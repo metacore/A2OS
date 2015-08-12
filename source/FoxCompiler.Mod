@@ -23,6 +23,7 @@ CONST
 	SingleModule*=10;
 	Oberon07*=11;
 	ChangeCase*=12;
+	Cooperative*=13;
 
 	DefaultBackend = "AMD";
 	DefaultFrontend = "Oberon";
@@ -187,7 +188,7 @@ TYPE
 				IF (options.symbolFile # NIL) THEN
 					options.symbolFile.Initialize(diagnostics,system,options.destPath);
 				END;
-				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,system,options.symbolFile,activeCellsSpecification,importCache);
+				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,activeCellsSpecification,importCache);
 				checker.replacements := options.replacements;
 				checker.Module(module);
 				IF checker.error THEN
@@ -339,6 +340,7 @@ TYPE
 		options.Add("S","srcPath", Options.String);
 		options.Add("D","destPath", Options.String);
 		options.Add(0X,"replacements", Options.String);
+		options.Add(0X,"cooperative", Options.Flag);
 
 		position := input.Pos();
 		parsed := options.Parse(input,NIL);
@@ -447,6 +449,7 @@ TYPE
 			IF options.GetFlag("singleModule") THEN INCL(compilerOptions.flags,SingleModule) END;
 			IF options.GetFlag("oberon07") THEN INCL(compilerOptions.flags, Oberon07) END;
 			IF options.GetFlag("activeCells") THEN INCL(compilerOptions.flags, ActiveCellsFlag) END;
+			IF options.GetFlag("cooperative") THEN INCL(compilerOptions.flags, Cooperative) END;
 			IF ~options.GetString("srcPath", compilerOptions.srcPath) THEN compilerOptions.srcPath := "" END;
 			IF ~options.GetString("destPath", compilerOptions.destPath) THEN compilerOptions.destPath := "" END;
 			IF compilerOptions.backend # NIL THEN compilerOptions.backend.GetOptions (options) END;

@@ -13,7 +13,7 @@ Config strings:
 The Init program is a 8086 machine code program in hexadecimal.  It has to initialize the specified display mode, possibly by making display BIOS calls, and leave the 32-bit physical address of the frame buffer in DX:CX.
 *)
 
-IMPORT SYSTEM, Machine, KernelLog, MemCache, Displays, Strings, Commands, Options;
+IMPORT SYSTEM, Machine, KernelLog, MemCache, Displays, Strings, Commands, Options, Modules;
 
 VAR
 	d: Displays.Display;
@@ -97,7 +97,14 @@ BEGIN
 	ASSERT(res = 0)
 END Init;
 
+PROCEDURE CleanUp;
+BEGIN
+	ASSERT (d # NIL);
+	Machine.Fill32(d.fbadr, d.fbsize, 0);	(* clear video memory *)
+END CleanUp;
+
 BEGIN
 	Init;
+	Modules.InstallTermHandler(CleanUp);
 END DisplayLinear.
 

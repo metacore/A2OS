@@ -978,7 +978,7 @@ VAR
 			IF Kernel32.SetCurrentDirectory( sysPath ) # Kernel32.False THEN ret := Kernel32.GetCurrentDirectory( LEN( sysPath ), sysPath ) END
 		END;
 		IF ret = 0 THEN
-			Kernel32.GetModuleFileName( Machine.hInstance, sysPath, LEN( sysPath ) );  j := -1;
+			Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
 			WHILE sysPath[i] # 0X DO
 				IF sysPath[i] = PathDelimiter THEN j := i END;
 				INC( i )
@@ -1177,7 +1177,7 @@ VAR
 		drives := drives - {0,1}; (* do not scan for diskettes *)
 		AutoMountWindowsLogicalDrives( drives );
 
-		Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );  i := 0;  Kernel32.GetModuleFileName( Machine.hInstance, sysPath, LEN( sysPath ) );  j := -1;
+		Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );  i := 0;  Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
 		FixDriveLetter (workPath); FixDriveLetter (sysPath);
 		WHILE sysPath[i] # 0X DO
 			IF sysPath[i] = PathDelimiter THEN j := i END;

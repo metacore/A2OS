@@ -1,18 +1,109 @@
  MODULE GenericLinker;	(* AUTHOR "negelef"; PURPOSE "Generic Object File Linker"; *)
 
-IMPORT ObjectFile, Streams, Diagnostics, Strings, StringPool;
+IMPORT ObjectFile, Streams, Diagnostics, Strings, SYSTEM;
 
 TYPE Address* = ObjectFile.Unit;
 
-CONST InvalidAddress* = MAX (Address);
-
-TYPE Priority = LONGINT;
+CONST
+	InvalidAddress* = MAX (Address);
 
 CONST
 	Fixed* = 0; InitCode*=1; BodyCode* = 2; Code* = 3; Data* = 4; Const* = 5; Empty* = 6;
 	UseAll *= {Fixed .. Empty};
 	UseInitCode*={Fixed, InitCode};
 	UseAllButInitCode*={Fixed, BodyCode..Empty};
+
+TYPE
+	HashEntrySegmentedName = RECORD
+		key: ObjectFile.SegmentedName; (* key[0]= MIN(LONGINT) <=> empty *)
+		value: Block;
+	END;
+	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName;
+
+	HashTableSegmentedName = OBJECT
+	VAR
+		table: HashSegmentedNameArray;
+		size: LONGINT;
+		used-: LONGINT;
+		maxLoadFactor: REAL;
+
+		(* Interface *)
+
+		PROCEDURE & Init (initialSize: LONGINT);
+		BEGIN
+			ASSERT(initialSize > 2);
+			NEW(table, initialSize);
+			size := initialSize;
+			used := 0;
+			maxLoadFactor := 0.75;
+			Clear;
+		END Init;
+
+		PROCEDURE Put(CONST key: ObjectFile.SegmentedName; value: Block);
+		VAR hash: LONGINT;
+		BEGIN
+			ASSERT(used < size);
+			hash := HashValue(key);
+			IF table[hash].key[0] < 0 THEN
+				INC(used, 1);
+			END;
+			table[hash].key := key;
+			table[hash].value := value;
+			IF (used / size) > maxLoadFactor THEN Grow END;
+		END Put;
+
+		PROCEDURE Get(CONST key: ObjectFile.SegmentedName):Block;
+		BEGIN
+			RETURN table[HashValue(key)].value;
+		END Get;
+
+		PROCEDURE Clear;
+		VAR i: LONGINT;
+		BEGIN FOR i := 0 TO size - 1 DO table[i].key[0] := -1; END; END Clear;
+
+		(* Internals *)
+		PROCEDURE Hash(CONST name: ObjectFile.SegmentedName): LONGINT;
+		VAR fp,i: LONGINT;
+		BEGIN
+			fp := name[0]; i := 1;
+			WHILE (i<LEN(name)) & (name[i] >= 0) DO
+				fp:=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(fp, 7)) / SYSTEM.VAL(SET, name[i]));
+				INC(i);
+			END;
+			RETURN fp
+		END Hash;
+
+		PROCEDURE HashValue(CONST key: ObjectFile.SegmentedName):LONGINT;
+		VAR value, h,i: LONGINT;
+		BEGIN
+			ASSERT(key[0] >= 0);
+			h := Hash(key);
+			i := 0;
+			REPEAT
+				value := (h + i) MOD size;
+				INC(i);
+			UNTIL((table[value].key[0] < 0) OR (table[value].key = key) OR (i > size));
+			ASSERT((table[value].key[0] <0 ) OR (table[value].key = key));
+			RETURN value;
+		END HashValue;
+
+		PROCEDURE Grow;
+		VAR oldTable: HashSegmentedNameArray; oldSize, i: LONGINT; key: ObjectFile.SegmentedName;
+		BEGIN
+			oldSize := size;
+			oldTable := table;
+			Init(size*2);
+			FOR i := 0 TO oldSize-1 DO
+				key := oldTable[i].key;
+				IF key[0] # MIN(LONGINT) THEN
+					IF oldTable[i].value # NIL THEN
+						Put(key, oldTable[i].value);
+					END;
+				END;
+			END;
+		END Grow;
+
+	END HashTableSegmentedName;
 
 TYPE Arrangement* = OBJECT
 
@@ -25,7 +116,7 @@ TYPE Arrangement* = OBJECT
 	PROCEDURE Patch* (pos, value: Address; offset, bits, unit: ObjectFile.Bits);
 	END Patch;
 
-	PROCEDURE CheckReloc*(target: Address; CONST pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
+	PROCEDURE CheckReloc*(target: Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
 	BEGIN
 		(* to be able to provide relocation information in an image*)
 	END CheckReloc;
@@ -38,6 +129,7 @@ TYPE Block* = POINTER TO RECORD (ObjectFile.Section)
 	address*: Address;
 	aliasOf*: Block;
 	referenced, used: BOOLEAN;
+	prioType: LONGINT; (* priority cache *)
 END;
 
 TYPE Linker* = OBJECT
@@ -49,12 +141,14 @@ VAR
 	code, data: Arrangement;
 	firstBlock, firstLinkedBlock: Block;
 	linkRoot: ObjectFile.SectionName;
+	hash: HashTableSegmentedName;
 
 	PROCEDURE &InitLinker* (diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; useCategories: SET; code, data: Arrangement);
 	BEGIN
 		SELF.diagnostics := diagnostics; SELF.log := log; SELF.usedCategories := useCategories;
 		error := FALSE; SELF.code := code; SELF.data := data; firstBlock := NIL; firstLinkedBlock := NIL;
 		linkRoot := "";
+		NEW(hash,64);
 	END InitLinker;
 
 	PROCEDURE SetLinkRoot*(CONST root: ARRAY OF CHAR);
@@ -82,11 +176,8 @@ VAR
 	END InformationP;
 
 	PROCEDURE FindBlock* (CONST identifier: ObjectFile.Identifier): Block;
-	VAR block: Block;
 	BEGIN
-		block := firstBlock;
-		WHILE (block # NIL) & (block.identifier.name # identifier.name) DO block := block.next END;
-		RETURN block;
+		RETURN hash.Get(identifier.name);
 	END FindBlock;
 
 	PROCEDURE ImportBlock*(CONST fixup: ObjectFile.Fixup): Block;
@@ -107,19 +198,22 @@ VAR
 	PROCEDURE Precedes* (this, that: Block): BOOLEAN;
 	VAR leftType, rightType: LONGINT;
 	BEGIN
-		leftType := GetPriority(this);
-		rightType := GetPriority(that);
+		leftType := this.prioType;
+		rightType := that.prioType;
 		RETURN (leftType < rightType) OR (leftType = rightType) & (this.priority < that.priority)
 	END Precedes;
 
+
 	PROCEDURE AddSection* (CONST section: ObjectFile.Section);
-	VAR priority: Priority; block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: LONGINT; alias: ObjectFile.Alias;
+	VAR block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: LONGINT; alias: ObjectFile.Alias;
 	BEGIN
 		IF FindBlock (section.identifier) # NIL THEN ObjectFile.SegmentedNameToString(section.identifier.name,name); Error (name, "duplicated section"); RETURN; END;
 		NEW (block); ObjectFile.CopySection (section, block^); block.address := InvalidAddress; block.referenced := FALSE; block.used := FALSE;
 		current := firstBlock; previous := NIL;
+		block.prioType := GetPriority(block);
 		WHILE (current # NIL) & ~Precedes(block,current) DO previous := current; current := current.next; END;
 		IF previous # NIL THEN previous.next := block; ELSE firstBlock := block; END; block.next := current;
+		hash.Put(block.identifier.name, block);
 		ExportBlock(block);
 		current := block;
 		(* append all alias blocks after the block *)
@@ -133,6 +227,7 @@ VAR
 			newBlock.next := current.next;
 			current.next := newBlock;
 			current := newBlock;
+			hash.Put(current.identifier.name, current);
 			ExportBlock(current);
 		END;
 
@@ -167,8 +262,7 @@ VAR
 	END Aliases;
 	*)
 
-	PROCEDURE PatchAlias*(CONST block: Block);
-	VAR newBlock: Block; alias: ObjectFile.Alias; i: LONGINT; name: ARRAY 256 OF CHAR;
+	PROCEDURE PatchAlias*(block: Block);
 	BEGIN
 		IF block.aliasOf # NIL THEN INC(block.address, block.aliasOf.address) END;
 	END PatchAlias;
@@ -249,14 +343,13 @@ VAR
 			BEGIN arrangement.Patch (target, address, pattern.offset, pattern.bits, block.unit); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
-			PROCEDURE CheckBits(value: LONGINT; CONST pattern: ObjectFile.Pattern; offset: LONGINT);
+			PROCEDURE CheckBits(pattern: ObjectFile.Pattern; offset: LONGINT);
 			VAR i, nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO pattern.patterns-1 DO
 					INC(nobits,pattern.pattern[i].bits);
 				END;
-
 				remainder := ASH(address,-nobits);
 
 				IF  (nobits <32) & ((remainder > 0) OR (remainder < -1)) THEN
@@ -273,17 +366,17 @@ VAR
 				END;
 			END CheckBits;
 
-			PROCEDURE ApplyPatch(CONST pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
-			VAR i,j: LONGINT;
+			PROCEDURE ApplyPatch(pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
+			VAR j: LONGINT;
 			BEGIN
-					target := block.address + patch.offset;
-					address := reference.address + patch.displacement;
-					IF pattern.mode = ObjectFile.Relative THEN
-						DEC(address,target)
-					END;
-					address := ASH (address, pattern.scale);
-					CheckBits(address, pattern, patch.offset);
-					FOR j := 0 TO pattern.patterns-1 DO PatchPattern(pattern.pattern[j]) END;
+				target := block.address + patch.offset;
+				address := reference.address + patch.displacement;
+				IF pattern.mode = ObjectFile.Relative THEN
+					DEC(address,target)
+				END;
+				address := ASH (address, pattern.scale);
+				CheckBits(pattern, patch.offset);
+				FOR j := 0 TO pattern.patterns-1 DO PatchPattern(pattern.pattern[j]) END;
 			END ApplyPatch;
 
 		BEGIN
@@ -368,13 +461,11 @@ BEGIN
 	HALT(100); (* undefined type *)
 END GetPriority;
 
-
-
 PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
-VAR section: ObjectFile.Section; string: ARRAY 32 OF CHAR; ch: CHAR; binary: BOOLEAN; poolMap: ObjectFile.PoolMap;
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap;
 
 	PROCEDURE Header;
-	VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
+	VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR;
 	BEGIN
 		reader.String(string);
 		binary := string="FoxOFB";

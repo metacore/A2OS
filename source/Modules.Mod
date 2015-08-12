@@ -132,7 +132,7 @@ TYPE
 
 	END Module;
 
-	LoaderProc* = PROCEDURE (name, fileName: ARRAY OF CHAR; VAR res: LONGINT;
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT;
 			VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
 
 VAR

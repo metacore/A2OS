@@ -187,10 +187,10 @@ TYPE
 		prev-: LabelList;
 	END;
 
-	ObjectFileSection*= POINTER TO ObjectFile.Section;
 
-	Section* = OBJECT (ObjectFileSection)
+	Section* = OBJECT
 	VAR
+		os*: ObjectFile.Section;
 		labels-: LabelList; (* labels for tracking the PC / debugging *)
 		fixupList-: FixupList;
 		aliasList-: AliasList;
@@ -210,20 +210,20 @@ TYPE
 		BEGIN
 			ASSERT(unit > 0);
 			ASSERT(unit <= 32); (* implementation restriction *)
-			SELF.type := type;
-			identifier.name := name;
+			SELF.os.type := type;
+			os.identifier.name := name;
 			(*
 			ObjectFile.ToSegmentedName(name, SELF.identifier.name);
 			*)
 			(*COPY(name,SELF.identifier.name);*)
-			NEW(bits,0);
-			SELF.unit := unit;
+			NEW(os.bits,0);
+			SELF.os.unit := unit;
 			IF dump THEN
 				comments := Sections.NewCommentWriter(GetPC);
 			ELSE
 				comments := NIL
 			END;
-			alignment := 0;
+			os.alignment := 0;
 			finally := -1;
 			labels := NIL;
 			SELF.bigEndian := bigEndian;
@@ -231,13 +231,13 @@ TYPE
 			NEW(aliasList);
 			validPAFEnter := 0; validPAFExit := 0;
 			pc := 0;
-			fixed := FALSE;
-			SELF.priority := priority;
+			os.fixed := FALSE;
+			SELF.os.priority := priority;
 		END InitBinarySection;
 
 		PROCEDURE Reset*;
 		BEGIN
-			NEW(bits,0);
+			NEW(os.bits,0);
 			NEW(fixupList);
 			IF comments # NIL THEN comments.Reset END;
 			validPAFEnter := 0; validPAFExit := 0;
@@ -284,29 +284,29 @@ TYPE
 		END SetFinally;
 
 		PROCEDURE SetAlignment*(fixed: BOOLEAN; alignat: LONGINT);
-		BEGIN alignment := alignat; SELF.fixed := fixed;
+		BEGIN os.alignment := alignat; SELF.os.fixed := fixed;
 		END SetAlignment;
 
 		PROCEDURE CheckSize(size: LONGINT);
 		BEGIN
-			IF bits.GetSize()  < size + pc*unit THEN bits.Resize(size + pc*unit) END;
-			ASSERT(bits.GetSize() MOD unit = 0);
+			IF os.bits.GetSize()  < size + pc*os.unit THEN os.bits.Resize(size + pc*os.unit) END;
+			ASSERT(os.bits.GetSize() MOD os.unit = 0);
 		END CheckSize;
 
 		PROCEDURE CopyBits*(src: BitSets.BitSet; srcPos, len: Bits);
 		BEGIN
-			ASSERT(len MOD unit = 0);
+			ASSERT(len MOD os.unit = 0);
 			CheckSize(src.GetSize());
-			BitSets.CopyBits(src,srcPos,bits,pc*unit,len);
-			INC(pc,len DIV unit);
+			BitSets.CopyBits(src,srcPos,os.bits,pc*os.unit,len);
+			INC(pc,len DIV os.unit);
 		END CopyBits;
 
 		PROCEDURE PutBits*(d: LONGINT; size: Bits);
 		BEGIN
 			(*ASSERT(size MOD unit = 0);*)
 			CheckSize(size);
-			bits.SetBits(pc*unit,size,d);
-			INC(pc,size DIV unit);
+			os.bits.SetBits(pc*os.unit,size,d);
+			INC(pc,size DIV os.unit);
 		END PutBits;
 
 		PROCEDURE PutBitsAt*(at: Unit; d: LONGINT; size: Bits);
@@ -326,47 +326,47 @@ TYPE
 		PROCEDURE PutWord*(w: LONGINT);
 		VAR c1,c2: LONGINT;
 		BEGIN
-			ASSERT((2*Byte) MOD unit = 0);
+			ASSERT((2*Byte) MOD os.unit = 0);
 			CheckSize(2*Byte);
 			c1 := w;
 			c2 := w DIV 100H;
 			IF bigEndian THEN
-				bits.SetBits(pc*unit,Byte,c2);
-				bits.SetBits(pc*unit+Byte,Byte,c1);
+				os.bits.SetBits(pc*os.unit,Byte,c2);
+				os.bits.SetBits(pc*os.unit+Byte,Byte,c1);
 			ELSE
-				bits.SetBits(pc*unit,Byte,c1);
-				bits.SetBits(pc*unit+Byte,Byte,c2);
+				os.bits.SetBits(pc*os.unit,Byte,c1);
+				os.bits.SetBits(pc*os.unit+Byte,Byte,c2);
 			END;
-			INC(pc,(2*Byte) DIV unit);
+			INC(pc,(2*Byte) DIV os.unit);
 		END PutWord;
 
 		PROCEDURE PutDWord*(d: LONGINT);
 		VAR c1,c2,c3,c4: LONGINT;
 		BEGIN
-			ASSERT((4*Byte) MOD unit = 0);
+			ASSERT((4*Byte) MOD os.unit = 0);
 			CheckSize(4*Byte);
 			c1 := d;
 			c2 := d DIV 100H;
 			c3 := d DIV 10000H;
 			c4 := d DIV 1000000H;
 			IF bigEndian THEN
-				bits.SetBits(pc*unit+0*Byte,Byte,c4);
-				bits.SetBits(pc*unit+1*Byte,Byte,c3);
-				bits.SetBits(pc*unit+2*Byte,Byte,c2);
-				bits.SetBits(pc*unit+3*Byte,Byte,c1);
+				os.bits.SetBits(pc*os.unit+0*Byte,Byte,c4);
+				os.bits.SetBits(pc*os.unit+1*Byte,Byte,c3);
+				os.bits.SetBits(pc*os.unit+2*Byte,Byte,c2);
+				os.bits.SetBits(pc*os.unit+3*Byte,Byte,c1);
 			ELSE
-				bits.SetBits(pc*unit+0*Byte,Byte,c1);
-				bits.SetBits(pc*unit+1*Byte,Byte,c2);
-				bits.SetBits(pc*unit+2*Byte,Byte,c3);
-				bits.SetBits(pc*unit+3*Byte,Byte,c4);
+				os.bits.SetBits(pc*os.unit+0*Byte,Byte,c1);
+				os.bits.SetBits(pc*os.unit+1*Byte,Byte,c2);
+				os.bits.SetBits(pc*os.unit+2*Byte,Byte,c3);
+				os.bits.SetBits(pc*os.unit+3*Byte,Byte,c4);
 			END;
-			INC(pc,(4*Byte) DIV unit);
+			INC(pc,(4*Byte) DIV os.unit);
 		END PutDWord;
 
 		PROCEDURE PutQWord* (q: HUGEINT);
 		VAR c: ARRAY 8 OF LONGINT; i: LONGINT;
 		BEGIN
-			ASSERT((8*Byte) MOD unit = 0);
+			ASSERT((8*Byte) MOD os.unit = 0);
 			CheckSize(8*Byte);
 			FOR i := 0 TO 7 DO
 				c[i] := SHORT(q MOD 100H);
@@ -374,14 +374,14 @@ TYPE
 			END;
 			IF bigEndian THEN
 				FOR i := 0 TO 7 DO
-					bits.SetBits(pc*unit+i*Byte,Byte,c[7-i]);
+					os.bits.SetBits(pc*os.unit+i*Byte,Byte,c[7-i]);
 				END;
 			ELSE
 				FOR i := 0 TO 7 DO
-					bits.SetBits(pc*unit+i*Byte,Byte,c[i]);
+					os.bits.SetBits(pc*os.unit+i*Byte,Byte,c[i]);
 				END;
 			END;
-			INC(pc,(8*Byte) DIV unit);
+			INC(pc,(8*Byte) DIV os.unit);
 		END PutQWord;
 
 
@@ -447,14 +447,14 @@ TYPE
 
 		PROCEDURE GetByte* (pc: Unit): CHAR;
 		BEGIN
-			RETURN CHR(bits.GetBits(pc*unit,8));
+			RETURN CHR(os.bits.GetBits(pc*os.unit,8));
 		END GetByte;
 
 		PROCEDURE GetWord*(pc: Unit): LONGINT;
 		VAR c1,c2: LONGINT;
 		BEGIN
-			c1 := bits.GetBits(pc*unit,8);
-			c2 := bits.GetBits(pc*unit+8,8);
+			c1 := os.bits.GetBits(pc*os.unit,8);
+			c2 := os.bits.GetBits(pc*os.unit+8,8);
 			IF bigEndian THEN
 				RETURN c1*100H + c2;
 			ELSE
@@ -465,10 +465,10 @@ TYPE
 		PROCEDURE GetDWord*(pc: Unit): LONGINT;
 		VAR c1,c2,c3,c4: LONGINT;
 		BEGIN
-			c1 := bits.GetBits(pc*unit+0*Byte,Byte);
-			c2 := bits.GetBits(pc*unit+1*Byte,Byte);
-			c3 := bits.GetBits(pc*unit+2*Byte,Byte);
-			c4 := bits.GetBits(pc*unit+3*Byte,Byte);
+			c1 := os.bits.GetBits(pc*os.unit+0*Byte,Byte);
+			c2 := os.bits.GetBits(pc*os.unit+1*Byte,Byte);
+			c3 := os.bits.GetBits(pc*os.unit+2*Byte,Byte);
+			c4 := os.bits.GetBits(pc*os.unit+3*Byte,Byte);
 			IF bigEndian THEN
 				RETURN c4 + 100H * (c3 + 100H * (c2 + c1*100H));
 			ELSE
@@ -483,12 +483,12 @@ TYPE
 			IF bigEndian THEN
 				FOR i := 0 TO 7 DO
 					h := 100H*h;
-					h := h + bits.GetBits(pc*unit+i*Byte,Byte);
+					h := h + os.bits.GetBits(pc*os.unit+i*Byte,Byte);
 				END;
 			ELSE
 				FOR i := 7 TO 0 BY -1 DO
 					h := 100H*h;
-					h := h + bits.GetBits(pc*unit+i*Byte,Byte);
+					h := h + os.bits.GetBits(pc*os.unit+i*Byte,Byte);
 				END;
 			END;
 			RETURN h
@@ -510,7 +510,7 @@ TYPE
 
 		PROCEDURE GetBits*(pc: Unit; size: Bits): LONGINT;
 		BEGIN
-			RETURN bits.GetBits(pc*unit,size)
+			RETURN os.bits.GetBits(pc*os.unit,size)
 		END GetBits;
 
 		PROCEDURE ApplyFixup*(fixup: Fixup): BOOLEAN;
@@ -519,7 +519,7 @@ TYPE
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
 				IF pattern.offset # MIN(SHORTINT) THEN
-					bits.SetBits(fixup.offset*unit+pattern.offset,pattern.bits,address);
+					os.bits.SetBits(fixup.offset*os.unit+pattern.offset,pattern.bits,address);
 				END;
 				address := ASH (address, -pattern.bits);
 			END PatchPattern;
@@ -573,8 +573,8 @@ TYPE
 			PROCEDURE DumpUnit(at: LONGINT);
 			VAR val: LONGINT; a: ARRAY 9 OF CHAR; bits: LONGINT;
 			BEGIN
-				val := GetBits(at,unit);
-				bits := unit;
+				val := GetBits(at,os.unit);
+				bits := os.unit;
 				a[(bits-1) DIV 4 +1] := 0X;
 				WHILE (bits > 0) DO
 					a[(bits-1) DIV 4] := Hex(val MOD 16);
@@ -632,11 +632,11 @@ TYPE
 		BEGIN
 			IF comments # NIL THEN comments.Update END;
 			ww := Basic.GetWriter(w);
-			ww.String(" unit="); ww.Int(unit,1);
-			IF fixed THEN w.String(" fixed") ELSE w.String(" relocatable") END;
-			w.String(" align="); w.Int(alignment,1);
+			ww.String(" unit="); ww.Int(os.unit,1);
+			IF os.fixed THEN w.String(" fixed") ELSE w.String(" relocatable") END;
+			w.String(" align="); w.Int(os.alignment,1);
 			ww.String(" size="); ww.Int(SELF.pc,1);
-			ww.String(" fixups="); ww.Int(SELF.fixups,1);
+			ww.String(" fixups="); ww.Int(SELF.os.fixups,1);
 			ww.Ln;
 			ww.IncIndent;
 			fixupList.Dump(ww);

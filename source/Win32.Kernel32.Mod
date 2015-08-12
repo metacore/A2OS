@@ -51,6 +51,11 @@ CONST
 	MEMCommit* = 12;  MEMReserve* = 13;  MEMDecommit* = 14;
 	MEMRelease* = 15;  CreateSuspended* = 2;  TLSOutOfIndexes* = -1;
 
+	(** heap allocation options *)
+	HeapNoSerialize* = 2H;
+	HeapGenerateExceptions* = 4H;
+	HeapZeroMemory* = 8H;
+	
 	(** protect (VirtualAlloc) flags *)
 	PageReadWrite* = 2;  PageExecuteReadWrite* = 6;
 
@@ -107,6 +112,7 @@ CONST
 
 
 	(** WaitForSingleObject return values *)
+	WaitFailed* = -1;
 	WaitTimeout* = 0102H;
 
 	(** SetErrorMode *)
@@ -372,6 +378,8 @@ VAR
 																	   VAR lpCurrentDirectory: ARRAY   OF CHAR;
 																	   VAR lpStartupInfo: StartupInfo;
 																	   VAR lpProcessInformation: ProcessInformation ): BOOL;
+	(** The CreateSemaphore function creates or opens a named or unnamed semaphore object. *)
+	CreateSemaphore-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS; lInitialCount: LONGINT; lMaximumCount: LONGINT; lpName: LPSTR): HANDLE;
 	(** The CreateThread function creates a thread to execute within the address space of the calling process. *)
 	CreateThread-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS;
 																	  dwStackSize: LONGINT;
@@ -485,7 +493,7 @@ VAR
 	(* The GetLogicalDrives function retrieves a bitmask representing the currently available disk drives.
 *)
 
-	GetLogicalDrives-: PROCEDURE ( ): SET;
+	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): SET;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
 																				    nSize: LONGINT ): LONGINT;
@@ -499,9 +507,12 @@ VAR
 																			CONST lpReturnedString: ARRAY OF CHAR;
 																			nSize: LONGINT;
 																			CONST lpFileName: ARRAY OF CHAR): LONGINT;
-	(* The GetProcessTimes function returns the times spent in kernel mode, user mode ... for the specified process *)
+	(** The GetProcessAffinityMask function retrieves the process affinity mask for the specified process and the system affinity mask for the system. *)
+	GetProcessAffinityMask- : PROCEDURE {WINAPI} ( hProcess: HANDLE; lpProcessAffinityMask: ADDRESS;  lpSystemAffinityMask: ADDRESS ): BOOL;
+	(** The GetProcessHeap function retrieves a handle to the default heap of the calling process. This handle can then be used in subsequent calls to the heap functions. *)
+	GetProcessHeap- : PROCEDURE {WINAPI} (): HANDLE;
+	(** The GetProcessTimes function returns the times spent in kernel mode, user mode ... for the specified process *)
 	GetProcessTimes- : PROCEDURE {WINAPI} (CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime ): LONGINT;
-
 	(** The GetStartupInfo function retrieves the contents of the StartupInfo structure that was specified when
 			the calling process was created. *)
 	GetStartupInfo-: PROCEDURE {WINAPI} ( VAR lpStartupInfo: StartupInfo );
@@ -574,6 +585,10 @@ VAR
 	(** The GlobalUnlock function decrements the lock count associated with a memory object that was allocated with
 			the GMEM_MOVEABLE flag. *)
 	GlobalUnlock-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): BOOL;
+	(** The HeapAlloc function allocates a block of memory from a heap. The allocated memory is not movable. *)
+	HeapAlloc-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: LONGINT; size: SIZE): ADDRESS;
+	(** The HeapFree function frees a memory block allocated from a heap by the HeapAlloc or HeapReAlloc function. *)
+	HeapFree-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: LONGINT; lpMem: ADDRESS): ADDRESS;
 	(** The InitializeCriticalSection function initializes a critical section object. *)
 	InitializeCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	(** The InterlockedDecrement function both decrements (decreases by one) the value of the specified 32-bit
@@ -614,8 +629,6 @@ VAR
 
 	(** Retrieves the cycle time for the specified thread (both user and kernel mode, Windows Vista and newer) *)
 	QueryThreadCycleTime- : PROCEDURE {WINAPI} (hThread : HANDLE; VAR cycleTime : HUGEINT) : BOOL;
-
-
 	(** The ReadFile function reads data from a file, starting at the position indicated by the file pointer. *)
 	ReadFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															  VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
@@ -628,6 +641,8 @@ VAR
 																				   VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
 																				   nSize: LONGINT;
 																				   VAR lpNumberOfBytesRead: LONGINT ): BOOL;
+	(** The ReleaseSemaphore function increases the count of the specified semaphore object by a specified amount. *)
+	ReleaseSemaphore-: PROCEDURE {WINAPI} ( hSemaphore: HANDLE; lReleaseCount: LONGINT; lpPreviousCount: ADDRESS): BOOL;
 	(** The RemoveDirectory function deletes an existing empty directory. *)
 	RemoveDirectory-: PROCEDURE {WINAPI} ( VAR lpPathName: ARRAY   OF CHAR ): BOOL;
 	(** The ResetEvent function sets the state of the specified event object to nonsignaled. *)
@@ -654,6 +669,8 @@ VAR
 	(** The SetConsoleScreenBufferSize function changes the size of the specified console screen buffer. *)
 	SetConsoleScreenBufferSize-: PROCEDURE {WINAPI} ( hConsoleOuput: HANDLE;
 																							   dwSize: LONGINT ): BOOL;
+	(** The SetConsoleTextAttribute function sets the attributes of characters written to the console screen buffer by the WriteFile or WriteConsole function, or echoed by the ReadFile or ReadConsole function. *)
+	SetConsoleTextAttribute-: PROCEDURE {WINAPI} (hConsoleOutput: HANDLE; wAttributes: LONGINT): BOOL;
 	(** The SetConsoleTitle function sets the title bar string for the current console window. *)
 	SetConsoleTitle-: PROCEDURE {WINAPI} ( VAR lpConsoleTitle: ARRAY   OF CHAR ): BOOL;
 	(** The SetConsoleWindowInfo function sets the current size and position of a console screen buffer's window. *)
@@ -681,6 +698,8 @@ VAR
 																    VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime ): BOOL;
 	(** The SetLocalTime function sets the current local time and date. *)
 	SetLocalTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime ): BOOL;
+	(** The SetThreadAffinityMask function sets a processor affinity mask for the specified thread. *)
+	SetThreadAffinityMask-: PROCEDURE {WINAPI} ( hThread: HANDLE; dwThreadAffinityMask: SET): SET;
 	(** The SetThreadContext function sets the context in the specified thread. *)
 	SetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;
@@ -730,8 +749,8 @@ VAR
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
 
-	(* OutputString*: OutputStringProc; *)
-	Shutdown*: PROCEDURE ( code: LONGINT );
+	hInstance-: HINSTANCE;   (* init by linker/loader *)
+	isEXE-: BOOLEAN;
 
 	(** Wrapper for getProcAddress. *)
 	PROCEDURE GetProcAddress*( hModule: HMODULE;  procName: ARRAY OF CHAR; VAR adr: ADDRESS );
@@ -775,17 +794,16 @@ VAR
 		outputDebugString( s );  s[0] := 0AX;  s[1] := 0X;  outputDebugString( s )
 	END SendToDebugger;
 
-	PROCEDURE ShutdownP(l: LONGINT);
+	PROCEDURE Shutdown*(l: LONGINT);
 	BEGIN
 		outputDebugString("Kernel32.Shutdown");
 		ExitProcess(l);
-	END ShutdownP;
+	END Shutdown;
 
 	PROCEDURE Init;
 	VAR mod: HMODULE;
 		str: ARRAY 64 OF CHAR;
 	BEGIN
-		Shutdown := ShutdownP;
 		str := "Kernel32.DLL";
 		mod := LoadLibrary(str);
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
@@ -798,6 +816,7 @@ VAR
 		GetProcAddress(mod, "CreateEventA",SYSTEM.VAL(ADDRESS,CreateEvent));
 		GetProcAddress(mod, "CreateFileA",SYSTEM.VAL(ADDRESS,CreateFile));
 		GetProcAddress(mod, "CreateProcessA",SYSTEM.VAL(ADDRESS,CreateProcess));
+		GetProcAddress(mod, "CreateSemaphoreA",SYSTEM.VAL(ADDRESS,CreateSemaphore));
 		GetProcAddress(mod, "CreateThread",SYSTEM.VAL(ADDRESS,CreateThread));
 		GetProcAddress(mod, "DeleteCriticalSection",SYSTEM.VAL(ADDRESS,DeleteCriticalSection));
 		GetProcAddress(mod, "DeleteFileA",SYSTEM.VAL(ADDRESS,DeleteFile));
@@ -839,6 +858,8 @@ VAR
 		GetProcAddress(mod, "GetModuleHandleA",SYSTEM.VAL(ADDRESS,GetModuleHandle));
 		GetProcAddress(mod, "GetPrivateProfileStringA",SYSTEM.VAL(ADDRESS,GetPrivateProfileString));
 		(* must be done by linker: GetProcAddress(mod, "GetProcAddress",SYSTEM.VAL(ADDRESS,getProcAddress)); *)
+		GetProcAddress(mod, "GetProcessAffinityMask",SYSTEM.VAL(ADDRESS,GetProcessAffinityMask));
+		GetProcAddress(mod, "GetProcessHeap",SYSTEM.VAL(ADDRESS,GetProcessHeap));
 		GetProcAddress(mod, "GetProcessTimes", SYSTEM.VAL(ADDRESS, GetProcessTimes));
 		GetProcAddress(mod, "GetStartupInfoA",SYSTEM.VAL(ADDRESS,GetStartupInfo));
 		GetProcAddress(mod, "GetStdHandle",SYSTEM.VAL(ADDRESS,GetStdHandle));
@@ -862,6 +883,8 @@ VAR
 		GetProcAddress(mod, "GlobalReAlloc",SYSTEM.VAL(ADDRESS,GlobalReAlloc));
 		GetProcAddress(mod, "GlobalSize",SYSTEM.VAL(ADDRESS,GlobalSize));
 		GetProcAddress(mod, "GlobalUnlock",SYSTEM.VAL(ADDRESS,GlobalUnlock));
+		GetProcAddress(mod, "HeapAlloc",SYSTEM.VAL(ADDRESS,HeapAlloc));
+		GetProcAddress(mod, "HeapFree",SYSTEM.VAL(ADDRESS,HeapFree));
 		GetProcAddress(mod, "InitializeCriticalSection",SYSTEM.VAL(ADDRESS,InitializeCriticalSection));
 		GetProcAddress(mod, "InterlockedDecrement",SYSTEM.VAL(ADDRESS,InterlockedDecrement));
 		GetProcAddress(mod, "InterlockedIncrement",SYSTEM.VAL(ADDRESS,InterlockedIncrement));
@@ -878,6 +901,7 @@ VAR
 		GetProcAddress(mod, "QueryThreadCycleTime", SYSTEM.VAL(ADDRESS, QueryThreadCycleTime));
 		GetProcAddress(mod, "ReadFile",SYSTEM.VAL(ADDRESS,ReadFile));
 		GetProcAddress(mod, "ReadProcessMemory",SYSTEM.VAL(ADDRESS,ReadProcessMemory));
+		GetProcAddress(mod, "ReleaseSemaphore",SYSTEM.VAL(ADDRESS,ReleaseSemaphore));
 		GetProcAddress(mod, "RemoveDirectoryA",SYSTEM.VAL(ADDRESS,RemoveDirectory));
 		GetProcAddress(mod, "ResetEvent",SYSTEM.VAL(ADDRESS,ResetEvent));
 		GetProcAddress(mod, "ResumeThread",SYSTEM.VAL(ADDRESS,ResumeThread));
@@ -888,6 +912,7 @@ VAR
 		GetProcAddress(mod, "SetCommTimeouts",SYSTEM.VAL(ADDRESS,SetCommTimeouts));
 		GetProcAddress(mod, "SetConsoleCursorPosition",SYSTEM.VAL(ADDRESS,SetConsoleCursorPosition));
 		GetProcAddress(mod, "SetConsoleScreenBufferSize",SYSTEM.VAL(ADDRESS,SetConsoleScreenBufferSize));
+		GetProcAddress(mod, "SetConsoleTextAttribute",SYSTEM.VAL(ADDRESS,SetConsoleTextAttribute));
 		GetProcAddress(mod, "SetConsoleTitleA",SYSTEM.VAL(ADDRESS,SetConsoleTitle));
 		GetProcAddress(mod, "SetConsoleWindowInfo",SYSTEM.VAL(ADDRESS,SetConsoleWindowInfo));
 		GetProcAddress(mod, "SetCurrentDirectoryA",SYSTEM.VAL(ADDRESS,SetCurrentDirectory));
@@ -898,6 +923,7 @@ VAR
 		GetProcAddress(mod, "SetFilePointer",SYSTEM.VAL(ADDRESS,SetFilePointer));
 		GetProcAddress(mod, "SetFileTime",SYSTEM.VAL(ADDRESS,SetFileTime));
 		GetProcAddress(mod, "SetLocalTime",SYSTEM.VAL(ADDRESS,SetLocalTime));
+		GetProcAddress(mod, "SetThreadAffinityMask",SYSTEM.VAL(ADDRESS,SetThreadAffinityMask));
 		GetProcAddress(mod, "SetThreadContext",SYSTEM.VAL(ADDRESS,SetThreadContext));
 		GetProcAddress(mod, "SetThreadPriority",SYSTEM.VAL(ADDRESS,SetThreadPriority));
 		GetProcAddress(mod, "SetupComm",SYSTEM.VAL(ADDRESS,SetupComm));
@@ -915,6 +941,8 @@ VAR
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
 		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
+		isEXE := hInstance = NULL;
+		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
 		END Init;
 
 		(* for new object file:

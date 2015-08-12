@@ -1660,7 +1660,7 @@ BEGIN
 		ASSERT(dst.mode # PCO.ImmeA);
 		PCO.GenFSTP(dst.mode+(PCO.RegMem-PCO.Mem), FPSize[src.size], dst.base, dst.index, dst.scale, dst.disp);
 		FixAbsolute(dst.addr, -4);
-		PCO.PutByte(PCO.WAIT)
+		PCO.PutByte(PCO.wWAIT)
 	ELSIF src.size = PCLIR.Int64 THEN
 		IF dst.mode = PCO.Regs THEN
 			HALT(99)
@@ -1973,7 +1973,7 @@ BEGIN
 	IF dest64 THEN size := 12 ELSE size := 8 END;
 	PCO.GenTyp1(PCO.SUB, PCO.ImmReg, ESP, noBase, noInx, noScale, noDisp, size);
 	PCO.GenFSTCW(ESP, noInx, noScale, 0);
-	PCO.PutByte(PCO.WAIT);
+	PCO.PutByte(PCO.wWAIT);
 	PCO.GenMOV(PCO.MemReg, reg, ESP, noInx, noScale, 0, noImm);
 	PCO.GenTyp1(PCO.AND, PCO.ImmReg, reg, noBase, noInx, noScale, noDisp, 0F3FFH);
 	PCO.GenTyp1(PCO.Or, PCO.ImmReg, reg, noBase, noInx, noScale, noDisp, 0400H);
@@ -1984,7 +1984,7 @@ BEGIN
 	ELSE
 		PCO.GenFSTP(PCO.RegMem, PCO.dInt, ESP, noInx, noScale, 4)
 	END;
-	PCO.PutByte(PCO.WAIT);
+	PCO.PutByte(PCO.wWAIT);
 	PCO.GenFLDCW(ESP, noInx, noScale, 0);
 	PCO.GenPOP(PCO.Regs, dst, noBase, noInx, noScale, noDisp);
 	PCO.GenPOP(PCO.Regs, dst, noBase, noInx, noScale, noDisp);

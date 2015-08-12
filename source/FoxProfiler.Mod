@@ -1,6 +1,6 @@
 MODULE FoxProfiler; (** AUTHOR "fof"; PURPOSE "minimal implementation of a compiler supported profiler"; *)
 
-IMPORT KernelLog,Objects,Machine,SYSTEM,Streams,Kernel,Commands;
+IMPORT KernelLog,Objects,Machine,SYSTEM,Streams,Commands;
 
 CONST
 	TraceAdd=FALSE;
@@ -24,7 +24,8 @@ TYPE
 	Process= OBJECT
 	VAR
 		stackPosition: LONGINT;
-		startTime, correcture: ARRAY MaxStackSize OF HUGEINT;
+		startTime, correcture: ARRAY MaxStackSize OF HUGEINT; (* correcture: time taken for calls to other profiled procedures *)
+		module, procedure: ARRAY MaxStackSize OF LONGINT;
 		modules: ARRAY MaxModules OF ProcedureTimes;
 
 		PROCEDURE &Init;
@@ -43,8 +44,18 @@ TYPE
 		BEGIN
 			IF TraceEnter THEN log.String("stack position "); log.Int(stackPosition,1); log.Ln; END;
 			IF stackPosition < MaxStackSize THEN
-				startTime[stackPosition] := enterTime;
-				correcture[stackPosition] := GetTimer()-enterTime;
+				startTime[stackPosition] := GetTimer();
+				correcture[stackPosition] := 0;
+
+				(* debugging *)
+				module[stackPosition] := moduleId;
+				procedure[stackPosition] := procedureId;
+
+				(* book keeping for caller *)
+				IF stackPosition > 0 THEN
+					(* try to remove time spent in profiler *)
+					INC(correcture[stackPosition-1], startTime[stackPosition] -enterTime);
+				END;
 			END;
 			IF (moduleId < MaxModules) & (procedureId < MaxProcedures) THEN
 				INC(modules[moduleId,procedureId].calls);
@@ -61,8 +72,12 @@ TYPE
 					INC(modules[moduleId,procedureId].brut,enterTime-startTime[stackPosition]);
 				END;
 				IF stackPosition > 0 THEN
+					(* try to remove time spent in procedure plus time spent in profiler *)
 					INC(correcture[stackPosition-1], GetTimer()-startTime[stackPosition]);
 				END;
+				ASSERT(stackPosition >= 0);
+				ASSERT(module[stackPosition] = moduleId);
+				ASSERT(procedure[stackPosition] = procedureId);
 			END;
 			IF TraceEnter THEN log.String("stack position "); log.Int(stackPosition,1); log.Ln; END;
 		END Exit;
@@ -129,7 +144,7 @@ VAR
 	PROCEDURE GetProcess(): Process;
 	VAR process: ANY; value: LONGINT; key: ADDRESS;
 	BEGIN
-		process := Objects.CurrentProcess();
+		process := Objects.ActiveObject();
 		key := SYSTEM.VAL(ADDRESS,process) DIV SIZEOF(ADDRESS);
 		IF Has(key) THEN
 			value := Get(key);
@@ -164,9 +179,7 @@ VAR
 	PROCEDURE GetTimer(): HUGEINT;
 	VAR cpuCycles: Objects.CpuCyclesArray;
 	BEGIN
-		Objects.GetCpuCycles(Objects.CurrentProcess(), cpuCycles, TRUE);
-		RETURN cpuCycles[0];
-		(* time:= Machine.GetTimer(); *)
+		RETURN Objects.CurrentProcessTime();
 	END GetTimer;
 
 	PROCEDURE EnterProcedure*(moduleId, procedureId: LONGINT);
@@ -348,13 +361,9 @@ VAR
 	END Report;
 
 	PROCEDURE Calibrate;
-	VAR timer: Kernel.MilliTimer;  t: HUGEINT;
 	BEGIN
-		INC( n );  Kernel.SetTimer( timer, 1000 );  t := Machine.GetTimer();
-		WHILE ~Kernel.Expired( timer ) DO END;
-		t := Machine.GetTimer() - t;
-		log.Ln;  log.String( "Timing reported MHz : " ); log.FloatFix( t / 1000 / 1000, 5, 1,0 );
-		log.Ln;  frequency := (frequency * (n - 1) + t) / n;  log.String( "Updated value: " );  log.FloatFix( frequency / 1000 / 1000, 5, 1,0 );
+		frequency := Objects.TimerFrequency();
+		log.Ln;  log.String( "Timer reported Frequency: " ); log.FloatFix( frequency, 5, 1,0 );
 		log.Ln;  log.Update;
 	END Calibrate;
 
@@ -365,6 +374,7 @@ VAR
 		FOR i := 0 TO LEN(table)-1 DO table[i].used := FALSE END;
 		numberModules := 0;
 		numberProcesses := 0;
+		Calibrate;
 	END Init;
 
 	PROCEDURE Reset*;
@@ -383,11 +393,9 @@ VAR
 		END;
 	END Reset;
 
-
 BEGIN
 	NEW(log,KernelLog.Send,1024*1024);
-		(*
-Streams.OpenWriter( log, KernelLog.Send ); *) Init; Calibrate;
+	Init;
 END FoxProfiler.
 
 WMUtilities.Call --font=Courier FoxProfiler.Report ~

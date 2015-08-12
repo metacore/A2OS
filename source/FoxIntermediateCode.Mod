@@ -52,6 +52,7 @@ CONST
 	None*=-1; (* no register assigned *)
 	SP*=-2; (* stack pointer *)
 	FP*=-3; (* frame pointer *)
+	AP*=-4; (* activity pointer *)
 	HwRegister*=-32; (* any value below or equal hwreg is a user defined hardware register *)
 
 	(* FoxProgTools.Enum -e -l=8
@@ -256,6 +257,7 @@ TYPE
 		PROCEDURE Emit*(instruction: Instruction);
 		VAR new: Instructions;
 			op1size,op2size,op3size,op1form,op2form,op3form: LONGINT;
+			i: SIZE;
 		BEGIN
 			op1size := instruction.op1.type.sizeInBits;
 			op2size := instruction.op2.type.sizeInBits;
@@ -289,7 +291,9 @@ TYPE
 				NEW(instructions, 16);
 			ELSIF pc = LEN(instructions) THEN
 				NEW(new,4*LEN(instructions));
-				SYSTEM.MOVE(ADDRESSOF(instructions[0]), ADDRESSOF(new[0]), LEN(instructions)*SIZEOF(Instruction));
+				FOR i := 0 TO LEN(instructions)-1 DO
+					new[i] := instructions[i];
+				END;
 				instructions := new;
 			END;
 			instruction.pc := pc;
@@ -437,7 +441,8 @@ TYPE
 			END;
 			*)
 
-			ASSERT(result.name= name); ASSERT(result.symbol = syntaxTreeSymbol);
+			ASSERT(result.name= name);
+			(*ASSERT(result.symbol = syntaxTreeSymbol);*)
 			RETURN section
 		END;
 
@@ -549,6 +554,8 @@ TYPE
 			w.String("sp")
 		ELSIF registerNumber = FP THEN
 			w.String("fp")
+		ELSIF registerNumber = AP THEN
+			w.String("ap")
 		ELSIF registerNumber > None THEN
 			w.String("r"); w.Int(registerNumber, 0);
 			IF registerClass.class = Parameter THEN w.String(":p"); w.Int(registerClass.number,0) END;
@@ -722,9 +729,9 @@ TYPE
 		(* call adr parSize - procedure call, second operand contains parameter size *)
 		AddFormat(call, "call", RegMemImm, Num, Undef,{});
 		(* enter cc pafSize regs - set up procedure activation frame;  op1 = calling convention, op2 = paf size, op3 = numberOfParameters in registers *)
-		AddFormat(enter, "enter", Num, Num, Num ,{});
+		AddFormat(enter, "enter", Num+Any, Num, Num ,{});
 		(* leave cc - remove paf, does not imply return, op1= calling convention, does not imply exit from procedure *)
-		AddFormat(leave, "leave", Num, Undef, Undef ,{});
+		AddFormat(leave, "leave", Num, Num, Undef ,{});
 		(* return value : return value, op1= returned value, if any, does not imply exit from procedure *)
 		AddFormat(return,"return",RegMemImm, Undef, Undef,{});
 		(* exit parSize pcOffset cc - exit from procedure, op1 = offset that has to be subtracted from return address (e.g., used for ARM interrupt procedures), op2 = calling convention *)
@@ -855,7 +862,7 @@ TYPE
 
 	PROCEDURE InitRegister*(VAR op: Operand; type: Type; registerClass: RegisterClass;  register: LONGINT);
 	BEGIN
-		Assert((register >0) OR (register = SP) OR (register = FP) OR (register <= HwRegister) ,"unmapped register number");
+		Assert((register >0) OR (register = SP) OR (register = FP) OR (register = AP) OR (register <= HwRegister) ,"unmapped register number");
 		InitOperand(op);
 		op.mode := ModeRegister;
 		op.type := type;
@@ -868,9 +875,14 @@ TYPE
 	BEGIN InitRegister(op,type,registerClass, register); RETURN op
 	END Register;
 
+	PROCEDURE RegisterOffset*(type: Type; registerClass: RegisterClass; register, offset: LONGINT): Operand;
+	VAR op: Operand;
+	BEGIN InitRegister(op,type,registerClass, register); SetOffset (op, offset); RETURN op
+	END RegisterOffset;
+
 	PROCEDURE AddOffset*(VAR op: Operand; offset: LONGINT);
 	BEGIN
-		Assert((op.mode = ModeRegister) OR (op.mode = ModeImmediate) & (op.type.form IN {SignedInteger, UnsignedInteger}),"offset not on register or integer immediate");
+		Assert((op.mode = ModeRegister) OR (op.mode = ModeMemory) OR (op.mode = ModeImmediate) & (op.type.form IN {SignedInteger, UnsignedInteger}),"offset not on register or integer immediate");
 		IF (op.mode = ModeImmediate) & (op.symbol.name = "") THEN
 			INC(op.intValue,offset)
 		ELSE
@@ -901,6 +913,18 @@ TYPE
 		op.mode := ModeMemory;
 		ASSERT(op.register # 0);
 	END MakeMemory;
+	
+	PROCEDURE MakeAddress*(VAR op: Operand; CONST type: Type);
+	BEGIN
+		ASSERT(op.mode = ModeMemory);
+		IF op.register = None THEN
+			op.mode := ModeImmediate;
+		ELSE
+			op.mode := ModeRegister;
+			ASSERT(op.symbol.name = "");
+		END;
+		op.type := type;
+	END MakeAddress;
 
 	PROCEDURE InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT);
 	BEGIN
@@ -1069,6 +1093,7 @@ TYPE
 			END;
 		ELSIF name = "sp" THEN register := SP; RETURN TRUE
 		ELSIF name = "fp" THEN register := FP ; RETURN TRUE
+		ELSIF name = "ap" THEN register := AP ; RETURN TRUE
 		ELSE RETURN FALSE
 		END;
 	END DenotesRegister;

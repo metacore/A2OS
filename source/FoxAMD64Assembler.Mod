@@ -240,7 +240,7 @@ TYPE
 		BEGIN
 			COPY(message,msg);
 			Strings.Append(msg," in ");
-			ObjectFile.SegmentedNameToString(code.identifier.name,name);
+			ObjectFile.SegmentedNameToString(code.os.identifier.name,name);
 			Strings.Append(msg, name);
 			IF diagnostics # NIL THEN
 				diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid,msg);
@@ -1094,7 +1094,7 @@ TYPE
 			IF (pos = Diagnostics.Invalid) OR (sourceName = "") THEN
 				COPY(message,msg);
 				Strings.Append(msg," in ");
-				ObjectFile.SegmentedNameToString(emitter.code.identifier.name, name);
+				ObjectFile.SegmentedNameToString(emitter.code.os.identifier.name, name);
 				Strings.Append(msg, name);
 				diagnostics.Error(sourceName,errPos,Diagnostics.Invalid,msg);
 			ELSE
@@ -2005,7 +2005,7 @@ TYPE
 					ELSIF symbol = symIdent THEN
 						IF ident = "END" THEN
 							symbol := symNone;
-						ELSIF ~(scope # NIL) & (ident = "BITS") THEN
+						ELSIF ident = "BITS" THEN
 							NextSymbol;
 							IF ~Ensure (symNumber, 553) OR ~emitter.SetBits (val) THEN
 								SkipLine;

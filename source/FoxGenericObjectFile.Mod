@@ -12,11 +12,22 @@ CONST
 
 	(* optimizations *)
 	PatchFixups = TRUE; (* patch all fixups that can be processed during object file generation *)
-	AliasOnlyExported = TRUE;  (* create an alias only for exported sections *)
+	AliasOnlyExported = FALSE;  (* create an alias only for exported sections *)
+	DetailedStatistics = TRUE;
 
 VAR
 	statModules, statModulesSize: LONGINT;
 	statHeaders, statHeadersSize: LONGINT;
+TYPE
+
+	SectionStat = POINTER TO RECORD
+		name: ARRAY 64 OF CHAR;
+		entries: LONGINT;
+		size: LONGINT;
+	END;
+	
+VAR
+	statPool : Basic.HashTableInt;
 
 TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	VAR extension: Files.FileName; binary: BOOLEAN; mergeSections: BOOLEAN;
@@ -43,9 +54,9 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 						D.String('"section.resolved = NIL" for '); D.String(name); D.Ln;
 						RETURN FALSE
 					END;
-					section.resolved.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
+					section.resolved.os.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
 					CopyFixups (NIL, section.resolved, section.resolved, 0);
-					ObjectFile.WriteSection(writer,section.resolved^,binary, poolMap);
+					ObjectFile.WriteSection(writer,section.resolved.os,binary, poolMap);
 				(*
 				END;
 				*)
@@ -72,19 +83,19 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					resolved := section(IntermediateCode.Section).resolved;
 					IF resolved = NIL THEN RETURN FALSE END;
 
-					IF (resolved # NIL) & (resolved.alignment # 0) & (~resolved.fixed) & (resolved.priority = 0) THEN
+					IF (resolved # NIL)  & (resolved.pc # 0) & (~resolved.os.fixed) & (resolved.os.priority = 0) THEN
 						IF section.type = ObjectFile.Code THEN
-							codeAlign := CommonAlignment(codeAlign, resolved.alignment);
-							ASSERT((codeUnit=0) OR (codeUnit = resolved.unit));
-							codeUnit := resolved.unit;
+							codeAlign := CommonAlignment(codeAlign, resolved.os.alignment);
+							ASSERT((codeUnit=0) OR (codeUnit = resolved.os.unit));
+							codeUnit := resolved.os.unit;
 						ELSIF section.type = ObjectFile.Data THEN
-							dataAlign := CommonAlignment(dataAlign, resolved.alignment);
-							ASSERT((dataUnit=0) OR (dataUnit = resolved.unit));
-							dataUnit := resolved.unit;
+							dataAlign := CommonAlignment(dataAlign, resolved.os.alignment);
+							ASSERT((dataUnit=0) OR (dataUnit = resolved.os.unit));
+							dataUnit := resolved.os.unit;
 						ELSIF section.type = ObjectFile.Const THEN
-							constAlign := CommonAlignment(constAlign, resolved.alignment);
-							ASSERT((constUnit=0) OR (constUnit = resolved.unit));
-							constUnit := resolved.unit;
+							constAlign := CommonAlignment(constAlign, resolved.os.alignment);
+							ASSERT((constUnit=0) OR (constUnit = resolved.os.unit));
+							constUnit := resolved.os.unit;
 						END;
 					END;
 				END;
@@ -112,30 +123,36 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					section := sections.GetSection(i);
 					resolved := section(IntermediateCode.Section).resolved;
 					exported := section(IntermediateCode.Section).exported;
-					IF (resolved # NIL) & (resolved.alignment # 0) & (~resolved.fixed) & (resolved.priority = 0)  THEN
+					IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed) & (resolved.os.priority = 0)  THEN
 						IF section.type = ObjectFile.Code THEN
-							codeSection.Align(resolved.alignment);
-							resolved.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
+							IF resolved.os.alignment # 0 THEN
+							codeSection.Align(resolved.os.alignment);
+							END;
+							resolved.os.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
 
-							NEW(alias, resolved.identifier, codeSection.pc);
+							NEW(alias, resolved.os.identifier, codeSection.pc);
 							IF ~AliasOnlyExported OR exported THEN  codeSection.aliasList.AddAlias(alias) END;
 							section(IntermediateCode.Section).SetAlias(codeSection, codeSection.pc);
-							codeSection.CopyBits(resolved.bits,0, resolved.pc*codeUnit);
+							codeSection.CopyBits(resolved.os.bits,0, resolved.pc*codeUnit);
 
 						ELSIF section.type = ObjectFile.Data THEN
-							dataSection.Align(resolved.alignment);
-							resolved.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
-							NEW(alias, resolved.identifier, dataSection.pc);
+							IF resolved.os.alignment # 0 THEN
+							dataSection.Align(resolved.os.alignment);
+							END;
+							resolved.os.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
+							NEW(alias, resolved.os.identifier, dataSection.pc);
 							IF ~AliasOnlyExported OR exported THEN dataSection.aliasList.AddAlias(alias) END;
 							section(IntermediateCode.Section).SetAlias(dataSection, dataSection.pc);
-							dataSection.CopyBits(resolved.bits,0, resolved.pc*dataUnit );
+							dataSection.CopyBits(resolved.os.bits,0, resolved.pc*dataUnit );
 						ELSIF section.type = ObjectFile.Const THEN
-							constSection.Align(resolved.alignment);
-							resolved.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
-							NEW(alias, resolved.identifier, constSection.pc);
+							IF resolved.os.alignment # 0 THEN
+							constSection.Align(resolved.os.alignment);
+							END;
+							resolved.os.identifier.fingerprint := GetFingerPrint (section, fingerPrinter);
+							NEW(alias, resolved.os.identifier, constSection.pc);
 							IF ~AliasOnlyExported OR exported THEN constSection.aliasList.AddAlias(alias) END;
 							section(IntermediateCode.Section).SetAlias(constSection, constSection.pc);
-							constSection.CopyBits(resolved.bits,0, resolved.pc*constUnit);
+							constSection.CopyBits(resolved.os.bits,0, resolved.pc*constUnit);
 						END;
 					END;
 				END;
@@ -154,17 +171,17 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 				IF codeSection # NIL THEN
 					UpdateAliases (codeSection, fingerPrinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(codeSection.type), codeSection.identifier.name, NIL, FALSE);
+					irSection := IntermediateCode.NewSection(sections, SHORTINT(codeSection.os.type), codeSection.os.identifier.name, NIL, FALSE);
 					irSection.SetResolved(codeSection);
 				END;
 				IF dataSection # NIL THEN
 					UpdateAliases (dataSection, fingerPrinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(dataSection.type), dataSection.identifier.name, NIL, FALSE);
+					irSection := IntermediateCode.NewSection(sections, SHORTINT(dataSection.os.type), dataSection.os.identifier.name, NIL, FALSE);
 					irSection.SetResolved(dataSection);
 				END;
 				IF constSection # NIL THEN
 					UpdateAliases (constSection, fingerPrinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(constSection.type), constSection.identifier.name, NIL, FALSE);
+					irSection := IntermediateCode.NewSection(sections, SHORTINT(constSection.os.type), constSection.os.identifier.name, NIL, FALSE);
 					irSection.SetResolved(constSection);
 				END;
 				RETURN TRUE;
@@ -188,16 +205,16 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					section := sections.GetSection(i);
 					IF (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).alias = NIL)  THEN
 						IF ~ExportSection(section(IntermediateCode.Section)) THEN RETURN FALSE END;
-						IF  (section(IntermediateCode.Section).resolved.identifier.fingerprint # 0) THEN
+						IF  (section(IntermediateCode.Section).resolved.os.identifier.fingerprint # 0) THEN
 							FOR j := 0 TO i - 1 DO
 								test := sections.GetSection(j);
 								IF (test(IntermediateCode.Section).resolved # NIL)
-								&  (test(IntermediateCode.Section).resolved.identifier.fingerprint = section(IntermediateCode.Section).resolved.identifier.fingerprint) THEN
+								&  (test(IntermediateCode.Section).resolved.os.identifier.fingerprint = section(IntermediateCode.Section).resolved.os.identifier.fingerprint) THEN
 									msg := "duplicate fingerPrints: ";
-									ObjectFile.SegmentedNameToString(section(IntermediateCode.Section).resolved.identifier.name,name);
+									ObjectFile.SegmentedNameToString(section(IntermediateCode.Section).resolved.os.identifier.name,name);
 									Strings.Append(msg, name);
 									Strings.Append(msg, ", ");
-									ObjectFile.SegmentedNameToString(test(IntermediateCode.Section).resolved.identifier.name,name);
+									ObjectFile.SegmentedNameToString(test(IntermediateCode.Section).resolved.os.identifier.name,name);
 									Strings.Append(msg, name);
 									diagnostics.Warning(module.moduleName,Diagnostics.Invalid,Diagnostics.Invalid,msg);
 								END
@@ -208,10 +225,44 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				RETURN TRUE
 			END ExportSections;
 
+			PROCEDURE MakeStatistics(sections: Sections.SectionList);
+			VAR i: LONGINT;
+				section: Sections.Section;
+				resolved: BinaryCode.Section;
+				suffix: ARRAY 128 OF CHAR;
+				index: StringPool.Index;
+				any: ANY;
+				sectionStat : SectionStat;
+			BEGIN
+				FOR i := 0 TO sections.Length()-1 DO
+					section := sections.GetSection(i);
+					resolved := section(IntermediateCode.Section).resolved;
+					Basic.GetSuffix(section.name, suffix);
+					IF (suffix[0] = "@")  & ((suffix[1] # "c") OR (suffix[2] # "o")) THEN
+						StringPool.GetIndex(suffix, index);
+						any := statPool.Get(index);
+						IF any = NIL THEN
+							NEW(sectionStat);
+							COPY(suffix, sectionStat.name);
+							sectionStat.entries := 0;
+							sectionStat.size := 0;
+							statPool.Put(index, sectionStat);
+						ELSE
+							sectionStat := any(SectionStat);
+						END;
+						INC(sectionStat.entries);
+						INC(sectionStat.size, resolved.pc);
+					END;
+				END;
+			END MakeStatistics;
+
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
 			VAR result: BOOLEAN; pos: LONGINT;
 			BEGIN
 				pos := writer.Pos();
+				IF DetailedStatistics THEN
+					MakeStatistics(module.allSections);
+				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
 				WriteHeader(writer,binary,module.allSections,poolMap, fingerPrinter);
 				INC(statHeaders); INC(statHeadersSize, writer.Pos()-pos);
@@ -305,10 +356,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				offset := section(IntermediateCode.Section).aliasOffset;
 				IF TraceAliases THEN
 					Basic.WriteSegmentedName(D.Log, identifier.name); D.String(" => ");
-					Basic.WriteSegmentedName(D.Log, alias.identifier.name);
+					Basic.WriteSegmentedName(D.Log, alias.os.identifier.name);
 					D.Ln;
 				END;
-				identifier := alias.identifier;
+				identifier := alias.os.identifier;
 			END;
 		END;
 	END CheckAlias;
@@ -323,7 +374,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
-				to.bits.SetBits (target * to.unit + pattern.offset, pattern.bits, address); address := ASH (address, -pattern.bits);
+				to.os.bits.SetBits (target * to.os.unit + pattern.offset, pattern.bits, address); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
 			PROCEDURE CheckBits(value: LONGINT; offset: LONGINT);
@@ -342,7 +393,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					ELSE
 						minval := 0; maxval := ASH(1,nobits);
 					END;
-					ObjectFile.SegmentedNameToString(to.identifier.name,name);
+					ObjectFile.SegmentedNameToString(to.os.identifier.name,name);
 					Strings.Append(name,":");
 					Strings.IntToStr(offset,number);
 					Strings.Append(name,number);
@@ -363,12 +414,12 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END PatchFixup;
 
 	BEGIN
-		fixup := from.fixupList.firstFixup; i := 0; fixups := to.fixups; fixupList := to.fixup;
+		fixup := from.fixupList.firstFixup; i := 0; fixups := to.os.fixups; fixupList := to.os.fixup;
 		WHILE fixup # NIL DO
 			(*! fingerprint := GetFingerPrint(fixup.symbol, fingerPrinter);  *)
 			aliasSymbol := fixup.symbol;
 			CheckAlias(sections, aliasSymbol, aliasOffset);
-			IF PatchFixups & (aliasSymbol.name = to.identifier.name) & (fixup.mode = BinaryCode.Relative) THEN
+			IF PatchFixups & (aliasSymbol.name = to.os.identifier.name) & (fixup.mode = BinaryCode.Relative) THEN
 				PatchFixup(fixup, offset, aliasOffset);
 			ELSE
 				index := ObjectFile.AddFixup(fixups, fixupList, aliasSymbol.name, aliasSymbol.fingerprint, fixup.mode,fixup.scale, fixup.patterns, fixup.pattern);
@@ -376,7 +427,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END;
 			fixup := fixup.nextFixup; INC (i);
 		END;
-		ObjectFile.SetFixups(to^, fixups, fixupList);
+		ObjectFile.SetFixups(to.os, fixups, fixupList);
 		from.fixupList.InitFixupList; (* delete the source list *)
 	END CopyFixups;
 
@@ -389,7 +440,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			index := ObjectFile.AddAlias(aliases, aliasList, alias.identifier.name, alias.identifier.fingerprint, alias.offset);
 			alias := alias.nextAlias; INC (i);
 		END;
-		ObjectFile.SetAliases(section^, aliases, aliasList);
+		ObjectFile.SetAliases(section.os, aliases, aliasList);
 		section.aliasList.InitAliasList;
 	END UpdateAliases;
 
@@ -423,13 +474,13 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		VAR i: LONGINT; fixup: BinaryCode.Fixup; index: LONGINT; alias: BinaryCode.Alias; name: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (section.resolved # NIL)  & (section.alias = NIL)  THEN
-				poolMap.PutSegmentedName(section.resolved.identifier.name);
+				poolMap.PutSegmentedName(section.resolved.os.identifier.name);
 				(* for those sections that have been already resolved *)
-				FOR i := 0 TO section.resolved.fixups-1 DO
-					poolMap.PutSegmentedName(section.resolved.fixup[i].identifier.name);
+				FOR i := 0 TO section.resolved.os.fixups-1 DO
+					poolMap.PutSegmentedName(section.resolved.os.fixup[i].identifier.name);
 				END;
-				FOR i := 0 TO section.resolved.aliases-1 DO
-					poolMap.PutSegmentedName(section.resolved.alias[i].identifier.name);
+				FOR i := 0 TO section.resolved.os.aliases-1 DO
+					poolMap.PutSegmentedName(section.resolved.os.alias[i].identifier.name);
 				END;
 				fixup := section.resolved.fixupList.firstFixup; i := 0;
 				WHILE fixup # NIL DO
@@ -520,7 +571,15 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	END Show;
 
 	PROCEDURE Statistics*;
+	VAR iterator: Basic.IntIterator; stat: SectionStat; index: StringPool.Index; any: ANY;
 	BEGIN
+		IF DetailedStatistics THEN
+			iterator := statPool.GetIterator();
+			WHILE iterator.GetNext(index, any) DO
+				stat := any(SectionStat);
+				TRACE(stat.name, stat.entries, stat.size);
+			END;
+		END;
 		TRACE(statModules, statModulesSize);
 		TRACE(statHeaders, statHeadersSize);
 		ObjectFile.Statistics;
@@ -531,6 +590,9 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		ObjectFile.ResetStatistics;
 		statModules := 0; statModulesSize := 0;
 		statHeaders := 0; statHeadersSize := 0;
+		IF DetailedStatistics THEN
+			NEW(statPool,64);
+		END;
 	END ResetStatistics;
 
 BEGIN

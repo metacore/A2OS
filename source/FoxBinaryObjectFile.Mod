@@ -454,7 +454,7 @@ TYPE
 		BEGIN
 			ofs := (offset );
 			FOR i := 0 TO ((section.pc-1) ) DO
-				to[i+ofs] := CHR(section.bits.GetBits(i*8,8));
+				to[i+ofs] := CHR(section.os.bits.GetBits(i*8,8));
 			END;
 		END Copy;
 
@@ -498,16 +498,16 @@ TYPE
 					IF section.symbol = module.module.moduleScope.bodyProcedure THEN
 					ELSIF symbolName = "@moduleSelf" THEN
 					ELSIF section.type = Sections.ConstSection THEN
-						 IF binarySection.alignment # 0 THEN
-						 	INC(constSize,(-constSize) MOD binarySection.alignment);
+						 IF binarySection.os.alignment # 0 THEN
+						 	INC(constSize,(-constSize) MOD binarySection.os.alignment);
 						 END;
 						  section.SetOffset(constSize); INC(constSize,binarySection.pc); (* global constants: positive offset *)
 					ELSIF (section.type = Sections.CodeSection) OR (section.type = Sections.BodyCodeSection) THEN
 						section.SetOffset(codeSize); INC(codeSize, binarySection.pc);
 					ELSIF section.type = Sections.VarSection THEN
 						 INC(varSize, binarySection.pc);
-						 IF binarySection.alignment # 0 THEN
-						 	INC(varSize,(-varSize) MOD binarySection.alignment);
+						 IF binarySection.os.alignment # 0 THEN
+						 	INC(varSize,(-varSize) MOD binarySection.os.alignment);
 						 END;
 						 section.SetOffset(-varSize); (* global variables: negative offset *)
 					END
@@ -1944,6 +1944,7 @@ TYPE
 			PROCEDURE WriteVariable(variable: SyntaxTree.Variable; indirect: BOOLEAN);
 				VAR name: ARRAY 256 OF CHAR;
 			BEGIN
+				IF variable.externalName # NIL THEN RETURN END;
 				IF indirect THEN w.Char(rfIndirect) ELSE w.Char(rfDirect) END;
 				variable.GetName(name);
 				Type(variable.type);

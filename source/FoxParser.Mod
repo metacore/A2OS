@@ -31,7 +31,7 @@ CONST
 
 		VariableDeclaration  = VariableNameList ':' Type.
 
-		ProcedureDeclaration = 'procedure' ['&'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
+		ProcedureDeclaration = 'procedure' ['&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
 		                       DeclarationSequence  [Body] 'end' Identifier.
 
 		(nopov)
@@ -1622,6 +1622,9 @@ TYPE
 			END;
 			IF Optional( Scanner.Colon ) THEN
 				position:= symbol.start;
+				IF Optional( Scanner.LeftBrace) THEN
+					procedureType.SetReturnTypeModifiers(Flags());
+				END;
 				type := Type(SyntaxTree.invalidIdentifier,parentScope);
 				(* formally, any type is permitted as return type. Actually some of them might simply not be usable *)
 				procedureType.SetReturnType(type);
@@ -1722,7 +1725,7 @@ TYPE
 			recentCommentItem := symbol
 		END CommentWithPart;
 
-		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
+		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
 			                       DeclarationSequence  [Body] 'end' Identifier.
 			Forward declarations ignored.
 		**)
@@ -1734,29 +1737,29 @@ TYPE
 			access: SET;
 			position: LONGINT;
 			isConstructor: BOOLEAN;
+			isFinalizer: BOOLEAN;
 			isInline: BOOLEAN;
 			modifiers: SyntaxTree.Modifier;
 			forwardDeclaration: BOOLEAN;
+			string: Scanner.StringType;
 		BEGIN
 			IF Trace THEN S( "Procedure" ) END;
 			(* symbol procedure has already been consumed *)
 
 			modifiers := NIL;
-			isConstructor := FALSE; isInline := FALSE;
+			isConstructor := FALSE; isFinalizer := FALSE; isInline := FALSE;
 
 			procedureType := SyntaxTree.NewProcedureType(symbol.start, parentScope);
-			isConstructor := FALSE; isInline := FALSE;
 
 			IF Optional( Scanner.Arrow) THEN (* ignore forward declarations *)
 				forwardDeclaration := TRUE;
-				(*
-				diagnostics.Warning(scanner.source^, position, Diagnostics.Invalid,"Unsupported forward declaration. No semantic rules checked.");
-				*)
 			ELSE forwardDeclaration := FALSE;
 			END;
 
 			IF Optional( Scanner.And ) THEN  (* constructor *)
 				isConstructor := TRUE
+			ELSIF Optional( Scanner.Not ) THEN  (* finalizer *)
+				isFinalizer := TRUE
 			ELSIF Optional( Scanner.Minus ) THEN  (* inline *)
 				isInline := TRUE;
 			ELSIF Optional( Scanner.LeftBrace) THEN
@@ -1776,14 +1779,17 @@ TYPE
 			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 			procedure := SyntaxTree.NewProcedure( position, name, procedureScope);
 			procedure.SetConstructor(isConstructor);
+			procedure.SetFinalizer(isFinalizer);
 			procedure.SetInline(isInline);
 			CommentSymbol(procedure);
 			procedure.SetAccess(access);
 
 			procedureType.SetModifiers(modifiers);
 			procedure.SetType(procedureType);
+			IF Optional(Scanner.Extern) & MandatoryString(string) THEN procedure.SetExternalName(string); END;
 			IF Optional(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope) END;
-			IF ~forwardDeclaration THEN
+
+			IF (procedure.externalName = NIL) & ~forwardDeclaration THEN
 				IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
 				DeclarationSequence( procedureScope);
 				IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
@@ -1869,7 +1875,7 @@ TYPE
 
 		(** VariableNameList = IdentifierDefinition [Flags] {',' IdentifierDefinition [Flags]}.**)
 		PROCEDURE VariableNameList( scope: SyntaxTree.Scope );
-		VAR varname: SyntaxTree.Identifier;  position: LONGINT; variable: SyntaxTree.Variable;  flags,access: SET;
+		VAR varname: SyntaxTree.Identifier;  position: LONGINT; variable: SyntaxTree.Variable;  flags,access: SET; string: Scanner.StringType;
 		BEGIN
 			IF Trace THEN S( "VariableNameList" ) END;
 			REPEAT
@@ -1879,7 +1885,8 @@ TYPE
 				variable := SyntaxTree.NewVariable( position, varname );
 				CommentSymbol(variable);
 				IF Optional(Scanner.LeftBrace) THEN variable.SetModifiers(Flags()) END;
-				IF Optional(Scanner.Becomes) THEN variable.SetInitializer (Expression()) END;
+				IF Optional(Scanner.Becomes) THEN variable.SetInitializer (Expression());
+				ELSIF Optional(Scanner.Extern) & MandatoryString(string) THEN variable.SetExternalName(string); END;
 				variable.SetAccess(access);
 				scope.AddVariable(variable);
 			UNTIL ~Optional( Scanner.Comma );

@@ -2,12 +2,13 @@ MODULE FoxGlobal; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler Globally Defin
 (* (c) fof ETH Zürich, 2008 *)
 
 IMPORT
-	SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Runtime, D:= Debugging;
+	SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Dates, D:= Debugging;
 
 CONST
 	(* system flag names *)
 	StringWinAPI* = "WINAPI";
 	StringC* = "C";
+	StringMovable*="MOVABLE";
 	StringUntraced* = "UNTRACED";
 	StringDelegate* = "DELEGATE";
 	StringInterrupt*= "INTERRUPT";
@@ -23,8 +24,10 @@ CONST
 	StringRegister*= "REGISTER";
 	StringNoReturn*="NORETURN";
 	StringUnsafe*="UNSAFE";
+	StringPlain*="PLAIN";
 	StringDisposable*="DISPOSABLE";
 	StringUnchecked*="UNCHECKED";
+	StringUncooperative*="UNCOOPERATIVE";
 
 	(* block modifier flag names *)
 	StringExclusive* = "EXCLUSIVE";
@@ -69,7 +72,7 @@ CONST
 	(* FoxProgTools.Enum -e -i
 		(* global proper procedures *)
 		Assert  Copy  Dec  Excl  Halt  Inc  Incl  New Dispose GetProcedure Connect Delegate
-		Read Write Reshape
+		Read Write Reshape Wait
 		(* global functions *)
 		Abs   Cap  Chr  Chr32 Entier  EntierH  Incr Len  Long  Max  Min Odd  Ord  Ord32 Short  Size
 		Sum Dim Cas First Last Step Re Im Ash Lsh Rot
@@ -77,9 +80,11 @@ CONST
 		systemGet  systemPut  systemMove  systemNew systemRef
 		systemTypeCode systemHalt
 		systemPut8 systemPut16 systemPut32 systemPut64 systemTrace
+		systemSetStackPointer systemSetFramePointer systemSetActivity
 		(* system functions *)
 		systemAdr  systemSize systemBit  systemGet64  systemGet32  systemGet16  systemGet8
 		systemVal systemMsk
+		systemGetStackPointer systemGetFramePointer systemGetActivity
 
 		(* for active cells *)
 		Send Receive
@@ -90,41 +95,24 @@ CONST
 
 		Conversion
 		DotTimesPlus AtMulDec AtMulInc DecMul IncMul
-		end
+		endFox
 		~
 	*)
 
-(* global proper procedures *)
-Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; 
-Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; 
-Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; 
-Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1;
-(* global functions *)
-Abs*= Reshape+1; Cap*= Abs+1; Chr*= Cap+1; Chr32*= Chr+1; 
-Entier*= Chr32+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; 
-Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; 
-Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; 
-Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; 
-Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1;
-(* system proper procedures *)
-systemGet*= Rot+1; systemPut*= systemGet+1; systemMove*= systemPut+1; 
-systemNew*= systemMove+1; systemRef*= systemNew+1; 
-systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; 
-systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; 
-systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1;
-(* system functions *)
-systemAdr*= systemTrace+1; systemSize*= systemAdr+1; systemBit*= systemSize+1; 
-systemGet64*= systemBit+1; systemGet32*= systemGet64+1; systemGet16*= systemGet32+1; 
-systemGet8*= systemGet16+1; systemVal*= systemGet8+1; systemMsk*= systemVal+1;
-(* for active cells *)
-Send*= systemMsk+1; Receive*= Send+1;
-(* for backend specific extensions *)
-systemSpecial*= Receive+1;
-(* compatibility with Oberon07 -- other mappings: LSL -> LSH, FLOOR -> Entier, Pack und Unpk currently unsupported *)
-Asr*= systemSpecial+1; Ror*= Asr+1; Flt*= Ror+1; Conversion*= Flt+1; 
-DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; 
-AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; 
-endFox*= IncMul+1;
+	(* global proper procedures *)
+	Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1; Wait*= Reshape+1; 
+	(* global functions *)
+	Abs*= Wait+1; Cap*= Abs+1; Chr*= Cap+1; Chr32*= Chr+1; Entier*= Chr32+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1; 
+	(* system proper procedures *)
+	systemGet*= Rot+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1; 
+	(* system functions *)
+	systemAdr*= systemSetActivity+1; systemSize*= systemAdr+1; systemBit*= systemSize+1; systemGet64*= systemBit+1; systemGet32*= systemGet64+1; systemGet16*= systemGet32+1; systemGet8*= systemGet16+1; systemVal*= systemGet8+1; systemMsk*= systemVal+1; systemGetStackPointer*= systemMsk+1; systemGetFramePointer*= systemGetStackPointer+1; systemGetActivity*= systemGetFramePointer+1; 
+	(* for active cells *)
+	Send*= systemGetActivity+1; Receive*= Send+1; 
+	(* for backend specific extensions *)
+	systemSpecial*= Receive+1; 
+	(* compatibility with Oberon07 -- other mappings: LSL -> LSH, FLOOR -> Entier, Pack und Unpk currently unsupported *)
+	Asr*= systemSpecial+1; Ror*= Asr+1; Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; endFox*= IncMul+1; 
 
 	VectorCapability* = 0;
 	FloatingPointCapability*= 1;
@@ -192,10 +180,10 @@ VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,OberonName-,ArrayBaseName-,RecordBodyName-,ModuleBodyName-,
-	NameWinAPI-,NameC-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameAligned-,NameStackAligned-,
+	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
-	NameFrequencyDivider-, NameRegister-,NameNoReturn-,NameUnsafe-,NameDisposable-,NameUnchecked-: SyntaxTree.Identifier;
+	NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
 
@@ -250,7 +238,7 @@ TYPE
 
 		CanPassInRegister-: PassInRegisterProc;
 
-		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, registerParameters: LONGINT);
+		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, registerParameters: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
 		BEGIN
 			ASSERT(dataUnit > 0);
@@ -267,6 +255,7 @@ TYPE
 			SELF.parameterAlignment.max := maxParAlign;
 			SELF.offsetFirstParameter := offsetFirstPar;
 			SELF.registerParameters := registerParameters;
+			IF cooperative THEN INC(SELF.offsetFirstParameter,addressSize) END;
 			activeCellsCapabilities := NIL;
 			BuildScopes(SELF);
 			FOR i := 0 TO LEN(operatorDefined)-1 DO
@@ -342,18 +331,20 @@ TYPE
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
-					size := SizeOf(variable.type.resolved);
-					IF size < 0 THEN RETURN FALSE END;
-					DEC(offset,size);
+					IF variable.externalName = NIL THEN
+						size := SizeOf(variable.type.resolved);
+						IF size < 0 THEN RETURN FALSE END;
+						DEC(offset,size);
 
-					IF variable.alignment > 0 THEN
-						Basic.Align(offset, -variable.alignment*dataUnit);
-					ELSE
-						alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolved);
-						Basic.Align(offset,-alignment);
+						IF variable.alignment > 0 THEN
+							Basic.Align(offset, -variable.alignment*dataUnit);
+						ELSE
+							alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolved);
+							Basic.Align(offset,-alignment);
+						END;
+
+						variable.SetOffset(offset);
 					END;
-
-					variable.SetOffset(offset);
 					variable := variable.nextVariable;
 				END;
 			END;
@@ -602,6 +593,7 @@ TYPE
 	END BuildScopes;
 
 	PROCEDURE SetDefaultDeclarations*(system: System; minBits: LONGINT);
+	VAR now: Dates.DateTime; date, time: ARRAY 20 OF CHAR;
 	BEGIN
 		(* types *)
 		system.longintType := SyntaxTree.NewIntegerType(32, TRUE);
@@ -692,6 +684,17 @@ TYPE
 		NewBuiltin(systemMsk,"MSK",system.systemScope,TRUE);
 		NewBuiltin(systemBit,"BIT",system.systemScope,TRUE);
 
+		now := Dates.Now ();
+		Strings.FormatDateTime ("hh:nn:ss", now, time);
+		Strings.FormatDateTime ("mmm dd yyyy", now, date);
+		NewStringConstantCamelCase("Time", Strings.NewString (time), system.characterType, system.systemScope);
+		NewStringConstantCamelCase("Date", Strings.NewString (date), system.characterType, system.systemScope);
+		NewBuiltinCamelCase(systemGetStackPointer,"GetStackPointer",system.systemScope,TRUE);
+		NewBuiltinCamelCase(systemSetStackPointer,"SetStackPointer",system.systemScope,TRUE);
+		NewBuiltinCamelCase(systemGetFramePointer,"GetFramePointer",system.systemScope,TRUE);
+		NewBuiltinCamelCase(systemSetFramePointer,"SetFramePointer",system.systemScope,TRUE);
+		NewBuiltinCamelCase(systemGetActivity,"GetActivity",system.systemScope,TRUE);
+		NewBuiltinCamelCase(systemSetActivity,"SetActivity",system.systemScope,TRUE);
 
 		(* Set up system types *)
 		DeclareType(system.characterType,"CHAR",system.globalScope);
@@ -776,6 +779,7 @@ TYPE
 		NewBuiltin(GetProcedure,"GETPROCEDURE",system.globalScope,TRUE);
 		NewBuiltin(systemTrace,"TRACE",system.globalScope,TRUE);
 		NewBuiltin(Reshape,"RESHAPE",system.globalScope,TRUE);
+		NewBuiltin(Wait,"WAIT",system.globalScope,FALSE);
 
 		(*!
 
@@ -867,7 +871,7 @@ TYPE
 	PROCEDURE DefaultSystem*(): System;
 	VAR system: System;
 	BEGIN
-		NEW(system,8,8,32, 8,32,32,32,64,0);
+		NEW(system,8,8,32, 8,32,32,32,64,0,FALSE);
 		SetDefaultDeclarations(system,8);
 		SetDefaultOperators(system);
 		RETURN system
@@ -948,6 +952,36 @@ TYPE
 		NewConstant0(nameL,int,type,scope[Scanner.Lowercase]);
 	END NewConstant;
 
+	PROCEDURE NewStringConstant0(CONST name: ARRAY OF CHAR; string: SyntaxTree.String; baseType: SyntaxTree.Type; in: SyntaxTree.Scope);
+	VAR constant: SyntaxTree.Constant; value: SyntaxTree.StringValue;duplicate: BOOLEAN;
+	BEGIN
+		value := SyntaxTree.NewStringValue(-1,string);
+		value.SetType(SyntaxTree.NewStringType(-1,baseType,value.length));
+		constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
+		constant.SetValue(value);
+		constant.SetType(value.type);
+		constant.SetAccess(SyntaxTree.ReadOnly);
+		constant.SetState(SyntaxTree.Resolved);
+		in.AddConstant(constant);
+		in.EnterSymbol(constant,duplicate);
+		ASSERT(~duplicate);
+	END NewStringConstant0;
+
+	PROCEDURE NewStringConstant*(CONST name: ARRAY OF CHAR; string: SyntaxTree.String; type: SyntaxTree.Type; CONST scope: ARRAY OF SyntaxTree.ModuleScope);
+	VAR nameL,nameU: Scanner.IdentifierString;
+	BEGIN
+		Basic.Lowercase(name,nameL);
+		Basic.Uppercase(name,nameU);
+		NewStringConstant0(nameU,string,type,scope[Scanner.Uppercase]);
+		NewStringConstant0(nameL,string,type,scope[Scanner.Lowercase]);
+	END NewStringConstant;
+
+	PROCEDURE NewStringConstantCamelCase*(CONST name: ARRAY OF CHAR; string: SyntaxTree.String; type: SyntaxTree.Type; CONST scope: ARRAY OF SyntaxTree.ModuleScope);
+	BEGIN
+		NewStringConstant0(name,string,type,scope[Scanner.Uppercase]);
+		NewStringConstant0(name,string,type,scope[Scanner.Lowercase]);
+	END NewStringConstantCamelCase;
+
 	PROCEDURE NewBuiltin0( id: LONGINT; CONST name: ARRAY OF CHAR; in:  SyntaxTree.ModuleScope; realtime: BOOLEAN);
 	VAR basic: SyntaxTree.Builtin; duplicate: BOOLEAN; type: SyntaxTree.ProcedureType;
 	BEGIN
@@ -971,6 +1005,12 @@ TYPE
 		NewBuiltin0(id,nameU,scope[Scanner.Uppercase],realtime);
 		NewBuiltin0(id,nameL,scope[Scanner.Lowercase],realtime);
 	END NewBuiltin;
+
+	PROCEDURE NewBuiltinCamelCase*(id: LONGINT; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN);
+	BEGIN
+		NewBuiltin0(id,name,scope[Scanner.Uppercase],realtime);
+		NewBuiltin0(id,name,scope[Scanner.Lowercase],realtime);
+	END NewBuiltinCamelCase;
 
 	PROCEDURE NewCustomBuiltin0(CONST name: ARRAY OF CHAR; scope: SyntaxTree.ModuleScope; subType: SHORTINT; procedureType: SyntaxTree.ProcedureType);
 	VAR
@@ -1219,35 +1259,25 @@ TYPE
 	END Level;
 
 	PROCEDURE ConvertSigned*(this: HUGEINT; bits: LONGINT): HUGEINT;
-	VAR h: HUGEINT;
 	BEGIN
 		bits := 64-bits;
-		h :=Runtime.AslH(this,bits);
-		h := Runtime.AsrH(h,bits);
-		RETURN h
+		RETURN ASH (ASH (this, bits), -bits);
 	END ConvertSigned;
 
 	PROCEDURE ConvertUnsigned*(this: HUGEINT; bits: LONGINT): HUGEINT;
-	VAR h: HUGEINT;
 	BEGIN
 		bits := 64-bits;
-		h := Runtime.LslH(this,bits);
-		h := Runtime.LsrH(h,bits);
-		RETURN h;
+		RETURN LSH (LSH (this, bits), -bits);
 	END ConvertUnsigned;
 
 	PROCEDURE MaxInteger*(system: System; type: SyntaxTree.BasicType): HUGEINT;
-	VAR h: HUGEINT;
 	BEGIN
-		h := Runtime.AslH(1,system.SizeOf(type)-1);
-		RETURN h-1
+		RETURN ASH (HUGEINT(1), system.SizeOf (type) - 1) - 1;
 	END MaxInteger;
 
 	PROCEDURE MinInteger*(system: System; type: SyntaxTree.BasicType): HUGEINT;
-	VAR h: HUGEINT;
 	BEGIN
-		h := Runtime.AslH(1,system.SizeOf(type)-1);
-		RETURN -h
+		RETURN -ASH (HUGEINT(1), system.SizeOf (type) - 1);
 	END MinInteger;
 
 	(*! make architecture  independent ! *)
@@ -1264,14 +1294,14 @@ TYPE
 	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
 	VAR m: HUGEINT;
 	BEGIN
-		m := Runtime.AslH(1,sizeInBits);
+		m := ASH(HUGEINT(1),sizeInBits);
 		RETURN (this >= 0) & (this < m)
 	END IsUnsignedInteger;
 
 	PROCEDURE IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
 	VAR m: HUGEINT;
 	BEGIN
-			m := Runtime.AslH(1,sizeInBits-1);
+			m := ASH(HUGEINT(1),sizeInBits-1);
 			RETURN (this < m) & (-this <= m)
 	END IsSignedInteger;
 
@@ -1515,6 +1545,7 @@ TYPE
 
 		NameWinAPI := SyntaxTree.NewIdentifier(StringWinAPI);
 		NameC := SyntaxTree.NewIdentifier(StringC);
+		NameMovable := SyntaxTree.NewIdentifier(StringMovable);
 		NameUntraced := SyntaxTree.NewIdentifier(StringUntraced);
 		NameDelegate := SyntaxTree.NewIdentifier(StringDelegate);
 		NameInterrupt := SyntaxTree.NewIdentifier(StringInterrupt);
@@ -1548,9 +1579,11 @@ TYPE
 		NameFrequencyDivider := SyntaxTree.NewIdentifier(StringFrequencyDivider);
 		NameRegister := SyntaxTree.NewIdentifier(StringRegister);
 		NameNoReturn := SyntaxTree.NewIdentifier(StringNoReturn);
+		NamePlain := SyntaxTree.NewIdentifier(StringPlain);
 		NameUnsafe := SyntaxTree.NewIdentifier(StringUnsafe);
 		NameDisposable := SyntaxTree.NewIdentifier(StringDisposable);
 		NameUnchecked := SyntaxTree.NewIdentifier(StringUnchecked);
+		NameUncooperative := SyntaxTree.NewIdentifier(StringUncooperative);
 
 		(* types *)
 		Boolean8 := SyntaxTree.NewBooleanType(8);

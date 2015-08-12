@@ -10,29 +10,29 @@ VAR
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
 PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
-BEGIN INC (len, ofs); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
+BEGIN {UNCOOPERATIVE, UNCHECKED} INC (len, ofs); ASSERT (len <= LEN (buf)); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
 END Send;
 
 (** Skip to the next line on trace output. *)
 PROCEDURE Ln*;
-BEGIN Char (0DX); Char (0AX);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Char (0DX); Char (0AX);
 END Ln;
 
 (** Write a string to the trace output. *)
 PROCEDURE String* (CONST s: ARRAY OF CHAR);
-VAR i: LONGINT;
-BEGIN i := 0; WHILE (i< LEN(s)) & (s[i] # 0X) DO Char (s[i]); INC (i) END;
+VAR i: LONGINT; c: CHAR;
+BEGIN {UNCOOPERATIVE, UNCHECKED} FOR i := 0 TO LEN (s) - 1 DO c := s[i]; IF c = 0X THEN RETURN END; Char (c) END;
 END String;
 
 (** Write a string to the trace output and skip to next line. *)
 PROCEDURE StringLn* (CONST s: ARRAY OF CHAR);
-BEGIN String (s); Ln;
+BEGIN {UNCOOPERATIVE, UNCHECKED} String (s); Ln;
 END StringLn;
 
 (** Write a character. *)
 PROCEDURE Int* (x: HUGEINT; w: LONGINT);
 VAR i: SIZE; x0: HUGEINT; a: ARRAY 21 OF CHAR;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF x < 0 THEN
 		IF x = MIN (HUGEINT) THEN
 			DEC (w, 20);
@@ -55,14 +55,14 @@ BEGIN
 END Int;
 
 PROCEDURE Boolean* (x : BOOLEAN);
-BEGIN IF x THEN String ("TRUE") ELSE String ("FALSE") END
+BEGIN {UNCOOPERATIVE, UNCHECKED} IF x THEN String ("TRUE") ELSE String ("FALSE") END
 END Boolean;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
 PROCEDURE IntSuffix* (x, w: LONGINT; CONST suffix: ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF x MOD K # 0 THEN
 		Int (x, w)
 	ELSE
@@ -84,7 +84,7 @@ VAR i: LONGINT;
 	buf: ARRAY 2*SIZEOF(HUGEINT)+2 OF CHAR;
 	neg: BOOLEAN;
 	c: HUGEINT;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF w >= 0 THEN
 		i:= 0;
 		IF x < 0 THEN neg := TRUE; x :=-x ELSIF x=0 THEN buf := "0" ELSE neg := FALSE END;
@@ -118,19 +118,19 @@ END Hex;
 
 (** Write "x" as a hexadecimal address *)
 PROCEDURE Address* (x: ADDRESS);
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Hex(x,-2*SIZEOF(ADDRESS));
 END Address;
 
 (** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
 PROCEDURE HIntHex* (x: HUGEINT; w: LONGINT);
-BEGIN Hex (x, w);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Hex (x, w);
 END HIntHex;
 
 (** Write a block of memory in hex. *)
 PROCEDURE Memory* (adr: ADDRESS; size: SIZE);
 VAR i, j: ADDRESS; ch: CHAR;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	size := adr+size-1;
 	FOR i := adr TO size BY 16 DO
 		Address (i); Char (' ');
@@ -141,9 +141,11 @@ BEGIN
 				Hex (ORD (ch), -2)
 			ELSE
 				Char (' ');
+				Char (' ');
+				Char (' ');
 			END
 		END;
-		Char (' ');
+		Char (' '); Char (' ');
 		FOR j := i TO i+15 DO
 			IF j <= size THEN
 				SYSTEM.GET (j, ch);
@@ -155,14 +157,38 @@ BEGIN
 	END;
 END Memory;
 
+(* Write basic stack frame information *)
+PROCEDURE StackFrames- (skip, count, size: SIZE);
+VAR frame {UNTRACED}: POINTER {UNSAFE} TO RECORD descriptor, previous, caller, parameters: ADDRESS END;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	frame := ADDRESS OF frame + SIZE OF ADDRESS;
+	WHILE skip # 0 DO
+		frame := frame.previous;
+		IF frame = NIL THEN RETURN END;
+		DEC (skip);
+	END;
+	WHILE count # 0 DO
+		Address (frame.caller); Char (':'); Ln;
+		IF frame.previous = NIL THEN RETURN END;
+		IF frame.previous - ADDRESS OF frame.descriptor <= size THEN
+			Memory (ADDRESS OF frame.parameters, frame.previous - ADDRESS OF frame.descriptor);
+		ELSIF size # 0 THEN
+			Memory (ADDRESS OF frame.parameters, size); String ("..."); Ln;
+		END;
+		DEC (count); frame := frame.previous;
+	END;
+	WHILE frame.previous # NIL DO INC (count); frame := frame.previous END;
+	IF count # 0 THEN Char ('+'); Int (count, 0); Ln; END;
+END StackFrames;
+
 (** Write a buffer in hex. *)
 PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
-BEGIN Memory (ADDRESSOF (buf[ofs]), len)
+BEGIN {UNCOOPERATIVE, UNCHECKED} Memory (ADDRESSOF (buf[ofs]), len)
 END Buffer;
 
 (** Write bits (ofs..ofs+n-1) of x in binary. *)
 PROCEDURE Bits* (x: SET; ofs, n: LONGINT);
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	REPEAT
 		DEC (n);
 		IF (ofs+n) IN x THEN Char ('1') ELSE Char ('0') END
@@ -186,36 +212,35 @@ END Set;
 
 (** Colors *)
 PROCEDURE Blue*;
-BEGIN Color (9);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Color (9);
 END Blue;
 
 PROCEDURE Green*;
-BEGIN Color (10);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Color (10);
 END Green;
 
 PROCEDURE Red*;
-BEGIN Color (12);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Color (12);
 END Red;
 
 PROCEDURE Yellow*;
-BEGIN Color (14);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Color (14);
 END Yellow;
 
 PROCEDURE Default*;
-BEGIN Color (7);
+BEGIN {UNCOOPERATIVE, UNCHECKED} Color (7);
 END Default;
 
-
 PROCEDURE NullChar(c: CHAR);
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 END NullChar;
 
 PROCEDURE NullColor(c: SHORTINT);
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 END NullColor;
 
 PROCEDURE Init*;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Char := NullChar;
 	Color := NullColor;	
 END Init;

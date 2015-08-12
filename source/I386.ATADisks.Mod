@@ -814,7 +814,6 @@ TYPE
 			IF res # Res_OK THEN
 				(* Most likely, there is no device .... Show("Could not select device"); KernelLog.Ln; *)
 			END;
-
 			(* Check if registers are valid. FAST DETECTION  *)
 			Machine.Portout8(cmdbase+Ofs_CountLow, 055X);
 			NanoDelay(400);
@@ -1596,7 +1595,6 @@ TYPE
 			command.size := LEN(buf);
 			command.packet[4] := CHR(LEN(buf));
 			res := controller.ExecuteCommand(command, ATAPITimeout, status);
-
 			IF TraceVerbose & (trace * (TraceErrors + TraceSense) # {}) & (res # Res_OK) THEN
 				Show(name); KernelLog.String(" request sense failed"); KernelLog.Ln;
 			END;
@@ -1912,31 +1910,35 @@ VAR
 
 (* Block port input instruction. *)
 
-PROCEDURE -RepInWord(port, bufAdr: ADDRESS; len: SIZE);
+PROCEDURE RepInWord(port, bufAdr: ADDRESS; len: SIZE);
 CODE {SYSTEM.i386}
-	POP ECX
-	POP EDI
-	POP EDX
+	PUSH	ECX
+	MOV	EDX, [EBP + port]
+	MOV	EDI, [EBP + bufAdr]
+	MOV	ECX, [EBP + len]
 	CLD
-	REP INSW
+	REP	INSW
+	POP	ECX
 END RepInWord;
 
 (* Block port out instruction. *)
 
-PROCEDURE -RepOutWord(port, bufAdr: ADDRESS; len: SIZE);
+PROCEDURE RepOutWord(port, bufAdr: ADDRESS; len: SIZE);
 CODE {SYSTEM.i386}
-	POP ECX
-	POP ESI
-	POP EDX
+	PUSH	ECX
+	MOV	EDX, [EBP + port]
+	MOV	ESI, [EBP + bufAdr]
+	MOV	ECX, [EBP + len]
 	CLD
-	REP OUTSW
+	REP	OUTSW
+	POP	ECX
 END RepOutWord;
 
 PROCEDURE ResetCommand(cmd: Command; size: SIZE);
 BEGIN
 	ASSERT(cmd # NIL);
 	ASSERT(size MOD 4 = 0);
-	Machine.Fill32(SYSTEM.VAL(ADDRESS, cmd), size, 0);
+	Machine.Fill32(ADDRESS OF cmd.dev, size, 0);
 END ResetCommand;
 
 PROCEDURE GetPhysAdr(bufAdr: ADDRESS; size: LONGINT; VAR physAdr: ADDRESS): BOOLEAN;

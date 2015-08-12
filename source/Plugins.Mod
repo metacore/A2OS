@@ -28,7 +28,7 @@ TYPE
 
 		(** Set the name field.  Must be called before adding the plugin to a registry. *)
 
-		PROCEDURE SetName*(name: ARRAY OF CHAR);
+		PROCEDURE SetName*(CONST name: ARRAY OF CHAR);
 		BEGIN
 			ASSERT(registry = NIL);	(* can not be set after registering *)
 			COPY(name, SELF.name)
@@ -60,7 +60,7 @@ TYPE
 
 		(** Get a specific plugin.  If name = "", get the first existing plugin.  Return NIL if it was not found. *)
 
-		PROCEDURE Get*(name: ARRAY OF CHAR): Plugin;
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR): Plugin;
 		VAR p: Plugin;
 		BEGIN {EXCLUSIVE}
 			p := root;
@@ -72,7 +72,7 @@ TYPE
 
 		(** Like Get, but wait until the plugin is available. *)
 
-		PROCEDURE Await*(name: ARRAY OF CHAR): Plugin;
+		PROCEDURE Await*(CONST name: ARRAY OF CHAR): Plugin;
 		VAR p: Plugin; num: LONGINT;
 		BEGIN {EXCLUSIVE}
 			LOOP
@@ -212,7 +212,7 @@ TYPE
 
 		(** Initialize the registry *)
 
-		PROCEDURE &Init*(name, desc: ARRAY OF CHAR);
+		PROCEDURE &Init*(CONST name, desc: ARRAY OF CHAR);
 		VAR res: LONGINT;
 		BEGIN
 			root := NIL;

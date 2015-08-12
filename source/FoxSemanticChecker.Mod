@@ -76,6 +76,7 @@ TYPE
 		module: SyntaxTree.Module;
 		diagnostics: Diagnostics.Diagnostics;
 		useDarwinCCalls: BOOLEAN;
+		cooperative: BOOLEAN;
 		error-: BOOLEAN;
 		VerboseErrorMessage: BOOLEAN;
 		typeFixes, pointerFixes: LateFixList;
@@ -105,10 +106,11 @@ TYPE
 		activeCellsSpecification: ActiveCells.Specification;
 		replacements*: Replacement;
 
-		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope);
+		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope);
 		BEGIN
 			SELF.diagnostics := diagnostics;
 			SELF.useDarwinCCalls := useDarwinCCalls;
+			SELF.cooperative := cooperative;
 			SELF.system := system;
 			SELF.symbolFileFormat := symbolFileFormat;
 			SELF.activeCellsSpecification := activeCellsSpecification;
@@ -676,6 +678,7 @@ TYPE
 			IF TypeNeedsResolution(x) THEN
 				modifiers := x.modifiers;
 				x.SetRealtime(HasFlag(modifiers,Global.NameRealtime, position));
+				x.SetPlain(HasFlag(modifiers,Global.NamePlain,position));
 				x.SetDisposable(HasFlag(modifiers,Global.NameDisposable, position));
 				x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
 				(* inheritance cycle check
@@ -735,6 +738,7 @@ TYPE
 					parameter := SyntaxTree.NewParameter(procedureType.position,procedureType,Global.ResultName, SyntaxTree.VarParameter);
 					parameter.SetType(procedureType.returnType);
 					parameter.SetAccess(SyntaxTree.Hidden);
+					parameter.SetUntraced(procedureType.hasUntracedReturn);
 					VisitParameter(parameter);
 					procedureType.SetReturnParameter(parameter); (* return parameter serves as a cache only *)
 				END;
@@ -832,6 +836,11 @@ TYPE
 				IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
 				IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
 				CheckModifiers(modifiers, TRUE);
+				
+				modifiers := procedureType.returnTypeModifiers;
+				procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
+				CheckModifiers(modifiers, TRUE);
+				
 				typeFixes.Add(procedureType,currentScope);
 				procedureType.SetHasPointers(procedureType.isDelegate);
 				procedureType.SetState(SyntaxTree.Resolved);
@@ -879,6 +888,7 @@ TYPE
 						ELSIF resolved IS SyntaxTree.ObjectType THEN (* the type denoted by the <<OBJECT>> alone *)
 							baseType := NIL
 						ELSIF IsPointerToRecord(resolved,recordType) THEN
+							IF ~recordType.isObject THEN Warning(position, "deprecated extension of record to object"); END; 
 						ELSIF resolved IS SyntaxTree.MathArrayType THEN
 						ELSE
 							Error(position, Diagnostics.Invalid,"object does not extend pointer to record, object or math array ")
@@ -928,12 +938,11 @@ TYPE
 				END;
 
 				isRealtime := TRUE;
-				hasPointers := FALSE;
 				symbol := x.recordScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
 				WHILE symbol # NIL DO
 					IF symbol IS SyntaxTree.Variable THEN
 						isRealtime := isRealtime & symbol.type.resolved.isRealtime;
-						hasPointers := hasPointers OR symbol.type.resolved.hasPointers;
+						hasPointers := hasPointers OR symbol.type.resolved.hasPointers & ~symbol(SyntaxTree.Variable).untraced;
 					END;
 					IF symbol IS SyntaxTree.Procedure THEN
 						procedure := symbol(SyntaxTree.Procedure);
@@ -2207,7 +2216,7 @@ TYPE
 					int := Global.ConvertSigned(int,system.SizeOf(type));
 					result := SyntaxTree.NewIntegerValue(position,int);
 					result.SetType(type);
-				ELSIF (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.PointerType) & type(SyntaxTree.PointerType).isUnsafe THEN
+				ELSIF (type IS SyntaxTree.AddressType) OR IsUnsafePointer(type) THEN
 					int := Global.ConvertUnsigned(int,system.SizeOf(type));
 					result := SyntaxTree.NewIntegerValue(position,int);
 					result.SetType(type);
@@ -2318,7 +2327,12 @@ TYPE
 					result := SyntaxTree.invalidExpression;
 				END;
 			ELSIF expression IS SyntaxTree.NilValue THEN
-				result := expression;
+				IF type IS SyntaxTree.AddressType THEN
+					result := SyntaxTree.NewIntegerValue(position,0);
+					result.SetType(type);
+				ELSE
+					result := expression;
+				END;
 				(* nothing to be done *)
 			ELSIF expression IS SyntaxTree.MathArrayValue THEN
 				result := MathArrayConversion(position, expression,type);
@@ -4500,7 +4514,7 @@ TYPE
 		BEGIN
 			result := FALSE; type := x.type.resolved;
 			IF x = SyntaxTree.invalidExpression THEN
-			ELSIF  ~(type IS SyntaxTree.AddressType) & ~(type IS SyntaxTree.SizeType) & ~( (type IS SyntaxTree.IntegerType) & (type.sizeInBits <= system.addressType.sizeInBits)) & ~IsAddressValue(x) THEN
+			ELSIF  ~(type IS SyntaxTree.AddressType) & ~(type IS SyntaxTree.NilType) & ~(type IS SyntaxTree.SizeType) & ~( (type IS SyntaxTree.IntegerType) & (type.sizeInBits <= system.addressType.sizeInBits)) & ~IsAddressValue(x) & ~IsUnsafePointer(type) THEN
 				TRACE(type.sizeInBits);
 				TRACE(system.addressType.sizeInBits);
 				Error(x.position,Diagnostics.Invalid,"is no address type");
@@ -4520,6 +4534,18 @@ TYPE
 			END;
 			RETURN result
 		END CheckSizeType;
+
+		PROCEDURE CheckObjectType(x: SyntaxTree.Expression): BOOLEAN;
+		VAR result: BOOLEAN; type: SyntaxTree.Type;
+		BEGIN
+			result := FALSE; type := x.type.resolved;
+			IF x = SyntaxTree.invalidExpression THEN
+			ELSIF ~(type IS SyntaxTree.NilType) & ~(type IS SyntaxTree.ObjectType) & (~(type IS SyntaxTree.PointerType) OR ~(type(SyntaxTree.PointerType).pointerBase IS SyntaxTree.RecordType) OR ~type(SyntaxTree.PointerType).pointerBase(SyntaxTree.RecordType).isObject) THEN
+				Error(x.position,Diagnostics.Invalid,"is no object type");
+			ELSE result := TRUE
+			END;
+			RETURN result
+		END CheckObjectType;
 
 		(**
 			if expression x is of integer type then return true else report error and return false
@@ -4752,7 +4778,6 @@ TYPE
 			RETURN result
 		END CheckPortType;
 
-
 		(* move to builtin procedure call statement ?
 			remove builtin procedure call designator ?
 		*)
@@ -4896,6 +4921,10 @@ TYPE
 						(* modified: any integer parameter value is allowed, it is in the responsibility of the programmer to adhere to
 							rules imposed by the architecture / current runtime
 						 *)
+					END;
+				(* ---- WAIT ----- *)
+				ELSIF cooperative & (id = Global.Wait) & CheckArity(1,1) THEN
+					IF CheckObjectType(parameter0) THEN
 					END;
 				(* ---- NEW ----- *)
 				ELSIF (id = Global.New) & CheckArity(1,Infinity) THEN
@@ -5501,6 +5530,33 @@ TYPE
 						actualParameters.SetExpression(0,parameter0);
 					END;
 					type := system.shortintType;
+				(* ---- SYSTEM.GetStackPointer ----- *)
+				ELSIF (id = Global.systemGetStackPointer) & CheckArity(0,0) THEN
+					type := system.addressType;
+				(* ---- SYSTEM.GetFramePointer ----- *)
+				ELSIF (id = Global.systemGetFramePointer) & CheckArity(0,0) THEN
+					type := system.addressType;
+				(* ---- SYSTEM.GetActivity ----- *)
+				ELSIF cooperative & (id = Global.systemGetActivity) & CheckArity(0,0) THEN
+					type := system.objectType;
+				(* ---- SYSTEM.SetStackPointer ----- *)
+				ELSIF (id = Global.systemSetStackPointer) & CheckArity(1,1) THEN
+					IF CheckAddressType(parameter0) THEN
+						parameter0 := NewConversion(0,parameter0,system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter0);
+					END;
+				(* ---- SYSTEM.SetFramePointer ----- *)
+				ELSIF (id = Global.systemSetFramePointer) & CheckArity(1,1) THEN
+					IF CheckAddressType(parameter0) THEN
+						parameter0 := NewConversion(0,parameter0,system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter0);
+					END;
+				(* ---- SYSTEM.SetActivity ----- *)
+				ELSIF cooperative & (id = Global.systemSetActivity) & CheckArity(1,1) THEN
+					IF CheckObjectType(parameter0) THEN
+						parameter0 := NewConversion(0,parameter0,system.addressType,NIL);
+						actualParameters.SetExpression(0,parameter0);
+					END;
 				(* ---- LSH, LSL, ROT, ROR ----- *)
 				ELSIF ((id = Global.Lsh) OR (id = Global.Rot) OR (id= Global.Ror)) & CheckArity(2,2) THEN
 				 	type := type0;
@@ -6010,6 +6066,9 @@ TYPE
 				ELSIF (left.type.resolved # NIL) & (left.type.resolved IS SyntaxTree.ProcedureType) THEN
 					resolvedExpression := NewSupercallDesignator(arrowDesignator.position,left);
 				ELSE
+					IF IsPointerToObject(left.type) THEN
+						Warning(arrowDesignator.position,  "forbidden dereference on object"); 
+					END;
 					resolvedExpression := NewDereferenceDesignator(arrowDesignator.position,left)
 				END
 			END
@@ -6146,7 +6205,7 @@ TYPE
 				scope := scope.outerScope;
 			END;
 			IF (scope # NIL) THEN (* symbol (directly or indirectly) in procedure scope *)
-				IF (symbol.access * SyntaxTree.Public # {}) & (~(symbol IS SyntaxTree.Procedure) OR  ~symbol(SyntaxTree.Procedure).isBodyProcedure & ~symbol(SyntaxTree.Procedure).isConstructor)  THEN
+				IF (symbol.access * SyntaxTree.Public # {}) & (~(symbol IS SyntaxTree.Procedure) OR  ~symbol(SyntaxTree.Procedure).isBodyProcedure & ~symbol(SyntaxTree.Procedure).isConstructor & ~symbol(SyntaxTree.Procedure).isFinalizer)  THEN
 					Error(symbol.position,Diagnostics.Invalid,"cannot be exported");
 					IF VerboseErrorMessage THEN
 						Printout.Info("symbol",symbol);
@@ -6332,10 +6391,11 @@ TYPE
 			- check parameter kind and set read-only flags if appropriate
 		**)
 		PROCEDURE VisitParameter(parameter: SyntaxTree.Parameter);
-		VAR expression: SyntaxTree.Expression;
+		VAR modifiers: SyntaxTree.Modifier; expression: SyntaxTree.Expression; position: LONGINT;
 		BEGIN
 			IF Trace THEN D.Str("VisitParameter "); D.Str0(parameter.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(parameter) THEN
+				modifiers := parameter.modifiers;
 				parameter.SetType(ResolveType(parameter.type));
 				ASSERT(parameter.type.resolved # NIL);
 				CheckSymbolVisibility(parameter);
@@ -6350,6 +6410,24 @@ TYPE
 						END;
 					END;
 				END;
+				IF HasFlag(modifiers, Global.NameUntraced,position) THEN
+					parameter.SetUntraced(TRUE);
+					IF ~ContainsPointer(parameter.type) THEN
+						IF VerboseErrorMessage THEN Printout.Info("parameter",parameter); Printout.Info("parameter.type",parameter.type.resolved); END;
+						Error(position,Diagnostics.Invalid,"untraced flag on non-pointer variable");
+					END;
+				END;
+				IF HasFlag(modifiers, Global.NameMovable,position) THEN
+					parameter.SetMoveable(TRUE);
+					IF ~(parameter.type.resolved IS SyntaxTree.AddressType) THEN
+						IF VerboseErrorMessage THEN Printout.Info("parameter",parameter); Printout.Info("parameter.type",parameter.type.resolved); END;
+						Error(position,Diagnostics.Invalid,"illegal movable flag on non-address variable");
+					ELSIF parameter.kind = SyntaxTree.VarParameter THEN
+						IF VerboseErrorMessage THEN Printout.Info("parameter",parameter); Printout.Info("parameter.type",parameter.type.resolved); END;
+						Error(position,Diagnostics.Invalid,"unnecessary movable flag on variable variable");
+					END;
+				END;
+				CheckModifiers(modifiers, ~InCellNetScope(parameter.scope) OR ~(parameter.type.resolved IS SyntaxTree.CellType));
 				parameter.SetState(SyntaxTree.Resolved);
 			END;
 		END VisitParameter;
@@ -6358,8 +6436,10 @@ TYPE
 			- check the procedure type
 			- check if method (i.e. in record scope), if so then
 				- check if (unique) constructor
+				- check if (unique) finalizer
 				- check if super method available, if so then check signature
 			- of not in record scope then negative check on constructor flag
+			- of not in record scope then negative check on finalizer flag
 			- check declarations (including a delayed implementation check, cf procedure Declarations)
 			- check procedure symbol
 		**)
@@ -6425,6 +6505,13 @@ TYPE
 				END;
 
 				CheckModifiers(modifiers, TRUE);
+				
+				modifiers := procedureType.returnTypeModifiers;
+				procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
+				CheckModifiers(modifiers, TRUE);
+				
+
+				
 				FixProcedureType(procedureType);
 				currentIsRealtime := procedureType.isRealtime;
 				currentIsBodyProcedure := procedure.isBodyProcedure;
@@ -6475,10 +6562,31 @@ TYPE
 							procedure.scope(SyntaxTree.RecordScope).SetConstructor(procedure);
 						END;
 					END;
+					IF procedure.isFinalizer THEN
+						procedure.MarkUsed;
+						IF procedureType.returnType # NIL THEN
+							Error(procedure.position,Diagnostics.Invalid,"finalizer with forbidden return type");
+						END;
+						IF procedureType.numberParameters # 0 THEN
+							Error(procedure.position,Diagnostics.Invalid,"finalizer with formal parameters");
+						END;
+						proc := procedure.scope.firstProcedure;
+						WHILE (proc # NIL) & ((proc = procedure) OR ~(proc.isFinalizer)) DO
+							proc := proc.nextProcedure;
+						END;
+						IF proc # NIL THEN
+							Error(procedure.position,Diagnostics.Invalid,"duplicate finalizer")
+						ELSE
+							procedure.scope(SyntaxTree.RecordScope).SetFinalizer(procedure);
+						END;
+					END;
 					super := FindSuperProcedure(record.recordScope, procedure);
 					IF (super # NIL) & SignatureCompatible(procedure.position,procedureType,super.type.resolved(SyntaxTree.ProcedureType)) THEN
 						IF (super.isConstructor) & ~(procedure.isConstructor) THEN
 							Error(procedure.position,Diagnostics.Invalid,"incompatible signature: non-constructor extends constructor");
+						END;
+						IF (super.isFinalizer) & ~(procedure.isFinalizer) THEN
+							Error(procedure.position,Diagnostics.Invalid,"incompatible signature: non-finalizer extends finalizer");
 						END;
 						IF super.isFinal THEN
 							Error(procedure.position,Diagnostics.Invalid,"forbidden method extending final method");
@@ -7586,6 +7694,12 @@ TYPE
 						Error(position,Diagnostics.Invalid,"duplicate unchecked flag")
 					ELSE
 						block.SetUnchecked(TRUE);
+					END;
+				ELSIF (name=Global.NameUncooperative) THEN
+					IF block.isUncooperative THEN
+						Error(position,Diagnostics.Invalid,"duplicate uncooperative flag")
+					ELSE
+						block.SetUncooperative(TRUE);
 					END;
 				ELSE
 					Error(position,Diagnostics.Invalid,"unknown block modifier");
@@ -8856,6 +8970,17 @@ TYPE
 		RETURN expression.assignable;
 	END IsVariable;
 
+	PROCEDURE IsVariableParameter (symbol: SyntaxTree.Symbol): BOOLEAN;
+	BEGIN 
+		IF (symbol IS SyntaxTree.Parameter) THEN
+			WITH symbol: SyntaxTree.Parameter DO
+				RETURN (symbol.kind = SyntaxTree.VarParameter) OR (symbol.kind = SyntaxTree.ConstParameter) & ((symbol.type.resolved IS SyntaxTree.RecordType) OR (symbol.type.resolved IS SyntaxTree.ArrayType));
+			END;
+		ELSE
+			RETURN FALSE
+		END;
+	END IsVariableParameter;
+
 	PROCEDURE IsPointerType*(type: SyntaxTree.Type): BOOLEAN;
 	VAR result: BOOLEAN;
 	BEGIN
@@ -8866,6 +8991,18 @@ TYPE
 		END;
 		RETURN result
 	END IsPointerType;
+
+	PROCEDURE IsUnsafePointer*(type: SyntaxTree.Type): BOOLEAN;
+	VAR result: BOOLEAN;
+	BEGIN
+		IF type = NIL THEN result := FALSE
+		ELSE
+		type := type.resolved;
+		result :=  (type IS SyntaxTree.PointerType) & type(SyntaxTree.PointerType).isUnsafe;
+		END;
+		RETURN result
+	END IsUnsafePointer;
+	
 
 	PROCEDURE IsDisposable*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
@@ -8884,6 +9021,21 @@ TYPE
 		END;
 		RETURN result
 	END IsPointerToRecord;
+
+	PROCEDURE IsPointerToObject(type: SyntaxTree.Type): BOOLEAN;
+	VAR result: BOOLEAN;
+	BEGIN
+		IF type = NIL THEN result := FALSE
+		ELSE
+			type := type.resolved;
+			result := (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType)
+				&  (type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType).isObject)
+				;
+			result := result OR	(type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType # NIL);
+			result := result OR (type IS SyntaxTree.ObjectType);
+		END;
+		RETURN result
+	END IsPointerToObject;
 
 	PROCEDURE ContainsPointer*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
@@ -9168,10 +9320,10 @@ TYPE
 	END EnterCase;
 
 	(** generate and return a new checker object, errors are entered into diagnostics **)
-	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope): Checker;
+	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope): Checker;
 	VAR checker: Checker;
 	BEGIN
-		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,system,symbolFileFormat,activeCellsSpecification, importCache);
+		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,activeCellsSpecification, importCache);
 		RETURN checker
 	END NewChecker;
 
@@ -9295,6 +9447,24 @@ TYPE
 			OR (expression IS SyntaxTree.TypeGuardDesignator) OR (expression IS SyntaxTree.StringValue)
 			OR (expression IS SyntaxTree.StatementDesignator) & HasAddress(expression(SyntaxTree.StatementDesignator).result);
 	END HasAddress;
+	
+	PROCEDURE IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN;
+	VAR d: SyntaxTree.Designator; symbol: SyntaxTree.Symbol;
+	BEGIN
+		IF (e IS SyntaxTree.Designator) THEN
+			d := e(SyntaxTree.Designator);
+			WHILE (d # NIL) & ~(d IS SyntaxTree.SymbolDesignator) DO
+				IF d IS SyntaxTree.DereferenceDesignator THEN (* on heap *) RETURN FALSE END;
+				e := d.left;
+				IF (e # NIL) & (e IS SyntaxTree.Designator) THEN d := e(SyntaxTree.Designator) ELSE d := NIL END;
+			END;
+			IF d # NIL THEN
+				symbol := d(SyntaxTree.SymbolDesignator).symbol;
+				RETURN (symbol.scope IS SyntaxTree.ProcedureScope) & (symbol.externalName = NIL);
+			END;
+		END;
+		RETURN FALSE;
+	END IsLocalVariable;
 
 	PROCEDURE IsStaticProcedure*(procedure: SyntaxTree.Procedure): BOOLEAN;
 	BEGIN

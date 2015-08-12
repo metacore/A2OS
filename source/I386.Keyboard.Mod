@@ -102,9 +102,9 @@ CODE {SYSTEM.i386}
 	CALL L1
 L1:
 	POP EAX
-	ADD EAX,8
-	POP EBP
-	RET
+	ADD EAX, DWORD L2-L1
+	JMP DWORD L3
+L2:
 		; alphabet
 	DB 1EH, 'a', 'A', 4H,	30H, 'b', 'B', 4H,	2EH, 'c', 'C', 4H,	20H, 'd', 'D', 4H
 	DB 12H, 'e', 'E', 4H,	21H, 'f', 'F', 4H,	22H, 'g', 'G', 4H,	23H, 'h', 'H', 4H
@@ -211,6 +211,7 @@ L1:
 	DB 57H, 0FBH, 0FFH, 0H	; F11
 	DB 58H, 0FCH, 0FFH, 0H	; F12
 	DB 0FFH
+L3:
 END TableUS;
 
 PROCEDURE TableFromFile(name: ARRAY OF CHAR): ADDRESS;

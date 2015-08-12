@@ -10,7 +10,7 @@ MODULE FSTools; (** AUTHOR "be"; PURPOSE "Files Tools"; *)
  *	FSTools.SetDefault prefix ~							Set the specified volume as default volume.
  *	FSTools.Watch ~										Diplays a list of all mounted file systems
  *
- *	FSTools.CopyFiles [-io] {sourcefile " => " destfile} ~	Copy the specified files to
+ *	FSTools.CopyFiles [-ioq] {sourcefile " => " destfile} ~	Copy the specified files to
  *	FSTools.RenameFiles [-i] {oldname " => " newname} ~	Rename files
  *	FSTools.DeleteFiles [-i] {file} ~						Delete the specified files
  * 	FSTools.Directory [-ts] ~								Show Directory (t: show creation times, s: show file sizes)
@@ -18,10 +18,11 @@ MODULE FSTools; (** AUTHOR "be"; PURPOSE "Files Tools"; *)
  *	FSTools.Safe ~ 										disallow pattern matching
  *	FSTools.Unsafe ~ 										allow pattern matching
  *
- *	Options i and o:
+ *	Options i, o and q:
  *
  *	i: 	ignore errors, e.g. continue with deletion of files if a file could not be deleted
  *	o:	force overwriting existing files
+ *	q:	quiet mode
  *
  * Examples:
  *
@@ -516,7 +517,7 @@ END CopyTo;
 PROCEDURE CopyFiles*(context : Commands.Context); (** [Options] {source  => destination} ~ *)
 VAR
 	source, destination : FileList;
-	overwritten, error, ignoreErrors : BOOLEAN;
+	overwritten, error, ignoreErrors, quiet : BOOLEAN;
 	nofFiles, res, n : LONGINT;
 	options: Options.Options;
 BEGIN
@@ -524,6 +525,7 @@ BEGIN
 	options.Add("o", "overwrite", Options.Flag); (* overwrite target file if it exists *)
 	options.Add("i", "ignore", Options.Flag); (* continue on errors *)
 	options.Add("n", "nolist", Options.Flag); (* only allow two arguments *)
+	options.Add("q", "quiet", Options.Flag); (* do not print copied file names *)
 	IF options.Parse(context.arg, context.error) THEN
 		ignoreErrors := options.GetFlag("ignore");
 		IF options.GetFlag("nolist") THEN (* source target *)
@@ -532,21 +534,30 @@ BEGIN
 			nofFiles := GetFileLists(context, source, destination);
 		END;
 		IF nofFiles # Error THEN
-			context.out.String("Copying files..."); context.out.Ln; context.out.Update;
+			quiet := options.GetFlag("quiet");
+			IF ~quiet THEN context.out.String("Copying files..."); context.out.Ln; context.out.Update END;
 			n := 0;
 			WHILE(n < LEN(source)) & (source[n] # NIL) & (n < LEN(destination)) & (destination[n] # NIL) & (ignoreErrors OR ~error) DO
-				context.out.String("   Copy "); context.out.String(source[n]^); context.out.String(" => ");
-				context.out.String(destination[n]^); context.out.String(" ... ");
-				context.out.Update;
+				IF ~quiet THEN
+					context.out.String("   Copy "); context.out.String(source[n]^); context.out.String(" => ");
+					context.out.String(destination[n]^); context.out.String(" ... ");
+					context.out.Update;
+				END;
 				overwritten := options.GetFlag("overwrite");
 				Files.CopyFile(source[n]^, destination[n]^, overwritten, res);
 				IF res = Files.Ok THEN
-					context.out.String("done");
-					IF overwritten THEN context.out.String(" (overwritten)"); END;
-					context.out.Char("."); context.out.Ln;
-					context.out.Update;
+					IF ~quiet THEN
+						context.out.String("done");
+						IF overwritten THEN context.out.String(" (overwritten)"); END;
+						context.out.Char("."); context.out.Ln;
+						context.out.Update;
+					END;
 					INC(n);
 				ELSE
+					IF quiet THEN
+						context.out.String("   Copy "); context.out.String(source[n]^); context.out.String(" => ");
+						context.out.String(destination[n]^);
+					END;
 					context.error.String("failed "); ShowRes(context.error, res); context.error.Ln;
 					context.error.Update;
 					error := TRUE;

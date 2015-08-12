@@ -90,8 +90,6 @@ TYPE
 		map: ARRAY MapSize OF SET
 	END;
 
-	FileHd = POINTER TO FileHeader;
-
 	Buffer = POINTER TO RECORD (Files.Hint)
 		apos, lim: LONGINT;
 		mod: BOOLEAN;
@@ -554,12 +552,12 @@ TYPE
 		END Init;
 
 		PROCEDURE New0(name: ARRAY OF CHAR): Files.File;
-		VAR i, res: LONGINT; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
+		VAR i, res: LONGINT; f: File; buf: Buffer; head {UNTRACED}: POINTER {UNSAFE} TO FileHeader; namebuf: FileName;
 		BEGIN {EXCLUSIVE}
 			f := NIL; Check(name, namebuf, res);
 			IF res <= 0 THEN
 				NEW(buf); buf.apos := 0; buf.mod := TRUE; buf.lim := HeaderSize; buf.next := buf;
-				head := SYSTEM.VAL(FileHd, ADDRESSOF(buf.data));
+				head := ADDRESSOF(buf.data);
 				head.mark := HeaderMark;
 				head.aleng := 0; head.bleng := HeaderSize; head.name := namebuf;
 				Clock.Get(head.time, head.date);
@@ -578,7 +576,7 @@ TYPE
 
 		PROCEDURE Old0(name: ARRAY OF CHAR): Files.File;
 		VAR
-			i, k, res: LONGINT; f: File; header: DiskAdr; buf: Buffer; head {UNTRACED}: FileHd;
+			i, k, res: LONGINT; f: File; header: DiskAdr; buf: Buffer; head {UNTRACED}: POINTER {UNSAFE} TO FileHeader;
 			namebuf: FileName; super: SuperIndex; sub: SubIndex; sec: IndexSector;
 		BEGIN {EXCLUSIVE}
 			f := NIL; Check(name, namebuf, res);
@@ -588,7 +586,7 @@ TYPE
 					NEW(buf); buf.apos := 0; buf.next := buf; buf.mod := FALSE;
 
 					GetSector(vol, header, buf.data);
-					head := SYSTEM.VAL(FileHd, ADDRESSOF(buf.data));
+					head := ADDRESSOF(buf.data);
 
 					NEW(f); f.fs := SELF; f.key := header;
 					f.aleng := head.aleng; f.bleng := head.bleng;
@@ -928,21 +926,20 @@ TYPE
 		END Read;
 
 		PROCEDURE ReadBytes(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR src, dst: ADDRESS; m: LONGINT; buf: Buffer;
+		VAR src: ADDRESS; m: LONGINT; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
-				dst := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
 				IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END ;
 					src := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
 					IF m <= buf.lim THEN
-						SYSTEM.MOVE(src, dst, len); r.bpos := m; r.res := 0; EXIT
+						SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), len); r.bpos := m; r.res := 0; EXIT
 					ELSIF buf.lim = SectorSize THEN
 						m := buf.lim - r.bpos;
-						IF m > 0 THEN SYSTEM.MOVE(src, dst, m); INC(dst, m); DEC(len, m) END ;
+						IF m > 0 THEN SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m); INC(ofs, m); DEC(len, m) END ;
 						IF r.apos < aleng THEN
 							INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, r.apos);
 							IF buf = NIL THEN
@@ -957,10 +954,10 @@ TYPE
 						END
 					ELSE
 						m := buf.lim - r.bpos;
-						IF m > 0 THEN SYSTEM.MOVE(src, dst, m); r.bpos := buf.lim END ;
+						IF m > 0 THEN SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m); r.bpos := buf.lim END ;
 						r.res := len - m; r.eof := TRUE; EXIT
 					END
-				END
+				END;
 			ELSE
 				r.res := 0
 			END
@@ -998,20 +995,19 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
-				src := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
 				IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END;
 					buf.mod := TRUE; dst := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
 					IF m <= buf.lim THEN
-						SYSTEM.MOVE(src, dst, len); r.bpos := m; EXIT
+						SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, len); r.bpos := m; EXIT
 					ELSIF m <= SectorSize THEN
-						SYSTEM.MOVE(src, dst, len); r.bpos := m;
+						SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, len); r.bpos := m;
 						bleng := m; buf.lim := m; modH := TRUE; EXIT
 					ELSE
 						m := SectorSize - r.bpos;
-						IF m > 0 THEN SYSTEM.MOVE(src, dst, m); INC(src, m); DEC(len, m) END;
+						IF m > 0 THEN SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, m); INC(ofs, m); DEC(len, m) END;
 						WriteBuf(SELF, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, r.apos);
 						IF buf = NIL THEN
 							buf := r.hint(Buffer);

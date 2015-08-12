@@ -17,10 +17,11 @@ END E;
 
 PROCEDURE Eprime(VAR in:ARRAY OF SREAL; VAR out: ARRAY OF INTEGER);
 CODE {SYSTEM.i386, SYSTEM.FPU}
-   MOV   EDI, [EBP+8]         ; dest   = ADR(out)
-   MOV   ECX, [EBP+12]       ; count  = LEN(out)
-   MOV   ESI, [EBP+16]        ; source = ADR(in)
-   CMP   ECX, [EBP+20]
+   PUSH  ECX
+   MOV   EDI, [EBP+out+0]         ; dest   = ADR(out)
+   MOV   ECX, [EBP+out+4]       ; count  = LEN(out)
+   MOV   ESI, [EBP+in+0]        ; source = ADR(in)
+   CMP   ECX, [EBP+in+4]
    JGE   Ok
    PUSH  99                  ; LEN(in) > LEN(out)  then TRAP(99)
    INT   3
@@ -43,6 +44,7 @@ Check:
    JG    Loop
    FLDCW [ESP]               ; restore original FPU configuration
    ADD   ESP, 8
+   POP   ECX
 END Eprime;
 
 PROCEDURE E2*(in: srBase.PT; VAR out: srBase.IPT);

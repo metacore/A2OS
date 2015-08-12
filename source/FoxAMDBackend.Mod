@@ -57,7 +57,7 @@ TYPE
 		hint: LONGINT;
 		useFPU: BOOLEAN;
 
-		PROCEDURE &InitPhysicalRegisters(fpu: BOOLEAN);
+		PROCEDURE &InitPhysicalRegisters(fpu,cooperative: BOOLEAN);
 		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(toVirtual)-1 DO
@@ -90,10 +90,10 @@ TYPE
 
 	PhysicalRegisters32=OBJECT (PhysicalRegisters) (* 32 bit implementation *)
 
-		PROCEDURE & InitPhysicalRegisters32(fpu: BOOLEAN);
+		PROCEDURE & InitPhysicalRegisters32(fpu,cooperative: BOOLEAN);
 		VAR i: LONGINT;
 		BEGIN
-			InitPhysicalRegisters(fpu);
+			InitPhysicalRegisters(fpu,cooperative);
 			(* disable registers that are only usable in 64 bit mode *)
 			FOR i := 0 TO 31 DO
 				toVirtual[i+RAX] := unusable;
@@ -314,9 +314,9 @@ TYPE
 
 	PhysicalRegisters64=OBJECT (PhysicalRegisters) (* 64 bit implementation *)
 
-		PROCEDURE & InitPhysicalRegisters64(fpu: BOOLEAN);
+		PROCEDURE & InitPhysicalRegisters64(fpu,cooperative: BOOLEAN);
 		BEGIN
-			InitPhysicalRegisters(fpu);
+			InitPhysicalRegisters(fpu,cooperative);
 		END InitPhysicalRegisters64;
 
 		PROCEDURE SetReserved(index: LONGINT; res: BOOLEAN);
@@ -512,6 +512,7 @@ TYPE
 
 		*)
 
+		ap: Ticket;
 
 		(* -------------------------- constructor -------------------------------*)
 		PROCEDURE &InitGeneratorAMD64(CONST runtime: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendAMD64);
@@ -523,13 +524,13 @@ TYPE
 
 			NEW(emitter,diagnostics);
 			IF cpuBits=32 THEN
-				NEW(physicalRegisters32, backend.forceFPU); physicalRegisters := physicalRegisters32; error := ~emitter.SetBits(32);
+				NEW(physicalRegisters32, backend.forceFPU, backend.cooperative); physicalRegisters := physicalRegisters32; error := ~emitter.SetBits(32);
 				opBP := opEBP; opSP := opESP; opRA := opEAX; opRB := opEBX; opRD := opEDI; opRS := opESI; opRC := opECX;
 				SP := ESP; BP := EBP; RA := EAX;
 				RD := EDI; RS := ESI; RC := ECX;
 				ASSERT(~error);
 			ELSIF cpuBits=64 THEN
-				NEW(physicalRegisters64, backend.forceFPU); physicalRegisters := physicalRegisters64; error := ~emitter.SetBits(64);
+				NEW(physicalRegisters64, backend.forceFPU, backend.cooperative); physicalRegisters := physicalRegisters64; error := ~emitter.SetBits(64);
 				opBP := opRBP; opSP := opRSP; opRA := registerOperands[RAX]; opRB := registerOperands[RBX]; opRD := registerOperands[RDI];
 				opRS := registerOperands[RSI]; opRC := registerOperands[RCX];
 				opR8 := registerOperands[R8]; opR9 := registerOperands[R9];
@@ -554,6 +555,10 @@ TYPE
 
 		BEGIN
 			spillStack.Init;
+			IF backend.cooperative THEN
+				ap := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.UnsignedIntegerType(cpuBits),RC,in.pc);
+				ap.spillable := FALSE;
+			END;
 			emitter.SetCode(out);
 			Section^(in,out);
 			IF FrameSpillStack & (spillStack.MaxSize() >0) THEN
@@ -565,6 +570,9 @@ TYPE
 			END;
 			ASSERT(fpStackPointer = 0);
 			CheckEmptySpillStack;
+			IF backend.cooperative THEN 
+				UnmapTicket(ap);
+			END;
 			error := error OR emitter.error;
 		END Section;
 
@@ -699,6 +707,9 @@ TYPE
 				RETURN physicalRegister= BP
 			ELSIF (virtualRegister = IntermediateCode.SP) THEN
 				RETURN physicalRegister = SP
+			ELSIF (virtualRegister = IntermediateCode.AP) THEN
+				ASSERT(backend.cooperative);
+				RETURN ~(ap.spilled) & (ap.register = physicalRegister)
 			ELSE
 				RETURN FALSE
 			END;
@@ -856,7 +867,11 @@ TYPE
 				IF virtualRegister = IntermediateCode.FP THEN physicalRegister := BP;
 				ELSIF virtualRegister = IntermediateCode.SP THEN  physicalRegister := SP;
 				ELSE
-					ticket := virtualRegisters.Mapped(virtualRegister,Low);
+					IF virtualRegister = IntermediateCode.AP THEN
+						ticket := ap;
+					ELSE
+						ticket := virtualRegisters.Mapped(virtualRegister,Low);
+					END;
 					IF ticket.spilled THEN
 						IF physicalRegisters.Reserved(ticket.register) THEN
 							orig := ticket;
@@ -950,6 +965,10 @@ TYPE
 				index := IntermediateCode.ParameterRegister - virtualRegister;
 				physical := registerOperands[ParameterRegister(index, type)];
 			*)
+			ELSIF virtual.register = IntermediateCode.AP THEN
+				ASSERT(backend.cooperative);
+				Assert(part=Low,"forbidden partitioned register on AP");
+				TicketToOperand(ap, physical);
 			ELSE HALT(100);
 			END;
 
@@ -1231,10 +1250,10 @@ TYPE
 
 		(* enter procedure: generate PAF and clear stack *)
 		PROCEDURE EmitEnter(CONST instruction: IntermediateCode.Instruction);
-		VAR op1,imm,target: Assembler.Operand; cc,size,numberMachineWords,destPC: LONGINT;
-		CONST initialize=TRUE;
+		VAR op1,imm,target: Assembler.Operand; cc,size,numberMachineWords,destPC,firstPC,secondPC,x: LONGINT; body: SyntaxTree.Body; name: Basic.SegmentedName;
+		parametersSize: SIZE;
+		CONST initialize=TRUE; FirstOffset = 5; SecondOffset = 11; 
 		BEGIN
-			cc := SHORT(instruction.op1.intValue);
 			stackSize := SHORT(instruction.op2.intValue);
 			size := stackSize;
 
@@ -1244,7 +1263,49 @@ TYPE
 			INC(traceStackSize, stackSize);
 
 			emitter.Emit1(InstructionSet.opPUSH,opBP);
+			IF instruction.op1.mode # IntermediateCode.ModeNumber THEN
+				ASSERT (backend.cooperative);
+				EmitPush(instruction.op1,Low);
+				cc := SyntaxTree.OberonCallingConvention;
+			ELSE
+				IF backend.cooperative THEN
+					Assembler.InitImm(imm, SHORTINT (cpuBits DIV 8), 0);
+					emitter.Emit1(InstructionSet.opPUSH,imm);
+				END;				
+				cc := SHORT(instruction.op1.intValue);
+			END;
 			emitter.Emit2(InstructionSet.opMOV,opBP,opSP);
+			
+			IF backend.cooperative & (in.symbol # NIL) & (in.symbol IS SyntaxTree.Procedure) THEN
+				body := in.symbol(SyntaxTree.Procedure).procedureScope.body;
+				IF (body # NIL) & (body.code = NIL) & ~body.isUnchecked THEN
+					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),SP,-stackSize);
+					emitter.Emit2(InstructionSet.opLEA,opRA,op1);
+					emitter.Emit2(InstructionSet.opCMP,opSP,opRA);
+					Assembler.InitImm8(imm, FirstOffset);
+					emitter.Emit1(InstructionSet.opJB,imm);
+					firstPC := out.pc;
+					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),RC,IntermediateBackend.StackLimitOffset * cpuBits DIV 8);
+					emitter.Emit2(InstructionSet.opCMP,opRA,op1);
+					Assembler.InitImm8(imm, SecondOffset);
+					emitter.Emit1(InstructionSet.opJAE,imm);
+					secondPC := out.pc;
+					ASSERT (out.pc - firstPC = FirstOffset);
+					emitter.Emit1(InstructionSet.opPUSH,opRA);
+					parametersSize := IntermediateBackend.ProcedureParametersSize(backend.system, in.symbol(SyntaxTree.Procedure));
+					Assembler.InitImm(imm, SHORTINT (cpuBits DIV 8), parametersSize);
+					emitter.Emit1(InstructionSet.opPUSH,imm);
+					Basic.ToSegmentedName ("Activities.ExpandStack", name);
+					Assembler.InitOffset32(target,0);
+					Assembler.SetSymbol (target,name,0,0,0);
+					emitter.Emit1(InstructionSet.opCALL,target);
+					x := out.pc - secondPC;
+					ASSERT (out.pc - secondPC = SecondOffset);
+					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),RA,stackSize);
+					emitter.Emit2(InstructionSet.opLEA,opSP,op1);
+				END;
+			END;
+			
 			IF initialize THEN
 				(* always including this instruction make trace insertion possible *)
 				IF backend.traceable THEN
@@ -1262,15 +1323,9 @@ TYPE
 					END;
 					IF numberMachineWords >4 THEN
 						Assembler.InitImm(imm, 0, numberMachineWords DIV 4);
-						IF instruction.op3.intValue > 0 THEN (* register C is blocked *)
-							emitter.Emit2(InstructionSet.opMOV, opRB, imm);
-							destPC := out.pc;
-							emitter.Emit1(InstructionSet.opDEC, opRB);
-						ELSE
-							emitter.Emit2(InstructionSet.opMOV, opRC, imm);
-							destPC := out.pc;
-							emitter.Emit1(InstructionSet.opDEC, opRC);
-						END;
+						emitter.Emit2(InstructionSet.opMOV, opRB, imm);
+						destPC := out.pc;
+						emitter.Emit1(InstructionSet.opDEC, opRB);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
@@ -1314,7 +1369,7 @@ TYPE
 		END EmitEnter;
 
 		PROCEDURE EmitLeave(CONST instruction: IntermediateCode.Instruction);
-		VAR cc: LONGINT;
+		VAR cc: LONGINT; offset: Assembler.Operand;
 		BEGIN
 			cc := SHORT(instruction.op1.intValue);
 			IF (cc = SyntaxTree.WinAPICallingConvention)  OR (cc = SyntaxTree.CCallingConvention) THEN
@@ -1322,7 +1377,12 @@ TYPE
 				emitter.Emit1(InstructionSet.opPOP,opEDI);
 				emitter.Emit1(InstructionSet.opPOP,opEBX);
 			END;
-			emitter.Emit2(InstructionSet.opMOV,opSP,opBP);
+			IF instruction.op2.intValue # 0 THEN
+				Assembler.InitMem(offset,SHORT(SHORT(cpuBits DIV 8)),BP,SHORT(instruction.op2.intValue));
+				emitter.Emit2(InstructionSet.opLEA,opSP,offset);
+			ELSE
+				emitter.Emit2(InstructionSet.opMOV,opSP,opBP);
+			END;
 			emitter.Emit1(InstructionSet.opPOP,opBP);
 		END EmitLeave;
 
@@ -1514,7 +1574,7 @@ TYPE
 
 		PROCEDURE EmitConvertFloat(CONST instruction: IntermediateCode.Instruction);
 		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: LONGINT;
-		temp, temp2, temp3, temp4: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand
+		temp, temp2, temp3, temp4: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
 		BEGIN
 			vdest := instruction.op1; vsrc := instruction.op2;
 			srcType := vsrc.type;
@@ -1863,7 +1923,7 @@ TYPE
 					(* resolved must be available at this point ! *)
 					resolved := fixup(IntermediateCode.Section).resolved;
 					IF resolved # NIL THEN
-						emitter.code.CopyBits(resolved.bits,0,resolved.bits.GetSize());
+						emitter.code.CopyBits(resolved.os.bits,0,resolved.os.bits.GetSize());
 						emitterFixup := resolved.fixupList.firstFixup;
 						WHILE (emitterFixup # NIL) DO
 							newFixup := BinaryCode.NewFixup(emitterFixup.mode,emitterFixup.offset+pc,emitterFixup.symbol,emitterFixup.symbolOffset,emitterFixup.displacement,emitterFixup.scale,emitterFixup.pattern);
@@ -2035,7 +2095,7 @@ TYPE
 		END EmitArithmetic3;
 
 		PROCEDURE EmitArithmetic3XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT);
-		VAR op: LONGINT
+		VAR op: LONGINT;
 		BEGIN
 			IF instruction.op1.type.sizeInBits = 32 THEN op := op32 ELSE op := op64 END;
 			EmitArithmetic3(instruction, Low, op);
@@ -2050,7 +2110,7 @@ TYPE
 		END EmitArithmetic2;
 
 		PROCEDURE EmitArithmetic2XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT);
-		VAR op: LONGINT
+		VAR op: LONGINT;
 		BEGIN
 			IF instruction.op1.type.sizeInBits = 32 THEN op := op32 ELSE op := op64 END;
 			EmitArithmetic2(instruction, Low, op);
@@ -2343,8 +2403,11 @@ TYPE
 				END;
 			END;
 
-
-			Spill(physicalRegisters.Mapped(ECX)); ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,ECX,inPC);
+			IF instruction.op3.mode # IntermediateCode.ModeImmediate THEN
+				IF backend.cooperative THEN ap.spillable := TRUE END;
+				Spill(physicalRegisters.Mapped(ECX)); 
+				ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,ECX,inPC);
+			END;
 
 			(*GetTemporaryRegister(instruction.op2.type,dest);*)
 			MakeOperand(instruction.op1,Low,op1,NIL);
@@ -2424,6 +2487,11 @@ TYPE
 					emitter.Emit2( op, op1High, shift);
 				END;
 			END;
+			IF backend.cooperative & (instruction.op3.mode # IntermediateCode.ModeImmediate) THEN
+				UnmapTicket(ecx);
+				UnSpill(ap);
+				ap.spillable := FALSE;
+			END;
 		END EmitShift;
 
 		PROCEDURE EmitCas(CONST instruction: IntermediateCode.Instruction);
@@ -2437,12 +2505,18 @@ TYPE
 			END;
 			Spill(physicalRegisters.Mapped(register));
 			ra := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op2.type,register,inPC);
-			MakeOperand(instruction.op2,Low,op2,ra);
-			MakeRegister(instruction.op1,Low,op1);
-			Assembler.InitMem(mem,SHORT(instruction.op2.type.sizeInBits DIV 8),op1.register,0);
-			MakeRegister(instruction.op3,Low,op3);
-			emitter.EmitPrefix (InstructionSet.prfLOCK);
-			emitter.Emit2(InstructionSet.opCMPXCHG,mem,op3);
+			IF IntermediateCode.OperandEquals (instruction.op2,instruction.op3) THEN
+				MakeOperand(instruction.op1,Low,op1,ra);
+				Assembler.InitMem(mem,SHORT(instruction.op1.type.sizeInBits DIV 8),op1.register,0);
+				emitter.Emit2(InstructionSet.opMOV,op1,mem);
+			ELSE
+				MakeOperand(instruction.op2,Low,op2,ra);
+				MakeRegister(instruction.op1,Low,op1);
+				Assembler.InitMem(mem,SHORT(instruction.op2.type.sizeInBits DIV 8),op1.register,0);
+				MakeRegister(instruction.op3,Low,op3);
+				emitter.EmitPrefix (InstructionSet.prfLOCK);
+				emitter.Emit2(InstructionSet.opCMPXCHG,mem,op3);
+			END;
 		END EmitCas;
 
 		PROCEDURE EmitCopy(CONST instruction: IntermediateCode.Instruction);
@@ -2461,7 +2535,8 @@ TYPE
 			ELSE
 				Spill(physicalRegisters.Mapped(ESI));
 				Spill(physicalRegisters.Mapped(EDI));
-				Spill(physicalRegisters.Mapped(ECX));;
+				IF backend.cooperative THEN ap.spillable := TRUE END;
+				Spill(physicalRegisters.Mapped(ECX)); 
 
 				esi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RS,inPC);
 				edi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RD,inPC);
@@ -2551,64 +2626,68 @@ TYPE
 				UnmapTicket(esi);
 				UnmapTicket(edi);
 				UnmapTicket(ecx);
+				IF backend.cooperative THEN
+					UnSpill(ap);
+					ap.spillable := FALSE;
+				END;
 			END;
 		END EmitCopy;
 
 
 		PROCEDURE EmitFill(CONST instruction: IntermediateCode.Instruction; down: BOOLEAN);
-		VAR op1,op2,op3: Assembler.Operand; reg,sizeInBits,i: LONGINT;val,src,dest: Assembler.Operand;
+		VAR reg,sizeInBits,i: LONGINT;val, value, size, dest: Assembler.Operand;
 			op: LONGINT;
 			edi, ecx: Ticket;
 		BEGIN
-			IF FALSE & (instruction.op3.mode = IntermediateCode.ModeImmediate) & (instruction.op3.symbol.name = "") & (instruction.op3.intValue < 5) THEN
-				sizeInBits := instruction.op2.type.sizeInBits;
-				IF sizeInBits = IntermediateCode.Bits8 THEN src := opAL;
-				ELSIF sizeInBits = IntermediateCode.Bits16 THEN src := opAX;
-				ELSIF sizeInBits = IntermediateCode.Bits32 THEN src := opEAX;
+			IF FALSE & (instruction.op2.mode = IntermediateCode.ModeImmediate) & (instruction.op2.symbol.name = "") & (instruction.op2.intValue < 5) THEN
+				sizeInBits := instruction.op3.type.sizeInBits;
+				IF sizeInBits = IntermediateCode.Bits8 THEN value := opAL;
+				ELSIF sizeInBits = IntermediateCode.Bits16 THEN value := opAX;
+				ELSIF sizeInBits = IntermediateCode.Bits32 THEN value := opEAX;
 				ELSE HALT(200)
 				END;
-				MakeOperand(instruction.op1,Low,op1,NIL);
-				IF instruction.op1.mode = IntermediateCode.ModeRegister THEN reg := op1.register
-				ELSE emitter.Emit2(InstructionSet.opMOV,opEDX,op1); reg := EDX;
+				MakeOperand(instruction.op1,Low,dest,NIL);
+				IF instruction.op1.mode = IntermediateCode.ModeRegister THEN reg := dest.register
+				ELSE emitter.Emit2(InstructionSet.opMOV,opEDX,dest); reg := EDX;
 				END;
-				IF (instruction.op2.mode = IntermediateCode.ModeImmediate) & (instruction.op2.type.form IN IntermediateCode.Integer) & (instruction.op2.intValue = 0) THEN
+				IF (instruction.op3.mode = IntermediateCode.ModeImmediate) & (instruction.op3.type.form IN IntermediateCode.Integer) & (instruction.op3.intValue = 0) THEN
 					emitter.Emit2(InstructionSet.opXOR,opEAX,opEAX);
 				ELSE
-					MakeOperand(instruction.op2,Low,op2,NIL);
-					emitter.Emit2(InstructionSet.opMOV,src,op2);
+					MakeOperand(instruction.op3,Low,value,NIL);
 				END;
-				FOR i := 0 TO SHORT(instruction.op3.intValue)-1 DO
+				FOR i := 0 TO SHORT(instruction.op2.intValue)-1 DO
 					IF down THEN
 						Assembler.InitMem(dest,SHORT(SHORT(sizeInBits DIV 8)),reg,-i*sizeInBits DIV 8);
 					ELSE
 						Assembler.InitMem(dest,SHORT(SHORT(sizeInBits DIV 8 )),reg,i*sizeInBits DIV 8);
 					END;
-					emitter.Emit2(InstructionSet.opMOV,dest,src);
+					emitter.Emit2(InstructionSet.opMOV,dest,value);
 				END;
 			ELSE
 				Spill(physicalRegisters.Mapped(EDI));
+				IF backend.cooperative THEN ap.spillable := TRUE END;
 				Spill(physicalRegisters.Mapped(ECX));
 				edi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,EDI,inPC);
 				ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,ECX,inPC);
 
-				MakeOperand(instruction.op1,Low,op1,edi);
-				MakeOperand(instruction.op3,Low,op3,ecx);
-				MakeOperand(instruction.op2,Low,op2,NIL);
+				MakeOperand(instruction.op1,Low,dest,edi);
+				MakeOperand(instruction.op2,Low,size,ecx);
+				MakeOperand(instruction.op3,Low,value,NIL);
 				(*
 				emitter.Emit2(InstructionSet.opMOV,opEDI, op1[Low]);
 				emitter.Emit2(InstructionSet.opMOV,opECX, op3[Low]);
 				*)
-				CASE instruction.op2.type.sizeInBits OF
+				CASE instruction.op3.type.sizeInBits OF
 					IntermediateCode.Bits8: val := opAL; op := InstructionSet.opSTOSB;
 					|IntermediateCode.Bits16: val := opAX; op := InstructionSet.opSTOSW;
 					|IntermediateCode.Bits32: val := opEAX; op := InstructionSet.opSTOSD;
 				ELSE Halt("only supported for upto 32 bit integers ");
 				END;
 
-				IF (instruction.op2.mode = IntermediateCode.ModeImmediate) & (instruction.op2.type.form IN IntermediateCode.Integer) & (instruction.op2.intValue = 0) THEN
+				IF (instruction.op3.mode = IntermediateCode.ModeImmediate) & (instruction.op3.type.form IN IntermediateCode.Integer) & (instruction.op3.intValue = 0) THEN
 					emitter.Emit2(InstructionSet.opXOR,opEAX,opEAX);
 				ELSE
-					emitter.Emit2(InstructionSet.opMOV,val,op2);
+					emitter.Emit2(InstructionSet.opMOV,val,value);
 				END;
 
 				IF down THEN
@@ -2621,6 +2700,11 @@ TYPE
 				IF down THEN (* needed as calls to windows crash otherwise *)
 					emitter.Emit0(InstructionSet.opCLD);
 				END;
+				UnmapTicket(ecx);
+				IF backend.cooperative THEN
+					UnSpill(ap);
+					ap.spillable := FALSE;
+				END;
 			END;
 		END EmitFill;
 
@@ -2632,20 +2716,25 @@ TYPE
 			PROCEDURE JmpDest(brop: LONGINT);
 			BEGIN
 				IF instruction.op1.mode = IntermediateCode.ModeImmediate THEN
-					Assert(instruction.op1.symbol.name # "","branch without symbol destination");
-					dest := (instruction.op1.symbolOffset); (* this is the offset in the in-data section (intermediate code), it is not byte- *)
-					destPC := (in.instructions[dest].pc );
-					offset := destPC - (out.pc );
-					IF dest > inPC THEN (* forward jump *)
-						Assembler.InitOffset32(target,0);
+					IF instruction.op1.symbol.name # in.name THEN
+						Assembler.InitOffset32(target,instruction.op1.intValue);
 						Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.symbolOffset,instruction.op1.offset);
 						emitter.Emit1(brop,target);
-					ELSIF ABS(offset)  <= 126 THEN
-						Assembler.InitOffset8(target,destPC);
-						emitter.Emit1(brop,target);
 					ELSE
-						Assembler.InitOffset32(target,destPC);
-						emitter.Emit1(brop,target);
+						dest := (instruction.op1.symbolOffset); (* this is the offset in the in-data section (intermediate code), it is not byte- *)
+						destPC := (in.instructions[dest].pc );
+						offset := destPC - (out.pc );
+						IF dest > inPC THEN (* forward jump *)
+							Assembler.InitOffset32(target,0);
+							Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.symbolOffset,instruction.op1.offset);
+							emitter.Emit1(brop,target);
+						ELSIF ABS(offset)  <= 126 THEN
+							Assembler.InitOffset8(target,destPC);
+							emitter.Emit1(brop,target);
+						ELSE
+							Assembler.InitOffset32(target,destPC);
+							emitter.Emit1(brop,target);
+						END;
 					END;
 				ELSE
 					MakeOperand(instruction.op1,Low,target,NIL);
@@ -3124,11 +3213,11 @@ TYPE
 		BEGIN
 			IF system = NIL THEN
 				IF bits=32 THEN
-					NEW(system,8,8,32, 8,32,32,32,64,0);
+					NEW(system,8,8,32, 8,32,32,32,64,0,cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				ELSE
-					NEW(system,8,8,64,8,64,64,64,128,4 (* parameter registers *));
+					NEW(system,8,8,64,8,64,64,64,128,4 (* parameter registers *),cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				END;
@@ -3188,7 +3277,7 @@ TYPE
 			 		cg.Section(in(IntermediateCode.Section),out);
 			 		procedure := in.symbol(SyntaxTree.Procedure);
 			 		IF procedure.procedureScope.body.code # NIL THEN
-				 		procedure.procedureScope.body.code.SetBinaryCode(out.bits);
+				 		procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
 				 	END;
 			 	END
 		 	END;
@@ -3204,12 +3293,12 @@ TYPE
 			 			name := in.name;
 				 		out := ResolvedSection(in(IntermediateCode.Section));
 				 		cg.Section(in(IntermediateCode.Section),out);
-				 		IF out.type = Sections.VarSection THEN
+				 		IF out.os.type = Sections.VarSection THEN
 				 			IF out.pc = 1 THEN out.SetAlignment(FALSE,1)
 				 			ELSIF out.pc = 2 THEN out.SetAlignment(FALSE,2)
 				 			ELSIF out.pc > 2 THEN out.SetAlignment(FALSE,4)
 				 			END;
-				 		ELSIF out.type = Sections.ConstSection THEN
+				 		ELSIF out.os.type = Sections.ConstSection THEN
 				 			out.SetAlignment(FALSE,4);
 				 		END;
 			 		END

@@ -243,12 +243,12 @@ CONST
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+12]
 		MOV	EBX, [EBP+8]
-		MOV	ECX, [EBP+16]
+		MOV	EDX, [EBP+16]
 		NEG	EAX
 		NEG	EBX
 		SBB	EAX, 0
-		MOV	[ECX+4], EAX
-		MOV	[ECX], EBX
+		MOV	[EDX+4], EAX
+		MOV	[EDX], EBX
 	END "-";
 
 (** Dyadic Assignment Operators *)
@@ -273,11 +273,11 @@ CONST
 	CODE {SYSTEM.i386}
 		MOV	EAX, [EBP+16]
 		MOV	EBX, [EBP+20]
-		MOV	ECX, [EBP+24]
+		MOV	EDX, [EBP+24]
 		ADD	EAX, [EBP+8]
 		ADC	EBX, [EBP+12]
-		MOV	[ECX+0], EAX
-		MOV	[ECX+4], EBX
+		MOV	[EDX+0], EAX
+		MOV	[EDX+4], EBX
 	END "+";
 
 	PROCEDURE "+"*( a: Integer;  b: NbrInt32.Integer ): Integer;
@@ -315,11 +315,11 @@ CONST
 	CODE {SYSTEM.i386}
 		MOV	EAX, [EBP+16]
 		MOV	EBX, [EBP+20]
-		MOV	ECX, [EBP+24]
+		MOV	EDX, [EBP+24]
 		SUB	EAX, [EBP+8]
 		SBB	EBX, [EBP+12]
-		MOV	[ECX+0], EAX
-		MOV	[ECX+4], EBX
+		MOV	[EDX+0], EAX
+		MOV	[EDX+4], EBX
 	END "-";
 
 	PROCEDURE "-"*( a: Integer;  b: NbrInt32.Integer ): Integer;

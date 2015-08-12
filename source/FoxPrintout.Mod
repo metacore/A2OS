@@ -2,7 +2,7 @@ MODULE FoxPrintout; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler Module Outpu
 (* (c) fof ETHZ 2009 *)
 
 IMPORT
-	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Streams, D:=Debugging, Runtime, SYSTEM;
+	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Streams, D:=Debugging, SYSTEM;
 
 CONST
 	(* print modes *)
@@ -257,6 +257,7 @@ TYPE
 			IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
 			IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
 			IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
+			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
 			FlagEnd(first);
 		END PointerFlags;
 		
@@ -267,6 +268,7 @@ TYPE
 			IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
 			IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
 			IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
+			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
 			IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
 			FlagEnd(first);
 		END ObjectFlags;
@@ -433,6 +435,7 @@ TYPE
 			IF x.isDelegate THEN Flag(Global.NameDelegate,first) END;
 			IF x.isInterrupt THEN Flag(Global.NameInterrupt,first) END;
 			IF x.noPAF THEN Flag(Global.NameNoPAF,first) END;
+			IF x.noReturn THEN Flag(Global.NameNoReturn,first) END;
 			IF x.callingConvention = SyntaxTree.WinAPICallingConvention THEN
 				Flag(Global.NameWinAPI,first)
 			ELSIF x.callingConvention = SyntaxTree.CCallingConvention THEN
@@ -453,7 +456,15 @@ TYPE
 			IF (x.firstParameter # NIL) OR (x.returnType # NIL) THEN
 				ParameterList(x.firstParameter)
 			END;
-			IF x.returnType # NIL THEN w.String( ":" );  Type(x.returnType) END;
+			IF x.returnType # NIL THEN 
+				w.String( ":" );  					
+				IF x.hasUntracedReturn THEN
+						first := TRUE;
+						Flag(Global.NameUntraced, first);
+						FlagEnd(first);
+				END;
+				Type(x.returnType) 
+			END;
 			IF info & (x.returnParameter # NIL) THEN
 				BeginComment;
 				VisitParameter(x.returnParameter);
@@ -805,7 +816,7 @@ TYPE
 			PROCEDURE InBounds(val: HUGEINT; bits: LONGINT): BOOLEAN;
 			VAR m: HUGEINT;
 			BEGIN
-				m := Runtime.AslH(1,bits-1);
+				m := ASH(HUGEINT(1),bits-1);
 				RETURN (val < m) & (-val <= m)
 			END InBounds;
 		BEGIN
@@ -957,6 +968,11 @@ TYPE
 			ELSIF SyntaxTree.PublicRead IN x.access THEN w.String( "-" )
 			ELSIF x.access = {} THEN ASSERT(mode > SourceCode);
 				IF info THEN BeginComment; w.String("<- hidden"); EndComment  END;
+			END;
+
+			IF x.externalName # NIL THEN
+				Keyword(" EXTERN " ); w.Char('"');
+				w.String(x.externalName^); w.Char('"');
 			END;
 
 			IF info THEN
@@ -1129,6 +1145,17 @@ TYPE
 
 		PROCEDURE ParameterList*(x: SyntaxTree.Parameter);
 		VAR next: SyntaxTree.Parameter; first: BOOLEAN;
+
+			PROCEDURE Flags(x: SyntaxTree.Parameter);
+			VAR first: BOOLEAN;
+		BEGIN
+			first := TRUE;
+				IF x.untraced THEN
+					Flag(Global.NameUntraced,first)
+				END;
+				FlagEnd(first);
+			END Flags;
+			
 		BEGIN
 			first := TRUE;
 			w.String( "(" );
@@ -1140,14 +1167,14 @@ TYPE
 					IF x.kind = SyntaxTree.VarParameter THEN Keyword("VAR " );
 					ELSIF x.kind = SyntaxTree.ConstParameter THEN Keyword("CONST " );
 					END;
-					PrintSymbol(x);
+					PrintSymbol(x); Flags(x);
 					IF x.defaultValue # NIL THEN
 						w.String("= "); Expression(x.defaultValue);
 					END;
 
 					WHILE (next # NIL) & (next.type = x.type) & (next.kind = x.kind) & ((next.access # SyntaxTree.Hidden) OR (mode > SourceCode)) DO
 						w.String(", ");
-						PrintSymbol(next);
+						PrintSymbol(next); Flags(next);
 						IF next.defaultValue # NIL THEN
 							w.String("= "); Expression(next.defaultValue);
 						END;
@@ -1197,10 +1224,12 @@ TYPE
 				*)
 				IF x.isInline THEN w.String(" - ") END;
 				IF x.isConstructor THEN w.String(" & ") END;
+				IF x.isFinalizer THEN w.String(" ~ ") END;
 
 				first := TRUE;
 				IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;
 				IF (type.isRealtime) THEN Flag(Global.NameRealtime,first) END;
+				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
 				IF (x.fixed) THEN Value(Global.NameFixed, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;
@@ -1218,6 +1247,11 @@ TYPE
 				END;
 				IF type.returnType # NIL THEN
 					w.String( ": " );
+					IF type.hasUntracedReturn THEN
+						first := TRUE;
+						Flag(Global.NameUntraced, first);
+						FlagEnd(first);
+					END;
 					Type(type.returnType);
 				END;
 				IF info & (type.returnParameter # NIL) THEN
@@ -1226,11 +1260,15 @@ TYPE
 					Symbol(type.returnParameter);
 					EndComment;
 				END;
-				IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline) THEN
-					w.String( ";" );
-					Comments(x.comment,x,TRUE);
-					ProcedureScope(x.procedureScope);
-					Indent;  Keyword("END " );  Identifier(x.name);
+				IF x.externalName = NIL THEN
+					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline) THEN
+						w.String( ";" );
+						Comments(x.comment,x,TRUE);
+						IF mode >= SymbolFile THEN
+							ProcedureScope(x.procedureScope);
+						END;
+						Indent;  Keyword("END " );  Identifier(x.name);
+					END;
 				END;
 			END;
 		END VisitProcedure;
@@ -1281,6 +1319,11 @@ TYPE
 				ParameterList(type.firstParameter);
 				IF type.returnType # NIL THEN
 					w.String( ": " );
+					IF type.hasUntracedReturn THEN
+						first := TRUE;
+						Flag(Global.NameUntraced, first);
+						FlagEnd(first);
+					END;
 					Type(type.returnType);
 				END;
 				IF info & (type.returnParameter # NIL) THEN
@@ -1290,7 +1333,7 @@ TYPE
 				END;
 				w.String( ";" );
 				Comments(x.comment,x,TRUE);
-				IF mode > SymbolFile THEN
+				IF mode > SymbolFile THEN 
 					ProcedureScope(x.procedureScope);
 					Indent;  Keyword("END " );  	w.String( '"' );  Identifier(x.name);  w.String( '"' );
 				END;

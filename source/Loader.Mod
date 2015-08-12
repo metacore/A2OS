@@ -817,7 +817,7 @@ END ReadPtrsInProcBlock;
 
 (** LoadObj - Load an Active Oberon object file. *)
 
-PROCEDURE LoadObj*(name, fileName: ARRAY OF CHAR;  VAR res: LONGINT;  VAR msg: ARRAY OF CHAR): Modules.Module;
+PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT;  VAR msg: ARRAY OF CHAR): Modules.Module;
 VAR
 	f: Files.File; r: Files.Reader; h: ObjHeader; m: Modules.Module; i, caseTableSize: LONGINT;
 	dataLink: POINTER TO ARRAY OF DataLinkRec;

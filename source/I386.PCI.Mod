@@ -3,7 +3,7 @@ MODULE PCI;	(** non-portable *)
 
 (* Contributed by P. Ryser to the System 3 project *)
 
-	IMPORT SYSTEM, Machine, KernelLog;
+	IMPORT SYSTEM, Machine, Objects, KernelLog;
 
 	CONST
 		Trace = TRUE;
@@ -63,25 +63,22 @@ MODULE PCI;	(** non-portable *)
 		pci: BOOLEAN;
 		pciEntry: LONGINT;
 
-	PROCEDURE -BiosServiceDirectory(sadr, sid, fs: LONGINT; VAR badr: ADDRESS; VAR len, entry: LONGINT): CHAR;
+	PROCEDURE BiosServiceDirectory(sadr, sid, fs: LONGINT; VAR badr: ADDRESS; VAR len, entry: LONGINT): CHAR;
 	CODE {SYSTEM.i386}
-		DB 55H	; push ebp
-		DB 8BH, 0ECH	; mov ebp, esp
-		DB 66H, 8CH, 0C8H	; mov ax, cs
-		DB 50H	; push eax
-		DB 8BH, 45H, 14H	; mov eax, [ebp+20]
-		DB 8BH, 5DH, 10H	; mov ebx, [ebp+16]
-		DB 8BH, 55H, 18H	; ; mov edx, [ebp+24]
-		DB 0FFH, 0D2H	; call edx
-;		DB 0FFH, 55H, 18H	; call [dword ebp+24]
-		DB 8BH, 75H, 0CH	; mov esi, [ebp+12]
-		DB 89H, 1EH	; mov [esi], ebx
-		DB 8BH, 75H, 08H	; mov esi, [ebp+8]
-		DB 89H, 0EH	; mov [esi], ecx
-		DB 8BH, 75H, 04H	; mov esi, [ebp+4]
-		DB 89H, 16H	; mov [esi], edx
-		DB 5DH	;  pop ebp
-		DB 081H, 0C4H, 018H, 0H, 0H, 0H		; add esp, 24
+		PUSH	ECX
+		MOV	AX, CS
+		PUSH	EAX
+		MOV	EAX, [EBP+sid]
+		MOV	EBX, [EBP+fs]
+		MOV	EDX, [EBP+sadr]
+		CALL	EDX
+		MOV	ESI, [EBP+badr]
+		MOV	[ESI], EBX
+		MOV	ESI, [EBP+len]
+		MOV	[ESI], ECX
+		MOV	ESI, [EBP+entry]
+		MOV	[ESI], EDX
+		POP	ECX
 	END BiosServiceDirectory;
 
 	PROCEDURE FindBios32Service*(serviceId, serviceFkt: LONGINT; VAR serviceAdr: ADDRESS; VAR  serviceLen, entryOffset: LONGINT): LONGINT;
@@ -137,45 +134,43 @@ MODULE PCI;	(** non-portable *)
 		END
 	END DetectBios32;
 
-		PROCEDURE -pcicall(entry:LONGINT; VAR eax,ebx,ecx,edx,esi,edi:LONGINT; VAR eflags: SET);
+		PROCEDURE pcicall(entry:LONGINT; VAR eax,ebx,ecx,edx,esi,edi:LONGINT; VAR eflags: SET);
 		CODE {SYSTEM.i386}
-			DB 55H				 ; push ebp
-			DB 8BH, 0ECH				 ; mov ebp, esp
-			DB 8CH, 0C8H				 ; mov eax, cs
-			DB 50H				 ; push eax
-			DB 8BH, 45H, 08H			; mov eax, [ebp+8]
-			DB 8BH, 38H				 ; mov edi, [eax]
-			DB 8BH, 45H, 0CH			; mov eax, [ebp+12]
-			DB 8BH, 30H				; mov esi, [eax]
-			DB 8BH, 45H, 10H			; mov eax, [ebp+16]
-			DB 8BH, 10H				 ; mov edx, [eax]
-			DB 8BH, 45H, 14H			; mov eax, [ebp+20]
-			DB 8BH, 08H				 ; mov ecx, [eax]
-			DB 8BH, 45H, 18H			; mov eax, [ebp+24]
-			DB 8BH, 18H				 ; mov ebx, [eax]
-			DB 8BH, 45H, 1CH			; mov eax, [ebp+28]
-			DB 8BH, 00H				 ; mov eax, [eax]
-			DB 0FFH, 55H, 20H			; call [dword ebp+32]
-			DB 9CH				 ; pushfd
-			DB 50H				 ; push eax
-			DB 8BH, 45H, 08H			; mov eax, [ebp+8]
-			DB 89H, 38H				 ; mov [eax], edi
-			DB 8BH, 45H, 0CH			; mov eax, [ebp+12]
-			DB 89H, 30H				 ; mov [eax], esi
-			DB 8BH, 45H, 10H			; mov eax, [ebp+16]
-			DB 89H, 10H				 ; mov [eax], edx
-			DB 8BH, 45H, 14H			; mov eax, [ebp+20]
-			DB 89H, 08H				 ; mov [eax], ecx
-			DB 8BH, 45H, 18H			; mov eax, [ebp+24]
-			DB 89H, 18H				 ; mov [eax], ebx
-			DB 5BH				 ; pop ebx
-			DB 8BH, 45H, 1CH			; mov eax, [ebp+28]
-			DB 89H, 18H				 ; mov [eax], ebx
-			DB 5BH				 ; pop ebx
-			DB 8BH, 45H, 04H			; mov eax, [ebp+4]
-			DB 89H, 18H				 ; mov [eax], ebx
-			DB 5DH				 ; pop ebp
-			DB 081H, 0C4H, 020H, 0H, 0H, 0H				 ; add esp, 32
+			PUSH	ECX
+			MOV	EAX,CS
+			PUSH	EAX
+			MOV	EAX,[EBP+edi]
+			MOV	EDI,[EAX]
+			MOV	EAX,[EBP+esi]
+			MOV	ESI,[EAX]
+			MOV	EAX,[EBP+edx]
+			MOV	EDX,[EAX]
+			MOV	EAX,[EBP+ecx]
+			MOV	ECX,[EAX]
+			MOV	EAX,[EBP+ebx]
+			MOV	EBX,[EAX]
+			MOV	EAX,[EBP+eax]
+			MOV	EAX,[EAX]
+			CALL	DWORD [EBP+entry]
+			PUSHFD
+			PUSH	EAX
+			MOV	EAX,[EBP+edi]
+			MOV	[EAX],EDI
+			MOV	EAX,[EBP+esi]
+			MOV	[EAX],ESI
+			MOV	EAX,[EBP+edx]
+			MOV	[EAX],EDX
+			MOV	EAX,[EBP+ecx]
+			MOV	[EAX],ECX
+			MOV	EAX,[EBP+ebx]
+			MOV	[EAX],EBX
+			POP	EBX
+			MOV	EAX,[EBP+eax]
+			MOV	[EAX],EBX
+			POP	EBX
+			MOV	EAX,[EBP+eflags]
+			MOV	[EAX],EBX
+			POP	ECX
 		END pcicall;
 
 	PROCEDURE OutRegs(eax, ebx, ecx, edx, esi, edi: LONGINT; eflags: SET);
@@ -295,7 +290,8 @@ MODULE PCI;	(** non-portable *)
 	BEGIN {EXCLUSIVE}
 		IF pci THEN
 			eax := PCIFunctionId + getIrqRoutingOptions;
-			rb.BufferSize := dbN; rb.SegSelector := 0; rb.DataBufferAdr := ADDRESSOF(db[0]);
+			rb.BufferSize := dbN; rb.SegSelector := 0; 
+			rb.DataBufferAdr := ADDRESSOF(db[0]);
 			ebx := 0H; edi := ADDRESSOF(rb);
 			state := Machine.DisableInterrupts();
 			pcicall(pciEntry, eax, ebx, ecx, edx, esi, edi, eflags);

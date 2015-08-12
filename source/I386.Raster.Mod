@@ -835,72 +835,86 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	
 	PROCEDURE ClearBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386}
-			MOV EDI, [EBP+dadr]
-			MOV ECX, [EBP+len]
-			MOV EAX, 0
-			CLD
-			REP STOSB
+		PUSH ECX
+		MOV EDI, [EBP+dadr]
+		MOV ECX, [EBP+len]
+		MOV EAX, 0
+		CLD
+		REP STOSB
+		POP ECX
 	END ClearBytes;	
 	
 	(* len is nr of DWords*)
 	PROCEDURE Clear32 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386}
-			MOV EDI, [EBP+dadr]
-			IMUL ECX, [EBP+len], 4
-			MOV EAX, 0
-			CLD
-			REP STOSD
+		PUSH ECX
+		MOV EDI, [EBP+dadr]
+		IMUL ECX, [EBP+len], 4
+		MOV EAX, 0
+		CLD
+		REP STOSD
+		POP ECX
 	END Clear32;	
 	
 	(*---- fill --------------*)
 	PROCEDURE Fill8(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-		CODE {SYSTEM.i386}
-			MOV EDI, [EBP+destAdr]
-			MOV ECX, [EBP+size]
-			MOV EAX, [EBP+filler]
-			CLD
-			REP STOSB
-		END Fill8;
+	CODE {SYSTEM.i386}
+		PUSH ECX
+		MOV EDI, [EBP+destAdr]
+		MOV ECX, [EBP+size]
+		MOV EAX, [EBP+filler]
+		CLD
+		REP STOSB
+		POP ECX
+	END Fill8;
 		
 		(* size in 16bit words*)
 	PROCEDURE Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-		CODE {SYSTEM.i386}
-			MOV EDI, [EBP+destAdr]
-			MOV ECX, [EBP+size]
-			MOV EAX, [EBP+filler]
-			CLD
-			REP STOSW
-		END Fill16;
+	CODE {SYSTEM.i386}
+		PUSH ECX
+		MOV EDI, [EBP+destAdr]
+		MOV ECX, [EBP+size]
+		MOV EAX, [EBP+filler]
+		CLD
+		REP STOSW
+		POP ECX
+	END Fill16;
 	
 	(* size in 24bit entities*)
 	PROCEDURE Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-		CODE {SYSTEM.i386}
-			MOV EDI, [EBP+destAdr]
-			IMUL ECX, [EBP+size],3  ; because bytes are used below
-			MOV EAX, [EBP+filler]
-			CLD
-			REP STOSB
-		END Fill24;
+	CODE {SYSTEM.i386}
+		PUSH ECX
+		MOV EDI, [EBP+destAdr]
+		IMUL ECX, [EBP+size],3  ; because bytes are used below
+		MOV EAX, [EBP+filler]
+		CLD
+		REP STOSB
+		POP ECX
+	END Fill24;
 	
 	(* size in DWords*)
 	PROCEDURE Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); (*! to do: change interface, introduce in Blend()*)
-		CODE {SYSTEM.i386}
-			MOV EDI, [EBP+destAdr]
-			MOV ECX, [EBP+size]
-			MOV EAX, [EBP+filler]
-			CLD
-			REP STOSD
-		END Fill32;
+	CODE {SYSTEM.i386}
+		PUSH ECX
+		MOV EDI, [EBP+destAdr]
+		MOV ECX, [EBP+size]
+		MOV EAX, [EBP+filler]
+		CLD
+		REP STOSD
+		POP ECX
+	END Fill32;
 
 	(* len in DWords*)
 	PROCEDURE Fill32A(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); (*! to do: change interface, introduce in Blend()*)
-		CODE {SYSTEM.i386}
-			MOV EDI, [EBP+dadr]
-			MOV ECX, [EBP+len]
-			MOV EAX, [EBP+sadr]
-			CLD
-			REP STOSD
-		END Fill32A;
+	CODE {SYSTEM.i386}
+		PUSH ECX
+		MOV EDI, [EBP+dadr]
+		MOV ECX, [EBP+len]
+		MOV EAX, [EBP+sadr]
+		CLD
+		REP STOSD
+		POP ECX
+	END Fill32A;
 
 	(*--- srcCopy Transfer ---*)
 
@@ -1005,11 +1019,13 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(*
 	PROCEDURE Copy16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386}
-			MOV ESI, [EBP+sadr]
-			MOV EDI, [EBP+dadr]
-			CLD
-			MOV ECX, [EBP+len]
-			REP MOVSW
+		PUSH ECX
+		MOV ESI, [EBP+sadr]
+		MOV EDI, [EBP+dadr]
+		CLD
+		MOV ECX, [EBP+len]
+		REP MOVSW
+		POP ECX
 	END Copy16;	
 	*)
 
@@ -1035,11 +1051,13 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 (* (*produces only slightly more compact assembler code as prior procedure*)
 	PROCEDURE Copy32(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386}
-			MOV ESI, [EBP+sadr]
-			MOV EDI, [EBP+dadr]
-			CLD
-			MOV ECX, [EBP+len]
-			REP MOVSD
+		PUSH ECX
+		MOV ESI, [EBP+sadr]
+		MOV EDI, [EBP+dadr]
+		CLD
+		MOV ECX, [EBP+len]
+		REP MOVSD
+		POP ECX
 	END Copy32;	
 	*)
 	(* general methods *)
@@ -1574,6 +1592,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	PROCEDURE SSE2BGRA8888CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386, SYSTEM.MMX, SYSTEM.SSE, SYSTEM.SSE2, SYSTEM.Pentium}
 		PUSHFD
+		PUSH		ECX
 		PUSH 		EBX
 		; CLI
 
@@ -1636,6 +1655,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	end:
 		EMMS ; declare FPU registers free
 		POP 		EBX
+		POP			ECX
 		POPFD
 	END SSE2BGRA8888CopyBGR888;
 
@@ -1662,6 +1682,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	PROCEDURE SSE2BGR888CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386, SYSTEM.MMX, SYSTEM.SSE, SYSTEM.SSE2,SYSTEM.Pentium}
 		PUSHFD
+		PUSH 	ECX
 		PUSH 		EBX
 		; CLI
 
@@ -1730,6 +1751,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	end:
 		EMMS ; declare FPU registers free
 		POP 		EBX
+		POP	ECX
 		POPFD
 	END SSE2BGR888CopyBGRA8888;
 
@@ -2136,6 +2158,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	PROCEDURE MMXBGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386, SYSTEM.MMX}
 		PUSHFD
+		PUSH ECX
 		; CLI
 		MOV 		ESI, [EBP+sadr]
 		MOV 		EDI, [EBP+dadr]
@@ -2255,6 +2278,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		JMP 		loop
 	end:
 		EMMS ; declare FPU registers free
+		POP ECX
 		POPFD
 	END MMXBGRA8888Over565;
 
@@ -2262,6 +2286,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	PROCEDURE SSE2BGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.i386, SYSTEM.MMX, SYSTEM.SSE, SYSTEM.SSE2}
 		PUSHFD
+		PUSH ECX
 		PUSH 		EBX
 		; CLI
 
@@ -2669,6 +2694,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	end:
 		EMMS ; declare FPU registers free
 		POP 		EBX
+		POP ECX
 		POPFD
 
 	END SSE2BGRA8888Over565;

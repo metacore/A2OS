@@ -2,7 +2,7 @@
 
 MODULE Clock; (** AUTHOR "pjm"; PURPOSE "Real-time clock driver"; *)
 
-IMPORT SYSTEM, Machine, KernelLog, Kernel, Objects;
+IMPORT SYSTEM, Machine, KernelLog, Kernel, Objects, Modules;
 
 CONST
 	TraceVerbose = FALSE;
@@ -101,6 +101,13 @@ TYPE
 				KernelLog.String("Clock: ClockMode = ");  KernelLog.Int(clockmode, 1);  KernelLog.Ln
 			END
 		END InitClock;
+		
+		PROCEDURE Terminate;
+		BEGIN
+			IF clockmode # 1 THEN
+				Objects.RemoveHandler(SELF.HandleInterrupt, Machine.IRQ0+8)
+			END;
+		END Terminate;
 
 	END Clock;
 
@@ -136,9 +143,17 @@ BEGIN
 	clock.Set(time, date)
 END Set;
 
+PROCEDURE Cleanup;
+BEGIN
+	ASSERT (clock # NIL);
+	clock.Terminate;
+	clock := NIL;
+END Cleanup;
+
 BEGIN
 	tz := 2*60;	(* fixme: configurable *)
-	NEW(clock); Get(starttime, startdate)
+	NEW(clock); Get(starttime, startdate);
+	Modules.InstallTermHandler(Cleanup);
 END Clock.
 
 (*

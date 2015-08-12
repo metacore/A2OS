@@ -1,6 +1,6 @@
 MODULE Display;   (** fof , source Win32.Windows.Mod+Win32.Displays.Mod+Win32.Display.Mod+Win32.Viewers.Mod **)
 
-IMPORT SYSTEM, Machine, Kernel32, User32, Modules, KernelLog, GDI32, Displays, Strings,
+IMPORT SYSTEM, Kernel32, User32, Modules, KernelLog, GDI32, Displays, Strings,
 	AosInputs := Inputs, Commands, Objects,WinFS, Options;
 
 CONST
@@ -240,7 +240,7 @@ VAR
 		str := "";
 		create.win.hWnd :=
 			User32.CreateWindowEx( 0, create.className, str, create.style, create.x, create.y, create.w, create.h,
-													   create.win.hWndParent, create.hMenu, Machine.hInstance,
+													   create.win.hWndParent, create.hMenu, Kernel32.hInstance,
 													   SYSTEM.VAL( User32.LParam, create ) );
 		IF User32.WSMaximize IN create.style THEN
 			INCL( create.win.state, maximized );  ret := User32.ShowWindow( create.win.hWnd, User32.SWShowMaximized )
@@ -919,7 +919,7 @@ VAR
 		ret: Kernel32.ATOM;
 	BEGIN
 		dummyClass.cbSize := SIZEOF( User32.WndClassEx );  dummyClass.style := {};  dummyClass.lpfnWndProc := DummyProc;
-		dummyClass.cbClsExtra := 0;  dummyClass.cbWndExtra := 4;  dummyClass.hInstance := Machine.hInstance;
+		dummyClass.cbClsExtra := 0;  dummyClass.cbWndExtra := 4;  dummyClass.hInstance := Kernel32.hInstance;
 		dummyClass.hIcon := Kernel32.NULL;  dummyClass.hIconSm := Kernel32.NULL;  dummyClass.hCursor := Kernel32.NULL;
 		dummyClass.hbrBackground := Kernel32.NULL;  dummyClass.lpszMenuName := Kernel32.NULL;
 		dummyClass.lpszClassName := SYSTEM.VAL( Kernel32.LPSTR, ADDRESSOF( dummyClassName ) );
@@ -928,8 +928,8 @@ VAR
 		windowClass.cbSize := SIZEOF( User32.WndClassEx );
 		windowClass.style := {7};   (* Cs_parentdc: INTEGER is 128  = 2^7 *)
 		windowClass.lpfnWndProc := WindowProc;  windowClass.cbClsExtra := 0;  windowClass.cbWndExtra := 4;
-		windowClass.hInstance := Machine.hInstance;  str := "Console";  windowClass.hIcon := User32.LoadIcon( Machine.hInstance, str );
-		str := "Console.Small";  windowClass.hIconSm := User32.LoadIcon( Machine.hInstance, str );  windowClass.hCursor := Kernel32.NULL;
+		windowClass.hInstance := Kernel32.hInstance;  str := "Console";  windowClass.hIcon := User32.LoadIcon( Kernel32.hInstance, str );
+		str := "Console.Small";  windowClass.hIconSm := User32.LoadIcon( Kernel32.hInstance, str );  windowClass.hCursor := Kernel32.NULL;
 		windowClass.hbrBackground := Kernel32.NULL;  windowClass.lpszMenuName := Kernel32.NULL;
 		windowClass.lpszClassName := SYSTEM.VAL( Kernel32.LPSTR, ADDRESSOF( windowClassName ) );
 		ret := User32.RegisterClassEx( windowClass )
@@ -938,8 +938,8 @@ VAR
 	PROCEDURE UnregisterClasses;
 	VAR ret: Kernel32.BOOL;
 	BEGIN
-		ret := User32.UnregisterClass( dummyClassName, Machine.hInstance );
-		ret := User32.UnregisterClass( windowClassName, Machine.hInstance )
+		ret := User32.UnregisterClass( dummyClassName, Kernel32.hInstance );
+		ret := User32.UnregisterClass( windowClassName, Kernel32.hInstance )
 	END UnregisterClasses;
 
 	PROCEDURE FirstWindow( ): Window;
@@ -989,7 +989,7 @@ VAR
 	VAR ret: Kernel32.BOOL;
 	BEGIN
 		IF aControlWinClass # Kernel32.NULL THEN
-			ret := User32.UnregisterClass( controlClassName, Machine.hInstance );  aControlWinClass := Kernel32.NULL
+			ret := User32.UnregisterClass( controlClassName, Kernel32.hInstance );  aControlWinClass := Kernel32.NULL
 		END
 	END UnregisterControlWinClass;
 
@@ -1003,8 +1003,8 @@ VAR
 		captionY := User32.GetSystemMetrics( User32.SMCYCaption );
 		menuY := User32.GetSystemMetrics( User32.SMCYMenu );  capture := NIL;  hook := NIL;  mouse := NIL;
 		(* winMain := NIL; *) nWindows := 0;  str := "PointCircle";
-		hCurrentCursor := User32.LoadCursor( Machine.hInstance, str );   (* Kernel32.NULL;  *);
-		str := "Cross";  hAlternativeCursor := User32.LoadCursor( Machine.hInstance, str );  dummyClassName := "Aos.Dummy.Class";
+		hCurrentCursor := User32.LoadCursor( Kernel32.hInstance, str );   (* Kernel32.NULL;  *);
+		str := "Cross";  hAlternativeCursor := User32.LoadCursor( Kernel32.hInstance, str );  dummyClassName := "Aos.Dummy.Class";
 		windowClassName := "Aos.Window.Class";  controlClassName := "Aos.ControlWindow.Class";  aControlWinClass := Kernel32.NULL;  kioskmode := FALSE;
 		Kernel32.InitializeCriticalSection( moduleCS );
 		(*

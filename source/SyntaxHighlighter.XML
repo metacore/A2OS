@@ -109,7 +109,7 @@
 					OUT
 				</Group>
 				<Group style="Modifiers">
-					DELEGATE
+					DELEGATE EXTERN NORETURN
 				</Group>
 				<Group style="Locking">
 					KernelLog.Enter
@@ -143,7 +143,7 @@
 					CHAR
 					ANY
 					RANGE
-					ADDRESS SIZE
+					ADDRESS SIZE WORD LONGWORD
 				</Group>
 				<Group style="Dangerous">
 					SYSTEM.GET SYSTEM.GET8 SYSTEM.GET16 SYSTEM.GET32 SYSTEM.GET64
@@ -171,6 +171,8 @@
 					SYSTEM.PACK SYSTEM.UNPK
 					HALT
 					UNTRACED
+					UNCHECKED
+					UNCOOPERATIVE
 				</Group>
 				<Group style="Debug">
 					KernelLog

@@ -792,6 +792,19 @@ BEGIN
 	END;
 END GetCpuCycles;
 
+PROCEDURE CurrentProcessTime*(): HUGEINT;
+VAR result: HUGEINT; process: Process;
+BEGIN
+	process := CurrentProcess();
+	FOR i := 0 TO Machine.MaxCPU-1 DO result := result + process.cpuCycles[i]; END;
+	RETURN result;
+END CurrentProcessTime;
+
+PROCEDURE TimerFrequency*(): HUGEINT;
+BEGIN
+	RETURN 1000000000;
+END TimerFrequency;
+
 (* Handle hardware interrupt and route it to an interrupt handler process. *)
 PROCEDURE FieldIRQ(VAR state: Machine.State);
 VAR t: Process; id: LONGINT; new: Process; preempt: BOOLEAN;

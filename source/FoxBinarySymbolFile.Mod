@@ -245,7 +245,7 @@ TYPE
 		BEGIN
 			typeList := NIL; SELF.system := system; NEW(typeFixes);
 			NEW(streamDiagnostics, D.Log);
-			checker := SemanticChecker.NewChecker(streamDiagnostics,FALSE,FALSE,system,symbolFile,NIL,importCache);
+			checker := SemanticChecker.NewChecker(streamDiagnostics,FALSE,FALSE,TRUE,system,symbolFile,NIL,importCache);
 		END Init;
 
 		(* types that do not refer to other types *)
@@ -445,7 +445,7 @@ TYPE
 			Scope(recordType.recordScope);
 			var := recordType.recordScope.firstVariable;
 			WHILE var # NIL DO
-				hasPointer := hasPointer OR var.type.resolved.hasPointers;
+				hasPointer := hasPointer OR var.type.resolved.hasPointers & ~var.untraced;
 				var := var.nextVariable;
 			END;
 			recordType.SetHasPointers(hasPointer);

@@ -61,7 +61,6 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  *)
 
 IMPORT
-	SYSTEM,
 	Modules, Streams, Commands, Options, Files, Dates, Strings, Texts, TextUtilities, ReleaseThreadPool, Diagnostics, WMGraphics, Zip,
 	CompilerInterface, Compiler, SyntaxTree := FoxSyntaxTree ;
 
@@ -113,7 +112,7 @@ CONST
 	ALL = {0..31};
 
 	MaxBuilds = 16;
-	MaxPrefixes = 16;
+	MaxPrefixes = 32;
 	MaxNofImports = 64; (* Maximum number of entries in a module import section *)
 
 	Tab = 9X;

@@ -178,6 +178,8 @@
 					S*.PACK S*.UNPK					
 					HALT
 					UNTRACED
+					UNSAFE
+					UNCOOPERATIVE
 				</Group>
 				<Group style="Debug">
 					KernelLog

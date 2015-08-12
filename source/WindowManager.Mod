@@ -1566,7 +1566,6 @@ VAR
 	defaultKeyboard : KeyboardObj;
 	defaultMouse : MouseObj;
 	CharToUnicode: ARRAY 256 OF LONGINT; (** mapping from Oberon character codes to Unicodes **)
-	t : Kernel.Timer;
 
 
 PROCEDURE Min(a, b:LONGINT):LONGINT;
@@ -1674,7 +1673,6 @@ BEGIN
 	IF session # NIL THEN
 		IF toucher # NIL THEN toucher.alive := FALSE; toucher.timer.Wakeup END;
 		session.ShutDown;
-		t.Sleep(100)
 	 END
 END CleanUp;
 
@@ -1716,7 +1714,6 @@ BEGIN
 	InitCharMaps;
 	Modules.InstallTermHandler(CleanUp);
 	DoubleClick := 500;
-	NEW(t);
 END WindowManager.
 
 

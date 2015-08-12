@@ -75,8 +75,8 @@ END MOVDQA5;
 
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
 PROCEDURE TransformSSE2*(src, dst: LONGINT);
-VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: LONGINT;
-BEGIN
+VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr, ecx: LONGINT;
+BEGIN {UNCOOPERATIVE}
 
 	tg116 := tg116adr;
 	tg216 := tg216adr;
@@ -85,6 +85,7 @@ BEGIN
 	onecorr := onecorradr;
 	roundinvcol := roundinvcoladr;
 	roundinvcorr := roundinvcorradr;
+	ecx := Machine.GetECX();
 	Machine.SetEAX(src);
 	Machine.SetEDX(dst);
 	Machine.SetECX(roundinvrowadr);
@@ -106,7 +107,8 @@ BEGIN
 	Machine.SetECX(tabi17adr ); *)
 	DCT8INVROWSSE2;
 	MOVDQA5;
-	DCT8INVCOLSSE2
+	DCT8INVCOLSSE2;
+	Machine.SetECX (ecx);
 END TransformSSE2;
 
 
@@ -335,8 +337,8 @@ END MOVQ10;
 
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
 PROCEDURE TransformSSE*(src, dst: LONGINT);
-VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: LONGINT;
-BEGIN
+VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr, ecx: LONGINT;
+BEGIN {UNCOOPERATIVE}
 
 	tg116 := tg116adr;
 	tg216 := tg216adr;
@@ -346,6 +348,7 @@ BEGIN
 	roundinvcol := roundinvcoladr;
 	roundinvcorr := roundinvcorradr;
 
+	ecx := Machine.GetECX ();
 	Machine.SetECX(src);
 	Machine.SetEDX(dst);	(* MOV EDX, dst *)
 	Machine.SetEBX(roundinvrowadr );
@@ -377,6 +380,7 @@ BEGIN
 	DCT8INVCOLSSE;
 	MOVQ10;
 	DCT8INVCOLSSE;
+	Machine.SetECX(ecx);
 
 END TransformSSE;
 

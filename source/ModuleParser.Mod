@@ -18,17 +18,21 @@ CONST
 	Active* = 2;
 	Safe* = 3;
 	Priority* = 4;
-	HasExclusiveBlock* = 5;
+	Unchecked* = 5;
+	Uncooperative* = 6;
+	HasExclusiveBlock* = 7;
 	(* procedure modifiers (in addition to block modifiers) *)
-	Overwrite* = 6; (* procedure overwrites procedure in superclass *)
-	Overwritten* = 7; (* procedure is overwritten in subclass *)
-	Interrupt* = 8; (* procedure is an interrupt handler that might be called asynchronously *)
+	Overwrite* = 8; (* procedure overwrites procedure in superclass *)
+	Overwritten* = 9; (* procedure is overwritten in subclass *)
+	Interrupt* = 10; (* procedure is an interrupt handler that might be called asynchronously *)
 
 	ExclusiveStr = "EXCLUSIVE";
 	ActiveStr = "ACTIVE";
 	RealtimeStr = "REALTIME";
 	SafeStr = "SAFE";
 	PriorityStr = "PRIORITY";
+	UncheckedStr = "UNCHECKED";
+	UncooperativeStr = "UNCOOPERATIVE";
 	NoPAFStr = "NOPAF"; FixedStr = "FIXED"; AlignedStr = "FIXED";
 	DynamicStr = "DYNAMIC"; InterruptStr = "INTERRUPT"; PCOffsetStr = "PCOFFSET";
 
@@ -320,6 +324,7 @@ TYPE
 		ident*: InfoItem;
 		vis*: SHORTINT;
 		initializer*: InfoItem;
+		external*: Strings.String;
 	END IdentDef;
 
 	IdentList* = OBJECT (NodeList)
@@ -616,17 +621,27 @@ TYPE
 		VAR
 			identDef: IdentDef;
 			identList: IdentList;
+			
+			PROCEDURE Initializer;
+			VAR expr: InfoItem;
+			BEGIN
+				Check (FoxScanner.Becomes); NEW (expr);
+				ConstExprP(FoxScanner.Colon, FoxScanner.Comma, expr);
+			END Initializer;
+			
 		BEGIN
 			(*SysFlag;*)
 			NEW(var.identList, var);
 			NEW(var.identList.identDef);
 			IdentDefP(var.identList.identDef);
 			SysFlag;
+			IF symbol.token = FoxScanner.Becomes THEN Initializer END;
 			WHILE symbol.token = FoxScanner.Comma DO
 				NextSymbol;	(* avoids endless loop *)
 				NEW(identDef);
 				IdentDefP(identDef);
 				SysFlag;
+				IF symbol.token = FoxScanner.Becomes THEN Initializer END;
 				NEW(identList, var);
 				identList.identDef := identDef;
 				AppendLast(var.identList, identList);
@@ -643,6 +658,7 @@ TYPE
 			NEW(proc.head, proc);
 			ProcHeadP(proc.head);
 			IF proc.head.identDef = NIL THEN proc.head := NIL; RETURN END;
+			IF proc.head.identDef.external # NIL THEN RETURN END;
 			Check(FoxScanner.Semicolon);
 			IF 	(symbol.token = FoxScanner.Const) OR (symbol.token = FoxScanner.Var) OR
 				(symbol.token = FoxScanner.Type) OR (symbol.token = FoxScanner.Procedure) OR (symbol.token = FoxScanner.Operator) THEN
@@ -671,6 +687,7 @@ TYPE
 			| FoxScanner.Minus: head.inline := TRUE; NextSymbol;
 			| FoxScanner.And: head.constructor := TRUE; NextSymbol;
 			| FoxScanner.Times: (* ignore *) NextSymbol;
+			| FoxScanner.Not: (* ignore *) NextSymbol;
 			| FoxScanner.Arrow: (* ignore *) NextSymbol; forward := TRUE;
 			| FoxScanner.String: head.operator := TRUE;
 			| FoxScanner.Number: IF symbol.numberType = FoxScanner.Character THEN head.operator := TRUE END;
@@ -741,6 +758,7 @@ TYPE
 			Check(FoxScanner.RightParenthesis);
 			IF symbol.token = FoxScanner.Colon THEN
 				NextSymbol;
+				SysFlag;
 				NEW(pars.returnType, pars);
 				TypeP(pars.returnType)
 			END;
@@ -776,6 +794,7 @@ TYPE
 					NextSymbol;
 					NEW(identList.identDef);
 					IdentDefP(identList.identDef);
+					SysFlag;
 					AppendLast(fpSection.identList, identList);
 					(*
 					IF symbol.token = FoxScanner.Identifier THEN
@@ -1134,6 +1153,12 @@ TYPE
 								ConstExprP(FoxScanner.RightParenthesis, -1, ignore);
 								Check(FoxScanner.RightParenthesis);
 							END;
+						ELSIF symbol.identifierString = UncheckedStr  THEN
+							modifiers := modifiers + {Unchecked};
+							NextSymbol;
+						ELSIF symbol.identifierString = UncooperativeStr  THEN
+							modifiers := modifiers + {Uncooperative};
+							NextSymbol;
 						ELSE
 							Error(symbol.start); NextSymbol (* skip the ident, probably a typo *)
 						END;
@@ -1269,10 +1294,16 @@ TYPE
 			ELSE
 				identDef.vis := Private;
 			END;
+			identDef.external := NIL;
 			IF symbol.token = FoxScanner.Becomes THEN
 				NextSymbol;
 				NEW(identDef.initializer);
 				ConstExprP(FoxScanner.Colon, FoxScanner.Comma, identDef.initializer);
+			ELSIF symbol.token = FoxScanner.Extern THEN
+				NextSymbol;
+				identDef.external := Strings.NewString(symbol.string^);
+				Check(FoxScanner.String);
+				TRACE (identDef.external^);
 			END;
 		END IdentDefP;
 

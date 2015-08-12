@@ -336,7 +336,7 @@ TYPE
 	ArrayAccessOperators* = RECORD
 		len*: Operator; (* length operator *)
 		generalRead*, generalWrite*: Operator; (* operators on ARRAY [*] RANGE, for tensors *)
-		read*, write*: ARRAY [*] OF Operator; (* fixed-dim. operators *)
+		read*, write*: POINTER TO ARRAY OF Operator; (* fixed-dim. operators *)
 	END;
 
 	FingerPrint*= RECORD
@@ -493,10 +493,20 @@ TYPE
 		BEGIN RETURN FALSE
 		END IsComposite;
 
+		(** Returns if the type needs to be traced for garbage collection *)
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN IsPointer ();
+		END NeedsTrace;
+
 		PROCEDURE Accept*(v: Visitor);
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitType(SELF)
 		END Accept;
+				
+		PROCEDURE IsRecordType*(): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END IsRecordType;
 
 	END Type;
 
@@ -576,7 +586,7 @@ TYPE
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
-		BEGIN RETURN (to IS NilType) OR (to IS ObjectType) OR (to IS AnyType) OR (to IS PointerType) OR (to IS ProcedureType)
+		BEGIN RETURN (to IS NilType) OR (to IS ObjectType) OR (to IS AnyType) OR (to IS PointerType) OR (to IS ProcedureType) OR (to IS AddressType)
 		END CompatibleTo;
 
 		PROCEDURE IsPointer(): BOOLEAN;
@@ -946,6 +956,16 @@ TYPE
 		BEGIN position := SELF.position; v.VisitQualifiedType(SELF)
 		END Accept;
 
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN (resolved # NIL) & (resolved.NeedsTrace());
+		END NeedsTrace;
+		
+		PROCEDURE IsRecordType(): BOOLEAN;
+		BEGIN
+			RETURN (resolved # NIL) & (resolved.IsRecordType());
+		END IsRecordType;
+		
+
 	END QualifiedType;
 
 	(** string literal type **)
@@ -1103,6 +1123,10 @@ TYPE
 		BEGIN RETURN TRUE
 		END IsComposite;
 
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN arrayBase.resolved.NeedsTrace ();
+		END NeedsTrace;
+
 		PROCEDURE Accept*(v: Visitor);
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitArrayType(SELF)
@@ -1251,6 +1275,7 @@ TYPE
 		VAR
 			modifiers-: Modifier; (* set by the parser *)
 			pointerBase-: Type;
+			isPlain-: BOOLEAN;
 			isUnsafe-: BOOLEAN;
 			isDisposable-: BOOLEAN;
 
@@ -1258,6 +1283,7 @@ TYPE
 		BEGIN
 			modifiers := NIL;
 			pointerBase := NIL;
+			isPlain := FALSE;
 			isUnsafe := FALSE;
 			isDisposable := FALSE;
 			InitType(position);
@@ -1273,6 +1299,11 @@ TYPE
 		BEGIN
 			pointerBase := type;
 		END SetPointerBase;
+
+		PROCEDURE SetPlain*(plain: BOOLEAN);
+		BEGIN
+			isPlain := plain;
+		END SetPlain;
 
 		PROCEDURE SetUnsafe*(unsafe: BOOLEAN);
 		BEGIN
@@ -1405,6 +1436,15 @@ TYPE
 		BEGIN SELF.isObject := isObject
 		END IsObject;
 
+		PROCEDURE IsActive*(): BOOLEAN;
+		VAR base: RecordType;
+		BEGIN
+			IF (recordScope.bodyProcedure # NIL) & (recordScope.bodyProcedure.procedureScope.body # NIL) & (recordScope.bodyProcedure.procedureScope.body.isActive) THEN RETURN TRUE END;
+			base := GetBaseRecord();
+			IF base # NIL THEN RETURN base.IsActive() END;
+			RETURN FALSE
+		END IsActive;
+
 		PROCEDURE IsProtected*(): BOOLEAN;
 		VAR base: RecordType;
 		BEGIN
@@ -1485,10 +1525,19 @@ TYPE
 		BEGIN RETURN TRUE
 		END IsComposite;
 
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN recordScope.NeedsTrace();
+		END NeedsTrace;
+
 		PROCEDURE Accept*(v: Visitor);
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitRecordType(SELF)
 		END Accept;
+		
+		PROCEDURE IsRecordType(): BOOLEAN;
+		BEGIN
+			RETURN TRUE;
+		END IsRecordType;
 
 	END RecordType;
 
@@ -1559,6 +1608,8 @@ TYPE
 		VAR
 			modifiers-: Modifier; (* set by the parser *)
 			returnType-: Type;
+			returnTypeModifiers-: Modifier;
+			hasUntracedReturn-: BOOLEAN;
 			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters *)
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
 
@@ -1580,6 +1631,8 @@ TYPE
 			callingConvention := OberonCallingConvention;
 			parameterOffset := 0;
 			pcOffset := 0;
+			hasUntracedReturn := FALSE;
+			returnTypeModifiers := NIL;
 		END InitProcedureType;
 
 		PROCEDURE SetNoPAF*(noPAF: BOOLEAN);
@@ -1602,9 +1655,18 @@ TYPE
 		BEGIN modifiers := flags
 		END SetModifiers;
 
+		PROCEDURE SetReturnTypeModifiers*(flags: Modifier);
+		BEGIN returnTypeModifiers := flags
+		END SetReturnTypeModifiers;
+
 		PROCEDURE SetDelegate*(delegate: BOOLEAN);
 		BEGIN SELF.isDelegate := delegate; SELF.hasPointers := delegate;
 		END SetDelegate;
+		
+		PROCEDURE SetUntracedReturn*(untraced: BOOLEAN);
+		BEGIN
+			hasUntracedReturn := untraced;
+		END SetUntracedReturn;
 
 		PROCEDURE SetStackAlignment*(alignment: LONGINT);
 		BEGIN
@@ -1672,7 +1734,7 @@ TYPE
 					result := result & (noReturn = this.noReturn);
 					IF result THEN
 						p1 := firstParameter; p2 := this.firstParameter;
-						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved)) DO
+						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved) OR (p1.type.resolved IS AddressType) & (p2.type.resolved IS PointerType) & p2.type.resolved(PointerType).isUnsafe) DO
 							p1 := p1.nextParameter; p2 := p2.nextParameter
 						END;
 						result := ((p1=NIL) OR (p1.access = Hidden)) & ((p2=NIL)  OR (p2.access= Hidden));
@@ -1696,6 +1758,11 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitProcedureType(SELF)
 		END Accept;
+		
+		(** Returns if the type needs to be traced for garbage collection *)
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN isDelegate;
+		END NeedsTrace;
 
 	END ProcedureType;
 
@@ -1747,6 +1814,10 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitExpression(SELF)
 		END Accept;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN FALSE;
+		END NeedsTrace;
 
 	END Expression;
 
@@ -2167,7 +2238,7 @@ TYPE
 	END ArrowDesignator;
 
 	(** <<left[parameters]>>
-		designates an index designator
+		designates an index designator, before checker
 	**)
 	BracketDesignator* = OBJECT(Designator)
 		VAR parameters-: ExpressionList;
@@ -2186,6 +2257,7 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitBracketDesignator(SELF)
 		END Accept;
+
 
 	END BracketDesignator;
 
@@ -2218,6 +2290,10 @@ TYPE
 		PROCEDURE SetSymbol*(s: Symbol);
 		BEGIN SELF.symbol := s;
 		END SetSymbol;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN symbol.NeedsTrace() & ((left = NIL) OR (left.NeedsTrace()));
+		END NeedsTrace;
 
 	END SymbolDesignator;
 
@@ -2259,6 +2335,10 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitIndexDesignator(SELF)
 		END Accept;
+		
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN type.NeedsTrace() & left.NeedsTrace(); (* for x[y]: if x is untraced, then also x[y] should be treated untraced *)
+		END NeedsTrace;
 
 	END IndexDesignator;
 
@@ -2366,6 +2446,10 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitTypeGuardDesignator(SELF)
 		END Accept;
+		
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x(Y): if x is untraced, then x as Y should also be treated untraced  *)
+		END NeedsTrace;
 
 	END TypeGuardDesignator;
 
@@ -2386,6 +2470,10 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitDereferenceDesignator(SELF)
 		END Accept;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
+		END NeedsTrace;
 
 	END DereferenceDesignator;
 
@@ -2426,6 +2514,11 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitSelfDesignator(SELF)
 		END Accept;
+		
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN type.NeedsTrace();
+		END NeedsTrace;
+
 
 	END SelfDesignator;
 
@@ -2814,6 +2907,7 @@ TYPE
 		nextSymbol-: Symbol;
 
 		name-: Identifier; (* constant / variable / parameter / type name / module name *)
+		externalName-: Scanner.StringType;  (* variable / procedure *)
 		access-: SET; (* access flags (exported, readonly etc.) *)
 		type-: Type; (* type of constant / variable / parameter / procedure return type *)
 		scope-:Scope; (* container of symbol *)
@@ -2833,6 +2927,7 @@ TYPE
 			SELF.position := position; state := Undefined;
 			nextSymbol := NIL;
 			SELF.name := name;
+			externalName := NIL;
 			scope:= NIL;
 			type := NIL;
 			access := Internal;
@@ -2904,6 +2999,14 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position; v.VisitSymbol(SELF)
 		END Accept;
+		
+		PROCEDURE SetExternalName*(name: Scanner.StringType);
+		BEGIN externalName := name;
+		END SetExternalName;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN FALSE;
+		END NeedsTrace;
 
 	END Symbol;
 
@@ -3036,6 +3139,10 @@ TYPE
 		BEGIN position := SELF.position; v.VisitVariable(SELF)
 		END Accept;
 
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN ~untraced & (externalName = NIL) & type.NeedsTrace ();
+		END NeedsTrace;
+
 	END Variable;
 
 	(** << [VAR | CONST] name: type >>
@@ -3051,6 +3158,7 @@ TYPE
 		kind-: LONGINT;   (* ValueParameter, ConstParameter, VarParameter *)
 		ownerType-: Type;
 		untraced-: BOOLEAN;
+		movable-: BOOLEAN;
 
 		PROCEDURE & InitParameter( position: LONGINT;  ownerType: Type ; name: Identifier; kind: LONGINT);
 		BEGIN
@@ -3062,6 +3170,7 @@ TYPE
 			modifiers := NIL;
 			untraced := FALSE;
 			defaultValue := NIL;
+			movable := FALSE;
 		END InitParameter;
 
 		PROCEDURE SetModifiers*(flag: Modifier);
@@ -3071,6 +3180,10 @@ TYPE
 		PROCEDURE SetUntraced*(untraced: BOOLEAN);
 		BEGIN SELF.untraced := untraced
 		END SetUntraced;
+
+		PROCEDURE SetMoveable*(movable: BOOLEAN);
+		BEGIN SELF.movable := movable
+		END SetMoveable;
 
 		PROCEDURE SetDefaultValue*(e: Expression);
 		BEGIN defaultValue := e
@@ -3083,6 +3196,10 @@ TYPE
 
 		PROCEDURE SetKind*(kind: LONGINT);
 		BEGIN SELF.kind := kind; END SetKind;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		BEGIN RETURN ~untraced  & type.NeedsTrace ();
+		END NeedsTrace;
 
 	END Parameter;
 
@@ -3097,7 +3214,7 @@ TYPE
 			procedureScope- : ProcedureScope;
 			super-: Procedure;
 			level-, methodNumber-: LONGINT;
-			isBodyProcedure-, isConstructor-, isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
+			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
 
 		PROCEDURE & InitProcedure( position: LONGINT;  name: Identifier; scope: ProcedureScope);
 		BEGIN
@@ -3111,6 +3228,7 @@ TYPE
 			methodNumber := -1;
 			isBodyProcedure := FALSE;
 			isConstructor := FALSE;
+			isFinalizer := FALSE;
 			isInline := FALSE;
 			isOberonInline := FALSE;
 			isEntry := FALSE;
@@ -3132,6 +3250,10 @@ TYPE
 		PROCEDURE SetConstructor*(isConstructor: BOOLEAN);
 		BEGIN SELF.isConstructor := isConstructor
 		END SetConstructor;
+
+		PROCEDURE SetFinalizer*(isFinalizer: BOOLEAN);
+		BEGIN SELF.isFinalizer := isFinalizer
+		END SetFinalizer;
 
 		PROCEDURE SetInline*(isInline: BOOLEAN);
 		BEGIN SELF.isInline := isInline
@@ -4046,6 +4168,7 @@ TYPE
 			isExclusive-: BOOLEAN;
 			isRealtime-: BOOLEAN;
 			isUnchecked-: BOOLEAN;
+			isUncooperative-: BOOLEAN;
 
 		PROCEDURE & InitStatementBlock( position: LONGINT ; outer: Statement);
 		BEGIN
@@ -4053,6 +4176,7 @@ TYPE
 			isExclusive := FALSE;
 			isRealtime := FALSE;
 			isUnchecked := FALSE;
+			isUncooperative := FALSE;
 		END InitStatementBlock;
 
 		PROCEDURE SetRealtime*(b: BOOLEAN);
@@ -4064,6 +4188,11 @@ TYPE
 		BEGIN
 			isUnchecked := unchecked
 		END SetUnchecked;
+
+		PROCEDURE SetUncooperative*(uncooperative: BOOLEAN);
+		BEGIN
+			isUncooperative := uncooperative
+		END SetUncooperative;
 
 		PROCEDURE SetModifier*(modifier: Modifier);
 		BEGIN
@@ -4347,6 +4476,17 @@ TYPE
 			RETURN level;
 		END Level;
 
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		VAR variable: Variable;
+		BEGIN
+			variable := firstVariable;
+			WHILE variable # NIL DO
+				IF variable.NeedsTrace () THEN RETURN TRUE END;
+				variable := variable.nextVariable;
+			END;
+			RETURN FALSE;
+		END NeedsTrace;
+
 	END Scope;
 
 	ProcedureScope*=OBJECT (Scope)
@@ -4365,6 +4505,17 @@ TYPE
 		BEGIN
 			SELF.body := body;
 		END SetBody;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		VAR parameter: Parameter;
+		BEGIN
+			parameter := ownerProcedure.type.resolved(ProcedureType).firstParameter;
+			WHILE parameter # NIL DO
+				IF parameter.NeedsTrace () THEN RETURN TRUE END;
+				parameter := parameter.nextParameter;
+			END;
+			RETURN NeedsTrace^();
+		END NeedsTrace;
 
 	END ProcedureScope;
 
@@ -4400,6 +4551,7 @@ TYPE
 			ownerRecord-: RecordType;
 			bodyProcedure-: Procedure;
 			constructor-: Procedure;
+			finalizer-: Procedure;
 			numberMethods-: LONGINT;
 			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters for Active Cells programming*)
 			firstOperator-, lastOperator-: Operator; numberOperators: LONGINT; (* defined operators *)
@@ -4411,6 +4563,7 @@ TYPE
 			numberMethods := 0;
 			bodyProcedure := NIL;
 			constructor := NIL;
+			finalizer := NIL;
 			firstOperator := NIL; lastOperator := NIL; numberOperators := 0;
 		END InitRecordScope;
 
@@ -4421,6 +4574,10 @@ TYPE
 		PROCEDURE SetConstructor*(body: Procedure);
 		BEGIN SELF.constructor := body
 		END SetConstructor;
+
+		PROCEDURE SetFinalizer*(body: Procedure);
+		BEGIN SELF.finalizer := body
+		END SetFinalizer;
 
 		PROCEDURE SetNumberMethods*(numberMethods: LONGINT);
 		BEGIN SELF.numberMethods := numberMethods;
@@ -4512,6 +4669,14 @@ TYPE
 			END;
 			RETURN p;
 		END FindMethod;
+
+		PROCEDURE NeedsTrace* (): BOOLEAN;
+		VAR base: RecordType;
+		BEGIN
+			base := ownerRecord.GetBaseRecord();
+			IF (base # NIL) & (base.NeedsTrace ()) THEN RETURN TRUE END;
+			RETURN NeedsTrace^();
+		END NeedsTrace;
 
 	END RecordScope;
 

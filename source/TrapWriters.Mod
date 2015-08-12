@@ -20,6 +20,13 @@ TYPE
 		PROCEDURE Trapped;
 		BEGIN trapped := TRUE;
 		END Trapped;
+		
+		PROCEDURE Char(ch: CHAR);
+		BEGIN
+			Trace.Char(ch);
+			Char^(ch);
+		END Char;
+		
 
 		PROCEDURE &InitTrapWriter(f: WriterFactory);
 		BEGIN
@@ -167,3 +174,4 @@ BEGIN
 	trapWriter := NIL;
 END TrapWriters.
 TrapWriters.InstallTraceWriter
+TrapWriters.InstallLogWriter

@@ -94,7 +94,7 @@ MODULE PCO; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: Intel 386 code pa
 		ADD* = 0; ADC* = 10H; SUB* = 28H; SBB* = 18H; CMP* = 38H; AND* = 20H; Or* = 8H; XOR* = 30H;
 
 		(** Wait *)
-		WAIT* = 9BH;
+		wWAIT* = 9BH;
 
 		(** GenFop1 *)
 		FCOMPP* = 0; FTST* = 1; FLDZ* = 2; FLD1* = 3; FABS* = 4; FCHS* = 5; FSTSW* = 6; FINCSTP* = 7; FDECSTP* = 8;

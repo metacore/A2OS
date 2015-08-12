@@ -271,7 +271,7 @@ VAR
 		dest.name := source.name; dest.fingerprint := source.fingerprint
 	END CopyIdentifier;
 
-	PROCEDURE CopyPattern(CONST source: Pattern; VAR dest: Pattern);
+	PROCEDURE CopyPattern( source: Pattern; VAR dest: Pattern);
 	VAR i: LONGINT;
 	BEGIN
 		NEW(dest);
@@ -294,7 +294,7 @@ VAR
 		END;
 	END CopyPatches;
 
-	PROCEDURE CopyFixup*(CONST source: Fixup; VAR dest: Fixup);
+	PROCEDURE CopyFixup*(source: Fixup; VAR dest: Fixup);
 	VAR i: LONGINT;
 	BEGIN
 		CopyIdentifier(source.identifier, dest.identifier);
@@ -376,7 +376,7 @@ VAR
 			writer.Int (identifier.fingerprint, 0);
 		END WriteIdentifier;
 
-		PROCEDURE WritePattern(CONST pattern: Pattern);
+		PROCEDURE WritePattern(pattern: Pattern);
 		VAR i: LONGINT;
 		BEGIN
 			WriteValueIdentifier (pattern.mode, modes);
@@ -656,7 +656,7 @@ VAR
 			writer.RawNum (identifier.fingerprint);
 		END WriteIdentifier;
 
-		PROCEDURE WritePattern(CONST pattern: Pattern);
+		PROCEDURE WritePattern(pattern: Pattern);
 		VAR i: LONGINT;
 		BEGIN
 			WriteValueIdentifier (pattern.mode, modes);
@@ -880,18 +880,32 @@ VAR
 
 		PROCEDURE ReadSegment(): BOOLEAN;
 		VAR len,offset,bits: LONGINT; c: CHAR;
+			segment: ARRAY 128 OF CHAR;
+			received: LONGINT;
 		BEGIN
 			reader.RawNum(len);
 			IF len = 0 THEN RETURN FALSE END;
 			reader.RawNum(offset); offset := offset * ByteSize;
-			WHILE len > 0 DO
+			WHILE len > LEN(segment) DO
+				reader.Bytes(segment, 0, LEN(segment), received);
+				ASSERT(received = LEN(segment));
+				section.bits.SetBytes(offset, LEN(segment), segment);
+				DEC(len, received); 
+				INC(offset, received*ByteSize);
+			END;
+			IF size MOD 8 # 0 THEN
+				reader.Bytes(segment, 0, len-1, received);
+				ASSERT(received = len-1);
+				section.bits.SetBytes(offset, received, segment);
+				DEC(len, received); 
+				INC(offset, received*ByteSize);
+				(* last byte: only part of a byte *)
 				reader.Char(c);
-				bits := ORD(c);
-				(*
-				reader.RawLInt (bits);
-				*)
-				section.bits.SetBits (offset, MIN (ByteSize, size - offset), bits);
-				DEC(len); INC(offset,ByteSize);
+				section.bits.SetBits (offset, MIN (ByteSize, size - offset), ORD(c));
+			ELSE
+				reader.Bytes(segment, 0, len, received);
+				ASSERT(received = len);
+				section.bits.SetBytes(offset, received, segment);
 			END;
 			RETURN TRUE
 		END ReadSegment;
@@ -1133,6 +1147,24 @@ VAR
 		END;
 		name[i] := 0X;
 	END SegmentedNameToString;
+	
+	(* result = 0 : equal strings, result < 0: s1 before s2, result > 0 : s1 after s2 (alphanumerically) *)
+	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): LONGINT;
+	VAR n1, n2: SectionName; index: LONGINT; ch1, ch2: CHAR;
+	BEGIN
+		SegmentedNameToString(s1,n1);
+		SegmentedNameToString(s2,n2);
+		index := 0; 
+		ch1 := n1[index];
+		ch2 := n2[index];
+		WHILE (ch1 # 0X) & (ch1 = ch2)  DO
+			INC(index);
+			ch1 := n1[index];
+			ch2 := n2[index];
+		END;
+		RETURN ORD(ch1) - ORD(ch2);
+	END CompareSegmentedNames;
+
 
 	OPERATOR "="*(CONST l,r: SegmentedName): BOOLEAN;
 	VAR i: LONGINT;

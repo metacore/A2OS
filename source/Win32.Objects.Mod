@@ -1356,6 +1356,18 @@ BEGIN
 	END;
 END GetCpuCycles;
 
+PROCEDURE CurrentProcessTime*(): HUGEINT;
+VAR res: LONGINT; result: HUGEINT;
+BEGIN
+	res := Kernel32.QueryThreadCycleTime(CurrentProcess().handle, result);
+	RETURN result;
+END CurrentProcessTime;
+
+PROCEDURE TimerFrequency*(): HUGEINT;
+BEGIN
+	RETURN 1000000000;
+END TimerFrequency;
+
 BEGIN
 	exceptionhandler := NIL;
 	terminateProc := TerminateProc;

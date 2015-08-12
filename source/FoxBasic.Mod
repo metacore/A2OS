@@ -585,6 +585,33 @@ TYPE
 
 	END HashTable;
 
+	IntIterator*= OBJECT
+	VAR
+		table: HashIntArray;
+		count : LONGINT;
+		
+		PROCEDURE & Init(t: HashIntArray);
+		BEGIN
+			table := t;
+			count := -1;
+		END Init;
+		
+		PROCEDURE GetNext*(VAR key: LONGINT; VAR value: ANY): BOOLEAN;
+		BEGIN
+			REPEAT
+				INC(count);
+			UNTIL (count = LEN(table)) OR (table[count].value # NIL);
+			IF count = LEN(table) THEN 
+				RETURN FALSE
+			END;
+			key := table[count].key;
+			value := table[count].value;
+			RETURN TRUE;
+		END GetNext;
+		
+		
+	END IntIterator;
+
 	HashTableInt* = OBJECT
 	VAR
 		table: HashIntArray;
@@ -688,6 +715,13 @@ TYPE
 			END;
 		END Grow;
 
+		PROCEDURE GetIterator*(): IntIterator;
+		VAR iterator: IntIterator;
+		BEGIN
+			NEW(iterator, table);
+			RETURN iterator;
+		END GetIterator;
+		
 	END HashTableInt;
 
 	HashEntrySegmentedName = RECORD
@@ -1819,6 +1853,7 @@ VAR
 		IF i < LEN(name) THEN (* name[i] = empty *) name[i-1] := -1
 		ELSE (* i = LEN(name), name[i] = nonempty *)
 			DEC(i);
+			StringPool.GetString(name[i],string);
 		pos0 := 0; pos := 0;
 		WHILE (pos0 < LEN(string)) & (string[pos0] # 0X) DO
 			IF string[pos0] = "." THEN pos := pos0 END;
@@ -1832,6 +1867,33 @@ VAR
 		END;
 		END;
 	END RemoveSuffix;
+	
+	PROCEDURE GetSuffix*(CONST name: SegmentedName; VAR string: ARRAY OF CHAR);
+	VAR i,pos,pos0: LONGINT;
+	BEGIN
+		i := 0;
+		WHILE  (i< LEN(name)) & (name[i] >= 0) DO
+			INC(i);
+		END;
+		ASSERT(i>0);
+		StringPool.GetString(name[i-1],string);
+		IF i = LEN(name) THEN
+			pos0 := 0; pos := 0;
+			WHILE (pos0 < LEN(string)) & (string[pos0] # 0X) DO
+				IF string[pos0] = "." THEN pos := pos0 END;
+				INC(pos0);
+			END;
+			IF pos # 0 THEN (* no dot in name or name starts with dot *)
+				pos0 := 0;
+				REPEAT 
+					INC(pos); (* start with character after "." *)
+					string[pos0] := string[pos];
+					INC(pos0);
+				UNTIL string[pos]  = 0X;
+			END;
+		END;
+	END GetSuffix;
+
 
 	PROCEDURE IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN;
 	VAR prefixS, ofS: SectionName; i: LONGINT;

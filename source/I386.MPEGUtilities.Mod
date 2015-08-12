@@ -1833,6 +1833,7 @@ TYPE
 		PROCEDURE ScanLine565MMX(horizCount, pucV, pucU, pucY, pucOut: LONGINT; mmxConsts: LONGINT);
 		CODE { SYSTEM.MMX, SYSTEM.PentiumPro }
 
+			PUSH ECX
 			MOV EAX, [EBP+pucOut]
 			MOV EBX, [EBP+pucY]
 			MOV ECX, [EBP+pucU]
@@ -1950,6 +1951,7 @@ TYPE
 			JNE horizLoop
 
 			EMMS
+			POP ECX
 		END ScanLine565MMX;
 
 		(* Convert picture from YUV -> RGB 565 *)

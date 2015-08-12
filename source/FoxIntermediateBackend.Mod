@@ -1,0 +1,10663 @@
+MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
+
+IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
+	Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode,  Printout := FoxPrintout,
+	SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
+	FingerPrinter := FoxFingerPrinter, StringPool, ActiveCells := FoxActiveCells;
+
+CONST
+		(* operand modes *)
+		ModeUndefined = 0;
+		ModeReference = 1;
+		ModeValue = 2;
+
+		(* heap data offsets *)
+		ArrayDimTable = 3;	(* dimension table in dyn arrays *)
+
+		(* math array offsets *)
+		MathPtrOffset=0;
+		MathAdrOffset=1;
+		MathFlagsOffset=2;
+		MathDimOffset=3;
+		MathElementSizeOffset=4;
+		MathLenOffset=5;
+		MathIncrOffset=6;
+
+		SysDataArrayOffset* = 0; (* array offset in system bl	ock, for 32 byte alignment *)
+		ArrDataArrayOffset*= 16*8; (* 16 bytes array offset in array block, to be compatible with the GC scheme of POINTER TO ARRAY OF ... *)
+
+		TensorFlag* = 0;   (* flag indicating a tensor array *)
+		RangeFlag* = 1;   (* flag indicating a range, e.g. an array derived from A[..,..] *)
+		StackFlag* = 2;   (* flag indicates temporary result *)
+		StaticFlag* = 1;   (* flag indicating a static array, may not be reallocated *)
+
+		(** compiler generated traps *)
+		WithTrap* = 1; (* generated when a WITH statement fails *)
+		CaseTrap* = 2; (* generated when a case statement without else block fails *)
+		ReturnTrap* = 3;
+		TypeEqualTrap* = 5;
+		TypeCheckTrap* = 6;
+		IndexCheckTrap* = 7; (* generated when index is out of bounds or range is invalid *)
+		AssertTrap* = 8; (* generated when an assert fails *)
+		ArraySizeTrap* = 9;
+		ArrayFormTrap*=10; (* indicates that array cannot be (re-)allocated since shape, type or size does not match *)
+		SetElementTrap*=11; (* indicates that a set element is out of MIN(SET)...MAX(SET) *)
+		NegativeDivisorTrap*=12;
+		NoReturnTrap*=16; (* indicates that a procedure marked no return did return *)
+
+		Trace = FALSE;
+		TraceRegisterUsageCount=TRUE;
+
+		ArrayAlignment = 8*8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
+
+		(** system call numbers  *)
+		NumberSystemCalls* = 12;
+		SysNewRec* = 0;  SysNewArr* = 1;  SysNewSys* = 2;  SysCaseTable* = 3;  SysProcAddr* = 4;
+		SysLock* = 5;  SysUnlock* = 6;  SysStart* = 7;  SysAwait* = 8; SysInterfaceLookup* = 9;
+		SysRegisterInterface* = 10; SysGetProcedure* = 11;
+
+		DefaultRuntimeModuleName ="Runtime";
+		DefaultTraceModuleName ="KernelLog";
+		ChannelModuleName = "Channels";
+
+		suppressModuleRegistration=FALSE;
+
+		NonPointer = -1; (* special pointer values *)
+		NoType = 0; (* special type info values *)
+		LhsIsPointer = 0; (* for the operator kind *)
+		RhsIsPointer = 1;
+
+		(* priority values, lower means higher priority *)
+		EntryPriority=-4;
+		FirstPriority=-3;
+		InitPriority=-2;
+		ExitPriority=-1;
+
+		StrictChecks = FALSE;
+TYPE
+	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
+	SupportedImmediateProcedure* = PROCEDURE {DELEGATE} (CONST op: IntermediateCode.Operand): BOOLEAN;
+
+	Operand = RECORD
+		mode: SHORTINT;
+		op: IntermediateCode.Operand;
+		tag: IntermediateCode.Operand;
+		extra: IntermediateCode.Operand; (* stores the step size of an array range *)
+		dimOffset: LONGINT;
+	END;
+
+	Fixup= POINTER TO RECORD
+		pc: LONGINT;
+		nextFixup: Fixup;
+	END;
+
+	WriteBackCall = POINTER TO RECORD
+		call: SyntaxTree.ProcedureCallDesignator;
+		next: WriteBackCall;
+	END;
+
+	Label= OBJECT
+	VAR
+		fixups: Fixup;
+		section: IntermediateCode.Section;
+		pc: LONGINT;
+
+		PROCEDURE &InitLabel(section: IntermediateCode.Section);
+		BEGIN
+			SELF.section := section; pc := -1;
+		END InitLabel;
+
+		PROCEDURE Resolve(pc: LONGINT);
+		VAR at: LONGINT;
+		BEGIN
+			SELF.pc := pc;
+			WHILE(fixups # NIL) DO
+				at := fixups.pc;
+				section.PatchAddress(at,pc);
+				fixups := fixups.nextFixup;
+			END;
+		END Resolve;
+
+		PROCEDURE AddFixup(at: LONGINT);
+		VAR fixup: Fixup;
+		BEGIN
+			ASSERT(pc=-1);
+			NEW(fixup); fixup.pc := at; fixup.nextFixup := fixups; fixups := fixup;
+		END AddFixup;
+
+	END Label;
+
+
+	ConditionalBranch = PROCEDURE {DELEGATE}(label: Label; op1,op2: IntermediateCode.Operand);
+
+	DeclarationVisitor =OBJECT(SyntaxTree.Visitor)
+	VAR
+		backend: IntermediateBackend;
+		implementationVisitor: ImplementationVisitor;
+		meta: MetaDataGenerator;
+		system: Global.System;
+		currentScope: SyntaxTree.Scope;
+		module: Sections.Module;
+		moduleSelf: SyntaxTree.Variable;
+		dump: BOOLEAN;
+		forceModuleBody: BOOLEAN;
+		addressType: IntermediateCode.Type;
+
+		PROCEDURE & Init(system: Global.System; implementationVisitor: ImplementationVisitor; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN);
+		BEGIN
+			currentScope := NIL; module := NIL; moduleSelf := NIL;
+			SELF.system := system; SELF.implementationVisitor := implementationVisitor;
+			SELF.dump := dump;
+			SELF.backend := backend;
+			SELF.forceModuleBody := forceModuleBody;
+			addressType := IntermediateCode.GetType(system,system.addressType)
+		END Init;
+
+		PROCEDURE Error(position: LONGINT; CONST s: ARRAY OF CHAR);
+		BEGIN
+			backend.Error(module.module.sourceName, position, Diagnostics.Invalid, s);
+		END Error;
+
+		PROCEDURE Type(x: SyntaxTree.Type);
+		BEGIN
+			x.Accept(SELF);
+		END Type;
+
+		(** types **)
+
+		PROCEDURE VisitBasicType(x: SyntaxTree.BasicType);
+		BEGIN (* no code emission *) END VisitBasicType;
+
+		PROCEDURE VisitCharacterType(x: SyntaxTree.CharacterType);
+		BEGIN (* no code emission *)  END VisitCharacterType;
+
+		PROCEDURE VisitIntegerType(x: SyntaxTree.IntegerType);
+		BEGIN (* no code emission *)  END VisitIntegerType;
+
+		PROCEDURE VisitFloatType(x: SyntaxTree.FloatType);
+		BEGIN (* no code emission *)  END VisitFloatType;
+
+		PROCEDURE VisitComplexType(x: SyntaxTree.ComplexType);
+		BEGIN (* no code emission *)  END VisitComplexType;
+
+		PROCEDURE VisitQualifiedType(x: SyntaxTree.QualifiedType);
+		VAR type: SyntaxTree.Type;
+		BEGIN (* no further traversal to x.resolved necessary since type descriptor and code will be inserted at "original" position ? *)
+			type := x.resolved;
+			IF (type.typeDeclaration # NIL) & (type.typeDeclaration.scope.ownerModule # module.module) THEN
+				meta.CheckTypeDeclaration(type);
+			END;
+		END VisitQualifiedType;
+
+		PROCEDURE VisitStringType(x: SyntaxTree.StringType);
+		BEGIN (* no code emission *)   END VisitStringType;
+
+		PROCEDURE VisitArrayRangeType(x: SyntaxTree.RangeType);
+		BEGIN (* no code emission *)
+		END VisitArrayRangeType;
+
+		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
+		BEGIN (* no code emission *)   END VisitArrayType;
+
+		PROCEDURE VisitMathArrayType(x: SyntaxTree.MathArrayType);
+		BEGIN
+			meta.CheckTypeDeclaration(x);
+		END VisitMathArrayType;
+
+		PROCEDURE VisitPointerType(x: SyntaxTree.PointerType);
+		BEGIN
+			meta.CheckTypeDeclaration(x);
+			(* base type must not be visited => will be done via record type declaration, otherwise is done twice ! *)
+		END VisitPointerType;
+
+		PROCEDURE VisitRecordType(x: SyntaxTree.RecordType);
+		VAR name: ARRAY 256 OF CHAR; td: SyntaxTree.TypeDeclaration;
+		BEGIN (* no code emission *)
+			meta.CheckTypeDeclaration(x);
+			IF (x.recordScope.ownerModule = module.module) & (x.isObject) THEN
+				IF x.pointerType.typeDeclaration # NIL THEN
+					td := x.pointerType.typeDeclaration
+				ELSE
+					td := x.typeDeclaration
+				END;
+				Global.GetSymbolName(td,name);
+
+				(* code section for object *)
+			END;
+			Scope(x.recordScope);
+		END VisitRecordType;
+
+		PROCEDURE HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN;
+		VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
+		BEGIN
+			this := modifiers; id := SyntaxTree.NewIdentifier(name);
+			WHILE (this # NIL) & (this.identifier# id) DO
+				this := this.nextModifier;
+			END;
+			RETURN this # NIL
+		END HasFlag;
+
+		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
+		VAR name:Basic.SegmentedName; td: SyntaxTree.TypeDeclaration; type: SyntaxTree.Type; len,port,adr: LONGINT;
+			parameter: SyntaxTree.Parameter; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
+
+			PROCEDURE CreatePortArray(type: SyntaxTree.Type; len: LONGINT);
+			VAR i,len2: LONGINT; baseType: SyntaxTree.Type;
+			BEGIN
+				FOR i := 0 TO len-1 DO
+					IF SemanticChecker.IsStaticArray(type, baseType, len2) THEN
+						CreatePortArray(baseType, len2);
+					ELSE
+						adr := backend.activeCellsSpecification.GetPortAddress(port);
+						IntermediateCode.InitImmediate(op,addressType,adr);
+						symbol.Emit(Data(-1,op));
+						INC(port);
+					END;
+				END;
+			END CreatePortArray;
+
+		BEGIN
+			meta.CheckTypeDeclaration(x);
+			IF (x.cellScope.ownerModule = module.module)  THEN
+				td := x.typeDeclaration;
+				Global.GetSymbolSegmentedName(td,name);
+				(* code section for object *)
+			END;
+			port := 0;
+			parameter := x.firstParameter;
+			WHILE parameter # NIL DO
+				type := parameter.type.resolved;
+				IF type IS SyntaxTree.PortType THEN
+					len := 1;
+					INC(port);
+				ELSIF SemanticChecker.IsStaticArray(type,type,len) THEN
+					Global.GetSymbolSegmentedName(parameter,name);
+					symbol := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,parameter,dump);
+					CreatePortArray(type, len);
+					(*
+					WHILE len > 0 DO
+						adr := backend.activeCellsSpecification.GetPortAddress(port);
+						IntermediateCode.InitImmediate(op,addressType,adr);
+						symbol.Emit(Data(-1,op));
+						DEC(len); INC(port);
+					END;
+					*)
+				ELSE
+					Error(parameter.position,"should never happen, check semantic checker!");
+				END;
+				parameter := parameter.nextParameter;
+			END;
+			capabilities := {};
+			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN INCL(capabilities, Global.FloatingPointCapability) END;
+			IF HasFlag(x.modifiers, Global.StringVector) THEN INCL(capabilities, Global.VectorCapability) END;
+			backend.SetCapabilities(capabilities);
+			Scope(x.cellScope);
+		END VisitCellType;
+
+		PROCEDURE VisitProcedureType(x: SyntaxTree.ProcedureType);
+		BEGIN (* no code emission *)   END VisitProcedureType;
+
+		PROCEDURE VisitEnumerationType(x: SyntaxTree.EnumerationType);
+		BEGIN (* no code emission, exported enumeration type values should be included in symbol file *)
+		END VisitEnumerationType;
+
+		(* symbols *)
+
+		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
+		BEGIN
+			Procedure(x);
+		END VisitProcedure;
+
+		PROCEDURE VisitOperator(x: SyntaxTree.Operator);
+		BEGIN
+			Procedure(x);
+		END VisitOperator;
+
+		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section;
+		BEGIN
+			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) THEN
+				(* code section for variable *)
+				Global.GetSymbolSegmentedName(x,name);
+				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+				irv.SetExported(IsExported(x));
+				irv.SetPositionOrAlignment(x.fixed, x.alignment);
+				irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
+				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
+				meta.CheckTypeDeclaration(x.type);
+			ELSIF currentScope IS SyntaxTree.RecordScope THEN
+			ELSIF currentScope IS SyntaxTree.ProcedureScope THEN
+			END;
+			(* do not call Type(x.type) here as this must already performed in the type declaration section ! *)
+		END VisitVariable;
+
+		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; op: Operand;
+		BEGIN
+			ASSERT(currentScope.outerScope IS SyntaxTree.CellScope);
+			(* code section for variable *)
+			Global.GetSymbolSegmentedName(x,name);
+			irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+			irv.SetPositionOrAlignment(x.fixed, x.alignment);
+			(*
+			irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
+			*)
+			IF x.defaultValue = NIL THEN
+				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))))
+			ELSE
+				implementationVisitor.inData := TRUE;
+				implementationVisitor.Evaluate(x.defaultValue, op);
+				irv.Emit(Data(x.position,op.op));
+				implementationVisitor.inData := FALSE;
+			END;
+			meta.CheckTypeDeclaration(x.type);
+		END VisitParameter;
+
+
+		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
+		BEGIN
+			Type(x.declaredType); (* => code in objects *)
+			IF ~(x.declaredType IS SyntaxTree.QualifiedType) & (x.declaredType.resolved IS SyntaxTree.PointerType) THEN
+				Type(x.declaredType.resolved(SyntaxTree.PointerType).pointerBase);
+			END;
+		END VisitTypeDeclaration;
+
+		PROCEDURE VisitConstant(x: SyntaxTree.Constant);
+		BEGIN
+			IF (SyntaxTree.Public * x.access # {}) THEN
+				implementationVisitor.VisitConstant(x);
+			END;
+		END VisitConstant;
+
+
+		PROCEDURE Scope(x: SyntaxTree.Scope);
+		VAR procedure: SyntaxTree.Procedure;
+			constant: SyntaxTree.Constant;
+			variable: SyntaxTree.Variable;
+			prevScope: SyntaxTree.Scope;  typeDeclaration: SyntaxTree.TypeDeclaration;
+		BEGIN
+			prevScope := currentScope;
+			currentScope := x;
+			(* constants treated in implementation visitor  *)
+
+			typeDeclaration := x.firstTypeDeclaration;
+			WHILE typeDeclaration # NIL DO
+				VisitTypeDeclaration(typeDeclaration);
+				typeDeclaration := typeDeclaration.nextTypeDeclaration;
+			END;
+
+			variable := x.firstVariable;
+			WHILE variable # NIL DO
+				VisitVariable(variable);
+				variable := variable.nextVariable;
+			END;
+
+			procedure := x.firstProcedure;
+			WHILE procedure # NIL DO
+				VisitProcedure(procedure);
+				procedure := procedure.nextProcedure;
+			END;
+
+			constant := x.firstConstant;
+			WHILE constant # NIL DO
+				VisitConstant(constant);
+				constant := constant.nextConstant;
+			END;
+			currentScope := prevScope;
+		END Scope;
+
+		PROCEDURE Parameters(first: SyntaxTree.Parameter);
+		VAR parameter: SyntaxTree.Parameter;
+		BEGIN
+			parameter := first;
+			WHILE parameter # NIL DO
+				VisitParameter(parameter);
+				parameter := parameter.nextParameter;
+			END;
+		END Parameters;
+
+
+		PROCEDURE Procedure(x: SyntaxTree.Procedure);
+		VAR scope: SyntaxTree.ProcedureScope;
+			prevScope: SyntaxTree.Scope;
+			inline: BOOLEAN;
+			procedureType: SyntaxTree.ProcedureType;
+			pc: LONGINT;
+			stackSize: LONGINT;
+			name: Basic.SegmentedName; ir: IntermediateCode.Section;
+			null,size,src,dest,fp: IntermediateCode.Operand;
+			cc: LONGINT;
+			actorType: SyntaxTree.CellType;
+			registerNumber: LONGINT;
+			registerClass: IntermediateCode.RegisterClass;
+			type: IntermediateCode.Type;
+			formalParameter: SyntaxTree.Parameter;
+			priority: INTEGER;
+
+			PROCEDURE Signature;
+			VAR parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType; returnType : SyntaxTree.Type;
+			BEGIN
+				procedureType := x.type(SyntaxTree.ProcedureType);
+				returnType := procedureType.returnType;
+				IF returnType # NIL THEN
+					meta.CheckTypeDeclaration(returnType)
+				END;
+				parameter := procedureType.firstParameter;
+				WHILE parameter # NIL DO
+					meta.CheckTypeDeclaration(parameter.type); (* we have to re-export a type, i.e. it has to be present in the list of symbols *)
+					parameter := parameter.nextParameter;
+				END;
+			END Signature;
+
+			PROCEDURE CheckIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN;
+			VAR result: BOOLEAN;
+			BEGIN
+				result := FALSE;
+				IF x = SyntaxTree.invalidExpression THEN
+				ELSIF (x.resolved # NIL) & (x.resolved IS SyntaxTree.IntegerValue) THEN
+					result := TRUE;
+					value := x.resolved(SyntaxTree.IntegerValue).value;
+				ELSE
+					Error(x.position,"expression is not an integer constant");
+				END;
+				RETURN result;
+			END CheckIntegerValue;
+
+			PROCEDURE HasValue(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN;
+			VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
+			BEGIN
+				this := modifiers; id := SyntaxTree.NewIdentifier(name);
+				WHILE (this # NIL) & (this.identifier # id) DO
+					this := this.nextModifier;
+				END;
+				IF this # NIL THEN
+					IF this.expression = NIL THEN
+						Error(this.position,"expected expression value");
+					ELSIF CheckIntegerValue(this.expression,value) THEN
+					END;
+					RETURN TRUE
+				ELSE RETURN FALSE
+				END;
+			END HasValue;
+
+		BEGIN
+			(*
+			IF Trace & (dump # NIL) THEN dump.String("DeclarationVisitor:Procedure"); dump.Ln END;
+			*)
+			(* code section for this procedure *)
+			scope := x.procedureScope;
+			prevScope := currentScope;
+			currentScope := scope;
+			procedureType := x.type(SyntaxTree.ProcedureType);
+
+			implementationVisitor.temporaries.Init;
+
+			implementationVisitor.GetCodeSectionNameForSymbol(x, name);
+			IF (scope.body # NIL) & (x.isInline)  THEN
+				inline := TRUE;
+				ir := implementationVisitor.NewSection(module.allSections, Sections.InlineCodeSection, name,x,dump);
+				ir.SetExported(IsExported(x));
+			ELSIF (x.scope # NIL) & (x.scope IS SyntaxTree.CellScope) & (x.scope(SyntaxTree.CellScope).ownerCell.isCellNet)
+				OR (x.scope # NIL) & (x.scope IS SyntaxTree.ModuleScope) & (x.scope(SyntaxTree.ModuleScope).ownerModule.isCellNet) THEN
+					(* assembly *)
+				RETURN
+			ELSIF x = module.module.moduleScope.bodyProcedure THEN
+				inline := FALSE;
+				AddBodyCallStub(x);
+				ir := implementationVisitor.NewSection(module.allSections, Sections.BodyCodeSection, name,x,dump);
+				ir.SetExported(IsExported(x));
+			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x = scope.outerScope(SyntaxTree.CellScope).bodyProcedure) THEN
+				inline := FALSE;
+				actorType := scope.outerScope(SyntaxTree.CellScope).ownerCell;
+				IF ~HasValue(actorType.modifiers,Global.StringDataMemorySize,stackSize) THEN stackSize := ActiveCells.defaultDataMemorySize END;
+				AddBodyCallStub(x);
+				AddStackAllocation(x,stackSize);
+				ir := implementationVisitor.NewSection(module.allSections,Sections.BodyCodeSection, name,x,dump);
+				ir.SetExported(IsExported(x));
+			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x.isConstructor) THEN
+				inline := FALSE;
+				Parameters(procedureType.firstParameter);
+				ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
+				ir.SetExported(IsExported(x));
+			ELSE
+				inline := FALSE;
+				IF x.isEntry OR x.isExit THEN
+					ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,x,dump);
+					ir.SetExported(TRUE);
+					IF x.isEntry THEN ir.SetPriority(EntryPriority) ELSE ir.SetPriority(ExitPriority) END;
+				ELSE
+					ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
+					ir.SetExported(IsExported(x) OR SemanticChecker.InMethodTable(x));
+				END;
+			END;
+
+			cc := procedureType.callingConvention;
+
+			IF scope.body # NIL THEN
+				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
+				registerNumber := 0;
+				IF ~inline THEN
+					pc := ir.pc;
+					IF scope.lastVariable = NIL THEN
+						stackSize := 0
+					ELSE
+						stackSize := scope.lastVariable.offsetInBits;
+						IF stackSize <0 THEN stackSize := -stackSize END;
+						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
+					END;
+					(*
+					ir.Emit(Nop(position)); (* placeholder for stack frame check *)
+					ir.Emit(Nop(position)); (* placeholder for stack frame check (2) *)
+					*)
+					ir.Emit(Nop(-1)); (* placeholder for enter *)
+					(*
+					ir.Emit(Nop(position)); (* placeholder for fill *)
+					*)
+
+					IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
+						formalParameter := procedureType.lastParameter;
+						WHILE (formalParameter # NIL) & (registerNumber < system.registerParameters) DO
+							IF ~PassInRegister(formalParameter) THEN
+								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
+							ELSE
+								IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, SHORT(registerNumber));
+								type := GetType(system, formalParameter.type);
+								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
+								IntermediateCode.InitMemory(dest,GetType(system,formalParameter.type),implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+								ir.Emit(Mov(-1,dest, src));
+								implementationVisitor.ReleaseIntermediateOperand(src);
+								INC(registerNumber);
+								formalParameter := formalParameter.prevParameter;
+							END;
+						END;
+					END;
+					ir.EnterValidPAF;
+				END;
+
+				implementationVisitor.tagsAvailable := procedureType.callingConvention = SyntaxTree.OberonCallingConvention;
+
+				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
+
+				IF ~inline & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
+					IF scope.lastVariable # NIL THEN
+						stackSize := scope.lastVariable.offsetInBits;
+						IF stackSize <0 THEN stackSize := -stackSize END;
+						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
+					END;
+				END;
+
+				IF ~inline  & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
+					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
+						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
+						IF implementationVisitor.GetRuntimeProcedure(implementationVisitor.runtimeModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
+							size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,stackSize+256));
+							ir.EmitAt(pc,Push(size));
+							implementationVisitor.StaticCallOperand(result,procedure);
+							ir.EmitAt(pc+1,Call(result.op,ProcedureParametersSize(system,procedure)));
+						END;
+						*)
+					END;
+
+
+					ir.EmitAt(pc(*+2*),Enter(x.position,cc,ToMemoryUnits(system,stackSize),registerNumber)); (*!!*)
+
+					IF stackSize > 0 THEN
+						IF (stackSize MOD system.addressSize = 0) THEN
+							null := IntermediateCode.Immediate(addressType,0);
+							fp := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.FP);
+							IntermediateCode.AddOffset(fp,ToMemoryUnits(system,-system.addressSize));
+							size := IntermediateCode.Immediate(addressType,stackSize DIV system.addressSize);
+						ELSE
+							null := IntermediateCode.Immediate(int8,0);
+							fp := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.FP);
+							IntermediateCode.AddOffset(fp,ToMemoryUnits(system,-null.type.sizeInBits));
+							size := IntermediateCode.Immediate(addressType,stackSize DIV null.type.sizeInBits);
+						END;
+						(*! should potentially be called by backend -- enter might initialize
+						ir.EmitAt(pc+3,Fill(fp,null,size,TRUE));
+						*)
+					END;
+
+					ir.ExitValidPAF;
+
+
+					IF (procedureType.returnType = NIL) OR (scope.body.code # NIL)  THEN
+						ir.Emit(Leave(x.position,cc));
+						ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+					ELSIF ~scope.body.isUnchecked & ~backend.noRuntimeChecks THEN
+						ir.Emit(Trap(x.position,ReturnTrap));
+					ELSE
+						ir.Emit(Nop(x.position));
+					END
+				END;
+			ELSE (* force body for procedures *)
+				ir.Emit(Enter(x.position,cc,0,0));
+				ir.EnterValidPAF;
+				implementationVisitor.usedRegisters := NIL;
+				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
+				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
+				ir.ExitValidPAF;
+				ir.Emit(Leave(x.position,cc));
+				ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+			END;
+			Scope(scope);
+			Signature;
+			IF (x IS SyntaxTree.Operator) & x(SyntaxTree.Operator).isDynamic THEN implementationVisitor.RegisterDynamicOperator(x(SyntaxTree.Operator)) END;
+
+			currentScope := prevScope;
+		END Procedure;
+
+
+
+		PROCEDURE AddBodyCallStub(bodyProcedure: SyntaxTree.Procedure); (* code that is only necessary for static linkers *)
+		VAR procedure: SyntaxTree.Procedure; procedureScope: SyntaxTree.ProcedureScope; name: Basic.SegmentedName;
+			ir: IntermediateCode.Section; op: IntermediateCode.Operand;
+		BEGIN
+			ASSERT (bodyProcedure # NIL);
+			procedureScope := SyntaxTree.NewProcedureScope(bodyProcedure.scope);
+			procedure := SyntaxTree.NewProcedure(-1,SyntaxTree.NewIdentifier("@BodyStub"), procedureScope);
+			procedure.SetScope(bodyProcedure.scope);
+			procedure.SetType(SyntaxTree.NewProcedureType(-1,bodyProcedure.scope));
+			procedure.SetAccess(SyntaxTree.Hidden);
+			Global.GetSymbolSegmentedName (procedure,name);
+			ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,procedure,dump);
+			ir.SetExported(TRUE);
+			ir.SetPriority(InitPriority);
+			Global.GetSymbolSegmentedName (bodyProcedure,name);
+			IF backend.preregisterStatic THEN
+				implementationVisitor.currentScope := module.module.moduleScope;
+				implementationVisitor.section := ir;
+				implementationVisitor.PushSelfPointer();
+				implementationVisitor.CallThis("Modules","Preregister",1);
+			ELSE
+				IntermediateCode.InitAddress(op, addressType, name, implementationVisitor.GetFingerprint(bodyProcedure), 0);
+				ir.Emit(Call(bodyProcedure.position,op, 0));
+			END;
+		END AddBodyCallStub;
+
+		PROCEDURE AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: LONGINT); (* code that is only necessary for static linkers *)
+		VAR procedure: SyntaxTree.Procedure; procedureScope: SyntaxTree.ProcedureScope; name: Basic.SegmentedName;
+			ir: IntermediateCode.Section; op: IntermediateCode.Operand;
+		BEGIN
+			Global.GetSymbolSegmentedName (symbol,name);
+			Basic.RemoveSuffix(name);
+			Basic.SuffixSegmentedName(name, Basic.MakeString("@StackAllocation"));
+			ir := implementationVisitor.NewSection(module.allSections,Sections.InitCodeSection,name,NIL,dump);
+			ir.SetExported(TRUE);
+			ir.SetPriority(FirstPriority);
+			IntermediateCode.InitImmediate(op,addressType,initStack);
+			ir.Emit(Mov(-1,implementationVisitor.sp,op));
+		END AddStackAllocation;
+
+
+
+		(** entry function to visit a complete module *)
+		PROCEDURE Module(x: SyntaxTree.Module; module: Sections.Module);
+		VAR
+			ir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; idstr: SyntaxTree.IdentifierString;
+			hasDynamicOperatorDeclarations: BOOLEAN;
+			operator: SyntaxTree.Operator;
+			import: SyntaxTree.Import;
+
+			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
+			BEGIN
+				type := type.resolved;
+				IF type IS SyntaxTree.RecordType THEN
+					IF ScopeNeedsInitialization(type(SyntaxTree.RecordType).recordScope) THEN RETURN TRUE END;
+				ELSIF (type IS SyntaxTree.ArrayType) THEN
+					IF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+						IF TypeNeedsInitialization(type(SyntaxTree.ArrayType).arrayBase) THEN RETURN TRUE END;
+					END;
+				ELSIF type IS SyntaxTree.MathArrayType THEN
+					WITH type: SyntaxTree.MathArrayType DO
+						IF type.form = SyntaxTree.Open THEN
+							RETURN TRUE
+						ELSIF type.form = SyntaxTree.Static THEN
+							IF TypeNeedsInitialization(type.arrayBase) THEN RETURN TRUE END;
+						END;
+					END;
+				END;
+				RETURN FALSE
+			END TypeNeedsInitialization;
+
+			PROCEDURE ScopeNeedsInitialization(scope: SyntaxTree.Scope): BOOLEAN;
+			VAR variable: SyntaxTree.Variable;
+			BEGIN
+				variable := scope.firstVariable;
+				WHILE variable # NIL DO
+					IF TypeNeedsInitialization(variable.type) THEN RETURN TRUE END;
+					IF variable.initializer # NIL THEN RETURN TRUE END;
+					variable := variable.nextVariable;
+				END;
+				RETURN FALSE
+			END ScopeNeedsInitialization;
+
+
+		BEGIN
+			ASSERT(x # NIL); ASSERT(module # NIL);
+			SELF.module := module;
+
+			(* add import names to the generated Sections.Module *)
+			import := x.moduleScope.firstImport;
+			WHILE import # NIL DO
+				import.module.GetName(idstr);
+				module.imports.AddName(idstr);
+				import := import.nextImport
+			END;
+
+			IF ~implementationVisitor.newObjectFile & ~meta.simple THEN
+				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@moduleSelf"));
+				moduleSelf := SyntaxTree.NewVariable(0,SyntaxTree.NewIdentifier("@moduleSelf"));
+				moduleSelf.SetType(system.anyType);
+				moduleSelf.SetScope(x.moduleScope);
+				moduleSelf.SetUntraced(TRUE);
+				ir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,moduleSelf,dump);  ir.SetOffset(0);
+				ir.SetExported(TRUE);
+				IntermediateCode.InitImmediate(op,addressType,0);
+				ir.Emit(Data(-1,op));
+			END;
+
+			implementationVisitor.module := module;
+			implementationVisitor.moduleScope := x.moduleScope;
+			implementationVisitor.moduleSelf := moduleSelf;
+			implementationVisitor.canBeLoaded := TRUE;
+			meta.SetModule(module);
+
+			IF (forceModuleBody OR implementationVisitor.newObjectFile  & ~meta.simple  OR ScopeNeedsInitialization(x.moduleScope)) THEN
+				EnsureBodyProcedure(x.moduleScope); (* currently needed in Oberon, remove ? *)
+			END;
+
+			IF backend.profile THEN
+				EnsureBodyProcedure(x.moduleScope);
+				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@ModuleId"));
+				implementationVisitor.profileId := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+				implementationVisitor.profileId.Emit(Reserve(-1,ToMemoryUnits(system,system.SizeOf(system.longintType))));
+				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@InitProfiler"));
+				implementationVisitor.profileInit := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump);
+				implementationVisitor.profileInit.Emit(Enter(-1,0,0,0));
+
+				Global.GetModuleName(module.module,idstr);
+				implementationVisitor.ProfilerAddModule(idstr);
+				implementationVisitor.numberProcedures := 0;
+			END;
+			implementationVisitor.profile := backend.profile;
+
+			(* check if there is at least one dynamic operator locally defined *)
+			hasDynamicOperatorDeclarations := FALSE;
+			operator := x.moduleScope.firstOperator;
+			WHILE operator # NIL DO
+				IF operator.isDynamic THEN hasDynamicOperatorDeclarations := TRUE END;
+				operator := operator.nextOperator
+			END;
+
+			(* add operator initialization code section *)
+			IF hasDynamicOperatorDeclarations THEN
+				EnsureBodyProcedure(x.moduleScope);
+				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@OperatorInitialization"));
+				implementationVisitor.operatorInitializationCodeSection := implementationVisitor.NewSection(module.allSections, Sections.CodeSection,name, NIL, dump);
+				implementationVisitor.operatorInitializationCodeSection.Emit(Enter(-1,0,0,0));
+			END;
+
+			Scope(x.moduleScope);
+
+			IF hasDynamicOperatorDeclarations THEN
+				implementationVisitor.operatorInitializationCodeSection.Emit(Leave(-1,0));
+				implementationVisitor.operatorInitializationCodeSection.Emit(Exit(-1,0,0));
+			END;
+
+			IF backend.profile THEN
+				implementationVisitor.ProfilerPatchInit;
+			END;
+
+		END Module;
+
+	END DeclarationVisitor;
+
+	UsedArray*=POINTER TO ARRAY OF RECORD count: LONGINT; map: LONGINT; type: IntermediateCode.Type; class: IntermediateCode.RegisterClass END;
+
+	RegisterUsageCount*=OBJECT
+	VAR used: UsedArray; count: LONGINT;
+
+		PROCEDURE &Init;
+		VAR i: LONGINT;
+		BEGIN
+			count := 0;
+			IF used = NIL THEN NEW(used,64); END;
+			FOR i := 0 TO LEN(used)-1 DO used[i].count := 0 END;
+		END Init;
+
+		PROCEDURE Grow;
+		VAR new: UsedArray; size,i: LONGINT;
+		BEGIN
+			size := LEN(used)*2;
+			NEW(new,size);
+			FOR i := 0 TO LEN(used)-1 DO
+				new[i].count := used[i].count;
+				new[i].type := used[i].type;
+				new[i].map := used[i].map
+			END;
+			FOR i := LEN(used) TO LEN(new)-1 DO new[i].count := 0 END;
+			used := new
+		END Grow;
+
+		PROCEDURE Next(type: IntermediateCode.Type; class: IntermediateCode.RegisterClass): LONGINT;
+		BEGIN
+			INC(count);
+			IF count = LEN(used) THEN Grow END;
+			used[count].type := type;
+			used[count].class := class;
+			used[count].map := count;
+			RETURN count;
+		END Next;
+
+		PROCEDURE IncUse(register: LONGINT);
+		BEGIN
+			INC(used[register].count);
+			(*
+			IF (register = 1) & (count > 30)  THEN
+				D.TraceBack;
+			END;
+			*)
+		END IncUse;
+
+		PROCEDURE DecUse(register: LONGINT);
+		BEGIN
+			DEC(used[register].count);
+		END DecUse;
+
+		PROCEDURE Map(register: LONGINT): LONGINT;
+		VAR map : LONGINT;
+		BEGIN
+			IF register > 0 THEN
+				map := used[register].map;
+				WHILE register # map DO register := map; map := used[register].map END;
+			END;
+			RETURN register
+		END Map;
+
+		PROCEDURE Remap(register: LONGINT; to: LONGINT);
+		BEGIN
+			used[register].map:= to;
+			used[to].count := used[register].count;
+			used[register].count := 0;
+		END Remap;
+
+		PROCEDURE Use(register: LONGINT): LONGINT;
+		BEGIN
+			IF register< LEN(used) THEN
+				RETURN used[register].count
+			ELSE
+				RETURN 0
+			END
+		END Use;
+
+	END RegisterUsageCount;
+
+	RegisterEntry = POINTER TO RECORD
+		prev,next: RegisterEntry;
+		register: LONGINT;
+		registerClass: IntermediateCode.RegisterClass;
+		type: IntermediateCode.Type;
+	END;
+
+	VariableUse= ARRAY 32 OF SET; (* upper bound of 1024 temporary variables in a procedure .. should be enough for all times *)
+
+	Variables = OBJECT (Basic.List)
+	VAR
+		inUse: VariableUse;
+		registerIndex: LONGINT;
+
+		PROCEDURE & Init;
+		VAR i: LONGINT;
+		BEGIN
+			InitList(16);
+			FOR i := 0 TO LEN(inUse)-1 DO inUse[i] := {} END;
+			registerIndex := 1024;
+		END Init;
+
+		PROCEDURE GetUsage(VAR use: VariableUse);
+		BEGIN
+			use := inUse;
+		END GetUsage;
+
+		PROCEDURE SetUsage(CONST use: VariableUse);
+		BEGIN
+			inUse := use;
+		END SetUsage;
+
+		PROCEDURE GetVariable(i: LONGINT): SyntaxTree.Variable;
+		VAR any: ANY;
+		BEGIN
+			any := Get(i);;
+			IF any = NIL THEN RETURN NIL ELSE RETURN any(SyntaxTree.Variable) END;
+		END GetVariable;
+
+		PROCEDURE Occupy(pos: LONGINT);
+		BEGIN
+			INCL(inUse[pos DIV 32], pos MOD 32);
+		END Occupy;
+
+		PROCEDURE AddVariable(v: SyntaxTree.Variable);
+		BEGIN
+			Occupy(Length());
+			Add(v);
+		END AddVariable;
+
+		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; VAR pos: LONGINT): SyntaxTree.Variable;
+		VAR var : SyntaxTree.Variable;
+		BEGIN
+			FOR pos := 0 TO Length()-1 DO
+				IF ~((pos MOD 32) IN inUse[pos DIV 32]) THEN
+					var := GetVariable(pos);
+					IF type.SameType(var.type) THEN
+						Occupy(pos); RETURN var
+					END;
+				END;
+			END;
+			pos := Length();
+			RETURN NIL
+		END GetFreeVariable;
+
+	END Variables;
+
+	SymbolMap = POINTER TO RECORD this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; next: SymbolMap; END;
+
+	SymbolMapper = OBJECT
+	VAR
+		first: SymbolMap;
+
+		PROCEDURE & Init;
+		BEGIN
+			first := NIL;
+		END Init;
+
+		PROCEDURE Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression);
+		VAR new: SymbolMap;
+		BEGIN
+			NEW(new); new.this := this; new.to := to; new.tag := tag;
+			new.next := first;	first := new;
+		END Add;
+
+		PROCEDURE Get(this: SyntaxTree.Symbol): SymbolMap;
+		VAR s: SymbolMap;
+		BEGIN
+			s := first;
+			WHILE (s # NIL) & (s.this # this) DO
+				s := s.next
+			END;
+			RETURN s
+		END Get;
+
+	END SymbolMapper;
+
+
+	ImplementationVisitor =OBJECT(SyntaxTree.Visitor)
+	VAR
+		system: Global.System;
+		section: IntermediateCode.Section;
+		module: Sections.Module;
+		moduleScope : SyntaxTree.ModuleScope; (* shortcut for module.module.moduleScope *)
+		awaitProcCounter, labelId, constId, caseId: LONGINT;
+
+		hiddenPointerType: SyntaxTree.RecordType; (* used as hidden pointer, for example for ARRAY OF ANY *)
+		delegatePointerType: SyntaxTree.RecordType; (* used for delegates, for example in ARRAY OF PROCEDURE{DELEGATE} *)
+
+		checker: SemanticChecker.Checker;
+		backend: IntermediateBackend;
+		meta: MetaDataGenerator;
+		position: LONGINT;
+		moduleSelf: SyntaxTree.Variable;
+		(* variables for hand over of variables /  temporary state *)
+		currentScope: SyntaxTree.Scope;
+		constantDeclaration : SyntaxTree.Symbol;
+		result: Operand; (* result of the most recent expression / statement *)
+		destination: IntermediateCode.Operand;
+
+		arrayDestinationTag: IntermediateCode.Operand;
+		arrayDestinationDimension:LONGINT;
+
+		currentLoop: Label; (* variable to hand over loop exit jump list *)
+		conditional: BOOLEAN;
+		trueLabel, falseLabel: Label;
+		locked: BOOLEAN;
+		(*
+		usedRegisters: Registers;
+		*)
+		registerUsageCount: RegisterUsageCount;
+		usedRegisters: RegisterEntry;
+
+		(* useful operands and types *)
+		nil,fp,sp,true,false: IntermediateCode.Operand;
+		bool,addressType,setType, sizeType: IntermediateCode.Type;
+
+		commentPrintout: Printout.Printer;
+		dump: Streams.Writer;
+		tagsAvailable : BOOLEAN;
+		supportedInstruction: SupportedInstructionProcedure;
+		supportedImmediate: SupportedImmediateProcedure;
+		inData: BOOLEAN;  (* to prevent indirect reference to data within data sections, cf. VisitIntegerValue *)
+		emitLabels: BOOLEAN;
+		runtimeModuleName : SyntaxTree.IdentifierString;
+		newObjectFile: BOOLEAN;
+		indexCounter: LONGINT;
+
+		profile: BOOLEAN;
+		profileId, profileInit: IntermediateCode.Section;
+		profileInitPatchPosition: LONGINT;
+		numberProcedures: LONGINT;
+		procedureResultDesignator : SyntaxTree.Designator;
+		operatorInitializationCodeSection: IntermediateCode.Section;
+		fingerPrinter: FingerPrinter.FingerPrinter;
+
+		temporaries: Variables;
+		canBeLoaded : BOOLEAN;
+
+		currentIsInline: BOOLEAN;
+		currentMapper: SymbolMapper;
+		currentInlineExit: Label;
+
+		moduleBodySection: IntermediateCode.Section;
+		NeedDescriptor : BOOLEAN;
+
+		isUnchecked: BOOLEAN;
+
+		PROCEDURE & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend;
+			newObjectFile: BOOLEAN);
+		BEGIN
+			SELF.system := system;
+			SELF.runtimeModuleName := runtime;
+
+			currentScope := NIL;
+			hiddenPointerType := NIL;
+			delegatePointerType := NIL;
+
+			awaitProcCounter := 0;
+			labelId := 0; constId := 0; labelId := 0;
+			SELF.checker := checker;
+			SELF.backend := backend;
+			position := Diagnostics.Invalid;
+			conditional := FALSE;
+			locked := FALSE;
+			InitOperand(result,ModeUndefined);
+			addressType := IntermediateCode.GetType(system,system.addressType);
+			setType := IntermediateCode.GetType(system,system.setType);
+			sizeType := IntermediateCode.GetType(system, system.sizeType);
+			fp := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.FP);
+			sp := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.SP);
+			nil := IntermediateCode.Immediate(addressType,0);
+
+			IntermediateCode.InitOperand(destination);
+			tagsAvailable := TRUE;
+			supportedInstruction := supportedInstructionProcedure;
+			supportedImmediate := supportedImmediateProcedure;
+			inData := FALSE;
+
+			SELF.emitLabels := emitLabels;
+			IntermediateCode.InitOperand(arrayDestinationTag);
+
+			bool := IntermediateCode.GetType(system,system.booleanType);
+			IntermediateCode.InitImmediate(false,bool,0);
+			IntermediateCode.InitImmediate(true,bool,1);
+
+			SELF.newObjectFile := newObjectFile;
+			indexCounter := 0;
+			NEW(registerUsageCount);
+			usedRegisters := NIL;
+			procedureResultDesignator := NIL;
+			NEW(fingerPrinter, system);
+			NEW(temporaries);
+			currentIsInline := FALSE;
+			NeedDescriptor := FALSE;
+			isUnchecked := backend.noRuntimeChecks;
+		END Init;
+
+		PROCEDURE NewSection(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): IntermediateCode.Section;
+		VAR fp: SyntaxTree.FingerPrint; section: IntermediateCode.Section;
+		BEGIN
+			IF (syntaxTreeSymbol # NIL) & ~((syntaxTreeSymbol IS SyntaxTree.Procedure) & (syntaxTreeSymbol(SyntaxTree.Procedure).isInline)) THEN
+				fp := fingerPrinter.SymbolFP(syntaxTreeSymbol)
+			END;
+			section := IntermediateCode.NewSection(list, type, name, syntaxTreeSymbol, dump);
+			section.SetExported(IsExported(syntaxTreeSymbol));
+			RETURN section
+		END NewSection;
+
+		PROCEDURE AcquireRegister(CONST type: IntermediateCode.Type; class: IntermediateCode.RegisterClass): LONGINT;
+		VAR new: LONGINT;
+		BEGIN
+			new :=  registerUsageCount.Next(type,class);
+			UseRegister(new);
+			RETURN new
+		END AcquireRegister;
+
+		PROCEDURE GetIndex(): LONGINT;
+		BEGIN
+			INC(indexCounter); RETURN indexCounter
+		END GetIndex;
+		(** get the name for the code section that represens a certain symbol
+		(essentially the same as Global.GetSymbolName, apart from operators) **)
+		PROCEDURE GetCodeSectionNameForSymbol(symbol: SyntaxTree.Symbol; VAR name: Basic.SegmentedName);
+		VAR
+			operatorFingerPrint: SyntaxTree.FingerPrint;
+			operatorFingerPrintString,string: ARRAY 32 OF CHAR;
+		BEGIN
+			Global.GetSymbolSegmentedName(symbol, name);
+			(* if the symbol is an operator, then append the fingerprint to the name *)
+			IF symbol IS SyntaxTree.Operator THEN
+				operatorFingerPrint := fingerPrinter.SymbolFP(symbol);
+				string := "[";
+				Strings.IntToHexStr(operatorFingerPrint.shallow, 8, operatorFingerPrintString);
+				Strings.Append(string, operatorFingerPrintString);
+				Strings.Append(string, "]");
+				Basic.AppendToSegmentedName(name,string);
+			END
+		END GetCodeSectionNameForSymbol;
+
+		PROCEDURE TraceEnter(CONST s: ARRAY OF CHAR);
+		BEGIN
+			IF dump # NIL THEN
+				dump.String("enter "); dump.String(s); dump.Ln;
+			END;
+		END TraceEnter;
+
+		PROCEDURE TraceExit(CONST s: ARRAY OF CHAR);
+		BEGIN
+			IF dump # NIL THEN
+				dump.String("exit "); dump.String(s); dump.Ln;
+			END;
+		END TraceExit;
+
+
+		PROCEDURE Emit(instruction: IntermediateCode.Instruction);
+		VAR moduleName, procedureName: SyntaxTree.IdentifierString;
+
+			PROCEDURE CheckRegister(VAR op: IntermediateCode.Operand);
+			VAR i: LONGINT;
+			BEGIN
+				IF op.register >0 THEN IntermediateCode.SetRegister(op,registerUsageCount.Map(op.register)) END;
+				IF op.rule # NIL THEN
+					FOR i := 0 TO LEN(op.rule)-1 DO
+						CheckRegister(op.rule[i])
+					END;
+				END;
+
+			END CheckRegister;
+
+		BEGIN
+			CheckRegister(instruction.op1);
+			CheckRegister(instruction.op2);
+			CheckRegister(instruction.op3);
+
+			IF supportedInstruction(instruction,moduleName,procedureName) THEN section.Emit(instruction)
+			ELSE section.Emit(instruction);
+				EnsureSymbol(moduleName,procedureName); (* remainder for binary object file *)
+			END;
+		END Emit;
+
+		PROCEDURE Symbol(x: SyntaxTree.Symbol; VAR op: Operand);
+		VAR m: SymbolMap; e: SyntaxTree.Expression; o, t: IntermediateCode.Operand;
+		BEGIN
+			position := x.position;
+			IF currentIsInline THEN
+				m  := currentMapper.Get(x);
+				IF m # NIL THEN
+					(*
+					Printout.Info("mapping from", x);
+					Printout.Info("mapping to ", m.to);
+					*)
+					m.to.Accept(SELF);
+					op := result;
+					IF m.tag # NIL THEN
+						ReleaseIntermediateOperand(result.tag);
+						m.tag.Accept(SELF);
+						op.tag := result.op;
+						ReleaseIntermediateOperand(result.tag);
+					END;
+					RETURN
+				END;
+			END;
+			x.Accept(SELF);
+			op := result;
+		END Symbol;
+
+		PROCEDURE Expression(x: SyntaxTree.Expression);
+		BEGIN
+			position := x.position;
+			constantDeclaration := NIL;
+			IF (x IS SyntaxTree.SymbolDesignator) & (x(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Constant) THEN
+				constantDeclaration := x(SyntaxTree.SymbolDesignator).symbol;
+			END;
+			IF x.resolved # NIL THEN
+				x.resolved.Accept(SELF)
+			ELSE
+				x.Accept(SELF)
+			END;
+			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) THEN
+				Error(x.position, "unsupported modifier");
+			END;
+		END Expression;
+
+		(*
+		PROCEDURE ResetUsedTemporaries(previous: VariableUse);
+		VAR current: VariableUse; set: SET; i,j: LONGINT; variable: SyntaxTree.Variable; op: Operand; tmp: IntermediateCode.Operand;
+		BEGIN
+			temporaries.GetUsage(current);
+			FOR i := 0 TO LEN(current)-1 DO
+				set := current[i] - previous[i];
+				IF set # {} THEN
+					FOR j := 0 TO MAX(SET)-1 DO
+						IF j IN set THEN
+							variable := temporaries.GetVariable(i*MAX(SET)+j);
+							IF (variable.type.resolved IS SyntaxTree.MathArrayType) & (variable.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) THEN
+								Symbol(variable, op);
+								MakeMemory(tmp,op.op,addressType,0);
+								ReleaseOperand(op);
+								Emit(Mov(position,tmp, nil ) );
+								ReleaseIntermediateOperand(tmp);
+							END;
+						END;
+					END;
+				END;
+			END;
+
+		END ResetUsedTemporaries;
+		*)
+
+		PROCEDURE Statement(x: SyntaxTree.Statement);
+		VAR use: VariableUse;
+		BEGIN
+			temporaries.GetUsage(use);
+			position := x.position;
+			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
+			IF commentPrintout # NIL THEN
+				commentPrintout.Statement(x);
+				dump.Ln;
+				(*dump.Update;*)
+			END;
+			x.Accept(SELF);
+			(*
+			CheckRegistersFree();
+			*)
+			(*ResetUsedTemporaries(use);*)
+			temporaries.SetUsage(use);
+		END Statement;
+
+		(* dereference op. If op is already a memory operand then use auxiliary register to dereference
+			result will be registered as a new use of operand, op is not released (op must be released by caller)
+		*)
+		PROCEDURE MakeMemory(VAR res: IntermediateCode.Operand; op: IntermediateCode.Operand; type: IntermediateCode.Type; offset: LONGINT);
+		BEGIN
+
+			IF op.mode = IntermediateCode.ModeMemory THEN
+				ReuseCopy(res,op);
+			ELSE
+				res := op;
+				UseIntermediateOperand(res);
+			END;
+			IntermediateCode.AddOffset(res,offset);
+
+			IntermediateCode.MakeMemory(res,type);
+		END MakeMemory;
+
+		PROCEDURE ToMemory(VAR res: IntermediateCode.Operand; type: IntermediateCode.Type; offset: LONGINT);
+		VAR mem: IntermediateCode.Operand;
+		BEGIN
+			MakeMemory(mem,res,type,offset);
+			ReleaseIntermediateOperand(res);
+			res := mem;
+		END ToMemory;
+
+		PROCEDURE LoadValue(VAR operand: Operand; type: SyntaxTree.Type);
+		VAR mem: IntermediateCode.Operand;
+			firstOp, lastOp, stepOp: IntermediateCode.Operand;
+			componentType: SyntaxTree.Type;
+		BEGIN
+			type := type.resolved;
+			IF operand.mode = ModeReference THEN
+				IF type IS SyntaxTree.RangeType THEN
+					MakeMemory(firstOp, operand.op, IntermediateCode.GetType(system, system.longintType), 0);
+					MakeMemory(lastOp, operand.op, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
+					MakeMemory(stepOp, operand.op, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+					ReleaseOperand(operand);
+					operand.op := firstOp;
+					operand.tag := lastOp;
+					operand.extra := stepOp;
+				ELSIF type IS SyntaxTree.ComplexType THEN
+					componentType := type(SyntaxTree.ComplexType).componentType;
+					ASSERT((componentType.SameType(system.realType)) OR (componentType.SameType(system.longrealType)));
+					MakeMemory(firstOp, operand.op, IntermediateCode.GetType(system, componentType), 0);
+					MakeMemory(lastOp, operand.op, IntermediateCode.GetType(system, componentType), ToMemoryUnits(system, system.SizeOf(componentType)));
+					ReleaseOperand(operand);
+					operand.op := firstOp;
+					operand.tag := lastOp
+				ELSE
+					MakeMemory(mem,operand.op,IntermediateCode.GetType(system,type),0);
+					ReleaseIntermediateOperand(operand.op);
+					operand.op := mem;
+				END;
+				operand.mode := ModeValue;
+			END;
+			ASSERT(operand.mode = ModeValue);
+		END LoadValue;
+
+		PROCEDURE Evaluate(x: SyntaxTree.Expression; VAR op: Operand);
+		VAR prevConditional: BOOLEAN;
+		BEGIN
+			prevConditional := conditional;
+			conditional := FALSE;
+			InitOperand(result, ModeUndefined);
+			Expression(x);
+			op := result;
+			LoadValue(op,x.type.resolved);
+			conditional := prevConditional;
+		END Evaluate;
+
+		PROCEDURE Designate(x: SyntaxTree.Expression; VAR op: Operand);
+		VAR prevConditional: BOOLEAN;
+		BEGIN
+			prevConditional := conditional;
+			conditional := FALSE;
+			InitOperand(result,ModeUndefined);
+			Expression(x);
+			op := result;
+		(*
+			ASSERT((op.mode = ModeReference) OR (x.type.resolved IS SyntaxTree.NilType)); (* special case: winapi NIL parameter on references *)
+		*)
+			conditional := prevConditional;
+		END Designate;
+
+		PROCEDURE Condition(x: SyntaxTree.Expression; trueL,falseL: Label);
+		VAR prevTrue, prevFalse: Label; prevConditional: BOOLEAN;
+		BEGIN
+			ASSERT(trueL # NIL); ASSERT(falseL # NIL);
+			prevTrue := trueLabel; prevFalse := falseLabel; prevConditional := conditional;
+			conditional := TRUE;
+			trueLabel := trueL; falseLabel := falseL;
+			Expression(x);
+			trueL := trueLabel; falseL := falseLabel;
+			trueLabel := prevTrue;falseLabel := prevFalse;conditional := prevConditional;
+		END Condition;
+
+		PROCEDURE NewRegisterOperand(type: IntermediateCode.Type): IntermediateCode.Operand;
+		VAR op: IntermediateCode.Operand; reg: LONGINT;
+		BEGIN
+			reg := AcquireRegister(type,IntermediateCode.GeneralPurposeRegister);
+			IntermediateCode.InitRegister(op, type, IntermediateCode.GeneralPurposeRegister,reg);
+			RETURN op
+		END NewRegisterOperand;
+
+		PROCEDURE UnuseRegister(register: LONGINT);
+		BEGIN
+			IF (register > 0) THEN
+				register := registerUsageCount.Map(register);
+				registerUsageCount.DecUse(register);
+				IF TraceRegisterUsageCount & (dump# NIL) THEN
+					dump.String("unuse register "); dump.Int(register,1); dump.String(": ");dump.Int(registerUsageCount.Use(register),1); dump.Ln; dump.Update;
+				END;
+				IF registerUsageCount.Use(register)=0 THEN
+					IF ~RemoveRegisterEntry(usedRegisters,register) THEN
+						Warning(position, "register cannot be removed");
+					END;
+					IF TraceRegisterUsageCount & (dump# NIL) THEN
+						dump.String("remove register from usedRegisters"); dump.Ln; dump.Update;
+					END;
+				ELSIF registerUsageCount.Use(register)<0 THEN
+					Warning(position, "register removed too often");
+					D.TraceBack;
+				END;
+			END;
+		END UnuseRegister;
+
+		PROCEDURE UseRegister(register: LONGINT);
+		BEGIN
+			IF (register > 0) THEN
+				register := registerUsageCount.Map(register);
+				registerUsageCount.IncUse(register);
+				IF TraceRegisterUsageCount & (dump# NIL) THEN
+					dump.String("use register "); dump.Int(register,1); dump.String(": ");dump.Int(registerUsageCount.Use(register),1); dump.Ln; dump.Update;
+				END;
+				IF registerUsageCount.Use(register)=1 THEN
+					AddRegisterEntry(usedRegisters,register, registerUsageCount.used[register].class, registerUsageCount.used[register].type);
+					IF TraceRegisterUsageCount & (dump# NIL) THEN
+						dump.String("add register to usedRegisters"); dump.Ln; dump.Update;
+					END;
+				END;
+			END;
+		END UseRegister;
+
+		PROCEDURE ReleaseIntermediateOperand(CONST op: IntermediateCode.Operand);
+		BEGIN
+			UnuseRegister(op.register)
+		END ReleaseIntermediateOperand;
+
+		PROCEDURE UseIntermediateOperand(CONST op: IntermediateCode.Operand);
+		BEGIN
+			UseRegister(op.register)
+		END UseIntermediateOperand;
+
+		PROCEDURE ReleaseOperand(CONST op: Operand);
+		BEGIN
+			UnuseRegister(op.op.register);
+			UnuseRegister(op.tag.register);
+			UnuseRegister(op.extra.register);
+		END ReleaseOperand;
+
+		(* save registers marked in array "markedRegisters" to the stack
+			remove entries from array "markedRegisters" and save to array "saved" (=> recursion possible)
+		*)
+		PROCEDURE SaveRegisters();
+		VAR op: IntermediateCode.Operand; entry: RegisterEntry; type: IntermediateCode.Type;
+		BEGIN
+			entry := usedRegisters;
+			WHILE entry # NIL DO
+				type := registerUsageCount.used[entry.register].type;
+				IntermediateCode.InitRegister(op,entry.type,entry.registerClass, entry.register);
+				Emit(Push(position,op));
+				entry := entry.next;
+			END;
+		END SaveRegisters;
+
+		PROCEDURE ReleaseUsedRegisters(VAR saved: RegisterEntry);
+		BEGIN
+			saved := usedRegisters;
+			usedRegisters := NIL;
+		END ReleaseUsedRegisters;
+
+		(** remove parameter registers from used queue *)
+		PROCEDURE ReleaseParameterRegisters;
+		VAR op: IntermediateCode.Operand; entry,prev,next: RegisterEntry;
+		BEGIN
+			entry := usedRegisters; prev := NIL; usedRegisters := NIL;
+			WHILE entry # NIL DO
+				next := entry.next;
+				IF entry.registerClass.class = IntermediateCode.Parameter THEN
+					registerUsageCount.DecUse(entry.register);
+					ASSERT(registerUsageCount.Use(entry.register)=0);
+					IF TraceRegisterUsageCount & (dump# NIL) THEN
+						dump.String("unuse register "); dump.Int(entry.register,1); dump.Ln; dump.Update;
+					END;
+				ELSIF prev = NIL THEN
+					usedRegisters := entry; entry.prev := NIL; entry.next := NIL; prev := entry;
+				ELSE
+					prev.next := entry; entry.prev := prev; entry.next := NIL; prev:= entry;
+				END;
+				entry := next;
+			END;
+		END ReleaseParameterRegisters;
+
+		(* restore registers from array saved and re-enter into array markedRegisters (recursion possible) *)
+		PROCEDURE RestoreRegisters(CONST saved: RegisterEntry);
+		VAR op: IntermediateCode.Operand; entry,prev: RegisterEntry; type: IntermediateCode.Type; class: IntermediateCode.RegisterClass; new: LONGINT;
+		BEGIN
+			entry := saved;
+			WHILE (entry # NIL) DO prev := entry; entry := entry.next END;
+			entry := prev;
+			WHILE entry # NIL DO
+				prev := entry.prev;
+				type := entry.type;
+				class := entry.registerClass;
+				IntermediateCode.InitRegister(op,type,class,entry.register);
+				(*
+				new := registerUsageCount.Next(type,class);
+				registerUsageCount.Remap(entry.register,new);
+				IF TraceRegisterUsageCount & (dump# NIL) THEN
+					dump.String("remap register "); dump.Int(entry.register,1);
+					dump.String("to "); dump.Int(new,1);
+					dump.String("with count "); dump.Int(registerUsageCount.Use(new),1); dump.Ln; dump.Update;
+				END;
+				entry.register := new;
+				*)
+				
+				Emit(Pop(position,op));
+				AddRegisterEntry(usedRegisters,entry.register,entry.registerClass, entry.type);
+				entry := prev;
+			END;
+			(*
+			usedRegisters := saved;
+			*)
+		END RestoreRegisters;
+
+		PROCEDURE CheckRegistersFree;
+		VAR r: RegisterEntry; warning: ARRAY 128 OF CHAR; i: LONGINT;
+		BEGIN
+			IF usedRegisters # NIL THEN
+				r := usedRegisters;
+				WHILE r # NIL DO
+					warning := "register ";
+					Strings.AppendInt(warning, r.register);
+					Strings.Append(warning, " not released.");
+					Warning(position,warning);
+					r := r .next;
+				END;
+			END;
+			FOR i := 0 TO registerUsageCount.count-1 DO
+				IF registerUsageCount.used[i].count < 0 THEN
+					warning := "register ";
+					Strings.AppendInt(warning, i);
+					Strings.Append(warning, " unused too often.");
+					Warning(position,warning);
+				ELSIF registerUsageCount.used[i].count > 0 THEN (* should always coincide with cases above *)
+					warning := "register ";
+					Strings.AppendInt(warning, i);
+					Strings.Append(warning, " not unused often enough.");
+					Warning(position,warning);
+				END;
+			END;
+		END CheckRegistersFree;
+
+
+		(* Reuse2: reuse src1 or src2 for ongoing computation if src1 or src2, respectively, is a register.
+			Otherwise allocate a new register.
+			Does NOT necessarily keep the content of src1 or src2 in result! *)
+		PROCEDURE Reuse2(VAR result: IntermediateCode.Operand; src1,src2: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src1) THEN IntermediateCode.InitRegister(result,src1.type,src1.registerClass, src1.register);
+				UseIntermediateOperand(result);
+			ELSIF ReusableRegister(src2) THEN IntermediateCode.InitRegister(result,src2.type,src2.registerClass, src2.register);
+				UseIntermediateOperand(result);
+			ELSE IntermediateCode.InitRegister(result,src1.type,src1.registerClass,AcquireRegister(src1.type, src1.registerClass));
+			END;
+		END Reuse2;
+
+		(* Reuse2a: reuse src1 or src2 for ongoing computation if src1 or src2, respectively, is a register.
+			Otherwise check if an alternative destination is available. If so, then take the alternative (which is not necessarily a register).
+			If not then allocate a new register.
+			Does NOT necessarily keep the content of src1 or src2 in result!
+		*)
+		PROCEDURE Reuse2a(VAR result: IntermediateCode.Operand; src1,src2: IntermediateCode.Operand; VAR alternative: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src1) THEN IntermediateCode.InitRegister(result,src1.type,src1.registerClass, src1.register);
+				UseIntermediateOperand(result);
+			ELSIF ReusableRegister(src2) THEN IntermediateCode.InitRegister(result,src2.type,src2.registerClass, src2.register);
+				UseIntermediateOperand(result);
+			ELSIF alternative.mode # IntermediateCode.Undefined THEN
+				result := alternative; alternative := emptyOperand;
+				UseIntermediateOperand(result);
+			ELSE IntermediateCode.InitRegister(result,src1.type,src1.registerClass, AcquireRegister(src1.type, src1.registerClass));
+			END;
+		END Reuse2a;
+
+		(* like reuse2 but only one source *)
+		PROCEDURE Reuse1(VAR result: IntermediateCode.Operand; src1: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src1) THEN IntermediateCode.InitRegister(result,src1.type,src1.registerClass, src1.register);
+				UseIntermediateOperand(result);
+			ELSE IntermediateCode.InitRegister(result,src1.type,src1.registerClass, AcquireRegister(src1.type, src1.registerClass));
+			END;
+		END Reuse1;
+
+		(* like reuse2a but only one source *)
+		PROCEDURE Reuse1a(VAR result: IntermediateCode.Operand; src1: IntermediateCode.Operand; VAR alternative: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src1) THEN IntermediateCode.InitRegister(result,src1.type,src1.registerClass, src1.register);
+				UseIntermediateOperand(result);
+			ELSIF alternative.mode # IntermediateCode.Undefined THEN result := alternative; alternative := emptyOperand;
+				UseIntermediateOperand(result);
+			ELSE IntermediateCode.InitRegister(result,src1.type,src1.registerClass, AcquireRegister(src1.type, src1.registerClass));
+			END;
+		END Reuse1a;
+
+		(* like reuse1 but guarantees that content of src1 is in result *)
+		PROCEDURE ReuseCopy(VAR result: IntermediateCode.Operand; src1: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src1) THEN
+				IntermediateCode.InitRegister(result,src1.type,src1.registerClass, src1.register);
+				ASSERT((src1.mode = IntermediateCode.ModeRegister) & (src1.offset = 0));
+				UseIntermediateOperand(result);
+			ELSE
+				IntermediateCode.InitRegister(result,src1.type,src1.registerClass, AcquireRegister(src1.type, src1.registerClass));
+				Emit(Mov(position,result,src1));
+			END
+		END ReuseCopy;
+
+		PROCEDURE TransferToRegister(VAR result: IntermediateCode.Operand; src: IntermediateCode.Operand);
+		BEGIN
+			IF ReusableRegister(src) THEN
+				IntermediateCode.InitRegister(result,src.type,src.registerClass, src.register);
+			ELSE
+				IntermediateCode.InitRegister(result,src.type,src.registerClass, AcquireRegister(src.type, src.registerClass));
+				Emit(Mov(position,result,src));
+				ReleaseIntermediateOperand(src);
+			END
+		END TransferToRegister;
+
+
+		(** labels and branches **)
+		PROCEDURE NewLabel(): Label;
+		VAR label: Label;
+		BEGIN
+			NEW(label,section); RETURN label;
+		END NewLabel;
+
+		PROCEDURE SetLabel(label: Label);
+		BEGIN label.Resolve(section.pc);
+		END SetLabel;
+
+		PROCEDURE LabelOperand(label: Label): IntermediateCode.Operand;
+		BEGIN
+			ASSERT(label # NIL);
+			IF label.pc < 0 THEN (* label not yet set *)
+				label.AddFixup(section.pc);
+			END;
+			RETURN IntermediateCode.Address(addressType,label.section.name,GetFingerprint(label.section.symbol), label.pc);
+		END LabelOperand;
+
+		PROCEDURE BrL(label: Label);
+		BEGIN
+			Emit(Br(position,LabelOperand(label)));
+		END BrL;
+
+		PROCEDURE BrgeL(label: Label; left,right: IntermediateCode.Operand);
+		BEGIN
+			Emit(Brge(position,LabelOperand(label),left,right));
+		END BrgeL;
+
+		PROCEDURE BrltL(label: Label; left,right: IntermediateCode.Operand);
+		BEGIN
+			Emit(Brlt(position,LabelOperand(label),left,right));
+		END BrltL;
+
+		PROCEDURE BreqL(label: Label; left,right: IntermediateCode.Operand);
+		BEGIN
+			Emit(Breq(position,LabelOperand(label),left,right));
+		END BreqL;
+
+		PROCEDURE BrneL(label: Label; left,right: IntermediateCode.Operand);
+		BEGIN
+			Emit(Brne(position,LabelOperand(label),left,right));
+		END BrneL;
+
+		PROCEDURE Convert(VAR operand: IntermediateCode.Operand; type: IntermediateCode.Type);
+		VAR new: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("Convert") END;
+			IF IntermediateCode.TypeEquals(type,operand.type) THEN (* nothing to be done *)
+			ELSIF (operand.mode = IntermediateCode.ModeRegister) THEN
+				IF (type.sizeInBits = operand.type.sizeInBits) & (type.form IN IntermediateCode.Integer) & (operand.type.form IN IntermediateCode.Integer)
+					& (operand.offset = 0)
+				THEN
+					IntermediateCode.InitRegister(new,type,IntermediateCode.GeneralPurposeRegister,operand.register);
+					Emit(Conv(position,new,operand));
+				ELSE
+					IntermediateCode.InitRegister(new,type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(type,IntermediateCode.GeneralPurposeRegister));
+					Emit(Conv(position,new,operand));
+					ReleaseIntermediateOperand(operand);
+				END;
+				operand := new;
+			ELSIF (operand.mode = IntermediateCode.ModeImmediate) & (operand.symbol.name = "") & (operand.type.sizeInBits <= type.sizeInBits) & (operand.type.form IN IntermediateCode.Integer) & (type.form IN IntermediateCode.Integer) THEN
+				IntermediateCode.InitImmediate(operand,type,operand.intValue);
+			ELSE
+				IntermediateCode.InitRegister(new,type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(type,IntermediateCode.GeneralPurposeRegister));
+				Emit(Conv(position,new,operand));
+				ReleaseIntermediateOperand(operand);
+				operand := new;
+			END;
+			IF Trace THEN TraceExit("Convert") END;
+		END Convert;
+
+		PROCEDURE TrapC(br: ConditionalBranch; left,right:IntermediateCode.Operand; trapNo: LONGINT);
+		VAR exit: Label;
+		BEGIN
+			Assert((left.mode # IntermediateCode.ModeImmediate) OR (right.mode # IntermediateCode.ModeImmediate),"trap emission with two immediates");
+			exit := NewLabel();
+			br(exit,left,right);
+			Emit(Trap(position,trapNo));
+			SetLabel(exit);
+		END TrapC;
+
+		(** expressions *)
+
+		(** emit necessary runtime check for set elements **)
+		PROCEDURE CheckSetElement(o: IntermediateCode.Operand);
+		VAR max: IntermediateCode.Operand;
+		BEGIN
+			IF isUnchecked THEN RETURN END;
+			IF o.mode # IntermediateCode.ModeImmediate THEN (* otherwise it's the job of the checker *)
+				IntermediateCode.InitImmediate(max, setType, setType.sizeInBits (* number of bits in set *) -1);
+				TrapC(BrgeL, max, o, SetElementTrap);
+			END;
+		END CheckSetElement;
+
+		(** the set that a range represents **)
+		PROCEDURE SetFromRange(x: SyntaxTree.RangeExpression): IntermediateCode.Operand;
+		VAR
+			operand: Operand;
+			resultingSet, temp, size, allBits, noBits, one: IntermediateCode.Operand;
+		BEGIN
+			ASSERT((x.first # NIL) & (x.last # NIL)); (* ensured by the checker *)
+
+			allBits := IntermediateCode.Immediate(setType, -1);  (* bit mask 111...11111 *)
+			noBits := IntermediateCode.Immediate(setType, 0);  (* bit mask 0...0 *)
+			one := IntermediateCode.Immediate(setType, 1);
+
+			Evaluate(x, operand);
+
+			Convert(operand.op, setType);
+			Convert(operand.tag, setType);
+
+			CheckSetElement(operand.op);
+			CheckSetElement(operand.tag);
+
+			(* create mask for lower bound
+				i.e. shift 11111111 to the left by the value of the lower bound
+			*)
+			Reuse1(temp, operand.op);
+			Emit(Shl(position,temp, allBits, operand.op));
+			ReleaseIntermediateOperand(operand.op);
+			operand.op := temp;
+
+			(* create mask for upper bound
+				i.e. shift 11111111 to the right by the difference between the
+				upper bound and the maximum number of set elements
+			*)
+			IF (operand.tag.mode = IntermediateCode.ModeImmediate) & (operand.tag.symbol.name = "") THEN
+				IntermediateCode.InitImmediate(operand.tag, operand.tag.type, operand.op.type.sizeInBits - 1- operand.tag.intValue);
+				Reuse1(temp, operand.tag);
+			ELSE
+				Reuse1(temp, operand.tag);
+				IntermediateCode.InitImmediate(size, operand.tag.type, operand.op.type.sizeInBits - 1);
+				Emit(Sub(position,temp, size, operand.tag));
+			END;
+			Emit(Shr(position,temp, allBits, operand.tag));
+			ReleaseIntermediateOperand(operand.tag);
+			operand.tag := temp;
+
+			Reuse2(resultingSet, operand.op, operand.tag);
+
+			(* intersect the two masks *)
+			Emit(And(position,resultingSet, operand.op, operand.tag));
+
+			ReleaseOperand(operand);
+
+			RETURN resultingSet
+		END SetFromRange;
+
+		PROCEDURE VisitSet(x: SyntaxTree.Set);
+		VAR
+			res, operand: Operand;
+			temp, one, noBits, dest: IntermediateCode.Operand;
+			expression: SyntaxTree.Expression;
+			i: LONGINT;
+
+		BEGIN
+			IF Trace THEN TraceEnter("VisitSet") END;
+
+			dest := destination;
+			destination := emptyOperand;
+
+			noBits := IntermediateCode.Immediate(setType, 0);
+			one := IntermediateCode.Immediate(setType, 1);
+
+			(* start off with the empty set *)
+			InitOperand(res, ModeValue);
+			IntermediateCode.InitRegister(res.op, setType, IntermediateCode.GeneralPurposeRegister, AcquireRegister(setType, IntermediateCode.GeneralPurposeRegister));
+			Emit(Mov(position,res.op, noBits));
+
+			FOR i := 0 TO x.elements.Length() - 1 DO
+				expression := x.elements.GetExpression(i);
+
+				IF expression IS SyntaxTree.RangeExpression THEN
+					(* range of set elements *)
+					temp := SetFromRange(expression(SyntaxTree.RangeExpression));
+					ASSERT(IntermediateCode.TypeEquals(setType, temp.type));
+					Emit(Or(position,res.op, res.op, temp)); (* unify subset with current set *)
+					ReleaseIntermediateOperand(temp)
+				ELSE
+					(* singelton element *)
+					Evaluate(expression, operand);
+					Convert(operand.op, setType);
+					CheckSetElement(operand.op);
+
+					(* create subset containing single element *)
+					Reuse1(temp, operand.op);
+					Emit(Shl(position,temp, one, operand.op));
+					ReleaseOperand(operand);
+
+					Emit(Or(position,res.op, res.op, temp)); (* unify subset with current set *)
+					ReleaseIntermediateOperand(temp);
+				END
+			END;
+
+			result := res;
+			destination := dest;
+
+			IF Trace THEN TraceExit("VisitSet") END;
+		END VisitSet;
+
+		PROCEDURE VisitMathArrayExpression(x: SyntaxTree.MathArrayExpression);
+		VAR variable: SyntaxTree.Variable; index: SyntaxTree.IndexDesignator; dim: LONGINT;
+			designator: SyntaxTree.Designator; i: LONGINT; element: SyntaxTree.IntegerValue;
+
+			PROCEDURE RecursiveAssignment(x: SyntaxTree.MathArrayExpression; dim: LONGINT);
+			VAR numberElements,i: LONGINT; expression: SyntaxTree.Expression;
+				element: SyntaxTree.IntegerValue;
+			BEGIN
+				numberElements := x.elements.Length();
+				expression := index.parameters.GetExpression(dim);
+				element := expression(SyntaxTree.IntegerValue);
+				FOR i := 0 TO numberElements-1 DO
+					expression := x.elements.GetExpression(i);
+					element.SetValue(i);
+					IF expression IS SyntaxTree.MathArrayExpression THEN
+						RecursiveAssignment(expression(SyntaxTree.MathArrayExpression),dim+1);
+					ELSE
+						Assign(index,expression);
+					END;
+				END;
+			END RecursiveAssignment;
+
+		BEGIN
+			variable := GetTemporaryVariable(x.type, FALSE);
+			designator := SyntaxTree.NewSymbolDesignator(-1,NIL,variable);
+			designator.SetType(variable.type);
+			dim := SemanticChecker.Dimension(x.type,{SyntaxTree.Static});
+			index := SyntaxTree.NewIndexDesignator(x.position,designator);
+			FOR i := 0 TO dim-1 DO
+				element := SyntaxTree.NewIntegerValue(x.position,0);
+				element.SetType(system.longintType);
+				index.parameters.AddExpression(element);
+			END;
+			index.SetType(SemanticChecker.ArrayBase(x.type,dim));
+			RecursiveAssignment(x,0);
+			Expression(designator);
+		END VisitMathArrayExpression;
+
+
+		PROCEDURE VisitUnaryExpression(x: SyntaxTree.UnaryExpression);
+		VAR type,t0: SyntaxTree.Type; operand: Operand; dest: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitUnaryExpression") END;
+			dest := destination; destination := emptyOperand;
+			IF x.operator = Scanner.Not THEN
+				IF conditional THEN
+					Condition(x.left,falseLabel,trueLabel)
+				ELSE
+					Evaluate(x.left,operand);
+					InitOperand(result,ModeValue);
+					Reuse1a(result.op,operand.op,dest);
+					Emit(Xor(position,result.op,operand.op,true));
+					ReleaseOperand(operand);
+				END;
+			ELSIF x.operator = Scanner.Minus THEN
+				Evaluate(x.left,operand);
+				InitOperand(result,ModeValue);
+				Reuse1a(result.op,operand.op,dest);
+				type := x.left.type.resolved;
+				IF type IS SyntaxTree.SetType THEN
+					Emit(Not(position,result.op,operand.op));
+				ELSIF (type IS SyntaxTree.ComplexType) THEN
+					Reuse1(result.tag,operand.tag);
+					Emit(Neg(position,result.op,operand.op)); (* real part *)
+					Emit(Neg(position,result.tag,operand.tag)) (* imaginary part *)
+				ELSIF (type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.SizeType) OR (type IS SyntaxTree.AddressType) THEN
+					Emit(Neg(position,result.op,operand.op));
+				ELSE HALT(200)
+				END;
+				ReleaseOperand(operand);
+			ELSIF x.operator = Scanner.Address THEN
+				Designate(x.left,operand);
+				operand.mode := ModeValue;
+				t0 := x.left.type.resolved;
+				IF (t0 IS SyntaxTree.MathArrayType) & (t0(SyntaxTree.MathArrayType).form = SyntaxTree.Open) THEN
+					ReleaseIntermediateOperand(operand.op);
+					operand.op := operand.tag;
+					IntermediateCode.InitOperand(operand.tag);
+				END;
+				Convert(operand.op,IntermediateCode.GetType(system,x.type));
+				result := operand;
+			ELSE HALT(100)
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitUnaryExpression") END;
+		END VisitUnaryExpression;
+
+		(* test if e is of type type, side effect: result of evaluation of e stays in the operand *)
+		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL,falseL: Label);
+		VAR left,right: IntermediateCode.Operand; level,offset: LONGINT;
+		BEGIN
+			type := type.resolved;
+			IF type IS SyntaxTree.PointerType THEN
+				type := type(SyntaxTree.PointerType).pointerBase.resolved;
+			END;
+			IF type IS SyntaxTree.ObjectType THEN
+				BrL(trueL);
+			ELSE
+
+				ASSERT(type IS SyntaxTree.RecordType);
+
+				level := type(SyntaxTree.RecordType).Level();
+				(* get type desc tag of level relative to base tag *)
+				offset := (meta.BaseTypesTableOffset - level) * addressType.sizeInBits;
+				(*
+				IntermediateCode.MakeMemory(tag,addressType); (*! already done during generation *)
+				*)
+				ReuseCopy(left,tag);
+				IntermediateCode.AddOffset(left,ToMemoryUnits(system,offset));
+				right := TypeDescriptorAdr(type);
+				IntermediateCode.MakeMemory(left,addressType);
+				IF ~newObjectFile THEN
+					IntermediateCode.MakeMemory(right,addressType);
+				END;
+				BreqL(trueL,left,right);
+				ReleaseIntermediateOperand(left); ReleaseIntermediateOperand(right);
+				BrL(falseL);
+			END;
+		END TypeTest;
+
+		PROCEDURE Error(position: LONGINT; CONST s: ARRAY OF CHAR);
+		BEGIN
+			backend.Error(module.module.sourceName,position,Diagnostics.Invalid,s);
+			IF dump # NIL THEN
+				dump.String(s); dump.Ln;
+			END;
+		END Error;
+
+		PROCEDURE Warning(position: LONGINT; CONST s: ARRAY OF CHAR);
+		BEGIN
+			backend.diagnostics.Warning(module.module.sourceName,position,Diagnostics.Invalid,s);
+			IF dump # NIL THEN
+				dump.String(s); dump.Ln; dump.Update;
+			END;
+		END Warning;
+
+
+		PROCEDURE AddImport(CONST moduleName: ARRAY OF CHAR; VAR module: SyntaxTree.Module; force: BOOLEAN): BOOLEAN;
+		VAR import: SyntaxTree.Import;
+			s: Basic.MessageString;
+			selfName: SyntaxTree.IdentifierString;
+		BEGIN
+			moduleScope.ownerModule.GetName(selfName);
+			IF (moduleName = selfName) & (moduleScope.ownerModule.context = Global.A2Name) THEN
+				module := moduleScope.ownerModule
+			ELSE
+				import := moduleScope.ImportByModuleName(SyntaxTree.NewIdentifier(moduleName),SyntaxTree.NewIdentifier("A2"));
+
+
+
+				IF import = NIL THEN
+					import := SyntaxTree.NewImport(-1,SyntaxTree.NewIdentifier(moduleName),SyntaxTree.NewIdentifier(moduleName),TRUE);
+
+					import.SetContext(SyntaxTree.NewIdentifier("A2"));
+					IF ~checker.AddImport(moduleScope.ownerModule,import) THEN
+						s := "Module ";
+						Strings.Append(s,moduleName);
+						Strings.Append(s," cannot be imported.");
+						IF force THEN
+							Error(position,s);
+						ELSIF canBeLoaded THEN
+							Strings.Append(s, "=> no dynamic linking.");
+							Warning(position, s);
+							canBeLoaded := FALSE;
+						END;
+						RETURN FALSE
+					ELSE
+						SELF.module.imports.AddName(moduleName)
+					END;
+				ELSIF import.module = NIL THEN (* already tried *)
+					RETURN FALSE
+				END;
+				module := import.module;
+			END;
+			RETURN TRUE
+		END AddImport;
+
+		(* needed for old binary object file format*)
+		PROCEDURE EnsureSymbol(CONST moduleName,procedureName: SyntaxTree.IdentifierString);
+		VAR r: Operand; procedure: SyntaxTree.Procedure; module: SyntaxTree.Module; s: ARRAY 128 OF CHAR; fp: LONGINT;
+		BEGIN
+			IF AddImport(moduleName,module,TRUE) THEN
+				procedure := module.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
+				IF procedure = NIL THEN
+					s := "Instruction not supported on target, emulation procedure ";
+					Strings.Append(s,moduleName);
+					Strings.Append(s,".");
+					Strings.Append(s,procedureName);
+					Strings.Append(s," not present");
+					Error(position,s);
+				ELSE
+					StaticCallOperand(r,procedure);
+					ReleaseOperand(r);
+					fp := GetFingerprint(procedure);
+				END;
+			END;
+		END EnsureSymbol;
+
+		PROCEDURE ConditionToValue(x: SyntaxTree.Expression);
+		VAR exit: Label; trueL,falseL: Label;
+		BEGIN
+			trueL := NewLabel();
+			falseL := NewLabel();
+			exit := NewLabel();
+			Condition(x,trueL,falseL);
+			InitOperand(result,ModeValue);
+			SetLabel(trueL);
+			IntermediateCode.InitRegister(result.op,IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister,AcquireRegister(IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister));
+			Emit(Mov(position,result.op,true));
+			BrL(exit);
+			SetLabel(falseL);
+			Emit(MovReplace(position,result.op,false));
+			SetLabel(exit);
+		END ConditionToValue;
+
+		PROCEDURE ValueToCondition(VAR op: Operand);
+		BEGIN
+			LoadValue(op,system.booleanType);
+			BrneL(trueLabel,op.op, false);
+			ReleaseOperand(op);
+			BrL(falseLabel);
+		END ValueToCondition;
+
+		PROCEDURE GetDynamicSize(type: SyntaxTree.Type; tag: IntermediateCode.Operand):IntermediateCode.Operand;
+		VAR size: LONGINT;
+			PROCEDURE GetArraySize(type: SyntaxTree.ArrayType; offset: LONGINT):IntermediateCode.Operand;
+			VAR baseType: SyntaxTree.Type; size: LONGINT; sizeOperand,len,res: IntermediateCode.Operand;
+			BEGIN
+				ASSERT(type.form = SyntaxTree.Open);
+				baseType := type.arrayBase.resolved;
+				IF IsOpenArray(baseType) THEN
+					sizeOperand := GetArraySize(baseType(SyntaxTree.ArrayType),offset+system.addressSize);
+				ELSE
+					size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+					sizeOperand :=  IntermediateCode.Immediate(addressType,size);
+				END;
+				len := tag;
+				IntermediateCode.AddOffset(len,ToMemoryUnits(system,offset));
+				IntermediateCode.MakeMemory(len,addressType);
+				UseIntermediateOperand(len);
+				Reuse2(res,sizeOperand,len);
+				Emit(Mul(position,res,sizeOperand,len));
+				ReleaseIntermediateOperand(sizeOperand); ReleaseIntermediateOperand(len);
+				RETURN res
+			END GetArraySize;
+
+		BEGIN
+			type := type.resolved;
+			IF IsOpenArray(type)  THEN
+				IF tag.mode = IntermediateCode.ModeImmediate THEN (* special rule for winapi/c  arrays *)
+					RETURN tag
+				ELSE
+					RETURN  GetArraySize(type.resolved(SyntaxTree.ArrayType),0)
+				END;
+			ELSE
+				size := ToMemoryUnits(system,system.SizeOf(type));
+				RETURN IntermediateCode.Immediate(addressType,size)
+			END;
+		END GetDynamicSize;
+		
+		PROCEDURE GetSizeFromTag(tag: IntermediateCode.Operand): IntermediateCode.Operand;
+		VAR result: IntermediateCode.Operand;
+		BEGIN
+			MakeMemory(result, tag, addressType, 0);
+			RETURN result
+		END GetSizeFromTag;
+		
+		PROCEDURE GetArrayOfBytesSize(e: SyntaxTree.Expression; tag: IntermediateCode.Operand): IntermediateCode.Operand;
+		VAR parameter: SyntaxTree.Parameter;
+		BEGIN
+			IF (e IS SyntaxTree.SymbolDesignator) & (e(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
+				parameter := e(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Parameter);
+				IF (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) & (parameter.type.resolved IS SyntaxTree.RecordType) THEN RETURN GetSizeFromTag(tag) END;
+			ELSIF e IS SyntaxTree.DereferenceDesignator THEN
+				IF (e.type.resolved IS SyntaxTree.RecordType) THEN RETURN GetSizeFromTag(tag) END;
+			END;
+			RETURN GetDynamicSize(e.type, tag);
+		END GetArrayOfBytesSize;
+		
+
+		(*
+		to find imported symbol. not needed ?
+		PROCEDURE SymbolByName(CONST moduleName, symbolName: ARRAY OF CHAR): SyntaxTree.Symbol;
+		VAR importedModule: SyntaxTree.Module; symbol: SyntaxTree.Symbol;
+		BEGIN
+			IF AddImport(moduleName,importedModule,FALSE) THEN
+				symbol := importedModule.moduleScope.FindSymbol(SyntaxTree.NewIdentifier(symbolName));
+				RETURN symbol
+			ELSE
+				RETURN NIL
+			END
+		END SymbolByName;
+		*)
+
+		PROCEDURE GetRuntimeProcedure(CONST moduleName, procedureName: ARRAY OF CHAR; VAR procedure: SyntaxTree.Procedure; force: BOOLEAN): BOOLEAN;
+		VAR runtimeModule: SyntaxTree.Module; s: Basic.MessageString;
+		BEGIN
+			IF AddImport(moduleName,runtimeModule,force) THEN
+				procedure := runtimeModule.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
+				IF procedure = NIL THEN
+					s := "Procedure ";
+					Strings.Append(s,moduleName);
+					Strings.Append(s,".");
+					Strings.Append(s,procedureName);
+					Strings.Append(s," not present");
+					Error(position,s);
+					RETURN FALSE
+				ELSE
+					RETURN TRUE
+				END;
+			ELSE RETURN FALSE
+			END;
+		END GetRuntimeProcedure;
+
+		PROCEDURE GetTypeDescriptor(CONST moduleName, typeName: ARRAY OF CHAR; VAR name: Basic.SegmentedName): SyntaxTree.Symbol;
+		VAR importedModule: SyntaxTree.Module; source: IntermediateCode.Section; symbol: SyntaxTree.Symbol;
+			s: Basic.MessageString;
+		BEGIN
+			Basic.InitSegmentedName(name);
+			name[0] := Basic.MakeString(moduleName);
+			name[1] := Basic.MakeString(typeName);
+			name[2] := -1;
+
+			IF AddImport(moduleName,importedModule, FALSE) THEN
+				symbol := importedModule.moduleScope.FindTypeDeclaration(SyntaxTree.NewIdentifier(typeName));
+				IF symbol = NIL THEN
+					s := "type  ";
+					Strings.Append(s,moduleName);
+					Strings.Append(s,".");
+					Strings.Append(s,typeName);
+					Strings.Append(s," not present");
+					Error(position,s);
+				END;
+			ELSE symbol := NIL;
+			END;
+			IF importedModule = moduleScope.ownerModule THEN
+				source := NewSection(module.allSections, Sections.ConstSection, name, symbol, commentPrintout # NIL);
+			ELSE
+				source := NewSection(module.importedSections, Sections.ConstSection, name, symbol, commentPrintout # NIL);
+			END;
+			RETURN symbol
+		END GetTypeDescriptor;
+
+
+		(* Call a runtime procedure.  If numberParameters >= 0 then the procedure may be called without module import. Otherwise the signature has to be inferred from the import. *)
+		PROCEDURE CallThis(CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT);
+		VAR procedure: SyntaxTree.Procedure; result: Operand; reg: IntermediateCode.Operand; source: IntermediateCode.Section;
+			pooledName: Basic.SegmentedName;
+		BEGIN
+			IF GetRuntimeProcedure(moduleName,procedureName,procedure,numberParameters < 0) THEN (* ready for dynamic linking *)
+				StaticCallOperand(result,procedure);
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				ReleaseOperand(result);
+			ELSE (* only static linking possible *)
+				Basic.InitSegmentedName(pooledName);
+				pooledName[0] := Basic.MakeString(moduleName);
+				pooledName[1] := Basic.MakeString(procedureName);
+				pooledName[2] := -1;
+				source := NewSection(module.importedSections, Sections.CodeSection, pooledName, NIL,commentPrintout # NIL);
+				IntermediateCode.InitAddress(reg, addressType, pooledName , 0, 0);
+				Emit(Call(position,reg, ToMemoryUnits(system,numberParameters * system.addressSize)));
+			END;
+		END CallThis;
+
+		(* call moduleName.procedureName if it can be imported, otherwise use altModuleName.altProcedureName  *)
+		PROCEDURE CallThis2(CONST moduleName, procedureName,altModuleName, altProcedureName: ARRAY OF CHAR;numberParameters: LONGINT; return: IntermediateCode.Operand);
+		VAR procedure: SyntaxTree.Procedure; result: Operand; address: IntermediateCode.Operand; source: IntermediateCode.Section;
+			pooledName: Basic.SegmentedName;
+		BEGIN
+			ASSERT(numberParameters >= 0);
+			IF GetRuntimeProcedure(moduleName,procedureName,procedure,FALSE) THEN (* ready for dynamic linking *)
+				StaticCallOperand(result,procedure);
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				Emit(Result(position,return));
+				ReleaseOperand(result);
+			ELSE (* only static linking possible *)
+				Basic.InitSegmentedName(pooledName);
+				pooledName[0] := Basic.MakeString(altModuleName);
+				pooledName[1] := Basic.MakeString(altProcedureName);
+				pooledName[2] := -1;
+				source := NewSection(module.importedSections, Sections.CodeSection,  pooledName, NIL,commentPrintout # NIL);
+				IntermediateCode.InitAddress(address, addressType, pooledName , 0, 0);
+				Emit(Call(position,address, ToMemoryUnits(system, numberParameters * system.addressSize)));
+
+				Emit(Result(position,return));
+			END;
+		END CallThis2;
+
+		PROCEDURE CompareString(br: ConditionalBranch; leftExpression,rightExpression: SyntaxTree.Expression);
+		VAR
+			left,right: Operand;
+			leftSize, rightSize: IntermediateCode.Operand;
+			procedure: SyntaxTree.Procedure;
+			saved: RegisterEntry;
+			reg: IntermediateCode.Operand;
+			procedureName: SyntaxTree.IdentifierString;
+		BEGIN
+			procedureName := "CompareString";
+
+			IF GetRuntimeProcedure(runtimeModuleName,procedureName,procedure,TRUE) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved);
+				Designate(leftExpression,left);
+				leftSize := GetDynamicSize(leftExpression.type,left.tag);
+				Emit(Push(position,leftSize));
+				ReleaseIntermediateOperand(leftSize);
+				Emit(Push(position,left.op));
+				ReleaseOperand(left);
+
+				Designate(rightExpression,right);
+				rightSize := GetDynamicSize(rightExpression.type,right.tag);
+				Emit(Push(position,rightSize));
+				ReleaseIntermediateOperand(rightSize);
+				Emit(Push(position,right.op));
+				ReleaseOperand(right);
+
+				StaticCallOperand(result,procedure);
+				IntermediateCode.InitRegister(reg,int8,IntermediateCode.GeneralPurposeRegister,AcquireRegister(int8,IntermediateCode.GeneralPurposeRegister));
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				Emit(Result(position,reg));
+				ReleaseOperand(result);
+				(*
+				AcquireThisRegister(int8,IntermediateCode.Result);
+				*)
+				RestoreRegisters(saved); (* must be done before use of result, might be jumped over otherwise *)
+				(*
+				IntermediateCode.InitRegister(reg,int8,IntermediateCode.Result);
+				*)
+				br(trueLabel,reg,IntermediateCode.Immediate(int8,0));
+				ReleaseIntermediateOperand(reg);
+				BrL(falseLabel);
+			END;
+		END CompareString;
+
+		PROCEDURE CopyString(leftExpression,rightExpression: SyntaxTree.Expression);
+		VAR
+			left,right: Operand;
+			leftSize, rightSize: IntermediateCode.Operand;
+			procedure: SyntaxTree.Procedure;
+			saved: RegisterEntry;
+			procedureName: SyntaxTree.IdentifierString;
+		BEGIN
+			procedureName := "CopyString";
+
+			IF GetRuntimeProcedure(runtimeModuleName,procedureName,procedure,TRUE) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved);
+				Designate(leftExpression,left);
+				leftSize := GetDynamicSize(leftExpression.type,left.tag);
+				Emit(Push(position,leftSize));
+				ReleaseIntermediateOperand(leftSize);
+				Emit(Push(position,left.op));
+				ReleaseOperand(left);
+
+				Designate(rightExpression,right);
+				rightSize := GetDynamicSize(rightExpression.type,right.tag);
+				Emit(Push(position,rightSize));
+				ReleaseIntermediateOperand(rightSize);
+				Emit(Push(position,right.op));
+				ReleaseOperand(right);
+
+				StaticCallOperand(result,procedure);
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				ReleaseOperand(result);
+				RestoreRegisters(saved);
+			END;
+		END CopyString;
+
+		PROCEDURE VisitBinaryExpression(x: SyntaxTree.BinaryExpression);
+		VAR left,right: Operand; temp: Operand;  zero, one, tempReg, tempReg2: IntermediateCode.Operand;
+			leftType,rightType: SyntaxTree.Type;
+			leftExpression,rightExpression : SyntaxTree.Expression;
+			componentType: IntermediateCode.Type;
+			value: HUGEINT; exp: LONGINT;next,exit: Label; recordType: SyntaxTree.RecordType; dest: IntermediateCode.Operand;
+			size: LONGINT;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitBinaryExpression") END;
+			dest := destination; destination := emptyOperand;
+			leftType := x.left.type.resolved;
+			rightType := x.right.type.resolved;
+			(* for "OR" and "&" the left and right expressions may not be emitted first <= shortcut evaluation *)
+			CASE x.operator OF
+			Scanner.Or:
+				(* shortcut evaluation of left OR right *)
+				IF ~conditional THEN ConditionToValue(x);
+				ELSE
+					next := NewLabel();
+					Condition(x.left,trueLabel,next);
+					SetLabel(next);
+					Condition(x.right,trueLabel,falseLabel);
+				END;
+			|Scanner.And:
+				(* shortcut evaluation of left & right *)
+				IF ~conditional THEN ConditionToValue(x);
+				ELSE
+					next := NewLabel();
+					Condition(x.left,next,falseLabel);
+					SetLabel(next);
+					Condition(x.right,trueLabel,falseLabel);
+				END;
+			|Scanner.Is:
+				IF ~conditional THEN ConditionToValue(x);
+				ELSE
+					(* get type desc tag *)
+					IF IsPointerToRecord(leftType,recordType) THEN
+						Evaluate(x.left,left);
+						Dereference(left,recordType,IsUnsafePointer(leftType))
+					ELSE
+						Designate(x.left,left);
+					END;
+					TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,trueLabel,falseLabel);
+					ReleaseOperand(left);
+				END;
+			|Scanner.Plus:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF leftType IS SyntaxTree.SetType THEN
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Or(position,result.op,left.op,right.op));
+				ELSIF leftType IS SyntaxTree.ComplexType THEN
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest); (* TODO: review this *)
+					Reuse2(result.tag,left.tag,right.tag);
+					Emit(Add(position,result.op,left.op,right.op));
+					Emit(Add(position,result.tag,left.tag,right.tag))
+				ELSE
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Add(position,result.op,left.op,right.op));
+				END;
+				ReleaseOperand(left); ReleaseOperand(right);
+			|Scanner.Minus:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF leftType IS SyntaxTree.SetType THEN
+					InitOperand(result,ModeValue);
+					Reuse1(result.op,right.op);
+					Emit(Not(position,result.op,right.op));
+					ReleaseOperand(right);
+					Emit(And(position,result.op,result.op,left.op));
+					ReleaseOperand(left);
+				ELSIF leftType IS SyntaxTree.ComplexType THEN
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest); (* TODO: review this *)
+					Reuse2(result.tag,left.tag,right.tag);
+					Emit(Sub(position,result.op,left.op,right.op));
+					Emit(Sub(position,result.tag,left.tag,right.tag));
+					ReleaseOperand(left); ReleaseOperand(right)
+				ELSE
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Sub(position,result.op,left.op,right.op));
+					ReleaseOperand(left); ReleaseOperand(right);
+				END;
+			|Scanner.Times:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF leftType IS SyntaxTree.SetType THEN
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(And(position,result.op,left.op,right.op));
+				ELSIF (x.type.resolved IS SyntaxTree.IntegerType) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
+					InitOperand(result,ModeValue);
+					Reuse1a(result.op,left.op,dest);
+					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system, system.longintType),exp);
+					Emit(Shl(position,result.op,left.op,right.op));
+				ELSIF leftType IS SyntaxTree.ComplexType THEN
+					InitOperand(result, ModeValue);
+					componentType := left.op.type;
+					(* TODO: review this *)
+					(*
+					result.op = left.op * right.op - left.tag * right.tag
+					result.tag = left.tag * right.op + left.op * right.tag
+					*)
+					result.op := IntermediateCode.Register(componentType, IntermediateCode.GeneralPurposeRegister,AcquireRegister(componentType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mul(position,result.op, left.op, right.op));
+					tempReg := IntermediateCode.Register(componentType, IntermediateCode.GeneralPurposeRegister,AcquireRegister(componentType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mul(position,tempReg, left.tag, right.tag));
+					Emit(Sub(position,result.op, result.op, tempReg));
+
+					Reuse2(result.tag, left.tag, right.op);
+					Emit(Mul(position,result.tag, left.tag, right.op));
+					Emit(Mul(position,tempReg, left.op, right.tag));
+					Emit(Add(position,result.tag, result.tag, tempReg));
+
+					ReleaseIntermediateOperand(tempReg)
+				ELSE
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Mul(position,result.op,left.op,right.op));
+				END;
+				ReleaseOperand(left); ReleaseOperand(right);
+			|Scanner.Div:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF ((x.type.resolved IS SyntaxTree.IntegerType) OR (x.type.resolved IS SyntaxTree.AddressType)) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
+					InitOperand(result,ModeValue);
+					Reuse1a(result.op,left.op,dest);
+					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system, system.longintType),exp);
+					Emit(Shr(position,result.op,left.op,right.op));
+				ELSE
+					IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+						IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
+						IF ~isUnchecked THEN
+							exit := NewLabel();
+							BrltL(exit,zero,right.op);
+							Emit(Trap(position,NegativeDivisorTrap));
+							SetLabel(exit);
+						END;
+					END;
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Div(position,result.op,left.op,right.op));
+				END;
+				ReleaseOperand(left); ReleaseOperand(right);
+			|Scanner.Mod:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF ((x.type.resolved IS SyntaxTree.IntegerType) OR (x.type.resolved IS SyntaxTree.AddressType)) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
+					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system,x.type),value-1);
+					InitOperand(result,ModeValue);
+					Reuse1a(result.op,left.op,dest);
+					Emit(And(position,result.op,left.op,right.op));
+				ELSE
+					IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+						IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
+						IF ~isUnchecked THEN
+							exit := NewLabel();
+							BrltL(exit,zero,right.op);
+							Emit(Trap(position,NegativeDivisorTrap));
+							SetLabel(exit);
+						END;
+					END;
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Mod(position,result.op,left.op,right.op));
+				END;
+				ReleaseOperand(left); ReleaseOperand(right);
+			|Scanner.Slash:
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				IF leftType IS SyntaxTree.SetType THEN
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Xor(position,result.op,left.op,right.op));
+				ELSIF leftType IS SyntaxTree.ComplexType THEN
+					InitOperand(result,ModeValue);
+					componentType := left.op.type;
+					(* review this *)
+					(*
+					divisor = right.op * right.op + right.tag * right.tag
+					result.op = (left.op * right.op + left.tag * right.tag) / divisor
+					result.tag = (left.tag * right.op - left.op * right.tag) / divisor
+					*)
+					tempReg := IntermediateCode.Register(componentType, IntermediateCode.GeneralPurposeRegister,AcquireRegister(componentType,IntermediateCode.GeneralPurposeRegister));
+					tempReg2 := IntermediateCode.Register(componentType, IntermediateCode.GeneralPurposeRegister,AcquireRegister(componentType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mul(position,tempReg, right.op, right.op));
+					Emit(Mul(position,tempReg2, right.tag, right.tag));
+					Emit(Add(position,tempReg, tempReg, tempReg2));
+
+					result.op := tempReg2;
+					Emit(Mul(position,result.op, left.op, right.op));
+					tempReg2 := IntermediateCode.Register(componentType, IntermediateCode.GeneralPurposeRegister, AcquireRegister(componentType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mul(position,tempReg2, left.tag, right.tag));
+					Emit(Add(position,result.op, result.op, tempReg2));
+					Emit(Div(position,result.op, result.op, tempReg));
+
+					Reuse2(result.tag, left.tag, right.op);
+					Emit(Mul(position,result.tag, left.tag, right.op));
+					Emit(Mul(position,tempReg2, left.op, right.tag));
+					Emit(Sub(position,result.tag, result.tag, tempReg2));
+					Emit(Div(position,result.tag, result.tag, tempReg));
+
+					ReleaseIntermediateOperand(tempReg);
+					ReleaseIntermediateOperand(tempReg2)
+				ELSE
+					InitOperand(result,ModeValue);
+					Reuse2a(result.op,left.op,right.op,dest);
+					Emit(Div(position,result.op,left.op,right.op));
+				END;
+				ReleaseOperand(left); ReleaseOperand(right);
+			|Scanner.Equal:
+				IF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BreqL,x.left,x.right);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					IF leftType IS SyntaxTree.RangeType THEN
+						ASSERT(rightType IS SyntaxTree.RangeType);
+						BrneL(falseLabel, left.op, right.op); (* first *)
+						BrneL(falseLabel, left.tag, right.tag); (* last *)
+						BrneL(falseLabel, left.extra, right.extra); (* step *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel)
+					ELSIF IsDelegate(leftType) THEN (* delegate comparison *)
+						BrneL(falseLabel, left.op, right.op); (* first *)
+						BrneL(falseLabel, left.tag, right.tag); (* last *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel)
+					ELSIF leftType IS SyntaxTree.ComplexType THEN
+						(* TODO: review this *)
+						BrneL(falseLabel, left.op, right.op); (* real part *)
+						BrneL(falseLabel, left.tag, right.tag); (* imaginary part *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel)
+					ELSE
+						BrneL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel);
+					END;
+				END;
+			|Scanner.LessEqual:
+				IF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BrgeL,x.right,x.left);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					IF leftType IS SyntaxTree.SetType THEN (* left subsetequal right: left \cap right = left  *)
+						Reuse1(temp.op,right.op);
+						Emit(And(position,temp.op,left.op,right.op));
+						ReleaseOperand(right);
+						BreqL(trueLabel,temp.op,left.op);
+						BrL(falseLabel);
+						ReleaseOperand(temp);ReleaseOperand(left);
+					ELSE
+						BrltL(falseLabel,right.op,left.op); (* inverse evaluation to optimize jumps for true case *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel);
+					END;
+				END;
+			|Scanner.Less:
+				IF leftType IS SyntaxTree.SetType THEN (* left < right <=> left <= right & left # right *)
+					leftExpression := SyntaxTree.NewBinaryExpression(-1,x.left,x.right,Scanner.LessEqual);
+					leftExpression.SetType(system.booleanType);
+					rightExpression := SyntaxTree.NewBinaryExpression(-1,x.left,x.right,Scanner.Unequal);
+					rightExpression.SetType(system.booleanType);
+					leftExpression := SyntaxTree.NewBinaryExpression(-1,leftExpression,rightExpression,Scanner.And);
+					leftExpression.SetType(system.booleanType);
+					Expression(leftExpression);
+				ELSIF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BrltL,x.left,x.right);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					BrgeL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
+					ReleaseOperand(left); ReleaseOperand(right);
+					BrL(trueLabel);
+				END;
+			|Scanner.Greater:
+				IF leftType IS SyntaxTree.SetType THEN (* left > right <=> left >= right & left # right  *)
+					leftExpression := SyntaxTree.NewBinaryExpression(-1,x.left,x.right,Scanner.GreaterEqual);
+					leftExpression.SetType(system.booleanType);
+					rightExpression := SyntaxTree.NewBinaryExpression(-1,x.left,x.right,Scanner.Unequal);
+					rightExpression.SetType(system.booleanType);
+					leftExpression := SyntaxTree.NewBinaryExpression(-1,leftExpression,rightExpression,Scanner.And);
+					leftExpression.SetType(system.booleanType);
+					Expression(leftExpression);
+				ELSIF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BrltL,x.right,x.left);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					BrgeL(falseLabel, right.op,left.op); (* inverse evaluation to optimize jumps for true case *)
+					ReleaseOperand(left); ReleaseOperand(right);
+					BrL(trueLabel);
+				END;
+			|Scanner.GreaterEqual:
+				IF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BrgeL,x.left,x.right);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					IF leftType IS SyntaxTree.SetType THEN (* left supsetequal right: left \cap right = right *)
+						Reuse1(temp.op,left.op);
+						Emit(And(position,temp.op,left.op,right.op));
+						ReleaseOperand(left);
+						BreqL(trueLabel, temp.op,right.op);
+						ReleaseOperand(temp); ReleaseOperand(right);
+						BrL(falseLabel);
+					ELSE
+						BrltL(falseLabel, left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel);
+					END;
+				END;
+			|Scanner.Unequal:
+				IF ~conditional THEN ConditionToValue(x);
+				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+					CompareString(BrneL,x.left,x.right);
+				ELSE
+					Evaluate(x.left,left);
+					Evaluate(x.right,right);
+					IF leftType IS SyntaxTree.RangeType THEN
+						ASSERT(rightType IS SyntaxTree.RangeType);
+						BrneL(trueLabel, left.op, right.op); (* first *)
+						BrneL(trueLabel, left.tag, right.tag); (* last *)
+						BrneL(trueLabel, left.extra, right.extra); (* step *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(falseLabel)
+					ELSIF IsDelegate(leftType) THEN (* delegate comparison *)
+						BrneL(trueLabel, left.op, right.op); (* first *)
+						BrneL(trueLabel, left.tag, right.tag); (* last *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(falseLabel)
+					ELSIF leftType IS SyntaxTree.ComplexType THEN
+						(* TODO: review this *)
+						BrneL(trueLabel, left.op, right.op); (* real part *)
+						BrneL(trueLabel, left.tag, right.tag); (* imaginary part *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(falseLabel)
+					ELSE
+						BreqL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
+						ReleaseOperand(left); ReleaseOperand(right);
+						BrL(trueLabel);
+					END;
+				END;
+			|Scanner.In:
+				ASSERT(rightType.resolved IS SyntaxTree.SetType);
+				Evaluate(x.left,left);
+				Evaluate(x.right,right);
+				Convert(left.op,setType);
+				ReuseCopy(temp.op,right.op);
+				Emit(Shr(position,temp.op,temp.op,left.op));
+				ReleaseOperand(right); ReleaseOperand(left);
+				IntermediateCode.InitImmediate(one,setType,1);
+				Emit(And(position,temp.op,temp.op,one));
+				IF conditional THEN
+					IntermediateCode.InitImmediate(zero,setType,0);
+					BrneL(trueLabel,temp.op,zero);
+					ReleaseOperand(temp);
+					BrL(falseLabel);
+				ELSE
+					Convert(temp.op,bool);
+					result.mode := ModeValue;
+					result.op := temp.op;
+					result.tag := nil; (* may be left over from calls to evaluate *)
+				END;
+			|Scanner.Questionmarks:
+				Evaluate(x.left, left);
+				Emit(Push(position,left.op));
+				ReleaseOperand(left);
+				Designate(x.right, right);
+				size := ToMemoryUnits(system,system.SizeOf(x.right.type));
+				IF size # 1 THEN Error(x.right.position,"receive not implemented for complex data types") END;
+				Emit(Push(position,right.op));
+				ReleaseOperand(right);
+				CallThis(ChannelModuleName,"ReceiveNonBlockingB",-1);
+				InitOperand(result, ModeValue);
+				result.op := NewRegisterOperand(bool);
+				Emit(Result(position,result.op));
+				IF conditional THEN
+					IntermediateCode.InitImmediate(zero,setType,0);
+					BrneL(trueLabel,result.op,zero);
+					ReleaseOperand(result);
+					BrL(falseLabel);
+				END;
+			ELSE
+				HALT(100);
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitBinaryExpression") END;
+		END VisitBinaryExpression;
+
+		PROCEDURE VisitRangeExpression(x: SyntaxTree.RangeExpression);
+		VAR localResult, operand: Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitRangeExpression") END;
+
+			InitOperand(localResult, ModeValue);
+
+			ASSERT(x.first # NIL);
+			Evaluate(x.first, operand);
+			localResult.op := operand.op;
+			ReleaseOperand(operand);
+			UseIntermediateOperand(localResult.op);
+
+			ASSERT(x.last # NIL);
+			Evaluate(x.last, operand);
+			localResult.tag := operand.op;
+			ReleaseOperand(operand);
+			UseIntermediateOperand(localResult.tag);
+
+			IF x.step # NIL THEN
+				Evaluate(x.step, operand);
+				localResult.extra := operand.op;
+				ReleaseOperand(operand);
+				UseIntermediateOperand(localResult.extra);
+			END;
+
+			result := localResult;
+
+			IF Trace THEN TraceExit("VisitRangeExpression") END
+		END VisitRangeExpression;
+
+		PROCEDURE VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression);
+		BEGIN
+			HALT(100); (* should never be evaluated *)
+		END VisitTensorRangeExpression;
+
+		PROCEDURE VisitConversion(x: SyntaxTree.Conversion);
+		VAR old: Operand; dest: IntermediateCode.Operand; componentType: SyntaxTree.Type;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitConversion") END;
+
+			ASSERT(~(x.expression.type.resolved IS SyntaxTree.RangeType));
+
+			dest := destination; destination := emptyOperand;
+			Evaluate(x.expression,old);
+			InitOperand(result,ModeValue);
+
+			result.op := old.op;
+			ASSERT(result.op.mode # 0);
+			IF x.type.resolved IS SyntaxTree.ComplexType THEN
+				(* convert TO a complex number *)
+				componentType := x.type.resolved(SyntaxTree.ComplexType).componentType;
+				Convert(result.op,IntermediateCode.GetType(system, componentType));
+				ASSERT(result.op.mode # 0);
+				IF x.expression.type.resolved IS SyntaxTree.ComplexType THEN
+					(* convert FROM a complex number TO a complex number*)
+					result.tag := old.tag;
+					ASSERT(result.tag.mode # 0);
+					Convert(result.tag,IntermediateCode.GetType(system, componentType));
+					ASSERT(result.tag.mode # 0)
+				ELSE
+					ASSERT(componentType IS SyntaxTree.FloatType); (* this excludes complex types based on integer types *)
+					result.tag := IntermediateCode.FloatImmediate(IntermediateCode.GetType(system, componentType), 0); (* the imaginary part is set to 0 *)
+				END
+			ELSE
+				Convert(result.op,IntermediateCode.GetType(system,x.type));
+				ASSERT(result.op.mode # 0);
+
+				result.tag := old.tag; (*! probably never used *)
+			END;
+
+			destination := dest;
+			IF Trace THEN TraceExit("VisitConversion") END;
+		END VisitConversion;
+
+		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitTypeDeclaration") END;
+			ASSERT((x.declaredType.resolved IS SyntaxTree.EnumerationType) OR (x.declaredType.resolved IS SyntaxTree.RecordType)
+			OR (x.declaredType.resolved IS SyntaxTree.PointerType) & (x.declaredType.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType));
+			IF Trace THEN TraceExit("VisitTypeDeclaration") END;
+		END VisitTypeDeclaration;
+
+		(** designators (expressions) *)
+
+		PROCEDURE VisitSymbolDesignator(x: SyntaxTree.SymbolDesignator);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitSymbolDesignator") END;
+			IF x.left # NIL THEN Expression(x.left) END;
+			Symbol(x.symbol,result);
+			IF Trace THEN TraceExit("VisitSymbolDesignator") END;
+		END VisitSymbolDesignator;
+
+		PROCEDURE BoundCheck(index,length: IntermediateCode.Operand);
+		BEGIN
+			IF isUnchecked THEN RETURN END;
+			IF tagsAvailable THEN
+				TrapC(BrltL,index,length,IndexCheckTrap);
+			END;
+		END BoundCheck;
+
+		PROCEDURE DimensionCheck(base,dim: IntermediateCode.Operand; op: ConditionalBranch );
+		VAR d: IntermediateCode.Operand;
+		BEGIN
+			IF isUnchecked THEN RETURN END;
+			MakeMemory(d,base,dim.type,ToMemoryUnits(system,MathDimOffset * addressType.sizeInBits));
+			TrapC(op,dim,d,ArraySizeTrap);
+			ReleaseIntermediateOperand(d);
+		END DimensionCheck;
+
+		PROCEDURE MathIndexDesignator(x: SyntaxTree.IndexDesignator);
+		VAR
+			index, range, array, sourceLength, sourceIncrement, localResult: Operand;
+			firstIndex, lastIndex, stepSize, summand, targetLength, targetIncrement, tmp, srcDim, destDim: IntermediateCode.Operand;
+			expression: SyntaxTree.Expression;
+			resultingType, leftType, baseType: SyntaxTree.Type;
+			skipLabel1, skipLabel2: Label;
+			i, indexListSize, indexDim, rangeCount, indexCount, tensorRangeCount, srcDimOffset, destDimOffset, targetArrayDimensionality: LONGINT;
+			staticSourceLength, staticSourceIncrement, staticIndex, staticFirstIndex, staticLastIndex, staticStepSize, staticTargetLength: LONGINT;
+			variableOp: Operand;
+			variable: SyntaxTree.Variable;
+
+			PROCEDURE CountIndices(parameters: SyntaxTree.ExpressionList; VAR indexCount: LONGINT; VAR rangeCount: LONGINT; VAR tensorRangeCount: LONGINT);
+			VAR index: LONGINT; expression: SyntaxTree.Expression;
+			BEGIN
+				(* count the number of indices, ranges and tensorRanges in the index list *)
+				indexCount := 0; rangeCount := 0; tensorRangeCount := 0;
+				FOR i := 0 TO parameters.Length() - 1 DO
+					expression := parameters.GetExpression(i);
+					IF expression IS SyntaxTree.TensorRangeExpression THEN INC(tensorRangeCount)
+					ELSIF (expression.type # NIL) & (expression.type.resolved IS SyntaxTree.RangeType) THEN INC(indexCount)
+					ELSE INC(indexCount)
+					END
+				END;
+			END CountIndices;
+
+
+		BEGIN
+			ASSERT(tagsAvailable);
+
+			resultingType := x.type.resolved; (* resulting type *)
+			leftType := x.left.type.resolved; (* type of array to be indexed over *)
+
+			InitOperand(localResult, ModeReference);
+
+			IF (resultingType IS SyntaxTree.MathArrayType)  & ( (resultingType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) OR NeedDescriptor) THEN
+				targetArrayDimensionality := resultingType(SyntaxTree.MathArrayType).Dimensionality();
+
+				IF arrayDestinationTag.mode # IntermediateCode.Undefined THEN
+					(* a globally defined array destination tag is available -> use and invalidate it*)
+					localResult.tag := arrayDestinationTag;
+					IntermediateCode.InitOperand(arrayDestinationTag)
+				ELSE
+					(* otherwise, create a temporary variable and use it to store the array destination tag *)
+					variable := GetTemporaryVariable(GetMathArrayDescriptorType(targetArrayDimensionality), FALSE);
+					Symbol(variable, variableOp);
+					ReuseCopy(localResult.tag, variableOp.op);
+					ReleaseOperand(variableOp);
+				END
+			END;
+
+			indexListSize := x.parameters.Length();
+
+			CountIndices(x.parameters, indexCount, rangeCount, tensorRangeCount);
+			ASSERT(tensorRangeCount <= 1);
+
+			(* designate the array to be indexed over, perform tensor range check if known *)
+			Designate(x.left, array);
+
+			IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+				Dereference(array, leftType,FALSE);
+				IF tensorRangeCount=0 THEN
+					DimensionCheck(array.tag, IntermediateCode.Immediate(int32, rangeCount+indexCount), BreqL)
+				END
+			END;
+
+			(* determine source and destination dimension offsets; this depends on if the list starts with a '?' *)
+			IF x.parameters.GetExpression(0) IS SyntaxTree.TensorRangeExpression THEN
+				srcDimOffset := -indexListSize;
+				destDimOffset := -rangeCount
+			ELSE
+				srcDimOffset := 0;
+				destDimOffset := 0
+			END;
+
+			indexDim := 0;
+
+			(* use address of source array as basis *)
+			(*
+			ReuseCopy(localResult.op, array.op);
+			*)
+			localResult.op := array.op;
+			UseIntermediateOperand(localResult.op);
+
+			(* go through the index list *)
+			FOR i := 0 TO indexListSize - 1 DO
+				expression := x.parameters.GetExpression(i);
+
+				IF expression IS SyntaxTree.TensorRangeExpression THEN
+					(* nothing to do *)
+				ELSE
+					(* determine which dimension of source array is currently looked at *)
+					IF srcDimOffset < 0 THEN (* tensor expression or the form a[?,i,j] *)
+						(* get the memory operand pointing to array descriptor dimension *)
+						GetMathArrayField(tmp, array.tag, MathDimOffset);
+						(* make a reusable register from it *)
+						ReuseCopy(srcDim, tmp);
+						ReleaseIntermediateOperand(tmp);
+						AddInt(srcDim, srcDim, IntermediateCode.Immediate(addressType, i + srcDimOffset));
+					ELSE
+						srcDim := IntermediateCode.Immediate(int32, i)
+					END;
+
+					(* get length and increment of source array for current dimension *)
+					GetMathArrayLength(leftType(SyntaxTree.MathArrayType), array, srcDim, FALSE, sourceLength);
+					Convert(sourceLength.op, sizeType);
+					GetMathArrayIncrement(leftType(SyntaxTree.MathArrayType), array, srcDim, FALSE, sourceIncrement);
+					Convert(sourceIncrement.op, sizeType);
+					(* release the dim operand, if dynamic. No register reuse to decrease register pressure *)
+					ReleaseIntermediateOperand(srcDim);
+
+					IF SemanticChecker.IsIntegerType(expression.type.resolved) THEN
+						(* SINGLE INDEX *)
+						Evaluate(expression, index);
+						ReleaseIntermediateOperand(index.tag);
+						index.tag := emptyOperand;
+						Convert(index.op, sizeType);
+
+						(* lower bound check *)
+						IF IsIntegerImmediate(index.op, staticIndex) THEN
+							ASSERT(staticIndex >= 0) (* ensured by the checker *)
+						ELSIF isUnchecked THEN (* do nothing *)
+						ELSE
+							TrapC(BrgeL, index.op, IntermediateCode.Immediate(sizeType, 0), IndexCheckTrap)
+						END;
+
+						(* upper bound check *)
+						IF IsIntegerImmediate(index.op, staticIndex) & IsIntegerImmediate(sourceLength.op, staticSourceLength) THEN
+							ASSERT(staticIndex < staticSourceLength) (* ensured by checker *)
+						ELSIF isUnchecked THEN (* do nothing *)
+						ELSE
+							TrapC(BrltL, index.op, sourceLength.op, IndexCheckTrap)
+						END;
+
+						ReleaseOperand(sourceLength);
+						Convert(index.op, addressType);
+						summand := index.op;
+
+					ELSIF expression.type.resolved IS SyntaxTree.RangeType THEN
+						(* RANGE OF INDICES *)
+						Evaluate(expression, range);
+						firstIndex := range.op; UseIntermediateOperand(firstIndex);
+						lastIndex := range.tag; UseIntermediateOperand(lastIndex);
+						stepSize := range.extra; UseIntermediateOperand(stepSize);
+						ReleaseOperand(range);
+
+						Convert(firstIndex, sizeType);
+						Convert(lastIndex, sizeType);
+						Convert(stepSize, sizeType);
+
+						(* for dynamic upper bounds: add a runtime check, which repaces the upper bound with the largest valid index
+						if it is 'MAX(LONGINT)' *)
+						IF ~IsIntegerImmediate(lastIndex, staticLastIndex) THEN
+							TransferToRegister(lastIndex, lastIndex);
+							skipLabel1 := NewLabel();
+							BrneL(skipLabel1, lastIndex, IntermediateCode.Immediate(sizeType, MAX(LONGINT)));
+							Emit(MovReplace(position,lastIndex, sourceLength.op)); (* make sure that no new register is allocated *)
+							Emit(Sub(position,lastIndex, lastIndex, IntermediateCode.Immediate(sizeType, 1)));
+							SetLabel(skipLabel1)
+						END;
+
+						(* check if step size is valid *)
+						IF IsIntegerImmediate(stepSize, staticStepSize) THEN
+							ASSERT(staticStepSize >= 1) (* ensured by the checker *)
+						ELSIF isUnchecked THEN (* do nothing *)
+						ELSE
+							TrapC(BrgeL, stepSize, IntermediateCode.Immediate(sizeType, 1), IndexCheckTrap)
+						END;
+
+						(* check lower bound check *)
+						IF IsIntegerImmediate(firstIndex, staticFirstIndex) THEN
+							ASSERT(staticFirstIndex >= 0) (* ensured by the checker *)
+						ELSIF isUnchecked THEN (* do nothing *)
+						ELSE
+							TrapC(BrgeL, firstIndex, IntermediateCode.Immediate(sizeType, 0), IndexCheckTrap)
+						END;
+
+						(* check upper bound check *)
+						IF IsIntegerImmediate(lastIndex, staticLastIndex) & (staticLastIndex = MAX(LONGINT)) THEN
+							(* statically open range: nothing to do *)
+						ELSIF IsIntegerImmediate(lastIndex, staticLastIndex) & IsIntegerImmediate(sourceLength.op, staticSourceLength) THEN
+							ASSERT(staticLastIndex < staticSourceLength)
+						ELSIF isUnchecked THEN (* do nothing *)
+						ELSE
+							TrapC(BrltL, lastIndex, sourceLength.op, IndexCheckTrap)
+						END;
+
+						(* determine length of target array for current dimension *)
+						(* 1. incorporate last index: *)
+						IF IsIntegerImmediate(lastIndex, staticLastIndex) THEN
+							(* last index is static *)
+							IF IsIntegerImmediate(lastIndex, staticLastIndex) & (staticLastIndex = MAX(LONGINT)) THEN
+								targetLength := sourceLength.op
+							ELSE
+								targetLength := IntermediateCode.Immediate(sizeType, staticLastIndex + 1)
+							END;
+							UseIntermediateOperand(targetLength);
+						ELSE
+							(* targetLength := lastIndex + 1
+							Reuse1(targetLength, lastIndex);
+							*)
+							AddInt(targetLength, lastIndex, IntermediateCode.Immediate(sizeType, 1));
+						END;
+						ReleaseOperand(sourceLength);
+						ReleaseIntermediateOperand(lastIndex);
+						(* 2. incorporate first index: *)
+						IF IsIntegerImmediate(firstIndex, staticFirstIndex) & IsIntegerImmediate(targetLength, staticTargetLength) THEN
+							(* first index and current target length are static *)
+							targetLength := IntermediateCode.Immediate(sizeType, staticTargetLength - staticFirstIndex)
+						ELSIF IsIntegerImmediate(firstIndex, staticFirstIndex) & (staticFirstIndex = 0) THEN
+							(* first index = 0: nothing to do *)
+						ELSE
+							(* targetLength := targetLength - firstIndex *)
+							TransferToRegister(targetLength, targetLength);
+							Emit(Sub(position,targetLength, targetLength, firstIndex))
+						END;
+
+						(* clip negative lengths to 0 *)
+						IF IsIntegerImmediate(targetLength, staticTargetLength) THEN
+							IF staticTargetLength < 0 THEN
+								targetLength := IntermediateCode.Immediate(sizeType, 0)
+							END
+						ELSE
+							skipLabel1 := NewLabel();
+							BrgeL(skipLabel1, targetLength, IntermediateCode.Immediate(sizeType, 0));
+							TransferToRegister(targetLength, targetLength);
+							Emit(Mov(position,targetLength, IntermediateCode.Immediate(sizeType, 0)));
+							SetLabel(skipLabel1)
+						END;
+
+						(* 3. incorporate index step size: *)
+						IF IsIntegerImmediate(stepSize, staticStepSize) & IsIntegerImmediate(targetLength, staticTargetLength) THEN
+							(*step size and current target length are static *)
+							staticTargetLength := (staticTargetLength-1) DIV staticStepSize + 1;
+							targetLength := IntermediateCode.Immediate(sizeType, staticTargetLength)
+						ELSIF IsIntegerImmediate(stepSize, staticStepSize) & (staticStepSize = 1) THEN
+							(* step size = 1: nothing to do *)
+						ELSE
+							(* emit code for this:
+								targetLength := (targetLength-1) DIV stepSize +1;
+							*)
+							AddInt(targetLength, targetLength, IntermediateCode.Immediate(sizeType, -1));
+							DivInt(targetLength, targetLength, stepSize);
+							AddInt(targetLength, targetLength, IntermediateCode.Immediate(sizeType, 1));
+
+						END;
+
+						(* determine increment of target array for current dimension *)
+						IF IsIntegerImmediate(sourceIncrement.op, staticSourceIncrement) & IsIntegerImmediate(stepSize, staticStepSize) THEN
+							targetIncrement := IntermediateCode.Immediate(sizeType, staticSourceIncrement * staticStepSize);
+						ELSIF IsIntegerImmediate(stepSize, staticStepSize) & (staticStepSize = 1) THEN
+							(* step size = 1 *)
+							targetIncrement := sourceIncrement.op;
+							UseIntermediateOperand(targetIncrement)
+						ELSE
+							(* targetIncrement := sourceIncrement * stepSize *)
+							Reuse1(targetIncrement, stepSize);
+							ASSERT((sourceIncrement.op.mode # IntermediateCode.ModeImmediate) OR (stepSize.mode # IntermediateCode.ModeImmediate));
+							MulInt(targetIncrement, sourceIncrement.op, stepSize);
+						END;
+						ReleaseIntermediateOperand(stepSize);
+
+						(* write length and increment of target array to descriptor *)
+						IF destDimOffset < 0 THEN
+							(* determine which dimension of target array is currently looked at *)
+							GetMathArrayField(tmp, array.tag, MathDimOffset);
+							TransferToRegister(destDim, tmp);
+							AddInt(destDim, destDim, IntermediateCode.Immediate(sizeType, indexDim + destDimOffset));
+
+							PutMathArrayLenOrIncr(localResult.tag, targetLength, destDim, FALSE);
+							PutMathArrayLenOrIncr(localResult.tag, targetIncrement, destDim, TRUE);
+
+							ReleaseIntermediateOperand(destDim)
+						ELSE
+							PutMathArrayLength(localResult.tag, targetLength, indexDim);
+							PutMathArrayIncrement(localResult.tag , targetIncrement, indexDim)
+						END;
+						ReleaseIntermediateOperand(targetLength); targetLength := nil;
+						ReleaseIntermediateOperand(targetIncrement); targetIncrement := nil;
+
+						INC(indexDim);
+
+						Convert(firstIndex, addressType);
+						TransferToRegister(summand, firstIndex);
+					ELSE HALT(100);
+					END;
+
+					(*
+					ASSERT((summand.mode # IntermediateCode.ModeImmediate) OR (sourceIncrement.op.mode # IntermediateCode.ModeImmediate));
+					*)
+					Convert(sourceIncrement.op, addressType);
+					Convert(summand, addressType);
+					MulInt(summand, summand, sourceIncrement.op);
+					ReleaseIntermediateOperand(sourceIncrement.op);
+					AddInt(localResult.op, localResult.op, summand);
+					ReleaseIntermediateOperand(summand);
+				END
+			END;
+
+			result := localResult;
+
+			IF (resultingType IS SyntaxTree.RecordType) & (resultingType(SyntaxTree.RecordType).pointerType = NIL) THEN
+				ReleaseIntermediateOperand(result.tag);
+				result.tag := TypeDescriptorAdr(resultingType);
+				IF ~newObjectFile THEN
+					IntermediateCode.MakeMemory(result.tag,addressType);
+				END;
+
+			ELSIF IsDelegate(resultingType) THEN
+				ReleaseIntermediateOperand(result.tag);
+				IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
+				UseIntermediateOperand(result.tag);
+
+			ELSIF (resultingType IS SyntaxTree.ArrayType) & (resultingType(SyntaxTree.ArrayType).form = SyntaxTree.Static) THEN
+				ReleaseIntermediateOperand(result.tag);
+				IntermediateCode.InitImmediate(result.tag,addressType,resultingType(SyntaxTree.ArrayType).staticLength);
+
+			ELSIF (resultingType IS SyntaxTree.ArrayType) THEN
+				result.tag := array.tag; UseIntermediateOperand(result.tag); result.dimOffset := array.dimOffset+indexListSize-1;
+
+			ELSIF (resultingType IS SyntaxTree.MathArrayType) & ( (resultingType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) OR NeedDescriptor) THEN
+				(* finalize target array descriptor *)
+				ASSERT(result.tag.mode # IntermediateCode.Undefined); (* tag has been already set in the beginning *)
+
+				(* write lengths and increments of target array for remaining dimensions *)
+				i := indexListSize;
+				WHILE indexDim < targetArrayDimensionality DO
+					GetMathArrayLengthAt(leftType(SyntaxTree.MathArrayType),array,i,FALSE, sourceLength);
+					PutMathArrayLength(result.tag, sourceLength.op,indexDim);
+					ReleaseOperand(sourceLength);
+					GetMathArrayIncrementAt(leftType(SyntaxTree.MathArrayType),array,i,FALSE,sourceIncrement);
+					PutMathArrayIncrement(result.tag, sourceIncrement.op,indexDim);
+					ReleaseOperand(sourceIncrement);
+					INC(i); INC(indexDim);
+				END;
+
+				IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					tmp := nil;
+				ELSE
+					GetMathArrayField(tmp,array.tag,MathPtrOffset);
+				END;
+				PutMathArrayField(result.tag, tmp, MathPtrOffset);
+				ReleaseIntermediateOperand(tmp);
+				IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+					baseType := SemanticChecker.ArrayBase(resultingType, indexDim);
+					tmp := IntermediateCode.Immediate(addressType, ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+				ELSE
+					GetMathArrayField(tmp,array.tag, MathElementSizeOffset);
+				END;
+				PutMathArrayField(result.tag, tmp, MathElementSizeOffset);
+				ReleaseIntermediateOperand(tmp);
+
+				PutMathArrayField(result.tag, result.op, MathAdrOffset);
+
+				(* write dimensionality *)
+				IF targetArrayDimensionality # 0 THEN
+					PutMathArrayField(result.tag, IntermediateCode.Immediate(addressType, targetArrayDimensionality),MathDimOffset);
+				END;
+
+				PutMathArrayField(result.tag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{RangeFlag})),MathFlagsOffset);
+
+			END;
+
+			ReleaseOperand(array);
+
+			IF conditional & (resultingType.resolved IS SyntaxTree.BooleanType) THEN
+				ValueToCondition(result); (*! wrong as the result of an index designator is always an address *)
+			END;
+
+		END MathIndexDesignator;
+
+		(* TENTATIVE *)
+		PROCEDURE DumpOperand(operand: Operand);
+		BEGIN
+			D.Log.String("    op = ");
+			IntermediateCode.DumpOperand(D.Log, operand.op );
+			D.Log.Ln;
+			D.Log.String("    tag = ");
+			IntermediateCode.DumpOperand(D.Log, operand.tag );
+			D.Log.Ln;
+			D.Log.String("    extra = ");
+			IntermediateCode.DumpOperand(D.Log, operand.extra );
+			D.Log.Ln;
+			D.Log.Update
+		END DumpOperand;
+
+		(* get the length of an array , trying to make use of static information *)
+		PROCEDURE ArrayLength(type: SyntaxTree.Type; dim: LONGINT; tag: IntermediateCode.Operand): IntermediateCode.Operand;
+		VAR res: IntermediateCode.Operand; size: LONGINT;
+		BEGIN
+			type := type.resolved;
+			IF type IS SyntaxTree.ArrayType THEN
+				WITH type: SyntaxTree.ArrayType DO
+					IF type.form = SyntaxTree.Static THEN
+						RETURN IntermediateCode.Immediate(addressType,type.staticLength);
+					ELSE
+						res := tag;
+						IntermediateCode.AddOffset(res,ToMemoryUnits(system,addressType.sizeInBits*(DynamicDim(type)-1)));
+						IntermediateCode.MakeMemory(res,addressType);
+						UseIntermediateOperand(res);
+						RETURN res
+					END
+				END;
+			ELSE
+				size := ToMemoryUnits(system,system.AlignedSizeOf(type));
+				RETURN IntermediateCode.Immediate(addressType,size);
+			END;
+		END ArrayLength;
+
+		PROCEDURE AddInt(VAR res: IntermediateCode.Operand; x,y: IntermediateCode.Operand);
+		VAR oldReg: LONGINT;
+		BEGIN
+			ReleaseIntermediateOperand(res);
+			IF IsImmediate(x) & IsImmediate(y) THEN
+				IntermediateCode.InitImmediate(res,x.type,x.intValue+y.intValue);
+			ELSIF IsAddress(x) & IsImmediate(y) THEN
+				IntermediateCode.InitAddress(res,x.type,x.symbol.name, x.symbol.fingerprint, x.symbolOffset);
+				IntermediateCode.AddOffset(res, LONGINT(y.intValue)+x.offset);
+			ELSIF IsAddress(y) & IsImmediate(x) THEN
+				IntermediateCode.InitAddress(res,y.type,y.symbol.name, y.symbol.fingerprint, y.symbolOffset);
+				IntermediateCode.AddOffset(res, LONGINT(x.intValue)+y.offset);
+			ELSIF IsRegister(x) & IsImmediate(y) THEN
+				IntermediateCode.InitRegister(res, x.type, x.registerClass, x.register);
+				IntermediateCode.AddOffset(res, x.offset + LONGINT(y.intValue));
+				UseIntermediateOperand(res);
+			ELSIF IsRegister(y) & IsImmediate(x) THEN
+				IntermediateCode.InitRegister(res, y.type, y.registerClass, y.register);
+				IntermediateCode.AddOffset(res, y.offset + LONGINT(x.intValue));
+				UseIntermediateOperand(res);
+			ELSE
+				IF ~ReusableRegister(res) THEN
+					IntermediateCode.InitRegister(res,x.type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(x.type,IntermediateCode.GeneralPurposeRegister));
+				ELSE
+					UseIntermediateOperand(res);
+				END;
+				IF IsImmediate(x) & (x.intValue = 0) THEN
+					Emit(Mov(position,res,y))
+				ELSIF IsImmediate(y) & (y.intValue=0) THEN
+					Emit(Mov(position,res,x))
+				ELSE
+					Emit(Add(position,res, x, y));
+				END;
+			END;
+		END AddInt;
+
+		PROCEDURE MulInt(VAR res: IntermediateCode.Operand; x,y: IntermediateCode.Operand);
+		BEGIN
+			ReleaseIntermediateOperand(res);
+			IF IsImmediate(x) & IsImmediate(y) THEN
+				IntermediateCode.InitImmediate(res,x.type,x.intValue*y.intValue);
+			ELSE
+				IF ~ReusableRegister(res) THEN
+					IntermediateCode.InitRegister(res,x.type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(x.type,IntermediateCode.GeneralPurposeRegister));
+				ELSE UseIntermediateOperand(res);
+				END;
+				IF IsImmediate(x) & (x.intValue = 1) THEN
+					Emit(Mov(position,res,y))
+				ELSIF IsImmediate(y) & (y.intValue=1) THEN
+					Emit(Mov(position,res,x))
+				ELSE
+					Emit(Mul(position,res, x, y));
+				END;
+			END;
+		END MulInt;
+
+		PROCEDURE DivInt(VAR res: IntermediateCode.Operand; x,y: IntermediateCode.Operand);
+		BEGIN
+			ReleaseIntermediateOperand(res);
+			IF IsImmediate(x) & IsImmediate(y) THEN
+				IntermediateCode.InitImmediate(res,x.type,x.intValue DIV y.intValue);
+			ELSE
+				IF ~ReusableRegister(res) THEN
+					IntermediateCode.InitRegister(res,x.type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(x.type,IntermediateCode.GeneralPurposeRegister));
+				ELSE UseIntermediateOperand(res);
+				END;
+				IF IsImmediate(x) & (x.intValue = 1) THEN
+					Emit(Mov(position,res,y))
+				ELSIF IsImmediate(y) & (y.intValue=1) THEN
+					Emit(Mov(position,res,x))
+				ELSE
+					Emit(Div(position,res, x, y));
+				END;
+			END;
+		END DivInt;
+
+		PROCEDURE IndexDesignator(x: SyntaxTree.IndexDesignator);
+		VAR length,res: IntermediateCode.Operand; type: SyntaxTree.Type; maxDim: LONGINT; array:Operand;
+			index: Operand; e: SyntaxTree.Expression;i: LONGINT; size: LONGINT; atype: SyntaxTree.ArrayType;
+		BEGIN
+			type := x.left.type.resolved;
+			IF type IS SyntaxTree.StringType THEN
+				atype := SyntaxTree.NewArrayType(-1, NIL, SyntaxTree.Static);
+				atype.SetArrayBase(type(SyntaxTree.StringType).baseType);
+				atype.SetLength(Global.NewIntegerValue(system,-1, type(SyntaxTree.StringType).length));
+				type := atype;
+				x.left.SetType(type);
+			END;
+
+			IntermediateCode.InitImmediate(res,addressType,0);
+			maxDim := x.parameters.Length()-1;
+			FOR i := 0 TO maxDim DO
+				e := x.parameters.GetExpression(i);
+				Evaluate(e,index);
+				Convert(index.op,addressType);
+
+				AddInt(res, res, index.op);
+
+				IF i = 0 THEN
+					(*
+					ReuseCopy(res, index.op);
+					*)
+					Designate(x.left,array);
+					type := x.left.type.resolved;
+				(*
+				ELSE AddInt(res, res, index.op);
+				*)
+				END;
+
+				IF (array.tag.mode # IntermediateCode.Undefined ) THEN
+					length := ArrayLength(type(SyntaxTree.ArrayType),array.dimOffset+i,array.tag);
+					IF ((length.mode # IntermediateCode.ModeImmediate) OR (index.op.mode # IntermediateCode.ModeImmediate)) & tagsAvailable THEN
+						BoundCheck(index.op, length);
+					END;
+					ReleaseIntermediateOperand(length);
+				END;
+				ReleaseOperand(index);
+				type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+				
+				length := ArrayLength(type,array.dimOffset+i-1,array.tag);
+				IF (length.mode # IntermediateCode.ModeImmediate) OR (length.intValue # 1) THEN
+					MulInt(res,res,length);
+				END;
+				ReleaseIntermediateOperand(length);
+			END;
+			IF (type IS SyntaxTree.ArrayType) THEN
+				IF (type(SyntaxTree.ArrayType).form # SyntaxTree.Static) THEN
+					size := StaticSize(system, type);
+					IF size # 1 THEN
+						length := IntermediateCode.Immediate(addressType,size);
+						MulInt(res,res,length);
+					END;
+				ELSE
+					size := StaticSize(system, type(SyntaxTree.ArrayType).arrayBase);
+					IF size # 1 THEN
+						length := IntermediateCode.Immediate(addressType,size);
+						MulInt(res,res,length);
+					END;
+				END;
+			END;
+			AddInt(res,res,array.op);
+			InitOperand(result,ModeReference);
+			result.op := res;
+
+			IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
+				ReleaseIntermediateOperand(result.tag);
+				result.tag := TypeDescriptorAdr(type);
+				IF ~newObjectFile THEN
+					IntermediateCode.MakeMemory(result.tag,addressType);
+				END
+			ELSIF IsDelegate(type) THEN
+				ReleaseIntermediateOperand(result.tag);
+				IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
+				UseIntermediateOperand(result.tag);
+			ELSIF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static) THEN
+				ReleaseIntermediateOperand(result.tag);
+				IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+			ELSIF (type IS SyntaxTree.ArrayType)  THEN
+				result.tag := array.tag; UseIntermediateOperand(result.tag); result.dimOffset := array.dimOffset+maxDim;
+			END;
+			ReleaseOperand(array);
+
+			IF (conditional)  & (type.resolved IS SyntaxTree.BooleanType)  THEN
+				ValueToCondition(result); (*! wrong as the result of an index designator is always an address *)
+			END;
+		END IndexDesignator;
+
+		PROCEDURE VisitIndexDesignator(x: SyntaxTree.IndexDesignator);
+		VAR type: SyntaxTree.Type; dest: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitIndexDesignator") END;
+			dest := destination; destination := emptyOperand;
+			type := x.left.type.resolved;
+			IF type IS SyntaxTree.MathArrayType THEN
+				MathIndexDesignator(x);
+			ELSE ASSERT((type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.StringType));
+				IndexDesignator(x);
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitIndexDesignator") END;
+		END VisitIndexDesignator;
+
+		PROCEDURE PrepareTensorDescriptor(expression: SyntaxTree.IndexDesignator): SyntaxTree.Variable;
+		VAR variable: SyntaxTree.Variable; srcOperand,destOperand,procOp: Operand;
+			moduleName, procedureName: SyntaxTree.IdentifierString; arrayBase: SyntaxTree.Module; saved: RegisterEntry; s: Basic.MessageString;
+			procedure: SyntaxTree.Procedure;
+			parameters: SyntaxTree.ExpressionList; e: SyntaxTree.Expression;
+			prefixIndices, prefixRanges, suffixIndices, suffixRanges,i : LONGINT; tensorFound: BOOLEAN;
+		BEGIN
+			variable := GetTemporaryVariable(expression.left.type, FALSE);
+			parameters := expression.parameters;
+
+			moduleName := "FoxArrayBase";
+			procedureName := "CopyDescriptor";
+			IF AddImport(moduleName,arrayBase,TRUE) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved);
+				procedure := arrayBase.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
+				IF procedure = NIL THEN
+					s := "procedure ";
+					Strings.Append(s,moduleName);
+					Strings.Append(s,".");
+					Strings.Append(s,procedureName);
+					Strings.Append(s," not present");
+					Error(position,s);
+				ELSE
+					(* push address of temporary variable *)
+					Symbol(variable,destOperand);
+					Emit(Push(position,destOperand.op));
+					ReleaseOperand(destOperand);
+					(* push src *)
+					Evaluate(expression.left,srcOperand);
+					(*
+					Dereference(srcOperand,expression.type.resolved);
+					Emit(Push(position,srcOperand.tag));
+					*)
+					Emit(Push(position,srcOperand.op));
+					ReleaseOperand(srcOperand);
+
+					tensorFound := FALSE;
+					FOR i := 0 TO parameters.Length()-1 DO
+						e := parameters.GetExpression(i);
+						IF e IS SyntaxTree.TensorRangeExpression THEN
+							tensorFound := TRUE;
+						ELSIF e IS SyntaxTree.RangeExpression THEN
+							IF tensorFound THEN INC(suffixRanges) ELSE INC(prefixRanges) END;
+						ELSE
+							IF tensorFound THEN INC(suffixIndices) ELSE INC(prefixIndices) END;
+						END;
+					END;
+
+					Emit(Push(position,IntermediateCode.Immediate(int32,prefixIndices)));
+					Emit(Push(position,IntermediateCode.Immediate(int32,prefixRanges)));
+					Emit(Push(position,IntermediateCode.Immediate(int32,suffixIndices)));
+					Emit(Push(position,IntermediateCode.Immediate(int32,suffixRanges)));
+
+					StaticCallOperand(procOp,procedure);
+					Emit(Call(position,procOp.op,ProcedureParametersSize(system,procedure)));
+					ReleaseOperand(procOp);
+				END;
+				RestoreRegisters(saved);
+			END;
+			RETURN variable
+
+		END PrepareTensorDescriptor;
+
+		PROCEDURE PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; numberRegister: LONGINT);
+		VAR
+			type, descriptorType, baseType: SyntaxTree.Type;
+			operand, tmpOperand, variableOp, variable2Op: Operand;
+			baseReg, tmp, dimOp: IntermediateCode.Operand;
+			variable, variable2: SyntaxTree.Variable;
+			dim, i, size: LONGINT;
+
+			(* TODO: needed? *)
+			oldArrayDestinationTag: IntermediateCode.Operand;
+			oldArrayDestinationDimension: LONGINT;
+			position: LONGINT;
+
+			PROCEDURE Pass(op: IntermediateCode.Operand);
+			VAR registerClass: IntermediateCode.RegisterClass; parameterRegister: IntermediateCode.Operand;
+			BEGIN
+				IF numberRegister >= 0 THEN
+					IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, SHORT(numberRegister));
+					IntermediateCode.InitRegister(parameterRegister, op.type, registerClass, AcquireRegister(op.type, registerClass));
+					Emit(Mov(position,parameterRegister, op));
+				ELSE
+					Emit(Push(position,op))
+				END
+			END Pass;
+
+
+			PROCEDURE PushArrayLens(formalType,actualType: SyntaxTree.Type; dim: LONGINT);
+			VAR tmp: IntermediateCode.Operand; actualArrayBase: SyntaxTree.Type;
+			BEGIN
+				formalType := formalType.resolved; actualType := actualType.resolved;
+				IF IsOpenArray(formalType)THEN
+					IF actualType IS SyntaxTree.StringType THEN
+						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
+						RETURN;
+					ELSIF (actualType IS SyntaxTree.MathArrayType) & (actualType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) THEN
+						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.MathArrayType).staticLength)));
+						actualArrayBase := actualType(SyntaxTree.MathArrayType).arrayBase.resolved;
+					ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+						Pass((IntermediateCode.Immediate(addressType,actualType(SyntaxTree.ArrayType).staticLength)));
+						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolved;
+					ELSE
+						tmp := baseReg;
+						IntermediateCode.AddOffset(tmp,ToMemoryUnits(system,dim*system.addressSize));
+						IntermediateCode.MakeMemory(tmp,addressType);
+						Pass((tmp));
+						actualArrayBase := actualType(SyntaxTree.ArrayType).arrayBase.resolved;
+					END;
+					PushArrayLens(formalType(SyntaxTree.ArrayType).arrayBase.resolved, actualArrayBase,dim-1);
+				END;
+			END PushArrayLens;
+
+		BEGIN
+			IF Trace THEN TraceEnter("PushParameter") END;
+			position := expression.position;
+			IF expression.resolved # NIL THEN expression := expression.resolved END;
+			type := expression.type.resolved;
+
+			ASSERT( ((type IS SyntaxTree.MathArrayType) = (parameter.type.resolved IS SyntaxTree.MathArrayType))
+						OR  (type IS SyntaxTree.MathArrayType) & (parameter.type.resolved IS SyntaxTree.ArrayType)
+							& (type(SyntaxTree.MathArrayType).form = SyntaxTree.Static)
+							& (parameter.type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.Open)
+				);
+
+			(* TODO: needed? *)
+			oldArrayDestinationTag := arrayDestinationTag;
+			oldArrayDestinationDimension := arrayDestinationDimension;
+
+			IF IsArrayOfSystemByte(parameter.type) THEN
+				Designate(expression,operand);
+				tmp := GetArrayOfBytesSize(expression,operand.tag);
+				ReleaseIntermediateOperand(operand.tag);
+				operand.tag := tmp;
+				IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
+					Pass((operand.tag));
+				END;
+				Pass((operand.op));
+			ELSIF IsOpenArray(parameter.type) THEN
+				Designate(expression,operand);
+				baseReg := operand.tag;
+				IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
+					PushArrayLens(parameter.type,type,operand.dimOffset+DynamicDim(parameter.type)-1);
+				END;
+				Pass((operand.op)); (* address of the array *)
+			ELSIF parameter.type.resolved IS SyntaxTree.MathArrayType THEN
+			(* case 1 *)
+				IF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) &
+				(parameter.kind IN {SyntaxTree.ValueParameter, SyntaxTree.ConstParameter}) THEN
+					size := MathLenOffset + 2*SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+					size := ToMemoryUnits(system,size*addressType.sizeInBits);
+					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
+					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+					arrayDestinationTag := sp;
+
+					(* case 1b *)
+					IF expression IS SyntaxTree.IndexDesignator THEN
+					(*
+						dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+						descriptorType := GetMathArrayDescriptorType(dim);
+						variable := GetTemporaryVariable(descriptorType,expression.position);
+						Symbol(variable,variableOp);
+						arrayDestinationTag := variableOp.op;
+						*)
+						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
+						dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+						arrayDestinationDimension := dim;
+						Designate(expression,operand);
+					(* case 1a *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+					Designate(expression,operand);
+						Emit(Copy(position,arrayDestinationTag,operand.tag,IntermediateCode.Immediate(addressType,size)));
+						i := 0;
+						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+							INC(i);
+						END;
+						type := expression.type.resolved;
+						WHILE (i<dim) DO (* remaining static dimensions *)
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							INC(i);
+						END;
+						dimOp := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
+					(* case 1d *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Designate(expression,operand);
+						Dereference(operand,type.resolved,FALSE);
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						Emit(Copy(position,sp(*arrayDestinationTag*),operand.tag,IntermediateCode.Immediate(addressType,size)));
+						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
+					(* case 1f *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+						Designate(expression,operand);
+						FOR i := 0 TO dim-1 DO
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+						END;
+						dimOp := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						baseType := SemanticChecker.ArrayBase(type,dim);
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+					ELSE HALT(100);
+					END;
+				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & (parameter.kind = SyntaxTree.VarParameter) THEN
+					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
+					(* case 2b *)
+					IF expression IS SyntaxTree.IndexDesignator THEN
+						descriptorType := GetMathArrayDescriptorType(dim);
+						variable := GetTemporaryVariable(descriptorType, FALSE);
+						Symbol(variable,variableOp);
+						arrayDestinationTag := variableOp.op;
+						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
+						arrayDestinationDimension := dim;
+						NeedDescriptor := TRUE;
+						Designate(expression,operand);
+						Pass((operand.tag));
+						NeedDescriptor := FALSE;
+					(* case 2a *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+							INC(i);
+						END;
+						IF i = dim THEN
+							Designate(expression,operand);
+							Pass((operand.tag));
+						ELSE (* open-static *)
+							type := expression.type.resolved;
+							descriptorType := GetMathArrayDescriptorType(dim);
+							variable := GetTemporaryVariable(descriptorType, FALSE);
+							Symbol(variable,variableOp);
+							arrayDestinationTag := variableOp.op;
+							Designate(expression,operand);
+							FOR i := 0 TO dim-1 DO
+								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+							END;
+							dimOp := IntermediateCode.Immediate(addressType,dim);
+							PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+							PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+							PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+							PutMathArrayField(arrayDestinationTag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+							baseType := SemanticChecker.ArrayBase(type,dim);
+							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+							Pass((arrayDestinationTag));
+						END;
+					(* case 2d *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Designate(expression,operand);
+						Dereference(operand,type.resolved,FALSE);
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						Pass((operand.tag));
+					(* case 2f *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+						descriptorType := GetMathArrayDescriptorType(dim);
+						variable := GetTemporaryVariable(descriptorType, FALSE);
+						Symbol(variable,variableOp);
+						arrayDestinationTag := variableOp.op;
+						Designate(expression,operand);
+						FOR i := 0 TO dim-1 DO
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+						END;
+						dimOp := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						baseType := SemanticChecker.ArrayBase(type,dim);
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+						Pass((arrayDestinationTag));
+					ELSE HALT(100);
+					END;
+				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind IN {SyntaxTree.ConstParameter,SyntaxTree.ValueParameter}) THEN
+					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
+					(* case 3b *)
+					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
+							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
+							Symbol(variable,variableOp);
+							LoadValue(variableOp,system.addressType);
+						ELSE
+							descriptorType := GetMathArrayDescriptorType(dim);
+							variable := GetTemporaryVariable(descriptorType, FALSE);
+							Symbol(variable,variableOp);
+						END;
+						arrayDestinationTag := variableOp.op;
+						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
+						arrayDestinationDimension := 0;
+						Designate(expression,operand);
+						Pass((operand.tag));
+					(* case 3a *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+						i := 0;
+						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+							INC(i);
+						END;
+						IF i = dim THEN
+							Designate(expression,operand);
+							Pass((operand.tag));
+						ELSE (* open-static *)
+							type := expression.type.resolved;
+							descriptorType := GetMathArrayDescriptorType(dim);
+							variable := GetTemporaryVariable(descriptorType, FALSE);
+							Symbol(variable,variableOp);
+							arrayDestinationTag := variableOp.op;
+							Designate(expression,operand);
+							FOR i := 0 TO dim-1 DO
+								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+							END;
+							dimOp := IntermediateCode.Immediate(addressType,dim);
+							PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+							PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+							PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+							PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset); (* static flag ? *)
+							baseType := SemanticChecker.ArrayBase(type,dim);
+							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+							Pass((arrayDestinationTag));
+						END;
+					(* case 3d *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Designate(expression,operand);
+						Dereference(operand,type.resolved,FALSE);
+						(*
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						*)
+						Pass((operand.tag));
+					(* case 3f *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+						descriptorType := GetMathArrayDescriptorType(dim);
+						variable := GetTemporaryVariable(descriptorType, FALSE);
+						Symbol(variable,variableOp);
+						arrayDestinationTag := variableOp.op;
+						Designate(expression,operand);
+						IF operand.op.type.length >1 THEN (* vector register *)
+							variable2 := GetTemporaryVariable(type, FALSE);
+							Symbol(variable2, variable2Op);
+							MakeMemory(tmp,variable2Op.op,operand.op.type,0);
+							Emit(Mov(position,tmp, operand.op));
+							ReleaseOperand(operand);
+							Symbol(variable2, operand);
+						END;
+
+						FOR i := 0 TO dim-1 DO
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+						END;
+						dimOp := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						baseType := SemanticChecker.ArrayBase(type,dim);
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+						Pass((arrayDestinationTag));
+					ELSE HALT(100);
+					END;
+				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind = SyntaxTree.VarParameter) THEN
+					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
+					(* case 4b *)
+					IF (expression IS SyntaxTree.IndexDesignator) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
+							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
+							Symbol(variable,variableOp);
+							LoadValue(variableOp,system.addressType);
+						ELSE
+							descriptorType := GetMathArrayDescriptorType(dim);
+							variable := GetTemporaryVariable(descriptorType, FALSE);
+							Symbol(variable,variableOp);
+						END;
+						arrayDestinationTag := variableOp.op;
+						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
+						arrayDestinationDimension := 0;
+						Designate(expression,operand);
+						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+							Symbol(variable,variableOp);
+						ELSE
+							variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+							Symbol(variable,variableOp);
+							MakeMemory(tmp,variableOp.op,addressType,0);
+							Emit(Mov(position,tmp,operand.tag));
+							ReleaseIntermediateOperand(tmp);
+						END;
+						Pass((variableOp.op));
+						ReleaseOperand(variableOp);
+					(* case 4a *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
+						i := 0;
+						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
+							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+							INC(i);
+						END;
+						IF i = dim THEN
+							Designate(expression,operand);
+							arrayDestinationTag := operand.tag;
+						ELSE (* open-static *)
+							type := expression.type.resolved;
+							descriptorType := GetMathArrayDescriptorType(dim);
+							variable := GetTemporaryVariable(descriptorType, FALSE);
+							Symbol(variable,variableOp);
+							arrayDestinationTag := variableOp.op;
+							Designate(expression,operand);
+							FOR i := 0 TO dim-1 DO
+								GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+								GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+								PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+								ReleaseOperand(tmpOperand);
+							END;
+							dimOp := IntermediateCode.Immediate(addressType,dim);
+							PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+							PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+							PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+							PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
+							baseType := SemanticChecker.ArrayBase(type,dim);
+							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+						END;
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						Symbol(variable,variableOp);
+						MakeMemory(tmp,variableOp.op,addressType,0);
+						Emit(Mov(position,tmp,arrayDestinationTag));
+						ReleaseIntermediateOperand(tmp);
+						Pass((variableOp.op));
+						ReleaseOperand(variableOp);
+					(* case 4d *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Designate(expression,operand);
+						(*
+						Dereference(operand,type.resolved,FALSE);
+						*)
+						(*
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						*)
+						Pass((operand.op));
+					(* case 4f *)
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+						descriptorType := GetMathArrayDescriptorType(dim);
+						variable := GetTemporaryVariable(descriptorType, FALSE);
+						Symbol(variable,variableOp);
+						arrayDestinationTag := variableOp.op;
+						Designate(expression,operand);
+						FOR i := 0 TO dim-1 DO
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayLength(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+							GetMathArrayIncrementAt(type.resolved(SyntaxTree.MathArrayType),operand,i,FALSE,tmpOperand);
+							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
+							ReleaseOperand(tmpOperand);
+						END;
+						dimOp := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
+						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
+						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						baseType := SemanticChecker.ArrayBase(type,dim);
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
+						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						Symbol(variable,variableOp);
+						MakeMemory(tmp,variableOp.op,addressType,0);
+						Emit(Mov(position,tmp,arrayDestinationTag));
+						ReleaseIntermediateOperand(tmp);
+						Pass((variableOp.op));
+						ReleaseOperand(variableOp);
+					ELSE HALT(100);
+					END;
+				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind = SyntaxTree.ValueParameter) THEN
+					ASSERT(type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static);
+					Designate(expression,operand);
+					IF operand.op.type.length > 1 THEN
+						Emit(Push(position, operand.op));
+						ReleaseOperand(operand);
+					ELSE
+						size := system.SizeOf(type);
+						Basic.Align(size,system.AlignmentOf(system.parameterAlignment,type));
+						size := ToMemoryUnits(system,size);
+						Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
+						arrayDestinationTag := sp;
+						Emit(Copy(position,arrayDestinationTag,operand.op,IntermediateCode.Immediate(addressType,size)));
+					END;
+				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) THEN
+					Designate(expression,operand);
+					IF operand.op.type.length > 1 THEN (* need temporary to pass register *)
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						Symbol(variable,variableOp);
+						MakeMemory(tmp,variableOp.op,operand.op.type,0);
+						Emit(Mov(position,tmp,operand.op));
+						Emit(Push(position,variableOp.op));
+					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
+						Pass((operand.op));
+					ELSE Error(position,"Forbidden non-static actual type. Conversion involved?");
+					END;
+				ELSE HALT(200)
+				END;
+			ELSIF parameter.type.resolved IS SyntaxTree.RangeType THEN
+				IF parameter.kind = SyntaxTree.VarParameter THEN
+					ASSERT(~(expression IS SyntaxTree.RangeExpression));
+					Designate(expression, operand);
+					Pass((operand.op))
+				ELSE
+					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
+					Evaluate(expression, operand);
+					Pass((operand.extra)); (* step *)
+					Pass((operand.tag)); (* last *)
+					Pass((operand.op)) (* first *)
+				END
+			ELSIF parameter.type.resolved IS SyntaxTree.ComplexType THEN
+				IF parameter.kind = SyntaxTree.VarParameter THEN
+					Designate(expression, operand);
+					Pass((operand.op))
+				ELSE
+					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
+					Evaluate(expression, operand);
+					Pass((operand.tag)); (* real part *)
+					Pass((operand.op)) (* imaginary part *)
+				END
+			ELSE
+				IF (parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN
+					IF (type IS SyntaxTree.RecordType) OR IsStaticArray(parameter.type) THEN
+						Designate(expression,operand);
+						size := ToMemoryUnits(system,system.SizeOf(parameter.type));
+						(* stack allocation *)
+						Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size + (-size) MOD (system.addressSize DIV system.dataUnit))));
+						(*! parameter alignment to be discussed ... *)
+
+						IF type IS SyntaxTree.StringType THEN (* source potentially shorter than destination *)
+							size := type(SyntaxTree.StringType).length;
+						END;
+						Emit(Copy(position,sp,operand.op,IntermediateCode.Immediate(addressType,size)));
+					ELSIF IsOpenArray(parameter.type) THEN
+						Designate(expression,operand);
+						baseReg := operand.tag;
+						IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
+							PushArrayLens(parameter.type,type,operand.dimOffset+DynamicDim(parameter.type)-1);
+						END;
+						Pass((operand.op)); (* address of the array *)
+					ELSIF IsDelegate(parameter.type) THEN
+						Evaluate(expression,operand);
+						Pass((operand.tag));
+						Pass((operand.op));
+					ELSE
+						Evaluate(expression,operand);
+						Pass((operand.op));
+					END;
+				ELSIF expression IS SyntaxTree.NilValue THEN (* for special WinAPI rule *)
+					Evaluate(expression,operand);
+					Pass((operand.op));
+				ELSIF (type IS SyntaxTree.RecordType) & (parameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) THEN
+					Designate(expression,operand);
+					IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
+						(* MakeTypeTag(operand); (* late emission, otherwise type tags are generated when not used *) *)
+						Pass((operand.tag));
+					END;
+					Pass((operand.op));
+				ELSIF IsDelegate(parameter.type) THEN (* var parameter delegate: push base address only *)
+					Designate(expression,operand); (* push address *)
+					(* Pass((operand.tag));*)
+					Pass((operand.op));
+				ELSE (* var parameter *)
+					Designate(expression,operand);
+					Pass((operand.op));
+				END;
+			END;
+
+			(* TODO: needed? *)
+			arrayDestinationTag := oldArrayDestinationTag;
+			arrayDestinationDimension := oldArrayDestinationDimension;
+
+			IF needsParameterBackup THEN
+				(* IF dump # NIL THEN dump.String("backup parameter"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+				ReuseCopy(parameterBackup, operand.op)
+			END;
+
+			ReleaseOperand(operand);
+			IF Trace THEN TraceExit("PushParameter") END;
+		END PushParameter;
+
+		PROCEDURE VisitStatementDesignator(x: SyntaxTree.StatementDesignator);
+		VAR prevConditional: BOOLEAN;
+		BEGIN
+			prevConditional := conditional;
+			conditional := FALSE;
+
+			IF (x.result # NIL) & ( x.result IS SyntaxTree.SymbolDesignator) & (x.result(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Variable) & (x.result(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Variable).useRegister) THEN
+				Expression(x.result); (* use register *)
+			END;
+
+			Statement(x.statement);
+			conditional := prevConditional;
+			IF x.result # NIL THEN Expression(x.result) END;
+
+			IF (x.result # NIL) & (x.result IS SyntaxTree.SymbolDesignator) & (x.result(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Variable) & (x.result(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Variable).useRegister) THEN
+				ReleaseIntermediateOperand(result.op);
+			END;
+
+
+		END VisitStatementDesignator;
+
+		PROCEDURE InlineProcedureCall(x: SyntaxTree.ProcedureCallDesignator): BOOLEAN;
+		VAR
+			procedure: SyntaxTree.Procedure;
+			procedureType: SyntaxTree.ProcedureType;
+			wasInline: BOOLEAN;
+			actualParameters: SyntaxTree.ExpressionList;
+			formalParameter: SyntaxTree.Parameter;
+			actualParameter: SyntaxTree.Expression;
+			i: LONGINT;
+			variable, localVariable: SyntaxTree.Variable;
+			variableDesignator, tagDesignator, returnDesignator: SyntaxTree.Expression;
+			src, dest: Operand;
+			prevInlineExit : Label;
+			prevMapper: SymbolMapper;
+			tooComplex: BOOLEAN;
+
+			PROCEDURE SimpleExpression(e: SyntaxTree.Expression): BOOLEAN;
+			BEGIN
+				IF e = NIL THEN RETURN TRUE
+				ELSIF (e IS SyntaxTree.SymbolDesignator) THEN RETURN SimpleExpression(e(SyntaxTree.SymbolDesignator).left)
+				ELSIF (e IS SyntaxTree.Value) THEN RETURN TRUE
+				ELSIF (e IS SyntaxTree.SelfDesignator) THEN RETURN TRUE
+				ELSIF (e IS SyntaxTree.ResultDesignator) THEN RETURN TRUE
+				ELSIF (e IS SyntaxTree.DereferenceDesignator) THEN RETURN SimpleExpression(e(SyntaxTree.DereferenceDesignator).left)
+				ELSE RETURN FALSE
+				END;
+			END SimpleExpression;
+
+			PROCEDURE FitsInRegister(type: SyntaxTree.Type): BOOLEAN;
+			BEGIN
+				RETURN checker.CanPassInRegister(type)
+			END FitsInRegister;
+
+			PROCEDURE GetTemp(type: SyntaxTree.Type; tryRegister: BOOLEAN): SyntaxTree.Expression;
+			VAR
+				variable: SyntaxTree.Variable;
+				variableDesignator: SyntaxTree.Designator;
+			BEGIN
+				variable :=  GetTemporaryVariable(type, tryRegister & FitsInRegister(type));
+				variableDesignator := SyntaxTree.NewSymbolDesignator(SemanticChecker.InvalidPosition, NIL, variable);
+				variableDesignator.SetType(type);
+				RETURN variableDesignator
+			END GetTemp;
+
+
+
+		BEGIN
+			wasInline := currentIsInline;
+			prevInlineExit := currentInlineExit;
+			prevMapper := currentMapper;
+			currentInlineExit := NewLabel();
+			tooComplex := FALSE;
+			NEW(currentMapper);
+			currentIsInline := TRUE;
+			procedure := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+
+			formalParameter := procedureType.firstParameter;
+			actualParameters := x.parameters;
+
+			i := 0;
+			WHILE (i < actualParameters.Length()) & ~tooComplex DO
+				actualParameter := actualParameters.GetExpression(i);
+				IF actualParameter.resolved # NIL THEN
+					actualParameter := actualParameter.resolved
+				END;
+
+				(*
+					if expression is simple and can be passed immediately
+					or if type fits in register then we can proceed
+					otherwise we escape to ordinary procedure call.
+				*)
+
+				(* cases where the expression can be mapped identically *)
+				IF SimpleExpression(actualParameter) & (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter})  THEN
+					currentMapper.Add(formalParameter, actualParameter, NIL);
+				ELSIF FitsInRegister(actualParameter.type) & (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.ValueParameter}) THEN
+					variableDesignator := GetTemp(formalParameter.type, TRUE);
+					(*
+					Assign(variableDesignator, actualParameter);
+					*)
+
+					Evaluate(actualParameter, src);
+					Designate(variableDesignator, dest);
+					Emit(Mov(x.position, dest.op, src.op));
+					ReleaseOperand(dest);
+					ReleaseOperand(src);
+
+					currentMapper.Add(formalParameter, variableDesignator, NIL);
+				ELSE tooComplex := TRUE
+				END;
+
+				(*
+				ELSIF (formalParameter.kind = SyntaxTree.ConstParameter) & IsSimple(actualParameter) THEN
+					currentMapper.Add(formalParameter, actualParameter, NIL);
+				ELSIF (formalParameter.kind = SyntaxTree.VarParameter) OR formalParameter.type.IsComposite() & (formalParameter.kind = SyntaxTree.ConstParameter) THEN
+					variableDesignator := GetTemp(system.addressType, FALSE);
+					Designate(actualParameter, src);
+					Designate(variableDesignator, dest);
+					IntermediateCode.MakeMemory(dest.op,addressType);
+					Emit(Mov(x.position, dest.op, src.op));
+					ReleaseOperand(dest);
+					IF src.tag.mode # IntermediateCode.Undefined THEN
+						tagDesignator := GetTemp(system.addressType, FALSE);
+						Designate(tagDesignator, dest);
+						IntermediateCode.MakeMemory(dest.op,addressType);
+						Emit(Mov(x.position, dest.op, src.op));
+					END;
+
+					ReleaseOperand(dest); ReleaseOperand(src);
+					currentMapper.Add(formalParameter, variableDesignator, tagDesignator);
+				END;
+				*)
+				formalParameter := formalParameter.nextParameter;
+				INC(i);
+			END;
+
+
+			IF ~tooComplex & (procedureType.returnType # NIL) THEN
+				returnDesignator := GetTemp(procedureType.returnType, TRUE);
+				currentMapper.Add(NIL, returnDesignator, NIL);
+			END;
+
+			localVariable := procedure.procedureScope.firstVariable;
+			WHILE ~tooComplex & (localVariable # NIL) DO
+				variableDesignator := GetTemp(localVariable.type, FALSE);
+				currentMapper.Add(localVariable, variableDesignator, NIL);
+				localVariable := localVariable.nextVariable;
+			END;
+
+			IF ~tooComplex THEN
+				VisitStatementBlock(procedure.procedureScope.body);
+
+				SetLabel(currentInlineExit);
+
+				IF procedureType.returnType # NIL THEN
+					Designate(returnDesignator, result);
+					IF conditional THEN
+						ASSERT (procedureType.returnType.resolved IS SyntaxTree.BooleanType);
+						ValueToCondition(result)
+					END;
+				END;
+			END;
+
+			currentMapper := prevMapper;
+			currentInlineExit := prevInlineExit;
+			currentIsInline := wasInline;
+			RETURN ~tooComplex
+		END InlineProcedureCall;
+
+
+		PROCEDURE VisitProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator);
+		VAR
+			parameters: SyntaxTree.ExpressionList;
+			d, resultDesignator, actualParameter: SyntaxTree.Expression;
+			designator: SyntaxTree.Designator;
+			procedureType: SyntaxTree.ProcedureType;
+			formalParameter: SyntaxTree.Parameter;
+			noPush, end: Label;
+			operand, returnValue: Operand;
+			reg, size, mem, mask, dest: IntermediateCode.Operand;
+			saved: RegisterEntry;
+			symbol: SyntaxTree.Symbol;
+			variable: SyntaxTree.Variable;
+			i, j,  parametersSize, returnTypeSize, returnTypeOffset: LONGINT;
+			structuredReturnType: BOOLEAN;
+			firstWriteBackCall, currentWriteBackCall: WriteBackCall;
+			tempVariableDesignator: SyntaxTree.Designator;
+			gap, alignment: LONGINT; (*fld*)
+
+			(* TODO: remove unnecessary backup variables *)
+			oldResult: Operand;
+			oldCurrentScope: SyntaxTree.Scope;
+			oldArrayDestinationTag: IntermediateCode.Operand;
+			oldArrayDestinationDimension: LONGINT;
+			oldConstantDeclaration: SyntaxTree.Symbol;
+			oldDestination: IntermediateCode.Operand;
+			oldCurrentLoop: Label;
+			oldConditional: BOOLEAN;
+			oldTrueLabel, oldFalseLabel: Label;
+			oldLocked: BOOLEAN;
+			usedRegisters,oldUsedRegisters: RegisterEntry;
+
+			return: IntermediateCode.Operand;
+
+			parameterBackups: ARRAY 2 OF IntermediateCode.Operand;
+			arg: IntermediateCode.Operand;
+			dummy: IntermediateCode.Operand;
+			recordType: SyntaxTree.RecordType;
+			operatorSelectionProcedureOperand: Operand;
+			operatorSelectionProcedure: SyntaxTree.Procedure;
+			fingerPrint: SyntaxTree.FingerPrint;
+			isCallOfDynamicOperator, hasDynamicOperands: BOOLEAN;
+			identifierNumber: LONGINT;
+
+			passByRegister: BOOLEAN; registerNumber,stackSize: LONGINT;
+			procedure: SyntaxTree.Procedure;
+
+			PROCEDURE BackupGlobalState;
+			BEGIN
+				oldResult := result;
+				oldCurrentScope := currentScope;
+				oldArrayDestinationTag := arrayDestinationTag;
+				oldArrayDestinationDimension := arrayDestinationDimension;
+				oldConstantDeclaration := constantDeclaration;
+				oldDestination := destination;
+				oldCurrentLoop := currentLoop;
+				oldConditional := conditional;
+				oldTrueLabel := trueLabel;
+				oldFalseLabel := falseLabel;
+				oldLocked := locked;
+				oldUsedRegisters := usedRegisters
+			END BackupGlobalState;
+
+			PROCEDURE RestoreGlobalState;
+			BEGIN
+				result := oldResult;
+				currentScope := oldCurrentScope;
+				arrayDestinationTag := oldArrayDestinationTag;
+				arrayDestinationDimension := oldArrayDestinationDimension;
+				constantDeclaration := oldConstantDeclaration;
+				destination := oldDestination;
+				currentLoop := oldCurrentLoop;
+				conditional := oldConditional;
+				trueLabel := oldTrueLabel;
+				falseLabel := oldFalseLabel;
+				locked := oldLocked;
+				usedRegisters := oldUsedRegisters
+			END RestoreGlobalState;
+
+			(** do preparations before parameter push for array-structured object types (ASOTs):
+				if ASOT is passed as VAR parameter:
+				- allocate temporary variable of math array type
+				- copy contents of ASOT to be passed to temporary variable
+				- use temporary variable as the actual parameter instead
+				- create and store a write-back call in a list (an index operator call that writes the contents of the temp. variable back into the ASOT)
+			**)
+			PROCEDURE PrepareParameter(VAR actualParameter: SyntaxTree.Expression; formalParameter: SyntaxTree.Parameter);
+			VAR
+				expression: SyntaxTree.Expression;
+			BEGIN
+				IF actualParameter IS SyntaxTree.Designator THEN
+					designator := actualParameter(SyntaxTree.Designator);
+					IF (formalParameter.kind = SyntaxTree.VarParameter) & (designator.relatedAsot # NIL) & (actualParameter.type.resolved IS SyntaxTree.MathArrayType) THEN
+						(* actual parameter is an index read operator call on ASOT and formal parameter is of VAR kind *)
+						(* IF dump # NIL THEN dump.String("!!! BEGIN ASOT VAR parameter preparation"); dump.Ln; dump.Update END; *) (* TENTATIVE*)
+						ASSERT(checker # NIL);
+						checker.SetCurrentScope(currentScope);
+
+						(* allocate temporary variable *)
+						ASSERT(actualParameter.type # NIL);
+						ASSERT(actualParameter.type.resolved IS SyntaxTree.MathArrayType);
+						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE);
+						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(SemanticChecker.InvalidPosition, NIL, variable);
+						tempVariableDesignator.SetType(actualParameter.type.resolved);
+						ASSERT(tempVariableDesignator IS SyntaxTree.SymbolDesignator);
+						ASSERT(tempVariableDesignator.type # NIL);
+						ASSERT(tempVariableDesignator.type.resolved IS SyntaxTree.MathArrayType);
+
+						(* copy math array stored in actual parameter to temporary variable *)
+						BackupGlobalState;
+						AssignMathArray(tempVariableDesignator, actualParameter);
+						RestoreGlobalState;
+
+						(* use temporary variable as actual parameter instead of the original one *)
+						actualParameter := tempVariableDesignator;
+
+						(* create write-back call and store it in linked list *)
+						(* create new list entry *)
+						IF firstWriteBackCall = NIL THEN
+							NEW(firstWriteBackCall);
+							currentWriteBackCall := firstWriteBackCall
+						ELSE
+							ASSERT(currentWriteBackCall # NIL);
+							NEW(currentWriteBackCall.next);
+							currentWriteBackCall := currentWriteBackCall.next
+						END;
+ 						expression := checker.NewIndexOperatorCall(SemanticChecker.InvalidPosition, designator.relatedAsot, designator.relatedIndexList, tempVariableDesignator);
+						ASSERT(expression.type = NIL);
+						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
+					ELSIF (formalParameter.kind = SyntaxTree.VarParameter) & (designator.relatedAsot # NIL)  THEN
+						(* prepare writeback for any other "normal" indexer *)
+						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE);
+						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(SemanticChecker.InvalidPosition, NIL, variable);
+						tempVariableDesignator.SetType(actualParameter.type.resolved);
+						Assign(tempVariableDesignator, actualParameter);
+						actualParameter := tempVariableDesignator;
+						IF firstWriteBackCall = NIL THEN
+							NEW(firstWriteBackCall);
+							currentWriteBackCall := firstWriteBackCall
+						ELSE
+							ASSERT(currentWriteBackCall # NIL);
+							NEW(currentWriteBackCall.next);
+							currentWriteBackCall := currentWriteBackCall.next
+						END;
+ 						expression := checker.NewObjectOperatorCall(SemanticChecker.InvalidPosition, designator.relatedAsot, designator.relatedIndexList, tempVariableDesignator);
+						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
+					END
+				END
+			END PrepareParameter;
+
+		BEGIN
+			IF Trace THEN TraceEnter("VisitProcedureCallDesignator") END;
+
+			IF (x.left IS SyntaxTree.SymbolDesignator) & (x.left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
+				procedure := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+				IF procedure.isOberonInline & (procedure.scope.ownerModule = module.module) THEN
+					IF  InlineProcedureCall(x) THEN
+						RETURN
+					ELSE
+						Warning(x.position, "Inline call with complex parameters not yet implemented. Emitting ordinary procedure call.")
+					END
+				END;
+			END;
+
+
+			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
+			procedureType := x.left.type.resolved(SyntaxTree.ProcedureType);
+
+
+			dest := destination; destination := emptyOperand;
+			SaveRegisters();ReleaseUsedRegisters(saved);
+
+			parameters := x.parameters;
+
+			IF (x.left IS SyntaxTree.SymbolDesignator) & (x.left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Operator) THEN
+				(* an operator is called *)
+				(* IF dump # NIL THEN dump.String("*** begin of operator call ***"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+				ASSERT(procedureType.callingConvention = SyntaxTree.OberonCallingConvention);
+
+				(* check if a dynamic operator call should be performed *)
+				isCallOfDynamicOperator := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Operator).isDynamic
+			ELSE
+				isCallOfDynamicOperator := FALSE
+			END;
+
+			alignment := procedureType.stackAlignment;
+			IF alignment > 1 THEN
+				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+				Emit(Mov(position,reg, sp));
+				gap := ParametersSize(system, procedureType, FALSE) + ToMemoryUnits(system,system.offsetFirstParameter) + ToMemoryUnits(system,system.addressSize);
+
+				Emit(Sub(position,sp, sp, IntermediateCode.Immediate(addressType,gap)));
+				IntermediateCode.InitImmediate(mask,addressType,-alignment);
+				Emit(And(position,sp, sp, mask));
+				Emit(Add(position, sp, sp, IntermediateCode.Immediate(addressType, gap)));
+			 	Emit(Push(position,reg));
+				(*
+				IntermediateCode.InitMemory(mem, addressType, sp, 0);
+				Emit(Mov(position,mem,reg));
+				*)
+				ReleaseIntermediateOperand(reg);
+			END;
+
+			IF procedureType.callingConvention = SyntaxTree.DarwinCCallingConvention THEN	(*fld*)
+				IntermediateCode.InitImmediate(mask,addressType,-16);
+				Emit(And(position,sp, sp, mask));
+				gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
+				IF gap # 0 THEN
+					IntermediateCode.InitImmediate(size,addressType,gap);
+					Emit(Sub(position,sp,sp,size))
+				END;
+			END;
+
+			IF x.left IS SyntaxTree.SupercallDesignator THEN
+				symbol := x.left(SyntaxTree.SupercallDesignator).left(SyntaxTree.SymbolDesignator).symbol;
+			ELSIF x.left IS SyntaxTree.IndexDesignator THEN
+				symbol := x.left(SyntaxTree.IndexDesignator).left(SyntaxTree.SymbolDesignator).symbol;
+			ELSE
+				symbol := x.left(SyntaxTree.SymbolDesignator).symbol;
+			END;
+
+			IF isCallOfDynamicOperator & hasDynamicOperands THEN
+				IF dump # NIL THEN dump.String("++++++++++ dynamic operator call ++++++++++"); dump.Ln; dump.Update END; (* TENTATIVE *)
+				(* push ID *)
+				(* IF dump # NIL THEN dump.String("push ID"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+				ASSERT(x.left IS SyntaxTree.SymbolDesignator);
+				identifierNumber := Global.GetSymbol(module.module.case, x.left(SyntaxTree.SymbolDesignator).symbol.name);
+				Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), identifierNumber)));
+
+				formalParameter := procedureType.firstParameter;
+				FOR i := 0 TO parameters.Length() - 1 DO
+					IF formalParameter.access # SyntaxTree.Hidden THEN
+						ASSERT(i < 2);
+						IF IsStrictlyPointerToRecord(formalParameter.type) THEN
+							(* push pointer *)
+							(* IF dump # NIL THEN dump.String("push pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							IF formalParameter.kind = SyntaxTree.VarParameter THEN
+								(* add dereference *)
+								(* IF dump # NIL THEN dump.String("dereference pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+								ReleaseIntermediateOperand(parameterBackups[i]);
+								MakeMemory(parameterBackups[i], parameterBackups[i], addressType, 0)
+							END;
+							Emit(Push(position,parameterBackups[i]));
+							ReleaseIntermediateOperand(parameterBackups[i]);
+
+							(* push typetag *)
+							(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							recordType := formalParameter.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+							arg := TypeDescriptorAdr(recordType);
+							IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
+							Emit(Push(position,arg));
+						ELSE
+							(* push 'NonPointer' *)
+							(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
+
+							(* push fingerprint *)
+							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							fingerPrint := fingerPrinter.TypeFP(formalParameter.type.resolved);
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow))) (* TODO: push the type's fingerprint *)
+						END
+					END;
+					formalParameter := formalParameter.nextParameter
+				END;
+
+				(* for unary operators: complete the information for the second parameter *)
+				IF procedureType.numberParameters < 2 THEN
+					(* push 'NonPointer' *)
+					(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
+
+					(* push 'NoType' *)
+					(* IF dump # NIL THEN dump.String("push 'NoType'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NoType)));
+				END;
+
+				(* call operator selection procedure *)
+				IF GetRuntimeProcedure("FoxOperatorRuntime", "SelectOperator", operatorSelectionProcedure, TRUE) THEN
+					StaticCallOperand(operatorSelectionProcedureOperand, operatorSelectionProcedure);
+					Emit(Call(position,operatorSelectionProcedureOperand.op, ProcedureParametersSize(system, operatorSelectionProcedure)));
+					ReleaseOperand(operatorSelectionProcedureOperand);
+
+					(* use the address that the operator selection procedure returned as the target address of the call *)
+					InitOperand(operand, ModeValue);
+					operand.op := IntermediateCode.Register(addressType, IntermediateCode.GeneralPurposeRegister, AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Result(position,operand.op))
+				END
+			ELSE
+				Evaluate(x.left, operand)
+			END;
+
+			IF symbol IS SyntaxTree.Procedure THEN
+				IF x.left IS SyntaxTree.SupercallDesignator THEN
+					Emit(Push(position,operand.tag));
+				ELSIF (procedureType.isDelegate) THEN
+					Emit(Push(position,operand.tag));
+				END;
+			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
+				IF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
+					Emit(Push(position,operand.tag));
+				END;
+			ELSE HALT(200);
+			END;
+			
+			ReleaseIntermediateOperand(operand.tag);
+			operand.tag := emptyOperand;
+
+			(* determine if a structured return type is needed *)
+			structuredReturnType := StructuredReturnType(procedureType);
+
+			IF structuredReturnType THEN
+				IF resultDesignator  # NIL THEN
+					d := resultDesignator;
+				ELSE
+					variable := GetTemporaryVariable(procedureType.returnType, FALSE);
+					d := SyntaxTree.NewSymbolDesignator(-1,NIL,variable);
+					d.SetType(variable.type);
+				END;
+				IF (procedureType.returnType.resolved IS SyntaxTree.RecordType) THEN
+					Designate(d,returnValue);
+					returnTypeSize := system.SizeOf(procedureType.returnType.resolved);
+					size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,returnTypeSize));
+			 		Emit(Push(position,size));
+			 		Emit(Push(position,returnValue.op));
+			 		ReleaseOperand(returnValue);
+				ELSE
+					PushParameter(d,procedureType.returnParameter,procedureType.callingConvention, FALSE, dummy,-1)
+		 		END;
+		 	END;
+
+			firstWriteBackCall := NIL; (* reset write-back call list *)
+
+			IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
+				passByRegister := system.registerParameters > 0;
+				registerNumber := 0;
+				formalParameter := procedureType.lastParameter;
+				FOR i := parameters.Length() - 1 TO 0 BY -1 DO
+					actualParameter := parameters.GetExpression(i);
+					PrepareParameter(actualParameter, formalParameter);
+					IF passByRegister & (i < system.registerParameters) THEN
+						IF ~PassInRegister(formalParameter) THEN
+							Error(actualParameter.position,"cannot be passed by register")
+						ELSE
+							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,i);
+						END;
+						INC(registerNumber);
+					ELSE
+						PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,-1);
+					END;
+					formalParameter := formalParameter.prevParameter;
+				END;
+				IF passByRegister & (registerNumber > 0) THEN
+					stackSize := ToMemoryUnits(system,system.registerParameters*addressType.sizeInBits);
+					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
+				END;
+			ELSE
+				hasDynamicOperands := FALSE;
+				formalParameter := procedureType.firstParameter;
+				FOR i := 0 TO parameters.Length() - 1 DO
+					actualParameter := parameters.GetExpression(i);
+
+					IF formalParameter # NIL THEN (* TENTATIVE *)
+						PrepareParameter(actualParameter, formalParameter);
+
+						IF isCallOfDynamicOperator  & IsStrictlyPointerToRecord(formalParameter.type) & (formalParameter.access # SyntaxTree.Hidden) THEN (* TODO: remove hidden parameters *)
+							ASSERT(i < 2);
+							hasDynamicOperands := TRUE;
+							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, TRUE, parameterBackups[i],-1)
+						ELSE
+							IF passByRegister & (registerNumber > 0) THEN
+								stackSize := ToMemoryUnits(system,registerNumber*addressType.sizeInBits);
+								Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
+							END;
+							passByRegister := FALSE;
+							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,-1);
+						END;
+						formalParameter := formalParameter.nextParameter;
+					END;
+				END;
+			END;
+
+			IF symbol IS SyntaxTree.Procedure THEN
+				IF (symbol.scope IS SyntaxTree.ProcedureScope) THEN (* nested procedure *)
+					GetBaseRegister(reg,currentScope,symbol.scope); (* static link, may be fp or [fp+8] (if nested proc calls itself) *)
+					Emit(Push(position,reg));
+					ReleaseIntermediateOperand(reg);
+				END;
+				parametersSize := ProcedureParametersSize(system,symbol(SyntaxTree.Procedure));
+			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
+				parametersSize := ParametersSize(system,procedureType,FALSE);
+			END;
+			
+			ReleaseParameterRegisters();
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) OR (procedureType.callingConvention = SyntaxTree.CCallingConvention) THEN
+				Emit(Call(position,operand.op,0));
+			ELSE
+				Emit(Call(position,operand.op,parametersSize));
+			END;
+			ReleaseOperand(operand);
+
+			IF procedureType.noReturn THEN
+				Emit(Trap(position,NoReturnTrap));
+			END;
+
+			IF (procedureType.returnType # NIL) & ~structuredReturnType THEN
+				return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
+				Emit(Result(position,return));
+			END;
+
+			IF procedureType.callingConvention = SyntaxTree.CCallingConvention THEN
+				IF passByRegister & (registerNumber > 0) & (registerNumber < system.registerParameters) THEN (* allocated space for all registers *)
+					parametersSize := ToMemoryUnits(system,system.registerParameters*addressType.sizeInBits);
+				END;
+				size := IntermediateCode.Immediate(addressType,parametersSize);
+				Emit(Add(position,sp,sp,size));
+			END;
+
+			IF (resultDesignator = NIL) & (procedureType.returnType # NIL) THEN
+
+				IF structuredReturnType THEN
+					(* stack pointer rewinding done by callee
+					size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.SizeOfParameter(procedureType.returnParameter)));
+					Emit(Add(position,sp,sp,size));
+					*)
+					RestoreRegisters(saved);
+					InitOperand(result,ModeReference);
+					Symbol(variable,result);
+				ELSE
+					RestoreRegisters(saved);
+					InitOperand(result,ModeValue);
+					result.op := return;
+				END;
+			END;
+
+			IF alignment > 1 THEN
+				Emit(Pop(position,sp));
+			END;
+
+			IF conditional & (procedureType.returnType # NIL) & (procedureType.returnType.resolved IS SyntaxTree.BooleanType) THEN
+				ValueToCondition(result);
+			END;
+			destination := dest;
+
+			(* perform all write-back calls in the list *)
+			BackupGlobalState;
+			currentWriteBackCall := firstWriteBackCall;
+			WHILE currentWriteBackCall # NIL DO
+				VisitProcedureCallDesignator(currentWriteBackCall.call);
+				currentWriteBackCall := currentWriteBackCall.next
+			END;
+			RestoreGlobalState;
+			(* TENATIVE *)
+			(*
+			IF isOperatorCall THEN
+				IF dump # NIL THEN dump.String("*** end of operator call ***"); dump.Ln; dump.Update END
+			END;
+			*)
+
+			IF Trace THEN TraceExit("VisitProcedureCallDesignator") END;
+		END VisitProcedureCallDesignator;
+
+		PROCEDURE TypeDescriptorAdr(t: SyntaxTree.Type): IntermediateCode.Operand;
+		VAR res: IntermediateCode.Operand; source: Sections.Section; offset: LONGINT; name: Basic.SegmentedName;
+
+			td: SyntaxTree.Symbol;
+
+			PROCEDURE GetHiddenPointerType(): SyntaxTree.Type;
+			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
+			BEGIN
+				IF (hiddenPointerType = NIL) OR (hiddenPointerType.typeDeclaration.scope.ownerModule # module.module) THEN
+					scope := SyntaxTree.NewRecordScope(module.module.moduleScope);
+					variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier("@Any"));
+					variable.SetType(system.anyType);
+					scope.AddVariable(variable);
+					hiddenPointerType := SyntaxTree.NewRecordType(-1,NIL,scope);
+					typeDeclaration := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier("@HdPtrDesc"));
+					typeDeclaration.SetDeclaredType(hiddenPointerType);
+					typeDeclaration.SetScope(module.module.moduleScope);
+					hiddenPointerType.SetTypeDeclaration(typeDeclaration);
+					hiddenPointerType.SetState(SyntaxTree.Resolved);
+				END;
+				RETURN hiddenPointerType;
+			END GetHiddenPointerType;
+
+			PROCEDURE GetDelegateType(): SyntaxTree.Type;
+			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
+			BEGIN
+				IF (delegatePointerType = NIL) OR (delegatePointerType.typeDeclaration.scope.ownerModule # module.module) THEN
+					scope := SyntaxTree.NewRecordScope(module.module.moduleScope);
+					variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier("@Procedure"));
+					variable.SetType(SyntaxTree.NewProcedureType(-1,NIL));
+					scope.AddVariable(variable);
+					variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier("@Any"));
+					variable.SetType(system.anyType);
+					scope.AddVariable(variable);
+					delegatePointerType := SyntaxTree.NewRecordType(-1,NIL,scope);
+					typeDeclaration := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier("@Delegate"));
+					typeDeclaration.SetDeclaredType(delegatePointerType);
+					typeDeclaration.SetScope(module.module.moduleScope);
+					delegatePointerType.SetTypeDeclaration(typeDeclaration);
+					delegatePointerType.SetState(SyntaxTree.Resolved);
+				END;
+				RETURN delegatePointerType
+			END GetDelegateType;
+
+
+			PROCEDURE GetBackendType(x: SyntaxTree.Type; VAR offset: LONGINT; VAR name: Basic.SegmentedName): SyntaxTree.Symbol;
+			(* create anonymous type declaration for types that need a type descriptor but have been declared anonymously
+				such as in VAR a: RECORD ... END;
+				reason: type desciptors in Sections are then accessible via a type declaration symbol and for types
+				and variables, constants and procedures the same mechanism can be used for fixups etc.
+			*)
+			VAR  source: Sections.Section;null: HUGEINT; td: SyntaxTree.TypeDeclaration;
+				op: IntermediateCode.Operand;
+			BEGIN (* no code emission *)
+				source := NIL;
+				x := x.resolved;
+				IF (x IS SyntaxTree.AnyType) OR (x IS SyntaxTree.PointerType) THEN
+					x := GetHiddenPointerType();
+				ELSIF IsDelegate(x) THEN
+					x := GetDelegateType();
+				ELSIF (x IS SyntaxTree.RecordType) (* OR (x IS SyntaxTree.PointerType) *) THEN
+				ELSE HALT(200);
+				END;
+
+				td := x.typeDeclaration;
+				IF td = NIL THEN
+					ASSERT(x(SyntaxTree.RecordType).pointerType # NIL);
+					td := x(SyntaxTree.RecordType).pointerType.resolved.typeDeclaration;
+					ASSERT(td # NIL);
+				END;
+
+				IF newObjectFile THEN
+					Global.GetSymbolSegmentedName(td,name);
+					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+						meta.CheckTypeDeclaration(x);
+						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
+					ELSE
+						source := NewSection(module.importedSections, Sections.ConstSection,name,td,commentPrintout # NIL);
+					END;
+					offset := ToMemoryUnits(system,meta.GetTypeRecordBaseOffset(x(SyntaxTree.RecordType).recordScope.numberMethods)*system.addressSize);
+				ELSE
+					offset := 0;
+					source := module.allSections.FindBySymbol(td); (*TODO*)
+					IF source = NIL THEN
+						null := 0;
+						Global.GetSymbolSegmentedName(td,name);
+						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
+						IntermediateCode.InitImmediate(op,addressType,0);
+						source(IntermediateCode.Section).Emit(Data(position,op));
+						source.SetReferenced(FALSE)
+					ELSE
+						name := source.name;
+					END;
+				END;
+				RETURN td
+			END GetBackendType;
+
+		BEGIN
+			(*td := t.typeDeclaration;*)
+			td := GetBackendType(t,offset,name); (*! do not dereference a pointer here as the type descriptor for the pointer might be asked for *)
+			(*
+			IF t IS SyntaxTree.PointerType THEN
+				source := GetBackendType(t(SyntaxTree.PointerType).pointerBase.resolved);
+			ELSE
+				source := GetBackendType(t);
+			END;
+			*)
+			IF newObjectFile THEN
+				IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0 (*
+				1+t(SyntaxTree.RecordType).recordScope.numberMethods+16+1 *));
+				IntermediateCode.SetOffset(res,offset);
+			ELSE
+				IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0);
+			END;
+			(*
+			IntermediateCode.MakeMemory(res,IntermediateCode.UnsignedInteger,addressType.sizeInBits);
+			make memory should be used when tag is used, not earlier
+			*)
+
+
+			RETURN res
+		END TypeDescriptorAdr;
+
+		(*
+		PROCEDURE MakeTypeTag(VAR operand: Operand);
+		VAR result: IntermediateCode.Operand;
+		BEGIN
+			IF operand.tag.mode = IntermediateCode.Undefined THEN
+				operand.tag := TypeDescriptorAdr(operand.type);
+				IntermediateCode.MakeMemory(operand.tag,addressType);
+				UseIntermediateOperand(operand.tag);
+			END;
+		END MakeTypeTag;
+		*)
+
+		PROCEDURE ProfilerInit;
+		VAR reg: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitAddress(reg, addressType, profileInit.name , GetFingerprint(profileInit.symbol), 0);
+			Emit(Call(position,reg,0));
+		END ProfilerInit;
+
+		PROCEDURE ProfilerEnterExit(procedureNumber: LONGINT; enter: BOOLEAN);
+		VAR reg: IntermediateCode.Operand; result: Operand; procedure: SyntaxTree.Procedure;
+		BEGIN
+			IF enter & GetRuntimeProcedure("FoxProfiler","EnterProcedure",procedure,TRUE)
+			OR ~enter & GetRuntimeProcedure("FoxProfiler","ExitProcedure",procedure,TRUE)
+			THEN
+				IntermediateCode.InitAddress(reg, addressType, profileId.name , GetFingerprint(profileId.symbol), 0);
+				IntermediateCode.MakeMemory(reg, IntermediateCode.GetType(system,system.longintType));
+				Emit(Push(position,reg));
+				IntermediateCode.InitImmediate(reg, IntermediateCode.GetType(system,system.longintType), procedureNumber);
+				Emit(Push(position,reg));
+				StaticCallOperand(result,procedure);
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				ReleaseOperand(result);
+			END;
+		END ProfilerEnterExit;
+
+		PROCEDURE ProfilerAddProcedure(procedureNumber: LONGINT; CONST name: ARRAY OF CHAR);
+		VAR string: SyntaxTree.String; reg: IntermediateCode.Operand; result: Operand; procedure: SyntaxTree.Procedure; sv: SyntaxTree.StringValue;type: SyntaxTree.Type;
+		BEGIN
+			IF GetRuntimeProcedure("FoxProfiler","AddProcedure",procedure,TRUE) THEN
+				IntermediateCode.InitAddress(reg, addressType, profileId.name , GetFingerprint(profileId.symbol), 0);
+				IntermediateCode.MakeMemory(reg, IntermediateCode.GetType(system,system.longintType));
+				profileInit.Emit(Push(position,reg));
+				IntermediateCode.InitImmediate(reg, IntermediateCode.GetType(system,system.longintType), procedureNumber);
+				profileInit.Emit(Push(position,reg));
+				NEW(string, LEN(name)); COPY(name, string^);
+				sv := SyntaxTree.NewStringValue(-1,string);
+				type := SyntaxTree.NewStringType(-1,system.characterType,Strings.Length(name));
+				sv.SetType(type);
+				Designate(sv,result);
+				profileInit.Emit(Push(position,result.tag));
+				profileInit.Emit(Push(position,result.op));
+				StaticCallOperand(result,procedure);
+				profileInit.Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				ReleaseOperand(result);
+			END;
+		END ProfilerAddProcedure;
+
+		PROCEDURE ProfilerAddModule(CONST name: ARRAY OF CHAR);
+		VAR string: SyntaxTree.String; sv: SyntaxTree.StringValue; type: SyntaxTree.Type; result: Operand;  reg: IntermediateCode.Operand; procedure: SyntaxTree.Procedure;
+		BEGIN
+			IF GetRuntimeProcedure("FoxProfiler","AddModule",procedure,TRUE) THEN
+				IntermediateCode.InitAddress(reg, addressType, profileId.name , GetFingerprint(profileId.symbol), 0);
+				profileInit.Emit(Push(position,reg));
+				profileInitPatchPosition := profileInit.pc;
+				profileInit.Emit(Nop(position)); (* placeholder, will be patched by number of procedures *)
+				NEW(string, LEN(name)); COPY(name, string^);
+				sv := SyntaxTree.NewStringValue(-1,string);
+				type := SyntaxTree.NewStringType(-1,system.characterType,Strings.Length(name));
+				sv.SetType(type);
+				Designate(sv,result);
+				profileInit.Emit(Push(position,result.tag));
+				profileInit.Emit(Push(position,result.op));
+				StaticCallOperand(result,procedure);
+				profileInit.Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				ReleaseOperand(result);
+			END;
+		END ProfilerAddModule;
+
+		PROCEDURE ProfilerPatchInit;
+		VAR reg: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(reg, IntermediateCode.GetType(system,system.longintType), numberProcedures);
+			profileInit.EmitAt(profileInitPatchPosition,Push(position,reg));
+			profileInit.Emit(Leave(position,0));
+			profileInit.Emit(Exit(position,0,0));
+		END ProfilerPatchInit;
+
+		(** if operator can be overloaded dynamically, emit code that registers it in the runtime **)
+		PROCEDURE RegisterDynamicOperator(operator: SyntaxTree.Operator);
+		VAR
+			id: LONGINT;
+			leftType, rightType: SyntaxTree.Type;
+			procedureType: SyntaxTree.ProcedureType;
+			runtimeProcedure: SyntaxTree.Procedure;
+			runtimeProcedureOperand, operatorOperand: Operand;
+			kind: SET;
+
+			PROCEDURE PushTypeInfo(type: SyntaxTree.Type);
+			VAR
+				arg: IntermediateCode.Operand;
+				recordType: SyntaxTree.RecordType;
+				fingerPrint: SyntaxTree.FingerPrint;
+			BEGIN
+				IF type = NIL THEN
+					(* no type: push 'NoType' *)
+					(* IF dump # NIL THEN dump.String("push 'NoType'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NoType)
+				ELSIF IsStrictlyPointerToRecord(type) THEN
+					(* pointer to record type: push typetag *)
+					(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					recordType := type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+					arg := TypeDescriptorAdr(recordType);
+					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
+				ELSE
+					(* non-pointer to record type: push fingerprint *)
+					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					fingerPrint := fingerPrinter.TypeFP(type.resolved);
+					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow)
+				END;
+				operatorInitializationCodeSection.Emit(Push(position,arg))
+			END PushTypeInfo;
+		BEGIN
+			ASSERT(operatorInitializationCodeSection # NIL);
+
+			ASSERT(operator.type IS SyntaxTree.ProcedureType);
+			procedureType := operator.type(SyntaxTree.ProcedureType);
+
+			(* determine types *)
+			leftType := procedureType.firstParameter.type;
+			IF procedureType.numberParameters = 2 THEN
+				ASSERT(procedureType.firstParameter.nextParameter # NIL);
+				rightType := procedureType.firstParameter.nextParameter.type;
+			ELSE
+				rightType := NIL
+			END;
+
+
+			(* determine operator kind *)
+			IF IsStrictlyPointerToRecord(leftType) THEN
+				kind := {LhsIsPointer}
+			ELSE
+				kind := {}
+			END;
+			IF IsStrictlyPointerToRecord(rightType) THEN
+				kind := kind + {RhsIsPointer}
+			END;
+
+			IF kind # {} THEN (* TODO: to be removed later on *)
+				(* at least one of the types is a pointer to record *)
+
+				(* emit a code that registers this specific operator in the runtime *)
+				dump := operatorInitializationCodeSection.comments;
+
+				(* IF dump # NIL THEN dump.String("*** begin of operator registration ***"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+				IF GetRuntimeProcedure("FoxOperatorRuntime", "RegisterOperator", runtimeProcedure, TRUE) THEN
+					(* push ID *)
+					(* IF dump # NIL THEN dump.String("push ID"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					id := Global.GetSymbol(module.module.case, operator.name);
+					operatorInitializationCodeSection.Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), id)));
+
+					(* push kind *)
+					(* IF dump # NIL THEN dump.String("push kind"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					operatorInitializationCodeSection.Emit(Push(position,IntermediateCode.Immediate(setType, SYSTEM.VAL(LONGINT, kind))));
+
+					(* push type infos *)
+					PushTypeInfo(leftType);
+					PushTypeInfo(rightType);
+
+					(* push operator address *)
+					(* IF dump # NIL THEN dump.String("push operator address"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					StaticCallOperand(operatorOperand, operator);
+					operatorInitializationCodeSection.Emit(Push(position,operatorOperand.op));
+					ReleaseOperand(operatorOperand);
+
+					StaticCallOperand(runtimeProcedureOperand, runtimeProcedure);
+					operatorInitializationCodeSection.Emit(Call(position,runtimeProcedureOperand.op, ProcedureParametersSize(system, runtimeProcedure)));
+					ReleaseOperand(runtimeProcedureOperand)
+				END
+				(* IF dump # NIL THEN dump.String("*** end of operator registration ***"); dump.Ln; dump.Update END *) (* TENTATIVE *)
+			END
+		END RegisterDynamicOperator;
+
+		PROCEDURE SystemTrace(x: SyntaxTree.ExpressionList; pos: LONGINT);
+		VAR
+			traceModule: SyntaxTree.Module;
+			procedure: SyntaxTree.Procedure;
+			s,msg: Basic.MessageString;
+			res: Operand;
+			i: LONGINT;
+			sv: SyntaxTree.StringValue;
+			type: SyntaxTree.Type;
+			recordType: SyntaxTree.RecordType;
+			printout: Printout.Printer;
+			stringWriter: Streams.StringWriter;
+			expression: SyntaxTree.Expression;
+
+			PROCEDURE GetProcedure(CONST procedureName: ARRAY OF CHAR): BOOLEAN;
+			BEGIN
+				procedure := traceModule.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
+				IF procedure = NIL THEN
+					s := "procedure ";
+					Strings.Append(s,backend.traceModuleName);
+					Strings.Append(s,".");
+					Strings.Append(s,procedureName);
+					Strings.Append(s," not present");
+					Error(position,s);
+					RETURN FALSE
+				ELSE
+					RETURN TRUE
+				END;
+			END GetProcedure;
+
+			PROCEDURE CallProcedure;
+			BEGIN
+				StaticCallOperand(result,procedure);
+				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+			END CallProcedure;
+
+			PROCEDURE String(CONST s: ARRAY OF CHAR);
+			VAR res: Operand; string: SyntaxTree.String;
+			BEGIN
+				IF GetProcedure("String") THEN
+					NEW(string, LEN(s)); COPY(s, string^);
+					sv := SyntaxTree.NewStringValue(-1,string);
+					type := SyntaxTree.NewStringType(-1,system.characterType,Strings.Length(s));
+					sv.SetType(type);
+					Designate(sv,res);
+					Emit(Push(position,res.tag));
+					Emit(Push(position,res.op));
+					ReleaseOperand(res);
+					CallProcedure;
+				END;
+			END String;
+
+			PROCEDURE Integer(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Int") THEN
+					Emit(Push(position,op));
+					Emit(Push(position,IntermediateCode.Immediate(int32,1)));
+					CallProcedure;
+				END;
+			END Integer;
+
+			PROCEDURE Float(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("HIntHex") THEN
+					Emit(Push(position,op));
+					Emit(Push(position,IntermediateCode.Immediate(int32,16)));
+					CallProcedure;
+				END;
+			END Float;
+
+			PROCEDURE Set(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Set") THEN
+					Emit(Push(position,op));
+					(*
+					Emit(Push(position,IntermediateCode.Immediate(int32,0))); (* ofs *)
+					Emit(Push(position,IntermediateCode.Immediate(int32,32))); (* n *)
+					*)
+					CallProcedure;
+				END;
+			END Set;
+
+			PROCEDURE Boolean(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Boolean") THEN
+					Emit(Push(position,op));
+					CallProcedure;
+				END;
+			END Boolean;
+
+			PROCEDURE Char(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Char") THEN
+					Emit(Push(position,op));
+					CallProcedure;
+				END;
+			END Char;
+
+			PROCEDURE Address(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Address") THEN
+					Emit(Push(position,op));
+					CallProcedure;
+				END;
+			END Address;
+
+			PROCEDURE StringOperand(op,tag: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("String") THEN
+					Emit(Push(position,tag));
+					Emit(Push(position,op));
+					CallProcedure;
+				END;
+			END StringOperand;
+
+
+			PROCEDURE Ln;
+			BEGIN
+				IF GetProcedure("Ln") THEN
+					CallProcedure;
+				END;
+			END Ln;
+
+
+		BEGIN
+			IF AddImport(backend.traceModuleName,traceModule,TRUE) THEN
+				NEW(stringWriter,LEN(s));
+				FOR i := 0 TO x.Length()-1 DO
+					msg := "";
+					expression := x.GetExpression(i);
+					Global.GetModuleName(module.module, s);
+					IF i = 0 THEN
+						stringWriter.String(s); stringWriter.String("@"); stringWriter.Int(pos,1);
+						stringWriter.String(":");
+					END;
+
+					printout := Printout.NewPrinter(stringWriter,Printout.SourceCode,FALSE);
+					IF ~(expression IS SyntaxTree.StringValue) THEN
+						printout.Expression(expression);
+						stringWriter.Get(s);
+						Strings.Append(msg,s);
+						Strings.Append(msg,"= ");
+					ELSE stringWriter.Get(s); (* remove from string writer *)
+					END;
+					String(msg);
+					IF SemanticChecker.IsStringType(expression.type) THEN
+						Designate(expression,res);
+						StringOperand(res.op,res.tag);
+					ELSE
+						Evaluate(expression,res);
+						IF expression.type.resolved IS SyntaxTree.IntegerType THEN
+							IF res.op.type.sizeInBits < IntermediateCode.Bits64 THEN
+								Convert(res.op,int64);
+							END;
+							Integer(res.op);
+						ELSIF expression.type.resolved IS SyntaxTree.BooleanType THEN
+							Boolean(res.op);
+						ELSIF expression.type.resolved IS SyntaxTree.SetType THEN
+							Set(res.op);
+						ELSIF expression.type.resolved IS SyntaxTree.FloatType THEN
+							IF res.op.type.sizeInBits = IntermediateCode.Bits32 THEN
+								Convert(res.op,float64);
+							END;
+							Float(res.op);
+						ELSIF (expression.type.resolved IS SyntaxTree.CharacterType) & (expression.type.resolved.sizeInBits = 8) THEN
+							Char(res.op);
+						ELSIF expression.type.resolved IS SyntaxTree.AddressType THEN
+							Address(res.op);String("H");
+						ELSIF expression.type.resolved IS SyntaxTree.SizeType THEN
+							Address(res.op);String("H");
+						ELSIF (expression.type.resolved IS SyntaxTree.PointerType) OR IsPointerToRecord(expression.type,recordType) THEN
+							Address(res.op);String("H");
+						ELSIF (expression.type.resolved IS SyntaxTree.ProcedureType) THEN
+							Address(res.op);String("H");
+						ELSIF expression.type.resolved IS SyntaxTree.NilType THEN
+							String("NIL");
+						ELSE HALT(200);
+						END;
+					END;
+					ReleaseOperand(res);
+					String("; ");
+				END;
+				Ln;
+			END;
+		END SystemTrace;
+
+		PROCEDURE InitFields(type: SyntaxTree.Type; CONST adr: IntermediateCode.Operand; offset: LONGINT);
+		VAR baseType: SyntaxTree.Type; imm,mem: IntermediateCode.Operand; dim,size: LONGINT;
+			variable: SyntaxTree.Variable; i: LONGINT; initializerOp: Operand;
+		BEGIN
+			type := type.resolved;
+			IF type IS SyntaxTree.RecordType THEN
+				WITH type: SyntaxTree.RecordType DO
+					baseType := type.baseType;
+					IF baseType # NIL THEN
+						baseType := baseType.resolved;
+						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
+						InitFields(baseType,adr,offset);
+					END;
+					variable := type.recordScope.firstVariable;
+					WHILE variable # NIL DO
+						IF variable.initializer # NIL THEN
+							Evaluate(variable.initializer,initializerOp);
+							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
+							Emit(Mov(position,mem,initializerOp.op));
+							ReleaseOperand(initializerOp);
+							ReleaseIntermediateOperand(mem);
+						END;					
+						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
+						variable := variable.nextVariable
+					END;
+				END;
+			ELSIF (type IS SyntaxTree.ArrayType) THEN
+				WITH type: SyntaxTree.ArrayType DO
+					IF type.form = SyntaxTree.Static THEN
+						baseType := type.arrayBase;
+						size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+						FOR i := 0 TO type.staticLength-1 DO
+							InitFields(baseType,adr,offset+i*size);
+						END;
+					END;
+				END;
+			ELSIF type IS SyntaxTree.MathArrayType THEN
+				WITH type: SyntaxTree.MathArrayType DO
+					IF type.form = SyntaxTree.Open THEN
+						dim := DynamicDim(type);
+						imm := IntermediateCode.Immediate(addressType,dim);
+						PutMathArrayFieldOffset(adr,imm,MathDimOffset,offset);
+						baseType := SemanticChecker.ArrayBase(type,dim);
+						IF baseType = NIL THEN size := 0 ELSE size := system.AlignedSizeOf(baseType) END;
+						imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,size));
+						PutMathArrayFieldOffset(adr,imm,MathElementSizeOffset,offset);
+						ReleaseIntermediateOperand(imm);
+						(* flags remain empty (=0) for open array *)
+					ELSIF type.form = SyntaxTree.Static THEN
+						baseType := type.arrayBase;
+						size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+						FOR i := 0 TO type.staticLength-1 DO
+							InitFields(baseType,adr,offset+i*size);
+						END;
+					END;
+				END;
+			END;
+		END InitFields;
+
+		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable);
+		VAR type: SyntaxTree.Type; operand: Operand; tmp: IntermediateCode.Operand; reference: SyntaxTree.Expression;
+		BEGIN
+			type := variable.type.resolved;
+			IF (type IS SyntaxTree.MathArrayType) THEN
+				WITH type: SyntaxTree.MathArrayType DO
+					IF type.form = SyntaxTree.Open THEN
+						Symbol(variable,operand);
+						InitFields(type, operand.tag,0);
+					ELSIF type.form = SyntaxTree.Tensor THEN
+						Symbol(variable, operand);
+						MakeMemory(tmp,operand.op,addressType,0);
+						ReleaseOperand(operand);
+						Emit(Mov(position,tmp, nil ) );
+						ReleaseIntermediateOperand(tmp);
+					END;
+				END;
+			ELSE
+				Symbol(variable,operand);
+				IF variable.initializer # NIL THEN
+					reference := SyntaxTree.NewSymbolDesignator(variable.initializer.position,NIL,variable);
+					reference.SetType(variable.type.resolved);
+					reference.SetAssignable(TRUE);
+					Assign(reference,variable.initializer);
+				END;
+				InitFields(type, operand.op,0);
+				ReleaseOperand(operand);
+			END;
+		END InitVariable;
+
+		PROCEDURE MathArrayDim(type: SyntaxTree.MathArrayType; CONST base: IntermediateCode.Operand; VAR result: Operand);
+		VAR end: Label;
+		BEGIN
+			IF type.form = SyntaxTree.Tensor THEN
+				InitOperand(result,ModeValue);
+				ReuseCopy(result.op,base);
+				end := NewLabel();
+				BreqL(end,result.op,IntermediateCode.Immediate(addressType,0));
+				Emit(MovReplace(position,result.op,IntermediateCode.Memory(addressType,result.op,ToMemoryUnits(system,MathDimOffset*addressType.sizeInBits))));
+				SetLabel(end);
+				Convert(result.op,int32);
+			ELSE
+				InitOperand(result,ModeValue);
+				IntermediateCode.InitImmediate(result.op, int32, SemanticChecker.Dimension(type,{SyntaxTree.Open, SyntaxTree.Static}));
+			END
+		END MathArrayDim;
+
+		PROCEDURE PutMathArrayField(base,value: IntermediateCode.Operand; fieldOffset: LONGINT);
+		VAR mem: IntermediateCode.Operand; offset: LONGINT;
+		BEGIN
+			offset := ToMemoryUnits(system,fieldOffset*addressType.sizeInBits);
+			MakeMemory(mem,base,addressType,offset);
+			Emit(Mov(position,mem,value));
+			ReleaseIntermediateOperand(mem);
+		END PutMathArrayField;
+
+		PROCEDURE PutMathArrayFieldOffset(base,value: IntermediateCode.Operand; fieldOffset, offset: LONGINT);
+		VAR mem: IntermediateCode.Operand;
+		BEGIN
+			offset := offset + ToMemoryUnits(system,fieldOffset*addressType.sizeInBits);
+			MakeMemory(mem,base,addressType,offset);
+			Emit(Mov(position,mem,value));
+			ReleaseIntermediateOperand(mem);
+		END PutMathArrayFieldOffset;
+
+		PROCEDURE GetMathArrayField(VAR value: IntermediateCode.Operand; base: IntermediateCode.Operand; offset: LONGINT);
+		BEGIN
+			offset := ToMemoryUnits(system,offset*addressType.sizeInBits);
+			MakeMemory(value,base,addressType,offset);
+		END GetMathArrayField;
+
+		PROCEDURE PutMathArrayLenOrIncr(CONST base,value,dim: IntermediateCode.Operand; incr: BOOLEAN);
+		VAR offset: LONGINT; reg,mem: IntermediateCode.Operand;
+		BEGIN
+			IF incr THEN
+				offset := ToMemoryUnits(system,MathIncrOffset*addressType.sizeInBits);
+			ELSE
+				offset := ToMemoryUnits(system,MathLenOffset*addressType.sizeInBits);
+			END;
+			IF dim.mode=IntermediateCode.ModeImmediate THEN
+				PutMathArrayField(base,value,offset + ToMemoryUnits(system,SHORT(dim.intValue) * 2 * addressType.sizeInBits));
+			ELSE
+				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+				Emit(Mov(position,reg,dim));
+				Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,2*addressType.sizeInBits))));
+				Emit(Add(position,reg,reg,base));
+				MakeMemory(mem, reg, addressType, offset);
+				ReleaseIntermediateOperand(reg);
+				Emit(Mov(position,mem,value));
+				ReleaseIntermediateOperand(mem);
+			END;
+		END PutMathArrayLenOrIncr;
+
+		PROCEDURE PutMathArrayLength(base,value: IntermediateCode.Operand; dim: LONGINT);
+		BEGIN
+			PutMathArrayField(base,value,MathLenOffset + dim * 2);
+		END PutMathArrayLength;
+
+		PROCEDURE PutMathArrayIncrement(base,value: IntermediateCode.Operand; dim: LONGINT);
+		BEGIN
+			PutMathArrayField(base,value,MathIncrOffset + dim * 2);
+		END PutMathArrayIncrement;
+
+		PROCEDURE GetMathArrayIncrement(type: SyntaxTree.MathArrayType; CONST operand: Operand; VAR dim: IntermediateCode.Operand; check: BOOLEAN; VAR result: Operand);
+		BEGIN
+			MathArrayLenOrIncr(type,operand,dim,TRUE,check,result);
+		END GetMathArrayIncrement;
+
+		PROCEDURE GetMathArrayLength(type: SyntaxTree.MathArrayType; CONST operand: Operand; VAR dim: IntermediateCode.Operand; check: BOOLEAN; VAR result: Operand);
+		BEGIN
+			MathArrayLenOrIncr(type,operand,dim,FALSE,check,result);
+		END GetMathArrayLength;
+
+		PROCEDURE GetMathArrayLengthAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: LONGINT; check: BOOLEAN; VAR result: Operand);
+		VAR dimOp: IntermediateCode.Operand;
+		BEGIN
+			dimOp := IntermediateCode.Immediate(int32, dim);
+			GetMathArrayLength(type, operand, dimOp, check, result);
+		END GetMathArrayLengthAt;
+
+		PROCEDURE GetMathArrayIncrementAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: LONGINT; check: BOOLEAN; VAR result: Operand);
+		VAR dimOp: IntermediateCode.Operand;
+		BEGIN
+			dimOp := IntermediateCode.Immediate(int32, dim);
+			GetMathArrayIncrement(type, operand, dimOp, check, result);
+		END GetMathArrayIncrementAt;
+
+		PROCEDURE MathArrayLenOrIncr(type: SyntaxTree.MathArrayType; CONST operand: Operand; VAR dim: IntermediateCode.Operand; increment: BOOLEAN; check: BOOLEAN; VAR result: Operand );
+		VAR val: LONGINT; res,res2: IntermediateCode.Operand; end,next: Label; t: SyntaxTree.Type; imm: IntermediateCode.Operand; hasDynamicPart: BOOLEAN;
+			offset: LONGINT;
+		BEGIN
+			IF increment THEN
+				offset := MathIncrOffset;
+			ELSE
+				offset := MathLenOffset;
+			END;
+			INC(offset,operand.dimOffset*2);
+			IF check & (type.form = SyntaxTree.Tensor) & ~isUnchecked THEN
+				TrapC(BrneL,operand.tag,IntermediateCode.Immediate(addressType,0),IndexCheckTrap);
+			END;
+			(* static dimension *)
+			IF  dim.mode = IntermediateCode.ModeImmediate THEN
+				IF check & (type.form = SyntaxTree.Tensor) THEN
+					DimensionCheck(operand.tag,dim,BrltL);
+				END;
+				val := SHORT(dim.intValue);
+				IF type.form # SyntaxTree.Tensor THEN
+					t := SemanticChecker.ArrayBase(type,val);
+					type := t.resolved(SyntaxTree.MathArrayType);
+					IF type.form = SyntaxTree.Static THEN
+						IF increment THEN
+							res := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,type.staticIncrementInBits));
+						ELSE
+							res := IntermediateCode.Immediate(addressType,type.staticLength);
+						END;
+						InitOperand(result,ModeValue);
+						result.op := res;
+						RETURN;
+					END;
+				END;
+				offset := ToMemoryUnits(system, (val*2+offset)*addressType.sizeInBits);
+				MakeMemory(res,operand.tag,addressType,offset);
+				(*
+				res := IntermediateCode.Memory(addressType,operand.tag,offset);
+				*)
+				InitOperand(result,ModeValue);
+				result.op := res;
+			ELSE
+				Convert(dim,addressType);
+				IF check THEN
+					IF type.form = SyntaxTree.Tensor THEN
+						DimensionCheck(operand.tag,dim,BrltL);
+					ELSIF isUnchecked THEN (* do nothing *)
+					ELSE
+						TrapC(BrltL,dim,IntermediateCode.Immediate(addressType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
+					END;
+				END;
+				end := NewLabel(); next := NIL;
+
+				IntermediateCode.InitRegister(res,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+				Emit(Mov(position,res,dim));
+				Convert(res,int32);
+
+				t := type; val := operand.dimOffset; hasDynamicPart := FALSE;
+				WHILE t IS SyntaxTree.MathArrayType DO
+					type := t(SyntaxTree.MathArrayType);
+					IF type.form = SyntaxTree.Static THEN
+						imm := IntermediateCode.Immediate(int32,val);
+						next := NewLabel();
+						BrneL(next,imm,res);
+						IF increment THEN
+							imm := IntermediateCode.Immediate(int32,ToMemoryUnits(system,type.staticIncrementInBits));
+						ELSE
+							imm := IntermediateCode.Immediate(int32,type.staticLength);
+						END;
+						Emit(MovReplace(position,res,imm));
+						BrL(end);
+					ELSE hasDynamicPart := TRUE;
+					END;
+					t := type.arrayBase.resolved;
+					val := val + 1;
+					IF next # NIL THEN SetLabel(next) END;
+				END;
+				IF hasDynamicPart THEN
+					IntermediateCode.InitRegister(res2,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mov(position,res2,dim));
+					Emit(Mul(position,res2,res2,IntermediateCode.Immediate(addressType,2*ToMemoryUnits(system,addressType.sizeInBits))));
+					imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,offset*addressType.sizeInBits));
+					Emit(Add(position,res2,res2,imm));
+					Emit(Add(position,res2,res2,operand.tag));
+					IntermediateCode.MakeMemory(res2,int32);
+					Emit(MovReplace(position,res,res2));
+					ReleaseIntermediateOperand(res2);
+				END;
+				SetLabel(end);
+				Convert(res,int32);
+				InitOperand(result,ModeValue);
+				result.op := res;
+			END;
+		END MathArrayLenOrIncr;
+
+
+
+		PROCEDURE ArrayLen(type: SyntaxTree.ArrayType; VAR operand: Operand; VAR dim: IntermediateCode.Operand; VAR result: Operand );
+		VAR val: LONGINT; res,res2: IntermediateCode.Operand; end,next: Label; t: SyntaxTree.Type; imm: IntermediateCode.Operand; hasDynamicPart: BOOLEAN;
+			offset: LONGINT;
+		BEGIN
+			offset := operand.dimOffset+DynamicDim(type)-1;
+			IF  dim.mode = IntermediateCode.ModeImmediate THEN
+				ASSERT(type.form IN {SyntaxTree.Open});
+				val := SHORT(dim.intValue);
+				t := SemanticChecker.ArrayBase(type,val);
+				type := t.resolved(SyntaxTree.ArrayType);
+				IF type.form = SyntaxTree.Static THEN
+					res := IntermediateCode.Immediate(addressType,type.staticLength);
+				ELSE
+					offset := ToMemoryUnits(system, (offset-val)*addressType.sizeInBits);
+					res := IntermediateCode.Memory(addressType,operand.tag,offset);
+				END;
+				UseIntermediateOperand(res);
+				InitOperand(result,ModeValue);
+				result.op := res;
+			ELSE
+				Convert(dim,addressType);
+				IF ~isUnchecked THEN
+					TrapC(BrltL,dim,IntermediateCode.Immediate(addressType,SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static})), IndexCheckTrap);
+				END;
+
+				end := NewLabel(); next := NIL;
+
+				(* ReuseCopy(dim,res); *)
+				IntermediateCode.InitRegister(res,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType, IntermediateCode.GeneralPurposeRegister));
+				Emit(Mov(position,res,dim));
+				Convert(res,int32);
+
+				Convert(res,int32);
+				t := type; val := operand.dimOffset; hasDynamicPart := FALSE;
+				WHILE t IS SyntaxTree.ArrayType DO
+					type := t(SyntaxTree.ArrayType);
+					IF type.form = SyntaxTree.Static THEN
+						imm := IntermediateCode.Immediate(int32,val);
+						next := NewLabel();
+						BrneL(next,imm,res);
+						imm := IntermediateCode.Immediate(int32,type.staticLength);
+						Emit(MovReplace(position,res,imm));
+						BrL(end);
+					ELSE hasDynamicPart := TRUE;
+					END;
+					t := type.arrayBase.resolved;
+					val := val + 1;
+					IF next # NIL THEN SetLabel(next) END;
+				END;
+				IF hasDynamicPart THEN
+					ReuseCopy(res2,dim); (* dim is now in register res2 *)
+					Convert(res2,addressType);
+					Emit(Mul(position,res2,res2,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,addressType.sizeInBits))));
+					imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,offset*addressType.sizeInBits));
+					Emit(Sub(position,res2,imm,res2));
+					Emit(Add(position,res2,res2,operand.tag));
+					IntermediateCode.MakeMemory(res2,int32);
+					Emit(MovReplace(position,res,res2));
+					ReleaseIntermediateOperand(res2);
+				END;
+				SetLabel(end);
+				Convert(res,int32);
+				InitOperand(result,ModeValue);
+				result.op := res;
+			END;
+		END ArrayLen;
+
+		(**
+			create a temporary variable in current scope
+		**)
+		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN): SyntaxTree.Variable;
+		VAR name: SyntaxTree.Identifier; string: SyntaxTree.IdentifierString ; variable: SyntaxTree.Variable;
+		scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
+		BEGIN
+			IF ~register THEN
+				variable := temporaries.GetFreeVariable(type, index);
+			ELSE
+				index := temporaries.registerIndex; INC(temporaries.registerIndex);
+			END;
+			scope := currentScope;
+
+			IF variable = NIL THEN
+				COPY("@hiddenIRVar",string);
+				Basic.AppendNumber(string,index);
+				name := SyntaxTree.NewIdentifier(string);
+
+				variable := SyntaxTree.NewVariable(Diagnostics.Invalid,name);
+				variable.SetType(type);
+				variable.SetAccess(SyntaxTree.Hidden);
+				IF ~register THEN
+					temporaries.AddVariable(variable);
+
+					IF scope.lastVariable # NIL THEN
+						offset := scope.lastVariable.offsetInBits;
+					ELSE
+						offset := 0;
+					END;
+					DEC(offset,system.SizeOf(variable.type));
+					Basic.Align(offset,-system.AlignmentOf(system.variableAlignment,variable.type));
+					variable(SyntaxTree.Variable).SetOffset(offset);
+
+					scope.AddVariable(variable(SyntaxTree.Variable));
+					scope.EnterSymbol(variable, duplicate);
+					ASSERT(~duplicate);
+					InitVariable(variable(SyntaxTree.Variable));
+				ELSE
+					variable.SetUseRegister(TRUE);
+					variable(SyntaxTree.Variable).SetOffset(0);
+				END;
+			ELSE
+				InitVariable(variable(SyntaxTree.Variable));
+				(*
+				ASSERT(variable.type.resolved = type.resolved)
+				*)
+			END;
+			RETURN variable(SyntaxTree.Variable)
+		END GetTemporaryVariable;
+
+		PROCEDURE GetMathArrayDescriptorType(dimensions: LONGINT): SyntaxTree.Type;
+		VAR name: ARRAY 32 OF CHAR; symbol: SyntaxTree.Symbol; typeDeclaration: SyntaxTree.TypeDeclaration;
+			recordType: SyntaxTree.RecordType; type: SyntaxTree.Type;
+			recordScope: SyntaxTree.RecordScope; parentScope: SyntaxTree.Scope; identifier: SyntaxTree.Identifier;
+			i: LONGINT; duplicate: BOOLEAN;
+
+			PROCEDURE AddVariable(CONST name: ARRAY OF CHAR; type: SyntaxTree.Type);
+			VAR variable: SyntaxTree.Variable;
+			BEGIN
+				variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier(name));
+				variable.SetType(type);
+				recordScope.AddVariable(variable);
+			END AddVariable;
+
+
+		BEGIN
+			name := "@ArrayDescriptor";
+			Basic.AppendNumber(name,dimensions);
+			identifier := SyntaxTree.NewIdentifier(name);
+			parentScope := module.module.moduleScope;
+			symbol := parentScope.FindSymbol(identifier);
+			IF symbol # NIL THEN
+				typeDeclaration := symbol(SyntaxTree.TypeDeclaration);
+				type := typeDeclaration.declaredType;
+			ELSE
+				typeDeclaration := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier(name));
+				typeDeclaration.SetAccess(SyntaxTree.Hidden);
+				recordScope := SyntaxTree.NewRecordScope(parentScope);
+				recordType := SyntaxTree.NewRecordType( -1, parentScope, recordScope);
+				recordType.SetTypeDeclaration(typeDeclaration);
+				recordType.SetState(SyntaxTree.Resolved);
+				typeDeclaration.SetDeclaredType(recordType);
+				AddVariable("@ptr",system.anyType);
+				AddVariable("@adr",system.addressType);
+				AddVariable("@flags",system.addressType);
+				AddVariable("@dim",system.addressType);
+				AddVariable("@elementSize",system.addressType);
+				FOR i := 0 TO dimensions-1  DO
+					name := "@len";
+					Basic.AppendNumber(name,i);
+					AddVariable(name,system.addressType);
+					name := "@incr";
+					Basic.AppendNumber(name,i);
+					AddVariable(name,system.addressType);
+				END;
+				parentScope.AddTypeDeclaration(typeDeclaration);
+				parentScope.EnterSymbol(typeDeclaration,duplicate);
+				ASSERT(~duplicate);
+				type := recordType;
+			END;
+			RETURN type
+		END GetMathArrayDescriptorType;
+
+		PROCEDURE NewMathArrayDescriptor(op: Operand; dimensions: LONGINT);
+		VAR reg: IntermediateCode.Operand; type: SyntaxTree.Type;
+		BEGIN
+			type := GetMathArrayDescriptorType(dimensions);
+			Emit(Push(position,op.op));
+			(* push type descriptor *)
+			reg := TypeDescriptorAdr(type);
+			IF ~newObjectFile THEN
+				IntermediateCode.MakeMemory(reg,addressType);
+			END;
+			Emit(Push(position,reg));
+			ReleaseIntermediateOperand(reg);
+			(* push realtime flag: false by default *)
+			Emit(Push(position,false));
+			CallThis("Heaps","NewRec",3);
+		END NewMathArrayDescriptor;
+
+		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
+		VAR
+			p0,p1,p2,parameter: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
+			constructor: SyntaxTree.Procedure; s0,s1,s2: Operand; hint: HUGEINT;
+			i: LONGINT; formalParameter: SyntaxTree.Parameter;
+			tmp:IntermediateCode.Operand;
+			size: LONGINT; dim,openDim: LONGINT; pointer: IntermediateCode.Operand; t,t0,t1,t2: SyntaxTree.Type; trueL,falseL,ignore: Label;
+			exit,else,end: Label; procedureType: SyntaxTree.ProcedureType;
+			name: Basic.SegmentedName; symbol: Sections.Section; operand: Operand;
+			dest: IntermediateCode.Operand;
+			staticLength: LONGINT; itype: IntermediateCode.Type;
+			convert,isTensor: BOOLEAN;
+			flags: SET;
+			left: SyntaxTree.Expression;
+			call: SyntaxTree.Designator;
+			procedure: SyntaxTree.Procedure;
+			temporaryVariable: SyntaxTree.Variable;
+			dummy: IntermediateCode.Operand;
+			customBuiltin: SyntaxTree.CustomBuiltin;
+			isVarPar: ARRAY 3 OF BOOLEAN;
+			callsection: Sections.Section;
+			segmentedName: Basic.SegmentedName;
+
+			PROCEDURE CallBodies(self: IntermediateCode.Operand; type: SyntaxTree.Type);
+			VAR recordScope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; flags: LONGINT;
+				priority: IntermediateCode.Operand;
+				op,callop: Operand;
+			BEGIN
+				IF type = NIL THEN RETURN END;
+				type := type.resolved;
+				IF type IS SyntaxTree.PointerType THEN
+					type := type(SyntaxTree.PointerType).pointerBase.resolved
+				END;
+				IF type IS SyntaxTree.MathArrayType THEN RETURN END;
+				CallBodies(self,type(SyntaxTree.RecordType).baseType);
+				recordScope := type(SyntaxTree.RecordType).recordScope;
+				IF recordScope.bodyProcedure # NIL THEN
+					procedure := recordScope.bodyProcedure;
+					body := procedure.procedureScope.body;
+					Emit(Push(position,self));
+					IF body.isActive THEN
+						StaticCallOperand(callop,procedure);
+						Emit(Push(position,callop.op));
+						IF body.priority # NIL THEN Evaluate(body.priority,op); priority := op.op;
+							Convert(priority,int32);
+						ELSE priority := IntermediateCode.Immediate(int32,0)
+						END;
+						Emit(Push(position,priority));
+						ReleaseIntermediateOperand(priority);
+						flags := 0;
+						IF body.isSafe THEN
+							flags := 1;
+						END;
+						Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system,system.setType),flags)));
+						Emit(Push(position,self));
+						CallThis("Objects","CreateProcess",4)
+					ELSE
+						Emit(Push(position,self));
+						StaticCallOperand(callop,procedure);
+						Emit(Call(position,callop.op,ProcedureParametersSize(system,procedure)));
+					END;
+					Emit(Pop(position,self));
+				END;
+			END CallBodies;
+
+			PROCEDURE PushString(op: Operand; actualType: SyntaxTree.Type);
+			BEGIN
+				actualType := actualType.resolved;
+				IF actualType IS SyntaxTree.StringType THEN
+					Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
+				ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+					Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.ArrayType).staticLength)));
+				ELSE
+					tmp := op.tag;
+					IntermediateCode.MakeMemory(tmp,addressType);
+					Emit(Push(position,tmp));
+				END;
+				Emit(Push(position,op.op))
+			END PushString;
+
+			PROCEDURE PushTD(type: SyntaxTree.Type);
+			VAR op: IntermediateCode.Operand;
+			BEGIN
+				IF type = NIL THEN Emit(Push(position,IntermediateCode.Immediate(addressType,0)))
+				ELSIF type.resolved IS SyntaxTree.AnyType THEN Emit(Push(position,IntermediateCode.Immediate(addressType,1)))
+				ELSE
+					IF type.resolved IS SyntaxTree.PointerType THEN
+						type := type.resolved(SyntaxTree.PointerType).pointerBase;
+					END;
+					op := TypeDescriptorAdr(type.resolved);
+					IF ~newObjectFile THEN
+						IntermediateCode.MakeMemory(op,addressType);
+					END;
+					Emit(Push(position,op));
+				END
+			END PushTD;
+
+
+		BEGIN
+			IF Trace THEN TraceEnter("VisitBuiltinCallDesignator") END;
+
+			dest := destination; destination := emptyOperand;
+			p0 := NIL; p1 := NIL; p2 := NIL; len := x.parameters.Length();
+			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
+			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
+			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
+
+			CASE x.id OF
+
+			(* ---- COPY ----- *)
+			|Global.Copy:
+				CopyString(p1,p0); (* roles exchanged: COPY ( src => dest ) *)
+			(* ---- EXCL, INCL----- *)
+			|Global.Excl,Global.Incl:
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				Convert(s1.op,setType);
+				IF (s1.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
+					TrapC(BrltL,s1.op,IntermediateCode.Immediate(setType,setType.sizeInBits),IndexCheckTrap);
+				END;
+				ReuseCopy(res,s0.op);
+				ReleaseOperand(s0);
+				Reuse1(tmp,s1.op);
+				ReleaseOperand(s1);
+				Emit(Shl(position,tmp,IntermediateCode.Immediate(setType,1),s1.op));
+				IF x.id = Global.Excl THEN
+					Emit(Not(position,tmp,tmp));
+					Emit(And(position,res,res,tmp));
+				ELSE
+					Emit(Or(position,res,res,tmp));
+				END;
+				ReleaseIntermediateOperand(tmp);
+				Designate(p0,s0);
+				ToMemory(s0.op,setType,0);
+				Emit(Mov(position,s0.op,res));
+				ReleaseOperand(s0); ReleaseIntermediateOperand(res);
+			(* ---- GETPROCEDURE ----- *)
+			|Global.GetProcedure:
+				Designate(p0,s0);
+				PushString(s0,p0.type);
+				Designate(p1,s1);
+				PushString(s1,p1.type);
+				procedureType := p2.type.resolved(SyntaxTree.ProcedureType);
+				IF (procedureType.firstParameter = NIL) OR (procedureType.firstParameter.access = SyntaxTree.Hidden) THEN PushTD(NIL)
+				ELSE PushTD(procedureType.firstParameter.type)
+				END;
+				PushTD(procedureType.returnType);
+
+				Designate(p2,s2);
+				Emit(Push(position,s2.op));
+				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
+				CallThis("Modules","GetProcedure", 7);
+			(* ---- ASH, LSH, ROT ----- *)
+			|Global.Ash, Global.Asr, Global.Lsh, Global.Rot, Global.Ror:
+				Evaluate(p0,s0);
+				IF (x.id = Global.Lsh) OR (x.id = Global.Rot) OR (x.id = Global.Ror)THEN
+					(* make unsigned arguments in order to produced a logical shift *)
+					IF s0.op.type.form = IntermediateCode.SignedInteger THEN
+						convert:= TRUE;
+						itype := s0.op.type;
+						IntermediateCode.InitType(itype,IntermediateCode.UnsignedInteger,s0.op.type.sizeInBits);
+						Convert(s0.op,itype);
+					ELSE
+						convert := FALSE;
+					END;
+				END;
+				Evaluate(p1,s1);
+				IF IsIntegerConstant(p1,hint) THEN
+					ReuseCopy(reg,s0.op);
+					IF hint  > 0 THEN
+						IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
+						IF x.id = Global.Ash THEN Emit(Shl(position,reg,s0.op,s1.op))
+						ELSIF x.id = Global.Lsh THEN Emit(Shl(position,reg,s0.op,s1.op))
+						ELSIF x.id = Global.Rot THEN Emit(Rol(position,reg,s0.op,s1.op))
+						ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,s0.op,s1.op))
+						ELSIF x.id = Global.Asr THEN Emit(Shr(position,reg,s0.op,s1.op))
+						END;
+					ELSIF hint < 0 THEN
+						IntermediateCode.InitImmediate(s1.op,s1.op.type,-hint);
+						IF x.id = Global.Ash THEN Emit(Shr(position,reg,s0.op,s1.op));
+						ELSIF x.id = Global.Lsh THEN Emit(Shr(position,reg,s0.op,s1.op));
+						ELSIF x.id = Global.Rot THEN Emit(Ror(position,reg,s0.op,s1.op));
+						ELSIF x.id = Global.Ror THEN Emit(Rol(position,reg,s0.op,s1.op))
+						ELSIF x.id = Global.Asr THEN Emit(Shl(position,reg,s0.op,s1.op))
+						END;
+					END;
+					ReleaseOperand(s0); ReleaseOperand(s1);
+				ELSE
+					exit := NewLabel();
+					end := NewLabel();
+					ReuseCopy(reg,s0.op);
+					BrgeL(exit,s1.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,p1.type),0));
+					Reuse1(tmp,s1.op);
+					Emit(Neg(position,tmp,s1.op));
+					Convert(tmp,s1.op.type);
+					IF x.id = Global.Ash THEN Emit(Shr(position,reg,reg,tmp))
+					ELSIF x.id = Global.Lsh THEN Emit(Shr(position,reg,reg,tmp))
+					ELSIF x.id = Global.Rot THEN Emit(Ror(position,reg,reg,tmp))
+					ELSIF x.id = Global.Ror THEN Emit(Rol(position,reg,reg,tmp))
+					ELSIF x.id = Global.Asr THEN Emit(Shl(position,reg,reg,tmp))
+					END;
+					ReleaseIntermediateOperand(tmp);
+					BrL(end);
+					SetLabel(exit);
+					ReuseCopy(tmp,s1.op);
+					Convert(tmp,s1.op.type);
+					IF x.id = Global.Ash THEN Emit(Shl(position,reg,reg,tmp))
+					ELSIF x.id = Global.Lsh THEN Emit(Shl(position,reg,reg,tmp))
+					ELSIF x.id = Global.Rot THEN Emit(Rol(position,reg,reg,tmp))
+					ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,reg,tmp))
+					ELSIF x.id = Global.Asr THEN Emit(Shr(position,reg,reg,tmp))
+					END;
+					ReleaseIntermediateOperand(tmp);
+					SetLabel(end);
+					ReleaseOperand(s0); ReleaseOperand(s1);
+				END;
+				InitOperand(result,ModeValue);
+				IF convert THEN
+					itype := reg.type;
+					IntermediateCode.InitType(itype,IntermediateCode.SignedInteger,reg.type.sizeInBits);
+					Convert(reg,itype);
+				END;
+				result.op := reg;
+			(* ---- CAP ----- *)
+			|Global.Cap:
+				Evaluate(p0,result);
+				ReuseCopy(reg,result.op);
+				ReleaseIntermediateOperand(result.op);
+				ignore := NewLabel();
+				BrltL(ignore, reg,IntermediateCode.Immediate(IntermediateCode.GetType(system,system.characterType),ORD("a")));
+				BrltL(ignore,IntermediateCode.Immediate(IntermediateCode.GetType(system,system.characterType),ORD("z")),reg);
+				Emit(And(position,reg,reg,IntermediateCode.Immediate(IntermediateCode.GetType(system,system.characterType),5FH)));
+				SetLabel(ignore);
+				result.op := reg;
+			(* ---- CHR ----- *)
+			|Global.Chr, Global.Chr32:
+				Evaluate(p0,result);
+				Convert(result.op,IntermediateCode.GetType(system,x.type));
+			|Global.Entier, Global.EntierH:
+				Evaluate(p0,result);
+				Convert(result.op,IntermediateCode.GetType(system,x.type));
+			(* ---- MIN and MAX ----- *)
+			|Global.Max,Global.Min:
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				Reuse2(res,s0.op,s1.op);
+				else := NewLabel();
+				IF x.id = Global.Max THEN BrltL(else,s0.op,s1.op);
+				ELSE BrltL(else,s1.op,s0.op) END;
+				Emit(Mov(position,res,s0.op));
+				ReleaseOperand(s0);
+				end := NewLabel();
+				BrL(end);
+				SetLabel(else);
+				Emit(MovReplace(position,res,s1.op));
+				SetLabel(end);
+				ReleaseOperand(s1);
+				InitOperand(result,ModeValue);
+				result.op := res;
+			(* ---- ODD ----- *)
+			|Global.Odd:
+				IF ~conditional THEN
+					ConditionToValue(x)
+				ELSE
+					Evaluate(p0,result);
+					res := IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1);
+					Reuse1(res,result.op);
+					Emit(And(position,res,result.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1)));
+					ReleaseIntermediateOperand(result.op);
+					result.op := res;
+					BreqL(trueLabel,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1),result.op);
+					ReleaseOperand(result);
+					BrL(falseLabel);
+				END;
+			(* ---- ORD ----- *)
+			|Global.Ord, Global.Ord32:
+				Evaluate(p0,result);
+				Convert(result.op,IntermediateCode.GetType(system,x.type));
+			(* ---- SHORT, LONG ----- *)
+			|Global.Short, Global.Long:
+				Evaluate(p0,result);
+				IF x.type IS SyntaxTree.ComplexType THEN
+					componentType := x.type(SyntaxTree.ComplexType).componentType;
+					Convert(result.op, IntermediateCode.GetType(system, componentType));
+					Convert(result.tag, IntermediateCode.GetType(system, componentType));
+				ELSE
+					Convert(result.op,IntermediateCode.GetType(system,x.type));
+				END
+			(* ---- HALT, SYSTEM.HALT----- *)
+			|Global.Halt, Global.systemHalt:
+				Evaluate(p0,result);
+				ASSERT(result.op.mode = IntermediateCode.ModeImmediate);
+				Emit(Trap(position,SHORT(result.op.intValue)));
+			(* ---- ASSERT ----- *)
+			|Global.Assert:
+				IF ~backend.noAsserts THEN
+					trueL := NewLabel();
+					falseL := NewLabel();
+					Condition(p0,trueL,falseL);
+
+					IF p1 = NIL THEN val := AssertTrap
+					ELSE val := p1.resolved(SyntaxTree.IntegerValue).value;
+					END;
+
+					SetLabel(falseL);
+					Emit(Trap(position,val));
+					SetLabel(trueL);
+				END;
+
+				(*
+				Emit(TrapC(result.op,val);
+				*)
+			(* ---- INC, DEC----- *)
+			|Global.Inc,Global.Dec:
+				Expression(p0); adr := result.op;
+				LoadValue(result,p0.type); l := result;
+				IF p1 = NIL THEN r.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1);
+				ELSE Expression(p1); LoadValue(result,p1.type); r := result;
+				END;
+				IF x.id = Global.Inc THEN
+					Emit(Add(position,l.op,l.op,r.op));
+				ELSE
+					Emit(Sub(position,l.op,l.op,r.op));
+				END;
+				ReleaseOperand(l); ReleaseOperand(r);
+			(* ---- LEN ----- *)
+			|Global.Len: (* dynamic length, static length done by checker  *)
+				Designate(p0,operand);
+				IF p1 = NIL THEN
+					InitOperand(l,ModeValue);
+					l.op := IntermediateCode.Immediate(int32,0);
+				ELSE
+					Evaluate(p1,l);
+				END;
+				IF p0.type.resolved IS SyntaxTree.ArrayType THEN
+					ArrayLen(p0.type.resolved(SyntaxTree.ArrayType),operand,l.op, result);
+					ReleaseOperand(operand); ReleaseOperand(l);
+				ELSIF p0.type.resolved IS SyntaxTree.MathArrayType THEN
+					ASSERT(p1 # NIL);
+					IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+						Dereference(operand,p0.type.resolved,FALSE);
+					END;
+					GetMathArrayLength(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op, TRUE, result);
+					ReleaseOperand(operand); ReleaseOperand(l);
+				ELSE HALT(100);
+				END;
+				Convert(result.op,IntermediateCode.GetType(system, x.type));
+
+			(* ---- FIRST ---- *)
+			|Global.First:
+				IF p0 IS SyntaxTree.RangeExpression THEN (* optimization, could also work with designate *)
+					Evaluate(p0(SyntaxTree.RangeExpression).first, result)
+				ELSE
+					Designate(p0, result)
+				END
+
+			(* ---- LAST ---- *)
+			|Global.Last:
+				IF p0 IS SyntaxTree.RangeExpression THEN (* optimization, could also work with designate *)
+					Evaluate(p0(SyntaxTree.RangeExpression).last, result)
+				ELSE
+					Designate(p0, result);
+					(* make sure result.op is a register *)
+					tmp := result.op;
+					ReuseCopy(result.op, result.op);
+					ReleaseIntermediateOperand(tmp);
+					(* add offset to result.op *)
+					IntermediateCode.AddOffset(result.op, ToMemoryUnits(system, system.SizeOf(system.longintType)))
+				END
+
+			(* ---- STEP ---- *)
+			|Global.Step:
+				IF p0 IS SyntaxTree.RangeExpression THEN (* optimization, could also work with designate *)
+					Evaluate(p0(SyntaxTree.RangeExpression).step, result)
+				ELSE
+					Designate(p0, result);
+
+					(* make sure result.op is a register *)
+					tmp := result.op;
+					ReuseCopy(result.op, result.op);
+					ReleaseIntermediateOperand(tmp);
+
+					(* add offset to result.op *)
+					IntermediateCode.AddOffset(result.op, 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)))
+				END
+
+			(* ---- RE ---- *)
+			|Global.Re:
+				IF p0.type.resolved IS SyntaxTree.ComplexType THEN
+					Designate(p0, result)
+				ELSE
+					Evaluate(p0, result)
+				END
+
+			(* ---- IM ---- *)
+			|Global.Im:
+				ASSERT(p0.type.resolved IS SyntaxTree.ComplexType);
+				componentType := p0.type.resolved(SyntaxTree.ComplexType).componentType;
+
+				Designate(p0, result);
+
+				(* make sure result.op is a register *)
+				tmp := result.op;
+				ReuseCopy(result.op, result.op);
+				ReleaseIntermediateOperand(tmp);
+				(* add offset to result.op *)
+				IntermediateCode.AddOffset(result.op, ToMemoryUnits(system, system.SizeOf(componentType)));
+
+			(* ---- ABS ----- *)
+			|Global.Abs:
+				Evaluate(p0,operand);
+				type := p0.type.resolved;
+				InitOperand(result,ModeValue);
+				Reuse1a(result.op,operand.op,dest);
+				Emit(Abs(position,result.op,operand.op));
+				ReleaseOperand(operand);
+			(* ---- NEW ----- *)
+			|Global.New:
+				(*! the following code is only correct for "standard" Oberon calling convention *)
+				type := p0.type.resolved;
+				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType)
+				THEN
+					temporaryVariable := GetTemporaryVariable(type, FALSE);
+					IF temporaryVariable # NIL THEN
+						Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+					ELSE
+						Designate(p0,l);
+					END;
+					(* l.op contains address of pointer to record *)
+					Emit(Push(position,l.op)); (* address for use after syscall *)
+					Emit(Push(position,l.op));
+					ReleaseOperand(l);
+
+					(* push type descriptor *)
+					reg := TypeDescriptorAdr(p0.type.resolved(SyntaxTree.PointerType).pointerBase.resolved);
+					IF ~newObjectFile THEN
+						IntermediateCode.MakeMemory(reg,addressType);
+					END;
+					Emit(Push(position,reg));
+					ReleaseIntermediateOperand(reg);
+
+					(* push realtime flag *)
+					IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
+					ELSE Emit(Push(position,false));
+					END;
+
+					CallThis("Heaps","NewRec", 3);
+					(* check allocation success, if not successful then do not call initializers and bodies *)
+					IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Pop(position,pointer));
+					MakeMemory(reg,pointer,addressType,0);
+					ReleaseIntermediateOperand(pointer);
+					pointer := reg;
+					exit := NewLabel();
+					BreqL(exit,pointer,nil);
+					Emit(Push(position,pointer));
+
+					(* initialize fields *)
+					InitFields(p0.type.resolved(SyntaxTree.PointerType).pointerBase.resolved, pointer,0);
+
+					(* call initializer *)
+					constructor := GetConstructor(p0.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType));
+					IF constructor # NIL THEN
+						(*! should be unified with ProcedureCallDesignator *)
+						Emit(Push(position,pointer));
+						ReleaseIntermediateOperand(pointer);
+						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
+						FOR i := 1 TO x.parameters.Length()-1 DO
+							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+							formalParameter := formalParameter.nextParameter;
+						END;
+						(* static call of the constructor *)
+						Global.GetSymbolSegmentedName(constructor,name);
+						ASSERT(~constructor.isInline);
+						IF constructor.scope.ownerModule # module.module THEN
+							symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
+						ELSE
+							symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
+						END;
+						Emit(Call(position,IntermediateCode.Address(addressType, symbol.name, GetFingerprint(constructor), 0),ProcedureParametersSize(system,constructor)));
+					ELSE
+						ReleaseIntermediateOperand(pointer);
+					END;
+
+					IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Pop(position,pointer));
+
+					IF temporaryVariable # NIL THEN
+						Designate(p0,l);
+						ToMemory(l.op,addressType,0);
+						Emit(Mov(position,l.op,pointer));
+						ReleaseOperand(l);
+						result.tag := emptyOperand;
+					END;
+
+					(* call bodies *)
+					CallBodies(pointer,p0.type);
+					ReleaseIntermediateOperand(pointer);
+
+					IF temporaryVariable # NIL THEN
+						end := NewLabel();
+						BrL(end);
+						SetLabel(exit);
+						Designate(p0,l);
+						ToMemory(l.op,addressType,0);
+						Emit(Mov(position,l.op,nil)); (* write NIL to adr *)
+						ReleaseOperand(l);
+						SetLabel(end);
+					ELSE
+						SetLabel(exit);
+					END;
+
+				ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType)  THEN
+					type := type(SyntaxTree.PointerType).pointerBase.resolved;
+
+					dim := 0;
+
+					IF p1 # NIL THEN
+						FOR i := 1 TO x.parameters.Length()-1 DO
+							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							parameter := x.parameters.GetExpression(i);
+							Evaluate(parameter,r);
+							IF (r.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
+								IntermediateCode.InitImmediate(tmp,IntermediateCode.GetType(system,parameter.type),0);
+								TrapC(BrgeL,r.op,tmp,ArraySizeTrap);
+							END;
+							Emit(Push(position,r.op));
+							IF i=1 THEN
+								ReuseCopy(reg,r.op);
+							ELSE
+								Emit(Mul(position,reg,reg,r.op)); (*! optimize the multiplication of immediate operands *)
+							END;
+							ReleaseOperand(r);
+							INC(dim);
+						END;
+						Convert(reg,addressType);
+					ELSE
+						IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						Emit(Mov(position,reg,IntermediateCode.Immediate(addressType,1)));
+					END;
+
+					openDim := dim;
+					ASSERT(~(type IS SyntaxTree.ArrayType) OR (type(SyntaxTree.ArrayType).form = SyntaxTree.Static));
+
+					(*! the following code is only correct for "standard" Oberon calling convention *)
+					IF SemanticChecker.ContainsPointer(type) THEN
+						IF type IS SyntaxTree.ArrayType THEN
+							staticLength := 1;
+							WHILE (type IS SyntaxTree.ArrayType) DO (* static array *)
+								staticLength := staticLength * type(SyntaxTree.ArrayType).staticLength;
+								type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							END;
+							tmp := IntermediateCode.Immediate(reg.type,staticLength);
+							Emit(Mul(position,reg,reg,tmp));
+						END;
+						Designate(p0,l);
+						IF openDim > 0 THEN
+							Emit(Push(position,l.op)); (* address for use after syscall *)
+						END;
+						Emit(Push(position,l.op)); (* address *)
+						ReleaseOperand(l);
+
+						tmp := TypeDescriptorAdr(type);
+						IF ~newObjectFile THEN
+							IntermediateCode.MakeMemory(tmp,addressType);
+						END;
+						Emit(Push(position,tmp)); (* type descriptor *)
+						ReleaseIntermediateOperand(tmp);
+
+						Emit(Push(position,reg)); (* number Elements *)
+						ReleaseIntermediateOperand(reg);
+						tmp := IntermediateCode.Immediate(addressType,dim);
+						Emit(Push(position,tmp)); (* dimensions *)
+						(* push realtime flag *)
+						IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
+						ELSE Emit(Push(position,false));
+						END;
+						CallThis("Heaps","NewArr",5)
+					ELSE
+						size := ToMemoryUnits(system,system.SizeOf(type));
+						IF (size # 1) THEN
+							Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+						END;
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrayDimTable * system.addressSize+ system.addressSize+  system.addressSize * 2 * (openDim DIV 2)));
+						(* DIV 2 term for some strange alignment, don't understand it at the moment - copied from PCC *)
+						Emit(Add(position,reg,reg,tmp));
+						Designate(p0,l);
+						IF openDim >0 THEN
+							Emit(Push(position,l.op)); (* address for use after syscall *)
+						END;
+						Emit(Push(position,l.op)); (* address for syscall *)
+						ReleaseOperand(l); (* pointer address *)
+
+						Emit(Push(position,reg)); (* size *)
+						ReleaseIntermediateOperand(reg);
+						(* push realtime flag *)
+						IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
+						ELSE Emit(Push(position,false));
+						END;
+						CallThis("Heaps","NewSys", 3)
+					END;
+
+					IF openDim > 0 THEN
+						IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						Emit(Pop(position,adr));
+						ToMemory(adr,addressType,0);
+						ReuseCopy(tmp,adr);
+						ReleaseIntermediateOperand(adr);
+						adr := tmp;
+
+						else := NewLabel();
+						BreqL(else,adr,IntermediateCode.Immediate(addressType,0));
+
+						i := openDim-1;
+						IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						WHILE (i >= 0) DO
+							Emit(Pop(position,reg));
+							IntermediateCode.InitMemory(res,addressType,adr,ToMemoryUnits(system,ArrayDimTable* system.addressSize + system.addressSize*((openDim-1)-i)));
+							Emit(Mov(position,res,reg));
+							DEC(i);
+						END;
+						ReleaseIntermediateOperand(adr);
+						ReleaseIntermediateOperand(reg);
+
+						exit := NewLabel();
+						BrL(exit);
+						SetLabel(else);
+						(* else part: array could not be allocated *)
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,openDim*system.addressSize));
+						Emit(Add(position,sp,sp,tmp));
+						SetLabel(exit);
+					END;
+				ELSIF (type IS SyntaxTree.MathArrayType) THEN
+					IF t1 IS SyntaxTree.MathArrayType THEN (* NEW(a, array) *)
+						IF GetRuntimeProcedure("FoxArrayBase","AllocateTensorX",procedure,TRUE) THEN
+							left := SyntaxTree.NewSymbolDesignator(Diagnostics.Invalid,NIL,procedure);
+							procedureType := procedure.type(SyntaxTree.ProcedureType);
+							left.SetType(procedure.type);
+							formalParameter := procedureType.firstParameter;
+							(* push array to allocate *)
+							PushParameter(p0, formalParameter, procedureType.callingConvention, FALSE, dummy,-1);
+							formalParameter :=formalParameter.nextParameter;
+							(* push length array *)
+							PushParameter(p1, formalParameter, procedureType.callingConvention, FALSE, dummy,-1);
+							(* push size *)
+							type := t0;
+							WHILE (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
+								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
+							END;
+							tmp := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType),ToMemoryUnits(system,system.SizeOf(type))); (* alignment *)
+							Emit(Push(position,tmp));
+							(* *)
+							IF SemanticChecker.ContainsPointer(type) THEN
+								tmp := TypeDescriptorAdr(type);
+								IF ~newObjectFile THEN
+									IntermediateCode.MakeMemory(tmp,addressType);
+								END;
+							ELSE
+								tmp := IntermediateCode.Immediate(addressType, 0);
+							END;
+							Emit(Push(position,tmp)); (* type descriptor *)
+
+							StaticCallOperand(result,procedure);
+							Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+							ReleaseOperand(result);
+						END;
+						(*
+						designator := SyntaxTree.NewIdentifierDesignator(InvalidPosition, Global.ArrayBaseName);
+						designator := SyntaxTree.NewSelectorDesignator(InvalidPosition, designator, SyntaxTree.NewIdentifier(InvalidPosition, "AllocateTensorX"));
+						result := ResolveExpression(SyntaxTree.NewParameterDesignator(InvalidPosition, designator, actualParameters));
+						*)
+					ELSE
+
+						dim := 0;
+
+						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+							(* generate geometry descriptor *)
+							Designate(p0,l);
+							NewMathArrayDescriptor(l, x.parameters.Length()-1);
+							ReleaseOperand(l);
+							isTensor := TRUE;
+						ELSE
+							isTensor := FALSE;
+						END;
+
+						FOR i := 1 TO x.parameters.Length()-1 DO
+							IF ~isTensor THEN
+								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
+							END;
+							parameter := x.parameters.GetExpression(i);
+							Evaluate(parameter,r);
+							IF (r.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
+								IntermediateCode.InitImmediate(tmp,IntermediateCode.GetType(system,parameter.type),0);
+								TrapC(BrgeL,r.op,tmp,ArraySizeTrap);
+							END;
+							Emit(Push(position,r.op));
+							IF i=1 THEN
+								ReuseCopy(reg,r.op);
+							ELSE
+								Emit(Mul(position,reg,reg,r.op)); (*! optimize the multiplication of immediate operands *)
+							END;
+							ReleaseOperand(r);
+							INC(dim);
+						END;
+						Convert(reg,addressType);
+
+						openDim := dim;
+						ASSERT(~(type IS SyntaxTree.MathArrayType) OR (type(SyntaxTree.MathArrayType).form IN {SyntaxTree.Static,SyntaxTree.Tensor}));
+
+						(*! the following code is only correct for "standard" Oberon calling convention *)
+						IF SemanticChecker.ContainsPointer(SemanticChecker.ArrayBase(type,MAX(LONGINT))) THEN
+							t := type;
+							IF ~isTensor & (t IS SyntaxTree.MathArrayType) THEN
+								staticLength := 1;
+								WHILE (t IS SyntaxTree.MathArrayType) DO (* static array *)
+									staticLength := staticLength * t(SyntaxTree.MathArrayType).staticLength;
+									t := t(SyntaxTree.MathArrayType).arrayBase.resolved;
+								END;
+								tmp := IntermediateCode.Immediate(reg.type,staticLength);
+								Emit(Mul(position,reg,reg,tmp));
+							END;
+							Designate(p0,l);
+							IF isTensor THEN
+								Dereference(l,type,FALSE);
+								t := SemanticChecker.ArrayBase(type,MAX(LONGINT));
+							END;
+							Emit(Push(position,l.tag)); (* address for use after syscall *)
+							Emit(Push(position,l.tag)); (* address *)
+							ReleaseOperand(l);
+
+							tmp := TypeDescriptorAdr(t);
+							IF ~newObjectFile THEN
+								IntermediateCode.MakeMemory(tmp,addressType);
+							END;
+							Emit(Push(position,tmp)); (* type descriptor *)
+							ReleaseIntermediateOperand(tmp);
+
+							Emit(Push(position,reg)); (* number Elements *)
+							ReleaseIntermediateOperand(reg);
+							tmp := IntermediateCode.Immediate(addressType,0);
+							Emit(Push(position,tmp)); (* dimensions = 0, we control dimensions in the geometry descriptor *)
+							(* push realtime flag: false by default *)
+							Emit(Push(position,false));
+							CallThis("Heaps","NewArr",5);
+							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+							Emit(Pop(position,adr));
+							GetMathArrayField(tmp,adr,MathPtrOffset);
+							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+							Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrDataArrayOffset))));
+							PutMathArrayField(adr,reg,MathAdrOffset);
+							ReleaseIntermediateOperand(tmp);
+							ReleaseIntermediateOperand(reg);
+						ELSE
+							IF isTensor THEN
+								size := ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,MAX(LONGINT))));
+							ELSE
+								size := ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,openDim)));
+							END;
+							IF (size # 1) THEN
+								Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+							END;
+							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset));
+							Emit(Add(position,reg,reg,tmp));
+
+							Designate(p0,l);
+							IF isTensor THEN
+								Dereference(l,type,FALSE);
+							END;
+							Emit(Push(position,l.tag)); (* address for use after syscall *)
+							Emit(Push(position,l.tag)); (* address for syscall *)
+							ReleaseOperand(l); (* pointer address *)
+
+							Emit(Push(position,reg)); (* size *)
+							ReleaseIntermediateOperand(reg);
+							(* push realtime flag: false by default *)
+							Emit(Push(position,false));
+							CallThis("Heaps","NewSys",3);
+							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+							Emit(Pop(position,adr));
+							GetMathArrayField(tmp,adr,MathPtrOffset);
+							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+							Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset))));
+							PutMathArrayField(adr,reg,MathAdrOffset);
+							ReleaseIntermediateOperand(tmp);
+							ReleaseIntermediateOperand(reg);
+						END;
+
+
+						flags := {};
+						IntermediateCode.InitImmediate(tmp,addressType,SYSTEM.VAL(LONGINT,flags));
+						PutMathArrayField(adr,tmp,MathFlagsOffset);
+						IntermediateCode.InitImmediate(tmp,addressType,openDim);
+						PutMathArrayField(adr,tmp,MathDimOffset);
+
+						else := NewLabel();
+						BreqL(else,IntermediateCode.Memory(addressType,adr,0),IntermediateCode.Immediate(addressType,0));
+
+						i := openDim-1;
+						IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						IF isTensor THEN
+							IntermediateCode.InitImmediate(tmp,addressType,ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,MAX(LONGINT)))));
+						ELSE
+							IntermediateCode.InitImmediate(tmp,addressType,ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,openDim))));
+						END;
+						PutMathArrayField(adr,tmp,MathElementSizeOffset);
+						WHILE (i >= 0) DO
+							Emit(Pop(position,reg));
+							PutMathArrayLength(adr,reg,i);
+							PutMathArrayIncrement(adr,tmp,i);
+							IF i > 0 THEN
+								IF i=openDim-1 THEN
+									ReuseCopy(tmp,tmp);
+								END;
+								Emit(Mul(position,tmp,tmp,reg));
+							END;
+							DEC(i);
+						END;
+						ReleaseIntermediateOperand(adr);
+						ReleaseIntermediateOperand(reg);
+						ReleaseIntermediateOperand(tmp);
+
+						exit := NewLabel();
+						BrL(exit);
+						SetLabel(else);
+						(* else part: array could not be allocated *)
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,openDim*system.addressSize));
+						Emit(Add(position,sp,sp,tmp));
+
+						SetLabel(exit);
+					END;
+				ELSIF type IS SyntaxTree.CellType THEN
+					Error(p0.position,"cannot be allocated in runtime yet");
+				ELSE (* no pointer to record, no pointer to array *)
+					HALT(200);
+				END;
+			(* ---- ADDRESSOF----- *)
+			|Global.systemAdr:
+				Designate(p0,s0);
+				s0.mode := ModeValue;
+				IF (t0 IS SyntaxTree.MathArrayType) & (t0(SyntaxTree.MathArrayType).form = SyntaxTree.Open) THEN
+					ReleaseIntermediateOperand(s0.op);
+					s0.op := s0.tag;
+					IntermediateCode.InitOperand(s0.tag);
+				END;
+				Convert(s0.op,IntermediateCode.GetType(system,x.type));
+				result := s0;
+			(* ---- BIT ----- *)
+			|Global.systemBit:
+				Evaluate(p0,s0);
+				ToMemory(s0.op,addressType,0);
+				ReuseCopy(res,s0.op);
+				ReleaseOperand(s0);
+				Evaluate(p1,s1);
+				Emit(Ror(position,res,res,s1.op));
+				ReleaseOperand(s1);
+				Emit(And(position,res,res,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1)));
+				Convert(res,IntermediateCode.GetType(system,system.booleanType));
+				IF ~conditional THEN
+					InitOperand(result,ModeValue); result.op := res;
+				ELSE
+					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
+					BrL(falseLabel);
+					ReleaseIntermediateOperand(res);
+				END;
+			(* --- MSK ----*)
+			|Global.systemMsk:
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				ReuseCopy(res,s0.op);
+				ReleaseOperand(s0);
+				Emit(And(position,res,res,s1.op));
+				ReleaseOperand(s1);
+				InitOperand(result,ModeValue);
+				result.op := res;
+			(* ---- SYSTEM.GET8|16|32|64 ----- *)
+			|Global.systemGet8, Global.systemGet16, Global.systemGet32, Global.systemGet64:
+				Evaluate(p0,s0);
+				MakeMemory(res,s0.op,IntermediateCode.GetType(system,x.type),0);
+				ReleaseOperand(s0);
+				InitOperand(result,ModeValue);
+				result.op := res;
+
+			(* ---- SYSTEM.VAL ----- *)
+			|Global.systemVal:
+				Expression(p1);
+				s1 := result;
+				type :=p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
+				IF s1.mode = ModeReference THEN
+					(* nothing to  be done if not record type, just take over new type *)
+					IF (type IS SyntaxTree.RecordType) THEN
+						ReleaseIntermediateOperand(s1.tag);
+						s1.tag := TypeDescriptorAdr(type);
+						IF ~newObjectFile THEN
+							IntermediateCode.MakeMemory(s1.tag,addressType);
+						END;
+						UseIntermediateOperand(s1.tag);
+					END;
+					result := s1;
+				ELSE (* copy over result to different type, may not use convert *)
+					itype := IntermediateCode.GetType(system,type);
+					IF itype.sizeInBits = s1.op.type.sizeInBits THEN
+						IntermediateCode.InitRegister(s0.op,itype,IntermediateCode.GeneralPurposeRegister,AcquireRegister(itype,IntermediateCode.GeneralPurposeRegister));
+						Emit(Mov(position,s0.op,s1.op));
+						ReleaseOperand(s1);
+						InitOperand(result,ModeValue);
+						result.op := s0.op;
+					ELSE (* different size, must convert *)
+						(*! this is not very clean, should we forbid conversions between operands with different sizes or should we implement a cutting move ??? *)
+						Convert(s1.op, IntermediateCode.GetType(system,type));
+						result := s1;
+					END;
+				END;
+			(* ---- SYSTEM.GET ----- *)
+			|Global.systemGet:
+				Evaluate(p0,s0); (* adr *)
+				Designate(p1,s1); (* variable *)
+				ToMemory(s0.op,IntermediateCode.GetType(system,p1.type),0);
+				ToMemory(s1.op,IntermediateCode.GetType(system,p1.type),0);
+				Emit(Mov(position,s1.op,s0.op));
+				ReleaseOperand(s1);
+				ReleaseOperand(s0);
+			(* ---- SYSTEM.PUT 8|16|32|64 ----- *)
+			|Global.systemPut, Global.systemPut64, Global.systemPut32, Global.systemPut16, Global.systemPut8:
+				Evaluate(p0,s0); (*  *)
+				Evaluate(p1,s1); (* variable *)
+				IF p1.type.resolved IS SyntaxTree.ComplexType THEN
+					componentType := p1.type.resolved(SyntaxTree.ComplexType).componentType;
+
+					(* real part *)
+					MakeMemory(res, s0.op, IntermediateCode.GetType(system, componentType), 0);
+					Emit(Mov(position,res, s1.op));
+					ReleaseIntermediateOperand(res);
+
+					(* imaginary part *)
+					MakeMemory(res, s0.op, IntermediateCode.GetType(system, componentType), ToMemoryUnits(system, system.SizeOf(componentType)));
+					Emit(Mov(position,res, s1.tag));
+					ReleaseIntermediateOperand(res);
+
+					ReleaseOperand(s1);
+					ReleaseOperand(s0);
+				ELSE
+					MakeMemory(res,s0.op,IntermediateCode.GetType(system,p1.type),0);
+					ReleaseOperand(s0);
+					Emit(Mov(position,res,s1.op));
+					ReleaseIntermediateOperand(res);
+					ReleaseOperand(s1);
+				END;
+			(* ---- SYSTEM.MOVE ----- *)
+			|Global.systemMove:
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				Evaluate(p2,s2);
+				Emit(Copy(position,s1.op,s0.op,s2.op));
+				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
+			(* ---- SYSTEM.NEW ----- *)
+			|Global.systemNew:
+				Designate(p0,s0);
+				Emit(Push(position,s0.op));
+				ReleaseOperand(s0);
+				Evaluate(p1,s1);
+				Emit(Push(position,s1.op));
+				ReleaseOperand(s1);
+				(* push realtime flag: false by default *)
+				Emit(Push(position,false));
+				CallThis("Heaps","NewSys",3);
+			(* ---- SYSTEM.CALL ----- *)
+			|Global.systemRef:
+				Basic.ToSegmentedName(p0(SyntaxTree.StringValue).value^, segmentedName);
+				callsection := NewSection(module.allSections,  Sections.CodeSection, segmentedName, NIL,commentPrintout # NIL);
+				s0.mode := ModeValue;
+				IntermediateCode.InitAddress(s0.op, addressType, callsection.name, 0, 0);
+				result := s0
+			(* ---- INCR ----- *)
+			|Global.Incr:
+				Designate(p0,operand);
+				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(operand,p0.type.resolved,FALSE);
+				END;
+				ASSERT(p1 # NIL);
+				Evaluate(p1,l);
+				GetMathArrayIncrement(p0.type.resolved(SyntaxTree.MathArrayType),operand, l.op,TRUE, result);
+
+				ReleaseOperand(operand); ReleaseOperand(l);
+				Convert(result.op,IntermediateCode.GetType(system, x.type));
+			(* ---- SUM ----- *)
+			|Global.Sum: HALT(200);
+			(* ---- CAS ----- *)
+			|Global.Cas:
+				Designate(p0,s0);
+				Evaluate(p1,s1);
+				Evaluate(p2,s2);
+				Emit(Cas(position,s0.op,s1.op,s2.op));
+				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
+				res := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
+				Emit(Result(position, res)); result.op := res; result.mode := ModeValue;
+				IF conditional THEN
+					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
+					BrL(falseLabel);
+					ReleaseIntermediateOperand(res);
+				END;
+			(* ---- DIM ----- *)
+			|Global.Dim:
+				ASSERT(~SemanticChecker.IsArrayStructuredObjectType(p0.type));
+				Designate(p0,s0);
+				IF p0.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
+					Dereference(s0,p0.type.resolved,FALSE);
+				END;
+				MathArrayDim(p0.type.resolved(SyntaxTree.MathArrayType),s0.tag,result);
+				ReleaseOperand(s0);
+			(* ---- RESHAPE ----- *)
+			|Global.Reshape:
+				IF GetRuntimeProcedure("FoxArrayBase","Reshape",procedure,TRUE) THEN
+					left := SyntaxTree.NewSymbolDesignator(Diagnostics.Invalid,NIL,procedure);
+					left.SetType(procedure.type);
+					call := SyntaxTree.NewProcedureCallDesignator(position,left(SyntaxTree.Designator),x.parameters);
+					VisitProcedureCallDesignator(call(SyntaxTree.ProcedureCallDesignator));
+				END;
+			(* ---- SYSTEM.TYPECODE ----- *)
+			|Global.systemTypeCode:
+				type := p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
+				IF type.resolved IS SyntaxTree.PointerType THEN
+					type := type.resolved(SyntaxTree.PointerType).pointerBase;
+				END;
+				result.op := TypeDescriptorAdr(type);
+				IF ~newObjectFile THEN
+					ToMemory(result.op,IntermediateCode.GetType(system,x.type),0);
+				ELSE Convert(result.op, IntermediateCode.GetType(system,x.type));
+				END;
+				result.mode := ModeValue;
+			(* ---- SYSTEM.TRACE ----- *)
+			|Global.systemTrace:
+				SystemTrace(x.parameters, x.position);
+			(* ----- CONNECT ------*)
+			|Global.Connect:
+				Error(x.position,"cannot be connected in runtime yet");
+			(* ----- SEND ------*)
+			|Global.Send:
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				size := ToMemoryUnits(system,system.SizeOf(p1.type));
+				Emit(Push(position,s0.op));
+				Emit(Push(position,s1.op));
+				(*
+				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+				*)
+				IF size # 1 THEN Error(p1.position,"send not implemented for complex data types") END;
+				ReleaseOperand(s0);
+				ReleaseOperand(s1);
+				CallThis(ChannelModuleName,"Send",-1);
+			(* ----- RECEIVE ------*)
+			|Global.Receive:
+				Evaluate(p0,s0);
+				Emit(Push(position,s0.op));
+				Designate(p1,s1);
+				size := ToMemoryUnits(system,system.SizeOf(p1.type));
+				Emit(Push(position,s1.op));
+				IF p2 # NIL THEN
+					Designate(p2,s2);
+					Emit(Push(position,s2.op));
+				END;
+
+
+				(*
+				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+				*)
+				IF size # 1 THEN Error(p1.position,"receive not implemented for complex data types") END;
+				ReleaseOperand(s0);
+				ReleaseOperand(s1);
+				ReleaseOperand(s2);
+				IF p2 = NIL THEN
+					CallThis(ChannelModuleName,"Receive",-1)
+				ELSE
+					CallThis(ChannelModuleName,"ReceiveNonBlocking",-1)
+				END;
+
+			| Global.systemSpecial:
+				customBuiltin := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.CustomBuiltin);
+				ASSERT(customBuiltin.type IS SyntaxTree.ProcedureType);
+				procedureType := customBuiltin.type(SyntaxTree.ProcedureType);
+
+				(* determine if parameters are of the VAR kind *)
+				ASSERT(x.parameters.Length() <= 3);
+				formalParameter := procedureType.firstParameter;
+				FOR i := 0 TO x.parameters.Length() - 1 DO
+					isVarPar[i] := formalParameter.kind = SyntaxTree.VarParameter;
+					formalParameter := formalParameter.nextParameter
+				END;
+
+				IF p0 # NIL THEN IF isVarPar[0] THEN Designate(p0, s0) ELSE Evaluate(p0,s0) END ELSE InitOperand(s0, ModeValue) END;
+				IF p1 # NIL THEN IF isVarPar[1] THEN Designate(p1, s1) ELSE Evaluate(p1,s1) END ELSE InitOperand(s1, ModeValue) END;
+				IF p2 # NIL THEN IF isVarPar[2] THEN Designate(p2, s2) ELSE Evaluate(p2,s2) END ELSE InitOperand(s2, ModeValue) END;
+				Emit(SpecialInstruction(x.position, customBuiltin.subType,s0.op, s1.op, s2.op));
+				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
+				IF procedureType.returnType # NIL THEN
+					res := NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
+					Emit(Result(position, res));
+					(*InitOperand(result,ModeValue);
+					result.op := res;
+					*)
+
+					IF ~conditional THEN
+						InitOperand(result,ModeValue); result.op := res;
+					ELSE
+						BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
+						BrL(falseLabel);
+						ReleaseIntermediateOperand(res);
+					END;
+
+				END
+
+			ELSE (* function not yet implemented *)
+				Error(position,"not yet implemented");
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitBuiltinCallDesignator") END;
+		END VisitBuiltinCallDesignator;
+
+		PROCEDURE VisitTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator);
+		VAR trueL,falseL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitTypeGuardDesignator") END;
+			dest := destination; destination := emptyOperand;
+
+			Expression(x.left);
+			IF x.left.type.resolved = x.type.resolved THEN (* always true: do nothing *)
+			ELSIF isUnchecked THEN (* no check *)
+			ELSE
+				trueL := NewLabel();
+				falseL := NewLabel();
+				IF IsPointerToRecord(x.left.type,recordType) THEN
+					IntermediateCode.InitRegister(tag,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Mov(position,tag, result.op));
+					IF result.mode # ModeValue THEN
+						ptr := tag;
+						IntermediateCode.MakeMemory(ptr,addressType);
+						Emit(Mov(position,tag, ptr));
+					END;
+					IntermediateCode.AddOffset(tag,ToMemoryUnits(system,-addressType.sizeInBits));
+					IntermediateCode.MakeMemory(tag,addressType);
+				ELSE
+					tag := result.tag;
+				END;
+				TypeTest(tag,x.type,trueL,falseL);
+				ReleaseIntermediateOperand(tag);
+				SetLabel(falseL);
+				Emit(Trap(position,TypeCheckTrap));
+				SetLabel(trueL);
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitTypeGuardDesignator") END;
+		END VisitTypeGuardDesignator;
+
+		PROCEDURE Dereference(VAR operand: Operand; type: SyntaxTree.Type; isUnsafe: BOOLEAN);
+		VAR dereferenced: IntermediateCode.Operand; arrayDataOffset: LONGINT;
+		BEGIN
+			LoadValue(operand,system.addressType); (* in case operand is not a value yet *)
+			ReuseCopy(dereferenced,operand.op);
+			ReleaseOperand(operand);
+			operand.mode := ModeReference;
+			operand.op := dereferenced;
+			operand.tag := dereferenced;
+			UseIntermediateOperand(operand.tag);
+			IF (type=NIL) OR (type IS SyntaxTree.RecordType) THEN
+				IF isUnsafe THEN
+					ReleaseIntermediateOperand(operand.tag);
+					operand.tag := TypeDescriptorAdr(type);
+					IF ~newObjectFile THEN
+						IntermediateCode.MakeMemory(operand.tag,addressType);
+					END;
+				ELSE
+					IntermediateCode.AddOffset(operand.tag,ToMemoryUnits(system,-addressType.sizeInBits));
+					IntermediateCode.MakeMemory(operand.tag,addressType);
+				END;
+			ELSIF type IS SyntaxTree.ArrayType THEN
+				IF isUnsafe THEN
+					ReleaseIntermediateOperand(operand.tag);
+					IF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+						IntermediateCode.InitImmediate(operand.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+					ELSE
+						operand.tag := emptyOperand;
+					END;
+				ELSE
+					arrayDataOffset := DynamicDim(type) * addressType.sizeInBits + 3 * addressType.sizeInBits;
+					INC(arrayDataOffset, (-arrayDataOffset) MOD ArrayAlignment);  (* round up to multiple of ArrayAlignment to ensure that first array element is aligned at 0 MOD ArrayAlignment *)
+					IntermediateCode.AddOffset(operand.op,ToMemoryUnits(system,arrayDataOffset));
+					IntermediateCode.AddOffset(operand.tag,ToMemoryUnits(system,ArrayDimTable*system.addressSize))
+				END;
+			ELSIF type IS SyntaxTree.MathArrayType THEN
+				IntermediateCode.AddOffset(operand.op,ToMemoryUnits(system,MathAdrOffset*addressType.sizeInBits));
+				IntermediateCode.MakeMemory(operand.op,addressType);
+			ELSE HALT(100);
+			END;
+		END Dereference;
+
+		PROCEDURE VisitDereferenceDesignator(x: SyntaxTree.DereferenceDesignator);
+		VAR  type: SyntaxTree.Type; d: Operand; dest: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitDereferenceDesignator") END;
+			dest := destination; destination := emptyOperand;
+			Evaluate(x.left,d);
+			type := x.type.resolved;
+			Dereference(d,type,IsUnsafePointer(x.left.type));
+			result := d;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitDereferenceDesignator") END;
+		END VisitDereferenceDesignator;
+
+		PROCEDURE VisitSupercallDesignator(x: SyntaxTree.SupercallDesignator);
+		VAR procedure: SyntaxTree.Procedure; tag: IntermediateCode.Operand; dest: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitSupercallDesignator") END;
+			dest := destination; destination := emptyOperand;
+			Designate(x.left(SyntaxTree.SymbolDesignator).left,result);
+			tag := result.op;
+			(*ReleaseIntermediateOperand(result.tag); not necessary -- done in StaticCallOperand *)
+			procedure := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+			StaticCallOperand(result,procedure.super);
+
+			ReleaseIntermediateOperand(result.tag);
+			UseIntermediateOperand(tag); (* necessary ? *)
+
+			result.tag := tag;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitSupercallDesignator") END;
+		END VisitSupercallDesignator;
+
+		PROCEDURE VisitSelfDesignator(x: SyntaxTree.SelfDesignator);
+		VAR basereg: IntermediateCode.Operand; scope: SyntaxTree.Scope; dest: IntermediateCode.Operand;
+			moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitSelfDesignator") END;
+			dest := destination; destination := emptyOperand;
+			scope := currentScope;
+			WHILE (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.ProcedureScope) DO
+				scope := scope.outerScope;
+			END;
+			IF scope.outerScope IS SyntaxTree.ModuleScope THEN
+				IF newObjectFile THEN
+					moduleSection := meta.ModuleSection();
+					moduleOffset := moduleSection.pc;
+					result.mode := ModeValue;
+					result.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
+				ELSE
+					Symbol(moduleSelf,result);
+					IntermediateCode.MakeMemory(result.op,addressType);
+				END
+			ELSIF scope.outerScope IS SyntaxTree.CellScope THEN
+				(* no action necessary, just up to cell scope *)
+			ELSE
+				GetBaseRegister(basereg,currentScope,scope);
+				InitOperand(result,ModeReference);
+				result.op := basereg;
+				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
+				(* tag must be loaded when dereferencing SELF pointer *)
+			END;
+			destination := dest;
+			IF Trace THEN TraceExit("VisitSelfDesignator") END;
+		END VisitSelfDesignator;
+
+		PROCEDURE VisitResultDesignator(x: SyntaxTree.ResultDesignator);
+		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitResultDesignator") END;
+			procedure := currentScope(SyntaxTree.ProcedureScope).ownerProcedure;
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			parameter := procedureType.returnParameter;
+			VisitParameter(parameter);
+			IF Trace THEN TraceExit("VisitResultDesignator") END;
+		END VisitResultDesignator;
+
+		(** values *)
+		PROCEDURE VisitBooleanValue(x: SyntaxTree.BooleanValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitBooleanValue") END;
+			IF conditional THEN
+				IF x.value THEN BrL(trueLabel)
+				ELSE BrL(falseLabel)
+				END;
+			ELSE
+				InitOperand(result,ModeValue);
+				IF x.value THEN result.op := true ELSE result.op := false END;
+			END;
+		END VisitBooleanValue;
+
+		PROCEDURE GetDataSection*(): IntermediateCode.Section;
+		VAR name: Basic.SegmentedName; section: IntermediateCode.Section;
+		BEGIN
+			Global.GetModuleSegmentedName(module.module, name);
+			Basic.SuffixSegmentedName(name,Basic.MakeString("@Immediates"));
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,TRUE);
+			RETURN section
+		END GetDataSection;
+
+		PROCEDURE GetImmediateMem(VAR vop: IntermediateCode.Operand);
+		VAR data: IntermediateCode.Section;pc: LONGINT; type: IntermediateCode.Type;
+		BEGIN
+			type := vop.type;
+			data := GetDataSection();
+			pc := EnterImmediate(data,vop);
+			IntermediateCode.InitAddress(vop, addressType, data.name, 0, pc);
+			IntermediateCode.MakeMemory(vop, type);
+		END GetImmediateMem;
+
+		PROCEDURE VisitIntegerValue(x: SyntaxTree.IntegerValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitIntegerValue") END;
+			InitOperand(result,ModeValue);
+			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.hvalue);
+			IF ~supportedImmediate(result.op)  &~inData THEN
+				GetImmediateMem(result.op)
+			END;
+		END VisitIntegerValue;
+
+		PROCEDURE VisitCharacterValue(x: SyntaxTree.CharacterValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitCharacterValue") END;
+			InitOperand(result,ModeValue);
+			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
+		END VisitCharacterValue;
+
+		PROCEDURE VisitSetValue(x: SyntaxTree.SetValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitSetValue") END;
+			InitOperand(result,ModeValue);
+			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(LONGINT,x.value));
+		END VisitSetValue;
+
+		PROCEDURE VisitMathArrayValue(x: SyntaxTree.MathArrayValue);
+		VAR  irv: IntermediateCode.Section; name:Basic.SegmentedName;
+
+			PROCEDURE RecursiveData(x: SyntaxTree.MathArrayExpression);
+			VAR numberElements,i: LONGINT; expression: SyntaxTree.Expression; op: Operand;
+			BEGIN
+				numberElements := x.elements.Length();
+				FOR i := 0 TO numberElements-1 DO
+					expression := x.elements.GetExpression(i);
+					IF expression IS SyntaxTree.MathArrayExpression THEN
+						RecursiveData(expression(SyntaxTree.MathArrayExpression));
+					ELSE
+						inData := TRUE;
+						Evaluate(expression,op);
+						irv.Emit(Data(position,op.op));
+						inData := FALSE;
+						ReleaseOperand(op);
+					END;
+				END;
+			END RecursiveData;
+
+		BEGIN
+			IF Trace THEN TraceEnter("VisitMathArrayValue") END;
+			IF ~TryConstantDeclaration() THEN
+				IF constantDeclaration = NIL THEN constantDeclaration:=BuildConstant(module.module,x,constId) END;
+				Global.GetSymbolSegmentedName(constantDeclaration,name);
+				IF ~newObjectFile OR (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
+					irv := NewSection(module.allSections,Sections.ConstSection,name,constantDeclaration,commentPrintout # NIL);
+				ELSE
+					irv := NewSection(module.importedSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
+				END;
+				RecursiveData(x.array);
+				InitOperand(result,ModeReference);
+				IntermediateCode.InitAddress(result.op, addressType, irv.name, GetFingerprint(irv.symbol), 0);
+			END
+		END VisitMathArrayValue;
+
+		PROCEDURE TryConstantDeclaration(): BOOLEAN;
+		VAR constant: Sections.Section;
+		BEGIN
+			IF constantDeclaration = NIL THEN
+				RETURN FALSE
+			ELSE
+				(* Is a constant in this module: did we generate it already? *)
+				constant := module.allSections.FindBySymbol(constantDeclaration); (*TODO*)
+				IF constant # NIL THEN
+					InitOperand(result,ModeReference);
+					IntermediateCode.InitAddress(result.op,addressType,constant.name,GetFingerprint(constant.symbol), 0);
+					RETURN TRUE;
+				END;
+			END;
+			RETURN FALSE
+		END TryConstantDeclaration;
+
+		PROCEDURE VisitConstant(x: SyntaxTree.Constant);
+		BEGIN
+			constantDeclaration := x;
+			x.value.resolved.Accept(SELF);
+		END VisitConstant;
+
+		PROCEDURE VisitRealValue(x: SyntaxTree.RealValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitRealValue") END;
+			InitOperand(result,ModeValue);
+			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
+		END VisitRealValue;
+
+		PROCEDURE VisitComplexValue(x: SyntaxTree.ComplexValue);
+		VAR
+			componentType: SyntaxTree.Type;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitComplexValue") END;
+			ASSERT(x.type IS SyntaxTree.ComplexType);
+			componentType := x.type(SyntaxTree.ComplexType).componentType;
+			InitOperand(result,ModeValue);
+			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,componentType),x.realValue); (* real part *)
+			IntermediateCode.InitFloatImmediate(result.tag,IntermediateCode.GetType(system,componentType),x.imagValue); (* imaginary part *)
+		END VisitComplexValue;
+
+		PROCEDURE VisitStringValue(x: SyntaxTree.StringValue);
+		VAR  i: LONGINT; name: Basic.SegmentedName;
+			irv: IntermediateCode.Section; op: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitStringValue") END;
+			IF ~TryConstantDeclaration() THEN
+				IF constantDeclaration = NIL THEN constantDeclaration:=BuildConstant(module.module,x,constId) END;
+				Global.GetSymbolSegmentedName(constantDeclaration,name);
+				IF ~newObjectFile OR (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
+					irv := NewSection(module.allSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
+				ELSE
+					irv := NewSection(module.importedSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
+				END;
+				FOR i := 0 TO x.length-1 DO
+					IntermediateCode.InitImmediate(op,IntermediateCode.GetType(system,system.characterType),ORD(x.value[i]));
+					irv.Emit(Data(position,op));
+				END;
+				InitOperand(result,ModeReference);
+				IntermediateCode.InitAddress(result.op, addressType, irv.name, GetFingerprint(irv.symbol), 0);
+				result.tag := IntermediateCode.Immediate(addressType,x.length);
+			END
+		END VisitStringValue;
+
+		PROCEDURE VisitNilValue(x: SyntaxTree.NilValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitNilValue") END;
+			InitOperand(result,ModeValue);
+			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
+			result.tag := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
+		END VisitNilValue;
+
+		PROCEDURE VisitEnumerationValue(x: SyntaxTree.EnumerationValue);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitEnumerationValue") END;
+			InitOperand(result,ModeValue);
+			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);
+		END VisitEnumerationValue;
+
+		(** symbols *)
+
+		PROCEDURE VisitImport(x: SyntaxTree.Import);
+		BEGIN (* nothing to be done, might however be called via some designator module.procedure *)
+		END VisitImport;
+
+		PROCEDURE GetBaseRegister(VAR result: IntermediateCode.Operand; scope,baseScope: SyntaxTree.Scope);
+		VAR left,right: IntermediateCode.Operand;level: LONGINT;
+		BEGIN
+			IF scope # baseScope THEN
+				(* left := [fp+8] *)
+				IntermediateCode.InitMemory(right,addressType,fp,ToMemoryUnits(system,2*addressType.sizeInBits));
+				ReuseCopy(left,right);
+				ReleaseIntermediateOperand(right);
+				scope := scope.outerScope; DEC(level);
+				(* { left := [left+8] } *)
+				IntermediateCode.InitMemory(right,addressType,left,ToMemoryUnits(system,2*addressType.sizeInBits));
+				WHILE (scope # baseScope) & (scope IS SyntaxTree.ProcedureScope) DO
+					Emit(Mov(position,left,right));
+					scope := scope.outerScope; DEC(level);
+				END;
+				ASSERT((scope = baseScope) OR (baseScope = NIL));
+				result := left;
+			ELSE
+				result := fp;
+			END;
+		END GetBaseRegister;
+
+		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
+		VAR symbol: Sections.Section;  type: SyntaxTree.Type; name: Basic.SegmentedName; temp: IntermediateCode.Operand; reg: LONGINT;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitVariable");  END;
+			type := x.type.resolved;
+			IF (x.useRegister) THEN
+				InitOperand(result, ModeValue);
+				IF x.registerNumber < 0 THEN
+					x.SetRegisterNumber(AcquireRegister(IntermediateCode.GetType(system, type),IntermediateCode.GeneralPurposeRegister));
+					reg := x.registerNumber;
+				ELSE
+					reg := registerUsageCount.Map(x.registerNumber);
+					UseRegister(reg);
+				END;
+				IntermediateCode.InitRegister(result.op,IntermediateCode.GetType(system, type),IntermediateCode.GeneralPurposeRegister,reg);
+			ELSIF (x.scope IS SyntaxTree.ProcedureScope) THEN (* local variable (potentially via nested procedure) *)
+				InitOperand(result,ModeReference);
+				GetBaseRegister(result.op,currentScope,x.scope);
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+			ELSIF (x.scope = moduleScope) OR (x.scope IS SyntaxTree.CellScope) THEN (* global variable *)
+				InitOperand(result,ModeReference);
+				Global.GetSymbolSegmentedName(x,name);
+				symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
+				IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
+			ELSIF x.scope IS SyntaxTree.ModuleScope THEN (* global variable in imported module *)
+				InitOperand(result,ModeReference);
+				Global.GetSymbolSegmentedName(x,name);
+				symbol := NewSection(module.importedSections, Sections.VarSection, name,x,commentPrintout # NIL);
+				IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0)
+			ELSE (* field, left designator must have been emitted *)
+				ASSERT(result.mode = ModeReference);
+				IF result.op.mode = IntermediateCode.ModeMemory THEN
+					ReuseCopy(temp,result.op);
+					ReleaseIntermediateOperand(result.op);
+					result.op := temp;
+				END;
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+			END;
+
+			IF conditional & (x.type.resolved IS SyntaxTree.BooleanType) THEN
+				ValueToCondition(result);
+			ELSIF type IS SyntaxTree.ProcedureType THEN
+				ReleaseIntermediateOperand(result.tag);
+				IF type(SyntaxTree.ProcedureType).isDelegate THEN
+					IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
+					UseIntermediateOperand(result.tag);
+				ELSE
+					result.tag := nil; (* nil *)
+				END;
+			ELSIF (type IS SyntaxTree.ArrayType) THEN
+				ReleaseIntermediateOperand(result.tag);
+				IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+			ELSIF (type IS SyntaxTree.MathArrayType) THEN
+				IF type(SyntaxTree.MathArrayType).form IN {SyntaxTree.Open} THEN
+					ReleaseIntermediateOperand(result.tag);
+					result.tag := result.op;
+					UseIntermediateOperand(result.tag);
+					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,MathAdrOffset*addressType.sizeInBits));
+					IntermediateCode.MakeMemory(result.op,addressType);
+				END;
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
+				ReleaseIntermediateOperand(result.tag);
+				result.tag := TypeDescriptorAdr(type);
+				IF ~newObjectFile THEN
+					IntermediateCode.MakeMemory(result.tag,addressType);
+				END;
+				UseIntermediateOperand(result.tag);
+			(* tag for pointer type computed not here but during dereferencing *)
+			END;
+			IF Trace THEN TraceExit("VisitVariable") END;
+		END VisitVariable;
+
+		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; parameter: SyntaxTree.Parameter;adr: LONGINT; symbol: Sections.Section;
+			name: Basic.SegmentedName; parameterType: SyntaxTree.Type; len,inc: LONGINT;
+		BEGIN
+			type := x.type.resolved;
+			IF Trace THEN TraceEnter("VisitParameter") END;
+
+			IF x.ownerType IS SyntaxTree.CellType THEN
+				IF ~(x.type.resolved IS SyntaxTree.PortType) THEN
+					InitOperand(result,ModeReference);
+					Global.GetSymbolSegmentedName(x,name);
+					symbol := NewSection(module.allSections, Sections.ConstSection, name,x,commentPrintout # NIL);
+					IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol),0);
+					RETURN
+				ELSE
+					InitOperand(result, ModeValue);
+					parameter := x.ownerType(SyntaxTree.CellType).firstParameter;
+					adr := 0;
+					WHILE parameter # x DO
+						parameterType := parameter.type;
+						inc := 1;
+						WHILE SemanticChecker.IsStaticArray(parameterType, parameterType, len) DO inc := inc * len END;
+						INC(adr, inc);
+						parameter := parameter.nextParameter
+					END;
+					adr := backend.activeCellsSpecification.GetPortAddress(adr);
+					IntermediateCode.InitImmediate(result.op,addressType,adr);
+					RETURN
+				END;
+			ELSIF (currentScope IS SyntaxTree.ProcedureScope) & (currentScope(SyntaxTree.ProcedureScope).ownerProcedure.isConstructor) & (currentScope.outerScope IS SyntaxTree.CellScope) THEN
+				InitOperand(result,ModeReference);
+				Global.GetSymbolSegmentedName(x,name);
+				symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
+				IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
+				RETURN
+			ELSE
+				GetBaseRegister(basereg,currentScope,x.scope);
+				InitOperand(result,ModeReference);
+				result.op := basereg;
+			END;
+
+			IF IsOpenArray(type) THEN
+				result.tag := basereg;
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				IntermediateCode.MakeMemory(result.op,addressType);
+				IF Global.IsOberonProcedure(x.ownerType) THEN
+					IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+addressType.sizeInBits));
+					UseIntermediateOperand(result.tag);
+				ELSE
+					IntermediateCode.InitImmediate(result.tag,addressType,MAX(LONGINT)); (* non-Oberon procedure => unbounded array length *)
+				END;
+			ELSIF IsStaticArray(type) & (x.kind = SyntaxTree.ValueParameter) THEN
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+			ELSIF IsStaticArray(type) THEN
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				IntermediateCode.MakeMemory(result.op,addressType);
+				IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+			ELSIF type IS SyntaxTree.MathArrayType THEN
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				WITH type: SyntaxTree.MathArrayType DO
+					IF (x.kind = SyntaxTree.ValueParameter) OR (x.kind = SyntaxTree.ConstParameter) THEN
+						IF type.form = SyntaxTree.Tensor THEN
+						ELSIF type.form = SyntaxTree.Open THEN
+							result.tag := result.op;
+							IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,MathAdrOffset*addressType.sizeInBits));
+							IntermediateCode.MakeMemory(result.op,addressType);
+							UseIntermediateOperand(result.tag);
+						ELSIF type.form = SyntaxTree.Static THEN
+							IF x.kind = SyntaxTree.ConstParameter THEN
+								IntermediateCode.MakeMemory(result.op,addressType);
+							END;
+						ELSE HALT(100)
+						END;
+					ELSIF x.kind = SyntaxTree.VarParameter THEN
+						IF type.form = SyntaxTree.Tensor THEN
+							ToMemory(result.op,addressType,0);
+						ELSIF type.form = SyntaxTree.Open THEN
+							MakeMemory(mem, result.op,  addressType, 0); (* offset already added above *)
+							ReuseCopy(result.tag, mem);
+							ReleaseIntermediateOperand(mem);
+							ReleaseIntermediateOperand(result.op);
+							MakeMemory(result.op, result.tag, addressType, ToMemoryUnits(system,MathAdrOffset*addressType.sizeInBits));
+						ELSIF type.form = SyntaxTree.Static THEN
+							IntermediateCode.MakeMemory(result.op,addressType);
+						ELSE HALT(100)
+						END;
+					ELSE HALT(100)
+					END;
+				END;
+			ELSIF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & (type IS SyntaxTree.RecordType) THEN
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				IntermediateCode.MakeMemory(result.op,addressType);
+
+			ELSIF (x.kind = SyntaxTree.ValueParameter) OR (x.kind = SyntaxTree.ConstParameter) THEN
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+			END;
+
+			IF conditional & (x.type.resolved IS SyntaxTree.BooleanType) THEN
+				ValueToCondition(result);
+			ELSIF type IS SyntaxTree.ProcedureType THEN
+				ReleaseIntermediateOperand(result.tag);
+				IF type(SyntaxTree.ProcedureType).isDelegate THEN
+					IF x.kind = SyntaxTree.VarParameter THEN
+						ReuseCopy(result.tag,result.op);
+						IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,system.addressSize));
+						IntermediateCode.MakeMemory(result.tag,addressType);
+					ELSE
+						IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
+						UseIntermediateOperand(result.tag);
+					END;
+				ELSE
+					result.tag := nil;
+				END;
+			(* tag for pointer type computed not here but during dereferencing *)
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) THEN
+				ReleaseIntermediateOperand(result.tag);
+				result.tag := basereg;
+				IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+system.addressSize));
+				IntermediateCode.MakeMemory(result.tag,addressType);
+				UseIntermediateOperand(result.tag);
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind = SyntaxTree.ValueParameter) THEN
+				ReleaseIntermediateOperand(result.tag);
+				result.tag := TypeDescriptorAdr(type);
+				IF ~newObjectFile THEN
+					IntermediateCode.MakeMemory(result.tag,addressType);
+				END;
+				UseIntermediateOperand(result.tag);
+			END;
+			IF Trace THEN TraceExit("VisitParameter") END;
+		END VisitParameter;
+
+		PROCEDURE DynamicCallOperand(VAR operand: Operand; x: SyntaxTree.Procedure);
+		VAR tag,reg,tmp: IntermediateCode.Operand;
+		BEGIN
+			IF Trace THEN TraceEnter("DynamicCallOperand") END;
+			(* left.p: left already emitted *)
+			tag := result.op; (* value of pointer to left *)
+			(* get type desc *)
+			tmp := result.tag;
+			IntermediateCode.MakeMemory(tmp,addressType);
+			(* get method adr *)
+			Reuse1(reg,tmp);
+			ReleaseIntermediateOperand(tmp);
+			Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType, ToMemoryUnits(system,system.addressSize  *(meta.MethodTableOffset - x.methodNumber)))));
+
+			InitOperand(operand,ModeReference);
+			(* then operand.op contains the method adr and operand.tag contains the potential self pointer value *)
+			operand.op := reg;
+			operand.tag := tag;
+			IF Trace THEN TraceExit("DynamicCallOperand") END;
+		END DynamicCallOperand;
+
+		PROCEDURE StaticCallOperand(VAR operand: Operand; x: SyntaxTree.Procedure);
+		VAR source: IntermediateCode.Section; tag,reg: IntermediateCode.Operand; name:Basic.SegmentedName; sectionType: SHORTINT;
+			binary: BinaryCode.Section; bits: SyntaxTree.BinaryCode;
+		BEGIN
+			IF Trace THEN TraceEnter("StaticCallOperand") END;
+			IF x.type(SyntaxTree.ProcedureType).isDelegate THEN
+				tag := result.op;
+				ReleaseIntermediateOperand(result.tag);
+			ELSE tag := nil
+			END;
+			GetCodeSectionNameForSymbol(x, name);
+			IF x.isInline  THEN
+				sectionType := Sections.InlineCodeSection;
+			ELSE
+				sectionType := Sections.CodeSection;
+			END;
+			IF (x.scope.ownerModule = module.module) THEN
+				source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
+			ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.sourceCode # NIL) THEN
+				source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
+				IF source.pc = 0 THEN (* no code yet *)
+					source.Emit(Asm(position,x.procedureScope.body.code.sourceCode,NIL,NIL));
+				END;
+			ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.inlineCode # NIL) THEN
+				bits := x.procedureScope.body.code.inlineCode;
+				source := NewSection(module.allSections, sectionType, name, x, commentPrintout # NIL);
+				binary := BinaryCode.NewBinarySection(source.type, source.priority, system.codeUnit, name, FALSE, FALSE);
+				binary.CopyBits(bits, 0, bits.GetSize());
+				source.SetResolved(binary);
+			ELSE
+				source := NewSection(module.importedSections, sectionType, name,x,commentPrintout # NIL);
+			END;
+			IntermediateCode.InitAddress(reg, addressType, source.name , GetFingerprint(source.symbol), 0);
+			InitOperand(operand,ModeValue);
+			operand.op := reg;
+			operand.tag := tag;
+			IF Trace THEN TraceExit("StaticCallOperand") END;
+		END StaticCallOperand;
+
+		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
+		(* handle expressions of the form designator.procedure or procedure *)
+		BEGIN
+			IF Trace THEN TraceEnter("VisitProcedure") END;
+			IF  (x.type(SyntaxTree.ProcedureType).isDelegate) & ~SemanticChecker.IsStaticProcedure(x) THEN
+				DynamicCallOperand(result,x);
+			ELSIF x.isInline THEN
+				StaticCallOperand(result,x);
+			ELSE
+				StaticCallOperand(result,x);
+			END;
+			IF Trace THEN TraceExit("VisitProcedure") END;
+		END VisitProcedure;
+
+		PROCEDURE VisitOperator(x: SyntaxTree.Operator);
+		BEGIN
+			VisitProcedure(x);
+		END VisitOperator;
+
+		(** statements *)
+
+		PROCEDURE VisitProcedureCallStatement(x: SyntaxTree.ProcedureCallStatement);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitProcedureCallStatement") END;
+			Expression(x.call);
+			IF (x.call.type # NIL) THEN (* WINAPI call: procedure returning unused value *)
+				ReleaseOperand(result)
+			END;
+			IF Trace THEN TraceExit("VisitProcedureCallStatement") END;
+		END VisitProcedureCallStatement;
+
+		PROCEDURE AssignMathArray(left,right: SyntaxTree.Expression);
+		VAR leftType, rightType: SyntaxTree.MathArrayType;
+			leftBase, rightBase: SyntaxTree.Type;
+			procedureName,s: SyntaxTree.IdentifierString;
+			arrayBase: SyntaxTree.Module; saved: RegisterEntry;  procedure: SyntaxTree.Procedure; parameter: SyntaxTree.Parameter;
+			size: LONGINT; rightKind: LONGINT;
+			dummy: IntermediateCode.Operand;
+
+		CONST moduleName = "FoxArrayBase";
+
+			PROCEDURE OpenArray(from: SyntaxTree.MathArrayType): SyntaxTree.MathArrayType;
+			VAR result: SyntaxTree.MathArrayType; base: SyntaxTree.Type;
+			BEGIN
+				base := from(SyntaxTree.MathArrayType).arrayBase.resolved;
+				IF base IS SyntaxTree.MathArrayType THEN
+					base := OpenArray(base(SyntaxTree.MathArrayType));
+				END;
+				result := SyntaxTree.NewMathArrayType(left.position,currentScope,SyntaxTree.Open);
+				result.SetArrayBase(base);
+				RETURN result
+			END OpenArray;
+
+		BEGIN
+			IF AddImport(moduleName,arrayBase,TRUE) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved);
+				leftType := left.type.resolved(SyntaxTree.MathArrayType);
+				rightType := right.type.resolved(SyntaxTree.MathArrayType);
+				leftBase := SemanticChecker.ArrayBase(leftType,MAX(LONGINT));
+				rightBase := SemanticChecker.ArrayBase(rightType,MAX(LONGINT));
+				ASSERT(leftBase.resolved.SameType(rightBase.resolved));
+
+				IF leftType.form = SyntaxTree.Tensor THEN
+					procedureName := "CopyTensor"; rightKind := SyntaxTree.ValueParameter;
+				ELSIF leftType.form = SyntaxTree.Open THEN
+					procedureName := "CopyArray"; rightKind := SyntaxTree.VarParameter;
+				ELSIF leftType.form = SyntaxTree.Static THEN
+					procedureName := "CopyArray";rightKind := SyntaxTree.VarParameter;
+					leftType := OpenArray(leftType); (* necessary since copy procedure presumes an open array *)
+				END;
+
+				procedure := arrayBase.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
+				IF procedure = NIL THEN
+					s := "Instruction not supported on target, emulation procedure ";
+					Strings.Append(s,moduleName);
+					Strings.Append(s,".");
+					Strings.Append(s,procedureName);
+					Strings.Append(s," not present");
+					Error(position,s);
+				ELSE
+					parameter := SyntaxTree.NewParameter(left.position,procedure.type(SyntaxTree.ProcedureType),SyntaxTree.NewIdentifier("temp"), SyntaxTree.VarParameter);
+					parameter.SetType(leftType);
+					parameter.SetAccess(SyntaxTree.Internal);
+					PushParameter(left,parameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+					parameter.SetKind(rightKind);
+					PushParameter(right,parameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
+					size := ToMemoryUnits(system,system.SizeOf(rightBase));
+					Emit(Push(position,IntermediateCode.Immediate(int32,size)));
+					StaticCallOperand(result,procedure);
+					Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+					ReleaseOperand(result);
+				END;
+				RestoreRegisters(saved);
+			END;
+		END AssignMathArray;
+
+		PROCEDURE Assign(left,right: SyntaxTree.Expression);
+		VAR
+			leftO, rightO: Operand;
+			mem: IntermediateCode.Operand;
+			leftType, rightType, componentType: SyntaxTree.Type;
+			size: LONGINT;
+			parameters: SyntaxTree.ExpressionList;
+			procedure: SyntaxTree.Procedure;
+			call: SyntaxTree.ProcedureCallDesignator;
+			designator: SyntaxTree.Designator;
+
+			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
+			VAR procedureType: SyntaxTree.ProcedureType;
+			BEGIN
+				IF ReturnedAsParameter(right.type)  THEN
+					IF right IS SyntaxTree.ProcedureCallDesignator THEN
+						procedureType := right(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType);
+						RETURN procedureType.callingConvention = SyntaxTree.OberonCallingConvention
+					ELSIF right IS SyntaxTree.BuiltinCallDesignator THEN
+						WITH right: SyntaxTree.BuiltinCallDesignator DO
+							IF right.id = Global.Reshape THEN RETURN TRUE
+							END;
+						END;
+					END;
+				END;
+				RETURN FALSE
+			END CanPassAsResultParameter;
+
+		BEGIN
+			ASSERT(left.type # NIL); ASSERT(right.type # NIL);
+			leftType := left.type.resolved; rightType:= right.type.resolved;
+
+			IF CanPassAsResultParameter(right) THEN
+				procedureResultDesignator := left(SyntaxTree.Designator);
+				Expression(right);
+				procedureResultDesignator := NIL;
+			ELSIF (right IS SyntaxTree.UnaryExpression) & (right(SyntaxTree.UnaryExpression).operator = Scanner.Alias) THEN
+				(* left <-- ALIAS OF right: zerocopy *)
+				IF GetRuntimeProcedure("FoxArrayBase","ZeroCopy",procedure,TRUE) THEN
+					designator := SyntaxTree.NewSymbolDesignator(Diagnostics.Invalid, NIL, procedure);
+					designator.SetType(procedure.type);
+					parameters := SyntaxTree.NewExpressionList();  parameters.AddExpression(right(SyntaxTree.UnaryExpression).left); parameters.AddExpression(left);
+					call := SyntaxTree.NewProcedureCallDesignator(position,designator(SyntaxTree.Designator),parameters);
+					VisitProcedureCallDesignator(call(SyntaxTree.ProcedureCallDesignator));
+				END;
+			ELSIF leftType IS SyntaxTree.RangeType THEN
+				(* LHS is of array range type *)
+				ASSERT(rightType IS SyntaxTree.RangeType); (* ensured by the checker *)
+				Evaluate(right, rightO);
+				Designate(left, leftO);(* The order is crucial. Do not reorder emission of left and right *)
+
+				(* first *)
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), 0);
+				Emit(Mov(position,mem, rightO.op));
+				ReleaseIntermediateOperand(mem);
+
+				(* last *)
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
+				Emit(Mov(position,mem, rightO.tag));
+				ReleaseIntermediateOperand(mem);
+
+				(* step *)
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+				Emit(Mov(position,mem, rightO.extra));
+				ReleaseIntermediateOperand(mem);
+
+				ReleaseOperand(rightO);
+				ReleaseOperand(leftO)
+			ELSIF leftType IS SyntaxTree.ComplexType THEN
+				ASSERT(leftType.SameType(rightType)); (* ensured by the checker *)
+
+				Evaluate(right, rightO);
+				Designate(left, leftO); (* The order is crucial. Do not reorder emission of left and right *)
+
+				componentType := leftType(SyntaxTree.ComplexType).componentType;
+
+				(* real part *)
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, componentType), 0);
+				Emit(Mov(position,mem, rightO.op));
+				ReleaseIntermediateOperand(mem);
+
+				(* imaginary part *)
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, componentType), ToMemoryUnits(system, system.SizeOf(componentType)));
+				Emit(Mov(position,mem, rightO.tag));
+				ReleaseIntermediateOperand(mem);
+
+				ReleaseOperand(rightO);
+				ReleaseOperand(leftO)
+			ELSIF (leftType IS SyntaxTree.BasicType) OR (leftType IS SyntaxTree.PointerType) OR (leftType IS SyntaxTree.EnumerationType)
+				OR (leftType IS SyntaxTree.PortType) THEN
+				(* rightO := leftO;*)
+				Evaluate(right,rightO);
+				(* DO NOT REORDER EMISSION OF LEFT AND RIGHT OPERAND *)
+				Designate(left,leftO);
+				IF leftO.mode = ModeReference THEN
+					MakeMemory(mem,leftO.op,IntermediateCode.GetType(system,left.type),0);
+					destination := mem;
+				ELSE
+					destination := leftO.op;
+				END;
+				ReleaseOperand(leftO);
+				IF destination.mode # IntermediateCode.Undefined THEN
+					Emit(Mov(position,destination,rightO.op));
+				END;
+				ReleaseOperand(rightO);
+				ReleaseIntermediateOperand(mem);
+				IntermediateCode.InitOperand(destination);
+			ELSIF (leftType IS SyntaxTree.ProcedureType) THEN
+				Evaluate(right,rightO);
+				Designate(left,leftO);
+				MakeMemory(mem,leftO.op,addressType,0);
+				Emit(Mov(position,mem,rightO.op));
+				ReleaseIntermediateOperand(mem);
+				IF leftType(SyntaxTree.ProcedureType).isDelegate THEN
+					(* delegate *)
+					(*
+					MakeMemory(leftO.tag,leftO.tag,addressType); no! is already memory
+					*)
+					Emit(Mov(position,leftO.tag,rightO.tag));
+				END;
+				ReleaseOperand(leftO);
+				ReleaseOperand(rightO);
+			ELSIF (leftType IS SyntaxTree.RecordType) THEN
+				Designate(right,rightO);
+				Designate(left,leftO);
+				size := ToMemoryUnits(system,system.SizeOf(leftType));
+				Emit(Copy(position,leftO.op,rightO.op,IntermediateCode.Immediate(addressType,size)));
+				ReleaseOperand(leftO); ReleaseOperand(rightO);
+			ELSIF (leftType IS SyntaxTree.ArrayType) THEN
+				IF (rightType IS SyntaxTree.StringType) THEN
+					CopyString(left,right);
+				ELSIF ((rightType IS SyntaxTree.ArrayType) & (rightType(SyntaxTree.ArrayType).staticLength # 0) OR (rightType IS SyntaxTree.MathArrayType) & (rightType(SyntaxTree.MathArrayType).staticLength # 0)) & (leftType(SyntaxTree.ArrayType).staticLength # 0) THEN
+					Designate(right,rightO);
+					Designate(left,leftO);
+					size := ToMemoryUnits(system,system.SizeOf(rightType));
+					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+					ReleaseOperand(leftO); ReleaseOperand(rightO);
+				ELSE
+					HALT(201)
+				END;
+			ELSIF (leftType IS SyntaxTree.MathArrayType) THEN
+				AssignMathArray(left,right);
+			ELSE
+				HALT(200);
+			END;
+		END Assign;
+
+		PROCEDURE VisitAssignment(x: SyntaxTree.Assignment);
+		BEGIN
+			IF Trace THEN TraceEnter("VisitAssignment") END;
+			Assign(x.left,x.right);
+			IF Trace THEN TraceExit("VisitAssignment") END;
+		END VisitAssignment;
+
+		PROCEDURE VisitCommunicationStatement(communication: SyntaxTree.CommunicationStatement);
+		VAR p0,p1: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
+			constructor: SyntaxTree.Procedure; s0,s1: Operand; hint: HUGEINT; size: LONGINT;
+		BEGIN
+			p0 := communication.left; p1 := communication.right;
+			IF communication.send THEN
+				Evaluate(p0,s0);
+				Evaluate(p1,s1);
+				size := ToMemoryUnits(system,system.SizeOf(p1.type));
+				Emit(Push(position,s0.op));
+				Emit(Push(position,s1.op));
+				(*
+				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+				*)
+				IF size # 1 THEN Error(p1.position,"send not implemented for complex data types") END;
+				ReleaseOperand(s0);
+				ReleaseOperand(s1);
+				CallThis(ChannelModuleName,"Send",-1);
+			(* ----- RECEIVE ------*)
+			ELSE
+				Evaluate(p0,s0);
+				Emit(Push(position,s0.op));
+				Designate(p1,s1);
+				size := ToMemoryUnits(system,system.SizeOf(p1.type));
+				Emit(Push(position,s1.op));
+				(*
+				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+				*)
+				IF size # 1 THEN Error(p1.position,"receive not implemented for complex data types") END;
+				ReleaseOperand(s0);
+				ReleaseOperand(s1);
+				CallThis(ChannelModuleName,"Receive",-1)
+			END;
+		END VisitCommunicationStatement;
+
+
+		PROCEDURE VisitIfStatement(x: SyntaxTree.IfStatement);
+		VAR end: Label; i,elsifs: LONGINT; elsif: SyntaxTree.IfPart; escape: BOOLEAN;
+
+			PROCEDURE IfPart(if: SyntaxTree.IfPart);
+			VAR true, false: Label; condition, value: BOOLEAN;
+			BEGIN
+				condition := ~SemanticChecker.IsBooleanValue(if.condition, value);
+				IF condition THEN
+					true := NewLabel();
+					false := NewLabel();
+					Condition(if.condition,true,false);
+					SetLabel(true);
+					StatementSequence(if.statements);
+					BrL(end);
+					SetLabel(false);
+				ELSE
+					IF value THEN (* always true *)
+						escape := TRUE;
+						StatementSequence(if.statements);
+						(* no branch necessary -- rest skipped *)
+					END;
+				END;
+			END IfPart;
+
+		BEGIN
+			IF Trace THEN TraceEnter("VisitIfStatement") END;
+			end := NewLabel();
+			elsifs := x.ElsifParts();
+			IfPart(x.ifPart);
+			FOR i := 0 TO elsifs-1 DO
+				IF ~escape THEN
+					elsif := x.GetElsifPart(i);
+					IfPart(elsif);
+				END;
+			END;
+			IF (x.elsePart # NIL) & ~escape THEN
+				StatementSequence(x.elsePart);
+			END;
+			SetLabel(end);
+			IF Trace THEN TraceExit("VisitIfStatement") END;
+		END VisitIfStatement;
+
+		PROCEDURE WithPart(x: SyntaxTree.WithPart; VAR falseL, endL: Label);
+		VAR trueL: Label; res: Operand; recordType: SyntaxTree.RecordType;
+		BEGIN
+			(*IF x.variable.type.resolved = x.type.resolved THEN
+				(* always true, do nothing *)
+			ELSE*)
+			Designate(x.variable,res);
+			IF IsPointerToRecord(x.variable.type,recordType) THEN
+				Dereference(res,recordType,IsUnsafePointer(x.variable.type))
+			END;
+			trueL := NewLabel();
+			TypeTest(res.tag,x.type,trueL,falseL);
+			ReleaseOperand(res);
+			SetLabel(trueL);
+			StatementSequence(x.statements);
+			BrL(endL);
+		END WithPart;
+
+		PROCEDURE VisitWithStatement(x: SyntaxTree.WithStatement);
+		VAR endL,falseL: Label;i: LONGINT;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitWithStatement") END;
+
+			endL := NewLabel();
+			FOR i := 0 TO x.WithParts()-1 DO
+				falseL := NewLabel();
+				WithPart(x.GetWithPart(i),falseL,endL);
+				SetLabel(falseL);
+			END;
+			IF x.elsePart = NIL THEN
+				IF ~isUnchecked THEN
+					Emit(Trap(position,WithTrap));
+				END;
+			ELSE
+				StatementSequence(x.elsePart)
+			END;
+			SetLabel(endL);
+			IF Trace THEN TraceExit("VisitWithStatement") END;
+		END VisitWithStatement;
+
+		PROCEDURE VisitCaseStatement(x: SyntaxTree.CaseStatement);
+		VAR var: Operand; jmp,res,op,tmp: IntermediateCode.Operand; j,i,size: LONGINT; part: SyntaxTree.CasePart; constant: SyntaxTree.CaseConstant;
+			out,else: Label; label: Label;
+			fixups: POINTER TO ARRAY OF Label; section: IntermediateCode.Section; name: Basic.SegmentedName; string: ARRAY 32 OF CHAR;
+			symbol: SyntaxTree.Symbol;
+		BEGIN
+			(*! split case statement into if-elsif statements for large case label lists *)
+			IF Trace THEN TraceEnter("VisitCaseStatement") END;
+			size := x.max-x.min+1;
+			IF (size<0) OR (size > 1024*1024) THEN Error(x.position,"implementation restriction: case table size too large"); RETURN
+			END;
+			Evaluate(x.variable,var);
+			ReuseCopy(tmp,var.op);
+			ReleaseIntermediateOperand(var.op);
+			var.op := tmp;
+			Emit(Sub(position,var.op,var.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,x.variable.type),x.min)));
+			Convert(var.op,addressType);
+			size := x.max-x.min+1;
+			else := NewLabel();
+			BrgeL(else,var.op,IntermediateCode.Immediate(addressType,size));
+			(*
+			UniqueId(name,module.module,"case",caseId);
+			*)
+			string := "@case"; Basic.AppendNumber(string, caseId); INC(caseId);
+			Global.GetModuleSegmentedName(module.module, name);
+			Basic.SuffixSegmentedName(name,Basic.MakeString(string));
+			symbol := SyntaxTree.NewSymbol(name[1]);
+			symbol.SetScope(moduleScope);
+			NEW(fixups,size); FOR i := 0 TO size-1 DO fixups[i] := NIL END;
+			section := NewSection(module.allSections, Sections.ConstSection,name,SyntaxTree.NewSymbol(name[1]),commentPrintout # NIL);
+			section.isCaseTable := TRUE;
+			IntermediateCode.InitAddress(jmp, addressType, section.name, GetFingerprint(section.symbol), 0);
+			ReuseCopy(res,var.op);
+			ReleaseOperand(var);
+			Emit(Mul(position,res,res,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.addressSize))));
+			Emit(Add(position,res,res,jmp));
+			IntermediateCode.MakeMemory(res,addressType);
+			Emit(Br(position,res));
+			ReleaseIntermediateOperand(res);
+			out := NewLabel();
+			FOR i := 0 TO x.caseParts.Length()-1 DO (* case parts *)
+				part := x.GetCasePart(i);
+				constant := part.firstConstant;
+				label := NewLabel();
+				SetLabel(label);
+				WHILE(constant # NIL) DO (* case labels for this case part *)
+					FOR j := constant.min TO constant.max DO
+						fixups[j-x.min] := label;
+					END;
+					constant := constant.next;
+				END;
+				StatementSequence(part.statements);
+				BrL(out);
+			END;
+			SetLabel(else);
+			FOR i := 0 TO size-1 DO
+				IF fixups[i] = NIL THEN
+					fixups[i] := else;
+				END;
+			END;
+			IF x.elsePart # NIL THEN
+				StatementSequence(x.elsePart);
+			ELSIF ~isUnchecked THEN
+				Emit(Trap(position,CaseTrap));
+			END;
+			SetLabel(out);
+			FOR i := 0 TO size-1 DO
+				IntermediateCode.InitAddress(op, addressType, fixups[i].section.name, GetFingerprint(fixups[i].section.symbol), fixups[i].pc);
+				section.Emit(Data(position,op));
+			END;
+			IF Trace THEN TraceExit("VisitCaseStatement") END;
+		END VisitCaseStatement;
+
+
+		PROCEDURE VisitWhileStatement(x: SyntaxTree.WhileStatement);
+		VAR start: Label; true,false: Label;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitWhileStatement") END;
+			start := NewLabel();
+			true := NewLabel();
+			false := NewLabel();
+			SetLabel(start);
+			Condition(x.condition,true,false);
+			SetLabel(true);
+			StatementSequence(x.statements);
+			BrL(start);
+			SetLabel(false);
+			IF Trace THEN TraceExit("VisitWhileStatement") END;
+		END VisitWhileStatement;
+
+		PROCEDURE VisitRepeatStatement(x: SyntaxTree.RepeatStatement);
+		VAR false,true: Label;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitRepeatStatement") END;
+			true := NewLabel();
+			false := NewLabel();
+			SetLabel(false);
+			StatementSequence(x.statements);
+			Condition(x.condition,true,false);
+			SetLabel(true);
+			IF Trace THEN TraceExit("VisitRepeatStatement") END;
+		END VisitRepeatStatement;
+
+		PROCEDURE VisitForStatement(x: SyntaxTree.ForStatement);
+		VAR
+			binary: SyntaxTree.BinaryExpression; start,true,false : Label; cmp: LONGINT; by: HUGEINT;
+			temporaryVariable: SyntaxTree.Variable;
+			temporaryVariableDesignator : SyntaxTree.Designator;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitForStatement") END;
+			true := NewLabel();
+			false := NewLabel();
+			start := NewLabel();
+
+			Assign(x.variable,x.from);
+			temporaryVariable := GetTemporaryVariable(x.variable.type, FALSE);
+			temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(SemanticChecker.InvalidPosition, NIL, temporaryVariable);
+			temporaryVariableDesignator.SetType(x.variable.type.resolved);
+
+
+			Assign(temporaryVariableDesignator,x.to);
+			IF x.by = NIL THEN by := 1 ELSE by := x.by.resolved(SyntaxTree.IntegerValue).hvalue END;
+			IF by > 0 THEN
+				cmp := Scanner.LessEqual
+			ELSE
+				cmp := Scanner.GreaterEqual
+			END;
+			binary := SyntaxTree.NewBinaryExpression(0,x.variable,temporaryVariableDesignator,cmp);
+			binary.SetType(system.booleanType);
+
+			SetLabel(start);
+
+
+			Condition(binary,true,false);
+			SetLabel(true);
+			StatementSequence(x.statements);
+
+			binary := SyntaxTree.NewBinaryExpression(0,x.variable,x.by,Scanner.Plus);
+			binary.SetType(x.variable.type);
+			Assign(x.variable,binary);
+
+			BrL(start);
+			SetLabel(false);
+
+			IF Trace THEN TraceExit("VisitForStatement") END;
+		END VisitForStatement;
+
+		PROCEDURE VisitExitableBlock(x: SyntaxTree.ExitableBlock);
+		VAR prevLoop: Label;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitExitableBlock") END;
+			prevLoop := currentLoop;
+			currentLoop := NewLabel();
+			StatementSequence(x.statements);
+			SetLabel(currentLoop);
+			currentLoop := prevLoop;
+			IF Trace THEN TraceExit("VisitExitableBlock") END;
+		END VisitExitableBlock;
+
+		PROCEDURE VisitLoopStatement(x: SyntaxTree.LoopStatement);
+		VAR prevLoop,start: Label;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitLoopStatement") END;
+			start := NewLabel();
+			prevLoop := currentLoop;
+			SetLabel(start);
+			currentLoop := NewLabel();
+			StatementSequence(x.statements);
+			BrL(start);
+			SetLabel(currentLoop);
+			currentLoop := prevLoop;
+			IF Trace THEN TraceExit("VisitLoopStatement") END;
+		END VisitLoopStatement;
+
+		PROCEDURE VisitExitStatement(x: SyntaxTree.ExitStatement);
+		VAR outer: SyntaxTree.Statement;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitExitStatement") END;
+			IF locked  THEN (* r if we jump out of an exclusive block *)
+				outer := x.outer;
+				WHILE ~(outer IS SyntaxTree.ExitableBlock) & ~((outer IS SyntaxTree.StatementBlock) & outer(SyntaxTree.StatementBlock).isExclusive) DO
+					outer := outer.outer;
+				END;
+				IF ~(outer IS SyntaxTree.ExitableBlock) THEN
+					Lock(FALSE);
+				END;
+			END;
+			BrL(currentLoop);
+			IF Trace THEN TraceExit("VisitExitStatement") END;
+		END VisitExitStatement;
+
+		PROCEDURE VisitReturnStatement(x: SyntaxTree.ReturnStatement);
+		VAR
+			expression, parameterDesignator: SyntaxTree.Expression;
+			type, componentType: SyntaxTree.Type;
+			res, right: Operand;
+			left, size, mem, reg: IntermediateCode.Operand;
+			parameter: SyntaxTree.Parameter;
+			procedure: SyntaxTree.Procedure;
+			procedureType: SyntaxTree.ProcedureType;
+			returnTypeOffset: LONGINT;
+			delegate: BOOLEAN;
+			map: SymbolMap;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitReturnStatement") END;
+			expression := x.returnValue;
+			procedure := currentScope(SyntaxTree.ProcedureScope).ownerProcedure;
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+
+			IF currentIsInline THEN
+				IF expression # NIL THEN
+					map := currentMapper.Get(NIL);
+					IF map # NIL THEN
+						Assign(map.to, expression);
+					END;
+				END;
+				BrL(currentInlineExit);
+				RETURN;
+			END;
+
+			IF expression # NIL THEN
+				type := expression.type.resolved;
+				IF (expression IS SyntaxTree.ResultDesignator) THEN
+					IF locked THEN Lock(FALSE) END;
+					IF profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
+					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
+				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention) THEN
+					(* return without structured return parameter *)
+					Evaluate(expression,res);
+					delegate := (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate);
+					IF locked OR profile THEN
+						Emit(Push(position,res.op));
+						IF delegate THEN HALT(200) END;
+						ReleaseOperand(res);
+						IF locked THEN Lock(FALSE) END;
+						IF profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
+						reg := NewRegisterOperand(res.op.type);
+						Emit(Pop(position,reg));
+						Emit(Return(position,reg));
+						ReleaseIntermediateOperand(reg);
+					ELSE
+						Emit(Return(position,res.op));
+						ReleaseOperand(res);
+					END;
+				ELSIF (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR type.IsPointer()
+				THEN
+					(* return using structured return parameter *)
+					ASSERT((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static)
+						OR SemanticChecker.IsPointerType(type));
+					(* parameter := currentScope(SyntaxTree.ProcedureScope).FindParameter(Global.ReturnParameterName); *)
+					parameter :=procedureType.returnParameter;
+					ASSERT(parameter # NIL);
+					returnTypeOffset := parameter.offsetInBits;
+					(*
+					IF parameter# NIL THEN
+						returnTypeOffset := parameter.offsetInBits + system.SizeOfParameter(parameter);
+						INC(returnTypeOffset,(-returnTypeOffset) MOD system.AlignmentOf(system.parameterAlignment,parameter.type));
+					ELSE
+						returnTypeOffset := system.offsetFirstParameter
+					END;
+					*)
+					left := IntermediateCode.Memory(addressType,fp,ToMemoryUnits(system,returnTypeOffset));
+
+					IF type IS SyntaxTree.RangeType THEN
+						(* array range type *)
+						Evaluate(expression, right);
+
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), 0);
+						Emit(Mov(position,mem, right.op)); (* first *)
+						ReleaseIntermediateOperand(mem);
+
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
+						Emit(Mov(position,mem, right.tag)); (* last *)
+						ReleaseIntermediateOperand(mem);
+
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+						Emit(Mov(position,mem, right.extra)); (* step *)
+						ReleaseIntermediateOperand(mem);
+
+						ReleaseOperand(right);
+					ELSIF type IS SyntaxTree.ComplexType THEN
+						Evaluate(expression, right);
+						componentType := type(SyntaxTree.ComplexType).componentType;
+
+						MakeMemory(mem, left, IntermediateCode.GetType(system, componentType), 0);
+						Emit(Mov(position,mem, right.op)); (* real part *)
+						ReleaseIntermediateOperand(mem);
+
+						MakeMemory(mem, left, IntermediateCode.GetType(system, componentType), ToMemoryUnits(system, system.SizeOf(componentType)));
+						Emit(Mov(position,mem, right.tag)); (* imaginary part *)
+						ReleaseIntermediateOperand(mem);
+
+						ReleaseOperand(right);
+
+					ELSIF SemanticChecker.IsPointerType(type) THEN
+						Evaluate(expression, right);
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.addressType), 0);
+						Emit(Mov(position,mem, right.op)); (* step *)
+						ReleaseOperand(right); ReleaseIntermediateOperand(mem);
+					ELSE
+						(* not array range type *)
+						Designate(expression, right);
+						IF type IS SyntaxTree.RecordType THEN
+							size := IntermediateCode.Memory(addressType, fp, ToMemoryUnits(system, returnTypeOffset + system.addressSize));
+						ELSE ASSERT( (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.MathArrayType));
+							size := IntermediateCode.Immediate(addressType, ToMemoryUnits(system, system.SizeOf(type)));
+						END;
+						Emit(Copy(position,left, right.op, size));
+						ReleaseOperand(right)
+					END;
+					ReleaseIntermediateOperand(left);
+					IF locked THEN Lock(FALSE) END;
+					IF profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
+				ELSIF (type IS SyntaxTree.MathArrayType) OR (type IS SyntaxTree.ProcedureType) THEN
+					parameter := procedureType.returnParameter;
+					checker.SetCurrentScope(currentScope);
+
+					IF parameter = NIL THEN
+						Error(procedure.position, "structured return of parameter of procedure not found");
+					ELSE
+						parameterDesignator := checker.NewSymbolDesignator(expression.position,NIL,parameter);
+						Assign(parameterDesignator,expression);
+					END;
+					IF locked THEN Lock(FALSE) END;
+					IF profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
+				ELSE
+					HALT(200);
+				END;
+			ELSE
+				IF locked THEN Lock(FALSE) END;
+				IF profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
+			END;
+
+			Emit(Leave(position,procedure.type(SyntaxTree.ProcedureType).callingConvention));
+			Emit(Exit(position,procedure.type(SyntaxTree.ProcedureType).pcOffset,procedure.type(SyntaxTree.ProcedureType).callingConvention));
+			IF Trace THEN TraceExit("VisitReturnStatement") END;
+		END VisitReturnStatement;
+
+		PROCEDURE MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure;
+		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; procedureScope: SyntaxTree.ProcedureScope;
+			identifier: SyntaxTree.Identifier; body: SyntaxTree.Body; returnStatement : SyntaxTree.ReturnStatement;
+			statements: SyntaxTree.StatementSequence;
+			name, suffix: SyntaxTree.IdentifierString;
+		BEGIN
+			Strings.IntToStr(awaitProcCounter,suffix);
+			Strings.Concat("@AwaitProcedure",suffix,name);
+			identifier := SyntaxTree.NewIdentifier(name);
+			INC(awaitProcCounter);
+			ASSERT(currentScope IS SyntaxTree.ProcedureScope);
+			procedureScope := SyntaxTree.NewProcedureScope(currentScope);
+			ASSERT(procedureScope.outerScope IS SyntaxTree.ProcedureScope);
+			procedure := SyntaxTree.NewProcedure(x.position,identifier,procedureScope);
+			procedure.SetAccess(SyntaxTree.Hidden);
+			procedure.SetScope(currentScope);
+			procedureType := SyntaxTree.NewProcedureType(x.position,currentScope);
+			procedureType.SetReturnType(system.booleanType);
+			procedure.SetType(procedureType);
+			body := SyntaxTree.NewBody(x.position,procedureScope);
+			procedureScope.SetBody(body);
+			returnStatement := SyntaxTree.NewReturnStatement(x.position,body);
+			returnStatement.SetReturnValue(x.condition);
+			statements := SyntaxTree.NewStatementSequence();
+			statements.AddStatement(returnStatement);
+			body.SetStatementSequence(statements);
+			currentScope.AddProcedure(procedure);
+			RETURN procedure
+		END MakeAwaitProcedure;
+
+		PROCEDURE VisitAwaitStatement(x: SyntaxTree.AwaitStatement);
+		VAR proc: SyntaxTree.Procedure; res: IntermediateCode.Operand; symbol: Sections.Section;
+			call: IntermediateCode.Operand; label: Label; name: Basic.SegmentedName;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitAwaitStatement") END;
+			IF profile THEN ProfilerEnterExit(numberProcedures, FALSE) END;
+
+			proc := MakeAwaitProcedure(x);
+			Emit(Push(position,fp));
+			Global.GetSymbolSegmentedName(proc,name);
+			symbol := NewSection(module.allSections, Sections.CodeSection, name,proc,commentPrintout # NIL);
+			IntermediateCode.InitAddress(call,addressType,name, GetFingerprint(proc), 0);
+			res := NewRegisterOperand(IntermediateCode.GetType(system,system.booleanType));
+			Emit(Call(position,call,ProcedureParametersSize(system,proc)));
+			Emit(Result(position,res));
+			(*
+			AcquireThisRegister(IntermediateCode.GetType(system,system.booleanType),IntermediateCode.Result);
+			IntermediateCode.InitRegister(res,IntermediateCode.GetType(system,system.booleanType),IntermediateCode.Result);
+			*)
+			InitOperand(result,ModeValue);
+			result.op := res;
+			label := NewLabel();
+			BreqL(label, result.op, true);
+			ReleaseOperand(result);
+			symbol := NewSection(module.allSections, Sections.CodeSection, name,proc,commentPrintout # NIL);
+			IntermediateCode.InitAddress(res, addressType, name,GetFingerprint(proc), 0);
+			Emit(Push(position,res));
+			Emit(Push(position,fp));
+			PushSelfPointer();
+			Emit(Push(position,nil));
+			CallThis("Objects","Await",4);
+			SetLabel(label);
+			IF profile THEN ProfilerEnterExit(numberProcedures, TRUE) END;
+
+			IF Trace THEN TraceExit("VisitAwaitStatement") END;
+		END VisitAwaitStatement;
+
+		PROCEDURE StatementSequence(x: SyntaxTree.StatementSequence);
+		VAR statement: SyntaxTree.Statement;  i: LONGINT; (* pos: LONGINT; *)
+		BEGIN
+			FOR i := 0 TO x.Length() - 1 DO
+				statement := x.GetStatement( i );
+				Statement(statement);
+			END;
+		END StatementSequence;
+
+		PROCEDURE PushSelfPointer;
+		VAR scope: SyntaxTree.Scope;  op: Operand; moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
+		BEGIN
+			scope := currentScope;
+			WHILE(scope.outerScope IS SyntaxTree.ProcedureScope) DO
+				scope := scope.outerScope;
+			END;
+			IF scope.outerScope IS SyntaxTree.ModuleScope THEN
+				IF ~newObjectFile THEN
+					Symbol(moduleSelf,op);
+					IntermediateCode.MakeMemory(op.op,addressType);
+				ELSE
+					moduleSection := meta.ModuleSection();
+					moduleOffset := moduleSection.pc;
+					op.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
+				END;
+			ELSE
+				GetBaseRegister(op.op,currentScope,scope);
+				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
+				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
+				IntermediateCode.MakeMemory(op.op,addressType);
+			END;
+			Emit(Push(position,op.op));
+			ReleaseOperand(op);
+		END PushSelfPointer;
+
+		PROCEDURE Lock(lock: BOOLEAN);
+		BEGIN
+			IF Trace THEN TraceEnter("Lock") END;
+			IF profile THEN ProfilerEnterExit(numberProcedures, FALSE) END;
+			CheckRegistersFree(); (* no register may be in use as operands should not be preserved over the lock / unlock boundary *)
+			IF dump # NIL THEN
+				IF lock THEN dump.String("lock") ELSE dump.String("unlock") END;
+				dump.Ln;dump.Update;
+			END;
+			PushSelfPointer;
+			Emit(Push(position,true));
+			IF lock THEN CallThis("Objects","Lock",2)
+			ELSE CallThis("Objects","Unlock",2);
+			END;
+			IF profile THEN ProfilerEnterExit(numberProcedures, TRUE) END;
+			IF Trace THEN TraceExit("Lock") END;
+		END Lock;
+
+		PROCEDURE VisitStatementBlock(x: SyntaxTree.StatementBlock);
+		VAR previouslyUnchecked: BOOLEAN;
+		BEGIN
+			IF Trace THEN TraceEnter("VisitStatementBlock") END;
+			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
+
+			previouslyUnchecked := isUnchecked;
+			isUnchecked := isUnchecked OR x.isUnchecked;
+			IF x.isExclusive THEN Lock(TRUE); ASSERT(~locked);  locked := TRUE; END;
+			IF x.statements # NIL THEN
+				StatementSequence(x.statements);
+			END;
+			IF x.isExclusive THEN Lock(FALSE); ASSERT(locked); locked := FALSE; END;
+			isUnchecked := previouslyUnchecked;
+
+			IF Trace THEN TraceExit("VisitStatementBlock") END;
+		END VisitStatementBlock;
+
+		PROCEDURE VisitCode(x: SyntaxTree.Code);
+		VAR (*  inline: Sections.CellNet; symbol: SyntaxTree.Symbol; *)
+			in, out: IntermediateCode.Rules; statement: SyntaxTree.Statement; i: LONGINT; operand,par: Operand; str: POINTER TO ARRAY OF CHAR;
+				result, mem: IntermediateCode.Operand; scope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType; return: IntermediateCode.Operand;
+				procedure: SyntaxTree.Procedure;
+				map: SymbolMap;
+		BEGIN
+			scope := currentScope;
+			WHILE ~(scope IS SyntaxTree.ProcedureScope) DO scope := scope.outerScope END;
+			procedure :=  scope(SyntaxTree.ProcedureScope).ownerProcedure;
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			return := emptyOperand;
+
+			IF Trace THEN TraceEnter("VisitCode") END;
+			IF (x.inRules # NIL) & (x.inRules.Length()>0) THEN
+				NEW(in, x.inRules.Length());
+				FOR i := 0 TO LEN(in)-1 DO
+					statement := x.inRules.GetStatement(i);
+					WITH statement: SyntaxTree.Assignment DO
+						Evaluate(statement.right, operand);
+						result := operand.op;
+						NEW(str, 64);
+						Basic.GetString(statement.left(SyntaxTree.IdentifierDesignator).identifier, str^);
+						in[i] := result; IntermediateCode.SetString(in[i], str);
+						ReleaseIntermediateOperand(operand.tag);
+					END;
+				END;
+			ELSE in := NIL
+			END;
+			IF (x.outRules # NIL) & (x.outRules.Length()>0) THEN
+				NEW(out, x.outRules.Length());
+				FOR i := 0 TO LEN(out)-1 DO
+					statement := x.outRules.GetStatement(i);
+					IF statement IS SyntaxTree.StatementBlock THEN statement := statement(SyntaxTree.StatementBlock).statements.GetStatement(0) END;
+					WITH statement: SyntaxTree.Assignment DO
+						Evaluate(statement.left, operand); (*?? or designate *)
+						result := operand.op;
+						NEW(str, 64);
+						Basic.GetString(statement.right(SyntaxTree.IdentifierDesignator).identifier, str^);
+						out[i] := result; IntermediateCode.SetString(out[i], str);
+						ReleaseIntermediateOperand(operand.tag);
+					|statement: SyntaxTree.ReturnStatement DO
+						NEW(str, 64);
+						Basic.GetString(statement.returnValue(SyntaxTree.IdentifierDesignator).identifier, str^);
+						IF currentIsInline THEN
+							map := currentMapper.Get(NIL);
+							Evaluate(map.to, operand);
+							out[i] := operand.op;
+						ELSE
+							out[i] :=NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
+						END;
+						IntermediateCode.SetString(out[i], str);
+						ReleaseIntermediateOperand(operand.tag);
+						return := out[i];
+					ELSE
+					END;
+				END;
+			ELSE out := NIL
+			END;
+			Emit(Asm(x.position,x.sourceCode, in, out));
+			IF in # NIL THEN
+				FOR i := 0 TO LEN(in)-1 DO
+					ReleaseIntermediateOperand(in[i]);
+				END;
+			END;
+			IF out # NIL THEN
+				FOR i := 0 TO LEN(out)-1 DO
+					WITH statement: SyntaxTree.Assignment DO
+						ReleaseIntermediateOperand(out[i]);
+					ELSE
+						IF currentIsInline THEN
+							ReleaseIntermediateOperand(out[i]);
+						END;
+					END;
+					statement := x.outRules.GetStatement(i);
+				END;
+			END;
+			IF return.mode # IntermediateCode.Undefined THEN
+
+				IF currentIsInline THEN
+				ELSIF ReturnedAsParameter(procedureType.returnType) THEN
+					Symbol(procedureType.returnParameter, par);
+					MakeMemory(mem, par.op, return.type, 0);
+					ReleaseOperand(par);
+					Emit(Mov(position, mem, return));
+					ReleaseIntermediateOperand(mem);
+				ELSE
+					Emit(Return(position,return));
+				END;
+				IF currentIsInline THEN RETURN END;
+
+				Emit(Leave(position,procedureType(SyntaxTree.ProcedureType).callingConvention));
+				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,procedureType(SyntaxTree.ProcedureType).callingConvention));
+				ReleaseIntermediateOperand(return);
+			END;
+
+			IF Trace THEN TraceExit("VisitCode") END;
+		END VisitCode;
+
+		PROCEDURE ParameterCopies(x: SyntaxTree.ProcedureType);
+		VAR parameter: SyntaxTree.Parameter; type: SyntaxTree.Type; op: Operand; temp,size,par: IntermediateCode.Operand;
+			const: IntermediateCode.Operand;
+			parameterDesignator: SyntaxTree.Expression;
+		BEGIN
+			IF Trace THEN TraceEnter("ParameterCopies") END;
+			parameter := x.firstParameter;
+			WHILE parameter # NIL DO
+				IF parameter.kind = SyntaxTree.ValueParameter THEN
+					type := parameter.type.resolved;
+					IF IsOpenArray(type) THEN
+						VisitParameter(parameter);
+						op := result;
+						temp := GetDynamicSize(type,op.tag);
+						ReuseCopy(size,temp);
+						ReleaseIntermediateOperand(temp);
+						const := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,-system.addressSize)); (* alignment *)
+						Emit(Sub(position,size,sp,size));
+						Emit(And(position,size,size,const));
+						Emit(Mov(position,sp,size));
+						par := fp;
+						IntermediateCode.AddOffset(par,ToMemoryUnits(system,parameter.offsetInBits));
+						ReleaseIntermediateOperand(size);
+						size := GetDynamicSize(type,op.tag);
+						Emit(Copy(position,sp,op.op,size));
+						ReleaseIntermediateOperand(size);
+						ReleaseOperand(op);
+						IntermediateCode.MakeMemory(par,addressType);
+						Emit(Mov(position,par,sp));
+					ELSIF (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+						checker.SetCurrentScope(currentScope);
+						parameterDesignator := checker.NewSymbolDesignator(position,NIL,parameter);
+						Assign(parameterDesignator,parameterDesignator);
+					END;
+				END;
+				parameter := parameter.nextParameter;
+			END;
+			IF Trace THEN TraceExit("ParameterCopies") END;
+		END ParameterCopies;
+
+		PROCEDURE InitVariables(scope: SyntaxTree.Scope);
+		VAR x: SyntaxTree.Variable;
+		BEGIN
+			x := scope.firstVariable;
+			WHILE x # NIL DO
+				InitVariable(x);
+				x := x.nextVariable;
+			END;
+		END InitVariables;
+
+		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT;
+		BEGIN
+			IF (symbol # NIL) THEN
+				RETURN fingerPrinter.SymbolFP(symbol).shallow
+			ELSE
+				RETURN 0
+			END;
+		END GetFingerprint;
+
+
+		PROCEDURE Body(x: SyntaxTree.Body; scope: SyntaxTree.Scope; ir: IntermediateCode.Section; moduleBody: BOOLEAN);
+		VAR prevScope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType; procedure: SyntaxTree.Procedure;
+			end: Label;res: IntermediateCode.Operand; cellScope: SyntaxTree.CellScope; op: Operand; string: SyntaxTree.IdentifierString;
+			saved: RegisterEntry;
+		BEGIN
+			IF Trace THEN TraceEnter("Body") END;
+			ReleaseUsedRegisters(saved); (* just in case ... *)
+			section := ir;
+			IF moduleBody THEN moduleBodySection := section END;
+			IF ir.comments # NIL THEN
+				commentPrintout := Printout.NewPrinter(ir.comments,Printout.SourceCode,FALSE);
+				commentPrintout.SingleStatement(TRUE);
+				dump := ir.comments;
+			ELSE
+				commentPrintout := NIL;
+				dump := NIL;
+			END;
+			registerUsageCount.Init;
+
+			prevScope := currentScope;
+			currentScope := scope;
+
+			procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			IF newObjectFile & moduleBody & ~suppressModuleRegistration & ~meta.simple THEN
+				PushSelfPointer();
+				(*
+				moduleSection := ModuleSection(module);
+				moduleOffset := moduleSection.pc;
+				op := IntermediateCode.Address(addressType, moduleSection, moduleOffset);
+				Emit(Push(position,op));
+				*)
+				res := NewRegisterOperand(bool);
+				CallThis2("Modules","PublishThis","Runtime","InsertModule",2,res);
+				end := NewLabel();
+				(*AcquireThisRegister(bool, IntermediateCode.Result);*)
+				BrneL(end, res,true);
+				ReleaseIntermediateOperand(res);
+			END;
+			IF x # NIL THEN
+				IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
+				IF profile & (x.code = NIL) THEN (* do not profile assembler code sections *)
+					IF moduleBody THEN
+						ProfilerInit();
+					ELSE
+						Basic.SegmentedNameToString(ir.name, string);
+						ProfilerAddProcedure(numberProcedures,string);
+						ProfilerEnterExit(numberProcedures,TRUE);
+					END;
+				END;
+
+				IF moduleBody & (operatorInitializationCodeSection # NIL) THEN
+					Emit(Call(position,IntermediateCode.Address(addressType, operatorInitializationCodeSection.name, GetFingerprint(operatorInitializationCodeSection.symbol),  0), 0))
+				END;
+
+				section.SetPositionOrAlignment(procedure.fixed, procedure.alignment);
+				IF moduleBody THEN
+					InitVariables(moduleScope)
+				END;
+				IF (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.CellScope) THEN
+					cellScope := scope.outerScope(SyntaxTree.CellScope);
+					IF procedure = cellScope.bodyProcedure THEN
+						IF cellScope.constructor # NIL THEN
+							StaticCallOperand(op, cellScope.constructor);
+							Emit(Call(position,op.op,0));
+						END;
+					END;
+				END;
+
+				ParameterCopies(procedureType);
+				InitVariables(scope);
+				IF x.code = NIL THEN
+					VisitStatementBlock(x);
+				ELSE
+					VisitCode(x.code)
+				END;
+				IF x.finally # NIL THEN (*! mark finally block for object file *)
+					ir.SetFinally(ir.pc);
+					StatementSequence(x.finally)
+				END;
+				IF profile & (x.code = NIL) & ~moduleBody THEN (* do not profile assembler code sections *)
+					ProfilerEnterExit(numberProcedures,FALSE);
+					INC(numberProcedures);
+				END;
+
+			END;
+			IF newObjectFile & moduleBody  & ~suppressModuleRegistration & ~meta.simple THEN
+				PushSelfPointer();
+				CallThis("Modules","SetInitialized",1);
+				SetLabel(end);
+			END;
+			IF x # NIL THEN
+				SELF.position := x.position;
+			END;
+			CheckRegistersFree();
+			currentScope := prevScope;
+			IF Trace THEN TraceExit("Body") END;
+		END Body;
+
+	END ImplementationVisitor;
+
+	MetaDataGenerator=OBJECT
+	VAR
+		implementationVisitor: ImplementationVisitor;
+		module: Sections.Module;
+
+		simple: BOOLEAN; (* simple = no methods, no module loading, no reflection *)
+
+		MethodTableOffset: LONGINT; (* method table offset from zero *)
+		BaseTypesTableOffset: LONGINT;	(* table with all record extensions offset *)
+		TypeTags: LONGINT; (* type extension level support *)
+		TypeRecordBaseOffset: LONGINT; (* offset of type zero offset (without method entries) *)
+
+		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
+		BEGIN
+			IF simple THEN
+				TypeTags := 3; (* only 3 extensions allowed *)
+				BaseTypesTableOffset := -1;
+				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
+				TypeRecordBaseOffset := TypeTags;
+			ELSE
+				TypeTags := 16;
+				BaseTypesTableOffset := -2; (* typeInfo and size field *)
+				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
+				TypeRecordBaseOffset := TypeTags + 2; (* MPO, typeInfo *)
+			END;
+			SELF.simple := simple;
+			SELF.implementationVisitor := implementationVisitor;
+			implementationVisitor.meta := SELF;
+			declarationVisitor.meta := SELF;
+		END InitMetaDataGenerator;
+
+		PROCEDURE SetModule(module: Sections.Module);
+		BEGIN
+			SELF.module := module
+		END SetModule;
+
+		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
+		BEGIN
+			RETURN TypeRecordBaseOffset + numberMethods
+		END GetTypeRecordBaseOffset;
+
+		PROCEDURE HeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
+		VAR moduleTD: IntermediateCode.Section; offset: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol;
+		BEGIN
+			INC(dataAdrOffset,6);
+			Info(section,"headerAdr");
+			Address(section,0);
+			Info(section,"typeDesc");
+
+			symbol := implementationVisitor.GetTypeDescriptor(moduleName,typeName, name);
+			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+			NamedSymbol(section, name, symbol, 0, offset);
+
+			Info(section,"mark: LONGINT;");
+			Longint(section,-1);
+			Info(section,"dataAdr-: ADDRESS");
+			Symbol(section,section, dataAdrOffset,0);
+			Info(section,"size-: SIZE");
+			Address(section,0);
+			Info(section,"nextRealtime: HeapBlock;");
+			Address(section,0);
+		END HeapBlock;
+
+		PROCEDURE ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
+		VAR i: LONGINT;
+		BEGIN
+			INC(dataAdrOffset,14);
+			HeapBlock(moduleName,typeName,section,dataAdrOffset);
+			Info(section,"count*: LONGINT");
+			Longint(section,0);
+			Info(section,"locked*: BOOLEAN");
+			Longint(section,0);
+			Info(section,"awaitingLock*: ProcessQueue");
+			Address(section,0);
+			Address(section,0);
+			Info(section,"awaitingCond*: ProcessQueue");
+			Address(section,0);
+			Address(section,0);
+			Info(section,"lockedBy*: ANY");
+			Address(section,0);
+			Info(section,"lock*: ANY");
+			Address(section,0);
+			Info(section,"waitingPriorities*: ARRAY NumPriorities OF LONGINT");
+			Longint(section,1);
+			FOR i := 2 TO 6 DO
+			Longint(section,0);
+			END;
+		END ProtectedHeapBlock;
+
+		PROCEDURE Info(section: IntermediateCode.Section; CONST s: ARRAY OF CHAR);
+		BEGIN
+			IF section.comments # NIL THEN section.comments.String(s); section.comments.Ln; section.comments.Update END;
+		END Info;
+
+		PROCEDURE Address(section: IntermediateCode.Section; value: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),value);
+			section.Emit(Data(-11,op));
+		END Address;
+
+		PROCEDURE Size(section: IntermediateCode.Section; value: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.sizeType),value);
+			section.Emit(Data(-12,op));
+		END Size;
+
+
+		PROCEDURE Set(section: IntermediateCode.Section; value: SET);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),SYSTEM.VAL(LONGINT,value));
+			section.Emit(Data(-1,op));
+		END Set;
+
+		PROCEDURE Longint(section: IntermediateCode.Section; value: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),value);
+			section.Emit(Data(-1,op));
+		END Longint;
+
+		PROCEDURE PatchLongint(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
+		VAR op,noOperand: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitOperand(noOperand);
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),value);
+			section.PatchOperands(pc,op,noOperand,noOperand);
+		END PatchLongint;
+
+		PROCEDURE Boolean(section: IntermediateCode.Section; value: BOOLEAN);
+		VAR op: IntermediateCode.Operand; intValue: LONGINT;
+		BEGIN
+			IF value = FALSE THEN intValue := 0 ELSE intValue :=1 END;
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.booleanType),intValue);
+			section.Emit(Data(-1,op));
+		END Boolean;
+
+		PROCEDURE Char(section: IntermediateCode.Section; char: CHAR);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.characterType),ORD(char));
+			section.Emit(Data(-1,op));
+		END Char;
+
+		PROCEDURE String(section: IntermediateCode.Section; CONST str: ARRAY OF CHAR);
+		VAR i: LONGINT;
+		BEGIN
+			Info(section,str);
+			i := 0;
+			WHILE(str[i] # 0X) DO
+				Char(section,str[i]);
+				INC(i);
+			END;
+			Char(section,0X);
+		END String;
+
+
+		PROCEDURE NamedSymbol(section: IntermediateCode.Section; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationVisitor.GetFingerprint(symbol), virtualOffset);
+			IntermediateCode.SetOffset(op,realOffset);
+			section.Emit(Data(-1,op));
+		END NamedSymbol;
+
+
+		PROCEDURE Symbol(section: IntermediateCode.Section; symbol: Sections.Section; virtualOffset, realOffset: LONGINT);
+		BEGIN
+			IF symbol= NIL THEN
+				Address( section, realOffset);
+				ASSERT(virtualOffset = 0);
+			ELSE
+				NamedSymbol(section, symbol.name, symbol.symbol, virtualOffset, realOffset)
+			END;
+		END Symbol;
+
+		(* OutPointers delivers
+			{pointerOffset}
+		*)
+		PROCEDURE Pointers(offset: LONGINT; symbol: Sections.Section; section: IntermediateCode.Section; type: SyntaxTree.Type; VAR numberPointers: LONGINT);
+		VAR variable: SyntaxTree.Variable; i,n,size: LONGINT; base: SyntaxTree.Type;
+		BEGIN
+			type := type.resolved;
+			IF type IS SyntaxTree.AnyType THEN
+				Symbol(section, symbol, 0, (offset ));
+				INC(numberPointers);
+
+				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
+			ELSIF type IS SyntaxTree.PointerType THEN
+				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
+				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1);D.Ln;  END;
+			ELSIF (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate) THEN
+				Symbol(section, symbol, 0, (offset )+ToMemoryUnits(module.system,module.system.addressSize)); INC(numberPointers);
+				IF Trace THEN D.Str("ptr at offset="); D.Int(offset+ToMemoryUnits(module.system,module.system.addressSize),1); END;
+			ELSIF (type IS SyntaxTree.RecordType) THEN
+				(* never treat a record like a pointer, even if the pointer field is set! *)
+				WITH type: SyntaxTree.RecordType DO
+					base := type.GetBaseRecord();
+					IF base  # NIL THEN
+						Pointers(offset,symbol,section, base,numberPointers);
+					END;
+					variable := type.recordScope.firstVariable;
+					WHILE(variable # NIL) DO
+						IF ~(variable.untraced) THEN
+							Pointers(offset+ToMemoryUnits(module.system,variable.offsetInBits), symbol,  section, variable.type,numberPointers);
+						END;
+						variable := variable.nextVariable;
+					END;
+				END;
+			ELSIF (type IS SyntaxTree.ArrayType) THEN
+				WITH type: SyntaxTree.ArrayType DO
+					IF type.form= SyntaxTree.Static THEN
+						n := type.staticLength;
+						base := type.arrayBase.resolved;
+						WHILE(base IS SyntaxTree.ArrayType) DO
+							type := base(SyntaxTree.ArrayType);
+							n := n* type.staticLength;
+							base := type.arrayBase.resolved;
+						END;
+						size := ToMemoryUnits(module.system,module.system.AlignedSizeOf(base));
+						IF SemanticChecker.ContainsPointer(base) THEN
+							ASSERT(n<1000000); (* not more than one million pointers on the stack ... *)
+							FOR i := 0 TO n-1 DO
+								Pointers(offset+i*size, symbol, section, base,numberPointers);
+							END;
+						END;
+					ELSE
+						Symbol( section, symbol, 0, (offset )); INC(numberPointers);
+						IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
+					END;
+				END;
+			ELSIF (type IS SyntaxTree.MathArrayType) THEN
+				WITH type: SyntaxTree.MathArrayType DO
+					IF type.form = SyntaxTree.Static THEN
+						n := type.staticLength;
+						base := type.arrayBase.resolved;
+						WHILE(base IS SyntaxTree.MathArrayType) DO
+							type := base(SyntaxTree.MathArrayType);
+							n := n* type.staticLength;
+							base := type.arrayBase.resolved;
+						END;
+						size := ToMemoryUnits(module.system,module.system.AlignedSizeOf(base));
+						IF SemanticChecker.ContainsPointer(base) THEN
+							ASSERT(n<1000000); (* not more than one million pointers on the stack ... *)
+							FOR i := 0 TO n-1 DO
+								Pointers(offset+i*size, symbol,   section, base,numberPointers);
+							END;
+						END;
+					ELSE
+						Symbol(section, symbol, 0, (offset )); INC(numberPointers); (* GC relevant pointer is at offset 0 *)
+						IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
+					END
+				END;
+			(* ELSE no pointers in type *)
+			END;
+		END Pointers;
+
+		PROCEDURE ExportDesc(source: IntermediateCode.Section; fingerPrinter: FingerPrinter.FingerPrinter; symbol: Sections.Section): BOOLEAN;
+		VAR fingerPrint: SyntaxTree.FingerPrint;
+		BEGIN
+			IF (symbol # NIL) & (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
+				& (symbol.type # Sections.InlineCodeSection)
+			THEN
+				fingerPrint := fingerPrinter.SymbolFP(symbol.symbol);
+				Longint(source,fingerPrint.shallow);
+				Symbol(source,symbol,0,0);
+				Address(source,0);
+				Address(source,0);
+				RETURN TRUE
+			END;
+			RETURN FALSE
+		END ExportDesc;
+
+		PROCEDURE Array(source: IntermediateCode.Section; VAR sizePC: LONGINT);
+		BEGIN
+			Info(source,"ArrayHeader");
+			Address(source,0);
+			Address(source,0);
+			Address(source,0);
+			sizePC := source.pc;
+			Address(source,0);
+			Info(source,"array data");
+		END Array;
+
+		PROCEDURE ExportDescArray(source: IntermediateCode.Section; VAR size: LONGINT);
+		VAR
+			sizePC, i: LONGINT; section: Sections.Section; fingerPrinter : FingerPrinter.FingerPrinter;
+		BEGIN
+			NEW(fingerPrinter, module.system);
+			size := 0;
+			Array(source,sizePC);
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				section := module.allSections.GetSection(i);
+				IF ExportDesc( source, fingerPrinter, section) THEN INC(size) END
+			END;
+			PatchLongint(source,sizePC,size);
+		END ExportDescArray;
+
+		PROCEDURE ExceptionArray(source: IntermediateCode.Section);
+		VAR
+			p: Sections.Section; finallyPC, sizePC, size, i: LONGINT;
+		BEGIN
+			Info(source, "exception table offsets array descriptor");
+			size := 0;
+			Array(source,sizePC);
+			Info(source, "exception table content");
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				p := module.allSections.GetSection(i);
+				IF p.type = Sections.CodeSection THEN
+					finallyPC := p(IntermediateCode.Section).finally;
+					IF finallyPC>=0 THEN
+						Symbol( source, p, 0,0);
+						Symbol( source, p,  finallyPC, 0);
+						Symbol( source, p, finallyPC,0);
+						INC(size);
+					END;
+				END
+			END;
+			PatchLongint(source,sizePC,size);
+			END ExceptionArray;
+
+			PROCEDURE Name(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR);
+			VAR i: LONGINT; ch: CHAR;
+			BEGIN
+				i := 0;
+				REPEAT
+					ch := name[i]; INC(i);
+					Char( section, ch);
+				UNTIL ch = 0X;
+				WHILE i < 32 DO
+					Char( section, 0X); INC(i);
+				END;
+			END Name;
+
+
+			PROCEDURE LongName(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR);
+			VAR i: LONGINT; ch: CHAR;
+			BEGIN
+				i := 0;
+				REPEAT
+					ch := name[i]; INC(i);
+					Char( section, ch);
+				UNTIL ch = 0X;
+				WHILE i < 128 DO
+					Char( section, 0X); INC(i);
+				END;
+			END LongName;
+
+			PROCEDURE References(section: IntermediateCode.Section);
+			CONST
+				rfDirect = 1X; rfIndirect = 3X;
+				rfStaticArray= 12X; rfDynamicArray=14X; rfOpenArray=15X;
+				rfByte = 1X; rfBoolean = 2X; rfChar8=3X; rfShortint=04X; rfInteger = 05X; rfLongint = 06X;
+				rfReal = 07X; rfLongreal = 08X; rfSet = 09X; rfDelegate = 0EX;  rfString = 0FH; rfPointer = 0DX; rfHugeint = 10X;
+				rfChar16=11X; rfChar32=12X; rfAll=13X; rfSame=14X; rfRange=15X; rfRecord=16X; rfRecordPointer=1DX;
+				rfArrayFlag = 80X;
+
+			VAR
+				size: LONGINT; s: Sections.Section; sizePC, i: LONGINT;
+
+				PROCEDURE BaseType(arrayOf: BOOLEAN; type: SyntaxTree.Type);
+				VAR char: CHAR;
+				BEGIN
+					IF type = NIL THEN char := rfLongint
+					ELSIF type  IS SyntaxTree.ByteType THEN char := rfByte
+					ELSIF type IS SyntaxTree.BooleanType THEN char := rfBoolean
+					ELSIF type IS SyntaxTree.CharacterType THEN
+						IF type.sizeInBits = 8 THEN char := rfChar8
+						ELSIF type.sizeInBits = 16 THEN char := rfChar16
+						ELSIF type.sizeInBits = 32 THEN char := rfChar32
+						END;
+					ELSIF type IS SyntaxTree.IntegerType THEN
+						IF type.sizeInBits = 8 THEN char := rfShortint
+						ELSIF type.sizeInBits = 16 THEN char := rfInteger
+						ELSIF type.sizeInBits = 32 THEN char := rfLongint
+						ELSIF type.sizeInBits = 64 THEN char := rfHugeint
+						END;
+					ELSIF type IS SyntaxTree.SizeType THEN char := rfLongint
+					ELSIF type IS SyntaxTree.AddressType THEN char := rfLongint
+					ELSIF type IS SyntaxTree.FloatType THEN
+						IF type.sizeInBits = 32 THEN char := rfReal
+						ELSIF type.sizeInBits = 64 THEN  char := rfLongreal
+						END;
+					ELSIF type IS SyntaxTree.SetType THEN char := rfSet
+					ELSIF type IS SyntaxTree.AnyType THEN char := rfPointer
+					ELSIF type IS SyntaxTree.ObjectType THEN char := rfPointer
+					ELSIF type IS SyntaxTree.PointerType THEN char := rfPointer
+					ELSIF type IS SyntaxTree.ProcedureType THEN char := rfDelegate
+					ELSE (*ASSERT(arrayOf);*) char := rfPointer; (*RETURN (* ARRAY OF unknown (record): do not write anything *)*)
+					END;
+					IF arrayOf THEN
+						Char(section,CHR(ORD(char)+ORD(rfArrayFlag)));
+					ELSE
+						Char(section,char)
+					END;
+					INC(size);
+				END BaseType;
+
+				PROCEDURE RecordType(type: SyntaxTree.RecordType);
+				VAR destination: Sections.Section; name: SyntaxTree.IdentifierString;
+				BEGIN
+					destination := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
+					IF destination = NIL THEN
+						(* imported unused record type *)
+						Char(section,0X); (* nil type *)
+						INC(size);
+						type.typeDeclaration.GetName(name);
+						(*
+						this happens when a symbol from a different module is used but the type desciptor is not necessary to be present in the current module
+						D.Str("Warning: Unreferenced record type encountered: "); D.String(name); D.String(" unused? "); D.Ln;
+						*)
+					ELSE
+						IF type.pointerType # NIL THEN
+							Char(section,rfRecordPointer)
+						ELSE
+							Char(section,rfRecord);
+						END;
+						INC(size);
+						Longint(section,(destination.offset ));
+						INC(size,4);
+					END;
+				END RecordType;
+
+				PROCEDURE ArrayType(type: SyntaxTree.ArrayType);
+				BEGIN
+					IF type.arrayBase.resolved IS SyntaxTree.ArrayType THEN
+						Char(section,CHR(ORD(rfPointer)+ORD(rfArrayFlag)));
+						INC(size);
+					ELSE BaseType(TRUE,type.arrayBase.resolved)
+					END;
+					IF type.form = SyntaxTree.Static THEN
+						Longint(section,type.staticLength)
+					ELSE
+						Longint(section,0)
+					END;
+					INC(size,4);
+				END ArrayType;
+
+				PROCEDURE MathArrayType(type: SyntaxTree.MathArrayType);
+				BEGIN
+					IF type.arrayBase = NIL THEN BaseType(TRUE,NIL)
+					ELSIF type.arrayBase.resolved IS SyntaxTree.MathArrayType THEN
+						Char(section,CHR(ORD(rfPointer)+ORD(rfArrayFlag)));
+						INC(size);
+					ELSE BaseType(TRUE,type.arrayBase.resolved)
+					END;
+					IF type.form = SyntaxTree.Static THEN
+						Longint(section,type.staticLength)
+					ELSE
+						Longint(section,0)
+					END;
+					INC(size,4);
+				END MathArrayType;
+
+				PROCEDURE Type(type: SyntaxTree.Type);
+				BEGIN
+					IF type = NIL THEN Char(section,0X); INC(size); RETURN ELSE type := type.resolved END;
+
+					IF type IS SyntaxTree.BasicType THEN
+						BaseType(FALSE,type)
+					ELSIF type IS SyntaxTree.RecordType THEN
+						RecordType(type(SyntaxTree.RecordType));
+					ELSIF type IS SyntaxTree.ArrayType THEN
+						ArrayType(type(SyntaxTree.ArrayType))
+					ELSIF type IS SyntaxTree.EnumerationType THEN
+						BaseType(FALSE,module.system.longintType)
+					ELSIF type IS SyntaxTree.PointerType THEN
+						IF type(SyntaxTree.PointerType).pointerBase IS SyntaxTree.RecordType THEN
+							RecordType(type(SyntaxTree.PointerType).pointerBase(SyntaxTree.RecordType));
+						ELSE
+							BaseType(FALSE,type)
+						END;
+					ELSIF type IS SyntaxTree.ProcedureType THEN
+						BaseType(FALSE,type);
+					ELSIF type IS SyntaxTree.MathArrayType THEN
+						MathArrayType(type(SyntaxTree.MathArrayType));
+					ELSE HALT(200)
+					END;
+				END Type;
+
+				PROCEDURE WriteVariable(variable: SyntaxTree.Variable; indirect: BOOLEAN);
+					VAR name: ARRAY 256 OF CHAR;
+				BEGIN
+					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
+					INC(size);
+					variable.GetName(name);
+					Type(variable.type);
+					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
+					INC(size,4);
+					String(section,name);
+					INC(size,Strings.Length(name)+1);
+				END WriteVariable;
+
+				PROCEDURE WriteParameter(variable: SyntaxTree.Parameter; indirect: BOOLEAN);
+				VAR name: ARRAY 256 OF CHAR;
+				BEGIN
+					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
+					INC(size);
+					variable.GetName(name);
+					Type(variable.type);
+					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
+					INC(size,4);
+					variable.GetName(name);
+					String(section,name);
+					INC(size,Strings.Length(name)+1);
+				END WriteParameter;
+
+				PROCEDURE ReturnType(type: SyntaxTree.Type);
+				BEGIN
+					IF type = NIL THEN Char(section,0X); INC(size); RETURN ELSE type := type.resolved END;
+
+					IF type IS SyntaxTree.ArrayType THEN
+						WITH type: SyntaxTree.ArrayType DO
+							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
+							ELSE Char(section,rfOpenArray)
+							END;
+							INC(size);
+						END
+					ELSIF type IS SyntaxTree.MathArrayType THEN
+						WITH type: SyntaxTree.MathArrayType DO
+							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
+							ELSE Char(section,rfOpenArray)
+							END;
+							INC(size);
+						END
+					ELSIF type IS SyntaxTree.RecordType THEN
+						Char(section,rfRecord);
+						INC(size);
+					ELSE
+						BaseType(FALSE,type);
+					END;
+				END ReturnType;
+
+				PROCEDURE DeclarationName(typeDeclaration: SyntaxTree.TypeDeclaration; VAR name: ARRAY OF CHAR);
+				BEGIN
+					IF typeDeclaration = NIL THEN COPY("@ANONYMOUS",name)
+					ELSE typeDeclaration.GetName(name)
+					END;
+				END DeclarationName;
+
+
+				PROCEDURE Procedure(s: Sections.Section);
+				VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
+					 parameter: SyntaxTree.Parameter; variable: SyntaxTree.Variable;
+					 name,recordName: ARRAY 256 OF CHAR;
+					 record: SyntaxTree.RecordType;  i: LONGINT;
+				BEGIN
+					procedure := s.symbol(SyntaxTree.Procedure); (*! check for variable or type symbol for object body *)
+					procedure.GetName(name);
+					procedureType := procedure.type(SyntaxTree.ProcedureType);
+
+					Char(section,0F9X);
+					INC(size);
+					Symbol(section,s,0,0);
+					INC(size,4);
+					Symbol(section,s,s(IntermediateCode.Section).pc,0);
+					INC(size,4);
+					Longint(section,procedureType.numberParameters);
+					INC(size,4);
+					ReturnType(procedureType.returnType);
+					Longint(section,0); (*! level *)
+					INC(size,4);
+					Longint(section,0);
+					INC(size,4);
+					IF procedure.scope IS SyntaxTree.RecordScope THEN (* add object name *)
+						record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
+						recordName := "";
+						IF record.pointerType # NIL THEN
+							DeclarationName(record.pointerType.typeDeclaration,recordName);
+						ELSE
+							DeclarationName(record.typeDeclaration,recordName);
+						END;
+						i := 0;
+						Info(section,recordName);
+						WHILE recordName[i] # 0X DO
+							Char(section,recordName[i]); INC(i);
+							INC(size);
+						END;
+						Char(section,".");
+						INC(size);
+					END;
+					String(section,name);
+					INC(size,Strings.Length(name)+1);
+					parameter := procedureType.firstParameter;
+					WHILE(parameter # NIL) DO
+						WriteParameter(parameter,parameter.kind # SyntaxTree.ValueParameter); (*!treat  exceptions !*)
+						parameter := parameter.nextParameter;
+					END;
+					variable := procedure.procedureScope.firstVariable;
+					WHILE(variable # NIL) DO
+						WriteVariable(variable,FALSE);
+						variable := variable.nextVariable;
+					END;
+				END Procedure;
+
+				PROCEDURE Scope(s: Sections.Section);
+				VAR variable: SyntaxTree.Variable;
+				BEGIN
+					Char(section,0F8X);
+					INC(size);
+					Symbol(section,s,0,0); (* start *)
+					INC(size,4);
+					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
+					INC(size,4);
+					String(section,"$$");
+					INC(size,3);
+					(* removed variables -- wrongly interpreted by Reflection
+					variable := module.module.moduleScope.firstVariable;
+					WHILE(variable # NIL) DO
+						WriteVariable(variable,FALSE);
+						variable := variable.nextVariable;
+					END;
+					*)
+				END Scope;
+
+
+			BEGIN
+				Array(section,sizePC);
+
+				size := 0;
+				Char(section,0FFX); (* sign for trap writer *)
+				INC(size);
+
+				FOR i := 0 TO module.allSections.Length() - 1 DO
+					s := module.allSections.GetSection(i);
+					IF (s.type # Sections.InitCodeSection) & (s.symbol = module.module.moduleScope.bodyProcedure) THEN
+						Scope(s) (*! must be first procedure in ref section *)
+					END
+				END;
+
+				FOR i := 0 TO module.allSections.Length() - 1 DO
+					s := module.allSections.GetSection(i);
+					IF (s.symbol = module.module.moduleScope.bodyProcedure) THEN (* already done, see above *)
+					ELSIF (s.type # Sections.InitCodeSection) & (s.symbol # NIL) & (s.symbol IS SyntaxTree.Procedure) & ~s.symbol(SyntaxTree.Procedure).isInline THEN
+						Procedure(s)
+					END
+				END;
+
+				PatchLongint(section,sizePC,size);
+
+			END References;
+
+		(*
+		Command* = RECORD
+			(* Fields exported for initialization by loader/linker only! Consider read-only! *)
+			name*: Name; (* name of the procedure *)
+			argTdAdr*, retTdAdr* : ADDRESS; (* address of type descriptors of argument and return type, 0 if no type *)
+			entryAdr* : ADDRESS; (* entry address of procedure *)
+		END;
+		*)
+		PROCEDURE CommandArray(source: IntermediateCode.Section);
+		VAR
+			p: Sections.Section;  sizePC, numberCommands: LONGINT;
+			procedure : SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
+			name: ARRAY 32 OF CHAR; numberParameters, i: LONGINT;
+
+				(* Returns TRUE if the built-in function GETPROCEDURE can be used with this procedure type *)
+				PROCEDURE GetProcedureAllowed() : BOOLEAN;
+
+					PROCEDURE TypeAllowed(type : SyntaxTree.Type) : BOOLEAN;
+					BEGIN
+						RETURN
+							(type = NIL) OR
+							(type.resolved IS SyntaxTree.RecordType) OR
+							(type.resolved IS SyntaxTree.PointerType) & (type.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType);
+					END TypeAllowed;
+
+				BEGIN
+					numberParameters := procedureType.numberParameters;
+					RETURN
+						(numberParameters = 0) & TypeAllowed(procedureType.returnType) OR
+						(numberParameters = 1) & TypeAllowed(procedureType.firstParameter.type) & TypeAllowed(procedureType.returnType) OR
+						(numberParameters = 1) & (procedureType.firstParameter.type.resolved IS SyntaxTree.AnyType) & (procedureType.returnType # NIL) & (procedureType.returnType.resolved IS SyntaxTree.AnyType);
+				END GetProcedureAllowed;
+
+				PROCEDURE WriteType(type : SyntaxTree.Type);
+				VAR typeDeclaration: SyntaxTree.TypeDeclaration; section: Sections.Section;
+					name: Basic.SegmentedName;
+				BEGIN
+					IF type = NIL THEN
+						Address(source,0);
+					ELSIF (type.resolved IS SyntaxTree.AnyType) OR (type.resolved IS SyntaxTree.ObjectType) THEN
+						Address(source,1);
+					ELSE
+						type := type.resolved;
+						IF type IS SyntaxTree.PointerType THEN
+							type := type(SyntaxTree.PointerType).pointerBase.resolved;
+						END;
+						typeDeclaration := type.typeDeclaration; (* must be non-nil *)
+						IF (typeDeclaration.scope = NIL) OR (typeDeclaration.scope.ownerModule = module.module) THEN
+							name[0] := typeDeclaration.name; name[1] := -1;
+							section := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
+							ASSERT(section # NIL);
+						ELSE
+							Global.GetSymbolSegmentedName(typeDeclaration,name);
+							(* TODO *)
+							section := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,typeDeclaration, source.comments # NIL);
+						END;
+						Symbol(source,section, 0, ToMemoryUnits(module.system,(1 + type(SyntaxTree.RecordType).recordScope.numberMethods+16+1)*module.system.addressSize));
+					END;
+				END WriteType;
+
+		BEGIN
+			Info(source, "command array descriptor");
+			Array(source,sizePC);
+			numberCommands := 0;
+			Info(source, "command array content");
+
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				p := module.allSections.GetSection(i);
+				IF (p.symbol # NIL) & (p.symbol IS SyntaxTree.Procedure)  THEN
+					procedure := p.symbol(SyntaxTree.Procedure);
+					procedureType := procedure.type(SyntaxTree.ProcedureType);
+					IF (SyntaxTree.PublicWrite IN procedure.access) & ~(procedure.isInline) & ~(procedureType.isDelegate) & GetProcedureAllowed() THEN
+						procedure.GetName(name);
+						Name(source,name);
+						numberParameters := procedureType.numberParameters;
+						(* offset of type of first parameter *)
+						IF (numberParameters = 0 ) THEN WriteType(NIL)
+						ELSE WriteType(procedureType.firstParameter.type)
+						END;
+						(* offset of type of return parameter *)
+						WriteType(procedureType.returnType);
+						(* command name *)
+						(* command code offset *)
+						Symbol(source,p,0,0);
+						INC(numberCommands);
+						IF Trace THEN
+							D.Ln;
+						END;
+					END;
+				END
+			END;
+			PatchLongint(source,sizePC,numberCommands);
+		END CommandArray;
+
+		(* to prevent from double import of different module aliases *)
+		PROCEDURE IsFirstDirectOccurence(import: SyntaxTree.Import): BOOLEAN; (*! inefficient *)
+		VAR i: SyntaxTree.Import;
+		BEGIN
+			i := module.module.moduleScope.firstImport;
+			WHILE (i # NIL) & ((i.module # import.module) OR ~i.direct) DO
+				i := i.nextImport;
+			END;
+			RETURN i = import
+		END IsFirstDirectOccurence;
+
+		PROCEDURE ImportsArray(source: IntermediateCode.Section);
+		VAR import: SyntaxTree.Import ; pc: LONGINT;name: Basic.SegmentedName; numberImports: LONGINT; offset: LONGINT;
+		BEGIN
+			Array(source,pc);
+			Info(source, "import module array data");
+			offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+			import :=  module.module.moduleScope.firstImport;
+			numberImports := 0;
+			WHILE import # NIL DO
+				IF import.direct & ~Global.IsSystemModule(import.module) & IsFirstDirectOccurence(import) THEN
+					Global.GetModuleSegmentedName(import.module,name);
+					Basic.SuffixSegmentedName(name, StringPool.GetIndex1("@Module"));
+					NamedSymbol(source, name, NIL, 0, offset);
+					INC(numberImports);
+				END;
+				import := import.nextImport
+			END;
+			PatchLongint(source,pc,numberImports);
+		END ImportsArray;
+
+		PROCEDURE TypeInfoSection(source: IntermediateCode.Section);
+		VAR
+			p: Sections.Section; sizePC, size, i: LONGINT;
+		BEGIN
+			Info(source, "Type info section");
+			size := 0;
+			Array(source,sizePC);
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				p := module.allSections.GetSection(i);
+				WITH p: IntermediateCode.Section DO
+					IF Basic.SegmentedNameEndsWith(p.name,"@Info") THEN
+						Symbol(source,p,0,0);
+						INC(size);
+					END;
+				END
+			END;
+			PatchLongint(source,sizePC,size);
+		END TypeInfoSection;
+
+		(*
+			ProcTableEntry* = RECORD
+				pcFrom*, pcLimit*, pcStatementBegin*, pcStatementEnd*: ADDRESS;
+				noPtr*: LONGINT;
+			END;
+
+			ProcTable* = POINTER TO ARRAY OF ProcTableEntry;
+
+			PtrTable* = POINTER TO ARRAY OF ADDRESS;
+		*)
+
+		PROCEDURE PointersInProcTables(procArray, pointerArray: IntermediateCode.Section; VAR procArraySize, maxPointers: LONGINT);
+		VAR
+			destination: Sections.Section;
+			pointerArraySizePC, procArraySizePC, pointerArraySize, i: LONGINT;
+
+			PROCEDURE PointerOffsets(destination : IntermediateCode.Section);
+			VAR numberPointers: LONGINT; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
+				variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; string: Basic.SectionName;
+			BEGIN
+				Info(procArray,"pcFrom");
+				Symbol(procArray,destination,0,0);
+				Info(procArray,"pcTo");
+				Symbol(procArray,destination,destination.pc,0);
+				Info(procArray,"pcStatementBegin");
+				Symbol(procArray,destination,destination.validPAFEnter,0);
+				Info(procArray,"pcStatementEnd");
+				Symbol(procArray,destination,destination.validPAFExit,0);
+				Basic.SegmentedNameToString(destination.name, string);
+				Info(pointerArray,string);
+				procedure := destination.symbol(SyntaxTree.Procedure);
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
+				variable := procedure.procedureScope.firstVariable;
+				WHILE(variable # NIL) DO
+					IF ~(variable.untraced) THEN
+						Pointers(ToMemoryUnits(module.system,variable.offsetInBits), NIL,  pointerArray, variable.type, numberPointers);
+					END;
+					variable := variable.nextVariable
+				END;
+				parameter := procedureType.firstParameter;
+				WHILE(parameter # NIL) DO
+					IF ~(parameter.untraced) THEN
+						Pointers(ToMemoryUnits(module.system,parameter.offsetInBits), NIL,  pointerArray, parameter.type, numberPointers);
+					END;
+					parameter := parameter.nextParameter;
+				END;
+				Info(procArray,"numberPointers");
+				Longint(procArray,numberPointers);
+				IF numberPointers > maxPointers THEN maxPointers := numberPointers END;
+				INC(pointerArraySize, numberPointers);
+			END PointerOffsets;
+
+		BEGIN
+			maxPointers := 0;
+			Info(procArray, "proc array descriptor");
+			Address(procArray,0);
+			Address(procArray,0);
+			Address(procArray,0);
+			procArraySizePC := procArray.pc;
+			Address(procArray,0);
+			procArraySize := 0;
+			Info(pointerArray, "pointer array descriptor");
+			Address(pointerArray,0);
+			Address(pointerArray,0);
+			Address(pointerArray,0);
+			pointerArraySizePC := pointerArray.pc;
+			Address(pointerArray,0);
+			pointerArraySize := 0;
+			procArraySize := 0;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				destination := module.allSections.GetSection(i);
+				IF (destination.type IN {Sections.CodeSection, Sections.BodyCodeSection}) & (destination.symbol # NIL) & (destination.symbol IS SyntaxTree.Procedure) & ~destination.symbol(SyntaxTree.Procedure).isInline THEN
+					PointerOffsets(destination(IntermediateCode.Section));
+					INC(procArraySize);
+				END
+			END;
+
+			PatchLongint(procArray,procArraySizePC,procArraySize);
+			PatchLongint(pointerArray,pointerArraySizePC,pointerArraySize);
+		END PointersInProcTables;
+
+		(*
+			Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
+			VAR
+				next*: Module;	(** once a module is published, all fields are read-only *)
+				name*: Name;
+				init, published: BOOLEAN;
+				refcnt*: LONGINT; (* counts loaded modules that import this module *)
+				sb*: ADDRESS; <- set to beginning of data section by loader
+				entry*: POINTER TO ARRAY OF ADDRESS; <- not needed in new loader
+				command*: POINTER TO ARRAY OF Command;
+				ptrAdr*: POINTER TO ARRAY OF ADDRESS;
+				typeInfo*: POINTER TO ARRAY OF TypeDesc;
+				module*: POINTER TO ARRAY OF Module; <---- currently done by loader
+				procTable*: ProcTable; (* information inserted by loader, removed after use in Publish *)
+				ptrTable*: PtrTable;  (* information inserted by loader, removed after use in Publish *)
+				data*, code*: Bytes;
+				staticTypeDescs* (* ug *), refs*: Bytes; <- staticTypeDescs in data section, refs currently unsupported
+				export*: ExportDesc;
+				term*: TerminationHandler;
+				exTable*: ExceptionTable;
+				noProcs*: LONGINT;
+				firstProc*: ADDRESS; <-   done by loader
+				maxPtrs*: LONGINT;
+				crc*: LONGINT;
+		*)
+
+		PROCEDURE ModuleSection(): IntermediateCode.Section;
+		VAR name: ARRAY 128 OF CHAR;
+			moduleSection,moduleTD: IntermediateCode.Section; offset: LONGINT; pooledName: Basic.SegmentedName;
+			symbol: SyntaxTree.Symbol;
+		BEGIN
+			Global.GetModuleName(module.module,name);
+			Strings.Append(name,".@Module");
+			Basic.ToSegmentedName(name, pooledName);
+			moduleSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,TRUE);
+			moduleSection.SetExported(TRUE);
+			IF moduleSection.pc = 0 THEN
+				ProtectedHeapBlock("Heaps","ProtRecBlockDesc",moduleSection,2);
+				Info(moduleSection, "HeapBlock");
+				Symbol(moduleSection,moduleSection,2,0);
+				Info(moduleSection, "TypeDescriptor");
+				symbol := implementationVisitor.GetTypeDescriptor("Modules","Module", pooledName);
+				offset := ToMemoryUnits(module.system,(1 + 1 (*= numberMethods*) +16+1)*module.system.addressSize);
+				NamedSymbol(moduleSection, pooledName,symbol, 0, offset);
+			END;
+			RETURN moduleSection;
+		END ModuleSection;
+
+		PROCEDURE Module(bodyProc: IntermediateCode.Section);
+		VAR moduleName: ARRAY 128 OF CHAR;
+		moduleSection, pointerSection, importSection, emptyArraySection, exportDescArray, exceptionSection, commandsSection,
+			typeInfoSection, procTableSection, ptrTableSection, referenceSection : IntermediateCode.Section;
+			emptyArraySectionOffset, pointerSectionOffset, importSectionOffset, numberPointers, exportDescArrayOffset, exportDescSize,
+			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, ptrTableSectionOffset, maxPointers, numberProcs,temp,
+			referenceSectionOffset	: LONGINT;
+
+			PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
+			VAR name: ARRAY 128 OF CHAR; section: IntermediateCode.Section; pooledName: Basic.SegmentedName;
+			BEGIN
+				COPY(moduleName,name);
+				Strings.Append(name,suffix);
+				Basic.ToSegmentedName(name, pooledName);
+				section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName, NIL,TRUE);
+				HeapBlock(mName,typeName,section,2);
+				Info(section, "HeapBlock");
+				(*
+				Symbol(section,section,2,0);
+				*)
+				Address(section,0); (* empty such that GC does not go on traversing *)
+				Info(section, "TypeDescriptor");
+				Address(section,0);
+				offset := section.pc;
+				RETURN section
+			END Block;
+
+		BEGIN
+			Global.GetModuleName(module.module,moduleName);
+			exportDescArray := Block("Heaps","SystemBlockDesc",".@ExportDescArray",exportDescArrayOffset);
+			ExportDescArray(exportDescArray, exportDescSize);
+			pointerSection := Block("Heaps","SystemBlockDesc",".@PointerArray",pointerSectionOffset);
+			PointerArray(pointerSection,module.module.moduleScope, numberPointers);
+			importSection := Block("Heaps","SystemBlockDesc",".@ImportsArray",importSectionOffset);
+			ImportsArray(importSection);
+			commandsSection := Block("Heaps","SystemBlockDesc",".@CommandArray",commandsSectionOffset);
+			CommandArray(commandsSection);
+			exceptionSection := Block("Heaps","SystemBlockDesc",".@ExceptionArray",exceptionSectionOffset);
+			ExceptionArray(exceptionSection);
+			typeInfoSection := Block("Heaps","SystemBlockDesc",".@TypeInfoArray",typeInfoSectionOffset);
+			TypeInfoSection(typeInfoSection);
+			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
+			References(referenceSection);
+			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
+			ptrTableSection := Block("Heaps","SystemBlockDesc",".@PtrTable",ptrTableSectionOffset);
+			PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);
+			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
+			Array(emptyArraySection,temp);
+			moduleSection := ModuleSection();
+			Info(moduleSection, "nextRoot*: RootObject");
+			Address(moduleSection,0);
+			Info(moduleSection, "next*: Module");
+			Address(moduleSection,0);
+			Info(moduleSection, "name*: Name");
+			Name(moduleSection,moduleName);
+			Info(moduleSection, "init, published: BOOLEAN");
+			Boolean(moduleSection,FALSE);
+			Boolean(moduleSection,FALSE);
+			Info(moduleSection,"filler"); (*! introduce alignment! *)
+			Boolean(moduleSection,FALSE);
+			Boolean(moduleSection,FALSE);
+			Info(moduleSection, "refcnt*: LONGINT");
+			Longint(moduleSection,0);
+			Info(moduleSection, "sb*: ADDRESS");
+			Address(moduleSection,0);
+			Info(moduleSection, "entry*: POINTER TO ARRAY OF ADDRESS");
+			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Info(moduleSection, "command*: POINTER TO ARRAY OF Command");
+			Symbol(moduleSection,commandsSection,commandsSectionOffset,0);
+			Info(moduleSection, "ptrAdr*: POINTER TO ARRAY OF ADDRESS");
+			Symbol(moduleSection,pointerSection,pointerSectionOffset,0);
+			Info(moduleSection, "typeInfo*: POINTER TO ARRAY OF TypeDesc");
+			Symbol(moduleSection,typeInfoSection,typeInfoSectionOffset,0);
+			Info(moduleSection, "module*: POINTER TO ARRAY OF Module");
+			Symbol(moduleSection,importSection,emptyArraySectionOffset,0);
+			Info(moduleSection, "procTable*: ProcTable");
+			Symbol(moduleSection,procTableSection,procTableSectionOffset,0);
+			Info(moduleSection, "ptrTable*: PtrTable");
+			Symbol(moduleSection,ptrTableSection,ptrTableSectionOffset,0);
+			Info(moduleSection, "data*, code*, staticTypeDescs*, refs*: Bytes");
+			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Symbol(moduleSection,referenceSection,referenceSectionOffset,0);
+			Info(moduleSection, "export*: ExportDesc");
+			Address(moduleSection,0);
+			Address(moduleSection,0);
+			Longint(moduleSection,exportDescSize);
+			Symbol(moduleSection,exportDescArray, exportDescArrayOffset,0);
+			Info(moduleSection, "term*: TerminationHandler");
+			Address(moduleSection,0);
+			Info(moduleSection, "exTable*: ExceptionTable");
+			Symbol(moduleSection,exceptionSection,exceptionSectionOffset,0);
+			Info(moduleSection, "noProcs*: LONGINT");
+			Longint(moduleSection,numberProcs);
+			Info(moduleSection, "firstProc*: ADDRESS");
+			Address(moduleSection,0);
+			Info(moduleSection, "maxPtrs*: LONGINT");
+			Longint(moduleSection,maxPointers);
+			Info(moduleSection, "crc*: LONGINT");
+			Longint(moduleSection, 0); (*!  must be implemented *)
+
+
+			Info(moduleSection, "body*: ADDRESS");
+			Symbol(moduleSection, bodyProc, 0,0);
+		END Module;
+
+		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
+		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section;
+		BEGIN
+			Array(source,pc);
+			Info(source, "pointer offsets array data");
+			IF scope IS SyntaxTree.RecordScope THEN
+				Pointers(0,symbol, source,scope(SyntaxTree.RecordScope).ownerRecord,numberPointers);
+			ELSIF scope IS SyntaxTree.ModuleScope THEN
+				variable := scope(SyntaxTree.ModuleScope).firstVariable;
+				WHILE variable # NIL DO
+					IF ~(variable.untraced) THEN
+						symbol := module.allSections.FindBySymbol(variable);
+						ASSERT(symbol # NIL);
+						Pointers(0,symbol, source,variable.type,numberPointers);
+					END;
+					variable := variable.nextVariable;
+				END;
+			END;
+			PatchLongint(source,pc,numberPointers);
+		END PointerArray;
+
+
+
+
+		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
+		VAR recordType: SyntaxTree.RecordType;
+			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
+			section: Sections.Section; string: SyntaxTree.String; type: SyntaxTree.Type;
+
+			PROCEDURE FieldArray(source: IntermediateCode.Section);
+			VAR variable: SyntaxTree.Variable; pc, offset: LONGINT; symbol, tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
+				segmentedName: Basic.SegmentedName;
+				td: SyntaxTree.TypeDeclaration;
+			BEGIN
+				Array(source,pc);
+
+				Info(source, "FieldArray");
+				IF x IS SyntaxTree.RecordType THEN
+					variable := x(SyntaxTree.RecordType).recordScope.firstVariable
+				ELSE
+					variable := NIL;
+				END;
+				size :=0;
+				WHILE variable # NIL DO
+					type := variable.type.resolved;
+					Info(source,"offset");
+					Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+					Info(source,"type class");
+					IF type IS SyntaxTree.PointerType THEN
+						Size(source, 1);
+					ELSIF type IS SyntaxTree.RecordType THEN
+						Size(source, 2);
+					ELSIF type IS SyntaxTree.NumberType THEN
+						Size(source, 3);
+					ELSE
+						Size(source, 0);
+					END;
+					Info(source, "type desc");
+					IF type IS SyntaxTree.RecordType THEN
+						td := type(SyntaxTree.RecordType).typeDeclaration;
+						Global.GetSymbolSegmentedName(td,segmentedName);
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,implementationVisitor.dump # NIL);
+						ELSE
+							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,implementationVisitor.dump # NIL);
+						END;
+						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+						Symbol(source, tir,  0, offset);
+					ELSE
+						Address(source, 0);
+					END;
+					Info(source,"flags");
+					Set(source, {});
+					Info(source,"name");
+					variable.GetName(name);
+					LongName(source, name);
+					variable := variable.nextVariable;
+					INC(size);
+				END;
+				PatchLongint(source,pc,size);
+			END FieldArray;
+
+			PROCEDURE NewTypeDescriptorInfo(tag: Sections.Section; offset: LONGINT; isProtected: BOOLEAN): Sections.Section;
+			VAR name: Basic.SegmentedName;source, fieldSection: IntermediateCode.Section;
+				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
+				sectionName: Basic.SectionName;
+			CONST MPO=-40000000H;
+			BEGIN
+					(*
+						TypeDesc* = POINTER TO RECORD
+							descSize: LONGINT;
+							sentinel: LONGINT;	(* = MPO-4 *)
+							tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
+							flags*: SET;
+							mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+							name*: Name;
+						END;
+					*)
+					(* source := module.sections.FindByName(...) *)
+					Global.GetSymbolSegmentedName(td,name);
+					Basic.AppendToSegmentedName(name,"@Info");
+					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,implementationVisitor.dump # NIL);
+					Info(source, "type info size");	Address(source, 3*ToMemoryUnits(module.system,module.system.addressSize)+32);
+					Address(source,MPO-4);
+					Info(source, "type tag pointer");
+					Symbol( source, tag, offset, 0);
+					Info(source, "type flags");
+					flags := {};
+					IF isProtected THEN INCL(flags,31) END;
+					Set( source, flags);
+					Info(source, "pointer to module");
+					moduleSection := ModuleSection();
+					Symbol( source, moduleSection, moduleSection.pc,0);
+					Info(source, "type name");
+					i := 0;
+					Global.GetSymbolNameInScope(td, module.module.moduleScope, sectionName);
+					(*
+					Global.GetSymbolSegmentedName(td,name);
+					Basic.SegmentedNameToString(name, sectionName);
+					*)
+					Name(source,sectionName);
+					source.SetReferenced(FALSE);
+
+					Global.GetSymbolSegmentedName(td,name);
+					Basic.AppendToSegmentedName(name,"@Fields");
+
+					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
+					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);
+					Info(fieldSection, "HeapBlock");
+					Address(fieldSection,0); (* empty such that GC does not go on traversing *)
+					Info(fieldSection, "TypeDescriptor");
+					Address(fieldSection,0);
+
+					Info(source, "FieldArray ref");
+					Symbol(source, fieldSection, fieldSection.pc, 0);
+
+					FieldArray(fieldSection);
+					RETURN source;
+			END NewTypeDescriptorInfo;
+
+			PROCEDURE GetSection(x: SyntaxTree.Procedure): Sections.Section;
+			VAR source: IntermediateCode.Section; sectionType: SHORTINT; name: Basic.SegmentedName;
+			BEGIN
+				Global.GetSymbolSegmentedName(x,name);
+				IF x.isInline THEN
+					sectionType := Sections.InlineCodeSection;
+				ELSE
+					sectionType := Sections.CodeSection;
+				END;
+				IF (x.scope.ownerModule = module.module) THEN
+					source := IntermediateCode.NewSection(module.allSections, sectionType, name,x,implementationVisitor.dump # NIL);
+				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.sourceCode # NIL) THEN
+					HALT(200);
+				ELSE
+					source := IntermediateCode.NewSection(module.importedSections, sectionType, name,x,implementationVisitor.dump # NIL);
+				END;
+				RETURN source
+			END GetSection;
+
+			PROCEDURE NewTypeDescriptor;
+			VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; source: IntermediateCode.Section;
+				i,methods: LONGINT;
+				procedure: SyntaxTree.Procedure;
+				baseRecord: SyntaxTree.RecordType; baseTD: SyntaxTree.TypeDeclaration;
+				numberPointers: LONGINT;  padding,offset: LONGINT;
+			CONST MPO=-40000000H;
+
+				PROCEDURE TdTable(size: LONGINT);
+				BEGIN
+					Info(source, "tag table");
+					baseRecord := recordType;
+					i := 0;
+					WHILE baseRecord # NIL DO
+						INC(i);
+						baseRecord := baseRecord.GetBaseRecord();
+					END;
+					IF i > size THEN implementationVisitor.Error(x.position,"maximal extension level exceeded") END;
+					WHILE i < size DO
+						Address(source,0);
+						INC(i);
+					END;
+					baseRecord := recordType;
+					WHILE baseRecord # NIL DO
+						baseTD := baseRecord.typeDeclaration;
+						Global.GetSymbolSegmentedName(baseTD,name);
+						IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
+							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,baseTD,implementationVisitor.dump # NIL);
+						ELSE
+							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,implementationVisitor.dump # NIL);
+						END;
+						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(baseRecord.recordScope.numberMethods)*module.system.addressSize);
+						Symbol(source, tir,  0, offset);
+						baseRecord := baseRecord.GetBaseRecord();
+					END;
+				END TdTable;
+
+			BEGIN
+					Global.GetSymbolSegmentedName(td,name);
+					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+					source.SetExported(IsExported(td));
+
+					IF ~simple THEN
+						(*
+
+										MethodEnd = MPO
+										---
+										methods (# methods)
+										---
+										tags (16)
+										---
+										TypeDesc = TypeInfoAdr
+										---
+						td adr ---> 	rec size
+										----
+										pointer offsets
+										----
+										(padding)
+										-----
+										empty [2 addresses aligned]
+										empty
+										empty
+										numPtrs
+										---
+										pointer offsets
+										---
+						*)
+
+						Info(source, "MethodEnd = MPO");
+						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),MPO);
+						source(IntermediateCode.Section).Emit(Data(-1,op));
+
+						Info(source, "method table");
+						methods := recordType.recordScope.numberMethods;
+						FOR i := methods-1 TO 0 BY -1 DO
+							procedure := recordType.recordScope.FindMethod(i);
+							Global.GetSymbolSegmentedName(procedure,name);
+							NamedSymbol(source, name,procedure,0,0);
+						END;
+						TdTable(TypeTags);
+						Info(source, "type descriptor info pointer");
+						Symbol(source, NewTypeDescriptorInfo(source,source.pc+1,recordType.IsProtected()),0,0);
+						Info(source, "record size");
+						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
+						Info(source, "pointer offsets pointer");
+						padding := 1- source.pc MOD 2;
+						Symbol(source, source, source.pc+1+padding,0);
+						IF padding >0 THEN
+							Info(source, "padding");
+							FOR i := 1 TO padding DO Address(source,0) END;
+						END;
+						PointerArray(source, recordType.recordScope, numberPointers);
+					ELSE
+						(*
+							simple:
+											methods
+											tag(2)
+											tag(1)
+							td adr --->	tag(0)
+							td adr --->	size
+						*)
+						Info(source, "method table");
+						methods := recordType.recordScope.numberMethods;
+						FOR i := methods-1 TO 0 BY -1 DO
+							procedure := recordType.recordScope.FindMethod(i);
+							Global.GetSymbolSegmentedName(procedure, name);
+							NamedSymbol(source, name,procedure, 0,0);
+						END;
+						TdTable(TypeTags);
+						Info(source, "record size");
+						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
+					END;
+					source.SetReferenced(FALSE);
+			END NewTypeDescriptor;
+
+		BEGIN
+			x := x.resolved;
+			IF (x IS SyntaxTree.PointerType) THEN
+				x := x(SyntaxTree.PointerType).pointerBase.resolved;
+			END;
+
+			IF (x IS SyntaxTree.RecordType) THEN (* enter: insert only if not already inserted *)
+				recordType := x(SyntaxTree.RecordType);
+				td := x.typeDeclaration;
+				IF td = NIL THEN td := recordType.pointerType.resolved.typeDeclaration END; (* for compatibility with paco *)
+				ASSERT(td # NIL);
+
+				section := module.allSections.FindBySymbol(td); (* TODO *)
+				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
+					IF implementationVisitor.newObjectFile THEN
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							NewTypeDescriptor
+						END;
+					ELSE
+						(* data section in intermediate code *)
+						Global.GetSymbolSegmentedName(td,name);
+						tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),0);
+						tir.Emit(Data(-1,op));
+					END;
+				END;
+
+			END
+		END CheckTypeDeclaration
+
+	END MetaDataGenerator;
+
+
+	IntermediateBackend*= OBJECT (IntermediateCode.IntermediateBackend)
+	VAR
+		trace-: BOOLEAN;
+		traceString-: SyntaxTree.IdentifierString;
+		traceModuleName-: SyntaxTree.IdentifierString;
+		newObjectFile-: BOOLEAN;
+		profile-: BOOLEAN;
+		noRuntimeChecks: BOOLEAN;
+		simpleMetaData-: BOOLEAN;
+		noAsserts: BOOLEAN;
+		optimize-: BOOLEAN;
+		preregisterStatic-: BOOLEAN;
+		dump-: Basic.Writer;
+
+
+		PROCEDURE &InitIntermediateBackend*;
+		BEGIN
+			simpleMetaData := FALSE;
+			newObjectFile := FALSE;
+			InitBackend;
+			SetRuntimeModuleName(DefaultRuntimeModuleName);
+			SetTraceModuleName(DefaultTraceModuleName);
+		END InitIntermediateBackend;
+
+		PROCEDURE GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module;
+		VAR
+			declarationVisitor: DeclarationVisitor;
+			implementationVisitor: ImplementationVisitor;
+			module: Sections.Module;
+			name, instructionSet, platformName: SyntaxTree.IdentifierString;
+			meta: MetaDataGenerator; support: SET;
+		BEGIN
+			ResetError;
+			Global.GetSymbolName(x,name);
+
+			IF activeCellsSpecification # NIL THEN
+				GetDescription(instructionSet);
+				activeCellsSpecification.SetInstructionSet(instructionSet)
+			END;
+
+			NEW(module,x,system); (* backend structures *)
+
+			Global.GetModuleName(x, name);
+			module.SetModuleName(name);
+
+			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, runtimeModuleName, SELF, newObjectFile);
+			NEW(declarationVisitor,system,implementationVisitor,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
+
+			NEW(meta, implementationVisitor, declarationVisitor,simpleMetaData);
+			declarationVisitor.Module(x,module);
+
+			IF newObjectFile & ~meta.simple THEN
+				meta.Module(implementationVisitor.moduleBodySection);
+			END;
+
+			GetDescription(platformName);
+			module.SetPlatformName(platformName);
+
+			RETURN module
+		END GenerateIntermediate;
+
+		PROCEDURE SupportedImmediate*(CONST op: IntermediateCode.Operand): BOOLEAN;
+		BEGIN RETURN TRUE
+		END SupportedImmediate;
+
+		PROCEDURE ProcessSyntaxTreeModule(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule;
+		BEGIN RETURN ProcessIntermediateCodeModule(GenerateIntermediate(syntaxTreeModule, SupportedInstruction, SupportedImmediate))
+		END ProcessSyntaxTreeModule;
+
+		PROCEDURE ProcessIntermediateCodeModule(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule;
+		VAR
+			result: Sections.Module;
+			traceName: Basic.MessageString;
+		BEGIN
+			ASSERT(intermediateCodeModule IS Sections.Module);
+			result := intermediateCodeModule(Sections.Module);
+
+			IF trace THEN
+				traceName := "intermediate code trace: ";
+				Strings.Append(traceName,traceString);
+				dump := Basic.GetWriter(Basic.GetDebugWriter(traceName));
+				IF (traceString="") OR (traceString="*") THEN
+					result.Dump(dump);
+					dump.Update
+				ELSE
+					Sections.DumpFiltered(dump, result, traceString);
+				END
+			END;
+			RETURN result
+		END ProcessIntermediateCodeModule;
+
+		PROCEDURE GetDescription*(VAR instructionSet: ARRAY OF CHAR);
+		BEGIN instructionSet := "Intermediate";
+		END GetDescription;
+
+		PROCEDURE SetNewObjectFile*(newObjectFile: BOOLEAN; simpleMetaData: BOOLEAN);
+		BEGIN
+			SELF.newObjectFile := newObjectFile;
+			SELF.simpleMetaData := simpleMetaData;
+		END SetNewObjectFile;
+
+		PROCEDURE SetTraceModuleName(CONST name: ARRAY OF CHAR);
+		BEGIN COPY(name, traceModuleName)
+		END SetTraceModuleName;
+
+		PROCEDURE DefineOptions(options: Options.Options);
+		BEGIN
+			DefineOptions^(options);
+			options.Add(0X,"trace",Options.String);
+			options.Add(0X,"runtime",Options.String);
+			options.Add(0X,"newObjectFile",Options.Flag);
+			options.Add(0X,"traceModule",Options.String);
+			options.Add(0X,"profile",Options.Flag);
+			options.Add(0X,"noRuntimeChecks",Options.Flag);
+			options.Add(0X,"noAsserts",Options.Flag);
+			options.Add(0X,"metaData",Options.String);
+			options.Add('o',"optimize", Options.Flag);
+			options.Add(0X,"preregisterStatic", Options.Flag);
+		END DefineOptions;
+
+		PROCEDURE GetOptions(options: Options.Options);
+		VAR name,string: SyntaxTree.IdentifierString;
+		BEGIN
+			GetOptions^(options);
+			trace := options.GetString("trace",traceString);
+			profile := options.GetFlag("profile");
+			noRuntimeChecks := options.GetFlag("noRuntimeChecks");
+			noAsserts := options.GetFlag("noAsserts");
+			IF options.GetFlag("newObjectFile") THEN newObjectFile := TRUE END;
+			IF options.GetString("objectFile",string) & (string = "Minos") THEN 
+				simpleMetaData := TRUE
+			END;
+			IF options.GetString("metaData",string) THEN
+				IF string = "simple" THEN simpleMetaData := TRUE
+				ELSIF string ="full" THEN simpleMetaData := FALSE
+				END;
+			END;
+			IF options.GetString("runtime",name) THEN SetRuntimeModuleName(name) END;
+			IF options.GetString("traceModule",name) THEN SetTraceModuleName(name) END;
+			optimize := options.GetFlag("optimize");
+			preregisterStatic := options.GetFlag("preregisterStatic");
+		END GetOptions;
+
+		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		BEGIN RETURN SymbolFileFormat.Get()
+		END DefaultSymbolFileFormat;
+
+	END IntermediateBackend;
+
+
+	(* ----------------------------------- register allocation ------------------------------------- *)
+
+
+		(* register mapping scheme
+			virtual register number	--> register mapping   = 		part(0)		-->	ticket	<-->	physical register
+																											spill offset
+
+																	part(n)		-->	ticket	<-->	physical register
+																											spill offset
+		*)
+
+
+
+
+	VAR int8-, int16-, int32-, int64-, uint8-, uint16-, uint32-, uint64-, float32-, float64-: IntermediateCode.Type;
+		emptyOperand: IntermediateCode.Operand;
+		systemCalls: ARRAY NumberSystemCalls OF SyntaxTree.Symbol;
+
+	PROCEDURE PassBySingleReference(parameter: SyntaxTree.Parameter): BOOLEAN;
+	BEGIN
+		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE
+		ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
+			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (parameter.ownerType(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.CCallingConvention)
+		ELSIF parameter.kind = SyntaxTree.VarParameter THEN
+			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (parameter.ownerType(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.CCallingConvention)
+		END
+	END PassBySingleReference;
+
+	PROCEDURE PassInRegister(parameter: SyntaxTree.Parameter): BOOLEAN;
+	BEGIN
+		RETURN  ~parameter.type.IsComposite() OR PassBySingleReference(parameter)
+	END PassInRegister;
+
+	PROCEDURE AddRegisterEntry(VAR queue: RegisterEntry; register: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type);
+	VAR new: RegisterEntry;
+	BEGIN
+		NEW(new); new.register := register; new.registerClass := class; new.type := type; new.next := NIL; new.prev := NIL;
+		IF queue = NIL THEN
+			queue := new
+		ELSE
+			new.next := queue;
+			IF queue#NIL THEN queue.prev := new END;
+			queue := new
+		END;
+	END AddRegisterEntry;
+
+	PROCEDURE RemoveRegisterEntry(VAR queue: RegisterEntry; register: LONGINT): BOOLEAN;
+	VAR this: RegisterEntry;
+	BEGIN
+		this := queue;
+		WHILE (this # NIL) & (this.register # register) DO
+			this := this.next;
+		END;
+		IF this = NIL THEN
+			RETURN FALSE
+		END;
+		ASSERT(this # NIL);
+		IF this = queue THEN queue := queue.next END;
+		IF this.prev # NIL THEN this.prev.next := this.next END;
+		IF this.next # NIL THEN this.next.prev := this.prev END;
+		RETURN TRUE
+	END RemoveRegisterEntry;
+
+	PROCEDURE Assert(cond: BOOLEAN; CONST reason: ARRAY OF CHAR);
+	BEGIN ASSERT(cond);
+	END Assert;
+
+	PROCEDURE ReusableRegister(op: IntermediateCode.Operand): BOOLEAN;
+	BEGIN
+		RETURN (op.mode = IntermediateCode.ModeRegister) & (op.register > 0) & (op.offset = 0);
+	END ReusableRegister;
+
+	PROCEDURE EnsureBodyProcedure(moduleScope: SyntaxTree.ModuleScope);
+	VAR procedure: SyntaxTree.Procedure; procedureScope: SyntaxTree.ProcedureScope;
+	BEGIN
+		procedure := moduleScope.bodyProcedure;
+		IF procedure = NIL THEN (* artificially add body procedure if not existing. Really needed? *)
+			procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
+			procedure := SyntaxTree.NewProcedure(-1,Global.ModuleBodyName, procedureScope);
+			procedure.SetScope(moduleScope);
+			procedure.SetType(SyntaxTree.NewProcedureType(-1,moduleScope));
+			procedure.SetAccess(SyntaxTree.Hidden);
+			moduleScope.SetBodyProcedure(procedure);
+			moduleScope.AddProcedure(procedure);
+			procedureScope.SetBody(SyntaxTree.NewBody(-1,procedureScope)); (* empty body *)
+		END;
+	END EnsureBodyProcedure;
+
+	PROCEDURE GetSymbol*(scope: SyntaxTree.ModuleScope; CONST moduleName, symbolName: ARRAY OF CHAR): SyntaxTree.Symbol;
+	VAR import: SyntaxTree.Import;
+		s: Basic.MessageString;
+		selfName: SyntaxTree.IdentifierString;
+		module: SyntaxTree.Module;
+	BEGIN
+		scope.ownerModule.GetName(selfName);
+		IF (moduleName = selfName) & (scope.ownerModule.context = Global.A2Name) THEN
+			module := scope.ownerModule
+		ELSE
+			import := scope.ImportByModuleName(SyntaxTree.NewIdentifier(moduleName),SyntaxTree.NewIdentifier("A2"));
+			IF import = NIL THEN
+				RETURN NIL
+			ELSIF import.module = NIL THEN
+				RETURN NIL
+			ELSE module := import.module
+			END;
+		END;
+		RETURN module.moduleScope.FindSymbol(SyntaxTree.NewIdentifier(symbolName));
+	END GetSymbol;
+
+	PROCEDURE InitOperand(VAR op: Operand; mode: SHORTINT);
+	BEGIN
+		op.mode := mode;
+		IntermediateCode.InitOperand(op.op);
+		IntermediateCode.InitOperand(op.tag);
+		IntermediateCode.InitOperand(op.extra);
+		op.dimOffset := 0;
+	END InitOperand;
+
+	(* TODO: remove this, and redirect calls to 'IntermediateCode.GetType' directly *)
+	PROCEDURE GetType*(system: Global.System; type: SyntaxTree.Type): IntermediateCode.Type;
+	BEGIN RETURN IntermediateCode.GetType(system, type)
+	END GetType;
+
+	PROCEDURE BuildConstant(module: SyntaxTree.Module; value: SyntaxTree.Value; VAR adr: LONGINT): SyntaxTree.Constant;
+	VAR name: SyntaxTree.IdentifierString; constant: SyntaxTree.Constant;
+	BEGIN
+		name := "@const"; Basic.AppendNumber(name, adr); INC(adr);
+		(*
+		UniqueId(name,module,name,adr);
+		*)
+		constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
+		constant.SetValue(value);
+		module.moduleScope.AddConstant(constant);
+		constant.SetScope(module.moduleScope);
+		RETURN constant
+	END BuildConstant;
+
+	PROCEDURE IsIntegerConstant(expression: SyntaxTree.Expression; VAR val: HUGEINT): BOOLEAN;
+	BEGIN
+		IF expression.resolved # NIL THEN expression := expression.resolved END;
+
+		IF  (expression IS SyntaxTree.IntegerValue)  THEN
+			val := expression(SyntaxTree.IntegerValue).value;
+			RETURN TRUE
+		ELSE
+			RETURN FALSE
+		END;
+	END IsIntegerConstant;
+
+	PROCEDURE PowerOf2(val: HUGEINT;  VAR exp: LONGINT): BOOLEAN;
+	BEGIN
+		IF val <= 0 THEN RETURN FALSE END;
+		exp := 0;
+		WHILE ~ODD(val) DO
+			val := val DIV 2;
+			INC(exp)
+		END;
+		RETURN val = 1
+	END PowerOf2;
+
+	PROCEDURE GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure;
+	VAR procedure: SyntaxTree.Procedure;
+	BEGIN
+		procedure := record.recordScope.constructor;
+		IF procedure = NIL THEN
+			record := record.GetBaseRecord();
+			IF record # NIL THEN
+				procedure := GetConstructor(record)
+			END;
+		END;
+		RETURN procedure;
+	END GetConstructor;
+
+	PROCEDURE IsIntegerImmediate(CONST op: IntermediateCode.Operand; VAR value: LONGINT): BOOLEAN;
+	BEGIN
+		value := SHORT(op.intValue);
+		RETURN op.mode = IntermediateCode.ModeImmediate;
+	END IsIntegerImmediate;
+
+	(** whether a type strictily is a pointer to record or object type
+	(however, the basic type <<OBJECT>> is explicitly excluded) **)
+	PROCEDURE IsStrictlyPointerToRecord(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN
+			RETURN FALSE
+		ELSIF type.resolved IS SyntaxTree.PointerType THEN
+			RETURN type.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType
+		ELSE
+			RETURN FALSE
+		END
+	END IsStrictlyPointerToRecord;
+
+	PROCEDURE IsUnsafePointer(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN RETURN (type # NIL) & (type.resolved IS SyntaxTree.PointerType) & type.resolved(SyntaxTree.PointerType).isUnsafe
+	END IsUnsafePointer
+
+	PROCEDURE IsPointerToRecord(type: SyntaxTree.Type; VAR recordType: SyntaxTree.RecordType): BOOLEAN;
+	BEGIN type := type.resolved;
+		IF type IS SyntaxTree.PointerType THEN
+			type := type(SyntaxTree.PointerType).pointerBase;
+			type := type.resolved;
+			IF type IS SyntaxTree.RecordType THEN
+				recordType := type(SyntaxTree.RecordType);
+				RETURN TRUE
+			ELSE
+				RETURN FALSE
+			END
+		ELSIF type IS SyntaxTree.RecordType THEN
+			recordType := type(SyntaxTree.RecordType);
+			RETURN type(SyntaxTree.RecordType).pointerType # NIL
+		ELSIF type IS SyntaxTree.ObjectType THEN
+			RETURN TRUE
+		ELSIF type IS SyntaxTree.AnyType THEN
+			RETURN TRUE (*! potentially is a pointer to record, treat it this way?? *)
+		ELSE
+			RETURN FALSE
+		END;
+	END IsPointerToRecord;
+
+	PROCEDURE IsArrayOfSystemByte(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Open)
+		& (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType);
+	END IsArrayOfSystemByte;
+
+	PROCEDURE IsOpenArray(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Open);
+	END IsOpenArray;
+
+	PROCEDURE IsStaticArray(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static);
+	END IsStaticArray;
+
+	PROCEDURE IsDelegate(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate)
+	END IsDelegate;
+
+	PROCEDURE DynamicDim(type:SyntaxTree.Type): LONGINT;
+	VAR i: LONGINT;
+	BEGIN
+		i := 0; type := type.resolved;
+		WHILE(type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
+			INC(i);
+			type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+		END;
+		WHILE(type # NIL) & (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
+			INC(i);
+			type := type(SyntaxTree.MathArrayType).arrayBase;
+			IF type # NIL THEN type := type.resolved END;
+		END;
+		RETURN i
+	END DynamicDim;
+
+
+
+	PROCEDURE StaticSize(system: Global.System; type: SyntaxTree.Type): LONGINT;
+	BEGIN
+		WHILE (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
+			type := type(SyntaxTree.ArrayType).arrayBase;
+		END;
+		WHILE (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
+			type := type(SyntaxTree.MathArrayType).arrayBase;
+		END;
+		RETURN ToMemoryUnits(system,system.AlignedSizeOf(type));
+	END StaticSize;
+
+	PROCEDURE IsImmediate(x: IntermediateCode.Operand): BOOLEAN;
+	BEGIN
+		RETURN (x.mode = IntermediateCode.ModeImmediate)  & (x.symbol.name = "");
+	END IsImmediate;
+
+	PROCEDURE IsAddress(x: IntermediateCode.Operand): BOOLEAN;
+	BEGIN
+		RETURN (x.mode = IntermediateCode.ModeImmediate) & (x.symbol.name # "")
+	END IsAddress;
+
+	PROCEDURE IsRegister(x: IntermediateCode.Operand): BOOLEAN;
+	BEGIN
+		RETURN (x.mode = IntermediateCode.ModeRegister);
+	END IsRegister;
+
+
+
+
+	PROCEDURE ParametersSize(system: Global.System; procedureType: SyntaxTree.ProcedureType; isNested: BOOLEAN): LONGINT;
+	VAR parSize: LONGINT; parameter: SyntaxTree.Parameter;
+	BEGIN
+		parSize := 0;
+
+		IF StructuredReturnType(procedureType) THEN
+			parameter := procedureType.returnParameter;
+			INC(parSize,system.SizeOfParameter(parameter));
+			parSize := parSize + (-parSize) MOD system.addressSize;
+		END;
+
+		parameter :=procedureType.lastParameter;
+		WHILE (parameter # NIL) DO
+			INC(parSize,system.SizeOfParameter(parameter));
+			parSize := parSize + (-parSize) MOD system.addressSize;
+			parameter := parameter.prevParameter;
+		END;
+
+		IF procedureType.isDelegate THEN INC(parSize,system.addressSize) END; (* method => self pointer *)
+		IF isNested THEN INC(parSize,system.addressSize) END; (* nested procedure => static base *)
+
+		RETURN ToMemoryUnits(system,parSize)
+	END ParametersSize;
+
+	PROCEDURE ReturnedAsParameter(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE
+		ELSE
+			type := type.resolved;
+			RETURN (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ProcedureType) OR SemanticChecker.IsPointerType(type)
+				OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.MathArrayType);
+		END
+	END ReturnedAsParameter;
+
+	PROCEDURE StructuredReturnType(procedureType: SyntaxTree.ProcedureType): BOOLEAN;
+	BEGIN
+		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(procedureType.returnType);
+	END StructuredReturnType;
+
+	PROCEDURE IsNested(procedure: SyntaxTree.Procedure): BOOLEAN;
+	BEGIN
+		RETURN procedure.scope IS SyntaxTree.ProcedureScope
+	END IsNested;
+
+	PROCEDURE ProcedureParametersSize(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT;
+	BEGIN
+		IF (procedure.scope IS SyntaxTree.CellScope) & (procedure = procedure.scope(SyntaxTree.CellScope).constructor) THEN
+			RETURN 0
+		ELSE
+			RETURN ParametersSize(system,procedure.type(SyntaxTree.ProcedureType),IsNested(procedure));
+		END;
+	END ProcedureParametersSize;
+
+	PROCEDURE ToMemoryUnits*(system: Global.System; size: LONGINT): LONGINT;
+	VAR dataUnit: LONGINT;
+	BEGIN dataUnit := system.dataUnit;
+
+		ASSERT(size MOD system.dataUnit = 0);
+		RETURN size DIV system.dataUnit
+	END ToMemoryUnits;
+
+	PROCEDURE Get*(): Backend.Backend;
+	VAR backend: IntermediateBackend;
+	BEGIN NEW(backend); RETURN backend
+	END Get;
+
+	PROCEDURE Nop(position: LONGINT):IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.nop,emptyOperand,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Nop;
+
+	PROCEDURE Mov(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.mov,dest,src,emptyOperand);
+		RETURN instruction
+	END Mov;
+
+	(* like Mov but ensures that no new register will be allocated for dest *)
+	PROCEDURE MovReplace(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.mov,dest,src,dest);
+		RETURN instruction
+	END MovReplace;
+
+	PROCEDURE Conv(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.conv,dest,src,emptyOperand);
+		RETURN instruction
+	END Conv;
+
+	PROCEDURE Call*(position: LONGINT;op: IntermediateCode.Operand; parSize: LONGINT): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.call,op,IntermediateCode.Number(parSize),emptyOperand);
+		RETURN instruction
+	END Call;
+
+	PROCEDURE Enter(position: LONGINT;callconv: LONGINT; varSize: LONGINT; numRegs: LONGINT): IntermediateCode.Instruction;
+	VAR op1,op2,op3: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitNumber(op1,callconv);
+		IntermediateCode.InitNumber(op2,varSize);
+		IntermediateCode.InitNumber(op3, numRegs);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.enter,op1,op2,op3);
+		RETURN instruction
+	END Enter;
+
+	PROCEDURE Leave(position: LONGINT;callconv: LONGINT): IntermediateCode.Instruction;
+	VAR op1: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitNumber(op1,callconv);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.leave,op1,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Leave;
+
+	PROCEDURE Exit(position: LONGINT;pcOffset: LONGINT; callingConvention: LONGINT): IntermediateCode.Instruction;
+	VAR op1, op2: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitNumber(op1,pcOffset);
+		IntermediateCode.InitNumber(op2,callingConvention);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.exit,op1,op2,emptyOperand);
+		RETURN instruction
+	END Exit;
+
+	PROCEDURE Return(position: LONGINT;res: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.return,res,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Return;
+
+	PROCEDURE Result*(position: LONGINT;res: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.result,res,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Result;
+
+	PROCEDURE Trap(position: LONGINT;nr: LONGINT): IntermediateCode.Instruction;
+ 	VAR op1: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitNumber(op1,nr);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.trap,op1,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Trap;
+
+	PROCEDURE Br(position: LONGINT;dest: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.br,dest,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Br;
+
+	PROCEDURE Breq(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.breq,dest,left,right);
+		RETURN instruction
+	END Breq;
+
+	PROCEDURE Brne(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.brne,dest,left,right);
+		RETURN instruction
+	END Brne;
+
+	PROCEDURE Brge(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.brge,dest,left,right);
+		RETURN instruction
+	END Brge;
+
+	PROCEDURE Brlt(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.brlt,dest,left,right);
+		RETURN instruction
+	END Brlt;
+
+	PROCEDURE Pop*(position: LONGINT;op:IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.pop,op,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Pop;
+
+	PROCEDURE Push*(position: LONGINT;op: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		ASSERT(op.mode # IntermediateCode.Undefined);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.push,op,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Push;
+
+	PROCEDURE Neg(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position, IntermediateCode.neg,dest,src,emptyOperand);
+		RETURN instruction
+	END Neg;
+
+	PROCEDURE Not(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.not,dest,src,emptyOperand);
+		RETURN instruction
+	END Not;
+
+	PROCEDURE Abs(position: LONGINT;dest,src: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.abs,dest,src,emptyOperand);
+		RETURN instruction
+	END Abs;
+
+	PROCEDURE Mul(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.mul,dest,left,right);
+		RETURN instruction
+	END Mul;
+
+	PROCEDURE Div(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.div,dest,left,right);
+		RETURN instruction
+	END Div;
+
+	PROCEDURE Mod(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.mod,dest,left,right);
+		RETURN instruction
+	END Mod;
+
+	PROCEDURE Sub(position: LONGINT;dest: IntermediateCode.Operand; left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.sub,dest,left,right);
+		RETURN instruction
+	END Sub;
+
+	PROCEDURE Add(position: LONGINT;dest: IntermediateCode.Operand; left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.add,dest,left,right);
+		RETURN instruction
+	END Add;
+
+	PROCEDURE And(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.and,dest,left,right);
+		RETURN instruction
+	END And;
+
+	PROCEDURE Or(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.or,dest,left,right);
+		RETURN instruction
+	END Or;
+
+	PROCEDURE Xor(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.xor,dest,left,right);
+		RETURN instruction
+	END Xor;
+
+	PROCEDURE Shl(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.shl,dest,left, IntermediateCode.ToUnsigned(right));
+		RETURN instruction
+	END Shl;
+
+	PROCEDURE Shr(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.shr,dest,left, IntermediateCode.ToUnsigned(right));
+		RETURN instruction
+	END Shr;
+
+	PROCEDURE Rol(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.rol,dest,left, IntermediateCode.ToUnsigned(right));
+		RETURN instruction
+	END Rol;
+
+	PROCEDURE Ror(position: LONGINT;dest,left,right: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.ror,dest,left, IntermediateCode.ToUnsigned(right));
+		RETURN instruction
+	END Ror;
+
+	PROCEDURE Cas(position: LONGINT;dest,src,size: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.cas,dest,src,size);
+		RETURN instruction
+	END Cas;
+
+	PROCEDURE Copy(position: LONGINT;dest,src,size: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.copy,dest,src,size);
+		RETURN instruction
+	END Copy;
+
+	PROCEDURE Asm(position: LONGINT;s: SyntaxTree.SourceCode; inRules, outRules: IntermediateCode.Rules): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction; string, o1, o2: IntermediateCode.Operand;
+	BEGIN
+		string := IntermediateCode.String(s);
+		IntermediateCode.SetIntValue(string,position); (* for error reporting *)
+		IF inRules # NIL THEN IntermediateCode.InitRule(o1, inRules) ELSE o1 := emptyOperand END;
+		IF outRules # NIL THEN IntermediateCode.InitRule(o2, outRules) ELSE o2 := emptyOperand END;
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.asm,string,o1,o2);
+		RETURN instruction
+	END Asm;
+
+	PROCEDURE Data*(position: LONGINT;op: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.data,op,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Data;
+
+	PROCEDURE SpecialInstruction(position: LONGINT;subtype: SHORTINT; op1,op2,op3: IntermediateCode.Operand): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.special,op1,op2,op3);
+		IntermediateCode.SetSubType(instruction, subtype);
+		RETURN instruction
+	END SpecialInstruction;
+
+
+	PROCEDURE Reserve(position: LONGINT;units: LONGINT): IntermediateCode.Instruction;
+	VAR op1: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		(*! generate a warning if size exceeds a certain limit *)
+		(*
+		ASSERT(bytes < 1000000); (* sanity check *)
+		*)
+		ASSERT(0 <= units); (* sanity check *)
+		IntermediateCode.InitNumber(op1,units);
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.reserve,op1,emptyOperand,emptyOperand);
+		RETURN instruction
+	END Reserve;
+
+	PROCEDURE LabelInstruction(position: LONGINT): IntermediateCode.Instruction;
+	VAR op1: IntermediateCode.Operand;
+	VAR instruction: IntermediateCode.Instruction;
+	BEGIN
+		IntermediateCode.InitNumber(op1,position);
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.label,op1,emptyOperand,emptyOperand);
+		RETURN instruction
+	END LabelInstruction;
+
+	PROCEDURE EnterImmediate*(data: IntermediateCode.Section; CONST vop: IntermediateCode.Operand): LONGINT;
+	VAR pc: LONGINT;
+
+		PROCEDURE ProvidesValue(CONST instr: IntermediateCode.Instruction; op: IntermediateCode.Operand): BOOLEAN;
+		BEGIN
+			IF instr.opcode # IntermediateCode.data THEN RETURN FALSE END;
+			ASSERT(instr.op1.mode = IntermediateCode.ModeImmediate);
+			IF instr.op1.type.sizeInBits # op.type.sizeInBits THEN RETURN FALSE END;
+			IF instr.op1.type.form # op.type.form THEN RETURN FALSE END;
+			IF instr.op1.type.form = IntermediateCode.Float THEN
+				RETURN instr.op1.floatValue = op.floatValue
+			ELSE
+				RETURN instr.op1.intValue = op.intValue
+			END;
+		END ProvidesValue;
+
+	BEGIN
+		ASSERT(vop.mode = IntermediateCode.ModeImmediate);
+		pc := 0;
+		WHILE (pc<data.pc) & ~ProvidesValue(data.instructions[pc],vop) DO
+			INC(pc);
+		END;
+
+		IF pc = data.pc THEN
+			data.Emit(Data(-1,vop));
+		END;
+		RETURN pc
+	END EnterImmediate;
+
+
+	PROCEDURE Init;
+	VAR i: LONGINT; name: SyntaxTree.IdentifierString;
+	BEGIN
+		int8 := IntermediateCode.NewType(IntermediateCode.SignedInteger,IntermediateCode.Bits8);
+		int16 := IntermediateCode.NewType(IntermediateCode.SignedInteger,IntermediateCode.Bits16);
+		int32 := IntermediateCode.NewType(IntermediateCode.SignedInteger,IntermediateCode.Bits32);
+		int64 := IntermediateCode.NewType(IntermediateCode.SignedInteger,IntermediateCode.Bits64);
+		uint8 := IntermediateCode.NewType(IntermediateCode.UnsignedInteger,IntermediateCode.Bits8);
+		uint16 := IntermediateCode.NewType(IntermediateCode.UnsignedInteger,IntermediateCode.Bits16);
+		uint32 := IntermediateCode.NewType(IntermediateCode.UnsignedInteger,IntermediateCode.Bits32);
+		uint64 := IntermediateCode.NewType(IntermediateCode.UnsignedInteger,IntermediateCode.Bits64);
+		float32 := IntermediateCode.NewType(IntermediateCode.Float,IntermediateCode.Bits32);
+		float64 := IntermediateCode.NewType(IntermediateCode.Float,IntermediateCode.Bits64);
+		IntermediateCode.InitOperand(emptyOperand);
+
+		FOR i := 0 TO NumberSystemCalls-1 DO
+			name := "@SystemCall";
+			Basic.AppendNumber(name,i);
+			systemCalls[i] := SyntaxTree.NewSymbol(SyntaxTree.NewIdentifier(name));
+		END;
+
+
+	END Init;
+
+	PROCEDURE IsExported(symbol: SyntaxTree.Symbol): BOOLEAN;
+	BEGIN
+		RETURN (symbol # NIL) & (symbol.access * SyntaxTree.Public # {})
+	END IsExported;
+
+
+
+BEGIN
+	Init;
+
+END FoxIntermediateBackend.
+
+
+Compiler.Compile FoxIntermediateBackend.Mod ~

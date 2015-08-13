@@ -15,7 +15,7 @@ TYPE
 	SectionName = ARRAY 256 OF CHAR; (*! move *)
 
 	(** the assemblinker **)
-	Linker = OBJECT
+	Linker* = OBJECT
 	CONST
 		Trace = FALSE;
 		RequireSortedSections = FALSE; (* whether the sections in the generated modules are sorted w.r.t. their fixed positions *)
@@ -32,9 +32,9 @@ TYPE
 		allSections: Sections.SectionList;
 		isSorted, alreadyPrearrangedSinceLastSort: BOOLEAN;
 		originalRestrictions: POINTER TO ARRAY OF ArrangementRestriction;
-		objectFile: IRObjectFile.ObjectFileFormat;
+		objectFile-: IRObjectFile.ObjectFileFormat;
 
-		PROCEDURE & Init(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend; irFilePath: SyntaxTree.IdentifierString);
+		PROCEDURE & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend; irFilePath: SyntaxTree.IdentifierString);
 		BEGIN
 			IF diagnostics = NIL THEN
 				SELF.diagnostics := Basic.GetDefaultDiagnostics()
@@ -51,7 +51,7 @@ TYPE
 			isSorted := FALSE
 		END Init;
 
-		PROCEDURE PatchStackSize(CONST typeName: SectionName; size: LONGINT);
+		PROCEDURE PatchStackSize*(CONST typeName: SectionName; size: LONGINT);
 		VAR sectionName: SectionName; section: Sections.Section; pooledName: Basic.SegmentedName; op1, op2, op3: IntermediateCode.Operand; instruction: IntermediateCode.Instruction;
 		BEGIN
 			TRACE(size);
@@ -67,10 +67,88 @@ TYPE
 			section(IntermediateCode.Section).PatchOperands(0, op1, op2, op3);
 		END PatchStackSize;
 
+		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; value: HUGEINT);
+		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1, op2, op3: IntermediateCode.Operand;
+			size: HUGEINT;pooledName: Basic.SegmentedName;
+		BEGIN
+			Basic.ToSegmentedName(sectionName, pooledName);
+			section := allSections.FindByName(pooledName);
+			instruction := section(IntermediateCode.Section).instructions[0];
+			op1 := instruction.op1;
+			IF instruction.opcode = IntermediateCode.reserve THEN
+				size := section.bitsPerUnit * op1.intValue;
+			ELSIF instruction.opcode = IntermediateCode.data THEN
+				size := op1.type.sizeInBits
+			ELSE
+				HALT(100);
+			END;
+			IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.SignedInteger, INTEGER(size)), value);
+			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+			section(IntermediateCode.Section).EmitAt(0, instruction);
+		END PatchIntegerValue;
 
-		PROCEDURE LoadModule(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN;
+		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; value: BOOLEAN);
+		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1, op2, op3: IntermediateCode.Operand;
+			size: HUGEINT;pooledName: Basic.SegmentedName;
+		BEGIN
+			Basic.ToSegmentedName(sectionName, pooledName);
+			section := allSections.FindByName(pooledName);
+			instruction := section(IntermediateCode.Section).instructions[0];
+			op1 := instruction.op1;
+			IF instruction.opcode = IntermediateCode.reserve THEN
+				size := section.bitsPerUnit * op1.intValue;
+			ELSIF instruction.opcode = IntermediateCode.data THEN
+				size := op1.type.sizeInBits
+			ELSE
+				HALT(100);
+			END;
+			IF value THEN
+				IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.UnsignedInteger, INTEGER(size)), 1);
+			ELSE
+				IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.UnsignedInteger, INTEGER(size)), 0);
+			END;
+			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+			section(IntermediateCode.Section).EmitAt(0, instruction);
+		END PatchBooleanValue;
+
+		PROCEDURE PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR);
+		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1, op2, op3: IntermediateCode.Operand;
+			size: HUGEINT;pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
+			char: CHAR; i: LONGINT; 
+		BEGIN
+			Basic.ToSegmentedName(sectionName, pooledName);
+			section := allSections.FindByName(pooledName);
+			section(IntermediateCode.Section).Reset;
+			type := IntermediateCode.GetType(backend.system, backend.system.characterType);
+			i := 0; 
+			REPEAT
+				char := value[i];
+				IntermediateCode.InitImmediate(op1, type, ORD(char));
+				IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+				section(IntermediateCode.Section).Emit(instruction);
+				INC(i); 
+			UNTIL char = 0X; 
+		END PatchStringValue;
+		
+		PROCEDURE PatchLengthArray*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF LONGINT);
+		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1, op2, op3: IntermediateCode.Operand;
+			size: HUGEINT;pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
+			char: CHAR; i: LONGINT; 
+		BEGIN
+			Basic.ToSegmentedName(sectionName, pooledName);
+			section := allSections.FindByName(pooledName);
+			section(IntermediateCode.Section).Reset;
+			type := IntermediateCode.GetType(backend.system, backend.system.addressType);
+			FOR i := 0 TO LEN(value)-1 DO
+				IntermediateCode.InitImmediate(op1, type, value[i]);
+				IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+				section(IntermediateCode.Section).Emit(instruction);
+			END;
+		END PatchLengthArray;
+
+		PROCEDURE LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN;
 		VAR
-			filename, moduleName: SyntaxTree.IdentifierString;
+			filename, moduleName, extension: SyntaxTree.IdentifierString;
 			msg: ARRAY 128 OF CHAR;
 			i: LONGINT;
 			module: Sections.Module;
@@ -82,7 +160,7 @@ TYPE
 				IF Trace THEN D.String(">>> module "); D.String(moduleName); D.String(" has already been loaded"); D.Ln END;
 				RETURN TRUE
 			ELSE
-				IF moduleName = "SYSTEM" THEN
+				IF (moduleName=Global.StringSystemModule)  OR (moduleName=Global.StringsystemModule) THEN 
 					(* nothing to do *)
 				ELSE
 					(* open corresponding intermediate code file *)
@@ -121,7 +199,7 @@ TYPE
 		END LoadModule;
 
 		(** mark a section with a certain name as reachable **)
-		PROCEDURE MarkAsReachableByName(CONST name: ARRAY OF CHAR);
+		PROCEDURE MarkAsReachableByName*(CONST name: ARRAY OF CHAR);
 		VAR
 			section: Sections.Section;
 			pooledName: Basic.SegmentedName;
@@ -133,7 +211,7 @@ TYPE
 		END MarkAsReachableByName;
 
 		(** mark all sections whose names start with a certain prefix as reachable **)
-		PROCEDURE MarkAsReachableStartingWith(CONST prefix: Basic.SegmentedName; allowedSections: SET);
+		PROCEDURE MarkAsReachableStartingWith*(CONST prefix: Basic.SegmentedName; allowedSections: SET);
 		VAR
 			section: Sections.Section; name: Basic.SegmentedName;
 			i: LONGINT;
@@ -175,7 +253,7 @@ TYPE
 		END OperandSection;
 
 		(** mark a section as reachable and do the same recursively for all referenced sections **)
-		PROCEDURE MarkAsReachable(section: Sections.Section);
+		PROCEDURE MarkAsReachable*(section: Sections.Section);
 		VAR
 			intermediateCodeSection: IntermediateCode.Section;
 			i: LONGINT;
@@ -204,7 +282,7 @@ TYPE
 		END MarkAsReachable;
 
 		(** mark all sections as either reachable or unreachable **)
-		PROCEDURE MarkReachabilityOfAll(isReachable: BOOLEAN);
+		PROCEDURE MarkReachabilityOfAll*(isReachable: BOOLEAN);
 		VAR
 			section: Sections.Section;
 			i: LONGINT;
@@ -217,7 +295,7 @@ TYPE
 		END MarkReachabilityOfAll;
 
 		(** dump all sections (both reachable and not) **)
-		PROCEDURE DumpSections(writer: Streams.Writer; sections: Sections.SectionList);
+		PROCEDURE DumpSections*(writer: Streams.Writer; sections: Sections.SectionList);
 		VAR
 			section: Sections.Section;
 			i: LONGINT;
@@ -261,7 +339,7 @@ TYPE
 			END
 		END RestoreOriginalRestrictions;
 
-		PROCEDURE PrearrangeReachableDataSections;
+		PROCEDURE PrearrangeReachableDataSections*;
 		VAR
 			fixedDataSections, flexibleDataSections: Sections.SectionList;
 			section, fixedDataSection, flexibleDataSection: Sections.Section;
@@ -666,45 +744,67 @@ TYPE
 	END CopySections;
 
 	PROCEDURE FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR);
-	VAR extension: FileName;
+	VAR extension: Files.FileName;
 	BEGIN
 		Files.SplitExtension(filename, moduleName, extension);
 	END FileNameToModuleName;
 
-	PROCEDURE LinkActiveCells*(activeCellsSpecification: ActiveCells.Specification; backend: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat): BOOLEAN;
+	
 	TYPE
-		LinkerObject= OBJECT
+		CellLinker = OBJECT
 		VAR
-			specification: ActiveCells.Specification;
 			backend: Backend.Backend;
-			diagnostics: Diagnostics.Diagnostics;
 			irLinker: Linker;
 			objectFileFormat: Formats.ObjectFileFormat;
-			error: BOOLEAN;
 			system: Global.System;
+			diagnostics: Diagnostics.Diagnostics;
+			error: BOOLEAN;
 
-			PROCEDURE &Init(activeCellsSpecification: ActiveCells.Specification; b: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat);
+			instanceName, typeName: SectionName;
+			
+			PROCEDURE &Init(b: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat; d: Diagnostics.Diagnostics);
 			BEGIN
 				error := FALSE;
-				SELF.specification := activeCellsSpecification;
 				SELF.backend := b;
-				SELF.diagnostics := specification.diagnostics;
+				SELF.diagnostics := d;
 				IF diagnostics = NIL THEN diagnostics := Basic.GetDefaultDiagnostics() END;
 				SELF.objectFileFormat := objectFileFormat;
-				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
+				NEW(irLinker, diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
 				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
 					error := TRUE;
 					diagnostics.Error(backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
-				END;
-				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
-					error := TRUE;
-					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 				END;
 				backend := irLinker.backend;
 				system := backend.system;
 			END Init;
 
-			PROCEDURE LinkInstance(instance: ActiveCells.Instance): BOOLEAN;
+			PROCEDURE LoadModule*(CONST name: ARRAY OF CHAR);
+			BEGIN
+				IF ~irLinker.LoadModule(name,TRUE) THEN
+					error := TRUE;
+					diagnostics.Error(name,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+				END;
+			END LoadModule;
+			
+			PROCEDURE SetInstance*(CONST type, instance: ARRAY OF CHAR);
+			VAR linkRoot: SectionName;
+			BEGIN
+				COPY(type, typeName); 
+				COPY(instance, instanceName);
+				irLinker.MarkReachabilityOfAll(FALSE);
+				COPY(typeName, linkRoot);
+				Strings.Append(linkRoot,".@BodyStub");
+				irLinker.MarkAsReachableByName(linkRoot);
+			END SetInstance;
+
+			PROCEDURE GetInstructionSize(CONST instruction: IntermediateCode.Instruction; in: Sections.Section);
+			BEGIN
+				
+			END GetInstructionSize;
+			
+			
+			
+			(*PROCEDURE LinkInstance(CONST typeName, instanceName: ARRAY OF CHAR): BOOLEAN;
 			VAR
 				codeFileName, dataFileName: Files.FileName;
 				typeName, instanceName, linkRoot: SectionName;
@@ -856,6 +956,172 @@ TYPE
 				END;
 				RETURN ~linker.error & ~error
 			END LinkInstance;
+			*)
+			
+		END CellLinker;
+
+	PROCEDURE LinkActiveCells*(activeCellsSpecification: ActiveCells.Specification; backend: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat): BOOLEAN;
+	TYPE
+		LinkerObject= OBJECT
+		VAR
+			specification: ActiveCells.Specification;
+			backend: Backend.Backend;
+			diagnostics: Diagnostics.Diagnostics;
+			irLinker: Linker;
+			objectFileFormat: Formats.ObjectFileFormat;
+			error: BOOLEAN;
+			system: Global.System;
+
+			PROCEDURE &Init(activeCellsSpecification: ActiveCells.Specification; b: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat);
+			BEGIN
+				error := FALSE;
+				SELF.specification := activeCellsSpecification;
+				SELF.backend := b;
+				SELF.diagnostics := specification.diagnostics;
+				IF diagnostics = NIL THEN diagnostics := Basic.GetDefaultDiagnostics() END;
+				SELF.objectFileFormat := objectFileFormat;
+				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
+				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
+					error := TRUE;
+					diagnostics.Error(backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+				END;
+				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
+					error := TRUE;
+					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+				END;
+				backend := irLinker.backend;
+				system := backend.system;
+			END Init;
+
+			PROCEDURE LinkInstance(instance: ActiveCells.Instance): BOOLEAN;
+			VAR
+				codeFileName, dataFileName: Files.FileName;
+				typeName, instanceName, linkRoot: SectionName;
+				code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker;
+				i: LONGINT;
+				logFile: Files.File; linkerLog: Files.Writer;
+				type: ActiveCells.Type;
+				msg: MessageString;
+				objectFileExtension: ARRAY 32 OF CHAR;
+				instructionMemorySize, dataMemorySize: LONGINT;
+				parameter: ActiveCells.Parameter;
+				value: SyntaxTree.Value;
+				pooledName: Basic.SegmentedName;
+				error : BOOLEAN;
+			CONST MinimalStackSize=64;
+			BEGIN
+				error := FALSE;
+				type := instance.instanceType;
+				type.GetFullName(typeName,NIL);
+				instance.GetFullName(instanceName,NIL);
+				IF TraceLinking THEN
+					D.String("assembling instance "); D.String(instanceName); D.String(" of type "); D.String(typeName); D.Ln;
+				END;
+				IF instance.IsEngine() THEN
+					IF TraceLinking THEN
+						D.String("instance "); D.String(instanceName); D.String(" is engine "); D.Ln;
+					END;
+					RETURN TRUE;
+				END;
+
+				backend.SetCapabilities(instance.capabilities);
+				irLinker.MarkReachabilityOfAll(FALSE);
+				COPY(typeName, linkRoot);
+				Strings.Append(linkRoot,".@BodyStub");
+				irLinker.MarkAsReachableByName(linkRoot);
+				irLinker.PatchStackSize(typeName, instance.dataMemorySize);
+
+				FOR i := 0 TO instance.parameters.Length()-1 DO
+					parameter := instance.parameters.GetParameter(i);
+					IF parameter.parameterType = 0 THEN (* Boolean *)
+						value := SyntaxTree.NewBooleanValue(-1, parameter.boolean); value.SetType(system.booleanType);
+					ELSE
+						value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(system.integerType);
+					END;
+					Basic.ToSegmentedName(parameter.name, pooledName);
+					irLinker.PatchValueInSection(pooledName,value);
+				END;
+
+				IF error THEN RETURN FALSE END;
+
+				objectFileFormat.GetExtension(objectFileExtension);
+				irLinker.PrearrangeReachableDataSections;
+				IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
+					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not generate object file");
+					RETURN FALSE
+				END;
+
+				IF TraceLinking THEN
+					D.String("assembling instance done. "); D.Ln;
+				END;
+
+				NEW (code, 0); NEW (data, 0);
+				COPY(instanceName, msg); Strings.Append(msg,".log");	logFile := Files.New(msg);
+				IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
+				NEW (linker, specification.diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
+
+				linker.SetLinkRoot("" (* linkRoot *)); (* take all initcode sections *)
+				StaticLinker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
+
+				(* do linking after having read in all blocks to account for potential constraints *)
+				IF ~linker.error THEN linker.Link; END;
+
+				system := backend.GetSystem();
+
+				instructionMemorySize := instance.instructionMemorySize;
+				dataMemorySize := instance.dataMemorySize;
+
+				IF instructionMemorySize = 0 THEN
+					instructionMemorySize := type.instructionMemorySize
+				END;
+				IF dataMemorySize = 0 THEN
+					dataMemorySize := type.dataMemorySize
+				END;
+
+				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
+					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
+					error := TRUE;
+				ELSIF instructionMemorySize = 0 THEN
+					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
+				END;
+
+				dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
+				instance.SetInstructionMemorySize(instructionMemorySize);
+				instance.SetDataMemorySize(dataMemorySize);
+
+				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
+					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
+					error := TRUE;
+				END;
+
+				Files.JoinExtension(instanceName,ActiveCells.CodeFileExtension,codeFileName);
+				Files.JoinExtension(instanceName,ActiveCells.DataFileExtension,dataFileName);
+
+				IF ~linker.error THEN
+					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
+					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
+					IF specification.log # NIL THEN
+						specification.log.String(instanceName);
+						specification.log.String(" linked. IM = ");specification.log.Int(instructionMemorySize,1);
+						specification.log.String(" (used: "); specification.log.Int(code.SizeInBits() DIV system.codeUnit,1);
+						specification.log.String("), DM = "); specification.log.Int(dataMemorySize,1);
+						specification.log.String(" (used: "); specification.log.Int(data.SizeInBits() DIV system.dataUnit,1);
+						specification.log.String(")");
+						specification.log.Ln; specification.log.Update;
+
+						specification.log.String("generated code file: ");specification.log.String(codeFileName); specification.log.Ln;
+						specification.log.String("generated data file: ");specification.log.String(dataFileName); specification.log.Ln;
+
+
+					END;
+				ELSE
+					msg := "could not link ";
+					Strings.Append(msg,linkRoot);
+					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+				END;
+				RETURN ~linker.error & ~error
+			END LinkInstance;
 
 		END LinkerObject;
 
@@ -880,7 +1146,7 @@ TYPE
 		error, result, parsed: BOOLEAN;
 		options:Options.Options;
 		position: LONGINT;
-		moduleName: SyntaxTree.IdentifierString;
+		moduleName, extension: SyntaxTree.IdentifierString;
 
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
 		BEGIN
@@ -968,4 +1234,23 @@ TYPE
 	END Link;
 
 
+	(* to link active cells 
+		- load all intermediate code files and collect all sections in one object
+		- for each cell instance 
+			- find body stub by name of cell type
+			- find all descending sections recursively (!! may depend on backend needs !)
+			- add sections for ports and properties
+			- assemble, generate gof file
+			- link gof file
+	
+		- ir code / data units depend on section type, do not necessarily have to be stored
+	*)
+	
+	
+	
+	
+
 END FoxIntermediateLinker.
+FoxIntermediateObjectFile.Show Test ~
+FoxIntermediateLinker.Link -b=TRM --objectFile=Generic --targetFile=Test Test ~
+FoxGenericObjectFile.Show Test.Gof ~

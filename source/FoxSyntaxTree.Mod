@@ -45,6 +45,7 @@ CONST
 	Static*=1; (* ARRAY x OF .. / ARRAY [x] OF ... *)
 	Open*=2; (* ARRAY OF ... / ARRAY [*] OF ... *)
 	Tensor*=3; (* ARRAY [?] OF ... *)
+	SemiDynamic*=4;
 
 	(** node states, important for checker to avoid cycles *)
 	Undefined*={}; BeingResolved*=1; Resolved*=2; FingerPrinted*=3; Warned*=4; RecursionFlag=31;
@@ -266,6 +267,9 @@ TYPE
 
 		PROCEDURE VisitParameter*(x: Parameter);
 		BEGIN HALT(100) (* abstract *) END VisitParameter;
+
+		PROCEDURE VisitProperty*(x: Property);
+		BEGIN HALT(100) (* abstract *) END VisitProperty;
 
 		PROCEDURE VisitProcedure*(x: Procedure);
 		BEGIN HALT(100) (* abstract *) END VisitProcedure;
@@ -1076,6 +1080,12 @@ TYPE
 			arrayBase := type; IF (arrayBase # NIL) & (arrayBase.hasPointers) THEN SetHasPointers(TRUE) END;
 		END SetArrayBase;
 
+		PROCEDURE SetForm*(f: LONGINT);
+		BEGIN
+			form := f;
+		END SetForm;
+		
+
 		PROCEDURE SetLength*(length: Expression);
 		BEGIN
 			SELF.length := length;
@@ -1278,6 +1288,7 @@ TYPE
 			isPlain-: BOOLEAN;
 			isUnsafe-: BOOLEAN;
 			isDisposable-: BOOLEAN;
+			isHidden-: BOOLEAN;
 
 		PROCEDURE & InitPointerType(position: LONGINT; scope: Scope);
 		BEGIN
@@ -1289,7 +1300,13 @@ TYPE
 			InitType(position);
 			SELF.scope := scope;
 			hasPointers := TRUE;
+			isHidden := FALSE;
 		END InitPointerType;
+
+		PROCEDURE SetHidden*(hidden: BOOLEAN);
+		BEGIN
+			isHidden := hidden;
+		END SetHidden;	(** <<POINTER TO pointerBase>> **)
 
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags
@@ -1544,18 +1561,40 @@ TYPE
 	CellType*=OBJECT (Type)
 	VAR
 		firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters *)
+		firstProperty-, lastProperty-: Property; numberProperties: LONGINT; (* capabilities *)
 		cellScope-: CellScope;
 		isCellNet-: BOOLEAN;
 		modifiers-: Modifier;
+		baseType-: Type;
 
 		PROCEDURE &InitCellType(position: LONGINT; scope: Scope;  cellScope: CellScope);
 		BEGIN
 			InitType(position);
 			SELF.scope := scope;
 			numberParameters := 0; firstParameter := NIL; lastParameter := NIL;
+			numberProperties := 0; firstProperty := NIL; lastProperty := NIL;
 			SELF.cellScope := cellScope;
 			isCellNet := FALSE;
+			baseType := NIL;
 		END InitCellType;
+
+		PROCEDURE SetBaseType*(base: Type);
+		BEGIN
+			baseType := base;
+		END SetBaseType;
+		
+		PROCEDURE GetBaseRecord*():RecordType;
+		BEGIN
+			IF baseType = NIL THEN RETURN NIL; END;
+			IF baseType.resolved IS RecordType THEN
+				RETURN baseType.resolved(RecordType);
+			ELSIF baseType.resolved IS PointerType THEN
+				IF baseType.resolved(PointerType).pointerBase.resolved # NIL THEN
+					RETURN baseType.resolved(PointerType).pointerBase.resolved(RecordType);
+				END;
+			END;
+			RETURN NIL;
+		END GetBaseRecord;
 
 		PROCEDURE AddParameter*(p: Parameter);
 		BEGIN
@@ -1565,6 +1604,14 @@ TYPE
 			INC(numberParameters);
 		END AddParameter;
 
+		PROCEDURE AddProperty*(p: Property);
+		BEGIN
+			ASSERT(p # NIL);
+			IF lastProperty= NIL THEN firstProperty := p ELSE lastProperty.nextProperty := p; p.prevProperty := lastProperty; END;
+			lastProperty := p;
+			INC(numberProperties);
+		END AddProperty;
+		
 		PROCEDURE FindParameter*(identifier: Identifier): Parameter;
 		VAR p: Parameter;
 		BEGIN
@@ -1572,6 +1619,14 @@ TYPE
 			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextParameter END;
 			RETURN p;
 		END FindParameter;
+
+		PROCEDURE FindProperty*(identifier: Identifier): Property;
+		VAR p: Property;
+		BEGIN
+			p := firstProperty;
+			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
+			RETURN p;
+		END FindProperty;
 
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
@@ -1775,6 +1830,7 @@ TYPE
 			position-,endposition-: LONGINT;
 			state-: SET;
 			resolved-: Value;
+			isHidden-: BOOLEAN;
 
 
 		PROCEDURE End*( position: LONGINT );
@@ -1786,8 +1842,13 @@ TYPE
 		END SetState;
 
 		PROCEDURE &InitExpression(position: LONGINT);
-		BEGIN	SELF.position := position; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL;
+		BEGIN	SELF.position := position; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
 		END InitExpression;
+
+		PROCEDURE SetHidden*(hidden: BOOLEAN);
+		BEGIN isHidden := hidden
+		END SetHidden;
+		
 
 		PROCEDURE SetType*(type: Type);
 		BEGIN
@@ -3202,6 +3263,28 @@ TYPE
 		END NeedsTrace;
 
 	END Parameter;
+	
+	Property* = OBJECT (Variable)
+	VAR
+		nextProperty-, prevProperty-: Property;
+		value-: Expression;
+
+
+		PROCEDURE & InitProperty(position: LONGINT;  name: Identifier);
+		BEGIN
+			InitSymbol( position, name );
+		END InitProperty;
+
+		PROCEDURE SetValue*(e: Expression);
+		BEGIN value := e
+		END SetValue;
+
+		PROCEDURE Accept*(v: Visitor);
+		VAR position: LONGINT;
+		BEGIN position := SELF.position; v.VisitProperty(SELF)
+		END Accept;
+
+	END Property;
 
 
 	(** Procedure declaration symbol. Represents a procedure being defined in the form PROCEDURE name(parameters): returnType;
@@ -4429,6 +4512,14 @@ TYPE
 			lastVariable := v;
 		END AddVariable;
 
+		PROCEDURE PushVariable*(v: Variable);
+		BEGIN
+			ASSERT(v # NIL);
+			IF lastVariable= NIL THEN lastVariable := v ELSE v.nextVariable := firstVariable END;
+			INC(numberVariables);
+			firstVariable := v;
+		END PushVariable;
+
 		PROCEDURE FindVariable*(identifier: Identifier): Variable;
 		VAR p: Variable;
 		BEGIN
@@ -4707,6 +4798,18 @@ TYPE
 		PROCEDURE SetConstructor*(p: Procedure);
 		BEGIN constructor := p
 		END SetConstructor;
+		
+		PROCEDURE FindSymbol*(identifier: Identifier): Symbol;
+		VAR p: Symbol; base: RecordType;
+		BEGIN
+			p := FindSymbol^(identifier);
+			IF p = NIL THEN
+				IF ownerCell.isCellNet THEN
+					RETURN ownerCell.FindProperty(identifier);
+				END;
+			END;
+			RETURN p;
+		END FindSymbol;
 
 	END CellScope;
 
@@ -5219,6 +5322,13 @@ VAR
 	BEGIN
 		NEW( parameter, position, ownerType, name, passAs);  RETURN parameter;
 	END NewParameter;
+
+	PROCEDURE NewProperty*( position: LONGINT; name: Identifier): Property;
+	VAR property: Property;
+	BEGIN
+		NEW( property, position, name);  RETURN property;
+	END NewProperty;
+
 
 	PROCEDURE NewExpressionList*(): ExpressionList;
 	VAR expressionList: ExpressionList;

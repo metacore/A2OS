@@ -44,6 +44,9 @@ CONST
 	StringChannelDepth*= "ChannelDepth";
 	StringChannelModule*= "Channels";
 
+	StringSystemModule* = "SYSTEM";
+	StringsystemModule* = "system";
+	
 	StringBaseMem*= "BaseMem";
 	StringBaseDiv*= "BaseDiv";
 
@@ -237,6 +240,7 @@ TYPE
 		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
 
 		CanPassInRegister-: PassInRegisterProc;
+		cellsAreObjects-: BOOLEAN;
 
 		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, registerParameters: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
@@ -261,8 +265,15 @@ TYPE
 			FOR i := 0 TO LEN(operatorDefined)-1 DO
 				operatorDefined[i] := FALSE;
 			END;
-			CanPassInRegister :=NIL
+			CanPassInRegister :=NIL;
+			cellsAreObjects := FALSE;
 		END InitSystem;
+
+		PROCEDURE SetCellsAreObjects*(c: BOOLEAN);
+		BEGIN
+			cellsAreObjects := c;
+		END SetCellsAreObjects;
+		
 
 		PROCEDURE SetRegisterPassCallback*(canPassInRegister: PassInRegisterProc);
 		BEGIN
@@ -314,11 +325,51 @@ TYPE
 			RETURN TRUE
 		END GenerateRecordOffsets;
 
+		PROCEDURE GenerateCellOffsets(x: SyntaxTree.CellType): BOOLEAN;
+		VAR baseType: SyntaxTree.RecordType; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+		BEGIN
+			baseType :=x.GetBaseRecord();
+			IF (baseType  # NIL) & (baseType.sizeInBits < 0) THEN
+				IF~ GenerateRecordOffsets(baseType) THEN RETURN FALSE END;
+			END;
+			IF baseType # NIL THEN
+				offset := baseType.sizeInBits; alignment := baseType.alignmentInBits;
+			ELSE
+				offset := 0; alignment := dataUnit;
+			END;
+
+			variable := x.cellScope.firstVariable;
+			WHILE (variable # NIL) DO
+				size := SizeOf(variable.type.resolved);
+				IF size < 0 THEN RETURN FALSE END;
+
+				IF variable.alignment > 0 THEN
+					thisAlignment := variable.alignment*dataUnit;
+				ELSE
+					thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+				END;
+				Basic.Align(offset, thisAlignment);
+				IF thisAlignment  > alignment THEN alignment := thisAlignment END;
+
+				variable.SetOffset(offset);
+				INC(offset,size);
+				variable := variable.nextVariable;
+			END;
+			x.SetAlignment(alignment);
+			Basic.Align(offset, alignment); (* strictly speaking not necessary, but with the old object file format otherwise problems with the GC show up *)
+			x.SetSize(offset);
+			RETURN TRUE
+			
+		END GenerateCellOffsets;
+		
+
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
 		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; parameterOffset :LONGINT;
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
 				RETURN GenerateRecordOffsets(scope(SyntaxTree.RecordScope).ownerRecord)
+			ELSIF scope IS SyntaxTree.CellScope THEN
+				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
 				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.CellScope)
 				);
@@ -780,6 +831,11 @@ TYPE
 		NewBuiltin(systemTrace,"TRACE",system.globalScope,TRUE);
 		NewBuiltin(Reshape,"RESHAPE",system.globalScope,TRUE);
 		NewBuiltin(Wait,"WAIT",system.globalScope,FALSE);
+		NewBuiltin(Connect,"CONNECT",system.globalScope,FALSE);
+		NewBuiltin(Receive,"RECEIVE",system.globalScope,FALSE);
+		NewBuiltin(Send,"SEND",system.globalScope,FALSE);
+		NewBuiltin(Delegate,"DELEGATE",system.globalScope,FALSE);
+
 
 		(*!
 
@@ -866,6 +922,9 @@ TYPE
 		OperatorDefined(system,Scanner.Address, TRUE);
 		OperatorDefined(system,Scanner.Size, TRUE);
 		OperatorDefined(system,Scanner.Alias, TRUE);
+		
+		OperatorDefined(system, Scanner.Questionmarks, TRUE);
+
 	END SetDefaultOperators;
 
 	PROCEDURE DefaultSystem*(): System;

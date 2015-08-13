@@ -352,6 +352,7 @@ TYPE
 				FPNumber(fp,fpTypeComposite);
 				IF x.form = SyntaxTree.Open THEN FPNumber(fp,fpTypeOpenArray)
 				ELSIF x.form = SyntaxTree.Static THEN FPNumber(fp,fpTypeStaticArray)
+				ELSIF x.form = SyntaxTree.SemiDynamic THEN FPNumber(fp, fpTypeDynamicArray);
 				ELSE HALT(200)
 				END;
 				TypeName(fp,x);
@@ -1017,6 +1018,12 @@ TYPE
 			END;
 			SELF.fingerprint := fingerprint
 		END VisitVariable;
+		
+		PROCEDURE VisitProperty(x: SyntaxTree.Property);
+		BEGIN
+			VisitVariable(x);
+		END VisitProperty;
+		
 
 		(*
 			FP(ParameterDeclaration)    = 0 <*> fpModePar -> Name -> Visibility <*> FP(Type).

@@ -281,7 +281,9 @@ TYPE
 				w.BeginAlert; Keyword("POINTER TO NIL"); w.EndAlert;
 			ELSE
 				pointerBase := x.pointerBase;
-				IF (pointerBase IS SyntaxTree.RecordType) & (pointerBase(SyntaxTree.RecordType).isObject) THEN
+				IF x.isHidden THEN
+					Type(x.pointerBase);
+				ELSIF (pointerBase IS SyntaxTree.RecordType) & (pointerBase(SyntaxTree.RecordType).isObject) THEN
 					VisitRecordType(pointerBase(SyntaxTree.RecordType))
 				ELSE
 					Keyword("POINTER "); PointerFlags(x); Keyword("TO " );  Type(x.pointerBase);
@@ -305,7 +307,11 @@ TYPE
 
 		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
 		BEGIN
-			Keyword("CELL ");
+			IF x.isCellNet THEN
+				Keyword("CELLNET ")
+			ELSE
+				Keyword("CELL ");
+			END;
 			Modifiers(x.modifiers);
 			IF x.firstParameter # NIL THEN ParameterList(x.firstParameter) END;
 			Scope(x.cellScope);
@@ -648,7 +654,7 @@ TYPE
 
 		PROCEDURE VisitSymbolDesignator(x: SyntaxTree.SymbolDesignator);
 		BEGIN
-			IF x.left # NIL THEN
+			IF (x.left # NIL) & ~x.left.isHidden THEN
 			Expression(x.left); w.String(".");
 			END;
 			IF x.symbol IS SyntaxTree.Operator THEN
@@ -1059,6 +1065,8 @@ TYPE
 				IF (x.access # SyntaxTree.Hidden) THEN
 					Comments(x.comment,x,FALSE);
 					PrintSymbol(x);
+					IF x.modifiers # NIL THEN w.String(" "); Modifiers(x.modifiers); END;
+
 					IF x.initializer # NIL THEN
 						w.String( " := " ); Expression (x.initializer);
 					END;
@@ -1130,6 +1138,8 @@ TYPE
 				ELSIF x.kind = SyntaxTree.ConstParameter THEN Keyword("CONST " );
 				END;
 				PrintSymbol(x);
+				IF x.modifiers # NIL THEN w.String(" "); Modifiers(x.modifiers); END;
+
 				IF x.defaultValue # NIL THEN
 					w.String("= "); Expression(x.defaultValue);
 				END;

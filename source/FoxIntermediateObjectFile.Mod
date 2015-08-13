@@ -433,6 +433,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		BEGIN COPY(extension, ext)
 		END GetExtension;
 
+		PROCEDURE SetExtension(CONST ext: ARRAY OF CHAR);
+		BEGIN COPY(ext, extension)
+		END SetExtension;
+		
 	END ObjectFileFormat;
 
 	PROCEDURE Get*(): Formats.ObjectFileFormat;
@@ -511,13 +515,15 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; writer: Streams.Writer;
 		section: ObjectFile.Section; binary: BOOLEAN; poolMap, poolMapDummy: ObjectFile.PoolMap;
 		objectFile: ObjectFileFormat; module: Sections.Module; backend: Backend.Backend;
+		extension: Files.FileName;
 	BEGIN
 		IF DeveloperVersion THEN
 			IF context.arg.GetString(fileName) THEN
 				backend := Backend.GetBackendByName("TRM");
+				Files.SplitExtension(fileName, fileName, extension); 
 				NEW(objectFile);
+				IF extension # "" THEN objectFile.SetExtension(extension) END;
 				module := objectFile.Import(fileName, backend.GetSystem());
-				ASSERT(module # NIL); 
 				writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));
 				objectFile.ExportModuleTextual(module, writer);
 				writer.Update;

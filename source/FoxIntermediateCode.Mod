@@ -299,6 +299,7 @@ TYPE
 			instruction.pc := pc;
 			instructions[pc] := instruction;
 			INC(pc);
+			sizeInUnits := NotYetCalculatedSize;
 		END Emit;
 
 		PROCEDURE EmitAt*(at: LONGINT; instruction: Instruction);
@@ -310,6 +311,12 @@ TYPE
 			pc := oldpc;
 		END EmitAt;
 
+		PROCEDURE Reset*;
+		BEGIN
+			sizeInUnits := NotYetCalculatedSize;
+			pc := 0; 
+		END Reset;
+		
 		PROCEDURE PatchOperands*(pc: LONGINT; op1,op2,op3: Operand);
 		BEGIN instructions[pc].op1 := op1; instructions[pc].op2 := op2; instructions[pc].op3 := op3;
 		END PatchOperands;
@@ -1200,6 +1207,8 @@ TYPE
 			(* TODO: ok to comment out the following assertion?:
 			ASSERT(type(SyntaxTree.MathArrayType).form IN {SyntaxTree.Static, SyntaxTree.Tensor}); *)
 
+			RETURN GetType(system,system.addressType);
+		ELSIF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) THEN
 			RETURN GetType(system,system.addressType);
 		ELSIF type IS SyntaxTree.PortType THEN
 			RETURN GetType(system, system.addressType);

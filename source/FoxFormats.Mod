@@ -108,6 +108,11 @@ TYPE
 		BEGIN RETURN FALSE
 		END ForceModuleBodies;
 
+		PROCEDURE SetExtension*(CONST ext: ARRAY OF CHAR);
+		BEGIN HALT(100); (* abstract *)
+		END SetExtension;
+		
+
 		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);
 		BEGIN HALT(100); (* abstract *)
 		END GetExtension;

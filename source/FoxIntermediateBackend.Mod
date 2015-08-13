@@ -274,7 +274,7 @@ TYPE
 			END CreatePortArray;
 
 		BEGIN
-			meta.CheckTypeDeclaration(x);
+			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
 			IF (x.cellScope.ownerModule = module.module)  THEN
 				td := x.typeDeclaration;
 				Global.GetSymbolSegmentedName(td,name);
@@ -287,7 +287,13 @@ TYPE
 				IF type IS SyntaxTree.PortType THEN
 					len := 1;
 					INC(port);
-				ELSIF SemanticChecker.IsStaticArray(type,type,len) THEN
+				ELSIF SemanticChecker.IsStaticArray(type,type,len) OR SemanticChecker.IsDynamicArray(type, type) THEN
+					IF backend.cellsAreObjects THEN
+						IF IsStaticArray(parameter.type.resolved) THEN
+							Error(parameter.position, "static arrays of ports are currently not implemented, please use a property (array property of port)");
+						END;
+						(* do nothing *)
+					ELSE
 					Global.GetSymbolSegmentedName(parameter,name);
 					symbol := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,parameter,dump);
 					CreatePortArray(type, len);
@@ -299,6 +305,7 @@ TYPE
 						DEC(len); INC(port);
 					END;
 					*)
+					END;
 				ELSE
 					Error(parameter.position,"should never happen, check semantic checker!");
 				END;
@@ -334,7 +341,7 @@ TYPE
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section;
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
-			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) THEN
+			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 				(* code section for variable *)
 				Global.GetSymbolSegmentedName(x,name);
 				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
@@ -521,8 +528,12 @@ TYPE
 				ir.SetExported(IsExported(x));
 			ELSIF (x.scope # NIL) & (x.scope IS SyntaxTree.CellScope) & (x.scope(SyntaxTree.CellScope).ownerCell.isCellNet)
 				OR (x.scope # NIL) & (x.scope IS SyntaxTree.ModuleScope) & (x.scope(SyntaxTree.ModuleScope).ownerModule.isCellNet) THEN
-					(* assembly *)
-				RETURN
+				IF backend.cellsAreObjects THEN
+					ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name, x, dump);
+					ir.SetExported(IsExported(x));
+				ELSE
+					RETURN; (* cellnet cannot be compiled for final static hardware *)
+				END;
 			ELSIF x = module.module.moduleScope.bodyProcedure THEN
 				inline := FALSE;
 				AddBodyCallStub(x);
@@ -3394,10 +3405,16 @@ TYPE
 				ReleaseOperand(left);
 				Designate(x.right, right);
 				size := ToMemoryUnits(system,system.SizeOf(x.right.type));
-				IF size # 1 THEN Error(x.right.position,"receive not implemented for complex data types") END;
+				IF ~backend.cellsAreObjects THEN
+					IF size # 1 THEN Error(x.right.position,"receive not implemented for complex data types") END;
+				END;
 				Emit(Push(position,right.op));
 				ReleaseOperand(right);
-				CallThis(ChannelModuleName,"ReceiveNonBlockingB",-1);
+				IF backend.cellsAreObjects THEN
+					CallThis("ActiveCellsRuntime","ReceiveNonBlocking",-1);
+				ELSE
+					CallThis(ChannelModuleName,"ReceiveNonBlockingB",-1);
+				END;
 				InitOperand(result, ModeValue);
 				result.op := NewRegisterOperand(bool);
 				Emit(Result(position,result.op));
@@ -3928,6 +3945,10 @@ TYPE
 				WITH type: SyntaxTree.ArrayType DO
 					IF type.form = SyntaxTree.Static THEN
 						RETURN IntermediateCode.Immediate(addressType,type.staticLength);
+					(*ELSIF (type.form = SyntaxTree.SemiDynamic) & backend.cellsAreObjects THEN
+						Evaluate(type.length, op);
+						ReleaseIntermediateOperand(op.tag);
+						RETURN op.op;*)
 					ELSE
 						res := tag;
 						IntermediateCode.AddOffset(res,ToMemoryUnits(system,addressType.sizeInBits*(DynamicDim(type)-1)));
@@ -4046,6 +4067,9 @@ TYPE
 					*)
 					Designate(x.left,array);
 					type := x.left.type.resolved;
+					IF (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) & backend.cellsAreObjects THEN
+						Dereference(array, type, FALSE);
+					END;
 				(*
 				ELSE AddInt(res, res, index.op);
 				*)
@@ -5849,12 +5873,20 @@ TYPE
 
 
 		BEGIN
+			IF backend.traceModuleName = "" THEN RETURN END;
 			IF AddImport(backend.traceModuleName,traceModule,TRUE) THEN
+				IF GetProcedure("Enter") THEN
+					CallProcedure
+				END;
 				NEW(stringWriter,LEN(s));
 				FOR i := 0 TO x.Length()-1 DO
 					msg := "";
 					expression := x.GetExpression(i);
+					IF currentScope IS SyntaxTree.ProcedureScope THEN
+						Global.GetSymbolName(currentScope(SyntaxTree.ProcedureScope).ownerProcedure, s)
+					ELSE
 					Global.GetModuleName(module.module, s);
+					END;
 					IF i = 0 THEN
 						stringWriter.String(s); stringWriter.String("@"); stringWriter.Int(pos,1);
 						stringWriter.String(":");
@@ -5867,6 +5899,7 @@ TYPE
 						Strings.Append(msg,s);
 						Strings.Append(msg,"= ");
 					ELSE stringWriter.Get(s); (* remove from string writer *)
+						Strings.Append(msg, s);
 					END;
 					String(msg);
 					IF SemanticChecker.IsStringType(expression.type) THEN
@@ -5906,7 +5939,11 @@ TYPE
 					ReleaseOperand(res);
 					String("; ");
 				END;
-				Ln;
+				IF GetProcedure("Exit") THEN
+					CallProcedure
+				ELSE
+					Ln;
+				END;
 			END;
 		END SystemTrace;
 
@@ -6198,7 +6235,7 @@ TYPE
 		BEGIN
 			offset := operand.dimOffset+DynamicDim(type)-1;
 			IF  dim.mode = IntermediateCode.ModeImmediate THEN
-				ASSERT(type.form IN {SyntaxTree.Open});
+				ASSERT(type.form IN {SyntaxTree.Open, SyntaxTree.SemiDynamic});
 				val := SHORT(dim.intValue);
 				t := SemanticChecker.ArrayBase(type,val);
 				type := t.resolved(SyntaxTree.ArrayType);
@@ -6380,6 +6417,422 @@ TYPE
 			CallThis("Heaps","NewRec",3);
 		END NewMathArrayDescriptor;
 
+		PROCEDURE PushConstString(CONST s: ARRAY OF CHAR);
+		VAR res: Operand; string: SyntaxTree.String; sv: SyntaxTree.StringValue; type: SyntaxTree.Type;
+		BEGIN
+			NEW(string, LEN(s)); COPY(s, string^);
+			sv := SyntaxTree.NewStringValue(-1,string);
+			type := SyntaxTree.NewStringType(-1,system.characterType,Strings.Length(s));
+			sv.SetType(type);
+			Designate(sv,res);
+			Emit(Push(position,res.tag));
+			Emit(Push(position,res.op));
+			ReleaseOperand(res);
+		END PushConstString;
+
+		PROCEDURE PushConstBoolean(b: BOOLEAN);
+		VAR res: Operand; string: SyntaxTree.String; sv: SyntaxTree.StringValue; type: SyntaxTree.Type;
+		BEGIN
+			IF b THEN
+				Emit(Push(-1, true));
+			ELSE
+				Emit(Push(-1, false));
+			END;
+		END PushConstBoolean;
+
+		PROCEDURE PushConstSet(v: SET);
+		VAR value: SyntaxTree.Value; op: Operand;
+		BEGIN
+			value := SyntaxTree.NewSetValue(-1, v);
+			value.SetType(system.setType);
+			Evaluate(value, op);
+			Emit(Push(-1, op.op));
+			ReleaseOperand(op);
+		END PushConstSet;
+
+		PROCEDURE PushConstInteger(v: LONGINT);
+		VAR value: SyntaxTree.Value; op: Operand;
+		BEGIN
+			value := SyntaxTree.NewIntegerValue(-1, v);
+			value.SetType(system.longintType);
+			Evaluate(value, op);
+			Emit(Push(-1, op.op));
+			ReleaseOperand(op);
+		END PushConstInteger;
+
+		
+		PROCEDURE OpenInitializer(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope): IntermediateCode.Section;
+		VAR name: Basic.SegmentedName; procedure: SyntaxTree.Procedure; procedureScope: SyntaxTree.ProcedureScope;
+		 section: IntermediateCode.Section;
+		BEGIN
+			procedureScope := SyntaxTree.NewProcedureScope(scope);
+			Global.GetSymbolSegmentedName(symbol, name);
+			Basic.SuffixSegmentedName(name, Basic.MakeString("@Initializer"));
+			procedure := SyntaxTree.NewProcedure(-1, SyntaxTree.NewIdentifier(""), procedureScope);
+			procedure.SetScope(moduleScope);
+			procedure.SetType(SyntaxTree.NewProcedureType(-1,scope));
+			procedure.type(SyntaxTree.ProcedureType).SetDelegate(TRUE);
+			procedure.SetAccess(SyntaxTree.Hidden);
+			currentScope := procedureScope;
+			section := NewSection(module.allSections, Sections.CodeSection, name, NIL,commentPrintout # NIL);
+			section.Emit(Enter(-1,NIL,0,0,0));
+			RETURN section;
+		END OpenInitializer;
+		
+		PROCEDURE CloseInitializer(prev: IntermediateCode.Section);
+		BEGIN
+			Emit(Leave(0,NIL,0)); 
+			Emit(Exit(-1,ToMemoryUnits(system,addressType.sizeInBits),0));
+			section := prev;
+		END CloseInitializer;
+		
+
+		PROCEDURE AddPorts(cell: SyntaxTree.Symbol; x: SyntaxTree.CellType);
+		VAR componentName, parameterName, name: SyntaxTree.IdentifierString; instanceType: ActiveCells.Type;
+			parameter: SyntaxTree.Parameter; parameterType: SyntaxTree.Type; portIndex,i,direction,len,value: LONGINT;
+			port: ActiveCells.Port;
+			prevActiveCellsScope : ActiveCells.Scope;
+			dataMemorySize, codeMemorySize: LONGINT;
+			variable: SyntaxTree.Variable;
+			designator: SyntaxTree.Designator;
+			type: SyntaxTree.Type;
+
+			PROCEDURE Field(symbol: SyntaxTree.Symbol; VAR op: Operand);
+			VAR left, d: SyntaxTree.Designator; basereg: IntermediateCode.Operand;
+			BEGIN
+				InitOperand(op,ModeReference);
+				op.op := fp;
+				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,2*addressType.sizeInBits));
+				Dereference(op, x, FALSE);
+				result := op;
+				Symbol(symbol, op);
+			END Field;
+			
+			PROCEDURE PushSelf;
+			VAR op: IntermediateCode.Operand;
+			BEGIN
+				IntermediateCode.InitMemory(op, addressType, fp, ToMemoryUnits(system, 2*addressType.sizeInBits));
+				Emit(Push(-1, op));
+			END PushSelf;
+
+			PROCEDURE Direction(direction: LONGINT): SET;
+			BEGIN
+				IF direction = SyntaxTree.OutPort THEN RETURN {0}
+				ELSIF direction = SyntaxTree.InPort THEN RETURN {1}
+				ELSE HALT(100);
+				END;
+			END Direction;
+
+			PROCEDURE Parameter(CONST name: ARRAY OF CHAR; type: SyntaxTree.Type);
+			VAR sname: SyntaxTree.IdentifierString; i: LONGINT; op: Operand;
+			BEGIN
+				IF SemanticChecker.IsStaticArray(type, type, len) THEN
+					FOR i := 0 TO len-1 DO
+						COPY(name, sname);
+						AppendIndex(sname, i);
+						Parameter(sname, type);
+					END;
+				ELSE
+					(*
+					direction := Direction(type(SyntaxTree.PortType).direction);
+					port := instanceType.NewPort(name,direction,backend.activeCellsSpecification.GetPortAddress(portIndex));
+					port.SetWidth(type(SyntaxTree.PortType).sizeInBits);
+					*)
+					Symbol(cell, op);
+					ToMemory(op.op,addressType,0);
+					Emit(Push(-1, op.op));
+					ReleaseOperand(op);
+					PushConstString(name);
+					PushConstInteger(portIndex);
+					PushConstSet(Direction(type(SyntaxTree.PortType).direction));
+					PushConstInteger(type(SyntaxTree.PortType).sizeInBits);
+					
+					CallThis("ActiveCellsRuntime","AddPort",5);
+					INC(portIndex);
+				END;
+			END Parameter;
+			
+			PROCEDURE Variable(name: ARRAY OF CHAR; variable: SyntaxTree.Variable);
+			VAR op : Operand; portType: SyntaxTree.PortType; d, left: SyntaxTree.Designator; baseType: SyntaxTree.Type; prevScope: SyntaxTree.Scope;
+				size, reg: IntermediateCode.Operand; dim: LONGINT;
+				
+				PROCEDURE PushLens(type: SyntaxTree.Type);
+				BEGIN
+					IF type IS SyntaxTree.ArrayType THEN
+						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
+						Evaluate(type(SyntaxTree.ArrayType).length, op);
+						Emit(Push(-1, op.op));
+						ReleaseOperand(op);
+						INC(dim);
+					ELSE
+						baseType := type;
+					END;
+				END PushLens;
+				
+			BEGIN
+				(* cell *)
+					(*prevScope := currentScope;
+					currentScope := x.cellScope;
+					PushSelf();
+					*)
+					
+					IF variable.type IS SyntaxTree.ArrayType THEN
+						type := variable.type;
+						dim := 0; 
+						PushLens(type);
+						portType := baseType.resolved(SyntaxTree.PortType);
+					ELSE
+						portType := variable.type(SyntaxTree.PortType);
+					END;
+					
+					PushSelfPointer();
+					(*Symbol(cell, op);
+					ToMemory(op.op,addressType,0);
+					Emit(Push(-1, op.op));
+					ReleaseOperand(op);
+					*)
+				(* port *)
+					Field(variable, op);
+					(*left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
+					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(x);
+					d := SyntaxTree.NewSymbolDesignator(-1, left, variable); d.SetType(variable.type);
+					Designate(d, op);*)
+					Emit(Push(-1, op.op));
+					ReleaseOperand(op);
+				(* name *)
+					PushConstString(name);
+				(* inout *)
+					PushConstSet(Direction(portType.direction));
+				(* width *)
+					PushConstInteger(portType.sizeInBits);
+				
+				IF variable.type IS SyntaxTree.PortType THEN
+					CallThis("ActiveCellsRuntime","AddPort",6);
+				ELSIF variable.type IS SyntaxTree.ArrayType THEN
+					IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,6*addressType.sizeInBits));
+					Emit(Add(position,reg, sp, size));
+					(* dim *)
+					PushConstInteger(dim);
+					(* len array *)
+					Emit(Push(position, reg));
+					ReleaseIntermediateOperand(reg);
+					CallThis("ActiveCellsRuntime","AddPortArray",8);
+					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,dim*addressType.sizeInBits));
+					Emit(Add(position, sp,sp, size));
+				END;
+					(*currentScope := prevScope;*)
+					
+
+					(*
+					PushConstString(name);
+					PushConstInteger(portIndex);
+					PushConstSet(Direction(type(SyntaxTree.PortType).direction));
+					PushConstInteger(type(SyntaxTree.PortType).sizeInBits);
+					CallThis("ActiveCellsRuntime","AddPort",5);
+					INC(portIndex);
+					*)
+			END Variable;
+			
+
+
+		BEGIN
+		
+			IF backend.cellsAreObjects THEN
+				variable := x.cellScope.firstVariable;
+				WHILE (variable # NIL) DO
+					type := variable.type.resolved;
+					WHILE (type IS SyntaxTree.ArrayType) DO
+						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+					END;
+					IF (type IS SyntaxTree.PortType) THEN (* port found *)
+						(*!!! check port arrays !! *)
+						Global.GetSymbolName(variable,name);
+						Variable(name,variable);
+					END;
+					variable := variable.nextVariable;
+				END;
+			ELSE HALT(200) 
+			END;
+		
+			(*prevActiveCellsScope := currentActiveCellsScope;*)
+			(*
+			x.typeDeclaration.GetName(componentName);
+			instanceType := currentActiveCellsScope.NewType(componentName); (*backend.cification.NewType(componentName);*)
+			IF HasValue(x.modifiers,Global.StringDataMemorySize,dataMemorySize) THEN
+				instanceType.SetDataMemorySize(dataMemorySize);
+			END;
+			IF HasValue(x.modifiers,Global.StringCodeMemorySize,codeMemorySize) THEN
+				instanceType.SetInstructionMemorySize(codeMemorySize)
+			END;
+			IF HasFlag(x.modifiers, Global.StringVector) THEN
+				instanceType.AddCapability(ActiveCells.VectorCapability)
+			END;
+			IF HasFlag(x.modifiers, Global.StringTRMS) THEN
+				instanceType.AddCapability(ActiveCells.TRMSCapability)
+			END;
+			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN
+				instanceType.AddCapability(ActiveCells.FloatingPointCapability)
+			END;
+			AddDevices(instanceType, x);
+			*)
+			(*
+			IF x.isCellNet THEN
+				IF HasValue(x.modifiers,Global.StringFrequencyDivider,value) THEN backend.activeCellsSpecification.SetFrequencyDivider(value) END;
+			END;
+			*)
+
+			(*currentActiveCellsScope := instanceType;*)
+			(*
+			parameter := x.firstParameter;
+			portIndex := 0;
+			WHILE parameter # NIL DO
+				parameter.GetName(parameterName);
+				parameterType := parameter.type.resolved;
+				Parameter(parameterName, parameterType);
+				(*
+				IF SemanticChecker.IsStaticArray(parameterType,parameterType,len) THEN
+					ParameterArray(parameterType);
+					direction := Direction(parameterType(SyntaxTree.PortType).direction);
+					FOR i := 0 TO len-1 DO
+						COPY(parameterName,name);
+						AppendIndex(name,i);
+						port := instanceType.NewPort(name,direction,backend.activeCellsSpecification.GetPortAddress(portIndex));
+						port.SetWidth(parameterType(SyntaxTree.PortType).sizeInBits);
+						INC(portIndex);
+					END;
+				ELSE
+					direction := Direction(parameterType(SyntaxTree.PortType).direction);
+					port := instanceType.NewPort(parameterName,direction,backend.activeCellsSpecification.GetPortAddress(portIndex));
+					port.SetWidth(parameterType(SyntaxTree.PortType).sizeInBits);
+					INC(portIndex);
+				END;
+				*)
+				parameter := parameter.nextParameter;
+			END;
+			*)
+			(*
+			Scope(x.cellScope);
+			currentActiveCellsScope := prevActiveCellsScope;
+			AddModules(instanceType,x.cellScope);
+			*)
+		END AddPorts;
+		
+	
+		
+		PROCEDURE AddProperty(cellType: SyntaxTree.CellType; cell: SyntaxTree.Symbol; property: SyntaxTree.Property; value: SyntaxTree.Expression);
+		VAR par: ActiveCells.Parameter; name: ARRAY 256 OF CHAR; op: Operand;  left, d: SyntaxTree.Designator;
+		BEGIN
+				
+				Symbol(cell,op);
+				ToMemory(op.op,addressType,0);
+				Emit(Push(position,op.op));
+				ReleaseOperand(op);
+
+				
+				Basic.GetString(property.name, name);
+				PushConstString(name);
+				
+				IF SemanticChecker.IsStringType(property.type) OR (property.type.resolved IS SyntaxTree.IntegerType) THEN 
+					left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
+					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(cellType);
+					d := SyntaxTree.NewSymbolDesignator(-1, left, property); d.SetType(property.type);
+					Designate(d, op);
+					IF SemanticChecker.IsStringType(property.type) THEN 
+						Emit(Push(-1, op.tag))
+					END;
+					Emit(Push(-1, op.op));
+					ReleaseOperand(op);
+				END;
+				
+				IF SemanticChecker.IsStringType(property.type) THEN 
+					ASSERT(SemanticChecker.IsStringType(value.type));
+					Designate(value, op);
+					Emit(Push(property.position, op.tag));
+					Emit(Push(property.position, op.op));
+					ReleaseOperand(op);
+					CallThis("ActiveCellsRuntime","AddStringProperty",7);
+				ELSIF (property.type.resolved IS SyntaxTree.IntegerType) THEN
+					ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+					Evaluate(value, op); 
+					Emit(Push(property.position, op.op));
+					ReleaseOperand(op);
+					CallThis("ActiveCellsRuntime","AddIntegerProperty",5);
+				ELSE
+					CallThis("ActiveCellsRuntime","AddFlagProperty",3);
+				END;
+		END AddProperty;
+		
+		
+		PROCEDURE AddProperties(cellType: SyntaxTree.CellType; cell: SyntaxTree.Symbol; property: SyntaxTree.Property);
+		BEGIN
+			WHILE property # NIL DO
+				AddProperty(cellType, cell, property, property.value);
+				property := property.nextProperty;
+			END;
+		END AddProperties;
+		
+		PROCEDURE AddModifiers(cellType: SyntaxTree.CellType; cell: SyntaxTree.Symbol; modifier: SyntaxTree.Modifier);
+		VAR symbol: SyntaxTree.Symbol; 
+		BEGIN
+			WHILE modifier # NIL DO
+				symbol := cellType.cellScope.FindSymbol(modifier.identifier);
+				IF (symbol # NIL) & (symbol IS SyntaxTree.Property) THEN
+					AddProperty(cellType, cell, symbol(SyntaxTree.Property), modifier.expression);
+				ELSE
+					(*! move this check to checker *)
+					Error(modifier.position, "undefined property");
+				END;
+				modifier := modifier.nextModifier;
+			END;
+		END AddModifiers;
+		
+		PROCEDURE AppendModifier(VAR to: SyntaxTree.Modifier; this: SyntaxTree.Modifier);
+		VAR last: SyntaxTree.Modifier;
+		BEGIN
+			IF to = NIL THEN 
+				to := SyntaxTree.NewModifier(this.position, this.identifier, this.expression);
+			ELSE
+				last := to;
+				WHILE (last.nextModifier # NIL) & (this.identifier # last.identifier) DO
+					last := last.nextModifier;
+				END;
+				IF last.identifier # this.identifier THEN
+					ASSERT(last.nextModifier = NIL);
+					last.SetNext(SyntaxTree.NewModifier(this.position, this.identifier, this.expression));
+				END;
+			END;
+		END AppendModifier;
+
+		PROCEDURE AppendModifiers(VAR to: SyntaxTree.Modifier; this: SyntaxTree.Modifier);
+		BEGIN
+			WHILE this # NIL DO
+				AppendModifier(to, this);
+				this := this.nextModifier;
+			END;
+		END AppendModifiers;
+		
+		PROCEDURE PushPort(p: SyntaxTree.Expression);
+		VAR op: Operand;
+		BEGIN
+			Evaluate(p, op);
+			Emit(Push(p.position, op.op));
+			ReleaseOperand(op);
+			(*
+			WHILE (p # NIL) & ~(p.type.resolved IS SyntaxTree.CellType) DO
+				p := p(SyntaxTree.Designator).left;
+			END;
+			IF p # NIL THEN
+				Evaluate(p, op);
+				Emit(Push(p.position, op.op));
+				ReleaseOperand(op);
+			ELSE
+				Emit(Push(-1, nil));
+			END;
+			*)
+		END PushPort;
+
+
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
 		VAR
 			p0,p1,p2,parameter: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
@@ -6404,6 +6857,9 @@ TYPE
 			callsection: Sections.Section;
 			segmentedName: Basic.SegmentedName;
 			needsTrace: BOOLEAN;
+			modifier: SyntaxTree.Modifier;
+			previous, init: IntermediateCode.Section;
+			prevScope: SyntaxTree.Scope;
 
 			PROCEDURE CallBodies(self: IntermediateCode.Operand; type: SyntaxTree.Type);
 			VAR recordScope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; flags: LONGINT;
@@ -6727,6 +7183,9 @@ TYPE
 					Evaluate(p1,l);
 				END;
 				IF p0.type.resolved IS SyntaxTree.ArrayType THEN
+					IF (p0.type.resolved(SyntaxTree.ArrayType).form= SyntaxTree.SemiDynamic) THEN
+						Dereference(operand, p0.type.resolved, FALSE);
+					END;
 					ArrayLen(p0.type.resolved(SyntaxTree.ArrayType),operand,l.op, result);
 					ReleaseOperand(operand); ReleaseOperand(l);
 				ELSIF p0.type.resolved IS SyntaxTree.MathArrayType THEN
@@ -7655,7 +8114,30 @@ TYPE
 				SystemTrace(x.parameters, x.position);
 			(* ----- CONNECT ------*)
 			|Global.Connect:
-				Error(x.position,"cannot be connected in runtime yet");
+				IF backend.cellsAreObjects THEN
+					PushPort(p0);
+					PushPort(p1);
+					IF p2 # NIL THEN
+						Evaluate(p2, s2);
+						Emit(Push(p2.position, s2.op));
+						ReleaseOperand(s2);
+					ELSE
+						Emit(Push(-1, IntermediateCode.Immediate(int32, -1)));
+					END;
+					CallThis("ActiveCellsRuntime","Connect",3);
+				ELSE
+					Warning(x.position, "cannot run on final hardware");
+				END;
+			(* ----- DELEGATE ------*)
+			|Global.Delegate:
+				IF backend.cellsAreObjects THEN
+					PushPort(p0);
+					PushPort(p1);
+					CallThis("ActiveCellsRuntime","Delegate",4);
+				ELSE
+					Warning(x.position, "cannot run on final hardware");
+				END;
+
 			(* ----- SEND ------*)
 			|Global.Send:
 				Evaluate(p0,s0);
@@ -7666,10 +8148,16 @@ TYPE
 				(*
 				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
 				*)
-				IF size # 1 THEN Error(p1.position,"send not implemented for complex data types") END;
+				IF ~backend.cellsAreObjects THEN
+					IF size # 1 THEN Error(p1.position,"send not implemented for complex data types") END;
+				END;
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
-				CallThis(ChannelModuleName,"Send",-1);
+				IF backend.cellsAreObjects THEN
+					CallThis("ActiveCellsRuntime","Send",-1);
+				ELSE
+					CallThis(ChannelModuleName,"Send",-1);
+				END;
 			(* ----- RECEIVE ------*)
 			|Global.Receive:
 				Evaluate(p0,s0);
@@ -7686,14 +8174,24 @@ TYPE
 				(*
 				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
 				*)
-				IF size # 1 THEN Error(p1.position,"receive not implemented for complex data types") END;
+				IF ~backend.cellsAreObjects THEN
+					IF size # 1 THEN Error(p1.position,"receive not implemented for complex data types") END;
+				END;
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
 				ReleaseOperand(s2);
-				IF p2 = NIL THEN
-					CallThis(ChannelModuleName,"Receive",-1)
+				IF backend.cellsAreObjects THEN
+					IF p2 = NIL THEN
+						CallThis("ActiveCellsRuntime","Receive",-1)
+					ELSE
+						CallThis("ActiveCellsRuntime","ReceiveNonBlocking",-1)
+					END;
 				ELSE
-					CallThis(ChannelModuleName,"ReceiveNonBlocking",-1)
+					IF p2 = NIL THEN
+						CallThis(ChannelModuleName,"Receive",-1)
+					ELSE
+						CallThis(ChannelModuleName,"ReceiveNonBlocking",-1)
+					END;
 				END;
 
 			| Global.systemSpecial:
@@ -7799,7 +8297,7 @@ TYPE
 			operand.op := dereferenced;
 			operand.tag := dereferenced;
 			UseIntermediateOperand(operand.tag);
-			IF (type=NIL) OR (type IS SyntaxTree.RecordType) THEN
+			IF (type=NIL) OR (type IS SyntaxTree.RecordType)OR (type IS SyntaxTree.CellType) THEN
 				IF isUnsafe & ((type = NIL) OR ~type(SyntaxTree.RecordType).isObject) THEN
 					ReleaseIntermediateOperand(operand.tag);
 					operand.tag := TypeDescriptorAdr(type);
@@ -7887,6 +8385,7 @@ TYPE
 		PROCEDURE VisitSelfDesignator(x: SyntaxTree.SelfDesignator);
 		VAR basereg: IntermediateCode.Operand; scope: SyntaxTree.Scope; dest: IntermediateCode.Operand;
 			moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
+			name: Basic.SegmentedName;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSelfDesignator") END;
 			dest := destination; destination := emptyOperand;
@@ -7908,8 +8407,10 @@ TYPE
 					Symbol(moduleSelf,result);
 					IntermediateCode.MakeMemory(result.op,addressType);
 				END
-			ELSIF scope.outerScope IS SyntaxTree.CellScope THEN
-				(* no action necessary, just up to cell scope *)
+			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
+				result.mode := ModeValue;
+				Global.GetSymbolSegmentedName(scope.outerScope(SyntaxTree.CellScope).ownerCell.typeDeclaration, name);
+				result.op := IntermediateCode.Address(addressType, name, 0, moduleOffset);
 			ELSE
 				GetBaseRegister(basereg,currentScope,scope);
 				InitOperand(result,ModeReference);
@@ -8201,8 +8702,19 @@ TYPE
 					result.tag := nil; (* nil *)
 				END;
 			ELSIF (type IS SyntaxTree.ArrayType) THEN
-				ReleaseIntermediateOperand(result.tag);
-				IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+				IF type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic THEN
+					IF (x.scope IS SyntaxTree.ModuleScope) OR (x.scope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
+						ReleaseIntermediateOperand(result.tag);
+						Global.GetSymbolSegmentedName(x,name);
+						Basic.AppendToSegmentedName(name,"@len");
+						symbol := NewSection(module.allSections, Sections.VarSection, name,NIL ,commentPrintout # NIL);
+						IntermediateCode.InitAddress(result.tag, addressType, symbol.name,0 , 0);
+					ELSE
+					END;
+				ELSE
+					ReleaseIntermediateOperand(result.tag);
+					IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
+				END;
 			ELSIF (type IS SyntaxTree.MathArrayType) THEN
 				IF type(SyntaxTree.MathArrayType).form IN {SyntaxTree.Open} THEN
 					ReleaseIntermediateOperand(result.tag);
@@ -8223,15 +8735,36 @@ TYPE
 			IF Trace THEN TraceExit("VisitVariable") END;
 		END VisitVariable;
 
+		PROCEDURE VisitProperty(property: SyntaxTree.Property);
+		VAR name: ARRAY 256 OF CHAR; res: IntermediateCode.Operand;			saved: RegisterEntry;
+		BEGIN 
+			VisitVariable(property);
+			(*
+			SaveRegisters();ReleaseUsedRegisters(saved);
+			PushSelfPointer();
+			property.GetName(name);
+			PushConstString(name);
+			CallThis("ActiveCellsRuntime","GetIntegerProperty",4);
+			res := NewRegisterOperand(IntermediateCode.GetType(system,system.longintType));
+			Emit(Result(position,res));
+			InitOperand(result, ModeValue);
+			result.op := res;
+			RestoreRegisters(saved);
+			(*! emit read property via runtime module *)
+			*)
+		END VisitProperty;
+
 		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
 		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; parameter: SyntaxTree.Parameter;adr: LONGINT; symbol: Sections.Section;
-			name: Basic.SegmentedName; parameterType: SyntaxTree.Type; len,inc: LONGINT;
+			name: Basic.SegmentedName; parameterType, ptype: SyntaxTree.Type; len,inc: LONGINT;
 		BEGIN
 			type := x.type.resolved;
 			IF Trace THEN TraceEnter("VisitParameter") END;
 
 			IF x.ownerType IS SyntaxTree.CellType THEN
-				IF ~(x.type.resolved IS SyntaxTree.PortType) THEN
+				ptype := x.type.resolved;
+				IF ptype IS SyntaxTree.ArrayType THEN ptype := ptype(SyntaxTree.ArrayType).arrayBase.resolved END;
+				IF ~(ptype IS SyntaxTree.PortType) THEN
 					InitOperand(result,ModeReference);
 					GetCodeSectionNameForSymbol(x,name);
 					symbol := NewSection(module.allSections, Sections.ConstSection, name,x,commentPrintout # NIL);
@@ -8252,7 +8785,7 @@ TYPE
 					IntermediateCode.InitImmediate(result.op,addressType,adr);
 					RETURN
 				END;
-			ELSIF (currentScope IS SyntaxTree.ProcedureScope) & (currentScope(SyntaxTree.ProcedureScope).ownerProcedure.isConstructor) & (currentScope.outerScope IS SyntaxTree.CellScope) THEN
+			ELSIF ~backend.cellsAreObjects & (currentScope IS SyntaxTree.ProcedureScope) & (currentScope(SyntaxTree.ProcedureScope).ownerProcedure.isConstructor) & (currentScope.outerScope IS SyntaxTree.CellScope) THEN
 				InitOperand(result,ModeReference);
 				GetCodeSectionNameForSymbol(x,name);
 				symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
@@ -8790,10 +9323,16 @@ TYPE
 				(*
 				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
 				*)
-				IF size # 1 THEN Error(p1.position,"send not implemented for complex data types") END;
+				IF ~backend.cellsAreObjects THEN
+					IF size > ToMemoryUnits(system, system.addressSize) THEN Error(p1.position,"send not implemented for complex data types") END;
+				END;
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
-				CallThis(ChannelModuleName,"Send",-1);
+				IF backend.cellsAreObjects THEN
+					CallThis("ActiveCellsRuntime","Send",-1);
+				ELSE
+					CallThis(ChannelModuleName,"Send",-1);
+				END;
 			(* ----- RECEIVE ------*)
 			ELSE
 				Evaluate(p0,s0);
@@ -8804,10 +9343,16 @@ TYPE
 				(*
 				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
 				*)
-				IF size # 1 THEN Error(p1.position,"receive not implemented for complex data types") END;
+				IF ~backend.cellsAreObjects THEN
+					IF size > ToMemoryUnits(system, system.addressSize) THEN Error(p1.position,"receive not implemented for  complex data types") END;
+				END;
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
-				CallThis(ChannelModuleName,"Receive",-1)
+				IF backend.cellsAreObjects THEN
+					CallThis("ActiveCellsRuntime","Receive",-1);
+				ELSE
+					CallThis(ChannelModuleName,"Receive",-1)
+				END;
 			END;
 		END VisitCommunicationStatement;
 
@@ -9689,7 +10234,7 @@ TYPE
 				IF (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.CellScope) THEN
 					cellScope := scope.outerScope(SyntaxTree.CellScope);
 					IF procedure = cellScope.bodyProcedure THEN
-						IF cellScope.constructor # NIL THEN
+						IF (cellScope.constructor # NIL) & ~backend.cellsAreObjects THEN
 							StaticCallOperand(op, cellScope.constructor);
 							Emit(Call(position,op.op,0));
 						END;
@@ -9941,6 +10486,8 @@ TYPE
 				INC(numberPointers);
 
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
+			ELSIF (type IS SyntaxTree.PortType) & implementationVisitor.backend.cellsAreObjects THEN
+				Symbol(section, symbol, 0, offset); INC(numberPointers);
 			ELSIF type IS SyntaxTree.PointerType THEN
 				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1);D.Ln;  END;
@@ -9955,6 +10502,20 @@ TYPE
 						Pointers(offset,symbol,section, base,numberPointers);
 					END;
 					variable := type.recordScope.firstVariable;
+					WHILE(variable # NIL) DO
+						IF ~(variable.untraced) THEN
+							Pointers(offset+ToMemoryUnits(module.system,variable.offsetInBits), symbol,  section, variable.type,numberPointers);
+						END;
+						variable := variable.nextVariable;
+					END;
+				END;
+			ELSIF (type IS SyntaxTree.CellType) THEN
+				WITH type: SyntaxTree.CellType DO
+					base := type.GetBaseRecord();
+					IF base  # NIL THEN
+						Pointers(offset,symbol,section, base,numberPointers);
+					END;
+					variable := type.cellScope.firstVariable;
 					WHILE(variable # NIL) DO
 						IF ~(variable.untraced) THEN
 							Pointers(offset+ToMemoryUnits(module.system,variable.offsetInBits), symbol,  section, variable.type,numberPointers);
@@ -11113,7 +11674,7 @@ TYPE
 		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
 		VAR recordType: SyntaxTree.RecordType;
 			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
-			section: Sections.Section; string: SyntaxTree.String; type: SyntaxTree.Type;
+			section: Sections.Section; string: SyntaxTree.String; type: SyntaxTree.Type; cellType: SyntaxTree.CellType;
 
 			PROCEDURE FieldArray(source: IntermediateCode.Section);
 			VAR variable: SyntaxTree.Variable; pc, offset: LONGINT; symbol, tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
@@ -11446,7 +12007,43 @@ TYPE
 							implementationVisitor.CreateResetProcedure(recordType);
 							implementationVisitor.CreateAssignProcedure(recordType);
 						END;
+					(*! patch this !!!
+						ELSIF cellType # NIL THEN
+						recordType := cellType.GetBaseRecord();
+						Info(source, "MethodEnd = MPO");
+						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),MPO);
+						source(IntermediateCode.Section).Emit(Data(-1,op));
 
+						Info(source, "method table");
+						IF recordType # NIL THEN
+							methods := recordType.recordScope.numberMethods;
+						ELSE
+							methods := 0
+						END;
+						
+						FOR i := methods-1 TO 0 BY -1 DO
+							procedure := recordType.recordScope.FindMethod(i);
+							Global.GetSymbolSegmentedName(procedure,name);
+							NamedSymbol(source, name,procedure,0,0);
+						END;
+						TdTable(TypeTags);
+						Info(source, "type descriptor info pointer");
+						Symbol(source, NewTypeDescriptorInfo(source,source.pc+1,recordType.IsProtected()),0,0);
+						Info(source, "record size");
+						IF cellType.sizeInBits < 0 THEN
+							ASSERT(module.system.GenerateVariableOffsets(cellType.cellScope));
+						END;
+						Address(source, ToMemoryUnits(module.system,cellType.sizeInBits));
+						Info(source, "pointer offsets pointer");
+						padding := 1- source.pc MOD 2;
+						Symbol(source, source, source.pc+1+padding,0);
+						IF padding >0 THEN
+							Info(source, "padding");
+							FOR i := 1 TO padding DO Address(source,0) END;
+						END;
+						PointerArray(source, cellType.cellScope, numberPointers);
+						
+					*)
 					ELSIF ~simple THEN
 						(*
 
@@ -11534,7 +12131,17 @@ TYPE
 						tir.Emit(Data(-1,op));
 					END;
 				END;
-
+			ELSIF (x IS SyntaxTree.CellType) & implementationVisitor.backend.cellsAreObjects THEN
+				cellType := x(SyntaxTree.CellType);
+				td := x.typeDeclaration;
+				section := module.allSections.FindBySymbol(td); (* TODO *)
+				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
+					IF implementationVisitor.newObjectFile THEN
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							NewTypeDescriptor
+						END;
+					END;
+				END;
 			END
 		END CheckTypeDeclaration
 
@@ -11555,7 +12162,7 @@ TYPE
 		cooperative-: BOOLEAN;
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
-
+		cellsAreObjects: BOOLEAN;
 
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
@@ -11660,6 +12267,7 @@ TYPE
 			options.Add(0X,"metaData",Options.String);
 			options.Add('o',"optimize", Options.Flag);
 			options.Add(0X,"preregisterStatic", Options.Flag);
+			options.Add(0X,"cellsAreObjects", Options.Flag);
 		END DefineOptions;
 
 		PROCEDURE GetOptions(options: Options.Options);
@@ -11687,6 +12295,7 @@ TYPE
 			IF options.GetString("traceModule",name) THEN SetTraceModuleName(name) END;
 			optimize := options.GetFlag("optimize");
 			preregisterStatic := options.GetFlag("preregisterStatic");
+			cellsAreObjects := options.GetFlag("cellsAreObjects");
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
@@ -11745,6 +12354,11 @@ TYPE
 		statCoopTraceModule)
 	END Statistics;
 	
+
+	PROCEDURE AppendIndex(VAR name: ARRAY OF CHAR; index: LONGINT);
+	BEGIN
+		Strings.Append(name,"["); Basic.AppendNumber(name,index); Strings.Append(name,"]");
+	END AppendIndex;
 
 	PROCEDURE PassBySingleReference(parameter: SyntaxTree.Parameter): BOOLEAN;
 	BEGIN
@@ -12138,13 +12752,23 @@ TYPE
 		RETURN (procedure.scope IS SyntaxTree.ProcedureScope) & (procedure.externalName = NIL);
 	END IsNested;
 
+	PROCEDURE InCellScope(scope: SyntaxTree.Scope): BOOLEAN;
+	BEGIN
+		WHILE (scope # NIL) & ~(scope IS SyntaxTree.CellScope) DO
+			scope := scope.outerScope;
+		END;
+		RETURN scope # NIL;
+	END InCellScope;
+	
+
 	PROCEDURE ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT;
 	BEGIN
-		IF (procedure.scope IS SyntaxTree.CellScope) & (procedure = procedure.scope(SyntaxTree.CellScope).constructor) THEN
+		(*IF (procedure.scope IS SyntaxTree.CellScope) & (procedure = procedure.scope(SyntaxTree.CellScope).constructor) & ~backend.cellsAreObjects THEN
 			RETURN 0
 		ELSE
+		*)
 			RETURN ParametersSize(system,procedure.type(SyntaxTree.ProcedureType),IsNested(procedure));
-		END;
+		(*END;*)
 	END ProcedureParametersSize;
 
 	PROCEDURE ToMemoryUnits*(system: Global.System; size: LONGINT): LONGINT;

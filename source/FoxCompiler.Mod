@@ -24,6 +24,7 @@ CONST
 	Oberon07*=11;
 	ChangeCase*=12;
 	Cooperative*=13;
+	CellsAreObjects*=14;
 
 	DefaultBackend = "AMD";
 	DefaultFrontend = "Oberon";
@@ -159,9 +160,11 @@ TYPE
 			system := options.backend.GetSystem();
 		END;
 
+		system.SetCellsAreObjects(CellsAreObjects IN flags);
+
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
-		IF ActiveCellsFlag IN flags THEN
+		IF (ActiveCellsFlag IN flags) & ~(CellsAreObjects IN flags) THEN
 			NEW(activeCellsSpecification, "", diagnostics, log);
 			IF (system # NIL) THEN
 				activeCellsSpecification.DefineDevices(system);
@@ -205,7 +208,7 @@ TYPE
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
 				END;
 
-				IF ActiveCellsFlag IN flags THEN
+				IF (ActiveCellsFlag IN flags) & ~(CellsAreObjects IN flags) THEN
 					Global.GetSymbolName(module,name);
 					activeCellsSpecification.Init(name,diagnostics,log)
 				END;
@@ -450,6 +453,7 @@ TYPE
 			IF options.GetFlag("oberon07") THEN INCL(compilerOptions.flags, Oberon07) END;
 			IF options.GetFlag("activeCells") THEN INCL(compilerOptions.flags, ActiveCellsFlag) END;
 			IF options.GetFlag("cooperative") THEN INCL(compilerOptions.flags, Cooperative) END;
+			IF options.GetFlag("cellsAreObjects") THEN INCL(compilerOptions.flags, CellsAreObjects) END;
 			IF ~options.GetString("srcPath", compilerOptions.srcPath) THEN compilerOptions.srcPath := "" END;
 			IF ~options.GetString("destPath", compilerOptions.destPath) THEN compilerOptions.destPath := "" END;
 			IF compilerOptions.backend # NIL THEN compilerOptions.backend.GetOptions (options) END;

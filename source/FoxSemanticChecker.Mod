@@ -105,6 +105,7 @@ TYPE
 		activeCellsStatement: BOOLEAN;
 		activeCellsSpecification: ActiveCells.Specification;
 		replacements*: Replacement;
+		cellsAreObjects: BOOLEAN;
 
 		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope);
 		BEGIN
@@ -133,6 +134,7 @@ TYPE
 			currentIsBodyProcedure := FALSE;
 			currentIsExclusive := FALSE;
 			withEntries := NIL;
+			SELF.cellsAreObjects := system.cellsAreObjects;
 		END InitChecker;
 
 		(** report error **)
@@ -502,14 +504,20 @@ TYPE
 				- static array of open array forbidden
 		**)
 		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
-		VAR arrayBase: SyntaxTree.Type;
+		VAR arrayBase: SyntaxTree.Type; e: SyntaxTree.Expression;
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
 				x.SetArrayBase(ResolveType(x.arrayBase));
 				IF x.arrayBase.resolved.isRealtime THEN x.SetRealtime(TRUE) END;
 				arrayBase := x.arrayBase.resolved;
 				IF x.length # NIL THEN
-					x.SetLength(ConstantIntegerGeq0(x.length));
+				
+					e := ResolveExpression(x.length);
+					IF e.resolved = NIL THEN
+						x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
+					ELSE
+						x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
+					END;
 				END;
 				IF arrayBase IS SyntaxTree.ArrayType THEN
 					IF (x.form = SyntaxTree.Static) & (arrayBase(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
@@ -637,7 +645,7 @@ TYPE
 				*)
 			END;
 			resolved := ResolveType(type.pointerBase);
-			IF (resolved.resolved IS SyntaxTree.RecordType) OR (resolved.resolved IS SyntaxTree.ArrayType) THEN
+			IF (resolved.resolved IS SyntaxTree.RecordType) OR (resolved.resolved IS SyntaxTree.ArrayType) OR (resolved.resolved IS SyntaxTree.CellType) THEN
 				type.SetPointerBase(resolved);
 				IF (resolved.resolved IS SyntaxTree.RecordType) THEN
 					recordType := resolved.resolved(SyntaxTree.RecordType);
@@ -989,12 +997,37 @@ TYPE
 		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
 		VAR
 			symbol: SyntaxTree.Symbol; isRealtime: BOOLEAN; parameter: SyntaxTree.Parameter; type: SyntaxTree.Type; len: LONGINT;
-			modifier: SyntaxTree.Modifier; position,value: LONGINT; isEngine: BOOLEAN;
+			modifier: SyntaxTree.Modifier; position,value: LONGINT; isEngine: BOOLEAN; property: SyntaxTree.Property;
+			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
+			recordBase: SyntaxTree.RecordType;
+			numberMethods, int: LONGINT;
+			variable: SyntaxTree.Variable;
+			v: SyntaxTree.Expression;
+			str: Scanner.StringType;
+			atype: SyntaxTree.ArrayType;
+			prev: SyntaxTree.Scope;
 		BEGIN
+		
 			IF TypeNeedsResolution(x) THEN
+				recordBase := NIL;
+				IF cellsAreObjects THEN
+					qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(x.position, SyntaxTree.NewIdentifier("ActiveCellsRuntime"), SyntaxTree.NewIdentifier("Cell"));
+					ImportModule(qualifiedIdentifier.prefix, x.position);
+					x.SetBaseType(SyntaxTree.NewQualifiedType(x.position, currentScope, qualifiedIdentifier));
+					x.SetBaseType(ResolveType(x.baseType));
+					recordBase := x.GetBaseRecord();
+					IF recordBase = NIL THEN
+						Error(x.position,Diagnostics.Invalid,"ActiveCellsRuntime.Cell not present");
+					END;
+				END;
+				
+				IF recordBase = NIL THEN numberMethods := 0
+				ELSE numberMethods := recordBase.recordScope.numberMethods
+				END;
+
 
 				modifier := x.modifiers;
-				IF ~x.isCellNet THEN
+				(*IF ~x.isCellNet THEN*)
 					IF HasValue(modifier,Global.NameDataMemorySize,position,value) THEN END;
 					IF HasValue(modifier,Global.NameCodeMemorySize,position,value) THEN END;
 					IF HasFlag(modifier, Global.NameEngine, position) THEN isEngine := TRUE ELSE isEngine := FALSE END;
@@ -1009,17 +1042,58 @@ TYPE
 						IF HasFlag(modifier, symbol.name, position) THEN END;
 						symbol := symbol.nextSymbol;
 					END;
+					
+					modifier := x.modifiers;
+					WHILE (modifier # NIL) DO
+					
+						property := SyntaxTree.NewProperty(modifier.position, modifier.identifier);
+							
+						IF modifier.expression # NIL THEN
+							v := ConstantExpression(modifier.expression);
+							property.SetValue(v);
+							IF IsIntegerValue(modifier.expression, int) THEN
+								(*property.SetValue(modifier.expression);*)
+								property.SetType(system.longintType);
+							ELSIF IsStringValue(modifier.expression, str) THEN
+								(*property.SetValue(modifier.expression);*)
+								atype := SyntaxTree.NewArrayType(-1, NIL, SyntaxTree.Static);
+								atype.SetArrayBase(modifier.expression.type(SyntaxTree.StringType).baseType);
+								atype.SetLength(Global.NewIntegerValue(system,-1, (* type(SyntaxTree.StringType).length *) 256 (*! check if this is a good idea *) ));
+								property.SetType(atype);
 				ELSE
+								Error(modifier.position, Diagnostics.Invalid, "unsupported property type");
+							END;
+						ELSE (* flag property *)
+							ASSERT(modifier.resolved);
+							property.SetValue(SyntaxTree.NewBooleanValue(position,TRUE));
+							property.SetType(system.booleanType);
+						END;
+						(* property.SetScope(x.cellScope); *) (* not required, will be done during entry *)
+						(* property.SetState(SyntaxTree.Resolved); *) (* not required, will be done during entry *)
+						
+						x.AddProperty(property);
+						
+						modifier := modifier.nextModifier;
+					END;
+					
+				(*ELSE
+					
 					(* no: this should not be allowed on cell net types or check against global scope ...
 					IF HasValue(modifier, Global.NameFrequencyDivider, position,value) THEN
 						IF parameter # NIL THEN Error(position, Diagnostics.Invalid,"forbiddern frequency divider in non-terminal cellnet")
 						END;
 					END
 					*)
-				END;
+				
+				END;*)
 				CheckModifiers(modifier, FALSE);
 
+
+				Declarations(x.cellScope);
+
 				(* process parameters *)
+				prev := currentScope;
+				currentScope := x.cellScope;
 				parameter :=x.firstParameter;
 				WHILE (parameter # NIL) DO
 					VisitParameter(parameter);
@@ -1028,14 +1102,17 @@ TYPE
 						WHILE IsStaticArray(type, type, len) DO
 
 						END;
+						WHILE IsDynamicArray(type, type) DO END;
 						IF (* ~IsStaticArray(type,type,len) OR*)  ~(type IS SyntaxTree.PortType) THEN
 							Error(parameter.position, Diagnostics.Invalid, "invalid type, must be port or static array of port ");
 						END;
 					END;
 					parameter := parameter.nextParameter;
 				END;
+				
+				currentScope := prev;
 
-				Declarations(x.cellScope);
+
 
 				symbol := x.cellScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
 				WHILE symbol # NIL DO
@@ -3420,10 +3497,13 @@ TYPE
 				END;
 			ELSE
 			*)
-			IF (left = NIL) & (symbol.scope IS SyntaxTree.RecordScope) THEN
+			IF (left = NIL) & (symbol.scope IS SyntaxTree.RecordScope) 
+				OR (left = NIL) & (symbol.scope IS SyntaxTree.CellScope) & cellsAreObjects
+			THEN
 				left := ResolveDesignator(SyntaxTree.NewSelfDesignator(position)); (* auto self *)
-				IF IsPointerType(left.type) THEN
-					left := NewDereferenceDesignator(position,left)
+				IF IsPointerType(left.type) OR (left.type.resolved IS SyntaxTree.CellType) & cellsAreObjects THEN
+					left := NewDereferenceDesignator(position,left);
+					left.SetHidden(TRUE);
 				END;
 			ELSIF (symbol.scope IS SyntaxTree.ProcedureScope) THEN
 				scope := currentScope;
@@ -4174,7 +4254,10 @@ TYPE
 
 					ELSE
 						(* do auto-dereferencing if needed *)
-						IF (type IS SyntaxTree.PointerType) & ~IsArrayStructuredObjectType(type) THEN
+						IF (type IS SyntaxTree.PointerType) & ~IsArrayStructuredObjectType(type) 
+							(*OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) & cellsAreObjects
+							& (i=0)*)
+						THEN
 							(* expression of the form A[x,...] over ARRAY [...] OF POINTER TO ARRAY OF ... *)
 							IF (indexDesignator # NIL) & indexDesignator.hasRange THEN
 								Error(expression.position, Diagnostics.Invalid, "forbidden range valued indexer over pointer to array");
@@ -5822,7 +5905,7 @@ TYPE
 					activeCellsStatement := TRUE;
 				(* --------- RECEIVE ---------*)
 				ELSIF (id = Global.Receive) & CheckArity(2,3) THEN
-					ImportModule(Global.NameChannelModule,position);
+					IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,position) END;
 					IF CheckPortType(parameter0,inPort) & CheckVariable(parameter1) THEN
 						IF inPort.direction # SyntaxTree.InPort THEN
 							Error(parameter0.position,Diagnostics.Invalid,"not an in-port")
@@ -5837,7 +5920,7 @@ TYPE
 					END;
 				(* --------- SEND ---------*)
 				ELSIF (id = Global.Send) & CheckArity(2,2) THEN
-					ImportModule(Global.NameChannelModule,position);
+					IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,position) END;
 					IF CheckPortType(parameter0,outPort)  THEN
 						IF outPort.direction # SyntaxTree.OutPort THEN
 							Error(parameter1.position,Diagnostics.Invalid,"not an out-port")
@@ -5996,8 +6079,24 @@ TYPE
 				result := SyntaxTree.NewDereferenceDesignator(position,left);
 				result.SetAssignable(TRUE);
 				result.SetType(type);
+				result.SetHidden(left.isHidden);
+			ELSIF (type # NIL) & (type.resolved IS SyntaxTree.ArrayType) & (type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) THEN
+				type := type.resolved;
+				result := SyntaxTree.NewDereferenceDesignator(position,left);
+				result.SetAssignable(TRUE);
+				result.SetType(type);
+				result.SetHidden(left.isHidden);
+			ELSIF (type # NIL) & (type.resolved IS SyntaxTree.CellType) THEN
+				result := SyntaxTree.NewDereferenceDesignator(position,left);
+				result.SetAssignable(TRUE);
+				result.SetType(type);
+				result.SetHidden(left.isHidden);
 			ELSE
 				Error(position,Diagnostics.Invalid,"dereference on no pointer");
+				IF VerboseErrorMessage THEN
+					Printout.Info("pointer", type);
+					Printout.Info("scope", currentScope);
+				END;
 			END;
 			RETURN result
 		END NewDereferenceDesignator;
@@ -6334,7 +6433,7 @@ TYPE
 			- check symbol
 		**)
 		PROCEDURE VisitVariable(variable: SyntaxTree.Variable);
-		VAR modifiers: SyntaxTree.Modifier; value,position: LONGINT;
+		VAR modifiers: SyntaxTree.Modifier; value,position: LONGINT; pointerType: SyntaxTree.PointerType;
 		BEGIN
 			IF Trace THEN D.Str("VisitVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
@@ -6377,13 +6476,27 @@ TYPE
 					IF HasValue(modifiers, Global.NameCodeMemorySize, position, value) THEN END;
 					IF HasValue(modifiers, Global.NameDataMemorySize, position, value) THEN END;
 				END;
-				CheckModifiers(modifiers, ~InCellNetScope(variable.scope) OR ~(variable.type.resolved IS SyntaxTree.CellType));
+				CheckModifiers(modifiers, ~InCellNetScope(variable.scope) & ~(variable.type.resolved IS SyntaxTree.CellType));
 				IF variable.initializer # NIL THEN
 					variable.SetInitializer (CompatibleConversion (variable.initializer.position, ConstantExpression(variable.initializer), variable.type));
 				END;
+				
+				IF (variable.type.resolved IS SyntaxTree.CellType) (*& (cellsAreObjects)*) THEN
+					pointerType := SyntaxTree.NewPointerType(variable.position, variable.scope);
+					pointerType.SetPointerBase(variable.type);
+					pointerType.SetHidden(TRUE);
+					variable.SetType(ResolveType(pointerType));
+				END;
+				
 				variable.SetState(SyntaxTree.Resolved);
 			END;
 		END VisitVariable;
+
+		PROCEDURE VisitProperty(property: SyntaxTree.Property);
+		BEGIN
+			VisitVariable(property);
+		END VisitProperty;
+		
 
 		(** check and resolve a (procedure) parameter
 			- check and set type
@@ -6601,6 +6714,9 @@ TYPE
 						Error(procedure.position,Diagnostics.Invalid,"problems during parameter offset computation");
 					END;
 				ELSIF procedure.scope IS SyntaxTree.CellScope THEN (* allowed to be constructor *)
+					IF cellsAreObjects THEN 
+						procedureType.SetDelegate(TRUE);
+					END;
 					IF procedure.isConstructor THEN
 						procedure.scope(SyntaxTree.CellScope).SetConstructor(procedure);
 					END;
@@ -7093,7 +7209,7 @@ TYPE
 			left := ResolveDesignator(communication.left);
 			communication.SetLeft(left);
 			communication.SetRight(right);
-			ImportModule(Global.NameChannelModule,communication.position);
+			IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,communication.position) END;
 
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)
@@ -7867,7 +7983,9 @@ TYPE
 			symbol: SyntaxTree.Symbol;
 			prevPhase: LONGINT;
 			prevError : BOOLEAN;
-
+			property: SyntaxTree.Property;
+			type: SyntaxTree.Type;
+			atype : SyntaxTree.ArrayType;
 		BEGIN
 			prevError := error;
 			prevPhase := phase;
@@ -7901,7 +8019,21 @@ TYPE
 			ELSIF scope IS SyntaxTree.CellScope THEN
 				parameter := scope(SyntaxTree.CellScope).ownerCell.firstParameter;
 				WHILE(parameter # NIL) DO
-					Register(parameter,scope, FALSE); parameter := parameter.nextParameter;
+					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
+					variable.SetType(parameter.type);
+					variable.SetAccess(SyntaxTree.Hidden);
+					currentScope.PushVariable(variable);
+					(*
+					Register(parameter,scope, FALSE); 
+					*)
+					parameter := parameter.nextParameter;
+				END;
+				
+				property := scope(SyntaxTree.CellScope).ownerCell.firstProperty;
+				WHILE (property # NIL) DO
+					property.SetAccess(SyntaxTree.Hidden);
+					currentScope.PushVariable(property);
+					property := property.nextProperty;
 				END;
 			END;
 			IF error THEN RETURN END;
@@ -8207,6 +8339,9 @@ TYPE
 		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
 		BEGIN  END VisitVariable;
 
+		PROCEDURE VisitProperty*(x: SyntaxTree.Property);
+		BEGIN  END VisitProperty;
+
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		BEGIN	END VisitParameter;
 
@@ -8299,7 +8434,7 @@ TYPE
 				RETURN TRUE
 			ELSE
 				t := t.resolved;
-				RETURN (t IS SyntaxTree.RecordType) OR IsPointerToRecord(t);
+				RETURN (t IS SyntaxTree.RecordType) OR IsPointerToRecord(t) OR (t IS SyntaxTree.AnyType);
 			END;
 		END TypeAllowed;
 
@@ -8947,6 +9082,17 @@ TYPE
 			RETURN FALSE
 		END;
 	END IsStaticArray;
+
+	PROCEDURE IsDynamicArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		type := type.resolved;
+		IF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) THEN
+			base := type(SyntaxTree.ArrayType).arrayBase;
+			RETURN TRUE
+		ELSE
+			RETURN FALSE
+		END;
+	END IsDynamicArray;
 
 	PROCEDURE Dimension*(t: SyntaxTree.Type; form: SET): LONGINT;
 	VAR i: LONGINT;

@@ -701,6 +701,11 @@ TYPE
 		END
 	END GCLoop;	
 	
+	PROCEDURE TimerFrequency*(): HUGEINT;
+	BEGIN
+		RETURN Machine.mhz * 1000000
+	END TimerFrequency;
+
 	
 	(*----------------------------- initialization ----------------------------------*)
 	

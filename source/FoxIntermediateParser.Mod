@@ -1,1060 +1,630 @@
 MODULE FoxIntermediateParser;
-
 IMPORT
-  Basic := FoxBasic, 
-  Scanner := FoxIntermediateScanner, 
-  Fs	:= FoxScanner,
-  D := Debugging, 
-  SyntaxTree := FoxSyntaxTree, 
-(*  Global := FoxGlobal,  *)
-  Diagnostics;
+	Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Scanner := FoxScanner, Sections := FoxSections,
+	IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Global := FoxGlobal;
 
 CONST
-  Trace = TRUE;
-(*  CascadedWithSupport = FALSE;*)
-
-(**
-  Module        = 'module' SymbolName [Import] { Section } .
-  Import        = 'imports' SymbolName { ',' SymbolName } .
-  SectionOffset = 'offset' '=' Int .
-  Section       = 'bodycode' SymbolName SectionOffset { Stmt }
-                | 'inlinecode' SymbolName SectionOffset { Stmt }
-                | 'initcode' SymbolName SectionOffset { Stmt }
-                | 'var' SymbolName SectionOffset { Var }
-                | 'const' SymbolName SectionOffset { Const }
-                | 'code' SymbolName SectionOffset { Stmt }
-                .
-  Var           = 'reserve' Int .
-  Const         = 'data' Operand .
-  Stmt          = 'nop'
-                | 'mov'     Operand ',' Operand [ ',' Operand ]
-                | 'conv'    Operand ',' Operand
-                | 'call'    Operand ',' Operand
-                | 'enter'   Operand ',' Operand
-                | 'leave'   Operand
-                | 'return'  Operand
-                | 'exit'    Operand
-                | 'result'  Operand
-                | 'trap'    Operand
-                | 'br'      Operand
-                | 'breq'    Operand ',' Operand ',' Operand
-                | 'brne'    Operand ',' Operand ',' Operand
-                | 'brlt'    Operand ',' Operand ',' Operand
-                | 'brge'    Operand ',' Operand ',' Operand
-                | 'pop'     Operand
-                | 'push'    Operand
-                | 'not'     Operand ',' Operand
-                | 'neg'     Operand ',' Operand
-                | 'abs'     Operand ',' Operand
-                | 'mul'     Operand ',' Operand ',' Operand
-                | 'div'     Operand ',' Operand ',' Operand
-                | 'mod'     Operand ',' Operand ',' Operand
-                | 'sub'     Operand ',' Operand ',' Operand
-                | 'add'     Operand ',' Operand ',' Operand
-                | 'and'     Operand ',' Operand ',' Operand
-                | 'or'      Operand ',' Operand ',' Operand
-                | 'xor'     Operand ',' Operand ',' Operand
-                | 'shl'     Operand ',' Operand ',' Operand
-                | 'shr'     Operand ',' Operand ',' Operand
-                | 'rol'     Operand ',' Operand ',' Operand
-                | 'ror'     Operand ',' Operand ',' Operand
-                | 'copy'    Operand ',' Operand ',' Operand
-                | 'fill'    Operand ',' Operand ',' Operand
-                | 'asm'     String
-                .
-  Operand       = Type '[' MemoryAddr ']'       ; Memory Operand
-                | Type Register [ Int ]         ; Register Operand
-                | Type OpImmediate              ; Immediate Operand
-                | Type String                   ; String Operand
-                | Int                           ; Number Operand
-                .
-  OpImmediate   = Symbol
-                | Int
-                | Hex
-                | Float
-                .
-  MemoryAddr    = Register [ Int ]
-                | Symbol
-                | Int
-                .
-  Register      = '$' 'SP'
-                | '$' 'FP'
-                | '$' Int
-                | '$' 'R' '#' Int
-                .
-  Symbol        = SymbolName ':' Int [ SymbolOffset ] .
-  SymbolOffset  = '(' '@' Int ')' .
-  SymbolName    = Id
-                | '$' Id
-                | '$' '$' Id
-                .
-  Type          = Id .
-  Int           = ['-'|'+']('0'..'9')+           ; Integer
-  Hex           = ('0'..'9')('0'..'9'|'A'..'F')+'H'
-  Float         = ['-']('0'..'9')+'.'('0'..'9')+['E'('-'|'+')('0'..'9')+]
-  Id            = ('a'..'z'|'A'..'Z')('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.'|'@'|'$')+  ; Identifier
-  String        = '\'' { (Byte - '\'')|'\\\'' }  '\''
-
-**)
+	IntermediateCodeExtension = "Fil"; (* TODO: move to a better place *)
+	Trace=FALSE;
 
 TYPE
-  Parser* = OBJECT
-  VAR 
-    scanner: Scanner.AssemblerScanner;
-    symbol-: Fs.Symbol;
-    diagnostics: Diagnostics.Diagnostics;
-    currentScope: SyntaxTree.Scope;
-    recentSymbol: SyntaxTree.Symbol;
-    recentComment: SyntaxTree.Comment;
-    moduleScope: SyntaxTree.ModuleScope;
-    error-: BOOLEAN;
+	MessageString= ARRAY 256 OF CHAR;
 
-    indent: LONGINT;   (* for debugging purposes only *)
+	(** the intermediate code parser **)
+	IntermediateCodeParser* = OBJECT
+	CONST
+		Trace = FALSE;
+		Strict = TRUE;
 
-    PROCEDURE S( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
-    VAR i: LONGINT;
-    BEGIN
-      D.Ln;  INC( indent );  D.Int( indent,1 );
-      FOR i := 1 TO indent DO D.Str( "  " );  END;
-      D.Str( "start: " );  D.Str( s );  D.Str( " at pos " );  D.Int( symbol.start,1 );
-    END S;
+	VAR
+		diagnostics: Diagnostics.Diagnostics;
+		error: BOOLEAN;
+		symbol: Scanner.Symbol;
+		scanner: Scanner.AssemblerScanner;
+		system: Global.System;
 
-    PROCEDURE E( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
-    VAR i: LONGINT;
-    BEGIN
-      D.Ln;  D.Int( indent,1 );
-      FOR i := 1 TO indent DO D.Str( "  " );  END;
-      D.Str( "end : " );  D.Str( s );  D.Str( " at pos " );  D.Int( symbol.start,1 );
-    END E;
+		PROCEDURE &Init*(diagnostics: Diagnostics.Diagnostics; s: Global.System);
+		BEGIN
+			ASSERT(s # NIL); (* a default system object is required in case there is no platform directive *)
+			SELF.diagnostics := diagnostics;
+			system := s;
+			error := FALSE
+		END Init;
 
-(*    PROCEDURE EE( CONST s, t: ARRAY OF CHAR );   (* for debugging purposes only *)
-    VAR i: LONGINT;
-    BEGIN
-      D.Ln;  D.Int( indent,1 );
-      FOR i := 1 TO indent DO D.Str( "  " );  END;
-      D.Str( "end : " );  D.Str( s );  D.Str( " (" );  D.Str( t );  D.Str( ") at pos " );
-    END EE;*)
+		PROCEDURE Error(pos: LONGINT; CONST msg: ARRAY OF CHAR);
+		BEGIN
+			error := TRUE;
+			IF diagnostics # NIL THEN
+				diagnostics.Error(scanner.source^,pos,Diagnostics.Invalid,msg);
+			END;
 
-    (** constructor, init parser with scanner providing input and with diagnostics for error output *)
-    PROCEDURE & Init*( scanner: Scanner.AssemblerScanner; diagnostics: Diagnostics.Diagnostics );
-    BEGIN
-      SELF.scanner := scanner;
-      SELF.diagnostics := diagnostics;
-      error := ~scanner.GetNextSymbol(symbol);
-      recentSymbol := NIL; recentComment := NIL;
-      (* debugging *)
-      indent := 0;
-    END Init;
+			D.Update;
+			IF Trace THEN D.TraceBack END
+		END Error;
 
-    (** output error message and / or given code *)
-    PROCEDURE Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR);
-    VAR errorMessage: ARRAY 256 OF CHAR;
-    BEGIN
-      IF diagnostics # NIL THEN
-        Basic.GetErrorMessage(code,message,errorMessage);
-        diagnostics.Error(scanner.source, position, code, errorMessage);
-      END;
-      error := TRUE
-    END Error;
+		PROCEDURE NextSymbol;
+		BEGIN error := error OR ~scanner.GetNextSymbol(symbol)
+		END NextSymbol;
 
-    (** helper procedures interfacing to the scanner **)
+		PROCEDURE ThisToken(x: LONGINT): BOOLEAN;
+		BEGIN
+			IF ~error & (symbol.token = x) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
+		END ThisToken;
 
-    (** Get next symbol from scanner and store it in object-local variable 'symbol' *)
-    PROCEDURE NextSymbol;
-    VAR comment: SyntaxTree.Comment;
-    BEGIN
-      error := ~scanner.GetNextSymbol(symbol) OR error;
-      WHILE ~error & (symbol.token = Scanner.TK_Comment) DO
-        comment := SyntaxTree.NewComment(symbol.start, currentScope, symbol.source^,symbol.stringLength);
-        moduleScope.AddComment(comment);
-        recentComment := comment; comment.SetPreviousSymbol(recentSymbol);
-        error := ~scanner.GetNextSymbol(symbol);
-      END;
-    END NextSymbol;
+		PROCEDURE GetIdentifier(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN;
+		BEGIN
+			pos := symbol.start;
+			IF symbol.token # Scanner.Identifier THEN RETURN FALSE
+			ELSE COPY(symbol.identifierString,identifier); NextSymbol; RETURN TRUE
+			END;
+		END GetIdentifier;
 
-    (** Check if current symbol equals sym. If yes then return true, return false otherwise *)
-    PROCEDURE Peek(token: Fs.Token): BOOLEAN;
-    VAR comment: SyntaxTree.Comment;
-    BEGIN
-      WHILE ~error & (symbol.token = Scanner.TK_Comment) DO
-        comment := SyntaxTree.NewComment(symbol.start, currentScope, symbol.source^,symbol.stringLength);
-        moduleScope.AddComment(comment);
-        recentComment := comment; comment.SetPreviousSymbol(recentSymbol);
-        error := ~scanner.GetNextSymbol(symbol);
-      END;
-      RETURN symbol.token = token
-    END Peek;
+		PROCEDURE ExpectToken(x: LONGINT): BOOLEAN;
+		VAR
+			s: MessageString;
+		BEGIN
+			IF ThisToken(x) THEN RETURN TRUE
+			ELSE
+				s := "expected token "; Strings.Append(s,Scanner.tokens[x]); Strings.Append(s," but got "); Strings.Append(s,Scanner.tokens[symbol.token]);
+				Error(symbol.start, s);RETURN FALSE
+			END;
+		END ExpectToken;
 
-    (** Check if the current symbol equals sym.If yes then read next symbol, report error otherwise. returns success value  *)
-    PROCEDURE Mandatory( token: Fs.Token): BOOLEAN;
-    BEGIN
-      ASSERT( token # Scanner.TK_Identifier );  ASSERT( token # Scanner.TK_String );  ASSERT( token # Scanner.TK_Number );   (* because of NextSymbol ! *)
-      IF ~Peek(token) THEN
-        Error( symbol.start, token, "" );
-        RETURN FALSE
-      ELSE
-        NextSymbol;
-        RETURN TRUE
-      END
-    END Mandatory;
+		PROCEDURE ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN;
+		BEGIN
+			IF ~error & (symbol.token = Scanner.Identifier) & (this = symbol.identifierString) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
+		END ThisIdentifier;
 
-    PROCEDURE MandatoryInteger( VAR value: HUGEINT ): BOOLEAN;
-    BEGIN
-      IF Peek( Scanner.TK_Number ) THEN
-        value := symbol.integer;
-        NextSymbol;
-        RETURN	TRUE;
-      ELSE
-        Error( symbol.start, Scanner.TK_Number, "" );
-        value := 0;
-        RETURN FALSE;
-      END;
-    END MandatoryInteger;
+		PROCEDURE ExpectAnyIdentifier(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN;
+		BEGIN
+			IF ~GetIdentifier(pos,identifier)THEN Error(pos,"identifier expected"); RETURN FALSE
+			ELSE RETURN TRUE
+			END;
+		END ExpectAnyIdentifier;
 
+		PROCEDURE ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN;
+		VAR
+			result, isNegated: BOOLEAN;
+		BEGIN
+			isNegated := ThisToken(Scanner.Minus);
+			IF ExpectToken(Scanner.Number) & (symbol.numberType = Scanner.Integer) THEN
+				IF isNegated THEN
+					integer := -symbol.integer
+				ELSE
+					integer := symbol.integer
+				END;
+				result := TRUE
+			ELSE
+				result := FALSE
+			END;
+			RETURN result
+		END ExpectIntegerWithSign;
 
-(*    (** Check if the current symbol equals sym. If yes then read next symbol, report error otherwise  *)
-    PROCEDURE Check( token: Scanner.Token );
-    VAR b: BOOLEAN;
-    BEGIN
-      b := Mandatory( token );
-    END Check;*)
+		PROCEDURE ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN;
+		VAR
+			result: BOOLEAN;
+		BEGIN
+			IF ExpectToken(Scanner.Number) & (symbol.numberType = Scanner.Integer) THEN
+				integer := symbol.integer;
+				result := TRUE
+			ELSE
+				result := FALSE
+			END;
+			RETURN result
+		END ExpectIntegerWithoutSign;
 
-    (** Check if current symbol is an identifier. If yes then copy identifier to name and get next symbol,
-    report error otherwise and set name to empty name. returns success value *)
-    PROCEDURE MandatoryIdentifier( VAR name: Fs.StringType): BOOLEAN;
-    BEGIN
-      IF Peek(Scanner.TK_Identifier) THEN
-        name := symbol.string;
-        NextSymbol;
-        RETURN TRUE
-      ELSE
-        Error( symbol.start, Scanner.TK_Identifier, "" );
-        name := "";
-        RETURN FALSE
-      END
-    END MandatoryIdentifier;
+		PROCEDURE IgnoreNewLines;
+		BEGIN
+			WHILE ThisToken(Scanner.Ln) DO END;
+		END IgnoreNewLines;
 
-    (** Expect an identifier (using MandatoryIdentifier) and return identifier object **)
-    PROCEDURE Identifier(): SyntaxTree.Identifier;
-    VAR position: LONGINT; name: Fs.StringType; identifier: SyntaxTree.Identifier;
-    BEGIN
-      position := symbol.start;
-      IF MandatoryIdentifier(name) THEN
-        identifier := SyntaxTree.NewIdentifier(position,name);
-      ELSE
-        identifier := SyntaxTree.invalidIdentifier;
-      END;
-      RETURN identifier
-    END Identifier;
+		(* expect the newline or end-of-text symbol *)
+		PROCEDURE ExpectLineDelimiter(): BOOLEAN;
+		BEGIN
+			IF ~error & ((symbol.token = Scanner.Ln) OR (symbol.token = Scanner.EndOfText)) THEN
+				NextSymbol;
+				RETURN TRUE
+			ELSE
+				Error(symbol.start, "end of line/text expected");
+				RETURN FALSE
+			END;
+		END ExpectLineDelimiter;
 
-    (** Check if current symbol is a string (or string-like character). If yes then copy identifier to name and get next symbol,
-    report error otherwise and set name to empty name. returns success value*)
-(*    PROCEDURE MandatoryString( VAR name: Fs.StringType ): BOOLEAN;
-    BEGIN
-      IF Peek( Scanner.TK_String) THEN
-        name := symbol.string;
-        NextSymbol;
-        RETURN TRUE
-      ELSIF Peek( Scanner.TK_Character) THEN (* for compatibility with release: characters treated as strings *)
-        name := symbol.string;
-        NextSymbol;
-        RETURN TRUE
-      ELSE
-        Error( symbol.start, Scanner.TK_String, "" );
-        name := "";
-        RETURN FALSE
-      END
-    END MandatoryString;*)
+		(** parse an optional line number **)
+		PROCEDURE ParseLineNumber(expectedLineNumber: LONGINT);
+		VAR
+			positionOfLine, specifiedLineNumber: LONGINT;
+			message, tempString: MessageString;
+		BEGIN
+			IF Trace THEN D.String(">>> ParseLineNumber"); D.Ln END;
 
-    (** Check if current symbol is an identifier and if the name matches. If yes then get next symbol, report error otherwise. returns success value*)
-(*    PROCEDURE ExpectThisIdentifier( name: SyntaxTree.Identifier ): BOOLEAN;
-    VAR string: ARRAY 64 OF CHAR;
-    BEGIN
-      IF name = NIL THEN (* nothing to be expected *)
-        RETURN TRUE
-      ELSIF (symbol.token # Scanner.TK_Identifier) OR (Basic.MakeString(symbol.string) #  name.name) THEN
-        Basic.GetString(name.name,string);
-        Error( symbol.start, Scanner.TK_Identifier, string );
-        RETURN FALSE
-      ELSE
-        NextSymbol;
-        RETURN TRUE
-      END
-    END ExpectThisIdentifier;*)
+			positionOfLine := symbol.start;
+			IF ThisToken(Scanner.Number) THEN (* note: line numbers are optional *)
+				specifiedLineNumber := symbol.integer;
+				IF ExpectToken(Scanner.Colon) THEN
+					IF Strict & (specifiedLineNumber # expectedLineNumber) THEN
+						message := "invalid code line number (";
+						Strings.IntToStr(specifiedLineNumber, tempString); Strings.Append(message, tempString);
+						Strings.Append(message, " instead of ");
+						Strings.IntToStr(expectedLineNumber, tempString); Strings.Append(message, tempString);
+						Strings.Append(message, ")");
+						Error(positionOfLine, message)
+					END
+				END
+			END
+		END ParseLineNumber;
 
-    (** Check if current symbol is an identifier and if the name matches. If yes then get next symbol, report error otherwise. returns success value*)
-(*    PROCEDURE ExpectThisString( CONST name: ARRAY OF CHAR ): BOOLEAN;
-    BEGIN
-      IF (Peek(Scanner.TK_String) OR Peek(Scanner.TK_Character) OR Peek(Scanner.TK_Identifier)) & (symbol.string = name) THEN
-        NextSymbol;
-        RETURN TRUE
-      ELSE
-        Error( symbol.start, Scanner.TK_String, name );
-        RETURN FALSE
-      END
-    END ExpectThisString;*)
+		(** parse an intermediate code operand **)
+		PROCEDURE ParseOperand(VAR operand: IntermediateCode.Operand; sectionList: Sections.SectionList);
+		VAR
+			positionOfOperand, pos, registerNumber, symbolOffset, someLongint, integer: LONGINT;
+			someHugeint: HUGEINT;
+			hasTypeDescriptor, isMemoryOperand, lastWasIdentifier, isNegated: BOOLEAN;
+			someLongreal: LONGREAL;
+			identifier: SyntaxTree.IdentifierString;
+			type: IntermediateCode.Type;
+			sectionOfSymbol: Sections.Section;
+			name: Basic.SegmentedName;
+			registerClass: IntermediateCode.RegisterClass;
+		BEGIN
+			IF Trace THEN D.String(">>> ParseOperand"); D.Ln END;
 
-    (** Check if current symbol equals sym. If yes then get next symbol, return false otherwise *)
-    PROCEDURE Optional( token: Fs.Token ): BOOLEAN;
-    BEGIN
-      (* do not use for Identifier, String or Number, if the result is needed ! *)
-      IF Peek(token) THEN
-        NextSymbol;
-        RETURN TRUE
-      ELSE
-        RETURN FALSE
-      END
-    END Optional;
+			positionOfOperand := symbol.start;
 
-(*    (* ignore one ore more symbols of type token *)
-    PROCEDURE Ignore(token: Scanner.Token);
-    BEGIN WHILE Optional(token) DO END;
-    END Ignore;
+			(* defaults *)
+			hasTypeDescriptor := FALSE;
+			isMemoryOperand := FALSE;
 
-    (** Parsing according to the EBNF **)
+			(* consume optional type description *)
+			lastWasIdentifier := GetIdentifier(pos, identifier);
+			IF lastWasIdentifier & IntermediateCode.DenotesType(identifier, type) THEN
+				hasTypeDescriptor := TRUE;
+				lastWasIdentifier := GetIdentifier(pos, identifier)
+			END;
 
-    (** QualifiedIdentifier = Identifier ['.' Identifier]. **)
-    PROCEDURE QualifiedIdentifier( ): SyntaxTree.QualifiedIdentifier;
-    VAR prefix,suffix: SyntaxTree.Identifier; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  position: LONGINT;
-    BEGIN
-      IF Trace THEN S( "QualifiedIdentifier" ) END;
-      position:= symbol.start;
-      prefix := Identifier();
-      IF prefix # SyntaxTree.invalidIdentifier THEN
-        IF ~Optional( Scanner.Period )THEN
-          suffix := prefix;  prefix := NIL;   (* empty *)
-        ELSE
-           suffix := Identifier();
-        END;
-        qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier( position, prefix,suffix);
-      ELSE
-        qualifiedIdentifier := SyntaxTree.invalidQualifiedIdentifier;
-      END;
-      IF Trace THEN E( "QualifiedIdentifier" ) END;
-      RETURN qualifiedIdentifier
-    END QualifiedIdentifier;
+			(* consume optional memory operand bracket *)
+			IF ~lastWasIdentifier THEN
+				isMemoryOperand := ThisToken(Scanner.LeftBracket);
+				lastWasIdentifier := GetIdentifier(pos, identifier)
+			END;
 
-    (** IdentifierDefinition = Identifier [ '*' | '-' ].  **)
-    PROCEDURE IdentifierDefinition( VAR name: SyntaxTree.Identifier;  VAR access: SET; allowedReadOnly: BOOLEAN);
-    BEGIN
-      IF Trace THEN S( "IdentifierDefinition" ) END;
-      name := Identifier();
+			IF lastWasIdentifier THEN
+				IF IntermediateCode.DenotesRegister(identifier, registerClass, registerNumber) THEN
+					(* register *)
+					IntermediateCode.InitRegister(operand, type, registerClass, registerNumber);
+				ELSE
+					(* TODO: handle assembly constants *)
 
-      IF Optional( Scanner.Times ) THEN
-        access := SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal;
-      ELSIF Optional( Scanner.Minus ) THEN
-        IF ~allowedReadOnly THEN
-          Error( symbol.start, Diagnostics.Invalid, "may not be defined read-only" )
-        ELSE
-          access :=  SyntaxTree.ReadOnly + {SyntaxTree.InternalWrite};
-        END;
-      ELSE
-        access := SyntaxTree.Internal;
-      END;
-      IF Trace THEN E( "IdentifierDefinition") END;
-    END IdentifierDefinition;
+					(* symbol name *)
+					symbolOffset := 0;
 
-    (**    Statement =
-                     [
-                     Designator [':=' Expression]
-                     | 'if' Expression 'then' StatementSequence
-                        {'elsif' Expression 'then' StatementSequence} 'end'
-                     | 'with' Identifier ':' QualifiedIdentifier 'do'
-                         StatementSequence 'end'
-                     | 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
-                     | 'while' Expression 'do' StatementSequence 'end'
-                     | 'repeat' StatementSequence 'until' Expression
-                     | 'for' Identifier ':=' Expression 'to' Expression ['by' Expression] 'do'
-                         StatementSequence 'end'
-                     | 'loop' StatementSequence 'end'
-                     | 'exit'
-                     | 'return' [Expression]
-                     | 'await' Expression
-                     | 'begin' StatementBlock 'end'
-                     | 'code' {any} 'end'
-                     ].
-    **)
-    PROCEDURE Statement( statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
-    VAR qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  expression: SyntaxTree.Expression; designator: SyntaxTree.Designator;  statement: SyntaxTree.Statement;
-      ifStatement: SyntaxTree.IfStatement; elsifPart: SyntaxTree.IfPart;   statementSequence: SyntaxTree.StatementSequence;  withStatement: SyntaxTree.WithStatement;
-      withPart: SyntaxTree.WithPart; caller: SyntaxTree.ProcedureCallStatement;
-      caseStatement: SyntaxTree.CaseStatement;  whileStatement: SyntaxTree.WhileStatement;  repeatStatement: SyntaxTree.RepeatStatement;  forStatement: SyntaxTree.ForStatement;
-      identifier: SyntaxTree.Identifier;  loopStatement: SyntaxTree.LoopStatement;  returnStatement: SyntaxTree.ReturnStatement;  awaitStatement: SyntaxTree.AwaitStatement;
-      qualifiedType: SyntaxTree.QualifiedType; code : SyntaxTree.Code; position: LONGINT; result: BOOLEAN;
-    BEGIN
-      IF Trace THEN S( "Statement" ) END;
-      CASE symbol.token OF
-      | Scanner.Identifier, Scanner.Self, Scanner.Result:
-          designator := Designator();
-          position := symbol.start;
-          IF Optional( Scanner.Becomes ) THEN
-            expression := Expression();
-            statement := SyntaxTree.NewAssignment( position, designator, expression,outer )
-          ELSE
-            caller := SyntaxTree.NewProcedureCallStatement(designator.position, designator,outer);
-            statement := caller;
-          END;
-          statements.AddStatement( statement );
-          result := TRUE
-      | Scanner.If:
-          NextSymbol;
-          ifStatement := SyntaxTree.NewIfStatement( symbol.start ,outer);
-          expression := Expression();
-          ifStatement.ifPart.SetCondition( expression );
-          Check( Scanner.Then );
-          statementSequence := StatementSequence(ifStatement);
-          ifStatement.ifPart.SetStatements( statementSequence );
-          WHILE Optional( Scanner.Elsif ) DO
-            elsifPart := SyntaxTree.NewIfPart();
-            ifStatement.AddElsifPart( elsifPart);
-            expression := Expression();
-            elsifPart.SetCondition( expression );
-            Check( Scanner.Then );
-            statementSequence := StatementSequence(ifStatement);
-            elsifPart.SetStatements( statementSequence );
-          END;
-          IF Optional( Scanner.Else ) THEN
-            statementSequence := StatementSequence(ifStatement);
-            ifStatement.SetElsePart( statementSequence );
-          END;
-          Check( Scanner.End );  statements.AddStatement( ifStatement );
-          result := TRUE
-      | Scanner.With:
-          withStatement := SyntaxTree.NewWithStatement( symbol.start ,outer);
-          NextSymbol;
-          REPEAT
-            identifier := Identifier();
-            IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
-              Error(identifier.position,Diagnostics.Invalid,"forbidden qualified identifier in with statement");
-            END;
-            withPart := SyntaxTree.NewWithPart();
-            withStatement.AddWithPart(withPart);
-            designator := SyntaxTree.NewIdentifierDesignator(identifier.position,identifier);
-            withPart.SetVariable( designator );
-            Check( Scanner.Colon );
-            qualifiedIdentifier := QualifiedIdentifier();
-            qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.suffix.position, currentScope, qualifiedIdentifier);
-            withPart.SetType(qualifiedType);
-            Check( Scanner.Do );
-            statementSequence := StatementSequence(withStatement);
-            withPart.SetStatements( statementSequence );
-          UNTIL ~Optional(Scanner.Bar) OR ~CascadedWithSupport;
-          IF CascadedWithSupport & Optional(Scanner.Else) THEN
-            statementSequence := StatementSequence(withStatement);
-            withStatement.SetElsePart(statementSequence);
-          END;
-          Check( Scanner.End );
-          statements.AddStatement( withStatement );
-          result := TRUE
-      | Scanner.Case:
-          caseStatement := SyntaxTree.NewCaseStatement( symbol.start,outer );
-          NextSymbol;
-          expression := Expression();
-          Check( Scanner.Of );
-          caseStatement.SetVariable( expression );
-          IF Optional(Scanner.Bar) THEN END;
-          REPEAT
-            Case(caseStatement)
-          UNTIL ~Optional(Scanner.Bar);
-          IF Optional( Scanner.Else ) THEN
-            statementSequence := StatementSequence(caseStatement);
-            caseStatement.SetElsePart( statementSequence );
-          END;
-          Check( Scanner.End );
-          statements.AddStatement( caseStatement );
-          result := TRUE
-      | Scanner.While:
-          NextSymbol;
-          whileStatement := SyntaxTree.NewWhileStatement( symbol.start, outer );
-          expression := Expression();
-          Check( Scanner.Do );
-          whileStatement.SetCondition( expression );
-          statementSequence := StatementSequence(whileStatement);
-          whileStatement.SetStatements( statementSequence );
-          Check( Scanner.End );
-          statements.AddStatement( whileStatement );
-          result := TRUE
-      | Scanner.Repeat:
-          NextSymbol;
-          repeatStatement := SyntaxTree.NewRepeatStatement( symbol.start, outer );
-          statementSequence := StatementSequence(repeatStatement);
-          repeatStatement.SetStatements( statementSequence );
-          Check( Scanner.Until );
-          expression := Expression();
-          repeatStatement.SetCondition( expression );
-          statements.AddStatement( repeatStatement );
-          result := TRUE
-      | Scanner.For:
-          NextSymbol;
-          forStatement := SyntaxTree.NewForStatement( symbol.start, outer);
-          identifier := Identifier();
-          IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
-            Error(identifier.position,Diagnostics.Invalid,"forbidden non-local counter variable");
-          END;
-          designator := SyntaxTree.NewIdentifierDesignator(identifier.position,identifier);
-          forStatement.SetVariable( designator );
-          Check( Scanner.Becomes );
-          expression := Expression();
-          forStatement.SetFrom( expression );
-          Check( Scanner.To );
-          expression := Expression();
-          forStatement.SetTo( expression );
-          IF Optional( Scanner.By ) THEN
-            expression := Expression();
-            forStatement.SetBy( expression );
-          END;
-          Check( Scanner.Do );
-          statementSequence := StatementSequence(forStatement);
-          forStatement.SetStatements( statementSequence );
-          Check( Scanner.End );
-          statements.AddStatement( forStatement );
-          result := TRUE
-      | Scanner.Loop:
-          NextSymbol;
-          loopStatement := SyntaxTree.NewLoopStatement( symbol.start ,outer);
-          statementSequence := StatementSequence(loopStatement);
-          loopStatement.SetStatements( statementSequence );
-          Check( Scanner.End );
-          statements.AddStatement( loopStatement );
-          result := TRUE;
-      | Scanner.Exit:
-          NextSymbol;
-          statement := SyntaxTree.NewExitStatement( symbol.start, outer);
-          statements.AddStatement( statement );
-          result := TRUE;
-      | Scanner.Return:
-          NextSymbol;
-          returnStatement := SyntaxTree.NewReturnStatement( symbol.start, outer);
-          IF (symbol.token >= Scanner.Plus) & (symbol.token <= Scanner.Identifier) THEN
-            expression := Expression();
-            returnStatement.SetReturnValue( expression );
-          END;
-          statements.AddStatement( returnStatement );
-          result := TRUE;
-      | Scanner.Begin:
-          NextSymbol;  statement := StatementBlock(outer);  statements.AddStatement( statement );  Check( Scanner.End );
-          result := TRUE;
-      | Scanner.Await:
-          awaitStatement := SyntaxTree.NewAwaitStatement( symbol.start, outer );
-          NextSymbol;
-          expression := Expression();
-          awaitStatement.SetCondition( expression );
-          statements.AddStatement( awaitStatement );
-          result := TRUE
-      | Scanner.Code:
-        (* assemble *)
-        code := Code(outer);
-        Check(Scanner.End);
-        statements.AddStatement( code );
-        result := TRUE
-      | Scanner.End:  result := FALSE (* end of if, with, case, while, for, loop, or statement sequence *)
-      | Scanner.Until: result := FALSE  (* end of repeat *)
-      | Scanner.Else:  result := FALSE (* else of if or case *)
-      | Scanner.Elsif:  result := FALSE (* elsif of if *)
-      | Scanner.Bar:  result := FALSE (* next case *)
-      | Scanner.Finally: result := FALSE  (* end block by finally statement *)
-      | Scanner.Semicolon: result := FALSE (* allow the empty statement *)
-      (* builtin pseudo procedures are resolved by checker *)
-      ELSE Error( symbol.start, Scanner.Semicolon, "" ); result := FALSE;
-      END;
-      IF Trace THEN E( "Statement" ) END;
-      RETURN result
-    END Statement;
+					(* consume optional symbol offset *)
+					IF ThisToken(Scanner.Colon) THEN
+						IF ExpectIntegerWithSign(integer) THEN
+							symbolOffset := integer
+						ELSE
+							Error(symbol.start, "invalid symbol offset")
+						END
+					END;
 
-    (** StatementSequence = Statement {';' Statement}. **)
-    PROCEDURE StatementSequence(outer: SyntaxTree.Statement ): SyntaxTree.StatementSequence;
-    VAR statements: SyntaxTree.StatementSequence; b: BOOLEAN;
-    BEGIN
-      IF Trace THEN S( "StatementSequence" ) END;
-      statements := SyntaxTree.NewStatementSequence();
-      IF Lax THEN
-        WHILE ~Peek(Scanner.Return) & Statement(statements,outer) DO Ignore(Scanner.Semicolon) END;
-        IF Peek(Scanner.Return) & Statement(statements,outer) THEN Ignore(Scanner.Semicolon) END; (* return bound to end of statement sequence *)
-      ELSE
-        REPEAT
-          b := Statement( statements,outer )
-        UNTIL ~Optional( Scanner.Semicolon );
-      END;
-      IF Trace THEN E( "StatementSequence" ) END;
-      RETURN statements
-    END StatementSequence;
+					IF Trace THEN D.String(">>> symbol detected"); D.Ln END;
 
-    (** StatementBlock = ['{' BlockModifier '}'] StatementSequence. **)
-    PROCEDURE StatementBlock(outer: SyntaxTree.Statement): SyntaxTree.StatementBlock;
-    VAR block: SyntaxTree.StatementBlock;
-    BEGIN
-      IF Trace THEN S( "StatementBlock" ) END;
-      block := SyntaxTree.NewStatementBlock( symbol.end, outer );
-      IF Optional( Scanner.LeftBrace ) THEN
-        block.SetModifier(Flags());
-      END;
-      block.SetStatementSequence( StatementSequence(block) );
-      IF Trace THEN E( "StatementBlock" ) END;
-      RETURN block
-    END StatementBlock;
+					Basic.ToSegmentedName(identifier, name);
+					IntermediateCode.InitAddress(operand, IntermediateCode.UnsignedIntegerType(system.addressSize), name, 0, symbolOffset)
+				END
 
-    (** Code = {  Any \ 'end' } . **)
-    PROCEDURE Code(outer: SyntaxTree.Statement): SyntaxTree.Code;
-    VAR startPos, endPos, i ,len: LONGINT; codeString: Scanner.SourceString; code: SyntaxTree.Code;
-    BEGIN
-      startPos := symbol.start;
-      IF scanner.SkipToNextEnd(startPos, endPos, symbol) THEN
-        codeString := symbol.source;
-        code := SyntaxTree.NewCode(startPos,outer);
-        i := 0; len := LEN(codeString);
-        code.SetSourceCode(codeString,len);
-      END;
-      RETURN code;
-    END Code;
+			ELSIF symbol.token = Scanner.String THEN
+				(* string constant *)
+				IntermediateCode.InitString(operand, symbol.string);
+				NextSymbol
 
-    (** wrapper for a body in records and modules *)
-    PROCEDURE BodyProcedure(parentScope: SyntaxTree.Scope): SyntaxTree.Procedure;
-    VAR procedureScope: SyntaxTree.ProcedureScope; procedure: SyntaxTree.Procedure;
-    BEGIN
-      procedureScope := SyntaxTree.NewProcedureScope(parentScope);
-      IF parentScope IS SyntaxTree.ModuleScope THEN
-        procedure := SyntaxTree.NewProcedure( symbol.start, Global.ModuleBodyName,procedureScope);
-        procedure.SetAccess(SyntaxTree.Hidden);
-      ELSE
-        procedure := SyntaxTree.NewProcedure( symbol.start, Global.RecordBodyName,procedureScope);
-        (*! todo: make this a hidden symbol. Problematic when used with paco. *)
-        procedure.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
-      END;
-      parentScope.AddProcedure(procedure);
-      procedure.SetType(SyntaxTree.NewProcedureType(-1,parentScope));
-      procedure.SetBodyProcedure(TRUE);
-      procedureScope.SetBody(Body(procedureScope));
-      RETURN procedure
-    END BodyProcedure;
+			ELSE
+				(* immediate values/numbers *)
+				isNegated := ThisToken(Scanner.Minus);
+				IF ThisToken(Scanner.Number) THEN
+					CASE symbol.numberType OF
+					| Scanner.Integer:
+						IF isNegated THEN someLongint := -symbol.integer ELSE someLongint := symbol.integer END;
+						IF ~hasTypeDescriptor THEN
+							(* if no type description was included: use number type *)
+							IntermediateCode.InitNumber(operand, someLongint);
+						ELSIF type.form = IntermediateCode.Float THEN
+							ASSERT(hasTypeDescriptor);
+							IntermediateCode.InitFloatImmediate(operand, type, REAL(someLongint))
+						ELSE
+							ASSERT(hasTypeDescriptor & (type.form IN IntermediateCode.Integer));
+							IntermediateCode.InitImmediate(operand, type, someLongint)
+						END
+					| Scanner.Hugeint:
+						IF isNegated THEN someHugeint := - symbol.hugeint ELSE someHugeint := symbol.hugeint END;
+						IF ~hasTypeDescriptor THEN
+							(* if no type description was included: use number type *)
+							IntermediateCode.InitNumber(operand, someHugeint)
+						ELSIF type.form = IntermediateCode.Float THEN
+							ASSERT(hasTypeDescriptor);
+							IntermediateCode.InitFloatImmediate(operand, type, REAL(someHugeint))
+						ELSE
+							ASSERT(hasTypeDescriptor & (type.form IN IntermediateCode.Integer));
+							IntermediateCode.InitImmediate(operand, type, someHugeint)
+						END
+					| Scanner.Real, Scanner.Longreal:
+						IF isNegated THEN someLongreal := -symbol.real ELSE someLongreal := symbol.real END;
+						(* if no type description was included: use float type with same amount of bits as address type *)
+						IF ~hasTypeDescriptor THEN
+							IntermediateCode.InitType(type, IntermediateCode.Float, INTEGER(system.addressSize))
+						END;
+						IF type.form IN IntermediateCode.Integer THEN
+							Error(positionOfOperand, "floating point immediate value not applicable")
+						ELSE
+							IntermediateCode.InitFloatImmediate(operand, type, someLongreal)
+						END
+					ELSE HALT(100)
+					END
+				ELSE
+					Error(positionOfOperand, "invalid operand")
+				END
+			END;
 
-    (* ProcedureType = 'procedure' [Flags] [FormalParameters]. *)
-    PROCEDURE ProcedureType(position: LONGINT;  parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType;
-    VAR procedureType: SyntaxTree.ProcedureType;
-    BEGIN
-      IF Trace THEN S( "ProcedureType" ) END;
-      (* procedure symbol already consumed *)
-      procedureType := SyntaxTree.NewProcedureType( position, parentScope);
-      IF Optional(Scanner.LeftBrace) THEN
-        procedureType.SetModifiers(Flags());
-      END;
-      IF Optional(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, parentScope) END;
-      IF Trace THEN E( "ProcedureType" )
-      END;
-      RETURN procedureType;
-    END ProcedureType;
+			(* consume optional offset given in system units *)
+			IF ThisToken(Scanner.Plus) THEN
+				IF ExpectIntegerWithoutSign(integer) THEN
+					IntermediateCode.SetOffset(operand, integer)
+				ELSE
+					Error(symbol.start, "invalid offset")
+				END
+			ELSIF ThisToken(Scanner.Minus) THEN
+				IF ExpectIntegerWithoutSign(integer) THEN
+					IntermediateCode.SetOffset(operand, -integer)
+				ELSE
+					Error(symbol.start, "invalid offset")
+				END
+			END;
 
-    (** ParameterDeclaration = ['var'|'const'] Identifier {',' Identifier}':' Type.**)
-    PROCEDURE ParameterDeclaration( procedureType: SyntaxTree.ProcedureType ; parentScope: SyntaxTree.Scope);
-    VAR
-      type: SyntaxTree.Type; name: SyntaxTree.Identifier;
-      firstParameter, parameter: SyntaxTree.Parameter;   kind: LONGINT;
-    BEGIN
-      IF Trace THEN S( "ParameterDeclaration" ) END;
-      IF Optional( Scanner.Var ) THEN (* var parameter *)
-        kind := SyntaxTree.VarParameter
-      ELSIF Optional( Scanner.Const ) THEN (* const parameter *)
-        kind := SyntaxTree.ConstParameter
-      ELSIF symbol.token # Scanner.Identifier THEN
-        Error(symbol.start,Scanner.Identifier,"");
-        RETURN
-      ELSE kind := SyntaxTree.ValueParameter
-      END;
-      firstParameter := procedureType.lastParameter;
-      REPEAT
-        name := Identifier();
-        parameter := SyntaxTree.NewParameter(name.position,procedureType,name,kind);
-        procedureType.AddParameter(parameter);
-      UNTIL ~Optional( Scanner.Comma );
-      Check( Scanner.Colon );
-      type := Type( NIL, parentScope);
-      ASSERT(type # NIL);
-      IF firstParameter # NIL THEN parameter := firstParameter.nextParameter ELSE parameter := procedureType.firstParameter END;
-      WHILE parameter # NIL DO
-        parameter.SetType( type );
-        parameter := parameter.nextParameter;
-      END;
-      IF Trace THEN E( "ParameterDeclaration" )
-      END;
-    END ParameterDeclaration;
-*)
-    PROCEDURE CommentSymbol(symbol: SyntaxTree.Symbol);
-    BEGIN
-      IF (recentComment # NIL) & (recentComment.nextSymbol = NIL) THEN
-        recentComment.SetNextSymbol(symbol);
-      END;
-      recentSymbol := symbol
-    END CommentSymbol;
-(*
-    (** OperatorDeclaration  = 'operator' String ['*'|'-'] FormalParameters ';'
-                             DeclarationSequence [Body] 'end' String.
-    **)
-    PROCEDURE OperatorDeclaration(parentScope: SyntaxTree.Scope );
-    VAR
-      string: Scanner.StringType; name: Scanner.StringType;
-      procedureScope: SyntaxTree.ProcedureScope;
-      procedureType: SyntaxTree.ProcedureType;
-      operator: SyntaxTree.Operator;
-      access: SET;
-      i: LONGINT; ch: CHAR; position: LONGINT;
-    BEGIN
-      IF Trace THEN S( "Operator" ) END;
-      (* symbol operator already consumed *)
-      position := symbol.start;
-      IF MandatoryString( string ) THEN
-        (* copy string to name and check for length. LEN(name)>0, LEN(string)>0 can be presumed  *)
-        i := 0;
-        REPEAT
-          ch := string[i];
-          name[i] := ch;
-          INC(i);
-        UNTIL (ch = 0X) OR (i=LEN(string)) OR (i=LEN(name));
-        IF ch # 0X THEN (* string too long to act as operator identifier *)
-          Error(symbol.start,Basic.StringTooLong,"");
-          name := "";
-        END;
-      ELSE
-        name := "";
-      END;
-      IF Optional( Scanner.Times ) THEN access := SyntaxTree.ReadOnly;
-      ELSIF Optional( Scanner.Minus ) THEN access := SyntaxTree.ReadOnly;
-      ELSE access := SyntaxTree.Internal;
-      END;
-      procedureScope := SyntaxTree.NewProcedureScope(parentScope);
-      operator := SyntaxTree.NewOperator( symbol.start, SyntaxTree.NewIdentifier(position,name), procedureScope);
-      CommentSymbol(operator);
-      operator.SetAccess(access * SyntaxTree.ReadOnly);
-      procedureType := SyntaxTree.NewProcedureType(symbol.start,parentScope);
-      IF Mandatory(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope ) END;
-      operator.SetType( procedureType );
-      IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
-      DeclarationSequence( procedureScope );
-      IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
-        procedureScope.SetBody(Body(procedureScope));
-      END;
-      IF Mandatory(Scanner.End) & ExpectThisString(string) THEN END;
-      parentScope.AddProcedure(operator);
-      IF parentScope IS SyntaxTree.ModuleScope THEN
-        parentScope(SyntaxTree.ModuleScope).AddOperator(operator);
-      ELSIF parentScope IS SyntaxTree.RecordScope THEN
-        parentScope(SyntaxTree.RecordScope).AddOperator(operator);
-      ELSE
-        Error(position,Diagnostics.Invalid,"Operators only allowed in module scope");
-      END;
-      IF Trace THEN EE( "Operator", name ) END;
-    END OperatorDeclaration;
+			(* wrap memory operand around current operand if necessary *)
+			IF isMemoryOperand & ExpectToken(Scanner.RightBracket) THEN
+				IntermediateCode.SetType(operand, IntermediateCode.UnsignedIntegerType(system.addressSize)); (* set the type of the inner operand to the platform's address type *)
+				IF ~hasTypeDescriptor THEN
+					IntermediateCode.InitType(type, IntermediateCode.SignedInteger, INTEGER(system.addressSize)) (* default: signed integer type of address size *)
+				END;
+				IntermediateCode.InitMemory(operand, type, operand, 0) (* TODO: add offset? *)
+			END
+		END ParseOperand;
 
-    (** VariableNameList = IdentifierDefinition [Flags] {',' IdentifierDefinition [Flags]}.**)
-    PROCEDURE VariableNameList( scope: SyntaxTree.Scope );
-    VAR varname: SyntaxTree.Identifier;  position: LONGINT; variable: SyntaxTree.Variable;  flags,access: SET;
-    BEGIN
-      IF Trace THEN S( "VariableNameList" ) END;
-      REPEAT
-        flags := {};
-        position := symbol.start;
-        IdentifierDefinition( varname, access,TRUE);
-        variable := SyntaxTree.NewVariable( position, varname );
-        CommentSymbol(variable);
-        IF Optional(Scanner.LeftBrace) THEN variable.SetModifiers(Flags()) END;
-        variable.SetAccess(access);
-        scope.AddVariable(variable);
-      UNTIL ~Optional( Scanner.Comma );
-      IF Trace THEN E( "VariableNameList" ) END;
-    END VariableNameList;
+		(** parse an intermediate code instruction **)
+		PROCEDURE ParseInstruction(VAR instruction: IntermediateCode.Instruction; sectionList: Sections.SectionList);
+		VAR
+			opCode: SHORTINT;
+			positionOfInstruction, positionOfOperand, operandNumber: LONGINT;
+			operand: IntermediateCode.Operand;
+			operands: ARRAY 3 OF IntermediateCode.Operand;
+			operandType: IntermediateCode.Type;
+			identifier, message, tempString: SyntaxTree.IdentifierString;
+		BEGIN
+			IF Trace THEN D.String(">>> ParseInstruction"); D.Ln END;
 
-    (** VariableDeclaration = VariableNameList ':' Type. **)
-    PROCEDURE VariableDeclaration(parentScope: SyntaxTree.Scope );
-    VAR
-      variable, firstVariable: SyntaxTree.Variable; type: SyntaxTree.Type;
-    BEGIN
-      IF Trace THEN S( "VariableDeclaration" ) END;
-      firstVariable := parentScope.lastVariable;
-      VariableNameList( parentScope );
-      Check( Scanner.Colon );
-      type := Type( NIL, parentScope );
+			positionOfInstruction := symbol.start;
+			IF ExpectAnyIdentifier(positionOfInstruction, identifier) THEN
+				(* TODO: detect labels of the form << labelName: >> *)
+				opCode := IntermediateCode.FindMnemonic(identifier);
 
-      variable := firstVariable;
-      IF firstVariable #  NIL THEN variable := firstVariable.nextVariable ELSE variable := parentScope.firstVariable END;
-      WHILE variable # NIL  DO
-        variable.SetType( type );
-        variable := variable.nextVariable;
-      END;
-      IF Trace THEN E( "VariableDeclaration" ) END;
-    END VariableDeclaration;
+				IF opCode = IntermediateCode.None THEN
+					Error(positionOfInstruction, "unknown mnemonic")
+				ELSE
+					(* consume all operands *)
+					IntermediateCode.InitType(operandType, IntermediateCode.SignedInteger, 32); (* defaults *)
+					IntermediateCode.InitOperand(operands[0]);
+					IntermediateCode.InitOperand(operands[1]);
+					IntermediateCode.InitOperand(operands[2]);
 
-    (** TypeDeclaration = IdentifierDefinition '=' Type.**)
-    PROCEDURE TypeDeclaration(parentScope: SyntaxTree.Scope);
-    VAR name: SyntaxTree.Identifier;  position: LONGINT; type: SyntaxTree.Type; typeDeclaration: SyntaxTree.TypeDeclaration;   access: SET;
-    BEGIN
-      IF Trace THEN S( "TypeDeclaration" ) END;
-      position := symbol.start;
-      IdentifierDefinition( name, access,FALSE);
-      typeDeclaration := SyntaxTree.NewTypeDeclaration( position,name);
-      CommentSymbol(typeDeclaration);
-      Check( Scanner.Equal );
-      type := Type( name , parentScope);
-      type.SetTypeDeclaration(typeDeclaration);
-      typeDeclaration.SetDeclaredType(type);
-      (*
-      type.SetName(typeDeclaration.name);  (* don't do that: overwrites global names ! *)
-      *)
-      typeDeclaration.SetAccess(access * SyntaxTree.ReadOnly);
-      parentScope.AddTypeDeclaration( typeDeclaration );
-      IF Trace THEN E( "TypeDeclaration" ) END;
-    END TypeDeclaration;
+					operandNumber := 0;
+					IF ~ThisToken(Scanner.Ln) & ~ThisToken(Scanner.EndOfText) THEN
+						REPEAT
+							positionOfOperand := symbol.start;
+							IF operandNumber > 2 THEN
+								Error(positionOfInstruction, "instruction has too many operands")
+							ELSE
+								ParseOperand(operand, sectionList);
+								IF ~error THEN
+									IF Strict & ~IntermediateCode.CheckOperand(operand, opCode, operandNumber, message) THEN
+										Strings.Append(message, " @ operand ");
+										Strings.IntToStr(operandNumber + 1, tempString); Strings.Append(message, tempString);
+										Error(positionOfOperand, message)
+									END;
+									operands[operandNumber] := operand;
+									INC(operandNumber)
+								END
+							END
+						UNTIL error OR ~ThisToken(Scanner.Comma);
+						IF ~error & ExpectLineDelimiter() THEN END
+					END;
 
-    (** ConstDeclaration = IdentifierDefinition '=' Expression. **)
-    PROCEDURE ConstDeclaration(parentScope: SyntaxTree.Scope );
-    VAR name: SyntaxTree.Identifier;  position: LONGINT; constant: SyntaxTree.Constant;  expression: SyntaxTree.Expression;  access: SET;
-    BEGIN
-      IF Trace THEN S( "ConstDeclaration" ) END;
-      IdentifierDefinition( name, access, FALSE);
-      position := symbol.start;
-      constant := SyntaxTree.NewConstant( position, name );
-      CommentSymbol(constant);
-      constant.SetAccess(access * SyntaxTree.ReadOnly);
-      Check( Scanner.Equal );
-      expression := Expression();
-      constant.SetValue( expression );
-      parentScope.AddConstant( constant );
-      IF Trace THEN E( "ConstDeclaration" ) END;
-    END ConstDeclaration;
-*)
+					IF ~error THEN
+						IntermediateCode.InitInstruction(instruction, positionOfInstruction, opCode, operands[0], operands[1], operands[2]);
+						IF Strict & ~IntermediateCode.CheckInstruction(instruction, message) THEN
+							Error(positionOfInstruction, message)
+						END
+					END
+				END;
 
-    PROCEDURE StmtSequence( parentScope: SyntaxTree.Scope );
-    VAR
-    BEGIN
-      IF Trace THEN S( "StmtSequence" ) END;
-      IF Trace THEN E( "StmtSequence" ) END;
-    END StmtSequence;
+			END
+		END ParseInstruction;
 
-(**
-  OpImmediate   = Symbol
-                | Int
-                | Hex
-                | Float
-                .
-**)
-    PROCEDURE OpImmediate( parentScope: SyntaxTree.Scope ):BOOLEAN;
-    VAR
-    BEGIN
-      IF Trace THEN S( "OpImmediate" ) END;
-      IF Trace THEN E( "OpImmediate" ) END;
-    END OpImmediate;
+		(** parse the content of an intermediate code section
+		note: 'sectionList' is the list where referenced sections are found/to be created
+		**)
+		PROCEDURE ParseSectionContent*(scanner: Scanner.AssemblerScanner; section: IntermediateCode.Section; sectionList: Sections.SectionList);
+		VAR
+			instruction: IntermediateCode.Instruction;
+			lineNumber: LONGINT;
+		BEGIN
+			IF Trace THEN D.Ln; D.String(">>> ParseSectionContent"); D.Ln END;
+			SELF.scanner := scanner;
+			IgnoreNewLines;
+			lineNumber := 0;
+			WHILE ~error & (symbol.token # Scanner.Period) & (symbol.token # Scanner.EndOfText) DO
+				(* consume optional line number *)
+				ParseLineNumber(lineNumber);
+				IF ~error THEN
+					ParseInstruction(instruction, sectionList);
+					IF ~error THEN
+						IF Trace THEN IntermediateCode.DumpInstruction(D.Log, instruction); D.Ln; END;
+						section.Emit(instruction);
+						INC(lineNumber)
+					END;
+				END;
+				IgnoreNewLines
+			END
+		END ParseSectionContent;
 
-(**
-  MemoryAddr    = Register [ Int ]
-                | Symbol
-                | Int
-                .
-**)
-    PROCEDURE MemoryAddr( parentScope: SyntaxTree.Scope ):BOOLEAN;
-    VAR
-    BEGIN
-      IF Trace THEN S( "MemoryAddr" ) END;
-      IF Trace THEN E( "MemoryAddr" ) END;
-    END MemoryAddr;
+		(** parse a list of section properties **)
+		PROCEDURE ParseSectionProperties(VAR section: IntermediateCode.Section);
+		VAR
+			positionOfProperty, integer: LONGINT;
+		BEGIN
+			IF Trace THEN D.Ln; D.String(">>> ParseSectionProperties"); D.Ln END;
 
-(**
-  Register      = '$' 'SP'
-                | '$' 'FP'
-                | '$' Int
-                | '$' 'R' '#' Int
-                .
-**)
-    PROCEDURE Register( parentScope: SyntaxTree.Scope ):BOOLEAN;
-    VAR
-    BEGIN
-      IF Trace THEN S( "Register" ) END;
-      IF Trace THEN E( "Register" ) END;
-    END Register;
+			WHILE ~error & (symbol.token # Scanner.EndOfText) & (symbol.token # Scanner.Ln) DO
+				positionOfProperty := symbol.start;
 
-    PROCEDURE String( parentScope: SyntaxTree.Scope ):BOOLEAN;
-    VAR
-    BEGIN
-      IF Trace THEN S( "String" ) END;
-      IF Trace THEN E( "String" ) END;
-    END String;
+				(* fingerprint *)
+				IF ThisIdentifier("fingerprint") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						IF (section.fingerprint # 0) & (section.fingerprint # integer) THEN
+							Error(positionOfProperty, "incompatible fingerprint");
+						ELSE
+							section.SetFingerprint(integer);
+						END
+					ELSE
+						Error(positionOfProperty, "invalid fingerprint")
+					END
 
-(**
-  Operand       = Type '[' MemoryAddr ']'       ; Memory Operand
-                | Type Register [ Int ]         ; Register Operand
-                | Type OpImmediate              ; Immediate Operand
-                | Type String                   ; String Operand
-                | Int                           ; Number Operand
-                .
-**)
-    PROCEDURE Operand( parentScope: SyntaxTree.Scope );
-    VAR
-      value	: HUGEINT;
-      dummy : BOOLEAN;
-      type : Fs.StringType;
-    BEGIN
-      IF Trace THEN S( "Operand" ) END;
-      IF MandatoryIdentifier( type ) THEN
-        (* Type *)
-        IF Optional( Scanner.TK_LeftBracket ) THEN
-        
-        ELSIF Register( parentScope ) THEN
-        
-        ELSIF OpImmediate( parentScope ) THEN
-        
-        ELSIF String( parentScope ) THEN
-        
-        ELSE
-          Error( symbol.start, symbol.token, "Operand" );
-        END;
-      ELSE
-        (* Number *)
-        dummy := MandatoryInteger( value );
-	 END;
-      IF Trace THEN E( "Operand" ) END;
-    END Operand;
+				(* position *)
+				ELSIF ThisIdentifier("priority") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						section.SetPriority(SHORT(integer));
+					ELSE
+						Error(positionOfProperty," invalid priority")
+					END;
+				(* alignment *)
+				ELSIF ThisIdentifier("aligned") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						section.SetPositionOrAlignment(FALSE, integer)
+					ELSE
+						Error(positionOfProperty, "invalid alignment")
+					END
 
-(**
-  Const         = 'data' Operand .
-**)
-    PROCEDURE ConstSequence( parentScope: SyntaxTree.Scope );
-    VAR
-    BEGIN
-      IF Trace THEN S( "ConstSequence" ) END;
-      WHILE Optional( Scanner.TK_Data ) DO
-        Operand( parentScope );
-      END;
-      IF Trace THEN E( "ConstSequence" ) END;
-    END ConstSequence;
+				(* fixed position *)
+				ELSIF ThisIdentifier("fixed") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						section.SetPositionOrAlignment(TRUE, integer)
+					ELSE
+						Error(positionOfProperty, "invalid fixed postion")
+					END
 
+				(* unit size of the section in bits *)
+				ELSIF ThisIdentifier("unit") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						section.SetBitsPerUnit(integer) (* overwrite default unit size *)
+					ELSE
+						Error(positionOfProperty, "invalid unit size")
+					END
 
-(**
-  SectionOffset = 'offset' '=' Int .
-**)
-    PROCEDURE SectionOffset( parentScope: SyntaxTree.Scope);
-    VAR
-      value : HUGEINT;
-    BEGIN
-      IF Trace THEN S( "SectionOffset" ) END;
-      IF Mandatory( Scanner.TK_Offset ) THEN
-        IF Mandatory( Scanner.TK_Becomes ) THEN
-          IF MandatoryInteger( value ) THEN
-          END;
-        END;
-      END;
-      IF Trace THEN E( "SectionOffset" ) END;
-    END SectionOffset;
+				(* total size of the section in units *)
+				ELSIF ThisIdentifier("size") & ExpectToken(Scanner.Equal) THEN
+					IF ExpectIntegerWithSign(integer) THEN
+						 (* nothing to do (this property is ignored, since the size is calculated from the actual content) *)
+					ELSE
+						Error(positionOfProperty, "invalid size")
+					END
 
-(**
-  Section       = 'bodycode' SymbolName SectionOffset { Stmt }
-                | 'inlinecode' SymbolName SectionOffset { Stmt }
-                | 'initcode' SymbolName SectionOffset { Stmt }
-                | 'var' SymbolName SectionOffset { Var }
-                | 'const' SymbolName SectionOffset { Const }
-                | 'code' SymbolName SectionOffset { Stmt }
-                .
-**)
-    PROCEDURE Section( parentScope: SyntaxTree.Scope);
-    VAR
-      previousScope: SyntaxTree.Scope;
-      name : SyntaxTree.Identifier;
-    BEGIN
-      previousScope := currentScope;
-      currentScope := parentScope;
-      IF Trace THEN S( "Section" ) END;
-      LOOP
-        IF Optional( Scanner.TK_Bodycode ) THEN
-          name := Identifier();
-          SectionOffset( parentScope );
-          StmtSequence( parentScope );
-        ELSIF Optional( Scanner.TK_Inlinecode ) THEN
-(*          ...*)
-        ELSIF Optional( Scanner.TK_Const ) THEN
-          name := Identifier();
-          SectionOffset( parentScope );
-          ConstSequence( parentScope );
-        ELSE EXIT
-        END;
-      END;
-      currentScope := previousScope;
-      IF Trace THEN E( "Section" ) END;
-    END Section;
+				ELSE
+					Error(positionOfProperty, "invalid property")
+				END
+			END
+		END ParseSectionProperties;
 
-(**
-  Import        = 'imports' SymbolName { ',' SymbolName } .
-**)
-    PROCEDURE ImportList( moduleScope: SyntaxTree.ModuleScope );
-    VAR
-      name : SyntaxTree.Identifier;
-      import        : SyntaxTree.Import;
-      position      : LONGINT;
-    BEGIN
-      IF Trace THEN S( "Import" ) END;
-      (* import symbol already consumed *)
-      REPEAT
-        position := symbol.start;
-        name := Identifier();
-        IF name # SyntaxTree.invalidIdentifier THEN
-          import := SyntaxTree.NewImport( position, name, name, TRUE );
-          CommentSymbol(import);
-          moduleScope.AddImport( import );
-        END;
-      UNTIL ~Optional( Scanner.TK_Comma );
-      IF Trace THEN E( "Import" );  END;
-    END ImportList;
+		(** parse the content of an intermediate code module **)
+		PROCEDURE ParseModuleContent*(scanner: Scanner.AssemblerScanner ; module: Sections.Module (* sectionList: Sections.SectionList; VAR moduleName: SyntaxTree.IdentifierString; VAR backend: Backend.Backend; loader: ModuleLoader*) ): BOOLEAN;
+		VAR
+			pos, positionOfDirective: LONGINT;
+			identifier: Scanner.IdentifierString;
+			afterModuleDirective, afterImportsDirective, afterFirstSection, isExternalSection: BOOLEAN;
+			sectionType: SHORTINT;
+			section: IntermediateCode.Section;
+			name: Basic.SegmentedName;
+			moduleName: SyntaxTree.IdentifierString;
+		BEGIN
+			IF Trace THEN D.Ln; D.String(">>> ParseModuleContent"); D.Ln END;
 
-(**
-  Module        = 'module' SymbolName [Import] { Section } .
-**)
-    PROCEDURE Module*(): SyntaxTree.Module;
-    VAR moduleName: SyntaxTree.Identifier;  module: SyntaxTree.Module;  position: LONGINT; 
-    BEGIN
-      IF Trace THEN S( "Module" ) END;
-      position := symbol.start;
-      moduleScope := SyntaxTree.NewModuleScope(); (* needed to feed in comment already before module starts *)
-      currentScope := moduleScope;
-      IF Mandatory( Scanner.TK_Module ) THEN
-        moduleName :=  Identifier();
-        module := SyntaxTree.NewModule( scanner.source, moduleName.position, moduleName, moduleScope, 0 );
-        module.SetType(SyntaxTree.moduleType);
-        CommentSymbol(module);
-        IF Optional(Scanner.TK_Imports) THEN
-        	ImportList(moduleScope)
-        END;
-        Section( moduleScope );
-      END;
-      IF Trace THEN E( "Module" ) END;
-      RETURN module
-    END Module;
+			moduleName := "";
+			(*NEW(imports, 128);*)
 
-    (** check if another module declaration is available after recent module parsing -> for parsing and compiling multiple modules within a single file **)
-    PROCEDURE NextModule*(): BOOLEAN;
-    BEGIN
-      NextSymbol;
-      RETURN Peek(Scanner.TK_Module);
-    END NextModule;
+			ASSERT(scanner # NIL);
+			SELF.scanner := scanner;
+			NextSymbol; (* read first symbol *)
 
-  END Parser;
+			(* go through directives *)
+			afterModuleDirective := FALSE;
+			afterImportsDirective := FALSE;
+			afterFirstSection := FALSE;
+			IgnoreNewLines;
+			WHILE ~error & (symbol.token # Scanner.EndOfText) DO
+				positionOfDirective := symbol.start;
+				IF ExpectToken(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN
+					(* 'module' directive *)
+					IF identifier = "module" THEN
+						IF afterModuleDirective THEN
+							Error(positionOfDirective, "multiple module directives");
+						ELSIF ExpectAnyIdentifier(pos, identifier) & ExpectLineDelimiter() THEN
+							moduleName := identifier;
+							module.SetModuleName(identifier);
+							afterModuleDirective := TRUE;
+						END
 
-  (* utilities *)
-(*  PROCEDURE AppendModifier(VAR list: SyntaxTree.Modifier; modifier: SyntaxTree.Modifier);
-  VAR this, next: SyntaxTree.Modifier;
-  BEGIN
-    IF list = NIL THEN list := modifier
-    ELSE
-      this := list;
-      next := list.nextModifier;
-      WHILE next # NIL DO
-        this := next;
-        next := this.nextModifier;
-      END;
-      this.SetNext(modifier);
-    END;
-  END AppendModifier;*)
+					(* 'platform' directive *)
+					ELSIF identifier = "platform" THEN
+						IF ~afterModuleDirective THEN
+							Error(positionOfDirective, "platform directive must be preceeded by module directive")
+						ELSIF ExpectAnyIdentifier(pos, identifier) & ExpectLineDelimiter() THEN
+							module.SetPlatformName(identifier);
+							(*! check against used backend *)
+						ELSIF afterFirstSection THEN
+							Error(positionOfDirective, "platform directive not before all sections")
+						END
 
-  (** parser retrieval **)
-  PROCEDURE NewParser*( scanner: Scanner.AssemblerScanner;  diagnostics: Diagnostics.Diagnostics): Parser;
-  VAR parser: Parser;
-  BEGIN
-    NEW( parser, scanner, diagnostics );  RETURN parser;
-  END NewParser;
+					(* 'imports' directive *)
+					ELSIF identifier = "imports" THEN
+						IF ~afterModuleDirective THEN
+							Error(positionOfDirective, "import directive must be preceeded by module directive")
+						ELSIF afterImportsDirective THEN
+							Error(positionOfDirective, "multiple import directives")
+						ELSIF afterFirstSection THEN
+							Error(positionOfDirective, "import directive not before all sections")
+						ELSE
+							REPEAT
+								IF ExpectAnyIdentifier(positionOfDirective, identifier) THEN
+									module.imports.AddName(identifier);
+									(*
+									IF ~loader(identifier) THEN Error(positionOfDirective, "could not import") END;
+									*)
+								END
+							UNTIL error OR ~ThisToken(Scanner.Comma);
+							IF ExpectLineDelimiter() THEN
+								afterImportsDirective := TRUE
+							END
+						END
+
+					(* section *)
+					ELSE
+						(* determine if section is external *)
+						IF identifier = "external" THEN
+							positionOfDirective := symbol.start;
+							IF ExpectToken(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN END;
+							isExternalSection := TRUE
+						ELSE
+							isExternalSection := FALSE
+						END;
+
+						IF  ~error THEN
+							IF identifier = "code" THEN sectionType := Sections.CodeSection
+							ELSIF identifier = "const" THEN sectionType := Sections.ConstSection
+							ELSIF identifier = "var" THEN sectionType := Sections.VarSection
+							ELSIF identifier = "bodycode" THEN sectionType := Sections.BodyCodeSection
+							ELSIF identifier = "inlinecode" THEN sectionType := Sections.InlineCodeSection
+							ELSIF identifier = "initcode" THEN sectionType := Sections.InitCodeSection
+							ELSE Error(positionOfDirective, "invalid directive or section type")
+							END;
+
+							IF ~error & ~afterModuleDirective THEN
+								Error(positionOfDirective, "module directive expected first")
+							END;
+
+							IF ~error THEN
+								IF ExpectAnyIdentifier(pos, identifier) THEN
+									Basic.ToSegmentedName(identifier, name);
+									section := IntermediateCode.NewSection(module.allSections, sectionType, name, NIL, TRUE); (* keeps section if already present *)
+
+									(* set default unit size for the platform, which depends on the section type *)
+									IF (sectionType = Sections.VarSection) OR (sectionType = Sections.ConstSection) THEN
+										section.SetBitsPerUnit(system.dataUnit)
+									ELSE
+										section.SetBitsPerUnit(system.codeUnit)
+									END;
+									ASSERT(section.bitsPerUnit # Sections.UnknownSize);
+
+									(* consume optional section properties *)
+									ParseSectionProperties(section);
+
+									IF ~error & ExpectLineDelimiter() THEN
+										ParseSectionContent(scanner, section, module.allSections);
+										afterFirstSection := TRUE
+									END
+								END
+							END
+
+						END
+					END
+				END;
+				IgnoreNewLines;
+			END;
+			RETURN ~error
+		END ParseModuleContent;
+
+		(** parse an entire intermediate code module **)
+		PROCEDURE ParseModule*(system: Global.System): Sections.Module;
+		VAR
+			result: Sections.Module;
+		BEGIN
+			NEW(result, NIL, system); (* note: 1. there is no syntax tree module, 2. the system object to be used is not yet known *)
+			IF ParseModuleContent(scanner, result (* result.allSections, moduleName, backend, loader *)) THEN
+				IF Trace THEN
+					D.String("++++++++++ PARSED MODULE '"); D.String(result.moduleName); D.String("' ++++++++++"); D.Ln;
+					result.Dump(D.Log)
+				END
+			ELSE
+				result := NIL
+			END
+		END ParseModule;
+	END IntermediateCodeParser;
+
+	PROCEDURE ParseReader*(reader: Streams.Reader; diagnostics: Diagnostics.Diagnostics; module: Sections.Module): BOOLEAN;
+	VAR
+		assemblerScanner: Scanner.AssemblerScanner;
+		intermediateCodeParser: IntermediateCodeParser;
+	BEGIN
+		NEW(assemblerScanner, "", reader, 0, diagnostics);
+		NEW(intermediateCodeParser, diagnostics, module.system);
+		RETURN intermediateCodeParser.ParseModuleContent(assemblerScanner, module)
+	END ParseReader;
+
+	PROCEDURE ParseFile*(CONST pathName, moduleName: ARRAY OF CHAR; system: Global.System; diagnostics: Diagnostics.Diagnostics): Sections.Module;
+	VAR
+		filename: Files.FileName;
+		assemblerScanner: Scanner.AssemblerScanner;
+		intermediateCodeParser: IntermediateCodeParser;
+		reader: Streams.Reader;
+		msg: ARRAY 128 OF CHAR;
+		module: Sections.Module;
+	BEGIN
+		(* open corresponding intermediate code file *)
+		Files.JoinExtension(moduleName, IntermediateCodeExtension, filename);
+		IF pathName # "" THEN Files.JoinPath(pathName, filename, filename) END;
+		reader := Basic.GetFileReader(filename);
+		IF Trace THEN D.String("FoxIntermediateCodeParser.ParseFile "); D.String(filename); D.Ln END;
+		IF reader = NIL THEN
+			msg := "failed to open ";
+			Strings.Append(msg, filename);
+			diagnostics.Error(filename, Diagnostics.Invalid, Diagnostics.Invalid, msg);
+			RETURN NIL
+		ELSE
+			NEW(module, NIL, system);
+			IF ParseReader(reader, diagnostics, module) THEN
+				RETURN module
+			ELSE
+				RETURN NIL
+			END;
+		END;
+	END ParseFile;
+
 
 END FoxIntermediateParser.
-
-

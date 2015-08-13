@@ -8,6 +8,14 @@ VAR
 	Char*: CharProc;
 	Color*: PROCEDURE (c: SHORTINT);
 
+PROCEDURE Enter*;
+BEGIN
+END Enter;
+
+PROCEDURE Exit*;
+BEGIN
+END Exit;
+
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
 PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
 BEGIN {UNCOOPERATIVE, UNCHECKED} INC (len, ofs); ASSERT (len <= LEN (buf)); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;

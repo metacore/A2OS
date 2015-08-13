@@ -5752,6 +5752,7 @@ TYPE
 		VAR
 			traceModule: SyntaxTree.Module;
 			procedure: SyntaxTree.Procedure;
+			procedureVariable: SyntaxTree.Variable;
 			s,msg: Basic.MessageString;
 			res: Operand;
 			i: LONGINT;
@@ -5766,6 +5767,9 @@ TYPE
 			BEGIN
 				procedure := traceModule.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
 				IF procedure = NIL THEN
+					procedureVariable := traceModule.moduleScope.FindVariable(SyntaxTree.NewIdentifier(procedureName));
+				END;
+				IF (procedure = NIL) & (procedureVariable = NIL) THEN
 					s := "procedure ";
 					Strings.Append(s,backend.traceModuleName);
 					Strings.Append(s,".");
@@ -5779,9 +5783,17 @@ TYPE
 			END GetProcedure;
 
 			PROCEDURE CallProcedure;
+			VAR size: LONGINT;
 			BEGIN
-				StaticCallOperand(result,procedure);
-				Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+				IF procedure # NIL THEN
+					StaticCallOperand(result,procedure);
+					size := ProcedureParametersSize(system,procedure);
+				ELSE
+					Symbol(procedureVariable, result);
+					LoadValue(result, procedureVariable.type.resolved);
+					size := ParametersSize(system, procedureVariable.type.resolved(SyntaxTree.ProcedureType), FALSE);
+				END;
+				Emit(Call(position,result.op,size));
 			END CallProcedure;
 
 			PROCEDURE String(CONST s: ARRAY OF CHAR);

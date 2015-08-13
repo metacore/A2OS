@@ -701,6 +701,13 @@ TYPE
 		END
 	END GCLoop;	
 	
+	
+	
+	PROCEDURE CurrentProcessTime*(): HUGEINT;
+	BEGIN
+		RETURN  Machine.GetTimer()
+	END CurrentProcessTime;
+	
 	PROCEDURE TimerFrequency*(): HUGEINT;
 	BEGIN
 		RETURN Machine.mhz * 1000000

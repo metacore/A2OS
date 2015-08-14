@@ -11669,6 +11669,8 @@ TYPE
 			Info(source, "pointer offsets array data");
 			IF scope IS SyntaxTree.RecordScope THEN
 				Pointers(0,symbol, source,scope(SyntaxTree.RecordScope).ownerRecord,numberPointers);
+			ELSIF scope IS SyntaxTree.CellScope THEN
+				Pointers(0, symbol, source, scope(SyntaxTree.CellScope).ownerCell, numberPointers);
 			ELSIF scope IS SyntaxTree.ModuleScope THEN
 				variable := scope(SyntaxTree.ModuleScope).firstVariable;
 				WHILE variable # NIL DO
@@ -11859,11 +11861,13 @@ TYPE
 				VAR i,methods: LONGINT;
 				BEGIN
 					Info(source, "method table");
-					methods := recordType.recordScope.numberMethods;
-					FOR i := methods-1 TO 0 BY -1 DO
-						procedure := recordType.recordScope.FindMethod(i);
-						Global.GetSymbolSegmentedName(procedure, name);
-						NamedSymbol(source, name,procedure, 0,0);
+					IF recordType # NIL THEN
+						methods := recordType.recordScope.numberMethods;
+						FOR i := methods-1 TO 0 BY -1 DO
+							procedure := recordType.recordScope.FindMethod(i);
+							Global.GetSymbolSegmentedName(procedure, name);
+							NamedSymbol(source, name,procedure, 0,0);
+						END;
 					END;
 				END MethodTable;
 
@@ -11945,6 +11949,8 @@ TYPE
 					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
 					source.SetExported(IsExported(td));
 					
+					IF (cellType # NIL) THEN recordType := cellType.GetBaseRecord() END;
+					
 					IF implementationVisitor.backend.cooperative THEN
 
 						base := NIL;
@@ -12019,43 +12025,6 @@ TYPE
 							implementationVisitor.CreateResetProcedure(recordType);
 							implementationVisitor.CreateAssignProcedure(recordType);
 						END;
-					(*! patch this !!!
-						ELSIF cellType # NIL THEN
-						recordType := cellType.GetBaseRecord();
-						Info(source, "MethodEnd = MPO");
-						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),MPO);
-						source(IntermediateCode.Section).Emit(Data(-1,op));
-
-						Info(source, "method table");
-						IF recordType # NIL THEN
-							methods := recordType.recordScope.numberMethods;
-						ELSE
-							methods := 0
-						END;
-						
-						FOR i := methods-1 TO 0 BY -1 DO
-							procedure := recordType.recordScope.FindMethod(i);
-							Global.GetSymbolSegmentedName(procedure,name);
-							NamedSymbol(source, name,procedure,0,0);
-						END;
-						TdTable(TypeTags);
-						Info(source, "type descriptor info pointer");
-						Symbol(source, NewTypeDescriptorInfo(source,source.pc+1,recordType.IsProtected()),0,0);
-						Info(source, "record size");
-						IF cellType.sizeInBits < 0 THEN
-							ASSERT(module.system.GenerateVariableOffsets(cellType.cellScope));
-						END;
-						Address(source, ToMemoryUnits(module.system,cellType.sizeInBits));
-						Info(source, "pointer offsets pointer");
-						padding := 1- source.pc MOD 2;
-						Symbol(source, source, source.pc+1+padding,0);
-						IF padding >0 THEN
-							Info(source, "padding");
-							FOR i := 1 TO padding DO Address(source,0) END;
-						END;
-						PointerArray(source, cellType.cellScope, numberPointers);
-						
-					*)
 					ELSIF ~simple THEN
 						(*
 
@@ -12090,8 +12059,16 @@ TYPE
 						TdTable(TypeTags);
 						Info(source, "type descriptor info pointer");
 						Symbol(source, NewTypeDescriptorInfo(source,source.pc+1,recordType.IsProtected()),0,0);
-						Info(source, "record size");
-						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
+						IF (cellType # NIL) THEN
+							IF cellType.sizeInBits < 0 THEN
+								ASSERT(module.system.GenerateVariableOffsets(cellType.cellScope));
+							END;
+							Info(source, "cell size");
+							Address(source, ToMemoryUnits(module.system,cellType.sizeInBits));						
+						ELSE
+							Info(source, "record size");
+							Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
+						END;
 						Info(source, "pointer offsets pointer");
 						padding := 1- source.pc MOD 2;
 						Symbol(source, source, source.pc+1+padding,0);
@@ -12099,7 +12076,11 @@ TYPE
 							Info(source, "padding");
 							FOR i := 1 TO padding DO Address(source,0) END;
 						END;
-						PointerArray(source, recordType.recordScope, numberPointers);
+						IF cellType # NIL THEN
+							PointerArray(source, cellType.cellScope, numberPointers);
+						ELSE
+							PointerArray(source, recordType.recordScope, numberPointers);
+						END;
 					ELSE
 						(*
 							simple:

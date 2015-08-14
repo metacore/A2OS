@@ -719,7 +719,7 @@ TYPE
 				IF (x.sizeExpression # NIL) & CheckPositiveIntegerValue(x.sizeExpression,value,FALSE) THEN
 					x.SetSize(value)
 				ELSE
-					x.SetSize(system.SizeOf(system.integerType));
+					x.SetSize(system.SizeOf(system.longintType));
 				END;
 				x.SetState(SyntaxTree.Resolved);
 			END;
@@ -808,7 +808,7 @@ TYPE
 				IF checkUse OR (this.expression = NIL) THEN
 					Error(this.position,Diagnostics.Invalid,"unexpected modifier");
 				ELSE
-					this.SetExpression(ConstantExpression(this.expression));
+					this.SetExpression(ResolveExpression(this.expression));
 					this.Resolved;
 				(*! sanity check for "unqualified" modifiers, as for example used in ActiveCells Engine parameterization *)
 				END;

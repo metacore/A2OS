@@ -2642,6 +2642,7 @@ TYPE
 		VAR la, lb, i, top, t, b : LONGINT; cliprect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			ASSERT(layout # NIL);
+			DrawBackground^( );
 			canvas.SaveState(cstate);
 			canvas.GetClipRect(cliprect);
 			IF WMRectangles.RectEmpty(cliprect) THEN RETURN END;

@@ -2638,7 +2638,7 @@ TYPE
 			text.ReleaseRead;
 		END RenderAboveTextMarkers;
 
-		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR la, lb, i, top, t, b : LONGINT; cliprect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			ASSERT(layout # NIL);
@@ -2691,7 +2691,7 @@ TYPE
 			RenderAboveTextMarkers(canvas);
 			text.ReleaseRead;
 			canvas.RestoreState(cstate);
-		END DrawForeground;
+		END DrawBackground;
 
 		PROCEDURE StoreLineEnter;
 		VAR pos, cl : LONGINT;

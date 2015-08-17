@@ -50,11 +50,12 @@ CONST
 
 	Second* = 1000; (* frequency of ticks increments in Hz *)
 
+
 CONST
 		(* error codes *)
 		Ok* = 0;
 		NilAdr* = -1;	(* nil value for addresses (not same as pointer NIL value) *)
-
+		IsCooperative* = FALSE;
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
 	IDMap* = ARRAY 16 OF SHORTINT;
@@ -690,9 +691,13 @@ BEGIN
 	fullName[j] := 0X;
 END ToExecutablePath;
 
-PROCEDURE Init;
+PROCEDURE Init*;
 VAR vendor: Vendor; ver: LONGINT; hfile: Kernel32.HANDLE;
 BEGIN
+	Kernel32.Init;
+	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor;
+	InitLocks();
+	Trace.String("Machine");
 	boottime:=GetTimer();
 
 	COPY( Version, version );
@@ -1231,9 +1236,4 @@ CODE{SYSTEM.i386}
 END Portout32;
 
 
-
-BEGIN
-	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor;
-	InitLocks();
-	Init;
 END Machine.

@@ -332,6 +332,9 @@ TYPE
 	END;
 
 VAR
+	hInstance-: HINSTANCE;   (* init by linker/loader *)
+	isEXE-: BOOLEAN;
+
 	(* the procedure variables getProcAddress and LoadLibrary  must be patched by linker / PE loader *)
 	(** The GetProcAddress function returns the address of the specified exported dynamic-link library (DLL) function.
 			Use the GetProcAddress Oberon wrapper. *)
@@ -789,7 +792,7 @@ VAR
 		ExitProcess(l);
 	END ShutdownP;
 
-	PROCEDURE Init;
+	PROCEDURE Init*;
 	VAR mod: HMODULE;
 	BEGIN
 		Shutdown := ShutdownP;
@@ -924,7 +927,14 @@ VAR
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
 		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
-		END Init;
+		isEXE := hInstance = NULL;
+		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
+		IF IsDebuggerPresent()=True THEN
+			OutputString := OutputDebugString
+		ELSE
+			OutputString := NoOutputString
+		END;
+	END Init;
 
 
 
@@ -974,14 +984,5 @@ VAR
 			
 		END EntryPoint;
 		
-
-		
-BEGIN
-	Init;
-	IF IsDebuggerPresent()=True THEN
-		OutputString := OutputDebugString
-	ELSE
-		OutputString := NoOutputString
-	END;
 END Kernel32.
 	

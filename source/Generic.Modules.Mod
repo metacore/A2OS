@@ -943,7 +943,7 @@ END PublishRegisteredModules;
 PROCEDURE {FINAL} Main;
 BEGIN
 	Machine.Init;
-	Trace.String("published registered modules"); Trace.Ln;
+	Trace.String("publish registered modules"); Trace.Ln;
 	PublishRegisteredModules;
 END Main;
 

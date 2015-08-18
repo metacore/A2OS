@@ -8039,28 +8039,29 @@ TYPE
 					END;
 					
 					(* start *)
-
-					Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
-					ToMemory(l.op, addressType, 0);
-					Designate(p0,s0);
-					ToMemory(s0.op,addressType,0);
-					Emit(Mov(position,s0.op,l.op));
-					ReleaseOperand(l);
-					ReleaseOperand(s0);
-					result.tag := emptyOperand;					
-					
-					(* push cell *)
-					Symbol(temporaryVariable, l);
-					ToMemory(l.op,addressType,0);
-					Emit(Push(-1,l.op));
-					(* push delegate *)
-					Emit(Push(-1,l.op));
-					ReleaseOperand(l);
-					StaticCallOperand(s1,baseType(SyntaxTree.CellType).cellScope.bodyProcedure);
-					Emit(Push(position, s1.op));
-					ReleaseOperand(s1);
-					
-					CallThis(position,"ActiveCellsRuntime","Start",3);
+					IF baseType(SyntaxTree.CellType).cellScope.bodyProcedure # NIL THEN
+						Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+						ToMemory(l.op, addressType, 0);
+						Designate(p0,s0);
+						ToMemory(s0.op,addressType,0);
+						Emit(Mov(position,s0.op,l.op));
+						ReleaseOperand(l);
+						ReleaseOperand(s0);
+						result.tag := emptyOperand;					
+						
+						(* push cell *)
+						Symbol(temporaryVariable, l);
+						ToMemory(l.op,addressType,0);
+						Emit(Push(-1,l.op));
+						(* push delegate *)
+						Emit(Push(-1,l.op));
+						ReleaseOperand(l);
+						StaticCallOperand(s1,baseType(SyntaxTree.CellType).cellScope.bodyProcedure);
+						Emit(Push(position, s1.op));
+						ReleaseOperand(s1);
+						
+						CallThis(position,"ActiveCellsRuntime","Start",3);
+					END;
 
 					(*IF temporaryVariable # NIL THEN
 						end := NewLabel();

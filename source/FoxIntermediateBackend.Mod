@@ -6582,6 +6582,51 @@ TYPE
 				END;
 			END Parameter;
 			
+			PROCEDURE AddPortProperty(port: SyntaxTree.Variable; modifier: SyntaxTree.Modifier; value: SyntaxTree.Expression);
+		VAR par: ActiveCells.Parameter; name: ARRAY 256 OF CHAR; op: Operand;  left, d: SyntaxTree.Designator;
+		BEGIN
+				Field(variable, op);
+				(*left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
+				left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(x);
+				d := SyntaxTree.NewSymbolDesignator(-1, left, variable); d.SetType(variable.type);
+				Designate(d, op);*)
+				ToMemory(op.op,addressType,0);
+				Emit(Push(-1, op.op));
+				ReleaseOperand(op);			
+					
+				Basic.GetString(modifier.identifier, name);
+				PushConstString(name);
+
+				IF SemanticChecker.IsStringType(modifier.expression.type) THEN 
+					ASSERT(SemanticChecker.IsStringType(value.type));
+					Designate(value, op);
+					Emit(Push(modifier.position, op.tag));
+					Emit(Push(modifier.position, op.op));
+					ReleaseOperand(op);
+					CallThis(position,"ActiveCellsRuntime","AddPortStringProperty",5);
+				ELSIF (modifier.expression.type.resolved IS SyntaxTree.IntegerType) THEN
+					ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+					Evaluate(value, op); 
+					Emit(Push(modifier.position, op.op));
+					ReleaseOperand(op);
+					CallThis(position,"ActiveCellsRuntime","AddPortIntegerProperty",4);
+				ELSE
+					CallThis(position,"ActiveCellsRuntime","AddPortFlagProperty",3);
+				END;
+		END AddPortProperty;
+		
+		PROCEDURE AddPortProperties(variable: SyntaxTree.Variable);
+		VAR modifier: SyntaxTree.Modifier;
+		BEGIN
+			modifier := variable.modifiers;
+			WHILE modifier # NIL DO
+				AddPortProperty(variable,modifier, modifier.expression);
+				modifier := modifier.nextModifier;
+			END;
+		END AddPortProperties;
+		
+
+			
 			PROCEDURE Variable(name: ARRAY OF CHAR; variable: SyntaxTree.Variable);
 			VAR op : Operand; portType: SyntaxTree.PortType; d, left: SyntaxTree.Designator; baseType: SyntaxTree.Type; prevScope: SyntaxTree.Scope;
 				size, reg: IntermediateCode.Operand; dim: LONGINT;
@@ -6637,6 +6682,7 @@ TYPE
 				
 				IF variable.type IS SyntaxTree.PortType THEN
 					CallThis(variable.position,"ActiveCellsRuntime","AddPort",6);
+					AddPortProperties(variable);
 				ELSIF variable.type IS SyntaxTree.ArrayType THEN
 					IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,6*addressType.sizeInBits));
@@ -6791,6 +6837,8 @@ TYPE
 					CallThis(position,"ActiveCellsRuntime","AddFlagProperty",3);
 				END;
 		END AddProperty;
+		
+
 		
 		
 		PROCEDURE AddProperties(cellType: SyntaxTree.CellType; cell: SyntaxTree.Symbol; property: SyntaxTree.Property);
@@ -8038,17 +8086,17 @@ TYPE
 						ReleaseIntermediateOperand(pointer);*)
 					END;
 					
+					Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+					ToMemory(l.op, addressType, 0);
+					Designate(p0,s0);
+					ToMemory(s0.op,addressType,0);
+					Emit(Mov(position,s0.op,l.op));
+					ReleaseOperand(l);
+					ReleaseOperand(s0);
+					result.tag := emptyOperand;					
+
 					(* start *)
 					IF baseType(SyntaxTree.CellType).cellScope.bodyProcedure # NIL THEN
-						Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
-						ToMemory(l.op, addressType, 0);
-						Designate(p0,s0);
-						ToMemory(s0.op,addressType,0);
-						Emit(Mov(position,s0.op,l.op));
-						ReleaseOperand(l);
-						ReleaseOperand(s0);
-						result.tag := emptyOperand;					
-						
 						(* push cell *)
 						Symbol(temporaryVariable, l);
 						ToMemory(l.op,addressType,0);

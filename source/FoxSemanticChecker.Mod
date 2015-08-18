@@ -6485,7 +6485,7 @@ TYPE
 					IF HasValue(modifiers, Global.NameCodeMemorySize, position, value) THEN END;
 					IF HasValue(modifiers, Global.NameDataMemorySize, position, value) THEN END;
 				END;
-				CheckModifiers(modifiers, ~InCellNetScope(variable.scope) & ~(variable.type.resolved IS SyntaxTree.CellType));
+				CheckModifiers(modifiers, ~InCellNetScope(variable.scope) & ~(variable.type.resolved IS SyntaxTree.CellType) & ~(variable.type.resolved IS SyntaxTree.PortType));
 				IF variable.initializer # NIL THEN
 					variable.SetInitializer (CompatibleConversion (variable.initializer.position, ConstantExpression(variable.initializer), variable.type));
 				END;
@@ -8031,6 +8031,7 @@ TYPE
 					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
 					variable.SetType(parameter.type);
 					variable.SetAccess(SyntaxTree.Hidden);
+					variable.SetModifiers(parameter.modifiers);
 					currentScope.PushVariable(variable);
 					(*
 					Register(parameter,scope, FALSE); 

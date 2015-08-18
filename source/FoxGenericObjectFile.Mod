@@ -9,6 +9,7 @@ CONST
 	Version = 3;
 	Trace = FALSE;
 	TraceAliases = FALSE;
+	WarnDuplicateFingerprints = FALSE;
 
 	(* optimizations *)
 	PatchFixups = TRUE; (* patch all fixups that can be processed during object file generation *)
@@ -205,7 +206,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					section := sections.GetSection(i);
 					IF (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).alias = NIL)  THEN
 						IF ~ExportSection(section(IntermediateCode.Section)) THEN RETURN FALSE END;
-						IF  (section(IntermediateCode.Section).resolved.os.identifier.fingerprint # 0) THEN
+						IF  WarnDuplicateFingerprints &  (section(IntermediateCode.Section).resolved.os.identifier.fingerprint # 0) THEN
 							FOR j := 0 TO i - 1 DO
 								test := sections.GetSection(j);
 								IF (test(IntermediateCode.Section).resolved # NIL)

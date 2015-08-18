@@ -1,3 +1,4 @@
+
 MODULE FoxSemanticChecker; (* AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Semantic Checker"; *)
 (* (c) fof ETHZ 2009 *)
 
@@ -5879,11 +5880,11 @@ TYPE
 					END;
 
 					IF numberActualParameters = 3 THEN
-						IF IsIntegerValue(parameter2,i0) & (i0>=0) THEN
-							parameter2.SetResolved(SyntaxTree.NewIntegerValue(position,ABS(i0)));
-						ELSE
+						IF ~cellsAreObjects & ~IsIntegerValue(parameter2,i0) & (i0>=0) THEN
 							Error(position,Diagnostics.Invalid,"incompatible channel size parameter");
 						END;
+						parameter2 := NewConversion(Diagnostics.Invalid,parameter2,system.longintType,NIL);
+						actualParameters.SetExpression(2,parameter2);
 					END;
 
 					activeCellsStatement := TRUE;

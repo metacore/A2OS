@@ -805,13 +805,13 @@ TYPE
 			this := modifiers;
 			WHILE this # NIL DO
 				IF ~this.resolved THEN
-				IF checkUse OR (this.expression = NIL) THEN
-					Error(this.position,Diagnostics.Invalid,"unexpected modifier");
-				ELSE
-					this.SetExpression(ResolveExpression(this.expression));
-					this.Resolved;
-				(*! sanity check for "unqualified" modifiers, as for example used in ActiveCells Engine parameterization *)
-				END;
+					IF checkUse OR (this.expression = NIL) THEN
+						Error(this.position,Diagnostics.Invalid,"unexpected modifier");
+					ELSE
+						this.SetExpression(ResolveExpression(this.expression));
+						this.Resolved;
+					(*! sanity check for "unqualified" modifiers, as for example used in ActiveCells Engine parameterization *)
+					END;
 				END;
 				this := this.nextModifier
 			END;
@@ -5017,63 +5017,62 @@ TYPE
 					(* check constructor *)
 					IF CheckVariable(parameter0) THEN
 						IF type0 IS SyntaxTree.PointerType THEN
-							base := type0(SyntaxTree.PointerType).pointerBase.resolved;
-							IF base IS SyntaxTree.ArrayType THEN
-								arrayType := base(SyntaxTree.ArrayType);
-								IF arrayType.form = SyntaxTree.Static THEN
-									i := 1
-								ELSIF arrayType.form = SyntaxTree.Open THEN
-									i := Dimension(arrayType,{SyntaxTree.Open})+1;
-								ELSE HALT(100)
-								END;
-								IF CheckArity(i,i) & (numberActualParameters>1) THEN
-									i := 1;
-									REPEAT
+							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
+						END;
+						IF type0 IS SyntaxTree.ArrayType THEN
+							arrayType := type0(SyntaxTree.ArrayType);
+							IF arrayType.form = SyntaxTree.Static THEN
+								i := 1
+							ELSIF arrayType.form = SyntaxTree.Open THEN
+								i := Dimension(arrayType,{SyntaxTree.Open})+1;
+							ELSE HALT(100)
+							END;
+							IF CheckArity(i,i) & (numberActualParameters>1) THEN
+								i := 1;
+								REPEAT
+									actualParameter := actualParameters.GetExpression(i);
+									IF CheckSizeType(actualParameter) THEN
+										actualParameter := NewConversion(0,actualParameter,system.longintType,NIL);
+										actualParameters.SetExpression(i,actualParameter);
+									END;
+									INC(i);
+								UNTIL ~CheckSizeType(actualParameter) OR (actualParameter.resolved # NIL) & ~CheckPositiveIntegerValue(actualParameter,i0,TRUE) OR (i=numberActualParameters);
+							END;
+						ELSIF (type0 IS SyntaxTree.RecordType) THEN
+							constructor := GetConstructor(type0(SyntaxTree.RecordType));
+							IF constructor = NIL THEN
+								IF CheckArity(1,1) THEN END;
+							ELSIF (constructor.scope.ownerModule # currentScope.ownerModule) & ~(SyntaxTree.PublicRead IN constructor.access) THEN
+								Error(position,Diagnostics.Invalid,"new on object with hidden constructor");
+							ELSE
+								procedureType := constructor.type(SyntaxTree.ProcedureType);
+								numberFormalParameters := procedureType.numberParameters;
+								DEC(numberActualParameters);
+								IF numberActualParameters <= numberFormalParameters THEN
+									formalParameter := procedureType.firstParameter;
+									FOR i := 1 TO numberActualParameters DO
 										actualParameter := actualParameters.GetExpression(i);
-										IF CheckSizeType(actualParameter) THEN
-											actualParameter := NewConversion(0,actualParameter,system.longintType,NIL);
+										IF (actualParameter = SyntaxTree.invalidExpression) THEN
+										ELSIF ~ParameterCompatible(formalParameter,actualParameter) THEN
+										ELSE
+											IF formalParameter.type.resolved # actualParameter.type.resolved THEN
+												actualParameter := NewConversion(actualParameter.position,actualParameter,formalParameter.type,NIL);
+											END;
 											actualParameters.SetExpression(i,actualParameter);
 										END;
-										INC(i);
-									UNTIL ~CheckSizeType(actualParameter) OR (actualParameter.resolved # NIL) & ~CheckPositiveIntegerValue(actualParameter,i0,TRUE) OR (i=numberActualParameters);
-								END;
-							ELSE
-								ASSERT(base IS SyntaxTree.RecordType);
-								constructor := GetConstructor(base(SyntaxTree.RecordType));
-								IF constructor = NIL THEN
-									IF CheckArity(1,1) THEN END;
-								ELSIF (constructor.scope.ownerModule # currentScope.ownerModule) & ~(SyntaxTree.PublicRead IN constructor.access) THEN
-									Error(position,Diagnostics.Invalid,"new on object with hidden constructor");
-								ELSE
-									procedureType := constructor.type(SyntaxTree.ProcedureType);
-									numberFormalParameters := procedureType.numberParameters;
-									DEC(numberActualParameters);
-									IF numberActualParameters <= numberFormalParameters THEN
-										formalParameter := procedureType.firstParameter;
-										FOR i := 1 TO numberActualParameters DO
-											actualParameter := actualParameters.GetExpression(i);
-											IF (actualParameter = SyntaxTree.invalidExpression) THEN
-											ELSIF ~ParameterCompatible(formalParameter,actualParameter) THEN
-											ELSE
-												IF formalParameter.type.resolved # actualParameter.type.resolved THEN
-													actualParameter := NewConversion(actualParameter.position,actualParameter,formalParameter.type,NIL);
-												END;
-												actualParameters.SetExpression(i,actualParameter);
-											END;
-											formalParameter := formalParameter.nextParameter;
-										END;
-										WHILE (formalParameter # NIL) DO
-											IF formalParameter.defaultValue # NIL THEN
-												actualParameters.AddExpression(formalParameter.defaultValue);
-												formalParameter := formalParameter.nextParameter
-											ELSE
-												Error(position,Diagnostics.Invalid,"less actual than formal parameters");
-												formalParameter := NIL;
-											END;
-										END;
-									ELSE
-										Error(position,Diagnostics.Invalid,"more actual than formal parameters")
+										formalParameter := formalParameter.nextParameter;
 									END;
+									WHILE (formalParameter # NIL) DO
+										IF formalParameter.defaultValue # NIL THEN
+											actualParameters.AddExpression(formalParameter.defaultValue);
+											formalParameter := formalParameter.nextParameter
+										ELSE
+											Error(position,Diagnostics.Invalid,"less actual than formal parameters");
+											formalParameter := NIL;
+										END;
+									END;
+								ELSE
+									Error(position,Diagnostics.Invalid,"more actual than formal parameters")
 								END;
 							END;
 						ELSIF type0 IS SyntaxTree.MathArrayType THEN
@@ -6540,7 +6539,7 @@ TYPE
 						Error(position,Diagnostics.Invalid,"unnecessary movable flag on variable variable");
 					END;
 				END;
-				CheckModifiers(modifiers, ~InCellNetScope(parameter.scope) OR ~(parameter.type.resolved IS SyntaxTree.CellType));
+				CheckModifiers(modifiers, ~InCellNetScope(parameter.scope) & ~(parameter.type.resolved IS SyntaxTree.CellType) & ~(parameter.type.resolved IS SyntaxTree.PortType));
 				parameter.SetState(SyntaxTree.Resolved);
 			END;
 		END VisitParameter;
@@ -7913,7 +7912,7 @@ TYPE
 				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
 				currentIsBodyProcedure := currentIsBodyProcedure OR procedure.isBodyProcedure;
 				currentIsRealtime := currentIsRealtime OR procedure.type.isRealtime;
-				currentIsCellNet := InCellNetScope(procedure.scope);
+				currentIsCellNet := InCellNetScope(procedure.scope) OR cellsAreObjects;
 				(*
 				IF procedure.isInline & ((scope(SyntaxTree.ProcedureScope).body = NIL) OR (scope(SyntaxTree.ProcedureScope).body # NIL) & (scope(SyntaxTree.ProcedureScope).body.code = NIL)) THEN
 					Warning(procedure.position,"unsupported inline procedure - must be assembler code")

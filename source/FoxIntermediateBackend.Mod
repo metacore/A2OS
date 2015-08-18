@@ -759,12 +759,12 @@ TYPE
 				implementationVisitor.currentScope := module.module.moduleScope;
 				implementationVisitor.section := ir;
 				implementationVisitor.PushSelfPointer();
-				implementationVisitor.CallThis("Modules","Register",1);
+				implementationVisitor.CallThis(bodyProcedure.position,"Modules","Register",1);
 			ELSIF backend.preregisterStatic THEN
 				implementationVisitor.currentScope := module.module.moduleScope;
 				implementationVisitor.section := ir;
 				implementationVisitor.PushSelfPointer();
-				implementationVisitor.CallThis("Modules","Preregister",1);
+				implementationVisitor.CallThis(bodyProcedure.position,"Modules","Preregister",1);
 			ELSE
 				IntermediateCode.InitAddress(op, addressType, name, implementationVisitor.GetFingerprint(bodyProcedure), 0);
 				ir.Emit(Call(bodyProcedure.position,op, 0));
@@ -1329,7 +1329,7 @@ TYPE
 		BEGIN
 			IF backend.cooperative THEN
 				Emit(Push(position,IntermediateCode.Immediate(sizeType,trapNo)));
-				CallThis(DefaultRuntimeModuleName,"Trap",1); 
+				CallThis(position,DefaultRuntimeModuleName,"Trap",1); 
 			ELSE
 				Emit(Trap(position,trapNo));
 			END;
@@ -1410,7 +1410,7 @@ TYPE
 				x.Accept(SELF)
 			END;
 			(* check this, was commented out in ActiveCells3 *)
-			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) THEN
+			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) & ~backend.cellsAreObjects THEN
 				Error(x.position, "unsupported modifier");
 			END;
 		END Expression;
@@ -2188,7 +2188,7 @@ TYPE
 		BEGIN
 			Emit (Push(position, dst));
 			Emit (Push(position, src));
-			CallThis("GarbageCollector","Assign", 2);
+			CallThis(position,"GarbageCollector","Assign", 2);
 		END CallAssignPointer;
 
 		PROCEDURE CallAssignMethod(CONST dst (* address *) , src (* address *) : IntermediateCode.Operand; type: SyntaxTree.Type);
@@ -2220,20 +2220,20 @@ TYPE
 					Emit (Push(position, dst));
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, src));
-					CallThis("GarbageCollector","AssignDelegateArray", 4);
+					CallThis(position,"GarbageCollector","AssignDelegateArray", 4);
 				ELSE 
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, dst));
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, src));
-					CallThis("GarbageCollector","AssignPointerArray", 4);
+					CallThis(position,"GarbageCollector","AssignPointerArray", 4);
 					ASSERT(StaticArrayBaseType(type).IsPointer());
 				END;
 			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
 				ASSERT(type.resolved(SyntaxTree.ProcedureType).isDelegate);
 				Emit (Push(position, dst));
 				Emit (Push(position, src));
-				CallThis("GarbageCollector","AssignDelegate", 2);
+				CallThis(position,"GarbageCollector","AssignDelegate", 2);
 			ELSE HALT(100); (* missing ? *)
 			END;
 		END CallAssignMethod;
@@ -2329,7 +2329,7 @@ TYPE
 				SetLabel (skip);
 			ELSIF SemanticChecker.IsPointerType (type) THEN
 				Emit (Push(position, IntermediateCode.Memory (addressType,register,0)));
-				CallThis("GarbageCollector","Mark", 1);
+				CallThis(position,"GarbageCollector","Mark", 1);
 			ELSIF type.IsRecordType() THEN
 				Emit (Push(position,register));
 				GetRecordTypeName (type.resolved(SyntaxTree.RecordType),name);
@@ -2350,16 +2350,16 @@ TYPE
 				ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, register));
-					CallThis("GarbageCollector","MarkDelegateArray", 2);
+					CallThis(position,"GarbageCollector","MarkDelegateArray", 2);
 				ELSE 
 					Emit (Push(position, IntermediateCode.Immediate (sizeType,size)));
 					Emit (Push(position, register));
-					CallThis("GarbageCollector","MarkPointerArray", 2);
+					CallThis(position,"GarbageCollector","MarkPointerArray", 2);
 					ASSERT(base.IsPointer());
 				END;
 			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
 				Emit (Push(position, IntermediateCode.Memory (addressType,register,ToMemoryUnits(system,addressType.sizeInBits))));
-				CallThis("GarbageCollector","Mark", 1);
+				CallThis(position,"GarbageCollector","Mark", 1);
 			ELSE HALT(100); (* missing ? *)
 			END;
 		END CallTraceMethod;
@@ -2561,7 +2561,7 @@ TYPE
 		BEGIN
 			IF SemanticChecker.IsPointerType (type) THEN
 				Emit (Push(position, dest));
-				CallThis("GarbageCollector","Reset", 1);
+				CallThis(position,"GarbageCollector","Reset", 1);
 			ELSIF type.IsRecordType() THEN
 				Emit (Push(position, dest));
 				GetRecordTypeName (type.resolved(SyntaxTree.RecordType),name);
@@ -2582,18 +2582,18 @@ TYPE
 				ELSIF base.resolved IS SyntaxTree.ProcedureType THEN (* array of delegates *)
 					Emit (Push(position, size));
 					Emit (Push(position, dest));
-					CallThis("GarbageCollector","ResetDelegateArray", 2);
+					CallThis(position,"GarbageCollector","ResetDelegateArray", 2);
 				ELSE 
 					Emit (Push(position, size));
 					Emit (Push(position, dest));
-					CallThis("GarbageCollector","ResetArray", 2);
+					CallThis(position,"GarbageCollector","ResetArray", 2);
 					ASSERT(ArrayBaseType(type).IsPointer());
 				END;
 				ReleaseIntermediateOperand(size);
 			ELSIF type.resolved IS SyntaxTree.ProcedureType THEN
 				ASSERT(type.resolved(SyntaxTree.ProcedureType).isDelegate);
 				Emit (Push(position, dest));
-				CallThis("GarbageCollector","ResetDelegate", 1);
+				CallThis(position,"GarbageCollector","ResetDelegate", 1);
 			ELSE HALT(100); (* missing ? *)
 			END;
 		END CallResetProcedure;
@@ -2904,7 +2904,7 @@ TYPE
 
 
 		(* Call a runtime procedure.  If numberParameters >= 0 then the procedure may be called without module import. Otherwise the signature has to be inferred from the import. *)
-		PROCEDURE CallThis(CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT);
+		PROCEDURE CallThis(position: LONGINT; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT);
 		VAR procedure: SyntaxTree.Procedure; result: Operand; reg: IntermediateCode.Operand; source: IntermediateCode.Section;
 			pooledName: Basic.SegmentedName; size: LONGINT;
 		BEGIN
@@ -2913,7 +2913,10 @@ TYPE
 				IF numberParameters < 0 THEN
 					size := ProcedureParametersSize(system,procedure);
 				ELSE
-					size := ToMemoryUnits(system,numberParameters * system.addressSize)
+					size := ToMemoryUnits(system,numberParameters * system.addressSize);
+					IF size # ProcedureParametersSize(system,procedure) THEN
+						Error(position,"runtime call parameter count mismatch");
+					END;
 				END;
 				Emit(Call(position, result.op, size));
 				ReleaseOperand(result);
@@ -2979,9 +2982,9 @@ TYPE
 			ReleaseOperand(right);
 
 			IF backend.cooperative THEN
-				CallThis(DefaultRuntimeModuleName,procedureName, 4);
+				CallThis(position,DefaultRuntimeModuleName,procedureName, 4);
 			ELSE
-				CallThis(runtimeModuleName,procedureName, 4);
+				CallThis(position,runtimeModuleName,procedureName, 4);
 			END;
 			IntermediateCode.InitRegister(reg,int8,IntermediateCode.GeneralPurposeRegister,AcquireRegister(int8,IntermediateCode.GeneralPurposeRegister));
 			Emit(Result(position,reg));
@@ -3023,9 +3026,9 @@ TYPE
 			ReleaseOperand(right);
 
 			IF backend.cooperative THEN
-				CallThis(DefaultRuntimeModuleName,procedureName, 4);
+				CallThis(position,DefaultRuntimeModuleName,procedureName, 4);
 			ELSE
-				CallThis(runtimeModuleName,procedureName,4);
+				CallThis(position,runtimeModuleName,procedureName,4);
 			END;
 			RestoreRegisters(saved);
 		END CopyString;
@@ -3417,9 +3420,9 @@ TYPE
 				Emit(Push(position,right.op));
 				ReleaseOperand(right);
 				IF backend.cellsAreObjects THEN
-					CallThis("ActiveCellsRuntime","ReceiveNonBlocking",-1);
+					CallThis(position,"ActiveCellsRuntime","ReceiveNonBlocking",2);
 				ELSE
-					CallThis(ChannelModuleName,"ReceiveNonBlockingB",-1);
+					CallThis(position,ChannelModuleName,"ReceiveNonBlocking",2);
 				END;
 				InitOperand(result, ModeValue);
 				result.op := NewRegisterOperand(bool);
@@ -4753,7 +4756,7 @@ TYPE
 							Emit(Push(position, dst));
 							(* register dst has been freed before SaveRegisters already *)
 							Emit(Push(position, operand.tag));
-							CallThis("GarbageCollector","Assign",2);
+							CallThis(position,"GarbageCollector","Assign",2);
 							RestoreRegisters(saved);
 						ELSE
 							Pass((operand.tag));
@@ -4770,7 +4773,7 @@ TYPE
 							Emit(Push(position, dst));
 							(* register dst has been freed before SaveRegisters already *)
 							Emit(Push(position, operand.op));
-							CallThis("GarbageCollector","Assign",2);
+							CallThis(position,"GarbageCollector","Assign",2);
 							RestoreRegisters(saved);
 						ELSE
 							Pass((operand.op));
@@ -6441,7 +6444,7 @@ TYPE
 			ReleaseIntermediateOperand(reg);
 			(* push realtime flag: false by default *)
 			Emit(Push(position,false));
-			CallThis("Heaps","NewRec",3);
+			CallThis(position,"Heaps","NewRec",3);
 		END NewMathArrayDescriptor;
 
 		PROCEDURE PushConstString(CONST s: ARRAY OF CHAR);
@@ -6574,7 +6577,7 @@ TYPE
 					PushConstSet(Direction(type(SyntaxTree.PortType).direction));
 					PushConstInteger(type(SyntaxTree.PortType).sizeInBits);
 					
-					CallThis("ActiveCellsRuntime","AddPort",5);
+					CallThis(position, "ActiveCellsRuntime","AddPort",6);
 					INC(portIndex);
 				END;
 			END Parameter;
@@ -6602,7 +6605,6 @@ TYPE
 					currentScope := x.cellScope;
 					PushSelf();
 					*)
-					
 					IF variable.type IS SyntaxTree.ArrayType THEN
 						type := variable.type;
 						dim := 0; 
@@ -6634,7 +6636,7 @@ TYPE
 					PushConstInteger(portType.sizeInBits);
 				
 				IF variable.type IS SyntaxTree.PortType THEN
-					CallThis("ActiveCellsRuntime","AddPort",6);
+					CallThis(variable.position,"ActiveCellsRuntime","AddPort",6);
 				ELSIF variable.type IS SyntaxTree.ArrayType THEN
 					IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,6*addressType.sizeInBits));
@@ -6644,7 +6646,7 @@ TYPE
 					(* len array *)
 					Emit(Push(position, reg));
 					ReleaseIntermediateOperand(reg);
-					CallThis("ActiveCellsRuntime","AddPortArray",8);
+					CallThis(position,"ActiveCellsRuntime","AddPortArray",8);
 					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,dim*addressType.sizeInBits));
 					Emit(Add(position, sp,sp, size));
 				END;
@@ -6656,7 +6658,7 @@ TYPE
 					PushConstInteger(portIndex);
 					PushConstSet(Direction(type(SyntaxTree.PortType).direction));
 					PushConstInteger(type(SyntaxTree.PortType).sizeInBits);
-					CallThis("ActiveCellsRuntime","AddPort",5);
+					CallThis(position,"ActiveCellsRuntime","AddPort",5);
 					INC(portIndex);
 					*)
 			END Variable;
@@ -6778,15 +6780,15 @@ TYPE
 					Emit(Push(property.position, op.tag));
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
-					CallThis("ActiveCellsRuntime","AddStringProperty",7);
+					CallThis(position,"ActiveCellsRuntime","AddStringProperty",7);
 				ELSIF (property.type.resolved IS SyntaxTree.IntegerType) THEN
 					ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
 					Evaluate(value, op); 
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
-					CallThis("ActiveCellsRuntime","AddIntegerProperty",5);
+					CallThis(position,"ActiveCellsRuntime","AddIntegerProperty",5);
 				ELSE
-					CallThis("ActiveCellsRuntime","AddFlagProperty",3);
+					CallThis(position,"ActiveCellsRuntime","AddFlagProperty",3);
 				END;
 		END AddProperty;
 		
@@ -6918,7 +6920,7 @@ TYPE
 						ReleaseIntermediateOperand(priority);
 						IF backend.cooperative THEN
 							Emit(Push(position,self));
-							CallThis("Activities","Create",3)
+							CallThis(position,"Activities","Create",3)
 						ELSE
 							flags := 0;
 							IF body.isSafe THEN
@@ -6926,7 +6928,7 @@ TYPE
 							END;
 							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system,system.setType),flags)));
 							Emit(Push(position,self));
-							CallThis("Objects","CreateProcess",4)
+							CallThis(position,"Objects","CreateProcess",4)
 						END;
 					ELSE
 						Emit(Push(position,self));
@@ -7013,7 +7015,7 @@ TYPE
 				Designate(p0,s0);
 				Emit(Push(position,s0.op));
 				ReleaseOperand(s0);
-				CallThis(DefaultRuntimeModuleName,"Dispose", 1);
+				CallThis(position,DefaultRuntimeModuleName,"Dispose", 1);
 			(* ---- GETPROCEDURE ----- *)
 			|Global.GetProcedure:
 				Designate(p0,s0);
@@ -7029,7 +7031,7 @@ TYPE
 				Designate(p2,s2);
 				Emit(Push(position,s2.op));
 				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
-				CallThis("Modules","GetProcedure", 7);
+				CallThis(position,"Modules","GetProcedure", 7);
 			(* ---- ASH, LSH, ROT ----- *)
 			|Global.Ash, Global.Asr, Global.Lsh, Global.Rot, Global.Ror:
 				Evaluate(p0,s0);
@@ -7301,7 +7303,7 @@ TYPE
 				Evaluate(p0,operand);
 				Emit(Push(position,operand.op));
 				ReleaseOperand(operand);
-				CallThis("Activities","Wait", 1);
+				CallThis(position,"Activities","Wait", 1);
 			(* ---- NEW ----- *)
 			|Global.New:
 				(*! the following code is only correct for "standard" Oberon calling convention *)
@@ -7325,7 +7327,7 @@ TYPE
 							END;
 						END;
 						Emit(Push(position,IntermediateCode.Immediate(sizeType,size)));
-						CallThis("Runtime","New", 1);
+						CallThis(position,"Runtime","New", 1);
 						pointer := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
 						Emit(Result(position, pointer));
 						exit := NewLabel();
@@ -7393,7 +7395,7 @@ TYPE
 						IF needsTrace THEN ModifyAssignments(true) END;
 						IF ~type(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
-							CallThis("GarbageCollector","Watch",0);
+							CallThis(position,"GarbageCollector","Watch",0);
 							Emit(Pop(position, pointer));
 						END;
 						Designate(p0,l);
@@ -7431,7 +7433,7 @@ TYPE
 						ELSE Emit(Push(position,false));
 						END;
 
-						CallThis("Heaps","NewRec", 3);
+						CallThis(position,"Heaps","NewRec", 3);
 						(* check allocation success, if not successful then do not call initializers and bodies *)
 						IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 						Emit(Pop(position,pointer));
@@ -7547,7 +7549,7 @@ TYPE
 						Emit(Add(position,reg,reg,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize))));
 						Emit(Push(position,reg));
 						ReleaseIntermediateOperand(reg);
-						CallThis("Runtime","New", 1);
+						CallThis(position,"Runtime","New", 1);
 
 						pointer := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
 						Emit(Result(position, pointer));
@@ -7585,7 +7587,7 @@ TYPE
 						IF needsTrace THEN ModifyAssignments(true) END;
 						IF ~p0.type.resolved(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
-							CallThis("GarbageCollector","Watch",0);
+							CallThis(position,"GarbageCollector","Watch",0);
 							Emit(Pop(position, pointer));
 						END;
 						Designate(p0,l);
@@ -7647,7 +7649,7 @@ TYPE
 							IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
 							ELSE Emit(Push(position,false));
 							END;
-							CallThis("Heaps","NewArr",5)
+							CallThis(position,"Heaps","NewArr",5)
 						ELSE
 							size := ToMemoryUnits(system,system.SizeOf(type));
 							IF (size # 1) THEN
@@ -7669,7 +7671,7 @@ TYPE
 							IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
 							ELSE Emit(Push(position,false));
 							END;
-							CallThis("Heaps","NewSys", 3)
+							CallThis(position,"Heaps","NewSys", 3)
 						END;
 
 						IF openDim > 0 THEN
@@ -7814,7 +7816,7 @@ TYPE
 							Emit(Push(position,tmp)); (* dimensions = 0, we control dimensions in the geometry descriptor *)
 							(* push realtime flag: false by default *)
 							Emit(Push(position,false));
-							CallThis("Heaps","NewArr",5);
+							CallThis(position,"Heaps","NewArr",5);
 							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 							Emit(Pop(position,adr));
 							GetMathArrayField(tmp,adr,MathPtrOffset);
@@ -7847,7 +7849,7 @@ TYPE
 							ReleaseIntermediateOperand(reg);
 							(* push realtime flag: false by default *)
 							Emit(Push(position,false));
-							CallThis("Heaps","NewSys",3);
+							CallThis(position,"Heaps","NewSys",3);
 							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 							Emit(Pop(position,adr));
 							GetMathArrayField(tmp,adr,MathPtrOffset);
@@ -7942,7 +7944,7 @@ TYPE
 					(* push engine boolean *)
 					PushConstBoolean(baseType(SyntaxTree.CellType).FindProperty(Global.NameEngine) # NIL);
 					(* allocate *)
-					CallThis("ActiveCellsRuntime","Allocate",7);
+					CallThis(position,"ActiveCellsRuntime","Allocate",7);
 					
 					
 					(* add capabilities *)
@@ -7969,7 +7971,7 @@ TYPE
 					(* l.op contains value  of pointer to record *)
 					Emit(Push(position,l.op)); (* address for use after syscall *)
 					ReleaseOperand(l);
-					CallThis("ActiveCellsRuntime","FinishedProperties",1);
+					CallThis(position,"ActiveCellsRuntime","FinishedProperties",1);
 					
 					prevScope := currentScope;
 					init := OpenInitializer(temporaryVariable, baseType(SyntaxTree.CellType).cellScope);
@@ -8058,7 +8060,7 @@ TYPE
 					Emit(Push(position, s1.op));
 					ReleaseOperand(s1);
 					
-					CallThis("ActiveCellsRuntime","Start",2);
+					CallThis(position,"ActiveCellsRuntime","Start",3);
 
 					(*IF temporaryVariable # NIL THEN
 						end := NewLabel();
@@ -8240,7 +8242,7 @@ TYPE
 				ReleaseOperand(s1);
 				(* push realtime flag: false by default *)
 				Emit(Push(position,false));
-				CallThis("Heaps","NewSys",3);
+				CallThis(position,"Heaps","NewSys",3);
 			(* ---- SYSTEM.CALL ----- *)
 			|Global.systemRef:
 				Basic.ToSegmentedName(p0(SyntaxTree.StringValue).value^, segmentedName);
@@ -8273,7 +8275,7 @@ TYPE
 					Emit(Push(position, s0.op));
 					Emit(Push(position, s1.op));
 					Emit(Push(position, s2.op));
-					CallThis("GarbageCollector","CompareAndSwap",3);
+					CallThis(position,"GarbageCollector","CompareAndSwap",3);
 				ELSE
 					Emit(Cas(position,s0.op,s1.op,s2.op));
 				END;
@@ -8330,7 +8332,7 @@ TYPE
 					ELSE
 						Emit(Push(-1, IntermediateCode.Immediate(int32, -1)));
 					END;
-					CallThis("ActiveCellsRuntime","Connect",3);
+					CallThis(position,"ActiveCellsRuntime","Connect",3);
 				ELSE
 					Warning(x.position, "cannot run on final hardware");
 				END;
@@ -8339,7 +8341,7 @@ TYPE
 				IF backend.cellsAreObjects THEN
 					PushPort(p0);
 					PushPort(p1);
-					CallThis("ActiveCellsRuntime","Delegate",4);
+					CallThis(position,"ActiveCellsRuntime","Delegate",2);
 				ELSE
 					Warning(x.position, "cannot run on final hardware");
 				END;
@@ -8360,9 +8362,9 @@ TYPE
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
 				IF backend.cellsAreObjects THEN
-					CallThis("ActiveCellsRuntime","Send",-1);
+					CallThis(position,"ActiveCellsRuntime","Send",2);
 				ELSE
-					CallThis(ChannelModuleName,"Send",-1);
+					CallThis(position,ChannelModuleName,"Send",2);
 				END;
 			(* ----- RECEIVE ------*)
 			|Global.Receive:
@@ -8388,15 +8390,15 @@ TYPE
 				ReleaseOperand(s2);
 				IF backend.cellsAreObjects THEN
 					IF p2 = NIL THEN
-						CallThis("ActiveCellsRuntime","Receive",-1)
+						CallThis(position,"ActiveCellsRuntime","Receive",2)
 					ELSE
-						CallThis("ActiveCellsRuntime","ReceiveNonBlocking",-1)
+						CallThis(position,"ActiveCellsRuntime","ReceiveNonBlockingVar",3)
 					END;
 				ELSE
 					IF p2 = NIL THEN
-						CallThis(ChannelModuleName,"Receive",-1)
+						CallThis(position,ChannelModuleName,"Receive",2)
 					ELSE
-						CallThis(ChannelModuleName,"ReceiveNonBlocking",-1)
+						CallThis(position,ChannelModuleName,"ReceiveNonBlockingVar",3)
 					END;
 				END;
 
@@ -8950,7 +8952,7 @@ TYPE
 			PushSelfPointer();
 			property.GetName(name);
 			PushConstString(name);
-			CallThis("ActiveCellsRuntime","GetIntegerProperty",4);
+			CallThis(position,"ActiveCellsRuntime","GetIntegerProperty",4);
 			res := NewRegisterOperand(IntermediateCode.GetType(system,system.longintType));
 			Emit(Result(position,res));
 			InitOperand(result, ModeValue);
@@ -9511,7 +9513,7 @@ TYPE
 			IntermediateCode.InitMemory (quantum,  IntermediateCode.SignedIntegerType(addressType.sizeInBits), ap, ToMemoryUnits(system, QuantumOffset * addressType.sizeInBits));
 			IntermediateCode.InitImmediate(offset, quantum.type, section.pc - lastSwitchPC); IntermediateCode.InitImmediate(zero, quantum.type, 0); 
 			Emit(Sub(position,quantum,quantum, offset)); skip := NewLabel(); BrgeL(skip, quantum, zero);
-			lastSwitchPC := section.pc; CallThis("Activities","Switch",0); SetLabel(skip);
+			lastSwitchPC := section.pc; CallThis(position,"Activities","Switch",0); SetLabel(skip);
 			INC(statCoopSwitch, section.pc - pc);
 		END EmitCooperativeSwitch;
 
@@ -9535,9 +9537,9 @@ TYPE
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
 				IF backend.cellsAreObjects THEN
-					CallThis("ActiveCellsRuntime","Send",-1);
+					CallThis(position,"ActiveCellsRuntime","Send",2);
 				ELSE
-					CallThis(ChannelModuleName,"Send",-1);
+					CallThis(position,ChannelModuleName,"Send",2);
 				END;
 			(* ----- RECEIVE ------*)
 			ELSE
@@ -9555,9 +9557,9 @@ TYPE
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);
 				IF backend.cellsAreObjects THEN
-					CallThis("ActiveCellsRuntime","Receive",-1);
+					CallThis(position,"ActiveCellsRuntime","Receive",2);
 				ELSE
-					CallThis(ChannelModuleName,"Receive",-1)
+					CallThis(position,ChannelModuleName,"Receive",2)
 				END;
 			END;
 		END VisitCommunicationStatement;
@@ -10031,11 +10033,11 @@ TYPE
 				Condition(x.condition,true,false);
 				SetLabel(false);
 				PushSelfPointer();
-				CallThis("ExclusiveBlocks","Await",1);
+				CallThis(position,"ExclusiveBlocks","Await",1);
 				BrL(start);
 				SetLabel(true);
 				PushSelfPointer();
-				CallThis("ExclusiveBlocks","FinalizeAwait",1);
+				CallThis(position,"ExclusiveBlocks","FinalizeAwait",1);
 			ELSE
 				proc := MakeAwaitProcedure(x);
 				Emit(Push(position,fp));
@@ -10060,7 +10062,7 @@ TYPE
 				Emit(Push(position,fp));
 				PushSelfPointer();
 				Emit(Push(position,nil));
-				CallThis("Objects","Await",4);
+				CallThis(position,"Objects","Await",4);
 				SetLabel(label);
 			END;
 
@@ -10125,13 +10127,13 @@ TYPE
 			PushSelfPointer;
 			IF backend.cooperative THEN
 				Emit(Push(position,IntermediateCode.Immediate(sizeType, 1)));
-				IF lock THEN CallThis("ExclusiveBlocks","Enter",2)
-				ELSE CallThis("ExclusiveBlocks","Exit",2);
+				IF lock THEN CallThis(position,"ExclusiveBlocks","Enter",2)
+				ELSE CallThis(position,"ExclusiveBlocks","Exit",2);
 				END;
 			ELSE
 				Emit(Push(position,true));
-				IF lock THEN CallThis("Objects","Lock",2)
-				ELSE CallThis("Objects","Unlock",2);
+				IF lock THEN CallThis(position,"Objects","Lock",2)
+				ELSE CallThis(position,"Objects","Unlock",2);
 				END;
 			END;
 			IF profile THEN ProfilerEnterExit(numberProcedures, TRUE) END;
@@ -10312,13 +10314,13 @@ TYPE
 								Emit (Push(position, dst));
 								Emit (Push(position, length));
 								Emit (Push(position, op.op));
-								CallThis("GarbageCollector","AssignDelegateArray", 4);
+								CallThis(position,"GarbageCollector","AssignDelegateArray", 4);
 							ELSE 
 								Emit (Push(position, length));
 								Emit (Push(position, dst));
 								Emit (Push(position, length));
 								Emit (Push(position, op.op));
-								CallThis("GarbageCollector","AssignPointerArray", 4);
+								CallThis(position,"GarbageCollector","AssignPointerArray", 4);
 								ASSERT(ArrayBaseType(type).IsPointer());
 							END;
 							RestoreRegisters(saved);
@@ -10471,7 +10473,7 @@ TYPE
 			ELSIF newObjectFile & moduleBody  & ~suppressModuleRegistration & ~meta.simple THEN
 				(*! not required any more? check and delete!
 				PushSelfPointer();
-				CallThis("Modules","SetInitialized",1);
+				CallThis(position,"Modules","SetInitialized",1);
 				*)
 				(*
 				SetLabel(end);

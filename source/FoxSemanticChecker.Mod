@@ -191,14 +191,21 @@ TYPE
 		PROCEDURE Find(inScope: SyntaxTree.Scope; name: SyntaxTree.Identifier; traverse: BOOLEAN): SyntaxTree.Symbol;
 		VAR
 			scope,baseScope: SyntaxTree.Scope;
-			symbol: SyntaxTree.Symbol;
+			symbol, s: SyntaxTree.Symbol;
 			ownerRecord,base: SyntaxTree.RecordType;
 		BEGIN
 			scope := inScope;
+			symbol := NIL;
+
 			WHILE (scope # NIL) & (symbol = NIL) DO
 				symbol := scope.FindSymbol(name);
+				s := NIL;
+				IF (symbol # NIL) & (symbol.access * SyntaxTree.Public = {}) & (symbol.scope IS SyntaxTree.CellScope) (* hidden copies of parameters *) THEN
+					s := symbol.scope(SyntaxTree.CellScope).ownerCell.FindParameter(name);
+				END;
 
 				IF (symbol # NIL) & (symbol IS SyntaxTree.Parameter) & (symbol.scope IS SyntaxTree.CellScope) THEN (* ok, symbol auto-export in scope *)
+				ELSIF s # NIL THEN (* hidden variable shadows port parameter *)
 				ELSE
 					WHILE (symbol # NIL) & (symbol.scope.ownerModule # currentScope.ownerModule) & (symbol.access * SyntaxTree.Public = {}) DO
 						(* found symbol in different module, but is it not exported, can we go on searching in record base scopes ? *)
@@ -3591,7 +3598,6 @@ TYPE
 				IF (left.type # NIL) & IsPointerType(left.type.resolved) THEN
 					left := NewDereferenceDesignator(selectorDesignator.position,left);
 				END;
-
 				scope := NIL;
 				IF left.type = NIL THEN
 					Error(selectorDesignator.position,Diagnostics.Invalid,"field on nil typed designator");
@@ -3635,6 +3641,9 @@ TYPE
 					ELSE
 						Error(selectorDesignator.position,Diagnostics.Invalid,"undeclared identifier (selector)");
 						IF VerboseErrorMessage THEN
+							D.Str("IDENT = "); D.Str0(selectorDesignator.identifier); D.Ln; 
+							Printout.Info("scope", scope);
+							Printout.Info("left", left);
 							Printout.Info("undeclared identifier",selectorDesignator);
 							Printout.Info("left resolved designator",left);
 						END

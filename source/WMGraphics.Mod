@@ -417,6 +417,7 @@ TYPE
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		VAR rm : Raster.Mode; pix : Raster.Pixel;
 		BEGIN
+			Rectangles.Normalize(rect);
 			(* convert to super coordinates *)
 			Rectangles.MoveRel(rect, dx, dy);
 			IF ClipRect IN clipMode THEN Rectangles.ClipRect(rect, clipRect) END;

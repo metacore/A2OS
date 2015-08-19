@@ -139,7 +139,7 @@ BUILDS
 	{
 		INCLUDE "WIN iWIN WINGEN UNCOOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--objectFile=Generic --newObjectFile"
+		COMPILEOPTIONS "--objectFile=Generic --newObjectFile --mergeSections"
 		TARGET "AMD"
 		EXTENSION "GofW"
 		SYMBOLEXTENSION "SymW"

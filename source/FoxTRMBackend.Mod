@@ -14,6 +14,7 @@ CONST
 	HaltIRQNumber=8;
 	Registers = 8; None=-1;
 	Low=0; High=1;
+	FPSupported = TRUE; (* setting this to false increases code size slightly but also reduces register pressure *)
 
 	opAND= InstructionSet.opAND; opBIC* = InstructionSet.opBIC;
 	opOR= InstructionSet.opOR; opXOR= InstructionSet.opXOR;
@@ -193,7 +194,7 @@ TYPE
 		opSP, opLR, opFP, null, noOperand: InstructionSet.Operand;
 		instructionSet: InstructionSet.InstructionSet;
 
-		stackSize, enterStackSize, spillStackPosition: LONGINT;
+		stackSize, spillStackPosition: LONGINT;
 		stackSizeKnown: BOOLEAN;
 		inStackAllocation: BOOLEAN;
 		runtimeModuleName: SyntaxTree.IdentifierString;
@@ -239,15 +240,7 @@ TYPE
 					IF dump # NIL THEN
 						dump.String("stack size unknown ") ;
 					END;
-					(*
-					D.String("stack size unknown ") ; Basic.WriteSegmentedName(D.Log, in.name); D.Int(inPC,1); D.Ln;
-					*)
 					stackSizeKnown := FALSE;
-					(*
-					IF ~backend.supportFP & (in.type = Sections.CodeSection) THEN
-						Error("Stack size unknown and no FP support!");
-					END;
-					*)
 				END;
 			END;
 		END CheckStackPointer;
@@ -323,15 +316,16 @@ TYPE
 		BEGIN
 		
 		 
-			physicalRegisters(PhysicalRegisters).SupportFP(FALSE);
-			supportFP := FALSE;
+		 	
+			physicalRegisters(PhysicalRegisters).SupportFP(FPSupported);
+			supportFP := FPSupported;
 			tickets.Init;
 			spillStack.Init;
 			stackSizeKnown := TRUE;
 			forwardFixups.Init;
 			Section^(in,out);
 
-			IF stackSizeKnown = FALSE THEN
+			IF ~stackSizeKnown THEN
 				supportFP := TRUE;
 				tickets.Init;
 				spillStack.Init;
@@ -768,49 +762,39 @@ TYPE
 		BEGIN
 			stackSize := 0;
 			(*
+				stack layout:
 				p1
 				...
-				pm		<- SP + stackSize = FP + enterStackSize = logicalFP
+				pm	 													(parameters pushed by caller)
+				LR   													(explicitly pushed by frontend because hasLinkRegister = TRUE)
+				prev FP <-- FP = logicalFP 	(explicitly pushed by frontend)
 				v1
 				...
 				vn
-				spill1	<- logicalFP + spillStackPosition
+				spill1	<- logicalFP + spillStackPosition (negative)
 				...
-				spilln
-				LR	<- SP+1
-				FP <- SP = FP
+				spilln <-- SP
 			*)
 			cc := SHORT(instr.op1.intValue);
 			spillStackPosition := - LONGINT(instr.op2.intValue)-1; (* relative to logical frame pointer ! *)
-			AllocateStack(LONGINT(instr.op2.intValue+2+spillStack.MaxSize()), TRUE);
-			instructionSet.InitMemory(mem, InstructionSet.SP, 1);
-			Emit2(opST, opLR, mem);
-			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
-			Emit2(opST, opFP, mem);
-			enterStackSize := stackSize;
-			Emit2(opMOV, opFP, opSP);
+			AllocateStack(LONGINT(instr.op2.intValue+spillStack.MaxSize()), TRUE);
 		END EmitEnter;
 
 		PROCEDURE EmitLeave(CONST instr: IntermediateCode.Instruction);
 		VAR cc: LONGINT; mem: InstructionSet.Operand;
 		BEGIN
-			IF supportFP THEN
-				Emit2(opMOV, opSP, opFP);
-			END;
-			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
-			Emit2(opLD, opFP, mem);
-			instructionSet.InitMemory(mem, InstructionSet.SP, 1);
-			Emit2(opLD, opLR, mem);
-			IF supportFP THEN
-				AllocateStack(-enterStackSize, FALSE); (* revert stack *)
-			ELSE
-				ASSERT(enterStackSize = stackSize);
-				AllocateStack(-stackSize,FALSE);
+			IF ~supportFP THEN (* frame pointer might have been used *)
+				AllocateStack(-stackSize, FALSE);
+				Emit2(opMOV, opFP, opSP);
 			END;
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instr: IntermediateCode.Instruction);
+		VAR cc: LONGINT; mem: InstructionSet.Operand;
 		BEGIN
+			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
+			Emit2(opLD, opLR, mem);
+			AllocateStack(-1,FALSE);
 			Emit1(opBR, opLR);
 		END EmitExit;
 
@@ -1220,15 +1204,16 @@ TYPE
 		VAR register: LONGINT; fpOffset: LONGINT; ticket: Ticket;
 		BEGIN
 			IF virtualReg = IntermediateCode.FP THEN
-				IF supportFP THEN
-					register := InstructionSet.FP;
-					INC(offset, enterStackSize);
-				ELSE
+				IF stackSizeKnown THEN
 					register := InstructionSet.SP;
 					INC(offset, stackSize);
+				ELSE (* stack size unknown, actually fp must be supported *)
+					register := InstructionSet.FP;
 				END;
 			ELSIF virtualReg = IntermediateCode.SP THEN
 				register := InstructionSet.SP;
+			ELSIF virtualReg = IntermediateCode.LR THEN
+				register := InstructionSet.LR;
 			(*!ELSIF virtualReg <= IntermediateCode.ParameterRegister THEN
 				register := ParameterRegister(IntermediateCode.ParameterRegister-virtualReg, IntermediateCode.int32);
 			*)
@@ -2194,6 +2179,7 @@ TYPE
 			SetRuntimeModuleName(DefaultRuntimeModuleName);
 			SetNewObjectFile(TRUE,TRUE);
 			myInstructionSet:=defaultInstructionSet;
+			SetHasLinkRegister;
 		END InitBackendTRM;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System;
@@ -2219,15 +2205,7 @@ TYPE
 		PROCEDURE GetSystem(): Global.System;
 		VAR system: System;
 		BEGIN
-			(*
-			IF supportFP THEN
-			NEW(system, 18, 32, 32, 32, 32, 32, 32, 64 (* parameter offset: two words, one for LR and one for FP *));
-			ELSE
-			*)
 			NEW(system, 18, 32, 32, 32, 32, 32, 32, 0(* parameter offset 0: handled locally *), 0 (* no pass of parameters in registers *) , cooperative);
-			(*
-			END;
-			*)
 			Global.SetDefaultDeclarations(system,32);
 			Global.SetDefaultOperators(system);
 			RETURN system

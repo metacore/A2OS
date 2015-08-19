@@ -22,6 +22,7 @@ TYPE
 		capabilities-: SET;
 		oberon07-: BOOLEAN;
 		instructionWidth -: LONGINT;
+		hasLinkRegister-: BOOLEAN;
 
 		(* constructor *)
 		PROCEDURE & InitBackend *;
@@ -34,6 +35,7 @@ TYPE
 			findSectionName := "";
 			findSectionOffset := 0;
 			instructionWidth := -1;
+			hasLinkRegister := FALSE;
 		END InitBackend;
 
 		PROCEDURE SetOberon07*;
@@ -49,7 +51,12 @@ TYPE
 		BEGIN
 			SELF.capabilities := capabilities;
 		END SetCapabilities;
-
+		
+		PROCEDURE SetHasLinkRegister*;
+		BEGIN
+			hasLinkRegister := TRUE;
+		END SetHasLinkRegister;
+		
 
 		PROCEDURE SetInstructionWidth* (instructionWidth: LONGINT);
 		BEGIN

@@ -878,6 +878,8 @@ TYPE
 				result := InstructionSet.FP
 			ELSIF virtualRegisterNumber = IntermediateCode.SP THEN
 				result := InstructionSet.SP
+			ELSIF virtualRegisterNumber = IntermediateCode.LR THEN
+				result := InstructionSet.LR
 			ELSE
 				ticket := virtualRegisters.Mapped(virtualRegisterNumber, part);
 				IF ticket = NIL THEN
@@ -1790,61 +1792,37 @@ TYPE
 		PROCEDURE EmitEnter(CONST irInstruction: IntermediateCode.Instruction);
 		VAR allocationSize: LONGINT;
 		BEGIN
-			(* STMFD (Full Descending) aka STMDB (Decrement Before) *)
-
+			(* store registers for interrupts, if required *)
 			IF (irInstruction.op1.intValue = SyntaxTree.InterruptCallingConvention) THEN (* TODO: needed? *)
 				(* push R0-R11, FP and LR *)
-				Emit2WithFlags(opSTM, opSP, InstructionSet.NewRegisterList(0, {0..11, InstructionSet.FP, InstructionSet.LR}), {InstructionSet.flagDB, InstructionSet.flagBaseRegisterUpdate});
-				stackSize := 14*4;
-			ELSE
-				(* push FP and LR *)
-				Emit2WithFlags(opSTM, opSP, InstructionSet.NewRegisterList(0, {InstructionSet.FP, InstructionSet.LR}), {InstructionSet.flagDB, InstructionSet.flagBaseRegisterUpdate});
-				stackSize := 2*4;
-
-				(* altenative:
-				AllocateStack(2 * 4, TRUE);
-				Emit2(opSTR, opFP, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment}));
-				Emit2(opSTR, opLR, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 0, {InstructionSet.Increment}))
-				*)
+				Emit2WithFlags(opSTM, opSP, InstructionSet.NewRegisterList(0, {InstructionSet.FP, InstructionSet.LR, 0..11}), {InstructionSet.flagDB, InstructionSet.flagBaseRegisterUpdate});
+				Emit2(opMOV, opFP, opSP);
 			END;
-
-			Emit2(opMOV, opFP, opSP);
-
+			stackSize := 0;
+			(* allocate space on stack for local variables *)
 			allocationSize := LONGINT(irInstruction.op2.intValue);
 			Basic.Align(allocationSize, 4); (* 4 byte alignment *)
-			(* allocate space on stack for local variables *)
 			AllocateStack(allocationSize, TRUE, backend.initLocals);
-			
-			
-
 			(* allocate space on stack for register spills *)
-			spillStackStart := stackSize; IF spillStack.MaxSize() > 0 THEN AllocateStack(spillStack.MaxSize(), TRUE, FALSE) END
+			spillStackStart := -stackSize; 
+			IF spillStack.MaxSize() > 0 THEN AllocateStack(spillStack.MaxSize(), TRUE, FALSE) END
 		END EmitEnter;
 
 		(* leave <callingConvention> *)
 		PROCEDURE EmitLeave(CONST irInstruction: IntermediateCode.Instruction);
 		BEGIN
-			Emit2(opMOV, opSP, opFP);
-
 			(* LDMFD (Full Descending) aka LDMIA (Increment After) *)
 			IF (irInstruction.op1.intValue = SyntaxTree.InterruptCallingConvention) THEN
 				(* pop R0-R11, FP and LR *)
-				Emit2WithFlags(opLDM, opSP, InstructionSet.NewRegisterList(0, {0..11, InstructionSet.FP, InstructionSet.LR}), {InstructionSet.flagIA, InstructionSet.flagBaseRegisterUpdate})
-			ELSE
-				(* pop FP and LR *)
-				Emit2WithFlags(opLDM, opSP, InstructionSet.NewRegisterList(0, {InstructionSet.FP, InstructionSet.LR}), {InstructionSet.flagIA, InstructionSet.flagBaseRegisterUpdate})
-
-				(* alternative:
-				Emit2(opLDR, opFP, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment}));
-				Emit2(opLDR, opLR, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 0, {InstructionSet.Increment}));
-				AllocateStack(-2 * 4, TRUE)
-				*)
+				Emit2(opMOV, opSP, opFP);
+				Emit2WithFlags(opLDM, opSP, InstructionSet.NewRegisterList(0, {InstructionSet.FP, InstructionSet.LR, 0..11}), {InstructionSet.flagIA, InstructionSet.flagBaseRegisterUpdate})
 			END
 		END EmitLeave;
 
 		(* exit <parSize>, <pcOffset> *)
 		PROCEDURE EmitExit(CONST irInstruction: IntermediateCode.Instruction);
 		BEGIN
+			Emit2(opLDR, opLR, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment, InstructionSet.PostIndexed}));
 			IF (irInstruction.op1.intValue = 0) & (irInstruction.op2.intValue # SyntaxTree.InterruptCallingConvention) THEN
 				(* Emit2(opMOV, opPC, opLR) *)
 				Emit1(opBX, opLR) (* recommended for better interoperability between ARM and Thumb *)
@@ -3062,6 +3040,7 @@ TYPE
 			SetNewObjectFile(TRUE,FALSE);
 			system := NIL;
 			initLocals := TRUE;
+			SetHasLinkRegister;
 		END InitBackendARM;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System; activeCellsSpecification: ActiveCells.Specification);

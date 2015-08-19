@@ -53,6 +53,7 @@ CONST
 	SP*=-2; (* stack pointer *)
 	FP*=-3; (* frame pointer *)
 	AP*=-4; (* activity pointer *)
+	LR*=-5; (* link register *)
 	HwRegister*=-32; (* any value below or equal hwreg is a user defined hardware register *)
 
 	(* FoxProgTools.Enum -e -l=8
@@ -563,6 +564,8 @@ TYPE
 			w.String("fp")
 		ELSIF registerNumber = AP THEN
 			w.String("ap")
+		ELSIF registerNumber = LR THEN
+			w.String("lr")
 		ELSIF registerNumber > None THEN
 			w.String("r"); w.Int(registerNumber, 0);
 			IF registerClass.class = Parameter THEN w.String(":p"); w.Int(registerClass.number,0) END;
@@ -735,10 +738,10 @@ TYPE
 		AddFormat(conv, "conv", RegMem, RegMemImm, Undef, {Op1IsDestination});
 		(* call adr parSize - procedure call, second operand contains parameter size *)
 		AddFormat(call, "call", RegMemImm, Num, Undef,{});
-		(* enter cc pafSize regs - set up procedure activation frame;  op1 = calling convention, op2 = paf size, op3 = numberOfParameters in registers *)
-		AddFormat(enter, "enter", Num+Any, Num, Num ,{});
+		(* enter cc pafSize - set up procedure activation frame;  op1 = calling convention, op2 = size to be allocated on stack *)
+		AddFormat(enter, "enter", Num, Num, Undef ,{});
 		(* leave cc - remove paf, does not imply return, op1= calling convention, does not imply exit from procedure *)
-		AddFormat(leave, "leave", Num, Num, Undef ,{});
+		AddFormat(leave, "leave", Num, Undef, Undef ,{});
 		(* return value : return value, op1= returned value, if any, does not imply exit from procedure *)
 		AddFormat(return,"return",RegMemImm, Undef, Undef,{});
 		(* exit parSize pcOffset cc - exit from procedure, op1 = offset that has to be subtracted from return address (e.g., used for ARM interrupt procedures), op2 = calling convention *)
@@ -869,7 +872,7 @@ TYPE
 
 	PROCEDURE InitRegister*(VAR op: Operand; type: Type; registerClass: RegisterClass;  register: LONGINT);
 	BEGIN
-		Assert((register >0) OR (register = SP) OR (register = FP) OR (register = AP) OR (register <= HwRegister) ,"unmapped register number");
+		Assert((register >0) OR (register = SP) OR (register = FP) OR (register = AP) OR (register = LR) OR (register <= HwRegister) ,"unmapped register number");
 		InitOperand(op);
 		op.mode := ModeRegister;
 		op.type := type;
@@ -1101,6 +1104,7 @@ TYPE
 		ELSIF name = "sp" THEN register := SP; RETURN TRUE
 		ELSIF name = "fp" THEN register := FP ; RETURN TRUE
 		ELSIF name = "ap" THEN register := AP ; RETURN TRUE
+		ELSIF name = "lr" THEN register := LR ; RETURN TRUE
 		ELSE RETURN FALSE
 		END;
 	END DenotesRegister;

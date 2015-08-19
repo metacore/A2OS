@@ -1257,54 +1257,7 @@ TYPE
 			stackSize := SHORT(instruction.op2.intValue);
 			size := stackSize;
 
-			(*
-			IF stackSize > 512 THEN D.String("large stack size "); Basic.WriteSegmentedName(D.Log, in.name); D.String(": "); D.Int(stackSize,1); D.Ln; END;
-			*)
 			INC(traceStackSize, stackSize);
-
-			emitter.Emit1(InstructionSet.opPUSH,opBP);
-			IF instruction.op1.mode # IntermediateCode.ModeNumber THEN
-				ASSERT (backend.cooperative);
-				EmitPush(instruction.op1,Low);
-				cc := SyntaxTree.OberonCallingConvention;
-			ELSE
-				IF backend.cooperative THEN
-					Assembler.InitImm(imm, SHORTINT (cpuBits DIV 8), 0);
-					emitter.Emit1(InstructionSet.opPUSH,imm);
-				END;				
-				cc := SHORT(instruction.op1.intValue);
-			END;
-			emitter.Emit2(InstructionSet.opMOV,opBP,opSP);
-			
-			IF backend.cooperative & (in.symbol # NIL) & (in.symbol IS SyntaxTree.Procedure) THEN
-				body := in.symbol(SyntaxTree.Procedure).procedureScope.body;
-				IF (body # NIL) & (body.code = NIL) & ~body.isUnchecked THEN
-					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),SP,-stackSize);
-					emitter.Emit2(InstructionSet.opLEA,opRA,op1);
-					emitter.Emit2(InstructionSet.opCMP,opSP,opRA);
-					Assembler.InitImm8(imm, FirstOffset);
-					emitter.Emit1(InstructionSet.opJB,imm);
-					firstPC := out.pc;
-					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),RC,IntermediateBackend.StackLimitOffset * cpuBits DIV 8);
-					emitter.Emit2(InstructionSet.opCMP,opRA,op1);
-					Assembler.InitImm8(imm, SecondOffset);
-					emitter.Emit1(InstructionSet.opJAE,imm);
-					secondPC := out.pc;
-					ASSERT (out.pc - firstPC = FirstOffset);
-					emitter.Emit1(InstructionSet.opPUSH,opRA);
-					parametersSize := IntermediateBackend.ProcedureParametersSize(backend.system, in.symbol(SyntaxTree.Procedure));
-					Assembler.InitImm(imm, SHORTINT (cpuBits DIV 8), parametersSize);
-					emitter.Emit1(InstructionSet.opPUSH,imm);
-					Basic.ToSegmentedName ("Activities.ExpandStack", name);
-					Assembler.InitOffset32(target,0);
-					Assembler.SetSymbol (target,name,0,0,0);
-					emitter.Emit1(InstructionSet.opCALL,target);
-					x := out.pc - secondPC;
-					ASSERT (out.pc - secondPC = SecondOffset);
-					Assembler.InitMem(op1,SHORT(SHORT(cpuBits DIV 8)),RA,stackSize);
-					emitter.Emit2(InstructionSet.opLEA,opSP,op1);
-				END;
-			END;
 			
 			IF initialize THEN
 				(* always including this instruction make trace insertion possible *)
@@ -1356,16 +1309,6 @@ TYPE
 				emitter.Emit1(InstructionSet.opPUSH,opESI);
 			END;
 			spillStackStart := stackSize;
-
-			(*
-			IF (stackSize+spillStack.MaxSize()  > 128) THEN
-			D.String("section "); Basic.WriteSegmentedName(D.Log, in.name);
-			D.String(" stack size "); D.Int(stackSize,1);
-			D.String(" spill size "); D.Int(spillStack.MaxSize(),1);
-			D.Ln;
-			END;
-			*)
-
 		END EmitEnter;
 
 		PROCEDURE EmitLeave(CONST instruction: IntermediateCode.Instruction);
@@ -1377,13 +1320,6 @@ TYPE
 				emitter.Emit1(InstructionSet.opPOP,opEDI);
 				emitter.Emit1(InstructionSet.opPOP,opEBX);
 			END;
-			IF instruction.op2.intValue # 0 THEN
-				Assembler.InitMem(offset,SHORT(SHORT(cpuBits DIV 8)),BP,SHORT(instruction.op2.intValue));
-				emitter.Emit2(InstructionSet.opLEA,opSP,offset);
-			ELSE
-				emitter.Emit2(InstructionSet.opMOV,opSP,opBP);
-			END;
-			emitter.Emit1(InstructionSet.opPOP,opBP);
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instruction: IntermediateCode.Instruction);

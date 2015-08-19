@@ -2639,26 +2639,32 @@ TYPE
 		END RenderAboveTextMarkers;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR la, lb, i, top, t, b : LONGINT; cliprect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
+		VAR la, lb, i, top, t, b : LONGINT; rect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			ASSERT(layout # NIL);
-			DrawBackground^(canvas );
-			canvas.SaveState(cstate);
-			canvas.GetClipRect(cliprect);
-			IF WMRectangles.RectEmpty(cliprect) THEN RETURN END;
+			DrawBackground^(canvas);
+			rect := GetClientRect();
+			IF WMRectangles.RectEmpty(rect) THEN RETURN END;
 
 			IF showBorderI THEN
-				WMGraphicUtilities.DrawBevel(canvas, GetClientRect(),
+				WMGraphicUtilities.DrawBevel(canvas, rect,
 					1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy)
 			END;
 
-			text.AcquireRead;
-			la := FindLineByY(firstLineI, Strings.Max(cliprect.t, bordersI.t));
-			lb := FindLineByY(firstLineI, Strings.Min(cliprect.b, bounds.GetHeight() - bordersI.b));
-
+			canvas.SaveState(cstate);
 			(* allow clean clipping in at inner border *)
-			WMRectangles.ClipRect(cliprect, borderClip);
-			canvas.SetClipRect(cliprect);
+			WMRectangles.ClipRect(rect, borderClip);
+			canvas.SetClipRect(rect);
+
+			(* draw gutter *)
+			IF showLineNumbersI & (lineNumberBgColorI # 0) THEN
+				rect.r := x0-1;
+				canvas.Fill(rect, lineNumberBgColorI, WMGraphics.ModeSrcOverDst);
+			END;
+
+			text.AcquireRead;
+			la := FindLineByY(firstLineI, Strings.Max(rect.t, bordersI.t));
+			lb := FindLineByY(firstLineI, Strings.Min(rect.b, bounds.GetHeight() - bordersI.b));
 
 			(* prepare selections *)
 			FOR i := 0 TO nofHighlights - 1 DO
@@ -2671,10 +2677,10 @@ TYPE
 			IF (la = lb) & (textAlignV.Get() = WMGraphics.AlignCenter) THEN 
 				t := bordersI.t;
 				b := bounds.GetHeight()-bordersI.b;	
-				top :=  (t+b- layout.lines[la].height) DIV 2 (*- layout.lines[la].ascent*);
+				top :=  (t+b-layout.lines[la].height) DIV 2 (*- layout.lines[la].ascent*);
 				(* something is wrong with ascent and height here, does not comply with the notions in fonts *)
 			END;
-		
+			
 			FOR i := firstLineI TO la - 1 DO
 				top := top + (layout.lines[i].height);
 				CheckParagraphBegin(i, top);

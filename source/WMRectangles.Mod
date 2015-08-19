@@ -98,4 +98,21 @@ TYPE
 		RETURN t
 	END ResizeRect;
 
+	PROCEDURE Normalize*(VAR rect: Rectangle);
+	VAR
+		temp: LONGINT;
+	BEGIN
+		IF rect.l > rect.r THEN
+			temp := rect.l;
+			rect.l := rect.r;
+			rect.r := temp;
+		END;
+
+		IF rect.t > rect.b THEN
+			temp := rect.t;
+			rect.t := rect.b;
+			rect.b := temp;
+		END;
+	END Normalize;
+
 END WMRectangles.

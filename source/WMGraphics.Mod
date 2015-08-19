@@ -201,7 +201,7 @@ TYPE
 		PROCEDURE SetClipRect*(rect : Rectangle);
 		BEGIN
 			INCL(clipMode, ClipRect);
-			rect.r := Max(rect.r, rect.l); rect.b := Max(rect.b, rect.t);
+			Rectangles.Normalize(rect);
 			Rectangles.MoveRel(rect, dx, dy);
 			Rectangles.ClipRect(rect, limits);
 			clipRect := rect
@@ -298,6 +298,11 @@ TYPE
 		BEGIN
 			Fill(MakeRectangle(x, y, x + 1, y + 1), color, mode)
 		END SetPixel;
+		
+		PROCEDURE(*ABSTRACT*) GetPixel*(x, y : LONGINT ) : LONGINT;
+		BEGIN
+			RETURN 0H;
+		END GetPixel;
 
 		(** fill a rectangle within the current clipping rectangle *)
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
@@ -385,13 +390,29 @@ TYPE
 
 		PROCEDURE SetLimits*(r : Rectangle);
 		BEGIN
-			r.r := Max(r.r, r.l); r.b := Max(r.t, r.b);
+			Rectangles.Normalize(r);
 			Rectangles.ClipRect(r, bounds); SetLimits^(r)
 		END SetLimits;
 
 	(*	PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
 		BEGIN
 		END Line; *)
+
+		PROCEDURE GetPixel*(x, y : LONGINT) : LONGINT;
+		VAR pix : Raster.Pixel;
+			mode : Raster.Mode;
+			r, g, b, a : LONGINT;
+		BEGIN
+			INC( x, dx ); INC( y, dy );
+			IF (x >= 0) & (y >= 0) & (x < img.width) & (y < img.height) THEN
+				Raster.InitMode(mode, Raster.srcCopy);
+				Raster.Get(img, x, y, pix, mode);
+				Raster.GetRGBA(pix, r, g, b, a);
+				RETURN RGBAToColor(r, g, b ,a);
+			ELSE
+				RETURN 0H;
+			END;
+		END GetPixel;
 
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		VAR rm : Raster.Mode; pix : Raster.Pixel;
@@ -842,7 +863,6 @@ PROCEDURE ClearCache*;
 BEGIN
 	imgCache.Clear;
 END ClearCache;
-
 
 BEGIN
  	nofFallbackFonts := 3;

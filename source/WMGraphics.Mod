@@ -299,11 +299,6 @@ TYPE
 			Fill(MakeRectangle(x, y, x + 1, y + 1), color, mode)
 		END SetPixel;
 		
-		PROCEDURE(*ABSTRACT*) GetPixel*(x, y : LONGINT ) : LONGINT;
-		BEGIN
-			RETURN 0H;
-		END GetPixel;
-
 		(** fill a rectangle within the current clipping rectangle *)
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		END Fill;
@@ -397,22 +392,6 @@ TYPE
 	(*	PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
 		BEGIN
 		END Line; *)
-
-		PROCEDURE GetPixel*(x, y : LONGINT) : LONGINT;
-		VAR pix : Raster.Pixel;
-			mode : Raster.Mode;
-			r, g, b, a : LONGINT;
-		BEGIN
-			INC( x, dx ); INC( y, dy );
-			IF (x >= 0) & (y >= 0) & (x < img.width) & (y < img.height) THEN
-				Raster.InitMode(mode, Raster.srcCopy);
-				Raster.Get(img, x, y, pix, mode);
-				Raster.GetRGBA(pix, r, g, b, a);
-				RETURN RGBAToColor(r, g, b ,a);
-			ELSE
-				RETURN 0H;
-			END;
-		END GetPixel;
 
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		VAR rm : Raster.Mode; pix : Raster.Pixel;

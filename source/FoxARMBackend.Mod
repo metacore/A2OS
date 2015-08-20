@@ -1569,7 +1569,7 @@ TYPE
 						Emit2(opLDR, count, InstructionSet.NewImmediateOffsetMemory(InstructionSet.PC, 8+4, {InstructionSet.Decrement}));
 						(* label *)
 						Emit2(opSTR, zero, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Decrement, InstructionSet.PreIndexed}));
-						Emit3(opSUB, count, count, InstructionSet.NewImmediate(1));
+						Emit3WithFlags(opSUB, count, count, InstructionSet.NewImmediate(1),{InstructionSet.flagS});
 						Emit1WithCondition(opB, InstructionSet.NewImmediate(-8 -8), InstructionSet.conditionGT); (* label *)
 					END;
 				ELSE

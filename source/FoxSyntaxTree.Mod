@@ -3644,13 +3644,14 @@ TYPE
 
 	END Assignment;
 
-	(** << left ('!' | '?') right >> **)
+	(** << left ('!' | '?' | '<<' | '>>') right >> **)
 	CommunicationStatement* = OBJECT (Statement)
-	VAR left-: Designator; right-: Expression; send-: BOOLEAN;
+	VAR 
+		left-: Designator; right-: Expression; op-: LONGINT;
 
-		PROCEDURE & InitAssignment*( position: LONGINT;  send: BOOLEAN; left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: LONGINT; op: LONGINT; left: Designator;  right: Expression; outer: Statement );
 		BEGIN
-			InitStatement( position,outer );  SELF.send := send; SELF.left := left;  SELF.right := right;
+			InitStatement( position,outer );  SELF.op := op; SELF.left := left;  SELF.right := right;
 		END InitAssignment;
 
 		PROCEDURE SetLeft*(left: Designator);
@@ -5637,10 +5638,10 @@ VAR
 		NEW( assignment, position, left, right,outer );  RETURN assignment
 	END NewAssignment;
 
-	PROCEDURE NewCommunicationStatement*( position: LONGINT;  send: BOOLEAN; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
+	PROCEDURE NewCommunicationStatement*( position: LONGINT;  op: LONGINT; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
 	VAR communication: CommunicationStatement;
 	BEGIN
-		NEW( communication, position, send, left, right,outer );  RETURN communication
+		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
 	PROCEDURE NewProcedureCallStatement*(position: LONGINT; call: Designator; outer: Statement): ProcedureCallStatement;

@@ -100,6 +100,7 @@ CONST
 
 		RelationOp           = '=' | '.=' | '#' | '.#'
 		                     | '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
+		                     | '??' | '!!' | '<<?' | '>>?'		                     
 		                     | 'in' | 'is'
 
 		RangeExpression  = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
@@ -757,15 +758,12 @@ TYPE
 					factor := SyntaxTree.NewUnaryExpression(position,factor,Scanner.Transpose);
 				END;
 			END;
-			IF Optional(Scanner.Questionmarks) THEN
-				factor := SyntaxTree.NewBinaryExpression(position, factor, Factor(), Scanner.Questionmarks)
-			END;
 			IF Trace THEN E( "Factor" ) END;
 			RETURN factor
 		END Factor;
 
 		(** Term = Factor {MulOp Factor}.
-		   MulOp = '*' | '**' | '.*' | '+*' | '/' | './' | 'div' | 'mod' | '&'.
+		   MulOp = '*' | '**' | '.*' | '+*' | '/' | './' | 'div' | 'mod' | '&' | '<<?' | '>>?' || '!'.
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
 		VAR term, factor: SyntaxTree.Expression;  operator: LONGINT; position: LONGINT;
@@ -813,6 +811,7 @@ TYPE
 			Expression           = RangeExpression [RelationOp RangeExpression].
 			RelationOp           = '=' | '.=' | '#' | '.#'
 			                     | '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
+			                     | '??' | '!!' | '<<?' | '>>?'
 			                     | 'in' | 'is'
 		**)
 		PROCEDURE Expression*( ): SyntaxTree.Expression;
@@ -890,13 +889,10 @@ TYPE
 						expression := Expression();
 						statement := SyntaxTree.NewAssignment( position, designator, expression,outer );
 						CommentStatement(statement);
-					ELSIF Optional(Scanner.ExclamationMark) THEN
+					ELSIF Peek(Scanner.ExclamationMark) OR Peek(Scanner.Questionmark) OR Peek(Scanner.LessLess) OR Peek(Scanner.GreaterGreater) THEN
 						expression := Expression();
-						statement := SyntaxTree.NewCommunicationStatement(position, TRUE, designator, expression, outer);
-						CommentStatement(statement);
-					ELSIF Optional(Scanner.Questionmark) THEN
-						expression := Expression();
-						statement := SyntaxTree.NewCommunicationStatement(position, FALSE, designator, expression, outer);
+						statement := SyntaxTree.NewCommunicationStatement(position, symbol.token, designator, expression, outer);
+						NextSymbol;
 						CommentStatement(statement);
 					ELSE
 						caller := SyntaxTree.NewProcedureCallStatement(designator.position, designator,outer);

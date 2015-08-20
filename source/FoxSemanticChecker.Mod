@@ -2967,7 +2967,9 @@ TYPE
 				ELSE
 					Error(binaryExpression.position,Diagnostics.Invalid,"operator not applicable between different enumerators");
 				END;
-			ELSIF (leftType IS SyntaxTree.PortType) & (operator = Scanner.Questionmarks) THEN
+			ELSIF (leftType IS SyntaxTree.PortType) & ((operator = Scanner.Questionmarks) OR (operator = Scanner.ExclamationMarks) OR (operator = Scanner.LessLessQ)) THEN
+				type := system.booleanType;
+			ELSIF (rightType IS SyntaxTree.PortType) & (operator = Scanner.LessLessQ) THEN
 				type := system.booleanType;
 			ELSIF (leftType IS SyntaxTree.BasicType) & (rightType IS SyntaxTree.BasicType)
 				OR IsCharacterType(leftType) & IsCharacterType(rightType)
@@ -7222,7 +7224,28 @@ TYPE
 
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)
-			ELSIF communication.send & CheckPortType(left,outPort)  THEN
+			ELSIF communication.op = Scanner.LessLess THEN (* left is dest *)
+				IF (left.type.resolved IS SyntaxTree.PortType) & CheckPortType(left, outPort) THEN (* send *)
+					IF outPort.direction # SyntaxTree.OutPort THEN
+						Error(left.position,Diagnostics.Invalid,"not an out-port")
+					ELSIF outPort.sizeInBits # system.SizeOf(right.type) THEN
+						Error(left.position,Diagnostics.Invalid,"incompatible to port type");
+					ELSE
+						right := NewConversion(communication.position,right,left.type.resolved,NIL);
+						communication.SetRight(right)
+					END;
+				ELSIF (right.type.resolved IS SyntaxTree.PortType) & CheckPortType(right, inPort) THEN (* receive *)
+					IF CheckVariable(left) THEN
+						IF inPort.direction # SyntaxTree.InPort THEN
+							Error(left.position,Diagnostics.Invalid,"not an in-port")
+						ELSIF inPort.sizeInBits # system.SizeOf(right.type) THEN
+							Error(right.position,Diagnostics.Invalid,"incompatible to port type");
+						END;
+					END;
+				ELSE
+					Error(communication.position, -1, "unsupported stream operation");
+				END;
+			ELSIF (communication.op = Scanner.Questionmark)  & CheckPortType(left,outPort)  THEN
 				IF outPort.direction # SyntaxTree.OutPort THEN
 					Error(left.position,Diagnostics.Invalid,"not an out-port")
 				ELSIF outPort.sizeInBits # system.SizeOf(right.type) THEN
@@ -7231,7 +7254,7 @@ TYPE
 					right := NewConversion(communication.position,right,left.type.resolved,NIL);
 					communication.SetRight(right)
 				END;
-			ELSIF ~communication.send & CheckPortType(left,inPort) THEN
+			ELSIF (communication.op = Scanner.ExclamationMark) & CheckPortType(left,inPort) THEN
 				IF CheckVariable(right) THEN
 					IF inPort.direction # SyntaxTree.InPort THEN
 						Error(left.position,Diagnostics.Invalid,"not an in-port")
@@ -7239,6 +7262,8 @@ TYPE
 						Error(right.position,Diagnostics.Invalid,"incompatible to port type");
 					END;
 				END;
+			ELSE
+				Error(communication.position, -1, "unsupported operation");
 			END
 		END VisitCommunicationStatement;
 

@@ -34,69 +34,71 @@ CONST
 	(* RelationOps: Equal ... Is *)
     	Equal DotEqual Unequal DotUnequal
     	Less DotLess  LessEqual DotLessEqual Greater DotGreater GreaterEqual DotGreaterEqual
+    	LessLessQ GreaterGreaterQ Questionmarks ExclamationMarks 
     	In Is
     	(* MulOps: Times ... And *)
     	Times TimesTimes DotTimes PlusTimes Slash Backslash DotSlash Div Mod And
     	(* AddOps: Or ... Minus *)
     	Or Plus Minus
     	(* Prefix Unary Operators Plus ... Not *)
-	Not
+		Not
     	(* expressions may start with Plus ... Identifier *)
-	LeftParenthesis LeftBracket LeftBrace Number Character String Nil Imag True False Self Result Identifier
-	(* statementy may start with Self ... Begin *)
-	If Case While Repeat For Loop With Exit Await Return Begin
-	(* symbols, expressions and statements cannot start with *)
-	Semicolon Transpose RightBrace RightBracket RightParenthesis Questionmark Questionmarks ExclamationMark ExclamationMarks Upto
-    	Arrow Period Comma Colon Of Then Do To By Becomes Bar End Else Elsif Until Finally
-	(* declaration elements *)
-	Code Const Type Var Out Procedure Operator Import Definition Module Cell CellNet Extern
-	(* composite type symbols *)
-	Array Object Record Pointer Enum Port Address Size Alias
-	(* assembler constants *)
-	Ln PC PCOffset
-	(* number types *)
-	Shortint Integer Longint Hugeint Real Longreal
-	Comment EndOfText
-	~
+		LeftParenthesis LeftBracket LeftBrace Number Character String Nil Imag True False Self Result Identifier
+		(* statementy may start with Self ... Begin *)
+		If Case While Repeat For Loop With Exit Await Return Begin
+		(* symbols, expressions and statements cannot start with *)
+		Semicolon Transpose RightBrace RightBracket RightParenthesis 
+		Questionmark ExclamationMark
+		LessLess GreaterGreater 
+		Upto Arrow Period Comma Colon Of Then Do To By Becomes Bar End Else Elsif Until Finally
+		(* declaration elements *)
+		Code Const Type Var Out Procedure Operator Import Definition Module Cell CellNet Extern
+		(* composite type symbols *)
+		Array Object Record Pointer Enum Port Address Size Alias
+		(* assembler constants *)
+		Ln PC PCOffset
+		(* number types *)
+		Shortint Integer Longint Hugeint Real Longreal
+		Comment EndOfText
+		~
 	*)
-
 	None*= 0; 
 	(* RelationOps: Equal ... Is *)
 	Equal*= 1; DotEqual*= 2; Unequal*= 3; DotUnequal*= 4; Less*= 5; DotLess*= 6; 
 	LessEqual*= 7; DotLessEqual*= 8; Greater*= 9; DotGreater*= 10; GreaterEqual*= 11; DotGreaterEqual*= 12; 
-	In*= 13; Is*= 14; 
+	LessLessQ*= 13; GreaterGreaterQ*= 14; Questionmarks*= 15; ExclamationMarks*= 16; In*= 17; Is*= 18; 
 	(* MulOps: Times ... And *)
-	Times*= 15; TimesTimes*= 16; DotTimes*= 17; PlusTimes*= 18; Slash*= 19; Backslash*= 20; 
-	DotSlash*= 21; Div*= 22; Mod*= 23; And*= 24; 
+	Times*= 19; TimesTimes*= 20; DotTimes*= 21; PlusTimes*= 22; Slash*= 23; Backslash*= 24; 
+	DotSlash*= 25; Div*= 26; Mod*= 27; And*= 28; 
 	(* AddOps: Or ... Minus *)
-	Or*= 25; Plus*= 26; Minus*= 27; 
+	Or*= 29; Plus*= 30; Minus*= 31; 
 	(* Prefix Unary Operators Plus ... Not *)
-	Not*= 28; 
+	Not*= 32; 
 	(* expressions may start with Plus ... Identifier *)
-	LeftParenthesis*= 29; LeftBracket*= 30; LeftBrace*= 31; Number*= 32; Character*= 33; String*= 34; 
-	Nil*= 35; Imag*= 36; True*= 37; False*= 38; Self*= 39; Result*= 40; 
-	Identifier*= 41; 
+	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38; 
+	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44; 
+	Identifier*= 45; 
 	(* statementy may start with Self ... Begin *)
-	If*= 42; Case*= 43; While*= 44; Repeat*= 45; For*= 46; Loop*= 47; 
-	With*= 48; Exit*= 49; Await*= 50; Return*= 51; Begin*= 52; 
+	If*= 46; Case*= 47; While*= 48; Repeat*= 49; For*= 50; Loop*= 51; 
+	With*= 52; Exit*= 53; Await*= 54; Return*= 55; Begin*= 56; 
 	(* symbols, expressions and statements cannot start with *)
-	Semicolon*= 53; Transpose*= 54; RightBrace*= 55; RightBracket*= 56; RightParenthesis*= 57; Questionmark*= 58; 
-	Questionmarks*= 59; ExclamationMark*= 60; ExclamationMarks*= 61; Upto*= 62; Arrow*= 63; Period*= 64; 
-	Comma*= 65; Colon*= 66; Of*= 67; Then*= 68; Do*= 69; To*= 70; 
-	By*= 71; Becomes*= 72; Bar*= 73; End*= 74; Else*= 75; Elsif*= 76; 
-	Until*= 77; Finally*= 78; 
+	Semicolon*= 57; Transpose*= 58; RightBrace*= 59; RightBracket*= 60; RightParenthesis*= 61; Questionmark*= 62; 
+	ExclamationMark*= 63; LessLess*= 64; GreaterGreater*= 65; Upto*= 66; Arrow*= 67; Period*= 68; 
+	Comma*= 69; Colon*= 70; Of*= 71; Then*= 72; Do*= 73; To*= 74; 
+	By*= 75; Becomes*= 76; Bar*= 77; End*= 78; Else*= 79; Elsif*= 80; 
+	Until*= 81; Finally*= 82; 
 	(* declaration elements *)
-	Code*= 79; Const*= 80; Type*= 81; Var*= 82; Out*= 83; Procedure*= 84; 
-	Operator*= 85; Import*= 86; Definition*= 87; Module*= 88; Cell*= 89; CellNet*= 90; 
-	Extern*= 91; 
+	Code*= 83; Const*= 84; Type*= 85; Var*= 86; Out*= 87; Procedure*= 88; 
+	Operator*= 89; Import*= 90; Definition*= 91; Module*= 92; Cell*= 93; CellNet*= 94; 
+	Extern*= 95; 
 	(* composite type symbols *)
-	Array*= 92; Object*= 93; Record*= 94; Pointer*= 95; Enum*= 96; Port*= 97; 
-	Address*= 98; Size*= 99; Alias*= 100; 
+	Array*= 96; Object*= 97; Record*= 98; Pointer*= 99; Enum*= 100; Port*= 101; 
+	Address*= 102; Size*= 103; Alias*= 104; 
 	(* assembler constants *)
-	Ln*= 101; PC*= 102; PCOffset*= 103; 
+	Ln*= 105; PC*= 106; PCOffset*= 107; 
 	(* number types *)
-	Shortint*= 104; Integer*= 105; Longint*= 106; Hugeint*= 107; Real*= 108; Longreal*= 109; 
-	Comment*= 110; EndOfText*= 111; 
+	Shortint*= 108; Integer*= 109; Longint*= 110; Hugeint*= 111; Real*= 112; Longreal*= 113; 
+	Comment*= 114; EndOfText*= 115; 
 
 	SingleQuote = 27X;  DoubleQuote* = 22X;
 	Ellipsis = 7FX;   (* used in Scanner.GetNumber to return with ".." when reading an interval like 3..5 *)
@@ -881,10 +883,21 @@ TYPE
 					IF ch = '=' THEN GetNextCharacter;  s := Becomes  ELSE s := Colon END
 			| ';':     s := Semicolon;  GetNextCharacter
 			| '<':     GetNextCharacter;
-					IF ch = '=' THEN GetNextCharacter;  s := LessEqual ELSE s := Less;  END
+					IF ch = '=' THEN GetNextCharacter;  s := LessEqual 
+					ELSIF ch ='<' THEN GetNextCharacter; 
+						IF ch ='?' THEN GetNextCharacter; s := LessLessQ
+						ELSE s := LessLess
+						END;
+					ELSE s := Less;  
+					END
 			| '=':     s := Equal;  GetNextCharacter
 			| '>':     GetNextCharacter;
-					IF ch = '=' THEN GetNextCharacter;  s := GreaterEqual ELSE s := Greater;  END
+					IF ch = '=' THEN GetNextCharacter;  s := GreaterEqual 
+					ELSIF ch ='>' THEN GetNextCharacter; 
+						IF ch ='?' THEN GetNextCharacter; s := GreaterGreaterQ
+						ELSE s := GreaterGreater
+						END;
+					ELSE s := Greater;  END
 			| '[':     s := LeftBracket;  GetNextCharacter
 			| ']':     s := RightBracket;  GetNextCharacter
 			| '^':     s := Arrow;  GetNextCharacter
@@ -1471,6 +1484,13 @@ TYPE
 		EnterSymbol( "\", Backslash);
 		EnterSymbol( "`", Transpose);
 		EnterSymbol( "?",Questionmark);
+		EnterSymbol( "??",Questionmarks);
+		EnterSymbol( "!",ExclamationMark);
+		EnterSymbol( "!!",ExclamationMarks);
+		EnterSymbol( "<<",LessLess);
+		EnterSymbol( "<<?",LessLessQ);
+		EnterSymbol( ">>",GreaterGreater);
+		EnterSymbol( ">>?",GreaterGreaterQ);
 
 		Basic.SetErrorMessage(Number,"missing number");
 		Basic.SetErrorMessage(String,"missing string");

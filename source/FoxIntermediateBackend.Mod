@@ -3427,33 +3427,71 @@ TYPE
 					result.op := temp.op;
 					result.tag := nil; (* may be left over from calls to evaluate *)
 				END;
-			|Scanner.Questionmarks:
-				Evaluate(x.left, left);
-				Emit(Push(position,left.op));
-				ReleaseOperand(left);
-				Designate(x.right, right);
-				size := ToMemoryUnits(system,system.SizeOf(x.right.type));
-				IF ~backend.cellsAreObjects THEN
-					IF size # 1 THEN Error(x.right.position,"receive not implemented for complex data types") END;
-				END;
-				Emit(Push(position,right.op));
-				ReleaseOperand(right);
-				IF backend.cellsAreObjects THEN
-					CallThis(position,"ActiveCellsRuntime","ReceiveNonBlocking",2);
-				ELSE
-					CallThis(position,ChannelModuleName,"ReceiveNonBlocking",2);
-				END;
-				InitOperand(result, ModeValue);
-				result.op := NewRegisterOperand(bool);
-				Emit(Result(position,result.op));
-				IF conditional THEN
-					IntermediateCode.InitImmediate(zero,setType,0);
-					BrneL(trueLabel,result.op,zero);
-					ReleaseOperand(result);
-					BrL(falseLabel);
-				END;
 			ELSE
-				HALT(100);
+				IF (x.operator = Scanner.Questionmarks) OR (x.operator = Scanner.LessLessQ) & (x.right.type.resolved IS SyntaxTree.PortType) THEN
+					IF x.operator = Scanner.Questionmarks THEN
+						leftExpression := x.left;
+						rightExpression := x.right;
+					ELSE
+						leftExpression := x.right;
+						rightExpression := x.left;
+					END;
+					
+					Evaluate(leftExpression, left);
+					Emit(Push(position,left.op));
+					ReleaseOperand(left);
+					Designate(rightExpression, right);
+					size := ToMemoryUnits(system,system.SizeOf(x.right.type));
+					IF ~backend.cellsAreObjects THEN
+						IF size # 1 THEN Error(x.right.position,"receive not implemented for complex data types") END;
+					END;
+					Emit(Push(position,right.op));
+					ReleaseOperand(right);
+					IF backend.cellsAreObjects THEN
+						CallThis(position,"ActiveCellsRuntime","ReceiveNonBlocking",2);
+					ELSE
+						CallThis(position,ChannelModuleName,"ReceiveNonBlocking",2);
+					END;
+					InitOperand(result, ModeValue);
+					result.op := NewRegisterOperand(bool);
+					Emit(Result(position,result.op));
+					IF conditional THEN
+						IntermediateCode.InitImmediate(zero,setType,0);
+						BrneL(trueLabel,result.op,zero);
+						ReleaseOperand(result);
+						BrL(falseLabel);
+					END;
+				ELSIF (x.operator = Scanner.ExclamationMarks) OR (x.operator = Scanner.LessLessQ) & (x.left.type.resolved IS SyntaxTree.PortType) THEN
+					leftExpression := x.left;
+					rightExpression := x.right;
+
+					Evaluate(leftExpression, left);
+					Emit(Push(position,left.op));
+					ReleaseOperand(left);
+					Evaluate(rightExpression, right);
+					size := ToMemoryUnits(system,system.SizeOf(x.right.type));
+					IF ~backend.cellsAreObjects THEN
+						IF size # 1 THEN Error(x.right.position,"send not implemented for complex data types") END;
+					END;
+					Emit(Push(position,right.op));
+					ReleaseOperand(right);
+					IF backend.cellsAreObjects THEN
+						CallThis(position,"ActiveCellsRuntime","SendNonBlocking",2);
+					ELSE
+						CallThis(position,ChannelModuleName,"SendNonBlocking",2);
+					END;
+					InitOperand(result, ModeValue);
+					result.op := NewRegisterOperand(bool);
+					Emit(Result(position,result.op));
+					IF conditional THEN
+						IntermediateCode.InitImmediate(zero,setType,0);
+						BrneL(trueLabel,result.op,zero);
+						ReleaseOperand(result);
+						BrL(falseLabel);
+					END;
+				ELSE
+					HALT(100);
+				END;
 			END;
 			destination := dest;
 			IF Trace THEN TraceExit("VisitBinaryExpression") END;
@@ -9491,10 +9529,10 @@ TYPE
 		END EmitCooperativeSwitch;
 
 		PROCEDURE VisitCommunicationStatement(communication: SyntaxTree.CommunicationStatement);
-		VAR p0,p1: SyntaxTree.Expression; s0,s1: Operand; size: LONGINT;
+		VAR p0,p1,tmp: SyntaxTree.Expression; s0,s1: Operand; size: LONGINT;
 		BEGIN
 			p0 := communication.left; p1 := communication.right;
-			IF communication.send THEN
+			IF (communication.op = Scanner.ExclamationMark) OR (communication.op = Scanner.LessLess) & (communication.left.type.resolved IS SyntaxTree.PortType) THEN
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
 				size := ToMemoryUnits(system,system.SizeOf(p1.type));
@@ -9515,6 +9553,9 @@ TYPE
 				END;
 			(* ----- RECEIVE ------*)
 			ELSE
+				IF (communication.op = Scanner.LessLess) & (communication.right.type.resolved IS SyntaxTree.PortType) THEN
+					tmp := p0; p0 := p1; p1 := tmp;
+				END;
 				Evaluate(p0,s0);
 				Emit(Push(position,s0.op));
 				Designate(p1,s1);

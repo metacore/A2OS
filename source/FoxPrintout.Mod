@@ -1525,16 +1525,13 @@ TYPE
 		END VisitAssignment;
 
 		PROCEDURE VisitCommunicationStatement(x: SyntaxTree.CommunicationStatement);
+		VAR identifier: SyntaxTree.Identifier;
 		BEGIN
 			Expression(x.left);
-			IF x.send THEN
-				w.String(" ! ");
-			ELSE
-				w.String(" ? ");
-			END;
+			identifier := Global.GetIdentifier(x.op,case);
+			w.String(" "); Identifier(identifier); w.String(" ");
 			 Expression(x.right);
 		END VisitCommunicationStatement;
-
 
 		PROCEDURE IfPart(x: SyntaxTree.IfPart);
 		BEGIN

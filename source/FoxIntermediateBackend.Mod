@@ -585,7 +585,9 @@ TYPE
 					ir.Emit(Nop(position)); (* placeholder for stack frame check *)
 					ir.Emit(Nop(position)); (* placeholder for stack frame check (2) *)
 					*)
-					implementationVisitor.EmitEnter(ir,x.position,x,cc,ToMemoryUnits(system,stackSize),registerNumber);
+					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
+						implementationVisitor.EmitEnter(ir,x.position,x,cc,ToMemoryUnits(system,stackSize),registerNumber);
+					END;
 					pc := ir.pc-1;
 					(*
 					ir.Emit(Nop(position)); (* placeholder for fill *)
@@ -1338,6 +1340,7 @@ TYPE
 		VAR parametersSize: LONGINT;
 		VAR prevSection: IntermediateCode.Section;
 		BEGIN
+			ASSERT(~procedure.type(SyntaxTree.ProcedureType).noPAF);
 			prevSection := SELF.section;
 			SELF.section := section;
 			IF backend.hasLinkRegister THEN

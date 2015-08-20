@@ -2862,7 +2862,11 @@ CONST
 						(* LDR? ..., [PC, #...] or STR? ..., [PC, #...] *)
 						ASSERT(instruction.operands[1].mode = modeMemory);
 						IF (instruction.operands[1].register = PC) & (instruction.operands[1].offsetRegister = None) THEN
-							value := instruction.operands[1].offsetImmediate + adr + 8;
+							IF Decrement IN instruction.operands[1].indexing THEN 
+								value := -instruction.operands[1].offsetImmediate + adr + 8;
+							ELSE
+								value := instruction.operands[1].offsetImmediate + adr + 8;
+							END;
 							WriteReference(value, TRUE, w);
 							IF value * 8 + 32 < bitSet.GetSize() THEN
 								WriteReference(bitSet.GetBits(value * 8, 32) - codeDisplacement, TRUE, w); (* note that data references cannot be resolved like this *)

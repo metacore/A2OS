@@ -512,12 +512,18 @@ TYPE
 				- static array of open array forbidden
 		**)
 		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
-		VAR arrayBase: SyntaxTree.Type; e: SyntaxTree.Expression;
+		VAR arrayBase: SyntaxTree.Type; e: SyntaxTree.Expression; pointerType: SyntaxTree.PointerType;
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
 				x.SetArrayBase(ResolveType(x.arrayBase));
 				IF x.arrayBase.resolved.isRealtime THEN x.SetRealtime(TRUE) END;
 				arrayBase := x.arrayBase.resolved;
+				IF (arrayBase IS SyntaxTree.CellType) (*& (cellsAreObjects)*) THEN
+					pointerType := SyntaxTree.NewPointerType(x.position, x.scope);
+					pointerType.SetPointerBase(arrayBase);
+					pointerType.SetHidden(TRUE);
+					x.SetArrayBase(pointerType);
+				END;
 				IF x.length # NIL THEN
 				
 					e := ResolveExpression(x.length);
@@ -527,6 +533,7 @@ TYPE
 						x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
 					END;
 				END;
+
 				IF arrayBase IS SyntaxTree.ArrayType THEN
 					IF (x.form = SyntaxTree.Static) & (arrayBase(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
 						Error(x.position,Diagnostics.Invalid,"forbidden static array of dynamic array");

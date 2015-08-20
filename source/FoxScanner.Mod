@@ -1246,6 +1246,8 @@ TYPE
 		tokens[DotGreater] := "DotGreater";
 		tokens[GreaterEqual] := "GreaterEqual";
 		tokens[DotGreaterEqual] := "DotGreaterEqual";
+		tokens[LessLessQ] := "LessLessQ";
+		tokens[GreaterGreaterQ] := "GreaterGreaterQ";
 		tokens[In] := "In";
 		tokens[Is] := "Is";
 		tokens[Times] := "Times";
@@ -1295,6 +1297,8 @@ TYPE
 		tokens[ExclamationMark] := "ExclamationMark";
 		tokens[Questionmarks] := "Questionmarks";
 		tokens[ExclamationMarks] := "ExclamationMarks";
+		tokens[LessLess] := "LessLess";
+		tokens[GreaterGreater] := "GreaterGreater";
 		tokens[Upto] := "Upto";
 		tokens[Arrow] := "Arrow";
 		tokens[Period] := "Period";

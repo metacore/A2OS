@@ -26,16 +26,9 @@ CONST Priorities = HighestPriority - LowestPriority + 1;
 (** Represents a procedure that is called after the execution of an activity has been suspended by the {{{[[Activities.SwitchTo]]}}} procedure. *)
 TYPE SwitchFinalizer* = PROCEDURE (previous {UNTRACED}: Activity; value: ADDRESS);
 
-(* Represents a stack frame of an activity. *)
-TYPE StackFrame = OBJECT {UNSAFE,PLAIN} (BaseTypes.StackFrame)
-	VAR finalizeSwitchCaller: PROCEDURE;
-	VAR procedureCaller: PROCEDURE {NORETURN};
-	VAR procedureArgument {UNTRACED}: OBJECT;
-END StackFrame;
-
-
-Stack = POINTER {DISPOSABLE} TO ARRAY OF CHAR;
-StackRecord = POINTER {UNSAFE} TO RECORD
+(* Represents the stack of an activity. *)
+TYPE Stack = POINTER {DISPOSABLE} TO ARRAY OF CHAR;
+TYPE StackRecord = POINTER {UNSAFE} TO RECORD
 	prev {UNTRACED}, next {UNTRACED}: Stack;
 END;
 
@@ -49,7 +42,8 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	VAR priority: Priority;
 	VAR finalizer := NIL: SwitchFinalizer;
 	VAR previous: Activity; argument: ADDRESS;
-	VAR framePointer {UNTRACED}: StackFrame;
+	VAR framePointer {UNTRACED}: BaseTypes.StackFrame;
+	VAR procedure: PROCEDURE;
 	VAR object-: BaseTypes.Object;
 	VAR bound := FALSE: BOOLEAN;
 	VAR startTime-: Timer.Counter;
@@ -57,9 +51,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	VAR stack {UNTRACED}: Stack;
 
 	PROCEDURE &InitializeActivity (procedure: PROCEDURE; priority: Priority);
-	VAR 
-		stackFrame {UNTRACED}: StackFrame; StackFrameDescriptor {UNTRACED} EXTERN "BaseTypes.StackFrame": BaseTypes.Descriptor;
-		stackRecord: StackRecord;
+	VAR stackRecord {UNTRACED}: StackRecord; StackFrameDescriptor {UNTRACED} EXTERN "BaseTypes.StackFrame": BaseTypes.Descriptor;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT (priority < Priorities);
 		ASSERT (InitialStackSize > SafeStackSize);
@@ -70,14 +62,11 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		stackRecord.next := NIL;
 		stackRecord.prev := NIL;
 		stackLimit := ADDRESS OF stack[SafeStackSize+3* SIZE OF ADDRESS]; SELF.priority := priority;
-		stackFrame := ADDRESS OF stack[InitialStackSize - 6 * SIZE OF ADDRESS - CPU.StackDisplacement];
-		stackFrame.procedureArgument := NIL;
-		stackFrame.procedureCaller := TerminateCurrentActivity;
-		stackFrame.finalizeSwitchCaller := procedure;
-		stackFrame.caller := FinalizeSwitch;
-		stackFrame.previous := NIL;
-		stackFrame.descriptor := ADDRESS OF StackFrameDescriptor;
-		framePointer := stackFrame;
+		framePointer := ADDRESS OF stack[InitialStackSize - 3 * SIZE OF ADDRESS - CPU.StackDisplacement];
+		framePointer.caller := Start;
+		framePointer.previous := NIL;
+		framePointer.descriptor := ADDRESS OF StackFrameDescriptor;
+		SELF.procedure := procedure;
 	END InitializeActivity;
 
 	PROCEDURE ~Finalize;
@@ -94,7 +83,6 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 			DISPOSE (stack);
 			stack := next;
 		UNTIL stack = NIL;
-		
 		Finalize^;
 	END Finalize;
 
@@ -110,7 +98,6 @@ TYPE Process = OBJECT {DISPOSABLE} (Activity)
 		ASSERT (object.action # NIL);
 		SELF.object := object;
 		object.action.activity := SELF;
-		framePointer.procedureArgument := object;
 	END InitializeProcess;
 
 	PROCEDURE Unlink;
@@ -267,6 +254,18 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	currentActivity.finalizer := NIL; currentActivity.previous := NIL;
 END FinalizeSwitch;
 
+(* Entry point for new activities. *)
+PROCEDURE Start;
+VAR currentActivity {UNTRACED}: Activity;
+VAR procedure {UNTRACED}: POINTER {UNSAFE} TO RECORD body: PROCEDURE (object {UNTRACED}: OBJECT) END;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	FinalizeSwitch;
+	currentActivity := SYSTEM.GetActivity ()(Activity);
+	procedure := ADDRESS OF currentActivity.procedure;
+	procedure.body (currentActivity.object);
+	TerminateCurrentActivity;
+END Start;
+
 (** This procedure is called by the compiler for each {{{NEW}}} statement that creates an active object. *)
 (** It associates an active object with a new activity that begins its execution with the specified body procedure. *)
 PROCEDURE Create- (body: PROCEDURE; priority: Priority; object {UNTRACED}: BaseTypes.Object);
@@ -408,7 +407,6 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF Queues.Dequeue (item, action.waitingQueue) THEN Resume (item (Activity)) END;
 END EnqueueWaiting;
 
-
 PROCEDURE  ReturnToStackSegment*;
 VAR 
 	stackFrame {UNTRACED}: BaseTypes.StackFrame;
@@ -439,7 +437,6 @@ BEGIN{UNCOOPERATIVE, UNCHECKED}
 	ReturnToStackSegment;
 	CPU.RestoreResultAndReturn;
 END ReturnToStackSegment0;
-
 
 (** Expands the stack memory of the current activity to include the specified stack address and returns the new stack pointer to be set after the call. *)
 PROCEDURE ExpandStack- (address: ADDRESS; parSize: SIZE): ADDRESS;

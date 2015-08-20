@@ -1550,15 +1550,27 @@ TYPE
 		**)
 		PROCEDURE AllocateStack(allocationSize: LONGINT; doUpdateStackSize: BOOLEAN; clear: BOOLEAN);
 		VAR
-			operand, zero: InstructionSet.Operand; i: LONGINT;
+			operand, zero, count: InstructionSet.Operand; i: LONGINT;
 		BEGIN
 			inStackAllocation := TRUE;
 			operand := OperandFromValue(ABS(allocationSize), emptyOperand);
 			IF allocationSize > 0 THEN
 				IF clear THEN
-					Emit2(opMOV, InstructionSet.NewRegister(0, None, None, 0), InstructionSet.NewImmediate(0));
-					FOR i := 0 TO allocationSize-1 BY 4 DO
-						Emit2(opSTR, InstructionSet.NewRegister(0, None, None, 0), InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Decrement, InstructionSet.PreIndexed}));
+					zero := InstructionSet.NewRegister(0, None, None, 0);
+					Emit2(opMOV, zero , InstructionSet.NewImmediate(0));
+					IF allocationSize < 16 THEN
+						FOR i := 0 TO allocationSize-1 BY 4 DO
+							Emit2(opSTR, InstructionSet.NewRegister(0, None, None, 0), InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Decrement, InstructionSet.PreIndexed}));
+						END;
+					ELSE
+						count := InstructionSet.NewRegister(1, None, None, 0);
+						Emit1(opB, InstructionSet.NewImmediate(0)); (* PC offset = 8 !  Jump over immediate *)
+						out.PutBits(allocationSize DIV 4, 32);
+						Emit2(opLDR, count, InstructionSet.NewImmediateOffsetMemory(InstructionSet.PC, 8+4, {InstructionSet.Decrement}));
+						(* label *)
+						Emit2(opSTR, zero, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Decrement, InstructionSet.PreIndexed}));
+						Emit3(opSUB, count, count, InstructionSet.NewImmediate(1));
+						Emit1WithCondition(opB, InstructionSet.NewImmediate(-8 -8), InstructionSet.conditionGT); (* label *)
 					END;
 				ELSE
 					Emit3(opSUB, opSP, opSP, operand) (* decreasing SP: allocation *)
@@ -3533,3 +3545,5 @@ BEGIN
 	Init;
 
 END FoxARMBackend.
+
+SystemTools.FreeDownTo FoxARMBackend ~

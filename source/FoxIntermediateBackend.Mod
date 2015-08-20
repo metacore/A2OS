@@ -754,7 +754,7 @@ TYPE
 			ir.SetExported(TRUE);
 			ir.SetPriority(InitPriority);
 			Global.GetSymbolSegmentedName (bodyProcedure,name);
-			IF backend.newObjectFile OR backend.cooperative THEN
+			IF (backend.newObjectFile OR backend.cooperative) & ~meta.simple THEN
 				implementationVisitor.currentScope := module.module.moduleScope;
 				implementationVisitor.section := ir;
 				implementationVisitor.PushSelfPointer();

@@ -1358,25 +1358,26 @@ TYPE
 				IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
 				Emit(Push(-1,op1));
 				Emit(Mov(-1,fp, sp));
-				
-				NEW(call, section);
-				NEW(nocall, section);
-				reg := NewRegisterOperand(addressType);
-				IntermediateCode.InitImmediate(op1,addressType, varSize);
-				Emit(Sub(-1,reg, sp, op1));
-				BrltL(call, sp, reg);
-				IntermediateCode.InitMemory(op2, addressType,ap,ToMemoryUnits(system,system.addressSize*10));
-				BrgeL(nocall, sp, op2);
-				call.Resolve(section.pc);
-				parametersSize := ProcedureParametersSize(backend.system,procedure);
-				IntermediateCode.InitImmediate(op2,addressType, parametersSize);
-				Emit(Push(-1, op2));
-				Emit(Push(-1, reg));
-				ReleaseIntermediateOperand(reg);
-				CallThis(position, "Activities","ExpandStack",0);
-				Emit(Result(-1, sp));
-				ReleaseIntermediateOperand(reg);
-				nocall.Resolve(section.pc);
+				IF (procedure.procedureScope.body = NIL) OR ~procedure.procedureScope.body.isUnchecked THEN
+					NEW(call, section);
+					NEW(nocall, section);
+					reg := NewRegisterOperand(addressType);
+					IntermediateCode.InitImmediate(op1,addressType, varSize);
+					Emit(Sub(-1,reg, sp, op1));
+					BrltL(call, sp, reg);
+					IntermediateCode.InitMemory(op2, addressType,ap,ToMemoryUnits(system,system.addressSize*10));
+					BrgeL(nocall, sp, op2);
+					call.Resolve(section.pc);
+					parametersSize := ProcedureParametersSize(backend.system,procedure);
+					IntermediateCode.InitImmediate(op2,addressType, parametersSize);
+					Emit(Push(-1, op2));
+					Emit(Push(-1, reg));
+					ReleaseIntermediateOperand(reg);
+					CallThis(position, "Activities","ExpandStack",0);
+					Emit(Result(-1, sp));
+					ReleaseIntermediateOperand(reg);
+					nocall.Resolve(section.pc);
+				END;
 			ELSE
 				Emit(Mov(-1, fp, sp));
 			END;

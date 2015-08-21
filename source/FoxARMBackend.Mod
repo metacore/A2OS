@@ -2325,7 +2325,7 @@ TYPE
 						(* shiftAmount < 32: *)
 						Emit3WithCondition(opRSB, temp, shiftAmountRegister, InstructionSet.NewImmediate(32), InstructionSet.conditionLT);
 						Emit2WithCondition(opMOV, temp, InstructionSet.NewRegister(source[High].register, InstructionSet.shiftLSL, temp.register, 0), InstructionSet.conditionLT);
-						Emit3WithCondition(opORR, destination[Low], temp, InstructionSet.NewRegister(source[High].register, InstructionSet.shiftLSR, shiftAmountRegister.register, 0), InstructionSet.conditionLT);
+						Emit3WithCondition(opORR, destination[Low], temp, InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftLSR, shiftAmountRegister.register, 0), InstructionSet.conditionLT);
 						Emit2WithCondition(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, shiftAmountRegister.register, 0), InstructionSet.conditionLT);
 						(* shift amount >= 32: *)
 						Emit3WithCondition(opSUB, temp, shiftAmountRegister, InstructionSet.NewImmediate(32), InstructionSet.conditionGE);

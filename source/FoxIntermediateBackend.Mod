@@ -1339,10 +1339,13 @@ TYPE
 		VAR call, nocall: Label;
 		VAR parametersSize: LONGINT;
 		VAR prevSection: IntermediateCode.Section;
+		VAR prevDump: Streams.Writer;
 		BEGIN
 			ASSERT(~procedure.type(SyntaxTree.ProcedureType).noPAF);
 			prevSection := SELF.section;
 			SELF.section := section;
+			prevDump := dump;
+			dump := section.comments;
 			IF backend.hasLinkRegister THEN
 				Emit(Push(-1, lr));
 			END;
@@ -1375,7 +1378,6 @@ TYPE
 					ReleaseIntermediateOperand(reg);
 					CallThis(position, "Activities","ExpandStack",0);
 					Emit(Result(-1, sp));
-					ReleaseIntermediateOperand(reg);
 					nocall.Resolve(section.pc);
 				END;
 			ELSE
@@ -1383,6 +1385,7 @@ TYPE
 			END;
 			Emit(Enter(-1, callconv, varSize));
 			SELF.section := prevSection;
+			dump := prevDump;
 		END EmitEnter;
 		
 		PROCEDURE Enter(position: LONGINT; callconv: LONGINT; varSize: LONGINT): IntermediateCode.Instruction;
@@ -1631,6 +1634,9 @@ TYPE
 					END;
 				ELSIF registerUsageCount.Use(register)<0 THEN
 					Warning(position, "register removed too often");
+					IF dump # NIL THEN
+						dump.String("register removed too often"); dump.Ln; dump.Update;
+					END;
 					D.TraceBack;
 				END;
 			END;

@@ -149,8 +149,9 @@ CONST
 	opREV16* = 176;
 	opUXTH* = 177;
 	opWFE* = 178;
+	opWFI* = 179;
 
-	NumberMnemonics*= 179;
+	NumberMnemonics*= 180;
 
 	MaxOperands* = 6;
 
@@ -2405,6 +2406,7 @@ CONST
 		EnterMnemonic(opREV16, "REV16");
 		EnterMnemonic(opUXTH, "UXTH");
 		EnterMnemonic(opWFE, "WFE");
+		EnterMnemonic(opWFI, "WFI");
 
 		(* NEON mnemonics *)
 		EnterMnemonic(opVADD, "VADD");
@@ -2604,6 +2606,7 @@ CONST
 		EnterNEONInstruction(opREV16, "XXXX 0110 1011 1111 XXXX 1111 1011 XXXX", {flagCondition}, encodingR12, encodingR0, None, None, None, None);
 		EnterNEONInstruction(opUXTH, "XXXX 0110 1111 1111 XXXX XX00 0111 XXXX", {flagCondition}, encodingR12, encodingR0, None, None, None, None);
 		EnterNEONInstruction(opWFE, "XXXX 0011 0010 0000 1111 0000 0000 0010", {flagCondition}, None, None, None, None, None, None);
+		EnterNEONInstruction(opWFI, "XXXX 0011 0010 0000 1111 0000 0000 0011", {flagCondition}, None, None, None, None, None, None);
 
 		(* NEON instructions *)
 		EnterNEONInstruction(opVADD, "1111 0010 0XSS XXXX XXXX 1000 XQX0 XXXX", {flagNEONInt, flagNEON8bits, flagNEON16bits, flagNEON32bits, flagNEON64bits}, encodingNEONQorDd, encodingNEONQorDn, encodingNEONQorDm, None, None, None);

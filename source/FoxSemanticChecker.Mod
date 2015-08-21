@@ -5222,7 +5222,9 @@ TYPE
 				ELSIF ((id = Global.Ash) OR (id= Global.Asr)) & CheckArity(2,2) THEN
 					type := type0;
 					IF CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN
+						(*
 						ConvertOperands(parameter0,parameter1); (* same type *)
+						*)
 
 						type := parameter0.type;
 						IF IsIntegerValue(parameter0,i0) THEN

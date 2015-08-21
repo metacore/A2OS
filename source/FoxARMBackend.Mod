@@ -64,6 +64,7 @@ CONST
 	opFUITOD = InstructionSet.opFUITOD; opFUITOS = InstructionSet.opFUITOS;
 	opLDC = InstructionSet.opLDC; opLDC2 = InstructionSet.opLDC2;
 	opLDM = InstructionSet.opLDM; opLDR = InstructionSet.opLDR;
+	opLDREX = InstructionSet.opLDREX; opSTREX = InstructionSet.opSTREX;
 	opMCR = InstructionSet.opMCR; opMCR2 = InstructionSet.opMCR2;
 	opMCRR = InstructionSet.opMCRR; opMLA = InstructionSet.opMLA;
 	opMOV = InstructionSet.opMOV; opMRC = InstructionSet.opMRC;
@@ -1382,6 +1383,7 @@ TYPE
 			| IntermediateCode.shr: EmitShiftOrRotation(irInstruction)
 			| IntermediateCode.rol: EmitShiftOrRotation(irInstruction)
 			| IntermediateCode.ror: EmitShiftOrRotation(irInstruction)
+			| IntermediateCode.cas: EmitCas(irInstruction);
 			| IntermediateCode.copy: EmitCopy(irInstruction)
 			| IntermediateCode.fill: EmitFill(irInstruction, FALSE)
 			| IntermediateCode.asm: EmitAsm(irInstruction)
@@ -2929,6 +2931,31 @@ TYPE
 
 			Emit1(opSWI, InstructionSet.NewImmediate(LONGINT(irInstruction.op1.intValue))) (* software interrupt *)
 		END EmitTrap;
+
+		PROCEDURE EmitCas(VAR irInstruction: IntermediateCode.Instruction);
+		VAR
+			addressReg, addressBaseReg, comparandReg, comparandBaseReg, comparatorReg, comparatorBaseReg, tempReg: Operand
+		BEGIN
+			addressReg := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+			addressBaseReg := RegisterFromIrOperand(irInstruction.op1, Low, addressReg);
+			MovIfDifferent(addressReg, addressBaseReg);
+			IF IntermediateCode.OperandEquals (irInstruction.op2, irInstruction.op3) THEN
+				Emit2(opLDR, opRES, InstructionSet.NewImmediateOffsetMemory(addressReg.register, 0, {InstructionSet.Increment}));
+			ELSE
+				comparandReg := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+				comparandBaseReg := RegisterFromIrOperand(irInstruction.op2, Low, comparandReg);
+				MovIfDifferent(comparandReg, comparandBaseReg);
+				comparatorReg := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+				comparatorBaseReg := RegisterFromIrOperand(irInstruction.op3, Low, comparatorReg);
+				MovIfDifferent(comparatorReg, comparatorBaseReg);
+				Emit2(opLDREX, opRES, addressReg);
+				Emit2(opCMP, opRES, comparandReg);
+				tempReg := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+				Emit3WithCondition(opSTREX, tempReg, comparatorReg, addressReg, InstructionSet.conditionEQ);
+				Emit2WithCondition(opCMP, tempReg, InstructionSet.NewImmediate(1), InstructionSet.conditionEQ);
+				Emit1WithCondition(opB, InstructionSet.NewImmediate (-24), InstructionSet.conditionEQ);
+			END;	
+		END EmitCas;
 
 		(* possible optimization: use a combination of LDR and LDRB (would be 4x faster on average) *)
 		PROCEDURE EmitCopy(VAR irInstruction: IntermediateCode.Instruction);

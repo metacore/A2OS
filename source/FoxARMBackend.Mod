@@ -1659,7 +1659,8 @@ TYPE
 			ELSIF irDestinationOperand.mode = IntermediateCode.ModeRegister THEN
 				ASSERT((virtualRegisters.Mapped(irDestinationOperand.register, part) # NIL)
 						OR (irDestinationOperand.register = IntermediateCode.SP)
-						OR (irDestinationOperand.register = IntermediateCode.FP));
+						OR (irDestinationOperand.register = IntermediateCode.FP)
+						OR (irDestinationOperand.register = IntermediateCode.AP));
 				mappedArmRegister := InstructionSet.NewRegister(PhysicalRegisterNumber(irDestinationOperand.register, part), None, None, 0);
 				MovIfDifferent(mappedArmRegister, register)
 			ELSE

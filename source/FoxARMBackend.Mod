@@ -262,7 +262,7 @@ TYPE
 		hint: LONGINT;
 		useFPU: BOOLEAN;
 
-		PROCEDURE & InitPhysicalRegisters(supportFramePointer, useFPU: BOOLEAN);
+		PROCEDURE & InitPhysicalRegisters(supportFramePointer, useFPU, cooperative: BOOLEAN);
 		VAR
 			i: LONGINT;
 			unusable: Ticket;
@@ -285,6 +285,10 @@ TYPE
 			toVirtual[InstructionSet.LR] := unusable; (* link register *)
 			toVirtual[InstructionSet.CPSR] := unusable; (* current program state register *)
 			toVirtual[InstructionSet.SPSR] := unusable; (* saved program state register *)
+
+			IF cooperative THEN
+				toVirtual[InstructionSet.R11] := unusable; (* current activity register *)
+			END;
 
 			(* disable coprocessor registers *)
 			FOR i := InstructionSet.CR0 TO InstructionSet.CR15 DO toVirtual[i] := unusable END;
@@ -424,7 +428,7 @@ TYPE
 
 			IF Trace THEN IF backend.useFPU THEN D.String("use FPU"); D.Ln ELSE D.String("don't use FPU"); D.Ln END END;
 
-			NEW(physicalRegisters, TRUE, backend.useFPU);
+			NEW(physicalRegisters, TRUE, backend.useFPU, backend.cooperative);
 			InitTicketGenerator(diagnostics, backend.optimize, 2, physicalRegisters);
 			error := FALSE;
 
@@ -880,6 +884,8 @@ TYPE
 				result := InstructionSet.SP
 			ELSIF virtualRegisterNumber = IntermediateCode.LR THEN
 				result := InstructionSet.LR
+			ELSIF virtualRegisterNumber = IntermediateCode.AP THEN
+				result := InstructionSet.R11
 			ELSE
 				ticket := virtualRegisters.Mapped(virtualRegisterNumber, part);
 				IF ticket = NIL THEN

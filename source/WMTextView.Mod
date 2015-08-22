@@ -2079,7 +2079,7 @@ TYPE
 			cf := GetFont();
 			style.font := cf;
 
-			x := 0; l.pos := pos; l.height := style.font.GetHeight(); eol := FALSE;
+			x := 0; l.pos := pos; l.height := style.font.GetHeight();
 
 			(* For layouting a reordered line, the reordered text is needed, to correctly measure
 				the extends of each character. *)
@@ -2128,10 +2128,11 @@ TYPE
 			highlighterStyle := NIL; lastHighlighterStyle := NIL;
 			currentStyle := NIL; lastStyle := NIL;
 
-			REPEAT
+			eol := FALSE;
+			readerPosition := localTextReader.GetPosition();
+			localTextReader.ReadCh(ch);
 
-				readerPosition := localTextReader.GetPosition();
-				localTextReader.ReadCh(ch);
+			WHILE ~(localTextReader.eot OR eol) DO
 
 				IF (highlighter # NIL) THEN
 					ASSERT(state # NIL);
@@ -2297,8 +2298,11 @@ TYPE
 				ELSE
 					eol := TRUE
 				END;
-				INC(i)
-			UNTIL eol OR localTextReader.eot;
+				INC(i);
+				readerPosition := localTextReader.GetPosition();
+				localTextReader.ReadCh(ch);
+			END;
+
 
 			l.width := x;
 			l.ascent := ascent; l.height := leading; (* ascent + descent; *)

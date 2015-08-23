@@ -187,63 +187,42 @@ CODE
 	ADD	R4, R3, #vector_end - vector
 copy:
 	CMP	R3, R4
-	BEQ	skip
+	BEQ	vector_end
 	LDR	r5, [R2], #4
 	STR	r5, [R3], #4
 	B	copy
 vector:
-(*
-	ldr	pc, [pc, offset (header)]
-	ldr	pc, [pc, offset (undefined_instruction)]
-	ldr	pc, [pc, offset (software_interrupt)]
-	ldr	pc, [pc, offset (prefetch_abort)]
-	ldr	pc, [pc, offset (data_abort)]
-	nop
-	ldr	pc, [pc, offset (irq)]
-
-.macro invoke
-	.alias	CPU.#0
-	stmdb	sp!, #1
-	mov	r2, #0
-	stmdb	sp!, {r2}
-	stmdb	sp!, {pc}
-	ldr	pc, [pc, offset (handler)]
-	add	sp, sp, 4
-	ldmia	sp!, #1
-.endmacro
-
+	LDR	PC, [PC, #header-$-8]
+	LDR	PC, [PC, #undefined_instruction-$-8]
+	LDR	PC, [PC, #software_interrupt-$-8]
+	LDR	PC, [PC, #prefetch_abort-$-8]
+	LDR	PC, [PC, #data_abort-$-8]
+	MOV	R0, R0
+	LDR	PC, [PC, #irq-$-8]
 fiq:
-	invoke	FIQ, {r0, r1, r2, r3, r4, r5, r6, r7, lr}
-	subs	pc, lr, 4
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, LR}
+	MOV	R2, #UndefinedInstruction
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, LR}
+	SUBS	PC, LR, #4
 header:
-	.qbyte	@_header
+	d32	0x8000
 undefined_instruction:
-	.qbyte	@CPU.UndefinedInstruction
+	d32	UndefinedInstructionHandler
 software_interrupt:
-	.qbyte	@CPU.SoftwareInterrupt
+	d32	SoftwareInterruptHandler
 prefetch_abort:
-	.qbyte	@CPU.PrefetchAbort
+	d32	PrefetchAbortHandler
 data_abort:
-	.qbyte	@CPU.DataAbort
+	d32	DataAbortHandler
 irq:
-	.qbyte	@CPU.IRQ
-handler:
-	.qbyte	HandleInterrupt
-*)
+	d32	IRQHandler
+handle:
+	d32	HandleInterrupt
 vector_end:
-(*
-	invoke	UndefinedInstruction, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
-	movs	pc, lr
-	invoke	SoftwareInterrupt, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
-	movs	pc, lr
-	invoke	PrefetchAbort, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
-	subs	pc, lr, 4
-	invoke	DataAbort, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
-	subs	pc, lr, 4
-	invoke	IRQ, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
-	subs	pc, lr, 4
-*)
-skip:
 	MOV	R2, #0b10001
 	MSR	CPSR_c, R2
 	MOV	SP, #0x7000
@@ -259,5 +238,75 @@ skip:
 	MOV	R2, #0b10011
 	MSR	CPSR_c, R2
 END Initialize;
+
+PROCEDURE  {NOPAF} UndefinedInstructionHandler;
+CODE
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOV	R2, #UndefinedInstruction
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOVS	PC, LR
+handle:
+	d32	HandleInterrupt
+END UndefinedInstructionHandler;
+
+PROCEDURE  {NOPAF} SoftwareInterruptHandler;
+CODE
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOV	R2, #SoftwareInterrupt
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOVS	PC, LR
+handle:
+	d32	HandleInterrupt
+END SoftwareInterruptHandler;
+
+PROCEDURE  {NOPAF} PrefetchAbortHandler;
+CODE
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOV	R2, #PrefetchAbort
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	SUBS	PC, LR, #4
+handle:
+	d32	HandleInterrupt
+END PrefetchAbortHandler;
+
+PROCEDURE  {NOPAF} DataAbortHandler;
+CODE
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOV	R2, #DataAbort
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	SUBS	PC, LR, #4
+handle:
+	d32	HandleInterrupt
+END DataAbortHandler;
+
+PROCEDURE  {NOPAF} IRQHandler;
+CODE
+	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	MOV	R2, #IRQ
+	STR	R2, [SP, #-4]!
+	LDR	R2, [PC, #handle-$-8]
+	BLX	R2
+	ADD	SP, SP, #4
+	LDMIA	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
+	SUBS	PC, LR, #4
+handle:
+	d32	HandleInterrupt
+END IRQHandler;
 
 END CPU.

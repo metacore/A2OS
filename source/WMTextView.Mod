@@ -2120,7 +2120,7 @@ TYPE
 				END;
 			END;
 
-			i := 0;  ascent := style.font.GetAscent(); descent := style.font.GetDescent();
+			i := 0;  leading := 0; ascent := style.font.GetAscent(); descent := style.font.GetDescent();
 			align := AlignLeft; l.tabStops := NIL; COPY("", tabstring);
 			firstIndent := 0; leftIndent := 0; rightIndent := 0; spaceBefore := 0; spaceAfter := 0;
 

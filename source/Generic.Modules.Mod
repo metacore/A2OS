@@ -337,6 +337,7 @@ BEGIN
 	IF module.body # NIL THEN module.body END;
 	module.init := TRUE;
 	*)
+	(*TRACE("TODO", module, module.name);*)
 	Publish (module, new);
 	callagain := FALSE;
 	IF new THEN
@@ -345,8 +346,13 @@ BEGIN
 			module.init := TRUE;
 		END;
 		IF module.body # NIL THEN module.body END;
-		IF callagain THEN PublishRegisteredModules (* does not return *) END;
-		module.init := TRUE;
+		IF callagain THEN
+			PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
+			(*; HALT(400)*)
+		ELSE
+			(*TRACE('INITIALIZED', module, module.name);*)
+			module.init := TRUE;
+		END;
 	END;
 END Initialize0;
 

@@ -719,6 +719,10 @@ TYPE
 							ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
 						ELSE
 							ir.Emit(Nop(x.position));
+							IF scope.body.isUnchecked OR backend.noRuntimeChecks THEN (* return from procedure in any case *)
+								implementationVisitor.EmitLeave(ir,x.position,cc);
+								ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+							END;
 						END;
 					END
 				END;

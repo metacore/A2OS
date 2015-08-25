@@ -45,7 +45,7 @@ END Halt;
 (* memory management *)
 CONST MemorySize* = 964 * MB; MB = 1024 * 1024;
 
-VAR pageTable: RECORD entry {ALIGNED (4000H)}: ARRAY 4096 OF SIZE END;
+VAR pageTable {ALIGNED (4000H)}: RECORD entry: ARRAY 4096 OF SIZE END;
 
 PROCEDURE IdentityMapMemory-;
 CONST Section = 2H; Domain0 = 0H; FullAccess = 0C00H; NormalWriteBackAllocate = 100CH; StronglyOrdered = 0H; Shareable = 10000H;

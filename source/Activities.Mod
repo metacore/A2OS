@@ -62,7 +62,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		stackRecord.next := NIL;
 		stackRecord.prev := NIL;
 		stackLimit := ADDRESS OF stack[SafeStackSize+3* SIZE OF ADDRESS]; SELF.priority := priority;
-		framePointer := ADDRESS OF stack[InitialStackSize - 3 * SIZE OF ADDRESS - CPU.StackDisplacement];
+		framePointer := ADDRESS OF stack[InitialStackSize - 4 * SIZE OF ADDRESS - CPU.StackDisplacement];
 		framePointer.caller := Start;
 		framePointer.previous := NIL;
 		framePointer.descriptor := ADDRESS OF StackFrameDescriptor;

@@ -176,8 +176,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		DEC (skip);
 	END;
 	WHILE count # 0 DO
-		Address (frame.caller); Char (':'); Ln;
 		IF frame.previous = NIL THEN RETURN END;
+		Address (frame.caller); Char (':'); Ln;
 		IF frame.previous - ADDRESS OF frame.descriptor <= size THEN
 			Memory (ADDRESS OF frame.parameters, frame.previous - ADDRESS OF frame.descriptor);
 		ELSIF size # 0 THEN

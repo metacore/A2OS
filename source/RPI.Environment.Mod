@@ -116,12 +116,9 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.StringLn ("ready for power off or restart"); Flush; CPU.Halt;
 END Exit;
 
-PROCEDURE Initialize-;
+PROCEDURE InitTrace;
 CONST BaudRate = 115200;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	SYSTEM.SetActivity (NIL);
-	CPU.Initialize; LED (TRUE);
-	frequency := Timer.GetFrequency () DIV 1000;
 	CPU.WriteMask (CPU.UART_CR, {CPU.UARTEN});
 	CPU.Unmask (CPU.GPPUD, {CPU.PUD}); CPU.Delay (150);
 	CPU.Mask (CPU.GPPUDCLK0, {14, 15}); CPU.Delay (150);
@@ -132,6 +129,14 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.WriteMask (CPU.UART_LCRH, CPU.WLEN8);
 	CPU.WriteMask (CPU.UART_IMSC, {CPU.RXIM});
 	CPU.WriteMask (CPU.UART_CR, {CPU.UARTEN, CPU.TXE, CPU.RXE});
+	Trace.Init; Trace.Char := Write;
+END InitTrace;
+
+PROCEDURE Initialize-;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity (NIL);
+	CPU.Initialize; LED (TRUE); InitTrace;
+	frequency := Timer.GetFrequency () DIV 1000;
 	CPU.IdentityMapMemory; CPU.EnableMemoryManagementUnit;
 	HeapManager.Initialize (heap, ADDRESS OF KernelEnd, CPU.MemorySize);
 END Initialize;

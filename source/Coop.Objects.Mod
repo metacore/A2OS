@@ -30,9 +30,6 @@ CONST
 	halt* = 2222;
 	haltUnbreakable* = 2223;
 
-	MinIRQ = Machine.IRQ0;
-	NumIRQ = Machine.MaxIRQ-MinIRQ+1;
-
 TYPE
 	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
 
@@ -187,7 +184,7 @@ VAR
 
 	event: Timer; (* list of events *)
 	clock: Clock;
-	interrupt: ARRAY NumIRQ OF Interrupter;
+	interrupt: ARRAY CPU.Interrupts OF Interrupter;
 
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
@@ -333,11 +330,11 @@ END TimerFrequency;
 PROCEDURE InstallHandler*(h: EventHandler; int: LONGINT);
 VAR ih: Interrupter;
 BEGIN {EXCLUSIVE}
-	ASSERT((int >= MinIRQ) & (int-MinIRQ < NumIRQ));
-	ih := interrupt[int-MinIRQ];
+	ASSERT((int >= 0) & (int < CPU.Interrupts));
+	ih := interrupt[int];
 	IF ih = NIL THEN
 		NEW (ih, int);
-		interrupt[int-MinIRQ] := ih;
+		interrupt[int] := ih;
 	END;
 	ih.Add(h);
 END InstallHandler;
@@ -346,13 +343,13 @@ END InstallHandler;
 PROCEDURE RemoveHandler*(h: EventHandler; int: LONGINT);
 VAR ih: Interrupter;
 BEGIN {EXCLUSIVE}
-	ASSERT((int >= MinIRQ) & (int-MinIRQ < NumIRQ));
-	ih := interrupt[int-MinIRQ];
+	ASSERT((int >= 0) & (int < CPU.Interrupts));
+	ih := interrupt[int];
 	IF ih # NIL THEN
 		ih.Remove(h);
 		IF ih.Count () = 0 THEN
 			ih.Cancel;
-			interrupt[int-MinIRQ] := NIL;
+			interrupt[int] := NIL;
 		END;
 	END;
 END RemoveHandler;

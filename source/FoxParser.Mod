@@ -1349,6 +1349,7 @@ TYPE
 			recordType: SyntaxTree.RecordType;
 			recordScope: SyntaxTree.RecordScope;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  flags: SET;  qualifiedType: SyntaxTree.QualifiedType;
+			modifier: SyntaxTree.Modifier;
 		BEGIN
 			IF Trace THEN S( "RecordType" ) END;
 			(* record symbol already consumed *)
@@ -1356,6 +1357,10 @@ TYPE
 			flags := {};
 			recordScope := SyntaxTree.NewRecordScope(parentScope);
 			recordType := SyntaxTree.NewRecordType( position, parentScope, recordScope);
+			IF Optional( Scanner.LeftBrace ) THEN
+				modifier := Flags();
+				recordType.SetModifiers(modifier);
+			END;
 			IF Optional( Scanner.LeftParenthesis ) THEN
 				qualifiedIdentifier := QualifiedIdentifier();
 				qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, parentScope, qualifiedIdentifier );

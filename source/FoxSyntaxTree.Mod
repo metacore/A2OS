@@ -429,7 +429,7 @@ TYPE
 			scope := NIL;
 			resolved := SELF;
 			sizeInBits := MIN(LONGINT);
-			alignmentInBits := MIN(LONGINT);
+			alignmentInBits := 0;
 			isRealtime := FALSE;
 			recursion := FALSE;
 			hasPointers := FALSE;
@@ -440,9 +440,9 @@ TYPE
 		BEGIN SELF.sizeInBits := sizeInBits
 		END SetSize;
 
-		PROCEDURE SetAlignment*(alignmentInBits: LONGINT);
+		PROCEDURE SetAlignmentInBits*(alignmentInBits: LONGINT);
 		BEGIN SELF.alignmentInBits := alignmentInBits
-		END SetAlignment;
+		END SetAlignmentInBits;
 
 		PROCEDURE End*( position: LONGINT );
 		BEGIN SELF.endposition := position;
@@ -1419,6 +1419,7 @@ TYPE
 			recordScope-:RecordScope;
 			baseType-: Type;
 			pointerType-: PointerType; (* for support of A = POINTER TO RECORD ... END and B = POINTER TO RECORD (A) END; *)
+			modifiers-: Modifier;
 			isObject-,isProtected: BOOLEAN;
 
 			(* a math array type describing an object's array structure; NIL if the type does not exhibit an array structure *)
@@ -1438,8 +1439,13 @@ TYPE
 			recordScope.ownerRecord := SELF;
 			isObject := FALSE; isProtected := FALSE;
 			arrayStructure := NIL;
+			modifiers := NIL;
 		END InitRecordType;
 
+		PROCEDURE SetModifiers*(flag: Modifier);
+		BEGIN SELF.modifiers := flag;
+		END SetModifiers;
+		
 		PROCEDURE SetBaseType*( type: Type );
 		BEGIN
 			baseType := type; IF (baseType # NIL) & (baseType.hasPointers) THEN hasPointers := TRUE END;

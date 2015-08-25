@@ -299,7 +299,7 @@ TYPE
 			IF baseType # NIL THEN
 				offset := baseType.sizeInBits; alignment := baseType.alignmentInBits;
 			ELSE
-				offset := 0; alignment := dataUnit;
+				offset := 0; alignment := x.alignmentInBits;
 			END;
 
 			variable := x.recordScope.firstVariable;
@@ -319,7 +319,7 @@ TYPE
 				INC(offset,size);
 				variable := variable.nextVariable;
 			END;
-			x.SetAlignment(alignment);
+			x.SetAlignmentInBits(alignment);
 			Basic.Align(offset, alignment); (* strictly speaking not necessary, but with the old object file format otherwise problems with the GC show up *)
 			x.SetSize(offset);
 			RETURN TRUE
@@ -355,7 +355,7 @@ TYPE
 				INC(offset,size);
 				variable := variable.nextVariable;
 			END;
-			x.SetAlignment(alignment);
+			x.SetAlignmentInBits(alignment);
 			Basic.Align(offset, alignment); (* strictly speaking not necessary, but with the old object file format otherwise problems with the GC show up *)
 			x.SetSize(offset);
 			RETURN TRUE
@@ -581,7 +581,7 @@ TYPE
 		BEGIN
 			type := type.resolved;
 			IF type IS SyntaxTree.RecordType THEN
-				IF type.alignmentInBits < 0 THEN
+				IF type.alignmentInBits <= 0 THEN
 					IF GenerateRecordOffsets(type(SyntaxTree.RecordType)) THEN
 						result := type.alignmentInBits
 					END
@@ -589,13 +589,13 @@ TYPE
 					result := type.alignmentInBits
 				END;
 			ELSIF type IS SyntaxTree.ArrayType THEN
-				IF type.alignmentInBits <0 THEN
+				IF type.alignmentInBits <= 0 THEN
 					IF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
 						result := AlignmentOf(alignment,type(SyntaxTree.ArrayType).arrayBase.resolved);
 					ELSE
 						result := alignment.max
 					END;
-					type.SetAlignment(result)
+					type.SetAlignmentInBits(result)
 				ELSE
 					result := type.alignmentInBits
 				END;

@@ -881,6 +881,8 @@ TYPE
 			numberMethods: LONGINT; recordBase, recordType: SyntaxTree.RecordType; procedure: SyntaxTree.Procedure;
 			symbol: SyntaxTree.Symbol; isRealtime: BOOLEAN;
 			hasPointers: BOOLEAN;
+			modifiers: SyntaxTree.Modifier;
+			value: LONGINT;
 
 			PROCEDURE IsPointerToRecord(type: SyntaxTree.Type; VAR recordType: SyntaxTree.RecordType): BOOLEAN;
 			BEGIN
@@ -899,7 +901,13 @@ TYPE
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
 				hasPointers := FALSE;
+				
+				modifiers := x.modifiers;
+				IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(value*system.dataUnit) END;
+				CheckModifiers(modifiers, TRUE);
+				
 				IF x.baseType # NIL THEN
+
 					position := x.baseType.position;
 					baseType := ResolveType(x.baseType);
 					resolved := baseType.resolved;

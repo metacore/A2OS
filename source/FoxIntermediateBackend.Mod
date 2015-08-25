@@ -343,7 +343,7 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section;
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align: LONGINT;
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
@@ -353,7 +353,12 @@ TYPE
 				irv.SetExported(IsExported(x));
 				irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
 				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
-				irv.SetPositionOrAlignment(x.fixed, x.alignment);
+				IF ~x.fixed THEN
+					align := CommonAlignment(x.alignment, ToMemoryUnits(system, system.AlignmentOf(system.variableAlignment, x.type)));
+				ELSE
+					align := x.alignment;
+				END;
+				irv.SetPositionOrAlignment(x.fixed, align);
 				meta.CheckTypeDeclaration(x.type);
 			ELSIF currentScope IS SyntaxTree.RecordScope THEN
 			ELSIF currentScope IS SyntaxTree.ProcedureScope THEN
@@ -12534,6 +12539,32 @@ TYPE
 		statCoopTraceModule)
 	END Statistics;
 
+
+	PROCEDURE GCD(a,b: LONGINT): LONGINT;
+	VAR h: LONGINT;
+	BEGIN
+		WHILE b # 0 DO
+			h := a MOD b;
+			a := b;
+			b := h;
+		END;
+		RETURN a
+	END GCD;
+
+	PROCEDURE SCM(a,b: LONGINT): LONGINT;
+	BEGIN
+		RETURN a*b DIV GCD(a,b)
+	END SCM;
+
+	PROCEDURE CommonAlignment(a,b: LONGINT): LONGINT;
+	BEGIN
+		(*TRACE(a,b);*)
+		IF a = 0 THEN RETURN b
+		ELSIF b = 0 THEN RETURN a
+		ELSE RETURN SCM(a,b)
+		END;
+	END CommonAlignment;
+	
 	PROCEDURE PassBySingleReference(parameter: SyntaxTree.Parameter): BOOLEAN;
 	BEGIN
 		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE

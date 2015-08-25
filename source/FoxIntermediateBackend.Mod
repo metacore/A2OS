@@ -7440,7 +7440,7 @@ TYPE
 						IF needsTrace THEN ModifyAssignments(true) END;
 						IF ~type(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
-							CallThis(position,"GarbageCollector","Watch",0);
+							CallThis(position,"GarbageCollector","Watch",1);
 							Emit(Pop(position, pointer));
 						END;
 						Designate(p0,l);
@@ -7632,7 +7632,7 @@ TYPE
 						IF needsTrace THEN ModifyAssignments(true) END;
 						IF ~p0.type.resolved(SyntaxTree.PointerType).isDisposable THEN
 							Emit(Push(position, pointer));
-							CallThis(position,"GarbageCollector","Watch",0);
+							CallThis(position,"GarbageCollector","Watch",1);
 							Emit(Pop(position, pointer));
 						END;
 						Designate(p0,l);

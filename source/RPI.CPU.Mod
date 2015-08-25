@@ -309,4 +309,87 @@ handle:
 	d32	HandleInterrupt
 END IRQHandler;
 
+(* compiler intrinsics *)
+TYPE ULONGINT = LONGINT; (* alias to make distinction between signed and unsigned more clear *)
+TYPE UHUGEINT = HUGEINT;
+
+PROCEDURE DivS64*(left, right: HUGEINT): HUGEINT;
+VAR result, dummy: HUGEINT;
+BEGIN
+	DivModS64(left, right, result, dummy); RETURN result
+END DivS64;
+
+PROCEDURE ModS64*(left, right: HUGEINT): HUGEINT;
+VAR result, dummy: HUGEINT;
+BEGIN
+		DivModS64(left, right, dummy, result); RETURN result
+END ModS64;
+
+(* signed division and modulus
+- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
+*)
+PROCEDURE DivModS64*(dividend, divisor: HUGEINT; VAR quotient, remainder: HUGEINT);
+BEGIN
+	ASSERT(divisor > 0);
+	IF dividend >= 0 THEN
+		DivModU64(dividend, divisor, quotient, remainder)
+	ELSE
+		dividend := -dividend;
+		DivModU64(dividend, divisor, quotient, remainder);
+		quotient := -quotient;
+		IF remainder # 0 THEN
+			DEC(quotient);
+			remainder := divisor - remainder
+		END
+	END
+END DivModS64;
+
+(* Count leading zeros in a binary representation of a given 64-bit integer number *)
+PROCEDURE Clz64*(x: UHUGEINT): LONGINT;
+CODE
+	; high-half
+	LDR R1, [FP,#x+4]
+	CMP R1, #0 ; if high-half is zero count leading zeros of the low-half
+	BEQ LowHalf
+
+	CLZ R0, R1
+	B Exit
+
+	; low-half
+LowHalf:
+	LDR R1, [FP,#x]
+	CLZ R0, R1
+	ADD R0, R0, #32 ; add 32 zeros from the high-half
+
+Exit:
+END Clz64;
+
+(*
+	Fast 64-bit unsigned integer division/modulo (Alexey Morozov)
+*)
+PROCEDURE DivModU64*(dividend, divisor: UHUGEINT; VAR quotient, remainder: UHUGEINT);
+VAR m: LONGINT;
+BEGIN
+	quotient := 0;
+
+	IF dividend = 0 THEN remainder := 0; RETURN; END;
+	IF dividend < divisor THEN remainder := dividend; RETURN; END;
+
+	m := Clz64(divisor) - Clz64(dividend);
+	ASSERT(m >= 0);
+
+	divisor := LSH(divisor,m);
+	WHILE m >= 0 DO
+		quotient := LSH(quotient,1);
+		IF dividend >= divisor THEN
+			INC(quotient);
+			DEC(dividend,divisor);
+		END;
+		divisor := LSH(divisor,-1);
+		DEC(m);
+	END;
+
+	remainder := dividend;
+END DivModU64;
+
 END CPU.

@@ -107,26 +107,6 @@ VAR
 	END StrToInt;
 	(** -- Atomic operations -- *)
 
-(** Atomic INC with one parameter. *)
-
-	PROCEDURE -Inc*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
-		POP	EAX
-		LOCK
-		INC	DWORD[EAX]
-	END Inc;
-
-(** Atomic EXCL. *)
-
-	PROCEDURE Excl*( VAR s: SET;  bit: LONGINT );
-	CODE {SYSTEM.i386}
-		MOV	EAX, [EBP+bit]
-		MOV	EBX, [EBP+s]
-		LOCK
-		BTR	[EBX], EAX
-	END Excl;
-	(** -- Miscellaneous -- *)
-
 (** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
 
 	PROCEDURE -SpinHint*;
@@ -146,23 +126,11 @@ CODE {SYSTEM.i386}
 	MOV EAX, EBP
 END CurrentBP;
 
-(* Set current frame pointer *)
-PROCEDURE -SetBP* (bp: ADDRESS);
-CODE {SYSTEM.i386}
-	POP EBP
-END SetBP;
-
 (* Return current stack pointer *)
 PROCEDURE -CurrentSP* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, ESP
 END CurrentSP;
-
-(* Set current stack pointer *)
-PROCEDURE -SetSP* (sp: ADDRESS);
-CODE {SYSTEM.i386}
-	POP ESP
-END SetSP;
 
 PROCEDURE MapPhysical*(physAdr: ADDRESS; size: SIZE; VAR virtAdr: ADDRESS);
 BEGIN
@@ -210,7 +178,7 @@ END GetInit;
 
 (** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
 
-	PROCEDURE Fill32*( destAdr, size, filler: LONGINT );
+	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE {SYSTEM.i386}
 		PUSH	ECX
 		MOV	EDI, [EBP+destAdr]

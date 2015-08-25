@@ -351,9 +351,9 @@ TYPE
 				Global.GetSymbolSegmentedName(x,name);
 				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
 				irv.SetExported(IsExported(x));
-				irv.SetPositionOrAlignment(x.fixed, x.alignment);
 				irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
 				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
+				irv.SetPositionOrAlignment(x.fixed, x.alignment);
 				meta.CheckTypeDeclaration(x.type);
 			ELSIF currentScope IS SyntaxTree.RecordScope THEN
 			ELSIF currentScope IS SyntaxTree.ProcedureScope THEN
@@ -524,6 +524,8 @@ TYPE
 			procedureType := x.type(SyntaxTree.ProcedureType);
 			isModuleBody := x = module.module.moduleScope.bodyProcedure;
 			implementationVisitor.temporaries.Init;
+			implementationVisitor.usedRegisters := NIL;
+			implementationVisitor.registerUsageCount.Init;
 
 			implementationVisitor.GetCodeSectionNameForSymbol(x, name);
 			IF (scope.body # NIL) & (x.isInline)  THEN
@@ -729,7 +731,6 @@ TYPE
 			ELSE (* force body for procedures *)
 				implementationVisitor.EmitEnter(ir, x.position,x,cc,0,0);
 				ir.EnterValidPAF;
-				implementationVisitor.usedRegisters := NIL;
 				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
 				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
 				ir.ExitValidPAF;
@@ -10419,7 +10420,7 @@ TYPE
 				commentPrintout := NIL;
 				dump := NIL;
 			END;
-			registerUsageCount.Init;
+
 
 			prevScope := currentScope;
 			currentScope := scope;
@@ -12532,7 +12533,7 @@ TYPE
 		statCoopResetProcedure,
 		statCoopTraceModule)
 	END Statistics;
-	
+
 	PROCEDURE PassBySingleReference(parameter: SyntaxTree.Parameter): BOOLEAN;
 	BEGIN
 		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE

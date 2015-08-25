@@ -286,7 +286,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	I386GEN { Generic.I386.Machine.Mod }
 	AMD64 { AMD64.Machine.Mod }
 	WINORIG, WINGEN {Win32.Machine.Mod }
-	COOP { Mutexes.Mod Coop.Machine.Mod }
+	COOP { Mutexes.Mod Coop.I386.Machine.Mod }
 
 	UNIX { Unix.I386.Machine.Mod }
 

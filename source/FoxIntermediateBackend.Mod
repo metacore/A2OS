@@ -1350,6 +1350,7 @@ TYPE
 		VAR parametersSize: LONGINT;
 		VAR prevSection: IntermediateCode.Section;
 		VAR prevDump: Streams.Writer;
+		VAR body: SyntaxTree.Body;
 		BEGIN
 			ASSERT(~procedure.type(SyntaxTree.ProcedureType).noPAF);
 			prevSection := SELF.section;
@@ -1371,7 +1372,8 @@ TYPE
 				IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
 				Emit(Push(-1,op1));
 				Emit(Mov(-1,fp, sp));
-				IF (procedure.procedureScope.body = NIL) OR ~procedure.procedureScope.body.isUnchecked THEN
+				body := procedure.procedureScope.body;
+				IF (body # NIL) & (body.code = NIL) & ~procedure.procedureScope.body.isUnchecked THEN
 					NEW(call, section);
 					NEW(nocall, section);
 					reg := NewRegisterOperand(addressType);
@@ -6103,6 +6105,7 @@ TYPE
 					ELSIF type.form = SyntaxTree.Static THEN
 						baseType := type.arrayBase;
 						size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+						ASSERT(type.staticLength < 1024*1024*1024);
 						FOR i := 0 TO type.staticLength-1 DO
 							InitFields(baseType,adr,offset+i*size);
 						END;

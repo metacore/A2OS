@@ -9,11 +9,11 @@ VAR
 	Color*: PROCEDURE (c: SHORTINT);
 
 PROCEDURE Enter*;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Enter;
 
 PROCEDURE Exit*;
-BEGIN
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Exit;
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)

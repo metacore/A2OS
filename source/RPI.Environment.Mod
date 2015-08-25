@@ -57,6 +57,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	REPEAT UNTIL CPU.TXFE IN CPU.ReadMask (CPU.UART_FR);
 END Flush;
 
+PROCEDURE GetString- (CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	result[0] := 0X
+END GetString;
+
 PROCEDURE Clock- (): LONGINT;
 BEGIN RETURN Timer.GetCounter () DIV frequency;
 END Clock;
@@ -113,7 +118,6 @@ END Exit;
 
 PROCEDURE Initialize-;
 CONST BaudRate = 115200;
-VAR heapStart EXTERN "_heap_start": ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity (NIL);
 	CPU.Initialize; LED (TRUE);
@@ -129,7 +133,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.WriteMask (CPU.UART_IMSC, {CPU.RXIM});
 	CPU.WriteMask (CPU.UART_CR, {CPU.UARTEN, CPU.TXE, CPU.RXE});
 	CPU.IdentityMapMemory; CPU.EnableMemoryManagementUnit;
-	HeapManager.Initialize (heap, heapStart, CPU.MemorySize);
+	HeapManager.Initialize (heap, ADDRESS OF KernelEnd, CPU.MemorySize);
 END Initialize;
 
 PROCEDURE Terminate-;
@@ -137,6 +141,10 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Interrupts.Terminate;
 	LED (FALSE);
 END Terminate;
+
+PROCEDURE {NOPAF, ALIGNED(32)} KernelEnd;
+CODE
+END KernelEnd;
 
 BEGIN {UNCHECKED}
 	Trace.String ("Version "); Trace.String (SYSTEM.Date); Trace.String (" (");

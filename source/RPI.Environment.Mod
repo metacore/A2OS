@@ -5,7 +5,7 @@ MODULE Environment;
 
 IMPORT SYSTEM, Activities, CPU, HeapManager, Interrupts, Trace, Processors;
 
-CONST Running = 0; Halting = 1; Resetting = 2;
+CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 
 VAR heap: HeapManager.Heap;
 VAR clock := 0: LONGINT;
@@ -17,8 +17,7 @@ VAR previousTimerHandler := NIL: CPU.InterruptHandler;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Trace.StackFrames (2, 8, SIZE OF ADDRESS * 20);
-	IF SYSTEM.GetActivity () = NIL THEN Exit (Resetting) END;
+	IF SYSTEM.GetActivity () # NIL THEN Activities.TerminateCurrentActivity END;
 	Activities.TerminateCurrentActivity;
 END Abort;
 
@@ -86,25 +85,25 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF status THEN CPU.WriteMask (CPU.GPSET1, {15}) ELSE CPU.WriteMask (CPU.GPCLR1, {15}) END;
 END LED;
 
-PROCEDURE Halt*;
+PROCEDURE Shutdown*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	IF CAS (status, Running, Halting) # Running THEN RETURN END;
-	Trace.String ("system: halting..."); Trace.Ln;
+	IF CAS (status, Running, ShuttingDown) # Running THEN RETURN END;
+	Trace.StringLn ("system: shutting down...");
 	IF uartInterruptInstalled # 0 THEN CPU.WriteMask (CPU.IRQDisable2, {25}); Interrupts.Cancel (uartInterrupt) END;
 	IF timerInterruptInstalled # 0 THEN CPU.WriteMask (CPU.IRQDisable1, {1}) END;
-END Halt;
+END Shutdown;
 
-PROCEDURE Reset*;
+PROCEDURE Reboot*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Halt;
-	ASSERT (CAS (status, Halting, Resetting) = Halting);
-END Reset;
+	Shutdown;
+	ASSERT (CAS (status, ShuttingDown, Rebooting) = ShuttingDown);
+END Reboot;
 
 PROCEDURE {NORETURN} Exit- (status: WORD);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.String ("system: ");
-	IF status = Resetting THEN Trace.String ("resetting..."); Trace.Ln; Flush; CPU.Reset END;
-	Trace.String ("ready for power off or reset"); Trace.Ln; Flush; CPU.Halt;
+	IF status = Rebooting THEN Trace.StringLn ("rebooting..."); CPU.Reset END;
+	Trace.StringLn ("ready for power off or restart"); Flush; CPU.Halt;
 END Exit;
 
 PROCEDURE Initialize-;

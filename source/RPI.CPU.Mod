@@ -81,7 +81,7 @@ grant:
 	MOV	R0, #0b11
 	MCR	P15, 0, R0, C3, C0, 0
 enable:
-	MCR	P15, 0, R0, C1, C0, 0
+	MRC	P15, 0, R0, C1, C0, 0
 	ORR	R0, R0, #0b1	; memory protection
 	ORR	R0, R0, #0b100	; data and unified cache
 	ORR	R0, R0, #0b100000000000	; branch prediction

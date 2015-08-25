@@ -81,14 +81,14 @@ TYPE
 		BEGIN
 			Objects.GetCpuCycles(process, currentCycles, TRUE);
 			timer := Machine.GetTimer();
-			timeDiff := Machine.HIntToLReal(timer - lastTimer);
+			timeDiff := timer - lastTimer;
 			IF lastSamplesValid THEN
 				IF (LEN(dataset) = 1) THEN
-					dataset[0]  := SHORT(100.00 * Machine.HIntToLReal(currentCycles[0] - lastCycles[0]) / timeDiff);
+					dataset[0]  := SHORT(100.00 * LONGREAL(currentCycles[0] - lastCycles[0]) / timeDiff);
 				ELSE
 					pAll := 0.0;
 					FOR i := 1 TO LEN(dataset)-1 DO
-						cyclesDiff := Machine.HIntToLReal(currentCycles[i - 1] - lastCycles[i - 1]);
+						cyclesDiff := currentCycles[i - 1] - lastCycles[i - 1];
 						pAll := pAll + cyclesDiff;
 						dataset[i] := SHORT(100.0 * cyclesDiff / timeDiff);
 					END;

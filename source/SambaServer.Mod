@@ -1,6 +1,6 @@
 MODULE SambaServer; (** AUTHOR "mancos"; PURPOSE "SMB Server"; *)
 
-IMPORT SYSTEM, Machine, Modules, Streams, KernelLog, Commands, Dates, Strings, Files, TCP, TCPServices;
+IMPORT SYSTEM, Modules, Streams, KernelLog, Commands, Dates, Strings, Files, TCP, TCPServices;
 
 CONST
 	PrimaryDomain = "BLUEBOTTLE";
@@ -2010,10 +2010,10 @@ BEGIN
 	dtOld.minute := 0;
 	dtOld.second := 0;
 	Dates.TimeDifference(dtOld, dtNow, diffDay, diffHour, diffMinute, diffSecond);
-	tsNow := Machine.MulH(diffDay, 86400) + diffHour * 3600 + diffMinute * 60 + diffSecond;
-	tsNow := Machine.MulH(tsNow,10000000);
+	tsNow := diffDay * 86400 + diffHour * 3600 + diffMinute * 60 + diffSecond;
+	tsNow := tsNow * 10000000;
 	t[0] := SHORT(tsNow);
-	t[1] := SHORT(Machine.DivH(tsNow, 100000000H));
+	t[1] := SHORT(tsNow DIV 100000000H);
 END GetSMBTimeStamp;
 
 PROCEDURE GetUnixTimeStamp(dtNow: Dates.DateTime; VAR t: LONGINT);

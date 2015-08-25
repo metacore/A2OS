@@ -242,7 +242,7 @@ TYPE
 				(* CPU% - 2 *)
 				Objects.GetCpuCycles(processes[i], cycles, FALSE);
 				t0 := cycles[0];
-				Strings.IntToStr(SHORT (Machine.DivH(Machine.MulH(t0, 100)  , t1)), str);SetText(i, 2, str);
+				Strings.IntToStr(SHORT ((t0 * 100) DIV t1), str);SetText(i, 2, str);
 
 
 				(* priority - 3 *)

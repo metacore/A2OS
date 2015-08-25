@@ -1,7 +1,7 @@
 MODULE SambaClient; (** AUTHOR "mancos"; PURPOSE "SMB Client"; *)
 
 IMPORT
-	SYSTEM, Machine, Streams, KernelLog, Dates, Strings, Locks, Files, DNS, IP, TCP;
+	SYSTEM, Streams, KernelLog, Dates, Strings, Locks, Files, DNS, IP, TCP;
 
 CONST
 	PID = 9876;
@@ -1173,8 +1173,8 @@ VAR
 	ts: LONGINT;
 	continue: BOOLEAN;
 BEGIN
-	tsh := Machine.MulH(t[1], 100000000H) + t[0];
-	tsh := Machine.DivH(tsh, 10000000);
+	tsh := t[1] * 100000000H + t[0];
+	tsh := tsh DIV 10000000;
 	tsh := tsh - 11644473600;
 	ts := SHORT(tsh);
 	second := ts MOD 60;

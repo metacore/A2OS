@@ -4,7 +4,7 @@
 MODULE OGGVorbisPlayer;
 
 IMPORT
-	SYSTEM, Strings, KernelLog, Streams, Files, Machine, Commands, SoundDevices, BIT, Math,
+	SYSTEM, Strings, KernelLog, Streams, Files, Commands, SoundDevices, BIT, Math,
 	OGGUtilities, Modules, Kernel,
 	TCP, WebHTTP, WebHTTPClient;
 
@@ -2153,13 +2153,13 @@ TYPE
 				waco := OGGUtilities.MultHugeFP(wa, trig[c]);
 				wbco := OGGUtilities.MultHugeFP(wb, trig[c]);
 				INC(c);
-				x[x1] := Machine.DivH(wc + waco + wbce, 2);
+				x[x1] := (wc + waco + wbce) DIV 2;
 				INC(x1);
-				x[x2] := Machine.DivH(-wd + wbco - wace, 2);
+				x[x2] := (-wd + wbco - wace) DIV 2;
 				DEC(x2);
-				x[x1] := Machine.DivH(wd + wbco - wace, 2);
+				x[x1] := (wd + wbco - wace) DIV 2;
 				INC(x1);
-				x[x2] := Machine.DivH(wc - waco - wbce, 2);
+				x[x2] := (wc - waco - wbce) DIV 2;
 				DEC(x2)
 			END;
 		END KernelStep3;

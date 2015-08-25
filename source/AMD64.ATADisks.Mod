@@ -1236,7 +1236,7 @@ TYPE
 			command := cmdLBA48;
 			ResetCommand(command, SIZEOF(CommandLBA48Desc));
 			command.dev := dev; command.cmd := cmd;
-			command.lbaHigh := SHORT(Machine.ASHH(lba, -32));command.lbaLow := SHORT(lba); command.count := count;
+			command.lbaHigh := SHORT(ASH(lba, -32));command.lbaLow := SHORT(lba); command.count := count;
 			RETURN command;
 		END NewCommandLBA48;
 
@@ -1763,7 +1763,7 @@ TYPE
 			END;
 
 			lbaLow := SHORT(lba);
-			lbaHigh := SHORT(Machine.ASHH(lba, -32));
+			lbaHigh := SHORT(ASH(lba, -32));
 			ASSERT((lbaHigh = 0) OR (lbaHigh = -1)); (* negative value possible for raw writing *)
 			command.packet[2] := CHR(ASH(lbaLow, -24) MOD 100H);
 			command.packet[3] := CHR(ASH(lbaLow, -16) MOD 100H);

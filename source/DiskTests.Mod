@@ -16,7 +16,7 @@ MODULE DiskTests; (** AUTHOR "staubesv"; PURPOSE "Simple block device tests"; *)
  *)
 
 IMPORT
-	Machine, Streams, Random, Kernel, Commands, Disks, Partitions, Lib := PartitionsLib, Strings;
+	Streams, Random, Kernel, Commands, Disks, Partitions, Lib := PartitionsLib, Strings;
 
 TYPE
 
@@ -197,9 +197,9 @@ TYPE
 			PROCEDURE WriteB(b: HUGEINT; w : Streams.Writer);
 			VAR suffix: ARRAY 3 OF CHAR;
 			BEGIN
-				IF b > 1024*1024*1024 THEN suffix := "GB"; b := Machine.DivH(b, 1024*1024*1024);
-				ELSIF b > 1024*1024 THEN suffix := "MB"; b := Machine.DivH(b, 1024*1024);
-				ELSIF b > 1024 THEN suffix := "KB"; b := Machine.DivH(b, 1024);
+				IF b > 1024*1024*1024 THEN suffix := "GB"; b := b DIV (1024*1024*1024);
+				ELSIF b > 1024*1024 THEN suffix := "MB"; b := b DIV (1024*1024);
+				ELSIF b > 1024 THEN suffix := "KB"; b := b DIV 1024;
 				ELSE suffix := "B";
 				END;
 				w.Int(SHORT(b), 0); w.String(suffix);
@@ -216,7 +216,7 @@ TYPE
 				val := 0; FOR i := 0 TO LEN(testedSectors)-1 DO IF testedSectors[i] THEN INC(val); END; END;
 				info.String("   Transfer Sizes Coverage: "); info.FloatFix(100.0 * val / LEN(testedSectors), 5, 2, 0); info.Char("%"); info.Ln;
 			END;
-			info.String("   Total amount of data read: "); WriteB(Machine.MulH(blocksRead, disk.device.blockSize), info); info.Ln;
+			info.String("   Total amount of data read: "); WriteB(blocksRead * disk.device.blockSize, info); info.Ln;
 		END WriteSummary;
 
 		PROCEDURE PerformStep;

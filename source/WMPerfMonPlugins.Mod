@@ -678,7 +678,7 @@ TYPE
 			IF lastTimestamp # 0 THEN
 				Objects.GetCpuCycles(me, cpuCycles, TRUE);
 				FOR i := 0 TO LEN(cpuCycles)-1 DO INC (cycles , cpuCycles[i]); END;
-				value := SHORT(100.0 * Machine.HIntToLReal(cycles - lastCycles) / Machine.HIntToLReal(timestamp - lastTimestamp));
+				value := SHORT(100.0 * LONGREAL(cycles - lastCycles) / LONGREAL(timestamp - lastTimestamp));
 				sampleBuffer[sample MOD sampleBufferSize] := value; INC(sample);
 				lastCycles := cycles;
 				FOR i := 0 TO sampleBufferSize-1 DO sum := sum + sampleBuffer[i]; END;
@@ -763,7 +763,7 @@ BEGIN
 	endTime := Machine.GetTimer();
 	IF nbrOfGcRuns # Heaps.Ngc THEN RETURN FALSE; END;
 	timeDiff := endTime - startTime;
-	clockrate := SHORT (Machine.DivH(timeDiff, 1000*1000));
+	clockrate := SHORT (timeDiff DIV (1000*1000));
 	RETURN TRUE;
 END EstimateCpuClockrate;
 
@@ -774,7 +774,7 @@ END EstimateCpuClockrate;
 *)
 PROCEDURE CyclesToMs*(cycles : HUGEINT; mhz : LONGINT) : LONGINT;
 BEGIN
-	RETURN SHORT (Machine.DivH(cycles, 1000*mhz));
+	RETURN SHORT (cycles DIV (1000*mhz));
 END CyclesToMs;
 
 (** Convert number of milliseconds into string of the form d:h:m:s if m >= 1 or x.xxxs if m < 1*)

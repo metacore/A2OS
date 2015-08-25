@@ -1,6 +1,6 @@
 MODULE WinDisks;   (**  AUTHOR "fof"; PURPOSE "module to access partitions under Windows";  **)
 
-IMPORT Kernel32, SYSTEM, Strings, KernelLog, Streams, Commands, Disks, Plugins, Modules, Machine, WinFS;
+IMPORT Kernel32, SYSTEM, Strings, KernelLog, Streams, Commands, Disks, Plugins, Modules, WinFS;
 
 VAR
 	DeviceIoControl: PROCEDURE {WINAPI} ( hDevice: Kernel32.HANDLE;  dwIoControlCode: LONGINT;  VAR lpInBuffer: ARRAY OF SYSTEM.BYTE;  nInBufferSize: LONGINT;
@@ -64,7 +64,7 @@ TYPE
 
 			pos := LONG( block ) * LONG( blockSize );
 
-			poslow := SHORT( pos );  poshigh := SHORT( Machine.ASHH( pos, -32 ) );
+			poslow := SHORT( pos );  poshigh := SHORT( ASH( pos, -32 ) );
 
 			large.LowPart := poslow;  large.HighPart := poshigh;
 

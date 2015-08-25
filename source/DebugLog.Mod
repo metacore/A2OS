@@ -324,7 +324,7 @@ VAR
 BEGIN {EXCLUSIVE}
 	TraceIdString();
 	out := logwindow.tw;
-	out.Hex(SHORT (Machine.ASHH(x, -32)), w-8);
+	out.Hex(SHORT (ASH(x, -32)), w-8);
 	out.Hex(SHORT (x), 8);
 	out.Ln(); out.Update();
 END HIntHex;

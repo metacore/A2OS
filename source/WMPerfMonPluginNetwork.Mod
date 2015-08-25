@@ -1,8 +1,7 @@
 MODULE WMPerfMonPluginNetwork; (** AUTHOR "staubesv"; PURPOSE "Performance Monitor network performance plugin"; *)
 
 IMPORT
-	Machine, WMPerfMonPlugins,
-	Network, Plugins, Modules;
+	WMPerfMonPlugins, Network, Plugins, Modules;
 
 CONST
 	PluginName = "NetworkSpeed";
@@ -38,8 +37,8 @@ TYPE
 		PROCEDURE UpdateDataset*;
 		VAR sentKB, receivedKB : REAL;
 		BEGIN
-			sentKB := SHORT(Machine.HIntToLReal(l.sendCount)) / 1024;
-			receivedKB := SHORT(Machine.HIntToLReal(l.recvCount)) / 1024;
+			sentKB := l.sendCount / 1024;
+			receivedKB := l.recvCount / 1024;
 			dataset[0] := sentKB + receivedKB;
 			dataset[1] := sentKB;
 			dataset[2] := receivedKB;

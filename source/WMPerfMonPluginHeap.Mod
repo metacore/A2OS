@@ -386,7 +386,7 @@ TYPE
 
 		PROCEDURE UpdateDataset;
 		BEGIN
-			dataset[0] := Machine.DivH(Heaps.NnewBytes, 1024);
+			dataset[0] := Heaps.NnewBytes DIV 1024;
 		END UpdateDataset;
 
 	END BytesAllocated;

@@ -492,161 +492,6 @@ CODE {SYSTEM.i386}
 	AND AL, 1
 END InterruptsEnabled;
 
-(** -- HUGEINT operations -- *)
-
-(** Return h*g. based on code from "AMD Athlon Processor x86 code optimization guide" *)
-PROCEDURE  MulH* (h, g: HUGEINT): HUGEINT;
-CODE {SYSTEM.i386}
-	MOV EDX, [EBP+12]	; y_hi
-	MOV ECX, [EBP+20]	; x_hi
-	OR EDX, ECX		; are x_hi and y_hi both zeros?
-	MOV EDX, [EBP+16]	; x_lo
-	MOV EAX, [EBP+8]	; y_lo
-	JNZ fullMul			; yes, requires full multiplication
-	MUL EDX			; EDX:EAX := y_lo * x_lo
-	JMP exit			; done, return to caller
-
-fullMul:					; full multiplication is required
-
-	MUL ECX			; EAX := LO(y_lo*x_hi)
-	MOV EBX, EAX		; keep the result
-
-	MOV EAX, [EBP+12] 	; y_hi
-	MUL DWORD  [EBP+16]	; EAX := LO(y_hi*x_lo)
-	ADD EBX, EAX 		; EBX := LO(y_lo*x_hi) + LO(y_hi*x_lo)
-
-	MOV EAX, [EBP+8]	; y_lo
-	MUL DWORD   [EBP+16]	; EDX := HI(y_lo*x_lo), EAX := LO(y_lo*x_lo)
-	ADD EDX, EBX		; EDX := y_lo*x_hi + y_hi*x_lo + HI(y_lo*x_lo)
-exit:
-END MulH;
-
-(** Return h DIV g. Rounding and division by zero behaviour is currently undefined. *)
-PROCEDURE DivH* (x, y: HUGEINT): HUGEINT;
-CODE {SYSTEM.i386}
-	MOV ECX, [EBP+12]	; y-hi
-	MOV EBX, [EBP+8]	; y-lo
-	MOV EDX, [EBP+20]	; x-hi
-	MOV EAX, [EBP+16]	; x-lo
-
-	MOV ESI, ECX		; y-hi
-	XOR ESI, EDX		; y-hi ^ x-hi
-	SAR ESI, 31			; (quotient < 0) ? -1 : 0
-	MOV EDI, EDX		; x-hi
-	SAR EDI, 31			; (x < 0) ? -1 : 0
-	XOR EAX, EDI		; if (x < 0)
-	XOR EDX, EDI		; compute 1s complement of x
-	SUB EAX, EDI		; if (x < 0)
-	SBB EDX, EDI		; compute 2s complement of x
-	MOV EDI, ECX		; y-hi
-	SAR EDI, 31			; (y < 0) ? -1 : 0
-	XOR EBX, EDI		; if (y < 0)
-	XOR ECX, EDI		; compute 1s complement of y
-	SUB EBX, EDI		; if (y < 0)
-	SBB ECX, EDI		; compute 2s complement of y
-	JNZ bigDivisor		; y > 2^32-1
-	CMP EDX, EBX		; only one division needed ? (ECX = 0)
-	JAE twoDivs			; need two divisions
-	DIV EBX			; EAX = quotient-lo
-	MOV EDX, ECX		; EDX = quotient-hi = 0
-	; quotient in EDX:EAX
-	XOR EAX, ESI		; if (quotient < 0)
-	XOR EDX, ESI		; compute 1s complement of result
-	SUB EAX, ESI		; if (quotient < 0)
-	SBB EDX, ESI		; compute 2s complement of result
-	JMP exit			; done, return to caller
-
-twoDivs:
-	MOV ECX, EAX		; save x-lo in ECX
-	MOV EAX, EDX		; get x-hi
-	XOR EDX, EDX		; zero extend it into EDX:EAX
-	DIV EBX			; quotient-hi in EAX
-	XCHG EAX, ECX		; ECX = quotient-hi, EAX = x-lo
-	DIV EBX			; EAX = quotient-lo
-	MOV EDX, ECX		; EDX = quotient-hi
-	; quotient in EDX:EAX
-	JMP makeSign		; make quotient signed
-
-bigDivisor:
-	SUB ESP, 12			; create three local variables
-	MOV [ESP], EAX		; x-lo
-	MOV [ESP+4], EBX	; y-lo
-	MOV [ESP+8], EDX	; x-hi
-	MOV EDI, ECX		; save y-hi
-	SHR EDX, 1			; shift both
-	RCR EAX, 1			; y and
-	ROR EDI, 1			; and x
-	RCR EBX, 1			; right by 1 bit
-	BSR ECX, ECX		; ECX = number of remaining shifts
-	SHRD EBX, EDI, CL	; scale down y and
-	SHRD EAX, EDX, CL	; x such that y
-	SHR EDX, CL		; less than 2^32 (i.e. fits in EBX)
-	ROL EDI, 1			; restore original y-hi
-	DIV EBX			; compute quotient
-	MOV EBX, [ESP]		; x-lo
-	MOV ECX, EAX		; save quotient
-	IMUL EDI, EAX		; quotient * y hi-word (low only)
-	MUL DWORD [ESP+4]	; quotient * y lo-word
-	ADD EDX, EDI		; EDX:EAX = quotient * y
-	SUB EBX, EAX		; x-lo - (quot.*y)-lo
-	MOV EAX, ECX		; get quotient
-	MOV ECX, [ESP+8]	; x-hi
-	SBB ECX, EDX		; subtract y * quot. from x
-	SBB EAX, 0			; adjust quotient if remainder negative
-	XOR EDX, EDX		; clear hi-word of quotient
-	ADD ESP, 12		; remove local variables
-
-makeSign:
-	XOR EAX, ESI		; if (quotient < 0)
-	XOR EDX, ESI		; compute 1s complement of result
-	SUB EAX, ESI		; if (quotient < 0)
-	SBB EDX, ESI		; compute 2s complement of result
-exit:
-END DivH;
-
-(** Return ASH(h, n). *)
-PROCEDURE  -ASHH* (h: HUGEINT; n: LONGINT): HUGEINT;
-CODE {SYSTEM.i386}
-	POP ECX
-	POP EAX
-	POP EDX
-	CMP ECX, 0
-	JL right
-	AND ECX, 63	; limit count, like ASH
-	JZ exit
-ll:
-	SHL EAX, 1
-	RCL EDX, 1
-	DEC ECX
-	JNZ ll
-	JMP exit
-right:
-	NEG ECX
-	AND ECX, 63	; limit count, like ASH
-	JZ exit
-lr:
-	SAR EDX, 1
-	RCR EAX, 1
-	DEC ECX
-	JNZ lr
-exit:
-END ASHH;
-
-(** Return a HUGEINT composed of high and low. *)
-PROCEDURE  -LInt2ToHInt* (high, low: LONGINT): HUGEINT;
-CODE {SYSTEM.i386}
-	POP EAX
-	POP EDX
-END LInt2ToHInt;
-
-(** Return h as a LONGREAL, with possible loss of precision. *)
-PROCEDURE -HIntToLReal* (h: HUGEINT): LONGREAL;
-CODE {SYSTEM.i386, SYSTEM.FPU}
-	FILD QWORD [ESP]
-	FWAIT
-	ADD ESP, 8
-END HIntToLReal;
-
 (** -- Processor initialization -- *)
 PROCEDURE -SetFCR (s: SET);
 CODE {SYSTEM.i386, SYSTEM.FPU}
@@ -3279,13 +3124,13 @@ BEGIN
 		FOR i := 0 TO numProcessors-1 DO
 			INC (mean, t[i])
 		END;
-		mean := DivH(mean, n);
+		mean := mean DIV n;
 		var := 0;
 		FOR i := 0 TO numProcessors-1 DO
 			n := t[i] - mean;
-			INC (var, MulH(n, n))
+			INC (var, n * n)
 		END;
-		var := DivH(var, numProcessors - 1);
+		var := var DIV (numProcessors - 1);
 		Trace.String(" mean="); Trace.HIntHex(mean, 16);
 		Trace.String(" var="); Trace.HIntHex(var, 16);
 		Trace.String(" var="); Trace.Int(SHORT (var), 1);

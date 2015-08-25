@@ -1,6 +1,6 @@
 MODULE FoxInterpreterBackend; (** AUTHOR "fof"; PURPOSE "abstract code interpreter"; *)
 
-IMPORT Basic := FoxBasic, SYSTEM, Diagnostics, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options, Machine,
+IMPORT Basic := FoxBasic, SYSTEM, Diagnostics, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options,
 	IntermediateBackend := FoxIntermediateBackend, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats,
 	Trace := KernelLog, Streams, SymbolFileFormat := FoxTextualSymbolFile;
 
@@ -516,7 +516,7 @@ TYPE
 		ELSE
 			IF type.sizeInBits= 1 THEN dest.int1 := dest.int1 * source.int1;
 			ELSIF type.sizeInBits= 2 THEN dest.int2 := dest.int2 * source.int2;
-			ELSIF type.sizeInBits= 8 THEN dest.int8 := Machine.MulH (dest.int8, source.int8);
+			ELSIF type.sizeInBits= 8 THEN dest.int8 := dest.int8 * source.int8;
 			ELSE dest.int4 := dest.int4 * source.int4; END;
 		END;
 	END Multiply;
@@ -529,7 +529,7 @@ TYPE
 		ELSE
 			IF type.sizeInBits= 1 THEN dest.int1 := dest.int1 DIV source.int1;
 			ELSIF type.sizeInBits= 2 THEN dest.int2 := dest.int2 DIV source.int2;
-			ELSIF type.sizeInBits= 8 THEN dest.int8 := Machine.DivH (dest.int8, source.int8);
+			ELSIF type.sizeInBits= 8 THEN dest.int8 := dest.int8 * source.int8;
 			ELSE dest.int4 := dest.int4 DIV source.int4; END;
 		END;
 	END Divide;

@@ -68,7 +68,7 @@ END Bench;
 
 PROCEDURE CyclesToMs(cycles : HUGEINT; mhz : LONGINT) : LONGREAL;
 BEGIN
-	RETURN Machine.HIntToLReal(cycles) / (1000*mhz);
+	RETURN LONGREAL(cycles) / (1000*mhz);
 END CyclesToMs;
 
 PROCEDURE ShowMs(cycles : HUGEINT; out : Streams.Writer);
@@ -95,7 +95,7 @@ BEGIN {EXCLUSIVE}
 			END;
 			sum := sum + data[i];
 		END;
-		avg := SHORT(Machine.DivH(sum, nofSamples));
+		avg := SHORT(sum DIV nofSamples);
 		(* calculate standard deviation *)
 		diffSum := 0;
 		FOR i := 0 TO LEN(data)-1 DO

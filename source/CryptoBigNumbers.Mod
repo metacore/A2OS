@@ -370,7 +370,7 @@ VAR
 	BEGIN
 		tb.lo := b;  tb.hi := 0;
 		tc.lo := c;  tc.hi := 0;
-		res := M.MulH( S.VAL( HUGEINT, tb ), S.VAL( HUGEINT, tc ) );
+		res := S.VAL( HUGEINT, tb ) * S.VAL( HUGEINT, tc );
 		INC( res, d );
 		low := SHORT( res );
 		high := SHORT( LSH( res, -32 ) );

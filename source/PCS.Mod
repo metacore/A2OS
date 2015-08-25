@@ -3,7 +3,7 @@
 MODULE PCS; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: scanner"; *)
 
 	IMPORT
-		Streams, Texts, UTF8Strings, StringPool, PCM, Machine;
+		Streams, Texts, UTF8Strings, StringPool, PCM;
 
 	CONST
 		Trace = FALSE;
@@ -244,7 +244,7 @@ TYPE
 						IF intval = longintval THEN numtyp := integer END;
 					ELSE (* decimal *) numtyp := longinteger;
 						WHILE i < n DO d := Ord(dig[i], FALSE); INC(i);
-							longintval := Machine.MulH (longintval, 10) + d;
+							longintval := longintval * 10 + d;
 							IF longintval < 0 THEN err(203) END;
 						END;
 						intval := SHORT (longintval);

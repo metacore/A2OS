@@ -32,10 +32,10 @@ TYPE
 			timestamp := Machine.GetTimer();
 
 			IF lastTimeStamp # 0 THEN
-				total := Machine.HIntToLReal(timestamp - lastTimeStamp);
+				total := timestamp - lastTimeStamp;
 				FOR cpuNbr := 0 TO Machine.MaxCPU-1 DO
 					IF Objects.idleCycles[cpuNbr] # 0 THEN
-						dCycles := Machine.HIntToLReal(Objects.idleCycles[cpuNbr] - lastCycles[cpuNbr]);
+						dCycles := Objects.idleCycles[cpuNbr] - lastCycles[cpuNbr];
 						cpuLoad[cpuNbr] := 100.0 - SHORT(100.0 * (dCycles / total));
 					END;
 				END;

@@ -490,37 +490,6 @@ CODE {SYSTEM.AMD64}
 	AND AL, 1
 END InterruptsEnabled;
 
-(** -- HUGEINT operations -- *)
-
-(** Return h*g. *)
-PROCEDURE MulH* (h, g: HUGEINT): HUGEINT;
-BEGIN RETURN h * g;
-END MulH;
-
-(** Return h DIV g. Rounding and division by zero behaviour is currently undefined. *)
-PROCEDURE DivH* (x, y: HUGEINT): HUGEINT;
-BEGIN RETURN x DIV y
-END DivH;
-
-(** Return ASH(h, n). *)
-PROCEDURE ASHH* (h: HUGEINT; n: LONGINT): HUGEINT;
-BEGIN RETURN ASH (h, n);
-END ASHH;
-
-(** Return a HUGEINT composed of high and low. *)
-PROCEDURE -LInt2ToHInt* (high, low: LONGINT): HUGEINT;
-CODE {SYSTEM.AMD64}
-	POP RAX
-END LInt2ToHInt;
-
-(** Return h as a LONGREAL, with possible loss of precision. *)
-PROCEDURE -HIntToLReal* (h: HUGEINT): LONGREAL;
-CODE {SYSTEM.AMD64, SYSTEM.FPU}
-	FILD QWORD [ESP]
-	PAUSE
-	ADD RSP, 8
-END HIntToLReal;
-
 (** -- Processor initialization -- *)
 PROCEDURE -SetFCR (s: SET);
 CODE {SYSTEM.AMD64, SYSTEM.FPU}
@@ -3378,13 +3347,13 @@ BEGIN
 		FOR i := 0 TO numProcessors-1 DO
 			INC (mean, t[i])
 		END;
-		mean := DivH(mean, n);
+		mean := mean DIV n;
 		var := 0;
 		FOR i := 0 TO numProcessors-1 DO
 			n := t[i] - mean;
-			INC (var, MulH(n, n))
+			INC (var, n * n)
 		END;
-		var := DivH(var, numProcessors - 1);
+		var := var DIV (numProcessors - 1);
 		Trace.String(" mean="); Trace.HIntHex(mean, 16);
 		Trace.String(" var="); Trace.HIntHex(var, 16);
 		Trace.String(" var="); Trace.Int(SHORT (var), 1);

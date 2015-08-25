@@ -4,7 +4,7 @@
 MODULE OGGUtilities;
 
 IMPORT
-	SYSTEM, Strings, Files,  KernelLog, Machine, SoundDevices, BIT;
+	SYSTEM, Strings, Files,  KernelLog, SoundDevices, BIT;
 
 CONST
 	(* debugging set *)
@@ -673,7 +673,7 @@ TYPE
 		IF h < 0 THEN h := -1 * h END;
 		res := 0;
 		FOR i := 0 TO 63 DO
-			IF Machine.HIntToLInt(h) MOD 2 = 1 THEN
+			IF LONGINT(h) MOD 2 = 1 THEN
 				res := i
 			END;
 			h := LSH(h, -1)
@@ -737,8 +737,8 @@ TYPE
 		ELSE
 			n := Ny DIV 2;
 			divident := LSH(LONG(LONG(1)), n);
-			a := Machine.DivH(a, divident);
-			b := Machine.DivH(b, divident);
+			a := a DIV divident;
+			b := b DIV, divident;
 			RETURN a * b
 		END
 	END MultFP;
@@ -794,13 +794,13 @@ TYPE
 	(** scales a hugeint down for fix-point representation (rounded) with constant fraction Ny*)
 	PROCEDURE ScaleDownRoundedHuge*(i: HUGEINT): LONGINT;
 	BEGIN
-		RETURN SHORT(Machine.DivH(i + Machine.DivH(ScaleFactor , 2), ScaleFactor))
+		RETURN SHORT((i + ScaleFactor DIV 2) DIV ScaleFactor)
 	END ScaleDownRoundedHuge;
 
 	(** scales a hugeint down for fix-point representation  with constant fraction Ny*)
 	PROCEDURE ScaleDownHuge(i: HUGEINT): HUGEINT;
 	BEGIN
-		RETURN Machine.DivH(i, ScaleFactor)
+		RETURN i DIV ScaleFactor
 	END ScaleDownHuge;
 
 
@@ -945,7 +945,7 @@ TYPE
 	BEGIN
 		IF (value < 0) THEN sign := -1; value := -1 * value ELSE sign := 1 END;
 		IF (sign = -1) THEN w.String("-") ELSE w.String(" ") END;
-		PrintHex(SHORT (Machine.ASHH(value, -32)));
+		PrintHex(SHORT (ASH(value, -32));
 		PrintHex(SHORT (value));
 		w.Update
 	END VarH2;

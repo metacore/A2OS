@@ -283,40 +283,6 @@ VAR
 		OR RAX, RDX
 	END GetTimer;
 
-	
-	(** -- HUGEINT operations -- *)
-
-	(** Return h*g. *)
-	PROCEDURE MulH* (h, g: HUGEINT): HUGEINT;
-	BEGIN RETURN h * g;
-	END MulH;
-
-	(** Return h DIV g. Rounding and division by zero behaviour is currently undefined. *)
-	PROCEDURE DivH* (x, y: HUGEINT): HUGEINT;
-	BEGIN RETURN x DIV y
-	END DivH;
-
-	(** Return ASH(h, n). *)
-	PROCEDURE ASHH* (h: HUGEINT; n: LONGINT): HUGEINT;
-	BEGIN RETURN ASH (h, n);
-	END ASHH;
-
-	(** Return a HUGEINT composed of high and low. *)
-	PROCEDURE -LInt2ToHInt* (high, low: LONGINT): HUGEINT;
-	CODE {SYSTEM.AMD64}
-		POP RAX
-	END LInt2ToHInt;
-
-	(** Return h as a LONGREAL, with possible loss of precision. *)
-	PROCEDURE -HIntToLReal* (h: HUGEINT): LONGREAL;
-	CODE {SYSTEM.AMD64, SYSTEM.FPU}
-		FILD QWORD [ESP]
-		PAUSE
-		ADD RSP, 8
-	END HIntToLReal;
-
-
-
 
 	PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
 	END Portin8;
@@ -335,8 +301,6 @@ VAR
 
 	PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
 	END Portout32;
-
-
 
 
 	PROCEDURE Is32BitAddress*( adr: ADDRESS ): BOOLEAN;

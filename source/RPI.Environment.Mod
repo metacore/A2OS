@@ -14,7 +14,6 @@ VAR uartInterruptInstalled := 0: SIZE;
 VAR timerInterruptInstalled := 0: SIZE;
 VAR uartInterrupt: Interrupts.Interrupt;
 VAR previousTimerHandler := NIL: CPU.InterruptHandler;
-VAR name- EXTERN "_environment": ARRAY MAX (SIZE) OF CHAR;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}

@@ -42,6 +42,18 @@ CODE
 	WFI
 END Halt;
 
+PROCEDURE -SaveResult-;
+CODE
+	STMDB	SP!, {R0, R1}
+END SaveResult;
+
+PROCEDURE -RestoreResultAndReturn-;
+CODE
+	LDMIA	SP!, {R0, R1}
+	ADD	SP, FP, #4
+	LDMIA	SP!, {FP, PC}
+END RestoreResultAndReturn;
+
 (* memory management *)
 CONST MemorySize* = 964 * MB; MB = 1024 * 1024;
 

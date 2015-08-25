@@ -297,9 +297,11 @@ TYPE
 				IF~ GenerateRecordOffsets(baseType) THEN RETURN FALSE END;
 			END;
 			IF baseType # NIL THEN
-				offset := baseType.sizeInBits; alignment := baseType.alignmentInBits;
+				offset := baseType.sizeInBits; 
+				alignment := baseType.alignmentInBits;
 			ELSE
 				offset := 0; alignment := x.alignmentInBits;
+				IF alignment <= 0 THEN alignment := dataUnit END;
 			END;
 
 			variable := x.recordScope.firstVariable;
@@ -333,9 +335,11 @@ TYPE
 				IF~ GenerateRecordOffsets(baseType) THEN RETURN FALSE END;
 			END;
 			IF baseType # NIL THEN
-				offset := baseType.sizeInBits; alignment := baseType.alignmentInBits;
+				offset := baseType.sizeInBits; 
+				alignment := baseType.alignmentInBits;
 			ELSE
-				offset := 0; alignment := dataUnit;
+				offset := 0; alignment := baseType.alignmentInBits;
+				IF alignment <= 0 THEN alignment := dataUnit END;
 			END;
 
 			variable := x.cellScope.firstVariable;

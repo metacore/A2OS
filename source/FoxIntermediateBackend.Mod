@@ -1381,7 +1381,7 @@ TYPE
 					Emit(Push(-1, op2));
 					Emit(Push(-1, reg));
 					ReleaseIntermediateOperand(reg);
-					CallThis(position, "Activities","ExpandStack",0);
+					CallThis(position, "Activities","ExpandStack",2);
 					Emit(Result(-1, sp));
 					nocall.Resolve(section.pc);
 				END;

@@ -325,17 +325,114 @@ END IRQHandler;
 TYPE ULONGINT = LONGINT; (* alias to make distinction between signed and unsigned more clear *)
 TYPE UHUGEINT = HUGEINT;
 
+PROCEDURE DivS8*(left, right: SHORTINT): SHORTINT;
+VAR result, dummy: LONGINT;
+BEGIN	 DivModS32(left, right, result, dummy); RETURN SHORTINT(result)
+END DivS8;
+
+PROCEDURE DivS16*(left, right: INTEGER): INTEGER;
+VAR result, dummy: LONGINT;
+BEGIN	 DivModS32(left, right, result, dummy); RETURN INTEGER(result)
+END DivS16;
+
+PROCEDURE DivS32*(left, right: LONGINT): LONGINT;
+VAR result, dummy: LONGINT;
+BEGIN	 DivModS32(left, right, result, dummy); RETURN result
+END DivS32;
+
+PROCEDURE DivU32*(left, right: ULONGINT): ULONGINT;
+VAR result, dummy: LONGINT;
+BEGIN DivModU32(left, right, result, dummy); RETURN result
+END DivU32;
+
 PROCEDURE DivS64*(left, right: HUGEINT): HUGEINT;
 VAR result, dummy: HUGEINT;
 BEGIN
 	DivModS64(left, right, result, dummy); RETURN result
 END DivS64;
 
+PROCEDURE ModS8*(left, right: SHORTINT): SHORTINT;
+VAR result, dummy: LONGINT;
+BEGIN DivModS32(left, right, dummy, result); RETURN SHORTINT(result)
+END ModS8;
+
+PROCEDURE ModS16*(left, right: INTEGER): INTEGER;
+VAR result, dummy: LONGINT;
+BEGIN DivModS32(left, right, dummy, result); RETURN INTEGER(result)
+END ModS16;
+
+PROCEDURE ModS32*(left, right: LONGINT): LONGINT;
+VAR result, dummy: LONGINT;
+BEGIN DivModS32(left, right, dummy, result); RETURN result
+END ModS32;
+
+PROCEDURE ModU32*(left, right: ULONGINT): ULONGINT;
+VAR result, dummy: LONGINT;
+BEGIN DivModU32(left, right, dummy, result); RETURN result
+END ModU32;
+
 PROCEDURE ModS64*(left, right: HUGEINT): HUGEINT;
 VAR result, dummy: HUGEINT;
 BEGIN
 		DivModS64(left, right, dummy, result); RETURN result
 END ModS64;
+
+(* signed division and modulus
+- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
+*)
+PROCEDURE DivModS32(dividend, divisor: LONGINT; VAR quotient, remainder: LONGINT);
+BEGIN
+	ASSERT(divisor > 0);
+	IF dividend >= 0 THEN
+		DivModU32(dividend, divisor, quotient, remainder)
+	ELSE
+		dividend := -dividend;
+		DivModU32(dividend, divisor, quotient, remainder);
+		quotient := -quotient;
+		IF remainder # 0 THEN
+			DEC(quotient);
+			remainder := divisor - remainder
+		END
+	END
+END DivModS32;
+
+(*
+	Fast 32-bit unsigned integer division/modulo (author Alexey Morozov)
+*)
+PROCEDURE DivModU32(dividend, divisor: ULONGINT; VAR quotient, remainder: ULONGINT);
+CODE
+	MOV R2, #0 ; quotient will be stored in R2
+
+	LDR R0, [FP,#dividend] ; R0 := dividend
+	LDR R1, [FP,#divisor] ; R1 := divisor
+
+	; check for the case dividend < divisor
+	CMP R0, R1
+	BLT Exit ; nothing to do than setting quotient to 0 and remainder to dividend (R0)
+
+	CLZ R3, R0 ; R3 := clz(dividend)
+	CLZ R4, R1 ; R4 := clz(divisor)
+
+	SUB R3, R4, R3 ; R2 := clz(divisor) - clz(dividend) , R2 >= 0
+	LSL R1, R1, R3 ; scale divisor: divisor := LSH(divisor,clz(divisor)-clz(dividend))
+
+Loop:
+	CMP R0, R1
+	ADC R2, R2, R2
+	SUBCS R0, R0, R1
+	LSR R1, R1, #1
+	SUBS R3, R3, #1
+	BPL Loop
+
+	; R0 holds the remainder
+
+Exit:
+	LDR R1, [FP,#quotient] ; R1 := address of quotient
+	LDR R3, [FP,#remainder] ; R3 := address of remainder
+
+	STR R2, [R1,#0] ; quotient := R1
+	STR R0, [R3,#0] ; remainder := R0
+END DivModU32;
 
 (* signed division and modulus
 - note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one

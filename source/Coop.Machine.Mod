@@ -164,39 +164,6 @@ CODE {SYSTEM.i386}
 	POP ESP
 END SetSP;
 
-(* Compare two unsigned addresses *)
-PROCEDURE -LessThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETB AL
-END LessThan;
-
-PROCEDURE -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETBE AL
-END LessOrEqual;
-
-PROCEDURE -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETA AL
-END GreaterThan;
-
-PROCEDURE -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETAE AL
-END GreaterOrEqual;
-
 PROCEDURE MapPhysical*(physAdr: ADDRESS; size: SIZE; VAR virtAdr: ADDRESS);
 BEGIN
 	virtAdr := physAdr;

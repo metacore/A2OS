@@ -242,41 +242,6 @@ VAR
 		highFree := 0
 	END GetFreeK;
 
-
-(* Compare two unsigned addresses *)
-PROCEDURE {REALTIME} -LessThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETB AL
-END LessThan;
-
-PROCEDURE {REALTIME} -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETBE AL
-END LessOrEqual;
-
-PROCEDURE {REALTIME} -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETA AL
-END GreaterThan;
-
-PROCEDURE {REALTIME} -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETAE AL
-END GreaterOrEqual;
-
-
 (** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 PROCEDURE {REALTIME} Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 CODE {SYSTEM.i386}

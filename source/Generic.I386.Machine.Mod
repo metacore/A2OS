@@ -450,39 +450,6 @@ CODE {SYSTEM.i386}
 	REP NOP		; PAUSE instruction; NOP on pre-P4 processors, Spin Loop Hint on P4 and after
 END SpinHint;
 
-(* Compare two unsigned addresses *)
-PROCEDURE -LessThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETB AL
-END LessThan;
-
-PROCEDURE -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETBE AL
-END LessOrEqual;
-
-PROCEDURE -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETA AL
-END GreaterThan;
-
-PROCEDURE -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETAE AL
-END GreaterOrEqual;
-
 (** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: ADDRESS);
 CODE {SYSTEM.i386}
@@ -2250,14 +2217,14 @@ END GetStaticHeap;
 
 PROCEDURE InModuleHeap(p: ADDRESS): BOOLEAN;
 BEGIN
-	RETURN GreaterOrEqual(p, SYSTEM.VAL(ADDRESS, FirstAddress)) & LessOrEqual(p, SYSTEM.VAL(ADDRESS, LastAddress));
+	RETURN (p >= SYSTEM.VAL(ADDRESS, FirstAddress)) & (p <= SYSTEM.VAL(ADDRESS, LastAddress));
 END InModuleHeap;
 
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
 	RETURN 
-		GreaterOrEqual(p,memBlockHead.beginBlockAdr) & LessOrEqual(p,memBlockTail.endBlockAdr)
+		(p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
 		OR InModuleHeap(p);
 END ValidHeapAddress;
 

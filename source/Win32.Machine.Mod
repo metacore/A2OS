@@ -192,41 +192,6 @@ CODE {SYSTEM.i386}
 	POP ESP
 END SetSP;
 
-(* Compare two unsigned addresses *)
-PROCEDURE -LessThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETB AL
-END LessThan;
-
-PROCEDURE -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETBE AL
-END LessOrEqual;
-
-PROCEDURE -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETA AL
-END GreaterThan;
-
-PROCEDURE -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP EBX
-	POP EAX
-	CMP EAX, EBX
-	SETAE AL
-END GreaterOrEqual;
-
-
-
 (** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
 
 	PROCEDURE Fill32*( destAdr, size, filler: LONGINT );
@@ -908,7 +873,7 @@ END GetStaticHeap;
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
-	RETURN GreaterOrEqual(p,memBlockHead.beginBlockAdr) & LessOrEqual(p,memBlockTail.endBlockAdr)
+	RETURN (p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
 
 		OR (p>=401000H) & (p<=500000H) (*! guess until kernel size known *)
 
@@ -951,7 +916,7 @@ VAR cur {UNTRACED}, prev {UNTRACED}: MemoryBlock;
 BEGIN
 	cur := memBlockHead;
 	prev := NIL;
-	WHILE (cur # NIL) & LessThan(cur.startAdr, memBlock.startAdr) DO
+	WHILE (cur # NIL) & (cur.startAdr < memBlock.startAdr) DO
 		prev := cur;
 		cur := cur.next
 	END;
@@ -1045,7 +1010,7 @@ END ExpandHeap;
 (* Set memory block end address *)
 PROCEDURE SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS);
 BEGIN
-	ASSERT(GreaterOrEqual(endBlockAdr,memBlock.beginBlockAdr));
+	ASSERT(endBlockAdr >= memBlock.beginBlockAdr);
 	memBlock.endBlockAdr := endBlockAdr
 END SetMemoryBlockEndAddress;
 

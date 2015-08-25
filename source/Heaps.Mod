@@ -231,7 +231,7 @@ BEGIN
 				markStack[markStackHeight] := blockAdr; INC(markStackHeight);
 			ELSE (* overflow *)
 				adr := SYSTEM.VAL(ADDRESS, heapBlock) - BlockHeaderSize; (* lowestForgotten points to block start *)
-				IF Machine.LessThan(adr, lowestForgotten) THEN lowestForgotten := adr END
+				IF adr < lowestForgotten THEN lowestForgotten := adr END
 			END
 		END
 	END
@@ -263,8 +263,8 @@ BEGIN
 				ELSE
 					SYSTEM.GET(orgBlock + 2 * AddressSize, currentArrayElemAdr);
 					SYSTEM.GET(orgBlock, lastArrayElemAdr);
-					IF Machine.GreaterThan(currentArrayElemAdr, lastArrayElemAdr) THEN HALT(100) END;
-					WHILE Machine.LessOrEqual(currentArrayElemAdr, lastArrayElemAdr) DO
+					IF currentArrayElemAdr > lastArrayElemAdr THEN HALT(100) END;
+					WHILE currentArrayElemAdr <= lastArrayElemAdr DO
 						FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 							SYSTEM.GET(currentArrayElemAdr + staticTypeBlock.pointerOffsets[i], block);
 							Inspect(block)
@@ -300,7 +300,7 @@ VAR memBlock {UNTRACED}, startMemBlock {UNTRACED}: Machine.MemoryBlock; p {UNTRA
 BEGIN
 	isOverflow := FALSE;
 	memBlock := Machine.memBlockHead;
-	WHILE (memBlock # NIL) & ~(Machine.LessOrEqual(memBlock.beginBlockAdr, lowestForgotten) & Machine.LessThan(lowestForgotten, memBlock.endBlockAdr)) DO
+	WHILE (memBlock # NIL) & ~((memBlock.beginBlockAdr <= lowestForgotten) & (lowestForgotten < memBlock.endBlockAdr)) DO
 		memBlock := memBlock.next
 	END;
 	startMemBlock := memBlock;
@@ -310,7 +310,7 @@ BEGIN
 		ELSE
 			blockAdr := memBlock.beginBlockAdr
 		END;
-		WHILE Machine.LessThan(blockAdr, memBlock.endBlockAdr) & ~isOverflow DO
+		WHILE (blockAdr < memBlock.endBlockAdr) & ~isOverflow DO
 			p := SYSTEM.VAL(HeapBlock, blockAdr + BlockHeaderSize);
 			IF (p.mark = currentMarkValue) & ((p IS RecordBlock) OR (p IS ProtRecBlock) OR (p IS ArrayBlock)) THEN (* these blocks have outgoing references *)
 				isMarkStackEntry := FALSE;
@@ -330,7 +330,7 @@ BEGIN
 				ELSE
 					SYSTEM.GET(p.dataAdr + 2 * AddressSize, currentArrayElemAdr);  (* first element *)
 					SYSTEM.GET(p.dataAdr, lastArrayElemAdr);
-					WHILE ~isMarkStackEntry & Machine.LessOrEqual(currentArrayElemAdr, lastArrayElemAdr) DO
+					WHILE ~isMarkStackEntry & (currentArrayElemAdr <= lastArrayElemAdr) DO
 						i := 0;
 						WHILE ~isMarkStackEntry & (i < LEN(staticTypeBlock.pointerOffsets)) DO
 							SYSTEM.GET(currentArrayElemAdr + staticTypeBlock.pointerOffsets[i], refBlock);
@@ -524,8 +524,8 @@ PROCEDURE GetFreeBlockAndSplit(size: SIZE): FreeBlock;
 VAR p,remainder: FreeBlock;
 BEGIN
 	p := FindFreeBlock(size);
-	IF (p # NIL) & Machine.GreaterThan(p.size, size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-		ASSERT(Machine.GreaterOrEqual(p.size - size, BlockHeaderSize + SIZEOF(FreeBlockDesc)));
+	IF (p # NIL) & (ADDRESS(p.size) > ADDRESS (size)) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
+		ASSERT(ADDRESS(p.size - size) >= BlockHeaderSize + SIZEOF(FreeBlockDesc));
 		remainder := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
 		InitFreeBlock(remainder, Unmarked, NilVal, p.size - size);
 		AppendFreeBlock(remainder);
@@ -567,7 +567,7 @@ BEGIN
 		sweepMarkValue := currentMarkValue;
 	END;
 	WHILE ~found & (sweepMemBlock # NIL) DO
-		WHILE ~found & Machine.LessThan(sweepBlockAdr, sweepMemBlock.endBlockAdr) DO
+		WHILE ~found & (sweepBlockAdr < sweepMemBlock.endBlockAdr) DO
 			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
@@ -592,10 +592,10 @@ BEGIN
 			END;
 			IF (blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) THEN (* no further merging is possible *)
 				IF lastFreeBlockAdr # NilVal THEN
-					IF Machine.GreaterOrEqual(lastFreeBlock.size, size) THEN (* block found - may be too big *)
+					IF ADDRESS(lastFreeBlock.size) >= ADDRESS (size) THEN (* block found - may be too big *)
 						p := lastFreeBlock;
-						IF Machine.GreaterThan(p.size, size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-							ASSERT(Machine.GreaterOrEqual(p.size - size, BlockHeaderSize + SIZEOF(FreeBlockDesc)));
+						IF ADDRESS(p.size) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
+							ASSERT(ADDRESS(p.size - size) >= BlockHeaderSize + SIZEOF(FreeBlockDesc));
 							freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
 							InitFreeBlock(freeBlock, Unmarked, NilVal, p.size - size);
 							p.size := size
@@ -631,9 +631,9 @@ VAR memBlock {UNTRACED}: Machine.MemoryBlock; p, refBlock, currentArrayElemAdr, 
 		IF block = NilVal THEN
 			RETURN TRUE
 		ELSE
-			IF Machine.GreaterOrEqual(block, Machine.memBlockHead.beginBlockAdr) & Machine.LessThan(block, Machine.memBlockTail.endBlockAdr) THEN
+			IF (block >= Machine.memBlockHead.beginBlockAdr) & (block < Machine.memBlockTail.endBlockAdr) THEN
 				SYSTEM.GET(block + HeapBlockOffset, heapBlockAdr);
-				IF Machine.GreaterOrEqual(heapBlockAdr, Machine.memBlockHead.beginBlockAdr) & Machine.LessThan(heapBlockAdr, Machine.memBlockTail.endBlockAdr) THEN
+				IF (heapBlockAdr >= Machine.memBlockHead.beginBlockAdr) & (heapBlockAdr < Machine.memBlockTail.endBlockAdr) THEN
 					RETURN TRUE
 				ELSE
 					RETURN FALSE
@@ -648,7 +648,7 @@ BEGIN
 	memBlock := Machine.memBlockHead;
 	WHILE memBlock # NIL DO
 		p := memBlock.beginBlockAdr;
-		WHILE Machine.LessThan(p, memBlock.endBlockAdr) DO
+		WHILE p < memBlock.endBlockAdr DO
 			heapBlock := SYSTEM.VAL(HeapBlock, p + BlockHeaderSize);
 			IF heapBlock IS SystemBlock THEN
 			ELSIF heapBlock IS RecordBlock THEN
@@ -679,7 +679,7 @@ BEGIN
 					SYSTEM.GET(heapBlock.dataAdr + TypeDescOffset, staticTypeBlock); ASSERT(staticTypeBlock # NIL);
 					SYSTEM.GET(heapBlock.dataAdr + 2 * AddressSize, currentArrayElemAdr);
 					SYSTEM.GET(heapBlock.dataAdr, lastArrayElemAdr);
-					WHILE Machine.LessOrEqual(currentArrayElemAdr, lastArrayElemAdr) DO
+					WHILE currentArrayElemAdr <= lastArrayElemAdr DO
 						FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 							SYSTEM.GET(currentArrayElemAdr + staticTypeBlock.pointerOffsets[i], refBlock);
 							IF ~CheckBlock(refBlock) THEN
@@ -715,7 +715,7 @@ BEGIN
 		h := h DIV 3;  i := h;
 		WHILE i < numCandidates DO
 			p := candidates[i];  j := i;
-			WHILE (j >= h) & Machine.GreaterThan(candidates[j-h], p) DO
+			WHILE (j >= h) & (candidates[j-h] > p) DO
 				candidates[j] := candidates[j-h];  j := j-h;
 			END;
 			candidates[j] := p;  INC(i)
@@ -728,8 +728,8 @@ BEGIN
 	memBlock := Machine.memBlockHead;
 	WHILE memBlock # NIL DO
 		blockStart := memBlock.beginBlockAdr;
-		WHILE (i < numCandidates) & Machine.LessThan(blockStart, memBlock.endBlockAdr) DO
-			IF Machine.LessThan(p, blockStart + MinDataOffset) THEN (* candidate missed *)
+		WHILE (i < numCandidates) & (blockStart < memBlock.endBlockAdr) DO
+			IF p < blockStart + MinDataOffset THEN (* candidate missed *)
 				INC(i);
 				IF i < numCandidates THEN
 					p := candidates[i]
@@ -752,12 +752,12 @@ END CheckCandidates;
 PROCEDURE Candidate*(p: ADDRESS);
 VAR memBlock {UNTRACED}: Machine.MemoryBlock; heapBlockAdr, tdAdr: ADDRESS;
 BEGIN
-	IF Machine.GreaterOrEqual(p, Machine.memBlockHead.beginBlockAdr) & Machine.LessThan(p, Machine.memBlockTail.endBlockAdr) THEN
+	IF (p >= Machine.memBlockHead.beginBlockAdr) & (p < Machine.memBlockTail.endBlockAdr) THEN
 		memBlock := Machine.memBlockHead;
 		WHILE memBlock # NIL DO
-			IF Machine.GreaterOrEqual(p + HeapBlockOffset, memBlock.beginBlockAdr) & Machine.LessThan(p + HeapBlockOffset, memBlock.endBlockAdr) THEN
+			IF (p + HeapBlockOffset >= memBlock.beginBlockAdr) & (p + HeapBlockOffset < memBlock.endBlockAdr) THEN
 				SYSTEM.GET(p + HeapBlockOffset, heapBlockAdr);
-				IF Machine.GreaterOrEqual(heapBlockAdr + TypeDescOffset, memBlock.beginBlockAdr) & Machine.LessThan(heapBlockAdr + TypeDescOffset, memBlock.endBlockAdr) THEN
+				IF (heapBlockAdr + TypeDescOffset >= memBlock.beginBlockAdr) & (heapBlockAdr + TypeDescOffset < memBlock.endBlockAdr) THEN
 					SYSTEM.GET(heapBlockAdr + TypeDescOffset, tdAdr);
 					(* check whether tdAdr is a valid type descriptor address *)
 					IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
@@ -850,7 +850,7 @@ BEGIN
 	n := checkRoot;
 	WHILE n # NIL DO	(* iterate over checked list *)
 		t := n; n := n.nextFin;
-		IF Machine.LessOrEqual(codeAdr, SYSTEM.VAL (ADDRESS, t.finalizer)) & Machine.LessOrEqual(SYSTEM.VAL (ADDRESS, t.finalizer), codeEnd) THEN
+		IF (codeAdr <= SYSTEM.VAL (ADDRESS, t.finalizer)) & (SYSTEM.VAL (ADDRESS, t.finalizer) <= codeEnd) THEN
 			IF t = checkRoot THEN checkRoot := t.nextFin ELSE p.nextFin := t.nextFin END;	(* remove from list *)
 			IF Stats THEN DEC(NfinalizeAlive) END;
 			INC(N1)
@@ -862,7 +862,7 @@ BEGIN
 	n := finalizeRoot;
 	WHILE n # NIL DO	(* iterate over finalized list *)
 		t := n; n := n.nextFin;
-		IF Machine.LessOrEqual(codeAdr, SYSTEM.VAL (ADDRESS, t.finalizer)) & Machine.LessOrEqual(SYSTEM.VAL (ADDRESS, t.finalizer), codeEnd) THEN
+		IF (codeAdr <= SYSTEM.VAL (ADDRESS, t.finalizer)) & (SYSTEM.VAL (ADDRESS, t.finalizer) <= codeEnd) THEN
 			IF t = finalizeRoot THEN finalizeRoot := t.nextFin ELSE p.nextFin := t.nextFin END;	(* remove from list *)
 			IF Stats THEN DEC(NfinalizeDead) END;
 			INC(N2)
@@ -1049,7 +1049,7 @@ BEGIN
 		GetFreeBlock(size, p);
 		IF p = NIL THEN
 			Machine.ExpandHeap(try, size, memBlock, beginHeapBlockAdr, endHeapBlockAdr);	(* try to extend the heap *)
-			IF Machine.GreaterThan(endHeapBlockAdr, beginHeapBlockAdr) THEN
+			IF endHeapBlockAdr > beginHeapBlockAdr THEN
 				freeBlock := SYSTEM.VAL(FreeBlock, beginHeapBlockAdr + BlockHeaderSize);
 				InitFreeBlock(freeBlock, Unmarked, NilVal, endHeapBlockAdr - beginHeapBlockAdr);
 				Machine.SetMemoryBlockEndAddress(memBlock, endHeapBlockAdr); (* end address of expanded block must set after free block is fit in memory block *)
@@ -1340,11 +1340,11 @@ BEGIN
 	WHILE memBlock # NIL DO
 		total := total + memBlock.endBlockAdr - memBlock.beginBlockAdr;
 		blockAdr := memBlock.beginBlockAdr;
-		WHILE Machine.LessThan(blockAdr, memBlock.endBlockAdr) DO
+		WHILE blockAdr < memBlock.endBlockAdr DO
 			block := SYSTEM.VAL(HeapBlock, blockAdr + BlockHeaderSize); (* get heap block *)
 			IF (block.mark < currentMarkValue) THEN (* free/unused block encountered *)
 				free := free + block.size;
-				IF Machine.GreaterThan(block.size, largest) THEN largest := block.size END
+				IF ADDRESS(block.size) > ADDRESS(largest) THEN largest := block.size END
 			END;
 			blockAdr := blockAdr + block.size;
 		END;
@@ -1398,14 +1398,14 @@ BEGIN
 	(* find last block in static heap *)
 	p := beginBlockAdr;
 	heapBlock := SYSTEM.VAL(HeapBlock, p + BlockHeaderSize);
-	WHILE Machine.LessThan(p, freeBlockAdr) DO
+	WHILE p < freeBlockAdr DO
 		initBlock := SYSTEM.VAL(ANY, heapBlock.dataAdr);
 		p := p + heapBlock.size;
 		heapBlock := SYSTEM.VAL(HeapBlock, p + BlockHeaderSize)
 	END;
 
 	ASSERT(p = freeBlockAdr);
-	IF Machine.GreaterThan(endBlockAdr - freeBlockAdr, 0) THEN
+	IF endBlockAdr - freeBlockAdr > 0 THEN
 		(* initialization of free heap block done here since boot file is only written up to freeBlockAdr *)
 		freeBlock := SYSTEM.VAL(FreeBlock, freeBlockAdr + BlockHeaderSize);
 		InitFreeBlock(freeBlock, Unmarked, NilVal, endBlockAdr - freeBlockAdr);
@@ -1416,7 +1416,7 @@ BEGIN
 	currentMarkValue := 1;
 	(* extend the heap for one block such that module initialization can continue as long as Heaps.GC is not set validly *)
 	Machine.ExpandHeap(1, 1, memBlock, beginBlockAdr, endBlockAdr);	(* try = 1, size = 1 -> the minimal heap block expansion is performed *)
-	IF Machine.GreaterThan(endBlockAdr, beginBlockAdr) THEN
+	IF endBlockAdr > beginBlockAdr THEN
 		freeBlock := SYSTEM.VAL(FreeBlock, beginBlockAdr + BlockHeaderSize);
 		InitFreeBlock(freeBlock, Unmarked, NilVal, endBlockAdr - beginBlockAdr);
 		Machine.SetMemoryBlockEndAddress(memBlock, endBlockAdr);

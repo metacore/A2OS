@@ -416,7 +416,7 @@ BEGIN
 		samples[index][depth] := pc;
 		INC(depth);
 	END;
-	IF (bp # 0) & ((bp < lowAdr) OR Machine.GreaterThan(bp, highAdr)) THEN
+	IF (bp # 0) & ((bp < lowAdr) OR (bp > highAdr)) THEN
 		InvalidateSample(samples[index]);
 		Machine.AtomicInc(nofUnwindingFaults);
 	END;

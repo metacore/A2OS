@@ -440,39 +440,6 @@ CODE {SYSTEM.AMD64}
 	PAUSE
 END SpinHint;
 
-(* Compare two unsigned addresses *)
-PROCEDURE -LessThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.AMD64}
-	POP RBX
-	POP RAX
-	CMP RAX, RBX
-	SETB AL
-END LessThan;
-
-PROCEDURE -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.AMD64}
-	POP RBX
-	POP RAX
-	CMP RAX, RBX
-	SETBE AL
-END LessOrEqual;
-
-PROCEDURE -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.AMD64}
-	POP RBX
-	POP RAX
-	CMP RAX, RBX
-	SETA AL
-END GreaterThan;
-
-PROCEDURE -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-CODE {SYSTEM.AMD64}
-	POP RBX
-	POP RAX
-	CMP RAX, RBX
-	SETAE AL
-END GreaterOrEqual;
-
 (** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 CODE {SYSTEM.AMD64}
@@ -2263,7 +2230,7 @@ END GetStaticHeap;
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
-	RETURN GreaterOrEqual(p,memBlockHead.beginBlockAdr) & LessOrEqual(p,memBlockTail.endBlockAdr)
+	RETURN (p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
 		OR (p>=401000H) & (p<=500000H) (*! guess until kernel size known *)
 END ValidHeapAddress;
 

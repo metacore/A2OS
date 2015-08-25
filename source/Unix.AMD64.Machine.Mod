@@ -257,40 +257,6 @@ VAR
 		highFree := 0
 	END GetFreeK;
 
-	(* Compare two unsigned addresses *)
-	PROCEDURE -LessThan* (a, b: ADDRESS): BOOLEAN;
-	CODE {SYSTEM.AMD64}
-		POP RBX
-		POP RAX
-		CMP RAX, RBX
-		SETB AL
-	END LessThan;
-
-	PROCEDURE -LessOrEqual* (a, b: ADDRESS): BOOLEAN;
-	CODE {SYSTEM.AMD64}
-		POP RBX
-		POP RAX
-		CMP RAX, RBX
-		SETBE AL
-	END LessOrEqual;
-
-	PROCEDURE -GreaterThan* (a, b: ADDRESS): BOOLEAN;
-	CODE {SYSTEM.AMD64}
-		POP RBX
-		POP RAX
-		CMP RAX, RBX
-		SETA AL
-	END GreaterThan;
-
-	PROCEDURE -GreaterOrEqual* (a, b: ADDRESS): BOOLEAN;
-	CODE {SYSTEM.AMD64}
-		POP RBX
-		POP RAX
-		CMP RAX, RBX
-		SETAE AL
-	END GreaterOrEqual;
-
-
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 	PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE {SYSTEM.AMD64}

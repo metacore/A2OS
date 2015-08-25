@@ -3,12 +3,13 @@
 
 MODULE Environment;
 
-IMPORT SYSTEM, Activities, CPU, HeapManager, Interrupts, Trace, Processors;
+IMPORT SYSTEM, Activities, CPU, HeapManager, Interrupts, Trace, Processors, Timer;
 
 CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 
 VAR heap: HeapManager.Heap;
 VAR clock := 0: LONGINT;
+VAR frequency: Timer.Counter;
 VAR status* := Running: WORD;
 VAR uartInterruptInstalled := 0: SIZE;
 VAR timerInterruptInstalled := 0: SIZE;
@@ -54,7 +55,11 @@ END Read;
 PROCEDURE Flush-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	REPEAT UNTIL CPU.TXFE IN CPU.ReadMask (CPU.UART_FR);
-END Flush
+END Flush;
+
+PROCEDURE Clock- (): LONGINT;
+BEGIN RETURN Timer.GetCounter () DIV frequency;
+END Clock;
 
 PROCEDURE Sleep- (milliseconds: LONGINT);
 VAR interrupt: Interrupts.Interrupt;
@@ -112,6 +117,7 @@ VAR heapStart EXTERN "_heap_start": ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity (NIL);
 	CPU.Initialize; LED (TRUE);
+	frequency := Timer.GetFrequency () DIV 1000;
 	CPU.WriteMask (CPU.UART_CR, {CPU.UARTEN});
 	CPU.Unmask (CPU.GPPUD, {CPU.PUD}); CPU.Delay (150);
 	CPU.Mask (CPU.GPPUDCLK0, {14, 15}); CPU.Delay (150);

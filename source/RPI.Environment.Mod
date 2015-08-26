@@ -23,8 +23,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Abort;
 
 PROCEDURE Allocate- (size: SIZE): ADDRESS;
+VAR result, address: ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	RETURN HeapManager.Allocate (size, heap);
+	result := HeapManager.Allocate (size, heap);
+	IF result = NIL THEN RETURN NIL END;
+	FOR address := result TO result + size - 1 DO SYSTEM.PUT8 (address, 0) END;
+	RETURN result;
 END Allocate;
 
 PROCEDURE Deallocate- (address: ADDRESS);

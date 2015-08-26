@@ -738,7 +738,7 @@ TYPE
 			n := Ny DIV 2;
 			divident := LSH(LONG(LONG(1)), n);
 			a := a DIV divident;
-			b := b DIV, divident;
+			b := b DIV divident;
 			RETURN a * b
 		END
 	END MultFP;
@@ -945,7 +945,7 @@ TYPE
 	BEGIN
 		IF (value < 0) THEN sign := -1; value := -1 * value ELSE sign := 1 END;
 		IF (sign = -1) THEN w.String("-") ELSE w.String(" ") END;
-		PrintHex(SHORT (ASH(value, -32));
+		PrintHex(SHORT (ASH(value, -32)));
 		PrintHex(SHORT (value));
 		w.Update
 	END VarH2;

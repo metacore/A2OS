@@ -55,18 +55,17 @@ CODE
 END RestoreResultAndReturn;
 
 (* memory management *)
-CONST MemorySize* = 964 * MB; MB = 1024 * 1024;
-
 VAR pageTable {ALIGNED (4000H)}: RECORD entry: ARRAY 4096 OF SIZE END;
 
-PROCEDURE IdentityMapMemory-;
+PROCEDURE IdentityMapMemory- (size: SIZE);
 CONST Section = 2H; Domain0 = 0H; FullAccess = 0C00H; NormalWriteBackAllocate = 100CH; StronglyOrdered = 0H; Shareable = 10000H;
 CONST NormalMemory = Section + Domain0 + FullAccess + NormalWriteBackAllocate + Shareable;
 CONST StronglyOrderedMemory = Section + Domain0 + FullAccess + StronglyOrdered;
 VAR index: SIZE;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	FOR index := 0 TO MemorySize DIV MB - 1 DO pageTable.entry[index] := index * MB + NormalMemory END;
-	FOR index := MemorySize DIV MB TO LEN (pageTable.entry) - 1 DO pageTable.entry[index] := index * MB + StronglyOrderedMemory END;
+	index := 0; size := size DIV 100000H;
+	WHILE index # size DO pageTable.entry[index] := index * 100000H + NormalMemory; INC (index) END;
+	WHILE index # LEN (pageTable.entry) DO pageTable.entry[index] := index * 100000H + StronglyOrderedMemory; INC (index) END;
 END IdentityMapMemory;
 
 PROCEDURE EnableMemoryManagementUnit-;

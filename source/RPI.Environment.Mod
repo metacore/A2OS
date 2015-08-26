@@ -7,6 +7,7 @@ IMPORT SYSTEM, Activities, CPU, HeapManager, Interrupts, Trace, Processors, Time
 
 CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 
+VAR memory: SIZE;
 VAR heap: HeapManager.Heap;
 VAR clock := 0: LONGINT;
 VAR frequency: Timer.Counter;
@@ -15,6 +16,7 @@ VAR uartInterruptInstalled := 0: SIZE;
 VAR timerInterruptInstalled := 0: SIZE;
 VAR uartInterrupt: Interrupts.Interrupt;
 VAR previousTimerHandler := NIL: CPU.InterruptHandler;
+VAR atags {UNTRACED}: POINTER {UNSAFE} TO ARRAY 1000H OF SIZE;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -136,13 +138,22 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.Init; Trace.Char := Write;
 END InitTrace;
 
+PROCEDURE InitMemory;
+CONST ATAG_MEM = 054410002H;
+VAR atag := 0: SIZE; memTag {UNTRACED}: POINTER {UNSAFE} TO RECORD size: SIZE; start: ADDRESS END;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	WHILE atags[atag + 1] # ATAG_MEM DO INC (atag, atags[atag]) END;
+	memTag := ADDRESS OF atags[atag + 2];
+	CPU.IdentityMapMemory (memTag.size); CPU.EnableMemoryManagementUnit;
+	HeapManager.Initialize (heap, ADDRESS OF KernelEnd, memTag.start + memTag.size);
+	memory := memTag.start + memTag.size - ADDRESS OF KernelEnd;
+END InitMemory;
+
 PROCEDURE Initialize-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	SYSTEM.SetActivity (NIL);
-	CPU.Initialize; LED (TRUE); InitTrace;
+	SYSTEM.SetActivity (NIL); LED (TRUE);
+	CPU.Initialize; InitTrace; InitMemory;
 	frequency := Timer.GetFrequency () DIV 1000;
-	CPU.IdentityMapMemory; CPU.EnableMemoryManagementUnit;
-	HeapManager.Initialize (heap, ADDRESS OF KernelEnd, CPU.MemorySize);
 END Initialize;
 
 PROCEDURE Terminate-;
@@ -154,6 +165,12 @@ END Terminate;
 PROCEDURE {NOPAF, INITIAL, FIXED(8000H)} KernelBegin;
 CODE
 	MOV	SP, #8000H
+	LDR	R0, [PC, #tags-$-8]
+	STR	R2, [R0, #0]
+	B		skip
+tags:
+	d32	atags
+skip:
 END KernelBegin;
 
 PROCEDURE {NOPAF, FINAL, ALIGNED(32)} KernelEnd;
@@ -162,7 +179,7 @@ END KernelEnd;
 
 BEGIN {UNCHECKED}
 	Trace.String ("Version "); Trace.String (SYSTEM.Date); Trace.String (" (");
-	Trace.Int (CPU.MemorySize DIV (1024 * 1024), 0); Trace.String (" MB RAM, GC, ");
+	Trace.Int (memory DIV (1024 * 1024), 0); Trace.String (" MB RAM, GC, ");
 	Trace.String ("GC, ");
 	Trace.Int (Processors.count, 0); Trace.String (" CPU");
 	IF Processors.count > 1 THEN Trace.Char ('s') END; Trace.Char (')'); Trace.Ln;

@@ -2971,7 +2971,7 @@ TYPE
 
 
 		(* Call a runtime procedure.  If numberParameters >= 0 then the procedure may be called without module import. Otherwise the signature has to be inferred from the import. *)
-		PROCEDURE CallThis(position: LONGINT; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT);
+		PROCEDURE CallThisChecked(position: LONGINT; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT; checkNumParameters: BOOLEAN);
 		VAR procedure: SyntaxTree.Procedure; result: Operand; reg: IntermediateCode.Operand; source: IntermediateCode.Section;
 			pooledName: Basic.SegmentedName; size: LONGINT;
 		BEGIN
@@ -2981,13 +2981,14 @@ TYPE
 					size := ProcedureParametersSize(system,procedure);
 				ELSE
 					size := ToMemoryUnits(system,numberParameters * system.addressSize);
-					IF size # ProcedureParametersSize(system,procedure) THEN
+					IF checkNumParameters & (size # ProcedureParametersSize(system,procedure)) THEN
 						Error(position,"runtime call parameter count mismatch");
 					END;
 				END;
 				Emit(Call(position, result.op, size));
 				ReleaseOperand(result);
 			ELSE (* only static linking possible *)
+				ASSERT(numberParameters >= 0);
 				Basic.InitSegmentedName(pooledName);
 				pooledName[0] := Basic.MakeString(moduleName);
 				pooledName[1] := Basic.MakeString(procedureName);
@@ -2996,6 +2997,12 @@ TYPE
 				IntermediateCode.InitAddress(reg, addressType, pooledName , 0, 0);
 				Emit(Call(position,reg, ToMemoryUnits(system,numberParameters * system.addressSize)));
 			END;
+		END CallThisChecked;
+
+		(* Call a runtime procedure.  If numberParameters >= 0 then the procedure may be called without module import. Otherwise the signature has to be inferred from the import. *)
+		PROCEDURE CallThis(position: LONGINT; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT);
+		BEGIN
+			CallThisChecked(position, moduleName, procedureName, numberParameters,TRUE); 
 		END CallThis;
 
 		PROCEDURE CompareString(br: ConditionalBranch; leftExpression,rightExpression: SyntaxTree.Expression);

@@ -193,7 +193,7 @@ END DisableInterrupt;
 
 PROCEDURE Initialize-;
 CODE
-	ADD	R2, PC, #vector
+	ADD	R2, PC, #vector-$-8
 	MOV	R3, #0
 	ADD	R4, R3, #vector_end - vector
 copy:

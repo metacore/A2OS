@@ -6534,8 +6534,6 @@ VAR
 			ArrayBase.loopMatMulIncAXAX :=
 				MatMulIncAXAXLoopSSE;
 			ArrayBase.matMulIncX := MatMulIncX;
-			(* optimizations for small matrices  *)(*! CAVE this is SSE3*)
-			ArrayBase.matVecMulR4x4 := MatVecMulR4x4;
 		END;
 	END InstallSSE2;
 

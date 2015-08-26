@@ -2129,10 +2129,9 @@ TYPE
 			currentStyle := NIL; lastStyle := NIL;
 
 			eol := FALSE;
-			readerPosition := localTextReader.GetPosition();
-			localTextReader.ReadCh(ch);
-
-			WHILE ~(localTextReader.eot OR eol) DO
+			REPEAT
+				readerPosition := localTextReader.GetPosition();
+				localTextReader.ReadCh(ch);
 
 				IF (highlighter # NIL) THEN
 					ASSERT(state # NIL);
@@ -2250,8 +2249,8 @@ TYPE
 				lastHighlighterStyle := highlighterStyle;
 
 				IF first THEN
-					IF ch = Texts.NewLineChar THEN
-						ascent := style.font.GetAscent(); descent := 0;
+					IF (ch = Texts.NewLineChar) OR (ch = 0) THEN
+						ascent := style.font.GetAscent(); descent := style.font.GetDescent();
 					ELSE
 						descent := 0; ascent := 0;
 					END;
@@ -2262,7 +2261,7 @@ TYPE
 				END;
 				INC(pos);
 				IF (stopPos < 0) OR (pos <= stopPos) THEN
-					IF ch # Texts.NewLineChar THEN
+					IF (ch # Texts.NewLineChar) & (ch # 0) THEN
 						GetExtents(ch, dx, a, d); ascent := Strings.Max(ascent, a); descent := Strings.Max(descent, d);
 						IF ld = 0 THEN ld := ascent + descent; ELSE ld := Strings.Max(ld, ascent + descent); END; leading := Strings.Max(leading, ld);
 						IF isMultiLineI & (wrapModeI # NoWrap) & (i > 0) & (x0 + x + dx > wrapwidth) THEN
@@ -2299,10 +2298,7 @@ TYPE
 					eol := TRUE
 				END;
 				INC(i);
-				readerPosition := localTextReader.GetPosition();
-				localTextReader.ReadCh(ch);
-			END;
-
+			UNTIL eol OR localTextReader.eot;
 
 			l.width := x;
 			l.ascent := ascent; l.height := leading; (* ascent + descent; *)

@@ -10,7 +10,7 @@ IMPORT SYSTEM, Counters, CPU;
 CONST Maximum* = 4 + CPU.Interrupts;
 
 (** Holds the actual number of processors in the system. *)
-VAR count- := 4: SIZE;
+VAR count-: SIZE;
 
 VAR running: Counters.AlignedCounter; (* counts the number of application processors currently running *)
 
@@ -39,7 +39,7 @@ CODE
 	SEV
 END StartAll;
 
-PROCEDURE {NORETURN} Boot;
+PROCEDURE {NORETURN, NOPAF} Boot;
 PROCEDURE Idle EXTERN "Activities.Idle";
 PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -68,6 +68,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.WriteWord (Core2Mailbox, ADDRESS OF Boot);
 	CPU.WriteWord (Core3Mailbox, ADDRESS OF Boot);
 	REPEAT UNTIL Counters.Read (running) = 3;
+	count := 4;
 END Initialize;
 
 (** Terminates the module and waits for all other processors to stop their execution. *)

@@ -13,7 +13,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Enter;
 
 PROCEDURE Exit*;
-BEGIN {UNCOOPERATIVE, UNCHECKED}
+BEGIN {UNCOOPERATIVE, UNCHECKED} Ln;
 END Exit;
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
@@ -176,8 +176,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		DEC (skip);
 	END;
 	WHILE count # 0 DO
-		IF frame.previous = NIL THEN RETURN END;
 		Address (frame.caller); Char (':'); Ln;
+		IF frame.previous = NIL THEN RETURN END;
 		IF frame.previous - ADDRESS OF frame.descriptor <= size THEN
 			Memory (ADDRESS OF frame.parameters, frame.previous - ADDRESS OF frame.descriptor);
 		ELSIF size # 0 THEN

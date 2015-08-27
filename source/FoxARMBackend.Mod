@@ -3118,6 +3118,12 @@ TYPE
 				parameter.SetType(Global.Integer32); procedureType.AddParameter(parameter)
 			END IntPar;
 
+			PROCEDURE AddressPar;
+			BEGIN
+				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
+				parameter.SetType(Global.Unsigned32); procedureType.AddParameter(parameter)
+			END AddressPar;
+
 			PROCEDURE IntVarPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
@@ -3136,13 +3142,13 @@ TYPE
 
 		BEGIN
 			New; IntRet; Finish("SP", GetSP);
-			New; IntPar; Finish("SetSP", SetSP);
+			New; AddressPar; Finish("SetSP", SetSP);
 			New; IntRet; Finish("FP", GetFP);
-			New; IntPar; Finish("SetFP", SetFP);
+			New; AddressPar; Finish("SetFP", SetFP);
 			New; IntRet; Finish("PC", GetPC);
-			New; IntPar; Finish("SetPC", SetPC);
+			New; AddressPar; Finish("SetPC", SetPC);
 			New; IntRet; Finish("LNK", GetLNK);
-			New; IntPar; Finish("SetLNK", SetLNK);
+			New; AddressPar; Finish("SetLNK", SetLNK);
 			New; IntPar; IntPar;  Finish("LDPSR", LDPSR);
 			New; IntPar; IntVarPar; Finish("STPSR", STPSR);
 			New; IntPar; IntPar; IntPar; Finish("LDCPR", LDCPR);

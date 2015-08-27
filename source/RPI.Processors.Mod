@@ -61,7 +61,6 @@ END Boot;
 (** Initializes the module by enumerating all available processors. *)
 (** @topic Runtime Call *)
 PROCEDURE Initialize-;
-PROCEDURE Boot EXTERN "Processors.Boot";
 CONST Core1Mailbox = 04000009CH; Core2Mailbox = 0400000ACH; Core3Mailbox = 0400000BCH;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.WriteWord (Core1Mailbox, ADDRESS OF Boot);

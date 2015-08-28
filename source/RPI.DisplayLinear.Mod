@@ -1,74 +1,45 @@
 MODULE DisplayLinear;
 
-IMPORT CPU, Machine, Displays, Plugins;
+IMPORT CPU, Displays, Plugins;
 
 CONST Width = 1024;
 CONST Height = 768;
 CONST Depth = 24;
 
-CONST Mailbox = 3F00B880H; Base = 0H; Status = 18H; Write = 20H;
+VAR display: Displays.Display;
 
-TYPE FrameBuffer = RECORD
-	width, height: SIZE;
-	virtualWidth, virtualHeight: SIZE;
-	pitch: SIZE;
-	depth: SIZE;
-	xOffset, yOffset: SIZE;
-	address: ADDRESS;
-	size: SIZE;
-	cmap: ARRAY 256 OF SHORTINT;
+VAR buffer: RECORD {ALIGNED (16)}
+	size, code := 0: SIZE;
+	setPhysicalDisplay: RECORD tag := 048003H, size := 8, length := 8, width := Width, height := Height: SIZE END;
+	setVirtualDisplay: RECORD tag := 048004H, size := 8, length := 8, width := Width, height := Height: SIZE END;
+	setDepth: RECORD tag := 048005H, size := 4, length := 4, depth := Depth: SIZE END;
+	setVirtualOffset: RECORD tag := 048009H, size := 8, length := 8, x := 0, y := 0: SIZE END;
+	allocateBuffer: RECORD tag := 040001H, size := 8, length := 8: SIZE; frameBuffer: RECORD address := 0: ADDRESS; size := 0: SIZE END END;
+	getPitch: RECORD tag := 040008H, size := 4, length := 4, pitch: SIZE END;
+	end: RECORD tag := 0: SIZE END;
+	padding: RECORD END;
 END;
 
-VAR display: Displays.Display;
-VAR frameBuffer {ALIGNED (16)}: FrameBuffer; 
-
-PROCEDURE Send (channel: SIZE; value: WORD);
-BEGIN {UNCOOPERATIVE, UNCHECKED}
-	WHILE 31 IN CPU.ReadMask (Mailbox + Status) DO END;
-	CPU.WriteWord (Mailbox + Write, value + channel);
-END Send;
-
-PROCEDURE Receive (channel: SIZE): WORD;
-VAR value: WORD;
-BEGIN {UNCOOPERATIVE, UNCHECKED}
-	REPEAT
-		WHILE 30 IN CPU.ReadMask (Mailbox + Status) DO END;
-		value := CPU.ReadWord (Mailbox + Base);
-	UNTIL value MOD 16 = channel;
-	RETURN value DIV 16 * 16;
-END Receive;
-
-PROCEDURE Install*;
-END Install;
-
 PROCEDURE Initialize;
-VAR result: LONGINT;
+CONST Mailbox = 3F00B880H; Status = 18H; Write = 20H; Tags = 8;
+VAR address: ADDRESS; result: LONGINT;
 BEGIN
-	frameBuffer.width := Width;
-	frameBuffer.height := Height;
-	frameBuffer.depth := Depth;
-	frameBuffer.virtualWidth := frameBuffer.width;
-	frameBuffer.virtualHeight := frameBuffer.height;
-	frameBuffer.pitch := 0;
-	frameBuffer.xOffset := 0;
-	frameBuffer.yOffset := 0;
-	frameBuffer.address := NIL;
-	frameBuffer.size := 0;
+	buffer.size := ADDRESS OF buffer.padding - ADDRESS OF buffer.size;
+	FOR address := ADDRESS OF buffer.size TO ADDRESS OF buffer.padding BY CPU.CacheLineSize DO CPU.Clean (address) END;
 
 	REPEAT
-		Send (1, ADDRESS OF frameBuffer + 40000000H);
-		result := Receive (1);
-	UNTIL (result = 0) & (frameBuffer.address # NIL);
-
-	Machine.Fill32(frameBuffer.address, frameBuffer.size, 0);
+		WHILE 31 IN CPU.ReadMask (Mailbox + Status) DO END;
+		CPU.WriteWord (Mailbox + Write, ADDRESS OF buffer + Tags);
+		FOR address := ADDRESS OF buffer.size TO ADDRESS OF buffer.padding BY CPU.CacheLineSize DO CPU.Invalidate (address) END;
+	UNTIL buffer.allocateBuffer.frameBuffer.address # NIL;
 
 	NEW(display);
-	display.width := frameBuffer.width;
-	display.height := frameBuffer.height;
+	display.width := buffer.setVirtualDisplay.width;
+	display.height := buffer.setVirtualDisplay.height;
 	display.offscreen := 0;
-	display.format := frameBuffer.depth DIV 8;
+	display.format := buffer.setDepth.depth DIV 8;
 	display.unit := 10000;
-	display.InitFrameBuffer(frameBuffer.address, frameBuffer.size, frameBuffer.width * frameBuffer.depth DIV 8 + frameBuffer.pitch);
+	display.InitFrameBuffer(buffer.allocateBuffer.frameBuffer.address, buffer.allocateBuffer.frameBuffer.size, buffer.getPitch.pitch);
 	display.desc := "Linear framebuffer driver for Raspberry Pi";
 	Displays.registry.Add(display, result);
 	ASSERT(result = Plugins.Ok);

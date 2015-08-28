@@ -8374,7 +8374,9 @@ TYPE
 		PROCEDURE Symbol(x: SyntaxTree.Symbol);
 		BEGIN
 			IF ~x.used & (x.access * SyntaxTree.Public = {}) & (x.access # SyntaxTree.Hidden) THEN
-				Warning(x,"never used");
+				IF ~(x IS SyntaxTree.Parameter) THEN
+					Warning(x,"never used");
+				END;
 			END;
 			x.Accept(SELF);
 		END Symbol;

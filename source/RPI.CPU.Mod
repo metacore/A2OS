@@ -87,6 +87,20 @@ enable:
 	ORR	R0, R0, #0b1000000000000	; instruction cache
 	MCR	P15, 0, R0, C1, C0, 0
 END EnableMemoryManagementUnit;
+	
+PROCEDURE Invalidate- (address: ADDRESS);
+CODE
+	LDR	R0, [FP, #address]
+	BIC	R0, R0, #(CacheLineSize - 1)
+	MCR	P15, 0, R0, C7, C6, 1
+END Invalidate;
+
+PROCEDURE Clean- (address: ADDRESS);
+CODE
+	LDR	R0, [FP, #address]
+	BIC	R0, R0, #(CacheLineSize - 1)
+	MCR	P15, 0, R0, C7, C10, 1
+END Clean;
 
 (* hardware registers *)
 CONST WDOG* = 03F100024H; RSTC* = 03F10001CH; PASSWORD = 05A000000H; FULLRESET = 000000020H;

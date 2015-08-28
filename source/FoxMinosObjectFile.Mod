@@ -85,7 +85,7 @@ TYPE
 	(*
 		this procedure converts the section-based representation of fixups into a symbol based representation
 	*)
-	PROCEDURE GetFixups(module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT;
+	PROCEDURE GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT;
 	VAR temp: Fixup; fixup: BinaryCode.Fixup; nr :LONGINT; i: LONGINT; section: Sections.Section; sectionList: Sections.SectionList;
 
 		PROCEDURE Do;
@@ -102,6 +102,9 @@ TYPE
 							temp.fixup := fixup;
 							temp.fixupSection := section;
 							temp.nextFixup := first;
+							IF fixup.displacement # 0 THEN
+								diagnostics.Error(module.moduleName,Diagnostics.Invalid, Diagnostics.Invalid,"Fixups with displacement # 0 not supported in Minos Object File.");
+							END;
 							first := temp;
 						END;
 						fixup := fixup.nextFixup;
@@ -366,7 +369,7 @@ TYPE
 						fixup := binarySection.fixupList.firstFixup;
 						WHILE fixup # NIL DO
 							IF (fixup.mode = BinaryCode.Relative)  & InModule(fixup.symbol.name) THEN
-								HALT(100); (* should already be resolved *)
+								diagnostics.Error(module.moduleName,Diagnostics.Invalid, Diagnostics.Invalid,"Relative self fixup not supported by Minos Object File.");
 							ELSIF (fixup.mode = BinaryCode.Absolute) & InModule(fixup.symbol.name) THEN
 								this := section.offset  + fixup.offset; (* location of the fixup *)
 								(*
@@ -440,7 +443,7 @@ TYPE
 				FOR i := 1 TO numberEntries DO
 					section := entries[i];
 					IF section # NIL THEN
-						numberFixups := GetFixups(module, section, first);
+						numberFixups := GetFixups(diagnostics, module, section, first);
 						IF Trace THEN
 							D.Int(numberFixups,1); D.String(" fixups "); Basic.WriteSegmentedName(D.Log, section.name); D.Ln;
 						END;

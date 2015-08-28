@@ -2191,6 +2191,13 @@ TYPE
 					BreqL(trueL,left,right);
 					Emit(Mov(position,left,IntermediateCode.Memory(addressType,left,0)));
 					BrneL(repeatL,left,nil);
+				ELSIF meta.simple THEN
+					level := type(SyntaxTree.RecordType).Level();
+					(* get type desc tag of level relative to base tag *)
+					offset := (meta.BaseTypesTableOffset - level) * addressType.sizeInBits;
+					IntermediateCode.AddOffset(left,ToMemoryUnits(system,offset));
+					IntermediateCode.MakeMemory(left,addressType);
+					BreqL(trueL,left,right);
 				ELSE
 					level := type(SyntaxTree.RecordType).Level();
 					(* get type desc tag of level relative to base tag *)
@@ -5610,7 +5617,7 @@ TYPE
 					ELSE
 						source := NewSection(module.importedSections, Sections.ConstSection,name,td,commentPrintout # NIL);
 					END;
-					IF backend.cooperative THEN
+					IF backend.cooperative OR meta.simple THEN
 						offset := 0;
 					ELSE
 						IF x IS SyntaxTree.CellType THEN
@@ -10533,15 +10540,15 @@ TYPE
 		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
 		BEGIN
 			IF implementationVisitor.backend.cooperative THEN
-				TypeTags := MAX(LONGINT); (* only 3 extensions allowed *)
+				TypeTags := MAX(LONGINT); 
 				BaseTypesTableOffset := 0;
 				MethodTableOffset := 2;
 				TypeRecordBaseOffset := 0;			
 			ELSIF simple THEN
 				TypeTags := 3; (* only 3 extensions allowed *)
-				BaseTypesTableOffset := -1;
-				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
-				TypeRecordBaseOffset := TypeTags;
+				BaseTypesTableOffset := 3;
+				MethodTableOffset := BaseTypesTableOffset+1;
+				TypeRecordBaseOffset := 0;
 			ELSE
 				TypeTags := 16;
 				BaseTypesTableOffset := -2; (* typeInfo and size field *)
@@ -10562,7 +10569,7 @@ TYPE
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
 		BEGIN
-			IF implementationVisitor.backend.cooperative THEN RETURN 0 ELSE RETURN TypeRecordBaseOffset + numberMethods END;
+			IF implementationVisitor.backend.cooperative OR simple THEN RETURN 0 ELSE RETURN TypeRecordBaseOffset + numberMethods END;
 		END GetTypeRecordBaseOffset;
 
 		PROCEDURE HeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
@@ -12286,16 +12293,16 @@ TYPE
 					ELSE
 						(*
 							simple:
-											methods
-											tag(2)
+							td adr --> size
 											tag(1)
-							td adr --->	tag(0)
-							td adr --->	size
+											tag(2)
+											tag(3)
+							methods -> 
 						*)
-						MethodTable;
-						TdTable(TypeTags);
 						Info(source, "record size");
 						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
+						TdTable(TypeTags);
+						MethodTable;
 						source.SetReferenced(FALSE);
 					END;
 			END NewTypeDescriptor;

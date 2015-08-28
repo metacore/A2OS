@@ -2194,7 +2194,7 @@ TYPE
 				ELSIF meta.simple THEN
 					level := type(SyntaxTree.RecordType).Level();
 					(* get type desc tag of level relative to base tag *)
-					offset := (meta.BaseTypesTableOffset - level) * addressType.sizeInBits;
+					offset := (meta.BaseTypesTableOffset + level) * addressType.sizeInBits;
 					IntermediateCode.AddOffset(left,ToMemoryUnits(system,offset));
 					IntermediateCode.MakeMemory(left,addressType);
 					BreqL(trueL,left,right);
@@ -10546,8 +10546,8 @@ TYPE
 				TypeRecordBaseOffset := 0;			
 			ELSIF simple THEN
 				TypeTags := 3; (* only 3 extensions allowed *)
-				BaseTypesTableOffset := 3;
-				MethodTableOffset := BaseTypesTableOffset+1;
+				BaseTypesTableOffset := 1;
+				MethodTableOffset := BaseTypesTableOffset+TypeTags;
 				TypeRecordBaseOffset := 0;
 			ELSE
 				TypeTags := 16;
@@ -12031,13 +12031,32 @@ TYPE
 
 			PROCEDURE NewTypeDescriptor;
 			VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; source, base: IntermediateCode.Section;
-				procedure: SyntaxTree.Procedure;
-				baseRecord: SyntaxTree.RecordType; baseTD: SyntaxTree.TypeDeclaration; sym: SyntaxTree.Symbol;
+				procedure: SyntaxTree.Procedure; baseRecord: SyntaxTree.RecordType;
+				baseTD: SyntaxTree.TypeDeclaration; sym: SyntaxTree.Symbol;
 				numberPointers: LONGINT;  padding,offset, i: LONGINT;
 			CONST MPO=-40000000H;
 
-				PROCEDURE TdTable(size: LONGINT);
+				PROCEDURE TdTable(size: LONGINT; reverse: BOOLEAN);
 				VAR i: LONGINT;
+				
+					PROCEDURE Td(record: SyntaxTree.RecordType);
+					VAR baseTD: SyntaxTree.TypeDeclaration; name: Basic.SegmentedName; offset: LONGINT; 
+					BEGIN
+						IF record # NIL THEN
+							IF ~reverse THEN Td(record.GetBaseRecord()) END;
+							baseTD := record.typeDeclaration;
+							Global.GetSymbolSegmentedName(baseTD,name);
+							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
+								tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+							ELSE
+								tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+							END;
+							offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(record.recordScope.numberMethods)*module.system.addressSize);
+							Symbol(source, tir,  0, offset);
+							IF reverse THEN Td(record.GetBaseRecord()) END;
+						END;
+					END Td;
+					
 				BEGIN
 					Info(source, "tag table");
 					baseRecord := recordType;
@@ -12047,35 +12066,32 @@ TYPE
 						baseRecord := baseRecord.GetBaseRecord();
 					END;
 					IF i > size THEN implementationVisitor.Error(x.position,"maximal extension level exceeded") END;
+					IF ~reverse THEN Td(recordType) END;
 					WHILE i < size DO
 						Address(source,0);
 						INC(i);
 					END;
-					baseRecord := recordType;
-					WHILE baseRecord # NIL DO
-						baseTD := baseRecord.typeDeclaration;
-						Global.GetSymbolSegmentedName(baseTD,name);
-						IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
-						ELSE
-							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
-						END;
-						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(baseRecord.recordScope.numberMethods)*module.system.addressSize);
-						Symbol(source, tir,  0, offset);
-						baseRecord := baseRecord.GetBaseRecord();
-					END;
+					IF reverse THEN Td(recordType) END;
 				END TdTable;
 
-				PROCEDURE MethodTable;
+				PROCEDURE MethodTable(reverse: BOOLEAN);
 				VAR i,methods: LONGINT;
 				BEGIN
 					Info(source, "method table");
 					IF recordType # NIL THEN
 						methods := recordType.recordScope.numberMethods;
-						FOR i := methods-1 TO 0 BY -1 DO
-							procedure := recordType.recordScope.FindMethod(i);
-							Global.GetSymbolSegmentedName(procedure, name);
-							NamedSymbol(source, name,procedure, 0,0);
+						IF reverse THEN
+							FOR i := methods-1 TO 0 BY -1 DO
+								procedure := recordType.recordScope.FindMethod(i);
+								Global.GetSymbolSegmentedName(procedure, name);
+								NamedSymbol(source, name,procedure, 0,0);
+							END;
+						ELSE
+							FOR i := 0 TO methods-1 DO
+								procedure := recordType.recordScope.FindMethod(i);
+								Global.GetSymbolSegmentedName(procedure, name);
+								NamedSymbol(source, name,procedure, 0,0);
+							END;
 						END;
 					END;
 				END MethodTable;
@@ -12264,8 +12280,8 @@ TYPE
 						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),MPO);
 						source(IntermediateCode.Section).Emit(Data(-1,op));
 
-						MethodTable;
-						TdTable(TypeTags);
+						MethodTable(TRUE);
+						TdTable(TypeTags, TRUE);
 						Info(source, "type descriptor info pointer");
 						Symbol(source, NewTypeDescriptorInfo(source,source.pc+1,recordType.IsProtected()),0,0);
 						IF (cellType # NIL) THEN
@@ -12301,8 +12317,8 @@ TYPE
 						*)
 						Info(source, "record size");
 						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
-						TdTable(TypeTags);
-						MethodTable;
+						TdTable(TypeTags, FALSE);
+						MethodTable(FALSE);
 						source.SetReferenced(FALSE);
 					END;
 			END NewTypeDescriptor;

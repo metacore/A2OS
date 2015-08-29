@@ -18,6 +18,11 @@
 #	Release.Build --build --path="./" A2Cooperative ~
 #	StaticLinker.Link --fileName=a2.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader BootConsole ~
 #
+# A2 RPi Cooperative
+#
+#	Release.Build --build --path="./" A2RPiCooperative ~
+#	StaticLinker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
+#
 # WINAOS
 #
 # There are two different variants of WinAOS:
@@ -113,7 +118,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	A2Cooperative {
-		INCLUDE "NATIVE I386 COOP NATIVECOOP"
+		INCLUDE "NATIVE I386 COOP NATIVECOOP NATIVEI386COOP I386COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "AMD"
@@ -121,6 +126,17 @@ BUILDS
 		SYMBOLEXTENSION "Sym"
 		PATH "AOS:"
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
+	A2RPiCooperative {
+		INCLUDE "NATIVE ARM RPI COOP RPICOOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections"
+		TARGET "ARM"
+		EXTENSION "Gof"
+		SYMBOLEXTENSION "Sym"
+		PATH "AOS:"
+		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	A2NewObjectFile
@@ -181,7 +197,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	WinAosCooperative {
-		INCLUDE "WIN iWIN COOP WINCOOP"
+		INCLUDE "WIN iWIN COOP WINCOOP I386COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace"
 		TARGET "AMD"
@@ -214,7 +230,6 @@ BUILDS
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
-
 	LinuxAos {
 		INCLUDE "UNIX LINUX UNCOOP"
 		COMPILER "Compiler.Compile"
@@ -263,17 +278,20 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	 # Runtime support for HUGEINT and strings
 	UNCOOP { Runtime.Mod }
-	COOP { I386.CPU.Mod }
+	I386COOP { I386.CPU.Mod }
+	RPICOOP { RPI.CPU.Mod }
 
 	# Low-level trace output
 	Trace.Mod
 
 	# cooperative runtime system
 	COOP { Counters.Mod }
-	NATIVECOOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod}
+	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod}
 	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod  Win32.Timer.Mod}
+	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
 	NATIVECOOP { HeapManager.Mod BIOS.Environment.Mod }
+	RPICOOP { HeapManager.Mod RPI.Environment.Mod }
 	WINCOOP { Win32.Environment.Mod }
 
 	UNIX { Unix.Glue.Mod }
@@ -286,7 +304,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	I386GEN { Generic.I386.Machine.Mod }
 	AMD64 { AMD64.Machine.Mod }
 	WINORIG, WINGEN {Win32.Machine.Mod }
-	COOP { Mutexes.Mod Coop.I386.Machine.Mod }
+	COOP { Mutexes.Mod }
+	I386COOP { Coop.I386.Machine.Mod }
+	RPICOOP { Coop.ARM.Machine.Mod }
 
 	UNIX { Unix.I386.Machine.Mod }
 

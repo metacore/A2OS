@@ -49,7 +49,10 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  * BuildDescription =	Header Import BuildSection Packages
  * BuildSection = 		BUILDS {Build} END
  * Build = 				buildName OPENSECTION {BuildParameter} CLOSESECTION
- * Build = 				INCLUDE '"' [buildprefix {" " buildprefix} ] '"' | COMPILER '"' compileCommand '"' | TARGET '"' target '"' |
+ * Build = 				INCLUDE '"' [buildprefix {" " buildprefix} ] '"' |
+ *						COMPILER '"' compileCommand '"' | COMPILEROPTIONS '"' compileOptions '"' |
+ *						LINKER '"' linkCommand '"' | LINKEROPTIONS '"' linkOptions '"' |
+ *						TARGET '"' target '"' |
  *						EXTENSION '"' objectFileExtension '"' | PATH '"' objectFilePath '"' |
  *						EXCLUDEPACKAGES '"' [ exludedPackage {" " excludedPackage} ] '"'
  *						DISABLED "TRUE" | "FALSE"
@@ -500,12 +503,13 @@ TYPE
 		prefixes : ARRAY MaxPrefixes OF Name;
 		excludedPackages : Strings.StringArray;
 		onlyPackages: Strings.StringArray;
-		compiler, compileOptions : ARRAY 128 OF CHAR;
+		compiler, compileOptions, linker, linkOptions : ARRAY 128 OF CHAR;
 		target : ARRAY 8 OF CHAR;
 		extension : ARRAY 8 OF CHAR;
 		symbolFileExtension : ARRAY 8 OF CHAR;
 		path : Files.FileName;
 		disabled : BOOLEAN;
+		link: BOOLEAN; (* link packages instead of compiling *)
 
 		(* Used for dependencies analysis *)
 		modules : POINTER TO ARRAY OF File;
@@ -581,8 +585,13 @@ TYPE
 		BEGIN
 			ASSERT(options # NIL);
 			IF (options # NIL) THEN
+				link := options.GetFlag("link");
 				IF options.GetString("compiler", compiler) THEN END;
-				IF options.GetString("options", compileOptions) THEN END;
+				IF link THEN
+					IF options.GetString("options", compileOptions) THEN END;
+				ELSE
+					IF options.GetString("options", linkOptions) THEN END;
+				END;
 				IF options.GetString("target", target) THEN END;
 				IF options.GetString("extension", extension) THEN END;
 				IF options.GetString("symbolFileExtension", symbolFileExtension) THEN END;
@@ -600,7 +609,7 @@ TYPE
 
 		(** List all source code files included in this build to a stream *)
 		PROCEDURE ToStream*(w : Streams.Writer; charactersPerLine : LONGINT);
-		VAR file : File; color : LONGINT; characterCount : LONGINT;
+		VAR file : File; color : LONGINT; characterCount : LONGINT; name: Files.FileName;
 		BEGIN
 			characterCount := 0;
 			file := files;
@@ -614,12 +623,17 @@ TYPE
 						END;
 						w(TextUtilities.TextWriter).SetFontColor(color);
 					END;
-					characterCount := characterCount + Strings.Length(file.name);
+					IF link THEN
+						COPY(file.module.name, name)
+					ELSE
+						COPY(file.name, name)
+					END;
+					characterCount := characterCount + Strings.Length(name);
 					IF (characterCount > charactersPerLine) THEN
 						characterCount := 0;
 						w.Ln;
 					END;
-					w.String(file.name); w.String(" ");
+					w.String(name); w.String(" ");
 				END;
 				file := file.next;
 			END;
@@ -651,8 +665,14 @@ TYPE
 			tw.String("SystemTools.DoCommands"); tw.Ln;
 			tw.SetFontStyle({});
 			tw.String("SystemTools.Timer start ~"); tw.Ln;
-			tw.String(compiler);
-			tw.String(" "); GetCompilerOptions(temp); tw.String(temp); tw.Ln;
+			IF link THEN
+				tw.String(linker);
+				GetLinkerOptions(temp);
+			ELSE
+				tw.String(compiler);
+				GetCompilerOptions(temp);
+			END;
+			tw.String(" "); tw.String(temp); tw.Ln;
 			ToStream(tw, 80); (* file list *) tw.Ln; tw.String("~"); tw.Ln;
 			tw.String("SystemTools.Show Time elapsed: ~ SystemTools.Ln ~"); tw.Ln;
 			tw.String("SystemTools.Timer elapsed ~ SystemTools.Ln ~"); tw.Ln;
@@ -1208,6 +1228,11 @@ TYPE
 			END;
 		END GetCompilerOptions;
 
+		PROCEDURE GetLinkerOptions(VAR options: ARRAY OF CHAR);
+		BEGIN
+			COPY(linkOptions, options);
+		END GetLinkerOptions;
+
 		(* Count the number of source codes files in a specific build *)
 		PROCEDURE GetNofSources(VAR nofMarked : LONGINT) : LONGINT;
 		VAR file : File; nofSources : LONGINT;
@@ -1380,7 +1405,6 @@ TYPE
 				out.Ln; out.Update;
 			END;
 		END Compile;
-
 	END BuildObj;
 
 TYPE
@@ -1743,6 +1767,8 @@ CONST
 	tIMPORT = "IMPORT";
 	COMPILER = "COMPILER";
 	COMPILEOPTIONS = "COMPILEOPTIONS";
+	LINKER = "LINKER";
+	LINKEROPTIONS = "LINKEROPTIONS";
 	TARGET = "TARGET";
 	EXTENSION="EXTENSION";
 	SYMBOLEXTENSION="SYMBOLEXTENSION";
@@ -2085,7 +2111,7 @@ TYPE
 		VAR
 			token : Token; prefix : LONGINT;
 			string : ARRAY 256 OF CHAR; stringArray : Strings.StringArray;
-			compilerSet, compileOptionsSet, targetSet, includeSet, excludePackagesSet, extensionSet, symbolsSet, pathSet, disabledSet  : BOOLEAN;
+			compilerSet, compileOptionsSet, linkerSet, linkOptionsSet, targetSet, includeSet, excludePackagesSet, extensionSet, symbolsSet, pathSet, disabledSet  : BOOLEAN;
 			build : BuildObj;
 
 			PROCEDURE CheckOptions;
@@ -2102,7 +2128,7 @@ TYPE
 
 		BEGIN
 			NEW(build);
-			compilerSet := FALSE; compileOptionsSet := FALSE; targetSet := FALSE; includeSet := FALSE;
+			compilerSet := FALSE; compileOptionsSet := FALSE; linkerSet := FALSE; linkOptionsSet := FALSE; targetSet := FALSE; includeSet := FALSE;
 			extensionSet := FALSE; symbolsSet := FALSE; pathSet := FALSE; excludePackagesSet := FALSE; disabledSet := FALSE;
 			IF scanner.GetIdentifier(build.name) THEN
 				build.position := scanner.pos;
@@ -2120,6 +2146,16 @@ TYPE
 							ELSIF (token = COMPILEOPTIONS) THEN
 								IF compileOptionsSet THEN Error(scanner.pos, "# already set in build #", COMPILEOPTIONS, build.name); ELSE compileOptionsSet := TRUE; END;
 								IF ~scanner.GetIdentifier(build.compileOptions) THEN
+									(* continue *)
+								END;
+							ELSIF (token = LINKER) THEN
+								IF linkerSet THEN Error(scanner.pos, '# already set in build #', LINKER, build.name); ELSE linkerSet := TRUE; END;
+								IF ~scanner.GetIdentifier(build.linker) THEN
+									(* continue *)
+								END;
+							ELSIF (token = LINKEROPTIONS) THEN
+								IF linkOptionsSet THEN Error(scanner.pos, '# already set in build #', LINKEROPTIONS, build.name); ELSE linkOptionsSet := TRUE; END;
+								IF ~scanner.GetIdentifier(build.linkOptions) THEN
 									(* continue *)
 								END;
 							ELSIF (token = TARGET) THEN
@@ -3158,6 +3194,7 @@ BEGIN
 	options.Add(0X, "only", Options.String);
 	options.Add("e", "extension", Options.String);
 	options.Add("f", "file", Options.String);
+	options.Add("l", "link", Options.Flag);
 	options.Add("n", "nocheck", Options.Flag);
 	options.Add("o", "options", Options.String);
 	options.Add("p", "path", Options.String);
@@ -3208,6 +3245,11 @@ BEGIN
 						IF (res = 0) THEN
 							context.out.String("done."); context.out.Ln; context.out.Update;
 							IF options.GetFlag("build") THEN
+								IF options.GetFlag("link") THEN
+									context.error.String("Incompatible options: link cannot automatically build");
+									context.error.Ln; context.error.Update;
+									RETURN;
+								END;
 								build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
 							ELSIF ~options.GetFlag("zip") THEN
 								CallCommand("Notepad.Open", fullname, context);

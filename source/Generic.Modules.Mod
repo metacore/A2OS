@@ -312,7 +312,10 @@ VAR new: BOOLEAN;
 BEGIN
 	Publish (module, new);
 	IF new THEN
-		IF module.body # NIL THEN module.body END;
+		IF module.body # NIL THEN
+			Machine.FlushDCacheRange(ADDRESSOF(module.code[0]), LEN(module.code));
+			module.body
+		END;
 		module.init := TRUE;
 	END;
 END Initialize;

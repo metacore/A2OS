@@ -336,6 +336,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	I386, WIN, UNIX { I386.Reals.Mod }
 	AMD64 { AMD64.Reals.Mod }
+	ARM { ARM.Reals.Mod }
 
 	# default trap handling
 	UNCOOP { Reflection.Mod }
@@ -343,6 +344,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	NATIVEORIG, NATIVEGEN { Traps.Mod }
 	AMD64 { AMD64.Traps.Mod }
+	ARM { ARM.Traps.Mod }
 	WINORIG, WINGEN {  Win32.Traps.Mod }
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
@@ -415,6 +417,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	I386,UNIX { I386.Network.Mod }
 	AMD64 { AMD64.Network.Mod }
+	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
 	ActiveTimers.Mod
@@ -434,6 +437,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	I386 { I386.IP.Mod I386.IPv4.Mod }
 	AMD64 { AMD64.IP.Mod AMD64.IPv4.Mod }
+	ARM { ARM.IP.Mod ARM.IPv4.Mod }
 
 	NATIVE {
 		IPv6.Mod ICMP.Mod UDP.Mod DNS.Mod 	# IP, UDP, TCP

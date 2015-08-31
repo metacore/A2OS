@@ -2639,32 +2639,34 @@ TYPE
 		END RenderAboveTextMarkers;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR la, lb, i, top, t, b : LONGINT; rect : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
+		VAR la, lb, i, top, t, b : LONGINT; rect, clip : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			ASSERT(layout # NIL);
 			DrawBackground^(canvas);
+			canvas.GetClipRect(clip);
+			IF WMRectangles.RectEmpty(clip) THEN RETURN END;
 			rect := GetClientRect();
-			IF WMRectangles.RectEmpty(rect) THEN RETURN END;
+			canvas.SaveState(cstate);
 
 			IF showBorderI THEN
 				WMGraphicUtilities.DrawBevel(canvas, rect,
 					1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy)
 			END;
 
-			canvas.SaveState(cstate);
 			(* allow clean clipping in at inner border *)
 			WMRectangles.ClipRect(rect, borderClip);
-			canvas.SetClipRect(rect);
+			WMRectangles.ClipRect(clip, borderClip);
+			canvas.SetClipRect(clip);
 
 			(* draw gutter *)
-			IF showLineNumbersI & (lineNumberBgColorI # 0) THEN
-				rect.r := x0-1;
+			rect.r := x0 - 1;
+			IF showLineNumbersI & (lineNumberBgColorI # 0) & WMRectangles.Intersect(rect, clip) THEN
 				canvas.Fill(rect, lineNumberBgColorI, WMGraphics.ModeSrcOverDst);
 			END;
 
 			text.AcquireRead;
-			la := FindLineByY(firstLineI, Strings.Max(rect.t, bordersI.t));
-			lb := FindLineByY(firstLineI, Strings.Min(rect.b, bounds.GetHeight() - bordersI.b));
+			la := FindLineByY(firstLineI, clip.t);
+			lb := FindLineByY(firstLineI, clip.b);
 
 			(* prepare selections *)
 			FOR i := 0 TO nofHighlights - 1 DO
@@ -2673,19 +2675,18 @@ TYPE
 				IF highlights[i].a > highlights[i].b THEN t := highlights[i].a; highlights[i].a := highlights[i].b; highlights[i].b := t END
 			END;
 
-			top := bordersI.t;
+			top := borderClip.t;
 			IF (la = lb) & (textAlignV.Get() = WMGraphics.AlignCenter) THEN 
-				t := bordersI.t;
-				b := bounds.GetHeight()-bordersI.b;	
-				top :=  (t+b-layout.lines[la].height) DIV 2 (*- layout.lines[la].ascent*);
+				top := (borderClip.t+borderClip.b-layout.lines[la].height) DIV 2;
 				(* something is wrong with ascent and height here, does not comply with the notions in fonts *)
 			END;
-			
+
 			FOR i := firstLineI TO la - 1 DO
 				top := top + (layout.lines[i].height);
 				CheckParagraphBegin(i, top);
 				CheckParagraphEnd(i, top);
 			END;
+
 			IF la >= 0 THEN
 				(* draw the lines that intersect the clipping rectangle *)
 				FOR i := la TO lb DO
@@ -2695,6 +2696,7 @@ TYPE
 					CheckParagraphEnd(i, top);
 				END
 			END;
+
 			RenderAboveTextMarkers(canvas);
 			text.ReleaseRead;
 			canvas.RestoreState(cstate);

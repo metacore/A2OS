@@ -588,9 +588,9 @@ TYPE
 				link := options.GetFlag("link");
 				IF options.GetString("compiler", compiler) THEN END;
 				IF link THEN
-					IF options.GetString("options", compileOptions) THEN END;
-				ELSE
 					IF options.GetString("options", linkOptions) THEN END;
+				ELSE
+					IF options.GetString("options", compileOptions) THEN END;
 				END;
 				IF options.GetString("target", target) THEN END;
 				IF options.GetString("extension", extension) THEN END;

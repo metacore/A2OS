@@ -11204,6 +11204,8 @@ TYPE
 				VAR destination: Sections.Section; name: SyntaxTree.IdentifierString;
 				BEGIN
 					destination := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
+					IF destination = NIL THEN destination := importedSymbols.BySymbol(type.typeDeclaration) END;
+
 					IF destination = NIL THEN
 						(* imported unused record type *)
 						Char(section,0X); (* nil type *)

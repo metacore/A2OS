@@ -11156,13 +11156,14 @@ TYPE
 				rfStaticArray= 12X; rfDynamicArray=14X; rfOpenArray=15X;
 				rfByte = 1X; rfBoolean = 2X; rfChar8=3X; rfShortint=04X; rfInteger = 05X; rfLongint = 06X;
 				rfReal = 07X; rfLongreal = 08X; rfSet = 09X; rfDelegate = 0EX;  rfString = 0FH; rfPointer = 0DX; rfHugeint = 10X;
-				rfChar16=11X; rfChar32=12X; rfAll=13X; rfSame=14X; rfRange=15X; rfRecord=16X; rfRecordPointer=1DX;
+				rfChar16=11X; rfChar32=12X; rfAll=13X; rfSame=14X; rfRange=15X; rfRecord=16X; rfComplex = 17X; rfLongcomplex = 18X; 
+				rfRecordPointer=1DX;
 				rfArrayFlag = 80X;
 
 			VAR
-				size: LONGINT; s: Sections.Section; sizePC, i: LONGINT;
+				s: Sections.Section; sizePC, i, startPC, endPC: LONGINT;
 
-				PROCEDURE BaseType(arrayOf: BOOLEAN; type: SyntaxTree.Type);
+				PROCEDURE BaseType(type: SyntaxTree.Type): CHAR;
 				VAR char: CHAR;
 				BEGIN
 					IF type = NIL THEN char := rfLongint
@@ -11173,31 +11174,30 @@ TYPE
 						ELSIF type.sizeInBits = 16 THEN char := rfChar16
 						ELSIF type.sizeInBits = 32 THEN char := rfChar32
 						END;
-					ELSIF type IS SyntaxTree.IntegerType THEN
+					ELSIF (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType) THEN
 						IF type.sizeInBits = 8 THEN char := rfShortint
 						ELSIF type.sizeInBits = 16 THEN char := rfInteger
 						ELSIF type.sizeInBits = 32 THEN char := rfLongint
 						ELSIF type.sizeInBits = 64 THEN char := rfHugeint
 						END;
 					ELSIF type IS SyntaxTree.SizeType THEN char := rfLongint
-					ELSIF type IS SyntaxTree.AddressType THEN char := rfLongint
 					ELSIF type IS SyntaxTree.FloatType THEN
 						IF type.sizeInBits = 32 THEN char := rfReal
 						ELSIF type.sizeInBits = 64 THEN  char := rfLongreal
+						END;
+					ELSIF type IS SyntaxTree.ComplexType THEN
+						IF type.sizeInBits = 64 THEN char := rfComplex
+						ELSIF type.sizeInBits = 128 THEN char := rfLongcomplex
 						END;
 					ELSIF type IS SyntaxTree.SetType THEN char := rfSet
 					ELSIF type IS SyntaxTree.AnyType THEN char := rfPointer
 					ELSIF type IS SyntaxTree.ObjectType THEN char := rfPointer
 					ELSIF type IS SyntaxTree.PointerType THEN char := rfPointer
 					ELSIF type IS SyntaxTree.ProcedureType THEN char := rfDelegate
+					ELSIF type IS SyntaxTree.RangeType THEN char := rfRange
 					ELSE (*ASSERT(arrayOf);*) char := rfPointer; (*RETURN (* ARRAY OF unknown (record): do not write anything *)*)
 					END;
-					IF arrayOf THEN
-						Char(section,CHR(ORD(char)+ORD(rfArrayFlag)));
-					ELSE
-						Char(section,char)
-					END;
-					INC(size);
+					RETURN char
 				END BaseType;
 
 				PROCEDURE RecordType(type: SyntaxTree.RecordType);
@@ -11209,7 +11209,6 @@ TYPE
 					IF destination = NIL THEN
 						(* imported unused record type *)
 						Char(section,0X); (* nil type *)
-						INC(size);
 						type.typeDeclaration.GetName(name);
 						(*
 						this happens when a symbol from a different module is used but the type desciptor is not necessary to be present in the current module
@@ -11221,67 +11220,100 @@ TYPE
 						ELSE
 							Char(section,rfRecord);
 						END;
-						INC(size);
 						Longint(section,(destination.offset ));
-						INC(size,4);
 					END;
 				END RecordType;
-
-				PROCEDURE ArrayType(type: SyntaxTree.ArrayType);
+				
+				PROCEDURE StaticArrayLength(type: SyntaxTree.ArrayType; VAR baseType: SyntaxTree.Type): LONGINT;
 				BEGIN
-					IF type.arrayBase.resolved IS SyntaxTree.ArrayType THEN
-						Char(section,CHR(ORD(rfPointer)+ORD(rfArrayFlag)));
-						INC(size);
-					ELSE BaseType(TRUE,type.arrayBase.resolved)
+					baseType := type.arrayBase.resolved;
+					IF type.form = SyntaxTree.Static THEN
+						IF baseType IS SyntaxTree.ArrayType THEN
+							RETURN type.staticLength * StaticArrayLength(baseType(SyntaxTree.ArrayType),baseType)
+						ELSE
+							RETURN type.staticLength
+						END
+					ELSE
+						RETURN 0
+					END;
+				END StaticArrayLength;
+				
+				PROCEDURE ArrayType(type: SyntaxTree.ArrayType);
+				VAR length: LONGINT; baseType: SyntaxTree.Type; char: CHAR;
+				BEGIN
+					length := StaticArrayLength(type, baseType);
+					char := BaseType(baseType);
+					IF type.form # SyntaxTree.Open THEN
+						Char(section,CHR(ORD(char)+ORD(rfArrayFlag)));
+						Longint(section, length)
+					ELSE
+						length :=0;
+						(*length := 1+SemanticChecker.Dimension(type,{SyntaxTree.Open});*)
+						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
+						Longint(section, length)
+					END;
+				END ArrayType;
+				
+				PROCEDURE StaticMathArrayLength(type: SyntaxTree.MathArrayType; VAR baseType: SyntaxTree.Type): LONGINT;
+				BEGIN
+					baseType := type.arrayBase;
+					IF baseType # NIL THEN
+						baseType := baseType.resolved;
 					END;
 					IF type.form = SyntaxTree.Static THEN
-						Longint(section,type.staticLength)
+						IF (baseType # NIL) & (baseType IS SyntaxTree.MathArrayType) THEN
+							RETURN type.staticLength * StaticMathArrayLength(baseType(SyntaxTree.MathArrayType),baseType)
+						ELSE
+							RETURN type.staticLength
+						END
 					ELSE
-						Longint(section,0)
+						RETURN 0
 					END;
-					INC(size,4);
-				END ArrayType;
+				END StaticMathArrayLength;
 
 				PROCEDURE MathArrayType(type: SyntaxTree.MathArrayType);
+				VAR length: LONGINT; baseType: SyntaxTree.Type; char: CHAR;
 				BEGIN
-					IF type.arrayBase = NIL THEN BaseType(TRUE,NIL)
-					ELSIF type.arrayBase.resolved IS SyntaxTree.MathArrayType THEN
-						Char(section,CHR(ORD(rfPointer)+ORD(rfArrayFlag)));
-						INC(size);
-					ELSE BaseType(TRUE,type.arrayBase.resolved)
-					END;
-					IF type.form = SyntaxTree.Static THEN
-						Longint(section,type.staticLength)
+					length := StaticMathArrayLength(type, baseType);
+					char :=  BaseType(baseType);
+					IF type.form = SyntaxTree.Open THEN
+						char := BaseType(module.system.addressType);
+						length := 5+2*SemanticChecker.Dimension(type,{SyntaxTree.Open});
+						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
+						Longint(section, length)
+					ELSIF type.form=SyntaxTree.Tensor THEN
+						char := BaseType(module.system.addressType);
+						Char(section, CHR(ORD(char)));
 					ELSE
-						Longint(section,0)
+						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
+						Longint(section, length)
 					END;
-					INC(size,4);
 				END MathArrayType;
 
 				PROCEDURE Type(type: SyntaxTree.Type);
 				BEGIN
-					IF type = NIL THEN Char(section,0X); INC(size); RETURN ELSE type := type.resolved END;
+					IF type = NIL THEN Char(section,0X); RETURN ELSE type := type.resolved END;
 
 					IF type IS SyntaxTree.BasicType THEN
-						BaseType(FALSE,type)
+						Char(section, BaseType(type));
 					ELSIF type IS SyntaxTree.RecordType THEN
 						RecordType(type(SyntaxTree.RecordType));
 					ELSIF type IS SyntaxTree.ArrayType THEN
 						ArrayType(type(SyntaxTree.ArrayType))
 					ELSIF type IS SyntaxTree.EnumerationType THEN
-						BaseType(FALSE,module.system.longintType)
+						Char(section, BaseType(module.system.longintType))
 					ELSIF type IS SyntaxTree.PointerType THEN
 						IF type(SyntaxTree.PointerType).pointerBase IS SyntaxTree.RecordType THEN
 							RecordType(type(SyntaxTree.PointerType).pointerBase(SyntaxTree.RecordType));
 						ELSE
-							BaseType(FALSE,type)
+							Char(section, BaseType(type))
 						END;
 					ELSIF type IS SyntaxTree.ProcedureType THEN
-						BaseType(FALSE,type);
+						Char(section, BaseType(type));
 					ELSIF type IS SyntaxTree.MathArrayType THEN
 						MathArrayType(type(SyntaxTree.MathArrayType));
 					ELSIF type IS SyntaxTree.CellType THEN
-						BaseType(FALSE,module.system.anyType);
+						Char(section, BaseType(module.system.anyType));
 					ELSE HALT(200)
 					END;
 				END Type;
@@ -11291,52 +11323,43 @@ TYPE
 				BEGIN
 					IF variable.externalName # NIL THEN RETURN END;
 					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
-					INC(size);
 					variable.GetName(name);
 					Type(variable.type);
 					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
-					INC(size,4);
 					String(section,name);
-					INC(size,Strings.Length(name)+1);
 				END WriteVariable;
 
 				PROCEDURE WriteParameter(variable: SyntaxTree.Parameter; indirect: BOOLEAN);
 				VAR name: ARRAY 256 OF CHAR;
 				BEGIN
 					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
-					INC(size);
 					variable.GetName(name);
 					Type(variable.type);
 					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
-					INC(size,4);
 					variable.GetName(name);
 					String(section,name);
-					INC(size,Strings.Length(name)+1);
 				END WriteParameter;
 
 				PROCEDURE ReturnType(type: SyntaxTree.Type);
 				BEGIN
-					IF type = NIL THEN Char(section,0X); INC(size); RETURN ELSE type := type.resolved END;
+					IF type = NIL THEN Char(section,0X); RETURN ELSE type := type.resolved END;
 
 					IF type IS SyntaxTree.ArrayType THEN
 						WITH type: SyntaxTree.ArrayType DO
 							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
 							ELSE Char(section,rfOpenArray)
 							END;
-							INC(size);
 						END
 					ELSIF type IS SyntaxTree.MathArrayType THEN
 						WITH type: SyntaxTree.MathArrayType DO
 							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
 							ELSE Char(section,rfOpenArray)
 							END;
-							INC(size);
 						END
 					ELSIF type IS SyntaxTree.RecordType THEN
 						Char(section,rfRecord);
-						INC(size);
 					ELSE
-						BaseType(FALSE,type);
+						Char(section, BaseType(type));
 					END;
 				END ReturnType;
 
@@ -11346,23 +11369,18 @@ TYPE
 					 name: ARRAY 256 OF CHAR;
 				BEGIN
 					procedure := s.symbol(SyntaxTree.Procedure); (*! check for variable or type symbol for object body *)
-					procedure.GetName(name);
+				(*procedure.name,name);*)
+				Global.GetSymbolNameInScope(procedure,module.module.moduleScope,name);
+
 					procedureType := procedure.type(SyntaxTree.ProcedureType);
 
 					Char(section,0F9X);
-					INC(size);
 					Symbol(section,s,0,0);
-					INC(size,4);
 					Symbol(section,s,s(IntermediateCode.Section).pc,0);
-					INC(size,4);
 					Longint(section,procedureType.numberParameters);
-					INC(size,4);
 					ReturnType(procedureType.returnType);
 					Longint(section,0); (*! level *)
-					INC(size,4);
 					Longint(section,0);
-					INC(size,4);
-					Global.GetSymbolNameInScope(procedure, module.module.moduleScope, name);
 					(*
 					IF procedure.scope IS SyntaxTree.RecordScope THEN (* add object name *)
 						record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
@@ -11383,7 +11401,6 @@ TYPE
 					END;
 					*)
 					String(section,name);
-					INC(size,Strings.Length(name)+1);
 					parameter := procedureType.firstParameter;
 					WHILE(parameter # NIL) DO
 						WriteParameter(parameter,parameter.kind # SyntaxTree.ValueParameter); (*!treat  exceptions !*)
@@ -11399,13 +11416,9 @@ TYPE
 				PROCEDURE Scope(s: Sections.Section);
 				BEGIN
 					Char(section,0F8X);
-					INC(size);
 					Symbol(section,s,0,0); (* start *)
-					INC(size,4);
 					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
-					INC(size,4);
 					String(section,"$$");
-					INC(size,3);
 					(* removed variables -- wrongly interpreted by Reflection
 					variable := module.module.moduleScope.firstVariable;
 					WHILE(variable # NIL) DO
@@ -11415,13 +11428,22 @@ TYPE
 					*)
 				END Scope;
 
+				PROCEDURE ComputeSize(startPC, endPC: LONGINT): SIZE;
+				VAR result, i: LONGINT;
+				BEGIN
+					FOR i := startPC TO endPC -1 DO
+						ASSERT (section.instructions[i].opcode = IntermediateCode.data);
+						INC(result, ToMemoryUnits(module.system, section.instructions[i].op1.type.sizeInBits));
+					END;
+					RETURN result;
+				END ComputeSize;
+				
 
 			BEGIN
 				Array(section,sizePC,"");
-
-				size := 0;
+				
+				startPC := section.pc;
 				Char(section,0FFX); (* sign for trap writer *)
-				INC(size);
 
 				FOR i := 0 TO module.allSections.Length() - 1 DO
 					s := module.allSections.GetSection(i);
@@ -11437,11 +11459,12 @@ TYPE
 						Procedure(s)
 					END
 				END;
-
-				PatchArray(section,sizePC,size);
+				
+				endPC := section.pc;
+				PatchArray(section,sizePC,ComputeSize(startPC, endPC));
 
 			END References;
-
+			
 		(*
 		Command* = RECORD
 			(* Fields exported for initialization by loader/linker only! Consider read-only! *)

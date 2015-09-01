@@ -298,6 +298,32 @@ BEGIN
 	RETURN 0
 END ID;
 
+
+(**
+ * Flush Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+ * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+ * left empty on Intel architecture.
+ *)
+PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: LONGINT);
+END FlushDCacheRange;
+
+(**
+ * Invalidate Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+ * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+ * left empty on Intel architecture.
+ *)
+PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: LONGINT);
+END InvalidateDCacheRange;
+
+(**
+ * Invalidate Instruction Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+ * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+ * left empty on Intel architecture.
+ *)
+PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
+END InvalidateICacheRange;
+
+
 (* setup MMX, SSE and SSE2..SSE5 and AVX extension *)
 
 PROCEDURE SetupSSE2Ext;

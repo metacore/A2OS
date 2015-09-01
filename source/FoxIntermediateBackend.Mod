@@ -11201,26 +11201,18 @@ TYPE
 				END BaseType;
 
 				PROCEDURE RecordType(type: SyntaxTree.RecordType);
-				VAR destination: Sections.Section; name: SyntaxTree.IdentifierString;
+				VAR destination: Sections.Section; name: SyntaxTree.IdentifierString; sname: Basic.SegmentedName;
 				BEGIN
 					destination := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
-					IF destination = NIL THEN destination := importedSymbols.BySymbol(type.typeDeclaration) END;
-
-					IF destination = NIL THEN
-						(* imported unused record type *)
-						Char(section,0X); (* nil type *)
-						type.typeDeclaration.GetName(name);
-						(*
-						this happens when a symbol from a different module is used but the type desciptor is not necessary to be present in the current module
-						D.Str("Warning: Unreferenced record type encountered: "); D.String(name); D.String(" unused? "); D.Ln;
-						*)
+					IF type.pointerType # NIL THEN
+						Char(section,rfRecordPointer)
 					ELSE
-						IF type.pointerType # NIL THEN
-							Char(section,rfRecordPointer)
-						ELSE
-							Char(section,rfRecord);
-						END;
-						Longint(section,(destination.offset ));
+						Char(section,rfRecord);
+					END;
+					IF destination = NIL THEN
+						Longint(section,0);
+					ELSE
+						Longint(section,destination.offset); (* used for ? *)
 					END;
 				END RecordType;
 				

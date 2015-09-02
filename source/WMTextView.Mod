@@ -2642,15 +2642,18 @@ TYPE
 		VAR la, lb, i, top, t, b : LONGINT; rect, clip : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			ASSERT(layout # NIL);
-			DrawBackground^(canvas);
+
 			canvas.GetClipRect(clip);
 			IF WMRectangles.RectEmpty(clip) THEN RETURN END;
 			rect := GetClientRect();
 			canvas.SaveState(cstate);
 
-			IF showBorderI THEN
-				WMGraphicUtilities.DrawBevel(canvas, rect,
-					1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy)
+			IF WMRectangles.Intersect(rect, clip) THEN
+				DrawBackground^(canvas);
+				IF showBorderI THEN
+					WMGraphicUtilities.DrawBevel(canvas, rect,
+						1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy)
+				END;
 			END;
 
 			(* allow clean clipping in at inner border *)

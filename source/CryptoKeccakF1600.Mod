@@ -114,7 +114,7 @@ TYPE
 		
 		
 		PROCEDURE XORPermuteExtract*(	CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: LONGINT; 
-											VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: LONGINT );
+												VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: LONGINT );
 		BEGIN
 			XORLanes( inData, inOffset, inLaneCount );
 			Permute;
@@ -136,67 +136,74 @@ TYPE
 
 
 	(* Credit to Henry S. Warren, Hacker's Delight, Addison-Wesley, 2002	*)
-	PROCEDURE ToBitInterleaving( in: Lane; VAR out: Lane );
+	PROCEDURE ToBitInterleaving( CONST in: Lane; VAR out: Lane );
 	VAR temp, temp0, temp1: SET;
 	BEGIN
 	        temp0 := in.low;
 	        temp1 := in.high;
-	        temp := (temp0 / LSH(temp0, -1)) * S.VAL(SET, 022222222H);  temp0 := temp0 / temp / LSH(temp, 1);
-	        temp := (temp0 / LSH(temp0, -2)) * S.VAL(SET, 00C0C0C0CH);  temp0 := temp0 / temp / LSH(temp, 2);
-	        temp := (temp0 / LSH(temp0, -4)) * S.VAL(SET, 000F000F0H);  temp0 := temp0 / temp / LSH(temp, 4);
-	        temp := (temp0 / LSH(temp0, -8)) * S.VAL(SET, 00000FF00H);  temp0 := temp0 / temp / LSH(temp, 8);
+	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
 	        
-	        temp := (temp1 / LSH(temp1, -1)) * S.VAL(SET, 022222222H);  temp1 := temp1 / temp / LSH(temp, 1);
-	        temp := (temp1 / LSH(temp1, -2)) * S.VAL(SET, 00C0C0C0CH);  temp1 := temp1 / temp / LSH(temp, 2);
-	        temp := (temp1 / LSH(temp1, -4)) * S.VAL(SET, 000F000F0H);  temp1 := temp1 / temp / LSH(temp, 4);
-	        temp := (temp1 / LSH(temp1, -8)) * S.VAL(SET, 00000FF00H);  temp1 := temp1 / temp / LSH(temp, 8);
-	        out.low := (temp0 * S.VAL(SET, 00000FFFFH)) + LSH(temp1,16);
-	        out.high := LSH(temp0, - 16) + (temp1 * S.VAL(SET, 0FFFF0000H));
+	        temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
+	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+	        temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+	        out.low := (temp0 * S.VAL( SET, 00000FFFFH )) + LSH( temp1, 16 );
+	        out.high := LSH( temp0, - 16) + (temp1 * S.VAL( SET, 0FFFF0000H ));
 	END ToBitInterleaving;
 
 	(* Credit to Henry S. Warren, Hacker's Delight, Addison-Wesley, 2002 *)
-	PROCEDURE FromBitInterleaving( in: Lane;  VAR out: Lane );
+	PROCEDURE FromBitInterleaving( CONST in: Lane;  VAR out: Lane );
 	VAR temp, temp0, temp1: SET;
 	BEGIN
 	        temp0 := in.low; 
 	        temp1 := in.high; 
-	        temp := (temp0 * S.VAL(SET, 00000FFFFH)) + LSH(temp1, 16); 
-	        temp1 := LSH(temp0, - 16) + (temp1 * S.VAL(SET, 0FFFF0000H)); 
+	        temp := (temp0 * S.VAL( SET, 00000FFFFH )) + LSH( temp1, 16 ); 
+	        temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET, 0FFFF0000H )); 
 	        temp0 := temp; 
-	        temp := (temp0 / LSH(temp0, -8)) * S.VAL(SET, 00000FF00H);  temp0 := temp0 / temp / LSH(temp, 8); 
-	        temp := (temp0 / LSH(temp0, -4)) * S.VAL(SET, 000F000F0H);  temp0 := temp0 / temp / LSH(temp, 4); 
-	        temp := (temp0 / LSH(temp0, -2)) * S.VAL(SET, 00C0C0C0CH);  temp0 := temp0 / temp / LSH(temp, 2); 
-	        temp := (temp0 / LSH(temp0, -1)) * S.VAL(SET, 022222222H);  temp0 := temp0 / temp / LSH(temp, 1); 
+	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 ); 
+	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 ); 
+	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 ); 
+	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 ); 
 	        
-	        temp := (temp1 / LSH(temp1, -8)) * S.VAL(SET, 00000FF00H);  temp1 := temp1 / temp / LSH(temp, 8);
-	        temp := (temp1 / LSH(temp1, -4)) * S.VAL(SET, 000F000F0H);  temp1 := temp1 / temp / LSH(temp, 4);
-	        temp := (temp1 / LSH(temp1, -2)) * S.VAL(SET, 00C0C0C0CH);  temp1 := temp1 / temp / LSH(temp, 2);
-	        temp := (temp1 / LSH(temp1, -1)) * S.VAL(SET, 022222222H);  temp1 := temp1 / temp / LSH(temp, 1);
+	        temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+	        temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
 	        out.low := temp0;
 	        out.high := temp1;
 	END FromBitInterleaving;
 
 
 
-	PROCEDURE ROL64( CONST in: Lane; VAR out: Lane; offset: LONGINT );
-	VAR temp: SET;
+	PROCEDURE ROL64( VAR lane: Lane; offset: LONGINT );
+	VAR tmp: SET;
 	BEGIN
 		IF ODD( offset ) THEN
-			temp := in.low;
-			out.low := ROT( in.high, (offset+1) DIV 2 );
-			out.high := ROT( temp, (offset-1) DIV 2 )
+			tmp := lane.low;
+			lane.low := ROT( lane.high, (offset+1) DIV 2 );
+			lane.high := ROT( tmp, (offset-1) DIV 2 )
 		ELSE
-			out.low := ROT( in.low, offset DIV 2 );
-			out.high := ROT( in.high, offset DIV 2 )
-		END
+			lane.low := ROT( lane.low, offset DIV 2 );
+			lane.high := ROT( lane.high, offset DIV 2 )
+		END;
 	END ROL64;
 	
+
+	PROCEDURE ROL64_1XOR( CONST in1, in2: Lane; VAR out: Lane );
+	BEGIN
+		out.low := ROT( in1.high, 1 ) / in2.low;
+		out.high := in1.low / in2.high;
+	END ROL64_1XOR;
+
 
 	PROCEDURE Round( VAR a: State; r: LONGINT );
 	VAR
 		x, y, i, i1, i2: LONGINT;
 		c, d: ARRAY 5 OF Lane;  
-		tempA: State;  
+		a0: State;  
 	BEGIN
 		(* theta *)
 		FOR x := 0 TO 4 DO
@@ -207,10 +214,7 @@ TYPE
 			END
 		END;
 		FOR x := 0 TO 4 DO
-			ROL64( c[(x+1) MOD 5], d[x], 1 );
-			i := (x + 4) MOD 5;
-			d[x].low := d[x].low / c[i].low;  
-			d[x].high := d[x].high / c[i].high
+			ROL64_1XOR( c[(x+1) MOD 5], c[(x+4) MOD 5], d[x] );
 		END;
 		FOR x := 0 TO 4 DO
 			FOR y := 0 TO 4 DO
@@ -220,17 +224,14 @@ TYPE
 			END
 		END;
 		(* rho *)
-		FOR x := 0 TO 4 DO
-			FOR y := 0 TO 4 DO
-				i := x + 5*y;
-				ROL64( a[i], a[i], rhoOffsets[i] );	
-			END
+		FOR i := 0 TO 24 DO
+			ROL64( a[i], rhoOffsets[i] );	
 		END;
 		(* pi *)
-		tempA := a;
+		a0 := a;
 		FOR x := 0 TO 4 DO
 			FOR y := 0 TO 4 DO
-				a[y + 5*((2*x + 3*y) MOD 5)] := tempA[x + 5*y]
+				a[y + 5*((2*x + 3*y) MOD 5)] := a0[x + 5*y]
 			END
 		END;
 		(* chi *)
@@ -246,9 +247,9 @@ TYPE
 			i := 4 + y;  i1 := 0 + y;  i2 := 1 + y;
 			c[4].low := a[i].low / ((-a[i1].low) * a[i2].low);
 			c[4].high := a[i].high / ((-a[i1].high) * a[i2].high);
-			FOR x := 0 TO 4 DO
-				a[x+y].low := c[x].low;  
-				a[x+y].high := c[x].high; 
+			FOR x := 0 TO 4 DO  
+				a[x+y].low := c[x].low;
+				a[x+y].high := c[x].high
 			END
 		END;
 		(* iota *)
@@ -311,21 +312,7 @@ TYPE
 
 
 
-
-	PROCEDURE MachineIsLittleEndian(): BOOLEAN;
-	TYPE 
-		P = POINTER TO ARRAY 4 OF CHAR;
-	VAR
-		x: LONGINT;  p: P;
-	BEGIN
-		NEW( p );  p[0] := 80X;
-		S.MOVE( ADDRESSOF( p[0] ),  ADDRESSOF( x ), 4 );
-		RETURN x = 80H
-	END MachineIsLittleEndian;
-
-
 BEGIN
-	ASSERT( MachineIsLittleEndian() & (S.VAL( LONGINT, {0} ) = 1) );
 	InitializeRoundConstants;
 	InitializeRhoOffsets;
 END CryptoKeccakF1600.

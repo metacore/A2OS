@@ -1,5 +1,5 @@
 MODULE WMGraphics;	(** AUTHOR "TF"; PURPOSE "Generic Graphic Support"; *)
-
+ 
 IMPORT
 	Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale,
 	Codecs, Files, Streams;
@@ -201,7 +201,7 @@ TYPE
 		PROCEDURE SetClipRect*(rect : Rectangle);
 		BEGIN
 			INCL(clipMode, ClipRect);
-			Rectangles.Normalize(rect);
+			rect.r := Max(rect.r, rect.l); rect.b := Max(rect.b, rect.t);
 			Rectangles.MoveRel(rect, dx, dy);
 			Rectangles.ClipRect(rect, limits);
 			clipRect := rect
@@ -298,7 +298,7 @@ TYPE
 		BEGIN
 			Fill(MakeRectangle(x, y, x + 1, y + 1), color, mode)
 		END SetPixel;
-		
+
 		(** fill a rectangle within the current clipping rectangle *)
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		END Fill;
@@ -385,7 +385,7 @@ TYPE
 
 		PROCEDURE SetLimits*(r : Rectangle);
 		BEGIN
-			Rectangles.Normalize(r);
+			r.r := Max(r.r, r.l); r.b := Max(r.t, r.b);
 			Rectangles.ClipRect(r, bounds); SetLimits^(r)
 		END SetLimits;
 
@@ -396,7 +396,6 @@ TYPE
 		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
 		VAR rm : Raster.Mode; pix : Raster.Pixel;
 		BEGIN
-			Rectangles.Normalize(rect);
 			(* convert to super coordinates *)
 			Rectangles.MoveRel(rect, dx, dy);
 			IF ClipRect IN clipMode THEN Rectangles.ClipRect(rect, clipRect) END;
@@ -843,6 +842,7 @@ PROCEDURE ClearCache*;
 BEGIN
 	imgCache.Clear;
 END ClearCache;
+
 
 BEGIN
  	nofFallbackFonts := 3;

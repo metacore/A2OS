@@ -315,50 +315,6 @@ TYPE
 	*)
 	END DivModU64;
 
-	(* ---- FLOATING POINT EMULATION ----
-	The following procedures are used in case the target platform does not feature a math coprocessor (aka VFP unit).
-	Most of the code was taken from the Minos FPU emulation module "FPU.Mos".
-
-	Note that parameters and return types are declared as integers, even though they do contain floating point values
-	according to the IEEE standard.
-	*)
-
-	(** Tests for 0.0 (+0 or -0)
-	- corresponds to SYSTEM.NULL **)
-	PROCEDURE IsZeroF32(float: FLOAT32): BOOLEAN;
-	CODE
-		LDR R0, [FP, #+float] ; R0 := float
-		BIC R0, R0, #S ; clear the sign bit
-		CMP R0, #0 ; IF R0 = 0
-		MOVEQ R0, #1 ; THEN RETURN TRUE
-		MOVNE R0, #0 ; ELSE RETURN FALSE
-	END IsZeroF32;
-
-	(** Serves to obtain the sign for products and quotients.
-	- corresponds to SYSTEM.XOR **)
-	PROCEDURE SignXorF32(left, right: FLOAT32): FLOAT32;
-	CODE
-		LDR R0, [FP, #+left] ; R0 := left
-		LDR R1, [FP, #+right] ; R1: = right
-		EOR R0, R0, R1 ; R0 := R0 xor R1
-		AND R0, R0, #S ; clear all bits except the sign bit
-	END SignXorF32;
-
-	(** multiplies two 32-bit unsigned integer to produce a 64-bit result: [resultLow | resultHigh] = left * right
-	- corresponds to SYSTEM.MULD (but the low and high part of the result are passed explicitly) **)
-	PROCEDURE MulD(VAR resultLow, resultHigh: FLOAT32; left, right: FLOAT32);
-	CODE
-		LDR R2, [FP, #+resultLow] ; R2 := address of resultLow
-		LDR R3, [FP, #+resultHigh] ; R3: = address of resultHigh
-		LDR R4, [FP, #+left] ; R4 := left
-		LDR R5, [FP, #+right] ; R5: = right
-
-		UMULL R0, R1, R4, R5
-
-		STR R0, [R4, #+0]
-		STR R1, [R5, #+0]
-	END MulD;
-
 	PROCEDURE NegF32*(float: FLOAT32): FLOAT32;
 	CODE
 		LDR R0, [FP, #+float] ; R0 := float
@@ -585,14 +541,6 @@ TYPE
 		END ;
 		RETURN x
 	END ConvF32S32;
-	
-	(** whether x < y
-	- note that this operation should rather be done by direct code emission of the backend
-	**)
-	PROCEDURE LessThanF32(x, y: FLOAT32): BOOLEAN;
-	BEGIN
-		HALT(200)
-	END LessThanF32;
 
 	(* ---- STRING OPERATIONS ---- *)
 

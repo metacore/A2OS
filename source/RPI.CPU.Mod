@@ -105,8 +105,9 @@ END Clean;
 (* hardware registers *)
 CONST WDOG* = 03F100024H; RSTC* = 03F10001CH; PASSWORD = 05A000000H; FULLRESET = 000000020H;
 
-CONST GPFSEL0* = 03F200004H; FSEL0* = 0; FSEL1* = 3; FSEL2* = 6; FSEL3* = 9; FSEL4* = 12; FSEL5* = 15; FSEL6* = 18; FSEL7* = 21; FSEL8* = 24; FSEL9* = 27;
-CONST GPFSEL1* = 03F200008H; FSEL10* = 0; FSEL11* = 3; FSEL12* = 6; FSEL13* = 9; FSEL14* = 12; FSEL15* = 15; FSEL16* = 18; FSEL17* = 21; FSEL18* = 24; FSEL19* = 27;
+CONST GPFSEL0* = 03F200000H; FSEL0* = 0; FSEL1* = 3; FSEL2* = 6; FSEL3* = 9; FSEL4* = 12; FSEL5* = 15; FSEL6* = 18; FSEL7* = 21; FSEL8* = 24; FSEL9* = 27;
+CONST GPFSEL1* = 03F200004H; FSEL10* = 0; FSEL11* = 3; FSEL12* = 6; FSEL13* = 9; FSEL14* = 12; FSEL15* = 15; FSEL16* = 18; FSEL17* = 21; FSEL18* = 24; FSEL19* = 27;
+			GPFSEL2* = 03F200008H; GPFSEL3* = 03F20000CH; GPFSEL4* = 03F200010H; GPFSEL5* = 03F200014H; 
 CONST GPSET0* = 03F20001CH; GPSET1* = 03F200020H;
 CONST GPCLR0* = 03F200028H; GPCLR1* = 03F20002CH;
 CONST GPPUD* = 03F200094H; PUD* = 0;
@@ -174,6 +175,18 @@ CODE
 	STR	R4, [R2, #0]
 END Unmask;
 
+(* combined mask / unmask: clear mask and set value *)
+PROCEDURE MaskIn-(register: ADDRESS; mask, value: SET);
+CODE
+	LDR	R2, [FP, #register]
+	LDR	R3, [FP, #mask]
+	LDR	R4, [FP, #value]
+	LDR	R5, [R2, #0]
+	BIC	R5, R5, R3
+	ORR R5, R5, R4 
+	STR	R5, [R2, #0]
+END MaskIn;
+	
 (* interrupt handling *)
 CONST Interrupts* = 7;
 CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6;

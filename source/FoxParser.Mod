@@ -763,7 +763,7 @@ TYPE
 		END Factor;
 
 		(** Term = Factor {MulOp Factor}.
-		   MulOp = '*' | '**' | '.*' | '+*' | '/' | './' | 'div' | 'mod' | '&' | '<<?' | '>>?' || '!'.
+		   MulOp = '*' | '**' | '.*' | '+*' | '/' | './' | 'div' | 'mod' | '&'.
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
 		VAR term, factor: SyntaxTree.Expression;  operator: LONGINT; position: LONGINT;
@@ -771,7 +771,7 @@ TYPE
 			IF Trace THEN S( "Term" ) END;
 			position := symbol.start;
 			term := Factor();
-			WHILE (symbol.token >= Scanner.Times) & (symbol.token <= Scanner.And) OR (symbol.token = Scanner.ExclamationMarks) OR (symbol.token = Scanner.Questionmarks) DO
+			WHILE (symbol.token >= Scanner.Times) & (symbol.token <= Scanner.And)  DO
 				operator := symbol.token;
 				NextSymbol;
 				factor := Factor();
@@ -1320,7 +1320,7 @@ TYPE
 			RETURN cellType
 		END CellType;
 
-		(** PointerType = 'pointer' 'to' Type. **)
+		(** PointerType = 'pointer' [Flags] 'to' Type. **)
 		PROCEDURE PointerType( position: LONGINT; parentScope: SyntaxTree.Scope ): SyntaxTree.PointerType;
 		VAR pointerType: SyntaxTree.PointerType;  base: SyntaxTree.Type; 	modifiers: SyntaxTree.Modifier;
 		BEGIN
@@ -1342,7 +1342,7 @@ TYPE
 		END PointerType;
 
 		(**
-			RecordType = 'record' ['(' QualifiedIdentifier ')'] [VariableDeclaration {';' VariableDeclaration}] 'end'.
+			RecordType = 'record' [Flags] ['(' QualifiedIdentifier ')'] [VariableDeclaration {';' VariableDeclaration}] 'end'.
 		**)
 		PROCEDURE RecordType(position: LONGINT;  parentScope:SyntaxTree.Scope ): SyntaxTree.RecordType;
 		VAR
@@ -1379,7 +1379,7 @@ TYPE
 			RETURN recordType
 		END RecordType;
 
-		(** ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression}] 'of' Type | '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
+		(** ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression}] 'of' Type | 'array' '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
 	  		 MathArraySize = Expression | '*' | '?'.
 		**)
 		PROCEDURE ArrayType(position: LONGINT;   parentScope: SyntaxTree.Scope ): SyntaxTree.Type;
@@ -1440,7 +1440,8 @@ TYPE
 			RETURN type
 		END ArrayType;
 
-		(** EnumerationType = 'enum' Identifier {',' Identifier} 'end'. *)
+		(** EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition [':=' Expression] 
+                                {',' IdentifierDefinition [':=' Expression]} 'end'. *) 
 		PROCEDURE EnumerationType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.Type;
 		VAR type: SyntaxTree.EnumerationType; scope: SyntaxTree.EnumerationScope; identifier: SyntaxTree.Identifier;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier; qualifiedType: SyntaxTree.QualifiedType; access: SET;
@@ -1565,7 +1566,7 @@ TYPE
 			IF Trace THEN E( "PortList" ) END;
 		END PortList;
 
-		(** ParameterDeclaration = ['var'|'const'] Identifier {',' Identifier}':' Type.**)
+		(** ParameterDeclaration = ['var'|'const'] Identifier [Flags] [':= Expression] {',' Identifier [Flags] [':= Expression]}':' Type.**)
 		PROCEDURE ParameterDeclaration( procedureType: SyntaxTree.ProcedureType ; parentScope: SyntaxTree.Scope);
 		VAR
 			type: SyntaxTree.Type; name: SyntaxTree.Identifier;
@@ -1804,7 +1805,7 @@ TYPE
 			IF Trace THEN E( "Procedure") END;
 		END ProcedureDeclaration;
 
-		(** OperatorDeclaration  = 'operator' [Flags] String ['*'|'-'] FormalParameters ';'
+		(** OperatorDeclaration  = 'operator' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
 			                       DeclarationSequence [Body] 'end' String.
 		**)
 		PROCEDURE OperatorDeclaration(parentScope: SyntaxTree.Scope );

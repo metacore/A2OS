@@ -389,6 +389,32 @@ MODULE FPE64;
 		END;
 	END Div;
 
+	PROCEDURE FloatInt64*(i: HUGEINT; VAR z: Float64);
+		VAR x0, x1, xe: HUGEINT;
+	BEGIN
+		x1 := i;
+		x0 := 0;
+		IF x1 # 0 THEN
+			IF x1 = HUGEINT(8000000000000000H) THEN
+				x1 := HUGEINT(4000000000000000H);
+				xe := 63+B;
+			ELSE
+				IF x1 < 0 THEN
+					x1 := -x1
+				END;
+				xe := 62+B;
+				WHILE x1 < HUGEINT(4000000000000000H) DO x1 := x1*2; DEC(xe) END;
+			END;
+			x1 := x1 DIV 100000000H;
+			z.low := LONGINT(x1)*400000H;
+			x1 := LSH(x1, -10);
+			z.high := LONGINT(xe*C) + (LONGINT(x1)-C) + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, i DIV 100000000H) * {31});
+		ELSE
+			z.low := LONGINT(x0);
+			z.high := LONGINT(x1)
+		END
+	END FloatInt64;
+
 	PROCEDURE Float*(i: LONGINT; VAR z: Float64);
 		VAR x0, x1, xe: LONGINT;
 	BEGIN

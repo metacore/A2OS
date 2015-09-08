@@ -695,6 +695,7 @@ TYPE
 						symbol.numberType := Integer;
 						WHILE (i < n) & ~long  DO
 							d := Decimal( dig[i] );  INC( i );
+							IF symbol.integer >= MAX(LONGINT) DIV 10 THEN (* multiplication overflow *)long := TRUE END;
 							nextInt := symbol.integer*10+d;
 							IF nextInt >=0 THEN symbol.integer := nextInt ELSE (* overflow *) long := TRUE END;
 						END;
@@ -705,6 +706,7 @@ TYPE
 							symbol.numberType := Hugeint;
 							WHILE i < n DO
 								d := Decimal( dig[i] );  INC( i );
+								IF hugeint >= MAX(HUGEINT) DIV 10 THEN Error( Basic.NumberTooLarge) END;
 								hugeint := hugeint * tenh + d;
 								IF hugeint < 0 THEN Error( Basic.NumberTooLarge ) END
 							END;

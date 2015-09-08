@@ -1318,9 +1318,14 @@ TYPE
 				Keyword("OPERATOR ");
 
 				first := TRUE;
-				IF mode = SymbolFile THEN w.String("^ ") END;
-				IF x.isDynamic THEN Flag(Global.NameDynamic, first) END;
-				IF ~first THEN w.String("}") END;
+				IF x.isInline THEN
+					ASSERT(~x.isDynamic);
+					w.String("-");
+				ELSE
+					IF mode = SymbolFile THEN w.String("^ ") END;
+					IF x.isDynamic THEN Flag(Global.NameDynamic, first) END;
+					IF ~first THEN w.String("}") END;
+				END;
 
 				type := x.type(SyntaxTree.ProcedureType);
 				PrintSymbol(x);
@@ -1338,14 +1343,20 @@ TYPE
 				END;
 				IF info & (type.returnParameter # NIL) THEN
 					BeginComment;
+					(*w.String("retPar = ");*) (*! this is present in VisitProcedure - should it be present here as well??? *)
 					Symbol(type.returnParameter);
 					EndComment;
 				END;
-				w.String( ";" );
-				Comments(x.comment,x,TRUE);
-				IF mode > SymbolFile THEN 
-					ProcedureScope(x.procedureScope);
-					Indent;  Keyword("END " );  	w.String( '"' );  Identifier(x.name);  w.String( '"' );
+
+				IF x.externalName = NIL THEN
+					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline) THEN
+						w.String( ";" );
+						Comments(x.comment,x,TRUE);
+						IF mode >= SymbolFile THEN
+							ProcedureScope(x.procedureScope);
+						END;
+						Indent;  Keyword("END " );  	w.String( '"' );  Identifier(x.name);  w.String( '"' );
+					END;
 				END;
 			END
 		END VisitOperator;

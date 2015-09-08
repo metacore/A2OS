@@ -7746,11 +7746,25 @@ TYPE
 			awaitStatement.SetCondition(condition);
 		END VisitAwaitStatement;
 
+		PROCEDURE CheckSystemImport(position: LONGINT);
+		VAR import: SyntaxTree.Import;
+		BEGIN
+			import := currentScope.ownerModule.moduleScope.firstImport;
+			WHILE(import # NIL) DO
+				IF (import.module = system.systemModule[Scanner.Lowercase]) OR (import.module = system.systemModule[Scanner.Uppercase]) THEN
+					RETURN;
+				END;
+				import := import.nextImport;
+			END;
+			Error(position, Diagnostics.Invalid, "forbidden code without system import");
+		END CheckSystemImport;
+
 		(** check and resolve code statement: do nothing, must be done by assembler
 		**)
 		PROCEDURE VisitCode(code: SyntaxTree.Code);
 		VAR i: LONGINT; statement: SyntaxTree.Statement;
 		BEGIN
+			CheckSystemImport(code.position);
 			FOR i := 0 TO code.inRules.Length()-1 DO
 				statement := code.inRules.GetStatement(i);
 				IF statement IS SyntaxTree.Assignment THEN
@@ -7920,6 +7934,9 @@ TYPE
 				Error(body.position,Diagnostics.Invalid,"safe flag not in active body");
 			ELSIF body.priority # NIL THEN
 				Error(body.position,Diagnostics.Invalid,"priority flag not in active body");
+			END;
+			IF body.code # NIL THEN
+				CheckSystemImport(body.position);
 			END;
 			StatementSequence(body.finally)
 		END Body;

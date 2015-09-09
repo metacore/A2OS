@@ -260,16 +260,20 @@ TYPE
 	END StringMaker;
 
 	(** scanner reflects the following EBNF
-		Identifier           = Letter {Letter | Digit | '_'}.
-		Letter               = 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
-		Digit                = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
-		String               = '"' {Character} '"' | "'" {Character} "'".
-		Number               = Integer | Real.
-		Character				 = Digit [HexDigit] 'X'.
-		Integer              = Digit {Digit} | Digit {HexDigit} 'H'.
-		Real                 = Digit {Digit} '.' {Digit} [ScaleFactor].
-		ScaleFactor          = ('E' | 'D') ['+' | '-'] digit {digit}.
-		HexDigit             = Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
+		Symbol 				= String | Token | Number | Keyword | Identifier.
+		Token 				=  | '#' | '&' | '(' ['*' any '*' ')'] | ')' | '*'['*'] | '+'['*'] | ',' | '-' | '.' [ '.' | '*' | '/' | '=' | '#' | '>'['='] | '<' ['=']
+											  | '/' | ':' ['='] | ';'  | '<' ['=' | '<' ['?'] ] | '=' | '>' [ '=' | '>' ['?']]  
+											  | '[' | ']' | '^' | '{' | '|' | '}' | '~' | '\' |  '`' |  '?' ['?'] | '!' ['!']
+		Identifier			= Letter {Letter | Digit | '_'}.
+		Letter					= 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
+		Digit						= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
+		String					= '"' {Character} '"' | "'" {Character} "'".
+		Character			= Digit [HexDigit] 'X'.
+		Number				= Integer | Real.
+		Integer				= Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit}.
+		Real						= Digit {Digit} '.' {Digit} [ScaleFactor].
+		ScaleFactor		= ('E' | 'D') ['+' | '-'] digit {digit}.
+		HexDigit			= Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
 	**)
 
 	Scanner* = OBJECT
@@ -512,7 +516,7 @@ TYPE
 
 
 		(** get a string starting at current position
-			string = '"' {Character} '"' | "'" {Character} "'".
+			string = {'"' {Character} '"'} | {"'" {Character} "'"}.
 		**)
 		(* multiline indicates that a string may occupy more than one lines, either concatenated or via multi-strings " "  " "
 		*)
@@ -584,7 +588,7 @@ TYPE
 
 		(**
 		Number       =  Integer | Real.
-		Integer      =  Digit {Digit} | Digit {HexDigit} 'H'.
+		Integer      =  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit}.
 		Real         =  Digit {Digit} '.' {Digit} [ScaleFactor].
 		ScaleFactor  =  ('E' | 'D') ['+' | '-'] digit {digit}.
 		HexDigit     =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
@@ -967,6 +971,21 @@ TYPE
 		position, readerPosition : LONGINT;
 		ch: CHAR;
 	END;
+
+	(** assembler scanner reflects the following EBNF
+		Symbol 			= String | Token | Number | Identifier.
+		Token 			= '\' | '#' | '(' ['*' any '*' ')'] | ')' | CR [LF] | LF | '*' | '+' | ',' | '-' | '~' | '.' | '/' | '%' | ':' | ';' | '=' | '[' | ']' | '{' | '}' | '!' | '^' | '$'['$'].
+		String				= '"' {Character} '"' | "'" {Character} "'".
+		Identifier		= '@' | Letter {'@' | '.' | Letter | Digit | '_'} .
+		Letter 				= 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
+		Digit 				= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
+		Number			= Integer | Real.
+		Character		= Digit [HexDigit] 'X'.
+		Integer			=  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit}.
+		Real					= Digit {Digit} '.' {Digit} [ScaleFactor].
+		ScaleFactor	= ('E' | 'D') ['+' | '-'] digit {digit}.
+		HexDigit		= Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
+	**)
 
 	AssemblerScanner* = OBJECT (Scanner) (*!  move to different module? unify with compiler scanner? *)
 	VAR

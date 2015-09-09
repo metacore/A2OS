@@ -4,7 +4,7 @@ IMPORT
 	Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections,
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, CodeGenerators := FoxCodeGenerators, BinaryCode := FoxBinaryCode,
 	SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxARMAssembler, InstructionSet := FoxARMInstructionSet,
-	SYSTEM, Diagnostics, Streams, Options, WMUtilities, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile,
+	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile,
 	ActiveCells := FoxActiveCells, D := Debugging;
 
 CONST

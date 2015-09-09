@@ -576,17 +576,26 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 
 	StringPool.Mod Diagnostics.Mod Debugging.Mod
 
-	Fox.Tool
+	Fox.Tool	
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
-	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
+	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
 	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
-	FoxParser.Mod  FoxSemanticChecker.Mod
-	FoxBackend.Mod FoxSections.Mod FoxBinaryCode.Mod FoxFrontend.Mod FoxOberonFrontend.Mod
+	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
+	FoxBackend.Mod FoxSections.Mod 
+	FoxFrontend.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
 	FoxCompiler.Mod FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
-	FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
+	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
-	FoxInstructionSetAMD64TabSeperated.txt
+	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
+	FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
+	FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod 
+	FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod 
+
+	FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
+	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
+	FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
+
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)

@@ -5,6 +5,9 @@ MODULE Kernel32;   (** AUTHOR "ejz"; PURPOSE "Definition of the Win32 Kernel32 A
 IMPORT SYSTEM;
 
 CONST
+
+	Generic*= FALSE;
+
 	(** NIL pointer/address value *)
 	NULL* = 0;
 
@@ -800,7 +803,11 @@ VAR
 		ExitProcess(l);
 	END Shutdown;
 
-	PROCEDURE Init;
+	PROCEDURE Init*; (* stub for interoperability of Machine with Generic version *)
+	BEGIN
+	END Init; 
+
+	PROCEDURE Init0;
 	VAR mod: HMODULE;
 		str: ARRAY 64 OF CHAR;
 	BEGIN
@@ -943,7 +950,7 @@ VAR
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
 		isEXE := hInstance = NULL;
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
-		END Init;
+		END Init0;
 
 		(* for new object file:
 
@@ -995,11 +1002,14 @@ VAR
 
 		*)
 BEGIN
-	Init;
+	Init0;
+	OutputDebugString("Test");
 	IF IsDebuggerPresent()=True THEN
 		OutputString := OutputDebugString
 	ELSE
 		OutputString := NoOutputString
 	END;
 END Kernel32.
+
 	
+	#	PELinker.Link  Win32.Aos.Link ~

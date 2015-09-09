@@ -1069,5 +1069,8 @@ CODE{SYSTEM.i386}
 	OUT DX,EAX
 END Portout32;
 
-
+BEGIN
+	IF ~Kernel32.Generic THEN
+		Init
+	END;
 END Machine.

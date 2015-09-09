@@ -5,6 +5,8 @@ MODULE Kernel32;   (** AUTHOR "ejz"; PURPOSE "Definition of the Win32 Kernel32 A
 IMPORT SYSTEM;
 
 CONST
+	Generic*= TRUE;
+	
 	(** NIL pointer/address value *)
 	NULL* = 0;
 

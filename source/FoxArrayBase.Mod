@@ -76,7 +76,7 @@ CONST
 	MatVec7x7 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size7Flag});
 	MatVec8x8 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size8Flag});
 
-
+	SmallArrayMask = {SmallMatrixFlag,SmallVectorFlag,Size2Flag,Size3Flag,Size4Flag,Size5Flag,Size6Flag,Size7Flag,Size8Flag};
 
 TYPE
 	FastMatMul* = PROCEDURE ( matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: LONGINT ): BOOLEAN;
@@ -7860,12 +7860,12 @@ Sufficient (but not necessary) conditions:
 		(* account possible inplace left := left*right, right := left*right, left := left*left, right := right*right *)
 		IF (ladr # dadr) & (radr # dadr) THEN
 
-			flags := SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+			flags := SmallArrayMask * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
 
 			CASE SYSTEM.VAL(LONGINT,flags) OF
 
 				Mat2x2:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat2x2 THEN
+					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat2x2 THEN
 						IF dadr = 0 THEN NEW(RESULT,2,2);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -7880,7 +7880,7 @@ Sufficient (but not necessary) conditions:
 					END;
 
 				|Mat3x3:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat3x3 THEN
+					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat3x3 THEN
 						IF dadr = 0 THEN NEW(RESULT,3,3);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -7903,7 +7903,7 @@ Sufficient (but not necessary) conditions:
 
 
 				|Mat4x4:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat4x4 THEN
+					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat4x4 THEN
 						IF dadr = 0 THEN NEW(RESULT,4,4);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -7957,12 +7957,12 @@ Sufficient (but not necessary) conditions:
 		ladr := GetAdr(ADDRESSOF(left));
 		radr := GetAdr(ADDRESSOF(right));
 
-		flags := SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+		flags := SmallArrayMask * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
 
 		CASE SYSTEM.VAL(LONGINT,flags) OF
 
 			MatVec2x2:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec2 THEN
+				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec2 THEN
 					IF dadr = 0 THEN NEW(RESULT,2);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -7977,7 +7977,7 @@ Sufficient (but not necessary) conditions:
 				END;
 
 			|MatVec3x3:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec3 THEN
+				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec3 THEN
 					IF dadr = 0 THEN NEW(RESULT,3);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -7993,7 +7993,7 @@ Sufficient (but not necessary) conditions:
 				END;
 
 			|MatVec4x4:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec4 THEN
+				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec4 THEN
 					IF dadr = 0 THEN NEW(RESULT,4);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;

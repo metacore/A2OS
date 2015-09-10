@@ -90,6 +90,19 @@ CONST
 			ProcessorOffset = BaseObjectTypeSize + 1;
 			StackLimitOffset* = BaseObjectTypeSize + 3;
 			QuantumOffset = BaseObjectTypeSize + 4;
+			
+			
+			
+		(* flags for optimizations with small matricies and vectors (Alexey Morozov) *)
+		SmallMatrixFlag = 3; (* flag for identification of a small matrix *)
+		SmallVectorFlag = 3; (* flag for identification of a small vector *)
+		Size2Flag = 4; (* size = 2 *)
+		Size3Flag = 5; (* size = 3 *)
+		Size4Flag = 6; (* size = 4 *)
+		Size5Flag = 7; (* size = 5 *)
+		Size6Flag = 8; (* size = 6 *)
+		Size7Flag = 9; (* size = 7 *)
+		Size8Flag = 10; (* size = 8 *)
 		
 TYPE
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
@@ -4325,6 +4338,9 @@ TYPE
 			oldArrayDestinationDimension: LONGINT;
 			position: LONGINT;
 			saved: RegisterEntry;
+			
+			arrayFlags: SET;
+			m, n: LONGINT;
 
 			PROCEDURE Pass(op: IntermediateCode.Operand);
 			VAR registerClass: IntermediateCode.RegisterClass; parameterRegister: IntermediateCode.Operand;
@@ -4363,6 +4379,19 @@ TYPE
 					PushArrayLens(formalType(SyntaxTree.ArrayType).arrayBase.resolved, actualArrayBase,dim-1);
 				END;
 			END PushArrayLens;
+			
+			PROCEDURE SetSmallArraySizeFlag(VAR flags: SET; size: LONGINT);
+			BEGIN
+				CASE size OF
+					|2: INCL(flags,Size2Flag);
+					|3: INCL(flags,Size3Flag);
+					|4: INCL(flags,Size4Flag);
+					|5: INCL(flags,Size5Flag);
+					|6: INCL(flags,Size6Flag);
+					|7: INCL(flags,Size7Flag);
+					|8: INCL(flags,Size8Flag);
+				END;
+			END SetSmallArraySizeFlag;
 
 		BEGIN
 			IF Trace THEN TraceEnter("PushParameter") END;
@@ -4459,11 +4488,38 @@ TYPE
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
+						
+						(*******
+							identify the cases of small vector and matrices, used for optimizations in FoxArrayBase module (Alexey Morozov)
+						*)
+						arrayFlags := {StaticFlag};
+						IF dim = 1 THEN
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							m := LONGINT(tmpOperand.op.intValue);
+							IF (m >= 2) & (m <= 8) THEN INCL(arrayFlags,SmallVectorFlag); SetSmallArraySizeFlag(arrayFlags,m); END;
+						ELSIF dim = 2 THEN
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							m := LONGINT(tmpOperand.op.intValue);
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							n := LONGINT(tmpOperand.op.intValue);
+							IF (m >= 2) & (m <= 8) & (n >= 2) & (n <= 8) THEN
+								INCL(arrayFlags,SmallMatrixFlag); 
+								IF m = n THEN SetSmallArraySizeFlag(arrayFlags,m); END;
+							END;
+						END;
+						(*******)
+						
 						dimOp := IntermediateCode.Immediate(addressType,dim);
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,arrayFlags)),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -4538,11 +4594,38 @@ TYPE
 							PutMathArrayIncrement(arrayDestinationTag,tmpOperand.op,i);
 							ReleaseOperand(tmpOperand);
 						END;
+						
+						(*
+							identify the cases of small vector and matrices, used for optimizations in FoxArrayBase module (Alexey Morozov)
+						*)
+						arrayFlags := {StaticFlag};
+						IF dim = 1 THEN
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							m := LONGINT(tmpOperand.op.intValue);
+							IF (m >= 2) & (m <= 8) THEN INCL(arrayFlags,SmallVectorFlag); SetSmallArraySizeFlag(arrayFlags,m); END;
+						ELSIF dim = 2 THEN
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,0,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							m := LONGINT(tmpOperand.op.intValue);
+							GetMathArrayLengthAt(type.resolved(SyntaxTree.MathArrayType),operand,1,FALSE,tmpOperand);
+							ReleaseOperand(tmpOperand);
+							ASSERT(tmpOperand.op.mode = IntermediateCode.ModeImmediate);
+							n := LONGINT(tmpOperand.op.intValue);
+							IF (m >= 2) & (m <= 8) & (n >= 2) & (n <= 8) THEN
+								INCL(arrayFlags,SmallMatrixFlag); 
+								IF m = n THEN SetSmallArraySizeFlag(arrayFlags,m); END;
+							END;
+						END;
+						(*******)
+						
 						dimOp := IntermediateCode.Immediate(addressType,dim);
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,arrayFlags)),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);

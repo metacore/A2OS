@@ -1,13 +1,12 @@
 MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead graph drawing and storing"; *)
 (** right-click on navigator thumbnail allows window storage as image file *)
-(* see WMMatrix.Mod in Matrix library for simple display of 2D Math array data as images *)
 
-(*ToDo: catch NaN and Inf in data and other strategies avoid erratic window sizes*)
+(*ToDo: catch NaN and Inf in data and other strategies to avoid erratic window sizes*)
 
-IMPORT WMWindowManager, Strings, WMGraphics, WMRectangles, Modules, Reals, KernelLog;
+IMPORT WMWindowManager, Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager;
 
 TYPE
-	Histogram* = OBJECT (WMWindowManager.Window);
+	Histogram* = OBJECT (WM.Window);
 	VAR 
 		data:ARRAY [*] OF LONGREAL;
 		width,height:LONGINT;
@@ -19,8 +18,8 @@ TYPE
 			max:=MAX(data);
 			width:=LEN(data,0); height:=ENTIER(max)+1;
 			Init(10*width, 10*height, FALSE);
-			WMWindowManager.GetDefaultManager().Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
-			MovePos(10*width);
+			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
+			MovePos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -37,7 +36,7 @@ TYPE
 		END Draw;
 	END Histogram;
 
-	Graph* = OBJECT (WMWindowManager.Window);
+	Graph* = OBJECT (WM.Window);
 	VAR 
 		data:ARRAY [*] OF LONGREAL;
 		width,height:LONGINT;
@@ -50,9 +49,8 @@ TYPE
 			min:=MIN(0, MIN(data)); 
 			width:=LEN(data,0); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
-			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
-			MovePos(10*width);
+			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
+			MovePos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -75,7 +73,7 @@ TYPE
 		END Draw;
 END Graph;
 
-GraphXY* = OBJECT (WMWindowManager.Window);
+GraphXY* = OBJECT (WM.Window);
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
 		width,height:LONGINT;
@@ -88,9 +86,8 @@ GraphXY* = OBJECT (WMWindowManager.Window);
 			min:=MIN(0, MIN(data)); 
 			width:=ENTIER(max-min)+1; height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
-			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
-			MovePos(10*width);
+			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
+			MovePos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -117,7 +114,7 @@ GraphXY* = OBJECT (WMWindowManager.Window);
 		END Draw;
 END GraphXY;
 
-Graphs* = OBJECT (WMWindowManager.Window);
+Graphs* = OBJECT (WM.Window);
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
 		width,height:LONGINT;
@@ -130,9 +127,8 @@ Graphs* = OBJECT (WMWindowManager.Window);
 			min:=MIN(0, MIN(data)); 
 			width:=LEN(data,1); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
-			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
-			MovePos(10*width);
+			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
+			MovePos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -158,7 +154,7 @@ Graphs* = OBJECT (WMWindowManager.Window);
 END Graphs;
 
 (** display matrix values in checkerboard like fashion. positive values are in black/grey/white, negative values in red*)
-Matrix* = OBJECT (WMWindowManager.Window);
+Matrix* = OBJECT (WM.Window);
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
 		width,height:LONGINT;
@@ -178,9 +174,8 @@ Matrix* = OBJECT (WMWindowManager.Window);
 			IF( width<10) OR (height<10) THEN 
 				bounds := WMGraphics.MakeRectangle(0, 0, 10*width, 10*height);(* grow small images *)
 			END;
-			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
-			IF width<10 THEN MovePos(10*width) ELSE MovePos(width) END;
+			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
+			MovePos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -228,9 +223,9 @@ BEGIN {EXCLUSIVE}
 END Demo;
 
 PROCEDURE Cleanup;
-VAR manager:WMWindowManager.WindowManager; w,remove:WMWindowManager.Window;
+VAR manager:WM.WindowManager; w,remove:WM.Window;
 BEGIN {EXCLUSIVE}
-	manager:=WMWindowManager.GetDefaultManager();
+	manager:=WM.GetDefaultManager();
 	manager.lock.AcquireWrite;
 	w:=manager.GetFirst();
 	WHILE w#NIL DO
@@ -247,7 +242,7 @@ END Cleanup;
 BEGIN
 	Modules.InstallTermHandler(Cleanup);
 	Colors:=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
-	Pos:=50; PosX:=50; PosY:=50;
+	Pos:=0; MovePos(0);
 END WMSimpleGraphs.
 
 SystemTools.Free WMSimpleGraphs ~

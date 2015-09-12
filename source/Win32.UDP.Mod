@@ -8,6 +8,9 @@ CONST
 	unknown = 1;  IPAdrLen = 4;
 	NilPort* = 0;  (* Dan 31.01.05 *)
 
+	SendBufSize = 65536*8; (* send buffer size in bytes *)
+	RecvBufSize = 65536*16; (* receive buffer size in bytes *)
+
 TYPE
 
 TYPE
@@ -18,7 +21,10 @@ TYPE
 	Opens a socket which is dedicated to datagram services. lport is registered to receive datagrams
 	from any port and any host. *)
 		PROCEDURE & Open*( lport: LONGINT;  VAR res: LONGINT );
-		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;
+		VAR
+			sadr: WSock32.sockaddrIn;
+			err: LONGINT;
+			bufSize, len: LONGINT;
 		BEGIN
 			(* IF ~AosWinsock.ready THEN RETURN END;  *)
 			sock := WSock32.socket( WSock32.PFINet, WSock32.SockDGram, WSock32.IPProtoUDP );
@@ -31,6 +37,17 @@ TYPE
 				ELSE (*  Kernel.RegisterObject( SELF, SockFinalizer, FALSE ); *)  res := Ok
 				END
 			ELSE res := unknown;
+			END;
+			
+			bufSize := SendBufSize; len := SIZEOF(LONGINT);
+			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SOSndBuf,bufSize,len);
+			IF (err # 0) & trace THEN
+				KernelLog.String( "UDP.Open : failed to set send buffer size, WSock32 error code " ); KernelLog.Int(err,0); KernelLog.Ln;
+			END;
+			bufSize := RecvBufSize;
+			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SORcvBuf,bufSize,SIZEOF(LONGINT));
+			IF (err # 0) & trace THEN
+				KernelLog.String( "UDP.Open : failed to set receive buffer size, WSock32 error code " ); KernelLog.Int(err,0); KernelLog.Ln;
 			END;
 
 			IF trace THEN

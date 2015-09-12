@@ -33,6 +33,8 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		
 		SOLSocket* = 0FFFFH; 
 		SOMaxConn* = 07FFFFFFFH;
+		SOSndBuf* = 01001H; (** send buffer size *)
+		SORcvBuf* = 01002H; (** receive buffer size *)
 		SOSndTimeo* = 01005H; SORcvTimeo* = 01006H;
 		SIORcvAll* = LONGINT(98000001H);
 		
@@ -207,6 +209,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 
 		(** The Windows Sockets setsockopt function sets a socket option. *)
 		setsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: LONGINT; VAR optval: ARRAY   OF SYSTEM.BYTE; optlen: LONGINT): LONGINT;
+		getsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: LONGINT; VAR optval: ARRAY   OF SYSTEM.BYTE; VAR optlen: LONGINT): LONGINT;
 
 		(** The Windows Sockets socket function creates a socket that is bound to a specific service provider. *)
 		socket-: PROCEDURE {WINAPI} (af, type, protocol: LONGINT): Socket;
@@ -264,6 +267,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		Kernel32.GetProcAddress(wsock32, "send", SYSTEM.VAL(ADDRESS, send));
 		Kernel32.GetProcAddress(wsock32, "sendto", SYSTEM.VAL(ADDRESS, sendto));
 		Kernel32.GetProcAddress(wsock32, "setsockopt", SYSTEM.VAL(ADDRESS, setsockopt));
+		Kernel32.GetProcAddress(wsock32, "getsockopt", SYSTEM.VAL(ADDRESS, getsockopt));
 		Kernel32.GetProcAddress(wsock32, "socket", SYSTEM.VAL(ADDRESS, socket));
 		Kernel32.GetProcAddress(wsock32, "shutdown", SYSTEM.VAL(ADDRESS, shutdown));
 

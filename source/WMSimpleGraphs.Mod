@@ -19,7 +19,8 @@ TYPE
 			max:=MAX(data);
 			width:=LEN(data,0); height:=ENTIER(max)+1;
 			Init(10*width, 10*height, FALSE);
-			WMWindowManager.GetDefaultManager().Add(100, 100, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			WMWindowManager.GetDefaultManager().Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			MovePos(10*width);
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -50,7 +51,8 @@ TYPE
 			width:=LEN(data,0); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(150, 150, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			MovePos(10*width);
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -87,7 +89,8 @@ GraphXY* = OBJECT (WMWindowManager.Window);
 			width:=ENTIER(max-min)+1; height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(150, 150, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			MovePos(10*width);
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -128,7 +131,8 @@ Graphs* = OBJECT (WMWindowManager.Window);
 			width:=LEN(data,1); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(200, 200, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			MovePos(10*width);
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -175,7 +179,8 @@ Matrix* = OBJECT (WMWindowManager.Window);
 				bounds := WMGraphics.MakeRectangle(0, 0, 10*width, 10*height);(* grow small images *)
 			END;
 			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(150, 150, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			manager.Add(PosX, PosY, SELF, {WMWindowManager.FlagFrame,WMWindowManager.FlagClose});
+			IF width<10 THEN MovePos(10*width) ELSE MovePos(width) END;
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -200,7 +205,15 @@ Matrix* = OBJECT (WMWindowManager.Window);
 		END Draw;
 END Matrix;
 
+PROCEDURE MovePos(dx:LONGINT);
+BEGIN
+	INC(Pos,dx);
+	PosX:=Pos MOD 900;
+	PosY:=100+ (Pos DIV 900)*100 MOD 700;
+END MovePos;
+
 VAR Colors: ARRAY [*] OF WMGraphics.Color;
+	Pos, PosX,PosY: LONGINT;
 
 PROCEDURE Demo*;
 VAR h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix;
@@ -233,7 +246,8 @@ END Cleanup;
 
 BEGIN
 	Modules.InstallTermHandler(Cleanup);
-	Colors:=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray]
+	Colors:=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
+	Pos:=50; PosX:=50; PosY:=50;
 END WMSimpleGraphs.
 
 SystemTools.Free WMSimpleGraphs ~

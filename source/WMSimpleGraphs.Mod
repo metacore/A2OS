@@ -3,7 +3,9 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 
 (*ToDo: catch NaN and Inf in data and other strategies to avoid erratic window sizes*)
 
-IMPORT WMWindowManager, Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager;
+IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager;
+
+CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
 
 TYPE
 	Histogram* = OBJECT (WM.Window);
@@ -19,7 +21,7 @@ TYPE
 			width:=LEN(data,0); height:=ENTIER(max)+1;
 			Init(10*width, 10*height, FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
-			MovePos(GetWidth());
+			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -50,7 +52,7 @@ TYPE
 			width:=LEN(data,0); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
-			MovePos(GetWidth());
+			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -66,9 +68,7 @@ TYPE
 							(i+1)*w DIV width, h+mn-ENTIER(0.5+data[i+1]*h / height), 
 							WMGraphics.Black, WMGraphics.ModeCopy);
 			END;
-			IF mn#0 THEN 
-				canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);
-			END;
+			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);	END;
 			INC(timestamp);
 		END Draw;
 END Graph;
@@ -87,7 +87,7 @@ GraphXY* = OBJECT (WM.Window);
 			width:=ENTIER(max-min)+1; height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
-			MovePos(GetWidth());
+			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -104,12 +104,8 @@ GraphXY* = OBJECT (WM.Window);
 							-mnw+ENTIER(0.5+data[0,i+1]*scalex), h+mnh-ENTIER(0.5+data[1,i+1]*scaley), 
 							WMGraphics.Blue, WMGraphics.ModeCopy);
 			END;
-			IF mnh#0 THEN 
-				canvas.Line(0, h+mnh, w, h+mnh, WMGraphics.Black, WMGraphics.ModeCopy);
-			END;
-			IF mnw#0 THEN 
-				canvas.Line(-mnw, 0, -mnw, h, WMGraphics.Black, WMGraphics.ModeCopy);
-			END;
+			IF mnh#0 THEN canvas.Line(0, h+mnh, w, h+mnh, WMGraphics.Black, WMGraphics.ModeCopy)	END;
+			IF mnw#0 THEN canvas.Line(-mnw, 0, -mnw, h, WMGraphics.Black, WMGraphics.ModeCopy)	END;
 			INC(timestamp);
 		END Draw;
 END GraphXY;
@@ -128,7 +124,7 @@ Graphs* = OBJECT (WM.Window);
 			width:=LEN(data,1); height:=ENTIER(max-min)+1;
 			Init(10*width, 10*height, FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
-			MovePos(GetWidth());
+			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -146,9 +142,7 @@ Graphs* = OBJECT (WM.Window);
 								Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
 				END;
 			END;
-			IF mn#0 THEN 
-				canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);
-			END;
+			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy); END;
 			INC(timestamp);
 		END Draw;
 END Graphs;
@@ -175,7 +169,7 @@ Matrix* = OBJECT (WM.Window);
 				bounds := WMGraphics.MakeRectangle(0, 0, 10*width, 10*height);(* grow small images *)
 			END;
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
-			MovePos(GetWidth());
+			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
@@ -191,8 +185,8 @@ Matrix* = OBJECT (WM.Window);
 					IF valI>=0 THEN	col:=WMGraphics.RGBAToColor(valI,valI,valI,255);
 					ELSE				col:=WMGraphics.RGBAToColor(-valI,0,0,255);
 					END;
-					canvas.Fill(WMRectangles.MakeRect(x*w DIV width , h -ENTIER(0.5+(y+1)*h / height),  
-														(x+1)*w DIV width , h-ENTIER(0.5+y*h / height)), 
+					canvas.Fill(WMRectangles.MakeRect(x*w DIV width, h-ENTIER(0.5+(y+1)*h/height),  
+														(x+1)*w DIV width, h-ENTIER(0.5+y*h/height)), 
 														col, WMGraphics.ModeCopy);
 				END;
 			END;
@@ -200,26 +194,25 @@ Matrix* = OBJECT (WM.Window);
 		END Draw;
 END Matrix;
 
-PROCEDURE MovePos(dx:LONGINT);
+PROCEDURE NewWindowPos(dx:LONGINT);
 BEGIN
 	INC(Pos,dx);
 	PosX:=Pos MOD 900;
 	PosY:=100+ (Pos DIV 900)*100 MOD 700;
-END MovePos;
+END NewWindowPos;
 
-VAR Colors: ARRAY [*] OF WMGraphics.Color;
-	Pos, PosX,PosY: LONGINT;
+VAR Pos, PosX,PosY: LONGINT;
 
 PROCEDURE Demo*;
 VAR h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix;
 BEGIN {EXCLUSIVE}
-	NEW(h,[4,7,8,4,5,9,6,5,3,2,12,17,3,0,2], "Histogram"); 
-	NEW(g,[4,7,8,4,5,9,6,5,3,2,12,17,3,-3,2], "Graph"); 
-	NEW(k,[[-2,7,8,4,5,9,6,4,7,8,4,5,9,6],
+	NEW(h, [4,7,8,4,5,9,6,5,3,2,12,17,3,0,2], "Histogram"); 
+	NEW(g, [4,7,8,4,5,9,6,5,3,2,12,17,3,-3,2], "Graph"); 
+	NEW(k, [[-2,7,8,4,5,9,6,4,7,8,4,5,9,6],
 			[5,3,2,12,21,3,0,5,3,-2,12,17,3,1]], "MultiGraph"); 
-	NEW(gx,[	[-2,-1,0,1,5,9,6,4,7,3,4,5,9,6],
+	NEW(gx, [[-2,-1,0,1,5,9,6,4,7,3,4,5,9,6],
 				[1,3,4,7,12,3,0,5,3,-2,12,17,3,1]], "GraphXY"); 
-	NEW(m,[[1,2,3,4],[4,3,2,4],[5,4,-2,-6],[3,1,0,-1]], "Matrix"); 
+	NEW(m, [[1,2,3,4],[4,3,2,4],[5,4,-2,-6],[3,1,0,-1]], "Matrix"); 
 END Demo;
 
 PROCEDURE Cleanup;
@@ -241,8 +234,7 @@ END Cleanup;
 
 BEGIN
 	Modules.InstallTermHandler(Cleanup);
-	Colors:=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
-	Pos:=0; MovePos(0);
+	Pos:=0; NewWindowPos(0);
 END WMSimpleGraphs.
 
 SystemTools.Free WMSimpleGraphs ~

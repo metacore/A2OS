@@ -755,7 +755,8 @@ TYPE
                 any character except a NewLineCharacter.
             NewlineCharacter =
                 Carriage return character (0DX) |
-                Line feed character (0AX).
+                Line feed character (0AX) |
+				EOT (0X).
             DelimitedComment =
                 '/*' [DelimitedCommentText] Asterisks '/'.
             DelimitedCommentText =
@@ -773,7 +774,7 @@ TYPE
         PROCEDURE ReadSingleLineComment(VAR symbol: Symbol);
         BEGIN
             stringMaker.Clear;
-            WHILE (ch # 0DX) & (ch # 0AX) DO
+            WHILE (ch # 0DX) & (ch # 0AX) & (ch # EOT) DO
                 stringWriter.Char(ch);
                 GetNextCharacter;
             END;

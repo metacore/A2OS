@@ -7751,7 +7751,7 @@ TYPE
 		BEGIN
 			import := currentScope.ownerModule.moduleScope.firstImport;
 			WHILE(import # NIL) DO
-				IF (import.module = system.systemModule[Scanner.Lowercase]) OR (import.module = system.systemModule[Scanner.Uppercase]) THEN
+				IF (import.module.name = Global.SystemName) OR (import.module.name = Global.systemName)  THEN
 					RETURN;
 				END;
 				import := import.nextImport;

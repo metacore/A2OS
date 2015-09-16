@@ -170,10 +170,6 @@ TYPE
 				activeCellsSpecification.DefineDevices(system);
 				Global.OperatorDefined(system, Scanner.Questionmarks, TRUE);
 			END;
-			Global.NewBuiltin(Global.Connect,"CONNECT",system.globalScope,FALSE);
-			Global.NewBuiltin(Global.Receive,"RECEIVE",system.globalScope,FALSE);
-			Global.NewBuiltin(Global.Send,"SEND",system.globalScope,FALSE);
-			Global.NewBuiltin(Global.Delegate,"DELEGATE",system.globalScope,FALSE);
 			IF options.activeCellsBackend = NIL THEN FinalMessage(TRUE,"could not install activeCells backend"); RETURN FALSE END;
 		END;
 		options.frontend.Initialize(diagnostics, reader, source, position, ActiveCellsFlag IN flags);

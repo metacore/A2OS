@@ -1365,7 +1365,7 @@ TYPE
 		VAR prevDump: Streams.Writer;
 		VAR body: SyntaxTree.Body;
 		BEGIN
-			ASSERT(~procedure.type(SyntaxTree.ProcedureType).noPAF);
+			ASSERT((procedure = NIL) OR ~procedure.type(SyntaxTree.ProcedureType).noPAF);
 			prevSection := SELF.section;
 			SELF.section := section;
 			prevDump := dump;

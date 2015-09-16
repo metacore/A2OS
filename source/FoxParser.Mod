@@ -4,7 +4,7 @@ MODULE FoxParser;   (**  AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Parser";  
 IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal,  Diagnostics;
 
 CONST
-	Trace = FALSE;
+	Trace = FALSE;	
 	CascadedWithSupport = TRUE;
 	Lax=FALSE;
 
@@ -153,7 +153,7 @@ CONST
 
 	Number               = Integer | Real.
 
-	Integer              = Digit {Digit} | Digit {HexDigit} 'H'.
+	Integer              = Digit {Digit} | '0' 'x' {HexDigit} | Digit {HexDigit} 'H' .
 
 	Real                 = Digit {Digit} '.' {Digit} [ScaleFactor].
 

@@ -107,6 +107,7 @@ TYPE
 		activeCellsSpecification: ActiveCells.Specification;
 		replacements*: Replacement;
 		cellsAreObjects: BOOLEAN;
+		variableAccessed: BOOLEAN;
 
 		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope);
 		BEGIN
@@ -526,8 +527,13 @@ TYPE
 				END;
 				IF x.length # NIL THEN
 				
+					variableAccessed := FALSE;
 					e := ResolveExpression(x.length);
-					IF e.resolved = NIL THEN
+			
+					IF (e.resolved = NIL) THEN
+						IF variableAccessed THEN
+							Error(e.position, Diagnostics.Invalid, "forbidden variable access");
+						END;
 						x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
 					ELSE
 						x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
@@ -3548,6 +3554,7 @@ TYPE
 				assignable := assignable & (SyntaxTree.InternalWrite IN symbol.access);
 			END;
 
+				
 			assignable := assignable & ((symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter)
 				& (symbol(SyntaxTree.Parameter).kind # SyntaxTree.ConstParameter) & ~(symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType));
 
@@ -3557,6 +3564,10 @@ TYPE
 			symbol.MarkUsed;
 			IF symbol IS SyntaxTree.Constant THEN
 				result.SetResolved(symbol(SyntaxTree.Constant).value.resolved);
+			END;
+			
+			IF (symbol IS SyntaxTree.Variable) & ~(symbol IS SyntaxTree.Property) THEN
+				variableAccessed := TRUE
 			END;
 
 			IF (left = NIL) OR (left IS SyntaxTree.SelfDesignator) OR (left IS SyntaxTree.DereferenceDesignator) & (left(SyntaxTree.DereferenceDesignator).left IS SyntaxTree.SelfDesignator) THEN
@@ -6370,13 +6381,17 @@ TYPE
 			- check symbol
 		**)
 		PROCEDURE VisitTypeDeclaration(typeDeclaration: SyntaxTree.TypeDeclaration);
+		VAR prevScope: SyntaxTree.Scope;
 		BEGIN
 			IF Trace THEN D.Str("VisitTypeDeclaration "); D.Str0(typeDeclaration.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(typeDeclaration) THEN
+				prevScope := currentScope;
+				currentScope := typeDeclaration.scope;
 				typeDeclaration.SetType(SyntaxTree.typeDeclarationType);
 				typeDeclaration.SetDeclaredType(ResolveType(typeDeclaration.declaredType));
 				CheckSymbolVisibility(typeDeclaration);
 				typeDeclaration.SetState(SyntaxTree.Resolved);
+				currentScope := prevScope;
 			END;
 		END VisitTypeDeclaration;
 
@@ -6465,6 +6480,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.Str("VisitVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
+
 				modifiers := variable.modifiers;
 				(*
 				flags := Flags(variable.modifiers,{SyntaxTree.UntracedFlag, SyntaxTree.AlignedFlag, SyntaxTree.FixedFlag});

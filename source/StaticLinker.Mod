@@ -1,6 +1,6 @@
 MODULE StaticLinker;	(* AUTHOR "negelef"; PURPOSE "Static Object File Linker"; *)
 
-IMPORT Commands, Options, Diagnostics, Files, GenericLinker, ObjectFile, BitSets, Strings, Streams, D:=Debugging;
+IMPORT Commands, Options, Diagnostics, Files, GenericLinker, ObjectFile, BitSets, Strings, Streams;
 
 TYPE
 	ExportName = ARRAY 128 OF CHAR;
@@ -235,9 +235,11 @@ BEGIN
 	
 	end := (size-1) DIV bitsPerLine + 1;
 	
+	(*
 	D.String("bits per line: ");D.Int(bitsPerLine,0);
 	D.String("  number of bits: ");D.Int(size,0);
 	D.String("  number of words: ");D.Int(end,0);D.Ln;
+	*)
 	
 	nonZeroInLeadingNibble:=bitsPerLine MOD 4;
 	FOR i := 0 TO end-1 DO
@@ -623,6 +625,14 @@ PROCEDURE WritePE64File (linker: GenericLinker.Linker; arrangement: Arrangement;
 BEGIN WritePEFile (linker, arrangement, writer, 64, 2, FALSE);
 END WritePE64File;
 
+PROCEDURE WritePE32CUIFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
+BEGIN WritePEFile (linker, arrangement, writer, 32, 3, FALSE);
+END WritePE32CUIFile;
+
+PROCEDURE WritePE64CUIFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
+BEGIN WritePEFile (linker, arrangement, writer, 64, 3, FALSE);
+END WritePE64CUIFile;
+
 PROCEDURE WriteEFI32File (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
 BEGIN WritePEFile (linker, arrangement, writer, 32, 10, FALSE);
 END WriteEFI32File;
@@ -797,6 +807,8 @@ BEGIN
 	ELSIF format = "TRMData" THEN RETURN WriteTRMDataFile;
 	ELSIF format = "PE32" THEN RETURN WritePE32File;
 	ELSIF format = "PE64" THEN RETURN WritePE64File;
+	ELSIF format = "PE32CUI" THEN RETURN WritePE32CUIFile;
+	ELSIF format = "PE64CUI" THEN RETURN WritePE64CUIFile;
 	ELSIF format = "EFI32" THEN RETURN WriteEFI32File;
 	ELSIF format = "EFI64" THEN RETURN WriteEFI64File;
 	ELSIF format = "ELF" THEN RETURN WriteELFFile;

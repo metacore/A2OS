@@ -29,7 +29,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=TRUE;
+	TraceBoot=FALSE;
 
 TYPE
 	(* definitions for object-model loader support *)
@@ -206,8 +206,9 @@ VAR
 	numPtrs: LONGINT;
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
-	register: ARRAY 64 OF Module;
-	registered: LONGINT;
+	register: RECORD
+		first, last: Module;
+	END;
 
 (** Register a module loader. *)
 
@@ -930,15 +931,21 @@ END GetKernelProc;
 
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	register[registered] := module;
-	INC (registered);
+	IF register.first = NIL THEN
+		register.first := module;
+	ELSE
+		register.last.next := module;
+	END;
+	register.last := module;
 END Register;
 
 PROCEDURE PublishRegisteredModules;
 VAR m {UNTRACED}: Module; module, import: SIZE;
 BEGIN
-	FOR module := 0 TO registered - 1 DO
-		m := register[module];
+	WHILE register.first # NIL DO
+		m := register.first;
+		register.first := m.next;
+		m.next := NIL;
 		IF m.module # NIL THEN
 			FOR import := 0 TO LEN (m.module) - 1 DO
 				Initialize0 (m.module[import]);

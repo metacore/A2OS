@@ -1,7 +1,7 @@
 MODULE FoxProgTools;   (**  AUTHOR "fof"; PURPOSE "Oberon Compiler: Programming Tools";  **)
 (* (c) fof ETH Zürich, 2009 *)
 
-IMPORT Streams,Options,Commands,Files,Strings, Basic := FoxBasic, D := Debugging;
+IMPORT Streams,Options,Commands,Files,Strings, Basic := FoxBasic;
 TYPE
 	NameEntry = POINTER TO RECORD
 		name: ARRAY 265 OF CHAR;

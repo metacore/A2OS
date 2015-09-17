@@ -827,16 +827,18 @@ VAR
 		p: Files.Parameters; namebuf1, namebuf2: FileName;  size, snum, mlen, sysfl: LONGINT;
 		res: LONGINT; prefix: ARRAY 256 OF CHAR;
 	BEGIN
-		IF (context = NIL) THEN
-			NEW(context, NIL, NIL, NIL, NIL, NIL);
-		END;
-		NEW(p, context.in, context.arg, context.out, context.error, context.caller);
 		COPY(drive,prefix);
 		size := LEN( namebuf1 );  res := Kernel32.GetVolumeInformation( prefix, namebuf1, size, snum, mlen, sysfl, namebuf2, size );
 		IF res = 0 THEN
-			context.error.String("Not mounted (no volume information): "); context.error.String(prefix); context.error.Ln;
-			context.error.Update;
+			IF context# NIL THEN
+				context.error.String("Not mounted (no volume information): "); context.error.String(prefix); context.error.Ln;
+				context.error.Update;
+			END;
 		ELSE
+			IF (context = NIL) THEN
+				NEW(context, NIL, NIL, NIL, NIL, NIL);
+			END;
+			NEW(p, context.in, context.arg, context.out, context.error, context.caller);
 			IF TraceMounting THEN
 				context.out.String( "Mounting: " );  context.out.String( drive );
 				context.out.String( " (" );  context.out.String( namebuf1 );  context.out.String( "), fs = " );

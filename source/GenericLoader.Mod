@@ -448,7 +448,7 @@ TYPE
 			END;
 
 			IF adr = 0 THEN
-				D.String("Fatal: did not find block in module via fingerprint  "); s := identifier.name; D.String(s); D.Ln;
+				D.String("GenericLoader Fatal error: did not find block "); s := identifier.name; D.String(s); D.Ln;
 				RETURN NIL;
 			ELSE (* found *)
 				importBlock.identifier.fingerprint := identifier.fingerprint; importBlock.address := adr

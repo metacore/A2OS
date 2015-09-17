@@ -13,8 +13,6 @@ PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN
 BEGIN
 	IF mode # none THEN
 		Kernel32.WriteFile (hout, buf[ofs], len, len, NIL);
-	END;
-	IF mode = file THEN
 		Kernel32.FlushFileBuffers(hout);
 	END;
 END Send;
@@ -34,8 +32,8 @@ PROCEDURE Close*;
 VAR res: LONGINT;
 BEGIN
 	IF mode = console THEN
-		res := Kernel32.FreeConsole ();
 		Kernel32.CloseHandle(hout);
+		res := Kernel32.FreeConsole ();
 	ELSIF mode = file THEN
 		Kernel32.CloseHandle(hout);
 	END;
@@ -46,8 +44,12 @@ END Close;
 PROCEDURE OpenConsole*;
 VAR res: LONGINT;
 BEGIN
-	Close;
-	res := Kernel32.AllocConsole ();
+	IF mode = console THEN RETURN 
+	ELSIF mode = file THEN Close
+	END;
+	IF Kernel32.AttachConsole(-1) = Kernel32.False THEN
+		res := Kernel32.AllocConsole ();
+	END;
 
 	hin := Kernel32.GetStdHandle (Kernel32.STDInput);
 	ASSERT ((hin) # (Kernel32.InvalidHandleValue));

@@ -326,22 +326,6 @@ VAR callagain: BOOLEAN;
 PROCEDURE Initialize0*(module: Module);
 VAR new: BOOLEAN;
 BEGIN
-	(*
-	(* don't use trace here, Trace might be uninitialized ! *)
-
-	Trace.String("init module "); Trace.String(module.name); Trace.Ln;
-	module.published := TRUE;
-	module.next := root; root := module;
-	module.refcnt := 0;
-	(*
-		SortProcTable(module);
-		SelectionSort(module.exTable);
-	*)
-	body := SYSTEM.VAL(ADDRESS, module.body);
-	IF module.body # NIL THEN module.body END;
-	module.init := TRUE;
-	*)
-	(*TRACE("TODO", module, module.name);*)
 	Publish (module, new);
 	callagain := FALSE;
 	IF new THEN
@@ -352,9 +336,7 @@ BEGIN
 		IF module.body # NIL THEN module.body END;
 		IF callagain THEN
 			PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
-			(*; HALT(400)*)
 		ELSE
-			(*TRACE('INITIALIZED', module, module.name);*)
 			module.init := TRUE;
 		END;
 	END;

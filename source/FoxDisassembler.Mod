@@ -17,6 +17,8 @@ TYPE
 
 		PROCEDURE & Init*(w: Streams.Writer);
 		BEGIN SELF.w := w; NEW(stringWriter, 256);
+			codeDisplacement := 0; dataDisplacement := 0;
+
 		END Init;
 
 		PROCEDURE GetLogFile*(CONST binaryFileName: ARRAY OF CHAR): Files.File;
@@ -190,7 +192,6 @@ TYPE
 		PROCEDURE Disassemble*(code, data: BitSets.BitSet; codeUnit, dataUnit: LONGINT; logFile: Files.File; address: ADDRESS);
 		BEGIN
 			SELF.code := code;SELF.data := data; SELF.codeUnit := codeUnit; SELF.dataUnit := dataUnit;
-			codeDisplacement := 0; dataDisplacement := 0;
 			first := ParseLogFile(logFile); block := first;
 			IF block = NIL THEN
 				w.String("------ code ------"); w.Ln;
@@ -213,6 +214,13 @@ TYPE
 				END;
 			END;
 		END Disassemble;
+
+		PROCEDURE SetDisplacements*(code, data: LONGINT);
+		BEGIN
+			codeDisplacement := code;
+			dataDisplacement := data;
+		END SetDisplacements;
+		
 
 	END Disassembler;
 

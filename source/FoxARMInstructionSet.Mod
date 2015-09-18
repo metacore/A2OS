@@ -2885,7 +2885,7 @@ CONST
 		END Disasm;
 
 	VAR disassembler: Disasm; codeFileName, dataFileName, logFileName: Files.FileName; codeFile, logFile: Files.File;code: BitSets.BitSet; options: Options.Options;
-		address: LONGINT;
+		address, offset: LONGINT;
 	BEGIN
 		IF context.arg.GetString(codeFileName) THEN
 			codeFile := Files.Old(codeFileName);
@@ -2893,6 +2893,7 @@ CONST
 			NEW(options);
 			options.Add("l","logFile", Options.String);
 			options.Add("a","address",Options.Integer);
+			options.Add("o","offset",Options.Integer);
 			IF options.Parse(context.arg, context.out) THEN
 				IF ~options.GetInteger("a", address) THEN address := 0 END;
 				NEW(disassembler, context.out);
@@ -2901,6 +2902,9 @@ CONST
 					logFile := Files.Old(logFileName);
 				ELSE
 					logFile := disassembler.GetLogFile(codeFileName)
+				END;
+				IF options.GetInteger("o",offset) THEN
+					disassembler.SetDisplacements(offset,offset)
 				END;
 				disassembler.Disassemble(code, code, 8,8 , logFile, address);
 			END;

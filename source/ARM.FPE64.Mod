@@ -405,10 +405,10 @@ MODULE FPE64;
 				xe := 62+B;
 				WHILE x1 < HUGEINT(4000000000000000H) DO x1 := x1*2; DEC(xe) END;
 			END;
-			x1 := x1 DIV 100000000H;
+			x1 := ASH(x1, -32); (*x1 DIV 100000000H;*)
 			z.low := LONGINT(x1)*400000H;
 			x1 := LSH(x1, -10);
-			z.high := LONGINT(xe*C) + (LONGINT(x1)-C) + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, i DIV 100000000H) * {31});
+			z.high := LONGINT(xe*C) + (LONGINT(x1)-C) + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(i, -32)) * {31});
 		ELSE
 			z.low := LONGINT(x0);
 			z.high := LONGINT(x1)

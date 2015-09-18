@@ -332,6 +332,22 @@ VAR
 		NEW (dest.bits, source.bits.GetSize ());
 		BitSets.CopyBits (source.bits, 0, dest.bits, 0, source.bits.GetSize ());
 	END CopySection;
+	
+	PROCEDURE InitSection*(VAR dest: Section);
+	BEGIN
+		dest.type := 0;
+		dest.identifier.name := "";
+		dest.identifier.fingerprint := 0;
+		dest.unit := 0;
+		dest.fixed := FALSE;
+		dest.alignment := 0;
+		dest.priority := 0;
+		dest.fixups:= 0;
+		dest.aliases := 0;
+		dest.fixup := NIL;
+		dest.alias := NIL;
+		dest.bits := NIL;
+	END InitSection;
 
 	PROCEDURE NibbleToCharacter* (value: LONGINT): CHAR;
 	BEGIN

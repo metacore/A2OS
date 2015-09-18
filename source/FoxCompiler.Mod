@@ -128,6 +128,7 @@ TYPE
 					log.String("compiling ");
 					IF source # "" THEN 	log.String(source); log.String(" => ");	END;
 					log.String(message); log.Ln;
+					log.Update;
 				END;
 			END;
 		END FinalMessage;

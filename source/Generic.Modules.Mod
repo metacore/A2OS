@@ -29,7 +29,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=FALSE;
+	TraceBoot=TRUE;
 
 TYPE
 	(* definitions for object-model loader support *)
@@ -326,6 +326,8 @@ VAR callagain: BOOLEAN;
 PROCEDURE Initialize0*(module: Module);
 VAR new: BOOLEAN;
 BEGIN
+	(* module MUST have been removed from register list and must not have been initialized yet *)
+	ASSERT(module.next = NIL);
 	Publish (module, new);
 	callagain := FALSE;
 	IF new THEN
@@ -922,7 +924,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Register;
 
 PROCEDURE PublishRegisteredModules;
-VAR m {UNTRACED}: Module; module, import: SIZE;
+VAR m {UNTRACED}, prev {UNTRACED}, cur {UNTRACED}: Module; module, import: SIZE;
 BEGIN
 	WHILE register.first # NIL DO
 		m := register.first;
@@ -930,7 +932,24 @@ BEGIN
 		m.next := NIL;
 		IF m.module # NIL THEN
 			FOR import := 0 TO LEN (m.module) - 1 DO
-				Initialize0 (m.module[import]);
+				IF ~m.module[import].published THEN
+					ASSERT(register.first # NIL);
+					prev := NIL;
+					cur := register.first;
+					WHILE (cur # NIL) & (cur # m.module[import]) DO
+						prev := cur;
+						cur := cur.next
+					END;
+					(*ASSERT(cur = m.module[import]);*)
+					ASSERT(cur = m.module[import]);
+					IF prev = NIL THEN
+						register.first := cur.next
+					ELSE
+						prev.next := cur.next;
+					END;
+					cur.next := NIL;
+					Initialize0 (m.module[import]);
+				END
 			END;
 		END;
 		Initialize0 (m);

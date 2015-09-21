@@ -130,7 +130,7 @@ TYPE
 	(*
 		Fast 32-bit unsigned integer division/modulo (author Alexey Morozov)
 	*)
-	PROCEDURE DivModU32(dividend, divisor: ULONGINT; VAR quotient, remainder: ULONGINT);
+	PROCEDURE DivModU32*(dividend, divisor: ULONGINT; VAR quotient, remainder: ULONGINT);
 	CODE
 		MOV R2, #0 ; quotient will be stored in R2
 
@@ -139,8 +139,9 @@ TYPE
 
 		; check for the case dividend < divisor
 		CMP R0, R1
-		BLT Exit ; nothing to do than setting quotient to 0 and remainder to dividend (R0)
-
+		BEQ Equal
+		BLS Exit ; nothing to do than setting quotient to 0 and remainder to dividend (R0)
+	
 		CLZ R3, R0 ; R3 := clz(dividend)
 		CLZ R4, R1 ; R4 := clz(divisor)
 
@@ -156,12 +157,18 @@ TYPE
 		BPL Loop
 
 		; R0 holds the remainder
-
+		
+		B Exit
+		
+	Equal:
+		MOV R2, #1
+		MOV R0, #0
+		
 	Exit:
 		LDR R1, [FP,#quotient] ; R1 := address of quotient
 		LDR R3, [FP,#remainder] ; R3 := address of remainder
 
-		STR R2, [R1,#0] ; quotient := R1
+		STR R2, [R1,#0] ; quotient := R2
 		STR R0, [R3,#0] ; remainder := R0
 	END DivModU32;
 

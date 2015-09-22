@@ -5,6 +5,8 @@ IMPORT SYSTEM, IP, (* AosWinsock, *) WSock32, KernelLog;
 CONST
 	(* error codes. *)
 	Ok* = 0;  AddressInUse* = 3501;  Timeout* = 3502;  BufferOverflow* = 3503;  AlreadyBlocked* = 3504;
+	PortInUse* = 3501;
+
 	unknown = 1;  IPAdrLen = 4;
 	NilPort* = 0;  (* Dan 31.01.05 *)
 

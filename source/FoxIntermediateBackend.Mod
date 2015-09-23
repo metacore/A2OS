@@ -50,6 +50,7 @@ CONST
 		TraceRegisterUsageCount=TRUE;
 
 		ArrayAlignment = 8*8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
+		LongNameLength = 64;
 
 		(** system call numbers  *)
 		NumberSystemCalls* = 12;
@@ -11228,7 +11229,8 @@ TYPE
 					ch := name[i]; INC(i);
 					Char( section, ch);
 				UNTIL ch = 0X;
-				WHILE i < 128 DO
+				ASSERT(i < LongNameLength);
+				WHILE i < 64 DO
 					Char( section, 0X); INC(i);
 				END;
 			END LongName;
@@ -12094,11 +12096,14 @@ TYPE
 					LongName(source, name);
 
 					Global.GetSymbolSegmentedName(procedure, segmentedName);
-					NamedSymbol(source, segmentedName, NIL, 0 , 0); 
+					NamedSymbol(source, segmentedName, procedure, 0 , 0); 
 
 					Size(source, 0);
 					Address(source, 0);
 					Address(source, 0);
+					Address(source, 0);
+
+					(* return type entry *)
 					Address(source, 0);
 					Address(source, 0);
 					procedure := procedure.nextProcedure;
@@ -12162,6 +12167,9 @@ TYPE
 					Symbol(source, fieldSection, fieldSection.pc, 0);
 
 					FieldArray(fieldSection);
+
+					Global.GetSymbolSegmentedName(td,name);
+					Basic.AppendToSegmentedName(name,"@Procedures");
 
 					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
 					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);

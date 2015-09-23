@@ -12092,8 +12092,10 @@ TYPE
 					Info(source,"name");
 					procedure.GetName(name);
 					LongName(source, name);
-					
-					Address(source, 0);
+
+					Global.GetSymbolSegmentedName(procedure, segmentedName);
+					NamedSymbol(source, segmentedName, NIL, 0 , 0); 
+
 					Size(source, 0);
 					Address(source, 0);
 					Address(source, 0);
@@ -12160,6 +12162,19 @@ TYPE
 					Symbol(source, fieldSection, fieldSection.pc, 0);
 
 					FieldArray(fieldSection);
+
+					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
+					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);
+					Info(fieldSection, "HeapBlock");
+					Address(fieldSection,0); (* empty such that GC does not go on traversing *)
+					Info(fieldSection, "TypeDescriptor");
+					Address(fieldSection,0);
+
+					Info(source, "Procedure Array ref");
+					Symbol(source, fieldSection, fieldSection.pc, 0);
+
+					ProcedureArray(fieldSection);
+					
 					RETURN source;
 			END NewTypeDescriptorInfo;
 

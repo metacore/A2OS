@@ -12027,6 +12027,8 @@ TYPE
 				Info(source, "FieldArray");
 				IF x IS SyntaxTree.RecordType THEN
 					variable := x(SyntaxTree.RecordType).recordScope.firstVariable
+				ELSIF x IS SyntaxTree.CellType THEN
+					variable := x(SyntaxTree.CellType).cellScope.firstVariable
 				ELSE
 					variable := NIL;
 				END;
@@ -12069,6 +12071,39 @@ TYPE
 				END;
 				PatchArray(source,pc,size);
 			END FieldArray;
+			
+			PROCEDURE ProcedureArray(source: IntermediateCode.Section);
+			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
+				segmentedName: Basic.SegmentedName;
+				td: SyntaxTree.TypeDeclaration;
+				procedure: SyntaxTree.Procedure;
+			BEGIN
+				Array(source,pc,"Modules.ProcedureEntry");
+
+				Info(source, "ProcedureArray");
+				IF x IS SyntaxTree.RecordType THEN
+					procedure := x(SyntaxTree.RecordType).recordScope.firstProcedure
+				ELSIF x IS SyntaxTree.CellType THEN
+					procedure := x(SyntaxTree.CellType).cellScope.firstProcedure;
+				END;
+				size :=0;
+				WHILE procedure # NIL DO
+				
+					Info(source,"name");
+					procedure.GetName(name);
+					LongName(source, name);
+					
+					Address(source, 0);
+					Size(source, 0);
+					Address(source, 0);
+					Address(source, 0);
+					Address(source, 0);
+					Address(source, 0);
+					procedure := procedure.nextProcedure;
+					INC(size);
+				END;
+				PatchArray(source,pc,size);
+			END ProcedureArray;
 
 			PROCEDURE NewTypeDescriptorInfo(tag: Sections.Section; offset: LONGINT; isProtected: BOOLEAN): Sections.Section;
 			VAR name: Basic.SegmentedName;source, fieldSection: IntermediateCode.Section;

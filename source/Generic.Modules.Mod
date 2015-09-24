@@ -458,7 +458,7 @@ BEGIN
 			Machine.Release (Machine.TraceOutput);
 		END;
 		p := m;
-		IF (m # NIL) & ~m.published THEN	(* no race on m.published, as update is done below in Publish *)			Initialize(m);
+		IF (m # NIL) & ~m.published THEN	(* no race on m.published, as update is done below in Publish *)
 			Initialize(m);
 		END;
 		IF trace THEN
@@ -515,13 +515,26 @@ BEGIN
 	RETURN m
 END ThisModuleByAdr;
 
+CONST ModuleInitTimeout = HUGEINT(3000000000); (* Timeout for waiting until a module get initialized, 3 seconds for 1 GHz CPU *)
+
 (*	Retrieve a procedure given a module name, the procedure name and some type information (kernel call) *)
 PROCEDURE GetProcedure*(CONST moduleName, procedureName : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
-VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i, res : LONGINT;
+VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i, res : LONGINT; t: HUGEINT;
 BEGIN
 	module := ThisModule(moduleName, res, ignoreMsg);
 	IF (res = Ok) THEN
-		ASSERT(module.init);	(* module body must have been called (see note at end of module) *)
+		(*! 
+			module body must have been called (see note at the end of this module);
+			return NIL if the module does not get initialized within the specified timeout
+		*)
+		IF ~module.init THEN
+			t := Machine.GetTimer();
+			WHILE ~module.init & (Machine.GetTimer() - t < ModuleInitTimeout) DO END;
+			IF ~module.init THEN (* timeout has expired *)
+				RETURN;
+			END;
+		END;
+
 		Machine.Acquire(Machine.Modules);
 		i := 0; entryAdr := Heaps.NilVal;
 		WHILE (entryAdr = Heaps.NilVal) & (i # LEN(module.command^)) DO
@@ -1020,5 +1033,5 @@ END Modules.
 06.10.1998	pjm	FreeModule
 
 Note:
-o ThisCommand race: process A calls ThisModule, the module is published, but before its body has finished executing, process B calls ThisCommand, causing the assert (m.init) to fail. Process B should perhaps wait in this case until the body has executed, or ThisCommand should return NIL (but that will just move the race to the user).
+o GetProcedure race: process A calls ThisModule, the module is published, but before its body has finished executing, process B calls GetProcedure, causing the assert (m.init) to fail. Process B should perhaps wait in this case until the body has executed, or GetProcedure should return NIL (but that will just move the race to the user).
 *)

@@ -8,7 +8,15 @@ IMPORT SYSTEM, KernelLog, Heaps, Math, MathL;
 
 TYPE
 	Address = LONGINT;
-
+	
+	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: INTEGER): INTEGER );
+	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGINT): LONGINT );
+	GenericUnaryAALoopH = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	GenericUnaryAALoopR = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: REAL): REAL );
+	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 	UnaryAALoop = PROCEDURE ( ladr, dadr, linc, dinc, len: Address );
 	UnaryASLoop = PROCEDURE ( ladr, dadr, linc, len: Address );
 	UnarySALoop = PROCEDURE ( ladr, dadr, dinc, len: Address );
@@ -509,6 +517,402 @@ Sufficient (but not necessary) conditions:
 
 
 	(*** procedures to traverse arrays and apply operators *)
+	
+	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
+	PROCEDURE ApplyGenericUnaryAAOpS( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
+		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+			origdest: LONGINT;  modes: SET;
+			dest, left, dim: LONGINT;
+			
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc ); DEC( len );
+				END;
+			END;
+		END Traverse;
+		
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(* allocate destination, if necessary *)
+		(*IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpS;
+
+	(** apply unary operator to array:  array INTEGER -> array INTEGER *)
+	PROCEDURE ApplyGenericUnaryAAOpI( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
+		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+			origdest: LONGINT;  modes: SET;
+			dest, left, dim: LONGINT;
+			
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc ); DEC( len );
+				END;
+			END;
+		END Traverse;
+		
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(* allocate destination, if necessary *)
+		(*IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpI;
+
+	(** apply unary operator to array:  array LONGINT -> array LONGINT *)
+	PROCEDURE ApplyGenericUnaryAAOpL( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
+		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+			origdest: LONGINT;  modes: SET;
+			dest, left, dim: LONGINT;
+			
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc ); DEC( len );
+				END;
+			END;
+		END Traverse;
+		
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(* allocate destination, if necessary *)
+		(*IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpL;
+	
+	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
+	PROCEDURE ApplyGenericUnaryAAOpH( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+		origdest: LONGINT;  modes: SET;
+	VAR dest, left, dim: LONGINT;
+
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc );
+					DEC( len );
+				END;
+			END;
+		END Traverse;
+
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(*
+		(* allocate destination, if necessary *)
+		IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;
+		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpH;
+
+	(** apply unary operator to array:  array REAL -> array REAL *)
+	PROCEDURE ApplyGenericUnaryAAOpR( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
+		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+			origdest: LONGINT;  modes: SET;
+			dest, left, dim: LONGINT;
+			
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc ); DEC( len );
+				END;
+			END;
+		END Traverse;
+		
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(* allocate destination, if necessary *)
+		(*IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpR;
+	
+	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
+	PROCEDURE ApplyGenericUnaryAAOpX( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+		origdest: LONGINT;  modes: SET;
+	VAR dest, left, dim: LONGINT;
+
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc );
+					DEC( len );
+				END;
+			END;
+		END Traverse;
+
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(*
+		(* allocate destination, if necessary *)
+		IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;
+		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpX;
+	
+	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
+	PROCEDURE ApplyGenericUnaryAAOpZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+		origdest: LONGINT;  modes: SET;
+	VAR dest, left, dim: LONGINT;
+
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc );
+					DEC( len );
+				END;
+			END;
+		END Traverse;
+
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(*
+		(* allocate destination, if necessary *)
+		IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;
+		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpZ;
+	
+	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
+	PROCEDURE ApplyGenericUnaryAAOpLZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
+		origdest: LONGINT;  modes: SET;
+	VAR dest, left, dim: LONGINT;
+
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		VAR len: LONGINT;  linc, dinc: LONGINT;
+		BEGIN
+			IF dim = loopd THEN
+				Loop( ladr, dadr, loopli, loopdi, looplen, op );
+				IF conservative THEN INC( glen, looplen ) END;
+			ELSE
+				len := GetLen( left, dim );  linc := GetIncr( left, dim );
+				dinc := GetIncr( dest, dim );  INC( dim );
+				WHILE (len > 0) DO
+					Traverse( dim, ladr, dadr );  INC( ladr, linc );  INC( dadr, dinc );
+					DEC( len );
+				END;
+			END;
+		END Traverse;
+
+	BEGIN
+		SYSTEM.GET( d, dest );  SYSTEM.GET( l, left );  dim := GetDim( left );
+		origdest := 0;  modes := {up, down};
+		(* allocate destination, if necessary *)
+		p := AllocateSame( dest, left, elementSize );
+		IF p = NIL THEN
+			CopyUpCompatible( dest, left, modes );
+			IF up IN modes THEN  (* nothing to be done *)
+			ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
+			END;
+		END;
+		(*
+		(* allocate destination, if necessary *)
+		IF GetAdr( dest ) = -1 THEN p := Allocate( left, dest, dim, elementSize )
+		ELSIF CheckGeometry( left, dest, dim )
+		END;
+		*)
+		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
+		(* check pattern: longest piece that can be done with a loop *)
+		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
+		Traverse( 0, GetAdr( left ), GetAdr( dest ) );
+		IF up IN modes THEN  (* nothing to be done *)
+		ELSIF down IN modes THEN Reverse( left, dim );  Reverse( dest, dim )
+		ELSE CopyContent( origdest, dest, elementSize );
+		END;
+		SYSTEM.PUT( d, dest );
+	END ApplyGenericUnaryAAOpLZ;
 
 (** apply unary operator to array:  array -> array *)
 	PROCEDURE ApplyUnaryAAOp( d, l: Address;  elementSize: LONGINT;
@@ -1639,8 +2043,89 @@ Sufficient (but not necessary) conditions:
 		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( BOOLEAN ), NotLoopAB );
 		RETURN RESULT
 	END "~";
+	
+	(*** monadic generic (A) -> -A  ********************************************************************)
 
+(** SHORTINT *)
+	PROCEDURE GenericLoopS( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	VAR lval: SHORTINT;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopS;
+	
+(** INTEGER *)
+	PROCEDURE GenericLoopI( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: INTEGER): INTEGER );
+	VAR lval: INTEGER;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopI;
 
+(** LONGINT *)
+	PROCEDURE GenericLoopL( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGINT): LONGINT );
+	VAR lval: LONGINT;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopL;
+
+(** HUGEINT *)
+	PROCEDURE GenericLoopH( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	VAR lval: HUGEINT;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopH;
+
+(** REAL *)
+	PROCEDURE GenericLoopR( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: REAL): REAL );
+	VAR lval: REAL;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopR;
+
+(** LONGREAL *)
+	PROCEDURE GenericLoopX( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	VAR lval: LONGREAL;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopX;
+	
+(** COMPLEX *)
+	PROCEDURE GenericLoopZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	VAR lval: COMPLEX;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopZ;
+(*
+(** LONGCOMPLEX *)
+	PROCEDURE GenericLoopLZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	VAR lval: LONGCOMPLEX;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END GenericLoopLZ;
+*)
 	(*** monadic minus A -> -A  ********************************************************************)
 
 (** SHORTINT *)
@@ -9554,6 +10039,48 @@ Sufficient (but not necessary) conditions:
 	OPERATOR ">="*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) >= ABS(y); END ">=";
 	OPERATOR "<"*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) < ABS(y); END "<";
 	OPERATOR ">"*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) > ABS(y); END ">";
+	
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SHORTINT; op: PROCEDURE(x: SHORTINT): SHORTINT): ARRAY[?] OF SHORTINT; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpS(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(SHORTINT),GenericLoopS,op);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF INTEGER; op: PROCEDURE(x: INTEGER): INTEGER): ARRAY[?] OF INTEGER; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpI(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(INTEGER),GenericLoopI,op);
+		RETURN RESULT;
+	END "ALL";
+	
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGINT; op: PROCEDURE(x: LONGINT): LONGINT): ARRAY[?] OF LONGINT; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpL(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(LONGINT),GenericLoopL,op);
+		RETURN RESULT;
+	END "ALL";
+	
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF HUGEINT; op: PROCEDURE(x: HUGEINT): HUGEINT): ARRAY[?] OF HUGEINT; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpH(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(HUGEINT),GenericLoopH,op);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF REAL; op: PROCEDURE(x: REAL): REAL): ARRAY[?] OF REAL; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpR(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(REAL),GenericLoopR,op);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGREAL; op: PROCEDURE(x: LONGREAL): LONGREAL): ARRAY[?] OF LONGREAL; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpX(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(LONGREAL),GenericLoopX,op);
+		RETURN RESULT;
+	END "ALL";
+	
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF COMPLEX; op: PROCEDURE(x: COMPLEX): COMPLEX): ARRAY[?] OF COMPLEX; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpZ(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(COMPLEX),GenericLoopZ,op);
+		RETURN RESULT;
+	END "ALL";
 
 BEGIN
 	alloc := 0;  SetDefaults();  InitOptimization();  (* CreateTypePool;  *)

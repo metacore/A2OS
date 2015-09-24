@@ -106,8 +106,9 @@ CONST
 	Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1; Wait*= Reshape+1; 
 	(* global functions *)
 	Abs*= Wait+1; Cap*= Abs+1; Chr*= Cap+1; Chr32*= Chr+1; Entier*= Chr32+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1; 
+	All* = Rot+1;
 	(* system proper procedures *)
-	systemGet*= Rot+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1; 
+	systemGet*= All+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1; 
 	(* system functions *)
 	systemAdr*= systemSetActivity+1; systemSize*= systemAdr+1; systemBit*= systemSize+1; systemGet64*= systemBit+1; systemGet32*= systemGet64+1; systemGet16*= systemGet32+1; systemGet8*= systemGet16+1; systemVal*= systemGet8+1; systemMsk*= systemVal+1; systemGetStackPointer*= systemMsk+1; systemGetFramePointer*= systemGetStackPointer+1; systemGetActivity*= systemGetFramePointer+1; 
 	(* for active cells *)
@@ -834,6 +835,7 @@ TYPE
 		NewBuiltin(GetProcedure,"GETPROCEDURE",system.globalScope,TRUE);
 		NewBuiltin(systemTrace,"TRACE",system.globalScope,TRUE);
 		NewBuiltin(Reshape,"RESHAPE",system.globalScope,TRUE);
+		NewBuiltin(All,"ALL",system.globalScope,TRUE);
 		NewBuiltin(Wait,"WAIT",system.globalScope,FALSE);
 		NewBuiltin(Connect,"CONNECT",system.globalScope,FALSE);
 		NewBuiltin(Receive,"RECEIVE",system.globalScope,FALSE);
@@ -926,6 +928,7 @@ TYPE
 		OperatorDefined(system,Scanner.Address, TRUE);
 		OperatorDefined(system,Scanner.Size, TRUE);
 		OperatorDefined(system,Scanner.Alias, TRUE);
+		OperatorDefined(system,All,TRUE);
 		
 		OperatorDefined(system, Scanner.Questionmarks, TRUE);
 
@@ -1565,6 +1568,7 @@ TYPE
 		NewBuiltinIdentifier(Excl,"EXCL");
 		NewBuiltinIdentifier(Inc,"INC");
 		NewBuiltinIdentifier(Incl,"INCL");
+		NewBuiltinIdentifier(All,"ALL");
 
 
 		(* TODO: check if ok. The operators defined in FoxArrayBase require the following identifiers *)

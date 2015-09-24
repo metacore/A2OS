@@ -8413,6 +8413,8 @@ TYPE
 				Convert(result.op,IntermediateCode.GetType(system, x.type));
 			(* ---- SUM ----- *)
 			|Global.Sum: HALT(200);
+			(* ---- ALL ----- *)
+			|Global.All: HALT(200);
 			(* ---- CAS ----- *)
 			|Global.Cas:
 				needsTrace := p0.NeedsTrace();

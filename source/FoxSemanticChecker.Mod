@@ -5814,6 +5814,9 @@ TYPE
 				(* ---- SUM ----- *)
 				ELSIF (id = Global.Sum) & CheckArity(1,2) THEN (* can only be found by overloading *)
 					Error(position, Diagnostics.Invalid, "sum operator not applicable");
+				(* ---- ALL ----- *)
+				ELSIF (id = Global.All) & CheckArity(2,3) THEN (* can only be found by overloading *)
+					Error(position, Diagnostics.Invalid, "all operator not applicable");
 				(* ---- DIM ----- *)
 				ELSIF (id = Global.Dim) & CheckArity(1,1) THEN
 					type := system.sizeType;
@@ -6907,6 +6910,7 @@ TYPE
 						| Global.Max, Global.Min: (* unary and binary *)
 						| Global.Odd: (* TODO: arity? *)
 						| Global.Sum: (* TODO: arity? *)
+						| Global.All: (* TODO: arity? *)
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
 						END;
@@ -8889,7 +8893,15 @@ TYPE
 				ASSERT(formalParameter.type # NIL);
 				IF (actualParameter.type = NIL) THEN distance := Infinity
 				ELSE
-					distance := TypeDistance(system,actualParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
+					IF (actualParameter.type.resolved IS SyntaxTree.ProcedureType) & (formalParameter.type.resolved IS SyntaxTree.ProcedureType) THEN
+						IF actualParameter.type.resolved.SameType(formalParameter.type.resolved) THEN
+							distance := 0;
+						ELSE
+							distance := Infinity;
+						END;
+					ELSE
+						distance := TypeDistance(system,actualParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
+					END;
 				END;
 				IF distance = Infinity THEN
 					result := Infinity;

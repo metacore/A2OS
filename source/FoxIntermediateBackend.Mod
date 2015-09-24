@@ -105,6 +105,8 @@ CONST
 		Size7Flag = 9; (* size = 7 *)
 		Size8Flag = 10; (* size = 8 *)
 		
+		ReflectionSupport = TRUE;
+		
 TYPE
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
 	SupportedImmediateProcedure* = PROCEDURE {DELEGATE} (CONST op: IntermediateCode.Operand): BOOLEAN;
@@ -10613,13 +10615,16 @@ TYPE
 		declarationVisitor: DeclarationVisitor;
 		module: Sections.Module;
 		moduleName: ARRAY 128 OF CHAR;
- 
+ 		moduleNamePool: Basic.HashTableInt;
+ 		moduleNamePoolSection: IntermediateCode.Section;
+ 		
 		simple: BOOLEAN; (* simple = no methods, no module loading, no reflection *)
 
 		MethodTableOffset: LONGINT; (* method table offset from zero *)
 		BaseTypesTableOffset: LONGINT;	(* table with all record extensions offset *)
 		TypeTags: LONGINT; (* type extension level support *)
 		TypeRecordBaseOffset: LONGINT; (* offset of type zero offset (without method entries) *)
+		
 
 		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
 		BEGIN
@@ -10647,8 +10652,13 @@ TYPE
 		END InitMetaDataGenerator;
 
 		PROCEDURE SetModule(module: Sections.Module);
+		VAR namePoolOffset: LONGINT;
 		BEGIN
-			SELF.module := module
+			SELF.module := module;
+			Global.GetModuleName(module.module,moduleName);
+			NEW(moduleNamePool, 32);
+			moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
+			
 		END SetModule;
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
@@ -10897,26 +10907,42 @@ TYPE
 			(* ELSE no pointers in type *)
 			END;
 		END Pointers;
-		
-		PROCEDURE DynamicName(source: IntermediateCode.Section; name: StringPool.Index; pool: Basic.HashTableInt): LONGINT;
-		VAR s: Basic.SectionName; i: LONGINT; ch: CHAR; position: LONGINT;
+
+		PROCEDURE EnterDynamicName(source: IntermediateCode.Section; CONST name: ARRAY OF CHAR; index: LONGINT; pool: Basic.HashTableInt): LONGINT;
+		VAR position,i: LONGINT; ch: CHAR; 
 		BEGIN
-			IF pool.Has(name) THEN
-				RETURN pool.GetInt(name)
+			IF pool.Has(index) THEN
+				RETURN pool.GetInt(index)
 			ELSE
 				position := source.pc;
-				pool.PutInt(name, position);
-				StringPool.GetString(name, s);
-				Info(source, s);
+				pool.PutInt(index, position);
+				Info(source, name);
 				i := 0;
 				REPEAT
-					ch := s[i]; INC(i);
+					ch := name[i]; INC(i);
 					Char( source, ch);
 				UNTIL ch = 0X;
 			END;
 			RETURN position;
-		END DynamicName;
+		END EnterDynamicName;
 
+		PROCEDURE DynamicName(source: IntermediateCode.Section; index: StringPool.Index; pool: Basic.HashTableInt): LONGINT;
+		VAR name: Basic.SectionName; i: LONGINT; ch: CHAR; position: LONGINT;
+		BEGIN
+			IF pool.Has(index) THEN
+				RETURN pool.GetInt(index)
+			ELSE
+				StringPool.GetString(index, name);
+				position := EnterDynamicName(source,name,index, pool); 
+			END;
+			RETURN position;
+		END DynamicName;
+		
+		PROCEDURE DynamicNameS(source: IntermediateCode.Section; CONST name: ARRAY OF CHAR; pool: Basic.HashTableInt): LONGINT;
+		BEGIN
+			RETURN EnterDynamicName(source, name, StringPool.GetIndex1(name), pool)
+		END DynamicNameS;
+		
 		PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
 		VAR name: ARRAY 128 OF CHAR; section: IntermediateCode.Section; pooledName: Basic.SegmentedName;
 		BEGIN
@@ -11171,6 +11197,7 @@ TYPE
 		BEGIN
 			NEW(fingerPrinter, module.system);
 			NEW(poolMap, 64);
+			(* this is the name pool private to the export table -- it is sorted and should not be mixed / used for other names in a module *)
 			namePool := Block("Heaps","SystemBlockDesc",".@NamePool",namePoolOffset); 
 			
 			NEW(sectionArray, module.allSections.Length());
@@ -11894,7 +11921,6 @@ TYPE
 			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, ptrTableSectionOffset, maxPointers, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
 		BEGIN
-			Global.GetModuleName(module.module,moduleName);
 			
 			pointerSection := Block("Heaps","SystemBlockDesc",".@PointerArray",pointerSectionOffset);
 			PointerArray(pointerSection,module.module.moduleScope, numberPointers);
@@ -12014,28 +12040,91 @@ TYPE
 			PatchArray(source,pc,numberPointers);
 		END PointerArray;
 
-		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
-		VAR recordType: SyntaxTree.RecordType;
-			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
-			section: Sections.Section; type: SyntaxTree.Type; cellType: SyntaxTree.CellType;
+			PROCEDURE SymbolSection(symbol: SyntaxTree.Symbol; CONST suffix: ARRAY OF CHAR; VAR pc: LONGINT): IntermediateCode.Section;
+			VAR
+				name: Basic.SegmentedName;
+				section: IntermediateCode.Section;
+			BEGIN
+					Global.GetSymbolSegmentedName(symbol,name);
+					Basic.AppendToSegmentedName(name,suffix);
 
-			PROCEDURE FieldArray(source: IntermediateCode.Section);
-			VAR variable: SyntaxTree.Variable; pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
+					section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
+					HeapBlock("Heaps","SystemBlockDesc", section, 2);
+					Info(section, "HeapBlock");
+					Address(section,0); (* empty such that GC does not go on traversing *)
+					Info(section, suffix);
+					Address(section,0);
+					pc := section.pc;
+					RETURN section;
+			END SymbolSection;
+			
+			PROCEDURE ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
+			VAR type: SyntaxTree.Type; variable: SyntaxTree.Variable; pc: LONGINT; section: IntermediateCode.Section;
+			BEGIN
+				IF ~ReflectionSupport THEN variable := NIL
+				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
+					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
+					IF type IS SyntaxTree.PointerType THEN
+						type := type(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF type IS SyntaxTree.RecordType THEN
+						variable := type(SyntaxTree.RecordType).recordScope.firstVariable
+					ELSIF type IS SyntaxTree.CellType THEN
+						variable := type(SyntaxTree.CellType).cellScope.firstVariable;
+					END;
+				ELSIF symbol IS SyntaxTree.Procedure THEN
+					variable := symbol(SyntaxTree.Procedure).procedureScope.firstVariable;
+				END;
+				Info(in, "variables");
+				IF variable # NIL THEN
+					section := SymbolSection(symbol, "@Variables",pc);
+					VariableArray(section, variable);
+					Symbol(in, section, pc, 0);
+				ELSE
+					Address(in, 0);
+				END;
+			END ReflectVariables;
+
+			PROCEDURE ReflectProcedures(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
+			VAR type: SyntaxTree.Type; procedure: SyntaxTree.Procedure; pc: LONGINT; section: IntermediateCode.Section;
+			BEGIN
+				IF ~ReflectionSupport THEN procedure := NIL
+				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
+					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
+					IF type IS SyntaxTree.PointerType THEN
+						type := type(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF type IS SyntaxTree.RecordType THEN
+						procedure := type(SyntaxTree.RecordType).recordScope.firstProcedure
+					ELSIF type IS SyntaxTree.CellType THEN
+						procedure := type(SyntaxTree.CellType).cellScope.firstProcedure;
+					END;
+				ELSIF symbol IS SyntaxTree.Procedure THEN
+					procedure := symbol(SyntaxTree.Procedure).procedureScope.firstProcedure;
+				END;
+				
+				Info(in, "procedures");
+				IF procedure # NIL THEN
+					section := SymbolSection(symbol, "@Procedures",pc);
+					ProcedureArray(section, procedure);
+					Symbol(in, section, pc, 0);
+				ELSE
+					Address(in, 0);
+				END;
+			END ReflectProcedures;
+			
+			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
+			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
 				segmentedName: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
+				type: SyntaxTree.Type;
 			BEGIN
 				Array(source,pc,"Modules.FieldEntry");
-
 				Info(source, "FieldArray");
-				IF x IS SyntaxTree.RecordType THEN
-					variable := x(SyntaxTree.RecordType).recordScope.firstVariable
-				ELSIF x IS SyntaxTree.CellType THEN
-					variable := x(SyntaxTree.CellType).cellScope.firstVariable
-				ELSE
-					variable := NIL;
-				END;
 				size :=0;
 				WHILE variable # NIL DO
+					Info(source,"name");
+					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
 					type := variable.type.resolved;
 					Info(source,"offset");
 					Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
@@ -12065,43 +12154,36 @@ TYPE
 					END;
 					Info(source,"flags");
 					Set(source, {});
-					Info(source,"name");
-					variable.GetName(name);
-					LongName(source, name);
 					variable := variable.nextVariable;
 					INC(size);
 				END;
 				PatchArray(source,pc,size);
-			END FieldArray;
+			END VariableArray;
 			
-			PROCEDURE ProcedureArray(source: IntermediateCode.Section);
+			PROCEDURE ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
 				segmentedName: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
-				procedure: SyntaxTree.Procedure;
 			BEGIN
 				Array(source,pc,"Modules.ProcedureEntry");
 
 				Info(source, "ProcedureArray");
-				IF x IS SyntaxTree.RecordType THEN
-					procedure := x(SyntaxTree.RecordType).recordScope.firstProcedure
-				ELSIF x IS SyntaxTree.CellType THEN
-					procedure := x(SyntaxTree.CellType).cellScope.firstProcedure;
-				END;
 				size :=0;
 				WHILE procedure # NIL DO
 				
 					Info(source,"name");
-					procedure.GetName(name);
-					LongName(source, name);
+					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, procedure.name, moduleNamePool), 0); (* reference to dynamic name *)
 
 					Global.GetSymbolSegmentedName(procedure, segmentedName);
 					NamedSymbol(source, segmentedName, procedure, 0 , 0); 
 
+					(* size *)
 					Size(source, 0);
+					(* parameters *)
 					Address(source, 0);
-					Address(source, 0);
-					Address(source, 0);
+					(* variables *)
+					ReflectVariables(source, procedure);
+					ReflectProcedures(source, procedure);
 
 					(* return type entry *)
 					Address(source, 0);
@@ -12111,6 +12193,13 @@ TYPE
 				END;
 				PatchArray(source,pc,size);
 			END ProcedureArray;
+
+
+		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
+		VAR recordType: SyntaxTree.RecordType;
+			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
+			section: Sections.Section; type: SyntaxTree.Type; cellType: SyntaxTree.CellType;
+
 
 			PROCEDURE NewTypeDescriptorInfo(tag: Sections.Section; offset: LONGINT; isProtected: BOOLEAN): Sections.Section;
 			VAR name: Basic.SegmentedName;source, fieldSection: IntermediateCode.Section;
@@ -12155,6 +12244,11 @@ TYPE
 
 					Global.GetSymbolSegmentedName(td,name);
 					Basic.AppendToSegmentedName(name,"@Fields");
+					
+					ReflectVariables(source, td);
+					ReflectProcedures(source, td);
+					(*
+					fieldSection := VariableArray(
 
 					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
 					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);
@@ -12182,7 +12276,7 @@ TYPE
 					Symbol(source, fieldSection, fieldSection.pc, 0);
 
 					ProcedureArray(fieldSection);
-					
+					*)
 					RETURN source;
 			END NewTypeDescriptorInfo;
 

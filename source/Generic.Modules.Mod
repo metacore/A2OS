@@ -29,12 +29,12 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=TRUE;
+	TraceBoot=FALSE;
 
 TYPE
 	(* definitions for object-model loader support *)
 	Name* = ARRAY 32 OF CHAR;
-	DynamicName* = POINTER {UNSAFE} TO ARRAY OF CHAR;
+	DynamicName* = POINTER {UNSAFE} TO ARRAY 256 OF CHAR;
 	
 	Command* = RECORD
 		(* Fields exported for initialization by loader/linker only! Consider read-only! *)
@@ -56,7 +56,6 @@ TYPE
 
 	TerminationHandler* = PROCEDURE;
 
-	LongName = ARRAY 64 OF CHAR;
 	
 	EntryType*=RECORD
 		(* classes:
@@ -92,7 +91,7 @@ TYPE
 	END;
 
 	FieldEntry*= RECORD
-		name*: LongName; (*! change to dynamic name ? *)
+		name*: DynamicName; (*! change to dynamic name ? *)
 		offset*: SIZE; (* offset of this type *)
 		type*: EntryType;
 		flags*: SET;
@@ -101,7 +100,7 @@ TYPE
 	ProcedureEntries*=POINTER TO ARRAY OF ProcedureEntry;
 	
 	ProcedureEntry*=RECORD
-		name*: LongName; (*! change to dynamic name ? *)
+		name*: DynamicName; 
 		address*: ADDRESS;
 		size*: SIZE;
 		parameters*: FieldEntries;

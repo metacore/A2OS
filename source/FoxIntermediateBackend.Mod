@@ -10658,9 +10658,10 @@ TYPE
 		BEGIN
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
-			NEW(moduleNamePool, 32);
-			moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
-			
+			IF ReflectionSupport &  ~simple THEN 
+				NEW(moduleNamePool, 32);
+				moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
+			END;
 		END SetModule;
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
@@ -12063,7 +12064,7 @@ TYPE
 			PROCEDURE ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
 			VAR type: SyntaxTree.Type; variable: SyntaxTree.Variable; pc: LONGINT; section: IntermediateCode.Section;
 			BEGIN
-				IF ~ReflectionSupport THEN variable := NIL
+				IF ~ReflectionSupport OR simple THEN variable := NIL
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 					IF type IS SyntaxTree.PointerType THEN
@@ -12090,7 +12091,7 @@ TYPE
 			PROCEDURE ReflectProcedures(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
 			VAR type: SyntaxTree.Type; procedure: SyntaxTree.Procedure; pc: LONGINT; section: IntermediateCode.Section;
 			BEGIN
-				IF ~ReflectionSupport THEN procedure := NIL
+				IF ~ReflectionSupport OR simple THEN procedure := NIL
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 					IF type IS SyntaxTree.PointerType THEN

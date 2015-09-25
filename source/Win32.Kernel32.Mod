@@ -346,6 +346,8 @@ VAR
 
 	(** The AllocConsole function allocates a new console for the calling process. *)
 	AllocConsole-: PROCEDURE {WINAPI} ( ): BOOL;
+	(** The AttachConsole function attaches the calling process to the console of the specified process. *)
+	AttachConsole-: PROCEDURE {WINAPI} (in: LONGINT): BOOL;
 	(**The Beep function generates simple tones on the speaker. The function is synchronous; it does not return control to its caller until the sound finishes.*)
 	Beep-: PROCEDURE {WINAPI} ( dwFreq, dwDuration: LONGINT ): BOOL;
 	(** The ClearCommBreak function restores character transmission for a specified communications device and places the transmission line in a nonbreak state. *)
@@ -814,6 +816,7 @@ VAR
 		str := "Kernel32.DLL";
 		mod := LoadLibrary(str);
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
+		GetProcAddress(mod, "AttachConsole",SYSTEM.VAL(ADDRESS,AttachConsole));
 		GetProcAddress(mod, "Beep",SYSTEM.VAL(ADDRESS,Beep));
 		GetProcAddress(mod, "ClearCommBreak",SYSTEM.VAL(ADDRESS,ClearCommBreak));
 		GetProcAddress(mod, "ClearCommError",SYSTEM.VAL(ADDRESS,ClearCommError));

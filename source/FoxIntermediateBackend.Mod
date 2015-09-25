@@ -10658,7 +10658,7 @@ TYPE
 		BEGIN
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
-			IF ReflectionSupport &  ~simple THEN 
+			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple THEN 
 				NEW(moduleNamePool, 32);
 				moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
 			END;
@@ -12048,6 +12048,7 @@ TYPE
 				name: Basic.SegmentedName;
 				section: IntermediateCode.Section;
 			BEGIN
+					ASSERT(implementationVisitor.newObjectFile);
 					Global.GetSymbolSegmentedName(symbol,name);
 					Basic.AppendToSegmentedName(name,suffix);
 
@@ -12064,6 +12065,7 @@ TYPE
 			PROCEDURE ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
 			VAR type: SyntaxTree.Type; variable: SyntaxTree.Variable; pc: LONGINT; section: IntermediateCode.Section;
 			BEGIN
+				ASSERT(implementationVisitor.newObjectFile);
 				IF ~ReflectionSupport OR simple THEN variable := NIL
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
@@ -12091,6 +12093,7 @@ TYPE
 			PROCEDURE ReflectProcedures(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
 			VAR type: SyntaxTree.Type; procedure: SyntaxTree.Procedure; pc: LONGINT; section: IntermediateCode.Section;
 			BEGIN
+				ASSERT(implementationVisitor.newObjectFile);
 				IF ~ReflectionSupport OR simple THEN procedure := NIL
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;

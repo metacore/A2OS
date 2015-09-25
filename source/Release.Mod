@@ -112,7 +112,7 @@ CONST
 	No = 3; (* per default, don't install package *)
 
 	(* File.release*)
-	ALL = {0..31};
+	All = {0..31};
 
 	MaxBuilds = 16;
 	MaxPrefixes = 32;
@@ -164,7 +164,7 @@ TYPE
 		BEGIN
 			INC(nofFiles);
 			IF file.IsSourceCode() THEN INC(nofSources); END;
-			IF (file.release # ALL) THEN
+			IF (file.release # All) THEN
 				FOR i := 0 TO MaxPrefixes-1 DO
 					IF i IN file.release THEN
 						INC(stats[i].nofFiles);
@@ -416,7 +416,7 @@ TYPE
 
 		PROCEDURE IsInRelease*(release : SET) : BOOLEAN;
 		BEGIN
-			RETURN (SELF.release = ALL) OR (SELF.release * release # {});
+			RETURN (SELF.release = All) OR (SELF.release * release # {});
 		END IsInRelease;
 
 		PROCEDURE IsSourceCode*() : BOOLEAN;
@@ -1580,7 +1580,7 @@ TYPE
 					nofFiles := 0;
 					file := files;
 					WHILE (file # NIL) DO
-						IF (file.release # ALL) & (prefix IN file.release) THEN
+						IF (file.release # All) & (prefix IN file.release) THEN
 							w.Char(Tab); w.String(file.name); w.Ln;
 							INC(nofFiles);
 						END;
@@ -2260,12 +2260,12 @@ TYPE
 		PROCEDURE ParsePackage(builds : Builds;  VAR token : Token) : BOOLEAN;
 		VAR currentRelease : SET; index : LONGINT; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
 		BEGIN
-			currentRelease := ALL;
+			currentRelease := All;
 			LOOP
 				IF scanner.Get(token) THEN
 					index := builds.GetPrefixIndex(token);
 					IF (index >= 0) THEN
-						IF (currentRelease = ALL) THEN
+						IF (currentRelease = All) THEN
 							currentRelease := {};
 							IF ~ParseBuildPrefixes(builds, token, currentRelease, pos) THEN
 								RETURN FALSE;
@@ -2276,8 +2276,8 @@ TYPE
 							RETURN FALSE;
 						END;
 					ELSIF (token = CLOSESECTION) THEN
-						IF (currentRelease # ALL) THEN
-							currentRelease := ALL;
+						IF (currentRelease # All) THEN
+							currentRelease := All;
 						ELSE
 							Error(scanner.pos, "No matching opening bracket", "", "");
 							RETURN FALSE;
@@ -2305,7 +2305,7 @@ TYPE
 					EXIT;
 				END;
 			END;
-			RETURN (currentRelease = ALL);
+			RETURN (currentRelease = All);
 		END ParsePackage;
 
 		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : SET; VAR pos : LONGINT) : BOOLEAN;

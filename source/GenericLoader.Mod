@@ -358,7 +358,7 @@ TYPE
 		msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: LONGINT; m: HashTableInt;
 		s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
 
-			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF CHAR): LONGINT;
+			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): LONGINT;
 			VAR s: ObjectFile.SectionName; i: LONGINT;
 			BEGIN
 				IF name = NIL THEN RETURN -1 END;

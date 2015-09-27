@@ -8893,15 +8893,7 @@ TYPE
 				ASSERT(formalParameter.type # NIL);
 				IF (actualParameter.type = NIL) THEN distance := Infinity
 				ELSE
-					IF (actualParameter.type.resolved IS SyntaxTree.ProcedureType) & (formalParameter.type.resolved IS SyntaxTree.ProcedureType) THEN
-						IF actualParameter.type.resolved.SameType(formalParameter.type.resolved) THEN
-							distance := 0;
-						ELSE
-							distance := Infinity;
-						END;
-					ELSE
-						distance := TypeDistance(system,actualParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
-					END;
+					distance := TypeDistance(system,actualParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
 				END;
 				IF distance = Infinity THEN
 					result := Infinity;
@@ -8943,6 +8935,32 @@ TYPE
 		ASSERT(result >= 0);
 		RETURN result
 	END Distance;
+	
+	PROCEDURE ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): LONGINT;
+	VAR result: LONGINT; formalParameter, rightParameter: SyntaxTree.Parameter; distance: LONGINT; i: LONGINT;
+	BEGIN
+		IF right.numberParameters # (procedureType.numberParameters) THEN
+			result := Infinity
+		ELSE
+			formalParameter := procedureType.firstParameter;
+			rightParameter := right.firstParameter;
+			i := 0;
+			result := 0;
+			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)
+			WHILE (formalParameter # NIL) & (result # Infinity) DO
+				distance := TypeDistance(system,rightParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
+				IF distance = Infinity THEN
+					result := Infinity;
+				ELSE
+					INC(result,distance);
+				END;
+				formalParameter := formalParameter.nextParameter;
+				rightParameter := rightParameter.nextParameter;
+			END;
+		END;
+		ASSERT(result >= 0);
+		RETURN result
+	END ProcedureTypeDistance;
 
 	(** compute and return the distance between two types, used for computation of signature distance
 		from -> to
@@ -9002,6 +9020,10 @@ TYPE
 			ELSIF to IS SyntaxTree.PointerType THEN i := PointerTypeDistance(ptr, to(SyntaxTree.PointerType))
 			(* ELSE i := TypeDistance(ptr.base, to); *)
 			END
+		ELSIF (from IS SyntaxTree.ProcedureType) THEN
+			IF (to IS SyntaxTree.ProcedureType) THEN
+				i := ProcedureTypeDistance(system, from(SyntaxTree.ProcedureType), to(SyntaxTree.ProcedureType));
+			END;
 		(*no procedure test, procedure must be the same*)
 		END;
 		RETURN i

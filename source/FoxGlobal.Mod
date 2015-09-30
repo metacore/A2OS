@@ -932,6 +932,9 @@ TYPE
 		
 		OperatorDefined(system, Scanner.Questionmarks, TRUE);
 
+		OperatorDefined(system, Scanner.GreaterGreater, TRUE);
+		OperatorDefined(system, Scanner.LessLess, TRUE);
+
 	END SetDefaultOperators;
 
 	PROCEDURE DefaultSystem*(): System;

@@ -6913,6 +6913,10 @@ TYPE
 						| Global.All: (* TODO: arity? *)
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
+						| Scanner.GreaterGreater, Scanner.LessLess:
+							mustBeBinary := TRUE;
+						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:
+							mustBeBinary := TRUE; mustReturnBoolean := TRUE;
 						END;
 
 						(* check parameter count *)

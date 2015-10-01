@@ -440,6 +440,48 @@ MODULE FPE64;
 		END
 	END Float;
 
+	PROCEDURE FixInt64*(CONST a: Float64): HUGEINT;
+	(*VAR x0, x1, xe: LONGINT;
+		x: LONGINT;
+	BEGIN
+		x0 := a.low;
+		x1 := a.high;
+		IF (x0 # 0) OR (x1 # 0) THEN
+			xe := x1 DIV C MOD E - B;
+			IF x1 > 0 THEN
+				x := (x1 MOD C + C)*K;
+				x := LSH(x0, -22) + x
+			ELSE
+				x := -(x1 MOD C + C)*K;
+				x := x - LSH(x0, -22)
+			END;
+			IF xe < 0 THEN x := ASH(x, -31)
+			ELSIF xe <= 30 THEN x := ASH(x, xe - 30)
+			ELSIF x > 0 THEN x := HUGEINT(7FFFFFFFFFFFFFFFH)
+			ELSE x := HUGEINT(8000000000000000H)
+			END
+		END;
+		RETURN x1*)
+	VAR
+		x: HUGEINT;
+		xe: LONGINT;
+	BEGIN
+		x := SYSTEM.GET64(ADDRESSOF(a));
+		IF x # 0 THEN
+			xe := LONGINT(LSH(x, -32)) DIV C MOD E - B;
+			x := LSH(LSH(x, 12), -12) + 10000000000000H;
+			IF a.high < 0 THEN
+				x := -x
+			END;
+			IF xe < 0 THEN x := ASH(x, -53)
+			ELSIF xe <= 52 THEN x := ASH(x, xe -52)
+			ELSIF x > 0 THEN x := HUGEINT(7FFFFFFFFFFFFFFFH)
+			ELSE x := HUGEINT(8000000000000000H)
+			END
+		END;
+		RETURN x
+	END FixInt64;
+
 	PROCEDURE Fix*(CONST a: Float64): LONGINT;
 		VAR x0, x1, xe: LONGINT;
 	BEGIN

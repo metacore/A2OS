@@ -339,7 +339,7 @@ TYPE
 				offset := baseType.sizeInBits; 
 				alignment := baseType.alignmentInBits;
 			ELSE
-				offset := 0; alignment := baseType.alignmentInBits;
+				offset := 0; alignment := x.alignmentInBits;
 				IF alignment <= 0 THEN alignment := dataUnit END;
 			END;
 

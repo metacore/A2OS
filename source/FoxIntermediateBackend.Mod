@@ -3892,8 +3892,8 @@ TYPE
 							END
 						ELSE
 							skipLabel1 := NewLabel();
-							BrgeL(skipLabel1, targetLength, IntermediateCode.Immediate(sizeType, 0));
 							TransferToRegister(targetLength, targetLength);
+							BrgeL(skipLabel1, targetLength, IntermediateCode.Immediate(sizeType, 0));
 							Emit(Mov(position,targetLength, IntermediateCode.Immediate(sizeType, 0)));
 							SetLabel(skipLabel1)
 						END;

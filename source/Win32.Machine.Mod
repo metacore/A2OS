@@ -43,7 +43,7 @@ CONST
 	EndBlockOfs = 38H;	(* cf. Linker0 *)
 	MemoryBlockOfs = BlockHeaderSize + RecordDescSize + BlockHeaderSize; (* memory block (including header) starts at offset HeaderSize *)
 
-	MemBlockSize = 8*1024*1024; (* 8 MB, must be multiple of StaticBlockSize *)
+	MemBlockSize = 4*1024*1024; (* must be multiple of StaticBlockSize *)
 	MinMemBlockSize = 4*1024*1024;
 
 	NilVal = 0;
@@ -815,8 +815,6 @@ BEGIN
 	INC(memDescSize, (-memDescSize) MOD StaticBlockSize); 	(* round up to multiple of StaticBlockSize *)
 	INC(size, (-size) MOD StaticBlockSize); (* round up to multiple of StaticBlockSize *)
 	memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
-	IF memBlkSize < MinMemBlockSize THEN memBlkSize := MemBlockSize END; 	(* MemBlockSize implicitly multiple of StaticBlockSize *)
-
 	INC(memBlkSize, (-memBlkSize) MOD MemBlockSize);
 	initVal := memBlockTail.startAdr + memBlockTail.size;
 	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});

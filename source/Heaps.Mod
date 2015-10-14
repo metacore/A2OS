@@ -138,7 +138,7 @@ TYPE
 	END GCStatus;
 
 CONST
-	MaxFreeLists = 14;
+	MaxFreeLists = 20;
 	FreeListBarrier = 7;
 TYPE
 	FreeList= RECORD minSize: SIZE; first {UNTRACED}, last{UNTRACED}: FreeBlock END;
@@ -451,9 +451,6 @@ PROCEDURE InsertSorted(VAR freeList: FreeList; block: FreeBlock);
 VAR x: FreeBlock;
 BEGIN
 	(* keep them ordered to avoid unnecessary splits *)
-	(* this optimization has positive impact on heap utilization
-	    130 MB vs. 240 MB heap for compiling and linking a new system
-	    but it slows down heap allocation speed. 	*)
 	x := freeList.first;
 	WHILE x # NIL DO
 		ASSERT(x # block);
@@ -481,7 +478,14 @@ BEGIN
 	IF i < FreeListBarrier THEN
 		AppendFree(freeLists[i], block);
 	ELSE
+		AppendFree(freeLists[i], block);
+		(*
+		keeping lists sorted has some positive impact on heap utilization
+	    but it slows down heap allocation speed:
+	    
 		InsertSorted(freeLists[i], block);
+		*)
+
 	END;
 END AppendFreeBlock;
 
@@ -496,23 +500,30 @@ BEGIN
 			block := GetFree(freeLists[i]);
 		ELSE
 			block := freeLists[i].first;
+			prev := NIL;
 			WHILE (block # NIL) & (block.size < size) DO
 				prev := block;
 				block := block.next;
 			END;
 
-			IF block # NIL THEN (* block.size >= size *)
-				IF prev = NIL THEN freeLists[i].first := block.next
+			IF block # NIL THEN (* blockize >= size *)
+				IF prev = NIL THEN
+					freeLists[i].first := block.next;
 				ELSE prev.next := block.next
+				END;
+				IF block = freeLists[i].last THEN
+					freeLists[i].last := prev
 				END;
 				block.next := NIL;
 			END;
 
+			(*
 			prev := freeLists[i].first;
 			WHILE prev # NIL DO
 				ASSERT(prev # block);
 				prev := prev.next;
 			END;
+			*)
 
 		END;
 		INC( i )
@@ -547,13 +558,19 @@ BEGIN
 	ELSE
 		LazySweep(size, p)
 	END;
+	IF size # MAX(LONGINT) THEN
+	INC(throughput, size);
+	END;
 END GetFreeBlock;
 
 (* Sweep phase *)
 PROCEDURE LazySweep(size: SIZE; VAR p: FreeBlock);
-VAR lastFreeBlockAdr: ADDRESS; found : BOOLEAN;
-	block: HeapBlock; freeBlock, lastFreeBlock: FreeBlock; blockMark: LONGINT; blockSize: SIZE;
+VAR 
+	lastFreeBlockAdr: ADDRESS; found : BOOLEAN;
+	block {UNTRACED}: HeapBlock ; freeBlock{UNTRACED}, lastFreeBlock{UNTRACED}: FreeBlock; blockMark: LONGINT; blockSize: SIZE;
+CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 BEGIN
+	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
 	found := FALSE;
 	lastFreeBlockAdr := NilVal;
 	lastFreeBlock := NIL;
@@ -571,11 +588,11 @@ BEGIN
 			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
-			IF (block.mark < sweepMarkValue) THEN
+			IF (blockMark < sweepMarkValue) THEN
 				IF (block IS SystemBlock) OR (block IS RecordBlock) OR (block IS ProtRecBlock) OR (block IS ArrayBlock) THEN
 					freeBlock := SYSTEM.VAL(FreeBlock, block);
-					InitFreeBlock(freeBlock, Unmarked, NilVal, block.size); (* convert this block into a free heap block and clear its data *)
-					Machine.Fill32(sweepBlockAdr + BlockHeaderSize + SIZEOF(FreeBlockDesc), freeBlock.size - BlockHeaderSize - SIZEOF(FreeBlockDesc), DebugValue);
+					InitFreeBlock(freeBlock, Unmarked, NilVal, blockSize); (* convert this block into a free heap block and clear its data *)
+					Machine.Fill32(sweepBlockAdr + FreeBlockHeaderSize, blockSize - FreeBlockHeaderSize, DebugValue);
 				ELSE
 					ASSERT(block IS FreeBlock);
 					freeBlock := block(FreeBlock); (* free block has data cleared by definition *)
@@ -585,23 +602,25 @@ BEGIN
 					lastFreeBlock := freeBlock;
 				ELSIF lastFreeBlockAdr + lastFreeBlock.size = sweepBlockAdr THEN
 					(* there are two contiguous free blocks - merge them *)
-					lastFreeBlock.size := lastFreeBlock.size + block.size;
+					INC(lastFreeBlock.size,blockSize);
 					(* clear header fields of concatenated block *)
-					Machine.Fill32(sweepBlockAdr, BlockHeaderSize + SIZEOF(FreeBlockDesc), DebugValue);
+					Machine.Fill32(sweepBlockAdr, FreeBlockHeaderSize, DebugValue);
 				END
+			ELSE
+				ASSERT(~(block IS FreeBlock));
 			END;
 			IF (blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) THEN (* no further merging is possible *)
 				IF lastFreeBlockAdr # NilVal THEN
 					IF ADDRESS(lastFreeBlock.size) >= ADDRESS (size) THEN (* block found - may be too big *)
 						p := lastFreeBlock;
 						IF ADDRESS(p.size) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-							ASSERT(ADDRESS(p.size - size) >= BlockHeaderSize + SIZEOF(FreeBlockDesc));
+							ASSERT(ADDRESS(p.size - size) >= FreeBlockHeaderSize);
 							freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
 							InitFreeBlock(freeBlock, Unmarked, NilVal, p.size - size);
-							p.size := size
+							p.size := size;
 						END;
+						sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)
 						found := TRUE;
-						sweepBlockAdr := lastFreeBlockAdr + size (* make sure next lazy sweep continues after block p *)
 					ELSIF EnableFreeLists THEN AppendFreeBlock(lastFreeBlock);
 					END;
 					lastFreeBlockAdr := NilVal;
@@ -974,7 +993,7 @@ END InvokeGC;
 PROCEDURE ReturnBlocks;
 VAR memBlock {UNTRACED}, free{UNTRACED}: Machine.MemoryBlock; p: ADDRESS; heapBlock {UNTRACED}: HeapBlock; f: FreeBlock;
 BEGIN
-	GetFreeBlock(MAX(LONGINT), f); (* merge all empty blocks, if necessary *)
+	GetFreeBlock(MAX(LONGINT), f);
 	memBlock := Machine.memBlockHead;
 	WHILE memBlock # NIL DO
 		free := NIL;
@@ -1023,6 +1042,8 @@ BEGIN
 	SYSTEM.PUT(freeBlockAdr + HeapBlockOffset, NilVal)
 END InitFreeBlock;
 
+VAR throughput := 0 : SIZE;
+
 (* NewBlock - Allocate a heap block. {(size MOD BlockSize = 0)}. Caller must hold Heap lock. *)
 PROCEDURE NewBlock(size: SIZE): ADDRESS;
 VAR try: LONGINT; p {UNTRACED}, freeBlock {UNTRACED}: FreeBlock; memBlock {UNTRACED}: Machine.MemoryBlock;
@@ -1039,7 +1060,11 @@ BEGIN
 	CheckPostGC;
 	try := 1;
 	p := NIL;
-	GetFreeBlock(size, p);
+	IF  (GC = NilGC) OR (throughput < 64*1024*1024) THEN
+		GetFreeBlock(size, p);
+	ELSE
+		throughput := 0;
+	END;
 	WHILE (p = NIL) & (try <= MaxTries) DO
 		Machine.Release(Machine.Heaps);	(* give up control *)
 		GC;	(* try to free memory (other processes may also steal memory now) *)
@@ -1481,3 +1506,6 @@ TraceHeap:
 19.06.2007	ug	Garbage collector using meta data for stack inspection (cf. Objects)
 11.07.2008 	ug	new heap data structures and adaption to GC
 *)
+
+StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+FSTools.CloseFiles A2.exe ~

@@ -586,37 +586,37 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	BEGIN
 		NEW(sectionList);
 		IF context.arg.GetString(dest) THEN
-		(*writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));*)
-		WHILE context.arg.GetString(fileName) DO
-			file := Files.Old(fileName);
-			IF file # NIL THEN
-				NEW(reader,file,0);
-				ReadHeader(reader, binary, poolMap);
-				WHILE reader.Peek () # 0X DO
-					ObjectFile.InitSection(section);
-					ObjectFile.ReadSection (reader, section, binary, poolMap);
-					NEW(bs, SHORTINT(section.type) ,section.priority,section.unit,name, FALSE, FALSE);
-					bs.os := section;
-					NEW(is, SHORTINT(bs.os.type), SHORTINT(bs.os.priority), bs.os.identifier.name,NIL, FALSE);
-					is.SetResolved(bs);
-					sectionList.AddSection(is);
-					
-					
-					reader.SkipWhitespace;
+			(*writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));*)
+			WHILE context.arg.GetString(fileName) DO
+				file := Files.Old(fileName);
+				IF file # NIL THEN
+					NEW(reader,file,0);
+					ReadHeader(reader, binary, poolMap);
+					WHILE reader.Peek () # 0X DO
+						ObjectFile.InitSection(section);
+						ObjectFile.ReadSection (reader, section, binary, poolMap);
+						NEW(bs, SHORTINT(section.type) ,section.priority,section.unit,name, FALSE, FALSE);
+						bs.os := section;
+						NEW(is, SHORTINT(bs.os.type), SHORTINT(bs.os.priority), bs.os.identifier.name,NIL, FALSE);
+						is.SetResolved(bs);
+						sectionList.AddSection(is);		
+						reader.SkipWhitespace;
+					END;
+				ELSE
+					context.error.String("file not found "); context.error.String(fileName); context.error.Ln; 
+					RETURN;
 				END;
-			ELSE
-				context.error.String("file not found "); context.error.String(fileName); context.error.Ln
 			END;
-		END;
-		file := Files.New(dest);
-		Files.OpenWriter(writer, file, 0);
-		WriteHeader(writer, TRUE, sectionList, poolMapDummy, NIL);
-		FOR i := 0 TO sectionList.Length()-1 DO
-			is := sectionList.GetSection(i)(IntermediateCode.Section);
-			ObjectFile.WriteSection(writer, is.resolved.os, TRUE, poolMapDummy); (* binary *)
-		END;
-		writer.Update;
-		Files.Register(file);
+			file := Files.New(dest);
+			Files.OpenWriter(writer, file, 0);
+			WriteHeader(writer, TRUE, sectionList, poolMapDummy, NIL);
+			FOR i := 0 TO sectionList.Length()-1 DO
+				is := sectionList.GetSection(i)(IntermediateCode.Section);
+				ObjectFile.WriteSection(writer, is.resolved.os, TRUE, poolMapDummy); (* binary *)
+			END;
+			writer.Update;
+			Files.Register(file);
+			context.out.String("Created library "); context.out.String(dest); context.out.Ln;
 		END;
 	END MakeLibrary;
 	

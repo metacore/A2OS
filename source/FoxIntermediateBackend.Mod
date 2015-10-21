@@ -2764,7 +2764,7 @@ TYPE
 
 
 				IF import = NIL THEN
-					import := SyntaxTree.NewImport(-1,SyntaxTree.NewIdentifier(moduleName),SyntaxTree.NewIdentifier(moduleName),TRUE);
+					import := SyntaxTree.NewImport(-1,SyntaxTree.NewIdentifier(moduleName),SyntaxTree.NewIdentifier(moduleName),FALSE);
 
 					import.SetContext(SyntaxTree.NewIdentifier("A2"));
 					IF ~checker.AddImport(moduleScope.ownerModule,import) THEN

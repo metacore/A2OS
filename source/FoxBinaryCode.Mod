@@ -590,9 +590,10 @@ TYPE
 				i := from; nr := 0;
 				IF to >= pc THEN to := pc-1 END;
 				WHILE i <= to DO
-					w.String("["); w.Int(i,3); w.String("] ");
+					w.String("["); w.Hex(i,3); w.String("] ");
 					nr := 0;
-					WHILE (i<=to) & (nr<32) DO
+					WHILE (i<=to) & (nr<16) DO
+						IF i = 8 THEN w.Sring(" ") END;
 						DumpUnit(i);
 						w.String(" ");
 						INC(i); INC(nr);

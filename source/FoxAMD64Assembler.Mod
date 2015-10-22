@@ -118,7 +118,8 @@ CONST
 	symNegate = 21;
 	symMod = 22;
 	symPeriod = 23;
-	symEnd = 24;
+	symAt = 24;
+	symEnd = 25;
 
 TYPE
 	Name = Scanner.IdentifierString;
@@ -268,6 +269,17 @@ TYPE
 			s.Get(msg);
 			ErrorSS(msg1,msg);
 		END ErrorSI;
+		
+		PROCEDURE AddFixup (mode: SHORTINT; size: SHORTINT; pc: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT);
+		VAR fixup: BinaryCode.Fixup; format: BinaryCode.FixupPatterns; id: ObjectFile.Identifier;
+		BEGIN
+			NEW(format,1);
+			format[0].bits:= size*8;
+			format[0].offset := 0;
+			fixup := BinaryCode.NewFixup(mode,pc,symbol,symbolOffset,displacement,0,format);
+			code.fixupList.AddFixup(fixup);
+		END AddFixup;
+
 
 		PROCEDURE EmitInstruction (mnem: LONGINT; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN;
 		VAR instr, i, oppos, op: LONGINT;
@@ -318,16 +330,6 @@ TYPE
 
 				RETURN instr
 			END FindInstruction;
-
-			PROCEDURE AddFixup (mode: SHORTINT; size: SHORTINT; pc: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT);
-			VAR fixup: BinaryCode.Fixup; format: BinaryCode.FixupPatterns; id: ObjectFile.Identifier;
-			BEGIN
-				NEW(format,1);
-				format[0].bits:= size*8;
-				format[0].offset := 0;
-				fixup := BinaryCode.NewFixup(mode,pc,symbol,symbolOffset,displacement,0,format);
-				code.fixupList.AddFixup(fixup);
-			END AddFixup;
 
 			PROCEDURE GetRegOperand (): LONGINT;
 			VAR i: LONGINT;
@@ -1262,6 +1264,8 @@ TYPE
 					NextChar;
 				| '}': symbol := symRBrace;
 					NextChar;
+				| '@': symbol := symAt;
+					NextChar;
 				| '$': NextChar;
 					IF char = '$' THEN
 						symbol := symPCOffset; NextChar;
@@ -1437,7 +1441,7 @@ TYPE
 
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
-			VAR i: LONGINT; type:SHORTINT;
+			VAR i: LONGINT; type:SHORTINT; ofs: Operand;
 			BEGIN
 				NextSymbol;
 
@@ -1454,6 +1458,26 @@ TYPE
 							WHILE i # 0 DO emitter.code.PutByte (0); DEC (i) END;
 						END;
 						NextSymbol;
+					ELSIF (scope # NIL) & (symbol = symAt) THEN
+						NextSymbol;
+						IF symbol # symIdent THEN Error("identifier missing") END;
+						GetOffsetFixup (idents, ofs);
+						NextSymbol;
+						IF symbol = symPlus THEN
+							NextSymbol;
+							IF Expression(i, FALSE, type) THEN
+								ofs.displacement := i
+							END;
+						ELSIF symbol = symMinus THEN
+							NextSymbol;
+							IF Expression(i, FALSE, type) THEN
+								ofs.displacement := - i
+							END;
+						END;
+						IF pass = maxPasses THEN
+						emitter.AddFixup(BinaryCode.Absolute,4, emitter.code.pc, ofs.symbol, ofs.symbolOffset,ofs.displacement);
+						END;
+						emitter.code.PutBytes (i, size );
 					ELSIF Expression (i, FALSE,type) THEN
 						emitter.code.PutBytes (i, size );
 					ELSE
@@ -1801,7 +1825,7 @@ TYPE
 							END;
 						ELSE
 							(* number or identifier (symbol) *)
-							InitImm(offset,size,0);
+						InitImm(offset,size,0);
 
 							IF (scope # NIL) & (symbol = symIdent) THEN (* identifier: must be a symbol *)
 								GetOffsetFixup (idents, offset);

@@ -1475,9 +1475,9 @@ TYPE
 							END;
 						END;
 						IF pass = maxPasses THEN
-						emitter.AddFixup(BinaryCode.Absolute,4, emitter.code.pc, ofs.symbol, ofs.symbolOffset,ofs.displacement);
+							emitter.AddFixup(BinaryCode.Absolute, ofs.sizeInBytes, emitter.code.pc, ofs.symbol, ofs.symbolOffset,ofs.displacement);
 						END;
-						emitter.code.PutBytes (i, size );
+						emitter.code.PutBytes (0, size );
 					ELSIF Expression (i, FALSE,type) THEN
 						emitter.code.PutBytes (i, size );
 					ELSE

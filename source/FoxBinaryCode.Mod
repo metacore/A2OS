@@ -593,7 +593,7 @@ TYPE
 					w.String("["); w.Hex(i,3); w.String("] ");
 					nr := 0;
 					WHILE (i<=to) & (nr<16) DO
-						IF i = 8 THEN w.Sring(" ") END;
+						IF i = 8 THEN w.String(" ") END;
 						DumpUnit(i);
 						w.String(" ");
 						INC(i); INC(nr);

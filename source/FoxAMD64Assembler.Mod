@@ -1132,6 +1132,7 @@ TYPE
 			pass: LONGINT;
 			absoluteMode: BOOLEAN;
 			absoluteOffset: LONGINT;
+			alignment: LONGINT;
 			orgOffset: LONGINT;
 			char: CHAR;
 			orgReaderPos: LONGINT;
@@ -1439,6 +1440,17 @@ TYPE
 				RETURN TRUE;
 			END Expression;
 
+			PROCEDURE Align(size: LONGINT);
+			VAR pc: LONGINT;
+			BEGIN
+				IF size <= 0 THEN Error("invalid alignment size"); RETURN END;
+				pc := emitter.code.pc DIV 8; (* bytes *)
+				WHILE pc MOD size # 0 DO
+					emitter.code.PutByte(0); 
+					INC(pc);
+				END;
+			END Align;
+			
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
 			VAR i: LONGINT; type:SHORTINT; ofs: Operand;
@@ -2035,6 +2047,11 @@ TYPE
 								SkipLine;
 							ELSE
 								NextSymbol;
+							END;
+						ELSIF ident = "ALIGN" THEN
+							NextSymbol;
+							IF Expression(alignment, TRUE, type) THEN
+								Align(alignment);
 							END;
 						ELSIF ~(scope # NIL) & (ident = "CPU") THEN
 							IF ~GetCPU (FALSE) THEN

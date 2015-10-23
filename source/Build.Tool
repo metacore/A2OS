@@ -44,7 +44,7 @@ SystemTools.Timer start ~
 FSTools.Mount RAMDISK RamFS 2000000 4096 ~
 FSTools.DeleteFiles RAMDISK:A2.Dsk ~
 
-VirtualDisks.Create RAMDISK:A2.Dsk 300000 512 ~
+VirtualDisks.Create RAMDISK:A2.Dsk 320000 512 ~
 VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 RAMDISK:A2.Dsk  ~
 
 Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H
@@ -221,7 +221,7 @@ SystemTools.Timer start ~
 
 FSTools.DeleteFiles ../Test/A2HDD.img ~
 
-VirtualDisks.Create ../Test/A2HDD.img 300000 512 ~
+VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
 VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 
 Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps

@@ -6,12 +6,14 @@ MODULE ElfHeader;
 
 IMPORT SYSTEM, Trace;
 
+
 VAR
-	empty-: RECORD END; (* empty variable linked to end of kernel *)
+	last-: RECORD END; (* empty variable linked to end of kernel *)
 
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS): ADDRESS;
 	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
+	exit-		: PROCEDURE {C} (status: LONGINT);
 
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
 	CONST base = 08048000H;
@@ -39,8 +41,8 @@ VAR
 		DD 0
 		DD base; 
 		DD base; 
-		DD @empty - base; segment size (file)
-		DD @empty - base; segment size (memory)
+		DD @last - base; segment size (file)
+		DD @last - base; segment size (memory)
 		DD 07
 		DD 1000H; alignment
 		
@@ -49,8 +51,8 @@ VAR
 		DD interpretername; interpreter name offset
 		DD interpretername + base; interpreter name 
 		DD interpretername + base; interpreter name
-		DD 13H ; interpreter name length
-		DD 13H ; interpreter name length
+		DD interpretername_end - interpretername ; interpreter name length
+		DD interpretername_end - interpretername ; interpreter name length
 		DD 4H
 		DD 1H
 
@@ -59,8 +61,8 @@ VAR
 		DD dynamicsection 
 		DD dynamicsection + base
 		DD dynamicsection + base
-		DD 40H ; size of dynamic section
-		DD 40H ; size of dynamic section
+		DD dynamicsection_end - dynamicsection ; size of dynamic section
+		DD dynamicsection_end - dynamicsection ; size of dynamic section
 		DD 06H
 		DD 04H
 
@@ -68,19 +70,21 @@ VAR
 		DD 05H, base + stringtable
 		DD 06H, symboltablebegin + base
 		DD 07H, dlsymrelocation + base
-		DD 08H, stringtable-dlsymrelocation ; size (relocationtable)
+		DD 08H, dlsymrelocation_end-dlsymrelocation ; size (relocationtable)
 		DD 09H, 0CH
-		DD 0AH, endstringtable - stringtable; size (stringtable)
+		DD 0AH, stringtable_end - stringtable; size (stringtable)
 		DD 0BH, 10H
 		
 		DD 01H, libname - stringtable; position of libname
 		DD 0H, 0H ; sentinel
-
+		dynamicsection_end:		
+		
 	 	dlsymrelocation:
 		DD @dlsym
 		DB 01H
 		DB 01H, 00H, 00H; index of the symbol
 		DD 0H
+		dlsymrelocation_end:
 
 		stringtable:
 		DB 0H ; sentinel
@@ -91,7 +95,8 @@ VAR
 		dlsymname:
 		DB 'dlsym', 0
 		
-		endstringtable:
+		
+		stringtable_end:
 		
 		ALIGN 4
 		symboltablebegin:
@@ -106,12 +111,13 @@ VAR
 		DD dlsymname - stringtable; position of dlsymname
 		DD	0
 		DD	0
-		DB	12H
+		DB	12H ; info: global + function
 		DB 0
 		DW	0
 
 		interpretername:
 		DB '/lib/ld-linux.so.2', 0
+		interpretername_end:
 
 		ALIGN 4
 
@@ -151,15 +157,23 @@ VAR
 	PROCEDURE Init;
 	BEGIN
 		Trace.Char := Char;
+		ASSERT(dlsym # NIL);
 		Dlsym(0,"dlopen", ADDRESS OF dlopen);
 		ASSERT(dlopen # NIL); 
 		Dlsym( 0, "dlclose", ADDRESS OF dlclose);
 		ASSERT(dlclose # NIL); 
+		Dlsym(0,"exit", ADDRESS OF exit);
+		ASSERT(exit # NIL);
 	END Init;
+	
+	PROCEDURE {FINAL} ExitPoint;
+	BEGIN
+		exit(0);
+	END ExitPoint;
 
 BEGIN
 	Init;
-	Trace.String("ElfHeader loaded");
+	Trace.String("ElfHeader loaded"); Trace.Ln;
 END ElfHeader.
 
 SystemTools.DoCommands

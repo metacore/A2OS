@@ -1195,7 +1195,7 @@ TYPE
 						INC (i);
 					END;
 					NextChar
-				UNTIL ~((('A' <= CAP(char)) & (CAP(char) <= 'Z')) OR (('0' <= char) & (char <= '9')));
+				UNTIL ~( ('A' <= CAP(char)) & (CAP(char) <= 'Z') OR ('0' <= char) & (char <= '9') OR (char = '_') );
 				ident[i] := 0X; idents[i] := 0X;
 			END GetIdentifier;
 
@@ -1218,7 +1218,7 @@ TYPE
 				errPos := position- 1;
 
 				CASE char OF
-				'A' .. 'Z', 'a' .. 'z' :
+				'A' .. 'Z', 'a' .. 'z', '_' :
 					GetIdentifier;
 					SkipBlanks;
 					IF char = ':' THEN

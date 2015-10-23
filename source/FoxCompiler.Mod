@@ -302,10 +302,26 @@ TYPE
 
 		RETURN TRUE;
 	END Modules;
+	
+
+	
+	PROCEDURE GetDefaults(CONST name: ARRAY OF CHAR): Streams.Reader;
+	VAR s: Streams.StringReader; platform: Platform;
+	BEGIN
+		s := NIL;
+		platform := GetPlatform(name);
+		IF platform # NIL THEN
+			NEW(s, LEN(platform.defaults));
+			s.Set(platform.defaults);
+		END;
+		RETURN s;
+	END GetDefaults;
+	
 
 	PROCEDURE GetOptions*(input: Streams.Reader; error:Streams.Writer; diagnostics: Diagnostics.Diagnostics;
 		VAR compilerOptions: CompilerOptions): BOOLEAN;
 	VAR options: Options.Options;  name: ARRAY 256 OF CHAR; result: BOOLEAN; position: LONGINT;
+	defaults: Streams.Reader;
 		parsed: BOOLEAN;
 
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
@@ -318,8 +334,12 @@ TYPE
 	BEGIN
 		result := TRUE;
 		NEW(options);
-		options.Add("p","print",Options.Flag);
-		options.Add("P","Print",Options.Flag);
+		
+		options.Add("p","platform",Options.String);
+		options.Add(0X,"showOptions",Options.Flag);
+		
+		options.Add(0X,"print",Options.Flag);
+		options.Add(0X,"Print",Options.Flag);
 		options.Add(0X,"silent",Options.Flag);
 		options.Add("c","check",Options.Flag);
 		options.Add("e","traceError",Options.Flag);
@@ -344,6 +364,19 @@ TYPE
 
 		position := input.Pos();
 		parsed := options.Parse(input,NIL);
+		IF options.GetString("platform", name) THEN
+			defaults := GetDefaults(name);
+			IF defaults = NIL THEN 	
+				error.String("Unknown platform"); error.Ln 
+			ELSE
+				TRACE(defaults);
+				parsed := options.Parse(defaults, NIL) & parsed;
+				input.SetPos(position);
+				parsed := options.Parse(input, NIL) & parsed; (* reparse overwrites *)
+			END;
+		ELSE 
+			defaults := NIL;
+		END;
 
 		IF options.GetString("b", name) THEN
 			IF name = "" THEN compilerOptions.backend := NIL
@@ -432,6 +465,10 @@ TYPE
 
 		IF result & ~parsed THEN
 			options.Clear;
+			IF defaults # NIL THEN
+				defaults.SetPos(0);
+				parsed := options.Parse(defaults, error);
+			END;
 			input.SetPos(position);
 			result := options.Parse(input,error)
 		END;
@@ -460,6 +497,8 @@ TYPE
 			IF compilerOptions.activeCellsBackend # NIL THEN compilerOptions.activeCellsBackend.GetOptions(options) END;
 			IF compilerOptions.activeCellsAssembler # NIL THEN compilerOptions.activeCellsAssembler.GetOptions(options) END;
 		END;
+		
+		IF options.GetFlag("showOptions") THEN options.Show(error) END;
 		RETURN result
 	END GetOptions;
 
@@ -535,5 +574,54 @@ TYPE
 			context.out.Update;
 		END;
 	END CompileReader;
+	
+	TYPE 
+	Platform = POINTER TO RECORD
+		name: ARRAY 32 OF CHAR;
+		defaults: ARRAY 256 OF CHAR;
+	END;
+	
+	Platforms = OBJECT(Basic.List)
+		PROCEDURE GetPlatform(i: LONGINT): Platform;
+		BEGIN
+			RETURN Get(i)(Platform);
+		END GetPlatform;
+	END Platforms;
+	
+	VAR platforms: Platforms;
+	
+	PROCEDURE AddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
+	VAR i: LONGINT; platform: Platform;
+	BEGIN
+		platform := GetPlatform(name);
+		IF platform = NIL THEN 
+			NEW(platform);
+			COPY(name, platform.name);
+			platforms.Add(platform);
+		END;
+		COPY(defaults, platform.defaults);
+	END AddPlatform;
+	
+	PROCEDURE GetPlatform(CONST name: ARRAY OF CHAR): Platform;
+	VAR i: LONGINT; platform: Platform;
+	BEGIN
+		FOR i := 0 TO platforms.Length()-1 DO
+			platform := platforms.GetPlatform(i);
+			IF platform.name = name THEN
+				RETURN platform
+			END;
+		END;
+		RETURN  NIL;
+	END GetPlatform;
 
+BEGIN
+	NEW(platforms,8);
+	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
+	AddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtensions=.Obw --symbolFileExtension=.Obw");
+	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW");
+	AddPlatform("Minos","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
+	AddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
+	AddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");
+	AddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
+	AddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
 END Compiler.

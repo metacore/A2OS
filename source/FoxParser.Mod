@@ -893,6 +893,7 @@ TYPE
 			caseStatement: SyntaxTree.CaseStatement;  whileStatement: SyntaxTree.WhileStatement;  repeatStatement: SyntaxTree.RepeatStatement;  forStatement: SyntaxTree.ForStatement;
 			identifier: SyntaxTree.Identifier;  loopStatement: SyntaxTree.LoopStatement;  returnStatement: SyntaxTree.ReturnStatement;  awaitStatement: SyntaxTree.AwaitStatement;
 			qualifiedType: SyntaxTree.QualifiedType; code : SyntaxTree.Code; position: LONGINT; result: BOOLEAN;
+			commToken: Scanner.Token;
 		BEGIN
 			IF Trace THEN S( "Statement" ) END;
 			CASE symbol.token OF
@@ -904,9 +905,10 @@ TYPE
 						statement := SyntaxTree.NewAssignment( position, designator, expression,outer );
 						CommentStatement(statement);
 					ELSIF Peek(Scanner.ExclamationMark) OR Peek(Scanner.Questionmark) OR Peek(Scanner.LessLess) OR Peek(Scanner.GreaterGreater) THEN
-						expression := Expression();
-						statement := SyntaxTree.NewCommunicationStatement(position, symbol.token, designator, expression, outer);
+						commToken := symbol.token; 
 						NextSymbol;
+						expression := Expression();
+						statement := SyntaxTree.NewCommunicationStatement(position, commToken, designator, expression, outer);
 						CommentStatement(statement);
 					ELSE
 						caller := SyntaxTree.NewProcedureCallStatement(designator.position, designator,outer);

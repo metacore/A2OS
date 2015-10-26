@@ -621,6 +621,7 @@ BEGIN
 	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW");
 	AddPlatform("Minos","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
 	AddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
+	AddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
 	AddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");
 	AddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	AddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");

@@ -2804,17 +2804,22 @@ BEGIN
 END Uncomment;
 
 PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY OF CHAR);
-VAR filename, extension, config : Files.FileName; res : LONGINT;
+VAR filename, extension, config : Files.FileName; res : LONGINT; tries: LONGINT;
 BEGIN
 	name := "";
-	Strings.UpperCase(fullname);
-	Strings.GetExtension(fullname, filename, extension);
-	IF (extension # "") THEN
-		config := "Applications.PET.SyntaxHighlighter.";
-		Strings.AppendX(config, extension);
-		Configuration.Get(config, name, res);
-		IF (res # Configuration.Ok) THEN name := ""; END;
-	END;
+	tries := 0; 
+	REPEAT (* try with case as is first *)
+		Strings.GetExtension(fullname, filename, extension);
+		IF (extension # "") THEN
+			config := "Applications.PET.SyntaxHighlighter.";
+			Strings.AppendX(config, extension);
+			Configuration.Get(config, name, res);
+			IF (res # Configuration.Ok) THEN name := ""; END;
+		END;
+		Strings.UpperCase(fullname);
+		INC(tries);
+	UNTIL (res = Configuration.Ok) OR (tries >1); 
+	
 END GetSyntaxHighlighterName;
 
 PROCEDURE ControlKeyDown(flags : SET) : BOOLEAN;

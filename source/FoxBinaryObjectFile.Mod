@@ -115,7 +115,11 @@ TYPE Name=ARRAY 256 OF CHAR;
 TYPE
 
 	ObjectFileFormat*= OBJECT (Formats.ObjectFileFormat)
-	VAR extension: Basic.FileName;
+
+		PROCEDURE & InitObjectFileFormat;
+		BEGIN
+			Init; SetExtension(Machine.DefaultObjectFileExtension);
+		END InitObjectFileFormat;
 
 		PROCEDURE Export*(module: Formats.GeneratedModule; symbolFileFormat: Formats.SymbolFileFormat): BOOLEAN;
 		VAR symbolFile: Files.File; moduleName: SyntaxTree.IdentifierString; fileName: Files.FileName; f: Files.File; w: Files.Writer;
@@ -163,9 +167,10 @@ TYPE
 		END DefineOptions;
 
 		PROCEDURE GetOptions*(options: Options.Options);
+		VAR extension: Files.FileName;
 		BEGIN
-			IF ~options.GetString("objectFileExtension",extension) THEN
-				extension := Machine.DefaultObjectFileExtension
+			IF options.GetString("objectFileExtension",extension) THEN
+				SetExtension(extension);
 			END;
 		END GetOptions;
 
@@ -176,10 +181,6 @@ TYPE
 		PROCEDURE ForceModuleBodies(): BOOLEAN; (* necessary in binary object file format as bodies not recognizable later on *)
 		BEGIN RETURN TRUE
 		END ForceModuleBodies;
-
-		PROCEDURE GetExtension(VAR ext: ARRAY OF CHAR);
-		BEGIN COPY(extension, ext)
-		END GetExtension;
 
 	END ObjectFileFormat;
 

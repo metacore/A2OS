@@ -242,7 +242,8 @@ TYPE
 
 				(** generate object file **)
 				IF options.objectFile # NIL THEN
-					options.objectFile.Initialize(diagnostics, options.destPath);
+					options.objectFile.Initialize(diagnostics);
+					options.objectFile.SetPath(options.destPath);
 
 					IF options.findPC # "" THEN
 						Strings.StrToInt(options.findPC, sectionOffset);
@@ -369,7 +370,6 @@ TYPE
 			IF defaults = NIL THEN 	
 				error.String("Unknown platform"); error.Ln 
 			ELSE
-				TRACE(defaults);
 				parsed := options.Parse(defaults, NIL) & parsed;
 				input.SetPos(position);
 				parsed := options.Parse(input, NIL) & parsed; (* reparse overwrites *)

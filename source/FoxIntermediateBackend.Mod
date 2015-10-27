@@ -274,64 +274,53 @@ TYPE
 		VAR name:Basic.SegmentedName; td: SyntaxTree.TypeDeclaration; type: SyntaxTree.Type; len,port,adr: LONGINT;
 			parameter: SyntaxTree.Parameter; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
 
-			PROCEDURE CreatePortArray(type: SyntaxTree.Type; len: LONGINT);
+			PROCEDURE CreatePorts(type: SyntaxTree.Type; len: LONGINT);
 			VAR i,len2: LONGINT; baseType: SyntaxTree.Type;
 			BEGIN
 				FOR i := 0 TO len-1 DO
 					IF SemanticChecker.IsStaticArray(type, baseType, len2) THEN
-						CreatePortArray(baseType, len2);
+						CreatePorts(baseType, len*len2);
+					ELSIF IsSemiDynamicArray(type) THEN
+						port := MIN(LONGINT); (* unknown port address from here on *)
 					ELSE
-						IF backend.cellsAreObjects THEN
-							adr := port
-						ELSE
-							(*! add check from ActiveCells2 *)
-							adr := backend.activeCellsSpecification.GetPortAddress(port);
-						END;
 						IntermediateCode.InitImmediate(op,addressType,adr);
 						symbol.Emit(Data(-1,op));
 						INC(port);
 					END;
 				END;
-			END CreatePortArray;
+			END CreatePorts;
 
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
+			(*
 			IF (x.cellScope.ownerModule = module.module)  THEN
 				td := x.typeDeclaration;
 				Global.GetSymbolSegmentedName(td,name);
 				(* code section for object *)
 			END;
+			*)
+			(* unnecessary to generate space for ports: already represented as hidden variables *)
+			(*
 			port := 0;
 			parameter := x.firstParameter;
 			WHILE parameter # NIL DO
 				type := parameter.type.resolved;
-				IF type IS SyntaxTree.PortType THEN
-					len := 1;
-					INC(port);
-				ELSIF SemanticChecker.IsStaticArray(type,type,len) OR SemanticChecker.IsDynamicArray(type, type) THEN
-					IF backend.cellsAreObjects THEN
-						IF IsStaticArray(parameter.type.resolved) THEN
-							Error(parameter.position, "static arrays of ports are currently not implemented, please use a property (array property of port)");
-						END;
-						(* do nothing *)
-					ELSE
-					Global.GetSymbolSegmentedName(parameter,name);
-					symbol := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,parameter,dump);
-					CreatePortArray(type, len);
-					(*
-					WHILE len > 0 DO
-						adr := backend.activeCellsSpecification.GetPortAddress(port);
-						IntermediateCode.InitImmediate(op,addressType,adr);
-						symbol.Emit(Data(-1,op));
-						DEC(len); INC(port);
-					END;
+				Global.GetSymbolSegmentedName(parameter,name);
+				symbol := implementationVisitor.NewSection(module.allSections, Sections.ConstSection,name,parameter,dump);
+				IF port >= 0 THEN
+					(*! could be used for optimization: query value here ???
+					parameter.SetResolved(SyntaxTree.NewIntegerValue(-1, port));
 					*)
+				END;
+				CreatePorts(type, 1); 
+				IF backend.cellsAreObjects THEN
+					IF IsStaticArray(parameter.type.resolved) THEN
+						Error(parameter.position, "static arrays of ports are currently not implemented, please use a property (array property of port)");
 					END;
-				ELSE
-					Error(parameter.position,"should never happen, check semantic checker!");
 				END;
 				parameter := parameter.nextParameter;
 			END;
+			*)
 			capabilities := {};
 			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN INCL(capabilities, Global.FloatingPointCapability) END;
 			IF HasFlag(x.modifiers, Global.StringVector) THEN INCL(capabilities, Global.VectorCapability) END;
@@ -1261,14 +1250,13 @@ TYPE
 			usedRegisters := NIL; 
 			RETURN context;
 		END SwitchContext;
-		
+
 		PROCEDURE ReturnToContext(context: Context);
 		BEGIN
 			section := context.section;
 			registerUsageCount := context.registerUsageCount;
 			usedRegisters := context.usedRegisters;
 		END ReturnToContext;
-		
 
 		PROCEDURE NewSection(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): IntermediateCode.Section;
 		VAR fp: SyntaxTree.FingerPrint; section: IntermediateCode.Section;
@@ -13112,6 +13100,14 @@ TYPE
 		type := type.resolved;
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Open);
 	END IsOpenArray;
+	
+	PROCEDURE IsSemiDynamicArray(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic);
+	END IsSemiDynamicArray;
+	
 
 	PROCEDURE IsStaticArray(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN

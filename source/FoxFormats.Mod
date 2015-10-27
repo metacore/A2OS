@@ -79,12 +79,13 @@ TYPE
 	ObjectFileFormat*= OBJECT
 		VAR diagnostics-: Diagnostics.Diagnostics;
 			path-: Files.FileName;
+			extension-: Files.FileName;
 
 		PROCEDURE &Init*;
 		BEGIN diagnostics := NIL;path := ""
 		END Init;
 
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; CONST path: ARRAY OF CHAR);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics);
 		BEGIN SELF.diagnostics := diagnostics;  COPY(path, SELF.path)
 		END Initialize;
 
@@ -109,13 +110,22 @@ TYPE
 		END ForceModuleBodies;
 
 		PROCEDURE SetExtension*(CONST ext: ARRAY OF CHAR);
-		BEGIN HALT(100); (* abstract *)
+		BEGIN COPY(ext, SELF.extension);
 		END SetExtension;
-		
 
 		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);
-		BEGIN HALT(100); (* abstract *)
+		BEGIN COPY(SELF.extension, ext);
 		END GetExtension;
+		
+		PROCEDURE SetPath*(CONST path: ARRAY OF CHAR);
+		BEGIN
+			COPY(path, SELF.path);
+		END SetPath;
+		
+		PROCEDURE GetPath*(VAR path: ARRAY OF CHAR);
+		BEGIN
+			COPY(SELF.path, path);
+		END GetPath;
 
 	END ObjectFileFormat;
 

@@ -31,11 +31,11 @@ VAR
 	statPool : Basic.HashTableInt;
 
 TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
-	VAR extension: Files.FileName; binary: BOOLEAN; mergeSections: BOOLEAN;
+	VAR binary: BOOLEAN; mergeSections: BOOLEAN;
 
 		PROCEDURE & InitObjectFileFormat;
 		BEGIN
-			Init; extension := ObjectFile.DefaultExtension;
+			Init; SetExtension(ObjectFile.DefaultExtension);
 		END InitObjectFileFormat;
 
 
@@ -310,8 +310,11 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END DefineOptions;
 
 		PROCEDURE GetOptions* (options: Options.Options);
+		VAR extension: Files.FileName;
 		BEGIN
-			IF ~options.GetString("objectFileExtension",extension) THEN extension := ObjectFile.DefaultExtension; END;
+			IF options.GetString("objectFileExtension",extension) THEN 
+				SetExtension(extension);
+			END;
 			binary := ~options.GetFlag("textualObjectFile");
 			mergeSections := options.GetFlag("mergeSections");
 		END GetOptions;
@@ -320,9 +323,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 
-		PROCEDURE GetExtension(VAR ext: ARRAY OF CHAR);
-		BEGIN COPY(extension, ext)
-		END GetExtension;
 
 
 	END ObjectFileFormat;

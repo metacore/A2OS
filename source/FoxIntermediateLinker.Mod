@@ -3,7 +3,8 @@ IMPORT
 	Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Sections := FoxSections,
 	IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Backend := FoxBackend,
 	Global := FoxGlobal, Formats := FoxFormats, 
-	ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile;
+	ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile,
+	GenericLinker, StaticLinker;
 
 CONST
 	DefaultBackend = "AMD";
@@ -962,7 +963,6 @@ TYPE
 		fileName[i] := 0X;
 	END SectionNameToFileName;
 
-
 	PROCEDURE GetPriority*(block: Sections.Section): LONGINT;
 	CONST Fixed=0; InitCode=1; BodyCode=2;Code=3; Data=4; Const=5; Empty =6;
 	BEGIN
@@ -994,6 +994,7 @@ TYPE
 		END;
 	END CopySections;
 
+	
 
 (*
 	PROCEDURE LinkActiveCells*(activeCellsSpecification: ActiveCells.Specification; backend: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat): BOOLEAN;
@@ -1268,7 +1269,81 @@ TYPE
 			END;
 		END;
 	END Link;
+	
+	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
+	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
+			inker: GenericLinker.Linker;
+			i: LONGINT;
+			logFile: Files.File; 
+			objectFileExtension: ARRAY 32 OF CHAR;
+			value: SyntaxTree.Value;
+			pooledName: Basic.SegmentedName;
+			error : BOOLEAN;
+			fileName, codeFileName, dataFileName: Files.FileName;
+			system: Global.System;
+			msg: ARRAY 256 OF CHAR;
+	CONST MinimalStackSize = 64;
+	CONST CodeFileExtension="code"; DataFileExtension="data";
+	BEGIN
+		error := FALSE;
+		NEW (code, 0); NEW (data, 0);
+		COPY(instanceName, fileName); Strings.Append(fileName,".log");	logFile := Files.New(fileName);
+		IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
+		NEW (linker, diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
+				StaticLinker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
 
+				(* do linking after having read in all blocks to account for potential constraints *)
+				IF ~linker.error THEN linker.Link; END;
+
+				system := backend.GetSystem();
+
+
+				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
+					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
+					error := TRUE;
+				ELSIF instructionMemorySize = 0 THEN
+					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
+				END;
+
+				dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
+
+				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
+					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
+					error := TRUE;
+				END;
+
+				Files.JoinExtension(instanceName,CodeFileExtension,codeFileName);
+				Files.JoinExtension(instanceName,DataFileExtension,dataFileName);
+
+				IF ~linker.error THEN
+					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
+					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
+					IF log # NIL THEN
+						log.String(instanceName);
+						log.String(" linked. IM = ");log.Int(instructionMemorySize,1);
+						log.String(" (used: "); log.Int(code.SizeInBits() DIV system.codeUnit,1);
+						log.String("), DM = "); log.Int(dataMemorySize,1);
+						log.String(" (used: "); log.Int(data.SizeInBits() DIV system.dataUnit,1);
+						log.String(")");
+						log.Ln; log.Update;
+
+						log.String("generated code file: ");log.String(codeFileName); log.Ln;
+						log.String("generated data file: ");log.String(dataFileName); log.Ln;
+
+
+					END;
+				ELSE
+					msg := "could not link ";
+					Strings.Append(msg,instanceName);
+					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+				END;
+				RETURN ~linker.error & ~error
+		
+	END WriteCodeAndDataFiles;
+	
+
+	
 
 	(* to link active cells 
 		- load all intermediate code files and collect all sections in one object

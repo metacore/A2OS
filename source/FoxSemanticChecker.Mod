@@ -256,9 +256,17 @@ TYPE
 					ELSE
 						currentScope := symbol(SyntaxTree.Import).module.moduleScope;
 						symbol := Find(currentScope,qualifiedIdentifier.suffix,FALSE);
-						IF (symbol = NIL) OR (symbol.access * SyntaxTree.Public = {}) THEN Error(qualifiedIdentifier.position,Diagnostics.Invalid,"undeclared identifier (prefix-suffix)") END;
+						
+						IF (symbol = NIL) OR (symbol.access * SyntaxTree.Public = {}) THEN 
+							IF VerboseErrorMessage THEN
+								Printout.Info("scope", currentScope);
+								Printout.Info("symbol", symbol);
+							END;
+							Error(qualifiedIdentifier.position,Diagnostics.Invalid,"undeclared identifier (prefix-suffix)") 
+						END;
 					END;
 				ELSE
+					D.Str0(qualifiedIdentifier.prefix);D.Ln;
 					Error(qualifiedIdentifier.position,Diagnostics.Invalid,"prefix does not denote a module name");
 					symbol := NIL;
 				END;
@@ -552,7 +560,7 @@ TYPE
 		END VisitArrayType;
 
 		PROCEDURE ImportModule(name: SyntaxTree.Identifier; position: LONGINT);
-		VAR module: SyntaxTree.Module; import: SyntaxTree.Import; moduleScope: SyntaxTree.ModuleScope;
+		VAR module: SyntaxTree.Module; import, duplicate: SyntaxTree.Import; moduleScope: SyntaxTree.ModuleScope;
 		BEGIN
 			module := currentScope.ownerModule;
 			IF module.name=name THEN
@@ -569,6 +577,13 @@ TYPE
 				ELSIF import.direct=FALSE THEN
 					import.SetScope(module.moduleScope);
 					import.SetDirect(TRUE);
+					IF moduleScope.FindSymbol(import.name) = NIL THEN
+						duplicate := SyntaxTree.NewImport(InvalidPosition,import.name, import.name,FALSE);
+						duplicate.SetContext(import.context);
+						duplicate.SetModule(import.module);
+						Register(duplicate,moduleScope,TRUE);
+						VisitImport(duplicate);
+					END;
 				END;
 				import.MarkUsed
 			END;
@@ -6991,8 +7006,10 @@ TYPE
 			moduleScope: SyntaxTree.ModuleScope;
 			import,reimport: SyntaxTree.Import;
 			filename: FileName;
+			prevScope: SyntaxTree.Scope;
 		BEGIN
 			IF SymbolNeedsResolution(x) THEN
+				prevScope := currentScope;
 				x.SetType(SyntaxTree.importType);
 				moduleScope := currentScope.ownerModule.moduleScope;
 
@@ -7080,6 +7097,7 @@ TYPE
 						END;
 					END;
 				END;
+				currentScope := prevScope;
 				(* ELSE nothing to be done *)
 				x.SetState(SyntaxTree.Resolved);
 			END;

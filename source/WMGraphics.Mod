@@ -157,14 +157,15 @@ TYPE
 		limits : Rectangle;
 		dx, dy : LONGINT;
 		font : Font;
-		color : LONGINT;
+		color : Color;
 	END;
 
 	Canvas* = OBJECT
 	VAR
 		limits*, (* The limits to which the clip Rect can be set *)
 		clipRect* : Rectangle; (* The current clip rectangle *)
-		dx*, dy*, color* : LONGINT;
+		dx*, dy* : LONGINT;
+		color* : Color;
 		clipMode* : SET;
 		generator*: Strings.String;
 		font- : Font;
@@ -491,7 +492,7 @@ TYPE
 			END
 		END AddLine;
 
-		PROCEDURE FillFlat(color, mode : LONGINT);
+		PROCEDURE FillFlat(color : Color; mode : LONGINT);
 		VAR i, sp, cur : LONGINT;
 		in : BOOLEAN;
 		BEGIN

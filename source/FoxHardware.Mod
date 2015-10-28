@@ -2,6 +2,8 @@
 	@author Felix Friedrich
 	@purpose Hardware Module containing base class of hardware description object for emission of hardware on FPGAs
 **)
+
+(*! deprecated -- not used any more in ActiveCells 3 *)
 MODULE FoxHardware;
 
 IMPORT ActiveCells := FoxActiveCells, Streams, Diagnostics, Strings, Commands, Files;
@@ -76,8 +78,7 @@ TYPE
 	BEGIN
 		RETURN (sizeInUnits-1) DIV blockSize +1
 	END SizeInBlocks;
-
-
+	
 END FoxHardware.
 
 FoxHardware.Emit ML505 TL.spec ~

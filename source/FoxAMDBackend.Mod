@@ -4,8 +4,8 @@ IMPORT
 	Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections,
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode,
 	InstructionSet := FoxAMD64InstructionSet, Assembler := FoxAMD64Assembler, SemanticChecker := FoxSemanticChecker, Formats := FoxFormats,
-	Diagnostics, Streams, Options, Strings, ObjectFileFormat := FoxBinaryObjectFile, ActiveCells := FoxActiveCells
-	, Machine, D := Debugging, CodeGenerators := FoxCodeGenerators, ObjectFile;
+	Diagnostics, Streams, Options, Strings, ObjectFileFormat := FoxBinaryObjectFile, 
+	Machine, D := Debugging, CodeGenerators := FoxCodeGenerators, ObjectFile;
 
 CONST
 
@@ -3092,9 +3092,9 @@ TYPE
 			forceFPU := FALSE;
 		END InitBackendAMD64;
 
-		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System; activeCells: ActiveCells.Specification);
+		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
-			Initialize^(diagnostics,log, flags,checker,system,activeCells); NEW(cg, runtimeModuleName, diagnostics, SELF);
+			Initialize^(diagnostics,log, flags,checker,system); NEW(cg, runtimeModuleName, diagnostics, SELF);
 		END Initialize;
 
 		PROCEDURE GetSystem(): Global.System;

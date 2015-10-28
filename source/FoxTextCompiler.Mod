@@ -1,7 +1,7 @@
 MODULE TextCompiler; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Streams, Modules, Basic := FoxBasic, Compiler, TextUtilities, Diagnostics, Texts, Backend := FoxBackend, SyntaxTree := FoxSyntaxTree,
-	CompilerInterface, Hardware := FoxHardware, Formats := FoxFormats, ActiveCells := FoxActiveCells, Strings, UTF8Strings, Commands;
+	CompilerInterface, Formats := FoxFormats, Strings, UTF8Strings, Commands;
 
 CONST
 

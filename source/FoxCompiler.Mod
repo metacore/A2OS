@@ -5,8 +5,7 @@ IMPORT
 	Basic := FoxBasic, Scanner := FoxScanner, Parser := FoxParser,
 	SemanticChecker := FoxSemanticChecker, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats,
 	Streams, Commands,Diagnostics, Options, Kernel, Printout := FoxPrintout, Backend := FoxBackend,Strings, Global := FoxGlobal,
-	ActiveCells := FoxActiveCells, Hardware := FoxHardware, Frontend := FoxFrontend,
-	Files;
+	Frontend := FoxFrontend,	Files;
 
 CONST
 	(* flags *)
@@ -38,10 +37,8 @@ TYPE
 		backend*: Backend.Backend;
 		symbolFile*: Formats.SymbolFileFormat;
 		objectFile*: Formats.ObjectFileFormat;
-		hardware*: Hardware.Description;
 		findPC*: SectionName;
 		documentation*: Backend.Backend;
-		activeCellsBackend, activeCellsAssembler: Backend.Backend;
 		srcPath, destPath: Files.FileName;
 		replacements: SemanticChecker.Replacement;
 	END;
@@ -101,7 +98,6 @@ TYPE
 		name: SyntaxTree.IdentifierString;
 		split: Strings.StringArray;
 		sectionOffset: LONGINT;
-		activeCellsSpecification: ActiveCells.Specification;
 		flags: SET;
 
 		PROCEDURE FinalMessage(error: BOOLEAN; CONST msg: ARRAY OF CHAR);
@@ -165,14 +161,6 @@ TYPE
 
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
-		IF (ActiveCellsFlag IN flags) & ~(CellsAreObjects IN flags) THEN
-			NEW(activeCellsSpecification, "", diagnostics, log);
-			IF (system # NIL) THEN
-				activeCellsSpecification.DefineDevices(system);
-				Global.OperatorDefined(system, Scanner.Questionmarks, TRUE);
-			END;
-			IF options.activeCellsBackend = NIL THEN FinalMessage(TRUE,"could not install activeCells backend"); RETURN FALSE END;
-		END;
 		options.frontend.Initialize(diagnostics, reader, source, position, ActiveCellsFlag IN flags);
 		REPEAT
 			(** first phase: scan and parse **)
@@ -188,7 +176,7 @@ TYPE
 				IF (options.symbolFile # NIL) THEN
 					options.symbolFile.Initialize(diagnostics,system,options.destPath);
 				END;
-				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,activeCellsSpecification,importCache);
+				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,importCache);
 				checker.replacements := options.replacements;
 				checker.Module(module);
 				IF checker.error THEN
@@ -207,12 +195,11 @@ TYPE
 
 				IF (ActiveCellsFlag IN flags) & ~(CellsAreObjects IN flags) THEN
 					Global.GetSymbolName(module,name);
-					activeCellsSpecification.Init(name,diagnostics,log)
 				END;
 
 				(** third phase: generate code, can consist of sub-phases (such as intermediate backend / hardware backend) **)
 				IF options.backend # NIL THEN
-					options.backend.Initialize(diagnostics, log, flags, checker, system, activeCellsSpecification);
+					options.backend.Initialize(diagnostics, log, flags, checker, system);
 					IF options.findPC # "" THEN
 						split := Strings.Split(options.findPC,":");
 						IF LEN(split)>1 THEN
@@ -259,34 +246,10 @@ TYPE
 					END;
 				END;
 
-				IF activeCellsSpecification # NIL THEN
-					options.activeCellsBackend.Initialize(diagnostics,log, flags,checker,system,activeCellsSpecification);
-					generatedModule := options.activeCellsBackend.ProcessSyntaxTreeModule(module);
-					IF options.activeCellsBackend.error THEN
-						FinalMessage(TRUE, " could not be compiled (activeCells backend errors)");
-						RETURN FALSE
-					END;
-				END;
 
-				IF activeCellsSpecification = NIL THEN (* no activeCells *)
-				ELSIF (activeCellsSpecification.types.Length() = 0) & (activeCellsSpecification.instances.Length()=0) THEN (* nothing defined *)
-				ELSE
-					IF options.activeCellsAssembler= NIL THEN FinalMessage(TRUE,"could not install activeCells assembler"); RETURN FALSE END;
-					options.activeCellsAssembler.Initialize(diagnostics, log, flags, checker, system, activeCellsSpecification);
-					IF options.hardware # NIL THEN options.hardware.Init(diagnostics, log) END;
-
-					IF ~options.activeCellsAssembler.Emit(options.backend) THEN
-						(*activeCellsSpecification.Link(diagnostics,system.codeUnit, system.dataUnit) *)
-						FinalMessage(TRUE, " could not assemble"); RETURN FALSE
-					ELSIF ~activeCellsSpecification.Emit() THEN
-						FinalMessage(TRUE, " could not emit backend specification"); RETURN FALSE;
-					ELSIF (options.hardware # NIL) & ~options.hardware.Emit(activeCellsSpecification) THEN
-						FinalMessage(TRUE, " could not emit hardware"); RETURN FALSE;
-					END;
-				END;
 
 				IF options.documentation # NIL THEN
-					options.documentation.Initialize(diagnostics,log, flags,checker,system,activeCellsSpecification);
+					options.documentation.Initialize(diagnostics,log, flags,checker,system);
 					generatedModule := options.documentation.ProcessSyntaxTreeModule(module);
 				END;
 
@@ -427,12 +390,6 @@ TYPE
 			compilerOptions.symbolFile := compilerOptions.objectFile.DefaultSymbolFileFormat();
 		END;
 
-		IF options.GetString("hardware",name) THEN
-			compilerOptions.hardware := Hardware.GetDescription(name);
-			IF compilerOptions.hardware = NIL THEN
-				Error("hardware description could not be installed"); result := FALSE;
-			END;
-		END;
 
 		IF options.GetString("d", name) THEN
 			compilerOptions.documentation := Backend.GetBackendByName("Documentation");
@@ -441,11 +398,6 @@ TYPE
 			END;
 		ELSE
 			compilerOptions.documentation := NIL
-		END;
-
-		IF options.GetFlag("activeCells") THEN
-			compilerOptions.activeCellsBackend := Backend.GetBackendByName("FoxActiveCellsBackend");
-			compilerOptions.activeCellsAssembler := Backend.GetBackendByName("FoxIntermediateLinker");
 		END;
 
 		IF options.GetString("replacements", name) THEN
@@ -460,8 +412,6 @@ TYPE
 		IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.DefineOptions(options); INCL(compilerOptions.flags,Check) END;
 		IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.DefineOptions(options); INCL(compilerOptions.flags,Check) END;
 		IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.DefineOptions(options) END;
-		IF compilerOptions.activeCellsBackend # NIL THEN compilerOptions.activeCellsBackend.DefineOptions(options) END;
-		IF compilerOptions.activeCellsAssembler # NIL THEN compilerOptions.activeCellsAssembler.DefineOptions(options) END;
 
 		IF result & ~parsed THEN
 			options.Clear;
@@ -494,8 +444,6 @@ TYPE
 			IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.GetOptions(options) END;
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
-			IF compilerOptions.activeCellsBackend # NIL THEN compilerOptions.activeCellsBackend.GetOptions(options) END;
-			IF compilerOptions.activeCellsAssembler # NIL THEN compilerOptions.activeCellsAssembler.GetOptions(options) END;
 		END;
 		
 		IF options.GetFlag("showOptions") THEN options.Show(error) END;

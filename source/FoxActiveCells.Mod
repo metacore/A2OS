@@ -1,5 +1,5 @@
 MODULE FoxActiveCells; (** AUTHOR "fof"; PURPOSE "hardware library for the ActiveCells compiler"; *)
-
+(*! deprecated -- not used any more in Active Cells 3 *)
 IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams,  D := Debugging, Diagnostics, Strings, Commands, GenericLinker, StaticLinker, SYSTEM, Modules;
 
 CONST

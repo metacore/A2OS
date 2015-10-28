@@ -3,7 +3,7 @@ MODULE FoxSemanticChecker; (* AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Seman
 (* (c) fof ETHZ 2009 *)
 
 IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Parser := FoxParser,
-Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, ActiveCells := FoxActiveCells, SYSTEM, Streams, Strings;
+Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, SYSTEM, Streams, Strings;
 
 CONST
 	Trace = FALSE;
@@ -104,19 +104,17 @@ TYPE
 		global: SyntaxTree.ModuleScope;
 		withEntries: WithEntry;
 		activeCellsStatement: BOOLEAN;
-		activeCellsSpecification: ActiveCells.Specification;
 		replacements*: Replacement;
 		cellsAreObjects: BOOLEAN;
 		variableAccessed: BOOLEAN;
 
-		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope);
+		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope);
 		BEGIN
 			SELF.diagnostics := diagnostics;
 			SELF.useDarwinCCalls := useDarwinCCalls;
 			SELF.cooperative := cooperative;
 			SELF.system := system;
 			SELF.symbolFileFormat := symbolFileFormat;
-			SELF.activeCellsSpecification := activeCellsSpecification;
 			error := FALSE;
 			NEW(typeFixes);
 			NEW(pointerFixes);
@@ -9591,10 +9589,10 @@ TYPE
 	END EnterCase;
 
 	(** generate and return a new checker object, errors are entered into diagnostics **)
-	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; activeCellsSpecification: ActiveCells.Specification; VAR importCache: SyntaxTree.ModuleScope): Checker;
+	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope): Checker;
 	VAR checker: Checker;
 	BEGIN
-		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,activeCellsSpecification, importCache);
+		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,importCache);
 		RETURN checker
 	END NewChecker;
 

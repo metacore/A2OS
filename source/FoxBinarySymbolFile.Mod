@@ -245,7 +245,7 @@ TYPE
 		BEGIN
 			typeList := NIL; SELF.system := system; NEW(typeFixes);
 			NEW(streamDiagnostics, D.Log);
-			checker := SemanticChecker.NewChecker(streamDiagnostics,FALSE,FALSE,TRUE,system,symbolFile,NIL,importCache);
+			checker := SemanticChecker.NewChecker(streamDiagnostics,FALSE,FALSE,TRUE,system,symbolFile,importCache);
 		END Init;
 
 		(* types that do not refer to other types *)

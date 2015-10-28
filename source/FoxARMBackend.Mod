@@ -5,11 +5,10 @@ IMPORT
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, CodeGenerators := FoxCodeGenerators, BinaryCode := FoxBinaryCode,
 	SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxARMAssembler, InstructionSet := FoxARMInstructionSet,
 	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile,
-	ActiveCells := FoxActiveCells, D := Debugging;
+	D := Debugging;
 
 CONST
 	Trace = FALSE; (* general trace *)
-	TraceFixups = FALSE;
 	DefaultRuntimeModuleName = "ARMRuntime";
 
 	None = -1;
@@ -508,7 +507,7 @@ TYPE
 		if not, the location of a runtime is returned **)
 		PROCEDURE Supported(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		VAR
-			result: BOOLEAN; value: HUGEINT; exp: LONGINT;
+			result: BOOLEAN;
 		BEGIN
 			CASE irInstruction.opcode OF
 			| IntermediateCode.add, IntermediateCode.sub, IntermediateCode.mul, IntermediateCode.abs, IntermediateCode.neg:
@@ -591,7 +590,6 @@ TYPE
 		(** emit an ARM instruction with an arbitrary amount of operands **)
 		PROCEDURE Emit(opCode, condition: LONGINT; flags: SET; CONST operands: ARRAY InstructionSet.MaxOperands OF Operand);
 		VAR
-			i: LONGINT;
 		BEGIN
 			(* check whether the instruction modifies the stack pointer *)
 			CheckStackPointer(operands[0]);
@@ -1003,7 +1001,7 @@ TYPE
 		**)
 		PROCEDURE RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
 		VAR
-			result, offsetOperand, tempReg: Operand;
+			result: Operand;
 		BEGIN
 			ASSERT(irRegisterOperand.mode = IntermediateCode.ModeRegister);
 
@@ -1169,7 +1167,6 @@ TYPE
 		**)
 		PROCEDURE RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
 		VAR
-			value: LONGINT;
 			result: Operand;
 		BEGIN
 			CASE irOperand.mode OF
@@ -1331,9 +1328,6 @@ TYPE
 
 		(** generate code for a certain IR instruction **)
 		PROCEDURE Generate(VAR irInstruction: IntermediateCode.Instruction);
-		VAR
-			ticket: Ticket;
-			(* hwreg, lastUse: LONGINT; *)
 		BEGIN
 			(* CheckFixups; *)
 			EmitFixupBlockIfNeeded;
@@ -2556,7 +2550,7 @@ TYPE
 			fixup,failFixup: BinaryCode.Fixup;
 			fixupPatternList: ObjectFile.FixupPatterns;
 			identifier: ObjectFile.Identifier;
-			hiHit, hiFail, lowHit, lowFail: LONGINT;
+			hiHit, hiFail, lowHit: LONGINT;
 
 			PROCEDURE JmpDest(branchConditionCode: LONGINT);
 			BEGIN
@@ -3089,9 +3083,9 @@ TYPE
 			SetHasLinkRegister;
 		END InitBackendARM;
 
-		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System; activeCellsSpecification: ActiveCells.Specification);
+		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
-			Initialize^(diagnostics, log, flags, checker, system, activeCellsSpecification);
+			Initialize^(diagnostics, log, flags, checker, system);
 			NEW(cg, runtimeModuleName, diagnostics, SELF)
 		END Initialize;
 

@@ -42,7 +42,7 @@ TYPE
 			backend := defaultBackend;
 			defaultBackend.GetDescription(platformName);
 			
-			backend.Initialize(diagnostics, NIL, {}, NIL, backend.GetSystem(), NIL);
+			backend.Initialize(diagnostics, NIL, {}, NIL, backend.GetSystem());
 			NEW(allSections);
 			NEW(importList, 128);
 			NEW(loadedModules, 128);
@@ -645,7 +645,7 @@ TYPE
 			result := TRUE;
 
 			(* generate binary code *)
-			backend.Initialize(diagnostics, log, {}, NIL, backend.GetSystem(), NIL);
+			backend.Initialize(diagnostics, log, {}, NIL, backend.GetSystem());
 			binaryModule := backend.ProcessIntermediateCodeModule(intermediateCodeModule); count := 0;
 
 			(* iterative compilation until all sections remain fixed at their position *)
@@ -1272,12 +1272,8 @@ TYPE
 	
 	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
 	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
-			inker: GenericLinker.Linker;
-			i: LONGINT;
 			logFile: Files.File; 
 			objectFileExtension: ARRAY 32 OF CHAR;
-			value: SyntaxTree.Value;
-			pooledName: Basic.SegmentedName;
 			error : BOOLEAN;
 			fileName, codeFileName, dataFileName: Files.FileName;
 			system: Global.System;

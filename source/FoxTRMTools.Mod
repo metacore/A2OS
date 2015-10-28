@@ -1,5 +1,5 @@
 MODULE FoxTRMTools; (** AUTHOR ""; PURPOSE ""; *)
-
+(*! deprecated -- not used any more in Active Cells3 *)
 IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, Random, Machine, ActiveCells := FoxActiveCells, Streams, WinApplications, Hardware := FoxHardware,
 		BitSets,ObjectFile;
 

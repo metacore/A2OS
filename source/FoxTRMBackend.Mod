@@ -5,8 +5,7 @@ IMPORT
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode,
 	SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxTRMAssembler, InstructionSet := FoxTRMInstructionSet,
 	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxIntermediateObjectFile,
-	ActiveCells := FoxActiveCells, CodeGenerators := FoxCodeGenerators, D := Debugging,
-	KernelLog;
+	CodeGenerators := FoxCodeGenerators, D := Debugging;
 
 CONST
 	TraceFixups = FALSE;
@@ -2182,11 +2181,10 @@ TYPE
 			SetHasLinkRegister;
 		END InitBackendTRM;
 
-		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System;
-			activeCellsSpecification: ActiveCells.Specification);
+		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		VAR
 		BEGIN
-			Initialize^(diagnostics, log, flags, checker, system, activeCellsSpecification); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
+			Initialize^(diagnostics, log, flags, checker, system); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
 			
 			
 			NEW(cg, runtimeModuleName, diagnostics, SELF,myInstructionSet);

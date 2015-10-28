@@ -1,7 +1,7 @@
 MODULE FoxBackend; (**  AUTHOR "kaeserm,fof"; PURPOSE "Oberon Compiler: Common backend module";  **)
 
 IMPORT
-	Streams, Diagnostics, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, ActiveCells := FoxActiveCells, Options, Strings;
+	Streams, Diagnostics, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
 
 
 TYPE
@@ -16,7 +16,6 @@ TYPE
 		error-: BOOLEAN;
 		checker-: SemanticChecker.Checker;
 		source-: SyntaxTree.String;
-		activeCellsSpecification-: ActiveCells.Specification;
 		findSectionName-: SectionName;
 		findSectionOffset-: LONGINT;
 		capabilities-: SET;
@@ -69,7 +68,7 @@ TYPE
 		END ResetError;
 
 		(* initialize backend for usage *)
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System; activeCellsSpecification: ActiveCells.Specification);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
 			error := FALSE;
 			SELF.diagnostics := diagnostics;
@@ -77,7 +76,6 @@ TYPE
 			SELF.flags := flags;
 			SELF.checker := checker;
 			SELF.system := system;
-			SELF.activeCellsSpecification := activeCellsSpecification;
 		END Initialize;
 
 		(* Get the system used by this backend (singleton) *)

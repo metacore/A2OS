@@ -3,7 +3,7 @@ MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
 	Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode,  Printout := FoxPrintout,
 	SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
-	FingerPrinter := FoxFingerPrinter, StringPool, ActiveCells := FoxActiveCells;
+	FingerPrinter := FoxFingerPrinter, StringPool;
 
 CONST
 		(* operand modes *)
@@ -50,7 +50,6 @@ CONST
 		TraceRegisterUsageCount=TRUE;
 
 		ArrayAlignment = 8*8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
-		LongNameLength = 64;
 
 		(** system call numbers  *)
 		NumberSystemCalls* = 12;
@@ -271,8 +270,7 @@ TYPE
 		END HasFlag;
 
 		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
-		VAR name:Basic.SegmentedName; td: SyntaxTree.TypeDeclaration; type: SyntaxTree.Type; len,port,adr: LONGINT;
-			parameter: SyntaxTree.Parameter; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
+		VAR port,adr: LONGINT; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
 
 			PROCEDURE CreatePorts(type: SyntaxTree.Type; len: LONGINT);
 			VAR i,len2: LONGINT; baseType: SyntaxTree.Type;
@@ -520,6 +518,8 @@ TYPE
 				ELSE RETURN FALSE
 				END;
 			END HasValue;
+		
+			CONST DefaultDataMemorySize=512;
 
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
@@ -558,7 +558,7 @@ TYPE
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x = scope.outerScope(SyntaxTree.CellScope).bodyProcedure) THEN
 				inline := FALSE;
 				cellType := scope.outerScope(SyntaxTree.CellScope).ownerCell;
-				IF ~HasValue(cellType.modifiers,Global.StringDataMemorySize,stackSize) THEN stackSize := ActiveCells.defaultDataMemorySize END;
+				IF ~HasValue(cellType.modifiers,Global.StringDataMemorySize,stackSize) THEN stackSize := DefaultDataMemorySize END;
 				AddBodyCallStub(x);
 				AddStackAllocation(x,stackSize);
 				ir := implementationVisitor.NewSection(module.allSections,Sections.BodyCodeSection, name,x,dump);
@@ -986,13 +986,6 @@ TYPE
 			END;
 			RETURN register
 		END Map;
-
-		PROCEDURE Remap(register: LONGINT; to: LONGINT);
-		BEGIN
-			used[register].map:= to;
-			used[to].count := used[register].count;
-			used[register].count := 0;
-		END Remap;
 
 		PROCEDURE Use(register: LONGINT): LONGINT;
 		BEGIN
@@ -9114,7 +9107,6 @@ TYPE
 						INC(adr, inc);
 						parameter := parameter.nextParameter
 					END;
-					adr := backend.activeCellsSpecification.GetPortAddress(adr);
 					IntermediateCode.InitImmediate(result.op,addressType,adr);
 					RETURN
 				END;
@@ -10918,7 +10910,7 @@ TYPE
 		END EnterDynamicName;
 
 		PROCEDURE DynamicName(source: IntermediateCode.Section; index: StringPool.Index; pool: Basic.HashTableInt): LONGINT;
-		VAR name: Basic.SectionName; i: LONGINT; ch: CHAR; position: LONGINT;
+		VAR name: Basic.SectionName; position: LONGINT;
 		BEGIN
 			IF pool.Has(index) THEN
 				RETURN pool.GetInt(index)
@@ -10928,12 +10920,7 @@ TYPE
 			END;
 			RETURN position;
 		END DynamicName;
-		
-		PROCEDURE DynamicNameS(source: IntermediateCode.Section; CONST name: ARRAY OF CHAR; pool: Basic.HashTableInt): LONGINT;
-		BEGIN
-			RETURN EnterDynamicName(source, name, StringPool.GetIndex1(name), pool)
-		END DynamicNameS;
-		
+				
 		PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
 		VAR name: ARRAY 128 OF CHAR; section: IntermediateCode.Section; pooledName: Basic.SegmentedName;
 		BEGIN
@@ -11239,19 +11226,6 @@ TYPE
 			END Name;
 
 
-			PROCEDURE LongName(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR);
-			VAR i: LONGINT; ch: CHAR;
-			BEGIN
-				i := 0;
-				REPEAT
-					ch := name[i]; INC(i);
-					Char( section, ch);
-				UNTIL ch = 0X;
-				ASSERT(i < LongNameLength);
-				WHILE i < 64 DO
-					Char( section, 0X); INC(i);
-				END;
-			END LongName;
 
 			PROCEDURE References(section: IntermediateCode.Section);
 			CONST
@@ -11304,7 +11278,7 @@ TYPE
 				END BaseType;
 
 				PROCEDURE RecordType(type: SyntaxTree.RecordType);
-				VAR destination: Sections.Section; name: SyntaxTree.IdentifierString; sname: Basic.SegmentedName;
+				VAR destination: Sections.Section; 
 				BEGIN
 					destination := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
 					IF type.pointerType # NIL THEN
@@ -12108,7 +12082,7 @@ TYPE
 			END ReflectProcedures;
 			
 			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
-			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
+			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				segmentedName: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
 				type: SyntaxTree.Type;
@@ -12155,9 +12129,8 @@ TYPE
 			END VariableArray;
 			
 			PROCEDURE ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure);
-			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT; name: ARRAY 128 OF CHAR;
+			VAR pc: LONGINT; size: LONGINT; 
 				segmentedName: Basic.SegmentedName;
-				td: SyntaxTree.TypeDeclaration;
 			BEGIN
 				Array(source,pc,"Modules.ProcedureEntry");
 
@@ -12192,11 +12165,11 @@ TYPE
 		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
 		VAR recordType: SyntaxTree.RecordType;
 			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
-			section: Sections.Section; type: SyntaxTree.Type; cellType: SyntaxTree.CellType;
+			section: Sections.Section; cellType: SyntaxTree.CellType;
 
 
 			PROCEDURE NewTypeDescriptorInfo(tag: Sections.Section; offset: LONGINT; isProtected: BOOLEAN): Sections.Section;
-			VAR name: Basic.SegmentedName;source, fieldSection: IntermediateCode.Section;
+			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
 				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
 				sectionName: Basic.SectionName;
 			CONST MPO=-40000000H;
@@ -12279,7 +12252,7 @@ TYPE
 			VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; source, base: IntermediateCode.Section;
 				procedure: SyntaxTree.Procedure; baseRecord: SyntaxTree.RecordType;
 				baseTD: SyntaxTree.TypeDeclaration; sym: SyntaxTree.Symbol;
-				numberPointers: LONGINT;  padding,offset, i: LONGINT;
+				numberPointers: LONGINT;  padding, i: LONGINT;
 			CONST MPO=-40000000H;
 
 				PROCEDURE TdTable(size: LONGINT; reverse: BOOLEAN);
@@ -12642,16 +12615,11 @@ TYPE
 			declarationVisitor: DeclarationVisitor;
 			implementationVisitor: ImplementationVisitor;
 			module: Sections.Module;
-			name, instructionSet, platformName: SyntaxTree.IdentifierString;
+			name, platformName: SyntaxTree.IdentifierString;
 			meta: MetaDataGenerator; 
 		BEGIN
 			ResetError;
 			Global.GetSymbolName(x,name);
-
-			IF activeCellsSpecification # NIL THEN
-				GetDescription(instructionSet);
-				activeCellsSpecification.SetInstructionSet(instructionSet)
-			END;
 
 			NEW(module,x,system); (* backend structures *)
 
@@ -12916,7 +12884,6 @@ TYPE
 
 	PROCEDURE GetSymbol*(scope: SyntaxTree.ModuleScope; CONST moduleName, symbolName: ARRAY OF CHAR): SyntaxTree.Symbol;
 	VAR import: SyntaxTree.Import;
-		s: Basic.MessageString;
 		selfName: SyntaxTree.IdentifierString;
 		module: SyntaxTree.Module;
 	BEGIN

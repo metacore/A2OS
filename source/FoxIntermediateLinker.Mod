@@ -1270,7 +1270,7 @@ TYPE
 		END;
 	END Link;
 	
-	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
+	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
 	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
 			logFile: Files.File; 
 			objectFileExtension: ARRAY 32 OF CHAR;
@@ -1286,7 +1286,7 @@ TYPE
 		COPY(instanceName, fileName); Strings.Append(fileName,".log");	logFile := Files.New(fileName);
 		IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
 		NEW (linker, diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
-				StaticLinker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
+		StaticLinker.ReadObjectFile(instanceName, "",objectFile.extension, linker);
 
 				(* do linking after having read in all blocks to account for potential constraints *)
 				IF ~linker.error THEN linker.Link; END;

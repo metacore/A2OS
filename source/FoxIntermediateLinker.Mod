@@ -10,7 +10,7 @@ CONST
 	DefaultBackend = "AMD";
 
 TYPE
-	SectionName = ARRAY 256 OF CHAR; (*! move *)
+	SectionName* = ObjectFile.SectionName; (*ARRAY 256 OF CHAR; (*! move *)*)
 
 	(** the assemblinker **)
 	Linker* = OBJECT
@@ -72,6 +72,7 @@ TYPE
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
+			IF section = NIL THEN RETURN END; (* nothing to patch *)
 			instruction := section(IntermediateCode.Section).instructions[0];
 			op1 := instruction.op1;
 			IF instruction.opcode = IntermediateCode.reserve THEN
@@ -92,6 +93,7 @@ TYPE
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
+			IF section = NIL THEN RETURN END; (* nothing to patch *)
 			instruction := section(IntermediateCode.Section).instructions[0];
 			op1 := instruction.op1;
 			IF instruction.opcode = IntermediateCode.reserve THEN
@@ -117,6 +119,7 @@ TYPE
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
+			IF section = NIL THEN RETURN END; (* nothing to patch *)
 			section(IntermediateCode.Section).Reset;
 			type := IntermediateCode.GetType(backend.system, backend.system.characterType);
 			i := 0; 
@@ -136,6 +139,7 @@ TYPE
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
+			IF section = NIL THEN RETURN END; (* nothing to patch *)
 			section(IntermediateCode.Section).Reset;
 			type := IntermediateCode.GetType(backend.system, backend.system.addressType);
 			FOR i := 0 TO LEN(value)-1 DO

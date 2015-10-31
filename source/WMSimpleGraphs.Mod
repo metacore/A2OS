@@ -14,12 +14,12 @@ TYPE
 
 TYPE
 	Window=OBJECT(WM.Window);
+	VAR width,height:LONGINT;
 	END Window;
 	
 	Histogram* = OBJECT (Window);
 	VAR 
 		data:ARRAY [*] OF LONGREAL;
-		width,height:LONGINT;
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
 		VAR max:LONGREAL; 
@@ -50,7 +50,6 @@ TYPE
 	Matrix* = OBJECT (Window);
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
-		width,height:LONGINT;
 		max,min, offset, gain:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -97,7 +96,6 @@ TYPE
 	CONST border=5;
 	VAR 
 		data:ARRAY [*] OF LONGREAL;
-		width,height:LONGINT;
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -133,7 +131,6 @@ Graphs* = OBJECT (Window);
 	CONST border=5;
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
-		width,height:LONGINT;
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -171,7 +168,6 @@ GraphXY* = OBJECT (Window);
 	CONST border=5;
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
-		width,height:LONGINT;
 		minx,miny,maxx,maxy:LONGREAL;
 		ticks: ARRAY [*,*] OF LONGREAL;
 
@@ -277,12 +273,8 @@ TYPE Regression*= OBJECT (Scatter)
 		x:=-mnw+ENTIER(0.5+x0*scalex);  y:=h+mnh-ENTIER(0.5+y0*scaley);
 		xx:=-mnw+ENTIER(0.5+x1*scalex); yy:=h+mnh-ENTIER(0.5+y1*scaley);
 		canvas.Line(x,y,xx,yy,WMGraphics.Red, WMGraphics.ModeCopy);  
-	END Draw;
-	
+	END Draw;	
 	END Regression;
-
-
-
 
 PROCEDURE NewWindowPos(dx:LONGINT);
 BEGIN

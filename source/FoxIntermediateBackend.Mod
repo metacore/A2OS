@@ -6741,15 +6741,19 @@ TYPE
 			
 			PROCEDURE Variable(name: ARRAY OF CHAR; variable: SyntaxTree.Variable);
 			VAR op : Operand; portType: SyntaxTree.PortType; baseType: SyntaxTree.Type; 
-				size, reg: IntermediateCode.Operand; dim: LONGINT;
+				size, reg: IntermediateCode.Operand; dim, len: LONGINT;
 				
 				PROCEDURE PushLens(type: SyntaxTree.Type);
 				BEGIN
-					IF type IS SyntaxTree.ArrayType THEN
+					IF IsSemiDynamicArray(type) THEN
 						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
 						Evaluate(type(SyntaxTree.ArrayType).length, op);
 						Emit(Push(-1, op.op));
 						ReleaseOperand(op);
+						INC(dim);
+					ELSIF IsStaticArray(type) THEN
+						len := len * type(SyntaxTree.ArrayType).staticLength;
+						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
 						INC(dim);
 					ELSE
 						baseType := type;
@@ -6761,6 +6765,7 @@ TYPE
 					IF variable.type IS SyntaxTree.ArrayType THEN
 						type := variable.type;
 						dim := 0; 
+						len := 1;
 						PushLens(type);
 						portType := baseType.resolved(SyntaxTree.PortType);
 					ELSE
@@ -6768,7 +6773,10 @@ TYPE
 					END;
 					
 					PushSelfPointer();
-				(* port *)
+				(* port / array of ports *)
+					IF IsStaticArray(type) THEN
+						PushConstInteger(len);
+					END;
 					Field(variable, op);
 					(*left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
 					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(x);
@@ -6786,7 +6794,9 @@ TYPE
 				IF variable.type IS SyntaxTree.PortType THEN
 					CallThis(variable.position,"ActiveCellsRuntime","AddPort",6);
 					AddPortProperties(variable);
-				ELSIF variable.type IS SyntaxTree.ArrayType THEN
+				ELSIF IsStaticArray(type)THEN
+					CallThis(variable.position,"ActiveCellsRuntime","AddStaticPortArray",7);
+				ELSIF IsSemiDynamicArray(type) THEN
 					IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,6*addressType.sizeInBits));
 					Emit(Add(position,reg, sp, size));
@@ -6798,6 +6808,8 @@ TYPE
 					CallThis(position,"ActiveCellsRuntime","AddPortArray",8);
 					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,dim*addressType.sizeInBits));
 					Emit(Add(position, sp,sp, size));
+				ELSE
+					HALT(100);
 				END;
 			END Variable;
 			

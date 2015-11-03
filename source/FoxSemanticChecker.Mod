@@ -1142,9 +1142,11 @@ TYPE
 					type := parameter.type.resolved;
 					IF ~(type IS SyntaxTree.PortType) THEN
 						WHILE IsStaticArray(type, type, len) DO
-
+							IF IsDynamicArray(type, type) THEN Error(parameter.position, Diagnostics.Invalid, "invalid mixture of dynamic and static array of ports") END;
 						END;
-						WHILE IsDynamicArray(type, type) DO END;
+						WHILE IsDynamicArray(type, type) DO 
+							IF IsStaticArray(type, type, len) THEN Error(parameter.position, Diagnostics.Invalid, "invalid mixture of dynamic and static array of ports") END;
+						END;
 						IF (* ~IsStaticArray(type,type,len) OR*)  ~(type IS SyntaxTree.PortType) THEN
 							Error(parameter.position, Diagnostics.Invalid, "invalid type, must be port or static array of port ");
 						END;

@@ -272,6 +272,7 @@ TYPE
 		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
 		VAR port,adr: LONGINT; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
 
+			(*
 			PROCEDURE CreatePorts(type: SyntaxTree.Type; len: LONGINT);
 			VAR i,len2: LONGINT; baseType: SyntaxTree.Type;
 			BEGIN
@@ -287,6 +288,7 @@ TYPE
 					END;
 				END;
 			END CreatePorts;
+			*)
 
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
@@ -355,14 +357,21 @@ TYPE
 				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
 				irv.SetExported(IsExported(x));
 				irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
-				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
-				IF ~x.fixed THEN
-					align := CommonAlignment(x.alignment, ToMemoryUnits(system, system.AlignmentOf(system.variableAlignment, x.type)));
+				IF (currentScope IS SyntaxTree.CellScope) & IsSemiDynamicArray(x.type) THEN
+					irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
+					Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
+					irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+					irv.Emit(Reserve(x.position, DynamicDim(x.type) * ToMemoryUnits(system, system.addressSize)));
 				ELSE
-					align := x.alignment;
+					irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
+					IF ~x.fixed THEN
+						align := CommonAlignment(x.alignment, ToMemoryUnits(system, system.AlignmentOf(system.variableAlignment, x.type)));
+					ELSE
+						align := x.alignment;
+					END;
+					irv.SetPositionOrAlignment(x.fixed, align);
+					meta.CheckTypeDeclaration(x.type);
 				END;
-				irv.SetPositionOrAlignment(x.fixed, align);
-				meta.CheckTypeDeclaration(x.type);
 			ELSIF currentScope IS SyntaxTree.RecordScope THEN
 			ELSIF currentScope IS SyntaxTree.ProcedureScope THEN
 			END;
@@ -370,8 +379,10 @@ TYPE
 		END VisitVariable;
 
 		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; op: Operand;
+		VAR name: Basic.SegmentedName; irv, irl: IntermediateCode.Section; op: Operand; dim: LONGINT;
 		BEGIN
+			HALT(100);
+			(*
 			ASSERT(currentScope.outerScope IS SyntaxTree.CellScope);
 			(* code section for variable *)
 			Global.GetSymbolSegmentedName(x,name);
@@ -380,7 +391,13 @@ TYPE
 			(*
 			irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
 			*)
-			IF x.defaultValue = NIL THEN
+			IF IsSemiDynamicArray(x.type) & ~backend.cellsAreObjects THEN
+				HALT(100);
+				irv.Emit(Reserve(x.position, system.addressSize));
+				Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
+				irl := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+				irl.Emit(Reserve(x.position, DynamicDim(x.type) * system.addressSize));
+			ELSIF x.defaultValue = NIL THEN
 				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))))
 			ELSE
 				implementationVisitor.inData := TRUE;
@@ -389,6 +406,7 @@ TYPE
 				implementationVisitor.inData := FALSE;
 			END;
 			meta.CheckTypeDeclaration(x.type);
+			*)
 		END VisitParameter;
 
 
@@ -11558,7 +11576,7 @@ TYPE
 		VAR
 			p: Sections.Section;  sizePC, numberCommands: LONGINT;
 			procedure : SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
-			name: ARRAY 32 OF CHAR; numberParameters, i: LONGINT;
+			name: SyntaxTree.IdentifierString; numberParameters, i: LONGINT;
 
 				(* Returns TRUE if the built-in function GETPROCEDURE can be used with this procedure type *)
 				PROCEDURE GetProcedureAllowed() : BOOLEAN;

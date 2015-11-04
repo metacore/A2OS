@@ -2276,8 +2276,9 @@ TYPE
 		 			Basic.SegmentedNameToString(in.name, name);
 			 		out := ResolvedSection(in(IntermediateCode.Section));
 			 		cg.dump := out.comments;
-			 		
-			 		SetInstructionWidth(out.os.unit);
+			 		IF instructionWidth < out.os.unit THEN 
+			 			SetInstructionWidth(out.os.unit);
+			 		END;
 			 		cg.Section(in(IntermediateCode.Section), out);  (*compilation*)
 			 		IF in.symbol # NIL THEN
 				 		procedure := in.symbol(SyntaxTree.Procedure);
@@ -2295,7 +2296,6 @@ TYPE
 			 		in := module.allSections.GetSection(i);
 			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
 				 		out := ResolvedSection(in(IntermediateCode.Section));
-				 		SetInstructionWidth(out.os.unit);
 				 		cg.Section(in(IntermediateCode.Section),out);  
 			 		END
 			 	END

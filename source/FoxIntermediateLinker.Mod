@@ -42,7 +42,7 @@ TYPE
 			backend := defaultBackend;
 			defaultBackend.GetDescription(platformName);
 			
-			backend.Initialize(diagnostics, NIL, {}, NIL, backend.GetSystem());
+
 			NEW(allSections);
 			NEW(importList, 128);
 			NEW(loadedModules, 128);
@@ -1294,9 +1294,9 @@ TYPE
 
 				(* do linking after having read in all blocks to account for potential constraints *)
 				IF ~linker.error THEN linker.Link; END;
-
+				
 				system := backend.GetSystem();
-
+				
 
 				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
 					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
@@ -1318,6 +1318,9 @@ TYPE
 				IF ~linker.error THEN
 					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
 					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+					
+					
+					
 					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
 					IF log # NIL THEN
 						log.String(instanceName);

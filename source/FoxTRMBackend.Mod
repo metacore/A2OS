@@ -2171,6 +2171,7 @@ TYPE
 		cg: CodeGeneratorTRM;
 		patchSpartan6: BOOLEAN;
 		myInstructionSet: InstructionSet.InstructionSet;
+		recentInstructionWidth : LONGINT;
 		
 		PROCEDURE &InitBackendTRM;
 		BEGIN
@@ -2179,6 +2180,7 @@ TYPE
 			SetNewObjectFile(TRUE,TRUE);
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;
+			recentInstructionWidth := Sections.UnknownSize;
 		END InitBackendTRM;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
@@ -2189,16 +2191,17 @@ TYPE
 			
 			NEW(cg, runtimeModuleName, diagnostics, SELF,myInstructionSet);
 			cg.patchSpartan6 := patchSpartan6;
+			recentInstructionWidth := Sections.UnknownSize;
 		END Initialize;
 		
 		PROCEDURE SetInstructionWidth* (instructionWidth: LONGINT);  (*override*)
 		BEGIN
-			SetInstructionWidth^(instructionWidth);
-			NEW(myInstructionSet,instructionWidth);
-			cg.SetInstructionSet(myInstructionSet);
+			IF SELF.instructionWidth # instructionWidth THEN
+				SetInstructionWidth^(instructionWidth);
+				NEW(myInstructionSet,instructionWidth);
+				cg.SetInstructionSet(myInstructionSet);
+			END;
 		END SetInstructionWidth;
-		
-		
 		
 		PROCEDURE GetSystem(): Global.System;
 		VAR system: System;
@@ -2276,9 +2279,7 @@ TYPE
 		 			Basic.SegmentedNameToString(in.name, name);
 			 		out := ResolvedSection(in(IntermediateCode.Section));
 			 		cg.dump := out.comments;
-			 		IF instructionWidth < out.os.unit THEN 
-			 			SetInstructionWidth(out.os.unit);
-			 		END;
+		 			SetInstructionWidth(out.os.unit);
 			 		cg.Section(in(IntermediateCode.Section), out);  (*compilation*)
 			 		IF in.symbol # NIL THEN
 				 		procedure := in.symbol(SyntaxTree.Procedure);
@@ -2296,6 +2297,7 @@ TYPE
 			 		in := module.allSections.GetSection(i);
 			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
 				 		out := ResolvedSection(in(IntermediateCode.Section));
+			 			SetInstructionWidth(out.os.unit);
 				 		cg.Section(in(IntermediateCode.Section),out);  
 			 		END
 			 	END
@@ -2331,7 +2333,8 @@ TYPE
 		BEGIN
 			ASSERT(intermediateCodeModule IS Sections.Module);
 			result := ProcessIntermediateCodeModule^(intermediateCodeModule);
-
+			recentInstructionWidth := Sections.UnknownSize;
+			
 			IF ~error THEN
 				GenerateBinary(result(Sections.Module), dump);
 				IF dump # NIL THEN
@@ -2442,14 +2445,18 @@ TYPE
 			ELSIF in.type IN {Sections.VarSection, Sections.ConstSection} THEN
 				unit := 32;
 			ELSE
-				IF (instructionWidth # Sections.UnknownSize) THEN
-					unit := instructionWidth;
+				IF (recentInstructionWidth # Sections.UnknownSize) THEN
+					unit := recentInstructionWidth(* instructionWidth*);
 				ELSE
 					unit:=18;
 				END
 				
 			END;
-			
+
+			IF in.IsCode() THEN
+				recentInstructionWidth := unit;
+			END;
+
 			IF in.resolved = NIL THEN
 				NEW(section, in.type, in.priority, unit, in.name, in.comments # NIL, FALSE);
 				section.SetAlignment(in.fixed, in.positionOrAlignment);

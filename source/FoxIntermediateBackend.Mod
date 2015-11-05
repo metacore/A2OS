@@ -348,7 +348,7 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align: LONGINT;
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i: LONGINT;
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
@@ -361,7 +361,9 @@ TYPE
 					irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
 					irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
-					irv.Emit(Reserve(x.position, DynamicDim(x.type) * ToMemoryUnits(system, system.addressSize)));
+					FOR i := 0 TO DynamicDim(x.type)-1 DO
+						irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
+					END;
 				ELSE
 					irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
 					IF ~x.fixed THEN
@@ -6843,8 +6845,7 @@ TYPE
 						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 					END;
 					IF (type IS SyntaxTree.PortType) THEN (* port found *)
-						(*!!! check port arrays !! *)
-						Global.GetSymbolName(variable,name);
+						Global.GetSymbolNameInScope(variable,x.cellScope,name);
 						Variable(name,variable);
 					END;
 					variable := variable.nextVariable;
@@ -6926,8 +6927,7 @@ TYPE
 				Emit(Push(position,op.op));
 				ReleaseOperand(op);
 
-				
-				Basic.GetString(property.name, name);
+				Global.GetSymbolNameInScope(property, cellType.cellScope , name);
 				PushConstString(name);
 				
 				IF SemanticChecker.IsStringType(property.type) OR (property.type.resolved IS SyntaxTree.IntegerType) THEN 
@@ -9076,7 +9076,7 @@ TYPE
 					IF (x.scope IS SyntaxTree.ModuleScope) OR (x.scope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 						ReleaseIntermediateOperand(result.tag);
 						Global.GetSymbolSegmentedName(x,name);
-						Basic.AppendToSegmentedName(name,"@len");
+						Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
 						symbol := NewSection(module.allSections, Sections.VarSection, name,NIL ,commentPrintout # NIL);
 						IntermediateCode.InitAddress(result.tag, addressType, symbol.name,0 , 0);
 					ELSE

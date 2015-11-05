@@ -84,60 +84,51 @@ TYPE
 		END EmitAt;
 		
 
-		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT);
+		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
-			size: HUGEINT;pooledName: Basic.SegmentedName;
+			pooledName: Basic.SegmentedName; itype: IntermediateCode.Type;
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
-			IF section = NIL THEN RETURN END; (* nothing to patch *)
-			instruction := section(IntermediateCode.Section).instructions[0];
-			op1 := instruction.op1;
-			IF instruction.opcode = IntermediateCode.reserve THEN
-				size := section.bitsPerUnit * op1.intValue;
-			ELSIF instruction.opcode = IntermediateCode.data THEN
-				size := op1.type.sizeInBits
-			ELSE
-				HALT(100);
-			END;
-			IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.SignedInteger, INTEGER(size)), value);
+			IF section = NIL THEN 
+				TRACE(sectionName);
+				RETURN FALSE 
+			END; (* nothing to patch *)
+			itype := IntermediateCode.GetType(backend.system, backend.system.booleanType);
+			IntermediateCode.InitImmediate(op1,itype, value);
 			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
 			EmitAt(section(IntermediateCode.Section),index, instruction);
+			RETURN TRUE;
 		END PatchIntegerValue;
 
-		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR;index: LONGINT; value: BOOLEAN);
+		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR;index: LONGINT; value: BOOLEAN): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
-			size: HUGEINT;pooledName: Basic.SegmentedName;
+			pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
-			IF section = NIL THEN RETURN END; (* nothing to patch *)
-			instruction := section(IntermediateCode.Section).instructions[0];
-			op1 := instruction.op1;
-			IF instruction.opcode = IntermediateCode.reserve THEN
-				size := section.bitsPerUnit * op1.intValue;
-			ELSIF instruction.opcode = IntermediateCode.data THEN
-				size := op1.type.sizeInBits
-			ELSE
-				HALT(100);
-			END;
+			IF section = NIL THEN RETURN FALSE END; (* nothing to patch *)
+			
+			type := IntermediateCode.GetType(backend.system, backend.system.booleanType);
+
 			IF value THEN
-				IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.UnsignedInteger, INTEGER(size)), 1);
+				IntermediateCode.InitImmediate(op1, type, 1);
 			ELSE
-				IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.UnsignedInteger, INTEGER(size)), 0);
+				IntermediateCode.InitImmediate(op1, type, 0);
 			END;
 			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
 			EmitAt(section(IntermediateCode.Section), index, instruction);
+			RETURN TRUE;
 		END PatchBooleanValue;
 
-		PROCEDURE PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR);
+		PROCEDURE PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
 			char: CHAR; i: LONGINT; 
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
-			IF section = NIL THEN RETURN END; (* nothing to patch *)
+			IF section = NIL THEN RETURN FALSE END; (* nothing to patch *)
 			section(IntermediateCode.Section).Reset;
 			type := IntermediateCode.GetType(backend.system, backend.system.characterType);
 			i := 0; 
@@ -148,6 +139,7 @@ TYPE
 				section(IntermediateCode.Section).Emit(instruction);
 				INC(i); 
 			UNTIL char = 0X; 
+			RETURN TRUE;
 		END PatchStringValue;
 		
 

@@ -65,8 +65,26 @@ TYPE
 			IntermediateCode.SetIntValue(op2, size);
 			section(IntermediateCode.Section).PatchOperands(0, op1, op2, op3);
 		END PatchStackSize;
+		
+		PROCEDURE EmitAt(section: IntermediateCode.Section; index: LONGINT; CONST instruction: IntermediateCode.Instruction);
+		VAR reserve: IntermediateCode.Instruction; op: IntermediateCode.Operand;
+		BEGIN
+			IF index = section.pc THEN
+				section.Emit(instruction)
+			ELSIF index < section.pc THEN
+				section.EmitAt(index, instruction)
+			ELSE
+				IntermediateCode.InitImmediate(op, instruction.op1.type, 1);
+				IntermediateCode.InitInstruction1(reserve,0, IntermediateCode.reserve, op);
+				WHILE (section.pc < index) DO
+					section.Emit(reserve);
+				END;
+				section.Emit(instruction);
+			END
+		END EmitAt;
+		
 
-		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; value: HUGEINT);
+		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT);
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			size: HUGEINT;pooledName: Basic.SegmentedName;
 		BEGIN
@@ -84,10 +102,10 @@ TYPE
 			END;
 			IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.SignedInteger, INTEGER(size)), value);
 			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
-			section(IntermediateCode.Section).EmitAt(0, instruction);
+			EmitAt(section(IntermediateCode.Section),index, instruction);
 		END PatchIntegerValue;
 
-		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; value: BOOLEAN);
+		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR;index: LONGINT; value: BOOLEAN);
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			size: HUGEINT;pooledName: Basic.SegmentedName;
 		BEGIN
@@ -109,7 +127,7 @@ TYPE
 				IntermediateCode.InitImmediate(op1, IntermediateCode.NewType(IntermediateCode.UnsignedInteger, INTEGER(size)), 0);
 			END;
 			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
-			section(IntermediateCode.Section).EmitAt(0, instruction);
+			EmitAt(section(IntermediateCode.Section), index, instruction);
 		END PatchBooleanValue;
 
 		PROCEDURE PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR);
@@ -132,22 +150,6 @@ TYPE
 			UNTIL char = 0X; 
 		END PatchStringValue;
 		
-		PROCEDURE PatchLengthArray*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF LONGINT);
-		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
-			pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
-			i: LONGINT; 
-		BEGIN
-			Basic.ToSegmentedName(sectionName, pooledName);
-			section := allSections.FindByName(pooledName);
-			IF section = NIL THEN RETURN END; (* nothing to patch *)
-			section(IntermediateCode.Section).Reset;
-			type := IntermediateCode.GetType(backend.system, backend.system.addressType);
-			FOR i := 0 TO LEN(value)-1 DO
-				IntermediateCode.InitImmediate(op1, type, value[i]);
-				IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
-				section(IntermediateCode.Section).Emit(instruction);
-			END;
-		END PatchLengthArray;
 
 		PROCEDURE LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN;
 		VAR

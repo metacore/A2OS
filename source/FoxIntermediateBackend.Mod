@@ -709,6 +709,9 @@ TYPE
 						END;
 						implementationVisitor.EmitLeave(ir, x.position,cc);
 						IF finalizer THEN
+							IF backend.hasLinkRegister THEN
+								ir.Emit(Pop(-1, implementationVisitor.lr));
+							END;	
 							Basic.ToSegmentedName("BaseTypes.Object.Finalize", name);
 							IntermediateCode.InitAddress(dest, addressType, name , 0, 0);
 							ir.Emit(Br(x.position,dest));

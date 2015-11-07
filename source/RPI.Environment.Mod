@@ -180,7 +180,6 @@ END KernelEnd;
 BEGIN {UNCHECKED}
 	Trace.String ("Version "); Trace.String (SYSTEM.Date); Trace.String (" (");
 	Trace.Int (memory DIV (1024 * 1024), 0); Trace.String (" MB RAM, GC, ");
-	Trace.String ("GC, ");
 	Trace.Int (Processors.count, 0); Trace.String (" CPU");
 	IF Processors.count > 1 THEN Trace.Char ('s') END; Trace.Char (')'); Trace.Ln;
 END Environment.

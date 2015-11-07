@@ -2639,6 +2639,9 @@ TYPE
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
 			IF dump # NIL THEN dump := section.comments END;
+			IF backend.hasLinkRegister THEN
+				Emit(Push(-1, lr));
+			END;
 			Emit(Push(position,fp));
 			Emit(Mov(position,fp, IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,addressType.sizeInBits * 2))));
 			ResetVariables(scope);

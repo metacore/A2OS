@@ -2255,6 +2255,9 @@ TYPE
 			Basic.ToSegmentedName(name, pooledName);
 			section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, pooledName,NIL,TRUE);
 			IF dump # NIL THEN dump := section.comments END;
+			IF backend.hasLinkRegister THEN
+				Emit(Push(-1, lr));
+			END;
 
 			variable := mod.moduleScope.firstVariable;
 			WHILE variable # NIL DO
@@ -2267,6 +2270,9 @@ TYPE
 				variable := variable.nextVariable;
 			END;
 
+			IF backend.hasLinkRegister THEN
+				Emit(Pop(-1, lr));
+			END;
 			Basic.ToSegmentedName ("Modules.Module.@Trace",pooledName);
 			IntermediateCode.InitAddress(op, addressType, pooledName , 0, 0);
 			Emit(Br(position,op));
@@ -2345,6 +2351,9 @@ TYPE
 			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
 
 			IF dump # NIL THEN dump := section.comments END;
+			IF backend.hasLinkRegister THEN
+				Emit(Push(-1, lr));
+			END;
 
 			
 			variable := recordType.recordScope.firstVariable;
@@ -2367,6 +2376,9 @@ TYPE
 			
 			recordBase := recordType.GetBaseRecord();
 			IF (recordBase # NIL) & recordBase.NeedsTrace() THEN
+				IF backend.hasLinkRegister THEN
+					Emit(Pop(-1, lr));
+				END;				
 				GetRecordTypeName (recordBase,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
@@ -2469,6 +2481,10 @@ TYPE
 			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
 			IF dump # NIL THEN dump := section.comments END;
 
+			IF backend.hasLinkRegister THEN
+				Emit(Push(-1, lr));
+			END;
+
 			variable := recordType.recordScope.firstVariable;
 			WHILE variable # NIL DO
 				IF variable.NeedsTrace() THEN
@@ -2489,6 +2505,9 @@ TYPE
 				recordBase := recordBase.GetBaseRecord();
 			END;			
 			IF recordBase # NIL THEN
+				IF backend.hasLinkRegister THEN
+					Emit(Pop(-1, lr));
+				END;	
 				GetRecordTypeName (recordBase,name);
 				IF HasExplicitTraceMethod (recordBase) THEN
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("Trace"));
@@ -2500,6 +2519,9 @@ TYPE
 			ELSIF (recordType.pointerType # NIL) & recordType.pointerType.isPlain THEN
 				Emit(Exit(position,0,0));
 			ELSE
+				IF backend.hasLinkRegister THEN
+					Emit(Pop(-1, lr));
+				END;
 				IF recordType.isObject THEN
 					Basic.ToSegmentedName ("BaseTypes.Object",name);
 				ELSE								
@@ -2578,10 +2600,13 @@ TYPE
 
 			IF dump # NIL THEN dump := section.comments END;
 
+			IF backend.hasLinkRegister THEN
+				Emit(Push(-1, lr));
+			END;
+
 			variable := recordType.recordScope.firstVariable;
 			WHILE variable # NIL DO
 				IF variable.NeedsTrace() THEN
-
 					dst := NewRegisterOperand (addressType);
 					Emit (Mov(position, dst, parameter1));
 					IntermediateCode.AddOffset(dst,ToMemoryUnits(system,variable.offsetInBits));
@@ -2596,6 +2621,9 @@ TYPE
 			
 			recordBase := recordType.GetBaseRecord();
 			IF (recordBase # NIL) & recordBase.NeedsTrace() THEN
+				IF backend.hasLinkRegister THEN
+					Emit(Pop(-1, lr));
+				END;
 				GetRecordTypeName (recordBase,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);

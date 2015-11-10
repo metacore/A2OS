@@ -348,7 +348,73 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i: LONGINT;
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
+			size, addressSize: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
+
+			PROCEDURE SingleInitialize(CONST op: IntermediateCode.Operand; offset: LONGINT);
+			BEGIN
+					size := offset - lastUpdated;
+					IF size > 0 THEN
+						irv.Emit(Reserve(x.position,size));
+					END;
+					irv.Emit(Data(x.position, op));
+					lastUpdated := offset + ToMemoryUnits(system, op.type.sizeInBits);
+			END SingleInitialize;
+			
+
+			PROCEDURE Initialize(type: SyntaxTree.Type; initializer: SyntaxTree.Expression; offset: LONGINT);
+			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable;
+			BEGIN
+				IF type = NIL THEN RETURN ELSE type := type.resolved END;
+				WITH type: SyntaxTree.RecordType DO
+					baseType := type.baseType;
+					IF baseType # NIL THEN
+						baseType := baseType.resolved;
+						IF baseType IS SyntaxTree.PointerType THEN 
+							baseType := baseType(SyntaxTree.PointerType).pointerBase 
+						END;
+						Initialize(baseType,NIL, offset);
+					END;
+					variable := type.recordScope.firstVariable;
+					WHILE variable # NIL DO
+						Initialize(variable.type, variable.initializer, offset+ToMemoryUnits(system,variable.offsetInBits));
+						variable := variable.nextVariable
+					END;
+				| type: SyntaxTree.ArrayType DO
+						IF type.form = SyntaxTree.Static THEN
+							baseType := type.arrayBase;
+							size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+							FOR i := 0 TO type.staticLength-1 DO
+								Initialize(baseType,NIL,offset+i*size);
+							END;
+						END;
+				| type: SyntaxTree.MathArrayType DO
+						IF type.form = SyntaxTree.Open THEN
+							dim := DynamicDim(type);
+							baseType := SemanticChecker.ArrayBase(type,dim);
+							imm := IntermediateCode.Immediate(addressType,dim);
+							SingleInitialize(imm, offset + ToMemoryUnits(system, addressType.sizeInBits)* MathDimOffset);
+							IF baseType = NIL THEN size := 0 ELSE size := system.AlignedSizeOf(baseType) END;
+							imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,size));
+							SingleInitialize(imm, offset + ToMemoryUnits(system, addressType.sizeInBits)* MathElementSizeOffset);
+							(* flags remain empty (=0) for open array *)
+						ELSIF type.form = SyntaxTree.Static THEN
+							baseType := type.arrayBase;
+							size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+							ASSERT(type.staticLength < 1024*1024*1024);
+							FOR i := 0 TO type.staticLength-1 DO
+								Initialize(baseType,NIL,offset+i*size);
+							END;
+						END;
+				ELSE 
+					IF initializer # NIL THEN
+						implementationVisitor.Evaluate(initializer, op);
+						SingleInitialize(op.op, offset);
+					END;
+				END;
+			END Initialize;
+			
+		
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
@@ -365,7 +431,12 @@ TYPE
 						irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 					END;
 				ELSE
-					irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))));
+					lastUpdated:= 0;
+					Initialize(x.type, x.initializer, 0);
+					size := ToMemoryUnits(system,system.SizeOf(x.type)) - lastUpdated;	
+					IF size > 0 THEN
+						irv.Emit(Reserve(x.position,size));
+					END;
 					IF ~x.fixed THEN
 						align := CommonAlignment(x.alignment, ToMemoryUnits(system, system.AlignmentOf(system.variableAlignment, x.type)));
 					ELSE
@@ -6189,6 +6260,7 @@ TYPE
 			END;
 		END SystemTrace;
 
+
 		PROCEDURE InitFields(type: SyntaxTree.Type; CONST adr: IntermediateCode.Operand; offset: LONGINT);
 		VAR baseType: SyntaxTree.Type; imm,mem: IntermediateCode.Operand; dim,size: LONGINT;
 			variable: SyntaxTree.Variable; i: LONGINT; initializerOp: Operand;
@@ -10602,7 +10674,7 @@ TYPE
 
 				section.SetPositionOrAlignment(procedure.fixed, procedure.alignment);
 				IF moduleBody THEN
-					InitVariables(moduleScope)
+					(* InitVariables(moduleScope) *)
 				END;
 				IF (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.CellScope) THEN
 					cellScope := scope.outerScope(SyntaxTree.CellScope);

@@ -14,7 +14,7 @@ TYPE
 	BigNumber = B.BigNumber;
 
 VAR
-	one, two: BigNumber;
+	one: BigNumber;
 	primes: ARRAY N OF LONGINT;
 
 
@@ -31,7 +31,7 @@ VAR
 				ELSE
 					Out.Int( i, 0 );  INC( i );
 					(* for "safe prime" generation, check that (p-1)/2 is prime. *)
-					B.Copy( p, t );  B.Shift( t, -1 );
+					B.Copy( p, t );  t.Shift( -1 );
 					IF IsPrime( t, checks, FALSE ) THEN
 						Out.String( " (safe prime)" ); Out.Ln;
 						RETURN p
@@ -53,7 +53,7 @@ VAR
 			IF IsPrime( p, checks, FALSE ) THEN
 				IF ~safe THEN  RETURN p
 				ELSE  (* for "safe prime" generation, check that (p-1)/2 is prime. *)
-					B.Copy( p, t );  B.Shift( t, -1 );
+					B.Copy( p, t );  t.Shift( -1 );
 					IF IsPrime( t, checks, FALSE ) THEN  RETURN p  END
 				END
 			END
@@ -117,7 +117,7 @@ VAR
 
 		(* we need (p - rem) mod add = 0 *)
 		r := B.Mod( p, add );  p := B.Sub( p, r );
-		IF B.Zero( rem ) THEN  B.Inc( p )  ELSE  p := B.Add( p, rem )  END;
+		IF rem.IsZero( ) THEN  p.Inc  ELSE  p := B.Add( p, rem )  END;
 
 		(* we now have a random number 'p' to test. *)
 		i := 0;
@@ -125,30 +125,30 @@ VAR
 			INC( i );
 			IF i >= N THEN  RETURN p  END;
 			B.AssignInt( d, primes[i] );  r := B.Mod( p, d );
-			IF B.Zero( r ) THEN  p := B.Add( p, add );  i := 0  END;
+			IF r.IsZero( ) THEN  p := B.Add( p, add );  i := 0  END;
 		END
 	END ProbableDHPrime;
 
 	PROCEDURE ProbableDHPrimeSafe( bits: INTEGER; padd, rem: BigNumber ): BigNumber;
 	VAR d, q, r, qr, qadd, p: BigNumber;  i: LONGINT;
 	BEGIN
-		B.Copy( padd, qadd );  B.Shift( qadd, -1 );
+		B.Copy( padd, qadd );  qadd.Shift( -1 );
 		q := B.NewRand( bits, 0, 1 );
 
 		r := B.Mod( q, qadd );  q := B.Sub( q, r );
-		IF B.Zero( rem ) THEN  B.Inc( q )
-		ELSE  B.Copy( rem, r );  B.Shift( r, -1 );  q := B.Add( q, r )
+		IF rem.IsZero( ) THEN  q.Inc
+		ELSE  B.Copy( rem, r );  r.Shift( -1 );  q := B.Add( q, r )
 		END;
 
 		(* we now have a random number  to test. *)
-		B.Copy( q, p );  B.Shift( p, 1 );  B.Inc( p );
+		B.Copy( q, p );  p.Shift( 1 );  p.Inc;
 
 		i := 0;
 		LOOP
 			INC( i );
 			IF i >= N THEN  RETURN p  END;
 			B.AssignInt( d, primes[i] );  r := B.Mod( p, d );  qr := B.Mod( q, d );
-			IF B.Zero( r ) OR B.Zero( qr ) THEN
+			IF r.IsZero( ) OR qr.IsZero( ) THEN
 				p := B.Add( p, padd );  q := B.Add( q, qadd );  i := 0
 			END;
 		END
@@ -158,7 +158,7 @@ VAR
 	PROCEDURE IsPrime*( a: BigNumber;  checks: INTEGER;  doTrialDiv: BOOLEAN ): BOOLEAN;
 	VAR i, k: INTEGER;  A, A1, A1odd, check: BigNumber;
 	BEGIN
-		IF checks = 0 THEN  checks := Checks( B.BitSize( a ) )  END;
+		IF checks = 0 THEN  checks := Checks( a.BitSize( ) )  END;
 		IF ~ODD( a.d[0] ) THEN  RETURN FALSE  END;
 		IF doTrialDiv THEN
 			FOR i := 1 TO N - 1 DO
@@ -166,18 +166,18 @@ VAR
 			END
 		END;
 		B.Copy( a, A );
-		IF A.neg THEN  B.Neg( A )  END;
-		B.Copy( A, A1 );  B.Dec( A1 );
-		IF B.Zero( A1 ) THEN  RETURN FALSE  END;
+		IF A.neg THEN  A.Negate  END;
+		B.Copy( A, A1 );  A1.Dec;
+		IF A1.IsZero( ) THEN  RETURN FALSE  END;
 
 		(* write  A1  as  A1odd * 2^k *)
-		k := 1;  WHILE ~B.BitSet( A1, k ) DO  INC( k )  END;
-		B.Copy( A1, A1odd );  B.Shift( A1odd, -k );
+		k := 1;  WHILE ~A1.BitSet( k ) DO  INC( k )  END;
+		B.Copy( A1, A1odd );  A1odd.Shift( -k );
 
 		FOR i := 1 TO checks DO
-			check := B.NewRand( B.BitSize( A1 ), 0, 0 );
-			IF B.Cmp( check, A1 ) >= 0 THEN  check := B.Sub( check, A1 )  END;
-			B.Inc( check );
+			check := B.NewRand( A1.BitSize( ), 0, 0 );
+			IF check.GEQ( A1 ) THEN  check := B.Sub( check, A1 )  END;
+			check.Inc;
 			(* now 1 <= check < A *)
 			IF ~witness( check, A, A1, A1odd, k ) THEN   RETURN FALSE  END;
 		END;
@@ -188,14 +188,14 @@ VAR
 	VAR w: BigNumber;
 	BEGIN
 		w := B.ModExp( W, a1odd, a );
-		IF B.Cmp( w, one ) = 0 THEN  (* probably prime *)  RETURN TRUE  END;
-		IF B.Cmp( w, a1 ) = 0 THEN   RETURN TRUE  END;
+		IF w.EQ( one ) THEN  (* probably prime *)  RETURN TRUE  END;
+		IF w.EQ( a1 ) THEN   RETURN TRUE  END;
 				(* w = -1 (mod a), a is probably prime *)
 		WHILE k > 0 DO
 			w := B.ModMul( w, w, a );  (* w = w^2 mod a *)
-			IF B.Cmp( w, one ) = 0 THEN  RETURN FALSE  END;
+			IF w.EQ( one ) THEN  RETURN FALSE  END;
 					(* a is composite, otherwise a previous w would  have been = -1 (mod a) *)
-			IF B.Cmp( w, a1 ) = 0 THEN  RETURN TRUE  END;
+			IF w.EQ( a1 ) THEN  RETURN TRUE  END;
 					(* w = -1 (mod a), a is probably prime *)
 			DEC( k )
 		END;
@@ -220,6 +220,6 @@ VAR
 	END Init;
 
 BEGIN
-	Init;  B.AssignInt( one, 1 ); B.AssignInt( two, 2 );
+	Init;  B.AssignInt( one, 1 ); 
 END CryptoPrimes.
 

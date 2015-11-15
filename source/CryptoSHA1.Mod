@@ -25,10 +25,10 @@ TYPE
 
 		PROCEDURE Initialize*;
 		BEGIN
-			hash[0] := 067452301H;
+			hash[0] := LONGINT( 067452301H );
 			hash[1] := LONGINT( 0EFCDAB89H );
 			hash[2] := LONGINT( 098BADCFEH );
-			hash[3] := 010325476H;
+			hash[3] := LONGINT( 010325476H );
 			hash[4] := LONGINT( 0C3D2E1F0H );
 			Nl := 0;
 			Nh := 0;
@@ -165,7 +165,7 @@ TYPE
 		xc := U.SetFromBufferBE( buf, pos );  INC( pos, 4 );  tr0019( A, B, C, D, E, T, xc );
 		xd := U.SetFromBufferBE( buf, pos );  INC( pos, 4 );  tr0019( T, A, B, C, D, E, xd );
 		xe := U.SetFromBufferBE( buf, pos );  INC( pos, 4 );  tr0019( E, T, A, B, C, D, xe );
-		xf := U.SetFromBufferBE( buf, pos  );  INC( pos, 4 );  tr0019( D, E, T, A, B, C, xf  );
+		xf  := U.SetFromBufferBE( buf, pos );  INC( pos, 4 );  tr0019( D, E, T, A, B, C, xf  );
 
 		x0 := ROT( x0 / x2 / x8 / xd, 1 );		tr0019( C, D, E, T, A, B, x0 );
 		x1 := ROT( x1 / x3 / x9 / xe, 1 );		tr0019( B, C, D, E, T, A, x1 );
@@ -180,7 +180,7 @@ TYPE
 		x9 := ROT( x9 / xb / x1 / x6, 1 );		tr2039( T, A, B, C, D, E, x9 );
 		xa := ROT( xa / xc / x2 / x7, 1 ); 		tr2039( E, T, A, B, C, D, xa );
 		xb := ROT( xb / xd / x3 / x8, 1 );		tr2039( D, E, T, A, B, C, xb );
-		xc := ROT( xc / xe  / x4 / x9, 1 ); 		tr2039( C, D, E, T, A, B, xc );
+		xc := ROT( xc / xe / x4 / x9, 1 ); 		tr2039( C, D, E, T, A, B, xc );
 		xd := ROT( xd / xf  / x5 / xa, 1 );		tr2039( B, C, D, E, T, A, xd );
 		xe := ROT( xe / x0 / x6 / xb, 1 );		tr2039( A, B, C, D, E, T, xe );
 		xf  := ROT( xf  / x1 / x7 / xc, 1 );		tr2039( T, A, B, C, D, E, xf  );
@@ -197,7 +197,7 @@ TYPE
 		x9 := ROT( x9 / xb / x1 / x6, 1 );		tr4059( B, C, D, E, T, A, x9 );
 		xa := ROT( xa / xc / x2 / x7, 1 );		tr4059( A, B, C, D, E, T, xa );
 		xb := ROT( xb / xd / x3 / x8, 1 );		tr4059( T, A, B, C, D, E, xb );
-		xc := ROT( xc / xe  / x4 / x9, 1 );		tr4059( E, T, A, B, C, D, xc );
+		xc := ROT( xc / xe / x4 / x9, 1 );		tr4059( E, T, A, B, C, D, xc );
 		xd := ROT( xd / xf  / x5 / xa, 1 );  		tr4059( D, E, T, A, B, C, xd );
 		xe := ROT( xe / x0 / x6 / xb, 1 );  		tr4059( C, D, E, T, A, B, xe );
 		xf  := ROT( xf  / x1 / x7 / xc, 1 );		tr4059( B, C, D, E, T, A, xf  );
@@ -214,7 +214,7 @@ TYPE
 		xa := ROT( xa / xc / x2 / x7, 1 );		tr4059( C, D, E, T, A, B, xa );
 		xb := ROT( xb / xd / x3 / x8, 1 );		tr4059( B, C, D, E, T, A, xb );
 
-		xc := ROT( xc / xe / x4 / x9, 1 );			tr6079( A, B, C, D, E, T, xc );
+		xc := ROT( xc / xe / x4 / x9, 1 );		tr6079( A, B, C, D, E, T, xc );
 		xd := ROT( xd / xf  / x5 / xa, 1 );		tr6079( T, A, B, C, D, E, xd );
 		xe := ROT( xe / x0 / x6 / xb, 1 ); 		tr6079( E, T, A, B, C, D, xe );
 		xf  := ROT( xf  / x1 / x7 / xc, 1 );		tr6079( D, E, T, A, B, C, xf  );
@@ -230,7 +230,7 @@ TYPE
 		x9 := ROT( x9 / xb / x1 / x6, 1 );		tr6079( T, A, B, C, D, E, x9 );
 		xa := ROT( xa / xc / x2 / x7, 1 );		tr6079( E, T, A, B, C, D, xa );
 		xb := ROT( xb / xd / x3 / x8, 1 );		tr6079( D, E, T, A, B, C, xb );
-		xc := ROT( xc / xe  / x4 / x9, 1 );		tr6079( C, D, E, T, A, B, xc );
+		xc := ROT( xc / xe / x4 / x9, 1 );		tr6079( C, D, E, T, A, B, xc );
 		xd := ROT( xd / xf  / x5 / xa, 1 );		tr6079( B, C, D, E, T, A, xd );
 		xe := ROT( xe / x0 / x6 / xb, 1 );		tr6079( A, B, C, D, E, T, xe );
 		xf  := ROT( xf  / x1 / x7 / xc, 1 );		tr6079( T, A, B, C, D, E, xf  );

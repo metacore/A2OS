@@ -91,7 +91,7 @@ VAR
 			FOR i := 0 TO 19 DO  sbuf[i] := seed[i]  END;
 		END;
 		B.AssignInt( test, 1 );
-		B.Shift( test, bits - 1 );
+		test.Shift( bits - 1 );
 		NEW( h );
 		pfound := FALSE;
 		LOOP (* find q and p *)
@@ -138,14 +138,14 @@ VAR
 					h.Update( buf, 0, 20 );
 					h.GetHash( md, 0 );
 					B.AssignBin( r0, md, 0, 20 );
-					B.Shift( r0, 160*k );  W := B.Add( W, r0 );
+					r0.Shift( 160*k );  W := B.Add( W, r0 );
 				END;
-				B.Mask( W, bits - 1);
+				W.Mask( bits - 1);
 				W := B.Add( W, test );
 				B.Copy( dsa.q, r0 );
-				B.Shift( r0, 1 );
+				r0.Shift( 1 );
 				r0 := B.Mod( W, r0 );
-				B.Dec( r0 );
+				r0.Dec;
 				dsa.p := B.Sub( W, r0 );
 				IF B.Cmp( dsa.p, test ) >= 0 THEN
 					IF P.IsPrime( dsa.p, 50, TRUE ) THEN
@@ -160,13 +160,13 @@ VAR
 		END; (* find q and p *)
 
 		B.Copy( dsa.p, test );
-		B.Dec( test );
+		test.Dec;
 		r0 := B.Div( test, dsa.q );	(*  r0 := (p-1)/q *)
 		B.AssignInt( test, 2 );
 		LOOP (* g := test ^ r0 mod p *)
 			dsa.g := B.ModExp( test, r0, dsa.p );
 			IF B.Cmp( dsa.g, one ) # 0 THEN  EXIT  END;
-			B.Inc( test );
+			test.Inc;
 		END;
 	END GenParams;
 
@@ -176,7 +176,7 @@ VAR
 		GenParams( priv, bits, seed );
 		REPEAT
 			priv.y := B.NewRandRange( priv.q )
-		UNTIL ~B.Zero( priv.y );
+		UNTIL ~priv.y.IsZero( );
 		NEW( pub );  pub^ := priv^;
 		pub.y := B.ModExp( priv.g, priv.y, priv.p );
 		priv.private := TRUE;

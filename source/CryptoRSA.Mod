@@ -25,14 +25,14 @@ TYPE
 		VAR
 			name-: ARRAY 128 OF CHAR;   (** Owner of this key. *)
 			private-: BOOLEAN;   (** Is this a private key? then the exponent is encrypted *)
-			size-: INTEGER;
+			size-: LONGINT;
 			exponent-, modulus-: Number;
 			p, q, u: Number;   (* for chinese remainder theorem *)
 			time-, date-: LONGINT;
 			certificates*: Certificate;
 			next*: Key;
 
-			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  dlen: INTEGER ): Number;
+			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  dlen: LONGINT ): Number;
 			VAR msg: Number;
 			BEGIN
 				ASSERT( private );
@@ -45,10 +45,10 @@ TYPE
 			END Sign;
 
 
-			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: INTEGER;  signature: Number ): BOOLEAN;
+			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: LONGINT;  signature: Number ): BOOLEAN;
 			VAR
 				msg: Number;
-				i, l: INTEGER;
+				i, l: LONGINT;
 				buf: Buffer;
 			BEGIN
 				ASSERT(  ~private & (dlen >= 16) );
@@ -105,8 +105,8 @@ VAR
 	BEGIN
 		ASSERT( B.Cmp( p, q ) # 0 );
 		n := B.Mul( p, q );
-		B.Copy( p, p1 );  B.Dec( p1 );
-		B.Copy( q, q1 );  B.Dec( q1 );
+		B.Copy( p, p1 );  p1.Dec;
+		B.Copy( q, q1 );  q1.Dec;
 		x := B.Mul( p1, q1 );
 
 		d := B.ModInverse( e, x );
@@ -205,7 +205,7 @@ VAR
 		r.String( k.name );
 		r.RawBool( k.private );
 		ASSERT( k.private );
-		r.RawInt( k.size );
+		r.RawLInt( k.size );
 		r.RawLInt( k.time );
 		r.RawLInt( k.date );
 
@@ -259,7 +259,7 @@ VAR
 		ASSERT( k.private );
 		w.Char( '"' ); w.String( k.name ); w.Char( '"' );
 		w.RawBool( k.private );
-		w.RawInt( k.size );
+		w.RawLInt( k.size );
 		w.RawLInt( k.time );
 		w.RawLInt( k.date );
 

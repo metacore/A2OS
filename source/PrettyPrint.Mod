@@ -18,7 +18,7 @@ CONST
 	PPDir = "PPr";
 
 VAR
-	highlighter: SyntaxHighlighter.Highlighter;
+	highlighterU, highlighterL: SyntaxHighlighter.Highlighter;
 	out, err: Streams.Writer;
 	
 	PROCEDURE CheckSubDirectory( CONST dname: ARRAY OF CHAR ): BOOLEAN;
@@ -40,17 +40,20 @@ VAR
 	
 	PROCEDURE Convert*( context: Commands.Context );	(*  {filename} ~ *)
 	VAR 
-		filename, dest: ARRAY 64 OF CHAR;  format, res: LONGINT;
+		filename, dest: ARRAY 64 OF CHAR;  format, l, res: LONGINT;
 		f: Files.File;  text: Texts.Text;
+		highlighter: SyntaxHighlighter.Highlighter;
 	BEGIN
 		out := context.out;  err := context.error;
 		
 		out.String( "PrettyPrint.Convert" ); out.Ln;
 		IF ~CheckSubDirectory( PPDir ) THEN  Files.CreateDirectory( PPDir, res )  END;
-		IF highlighter = NIL THEN  LoadHighlighter  END;
-		IF highlighter # NIL THEN
+		IF highlighterU = NIL THEN  LoadHighlighter  END;
+		IF highlighterU # NIL THEN
 			WHILE context.arg.GetString( filename ) DO
 				out.String( "    " );  out.String( filename );  
+				l := Strings.Length( filename );
+				IF filename[l-3] = 'm' THEN  highlighter := highlighterL  ELSE  highlighter := highlighterU END;
 				f := Files.Old( filename );
 				IF f = NIL THEN
 					err.String( " : file not found" ); err.Ln;  
@@ -74,18 +77,20 @@ VAR
 	VAR res: LONGINT; msg: ARRAY 128 OF CHAR;
 	BEGIN 
 		Commands.Call( "SyntaxHighlighter.Open PrettyPrintHighlighter.XML", {}, res, msg );
-		highlighter := SyntaxHighlighter.GetHighlighter( "PrintOberon" );
+		highlighterU := SyntaxHighlighter.GetHighlighter( "PrintOberon" );
+		highlighterL := SyntaxHighlighter.GetHighlighter( "printoberon" );
 		Commands.Call( "SyntaxHighlighter.Open SyntaxHighlighter.XML", {}, res, msg );
 	END LoadHighlighter;
 
 BEGIN
-	highlighter := NIL
+	highlighterU := NIL;
+	highlighterL := NIL
 END PrettyPrint.
 
 
 	SystemTools.Free PrettyPrint ~
 	
-	PrettyPrint.Convert  PrettyPrint.Mod  Xyz.Mod ~
+	PrettyPrint.Convert  PrettyPrint.Mod  Huffman.mod Xyz.Mod ~
 
 
 

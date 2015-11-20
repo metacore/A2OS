@@ -38,31 +38,40 @@
 	<Styles>
 		<Style name="Default"/>
 		<Style name="Bold" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
+		<Style name="KeyWords" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
+		<Style name="KeyWordsL" fontstyle="{0}" color="7090FFFF"/>
 		<Style name="Italic" fontstyle="{1}"/>
 		<Style name="Red" fontsize="8" fontstyle="{0}" color="FF0000FF"/>
 		<Style name="Blue" fontsize="8" fontstyle="{0}" color="0000FFFF"/>
 		<Style name="Green" fontsize="8" fontstyle="{0}" color="009000FF"/>
 		<Style name="Comment" color="808080FF"/>
+		<Style name="Punctuation"  color="707070FF"/>
 		<Style name="ToDo" fontsize="8" fontstyle="{0}" color = "FF0000FF"/>
 		<Style name="CommentItalic" fontstyle="{1}" color="808080FF"/>
 		<Style name="Control" fontstyle="{0}" color="FFFF"/>
 		<Style name="Modifiers" color="A000FF"/>
 		<Style name="Locking" color="FF00FFFF"/>
 		<Style name="Checks" fontsize="8" fontstyle="{0}" color="0000FFFF"/>
+		<Style name="ChecksL" fontstyle="{0}" color="0000FFFF"/>
 		<Style name="Threads" color="FF00FFFF"/>
+		<Style name="ThreadsL" fontstyle="{0}" color="FF00FFFF"/>
 		<Style name="Structure" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
 		<Style name="Operators" color="D02020FF"/>
 		<Style name="OperatorKW" fontsize="8" fontstyle="{0}" color="CF5F5FFF"/>
+		<Style name="OperatorKWL" fontstyle="{0}" color="E07070FF"/>
 		<Style name="Values" color="158080FF"/>
 		<Style name="ValueNames" fontsize="8" fontstyle="{0}" color="159898FF"/>
+		<Style name="ValueNamesL" fontstyle="{0}" color="1088A8FF"/>
 		<Style name="BasicTypes" fontsize="8" fontstyle="{0}" color="7F8FAFFF"/>
+		<Style name="BasicTypesL" fontstyle="{0}" color="7080A0FF"/>
 		<Style name="ComplexTypes" fontstyle="{0}" color="FFFF"/>
 		<Style name="Dangerous" fontsize="8" fontstyle="{0}" color="FF0000FF"/>
+		<Style name="DangerousL" fontstyle="{0}" color="FF0000FF"/>
 		<Style name="Debug" color="FFFF"/>
 		<Style name="String" color="7F002FFF"/>
 		<Style name="Error" bgcolor="FF0000FF"/>
 		<Style name="StdProc" fontsize="8" fontstyle="{0}" color="00A0C0FF"/>
-		<Style name="LinkerSpecial" color="C06000FF"/>
+		<Style name="StdProcL" fontstyle="{0}" color="00A0B0FF"/>
 	</Styles>
 
 	<Highlighters>
@@ -81,27 +90,27 @@
 			</Tokens>
 
 			<Words allowCharacters="._" numberStyle="Values">
-				<Group style="Bold">
+				<Group style="KeyWords">
 					FOR TO WHILE DO REPEAT UNTIL IF THEN ELSE ELSIF
 					LOOP CASE BY
 					BEGIN END CODE FINALLY
 					OF WITH
 				</Group>
-				<Group style="Green">
+				<Group style="KeyWords">
 					RETURN EXIT
 				</Group>
-				<Group style="Bold">
+				<Group style="KeyWords">
 					VAR CONST
 					ARRAY POINTER
 				</Group>
-				<Group style="Bold">
-					NEW SELF DISPOSE
+				<Group style="KeyWords">
+					DISPOSE
 				</Group>
 				<Group style="OperatorKW">
 					DIV MOD IN IS OR
 				</Group>
 				<Group style="StdProc">
-					ABS ASH CAP CHR ORD
+					ABS ASH CAP CHR ORD NEW CAS
 					COPY GETPROCEDURE LEN
 					MAX MIN ODD ADDRESSOF SIZEOF SHORT LONG ENTIER ENTIERH
 					RE IM
@@ -112,7 +121,7 @@
 					OUT
 				</Group>
 				<Group style="Modifiers">
-					DELEGATE
+					DELEGATE REALTIME UNCHECKED UNCOOPERATIVE DISPOSABLE ALIGNED
 				</Group>
 				<Group style="Locking">
 					KernelLog.Enter
@@ -125,21 +134,18 @@
 					*.AcquireWrite *.ReleaseWrite
 					mtxLock mtxUnlock conWait conSignal
 				</Group>
-				<Group style="LinkerSpecial">
-					Heaps.Relocate
-				</Group>
 				<Group style="Checks">
 					ASSERT
 				</Group>
 				<Group style="Threads">
 					ACTIVE SHARED PRIORITY AWAIT EXCLUSIVE
 				</Group>
-				<Group style="Bold">
+				<Group style="KeyWords">
 					MODULE IMPORT TYPE DEFINITION REFINES IMPLEMENTS PROCEDURE OPERATOR
 					OBJECT RECORD
 				</Group>
 				<Group style="ValueNames">
-					NIL TRUE FALSE IMAG
+					NIL TRUE FALSE IMAG SELF
 				</Group>
 				<Group style="BasicTypes">
 					BOOLEAN
@@ -231,6 +237,173 @@
 				<Region
 					style="Default" styleOpen="Default" styleClose="Default"
 					open="CODE" close="END" nesting="FALSE" multiline="TRUE"
+				/>
+			</Regions>
+
+		</Highlighter>
+
+		<Highlighter name="printoberon" defaultstyle="Default">
+			<Tokens>
+				<Group style="Error">
+					*)
+				</Group>
+				<Group style="Operators">
+					= := * + - /
+					&lt; &lt;= &gt;= &gt; &amp; ~ #
+				</Group>
+				<Group style="Comment">
+					; : ,
+				</Group>
+			</Tokens>
+
+			<Words allowCharacters="._" numberStyle="Values">
+				<Group style="KeyWordsL">
+					for to while do repeat until if then else elsif
+					loop case by
+					begin end code finally
+					of with
+				</Group>
+				<Group style="KeyWordsL">
+					return exit
+				</Group>
+				<Group style="KeyWordsL">
+					var const
+					array pointer
+				</Group>
+				<Group style="KeyWordsL">
+					new self dispose
+				</Group>
+				<Group style="OperatorKWL">
+					div mod in is or
+				</Group>
+				<Group style="StdProcL">
+					abs ash cap chr ord cas
+					copy getprocedure len
+					max min odd addressof sizeof short long entier entierh
+					re im
+					lsh rot incr
+					first last step
+					incl excl inc dec
+					send receive
+					out
+				</Group>
+				<Group style="Modifiers">
+					DELEGATE REALTIME DISPOSABLE ALIGNED
+				</Group>
+				<Group style="Locking">
+					KernelLog.Enter
+					KernelLog.Exit
+					Acquire Release
+					*.Acquire *.Release
+					AcquireRead ReleaseRead
+					AcquireWrite ReleaseWrite
+					*.AcquireRead 	*.ReleaseRead
+					*.AcquireWrite *.ReleaseWrite
+					mtxLock mtxUnlock conWait conSignal
+				</Group>
+				<Group style="ChecksL">
+					assert
+				</Group>
+				<Group style="Threads">
+					ACTIVE SHARED PRIORITY EXCLUSIVE
+				</Group>
+				<Group style="ThreadsL">
+					await 
+				</Group>
+				<Group style="KeyWordsL">
+					module import type definition refines implements procedure operator
+					object record
+				</Group>
+				<Group style="ValueNamesL">
+					nil true false imag
+				</Group>
+				<Group style="BasicTypesL">
+					boolean
+					shortint integer longint hugeint
+					real longreal					
+					complex longcomplex
+					set
+					char
+					any
+					range
+					address size
+				</Group>
+				<Group style="Dangerous">
+					UNTRACED UNSAVE UNCHECKED UNCOOPERATIVE
+				</Group>
+				<Group style="DangerousL">
+					system.get system.get8 system.get16 system.get32 system.get64
+					system.sizeof system.typeof
+					system.put system.put8 system.put16 system.put32 system.put64
+					system.val
+					system.adr
+					system.move
+					system.portin system.portput
+					system.cli system.sti
+					system
+					system.byte
+					system.bit system.msk
+					system.fp system.setfp
+					system.sp system.setsp
+					system.lnk system.setlnk
+					system.pc system.setpc
+					system.ldpsr system.stpsr
+					system.ldcpr system.stcpr
+					system.flush
+					system.null
+					system.xor
+					system.muld
+					system.addc
+					system.pack system.unpk		
+					system.typecode		
+					halt
+				</Group>
+				<Group style="Debug">
+					KernelLog
+					KernelLog.Send
+					KernelLog.String KernelLog.Ln
+					KernelLog.Char KernelLog.Int KernelLog.Boolean
+					KernelLog.IntSuffix KernelLog.Hex
+					KernelLog.Address KernelLog.HIntHex
+					KernelLog.Memory KernelLog.Buffer
+					KernelLog.Bits
+					KernelLog.OpenBuffer
+					KernelLog.CloseBuffer
+					Trace
+					Trace.Send
+					Trace.Ln Trace.String Trace.StringLn
+					Trace.Int Trace.Boolean Trace.IntSuffix
+					Trace.Hex Trace.Address
+					Trace.HIntHex
+					Trace.Memory Trace.Buffer Trace.Bits
+					Trace.Blue Trace.Green Trace.Red Trace.Yellow Trace.Default
+				</Group>
+			</Words>
+
+			<Regions>
+				<Region
+					style="Comment" styleOpen="Comment" styleClose="Comment"
+					open="(*" close="*)" nesting="TRUE" multiline="TRUE"
+				/>
+				<Region
+					style="ToDo" styleOpen="Comment" styleClose="Comment"
+					open="(*!" close="*)" nesting="TRUE" multiline="TRUE"
+				/>
+				<Region
+					style="Red" styleOpen="Comment" styleClose="Comment"
+					open="(*?" close="*)" nesting="TRUE" multiline="TRUE"
+				/>
+				<Region
+					style="Comment" styleOpen="CommentItalic" styleClose="CommentItalic"
+					open="(**" close="*)" nesting="TRUE" multiline="TRUE"
+				/>
+				<Region
+					style="String" styleOpen="Comment" styleClose="Comment"
+					open='"' close='"' nesting="FALSE" multiline="FALSE"
+				/>
+				<Region
+					style="String" styleOpen="Comment" styleClose="Comment"
+					open="'" close="'" nesting="FALSE" multiline="FALSE"
 				/>
 			</Regions>
 

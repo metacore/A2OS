@@ -432,7 +432,9 @@ TYPE
 					END;
 				ELSE
 					lastUpdated:= 0;
-					Initialize(x.type, x.initializer, 0);
+					IF implementationVisitor.newObjectFile THEN
+						Initialize(x.type, x.initializer, 0);
+					END;
 					size := ToMemoryUnits(system,system.SizeOf(x.type)) - lastUpdated;	
 					IF size > 0 THEN
 						irv.Emit(Reserve(x.position,size));
@@ -10673,8 +10675,8 @@ TYPE
 				END;
 
 				section.SetPositionOrAlignment(procedure.fixed, procedure.alignment);
-				IF moduleBody THEN
-					(* InitVariables(moduleScope) *)
+				IF moduleBody & ~newObjectFile THEN
+					InitVariables(moduleScope)
 				END;
 				IF (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.CellScope) THEN
 					cellScope := scope.outerScope(SyntaxTree.CellScope);

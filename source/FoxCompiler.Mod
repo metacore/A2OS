@@ -15,7 +15,6 @@ CONST
 	TraceError* = 3;
 	Info* = 4;
 	FindPC* = 5;
-	ActiveCellsFlag*=6;
 	Warnings*=7;
 	ForceModuleBodies*=8;
 	UseDarwinCCalls*=9;	(* use Darwin stack alignment for ext. C procedures *)	(*fld*)
@@ -161,7 +160,7 @@ TYPE
 
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
-		options.frontend.Initialize(diagnostics, reader, source, position, ActiveCellsFlag IN flags);
+		options.frontend.Initialize(diagnostics, reader, source, position);
 		REPEAT
 			(** first phase: scan and parse **)
 			module := options.frontend.Parse();
@@ -191,10 +190,6 @@ TYPE
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
 					PrintModule;
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
-				END;
-
-				IF (ActiveCellsFlag IN flags) & ~(CellsAreObjects IN flags) THEN
-					Global.GetSymbolName(module,name);
 				END;
 
 				(** third phase: generate code, can consist of sub-phases (such as intermediate backend / hardware backend) **)
@@ -435,7 +430,6 @@ TYPE
 			IF options.GetFlag("darwinHost") THEN INCL(compilerOptions.flags,UseDarwinCCalls) END;	(*fld*)
 			IF options.GetFlag("singleModule") THEN INCL(compilerOptions.flags,SingleModule) END;
 			IF options.GetFlag("oberon07") THEN INCL(compilerOptions.flags, Oberon07) END;
-			IF options.GetFlag("activeCells") THEN INCL(compilerOptions.flags, ActiveCellsFlag) END;
 			IF options.GetFlag("cooperative") THEN INCL(compilerOptions.flags, Cooperative) END;
 			IF options.GetFlag("cellsAreObjects") THEN INCL(compilerOptions.flags, CellsAreObjects) END;
 			IF ~options.GetString("srcPath", compilerOptions.srcPath) THEN compilerOptions.srcPath := "" END;

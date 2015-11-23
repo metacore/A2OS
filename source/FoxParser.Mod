@@ -175,7 +175,6 @@ TYPE
 		recentComment: SyntaxTree.Comment;
 		moduleScope: SyntaxTree.ModuleScope;
 		error-: BOOLEAN;
-		activeCellsSupport: BOOLEAN;
 
 		indent: LONGINT;   (* for debugging purposes only *)
 
@@ -212,12 +211,7 @@ TYPE
 			recentCommentItem := NIL; recentComment := NIL;
 			(* debugging *)
 			indent := 0;
-			activeCellsSupport := FALSE;
 		END Init;
-
-		PROCEDURE ActiveCellsSupport*;
-		BEGIN activeCellsSupport := TRUE
-		END ActiveCellsSupport;
 
 		(** output error message and / or given code *)
 		PROCEDURE Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR);

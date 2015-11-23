@@ -10,12 +10,11 @@ TYPE
 		scanner: Scanner.Scanner;
 		parser: Parser.Parser;
 		
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT; activeCells: BOOLEAN);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
-			Initialize^(diagnostics, reader, fileName, pos, activeCells);
+			Initialize^(diagnostics, reader, fileName, pos);
 			scanner := Scanner.NewScanner(fileName, reader, pos, diagnostics);
 			parser := Parser.NewParser( scanner, diagnostics );
-			IF activeCells THEN parser.ActiveCellsSupport END;
 		END Initialize;
 		
 		PROCEDURE Parse*(): SyntaxTree.Module;

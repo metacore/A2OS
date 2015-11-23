@@ -117,7 +117,6 @@ TYPE
         recentComment: SyntaxTree.Comment;
         moduleScope: SyntaxTree.ModuleScope;
         error-: BOOLEAN;
-        activeCellsSupport: BOOLEAN;
 
         initStatements: SyntaxTree.StatementSequence;
         initOuter: SyntaxTree.Statement;
@@ -175,8 +174,6 @@ TYPE
             NEW(localIdentTable);
             (* debugging *)
             indent := 0;
-            activeCellsSupport := FALSE;
-
         END Init;
 
         PROCEDURE InitDelegateModifiers;
@@ -218,11 +215,6 @@ TYPE
             StringPool.GetIndex(Global.LynxSelect, lynxSelect);
             StringPool.GetIndex(Global.LynxSelidx, lynxSelidx);
         END InitSystemNames;
-
-        PROCEDURE ActiveCellsSupport*;
-        BEGIN 
-            activeCellsSupport := TRUE
-        END ActiveCellsSupport;
 
         PROCEDURE S(CONST s: ARRAY OF CHAR);    (* for debugging purposes only *)
             VAR i: LONGINT;

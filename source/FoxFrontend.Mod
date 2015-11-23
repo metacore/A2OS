@@ -9,11 +9,11 @@ TYPE
 	VAR		
 		PROCEDURE & InitFrontEnd*;
 		BEGIN
-			Initialize(NIL, NIL, "", 0, FALSE);
+			Initialize(NIL, NIL, "", 0);
 		END InitFrontEnd;
 		
 		(* initialize frontend for usage *)
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader;CONST fileName: ARRAY OF CHAR; pos: LONGINT; activeCellsSupport: BOOLEAN);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader;CONST fileName: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
 		END Initialize;
 

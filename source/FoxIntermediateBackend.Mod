@@ -351,6 +351,39 @@ TYPE
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
 			size, addressSize: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 
+			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
+			BEGIN
+				type := type.resolved;
+				IF type IS SyntaxTree.RecordType THEN
+					IF ScopeNeedsInitialization(type(SyntaxTree.RecordType).recordScope) THEN RETURN TRUE END;
+				ELSIF (type IS SyntaxTree.ArrayType) THEN
+					IF type(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+						IF TypeNeedsInitialization(type(SyntaxTree.ArrayType).arrayBase) THEN RETURN TRUE END;
+					END;
+				ELSIF type IS SyntaxTree.MathArrayType THEN
+					WITH type: SyntaxTree.MathArrayType DO
+						IF type.form = SyntaxTree.Open THEN
+							RETURN TRUE
+						ELSIF type.form = SyntaxTree.Static THEN
+							IF TypeNeedsInitialization(type.arrayBase) THEN RETURN TRUE END;
+						END;
+					END;
+				END;
+				RETURN FALSE
+			END TypeNeedsInitialization;
+
+			PROCEDURE ScopeNeedsInitialization(scope: SyntaxTree.Scope): BOOLEAN;
+			VAR variable: SyntaxTree.Variable;
+			BEGIN
+				variable := scope.firstVariable;
+				WHILE variable # NIL DO
+					IF TypeNeedsInitialization(variable.type) THEN RETURN TRUE END;
+					IF variable.initializer # NIL THEN RETURN TRUE END;
+					variable := variable.nextVariable;
+				END;
+				RETURN FALSE
+			END ScopeNeedsInitialization;
+
 			PROCEDURE SingleInitialize(CONST op: IntermediateCode.Operand; offset: LONGINT);
 			BEGIN
 					size := offset - lastUpdated;
@@ -383,9 +416,11 @@ TYPE
 				| type: SyntaxTree.ArrayType DO
 						IF type.form = SyntaxTree.Static THEN
 							baseType := type.arrayBase;
-							size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
-							FOR i := 0 TO type.staticLength-1 DO
-								Initialize(baseType,NIL,offset+i*size);
+							IF TypeNeedsInitialization(baseType) THEN
+								size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+								FOR i := 0 TO type.staticLength-1 DO
+									Initialize(baseType,NIL,offset+i*size);
+								END;
 							END;
 						END;
 				| type: SyntaxTree.MathArrayType DO
@@ -400,10 +435,12 @@ TYPE
 							(* flags remain empty (=0) for open array *)
 						ELSIF type.form = SyntaxTree.Static THEN
 							baseType := type.arrayBase;
-							size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
-							ASSERT(type.staticLength < 1024*1024*1024);
-							FOR i := 0 TO type.staticLength-1 DO
-								Initialize(baseType,NIL,offset+i*size);
+							IF TypeNeedsInitialization(baseType) THEN
+								size := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+								ASSERT(type.staticLength < 1024*1024*1024);
+								FOR i := 0 TO type.staticLength-1 DO
+									Initialize(baseType,NIL,offset+i*size);
+								END;
 							END;
 						END;
 				ELSE 
@@ -432,7 +469,7 @@ TYPE
 					END;
 				ELSE
 					lastUpdated:= 0;
-					IF implementationVisitor.newObjectFile THEN
+					IF implementationVisitor.newObjectFile & ((x.initializer # NIL) OR TypeNeedsInitialization(x.type)) THEN
 						Initialize(x.type, x.initializer, 0);
 					END;
 					size := ToMemoryUnits(system,system.SizeOf(x.type)) - lastUpdated;	

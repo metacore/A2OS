@@ -42,7 +42,7 @@ type
 		procedure AddIntegerProperty*(c: any; const name: array of char; value: longint);
 		end AddIntegerProperty;
 
-		procedure FinishedProperties*(c: any);
+		procedure FinishedProperties*(var c: any);
 		end FinishedProperties;
 
 		procedure Connect*(outPort, inPort: any; depth: longint);

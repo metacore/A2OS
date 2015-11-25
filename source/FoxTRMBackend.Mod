@@ -2206,7 +2206,7 @@ TYPE
 		PROCEDURE GetSystem(): Global.System;
 		VAR system: System;
 		BEGIN
-			NEW(system, 18, 32, 32, 32, 32, 32, 32, 0(* parameter offset 0: handled locally *), 0 (* no pass of parameters in registers *) , cooperative);
+			NEW(system, 18, 32, 32, 32, 32, 32, 32, 64(* parameter offset 0: handled locally *), 0 (* no pass of parameters in registers *) , cooperative);
 			Global.SetDefaultDeclarations(system,32);
 			Global.SetDefaultOperators(system);
 			RETURN system

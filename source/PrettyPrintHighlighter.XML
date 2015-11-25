@@ -12,7 +12,7 @@
 		<!ATTLIST Style
 			name NMTOKEN #REQUIRED
 			fontname NMTOKEN "Oberon"
-			fontsize NMTOKEN "10"
+			fontsize NMTOKEN "12"
 			fontstyle CDATA "{}"
 			color NMTOKEN "FF"
 			bgcolor NMTOKEN "0"
@@ -37,40 +37,40 @@
 <SyntaxHighlighter>
 	<Styles>
 		<Style name="Default"/>
-		<Style name="Bold" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
-		<Style name="KeyWords" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
+		<Style name="Bold" fontsize="10" fontstyle="{0}" color="7090FFFF"/>
+		<Style name="KeyWords" fontsize="10" fontstyle="{0}" color="7090FFFF"/>
 		<Style name="KeyWordsL" fontstyle="{0}" color="7090FFFF"/>
 		<Style name="Italic" fontstyle="{1}"/>
-		<Style name="Red" fontsize="8" fontstyle="{0}" color="FF0000FF"/>
-		<Style name="Blue" fontsize="8" fontstyle="{0}" color="0000FFFF"/>
-		<Style name="Green" fontsize="8" fontstyle="{0}" color="009000FF"/>
+		<Style name="Red" fontsize="10" fontstyle="{0}" color="FF0000FF"/>
+		<Style name="Blue" fontsize="10" fontstyle="{0}" color="0000FFFF"/>
+		<Style name="Green" fontsize="10" fontstyle="{0}" color="009000FF"/>
 		<Style name="Comment" color="808080FF"/>
 		<Style name="Punctuation"  color="707070FF"/>
-		<Style name="ToDo" fontsize="8" fontstyle="{0}" color = "FF0000FF"/>
+		<Style name="ToDo" fontsize="10" fontstyle="{0}" color = "FF0000FF"/>
 		<Style name="CommentItalic" fontstyle="{1}" color="808080FF"/>
 		<Style name="Control" fontstyle="{0}" color="FFFF"/>
 		<Style name="Modifiers" color="A000FF"/>
 		<Style name="Locking" color="FF00FFFF"/>
-		<Style name="Checks" fontsize="8" fontstyle="{0}" color="0000FFFF"/>
+		<Style name="Checks" fontsize="10" fontstyle="{0}" color="0000FFFF"/>
 		<Style name="ChecksL" fontstyle="{0}" color="0000FFFF"/>
 		<Style name="Threads" color="FF00FFFF"/>
 		<Style name="ThreadsL" fontstyle="{0}" color="FF00FFFF"/>
-		<Style name="Structure" fontsize="8" fontstyle="{0}" color="7090FFFF"/>
+		<Style name="Structure" fontsize="10" fontstyle="{0}" color="7090FFFF"/>
 		<Style name="Operators" color="D02020FF"/>
-		<Style name="OperatorKW" fontsize="8" fontstyle="{0}" color="CF5F5FFF"/>
+		<Style name="OperatorKW" fontsize="10" fontstyle="{0}" color="CF5F5FFF"/>
 		<Style name="OperatorKWL" fontstyle="{0}" color="E07070FF"/>
 		<Style name="Values" color="158080FF"/>
-		<Style name="ValueNames" fontsize="8" fontstyle="{0}" color="159898FF"/>
+		<Style name="ValueNames" fontsize="10" fontstyle="{0}" color="159898FF"/>
 		<Style name="ValueNamesL" fontstyle="{0}" color="1088A8FF"/>
-		<Style name="BasicTypes" fontsize="8" fontstyle="{0}" color="7F8FAFFF"/>
+		<Style name="BasicTypes" fontsize="10" fontstyle="{0}" color="7F8FAFFF"/>
 		<Style name="BasicTypesL" fontstyle="{0}" color="7080A0FF"/>
 		<Style name="ComplexTypes" fontstyle="{0}" color="FFFF"/>
-		<Style name="Dangerous" fontsize="8" fontstyle="{0}" color="FF0000FF"/>
+		<Style name="Dangerous" fontsize="10" fontstyle="{0}" color="FF0000FF"/>
 		<Style name="DangerousL" fontstyle="{0}" color="FF0000FF"/>
 		<Style name="Debug" color="FFFF"/>
 		<Style name="String" color="7F002FFF"/>
 		<Style name="Error" bgcolor="FF0000FF"/>
-		<Style name="StdProc" fontsize="8" fontstyle="{0}" color="00A0C0FF"/>
+		<Style name="StdProc" fontsize="10" fontstyle="{0}" color="00A0C0FF"/>
 		<Style name="StdProcL" fontstyle="{0}" color="00A0B0FF"/>
 	</Styles>
 
@@ -103,8 +103,8 @@
 					VAR CONST
 					ARRAY POINTER
 				</Group>
-				<Group style="KeyWords">
-					DISPOSE
+				<Group style="StdProc">
+					NEW DISPOSE
 				</Group>
 				<Group style="OperatorKW">
 					DIV MOD IN IS OR
@@ -121,7 +121,7 @@
 					OUT
 				</Group>
 				<Group style="Modifiers">
-					DELEGATE REALTIME UNCHECKED UNCOOPERATIVE DISPOSABLE ALIGNED
+					DELEGATE REALTIME DISPOSABLE ALIGNED
 				</Group>
 				<Group style="Locking">
 					KernelLog.Enter
@@ -149,7 +149,7 @@
 				</Group>
 				<Group style="BasicTypes">
 					BOOLEAN
-					SHORTINT INTEGER LONGINT HUGEINT
+					SHORTINT INTEGER LONGINT HUGEINT WORD LONGWORD
 					REAL LONGREAL					
 					COMPLEX LONGCOMPLEX
 					SET
@@ -157,6 +157,9 @@
 					ANY
 					RANGE
 					ADDRESS SIZE
+				</Group>
+				<Group style="Dangerous">
+					UNTRACED UNSAVE UNCHECKED UNCOOPERATIVE
 				</Group>
 				<Group style="Dangerous">
 					S*.GET S*.GET8 S*.GET16 S*.GET32 S*.GET64
@@ -183,9 +186,6 @@
 					S*.ADDC
 					S*.PACK S*.UNPK					
 					HALT
-					UNTRACED
-					UNSAFE
-					UNCOOPERATIVE
 				</Group>
 				<Group style="Debug">
 					KernelLog
@@ -270,8 +270,8 @@
 					var const
 					array pointer
 				</Group>
-				<Group style="KeyWordsL">
-					new self dispose
+				<Group style="StdProcL">
+					new dispose
 				</Group>
 				<Group style="OperatorKWL">
 					div mod in is or
@@ -315,7 +315,7 @@
 					object record
 				</Group>
 				<Group style="ValueNamesL">
-					nil true false imag
+					nil true false imag self
 				</Group>
 				<Group style="BasicTypesL">
 					boolean

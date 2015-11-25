@@ -311,7 +311,6 @@ TYPE
 		options.Add(0X,"singleModule",Options.Flag);
 		options.Add(0X, "symbolFile", Options.String);
 		options.Add(0X, "objectFile", Options.String);
-		options.Add(0X,"activeCells", Options.Flag);
 		options.Add("w","warnings", Options.Flag);
 		options.Add(0X,"darwinHost", Options.Flag);
 		options.Add(0X,"hardware", Options.String);

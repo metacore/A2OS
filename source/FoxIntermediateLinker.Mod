@@ -1268,7 +1268,7 @@ TYPE
 		END;
 	END Link;
 	
-	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
+	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
 	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
 			logFile: Files.File; 
 			objectFileExtension: ARRAY 32 OF CHAR;
@@ -1277,7 +1277,7 @@ TYPE
 			system: Global.System;
 			msg: ARRAY 256 OF CHAR;
 	CONST MinimalStackSize = 64;
-	CONST CodeFileExtension="code"; DataFileExtension="data";
+	(*CONST CodeFileExtension="code"; DataFileExtension="data";*)
 	BEGIN
 		error := FALSE;
 		NEW (code, 0); NEW (data, 0);
@@ -1306,8 +1306,8 @@ TYPE
 					error := TRUE;
 				END;
 
-				Files.JoinExtension(instanceName,CodeFileExtension,codeFileName);
-				Files.JoinExtension(instanceName,DataFileExtension,dataFileName);
+				Files.JoinExtension(instanceName,codeFileExtension,codeFileName);
+				Files.JoinExtension(instanceName,dataFileExtension,dataFileName);
 
 				IF ~linker.error THEN
 					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);

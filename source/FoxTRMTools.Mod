@@ -1,8 +1,8 @@
 MODULE FoxTRMTools;
 IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,ObjectFile;
 
-	(*! check spartan 6 emission *)
-	PROCEDURE PatchSpartan6(this: ARRAY OF CHAR; VAR result: ARRAY OF CHAR; line: LONGINT);
+	(*! check spartan 6 code emission *)
+	PROCEDURE PatchSpartan6(CONST this: ARRAY OF CHAR; VAR result: ARRAY OF CHAR; line: LONGINT);
 
 	(*
 		decode 36 bits 2 instruction big endian format
@@ -85,7 +85,9 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 
 	END PatchSpartan6;
 
-	(*trm code file is split into columns. baseDiv words per line, line distributed onto numBase words.*)
+	(*trm code file is split into columns. baseDiv words per line, line distributed onto numBase words.
+		target --> target_base_<i>, horizontally running index <i>
+	*)
 	PROCEDURE SplitColumns* (CONST source,target: ARRAY OF CHAR; instructionWidth, numBase, baseDiv: LONGINT;diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR
 		i,j,k,numReadNibbles,nibble,payloadInLeadingNibble,unCutWordLength:LONGINT;
@@ -95,7 +97,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		base:  BitSets.BitSet;
 		word: BitSets.BitSet;
 		reader: Files.Reader;
-		inputFileName: ARRAY 50 OF CHAR;
+		inputFileName: Files.FileName;
 		inputFile: Files.File;
 		line: ARRAY 128 OF CHAR;
 
@@ -104,7 +106,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		FOR i:=0 TO numBase-1 DO(*create filenames*)
 			(*copy name. add '.base i' to distinguish*)
 			COPY(target,currFileName);
-			Strings.Append(currFileName,"base");
+			(*Strings.Append(currFileName,"_base_");*)
 			Basic.AppendNumber(currFileName, i);
 			files[i]:= Files.New(currFileName);
 			Files.OpenWriter(writers[i],files[i],0);
@@ -127,7 +129,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		NEW(base,numBase*36);
 		NEW(word,instructionWidth);
 		WHILE reader.Available()>0 DO (*assumes number of words is a multiple of baseDiv. make sure in static linker*)
-			
 			base.Zero;
 			(*read a BASE line*)
 			FOR k:=0 TO baseDiv-1 DO 

@@ -264,8 +264,8 @@ BEGIN
 		lines := (((end-1) DIV lines)+1)*lines; (* round up to next multiple of lines *)
 	END;
 	FOR i := end TO lines -1 DO
-		FOR j:=1 TO bitsPerLine DIV 4 BY 1 DO
-			writer.Char('f');
+		FOR j:=1 TO (bitsPerLine-1) DIV 4 + 1 BY 1 DO
+			writer.Char('F');
 		END;
 		
 		writer.Ln;

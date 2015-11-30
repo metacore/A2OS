@@ -7120,6 +7120,12 @@ TYPE
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddRealProperty",-1); (* must import *)
+				ELSIF (property.type.resolved IS SyntaxTree.SetType) THEN
+					ASSERT((value.type.resolved IS SyntaxTree.SetType));
+					Evaluate(value, op); 
+					Emit(Push(property.position, op.op));
+					ReleaseOperand(op);
+					CallThis(position,"ActiveCellsRuntime","AddSetProperty",-1); (* must import *)
 				ELSE
 					HALT(200);
 				END;

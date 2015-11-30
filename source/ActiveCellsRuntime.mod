@@ -48,6 +48,9 @@ type
 		procedure AddRealProperty*(c: any; const name: array of char; value: longreal);
 		end AddRealProperty;
 
+		procedure AddSetProperty*(c: any; const name: array of char; s: set);
+		end AddSetProperty;
+
 		procedure FinishedProperties*(var c: any);
 		end FinishedProperties;
 
@@ -182,6 +185,13 @@ type
 		newValue := value;
 		GetContext().AddRealProperty(c.c, name, value);
 	end AddRealProperty;
+
+	procedure AddSetProperty*(c: Cell; const name: array of char; var newValue: set; value: set);
+	begin
+		if EnableTrace then trace(c, name, newValue, value); end;
+		newValue := value;
+		GetContext().AddSetProperty(c.c, name, value);
+	end AddSetProperty;
 
 	procedure FinishedProperties*(c: Cell);
 	begin

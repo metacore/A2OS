@@ -1045,6 +1045,7 @@ TYPE
 			numberMethods, int: LONGINT;
 			real: LONGREAL;
 			bool: BOOLEAN;
+			set: SET;
 			variable: SyntaxTree.Variable;
 			v: SyntaxTree.Expression;
 			str: Scanner.StringType;
@@ -1104,6 +1105,8 @@ TYPE
 								property.SetType(system.longrealType);
 							ELSIF IsBooleanValue(modifier.expression, bool) THEN
 								property.SetType(system.booleanType);
+							ELSIF IsSetValue(modifier.expression, set) THEN
+								property.SetType(system.setType);
 							ELSIF IsStringValue(modifier.expression, str) THEN
 								(*property.SetValue(modifier.expression);*)
 								atype := SyntaxTree.NewArrayType(-1, NIL, SyntaxTree.Static);

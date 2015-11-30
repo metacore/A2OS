@@ -7304,7 +7304,7 @@ TYPE
 				ELSE
 					Error(communication.position, -1, "unsupported stream operation");
 				END;
-			ELSIF (communication.op = Scanner.Questionmark)  & CheckPortType(left,outPort)  THEN
+			ELSIF (communication.op = Scanner.ExclamationMark)  & CheckPortType(left,outPort)  THEN
 				IF outPort.direction # SyntaxTree.OutPort THEN
 					Error(left.position,Diagnostics.Invalid,"not an out-port")
 				ELSIF outPort.sizeInBits # system.SizeOf(right.type) THEN
@@ -7313,7 +7313,7 @@ TYPE
 					right := NewConversion(communication.position,right,left.type.resolved,NIL);
 					communication.SetRight(right)
 				END;
-			ELSIF (communication.op = Scanner.ExclamationMark) & CheckPortType(left,inPort) THEN
+			ELSIF (communication.op = Scanner.Questionmark) & CheckPortType(left,inPort) THEN
 				IF CheckVariable(right) THEN
 					IF inPort.direction # SyntaxTree.InPort THEN
 						Error(left.position,Diagnostics.Invalid,"not an in-port")

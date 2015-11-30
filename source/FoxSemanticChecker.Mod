@@ -839,7 +839,7 @@ TYPE
 			this := modifiers;
 			WHILE this # NIL DO
 				IF ~this.resolved THEN
-					IF checkUse OR (this.expression = NIL) THEN
+					IF checkUse THEN
 						Error(this.position,Diagnostics.Invalid,"unexpected modifier");
 					ELSE
 						this.SetExpression(ResolveExpression(this.expression));
@@ -1043,6 +1043,8 @@ TYPE
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			recordBase: SyntaxTree.RecordType;
 			numberMethods, int: LONGINT;
+			real: LONGREAL;
+			bool: BOOLEAN;
 			variable: SyntaxTree.Variable;
 			v: SyntaxTree.Expression;
 			str: Scanner.StringType;
@@ -1095,19 +1097,24 @@ TYPE
 							property.SetValue(v);
 							IF IsIntegerValue(modifier.expression, int) THEN
 								(*property.SetValue(modifier.expression);*)
+								modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longintType, NIL));
 								property.SetType(system.longintType);
+							ELSIF IsRealValue(modifier.expression, real) THEN
+								modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longrealType, NIL));
+								property.SetType(system.longrealType);
+							ELSIF IsBooleanValue(modifier.expression, bool) THEN
+								property.SetType(system.booleanType);
 							ELSIF IsStringValue(modifier.expression, str) THEN
 								(*property.SetValue(modifier.expression);*)
 								atype := SyntaxTree.NewArrayType(-1, NIL, SyntaxTree.Static);
 								atype.SetArrayBase(modifier.expression.type(SyntaxTree.StringType).baseType);
 								atype.SetLength(Global.NewIntegerValue(system,-1, (* type(SyntaxTree.StringType).length *) 256 (*! check if this is a good idea *) ));
 								property.SetType(atype);
-				ELSE
+							ELSE
 								Error(modifier.position, Diagnostics.Invalid, "unsupported property type");
 							END;
 						ELSE (* flag property *)
-							ASSERT(modifier.resolved);
-							property.SetValue(SyntaxTree.NewBooleanValue(position,TRUE));
+							(*property.SetValue(SyntaxTree.NewBooleanValue(position,TRUE));*)
 							property.SetType(system.booleanType);
 						END;
 						(* property.SetScope(x.cellScope); *) (* not required, will be done during entry *)
@@ -6556,7 +6563,7 @@ TYPE
 
 		PROCEDURE VisitProperty(property: SyntaxTree.Property);
 		BEGIN
-			VisitVariable(property);
+			VisitVariable(property)
 		END VisitProperty;
 		
 

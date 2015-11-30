@@ -7075,7 +7075,13 @@ TYPE
 				Global.GetSymbolNameInScope(property, cellType.cellScope , name);
 				PushConstString(name);
 				
-				IF SemanticChecker.IsStringType(property.type) OR (property.type.resolved IS SyntaxTree.IntegerType) THEN 
+				IF (value # NIL) THEN 
+					ASSERT(
+						SemanticChecker.IsStringType(property.type) 
+						OR (property.type.resolved IS SyntaxTree.IntegerType) 
+						OR (property.type.resolved IS SyntaxTree.FloatType)
+						OR (property.type.resolved IS SyntaxTree.BooleanType)
+						);
 					left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
 					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(cellType);
 					d := SyntaxTree.NewSymbolDesignator(-1, left, property); d.SetType(property.type);
@@ -7087,7 +7093,9 @@ TYPE
 					ReleaseOperand(op);
 				END;
 				
-				IF SemanticChecker.IsStringType(property.type) THEN 
+				IF value = NIL THEN
+					CallThis(position,"ActiveCellsRuntime","AddFlagProperty",3);
+				ELSIF SemanticChecker.IsStringType(property.type) THEN 
 					ASSERT(SemanticChecker.IsStringType(value.type));
 					Designate(value, op);
 					Emit(Push(property.position, op.tag));
@@ -7100,8 +7108,20 @@ TYPE
 					Emit(Push(property.position, op.op));
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddIntegerProperty",5);
+				ELSIF (property.type.resolved IS SyntaxTree.BooleanType) THEN
+					ASSERT(value.type.resolved IS SyntaxTree.BooleanType);
+					Evaluate(value, op); 
+					Emit(Push(property.position, op.op));
+					ReleaseOperand(op);
+					CallThis(position,"ActiveCellsRuntime","AddBooleanProperty",5);
+				ELSIF (property.type.resolved IS SyntaxTree.FloatType) THEN
+					ASSERT((value.type.resolved IS SyntaxTree.FloatType) & (value.type.resolved(SyntaxTree.FloatType).sizeInBits =64));
+					Evaluate(value, op); 
+					Emit(Push(property.position, op.op));
+					ReleaseOperand(op);
+					CallThis(position,"ActiveCellsRuntime","AddRealProperty",-1); (* must import *)
 				ELSE
-					CallThis(position,"ActiveCellsRuntime","AddFlagProperty",3);
+					HALT(200);
 				END;
 		END AddProperty;
 		

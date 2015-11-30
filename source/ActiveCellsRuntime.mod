@@ -42,6 +42,12 @@ type
 		procedure AddIntegerProperty*(c: any; const name: array of char; value: longint);
 		end AddIntegerProperty;
 
+		procedure AddBooleanProperty*(c: any; const name: array of char; value: boolean);
+		end AddBooleanProperty;
+
+		procedure AddRealProperty*(c: any; const name: array of char; value: longreal);
+		end AddRealProperty;
+
 		procedure FinishedProperties*(var c: any);
 		end FinishedProperties;
 
@@ -162,6 +168,20 @@ type
 		newValue := value;
 		GetContext().AddIntegerProperty(c.c, name, value);
 	end AddIntegerProperty;
+
+	procedure AddBooleanProperty*(c: Cell; const name: array of char; var newValue: boolean; value: boolean);
+	begin
+		if EnableTrace then trace(c, name, newValue, value); end;
+		newValue := value;
+		GetContext().AddBooleanProperty(c.c, name, value);
+	end AddBooleanProperty;
+
+	procedure AddRealProperty*(c: Cell; const name: array of char; var newValue: longreal; value: longreal);
+	begin
+		if EnableTrace then trace(c, name, newValue, value, entier(value)); end;
+		newValue := value;
+		GetContext().AddRealProperty(c.c, name, value);
+	end AddRealProperty;
 
 	procedure FinishedProperties*(c: Cell);
 	begin

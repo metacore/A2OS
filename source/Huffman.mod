@@ -1,6 +1,6 @@
 module Huffman; (** AUTHOR GF; PURPOSE "files and streams compression"; *)
 
-import Streams, Commands, Files, Strings;
+import Streams, Commands, Files, Strings, Kernel;
 
 const 
 	BlockSize = 8*1024;
@@ -9,33 +9,38 @@ const
 type 
 	HuffmanNode = object 
 		var 
-			freq: longint;
+			freqency: longint;
 			left, right: HuffmanNode;		(* both nil in case of leaf *)
 			pattern: char;						
 		
-		procedure & Init( patt: char; f: longint );
+		procedure & Init( patt: char; freq: longint );
 		begin
-			pattern := patt;  freq := f;  left := nil;  right := nil
+			pattern := patt;  freqency := freq;  left := nil;  right := nil
 		end Init;
 		
 		procedure AddChildren( l, r: HuffmanNode );
 		begin
-			left := l;  right := r;  freq := l.freq + r.freq
+			left := l;  right := r;  freqency := l.freqency + r.freqency
 		end AddChildren;
 			
 	end HuffmanNode;
 	
 	
+	Codebits = record
+		bitsize: longint;
+		val: longint
+	end;
+	
+		
 	HuffmanCode = object
 		var 
 			wsize, bitsize: longint;
-			buffer: pointer to array of longint;
+			buffer: pointer to array BlockSize div 2 of longint;
 			lastval, lastbits: longint;
 		
 		procedure &Init;
 		begin  
-			new( buffer, BlockSize );
-			Clear
+			new( buffer );  Clear
 		end Init;
 		
 		procedure Clear;
@@ -44,11 +49,11 @@ type
 		end Clear;
 		
 		
-		procedure Append( const cbits: Codebits );
+		procedure Append( const bits: Codebits );
 		var 
 			bitsize, val, addval, addbits, shift: longint;
 		begin
-			bitsize := cbits.bitsize;  val := cbits.val;
+			bitsize := bits.bitsize;  val := bits.val;
 			if lastbits + bitsize > 32 then
 				addbits := 32 - lastbits;  shift := bitsize - addbits;
 				addval := lsh( val, -shift );
@@ -63,27 +68,27 @@ type
 		end Append;
 		
 		
-		procedure Write( w: Streams.Writer );
+		procedure WriteCode( w: Streams.Writer );
 		var i: longint;
 		begin
 			bitsize := 32*wsize + lastbits;
 			if lastbits > 0 then  
-				buffer[wsize] := ash( lastval, 32 - lastbits );
-				inc( wsize ); 
+				buffer[wsize] := ash( lastval, 32 - lastbits );  inc( wsize ); 
 			end;
 			
 			w.RawLInt( bitsize );
 			for i := 0 to wsize - 1 do  w.RawLInt( buffer[i] )  end;
 			w.Update
-		end Write;
+		end WriteCode;
 		
 		
-		procedure Read( r: Streams.Reader );
+		procedure ReadCode( r: Streams.Reader );
 		var i, n: longint;
 		begin
+			Clear;
 			r.RawLInt( bitsize );  n := (bitsize + 31) div 32;
 			for i := 0 to n - 1 do  r.RawLInt( buffer[i] )  end
-		end Read;
+		end ReadCode;
 		
 		
 		procedure Decode( tree: HuffmanNode;  w: Streams.Writer );
@@ -103,16 +108,10 @@ type
 		end Decode;
 	
 	end HuffmanCode;
-	
 		
-	Codebits = record
-		bitsize: longint;
-		val: longint
-	end;
 
-	
 	Pattern = record
-		freq: longint;
+		freqency: longint;
 		pattern: char
 	end;
 	
@@ -122,24 +121,43 @@ type
 	
 	procedure Encode*( r: Streams.Reader;  w: Streams.Writer );
 	var 
-		buffer: HuffmanCode;  i, chunk: longint;
+		buffer: HuffmanCode;  i, n, needed, ofs, got, chunksize, timeout: longint;
 		codeTable: array 256 of Codebits;
 		pf: PatternFrequencies;
 		plaintext: array BlockSize of char;
+		timer: Kernel.Timer;
 	begin 
-		new( buffer );
+		new( buffer );  new( timer );
 		w.RawLInt( HTag );
 		loop
-			r.Bytes( plaintext, 0, BlockSize, chunk );
-			if chunk < 1 then  exit  end;
-			pf := CountPatterns( plaintext, chunk );
-			WriteFrequencies( pf, w );
+			if r is Files.Reader then
+				r.Bytes( plaintext, 0, BlockSize, chunksize );
+			else
+				(* give reader some time (~3 sec) to accumulate data *)
+				timeout := 100;  ofs := 0;  needed := BlockSize;
+				repeat  n := r.Available( );
+					if n > 0 then
+						if n > needed then  n := needed  end;
+						r.Bytes( plaintext, ofs, n, got );  inc( ofs, got );  dec( needed, got )
+					end;
+					if needed > 0 then 
+						if timeout <= 1600 then  timer.Sleep( timeout );  timeout := 2*timeout
+						else  needed := 0
+						end;  
+					end;
+				until needed = 0;
+				chunksize := ofs
+			end;
+			if chunksize < 1 then  exit  end;
+			pf := CountPatterns( plaintext, chunksize );
 			InitCodeTable( codeTable, NewHuffmanTree( pf ) );
 			buffer.Clear; 
-			for i := 0 to chunk - 1 do  
+			for i := 0 to chunksize - 1 do  
 				buffer.Append( codeTable[ord( plaintext[i] )] );
 			end;
-			buffer.Write( w );
+			WriteFrequencies( pf, w );
+			buffer.WriteCode( w );
+			w.Update
 		end
 	end Encode;
 	
@@ -158,8 +176,7 @@ type
 		new( buffer );
 		while r.Available( ) >= 11 do
 			tree := NewHuffmanTree( ReadFrequencies( r ) );
-			buffer.Clear;  
-			buffer.Read( r );
+			buffer.ReadCode( r );
 			buffer.Decode( tree,  w )
 		end;
 		return true
@@ -179,8 +196,8 @@ type
 				if low < high then
 					i := low;  j := high;  m := (i + j) div 2;
 					repeat
-						while a[i].freq < a[m].freq do  inc( i )  end;
-						while a[j].freq > a[m].freq do  dec( j )  end;
+						while a[i].freqency < a[m].freqency do  inc( i )  end;
+						while a[j].freqency > a[m].freqency do  dec( j )  end;
 						if i <= j then
 							if i = m then  m := j
 							elsif j = m then  m := i
@@ -194,14 +211,11 @@ type
 			end Quicksort;
 	
 	begin
-		for i := 0 to 255 do   
-			a[i].pattern := chr( i );  a[i].freq := 0
-		end;
+		for i := 0 to 255 do  a[i].pattern := chr( i );  a[i].freqency := 0  end;
+		for i := 0 to blksize - 1 do  inc( a[ord( block[i] )].freqency )  end;
+		Quicksort( 0, 255 );	(* sort patterns by frequency *)
 		i := 0;
-		while i < blksize do  inc( a[ord( block[i] )].freq );  inc( i )  end;
-		Quicksort( 0, 255 );
-		i := 0;
-		while a[i].freq = 0 do  inc( i )  end;	(* skip unused patterns *)
+		while a[i].freqency = 0 do  inc( i )  end; 	(* skip unused patterns *)
 		n := 256 - i;  start := i;
 		new( pf, n );
 		for i := 0 to n - 1 do  pf[i] := a[start + i]  end;
@@ -214,25 +228,25 @@ type
 	var 
 		i, start, top: longint;  n, n2: HuffmanNode;
 		a: pointer to array of HuffmanNode;
+		patt: char;
 	begin
-		start := 0;  top := len( pf^ ) - 1;
-		new( a, len( pf^ ) );
-		for i := 0 to len( pf^ ) -1 do
-			new( a[i], pf[i].pattern, pf[i].freq )
-		end;
-		if start = top then  
+		new( a, len( pf^ ) );  top := len( pf^ ) - 1;
+		for i := 0 to top do  new( a[i], pf[i].pattern, pf[i].freqency )  end;
+		if top = 0 then  
 			(* the whole, probably last small block contains only one pattern *)
-			new( n, 0X, 0 );  new( n2, 0X, 0 );  n.AddChildren( n2, a[start] );
-			return n  
+			patt := chr( (ord( a[0].pattern ) + 1) mod 256 );	(* some different pattern *)
+			new( n, 0X, 0 );  new( n2, patt, 0 );  n.AddChildren( n2, a[0] );
+		else
+			start := 0;  
+			while start < top do  
+				new( n, 0X, 0 );  n.AddChildren( a[start], a[start+1] ); 
+				i := start + 1;  
+				while (i < top) & (a[i+1].freqency < n.freqency) do  a[i] := a[i+1];  inc( i )  end;
+				a[i] := n;  
+				inc( start );
+			end
 		end;
-		while start < top do  
-			new( n, 0X, 0 );  n.AddChildren( a[start], a[start+1] ); 
-			i := start + 1;  
-			while (i < top) & (a[i+1].freq < n.freq) do  a[i] := a[i+1];  inc( i )  end;
-			a[i] := n;  
-			inc( start );
-		end;
-		return a[start]
+		return n
 	end NewHuffmanTree;
 	
 	
@@ -246,8 +260,8 @@ type
 				table[ord( node.pattern )] := bits;
 			else
 				inc( bits.bitsize );  
-				bits.val := 2*bits.val;  Traverse( node.right, bits );	(* ..xxx0 *)
-				bits.val := bits.val + 1;  Traverse( node.left, bits );	(* ..xxx1 *)
+				bits.val := 2*bits.val;  Traverse( node.right, bits );	(* ..xx0 *)
+				bits.val := bits.val + 1;  Traverse( node.left, bits );	(* ..xx1 *)
 			end;
 		end Traverse;
 	
@@ -265,7 +279,7 @@ type
 		r.RawNum( n );  
 		new( pf, n );
 		for i := 0 to n - 1 do
-			r.RawNum( pf[i].freq );  r.Char( pf[i].pattern ); 
+			r.RawNum( pf[i].freqency );  r.Char( pf[i].pattern ); 
 		end;
 		return pf
 	end ReadFrequencies;
@@ -276,31 +290,38 @@ type
 		n := len( pf^ );
 		w.RawNum( n );
 		for i := 0 to n - 1 do 
-			w.RawNum( pf[i].freq );  w.Char( pf[i].pattern );
+			w.RawNum( pf[i].freqency );  w.Char( pf[i].pattern );
 		end;
 	end WriteFrequencies;
+	
+	
+	procedure OpenNewFile( const name: array of char ): Files.File;
+	var
+		name2: array 128 of char;  res: longint;
+	begin
+		if Files.Old( name ) # nil then
+			copy( name, name2);  Strings.Append( name2, ".Bak" );
+			Files.Rename( name, name2, res )
+		end;
+		return Files.New( name )
+	end OpenNewFile;
 	
 	
 	procedure EncodeFile*( c: Commands.Context );
 	var
 		f1, f2: Files.File;
 		r: Files.Reader;  w: Files.Writer;
-		name1, name2, name3: array 128 of char;
-		res: longint;
+		name1, name2: array 128 of char;
 	begin
 		if c.arg.GetString( name1 ) then
 			if ~c.arg.GetString( name2 ) then
 				name2 := name1;
 				Strings.Append( name2, ".hc" )
 			end;
-			if Files.Old( name2 ) # nil then
-				name3 := name2;  Strings.Append( name3, ".Old" );
-				Files.Rename( name2, name3, res )
-			end;
 			f1 := Files.Old( name1 );
 			if f1 # nil then
-				f2 := Files.New( name2 );
-				Files.OpenReader( r, f1, 0 ); Files.OpenWriter( w, f2, 0 );
+				Files.OpenReader( r, f1, 0 ); 
+				f2 := OpenNewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				Encode( r, w );
 				w.Update;
 				Files.Register( f2 )
@@ -318,25 +339,19 @@ type
 	var
 		f1, f2: Files.File;
 		r: Files.Reader;  w: Files.Writer;
-		name1, name2, name3, msg: array 128 of char;
-		l, res: longint;
+		name1, name2, msg: array 128 of char;
 	begin
 		if c.arg.GetString( name1 ) then
 			if ~c.arg.GetString( name2 ) then
 				name2 := name1;
-				l := Strings.Length( name2 );
-				if (name2[l-3] = '.') & (name2[l-2] = 'h') & (name2[l-1] = 'c') then  name2[l-3] := 0X  
+				if Strings.EndsWith( ".hc", name2 ) then  name2[Strings.Length( name2 ) - 3] := 0X
 				else Strings.Append( name2, ".uncomp" )
 				end;
-				if Files.Old( name2 ) # nil then
-					name3 := name2;  Strings.Append( name3, ".Old" );
-					Files.Rename( name2, name3, res )
-				end
 			end;
 			f1 := Files.Old( name1 );
 			if f1 # nil then
-				f2 := Files.New( name2 );
-				Files.OpenReader( r, f1, 0 );	 Files.OpenWriter( w, f2, 0 );
+				Files.OpenReader( r, f1, 0 );	 
+				f2 := OpenNewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				if Decode( r, w, msg ) then
 					w.Update;
 					Files.Register( f2 )	
@@ -360,7 +375,7 @@ end Huffman.
 	Huffman.EncodeFile   Huffman.mod ~
 	Huffman.EncodeFile   Huffman.Obj ~
 	Huffman.EncodeFile   uebung01.pdf ~
-	
+		
 	Huffman.DecodeFile   Huffman.mod.hc  TTT.mod ~
 	Huffman.DecodeFile   Huffman.Obj.hc  TTT.Obj ~
 	Huffman.DecodeFile   uebung01.pdf.hc  TTT.pdf ~

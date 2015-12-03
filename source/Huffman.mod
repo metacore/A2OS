@@ -9,18 +9,18 @@ const
 type 
 	HuffmanNode = object 
 		var 
-			freqency: longint;
+			frequency: longint;
 			left, right: HuffmanNode;		(* both nil in case of leaf *)
 			pattern: char;						
 		
 		procedure & Init( patt: char; freq: longint );
 		begin
-			pattern := patt;  freqency := freq;  left := nil;  right := nil
+			pattern := patt;  frequency := freq;  left := nil;  right := nil
 		end Init;
 		
 		procedure AddChildren( l, r: HuffmanNode );
 		begin
-			left := l;  right := r;  freqency := l.freqency + r.freqency
+			left := l;  right := r;  frequency := l.frequency + r.frequency
 		end AddChildren;
 			
 	end HuffmanNode;
@@ -111,7 +111,7 @@ type
 		
 
 	Pattern = record
-		freqency: longint;
+		frequency: longint;
 		pattern: char
 	end;
 	
@@ -196,8 +196,8 @@ type
 				if low < high then
 					i := low;  j := high;  m := (i + j) div 2;
 					repeat
-						while a[i].freqency < a[m].freqency do  inc( i )  end;
-						while a[j].freqency > a[m].freqency do  dec( j )  end;
+						while a[i].frequency < a[m].frequency do  inc( i )  end;
+						while a[j].frequency > a[m].frequency do  dec( j )  end;
 						if i <= j then
 							if i = m then  m := j
 							elsif j = m then  m := i
@@ -211,11 +211,11 @@ type
 			end Quicksort;
 	
 	begin
-		for i := 0 to 255 do  a[i].pattern := chr( i );  a[i].freqency := 0  end;
-		for i := 0 to blksize - 1 do  inc( a[ord( block[i] )].freqency )  end;
+		for i := 0 to 255 do  a[i].pattern := chr( i );  a[i].frequency := 0  end;
+		for i := 0 to blksize - 1 do  inc( a[ord( block[i] )].frequency )  end;
 		Quicksort( 0, 255 );	(* sort patterns by frequency *)
 		i := 0;
-		while a[i].freqency = 0 do  inc( i )  end; 	(* skip unused patterns *)
+		while a[i].frequency = 0 do  inc( i )  end; 	(* skip unused patterns *)
 		n := 256 - i;  start := i;
 		new( pf, n );
 		for i := 0 to n - 1 do  pf[i] := a[start + i]  end;
@@ -231,7 +231,7 @@ type
 		patt: char;
 	begin
 		new( a, len( pf^ ) );  top := len( pf^ ) - 1;
-		for i := 0 to top do  new( a[i], pf[i].pattern, pf[i].freqency )  end;
+		for i := 0 to top do  new( a[i], pf[i].pattern, pf[i].frequency )  end;
 		if top = 0 then  
 			(* the whole, probably last small block contains only one pattern *)
 			patt := chr( (ord( a[0].pattern ) + 1) mod 256 );	(* some different pattern *)
@@ -241,7 +241,7 @@ type
 			while start < top do  
 				new( n, 0X, 0 );  n.AddChildren( a[start], a[start+1] ); 
 				i := start + 1;  
-				while (i < top) & (a[i+1].freqency < n.freqency) do  a[i] := a[i+1];  inc( i )  end;
+				while (i < top) & (a[i+1].frequency < n.frequency) do  a[i] := a[i+1];  inc( i )  end;
 				a[i] := n;  
 				inc( start );
 			end
@@ -279,7 +279,7 @@ type
 		r.RawNum( n );  
 		new( pf, n );
 		for i := 0 to n - 1 do
-			r.RawNum( pf[i].freqency );  r.Char( pf[i].pattern ); 
+			r.RawNum( pf[i].frequency );  r.Char( pf[i].pattern ); 
 		end;
 		return pf
 	end ReadFrequencies;
@@ -290,7 +290,7 @@ type
 		n := len( pf^ );
 		w.RawNum( n );
 		for i := 0 to n - 1 do 
-			w.RawNum( pf[i].freqency );  w.Char( pf[i].pattern );
+			w.RawNum( pf[i].frequency );  w.Char( pf[i].pattern );
 		end;
 	end WriteFrequencies;
 	

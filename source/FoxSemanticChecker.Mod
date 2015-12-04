@@ -5840,7 +5840,7 @@ TYPE
 				ELSIF (id = Global.Sum) & CheckArity(1,2) THEN (* can only be found by overloading *)
 					Error(position, Diagnostics.Invalid, "sum operator not applicable");
 				(* ---- ALL ----- *)
-				ELSIF (id = Global.All) & CheckArity(2,3) THEN (* can only be found by overloading *)
+				ELSIF (id = Global.All) & CheckArity(2,4) THEN (* can only be found by overloading *)
 					Error(position, Diagnostics.Invalid, "all operator not applicable");
 				(* ---- DIM ----- *)
 				ELSIF (id = Global.Dim) & CheckArity(1,1) THEN

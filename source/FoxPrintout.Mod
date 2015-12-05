@@ -1158,12 +1158,17 @@ TYPE
 
 			PROCEDURE Flags(x: SyntaxTree.Parameter);
 			VAR first: BOOLEAN;
-		BEGIN
-			first := TRUE;
-				IF x.untraced THEN
-					Flag(Global.NameUntraced,first)
+			BEGIN
+				IF x.modifiers # NIL THEN 
+					Modifiers(x.modifiers) 
+				ELSE
+					first := TRUE;
+					IF x.untraced THEN
+						Flag(Global.NameUntraced,first)
+					END;
+					
+					FlagEnd(first);
 				END;
-				FlagEnd(first);
 			END Flags;
 			
 		BEGIN

@@ -1,3 +1,7 @@
+(* 
+	ActiveCells Runtime context to run Active Cells as Active Objects
+	Felix Friedrich, ETH Zürich, 2015
+*)
 module ActiveCellsRunner;
 
 import ActiveCellsRuntime, Commands, Modules;
@@ -26,7 +30,7 @@ type
 		
 		procedure Put(value: longint);
 		begin{EXCLUSIVE}
-			await(inPos+1 # outPos mod len(data));
+			await((inPos+1) mod len(data) # outPos);
 			data[inPos] := value;
 			inc(inPos); inPos := inPos mod len(data);
 		end Put;
@@ -48,6 +52,8 @@ type
 	
 		procedure & InitPort(inout: set; width: longint);
 		begin
+			fifo := nil; 
+			delegatedTo := nil; 
 			self.inout := inout;
 			delegatedTo := nil;
 		end InitPort;
@@ -71,7 +77,6 @@ type
 			begin{EXCLUSIVE}
 				await((fifo # nil) or (delegatedTo # nil));
 			end;
-
 			if delegatedTo # nil then
 				delegatedTo.Send(value)
 			else
@@ -84,7 +89,6 @@ type
 			begin{EXCLUSIVE}
 				await((fifo # nil) or (delegatedTo # nil));
 			end;
-
 			if delegatedTo # nil then	
 				delegatedTo.Receive(value)
 			else

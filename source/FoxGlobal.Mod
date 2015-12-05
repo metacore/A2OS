@@ -329,12 +329,21 @@ TYPE
 		END GenerateRecordOffsets;
 
 		PROCEDURE GenerateCellOffsets(x: SyntaxTree.CellType): BOOLEAN;
-		VAR baseType: SyntaxTree.RecordType; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+		VAR baseType: SyntaxTree.Type; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
 		BEGIN
-			baseType :=x.GetBaseRecord();
-			IF (baseType  # NIL) & (baseType.sizeInBits < 0) THEN
-				IF~ GenerateRecordOffsets(baseType) THEN RETURN FALSE END;
+			baseType := x.baseType;
+			IF (baseType # NIL) THEN
+				baseType := baseType.resolved;
+				IF baseType IS SyntaxTree.PointerType THEN
+					baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved
+				END;
+				IF (baseType IS SyntaxTree.CellType) THEN
+					IF~ GenerateCellOffsets(baseType(SyntaxTree.CellType)) THEN RETURN FALSE END;
+				ELSE ASSERT (baseType IS SyntaxTree.RecordType);
+					IF~GenerateRecordOffsets(baseType(SyntaxTree.RecordType)) THEN RETURN FALSE END;
+				END;
 			END;
+
 			IF baseType # NIL THEN
 				offset := baseType.sizeInBits; 
 				alignment := baseType.alignmentInBits;
@@ -376,8 +385,7 @@ TYPE
 			ELSIF scope IS SyntaxTree.CellScope THEN
 				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
-				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.CellScope)
-				);
+				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope));
 				offset := 0;
 				IF scope IS SyntaxTree.ProcedureScope THEN
 					parameterOffset := scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).parameterOffset

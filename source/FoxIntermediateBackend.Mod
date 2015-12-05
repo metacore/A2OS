@@ -7171,6 +7171,17 @@ TYPE
 			END;
 		END AppendModifiers;
 		
+		PROCEDURE AppendCellTypeModifiers(VAR to: SyntaxTree.Modifier; c: SyntaxTree.CellType);
+		VAR base: SyntaxTree.Type; 
+		BEGIN
+			AppendModifiers(to, c.modifiers);
+			base := c.GetBaseValueType();
+			IF (base # NIL) & (base IS SyntaxTree.CellType) THEN
+				AppendCellTypeModifiers(to, base(SyntaxTree.CellType))
+			END;
+		END AppendCellTypeModifiers;
+		
+		
 		PROCEDURE PushPort(p: SyntaxTree.Expression);
 		VAR op: Operand;
 		BEGIN
@@ -8285,7 +8296,8 @@ TYPE
 						AppendModifiers(modifier, p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Variable).modifiers );
 						(* AddModifiers(baseType(SyntaxTree.CellType), temporaryVariable, modifier);*)
 					END;
-					AppendModifiers(modifier, baseType(SyntaxTree.CellType).modifiers);
+					AppendCellTypeModifiers(modifier, baseType(SyntaxTree.CellType));
+					
 					(*
 					modifier := baseType(SyntaxTree.CellType).modifiers;
 					AddProperties(baseType(SyntaxTree.CellType), temporaryVariable, baseType(SyntaxTree.CellType).firstProperty);
@@ -11435,6 +11447,7 @@ TYPE
 				rfByte = 1X; rfBoolean = 2X; rfChar8=3X; rfShortint=04X; rfInteger = 05X; rfLongint = 06X;
 				rfReal = 07X; rfLongreal = 08X; rfSet = 09X; rfDelegate = 0EX;  rfString = 0FH; rfPointer = 0DX; rfHugeint = 10X;
 				rfChar16=11X; rfChar32=12X; rfAll=13X; rfSame=14X; rfRange=15X; rfRecord=16X; rfComplex = 17X; rfLongcomplex = 18X; 
+				rfPort = 19X;
 				rfRecordPointer=1DX;
 				rfArrayFlag = 80X;
 
@@ -11473,6 +11486,7 @@ TYPE
 					ELSIF type IS SyntaxTree.PointerType THEN char := rfPointer
 					ELSIF type IS SyntaxTree.ProcedureType THEN char := rfDelegate
 					ELSIF type IS SyntaxTree.RangeType THEN char := rfRange
+					ELSIF type IS SyntaxTree.PortType THEN char := rfPort
 					ELSE (*ASSERT(arrayOf);*) char := rfPointer; (*RETURN (* ARRAY OF unknown (record): do not write anything *)*)
 					END;
 					RETURN char
@@ -11584,6 +11598,8 @@ TYPE
 						MathArrayType(type(SyntaxTree.MathArrayType));
 					ELSIF type IS SyntaxTree.CellType THEN
 						Char(section, BaseType(module.system.anyType));
+					ELSIF type IS SyntaxTree.PortType THEN
+						Char(section, rfPort);
 					ELSE HALT(200)
 					END;
 				END Type;

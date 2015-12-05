@@ -1056,13 +1056,17 @@ TYPE
 			IF TypeNeedsResolution(x) THEN
 				recordBase := NIL;
 				IF cellsAreObjects THEN
-					qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(x.position, SyntaxTree.NewIdentifier("ActiveCellsRuntime"), SyntaxTree.NewIdentifier("Cell"));
-					ImportModule(qualifiedIdentifier.prefix, x.position);
-					x.SetBaseType(SyntaxTree.NewQualifiedType(x.position, currentScope, qualifiedIdentifier));
-					x.SetBaseType(ResolveType(x.baseType));
-					recordBase := x.GetBaseRecord();
-					IF recordBase = NIL THEN
-						Error(x.position,Diagnostics.Invalid,"ActiveCellsRuntime.Cell not present");
+					IF x.baseType = NIL THEN 
+						qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(x.position, SyntaxTree.NewIdentifier("ActiveCellsRuntime"), SyntaxTree.NewIdentifier("Cell"));
+						ImportModule(qualifiedIdentifier.prefix, x.position);
+						x.SetBaseType(SyntaxTree.NewQualifiedType(x.position, currentScope, qualifiedIdentifier));
+						x.SetBaseType(ResolveType(x.baseType));
+						recordBase := x.GetBaseRecord();
+						IF recordBase = NIL THEN
+							Error(x.position,Diagnostics.Invalid,"ActiveCellsRuntime.Cell not present");
+						END;
+					ELSE
+						x.SetBaseType(ResolveType(x.baseType));
 					END;
 				END;
 				
@@ -7297,7 +7301,7 @@ TYPE
 				IF (left.type.resolved IS SyntaxTree.PortType) & CheckPortType(left, outPort) THEN (* send *)
 					IF outPort.direction # SyntaxTree.OutPort THEN
 						Error(left.position,Diagnostics.Invalid,"not an out-port")
-					ELSIF outPort.sizeInBits # system.SizeOf(right.type) THEN
+					ELSIF outPort.sizeInBits < system.SizeOf(right.type) THEN
 						Error(left.position,Diagnostics.Invalid,"incompatible to port type");
 					ELSE
 						right := NewConversion(communication.position,right,left.type.resolved,NIL);
@@ -7317,7 +7321,7 @@ TYPE
 			ELSIF (communication.op = Scanner.ExclamationMark)  & CheckPortType(left,outPort)  THEN
 				IF outPort.direction # SyntaxTree.OutPort THEN
 					Error(left.position,Diagnostics.Invalid,"not an out-port")
-				ELSIF outPort.sizeInBits # system.SizeOf(right.type) THEN
+				ELSIF outPort.sizeInBits < system.SizeOf(right.type) THEN
 					Error(left.position,Diagnostics.Invalid,"incompatible to port type");
 				ELSE
 					right := NewConversion(communication.position,right,left.type.resolved,NIL);
@@ -8103,9 +8107,51 @@ TYPE
 			symbol: SyntaxTree.Symbol;
 			prevPhase: LONGINT;
 			prevError : BOOLEAN;
-			property: SyntaxTree.Property;
 			type: SyntaxTree.Type;
 			atype : SyntaxTree.ArrayType;
+			
+			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
+			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
+			BEGIN
+				IF type.baseType # NIL THEN 
+					baseType := type.baseType.resolved; 
+					IF baseType IS SyntaxTree.PointerType THEN
+						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF baseType IS SyntaxTree.CellType THEN
+						DeclareCell(baseType(SyntaxTree.CellType));
+					END;
+				END;
+				parameter := type.firstParameter;
+				WHILE(parameter # NIL) DO (* duplicates forbidden *)
+					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
+					variable.SetType(parameter.type);
+					variable.SetAccess(SyntaxTree.Hidden);
+					variable.SetModifiers(parameter.modifiers);
+					currentScope.PushVariable(variable);
+					(*
+					Register(parameter,scope, FALSE); 
+					*)
+					parameter := parameter.nextParameter;
+				END;
+				
+				property := type.firstProperty;
+				WHILE (property # NIL) DO (* duplicates allowed : overwrite *)
+					variable := currentScope.FindVariable(property.name);
+					IF (variable # NIL) & (variable IS SyntaxTree.Property) THEN (* overwrite *)
+						prop := variable(SyntaxTree.Property); 
+					ELSE (* add, duplicate symbols detection later *)
+						prop := SyntaxTree.NewProperty(property.position, property.name);
+						currentScope.PushVariable(prop);
+					END;
+					prop.SetType(property.type);
+					prop.SetValue(property.value);
+					prop.SetAccess(SyntaxTree.Hidden);
+					property := property.nextProperty;
+				END;
+			END DeclareCell;
+			
+			
 		BEGIN
 			prevError := error;
 			prevPhase := phase;
@@ -8137,25 +8183,7 @@ TYPE
 				parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType).returnParameter;
 				IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
 			ELSIF scope IS SyntaxTree.CellScope THEN
-				parameter := scope(SyntaxTree.CellScope).ownerCell.firstParameter;
-				WHILE(parameter # NIL) DO
-					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
-					variable.SetType(parameter.type);
-					variable.SetAccess(SyntaxTree.Hidden);
-					variable.SetModifiers(parameter.modifiers);
-					currentScope.PushVariable(variable);
-					(*
-					Register(parameter,scope, FALSE); 
-					*)
-					parameter := parameter.nextParameter;
-				END;
-				
-				property := scope(SyntaxTree.CellScope).ownerCell.firstProperty;
-				WHILE (property # NIL) DO
-					property.SetAccess(SyntaxTree.Hidden);
-					currentScope.PushVariable(property);
-					property := property.nextProperty;
-				END;
+				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
 			END;
 			IF error THEN RETURN END;
 

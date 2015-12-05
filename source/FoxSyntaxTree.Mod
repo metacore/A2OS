@@ -1589,10 +1589,23 @@ TYPE
 			baseType := base;
 		END SetBaseType;
 		
+		PROCEDURE GetBaseValueType*(): Type;
+		BEGIN
+			IF baseType = NIL THEN 
+				RETURN NIL
+			ELSIF baseType.resolved IS PointerType THEN
+				RETURN baseType.resolved(PointerType).pointerBase.resolved
+			ELSE 
+				RETURN baseType.resolved; 
+			END;
+		END GetBaseValueType;
+		
 		PROCEDURE GetBaseRecord*():RecordType;
 		BEGIN
 			IF baseType = NIL THEN RETURN NIL; END;
-			IF baseType.resolved IS RecordType THEN
+			IF baseType.resolved IS CellType THEN
+				RETURN baseType.resolved(CellType).GetBaseRecord();
+			ELSIF baseType.resolved IS RecordType THEN
 				RETURN baseType.resolved(RecordType);
 			ELSIF baseType.resolved IS PointerType THEN
 				IF baseType.resolved(PointerType).pointerBase.resolved # NIL THEN
@@ -1621,16 +1634,28 @@ TYPE
 		PROCEDURE FindParameter*(identifier: Identifier): Parameter;
 		VAR p: Parameter;
 		BEGIN
-			p := firstParameter;
-			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextParameter END;
+			p := NIL;
+			IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
+				p := baseType.resolved(CellType).FindParameter(identifier);
+			END;
+			IF p = NIL THEN 
+				p := firstParameter;
+				WHILE(p#NIL) & (p.name # identifier) DO p := p.nextParameter END;
+			END;
 			RETURN p;
 		END FindParameter;
 
 		PROCEDURE FindProperty*(identifier: Identifier): Property;
 		VAR p: Property;
 		BEGIN
-			p := firstProperty;
-			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
+			p := NIL;
+			IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
+				p := baseType.resolved(CellType).FindProperty(identifier);
+			END;
+			IF p = NIL THEN 
+				p := firstProperty;
+				WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
+			END;
 			RETURN p;
 		END FindProperty;
 
@@ -4807,7 +4832,7 @@ TYPE
 		END SetConstructor;
 		
 		PROCEDURE FindSymbol*(identifier: Identifier): Symbol;
-		VAR p: Symbol; base: RecordType;
+		VAR p: Symbol; base: Type;
 		BEGIN
 			p := FindSymbol^(identifier);
 			IF p = NIL THEN
@@ -4815,6 +4840,22 @@ TYPE
 					RETURN ownerCell.FindProperty(identifier);
 				END;
 			END;
+			IF p = NIL THEN
+				base := ownerCell.baseType;
+				IF (base # NIL) THEN
+					base := base.resolved;
+					IF base IS PointerType THEN 
+						base := base(PointerType).pointerBase.resolved;
+					END;
+					WITH base: CellType DO
+						p := base.cellScope.FindSymbol(identifier)
+					|base: RecordType DO
+						p := base.recordScope.FindSymbol(identifier)
+						
+					END;
+				END;
+			END;
+
 			RETURN p;
 		END FindSymbol;
 

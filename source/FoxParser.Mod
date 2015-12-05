@@ -1294,6 +1294,8 @@ TYPE
 			cellType: SyntaxTree.CellType;
 			cellScope: SyntaxTree.CellScope;
 			modifiers: SyntaxTree.Modifier;
+			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
+			qualifiedType: SyntaxTree.Type;
 		BEGIN
 			IF Trace THEN S( "CellType" ) END;
 			(* symbol cell already consumed *)
@@ -1302,7 +1304,12 @@ TYPE
 			cellType := SyntaxTree.NewCellType( position, parentScope,cellScope);
 			cellType.IsCellNet(isCellNet);
 			cellScope.SetOwnerCell(cellType);
-
+			
+			IF Optional(Scanner.Colon) THEN
+				qualifiedIdentifier := QualifiedIdentifier();
+				qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, parentScope, qualifiedIdentifier );
+				cellType.SetBaseType( qualifiedType );
+			END;
 
 			IF Optional(Scanner.LeftBrace) THEN
 				modifiers := Flags();

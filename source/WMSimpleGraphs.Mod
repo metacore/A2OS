@@ -8,7 +8,8 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, MathL;
 
 CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
-
+		MinSize=30
+	
 TYPE 
 	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept: LONGREAL);
 
@@ -22,12 +23,14 @@ TYPE
 		data:ARRAY [*] OF LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
-		VAR max:LONGREAL; 
+		VAR max:LONGREAL; w0,h0:LONGINT;
 		BEGIN
 			SELF.data:=data;
 			max:=MAX(data);
 			width:=LEN(data,0); height:=ENTIER(max)+1;
-			Init(10*width, 10*height, FALSE);
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
@@ -37,6 +40,7 @@ TYPE
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 		VAR i:LONGINT;
 		BEGIN
+			IF Reals.IsNaNL(data[i]) THEN RETURN END;
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			FOR i:=0 TO LEN(data,0)-1 DO
 				canvas.Fill(WMRectangles.MakeRect(      i*w DIV width , h-ENTIER(data[i]*h / height), 
@@ -99,12 +103,17 @@ TYPE
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		VAR w0,h0:LONGINT;
 		BEGIN
 			SELF.data:=data;
-			max:=MAX(data);
+			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
 			width:=LEN(data,0); height:=ENTIER(max-min)+1;
-			Init(10*width, 10*height, FALSE);
+			IF Reals.IsNaNL(width) THEN width:=100 END;
+			IF Reals.IsNaNL(height) THEN height:=100 END;
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
@@ -112,15 +121,17 @@ TYPE
 		END New;
 		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
-		VAR i:LONGINT; mn,mx:LONGINT;
+		VAR i:LONGINT; mn,mx,x0,y0,x1,y1:LONGINT;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			mn:=-border+ENTIER(0.5+min*h / height);
 			mx:=ENTIER(0.5+max*h / height);
 			FOR i:=0 TO LEN(data,0)-2 DO
-				canvas.Line(border+i*w DIV width, 	h+mn-ENTIER(0.5+data[i]*h / height),  
-							border+(i+1)*w DIV width, h+mn-ENTIER(0.5+data[i+1]*h / height), 
-							WMGraphics.Black, WMGraphics.ModeCopy);
+				x0:=border+i*w DIV width;
+				y0:=h+mn-ENTIER(0.5+data[i]*h / height);
+				x1:=border+(i+1)*w DIV width;
+				y1:=h+mn-ENTIER(0.5+data[i+1]*h / height); 
+				canvas.Line(x0,y0,x1,y1, WMGraphics.Black, WMGraphics.ModeCopy);
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);	END;
 			INC(timestamp);
@@ -134,12 +145,17 @@ Graphs* = OBJECT (Window);
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		VAR w0,h0:LONGINT;
 		BEGIN
 			SELF.data:=data;
-			max:=MAX(data);
+			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
 			width:=LEN(data,1); height:=ENTIER(max-min)+1;
-			Init(10*width, 10*height, FALSE);
+			IF Reals.IsNaNL(width) THEN width:=100 END;
+			IF Reals.IsNaNL(height) THEN height:=100 END;
+			IF width<MinSize THEN w0:=10*width ELSE w0:=width END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
@@ -147,16 +163,18 @@ Graphs* = OBJECT (Window);
 		END New;
 		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
-		VAR i,j:LONGINT; mn,mx:LONGINT;
+		VAR i,j:LONGINT; mn,mx, x0,x1,y0,y1:LONGINT;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			mn:=-border+ENTIER(0.5+min*h / height);
 			mx:=ENTIER(0.5+max*h / height);
 			FOR j:=0 TO LEN(data,0)-1 DO
 				FOR i:=0 TO LEN(data,1)-2 DO
-					canvas.Line(border+i*w DIV width, 	h+mn-ENTIER(0.5+data[j,i]*h / height),  
-								border+(i+1)*w DIV width, h+mn-ENTIER(0.5+data[j,i+1]*h / height), 
-								Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
+					x0:=border+i*w DIV width;
+					y0:=h+mn-ENTIER(0.5+data[j,i]*h / height);
+					x1:=border+(i+1)*w DIV width;
+					y1:=h+mn-ENTIER(0.5+data[j,i+1]*h / height);
+					canvas.Line(x0, y0,	x1, y1, Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
 				END;
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy); END;
@@ -165,25 +183,49 @@ Graphs* = OBJECT (Window);
 END Graphs;
 
 GraphXY* = OBJECT (Window);
-	CONST border=5;
+	CONST border=5; scaleRatio=0.95;
 	VAR 
 		data:ARRAY [*,*] OF LONGREAL;
 		minx,miny,maxx,maxy:LONGREAL;
 		ticks: ARRAY [*,*] OF LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		VAR w0,h0:LONGINT;
 		BEGIN
 			SELF.data:=data;
 			maxx:=MAX(0,MAX(data[0]));maxy:=MAX(0,MAX(data[1]));
 			minx:=MIN(0, MIN(data[0])); miny:=MIN(0, MIN(data[1])); 
 			width:=ENTIER(maxx-minx)+1; height:=ENTIER(maxy-miny)+1;
-			Init(10*width, 10*height, FALSE);
+			IF Reals.IsNaNL(width) THEN width:=100 END;
+			IF Reals.IsNaNL(height) THEN height:=100 END;
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
-			ticks:=GetTicks(data);
+			GetTicks;
 		END New;
+		
+		PROCEDURE GetTicks ; (*ticks along X, along Y, at decimal units*)
+		VAR maxx,maxy,stepx,stepy: LONGREAL; log:LONGREAL; steps,i:LONGINT;
+		BEGIN
+			maxx:=MAX(ABS(data[0]));
+			log:=Log10(maxx);
+			stepx:=Exp10(log);
+			
+			maxy:=MAX(ABS(data[1]));
+			log:=Log10(maxy);
+			stepy := Exp10(log);
+			
+			steps:=MAX(ENTIER(maxx/stepx), ENTIER(maxy/stepy));
+			NEW(ticks,2,steps);
+			FOR i:=0 TO steps-1 DO
+				ticks[0,i]:=(i+1)*stepx;
+				ticks[1,i]:=(i+1)*stepy;
+			END;
+		END GetTicks;
 		
 		PROCEDURE Axes(canvas: WMGraphics.Canvas; w,h,mnw,mnh:LONGINT; scalex,scaley:REAL);
 		VAR i:LONGINT;
@@ -197,16 +239,18 @@ GraphXY* = OBJECT (Window);
 		END Axes;
 		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
-		VAR i:LONGINT; mnw,mnh,mxw,mxh:LONGINT; scalex,scaley:REAL;
+		VAR i:LONGINT; mnw,mnh,mxw,mxh,x0,x1,y0,y1:LONGINT; scalex,scaley:REAL;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
-			scalex:=w/width; scaley:=h/height;
+			scalex:=scaleRatio*w/width; scaley:=scaleRatio*h/height;
 			mnw:=-border+ENTIER(0.5+minx* scalex);	mxw:=ENTIER(0.5+maxx* scalex);
 			mnh:=-border+ENTIER(0.5+miny* scaley);	mxh:=ENTIER(0.5+maxy* scaley);
 			FOR i:=0 TO LEN(data,1)-2 DO
-				canvas.Line(-mnw+ENTIER(0.5+data[0,i]*scalex), 	h+mnh-ENTIER(0.5+data[1,i]*scaley),  
-							-mnw+ENTIER(0.5+data[0,i+1]*scalex), h+mnh-ENTIER(0.5+data[1,i+1]*scaley), 
-							WMGraphics.Blue, WMGraphics.ModeCopy);
+				x0:=-mnw+ENTIER(0.5+data[0,i]*scalex);
+				y0:= h+mnh-ENTIER(0.5+data[1,i]*scaley);
+				x1:= -mnw+ENTIER(0.5+data[0,i+1]*scalex);
+				y1:= h+mnh-ENTIER(0.5+data[1,i+1]*scaley); 
+				canvas.Line(x0,y0,x1,y1, WMGraphics.Blue, WMGraphics.ModeCopy);
 			END;
 			Axes(canvas, w,h,mnw,mnh,scalex,scaley);
 			INC(timestamp);
@@ -223,8 +267,8 @@ TYPE Scatter* = OBJECT (GraphXY);
 		VAR i:LONGINT; mnw,mnh,mxw,mxh, x,y, ex,ey:LONGINT; scalex,scaley:REAL; rect:WMRectangles.Rectangle;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
-			scalex:=w/width; 
-			scaley:=h/height;
+			scalex:=scaleRatio*w/width; 
+			scaley:=scaleRatio*h/height;
 			mnw:=-border+ENTIER(0.5+minx* scalex);	mxw:=ENTIER(0.5+maxx* scalex);
 			mnh:=-border+ENTIER(0.5+miny* scaley);	mxh:=ENTIER(0.5+maxy* scaley);
 			FOR i:=0 TO LEN(data,1)-1 DO
@@ -268,7 +312,8 @@ TYPE Regression*= OBJECT (Scatter)
 		IF (y1<miny) THEN y1:=miny; x1:=(y1-intercept)/slope;
 		ELSIF y1>maxy THEN y1:=maxy; x1:=(y1-intercept)/slope;
 		END;
-		scalex:=w/width; scaley:=h/height;
+		scalex:=scaleRatio*w/width; 
+		scaley:=scaleRatio*h/height;
 		mnw:=-border+ENTIER(0.5+minx* scalex); mnh:=-border+ENTIER(0.5+miny* scaley);	
 		x:=-mnw+ENTIER(0.5+x0*scalex);  y:=h+mnh-ENTIER(0.5+y0*scaley);
 		xx:=-mnw+ENTIER(0.5+x1*scalex); yy:=h+mnh-ENTIER(0.5+y1*scaley);
@@ -279,8 +324,8 @@ TYPE Regression*= OBJECT (Scatter)
 PROCEDURE NewWindowPos(dx:LONGINT);
 BEGIN
 	INC(Pos,dx);
-	PosX:=Pos MOD 900;
-	PosY:=100+ (Pos DIV 900)*100 MOD 700;
+	PosX:=Pos MOD 700;
+	PosY:=100+ (Pos DIV 700)*50 MOD 700;
 END NewWindowPos;
 
 PROCEDURE Log10(x:LONGREAL):LONGREAL;
@@ -291,26 +336,7 @@ PROCEDURE Exp10(x:LONGREAL):LONGREAL;
 BEGIN RETURN MathL.exp(ENTIER(x)*MathL.ln(10));
 END Exp10;
 
-PROCEDURE GetTicks(CONST data: ARRAY [*,*] OF LONGREAL): ARRAY [*, *] OF LONGREAL; (*ticks along X, along Y, at decimal units*)
-VAR maxx,maxy,stepx,stepy: LONGREAL; log:LONGREAL; steps,i:LONGINT;
-BEGIN
-	maxx:=MAX(ABS(data[0]));
-	log:=Log10(maxx);
-	stepx:=Exp10(log);
-	
-	maxy:=MAX(ABS(data[1]));
-	log:=Log10(maxy);
-	stepy := Exp10(log);
-	
-	steps:=MAX(ENTIER(maxx/stepx), ENTIER(maxy/stepy));
-	NEW(RESULT,2,steps);
-	FOR i:=0 TO steps-1 DO
-		RESULT[0,i]:=i*stepx;
-		RESULT[1,i]:=i*stepy;
-	END;
-	
-	RETURN RESULT
-END GetTicks;
+
 
 PROCEDURE DummyRegressor(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept:LONGREAL);
 BEGIN
@@ -358,6 +384,9 @@ BEGIN
 END WMSimpleGraphs.
 
 SystemTools.Free WMSimpleGraphs ~
+SystemTools.FreeDownTo MatrixBase ~
+
+Compiler.Compile -p=Win32G WMSimpleGraphs.Mod ~
 
 WMSimpleGraphs.Demo ~
 

@@ -12,7 +12,8 @@ IMPORT
 CONST
 	BufSize = 16*1024; (* internal buffer size, used for copy *)
 
-	FileNameLength = 256;
+	(*FileNameLength = 256;*)
+	FileNameLength=Files.NameLength;
 
 	TraceCopy = 0;
 	TraceDragging = 1;

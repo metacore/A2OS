@@ -5,7 +5,7 @@ IMPORT Files, Modules, WMGraphics, WMProperties,
 	WM := WMWindowManager;
 
 CONST
-	WindowWidth = 500; WindowHeight = 400;
+	WindowWidth = 500; WindowHeight = 400; FileNameLength = Files.NameLength;
 
 TYPE
 	KillerMsg = OBJECT
@@ -37,7 +37,7 @@ TYPE
 		END Init;
 
 		PROCEDURE TextChanged(sender, data : ANY);
-		VAR str : ARRAY 128 OF CHAR;
+		VAR str : ARRAY FileNameLength (* was 128*)  OF CHAR;
 		BEGIN
 			filterEdit.GetAsString(str);
 			filterProp.Set(Strings.NewString(str))

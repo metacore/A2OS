@@ -6,7 +6,7 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = "Aos (rev.6275)";
+	Version = "Aos (rev.6547)";
 
 	DefaultObjectFileExtension* = ".Obj";
 	
@@ -112,7 +112,6 @@ VAR
 	
 	timer0	: HUGEINT;
 
-(** -- Processor identification -- *)
 
 	(** Return current processor ID (0 to MaxNum-1). *)
 	PROCEDURE {REALTIME} ID* (): LONGINT;
@@ -231,32 +230,47 @@ VAR
 			cur := cur.next
 		END
 	END TraceHeap;
-
 	
+
+	(* returns if an address is a currently allocated heap address *)
+	PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
+	VAR mb: MemoryBlock; 
+	BEGIN
+		mb := memBlockHead;  
+		WHILE mb # NIL DO
+			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
+			mb := mb.next;  
+		END;  
+		RETURN FALSE  
+	END ValidHeapAddress;
+	
+
 	(** Return information on free memory in Kbytes. *)
 	PROCEDURE GetFreeK*(VAR total, lowFree, highFree: SIZE);
 	BEGIN
-		(* meaningless in Unix port, for interface compatibility only *)
+		(*! meaningless in Unix port, for interface compatibility only *)
 		total := 0;
 		lowFree := 0;
 		highFree := 0
 	END GetFreeK;
+	
+	
 
-(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
-PROCEDURE {REALTIME} Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-CODE {SYSTEM.i386}
-	MOV EDI, [EBP+destAdr]
-	MOV ECX, [EBP+size]
-	MOV EAX, [EBP+filler]
-	TEST ECX, 3
-	JZ ok
-	PUSH 8	; ASSERT failure
-	INT 3
-ok:
-	SHR ECX, 2
-	CLD
-	REP STOSD
-END Fill32;
+	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
+	PROCEDURE {REALTIME} Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	CODE {SYSTEM.i386}
+		MOV EDI, [EBP+destAdr]
+		MOV ECX, [EBP+size]
+		MOV EAX, [EBP+filler]
+		TEST ECX, 3
+		JZ ok
+		PUSH 8	; ASSERT failure
+		INT 3
+	ok:
+		SHR ECX, 2
+		CLD
+		REP STOSD
+	END Fill32;
 
 
 PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
@@ -276,28 +290,6 @@ END Portout16;
 
 PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
 END Portout32;
-
-
-(* returns if an address is a currently allocated heap address *)
-PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
-VAR mb: MemoryBlock; 
-BEGIN
-	mb := memBlockHead;  
-	WHILE mb # NIL DO
-		IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
-		mb := mb.next;  
-	END;  
-	RETURN FALSE  
-END ValidHeapAddress;
-
-PROCEDURE Ensure32BitAddress*( adr: ADDRESS ): LONGINT;
-BEGIN
-	RETURN adr
-END Ensure32BitAddress;
-
-PROCEDURE Is32BitAddress*( adr: ADDRESS ): BOOLEAN;
-BEGIN  RETURN S.VAL( LONGINT, adr ) = adr;
-END Is32BitAddress;
 
 
 (** -- Atomic operations -- *)
@@ -443,7 +435,7 @@ CODE {SYSTEM.Pentium}
 END GetTimer;
 
 
-(** -- Configuration and bootstrapping -- *)
+	(** -- Configuration and bootstrapping -- *)
 
 	(** Return the value of the configuration string specified by parameter name in parameter val. Returns val = "" if the string was not found, or has an empty value. *)
 	PROCEDURE GetConfig* (CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
@@ -608,18 +600,9 @@ END GetTimer;
 		AVXSupport := SSE3Support & (AVXFlag IN features2);
 
 		IF SSESupport & (FXSRFlag IN features) THEN
-			(* InitSSE(); *) (*! not privileged mode in Windows and Unix not allowed *)
+			(* InitSSE(); *) (*! not privileged mode in Windows and Unix, not allowed *)
 		END;
 	END SetupSSE2Ext;
-	
-
-	PROCEDURE -InitSSE;
-	CODE {SYSTEM.Pentium, SYSTEM.Privileged}
-		MOV	EAX, CR4
-		OR		EAX, 00000200H		; set bit 9 (OSFXSR)
-		AND	EAX, 0FFFFFBFFH	; delete bit 10 (OSXMMEXCPT)
-		MOV	CR4, EAX
-	END InitSSE;
 	
 
 	(** -- Processor initialization -- *)
@@ -748,22 +731,22 @@ END GetTimer;
 		END
 	END CPUSpeed;
 	
-	PROCEDURE Log1( c: CHAR );
+	PROCEDURE Log( c: CHAR );
 	VAR ignore: LONGINT;
 	BEGIN
 		ignore := Unix.write( 1, ADDRESSOF( c ), 1 );
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
-	END Log1;
+	END Log;
 	
-	PROCEDURE Log2( c: CHAR );
+	PROCEDURE LogFileOnly( c: CHAR );
 	VAR ignore: LONGINT;
 	BEGIN
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
-	END Log2;
+	END LogFileOnly;
 	
 	
 	PROCEDURE InitLog;
-	VAR name: ARRAY 32 OF CHAR;  pid, i, d: LONGINT;
+	VAR name, cmd: ARRAY 32 OF CHAR;  pid, i: LONGINT; 
 	BEGIN
 		name := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;
@@ -772,19 +755,24 @@ END GetTimer;
 			pid := pid DIV 10;		
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( name ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-		IF Unix.argc < 3 THEN  VerboseLog  
-		ELSE  standaloneAppl := TRUE;  SilentLog
+		IF Unix.argc > 2 THEN
+			Unix.GetArgval( "-x", cmd );
+			IF cmd # "" THEN  SilentLog;  standaloneAppl := TRUE 
+			ELSE  VerboseLog 
+			END
+		ELSE
+			VerboseLog
 		END
 	END InitLog;
 	
 	PROCEDURE SilentLog*;
 	BEGIN
-		Trace.Char := Log2
+		Trace.Char := LogFileOnly
 	END SilentLog;
 	
 	PROCEDURE VerboseLog*;
 	BEGIN
-		Trace.Char := Log1
+		Trace.Char := Log
 	END VerboseLog;
 
 	
@@ -828,8 +816,9 @@ END GetTimer;
 		InitConfig;
 		InitLog;
 		CPUSpeed;
-		
-		CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext;
+		IF CpuIdSupported() THEN
+			CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext
+		END;
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
 	END Init;
 

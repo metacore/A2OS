@@ -684,6 +684,7 @@ TYPE
 	*)
 	PROCEDURE GCLoop*;	(* Timer and GC activity *)
 	BEGIN
+		SetPriority( GCPriority );
 		LOOP
 			IF collect THEN  
 				collect := FALSE;

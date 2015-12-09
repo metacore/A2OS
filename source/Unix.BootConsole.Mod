@@ -1,6 +1,6 @@
 MODULE BootConsole;	(** AUTHOR "G.F."; PURPOSE "Boot console"; *)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Modules, Objects, Commands;
+IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
 
 TYPE
 	Module = Modules.Module;
@@ -69,9 +69,7 @@ VAR
 		m := Modules.ThisModule( modName, res, msg );
 		IF m # NIL THEN
 			cmd := ThisCommand( m, procName );
-			IF cmd # NIL THEN  
-				IF Machine.standaloneAppl THEN  Machine.SilentLog  END;
-				cmd
+			IF cmd # NIL THEN  cmd
 			ELSE
 				Trace.String( "BootConsole.Execute:  module '" );  Trace.String( modName );
 				Trace.String( "' has no command '" );  Trace.String( procName );  Trace.Char( "'" );
@@ -128,7 +126,6 @@ VAR
 	BEGIN
 		Unix.GetArgval( "-x", cmd );
 		IF cmd # "" THEN  	
-			Machine.VerboseLog;
 			ci := 0;
 			IF GetName( modName ) & GetName( cmdName ) THEN  
 				IF Glue.debug # {} THEN
@@ -186,10 +183,7 @@ VAR
 
 BEGIN
 	InitPrelinkedModules;
-	
 	StartSystem;
-	
-	Objects.SetPriority( Objects.GCPriority );
 	Objects.GCLoop;
 END BootConsole.
 

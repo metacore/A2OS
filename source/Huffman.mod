@@ -31,6 +31,8 @@ type
 		val: longint
 	end;
 	
+	CodeTable = array 256 of Codebits;
+	
 		
 	HuffmanCode = object
 		var 
@@ -49,7 +51,7 @@ type
 		end Clear;
 		
 		
-		procedure Append( const bits: Codebits );
+		procedure AppendBits( const bits: Codebits );
 		var 
 			bitsize, val, addval, addbits, shift: longint;
 		begin
@@ -65,7 +67,7 @@ type
 			if lastbits = 32 then
 				buffer[wsize] := lastval;  inc( wsize );  lastval := 0;  lastbits := 0
 			end
-		end Append;
+		end AppendBits;
 		
 		
 		procedure WriteCode( w: Streams.Writer );
@@ -118,7 +120,6 @@ type
 	PatternFrequencies = pointer to array of Pattern;		(* ordered by frequency *)
 	
 	
-	
 	procedure Encode*( r: Streams.Reader;  w: Streams.Writer );
 	var 
 		buffer: HuffmanCode;  i, n, needed, ofs, got, chunksize, timeout: longint;
@@ -153,7 +154,7 @@ type
 			InitCodeTable( codeTable, NewHuffmanTree( pf ) );
 			buffer.Clear; 
 			for i := 0 to chunksize - 1 do  
-				buffer.Append( codeTable[ord( plaintext[i] )] );
+				buffer.AppendBits( codeTable[ord( plaintext[i] )] );
 			end;
 			WriteFrequencies( pf, w );
 			buffer.WriteCode( w );
@@ -213,6 +214,11 @@ type
 	begin
 		for i := 0 to 255 do  a[i].pattern := chr( i );  a[i].frequency := 0  end;
 		for i := 0 to blksize - 1 do  inc( a[ord( block[i] )].frequency )  end;
+		for i := 0 to 255 do  
+			if a[i].frequency > 0 then (* scale => [1..101H] *)
+				a[i].frequency := 100H * a[i].frequency div blksize + 1;
+			end
+		end;
 		Quicksort( 0, 255 );	(* sort patterns by frequency *)
 		i := 0;
 		while a[i].frequency = 0 do  inc( i )  end; 	(* skip unused patterns *)
@@ -223,7 +229,6 @@ type
 	end CountPatterns;
 		
 	
-	
 	procedure NewHuffmanTree( pf: PatternFrequencies ): HuffmanNode;
 	var 
 		i, start, top: longint;  n, n2: HuffmanNode;
@@ -233,7 +238,7 @@ type
 		new( a, len( pf^ ) );  top := len( pf^ ) - 1;
 		for i := 0 to top do  new( a[i], pf[i].pattern, pf[i].frequency )  end;
 		if top = 0 then  
-			(* the whole, probably last small block contains only one pattern *)
+			(* the whole, probably last small block contains only a single pattern *)
 			patt := chr( (ord( a[0].pattern ) + 1) mod 256 );	(* some different pattern *)
 			new( n, 0X, 0 );  new( n2, patt, 0 );  n.AddChildren( n2, a[0] );
 		else
@@ -250,7 +255,7 @@ type
 	end NewHuffmanTree;
 	
 	
-	procedure InitCodeTable( var table: array of Codebits; huffmanTree: HuffmanNode );
+	procedure InitCodeTable( var table: CodeTable; huffmanTree: HuffmanNode );
 	var 
 		start: Codebits;
 	

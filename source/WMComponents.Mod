@@ -418,7 +418,7 @@ TYPE
 						END;
 					END;
 				ELSIF ~(c IS XML.Comment) THEN
-					RETURN
+					Release; RETURN
 				END;
 			END;
 

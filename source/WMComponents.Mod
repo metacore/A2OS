@@ -2196,8 +2196,8 @@ TYPE
 				END;
 				DEC(disableUpdate);
 			END;			
-			form.Initialize;
-			form.Invalidate;
+			(*form.Initialize;*)(*implied above*)
+			(*form.Invalidate;*)(*implied above*)
 		END SetContent;
 
 		PROCEDURE DisableUpdate*;

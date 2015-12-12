@@ -394,28 +394,23 @@ TYPE
 			IF sequencer # NIL THEN ASSERT(sequencer.lock.HasReadLock()) END
 		END CheckReadLock;
 
-		(** AddContent adds a content (element or subtree) to the element. Called mainly by the XMLParser.
-		*)
+		(** AddContent adds a content (element or subtree) to the element	*)
 		PROCEDURE AddContent*(c : XML.Content);
 		VAR m:Messages.Message;  rect:Rectangles.Rectangle;
 		BEGIN
 			ASSERT(c # NIL);
 			Acquire;
-			BEGIN {EXCLUSIVE}
+			BEGIN (*{EXCLUSIVE}*)(* EXCLUSIVE leads to deadlock ?*)
 				IF c IS WMProperties.Properties THEN
 					properties.SetXML(c(WMProperties.Properties)); 
 				ELSIF c IS Component THEN
-					IF (sequencer # c(Component).sequencer) THEN 
-						IF sequencer#NIL THEN 
-							c(Component).SetSequencer(sequencer); 
-							c(Component).Reset(SELF,NIL); (* will be scheduled by sequencer. implied RecacheProperties*)
-							IF (SELF IS VisualComponent) & ( c IS VisualComponent) THEN (* todo: move to VisualComponent*)
-								sequencer.ScheduleEvent(SELF(VisualComponent).InvalidateCommand, SELF, NIL); 
-							END;
-						ELSE (* no tree traversal - is less costly *)
-							c(Component).sequencer:=NIL; 
-							c(Component).initialized:=FALSE; (*? is this necessary/correct ?*)
-						END;
+					IF sequencer#NIL THEN 
+						c(Component).SetSequencer(sequencer); 
+						c(Component).Reset(SELF,NIL); (* will be scheduled by sequencer. implied RecacheProperties*)
+						Initialize; (*? there is also a Initialize() within Reset() above, but that one seems sometimes not be effective because scheduled later; however ,this is partial redundancy *)
+					ELSE (* no tree traversal - is less costly *)
+						c(Component).initialized:=FALSE; 
+						c(Component).sequencer:=NIL; 
 					END;
 				ELSIF ~(c IS XML.Comment) THEN
 					Release; RETURN
@@ -585,7 +580,7 @@ TYPE
 				sequencer.ScheduleEvent(SELF.Reset, sender, data);
 				IF CanYield THEN Objects.Yield END;
 			ELSE
-				BEGIN	 
+				BEGIN	 (* how about exclusivity ?*)
 					RecacheProperties;
 					c := GetFirst();
 					WHILE (c # NIL) DO
@@ -593,8 +588,8 @@ TYPE
 							c(Component).Reset(sender, data) 
 						END;
 						c := GetNext(c);
-					END;		
-					IF ~initialized THEN Initialize END; (*component is ready when children are ready *)
+					END;	
+					Initialize;
 				END;
 			END
 		END Reset;
@@ -798,6 +793,8 @@ TYPE
 
 			aligning := FALSE; fPointerOwner := SELF; focusComponent := SELF;
 		END Init;
+
+
 
 		(** Focus handling *)
 		PROCEDURE TraceFocusChain*;
@@ -1053,6 +1050,7 @@ TYPE
 		BEGIN
 			Initialize^;
 			AlignSubComponents;
+			IF sequencer#NIL THEN Invalidate END;
 		END Initialize;
 
 	(** Locating *)

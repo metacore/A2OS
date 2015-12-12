@@ -5868,7 +5868,11 @@ TYPE
 					IF source = NIL THEN
 						null := 0;
 						GetCodeSectionNameForSymbol(td,name);
-						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
+						ELSE
+							source := NewSection(module.importedSections, Sections.ConstSection, name,td,commentPrintout # NIL);
+						END;
 						IntermediateCode.InitImmediate(op,addressType,0);
 						source(IntermediateCode.Section).Emit(Data(position,op));
 						source.SetReferenced(FALSE)
@@ -12780,7 +12784,11 @@ TYPE
 					ELSE
 						(* data section in intermediate code *)
 						Global.GetSymbolSegmentedName(td,name);
-						tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+						ELSE
+							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+						END;
 						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),0);
 						tir.Emit(Data(-1,op));
 					END;

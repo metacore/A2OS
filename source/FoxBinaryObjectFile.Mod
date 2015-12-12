@@ -425,6 +425,9 @@ TYPE
 				WHILE fixup # NIL DO
 					next := fixup.nextFixup;
 					symbol := module.allSections.FindByName(fixup.symbol.name);
+					IF symbol = NIL THEN
+						symbol := module.importedSections.FindByName(fixup.symbol.name)
+					END;
 					IF symbol # NIL THEN
 						symbol.SetReferenced(TRUE);
 					ELSIF Trace THEN
@@ -739,6 +742,9 @@ TYPE
 					typeDeclaration := type.typeDeclaration; (* must be non-nil *)
 					typeDeclaration.GetName(name);
 					section := symbols.BySymbol(type.typeDeclaration);
+					IF section = NIL THEN 
+						section := importedSymbols.BySymbol(type.typeDeclaration);
+					END;
 					ASSERT(section # NIL);
 					w.RawNum((section.offset )); (* type descriptor section offset *)
 					IF Trace THEN
@@ -1410,6 +1416,9 @@ TYPE
 						IF type.recordScope.ownerModule = importedModule THEN (* type belongs to currently processed module *)
 							IF Trace  THEN D.Str("UseTypeFP:"); D.Str(name); D.Str("?"); D.Ln END;
 							t := symbols.BySymbol(type.typeDeclaration); (* TODO *)
+							IF t = NIL THEN 
+								t := importedSymbols.BySymbol(type.typeDeclaration);
+							END;
 							IF (t # NIL) & (t.referenced) (*(t.fixups # NIL)*) THEN
 								t.referenced := FALSE;
 
@@ -1499,6 +1508,7 @@ TYPE
 						type := typeDeclaration.declaredType;
 						IF type IS SyntaxTree.PointerType THEN type := type(SyntaxTree.PointerType).pointerBase END;
 						sym := symbols.BySymbol(typeDeclaration); (* only if has been used -- contained in module sections: alias *)
+						IF sym = NIL THEN sym := importedSymbols.BySymbol(typeDeclaration) END;
 						IF (sym # NIL) & (sym.referenced) THEN
 							UseEntry(importedModule,typeDeclaration,0,"");
 							UseType(typeDeclaration.declaredType);
@@ -2188,6 +2198,16 @@ TYPE
 						fixup := fixup.nextFixup;
 					END
 				END
+			END;
+
+			(* enter unused types to local sections -- required, otherwise traps *)
+			FOR i := 0 TO module.importedSections.Length() - 1 DO
+				section := module.importedSections.GetSection(i);
+				IF (section.type = Sections.ConstSection) & (section.symbol # NIL) & (section.symbol IS SyntaxTree.TypeDeclaration) THEN
+					IF symbols.BySymbol(section.symbol) = NIL THEN 
+						ASSERT(Enter(section, symbols, symbol))
+					END;
+				END;
 			END;
 
 			IF Trace THEN

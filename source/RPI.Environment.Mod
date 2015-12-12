@@ -151,7 +151,7 @@ END InitMemory;
 
 PROCEDURE Initialize-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	SYSTEM.SetActivity (NIL); LED (TRUE);
+	LED (TRUE);
 	CPU.Initialize; InitTrace; InitMemory;
 	frequency := Timer.GetFrequency () DIV 1000;
 END Initialize;

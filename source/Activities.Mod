@@ -118,13 +118,12 @@ TYPE Process = OBJECT {DISPOSABLE} (Activity)
 END Process;
 
 (* Stores information per processor. *)
-TYPE Processor = RECORD
+TYPE Processor = RECORD {ALIGNED (CPU.CacheLineSize)}
 	assigning := FALSE: BOOLEAN;
 	originalFramePointer: ADDRESS;
 	readyQueue: ARRAY Priorities OF Queues.AlignedQueue;
 	runningActivity: Activity;
 	index: SIZE;
-	dummy {ALIGNED (CPU.CacheLineSize)} : RECORD END;
 END;
 
 VAR processors: ARRAY Processors.Maximum OF Processor;

@@ -22,7 +22,7 @@ TYPE Heap* = RECORD
 	begin, end: ADDRESS; sentinel := 0: SIZE;
 END;
 
-VAR processors: ARRAY Processors.Maximum OF RECORD hazard {UNTRACED}: Block; dummy {ALIGNED (CPU.CacheLineSize)} : RECORD END END;
+VAR processors: ARRAY Processors.Maximum OF RECORD {ALIGNED (CPU.CacheLineSize)} hazard {UNTRACED}: Block END;
 
 (* Computes the index of a block that has the given size. *)
 PROCEDURE GetIndex (size: SIZE): SIZE;

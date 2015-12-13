@@ -64,14 +64,7 @@ TYPE
 			lastKeys := {};
 			NEW(PArray,0); 
 		END Init;
-		
-		PROCEDURE Initialize*;
-		BEGIN(* Called by component.Reset() through sequencer, renders component responsive *)
-			Initialize^;
-			RecacheProperties;
-			Normalize;
-		END Initialize;
-	
+
 		PROCEDURE AddPoint*(x, y : LONGINT); (* in stable parent coordinates (because coordinates relative to the figure bound change with normalization) *)
 		VAR 
 			s: ARRAY 16 OF CHAR;
@@ -83,7 +76,6 @@ TYPE
 			INC(nofPoints);
 			NEW(pp,NIL,Strings.NewString(s),NIL);  
 			pp.SetCoordinate(x,y); 
-			(*NEW(a); a.SetName("Index"); a.SetValue(s); pp.AddAttribute(a);*)
 			Acquire;
 			properties.Add(pp);
 			Release;
@@ -257,6 +249,7 @@ TYPE
 		PROCEDURE AddDisplayPoint(x, y : LONGINT);
 		VAR point, p : Point; 
 		BEGIN
+			Acquire;
 			NEW(point); point.x := x; point.y := y; point.previous := NIL; point.next := NIL;
 			IF (points = NIL) THEN points := point;
 			ELSE
@@ -265,19 +258,22 @@ TYPE
 				p.next := point; point.previous := p;
 			END;
 			INC(nofPoints);
+			Release;
 		END AddDisplayPoint;
 		
 		PROCEDURE MoveDisplayPoints(dx, dy : LONGINT); 
 		VAR p : Point;
 		BEGIN
+			Acquire;
 			p := points;
 			WHILE (p # NIL) DO	p.x := p.x + dx; p.y := p.y + dy; p := p.next; END;
+			Release;
 		END MoveDisplayPoints;
 
 		PROCEDURE Normalize; 
 		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; dx,dy:LONGINT;
 		BEGIN
-
+			Acquire;
 			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT); rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
 			p:=points;
 			WHILE p#NIL DO (* adapt display point coordinates to new bounds *)
@@ -292,6 +288,7 @@ TYPE
 				p:=p.next; 
 			END;
 			bounds.Set(rect);
+			Release;
 		END Normalize;
 
 		PROCEDURE Scale;
@@ -328,6 +325,7 @@ TYPE
 		PROCEDURE RecachePoints; (*build point list in parent coordinates*)
 		VAR p:Point;	i,x,y:LONGINT;
 		BEGIN
+			Acquire;
 			PArray:=properties.Enumerate();
 			points:=NIL; p:=NIL; nofPoints:=0;
 			FOR i:=0 TO LEN(PArray)-1 DO
@@ -336,6 +334,7 @@ TYPE
 					AddDisplayPoint(x, y);
 				END;
 			END;
+			Release;
 		END RecachePoints;
 		
 		PROCEDURE DrawDisplayPoint(canvas : WMGraphics.Canvas; pp: WMProperties.PointProperty);
@@ -650,7 +649,6 @@ TYPE
 		PROCEDURE Initialize*;
 		VAR pp:WMProperties.PointProperty;
 		BEGIN
-			RecachePoints;
 			IF nofPoints=0 THEN (* default *)
 				Acquire;
 				NEW(pp,NIL,Strings.NewString("Point0"),NIL); pp.SetCoordinate(5,20); properties.Add(pp); INC(nofPoints);
@@ -659,10 +657,10 @@ TYPE
 				NEW(pp,NIL,Strings.NewString("Point3"),NIL); pp.SetCoordinate(30,30); properties.Add(pp); INC(nofPoints);
 				Release;
 			END;
-			Initialize^; (* contains some redundancy*)
 			RecachePoints;
 			SplineToPoly(points, Closed IN state, pointArray, nSegments);
 			Normalize;
+			Initialize^; 
 		END Initialize;
 		
 			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
@@ -703,7 +701,7 @@ TYPE
 			RETURN FALSE
 		END IsHit;
 
-		PROCEDURE PropertyChanged*(sender, property : ANY);
+		(*PROCEDURE PropertyChanged*(sender, property : ANY);
 			BEGIN
 				IF (property=closed) THEN 
 					IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed);  END; 
@@ -716,7 +714,24 @@ TYPE
 					SplineToPoly(points, Closed IN state, pointArray, nSegments); 
 					Normalize;
 					Resized;
-				ELSE PropertyChanged^(sender,property);
+					(*should call PropertyChanged^ in some cases here ?*)
+				ELSE 
+					RecachePoints; 
+					SplineToPoly(points, Closed IN state, pointArray, nSegments); 
+					Normalize;
+					Resized;
+					PropertyChanged^(sender,property);
+				END;
+			END PropertyChanged;*)
+
+		PROCEDURE PropertyChanged*(sender, property : ANY);
+			BEGIN
+				RecacheProperties;
+				SplineToPoly(points, Closed IN state, pointArray, nSegments); 
+				Normalize;
+				Resized;(* implied Invalidate *)
+				IF ~(property IS WMProperties.PointProperty) & ~(property=closed) THEN
+					PropertyChanged^(sender,property);
 				END;
 			END PropertyChanged;
 

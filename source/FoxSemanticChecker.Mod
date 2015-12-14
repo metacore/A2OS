@@ -1068,6 +1068,8 @@ TYPE
 					ELSE
 						x.SetBaseType(ResolveType(x.baseType));
 					END;
+				ELSE
+					x.SetBaseType(ResolveType(x.baseType));
 				END;
 				
 				IF recordBase = NIL THEN numberMethods := 0
@@ -8114,7 +8116,7 @@ TYPE
 			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
 			BEGIN
 				IF type.baseType # NIL THEN 
-					baseType := type.baseType.resolved; 
+					baseType := type.baseType.resolved;
 					IF baseType IS SyntaxTree.PointerType THEN
 						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
 					END;

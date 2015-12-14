@@ -5953,9 +5953,10 @@ TYPE
 					END;
 
 					IF numberActualParameters = 3 THEN
-						IF ~cellsAreObjects & ~IsIntegerValue(parameter2,i0) & (i0>=0) THEN
+						(*IF ~cellsAreObjects & ~IsIntegerValue(parameter2,i0) & (i0>=0) THEN
 							Error(position,Diagnostics.Invalid,"incompatible channel size parameter");
 						END;
+						*)
 						parameter2 := NewConversion(Diagnostics.Invalid,parameter2,system.longintType,NIL);
 						actualParameters.SetExpression(2,parameter2);
 					END;

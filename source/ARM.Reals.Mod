@@ -58,6 +58,12 @@ BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, i); RETURN ASH(i, -20) MOD 2048
 END ExpoL;
 
+(** Returns the mantissa *)
+PROCEDURE Mantissa* (x: REAL): LONGINT;
+BEGIN
+	RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, x) * {0 .. 22})
+END Mantissa;
+
 (** Sets the shifted binary exponent. *)
 PROCEDURE SetExpo* (e: LONGINT; VAR x: REAL);
 	VAR i: LONGINT;

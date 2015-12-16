@@ -338,7 +338,7 @@ VAR
 	rename-		: PROCEDURE {C} ( oldname, newname: ADDRESS ): LONGINT;
 	ftruncate-		: PROCEDURE {C} ( fd: LONGINT;  length: SIZE ): LONGINT;
 	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
-	utime-		: PROCEDURE {C} ( fd: LONGINT;  tb: ADDRESS ): LONGINT;
+	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: FdSetPtr;  VAR timeout: Timeval ): LONGINT;
 
@@ -565,3 +565,4 @@ BEGIN
 
 	getSysinfo;
 END Unix.
+

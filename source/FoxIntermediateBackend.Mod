@@ -7083,6 +7083,7 @@ TYPE
 						OR (property.type.resolved IS SyntaxTree.IntegerType) 
 						OR (property.type.resolved IS SyntaxTree.FloatType)
 						OR (property.type.resolved IS SyntaxTree.BooleanType)
+						OR (property.type.resolved IS SyntaxTree.SetType)
 						);
 					left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
 					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(cellType);

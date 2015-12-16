@@ -107,14 +107,14 @@ VAR
 						ELSIF keysym = 0FE20H THEN  (* handle Shift-Tab key *)
 							km.keysym := Inputs.KsTab; km.ch :=09X
 						ELSE
-							km.keysym := keysym;				
+							km.keysym := LONGINT(keysym);				
 						END;
 						km.flags := KeyState( );
 						SendKeyboardMsg( km )
 					ELSE
 						IF (Api.ControlMask IN kp.state) & (keysym = 32) THEN (* check Ctrl-space *)
 							km.ch := CHR( keysym );  km.flags := KeyState( );
-							km.keysym := keysym;
+							km.keysym := LONGINT(keysym);
 							SendKeyboardMsg( km ); (* IME keys *)
 						ELSE
 							xbuttons := newxbuttons;  i := 0;
@@ -239,7 +239,7 @@ VAR
 	END KeyState;
 
 
-	PROCEDURE Keysym( CONST str: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE Keysym( CONST str: ARRAY OF CHAR ): X11.KeySym;
 	BEGIN
 		RETURN X11.StringToKeysym( ADDRESSOF( str ) )
 	END Keysym;
@@ -247,12 +247,12 @@ VAR
 	PROCEDURE Init*;
 	VAR FK: ARRAY 8 OF CHAR;
 		n, i, k: LONGINT;  modifiers: X11.Modifiers;
-		shift, control, meta, alt, capslock, numlock: LONGINT;   (* keysym's *)
+		shift, control, meta, alt, capslock, numlock: X11.KeySym;  
 
 
 		PROCEDURE Rebind( CONST keystr: ARRAY OF CHAR;  nofmod: LONGINT;  key: CHAR );
 		VAR newkeystr: ARRAY 8 OF CHAR;
-			oldkeysym: LONGINT;
+			oldkeysym: X11.KeySym;
 		BEGIN
 			Machine.Acquire( Machine.X11 );
 			oldkeysym := Keysym( keystr );

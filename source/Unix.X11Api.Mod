@@ -14,7 +14,7 @@ TYPE
 	Pixmap = X11.Pixmap;
 	Cursor* = X11.Cursor;
 	Atom* = X11.Atom;
-	XID* = LONGINT;
+	XID* = ADDRESS;
 
 	Drawable* = X11.Drawable;
 	Colormap* = X11.Colormap;

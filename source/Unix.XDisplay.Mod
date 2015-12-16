@@ -220,7 +220,7 @@ TYPE
 					at bit offset "bitofs".  The line byte increment is "stride", which may be positive, negative or zero.
 					"fg" and "bg" specify the colors for value 1 and 0 pixels respectively. *)
 				PROCEDURE Mask*( VAR buf: ARRAY OF CHAR;  bitofs, stride, fg, bg, x, y, w, h: LONGINT );
-				VAR p, i: LONGINT;  s: SET;
+				VAR p: ADDRESS; i: LONGINT;  s: SET;
 					image: X11.Image;
 					fgpixel, bgpixel, xret: LONGINT;
 					ix, iy, ih: LONGINT;
@@ -238,7 +238,7 @@ TYPE
 						image := X11.CreateImage( xdisp, visual, depth, X11.ZPixmap, 0, 0, w, h, 32, 0 );
 						imp := S.VAL( X11.ImagePtr, image );
 						imp.data := ADDRESSOF( imgBuffer[0] );
-						i := ADDRESSOF( buf[0] ) MOD 4;  INC( bitofs, i*8 );
+						i := LONGINT(ADDRESSOF( buf[0] ) MOD 4);  INC( bitofs, i*8 );
 						p := ADDRESSOF( buf[0] ) - i + bitofs DIV 32*4;   (* p always aligned to 32-bit boundary *)
 						bitofs := bitofs MOD 32;  stride := stride*8;
 						ix := 0; iy := 0; ih := h;
@@ -747,7 +747,7 @@ VAR
 		msk := S.VAL( X11.PatternPtr, NewPattern( d, image, 16, 16 ) );
 		
 		Machine.Acquire( Machine.X11 );
-		noCursor := X11.CreatePixmapCursor( d.xdisp, src.pixmap, msk.pixmap, ADDRESSOF( fg ), ADDRESSOF( bg ), 1, 1 );
+		noCursor := X11.CreatePixmapCursor( d.xdisp, src.pixmap, msk.pixmap, fg, bg, 1, 1 );
 		X11.DefineCursor( d.xdisp, d.primary, noCursor );
 		Machine.Release( Machine.X11 )
 	END SuppressX11Cursors;

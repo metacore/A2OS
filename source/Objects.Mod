@@ -1168,7 +1168,7 @@ BEGIN
 	(* initialize the stack *)
 	Machine.NewStack(t.stack, t, sp);
 	IF VeryConservative THEN
-		Machine.Fill32(t.stack.adr, sp-t.stack.adr, 0D0D0DEADH)
+		Machine.Fill32(t.stack.adr, sp-t.stack.adr, LONGINT(0D0D0DEADH))
 	END;
 	SYSTEM.PUT (sp-1*AddressSize, obj); (* self parameter for body *)
 	SYSTEM.PUT (sp-2*AddressSize, terminate); (* return address for body *)

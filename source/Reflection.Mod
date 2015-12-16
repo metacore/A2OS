@@ -223,8 +223,9 @@ VAR
 
 	(* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 	PROCEDURE FindProcByName*(mod: Modules.Module; CONST name: ARRAY OF CHAR;  VAR from, to: ADDRESS): BOOLEAN;
-	VAR i, namePos, m, t, tstart, tend: LONGINT; ch: CHAR; newObjectFile: BOOLEAN;
+	VAR i, namePos, m, t, temp: LONGINT; ch: CHAR; newObjectFile: BOOLEAN;
 		refs: Modules.Bytes; success: BOOLEAN;
+		tstart, tend: ADDRESS;
 	BEGIN
 		IF mod = NIL THEN RETURN FALSE END;
 		refs := mod.refs;
@@ -235,8 +236,9 @@ VAR
 		ch := refs[i]; INC(i); tstart := 0;
 		success := FALSE;
 		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) & ~success DO	(* proc *)
-			GetNum(refs, i, tstart);	(* pofs *)
-			IF newObjectFile THEN GetNum(refs,i,tend) END;
+			GetNum(refs, i, temp);	(* pofs *)
+			tstart := temp;
+			IF newObjectFile THEN GetNum(refs,i,temp); tend := temp END;
 			IF ch = 0F9X THEN
 				GetNum(refs, i, t);	(* nofPars *)
 				INC(i, 3)	(* RetType, procLev, slFlag *);
@@ -259,7 +261,7 @@ VAR
 		END;
 		IF success & ~newObjectFile THEN
 			IF (ch = 0F8X) OR (ch = 0F9X) THEN
-				GetNum(refs, i, tend)
+				GetNum(refs, i, temp); tend := temp;
 			ELSE
 				tend :=LEN(mod.code);
 			END;

@@ -60,8 +60,8 @@ VAR
 		ELSE
 			(* output first line *)
 			w.String("["); w.Int(trapState[id], 1); w.String("] ");
-			w.String("TRAP "); w.Int(SHORT(exc.halt), 1);
-			w.String(" PL"); w.Int(SHORT(int.CS) MOD 4, 2); w.Char(" ");
+			w.String("TRAP "); w.Int(LONGINT(exc.halt), 1);
+			w.String(" PL"); w.Int(LONGINT(int.CS) MOD 4, 2); w.Char(" ");
 			CASE exc.halt OF
 				-14:	(* page fault *)
 					IF (int.CS MOD 4 > Machine.KernelLevel) & (exc.pf+4 = int.SP) THEN

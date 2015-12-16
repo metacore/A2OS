@@ -375,7 +375,7 @@ TYPE
 				IF TraceVerbose & (trace * TraceBuffer # {})THEN KernelLog.String(", "); KernelLog.Hex(left, 0); KernelLog.Ln; END;
 				DEC(size, left);
 				IF size = 0 THEN
-					command.prdt.prd[i].size := SHORT(80000000H) + left; (* end marker *)
+					command.prdt.prd[i].size := LONGINT(80000000H) + left; (* end marker *)
 					EXIT
 				END;
 				command.prdt.prd[i].size := left;

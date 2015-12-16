@@ -367,6 +367,7 @@ TYPE
 				toVirtual[index MOD 32 + RAX] := split;
 				toVirtual[index MOD 32 + EAX] := split;
 				toVirtual[index MOD 32 + AX] := split;
+			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Allocate;
@@ -404,6 +405,7 @@ TYPE
 				toVirtual[index MOD 32 + RAX] := free;
 				toVirtual[index MOD 32 + EAX] := free;
 				toVirtual[index MOD 32 + AX] := free;
+			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Free;

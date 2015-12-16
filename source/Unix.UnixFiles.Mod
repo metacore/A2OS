@@ -466,7 +466,7 @@ TYPE
 				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
 				VAR  org, offset, i, n, res: LONGINT;  buf: Buffer;
 				BEGIN 
-					IF p > fsize THEN  p := fsize
+					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
 					END;
 					offset := p MOD Bufsize;  org := p - offset;  
@@ -593,7 +593,7 @@ TYPE
 
 				PROCEDURE Length*( ): LONGINT;
 				BEGIN
-					RETURN fsize
+					RETURN LONGINT(fsize)
 				END Length;
 
 

@@ -31,7 +31,7 @@ VAR
 
 	gethostbyaddr	: PROCEDURE {C} ( adr: ADDRESS; len, typ: LONGINT ): Hostent;
 	gethostbyname	: PROCEDURE {C} ( name: ADDRESS ): Hostent;
-	gethostname		: PROCEDURE {C} ( name: ADDRESS; len: LONGINT ): LONGINT;
+	gethostname		: PROCEDURE {C} ( name: ADDRESS; len: SIZE ): LONGINT;
 
 	(* Statistic variables *)
 	NDNSReceived-, NDNSSent-, NDNSMismatchID-, NDNSError-: LONGINT;
@@ -97,9 +97,9 @@ VAR
 	
 	(* none portable, Unix ports only! *)
 	PROCEDURE GetHostName*( VAR name: ARRAY OF CHAR;  VAR res: LONGINT );
-	VAR len, x: LONGINT;
+	VAR x: LONGINT;
 	BEGIN
-		x := gethostname( ADDRESSOF( name ), ADDRESSOF( len ) );
+		x := gethostname( ADDRESSOF( name ), LEN( name ) );
 		IF x >= 0 THEN  res := Ok  ELSE  res := NotFound  END
 	END GetHostName;
 	

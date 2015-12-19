@@ -823,6 +823,10 @@ TYPE
 			ELSE FPLongReal(SELF.fp,x.value)
 			END;
 		END VisitRealValue;
+		
+		PROCEDURE VisitNilValue(x: SyntaxTree.NilValue);
+		BEGIN IF x.type.sizeInBits = 64 THEN FPHugeInt(SELF.fp, 0) ELSE FPNumber(SELF.fp, 0) END;
+		END VisitNilValue;
 
 		(* fp = fp & String *)
 		PROCEDURE VisitStringValue(x: SyntaxTree.StringValue);

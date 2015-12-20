@@ -493,7 +493,8 @@ TYPE
 		img* : Graphics.Image;
 		canvas* : Graphics.BufferCanvas;
 		canvasGen-: Graphics.CanvasGenerator;
-		pointerThreshold* : LONGINT;
+		pointerThreshold*, 
+		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
 
 		PROCEDURE &Init*(w, h : LONGINT; alpha : BOOLEAN);
 		BEGIN
@@ -501,7 +502,8 @@ TYPE
 			NEW(img);
 			IF alpha THEN Raster.Create(img, w, h, Raster.BGRA8888) ELSE Raster.Create(img, w, h, format) END;
 			SetCanvasGenerator(Graphics.GenCanvas);
-			pointerThreshold := 1; (* invisible pixels are treated as invisble *)
+			pointerThreshold := 1; (* invisible pixels are treated as invisible *)
+			maxInterpolation := Graphics.ScaleBilinear;
 		END Init;
 
 		PROCEDURE SetCanvasGenerator*(canvasGen:Graphics.CanvasGenerator);
@@ -532,10 +534,10 @@ TYPE
 				ELSE
 					IF useAlpha THEN
 						canvas.ScaleImage(img, Rectangles.MakeRect(0, 0, img.width, img.height),
-							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeSrcOverDst, q)
+							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeSrcOverDst, MIN( q,maxInterpolation))
 					ELSE
 						canvas.ScaleImage(img, Rectangles.MakeRect(0, 0, img.width, img.height),
-							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeCopy, q)
+							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeCopy, MIN(q,maxInterpolation))
 					END
 				END
 			END;
@@ -615,10 +617,10 @@ TYPE
 				ELSE
 					IF useAlpha THEN
 						canvas.ScaleImage(img, Rectangles.MakeRect(0, 0, img.width, img.height),
-							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeSrcOverDst, q)
+							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeSrcOverDst, MIN(q,maxInterpolation))
 					ELSE
 						canvas.ScaleImage(img, Rectangles.MakeRect(0, 0, img.width, img.height),
-							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeCopy, q)
+							Rectangles.MakeRect(0, 0, w, h), Graphics.ModeCopy, MIN(q,maxInterpolation))
 					END
 				END
 			END;

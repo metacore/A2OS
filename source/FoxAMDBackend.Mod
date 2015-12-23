@@ -843,6 +843,8 @@ TYPE
 
 				IF virtual.symbol.name # "" THEN size := SHORT(type.sizeInBits DIV 8);
 				ELSIF forbidden16Bit & IsImm16(value) & ~(IsImm8(value)) THEN size := Assembler.bits32;
+				ELSIF (type.sizeInBits = 64) & (type.form = IntermediateCode.UnsignedInteger) & (value > MAX(LONGINT)) THEN 
+					size := 8; (* don't use negative signed 32-bit value  to encode 64-bit unsigned value! *)	
 				ELSE size := 0
 				END;
 				Assembler.InitImm(physical,size ,value);

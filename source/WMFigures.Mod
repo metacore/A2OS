@@ -757,7 +757,7 @@ TYPE
 		END Normalize;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR p: Point; col: LONGINT; 
+		VAR p,pa: Point; col: LONGINT; d:REAL;
 		BEGIN
 			DrawBackground^(canvas); 
 			IF mouseOver THEN col:=clHover.Get() ELSE col:=color.Get() END;
@@ -766,7 +766,17 @@ TYPE
 			ELSE
 				canvas.PolyLine(pointArray, nSegments, closed.Get(), col, WMGraphics.ModeSrcOverDst);
 			END;
-			IF arrow.Get() (*(Arrow IN state)*) & (p#NIL) THEN DrawArrow(canvas, p.previous, p) END;
+			IF arrow.Get() (*(Arrow IN state)*) & (p#NIL) THEN 
+				(*
+				d:=Math.sqrt( (p.x-p.previous.x)*(p.x-p.previous.x) + (p.y-p.previous.y)*(p.y-p.previous.y));
+				d:=10/d;
+				NEW(pa); 
+				pa.x:= p.x - ENTIER(d*(p.x-p.previous.x));
+				pa.y:= p.y - ENTIER(d*(p.y-p.previous.y));
+				DrawArrow(canvas, pa, p);
+				*)
+				DrawArrow(canvas, p.previous, p) 
+			END;
 		END DrawBackground;
 	END Spline;
 

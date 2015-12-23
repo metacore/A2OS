@@ -1,5 +1,5 @@
 (** Active Cells Runtime Base Code for Variations of ActiveCellsRuntime Implementations  
-	Felix Friedrich, ETH ZÃ¼rich, 2015
+	Felix Friedrich, ETH Zürich, 2015
 *)
 module ActiveCellsRuntime;
 
@@ -17,7 +17,9 @@ type
 	end Cell;
 
 	Context*= object
-	
+	var
+		topNet-: any; (** top-level CELLNET object specific to this runtime context *)
+		
 		procedure Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellNet, isEngine: boolean);
 		end Allocate;
 		
@@ -124,8 +126,11 @@ type
 	
 
 	procedure Allocate*(scope: Cell; var c: Cell; tag: address; const name: array of char; isCellnet, isEngine: boolean);
+	var ctx: Context;
 	begin
-		AllocateOnContext(GetContext(), scope, c, tag, name, isCellnet, isEngine);
+		ctx := GetContext();
+		AllocateOnContext(ctx, scope, c, tag, name, isCellnet, isEngine);
+		if scope = nil then ctx.topNet := c.c; end;
 	end Allocate;
 
 	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: longint);
@@ -298,7 +303,14 @@ type
 		return nbrOfUnloadedModules;
 	end FreeDownTo;
 	
-	procedure Execute*( const cellNet: array of char; context: Context; diagnostics: Diagnostics.Diagnostics);
+	(**
+		Execute ActiveCells CELLNET code
+		
+		cellNet: name of a CELLNET type in the format "ModuleName.TypeName", e.g. TestActiveCells.TestCellNet
+		context: runtime context used for executing the code
+		diagnostics: interface for generation of diagnostic messages (see Diagnostics.Mod)
+	*)
+	procedure Execute*(const cellNet: array of char; context: Context; diagnostics: Diagnostics.Diagnostics);
 	type
 		StartProc = procedure{DELEGATE}();
 		

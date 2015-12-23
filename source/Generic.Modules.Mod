@@ -29,7 +29,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=FALSE;
+	TraceBoot=TRUE;
 
 TYPE
 	(* definitions for object-model loader support *)
@@ -44,7 +44,7 @@ TYPE
 	END;
 
 	ExportDesc* = RECORD
-		fp*: ADDRESS;
+		fp*: LONGINT;
 		name* {UNTRACED}: DynamicName;
 		adr*: ADDRESS;
 		exports*: LONGINT;
@@ -325,6 +325,7 @@ VAR callagain: BOOLEAN;
 PROCEDURE Initialize0*(module: Module);
 VAR new: BOOLEAN;
 BEGIN
+	TRACE(module.name);
 	(* module MUST have been removed from register list and must not have been initialized yet *)
 	ASSERT(module.next = NIL);
 	Publish (module, new);
@@ -334,6 +335,37 @@ BEGIN
 			callagain := TRUE;
 			module.init := TRUE;
 		END;
+		Trace.Memory(SYSTEM.VAL(ADDRESS, module), 256);
+		TRACE(module, module.name, module.body);
+		TRACE(module);
+		TRACE(ADDRESS OF module.next);
+		TRACE(ADDRESS OF module.name);
+		TRACE(ADDRESS OF module.init);
+		TRACE(ADDRESS OF module.published);
+		TRACE(ADDRESS OF module.body);
+		TRACE(ADDRESS OF module.refcnt);
+		TRACE(ADDRESS OF module.sb);
+		TRACE(ADDRESS OF module.entry);
+		TRACE(ADDRESS OF module.command); 
+		TRACE(ADDRESS OF module.ptrAdr);
+		TRACE(ADDRESS OF module.typeInfo);
+		TRACE(ADDRESS OF module.module);
+		TRACE(ADDRESS OF module.procTable);
+		TRACE(ADDRESS OF module.ptrTable);
+		TRACE(ADDRESS OF module.data); 
+		TRACE(ADDRESS OF module.code);
+		TRACE(ADDRESS OF module.staticTypeDescs);
+		TRACE(ADDRESS OF module.refs);
+		TRACE(ADDRESS OF module.export);
+		TRACE(ADDRESS OF module.term);
+		TRACE(ADDRESS OF module.exTable);
+		TRACE(ADDRESS OF module.noProcs);
+		TRACE(ADDRESS OF module.firstProc);
+		TRACE(ADDRESS OF module.maxPtrs);
+		TRACE(ADDRESS OF module.crc);
+		TRACE(ADDRESS OF module.body);
+			
+					
 		IF module.body # NIL THEN module.body END;
 		IF callagain THEN
 			PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
@@ -341,6 +373,7 @@ BEGIN
 			module.init := TRUE;
 		END;
 	END;
+	TRACE(module.name);
 END Initialize0;
 
 (** Return the named module or NIL if it is not loaded yet. *)
@@ -927,6 +960,7 @@ END GetKernelProc;
 
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	TRACE(module.name);
 	IF register.first = NIL THEN
 		register.first := module;
 	ELSE
@@ -971,7 +1005,7 @@ END PublishRegisteredModules;
 (* procedure that will be called last in a linked kernel *)
 PROCEDURE {FINAL} Main;
 BEGIN
-	Machine.Init;
+	(*Machine.Init;*)
 	Trace.String("publish registered modules"); Trace.Ln;
 	PublishRegisteredModules;
 END Main;

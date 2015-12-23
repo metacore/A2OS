@@ -10947,6 +10947,14 @@ TYPE
 			section.Emit(Data(-1,op));
 		END Longint;
 
+		PROCEDURE PatchAddress(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
+		VAR op,noOperand: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitOperand(noOperand);
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),value);
+			section.PatchOperands(pc,op,noOperand,noOperand);
+		END PatchAddress;
+
 		PROCEDURE PatchLongint(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
 		VAR op,noOperand: IntermediateCode.Operand;
 		BEGIN
@@ -11315,6 +11323,8 @@ TYPE
 				Basic.InitSegmentedName(prev);
 				olevel := -1;
 				scopes[0].section := source;
+				scopes[0].arraySizePC := MIN(LONGINT);
+				
 
 				FOR s := 0 TO LEN(sections)-1 DO
 					symbol := sections[s];
@@ -11378,9 +11388,10 @@ TYPE
 					DEC(olevel); 
 				END;
 				
+
 				level := 0;
 				WHILE (level < LEN(scopes)) DO
-					IF scopes[level].section # NIL THEN
+					IF (scopes[level].section # NIL) & (scopes[level].arraySizePC # MIN(LONGINT))  THEN
 						PatchArray(scopes[level].section, scopes[level].arraySizePC, scopes[level].gelements);
 					END;
 					INC(level);
@@ -12170,20 +12181,20 @@ TYPE
 			Symbol(moduleSection,referenceSection,referenceSectionOffset,0);
 			Info(moduleSection, "export*: ExportDesc");
 			ExportDesc(moduleSection);
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0) END;
 			Info(moduleSection, "term*: TerminationHandler");
 			Address(moduleSection,0);
 			Info(moduleSection, "exTable*: ExceptionTable");
 			Symbol(moduleSection,exceptionSection,exceptionSectionOffset,0);
 			Info(moduleSection, "noProcs*: LONGINT");
 			Longint(moduleSection,numberProcs);
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); Longint(moduleSection,0); END;
 			Info(moduleSection, "firstProc*: ADDRESS");
 			Address(moduleSection,0);
 			Info(moduleSection, "maxPtrs*: LONGINT");
 			Longint(moduleSection,maxPointers);
 			Info(moduleSection, "crc*: LONGINT");
 			Longint(moduleSection, 0); (*!  must be implemented *)
-
-
 			Info(moduleSection, "body*: ADDRESS");
 			Symbol(moduleSection, bodyProc, 0,0);
 

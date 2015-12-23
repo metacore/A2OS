@@ -749,7 +749,7 @@ TYPE
 								ELSIF (index2 = SystemCommand_StayOnBottom) THEN
 									manager.SetWindowFlag(window, WMWindowManager.FlagStayOnBottom, ~(WMWindowManager.FlagStayOnBottom IN window.flags));
 								ELSIF (index2 = SystemCommand_WindowShot) THEN
-									WindowShot(window);
+									WindowShot(window, windowShotScale);
 								ELSIF (index2 = SystemCommand_StoreWindow) THEN
 									StoreWindow(window);
 							ELSIF (index2 = SystemCommand_Frame) THEN
@@ -1365,6 +1365,7 @@ VAR
 	StrOverview: Strings.String;
 
 	width, height : LONGINT;
+	windowShotScale*:REAL;
 
 	windowsAreHidden : BOOLEAN;
 	navigationIsHidden : BOOLEAN;
@@ -1411,16 +1412,18 @@ BEGIN
 	COPY(title, str);
 END GenerateName;
 
-PROCEDURE WindowShot(window: WMWindowManager.Window);
-VAR str,fn: Files.FileName;  res: LONGINT; startTime: Dates.DateTime;
+PROCEDURE WindowShot(window: WMWindowManager.Window; scale:REAL);
+VAR str,fn: Files.FileName;  w,h, res: LONGINT; startTime: Dates.DateTime;
 	img:WMGraphics.Image;
 BEGIN
 	GenerateName(window.GetTitle(),fn);
 	IF fn="" THEN COPY("WindowShot",fn) END;
-	startTime := Dates.Now();
-	Strings.FormatDateTime("_yyyymmdd__hhnnss",startTime,str);
+	Strings.FormatDateTime("_yyyymmdd__hhnnss",Dates.Now(),str);
 	Strings.Concat(fn,str,fn);
 	Strings.Append(fn,".bmp");
+	
+	(* scaled storing not yet implemented *)
+	
 	IF window IS WMWindowManager.DoubleBufferWindow THEN
 		WMGraphics.StoreImage(window(WMWindowManager.DoubleBufferWindow).backImg, fn, res);
 	ELSIF window IS WMWindowManager.BufferWindow THEN
@@ -1431,7 +1434,7 @@ BEGIN
 		WMGraphics.StoreImage(img, fn, res);
 	END;
 	IF res=0 THEN
-		KernelLog.String("store window shot as "); KernelLog.String(fn); KernelLog.Ln;
+		KernelLog.String("stored window shot as "); KernelLog.String(fn); KernelLog.Ln;
 	END;
 END WindowShot;
 
@@ -1933,6 +1936,7 @@ BEGIN
 	InitProtos;
 	windowsAreHidden := FALSE;
 	navigationIsHidden := FALSE;
+	windowShotScale:=1.0;
 	ASSERT(manager # NIL);
 END WMNavigate.
 

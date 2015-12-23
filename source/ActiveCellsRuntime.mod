@@ -1,5 +1,5 @@
 (** Active Cells Runtime Base Code for Variations of ActiveCellsRuntime Implementations  
-	Felix Friedrich, ETH Zürich, 2015
+	Felix Friedrich, ETH Z 2015
 *)
 module ActiveCellsRuntime;
 
@@ -122,15 +122,14 @@ type
 		c := a(Cell);
 		context.Allocate(s, ac, typeInfo, name, isCellnet, isEngine);
 		c.c := ac;
+		
+		if scope = nil then context.topNet := ac; end;
 	end AllocateOnContext;
 	
 
 	procedure Allocate*(scope: Cell; var c: Cell; tag: address; const name: array of char; isCellnet, isEngine: boolean);
-	var ctx: Context;
 	begin
-		ctx := GetContext();
-		AllocateOnContext(ctx, scope, c, tag, name, isCellnet, isEngine);
-		if scope = nil then ctx.topNet := c.c; end;
+		AllocateOnContext(GetContext(), scope, c, tag, name, isCellnet, isEngine);
 	end Allocate;
 
 	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: longint);

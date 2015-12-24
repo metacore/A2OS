@@ -11291,11 +11291,14 @@ TYPE
 					ELSE
 						Longint(source, 0);
 					END;
+					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0);END;
+
 					
 					Symbol(source, namePool, DynamicName(namePool, name, poolMap), 0); (* reference to dynamic name *)
 					Symbol(source, symbol,0,0);
 					patchAdr := source.pc;
-					Address(source,0);
+					Longint(source, 0);
+					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
 					Address(source,0);
 				END;
 				RETURN TRUE
@@ -11310,6 +11313,7 @@ TYPE
 			VAR level, olevel, s: LONGINT; prev, this: Basic.SegmentedName; name: ARRAY 256 OF CHAR;
 				scopes: ARRAY LEN(prev)+1 OF Scope; arrayName: ARRAY 32 OF CHAR;
 				sym: Sections.Section; ignore: LONGINT; symbol: Sections.Section;
+				nextPatch: LONGINT;
 			TYPE
 				Scope = RECORD
 					elements: LONGINT;
@@ -11339,7 +11343,10 @@ TYPE
 								(*TRACE("closing",olevel,scopes[olevel].elements); *)
 								IF olevel > 0 THEN
 									PatchLongint(scopes[olevel-1].section,scopes[olevel-1].patchAdr, scopes[olevel].elements);
-									PatchSymbol(scopes[olevel-1].section,scopes[olevel-1].patchAdr+1, scopes[olevel].section.name,  scopes[olevel].section.symbol, scopes[olevel].beginPC, 0);
+									nextPatch := scopes[olevel-1].patchAdr+1;
+									IF module.system.addressType.sizeInBits = 64 THEN INC(nextPatch) END;
+
+									PatchSymbol(scopes[olevel-1].section,nextPatch, scopes[olevel].section.name,  scopes[olevel].section.symbol, scopes[olevel].beginPC, 0);
 								END;
 								scopes[olevel].gelements := scopes[olevel].gelements + scopes[olevel].elements;
 								DEC(olevel); 
@@ -11382,7 +11389,10 @@ TYPE
 					(*TRACE("closing",olevel,scopes[olevel].elements); *)
 					IF olevel > 0 THEN
 						PatchLongint(scopes[olevel-1].section,scopes[olevel-1].patchAdr, scopes[olevel].elements);
-						PatchSymbol(scopes[olevel-1].section,scopes[olevel-1].patchAdr+1, scopes[olevel].section.name,  scopes[olevel].section.symbol, scopes[olevel].beginPC, 0);
+						nextPatch := scopes[olevel-1].patchAdr+1;
+						IF module.system.addressType.sizeInBits = 64 THEN INC(nextPatch) END;
+
+						PatchSymbol(scopes[olevel-1].section,nextPatch, scopes[olevel].section.name,  scopes[olevel].section.symbol, scopes[olevel].beginPC, 0);
 					END;
 					scopes[olevel].gelements := scopes[olevel].gelements + scopes[olevel].elements;
 					DEC(olevel); 
@@ -12181,14 +12191,13 @@ TYPE
 			Symbol(moduleSection,referenceSection,referenceSectionOffset,0);
 			Info(moduleSection, "export*: ExportDesc");
 			ExportDesc(moduleSection);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0) END;
 			Info(moduleSection, "term*: TerminationHandler");
 			Address(moduleSection,0);
 			Info(moduleSection, "exTable*: ExceptionTable");
 			Symbol(moduleSection,exceptionSection,exceptionSectionOffset,0);
 			Info(moduleSection, "noProcs*: LONGINT");
 			Longint(moduleSection,numberProcs);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); Longint(moduleSection,0); END;
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END;
 			Info(moduleSection, "firstProc*: ADDRESS");
 			Address(moduleSection,0);
 			Info(moduleSection, "maxPtrs*: LONGINT");

@@ -10879,6 +10879,8 @@ TYPE
 
 			Info(section,"mark: LONGINT;");
 			Longint(section,-1);
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0);END;
+			
 			Info(section,"dataAdr-: ADDRESS");
 			Symbol(section,section, dataAdrOffset,0);
 			Info(section,"size-: SIZE");
@@ -10954,6 +10956,14 @@ TYPE
 			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),value);
 			section.PatchOperands(pc,op,noOperand,noOperand);
 		END PatchAddress;
+
+		PROCEDURE PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
+		VAR op,noOperand: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitOperand(noOperand);
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.sizeType),value);
+			section.PatchOperands(pc,op,noOperand,noOperand);
+		END PatchSize;
 
 		PROCEDURE PatchLongint(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
 		VAR op,noOperand: IntermediateCode.Operand;
@@ -11201,10 +11211,10 @@ TYPE
 		PROCEDURE PatchArray(section: IntermediateCode.Section; pc: LONGINT; size: LONGINT);
 		BEGIN
 			IF implementationVisitor.backend.cooperative THEN
-				PatchLongint(section, pc, size);
-				PatchLongint(section, pc + 3, size);
+				PatchSize(section, pc, size);
+				PatchSize(section, pc + 3, size);
 			ELSE
-				PatchLongint(section, pc, size);
+				PatchSize(section, pc, size);
 			END;
 		END PatchArray;
 
@@ -11894,7 +11904,11 @@ TYPE
 			IF implementationVisitor.backend.cooperative THEN
 				offset := 0;
 			ELSE
-				offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+				IF module.system.addressType.sizeInBits = 64 THEN 
+					offset := ToMemoryUnits(module.system, 18* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+				ELSE
+					offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+				END;
 			END;
 			import :=  module.module.moduleScope.firstImport;
 			numberImports := 0;

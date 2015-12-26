@@ -10,52 +10,16 @@ VAR p0, p1: ADDRESS;
 	edi	: address of frame buffer
 *)
 
-(*GO: Changed this to also do the move
-
-	esi	: kernelSize
-
-		PUSH DWORD 0
-	PUSH DWORD 0
-	LIDT [RSP]
-	INT 3
-
-*)
-PROCEDURE JumpTo*(adr : ADDRESS; btAddr, kernelSize, fbAddr, memmapAddr : HUGEINT);
+PROCEDURE JumpTo*(adr : ADDRESS; rax, rsi, rdi, rcx, rdx: HUGEINT);
 CODE {SYSTEM.AMD64, SYSTEM.Privileged}
-	MOV R15, [RBP+fbAddr];  fbAddr
-	MOV R14, [RBP+kernelSize]; kernelSize
-	MOV R13, [RBP+btAddr]; btAddr
-	MOV R12, [RBP+adr]; kernelAddr
-	MOV R11, [RBP+memmapAddr]; memmapAddr;
-	MOV R10, 1H; flag to notifiy we are coming from efi
-NT:	CALL NZ
-NZ: 	
-	POP RCX
-	ADD RCX, NX-NZ; we copy the currently executing code to page 0 (1 page of code)
-	MOV RDI, 1000H
-	MOV RSI, RCX
-	MOV RCX, 512
-	CLD
-	REP MOVSQ
+
+	MOV RDI, [RBP+rdi];  fbAddr
+	MOV RSI,  [RBP+rsi]; kernelSize
+	MOV RAX, [RBP+rax]; btAddr
+	MOV RCX, [RBP+rcx];
+	MOV RDX, [RBP+rdx];
 	
-	MOV RCX, 1000H
-	JMP RCX ;then we jump to it - we do this to make sure we dont overwrite our running code with the image we are going to move
-
-
-NX:
-	MOV RCX, R14  ; move the image
-	MOV RDI, 2000H ; to 1000 hex
-	MOV RSI, R12
-	CLD
-	REP MOVSB
-
-
-	XOR RCX,RCX
-	XOR RDX,RDX
-	MOV RDI, R15;
-	MOV RSI, R14;
-	MOV RAX, R13;
-	MOV RBX, 2000H; ;start the image
+	MOV RBX, [RBP+adr]
 	CALL RBX
 
 END JumpTo;

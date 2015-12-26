@@ -42,6 +42,7 @@ TYPE
 		(* frame buffer parameters *)
 		adr: ADDRESS; VAR x,y: SIZE; w,h,depth: SIZE;
 		info: GraphicsModeInfo;
+		traceChar: PROCEDURE {DELEGATE} (c: CHAR);
 
 	PROCEDURE MakeFont*(VAR font: Font);
 	VAR buf: Buffer; pos: LONGINT;
@@ -316,7 +317,7 @@ TYPE
 
 	PROCEDURE Mask(buf: ADDRESS; bitof, stride, x, y, w, h, adr, dstride, depth: SIZE);
 	CONST SetSize = MAX (SET) + 1;
-	VAR p, i, dadr: ADDRESS; s: SET; space,d: LONGINT; bitofs: SIZE;
+	VAR p, i, dadr: ADDRESS; s: SET; space: LONGINT; d, bitofs: SIZE;
 	BEGIN
 		IF (w > 0) & (h > 0) THEN
 			i := buf MOD SIZEOF (SET);
@@ -393,6 +394,7 @@ TYPE
 
 	PROCEDURE RenderChar(c: CHAR);
 	BEGIN
+		IF traceChar # NIL THEN traceChar(c) END;
 		RenderChar0(c, adr,x,y,w,h,depth);
 	END RenderChar;
 
@@ -400,14 +402,16 @@ TYPE
 	VAR mask, depth: LONGINT;
 	BEGIN
 		CASE info.PixelFormat OF
-			PFRGBX8Bit, PFBGRX8Bit :
-				depth := 32
-			| PFBitMask :
-				mask := info.PixelBitmask.RedMask + info.PixelBitmask.GreenMask + info.PixelBitmask.BlueMask;
-				depth := 0;
-				WHILE mask # 0 DO mask := LSH(mask,-1); INC(depth); END;
-			| PFBltOnly :
-				depth := 0;
+		PFRGBX8Bit, PFBGRX8Bit :
+			depth := 32
+		| PFBitMask :
+			mask := info.PixelBitmask.RedMask + info.PixelBitmask.GreenMask + info.PixelBitmask.BlueMask;
+			depth := 0;
+			WHILE mask # 0 DO mask := LSH(mask,-1); INC(depth); END;
+		| PFBltOnly :
+			depth := 0;
+		ELSE
+			depth := 0;
 		END;
 		RETURN depth
 	END GetDepth;
@@ -422,7 +426,7 @@ TYPE
 
 		FOR i := 0 TO 9 DO
 			SYSTEM.GET(graphicsModeInfo+i*8,tmp);
-			Trace.Hex(tmp,8);
+			Trace.Hex(tmp,-16);
 			Trace.Ln;
 		END;
 		adr := frameBufferAdr;
@@ -431,17 +435,31 @@ TYPE
 		Trace.String("Graphical Console, h = "); Trace.Address(h); Trace.Ln;
 		Trace.String("Graphical Console, depth = "); Trace.Address(depth); Trace.Ln;
 
-		FOR i := 0 TO w*h*depth DIV 8-1 DO SYSTEM.PUT(adr+i,0)	END;
+		FOR i := 0 TO w*h*depth DIV 8-1  DO SYSTEM.PUT(adr+i,0)	END;
+		
+		
 		RenderChar("X"); RenderChar("X");
+
+		traceChar := Trace.Char;
 		Trace.Char := RenderChar;
+		
 		Trace.String("Graphical Console started"); Trace.Ln;
 	END SetupConsole;
 
 
-BEGIN
+	PROCEDURE Init*;
+	BEGIN
+		Trace.String("Graphical Console Enter"); Trace.Ln;
+		MakeFont(font);
+		Trace.String("Graphical Console Exit"); Trace.Ln;
+	END Init;
+	
+
+(*BEGIN
 	Trace.String("Graphical Console Enter"); Trace.Ln;
 	MakeFont(font);
 	Trace.String("Graphical Console Exit"); Trace.Ln;
+*)
 END EFIGraphicalConsole.
 
 

@@ -335,6 +335,7 @@ BEGIN
 			callagain := TRUE;
 			module.init := TRUE;
 		END;
+		(*
 		Trace.Memory(SYSTEM.VAL(ADDRESS, module), 256);
 		TRACE(module, module.name, module.body);
 		TRACE(module);
@@ -364,7 +365,7 @@ BEGIN
 		TRACE(ADDRESS OF module.maxPtrs);
 		TRACE(ADDRESS OF module.crc);
 		TRACE(ADDRESS OF module.body);
-			
+		*)
 					
 		IF module.body # NIL THEN module.body END;
 		IF callagain THEN
@@ -373,7 +374,6 @@ BEGIN
 			module.init := TRUE;
 		END;
 	END;
-	TRACE(module.name);
 END Initialize0;
 
 (** Return the named module or NIL if it is not loaded yet. *)

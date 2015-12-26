@@ -79,16 +79,12 @@ BEGIN
 	END;
 
 	adr := -1;
-	TRACE(status);
 	TRACE(adr);
 	status :=AllocateMemory(adr, 10); (* a few additional pages *)
 	(* now bootTablePhAddr contains the base address of the allocated pages *)
-	TRACE(status);
-	TRACE(adr);
 	IF status # EFI.Success THEN
 		RETURN status;
 	END;
-	TRACE(status);
 	numcritEntries := 0;
 	MemMapSize := LEN(MemMap)*SIZEOF(EFI.MemoryDescriptor);
 	status := EFI.table.BS.GetMemoryMap(MemMapSize, MemMap, MapKey, DescriptorSize, DescriptorVersion);
@@ -96,7 +92,6 @@ BEGIN
 		(* we cant resize. We are doomed!*)
 		RETURN status;
 	END;
-
 	numEntries := MemMapSize DIV DescriptorSize; (*DIV SIZEOF(EFI.MemoryDescriptor); *)
 
 
@@ -104,6 +99,7 @@ BEGIN
 	memsize := 0;
 	FOR i := 0 TO numEntries-1 DO
 		MemMapElement := SYSTEM.VAL(EFI.MemoryDescriptorPointer, ADDRESSOF(MemMap[0])+i*DescriptorSize);
+		
 (*		IF (MemMapElement.Type #  EFI.MTConventionalMemory *)
 		IF ( (MemMapElement.Type = EFI.MTRuntimeServicesCode) OR ( MemMapElement.Type = EFI.MTRuntimeServicesData)
 			OR (MemMapElement.Type = EFI.MTUnusableMemory) OR (MemMapElement.Type = EFI.MTACPIReclaimMemory)
@@ -112,19 +108,18 @@ BEGIN
 			OR (MemMapElement.Type = EFI.MTLoaderCode) OR (MemMapElement.Type = EFI.MTLoaderData)
 			OR (MemMapElement.Type = EFI.MTReserved)
 			OR (MemMapElement.Type = EFI.MTBootServicesCode) OR (MemMapElement.Type = EFI.MTBootServicesData) (* this line shouldnt be - but it freezes if i touch that memory *)
-
-
-
 			)THEN
-(*			Trace.Ln;
-			Trace.Address(MemMapElement.PhysicalStart);
+			Trace.Address(ADDRESS(MemMapElement.PhysicalStart));
 			Trace.String(" - " );
-			Trace.Address(MemMapElement.PhysicalStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize));
+			Trace.Address(ADDRESS(MemMapElement.PhysicalStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize)));
 			Trace.String(" X ");
-			Trace.Address(MemMapElement.VirtualStart);
+			Trace.Address(ADDRESS(MemMapElement.VirtualStart));
 			Trace.String(" - " );
-			Trace.Address(MemMapElement.VirtualStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize));
-			*)
+			Trace.Address(ADDRESS(MemMapElement.VirtualStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize)));
+			Trace.Ln;
+
+
+			
 			IF (tmp # MemMapElement.PhysicalStart) THEN
 				SYSTEM.PUT(ADDRESS(adr+(numcritEntries*2+1+1)*8), MemMapElement.PhysicalStart);
 				tmp := MemMapElement.PhysicalStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize);
@@ -142,12 +137,8 @@ BEGIN
 
 	FOR hi:= 0 TO numcritEntries-1 DO
 		SYSTEM.GET(ADDRESS(adr+(hi*2+1+1)*8), tmp);
-		TRACE(tmp);
 		SYSTEM.GET(ADDRESS(adr+(hi*2+1+1+1)*8), tmp);
-		TRACE(tmp);
 	END;
-
-
 
 	SYSTEM.PUT(ADDRESS(adr),numcritEntries);
 	SYSTEM.PUT(ADDRESS(adr+8),memsize);

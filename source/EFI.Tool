@@ -15,19 +15,39 @@ StaticLinker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EF
 ** Kernel Image **
 
 SystemTools.DoCommands
-Compiler.Compile --objectFileExtension=.Obx --symbolFileExtension=.Obx
+Compiler.Compile --objectFile=Generic --newObjectFile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
+	Runtime.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Generic.Modules.Mod 
+	Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
+	Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod Traps.Mod Locks.Mod BiosFreePCI.Mod 
+	Clock.Mod I386.MemCache.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 
+	FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod 
+	OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod ISO9660Files.Mod 
+	RelativeFileSystem.Mod Loader.Mod BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod 
+	GenericLinker.Mod GenericLoader.Mod BootConsole.Mod
 
-	Runtime.Mod Trace.Mod I386.Machine.Mod Heaps.Mod Modules.Mod Objects.Mod Kernel.Mod
-	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod
-	Reflection.Mod Traps.Mod Locks.Mod BiosFreePCI.Mod Clock.Mod I386.MemCache.Mod Disks.Mod Files.Mod
-	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod
-	RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod
-	ISO9660Files.Mod RelativeFileSystem.Mod Loader.Mod BootConsole.Mod I386.ATADisks.Mod
 ~
-Linker.Link \.Obx E:/felix.svn/qemu/disk/IDE.Bin 0100000H 1000H 
-	Kernel Traps ATADisks DiskVolumes DiskFS BootConsole Loader ~
+
+StaticLinker.Link
+	--fileName=E:/felix.svn/qemu/disk/IDE.Bin
+	--extension=Gox
+	--displacement=0100000H
+	--path="./"
+	Runtime Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
+	KernelLog Streams Reflection  TrapWriters Traps  Plugins
+	Diagnostics BitSets StringPool ObjectFile Reals Clock Dates Strings GenericLinker 
+	Commands
+	Files GenericLoader BootConsole 
+	~
 ~
+
 **************** 64 BIT ********************
+SystemTools.FreeDownTo FoxIntermediateBackend ~
+
+
+	Compiler.Compile --newObjectFile --objectFile=Generic  -b=AMD --bits=64  --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
+	--trace=* -i StartConsole.Mod ~
+~
+
 
 ** Loader **
 ~
@@ -40,26 +60,26 @@ StaticLinker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EF
 	Runtime Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
 	 EFIGraphicalConsole EFIA2Loader
 ~
-~
+
 
 ** Kernel Image **
-
+	
 SystemTools.DoCommands
-	Compiler.Compile --newObjectFile --objectFile=Generic  -b=AMD --bits=64
-	AMD64.Runtime.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod oc/Generic.Modules.Mod Objects.Mod Kernel.Mod 
+	Compiler.Compile --newObjectFile --objectFile=Generic  -b=AMD --bits=64  --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
+	AMD64.Runtime.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Generic.Modules.Mod Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
-	Reflection.Mod AMD64.Traps.Mod Locks.Mod BiosFreePCI.Mod Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
+	Reflection.Mod TrapWriters.Mod AMD64.Traps.Mod Locks.Mod BiosFreePCI.Mod Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
 	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod 
 	RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
 	ISO9660Files.Mod RelativeFileSystem.Mod Loader.Mod BootConsole.Mod AMD64.ATADisks.Mod ~
 	
 	StaticLinker.Link
 	--fileName=E:/felix.svn/qemu/disk/IDE.Bin
-	--extension=Gof
-	--displacement=01000000H
+	--extension=Gos
+	--displacement=0100000H
 	Runtime Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
 	KernelLog Plugins Streams Commands Reals 
-	Reflection Traps Locks PCI Clock MemCache Disks Files 
+	Reflection TrapWriters Traps Locks PCI Clock MemCache Disks Files 
 	ATADisks
 	Dates Strings UTF8Strings Caches   	    
 	Loader  BootConsole ~

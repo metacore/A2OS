@@ -96,6 +96,7 @@ TYPE
 	MemoryDescriptorPointer*= POINTER TO MemoryDescriptor;
 	MemoryDescriptor* = RECORD
 		Type- : Int32;
+		pad-: Int32;
 		PhysicalStart-: PhysicalAddress;
 		VirtualStart-: VirtualAddress; 
 	(*	PhysicalStart-: Int64;

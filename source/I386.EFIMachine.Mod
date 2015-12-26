@@ -7,15 +7,18 @@ IMPORT SYSTEM, EFI;
 	esi	: ?
 	edi	: address of frame buffer
 *)
-PROCEDURE JumpTo*(adr : ADDRESS; eax,esi,edi, ecx : LONGINT);
+PROCEDURE JumpTo*(adr : ADDRESS; eax,esi,edi, ecx, edx: LONGINT);
 CODE {SYSTEM.i386}
 	XOR ECX,ECX
 	XOR EDX,EDX
+	
 	MOV EDI, [EBP+edi];
 	MOV ESI, [EBP+esi];
 	MOV EAX, [EBP+eax];
-	MOV EBX, [EBP+adr];
 	MOV ECX, [EBP+ecx];
+	MOV EDX, [EBP+edx];
+
+	MOV EBX, [EBP+adr];
 	CALL EBX
 END JumpTo;
 

@@ -1,16 +1,14 @@
 MODULE EFIA2Loader; (** AUTHOR "Matthias Frei"; PURPOSE "EFI A2 Boot Loader"; *)
 
 IMPORT
-	SYSTEM, EFI, Machine := EFIMachine, EFILib, EFIFileProtocol, EFIGraphicsOutput, Trace;
+	SYSTEM, EFI, Machine := EFIMachine, EFILib, EFIFileProtocol, EFIGraphicsOutput, EFIGraphicalConsole, Trace;
 
 CONST
 	traceDebug = TRUE;
 
 	(* address to which the executable will be loaded to. Loaded to arbitrary address if  = -1 *)
-	kernelAddress = 1000H;
-	(* address to which the executable relocates itself. Ignored if -1 *)
-(*	kernelRelocAddress = 01000000H;*)
-	kernelRelocAddress = -1;
+	kernelAddress = 100000H;
+
 	(* address at which the boot table is generated. Arbitrary if -1 *)
 	bootTableAddress = -1;
 
@@ -21,10 +19,9 @@ VAR
 
 	(* search a mode that with the preferred horizontal and vertical resolution. Returns the corresponding mode
 	number or -1 if no such mode is found or if an error occurs *)
-	PROCEDURE SearchGraphicsMode(prot : EFIGraphicsOutput.Protocol; prefWidth, prefHeight, prefDepth, prefFormat : LONGINT): LONGINT;
+	PROCEDURE SearchGraphicsMode(prot : EFIGraphicsOutput.Protocol; prefWidth, prefHeight, prefDepth, prefFormat : LONGINT; VAR info: EFIGraphicsOutput.GraphicsModeInfo): LONGINT;
 	VAR
 		mode : EFIGraphicsOutput.GraphicsMode;
-		info : EFIGraphicsOutput.GraphicsModeInfo;
 		sizeofInfo : EFI.Int;
 		maxMode : EFI.Int32;
 		i : LONGINT;
@@ -45,15 +42,15 @@ VAR
 (*			IF (prefWidth = info.HorizontalResolution) & (prefHeight = info.VerticalResolution)
 					& (prefFormat = info.PixelFormat) & (prefDepth = 32) THEN (* all pixel formats are 32 bit *) *)
 			IF (prefWidth = info.HorizontalResolution) & (prefHeight = info.VerticalResolution)
-					& (prefDepth = 32) THEN (* all pixel formats are 32 bit *) 					
-					
+					& (prefDepth = 32) THEN (* all pixel formats are 32 bit *)
+
 				RETURN i;
 			END;
 		END;
 		RETURN -1;
 	END SearchGraphicsMode;
 
-	PROCEDURE GetFrameBuffer(prefWidth, prefHeight, prefDepth, prefFormat : LONGINT; VAR framebufAddr : ADDRESS; VAR framebufSize : SIZE): EFI.Status;
+	PROCEDURE GetFrameBuffer(prefWidth, prefHeight, prefDepth, prefFormat : LONGINT; VAR framebufAddr : ADDRESS; VAR framebufSize : SIZE; VAR info: EFIGraphicsOutput.GraphicsModeInfo): EFI.Status;
 	VAR
 		handle : EFI.Handle;
 		handleBuf : ARRAY 128 OF EFI.Handle;
@@ -73,12 +70,14 @@ VAR
 				status := EFI.table.BS.HandleProtocol(handle, EFIGraphicsOutput.GUID, prot);
 				goProt := SYSTEM.VAL(EFIGraphicsOutput.Protocol, prot);
 				IF status = EFI.Success THEN
-					modeNumber := SearchGraphicsMode(goProt, prefWidth, prefHeight, prefDepth, prefFormat);
+					modeNumber := SearchGraphicsMode(goProt, prefWidth, prefHeight, prefDepth, prefFormat, info);
 					IF modeNumber >= 0 THEN
 						status := goProt.SetMode(goProt, modeNumber);
 						IF (status = EFI.Success) & (goProt.Mode.Mode = modeNumber) THEN
 							framebufPhysAddr := goProt.Mode.FrameBufferBase;
 							framebufAddr := SYSTEM.VAL(ADDRESS, framebufPhysAddr);
+
+
 							framebufSize := goProt.Mode.FrameBufferSize;
 							RETURN EFI.Success;
 						END;
@@ -411,7 +410,7 @@ VAR
 			kernelPages := (kernelSize DIV EFI.PageSize) + 1;
 
 			(* allocate all memory at kernelRelocAddress *)
-			IF (kernelRelocAddress # -1) THEN
+			IF (kernelAddress # -1) THEN
 				(*status := Allocate(kernelRelocAddress, kernelPages);*)
 				TRACE(status);
 				(*
@@ -430,7 +429,7 @@ VAR
 				*)
 			END;
 
-			loadAddr := kernelRelocAddress;
+			loadAddr := kernelAddress;
 			(*loadAddr := 400000H; *)
 
 			allocAddr:= 0;  (*we use the variable to reserve page 0 and 1 *)
@@ -438,7 +437,9 @@ VAR
 			IF status # EFI.Success THEN
 				Trace.String("could not allocate page 0 and 1 - this might be a problem for the relocation process");
 			END;
+			(*
 			loadAddr := -1;  (*we let EFI decide where to put it *)
+			*)
 
 			status := EFILib.LoadFile(kernelImageFile, loadAddr);
 			IF (status = EFI.Success ) THEN
@@ -493,6 +494,7 @@ VAR
 		i, dWidth, dHeight, dDepth, dFormat : LONGINT;
 		size: EFI.Int64;
 		buf : ARRAY 100 OF EFI.Char16;
+		fbInfo: EFIGraphicsOutput.GraphicsModeInfo;
 	BEGIN
 		Trace.String("Starting"); Trace.Ln;
 
@@ -512,8 +514,13 @@ VAR
 				GetConfig("DDepth",val); i:=0; dDepth := EFILib.StringToInt(i, val);
 				dFormat := EFIGraphicsOutput.PFBGRX8Bit;  (* Displays.Mod uses BGR *)
 
-				fbStat := GetFrameBuffer(dWidth,dHeight,dDepth, dFormat, fbAddr, fbSize);
+				fbStat := GetFrameBuffer(dWidth,dHeight,dDepth, dFormat, fbAddr, fbSize, fbInfo);
 				TRACE(fbAddr);
+
+(*
+				EFIGraphicalConsole.Init;
+				EFIGraphicalConsole.SetupConsole(fbInfo, fbAddr);
+*)
 
 				IF (fbStat = EFI.Success) THEN
 					(* Does not work because IntToString does not function properly for large numbers.
@@ -545,7 +552,7 @@ VAR
 			IF traceDebug THEN
 				Trace.String("DEBUG: Kernel at ");Trace.Address(kernelAddr);Trace.Ln;
 				Trace.String("DEBUG: BootTable at ");Trace.Address(btAddr);Trace.Ln;
-				Trace.String("DEBUG: FrameBuffer at "); Trace.Address(fbAddr); Trace.Ln;				
+				Trace.String("DEBUG: FrameBuffer at "); Trace.Address(fbAddr); Trace.Ln;
 				(*
 				Trace.String("DEBUG: boot table:"); Trace.Ln; Trace.Memory(bootTableBegin, bootTableEnd-bootTableBegin + 5);
 				*)
@@ -560,34 +567,39 @@ VAR
 			(*
 			Trace.Memory(kernelAddress, 100);
 			*)
-			
+
 			memmapStat := EFILib.GetMemoryMapping(adr);
 			memmapAddr := SYSTEM.VAL(ADDRESS,adr);
 			TRACE(memmapAddr);
+			TRACE(fbAddr);
 			IF (memmapStat = EFI.Success ) THEN
 				Trace.Ln;
 				Trace.String("saved memory mappings");
 			ELSE
 				Trace.Ln;
-				Trace.String("failed to saved memory mappings");			
+				Trace.String("failed to saved memory mappings");
 			END;
-
+			PrintGraphicsModes; Trace.Ln;
 
 			IF ((kernelStat = EFI.Success) OR (kernelStat = EFI.WarnWriteFailure)) & (btStat = EFI.Success) THEN
 				TRACE(kernelAddr, btAddr, kernelSize, fbAddr);
 
 				Trace.String("Shutting down Boot Services - WTF?!"); Trace.Ln;
+				TRACE(fbInfo);
 				status := EFILib.ExitBootServices();
-(*				status := EFI.Success;*)
+
 				IF status = EFI.Success THEN
 					(* sshhhhhht!!!  nomore EFITrace from here on *)
 
-					Machine.JumpTo(kernelAddr, btAddr, kernelSize, fbAddr, memmapAddr);					
+					ASSERT(fbInfo # NIL);
+					Machine.JumpTo(kernelAddr, btAddr (* eax *) , kernelSize (* esi *) , fbAddr (* edi *), memmapAddr (* ecx *), SYSTEM.VAL(ADDRESS, fbInfo)(* edx *) );
+
+					Trace.String("returned ??"); Trace.Ln;
 					(*
 					SYSTEM.MOVE(kernelAddr, kernelAddress, kernelSize);
-					
-					
-					
+
+
+
 					kernelAddr := kernelAddress;
 					IF (kernelStat = EFI.WarnWriteFailure) THEN
 						(* couldn't allocate suitable memory portion before. Relocate it to the correct load address, EFI is not running anymore! *)

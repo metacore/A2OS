@@ -6946,7 +6946,7 @@ TYPE
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
 						| Scanner.GreaterGreater, Scanner.LessLess:
-							mustBeBinary := TRUE;
+							mustBeBinary := TRUE; hasReturnType := FALSE;
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:
 							mustBeBinary := TRUE; mustReturnBoolean := TRUE;
 						END;

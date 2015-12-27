@@ -306,7 +306,7 @@ type
 		Execute ActiveCells CELLNET code
 		
 		cellNet: name of a CELLNET type in the format "ModuleName.TypeName", e.g. TestActiveCells.TestCellNet
-		context: runtime context used for executing the code
+		context: runtime context used for executing the ActiveCells code
 		diagnostics: interface for generation of diagnostic messages (see Diagnostics.Mod)
 	*)
 	procedure Execute*(const cellNet: array of char; context: Context; diagnostics: Diagnostics.Diagnostics);
@@ -344,31 +344,38 @@ type
 		starter: Starter;
 		launcher: Launcher;
 	begin
+		assert(context # nil);
+		context.topNet := nil;
+		
 		i := Strings.IndexOfByte2(".",cellNet);
 		if i = -1 then
-			diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid, "cellNet malformed");
+			diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid, "CELLNET type name is malformed");
+			return;
 		end;
 
 		Strings.Copy(cellNet,0,i,moduleName);
 		Strings.Copy(cellNet,i+1,Strings.Length(cellNet)-Strings.Length(moduleName),typeName);
 
 		unloaded := FreeDownTo(moduleName);
-		if unloaded > 0 then 
+		if unloaded > 0 then
 			(*param.ctx.Information("", Diagnostics.Invalid,Diagnostics.Invalid,"unloaded " & unloaded & " modules")*)
 		end;
 		m := Modules.ThisModule(moduleName,res,str);
 
 		if m = nil then
-			(*
-			param.ctx.Error("",Diagnostics.Invalid,HdlBackend.ErrNotFound,'failed to load module "' & moduleName & '"');
-			*)
+			Strings.Concat('failed to load module "',moduleName,str);
+			Strings.Concat(str,'"',str);
+			diagnostics.Error("",Diagnostics.Invalid,-1,str);
+			return;
 		end;
 		typeInfo := Modules.ThisType(m,typeName);
 		if typeInfo = nil then
-			(*
-			param.ctx.Error("",Diagnostics.Invalid,HdlBackend.ErrNotFound,'failed to find cellnet type "' & param.architectureName & '" in module "' & moduleName & '"');
-			return nil;
-			*)
+			Strings.Concat('failed to find CELLNET type "',cellNet,str);
+			Strings.Concat(str,'" in module "',str);
+			Strings.Concat(str,moduleName,str);
+			Strings.Concat(str,'"',str);
+			diagnostics.Error("",Diagnostics.Invalid,-1,str);
+			return;
 		end;
 
 		assert(len(typeInfo.procedures) = 1);

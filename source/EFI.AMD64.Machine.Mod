@@ -1904,19 +1904,19 @@ heapEndAdr := 0;
 	freeStackIndex := 0;
 	(* mappings *)
 	mapTop := MapAreaAdr;
-	IF fbadr + 1024 * PS * 10 > mapTop THEN mapTop := fbadr + 1024 * PS * 10 END; (* frame buffer ! *)
+(*	IF fbadr + 1024 * PS * 10 > mapTop THEN mapTop := fbadr + 1024 * PS * 10 END; (* frame buffer ! *)*)
 
 	(* create the address space *)
 	NewPage(kernelPML4); ASSERT(kernelPML4 # NilAdr);
 	Fill32(kernelPML4, TPS, PageNotPresent);
 	IF ~MapDirect(LowAdr, memTop-LowAdr, LowAdr + UserPage) THEN HALT(99) END;	(* map heap direct *)
 	
-	IF ~MapDirect(fbadr, PS*1024*1, fbadr + UserPage) THEN  (* map frame buffer  direct *)
+(*	IF ~MapDirect(fbadr, PS*1024*1, fbadr + UserPage) THEN  (* map frame buffer  direct *)
 		Trace.String("map direct failed at fbadr"); Trace.Address(fbadr); Trace.Ln;
 	ELSE
 		Trace.String("fbuffer mapped"); Trace.Address(fbadr); Trace.Ln;
 	END; 
-
+*)
 END InitPages;
 
 (* Generate a memory segment descriptor. type IN {0..7} & dpl IN {0..3}.

@@ -50,7 +50,7 @@ TYPE
 		PROCEDURE Put1(ch: CHAR); BEGIN buffer[pos] := ch; INC(pos) END Put1;
 		PROCEDURE Dimensions(VAR char: Char; dx,x,y,w,h: INTEGER); BEGIN char.dx := dx; char.x := x; char.y := y; char.w := w; char.h := h END Dimensions;
 	BEGIN
-		font.height := 14;
+		font.height := 15;
 		font.minX := 0;
 		font.maxX := 13;
 		font.minY := -4;
@@ -357,10 +357,13 @@ TYPE
 			FOR y0 := font.height TO y+font.height-1 DO
 				sadr := adr + y0*w*depth DIV 8;
 				dadr := adr + (y0-font.height)*w*depth DIV 8;
+				SYSTEM.MOVE(sadr, dadr, w*depth DIV 8 -1);
+				(*
 				FOR x0 := 0 TO w*depth DIV 8-1 DO
 					SYSTEM.GET(sadr+x0,val);
 					SYSTEM.PUT(dadr+x0,val);
 				END;
+				*)
 			END;
 			FOR y0 := y+1 TO h-1 DO
 				dadr := adr + y0*w*depth DIV 8;

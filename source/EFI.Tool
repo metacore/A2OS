@@ -60,7 +60,7 @@ StaticLinker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EF
 	Runtime Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
 	 EFIGraphicalConsole EFIA2Loader
 ~
-
+~
 
 ** Kernel Image **
 	

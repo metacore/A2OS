@@ -1092,7 +1092,7 @@ TYPE
 			sectionName := vop.symbol;
 			Resolve(vop);
 			section := vop.resolved; offset := vop.offset;
-			IF (section # NIL) & (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).resolved.os.fixed) THEN
+			IF (vop.symbolOffset > 0) & (section # NIL) & (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).resolved.os.fixed) THEN
 				INC(offset, section(IntermediateCode.Section).resolved.os.alignment);
 				INC(offset, section(IntermediateCode.Section).instructions[vop.symbolOffset].pc);
 				sectionName.name := "";

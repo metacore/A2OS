@@ -325,7 +325,7 @@ VAR callagain: BOOLEAN;
 PROCEDURE Initialize0*(module: Module);
 VAR new: BOOLEAN;
 BEGIN
-	TRACE(module.name);
+	(*TRACE(module.name);*)
 	(* module MUST have been removed from register list and must not have been initialized yet *)
 	ASSERT(module.next = NIL);
 	Publish (module, new);
@@ -960,7 +960,7 @@ END GetKernelProc;
 
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	TRACE(module.name);
+	(*TRACE(module.name);*)
 	IF register.first = NIL THEN
 		register.first := module;
 	ELSE

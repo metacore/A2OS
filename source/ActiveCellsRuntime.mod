@@ -67,9 +67,15 @@ type
 
 		procedure Send*(p: any; value: longint);
 		end Send;
+		
+		procedure SendNonBlocking*(p: any; value: longint): boolean;
+		end SendNonBlocking;
 
 		procedure Receive*(p: any; var value: longint);
 		end Receive;
+		
+		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+		end ReceiveNonBlocking;
 			
 	end Context;
 	
@@ -225,11 +231,21 @@ type
 	begin
 		GetContext().Send(p, value);
 	end Send;
+	
+	procedure SendNonBlocking*(p: any; value: longint): boolean;
+	begin
+		return GetContext().SendNonBlocking(p, value);
+	end SendNonBlocking;
 
 	procedure Receive*(p: any; var value: longint);
 	begin
 		GetContext().Receive(p, value);
 	end Receive;
+	
+	procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+	begin
+		return GetContext().ReceiveNonBlocking(p, value);
+	end ReceiveNonBlocking;
 
 type
 	Module = pointer to record

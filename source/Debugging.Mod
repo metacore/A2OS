@@ -5,7 +5,7 @@ IMPORT SYSTEM, Streams, KernelLog, Files, StringPool,  Modules, Objects, Reflect
 VAR
 	DefaultLog, Log-: Streams.Writer;  f: Files.File;  lock: Locks.RWLock;
 
-	PROCEDURE Memory*( from, tov: LONGINT );
+	PROCEDURE Memory*( from, tov: ADDRESS );
 	VAR i, val: LONGINT;
 	BEGIN
 		Log.String( ">>>>>" );  Log.Ln;

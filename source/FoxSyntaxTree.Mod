@@ -60,6 +60,7 @@ TYPE
 	BinaryCode*= BitSets.BitSet;
 	String*= Scanner.StringType;
 	IdentifierString*= Scanner.IdentifierString;
+	CallingConvention*= LONGINT;
 
 	(** visitor pattern implementation *)
 	(* to use this object in your implementation, copy and paste and replace "x: " by "x: SyntaxTree." *)
@@ -1701,7 +1702,7 @@ TYPE
 
 			isDelegate-,isInterrupt-,noPAF-,noReturn-: BOOLEAN;
 			pcOffset-: LONGINT; (* PC offset: used for ARM interrupt procedures *)
-			callingConvention-: LONGINT;
+			callingConvention-: CallingConvention;
 			stackAlignment-: LONGINT;
 			parameterOffset-: LONGINT; (* stack parameter offset caused by parameters on stack *)
 
@@ -1767,7 +1768,7 @@ TYPE
 		BEGIN returnParameter := parameter
 		END SetReturnParameter;
 
-		PROCEDURE SetCallingConvention*(cc: LONGINT);
+		PROCEDURE SetCallingConvention*(cc: CallingConvention);
 		BEGIN callingConvention := cc
 		END SetCallingConvention;
 

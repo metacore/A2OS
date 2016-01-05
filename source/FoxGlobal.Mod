@@ -229,8 +229,6 @@ TYPE
 		(* type sizes defined by backend *)
 		addressSize-: LONGINT;
 
-		registerParameters-: LONGINT; (* how many parameters are passed via registers *)
-
 		(* system type mapping, in a later version only the global (unisgned) types should be used
 			the following two types are only there for compatibility with the system as is
 			problematic are mainly the conversions between (signed) Oberon types and (unsigned) addressType.
@@ -243,7 +241,7 @@ TYPE
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
 
-		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, registerParameters: LONGINT; cooperative: BOOLEAN);
+		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
 		BEGIN
 			ASSERT(dataUnit > 0);
@@ -259,7 +257,6 @@ TYPE
 			SELF.parameterAlignment.min := minParAlign;
 			SELF.parameterAlignment.max := maxParAlign;
 			SELF.offsetFirstParameter := offsetFirstPar;
-			SELF.registerParameters := registerParameters;
 			IF cooperative THEN INC(SELF.offsetFirstParameter,addressSize) END;
 			activeCellsCapabilities := NIL;
 			BuildScopes(SELF);
@@ -948,7 +945,7 @@ TYPE
 	PROCEDURE DefaultSystem*(): System;
 	VAR system: System;
 	BEGIN
-		NEW(system,8,8,32, 8,32,32,32,64,0,FALSE);
+		NEW(system,8,8,32, 8,32,32,32,64,FALSE);
 		SetDefaultDeclarations(system,8);
 		SetDefaultOperators(system);
 		RETURN system

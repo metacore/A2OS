@@ -6,6 +6,7 @@ IMPORT
 
 TYPE
 	SectionName = ARRAY 256 OF CHAR;
+	Registers*= POINTER TO ARRAY OF LONGINT;
 
 	Backend* = OBJECT
 	VAR
@@ -55,7 +56,6 @@ TYPE
 		BEGIN
 			hasLinkRegister := TRUE;
 		END SetHasLinkRegister;
-		
 
 		PROCEDURE SetInstructionWidth* (instructionWidth: LONGINT);
 		BEGIN
@@ -83,6 +83,11 @@ TYPE
 		BEGIN
 			RETURN Global.DefaultSystem();
 		END GetSystem;
+		
+		PROCEDURE GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Registers;
+		BEGIN
+			RETURN NIL; (* default case: no parameter registers *)
+		END GetParameterRegisters;
 
 		PROCEDURE Error*(CONST source: ARRAY OF CHAR; errorNumber, errorPosition: LONGINT; CONST err: ARRAY OF CHAR);
 		BEGIN

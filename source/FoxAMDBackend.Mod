@@ -936,15 +936,24 @@ TYPE
 			END;
 		END GetTypedHardwareRegister;
 
+		(* returns the following register (or part thereof)
+			0: regRAX; 
+			1: regRCX; 
+			2: regRDX; 
+			3: regRBX;
+			4: regRSP; 
+			5: regRBP; 
+			6: regRSI; 
+			7: regRDI;
+			8 .. 15: regRx;
+		*)
+
 		PROCEDURE ParameterRegister(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT;
 		VAR physical: LONGINT;
 		BEGIN
-			CASE index OF
-				0: RETURN GetTypedHardwareRegister(RCX,type)
-				|1: RETURN GetTypedHardwareRegister(RDX,type)
-				|2: RETURN GetTypedHardwareRegister(R8,type)
-				|3: RETURN GetTypedHardwareRegister(R9,type)
-			END;
+			RETURN GetTypedHardwareRegister(RAX + index, type);
+			ASSERT(0 <= index); 
+			ASSERT(index <= 15);
 			RETURN physical;
 		END ParameterRegister;
 
@@ -964,11 +973,6 @@ TYPE
 			ELSIF virtual.register = IntermediateCode.SP THEN
 				Assert(part=Low,"forbidden partitioned register on SP");
 				physical := opSP;
-			(*! done by generic part:
-				ELSIF virtual.register <= IntermediateCode.ParameterRegister THEN
-				index := IntermediateCode.ParameterRegister - virtualRegister;
-				physical := registerOperands[ParameterRegister(index, type)];
-			*)
 			ELSIF virtual.register = IntermediateCode.AP THEN
 				ASSERT(backend.cooperative);
 				Assert(part=Low,"forbidden partitioned register on AP");
@@ -3088,12 +3092,28 @@ TYPE
 		bits: LONGINT;
 		traceable: BOOLEAN;
 		forceFPU: BOOLEAN;
+		winAPIRegisters, cRegisters: Backend.Registers;
 
 		PROCEDURE &InitBackendAMD64;
 		BEGIN
 			InitIntermediateBackend;
 			bits := 32;
 			forceFPU := FALSE;
+						
+			NEW(winAPIRegisters, 4); 
+			winAPIRegisters[0] := RCX - RAX;
+			winAPIRegisters[1] := RDX - RAX;
+			winAPIRegisters[2] := R8 - RAX;
+			winAPIRegisters[3] := R9 - RAX; 
+			
+			NEW(cRegisters, 6);
+			cRegisters[0] := RDI - RAX;
+			cRegisters[1] := RSI - RAX;
+			cRegisters[2] := RDX - RAX;
+			cRegisters[3] := RCX - RAX; 
+			cRegisters[4] := R8 - RAX;
+			cRegisters[5] := R9 - RAX; 
+			
 		END InitBackendAMD64;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
@@ -3153,11 +3173,11 @@ TYPE
 		BEGIN
 			IF system = NIL THEN
 				IF bits=32 THEN
-					NEW(system,8,8,32, 8,32,32,32,64,0,cooperative);
+					NEW(system,8,8,32, 8,32,32,32,64,cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				ELSE
-					NEW(system,8,8,64,8,64,64,64,128,4 (* parameter registers *),cooperative);
+					NEW(system,8,8,64,8,64,64,64,128,cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				END;
@@ -3166,6 +3186,22 @@ TYPE
 			END;
 			RETURN system
 		END GetSystem;
+
+		(* return index of general purpose register used as parameter register in calling convention *)
+		PROCEDURE GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Backend.Registers;
+		BEGIN
+			IF bits = 32 THEN
+				RETURN NIL;
+			ELSE
+				CASE callingConvention OF
+					SyntaxTree.CCallingConvention: RETURN cRegisters;
+					|SyntaxTree.WinAPICallingConvention:  RETURN winAPIRegisters;
+					|SyntaxTree.DarwinCCallingConvention: RETURN cRegisters; 
+				ELSE
+					RETURN NIL;
+				END;
+			END
+		END GetParameterRegisters;
 
 		PROCEDURE SupportedInstruction(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		BEGIN

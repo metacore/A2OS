@@ -1027,8 +1027,8 @@ TYPE
 	BEGIN type.length := length
 	END ToVectorType;
 
-	PROCEDURE InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: INTEGER);
-	BEGIN registerClass.class := class; registerClass.number := number
+	PROCEDURE InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: LONGINT);
+	BEGIN registerClass.class := class; registerClass.number := INTEGER(number)
 	END InitRegisterClass;
 
 	PROCEDURE NewType*(form: SHORTINT; sizeInBits: INTEGER): Type;

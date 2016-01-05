@@ -597,6 +597,8 @@ TYPE
 			cc: LONGINT;
 			cellType: SyntaxTree.CellType;
 			registerNumber: LONGINT;
+			registerParameter: Backend.Registers;
+			registerParameters: LONGINT;
 			registerClass: IntermediateCode.RegisterClass;
 			type: IntermediateCode.Type;
 			formalParameter: SyntaxTree.Parameter;
@@ -736,12 +738,18 @@ TYPE
 					*)
 
 					IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
+						registerParameter := backend.GetParameterRegisters(procedureType.callingConvention);
+						
+						IF registerParameter = NIL THEN registerParameters := 0 
+						ELSE registerParameters := LEN(registerParameter) 
+						END;
+						
 						formalParameter := procedureType.lastParameter;
-						WHILE (formalParameter # NIL) & (registerNumber < system.registerParameters) DO
+						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
 							IF ~PassInRegister(formalParameter) THEN
 								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
 							ELSE
-								IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, SHORT(registerNumber));
+								IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, registerParameter[registerNumber]);
 								type := GetType(system, formalParameter.type);
 								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
 								IntermediateCode.InitMemory(dest,GetType(system,formalParameter.type),implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
@@ -5343,6 +5351,8 @@ TYPE
 			isCallOfDynamicOperator, hasDynamicOperands: BOOLEAN;
 			identifierNumber: LONGINT;
 
+			parameterRegister: Backend.Registers;
+			parameterRegisters: LONGINT;
 			passByRegister: BOOLEAN; registerNumber,stackSize: LONGINT;
 			procedure: SyntaxTree.Procedure;
 
@@ -5637,17 +5647,22 @@ TYPE
 			firstWriteBackCall := NIL; (* reset write-back call list *)
 
 			IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
-				passByRegister := system.registerParameters > 0;
+				parameterRegister := backend.GetParameterRegisters(procedureType.callingConvention);
+				IF parameterRegister = NIL THEN parameterRegisters := 0 
+				ELSE parameterRegisters := LEN(parameterRegister) 
+				END; 
+				
+				passByRegister := parameterRegisters > 0;
 				registerNumber := 0;
 				formalParameter := procedureType.lastParameter;
 				FOR i := parameters.Length() - 1 TO 0 BY -1 DO
 					actualParameter := parameters.GetExpression(i);
 					PrepareParameter(actualParameter, formalParameter);
-					IF passByRegister & (i < system.registerParameters) THEN
+					IF passByRegister & (i < parameterRegisters) THEN
 						IF ~PassInRegister(formalParameter) THEN
 							Error(actualParameter.position,"cannot be passed by register")
 						ELSE
-							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,i);
+							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,parameterRegister[i]);
 						END;
 						INC(registerNumber);
 					ELSE
@@ -5656,7 +5671,7 @@ TYPE
 					formalParameter := formalParameter.prevParameter;
 				END;
 				IF passByRegister & (registerNumber > 0) THEN
-					stackSize := ToMemoryUnits(system,system.registerParameters*addressType.sizeInBits);
+					stackSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
 					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
 				END;
 			ELSE
@@ -5714,8 +5729,8 @@ TYPE
 			END;
 
 			IF procedureType.callingConvention = SyntaxTree.CCallingConvention THEN
-				IF passByRegister & (registerNumber > 0) & (registerNumber < system.registerParameters) THEN (* allocated space for all registers *)
-					parametersSize := ToMemoryUnits(system,system.registerParameters*addressType.sizeInBits);
+				IF passByRegister & (registerNumber > 0) & (registerNumber < parameterRegisters) THEN (* allocated space for all registers *)
+					parametersSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
 				END;
 				size := IntermediateCode.Immediate(addressType,parametersSize);
 				Emit(Add(position,sp,sp,size));

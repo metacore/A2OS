@@ -194,7 +194,7 @@ TYPE
 			END ResolveLocalFixups;
 
 			PROCEDURE GetRegisterAllocation;
-			CONST MaxParameterRegisters=8;
+			CONST MaxParameterRegisters=16;
 			VAR pc,i: LONGINT; parameterRegisters: ARRAY MaxParameterRegisters OF IntermediateCode.Operand;
 
 				PROCEDURE RegisterUsage(CONST instruction: IntermediateCode.Instruction);

@@ -3188,7 +3188,7 @@ TYPE
 				registerParameters = 0
 				*)
 
-				NEW(system, 8, 8, 32, (*32*) 8, 32, 8, 32, 32 * 2, 0, cooperative);
+				NEW(system, 8, 8, 32, (*32*) 8, 32, 8, 32, 32 * 2, cooperative);
 
 				IF oberon07 THEN
 					IF Trace THEN D.String("Oberon07"); D.Ln END;

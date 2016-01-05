@@ -6,7 +6,6 @@ VAR fbadr: ADDRESS;
 	
 	PROCEDURE {INITIAL} First ;
 	BEGIN
-		Machine.Init;
 		Trace.String("first ? "); Trace.Ln; 
 		Trace.Address(Machine.fbadr);  Trace.Ln;
 		Machine.MapPhysical(Machine.fbadr, 	1024*768*4, fbadr); 

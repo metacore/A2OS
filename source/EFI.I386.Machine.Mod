@@ -1844,19 +1844,15 @@ BEGIN
 	freeStackIndex := 0;
 	(* mappings *)
 	mapTop := MapAreaAdr ;
-	(*! remove if works 
 	IF fbadr + 1024 * PS * 10 > mapTop THEN mapTop := fbadr + 1024 * PS * 10 END; (* frame buffer ! *)
-	*)
 	(* create the address space *)
 	NewPage(kernelPD); ASSERT(kernelPD # NilAdr);
 	Fill32(kernelPD, PTEs*4, PageNotPresent);
 	IF ~MapDirect(LowAdr, mTop-LowAdr, LowAdr + UserPage) THEN HALT(99) END	;(* map heap direct *)
 	
-	(*! remove if works 
 	IF ~MapDirect(fbadr, PS*1024*10, fbadr + UserPage) THEN  (* map frame buffer  direct *)
 		Trace.String("map direct failed at fbadr"); Trace.Address(fbadr); Trace.Ln;
 	END; 
-	*)
 
 END InitPages;
 
@@ -3653,15 +3649,17 @@ PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
 ;	JMP DWORD 100000H - 1000H + Skip
 ;Skip:
 *)
-CODE{SYSTEM.i386}
-	; save arguments passed by bootloader
-	MOV bootFlag, EAX
-	MOV initRegs0,ESI
-	MOV initRegs1, ECX
-	
-	MOV fbadr, EDI
-	MOV fbInfoPtr, EDX
-
+BEGIN
+	CODE{SYSTEM.i386}
+		; save arguments passed by bootloader
+		MOV bootFlag, EAX
+		MOV initRegs0,ESI
+		MOV initRegs1, ECX
+		
+		MOV fbadr, EDI
+		MOV fbInfoPtr, EDX
+	END;
+	Init;
 END FirstAddress;
 
 (* empty section allocated at end of bootfile *)

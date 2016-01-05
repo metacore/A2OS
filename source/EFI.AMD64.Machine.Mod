@@ -3852,15 +3852,17 @@ END InitTrace;
 
 (* The following procedure is linked as the first block in the bootfile *)
 PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
-CODE{SYSTEM.AMD64}
-	; save arguments passed by bootloader
-	MOV bootFlag, RAX
-	MOV initRegs0,RSI
-	MOV initRegs1, RCX
-	
-	MOV fbadr, RDI
-	MOV fbInfoPtr, RDX
-
+BEGIN
+	CODE{SYSTEM.AMD64}
+		; save arguments passed by bootloader
+		MOV bootFlag, RAX
+		MOV initRegs0,RSI
+		MOV initRegs1, RCX
+		
+		MOV fbadr, RDI
+		MOV fbInfoPtr, RDX
+	END;
+	Init;
 END FirstAddress;
 
 (*

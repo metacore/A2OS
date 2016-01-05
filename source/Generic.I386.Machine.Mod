@@ -3640,11 +3640,14 @@ PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
 ;	JMP DWORD 100000H - 1000H + Skip
 ;Skip:
 *)
-CODE{SYSTEM.i386}
-	; save arguments passed by bootloader
-	MOV bootFlag, EAX
-	MOV initRegs0,ESI
-	MOV initRegs1, EDI
+BEGIN (* no PAF --> no variables !! *)
+	CODE{SYSTEM.i386}
+		; save arguments passed by bootloader
+		MOV bootFlag, EAX
+		MOV initRegs0,ESI
+		MOV initRegs1, EDI
+	END; 
+	Init; (* call initializer as first action of the kernel *)
 END FirstAddress;
 
 (* empty section allocated at end of bootfile *)

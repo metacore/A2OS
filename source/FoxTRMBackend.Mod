@@ -1087,20 +1087,17 @@ TYPE
 
 		(* if the symbol has a statically known offset then return offset and set resulting section to nil, otherwise do not set resulting section to nil *)
 		PROCEDURE GetSymbolOffset(VAR vop: IntermediateCode.Operand; VAR sectionName: ObjectFile.Identifier): LONGINT;
-		VAR offset: LONGINT; section: Sections.Section; name: ARRAY 256 OF CHAR;
+		VAR offset: LONGINT; section: Sections.Section;
 		BEGIN
 			sectionName := vop.symbol;
-			name := sectionName.name;
 			Resolve(vop);
 			section := vop.resolved; offset := vop.offset;
-			TRACE(name, offset);
 			IF (section # NIL) & (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).resolved.os.fixed) THEN
 				INC(offset, section(IntermediateCode.Section).resolved.os.alignment);
 				IF vop.symbolOffset > 0 THEN 
 					INC(offset, section(IntermediateCode.Section).instructions[vop.symbolOffset].pc);
 				END;
 				sectionName.name := "";
-				TRACE(name, offset);
 			END;
 			RETURN offset
 		END GetSymbolOffset;

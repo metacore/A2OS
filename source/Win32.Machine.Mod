@@ -567,6 +567,11 @@ BEGIN
 	END;
 END Init;
 
+	PROCEDURE {INITIAL} Start;
+	BEGIN
+		Init; (* cannot allocate variables in here *)
+	END Start;
+
 	(* Initialize locks. *)
 	PROCEDURE InitLocks;
 	VAR i: LONGINT;

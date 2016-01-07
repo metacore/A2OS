@@ -1124,8 +1124,7 @@ TYPE
 				IF IsFloat(instruction.op1) & backend.forceFPU THEN
 					EmitResultFPU(instruction)
 				ELSE
-					EmitResult(instruction,Low);
-					IF IsComplex(instruction.op1) THEN EmitResult(instruction,High) END;
+					EmitResult(instruction);
 				END;
 			|IntermediateCode.return:
 				IF IsFloat(instruction.op1) & backend.forceFPU THEN
@@ -1821,25 +1820,44 @@ TYPE
 			END;
 		END EmitConvert;
 
-		PROCEDURE EmitResult(CONST instruction: IntermediateCode.Instruction; part: LONGINT);
-		VAR result,op: Assembler.Operand; register, highRegister: LONGINT; highReserved: BOOLEAN; type: IntermediateCode.Type;
+		PROCEDURE EmitResult(CONST instruction: IntermediateCode.Instruction);
+		VAR result, resultHigh, op, opHigh: Assembler.Operand; register, highRegister: LONGINT; lowReserved, highReserved: BOOLEAN; type: IntermediateCode.Type;
 		BEGIN
-			register := ResultRegister(instruction.op1.type,part);
-			IF (part = Low) & IsComplex(instruction.op1) THEN
-				(* protect upper result (EDX) register *)
+			IF ~IsComplex(instruction.op1) THEN
+				register := ResultRegister(instruction.op1.type,Low);
+				result := registerOperands[register];
+				MakeOperand(instruction.op1,Low,op,NIL);
+				GetPartType(instruction.op1.type, Low, type);
+				Move(op,result,type);
+			ELSE
+				register := ResultRegister(instruction.op1.type,Low);
+				result := registerOperands[register];
 				highRegister := ResultRegister(instruction.op1.type, High);
+				resultHigh := registerOperands[highRegister];
+
+				(* make sure that result registers are not used during emission of Low / High *)
+				lowReserved := physicalRegisters.Reserved(register);
+				physicalRegisters.SetReserved(register, TRUE); 
 				highReserved := physicalRegisters.Reserved(highRegister);
 				physicalRegisters.SetReserved(highRegister,TRUE);
+				
+				MakeOperand(instruction.op1,Low,op, NIL);
+				IF Assembler.SameOperand(op, resultHigh) THEN
+					emitter.Emit2(InstructionSet.opXCHG, result, resultHigh); (* low register already mapped ok *)
+					MakeOperand(instruction.op1, High, opHigh, NIL);
+					GetPartType(instruction.op1.type, High, type);
+					Move(opHigh, result, type);
+				ELSE
+					GetPartType(instruction.op1.type, Low, type);
+					Move(op, result, type);
+					MakeOperand(instruction.op1,High, opHigh, NIL);
+					GetPartType(instruction.op1.type, High, type);
+					Move(opHigh, resultHigh, type);
+				END;
+				physicalRegisters.SetReserved(register, lowReserved);
+				physicalRegisters.SetReserved(highRegister, highReserved);
 			END;
 
-			result := registerOperands[register];
-			MakeOperand(instruction.op1,part,op,NIL);
-			GetPartType(instruction.op1.type, part, type);
-			Move(op,result,type);
-
-			IF (part = Low) & IsComplex(instruction.op1) THEN
-				physicalRegisters.SetReserved(highRegister, highReserved);
-			END
 		END EmitResult;
 
 		PROCEDURE EmitResultFPU(CONST instruction: IntermediateCode.Instruction);

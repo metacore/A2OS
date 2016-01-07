@@ -5516,14 +5516,10 @@ TYPE
 				ReleaseIntermediateOperand(reg);
 			END;
 
-			IF procedureType.callingConvention = SyntaxTree.DarwinCCallingConvention THEN	(*fld*)
+			IF (procedureType.callingConvention = SyntaxTree.DarwinCCallingConvention) & (system.addressSize = 32) THEN
+				(* align stack to 16-byte boundary *)
 				IntermediateCode.InitImmediate(mask,addressType,-16);
-				Emit(And(position,sp, sp, mask));
-				gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
-				IF gap # 0 THEN
-					IntermediateCode.InitImmediate(size,addressType,gap);
-					Emit(Sub(position,sp,sp,size))
-				END;
+				Emit(And(position,sp, sp, mask))		
 			END;
 
 			IF x.left IS SyntaxTree.SupercallDesignator THEN
@@ -5654,6 +5650,13 @@ TYPE
 				
 				passByRegister := parameterRegisters > 0;
 				registerNumber := 0;
+				IF parameters.Length() > parameterRegisters THEN
+					gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
+					IF gap # 0 THEN
+						IntermediateCode.InitImmediate(size,addressType,gap);
+						Emit(Sub(position,sp,sp,size))
+					END
+				END;
 				formalParameter := procedureType.lastParameter;
 				FOR i := parameters.Length() - 1 TO 0 BY -1 DO
 					actualParameter := parameters.GetExpression(i);
@@ -5670,7 +5673,7 @@ TYPE
 					END;
 					formalParameter := formalParameter.prevParameter;
 				END;
-				IF passByRegister & (registerNumber > 0) THEN
+				IF passByRegister & (registerNumber > 0) & ~SysvABI(procedureType.callingConvention) THEN
 					stackSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
 					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
 				END;
@@ -5712,7 +5715,7 @@ TYPE
 			END;
 						
 			ReleaseParameterRegisters();
-			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) OR (procedureType.callingConvention = SyntaxTree.CCallingConvention) THEN
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) OR SysvABI(procedureType.callingConvention) THEN
 				Emit(Call(position,operand.op,0));
 			ELSE
 				Emit(Call(position,operand.op,parametersSize));
@@ -5728,12 +5731,21 @@ TYPE
 				Emit(Result(position,return));
 			END;
 
-			IF procedureType.callingConvention = SyntaxTree.CCallingConvention THEN
-				IF passByRegister & (registerNumber > 0) & (registerNumber < parameterRegisters) THEN (* allocated space for all registers *)
-					parametersSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
+			IF SysvABI(procedureType.callingConvention) THEN
+				IF passByRegister THEN 
+					IF parameters.Length() > parameterRegisters THEN
+						parametersSize := ToMemoryUnits(system,(parameters.Length()-parameterRegisters)*addressType.sizeInBits)
+					ELSE 
+						parametersSize := 0
+					END
+				ELSE
+					parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits)
 				END;
-				size := IntermediateCode.Immediate(addressType,parametersSize);
-				Emit(Add(position,sp,sp,size));
+				IF parametersSize > 0 THEN
+					INC( parametersSize, (-parametersSize) MOD 16 );
+					size := IntermediateCode.Immediate(addressType,parametersSize);
+					Emit(Add(position,sp,sp,size))
+				END;
 			END;
 
 			IF (resultDesignator = NIL) & (procedureType.returnType # NIL) THEN
@@ -13088,9 +13100,9 @@ TYPE
 	BEGIN
 		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE
 		ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (parameter.ownerType(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.CCallingConvention)
+			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
 		ELSIF parameter.kind = SyntaxTree.VarParameter THEN
-			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & (parameter.ownerType(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.CCallingConvention)
+			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
 		END
 	END PassBySingleReference;
 
@@ -13543,6 +13555,11 @@ TYPE
 		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.conv,dest,src,emptyOperand);
 		RETURN instruction
 	END Conv;
+	
+	PROCEDURE SysvABI( cc: LONGINT ): BOOLEAN;
+	BEGIN
+		RETURN (cc IN {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention})
+	END SysvABI;
 
 	PROCEDURE Call*(position: LONGINT;op: IntermediateCode.Operand; parSize: LONGINT): IntermediateCode.Instruction;
 	VAR instruction: IntermediateCode.Instruction;

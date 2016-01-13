@@ -347,8 +347,8 @@ VAR
 	system-		: PROCEDURE {C} ( cmd: ADDRESS );
 	uname-		: PROCEDURE {C} ( utsname: ADDRESS ): LONGINT;
 
-	getcwd-		: PROCEDURE {C} ( buf: ADDRESS;  len: SIZE ): LONGINT;
-	getenv-		: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
+	getcwd-		: PROCEDURE {C} ( buf: ADDRESS;  len: SIZE ): ADDRESS;
+	getenv-		: PROCEDURE {C} ( name: ADDRESS ): ADDRESS;
 
 	opendir-		: PROCEDURE {C} ( name: ADDRESS ): ADDRESS;
 	readdir-		: PROCEDURE {C} ( dir: ADDRESS ): Dirent;

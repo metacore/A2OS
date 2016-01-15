@@ -56,7 +56,7 @@ CONST
 	
 	MaxCandidates = 1024;
 	
-	ProtOfs = 2*BlockSize + 16;	(*! p mod 32 = 16 ! *)
+	ProtOfs = (AddrSize DIV 4)*(2*BlockSize) + 16;	(*! p mod 32 = 16 ! *)
 	SysOfs = 24;  	(*! p mod 16 = 8 ! *)
 	ProtTypeBit* = 31;   (** flags in TypeDesc, low bits reserved for extLevel *)
 

@@ -30,25 +30,25 @@ TYPE Protocol*= POINTER TO ProtocolDescription;
 (* Open or create a new file. 'This' is a pointer to a protocol instance that is the file handle to the source location. This would
 typically be an open handle to a directory. A handle for the new file is returned to 'NewHandle'.  The filename may include
 the path modifiers '\', '.' and '..'. If the filename starts with a '\' the relative location is the root directory. *)
-TYPE FileOpen* = PROCEDURE{C}(This : Protocol; VAR NewHandle : Protocol; CONST FileName : ARRAY OF EFI.Char16; OpenMode : EFI.Int64; Attributes : EFI.Int64) : EFI.Status;
+TYPE FileOpen* = PROCEDURE{WINAPI}(This : Protocol; VAR NewHandle : Protocol; CONST FileName : ARRAY OF EFI.Char16; OpenMode : EFI.Int64; Attributes : EFI.Int64) : EFI.Status;
 (* Close a specified handle. All dirty cached file data is flushed to the device, and the file is closed *)
-TYPE FileClose* = PROCEDURE{C}(This : Protocol) : EFI.Status;
+TYPE FileClose* = PROCEDURE{WINAPI}(This : Protocol) : EFI.Status;
 (* Close and delete a file *)
-TYPE FileDelete* = PROCEDURE{C}(This : Protocol) : EFI.Status;
+TYPE FileDelete* = PROCEDURE{WINAPI}(This : Protocol) : EFI.Status;
 (* Read 'BufferSize' bytes. On success, the number bytes read is written to 'BufferSize' and the file position is updated.
 If 'This' is a directory, read the directory entry at the current file position. If this entry does not fit into the buffer BufferTooSmall
 is returned and the file position is not updated and 'BufferSize' is set to the size needed to read the entry. *)
-TYPE FileRead* = PROCEDURE{C}(This : Protocol; VAR BufferSize : EFI.Int; Buffer : ADDRESS) : EFI.Status;
+TYPE FileRead* = PROCEDURE{WINAPI}(This : Protocol; VAR BufferSize : EFI.Int; Buffer : ADDRESS) : EFI.Status;
 (* Write specified number of bytes to the file at the current file position. Current file position is advanced the actual number of
 bytes written, which is returned in 'BufferSize'. Direct writes to open directories are not supported *)
-TYPE FileWrite* = PROCEDURE{C}(This : Protocol; VAR BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
+TYPE FileWrite* = PROCEDURE{WINAPI}(This : Protocol; VAR BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
 (* Set the current file position. Only absolute position is supported with exception of FFFFFFFFFFFFFFFFH which sets the position
 to the end of the file. Seeking past the end of file is allowed (a subsequent write would grow the file. *)
-TYPE FileGetPosition* = PROCEDURE{C}(This : Protocol; VAR Position : EFI.Int64) : EFI.Status;
-TYPE FileSetPosition* = PROCEDURE{C}(This : Protocol; Position : EFI.Int64) : EFI.Status;
-TYPE FileGetInfo* = PROCEDURE{C}(This : Protocol; CONST InformationType : EFI.GUID; VAR BufferSize : EFI.Int; VAR Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
-TYPE FileSetInfo* = PROCEDURE{C}(This : Protocol; CONST InformationType : EFI.GUID; BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
-TYPE FileFlush* = PROCEDURE{C}(This : Protocol) : EFI.Status;
+TYPE FileGetPosition* = PROCEDURE{WINAPI}(This : Protocol; VAR Position : EFI.Int64) : EFI.Status;
+TYPE FileSetPosition* = PROCEDURE{WINAPI}(This : Protocol; Position : EFI.Int64) : EFI.Status;
+TYPE FileGetInfo* = PROCEDURE{WINAPI}(This : Protocol; CONST InformationType : EFI.GUID; VAR BufferSize : EFI.Int; VAR Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
+TYPE FileSetInfo* = PROCEDURE{WINAPI}(This : Protocol; CONST InformationType : EFI.GUID; BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
+TYPE FileFlush* = PROCEDURE{WINAPI}(This : Protocol) : EFI.Status;
 
 TYPE ProtocolDescription*= RECORD(EFI.ProtocolDescription)
 	Revision-: EFI.Int64;

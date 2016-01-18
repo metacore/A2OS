@@ -12,7 +12,7 @@ VAR
 TYPE Protocol* = POINTER TO ProtocolDescription;
 
 TYPE PtrToArrayOfByte* = POINTER TO ARRAY 2048 OF SYSTEM.BYTE;
-TYPE LIUnload* = PROCEDURE{C}(ImageHandle : EFI.Handle) : EFI.Status;
+TYPE LIUnload* = PROCEDURE{WINAPI}(ImageHandle : EFI.Handle) : EFI.Status;
 TYPE ProtocolDescription* = RECORD(EFI.ProtocolDescription)
 	Revision-: EFI.Int32;
 	ParentHandle-: EFI.Handle;

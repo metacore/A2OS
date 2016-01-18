@@ -13100,9 +13100,9 @@ TYPE
 	BEGIN
 		IF parameter.kind = SyntaxTree.ValueParameter THEN RETURN FALSE
 		ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
+			RETURN (parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABIorWINAPI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
 		ELSIF parameter.kind = SyntaxTree.VarParameter THEN
-			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
+			RETURN ~(parameter.type.resolved IS SyntaxTree.ArrayType) & ~(parameter.type.resolved IS SyntaxTree.MathArrayType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) & SysvABIorWINAPI(parameter.ownerType(SyntaxTree.ProcedureType).callingConvention)
 		END
 	END PassBySingleReference;
 
@@ -13560,6 +13560,11 @@ TYPE
 	BEGIN
 		RETURN (cc IN {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention})
 	END SysvABI;
+
+	PROCEDURE SysvABIorWINAPI( cc: LONGINT ): BOOLEAN;
+	BEGIN
+		RETURN (cc IN {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention, SyntaxTree.WinAPICallingConvention})
+	END SysvABIorWINAPI;
 
 	PROCEDURE Call*(position: LONGINT;op: IntermediateCode.Operand; parSize: LONGINT): IntermediateCode.Instruction;
 	VAR instruction: IntermediateCode.Instruction;

@@ -11,7 +11,7 @@ VAR
 
 TYPE Protocol*= POINTER TO ProtocolDescription;
 
-TYPE SFSOpenVolume* = PROCEDURE{C}(This : Protocol; VAR Root : EFIFileProtocol.Protocol):EFI.Status;
+TYPE SFSOpenVolume* = PROCEDURE{WINAPI}(This : Protocol; VAR Root : EFIFileProtocol.Protocol):EFI.Status;
 TYPE ProtocolDescription *= RECORD(EFI.ProtocolDescription)
 	Revision-:EFI.Int64;
 	OpenVolume-: SFSOpenVolume

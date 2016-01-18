@@ -152,32 +152,32 @@ TYPE DevicePath* = RECORD
 	SubType-: Int8;
 	Length-: ARRAY 2 OF Int8;
 END;
-TYPE BSDummyType* = PROCEDURE{C};
+TYPE BSDummyType* = PROCEDURE{WINAPI};
 (* task priority functions *)
-TYPE BSTPLRaise* = PROCEDURE{C}(NewTpl : TPL) : TPL;
-TYPE BSTPLRestore* = PROCEDURE{C}(oldTpl : TPL);
+TYPE BSTPLRaise* = PROCEDURE{WINAPI}(NewTpl : TPL) : TPL;
+TYPE BSTPLRestore* = PROCEDURE{WINAPI}(oldTpl : TPL);
 (* Memory functions *)
-TYPE BSAllocatePages* = PROCEDURE{C}(Type : Int; MemoryType : Int; Pages : Int; VAR Memory : PhysicalAddress) : Status;
-TYPE BSFreePages* = PROCEDURE{C}(Memory : PhysicalAddress; Pages : Int) : Status;
-TYPE BSGetMemoryMap* = PROCEDURE{C}(VAR MemoryMapSize : Int; VAR MemoryMap : ARRAY OF MemoryDescriptor; VAR MapKey, DescriptorSize : Int; VAR DescriptorVersion : Int32) : Status;
+TYPE BSAllocatePages* = PROCEDURE{WINAPI}(Type : Int; MemoryType : Int; Pages : Int; VAR Memory : PhysicalAddress) : Status;
+TYPE BSFreePages* = PROCEDURE{WINAPI}(Memory : PhysicalAddress; Pages : Int) : Status;
+TYPE BSGetMemoryMap* = PROCEDURE{WINAPI}(VAR MemoryMapSize : Int; VAR MemoryMap : ARRAY OF MemoryDescriptor; VAR MapKey, DescriptorSize : Int; VAR DescriptorVersion : Int32) : Status;
 (* protocol handler functions *)
-TYPE BSProtocolInstall* = PROCEDURE{C}(VAR Handle : Handle; CONST Protocol : GUID; InterfaceType : Int; Interface : Protocol) : Status;
-TYPE BSProtocolReinstall* = PROCEDURE{C}(Handle : Handle; CONST Protocol : GUID; OldInterface, NewInterface : Protocol) : Status;
-TYPE BSProtocolUninstall* = PROCEDURE{C}(Handle : Handle; CONST Protocol : GUID; Interface : Protocol) : Status;
-TYPE BSProtocolHandle* = PROCEDURE{C}(Handle : Handle; CONST Protocol : GUID; VAR Interface : Protocol) : Status;
-TYPE BSProtocolRegisterNotify* = PROCEDURE{C}(CONST Protocol : GUID; Event : Event; VAR Registration : Pointer) : Status;
-TYPE BSLocateHandle* = PROCEDURE{C}(SearchType : Int; CONST Protocol : GUID; SearchKey : Pointer; VAR BufferSize : Int; VAR Buffer : ARRAY OF Handle): Status;
-TYPE BSLocateDevicePath* = PROCEDURE{C}(CONST Protocol : GUID; VAR DevicePath : DevicePath; VAR Device : Handle) : Status;
-TYPE BSInstallConfigurationTable* = PROCEDURE{C}(CONST Protocol : GUID; Table : Pointer) : Status;
+TYPE BSProtocolInstall* = PROCEDURE{WINAPI}(VAR Handle : Handle; CONST Protocol : GUID; InterfaceType : Int; Interface : Protocol) : Status;
+TYPE BSProtocolReinstall* = PROCEDURE{WINAPI}(Handle : Handle; CONST Protocol : GUID; OldInterface, NewInterface : Protocol) : Status;
+TYPE BSProtocolUninstall* = PROCEDURE{WINAPI}(Handle : Handle; CONST Protocol : GUID; Interface : Protocol) : Status;
+TYPE BSProtocolHandle* = PROCEDURE{WINAPI}(Handle : Handle; CONST Protocol : GUID; VAR Interface : Protocol) : Status;
+TYPE BSProtocolRegisterNotify* = PROCEDURE{WINAPI}(CONST Protocol : GUID; Event : Event; VAR Registration : Pointer) : Status;
+TYPE BSLocateHandle* = PROCEDURE{WINAPI}(SearchType : Int; CONST Protocol : GUID; SearchKey : Pointer; VAR BufferSize : Int; VAR Buffer : ARRAY OF Handle): Status;
+TYPE BSLocateDevicePath* = PROCEDURE{WINAPI}(CONST Protocol : GUID; VAR DevicePath : DevicePath; VAR Device : Handle) : Status;
+TYPE BSInstallConfigurationTable* = PROCEDURE{WINAPI}(CONST Protocol : GUID; Table : Pointer) : Status;
 (* image functions *)
-TYPE BSImageLoad* = PROCEDURE{C}(BootPolicy : Boolean; ParentImageHandle : Handle; CONST FilePath : DevicePath; SourceSize : Int; SourceBuffer : Pointer; VAR ImageHandle : Handle) : Status;
-TYPE BSImageStart* = PROCEDURE{C}(ImageHandle : Handle; VAR ExitDataSize : Int; VAR ExitData : ARRAY OF Char16) : Status;
-TYPE BSImageExit* = PROCEDURE{C}(ImageHandle : Handle; ExitStatus : Status; ExitDataSize : Int; VAR ExitData : ARRAY OF Char16) : Status;
-TYPE BSImageUnload* = PROCEDURE{C}(ImageHandle : Handle) : Status;
-TYPE BSExitBootServices* = PROCEDURE{C}(ImageHandle : Handle; MapKey : Int) : Status;
+TYPE BSImageLoad* = PROCEDURE{WINAPI}(BootPolicy : Boolean; ParentImageHandle : Handle; CONST FilePath : DevicePath; SourceSize : Int; SourceBuffer : Pointer; VAR ImageHandle : Handle) : Status;
+TYPE BSImageStart* = PROCEDURE{WINAPI}(ImageHandle : Handle; VAR ExitDataSize : Int; VAR ExitData : ARRAY OF Char16) : Status;
+TYPE BSImageExit* = PROCEDURE{WINAPI}(ImageHandle : Handle; ExitStatus : Status; ExitDataSize : Int; VAR ExitData : ARRAY OF Char16) : Status;
+TYPE BSImageUnload* = PROCEDURE{WINAPI}(ImageHandle : Handle) : Status;
+TYPE BSExitBootServices* = PROCEDURE{WINAPI}(ImageHandle : Handle; MapKey : Int) : Status;
 (* misc. functions *)
-TYPE BSGetNextMonotonicCount* = PROCEDURE{C}(VAR Count : Int64);
-TYPE BSStall* = PROCEDURE{C}(Microseconds : Int);
+TYPE BSGetNextMonotonicCount* = PROCEDURE{WINAPI}(VAR Count : Int64);
+TYPE BSStall* = PROCEDURE{WINAPI}(Microseconds : Int);
 
 TYPE BootServices* = RECORD
 	Hdr- : TableHeader;
@@ -219,7 +219,7 @@ TYPE BootServices* = RECORD
 END;
 
 (* RuntimeService function type declarations *)
-TYPE RSDummyType* = PROCEDURE{C};
+TYPE RSDummyType* = PROCEDURE{WINAPI};
 
 TYPE RuntimeServices* = RECORD
 	Hdr- : TableHeader;
@@ -252,8 +252,8 @@ TYPE InputKey* = RECORD
 	ScanCode-: Int16;
 	UnicodeChar-: Char16;
 END;
-TYPE InputReset* = PROCEDURE {C} (This: POINTER TO SimpleInputInterface; ExtendedVerification: Boolean): Status;
-TYPE InputReadKey* = PROCEDURE {C} (This: POINTER TO SimpleInputInterface; VAR key: InputKey): Status;
+TYPE InputReset* = PROCEDURE {WINAPI} (This: POINTER TO SimpleInputInterface; ExtendedVerification: Boolean): Status;
+TYPE InputReadKey* = PROCEDURE {WINAPI} (This: POINTER TO SimpleInputInterface; VAR key: InputKey): Status;
 
 TYPE SimpleInputInterface* = RECORD(ProtocolDescription)
 	Reset-: InputReset;
@@ -273,15 +273,15 @@ TYPE SimpleTextOutputInterfaceMode* = RECORD
 	CursorVisible-: Boolean;
 END;
 
-TYPE TextReset* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; ExtendedVerification: Boolean): Status;
-TYPE TextString* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface;  CONST String: ARRAY OF Char16): Status;
-TYPE TextTestString* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; CONST String: ARRAY OF Char16): Status;
-TYPE TextQueryMode* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; ModeNumber: Int; VAR Columns, Rows: Int): Status;
-TYPE TextSetMode* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; ModeNumber: Int): Status;
-TYPE TextSetAttribute* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; Attribute: Int): Status;
-TYPE TextClearScreen* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface): Status;
-TYPE TextSetCursorPos* = PROCEDURE {C} (This: POINTER TO SimpleTextOutputInterface; Column, Row : Int): Status;
-TYPE TextEnableCursor* = PROCEDURE {C} (This : POINTER TO SimpleTextOutputInterface; Visible : Boolean): Status;
+TYPE TextReset* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; ExtendedVerification: Boolean): Status;
+TYPE TextString* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface;  CONST String: ARRAY OF Char16): Status;
+TYPE TextTestString* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; CONST String: ARRAY OF Char16): Status;
+TYPE TextQueryMode* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; ModeNumber: Int; VAR Columns, Rows: Int): Status;
+TYPE TextSetMode* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; ModeNumber: Int): Status;
+TYPE TextSetAttribute* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; Attribute: Int): Status;
+TYPE TextClearScreen* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface): Status;
+TYPE TextSetCursorPos* = PROCEDURE {WINAPI} (This: POINTER TO SimpleTextOutputInterface; Column, Row : Int): Status;
+TYPE TextEnableCursor* = PROCEDURE {WINAPI} (This : POINTER TO SimpleTextOutputInterface; Visible : Boolean): Status;
 
 TYPE SimpleTextOutputInterface* = RECORD(ProtocolDescription)
 	Reset-: TextReset;

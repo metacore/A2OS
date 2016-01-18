@@ -35,9 +35,9 @@ TYPE GraphicsModeInfoDescription* = RECORD
 END;
 
 TYPE Protocol* = POINTER TO ProtocolDescription;
-TYPE GOQueryMode* = PROCEDURE{C}(This : Protocol; ModeNumber : EFI.Int32; VAR SizeOfInfo : EFI.Int; VAR Info : GraphicsModeInfo) : EFI.Status;
-TYPE GOSetMode* = PROCEDURE{C}(This : Protocol; ModeNumber : EFI.Int32) : EFI.Status;
-TYPE GODummyType* = PROCEDURE{C}():EFI.Status;
+TYPE GOQueryMode* = PROCEDURE{WINAPI}(This : Protocol; ModeNumber : EFI.Int32; VAR SizeOfInfo : EFI.Int; VAR Info : GraphicsModeInfo) : EFI.Status;
+TYPE GOSetMode* = PROCEDURE{WINAPI}(This : Protocol; ModeNumber : EFI.Int32) : EFI.Status;
+TYPE GODummyType* = PROCEDURE{WINAPI}():EFI.Status;
 TYPE ProtocolDescription* = RECORD(EFI.ProtocolDescription)
 	QueryMode-: GOQueryMode;
 	SetMode-: GOSetMode;

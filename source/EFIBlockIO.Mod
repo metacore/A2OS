@@ -23,10 +23,10 @@ END;
 
 TYPE Protocol* = POINTER TO ProtocolDescription;
 
-TYPE BlockIOReset* = PROCEDURE{C}(This : Protocol; ExtendedVerification : EFI.Boolean) : EFI.Status;
-TYPE BlockIOReadBlocks* = PROCEDURE{C}(This : Protocol; MediaId : EFI.Int32; LBA: EFI.LBA; BufferSize : EFI.Int; VAR Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
-TYPE BlockIOWriteBlocks* = PROCEDURE{C}(This : Protocol; MediaId : EFI.Int32; LBA: EFI.LBA; BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
-TYPE BlockIOFlushBlocks* = PROCEDURE{C}(This : Protocol) : EFI.Status;
+TYPE BlockIOReset* = PROCEDURE{WINAPI}(This : Protocol; ExtendedVerification : EFI.Boolean) : EFI.Status;
+TYPE BlockIOReadBlocks* = PROCEDURE{WINAPI}(This : Protocol; MediaId : EFI.Int32; LBA: EFI.LBA; BufferSize : EFI.Int; VAR Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
+TYPE BlockIOWriteBlocks* = PROCEDURE{WINAPI}(This : Protocol; MediaId : EFI.Int32; LBA: EFI.LBA; BufferSize : EFI.Int; CONST Buffer : ARRAY OF SYSTEM.BYTE) : EFI.Status;
+TYPE BlockIOFlushBlocks* = PROCEDURE{WINAPI}(This : Protocol) : EFI.Status;
 
 TYPE ProtocolDescription* = RECORD(EFI.ProtocolDescription)
 	Revision-: EFI.Int64;

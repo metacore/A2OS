@@ -845,7 +845,7 @@ TYPE
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
 		BEGIN RETURN (this = SELF) OR (this IS IntegerType) & (this.sizeInBits = sizeInBits) & (this(IntegerType).signed = signed)
-			OR (this IS SizeType) & (this.sizeInBits=sizeInBits)
+			OR signed & (this IS SizeType) & (this.sizeInBits=sizeInBits)
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;

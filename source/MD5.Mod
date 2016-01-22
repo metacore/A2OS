@@ -29,13 +29,18 @@ under a public-key cryptosystem such as RSA. *)
 		VAR cont: Context;
 	BEGIN
 		NEW(cont);
+		Init(cont);
+		RETURN cont
+	END New;
+
+	PROCEDURE Init * (cont: Context);
+	BEGIN
 		cont.buf[0] := 067452301H;
 		cont.buf[1] := LONGINT(0EFCDAB89H);
 		cont.buf[2] := LONGINT(098BADCFEH);
 		cont.buf[3] := 010325476H;
 		cont.bits := 0;
-		RETURN cont
-	END New;
+	END Init;
 
 	PROCEDURE ByteReverse(VAR in: ARRAY OF SYSTEM.BYTE; VAR out: ARRAY OF LONGINT; longs: LONGINT);
 		VAR
@@ -208,7 +213,7 @@ under a public-key cryptosystem such as RSA. *)
 
 (** Continues an MD5 message-digest operation, processing another
 	message block, and updating the context. *)
-	PROCEDURE WriteBytes*(context: Context; VAR buf: ARRAY OF CHAR; len: LONGINT);
+	PROCEDURE WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: LONGINT);
 		VAR
 			in: ARRAY 16 OF LONGINT;
 			beg, t: LONGINT;
@@ -277,7 +282,7 @@ under a public-key cryptosystem such as RSA. *)
 		IF i < 10 THEN
 			RETURN CHR(ORD("0")+i)
 		ELSE
-			RETURN CHR(ORD("a")+i-10)
+			RETURN CHR(ORD("A")+i-10)
 		END
 	END HexDigit;
 

@@ -247,7 +247,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	LinuxAos {
-		INCLUDE "UNIX LINUX UNCOOP"
+		INCLUDE "UNIX UNIX32 LINUX UNCOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS ""
 		TARGET "AMD"
@@ -257,24 +257,59 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	DarwinAos {
-		INCLUDE "UNIX DARWIN UNCOOP"
+	LinuxAos64 {
+		INCLUDE "UNIX UNIX64 LINUX64 UNCOOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--darwinHost"
+		COMPILEOPTIONS "--bits=64"
 		TARGET "AMD"
-		EXTENSION "Obj"
-		SYMBOLEXTENSION "Obj"
+		EXTENSION "Obz"
+		SYMBOLEXTENSION "Obz"
 		PATH "NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+#
+#	exceeds max. releases !
+#	DarwinAos {
+#		INCLUDE "UNIX UNIX32 DARWIN UNCOOP"
+#		COMPILER "Compiler.Compile"
+#		COMPILEOPTIONS "--darwinHost"
+#		TARGET "AMD"
+#		EXTENSION "Obj"
+#		SYMBOLEXTENSION "Obj"
+#		PATH "NewAos/"
+#		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+#		DISABLED "FALSE"
+#	}
+#	DarwinAos64 {
+#		INCLUDE "UNIX UNIX64 DARWIN64 UNCOOP"
+#		COMPILER "Compiler.Compile"
+#		COMPILEOPTIONS "--bits=64 --darwinHost"
+#		TARGET "AMD"
+#		EXTENSION "Obz"
+#		SYMBOLEXTENSION "Obz"
+#		PATH "NewAos/"
+#		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+#		DISABLED "FALSE"
+#	}
 	SolarisAos {
-		INCLUDE "UNIX SOLARIS UNCOOP"
+		INCLUDE "UNIX UNIX32 SOLARIS UNCOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS ""
 		TARGET "AMD"
 		EXTENSION "Obj"
 		SYMBOLEXTENSION "Obj"
+		PATH "NewAos/"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
+	SolarisAos64 {
+		INCLUDE "UNIX UNIX64 SOLARIS64 UNCOOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "--bits=64"
+		TARGET "AMD"
+		EXTENSION "Obz"
+		SYMBOLEXTENSION "Obz"
 		PATH "NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -314,7 +349,10 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Win32.Environment.Mod }
 
 	UNIX { Unix.Glue.Mod }
-	DARWIN { Darwin.I386.Unix.Mod } LINUX { Linux.I386.Unix.Mod } SOLARIS { Solaris.I386.Unix.Mod }
+#	DARWIN { Darwin.I386.Unix.Mod }  DARWIN64 { Darwin.AMD64.Unix.Mod } 
+	LINUX { Linux.I386.Unix.Mod }  LINUX64 { Linux.AMD64.Unix.Mod } 
+	SOLARIS { Solaris.I386.Unix.Mod }  SOLARIS64 { Solaris.AMD64.Unix.Mod } 
+	
 
 	WINORIG { Win32.Kernel32.Mod}
 	WINGEN {Generic.Win32.Kernel32.Mod}
@@ -327,7 +365,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
 
-	UNIX { Unix.I386.Machine.Mod }
+	UNIX32 { Unix.I386.Machine.Mod }
+	UNIX64 { Unix.AMD64.Machine.Mod }
 
 	NATIVEORIG, NATIVEGEN, WINORIG, WINGEN { Heaps.Mod }
 	UNIX { Unix.Heaps.Mod }
@@ -353,8 +392,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# Services and device drivers
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 
-	I386, WIN, UNIX { I386.Reals.Mod }
-	AMD64 { AMD64.Reals.Mod }
+	I386, WIN, UNIX32 { I386.Reals.Mod }
+	AMD64, UNIX64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -434,8 +473,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BootShell.Mod
 
-	I386,UNIX { I386.Network.Mod }
-	AMD64 { AMD64.Network.Mod }
+	I386,UNIX32 { I386.Network.Mod }
+	AMD64, UNIX64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
@@ -618,12 +657,12 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WIN, UNIX { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WIN, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	FoxArrayBase.Mod
-	I386, WIN, UNIX { I386.FoxArrayBaseOptimized.Mod }
+	I386, WIN, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -646,8 +685,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386, WIN, UNIX { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	I386, WIN, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
@@ -662,8 +701,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386, WIN, UNIX { I386.Raster.Mod }
-	AMD64 { AMD64.Raster.Mod }
+	I386, WIN, UNIX32 { I386.Raster.Mod }
+	AMD64, UNIX64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -695,8 +734,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	I386, WIN, UNIX { I386.WMRasterScale.Mod }
-	AMD64 { AMD64.WMRasterScale.Mod }
+	I386, WIN, UNIX32 { I386.WMRasterScale.Mod }
+	AMD64, UNIX64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 
@@ -793,8 +832,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386, WIN, UNIX { I386.CPUID.Mod }
-	AMD64 { AMD64.CPUID.Mod }
+	I386, WIN, UNIX32 { I386.CPUID.Mod }
+	AMD64, UNIX64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
 
@@ -872,7 +911,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin  # MP3 Decoder
 
 	# Video codecs
-	I386, WIN, UNIX {
+	I386, WIN, UNIX32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
@@ -1171,8 +1210,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WIN, UNIX { I386.WMTransitions.Mod }
-	AMD64 { AMD64.WMTransitions.Mod }
+	I386, WIN, UNIX32 { I386.WMTransitions.Mod }
+	AMD64, UNIX64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod
@@ -1340,8 +1379,8 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WIN, UNIX {I386.EFIMachine.Mod}
-	AMD64 { AMD64.EFIMachine.Mod }
+	I386, WIN, UNIX32 {I386.EFIMachine.Mod}
+	AMD64, UNIX64 { AMD64.EFIMachine.Mod }
 
 
 	EFIBlockIO.Mod EFIDiskIO.Mod

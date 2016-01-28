@@ -114,7 +114,7 @@ CONST
 	(* File.release*)
 	All = {0..31};
 
-	MaxBuilds = 16;
+	MaxBuilds = 32;
 	MaxPrefixes = 32;
 	MaxNofImports = 64; (* Maximum number of entries in a module import section *)
 

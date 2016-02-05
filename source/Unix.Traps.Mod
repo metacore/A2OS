@@ -25,7 +25,7 @@ VAR
 	trace: BOOLEAN;  
 	
 	unix: Commands.Context;
-		
+			
 	
 	PROCEDURE Append( VAR ar: ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
 	VAR i, j: LONGINT;
@@ -63,11 +63,15 @@ VAR
 		w.Update;
 		TrapWriters.Trapped;
 			
-		S.GET( S.VAL( ADDRESS, p.obj ) - AddrSize, tag );
-		S.GET( tag - AddrSize, td );  
-		IF td.mod # NIL THEN  
-			COPY( td.mod.name, name );  Append( name,  "." );  Append( name, td.name );
-			IF name = "Oberon.System.OberonRunner" THEN  UnlockOberon  END
+		IF p.obj = NIL THEN	(* the main thread is not associated with any object *)
+			Unix.exit( -1 )
+		ELSE
+			S.GET( S.VAL( ADDRESS, p.obj ) - AddrSize, tag );
+			S.GET( tag - AddrSize, td );  
+			IF td.mod # NIL THEN  
+				COPY( td.mod.name, name );  Append( name,  "." );  Append( name, td.name );
+				IF name = "Oberon.System.OberonRunner" THEN  UnlockOberon  END
+			END
 		END;
 		TrapHandlingLevel := 0;
 		Machine.Release( Machine.Trap )
@@ -86,24 +90,25 @@ VAR
 		INC( TrapHandlingLevel ); 
 		IF trace THEN  
 			Trace.String( "Aos Trap:  signal = " );  Trace.Int( sig, 0 );  
-			Trace.String( ",  ucp = " );  Trace.Hex( S.VAL( ADDRESS, ucp ), -8 );  
+			Trace.String( ",  ucp = " );  Trace.Address( S.VAL( ADDRESS, ucp ) );  
 			Trace.String( ", traphandling  level = " ); Trace.Int( TrapHandlingLevel, 1 );  
 			Trace.Ln;  
 		END;  
-				
-		IF fatalerror THEN  
+		
+		IF fatalerror THEN 
 			w := unix.error  
 		ELSE  
 			w := TrapWriters.GetWriter();
 			w.Char( 1X );   (* begin of trap text *) 
 		END;
+
 		w.Ln;  
-		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln;
+		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln; 
 		IF TrapHandlingLevel = 1 THEN  
 			IF ~fatalerror THEN  Machine.Acquire( Machine.Trap )  END;
 			w.String( "Trap " ) 
 		ELSE  
-			w.String( "==== recursive Trap" )  
+			w.String( "[recursive Trap] " )  
 		END;  
 		CASE sig OF 
 		| 1:		w.String( "1 (Hangup signal)" );   
@@ -114,17 +119,18 @@ VAR
 				sp := ucp.mc.r_sp;
 				S.GET( sp, trapno );  w.Int( trapno, 0 );  
 				CASE trapno OF 
-				| 1:       w.String( "  (WITH guard failed)" ) 
-				| 2:       w.String( "  (CASE invalid)" ) 
-				| 3:       w.String( "  (RETURN missing)" ) 
-				| 5:       w.String( "  (Implicit type guard failed)" ) 
-				| 6:       w.String( "  (Type guard failed)" ) 
-				| 7:       w.String( "  (Index out of range)" ) 
-				| 8:       w.String( "  (ASSERT failed)" ) 
-				| 9:       w.String( "  (Array dimension error)" ) 
+				| 1:		w.String( "  (WITH guard failed)" ) 
+				| 2:		w.String( "  (CASE invalid)" ) 
+				| 3:		w.String( "  (RETURN missing)" ) 
+				| 5:		w.String( "  (implicit type guard failed)" ) 
+				| 6:		w.String( "  (type guard failed)" ) 
+				| 7:		w.String( "  (index out of range)" ) 
+				| 8:		w.String( "  (ASSERT failed)" ) 
+				| 9:		w.String( "  (array dimension error)" ) 
+				|12:	w.String( "  (division error)" )
 				ELSE 
 					IF trapno >= 30 THEN  w.String( "  (programmed HALT)" )  
-					ELSE  w.String( "  (unknown exception, division error?)" )   
+					ELSE  w.String( "  (unknown exception)" )   
 					END  
 				END;   
 		|  8:	w.String( "8 (Arithmetic exception)" );   

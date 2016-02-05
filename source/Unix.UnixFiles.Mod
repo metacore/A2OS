@@ -391,7 +391,7 @@ TYPE
 				tempFile: BOOLEAN;
 				dev: Unix.DevT;
 				ino: LONGINT;
-				mtime: LONGINT;
+				mtime: HUGEINT;
 				fsize, fpos: SIZE;
 				bufs: ARRAY NBufs OF Buffer;
 				swapper, state: LONGINT;

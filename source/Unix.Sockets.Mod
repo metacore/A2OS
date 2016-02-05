@@ -307,29 +307,37 @@ VAR
 	END Available;
 
 	PROCEDURE Requested*( s: LONGINT ): BOOLEAN;
-	VAR res, i: LONGINT;
+	CONST
+		SLen = Unix.FdSetLen;
+		SetBits = SIZEOF( SET ) * 8;
+	VAR 
+		res, i: LONGINT;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
 	BEGIN
 		timeout.sec := 0; timeout.usec := 0;
-		FOR i := 0 TO LEN( readfds ) - 1  DO readfds[i] := {} END;
-		INCL( readfds[s DIV 32],  s MOD 32 );
-		res := Unix.select( s+1, S.VAL( Unix.FdSetPtr, ADDRESSOF( readfds ) ), NIL, NIL, timeout );
+		FOR i := 0 TO SLen - 1  DO readfds[i] := {} END;
+		INCL( readfds[s DIV SetBits],  s MOD SetBits );
+		res := Unix.select( s+1, ADDRESSOF( readfds ), 0, 0, timeout );
 		RETURN res > 0 
 	END Requested;
 	
 	
 	PROCEDURE AwaitPacket*( s: LONGINT; ms: LONGINT ): BOOLEAN;
-	VAR res, err, i: LONGINT;
+	CONST
+		SLen = Unix.FdSetLen;
+		SetBits = SIZEOF( SET ) * 8;
+	VAR 
+		res, err, i: LONGINT;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
 	BEGIN
 		timeout.sec := ms DIV 1000;  ms := ms MOD 1000;
 		timeout.usec := 1000*ms;
-		FOR i := 0 TO LEN( readfds ) - 1  DO readfds[i] := {} END;
-		INCL( readfds[s DIV 32],  s MOD 32 );
+		FOR i := 0 TO SLen - 1  DO readfds[i] := {} END;
+		INCL( readfds[s DIV SetBits],  s MOD SetBits );
 		REPEAT
-			res := Unix.select( s+1, S.VAL( Unix.FdSetPtr, ADDRESSOF( readfds ) ), NIL, NIL, timeout );
+			res := Unix.select( s+1, ADDRESSOF( readfds ), 0, 0, timeout );
 			IF res < 0 THEN  err := Unix.errno()  END
 		UNTIL (res >= 0) OR (err # Unix.EINTR);
 		RETURN res > 0 

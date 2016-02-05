@@ -210,8 +210,8 @@ TYPE
 			END;
 
 	Timeval* = RECORD
-				sec*	: LONGINT;
-				usec*	: LONGINT
+				sec*	: HUGEINT;
+				usec*	: HUGEINT
 			END;
 
 	TmPtr* = POINTER TO Tm;
@@ -233,9 +233,12 @@ TYPE
 			END;
 
 
+CONST
+	FdSetLen* = 32;
+	
+TYPE
+	FdSet* = ARRAY FdSetLen OF SET;
 
-	FdSet* = ARRAY 32 OF SET;
-	FdSetPtr* = POINTER TO FdSet;
 
 	Dirent* = POINTER TO RECORD
 				ino-, off-	: LONGINT;   (* these may change to HUGEINT in future Linux releases!! *)
@@ -313,7 +316,7 @@ VAR
 	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
-	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: FdSetPtr;  VAR timeout: Timeval ): LONGINT;
+	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;

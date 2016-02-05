@@ -213,8 +213,8 @@ TYPE
 			END;
 
 	Timeval* = RECORD
-				sec*	: LONGINT;
-				usec*	: LONGINT
+				sec-		: HUGEINT;
+				usec-		: HUGEINT;
 			END;
 
 	TmPtr* = POINTER TO Tm;
@@ -235,9 +235,11 @@ TYPE
 				interval*, value*: Timeval
 			END;
 
-
-	FdSet* = ARRAY 32 OF SET;
-	FdSetPtr* = POINTER TO FdSet;
+CONST
+	FdSetLen* = 16;
+	
+TYPE
+	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
 				ino-, off-	: LONGINT;
@@ -245,12 +247,13 @@ TYPE
 				name-	: (*array of*) CHAR;
 			END;
 
-	Sigset* = ARRAY 4 OF SET;
+	Sigset* = ARRAY 4 OF LONGINT;
 
 	Stack* = RECORD
 				sp*	: ADDRESS;
 				size*	: SIZE;
-				flags*	: SET;
+				flags*	: LONGINT;
+				dummy: ADDRESS; 
 			END;
 
 	Ucontext* = POINTER TO UcontextDesc;
@@ -292,26 +295,6 @@ TYPE
 				r_ds		: HUGEINT;
 				r_fsbase	: HUGEINT;
 				r_gsbase	: HUGEINT;
-				
-			(*	r_gs-		: LONGINT;
-				r_fs-		: LONGINT;
-				r_es-		: LONGINT;
-				r_ds-		: LONGINT;
-				r_di-		: LONGINT;
-				r_si-		: LONGINT;
-				r_bp-		: LONGINT;
-				r_sp-		: LONGINT;
-				r_bx-		: LONGINT;
-				r_dx-		: LONGINT;
-				r_cx-		: LONGINT;
-				r_ax-		: LONGINT;
-				r_trapno-	: LONGINT;
-				r_err-		: LONGINT;
-				r_pc-		: LONGINT;
-				r_cs-		: LONGINT;
-				r_flags-	: LONGINT;
-				r_spatsig-	: LONGINT;
-				r_ss-		: LONGINT;		*)
 			END;
 
 
@@ -340,7 +323,7 @@ VAR
 	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
-	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: FdSetPtr;  VAR timeout: Timeval ): LONGINT;
+	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;

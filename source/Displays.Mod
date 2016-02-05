@@ -113,7 +113,7 @@ TYPE
 		VAR p: ADDRESS; i, bitofs: LONGINT; s: SET;
 		BEGIN
 			IF (w > 0) & (h > 0) THEN
-				i := ADDRESSOF(buf[0]) MOD SIZEOF (SET);
+				i := LONGINT(ADDRESSOF(buf[0]) MOD SIZEOF(SET));
 				bitofs := bitof + i * 8;
 				p := ADDRESSOF(buf[0])-i + bitofs DIV SetSize * SIZEOF (SET);	(* p always aligned to 32-bit boundary *)
 				bitofs := bitofs MOD SetSize; stride := stride*8;

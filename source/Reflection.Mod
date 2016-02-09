@@ -73,7 +73,7 @@ VAR
 	(* Get a compressed refblk number. *)
 	PROCEDURE GetNum( refs: Modules.Bytes;  VAR i, num: LONGINT );
 	VAR
-		n, s: LONGINT;  x: CHAR;
+		n, s, x: LONGINT; 
 	BEGIN
 		IF NewObjectFile(refs) THEN
 			(* Copying byte by byte to avoid unaligned memory accesses on ARM *)
@@ -83,9 +83,9 @@ VAR
 			SYSTEM.PUT8(ADDRESSOF(num) + 3, refs[i + 3]);
 			INC(i,4);
 		ELSE
-			s := 0;  n := 0;  x := refs[i];  INC( i );
-			WHILE ORD( x ) >= 128 DO INC( n, ASH( ORD( x ) - 128, s ) );  INC( s, 7 );  x := refs[i];  INC( i ) END;
-			num := n + ASH( ORD( x ) MOD 64 - ORD( x ) DIV 64 * 64, s )
+			s := 0;  n := 0;  x := ORD(refs[i]);  INC( i );
+			WHILE x >= 128 DO  INC( n, ASH( x - 128, s ) );  INC( s, 7 );  x := ORD(refs[i]);  INC( i )  END;
+			num := n + ASH( x MOD 64 - x DIV 64 * 64, s )
 		END;
 	END GetNum;
 
@@ -181,6 +181,7 @@ VAR
 		IF newObjectFile THEN INC(pos) END;
 		ch := refs[pos]; INC(pos); tstart := 0;
 		found := FALSE;
+
 		WHILE ~found & (pos < len) & ((ch = 0F8X) OR (ch = 0F9X)) DO	(* proc *)
 			GetNum(refs, pos, tstart);	(* procedure offset *)
 			IF newObjectFile THEN

@@ -2,7 +2,7 @@ MODULE FoxBinaryObjectFile; (** AUTHOR "fof"; PURPOSE "Oberon Compiler Object Fi
 
 IMPORT
 	Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, FingerPrinter := FoxFingerPrinter, Sections := FoxSections,
-	Streams, D := Debugging, Files, SYSTEM,Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxBinarySymbolFile, Options,
+	Streams, D := Debugging, Files, SYSTEM,Strings, BinaryCode := FoxBinaryCode, Log := KernelLog, Diagnostics, SymbolFileFormat := FoxBinarySymbolFile, Options,
 	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine
 	;
 
@@ -1943,13 +1943,18 @@ TYPE
 			END Type;
 
 			PROCEDURE WriteVariable(variable: SyntaxTree.Variable; indirect: BOOLEAN);
-				VAR name: ARRAY 256 OF CHAR;
+			VAR name: ARRAY 256 OF CHAR; s: Section;
 			BEGIN
 				IF variable.externalName # NIL THEN RETURN END;
 				IF indirect THEN w.Char(rfIndirect) ELSE w.Char(rfDirect) END;
 				variable.GetName(name);
 				Type(variable.type);
-				w.RawNum((variable.offsetInBits DIV 8));
+				s := symbols.BySymbol(variable); 
+				IF s # NIL THEN (* global variable *)
+					w.RawNum( s.offset );
+				ELSE
+					w.RawNum( variable.offsetInBits DIV 8 );
+				END;
 				w.RawString(name);
 			END WriteVariable;
 

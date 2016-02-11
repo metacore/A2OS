@@ -398,6 +398,7 @@ TYPE
 	PROCEDURE MakeSectionOffsets(module: Sections.Module; VAR constSize, varSize, codeSize, caseTableSize: LONGINT; VAR const, code: ByteArray);
 	VAR symbolName: SyntaxTree.IdentifierString; symbol: SyntaxTree.Symbol; binarySection: BinaryCode.Section;
 		pc: LONGINT;
+		addrSize: LONGINT; (* size of ADDRESS in bytes *)
 
 		(*
 		PROCEDURE InModule(s: Sections.Section):BOOLEAN;
@@ -536,11 +537,12 @@ TYPE
 
 
 	BEGIN
+		addrSize := module.system.addressSize DIV 8;
 		FirstOffsets(module.allSections); (* regular sections *)
 		SetOffsets(module.allSections,FALSE); (* regular sections *)
 		pc := constSize;
 		SetOffsets(module.allSections, TRUE); (* case table sections *)
-		caseTableSize := (constSize -pc) DIV 4 ;
+		caseTableSize := (constSize -pc) DIV addrSize;
 		FixupSections;
 
 		NEW(const,constSize ); NEW(code,codeSize );
@@ -555,6 +557,7 @@ TYPE
 		moduleScope: SyntaxTree.ModuleScope; fingerprinter: FingerPrinter.FingerPrinter;
 		const, code: ByteArray; procedureFixupOffset : LONGINT;
 		crc: LONGINT; crc32: Basic.CRC32Stream;
+		addrSize: LONGINT; (* size of ADDRESS in bytes *)
 
 		symbols, importedSymbols: SectionList; (* list of sections with fixups in the other direction, needed for this particular object file format *)
 
@@ -1073,7 +1076,8 @@ TYPE
 				INC(numberLinks);
 			END;
 			IF caseTableSize > 0 THEN
-				w.Char(0X); w.Char(SysCallMap[CaseTable]); w.RawNum((constSize -caseTableSize *4));
+				w.Char(0X); w.Char(SysCallMap[CaseTable]); 
+				w.RawNum( constSize - (caseTableSize*addrSize) );
 				INC(numberLinks);
 				(* case table is fixuped by the loader using offset of case table in constant section
 					it is impossible to have disjoint case tables here
@@ -2229,6 +2233,7 @@ TYPE
 			References
 		*)
 	BEGIN
+		addrSize := module.system.addressSize DIV 8;
 		MakeSectionOffsets(module,constSize,dataSize,codeSize,caseTableSize,const,code);
 		MakeSections;
 		(* from here on we do not need IntermediateCode.Sections any more *)

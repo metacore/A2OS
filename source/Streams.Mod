@@ -251,7 +251,7 @@ TYPE
 		END Int;
 
 	(** Write a SET in Oberon notation. *)
-		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
+	(*	PROCEDURE Set*( s: SET );   (* from P. Saladin *)
 		VAR i, last: LONGINT;  dots: BOOLEAN;
 		BEGIN
 			Char( "{" );  last := MIN( LONGINT );  dots := FALSE;
@@ -268,7 +268,26 @@ TYPE
 				END
 			END;
 			Char( "}" )
-		END Set;
+		END Set;	*)
+		
+		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
+		VAR i, last: LONGINT;  dots: BOOLEAN;
+		BEGIN
+			Char( "{" );  last := MAX( LONGINT );  dots := FALSE;
+			FOR i := MAX( SET ) TO 0 BY -1 DO
+				IF i IN s THEN
+					IF last = (i + 1) THEN
+						IF dots THEN String( ".." );  dots := FALSE END;
+						IF (i = 0) OR ~((i - 1) IN s) THEN Int( i, 1 ) END
+					ELSE
+						IF last <= MAX( SET ) THEN String( ", " ) END;
+						Int( i, 1 );  dots := TRUE
+					END;
+					last := i
+				END
+			END;
+			Char( "}" )
+		END Set
 
 		(**
 			Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.

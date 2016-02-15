@@ -1885,7 +1885,7 @@ TYPE
 			VAR
 				left, right: SyntaxTree.Expression;
 				elementResult: SyntaxTree.Expression;
-				leftInteger, rightInteger: LONGINT;
+				leftInteger, rightInteger, temp: LONGINT;
 			BEGIN
 				(* set context of range *)
 				IF element IS SyntaxTree.RangeExpression THEN
@@ -1935,8 +1935,14 @@ TYPE
 						ELSIF (rightInteger<0) OR (rightInteger >= system.setType.sizeInBits) THEN
 							Error(right.position,Diagnostics.Invalid,"not allowed set integer value");
 						ELSE
+							IF leftInteger > rightInteger THEN
+								temp := leftInteger;  leftInteger := rightInteger;  rightInteger := temp
+							END;
+							IF leftInteger > MAX(SET) THEN leftInteger := MAX(SET) END;
 							IF rightInteger > MAX(SET) THEN rightInteger := MAX(SET) END; (*!!!!!!!!! this is a hack !!!!!!! *)
-							s := s + {leftInteger..rightInteger};
+							(*!	in case of MAX(SET) =31 and --bits=64 some kind of sign extension
+								extends the range  x..31  to  x..63 !!!!!! *)
+							s := s + {leftInteger..rightInteger};	
 							(* same but more explicit:
 							WHILE (leftInteger <= rightInteger) DO
 								INCL(s,leftInteger);

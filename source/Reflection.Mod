@@ -502,7 +502,7 @@ VAR
 
 	PROCEDURE WriteSimpleVar( w: Streams.Writer;  adr, type, tdadr: ADDRESS;  VAR col: LONGINT );
 	VAR ch: CHAR;  sval: SHORTINT;  ival: INTEGER;  lval: LONGINT;  rval: REAL; xval: LONGREAL; hval : HUGEINT;
-		address: ADDRESS; pos0: LONGINT;
+		address: ADDRESS; pos0: LONGINT; setval: SET;
 	BEGIN
 		pos0 := w.Pos();
 		IF (adr # 0) OR (type = 22) THEN
@@ -549,11 +549,13 @@ VAR
 					w.String(")");
 			| 16:   (* HUGEINT *)
 					SYSTEM.GET( adr , hval );
-					w.Hex(hval,1);
-					IF hval < 0 THEN w.String( "H (" ); w.Hex(hval,-16); w.String(")") END;
+					IF hval = 0 THEN  w.Char( '0' ); 
+					ELSIF hval > 0 THEN  w.Hex( hval, 1 ); w.Char( 'H' )
+					ELSE w.Hex( hval, -16 ); 
+					END;
 			| 9:    (* SET *)
-					SYSTEM.GET( adr, lval );
-					w.Set( SYSTEM.VAL( SET, lval ) );
+					SYSTEM.GET( adr, setval );
+					w.Set( setval );
 			| 22:  (* RECORD *)
 					w.String( "Rec@" );  w.Hex( tdadr, -8 );  w.Char( "H" );
 			| 14:  (* PROC *)

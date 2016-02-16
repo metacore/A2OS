@@ -36,7 +36,7 @@ VAR
 
 
 
-	PROCEDURE Init;
+	PROCEDURE Initialize*;
 	VAR i: LONGINT;
 	BEGIN
 		S.MOVE( ADDRESSOF( AAgetadr ), ADDRESSOF( dlsym ), AddrSize );
@@ -50,8 +50,7 @@ VAR
 		stackBottom := ADDRESSOF( i ) + 2*AddrSize;
 		
 		Trace.Char := Char;
-	END Init;
+	END Initialize;
 
-BEGIN
-	Init;
+
 END Glue.

@@ -1,6 +1,6 @@
 MODULE BootConsole;	(** AUTHOR "G.F."; PURPOSE "Boot console"; *)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
+IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands, Heaps;
 
 TYPE
 	Module = Modules.Module;
@@ -145,22 +145,24 @@ VAR
 	
 	
 	
-	PROCEDURE InitPrelinkedModules;
+	PROCEDURE InitializeCoreModules;
 	TYPE Body = PROCEDURE;
 	VAR m: Modules.Module;  body: Body;  trace: BOOLEAN;
 	BEGIN
-		m := Modules.root;  trace := FALSE;  
+		m := Modules.root;  trace :=  Glue.debug # {};
 		LOOP
 			IF m.name = "BootConsole" THEN  EXIT   END;   (* initialize modules belonging to bootfile only *)
 			IF trace THEN
-				Trace.String( "Initializing " );  Trace.String( m.name ); Trace.Ln
+				Trace.String( "#### Initializing " );  Trace.String( m.name ); 
+				Trace.String( "     code: [" ); Trace.Hex( ADDRESSOF( m.code[0] ), -8 );
+				Trace.String( ".." ); Trace.Hex( ADDRESSOF( m.code[0] ) + LEN( m.code^ ), -8 );
+				Trace.Char( ']' ); Trace.Ln
 			END;
 			body := S.VAL( Body, ADDRESSOF( m.code[0] ) );
 			body;	
-			IF m.name = "Glue" THEN  trace := Glue.debug # {}  END;
 			m := m.next
 		END
-	END InitPrelinkedModules;
+	END InitializeCoreModules;
 
 
 	PROCEDURE StartSystem;
@@ -180,11 +182,11 @@ VAR
 	END StartSystem;
 
 
-
 BEGIN
-	InitPrelinkedModules;
+	Glue.Initialize;
+	InitializeCoreModules;
 	StartSystem;
-	Objects.GCLoop;
+	Objects.GCLoop
 END BootConsole.
 
 

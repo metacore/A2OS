@@ -4,7 +4,7 @@ MODULE UnixFiles;   (** AUTHOR "gf"; PURPOSE "Unix file systems" *)
 
 (*  derived fron (SPARCOberon) Files.Mod by J. Templ 1.12. 89/14.05.93 *)
 
-IMPORT S := SYSTEM, Unix, Machine, Heaps, Objects, Kernel, Modules, Log := KernelLog, Files;
+IMPORT S := SYSTEM, Unix, Machine, Heaps, Kernel, Modules, Log := KernelLog, Files;
 
 
 CONST
@@ -371,18 +371,11 @@ TYPE
 			END UnixFileSystem;
 	
 	
-	Buffer = OBJECT (Files.Hint )
-			VAR
-				chg: BOOLEAN;
-				org, size: LONGINT;
-				data: ARRAY Bufsize OF CHAR;
-				
-				PROCEDURE &Init;
-				BEGIN 
-					chg := FALSE;  org := -1; 
-				END Init;
-				
-			END Buffer;
+	Buffer =	POINTER TO RECORD (Files.Hint)
+					chg: BOOLEAN;
+					org, size: LONGINT;
+					data: ARRAY Bufsize OF CHAR;
+				END;
 	
 	File* = OBJECT (Files.File)
 			VAR
@@ -456,7 +449,7 @@ TYPE
 						res := Unix.fstat( fd, stat );  mtime := stat.mtime.sec
 					END
 				END Flush;
-				
+		
 	
 				PROCEDURE Set*( VAR r: Files.Rider;  pos: LONGINT );
 				BEGIN {EXCLUSIVE}
@@ -474,7 +467,8 @@ TYPE
 					WHILE (i < NBufs) & (bufs[i] # NIL) & (org # bufs[i].org) DO  INC( i )  END;
 					IF i < NBufs THEN
 						IF bufs[i] = NIL THEN  
-							NEW( buf );  bufs[i] := buf;  
+							NEW( buf );  buf.chg := FALSE;  buf.org := -1;
+							bufs[i] := buf
 						ELSE  
 							swapper := i;
 							buf := bufs[swapper];  Flush( buf )

@@ -5650,7 +5650,7 @@ TYPE
 				
 				passByRegister := parameterRegisters > 0;
 				registerNumber := 0;
-				IF parameters.Length() > parameterRegisters THEN
+				IF passByRegister & (parameters.Length() > parameterRegisters) THEN
 					gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
 					IF gap # 0 THEN
 						IntermediateCode.InitImmediate(size,addressType,gap);

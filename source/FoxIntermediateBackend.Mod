@@ -5725,9 +5725,9 @@ TYPE
 			END;
 			
 			(* === return parameter space === *)
-			IF procedureType.callingConvention = SyntaxTree.WinAPICallingConvention THEN
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister THEN
 				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
-				IF passByRegister & (parametersSize < 32) THEN 
+				IF (parametersSize > 0) & (parametersSize < 32) THEN 
 					(* allocated space for all parameter registers *)
 					parametersSize := 32
 				END;

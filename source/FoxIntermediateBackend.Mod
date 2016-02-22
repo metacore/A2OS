@@ -5650,13 +5650,6 @@ TYPE
 				
 				passByRegister := parameterRegisters > 0;
 				registerNumber := 0;
-				IF passByRegister & (parameters.Length() > parameterRegisters) THEN
-					gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
-					IF gap # 0 THEN
-						IntermediateCode.InitImmediate(size,addressType,gap);
-						Emit(Sub(position,sp,sp,size))
-					END
-				END;
 				formalParameter := procedureType.lastParameter;
 				FOR i := parameters.Length() - 1 TO 0 BY -1 DO
 					actualParameter := parameters.GetExpression(i);
@@ -5730,6 +5723,19 @@ TYPE
 				return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
 				Emit(Result(position,return));
 			END;
+			
+			(* === return parameter space === *)
+			IF procedureType.callingConvention = SyntaxTree.WinAPICallingConvention THEN
+				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
+				IF passByRegister & (parametersSize < 32) THEN 
+					(* allocated space for all parameter registers *)
+					parametersSize := 32
+				END;
+				IF parametersSize > 0 THEN
+					size := IntermediateCode.Immediate(addressType,parametersSize);
+					Emit(Add(position,sp,sp,size))
+				END;
+			END; 
 
 			IF SysvABI(procedureType.callingConvention) THEN
 				IF passByRegister THEN 
@@ -5737,12 +5743,11 @@ TYPE
 						parametersSize := ToMemoryUnits(system,(parameters.Length()-parameterRegisters)*addressType.sizeInBits)
 					ELSE 
 						parametersSize := 0
-					END
+					END;
 				ELSE
 					parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits)
 				END;
 				IF parametersSize > 0 THEN
-					INC( parametersSize, (-parametersSize) MOD 16 );
 					size := IntermediateCode.Immediate(addressType,parametersSize);
 					Emit(Add(position,sp,sp,size))
 				END;

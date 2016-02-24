@@ -5727,14 +5727,12 @@ TYPE
 			(* === return parameter space === *)
 			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister THEN
 				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
-				IF (parametersSize > 0) & (parametersSize < 32) THEN 
+				IF parametersSize < 32 THEN 
 					(* allocated space for all parameter registers *)
 					parametersSize := 32
 				END;
-				IF parametersSize > 0 THEN
-					size := IntermediateCode.Immediate(addressType,parametersSize);
-					Emit(Add(position,sp,sp,size))
-				END;
+				size := IntermediateCode.Immediate(addressType,parametersSize);
+				Emit(Add(position,sp,sp,size))
 			END; 
 
 			IF SysvABI(procedureType.callingConvention) THEN

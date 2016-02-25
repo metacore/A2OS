@@ -13212,6 +13212,7 @@ TYPE
 		*)
 		constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
 		constant.SetValue(value);
+		constant.SetAccess(SyntaxTree.Hidden);
 		module.moduleScope.AddConstant(constant);
 		constant.SetScope(module.moduleScope);
 		RETURN constant

@@ -1050,9 +1050,11 @@ TYPE
 			Indent;  Keyword("CONST " );
 			w.IncIndent;
 			WHILE(x # NIL) DO
-				Indent;
-				Symbol(x);
-				w.String( "; " );
+				IF (x.access # SyntaxTree.Hidden) OR (mode > SourceCode) THEN
+					Indent;
+					Symbol(x);
+					w.String( "; " );
+				END;
 				x := x.nextConstant;
 			END;
 			w.DecIndent;

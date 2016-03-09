@@ -1309,6 +1309,7 @@ TYPE
 				emitter.Emit2(InstructionSet.opSUB,opSP,op1);
 			END;
 
+			cc := SHORT(instruction.op1.intValue);
 			IF (cc = SyntaxTree.WinAPICallingConvention) OR (cc = SyntaxTree.CCallingConvention) THEN
 				(* the winapi calling convention presumes that all registers except EAX, EDX and ECX are retained by the callee *)
 				emitter.Emit1(InstructionSet.opPUSH,opEBX);

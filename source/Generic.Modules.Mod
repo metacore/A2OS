@@ -1003,7 +1003,7 @@ BEGIN
 END PublishRegisteredModules;
 
 (* procedure that will be called last in a linked kernel *)
-PROCEDURE {FINAL} Main;
+PROCEDURE {FINAL, NOPAF} Main;
 BEGIN
 	(*Machine.Init;*)
 	Trace.String("publish registered modules"); Trace.Ln;

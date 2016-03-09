@@ -567,7 +567,7 @@ BEGIN
 	END;
 END Init;
 
-	PROCEDURE {INITIAL} Start;
+	PROCEDURE {INITIAL, NOPAF} Start;
 	BEGIN
 		Init; (* cannot allocate variables in here *)
 	END Start;

@@ -1411,24 +1411,45 @@ TYPE
 			RETURN new
 		END AcquireRegister;
 
+		PROCEDURE GetFingerprintString(symbol: SyntaxTree.Symbol; VAR string: ARRAY OF CHAR);
+		VAR
+			fingerPrint: SyntaxTree.FingerPrint;
+			fingerPrintString: ARRAY 32 OF CHAR;
+		BEGIN
+			fingerPrint := fingerPrinter.SymbolFP(symbol);
+			string := "[";
+			Strings.IntToHexStr(fingerPrint.shallow, 8, fingerPrintString);
+			Strings.Append(string, fingerPrintString);
+			Strings.Append(string, "]");
+		END GetFingerprintString;
+		
+
 		(** get the name for the code section that represens a certain symbol
 		(essentially the same as Global.GetSymbolName, apart from operators) **)
 		PROCEDURE GetCodeSectionNameForSymbol(symbol: SyntaxTree.Symbol; VAR name: Basic.SegmentedName);
-		VAR
-			operatorFingerPrint: SyntaxTree.FingerPrint;
-			operatorFingerPrintString,string: ARRAY 32 OF CHAR;
+		VAR string: ARRAY 32 OF CHAR;
 		BEGIN
 			Global.GetSymbolSegmentedName(symbol, name);
 			(* if the symbol is an operator, then append the fingerprint to the name *)
 			IF symbol IS SyntaxTree.Operator THEN
-				operatorFingerPrint := fingerPrinter.SymbolFP(symbol);
-				string := "[";
-				Strings.IntToHexStr(operatorFingerPrint.shallow, 8, operatorFingerPrintString);
-				Strings.Append(string, operatorFingerPrintString);
-				Strings.Append(string, "]");
+				GetFingerprintString(symbol, string);
 				Basic.AppendToSegmentedName(name,string);
 			END
 		END GetCodeSectionNameForSymbol;
+
+
+		(** get the name for the code section that represens a certain symbol
+		(essentially the same as Global.GetSymbolName, apart from operators) **)
+		PROCEDURE GetCodeSectionNameForSymbolInScope(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; VAR name: ARRAY OF CHAR);
+		VAR string: ARRAY 32 OF CHAR;
+		BEGIN
+			Global.GetSymbolNameInScope(symbol, scope, name);
+			(* if the symbol is an operator, then append the fingerprint to the name *)
+			IF symbol IS SyntaxTree.Operator THEN
+				GetFingerprintString(symbol, string);
+				Strings.Append(name, string);
+			END
+		END GetCodeSectionNameForSymbolInScope;
 
 		PROCEDURE TraceEnter(CONST s: ARRAY OF CHAR);
 		BEGIN
@@ -11716,12 +11737,15 @@ TYPE
 				PROCEDURE Procedure(s: Sections.Section);
 				VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
 					 parameter: SyntaxTree.Parameter; variable: SyntaxTree.Variable;
+					 segmentedName: Basic.SegmentedName;
 					 name: ARRAY 256 OF CHAR;
 				BEGIN
 					procedure := s.symbol(SyntaxTree.Procedure); (*! check for variable or type symbol for object body *)
 				(*procedure.name,name);*)
-				Global.GetSymbolNameInScope(procedure,module.module.moduleScope,name);
 
+
+					implementationVisitor.GetCodeSectionNameForSymbolInScope(procedure,module.module.moduleScope, name);
+					
 					procedureType := procedure.type(SyntaxTree.ProcedureType);
 
 					Char(section,0F9X);
@@ -12425,7 +12449,7 @@ TYPE
 					Info(source,"name");
 					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, procedure.name, moduleNamePool), 0); (* reference to dynamic name *)
 
-					Global.GetSymbolSegmentedName(procedure, segmentedName);
+					implementationVisitor.GetCodeSectionNameForSymbol(procedure, segmentedName);
 					NamedSymbol(source, segmentedName, procedure, 0 , 0); 
 
 					(* size *)
@@ -12586,13 +12610,13 @@ TYPE
 						IF reverse THEN
 							FOR i := methods-1 TO 0 BY -1 DO
 								procedure := recordType.recordScope.FindMethod(i);
-								Global.GetSymbolSegmentedName(procedure, name);
+								implementationVisitor.GetCodeSectionNameForSymbol(procedure, name);
 								NamedSymbol(source, name,procedure, 0,0);
 							END;
 						ELSE
 							FOR i := 0 TO methods-1 DO
 								procedure := recordType.recordScope.FindMethod(i);
-								Global.GetSymbolSegmentedName(procedure, name);
+								implementationVisitor.GetCodeSectionNameForSymbol(procedure, name);
 								NamedSymbol(source, name,procedure, 0,0);
 							END;
 						END;

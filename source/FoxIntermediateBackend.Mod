@@ -5510,7 +5510,7 @@ TYPE
 				ASSERT(procedureType.callingConvention = SyntaxTree.OberonCallingConvention);
 
 				(* check if a dynamic operator call should be performed *)
-				isCallOfDynamicOperator := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Operator).isDynamic
+				isCallOfDynamicOperator := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Operator).isDynamic;
 			ELSE
 				isCallOfDynamicOperator := FALSE
 			END;
@@ -5551,75 +5551,7 @@ TYPE
 				symbol := x.left(SyntaxTree.SymbolDesignator).symbol;
 			END;
 
-			IF isCallOfDynamicOperator & hasDynamicOperands THEN
-				IF dump # NIL THEN dump.String("++++++++++ dynamic operator call ++++++++++"); dump.Ln; dump.Update END; (* TENTATIVE *)
-				(* push ID *)
-				(* IF dump # NIL THEN dump.String("push ID"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-				ASSERT(x.left IS SyntaxTree.SymbolDesignator);
-				identifierNumber := Global.GetSymbol(module.module.case, x.left(SyntaxTree.SymbolDesignator).symbol.name);
-				Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), identifierNumber)));
-
-				formalParameter := procedureType.firstParameter;
-				FOR i := 0 TO parameters.Length() - 1 DO
-					IF formalParameter.access # SyntaxTree.Hidden THEN
-						ASSERT(i < 2);
-						IF IsStrictlyPointerToRecord(formalParameter.type) THEN
-							(* push pointer *)
-							(* IF dump # NIL THEN dump.String("push pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							IF formalParameter.kind = SyntaxTree.VarParameter THEN
-								(* add dereference *)
-								(* IF dump # NIL THEN dump.String("dereference pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-								ReleaseIntermediateOperand(parameterBackups[i]);
-								MakeMemory(parameterBackups[i], parameterBackups[i], addressType, 0)
-							END;
-							Emit(Push(position,parameterBackups[i]));
-							ReleaseIntermediateOperand(parameterBackups[i]);
-
-							(* push typetag *)
-							(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							recordType := formalParameter.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
-							arg := TypeDescriptorAdr(recordType);
-							IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
-							Emit(Push(position,arg));
-						ELSE
-							(* push 'NonPointer' *)
-							(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
-
-							(* push fingerprint *)
-							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							fingerPrint := fingerPrinter.TypeFP(formalParameter.type.resolved);
-							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow))) (* TODO: push the type's fingerprint *)
-						END
-					END;
-					formalParameter := formalParameter.nextParameter
-				END;
-
-				(* for unary operators: complete the information for the second parameter *)
-				IF procedureType.numberParameters < 2 THEN
-					(* push 'NonPointer' *)
-					(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
-
-					(* push 'NoType' *)
-					(* IF dump # NIL THEN dump.String("push 'NoType'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NoType)));
-				END;
-
-				(* call operator selection procedure *)
-				IF GetRuntimeProcedure("FoxOperatorRuntime", "SelectOperator", operatorSelectionProcedure, TRUE) THEN
-					StaticCallOperand(operatorSelectionProcedureOperand, operatorSelectionProcedure);
-					Emit(Call(position,operatorSelectionProcedureOperand.op, ProcedureParametersSize(system, operatorSelectionProcedure)));
-					ReleaseOperand(operatorSelectionProcedureOperand);
-
-					(* use the address that the operator selection procedure returned as the target address of the call *)
-					InitOperand(operand, ModeValue);
-					operand.op := IntermediateCode.Register(addressType, IntermediateCode.GeneralPurposeRegister, AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-					Emit(Result(position,operand.op))
-				END
-			ELSE
-				Evaluate(x.left, operand)
-			END;
+			Evaluate(x.left, operand);
 
 			IF symbol IS SyntaxTree.Procedure THEN
 				IF x.left IS SyntaxTree.SupercallDesignator THEN
@@ -5727,6 +5659,94 @@ TYPE
 			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
 				parametersSize := ParametersSize(system,procedureType,FALSE);
 			END;
+
+
+			IF isCallOfDynamicOperator & hasDynamicOperands THEN
+			(*
+				dynamic operator overloading:
+				first push parameters, regularly:
+				[self]
+				par1
+				par2 
+				
+				then push parameters for GetOperator
+				identifier
+				ptr1
+				tag
+				ptr2
+				tag
+				call GetOperatorRuntimeProc
+				
+				call Operator
+			*)
+				IF dump # NIL THEN dump.String("++++++++++ dynamic operator call ++++++++++"); dump.Ln; dump.Update END; (* TENTATIVE *)
+				(* push ID *)
+				(* IF dump # NIL THEN dump.String("push ID"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+				ASSERT(x.left IS SyntaxTree.SymbolDesignator);
+				identifierNumber := Global.GetSymbol(module.module.case, x.left(SyntaxTree.SymbolDesignator).symbol.name);
+				Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), identifierNumber)));
+
+				formalParameter := procedureType.firstParameter;
+				FOR i := 0 TO parameters.Length() - 1 DO
+					IF formalParameter.access # SyntaxTree.Hidden THEN
+						ASSERT(i < 2);
+						IF IsStrictlyPointerToRecord(formalParameter.type) THEN
+							(* push pointer *)
+							(* IF dump # NIL THEN dump.String("push pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							IF formalParameter.kind = SyntaxTree.VarParameter THEN
+								(* add dereference *)
+								(* IF dump # NIL THEN dump.String("dereference pointer"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							(*! better: do refer to stack above than using parameter backups !!*)
+								ReleaseIntermediateOperand(parameterBackups[i]);
+								MakeMemory(parameterBackups[i], parameterBackups[i], addressType, 0)
+							END;
+							Emit(Push(position,parameterBackups[i]));
+							ReleaseIntermediateOperand(parameterBackups[i]);
+
+							(* push typetag *)
+							(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							recordType := formalParameter.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+							arg := TypeDescriptorAdr(recordType);
+							IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
+							Emit(Push(position,arg));
+						ELSE
+							(* push 'NonPointer' *)
+							(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
+
+							(* push fingerprint *)
+							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+							fingerPrint := fingerPrinter.TypeFP(formalParameter.type.resolved);
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow))) (* TODO: push the type's fingerprint *)
+						END
+					END;
+					formalParameter := formalParameter.nextParameter
+				END;
+
+				(* for unary operators: complete the information for the second parameter *)
+				IF procedureType.numberParameters < 2 THEN
+					(* push 'NonPointer' *)
+					(* IF dump # NIL THEN dump.String("push 'NonPointer'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NonPointer)));
+
+					(* push 'NoType' *)
+					(* IF dump # NIL THEN dump.String("push 'NoType'"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
+					Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), NoType)));
+				END;
+
+				(* call operator selection procedure *)
+				IF GetRuntimeProcedure("FoxOperatorRuntime", "SelectOperator", operatorSelectionProcedure, TRUE) THEN
+					StaticCallOperand(operatorSelectionProcedureOperand, operatorSelectionProcedure);
+					Emit(Call(position,operatorSelectionProcedureOperand.op, ProcedureParametersSize(system, operatorSelectionProcedure)));
+					ReleaseOperand(operatorSelectionProcedureOperand);
+
+					(* use the address that the operator selection procedure returned as the target address of the call *)
+					InitOperand(operand, ModeValue);
+					operand.op := IntermediateCode.Register(addressType, IntermediateCode.GeneralPurposeRegister, AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+					Emit(Result(position,operand.op))
+				END
+			END;
+
 						
 			ReleaseParameterRegisters();
 			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) OR SysvABI(procedureType.callingConvention) THEN

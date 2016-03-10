@@ -6,7 +6,7 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = "Aos (rev.6559)";
+	Version = "Aos (rev.6634)";
 
 	DefaultObjectFileExtension* = ".Obj";
 	
@@ -31,7 +31,7 @@ CONST
 	KernelLog* = 7;		(* Atomic output *)
 	X11* = 8;				(* XWindows I/O *)
 	Trap* = 9;
-	GC* = 10;
+	GC = 10;
 	MaxLocks* = 11;   (* { <= 32 } *)
 	
 	MaxCPU* = 4;
@@ -75,6 +75,8 @@ VAR
 	SSE5Support-	: BOOLEAN;
 	AVXSupport-		: BOOLEAN;
 	
+	GCacquired- : BOOLEAN;
+	
 	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 	
 	prioLow-, prioHigh-: LONGINT;	(* permitted thread priorities *)
@@ -111,6 +113,7 @@ VAR
 	traceHeap: BOOLEAN;
 	
 	timer0	: HUGEINT;
+	
 
 
 	(** Return current processor ID (0 to MaxNum-1). *)
@@ -658,6 +661,23 @@ END GetTimer;
 	BEGIN 
 		mtxUnlock( mtx[level] );
 	END Release;  
+	
+	PROCEDURE  AcquireGC*( ): BOOLEAN;  
+	VAR res: BOOLEAN;
+	BEGIN 
+		mtxLock( mtx[GC] );
+		IF ~GCacquired THEN  GCacquired := TRUE;  res := TRUE  ELSE  res := FALSE  END;
+		mtxUnlock( mtx[GC] );
+		RETURN  res
+	END AcquireGC;  
+
+	(** Release a spin-lock. *)
+	PROCEDURE  ReleaseGC*;   
+	BEGIN 
+		mtxLock( mtx[GC] );
+		GCacquired := FALSE;
+		mtxUnlock( mtx[GC] )
+	END ReleaseGC;  
 	
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
 	VAR ignore: LONGINT;

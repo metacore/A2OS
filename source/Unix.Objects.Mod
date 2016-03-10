@@ -180,7 +180,7 @@ TYPE
 					n.finalizer(n.objStrong)	(* may acquire locks *)
 				END;
 			END;
-			Machine.Release( Machine.GC )
+			Machine.ReleaseGC
 		END
 	END FinalizerCaller;
 	
@@ -674,9 +674,10 @@ TYPE
 	
 	PROCEDURE InvokeGC;
 	BEGIN
-		Machine.Acquire( Machine.GC ); (* gets released by FinalizerCaller *)
-		collect := TRUE;
-		conWait( gcFinished, igc );
+		IF Machine.AcquireGC() THEN (* gets released by FinalizerCaller *)
+			collect := TRUE;
+			conWait( gcFinished, igc )
+		END;
 	END InvokeGC;
 	
 	(*!	GCLoop gets called as last procedure in BootConsole (main thread). 

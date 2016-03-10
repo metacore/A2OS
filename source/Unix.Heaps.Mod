@@ -698,9 +698,7 @@ VAR
 	PROCEDURE Collect;
 	BEGIN
 		thruput := 0;
-		Machine.Acquire( Machine.GC );
 		Machine.Release( Machine.Heaps );
-		Machine.Release( Machine.GC );
 		GC;
 		Machine.Acquire( Machine.Heaps );
 	END Collect;

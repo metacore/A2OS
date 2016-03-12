@@ -12517,26 +12517,27 @@ TYPE
 				Info(source, "ProcedureArray");
 				size :=0;
 				WHILE procedure # NIL DO
-				
-					Info(source,"name");
-					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, procedure.name, moduleNamePool), 0); (* reference to dynamic name *)
+					IF ~procedure.isInline THEN
+						Info(source,"name");
+						Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, procedure.name, moduleNamePool), 0); (* reference to dynamic name *)
 
-					implementationVisitor.GetCodeSectionNameForSymbol(procedure, segmentedName);
-					NamedSymbol(source, segmentedName, procedure, 0 , 0); 
+						implementationVisitor.GetCodeSectionNameForSymbol(procedure, segmentedName);
+						NamedSymbol(source, segmentedName, procedure, 0 , 0); 
 
-					(* size *)
-					Size(source, 0);
-					(* parameters *)
-					Address(source, 0);
-					(* variables *)
-					ReflectVariables(source, procedure);
-					ReflectProcedures(source, procedure);
+						(* size *)
+						Size(source, 0);
+						(* parameters *)
+						Address(source, 0);
+						(* variables *)
+						ReflectVariables(source, procedure);
+						ReflectProcedures(source, procedure);
 
-					(* return type entry *)
-					Address(source, 0);
-					Address(source, 0);
+						(* return type entry *)
+						Address(source, 0);
+						Address(source, 0);
+						INC(size);
+					END;
 					procedure := procedure.nextProcedure;
-					INC(size);
 				END;
 				PatchArray(source,pc,size);
 			END ProcedureArray;

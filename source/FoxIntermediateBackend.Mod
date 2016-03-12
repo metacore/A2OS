@@ -12470,7 +12470,7 @@ TYPE
 					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
 					type := variable.type.resolved;
 					Info(source,"offset");
-					IF variable.scope IS SyntaxTree.ModuleScope THEN
+					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
 						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
 						NamedSymbol(source, name,variable, 0,0);
 					ELSE
@@ -12487,7 +12487,7 @@ TYPE
 						Size(source, 0);
 					END;
 					Info(source, "type desc");
-					IF type IS SyntaxTree.RecordType THEN
+					IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN
 						td := type(SyntaxTree.RecordType).typeDeclaration;
 						Global.GetSymbolSegmentedName(td,segmentedName);
 						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN

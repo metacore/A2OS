@@ -12205,6 +12205,49 @@ TYPE
 			RETURN moduleSection;
 		END ModuleSection;
 		
+			PROCEDURE NewModuleInfo();
+			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
+				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
+				sectionName: Basic.SectionName;
+			CONST MPO=-40000000H;
+			BEGIN
+					(*
+						TypeDesc* = POINTER TO RECORD
+							descSize: LONGINT;
+							sentinel: LONGINT;	(* = MPO-4 *)
+							tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
+							flags*: SET;
+							mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+							name*: Name;
+						END;
+					*)
+					Global.GetSymbolSegmentedName(module.module,name);
+					Basic.AppendToSegmentedName(name,"@Info");
+					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+					Info(source, "type info size");	Address(source, 3*ToMemoryUnits(module.system,module.system.addressSize)+32);
+					Address(source,MPO-4);
+					Info(source, "type tag pointer");
+					Address( source,0);
+					Info(source, "type flags");
+					flags := {};
+					Set( source, flags);
+					Info(source, "pointer to module");
+					moduleSection := ModuleSection();
+					Symbol( source, moduleSection, moduleSection.pc,0);
+					Info(source, "type name");
+					i := 0;
+					sectionName := "@Self";
+					(*
+					Global.GetSymbolSegmentedName(td,name);
+					Basic.SegmentedNameToString(name, sectionName);
+					*)
+					Name(source,sectionName);
+					source.SetReferenced(FALSE);
+
+					ReflectVariables(source, module.module);
+					ReflectProcedures(source, module.module);
+			END NewModuleInfo;
+			
 
 			
 		PROCEDURE Module(bodyProc: IntermediateCode.Section);
@@ -12215,7 +12258,7 @@ TYPE
 			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, ptrTableSectionOffset, maxPointers, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
 		BEGIN
-			
+			NewModuleInfo();
 			pointerSection := Block("Heaps","SystemBlockDesc",".@PointerArray",pointerSectionOffset);
 			PointerArray(pointerSection,module.module.moduleScope, numberPointers);
 			importSection := Block("Heaps","SystemBlockDesc",".@ImportsArray",importSectionOffset);
@@ -12357,6 +12400,8 @@ TYPE
 			BEGIN
 				ASSERT(implementationVisitor.newObjectFile);
 				IF ~ReflectionSupport OR simple THEN variable := NIL
+				ELSIF symbol IS SyntaxTree.Module THEN
+					variable := symbol(SyntaxTree.Module).moduleScope.firstVariable;
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 					IF type IS SyntaxTree.PointerType THEN
@@ -12385,6 +12430,8 @@ TYPE
 			BEGIN
 				ASSERT(implementationVisitor.newObjectFile);
 				IF ~ReflectionSupport OR simple THEN procedure := NIL
+				ELSIF symbol IS SyntaxTree.Module THEN
+					procedure := symbol(SyntaxTree.Module).moduleScope.firstProcedure;
 				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
 					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 					IF type IS SyntaxTree.PointerType THEN
@@ -12411,7 +12458,7 @@ TYPE
 			
 			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
-				segmentedName: Basic.SegmentedName;
+				segmentedName, name: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
 				type: SyntaxTree.Type;
 			BEGIN
@@ -12423,7 +12470,12 @@ TYPE
 					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
 					type := variable.type.resolved;
 					Info(source,"offset");
-					Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+					IF variable.scope IS SyntaxTree.ModuleScope THEN
+						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
+						NamedSymbol(source, name,variable, 0,0);
+					ELSE
+						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+					END;
 					Info(source,"type class");
 					IF type IS SyntaxTree.PointerType THEN
 						Size(source, 1);
@@ -12537,43 +12589,13 @@ TYPE
 					Name(source,sectionName);
 					source.SetReferenced(FALSE);
 
-					Global.GetSymbolSegmentedName(td,name);
-					Basic.AppendToSegmentedName(name,"@Fields");
-					
 					ReflectVariables(source, td);
 					ReflectProcedures(source, td);
-					(*
-					fieldSection := VariableArray(
 
-					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
-					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);
-					Info(fieldSection, "HeapBlock");
-					Address(fieldSection,0); (* empty such that GC does not go on traversing *)
-					Info(fieldSection, "TypeDescriptor");
-					Address(fieldSection,0);
-
-					Info(source, "FieldArray ref");
-					Symbol(source, fieldSection, fieldSection.pc, 0);
-
-					FieldArray(fieldSection);
-
-					Global.GetSymbolSegmentedName(td,name);
-					Basic.AppendToSegmentedName(name,"@Procedures");
-
-					fieldSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
-					HeapBlock("Heaps","SystemBlockDesc", fieldSection, 2);
-					Info(fieldSection, "HeapBlock");
-					Address(fieldSection,0); (* empty such that GC does not go on traversing *)
-					Info(fieldSection, "TypeDescriptor");
-					Address(fieldSection,0);
-
-					Info(source, "Procedure Array ref");
-					Symbol(source, fieldSection, fieldSection.pc, 0);
-
-					ProcedureArray(fieldSection);
-					*)
 					RETURN source;
 			END NewTypeDescriptorInfo;
+			
+
 
 
 			PROCEDURE NewTypeDescriptor;

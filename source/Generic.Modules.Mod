@@ -91,7 +91,7 @@ TYPE
 	END;
 
 	FieldEntry*= RECORD
-		name*: DynamicName; (*! change to dynamic name ? *)
+		name*: DynamicName;
 		offset*: SIZE; (* offset of this type *)
 		type*: EntryType;
 		flags*: SET;
@@ -109,15 +109,15 @@ TYPE
 		returnType*: EntryType;
 	END;
 
-	TypeDesc* = POINTER TO RECORD   (* ug: adapt constant TypeDescRecSize if this type is changed !!! *)
+	TypeDesc* = POINTER TO RECORD 
 		descSize: LONGINT;
 		sentinel: LONGINT;	(* = MPO-4 *)
 		tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags*: SET;
 		mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
 		name*: Name;
-		fields*: POINTER TO ARRAY OF FieldEntry;
-		procedures*: POINTER TO ARRAY OF ProcedureEntry;
+		fields*: FieldEntries;
+		procedures*: ProcedureEntries;
 	END;
 
 	ExceptionTableEntry* = RECORD
@@ -153,8 +153,8 @@ TYPE
 			sb*: ADDRESS; (* reference address between constants and local variables *)
 			entry*: POINTER TO ARRAY OF ADDRESS;
 			command*: POINTER TO ARRAY OF Command;
-			ptrAdr*: POINTER TO ARRAY OF ADDRESS;
-			typeInfo*: POINTER TO ARRAY OF TypeDesc;	(* traced explicitly in FindRoots *)
+			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
+			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
 			procTable*: ProcTable; (* information inserted by loader, removed after use in Publish *)
 			ptrTable*: PtrTable;  (* information inserted by loader, removed after use in Publish *)

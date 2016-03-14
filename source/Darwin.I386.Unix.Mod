@@ -209,8 +209,8 @@ TYPE
 			END;
 
 	Timeval* = RECORD
-				sec*		: HUGEINT;
-				usec*		: HUGEINT
+				sec*		: LONGINT;
+				usec*		: LONGINT
 			END;
 
 	TmPtr* = POINTER TO Tm;

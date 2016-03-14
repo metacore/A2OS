@@ -5537,10 +5537,15 @@ TYPE
 				ReleaseIntermediateOperand(reg);
 			END;
 
-			IF (procedureType.callingConvention = SyntaxTree.DarwinCCallingConvention) & (system.addressSize = 32) THEN
+			IF SysvABI(procedureType.callingConvention) & (system.addressSize = 32) THEN
 				(* align stack to 16-byte boundary *)
 				IntermediateCode.InitImmediate(mask,addressType,-16);
-				Emit(And(position,sp, sp, mask))		
+				Emit(And(position,sp, sp, mask));
+				gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
+				IF gap # 0 THEN
+					IntermediateCode.InitImmediate(size,addressType,gap);
+					Emit(Sub(position,sp,sp,size))
+				END;
 			END;
 
 			IF x.left IS SyntaxTree.SupercallDesignator THEN
@@ -5784,7 +5789,8 @@ TYPE
 						parametersSize := 0
 					END;
 				ELSE
-					parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits)
+					parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
+					INC( parametersSize, (-parametersSize) MOD 16 )
 				END;
 				IF parametersSize > 0 THEN
 					size := IntermediateCode.Immediate(addressType,parametersSize);

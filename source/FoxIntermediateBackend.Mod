@@ -12228,7 +12228,7 @@ TYPE
 						END;
 					*)
 					Global.GetSymbolSegmentedName(module.module,name);
-					Basic.AppendToSegmentedName(name,"@Info");
+					Basic.AppendToSegmentedName(name,".@Info");
 					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					Info(source, "type info size");	Address(source, 3*ToMemoryUnits(module.system,module.system.addressSize)+32);
 					Address(source,MPO-4);
@@ -12401,6 +12401,24 @@ TYPE
 					RETURN section;
 			END SymbolSection;
 			
+			PROCEDURE ReflectParameters(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
+			VAR type: SyntaxTree.Type; variable: SyntaxTree.Parameter; pc: LONGINT; section: IntermediateCode.Section;
+			BEGIN
+				ASSERT(implementationVisitor.newObjectFile);
+				IF ~ReflectionSupport OR simple THEN variable := NIL
+				ELSIF symbol IS SyntaxTree.Procedure THEN
+					variable := symbol(SyntaxTree.Procedure).type(SyntaxTree.ProcedureType).firstParameter;
+				END;
+				Info(in, "parameters");
+				IF variable # NIL THEN
+					section := SymbolSection(symbol, ".@Parameters",pc);
+					ParameterArray(section, variable);
+					Symbol(in, section, pc, 0);
+				ELSE
+					Address(in, 0);
+				END;
+			END ReflectParameters;
+			
 			PROCEDURE ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
 			VAR type: SyntaxTree.Type; variable: SyntaxTree.Variable; pc: LONGINT; section: IntermediateCode.Section;
 			BEGIN
@@ -12423,7 +12441,7 @@ TYPE
 				END;
 				Info(in, "variables");
 				IF variable # NIL THEN
-					section := SymbolSection(symbol, "@Variables",pc);
+					section := SymbolSection(symbol, ".@Variables",pc);
 					VariableArray(section, variable);
 					Symbol(in, section, pc, 0);
 				ELSE
@@ -12454,13 +12472,65 @@ TYPE
 				
 				Info(in, "procedures");
 				IF procedure # NIL THEN
-					section := SymbolSection(symbol, "@Procedures",pc);
+					section := SymbolSection(symbol, ".@Procedures",pc);
 					ProcedureArray(section, procedure);
 					Symbol(in, section, pc, 0);
 				ELSE
 					Address(in, 0);
 				END;
 			END ReflectProcedures;
+
+			PROCEDURE ParameterArray(source: IntermediateCode.Section; variable: SyntaxTree.Parameter);
+			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
+				segmentedName, name: Basic.SegmentedName;
+				td: SyntaxTree.TypeDeclaration;
+				type: SyntaxTree.Type;
+			BEGIN
+				Array(source,pc,"Modules.FieldEntry");
+				Info(source, "FieldArray");
+				size :=0;
+				WHILE variable # NIL DO
+					Info(source,"name");
+					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
+					type := variable.type.resolved;
+					Info(source,"offset");
+					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
+						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
+						NamedSymbol(source, name,variable, 0,0);
+					ELSE
+						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+					END;
+					Info(source,"type class");
+					IF type IS SyntaxTree.PointerType THEN
+						Size(source, 1);
+					ELSIF type IS SyntaxTree.RecordType THEN
+						Size(source, 2);
+					ELSIF type IS SyntaxTree.NumberType THEN
+						Size(source, 3);
+					ELSE
+						Size(source, 0);
+					END;
+					Info(source, "type desc");
+					IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN
+						td := type(SyntaxTree.RecordType).typeDeclaration;
+						Global.GetSymbolSegmentedName(td,segmentedName);
+						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+						ELSE
+							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+						END;
+						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+						Symbol(source, tir,  0, offset);
+					ELSE
+						Address(source, 0);
+					END;
+					Info(source,"flags");
+					Set(source, {});
+					variable := variable.nextParameter;
+					INC(size);
+				END;
+				PatchArray(source,pc,size);
+			END ParameterArray;
 			
 			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
@@ -12573,7 +12643,7 @@ TYPE
 					*)
 					(* source := module.sections.FindByName(...) *)
 					Global.GetSymbolSegmentedName(td,name);
-					Basic.AppendToSegmentedName(name,"@Info");
+					Basic.AppendToSegmentedName(name,".@Info");
 					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					Info(source, "type info size");	Address(source, 3*ToMemoryUnits(module.system,module.system.addressSize)+32);
 					Address(source,MPO-4);

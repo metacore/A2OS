@@ -7261,6 +7261,38 @@ TYPE
 			END;
 		END AppendCellTypeModifiers;
 		
+		PROCEDURE AddPortProperty(modifier: SyntaxTree.Modifier; value: SyntaxTree.Expression);
+		VAR name: ARRAY 256 OF CHAR; op: Operand; 
+		BEGIN
+			Basic.GetString(modifier.identifier, name);
+			PushConstString(name);
+
+			IF SemanticChecker.IsStringType(modifier.expression.type) THEN 
+				ASSERT(SemanticChecker.IsStringType(value.type));
+				Designate(value, op);
+				Emit(Push(modifier.position, op.tag));
+				Emit(Push(modifier.position, op.op));
+				ReleaseOperand(op);
+				CallThisChecked(position,"ActiveCellsRuntime","AddPortStringProperty",4,FALSE);
+			ELSIF (modifier.expression.type.resolved IS SyntaxTree.IntegerType) THEN
+				ASSERT(value.type.resolved IS SyntaxTree.IntegerType);
+				Evaluate(value, op); 
+				Emit(Push(modifier.position, op.op));
+				ReleaseOperand(op);
+				CallThisChecked(position,"ActiveCellsRuntime","AddPortIntegerProperty",3,FALSE);
+			ELSE
+				CallThisChecked(position,"ActiveCellsRuntime","AddPortFlagProperty",2,FALSE);
+			END;
+		END AddPortProperty;
+		
+		PROCEDURE AddPortProperties(modifier: SyntaxTree.Modifier);
+		BEGIN
+			WHILE modifier # NIL DO
+				AddPortProperty(modifier, modifier.expression);
+				modifier := modifier.nextModifier;
+			END;
+		END AddPortProperties;
+
 		
 		PROCEDURE PushPort(p: SyntaxTree.Expression);
 		VAR op: Operand;
@@ -7268,18 +7300,9 @@ TYPE
 			Evaluate(p, op);
 			Emit(Push(p.position, op.op));
 			ReleaseOperand(op);
-			(*
-			WHILE (p # NIL) & ~(p.type.resolved IS SyntaxTree.CellType) DO
-				p := p(SyntaxTree.Designator).left;
+			IF p IS SyntaxTree.Designator THEN
+			AddPortProperties(p(SyntaxTree.Designator).modifiers)
 			END;
-			IF p # NIL THEN
-				Evaluate(p, op);
-				Emit(Push(p.position, op.op));
-				ReleaseOperand(op);
-			ELSE
-				Emit(Push(-1, nil));
-			END;
-			*)
 		END PushPort;
 
 

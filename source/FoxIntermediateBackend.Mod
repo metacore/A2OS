@@ -12480,7 +12480,7 @@ TYPE
 				END;
 			END ReflectProcedures;
 
-			PROCEDURE ParameterArray(source: IntermediateCode.Section; variable: SyntaxTree.Parameter);
+			PROCEDURE ParameterArray(source: IntermediateCode.Section; parameter: SyntaxTree.Parameter);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				segmentedName, name: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
@@ -12489,69 +12489,38 @@ TYPE
 				Array(source,pc,"Modules.FieldEntry");
 				Info(source, "FieldArray");
 				size :=0;
-				WHILE variable # NIL DO
+				WHILE parameter # NIL DO
 					Info(source,"name");
-					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
-					type := variable.type.resolved;
+					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, parameter.name, moduleNamePool), 0); (* reference to dynamic name *)
 					Info(source,"offset");
-					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
-						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
-						NamedSymbol(source, name,variable, 0,0);
+					IF (parameter.scope # NIL) & (parameter.scope IS SyntaxTree.ModuleScope) THEN
+						implementationVisitor.GetCodeSectionNameForSymbol(parameter, name);
+						NamedSymbol(source, name,parameter, 0,0);
 					ELSE
-						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+						Size(source, ToMemoryUnits(module.system,parameter.offsetInBits));
 					END;
-					Info(source,"type class");
-					IF type IS SyntaxTree.PointerType THEN
-						Size(source, 1);
-					ELSIF type IS SyntaxTree.RecordType THEN
-						Size(source, 2);
-					ELSIF type IS SyntaxTree.NumberType THEN
-						Size(source, 3);
-					ELSE
-						Size(source, 0);
-					END;
-					Info(source, "type desc");
-					IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN
-						td := type(SyntaxTree.RecordType).typeDeclaration;
-						Global.GetSymbolSegmentedName(td,segmentedName);
-						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-						ELSE
-							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-						END;
-						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
-						Symbol(source, tir,  0, offset);
-					ELSE
-						Address(source, 0);
-					END;
+					TypeEntry(source, parameter.type);
 					Info(source,"flags");
-					Set(source, {});
-					variable := variable.nextParameter;
+					IF parameter.kind = SyntaxTree.VarParameter THEN
+						Set(source, {1});
+					ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
+						Set(source,{2});
+					ELSE
+						Set(source, {});
+					END;
+					parameter := parameter.nextParameter;
 					INC(size);
 				END;
 				PatchArray(source,pc,size);
 			END ParameterArray;
 			
-			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
+			PROCEDURE TypeEntry(source: IntermediateCode.Section; type: SyntaxTree.Type);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				segmentedName, name: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
-				type: SyntaxTree.Type;
 			BEGIN
-				Array(source,pc,"Modules.FieldEntry");
-				Info(source, "FieldArray");
-				size :=0;
-				WHILE variable # NIL DO
-					Info(source,"name");
-					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
-					type := variable.type.resolved;
-					Info(source,"offset");
-					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
-						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
-						NamedSymbol(source, name,variable, 0,0);
-					ELSE
-						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
-					END;
+				IF type # NIL THEN 
+					type := type.resolved;
 					Info(source,"type class");
 					IF type IS SyntaxTree.PointerType THEN
 						Size(source, 1);
@@ -12576,8 +12545,34 @@ TYPE
 					ELSE
 						Address(source, 0);
 					END;
+				ELSE
+					Size(source, 0);
+					Address(source, 0);
+				END;
+			END TypeEntry;
+			
+			
+			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
+			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
+				name: Basic.SegmentedName;
+			BEGIN
+				Array(source,pc,"Modules.FieldEntry");
+				Info(source, "FieldArray");
+				size :=0;
+				WHILE variable # NIL DO
+					Info(source,"name");
+					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
+					Info(source,"offset");
+					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
+						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
+						NamedSymbol(source, name,variable, 0,0);
+					ELSE
+						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
+					END;
+					TypeEntry(source, variable.type);
 					Info(source,"flags");
 					Set(source, {});
+
 					variable := variable.nextVariable;
 					INC(size);
 				END;
@@ -12603,14 +12598,14 @@ TYPE
 						(* size *)
 						Size(source, 0);
 						(* parameters *)
-						Address(source, 0);
+						ReflectParameters(source, procedure);
 						(* variables *)
 						ReflectVariables(source, procedure);
 						ReflectProcedures(source, procedure);
 
 						(* return type entry *)
-						Address(source, 0);
-						Address(source, 0);
+						TypeEntry(source, procedure.type(SyntaxTree.ProcedureType).returnType);
+
 						INC(size);
 					END;
 					procedure := procedure.nextProcedure;

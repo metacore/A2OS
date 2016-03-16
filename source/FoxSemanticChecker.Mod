@@ -3609,7 +3609,7 @@ TYPE
 
 			IF (left = NIL) OR (left IS SyntaxTree.SelfDesignator) OR (left IS SyntaxTree.DereferenceDesignator) & (left(SyntaxTree.DereferenceDesignator).left IS SyntaxTree.SelfDesignator) THEN
 				IF GetGuard(symbol,guardType) THEN
-					result := NewTypeGuardDesignator(position,result(SyntaxTree.SymbolDesignator),guardType);
+					result := NewTypeGuardDesignator(position,result(SyntaxTree.SymbolDesignator),guardType, result);
 				END;
 			END;
 
@@ -6054,7 +6054,7 @@ TYPE
 			- returns new type guard designator
 			returns invalidDesignator = invalidExpression if error
 		**)
-		PROCEDURE NewTypeGuardDesignator(position: LONGINT; left: SyntaxTree.Designator; type: SyntaxTree.Type): SyntaxTree.Designator;
+		PROCEDURE NewTypeGuardDesignator(position: LONGINT; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator;
 		BEGIN
 			result := SyntaxTree.invalidDesignator;
@@ -6071,6 +6071,7 @@ TYPE
 				result := SyntaxTree.NewTypeGuardDesignator(position,left,type);
 				result.SetType(type);
 				result.SetAssignable(left.assignable);
+				result(SyntaxTree.TypeGuardDesignator).SetTypeExpression(typeExpression);
 			END;
 			RETURN result
 		END NewTypeGuardDesignator;
@@ -6110,9 +6111,9 @@ TYPE
 					IF (left.type = NIL) THEN
 						Error(left.position,Diagnostics.Invalid,"object is not a procedure or cannot be extended");
 					ELSIF IsExtensibleDesignator(left) & (parameters.Length()=1) & IsTypeDesignator(parameters.GetExpression(0),typeDeclaration) THEN
-						result := NewTypeGuardDesignator(designator.position,left,typeDeclaration.declaredType)
+						result := NewTypeGuardDesignator(designator.position,left,typeDeclaration.declaredType, parameters.GetExpression(0))
 					ELSIF IsUnextensibleRecord(left) & (parameters.Length()=1) & IsTypeDesignator(parameters.GetExpression(0),typeDeclaration) & (typeDeclaration.declaredType.resolved = left.type.resolved) THEN
-						result := NewTypeGuardDesignator(designator.position,left,typeDeclaration.declaredType)
+						result := NewTypeGuardDesignator(designator.position,left,typeDeclaration.declaredType, parameters.GetExpression(0))
 					ELSIF (left.type.resolved IS SyntaxTree.ProcedureType) THEN
 						IF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Builtin) THEN
 							result := NewBuiltinCallDesignator(designator.position,left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Builtin),parameters,left);
@@ -7297,17 +7298,53 @@ TYPE
 			left: SyntaxTree.Designator;
 			right: SyntaxTree.Expression;
 			inPort, outPort: SyntaxTree.PortType;
+			expression: SyntaxTree.Expression;
+			procedureCallDesignator: SyntaxTree.ProcedureCallDesignator;
 		BEGIN
 			right := ResolveExpression(communication.right);
 			left := ResolveDesignator(communication.left);
 			communication.SetLeft(left);
 			communication.SetRight(right);
-			IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,communication.position) END;
+			
+			expression := NewOperatorCall(communication.position, communication.op, left, right, NIL);
+			IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
+				procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
+				(* conversion done by procedure call
+				(* try to convert to left argument *)
+				IF (left.type.resolved IS SyntaxTree.MathArrayType) & (right.type.resolved IS SyntaxTree.MathArrayType) & AssignmentCompatible(left, right) THEN
+					right := NewConversion(right.position, right, left.type.resolved, NIL);
+					procedureCallDesignator.parameters.SetExpression(1, right);
+				END;
+				*)
+				resolvedStatement := SyntaxTree.NewProcedureCallStatement(communication.position, procedureCallDesignator, communication.outer);
+			ELSE
 
-			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
-				(* error already handled *)
-			ELSIF communication.op = Scanner.LessLess THEN (* left is dest *)
-				IF (left.type.resolved IS SyntaxTree.PortType) & CheckPortType(left, outPort) THEN (* send *)
+				IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,communication.position) END;
+
+				IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
+					(* error already handled *)
+				ELSIF communication.op = Scanner.LessLess THEN (* left is dest *)
+					IF (left.type.resolved IS SyntaxTree.PortType) & CheckPortType(left, outPort) THEN (* send *)
+						IF outPort.direction # SyntaxTree.OutPort THEN
+							Error(left.position,Diagnostics.Invalid,"not an out-port")
+						ELSIF outPort.sizeInBits < system.SizeOf(right.type) THEN
+							Error(left.position,Diagnostics.Invalid,"incompatible to port type");
+						ELSE
+							right := NewConversion(communication.position,right,left.type.resolved,NIL);
+							communication.SetRight(right)
+						END;
+					ELSIF (right.type.resolved IS SyntaxTree.PortType) & CheckPortType(right, inPort) THEN (* receive *)
+						IF CheckVariable(left) THEN
+							IF inPort.direction # SyntaxTree.InPort THEN
+								Error(left.position,Diagnostics.Invalid,"not an in-port")
+							ELSIF inPort.sizeInBits # system.SizeOf(right.type) THEN
+								Error(right.position,Diagnostics.Invalid,"incompatible to port type");
+							END;
+						END;
+					ELSE
+						Error(communication.position, -1, "unsupported stream operation");
+					END;
+				ELSIF (communication.op = Scanner.ExclamationMark)  & CheckPortType(left,outPort)  THEN
 					IF outPort.direction # SyntaxTree.OutPort THEN
 						Error(left.position,Diagnostics.Invalid,"not an out-port")
 					ELSIF outPort.sizeInBits < system.SizeOf(right.type) THEN
@@ -7316,8 +7353,8 @@ TYPE
 						right := NewConversion(communication.position,right,left.type.resolved,NIL);
 						communication.SetRight(right)
 					END;
-				ELSIF (right.type.resolved IS SyntaxTree.PortType) & CheckPortType(right, inPort) THEN (* receive *)
-					IF CheckVariable(left) THEN
+				ELSIF (communication.op = Scanner.Questionmark) & CheckPortType(left,inPort) THEN
+					IF CheckVariable(right) THEN
 						IF inPort.direction # SyntaxTree.InPort THEN
 							Error(left.position,Diagnostics.Invalid,"not an in-port")
 						ELSIF inPort.sizeInBits # system.SizeOf(right.type) THEN
@@ -7325,28 +7362,9 @@ TYPE
 						END;
 					END;
 				ELSE
-					Error(communication.position, -1, "unsupported stream operation");
+					Error(communication.position, -1, "unsupported operation");
 				END;
-			ELSIF (communication.op = Scanner.ExclamationMark)  & CheckPortType(left,outPort)  THEN
-				IF outPort.direction # SyntaxTree.OutPort THEN
-					Error(left.position,Diagnostics.Invalid,"not an out-port")
-				ELSIF outPort.sizeInBits < system.SizeOf(right.type) THEN
-					Error(left.position,Diagnostics.Invalid,"incompatible to port type");
-				ELSE
-					right := NewConversion(communication.position,right,left.type.resolved,NIL);
-					communication.SetRight(right)
-				END;
-			ELSIF (communication.op = Scanner.Questionmark) & CheckPortType(left,inPort) THEN
-				IF CheckVariable(right) THEN
-					IF inPort.direction # SyntaxTree.InPort THEN
-						Error(left.position,Diagnostics.Invalid,"not an in-port")
-					ELSIF inPort.sizeInBits # system.SizeOf(right.type) THEN
-						Error(right.position,Diagnostics.Invalid,"incompatible to port type");
-					END;
-				END;
-			ELSE
-				Error(communication.position, -1, "unsupported operation");
-			END
+			END;
 		END VisitCommunicationStatement;
 
 		(** check and resolve if/eslif part
@@ -9092,6 +9110,12 @@ TYPE
 		ELSIF (from IS SyntaxTree.ProcedureType) THEN
 			IF (to IS SyntaxTree.ProcedureType) THEN
 				i := ProcedureTypeDistance(system, from(SyntaxTree.ProcedureType), to(SyntaxTree.ProcedureType));
+			END;
+		ELSIF (from IS SyntaxTree.PortType) THEN
+			IF (to IS SyntaxTree.PortType) THEN
+				IF (to.sizeInBits = from.sizeInBits) & (to(SyntaxTree.PortType).direction = from(SyntaxTree.PortType).direction) THEN
+					i := 0;
+				END;
 			END;
 		(*no procedure test, procedure must be the same*)
 		END;

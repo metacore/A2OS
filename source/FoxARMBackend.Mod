@@ -3342,7 +3342,7 @@ TYPE
 			 		in := module.allSections.GetSection(i);
 		 			Basic.SegmentedNameToString(in.name, name);
 
-			 		IF (in.type # Sections.InlineCodeSection) & (in(IntermediateCode.Section).resolved = NIL) THEN
+			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
 				 		out := ResolvedSection(in(IntermediateCode.Section));
 				 		cg.Section(in(IntermediateCode.Section),out);
 			 		END

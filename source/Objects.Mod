@@ -383,6 +383,7 @@ VAR
 
 	rootedProcesses: ARRAY NumPriorities OF Process; (* list of potential processes that are not traced by GC when processing the ready queues, since GC only traces processes with
 	                                                                                      priorities Low ... High in ready queues. The potentially not traced processes are rooted here and traced by the GC *)
+	initObject: ProtectedObject;	(* Active object for the init process *)
 
 	event: Timer;	(* list of events *)
 
@@ -1798,7 +1799,8 @@ BEGIN
 	(* create a process for rest of init code, which runs at user level *)
 	entry := Machine.CurrentBP ();
 	SYSTEM.GET (entry+AddressSize, entry);	(* return address into linker-generated call table *)
-	NewProcess(SYSTEM.VAL (Body, entry), {Resistant}, NIL, init); (* create init process *)
+	NEW(initObject);
+	NewProcess(SYSTEM.VAL (Body, entry), {Resistant}, initObject, init); (* create init process *)
 	init.priority := High;
 	init.staticPriority := init.priority;
 	(* initialize prioRequests for init process *)

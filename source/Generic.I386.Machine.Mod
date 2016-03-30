@@ -441,6 +441,25 @@ CODE {SYSTEM.i386}
 	MOV AL, [EBX+EAX]
 END ID;
 
+(**
+	Disable data cache for the memory range [adr, adr + len). Repeated cache disabling is recorded. A maximum of 127 successive disabling is supported.
+	Cache disabling is allowed for heap and stack memory ranges only.
+*)
+PROCEDURE DisableDCacheRange * (adr: ADDRESS; len: LONGINT);
+END DisableDCacheRange;
+
+(**
+	Enable data cache for the memory range [adr, adr + len).
+	The memory range must have been previously disabled.
+	It is the responsibility of client software to re-enable cache for the regions that it disabled.
+*)
+PROCEDURE EnableDCacheRange * (adr: ADDRESS; len: LONGINT);
+END EnableDCacheRange;
+
+(* InvalidateICache - invalidates the ICache. Works only in a priviledged mode. *)
+PROCEDURE InvalidateICache*;
+END InvalidateICache;
+
 (** -- Miscellaneous -- *)
 
 (** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)

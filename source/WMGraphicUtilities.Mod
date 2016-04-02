@@ -283,4 +283,147 @@ BEGIN
 	END;
 END Ellipse;
 
+
+PROCEDURE DrawRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+	VAR innerRect : WMRectangles.Rectangle;
+BEGIN
+
+    IF (rect.r <= rect.l) OR (rect.b <= rect.t) OR (rx <= 0) OR (ry <= 0) THEN RETURN END;
+
+	(* Set the coordinates to reflect the centers of 4 quarter circles *)
+	innerRect := rect;
+
+	INC(innerRect.l, rx + 1);
+	INC(innerRect.t, ry + 1);
+	DEC(innerRect.r, rx + 1);
+	DEC(innerRect.b, ry + 1);
+
+	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
+
+	IF rx = ry THEN
+		DrawCircleCorners( canvas, rect, rx, color, mode) ;
+	ELSE
+		DrawOvalCorners( canvas, rect, rx, ry, color, mode) ;
+	END;
+
+	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t,      innerRect.r, rect.t + 1),  color, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), color, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), color, mode);
+	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      color, mode);
+	
+END DrawRoundRect;
+
+(* Draw 4 "circle" corners *)
+PROCEDURE DrawCircleCorners*(CONST canvas: WMGraphics.Canvas; rect : WMRectangles.Rectangle; r : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+VAR
+	X, Y : LONGINT;
+ 	XChange, YChange : LONGINT;
+	RadiusError : LONGINT;
+BEGIN
+	X := r;
+	Y := 0;
+	XChange :=  1 - 2*r;
+	YChange := 1;
+	RadiusError := 0;
+
+	(* resize rectangle *)
+	INC(rect.l, r);
+	INC(rect.t, r);
+	DEC(rect.r, r);
+	DEC(rect.b, r);
+
+	WHILE ( X >= Y ) DO
+			canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.b+Y-1, rect.r+X,   rect.b+Y),   color, mode);
+			canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.b+Y-1, rect.l-X+1, rect.b+Y),   color, mode);
+			canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.t-Y,   rect.r+X,   rect.t-Y+1), color, mode);
+			canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.t-Y,   rect.l-X+1, rect.t-Y+1), color, mode);
+			
+            IF (X > Y) THEN
+				canvas.Fill(WMRectangles.MakeRect(rect.r+Y-1, rect.b+X-1, rect.r+Y,   rect.b+X),   color, mode);
+				canvas.Fill(WMRectangles.MakeRect(rect.l-Y,   rect.b+X-1, rect.l-Y+1, rect.b+X),   color, mode);
+				canvas.Fill(WMRectangles.MakeRect(rect.r+Y-1, rect.t-X,   rect.r+Y,   rect.t-X+1), color, mode);
+				canvas.Fill(WMRectangles.MakeRect(rect.l-Y,   rect.t-X,   rect.l-Y+1, rect.t-X+1), color, mode);
+			END;
+		
+		INC(Y);
+		INC(RadiusError, YChange);
+		INC(YChange,2);
+		IF (2*RadiusError + XChange > 0) THEN
+			DEC(X);
+			INC(RadiusError, XChange);
+			INC(XChange,2);
+		END;
+	END;
+END DrawCircleCorners;
+
+(* Draw 4 "oval" corners use Bresenham Type Algorithm For Drawing Ellipses *)
+PROCEDURE DrawOvalCorners*(CONST canvas: WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+VAR
+	X, Y : LONGINT;
+	XChange, YChange : LONGINT;
+	EllipseError : LONGINT;
+	TwoASquare, TwoBSquare : LONGINT;
+	StoppingX, StoppingY : LONGINT;
+BEGIN
+	TwoASquare := 2*rx*rx;
+	TwoBSquare := 2*ry*ry;
+	X := rx;
+	Y := 0;
+	XChange :=  ry*ry*(1-2*rx);
+	YChange :=  rx*rx;
+	EllipseError := 0;
+	StoppingX := TwoBSquare*rx;
+	StoppingY := 0;
+
+	INC(rect.l, rx);
+	INC(rect.t, ry);
+	DEC(rect.r, rx);
+	DEC(rect.b, ry);
+
+	WHILE ( StoppingX >= StoppingY ) DO (* 1st set of points, y>1 *)
+
+		canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.b+Y-1, rect.r+X,   rect.b+Y),   color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.b+Y-1, rect.l-X+1, rect.b+Y),   color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.t-Y,   rect.r+X,   rect.t-Y+1), color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.t-Y,   rect.l-X+1, rect.t-Y+1), color, mode);
+
+		INC(Y);
+		INC(StoppingY, TwoASquare);
+		INC(EllipseError, YChange);
+		INC(YChange,TwoASquare);
+		IF ((2*EllipseError + XChange) > 0 ) THEN
+			DEC(X);
+			DEC(StoppingX, TwoBSquare);
+			INC(EllipseError, XChange);
+			INC(XChange,TwoBSquare)
+		END;
+	END;
+	(* 1st point set is done; start the 2nd set of points *)
+	X := 0;
+	Y := ry;
+	XChange := ry*ry;
+	YChange := rx*rx*(1-2*ry);
+	EllipseError := 0;
+	StoppingX := 0;
+	StoppingY := TwoASquare*ry;
+	WHILE ( StoppingX<= StoppingY ) DO  (*2nd set of points, y < 1*)
+
+		canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.b+Y-1, rect.r+X,   rect.b+Y),   color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.b+Y-1, rect.l-X+1, rect.b+Y),   color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+X-1, rect.t-Y,   rect.r+X,   rect.t-Y+1), color, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-X,   rect.t-Y,   rect.l-X+1, rect.t-Y+1), color, mode);
+
+		INC(X);
+		INC(StoppingX, TwoBSquare);
+		INC(EllipseError, XChange);
+		INC(XChange,TwoBSquare);
+		IF ((2*EllipseError + YChange) > 0 ) THEN
+			DEC(Y);
+			DEC(StoppingY, TwoASquare);
+			INC(EllipseError, YChange);
+			INC(YChange,TwoASquare)
+		END;
+	END;
+END DrawOvalCorners;
+
 END WMGraphicUtilities.

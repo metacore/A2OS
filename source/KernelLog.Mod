@@ -176,7 +176,7 @@ BEGIN
 		FOR j := i TO i+15 DO
 			IF j <= size THEN
 				SYSTEM.GET(j, ch);
-				Hex(ORD(ch), -3)
+				Hex(ORD(ch), -2)
 			ELSE
 				String("   ")
 			END

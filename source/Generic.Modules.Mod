@@ -65,46 +65,7 @@ TYPE
 		type*: ADDRESS; (* type descriptor or additional information *)
 	END;
 	
-	VAR
-	(*
-		EntryType = POINTER TO EntryTypeDesc;
-		shortint: EntryType;
-		integer: EntryType;
-		longint: EntryType;
-		hugeint: EntryType;
-		size: EntryType;
-		address: EntryType;
-		real: EntryType;
-		longreal: EntryType;
-		set: EntryType;
-		...
-	*)
-
-	(*
-	Type = POINTER {UNSAFE} TO RECORD
-		class: CHAR
-	END;
-	
-	BaseType = POINTER {UNSAFE} TO RECORD(Type)
-		size: INTEGER;
-		type: ADDRESS;
-	END;
-	
-	StaticArrayType = POINTER {UNSAFE} TO RECORD(Type)
-		size: SIZE;
-		base: POINTER {UNSAFE} TO Base;
-	END;
-	
-	DynamicArrayType = POINTER {UNSAFE} TO RECORD(Type)
-		base: POINTER {UNSAFE} TO Type;
-	END;
-	
-	RecordType = POINTER {UNSAFE} TO RECORD(Type)
-		type: ADDRESS;
-	END;
-	*)
-
-	FieldEntry*= RECORD
+	FieldEntry* = RECORD
 		name*: DynamicName;
 		offset*: SIZE; (* offset of this type *)
 		type*: EntryType;

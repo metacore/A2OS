@@ -312,7 +312,7 @@ TYPE
 			b: BOOLEAN;
 			set: SET;
 		BEGIN
-			IF index >= LEN(proc.parameters) THEN RETURN FALSE END; 
+			IF (proc.parameters = NIL) OR (index >= LEN(proc.parameters)) THEN RETURN FALSE END; 
 			type := proc.parameters[index].type;
 			INC(index);
 			
@@ -388,6 +388,7 @@ TYPE
 				RETURN set;
 			| sfTypeAny, sfTypeObject, sfTypePointerToRecord:  (* pointers are passed as varpars *)
 				RETURN NIL;
+			| 0X: RETURN NIL;
 			END;
 			RETURN NIL;
 		END Evaluate;
@@ -473,6 +474,8 @@ TYPE
 			 THEN
 				SYSTEM.GET(address, value);
 				SYSTEM.GET(value-SIZEOF(ADDRESS), type); (*  type desc *)
+				RETURN FindInType(SELF, value, type, name);
+				(*
 				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
 				IF FindProc(typeInfo.procedures, name,num) THEN
 					NEW(proc, SELF, name, typeInfo.procedures[num]);
@@ -484,8 +487,11 @@ TYPE
 					RETURN f;
 				ELSE HALT(101);
 				END;
+				*)
 			ELSIF field.type.class = sfTypeRecord THEN
 				type := field.type.type;
+				RETURN FindInType(SELF, address, type, name);
+				(*
 				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
 				IF FindProc(typeInfo.procedures, name,num) THEN
 					NEW(proc, SELF, name, typeInfo.procedures[num]);
@@ -497,12 +503,37 @@ TYPE
 					RETURN f;
 				ELSE HALT(101);
 				END;
+				*)
 			ELSE HALT(100); 
 			END;
 		END Find;
 		
 	END FieldResult;
 
+	(* traverse types and supertypes for first occurence of symbol name *) 	
+	PROCEDURE FindInType(scope: Result; address: ADDRESS; type: ADDRESS; CONST name: ARRAY OF CHAR): Result;
+	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT; 
+			proc: ProcedureResult; f: FieldResult;	
+	BEGIN
+		FOR i := 15 TO 0 BY -1 DO
+			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag); 
+			IF tag # NIL THEN
+				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo); 
+				IF FindProc(typeInfo.procedures, name,num) THEN
+					NEW(proc, scope, name, typeInfo.procedures[num]);
+					proc.address := typeInfo.procedures[num].address;
+					RETURN proc
+				ELSIF FindField(typeInfo.fields, name, num) THEN
+					NEW(f, name, typeInfo.fields[num]);
+					f.address := address + typeInfo.fields[num].offset;
+					RETURN f;
+				END;
+			END;
+		END;
+		RETURN NIL; 
+	END FindInType;
+	
+TYPE
 	Value*= OBJECT(Result)
 
 		PROCEDURE & InitValue;
@@ -600,6 +631,8 @@ TYPE
 			IF value # NIL THEN 
 				address := value; 
 				SYSTEM.GET(address-SIZEOF(ADDRESS), type); (*  type desc *)
+				RETURN FindInType(SELF, address, type, name);
+				(*
 				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
 				IF FindProc(typeInfo.procedures, name,num) THEN
 					NEW(proc, SELF, name, typeInfo.procedures[num]);
@@ -607,10 +640,11 @@ TYPE
 					RETURN proc
 				ELSIF FindField(typeInfo.fields, name, num) THEN
 					NEW(f, name, typeInfo.fields[num]);
-					f.address := v + typeInfo.fields[num].offset;
+					f.address := address + typeInfo.fields[num].offset;
 					RETURN f;
 				ELSE HALT(101);
 				END;
+				*)
 			ELSE
 				RETURN NIL;
 			END;

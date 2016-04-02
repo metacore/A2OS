@@ -938,7 +938,15 @@ TYPE
 		END VisitStatement;
 
 		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
-		BEGIN x.call.Accept(SELF) END VisitProcedureCallStatement;
+		VAR call: SyntaxTree.Designator;
+		BEGIN
+			IF ~(x.call IS SyntaxTree.ParameterDesignator) THEN
+				call := SyntaxTree.NewParameterDesignator(x.position,x.call,SyntaxTree.NewExpressionList());
+			ELSE
+				call := x.call;
+			END;
+			call.Accept(SELF);
+		END VisitProcedureCallStatement;
 
 		PROCEDURE LoadValue;
 		BEGIN

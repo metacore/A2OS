@@ -1,6 +1,6 @@
 MODULE FoxInterpreterSymbols; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, SYSTEM;
+IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, Machine, SYSTEM;
 
 CONST
 	TAB = 09X;
@@ -92,7 +92,7 @@ TYPE
 				field: FieldResult;
 		BEGIN
 				IF FindProc(self.procedures, name,num) THEN
-					NEW(proc, name, self.procedures[num]);
+					NEW(proc, SELF, name, self.procedures[num]);
 					proc.address := self.procedures[num].address;
 					RETURN proc
 				ELSIF FindField(self.fields, name, num) THEN
@@ -100,24 +100,301 @@ TYPE
 					field.address := self.fields[num].offset;
 					RETURN field;
 				END;
+				RETURN NIL;
 		END Find;
 
 
 	END ModuleResult;
 	
+		Callstack = OBJECT
+	VAR 
+		data: ARRAY 1024 OF CHAR;
+		pos: LONGINT;
+		size: LONGINT;
+		H: HUGEINT; (* result in register *)
+		
+		retType: Modules.FieldEntry;
+		parameters: POINTER TO ARRAY OF Modules.FieldEntry;
+		pPos: LONGINT;
+		
+		PROCEDURE & Init;
+		BEGIN
+			pos := 1024; size := 0;
+		END Init;
+		
+		PROCEDURE Next(s: SIZE): ADDRESS;
+		BEGIN
+			DEC(pos, s); INC(size, s);
+			RETURN ADDRESSOF(data[pos]);
+		END Next;
+		
+		PROCEDURE PushH(h: HUGEINT);
+		VAR p: POINTER {UNSAFE} TO RECORD h: HUGEINT END;
+		BEGIN
+			p := Next(SIZEOF(HUGEINT));
+			p.h := h;
+		END PushH;
+
+		PROCEDURE PushL(i: LONGINT);
+		VAR p: POINTER {UNSAFE} TO RECORD i: LONGINT END;
+		BEGIN
+			p := Next(SIZEOF(LONGINT));
+			p.i := i;
+		END PushL;
+
+		PROCEDURE PushI(i: INTEGER);
+		BEGIN
+			PushL(i);
+		END PushI;		
+
+		PROCEDURE PushS(i: SHORTINT);
+		BEGIN
+			PushL(i);
+		END PushS;		
+		
+		PROCEDURE PushB(b: BOOLEAN);
+		VAR p: POINTER {UNSAFE} TO RECORD b: BOOLEAN END;
+		BEGIN
+			p := Next(SIZEOF(LONGINT));
+			p.b := b;
+		END PushB;
+		
+		PROCEDURE PushC(c: CHAR);
+		BEGIN
+			PushL(ORD(c));
+		END PushC;
+		
+		PROCEDURE PushSet(set: SET);
+		VAR p: POINTER {UNSAFE} TO RECORD s:SET END;
+		BEGIN
+			p := Next(SIZEOF(SET));
+			p.s := set;
+		END PushSet;
+
+		PROCEDURE PushR(r: REAL);
+		VAR p: POINTER {UNSAFE} TO RECORD r: REAL END;
+		BEGIN
+			p := Next(SIZEOF(REAL));
+			p.r := r;
+		END PushR;
+		
+		PROCEDURE PushX(x: LONGREAL);
+		VAR p: POINTER {UNSAFE} TO RECORD x: LONGREAL END;
+		BEGIN
+			p := Next(SIZEOF(LONGREAL));
+			p.x := x;
+		END PushX;
+		
+		PROCEDURE PushA(a: ADDRESS);
+		VAR p: POINTER {UNSAFE} TO RECORD a: ADDRESS END;
+		BEGIN
+			p := Next(SIZEOF(ADDRESS));
+			p.a := a;
+		END PushA;
+
+
+		PROCEDURE PushSz(s: SIZE);
+		VAR p: POINTER {UNSAFE} TO RECORD s: SIZE END;
+		BEGIN
+			p := Next(SIZEOF(SIZE));
+			p.s := s;
+		END PushSz;
+		
+		PROCEDURE Call(adr: ADDRESS);
+		VAR esp: ADDRESS; P: Procedure; h: HUGEINT
+		TYPE 
+			Procedure = PROCEDURE(): HUGEINT;
+		BEGIN
+			P := SYSTEM.VAL(Procedure, adr); 
+			esp := Machine.CurrentSP();
+			Machine.SetSP(esp-size);
+			IF size > 0 THEN 
+				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
+			END;
+			H := P();
+			Machine.SetSP(esp);
+		END Call;
+		
+		PROCEDURE ResH(): HUGEINT;
+		BEGIN
+			RETURN H;
+		END ResH;
+
+		PROCEDURE ResL(): LONGINT;
+		BEGIN
+			RETURN LONGINT(H);
+		END ResL;
+
+		PROCEDURE ResI(): INTEGER;
+		BEGIN
+			RETURN INTEGER(H);
+		END ResI;
+
+		PROCEDURE ResS(): SHORTINT;
+		BEGIN
+			RETURN SHORTINT(H);
+		END ResS;
+
+		PROCEDURE ResC(): CHAR;
+		BEGIN
+			RETURN CHR(H);
+		END ResC;
+
+		PROCEDURE ResB(): BOOLEAN;
+		BEGIN
+			RETURN SYSTEM.VAL(BOOLEAN, ResC());
+		END ResB;
+
+		PROCEDURE ResSet(): SET;
+		BEGIN
+			RETURN SYSTEM.VAL(SET,H);
+		END ResSet;
+
+		PROCEDURE ResSz(): SIZE;
+		BEGIN
+			RETURN SYSTEM.VAL(SIZE, H);
+		END ResSz;
+
+		PROCEDURE ResA(): ADDRESS;
+		BEGIN
+			RETURN SYSTEM.VAL(ADDRESS, H)
+		END ResA;
+
+		PROCEDURE ResR(): REAL;
+		BEGIN
+			RETURN SYSTEM.VAL(REAL, ResL())
+		END ResR;
+
+		PROCEDURE ResX(): LONGREAL;
+		BEGIN
+			RETURN SYSTEM.VAL(LONGREAL, ResH())
+		END ResX;
+
+	END Callstack;
+
 	ProcedureResult*= OBJECT(SymbolResult)
 	VAR 
 		proc: Modules.ProcedureEntry;
 		address: ADDRESS;
+		stack: Callstack;
+		index: LONGINT;
+		caller-: Result;
+		
+		PROCEDURE ReturnsPointer*(): BOOLEAN;
+		BEGIN
+			CASE proc.returnType.class
+			OF sfTypeAny, sfTypeObject, sfTypePointerToRecord: RETURN TRUE
+			ELSE RETURN FALSE
+			END;
+		END ReturnsPointer;
 	
-		PROCEDURE & InitProcedure(CONST name: ARRAY OF CHAR; CONST p: Modules.ProcedureEntry);
+		PROCEDURE & InitProcedure(c: Result; CONST name: ARRAY OF CHAR; CONST p: Modules.ProcedureEntry);
 		BEGIN
 			InitSymbol(name); proc := p;
+			caller := c; 
 		END InitProcedure;
+		
+		PROCEDURE Pars*();
+		BEGIN
+			index := 0;
+			NEW(stack); (* can optimize this *)
+		END Pars;
+		
+		PROCEDURE PushAddress*(adr: ADDRESS); (* for self pointer *)
+		BEGIN
+			stack.PushA(adr);
+		END PushAddress;
+		
+		PROCEDURE Push*(v: Value): BOOLEAN;
+		VAR type: Modules.EntryType;
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+			r: REAL; x: LONGREAL;
+			b: BOOLEAN;
+			set: SET;
+		BEGIN
+			IF index >= LEN(proc.parameters) THEN RETURN FALSE END; 
+			type := proc.parameters[index].type;
+			INC(index);
+			
+			CASE type.class OF
+				sfTypeSignedInteger:
+				IF v.GetInt(h) THEN
+					CASE type.size OF
+					8: s:= SHORTINT(h); stack.PushS(s);
+					|16: i:= INTEGER(h); stack.PushI(i);
+					|32:l := LONGINT(h); stack.PushL(l);
+					|64:stack.PushH(h); 
+					END;
+					RETURN TRUE
+				END;
+			|sfTypeFloat:
+				IF v.GetReal(x) THEN
+					CASE type.size OF
+					32: r := REAL(x);stack.PushR(r)
+					|64: stack.PushX(x)
+					END;
+					RETURN TRUE
+				END;
+			|sfTypeBoolean:
+				IF v.GetBoolean(b) THEN
+					stack.PushB(b);
+				RETURN TRUE
+				END;
+			|sfTypeSet:
+				IF v.GetSet(set) THEN
+					stack.PushSet(set);
+					RETURN TRUE
+				END;
+			END;
+			RETURN FALSE;
+		END Push;
+		
+		PROCEDURE Check*(): BOOLEAN;
+		BEGIN
+			RETURN (proc.parameters = NIL) & (index = 0) OR  (index = LEN(proc.parameters));
+		END Check;
+
+		PROCEDURE Evaluate(): Value;
+		VAR 
+			type: Modules.EntryType;
+			int: IntegerValue;
+			real: RealValue;
+			bool: BooleanValue;
+			set: SetValue;
+			any: AnyValue;
+		BEGIN
+			stack.Call(address);
+			type := proc.returnType;
+			CASE type.class OF
+				sfTypeSignedInteger:
+				CASE type.size OF
+				8: NEW(int, stack.ResS()); 
+				|16: NEW(int, stack.ResI());
+				|32: NEW(int, stack.ResL());
+				|64: NEW(int, SHORT(stack.ResH())); 
+				END;
+				RETURN int;
+			|sfTypeFloat:
+				CASE type.size OF
+				32: NEW(real, stack.ResR()); 
+				|64: NEW(real, stack.ResX());
+				END;
+				RETURN real;
+			|sfTypeBoolean:
+				NEW(bool, stack.ResB()); 
+				RETURN bool; 
+			|sfTypeSet:
+				NEW(set, stack.ResSet());
+				RETURN set;
+			| sfTypeAny, sfTypeObject, sfTypePointerToRecord:  (* pointers are passed as varpars *)
+				RETURN NIL;
+			END;
+			RETURN NIL;
+		END Evaluate;
 
 	END ProcedureResult;
 
-	FieldResult = OBJECT (SymbolResult)
+	FieldResult* = OBJECT (SymbolResult)
 	VAR field: Modules.FieldEntry;
 		address: ADDRESS;
 	
@@ -129,19 +406,29 @@ TYPE
 		PROCEDURE Evaluate(): Value;
 		VAR l: LONGINT;
 			int: IntegerValue;
+			a: ANY; 
+			any: AnyValue; 
 		BEGIN
 			CASE field.type.class OF
 				sfTypeSignedInteger: 
 					SYSTEM.GET(address, l);
 					NEW(int, l); 
-					RETURN int
+					RETURN int;
+			| sfTypePointerToRecord, sfTypeAny, sfTypeObject:
+				SYSTEM.GET(address, a); 
+					NEW(any, a);
+					RETURN any;
 			ELSE
 				HALT(100);
 			END;
 		END Evaluate;
 		
 		PROCEDURE SetV(v: Value): BOOLEAN;
-		VAR h: HUGEINT; s: SHORTINT; i: INTEGER; l: LONGINT; 
+		VAR 
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+			r: REAL; x: LONGREAL;
+			b: BOOLEAN;
+			set: SET;
 		BEGIN
 			CASE field.type.class OF
 				sfTypeSignedInteger:
@@ -152,7 +439,25 @@ TYPE
 					|32:l := LONGINT(h); SYSTEM.PUT(address, l);
 					|64: SYSTEM.PUT(address, h); 
 					END;
-				RETURN TRUE
+					RETURN TRUE
+				END;
+			|sfTypeFloat:
+				IF v.GetReal(x) THEN
+					CASE field.type.size OF
+					32: r := REAL(x); SYSTEM.PUT(address, r);
+					|64: SYSTEM.PUT(address,x); 
+					END;
+					RETURN TRUE
+				END;
+			|sfTypeBoolean:
+				IF v.GetBoolean(b) THEN
+					SYSTEM.PUT(address,b); 
+					RETURN TRUE
+				END;
+			|sfTypeSet:
+				IF v.GetSet(set) THEN
+					SYSTEM.PUT(address,set); 
+					RETURN TRUE
 				END;
 			END;
 		END SetV;
@@ -170,7 +475,7 @@ TYPE
 				SYSTEM.GET(value-SIZEOF(ADDRESS), type); (*  type desc *)
 				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
 				IF FindProc(typeInfo.procedures, name,num) THEN
-					NEW(proc, name, typeInfo.procedures[num]);
+					NEW(proc, SELF, name, typeInfo.procedures[num]);
 					proc.address := typeInfo.procedures[num].address;
 					RETURN proc
 				ELSIF FindField(typeInfo.fields, name, num) THEN
@@ -183,7 +488,7 @@ TYPE
 				type := field.type.type;
 				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
 				IF FindProc(typeInfo.procedures, name,num) THEN
-					NEW(proc, name, typeInfo.procedures[num]);
+					NEW(proc, SELF, name, typeInfo.procedures[num]);
 					proc.address := typeInfo.procedures[num].address;
 					RETURN proc
 				ELSIF FindField(typeInfo.fields, name, num) THEN
@@ -209,15 +514,40 @@ TYPE
 			RETURN SELF;
 		END Evaluate;
 		
-		PROCEDURE GetInt(VAR h: HUGEINT): BOOLEAN;
+		PROCEDURE GetInt*(VAR h: HUGEINT): BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END GetInt;
+
+		PROCEDURE GetAddress*(VAR a: ADDRESS): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetAddress;
 		
-		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		PROCEDURE GetReal*(VAR x: LONGREAL): BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END GetReal;
+
+		PROCEDURE GetBoolean*(VAR x: BOOLEAN): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetBoolean;
+
+		PROCEDURE GetSet*(VAR x: SET): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetSet;
+
+		PROCEDURE GetChar*(VAR x: CHAR): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetChar;
+
+		PROCEDURE GetRange*(VAR x: RANGE): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetRange;
 
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
@@ -238,6 +568,57 @@ TYPE
 	TYPE
 
 	AnyValue*=OBJECT(Value)
+	VAR value*:ANY;
+
+		PROCEDURE & InitAny*(value: ANY);
+		BEGIN InitValue; SELF.value := value; type := "AnyValue";
+		END InitAny;
+
+		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
+		END Enumerate;
+
+		PROCEDURE GetAddress(VAR a: ADDRESS): BOOLEAN;
+		BEGIN
+			a := value; RETURN TRUE;
+		END GetAddress;
+
+		PROCEDURE WriteValue(w: Streams.Writer);
+		BEGIN w.Address(value);
+		END WriteValue;
+		
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
+		
+		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		VAR type, v, address: ADDRESS;
+		VAR typeInfo: Modules.TypeDesc; num: LONGINT;
+		proc: ProcedureResult; f: FieldResult;
+		BEGIN
+			IF value # NIL THEN 
+				address := value; 
+				SYSTEM.GET(address-SIZEOF(ADDRESS), type); (*  type desc *)
+				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
+				IF FindProc(typeInfo.procedures, name,num) THEN
+					NEW(proc, SELF, name, typeInfo.procedures[num]);
+					proc.address := typeInfo.procedures[num].address;
+					RETURN proc
+				ELSIF FindField(typeInfo.fields, name, num) THEN
+					NEW(f, name, typeInfo.fields[num]);
+					f.address := v + typeInfo.fields[num].offset;
+					RETURN f;
+				ELSE HALT(101);
+				END;
+			ELSE
+				RETURN NIL;
+			END;
+		END Find;
+
+	END AnyValue;
+
+	AddressValue*=OBJECT(Value)
 	VAR value*:ADDRESS;
 
 		PROCEDURE & InitAny*(value: ADDRESS);
@@ -263,8 +644,13 @@ TYPE
 			END;
 		END Get;
 
+		PROCEDURE GetAddress(VAR a: ADDRESS): BOOLEAN;
+		BEGIN
+			a := value; RETURN TRUE;
+		END GetAddress;
+
 		PROCEDURE WriteValue(w: Streams.Writer);
-		BEGIN w.Int(value,0);
+		BEGIN w.Address(value);
 		END WriteValue;
 		
 		PROCEDURE Address(): ADDRESS;
@@ -273,7 +659,7 @@ TYPE
 		END Address;
 		
 
-	END AnyValue;
+	END AddressValue;
 
 	IntegerValue*=OBJECT(Value)
 	VAR value*: LONGINT;
@@ -304,7 +690,11 @@ TYPE
 		BEGIN
 			v := value; RETURN TRUE;
 		END GetInt;
-		
+
+		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		BEGIN
+			x := value; RETURN TRUE;
+		END GetReal;
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN w.Int(value,0);
@@ -341,7 +731,12 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
-
+		
+		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		BEGIN
+			x := value; RETURN TRUE; 
+		END GetReal;
+		
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN w.Float(value,40);
 		END WriteValue;
@@ -377,6 +772,12 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
+
+		PROCEDURE GetBoolean(VAR x: BOOLEAN): BOOLEAN;
+		BEGIN
+			x := value; RETURN TRUE;
+		END GetBoolean;
+
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN IF value THEN w.String("TRUE") ELSE w.String("FALSE") END
@@ -450,6 +851,11 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
+		
+		PROCEDURE GetSet(VAR x: SET): BOOLEAN;
+		BEGIN
+			x:= value; RETURN TRUE;
+		END GetSet;
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN
@@ -486,7 +892,13 @@ TYPE
 			IF name = StrValue THEN c.SetRange(value);
 			ELSE Get^(name, index, c);
 			END;
-		END Get;
+		END Get;		
+
+		PROCEDURE GetRange(VAR x: RANGE): BOOLEAN;
+		BEGIN
+			x := value; RETURN TRUE; 
+		END GetRange;
+
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN
@@ -524,6 +936,11 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
+		
+		PROCEDURE GetChar(VAR c: CHAR): BOOLEAN;
+		BEGIN
+			c := value; RETURN TRUE; 
+		END GetChar;
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN

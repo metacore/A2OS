@@ -218,8 +218,7 @@ TYPE
 		BEGIN
 			RETURN SYSTEM.VAL(LONGREAL, ResH())
 		END ResX;
-		
-		
+
 	END Callstack;
 
 	Interpreter* = OBJECT (SyntaxTree.Visitor)
@@ -602,16 +601,35 @@ TYPE
 		
 	
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
-		VAR e: SyntaxTree.Expression;
+		VAR e: SyntaxTree.Expression; proc: InterpreterSymbols.ProcedureResult; i: LONGINT;
+			adr: ADDRESS; adrValue: Value; any: InterpreterSymbols.AnyValue;
 		BEGIN
 			e := x.left;
-			PushParameters(x.parameters);
 			Expression(e);
-			callStack.Call(procedureDesc.address);
-			TRACE(procedureDesc.name^, procedureDesc.address);
-			(*IF e IS IdentifierDesignator THEN
+			IF (item.object # NIL) & (item.object IS InterpreterSymbols.ProcedureResult) THEN
+				proc := item.object(InterpreterSymbols.ProcedureResult);
+				(* self pointer *) 
+				proc.Pars();
+				IF ~(proc.caller IS InterpreterSymbols.ModuleResult) THEN
+					adrValue := proc.caller.Evaluate();
+					ASSERT(adrValue.GetAddress(adr)); 
+					proc.PushAddress(adr);
+				END;
+				(* result pointer *) 
+				IF proc.ReturnsPointer() THEN
+					NEW(any,NIL);
+					proc.PushAddress(any.Address());
+				END; 
+				FOR i := 0 TO x.parameters.Length()-1 DO
+					e := x.parameters.GetExpression(i);
+					IF ~proc.Push(Evaluate(e)) THEN Error("wrong parameter"); RETURN END;
+				END;
+				IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END; 
+				item.object := proc.Evaluate();
+				IF any # NIL THEN item.object := any END;
+			ELSE
+				Error("no procedure")
 			END;
-			*)
 		END VisitParameterDesignator;
 
 		PROCEDURE VisitArrowDesignator*(x: SyntaxTree.ArrowDesignator);
@@ -941,6 +959,13 @@ TYPE
 			END;
 			RETURN ~error
 		END GetValue;
+		
+		PROCEDURE Evaluate(x: SyntaxTree.Expression): Value;
+		VAR w: Value;
+		BEGIN
+			 IF GetValue(x, w) THEN RETURN w ELSE RETURN NIL END;
+		END Evaluate;
+		
 
 		PROCEDURE GetInteger(x: SyntaxTree.Expression; VAR i: Integer): BOOLEAN;
 		VAR v: Value;
@@ -1256,9 +1281,14 @@ END FoxInterpreter.
 SystemTools.Free FoxInterpreter FoxInterpreterSymbols ~
 
 
+
 FoxInterpreter.Expression
 	Test.c.b;
 	~ 
+	
+FoxInterpreter.Expression
+	Test.Test(5);
+	~
 FoxInterpreter.Statements
 	a := Test.c.b;
 	Test.c.b := Test.c.b + 1;

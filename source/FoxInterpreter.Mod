@@ -1,14 +1,16 @@
 MODULE FoxInterpreter; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Scanner := FoxScanner, FoxParser, SyntaxTree := FoxSyntaxTree, Printout := FoxPrintout, Commands, Diagnostics, StringPool, InterpreterSymbols := FoxInterpreterSymbols, D:= Debugging,
-	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic;
-	
+	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic, SYSTEM, Machine;
+
 CONST
 	EnableTrace = FALSE;
+	MaxIndex = 8;
+
 
 TYPE
-
-	Value*=InterpreterSymbols.Item;
+	Result*= InterpreterSymbols.Result;
+	Value*=InterpreterSymbols.Value;
 	Integer*=InterpreterSymbols.IntegerValue;
 	Real*=InterpreterSymbols.RealValue;
 	String*=InterpreterSymbols.StringValue;
@@ -16,9 +18,17 @@ TYPE
 	Set*=InterpreterSymbols.SetValue;
 	Range*=InterpreterSymbols.RangeValue;
 	Char*=InterpreterSymbols.CharValue;
+	MathArrayValue*= InterpreterSymbols.MathArrayValue;
+	
 	Scope*=InterpreterSymbols.Scope;
 	Container*= InterpreterSymbols.Container;
-	Address*=InterpreterSymbols.Address;
+	
+	Item*= RECORD
+		object*: InterpreterSymbols.Item;
+		in*: InterpreterSymbols.Item;
+		name*: StringPool.Index;
+		i*: ARRAY MaxIndex OF LONGINT; (* indices if applicable *)
+	END;
 
 	CommandStatement = OBJECT (SyntaxTree.Statement)
 	VAR command: Strings.String;
@@ -65,25 +75,177 @@ TYPE
 
 	END Parser;
 
+
+	Callstack = OBJECT
+	VAR 
+		data: ARRAY 1024 OF CHAR;
+		pos: LONGINT;
+		size: LONGINT;
+		H: HUGEINT; (* result in register *)
+		
+		retType: Modules.FieldEntry;
+		parameters: POINTER TO ARRAY OF Modules.FieldEntry;
+		pPos: LONGINT;
+		
+		PROCEDURE & Init;
+		BEGIN
+			pos := 1024; size := 0;
+		END Init;
+		
+		PROCEDURE Next(s: SIZE): ADDRESS;
+		BEGIN
+			DEC(pos, s); INC(size, s);
+			RETURN ADDRESSOF(data[pos]);
+		END Next;
+		
+		PROCEDURE PushH(h: HUGEINT);
+		VAR p: POINTER {UNSAFE} TO RECORD h: HUGEINT END;
+		BEGIN
+			p := Next(SIZEOF(HUGEINT));
+			p.h := h;
+		END PushH;
+
+		PROCEDURE PushL(i: LONGINT);
+		VAR p: POINTER {UNSAFE} TO RECORD i: LONGINT END;
+		BEGIN
+			p := Next(SIZEOF(LONGINT));
+			p.i := i;
+		END PushL;
+
+		PROCEDURE PushI(i: INTEGER);
+		BEGIN
+			PushL(i);
+		END PushI;		
+
+		PROCEDURE PushS(i: SHORTINT);
+		BEGIN
+			PushL(i);
+		END PushS;		
+		
+		PROCEDURE PushC(c: CHAR);
+		BEGIN
+			PushL(ORD(c));
+		END PushC;
+		
+		PROCEDURE PushR(r: REAL);
+		VAR p: POINTER {UNSAFE} TO RECORD r: REAL END;
+		BEGIN
+			p := Next(SIZEOF(REAL));
+			p.r := r;
+		END PushR;
+		
+		PROCEDURE PushX(x: LONGREAL);
+		VAR p: POINTER {UNSAFE} TO RECORD x: LONGREAL END;
+		BEGIN
+			p := Next(SIZEOF(LONGREAL));
+			p.x := x;
+		END PushX;
+		
+		PROCEDURE PushA(a: ADDRESS);
+		VAR p: POINTER {UNSAFE} TO RECORD a: ADDRESS END;
+		BEGIN
+			p := Next(SIZEOF(ADDRESS));
+			p.a := a;
+		END PushA;
+
+
+		PROCEDURE PushSz(s: SIZE);
+		VAR p: POINTER {UNSAFE} TO RECORD s: SIZE END;
+		BEGIN
+			p := Next(SIZEOF(SIZE));
+			p.s := s;
+		END PushSz;
+		
+		PROCEDURE Call(adr: ADDRESS);
+		VAR esp: ADDRESS; P: Procedure; h: HUGEINT
+		TYPE 
+			Procedure = PROCEDURE(): HUGEINT;
+		BEGIN
+			P := SYSTEM.VAL(Procedure, adr); 
+			esp := Machine.CurrentSP();
+			Machine.SetSP(esp-size);
+			SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
+			H := P();
+			Machine.SetSP(esp);
+		END Call;
+		
+		PROCEDURE ResH(): HUGEINT;
+		BEGIN
+			RETURN H;
+		END ResH;
+
+		PROCEDURE ResL(): LONGINT;
+		BEGIN
+			RETURN LONGINT(H);
+		END ResL;
+
+		PROCEDURE ResI(): INTEGER;
+		BEGIN
+			RETURN INTEGER(H);
+		END ResI;
+
+		PROCEDURE ResS(): SHORTINT;
+		BEGIN
+			RETURN SHORTINT(H);
+		END ResS;
+
+		PROCEDURE ResC(): CHAR;
+		BEGIN
+			RETURN CHR(H);
+		END ResC;
+
+		PROCEDURE ResSet(): SET;
+		BEGIN
+			RETURN SYSTEM.VAL(SET,H);
+		END ResSet;
+
+		PROCEDURE ResSz(): SIZE;
+		BEGIN
+			RETURN SYSTEM.VAL(SIZE, H);
+		END ResSz;
+
+		PROCEDURE ResA(): ADDRESS;
+		BEGIN
+			RETURN SYSTEM.VAL(ADDRESS, H)
+		END ResA;
+
+		PROCEDURE ResR(): REAL;
+		BEGIN
+			RETURN SYSTEM.VAL(REAL, ResL())
+		END ResR;
+
+		PROCEDURE ResX(): LONGREAL;
+		BEGIN
+			RETURN SYSTEM.VAL(LONGREAL, ResH())
+		END ResX;
+		
+		
+	END Callstack;
+
 	Interpreter* = OBJECT (SyntaxTree.Visitor)
 	VAR
 		value: BOOLEAN;
-		address-: Address;
+		item-: Item;
 		module-: Modules.Module;
+		typeDesc-: Modules.TypeDesc;
+		procedureDesc-: Modules.ProcedureEntry;
 
 		scope-: Scope;
 		exit: BOOLEAN;
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
 		context-: Commands.Context;
-
+		callStack: Callstack;
+		
+		
 		PROCEDURE & Init*(scope: Scope; diagnostics: Diagnostics.Diagnostics; context: Commands.Context);
 		BEGIN
 			IF scope = NIL THEN scope := global END;
 			SELF.scope := scope;
 			error := FALSE;
 			SELF.diagnostics := diagnostics;
-			SELF.context := context
+			SELF.context := context;
+			NEW(callStack);
 		END Init;
 
 		PROCEDURE SetScope*(s: Scope);
@@ -95,7 +257,6 @@ TYPE
 		BEGIN
 			error := FALSE;
 		END Reset;
-
 
 		PROCEDURE Error(CONST msg: ARRAY OF CHAR);
 		BEGIN
@@ -139,57 +300,57 @@ TYPE
 		END VisitSet;
 
 		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
-		VAR numberElements, i: LONGINT; a: InterpreterSymbols.MathArrayValue;
+		VAR numberElements, i: LONGINT; a: MathArrayValue;
 		BEGIN
 			numberElements := x.elements.Length();
 			NEW(a, numberElements);
 			FOR i := 0 TO numberElements-1 DO
 				Expression(x.elements.GetExpression(i));
-				a.SetValue(i,address.object(InterpreterSymbols.Value));
+				a.SetValue(i,item.object(Value));
 			END;
-			address.object := a; value := TRUE;
+			item.object := a; value := TRUE;
 		END VisitMathArrayExpression;
 
 		PROCEDURE NewInt(i: LONGINT);
 		VAR v: Integer;
 		BEGIN
-			NEW(v, i); address.object := v; value := TRUE
+			NEW(v, i); item.object := v; value := TRUE
 		END NewInt;
 
 		PROCEDURE NewReal(i: LONGREAL);
 		VAR v: Real;
 		BEGIN
-			NEW(v, i); address.object := v; value := TRUE
+			NEW(v, i); item.object := v; value := TRUE
 		END NewReal;
 
 		PROCEDURE NewBool(b: BOOLEAN);
 		VAR v: Boolean;
 		BEGIN
-			NEW(v, b); address.object := v; value := TRUE;
+			NEW(v, b); item.object := v; value := TRUE;
 		END NewBool;
 
 		PROCEDURE NewSet(s: SET);
 		VAR v: Set;
 		BEGIN
-			NEW(v, s); address.object := v; value := TRUE;
+			NEW(v, s); item.object := v; value := TRUE;
 		END NewSet;
 
 		PROCEDURE NewString(CONST s: ARRAY OF CHAR);
 		VAR v: String;
 		BEGIN
-			NEW(v, s); address.object := v; value := TRUE;
+			NEW(v, s); item.object := v; value := TRUE;
 		END NewString;
 
 		PROCEDURE NewRange(r: RANGE);
 		VAR v: Range;
 		BEGIN
-			NEW(v, r ); address.object := v; value := TRUE;
+			NEW(v, r ); item.object := v; value := TRUE;
 		END NewRange;
 
 		PROCEDURE NewChar(c: CHAR);
 		VAR v: Char;
 		BEGIN
-			NEW(v, c); address.object := v; value := TRUE;
+			NEW(v, c); item.object := v; value := TRUE;
 		END NewChar;
 
 		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
@@ -357,44 +518,97 @@ TYPE
 		END FindInScope;
 		*)
 
+
+		PROCEDURE FindType(CONST types: POINTER TO ARRAY OF Modules.TypeDesc; CONST name: ARRAY OF CHAR): Modules.TypeDesc;
+		VAR i: LONGINT;
+		BEGIN
+		IF types = NIL THEN RETURN NIL END;
+		FOR i := 0 TO LEN(types)-1 DO
+			IF types[i].name = name THEN 
+				RETURN types[i];
+			END;
+		END;
+		RETURN NIL;
+		END FindType;
+
+		PROCEDURE FindProc(CONST types: POINTER TO ARRAY OF Modules.ProcedureEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+		BEGIN
+		IF types = NIL THEN RETURN FALSE END;
+		FOR num := 0 TO LEN(types)-1 DO
+			IF types[num].name^ = name THEN 
+				RETURN TRUE;
+			END;
+		END;
+			RETURN FALSE;
+		END FindProc;
+
+		PROCEDURE FindField(CONST types: POINTER TO ARRAY OF Modules.FieldEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+		BEGIN
+		IF types = NIL THEN RETURN FALSE END;
+		FOR num := 0 TO LEN(types)-1 DO
+			IF types[num].name^ = name THEN 
+				RETURN TRUE;
+			END;
+		END;
+			RETURN FALSE;
+		END FindField;
+
+
+
 		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
 		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: LONGINT;
 		BEGIN
 			ASSERT(x.left = NIL);
-			address.name := x.identifier;
+			item.name := x.identifier;
 			(*
-			address.object := FindInScope(address.scope, address.name);
+			item.object := FindInScope(item.scope, item.name);
 			*)
-			address.object := scope.FindObject1(address.name, -1, address.in);
-			IF address.object = NIL THEN
-				StringPool.GetString(address.name, moduleName);
-				module := Modules.ThisModule(moduleName, res, msg)
-			ELSE
-				module := NIL
+			item.object := scope.FindObject1(item.name, -1, item.in);
+			IF item.object = NIL THEN
+				StringPool.GetString(item.name, moduleName);
+				item.object :=InterpreterSymbols.GetModule(moduleName); 
 			END;
 		END VisitIdentifierDesignator;
 
 		PROCEDURE VisitSelectorDesignator*(x: SyntaxTree.SelectorDesignator);
-		VAR traverse: BOOLEAN; name: ARRAY 128 OF CHAR;
+		VAR traverse: BOOLEAN; name: ARRAY 128 OF CHAR; num: LONGINT;
 		BEGIN
 			Expression(x.left); traverse := FALSE;
 			IF error THEN RETURN END;
-			address.name := x.identifier;
-			IF (address.object # NIL) THEN
-				address.in := address.object;
-				address.object := InterpreterSymbols.FindInObject1(address.object, x.identifier,-1);
-			ELSIF module # NIL THEN
-				StringPool.GetString(address.name, name);
+			item.name := x.identifier;
+			IF (item.object # NIL) THEN
+				IF item.object IS Result THEN
+					StringPool.GetString(item.name, name);
+					item.object := item.object(Result).Find(name);
+				ELSE
+					item.in := item.object;
+					item.object := InterpreterSymbols.FindInObject1(item.object, x.identifier,-1);
+				END;
 			ELSE
-				ErrorSS("invalid selector",address.name);
-				address.in := NIL;
+				ErrorSS("invalid selector",item.name);
+				item.in := NIL;
 			END;
 		END VisitSelectorDesignator;
 
+		PROCEDURE PushParameters(e: SyntaxTree.ExpressionList);
+		VAR i: LONGINT; value: Value;
+		BEGIN
+			FOR i := 0 TO e.Length()-1 DO
+				IF GetValue(e.GetExpression(i), value) THEN
+					callStack.PushL(value(Integer).value);
+				END;
+			END;
+		END PushParameters;
+		
+	
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
 		VAR e: SyntaxTree.Expression;
-		BEGIN HALT(100);
+		BEGIN
 			e := x.left;
+			PushParameters(x.parameters);
+			Expression(e);
+			callStack.Call(procedureDesc.address);
+			TRACE(procedureDesc.name^, procedureDesc.address);
 			(*IF e IS IdentifierDesignator THEN
 			END;
 			*)
@@ -404,22 +618,22 @@ TYPE
 		BEGIN HALT(100) (* abstract *) END VisitArrowDesignator;
 
 		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
-		VAR array: InterpreterSymbols.MathArrayValue; i: LONGINT; element: InterpreterSymbols.Value; index: Integer; obj: PersistentObjects.Object;
+		VAR array: MathArrayValue; i: LONGINT; element: Value; index: Integer; obj: PersistentObjects.Object;
 			leftValue, rightValue: Value; filter: InterpreterSymbols.ObjectFilter; expression: SyntaxTree.Expression;
 			attribute, value: ARRAY 128 OF CHAR;
 		BEGIN
 			Expression(x.left);
-			IF (address.object # NIL) & (address.object IS InterpreterSymbols.MathArrayValue) THEN
-				element := address.object(InterpreterSymbols.MathArrayValue);
+			IF (item.object # NIL) & (item.object IS MathArrayValue) THEN
+				element := item.object(MathArrayValue);
 				FOR i := 0 TO x.parameters.Length()-1 DO
-					array := element(InterpreterSymbols.MathArrayValue);
+					array := element(MathArrayValue);
 					IF GetInteger(x.parameters.GetExpression(i), index) THEN
 						element := array.GetValue(index.value);
 					END;
 				END;
-				address.object := element;
-			ELSIF (address.object # NIL) THEN
-				NEW(filter); obj := address.object;
+				item.object := element;
+			ELSIF (item.object # NIL) THEN
+				NEW(filter); obj := item.object;
 				FOR i := 0 TO x.parameters.Length()-1 DO
 					expression := x.parameters.GetExpression(i);
 					IF (expression IS SyntaxTree.BinaryExpression) & (expression(SyntaxTree.BinaryExpression).operator = Scanner.Equal) THEN
@@ -427,28 +641,28 @@ TYPE
 						GetValue(expression(SyntaxTree.BinaryExpression).right, rightValue) THEN
 							StringPool.GetString(
 							expression(SyntaxTree.BinaryExpression).left(SyntaxTree.IdentifierDesignator).identifier, attribute);
-							rightValue(InterpreterSymbols.Value).GetString(value);
+							rightValue(Value).GetString(value);
 							obj := filter.Filter(obj, attribute, value)
 						ELSE HALT(200)
 						END;
 					ELSE
 						IF GetValue(expression, leftValue) THEN
 							IF leftValue IS String THEN
-								leftValue(InterpreterSymbols.Value).GetString(value);
+								leftValue(Value).GetString(value);
 								obj := filter.Filter(obj, "name", value);
 							ELSIF leftValue IS Integer THEN
 								IF obj IS PersistentObjects.ObjectList THEN
-									address.object := obj(PersistentObjects.ObjectList).GetElement(leftValue(Integer).value)
-								ELSIF obj IS InterpreterSymbols.Container THEN
-									address.object := obj(InterpreterSymbols.Container).GetItem(leftValue(Integer).value)
+									item.object := obj(PersistentObjects.ObjectList).GetElement(leftValue(Integer).value)
+								ELSIF obj IS Container THEN
+									item.object := obj(Container).GetItem(leftValue(Integer).value)
 								ELSE Error("cannot be indexed")
 								END;
 							END;
 						END;
 					END;
 				END;
-				IF obj(InterpreterSymbols.Container).symbols.Length() > 0 THEN
-					address.object := obj(InterpreterSymbols.Container).GetItem(0);
+				IF obj(Container).symbols.Length() > 0 THEN
+					item.object := obj(Container).GetItem(0);
 				ELSE
 					Error("no such symbol")
 				END;
@@ -585,7 +799,7 @@ TYPE
 					done := GetValue(expression, value);
 				UNTIL done OR ~parser.Optional(Scanner.Colon);
 
-				IF done THEN value(InterpreterSymbols.Value).WriteValue(destinationWriter);
+				IF done THEN value(Value).WriteValue(destinationWriter);
 				ELSE
 					destinationWriter.String("#COULD NOT INTERPRETE#");
 					error := TRUE;
@@ -710,8 +924,10 @@ TYPE
 
 		PROCEDURE LoadValue;
 		BEGIN
-			IF address.object = NIL THEN
-				ErrorSS("could not load value", address.name);
+			IF (item.object # NIL) & (item.object IS Result) THEN
+				item.object := item.object(Result).Evaluate();
+			ELSE
+				ErrorSS("could not load value", item.name);
 			END;
 		END LoadValue;
 
@@ -720,7 +936,9 @@ TYPE
 			IF error THEN RETURN FALSE END;
 			Expression(x);
 			LoadValue();
-			w := address.object;
+			IF item.object # NIL THEN
+				w := item.object(Value);
+			END;
 			RETURN ~error
 		END GetValue;
 
@@ -747,8 +965,9 @@ TYPE
 		PROCEDURE PutValue(x: SyntaxTree.Designator; v: Value);
 		BEGIN
 			x.Accept(SELF);
-			IF (address.in # NIL) & (address.name # 0) & (address.in IS InterpreterSymbols.Container) THEN
-				address.in(InterpreterSymbols.Container).Enter1(v, address.name);
+			IF (item.object # NIL) & item.object(Result).SetV(v) THEN
+			ELSIF (item.in # NIL) & (item.name # 0) & (item.in IS Container) THEN
+				item.in(Container).Enter1(v, item.name);
 			END;
 		END PutValue;
 
@@ -881,12 +1100,13 @@ TYPE
 		PROCEDURE Expression(x: SyntaxTree.Expression);
 		BEGIN
 			value := FALSE;
-			x.Accept(SELF);
+			x.Accept(SELF);			
 		END Expression;
-
+		
+		
 		PROCEDURE Statement(x: SyntaxTree.Statement);
 		BEGIN
-			address.object := NIL;
+			item.object := NIL;
 			x.Accept(SELF);
 		END Statement;
 
@@ -964,7 +1184,7 @@ TYPE
 			END;
 		END DoResolve;
 
-		PROCEDURE Resolve*(scope: InterpreterSymbols.Scope);
+		PROCEDURE Resolve*(scope: Scope);
 		BEGIN
 			REPEAT
 				changed := FALSE;
@@ -998,7 +1218,7 @@ BEGIN
 	expression := parser.Expression();
 	NEW(interpreter, global, diagnostics,NIL);
 	IF interpreter.GetValue(expression, value) THEN
-		value(InterpreterSymbols.Value).WriteValue(context.out); context.out.Ln
+		value(Value).WriteValue(context.out); context.out.Ln
 	ELSE
 		context.error.String("could not evaluate expression"); context.error.Ln
 	END;
@@ -1035,6 +1255,25 @@ END FoxInterpreter.
 
 SystemTools.Free FoxInterpreter FoxInterpreterSymbols ~
 
+
+FoxInterpreter.Expression
+	Test.c.b;
+	~ 
+FoxInterpreter.Statements
+	a := Test.c.b;
+	Test.c.b := Test.c.b + 1;
+	~	
+FoxInterpreter.Expression
+	a;
+	~	
+FoxInterpreter.Expression
+	Test.c.b;
+	~	
+
+FoxInterpreter.Statements
+	Test.Test(123)
+	~
+
 FoxInterpreter.Statements
 	FOR i := 1 TO 100 DO
 		CASE i MOD 10 OF
@@ -1052,7 +1291,10 @@ FoxInterpreter.Statements
 FoxInterpreter.Expression
 	i MOD 10  ~
 
-
+FoxInterpreter.Statements
+	o := Test.TestO();
+	~
+	
 
 FoxInterpreter.Statements
 	s := {0..10, 15};

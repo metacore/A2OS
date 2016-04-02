@@ -58,37 +58,51 @@ TYPE
 
 	
 	EntryType*=RECORD
-		(* classes:
-			0: no Type
-			1:  ObjectType
-			2:	NilType
-			3:	AnyType
-			4:	ByteType
-			5:	AddressType
-			6:	SizeType
-			7:	BooleanType
-			8:	SetType
-			9:	CharacterType
-			10:	RangeType
-			11:	SignedInteger
-			12:	UnsignedIntegerType
-			13:	FloatType
-			14:	ComplexType
-			15: StringType
-			16: EnumerationType
-			17: ArrayType
-			18: MathArrayType
-			19: PointerType
-			20: PortType
-			21: RecordType
-			22: CellType
-			23: ProcedureType		 
-		*)
-		class*: SHORTINT; 
+		class*: CHAR; 
+		subclass*: CHAR;
 		(* size in bits *)
 		size*: INTEGER;
 		type*: ADDRESS; (* type descriptor or additional information *)
 	END;
+	
+	VAR
+	(*
+		EntryType = POINTER TO EntryTypeDesc;
+		shortint: EntryType;
+		integer: EntryType;
+		longint: EntryType;
+		hugeint: EntryType;
+		size: EntryType;
+		address: EntryType;
+		real: EntryType;
+		longreal: EntryType;
+		set: EntryType;
+		...
+	*)
+
+	(*
+	Type = POINTER {UNSAFE} TO RECORD
+		class: CHAR
+	END;
+	
+	BaseType = POINTER {UNSAFE} TO RECORD(Type)
+		size: INTEGER;
+		type: ADDRESS;
+	END;
+	
+	StaticArrayType = POINTER {UNSAFE} TO RECORD(Type)
+		size: SIZE;
+		base: POINTER {UNSAFE} TO Base;
+	END;
+	
+	DynamicArrayType = POINTER {UNSAFE} TO RECORD(Type)
+		base: POINTER {UNSAFE} TO Type;
+	END;
+	
+	RecordType = POINTER {UNSAFE} TO RECORD(Type)
+		type: ADDRESS;
+	END;
+	*)
 
 	FieldEntry*= RECORD
 		name*: DynamicName;
@@ -96,6 +110,7 @@ TYPE
 		type*: EntryType;
 		flags*: SET;
 	END;
+	
 	FieldEntries*= POINTER TO ARRAY OF FieldEntry;
 	ProcedureEntries*=POINTER TO ARRAY OF ProcedureEntry;
 	

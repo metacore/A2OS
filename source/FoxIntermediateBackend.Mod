@@ -11096,6 +11096,13 @@ TYPE
 			section.Emit(Data(-1,op));
 		END Char;
 
+		PROCEDURE Integer(section: IntermediateCode.Section; int: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.integerType),int);
+			section.Emit(Data(-1,op));
+		END Integer;
+
 		PROCEDURE String(section: IntermediateCode.Section; CONST str: ARRAY OF CHAR);
 		VAR i: LONGINT;
 		BEGIN
@@ -12541,39 +12548,221 @@ TYPE
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				segmentedName, name: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
+			CONST
+			
+				sfTypeNoType = 0X;
+				sfTypeBoolean= 01X;
+				sfTypeChar = 02X;
+				sfTypeSignedInteger = 03X;
+				sfTypeUnsignedInteger = 04X;
+				sfTypeFloat = 05X;
+				sfTypeComplex = 06X;
+				sfTypeSet = 07X;
+				sfTypeByte =  08X;
+				sfTypeAny =  09X;
+				sfTypeObject =  0AX;
+				sfTypeAddress= 0BX;
+				sfTypeSize = 0CX;
+				sfTypeRange  = 0DX;
+				sfTypePointerToRecord = 0EX;
+				sfTypePointerToArray = 0FX;
+				sfTypeOpenArray = 10X;
+				sfTypeStaticArray = 11X;
+				sfTypeRecord = 12X;
+				
+				
+
 			BEGIN
 				IF type # NIL THEN 
 					type := type.resolved;
 					Info(source,"type class");
-					IF type IS SyntaxTree.PointerType THEN
-						Size(source, 1);
-					ELSIF type IS SyntaxTree.RecordType THEN
-						Size(source, 2);
-					ELSIF type IS SyntaxTree.NumberType THEN
-						Size(source, 3);
+					
+					size := type.sizeInBits;
+					IF type IS SyntaxTree.BasicType THEN (* BasicType  *)
+						IF type IS SyntaxTree.BooleanType THEN 
+							Char(source, sfTypeBoolean);
+						ELSIF type IS SyntaxTree.CharacterType THEN
+							Char(source, sfTypeChar);
+						ELSIF type IS SyntaxTree.IntegerType THEN
+							IF type(SyntaxTree.IntegerType).signed THEN
+								Char(source, sfTypeSignedInteger)
+							ELSE
+								Char(source, sfTypeUnsignedInteger)
+							END;
+						ELSIF type IS SyntaxTree.FloatType THEN
+							Char(source, sfTypeFloat);
+						ELSIF type IS SyntaxTree.ComplexType THEN
+							Char(source, sfTypeComplex)
+						ELSIF type IS SyntaxTree.SetType THEN
+							Char(source, sfTypeSet);
+						ELSIF type IS SyntaxTree.AnyType THEN 
+							Char(source, sfTypeAny);
+						ELSIF type IS SyntaxTree.ObjectType THEN
+							Char(source, sfTypeObject);
+						ELSIF type IS SyntaxTree.ByteType THEN
+							Char(source, sfTypeByte);
+						ELSIF type IS SyntaxTree.RangeType THEN
+							Char(source, sfTypeRange)
+						ELSIF type IS SyntaxTree.AddressType THEN 
+							Char(source, sfTypeAddress)
+						ELSIF type IS SyntaxTree.SizeType THEN 
+							Char(source, sfTypeSize)
+						ELSE 
+							Char(source, 0FFX); (* invalid type *)
+						END;
+					ELSIF (type IS SyntaxTree.PointerType) THEN
+						IF IsStrictlyPointerToRecord(type) THEN
+							Char(source, sfTypePointerToRecord)
+						ELSE
+							Char(source, sfTypePointerToArray)
+						END; 
+					ELSIF (type IS SyntaxTree.ArrayType) THEN
+						IF IsStaticArray(type) THEN
+							Char(source, sfTypeStaticArray)
+						ELSE
+							Char(source, sfTypeOpenArray)
+						END;
+					ELSIF (type IS SyntaxTree.RecordType) THEN
+						IF type(SyntaxTree.RecordType).pointerType # NIL (* OBJECT *) THEN
+							Char(source, sfTypePointerToRecord)
+						ELSE
+							Char(source, sfTypeRecord);
+						END;
 					ELSE
-						Size(source, 0);
+						Char(source, 0FFX); (* invalid type *)
+					END; 
+					Char(source, 0X); (* subtype *)
+
+						(*
+						IF TraceExport IN Trace THEN
+
+							IF  type IS SyntaxTree.RecordType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / RecordType "); D.Str(name); D.Ln END;
+								WITH type: SyntaxTree.RecordType DO
+									w.RawNum(sfTypeRecord);
+									baseType := type.baseType;
+									Type(baseType);
+									w.RawString(name);
+									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
+									w.RawNum(SYSTEM.VAL(LONGINT,flags));
+									Record(type)
+								END
+							ELSIF type IS SyntaxTree.PointerType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / PointerType "); D.Str(name); D.Ln END;
+								w.RawNum(sfTypePointer);
+								Type(type(SyntaxTree.PointerType).pointerBase);
+								w.RawString(name);
+								WITH type: SyntaxTree.PointerType DO
+									IF type.isUnsafe THEN INCL(flags,sfUnsafe) END;
+									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
+									IF type.isDisposable THEN INCL(flags,sfDisposable) END;
+								END;
+								w.RawNum(SYSTEM.VAL(LONGINT,flags));
+							ELSIF type IS SyntaxTree.ArrayType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / ArrayType "); D.Str(name); D.Ln END;
+								WITH type: SyntaxTree.ArrayType DO
+									IF type.form = SyntaxTree.Open THEN
+										w.RawNum(sfTypeOpenArray)
+									ELSIF type.form = SyntaxTree.Static THEN
+										w.RawNum(sfTypeStaticArray)
+									ELSE HALT(100)
+									END;
+									Type(type.arrayBase);
+									w.RawString(name);
+									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
+									w.RawNum(SYSTEM.VAL(LONGINT,flags));
+									IF type.form = SyntaxTree.Static THEN
+										w.RawNum(type.staticLength);
+									END;
+								END;
+							ELSIF type IS SyntaxTree.MathArrayType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / MathArrayType "); D.Str(name); D.Ln END;
+								WITH type: SyntaxTree.MathArrayType DO
+									IF type.form = SyntaxTree.Open THEN
+										w.RawNum(sfTypeOpenMathArray)
+									ELSIF type.form = SyntaxTree.Static THEN
+										w.RawNum(sfTypeStaticMathArray)
+									ELSIF type.form = SyntaxTree.Tensor THEN
+										w.RawNum(sfTypeTensor)
+									ELSE HALT(100)
+									END;
+									Type(type.arrayBase);
+									w.RawString(name);
+									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
+									w.RawNum(SYSTEM.VAL(LONGINT,flags));
+									IF type.form = SyntaxTree.Static THEN
+										w.RawNum(type.staticLength);
+									END;
+								END;
+							ELSIF type IS SyntaxTree.ProcedureType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / ProcedureType"); D.Str(name); D.Ln END;
+								WITH type: SyntaxTree.ProcedureType DO
+									IF type.isDelegate THEN
+										w.RawNum(sfSysFlag); w.RawNum(sfDelegate);
+									END;
+									w.RawNum(sfTypeProcedure);
+									Type(type.returnType);
+									w.RawString(name);
+
+									IF type.callingConvention =  SyntaxTree.WinAPICallingConvention THEN
+										INCL(flags,sfWinAPIParam);
+									ELSIF  type.callingConvention =  SyntaxTree.CCallingConvention  THEN
+										INCL(flags,sfCParam);
+									ELSIF  type.callingConvention =  SyntaxTree.DarwinCCallingConvention  THEN
+										INCL(flags,sfDarwinCParam);
+									END;
+									IF type.isRealtime THEN
+										INCL(flags,sfRealtime)
+									END;
+									w.RawNum(SYSTEM.VAL(LONGINT,flags));
+
+									ParameterList(type);
+								END;
+							ELSIF type IS SyntaxTree.EnumerationType THEN
+								IF TraceExport IN Trace THEN D.Str("Type / UserType / EnumerationType"); D.Str(name); D.Ln END;
+								WITH type: SyntaxTree.EnumerationType DO
+									w.RawNum(sfTypeEnumeration);
+									Type(type.enumerationBase);
+									w.RawString(name);
+									EnumerationList(type.enumerationScope);
+								END;
+							ELSE HALT(200)
+							END;
+						END;
 					END;
+					*)
+					Info(source, "size");
+					Integer(source, size);
 					Info(source, "type desc");
-					IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN
+					td := NIL;
+					IF type IS SyntaxTree.PointerType THEN
+						td := type(SyntaxTree.PointerType).typeDeclaration;
+						type := type(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF (td = NIL) & (type IS SyntaxTree.RecordType) THEN 
 						td := type(SyntaxTree.RecordType).typeDeclaration;
+					END;
+					IF (td # NIL) & (type IS SyntaxTree.RecordType) THEN
 						Global.GetSymbolSegmentedName(td,segmentedName);
 						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
 							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 						ELSE
 							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 						END;
-						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+						IF type IS SyntaxTree.RecordType THEN
+							offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+						END;
 						Symbol(source, tir,  0, offset);
 					ELSE
 						Address(source, 0);
 					END;
 				ELSE
-					Size(source, 0);
+					Char(source, 0X); (* NIL type *)
+					Char(source, 0X);
+					Integer(source, 0);
 					Address(source, 0);
 				END;
 			END TypeEntry;
-			
 			
 			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
@@ -12624,6 +12813,7 @@ TYPE
 						ReflectParameters(source, procedure);
 						(* variables *)
 						ReflectVariables(source, procedure);
+						(* proedures *)
 						ReflectProcedures(source, procedure);
 
 						(* return type entry *)

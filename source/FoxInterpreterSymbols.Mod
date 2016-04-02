@@ -1,26 +1,223 @@
 MODULE FoxInterpreterSymbols; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects;
+IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, SYSTEM;
 
 CONST
-	MaxIndex = 8;
 	TAB = 09X;
+
+CONST
+
+	sfTypeNoType = 0X;
+	sfTypeBoolean= 01X;
+	sfTypeChar = 02X;
+	sfTypeSignedInteger = 03X;
+	sfTypeUnsignedInteger = 04X;
+	sfTypeFloat = 05X;
+	sfTypeComplex = 06X;
+	sfTypeSet = 07X;
+	sfTypeByte =  08X;
+	sfTypeAny =  09X;
+	sfTypeObject =  0AX;
+	sfTypeAddress= 0BX;
+	sfTypeSize = 0CX;
+	sfTypeRange  = 0DX;
+	sfTypePointerToRecord = 0EX;
+	sfTypePointerToArray = 0FX;
+	sfTypeOpenArray = 10X;
+	sfTypeStaticArray = 11X;
+	sfTypeRecord = 12X;
+
 TYPE
 
 	Item*= PersistentObjects.Object;
+	Object* = PersistentObjects.Object;
+	Content* = PersistentObjects.Content;
 
-	Address*= RECORD
-		object*: Item;
-		in*: Item;
-		name*: StringPool.Index;
-		i*: ARRAY MaxIndex OF LONGINT; (* indices if applicable *)
-	END;
+	TYPE
 
-	Value* = OBJECT (Item)
+	Result*= OBJECT (Item)
+
+		PROCEDURE Evaluate*(): Value;
+		BEGIN
+			RETURN NIL;
+		END Evaluate;
+
+		PROCEDURE SetV*(v: Value): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END SetV;
+		
+		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
+		BEGIN
+			RETURN NIL;
+		END Find;
+
+		PROCEDURE Address*(): ADDRESS;
+		BEGIN
+			RETURN NIL;
+		END Address;
+		
+		PROCEDURE Trace*;
+		BEGIN
+			
+		END Trace;
+		
+	END Result;
+	
+		
+	SymbolResult*=OBJECT(Result)
+	VAR name: ARRAY 32 OF CHAR;
+	
+		PROCEDURE InitSymbol(CONST n: ARRAY OF CHAR);
+		BEGIN
+			COPY(n, name);
+		END InitSymbol;
+		
+	END SymbolResult;
+	
+	ModuleResult*= OBJECT(SymbolResult)
+	VAR 
+		self: Modules.TypeDesc;
+		
+		PROCEDURE & InitModule(CONST name: ARRAY OF CHAR; m: Modules.Module);
+		BEGIN
+			InitSymbol(name);
+			ASSERT(m # NIL);
+			self := FindType(m.typeInfo, "@Self");
+		END InitModule;
+		
+		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		VAR num: LONGINT;
+				proc: ProcedureResult;
+				field: FieldResult;
+		BEGIN
+				IF FindProc(self.procedures, name,num) THEN
+					NEW(proc, name, self.procedures[num]);
+					proc.address := self.procedures[num].address;
+					RETURN proc
+				ELSIF FindField(self.fields, name, num) THEN
+					NEW(field, name, self.fields[num]);
+					field.address := self.fields[num].offset;
+					RETURN field;
+				END;
+		END Find;
+
+
+	END ModuleResult;
+	
+	ProcedureResult*= OBJECT(SymbolResult)
+	VAR 
+		proc: Modules.ProcedureEntry;
+		address: ADDRESS;
+	
+		PROCEDURE & InitProcedure(CONST name: ARRAY OF CHAR; CONST p: Modules.ProcedureEntry);
+		BEGIN
+			InitSymbol(name); proc := p;
+		END InitProcedure;
+
+	END ProcedureResult;
+
+	FieldResult = OBJECT (SymbolResult)
+	VAR field: Modules.FieldEntry;
+		address: ADDRESS;
+	
+		PROCEDURE & InitField(CONST name: ARRAY OF CHAR; CONST f: Modules.FieldEntry);
+		BEGIN
+			InitSymbol(name); field := f;
+		END InitField;
+		
+		PROCEDURE Evaluate(): Value;
+		VAR l: LONGINT;
+			int: IntegerValue;
+		BEGIN
+			CASE field.type.class OF
+				sfTypeSignedInteger: 
+					SYSTEM.GET(address, l);
+					NEW(int, l); 
+					RETURN int
+			ELSE
+				HALT(100);
+			END;
+		END Evaluate;
+		
+		PROCEDURE SetV(v: Value): BOOLEAN;
+		VAR h: HUGEINT; s: SHORTINT; i: INTEGER; l: LONGINT; 
+		BEGIN
+			CASE field.type.class OF
+				sfTypeSignedInteger:
+				IF v.GetInt(h) THEN
+					CASE field.type.size OF
+					8: s:= SHORTINT(h); SYSTEM.PUT(address, s);
+					|16: i:= INTEGER(h); SYSTEM.PUT(address, i);
+					|32:l := LONGINT(h); SYSTEM.PUT(address, l);
+					|64: SYSTEM.PUT(address, h); 
+					END;
+				RETURN TRUE
+				END;
+			END;
+		END SetV;
+
+		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		VAR type, value: ADDRESS;
+		VAR typeInfo: Modules.TypeDesc; num: LONGINT;
+		proc: ProcedureResult; f: FieldResult;
+		BEGIN
+			IF (field.type.class = sfTypePointerToRecord)
+				OR (field.type.class = sfTypeAny) 
+				OR (field.type.class = sfTypeObject)
+			 THEN
+				SYSTEM.GET(address, value);
+				SYSTEM.GET(value-SIZEOF(ADDRESS), type); (*  type desc *)
+				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
+				IF FindProc(typeInfo.procedures, name,num) THEN
+					NEW(proc, name, typeInfo.procedures[num]);
+					proc.address := typeInfo.procedures[num].address;
+					RETURN proc
+				ELSIF FindField(typeInfo.fields, name, num) THEN
+					NEW(f, name, typeInfo.fields[num]);
+					f.address := value + typeInfo.fields[num].offset;
+					RETURN f;
+				ELSE HALT(101);
+				END;
+			ELSIF field.type.class = sfTypeRecord THEN
+				type := field.type.type;
+				SYSTEM.GET(type-SIZEOF(ADDRESS), typeInfo); (* type info*)
+				IF FindProc(typeInfo.procedures, name,num) THEN
+					NEW(proc, name, typeInfo.procedures[num]);
+					proc.address := typeInfo.procedures[num].address;
+					RETURN proc
+				ELSIF FindField(typeInfo.fields, name, num) THEN
+					NEW(f, name, typeInfo.fields[num]);
+					f.address := address + typeInfo.fields[num].offset;
+					RETURN f;
+				ELSE HALT(101);
+				END;
+			ELSE HALT(100); 
+			END;
+		END Find;
+		
+	END FieldResult;
+
+	Value*= OBJECT(Result)
 
 		PROCEDURE & InitValue;
 		BEGIN InitObject
 		END InitValue;
+
+		PROCEDURE Evaluate(): Value;
+		BEGIN
+			RETURN SELF;
+		END Evaluate;
+		
+		PROCEDURE GetInt(VAR h: HUGEINT): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetInt;
+		
+		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		BEGIN
+			RETURN FALSE;
+		END GetReal;
 
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
@@ -34,11 +231,49 @@ TYPE
 			stringWriter.Get(w);
 		END GetString;
 
-
 	END Value;
+
 
 	CONST StrValue="value";
 	TYPE
+
+	AnyValue*=OBJECT(Value)
+	VAR value*:ADDRESS;
+
+		PROCEDURE & InitAny*(value: ADDRESS);
+		BEGIN InitValue; SELF.value := value; type := "AnyValue";
+		END InitAny;
+
+		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
+		END Enumerate;
+
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		VAR int: LONGINT;
+		BEGIN
+			IF name = StrValue THEN c.GetInteger(int); value := int;
+			ELSE Set^(name, index, c);
+			END;
+		END Set;
+
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		BEGIN
+			IF name = StrValue THEN c.SetInteger(value);
+			ELSE Get^(name, index, c);
+			END;
+		END Get;
+
+		PROCEDURE WriteValue(w: Streams.Writer);
+		BEGIN w.Int(value,0);
+		END WriteValue;
+		
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
+		
+
+	END AnyValue;
 
 	IntegerValue*=OBJECT(Value)
 	VAR value*: LONGINT;
@@ -51,23 +286,34 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetInteger(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
+		
+		PROCEDURE GetInt(VAR v: HUGEINT): BOOLEAN;
+		BEGIN
+			v := value; RETURN TRUE;
+		END GetInt;
+		
 
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN w.Int(value,0);
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END IntegerValue;
 
@@ -82,14 +328,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetFloat(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetFloat(value);
 			ELSE Get^(name, index, c);
@@ -100,6 +346,10 @@ TYPE
 		BEGIN w.Float(value,40);
 		END WriteValue;
 
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END RealValue;
 
@@ -114,14 +364,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetBoolean(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetBoolean(value);
 			ELSE Get^(name, index, c);
@@ -131,6 +381,11 @@ TYPE
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN IF value THEN w.String("TRUE") ELSE w.String("FALSE") END
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END BooleanValue;
 
@@ -145,14 +400,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetString(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetString(value);
 			ELSE Get^(name, index, c);
@@ -162,6 +417,11 @@ TYPE
 		PROCEDURE WriteValue(w: Streams.Writer);
 		BEGIN (*w.String('"');*) w.String(value^); (*w.String('"');*)
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN value;
+		END Address;
 
 	END StringValue;
 
@@ -177,14 +437,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetSet(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetSet(value);
 			ELSE Get^(name, index, c);
@@ -195,6 +455,11 @@ TYPE
 		BEGIN
 			w.Set(value)
 		END WriteValue;
+		
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END SetValue;
 
@@ -209,14 +474,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetRange(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetRange(value);
 			ELSE Get^(name, index, c);
@@ -227,6 +492,11 @@ TYPE
 		BEGIN
 			w.Int(FIRST(value),0); w.String(" .. "); w.Int(LAST(value),0); IF STEP(value) # 1 THEN w.String(" BY "); w.Int(STEP(value),0) END;
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END RangeValue;
 
@@ -241,14 +511,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetChar(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetChar(value);
 			ELSE Get^(name, index, c);
@@ -259,6 +529,11 @@ TYPE
 		BEGIN
 			w.Hex(ORD(value),2); w.String("X");
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END CharValue;
 
@@ -273,14 +548,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetEnum(translation, value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetEnum(translation, value);
 			ELSE Get^(name, index, c);
@@ -292,6 +567,11 @@ TYPE
 		BEGIN
 			IF translation.Name(value, str) THEN w.String(str) ELSE w.String("unknown") END;
 		END WriteValue;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN ADDRESSOF(value)
+		END Address;
 
 	END EnumValue;
 
@@ -309,14 +589,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN values[index] := ContentGetValue(c)
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetObject(values[index],"Value");
 			ELSE Get^(name, index, c);
@@ -392,14 +672,14 @@ TYPE
 			END;
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF FALSE THEN
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: PersistentObjects.Content);
+		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR item: Item;
 		BEGIN
 			item := Find(name);
@@ -453,10 +733,10 @@ TYPE
 	Scope* = OBJECT
 	VAR
 		outer-: Scope;
-		object-: PersistentObjects.Object;
+		object-: Object;
 		level: LONGINT;
 
-		PROCEDURE & InitScope*(outer: Scope; object: PersistentObjects.Object);
+		PROCEDURE & InitScope*(outer: Scope; object: Object);
 		BEGIN
 			SELF.outer := outer;
 			IF outer = NIL THEN level := 0 ELSE level := outer.level + 1 END;
@@ -464,15 +744,15 @@ TYPE
 			SELF.object := object
 		END InitScope;
 
-		PROCEDURE Enter*(object: PersistentObjects.Object): Scope;
+		PROCEDURE Enter*(object: Object): Scope;
 		VAR scope: Scope;
 		BEGIN
 			NEW(scope, SELF, object);
 			RETURN scope
 		END Enter;
 
-		PROCEDURE FindObject*(CONST name: ARRAY OF CHAR; index: LONGINT; VAR in: PersistentObjects.Object): PersistentObjects.Object;
-		VAR object: PersistentObjects.Object;
+		PROCEDURE FindObject*(CONST name: ARRAY OF CHAR; index: LONGINT; VAR in: Object): Object;
+		VAR object: Object;
 		BEGIN
 			in := SELF.object;
 			object := FindInObject(in, name, index);
@@ -482,7 +762,7 @@ TYPE
 			RETURN object
 		END FindObject;
 
-		PROCEDURE FindObject1*(name: StringPool.Index; index: LONGINT; VAR in: PersistentObjects.Object): PersistentObjects.Object;
+		PROCEDURE FindObject1*(name: StringPool.Index; index: LONGINT; VAR in: Object): Object;
 		VAR str: ARRAY 256 OF CHAR;
 		BEGIN
 			StringPool.GetString(name, str);
@@ -524,8 +804,8 @@ TYPE
 		(*scope.Write(context.out);*)
 	END Test;
 
-	PROCEDURE ContentGetValue(c: PersistentObjects.Content): Value;
-	VAR o: PersistentObjects.Object;
+	PROCEDURE ContentGetValue(c: Content): Value;
+	VAR o: Object;
 	BEGIN
 		c.GetObject(o); IF o = NIL THEN RETURN NIL ELSE RETURN o(Value) END;
 	END ContentGetValue;
@@ -585,8 +865,8 @@ TYPE
 		NEW(obj, translation, value);
 	END NewEnumValue;
 
-	PROCEDURE FindInObject*(in: PersistentObjects.Object; CONST name: ARRAY OF CHAR; index: LONGINT): PersistentObjects.Object;
-	VAR content: PersistentObjects.Content;
+	PROCEDURE FindInObject*(in: Object; CONST name: ARRAY OF CHAR; index: LONGINT): Object;
+	VAR content: Content;
 	TYPE Class=PersistentObjects.Class;
 	BEGIN
 		NEW(content);
@@ -611,8 +891,8 @@ TYPE
 	TYPE
 	ObjectFilter* = OBJECT
 	VAR
-		content: PersistentObjects.Content;
-		object: PersistentObjects.Object;
+		content: Content;
+		object: Object;
 		found: Container;
 		attribute, value: ARRAY 256 OF CHAR;
 
@@ -621,7 +901,7 @@ TYPE
 			NEW(content); NEW(found);
 		END InitObjectFilter;
 
-		PROCEDURE AddFiltered(obj: PersistentObjects.Object);
+		PROCEDURE AddFiltered(obj: Object);
 		BEGIN
 			IF obj # NIL THEN
 				obj.Get(attribute, -1, content);
@@ -632,7 +912,7 @@ TYPE
 		END AddFiltered;
 
 		PROCEDURE Enumerate(CONST name: ARRAY OF CHAR; array: BOOLEAN);
-		VAR obj: PersistentObjects.Object; index: LONGINT;
+		VAR obj: Object; index: LONGINT;
 		BEGIN
 			object.Get(name,-1, content);
 			IF content.success & (content.class = PersistentObjects.Class.Object) THEN
@@ -650,7 +930,7 @@ TYPE
 			END;
 		END Enumerate;
 
-		PROCEDURE Filter*(obj: PersistentObjects.Object; attribute, value: ARRAY OF CHAR): Container;
+		PROCEDURE Filter*(obj: Object; attribute, value: ARRAY OF CHAR): Container;
 		BEGIN
 			NEW(found);
 			object := obj;
@@ -662,7 +942,55 @@ TYPE
 
 	END ObjectFilter;
 
-	PROCEDURE FindInObject1*(in: PersistentObjects.Object; name: StringPool.Index; index: LONGINT): PersistentObjects.Object;
+
+			
+	PROCEDURE FindType(CONST types: POINTER TO ARRAY OF Modules.TypeDesc; CONST name: ARRAY OF CHAR): Modules.TypeDesc;
+	VAR i: LONGINT;
+	BEGIN
+		IF types = NIL THEN RETURN NIL END;
+		FOR i := 0 TO LEN(types)-1 DO
+			IF types[i].name = name THEN 
+				RETURN types[i];
+			END;
+		END;
+		RETURN NIL;
+	END FindType;
+	
+	PROCEDURE FindField(CONST types: POINTER TO ARRAY OF Modules.FieldEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+	BEGIN
+		IF types = NIL THEN RETURN FALSE END;
+		FOR num := 0 TO LEN(types)-1 DO
+			IF types[num].name^ = name THEN 
+				RETURN TRUE;
+			END;
+		END;
+		RETURN FALSE;
+	END FindField;
+
+	PROCEDURE FindProc(CONST types: POINTER TO ARRAY OF Modules.ProcedureEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+	BEGIN
+		IF types = NIL THEN RETURN FALSE END;
+		FOR num := 0 TO LEN(types)-1 DO
+			IF types[num].name^ = name THEN 
+				RETURN TRUE;
+			END;
+		END;
+		RETURN FALSE;
+	END FindProc;
+	
+	PROCEDURE GetModule*(CONST name: ARRAY OF CHAR): ModuleResult;
+	VAR msg: ARRAY 128 OF CHAR; res: LONGINT; mod:ModuleResult; m: Modules.Module;
+	BEGIN
+		m := Modules.ThisModule(name, res, msg);
+		IF m # NIL THEN 
+			NEW(mod, name, m);
+		ELSE
+			mod := NIL;
+		END;
+		RETURN mod;
+	END GetModule;
+
+	PROCEDURE FindInObject1*(in: Object; name: StringPool.Index; index: LONGINT): Object;
 	VAR str: ARRAY 256 OF CHAR;
 	BEGIN
 		StringPool.GetString(name, str);

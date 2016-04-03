@@ -323,16 +323,39 @@ TYPE
 			stack.PushA(adr);
 		END PushAddress;
 		
-		PROCEDURE Push*(v: Value): BOOLEAN;
+		PROCEDURE Push*(v: Result): BOOLEAN;
 		VAR type: Modules.EntryType;
 			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
 			r: REAL; x: LONGREAL;
 			b: BOOLEAN;
 			set: SET;
+			var: BOOLEAN;
 		BEGIN
 			IF (proc.parameters = NIL) OR (index >= LEN(proc.parameters)) THEN RETURN FALSE END; 
 			type := proc.parameters[index].type;
+			var := 1 IN proc.parameters[index].flags;
 			INC(index);
+			IF var THEN
+				IF type.subclass = 0X THEN
+					CASE type.class OF
+						sfTypeCHAR .. sfTypePointerToArray:
+						 stack.PushA(v.Address());
+						 RETURN TRUE;
+					ELSE
+						RETURN FALSE
+					END;
+				ELSIF type.subclass = sfTypeOpenArray THEN
+					CASE type.class OF
+					sfTypeCHAR, sfTypeCHAR8:
+						IF v IS StringValue THEN
+							stack.PushSz(LEN(v(StringValue).value));
+							stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+							RETURN TRUE;
+						END;
+					END;
+				END;
+			ELSE
+			WITH v: Value DO 
 			IF type.subclass = 0X THEN
 				CASE type.class OF
 				sfTypeSHORTINT,sfTypeSIGNED8 : 
@@ -382,9 +405,11 @@ TYPE
 					IF v IS StringValue THEN
 						stack.PushSz(LEN(v(StringValue).value));
 						stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+						RETURN TRUE;
 					END;
 				END;
-				RETURN TRUE;
+			END;
+			END;
 			END;
 			RETURN FALSE;
 		END Push;

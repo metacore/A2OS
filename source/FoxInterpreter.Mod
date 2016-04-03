@@ -289,7 +289,7 @@ TYPE
 		BEGIN
 			FOR i := 0 TO x.elements.Length()-1 DO
 				IF GetValue(x.elements.GetExpression(i), value) THEN
-					IF value IS Integer THEN INCL(s, value(Integer).value)
+					IF value IS Integer THEN INCL(s, LONGINT(value(Integer).value))
 					ELSIF value IS Range THEN s := s + {FIRST(value(Range).value)..LAST(value(Range).value)}
 					ELSE Error("wrong value type")
 					END;
@@ -310,7 +310,7 @@ TYPE
 			item.object := a; value := TRUE;
 		END VisitMathArrayExpression;
 
-		PROCEDURE NewInt(i: LONGINT);
+		PROCEDURE NewInt(i: HUGEINT);
 		VAR v: Integer;
 		BEGIN
 			NEW(v, i); item.object := v; value := TRUE
@@ -353,7 +353,7 @@ TYPE
 		END NewChar;
 
 		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
-		VAR value: Value; i: LONGINT; r: LONGREAL; b: BOOLEAN; operator: LONGINT;
+		VAR value: Value; i: HUGEINT; r: LONGREAL; b: BOOLEAN; operator: LONGINT;
 		BEGIN
 			operator := x.operator;
 			IF ~GetValue(x, value) THEN RETURN END;
@@ -388,7 +388,7 @@ TYPE
 		END VisitUnaryExpression;
 
 		PROCEDURE VisitBinaryExpression*(x: SyntaxTree.BinaryExpression);
-		VAR left, right: Value; operator: LONGINT; li, ri: LONGINT; lr, rr: LONGREAL; lb, rb:  BOOLEAN; sl, sr: SET;
+		VAR left, right: Value; operator: LONGINT; li, ri: HUGEINT; lr, rr: LONGREAL; lb, rb:  BOOLEAN; sl, sr: SET;
 		BEGIN
 			operator := x.operator;
 			IF ~GetValue(x.left, left) OR ~GetValue(x.right, right) THEN RETURN END;
@@ -476,7 +476,7 @@ TYPE
 		END VisitBinaryExpression;
 
 		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
-		VAR first,last,step: LONGINT; value: Integer;
+		VAR first,last,step: HUGEINT; value: Integer;
 		BEGIN
 			IF ~ExpectInteger(x.first, value) THEN RETURN END;
 			first := value.value;
@@ -588,16 +588,6 @@ TYPE
 				item.in := NIL;
 			END;
 		END VisitSelectorDesignator;
-
-		PROCEDURE PushParameters(e: SyntaxTree.ExpressionList);
-		VAR i: LONGINT; value: Value;
-		BEGIN
-			FOR i := 0 TO e.Length()-1 DO
-				IF GetValue(e.GetExpression(i), value) THEN
-					callStack.PushL(value(Integer).value);
-				END;
-			END;
-		END PushParameters;
 		
 	
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
@@ -638,7 +628,7 @@ TYPE
 		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
 		VAR array: MathArrayValue; i: LONGINT; element: Value; index: Integer; obj: PersistentObjects.Object;
 			leftValue, rightValue: Value; filter: InterpreterSymbols.ObjectFilter; expression: SyntaxTree.Expression;
-			attribute, value: ARRAY 128 OF CHAR;
+			attribute, value: ARRAY 128 OF CHAR; val: LONGINT;
 		BEGIN
 			Expression(x.left);
 			IF (item.object # NIL) & (item.object IS MathArrayValue) THEN
@@ -646,7 +636,7 @@ TYPE
 				FOR i := 0 TO x.parameters.Length()-1 DO
 					array := element(MathArrayValue);
 					IF GetInteger(x.parameters.GetExpression(i), index) THEN
-						element := array.GetValue(index.value);
+						element := array.GetValue(LONGINT(index.value));
 					END;
 				END;
 				item.object := element;
@@ -670,9 +660,9 @@ TYPE
 								obj := filter.Filter(obj, "name", value);
 							ELSIF leftValue IS Integer THEN
 								IF obj IS PersistentObjects.ObjectList THEN
-									item.object := obj(PersistentObjects.ObjectList).GetElement(leftValue(Integer).value)
+									item.object := obj(PersistentObjects.ObjectList).GetElement(LONGINT(leftValue(Integer).value))
 								ELSIF obj IS Container THEN
-									item.object := obj(Container).GetItem(leftValue(Integer).value)
+									item.object := obj(Container).GetItem(LONGINT(leftValue(Integer).value))
 								ELSE Error("cannot be indexed")
 								END;
 							END;
@@ -1082,7 +1072,7 @@ TYPE
 		END VisitRepeatStatement;
 
 		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
-		VAR fromV, toV, byV: Integer; from, to, by,i: LONGINT; int: Integer;
+		VAR fromV, toV, byV: Integer; from, to, by,i: HUGEINT; int: Integer;
 		BEGIN
 			IF ExpectInteger(x.from, fromV) & ExpectInteger(x.to, toV) THEN
 				from := fromV.value;

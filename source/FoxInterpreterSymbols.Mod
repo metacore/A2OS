@@ -101,6 +101,7 @@ TYPE
 			InitSymbol(name);
 			ASSERT(m # NIL);
 			self := FindType(m.typeInfo, "@Self");
+			ASSERT(self # NIL);
 		END InitModule;
 		
 		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
@@ -218,75 +219,75 @@ TYPE
 		END PushSz;
 		
 		PROCEDURE Call(adr: ADDRESS);
-		VAR esp: ADDRESS; P: Procedure; h: HUGEINT
-		TYPE 
-			Procedure = PROCEDURE(): HUGEINT;
+		TYPE
+			P = PROCEDURE();
+		VAR
+			esp: ADDRESS;
+			p: P; 
 		BEGIN
-			P := SYSTEM.VAL(Procedure, adr); 
+			p := SYSTEM.VAL(P, adr);
 			esp := Machine.CurrentSP();
 			Machine.SetSP(esp-size);
 			IF size > 0 THEN 
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
-			H := P();
+			p();
 			Machine.SetSP(esp);
-		END Call;
-		
-		PROCEDURE ResH(): HUGEINT;
-		BEGIN
-			RETURN H;
-		END ResH;
+		END Call; 
 
-		PROCEDURE ResL(): LONGINT;
+		PROCEDURE CallH(adr: ADDRESS): HUGEINT;
+		TYPE
+			P = PROCEDURE(): HUGEINT;
+		VAR
+			res: HUGEINT; esp: ADDRESS;
+			p: P; 
 		BEGIN
-			RETURN LONGINT(H);
-		END ResL;
+			p := SYSTEM.VAL(P, adr);
+			esp := Machine.CurrentSP();
+			Machine.SetSP(esp-size);
+			IF size > 0 THEN 
+				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
+			END;
+			res := p();
+			Machine.SetSP(esp);
+			RETURN res;
+		END CallH; 
 
-		PROCEDURE ResI(): INTEGER;
+		PROCEDURE CallR(adr: ADDRESS): REAL;
+		TYPE
+			P = PROCEDURE(): REAL;
+		VAR
+			res: REAL; esp: ADDRESS;
+			p: P; 
 		BEGIN
-			RETURN INTEGER(H);
-		END ResI;
+			p := SYSTEM.VAL(P, adr);
+			esp := Machine.CurrentSP();
+			Machine.SetSP(esp-size);
+			IF size > 0 THEN 
+				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
+			END;
+			res := p();
+			Machine.SetSP(esp);
+			RETURN res;
+		END CallR; 
 
-		PROCEDURE ResS(): SHORTINT;
+		PROCEDURE CallX(adr: ADDRESS): LONGREAL;
+		TYPE
+			P = PROCEDURE(): LONGREAL;
+		VAR
+			res: LONGREAL; esp: ADDRESS;
+			p: P; 
 		BEGIN
-			RETURN SHORTINT(H);
-		END ResS;
-
-		PROCEDURE ResC(): CHAR;
-		BEGIN
-			RETURN CHR(H);
-		END ResC;
-
-		PROCEDURE ResB(): BOOLEAN;
-		BEGIN
-			RETURN SYSTEM.VAL(BOOLEAN, ResC());
-		END ResB;
-
-		PROCEDURE ResSet(): SET;
-		BEGIN
-			RETURN SYSTEM.VAL(SET,H);
-		END ResSet;
-
-		PROCEDURE ResSz(): SIZE;
-		BEGIN
-			RETURN SYSTEM.VAL(SIZE, H);
-		END ResSz;
-
-		PROCEDURE ResA(): ADDRESS;
-		BEGIN
-			RETURN SYSTEM.VAL(ADDRESS, H)
-		END ResA;
-
-		PROCEDURE ResR(): REAL;
-		BEGIN
-			RETURN SYSTEM.VAL(REAL, ResL())
-		END ResR;
-
-		PROCEDURE ResX(): LONGREAL;
-		BEGIN
-			RETURN SYSTEM.VAL(LONGREAL, ResH())
-		END ResX;
-
+			p := SYSTEM.VAL(P, adr);
+			esp := Machine.CurrentSP();
+			Machine.SetSP(esp-size);
+			IF size > 0 THEN 
+				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
+			END;
+			res := p();
+			Machine.SetSP(esp);
+			RETURN res;
+		END CallX; 
 	END Callstack;
 
 	ProcedureResult*= OBJECT(SymbolResult)
@@ -406,28 +407,28 @@ TYPE
 			type := proc.returnType;
 			CASE type.class OF
 				sfTypeSHORTINT,sfTypeSIGNED8 : 
-					NEW(int, stack.ResS()); 
+					NEW(int, SHORTINT(stack.CallH(address))); 
 					RETURN int;
 			| sfTypeINTEGER,sfTypeSIGNED16 : 
-					NEW(int, stack.ResI()); 
+					NEW(int,  INTEGER(stack.CallH(address))); 
 					RETURN int;
 			| sfTypeLONGINT,sfTypeSIGNED32: 
-					NEW(int, stack.ResL()); 
+					NEW(int,  LONGINT(stack.CallH(address))); 
 					RETURN int;
 			| sfTypeHUGEINT,sfTypeSIGNED64: 
-					NEW(int, SHORT(stack.ResH())); 
+					NEW(int, stack.CallH(address)); 
 					RETURN int;
 			|sfTypeREAL:
-				 NEW(real, stack.ResR()); 
+				 NEW(real, stack.CallR(address)); 
 				 RETURN real
 			|sfTypeLONGREAL:
-				NEW(real, stack.ResX());
+				NEW(real, stack.CallX(address));
 				RETURN real; 
 			|sfTypeBOOLEAN:
-				NEW(bool, stack.ResB()); 
+				NEW(bool, SYSTEM.VAL(BOOLEAN, stack.CallH(address))); 
 				RETURN bool; 
 			|sfTypeSET:
-				NEW(set, stack.ResSet());
+				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address))); 
 				RETURN set;
 			| sfTypeANY, sfTypeOBJECT, sfTypePointerToRecord:  (* pointers are passed as varpars *)
 				RETURN NIL;
@@ -768,9 +769,9 @@ TYPE
 	END AddressValue;
 
 	IntegerValue*=OBJECT(Value)
-	VAR value*: LONGINT;
+	VAR value*: HUGEINT;
 
-		PROCEDURE & InitInteger*(value: LONGINT);
+		PROCEDURE & InitInteger*(value: HUGEINT);
 		BEGIN InitValue; SELF.value := value; type := "IntegerValue";
 		END InitInteger;
 
@@ -779,15 +780,16 @@ TYPE
 		END Enumerate;
 
 		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		VAR val: LONGINT;
 		BEGIN
-			IF name = StrValue THEN c.GetInteger(value);
+			IF name = StrValue THEN c.GetInteger(val); value := val;
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
 		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
-			IF name = StrValue THEN c.SetInteger(value);
+			IF name = StrValue THEN c.SetInteger(LONGINT(value));
 			ELSE Get^(name, index, c);
 			END;
 		END Get;

@@ -305,6 +305,12 @@ TYPE
 			ELSE RETURN FALSE
 			END;
 		END ReturnsPointer;
+		
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN address;
+		END Address;
+		
 	
 		PROCEDURE & InitProcedure(c: Result; CONST name: ARRAY OF CHAR; CONST p: Modules.ProcedureEntry);
 		BEGIN
@@ -323,13 +329,14 @@ TYPE
 			stack.PushA(adr);
 		END PushAddress;
 		
-		PROCEDURE Push*(v: Result): BOOLEAN;
+		PROCEDURE Push*(o: Result): BOOLEAN;
 		VAR type: Modules.EntryType;
 			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
 			r: REAL; x: LONGREAL;
 			b: BOOLEAN;
 			set: SET;
 			var: BOOLEAN;
+			v:Value;
 		BEGIN
 			IF (proc.parameters = NIL) OR (index >= LEN(proc.parameters)) THEN RETURN FALSE END; 
 			type := proc.parameters[index].type;
@@ -339,7 +346,8 @@ TYPE
 				IF type.subclass = 0X THEN
 					CASE type.class OF
 						sfTypeCHAR .. sfTypePointerToArray:
-						 stack.PushA(v.Address());
+						(*! check type ! *)
+						 stack.PushA(o.Address());
 						 RETURN TRUE;
 					ELSE
 						RETURN FALSE
@@ -347,14 +355,16 @@ TYPE
 				ELSIF type.subclass = sfTypeOpenArray THEN
 					CASE type.class OF
 					sfTypeCHAR, sfTypeCHAR8:
-						IF v IS StringValue THEN
-							stack.PushSz(LEN(v(StringValue).value));
-							stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+						IF o IS StringValue THEN
+							stack.PushSz(LEN(o(StringValue).value));
+							stack.PushA(ADDRESSOF(o(StringValue).value[0])); 
 							RETURN TRUE;
 						END;
 					END;
 				END;
 			ELSE
+			v := o.Evaluate();
+			IF v = NIL THEN RETURN FALSE END;
 			WITH v: Value DO 
 			IF type.subclass = 0X THEN
 				CASE type.class OF
@@ -428,7 +438,6 @@ TYPE
 			set: SetValue;
 			any: AnyValue;
 		BEGIN
-			stack.Call(address);
 			type := proc.returnType;
 			CASE type.class OF
 				sfTypeSHORTINT,sfTypeSIGNED8 : 
@@ -456,8 +465,11 @@ TYPE
 				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address))); 
 				RETURN set;
 			| sfTypeANY, sfTypeOBJECT, sfTypePointerToRecord:  (* pointers are passed as varpars *)
+				stack.Call(address);
 				RETURN NIL;
-			| 0X: RETURN NIL;
+			| 0X: 
+				stack.Call(address);
+				RETURN NIL;
 			END;
 			RETURN NIL;
 		END Evaluate;
@@ -473,6 +485,11 @@ TYPE
 			InitSymbol(name); field := f;
 		END InitField;
 		
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN address;
+		END Address;
+
 		PROCEDURE Evaluate(): Value;
 		VAR 
 			s: SHORTINT;

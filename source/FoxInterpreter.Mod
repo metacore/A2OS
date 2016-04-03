@@ -612,7 +612,7 @@ TYPE
 				END; 
 				FOR i := 0 TO x.parameters.Length()-1 DO
 					e := x.parameters.GetExpression(i);
-					IF ~proc.Push(Evaluate(e)) THEN Error("wrong parameter"); RETURN END;
+					IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); RETURN END;
 				END;
 				IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END; 
 				item.object := proc.Evaluate();
@@ -957,6 +957,16 @@ TYPE
 			END;
 			RETURN ~error
 		END GetValue;
+		
+		PROCEDURE Designate(x: SyntaxTree.Expression): Result;
+		BEGIN
+			Expression(x);
+			IF item.object # NIL THEN 
+				RETURN item.object(Result);
+			ELSE 
+				RETURN NIL
+			END;
+		END Designate;
 		
 		PROCEDURE Evaluate(x: SyntaxTree.Expression): Value;
 		VAR w: Value;

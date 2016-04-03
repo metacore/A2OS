@@ -7,25 +7,42 @@ CONST
 
 CONST
 
-	sfTypeNoType = 0X;
-	sfTypeBoolean= 01X;
-	sfTypeChar = 02X;
-	sfTypeSignedInteger = 03X;
-	sfTypeUnsignedInteger = 04X;
-	sfTypeFloat = 05X;
-	sfTypeComplex = 06X;
-	sfTypeSet = 07X;
-	sfTypeByte =  08X;
-	sfTypeAny =  09X;
-	sfTypeObject =  0AX;
-	sfTypeAddress= 0BX;
-	sfTypeSize = 0CX;
-	sfTypeRange  = 0DX;
-	sfTypePointerToRecord = 0EX;
-	sfTypePointerToArray = 0FX;
-	sfTypeOpenArray = 10X;
-	sfTypeStaticArray = 11X;
-	sfTypeRecord = 12X;
+			sfTypeNone = 0X;
+			sfTypeCHAR = 01X;
+			sfTypeCHAR8 = 02X;
+			sfTypeCHAR16 = 03X;
+			sfTypeCHAR32 = 04X;
+			sfTypeRANGE = 05X;
+			sfTypeSHORTINT = 06X;
+			sfTypeINTEGER = 07X;
+			sfTypeLONGINT = 08X;
+			sfTypeHUGEINT = 09X;
+			sfTypeWORD = 0AX;
+			sfTypeLONGWORD = 0BX;
+			sfTypeSIGNED8 = 0CX;
+			sfTypeSIGNED16 = 0DX;
+			sfTypeSIGNED32 = 0EX;
+			sfTypeSIGNED64 = 0FX;
+			sfTypeUNSIGNED8 = 10X;
+			sfTypeUNSIGNED16 = 11X; 
+			sfTypeUNSIGNED32 = 12X;
+			sfTypeUNSIGNED64 = 13X;
+			sfTypeREAL = 14X;
+			sfTypeLONGREAL = 15X;
+			sfTypeCOMPLEX = 16X;
+			sfTypeLONGCOMPLEX = 17X;
+			sfTypeBOOLEAN = 18X;
+			sfTypeSET = 19X;
+			sfTypeANY = 1AX;
+			sfTypeOBJECT = 1BX; 
+			sfTypeBYTE = 1CX; 
+			sfTypeADDRESS = 1DX; 
+			sfTypeSIZE = 1EX; 
+			sfTypePointerToRecord = 20X;
+			sfTypePointerToArray = 21X;
+			sfTypeOpenArray = 22X;
+			sfTypeStaticArray = 23X;
+			sfTypeRecord = 24X;
 
 TYPE
 
@@ -283,7 +300,7 @@ TYPE
 		PROCEDURE ReturnsPointer*(): BOOLEAN;
 		BEGIN
 			CASE proc.returnType.class
-			OF sfTypeAny, sfTypeObject, sfTypePointerToRecord: RETURN TRUE
+			OF sfTypeANY, sfTypeOBJECT, sfTypePointerToRecord: RETURN TRUE
 			ELSE RETURN FALSE
 			END;
 		END ReturnsPointer;
@@ -315,36 +332,58 @@ TYPE
 			IF (proc.parameters = NIL) OR (index >= LEN(proc.parameters)) THEN RETURN FALSE END; 
 			type := proc.parameters[index].type;
 			INC(index);
-			
-			CASE type.class OF
-				sfTypeSignedInteger:
-				IF v.GetInt(h) THEN
-					CASE type.size OF
-					8: s:= SHORTINT(h); stack.PushS(s);
-					|16: i:= INTEGER(h); stack.PushI(i);
-					|32:l := LONGINT(h); stack.PushL(l);
-					|64:stack.PushH(h); 
+			IF type.subclass = 0X THEN
+				CASE type.class OF
+				sfTypeSHORTINT,sfTypeSIGNED8 : 
+					IF v.GetInt(h) THEN
+						s:= SHORTINT(h); stack.PushS(s);
+						RETURN TRUE;
 					END;
-					RETURN TRUE
-				END;
-			|sfTypeFloat:
-				IF v.GetReal(x) THEN
-					CASE type.size OF
-					32: r := REAL(x);stack.PushR(r)
-					|64: stack.PushX(x)
+				| sfTypeINTEGER,sfTypeSIGNED16 : 
+					IF v.GetInt(h) THEN
+						i:= INTEGER(h); stack.PushI(i);
+						RETURN TRUE;
 					END;
+				| sfTypeLONGINT,sfTypeSIGNED32: 
+					IF v.GetInt(h) THEN
+						l:= LONGINT(h); stack.PushL(l);
+						RETURN TRUE;
+					END;
+				| sfTypeHUGEINT,sfTypeSIGNED64: 
+					IF v.GetInt(h) THEN
+						stack.PushH(h);
+						RETURN TRUE;
+					END;
+				|sfTypeREAL:
+					IF v.GetReal(x) THEN
+						r := REAL(x);stack.PushR(r);
+						RETURN TRUE;
+					END;
+				|sfTypeLONGREAL:
+					IF v.GetReal(x) THEN
+						stack.PushX(x);
+						RETURN TRUE;
+					END;
+				|sfTypeBOOLEAN:
+					IF v.GetBoolean(b) THEN
+						stack.PushB(b);
 					RETURN TRUE
+					END;
+				|sfTypeSET:
+					IF v.GetSet(set) THEN
+						stack.PushSet(set);
+						RETURN TRUE
+					END;
 				END;
-			|sfTypeBoolean:
-				IF v.GetBoolean(b) THEN
-					stack.PushB(b);
-				RETURN TRUE
+			ELSIF type.subclass = sfTypeOpenArray THEN
+				CASE type.class OF
+				sfTypeCHAR, sfTypeCHAR8:
+					IF v IS StringValue THEN
+						stack.PushSz(LEN(v(StringValue).value));
+						stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+					END;
 				END;
-			|sfTypeSet:
-				IF v.GetSet(set) THEN
-					stack.PushSet(set);
-					RETURN TRUE
-				END;
+				RETURN TRUE;
 			END;
 			RETURN FALSE;
 		END Push;
@@ -366,27 +405,31 @@ TYPE
 			stack.Call(address);
 			type := proc.returnType;
 			CASE type.class OF
-				sfTypeSignedInteger:
-				CASE type.size OF
-				8: NEW(int, stack.ResS()); 
-				|16: NEW(int, stack.ResI());
-				|32: NEW(int, stack.ResL());
-				|64: NEW(int, SHORT(stack.ResH())); 
-				END;
-				RETURN int;
-			|sfTypeFloat:
-				CASE type.size OF
-				32: NEW(real, stack.ResR()); 
-				|64: NEW(real, stack.ResX());
-				END;
-				RETURN real;
-			|sfTypeBoolean:
+				sfTypeSHORTINT,sfTypeSIGNED8 : 
+					NEW(int, stack.ResS()); 
+					RETURN int;
+			| sfTypeINTEGER,sfTypeSIGNED16 : 
+					NEW(int, stack.ResI()); 
+					RETURN int;
+			| sfTypeLONGINT,sfTypeSIGNED32: 
+					NEW(int, stack.ResL()); 
+					RETURN int;
+			| sfTypeHUGEINT,sfTypeSIGNED64: 
+					NEW(int, SHORT(stack.ResH())); 
+					RETURN int;
+			|sfTypeREAL:
+				 NEW(real, stack.ResR()); 
+				 RETURN real
+			|sfTypeLONGREAL:
+				NEW(real, stack.ResX());
+				RETURN real; 
+			|sfTypeBOOLEAN:
 				NEW(bool, stack.ResB()); 
 				RETURN bool; 
-			|sfTypeSet:
+			|sfTypeSET:
 				NEW(set, stack.ResSet());
 				RETURN set;
-			| sfTypeAny, sfTypeObject, sfTypePointerToRecord:  (* pointers are passed as varpars *)
+			| sfTypeANY, sfTypeOBJECT, sfTypePointerToRecord:  (* pointers are passed as varpars *)
 				RETURN NIL;
 			| 0X: RETURN NIL;
 			END;
@@ -405,17 +448,34 @@ TYPE
 		END InitField;
 		
 		PROCEDURE Evaluate(): Value;
-		VAR l: LONGINT;
+		VAR 
+			s: SHORTINT;
+			i: INTEGER;
+			l: LONGINT;
+			h: HUGEINT;
+			
 			int: IntegerValue;
 			a: ANY; 
 			any: AnyValue; 
 		BEGIN
 			CASE field.type.class OF
-				sfTypeSignedInteger: 
+				sfTypeSHORTINT,sfTypeSIGNED8 : 
+					SYSTEM.GET(address, s);
+					NEW(int, s); 
+					RETURN int;
+			| sfTypeINTEGER,sfTypeSIGNED16 : 
+					SYSTEM.GET(address, i);
+					NEW(int, i); 
+					RETURN int;
+			| sfTypeLONGINT,sfTypeSIGNED32: 
 					SYSTEM.GET(address, l);
 					NEW(int, l); 
 					RETURN int;
-			| sfTypePointerToRecord, sfTypeAny, sfTypeObject:
+			| sfTypeHUGEINT,sfTypeSIGNED64: 
+					SYSTEM.GET(address, h);
+					NEW(int,LONGINT(h)); 
+					RETURN int;
+			| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
 				SYSTEM.GET(address, a); 
 					NEW(any, a);
 					RETURN any;
@@ -432,30 +492,42 @@ TYPE
 			set: SET;
 		BEGIN
 			CASE field.type.class OF
-				sfTypeSignedInteger:
+				sfTypeSHORTINT, sfTypeSIGNED8:
 				IF v.GetInt(h) THEN
-					CASE field.type.size OF
-					8: s:= SHORTINT(h); SYSTEM.PUT(address, s);
-					|16: i:= INTEGER(h); SYSTEM.PUT(address, i);
-					|32:l := LONGINT(h); SYSTEM.PUT(address, l);
-					|64: SYSTEM.PUT(address, h); 
-					END;
+					s:= SHORTINT(h); SYSTEM.PUT(address, s);
+					RETURN TRUE;
+				END;
+			|sfTypeINTEGER, sfTypeSIGNED16:
+				IF v.GetInt(h) THEN
+					i:= INTEGER(h); SYSTEM.PUT(address, i);
+					RETURN TRUE;
+				END;
+			|sfTypeLONGINT, sfTypeSIGNED32:
+				IF v.GetInt(h) THEN
+					l:= LONGINT(h); SYSTEM.PUT(address, l);
+					RETURN TRUE;
+				END;
+			|sfTypeHUGEINT, sfTypeSIGNED64:
+				IF v.GetInt(h) THEN
+					SYSTEM.PUT(address, h); 
 					RETURN TRUE
 				END;
-			|sfTypeFloat:
+			|sfTypeREAL:
 				IF v.GetReal(x) THEN
-					CASE field.type.size OF
-					32: r := REAL(x); SYSTEM.PUT(address, r);
-					|64: SYSTEM.PUT(address,x); 
-					END;
+					r := REAL(x); SYSTEM.PUT(address, r);
 					RETURN TRUE
 				END;
-			|sfTypeBoolean:
+			|sfTypeLONGREAL:
+				IF v.GetReal(x) THEN
+					SYSTEM.PUT(address,x); 
+					RETURN TRUE
+				END;
+			|sfTypeBOOLEAN:
 				IF v.GetBoolean(b) THEN
 					SYSTEM.PUT(address,b); 
 					RETURN TRUE
 				END;
-			|sfTypeSet:
+			|sfTypeSET:
 				IF v.GetSet(set) THEN
 					SYSTEM.PUT(address,set); 
 					RETURN TRUE
@@ -469,8 +541,8 @@ TYPE
 		proc: ProcedureResult; f: FieldResult;
 		BEGIN
 			IF (field.type.class = sfTypePointerToRecord)
-				OR (field.type.class = sfTypeAny) 
-				OR (field.type.class = sfTypeObject)
+				OR (field.type.class = sfTypeANY) 
+				OR (field.type.class = sfTypeOBJECT)
 			 THEN
 				SYSTEM.GET(address, value);
 				SYSTEM.GET(value-SIZEOF(ADDRESS), type); (*  type desc *)

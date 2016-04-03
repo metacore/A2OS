@@ -259,7 +259,6 @@ TYPE
 
 			LOOP
 				ch := context.in.Get();
-				TRACE(ORD(ch), ch);
 				IF IsAsciiCharacter(ch) THEN
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN

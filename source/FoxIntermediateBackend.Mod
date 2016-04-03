@@ -12548,65 +12548,144 @@ TYPE
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				segmentedName, name: Basic.SegmentedName;
 				td: SyntaxTree.TypeDeclaration;
+				sub: CHAR;
 			CONST
 			
-				sfTypeNoType = 0X;
-				sfTypeBoolean= 01X;
-				sfTypeChar = 02X;
-				sfTypeSignedInteger = 03X;
-				sfTypeUnsignedInteger = 04X;
-				sfTypeFloat = 05X;
-				sfTypeComplex = 06X;
-				sfTypeSet = 07X;
-				sfTypeByte =  08X;
-				sfTypeAny =  09X;
-				sfTypeObject =  0AX;
-				sfTypeAddress= 0BX;
-				sfTypeSize = 0CX;
-				sfTypeRange  = 0DX;
-				sfTypePointerToRecord = 0EX;
-				sfTypePointerToArray = 0FX;
-				sfTypeOpenArray = 10X;
-				sfTypeStaticArray = 11X;
-				sfTypeRecord = 12X;
 				
-				
-
+			sfTypeNone = 0X;
+			sfTypeCHAR = 01X;
+			sfTypeCHAR8 = 02X;
+			sfTypeCHAR16 = 03X;
+			sfTypeCHAR32 = 04X;
+			sfTypeRANGE = 05X;
+			sfTypeSHORTINT = 06X;
+			sfTypeINTEGER = 07X;
+			sfTypeLONGINT = 08X;
+			sfTypeHUGEINT = 09X;
+			sfTypeWORD = 0AX;
+			sfTypeLONGWORD = 0BX;
+			sfTypeSIGNED8 = 0CX;
+			sfTypeSIGNED16 = 0DX;
+			sfTypeSIGNED32 = 0EX;
+			sfTypeSIGNED64 = 0FX;
+			sfTypeUNSIGNED8 = 10X;
+			sfTypeUNSIGNED16 = 11X; 
+			sfTypeUNSIGNED32 = 12X;
+			sfTypeUNSIGNED64 = 13X;
+			sfTypeREAL = 14X;
+			sfTypeLONGREAL = 15X;
+			sfTypeCOMPLEX = 16X;
+			sfTypeLONGCOMPLEX = 17X;
+			sfTypeBOOLEAN = 18X;
+			sfTypeSET = 19X;
+			sfTypeANY = 1AX;
+			sfTypeOBJECT = 1BX; 
+			sfTypeBYTE = 1CX; 
+			sfTypeADDRESS = 1DX; 
+			sfTypeSIZE = 1EX; 
+			sfTypePointerToRecord = 20X;
+			sfTypePointerToArray = 21X;
+			sfTypeOpenArray = 22X;
+			sfTypeStaticArray = 23X;
+			sfTypeRecord = 24X;
+			
 			BEGIN
 				IF type # NIL THEN 
 					type := type.resolved;
 					Info(source,"type class");
-					
+					sub := 0X;
 					size := type.sizeInBits;
+					IF type IS SyntaxTree.ArrayType THEN
+						IF IsOpenArray(type) THEN
+							 sub := sfTypeOpenArray;
+						 ELSIF IsStaticArray(type) THEN
+						 	sub := sfTypeStaticArray;
+						 END;
+						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+					END;
 					IF type IS SyntaxTree.BasicType THEN (* BasicType  *)
 						IF type IS SyntaxTree.BooleanType THEN 
-							Char(source, sfTypeBoolean);
+							Char(source, sfTypeBOOLEAN);
 						ELSIF type IS SyntaxTree.CharacterType THEN
-							Char(source, sfTypeChar);
+							IF type = module.system.characterType THEN
+								Char(source, sfTypeCHAR);
+							ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
+								Char(source, sfTypeCHAR8)
+							ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
+								Char(source, sfTypeCHAR16);
+							ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
+								Char(source, sfTypeCHAR32);
+							ELSE
+								Char(source, 0FFX); (* invalid type *)
+							END;
 						ELSIF type IS SyntaxTree.IntegerType THEN
 							IF type(SyntaxTree.IntegerType).signed THEN
-								Char(source, sfTypeSignedInteger)
+								IF (type = module.system.shortintType) THEN
+									Char(source, sfTypeSHORTINT)
+								ELSIF (type = module.system.integerType) THEN
+									Char(source, sfTypeINTEGER)
+								ELSIF (type = module.system.longintType) THEN
+									Char(source, sfTypeLONGINT)
+								ELSIF (type = module.system.hugeintType) THEN 
+									Char(source, sfTypeHUGEINT)
+								ELSIF (type = module.system.wordType) THEN
+									Char(source, sfTypeWORD)
+								ELSIF (type = module.system.longWordType) THEN
+									Char(source, sfTypeLONGWORD);
+								ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
+									Char(source, sfTypeSIGNED8)
+								ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
+									Char(source, sfTypeSIGNED16)
+								ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
+									Char(source, sfTypeSIGNED32)
+								ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
+									Char(source, sfTypeSIGNED64)
+								ELSE
+									Char(source, 0FFX); (* invalid type *)
+								END 
 							ELSE
-								Char(source, sfTypeUnsignedInteger)
+								IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
+									Char(source, sfTypeUNSIGNED8)
+								ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
+									Char(source, sfTypeUNSIGNED16)
+								ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
+									Char(source, sfTypeUNSIGNED32)
+								ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
+									Char(source, sfTypeUNSIGNED64)
+								ELSE
+									Char(source, 0FFX); (* invalid type *)
+								END 
 							END;
 						ELSIF type IS SyntaxTree.FloatType THEN
-							Char(source, sfTypeFloat);
+							IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
+								Char(source, sfTypeREAL);
+							ELSIF (type = module.system.longrealType) OR (type.sizeInBits = 64) THEN
+								Char(source, sfTypeLONGREAL);
+							ELSE
+								Char(source, 0FFX); (* invalid type *)
+							END;
 						ELSIF type IS SyntaxTree.ComplexType THEN
-							Char(source, sfTypeComplex)
+							IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
+								Char(source, sfTypeCOMPLEX);
+							ELSIF (type = module.system.longcomplexType) OR (type.sizeInBits = 12) THEN
+								Char(source, sfTypeLONGCOMPLEX);
+							ELSE
+								Char(source, 0FFX); (* invalid type *)
+							END;
 						ELSIF type IS SyntaxTree.SetType THEN
-							Char(source, sfTypeSet);
+							Char(source, sfTypeSET);
 						ELSIF type IS SyntaxTree.AnyType THEN 
-							Char(source, sfTypeAny);
+							Char(source, sfTypeANY);
 						ELSIF type IS SyntaxTree.ObjectType THEN
-							Char(source, sfTypeObject);
+							Char(source, sfTypeOBJECT);
 						ELSIF type IS SyntaxTree.ByteType THEN
-							Char(source, sfTypeByte);
+							Char(source, sfTypeBYTE);
 						ELSIF type IS SyntaxTree.RangeType THEN
-							Char(source, sfTypeRange)
+							Char(source, sfTypeRANGE)
 						ELSIF type IS SyntaxTree.AddressType THEN 
-							Char(source, sfTypeAddress)
+							Char(source, sfTypeADDRESS)
 						ELSIF type IS SyntaxTree.SizeType THEN 
-							Char(source, sfTypeSize)
+							Char(source, sfTypeSIZE)
 						ELSE 
 							Char(source, 0FFX); (* invalid type *)
 						END;
@@ -12631,7 +12710,7 @@ TYPE
 					ELSE
 						Char(source, 0FFX); (* invalid type *)
 					END; 
-					Char(source, 0X); (* subtype *)
+					Char(source, sub); (* subtype *)
 
 						(*
 						IF TraceExport IN Trace THEN

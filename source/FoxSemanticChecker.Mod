@@ -2558,6 +2558,8 @@ TYPE
 						OR ~(type IS SyntaxTree.ArrayType) THEN
 						Error(expression.position,Diagnostics.Invalid,"cannot convert array type to non-array type")
 					END;
+			ELSIF IsPointerType(type) & ~IsPointerType(expression.type.resolved) THEN
+				result := SyntaxTree.NewConversion(expression.position,expression,system.addressType,reference);
 			ELSIF ~(type IS SyntaxTree.BasicType) & ~(expression.type.resolved IS SyntaxTree.CharacterType) THEN
 				(*skip, no conversion*)
 			ELSIF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
@@ -2978,6 +2980,9 @@ TYPE
 					Error(binaryExpression.position,Diagnostics.Invalid,"incompatible operands");
 					IF VerboseErrorMessage THEN Printout.Info("leftType",leftType); Printout.Info("right",rightType) END
 				ELSIF (operator = Scanner.Equal) OR (operator = Scanner.Unequal) THEN
+					ConvertOperands(left, right);
+					binaryExpression.SetLeft(left);
+					binaryExpression.SetRight(right);
 					IF (left IS SyntaxTree.NilValue) & (right IS SyntaxTree.NilValue) THEN
 						IF operator = Scanner.Equal THEN NewBool(TRUE) ELSE NewBool(FALSE) END;
 					END;

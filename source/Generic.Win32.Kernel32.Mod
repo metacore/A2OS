@@ -749,7 +749,7 @@ VAR
 	Shutdown*: PROCEDURE ( code: LONGINT );
 
 	(** Wrapper for getProcAddress. *)
-	PROCEDURE GetProcAddress*( hModule: HMODULE;  procName: ARRAY OF CHAR; VAR adr: ADDRESS );
+	PROCEDURE GetProcAddress*( hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS );
 	BEGIN
 		adr := getProcAddress( hModule, procName )
 	END GetProcAddress;
@@ -777,7 +777,7 @@ VAR
 	BEGIN
 	END NoOutputString;
 
-	PROCEDURE SendToDebugger*(str: ARRAY OF CHAR;  x: LONGINT );
+	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: LONGINT );
 	VAR s: ARRAY 16 OF CHAR;
 		d, i: LONGINT;
 	BEGIN

@@ -210,8 +210,8 @@ TYPE
 			END;
 
 	Timeval* = RECORD
-				sec*	: HUGEINT;
-				usec*	: HUGEINT
+				sec*	: LONGINT;
+				usec*	: LONGINT
 			END;
 
 	TmPtr* = POINTER TO Tm;
@@ -242,13 +242,13 @@ TYPE
 
 	Dirent* = POINTER TO RECORD
 				ino-, off-	: LONGINT;   (* these may change to HUGEINT in future Linux releases!! *)
-				reclen-		: INTEGER;
+				reclen-	: INTEGER;
 				typ-		: CHAR;
-				name-		: (*array of*) CHAR;
+				name-	: (*array of*) CHAR;
 			END;
 
 	Stack* = RECORD
-				sp*			: ADDRESS;
+				sp*		: ADDRESS;
 				flags*		: SET;
 				size*		: SIZE
 			END;

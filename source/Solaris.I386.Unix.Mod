@@ -111,7 +111,7 @@ CONST
 		
 	(* types of connection *)
 		SockStream*	= 2;
-		SockDGram*		= 1;
+		SockDGram*	= 1;
 		
 	(* protocols *)
 		IpProtoUDP*	= 17;
@@ -121,7 +121,7 @@ CONST
 		SoLSocket*		= 0FFFFH;	(* socket option level *)
 		SoLinger*		= 80H; 		(* linger (gracefully close the connection)*)
 		SoKeepAlive*	= 8;			(* keep connection alive *)
-		SoNoDelay*	= 1;			(* no delay *)
+		SoNoDelay*		= 1;			(* no delay *)
 		
 	(* ioctl *)
 		FioNRead*		= 4004667FH;	(* something to read ? *)
@@ -131,7 +131,7 @@ CONST
 		MsgDontWait*	= 80H;		(* non blocking read *)
 		
 	(* shutdown *)
-		ShutRDWR*	= 2;
+		ShutRDWR*		= 2;
 		
 	SockAddrSizeV4*	= 16;
 	SockAddrSizeV6*	= 32;
@@ -173,10 +173,10 @@ CONST
 	   CS7*   	= {5};
 	   CS8*   	= {4,5};
 	CSTOPB*	= {6};
-	CREAD*	= {7};
+	CREAD*		= {7};
 	PARENB*	= {8};
 	PARODD*	= {9};
-	HUPCL*	= {10};
+	HUPCL*		= {10};
 	CLOCAL*	= {11};
 	
 TYPE
@@ -213,8 +213,8 @@ TYPE
 			END;
 
 	Timeval* = RECORD
-				sec*	: HUGEINT;
-				usec*	: HUGEINT
+				sec*	: LONGINT;
+				usec*	: LONGINT
 			END;
 
 	TmPtr* = POINTER TO Tm;

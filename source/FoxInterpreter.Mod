@@ -1,7 +1,7 @@
 MODULE FoxInterpreter; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Scanner := FoxScanner, FoxParser, SyntaxTree := FoxSyntaxTree, Printout := FoxPrintout, Commands, Diagnostics, StringPool, InterpreterSymbols := FoxInterpreterSymbols, D:= Debugging,
-	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic, SYSTEM, Machine;
+	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic, SYSTEM, Machine, Global := FoxGlobal;
 
 CONST
 	EnableTrace = FALSE;
@@ -18,10 +18,15 @@ TYPE
 	Set*=InterpreterSymbols.SetValue;
 	Range*=InterpreterSymbols.RangeValue;
 	Char*=InterpreterSymbols.CharValue;
+	Any*=InterpreterSymbols.AnyValue;
 	MathArrayValue*= InterpreterSymbols.MathArrayValue;
 	
 	Scope*=InterpreterSymbols.Scope;
 	Container*= InterpreterSymbols.Container;
+	
+	Builtin*=OBJECT (InterpreterSymbols.Object)
+	VAR id: LONGINT;
+	END Builtin;
 	
 	Item*= RECORD
 		object*: InterpreterSymbols.Item;
@@ -75,152 +80,6 @@ TYPE
 
 	END Parser;
 
-
-	Callstack = OBJECT
-	VAR 
-		data: ARRAY 1024 OF CHAR;
-		pos: LONGINT;
-		size: LONGINT;
-		H: HUGEINT; (* result in register *)
-		
-		retType: Modules.FieldEntry;
-		parameters: POINTER TO ARRAY OF Modules.FieldEntry;
-		pPos: LONGINT;
-		
-		PROCEDURE & Init;
-		BEGIN
-			pos := 1024; size := 0;
-		END Init;
-		
-		PROCEDURE Next(s: SIZE): ADDRESS;
-		BEGIN
-			DEC(pos, s); INC(size, s);
-			RETURN ADDRESSOF(data[pos]);
-		END Next;
-		
-		PROCEDURE PushH(h: HUGEINT);
-		VAR p: POINTER {UNSAFE} TO RECORD h: HUGEINT END;
-		BEGIN
-			p := Next(SIZEOF(HUGEINT));
-			p.h := h;
-		END PushH;
-
-		PROCEDURE PushL(i: LONGINT);
-		VAR p: POINTER {UNSAFE} TO RECORD i: LONGINT END;
-		BEGIN
-			p := Next(SIZEOF(LONGINT));
-			p.i := i;
-		END PushL;
-
-		PROCEDURE PushI(i: INTEGER);
-		BEGIN
-			PushL(i);
-		END PushI;		
-
-		PROCEDURE PushS(i: SHORTINT);
-		BEGIN
-			PushL(i);
-		END PushS;		
-		
-		PROCEDURE PushC(c: CHAR);
-		BEGIN
-			PushL(ORD(c));
-		END PushC;
-		
-		PROCEDURE PushR(r: REAL);
-		VAR p: POINTER {UNSAFE} TO RECORD r: REAL END;
-		BEGIN
-			p := Next(SIZEOF(REAL));
-			p.r := r;
-		END PushR;
-		
-		PROCEDURE PushX(x: LONGREAL);
-		VAR p: POINTER {UNSAFE} TO RECORD x: LONGREAL END;
-		BEGIN
-			p := Next(SIZEOF(LONGREAL));
-			p.x := x;
-		END PushX;
-		
-		PROCEDURE PushA(a: ADDRESS);
-		VAR p: POINTER {UNSAFE} TO RECORD a: ADDRESS END;
-		BEGIN
-			p := Next(SIZEOF(ADDRESS));
-			p.a := a;
-		END PushA;
-
-
-		PROCEDURE PushSz(s: SIZE);
-		VAR p: POINTER {UNSAFE} TO RECORD s: SIZE END;
-		BEGIN
-			p := Next(SIZEOF(SIZE));
-			p.s := s;
-		END PushSz;
-		
-		PROCEDURE Call(adr: ADDRESS);
-		VAR esp: ADDRESS; P: Procedure; h: HUGEINT
-		TYPE 
-			Procedure = PROCEDURE(): HUGEINT;
-		BEGIN
-			P := SYSTEM.VAL(Procedure, adr); 
-			esp := Machine.CurrentSP();
-			Machine.SetSP(esp-size);
-			SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
-			H := P();
-			Machine.SetSP(esp);
-		END Call;
-		
-		PROCEDURE ResH(): HUGEINT;
-		BEGIN
-			RETURN H;
-		END ResH;
-
-		PROCEDURE ResL(): LONGINT;
-		BEGIN
-			RETURN LONGINT(H);
-		END ResL;
-
-		PROCEDURE ResI(): INTEGER;
-		BEGIN
-			RETURN INTEGER(H);
-		END ResI;
-
-		PROCEDURE ResS(): SHORTINT;
-		BEGIN
-			RETURN SHORTINT(H);
-		END ResS;
-
-		PROCEDURE ResC(): CHAR;
-		BEGIN
-			RETURN CHR(H);
-		END ResC;
-
-		PROCEDURE ResSet(): SET;
-		BEGIN
-			RETURN SYSTEM.VAL(SET,H);
-		END ResSet;
-
-		PROCEDURE ResSz(): SIZE;
-		BEGIN
-			RETURN SYSTEM.VAL(SIZE, H);
-		END ResSz;
-
-		PROCEDURE ResA(): ADDRESS;
-		BEGIN
-			RETURN SYSTEM.VAL(ADDRESS, H)
-		END ResA;
-
-		PROCEDURE ResR(): REAL;
-		BEGIN
-			RETURN SYSTEM.VAL(REAL, ResL())
-		END ResR;
-
-		PROCEDURE ResX(): LONGREAL;
-		BEGIN
-			RETURN SYSTEM.VAL(LONGREAL, ResH())
-		END ResX;
-
-	END Callstack;
-
 	Interpreter* = OBJECT (SyntaxTree.Visitor)
 	VAR
 		value: BOOLEAN;
@@ -234,7 +93,6 @@ TYPE
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
 		context-: Commands.Context;
-		callStack: Callstack;
 		
 		
 		PROCEDURE & Init*(scope: Scope; diagnostics: Diagnostics.Diagnostics; context: Commands.Context);
@@ -244,7 +102,6 @@ TYPE
 			error := FALSE;
 			SELF.diagnostics := diagnostics;
 			SELF.context := context;
-			NEW(callStack);
 		END Init;
 
 		PROCEDURE SetScope*(s: Scope);
@@ -556,16 +413,27 @@ TYPE
 
 		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
 		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: LONGINT;
+			 builtin : Builtin; anyValue: Any;
 		BEGIN
 			ASSERT(x.left = NIL);
 			item.name := x.identifier;
 			(*
 			item.object := FindInScope(item.scope, item.name);
 			*)
-			item.object := scope.FindObject1(item.name, -1, item.in);
-			IF item.object = NIL THEN
-				StringPool.GetString(item.name, moduleName);
-				item.object :=InterpreterSymbols.GetModule(moduleName); 
+			IF item.name = Basic.MakeString("trace") THEN 
+				NEW(builtin); builtin.id :=  Global.systemTrace;
+				item.object := builtin;
+			ELSIF item.name = Basic.MakeString("context") THEN
+				NEW(anyValue, context);
+				item.object :=  anyValue;
+			ELSE
+				
+				item.object := scope.FindObject1(item.name, -1, item.in);
+				
+				IF item.object = NIL THEN
+					StringPool.GetString(item.name, moduleName);
+					item.object :=InterpreterSymbols.GetModule(moduleName); 
+				END;
 			END;
 		END VisitIdentifierDesignator;
 
@@ -596,27 +464,38 @@ TYPE
 		BEGIN
 			e := x.left;
 			Expression(e);
-			IF (item.object # NIL) & (item.object IS InterpreterSymbols.ProcedureResult) THEN
-				proc := item.object(InterpreterSymbols.ProcedureResult);
-				(* self pointer *) 
-				proc.Pars();
-				IF ~(proc.caller IS InterpreterSymbols.ModuleResult) THEN
-					adrValue := proc.caller.Evaluate();
-					ASSERT(adrValue.GetAddress(adr)); 
-					proc.PushAddress(adr);
+			IF (item.object # NIL) THEN
+				IF (item.object IS InterpreterSymbols.ProcedureResult) THEN
+					proc := item.object(InterpreterSymbols.ProcedureResult);
+					(* self pointer *) 
+					proc.Pars();
+					IF ~(proc.caller IS InterpreterSymbols.ModuleResult) THEN
+						adrValue := proc.caller.Evaluate();
+						ASSERT(adrValue.GetAddress(adr)); 
+						proc.PushAddress(adr);
+					END;
+					(* result pointer *) 
+					IF proc.ReturnsPointer() THEN
+						NEW(any,NIL);
+						proc.PushAddress(any.Address());
+					END; 
+					FOR i := 0 TO x.parameters.Length()-1 DO
+						e := x.parameters.GetExpression(i);
+						IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); RETURN END;
+					END;
+					IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END; 
+					item.object := proc.Evaluate();
+					IF any # NIL THEN item.object := any END;
+				ELSIF (item.object IS Builtin) THEN
+					CASE item.object(Builtin).id OF
+					Global.systemTrace:
+						SystemTrace(x.parameters);
+					ELSE
+						Error("no builtin?")
+					END;
+				ELSE
+						Error("no procedure")
 				END;
-				(* result pointer *) 
-				IF proc.ReturnsPointer() THEN
-					NEW(any,NIL);
-					proc.PushAddress(any.Address());
-				END; 
-				FOR i := 0 TO x.parameters.Length()-1 DO
-					e := x.parameters.GetExpression(i);
-					IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); RETURN END;
-				END;
-				IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END; 
-				item.object := proc.Evaluate();
-				IF any # NIL THEN item.object := any END;
 			ELSE
 				Error("no procedure")
 			END;
@@ -686,9 +565,59 @@ TYPE
 		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
 		BEGIN HALT(100)
 		END VisitProcedureCallDesignator;
+		
+		PROCEDURE SystemTrace(x: SyntaxTree.ExpressionList);
+		VAR
+			printout: Printout.Printer;
+			value: Value;
+			expression: SyntaxTree.Expression;
+			i: LONGINT;
+			out: Streams.Writer;
+		BEGIN
+			out := context.out;
+			printout := Printout.NewPrinter(out,Printout.SourceCode,FALSE);
+			FOR i := 0 TO x.Length()-1 DO
+				expression := x.GetExpression(i);
+				IF ~(expression IS SyntaxTree.StringValue) THEN
+					printout.Expression(expression);
+					out.String("= ");
+				END;
+				value := Evaluate(expression);
+				IF value # NIL THEN
+					value.WriteValue(out);
+				ELSE
+					out.String("UNKNOWN")
+				END;
+				out.Ln;
+			END;
+			out.Update;
+		END SystemTrace;
+		
+		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
+		VAR p,p0,p1,p2: SyntaxTree.Expression;
+			type,t0,t1,t2: SyntaxTree.Type;
+			len: LONGINT;
+			i: LONGINT; 
+			parameter: SyntaxTree.Parameter;
+			name: Basic.SectionName;
+			modifier: SyntaxTree.Modifier;
+			position: LONGINT;
+		BEGIN
+			position := x.position;
+			p0 := NIL; p1 := NIL; p2 := NIL; len := x.parameters.Length();
+			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
+			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
+			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
 
-		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
-		BEGIN HALT(100)
+			CASE x.id OF
+			(* ----- NEW -----*)
+			Global.New:
+				Error("Not Yet Implemented");
+			|Global.systemTrace:
+				SystemTrace(x.parameters);
+			ELSE (* function not yet implemented *)
+				Error("Not Yet Implemented");
+			END;
 		END VisitBuiltinCallDesignator;
 
 		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
@@ -1008,7 +937,9 @@ TYPE
 		VAR value: Value;
 		BEGIN
 			IF GetValue(x.right, value) THEN
-				PutValue(x.left, value);
+				IF x.left # NIL THEN
+					PutValue(x.left, value);
+				END;
 			END;
 		END VisitAssignment;
 
@@ -1136,8 +1067,7 @@ TYPE
 			x.Accept(SELF);			
 		END Expression;
 		
-		
-		PROCEDURE Statement(x: SyntaxTree.Statement);
+		PROCEDURE Statement*(x: SyntaxTree.Statement);
 		BEGIN
 			item.object := NIL;
 			x.Accept(SELF);

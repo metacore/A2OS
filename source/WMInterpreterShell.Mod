@@ -26,7 +26,7 @@ CONST
 
 	ReceiveBufferSize = 256;
 
-	Prompt = ">";
+	Prompt = "";
 
 	Backspace = 08X;
 	ESC = 1BX;
@@ -109,7 +109,7 @@ TYPE
 					editor.editor.tv.End(flags * Inputs.Ctrl # {}, flags * Inputs.Shift # {})
 				ELSIF (keySym = Inputs.KsBackSpace) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Backspace *)
 					Clear;
-				ELSIF (keySym = Inputs.KsReturn) & (flags*Inputs.Shift # {}) THEN (* SHIFT ENTER *)
+				ELSIF (keySym = Inputs.KsReturn) & (flags*Inputs.Shift = {}) THEN (* ENTER *)
 					text.AcquireRead;
 					len := text.GetLength()-begPos;
 					
@@ -123,15 +123,18 @@ TYPE
 							r.ReadCh(u);
 							IF (u >= 32) & (u <= 126) THEN (* take only characters *)
 								buf[n] := CHR(u); INC(n);
-							END; buf[n] := 0X;
+							END; 
+							buf[n] := 0X;
 						END;
 					END;
 					text.ReleaseRead;
 					
 					IF len > 0 THEN
 						out.String(buf^);
-						out.Char(ESC); out.Char(0DX); out.Update;
+						out.Char(ESC);  out.Char(0DX); out.Update;
+						begPos := begPos + len;						
 					END;
+					editor.editor.KeyPressed(ucs,flags,keySym,handled);
 
 				ELSIF ((keySym = Inputs.KsLeft) OR (keySym = Inputs.KsUp) OR (keySym = Inputs.KsDown)) & (editor.editor.tv.cursor.GetPosition() = begPos) THEN
 					

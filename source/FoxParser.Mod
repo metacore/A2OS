@@ -6,7 +6,6 @@ IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := F
 CONST
 	Trace = FALSE;	
 	CascadedWithSupport = TRUE;
-	Lax=FALSE;
 
 	(** the parser reflects the following EBNF:
 
@@ -175,8 +174,10 @@ TYPE
 		recentComment: SyntaxTree.Comment;
 		moduleScope: SyntaxTree.ModuleScope;
 		error-: BOOLEAN;
+		Lax-: BOOLEAN;
 
 		indent: LONGINT;   (* for debugging purposes only *)
+		hasSymbol: BOOLEAN;
 
 		PROCEDURE S( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
 		VAR i: LONGINT;
@@ -192,6 +193,7 @@ TYPE
 			D.Ln;  D.Int( indent,1 );
 			FOR i := 1 TO indent DO D.Str( "  " );  END;
 			D.Str( "end : " );  D.Str( s );  D.Str( " at pos " );  D.Int( symbol.start,1 );
+			DEC(indent);
 		END E;
 
 		PROCEDURE EE( CONST s, t: ARRAY OF CHAR );   (* for debugging purposes only *)
@@ -200,6 +202,7 @@ TYPE
 			D.Ln;  D.Int( indent,1 );
 			FOR i := 1 TO indent DO D.Str( "  " );  END;
 			D.Str( "end : " );  D.Str( s );  D.Str( " (" );  D.Str( t );  D.Str( ") at pos " );
+			DEC(indent);
 		END EE;
 
 		(** constructor, init parser with scanner providing input and with diagnostics for error output *)
@@ -208,10 +211,19 @@ TYPE
 			SELF.scanner := scanner;
 			SELF.diagnostics := diagnostics;
 			error := ~scanner.GetNextSymbol(symbol);
+			hasSymbol := TRUE;
+			IF error THEN diagnostics.Error(scanner.source^, Diagnostics.Invalid, Diagnostics.Invalid, "no input stream") END;
 			recentCommentItem := NIL; recentComment := NIL;
 			(* debugging *)
 			indent := 0;
+			Lax := FALSE;
 		END Init;
+		
+		PROCEDURE SetLax*;
+		BEGIN
+			Lax := TRUE;
+		END SetLax;
+		
 
 		(** output error message and / or given code *)
 		PROCEDURE Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR);
@@ -226,10 +238,10 @@ TYPE
 
 		(** helper procedures interfacing to the scanner **)
 
-		PROCEDURE SkipComments();
+		PROCEDURE SkipComments(b: BOOLEAN);
 		VAR comment: SyntaxTree.Comment;
 		BEGIN
-			WHILE ~error & (symbol.token = Scanner.Comment) DO
+			WHILE ~error & (b & (TokenB()= Scanner.Comment) OR ~b & (Token() = Scanner.Comment)) DO
 				comment := SyntaxTree.NewComment(symbol.start, currentScope, symbol.string^,symbol.stringLength);
 				IF moduleScope # NIL THEN
 					moduleScope.AddComment(comment);
@@ -265,7 +277,8 @@ TYPE
 						END;
 					END;
 				END;
-				error := ~scanner.GetNextSymbol(symbol);
+				NextSymbol;
+				(*error := ~scanner.GetNextSymbol(symbol);*)
 			END;
 		END SkipComments;
 
@@ -273,16 +286,51 @@ TYPE
 		PROCEDURE NextSymbol*;
 		VAR comment: SyntaxTree.Comment;
 		BEGIN
-			error := ~scanner.GetNextSymbol(symbol) OR error;
-			SkipComments();
+			(*
+				error := ~scanner.GetNextSymbol(symbol) OR error;
+				hasSymbol := TRUE;
+				SkipComments();
+			*)
+			hasSymbol := FALSE;
 		END NextSymbol;
+
+		PROCEDURE Token*(): LONGINT;
+		BEGIN
+			IF ~hasSymbol OR (symbol.token = Scanner.Escape) THEN
+				error := ~scanner.GetNextSymbol(symbol) OR error;
+				IF symbol.token = Scanner.Escape THEN 
+					error := ~scanner.GetNextSymbol(symbol) OR error;
+				END;
+				hasSymbol := TRUE;
+				SkipComments(FALSE);
+			END;
+			RETURN symbol.token;
+		END Token;
+
+		(* stop on escape token *)
+		PROCEDURE TokenB*(): LONGINT;
+		BEGIN
+			IF ~hasSymbol THEN
+				error := ~scanner.GetNextSymbol(symbol) OR error;
+				hasSymbol := TRUE;
+				SkipComments(TRUE);
+			END;
+			RETURN symbol.token;
+		END TokenB;
+
+		(** Check if current symbol equals sym. If yes then return true, return false otherwise *)
+		PROCEDURE PeekB*(token: Scanner.Token): BOOLEAN;
+		VAR comment: SyntaxTree.Comment;
+		BEGIN
+			RETURN TokenB() = token
+		END PeekB;
 
 		(** Check if current symbol equals sym. If yes then return true, return false otherwise *)
 		PROCEDURE Peek*(token: Scanner.Token): BOOLEAN;
 		VAR comment: SyntaxTree.Comment;
 		BEGIN
-			SkipComments();
-			RETURN symbol.token = token
+			SkipComments(FALSE);
+			RETURN Token() = token
 		END Peek;
 
 		(** Check if the current symbol equals sym.If yes then read next symbol, report error otherwise. returns success value  *)
@@ -358,7 +406,7 @@ TYPE
 		BEGIN
 			IF name = SyntaxTree.invalidIdentifier THEN (* nothing to be expected *)
 				RETURN TRUE
-			ELSIF (symbol.token # Scanner.Identifier) OR (symbol.identifier # name) THEN
+			ELSIF (Token() # Scanner.Identifier) OR (symbol.identifier # name) THEN
 				Basic.GetString(name,string);
 				Error( symbol.start, Scanner.Identifier, string );
 				RETURN FALSE
@@ -392,6 +440,17 @@ TYPE
 			END
 		END Optional;
 
+		PROCEDURE OptionalB*( token: Scanner.Token ): BOOLEAN;
+		BEGIN
+			(* do not use for Identifier, String or Number, if the result is needed ! *)
+			IF PeekB(token) THEN
+				NextSymbol;
+				RETURN TRUE
+			ELSE
+				RETURN FALSE
+			END
+		END OptionalB;
+		
 		(* ignore one ore more symbols of type token *)
 		PROCEDURE Ignore(token: Scanner.Token);
 		BEGIN WHILE Optional(token) DO END;
@@ -540,7 +599,7 @@ TYPE
 				expression := SyntaxTree.NewRangeExpression(position, first, last, step)
 			ELSE
 				expression := SimpleExpression();
-				IF Optional(Scanner.Upto) THEN
+				IF OptionalB(Scanner.Upto) THEN
 					(* is range expression *)
 					first := expression;
 
@@ -580,7 +639,7 @@ TYPE
 				designator := SyntaxTree.NewSelfDesignator(position);
 			ELSIF Optional(Scanner.Result) THEN
 				designator := SyntaxTree.NewResultDesignator(position);
-			ELSIF (symbol.token = Scanner.Address) OR (symbol.token = Scanner.Size) OR (symbol.token = Scanner.Alias) THEN
+			ELSIF (Token() = Scanner.Address) OR (Token()=Scanner.Size) OR (Token() = Scanner.Alias) THEN
 				identifier := symbol.identifier;
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 				NextSymbol;
@@ -591,14 +650,15 @@ TYPE
 
 			LOOP
 				position := symbol.start;
-				IF Optional( Scanner.LeftParenthesis ) THEN
+				IF OptionalB( Scanner.LeftParenthesis ) THEN
 					expressionList := SyntaxTree.NewExpressionList();
 					IF ~Optional( Scanner.RightParenthesis ) THEN
 						ExpressionList( expressionList );
 						Check( Scanner.RightParenthesis )
 					END;
 					designator := SyntaxTree.NewParameterDesignator( position,designator,expressionList);
-				ELSIF Optional( Scanner.Period ) THEN
+				ELSIF OptionalB( Scanner.Period ) THEN
+					IF ~Optional(Scanner.Identifier) THEN (* make sure symbol is read *) END;
 					CASE symbol.identifierString[0] OF
 						"a".."z", "A" .. "Z":
 					(*IF Peek(Scanner.Size) (* special rule: support for SYSTEM.SIZE *) THEN*)
@@ -607,20 +667,22 @@ TYPE
 						identifier := Identifier(position);
 					END;
 					designator := SyntaxTree.NewSelectorDesignator(position,designator,identifier);
-				ELSIF Optional( Scanner.LeftBracket ) THEN
+				ELSIF OptionalB( Scanner.LeftBracket ) THEN
 					expressionList := SyntaxTree.NewExpressionList();
 					IndexList( expressionList );
 					Check( Scanner.RightBracket );
 					designator:= SyntaxTree.NewBracketDesignator( position,designator,expressionList );
-				ELSIF Optional( Scanner.Arrow ) THEN
+				ELSIF OptionalB( Scanner.Arrow ) THEN
 					designator:= SyntaxTree.NewArrowDesignator( position,designator );
 				ELSE EXIT
 				END;
 			END;
 
-			IF Optional(Scanner.LeftBrace) THEN
+			IF OptionalB(Scanner.LeftBrace) THEN
 				designator.SetModifiers(Flags());
 			END;
+			
+			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking signal *)*)
 
 			IF Trace THEN E( "Designator" ) END;
 			RETURN designator
@@ -671,7 +733,7 @@ TYPE
 		BEGIN
 			IF Trace THEN S( "Factor" ) END;
 			position := symbol.start;
-			CASE symbol.token OF
+			CASE Token() OF
 			| Scanner.Number:
 					IF (symbol.numberType = Scanner.Integer) THEN
 						factor := SyntaxTree.NewIntegerValue( position, symbol.integer);
@@ -694,8 +756,8 @@ TYPE
 					factor := SyntaxTree.NewStringValue( position, symbol.string );
 					factor.End( symbol.end );
 					NextSymbol;
-					WHILE (symbol.token = Scanner.String) OR (symbol.token = Scanner.Character) DO
-						IF symbol.token = Scanner.Character THEN
+					WHILE (Token() = Scanner.String) OR (Token() = Scanner.Character) DO
+						IF Token() = Scanner.Character THEN
 							factor(SyntaxTree.StringValue).AppendChar(symbol.character);
 						ELSE
 							factor(SyntaxTree.StringValue).Append(symbol.string);
@@ -733,7 +795,7 @@ TYPE
 					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Not );
 					factor.End( symbol.end );
 			| Scanner.Address, Scanner.Size, Scanner.Alias:
-					operator := symbol.token;
+					operator := Token();
 					factor := Designator();
 					IF Optional(Scanner.Of) THEN
 						factor := Designator();
@@ -752,7 +814,7 @@ TYPE
 				NextSymbol;  factor := SyntaxTree.invalidExpression;
 			END;
 			(* suffix *)
-			IF Optional(Scanner.Transpose) THEN
+			IF OptionalB(Scanner.Transpose) THEN
 				IF (factor IS SyntaxTree.UnaryExpression) & (factor(SyntaxTree.UnaryExpression).operator = Scanner.Transpose) THEN
 					(* transpose operator has higher precedence than not, reevaluate expression: *)
 					factor := factor(SyntaxTree.UnaryExpression).left;
@@ -775,8 +837,8 @@ TYPE
 			IF Trace THEN S( "Term" ) END;
 			position := symbol.start;
 			term := Factor();
-			WHILE (symbol.token >= Scanner.Times) & (symbol.token <= Scanner.And)  DO
-				operator := symbol.token;
+			WHILE (TokenB() >= Scanner.Times) & (TokenB() <= Scanner.And)  DO
+				operator := Token();
 				NextSymbol;
 				factor := Factor();
 				term := SyntaxTree.NewBinaryExpression( position, term, factor, operator );
@@ -795,14 +857,14 @@ TYPE
 			IF Trace THEN S( "SimpleExpression" ) END;
 			position := symbol.start;
 			IF Peek(Scanner.Plus) OR Peek(Scanner.Minus) THEN (* sign should be part of the factor *)
-				operator := symbol.token;
+				operator := Token();
 				NextSymbol;
 				term := Term();
 				expression := SyntaxTree.NewUnaryExpression( position, term, operator );
 			ELSE expression := Term();
 			END;
-			WHILE (symbol.token >= Scanner.Or) & (symbol.token <= Scanner.Minus) DO
-				operator := symbol.token;
+			WHILE (TokenB() >= Scanner.Or) & (TokenB() <= Scanner.Minus) DO
+				operator := Token();
 				NextSymbol;
 				term := Term();
 				expression := SyntaxTree.NewBinaryExpression( position, expression, term, operator );
@@ -824,12 +886,13 @@ TYPE
 			IF Trace THEN S( "Expression" ) END;
 			position := symbol.start;
 			expression := RangeExpression();
-			IF (symbol.token >= Scanner.Equal) & (symbol.token <= Scanner.Is) THEN
-				operator := symbol.token;
+			IF (TokenB() >= Scanner.Equal) & (TokenB() <= Scanner.Is) THEN
+				operator := Token();
 				NextSymbol;
 				rightExpression := RangeExpression();
 				expression := SyntaxTree.NewBinaryExpression(position, expression, rightExpression, operator );
 			END;
+			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking escape *)*)
 			IF Trace THEN E( "Expression" ) END;
 			RETURN expression
 		END Expression;
@@ -890,16 +953,16 @@ TYPE
 			commToken: Scanner.Token;
 		BEGIN
 			IF Trace THEN S( "Statement" ) END;
-			CASE symbol.token OF
+			CASE Token() OF
 			| Scanner.Identifier, Scanner.Self, Scanner.Result:
 					designator := Designator();
 					position := symbol.start;
-					IF Optional( Scanner.Becomes ) THEN
+					IF OptionalB( Scanner.Becomes ) THEN
 						expression := Expression();
 						statement := SyntaxTree.NewAssignment( position, designator, expression,outer );
 						CommentStatement(statement);
-					ELSIF Peek(Scanner.ExclamationMark) OR Peek(Scanner.Questionmark) OR Peek(Scanner.LessLess) OR Peek(Scanner.GreaterGreater) THEN
-						commToken := symbol.token; 
+					ELSIF PeekB(Scanner.ExclamationMark) OR PeekB(Scanner.Questionmark) OR PeekB(Scanner.LessLess) OR PeekB(Scanner.GreaterGreater) THEN
+						commToken := Token(); 
 						NextSymbol;
 						expression := Expression();
 						statement := SyntaxTree.NewCommunicationStatement(position, commToken, designator, expression, outer);
@@ -910,6 +973,7 @@ TYPE
 						CommentStatement(statement);
 					END;
 					statements.AddStatement( statement );
+					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
 			| Scanner.If:
 					NextSymbol;
@@ -1051,7 +1115,7 @@ TYPE
 					NextSymbol;
 					returnStatement := SyntaxTree.NewReturnStatement( symbol.start, outer);
 					CommentStatement(returnStatement);
-					IF (symbol.token >= Scanner.Plus) & (symbol.token <= Scanner.Identifier) THEN
+					IF (Token() >= Scanner.Plus) & (Token() <= Scanner.Identifier) THEN
 						expression := Expression();
 						returnStatement.SetReturnValue( expression );
 					END;
@@ -1082,7 +1146,18 @@ TYPE
 			| Scanner.Finally: result := FALSE  (* end block by finally statement *)
 			| Scanner.Semicolon: result := FALSE (* allow the empty statement *)
 			(* builtin pseudo procedures are resolved by checker *)
-			ELSE (* Error( symbol.start, Scanner.Semicolon, "" ); *) result := FALSE;
+			ELSE 
+				result := FALSE;
+				(*
+				IF Lax THEN
+					expression := Expression();
+					statement := SyntaxTree.NewAssignment( position, NIL, expression,outer );
+					statements.AddStatement(statement);
+					result := ~error;
+				ELSE
+					result := FALSE;
+				END;
+				*)
 			END;
 			IF Trace THEN E( "Statement" ) END;
 			RETURN result
@@ -1526,7 +1601,7 @@ TYPE
 			ELSIF Optional( Scanner.Port) THEN type := PortType( position, parentScope)
 			ELSIF Optional( Scanner.Procedure ) THEN type := ProcedureType( position,parentScope);
 			ELSIF Optional( Scanner.Enum ) THEN type := EnumerationType( position,parentScope);
-			ELSIF (symbol.token = Scanner.Address) OR (symbol.token = Scanner.Size) THEN
+			ELSIF (Token() = Scanner.Address) OR (Token() = Scanner.Size) THEN
 				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position,SyntaxTree.invalidIdentifier, symbol.identifier);
 				type := SyntaxTree.NewQualifiedType( qualifiedIdentifier.position, parentScope, qualifiedIdentifier );
 				NextSymbol;
@@ -1596,7 +1671,7 @@ TYPE
 				kind := SyntaxTree.VarParameter
 			ELSIF Optional( Scanner.Const ) THEN (* const parameter *)
 				kind := SyntaxTree.ConstParameter
-			ELSIF symbol.token # Scanner.Identifier THEN
+			ELSIF Token() # Scanner.Identifier THEN
 				Error(symbol.start,Scanner.Identifier,"");
 				RETURN
 			ELSE kind := SyntaxTree.ValueParameter
@@ -2105,7 +2180,7 @@ TYPE
 				END;
 				Check(Scanner.End);
 				IF ExpectThisIdentifier( moduleName ) THEN
-					IF symbol.token # Scanner.Period THEN
+					IF Token() # Scanner.Period THEN
 						Error(  symbol.start, Scanner.Period, "" )
 					ELSIF ~error & ~scanner.error THEN (* read ahead to read comments and to check for next module *)
 						scanner.ResetCase;

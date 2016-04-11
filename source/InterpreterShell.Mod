@@ -256,7 +256,6 @@ TYPE
 
 		BEGIN
 			command := ""; currentIndex := -1;
-
 			LOOP
 				ch := context.in.Get();
 				IF IsAsciiCharacter(ch) THEN
@@ -282,6 +281,7 @@ TYPE
 							IF context.in.Peek() = EscapeChar2 THEN ch := context.in.Get(); HandleEscapeSequence;
 							ELSIF context.in.Peek() = 0DX THEN (* command *)
 								ch := context.in.Get();
+								INC(currentIndex); command[currentIndex] := ch;
 								EXIT;
 							ELSIF context.in.Peek () = Escape THEN
 								command[currentIndex+1] := 0X;
@@ -629,18 +629,127 @@ TYPE
 		END Execute;
 		*)
 
+		TYPE 
+		
+	StringType = POINTER TO ARRAY OF CHAR;
+	Reader* = OBJECT (Streams.Reader)
+	VAR length : LONGINT;
+			data : StringType;
+			rofs: LONGINT;
+
+		PROCEDURE &Init*(initialSize : LONGINT);
+		BEGIN
+			IF initialSize < 256 THEN initialSize := 256 END;
+			NEW(data, initialSize); length := 0; rofs := 0;
+			InitReader( Receive, initialSize )
+		END Init;
+
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		VAR i,pos : LONGINT; n: StringType;
+		BEGIN{EXCLUSIVE}
+			IF length + len + 1 >= LEN(data) THEN
+				NEW(n, LEN(data) + len + 1); FOR i := 0 TO length - 1 DO n[i] := data[i] END;
+				data := n
+			END;
+			pos := (rofs + length) MOD LEN(data);
+			WHILE (len > 0) & (buf[ofs] # 0X) DO
+				data[pos] := buf[ofs];
+				pos := (pos+1) MOD LEN(data);
+				INC(ofs); INC(length); DEC(len)
+			END;
+		END Add;
+
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		VAR o,pos: LONGINT;
+		BEGIN{EXCLUSIVE}
+			AWAIT(length >= min);
+			pos := rofs;
+			len := 0;
+			WHILE (length > 0)  & (size >0) DO
+				buf[ofs] := data[pos];
+				pos := (pos + 1) MOD LEN(data);
+				INC(ofs); DEC(length); INC(len); DEC(size);
+			END;
+			rofs := pos;
+			IF ofs < size THEN 
+				buf[ofs] := 0X; (* safety / trace *)
+			END;
+		END Receive;
+
+	END Reader;
+		
 		PROCEDURE Run;
 		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; interpreter: Interpreter.Interpreter; s: Scanner.StringMaker; w: Streams.Writer; r: Streams.Reader;
-			scanner: Scanner.Scanner; parser: Interpreter.Parser; diagnostics: Diagnostics.StreamDiagnostics; seq: SyntaxTree.StatementSequence;
+			scanner: Scanner.Scanner; parser: Interpreter.Parser; 
+			
+			diagnostics: Diagnostics.StreamDiagnostics; seq: SyntaxTree.StatementSequence;
 			str: Scanner.StringType; len: LONGINT; container: Interpreter.Container; scope: Interpreter.Scope; e: SyntaxTree.Expression; value: Interpreter.Value;
+			reader: Reader; 
+			
+			runner: OBJECT
+			VAR 
+			r: Streams.Reader;
+			scanner: Scanner.Scanner; parser: Interpreter.Parser;
+			stm: SyntaxTree.Statement;
+			diagnostics: Diagnostics.Diagnostics;
+			seq: SyntaxTree.StatementSequence;
+			interpreter: Interpreter.Interpreter;
+			container: Interpreter.Container; scope: Interpreter.Scope; 
+			context: Commands.Context;
+
+				PROCEDURE &Init(r: Streams.Reader; diag: Diagnostics.Diagnostics; ctxt: Commands.Context);
+				BEGIN
+					 SELF.r := r; diagnostics := diag; SELF.r := r;
+					 context := ctxt;
+				END Init;
+				
+			BEGIN{ACTIVE}
+				ASSERT(diagnostics # NIL);
+				NEW(scanner,"", r, 0, diagnostics);
+				scanner.SetCase(Scanner.Lowercase);
+				NEW(parser, scanner, diagnostics); (* silent *) 
+				parser.SetLax;
+				
+				NEW(container);
+				NEW(scope, Interpreter.global, container);
+				NEW(interpreter, scope, diagnostics, context);
+				LOOP
+				(*diagnostics.Information("interpreter",Diagnostics.Invalid,Diagnostics.Invalid,"start statement");*)
+				seq := SyntaxTree.NewStatementSequence();
+				IF parser.Statement(seq, NIL) THEN
+					(*Printout.Info("executing ", seq);*)
+					interpreter.StatementSequence(seq);
+					context.out.Update;
+					WHILE parser.Optional(Scanner.Escape) OR parser.Optional(Scanner.Semicolon) DO 
+						(*TRACE(parser.Token());*)
+					END;
+					IF interpreter.error THEN interpreter.Reset END;
+				ELSE
+					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, "no statement"); 
+					IF ~parser.error THEN
+						parser.NextSymbol;
+					END;
+					(*NEW(scanner, "",r, 0, diagnostics);
+					NEW(parser, scanner, diagnostics); (* silent *)*)
+				END;
+				
+				END;
+			END; 
 		BEGIN
 			NEW(s,0);
 			w := s.GetWriter();
 			NEW(diagnostics, context.out);
 			exit := FALSE;
-			NEW(container);
+			(*NEW(container);
 			NEW(scope, Interpreter.global, container);
 			NEW(interpreter, scope, diagnostics, context);
+			*)
+			NEW(reader, 1024);
+			(*NEW(w, reader.Add,1024);*)
+			NEW(runner, reader, diagnostics, context);
+			
+			
+			(*seq := parser.StatementSequence(NIL);*)
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO
 				IF (prompt # "") THEN
 					context.out.Ln;
@@ -651,12 +760,21 @@ TYPE
 					context.out.Update
 				END;
 				s.Clear;
-				ReadCommand(w);w.Update;
+				ReadCommand(w);w.Char(Escape);w.Ln; w.Update;(*
 				context.out.Ln; context.out.String("------------");
 				context.out.Ln; context.out.Update;
+				*)
 				str := s.GetString(len);
+				reader.Add(str^,0,len,TRUE,res);
+				
+				
+				
+				
+				(*
 				NEW(scanner, "", s.GetReader(), 0, diagnostics);
 				NEW(parser, scanner, NIL); (* silent *)
+				*)
+				(*
 				e := parser.Expression();
 				interpreter.Reset;
 				IF ~parser.error & parser.Optional(Scanner.EndOfText) THEN
@@ -667,6 +785,8 @@ TYPE
 					str := s.GetString(len);
 					NEW(scanner, "", s.GetReader(), 0, diagnostics);
 					NEW(parser, scanner, diagnostics);
+					*)
+					(*
 					seq := parser.StatementSequence(NIL);
 					IF parser.Mandatory(Scanner.EndOfText) THEN
 						interpreter.StatementSequence(seq);
@@ -674,7 +794,8 @@ TYPE
 							context.out.String("[ok]");
 						END;
 					END;
-				END;
+					*)
+				(*END;*)
 			END;
 			context.out.Update; context.error.Update
 		END Run;
@@ -724,7 +845,7 @@ TYPE
 
 	BEGIN {ACTIVE, SAFE}
 		context.out.String(Version); context.out.Ln;
-		context.out.String("Evaluate statement sequence with SHIFT-ENTER"); context.out.Ln;
+		context.out.String("Enter statement sequence in lower case with lax syntax"); context.out.Ln;
 		context.out.Update;
 		Run;
 		IF (upcall # NIL) THEN upcall(ExitShell); END;
@@ -733,6 +854,6 @@ TYPE
 
 END InterpreterShell.
 
-SystemTools.Free Shell ~
+SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter~
 
-WMShell.Open ~
+WMInterpreterShell.Open ~

@@ -16,8 +16,8 @@ CONST
 	MaxLongrealExponent* = 308;   (* maximal longreal exponent *)
 
 	(* scanner constants *)
-	EOT* = 0X; LF* = 0AX; CR* = 0DX; TAB* = 09X;
-
+	EOT* = 0X; LF* = 0AX; CR* = 0DX; TAB* = 09X; ESC* = 1BX;
+ 
 TYPE
 	StringType* = Strings.String;
 	IdentifierType *= StringPool.Index;
@@ -59,7 +59,7 @@ CONST
 		Ln PC PCOffset
 		(* number types *)
 		Shortint Integer Longint Hugeint Real Longreal
-		Comment EndOfText
+		Comment EndOfText Escape
 		~
 	*)
 	None*= 0; 
@@ -98,7 +98,7 @@ CONST
 	Ln*= 105; PC*= 106; PCOffset*= 107; 
 	(* number types *)
 	Shortint*= 108; Integer*= 109; Longint*= 110; Hugeint*= 111; Real*= 112; Longreal*= 113; 
-	Comment*= 114; EndOfText*= 115; 
+	Comment*= 114; EndOfText*= 115; Escape *= 116;
 
 	SingleQuote = 27X;  DoubleQuote* = 22X;
 	Ellipsis = 7FX;   (* used in Scanner.GetNumber to return with ".." when reading an interval like 3..5 *)
@@ -323,6 +323,11 @@ TYPE
 		BEGIN
 			firstIdentifier := TRUE; case := Unknown;
 		END ResetCase;
+		
+		PROCEDURE SetCase*(c: LONGINT);
+		BEGIN
+			case := c;
+		END SetCase;		
 
 		(** report an error occured during scanning **)
 		PROCEDURE ErrorS(CONST msg: ARRAY OF CHAR);
@@ -831,7 +836,7 @@ TYPE
 
 		PROCEDURE SkipBlanks;
 		BEGIN
-			WHILE ch <= " " DO  (*ignore control characters*)
+			WHILE (ch <= " ") & (ch # ESC)  DO  (*ignore control characters*)
 				IF ch = EOT THEN
 					IF Trace THEN D.String("EOT"); D.Ln; END;
 					RETURN
@@ -849,6 +854,7 @@ TYPE
 			stringMaker.Clear;
 			CASE ch OF  (* ch > " " *)
 			EOT: s := EndOfText
+			|ESC: s := Escape;; GetNextCharacter
 			| DoubleQuote:
 					s := String; GetString(symbol,TRUE, TRUE, FALSE);
 			| SingleQuote:
@@ -939,7 +945,7 @@ TYPE
 						IF  (token >= 0) THEN s := token END;
 						IF (s = Module) OR (s=CellNet) THEN case := Lowercase END;
 					END;
-					IF firstIdentifier & (s # Module) & (s # CellNet) THEN case := Uppercase; s := Identifier END;
+					IF firstIdentifier & (s # Module) & (s # CellNet) & (case = Unknown) THEN case := Uppercase; s := Identifier END;
 			ELSE s := Identifier;  GetIdentifier( symbol );
 			END;
 			firstIdentifier := FALSE;
@@ -1108,7 +1114,7 @@ TYPE
 
 			PROCEDURE SkipBlanks;
 			BEGIN
-				WHILE (ch <= ' ') & (ch # CR) & (ch # LF) & (ch # EOT) DO  (* ignore control characters except line feeds *)
+				WHILE (ch <= ' ') & (ch # CR) & (ch # LF) & (ch # EOT)  DO  (* ignore control characters except line feeds *)
 					GetNextCharacter
 				END;
 			END SkipBlanks;

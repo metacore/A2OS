@@ -217,6 +217,101 @@ TYPE
 			FOR i :=	 0 TO len-1 DO context.out.Char(Backspace); END;
 		END DeleteStringFromDisplay;
 
+		PROCEDURE ReadCommand(w: Streams.Writer (*VAR command : ARRAY OF CHAR*));
+		VAR
+			ch: CHAR;
+			currentIndex : LONGINT;
+			
+
+			PROCEDURE IsAsciiCharacter(ch : CHAR) : BOOLEAN;
+			BEGIN
+				RETURN ORD(ch) <= 127;
+			END IsAsciiCharacter;
+
+			PROCEDURE IsControlCharacter(ch : CHAR) : BOOLEAN;
+			BEGIN
+				RETURN ORD(ch) < 32;
+			END IsControlCharacter;
+
+			PROCEDURE HandleEscapeSequence;
+			BEGIN
+				ch := context.in.Get();
+				ch := CHR(ORD(ch)+128);
+
+				IF (ch = CursorDown) OR (ch = CursorUp) THEN (* Command History Keys *)
+
+					command[currentIndex+1] := 0X;
+					DeleteStringFromDisplay(command);
+
+					IF ch = CursorUp THEN
+						commandHistory.GetPreviousCommand(command);
+					ELSE
+						commandHistory.GetNextCommand(command);
+					END;
+					currentIndex := Strings.Length(command)-1;
+					IF echo & (command # "") THEN context.out.String(command); context.out.Update; END;
+				ELSE
+					(* ignore escaped character *)
+				END;
+			END HandleEscapeSequence;
+
+		BEGIN
+			command := ""; currentIndex := -1;
+
+			LOOP
+				ch := context.in.Get();
+
+				IF IsAsciiCharacter(ch) THEN
+
+					IF IsControlCharacter(ch) OR (ch = Delete) THEN
+
+						IF (ch = CR) OR (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+							EXIT
+
+						ELSIF (ch = Backspace) OR (ch = Delete)THEN
+							IF currentIndex >= 0 THEN (* There is a character at the left of the cursor *)
+								command[currentIndex] := 0X;
+								DEC(currentIndex);
+								IF echo THEN
+									context.out.Char(Backspace); context.out.Char(Space); context.out.Char(Backspace); context.out.Update;
+								END;
+							END;
+						ELSIF (ORD(ch) = 03H) THEN
+						(*	IF runner # NIL THEN AosActive.TerminateThis(runner); END; *)
+						ELSIF (ch = EscapeChar1) THEN (* Escape sequence *)
+							IF context.in.Peek() = EscapeChar2 THEN ch := context.in.Get(); HandleEscapeSequence;
+							ELSIF context.in.Peek () = Escape THEN
+								command[currentIndex+1] := 0X;
+								DeleteStringFromDisplay (command); context.out.Update;
+								ch := context.in.Get (); command := ""; currentIndex := -1;
+							END;
+						ELSE
+							(* ignore other control characters *)
+						END;
+
+					ELSE
+						IF currentIndex <= LEN(command) - 2 (* Always need space for 0X *) THEN
+							INC(currentIndex);
+							command[currentIndex] := ch;
+							IF echo THEN context.out.Char(ch); context.out.Update; END;
+						END;
+					END;
+
+				ELSE
+					(* ignore non-ascii characters *)
+				END;
+			END;
+
+			command[currentIndex+1] := 0X;
+
+			IF ch = CR THEN
+				commandHistory.AddCommand(command);
+				IF (context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;
+				IF echo THEN context.out.Ln; context.out.Update END
+			END;
+			w.String(command);
+		END ReadCommand;
+(*
 		PROCEDURE ReadCommand(w: Streams.Writer);
 		VAR
 			ch: CHAR;
@@ -258,6 +353,7 @@ TYPE
 			command := ""; currentIndex := -1;
 			LOOP
 				ch := context.in.Get();
+				TRACE(ch);
 				IF IsAsciiCharacter(ch) THEN
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
@@ -279,6 +375,7 @@ TYPE
 						(*	IF runner # NIL THEN AosActive.TerminateThis(runner); END; *)
 						ELSIF (ch = EscapeChar1) THEN (* Escape sequence *)
 							IF context.in.Peek() = EscapeChar2 THEN ch := context.in.Get(); HandleEscapeSequence;
+							ELSIF context.in.Peek() = 
 							ELSIF context.in.Peek() = 0DX THEN (* command *)
 								ch := context.in.Get();
 								INC(currentIndex); command[currentIndex] := ch;
@@ -322,6 +419,7 @@ TYPE
 				w.String(command);
 			END;
 		END ReadCommand;
+		*)
 		(*
 		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): LONGINT;
 		VAR sym: SET; pos: LONGINT; c, next: CHAR;
@@ -693,9 +791,11 @@ TYPE
 			stm: SyntaxTree.Statement;
 			diagnostics: Diagnostics.Diagnostics;
 			seq: SyntaxTree.StatementSequence;
+			expression: SyntaxTree.Expression;
 			interpreter: Interpreter.Interpreter;
 			container: Interpreter.Container; scope: Interpreter.Scope; 
 			context: Commands.Context;
+			value: Interpreter.Value;
 
 				PROCEDURE &Init(r: Streams.Reader; diag: Diagnostics.Diagnostics; ctxt: Commands.Context);
 				BEGIN
@@ -705,6 +805,9 @@ TYPE
 				
 			BEGIN{ACTIVE}
 				ASSERT(diagnostics # NIL);
+				context.out.Ln;
+				context.out.String(">");
+				context.out.Update;
 				NEW(scanner,"", r, 0, diagnostics);
 				scanner.SetCase(Scanner.Lowercase);
 				NEW(parser, scanner, diagnostics); (* silent *) 
@@ -716,9 +819,24 @@ TYPE
 				LOOP
 				(*diagnostics.Information("interpreter",Diagnostics.Invalid,Diagnostics.Invalid,"start statement");*)
 				seq := SyntaxTree.NewStatementSequence();
-				IF parser.Statement(seq, NIL) THEN
+				IF parser.Optional(Scanner.Questionmark) THEN
+					expression := parser.Expression();
+					IF interpreter.GetValue(expression, value) THEN
+						value.WriteValue(context.out);
+					ELSE
+						context.out.String("NIL")
+					END;
+					context.out.Ln;
+					context.out.String(">");
+					context.out.Update;
+					WHILE parser.Optional(Scanner.Escape)  DO 
+					END;
+				ELSIF parser.Statement(seq, NIL) THEN
 					(*Printout.Info("executing ", seq);*)
 					interpreter.StatementSequence(seq);
+					context.out.Update;
+					context.out.Ln;
+					context.out.String(">");
 					context.out.Update;
 					WHILE parser.Optional(Scanner.Escape) OR parser.Optional(Scanner.Semicolon) DO 
 						(*TRACE(parser.Token());*)
@@ -751,14 +869,6 @@ TYPE
 			
 			(*seq := parser.StatementSequence(NIL);*)
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO
-				IF (prompt # "") THEN
-					context.out.Ln;
-					context.out.String(prompt);
-					FOR i := 0 TO nestingLevel-1 DO
-						context.out.String(NestingLevelIndicator);
-					END;
-					context.out.Update
-				END;
 				s.Clear;
 				ReadCommand(w);w.Char(Escape);w.Ln; w.Update;(*
 				context.out.Ln; context.out.String("------------");

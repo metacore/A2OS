@@ -26,7 +26,7 @@ CONST
 
 	ReceiveBufferSize = 256;
 
-	Prompt = "";
+	Prompt = "SHELL>";
 
 	Backspace = 08X;
 	ESC = 1BX;
@@ -42,8 +42,7 @@ TYPE
 		pipeOut, pipeIn : Pipes.Pipe;
 
 		(* Terminal window text writer *)
-		w: TextUtilities.TextWriter;
-		r: Texts.TextReader;
+		w : TextUtilities.TextWriter;
 		text : Texts.Text;
 
 		shell : Shell.Shell;
@@ -53,15 +52,9 @@ TYPE
 		running, dead : BOOLEAN;
 		timer : Kernel.Timer;
 
-		begPos: LONGINT;
-		selectedAll: BOOLEAN;
-		
-		buf: POINTER TO ARRAY OF CHAR;
-
 		PROCEDURE Clear;
 		BEGIN
 			editor.Clear;
-			NewLine(Prompt);
 			Invalidate;
 		END Clear;
 
@@ -73,32 +66,20 @@ TYPE
 		END ExtPointerUp;
 
 		PROCEDURE ExtKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
-		VAR 
-			i, len, n, u: LONGINT;
 		BEGIN
 			handled := FALSE;
 			IF editor.HandleShortcut(ucs, flags, keySym) THEN handled := TRUE; END;
 
-			selectedAll := FALSE;
-
 			IF ~handled & ~(Inputs.Release IN flags) THEN
 				handled := TRUE;
 				IF keySym = 01H THEN (* Ctrl-A *)
-
-					text.AcquireRead;
-					IF editor.editor.tv.cursor.GetPosition() > begPos THEN
-						editor.editor.tv.selection.SetFromTo(begPos,text.GetLength());
-						Texts.SetLastSelection(text,editor.editor.tv.selection.from,editor.editor.tv.selection.to);
-					END;
-					text.ReleaseRead;
-
-					selectedAll := TRUE;
-				(*ELSIF keySym = 03H THEN (* Ctrl-C *)
+					editor.editor.tv.SelectAll
+				ELSIF keySym = 03H THEN (* Ctrl-C *)
 					editor.editor.tv.CopySelection
 				ELSIF keySym = 16H THEN (* Ctrl-V *)
 					CopyFromClipboard;
 	 			ELSIF (keySym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
-	 				editor.editor.tv.CopySelection*)
+	 				editor.editor.tv.CopySelection
 				ELSIF keySym = 0FF56H THEN (* Page Down *)
 					editor.editor.tv.PageDown(flags * Inputs.Shift # {})
 				ELSIF keySym = 0FF55H THEN (* Page Up *)
@@ -107,40 +88,9 @@ TYPE
 					editor.editor.tv.Home(flags * Inputs.Ctrl # {}, flags * Inputs.Shift # {})
 				ELSIF keySym = 0FF57H THEN (* Cursor End *)
 					editor.editor.tv.End(flags * Inputs.Ctrl # {}, flags * Inputs.Shift # {})
-				ELSIF (keySym = Inputs.KsBackSpace) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Backspace *)
-					Clear;
-				ELSIF (keySym = Inputs.KsReturn) & (flags*Inputs.Shift = {}) THEN (* ENTER *)
-					text.AcquireRead;
-					len := text.GetLength()-begPos;
-					
-					IF len > 0 THEN
-						IF len >= LEN(buf) THEN NEW(buf,len+(len DIV 4)); END;
-						NEW(r,text);
-						r.SetPosition(begPos);
-					
-						n := 0;
-						FOR i := 0 TO len-1 DO
-							r.ReadCh(u);
-							IF (u >= 32) & (u <= 126) THEN (* take only characters *)
-								buf[n] := CHR(u); INC(n);
-							END; 
-							buf[n] := 0X;
-						END;
-					END;
-					text.ReleaseRead;
-					
-					IF len > 0 THEN
-						out.String(buf^);
-						out.Char(ESC);  out.Char(0DX); out.Update;
-						begPos := begPos + len;						
-					END;
-					editor.editor.KeyPressed(ucs,flags,keySym,handled);
-
-				ELSIF ((keySym = Inputs.KsLeft) OR (keySym = Inputs.KsUp) OR (keySym = Inputs.KsDown)) & (editor.editor.tv.cursor.GetPosition() = begPos) THEN
-					
-				ELSIF (keySym = Inputs.KsBackSpace) & (flags = {}) THEN
-					IF editor.editor.tv.cursor.GetPosition() # begPos THEN
-						handled := FALSE;
+				ELSIF keySym = 0FF1BH THEN (* Esc *)
+					IF ~(Inputs.Release IN flags) THEN
+						out.Char(ESC); out.Char(ESC); out.Update;
 					END;
 				ELSE
 					handled := FALSE;
@@ -148,7 +98,13 @@ TYPE
 			END;
 
 			IF ~handled & (ucs > 0) & (ucs < 256) THEN
-				editor.editor.KeyPressed(ucs,flags,keySym,handled);
+				IF ~(Inputs.Release IN flags) THEN
+					IF ucs > 127 THEN (* Escape non-ascii characters *)
+						out.Char(ESC); out.Char("["); ucs := ucs - 128;
+					END;
+					out.Char(CHR(ucs)); out.Update;
+				END;
+				handled := TRUE;
 			END;
 		END ExtKeyPressed;
 
@@ -169,7 +125,7 @@ TYPE
 			NEW(out, pipeOut.Send, 256);
 			NEW(in, pipeIn.Receive, 256);
 
-			NEW(shell, shellIn,shellOut, shellOut, FALSE, "");
+			NEW(shell, shellIn,shellOut, shellOut, TRUE, Prompt);
 		END InitShell;
 
 		PROCEDURE CopyFromClipboard;
@@ -182,7 +138,6 @@ TYPE
 			END;
 			Texts.clipboard.ReleaseRead;
 			out.String(string^); out.Update;
-			TRACE(string^);
 		END CopyFromClipboard;
 
 		PROCEDURE Finalize;
@@ -203,15 +158,6 @@ TYPE
 			text.Delete(pos - nbrOfCharacters, nbrOfCharacters);
 			text.ReleaseWrite;
 		END DeleteNCharacters;
-		
-		PROCEDURE NewLine(CONST prompt: ARRAY OF CHAR);
-		BEGIN
-			w.Ln; w.String(prompt); w.Update;
-			text.AcquireRead;
-			editor.editor.tv.cursor.SetPosition(text.GetLength());
-			begPos := editor.editor.tv.cursor.GetPosition();
-			text.ReleaseRead;
-		END NewLine;
 
 		PROCEDURE ReceiveCharacters;
 		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, size, len : LONGINT;
@@ -235,7 +181,6 @@ TYPE
 					END;
 				END;
 				w.Update;
-				NewLine(Prompt);
 			END;
 			DeleteNCharacters(backspaces);
 		END ReceiveCharacters;
@@ -257,8 +202,6 @@ TYPE
 			editor.SetText(text);
 			InitShell;
 			SetNameAsString(StrShellComponent);
-			
-			NEW(buf,65536);
 		END Init;
 
 	BEGIN {ACTIVE}
@@ -382,13 +325,7 @@ BEGIN
 	InitStrings;
 END WMInterpreterShell.
 
-WMInterpreterShell.Open ~
+WMShell.Open ~
 
-SystemTools.Free WMInterpreterShell ~
-SystemTools.Free WMInterpreterShell InterpreterShell ~
-
-FOR i := 0 TO 100 DO
-	CMD "SystemTools.Show ?{i}?"
-END;
-
-
+SystemTools.Free WMShell ~
+SystemTools.Free WMShell Shell ~

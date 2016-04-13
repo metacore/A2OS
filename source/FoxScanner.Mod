@@ -43,7 +43,7 @@ CONST
     	(* Prefix Unary Operators Plus ... Not *)
 		Not
     	(* expressions may start with Plus ... Identifier *)
-		LeftParenthesis LeftBracket LeftBrace Number Character String Nil Imag True False Self Result Identifier
+		LeftParenthesis LeftBracket LeftBrace Number Character String Nil Imag True False Self Result New Identifier
 		(* statementy may start with Self ... Begin *)
 		If Case While Repeat For Loop With Exit Await Return Begin
 		(* symbols, expressions and statements cannot start with *)
@@ -77,28 +77,28 @@ CONST
 	(* expressions may start with Plus ... Identifier *)
 	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38; 
 	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44; 
-	Identifier*= 45; 
+	New*= 45; Identifier*= 46; 
 	(* statementy may start with Self ... Begin *)
-	If*= 46; Case*= 47; While*= 48; Repeat*= 49; For*= 50; Loop*= 51; 
-	With*= 52; Exit*= 53; Await*= 54; Return*= 55; Begin*= 56; 
+	If*= 47; Case*= 48; While*= 49; Repeat*= 50; For*= 51; Loop*= 52; 
+	With*= 53; Exit*= 54; Await*= 55; Return*= 56; Begin*= 57; 
 	(* symbols, expressions and statements cannot start with *)
-	Semicolon*= 57; Transpose*= 58; RightBrace*= 59; RightBracket*= 60; RightParenthesis*= 61; Questionmark*= 62; 
-	ExclamationMark*= 63; LessLess*= 64; GreaterGreater*= 65; Upto*= 66; Arrow*= 67; Period*= 68; 
-	Comma*= 69; Colon*= 70; Of*= 71; Then*= 72; Do*= 73; To*= 74; 
-	By*= 75; Becomes*= 76; Bar*= 77; End*= 78; Else*= 79; Elsif*= 80; 
-	Until*= 81; Finally*= 82; 
+	Semicolon*= 58; Transpose*= 59; RightBrace*= 60; RightBracket*= 61; RightParenthesis*= 62; Questionmark*= 63; 
+	ExclamationMark*= 64; LessLess*= 65; GreaterGreater*= 66; Upto*= 67; Arrow*= 68; Period*= 69; 
+	Comma*= 70; Colon*= 71; Of*= 72; Then*= 73; Do*= 74; To*= 75; 
+	By*= 76; Becomes*= 77; Bar*= 78; End*= 79; Else*= 80; Elsif*= 81; 
+	Until*= 82; Finally*= 83; 
 	(* declaration elements *)
-	Code*= 83; Const*= 84; Type*= 85; Var*= 86; Out*= 87; Procedure*= 88; 
-	Operator*= 89; Import*= 90; Definition*= 91; Module*= 92; Cell*= 93; CellNet*= 94; 
-	Extern*= 95; 
+	Code*= 84; Const*= 85; Type*= 86; Var*= 87; Out*= 88; Procedure*= 89; 
+	Operator*= 90; Import*= 91; Definition*= 92; Module*= 93; Cell*= 94; CellNet*= 95; 
+	Extern*= 96; 
 	(* composite type symbols *)
-	Array*= 96; Object*= 97; Record*= 98; Pointer*= 99; Enum*= 100; Port*= 101; 
-	Address*= 102; Size*= 103; Alias*= 104; 
+	Array*= 97; Object*= 98; Record*= 99; Pointer*= 100; Enum*= 101; Port*= 102; 
+	Address*= 103; Size*= 104; Alias*= 105; 
 	(* assembler constants *)
-	Ln*= 105; PC*= 106; PCOffset*= 107; 
+	Ln*= 106; PC*= 107; PCOffset*= 108; 
 	(* number types *)
-	Shortint*= 108; Integer*= 109; Longint*= 110; Hugeint*= 111; Real*= 112; Longreal*= 113; 
-	Comment*= 114; EndOfText*= 115; Escape *= 116;
+	Shortint*= 109; Integer*= 110; Longint*= 111; Hugeint*= 112; Real*= 113; Longreal*= 114; 
+	Comment*= 115; EndOfText*= 116; Escape*= 117; 
 
 	SingleQuote = 27X;  DoubleQuote* = 22X;
 	Ellipsis = 7FX;   (* used in Scanner.GetNumber to return with ".." when reading an interval like 3..5 *)
@@ -1302,6 +1302,7 @@ TYPE
 		tokens[True] := "True";
 		tokens[False] := "False";
 		tokens[Self] := "Self";
+		tokens[New] := "New";
 		tokens[Result] := "Result";
 		tokens[Identifier] := "Identifier";
 		tokens[If] := "If";
@@ -1456,6 +1457,7 @@ TYPE
 		Enter( "repeat" , Repeat);
 		Enter( "return" , Return);
 		Enter( "self", Self);
+		Enter( "new", New);
 		Enter( "result", Result);
 		Enter( "then" , Then);
 		Enter( "true" , True);

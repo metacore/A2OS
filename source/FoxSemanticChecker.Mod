@@ -4593,7 +4593,10 @@ TYPE
 		**)
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
 		BEGIN
-			IF ExpressionList(x.parameters) THEN
+			IF (x.returnType # NIL) & ExpressionList(x.parameters) THEN
+				resolvedExpression := NewBuiltinCallDesignator(x.position,NIL, x.parameters,NIL, ResolveType(x.returnType));
+				ASSERT(resolvedExpression.type # NIL);
+			ELSIF ExpressionList(x.parameters) THEN
 				resolvedExpression := x;
 			END;
 		END VisitBuiltinCallDesignator;
@@ -4941,10 +4944,10 @@ TYPE
 			RETURN result
 		END CheckPortType;
 
-		(* move to builtin procedure call statement ?
+				(* move to builtin procedure call statement ?
 			remove builtin procedure call designator ?
 		*)
-		PROCEDURE NewBuiltinCallDesignator(position: LONGINT; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Designator): SyntaxTree.Expression;
+		PROCEDURE NewBuiltinCallDesignator(position: LONGINT; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
 			numberActualParameters,numberFormalParameters: LONGINT;
 			formalParameter: SyntaxTree.Parameter;
@@ -4961,6 +4964,7 @@ TYPE
 			c: CHAR;
 			id: LONGINT;
 			b: BOOLEAN;
+			first: LONGINT;
 
 			mathArrayType: SyntaxTree.MathArrayType;
 			customBuiltin: SyntaxTree.CustomBuiltin;
@@ -5010,9 +5014,14 @@ TYPE
 				END
 			END;
 
-			id := builtin.id;
-			IF system.operatorDefined[id] THEN (* try to find overloaded operator *)
-				result := NewOperatorCall(position,builtin.id,parameter0,parameter1,NIL);
+			IF returnType # NIL THEN 
+				id := Global.New;
+				result := NIL;
+			ELSE
+				id := builtin.id;
+				IF system.operatorDefined[id] THEN (* try to find overloaded operator *)
+					result := NewOperatorCall(position,builtin.id,parameter0,parameter1,NIL);
+				END;
 			END;
 
 			IF result = SyntaxTree.invalidExpression THEN (* error already handled *)
@@ -5020,6 +5029,9 @@ TYPE
 			ELSE
 				result := SyntaxTree.NewBuiltinCallDesignator(position,id,left,actualParameters);
 				result(SyntaxTree.Designator).SetLeft(left);
+				IF returnType # NIL THEN
+					type := returnType;
+				END;
 				(* ---- ASSERT ----- *)
 				IF (id = Global.Assert) & CheckArity(1,2)  THEN
 					IF CheckBooleanType(parameter0) THEN
@@ -5090,25 +5102,31 @@ TYPE
 					IF CheckObjectType(parameter0) THEN
 					END;
 				(* ---- NEW ----- *)
-				ELSIF (id = Global.New) & CheckArity(1,Infinity) THEN
+				ELSIF (id = Global.New)  THEN
+					IF returnType # NIL THEN
+						first := 0; type2 := type1; type1 := type0 ; type0:= returnType.resolved;
+					ELSE
+						first := 1;
+					END;
+					IF CheckArity(first,Infinity) THEN 
 					IF currentIsRealtime THEN
 						Error(position,Diagnostics.Invalid,"forbidden new in realtime block");
 					END;
 					(* check constructor *)
-					IF CheckVariable(parameter0) THEN
+					IF (first =0) OR CheckVariable(parameter0) THEN
 						IF type0 IS SyntaxTree.PointerType THEN
 							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
 						END;
 						IF type0 IS SyntaxTree.ArrayType THEN
 							arrayType := type0(SyntaxTree.ArrayType);
 							IF arrayType.form = SyntaxTree.Static THEN
-								i := 1
+								i := first
 							ELSIF arrayType.form = SyntaxTree.Open THEN
-								i := Dimension(arrayType,{SyntaxTree.Open})+1;
+								i := Dimension(arrayType,{SyntaxTree.Open})+first;
 							ELSE HALT(100)
 							END;
 							IF CheckArity(i,i) & (numberActualParameters>1) THEN
-								i := 1;
+								i := first;
 								REPEAT
 									actualParameter := actualParameters.GetExpression(i);
 									IF CheckSizeType(actualParameter) THEN
@@ -5121,16 +5139,15 @@ TYPE
 						ELSIF (type0 IS SyntaxTree.RecordType) THEN
 							constructor := GetConstructor(type0(SyntaxTree.RecordType));
 							IF constructor = NIL THEN
-								IF CheckArity(1,1) THEN END;
+								IF CheckArity(first,first) THEN END;
 							ELSIF (constructor.scope.ownerModule # currentScope.ownerModule) & ~(SyntaxTree.PublicRead IN constructor.access) THEN
 								Error(position,Diagnostics.Invalid,"new on object with hidden constructor");
 							ELSE
 								procedureType := constructor.type(SyntaxTree.ProcedureType);
 								numberFormalParameters := procedureType.numberParameters;
-								DEC(numberActualParameters);
-								IF numberActualParameters <= numberFormalParameters THEN
+								IF numberActualParameters-first <= numberFormalParameters THEN
 									formalParameter := procedureType.firstParameter;
-									FOR i := 1 TO numberActualParameters DO
+									FOR i := first TO numberActualParameters-1 DO
 										actualParameter := actualParameters.GetExpression(i);
 										IF (actualParameter = SyntaxTree.invalidExpression) THEN
 										ELSIF ~ParameterCompatible(formalParameter,actualParameter) THEN
@@ -5161,9 +5178,9 @@ TYPE
 								Error(position,Diagnostics.Invalid,"new on static array");
 							ELSE
 								IF mathArrayType.form = SyntaxTree.Tensor THEN
-									i0 := 2; i1 := Infinity;
+									i0 := first+1; i1 := Infinity;
 								ELSIF mathArrayType.form = SyntaxTree.Open THEN
-									i0 := Dimension(mathArrayType,{SyntaxTree.Open})+1;
+									i0 := Dimension(mathArrayType,{SyntaxTree.Open})+first;
 									i1 := i0;
 								ELSE HALT(100);
 								END;
@@ -5190,8 +5207,8 @@ TYPE
 										parameter1 := NewConversion(Diagnostics.Invalid,parameter1,parameterType,NIL); actualParameters.SetExpression(1,parameter1);
 									END;
 								ELSE
-									IF CheckArity(i0,i1) & (numberActualParameters >1) THEN
-										i := 1;
+									IF CheckArity(i0,i1) & (numberActualParameters >first) THEN
+										i := first;
 										REPEAT
 											actualParameter := actualParameters.GetExpression(i);
 											IF CheckSizeType(actualParameter) THEN
@@ -5216,7 +5233,7 @@ TYPE
 									DEC(numberActualParameters);
 									IF numberActualParameters <= numberFormalParameters THEN
 										formalParameter := procedureType.firstParameter;
-										FOR i := 1 TO numberActualParameters DO
+										FOR i := first TO numberActualParameters DO
 											actualParameter := actualParameters.GetExpression(i);
 											IF (actualParameter = SyntaxTree.invalidExpression) THEN
 											ELSIF ~ParameterCompatible(formalParameter,actualParameter) THEN
@@ -5247,6 +5264,7 @@ TYPE
 						ELSE
 							Error(position,Diagnostics.Invalid,"cannot be allocated");
 						END;
+					END;
 					END;
 				(* ---- DISPOSE ----- *)
 				ELSIF (id = Global.Dispose) & CheckArity(1,1) THEN
@@ -6121,7 +6139,7 @@ TYPE
 						result := NewTypeGuardDesignator(designator.position,left,typeDeclaration.declaredType, parameters.GetExpression(0))
 					ELSIF (left.type.resolved IS SyntaxTree.ProcedureType) THEN
 						IF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Builtin) THEN
-							result := NewBuiltinCallDesignator(designator.position,left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Builtin),parameters,left);
+							result := NewBuiltinCallDesignator(designator.position,left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Builtin),parameters,left,NIL);
 						ELSE
 							result := NewProcedureCallDesignator(designator.position,left,parameters)
 						END
@@ -6824,7 +6842,7 @@ TYPE
 
 		(**
 			a builtin procedure is a global item that may not be modified locally
-			instead the resolving of builtin procedure calls are done in the NewBuiltinCallDesignator
+			instead the resolving of builtin procedure calls are done in the esignator
 		**)
 		PROCEDURE VisitBuiltin(builtinProcedure: SyntaxTree.Builtin);
 		VAR type: SyntaxTree.Type;

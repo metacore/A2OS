@@ -7335,6 +7335,7 @@ TYPE
 			modifier: SyntaxTree.Modifier;
 			previous, init: IntermediateCode.Section;
 			prevScope: SyntaxTree.Scope;
+			firstPar: LONGINT;
 
 			PROCEDURE CallBodies(self: IntermediateCode.Operand; type: SyntaxTree.Type);
 			VAR recordScope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; flags: LONGINT;
@@ -7751,7 +7752,13 @@ TYPE
 			(* ---- NEW ----- *)
 			|Global.New:
 				(*! the following code is only correct for "standard" Oberon calling convention *)
-				type := p0.type.resolved;
+				IF x.type # NIL THEN
+					type := x.type.resolved;
+					firstPar := 0;
+				ELSE
+					type := p0.type.resolved;
+					firstPar := 1;
+				END;
 				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType)
 				THEN
 					recordType := type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
@@ -7772,7 +7779,7 @@ TYPE
 						END;
 						Emit(Push(position,IntermediateCode.Immediate(sizeType,size)));
 						CallThis(position,"Runtime","New", 1);
-						pointer := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
+						pointer := NewRegisterOperand(IntermediateCode.GetType(system, type));
 						Emit(Result(position, pointer));
 						exit := NewLabel();
 						BreqL(exit,pointer,nil);
@@ -7812,7 +7819,7 @@ TYPE
 							Emit(Push(position,pointer));
 							ReleaseIntermediateOperand(pointer);
 							formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-							FOR i := 1 TO x.parameters.Length()-1 DO
+							FOR i := firstPar TO x.parameters.Length()-1 DO
 								PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 								formalParameter := formalParameter.nextParameter;
 							END;
@@ -7831,7 +7838,7 @@ TYPE
 						END;
 
 						(* call bodies *)
-						CallBodies(pointer,p0.type);
+						CallBodies(pointer,type);
 						
 						
 						SetLabel(exit);
@@ -7873,7 +7880,7 @@ TYPE
 						ReleaseIntermediateOperand(reg);
 
 						(* push realtime flag *)
-						IF (p0.type.resolved.isRealtime) THEN Emit(Push(position,true));
+						IF type.resolved.isRealtime THEN Emit(Push(position,true));
 						ELSE Emit(Push(position,false));
 						END;
 
@@ -7898,7 +7905,7 @@ TYPE
 							Emit(Push(position,pointer));
 							ReleaseIntermediateOperand(pointer);
 							formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-							FOR i := 1 TO x.parameters.Length()-1 DO
+							FOR i := firstPar TO x.parameters.Length()-1 DO
 								PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 								formalParameter := formalParameter.nextParameter;
 							END;
@@ -7918,19 +7925,21 @@ TYPE
 						IntermediateCode.InitRegister(pointer,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 						Emit(Pop(position,pointer));
 
-						IF temporaryVariable # NIL THEN
+						IF (temporaryVariable # NIL) & (x.type = NIL) THEN
 							Designate(p0,l);
 							ToMemory(l.op,addressType,0);
 							Emit(Mov(position,l.op,pointer));
 							ReleaseOperand(l);
 							result.tag := emptyOperand;
+						ELSIF (x.type # NIL) THEN
+							result := l; (* temporary variable is the result of NEW Type() *)
 						END;
 
 						(* call bodies *)
-						CallBodies(pointer,p0.type);
+						CallBodies(pointer,type);
 						ReleaseIntermediateOperand(pointer);
 
-						IF temporaryVariable # NIL THEN
+						IF (temporaryVariable # NIL) & (x.type = NIL) THEN
 							end := NewLabel();
 							BrL(end);
 							SetLabel(exit);
@@ -7949,7 +7958,7 @@ TYPE
 					dim := 0;
 
 					IF p1 # NIL THEN
-						FOR i := 1 TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO x.parameters.Length()-1 DO
 							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 							parameter := x.parameters.GetExpression(i);
 							Evaluate(parameter,r);
@@ -8202,7 +8211,7 @@ TYPE
 							isTensor := FALSE;
 						END;
 
-						FOR i := 1 TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO x.parameters.Length()-1 DO
 							IF ~isTensor THEN
 								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
 							END;
@@ -8466,7 +8475,7 @@ TYPE
 							ReleaseOperand(l);
 						END;
 						formalParameter := constructor.type(SyntaxTree.ProcedureType).firstParameter;
-						FOR i := 1 TO x.parameters.Length()-1 DO
+						FOR i := firstPar TO x.parameters.Length()-1 DO
 							PushParameter(x.parameters.GetExpression(i), formalParameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 							formalParameter := formalParameter.nextParameter;
 						END;

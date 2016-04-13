@@ -2495,12 +2495,18 @@ TYPE
 			id-: LONGINT;
 			parameters-: ExpressionList;
 			builtin-: Builtin;
+			returnType-: Type;
 
 		PROCEDURE & InitBuiltinCallDesignator(position: LONGINT; id: LONGINT; left: Designator; parameters: ExpressionList);
 		BEGIN
-			InitDesignator(position); SELF.parameters := parameters; SELF.id := id; SELF.left := left;
+			InitDesignator(position); SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL;
 		END InitBuiltinCallDesignator;
-
+		
+		PROCEDURE SetReturnType*(type: Type);
+		BEGIN
+			returnType := type (* used for NEW Type() expression *)
+		END SetReturnType;
+		
 		PROCEDURE Clone(): Expression;
 		VAR copy: BuiltinCallDesignator;
 		BEGIN

@@ -632,6 +632,8 @@ TYPE
 		VAR
 			designator: SyntaxTree.Designator;  expressionList: SyntaxTree.ExpressionList;
 			identifier: SyntaxTree.Identifier; position: LONGINT;
+			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
+			qualifiedType : SyntaxTree.QualifiedType;
 		BEGIN
 			IF Trace THEN S( "Designator" ) END;
 			position := symbol.start;
@@ -643,6 +645,24 @@ TYPE
 				identifier := symbol.identifier;
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 				NextSymbol;
+			ELSIF (Token() = Scanner.New) THEN
+				identifier := symbol.identifier;
+				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
+				NextSymbol;
+				IF Token() # Scanner.LeftParenthesis THEN (* NEW Type () *)
+					qualifiedIdentifier := QualifiedIdentifier();
+					qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, currentScope, qualifiedIdentifier);
+					IF Mandatory( Scanner.LeftParenthesis ) THEN
+						expressionList := SyntaxTree.NewExpressionList();
+						IF ~Optional(Scanner.RightParenthesis) THEN
+							ExpressionList( expressionList );
+							Check( Scanner.RightParenthesis )
+						END;
+					END;
+					designator := SyntaxTree.NewBuiltinCallDesignator(position,Global.New, NIL, expressionList);
+					designator(SyntaxTree.BuiltinCallDesignator).SetReturnType(qualifiedType);
+					(* special case: NEW Type() *)
+				END;	
 			ELSE
 				identifier := Identifier(position);
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
@@ -802,7 +822,7 @@ TYPE
 						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
 					END;
 					factor.End (symbol.end)
-			| Scanner.Self, Scanner.Result, Scanner.Identifier:
+			| Scanner.Self, Scanner.Result, Scanner.Identifier, Scanner.New:
 					factor := Designator();
 					factor.End( symbol.end );
 			| Scanner.LeftBracket:
@@ -954,7 +974,7 @@ TYPE
 		BEGIN
 			IF Trace THEN S( "Statement" ) END;
 			CASE Token() OF
-			| Scanner.Identifier, Scanner.Self, Scanner.Result:
+			| Scanner.Identifier, Scanner.Self, Scanner.Result, Scanner.New:
 					designator := Designator();
 					position := symbol.start;
 					IF OptionalB( Scanner.Becomes ) THEN

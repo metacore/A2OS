@@ -91,13 +91,38 @@ TYPE
 		END InitSymbol;
 		
 	END SymbolResult;
-	
+
+	TypeResult*= OBJECT(SymbolResult)
+	VAR 
+		type-: Modules.TypeDesc;
+		address: ADDRESS;
+		
+		PROCEDURE & InitType(CONST name: ARRAY OF CHAR; CONST t: Modules.TypeDesc);
+		BEGIN
+			InitSymbol(name); 
+			type := t;
+		END InitType;
+
+		PROCEDURE Address(): ADDRESS;
+		BEGIN
+			RETURN type.tag;
+		END Address;
+			
+		PROCEDURE Evaluate(): Value;
+		BEGIN
+			RETURN NIL;
+		END Evaluate;
+
+	END TypeResult;
+
 	ModuleResult*= OBJECT(SymbolResult)
 	VAR 
 		self: Modules.TypeDesc;
+		mod: Modules.Module;
 		
 		PROCEDURE & InitModule(CONST name: ARRAY OF CHAR; m: Modules.Module);
 		BEGIN
+			mod := m;
 			InitSymbol(name);
 			ASSERT(m # NIL);
 			self := FindType(m.typeInfo, "@Self");
@@ -108,6 +133,8 @@ TYPE
 		VAR num: LONGINT;
 				proc: ProcedureResult;
 				field: FieldResult;
+				type: Modules.TypeDesc;
+				typeResult: TypeResult;
 		BEGIN
 				IF FindProc(self.procedures, name,num) THEN
 					NEW(proc, SELF, name, self.procedures[num]);
@@ -117,6 +144,13 @@ TYPE
 					NEW(field, name, self.fields[num]);
 					field.address := self.fields[num].offset;
 					RETURN field;
+				ELSE 
+					type := FindType(mod.typeInfo, name);
+					TRACE(name, type);
+					IF type # NIL THEN
+						NEW(typeResult, name, type);
+					END;
+					RETURN typeResult;
 				END;
 				RETURN NIL;
 		END Find;

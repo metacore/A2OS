@@ -1,7 +1,7 @@
 MODULE FoxInterpreter; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Scanner := FoxScanner, FoxParser, SyntaxTree := FoxSyntaxTree, Printout := FoxPrintout, Commands, Diagnostics, StringPool, InterpreterSymbols := FoxInterpreterSymbols, D:= Debugging,
-	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic, SYSTEM, Machine, Global := FoxGlobal;
+	Strings, Streams, Modules, PersistentObjects, Basic := FoxBasic, SYSTEM, Machine, Global := FoxGlobal, Heaps;
 
 CONST
 	EnableTrace = FALSE;
@@ -356,6 +356,36 @@ TYPE
 		(** designators (expressions) *)
 		PROCEDURE VisitDesignator*(x: SyntaxTree.Designator);
 		BEGIN HALT(100) (* abstract *) END VisitDesignator;
+		
+		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
+		VAR moduleName, name: Modules.Name; 
+		BEGIN
+			IF x.qualifiedIdentifier.prefix # SyntaxTree.invalidIdentifier THEN
+				item.name := x.qualifiedIdentifier.prefix;
+				item.object := scope.FindObject1(item.name, -1, item.in);
+				
+				IF item.object = NIL THEN
+					StringPool.GetString(item.name, moduleName);
+					item.object :=InterpreterSymbols.GetModule(moduleName); 
+				END;
+			END;
+			item.name := x.qualifiedIdentifier.suffix;
+			IF (item.object # NIL) THEN
+				IF item.object IS Result THEN
+					StringPool.GetString(item.name, name);
+					item.object := item.object(Result).Find(name);
+				ELSE
+					item.in := item.object;
+					item.object := InterpreterSymbols.FindInObject1(item.object, item.name,-1);
+				END;
+			ELSE
+				ErrorSS("invalid selector",item.name);
+				item.in := NIL;
+			END;
+				
+				
+		END VisitQualifiedType;
+		
 
 		(*
 		PROCEDURE FindInScope(scope: Scope; symbol: StringPool.Index): Value;
@@ -374,7 +404,7 @@ TYPE
 		END FindInScope;
 		*)
 
-
+(*
 		PROCEDURE FindType(CONST types: POINTER TO ARRAY OF Modules.TypeDesc; CONST name: ARRAY OF CHAR): Modules.TypeDesc;
 		VAR i: LONGINT;
 		BEGIN
@@ -409,7 +439,7 @@ TYPE
 			RETURN FALSE;
 		END FindField;
 
-
+*)
 
 		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
 		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: LONGINT;
@@ -593,6 +623,16 @@ TYPE
 			out.Update;
 		END SystemTrace;
 		
+		PROCEDURE FindType(type: SyntaxTree.Type): Result;
+		BEGIN
+			type.Accept(SELF);
+			IF item.object # NIL THEN
+				RETURN item.object(Result);
+			END;
+			RETURN NIL;
+		END FindType;
+		
+		
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
 		VAR p,p0,p1,p2: SyntaxTree.Expression;
 			type,t0,t1,t2: SyntaxTree.Type;
@@ -602,17 +642,34 @@ TYPE
 			name: Basic.SectionName;
 			modifier: SyntaxTree.Modifier;
 			position: LONGINT;
+			value: Value;
+			result: Result;
+			address: ADDRESS;
+			o: ANY;
+			anyValue: InterpreterSymbols.AnyValue;
 		BEGIN
 			position := x.position;
-			p0 := NIL; p1 := NIL; p2 := NIL; len := x.parameters.Length();
+			p0 := NIL; p1 := NIL; p2 := NIL; 
+			IF x.parameters # NIL THEN 
+				len := x.parameters.Length();
+			ELSE
+				len := 0
+			END;
 			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
 			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
 			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
-
 			CASE x.id OF
 			(* ----- NEW -----*)
 			Global.New:
-				Error("Not Yet Implemented");
+				result := FindType(x.returnType);
+				IF (result # NIL) & (result IS InterpreterSymbols.TypeResult)  THEN
+					address := result.Address();
+					Heaps.NewRec(o, address, FALSE);
+					NEW(anyValue, o);
+					item.object := anyValue;
+				ELSE
+					Error("No Type");
+				END;
 			|Global.systemTrace:
 				SystemTrace(x.parameters);
 			ELSE (* function not yet implemented *)
@@ -881,9 +938,7 @@ TYPE
 			IF error THEN RETURN FALSE END;
 			Expression(x);
 			LoadValue();
-			IF item.object # NIL THEN
-				w := item.object(Value);
-			END;
+			w := item.object(Value);
 			RETURN ~error
 		END GetValue;
 		

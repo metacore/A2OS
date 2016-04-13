@@ -964,6 +964,6 @@ TYPE
 
 END InterpreterShell.
 
-SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter~
+SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols ~
 
 WMInterpreterShell.Open ~

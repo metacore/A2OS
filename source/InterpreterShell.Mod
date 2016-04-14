@@ -304,7 +304,7 @@ TYPE
 
 			command[currentIndex+1] := 0X;
 
-			IF ch = CR THEN
+			IF (ch = CR) OR (ch = LF) THEN
 				commandHistory.AddCommand(command);
 				IF (context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;
 				IF echo THEN context.out.Ln; context.out.Update END
@@ -968,3 +968,12 @@ END InterpreterShell.
 SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols Test ~
 
 WMInterpreterShell.Open ~
+
+
+try this:
+
+o := context.out
+for i := 0 to 100 do
+o.String("i = "); o.Int(i,1); o.Ln
+end
+

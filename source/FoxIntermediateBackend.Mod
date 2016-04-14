@@ -12827,7 +12827,7 @@ TYPE
 						td := type(SyntaxTree.PointerType).typeDeclaration;
 						type := type(SyntaxTree.PointerType).pointerBase.resolved;
 					END;
-					IF (td = NIL) & (type IS SyntaxTree.RecordType) THEN 
+					IF  (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN 
 						td := type(SyntaxTree.RecordType).typeDeclaration;
 					END;
 					IF (td # NIL) & (type IS SyntaxTree.RecordType) THEN

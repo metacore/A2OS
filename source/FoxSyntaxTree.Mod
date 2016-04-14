@@ -54,6 +54,13 @@ CONST
 	ArrayIndex* = 0;
 	SetElement* = 1;
 	CaseGuard* = 2;
+	
+	(* reflection flags *)
+	FlagProcedureDelegate*=0;
+	FlagProcedureConstructor*=1;
+	
+	FlagParameterVar*=1;
+	FlagParameterConst*=2;
 
 TYPE
 	SourceCode*= Scanner.StringType;

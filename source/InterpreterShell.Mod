@@ -838,6 +838,7 @@ TYPE
 					context.out.Ln;
 					context.out.String(">");
 					context.out.Update;
+					IF interpreter.error THEN interpreter.Reset END;
 					WHILE parser.Optional(Scanner.Escape) OR parser.Optional(Scanner.Semicolon) DO 
 						(*TRACE(parser.Token());*)
 					END;
@@ -964,6 +965,6 @@ TYPE
 
 END InterpreterShell.
 
-SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols ~
+SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols Test ~
 
 WMInterpreterShell.Open ~

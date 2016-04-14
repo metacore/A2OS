@@ -83,6 +83,7 @@ TYPE
 		variables*: FieldEntries;
 		procedures*: ProcedureEntries;
 		returnType*: EntryType;
+		flags*: SET;
 	END;
 
 	TypeDesc* = POINTER TO RECORD 

@@ -647,6 +647,9 @@ TYPE
 			address: ADDRESS;
 			o: ANY;
 			anyValue: InterpreterSymbols.AnyValue;
+			proc: InterpreterSymbols.ProcedureResult;
+			ignore: Result;
+			e: SyntaxTree.Expression;
 		BEGIN
 			position := x.position;
 			p0 := NIL; p1 := NIL; p2 := NIL; 
@@ -655,9 +658,6 @@ TYPE
 			ELSE
 				len := 0
 			END;
-			IF len > 0 THEN p0 := x.parameters.GetExpression(0); t0 := p0.type.resolved END;
-			IF len > 1 THEN p1 := x.parameters.GetExpression(1); t1 := p1.type.resolved END;
-			IF len > 2 THEN p2 := x.parameters.GetExpression(2); t2 := p2.type.resolved END;
 			CASE x.id OF
 			(* ----- NEW -----*)
 			Global.New:
@@ -666,6 +666,18 @@ TYPE
 					address := result.Address();
 					Heaps.NewRec(o, address, FALSE);
 					NEW(anyValue, o);
+					
+					proc := result(InterpreterSymbols.TypeResult).Constructor();
+					IF proc # NIL THEN
+						proc.Pars();
+						proc.PushAddress(o);
+						FOR i := 0 TO x.parameters.Length()-1 DO
+							e := x.parameters.GetExpression(i);
+							IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); item.object := NIL; RETURN END;
+						END;
+						IF ~proc.Check() THEN Error("non-matching parameter number"); item.object := NIL; RETURN END; 
+						ignore := proc.Evaluate();
+					END;
 					item.object := anyValue;
 				ELSE
 					Error("No Type");
@@ -937,8 +949,11 @@ TYPE
 		BEGIN
 			IF error THEN RETURN FALSE END;
 			Expression(x);
+			IF error THEN RETURN FALSE END;
 			LoadValue();
-			w := item.object(Value);
+			IF item.object # NIL THEN 
+				w := item.object(Value);
+			END;
 			RETURN ~error
 		END GetValue;
 		

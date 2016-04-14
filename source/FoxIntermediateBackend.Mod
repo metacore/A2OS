@@ -12541,9 +12541,9 @@ TYPE
 					TypeEntry(source, parameter.type);
 					Info(source,"flags");
 					IF parameter.kind = SyntaxTree.VarParameter THEN
-						Set(source, {1});
+						Set(source, {SyntaxTree.FlagParameterVar});
 					ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-						Set(source,{2});
+						Set(source,{SyntaxTree.FlagParameterConst});
 					ELSE
 						Set(source, {});
 					END;
@@ -12882,6 +12882,7 @@ TYPE
 			PROCEDURE ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure);
 			VAR pc: LONGINT; size: LONGINT; 
 				segmentedName: Basic.SegmentedName;
+				flags: SET;
 			BEGIN
 				Array(source,pc,"Modules.ProcedureEntry");
 
@@ -12906,6 +12907,15 @@ TYPE
 
 						(* return type entry *)
 						TypeEntry(source, procedure.type(SyntaxTree.ProcedureType).returnType);
+						Info(source, "flags");
+						flags := {};
+						IF procedure.type(SyntaxTree.ProcedureType).isDelegate THEN
+							INCL(flags, SyntaxTree.FlagProcedureDelegate)
+						END;
+						IF procedure.isConstructor THEN
+							INCL(flags, SyntaxTree.FlagProcedureConstructor)
+						END;
+						Set(source, flags);
 
 						INC(size);
 					END;

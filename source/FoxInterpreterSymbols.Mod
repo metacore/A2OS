@@ -1,6 +1,6 @@
 MODULE FoxInterpreterSymbols; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, Machine, SYSTEM;
+IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, Machine, SyntaxTree := FoxSyntaxTree, SYSTEM;
 
 CONST
 	TAB = 09X;
@@ -112,6 +112,11 @@ TYPE
 		BEGIN
 			RETURN NIL;
 		END Evaluate;
+		
+		PROCEDURE Constructor*(): ProcedureResult;
+		BEGIN
+			RETURN FindConstructor(SELF, type);
+		END Constructor;
 
 	END TypeResult;
 
@@ -146,7 +151,6 @@ TYPE
 					RETURN field;
 				ELSE 
 					type := FindType(mod.typeInfo, name);
-					TRACE(name, type);
 					IF type # NIL THEN
 						NEW(typeResult, name, type);
 					END;
@@ -371,6 +375,7 @@ TYPE
 			set: SET;
 			var: BOOLEAN;
 			v:Value;
+			a: ADDRESS;
 		BEGIN
 			IF (proc.parameters = NIL) OR (index >= LEN(proc.parameters)) THEN RETURN FALSE END; 
 			type := proc.parameters[index].type;
@@ -442,6 +447,12 @@ TYPE
 						stack.PushSet(set);
 						RETURN TRUE
 					END;
+				|sfTypePointerToRecord:
+					IF v.GetAddress(a) THEN
+						stack.PushA(a);
+						RETURN TRUE
+					END;
+				ELSE TRACE(ORD(type.class)); HALT(100);
 				END;
 			ELSIF type.subclass = sfTypeOpenArray THEN
 				CASE type.class OF
@@ -681,6 +692,26 @@ TYPE
 		END;
 		RETURN NIL; 
 	END FindInType;
+	
+	PROCEDURE FindConstructor(scope: Result; type: ADDRESS): ProcedureResult;
+	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT; 
+			proc: ProcedureResult; f: FieldResult;	
+	BEGIN
+		FOR i := 15 TO 0 BY -1 DO
+			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag); 
+			IF tag # NIL THEN
+				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo); 
+				FOR num := 0 TO LEN(typeInfo.procedures)-1 DO
+					IF SyntaxTree.FlagProcedureConstructor IN typeInfo.procedures[num].flags THEN
+						NEW(proc, scope, typeInfo.procedures[num].name^, typeInfo.procedures[num]);
+						proc.address := typeInfo.procedures[num].address;
+						RETURN proc
+					END;
+				END;
+			END;
+		END;
+		RETURN NIL; 
+	END FindConstructor;
 	
 TYPE
 	Value*= OBJECT(Result)

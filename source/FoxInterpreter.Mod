@@ -618,8 +618,9 @@ TYPE
 				ELSE
 					out.String("UNKNOWN")
 				END;
-				out.Ln;
+				out.String("; ");
 			END;
+			out.Ln;
 			out.Update;
 		END SystemTrace;
 		

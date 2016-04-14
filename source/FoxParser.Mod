@@ -219,6 +219,12 @@ TYPE
 			Lax := FALSE;
 		END Init;
 		
+		PROCEDURE Reset*;
+		BEGIN
+			error := FALSE;
+		END Reset;
+		
+		
 		PROCEDURE SetLax*;
 		BEGIN
 			Lax := TRUE;

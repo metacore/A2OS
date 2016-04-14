@@ -796,6 +796,7 @@ TYPE
 			container: Interpreter.Container; scope: Interpreter.Scope; 
 			context: Commands.Context;
 			value: Interpreter.Value;
+			first: BOOLEAN;
 
 				PROCEDURE &Init(r: Streams.Reader; diag: Diagnostics.Diagnostics; ctxt: Commands.Context);
 				BEGIN
@@ -804,6 +805,7 @@ TYPE
 				END Init;
 				
 			BEGIN{ACTIVE}
+				first := TRUE;
 				ASSERT(diagnostics # NIL);
 				context.out.Ln;
 				context.out.String(">");
@@ -820,6 +822,7 @@ TYPE
 				(*diagnostics.Information("interpreter",Diagnostics.Invalid,Diagnostics.Invalid,"start statement");*)
 				seq := SyntaxTree.NewStatementSequence();
 				IF parser.Optional(Scanner.Questionmark) THEN
+					first := TRUE;
 					expression := parser.Expression();
 					IF interpreter.GetValue(expression, value) THEN
 						value.WriteValue(context.out);
@@ -832,6 +835,7 @@ TYPE
 					WHILE parser.Optional(Scanner.Escape)  DO 
 					END;
 				ELSIF parser.Statement(seq, NIL) THEN
+					first := TRUE;
 					(*Printout.Info("executing ", seq);*)
 					interpreter.StatementSequence(seq);
 					context.out.Update;
@@ -844,10 +848,15 @@ TYPE
 					END;
 					IF interpreter.error THEN interpreter.Reset END;
 				ELSE
-					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, "no statement"); 
-					IF ~parser.error THEN
-						parser.NextSymbol;
+					IF ~parser.error & first THEN 
+						diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, "no statement");
+						first := FALSE;
+						context.out.Ln;
+						context.out.String(">");
+						context.out.Update;
 					END;
+					IF parser.error THEN parser.Reset END;
+					parser.NextSymbol;
 					(*NEW(scanner, "",r, 0, diagnostics);
 					NEW(parser, scanner, diagnostics); (* silent *)*)
 				END;

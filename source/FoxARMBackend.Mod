@@ -1089,6 +1089,7 @@ TYPE
 				(* case 1: [r1] or [r1 + 7] *)
 				ASSERT(irMemoryOperand.symbol.name = "");
 				baseAddressRegisterNumber := PhysicalRegisterNumber(irMemoryOperand.register, Low); (* addresses always are in the lower part *)
+				baseAddressRegister := InstructionSet.NewRegister(baseAddressRegisterNumber, InstructionSet.None, InstructionSet.None, InstructionSet.None);
 
 			ELSIF irMemoryOperand.symbol.name # "" THEN
 				(* case 2: [symbol], [symbol:3], [symbol + 7] or [symbol:3 + 7] *)

@@ -320,8 +320,7 @@ BEGIN
 
 	EllipseBresenham(canvas, innerRect, rx, ry, FillCornerPoints, color, mode);
 
-	INC(innerRect.l, 1); INC(innerRect.t, 1); DEC(innerRect.r, 1); DEC(innerRect.b, 1);
-	canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t, rect.r, innerRect.b), color, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t + 1, rect.r, innerRect.b - 1), color, mode);
 END FillRoundRect;
 
 PROCEDURE DrawRoundedCorners*(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);

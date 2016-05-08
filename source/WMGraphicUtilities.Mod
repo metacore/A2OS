@@ -305,8 +305,24 @@ BEGIN
 	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), color, mode);
 	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      color, mode);
 	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), color, mode);
-
 END DrawRoundRect;
+
+PROCEDURE FillRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+	VAR innerRect : WMRectangles.Rectangle;
+BEGIN
+    IF (rect.r <= rect.l) OR (rect.b <= rect.t) OR (rx <= 0) OR (ry <= 0) THEN RETURN END;
+
+	(* Set coordinates to reflect the centers of 4 quarter circles *)
+	innerRect := rect;
+	INC(innerRect.l, rx); INC(innerRect.t, ry);	DEC(innerRect.r, rx); DEC(innerRect.b, ry);
+
+	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
+
+	EllipseBresenham(canvas, innerRect, rx, ry, FillCornerPoints, color, mode);
+
+	INC(innerRect.l, 1); INC(innerRect.t, 1); DEC(innerRect.r, 1); DEC(innerRect.b, 1);
+	canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t, rect.r, innerRect.b), color, mode);
+END FillRoundRect;
 
 PROCEDURE DrawRoundedCorners*(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
 BEGIN
@@ -320,6 +336,12 @@ BEGIN
 	canvas.Fill(WMRectangles.MakeRect(rect.r+x-1, rect.t-y,   rect.r+x,   rect.t-y+1), color, mode);
 	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.t-y,   rect.l-x+1, rect.t-y+1), color, mode);
 END DrawCornerPoints;
+
+PROCEDURE FillCornerPoints(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+BEGIN
+	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.b+y-1, rect.r+x, rect.b+y),   color, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.t-y,   rect.r+x, rect.t-y+1), color, mode);
+END FillCornerPoints;
 
 PROCEDURE EllipseBresenham(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; drawPoints : EllipsePointsDraw; color : WMGraphics.Color; mode : LONGINT);
 VAR

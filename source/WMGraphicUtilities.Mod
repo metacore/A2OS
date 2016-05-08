@@ -3,6 +3,9 @@ MODULE WMGraphicUtilities;	(** AUTHOR "TF"; PURPOSE "Tools using WMGraphics"; *)
 IMPORT
 	WMGraphics, WMRectangles, Strings;
 
+TYPE
+	EllipsePointsDraw* = PROCEDURE(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+
 (* factor in 1/256, alpha remains unchanged *)
 PROCEDURE ScaleColor*(color : LONGINT; factor : LONGINT): LONGINT;
 VAR r, g, b, a : LONGINT;
@@ -294,22 +297,23 @@ BEGIN
 
 	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
 
-	EllipseBresenham(canvas, innerRect, rx, ry, color, mode);
+	EllipseBresenham(canvas, innerRect, rx, ry, DrawCornerPoints, color, mode);
 
 	INC(innerRect.l, 1); INC(innerRect.t, 1); DEC(innerRect.r, 1); DEC(innerRect.b, 1);
-	
+
 	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t,      innerRect.r, rect.t + 1),  color, mode);
 	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), color, mode);
 	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      color, mode);
 	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), color, mode);
+
 END DrawRoundRect;
 
-PROCEDURE DrawRoundedCorners*(CONST canvas: WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE DrawRoundedCorners*(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
 BEGIN
-	EllipseBresenham(canvas, innerRect, rx, ry, color, mode);
+	EllipseBresenham(canvas, innerRect, rx, ry, DrawCornerPoints, color, mode);
 END DrawRoundedCorners;
 
-PROCEDURE DrawCornerPoints(CONST canvas: WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE DrawCornerPoints(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
 BEGIN
 	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.b+y-1, rect.l-x+1, rect.b+y),   color, mode);
 	canvas.Fill(WMRectangles.MakeRect(rect.r+x-1, rect.b+y-1, rect.r+x,   rect.b+y),   color, mode);
@@ -317,7 +321,7 @@ BEGIN
 	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.t-y,   rect.l-x+1, rect.t-y+1), color, mode);
 END DrawCornerPoints;
 
-PROCEDURE EllipseBresenham(CONST canvas: WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE EllipseBresenham(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; drawPoints : EllipsePointsDraw; color : WMGraphics.Color; mode : LONGINT);
 VAR
 	X, Y : LONGINT;
 	XChange, YChange : LONGINT;
@@ -327,15 +331,15 @@ VAR
 	BEGIN
 	RadiusError := 0;
 	Y := 0;
-	IF rx = ry THEN (**)
+	IF rx = ry THEN (* circle *)
 		X := rx;
 		XChange :=  1 - 2 * rx;
 		YChange := 1;
 
 		WHILE ( X >= Y ) DO
-			DrawCornerPoints(canvas, innerRect, X, Y, color, mode);
+			drawPoints(canvas, innerRect, X, Y, color, mode);
 			IF (X > Y) THEN
-				DrawCornerPoints(canvas, innerRect, Y, X, color, mode);
+				drawPoints(canvas, innerRect, Y, X, color, mode);
 			END;
 
 			INC(Y);
@@ -357,7 +361,7 @@ VAR
 		StoppingY := 0;
 
 		WHILE ( StoppingX >= StoppingY ) DO (* 1st set of points, y > 1 *)
-			DrawCornerPoints(canvas, innerRect, X, Y, color, mode);
+			drawPoints(canvas, innerRect, X, Y, color, mode);
 
 			INC(Y);
 			INC(StoppingY, TwoASquare);
@@ -379,7 +383,7 @@ VAR
 		StoppingX := 0;
 		StoppingY := TwoASquare*ry;
 		WHILE ( StoppingX<= StoppingY ) DO  (*2nd set of points, y < 1*)
-			DrawCornerPoints(canvas, innerRect, X, Y, color, mode);
+			drawPoints(canvas, innerRect, X, Y, color, mode);
 
 			INC(X);
 			INC(StoppingX, TwoBSquare);

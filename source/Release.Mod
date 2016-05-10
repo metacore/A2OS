@@ -1993,8 +1993,7 @@ TYPE
 					Error(Diagnostics.Invalid, "Version mismatch, Release.Mod is version #, tool file is version #", v1, v2);
 				END;
 			END;
-			ASSERT(builds # NIL);
-			RETURN ~(error OR scanner.error);
+			RETURN ~(error OR scanner.error OR (builds = NIL));
 		END Parse;
 
 		(* Import = IMPORT Entries END whereas Entries = FileName *)
@@ -2082,6 +2081,7 @@ TYPE
 		PROCEDURE ParseBuilds(builds : Builds) : BOOLEAN;
 		VAR token : Token; build : BuildObj;
 		BEGIN
+			IF builds = NIL THEN RETURN FALSE END;
 			ASSERT(builds # NIL);
 			scanner.Peek(token);
 			IF  (token = BUILDS) THEN

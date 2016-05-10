@@ -8927,6 +8927,7 @@ TYPE
 					IntermediateCode.MakeMemory(tag,addressType);
 				ELSE
 					tag := result.tag;
+					UseIntermediateOperand(tag);
 				END;
 				TypeTest(tag,x.type,trueL,falseL);
 				ReleaseIntermediateOperand(tag);

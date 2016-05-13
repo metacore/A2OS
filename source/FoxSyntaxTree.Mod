@@ -3192,6 +3192,7 @@ TYPE
 	VAR
 		nextVariable-: Variable;
 		untraced-: BOOLEAN;
+		fictive-: BOOLEAN; (* variable is not allocated but has a fixed offset *)
 		useRegister-: BOOLEAN; registerNumber-: LONGINT;
 		modifiers-: Modifier;
 		initializer-: Expression;
@@ -3209,13 +3210,13 @@ TYPE
 			registerNumber := -1;
 			usedAsReference := FALSE;
 			initializer := NIL;
+			fictive := FALSE;
 		END InitVariable;
 
 		PROCEDURE UsedAsReference*;
 		BEGIN
 			usedAsReference := TRUE
 		END UsedAsReference;
-
 
 		PROCEDURE SetUntraced*(u: BOOLEAN);
 		BEGIN untraced := u
@@ -3230,8 +3231,13 @@ TYPE
 		BEGIN
 			registerNumber := reg
 		END SetRegisterNumber;
-
-
+		
+		PROCEDURE SetFictive*(f: BOOLEAN);
+		BEGIN
+			fictive := f;
+			IF fictive THEN SetUntraced(TRUE) END;
+		END SetFictive;
+		
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
 		END SetModifiers;

@@ -5474,7 +5474,7 @@ TYPE
 							NEW(currentWriteBackCall.next);
 							currentWriteBackCall := currentWriteBackCall.next
 						END;
- 						expression := checker.NewObjectOperatorCall(SemanticChecker.InvalidPosition, designator.relatedAsot, designator.relatedIndexList, tempVariableDesignator);
+ 						expression := checker.NewObjectOperatorCall(SemanticChecker.InvalidPosition, designator.relatedAsot, 0, designator.relatedIndexList, tempVariableDesignator);
 						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
 					END
 				END

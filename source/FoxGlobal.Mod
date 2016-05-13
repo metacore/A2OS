@@ -17,6 +17,7 @@ CONST
 	StringExit*= "FINAL";
 	StringNoPAF*="NOPAF";
 	StringFixed*="FIXED";
+	StringFictive*="FICTIVE";
 	StringAligned*="ALIGNED";
 	StringAlignStack*="ALIGNSTACK";
 	StringFinal*="FINAL";
@@ -184,7 +185,7 @@ VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,OberonName-,ArrayBaseName-,RecordBodyName-,ModuleBodyName-,
-	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameAligned-,NameStackAligned-,
+	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
@@ -304,19 +305,21 @@ TYPE
 
 			variable := x.recordScope.firstVariable;
 			WHILE (variable # NIL) DO
-				size := SizeOf(variable.type.resolved);
-				IF size < 0 THEN RETURN FALSE END;
+				IF ~variable.fictive THEN
+					size := SizeOf(variable.type.resolved);
+					IF size < 0 THEN RETURN FALSE END;
 
-				IF variable.alignment > 0 THEN
-					thisAlignment := variable.alignment*dataUnit;
-				ELSE
-					thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+					IF variable.alignment > 0 THEN
+						thisAlignment := variable.alignment*dataUnit;
+					ELSE
+						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+					END;
+					Basic.Align(offset, thisAlignment);
+					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
+
+					variable.SetOffset(offset);
+					INC(offset,size);
 				END;
-				Basic.Align(offset, thisAlignment);
-				IF thisAlignment  > alignment THEN alignment := thisAlignment END;
-
-				variable.SetOffset(offset);
-				INC(offset,size);
 				variable := variable.nextVariable;
 			END;
 			x.SetAlignmentInBits(alignment);
@@ -351,19 +354,21 @@ TYPE
 
 			variable := x.cellScope.firstVariable;
 			WHILE (variable # NIL) DO
-				size := SizeOf(variable.type.resolved);
-				IF size < 0 THEN RETURN FALSE END;
+				IF ~variable.fictive THEN
+					size := SizeOf(variable.type.resolved);
+					IF size < 0 THEN RETURN FALSE END;
 
-				IF variable.alignment > 0 THEN
-					thisAlignment := variable.alignment*dataUnit;
-				ELSE
-					thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+					IF variable.alignment > 0 THEN
+						thisAlignment := variable.alignment*dataUnit;
+					ELSE
+						thisAlignment := AlignmentOf(SELF.variableAlignment, variable.type.resolved);
+					END;
+					Basic.Align(offset, thisAlignment);
+					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
+
+					variable.SetOffset(offset);
+					INC(offset,size);
 				END;
-				Basic.Align(offset, thisAlignment);
-				IF thisAlignment  > alignment THEN alignment := thisAlignment END;
-
-				variable.SetOffset(offset);
-				INC(offset,size);
 				variable := variable.nextVariable;
 			END;
 			x.SetAlignmentInBits(alignment);
@@ -392,7 +397,7 @@ TYPE
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
-					IF variable.externalName = NIL THEN
+					IF (variable.externalName = NIL) & ~variable.fictive THEN
 						size := SizeOf(variable.type.resolved);
 						IF size < 0 THEN RETURN FALSE END;
 						DEC(offset,size);
@@ -1629,6 +1634,7 @@ TYPE
 		NameEntry := SyntaxTree.NewIdentifier(StringEntry);
 		NameExit := SyntaxTree.NewIdentifier(StringExit);
 		NameFixed := SyntaxTree.NewIdentifier(StringFixed);
+		NameFictive := SyntaxTree.NewIdentifier(StringFictive);
 		NameAligned := SyntaxTree.NewIdentifier(StringAligned);
 		NameStackAligned := SyntaxTree.NewIdentifier(StringAlignStack);
 		NameExclusive := SyntaxTree.NewIdentifier(StringExclusive);

@@ -2813,6 +2813,7 @@ TYPE
 			value: SyntaxTree.Value;
 			leftFirst, leftLast, leftStep, rightFirst, rightLast, rightStep: LONGINT;
 			integerConstantFolding: BOOLEAN;
+			list: SyntaxTree.ExpressionList;
 
 			PROCEDURE NewBool(v: BOOLEAN);
 			BEGIN
@@ -2887,6 +2888,12 @@ TYPE
 			leftType := left.type.resolved; rightType := right.type.resolved;
 			IF ~(leftType IS SyntaxTree.BasicType) OR ~(rightType IS SyntaxTree.BasicType) OR (leftType IS SyntaxTree.ComplexType) OR (rightType IS SyntaxTree.ComplexType) THEN
 				operatorCall := NewOperatorCall(binaryExpression.position,operator,left,right,NIL);
+			END;
+
+			IF (operatorCall = NIL) & IsPointerToObject(left.type) THEN
+				list := SyntaxTree.NewExpressionList();
+				list.AddExpression(right);
+				operatorCall := NewObjectOperatorCall(binaryExpression.position, left, operator, NIL, right);
 			END;
 
 			IF operatorCall # NIL THEN
@@ -4150,18 +4157,18 @@ TYPE
 			RETURN result
 		END NewIndexOperatorCall;
 
-		PROCEDURE NewObjectOperatorCall*(position: LONGINT; left: SyntaxTree.Expression; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator;
+		PROCEDURE NewObjectOperatorCall*(position: LONGINT; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR type: SyntaxTree.Type; expression: SyntaxTree.Expression; op: SyntaxTree.Operator; recordType: SyntaxTree.RecordType;
 			actualParameters: SyntaxTree.ExpressionList; i: LONGINT; result: SyntaxTree.Designator;
 
 			PROCEDURE FindOperator(recordType: SyntaxTree.RecordType; identifier: SyntaxTree.Identifier; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Operator;
 			VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
+
 				PROCEDURE FindInScope(scope: SyntaxTree.RecordScope; access: SET);
 				VAR operator: SyntaxTree.Operator; distance,i: LONGINT;
 				CONST trace = FALSE;
 				BEGIN
 					IF trace THEN
-
 						FOR i := 0 TO actualParameters.Length()-1 DO
 							Printout.Info("par", actualParameters.GetExpression(i));
 						END;
@@ -4184,7 +4191,12 @@ TYPE
 
 			BEGIN
 				bestDistance := Infinity; bestOperator := NIL; numberParameters := actualParameters.Length();
-				identifier := SyntaxTree.NewIdentifier("[]");
+				IF oper = 0 THEN  (* index *)
+					identifier := SyntaxTree.NewIdentifier("[]");
+				ELSE
+					identifier := Global.GetIdentifier(oper,currentScope.ownerModule.case);
+				END;
+				
 				WHILE (recordType # NIL) DO
 					FindInScope(recordType.recordScope,SyntaxTree.ReadOnly);
 					recordType := recordType.GetBaseRecord();
@@ -4193,13 +4205,15 @@ TYPE
 			END FindOperator;
 		BEGIN
 			type := left.type.resolved;
-
+			IF ~(type IS SyntaxTree.PointerType) THEN RETURN NIL END;
 			recordType := type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
 
 			actualParameters := SyntaxTree.NewExpressionList();
-			FOR i := 0 TO parameters.Length()-1 DO
-				expression := ResolveExpression(parameters.GetExpression(i));
-				actualParameters.AddExpression(expression);
+			IF parameters # NIL THEN
+				FOR i := 0 TO parameters.Length()-1 DO
+					expression := ResolveExpression(parameters.GetExpression(i));
+					actualParameters.AddExpression(expression);
+				END;
 			END;
 			IF rhs # NIL THEN actualParameters.AddExpression(rhs) END;
 
@@ -4226,8 +4240,7 @@ TYPE
 
 				IF rhs # NIL THEN result.SetAssignable(TRUE) END;
 			ELSE
-				Error(position,Diagnostics.Invalid,"undefined operator");
-				result := SyntaxTree.invalidDesignator
+				result := NIL;
 			END;
 			RETURN result;
 		END NewObjectOperatorCall;
@@ -4317,8 +4330,12 @@ TYPE
 
 				(*!!! clean up *)
 				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) & ~IsArrayStructuredObjectType(type) THEN
-					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, bracketDesignator.parameters,bracketDesignator.relatedRhs);
-					RETURN
+					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
+					IF resolvedExpression = NIL THEN 
+						Error(bracketDesignator.position,Diagnostics.Invalid,"undefined operator");
+						resolvedExpression := SyntaxTree.invalidDesignator
+					END;
+					RETURN;
 				END;
 
 				i := 0;
@@ -6579,6 +6596,12 @@ TYPE
 						Error(position,Diagnostics.Invalid,"fixed position not possible in procedure");
 					END;
 					variable.SetAlignment(TRUE, value);
+				ELSIF HasValue(modifiers, Global.NameFictive, position, value) THEN
+					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
+						Error(position, Diagnostics.Invalid,"fictive offset not possible in procedure");
+					END;
+					variable.SetFictive(TRUE);
+					variable.SetOffset(value*system.dataUnit);
 				END;
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.SetUseRegister(TRUE) END;
 				IF variable.type.resolved IS SyntaxTree.CellType THEN
@@ -8716,7 +8739,7 @@ TYPE
 
 			ELSIF to IS SyntaxTree.PointerType THEN
 				result := (this IS SyntaxTree.NilType) OR ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType)) & to(SyntaxTree.PointerType).isUnsafe OR
-						IsPointerType(this) & (IsTypeExtension(to,this) OR ((to(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType) & SameType(to,this)))
+						IsPointerType(this) & (IsTypeExtension(to,this) OR to(SyntaxTree.PointerType).isUnsafe OR ((to(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType) & SameType(to,this)))
 				     & (~to.isRealtime OR this.isRealtime);
 			ELSIF to IS SyntaxTree.ProcedureType THEN
 				result := (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.ProcedureType) & SameType(to(SyntaxTree.ProcedureType),this(SyntaxTree.ProcedureType))

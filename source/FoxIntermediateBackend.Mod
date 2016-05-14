@@ -604,6 +604,7 @@ TYPE
 			formalParameter: SyntaxTree.Parameter;
 			recordType: SyntaxTree.RecordType;
 			isModuleBody: BOOLEAN;
+			parametersSize: LONGINT;
 
 			PROCEDURE Signature;
 			VAR parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType; returnType : SyntaxTree.Type;
@@ -713,8 +714,15 @@ TYPE
 			END;
 
 			cc := procedureType.callingConvention;
+			IF cc = SyntaxTree.WinAPICallingConvention THEN
+				parametersSize := ProcedureParametersSize(backend.system,x);
+			ELSE
+				parametersSize := 0;
+			END;
 
 			IF scope.body # NIL THEN
+
+
 				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 				registerNumber := 0;
 				IF ~inline THEN
@@ -809,6 +817,11 @@ TYPE
 
 					ir.ExitValidPAF;
 
+					IF procedureType.callingConvention = SyntaxTree.WinAPICallingConvention THEN
+						parametersSize := ProcedureParametersSize(backend.system,x);
+					ELSE
+						parametersSize := 0;
+					END;
 
 					IF (procedureType.returnType = NIL) OR (scope.body.code # NIL)  THEN
 						finalizer := FALSE;
@@ -834,7 +847,7 @@ TYPE
 							IntermediateCode.InitAddress(dest, addressType, name , 0, 0);
 							ir.Emit(Br(x.position,dest));
 						ELSE
-							ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+							ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 						END;
 					ELSE
 						IF ~scope.body.isUnchecked & ~backend.noRuntimeChecks THEN
@@ -869,12 +882,12 @@ TYPE
 							END;
 							
 							implementationVisitor.EmitLeave(ir,x.position,cc);
-							ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+							ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 						ELSE
 							ir.Emit(Nop(x.position));
 							IF scope.body.isUnchecked OR backend.noRuntimeChecks THEN (* return from procedure in any case *)
 								implementationVisitor.EmitLeave(ir,x.position,cc);
-								ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+								ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 							END;
 						END;
 					END
@@ -886,7 +899,7 @@ TYPE
 				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
 				ir.ExitValidPAF;
 				implementationVisitor.EmitLeave(ir,x.position,cc);
-				ir.Emit(Exit(x.position,procedureType.pcOffset,cc));
+				ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 			END;
 			Scope(scope);
 			Signature;
@@ -1055,7 +1068,7 @@ TYPE
 
 			IF hasDynamicOperatorDeclarations THEN
 				implementationVisitor.EmitLeave(implementationVisitor.operatorInitializationCodeSection,-1,0);
-				implementationVisitor.operatorInitializationCodeSection.Emit(Exit(-1,0,0));
+				implementationVisitor.operatorInitializationCodeSection.Emit(Exit(-1,0,0,0));
 			END;
 
 			IF backend.profile THEN
@@ -2526,7 +2539,7 @@ TYPE
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Br(position,op));
 			ELSE
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0, 0));
 			END;
 			
 			IF ~recordType.isObject THEN
@@ -2556,7 +2569,7 @@ TYPE
 				Emit(Add(position, src, src, ofs));
 				Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 				BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0, 0));
 			END;
 			INC(statCoopAssignProcedure, section.pc);
 			ReturnToContext(context);
@@ -2659,7 +2672,7 @@ TYPE
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Br(position,op));
 			ELSIF (recordType.pointerType # NIL) & recordType.pointerType.isPlain THEN
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0,0));
 			ELSE
 				IF backend.hasLinkRegister THEN
 					Emit(Pop(-1, lr));
@@ -2695,7 +2708,7 @@ TYPE
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Call(position,op, ToMemoryUnits(system, system.addressSize)));
 				ReleaseIntermediateOperand(register);
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0,0));
 				
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
@@ -2718,7 +2731,7 @@ TYPE
 				Emit(Add(position, register, register, ofs));
 				Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 				BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0,0));
 			END;
 			INC(statCoopTraceMethod, section.pc);
 
@@ -2771,7 +2784,7 @@ TYPE
 				IntermediateCode.InitAddress(op, addressType, name , 0, 0);
 				Emit(Br(position,op));
 			ELSE
-				Emit(Exit(position,0,0));
+				Emit(Exit(position,0,0, 0));
 			END;
 			
 			GetRecordTypeName (recordType,name);
@@ -2795,7 +2808,7 @@ TYPE
 			Emit(Add(position, dst, dst, ofs));
 			Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 			BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
-			Emit(Exit(position,0,0));
+			Emit(Exit(position,0,0, 0));
 			INC(statCoopResetProcedure, section.pc);
 
 			ReturnToContext(context);
@@ -2816,7 +2829,7 @@ TYPE
 			Emit(Mov(position,fp, IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,addressType.sizeInBits * 2))));
 			ResetVariables(scope);
 			Emit(Pop(position,fp));
-			Emit(Exit(position,0,0));
+			Emit(Exit(position,0,0, 0));
 			ReturnToContext(context);
 			IF dump # NIL THEN dump := section.comments END;
 		END CreateResetMethod;
@@ -6069,7 +6082,7 @@ TYPE
 			IntermediateCode.InitImmediate(reg, IntermediateCode.GetType(system,system.longintType), numberProcedures);
 			profileInit.EmitAt(profileInitPatchPosition,Push(position,reg));
 			EmitLeave(profileInit,position,0);
-			profileInit.Emit(Exit(position,0,0));
+			profileInit.Emit(Exit(position,0,0,0));
 		END ProfilerPatchInit;
 
 		(** if operator can be overloaded dynamically, emit code that registers it in the runtime **)
@@ -6914,7 +6927,7 @@ TYPE
 		PROCEDURE CloseInitializer(prev: IntermediateCode.Section);
 		BEGIN
 			EmitLeave(section, 0, 0 );
-			Emit(Exit(-1,ToMemoryUnits(system,addressType.sizeInBits),0));
+			Emit(Exit(-1,ToMemoryUnits(system,addressType.sizeInBits),0, 0));
 			section := prev;
 		END CloseInitializer;
 		
@@ -10303,6 +10316,7 @@ TYPE
 			returnTypeOffset: LONGINT;
 			delegate: BOOLEAN;
 			map: SymbolMap;
+			cc, parametersSize: LONGINT;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitReturnStatement") END;
 			expression := x.returnValue;
@@ -10426,8 +10440,15 @@ TYPE
 			IF backend.cooperative THEN
 				BrL(exitLabel);
 			ELSE
+				cc := procedureType(SyntaxTree.ProcedureType).callingConvention;
+				IF cc = SyntaxTree.WinAPICallingConvention THEN
+					parametersSize := ProcedureParametersSize(backend.system,procedure);
+				ELSE
+					parametersSize := 0;
+				END;
+
 				EmitLeave(section, position,procedure.type(SyntaxTree.ProcedureType).callingConvention);
-				Emit(Exit(position,procedure.type(SyntaxTree.ProcedureType).pcOffset,procedure.type(SyntaxTree.ProcedureType).callingConvention));
+				Emit(Exit(position,procedure.type(SyntaxTree.ProcedureType).pcOffset,procedure.type(SyntaxTree.ProcedureType).callingConvention, parametersSize));
 			END;
 			IF Trace THEN TraceExit("VisitReturnStatement") END;
 		END VisitReturnStatement;
@@ -10612,6 +10633,7 @@ TYPE
 				result, mem: IntermediateCode.Operand; scope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType; return: IntermediateCode.Operand;
 				procedure: SyntaxTree.Procedure;
 				map: SymbolMap;
+				cc, parametersSize: LONGINT;
 		BEGIN
 			scope := currentScope;
 			WHILE ~(scope IS SyntaxTree.ProcedureScope) DO scope := scope.outerScope END;
@@ -10697,8 +10719,14 @@ TYPE
 				END;
 				IF currentIsInline THEN RETURN END;
 
-				EmitLeave(section, position,procedureType(SyntaxTree.ProcedureType).callingConvention);
-				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,procedureType(SyntaxTree.ProcedureType).callingConvention));
+				cc := procedureType(SyntaxTree.ProcedureType).callingConvention;
+				IF cc = SyntaxTree.WinAPICallingConvention THEN
+					parametersSize := ProcedureParametersSize(backend.system,procedure);
+				ELSE
+					parametersSize := 0;
+				END;
+				EmitLeave(section, position,cc);
+				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,cc, parametersSize));
 				ReleaseIntermediateOperand(return);
 			END;
 
@@ -10966,6 +10994,7 @@ TYPE
 			Global.GetModuleName(module.module,moduleName);
 			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple THEN 
 				NEW(moduleNamePool, 32);
+				(*! require GC protection *)
 				moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
 			END;
 		END SetModule;
@@ -11300,7 +11329,7 @@ TYPE
 			RETURN section
 		END Block;		
 
-		PROCEDURE Array(source: IntermediateCode.Section; VAR sizePC: LONGINT; CONST baseType: ARRAY OF  CHAR);
+		PROCEDURE ArrayBlock(source: IntermediateCode.Section; VAR sizePC: LONGINT; CONST baseType: ARRAY OF  CHAR);
 		VAR name: Basic.SegmentedName;
 		BEGIN
 			Info(source,"ArrayHeader");
@@ -11323,7 +11352,34 @@ TYPE
 				Address(source,0);
 				Info(source,"array data");
 			END;
-		END Array;
+		END ArrayBlock;
+
+		PROCEDURE ArrayBlockP(source: IntermediateCode.Section; VAR sizePC: LONGINT; VAR firstPC, lastPC: LONGINT; CONST baseType: ARRAY OF  CHAR);
+		VAR name: Basic.SegmentedName;
+		BEGIN
+			Info(source,"ArrayHeader");
+			IF implementationVisitor.backend.cooperative THEN
+				sizePC := source.pc;
+				Address(source,0);
+				NamedSymbol(source,source.name,NIL,0,ToMemoryUnits(implementationVisitor.system,(BaseArrayTypeSize + 1)*implementationVisitor.addressType.sizeInBits));
+				IF baseType # "" THEN
+					Basic.ToSegmentedName(baseType, name);
+					NamedSymbol(source, name,NIL, 0, 0);
+				ELSE
+					Address(source,0);
+				END;
+				Address(source,0);
+			ELSE
+				lastPC := source.pc;
+				Address(source,0);
+				Address(source,0);
+				firstPC := source.pc;
+				Address(source,0);
+				sizePC := source.pc;
+				Address(source,0);
+				Info(source,"array data");
+			END;
+		END ArrayBlockP;
 
 		PROCEDURE PatchArray(section: IntermediateCode.Section; pc: LONGINT; size: LONGINT);
 		BEGIN
@@ -11485,7 +11541,8 @@ TYPE
 										arrayName := ".@ExportArray";
 										Strings.AppendInt(arrayName, level);
 										scopes[level].section := Block("Heaps","SystemBlockDesc",arrayName,ignore);
-										Array(scopes[level].section,scopes[level].arraySizePC,"Modules.ExportDesc");
+										(*! needs pointer array construction *)
+										ArrayBlock(scopes[level].section,scopes[level].arraySizePC,"Modules.ExportDesc");
 									END;
 									scopes[level].beginPC := scopes[level].section.pc;
 									
@@ -11540,6 +11597,7 @@ TYPE
 			NEW(fingerPrinter, module.system);
 			NEW(poolMap, 64);
 			(* this is the name pool private to the export table -- it is sorted and should not be mixed / used for other names in a module *)
+			(*! require a GC pointer *)
 			namePool := Block("Heaps","SystemBlockDesc",".@NamePool",namePoolOffset); 
 			
 			NEW(sectionArray, module.allSections.Length());
@@ -11559,7 +11617,7 @@ TYPE
 		BEGIN
 			Info(source, "exception table offsets array descriptor");
 			size := 0;
-			Array(source,sizePC,"Modules.ExceptionTableEntry");
+			ArrayBlock(source,sizePC,"Modules.ExceptionTableEntry");
 			Info(source, "exception table content");
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				p := module.allSections.GetSection(i);
@@ -11880,7 +11938,7 @@ TYPE
 				
 
 			BEGIN
-				Array(section,sizePC,"");
+				ArrayBlock(section,sizePC,"");
 				
 				startPC := section.pc;
 				Char(section,0FFX); (* sign for trap writer *)
@@ -11973,7 +12031,7 @@ TYPE
 
 		BEGIN
 			Info(source, "command array descriptor");
-			Array(source,sizePC,"Modules.Command");
+			ArrayBlock(source,sizePC,"Modules.Command");
 			numberCommands := 0;
 			Info(source, "command array content");
 
@@ -12019,7 +12077,8 @@ TYPE
 		PROCEDURE ImportsArray(source: IntermediateCode.Section);
 		VAR import: SyntaxTree.Import ; pc: LONGINT;name: Basic.SegmentedName; numberImports: LONGINT; offset: LONGINT;
 		BEGIN
-			Array(source,pc,"");
+			(*! needs to be pointer array *)
+			ArrayBlock(source,pc,"");
 			Info(source, "import module array data");
 			IF implementationVisitor.backend.cooperative THEN
 				offset := 0;
@@ -12050,7 +12109,8 @@ TYPE
 		BEGIN
 			Info(source, "Type info section");
 			size := 0;
-			Array(source,sizePC,"Modules.TypeDesc");
+			(*! require pointer array *)
+			ArrayBlock(source,sizePC,"Modules.TypeDesc");
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				p := module.allSections.GetSection(i);
 				WITH p: IntermediateCode.Section DO
@@ -12325,7 +12385,7 @@ TYPE
 			END;
 			PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
-			Array(emptyArraySection,temp,"");
+			ArrayBlock(emptyArraySection,temp,"");
 			moduleSection := ModuleSection();
 			Info(moduleSection, "nextRoot*: RootObject");
 			Address(moduleSection,0);
@@ -12402,7 +12462,7 @@ TYPE
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
 		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section;
 		BEGIN
-			Array(source,pc,"");
+			ArrayBlock(source,pc,"");
 			Info(source, "pointer offsets array data");
 			IF scope IS SyntaxTree.RecordScope THEN
 				Pointers(0,symbol, source,scope(SyntaxTree.RecordScope).ownerRecord,numberPointers);
@@ -12526,7 +12586,7 @@ TYPE
 				td: SyntaxTree.TypeDeclaration;
 				type: SyntaxTree.Type;
 			BEGIN
-				Array(source,pc,"Modules.FieldEntry");
+				ArrayBlock(source,pc,"Modules.FieldEntry");
 				Info(source, "FieldArray");
 				size :=0;
 				WHILE parameter # NIL DO
@@ -12857,7 +12917,7 @@ TYPE
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				name: Basic.SegmentedName;
 			BEGIN
-				Array(source,pc,"Modules.FieldEntry");
+				ArrayBlock(source,pc,"Modules.FieldEntry");
 				Info(source, "FieldArray");
 				size :=0;
 				WHILE variable # NIL DO
@@ -12885,7 +12945,8 @@ TYPE
 				segmentedName: Basic.SegmentedName;
 				flags: SET;
 			BEGIN
-				Array(source,pc,"Modules.ProcedureEntry");
+				(*! needs pointer array *)
+				ArrayBlock(source,pc,"Modules.ProcedureEntry");
 
 				Info(source, "ProcedureArray");
 				size :=0;
@@ -14027,13 +14088,14 @@ TYPE
 		RETURN instruction
 	END Call;
 
-	PROCEDURE Exit(position: LONGINT;pcOffset: LONGINT; callingConvention: LONGINT): IntermediateCode.Instruction;
-	VAR op1, op2: IntermediateCode.Operand;
+	PROCEDURE Exit(position: LONGINT;pcOffset: LONGINT; callingConvention, unwind: LONGINT): IntermediateCode.Instruction;
+	VAR op1, op2, op3: IntermediateCode.Operand;
 	VAR instruction: IntermediateCode.Instruction;
 	BEGIN
 		IntermediateCode.InitNumber(op1,pcOffset);
 		IntermediateCode.InitNumber(op2,callingConvention);
-		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.exit,op1,op2,emptyOperand);
+		IntermediateCode.InitNumber(op3,unwind);
+		IntermediateCode.InitInstruction(instruction, position, IntermediateCode.exit,op1,op2,op3);
 		RETURN instruction
 	END Exit;
 

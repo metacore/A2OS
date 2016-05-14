@@ -1331,8 +1331,15 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instruction: IntermediateCode.Instruction);
+		VAR parSize: LONGINT; operand: Assembler.Operand;
 		BEGIN
-			emitter.Emit0(InstructionSet.opRET);
+			parSize := SHORT(instruction.op3.intValue);
+			IF parSize = 0 THEN
+				emitter.Emit0(InstructionSet.opRET)
+			ELSE (* e.g. for WINAPI calling convention *)
+				operand := Assembler.NewImm16(parSize);
+				emitter.Emit1(InstructionSet.opRET,operand)
+			END;
 			IF fpStackPointer # 0 THEN Error(instruction.textPosition,"compiler implementation error: fp stack not cleared") END;
 		END EmitExit;
 

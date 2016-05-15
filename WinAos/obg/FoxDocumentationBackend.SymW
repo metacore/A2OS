@@ -1,0 +1,177 @@
+MODULE FoxDocumentationBackend;
+	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Scanner := FoxScanner, Backend := FoxBackend, Formats := FoxFormats, Options, Streams, Runtime, Strings, SymbolFileFormat := FoxBinarySymbolFile, Diagnostics, DocumentationTree := FoxDocumentationTree, DocumentationPrinter := FoxDocumentationPrinter, DocumentationHtml := FoxDocumentationHtml, DocumentationParser := FoxDocumentationParser, DocumentationScanner := FoxDocumentationScanner, D := Debugging, Files;
+CONST 
+	Section = 0; 
+	Item = 1; 
+	Enum = 2; 
+	MaxLevels = 3; 
+	VisibleConstant* = 3; 
+	SecondVisibleConstant* = 4; 
+	Third* = 4; 
+	DefaultTemplateFile = \"oc/DocuTemplate.txt"\; 
+	KeywordElementType = ElementType.Bold; 
+	QualifiedIdentifierElementType = ElementType.Bold; 
+TYPE 
+	ElementType = DocumentationTree.ElementType; 
+
+	ParagraphType = DocumentationTree.ParagraphType; 
+
+	State = RECORD 
+		document: DocumentationTree.Document; 
+		section: DocumentationTree.Section; 
+		paragraphs: DocumentationTree.Paragraphs; 
+		paragraph: DocumentationTree.Paragraph; 
+		text: DocumentationTree.Text; 
+		scope: SyntaxTree.Scope; 
+	END; 
+
+	Generator* = OBJECT (SyntaxTree.Visitor)
+	VAR 
+		w, ws: Streams.StringWriter; 
+		case: LONGINT; 
+		diagnostics: Diagnostics.Diagnostics; 
+		level: ARRAY MaxLevels OF LONGINT; 
+		current: State; 
+		document: DocumentationTree.Document; 
+		parameterDocument: DocumentationTree.Document; 
+		short: BOOLEAN; 
+		backend: DocumentationBackend; 
+
+		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ Keyword(CONST a: ARRAY OF CHAR); 
+		PROCEDURE ^ Identifier*(x: SyntaxTree.Identifier); 
+		PROCEDURE ^ QualifiedIdentifier*(x: SyntaxTree.QualifiedIdentifier); 
+		PROCEDURE ^ Type*(x: SyntaxTree.Type); 
+		PROCEDURE ^ VisitType*(x: SyntaxTree.Type); 
+		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 
+		PROCEDURE ^ VisitBooleanType*(x: SyntaxTree.BooleanType); 
+		PROCEDURE ^ VisitSetType*(x: SyntaxTree.SetType); 
+		PROCEDURE ^ VisitSizeType*(x: SyntaxTree.SizeType); 
+		PROCEDURE ^ VisitCharacterType*(x: SyntaxTree.CharacterType); 
+		PROCEDURE ^ VisitIntegerType*(x: SyntaxTree.IntegerType); 
+		PROCEDURE ^ VisitFloatType*(x: SyntaxTree.FloatType); 
+		PROCEDURE ^ VisitComplexType*(x: SyntaxTree.ComplexType); 
+		PROCEDURE ^ VisitByteType*(x: SyntaxTree.ByteType); 
+		PROCEDURE ^ VisitQualifiedType*(x: SyntaxTree.QualifiedType); 
+		PROCEDURE ^ VisitStringType*(x: SyntaxTree.StringType); 
+		PROCEDURE ^ VisitEnumerationType*(x: SyntaxTree.EnumerationType); 
+		PROCEDURE ^ VisitRangeType*(x: SyntaxTree.RangeType); 
+		PROCEDURE ^ VisitArrayType*(x: SyntaxTree.ArrayType); 
+		PROCEDURE ^ VisitNilType*(x: SyntaxTree.NilType); 
+		PROCEDURE ^ VisitAddressType*(x: SyntaxTree.AddressType); 
+		PROCEDURE ^ VisitObjectType*(x: SyntaxTree.ObjectType); 
+		PROCEDURE ^ VisitAnyType*(x: SyntaxTree.AnyType); 
+		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
+		PROCEDURE ^ VisitPointerType*(x: SyntaxTree.PointerType); 
+		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
+		PROCEDURE ^ VisitCellType*(x: SyntaxTree.CellType); 
+		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
+		PROCEDURE ^ VisitProcedureType*(x: SyntaxTree.ProcedureType); 
+		PROCEDURE ^ ExpressionList(x: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ Expression*(x: SyntaxTree.Expression); 
+		PROCEDURE ^ VisitExpression*(x: SyntaxTree.Expression); 
+		PROCEDURE ^ VisitSet*(x: SyntaxTree.Set); 
+		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
+		PROCEDURE ^ VisitUnaryExpression*(x: SyntaxTree.UnaryExpression); 
+		PROCEDURE ^ VisitBinaryExpression*(x: SyntaxTree.BinaryExpression); 
+		PROCEDURE ^ VisitRangeExpression*(x: SyntaxTree.RangeExpression); 
+		PROCEDURE ^ VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression); 
+		PROCEDURE ^ VisitConversion*(x: SyntaxTree.Conversion); 
+		PROCEDURE ^ VisitSymbolDesignator*(x: SyntaxTree.SymbolDesignator); 
+		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
+		PROCEDURE ^ VisitValue*(x: SyntaxTree.Value); 
+		PROCEDURE ^ VisitBooleanValue*(x: SyntaxTree.BooleanValue); 
+		PROCEDURE ^ VisitIntegerValue*(x: SyntaxTree.IntegerValue); 
+		PROCEDURE ^ VisitCharacterValue*(x: SyntaxTree.CharacterValue); 
+		PROCEDURE ^ VisitSetValue*(x: SyntaxTree.SetValue); 
+		PROCEDURE ^ VisitMathArrayValue*(x: SyntaxTree.MathArrayValue); 
+		PROCEDURE ^ FormatedFloat(value: LONGREAL; subtype: LONGINT); 
+		PROCEDURE ^ VisitRealValue*(x: SyntaxTree.RealValue); 
+		PROCEDURE ^ VisitComplexValue*(x: SyntaxTree.ComplexValue); 
+		PROCEDURE ^ VisitStringValue*(x: SyntaxTree.StringValue); 
+		PROCEDURE ^ VisitNilValue*(x: SyntaxTree.NilValue); 
+		PROCEDURE ^ VisitEnumerationValue*(x: SyntaxTree.EnumerationValue); 
+		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 
+		PROCEDURE ^ PrintSymbol(x: SyntaxTree.Symbol); 
+		PROCEDURE ^ ParameterList*(x: SyntaxTree.Parameter); 
+		PROCEDURE ^ Visible(symbol: SyntaxTree.Symbol): BOOLEAN; 
+		PROCEDURE ^ Symbol*(x: SyntaxTree.Symbol); 
+		PROCEDURE ^ NeedsSection(x: SyntaxTree.Symbol): BOOLEAN; 
+		PROCEDURE ^ ExtractParameters(x: SyntaxTree.ProcedureType; doc: DocumentationTree.Document; VAR parameters: DocumentationTree.Document); 
+		PROCEDURE ^ WriteSymbolSection(x: SyntaxTree.Symbol); 
+		PROCEDURE ^ BeginSymbolSection(CONST title: ARRAY OF CHAR; x: SyntaxTree.Symbol): DocumentationTree.Section; 
+		PROCEDURE ^ VisitSymbol*(x: SyntaxTree.Symbol); 
+		PROCEDURE ^ VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration); 
+		PROCEDURE ^ VisitConstant*(x: SyntaxTree.Constant); 
+		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
+		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
+		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
+		PROCEDURE ^ Int(value: LONGINT); 
+		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN); 
+		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
+		PROCEDURE ^ String(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Whitespace; 
+		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
+		PROCEDURE ^ VisitImport*(x: SyntaxTree.Import); 
+		PROCEDURE ^ VisitBuiltin*(x: SyntaxTree.Builtin); 
+		PROCEDURE ^ Scope*(x: SyntaxTree.Scope); 
+		PROCEDURE ^ SymbolRow(CONST head: ARRAY OF CHAR; symbol: SyntaxTree.Symbol; VAR first: BOOLEAN); 
+		PROCEDURE ^ Summary(paragraphs: DocumentationTree.Paragraphs; x: SyntaxTree.Scope); 
+		PROCEDURE ^ WriteTextElement(textElement: DocumentationTree.TextElement); 
+		PROCEDURE ^ BeginSection(document: DocumentationTree.Document): DocumentationTree.Section; 
+		PROCEDURE ^ PrefixSection(document: DocumentationTree.Document): DocumentationTree.Section; 
+		PROCEDURE ^ EndSection(section: DocumentationTree.Section); 
+		PROCEDURE ^ PatchLinkE(element: DocumentationTree.TextElement); 
+		PROCEDURE ^ PatchLinksP(par: DocumentationTree.Paragraph); 
+		PROCEDURE ^ PatchLinksS(sec: DocumentationTree.Section); 
+		PROCEDURE ^ PatchLinks(doc: DocumentationTree.Document; scope: SyntaxTree.Scope); 
+		PROCEDURE ^ Modifiers(x: SyntaxTree.Modifier); 
+		PROCEDURE ^ Module*(x: SyntaxTree.Module; backend: DocumentationBackend): DocumentationTree.Document; 
+	END Generator; 
+
+	Checker = OBJECT 
+	VAR 
+		labels: DocumentationTree.Text; 
+		links: DocumentationTree.Text; 
+		currentScope: SyntaxTree.Scope; 
+
+		PROCEDURE ^ CheckElement(element: DocumentationTree.TextElement); 
+		PROCEDURE ^ CollectElement(element: DocumentationTree.TextElement); 
+		PROCEDURE ^ CollectParagraph(par: DocumentationTree.Paragraph); 
+		PROCEDURE ^ CollectSection(sec: DocumentationTree.Section); 
+		PROCEDURE ^ Document(doc: DocumentationTree.Document; scope: SyntaxTree.Scope); 
+	END Checker; 
+
+	DocumentationBackend = OBJECT (Backend.Backend)
+	VAR 
+		trace: BOOLEAN; 
+		fileName: Files.FileName; 
+		generator: Generator; 
+		templateFile: Files.FileName; 
+		internals: BOOLEAN; 
+
+		PROCEDURE ^  & InitIntermediateBackend*; 
+		PROCEDURE ^ ParseFile(fileName: ARRAY OF CHAR): DocumentationTree.Document; 
+		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+		PROCEDURE ^ DefaultObjectFileFormat*(): Formats.ObjectFileFormat; 
+	END DocumentationBackend; 
+
+	PROCEDURE ^ Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ Hex(w: Streams.Writer; x: HUGEINT); 
+	PROCEDURE ^ ToText(w: Streams.StringWriter; text: DocumentationTree.Text; elementType: ElementType); 
+	PROCEDURE ^ WriteSymbolLabel(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol); 
+	PROCEDURE ^ WriteReferenceInScope*(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope); 
+	PROCEDURE ^ WriteSymbolReference(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope); 
+	PROCEDURE ^ ParseComments(document: DocumentationTree.Document; c, sentinel: SyntaxTree.Comment; x: ANY); 
+	PROCEDURE ^ MergeComments(c, sentinel: SyntaxTree.Comment; x: ANY): DocumentationTree.String; 
+	PROCEDURE ^ KeepSections(in: DocumentationTree.Document); 
+	PROCEDURE ^ MergeDocument(in: DocumentationTree.Document; descriptionSection: DocumentationTree.Paragraphs; this: DocumentationTree.Document); 
+	PROCEDURE ^ MergeParagraphs(in, this: DocumentationTree.Paragraphs); 
+	PROCEDURE ^ MergeSections(in, this: DocumentationTree.Sections); 
+	PROCEDURE ^ MergeSectionDocument(section: DocumentationTree.Section; document: DocumentationTree.Document); 
+	PROCEDURE ^ Get*(): Backend.Backend; 
+BEGIN
+END FoxDocumentationBackend.

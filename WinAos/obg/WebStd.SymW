@@ -1,0 +1,293 @@
+MODULE WebStd;
+	IMPORT DynamicWebpage, PrevalenceSystem, HTTPSupport, HTTPSession, GenericSort, XML, XMLObjects, DynamicStrings, Dates, Strings, TFClasses, KernelLog, WebHTTP;
+CONST 
+	DateTimeFormat* = \"dd.mm.yyyy hh:nn:ss"\; 
+	SessionContainerNamePrefix = \"dxp-WebStd-sessioncontainer-"\; 
+	SessionVariableNamePrefix = \"dxp-WebStd-variable-"\; 
+	SessionGuardNamePrefix = \"dxp-WebStd-Guard-"\; 
+	SessionVisitorCounterPrefix = \"dxp-WebStd-VisitorCounter-"\; 
+TYPE 
+	Hyperlink* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END Hyperlink; 
+
+	GetHeaderField* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END GetHeaderField; 
+
+	SetVariable* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END SetVariable; 
+
+	GetVariable* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END GetVariable; 
+
+	Guard* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ PreTransform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END Guard; 
+
+	Sequence* = OBJECT (DynamicWebpage.StateFullActiveElement)
+	VAR 
+		stateCounter: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ PreTransform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ SetState(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ GetEventHandlers*(): DynamicWebpage.EventHandlerList; 
+	END Sequence; 
+
+	IsEqual* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Compare(arg1, arg2: XML.Content): BOOLEAN; 
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END IsEqual; 
+
+	Not* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END Not; 
+
+	And* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END And; 
+
+	Or* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END Or; 
+
+	Xor* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END Xor; 
+
+	EventButton* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END EventButton; 
+
+	EventLink* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END EventLink; 
+
+	Formular* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ RenameInputAttr(n: XML.Content); 
+	END Formular; 
+
+	PersistentDataObject* = OBJECT {EXCLUSIVE} (PrevalenceSystem.PersistentObject)
+
+		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
+	END PersistentDataObject; 
+
+	PersistentDataObjectList* = POINTER TO ARRAY OF PersistentDataObject; 
+
+	PersistentDataFilter* = PROCEDURE {DELEGATE}(obj: PersistentDataObject):BOOLEAN; 
+
+	PersistentDataCompare* = PROCEDURE {DELEGATE}(obj1, obj2: PersistentDataObject):BOOLEAN; 
+
+	PersistentDataContainer* = OBJECT {EXCLUSIVE} (PersistentDataObject)
+	VAR 
+		name: Strings.String; 
+		dataObjList: TFClasses.List; 
+
+		PROCEDURE ^  & Create*; 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ SetName*(n: ARRAY OF CHAR); 
+		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): PersistentDataObject; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetItem*(i: LONGINT): PersistentDataObject; 
+		PROCEDURE ^ GetElementList*(filter: PersistentDataFilter; persComp: PersistentDataCompare): PersistentDataObjectList; 
+		PROCEDURE ^ AddPersistentDataObject*(obj: PersistentDataObject; desc: PrevalenceSystem.PersistentObjectDescriptor); 
+		PROCEDURE ^ Contains*(obj: PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ RemovePersistentDataObject*(obj: PersistentDataObject); 
+		PROCEDURE ^ FilterContainerByName(obj: PrevalenceSystem.PersistentObject): BOOLEAN; 
+		PROCEDURE ^ Externalize*(): XML.Content; 
+		PROCEDURE ^ Internalize*(xml: XML.Content); 
+		PROCEDURE ^ InternalizeElem(elem: XML.Element); 
+		PROCEDURE ^ GetReferrencedObjects*(): PrevalenceSystem.PersistentObjectList; 
+		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
+	END PersistentDataContainer; 
+
+	PersistentDataSorter = OBJECT 
+	VAR 
+		comp: PersistentDataCompare; 
+
+		PROCEDURE ^  & Init*(persComp: PersistentDataCompare); 
+		PROCEDURE ^ GenericCompare(obj1, obj2: ANY): BOOLEAN; 
+	END PersistentDataSorter; 
+
+	DataContainer* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END DataContainer; 
+
+	SessionDataObject* = OBJECT 
+	VAR 
+		oid*: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
+	END SessionDataObject; 
+
+	SessionDataObjectList* = POINTER TO ARRAY OF SessionDataObject; 
+
+	SessionDataFilter* = PROCEDURE {DELEGATE}(obj: SessionDataObject):BOOLEAN; 
+
+	SessionDataCompare* = PROCEDURE {DELEGATE}(obj1, obj2: SessionDataObject):BOOLEAN; 
+
+	SessionDataContainer* = OBJECT (SessionDataObject)
+	VAR 
+		name: Strings.String; 
+		dataObjList: TFClasses.List; 
+
+		PROCEDURE ^  & Create*(containerName: ARRAY OF CHAR); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): SessionDataObject; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetItem*(i: LONGINT): SessionDataObject; 
+		PROCEDURE ^ GetElementList*(filter: SessionDataFilter; sessComp: SessionDataCompare): SessionDataObjectList; 
+		PROCEDURE ^ AddSessionDataObject*(obj: SessionDataObject); 
+		PROCEDURE ^ Contains*(obj: SessionDataObject): BOOLEAN; 
+		PROCEDURE ^ RemoveSessionDataObject*(obj: SessionDataObject); 
+		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
+	END SessionDataContainer; 
+
+	SessionDataSorter = OBJECT 
+	VAR 
+		comp: SessionDataCompare; 
+
+		PROCEDURE ^  & Init*(sessComp: SessionDataCompare); 
+		PROCEDURE ^ GenericCompare(obj1, obj2: ANY): BOOLEAN; 
+	END SessionDataSorter; 
+
+	SessionContainer* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END SessionContainer; 
+
+	Datagrid* = OBJECT (DynamicWebpage.StateFullActiveElement)
+	VAR 
+		pos: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ SetPos(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ GetEventHandlers*(): DynamicWebpage.EventHandlerList; 
+	END Datagrid; 
+
+	ToggleBlock* = OBJECT (DynamicWebpage.StateFullActiveElement)
+	VAR 
+		isShowing: BOOLEAN; 
+		firstAccess: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PreTransform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ Show(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ Hide(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ GetEventHandlers*(): DynamicWebpage.EventHandlerList; 
+	END ToggleBlock; 
+
+	PersistentCounter = OBJECT {EXCLUSIVE} (PrevalenceSystem.PersistentObject)
+	VAR 
+		name: Strings.String; 
+		counter: LONGINT; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ IncreaseCounter; 
+		PROCEDURE ^ Internalize*(xml: XML.Content); 
+		PROCEDURE ^ Externalize*(): XML.Content; 
+	END PersistentCounter; 
+
+	VisitorCounter* = OBJECT {EXCLUSIVE} (DynamicWebpage.StateLessActiveElement)
+	VAR 
+		counterName: Strings.String; 
+		nameLock: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ LockName; 
+		PROCEDURE ^ UnlockName; 
+		PROCEDURE ^ FilterPersistentCounter(obj: PrevalenceSystem.PersistentObject): BOOLEAN; 
+		PROCEDURE ^ GetCounterByName(name: ARRAY OF CHAR): PersistentCounter; 
+	END VisitorCounter; 
+
+	PtrDateTime* = POINTER TO Dates.DateTime; 
+VAR 
+	persistentDataContainerDesc*: PrevalenceSystem.PersistentObjectDescriptor; 
+	persistentCounterDesc: PrevalenceSystem.PersistentObjectDescriptor; 
+	tempContainerName: Strings.String; 
+	qlock: BOOLEAN; 
+	oidCounter: LONGINT; 
+
+	PROCEDURE ^ GetXMLSubElement*(parent: XML.Container; name: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ NofXMLSubElements*(parent: XML.Container; name: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetXMLSubElementByIndex*(parent: XML.Container; name: ARRAY OF CHAR; index: LONGINT): XML.Element; 
+	PROCEDURE ^ GetXMLCharContent*(parent: XML.Container): Strings.String; 
+	PROCEDURE ^ SpecialCharacter(c: CHAR): BOOLEAN; 
+	PROCEDURE ^ CreateXMLText*(text: ARRAY OF CHAR): XML.Container; 
+	PROCEDURE ^ GetEncXMLAttributeText*(text: ARRAY OF CHAR): Strings.String; 
+	PROCEDURE ^ CreateXMLTextWithBR*(text: ARRAY OF CHAR): XML.Container; 
+	PROCEDURE ^ AppendXMLContent*(container: XML.Container; appendix: XML.Content); 
+	PROCEDURE ^ CopyXMLSubContents*(from, to: XML.Container); 
+	PROCEDURE ^ Concat(dynStr: DynamicStrings.DynamicString; appendix: ARRAY OF CHAR); 
+	PROCEDURE ^ GetString*(text: ARRAY OF CHAR): Strings.String; 
+	PROCEDURE ^ StrToDateTime*(str: ARRAY OF CHAR; VAR dt: Dates.DateTime); 
+	PROCEDURE ^ DateTimeToStr*(VAR dt: Dates.DateTime): Strings.String; 
+	PROCEDURE ^ GetNowDateTimeAsStr*(): Strings.String; 
+	PROCEDURE ^ CompareDateTime*(VAR a, b: Dates.DateTime): BOOLEAN; 
+	PROCEDURE ^ InternalizeString*(container: XML.Container; elementName: ARRAY OF CHAR): Strings.String; 
+	PROCEDURE ^ InternalizeDateTime*(container: XML.Container; elementName: ARRAY OF CHAR): PtrDateTime; 
+	PROCEDURE ^ InternalizeInteger*(container: XML.Container; elementName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ InternalizeBoolean*(container: XML.Container; elementName: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExternalizeString*(str: Strings.String; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExternalizeDateTime*(dateTime: PtrDateTime; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExternalizeInteger*(number: LONGINT; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExternalizeBoolean*(boolVal: BOOLEAN; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultPersistentDataFilter*(obj: PersistentDataObject): BOOLEAN; 
+	PROCEDURE ^ DefaultSessionDataFilter*(obj: SessionDataObject): BOOLEAN; 
+	PROCEDURE ^ GetSessionDataContainer*(session: HTTPSession.Session; name: ARRAY OF CHAR): SessionDataContainer; 
+	PROCEDURE ^ FindSessionDataContainer*(session: HTTPSession.Session; name: ARRAY OF CHAR): SessionDataContainer; 
+	PROCEDURE ^ GetPersistentDataContainer*(prevSys: PrevalenceSystem.PrevalenceSystem; name: ARRAY OF CHAR): PersistentDataContainer; 
+	PROCEDURE ^ FindPersistentDataContainer*(prevSys: PrevalenceSystem.PrevalenceSystem; name: ARRAY OF CHAR): PersistentDataContainer; 
+	PROCEDURE ^ FilterPersistentDataContainer(obj: PrevalenceSystem.PersistentObject): BOOLEAN; 
+	PROCEDURE ^ IsExternalHyperlink(href: ARRAY OF CHAR; host: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ QueryLock; 
+	PROCEDURE ^ QueryUnlock; 
+	PROCEDURE ^ GetNewOid(): LONGINT; 
+	PROCEDURE ^ CreateHyperlinkElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateEventButtonElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateEventLinkElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateFormularElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateDataContainerElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateSessionContainerElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateDatagridElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateGetHeaderFieldElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateGetVariableElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateSetVariableElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateGuardElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateSequenceElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateIsEqualElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateToggleBlockElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateVisitorCounterElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateNotElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateAndElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateOrElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateXorElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ GetActiveElementDescriptors*(): DynamicWebpage.ActiveElementDescSet; 
+	PROCEDURE ^ GetNewPersistentDataContainer(): PrevalenceSystem.PersistentObject; 
+	PROCEDURE ^ GetNewPersistentCounter(): PrevalenceSystem.PersistentObject; 
+	PROCEDURE ^ GetPersistentObjectDescriptors*(): PrevalenceSystem.PersistentObjectDescSet; 
+BEGIN
+END WebStd.

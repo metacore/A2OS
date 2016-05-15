@@ -1,0 +1,160 @@
+MODULE WMTextStyleTool;
+	IMPORT Commands, Streams, Texts, Strings, WMComponents, WMRestorable, WMStringGrids, WMGrids, WMEditors, WMGraphics, WMMessages, WMStandardComponents, Modules, WMPopups, WMRectangles, WMDialogs, FP1616, Files, XMLParser, XMLScanner, XML, XMLObjects, WM := WMWindowManager;
+CONST 
+	AlignLeft = 0; 
+	AlignCenter = 1; 
+	AlignRight = 2; 
+	AlignJustified = 3; 
+	StyleRegular = 0; 
+	StyleBold = 1; 
+	StyleItalic = 2; 
+	StyleBoldItalic = 3; 
+	ChangeFont = {0}; 
+	ChangeSize = {1}; 
+	ChangeStyle = {2}; 
+	ChangeFgColor = {3}; 
+	ChangeBgColor = {4}; 
+	Absolute = 0; 
+	IncrementBy = 1; 
+	DecrementBy = 2; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	ContextMenuData = OBJECT 
+	VAR 
+		val: LONGINT; 
+
+		PROCEDURE ^  & New*(val: LONGINT); 
+	END ContextMenuData; 
+
+	ChangeInfo = OBJECT (Texts.Attributes)
+	VAR 
+		fields: SET; 
+		name: ARRAY 128 OF CHAR; 
+		deltaSizeMode: LONGINT; 
+		deltaSize: LONGINT; 
+		fgColor, bgColor: LONGINT; 
+		style: SET; 
+
+		PROCEDURE ^  & Init*; 
+	END ChangeInfo; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		bold, lock, comment, stupid, assert, preferred, debug, normal, highlight, adhoc, more, edit, link, label: WMStandardComponents.Button; 
+		winpanel: WMStandardComponents.Panel; 
+		cList: WMStringGrids.StringGrid; 
+		styleEditor: StyleEditor; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ AdHocStyle(sender, data: ANY); 
+		PROCEDURE ^ EditStyles(sender, data: ANY); 
+		PROCEDURE ^ ShowList(sender, data: ANY); 
+		PROCEDURE ^ BuildList; 
+		PROCEDURE ^ SetStyleFromList(sender, data: ANY); 
+		PROCEDURE ^ SetStyle(sender, data: ANY); 
+		PROCEDURE ^ AddLink(sender, data: ANY); 
+		PROCEDURE ^ AddLabel(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+
+	AdHocStyleWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		get, apply: WMStandardComponents.Button; 
+		famEdit, sizeEdit, styleEdit, colorEdit, bgColEdit: WMEditors.Editor; 
+		styleB, colB, bgColB: WMStandardComponents.Button; 
+		popup: WMPopups.Popup; 
+		cStyle: Texts.CharacterStyle; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ GetStyle(sender, data: ANY); 
+		PROCEDURE ^ SetCustomStyle(sender, data: ANY); 
+		PROCEDURE ^ StyleDrop(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ Close*; 
+	END AdHocStyleWindow; 
+
+	StyleEditor* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		shown: BOOLEAN; 
+		popup: WMPopups.Popup; 
+		oldPStyleName, oldCStyleName: ARRAY 256 OF CHAR; 
+		tabColor, tabSelectedColor: LONGINT; 
+		previewLabel, fontNotFound: WMStandardComponents.Label; 
+		tabPanel, buttonPanel, pstylePanel, cstylePanel: WMStandardComponents.Panel; 
+		pstyleButton, cstyleButton, button: WMStandardComponents.Button; 
+		pName, pAlign, pFirstIndent, pLeftIndent, pRightIndent, pSpaceBefore, pSpaceAfter, pDefCharStyle, cName, cFont, cSize, cStyle, cBaselineShift, cLeading, cColor, cBackColor, cTracking, cStretchH, cStretchV: WMEditors.Editor; 
+		pList, cList: WMStringGrids.StringGrid; 
+		UpdateProc*: PROCEDURE {DELEGATE}; 
+		currentPStyle, tempPStyle: Texts.ParagraphStyle; 
+		currentCStyle, tempCStyle: Texts.CharacterStyle; 
+		pStyles: Texts.ParagraphStyleArray; 
+		cStyles: Texts.CharacterStyleArray; 
+		vc: WMComponents.VisualComponent; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ LoadStyleList; 
+		PROCEDURE ^ TabHandler(sender, data: ANY); 
+		PROCEDURE ^ PClickSelected(sender, data: ANY); 
+		PROCEDURE ^ CClickSelected(sender, data: ANY); 
+		PROCEDURE ^ UpdateValueHandler(sender, data: ANY); 
+		PROCEDURE ^ UpdateList; 
+		PROCEDURE ^ SendUpdateMsg; 
+		PROCEDURE ^ NewPHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportPHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportParagraphStyles(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ RemovePHandler(sender, data: ANY); 
+		PROCEDURE ^ ApplyPHandler(sender, data: ANY); 
+		PROCEDURE ^ NewCHandler(sender, data: ANY); 
+		PROCEDURE ^ ExportCHandler(sender, data: ANY); 
+		PROCEDURE ^ ExportCharacterStyles(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ ImportCHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportCharacterStyles(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ RemoveCHandler(sender, data: ANY); 
+		PROCEDURE ^ ApplyCHandler(sender, data: ANY); 
+		PROCEDURE ^ AlignHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ AlignPopupHandler(sender, data: ANY); 
+		PROCEDURE ^ StyleHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorPopupHandler(result: LONGINT); 
+	END StyleEditor; 
+VAR 
+	nofWindows: LONGINT; 
+	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
+	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
+
+	PROCEDURE ^ CreateStyleName(CONST fontname: ARRAY OF CHAR; style: SET; size, fgColor, bgColor: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value, currentSize: LONGINT; VAR newSize: LONGINT); 
+	PROCEDURE ^ ChangeFontSize(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ ChangeFontColor(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ ChangeFontStyle(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ ChangeFontName(VAR attr: Texts.Attributes; userData: ANY); 
+	PROCEDURE ^ Change(changeInfo: ChangeInfo); 
+	PROCEDURE ^ SetFontSize*(context: Commands.Context); 
+	PROCEDURE ^ SetFontStyle*(context: Commands.Context); 
+	PROCEDURE ^ SetFontColor*(context: Commands.Context); 
+	PROCEDURE ^ SetFontName*(context: Commands.Context); 
+	PROCEDURE ^ SetStyleByName*(context: Commands.Context); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMTextStyleTool.

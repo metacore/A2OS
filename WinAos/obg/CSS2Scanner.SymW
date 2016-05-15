@@ -1,0 +1,80 @@
+MODULE CSS2Scanner;
+	IMPORT KernelLog, Strings, Streams, Files, DynamicStrings;
+CONST 
+	Null =  -2; 
+	Invalid* =  -1; 
+	Ident* = 0; 
+	AtKeyword* = 1; 
+	String* = 2; 
+	Hash* = 3; 
+	Important* = 4; 
+	Number* = 5; 
+	Percentage* = 6; 
+	Dimension* = 7; 
+	URI* = 8; 
+	Function* = 9; 
+	UnicodeRange* = 10; 
+	Cdo* = 11; 
+	Cdc* = 12; 
+	Slash* = 13; 
+	Comma* = 14; 
+	Greater* = 15; 
+	Plus* = 16; 
+	Minus* = 17; 
+	Asterisk* = 18; 
+	Semicolon* = 19; 
+	Colon* = 20; 
+	Dot* = 21; 
+	BracketOpen* = 22; 
+	BracketClose* = 23; 
+	ParenOpen* = 24; 
+	ParenClose* = 25; 
+	BraceOpen* = 26; 
+	BraceClose* = 27; 
+	Equal* = 28; 
+	Includes* = 29; 
+	Dashmatch* = 30; 
+	Eof* = 31; 
+	Undefined* = 0; 
+	Integer* = 1; 
+	Real* = 2; 
+TYPE 
+	Scanner* = OBJECT 
+	VAR 
+		sym-: LONGINT; 
+		numberType-: SHORTINT; 
+		intVal-: LONGINT; 
+		realVal-: LONGREAL; 
+		line-, row-, pos: LONGINT; 
+		reportError*: PROCEDURE (pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+		nextCh: CHAR; 
+		dynstr: DynamicStrings.DynamicString; 
+		f: Files.File; 
+		r: Files.Reader; 
+
+		PROCEDURE ^  & Init*(f: Files.File); 
+		PROCEDURE ^ Error(msg: ARRAY OF CHAR); 
+		PROCEDURE ^ NextCh; 
+		PROCEDURE ^ SkipWhiteSpace; 
+		PROCEDURE ^ ScanComment; 
+		PROCEDURE ^ ScanEscape(isString: BOOLEAN; VAR i: LONGINT); 
+		PROCEDURE ^ ScanIdent; 
+		PROCEDURE ^ ScanName; 
+		PROCEDURE ^ ScanString; 
+		PROCEDURE ^ ScanURL; 
+		PROCEDURE ^ ScanNumber; 
+		PROCEDURE ^ Scan*; 
+		PROCEDURE ^ GetStr*(): Strings.String; 
+		PROCEDURE ^ GetPos*(): LONGINT; 
+	END Scanner; 
+
+	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsNonAscii(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsEscape(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsNmStart(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsNmChar(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: LONGINT); 
+	PROCEDURE ^ DefaultReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+BEGIN
+END CSS2Scanner.

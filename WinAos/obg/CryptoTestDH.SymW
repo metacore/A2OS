@@ -1,0 +1,12 @@
+MODULE CryptoTestDH;
+	IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog;
+CONST 
+
+	PROCEDURE ^ Do(CONST nprime: ARRAY OF CHAR); 
+	PROCEDURE ^ SSL192*; 
+	PROCEDURE ^ SSL512*; 
+	PROCEDURE ^ SSL1024*; 
+	PROCEDURE ^ SSH*; 
+	PROCEDURE ^ SSL2048*; 
+BEGIN
+END CryptoTestDH.

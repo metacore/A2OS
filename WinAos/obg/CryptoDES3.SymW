@@ -1,0 +1,22 @@
+MODULE CryptoDES3;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, DES := CryptoDES, S := SYSTEM;
+CONST 
+TYPE 
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ske, skd: ARRAY 96 OF SET; 
+		ski: LONGINT; 
+		ivx, ivy: SET; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RoundE*(VAR x, y: SET); 
+		PROCEDURE ^ RoundD*(VAR x, y: SET); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+BEGIN
+END CryptoDES3.

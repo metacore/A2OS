@@ -1,0 +1,213 @@
+MODULE MP3Decoder;
+	IMPORT SYSTEM, Files, Streams, KernelLog, Math, SoundDevices, Codecs;
+CONST 
+	MAXBUF = 4096; 
+	MPEGLAYER1 = 1; 
+	MPEGLAYER2 = 2; 
+	MPEGLAYER3 = 3; 
+	MPEG1LAYER3 = 65530; 
+	MPEG1LAYER3CRC = 65531; 
+	MPEG1LAYER2 = 65532; 
+	MPEG1LAYER2CRC = 65533; 
+	MPEG1LAYER1 = 65534; 
+	MPEG1LAYER1CRC = 65535; 
+TYPE 
+	Channel = RECORD 
+		scfsi: ARRAY 4 OF BOOLEAN; 
+		gr: ARRAY 2 OF RECORD 
+			part23length, bigvalues, globalgain, scalefaccompress, blocktype, region0count, region1count: INTEGER; 
+			tableselect, subblockgain: ARRAY 3 OF INTEGER; 
+			windowswitchingflag, mixedblockflag, preflag, scalefacscale, count1tableselect: BOOLEAN; 
+		END; 
+	END; 
+
+	Scalefactors = RECORD 
+		l: ARRAY 23 OF INTEGER; 
+		s: ARRAY 3 OF ARRAY 13 OF INTEGER; 
+	END; 
+
+	Frame = OBJECT 
+	VAR 
+		stereo: INTEGER; 
+		jsbound: INTEGER; 
+		single: INTEGER; 
+		lsd: INTEGER; 
+		mpeg25: INTEGER; 
+		headerchange: INTEGER; 
+		layer: INTEGER; 
+		errorprotection: INTEGER; 
+		bitrate: INTEGER; 
+		samplerate: INTEGER; 
+		padding: BOOLEAN; 
+		extension: BOOLEAN; 
+		channelmode: INTEGER; 
+		modeextension: INTEGER; 
+		copyright: BOOLEAN; 
+		original: BOOLEAN; 
+		emphasis: INTEGER; 
+		nofSlots: INTEGER; 
+		crc: BOOLEAN; 
+		maindatabegin: INTEGER; 
+		hsynth: BOOLEAN; 
+		store: ARRAY 2 OF ARRAY 32 OF ARRAY 18 OF REAL; 
+		ssynth: BOOLEAN; 
+		ch: ARRAY 2 OF Channel; 
+		header: ARRAY 36 OF CHAR; 
+		curByte: INTEGER; 
+		curBit: INTEGER; 
+		tempVal: LONGINT; 
+		scalefactors: ARRAY 2 OF Scalefactors; 
+	END Frame; 
+
+	HuffDecoded = ARRAY (32 + 1) OF ARRAY 18 OF LONGINT; 
+
+	Granule = ARRAY 32 OF ARRAY 18 OF REAL; 
+
+	Stereo = ARRAY 2 OF Granule; 
+
+	PcmStereo = ARRAY 2304 OF CHAR; 
+
+	Raw3 = ARRAY 3 OF REAL; 
+
+	Raw4 = ARRAY 4 OF REAL; 
+
+	Raw5 = ARRAY 5 OF REAL; 
+
+	Raw9 = ARRAY 9 OF REAL; 
+
+	Raw18 = ARRAY 18 OF REAL; 
+
+	Raw32 = ARRAY 32 OF REAL; 
+
+	Raw36 = ARRAY 36 OF REAL; 
+
+	MpstrPtr* = POINTER TO Mpstr; 
+
+	Mpstr* = RECORD 
+		head: SoundDevices.Buffer; 
+		tail: SoundDevices.Buffer; 
+		bsize: INTEGER; 
+		framesize*: INTEGER; 
+		fsizeold: INTEGER; 
+		fr: Frame; 
+		bsspace: ARRAY 2 OF ARRAY 2304 OF CHAR; 
+		hybridblock: ARRAY 2 OF ARRAY 2 OF ARRAY 576 OF REAL; 
+		hybridblc: ARRAY 2 OF INTEGER; 
+		header: LONGINT; 
+		bsnum: INTEGER; 
+		synthbuffs: ARRAY 2 OF ARRAY 2 OF ARRAY 272 OF REAL; 
+		synthbo: INTEGER; 
+	END; 
+
+	MP3Decoder* = OBJECT (Codecs.AudioDecoder)
+	VAR 
+		encFrame: Frame; 
+		fHeader: ARRAY 5 OF CHAR; 
+		cHeader: ARRAY 5 OF CHAR; 
+		data: ARRAY MAXBUF OF CHAR; 
+		curBit, curByte, tempVal, offset: INTEGER; 
+		totBits: LONGINT; 
+		mainDataEnd, frameStart: INTEGER; 
+		vVec: ARRAY 2 OF ARRAY 1024 OF REAL; 
+		vectIdx0, vectIdx1: LONGINT; 
+		frameNum: LONGINT; 
+		first: BOOLEAN; 
+		paranoia: BOOLEAN; 
+		s: Streams.Reader; 
+		channels: LONGINT; 
+		bitsPerSample: LONGINT; 
+		samplesPerSec: LONGINT; 
+		bitRate: LONGINT; 
+		totSamples: LONGINT; 
+		hasMoreBytes: BOOLEAN; 
+		out: ARRAY 2 OF PcmStereo; 
+		gr: INTEGER; 
+		outBufferPos: LONGINT; 
+
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ GetHeaderInfo; 
+		PROCEDURE ^ GetSideInfo; 
+		PROCEDURE ^ GetScaleFactors(ch, gr: INTEGER); 
+		PROCEDURE ^ HuffDec(t: INTEGER; VAR x, y, v, w: INTEGER); 
+		PROCEDURE ^ L3HuffDec(VAR is: HuffDecoded; ch, gr: INTEGER; part2Start: LONGINT); 
+		PROCEDURE ^ Dequantize(is: HuffDecoded; VAR xr: Granule; ch, gr: INTEGER); 
+		PROCEDURE ^ JointStereo(ro: Stereo; VAR lr: Stereo; gr: INTEGER); 
+		PROCEDURE ^ Reorder(xr: Granule; VAR re: Granule; ch, gr: INTEGER); 
+		PROCEDURE ^ Antialias(xr: Granule; VAR hybridIn: Granule; ch, gr: INTEGER); 
+		PROCEDURE ^ HybridSynthesis(hybridIn: Granule; VAR hybridOut: Granule; ch, gr: INTEGER); 
+		PROCEDURE ^ IMDCT(in: Raw18; VAR out: Raw36; bt: INTEGER); 
+		PROCEDURE ^ IMDCT3pt(in: Raw3; VAR out: Raw3); 
+		PROCEDURE ^ IMDCT4pt(in: Raw4; VAR out: Raw4); 
+		PROCEDURE ^ IMDCT5pt(in: Raw5; VAR out: Raw5); 
+		PROCEDURE ^ IMDCT9pt(in: Raw9; VAR out: Raw9); 
+		PROCEDURE ^ SubbandSynthesis(in: Granule; VAR out: PcmStereo; ch, gr: INTEGER); 
+		PROCEDURE ^ DCT(in: Raw32; VAR out: Raw32; n: INTEGER); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
+		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
+		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
+		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ GetAudioTime*(): HUGEINT; 
+		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
+		PROCEDURE ^ DoLayer3; 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ GetBit(): BOOLEAN; 
+		PROCEDURE ^ GetBits(count: INTEGER): INTEGER; 
+		PROCEDURE ^ GetDataBit(): BOOLEAN; 
+		PROCEDURE ^ GetDataBits(count: INTEGER): INTEGER; 
+		PROCEDURE ^ GoBackNBits(n: INTEGER); 
+	END MP3Decoder; 
+
+	; 
+
+	; 
+
+	; 
+VAR 
+	JSBTABLE: ARRAY 4 OF INTEGER; 
+	BITRATE: ARRAY 15 OF INTEGER; 
+	FREQUENCY: ARRAY 4 OF REAL; 
+	SFBTABLE: RECORD 
+		l: ARRAY 5 OF INTEGER; 
+		s: ARRAY 3 OF INTEGER; 
+	END; 
+	SLEN: ARRAY 2 OF ARRAY 16 OF INTEGER; 
+	SFBIDX: ARRAY 3 OF RECORD 
+		l: ARRAY 23 OF INTEGER; 
+		s: ARRAY 14 OF INTEGER; 
+	END; 
+	PRETAB: ARRAY 22 OF INTEGER; 
+	H: ARRAY 34 OF RECORD 
+		len, xlen, ylen: INTEGER; 
+		linbits: INTEGER; 
+		v: POINTER TO ARRAY OF POINTER TO ARRAY OF INTEGER; 
+	END; 
+	ISPOW: ARRAY 8207 OF REAL; 
+	GGPOW: ARRAY 256 OF REAL; 
+	SGPOW: ARRAY 8 OF REAL; 
+	SFSPOW: ARRAY 2 OF ARRAY 16 OF REAL; 
+	SFLPOW: ARRAY 2 OF ARRAY 16 OF ARRAY 2 OF ARRAY 22 OF REAL; 
+	STEREOTAN: ARRAY 8 OF REAL; 
+	CI, CA, CS: ARRAY 8 OF REAL; 
+	IMDCTWIN: ARRAY 4 OF ARRAY 36 OF REAL; 
+	IMDCTCOS: ARRAY 5 OF REAL; 
+	IMDCTSIN: ARRAY 4 OF REAL; 
+	IMDCTSQRT: REAL; 
+	POSTTWIDDLE6: ARRAY 3 OF REAL; 
+	POSTTWIDDLE9: ARRAY 4 OF REAL; 
+	POSTTWIDDLE12: ARRAY 6 OF REAL; 
+	POSTTWIDDLE18: ARRAY 9 OF REAL; 
+	POSTTWIDDLE36: ARRAY 18 OF REAL; 
+	GS: ARRAY 512 OF REAL; 
+	DCTCOS: ARRAY 2 OF ARRAY 2 OF REAL; 
+	DCTTWIDDLE: ARRAY 16 OF ARRAY 33 OF REAL; 
+
+	PROCEDURE ^ LoadHuffmanTables; 
+	PROCEDURE ^ InitTables; 
+	PROCEDURE ^ Factory*(): Codecs.AudioDecoder; 
+BEGIN
+END MP3Decoder.

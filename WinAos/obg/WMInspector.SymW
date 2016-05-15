@@ -1,0 +1,132 @@
+MODULE WMInspector;
+	IMPORT Modules, Strings, XMLObjects, Texts, Files, WMRectangles, WMGraphics, WMMessages, WMRestorable, WMWindowManager, WMComponents, WMStandardComponents, WMTrees, WMTabComponents, WMInspectionComponents, XML, Raster, WMPopups, Models;
+CONST 
+	WindowWidth = 800; 
+	WindowHeight = 500; 
+	MaxNofWindows = 100; 
+	Bearing = 2; 
+TYPE 
+	Windows = ARRAY MaxNofWindows OF WMWindowManager.Window; 
+
+	InspectionTree* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		treeView-: WMTrees.TreeView; 
+		tree-: WMTrees.Tree; 
+		selected: WMTrees.TreeNode; 
+		dragged: WMTrees.TreeNode; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DragAccepted(sender, data: ANY); 
+		PROCEDURE ^ DragRejected(sender, data: ANY); 
+		PROCEDURE ^ GetNodeData(node: WMTrees.TreeNode): WMComponents.VisualComponent; 
+		PROCEDURE ^ DragDroppedHandler(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ OnStartDrag(sender, data: ANY); 
+		PROCEDURE ^ AddComponents(component: WMComponents.Component; parent: WMTrees.TreeNode); 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+	END InspectionTree; 
+
+	FormComponentsTree* = OBJECT {EXCLUSIVE} (InspectionTree)
+	VAR 
+		windows: Windows; 
+		refreshBtn, splitBtn: WMStandardComponents.Button; 
+		dragger: DragCommand; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddFormWindow(window: WMComponents.FormWindow; parent: WMTrees.TreeNode); 
+		PROCEDURE ^ AddNonFormWindow(window: WMWindowManager.Window; parent: WMTrees.TreeNode); 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+	END FormComponentsTree; 
+
+	TextComponentsTree = OBJECT {EXCLUSIVE} (InspectionTree)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END TextComponentsTree; 
+
+	SelectedTextTree = OBJECT {EXCLUSIVE} (InspectionTree)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END SelectedTextTree; 
+
+	SelectedComponentsTree = OBJECT {EXCLUSIVE} (InspectionTree)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END SelectedComponentsTree; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	SelectionWrapper = POINTER TO RECORD 
+		tree: WMTrees.Tree; 
+		node: WMTrees.TreeNode; 
+	END; 
+
+	InspectorComponent = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		formTree-: FormComponentsTree; 
+		textTree: TextComponentsTree; 
+		selectedTextTree: SelectedTextTree; 
+		selectedComponentTree: SelectedComponentsTree; 
+		currentTree: InspectionTree; 
+		propertyPanel: WMInspectionComponents.PropertyPanel; 
+		libraryPanel: WMInspectionComponents.RepositoryPanel; 
+		xmlPanel: WMInspectionComponents.XMLPanel; 
+
+		PROCEDURE ^  & InitInspector(simple: BOOLEAN; vis: Models.Boolean); 
+		PROCEDURE ^ Create(simple: BOOLEAN; vis: Models.Boolean); 
+		PROCEDURE ^ TabSelected(sender, data: ANY); 
+		PROCEDURE ^ NodeClicked(sender, data: ANY); 
+		PROCEDURE ^ GetVisualComponent(sel: SelectionWrapper): WMComponents.VisualComponent; 
+		PROCEDURE ^ ToggleVisibility(sender, data: ANY); 
+		PROCEDURE ^ Select(sender, data: ANY); 
+		PROCEDURE ^ ToggleEditMode(sender, data: ANY); 
+		PROCEDURE ^ UpdateNode(tree: WMTrees.Tree; node: WMTrees.TreeNode; cParent: WMComponents.VisualComponent); 
+		PROCEDURE ^ Delete(sender, data: ANY); 
+		PROCEDURE ^ MoveUp(sender, data: ANY); 
+		PROCEDURE ^ MoveDown(sender, data: ANY); 
+		PROCEDURE ^ MoveOneDown(sender, data: ANY); 
+		PROCEDURE ^ MoveOneUp(sender, data: ANY); 
+		PROCEDURE ^ InvalidateM(sender, data: ANY); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+	END InspectorComponent; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		upper, lower: InspectorComponent; 
+		upperVisible: Models.Boolean; 
+
+		PROCEDURE ^  & New*(context: WMRestorable.Context); 
+		PROCEDURE ^ CreateF(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+
+	DragCommand* = OBJECT {EXCLUSIVE} (WMStandardComponents.Label)
+	VAR 
+		caption: XML.Attribute; 
+		inspector: InspectorComponent; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Accept(sender, par: ANY); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+	END DragCommand; 
+VAR 
+	nofWindows: LONGINT; 
+	manager: WMWindowManager.WindowManager; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Clear(VAR windows: Windows); 
+	PROCEDURE ^ GetWindows(VAR windows: Windows; VAR nofWindows: LONGINT); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ NewCommandDragger*(): XML.Element; 
+BEGIN
+END WMInspector.

@@ -1,0 +1,64 @@
+MODULE Array2dRe;
+	IMPORT SYSTEM, Array1dBytes, NbrInt, NbrRat, NbrRe, Array1d := Array1dRe, ArrayXd := ArrayXdRe, Array1dInt, Array2dInt, Array1dRat, Array2dRat, Array1dRe, DataErrors;
+CONST 
+TYPE 
+	Value* = Array1d.Value; 
+
+	Array* = ArrayXd.Array2; 
+
+	Index* = NbrInt.Integer; 
+
+	PROCEDURE ^ Copy*(VAR src: ARRAY OF ARRAY OF Value; VAR dest: ARRAY OF ARRAY OF Value; srcx, srcy, destx, desty, w, h: Index); 
+	PROCEDURE ^ Fill*(val: Value; VAR res: ARRAY OF ARRAY OF Value; x, y, w, h: Index); 
+	PROCEDURE ^ MinMax*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index; VAR min, max: Value; VAR minx, miny, maxx, maxy: Index); 
+	PROCEDURE ^ kSmallest*(k: Index; VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index): Value; 
+	PROCEDURE ^ Median*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index): Value; 
+	PROCEDURE ^ MeanSsq*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index; VAR mean, ssq: Value); 
+	PROCEDURE ^ CopyRow*(y: Index; VAR s: ARRAY OF ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyCol*(x: Index; VAR s: ARRAY OF ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyToRow*(VAR s: ARRAY OF Value; y: Index; VAR res: ARRAY OF ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyToCol*(VAR s: ARRAY OF Value; x: Index; VAR res: ARRAY OF ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ Row*(y: Index; VAR s: ARRAY OF ARRAY OF Value): Array1d.Array; 
+	PROCEDURE ^ Col*(x: Index; VAR s: ARRAY OF ARRAY OF Value): Array1d.Array; 
+	PROCEDURE ^ Transposed*(VAR s: ARRAY OF ARRAY OF Value): Array; 
+	PROCEDURE ^ SwapRows*(VAR s: ARRAY OF ARRAY OF Value; y1, y2: Index); 
+	PROCEDURE ^ SwapCols*(VAR s: ARRAY OF ARRAY OF Value; x1, x2: Index); 
+	OPERATOR ^ "-"-(x: Array): Array; 
+	OPERATOR ^ ":="-(VAR l: Array; r: Value); 
+	OPERATOR ^ ":="-(VAR l: Array; r: Array2dRat.Array); 
+	OPERATOR ^ ":="-(VAR l: Array; r: Array2dInt.Array); 
+	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF NbrRe.Real); 
+	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF NbrRat.Rational); 
+	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF NbrInt.Integer); 
+	OPERATOR ^ "+"-(l, r: Array): Array; 
+	OPERATOR ^ "+"-(l: Array; r: Array2dRat.Array): Array; 
+	OPERATOR ^ "+"-(l: Array2dRat.Array; r: Array): Array; 
+	OPERATOR ^ "+"-(l: Array; r: Array2dInt.Array): Array; 
+	OPERATOR ^ "+"-(l: Array2dInt.Array; r: Array): Array; 
+	OPERATOR ^ "-"-(l, r: Array): Array; 
+	OPERATOR ^ "-"-(l: Array; r: Array2dRat.Array): Array; 
+	OPERATOR ^ "-"-(l: Array2dRat.Array; r: Array): Array; 
+	OPERATOR ^ "-"-(l: Array; r: Array2dInt.Array): Array; 
+	OPERATOR ^ "-"-(l: Array2dInt.Array; r: Array): Array; 
+	OPERATOR ^ "*"-(l, r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: Array2dRat.Array): Array; 
+	OPERATOR ^ "*"-(l: Array2dRat.Array; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: Array2dInt.Array): Array; 
+	OPERATOR ^ "*"-(l: Array2dInt.Array; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: Array1dRe.Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: Array; r: Array1dRat.Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: Array; r: Array1dInt.Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: Array1dRe.Array; r: Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: Array1dRat.Array; r: Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: Array1dInt.Array; r: Array): Array1dRe.Array; 
+	OPERATOR ^ "*"-(l: NbrRe.Real; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: NbrRe.Real): Array; 
+	OPERATOR ^ "*"-(l: NbrRat.Rational; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: NbrRat.Rational): Array; 
+	OPERATOR ^ "*"-(l: NbrInt.Integer; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: NbrInt.Integer): Array; 
+	OPERATOR ^ "/"-(l: Array; r: NbrRe.Real): Array; 
+	OPERATOR ^ "/"-(l: Array; r: NbrRat.Rational): Array; 
+	OPERATOR ^ "/"-(l: Array; r: NbrInt.Integer): Array; 
+BEGIN
+END Array2dRe.

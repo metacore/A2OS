@@ -1,0 +1,16 @@
+MODULE FoxIntermediateAssembler;
+	IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Scanner := FoxScanner;
+CONST 
+	Trace = FoxAssembler.Trace; 
+TYPE 
+	Register* = LONGINT; 
+
+	Operand* = IntermediateCode.Operand; 
+
+	Assembler* = OBJECT (FoxAssembler.Assembler)
+
+		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
+	END Assembler; 
+
+BEGIN
+END FoxIntermediateAssembler.

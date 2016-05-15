@@ -8,6 +8,7 @@ CONST
 	Version = "WinAos Revision 5614 (04.07.2014)";
 
 	DefaultConfigFile = "aos.ini";
+	DefaultGenericConfigFile = "aosg.ini";
 	UserConfigFile = "myaos.ini";
 
 	MaxCPU* = 8;	(* dummy definition to make GC for both Win32 and I386 work *)
@@ -540,7 +541,11 @@ BEGIN
 
 	ReadCommandLine(commandLine);
 
-	ToExecutablePath(DefaultConfigFile, defaultConfigFile);
+	IF Kernel32.Generic THEN
+		ToExecutablePath(DefaultGenericConfigFile, defaultConfigFile);
+	ELSE
+		ToExecutablePath(DefaultConfigFile, defaultConfigFile);
+	END;
 	COPY(UserConfigFile, userConfigFile);
 	hfile := Kernel32.CreateFile( userConfigFile, {Kernel32.GenericRead}, {Kernel32.FileShareRead}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
 	IF hfile = Kernel32.InvalidHandleValue THEN

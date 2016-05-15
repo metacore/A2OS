@@ -1,0 +1,29 @@
+MODULE WMGraphicUtilities;
+	IMPORT WMGraphics, WMRectangles, Strings;
+TYPE 
+	EllipsePointsDraw* = PROCEDURE (CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; x, y: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+
+	PROCEDURE ^ ScaleColor*(color: LONGINT; factor: LONGINT): LONGINT; 
+	PROCEDURE ^ InterpolateLinear*(a, b, percent: LONGINT): LONGINT; 
+	PROCEDURE ^ InterpolateColorLinear*(cl0, cl1, percent: LONGINT): LONGINT; 
+	PROCEDURE ^ DrawBevel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color, mode: LONGINT); 
+	PROCEDURE ^ DrawBevelPanel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color, mode: LONGINT); 
+	PROCEDURE ^ FillGradientHorizontal*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clLeft, clRight, mode: LONGINT); 
+	PROCEDURE ^ FillGradientVertical*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clTop, clBottom, mode: LONGINT); 
+	PROCEDURE ^ FillRoundHorizontalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color, mode: LONGINT); 
+	PROCEDURE ^ FillRoundVerticalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color, mode: LONGINT); 
+	PROCEDURE ^ DrawRect*(canvas: WMGraphics.Canvas; r: WMRectangles.Rectangle; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ RectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN); 
+	PROCEDURE ^ ExtRectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; openSides: SET; borderWidth: LONGINT; down: BOOLEAN); 
+	PROCEDURE ^ RepeatImageHorizontal*(canvas: WMGraphics.Canvas; x, y, dx, dy: LONGINT; img: WMGraphics.Image); 
+	PROCEDURE ^ RepeatImageVertical*(canvas: WMGraphics.Canvas; x, y, dx, dy: LONGINT; img: WMGraphics.Image); 
+	PROCEDURE ^ Circle*(CONST c: WMGraphics.Canvas; CX, CY, R: LONGINT); 
+	PROCEDURE ^ Ellipse*(CONST c: WMGraphics.Canvas; CX, CY, XRadius, YRadius: LONGINT); 
+	PROCEDURE ^ DrawRoundRect*(CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; rx, ry: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillRoundRect*(CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; rx, ry: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ DrawRoundedCorners*(CONST canvas: WMGraphics.Canvas; innerRect: WMRectangles.Rectangle; rx, ry: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ DrawCornerPoints(CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; x, y: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillCornerPoints(CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; x, y: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ EllipseBresenham(CONST canvas: WMGraphics.Canvas; innerRect: WMRectangles.Rectangle; rx, ry: LONGINT; drawPoints: EllipsePointsDraw; color: WMGraphics.Color; mode: LONGINT); 
+BEGIN
+END WMGraphicUtilities.

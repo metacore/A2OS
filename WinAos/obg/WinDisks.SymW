@@ -1,0 +1,73 @@
+MODULE WinDisks;
+	IMPORT Kernel32, SYSTEM, Strings, KernelLog, Streams, Commands, Disks, Plugins, Modules, WinFS;
+CONST 
+	MaxExtents = 1; 
+	BlockNumberInvalid* = 101; 
+	Error* = 102; 
+	Unknown = 0; 
+	RemovableMedia = 11; 
+	FixedMedia = 12; 
+	IOCTL_DISK_GET_DRIVE_GEOMETRY = 458752; 
+	VOLUME_GET_VOLUME_DISK_EXTENTS = 5636096; 
+	FSCTL_LOCK_VOLUME = 589848; 
+	FSCTL_UNLOCK_VOLUME = 589852; 
+	FSCTL_DISMOUNT_VOLUME = 589856; 
+TYPE 
+	DISK_GEOMETRY = RECORD 
+		Cylinders: HUGEINT; 
+		MediaType: LONGINT; 
+		TracksPerCylinder: LONGINT; 
+		SectorsPerTrack: LONGINT; 
+		BytesPerSector: LONGINT; 
+	END; 
+
+	DISK_EXTENT = RECORD 
+		DiskNumber: LONGINT; 
+		padding: LONGINT; 
+		StartingOffset: HUGEINT; 
+		ExtentLength: HUGEINT; 
+	END; 
+
+	VOLUME_DISK_EXTENTS = RECORD 
+		NumberOfDiskExtents: LONGINT; 
+		padding: LONGINT; 
+		extents: ARRAY MaxExtents OF DISK_EXTENT; 
+	END; 
+
+	VirtualDisk = OBJECT {EXCLUSIVE} (Disks.Device)
+	VAR 
+		handle: Kernel32.HANDLE; 
+		size: LONGINT; 
+		next: VirtualDisk; 
+		drive: LONGINT; 
+
+		PROCEDURE ^ Finish(VAR res: LONGINT); 
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: LONGINT); 
+		PROCEDURE ^  & New*(handle: Kernel32.HANDLE; CONST diskname: ARRAY OF CHAR; drive: LONGINT; flags: SET; blockSize, blocks: LONGINT); 
+	END VirtualDisk; 
+VAR 
+	DeviceIoControl: PROCEDURE {WINAPI}(hDevice: Kernel32.HANDLE; dwIoControlCode: LONGINT; VAR lpInBuffer: ARRAY OF SYSTEM.BYTE; nInBufferSize: LONGINT; VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE; nOutBufferSize: LONGINT; VAR lpBytesReturned: LONGINT; lpOverlapped: ANY):Kernel32.BOOL; 
+	SetFilePointer: PROCEDURE {WINAPI}(hFile: Kernel32.HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
+	disks: VirtualDisk; 
+
+	PROCEDURE ^ AddDisk(vd: VirtualDisk); 
+	PROCEDURE ^ RemoveDisk(vd: VirtualDisk); 
+	PROCEDURE ^ IsMounted(dev: Disks.Device): BOOLEAN; 
+	PROCEDURE ^ Uninstall*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ ReportDiskGeometry(VAR pdg: DISK_GEOMETRY; out: Streams.Writer); 
+	PROCEDURE ^ GetDiskGeometry(handle: Kernel32.HANDLE; VAR pdg: DISK_GEOMETRY): BOOLEAN; 
+	PROCEDURE ^ LockVolume(handle: Kernel32.HANDLE): BOOLEAN; 
+	PROCEDURE ^ UnlockVolume(handle: Kernel32.HANDLE): BOOLEAN; 
+	PROCEDURE ^ DismountVolume(handle: Kernel32.HANDLE): BOOLEAN; 
+	PROCEDURE ^ AppendInt(VAR name: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ OpenVolume(VAR handle: Kernel32.HANDLE; flags: SET; CONST name: ARRAY OF CHAR; context: Commands.Context): BOOLEAN; 
+	PROCEDURE ^ OutSize(f: LONGREAL; out: Streams.Writer); 
+	PROCEDURE ^ GetPhysicalDrive(VAR handle: Kernel32.HANDLE; flags: SET; VAR name: ARRAY OF CHAR; context: Commands.Context); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ Notification(type: LONGINT; drives: SET); 
+	PROCEDURE ^ Init; 
+BEGIN
+END WinDisks.

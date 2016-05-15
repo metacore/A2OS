@@ -1,0 +1,52 @@
+MODULE TestComponents;
+	IMPORT Modules, KernelLog, Commands, Strings, XML, Repositories, WMWindowManager, WMMessages, WMComponents, WMStandardComponents, WMStringGrids;
+CONST 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	TestBase = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(CONST windowTitle: ARRAY OF CHAR); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END TestBase; 
+
+	TestVisualComponent = OBJECT {EXCLUSIVE} (TestBase)
+	VAR 
+		vc: WMComponents.VisualComponent; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & NewTest*(CONST windowTitle: ARRAY OF CHAR; vc: WMComponents.VisualComponent); 
+	END TestVisualComponent; 
+
+	StandardComponents = OBJECT {EXCLUSIVE} (TestBase)
+	VAR 
+		label: WMStandardComponents.Label; 
+
+		PROCEDURE ^ SayHello(sender, data: ANY); 
+		PROCEDURE ^ SayBye(sender, data: ANY); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+	END StandardComponents; 
+
+	StringGrids = OBJECT {EXCLUSIVE} (TestBase)
+	VAR 
+		label: WMStandardComponents.Label; 
+		tabs: WMStringGrids.StringGrid; 
+
+		PROCEDURE ^ Test(sender, data: ANY); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+	END StringGrids; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ TestComponent*(vc: WMComponents.VisualComponent); 
+	PROCEDURE ^ TestStandardComponents*; 
+	PROCEDURE ^ TestStringGrids*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TestComponents.

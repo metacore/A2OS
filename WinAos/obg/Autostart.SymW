@@ -1,0 +1,8 @@
+MODULE Autostart;
+	IMPORT XML, XMLObjects, Commands, Configuration, KernelLog;
+CONST 
+	Trace = TRUE; 
+
+	PROCEDURE ^ Run*; 
+BEGIN
+END Autostart.

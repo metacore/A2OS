@@ -73,10 +73,11 @@ TYPE
 
 	HeapBlock* = POINTER TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockDesc* = RECORD
+		typeDesc {FICTIVE =TypeDescOffset}: StaticTypeBlock; 
 		mark: LONGINT;
 		dataAdr-: ADDRESS;
 		size-: SIZE;
-		nextMark: HeapBlock;
+		nextMark {UNTRACED}: HeapBlock;
 	END;
 
 	FreeBlock* = POINTER TO FreeBlockDesc;
@@ -113,6 +114,11 @@ TYPE
 	END;
 
 	PointerOffsets = POINTER TO ARRAY OF SIZE;
+	
+	Block*= POINTER	{UNSAFE} TO RECORD
+		heapBlock {FICTIVE =HeapBlockOffset}: HeapBlock; 
+		typeBlock {FICTIVE =TypeDescOffset}: StaticTypeBlock;
+	END;
 
 TYPE
 	GCStatus* = OBJECT
@@ -147,7 +153,7 @@ VAR
 	markList: MarkList;
 	freeLists: FreeLists;
 	GC*: PROCEDURE;	(** activate the garbage collector *)
-	initBlock: ANY;	(* anchor for init calls *)
+	initBlock {UNTRACED}: ANY;	(* anchor for init calls *)
 	currentMarkValue: LONGINT; (* all objects that have this value in their mark field are still used - initial value filled in by linker *)
 	sweepMarkValue: LONGINT; (* most recent mark value *)
 	sweepBlockAdr: ADDRESS;	(* where to resume sweeping *)
@@ -233,12 +239,11 @@ VAR
 	heapBlock {UNTRACED}: HeapBlock; 
 	rootObj{UNTRACED}: RootObject; 
 	blockAdr : ADDRESS;
-	blockMeta : POINTER {UNSAFE} TO RECORD heapBlock: HeapBlock; typeBlock: StaticTypeBlock; END;
+	blockMeta : Block;
 BEGIN
 	(* ug: check for validity of block is necessary since users may assign values to pointer variables that are not real heap blocks, e.g. by using SYSTEM.VAL or ADDRESSOF *)
 	IF (block = NIL) OR ~CheckPointer(block) THEN RETURN END;
-	blockAdr := block;
-	blockMeta := blockAdr + HeapBlockOffset;
+	blockMeta := block;
 	heapBlock := blockMeta.heapBlock; 
 	IF (heapBlock = NIL) OR (heapBlock.mark >= currentMarkValue) THEN RETURN END;
 	heapBlock.mark := currentMarkValue;
@@ -261,14 +266,14 @@ VAR orgBlock: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
 	protected: ProtRecBlock;
 	b : POINTER {UNSAFE} TO RECORD p: ANY END;
-	meta: POINTER {UNSAFE} TO RECORD staticTypeBlock: StaticTypeBlock; last, current, first: ADDRESS END;
+	meta: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
 BEGIN
 	IF Stats THEN INC(Nmark) END;
 	Inspect(p);
 	orgHeapBlock := ExtractFromMarkList();
 	WHILE orgHeapBlock # NIL DO
 		orgBlock := orgHeapBlock.dataAdr;
-		meta := orgBlock + TypeDescOffset;
+		meta := orgBlock;
 		staticTypeBlock := meta.staticTypeBlock;
 		IF ~(orgHeapBlock IS ArrayBlock) THEN
 			FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
@@ -277,9 +282,10 @@ BEGIN
 			END
 		ELSE
 			currentArrayElemAdr := meta.first;
-			lastArrayElemAdr := meta.last;
+			
+			lastArrayElemAdr := meta.first + meta.last * staticTypeBlock.recSize;
 			IF currentArrayElemAdr > lastArrayElemAdr THEN HALT(100) END;
-			WHILE currentArrayElemAdr <= lastArrayElemAdr DO
+			WHILE currentArrayElemAdr < lastArrayElemAdr DO
 				FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 					b := currentArrayElemAdr + staticTypeBlock.pointerOffsets[i];
 					Inspect(b.p)
@@ -532,6 +538,7 @@ BEGIN
 				ASSERT(~(block IS FreeBlock));
 			END;
 			IF (blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) THEN (* no further merging is possible *)
+				ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr);
 				IF lastFreeBlockAdr # NilVal THEN
 					IF ADDRESS(lastFreeBlock.size) >= ADDRESS (size) THEN (* block found - may be too big *)
 						p := lastFreeBlock;
@@ -965,7 +972,7 @@ BEGIN
 	(* return blocks now *)
 	Machine.Acquire(Machine.Heaps);
 	(* trying to satisfy a request of MAX(LONGINT) bytes will never succeed - lazy sweep runs until end of heap *)
-	ReturnBlocks;
+	IF EnableReturnBlocks THEN ReturnBlocks END;
 	Machine.Release(Machine.Heaps);
 END LazySweepGC;
 
@@ -1250,7 +1257,7 @@ BEGIN
 				Machine.Fill32(dataBlockAdr, fillSize, 0); 	(* clear everything from dataBlockAdr until end of block *)
 
 				firstElem := dataBlockAdr + arrayDataOffset;
-				SYSTEM.PUT(dataBlockAdr, firstElem + arrSize - elemSize); 	(* lastElem *)
+				SYSTEM.PUT(dataBlockAdr, numElems (* firstElem + arrSize - elemSize *)); 	(* lastElem *)
 				SYSTEM.PUT(dataBlockAdr + AddressSize, NIL);
 				SYSTEM.PUT(dataBlockAdr + 2 * AddressSize, firstElem); 		(* firstElem *)
 
@@ -1456,5 +1463,5 @@ TraceHeap:
 11.07.2008 	ug	new heap data structures and adaption to GC
 *)
 
-StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-FSTools.CloseFiles A2.exe ~
+StaticLinker.Link --fileFormat=PE32 --fileName=A2N.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+FSTools.CloseFiles A2N.exe ~

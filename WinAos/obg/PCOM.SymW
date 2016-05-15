@@ -1,0 +1,174 @@
+MODULE PCOM;
+	IMPORT SYSTEM, Modules, StringPool, PCM, PCS, PCT, PCBT, PCLIR, Diagnostics;
+CONST 
+	Trace = FALSE; 
+	TraceCalls = FALSE; 
+	TraceImport = FALSE; 
+	StrictChecks = TRUE; 
+	TraceFPName = \"D1"\; 
+	TraceFP = TRUE; 
+	ImportedModuleFlag = {}; 
+	UndefTag =  -1; 
+	SFtypBool = 1; 
+	SFtypChar8 = 2; 
+	SFtypChar16 = 3; 
+	SFtypChar32 = 4; 
+	SFtypInt8 = 5; 
+	SFtypInt16 = 6; 
+	SFtypInt32 = 7; 
+	SFtypInt64 = 8; 
+	SFtypFloat32 = 9; 
+	SFtypFloat64 = 10; 
+	SFtypSet = 11; 
+	SFtypString = 12; 
+	SFtypNoTyp = 13; 
+	SFtypNilTyp = 14; 
+	SFtypByte = 15; 
+	SFtypSptr = 16; 
+	SFmod1 = 17; 
+	SFlastStruct = SFtypSptr; 
+	SFmodOther = 45; 
+	SFtypOpenArr = 46; 
+	SFtypDynArr = 47; 
+	SFtypArray = 48; 
+	SFtypPointer = 49; 
+	SFtypRecord = 50; 
+	SFtypProcTyp = 51; 
+	SFsysflag = 52; 
+	SFinvisible = 53; 
+	SFreadonly = 54; 
+	SFobjflag = 55; 
+	SFconst = 55; 
+	SFvar = 56; 
+	SFlproc = 57; 
+	SFxproc = 58; 
+	SFoperator = 59; 
+	SFtproc = 60; 
+	SFcproc = SFtproc; 
+	SFalias = 61; 
+	SFtyp = 62; 
+	SFend = 63; 
+	SFtypOpenEnhArr = 64; 
+	SFtypDynEnhArr = 65; 
+	SFtypTensor = 66; 
+	SFtypStaticEnhArray = 67; 
+	InlineMarker = 171; 
+	SFdelegate = 5; 
+	FPMvar = 1; 
+	FPMpar = 1; 
+	FPMvarpar = 2; 
+	FPMconst = 3; 
+	FPMfield = 4; 
+	FPMtype = 5; 
+	FPMxproc = 7; 
+	FPMcproc = 9; 
+	FPMmethod = 13; 
+	FPMinit = 14; 
+	FPFbyte = 1; 
+	FPFbool = 2; 
+	FPFchar8 = 3; 
+	FPFint8typ = 4; 
+	FPFint16typ = 5; 
+	FPFint32typ = 6; 
+	FPFfloat32typ = 7; 
+	FPFfloat64typ = 8; 
+	FPFsettyp = 9; 
+	FPFstringtyp = 10; 
+	FPFnotyp = 12; 
+	FPFpointer = 13; 
+	FPFproc = 14; 
+	FPFcomp = 15; 
+	FPFint64typ = 16; 
+	FPFchar16typ = 17; 
+	FPFchar32typ = 18; 
+	FPFbasic = 1; 
+	FPFstaticarr = 2; 
+	FPFdynarr = 4; 
+	FPFopenarr = 5; 
+	FPFrecord = 6; 
+	FPintern = 0; 
+	FPextern = 1; 
+	FPexternR = 2; 
+	FPothervis = 3; 
+	FPfalse = 0; 
+	FPtrue = 1; 
+	FPhasBody = 2; 
+	FPprotected = 16; 
+	FPactive = 32; 
+	FPdelegate = 5; 
+	FPsystemType = 6; 
+	empty =  -1; 
+	readonly = (PCT.Internal + {PCT.PublicR}); 
+TYPE 
+	ReadStringProc = PROCEDURE (VAR R: PCM.SymReader; VAR string: ARRAY OF CHAR); 
+
+	StringBuf = ARRAY 256 OF CHAR; 
+
+	ImportList = POINTER TO ARRAY OF StringPool.Index; 
+
+	Symbol* = OBJECT (PCM.Attribute)
+	VAR 
+		fp*: LONGINT; 
+		sibling: PCT.Symbol; 
+	END Symbol; 
+
+	Struct* = OBJECT (PCM.Attribute)
+	VAR 
+		fp*, pbfp*, pvfp*: LONGINT; 
+		fpdone*{UNTRACED} : PCT.Module; 
+		strref*: LONGINT; 
+		tag: LONGINT; 
+		uref*: LONGINT; 
+		mod*: PCT.Module; 
+
+		PROCEDURE ^  & Init*(mod: PCT.Module); 
+	END Struct; 
+
+	StructArray = POINTER TO ARRAY OF PCT.Struct; 
+
+	Module* = OBJECT (PCM.Attribute)
+	VAR 
+		nofimp: LONGINT; 
+		import: PCT.ModuleArray; 
+		nofstr: LONGINT; 
+		struct: StructArray; 
+		nofreimp: LONGINT; 
+		reimp: StructArray; 
+		expnumber: LONGINT; 
+		changed: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+	END Module; 
+VAR 
+	predefStruct: ARRAY (SFlastStruct + 1) OF PCT.Struct; 
+	FParray: ARRAY 6 OF SHORTINT; 
+	altSelf: PCS.Name; 
+	Ninterfaces, NpatchPointer0: LONGINT; 
+
+	PROCEDURE ^ FPrint(VAR fp: LONGINT; val: LONGINT); 
+	PROCEDURE ^ FPrintSet(VAR fp: LONGINT; set: SET); 
+	PROCEDURE ^ FPrintReal(VAR fp: LONGINT; real: REAL); 
+	PROCEDURE ^ FPrintLReal(VAR fp: LONGINT; lr: LONGREAL); 
+	PROCEDURE ^ FPrintName*(VAR fp: LONGINT; name: ARRAY OF CHAR); 
+	PROCEDURE ^ FPrintVis(VAR fp: LONGINT; vis: SET); 
+	PROCEDURE ^ FPrintSign(VAR fp: LONGINT; par: PCT.Parameter; self: PCT.Parameter; ret: PCT.Struct; current: PCT.Module; isOperator: BOOLEAN); 
+	PROCEDURE ^ FPrintMeth(VAR pbfp, pvfp: LONGINT; mth, init, body: PCT.Method; current: PCT.Module); 
+	PROCEDURE ^ FPrintRecord(typ: PCT.Record; current: PCT.Module); 
+	PROCEDURE ^ FPrintTyp0(typ: PCT.Struct; current: PCT.Module); 
+	PROCEDURE ^ FPrintTyp*(typ: PCT.Struct; current: PCT.Module); 
+	PROCEDURE ^ FPrintConstEnhArray(VAR fp: LONGINT; val: PCT.Value); 
+	PROCEDURE ^ FPrintObj*(obj: PCT.Symbol; current: PCT.Module); 
+	PROCEDURE ^ Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOLEAN; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtendStructArray*(VAR a: StructArray); 
+	PROCEDURE ^ AddImport(VAR list: ImportList; idx: StringPool.Index); 
+	PROCEDURE ^ ReadString(VAR R: PCM.SymReader; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadStringNoZeroCompress(VAR R: PCM.SymReader; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadStrIndex(VAR r: PCM.SymReader; readString: ReadStringProc; VAR s: PCS.Name); 
+	PROCEDURE ^ ImportComplete(m: PCT.Module); 
+	PROCEDURE ^ Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ InitBasic(t: PCT.Struct; tag, fp: LONGINT); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ CreateString(VAR idx: StringPool.Index; str: ARRAY OF CHAR); 
+BEGIN
+END PCOM.

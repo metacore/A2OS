@@ -1,0 +1,110 @@
+MODULE GenericLoader;
+	IMPORT SYSTEM, KernelLog, Modules, Streams, Files, D := KernelLog, GenericLinker, ObjectFile, Diagnostics, Strings, StringPool, Trace, Machine;
+CONST 
+	Ok = 0; 
+	LinkerError = 3400; 
+	FileNotFound = 3401; 
+	SupportOldObjectFileFormat = FALSE; 
+	TraceLoading = FALSE; 
+TYPE 
+	HashEntryIntInt = RECORD 
+		key, value: LONGINT; 
+	END; 
+
+	HashIntArray = POINTER TO ARRAY OF HashEntryIntInt; 
+
+	HashEntryIntAny = RECORD 
+		key: LONGINT; 
+		value: ANY; 
+	END; 
+
+	HashIntAnyArray = POINTER TO ARRAY OF HashEntryIntAny; 
+
+	HashTableInt = OBJECT 
+	VAR 
+		table: HashIntArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: LONGINT; value: LONGINT); 
+		PROCEDURE ^ Get*(key: LONGINT): LONGINT; 
+		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+		PROCEDURE ^ Grow; 
+	END HashTableInt; 
+
+	HashTableIntAny* = OBJECT 
+	VAR 
+		table: HashIntAnyArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: LONGINT; value: ANY); 
+		PROCEDURE ^ Get*(key: LONGINT): ANY; 
+		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+		PROCEDURE ^ Grow; 
+	END HashTableIntAny; 
+
+	Data = RECORD 
+		size, pos: LONGINT; 
+		bytes: Modules.Bytes; 
+		firstAddress: LONGINT; 
+	END; 
+
+	Arrangement* = OBJECT (GenericLinker.Arrangement)
+	VAR 
+		code, data: Data; 
+		hasBody: BOOLEAN; 
+		bodyAddress: LONGINT; 
+
+		PROCEDURE ^  & InitArrangement; 
+		PROCEDURE ^ Preallocate*(CONST section: ObjectFile.Section); 
+		PROCEDURE ^ Allocate*(CONST section: ObjectFile.Section): GenericLinker.Address; 
+		PROCEDURE ^ Patch*(pos, value: GenericLinker.Address; offset, bits, unit: ObjectFile.Bits); 
+	END Arrangement; 
+
+	ModuleList = OBJECT {EXCLUSIVE} 
+	VAR 
+		hash: HashTableIntAny; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ ThisModule(module: Modules.Module): HashTableInt; 
+	END ModuleList; 
+
+	Linker = OBJECT (GenericLinker.Linker)
+	VAR 
+		moduleName: ObjectFile.SegmentedName; 
+		importBlock: GenericLinker.Block; 
+		hash: HashTableIntAny; 
+		moduleBlock: GenericLinker.Block; 
+
+		PROCEDURE ^  & InitLinkerX*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; code, data: GenericLinker.Arrangement; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ FindBlock*(CONST identifier: ObjectFile.Identifier): GenericLinker.Block; 
+		PROCEDURE ^ ExportBlock*(block: GenericLinker.Block); 
+		PROCEDURE ^ ImportBlock*(CONST fixup: ObjectFile.Fixup): GenericLinker.Block; 
+	END Linker; 
+VAR 
+	moduleList: ModuleList; 
+	testTypeDescs: Modules.Bytes; 
+	InternalModuleName, OberonName: StringPool.Index; 
+
+	PROCEDURE ^ InitData(VAR data: Data); 
+	PROCEDURE ^ IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN; 
+	PROCEDURE ^ DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data); 
+	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): GenericLinker.Address; 
+	PROCEDURE ^ SortProcTable(m: Modules.Module); 
+	PROCEDURE ^ SelectionSort(exTable: Modules.ExceptionTable); 
+	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove*; 
+BEGIN
+END GenericLoader.

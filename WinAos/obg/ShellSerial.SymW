@@ -1,0 +1,22 @@
+MODULE ShellSerial;
+	IMPORT Modules, Kernel, Commands, Streams, Strings, Files, Serials, Shell, XYModem;
+CONST 
+	DefaultPort = 1; 
+	DefaultBPS = 115200; 
+	DefaultParity = Serials.ParNo; 
+	DefaultStop = Serials.Stop1; 
+	BufferSize = 1024; 
+	Prompt = \"SHELL>"\; 
+VAR 
+	shells: ARRAY (Serials.MaxPorts + 1) OF Shell.Shell; 
+
+	PROCEDURE ^ YReceive*(context: Commands.Context); 
+	PROCEDURE ^ XReceive*(context: Commands.Context); 
+	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ Wait(ms: LONGINT); 
+	PROCEDURE ^ GetXYPars(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetSerialPortParameters(context: Commands.Context; VAR port, bps, parity, stop: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END ShellSerial.

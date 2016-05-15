@@ -1,0 +1,46 @@
+MODULE UnihanParser;
+	IMPORT Streams, Files, Strings, UTF8Strings, TextUtilities, KernelLog;
+CONST 
+	MaxCode = 200000; 
+TYPE 
+	String = Strings.String; 
+
+	Character* = OBJECT 
+	VAR 
+		radical*, tradvariant*, simpvariant*, additionalstrokes*, totalstrokes*, freq*, xfreq*: LONGINT; 
+		mandarin*, pinyin*, cantonese*, korean*, definition*: String; 
+	END Character; 
+
+	ListElement = POINTER TO RECORD 
+		next: ListElement; 
+	END; 
+
+	CompareProc = PROCEDURE {DELEGATE}(a, b: ListElement):LONGINT; 
+
+	PIMEEntry = POINTER TO RECORD (ListElement)
+		pinyin: ARRAY 8 OF CHAR; 
+		ucs: LONGINT; 
+		freq: LONGINT; 
+	END; 
+VAR 
+	codeArray: POINTER TO ARRAY OF Character; 
+	nofLines: LONGINT; 
+	tok: ARRAY 32 OF CHAR; 
+	data: ARRAY 256 OF CHAR; 
+	cap: ARRAY 256 OF CHAR; 
+	isNum: ARRAY 256 OF BOOLEAN; 
+
+	PROCEDURE ^ GetHex(r: Streams.Reader): LONGINT; 
+	PROCEDURE ^ HasCode*(code: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetCharacter*(code: LONGINT): Character; 
+	PROCEDURE ^ CountCharacters(): LONGINT; 
+	PROCEDURE ^ ParseLine(r: Streams.Reader); 
+	PROCEDURE ^ AddRadicals; 
+	PROCEDURE ^ AddFrequencies; 
+	PROCEDURE ^ ParseFile*; 
+	PROCEDURE ^ Sort(root: ListElement; compare: CompareProc); 
+	PROCEDURE ^ ComparePinyinFreq(a, b: ListElement): LONGINT; 
+	PROCEDURE ^ BuildBasicPinyinIMETable*; 
+	PROCEDURE ^ InitLookup; 
+BEGIN
+END UnihanParser.

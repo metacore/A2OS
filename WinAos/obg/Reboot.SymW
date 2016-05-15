@@ -1,0 +1,6 @@
+MODULE Reboot;
+	IMPORT Kernel, Files, FileTrapWriter, Machine, Commands;
+
+	PROCEDURE ^ Do*(context: Commands.Context); 
+BEGIN
+END Reboot.

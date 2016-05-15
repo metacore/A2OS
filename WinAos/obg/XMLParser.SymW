@@ -1,0 +1,65 @@
+MODULE XMLParser;
+	IMPORT Strings, KernelLog, DynamicStrings, Scanner := XMLScanner, XML;
+CONST 
+	Ok* = XML.Ok; 
+	UnknownError* =  -1; 
+TYPE 
+	String = Strings.String; 
+
+	Parser* = OBJECT 
+	VAR 
+		scanner: Scanner.Scanner; 
+		dtd: XML.DocTypeDecl; 
+		elemReg*: XML.ElementRegistry; 
+		reportError*: PROCEDURE {DELEGATE}(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		res*: LONGINT; 
+		ds1, ds2: DynamicStrings.DynamicString; 
+
+		PROCEDURE ^  & Init*(s: Scanner.Scanner); 
+		PROCEDURE ^ Error(CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ CheckSymbol(expectedSymbols: SET; CONST errormsg: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpandCharacterRef(num: LONGINT): CHAR; 
+		PROCEDURE ^ ExpandEntityRef(CONST name: ARRAY OF CHAR; type: SHORTINT): String; 
+		PROCEDURE ^ Parse*(): XML.Document; 
+		PROCEDURE ^ ParseExtGenEntity*(extEntityRef: XML.ExternalEntityRef); 
+		PROCEDURE ^ ParseXMLDecl(): XML.XMLDecl; 
+		PROCEDURE ^ ParseTextDecl(): XML.TextDecl; 
+		PROCEDURE ^ ParseComment(): XML.Comment; 
+		PROCEDURE ^ ParseProcessingInstruction(): XML.ProcessingInstruction; 
+		PROCEDURE ^ ParseDocTypeDecl; 
+		PROCEDURE ^ ParseMarkupDecls; 
+		PROCEDURE ^ ParseElementDecl(dtd: XML.DocTypeDecl); 
+		PROCEDURE ^ ParseAttListDecl(dtd: XML.DocTypeDecl); 
+		PROCEDURE ^ ParseContentParticle(VAR contentType: SHORTINT): XML.CollectionCP; 
+		PROCEDURE ^ ParseElementContent(): XML.ContentParticle; 
+		PROCEDURE ^ ParseEntityDecl(dtd: XML.DocTypeDecl); 
+		PROCEDURE ^ ParseNotationDecl(dtd: XML.DocTypeDecl); 
+		PROCEDURE ^ ParseSystemLiteral(): String; 
+		PROCEDURE ^ ParsePubidLiteral(): String; 
+		PROCEDURE ^ ParseCDataSect(): XML.CDataSect; 
+		PROCEDURE ^ ParseCharData(): XML.ArrayChars; 
+		PROCEDURE ^ ParseElement(): XML.Element; 
+		PROCEDURE ^ ParseStartTag(VAR e: XML.Element; VAR empty: BOOLEAN); 
+		PROCEDURE ^ ParseAttribute(): XML.Attribute; 
+		PROCEDURE ^ ParseEndTag(e: XML.Element); 
+		PROCEDURE ^ ExpandCharacterRefs(s: String): String; 
+		PROCEDURE ^ ParseEntityValue(): String; 
+		PROCEDURE ^ ParseAttributeValue(): String; 
+		PROCEDURE ^ ParseCharRef(): XML.CharReference; 
+		PROCEDURE ^ ParseEntityRef(): XML.EntityRef; 
+	END Parser; 
+
+	; 
+VAR 
+	predefinedEntities: ARRAY 5 OF RECORD 
+		name: ARRAY 5 OF CHAR; 
+		expanded: Strings.String; 
+	END; 
+
+	PROCEDURE ^ IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ StrToInt(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ExpandPredefinedEntity(CONST name: ARRAY OF CHAR): Strings.String; 
+	PROCEDURE ^ Init; 
+BEGIN
+END XMLParser.

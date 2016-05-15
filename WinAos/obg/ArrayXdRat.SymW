@@ -1,0 +1,154 @@
+MODULE ArrayXdRat;
+	IMPORT SYSTEM, NbrInt, ArrayXdBytes, Array1d := Array1dRat, dbgOut := KernelLog, NbrRat, DataErrors, Array1dInt, DataIO;
+CONST 
+	generic* = 0; 
+	vector* = 1; 
+	matrix* = 2; 
+	cube* = 3; 
+	hcube* = 4; 
+	VERSION* = 1; 
+	StrictBoundaryC* = 0; 
+	AbsorbingBoundaryC* = 1; 
+	PeriodicBoundaryC* = 2; 
+	SymmetricOnBoundaryC* = 3; 
+	SymmetricOffBoundaryC* = 4; 
+	AntisymmetricOnBoundaryC* = 5; 
+	AntisymmetricOffBoundaryC* = 6; 
+TYPE 
+	Value* = Array1d.Value; 
+
+	Index* = LONGINT; 
+
+	Array1* = Array1d.Array; 
+
+	IntValue* = Array1dInt.Value; 
+
+	Array2* = POINTER TO ARRAY OF ARRAY OF Value; 
+
+	Array3* = POINTER TO ARRAY OF ARRAY OF ARRAY OF Value; 
+
+	Array4* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; 
+
+	Map* = Array1d.Map; 
+
+	Array* = OBJECT {EXCLUSIVE} (ArrayXdBytes.Array)
+	VAR 
+		data-: Array1; 
+
+		PROCEDURE ^ Allocate*(size: LONGINT; VAR adr: Index; VAR ptr: ANY); 
+		PROCEDURE ^ GetInfo*(VAR elementsize: Index); 
+		PROCEDURE ^ AlikeX*(): ArrayXdBytes.Array; 
+		PROCEDURE ^ Read*(R: DataIO.Reader); 
+		PROCEDURE ^ Write*(W: DataIO.Writer); 
+		PROCEDURE ^ Type*(): SHORTINT; 
+		PROCEDURE ^ Get1*(x: Index): Value; 
+		PROCEDURE ^ Set1*(x: Index; v: Value); 
+		PROCEDURE ^ Get2*(x, y: Index): Value; 
+		PROCEDURE ^ Set2*(x, y: Index; v: Value); 
+		PROCEDURE ^ Get3*(x, y, z: Index): Value; 
+		PROCEDURE ^ Set3*(x, y, z: Index; v: Value); 
+		PROCEDURE ^ Get4*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ Set4*(x, y, z, t: Index; v: Value); 
+		PROCEDURE ^ GetX*(VAR x: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ SetX*(VAR x: ARRAY OF Index; dim: Index; v: Value); 
+		PROCEDURE ^ Get1BAbsorbing*(x: Index): Value; 
+		PROCEDURE ^ Get2BAbsorbing*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BAbsorbing*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BAbsorbing*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBAbsorbing*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ Get1BPeriodic*(x: Index): Value; 
+		PROCEDURE ^ Get2BPeriodic*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BPeriodic*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BPeriodic*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBPeriodic*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ Get1BSymmetricOffB*(x: Index): Value; 
+		PROCEDURE ^ Get2BSymmetricOffB*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BSymmetricOffB*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BSymmetricOffB*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBSymmetricOffB*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ Get1BSymmetricOnB*(x: Index): Value; 
+		PROCEDURE ^ Get2BSymmetricOnB*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BSymmetricOnB*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BSymmetricOnB*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBSymmetricOnB*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ Get1BAntisymmetricOffB*(x: Index): Value; 
+		PROCEDURE ^ Get2BAntisymmetricOffB*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BAntisymmetricOffB*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BAntisymmetricOffB*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBAntisymmetricOffB*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ Get1BAntisymmetricOnB*(x: Index): Value; 
+		PROCEDURE ^ Get2BAntisymmetricOnB*(x, y: Index): Value; 
+		PROCEDURE ^ Get3BAntisymmetricOnB*(x, y, z: Index): Value; 
+		PROCEDURE ^ Get4BAntisymmetricOnB*(x, y, z, t: Index): Value; 
+		PROCEDURE ^ GetXBAntisymmetricOnB*(b: ARRAY OF Index; dim: Index): Value; 
+		PROCEDURE ^ CopyToArray*(dest: Array; srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray); 
+		PROCEDURE ^ MapAll*(m: Array1d.Map); 
+		PROCEDURE ^ Negate*; 
+		PROCEDURE ^ Add*(x: Array); 
+		PROCEDURE ^ Subtract*(x: Array); 
+		PROCEDURE ^ Multiply*(a: Value); 
+		PROCEDURE ^ Divide*(a: Value); 
+		PROCEDURE ^ dbgWrite*; 
+	END Array; 
+VAR 
+	zero: Value; 
+
+	PROCEDURE ^ New1d*(ox, w: Index): Array; 
+	PROCEDURE ^ New2d*(ox, w, oy, h: Index): Array; 
+	PROCEDURE ^ New3d*(ox, w, oy, h, oz, d: Index): Array; 
+	PROCEDURE ^ New4d*(ox, w, oy, h, oz, d, ot, dt: Index): Array; 
+	PROCEDURE ^ CopyVecToVec*(src, dest: Array; srcx, destx, len: Index); 
+	PROCEDURE ^ CopyMtxToVec*(src, dest: Array; dim: Index; srcx, srcy, destx, len: Index); 
+	PROCEDURE ^ CopyVecToMtx*(src, dest: Array; dim: Index; srcx, destx, desty, len: Index); 
+	PROCEDURE ^ CopyCubeToVec*(src, dest: Array; dim: Index; srcx, srcy, srcz, destx, len: Index); 
+	PROCEDURE ^ CopyVecToCube*(src, dest: Array; dim: Index; srcx, destx, desty, destz, len: Index); 
+	PROCEDURE ^ CopyHCubeToVec*(src, dest: Array; dim: Index; srcx, srcy, srcz, srct, destx, len: Index); 
+	PROCEDURE ^ CopyVecToHCube*(src, dest: Array; dim: Index; srcx, destx, desty, destz, destt, len: Index); 
+	PROCEDURE ^ CopyMtxToMtx*(src, dest: Array; srcx, srcy, destx, desty, lenx, leny: Index); 
+	PROCEDURE ^ CopyCubeToMtx*(src, dest: Array; dimx, dimy: Index; srcx, srcy, srcz, destx, desty, lenx, leny: Index); 
+	PROCEDURE ^ CopyMtxToCube*(src, dest: Array; dimx, dimy: Index; srcx, srcy, destx, desty, destz, lenx, leny: Index); 
+	PROCEDURE ^ CopyHCubeToMtx*(src, dest: Array; dimx, dimy: Index; srcx, srcy, srcz, srct, destx, desty, lenx, leny: Index); 
+	PROCEDURE ^ CopyMtxToHCube*(src, dest: Array; dimx, dimy: Index; srcx, srcy, destx, desty, destz, destt, lenx, leny: Index); 
+	PROCEDURE ^ CopyCubeToCube*(src, dest: Array; srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index); 
+	PROCEDURE ^ CopyHCubeToCube*(src, dest: Array; dimx, dimy, dimz: Index; srcx, srcy, srcz, srct, destx, desty, destz, lenx, leny, lenz: Index); 
+	PROCEDURE ^ CopyCubeToHCube*(src, dest: Array; dimx, dimy, dimz: Index; srcx, srcy, srcz, destx, desty, destz, destt, lenx, leny, lenz: Index); 
+	PROCEDURE ^ CopyHCubeToHCube*(src, dest: Array; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
+	PROCEDURE ^ CopyArrayToVec*(VAR src: ARRAY OF Value; dest: Array; srcx, destx, len: Index); 
+	PROCEDURE ^ CopyVecToArray*(src: Array; VAR dest: ARRAY OF Value; srcx, destx, len: Index); 
+	PROCEDURE ^ CopyArrayToMtx*(VAR src: ARRAY OF ARRAY OF Value; dest: Array; srcx, srcy, destx, desty, lenx, leny: Index); 
+	PROCEDURE ^ CopyMtxToArray*(src: Array; VAR dest: ARRAY OF ARRAY OF Value; srcx, srcy, destx, desty, lenx, leny: Index); 
+	PROCEDURE ^ CopyArrayToCube*(VAR src: ARRAY OF ARRAY OF ARRAY OF Value; dest: Array; srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index); 
+	PROCEDURE ^ CopyCubeToArray*(src: Array; VAR dest: ARRAY OF ARRAY OF ARRAY OF Value; srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index); 
+	PROCEDURE ^ CopyArrayToHCube*(VAR src: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; dest: Array; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
+	PROCEDURE ^ CopyHCubeToArray*(src: Array; VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
+	PROCEDURE ^ CopyArrayToArrayPartB*(src: Array; dest: ArrayXdBytes.ArrayMemoryStructure; boundaryCondition: SHORTINT; srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray); 
+	OPERATOR ^ ":="-(VAR l: Array1; r: Array); 
+	OPERATOR ^ ":="-(VAR l: Array2; r: Array); 
+	OPERATOR ^ ":="-(VAR l: Array3; r: Array); 
+	PROCEDURE ^ Fill*(l: Array; r: Value); 
+	PROCEDURE ^ Add*(l, r, res: Array); 
+	OPERATOR ^ "+"-(l, r: Array): Array; 
+	PROCEDURE ^ Sub*(l, r, res: Array); 
+	OPERATOR ^ "-"-(l, r: Array): Array; 
+	PROCEDURE ^ Mul*(l, r, res: Array); 
+	PROCEDURE ^ Div*(l, r, res: Array); 
+	PROCEDURE ^ AddAV*(l: Array; r: Value; res: Array); 
+	OPERATOR ^ "+"(l: Array; r: IntValue): Array; 
+	OPERATOR ^ "+"(l: IntValue; r: Array): Array; 
+	PROCEDURE ^ MulAV*(l: Array; r: Value; res: Array); 
+	OPERATOR ^ "*"(l: Array; r: IntValue): Array; 
+	OPERATOR ^ "*"(l: IntValue; r: Array): Array; 
+	PROCEDURE ^ DivAV*(l: Array; r: Value; res: Array); 
+	PROCEDURE ^ DivVA*(l: Value; r: Array; res: Array); 
+	OPERATOR ^ "/"(l: IntValue; r: Array): Array; 
+	PROCEDURE ^ SubAV*(l: Array; r: Value; res: Array); 
+	PROCEDURE ^ SubVA*(l: Value; r: Array; res: Array); 
+	OPERATOR ^ "-"-(l: Value; r: Array): Array; 
+	OPERATOR ^ "-"-(l: IntValue; r: Array): Array; 
+	PROCEDURE ^ LoadArray(R: DataIO.Reader; VAR obj: OBJECT); 
+	PROCEDURE ^ StoreArray(W: DataIO.Writer; obj: OBJECT); 
+	PROCEDURE ^ Register; 
+	PROCEDURE ^ Load*(R: DataIO.Reader; VAR obj: Array); 
+	PROCEDURE ^ Store*(W: DataIO.Writer; obj: Array); 
+BEGIN
+END ArrayXdRat.

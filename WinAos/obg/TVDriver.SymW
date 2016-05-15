@@ -1,0 +1,125 @@
+MODULE TVDriver;
+	IMPORT SYSTEM, Plugins, Modules, KernelLog, Strings, ActiveTimers;
+CONST 
+	RegistryName = \"TVDriver"\; 
+	RegistryDesc = \"TV drivers for Bluebottle"\; 
+	WesternEuropeanChnlSet* = 0; 
+	VbiMaxLines* = 16; 
+	VbiLineSize* = 2048; 
+	VbiBufferItems = 20; 
+	VbiDataSize* = ((VbiLineSize * VbiMaxLines) * 2); 
+	VbiBufferSize* = (VbiDataSize * VbiBufferItems); 
+TYPE 
+	VbiBuffer* = OBJECT {EXCLUSIVE} 
+	VAR 
+		data*: ARRAY VbiBufferSize OF CHAR; 
+		readPos*: LONGINT; 
+		insertPos*: LONGINT; 
+		vbiSize*: LONGINT; 
+		timeout: BOOLEAN; 
+		timer: ActiveTimers.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ TimeoutHandler; 
+		PROCEDURE ^ AwaitData*; 
+		PROCEDURE ^ Finalize*; 
+	END VbiBuffer; 
+
+	TVTuner* = OBJECT 
+	VAR 
+		frequency*: LONGINT; 
+
+		PROCEDURE ^  & Init*(vcd: VideoCaptureDevice); 
+		PROCEDURE ^ OpenVbi*(): LONGINT; 
+		PROCEDURE ^ CloseVbi*; 
+		PROCEDURE ^ Open*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SetChannelSet*(chnlSet: LONGINT); 
+		PROCEDURE ^ GetChannelSet*(): LONGINT; 
+		PROCEDURE ^ SetChannel*(chnl: LONGINT); 
+		PROCEDURE ^ GetChannel*(): LONGINT; 
+		PROCEDURE ^ GetMaxChannel*(): LONGINT; 
+		PROCEDURE ^ SetTVFrequency*(freq: LONGINT); 
+		PROCEDURE ^ SetTVFrequencyImpl*(freq: LONGINT); 
+		PROCEDURE ^ GetFrequency*(): LONGINT; 
+		PROCEDURE ^ SetRadioFrequency*(freq: LONGINT); 
+		PROCEDURE ^ InstallChannelSwitchHandler*(handler: ChannelSwitchHandler); 
+		PROCEDURE ^ NotifyChannelSwitchObservers(freq: LONGINT); 
+		PROCEDURE ^ GetTunerStatus*(): LONGINT; 
+		PROCEDURE ^ CalcFieldStrength*(): LONGINT; 
+		PROCEDURE ^ IsLocked*(): BOOLEAN; 
+		PROCEDURE ^ IsStereo*(): BOOLEAN; 
+		PROCEDURE ^ SetHue*(hue: LONGINT); 
+		PROCEDURE ^ GetHue*(): LONGINT; 
+		PROCEDURE ^ SetBrightness*(brightness: LONGINT); 
+		PROCEDURE ^ GetBrightness*(): LONGINT; 
+		PROCEDURE ^ SetChromaSaturation*(saturation: LONGINT); 
+		PROCEDURE ^ GetChromaSaturation*(): LONGINT; 
+		PROCEDURE ^ SetChromaVSaturation*(saturation: LONGINT); 
+		PROCEDURE ^ GetChromaVSaturation*(): LONGINT; 
+		PROCEDURE ^ SetChromaUSaturation*(saturation: LONGINT); 
+		PROCEDURE ^ GetChromaUSaturation*(): LONGINT; 
+		PROCEDURE ^ SetLumaNotch*(notch: LONGINT); 
+		PROCEDURE ^ GetLumaNotch*(): LONGINT; 
+		PROCEDURE ^ SetContrast*(contrast: LONGINT); 
+		PROCEDURE ^ GetContrast*(): LONGINT; 
+		PROCEDURE ^ SetColorBars*(enable: BOOLEAN); 
+	END TVTuner; 
+
+	ChannelSwitchHandler* = PROCEDURE {DELEGATE}(freq: LONGINT; tuner: TVTuner); 
+
+	ChannelSwitchObserver = OBJECT 
+	VAR 
+		next: ChannelSwitchObserver; 
+		handler: ChannelSwitchHandler; 
+	END ChannelSwitchObserver; 
+
+	NotificationHandler* = PROCEDURE {DELEGATE}; 
+
+	VideoCaptureDevice* = OBJECT (Plugins.Plugin)
+
+		PROCEDURE ^  & Init*(base: ADDRESS; irq, product, rev: LONGINT); 
+		PROCEDURE ^ GetVbiBuffer*(): VbiBuffer; 
+		PROCEDURE ^ GetTuner*(): TVTuner; 
+		PROCEDURE ^ GetAudio*(): Audio; 
+		PROCEDURE ^ InstallNotificationHandler*(handler: NotificationHandler); 
+		PROCEDURE ^ VideoOpen*; 
+		PROCEDURE ^ VideoClose*; 
+		PROCEDURE ^ IsVideoOpen*(): BOOLEAN; 
+		PROCEDURE ^ IsVbiOpen*(): BOOLEAN; 
+		PROCEDURE ^ SetClipRegion*; 
+		PROCEDURE ^ GetStatus*(): LONGINT; 
+		PROCEDURE ^ SetInputFormat*(format: LONGINT); 
+		PROCEDURE ^ GetInputFormat*(): LONGINT; 
+		PROCEDURE ^ SetPixelFormat*(format: LONGINT); 
+		PROCEDURE ^ SetInputDev0*; 
+		PROCEDURE ^ SetInputDev1*; 
+		PROCEDURE ^ SetInputDev2*; 
+		PROCEDURE ^ SetInputDevSVideo*; 
+		PROCEDURE ^ SetInputDev3*; 
+		PROCEDURE ^ SetVideo*(addr: ADDRESS; width: LONGINT); 
+		PROCEDURE ^ CaptureSingle*; 
+		PROCEDURE ^ CaptureContinuous*; 
+		PROCEDURE ^ StopCaptureContinuous*; 
+		PROCEDURE ^ SetGeometry*(columns, rows, frames: LONGINT; format: SET); 
+	END VideoCaptureDevice; 
+
+	Audio* = OBJECT 
+
+		PROCEDURE ^  & Init*(vcd: VideoCaptureDevice); 
+		PROCEDURE ^ SetAudioTuner*; 
+		PROCEDURE ^ SetAudioExtern*; 
+		PROCEDURE ^ SetAudioIntern*; 
+		PROCEDURE ^ SetAudioMute*; 
+		PROCEDURE ^ SetAudioUnmute*; 
+		PROCEDURE ^ IsAudioMute*(): BOOLEAN; 
+	END Audio; 
+VAR 
+	channelSwitchObservers: ChannelSwitchObserver; 
+	devices*: Plugins.Registry; 
+
+	PROCEDURE ^ GetVideoDevice*(idx: LONGINT): VideoCaptureDevice; 
+	PROCEDURE ^ GetDefaultDevice*(): VideoCaptureDevice; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TVDriver.

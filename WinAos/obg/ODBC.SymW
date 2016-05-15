@@ -1,0 +1,150 @@
+MODULE ODBC;
+	IMPORT S := SYSTEM, Kernel32, Modules;
+CONST 
+	MAXMESSAGELENGTH = 512; 
+	NTS =  -3; 
+TYPE 
+	HENV = POINTER TO HENVDesc; 
+
+	HENVDesc = RECORD 
+		henv: LONGINT; 
+	END; 
+
+	HDBC* = POINTER TO HDBCDesc; 
+
+	HDBCDesc* = RECORD 
+		hdbc: LONGINT; 
+	END; 
+
+	HSTMT* = POINTER TO HSTMTDesc; 
+
+	HSTMTDesc* = RECORD 
+		hstmt: LONGINT; 
+	END; 
+VAR 
+	lib: LONGINT; 
+	env: HENV; 
+	res1*: INTEGER; 
+	nullString-: ARRAY 1 OF CHAR; 
+	SQLAllocConnect: PROCEDURE {WINAPI}(henv: LONGINT; hdbc: LONGINT):INTEGER; 
+	SQLAllocEnv: PROCEDURE {WINAPI}(henv: LONGINT):INTEGER; 
+	SQLAllocStmt: PROCEDURE {WINAPI}(hdbc: LONGINT; hstmt: LONGINT):INTEGER; 
+	SQLBindCol: PROCEDURE {WINAPI}(hstmt: LONGINT; icol: INTEGER; fcType: INTEGER; rgbValue: LONGINT; cbValueMax: LONGINT; pcbValue: LONGINT):INTEGER; 
+	SQLCancel: PROCEDURE {WINAPI}(hstmt: LONGINT):INTEGER; 
+	SQLColAttributes: PROCEDURE {WINAPI}(hstmt: LONGINT; icol: INTEGER; fDescType: INTEGER; rgbDesc: LONGINT; cbDescMax: INTEGER; pcbDesc: LONGINT; pfDesc: LONGINT):INTEGER; 
+	SQLConnect: PROCEDURE {WINAPI}(hdbc: LONGINT; DSN: LONGINT; DSNMax: INTEGER; UID: LONGINT; UIDMax: INTEGER; AuthStr: LONGINT; AuthStrMax: INTEGER):INTEGER; 
+	SQLDescribeCol: PROCEDURE {WINAPI}(hstmt: LONGINT; icol: INTEGER; szColName: LONGINT; cbColNameMax: INTEGER; pcbColName: LONGINT; pfSqlType: LONGINT; pcbColDef: LONGINT; pibScale: LONGINT; pfNullable: LONGINT):INTEGER; 
+	SQLDisconnect: PROCEDURE {WINAPI}(hdbc: LONGINT):INTEGER; 
+	SQLError: PROCEDURE {WINAPI}(henv: LONGINT; hdbc: LONGINT; hstmt: LONGINT; szSqlState: LONGINT; pfNativeError: LONGINT; szErrorMessage: LONGINT; cbErrorMessage: INTEGER; pcbErrorMessage: LONGINT):INTEGER; 
+	SQLExecDirect: PROCEDURE {WINAPI}(hstmt: LONGINT; szSqlStr: LONGINT; cbSqlStr: INTEGER):INTEGER; 
+	SQLExecute: PROCEDURE {WINAPI}(hstmt: LONGINT):INTEGER; 
+	SQLFetch: PROCEDURE {WINAPI}(hstmt: LONGINT):INTEGER; 
+	SQLFreeConnect: PROCEDURE {WINAPI}(hdbc: LONGINT):INTEGER; 
+	SQLFreeEnv: PROCEDURE {WINAPI}(henv: LONGINT):INTEGER; 
+	SQLFreeStmt: PROCEDURE {WINAPI}(hstmt: LONGINT; fOption: INTEGER):INTEGER; 
+	SQLGetCursorName: PROCEDURE {WINAPI}(hstmt: LONGINT; szCursor: LONGINT; cbCursorMax: INTEGER; pcbCursor: LONGINT):INTEGER; 
+	SQLNumResultCols: PROCEDURE {WINAPI}(hstmt: LONGINT; pccol: LONGINT):INTEGER; 
+	SQLPrepare: PROCEDURE {WINAPI}(hstmt: LONGINT; szSqlStr: LONGINT; cbSqlStr: LONGINT):INTEGER; 
+	SQLRowCount: PROCEDURE {WINAPI}(hstmt: LONGINT; pcrow: LONGINT):INTEGER; 
+	SQLSetCursorName: PROCEDURE {WINAPI}(hstmt: LONGINT; szCursor: LONGINT; cbCursor: INTEGER):INTEGER; 
+	SQLTransact: PROCEDURE {WINAPI}(henv: LONGINT; hdbc: LONGINT; fType: INTEGER):INTEGER; 
+	SQLColumns: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; qualLen: INTEGER; tableOwner: LONGINT; ownerLen: INTEGER; tableName: LONGINT; nameLen: INTEGER; columnName: LONGINT; colNameLen: INTEGER):INTEGER; 
+	SQLDriverConnect: PROCEDURE {WINAPI}(hdbc: LONGINT; hwnd: LONGINT; connStrIn: LONGINT; connStrInLen: INTEGER; connStrOut: LONGINT; connStrOutMaxSize: INTEGER; connStrOutActSize: LONGINT; driverCompletion: INTEGER):INTEGER; 
+	SQLGetConnectOption: PROCEDURE {WINAPI}(hdbc: LONGINT; whatOption: INTEGER; option: LONGINT):INTEGER; 
+	SQLGetData: PROCEDURE {WINAPI}(hstmt: LONGINT; col: INTEGER; resType: INTEGER; resValue: LONGINT; resMaxSize: LONGINT; resActSize: LONGINT):INTEGER; 
+	SQLGetFunctions: PROCEDURE {WINAPI}(hdbc: LONGINT; whichFunction: INTEGER; functExists: LONGINT):INTEGER; 
+	SQLGetInfo: PROCEDURE {WINAPI}(hdbc: LONGINT; infoType: INTEGER; resInfo: LONGINT; resInfoMaxSize: INTEGER; resInfoActSize: LONGINT):INTEGER; 
+	SQLGetStmtOption: PROCEDURE {WINAPI}(hstmt: LONGINT; whichOption: INTEGER; option: LONGINT):INTEGER; 
+	SQLGetTypeInfo: PROCEDURE {WINAPI}(hstmt: LONGINT; whichType: INTEGER):INTEGER; 
+	SQLParamData: PROCEDURE {WINAPI}(hstmt: LONGINT; dataAdr: LONGINT):INTEGER; 
+	SQLPutData: PROCEDURE {WINAPI}(hstmt: LONGINT; dataAdr: LONGINT; dataSize: LONGINT):INTEGER; 
+	SQLSetConnectOption: PROCEDURE {WINAPI}(hdbc: LONGINT; whichOption: INTEGER; option: LONGINT):INTEGER; 
+	SQLSetStmtOption: PROCEDURE {WINAPI}(hstmt: LONGINT; whichOption: INTEGER; option: LONGINT):INTEGER; 
+	SQLSpecialColumns: PROCEDURE {WINAPI}(hstmt: LONGINT; whichColType: INTEGER; tableQualifier: LONGINT; tabelQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER; scope: INTEGER; nullableCols: INTEGER):INTEGER; 
+	SQLStatistics: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; tableQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER; indexType: INTEGER; accuracy: INTEGER):INTEGER; 
+	SQLTables: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; tableQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER; tableType: LONGINT; tableTypeLen: INTEGER):INTEGER; 
+	SQLBrowseConnect: PROCEDURE {WINAPI}(hdbc: LONGINT; connStrIn: LONGINT; connStrInLen: INTEGER; connStrOut: LONGINT; connStrOutMaxLen: INTEGER; connStrOutActLen: LONGINT):INTEGER; 
+	SQLColumnPrivileges: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; tableQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER; columnName: LONGINT; columnNameLen: INTEGER):INTEGER; 
+	SQLDataSources: PROCEDURE {WINAPI}(henv: LONGINT; direction: INTEGER; dataSourceName: LONGINT; dataSourceNameMaxLen: INTEGER; dataSourceNameActLen: LONGINT; description: LONGINT; descriptionMaxLen: INTEGER; descriptionActLen: LONGINT):INTEGER; 
+	SQLDescribeParam: PROCEDURE {WINAPI}(hstmt: LONGINT; par: INTEGER; sqlType: LONGINT; colPrecision: LONGINT; colScale: LONGINT; colNullable: LONGINT):INTEGER; 
+	SQLExtendedFetch: PROCEDURE {WINAPI}(hstmt: LONGINT; fetchType: INTEGER; rowToFetch: LONGINT; numFetchedRows: LONGINT; rowStatus: LONGINT):INTEGER; 
+	SQLForeignKeys: PROCEDURE {WINAPI}(hstmt: LONGINT; primKeyTabQualifier: LONGINT; primKeyTabQualifierLen: INTEGER; primKeyTabOwner: LONGINT; primKeyTabOwnerLen: INTEGER; primKeyTabName: LONGINT; primKeyTabNameLen: INTEGER; forKeyTabQualifier: LONGINT; forKeyTabQualifierLen: INTEGER; forKeyTabOwner: LONGINT; forKeyTabOwnerLen: INTEGER; forKeyTabName: LONGINT; forKeyTabNameLen: INTEGER):INTEGER; 
+	SQLMoreResults: PROCEDURE {WINAPI}(hstmt: LONGINT):INTEGER; 
+	SQLNativeSql: PROCEDURE {WINAPI}(hdbc: LONGINT; sqlStrIn: LONGINT; sqlStrInLen: LONGINT; sqlStrOut: LONGINT; sqlStrOutMaxLen: LONGINT; sqlStrOutActLen: LONGINT):INTEGER; 
+	SQLNumParams: PROCEDURE {WINAPI}(hstmt: LONGINT; numParams: LONGINT):INTEGER; 
+	SQLParamOptions: PROCEDURE {WINAPI}(hstmt: LONGINT; numRows: LONGINT; curRow: LONGINT):INTEGER; 
+	SQLPrimaryKeys: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; tableQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER):INTEGER; 
+	SQLProcedureColumns: PROCEDURE {WINAPI}(hstmt: LONGINT; procQualifier: LONGINT; procQualifierLen: INTEGER; procOwner: LONGINT; procOwnerLen: INTEGER; procName: LONGINT; procNameLen: INTEGER; columnName: LONGINT; columnNameLen: INTEGER):INTEGER; 
+	SQLProcedures: PROCEDURE {WINAPI}(hstmt: LONGINT; procQualifier: LONGINT; procQualifierLen: INTEGER; procOwner: LONGINT; procOwnerLen: INTEGER; procName: LONGINT; procNameLen: INTEGER):INTEGER; 
+	SQLSetPos: PROCEDURE {WINAPI}(hstmt: LONGINT; row: INTEGER; op: INTEGER; lock: INTEGER):INTEGER; 
+	SQLTablePrivileges: PROCEDURE {WINAPI}(hstmt: LONGINT; tableQualifier: LONGINT; tableQualifierLen: INTEGER; tableOwner: LONGINT; tableOwnerLen: INTEGER; tableName: LONGINT; tableNameLen: INTEGER):INTEGER; 
+	SQLDrivers: PROCEDURE {WINAPI}(henv: LONGINT; direction: INTEGER; driverDesc: LONGINT; driverDescMaxLen: INTEGER; driverDescActLen: LONGINT; driverAttributes: LONGINT; driverAttributesMaxLen: INTEGER; driverAttributesActLen: LONGINT):INTEGER; 
+	SQLBindParameter: PROCEDURE {WINAPI}(hstmt: LONGINT; parNum: INTEGER; paramType: INTEGER; cType: INTEGER; sqlType: INTEGER; colPrec: LONGINT; colScale: INTEGER; inOutBuff: LONGINT; inOutBuffMaxLen: LONGINT; inOutBuffActLen: LONGINT):INTEGER; 
+	SQLFetchScroll: PROCEDURE {WINAPI}(hstmt: LONGINT; fetchorientation: INTEGER; fetchoffset: LONGINT):INTEGER; 
+	SQLSetStmtAttr: PROCEDURE {WINAPI}(hstmt: LONGINT; attribute: LONGINT; value: LONGINT; stringlength: LONGINT):INTEGER; 
+	SQLSetConnectAttr: PROCEDURE {WINAPI}(hdbc: LONGINT; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT):INTEGER; 
+
+	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ AllocConnect*(hdbc: HDBC; VAR res: INTEGER); 
+	PROCEDURE ^ AllocEnv(henv: HENV; VAR res: INTEGER); 
+	PROCEDURE ^ AllocStmt*(hdbc: HDBC; hstmt: HSTMT; VAR res: INTEGER); 
+	PROCEDURE ^ BindCol*(hstmt: HSTMT; col, retType: INTEGER; VAR buf: ARRAY OF S.BYTE; VAR resSize: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ Cancel*(hstmt: HSTMT; VAR res: INTEGER); 
+	PROCEDURE ^ ColAttributes*(hstmt: HSTMT; col, fDescType: INTEGER; VAR rgbDesc: ARRAY OF CHAR; VAR pfDesc: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ Connect*(hdbc: HDBC; DSN, UID, PW: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ DescribeCol*(hstmt: HSTMT; icol: INTEGER; VAR ColName: ARRAY OF CHAR; VAR SqlType: INTEGER; VAR ColDef: LONGINT; VAR Scale: INTEGER; VAR Nullable: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Disconnect*(hdbc: HDBC; VAR res: INTEGER); 
+	PROCEDURE ^ StatementError*(hstmt: HSTMT; VAR SqlState: ARRAY OF CHAR; VAR NativeError: LONGINT; VAR ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ConnectionError*(hdbc: HDBC; VAR SqlState: ARRAY OF CHAR; VAR NativeError: LONGINT; ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExecDirect*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Execute*(hstmt: HSTMT; VAR res: INTEGER); 
+	PROCEDURE ^ Fetch*(hstmt: HSTMT; VAR res: INTEGER); 
+	PROCEDURE ^ FreeConnect*(hdbc: HDBC; VAR res: INTEGER); 
+	PROCEDURE ^ FreeEnv(henv: HENV; VAR res: INTEGER); 
+	PROCEDURE ^ FreeStmt*(hstmt: HSTMT; opt: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ GetCursorName*(hstmt: HSTMT; VAR Cursor: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ NumResultCols*(hstmt: HSTMT; VAR cols: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ Prepare*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ RowCount*(hstmt: HSTMT; VAR rows: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ SetCursorName*(hstmt: HSTMT; Cursor: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Commit*(hdbc: HDBC; VAR res: INTEGER); 
+	PROCEDURE ^ Rollback*(hdbc: HDBC; VAR res: INTEGER); 
+	PROCEDURE ^ Columns*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER): INTEGER; 
+	PROCEDURE ^ DriverConnect*(hdbc: HDBC; VAR connStrIn, connStrOut: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ GetConnectOption*(hdbc: HDBC; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ GetData*(hstmt: HSTMT; col, resType: INTEGER; VAR resValue: ARRAY OF S.BYTE; VAR resSize: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ GetFunctions*(hdbc: HDBC; whichFunct: INTEGER; VAR exists: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ GetInfo*(hdbc: HDBC; infoType: INTEGER; VAR info: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ GetStmtOption*(hstmt: HSTMT; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ GetTypeInfo*(hstmt: HSTMT; whichSQLType: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ ParamData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ SetConnectOption*(hdbc: HDBC; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ SetStmtOption*(hstmt: HSTMT; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ SpecialColumns*(hstmt: HSTMT; colType: INTEGER; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; scope: INTEGER; nullables: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Statistics*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; uniqueIndexes, accurate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Tables*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, tabType: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ BrowseConnect*(hdbc: HDBC; connStrIn: ARRAY OF CHAR; VAR connStrOut: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ColumnPrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ DataSources*(direction: INTEGER; VAR dataSourceName, dataSourceDesc: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ DescribeParam*(hstmt: HSTMT; par: INTEGER; VAR sqlType: INTEGER; VAR prec: LONGINT; VAR scale, nullable: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ ExtendedFetch*(hstmt: HSTMT; fetchType: INTEGER; rowToFetch: LONGINT; VAR numFetchedRows: LONGINT; VAR rowStatus: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ SetStmtAttr*(hstmt: HSTMT; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ ForeignKeys*(hstmt: HSTMT; primKeyTabQualifier, primKeyTabOwner, primKeyTabName, forKeyTabQualifier, forKeyTabOwner, forKeyTabName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ MoreResults*(hstmt: HSTMT): BOOLEAN; 
+	PROCEDURE ^ NativeSql*(hdbc: HDBC; origSql: ARRAY OF CHAR; VAR nativeSql: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ NumParams*(hstmt: HSTMT; VAR res: INTEGER): INTEGER; 
+	PROCEDURE ^ ParamOptions*(hstmt: HSTMT; numRows: LONGINT; VAR curRow: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ PrimaryKeys*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ProcedureColumns*(hstmt: HSTMT; procQualifier, procOwner, procName, colName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Procedures*(hstmt: HSTMT; procQualifier, procOwner, procName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ SetPos*(hstmt: HSTMT; row, op, lock: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ TablePrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Drivers*(dir: INTEGER; VAR driverDesc, driverAttr: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ BindParameter*(hstmt: HSTMT; par, parType, cType, sqlType: INTEGER; prec: LONGINT; scale: INTEGER; VAR parBuff: ARRAY OF S.BYTE; VAR parBuffActLen: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ FetchScroll*(hstmt: HSTMT; fetchOrientation: INTEGER; fetchOffset: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ SetConnectAttr*(hdbc: HDBC; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Term; 
+BEGIN
+END ODBC.

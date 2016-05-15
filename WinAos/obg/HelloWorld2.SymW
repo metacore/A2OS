@@ -1,0 +1,7 @@
+MODULE HelloWorld2;
+	IMPORT Commands;
+CONST 
+
+	PROCEDURE ^ HelloStream*(context: Commands.Context); 
+BEGIN
+END HelloWorld2.

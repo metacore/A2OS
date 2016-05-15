@@ -1,0 +1,98 @@
+MODULE OdUtil;
+	IMPORT Clock, Streams, Files, TFLog, Strings, KernelLog;
+CONST 
+	eth = FALSE; 
+	ModeWriter* = 1; 
+	ModeFile* = 2; 
+	CollCh* = \"/"\; 
+	LineLen* = 128; 
+TYPE 
+	Array8 = ARRAY 8 OF CHAR; 
+
+	Log* = OBJECT {EXCLUSIVE} (TFLog.Log)
+	VAR 
+		appName: ARRAY 64 OF CHAR; 
+		logPos: LONGINT; 
+		logLine: ARRAY 1024 OF CHAR; 
+		kind: LONGINT; 
+		locked: BOOLEAN; 
+		disableLogToOut: BOOLEAN; 
+		f: Files.File; 
+		w: Streams.Writer; 
+		fsw: Files.Writer; 
+		mode: INTEGER; 
+
+		PROCEDURE ^  & Init*(logName: ARRAY OF CHAR); 
+		PROCEDURE ^ SetLogFile*(fn: ARRAY OF CHAR); 
+		PROCEDURE ^ SetLogWriter*(w: Streams.Writer); 
+		PROCEDURE ^ SetLogToOut*(enabled: BOOLEAN); 
+		PROCEDURE ^ SetKind(kind: LONGINT); 
+		PROCEDURE ^ InternalLn; 
+		PROCEDURE ^ Ln*; 
+		PROCEDURE ^ Enter*; 
+		PROCEDURE ^ Exit*; 
+		PROCEDURE ^ InternalChar(x: CHAR); 
+		PROCEDURE ^ Char*(x: CHAR); 
+		PROCEDURE ^ InternalString*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ String*(x: ARRAY OF CHAR); 
+		PROCEDURE ^ Hex*(x, w: LONGINT); 
+		PROCEDURE ^ Int*(x, w: LONGINT); 
+		PROCEDURE ^ TimeStamp*; 
+		PROCEDURE ^ Close*; 
+	END Log; 
+
+	Link* = OBJECT 
+	VAR 
+		next*: Link; 
+
+		PROCEDURE ^  & link*; 
+		PROCEDURE ^ add*(new: Link); 
+	END Link; 
+
+	Line* = ARRAY LineLen OF CHAR; 
+
+	Lines* = OBJECT 
+	VAR 
+		line*: Line; 
+		next*: Lines; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ add*(CONST line: ARRAY OF CHAR); 
+		PROCEDURE ^ in*(target: Lines): Lines; 
+		PROCEDURE ^ notIn*(target: Lines): Lines; 
+	END Lines; 
+
+	Dict* = OBJECT 
+	VAR 
+		key*: ARRAY 64 OF CHAR; 
+		value*: ANY; 
+		next*: Dict; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ EqualsI(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ has*(fieldName: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ get*(fieldName: ARRAY OF CHAR; VAR value: ANY): BOOLEAN; 
+		PROCEDURE ^ set*(fieldName: ARRAY OF CHAR; value: ANY); 
+	END Dict; 
+VAR 
+	MsgLog*: Log; 
+
+	PROCEDURE ^ padColl*(VAR conf: ARRAY OF CHAR); 
+	PROCEDURE ^ unpadColl*(VAR conf: ARRAY OF CHAR); 
+	PROCEDURE ^ Dev0*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ I*(i: LONGINT): Array8; 
+	PROCEDURE ^ B*(b: BOOLEAN): Array8; 
+	PROCEDURE ^ msg1(CONST s1: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg1*(CONST s1: ARRAY OF CHAR); 
+	PROCEDURE ^ msg2(CONST s1, s2: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg2*(CONST s1, s2: ARRAY OF CHAR); 
+	PROCEDURE ^ msg3(CONST s1, s2, s3: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg3*(CONST s1, s2, s3: ARRAY OF CHAR); 
+	PROCEDURE ^ msg4(CONST s1, s2, s3, s4: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg4*(CONST s1, s2, s3, s4: ARRAY OF CHAR); 
+	PROCEDURE ^ msg5(CONST s1, s2, s3, s4, s5: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg5*(CONST s1, s2, s3, s4, s5: ARRAY OF CHAR); 
+	PROCEDURE ^ msg6(CONST s1, s2, s3, s4, s5, s6: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg6*(CONST s1, s2, s3, s4, s5, s6: ARRAY OF CHAR); 
+BEGIN
+END OdUtil.

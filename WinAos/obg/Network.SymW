@@ -1,0 +1,113 @@
+MODULE Network;
+	IMPORT SYSTEM, WSock32, Machine, KernelLog, Plugins, Kernel, Objects, Modules;
+CONST 
+	MaxLinkAdrSize* = 8; 
+	MaxPacketSize* = 1600; 
+	MaxNofBuffers = 10000; 
+	TypePointToPoint* = 0; 
+	TypeEthernet* = 1; 
+	LinkNotLinked* = 0; 
+	LinkLinked* = 1; 
+	LinkUnknown* = 2; 
+	ChecksumIP* = 0; 
+	ChecksumUDP* = 1; 
+	ChecksumTCP* = 2; 
+	MaxLoopbackPacketsPerMS = 500; 
+TYPE 
+	LinkAdr* = ARRAY MaxLinkAdrSize OF CHAR; 
+
+	Buffer* = POINTER TO RECORD 
+		data*: ARRAY MaxPacketSize OF CHAR; 
+		ofs*: LONGINT; 
+		len*: LONGINT; 
+		l3ofs*: LONGINT; 
+		l4ofs*: LONGINT; 
+		src*: LinkAdr; 
+		calcChecksum*: SET; 
+		int*: LONGINT; 
+		set*: SET; 
+		next*, prev*: Buffer; 
+	END; 
+
+	ReceiverList = POINTER TO RECORD 
+		next: ReceiverList; 
+		type: LONGINT; 
+		receiver: Receiver; 
+	END; 
+
+	SendSnifferList = POINTER TO RECORD 
+		next: SendSnifferList; 
+		sniffer: SendSniffer; 
+	END; 
+
+	RecvSnifferList = POINTER TO RECORD 
+		next: RecvSnifferList; 
+		sniffer: ReceiveSniffer; 
+	END; 
+
+	LinkDevice* = OBJECT {EXCLUSIVE} (Plugins.Plugin)
+	VAR 
+		type-: LONGINT; 
+		local-: LinkAdr; 
+		broadcast-: LinkAdr; 
+		mtu-: LONGINT; 
+		adrSize-: LONGINT; 
+		sendCount-, recvCount-: HUGEINT; 
+		calcChecksum-: SET; 
+		recList: ReceiverList; 
+		sendSnifferList: SendSnifferList; 
+		recvSnifferList: RecvSnifferList; 
+		item: ReceiverList; 
+		sniffer: RecvSnifferList; 
+		discard: BOOLEAN; 
+		finalized: BOOLEAN; 
+		upBufFirst, upBufLast: Buffer; 
+		buf: Buffer; 
+		timer: Kernel.MilliTimer; 
+		packetCount: LONGINT; 
+
+		PROCEDURE ^  & Constr*(type, mtu, adrSize: LONGINT); 
+		PROCEDURE ^ Finalize*(connected: BOOLEAN); 
+		PROCEDURE ^ Linked*(): LONGINT; 
+		PROCEDURE ^ Send*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN); 
+		PROCEDURE ^ DoSend*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
+		PROCEDURE ^ Loopback(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
+		PROCEDURE ^ InstallReceiver*(type: LONGINT; r: Receiver); 
+		PROCEDURE ^ RemoveReceiver*(type: LONGINT); 
+		PROCEDURE ^ InstallSendSniffer*(s: SendSniffer); 
+		PROCEDURE ^ RemoveSendSniffer*(s: SendSniffer); 
+		PROCEDURE ^ InstallReceiveSniffer*(s: ReceiveSniffer); 
+		PROCEDURE ^ RemoveReceiveSniffer*(s: ReceiveSniffer); 
+		PROCEDURE ^ QueueBuffer*(buf: Buffer; type: LONGINT); 
+	BEGIN{ACTIVE, PRIORITY(Objects.High)} 
+	END LinkDevice; 
+
+	Receiver* = PROCEDURE {DELEGATE}(dev: LinkDevice; type: LONGINT; buffer: Buffer); 
+
+	SendSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT):BOOLEAN; 
+
+	ReceiveSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR type: LONGINT; buffer: Buffer):BOOLEAN; 
+VAR 
+	registry*: Plugins.Registry; 
+	nofBuf: LONGINT; 
+	nofFreeBuf: LONGINT; 
+	freeBufList: Buffer; 
+
+	PROCEDURE ^ GetNewBuffer*(): Buffer; 
+	PROCEDURE ^ ReturnBuffer*(buf: Buffer); 
+	PROCEDURE ^ Finalize(p: Plugins.Plugin); 
+	PROCEDURE ^ Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Put4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
+	PROCEDURE ^ Put2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
+	PROCEDURE ^ Get4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ Get2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ PutNet4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
+	PROCEDURE ^ PutNet2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
+	PROCEDURE ^ GetNet4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ GetNet2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ LinkAdrToStr*(VAR adr: LinkAdr; size: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ OutLinkAdr*(VAR adr: LinkAdr; size: LONGINT); 
+	PROCEDURE ^ Copy*(VAR from, to: ARRAY OF CHAR; fofs, tofs, len: LONGINT); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Network.

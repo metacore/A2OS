@@ -1,0 +1,14 @@
+MODULE LinEqRe;
+	IMPORT Nbr := NbrRe, Vec := VecRe, Mtx := MtxRe, Errors := DataErrors;
+CONST 
+TYPE 
+	Solver* = OBJECT 
+
+		PROCEDURE ^  & Initialize*(VAR A: Mtx.Matrix); 
+		PROCEDURE ^ Solve*(VAR b: Vec.Vector): Vec.Vector; 
+	END Solver; 
+
+	PROCEDURE ^ NormalizeVector*(VAR v: Vec.Vector; VAR mag: Nbr.Real); 
+	PROCEDURE ^ NormalizeMatrix*(VAR m: Mtx.Matrix; VAR mag: Nbr.Real); 
+BEGIN
+END LinEqRe.

@@ -1,0 +1,21 @@
+MODULE CLUTs;
+	IMPORT Streams;
+CONST 
+	colors* = 256; 
+TYPE 
+	CLUT* = RECORD 
+		col*: ARRAY colors OF LONGINT; 
+		size*: INTEGER; 
+		bits: INTEGER; 
+		cube: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	PROCEDURE ^ Set*(VAR clut: CLUT; n, col: LONGINT); 
+	PROCEDURE ^ Get*(VAR clut: CLUT; n: LONGINT; VAR col: LONGINT); 
+	PROCEDURE ^ Init*(VAR clut: CLUT; size, bits: LONGINT); 
+	PROCEDURE ^ Match*(VAR clut: CLUT; col: LONGINT): LONGINT; 
+	PROCEDURE ^ Copy*(from, to: CLUT); 
+	PROCEDURE ^ Write*(VAR w: Streams.Writer; VAR clut: CLUT); 
+	PROCEDURE ^ Read*(r: Streams.Reader; VAR clut: CLUT; size: LONGINT); 
+BEGIN
+END CLUTs.

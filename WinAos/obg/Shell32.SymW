@@ -1,0 +1,20 @@
+MODULE Shell32;
+	IMPORT SYSTEM, Kernel32, Modules;
+CONST 
+	SWNORMAL* = 1; 
+TYPE 
+	LPCSTR* = ADDRESS; 
+
+	HWND* = Kernel32.HANDLE; 
+
+	HINSTANCE* = Kernel32.HINSTANCE; 
+
+	INT* = LONGINT; 
+VAR 
+	shell32: Kernel32.HMODULE; 
+	ShellExecute-: PROCEDURE {WINAPI}(hwnd: HWND; lpOperation, lpFile: ARRAY OF CHAR; lpParameters, lpDirectory: LPCSTR; nShowCmd: INT):HINSTANCE; 
+
+	PROCEDURE ^ TermMod; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Shell32.

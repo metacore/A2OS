@@ -1097,6 +1097,8 @@ TYPE
 					Value(Global.NameFixed,x.alignment,first)
 				ELSIF x.alignment > 1 THEN
 					Value(Global.NameAligned,x.alignment,first)
+				ELSIF x.fictive THEN
+					Value(Global.NameFictive, x.fictiveOffset, first);
 				END;
 				IF x.untraced THEN
 					Flag(Global.NameUntraced,first)

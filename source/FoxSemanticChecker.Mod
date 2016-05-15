@@ -6600,7 +6600,7 @@ TYPE
 					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
 						Error(position, Diagnostics.Invalid,"fictive offset not possible in procedure");
 					END;
-					variable.SetFictive(TRUE);
+					variable.SetFictive(value);
 					variable.SetOffset(value*system.dataUnit);
 				END;
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.SetUseRegister(TRUE) END;

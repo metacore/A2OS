@@ -1,3 +1,4 @@
+
 MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
@@ -10953,6 +10954,10 @@ TYPE
 		moduleName: ARRAY 128 OF CHAR;
  		moduleNamePool: Basic.HashTableInt;
  		moduleNamePoolSection: IntermediateCode.Section;
+ 		modulePointerSection: IntermediateCode.Section;
+ 		modulePointerSizePC: LONGINT;
+ 		modulePointerSectionOffset: LONGINT; 
+ 		modulePointers: LONGINT;
  		
 		simple: BOOLEAN; (* simple = no methods, no module loading, no reflection *)
 
@@ -10988,16 +10993,33 @@ TYPE
 		END InitMetaDataGenerator;
 
 		PROCEDURE SetModule(module: Sections.Module);
-		VAR namePoolOffset: LONGINT;
+		VAR namePoolOffset,  offset: LONGINT; name: Basic.SegmentedName; 
 		BEGIN
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
-			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple THEN 
+			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple & ~implementationVisitor.backend.cooperative THEN 
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
+				modulePointerSection := Block("Heaps","ArrayBlockDesc","@ModulePointerArray", modulePointerSectionOffset);
+				name := "Modules.InternalPtr";
+				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+				(* set base pointer *)
+				NamedSymbolAt(modulePointerSection, modulePointerSectionOffset -1, name, NIL, 0, offset);
+				ArrayBlock(modulePointerSection, modulePointerSizePC, "", TRUE);
+				modulePointers := 0; 
+
 				moduleNamePoolSection := Block("Heaps","SystemBlockDesc",".@ModuleNamePool", namePoolOffset);
+				AddPointer(moduleNamePoolSection, namePoolOffset);
 			END;
 		END SetModule;
+		
+		PROCEDURE AddPointer(section: IntermediateCode.Section; offset: LONGINT);
+		BEGIN
+			NamedSymbol(modulePointerSection, section.name, NIL, 0, offset);
+			INC(modulePointers);
+			(* optimization hint: this can be done once at the end but for consistency of the first tests we keep it like this *)
+			PatchSize(modulePointerSection, modulePointerSizePC, modulePointers); 
+		END AddPointer;
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
 		BEGIN
@@ -11162,6 +11184,14 @@ TYPE
 			IntermediateCode.SetOffset(op,realOffset);
 			section.Emit(Data(-1,op));
 		END NamedSymbol;
+
+		PROCEDURE NamedSymbolAt(section: IntermediateCode.Section; pc: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationVisitor.GetFingerprint(symbol), virtualOffset);
+			IntermediateCode.SetOffset(op,realOffset);
+			section.EmitAt(pc, Data(-1,op));
+		END NamedSymbolAt;
 
 
 		PROCEDURE Symbol(section: IntermediateCode.Section; symbol: Sections.Section; virtualOffset, realOffset: LONGINT);
@@ -11329,7 +11359,7 @@ TYPE
 			RETURN section
 		END Block;		
 
-		PROCEDURE ArrayBlock(source: IntermediateCode.Section; VAR sizePC: LONGINT; CONST baseType: ARRAY OF  CHAR);
+		PROCEDURE ArrayBlock(source: IntermediateCode.Section; VAR sizePC: LONGINT;  CONST baseType: ARRAY OF  CHAR; hasPointer: BOOLEAN);
 		VAR name: Basic.SegmentedName;
 		BEGIN
 			Info(source,"ArrayHeader");
@@ -11347,39 +11377,17 @@ TYPE
 			ELSE
 				Address(source,0);
 				Address(source,0);
-				Address(source,0);
+				(* first pointer for GC *)
+				IF hasPointer THEN 
+					NamedSymbol(source,source.name, NIL,source.pc+2,0);
+				ELSE
+					Address(source,0);
+				END;
 				sizePC := source.pc;
 				Address(source,0);
 				Info(source,"array data");
 			END;
 		END ArrayBlock;
-
-		PROCEDURE ArrayBlockP(source: IntermediateCode.Section; VAR sizePC: LONGINT; VAR firstPC, lastPC: LONGINT; CONST baseType: ARRAY OF  CHAR);
-		VAR name: Basic.SegmentedName;
-		BEGIN
-			Info(source,"ArrayHeader");
-			IF implementationVisitor.backend.cooperative THEN
-				sizePC := source.pc;
-				Address(source,0);
-				NamedSymbol(source,source.name,NIL,0,ToMemoryUnits(implementationVisitor.system,(BaseArrayTypeSize + 1)*implementationVisitor.addressType.sizeInBits));
-				IF baseType # "" THEN
-					Basic.ToSegmentedName(baseType, name);
-					NamedSymbol(source, name,NIL, 0, 0);
-				ELSE
-					Address(source,0);
-				END;
-				Address(source,0);
-			ELSE
-				lastPC := source.pc;
-				Address(source,0);
-				Address(source,0);
-				firstPC := source.pc;
-				Address(source,0);
-				sizePC := source.pc;
-				Address(source,0);
-				Info(source,"array data");
-			END;
-		END ArrayBlockP;
 
 		PROCEDURE PatchArray(section: IntermediateCode.Section; pc: LONGINT; size: LONGINT);
 		BEGIN
@@ -11387,6 +11395,7 @@ TYPE
 				PatchSize(section, pc, size);
 				PatchSize(section, pc + 3, size);
 			ELSE
+				PatchSize(section, pc-3, size); (* actually only for arrays with pointers, but does not harm... *)
 				PatchSize(section, pc, size);
 			END;
 		END PatchArray;
@@ -11495,7 +11504,7 @@ TYPE
 			PROCEDURE Export(CONST sections: ARRAY OF Sections.Section);
 			VAR level, olevel, s: LONGINT; prev, this: Basic.SegmentedName; name: ARRAY 256 OF CHAR;
 				scopes: ARRAY LEN(prev)+1 OF Scope; arrayName: ARRAY 32 OF CHAR;
-				sym: Sections.Section; ignore: LONGINT; symbol: Sections.Section;
+				sym: Sections.Section; offset: LONGINT; symbol: Sections.Section;
 				nextPatch: LONGINT;
 			TYPE
 				Scope = RECORD
@@ -11540,9 +11549,9 @@ TYPE
 									IF scopes[level].section = NIL THEN
 										arrayName := ".@ExportArray";
 										Strings.AppendInt(arrayName, level);
-										scopes[level].section := Block("Heaps","SystemBlockDesc",arrayName,ignore);
-										(*! needs pointer array construction *)
-										ArrayBlock(scopes[level].section,scopes[level].arraySizePC,"Modules.ExportDesc");
+										scopes[level].section := Block("Heaps","SystemBlockDesc",arrayName,offset);
+										AddPointer(scopes[level].section,offset); 
+										ArrayBlock(scopes[level].section,scopes[level].arraySizePC,"Modules.ExportDesc", FALSE);
 									END;
 									scopes[level].beginPC := scopes[level].section.pc;
 									
@@ -11617,7 +11626,7 @@ TYPE
 		BEGIN
 			Info(source, "exception table offsets array descriptor");
 			size := 0;
-			ArrayBlock(source,sizePC,"Modules.ExceptionTableEntry");
+			ArrayBlock(source,sizePC,"Modules.ExceptionTableEntry", FALSE);
 			Info(source, "exception table content");
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				p := module.allSections.GetSection(i);
@@ -11938,7 +11947,7 @@ TYPE
 				
 
 			BEGIN
-				ArrayBlock(section,sizePC,"");
+				ArrayBlock(section,sizePC,"", FALSE);
 				
 				startPC := section.pc;
 				Char(section,0FFX); (* sign for trap writer *)
@@ -12031,7 +12040,7 @@ TYPE
 
 		BEGIN
 			Info(source, "command array descriptor");
-			ArrayBlock(source,sizePC,"Modules.Command");
+			ArrayBlock(source,sizePC,"Modules.Command", FALSE);
 			numberCommands := 0;
 			Info(source, "command array content");
 
@@ -12077,8 +12086,8 @@ TYPE
 		PROCEDURE ImportsArray(source: IntermediateCode.Section);
 		VAR import: SyntaxTree.Import ; pc: LONGINT;name: Basic.SegmentedName; numberImports: LONGINT; offset: LONGINT;
 		BEGIN
-			(*! needs to be pointer array *)
-			ArrayBlock(source,pc,"");
+			(* strictly speaking this needs to be a pointer array but by the construction of module loading, this references are not required *)
+			ArrayBlock(source,pc,"", FALSE);
 			Info(source, "import module array data");
 			IF implementationVisitor.backend.cooperative THEN
 				offset := 0;
@@ -12109,8 +12118,7 @@ TYPE
 		BEGIN
 			Info(source, "Type info section");
 			size := 0;
-			(*! require pointer array *)
-			ArrayBlock(source,sizePC,"Modules.TypeDesc");
+			ArrayBlock(source,sizePC,"Modules.TypeDesc", FALSE);
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				p := module.allSections.GetSection(i);
 				WITH p: IntermediateCode.Section DO
@@ -12374,6 +12382,7 @@ TYPE
 			exceptionSection := Block("Heaps","SystemBlockDesc",".@ExceptionArray",exceptionSectionOffset);
 			ExceptionArray(exceptionSection);
 			typeInfoSection := Block("Heaps","SystemBlockDesc",".@TypeInfoArray",typeInfoSectionOffset);
+			AddPointer(typeInfoSection, typeInfoSectionOffset);
 			TypeInfoSection(typeInfoSection);
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
 			References(referenceSection);
@@ -12385,7 +12394,7 @@ TYPE
 			END;
 			PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
-			ArrayBlock(emptyArraySection,temp,"");
+			ArrayBlock(emptyArraySection,temp,"", FALSE);
 			moduleSection := ModuleSection();
 			Info(moduleSection, "nextRoot*: RootObject");
 			Address(moduleSection,0);
@@ -12439,6 +12448,8 @@ TYPE
 			Address(moduleSection,0);
 			Info(moduleSection, "maxPtrs*: LONGINT");
 			Longint(moduleSection,maxPointers);
+			Info(moduleSection,"internal: POINTER TO ARRAY OF InternalPtr");
+			Symbol(moduleSection, modulePointerSection, modulePointerSectionOffset, 0);
 			Info(moduleSection, "crc*: LONGINT");
 			Longint(moduleSection, 0); (*!  must be implemented *)
 			Info(moduleSection, "body*: ADDRESS");
@@ -12462,7 +12473,7 @@ TYPE
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
 		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section;
 		BEGIN
-			ArrayBlock(source,pc,"");
+			ArrayBlock(source,pc,"",FALSE);
 			Info(source, "pointer offsets array data");
 			IF scope IS SyntaxTree.RecordScope THEN
 				Pointers(0,symbol, source,scope(SyntaxTree.RecordScope).ownerRecord,numberPointers);
@@ -12512,6 +12523,7 @@ TYPE
 				Info(in, "parameters");
 				IF variable # NIL THEN
 					section := SymbolSection(symbol, ".@Parameters",pc);
+					AddPointer(section, pc);
 					ParameterArray(section, variable);
 					Symbol(in, section, pc, 0);
 				ELSE
@@ -12542,6 +12554,7 @@ TYPE
 				Info(in, "variables");
 				IF variable # NIL THEN
 					section := SymbolSection(symbol, ".@Variables",pc);
+					AddPointer(section, pc);
 					VariableArray(section, variable);
 					Symbol(in, section, pc, 0);
 				ELSE
@@ -12573,6 +12586,7 @@ TYPE
 				Info(in, "procedures");
 				IF procedure # NIL THEN
 					section := SymbolSection(symbol, ".@Procedures",pc);
+					AddPointer(section, pc);
 					ProcedureArray(section, procedure);
 					Symbol(in, section, pc, 0);
 				ELSE
@@ -12586,7 +12600,7 @@ TYPE
 				td: SyntaxTree.TypeDeclaration;
 				type: SyntaxTree.Type;
 			BEGIN
-				ArrayBlock(source,pc,"Modules.FieldEntry");
+				ArrayBlock(source,pc,"Modules.FieldEntry", FALSE);
 				Info(source, "FieldArray");
 				size :=0;
 				WHILE parameter # NIL DO
@@ -12917,7 +12931,7 @@ TYPE
 			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
 				name: Basic.SegmentedName;
 			BEGIN
-				ArrayBlock(source,pc,"Modules.FieldEntry");
+				ArrayBlock(source,pc,"Modules.FieldEntry", FALSE);
 				Info(source, "FieldArray");
 				size :=0;
 				WHILE variable # NIL DO
@@ -12945,8 +12959,7 @@ TYPE
 				segmentedName: Basic.SegmentedName;
 				flags: SET;
 			BEGIN
-				(*! needs pointer array *)
-				ArrayBlock(source,pc,"Modules.ProcedureEntry");
+				ArrayBlock(source,pc,"Modules.ProcedureEntry", FALSE);
 
 				Info(source, "ProcedureArray");
 				size :=0;
@@ -14416,3 +14429,20 @@ END FoxIntermediateBackend.
 
 
 Compiler.Compile FoxIntermediateBackend.Mod ~
+
+#	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2G.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+FSTools.CloseFiles A2G.exe ~
+
+SystemTools.FreeDownTo FoxIntermediateBackend ~
+
+Compiler.Compile -p=Win32G  --destPath=/temp/obg/
+Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
+Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
+Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
+Win32.Traps.Mod Locks.Mod Win32.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 
+FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod 
+OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod ISO9660Files.Mod Win32.User32.Mod 
+Win32.WinTrace.Mod Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod Win32.WinFS.Mod 
+RelativeFileSystem.Mod Loader.Mod BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod 
+GenericLinker.Mod GenericLoader.Mod BootConsole.Mod 

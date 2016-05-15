@@ -34,6 +34,10 @@ CONST
 TYPE
 	(* definitions for object-model loader support *)
 	Name* = ARRAY 32 OF CHAR;
+
+	(* the correponding name array is protected from being GCed via module's internal pointer arrray 
+		compiler generated!
+	*)
 	DynamicName* = POINTER {UNSAFE} TO ARRAY 256 OF CHAR;
 	
 	Command* = RECORD
@@ -56,7 +60,10 @@ TYPE
 
 	TerminationHandler* = PROCEDURE;
 
-	
+
+	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
+	*)
+		
 	EntryType*=RECORD
 		class*: CHAR; 
 		subclass*: CHAR;
@@ -72,16 +79,16 @@ TYPE
 		flags*: SET;
 	END;
 	
-	FieldEntries*= POINTER TO ARRAY OF FieldEntry;
-	ProcedureEntries*=POINTER TO ARRAY OF ProcedureEntry;
+	FieldEntries*= POINTER  TO ARRAY OF FieldEntry;
+	ProcedureEntries*=POINTER  TO ARRAY OF ProcedureEntry;
 	
 	ProcedureEntry*=RECORD
 		name*: DynamicName; 
 		address*: ADDRESS;
 		size*: SIZE;
-		parameters*: FieldEntries;
-		variables*: FieldEntries;
-		procedures*: ProcedureEntries;
+		parameters* {UNTRACED}: FieldEntries;
+		variables* {UNTRACED}: FieldEntries;
+		procedures* {UNTRACED}: ProcedureEntries;
 		returnType*: EntryType;
 		flags*: SET;
 	END;
@@ -91,10 +98,10 @@ TYPE
 		sentinel: LONGINT;	(* = MPO-4 *)
 		tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags*: SET;
-		mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+		mod* {UNTRACED}: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
 		name*: Name;
-		fields*: FieldEntries;
-		procedures*: ProcedureEntries;
+		fields* {UNTRACED}: FieldEntries;
+		procedures* {UNTRACED}: ProcedureEntries;
 	END;
 
 	ExceptionTableEntry* = RECORD
@@ -120,6 +127,9 @@ TYPE
 	END;
 
 	ProcOffsetTable* = POINTER TO ARRAY OF ProcOffsetEntry;
+	
+	(* don't rename this --> compile relies on this name *)
+	InternalPtr= RECORD p: ANY END;
 
 	Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
 		VAR
@@ -142,6 +152,8 @@ TYPE
 			noProcs*: LONGINT;	(* used for removing proc offsets when unloading module *)
 			firstProc*: ADDRESS; (* procedure with lowest PC in module, also used for unloading *)
 			maxPtrs*: LONGINT;
+			(* internal pointer array: to protect internal data structures from being GCed *)
+			internal: POINTER TO ARRAY OF InternalPtr;
 			crc*: LONGINT;
 			body*: PROCEDURE;
 

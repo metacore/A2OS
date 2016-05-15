@@ -4,7 +4,7 @@ IMPORT
 	WMGraphics, WMRectangles, Strings;
 
 TYPE
-	EllipsePointsDraw* = PROCEDURE(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+	EllipsePixelsFiller* = PROCEDURE(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 
 (* factor in 1/256, alpha remains unchanged *)
 PROCEDURE ScaleColor*(color : LONGINT; factor : LONGINT): LONGINT;
@@ -286,9 +286,10 @@ BEGIN
 	END;
 END Ellipse;
 
-PROCEDURE DrawRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE DrawRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; lineColor : WMGraphics.Color; mode : LONGINT);
 	VAR innerRect : WMRectangles.Rectangle;
 BEGIN
+	IF (lineColor = WMGraphics.Transparent) THEN RETURN END;
     IF (rect.r <= rect.l) OR (rect.b <= rect.t) OR (rx <= 0) OR (ry <= 0) THEN RETURN END;
 
 	(* Set coordinates to reflect the centers of 4 quarter circles *)
@@ -297,19 +298,20 @@ BEGIN
 
 	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
 
-	EllipseBresenham(canvas, innerRect, rx, ry, DrawCornerPoints, color, mode);
+	EllipseBresenham(canvas, innerRect, rx, ry, DrawEllipsePixels, lineColor, WMGraphics.Transparent, mode);
 
 	INC(innerRect.l, 1); INC(innerRect.t, 1); DEC(innerRect.r, 1); DEC(innerRect.b, 1);
 
-	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t,      innerRect.r, rect.t + 1),  color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), color, mode);
-	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), color, mode);
+	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t,      innerRect.r, rect.t + 1),  lineColor, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), lineColor, mode);
+	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      lineColor, mode);
+	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), lineColor, mode);
 END DrawRoundRect;
 
-PROCEDURE FillRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE FillRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 	VAR innerRect : WMRectangles.Rectangle;
 BEGIN
+	IF (lineColor = fillColor) & (lineColor = WMGraphics.Transparent) THEN RETURN END;
     IF (rect.r <= rect.l) OR (rect.b <= rect.t) OR (rx <= 0) OR (ry <= 0) THEN RETURN END;
 
 	(* Set coordinates to reflect the centers of 4 quarter circles *)
@@ -318,52 +320,79 @@ BEGIN
 
 	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
 
-	EllipseBresenham(canvas, innerRect, rx, ry, FillCornerPoints, color, mode);
+	(*IF lineColor = WMGraphics.Transparent THEN lineColor := fillColor; END;*)
 
-	canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t + 1, rect.r, innerRect.b - 1), color, mode);
+	IF (lineColor # fillColor) & (lineColor # WMGraphics.Transparent) THEN (* draw rect *)
+		DEC(rect.r); (* skip for filling part *)
+		canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t, innerRect.r, rect.t + 1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t + 1, rect.l+1, innerRect.b - 1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r, innerRect.t + 1, rect.r+1, innerRect.b - 1), lineColor, mode);
+		INC(rect.l); (* skip for filling part *)
+	END;
+
+	IF fillColor = WMGraphics.Transparent THEN (* draw round corners *)
+		EllipseBresenham(canvas, innerRect, rx, ry, DrawEllipsePixels, lineColor, fillColor, mode);
+	ELSE (* filling part -- fill round corners, fill center rect *)
+		canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t + 1, rect.r, innerRect.b-1), fillColor, mode);
+		EllipseBresenham(canvas, innerRect, rx, ry, FillSolidEllipsePixels, lineColor, fillColor, mode);
+	END;
 END FillRoundRect;
 
-PROCEDURE DrawRoundedCorners*(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE DrawEllipsePixels(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, unused : WMGraphics.Color; mode : LONGINT);
 BEGIN
-	EllipseBresenham(canvas, innerRect, rx, ry, DrawCornerPoints, color, mode);
-END DrawRoundedCorners;
+	IF lineColor # WMGraphics.Transparent THEN
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx,   rect.t-dy,   rect.l-dx+1, rect.t-dy+1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+dx-1, rect.t-dy,   rect.r+dx,   rect.t-dy+1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx,   rect.b+dy-1, rect.l-dx+1, rect.b+dy),   lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+dx-1, rect.b+dy-1, rect.r+dx,   rect.b+dy),   lineColor, mode);
+	END;
+END DrawEllipsePixels;
 
-PROCEDURE DrawCornerPoints(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE FillSolidEllipsePixels(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 BEGIN
-	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.b+y-1, rect.l-x+1, rect.b+y),   color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.r+x-1, rect.b+y-1, rect.r+x,   rect.b+y),   color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.r+x-1, rect.t-y,   rect.r+x,   rect.t-y+1), color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.t-y,   rect.l-x+1, rect.t-y+1), color, mode);
-END DrawCornerPoints;
+	IF (lineColor # fillColor) & (lineColor # WMGraphics.Transparent) THEN
+		DEC( rect.r ); DEC( rect.b ); (* skip for filling part *)
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx, rect.t-dy, rect.l-dx+1, rect.t-dy+1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+dx, rect.t-dy, rect.r+dx+1, rect.t-dy+1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx, rect.b+dy, rect.l-dx+1, rect.b+dy+1), lineColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.r+dx, rect.b+dy, rect.r+dx+1, rect.b+dy+1), lineColor, mode);
+		INC( rect.l ); (* skip for filling part *)
+	END;
+	IF fillColor # WMGraphics.Transparent THEN (* filling part *)
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx, rect.t-dy, rect.r+dx, rect.t-dy+1), fillColor, mode);
+		canvas.Fill(WMRectangles.MakeRect(rect.l-dx, rect.b+dy, rect.r+dx, rect.b+dy+1), fillColor, mode);
+	END;
+END FillSolidEllipsePixels;
 
-PROCEDURE FillCornerPoints(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; x, y : LONGINT; color : WMGraphics.Color; mode : LONGINT);
-BEGIN
-	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.b+y-1, rect.r+x, rect.b+y),   color, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.l-x,   rect.t-y,   rect.r+x, rect.t-y+1), color, mode);
-END FillCornerPoints;
-
-PROCEDURE EllipseBresenham(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; drawPoints : EllipsePointsDraw; color : WMGraphics.Color; mode : LONGINT);
+PROCEDURE EllipseBresenham(CONST canvas : WMGraphics.Canvas; innerRect : WMRectangles.Rectangle; rx, ry : LONGINT; drawPoints : EllipsePixelsFiller; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 VAR
-	X, Y : LONGINT;
+	X, Y, prevDistance : LONGINT;
 	XChange, YChange : LONGINT;
 	RadiusError : LONGINT;
 	TwoASquare, TwoBSquare : LONGINT;
 	StoppingX, StoppingY : LONGINT;
-	BEGIN
+BEGIN
 	RadiusError := 0;
-	Y := 0;
+	IF lineColor = WMGraphics.Transparent THEN lineColor := fillColor; END;
+
 	IF rx = ry THEN (* circle *)
 		X := rx;
+		prevDistance := rx;
+		Y := 0;
 		XChange :=  1 - 2 * rx;
 		YChange := 1;
 
-		WHILE ( X >= Y ) DO
-			drawPoints(canvas, innerRect, X, Y, color, mode);
-			IF (X > Y) THEN
-				drawPoints(canvas, innerRect, Y, X, color, mode);
+		drawPoints(canvas, innerRect, X, Y, lineColor, fillColor, mode); (* start points *)
+		WHILE ( Y < X ) DO
+			IF (X = prevDistance) THEN (* skip fill *)
+				drawPoints(canvas, innerRect, Y, X, lineColor, WMGraphics.Transparent, mode);
+			ELSE
+				drawPoints(canvas, innerRect, Y, X, lineColor, fillColor, mode);
 			END;
 
-			INC(Y);
+			prevDistance := X; (* save value *)
+
 			INC(RadiusError, YChange);
 			INC(YChange,2);
 			IF (2*RadiusError + XChange > 0) THEN
@@ -371,9 +400,15 @@ VAR
 				INC(RadiusError, XChange);
 				INC(XChange,2);
 			END;
+
+			INC(Y);
+
+			drawPoints(canvas, innerRect, X, Y, lineColor, fillColor, mode);
 		END;
 	ELSE
 		X := rx;
+		Y := 0;
+
 		TwoASquare := 2*rx*rx;
 		TwoBSquare := 2*ry*ry;
 		XChange :=  ry*ry*(1-2*rx);
@@ -382,9 +417,8 @@ VAR
 		StoppingY := 0;
 
 		WHILE ( StoppingX >= StoppingY ) DO (* 1st set of points, y > 1 *)
-			drawPoints(canvas, innerRect, X, Y, color, mode);
+			drawPoints(canvas, innerRect, X, Y, lineColor, fillColor, mode);
 
-			INC(Y);
 			INC(StoppingY, TwoASquare);
 			INC(RadiusError, YChange);
 			INC(YChange,TwoASquare);
@@ -392,21 +426,30 @@ VAR
 				DEC(X);
 				DEC(StoppingX, TwoBSquare);
 				INC(RadiusError, XChange);
-				INC(XChange,TwoBSquare)
+				INC(XChange,TwoBSquare);
 			END;
+
+			INC(Y);
 		END;
 		(* 1st point set is done; start the 2nd set of points *)
 		X := 0;
 		Y := ry;
+		prevDistance := ry;
+
 		XChange := ry*ry;
 		YChange := rx*rx*(1-2*ry);
 		RadiusError := 0;
 		StoppingX := 0;
 		StoppingY := TwoASquare*ry;
-		WHILE ( StoppingX<= StoppingY ) DO  (*2nd set of points, y < 1*)
-			drawPoints(canvas, innerRect, X, Y, color, mode);
+		WHILE ( StoppingX < StoppingY ) DO  (*2nd set of points, y < 1*)
+			IF (Y = prevDistance) THEN (* skip fill *)
+				drawPoints(canvas, innerRect, X, Y, lineColor, WMGraphics.Transparent, mode);
+			ELSE
+				drawPoints(canvas, innerRect, X, Y, lineColor, fillColor, mode);
+			END;
 
-			INC(X);
+			prevDistance := Y;
+
 			INC(StoppingX, TwoBSquare);
 			INC(RadiusError, XChange);
 			INC(XChange,TwoBSquare);
@@ -414,8 +457,10 @@ VAR
 				DEC(Y);
 				DEC(StoppingY, TwoASquare);
 				INC(RadiusError, YChange);
-				INC(YChange,TwoASquare)
+				INC(YChange,TwoASquare);
 			END;
+
+			INC(X);
 		END;
 	END;
 END EllipseBresenham;

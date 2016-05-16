@@ -1,6 +1,5 @@
 (* Minimal ELF header for self contained linux Oberon programs *)
 (* Copyright (c) Felix Friedrich, ETH Zürich *)
-(* Extracted in parts from Florian Negele's Eigen Compiler Suite *)
 
 MODULE ElfHeader; 
 

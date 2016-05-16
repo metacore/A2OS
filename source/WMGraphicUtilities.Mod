@@ -286,29 +286,21 @@ BEGIN
 	END;
 END Ellipse;
 
-PROCEDURE DrawRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; lineColor : WMGraphics.Color; mode : LONGINT);
-	VAR innerRect : WMRectangles.Rectangle;
+PROCEDURE DrawEllipse*(CONST canvas: WMGraphics.Canvas; CX, CY, XRadius, YRadius : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 BEGIN
-	IF (lineColor = WMGraphics.Transparent) THEN RETURN END;
-    IF (rect.r <= rect.l) OR (rect.b <= rect.t) OR (rx <= 0) OR (ry <= 0) THEN RETURN END;
+	IF (XRadius > 0) & (YRadius > 0) THEN
+		EllipseBresenham(canvas, WMRectangles.MakeRect(CX, CY, CX, CY), XRadius, YRadius, FillSolidEllipsePixels, lineColor, fillColor, mode);
+	END;
+END DrawEllipse;
 
-	(* Set coordinates to reflect the centers of 4 quarter circles *)
-	innerRect := rect;
-	INC(innerRect.l, rx); INC(innerRect.t, ry);	DEC(innerRect.r, rx); DEC(innerRect.b, ry);
+PROCEDURE DrawCircle*(CONST canvas: WMGraphics.Canvas; CX, CY, radius : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
+BEGIN
+	IF radius > 0 THEN
+		EllipseBresenham(canvas, WMRectangles.MakeRect(CX, CY, CX, CY), radius, radius, FillSolidEllipsePixels, lineColor, fillColor, mode);
+	END;
+END DrawCircle;
 
-	IF (innerRect.r < innerRect.l) OR (innerRect.b < innerRect.t) THEN RETURN END;
-
-	EllipseBresenham(canvas, innerRect, rx, ry, DrawEllipsePixels, lineColor, WMGraphics.Transparent, mode);
-
-	INC(innerRect.l, 1); INC(innerRect.t, 1); DEC(innerRect.r, 1); DEC(innerRect.b, 1);
-
-	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.t,      innerRect.r, rect.t + 1),  lineColor, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.l,      innerRect.t, rect.l + 1,  innerRect.b), lineColor, mode);
-	canvas.Fill(WMRectangles.MakeRect(innerRect.l, rect.b - 1,  innerRect.r, rect.b),      lineColor, mode);
-	canvas.Fill(WMRectangles.MakeRect(rect.r-1,    innerRect.t, rect.r,      innerRect.b), lineColor, mode);
-END DrawRoundRect;
-
-PROCEDURE FillRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
+PROCEDURE DrawRoundRect*(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; rx, ry : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 	VAR innerRect : WMRectangles.Rectangle;
 BEGIN
 	IF (lineColor = fillColor) & (lineColor = WMGraphics.Transparent) THEN RETURN END;
@@ -337,7 +329,7 @@ BEGIN
 		canvas.Fill(WMRectangles.MakeRect(rect.l, innerRect.t + 1, rect.r, innerRect.b-1), fillColor, mode);
 		EllipseBresenham(canvas, innerRect, rx, ry, FillSolidEllipsePixels, lineColor, fillColor, mode);
 	END;
-END FillRoundRect;
+END DrawRoundRect;
 
 PROCEDURE DrawEllipsePixels(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, unused : WMGraphics.Color; mode : LONGINT);
 BEGIN

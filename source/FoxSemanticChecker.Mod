@@ -2948,6 +2948,8 @@ TYPE
 						Printout.Info("left",left);
 						Printout.Info("right",right);
 					END;
+				ELSIF IsUnsafePointer(left.type) THEN
+					Error(binaryExpression.position,Diagnostics.Invalid,"forbidden type test on unsafe pointer");
 				ELSIF (leftType.SameType(right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved)) & ~(leftType IS SyntaxTree.PointerType) THEN
 					NewBool(TRUE)
 				ELSIF right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved IS SyntaxTree.AnyType THEN
@@ -6107,6 +6109,8 @@ TYPE
 				END;
 			ELSIF ~(left.type.resolved = type.resolved) & ~IsExtensibleDesignator(left) THEN (* left is not extensible *)
 				Error(position,Diagnostics.Invalid,"variable cannot be extended");
+			ELSIF IsUnsafePointer(left.type) THEN
+				Error(position,Diagnostics.Invalid,"forbidden type guard on unsafe pointer");
 			ELSE
 				result := SyntaxTree.NewTypeGuardDesignator(position,left,type);
 				result.SetType(type);
@@ -6602,6 +6606,7 @@ TYPE
 					END;
 					variable.SetFictive(value);
 					variable.SetOffset(value*system.dataUnit);
+					IF ContainsPointer(variable.type) THEN variable.SetUntraced(TRUE) END;
 				END;
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.SetUseRegister(TRUE) END;
 				IF variable.type.resolved IS SyntaxTree.CellType THEN

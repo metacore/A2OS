@@ -289,7 +289,7 @@ TYPE
 		END AddCapability;
 
 		PROCEDURE GenerateRecordOffsets*(x: SyntaxTree.RecordType): BOOLEAN; (* normally done in checker but the binary symbol file format makes this necessary *)
-		VAR baseType: SyntaxTree.RecordType; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+		VAR baseType: SyntaxTree.RecordType; offset,baseOffset, size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
 		BEGIN
 			baseType :=x.GetBaseRecord();
 			IF (baseType  # NIL) & (baseType.sizeInBits < 0) THEN
@@ -302,6 +302,7 @@ TYPE
 				offset := 0; alignment := x.alignmentInBits;
 				IF alignment <= 0 THEN alignment := dataUnit END;
 			END;
+			baseOffset := offset;
 
 			variable := x.recordScope.firstVariable;
 			WHILE (variable # NIL) DO
@@ -319,6 +320,8 @@ TYPE
 
 					variable.SetOffset(offset);
 					INC(offset,size);
+				ELSE
+					variable.SetOffset(baseOffset + variable.fictiveOffset * dataUnit);
 				END;
 				variable := variable.nextVariable;
 			END;

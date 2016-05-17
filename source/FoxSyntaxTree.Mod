@@ -3237,7 +3237,6 @@ TYPE
 		BEGIN
 			fictive := TRUE;
 			fictiveOffset := offset;
-			SetUntraced(TRUE);
 		END SetFictive;
 		
 		PROCEDURE SetModifiers*(flag: Modifier);

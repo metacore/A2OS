@@ -174,8 +174,8 @@ TYPE
 
 	END Module;
 
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT;
-			VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
+		
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
 
 VAR
 	extension-: ARRAY MaxObjFormats, 8 OF CHAR;
@@ -299,6 +299,7 @@ END PublishThis;
 PROCEDURE Initialize*(VAR module: Module);
 VAR new: BOOLEAN;
 BEGIN
+	IF (module = NIL) THEN RETURN END;
 	Publish (module, new);
 	IF new THEN
 		IF module.body # NIL THEN

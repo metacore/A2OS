@@ -588,7 +588,7 @@ VAR
 		END
 	END SelectionSort;
 	
-	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT;  VAR msg: ARRAY OF CHAR): Modules.Module;
+	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module;
 	TYPE Body=PROCEDURE;
 	VAR
 		file: Files.File; reader: Files.Reader; linker: Linker;
@@ -624,13 +624,24 @@ VAR
 				module.staticTypeDescs := testTypeDescs; (* trick to identify new object file loaded modules *)
 				module.data := arrangement.data.bytes;
 				module.code := arrangement.code.bytes;
+
 				module.firstProc := arrangement.code.firstAddress;
 				module.sb := arrangement.data.firstAddress;
 				module.body := SYSTEM.VAL(Body, arrangement.bodyAddress);
+				
 				(*
 				SortProcTable(module);
 				SelectionSort(module.exTable);
 				*)
+
+				(*
+					careful: when GC uses a heuristic for pointer detection on the stack, it will not
+					trace the module because the module is not reachable as a heap block in a sweep
+					Therefore the code and data array has to be secured in addition.
+					Here this is made sure to enter the module in the data structure before returning it. 
+				*) 
+				Modules.Initialize(module);
+
 
 			ELSE module := NIL; res := LinkerError; stringWriter.Update; stringWriter.Get(msg);
 

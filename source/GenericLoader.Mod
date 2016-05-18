@@ -626,7 +626,7 @@ VAR
 				module.code := arrangement.code.bytes;
 
 				module.firstProc := arrangement.code.firstAddress;
-				module.sb := arrangement.data.firstAddress;
+				module.sb := 0 (*arrangement.data.firstAddress*); (* zero is correct ! *)
 				module.body := SYSTEM.VAL(Body, arrangement.bodyAddress);
 				
 				(*

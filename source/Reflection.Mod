@@ -151,13 +151,15 @@ VAR
 
 	(** Find global variables of mod (which may be NIL) and return it in the refs, refpos and base parameters for use by NextVar.  If not found, refpos returns -1. *)
 	PROCEDURE InitVar*(mod: Modules.Module; VAR refs: Modules.Bytes; VAR refpos: LONGINT; VAR base: ADDRESS);
-	VAR ch: CHAR; startpc: ADDRESS;
+	VAR ch: CHAR; startpc,pc,end: ADDRESS;
 	BEGIN
 		refpos := -1;
 		IF mod # NIL THEN
 			refs := mod.refs; base := mod.sb;
 			IF (refs # NIL) & (LEN(refs) # 0) THEN
-				refpos := FindProc(refs, 0, startpc);
+				IF FindProcByName(mod,"$$",pc,end) THEN
+					refpos := FindProc(refs, pc, startpc);
+				END;
 				IF refpos # -1 THEN
 					ch := refs[refpos]; INC(refpos);
 					WHILE ch # 0X DO ch := refs[refpos]; INC(refpos) END

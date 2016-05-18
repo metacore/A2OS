@@ -11823,13 +11823,25 @@ TYPE
 				END Type;
 
 				PROCEDURE WriteVariable(variable: SyntaxTree.Variable; indirect: BOOLEAN);
-					VAR name: ARRAY 256 OF CHAR;
+					VAR name: ARRAY 256 OF CHAR; sn: Basic.SegmentedName;
 				BEGIN
 					IF variable.externalName # NIL THEN RETURN END;
 					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
 					variable.GetName(name);
 					Type(variable.type);
-					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
+					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
+						implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
+						NamedSymbol(section, sn,variable, 0,0);
+					ELSE
+						Size(section, ToMemoryUnits(module.system,variable.offsetInBits));
+					END;
+					(*
+					IF variable.scope IS SyntaxTree.ModuleScope THEN
+						Symbol(section, variable,0,0);
+					ELSE
+						Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
+					END;
+					*)
 					String(section,name);
 				END WriteVariable;
 
@@ -11921,18 +11933,17 @@ TYPE
 				END Procedure;
 
 				PROCEDURE Scope(s: Sections.Section);
+				VAR variable: SyntaxTree.Variable;
 				BEGIN
 					Char(section,0F8X);
 					Symbol(section,s,0,0); (* start *)
 					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
 					String(section,"$$");
-					(* removed variables -- wrongly interpreted by Reflection
 					variable := module.module.moduleScope.firstVariable;
 					WHILE(variable # NIL) DO
 						WriteVariable(variable,FALSE);
 						variable := variable.nextVariable;
 					END;
-					*)
 				END Scope;
 
 				PROCEDURE ComputeSize(startPC, endPC: LONGINT): SIZE;
@@ -12225,7 +12236,7 @@ TYPE
 				name*: Name;
 				init, published: BOOLEAN;
 				refcnt*: LONGINT; (* counts loaded modules that import this module *)
-				sb*: ADDRESS; <- set to beginning of data section by loader
+				sb*: ADDRESS; <- should be zero as the static base in generic object file is indeed 0 !
 				entry*: POINTER TO ARRAY OF ADDRESS; <- not needed in new loader
 				command*: POINTER TO ARRAY OF Command;
 				ptrAdr*: POINTER TO ARRAY OF ADDRESS;

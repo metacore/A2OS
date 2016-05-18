@@ -1033,7 +1033,7 @@ VAR throughput := 0 : SIZE;
 
 (* NewBlock - Allocate a heap block. {(size MOD BlockSize = 0)}. Caller must hold Heap lock. *)
 PROCEDURE NewBlock(size: SIZE): ADDRESS;
-VAR try: LONGINT; p {UNTRACED}, freeBlock {UNTRACED}: FreeBlock; memBlock {UNTRACED}: Machine.MemoryBlock;
+VAR try: LONGINT; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
 	beginHeapBlockAdr, endHeapBlockAdr: ADDRESS;
 
 	PROCEDURE CheckPostGC;
@@ -1062,7 +1062,7 @@ BEGIN
 		IF p = NIL THEN
 			Machine.ExpandHeap(try, size, memBlock, beginHeapBlockAdr, endHeapBlockAdr);	(* try to extend the heap *)
 			IF endHeapBlockAdr > beginHeapBlockAdr THEN
-				freeBlock := SYSTEM.VAL(FreeBlock, beginHeapBlockAdr + BlockHeaderSize);
+				freeBlock := beginHeapBlockAdr + BlockHeaderSize;
 				InitFreeBlock(freeBlock, Unmarked, NilVal, endHeapBlockAdr - beginHeapBlockAdr);
 				Machine.SetMemoryBlockEndAddress(memBlock, endHeapBlockAdr); (* end address of expanded block must set after free block is fit in memory block *)
 				IF EnableFreeLists THEN AppendFreeBlock(freeBlock)
@@ -1516,5 +1516,6 @@ TraceHeap:
 11.07.2008 	ug	new heap data structures and adaption to GC
 *)
 
+Compiler.Compile -p=Win32G --traceModule=Trace Heaps.Mod ~
 StaticLinker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2M.exe ~

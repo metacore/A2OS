@@ -2547,7 +2547,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE);
+				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2634,7 +2634,7 @@ TYPE
 			parameter1 (* address *) := IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,1*addressType.sizeInBits));
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
+			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 
 			IF backend.hasLinkRegister THEN
@@ -2692,7 +2692,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE);
+				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 				IF dump # NIL THEN dump := section.comments END;
@@ -2714,7 +2714,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE);
+				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2752,7 +2752,7 @@ TYPE
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
+			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 
 			IF dump # NIL THEN dump := section.comments END;
 
@@ -2791,7 +2791,7 @@ TYPE
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE);
+			section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
 
@@ -2821,7 +2821,7 @@ TYPE
 		BEGIN
 			GetCodeSectionNameForSymbol(scope.ownerProcedure, name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
+			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
 				Emit(Push(-1, lr));
@@ -2918,7 +2918,7 @@ TYPE
 			previousSection := section;
 			GetCodeSectionNameForSymbol(procedure, name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,TRUE));
+			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 			Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
 
@@ -9136,7 +9136,7 @@ TYPE
 		BEGIN
 			Global.GetModuleSegmentedName(module.module, name);
 			Basic.SuffixSegmentedName(name,Basic.MakeString("@Immediates"));
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,TRUE);
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL, dump # NIL);
 			RETURN section
 		END GetDataSection;
 
@@ -11337,7 +11337,7 @@ TYPE
 			COPY(moduleName,name);
 			Strings.Append(name,suffix);
 			Basic.ToSegmentedName(name, pooledName);
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName, NIL,TRUE);
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName, NIL, declarationVisitor.dump);
 			
 			IF implementationVisitor.backend.cooperative THEN
 				Info(section, "TypeDescriptor");
@@ -12284,7 +12284,7 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module.@Descriptor");
 			Basic.ToSegmentedName(name, pooledName);
-			descriptorSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,TRUE);
+			descriptorSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
 			Symbol(section,descriptorSection,0,0);
 			
 			Info(descriptorSection, "descriptor");
@@ -12309,7 +12309,7 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module");
 			Basic.ToSegmentedName(name, pooledName);
-			moduleSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,TRUE);
+			moduleSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
 			moduleSection.SetExported(TRUE);
 			IF moduleSection.pc = 0 THEN
 				IF implementationVisitor.backend.cooperative THEN
@@ -12513,7 +12513,7 @@ TYPE
 					Global.GetSymbolSegmentedName(symbol,name);
 					Basic.AppendToSegmentedName(name,suffix);
 
-					section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,TRUE);
+					section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,declarationVisitor.dump);
 					HeapBlock("Heaps","SystemBlockDesc", section, 2);
 					Info(section, "HeapBlock");
 					Address(section,0); (* empty such that GC does not go on traversing *)

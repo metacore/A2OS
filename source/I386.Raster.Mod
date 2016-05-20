@@ -849,7 +849,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	CODE {SYSTEM.i386}
 		PUSH ECX
 		MOV EDI, [EBP+dadr]
-		IMUL ECX, [EBP+len], 4
+		MOV ECX, [EBP+len]
 		MOV EAX, 0
 		CLD
 		REP STOSD

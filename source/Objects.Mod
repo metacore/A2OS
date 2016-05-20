@@ -396,7 +396,6 @@ VAR
 
 	entry: ADDRESS;
 	init: Process;
-	i: LONGINT;
 
 	(* Performance monitoring *)
 	idlecount*: ARRAY Machine.MaxCPU OF LONGINT; (** count of idle process timeslice interrupts *)
@@ -794,7 +793,7 @@ BEGIN
 END GetCpuCycles;
 
 PROCEDURE CurrentProcessTime*(): HUGEINT;
-VAR result: HUGEINT; process: Process;
+VAR result: HUGEINT; process: Process; i: LONGINT;
 BEGIN
 	process := CurrentProcess();
 	FOR i := 0 TO Machine.MaxCPU-1 DO result := result + process.cpuCycles[i]; END;
@@ -1783,6 +1782,13 @@ BEGIN
 	RETURN gcStatusExt
 END GCStatusFactory;
 
+PROCEDURE InitPrioRequest;
+VAR
+	i: LONGINT;
+BEGIN
+	FOR i := 0 TO LEN(init.prioRequests) - 1 DO init.prioRequests[i] := 0 END;
+END InitPrioRequest;
+
 BEGIN
 	IF Stats THEN InitStats; END;
 	Init;
@@ -1804,7 +1810,7 @@ BEGIN
 	init.priority := High;
 	init.staticPriority := init.priority;
 	(* initialize prioRequests for init process *)
-	FOR i := 0 TO LEN(init.prioRequests) - 1 DO init.prioRequests[i] := 0 END;
+	InitPrioRequest;
 	INC(init.prioRequests[init.priority]);
 	Machine.Acquire(Machine.Objects);
 	init.id := -1; Enter(init); init := NIL;

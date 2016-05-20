@@ -54,8 +54,11 @@ TYPE
 
 	HeapBlock* = POINTER TO HeapBlockDesc; 
 
+	HeapBlockU = POINTER {UNSAFE} TO HeapBlockDesc; 
+
 	HeapBlockDesc* = RECORD 
-		typeDesc{FICTIVE(-4), UNTRACED} : StaticTypeBlock; 
+		heapBlock{FICTIVE(-8)} : ADDRESS; 
+		typeDesc{FICTIVE(-4), UNTRACED} : POINTER {UNSAFE} TO StaticTypeDesc; 
 		mark: LONGINT; 
 		dataAdr-: ADDRESS; 
 		size-: SIZE; 
@@ -63,6 +66,8 @@ TYPE
 	END; 
 
 	FreeBlock* = POINTER TO FreeBlockDesc; 
+
+	FreeBlockU = POINTER {UNSAFE} TO FreeBlockDesc; 
 
 	FreeBlockDesc* = RECORD (HeapBlockDesc)
 		next: FreeBlock; 
@@ -75,10 +80,14 @@ TYPE
 
 	RecordBlock* = POINTER TO RecordBlockDesc; 
 
+	RecordBlockU = POINTER {UNSAFE} TO RecordBlockDesc; 
+
 	RecordBlockDesc = RECORD (HeapBlockDesc)
 	END; 
 
 	ProtRecBlock* = POINTER TO ProtRecBlockDesc; 
+
+	ProtRecBlockU = POINTER {UNSAFE} TO ProtRecBlockDesc; 
 
 	ProtRecBlockDesc* = RECORD (RecordBlockDesc)
 		count*: LONGINT; 
@@ -91,12 +100,28 @@ TYPE
 
 	ArrayBlock* = POINTER TO ArrayBlockDesc; 
 
+	ArrayBlockU = POINTER {UNSAFE} TO ArrayBlockDesc; 
+
 	ArrayBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	TypeInfo* = POINTER {UNSAFE} TO TypeInfoDesc; 
+
+	TypeInfoDesc = RECORD 
+		descSize: LONGINT; 
+		sentinel: LONGINT; 
+		tag: ADDRESS; 
+		flags: SET; 
+		mod: ADDRESS; 
+		name*: ARRAY 32 OF CHAR; 
 	END; 
 
 	StaticTypeBlock* = POINTER TO StaticTypeDesc; 
 
+	StaticTypeBlockU = POINTER {UNSAFE} TO StaticTypeDesc; 
+
 	StaticTypeDesc = RECORD 
+		info{FICTIVE(-4), UNTRACED} : TypeInfo; 
 		recSize: SIZE; 
 		pointerOffsets*{UNTRACED} : PointerOffsets; 
 	END; 
@@ -106,6 +131,28 @@ TYPE
 	Block* = POINTER {UNSAFE} TO RECORD 
 		heapBlock{FICTIVE(-8), UNTRACED} : HeapBlock; 
 		typeBlock{FICTIVE(-4), UNTRACED} : StaticTypeBlock; 
+	END; 
+
+	DataBlockU = POINTER {UNSAFE} TO DataBlockDesc; 
+
+	DataBlockDesc* = RECORD 
+		heapBlock{FICTIVE(-8), UNTRACED} : POINTER {UNSAFE} TO HeapBlockDesc; 
+		typeDesc{FICTIVE(-4), UNTRACED} : POINTER {UNSAFE} TO StaticTypeDesc; 
+	END; 
+
+	ArrayDataBlockU = POINTER {UNSAFE} TO ArrayDataBlockDesc; 
+
+	ArrayDataBlockDesc* = RECORD (DataBlockDesc)
+		numElems: SIZE; 
+		current: ADDRESS; 
+		first: ADDRESS; 
+	END; 
+
+	StackBlock = POINTER {UNSAFE} TO StackBlockDesc; 
+
+	StackBlockDesc = RECORD 
+		link: StackBlock; 
+		pc: ADDRESS; 
 	END; 
 
 	GCStatus* = OBJECT 
@@ -184,8 +231,8 @@ VAR
 	PROCEDURE ^ LazySweepGC*; 
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
+	PROCEDURE ^ SetPC(p: DataBlockU); 
 	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
-	PROCEDURE ^ SetPC(p: ANY; pc: ADDRESS); 
 	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 

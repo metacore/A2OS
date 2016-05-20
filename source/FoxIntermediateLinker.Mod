@@ -94,7 +94,7 @@ TYPE
 				TRACE(sectionName);
 				RETURN FALSE 
 			END; (* nothing to patch *)
-			itype := IntermediateCode.GetType(backend.system, backend.system.booleanType);
+			itype := IntermediateCode.GetType(backend.system, type);
 			IntermediateCode.InitImmediate(op1,itype, value);
 			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
 			EmitAt(section(IntermediateCode.Section),index, instruction);

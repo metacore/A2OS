@@ -5400,6 +5400,9 @@ TYPE
 					base := type0;
 
 					IF (base IS SyntaxTree.PointerType) & (parameter0 IS SyntaxTree.Designator) THEN
+						IF base(SyntaxTree.PointerType).isUnsafe THEN
+							Error(position, Diagnostics.Invalid, "forbidden len on unsafe pointer");
+						END;
 						parameter0 := NewDereferenceDesignator(position,parameter0(SyntaxTree.Designator));
 						actualParameters.SetExpression(0,parameter0);
 						type0 := parameter0.type.resolved;

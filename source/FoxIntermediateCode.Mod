@@ -120,7 +120,7 @@ TYPE
 		ModeString			mode, string
 	*)
 
-	Instruction* = RECORD
+	Instruction* = POINTER TO RECORD
 		opcode-: SHORTINT; (* instruction opcode *)
 		subtype-: SHORTINT; (* for special backend instruction *)
 		textPosition-: LONGINT; (* for error handling and tracking (findPC) *)
@@ -815,6 +815,7 @@ TYPE
 	PROCEDURE InitInstruction*(VAR instr: Instruction; textPosition: LONGINT; opcode: SHORTINT; op1,op2,op3: Operand);
 	VAR format: InstructionFormat; mode1, mode2, mode3: LONGINT; (* debugging *)
 	BEGIN
+		IF instr = NIL THEN NEW(instr) END;
 		format := instructionFormat[opcode];
 		mode1 := op1.mode;
 		mode2 := op2.mode;

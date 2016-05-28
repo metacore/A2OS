@@ -517,8 +517,8 @@ BEGIN
 	Fill4(dataBlockAdr, fillSize DIV 4, 0);
 
 	firstElem := dataBlockAdr + arrayDataOffset;
-	SYSTEM.PUT(dataBlockAdr, firstElem + arrSize - elemSize);	(* lastElemToMark *)
-	Relocate(dataBlockAdr);
+	SYSTEM.PUT(dataBlockAdr, numElems (* firstElem + arrSize - elemSize*) );	(* lastElemToMark *)
+	(* Relocate(dataBlockAdr); *)
 	SYSTEM.PUT(dataBlockAdr + AddressSize, NIL);				(* reserved for Mark *)
 	SYSTEM.PUT(dataBlockAdr + 2 * AddressSize, firstElem);		(* firstElem *)
 	Relocate(dataBlockAdr + 2 * AddressSize);
@@ -908,17 +908,18 @@ END RelocateModules;
 (* RelocateArrayFields - Fix up a dynamic array. *)
 
 PROCEDURE RelocateArrayFields(tagAdr: ADDRESS);
-VAR adr, p, lastElem: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: LONGINT;
+VAR adr, p, lastElem, size: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: LONGINT;
 BEGIN
-	SYSTEM.GET(tagAdr + AddressSize, lastElem);
+	SYSTEM.GET(tagAdr + AddressSize, size);
 	SYSTEM.GET(tagAdr + 3 * AddressSize, p);	(* firstElem *)
 	SYSTEM.GET(tagAdr, adr);	(* adr is address of static type descriptor (no alignment) *)
 	staticTypeBlock := SYSTEM.VAL(StaticTypeBlock, adr);
 	LOOP
+		IF size = 0 THEN EXIT END; 
+		DEC(size); 
 		FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 			Relocate(p + staticTypeBlock.pointerOffsets[i]);
 		END;
-		IF p = lastElem THEN EXIT END;
 		INC(p, staticTypeBlock.recSize)	(* step to next array element *)
 	END
 END RelocateArrayFields;

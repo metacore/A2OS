@@ -155,6 +155,7 @@ CONST
 		sfDynamic = 22;
 		sfUnsafe= 23;
 		sfDisposable= 24;
+		sfFictive = 25;
 
 		Undef=MIN(LONGINT);
 
@@ -903,8 +904,9 @@ TYPE
 				priority: LONGINT;
 				visibility: SET;
 
-				active, safe, isOperator, isDynamic: BOOLEAN;
+				active, safe, isOperator, isDynamic, isFictive: BOOLEAN;
 				untraced, realtime, constructor: BOOLEAN;
+				fOffset: LONGINT;
 
 				variable: SyntaxTree.Variable;
 				procedure: SyntaxTree.Procedure;
@@ -935,13 +937,18 @@ TYPE
 				R.RawNum(tag);
 				WHILE  (tag < sfTProcedure) OR (tag > sfEnd) DO	(*read fields*)
 					isOperator := FALSE;
-					Symbol(recordScope,type,name,visibility,untraced, realtime, constructor, isOperator, isDynamic);
+					Symbol(recordScope,type,name,visibility,untraced, realtime, constructor, isOperator, isDynamic, isFictive, fOffset);
 					ASSERT(type # NIL);
 					IF  name = "" THEN visibility := SyntaxTree.Internal END;
 					variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier(name));
 					variable.SetType(type);
 					variable.SetUntraced(untraced);
 					variable.SetAccess(visibility);
+					IF isFictive THEN
+						TRACE(fOffset);
+						variable.SetFictive(fOffset);
+						variable.SetUntraced(TRUE);
+					END;
 					variable.SetState(SyntaxTree.Resolved);
 					recordScope.AddVariable(variable);
 					recordScope.EnterSymbol(variable,b);
@@ -952,7 +959,7 @@ TYPE
 					R.RawNum(tag);
 					WHILE  tag#sfEnd  DO
 						isOperator := FALSE;
-						Symbol(recordScope,type,name, visibility,untraced, realtime, constructor, isOperator, isDynamic);
+						Symbol(recordScope,type,name, visibility,untraced, realtime, constructor, isOperator, isDynamic, isFictive, fOffset);
 						IF  name = "" THEN  R.RawString(name)  END;
 
 						procedureScope := SyntaxTree.NewProcedureScope(recordScope);
@@ -1325,17 +1332,18 @@ TYPE
 			END Inline;
 
 			(* Symbol = [sfObjFlag flag:RawNum] [sfReadOnly] Type name:RawString *)
-			PROCEDURE Symbol(parentScope: SyntaxTree.Scope; VAR type: SyntaxTree.Type; VAR name: SyntaxTree.IdentifierString;  VAR visibility: SET; VAR untraced, realtime, constructor, operator, isDynamic: BOOLEAN);
+			PROCEDURE Symbol(parentScope: SyntaxTree.Scope; VAR type: SyntaxTree.Type; VAR name: SyntaxTree.IdentifierString;  VAR visibility: SET; VAR untraced, realtime, constructor, operator, isDynamic, isFictive: BOOLEAN; VAR fictiveOffset: LONGINT);
 			VAR  f,i: LONGINT;
 			BEGIN
 				IF TraceImport IN Trace THEN
 					D.Str("Symbol: --> "); D.Ln
 				END;
-				untraced := FALSE; realtime := FALSE; constructor := FALSE; isDynamic := FALSE;
+				untraced := FALSE; realtime := FALSE; constructor := FALSE; isDynamic := FALSE; isFictive := FALSE;
 				visibility:=SyntaxTree.Public+SyntaxTree.Protected+SyntaxTree.Internal;
 				WHILE tag=sfObjFlag DO
 					R.RawNum(f);
-					IF f = sfUntraced THEN untraced := TRUE
+					IF f = sfFictive THEN isFictive := TRUE;  untraced := TRUE; TRACE(fictiveOffset); R.RawNum(fictiveOffset); 
+					ELSIF f = sfUntraced THEN untraced := TRUE
 					ELSIF f = sfRealtime THEN realtime := TRUE
 					ELSIF f = sfOperator THEN operator := TRUE;
 					ELSIF f = sfDynamic THEN isDynamic := TRUE;
@@ -1375,7 +1383,7 @@ TYPE
 			*)
 
 			PROCEDURE Module;
-			VAR flags: SET; untraced, realtime, constructor,operator, isDynamic: BOOLEAN; callingConvention: LONGINT;
+			VAR flags: SET; untraced, realtime, constructor,operator, isDynamic, isFictive: BOOLEAN; callingConvention: LONGINT; fOffset: LONGINT;
 			BEGIN
 				R.RawSet(flags);
 
@@ -1392,7 +1400,7 @@ TYPE
 				IF tag=sfConst	THEN R.RawNum(tag);
 					WHILE	(tag < sfVar) OR (tag > sfEnd) DO
 						operator := FALSE;
-						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic);
+						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(type # NIL);
 						value := Value(type);
 						constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
@@ -1410,12 +1418,17 @@ TYPE
 				IF	tag=sfVar	THEN	R.RawNum(tag);
 					WHILE	(tag < sfXProcedure) OR (tag > sfEnd)	DO
 						operator := FALSE;
-						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic);
+						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic,isFictive, fOffset);
 						ASSERT(type # NIL);
 						variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier(name));
 						variable.SetType(type);
 						variable.SetAccess(visibility);
 						variable.SetState(SyntaxTree.Resolved);
+						IF isFictive THEN
+							TRACE(fOffset);
+							variable.SetFictive(fOffset);
+							variable.SetUntraced(TRUE);
+						END;
 						moduleScope.AddVariable(variable);
 						moduleScope.EnterSymbol(variable,b);
 						R.RawNum(tag)
@@ -1426,7 +1439,7 @@ TYPE
 				IF	tag=sfXProcedure	THEN	R.RawNum(tag);
 					WHILE	(tag < sfOperator) OR (tag > sfEnd)	DO
 						operator := FALSE;
-						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic);
+						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
 						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
@@ -1448,7 +1461,7 @@ TYPE
 				IF	tag=sfOperator	THEN	R.RawNum(tag);
 					WHILE	(tag < sfCProcedure) OR (tag > sfEnd)	DO
 						operator := TRUE;
-						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic);
+						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
 						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
@@ -1476,7 +1489,7 @@ TYPE
 				IF  tag = sfCProcedure  THEN	R.RawNum(tag);
 					WHILE	(tag < sfAlias) OR (tag > sfEnd)	DO
 						operator := FALSE;
-						Symbol(moduleScope,type,name, visibility,untraced, realtime, constructor,operator, isDynamic);
+						Symbol(moduleScope,type,name, visibility,untraced, realtime, constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
 						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
@@ -1666,7 +1679,7 @@ TYPE
 				variable := scope.firstVariable;
 				WHILE variable # NIL DO
 					ASSERT(variable.type # NIL);
-					Symbol(variable.type,variable.name,variable.access,variable.untraced,FALSE, FALSE, FALSE, FALSE);
+					Symbol(variable.type,variable.name,variable.access,variable.untraced,FALSE, FALSE, FALSE, FALSE, variable.fictive, variable.fictiveOffset);
 					variable := variable.nextVariable;
 				END;
 
@@ -1676,12 +1689,12 @@ TYPE
 					WHILE procedure # NIL DO
 						procedureType := procedure.type(SyntaxTree.ProcedureType);
 						IF (procedure.access * SyntaxTree.Internal = procedure.access) THEN  (* not exported method *)
-							Symbol(procedureType.returnType,procedure.name,procedure.access,FALSE, procedureType.isRealtime,procedure.isConstructor,procedure IS SyntaxTree.Operator, FALSE);
+							Symbol(procedureType.returnType,procedure.name,procedure.access,FALSE, procedureType.isRealtime,procedure.isConstructor,procedure IS SyntaxTree.Operator, FALSE, FALSE, 0);
 							procedure.GetName(name);
 							w.RawString(name);
 						ELSE (* exported method *)
 							Symbol(procedureType.returnType,procedure.name,SyntaxTree.Public (*! for compatiblity should be procedure.access *),
-							FALSE, procedureType.isRealtime,procedure.isConstructor, procedure IS SyntaxTree.Operator, FALSE
+							FALSE, procedureType.isRealtime,procedure.isConstructor, procedure IS SyntaxTree.Operator, FALSE, FALSE, 0
 							);
 						END;
 						ParameterList(procedure.type(SyntaxTree.ProcedureType));
@@ -2120,14 +2133,15 @@ TYPE
 			(* Symbol =
 				[sfObjFlag flag:RawNum] [sfReadOnly] Type Name
 			*)
-			PROCEDURE Symbol(type: SyntaxTree.Type; name: SyntaxTree.Identifier; visibility: SET;untraced, realtime, constructor, operator, isDynamic: BOOLEAN);
+			PROCEDURE Symbol(type: SyntaxTree.Type; name: SyntaxTree.Identifier; visibility: SET;untraced, realtime, constructor, operator, isDynamic, isFictive: BOOLEAN; fOffset: LONGINT);
 			VAR string,string2: SyntaxTree.IdentifierString;
 			BEGIN
 				IF TraceExport IN Trace THEN
 					Basic.GetString(name,string);
 					D.Str("Symbol "); D.Str(string); D.Ln;
 				END;
-				IF untraced THEN w.RawNum(sfObjFlag); w.RawNum(sfUntraced)
+				IF isFictive THEN w.RawNum(sfObjFlag); w.RawNum(sfFictive); TRACE(fOffset); w.RawNum(fOffset);
+				ELSIF untraced THEN w.RawNum(sfObjFlag); w.RawNum(sfUntraced)
 				ELSIF realtime  THEN w.RawNum(sfObjFlag); w.RawNum(sfRealtime)
 				END;
 				IF operator THEN w.RawNum(sfObjFlag); w.RawNum(sfOperator) END;
@@ -2189,7 +2203,7 @@ TYPE
 				WHILE constant # NIL DO
 					IF constant.access * SyntaxTree.Public # {} THEN
 						IF first THEN w.RawNum(sfConst); first := FALSE END;
-						Symbol(constant.type,constant.name,SyntaxTree.Public (*! for compatiblity should be constant.access *) ,FALSE,FALSE,FALSE,FALSE, FALSE);
+						Symbol(constant.type,constant.name,SyntaxTree.Public (*! for compatiblity should be constant.access *) ,FALSE,FALSE,FALSE,FALSE, FALSE, FALSE, 0);
 						constant.GetName(name);
 						Value(constant.value.resolved(SyntaxTree.Value))
 					END;
@@ -2205,7 +2219,7 @@ TYPE
 				WHILE variable # NIL DO
 					IF variable.access * SyntaxTree.Public # {} THEN
 						IF first THEN w.RawNum(sfVar); first := FALSE END;
-						Symbol(variable.type,variable.name,variable.access,variable.untraced, FALSE, FALSE, FALSE, FALSE);
+						Symbol(variable.type,variable.name,variable.access,variable.untraced, FALSE, FALSE, FALSE, FALSE, variable.fictive, variable.fictiveOffset);
 					END;
 					variable := variable.nextVariable;
 				END;
@@ -2222,7 +2236,7 @@ TYPE
 						IF ~procedure.isInline  THEN
 							IF first THEN w.RawNum(sfXProcedure); first := FALSE END;
 							Symbol(procedureType.returnType,procedure.name,SyntaxTree.Public (*! for compatiblity should be procedure.access *),
-							FALSE, procedureType.isRealtime, procedure.isConstructor, FALSE, FALSE);
+							FALSE, procedureType.isRealtime, procedure.isConstructor, FALSE, FALSE, FALSE, 0);
 							ParameterList(procedureType);
 						END;
 					END;
@@ -2240,7 +2254,7 @@ TYPE
 						procedureType := procedure.type(SyntaxTree.ProcedureType);
 						IF first THEN w.RawNum(sfOperator); first := FALSE END;
 						Symbol(procedureType.returnType,procedure.name,SyntaxTree.Public (*! for compatiblity should be procedure.access *),
-						FALSE, procedure.isInline, procedure.isConstructor, FALSE, procedure(SyntaxTree.Operator).isDynamic);
+						FALSE, procedure.isInline, procedure.isConstructor, FALSE, procedure(SyntaxTree.Operator).isDynamic, FALSE, 0);
 						ParameterList(procedureType);
 						IF procedure.isInline THEN
 							w.RawNum(sfInline); Inline(procedure.procedureScope);
@@ -2261,7 +2275,7 @@ TYPE
 						IF procedure.isInline THEN
 							IF first THEN w.RawNum(sfCProcedure); first := FALSE END;
 							Symbol(procedureType.returnType,procedure.name,SyntaxTree.Public (*! for compatiblity should be procedure.access *),
-							FALSE, procedure.isInline, procedure.isConstructor, FALSE, FALSE);
+							FALSE, procedure.isInline, procedure.isConstructor, FALSE, FALSE, FALSE, 0);
 							ParameterList(procedureType);
 							Inline(procedure.procedureScope);
 						END;

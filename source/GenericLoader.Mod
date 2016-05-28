@@ -277,7 +277,7 @@ TYPE
 					adr := scope.adr;
 					IF SupportOldObjectFileFormat THEN
 						IF module.staticTypeDescs # testTypeDescs THEN (* old object file format *)
-							IF (adr = 0) & (scope.dsc # NIL) & (LEN(scope.dsc)>0) THEN (* type in old object file format *)
+							IF (adr = 0) & (scope.exports > 0)  THEN (* type in old object file format *)
 								adr := scope.dsc[0].adr;
 								SYSTEM.GET(module.sb + adr, adr);
 							ELSIF adr # 0 THEN
@@ -521,6 +521,7 @@ VAR
 		RETURN address
 	END DoAllocate;
 
+	(*
 	PROCEDURE SortProcTable(m: Modules.Module);
 		VAR i, j, min : LONGINT;
 
@@ -573,7 +574,7 @@ VAR
 			IF min # i THEN SwapProcTableEntries(i, min) END
 		END
 	END SortProcTable;
-
+	*) 
 	PROCEDURE SelectionSort(exTable: Modules.ExceptionTable);
 	VAR
 		p, q, min: LONGINT;

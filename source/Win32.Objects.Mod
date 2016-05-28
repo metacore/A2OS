@@ -231,15 +231,18 @@ TYPE
 		END FindRoots;
 
 		PROCEDURE FindPointers(bp, pc : ADDRESS; VAR diff0, diff1: SIZE);
-		VAR data: Modules.ProcTableEntry; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
+		(*
+		VAR procDesc: Modules.ProcedureDescPointer; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
+		*)
 		BEGIN
+			(*! adapt me
 			diff0 := InitDiff; diff1 := InitDiff;
-			Modules.FindProc(pc, data, startIndex, success);
+			procDesc := Modules.FindProc(pc, Modules.procedureDescriptors);
 			IF success THEN
-				diff0 := pc - data.pcFrom;
-				diff1 := pc - data.pcStatementEnd;
-				IF (data.noPtr > 0) & (pc >= data.pcStatementBegin) & (pc <= data.pcStatementEnd) THEN
-					FOR i := 0 TO data.noPtr - 1 DO
+				diff0 := pc - procDesc.pcFrom;
+				diff1 := pc - procDesc.pcStatementEnd;
+				IF (LEN(procDescs.offsets) > 0) & (pc >= procDesc.pcStatementBegin) & (pc <= procDescs.pcStatementEnd) THEN
+					FOR i := 0 TO procDescs.noPtr - 1 DO
 						SYSTEM.GET(bp + Modules.ptrOffsets[startIndex + i], ptr);
 						IF ptr # Heaps.NilVal THEN
 							Heaps.Mark(SYSTEM.VAL(ANY, ptr))
@@ -247,6 +250,7 @@ TYPE
 					END
 				END
 			END
+			*)
 		END FindPointers;
 
 	END Process;

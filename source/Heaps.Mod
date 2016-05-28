@@ -157,6 +157,11 @@ TYPE
 		link: StackBlock;
 		pc: ADDRESS;
 	END;
+	
+	(* a single pointer -- required as base type TD for array of pointer
+		Don't rename this. Compiler refers to this TD by name
+	*)
+	AnyPtr = RECORD a: ANY END; 
 
 TYPE
 	GCStatus* = OBJECT
@@ -218,6 +223,7 @@ VAR
 	(** Statistics considering the last GC cyle *)
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT;
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
+	NgcSweepTime-, NgcSweepMax-: HUGEINT;
 
 	gcStatus*: GCStatus;
 
@@ -238,7 +244,7 @@ PROCEDURE CheckPointer(p: ADDRESS): BOOLEAN;
 VAR ret: BOOLEAN; heapBlockAdr, tdAdr: ADDRESS;
 BEGIN
 	ret := FALSE;
-	IF Machine.ValidHeapAddress(p)THEN
+	IF Machine.ValidHeapAddress(p+HeapBlockOffset)THEN
 		SYSTEM.GET(p + HeapBlockOffset, heapBlockAdr);
 		IF Machine.ValidHeapAddress(heapBlockAdr + TypeDescOffset) THEN
 			SYSTEM.GET(heapBlockAdr + TypeDescOffset, tdAdr);
@@ -537,8 +543,10 @@ VAR
 	lastFreeBlockAdr: ADDRESS; found : BOOLEAN;
 	block {UNTRACED}: HeapBlock ; freeBlock{UNTRACED}, lastFreeBlock{UNTRACED}: FreeBlock; 
 	blockMark: LONGINT; blockSize: SIZE;
+	time1, time2: HUGEINT;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 BEGIN
+	time1 := Machine.GetTimer();
 	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
 	found := FALSE;
 	lastFreeBlockAdr := NilVal;
@@ -608,6 +616,9 @@ BEGIN
 			END
 		END
 	END;
+	time2 := Machine.GetTimer()-time1;
+	INC(NgcSweepTime, time2);
+	IF time2 > NgcSweepMax THEN NgcSweepMax := time2 END;
 END LazySweep;
 
 (* -- useful for debugging --
@@ -913,7 +924,7 @@ BEGIN
 	Do not use windows functionality such as  trace here in general -- can lead to deadlock when stopped processes are in writing to a file
 	*)
 	(* GC may run only if and only if sweep phase has been completed *)
-	IF (sweepMemBlock = NIL) & (sweepMarkValue = currentMarkValue) THEN
+	IF ~EnableFreeLists OR (sweepMemBlock = NIL) & (sweepMarkValue = currentMarkValue) THEN
 		IF Stats THEN
 			Nmark := 0; Nmarked := 0;
 			INC(Ngc);
@@ -1003,16 +1014,12 @@ END ReturnBlocks;
 PROCEDURE LazySweepGC*;
 VAR p {UNTRACED}: FreeBlock;
 BEGIN
-	(* make sure that lazy sweep phase is finished before invoking a new mark phase *)
-	Machine.Acquire(Machine.Heaps);
-	(* trying to satisfy a request of MAX(LONGINT) bytes will never succeed - lazy sweep runs until end of heap *)
-	GetFreeBlock(MAX(LONGINT), p);
-	Machine.Release(Machine.Heaps);
 	(* invoke mark phase, mark phase starts at next scheduler interrupt *)
 	GC;
 	(* return blocks now *)
 	Machine.Acquire(Machine.Heaps);
 	(* trying to satisfy a request of MAX(LONGINT) bytes will never succeed - lazy sweep runs until end of heap *)
+	GetFreeBlock(MAX(LONGINT), p);
 	IF EnableReturnBlocks THEN ReturnBlocks END;
 	Machine.Release(Machine.Heaps);
 END LazySweepGC;
@@ -1462,6 +1469,7 @@ BEGIN
 
 END Init;
 
+
 PROCEDURE SetHeuristic*;
 BEGIN
 	GCType := HeuristicStackInspectionGC;
@@ -1519,3 +1527,6 @@ TraceHeap:
 Compiler.Compile -p=Win32G --traceModule=Trace Heaps.Mod ~
 StaticLinker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2M.exe ~
+
+
+FoxBinarySymbolFile.Test /temp/obj/Heaps ~

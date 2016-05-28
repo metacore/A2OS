@@ -1704,6 +1704,7 @@ TYPE
 		PROCEDURE MakeMemory(VAR res: IntermediateCode.Operand; op: IntermediateCode.Operand; type: IntermediateCode.Type; offset: LONGINT);
 		BEGIN
 
+			ASSERT(op.mode # IntermediateCode.Undefined); 
 			IF op.mode = IntermediateCode.ModeMemory THEN
 				ReuseCopy(res,op);
 			ELSE
@@ -10926,14 +10927,6 @@ TYPE
 			IF backend.cooperative THEN
 				IF HasPointers (procedure.procedureScope) THEN CreateResetMethod (procedure.procedureScope) END;
 				IF HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure) THEN CreateProcedureDescriptor (procedure) END;
-			ELSIF newObjectFile & moduleBody  & ~suppressModuleRegistration & ~meta.simple THEN
-				(*! not required any more? check and delete!
-				PushSelfPointer();
-				CallThis(position,"Modules","SetInitialized",1);
-				*)
-				(*
-				SetLabel(end);
-				*)
 			END;
 			IF x # NIL THEN
 				SELF.position := x.position;
@@ -11001,7 +10994,7 @@ TYPE
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
 				modulePointerSection := Block("Heaps","ArrayBlockDesc","@ModulePointerArray", modulePointerSectionOffset);
-				name := "Modules.InternalPtr";
+				name := "Heaps.AnyPtr";
 				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
 				(* set base pointer *)
 				NamedSymbolAt(modulePointerSection, modulePointerSectionOffset -1, name, NIL, 0, offset);
@@ -11330,19 +11323,15 @@ TYPE
 			END;
 			RETURN position;
 		END DynamicName;
-				
-		PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
-		VAR name: ARRAY 128 OF CHAR; section: IntermediateCode.Section; pooledName: Basic.SegmentedName;
+
+		PROCEDURE NamedBlock(CONST mName, typeName: ARRAY OF CHAR; name: Basic.SegmentedName; VAR offset: LONGINT): IntermediateCode.Section;
+		VAR section: IntermediateCode.Section;
 		BEGIN
-			COPY(moduleName,name);
-			Strings.Append(name,suffix);
-			Basic.ToSegmentedName(name, pooledName);
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName, NIL, declarationVisitor.dump);
-			
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
 			IF implementationVisitor.backend.cooperative THEN
 				Info(section, "TypeDescriptor");
-				Basic.ToSegmentedName("BaseTypes.Array", pooledName);
-				NamedSymbol(section, pooledName,NIL, 0, 0);
+				Basic.ToSegmentedName("BaseTypes.Array", name);
+				NamedSymbol(section, name,NIL, 0, 0);
 				BasePointer(section);
 				offset := 0;
 			ELSE
@@ -11357,6 +11346,15 @@ TYPE
 				offset := section.pc;
 			END;
 			RETURN section
+		END NamedBlock;		
+				
+		PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
+		VAR name: ARRAY 128 OF CHAR; pooledName: Basic.SegmentedName;
+		BEGIN
+			COPY(moduleName,name);
+			Strings.Append(name,suffix);
+			Basic.ToSegmentedName(name, pooledName);
+			RETURN NamedBlock(mName, typeName, pooledName, offset); 
 		END Block;		
 
 		PROCEDURE ArrayBlock(source: IntermediateCode.Section; VAR sizePC: LONGINT;  CONST baseType: ARRAY OF  CHAR; hasPointer: BOOLEAN);
@@ -11379,6 +11377,7 @@ TYPE
 				Address(source,0);
 				(* first pointer for GC *)
 				IF hasPointer THEN 
+					(* points to first element in the array, this is NOT the base type descriptor *)
 					NamedSymbol(source,source.name, NIL,source.pc+2,0);
 				ELSE
 					Address(source,0);
@@ -11963,6 +11962,7 @@ TYPE
 				startPC := section.pc;
 				Char(section,0FFX); (* sign for trap writer *)
 
+				(* body procedure and global variables *)
 				FOR i := 0 TO module.allSections.Length() - 1 DO
 					s := module.allSections.GetSection(i);
 					IF (s.type # Sections.InitCodeSection) & (s.symbol = module.module.moduleScope.bodyProcedure) THEN
@@ -11970,6 +11970,7 @@ TYPE
 					END
 				END;
 
+				(* all global procedures *)
 				FOR i := 0 TO module.allSections.Length() - 1 DO
 					s := module.allSections.GetSection(i);
 					IF (s.symbol = module.module.moduleScope.bodyProcedure) THEN (* already done, see above *)
@@ -11977,6 +11978,9 @@ TYPE
 						Procedure(s)
 					END
 				END;
+				
+				(* all global types *)
+				(* to be filled *)
 				
 				endPC := section.pc;
 				PatchArray(section,sizePC,ComputeSize(startPC, endPC));
@@ -12152,6 +12156,51 @@ TYPE
 
 			PtrTable* = POINTER TO ARRAY OF ADDRESS;
 		*)
+		
+		PROCEDURE ProcedureDescriptor(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section);
+		VAR 
+			numberPointers: SIZE;
+			procedure: SyntaxTree.Procedure;
+		BEGIN
+				Info(section,"pcFrom");
+				Symbol(section,procedureSection,0,0);
+				Info(section,"pcTo");
+				Symbol(section, procedureSection, procedureSection.pc, 0);
+				Info(section,"pcStatementBegin");
+				Symbol(section,procedureSection, procedureSection.validPAFEnter,0);
+				Info(section,"pcStatementEnd");
+				Symbol(section, procedureSection, procedureSection.validPAFExit,0);
+				Info(section,"pointer to offsets array");
+				Symbol(section, section,section.pc+1,0);
+				Info(section,"offsets array");
+				procedure := procedureSection.symbol(SyntaxTree.Procedure);
+				PointerArray(section, procedure.procedureScope, numberPointers);
+		END ProcedureDescriptor; 
+		
+		PROCEDURE ProcedureDescriptorPointer(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section);
+		VAR dest: IntermediateCode.Section; name: Basic.SegmentedName;  offset: LONGINT;
+		BEGIN
+			name := procedureSection.name;
+			Basic.SuffixSegmentedName(name, Basic.MakeString("@Descriptor"));
+			dest := NamedBlock("Heaps","SystemBlock",name,offset);
+			ProcedureDescriptor(dest, procedureSection);
+			Symbol(section, dest, offset, 0);
+		END ProcedureDescriptorPointer;
+		
+		PROCEDURE ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT);
+		VAR sizePC, i: LONGINT; destination: Sections.Section
+		BEGIN
+			ArrayBlock(section, sizePC,"Modules.ProcedureDescPointer",FALSE);
+			numberProcs := 0;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				destination := module.allSections.GetSection(i);
+				IF (destination.type IN {Sections.CodeSection, Sections.BodyCodeSection}) & (destination.symbol # NIL) & (destination.symbol IS SyntaxTree.Procedure) & ~destination.symbol(SyntaxTree.Procedure).isInline THEN
+					ProcedureDescriptorPointer(section, destination(IntermediateCode.Section));
+					INC(numberProcs);
+				END
+			END;
+			PatchArray(section, sizePC, numberProcs);
+		END ProcedureDescriptorArray;
 
 		PROCEDURE PointersInProcTables(procArray, pointerArray: IntermediateCode.Section; VAR procArraySize, maxPointers: LONGINT);
 		VAR
@@ -12161,6 +12210,7 @@ TYPE
 			PROCEDURE PointerOffsets(destination : IntermediateCode.Section);
 			VAR numberPointers: LONGINT; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
 				variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; string: Basic.SectionName;
+				ptrPc, sizePc: LONGINT; 
 			BEGIN
 				Info(procArray,"pcFrom");
 				Symbol(procArray,destination,0,0);
@@ -12170,11 +12220,17 @@ TYPE
 				Symbol(procArray,destination,destination.validPAFEnter,0);
 				Info(procArray,"pcStatementEnd");
 				Symbol(procArray,destination,destination.validPAFExit,0);
+				
 				IF ~implementationVisitor.backend.cooperative THEN 
+					ptrPc := procArray.pc;
+					Address(procArray, 0); (* patch this address later *)
+					pointerArray := procArray;
+					ArrayBlock(pointerArray, sizePc, "", FALSE);
 					Basic.SegmentedNameToString(destination.name, string);
 					Info(pointerArray,string);
 					procedure := destination.symbol(SyntaxTree.Procedure);
 					procedureType := procedure.type(SyntaxTree.ProcedureType);
+					
 					variable := procedure.procedureScope.firstVariable;
 					WHILE(variable # NIL) DO
 						IF ~(variable.untraced) THEN
@@ -12182,6 +12238,7 @@ TYPE
 						END;
 						variable := variable.nextVariable
 					END;
+					(*! this might be unnecessary *)
 					parameter := procedureType.firstParameter;
 					WHILE(parameter # NIL) DO
 						IF ~(parameter.untraced) THEN
@@ -12189,11 +12246,15 @@ TYPE
 						END;
 						parameter := parameter.nextParameter;
 					END;
+					PatchArray(pointerArray, sizePc, numberPointers); 
+					PatchSymbol(procArray, ptrPc, procArray.name, NIL, sizePc+1, 0);
 				END;
+				(*
 				Info(procArray,"numberPointers");
 				Longint(procArray,numberPointers);
 				IF numberPointers > maxPointers THEN maxPointers := numberPointers END;
 				INC(pointerArraySize, numberPointers);
+				*)
 			END PointerOffsets;
 
 		BEGIN
@@ -12377,11 +12438,12 @@ TYPE
 			
 		PROCEDURE Module(bodyProc: IntermediateCode.Section);
 		VAR
-		moduleSection, pointerSection, importSection, emptyArraySection, exceptionSection, commandsSection,
+			moduleSection, pointerSection, importSection, emptyArraySection, exceptionSection, commandsSection,
 			typeInfoSection, procTableSection, ptrTableSection, referenceSection : IntermediateCode.Section;
 			emptyArraySectionOffset, pointerSectionOffset, importSectionOffset, numberPointers,
 			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, ptrTableSectionOffset, maxPointers, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
+			name: Basic.SegmentedName; offset: LONGINT;
 		BEGIN
 			NewModuleInfo();
 			pointerSection := Block("Heaps","SystemBlockDesc",".@PointerArray",pointerSectionOffset);
@@ -12398,12 +12460,18 @@ TYPE
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
 			References(referenceSection);
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
-			IF ~implementationVisitor.backend.cooperative THEN
+			(*IF ~implementationVisitor.backend.cooperative THEN
 				ptrTableSection := Block("Heaps","SystemBlockDesc",".@PtrTable",ptrTableSectionOffset);
-			ELSE
+			ELSE*)
 				ptrTableSection := NIL;
-			END;
-			PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);
+			(*END;*)
+			ProcedureDescriptorArray(procTableSection, numberProcs);
+			name := "Heaps.AnyPtr";
+			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+			(* set base pointer *)
+			NamedSymbolAt(procTableSection, procTableSectionOffset -1, name, NIL, 0, offset);
+
+			(*PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);*)
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
 			ArrayBlock(emptyArraySection,temp,"", FALSE);
 			moduleSection := ModuleSection();
@@ -12436,7 +12504,7 @@ TYPE
 			Info(moduleSection, "procTable*: ProcTable");
 			Symbol(moduleSection,procTableSection,procTableSectionOffset,0);
 			Info(moduleSection, "ptrTable*: PtrTable");
-			IF ~implementationVisitor.backend.cooperative THEN
+			IF ptrTableSection # NIL THEN
 				Symbol(moduleSection,ptrTableSection,ptrTableSectionOffset,0);
 			ELSE
 				Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
@@ -12459,7 +12527,7 @@ TYPE
 			Address(moduleSection,0);
 			Info(moduleSection, "maxPtrs*: LONGINT");
 			Longint(moduleSection,maxPointers);
-			Info(moduleSection,"internal: POINTER TO ARRAY OF InternalPtr");
+			Info(moduleSection,"internal: POINTER TO ARRAY OF Pointer");
 			Symbol(moduleSection, modulePointerSection, modulePointerSectionOffset, 0);
 			Info(moduleSection, "crc*: LONGINT");
 			Longint(moduleSection, 0); (*!  must be implemented *)
@@ -12500,6 +12568,15 @@ TYPE
 					END;
 					variable := variable.nextVariable;
 				END;
+			ELSIF scope IS SyntaxTree.ProcedureScope THEN
+				(*! parameters required ? *)
+					variable := scope(SyntaxTree.ProcedureScope).firstVariable;
+					WHILE(variable # NIL) DO
+						IF ~(variable.untraced) & (variable.externalName = NIL) THEN
+							Pointers(ToMemoryUnits(module.system,variable.offsetInBits), NIL,  source, variable.type, numberPointers);
+						END;
+						variable := variable.nextVariable
+					END;
 			END;
 			PatchArray(source,pc,numberPointers);
 		END PointerArray;
@@ -12964,6 +13041,8 @@ TYPE
 				END;
 				PatchArray(source,pc,size);
 			END VariableArray;
+			
+			
 			
 			PROCEDURE ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure);
 			VAR pc: LONGINT; size: LONGINT; 
@@ -14422,7 +14501,6 @@ TYPE
 			Basic.AppendNumber(name,i);
 			systemCalls[i] := SyntaxTree.NewSymbol(SyntaxTree.NewIdentifier(name));
 		END;
-
 
 	END Init;
 

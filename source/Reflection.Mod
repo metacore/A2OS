@@ -40,7 +40,7 @@ VAR
 	*)
 
 	(** Write a variable value.  The v parameter is a variable descriptor obtained with NextVar.  Parameter col is incremented with the (approximate) number of characters written. *)
-	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT);
+	PROCEDURE WriteVar*(w: Streams.Writer; VAR v: Variable; VAR col: LONGINT);
 	VAR ch: CHAR;
 	BEGIN
 		IF v.type = 15 THEN
@@ -580,7 +580,7 @@ VAR
 					WriteProc0(w, m, pc, bp, refs, refpos, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
 						IF refpos # -1 THEN Variables(w, refs, refpos, base) END;
-						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
+						IF FALSE & (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
 					END;
 				ELSE
 					w.String( "Unknown external procedure, pc = " );  w.Address( pc );  w.Ln; Wait(w);

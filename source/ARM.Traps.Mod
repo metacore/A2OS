@@ -110,22 +110,6 @@ VAR
 	modes: ARRAY 25 OF CHAR;
 	flags: ARRAY 13 OF CHAR;
 
-
-
-	(* Write flag values. *)
-	PROCEDURE Flags(w: Streams.Writer; s: SET);
-	VAR i: SHORTINT; ch: CHAR;
-	BEGIN
-		FOR i := 0 TO 11 DO
-			ch := flags[i];
-			IF ch # "!" THEN
-				IF i IN s THEN ch := CAP(ch) END;
-				w.Char(ch)
-			END
-		END;
-		w.String(" iopl"); w.Int(ASH(SYSTEM.VAL(LONGINT, s * {12,13}), -12), 1)
-	END Flags;
-
 	(** Display trap state. *)
 	PROCEDURE  Show*(p: Objects.Process; VAR int: Machine.State; VAR exc: Machine.ExceptionState; long: BOOLEAN);
 	VAR id: LONGINT; overflow: BOOLEAN; w: Streams.Writer;
@@ -170,12 +154,16 @@ VAR
 				|NilPointer: w.String(NilPointerDesc)
 				|MemoryError: w.String(MemoryErrorDesc); w.String(" at "); w.Address(exc.pf)
 				|ExceptionRaised: w.String(ExceptionRaisedDesc)
-				|ProcessResurrected: w.String(ProcessResurrectedDesc)
-				|RecursiveExclusive: w.String(RecursiveExclusiveDesc)
-				|AwaitOutsideExclusive: w.String(AwaitOutsideExclusiveDesc)
 			ELSE
-				w.String("HALT statement: ");
-				w.Int(exc.halt, 0)
+				(* To avoid huge sparse case table *)
+				CASE exc.halt OF
+					 ProcessResurrected: w.String(ProcessResurrectedDesc)
+					|RecursiveExclusive: w.String(RecursiveExclusiveDesc)
+					|AwaitOutsideExclusive: w.String(AwaitOutsideExclusiveDesc)
+				ELSE
+					w.String("HALT statement: ");
+					w.Int(exc.halt, 0)
+				END
 			END;
 			IF exc.locks # {} THEN
 				w.String(", Locks: "); w.Set(exc.locks)
@@ -185,15 +173,16 @@ VAR
 				w.Char(0EX);	(* "fixed font" *)
 				w.Ln;
 				(* output values *)
-				Val("R0", int.R[0]); Val("R1", int.R[1]); Val("R2", int.R[2]); Val("R3", int.R[3]);
-				Val("R4", int.R[4]); Val("R5", int.R[5]); Val("R6", int.R[6]); Val("R7", int.R[7]);
-				Val("R8", int.R[8]); Val("R9", int.R[9]); Val("R10", int.R[10]); Val("R11", int.R[11]);
-				Val("FP", int.BP); Val("SP", int.SP); Val("LR", int.LR); Val("PC", int.PC);
-				Val("PSR", int.PSR);
-				Val("TMR", Kernel.GetTicks()); w.Ln
+				Val("R0", int.R[0]); w.Char(' '); Val("R1", int.R[1]); w.Char(' '); Val("R2", int.R[2]); w.Char(' '); Val("R3", int.R[3]); w.Ln;
+				Val("R4", int.R[4]); w.Char(' '); Val("R5", int.R[5]); w.Char(' '); Val("R6", int.R[6]); w.Char(' '); Val("R7", int.R[7]); w.Ln;
+				Val("R8", int.R[8]); w.Char(' '); Val("R9", int.R[9]); w.Char(' '); Val("R10", int.R[10]); Val("R11", int.R[11]); w.Ln;
+				Val("FP", int.BP); w.Char(' '); Val("SP", int.SP); w.Char(' '); Val("LR", int.LR); w.Char(' '); Val("PC", int.PC); w.Ln;
+				Val("PSR", int.PSR); w.Ln;
+				Val("Ticks", Kernel.GetTicks()); Val("Timer", Machine.GetTimer()); w.Ln
 			ELSE
 				w.Ln
 			END;
+			w.Char(' '); w.String("CPU="); w.Int(1, 0); w.Ln;
 			IF exc.halt = UndefinedInstn THEN
 				Val("Instruction", exc.instn)
 			ELSIF exc.halt = MemoryError THEN
@@ -202,7 +191,9 @@ VAR
 					Val("Status", exc.status)
 				END
 			END;
+			w.Ln;
 			w.String("Process:"); Reflection.WriteProcess(w, p); w.Ln;
+			w.String("Stack Traceback:"); w.Ln;
 			Reflection.StackTraceBack(w, int.PC, int.BP, Objects.GetStackBottom(p), long, overflow);
 		END;
 		w.String("---------------------------------"); w.Ln;
@@ -353,7 +344,7 @@ VAR
 		user := TRUE;
 		traceTrap := (exc.locks = {}) & (exc.halt >= MAX(INTEGER)) & (exc.halt <= MAX(INTEGER)+1);
 
-		Show(t, int, exc, exc.halt # MAX(INTEGER)+1);	(* Always show the trap info!*)
+		Show(t, int, exc, (exc.halt # MAX(INTEGER)+1) & (trapState[Machine.ID()] = 0));	(* Always show the trap info!*)
 
 		IF exc.halt = haltUnbreakable THEN
 			Unbreakable(t, int, exc, handled)

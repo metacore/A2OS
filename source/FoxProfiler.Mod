@@ -87,7 +87,7 @@ TYPE
 	HashEntryInt = RECORD
 		used: BOOLEAN; key, value: LONGINT;
 	END;
-	HashIntArray = ARRAY 2*MaxProcesses OF HashEntryInt
+	HashIntArray = ARRAY 2*MaxProcesses OF HashEntryInt;
 
 
 VAR

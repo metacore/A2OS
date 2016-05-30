@@ -34,3 +34,6 @@ unmount=FSTools.Unmount
 uptime=UpTime.Show
 showfs=FSTools.Watch
 whoimports=SystemTools.WhoImports
+lsusb=UsbInfo.Show
+ps=SystemTools.ShowProcesses
+halt=SystemTools.PowerDown

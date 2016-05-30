@@ -351,7 +351,7 @@ VAR
 	pstr : ARRAY 10 OF CHAR;
 	i : LONGINT;
 
-	PROCEDURE ShowPipes(hcd : UsbHcdi.Hcd; details : BOOLEAN);
+	PROCEDURE ShowPipes(hcd : UsbHcdi.Hcd; details : BOOLEAN; tds: BOOLEAN);
 	VAR i, j, k : LONGINT; pipe : UsbHcdi.Pipe;
 	BEGIN
 		FOR i := 0 TO 127 DO (* search all addresses ... *)
@@ -360,6 +360,7 @@ VAR
 					pipe := hcd.pipes[i][k][j];
 					IF pipe # NIL THEN
 						context.out.String("ADR: "); context.out.Int(i, 0); context.out.String(": "); pipe.Show(details);
+						IF tds THEN hcd.ShowPipe(pipe) END;
 					END;
 				END;
 			END;
@@ -378,15 +379,17 @@ BEGIN
 			ELSIF Strings.Match("details", pstr) THEN
 				IF UsbDebug.Trace THEN hcd.Diag; ELSE context.out.String("UsbInfo: UsbDebug.Trace is FALSE. Cannot show diagnostics."); context.out.Ln; END;
 			ELSIF Strings.Match("pipes", pstr) THEN
-				ShowPipes(hcd, FALSE);
+				ShowPipes(hcd, FALSE, FALSE);
 			ELSIF Strings.Match("pipemore", pstr) THEN
-				ShowPipes(hcd, TRUE);
+				ShowPipes(hcd, TRUE, FALSE);
+			ELSIF Strings.Match("tds", pstr) THEN
+				ShowPipes(hcd, TRUE, TRUE);
 			ELSIF Strings.Match("all", pstr) THEN
 				IF UsbDebug.Trace THEN hcd.Diag; hcd.ShowSchedule;
 				ELSE
 					context.out.String("UsbInfo: UsbDebug.Trace is FALSE. Cannot show schedule/diagnostics."); context.out.Ln;
 				END;
-				ShowPipes(hcd, TRUE);
+				ShowPipes(hcd, TRUE, FALSE);
 			END;
 			context.out.Ln;
 		END;

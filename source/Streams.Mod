@@ -287,7 +287,7 @@ TYPE
 				END
 			END;
 			Char( "}" )
-		END Set
+		END Set;
 
 		(**
 			Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.

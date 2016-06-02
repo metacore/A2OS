@@ -1,4 +1,3 @@
-
 MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
@@ -11685,7 +11684,11 @@ TYPE
 				sfTypeMathTensor = 28X;
 				sfTypeDelegate = 29X;
 				sfTypeENUM = 2AX; 
+				sfTypeCellType = 2BX;
+				sfTypePortType = 2CX;
 				
+				sfInPort = 0X;
+				sfOutPort = 1X;
 				sfValPar = 0X;
 				sfVarPar = 1X;
 				sfConstPar = 2X; 
@@ -11811,6 +11814,30 @@ TYPE
 								ELSE
 									Address(section, 0);
 								END;
+							END;
+						| type: SyntaxTree.CellType DO
+								IF RefInfo THEN Info(section,"Record") END;
+								Char(section, sfTypeRecord);
+								td := type.typeDeclaration;		
+								IF RefInfo THEN Info(section,"TD") END;
+								IF (td # NIL) THEN
+									Global.GetSymbolSegmentedName(td,segmentedName);
+									IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+										tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+									ELSE
+										tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+									END;
+									offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
+									Symbol(section, tir,  0, offset);
+								ELSE
+									Address(section, 0);
+								END;
+						| type: SyntaxTree.PortType DO
+							Char(section, sfTypePortType);
+							IF type.direction = SyntaxTree.OutPort THEN
+								Char(section, sfOutPort)
+							ELSE
+								Char(section, sfInPort)
 							END;
 						| type: SyntaxTree.ProcedureType DO
 								Char(section, sfTypeDelegate);
@@ -12051,6 +12078,14 @@ TYPE
 						PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
 
 						NScope(declared.recordScope, pos);
+					|declared: SyntaxTree.CellType DO
+						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
+						Symbol(section, s,  0, offset);
+						Global.GetSymbolSegmentedName(typeDeclaration,name);
+						Basic.AppendToSegmentedName(name,".@Info");
+						s := module.allSections.FindByName(name); 
+						PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
+						NScope(declared.cellScope, pos);
 					ELSE
 						Address(section, 0);
 					END;					

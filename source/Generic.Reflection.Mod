@@ -58,6 +58,11 @@ CONST
 	sfTypeMathTensor* = 28X;
 	sfTypeDelegate* = 29X; 
 	sfTypeENUM* = 2AX;
+	sfTypeCell = 2BX;
+	sfTypePort = 2CX;
+	
+	sfInPort = 0X;
+	sfOutPort = 1X;
 
 	sfValPar* = 0X;
 	sfVarPar* = 1X;
@@ -274,7 +279,6 @@ CONST
 					end := GetAddress(refs, offset); 
 					w.String(name); 
 					w.Char(":"); w.Int(LONGINT(pc-startpc),1);
-					SkipType(refs, offset);
 					base := fp; (*! only for local !! *)
 					refpos := offset; 
 				END;
@@ -398,6 +402,8 @@ CONST
 			SYSTEM.GET(adr, sz); Signed(sz); w.String("["); Unsigned(sz, SIZEOF(SIZE)); w.String("]");
 		| sfTypeENUM:
 			SYSTEM.GET(adr, word); Signed(word);
+		| sfTypePort:
+			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
 		ELSE
 			w.String("UNKOWN TYPE "); Unsigned(ORD(type),1);
 		END;
@@ -476,6 +482,9 @@ CONST
 		| sfTypeDelegate: 
 			WHILE refs[offset] = sfParameter DO SkipParameter(refs, offset) END;
 			SkipType(refs, offset); 
+		| sfTypePort:
+			WriteBasicValue(w, type, adr, size);
+			SkipChar(offset);
 		ELSE
 			WriteBasicValue(w, type, adr, size);
 		END;
@@ -496,17 +505,43 @@ CONST
 		WriteValue(w, refs, offset, adr+base); 
 	END WriteVariable; 
 	
+	PROCEDURE WriteParameter*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT;  base: ADDRESS);
+	VAR name: ARRAY 128 OF CHAR;  adr: LONGINT;  prevScope: SIZE; c: CHAR;
+	BEGIN
+		IF ~Expect(GetChar(refs, offset) = sfParameter) THEN RETURN END;
+		prevScope := GetSize(refs, offset);
+		GetString(refs, offset, name); 
+		w.String(Sep); w.String(name); w.Char("=");
+		adr := GetSize(refs, offset);
+		c := GetChar(refs, offset); (*! check for varpar *)
+		WriteValue(w, refs, offset, adr+base); 
+	END WriteParameter; 
+	
+
 	(* write variables taking meta information from stream in stream at offset, potentially stored at base address
 	 *)
 	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS);
 	VAR count: LONGINT; 
 	BEGIN
 		WHILE refs[offset] = sfVariable DO
-			WriteVariable(w, refs, offset, base); 
-			INC(count); 
+			WriteVariable(w, refs, offset, base); w.Ln;
+			(*INC(count); *)
 		END; 
 		IF count > 0 THEN w.Ln; Wait(w); END;
 	END WriteVariables;
+
+	(* write variables taking meta information from stream in stream at offset, potentially stored at base address
+	 *)
+	PROCEDURE WriteParameters*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS);
+	VAR count: LONGINT; 
+	BEGIN
+		WHILE refs[offset] = sfParameter DO
+			WriteParameter(w, refs, offset, base); w.Ln;
+			(*INC(count); *)
+		END; 
+		IF count > 0 THEN w.Ln; Wait(w); END;
+	END WriteParameters;
+
 
 	(* skip type metadata in stream *)
 	PROCEDURE SkipType*(refs: Modules.Bytes; VAR offset: LONGINT);
@@ -528,6 +563,7 @@ CONST
 			WHILE refs[offset] = sfParameter DO SkipParameter(refs, offset) END;
 			SkipType(refs, offset);
 		| sfTypeENUM:
+		| sfTypePort: SkipChar(offset);
 		ELSE (* ?? *)
 		END;
 	END SkipType;
@@ -786,6 +822,8 @@ CONST
 					WriteProc0(w, m, pc, bp, refs, offset, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
 						IF offset >= 0 THEN 
+							WriteParameters(w,refs,offset, base); 
+							SkipType(refs, offset);
 							IF Expect(GetChar(refs, offset) = sfScopeBegin) THEN
 								WriteVariables(w,refs,offset, base); 
 							END;
@@ -927,6 +965,7 @@ TYPE
 		| sfTypeRANGE: w.String("RANGE"); 
 		| sfTypeADDRESS: w.String("ADDRESS"); 
 		| sfTypeSIZE: w.String("SIZE"); 
+		| sfTypePort: w.String("PORT"); IF GetChar(refs,offset) = sfInPort THEN w.String("IN") ELSE w.String("OUT") END;
 		ELSE w.String("????? TYPE ?????");
 		END;
 	END ReportType;
@@ -1047,3 +1086,7 @@ TestReflection.Test
 TestReflection.Trace 09454F69H ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
+
+
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+

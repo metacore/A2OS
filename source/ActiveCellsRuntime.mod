@@ -4,7 +4,7 @@
 module ActiveCellsRuntime;
 
 import
-	system, Heaps, Modules, Diagnostics, Strings, Objects;
+	system, Heaps, Modules, Diagnostics, Strings, Objects, Reflection, Commands;
 
 const
 	EnableTrace* = true;
@@ -350,7 +350,7 @@ type
 		end Starter
 				
 	var
-		moduleName, typeName: array 256 of char;
+		moduleName, typeName, name: array 256 of char;
 		m: Modules.Module;
 		typeInfo: Modules.TypeDesc;
 		i, res: longint;
@@ -359,6 +359,8 @@ type
 		unloaded: longint;
 		starter: Starter;
 		launcher: Launcher;
+		offset: size;
+		pc: address;
 	begin
 		assert(context # nil);
 		context.topNet := nil;
@@ -394,18 +396,41 @@ type
 			return;
 		end;
 
-		assert(len(typeInfo.procedures) = 1);
-		assert(typeInfo.procedures[0].name^ = "@Body");
+		copy(typeName, name);
+		Strings.Append(name, ".@Body");
+		if Reflection.FindByName(m.refs, offset, name) then
+			if Reflection.GetChar(m.refs,offset) = Reflection.sfProcedure then
+				Reflection.SkipSize(offset);
+				Reflection.SkipString(m.refs,offset);
+				pc := Reflection.GetAddress(m.refs, offset);
+				trace(pc);
+				
+				(*assert(len(typeInfo.procedures) = 1);
+				assert(typeInfo.procedures[0].name^ = "@Body");
+				*)
 
-		(* allocate the top level cellnet *)
-		AllocateOnContext(context, nil,scope,typeInfo.tag,typeName,true,false);
-		assert(scope # nil);
-		assert(scope.c # nil);
+				(* allocate the top level cellnet *)
+				AllocateOnContext(context, nil,scope,typeInfo.tag,typeName,true,false);
+				assert(scope # nil);
+				assert(scope.c # nil);
 
-		new(starter, typeInfo.procedures[0].address, scope);
-		new(launcher, context); 
-		launcher.Start(starter.P, true);
+				new(starter, pc, scope);
+			end;
+			new(launcher, context); 
+			launcher.Start(starter.P, true);
+		else 
+			Reflection.Report(Commands.GetContext().out, m.refs);
+		end;
 	end Execute;
-
+	
+(*	type LA = array of longint;
+	operator "<<"* (p: port out; const a: LA);
+	var i: longint;
+	begin
+		for i := 0 to len(a)-1 do
+			p << a[i];
+		end;
+	end "<<";
+*)
 end ActiveCellsRuntime.
 

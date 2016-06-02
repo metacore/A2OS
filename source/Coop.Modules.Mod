@@ -31,8 +31,12 @@ CONST
 TYPE
 	(* definitions for object-model loader support *)
 	Name* = ARRAY 32 OF CHAR;
-	DynamicName* = POINTER {UNSAFE} TO ARRAY OF CHAR;
 
+	(* the correponding name array is protected from being GCed via module's internal pointer arrray 
+		compiler generated!
+	*)
+	DynamicName* = POINTER {UNSAFE} TO ARRAY 256 OF CHAR;
+	
 	Command* = RECORD
 		(* Fields exported for initialization by loader/linker only! Consider read-only! *)
 		name*: Name; (* name of the procedure *)
@@ -53,69 +57,18 @@ TYPE
 
 	TerminationHandler* = PROCEDURE;
 
-	LongName = ARRAY 64 OF CHAR;
-	
-	EntryType*=RECORD
-		(* classes:
-			0: no Type
-			1:  ObjectType
-			2:	NilType
-			3:	AnyType
-			4:	ByteType
-			5:	AddressType
-			6:	SizeType
-			7:	BooleanType
-			8:	SetType
-			9:	CharacterType
-			10:	RangeType
-			11:	SignedInteger
-			12:	UnsignedIntegerType
-			13:	FloatType
-			14:	ComplexType
-			15: StringType
-			16: EnumerationType
-			17: ArrayType
-			18: MathArrayType
-			19: PointerType
-			20: PortType
-			21: RecordType
-			22: CellType
-			23: ProcedureType		 
-		*)
-		class*: SHORTINT; 
-		(* size in bits *)
-		size*: INTEGER;
-		type*: ADDRESS; (* type descriptor or additional information *)
-	END;
 
-	FieldEntry*= RECORD
-		name*: LongName; (*! change to dynamic name ? *)
-		offset*: SIZE; (* offset of this type *)
-		type*: EntryType;
-		flags*: SET;
-	END;
-	FieldEntries*= POINTER TO ARRAY OF FieldEntry;
-	ProcedureEntries*=POINTER TO ARRAY OF ProcedureEntry;
-	
-	ProcedureEntry*=RECORD
-		name*: LongName; (*! change to dynamic name ? *)
-		address*: ADDRESS;
-		size*: SIZE;
-		parameters*: FieldEntries;
-		variables*: FieldEntries;
-		procedures*: ProcedureEntries;
-		returnType*: EntryType;
-	END;
+	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
+	*)
 
-	TypeDesc* = POINTER TO RECORD   (* ug: adapt constant TypeDescRecSize if this type is changed !!! *)
-		descSize: LONGINT;
-		sentinel: LONGINT;	(* = MPO-4 *)
-		tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
-		flags*: SET;
-		mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
-		name*: Name;
-		fields*: POINTER TO ARRAY OF FieldEntry;
-		procedures*: POINTER TO ARRAY OF ProcedureEntry;
+	TypeDesc* = POINTER TO RECORD 
+		descSize-: LONGINT;
+		sentinel-: LONGINT;	(* = MPO-4 *)
+		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
+		flags-: SET;
+		mod- {UNTRACED}: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+		name-: Name;
+		refsOffset-: SIZE;
 	END;
 
 	ExceptionTableEntry* = RECORD
@@ -125,23 +78,16 @@ TYPE
 	END;
 
 	ExceptionTable* = POINTER TO ARRAY OF ExceptionTableEntry;
-
-	ProcTableEntry* = RECORD
-		pcFrom*, pcLimit*, pcStatementBegin*, pcStatementEnd*: ADDRESS;
-		noPtr*: LONGINT;
+	
+	ProcedureDescPointer* = POINTER TO ProcedureDesc;
+	ProcedureDesc*= RECORD
+		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
+		refsOffset-: SIZE;
+		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
 	END;
-
-	ProcTable* = POINTER TO ARRAY OF ProcTableEntry;
-
-	PtrTable* = POINTER TO ARRAY OF ADDRESS;
-
-	ProcOffsetEntry* = RECORD
-		data*: ProcTableEntry;	(* code offsets of procedures *)
-		startIndex*: LONGINT;	(* index into global ptrOffsets table *)
-	END;
-
-	ProcOffsetTable* = POINTER TO ARRAY OF ProcOffsetEntry;
-
+	
+	ProcedureDescs* = POINTER TO ARRAY OF ProcedureDescPointer;
+	
 	Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
 		VAR
 			next*: Module;	(** once a module is published, all fields are read-only *)
@@ -151,18 +97,16 @@ TYPE
 			sb*: ADDRESS; (* reference address between constants and local variables *)
 			entry*: POINTER TO ARRAY OF ADDRESS;
 			command*: POINTER TO ARRAY OF Command;
-			ptrAdr*: POINTER TO ARRAY OF ADDRESS;
-			typeInfo*: POINTER TO ARRAY OF TypeDesc;	(* traced explicitly in FindRoots *)
+			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
+			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
-			procTable*: ProcTable; (* information inserted by loader, removed after use in Publish *)
-			ptrTable*: PtrTable;  (* information inserted by loader, removed after use in Publish *)
+			procTable*: ProcedureDescs; (* information inserted by loader, removed after use in Publish *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
 			export*: ExportDesc;
 			term*: TerminationHandler;
 			exTable*: ExceptionTable;
-			noProcs*: LONGINT;	(* used for removing proc offsets when unloading module *)
-			firstProc*: ADDRESS; (* procedure with lowest PC in module, also used for unloading *)
-			maxPtrs*: LONGINT;
+			(* internal pointer array: to protect internal data structures from being GCed *)
+			internal-: POINTER TO ARRAY OF ANY;
 			crc*: LONGINT;
 			body*: PROCEDURE;
 
@@ -175,15 +119,19 @@ VAR
 	extension-: ARRAY MaxObjFormats, 8 OF CHAR;
 	loader: ARRAY MaxObjFormats OF LoaderProc;
 	numLoaders: LONGINT;
-	kernelProc*: ARRAY 11 OF ADDRESS;	(** kernel call addresses for loader *)
 
 	freeRoot*: Module;	(** list of freed modules (temporary) *)
 
 	root-: Module;	(** list of modules (read-only) *)
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
-	register {UNTRACED}: ARRAY 64 OF Module;
-	registered: LONGINT;
+	register: RECORD
+		first, last: Module;
+	END;
+	
+	(* global sorted table of all procedures , basically for GC *)
+	procedureDescriptors-: ProcedureDescs;
+	mayAllocate: BOOLEAN;
 
 (** Register a module loader. *)
 
@@ -244,6 +192,10 @@ BEGIN
 		m.published := TRUE;
 		m.next := root; root := m;
 		m.refcnt := 0;
+		SortExceptionTable(m.exTable);
+		SortProcedureDescs(m.procTable);
+		MergeProcedureDescs(m.procTable);
+
 		IF m.module # NIL THEN
 			FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
 		END;
@@ -255,6 +207,7 @@ END Publish;
 PROCEDURE Initialize*(VAR module: Module);
 VAR new: BOOLEAN;
 BEGIN
+	IF (module = NIL) THEN RETURN END;
 	Publish (module, new);
 	IF new THEN
 		IF module.body # NIL THEN module.body END;
@@ -262,28 +215,202 @@ BEGIN
 	END;
 END Initialize;
 
-(** Return the named module or NIL if it is not loaded yet. *)
-PROCEDURE ModuleByName*(CONST name: ARRAY OF CHAR): Module;
-VAR m: Module;
-BEGIN
-	Machine.Acquire(Machine.Modules);
-	m := root; WHILE (m # NIL) & (m.name # name) DO m := m.next END;
-	Machine.Release(Machine.Modules);
-	RETURN m
-END ModuleByName;
+	VAR callagain: BOOLEAN;
 
-(* Generate a module file name. *)
-PROCEDURE GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
-VAR i, j: LONGINT;
-BEGIN
-	i := 0; WHILE name[i] # 0X DO fileName[i] := name[i]; INC(i) END;
-	j := 0; WHILE extension[j] # 0X DO fileName[i] := extension[j]; INC(i); INC(j) END;
-	fileName[i] := 0X
-END GetFileName;
+	PROCEDURE Initialize0*(module: Module);
+	VAR new: BOOLEAN;
+	BEGIN
+		(*TRACE(module.name);*)
+		(* module MUST have been removed from register list and must not have been initialized yet *)
+		ASSERT(module.next = NIL);
+		Publish (module, new);
+		callagain := FALSE;
+		IF new THEN
+			IF module.name = "Objects" THEN
+				callagain := TRUE;
+				module.init := TRUE;
+			END;
+			(*
+			Trace.Memory(SYSTEM.VAL(ADDRESS, module), 256);
+			TRACE(module, module.name, module.body);
+			TRACE(module);
+			TRACE(ADDRESS OF module.next);
+			TRACE(ADDRESS OF module.name);
+			TRACE(ADDRESS OF module.init);
+			TRACE(ADDRESS OF module.published);
+			TRACE(ADDRESS OF module.body);
+			TRACE(ADDRESS OF module.refcnt);
+			TRACE(ADDRESS OF module.sb);
+			TRACE(ADDRESS OF module.entry);
+			TRACE(ADDRESS OF module.command); 
+			TRACE(ADDRESS OF module.ptrAdr);
+			TRACE(ADDRESS OF module.typeInfo);
+			TRACE(ADDRESS OF module.module);
+			TRACE(ADDRESS OF module.procTable);
+			TRACE(ADDRESS OF module.ptrTable);
+			TRACE(ADDRESS OF module.data); 
+			TRACE(ADDRESS OF module.code);
+			TRACE(ADDRESS OF module.staticTypeDescs);
+			TRACE(ADDRESS OF module.refs);
+			TRACE(ADDRESS OF module.export);
+			TRACE(ADDRESS OF module.term);
+			TRACE(ADDRESS OF module.exTable);
+			TRACE(ADDRESS OF module.noProcs);
+			TRACE(ADDRESS OF module.firstProc);
+			TRACE(ADDRESS OF module.maxPtrs);
+			TRACE(ADDRESS OF module.crc);
+			TRACE(ADDRESS OF module.body);
+			*)
+						
+			IF module.body # NIL THEN module.body END;
+			IF callagain THEN
+				PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
+			ELSE
+				module.init := TRUE;
+			END;
+		END;
+	END Initialize0;
+
+	(** Return the named module or NIL if it is not loaded yet. *)
+	PROCEDURE ModuleByName*(CONST name: ARRAY OF CHAR): Module;
+	VAR m: Module;
+	BEGIN
+		Machine.Acquire(Machine.Modules);
+		m := root; WHILE (m # NIL) & (m.name # name) DO m := m.next END;
+		Machine.Release(Machine.Modules);
+		RETURN m
+	END ModuleByName;
+
+	(* Generate a module file name. *)
+	PROCEDURE GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
+	VAR i, j: LONGINT;
+	BEGIN
+		i := 0; WHILE name[i] # 0X DO fileName[i] := name[i]; INC(i) END;
+		j := 0; WHILE extension[j] # 0X DO fileName[i] := extension[j]; INC(i); INC(j) END;
+		fileName[i] := 0X
+	END GetFileName;
+		
+	(* sort procedure descriptors by firstPC in ascending order *)
+	PROCEDURE SortProcedureDescs(p: ProcedureDescs);
+
+		PROCEDURE Less(i,j: LONGINT): BOOLEAN;
+		BEGIN
+			RETURN p[i].pcFrom < p[j].pcFrom;
+		END Less;
+		
+		PROCEDURE Swap(i,j: LONGINT);
+		VAR tmp: ProcedureDescPointer;
+		BEGIN
+			tmp := p[i];
+			p[i] := p[j];
+			p[j] := tmp;
+		END Swap;
+		
+		
+		PROCEDURE Quick( lo, hi: LONGINT);
+		VAR i, j, m: LONGINT;
+		BEGIN
+			IF lo < hi THEN
+				i := lo;  j := hi;  m := (lo + hi) DIV 2;
+				REPEAT
+					WHILE Less( i, m ) DO  INC( i )  END;
+					WHILE Less( m, j ) DO  DEC( j )  END;
+					IF i <= j THEN
+						IF m = i THEN  m := j
+						ELSIF m = j THEN  m := i
+						END;
+						Swap( i, j );  INC( i );  DEC( j )
+					END
+				UNTIL i > j;
+				Quick( lo, j);  Quick( i, hi)
+			END;
+		END Quick;
+
+	BEGIN
+		Quick(0, LEN(p)-1);
+	END SortProcedureDescs;
+
+	(* sort procedure descriptors by firstPC in ascending order *)
+	PROCEDURE SortExceptionTable(p: ExceptionTable);
+
+		PROCEDURE Less(i,j: LONGINT): BOOLEAN;
+		BEGIN
+			RETURN p[i].pcFrom < p[j].pcFrom;
+		END Less;
+		
+		PROCEDURE Swap(i,j: LONGINT);
+		VAR tmp: ExceptionTableEntry;
+		BEGIN
+			tmp := p[i];
+			p[i] := p[j];
+			p[j] := tmp;
+		END Swap;
+		
+		PROCEDURE Quick( lo, hi: LONGINT);
+		VAR i, j, m: LONGINT;
+		BEGIN
+			IF lo < hi THEN
+				i := lo;  j := hi;  m := (lo + hi) DIV 2;
+				REPEAT
+					WHILE Less( i, m ) DO  INC( i )  END;
+					WHILE Less( m, j ) DO  DEC( j )  END;
+					IF i <= j THEN
+						IF m = i THEN  m := j
+						ELSIF m = j THEN  m := i
+						END;
+						Swap( i, j );  INC( i );  DEC( j )
+					END
+				UNTIL i > j;
+				Quick( lo, j);  Quick( i, hi)
+			END;
+		END Quick;
+
+	BEGIN
+		Quick(0, LEN(p)-1);
+	END SortExceptionTable;
+	
+		
+	(* sort and merge procedure descriptors with the global procedure desc array, replacing the global procedure array *)
+	PROCEDURE MergeProcedureDescs*(p: ProcedureDescs);
+	VAR n: ProcedureDescs;
+		i,j,k: LONGINT;
+	BEGIN
+		IF ~mayAllocate THEN RETURN END; 
+		IF (p = NIL) OR (LEN(p) = 0) THEN RETURN END; 
+		IF procedureDescriptors = NIL THEN 
+			procedureDescriptors := p;
+		ELSE
+			NEW(n, LEN(procedureDescriptors) + LEN(p));
+			k := 0; i := 0; j := 0;
+			FOR k := 0 TO LEN(n)-1 DO
+				IF (i<LEN(p)) & ((j=LEN(procedureDescriptors)) OR (p[i].pcFrom < procedureDescriptors[j].pcFrom)) THEN
+					n[k] := p[i]; INC(i);
+				ELSE
+					n[k] := procedureDescriptors[j]; INC(j);
+				END;
+			END;
+			procedureDescriptors := n;
+		END;
+	END MergeProcedureDescs;
+
+	(* remove sorted procedure descriptors from sorted global array *)
+	PROCEDURE RemoveProcedureDescs*(p: ProcedureDescs);
+	VAR i,j,k: LONGINT; n: ProcedureDescs;
+	BEGIN
+		IF ~mayAllocate THEN RETURN END; 
+		NEW(n, LEN(procedureDescriptors) - LEN(p));
+		i := 0; j := 0; k := 0; 
+		WHILE i < LEN(procedureDescriptors) DO 
+			IF (j < LEN(p)) & (procedureDescriptors[i] = p[j]) THEN INC(j);
+			ELSE n[k] := procedureDescriptors[i]; INC(k);
+			END;
+			INC(i); 
+		END;
+		procedureDescriptors := n;
+	END RemoveProcedureDescs;
 
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
-TYPE Body = PROCEDURE;
 VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ModuleByName(name);
@@ -327,9 +454,9 @@ BEGIN
 	RETURN m
 END ThisModule;
 
-(** Return the module that contains code address pc or NIL if not found. Can also return freed modules. -- non-blocking variant for Reflection. *)
+(** Return the module that contains code address pc or NIL if not found. Can also return freed modules. Non-blocking version for reflection *)
 PROCEDURE ThisModuleByAdr0*(pc: ADDRESS): Module;
-VAR m: Module; i: LONGINT; found: BOOLEAN; list: LONGINT;
+VAR m: Module; found: BOOLEAN; list: LONGINT;
 BEGIN
 	list := 0; found := FALSE;
 	REPEAT
@@ -338,18 +465,8 @@ BEGIN
 			|1: m := freeRoot
 		END;
 		WHILE (m # NIL) & ~found DO
-			IF m.procTable # NIL THEN
-				i := 0;
-				WHILE ~found & (i<LEN(m.procTable)) DO
-					IF (m.procTable[i].pcFrom <= pc) & (pc <m.procTable[i].pcLimit) THEN
-						found := TRUE;
-					END;
-					INC(i);
-				END;
-			END;
-			IF ~found THEN
-				m := m.next;
-			END;
+			found := FindProc(pc, m.procTable) # NIL;
+			IF ~found THEN m := m.next END;
 		END;
 		INC(list)
 	UNTIL found OR (list=2);
@@ -436,6 +553,25 @@ BEGIN
 	RETURN t;
 END TypeOf;
 
+
+(** searches for the given pc in the global ProcKeyTable, if found it returns the corresponding data element *)
+PROCEDURE FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer;
+VAR l,r,x: LONGINT; isHit: BOOLEAN;
+BEGIN
+	IF p # NIL THEN
+		l := 0; r := LEN(p)-1;
+		REPEAT
+			x := (l + r) DIV 2;
+			IF pc < p[x].pcFrom THEN r := x - 1 ELSE l := x + 1 END;
+			isHit := ((p[x].pcFrom <= pc) & (pc < p[x].pcLimit));
+		UNTIL isHit OR (l > r);
+		IF isHit THEN
+			RETURN p[x];
+		END;
+	END;
+	RETURN NIL;
+END FindProc;
+
 (** Install procedure to execute when module is freed or shut down. The handler can distinguish the two cases by checking Modules.shutdown. If it is None, the module is being freed, otherwise the system is being shut down or rebooted. Only one handler may be installed per module. The last handler installed is active. *)
 PROCEDURE InstallTermHandler*(h: TerminationHandler);
 VAR m: Module;
@@ -486,6 +622,7 @@ BEGIN
 			(* do not clear m.data or m.code, as they are used in ThisModuleByAdr (for debugging). *)
 			(* do not clear m.refs, as they are used in Traps (for debugging). *)
 			m.export.dsc := NIL; m.exTable := NIL;
+			RemoveProcedureDescs(m.procTable);
 		ELSE
 			res := 1901;	(* can not free module in use *)
 			COPY(name, msg); Append(" reference count not zero", msg)
@@ -593,40 +730,12 @@ BEGIN
 	RETURN m.init;
 END Initialized;
 
-(** Return the specified kernel procedure address. *)
-PROCEDURE GetKernelProc*(num: LONGINT): ADDRESS;
-VAR adr: ADDRESS;
-BEGIN
-	adr := kernelProc[253-num];
-	ASSERT(adr # 0);
-	RETURN adr
-END GetKernelProc;
-
 PROCEDURE Init;
 VAR
-	newArr: PROCEDURE (VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN);
-	newSys: PROCEDURE (VAR p: ANY; size: SIZE; isRealtime: BOOLEAN);
-	newRec: PROCEDURE (VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN);
-	getProcedure: PROCEDURE(CONST m, p : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
 	s: ARRAY 4 OF CHAR;
 BEGIN
 	(* root and initBlock are initialized by the linker *)
 	shutdown := None;
-	newArr := Heaps.NewArr;
-	newSys := Heaps.NewSys;
-	newRec := Heaps.NewRec;
-	getProcedure := GetProcedure;
-	kernelProc[0] := SYSTEM.VAL (ADDRESS, newRec);	(* 253 *)
-	kernelProc[1] := SYSTEM.VAL (ADDRESS, newSys);	(* 252 *)
-	kernelProc[2] := SYSTEM.VAL (ADDRESS, newArr);	(* 251 *)
-	kernelProc[3] := 0;	(* 250 *)
-	kernelProc[4] := 0;	(* 249 *)
-	kernelProc[5] := 0;	(* 248 *)
-	kernelProc[6] := 0;	(* 247 *)
-	kernelProc[7] := 0;	(* 246 *)
-	kernelProc[8] := 0;	(* 245 *)
-	kernelProc[9] := 0;	(* 244 *)
-	kernelProc[10] := SYSTEM.VAL(ADDRESS, getProcedure);	(* 243 *)
 	numLoaders := 0;
 	freeRoot := NIL;
 	Machine.GetConfig("TraceModules", s);

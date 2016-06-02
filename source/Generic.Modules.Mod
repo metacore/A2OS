@@ -23,7 +23,6 @@ CONST
 
 	ClearCode = TRUE;
 
-
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
@@ -46,11 +45,11 @@ TYPE
 	END;
 
 	ExportDesc* = RECORD
-		fp*: LONGINT;
+		fp*: ADDRESS;
 		name* {UNTRACED}: DynamicName;
 		adr*: ADDRESS;
-		exports*: LONGINT;
-		dsc* {UNTRACED}: ExportArray
+		exports*: LONGINT; (* number of exports referenced by ExportArray *)
+		dsc* {UNTRACED}: ExportArray; (* pointer to memory containing a raw array with "exports" entries *)
 	END;
 	ExportArray* = POINTER {UNSAFE} TO ARRAY OF ExportDesc;
 
@@ -127,8 +126,8 @@ TYPE
 
 	END Module;
 
-		
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT;
+			VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
 
 VAR
 	extension-: ARRAY MaxObjFormats, 8 OF CHAR;
@@ -137,7 +136,6 @@ VAR
 
 	freeRoot*: Module;	(** list of freed modules (temporary) *)
 
-	(* the following two variables are initialized by Linker *)
 	root-: Module;	(** list of modules (read-only) *)
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
@@ -189,27 +187,18 @@ BEGIN
 	to[j] := 0X
 END Append;
 
-
 (** Add a module to the pool of accessible modules, or return named module. *)
 PROCEDURE Publish*(VAR m: Module; VAR new: BOOLEAN);
 VAR n: Module; i: LONGINT;
 BEGIN
-	(*
-	ASSERT((m.code # NIL) & (LEN(m.code^) > 0));
-	*)
 	Machine.Acquire(Machine.Modules);
-	n := root; WHILE (n # NIL) & (n.name # m.name) DO 	n := n.next END;
+	n := root; WHILE (n # NIL) & (n.name # m.name) DO n := n.next END;
 	IF n # NIL THEN	(* module with same name exists, return it and ignore new m *)
 		m := n; new := FALSE
 	ELSE
 		IF TraceBoot THEN
 			Machine.Acquire(Machine.TraceOutput);
 			Trace.String("publish "); Trace.String(m.name);
-			(*
-			a := m;
-			IF a IS Heaps.RootObject THEN Trace.String(" IS RootObj") END;
-			IF a IS Module THEN Trace.String(" IS Module"); END;
-			*)
 			Trace.Ln;
 			Machine.Release(Machine.TraceOutput);
 		END;
@@ -221,7 +210,7 @@ BEGIN
 		MergeProcedureDescs(m.procTable);
 
 		IF m.module # NIL THEN
-		FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
+			FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
 		END;
 
 		new := TRUE;
@@ -503,7 +492,7 @@ END ThisModuleByAdr0;
 
 (** Return the module that contains code address pc or NIL if not found. Can also return freed modules. *)
 PROCEDURE ThisModuleByAdr*(pc: ADDRESS): Module;
-VAR m: Module; 
+VAR m: Module;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	m := ThisModuleByAdr0(pc);
@@ -634,13 +623,9 @@ BEGIN
 	END;
 	res := Ok; msg[0] := 0X;
 	Machine.Acquire(Machine.Modules);
-	Trace.String("Acquired Machine.Modules x"); Trace.Ln;
 	p := NIL; m := root;
 	WHILE (m # NIL) & (m.name # name) DO p := m; m := m.next END;
-	Trace.String("Acquired Machine.Modules y"); Trace.Ln;
-
 	IF m # NIL THEN
-		Trace.String("found module"); Trace.Ln;
 		IF m.refcnt = 0 THEN	(* free the module *)
 			FOR i := 0 TO LEN(m.module)-1 DO DEC(m.module[i].refcnt) END;
 			m.init := FALSE;	(* disallow ThisCommand *)
@@ -665,9 +650,6 @@ BEGIN
 			(* do not clear m.data or m.code, as they are used in ThisModuleByAdr (for debugging). *)
 			(* do not clear m.refs, as they are used in Traps (for debugging). *)
 			m.export.dsc := NIL; m.exTable := NIL;
-			(*Trace.String("delete proc offsets"); Trace.Ln;
-			DeleteProcOffsets(m.firstProc, m.noProcs);
-			*)
 			RemoveProcedureDescs(m.procTable);
 		ELSE
 			res := 1901;	(* can not free module in use *)
@@ -688,7 +670,7 @@ BEGIN
 		LOOP
 			Machine.Acquire(Machine.Modules);
 			m := root; WHILE (m # NIL) & (m.term = NIL) DO m := m.next END;
-			IF m # NIL THEN term := m.term; m.term := NIL END;
+			IF m # NIL THEN term := m.term; m.term := NIL END; (* finalizer only called once *)
 			Machine.Release(Machine.Modules);
 			IF m = NIL THEN EXIT END;
 			IF trace THEN

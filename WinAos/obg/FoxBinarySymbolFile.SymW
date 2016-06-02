@@ -70,6 +70,7 @@ CONST
 	sfDynamic = 22; 
 	sfUnsafe = 23; 
 	sfDisposable = 24; 
+	sfFictive = 25; 
 	Undef = MIN(LONGINT); 
 	FileTag = 0BBX; 
 	NoZeroCompress = 0ADX; 

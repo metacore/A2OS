@@ -397,7 +397,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
-	UNCOOP { Reflection.Mod }
+	NATIVEORIG,WINORIG,UNIX { Reflection.Mod }
+	NATIVEGEN, WINGEN {Generic.Reflection.Mod}
 	COOP { Coop.Reflection.Mod }
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	NATIVEORIG, NATIVEGEN { Traps.Mod }
@@ -448,7 +449,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	NATIVE,WIN,UNIX { RelativeFileSystem.Mod } # file system relative to path
 
-	NATIVE,WIN,UNIX { Loader.Mod }
+	NATIVE,WINORIG,UNIX { Loader.Mod }
 	NATIVEGEN, WINGEN, COOP {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }
 
 	# binding modules

@@ -155,6 +155,10 @@ TYPE
 		pc: ADDRESS; 
 	END; 
 
+	AnyPtr = RECORD 
+		a: ANY; 
+	END; 
+
 	GCStatus* = OBJECT 
 
 		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
@@ -194,6 +198,7 @@ VAR
 	Ngc-: LONGINT; 
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT; 
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns-: HUGEINT; 
+	NgcSweepTime-, NgcSweepMax-: HUGEINT; 
 	gcStatus*: GCStatus; 
 	GCType*: LONGINT; 
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 

@@ -61,9 +61,7 @@ CONST
 		DefaultRuntimeModuleName ="Runtime";
 		DefaultTraceModuleName ="KernelLog";
 		ChannelModuleName = "Channels";
-
-		suppressModuleRegistration=FALSE;
-
+		
 		NonPointer = -1; (* special pointer values *)
 		NoType = 0; (* special type info values *)
 		LhsIsPointer = 0; (* for the operator kind *)
@@ -73,10 +71,7 @@ CONST
 		EntryPriority=-4;
 		FirstPriority=-3;
 		InitPriority=-2;
-		ExitPriority=-1;
-
-		StrictChecks = FALSE;
-		
+		ExitPriority=-1;		
 		BasePointerTypeSize = 5;
 		BaseArrayTypeSize = BasePointerTypeSize + 3;
 			LengthOffset = BasePointerTypeSize + 0;
@@ -350,7 +345,7 @@ TYPE
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
-			size, addressSize: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
+			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
 			BEGIN
@@ -4227,21 +4222,6 @@ TYPE
 			END;
 
 		END MathIndexDesignator;
-
-		(* TENTATIVE *)
-		PROCEDURE DumpOperand(operand: Operand);
-		BEGIN
-			D.Log.String("    op = ");
-			IntermediateCode.DumpOperand(D.Log, operand.op );
-			D.Log.Ln;
-			D.Log.String("    tag = ");
-			IntermediateCode.DumpOperand(D.Log, operand.tag );
-			D.Log.Ln;
-			D.Log.String("    extra = ");
-			IntermediateCode.DumpOperand(D.Log, operand.extra );
-			D.Log.Ln;
-			D.Log.Update
-		END DumpOperand;
 
 		(* get the length of an array , trying to make use of static information *)
 		PROCEDURE ArrayLength(type: SyntaxTree.Type; dim: LONGINT; tag: IntermediateCode.Operand): IntermediateCode.Operand;
@@ -10959,6 +10939,8 @@ TYPE
 		TypeTags: LONGINT; (* type extension level support *)
 		TypeRecordBaseOffset: LONGINT; (* offset of type zero offset (without method entries) *)
 		
+		patchInfoPC, patchProcedurePC: LONGINT;
+		
 
 		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
 		BEGIN
@@ -11168,6 +11150,13 @@ TYPE
 			END;
 			Char(section,0X);
 		END String;
+
+		PROCEDURE String0(section: IntermediateCode.Section; str: StringPool.Index);
+		VAR s: Basic.SectionName;
+		BEGIN
+			StringPool.GetString(str, s); 
+			String(section, s);
+		END String0;
 
 
 		PROCEDURE NamedSymbol(section: IntermediateCode.Section; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT);
@@ -11566,14 +11555,11 @@ TYPE
 								THEN
 									INC(scopes[olevel].elements);
 								END;
-								(*StringPool.GetString(this[level], name);*)
-								(*TRACE(level, name);*)
 								(* enter string in scope *)
 								INC(level);
 							END;
 						END;
 						Basic.SegmentedNameToString(this, name);
-						(*TRACE(level, "enter", name);*)
 						prev := this;
 					END;
 				END;
@@ -11589,7 +11575,6 @@ TYPE
 					scopes[olevel].gelements := scopes[olevel].gelements + scopes[olevel].elements;
 					DEC(olevel); 
 				END;
-				
 
 				level := 0;
 				WHILE (level < LEN(scopes)) DO
@@ -11605,7 +11590,6 @@ TYPE
 			NEW(fingerPrinter, module.system);
 			NEW(poolMap, 64);
 			(* this is the name pool private to the export table -- it is sorted and should not be mixed / used for other names in a module *)
-			(*! require a GC pointer *)
 			namePool := Block("Heaps","SystemBlockDesc",".@NamePool",namePoolOffset); 
 			
 			NEW(sectionArray, module.allSections.Length());
@@ -11654,337 +11638,468 @@ TYPE
 					Char( section, 0X); INC(i);
 				END;
 			END Name;
-
-
-
+		
 			PROCEDURE References(section: IntermediateCode.Section);
 			CONST
-				rfDirect = 1X; rfIndirect = 3X;
-				rfStaticArray= 12X; rfDynamicArray=14X; rfOpenArray=15X;
-				rfByte = 1X; rfBoolean = 2X; rfChar8=3X; rfShortint=04X; rfInteger = 05X; rfLongint = 06X;
-				rfReal = 07X; rfLongreal = 08X; rfSet = 09X; rfDelegate = 0EX;  rfString = 0FH; rfPointer = 0DX; rfHugeint = 10X;
-				rfChar16=11X; rfChar32=12X; rfAll=13X; rfSame=14X; rfRange=15X; rfRecord=16X; rfComplex = 17X; rfLongcomplex = 18X; 
-				rfPort = 19X;
-				rfRecordPointer=1DX;
-				rfArrayFlag = 80X;
+				sfTypeNone = 0X;
+				sfTypeCHAR = 01X;
+				sfTypeCHAR8 = 02X;
+				sfTypeCHAR16 = 03X;
+				sfTypeCHAR32 = 04X;
+				sfTypeRANGE = 05X;
+				sfTypeSHORTINT = 06X;
+				sfTypeINTEGER = 07X;
+				sfTypeLONGINT = 08X;
+				sfTypeHUGEINT = 09X;
+				sfTypeWORD = 0AX;
+				sfTypeLONGWORD = 0BX;
+				sfTypeSIGNED8 = 0CX;
+				sfTypeSIGNED16 = 0DX;
+				sfTypeSIGNED32 = 0EX;
+				sfTypeSIGNED64 = 0FX;
+				sfTypeUNSIGNED8 = 10X;
+				sfTypeUNSIGNED16 = 11X; 
+				sfTypeUNSIGNED32 = 12X;
+				sfTypeUNSIGNED64 = 13X;
+				sfTypeREAL = 14X;
+				sfTypeLONGREAL = 15X;
+				sfTypeCOMPLEX = 16X;
+				sfTypeLONGCOMPLEX = 17X;
+				sfTypeBOOLEAN = 18X;
+				sfTypeSET = 19X;
+				sfTypeANY = 1AX;
+				sfTypeOBJECT = 1BX; 
+				sfTypeBYTE = 1CX; 
+				sfTypeADDRESS = 1DX; 
+				sfTypeSIZE = 1EX; 
+				
+				sfTypeRecord = 20X;	
+
+				sfTypePointerToRecord = 21X;
+				sfTypePointerToArray = 22X;
+				sfTypeOpenArray = 23X;
+				sfTypeStaticArray = 24X;
+				sfTypeDynamicArray = 25X;
+				sfTypeMathStaticArray = 26X;
+				sfTypeMathOpenArray = 27X;
+				sfTypeMathTensor = 28X;
+				sfTypeDelegate = 29X;
+				sfTypeENUM = 2AX; 
+				
+				sfValPar = 0X;
+				sfVarPar = 1X;
+				sfConstPar = 2X; 
+
+				sfScopeBegin = 0F0X;
+				sfScopeEnd = 0F1X; 
+				sfProcedure = 0F2X; 
+				sfVariable = 	0F3X;
+				sfParameter = 0F4X;
+				sfTypeDeclaration = 0F5X;
+
+				RefInfo = TRUE;
 
 			VAR
-				s: Sections.Section; sizePC, i, startPC, endPC: LONGINT;
+				s: Sections.Section; sizePC, i, startPC, lastOffset: LONGINT;
 
-				PROCEDURE BaseType(type: SyntaxTree.Type): CHAR;
-				VAR char: CHAR;
+				PROCEDURE CurrentIndex(): SIZE;
+				VAR i: LONGINT;
 				BEGIN
-					IF type = NIL THEN char := rfLongint
-					ELSIF type  IS SyntaxTree.ByteType THEN char := rfByte
-					ELSIF type IS SyntaxTree.BooleanType THEN char := rfBoolean
-					ELSIF type IS SyntaxTree.CharacterType THEN
-						IF type.sizeInBits = 8 THEN char := rfChar8
-						ELSIF type.sizeInBits = 16 THEN char := rfChar16
-						ELSIF type.sizeInBits = 32 THEN char := rfChar32
-						END;
-					ELSIF (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType) THEN
-						IF type.sizeInBits = 8 THEN char := rfShortint
-						ELSIF type.sizeInBits = 16 THEN char := rfInteger
-						ELSIF type.sizeInBits = 32 THEN char := rfLongint
-						ELSIF type.sizeInBits = 64 THEN char := rfHugeint
-						END;
-					ELSIF type IS SyntaxTree.SizeType THEN char := rfLongint
-					ELSIF type IS SyntaxTree.FloatType THEN
-						IF type.sizeInBits = 32 THEN char := rfReal
-						ELSIF type.sizeInBits = 64 THEN  char := rfLongreal
-						END;
-					ELSIF type IS SyntaxTree.ComplexType THEN
-						IF type.sizeInBits = 64 THEN char := rfComplex
-						ELSIF type.sizeInBits = 128 THEN char := rfLongcomplex
-						END;
-					ELSIF type IS SyntaxTree.SetType THEN char := rfSet
-					ELSIF type IS SyntaxTree.AnyType THEN char := rfPointer
-					ELSIF type IS SyntaxTree.ObjectType THEN char := rfPointer
-					ELSIF type IS SyntaxTree.PointerType THEN char := rfPointer
-					ELSIF type IS SyntaxTree.ProcedureType THEN char := rfDelegate
-					ELSIF type IS SyntaxTree.RangeType THEN char := rfRange
-					ELSIF type IS SyntaxTree.PortType THEN char := rfPort
-					ELSE (*ASSERT(arrayOf);*) char := rfPointer; (*RETURN (* ARRAY OF unknown (record): do not write anything *)*)
+					FOR i := startPC TO section.pc -1 DO
+						ASSERT (section.instructions[i].opcode = IntermediateCode.data);
+						INC(lastOffset, ToMemoryUnits(module.system, section.instructions[i].op1.type.sizeInBits));
 					END;
-					RETURN char
-				END BaseType;
-
-				PROCEDURE RecordType(type: SyntaxTree.RecordType);
-				VAR destination: Sections.Section; 
+					startPC := section.pc;
+					RETURN lastOffset;
+				END CurrentIndex;
+			
+			(*
+					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
+					Procedure = sfProcedure prevSymbol:SIZE name:STRING from:ADDRESS to:ADDRESS {Parameter} returnType:Type Scope.
+					Variable = sfVariable prevSymbol:SIZE name:STRING (address:ADDRESS|offset:SIZE) Type.
+					Parameter = sfParameter prevSymbol:SIZE name:STRING offset:SIZE (sfVarPar|sfConstPar|sfValPar) Type.
+					TypeDeclaration = sfTypeDeclaration prevSymbol:SIZE name:STRING td:ADDRESS Scope.
+					Type = 
+						sfTypePointerToRecord 
+						| sfTypePointerToArray Type
+						| sfTypeOpenArray Type
+						| sfTypeDynamicArray Type
+						| sfTypeStaticArray length:SIZE Type
+						| sfTypeMathOpenArray Type 
+						| sfTypeMathStaticArray length:SIZE Type
+						| sfTypeMathTensor Type
+						| sfTypeRecord tdAdr:ADDRESS 
+						| sfTypeDelegate {Parameter} return:Type
+						| sfTypeBOOLEAN
+						| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
+						| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
+						| sfTypeSIGNED8 | sfTypeSIGNED16 | sfTypeSIGNED32 | sfTypeSIGNED64
+						| sfTypeUNSIGNED8 | sfTypeUNSIGNED16 | sfTypeUNSIGNED32 | sfTypeUNSIGNED64
+						| sfTypeWORD | sfTypeLONGWORD
+						| sfTypeREAL | sfTypeLONGREAL
+						| sfTypeCOMPLEX | sfTypeLONGCOMPLEX
+						| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE.
+		*) 
+		
+				PROCEDURE NType(type: SyntaxTree.Type);
+				VAR size: SIZE; td: SyntaxTree.TypeDeclaration; tir: Sections.Section; 
+					segmentedName: Basic.SegmentedName; offset: SIZE; parameter: SyntaxTree.Parameter;
 				BEGIN
-					destination := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
-					IF type.pointerType # NIL THEN
-						Char(section,rfRecordPointer)
+					IF type = NIL THEN
+						Char(section, sfTypeNone)
 					ELSE
-						Char(section,rfRecord);
+						type := type.resolved;
+						size := type.sizeInBits;
+						
+						WITH type:SyntaxTree.PointerType DO
+							IF type.pointerBase.resolved IS SyntaxTree.RecordType THEN
+								IF RefInfo THEN Info(section,"PointerToRecord") END;
+								Char(section, sfTypePointerToRecord);
+							ELSE
+								IF RefInfo THEN Info(section,"PointerToArray") END;
+								Char(section, sfTypePointerToArray);
+								NType(type.pointerBase);
+							END;
+						| type: SyntaxTree.ArrayType DO
+							IF type.form = SyntaxTree.Open THEN
+								IF RefInfo THEN Info(section,"OpenArray") END;
+								Char(section, sfTypeOpenArray);
+							ELSIF type.form = SyntaxTree.SemiDynamic THEN
+								IF RefInfo THEN Info(section,"DynamicArray") END;
+								Char(section, sfTypeDynamicArray); 
+							ELSIF type.form = SyntaxTree.Static THEN
+								IF RefInfo THEN Info(section,"StaticArray") END;
+								Char(section, sfTypeStaticArray);
+								Size(section, type.staticLength);
+							ELSE 
+								HALT(100);
+							END;
+							NType(type.arrayBase);
+						| type: SyntaxTree.MathArrayType DO
+							IF type.form = SyntaxTree.Open THEN
+								IF RefInfo THEN Info(section,"MathOpenArray") END;
+								Char(section, sfTypeMathOpenArray); 
+							ELSIF type.form = SyntaxTree.Static THEN
+								IF RefInfo THEN Info(section,"MathStaticArray") END;
+								Char(section, sfTypeMathStaticArray);
+								Size(section, type.staticLength);
+							ELSIF type.form = SyntaxTree.Tensor THEN
+								IF RefInfo THEN Info(section,"MathTensor") END;
+								Char(section, sfTypeMathTensor);
+							ELSE
+								HALT(100);
+							END;
+							NType(type.arrayBase);
+						| type: SyntaxTree.RecordType DO
+							IF type.pointerType # NIL (* OBJECT *) THEN
+								IF RefInfo THEN Info(section,"PointerToRecord") END;
+								Char(section, sfTypePointerToRecord)
+							ELSE
+								IF RefInfo THEN Info(section,"Record") END;
+								Char(section, sfTypeRecord);
+								td := type.typeDeclaration;		
+								IF RefInfo THEN Info(section,"TD") END;
+								IF (td # NIL) THEN
+									Global.GetSymbolSegmentedName(td,segmentedName);
+									IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+										tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+									ELSE
+										tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+									END;
+									offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+									Symbol(section, tir,  0, offset);
+								ELSE
+									Address(section, 0);
+								END;
+							END;
+						| type: SyntaxTree.ProcedureType DO
+								Char(section, sfTypeDelegate);
+								parameter := type.firstParameter;
+								WHILE(parameter # NIL) DO
+									NParameter(parameter, -1);
+									parameter := parameter.nextParameter;
+								END;
+								NType(type.returnType);															
+						| type:SyntaxTree.EnumerationType DO
+								Char(section, sfTypeENUM);
+						| type: SyntaxTree.BasicType DO
+							WITH type: SyntaxTree.BooleanType DO
+								IF RefInfo THEN Info(section,"Boolean") END;
+								Char(section, sfTypeBOOLEAN);
+							| type: SyntaxTree.CharacterType DO
+									IF type = module.system.characterType THEN
+									IF RefInfo THEN Info(section,"CHAR") END;
+										Char(section, sfTypeCHAR);
+									ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
+										IF RefInfo THEN Info(section,"CHAR8") END;
+										Char(section, sfTypeCHAR8)
+									ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
+										IF RefInfo THEN Info(section,"CHAR16") END;
+										Char(section, sfTypeCHAR16);
+									ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
+										IF RefInfo THEN Info(section,"CHAR32") END;
+										Char(section, sfTypeCHAR32);
+									ELSE
+										HALT(100);
+									END;
+							|type: SyntaxTree.IntegerType DO
+								IF type(SyntaxTree.IntegerType).signed THEN
+									IF (type = module.system.shortintType) THEN
+										IF RefInfo THEN Info(section,"SHORTINT") END;
+										Char(section, sfTypeSHORTINT)
+									ELSIF (type = module.system.integerType) THEN
+										IF RefInfo THEN Info(section,"INTEGER") END;
+										Char(section, sfTypeINTEGER)
+									ELSIF (type = module.system.longintType) THEN
+										IF RefInfo THEN Info(section,"LONGINT") END;
+										Char(section, sfTypeLONGINT)
+									ELSIF (type = module.system.hugeintType) THEN 
+										IF RefInfo THEN Info(section,"HUGEINT") END;
+										Char(section, sfTypeHUGEINT)
+									ELSIF (type = module.system.wordType) THEN
+										IF RefInfo THEN Info(section,"WORD") END;
+										Char(section, sfTypeWORD)
+									ELSIF (type = module.system.longWordType) THEN
+										IF RefInfo THEN Info(section,"LONGWORD") END;
+										Char(section, sfTypeLONGWORD);
+									ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
+										IF RefInfo THEN Info(section,"SIGNED8") END;
+										Char(section, sfTypeSIGNED8)
+									ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
+										IF RefInfo THEN Info(section,"SIGNED16") END;
+										Char(section, sfTypeSIGNED16)
+									ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
+										IF RefInfo THEN Info(section,"SIGNED32") END;
+										Char(section, sfTypeSIGNED32)
+									ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
+										IF RefInfo THEN Info(section,"SIGNED64") END;
+										Char(section, sfTypeSIGNED64)
+									ELSE
+										HALT(100);
+									END 
+								ELSE (* unsigned *) 
+									IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
+										IF RefInfo THEN Info(section,"UNSIGNED8") END;
+										Char(section, sfTypeUNSIGNED8)
+									ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
+										IF RefInfo THEN Info(section,"UNSIGNED16") END;
+										Char(section, sfTypeUNSIGNED16)
+									ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
+										IF RefInfo THEN Info(section,"UNSIGNED32") END;
+										Char(section, sfTypeUNSIGNED32)
+									ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
+										IF RefInfo THEN Info(section,"UNSIGNED64") END;
+										Char(section, sfTypeUNSIGNED64)
+									ELSE
+										HALT(100)
+									END 
+								END;
+							| type: SyntaxTree.FloatType DO
+								IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
+									IF RefInfo THEN Info(section,"REAL") END;
+									Char(section, sfTypeREAL);
+								ELSIF (type = module.system.longrealType) OR (type.sizeInBits = 64) THEN
+									IF RefInfo THEN Info(section,"LONGREAL") END;
+									Char(section, sfTypeLONGREAL);
+								ELSE
+									HALT(100);
+								END;
+							|type: SyntaxTree.ComplexType DO
+								IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
+									IF RefInfo THEN Info(section,"COMPLEX") END;
+									Char(section, sfTypeCOMPLEX);
+								ELSIF (type = module.system.longcomplexType) OR (type.sizeInBits = 12) THEN
+									IF RefInfo THEN Info(section,"LONGCOMPLEX") END;
+									Char(section, sfTypeLONGCOMPLEX);
+								ELSE
+									HALT(100);
+								END;
+							|type:SyntaxTree.SetType DO
+								IF RefInfo THEN Info(section,"SET") END;
+								Char(section, sfTypeSET);
+							|type:SyntaxTree.AnyType DO
+								IF RefInfo THEN Info(section,"ANY") END;
+								Char(section, sfTypeANY);
+							|type:SyntaxTree.ObjectType DO
+								IF RefInfo THEN Info(section,"OBJECT") END;
+								Char(section, sfTypeOBJECT);
+							|type:SyntaxTree.ByteType DO
+								IF RefInfo THEN Info(section,"BYTE") END;
+								Char(section, sfTypeBYTE);
+							|type:SyntaxTree.RangeType DO	
+								IF RefInfo THEN Info(section,"RANGE") END;
+								Char(section, sfTypeRANGE)
+							|type:SyntaxTree.AddressType DO
+								IF RefInfo THEN Info(section,"ADDRESS") END;
+								Char(section, sfTypeADDRESS)
+							|type:SyntaxTree.SizeType DO
+								IF RefInfo THEN Info(section,"SIZE") END;
+								Char(section, sfTypeSIZE)
+							ELSE
+								HALT(100)
+							END;
+						ELSE HALT(101);
+						END;
 					END;
-					IF destination = NIL THEN
-						Longint(section,0);
-					ELSE
-						Longint(section,destination.offset); (* used for ? *)
-					END;
-				END RecordType;
+				END NType;
 				
-				PROCEDURE StaticArrayLength(type: SyntaxTree.ArrayType; VAR baseType: SyntaxTree.Type): LONGINT;
+				(*
+					Parameter = sfParameter prevSymbol:SIZE name:STRING offset:SIZE (sfVarPar|sfConstPar|sfValPar) Type.
+				*)
+				PROCEDURE NParameter(parameter: SyntaxTree.Parameter; procOffset: LONGINT);
+				VAR pos: LONGINT; 
 				BEGIN
-					baseType := type.arrayBase.resolved;
-					IF type.form = SyntaxTree.Static THEN
-						IF baseType IS SyntaxTree.ArrayType THEN
-							RETURN type.staticLength * StaticArrayLength(baseType(SyntaxTree.ArrayType),baseType)
-						ELSE
-							RETURN type.staticLength
-						END
+					IF RefInfo THEN Info(section, "Parameter") END;
+					Char(section, sfParameter);
+					Size(section, procOffset);
+					String0(section, parameter.name);
+					Size(section, ToMemoryUnits(module.system,parameter.offsetInBits));
+					IF parameter.kind = SyntaxTree.VarParameter THEN
+						Char(section, sfVarPar);
+					ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
+						Char(section, sfConstPar);
 					ELSE
-						RETURN 0
+						Char(section, sfValPar);
 					END;
-				END StaticArrayLength;
+					NType(parameter.type);
+				END NParameter;
+
+				(*
+					Procedure = sfProcedure prevSymbol:SIZE name:STRING from:ADDRESS to:ADDRESS {Parameter} returnType:Type Scope.
+				*)
+				PROCEDURE NProcedure(procedure: SyntaxTree.Procedure; scopeOffset: LONGINT);
+				VAR s: Sections.Section; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; pos: LONGINT;
+					name: Basic.SegmentedName;
+				BEGIN
+					IF RefInfo THEN Info(section, "Procedure") END;
+					pos := CurrentIndex(); 
+					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+					Char(section, sfProcedure);
+					Size(section, scopeOffset); 
+					String0(section,procedure.name);
+					s := module.allSections.FindBySymbol(procedure); 
+					Symbol(section,s,0,0); (* start *)
+					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
+					
+					Global.GetSymbolSegmentedName(procedure,name);
+					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
+					s := module.allSections.FindByName(name); 
+					IF s # NIL THEN (*! should always work, check this *)
+						PatchSize(s(IntermediateCode.Section), patchProcedurePC, pos);
+					END;
+
+					IF RefInfo THEN Info(section, "Parameters") END;
+					parameter := procedureType.firstParameter;
+					WHILE(parameter # NIL) DO
+						NParameter(parameter, pos); (*!treat  exceptions !*)
+						parameter := parameter.nextParameter;
+					END;
+					IF RefInfo THEN Info(section, "ReturnType") END;
+					NType(procedureType.returnType);
+
+					NScope(procedure.procedureScope, pos);
+				END NProcedure;
 				
-				PROCEDURE ArrayType(type: SyntaxTree.ArrayType);
-				VAR length: LONGINT; baseType: SyntaxTree.Type; char: CHAR;
+				(*
+					Variable = sfVariable prevSymbol:SIZE name:STRING (address:ADDRESS|offset:SIZE) Type.
+				*)
+				PROCEDURE NVariable(variable: SyntaxTree.Variable; scopeOffset: LONGINT);
+				VAR s: Sections.Section; sn: Basic.SegmentedName; pos: LONGINT; 
 				BEGIN
-					length := StaticArrayLength(type, baseType);
-					char := BaseType(baseType);
-					IF type.form # SyntaxTree.Open THEN
-						Char(section,CHR(ORD(char)+ORD(rfArrayFlag)));
-						Longint(section, length)
-					ELSE
-						length :=0;
-						(*length := 1+SemanticChecker.Dimension(type,{SyntaxTree.Open});*)
-						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
-						Longint(section, length)
-					END;
-				END ArrayType;
-				
-				PROCEDURE StaticMathArrayLength(type: SyntaxTree.MathArrayType; VAR baseType: SyntaxTree.Type): LONGINT;
-				BEGIN
-					baseType := type.arrayBase;
-					IF baseType # NIL THEN
-						baseType := baseType.resolved;
-					END;
-					IF type.form = SyntaxTree.Static THEN
-						IF (baseType # NIL) & (baseType IS SyntaxTree.MathArrayType) THEN
-							RETURN type.staticLength * StaticMathArrayLength(baseType(SyntaxTree.MathArrayType),baseType)
-						ELSE
-							RETURN type.staticLength
-						END
-					ELSE
-						RETURN 0
-					END;
-				END StaticMathArrayLength;
-
-				PROCEDURE MathArrayType(type: SyntaxTree.MathArrayType);
-				VAR length: LONGINT; baseType: SyntaxTree.Type; char: CHAR;
-				BEGIN
-					length := StaticMathArrayLength(type, baseType);
-					char :=  BaseType(baseType);
-					IF type.form = SyntaxTree.Open THEN
-						char := BaseType(module.system.addressType);
-						length := 5+2*SemanticChecker.Dimension(type,{SyntaxTree.Open});
-						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
-						Longint(section, length)
-					ELSIF type.form=SyntaxTree.Tensor THEN
-						char := BaseType(module.system.addressType);
-						Char(section, CHR(ORD(char)));
-					ELSE
-						Char(section, CHR(ORD(char)+ORD(rfArrayFlag)));
-						Longint(section, length)
-					END;
-				END MathArrayType;
-
-				PROCEDURE Type(type: SyntaxTree.Type);
-				BEGIN
-					IF type = NIL THEN Char(section,0X); RETURN ELSE type := type.resolved END;
-
-					IF type IS SyntaxTree.BasicType THEN
-						Char(section, BaseType(type));
-					ELSIF type IS SyntaxTree.RecordType THEN
-						RecordType(type(SyntaxTree.RecordType));
-					ELSIF type IS SyntaxTree.ArrayType THEN
-						ArrayType(type(SyntaxTree.ArrayType))
-					ELSIF type IS SyntaxTree.EnumerationType THEN
-						Char(section, BaseType(module.system.longintType))
-					ELSIF type IS SyntaxTree.PointerType THEN
-						IF type(SyntaxTree.PointerType).pointerBase IS SyntaxTree.RecordType THEN
-							RecordType(type(SyntaxTree.PointerType).pointerBase(SyntaxTree.RecordType));
-						ELSE
-							Char(section, BaseType(type))
-						END;
-					ELSIF type IS SyntaxTree.ProcedureType THEN
-						Char(section, BaseType(type));
-					ELSIF type IS SyntaxTree.MathArrayType THEN
-						MathArrayType(type(SyntaxTree.MathArrayType));
-					ELSIF type IS SyntaxTree.CellType THEN
-						Char(section, BaseType(module.system.anyType));
-					ELSIF type IS SyntaxTree.PortType THEN
-						Char(section, rfPort);
-					ELSE HALT(200)
-					END;
-				END Type;
-
-				PROCEDURE WriteVariable(variable: SyntaxTree.Variable; indirect: BOOLEAN);
-					VAR name: ARRAY 256 OF CHAR; sn: Basic.SegmentedName;
-				BEGIN
-					IF variable.externalName # NIL THEN RETURN END;
-					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
-					variable.GetName(name);
-					Type(variable.type);
+					IF RefInfo THEN Info(section, "Variable") END;
+					pos := CurrentIndex(); 
+					Char(section, sfVariable);
+					Size(section, scopeOffset); 
+					String0(section, variable.name);
 					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
 						implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
 						NamedSymbol(section, sn,variable, 0,0);
 					ELSE
 						Size(section, ToMemoryUnits(module.system,variable.offsetInBits));
 					END;
-					(*
-					IF variable.scope IS SyntaxTree.ModuleScope THEN
-						Symbol(section, variable,0,0);
-					ELSE
-						Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
-					END;
-					*)
-					String(section,name);
-				END WriteVariable;
-
-				PROCEDURE WriteParameter(variable: SyntaxTree.Parameter; indirect: BOOLEAN);
-				VAR name: ARRAY 256 OF CHAR;
-				BEGIN
-					IF indirect THEN Char(section,rfIndirect) ELSE Char(section,rfDirect) END;
-					variable.GetName(name);
-					Type(variable.type);
-					Longint(section,ToMemoryUnits(module.system,variable.offsetInBits));
-					variable.GetName(name);
-					String(section,name);
-				END WriteParameter;
-
-				PROCEDURE ReturnType(type: SyntaxTree.Type);
-				BEGIN
-					IF type = NIL THEN Char(section,0X); RETURN ELSE type := type.resolved END;
-
-					IF type IS SyntaxTree.ArrayType THEN
-						WITH type: SyntaxTree.ArrayType DO
-							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
-							ELSE Char(section,rfOpenArray)
-							END;
-						END
-					ELSIF type IS SyntaxTree.MathArrayType THEN
-						WITH type: SyntaxTree.MathArrayType DO
-							IF type.form = SyntaxTree.Static THEN Char(section,rfStaticArray)
-							ELSE Char(section,rfOpenArray)
-							END;
-						END
-					ELSIF type IS SyntaxTree.RecordType THEN
-						Char(section,rfRecord);
-					ELSE
-						Char(section, BaseType(type));
-					END;
-				END ReturnType;
-
-				PROCEDURE Procedure(s: Sections.Section);
-				VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
-					 parameter: SyntaxTree.Parameter; variable: SyntaxTree.Variable;
-					 segmentedName: Basic.SegmentedName;
-					 name: ARRAY 256 OF CHAR;
-				BEGIN
-					procedure := s.symbol(SyntaxTree.Procedure); (*! check for variable or type symbol for object body *)
-				(*procedure.name,name);*)
-
-
-					implementationVisitor.GetCodeSectionNameForSymbolInScope(procedure,module.module.moduleScope, name);
-					
-					procedureType := procedure.type(SyntaxTree.ProcedureType);
-
-					Char(section,0F9X);
-					Symbol(section,s,0,0);
-					Symbol(section,s,s(IntermediateCode.Section).pc,0);
-					Longint(section,procedureType.numberParameters);
-					ReturnType(procedureType.returnType);
-					Longint(section,0); (*! level *)
-					Longint(section,0);
-					(*
-					IF procedure.scope IS SyntaxTree.RecordScope THEN (* add object name *)
-						record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
-						recordName := "";
-						IF record.pointerType # NIL THEN
-							DeclarationName(record.pointerType.typeDeclaration,recordName);
-						ELSE
-							DeclarationName(record.typeDeclaration,recordName);
-						END;
-						i := 0;
-						Info(section,recordName);
-						WHILE recordName[i] # 0X DO
-							Char(section,recordName[i]); INC(i);
-							INC(size);
-						END;
-						Char(section,".");
-						INC(size);
-					END;
-					*)
-					String(section,name);
-					parameter := procedureType.firstParameter;
-					WHILE(parameter # NIL) DO
-						WriteParameter(parameter,parameter.kind # SyntaxTree.ValueParameter); (*!treat  exceptions !*)
-						parameter := parameter.nextParameter;
-					END;
-					variable := procedure.procedureScope.firstVariable;
-					WHILE(variable # NIL) DO
-						WriteVariable(variable,FALSE);
-						variable := variable.nextVariable;
-					END;
-				END Procedure;
-
-				PROCEDURE Scope(s: Sections.Section);
-				VAR variable: SyntaxTree.Variable;
-				BEGIN
-					Char(section,0F8X);
-					Symbol(section,s,0,0); (* start *)
-					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
-					String(section,"$$");
-					variable := module.module.moduleScope.firstVariable;
-					WHILE(variable # NIL) DO
-						WriteVariable(variable,FALSE);
-						variable := variable.nextVariable;
-					END;
-				END Scope;
-
-				PROCEDURE ComputeSize(startPC, endPC: LONGINT): SIZE;
-				VAR result, i: LONGINT;
-				BEGIN
-					FOR i := startPC TO endPC -1 DO
-						ASSERT (section.instructions[i].opcode = IntermediateCode.data);
-						INC(result, ToMemoryUnits(module.system, section.instructions[i].op1.type.sizeInBits));
-					END;
-					RETURN result;
-				END ComputeSize;
+					NType(variable.type);
+					s := module.allSections.FindBySymbol(variable); 
+				END NVariable;
 				
+				(*
+					TypeDeclaration = sfTypeDeclaration prevSymbol:SIZE name:STRING td:ADDRESS Scope.
+				*)
+				PROCEDURE NTypeDeclaration(typeDeclaration: SyntaxTree.TypeDeclaration; scopeOffset: LONGINT);
+				VAR declared: SyntaxTree.Type; s: Sections.Section; offset: LONGINT; name: Basic.SegmentedName; pos: LONGINT;
+				BEGIN
+					IF typeDeclaration = NIL THEN RETURN END;
+					pos := CurrentIndex(); 
+					s := module.allSections.FindBySymbol(typeDeclaration); 
+					IF s = NIL THEN RETURN END; (*! duplicate, what to do? *) 
 
+					IF RefInfo THEN Info(section, "TypeDeclaration") END;
+					Char(section, sfTypeDeclaration);
+					Size(section, scopeOffset);
+					String0(section, typeDeclaration.name);
+										
+					declared := typeDeclaration.declaredType.resolved;
+					IF (declared IS SyntaxTree.PointerType) THEN
+						declared := declared(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+
+					WITH declared: SyntaxTree.RecordType DO
+						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(declared.recordScope.numberMethods)*module.system.addressSize);
+						Symbol(section, s,  0, offset);
+						Global.GetSymbolSegmentedName(typeDeclaration,name);
+						Basic.AppendToSegmentedName(name,".@Info");
+						s := module.allSections.FindByName(name); 
+						PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
+
+						NScope(declared.recordScope, pos);
+					ELSE
+						Address(section, 0);
+					END;					
+				END NTypeDeclaration;
+				
+				(*
+					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
+				*)
+				PROCEDURE NScope(scope: SyntaxTree.Scope; prevSymbol: LONGINT);
+				VAR bodyProcedure, procedure: SyntaxTree.Procedure; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration; pos: LONGINT;
+				BEGIN
+					IF scope = NIL THEN RETURN END; 
+					IF RefInfo THEN Info(section, "Scope") END;
+					Char(section, sfScopeBegin);
+					variable := scope.firstVariable;
+					WHILE (variable # NIL) DO
+						NVariable(variable, prevSymbol);
+						variable := variable.nextVariable;
+					END;
+					WITH scope: SyntaxTree.ModuleScope DO
+						bodyProcedure := scope.bodyProcedure;
+					|scope: SyntaxTree.RecordScope DO
+						bodyProcedure := scope.bodyProcedure;
+					ELSE
+						bodyProcedure := NIL;
+					END;
+					IF bodyProcedure # NIL THEN
+						NProcedure(bodyProcedure, prevSymbol)
+					END;
+					procedure := scope.firstProcedure;
+					WHILE procedure # NIL DO
+						IF (procedure # bodyProcedure) & ~procedure.isInline THEN NProcedure(procedure, prevSymbol) END;
+						procedure := procedure.nextProcedure;
+					END;
+					typeDeclaration := scope.firstTypeDeclaration;
+					WHILE typeDeclaration # NIL DO
+						NTypeDeclaration(typeDeclaration, prevSymbol);
+						typeDeclaration := typeDeclaration.nextTypeDeclaration;
+					END;
+					Char(section, sfScopeEnd); (* scope ends *)
+				END NScope;
+				
 			BEGIN
 				ArrayBlock(section,sizePC,"", FALSE);
 				
 				startPC := section.pc;
 				Char(section,0FFX); (* sign for trap writer *)
-
-				(* body procedure and global variables *)
-				FOR i := 0 TO module.allSections.Length() - 1 DO
-					s := module.allSections.GetSection(i);
-					IF (s.type # Sections.InitCodeSection) & (s.symbol = module.module.moduleScope.bodyProcedure) THEN
-						Scope(s) (*! must be first procedure in ref section *)
-					END
-				END;
-
-				(* all global procedures *)
-				FOR i := 0 TO module.allSections.Length() - 1 DO
-					s := module.allSections.GetSection(i);
-					IF (s.symbol = module.module.moduleScope.bodyProcedure) THEN (* already done, see above *)
-					ELSIF (s.type # Sections.InitCodeSection) & (s.symbol # NIL) & (s.symbol IS SyntaxTree.Procedure) & ~s.symbol(SyntaxTree.Procedure).isInline THEN
-						Procedure(s)
-					END
-				END;
-				
-				(* all global types *)
-				(* to be filled *)
-				
-				endPC := section.pc;
-				PatchArray(section,sizePC,ComputeSize(startPC, endPC));
-
+				NScope(module.module.moduleScope, -1);				
+				PatchArray(section,sizePC,CurrentIndex());
 			END References;
 			
 		(*
@@ -12172,6 +12287,8 @@ TYPE
 				Symbol(section, procedureSection, procedureSection.validPAFExit,0);
 				Info(section,"pointer to offsets array");
 				Symbol(section, section,section.pc+1,0);
+				patchProcedurePC := section.pc;
+				Size(section, 0);
 				Info(section,"offsets array");
 				procedure := procedureSection.symbol(SyntaxTree.Procedure);
 				PointerArray(section, procedure.procedureScope, numberPointers);
@@ -12188,7 +12305,7 @@ TYPE
 		END ProcedureDescriptorPointer;
 		
 		PROCEDURE ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT);
-		VAR sizePC, i: LONGINT; destination: Sections.Section
+		VAR sizePC, i: LONGINT; destination: Sections.Section;
 		BEGIN
 			ArrayBlock(section, sizePC,"Modules.ProcedureDescPointer",FALSE);
 			numberProcs := 0;
@@ -12202,93 +12319,6 @@ TYPE
 			PatchArray(section, sizePC, numberProcs);
 		END ProcedureDescriptorArray;
 
-		PROCEDURE PointersInProcTables(procArray, pointerArray: IntermediateCode.Section; VAR procArraySize, maxPointers: LONGINT);
-		VAR
-			destination: Sections.Section;
-			pointerArraySizePC, procArraySizePC, pointerArraySize, i: LONGINT;
-
-			PROCEDURE PointerOffsets(destination : IntermediateCode.Section);
-			VAR numberPointers: LONGINT; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
-				variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; string: Basic.SectionName;
-				ptrPc, sizePc: LONGINT; 
-			BEGIN
-				Info(procArray,"pcFrom");
-				Symbol(procArray,destination,0,0);
-				Info(procArray,"pcTo");
-				Symbol(procArray,destination,destination.pc,0);
-				Info(procArray,"pcStatementBegin");
-				Symbol(procArray,destination,destination.validPAFEnter,0);
-				Info(procArray,"pcStatementEnd");
-				Symbol(procArray,destination,destination.validPAFExit,0);
-				
-				IF ~implementationVisitor.backend.cooperative THEN 
-					ptrPc := procArray.pc;
-					Address(procArray, 0); (* patch this address later *)
-					pointerArray := procArray;
-					ArrayBlock(pointerArray, sizePc, "", FALSE);
-					Basic.SegmentedNameToString(destination.name, string);
-					Info(pointerArray,string);
-					procedure := destination.symbol(SyntaxTree.Procedure);
-					procedureType := procedure.type(SyntaxTree.ProcedureType);
-					
-					variable := procedure.procedureScope.firstVariable;
-					WHILE(variable # NIL) DO
-						IF ~(variable.untraced) THEN
-							Pointers(ToMemoryUnits(module.system,variable.offsetInBits), NIL,  pointerArray, variable.type, numberPointers);
-						END;
-						variable := variable.nextVariable
-					END;
-					(*! this might be unnecessary *)
-					parameter := procedureType.firstParameter;
-					WHILE(parameter # NIL) DO
-						IF ~(parameter.untraced) THEN
-							Pointers(ToMemoryUnits(module.system,parameter.offsetInBits), NIL,  pointerArray, parameter.type, numberPointers);
-						END;
-						parameter := parameter.nextParameter;
-					END;
-					PatchArray(pointerArray, sizePc, numberPointers); 
-					PatchSymbol(procArray, ptrPc, procArray.name, NIL, sizePc+1, 0);
-				END;
-				(*
-				Info(procArray,"numberPointers");
-				Longint(procArray,numberPointers);
-				IF numberPointers > maxPointers THEN maxPointers := numberPointers END;
-				INC(pointerArraySize, numberPointers);
-				*)
-			END PointerOffsets;
-
-		BEGIN
-			maxPointers := 0;
-			Info(procArray, "proc array descriptor");
-			Address(procArray,0);
-			Address(procArray,0);
-			Address(procArray,0);
-			procArraySizePC := procArray.pc;
-			Address(procArray,0);
-			procArraySize := 0;
-			IF ~implementationVisitor.backend.cooperative THEN
-				Info(pointerArray, "pointer array descriptor");
-				Address(pointerArray,0);
-				Address(pointerArray,0);
-				Address(pointerArray,0);
-				pointerArraySizePC := pointerArray.pc;
-				Address(pointerArray,0);
-				pointerArraySize := 0;
-			END;
-			procArraySize := 0;
-			FOR i := 0 TO module.allSections.Length() - 1 DO
-				destination := module.allSections.GetSection(i);
-				IF (destination.type IN {Sections.CodeSection, Sections.BodyCodeSection}) & (destination.symbol # NIL) & (destination.symbol IS SyntaxTree.Procedure) & ~destination.symbol(SyntaxTree.Procedure).isInline THEN
-					PointerOffsets(destination(IntermediateCode.Section));
-					INC(procArraySize);
-				END
-			END;
-
-			PatchLongint(procArray,procArraySizePC,procArraySize);
-			IF ~implementationVisitor.backend.cooperative THEN
-				PatchLongint(pointerArray,pointerArraySizePC,pointerArraySize);
-			END;
-		END PointersInProcTables;
 
 		(*
 			Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
@@ -12429,13 +12459,10 @@ TYPE
 					*)
 					Name(source,sectionName);
 					source.SetReferenced(FALSE);
-
-					ReflectVariables(source, module.module);
-					ReflectProcedures(source, module.module);
+					patchInfoPC := source.pc;
+					Size(source, 0);
 			END NewModuleInfo;
-			
 
-			
 		PROCEDURE Module(bodyProc: IntermediateCode.Section);
 		VAR
 			moduleSection, pointerSection, importSection, emptyArraySection, exceptionSection, commandsSection,
@@ -12471,7 +12498,6 @@ TYPE
 			(* set base pointer *)
 			NamedSymbolAt(procTableSection, procTableSectionOffset -1, name, NIL, 0, offset);
 
-			(*PointersInProcTables(procTableSection,ptrTableSection,numberProcs,maxPointers);*)
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
 			ArrayBlock(emptyArraySection,temp,"", FALSE);
 			moduleSection := ModuleSection();
@@ -12600,496 +12626,6 @@ TYPE
 					RETURN section;
 			END SymbolSection;
 			
-			PROCEDURE ReflectParameters(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
-			VAR type: SyntaxTree.Type; variable: SyntaxTree.Parameter; pc: LONGINT; section: IntermediateCode.Section;
-			BEGIN
-				ASSERT(implementationVisitor.newObjectFile);
-				IF ~ReflectionSupport OR simple THEN variable := NIL
-				ELSIF symbol IS SyntaxTree.Procedure THEN
-					variable := symbol(SyntaxTree.Procedure).type(SyntaxTree.ProcedureType).firstParameter;
-				END;
-				Info(in, "parameters");
-				IF variable # NIL THEN
-					section := SymbolSection(symbol, ".@Parameters",pc);
-					AddPointer(section, pc);
-					ParameterArray(section, variable);
-					Symbol(in, section, pc, 0);
-				ELSE
-					Address(in, 0);
-				END;
-			END ReflectParameters;
-			
-			PROCEDURE ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
-			VAR type: SyntaxTree.Type; variable: SyntaxTree.Variable; pc: LONGINT; section: IntermediateCode.Section;
-			BEGIN
-				ASSERT(implementationVisitor.newObjectFile);
-				IF ~ReflectionSupport OR simple THEN variable := NIL
-				ELSIF symbol IS SyntaxTree.Module THEN
-					variable := symbol(SyntaxTree.Module).moduleScope.firstVariable;
-				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
-					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
-					IF type IS SyntaxTree.PointerType THEN
-						type := type(SyntaxTree.PointerType).pointerBase.resolved;
-					END;
-					IF type IS SyntaxTree.RecordType THEN
-						variable := type(SyntaxTree.RecordType).recordScope.firstVariable
-					ELSIF type IS SyntaxTree.CellType THEN
-						variable := type(SyntaxTree.CellType).cellScope.firstVariable;
-					END;
-				ELSIF symbol IS SyntaxTree.Procedure THEN
-					variable := symbol(SyntaxTree.Procedure).procedureScope.firstVariable;
-				END;
-				Info(in, "variables");
-				IF variable # NIL THEN
-					section := SymbolSection(symbol, ".@Variables",pc);
-					AddPointer(section, pc);
-					VariableArray(section, variable);
-					Symbol(in, section, pc, 0);
-				ELSE
-					Address(in, 0);
-				END;
-			END ReflectVariables;
-
-			PROCEDURE ReflectProcedures(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol);
-			VAR type: SyntaxTree.Type; procedure: SyntaxTree.Procedure; pc: LONGINT; section: IntermediateCode.Section;
-			BEGIN
-				ASSERT(implementationVisitor.newObjectFile);
-				IF ~ReflectionSupport OR simple THEN procedure := NIL
-				ELSIF symbol IS SyntaxTree.Module THEN
-					procedure := symbol(SyntaxTree.Module).moduleScope.firstProcedure;
-				ELSIF symbol IS SyntaxTree.TypeDeclaration THEN
-					type := symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
-					IF type IS SyntaxTree.PointerType THEN
-						type := type(SyntaxTree.PointerType).pointerBase.resolved;
-					END;
-					IF type IS SyntaxTree.RecordType THEN
-						procedure := type(SyntaxTree.RecordType).recordScope.firstProcedure
-					ELSIF type IS SyntaxTree.CellType THEN
-						procedure := type(SyntaxTree.CellType).cellScope.firstProcedure;
-					END;
-				ELSIF symbol IS SyntaxTree.Procedure THEN
-					procedure := symbol(SyntaxTree.Procedure).procedureScope.firstProcedure;
-				END;
-				
-				Info(in, "procedures");
-				IF procedure # NIL THEN
-					section := SymbolSection(symbol, ".@Procedures",pc);
-					AddPointer(section, pc);
-					ProcedureArray(section, procedure);
-					Symbol(in, section, pc, 0);
-				ELSE
-					Address(in, 0);
-				END;
-			END ReflectProcedures;
-
-			PROCEDURE ParameterArray(source: IntermediateCode.Section; parameter: SyntaxTree.Parameter);
-			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
-				segmentedName, name: Basic.SegmentedName;
-				td: SyntaxTree.TypeDeclaration;
-				type: SyntaxTree.Type;
-			BEGIN
-				ArrayBlock(source,pc,"Modules.FieldEntry", FALSE);
-				Info(source, "FieldArray");
-				size :=0;
-				WHILE parameter # NIL DO
-					Info(source,"name");
-					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, parameter.name, moduleNamePool), 0); (* reference to dynamic name *)
-					Info(source,"offset");
-					IF (parameter.scope # NIL) & (parameter.scope IS SyntaxTree.ModuleScope) THEN
-						implementationVisitor.GetCodeSectionNameForSymbol(parameter, name);
-						NamedSymbol(source, name,parameter, 0,0);
-					ELSE
-						Size(source, ToMemoryUnits(module.system,parameter.offsetInBits));
-					END;
-					TypeEntry(source, parameter.type);
-					Info(source,"flags");
-					IF parameter.kind = SyntaxTree.VarParameter THEN
-						Set(source, {SyntaxTree.FlagParameterVar});
-					ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-						Set(source,{SyntaxTree.FlagParameterConst});
-					ELSE
-						Set(source, {});
-					END;
-					parameter := parameter.nextParameter;
-					INC(size);
-				END;
-				PatchArray(source,pc,size);
-			END ParameterArray;
-			
-			PROCEDURE TypeEntry(source: IntermediateCode.Section; type: SyntaxTree.Type);
-			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
-				segmentedName, name: Basic.SegmentedName;
-				td: SyntaxTree.TypeDeclaration;
-				sub: CHAR;
-			CONST
-			
-				
-			sfTypeNone = 0X;
-			sfTypeCHAR = 01X;
-			sfTypeCHAR8 = 02X;
-			sfTypeCHAR16 = 03X;
-			sfTypeCHAR32 = 04X;
-			sfTypeRANGE = 05X;
-			sfTypeSHORTINT = 06X;
-			sfTypeINTEGER = 07X;
-			sfTypeLONGINT = 08X;
-			sfTypeHUGEINT = 09X;
-			sfTypeWORD = 0AX;
-			sfTypeLONGWORD = 0BX;
-			sfTypeSIGNED8 = 0CX;
-			sfTypeSIGNED16 = 0DX;
-			sfTypeSIGNED32 = 0EX;
-			sfTypeSIGNED64 = 0FX;
-			sfTypeUNSIGNED8 = 10X;
-			sfTypeUNSIGNED16 = 11X; 
-			sfTypeUNSIGNED32 = 12X;
-			sfTypeUNSIGNED64 = 13X;
-			sfTypeREAL = 14X;
-			sfTypeLONGREAL = 15X;
-			sfTypeCOMPLEX = 16X;
-			sfTypeLONGCOMPLEX = 17X;
-			sfTypeBOOLEAN = 18X;
-			sfTypeSET = 19X;
-			sfTypeANY = 1AX;
-			sfTypeOBJECT = 1BX; 
-			sfTypeBYTE = 1CX; 
-			sfTypeADDRESS = 1DX; 
-			sfTypeSIZE = 1EX; 
-			sfTypePointerToRecord = 20X;
-			sfTypePointerToArray = 21X;
-			sfTypeOpenArray = 22X;
-			sfTypeStaticArray = 23X;
-			sfTypeRecord = 24X;
-			
-			BEGIN
-				IF type # NIL THEN 
-					type := type.resolved;
-					Info(source,"type class");
-					sub := 0X;
-					size := type.sizeInBits;
-					IF type IS SyntaxTree.ArrayType THEN
-						IF IsOpenArray(type) THEN
-							 sub := sfTypeOpenArray;
-						 ELSIF IsStaticArray(type) THEN
-						 	sub := sfTypeStaticArray;
-						 END;
-						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
-					END;
-					IF type IS SyntaxTree.BasicType THEN (* BasicType  *)
-						IF type IS SyntaxTree.BooleanType THEN 
-							Char(source, sfTypeBOOLEAN);
-						ELSIF type IS SyntaxTree.CharacterType THEN
-							IF type = module.system.characterType THEN
-								Char(source, sfTypeCHAR);
-							ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
-								Char(source, sfTypeCHAR8)
-							ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
-								Char(source, sfTypeCHAR16);
-							ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
-								Char(source, sfTypeCHAR32);
-							ELSE
-								Char(source, 0FFX); (* invalid type *)
-							END;
-						ELSIF type IS SyntaxTree.IntegerType THEN
-							IF type(SyntaxTree.IntegerType).signed THEN
-								IF (type = module.system.shortintType) THEN
-									Char(source, sfTypeSHORTINT)
-								ELSIF (type = module.system.integerType) THEN
-									Char(source, sfTypeINTEGER)
-								ELSIF (type = module.system.longintType) THEN
-									Char(source, sfTypeLONGINT)
-								ELSIF (type = module.system.hugeintType) THEN 
-									Char(source, sfTypeHUGEINT)
-								ELSIF (type = module.system.wordType) THEN
-									Char(source, sfTypeWORD)
-								ELSIF (type = module.system.longWordType) THEN
-									Char(source, sfTypeLONGWORD);
-								ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
-									Char(source, sfTypeSIGNED8)
-								ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
-									Char(source, sfTypeSIGNED16)
-								ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
-									Char(source, sfTypeSIGNED32)
-								ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
-									Char(source, sfTypeSIGNED64)
-								ELSE
-									Char(source, 0FFX); (* invalid type *)
-								END 
-							ELSE
-								IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
-									Char(source, sfTypeUNSIGNED8)
-								ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
-									Char(source, sfTypeUNSIGNED16)
-								ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
-									Char(source, sfTypeUNSIGNED32)
-								ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
-									Char(source, sfTypeUNSIGNED64)
-								ELSE
-									Char(source, 0FFX); (* invalid type *)
-								END 
-							END;
-						ELSIF type IS SyntaxTree.FloatType THEN
-							IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
-								Char(source, sfTypeREAL);
-							ELSIF (type = module.system.longrealType) OR (type.sizeInBits = 64) THEN
-								Char(source, sfTypeLONGREAL);
-							ELSE
-								Char(source, 0FFX); (* invalid type *)
-							END;
-						ELSIF type IS SyntaxTree.ComplexType THEN
-							IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
-								Char(source, sfTypeCOMPLEX);
-							ELSIF (type = module.system.longcomplexType) OR (type.sizeInBits = 12) THEN
-								Char(source, sfTypeLONGCOMPLEX);
-							ELSE
-								Char(source, 0FFX); (* invalid type *)
-							END;
-						ELSIF type IS SyntaxTree.SetType THEN
-							Char(source, sfTypeSET);
-						ELSIF type IS SyntaxTree.AnyType THEN 
-							Char(source, sfTypeANY);
-						ELSIF type IS SyntaxTree.ObjectType THEN
-							Char(source, sfTypeOBJECT);
-						ELSIF type IS SyntaxTree.ByteType THEN
-							Char(source, sfTypeBYTE);
-						ELSIF type IS SyntaxTree.RangeType THEN
-							Char(source, sfTypeRANGE)
-						ELSIF type IS SyntaxTree.AddressType THEN 
-							Char(source, sfTypeADDRESS)
-						ELSIF type IS SyntaxTree.SizeType THEN 
-							Char(source, sfTypeSIZE)
-						ELSE 
-							Char(source, 0FFX); (* invalid type *)
-						END;
-					ELSIF (type IS SyntaxTree.PointerType) THEN
-						IF IsStrictlyPointerToRecord(type) THEN
-							Char(source, sfTypePointerToRecord)
-						ELSE
-							Char(source, sfTypePointerToArray)
-						END; 
-					ELSIF (type IS SyntaxTree.ArrayType) THEN
-						IF IsStaticArray(type) THEN
-							Char(source, sfTypeStaticArray)
-						ELSE
-							Char(source, sfTypeOpenArray)
-						END;
-					ELSIF (type IS SyntaxTree.RecordType) THEN
-						IF type(SyntaxTree.RecordType).pointerType # NIL (* OBJECT *) THEN
-							Char(source, sfTypePointerToRecord)
-						ELSE
-							Char(source, sfTypeRecord);
-						END;
-					ELSE
-						Char(source, 0FFX); (* invalid type *)
-					END; 
-					Char(source, sub); (* subtype *)
-
-						(*
-						IF TraceExport IN Trace THEN
-
-							IF  type IS SyntaxTree.RecordType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / RecordType "); D.Str(name); D.Ln END;
-								WITH type: SyntaxTree.RecordType DO
-									w.RawNum(sfTypeRecord);
-									baseType := type.baseType;
-									Type(baseType);
-									w.RawString(name);
-									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
-									w.RawNum(SYSTEM.VAL(LONGINT,flags));
-									Record(type)
-								END
-							ELSIF type IS SyntaxTree.PointerType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / PointerType "); D.Str(name); D.Ln END;
-								w.RawNum(sfTypePointer);
-								Type(type(SyntaxTree.PointerType).pointerBase);
-								w.RawString(name);
-								WITH type: SyntaxTree.PointerType DO
-									IF type.isUnsafe THEN INCL(flags,sfUnsafe) END;
-									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
-									IF type.isDisposable THEN INCL(flags,sfDisposable) END;
-								END;
-								w.RawNum(SYSTEM.VAL(LONGINT,flags));
-							ELSIF type IS SyntaxTree.ArrayType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / ArrayType "); D.Str(name); D.Ln END;
-								WITH type: SyntaxTree.ArrayType DO
-									IF type.form = SyntaxTree.Open THEN
-										w.RawNum(sfTypeOpenArray)
-									ELSIF type.form = SyntaxTree.Static THEN
-										w.RawNum(sfTypeStaticArray)
-									ELSE HALT(100)
-									END;
-									Type(type.arrayBase);
-									w.RawString(name);
-									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
-									w.RawNum(SYSTEM.VAL(LONGINT,flags));
-									IF type.form = SyntaxTree.Static THEN
-										w.RawNum(type.staticLength);
-									END;
-								END;
-							ELSIF type IS SyntaxTree.MathArrayType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / MathArrayType "); D.Str(name); D.Ln END;
-								WITH type: SyntaxTree.MathArrayType DO
-									IF type.form = SyntaxTree.Open THEN
-										w.RawNum(sfTypeOpenMathArray)
-									ELSIF type.form = SyntaxTree.Static THEN
-										w.RawNum(sfTypeStaticMathArray)
-									ELSIF type.form = SyntaxTree.Tensor THEN
-										w.RawNum(sfTypeTensor)
-									ELSE HALT(100)
-									END;
-									Type(type.arrayBase);
-									w.RawString(name);
-									IF type.isRealtime THEN INCL(flags,sfRealtime) END;
-									w.RawNum(SYSTEM.VAL(LONGINT,flags));
-									IF type.form = SyntaxTree.Static THEN
-										w.RawNum(type.staticLength);
-									END;
-								END;
-							ELSIF type IS SyntaxTree.ProcedureType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / ProcedureType"); D.Str(name); D.Ln END;
-								WITH type: SyntaxTree.ProcedureType DO
-									IF type.isDelegate THEN
-										w.RawNum(sfSysFlag); w.RawNum(sfDelegate);
-									END;
-									w.RawNum(sfTypeProcedure);
-									Type(type.returnType);
-									w.RawString(name);
-
-									IF type.callingConvention =  SyntaxTree.WinAPICallingConvention THEN
-										INCL(flags,sfWinAPIParam);
-									ELSIF  type.callingConvention =  SyntaxTree.CCallingConvention  THEN
-										INCL(flags,sfCParam);
-									ELSIF  type.callingConvention =  SyntaxTree.DarwinCCallingConvention  THEN
-										INCL(flags,sfDarwinCParam);
-									END;
-									IF type.isRealtime THEN
-										INCL(flags,sfRealtime)
-									END;
-									w.RawNum(SYSTEM.VAL(LONGINT,flags));
-
-									ParameterList(type);
-								END;
-							ELSIF type IS SyntaxTree.EnumerationType THEN
-								IF TraceExport IN Trace THEN D.Str("Type / UserType / EnumerationType"); D.Str(name); D.Ln END;
-								WITH type: SyntaxTree.EnumerationType DO
-									w.RawNum(sfTypeEnumeration);
-									Type(type.enumerationBase);
-									w.RawString(name);
-									EnumerationList(type.enumerationScope);
-								END;
-							ELSE HALT(200)
-							END;
-						END;
-					END;
-					*)
-					Info(source, "size");
-					Integer(source, size);
-					Info(source, "type desc");
-					td := NIL;
-					IF type IS SyntaxTree.PointerType THEN
-						td := type(SyntaxTree.PointerType).typeDeclaration;
-						type := type(SyntaxTree.PointerType).pointerBase.resolved;
-					END;
-					IF  (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).typeDeclaration # NIL) THEN 
-						td := type(SyntaxTree.RecordType).typeDeclaration;
-					END;
-					IF (td # NIL) & (type IS SyntaxTree.RecordType) THEN
-						Global.GetSymbolSegmentedName(td,segmentedName);
-						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-							tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-						ELSE
-							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-						END;
-						IF type IS SyntaxTree.RecordType THEN
-							offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
-						END;
-						Symbol(source, tir,  0, offset);
-					ELSE
-						Address(source, 0);
-					END;
-				ELSE
-					Char(source, 0X); (* NIL type *)
-					Char(source, 0X);
-					Integer(source, 0);
-					Address(source, 0);
-				END;
-			END TypeEntry;
-			
-			PROCEDURE VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable);
-			VAR pc, offset: LONGINT; tir: Sections.Section; size: LONGINT;
-				name: Basic.SegmentedName;
-			BEGIN
-				ArrayBlock(source,pc,"Modules.FieldEntry", FALSE);
-				Info(source, "FieldArray");
-				size :=0;
-				WHILE variable # NIL DO
-					Info(source,"name");
-					Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, variable.name, moduleNamePool), 0); (* reference to dynamic name *)
-					Info(source,"offset");
-					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
-						implementationVisitor.GetCodeSectionNameForSymbol(variable, name);
-						NamedSymbol(source, name,variable, 0,0);
-					ELSE
-						Size(source, ToMemoryUnits(module.system,variable.offsetInBits));
-					END;
-					TypeEntry(source, variable.type);
-					Info(source,"flags");
-					Set(source, {});
-
-					variable := variable.nextVariable;
-					INC(size);
-				END;
-				PatchArray(source,pc,size);
-			END VariableArray;
-			
-			
-			
-			PROCEDURE ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure);
-			VAR pc: LONGINT; size: LONGINT; 
-				segmentedName: Basic.SegmentedName;
-				flags: SET;
-			BEGIN
-				ArrayBlock(source,pc,"Modules.ProcedureEntry", FALSE);
-
-				Info(source, "ProcedureArray");
-				size :=0;
-				WHILE procedure # NIL DO
-					IF ~procedure.isInline THEN
-						Info(source,"name");
-						Symbol(source, moduleNamePoolSection, DynamicName(moduleNamePoolSection, procedure.name, moduleNamePool), 0); (* reference to dynamic name *)
-
-						implementationVisitor.GetCodeSectionNameForSymbol(procedure, segmentedName);
-						NamedSymbol(source, segmentedName, procedure, 0 , 0); 
-
-						(* size *)
-						Size(source, 0);
-						(* parameters *)
-						ReflectParameters(source, procedure);
-						(* variables *)
-						ReflectVariables(source, procedure);
-						(* proedures *)
-						ReflectProcedures(source, procedure);
-
-						(* return type entry *)
-						TypeEntry(source, procedure.type(SyntaxTree.ProcedureType).returnType);
-						Info(source, "flags");
-						flags := {};
-						IF procedure.type(SyntaxTree.ProcedureType).isDelegate THEN
-							INCL(flags, SyntaxTree.FlagProcedureDelegate)
-						END;
-						IF procedure.isConstructor THEN
-							INCL(flags, SyntaxTree.FlagProcedureConstructor)
-						END;
-						Set(source, flags);
-
-						INC(size);
-					END;
-					procedure := procedure.nextProcedure;
-				END;
-				PatchArray(source,pc,size);
-			END ProcedureArray;
-
-
 		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
 		VAR recordType: SyntaxTree.RecordType;
 			tir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
@@ -13136,15 +12672,9 @@ TYPE
 					*)
 					Name(source,sectionName);
 					source.SetReferenced(FALSE);
-
-					ReflectVariables(source, td);
-					ReflectProcedures(source, td);
-
+					Size(source, 0);
 					RETURN source;
 			END NewTypeDescriptorInfo;
-			
-
-
 
 			PROCEDURE NewTypeDescriptor;
 			VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; source, base: IntermediateCode.Section;
@@ -14519,19 +14049,19 @@ END FoxIntermediateBackend.
 
 Compiler.Compile FoxIntermediateBackend.Mod ~
 
-#	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2G.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-FSTools.CloseFiles A2G.exe ~
+#	Release.Build --path="/temp/obh/" WinAosNewObjectFile ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H --path="/temp/obh/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+FSTools.CloseFiles A2H.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
-Compiler.Compile -p=Win32G  --destPath=/temp/obg/
+Compiler.Compile -p=Win32G  --destPath=/temp/obh/
 Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
-Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
+Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
 Win32.Traps.Mod Locks.Mod Win32.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 
 FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod 
 OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod ISO9660Files.Mod Win32.User32.Mod 
 Win32.WinTrace.Mod Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod Win32.WinFS.Mod 
-RelativeFileSystem.Mod Loader.Mod BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod 
+RelativeFileSystem.Mod BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod 
 GenericLinker.Mod GenericLoader.Mod BootConsole.Mod 

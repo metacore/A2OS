@@ -1,5 +1,5 @@
 MODULE Modules;
-	IMPORT SYSTEM, Trace, Machine, Heaps, Runtime;
+	IMPORT SYSTEM, Trace, Machine, Heaps;
 CONST 
 	Ok* = 0; 
 	AddressSize = SIZEOF(ADDRESS); 
@@ -13,8 +13,6 @@ CONST
 	PowerDown* = 1; 
 	Reboot* = 2; 
 	ClearCode = TRUE; 
-	InitTableLen = 1024; 
-	InitPtrTableLen = 2048; 
 	DefaultContext* = \"A2"\; 
 	NoLoader = 3400; 
 	TraceBoot = TRUE; 
@@ -44,44 +42,14 @@ TYPE
 
 	TerminationHandler* = PROCEDURE ; 
 
-	EntryType* = RECORD 
-		class*: CHAR; 
-		subclass*: CHAR; 
-		size*: INTEGER; 
-		type*: ADDRESS; 
-	END; 
-
-	FieldEntry* = RECORD 
-		name*: DynamicName; 
-		offset*: SIZE; 
-		type*: EntryType; 
-		flags*: SET; 
-	END; 
-
-	FieldEntries* = POINTER TO ARRAY OF FieldEntry; 
-
-	ProcedureEntries* = POINTER TO ARRAY OF ProcedureEntry; 
-
-	ProcedureEntry* = RECORD 
-		name*: DynamicName; 
-		address*: ADDRESS; 
-		size*: SIZE; 
-		parameters*{UNTRACED} : FieldEntries; 
-		variables*{UNTRACED} : FieldEntries; 
-		procedures*{UNTRACED} : ProcedureEntries; 
-		returnType*: EntryType; 
-		flags*: SET; 
-	END; 
-
 	TypeDesc* = POINTER TO RECORD 
 		descSize: LONGINT; 
 		sentinel: LONGINT; 
-		tag*: ADDRESS; 
-		flags*: SET; 
-		mod*{UNTRACED} : Module; 
-		name*: Name; 
-		fields*{UNTRACED} : FieldEntries; 
-		procedures*{UNTRACED} : ProcedureEntries; 
+		tag-: ADDRESS; 
+		flags-: SET; 
+		mod-{UNTRACED} : Module; 
+		name-: Name; 
+		refsOffset-: SIZE; 
 	END; 
 
 	ExceptionTableEntry* = RECORD 
@@ -92,25 +60,15 @@ TYPE
 
 	ExceptionTable* = POINTER TO ARRAY OF ExceptionTableEntry; 
 
-	ProcTableEntry* = RECORD 
-		pcFrom*, pcLimit*, pcStatementBegin*, pcStatementEnd*: ADDRESS; 
-		noPtr*: LONGINT; 
+	ProcedureDescPointer* = POINTER TO ProcedureDesc; 
+
+	ProcedureDesc* = RECORD 
+		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
+		refsOffset-: SIZE; 
+		offsets-{UNTRACED} : POINTER TO ARRAY OF ADDRESS; 
 	END; 
 
-	ProcTable* = POINTER TO ARRAY OF ProcTableEntry; 
-
-	PtrTable* = POINTER TO ARRAY OF ADDRESS; 
-
-	ProcOffsetEntry* = RECORD 
-		data*: ProcTableEntry; 
-		startIndex*: LONGINT; 
-	END; 
-
-	ProcOffsetTable* = POINTER TO ARRAY OF ProcOffsetEntry; 
-
-	InternalPtr = RECORD 
-		p: ANY; 
-	END; 
+	ProcedureDescs* = POINTER TO ARRAY OF ProcedureDescPointer; 
 
 	Module* = OBJECT {EXCLUSIVE} (Heaps.RootObject)
 	VAR 
@@ -124,8 +82,8 @@ TYPE
 		ptrAdr*: POINTER TO ARRAY OF ADDRESS; 
 		typeInfo*: POINTER TO ARRAY OF TypeDesc; 
 		module*: POINTER TO ARRAY OF Module; 
-		procTable*: ProcTable; 
-		ptrTable*: PtrTable; 
+		procTable*: ProcedureDescs; 
+		ptrTable*: ADDRESS; 
 		data*, code*, staticTypeDescs*, refs*: Bytes; 
 		export*: ExportDesc; 
 		term*: TerminationHandler; 
@@ -133,7 +91,7 @@ TYPE
 		noProcs*: LONGINT; 
 		firstProc*: ADDRESS; 
 		maxPtrs*: LONGINT; 
-		internal: POINTER TO ARRAY OF InternalPtr; 
+		internal: POINTER TO ARRAY OF ANY; 
 		crc*: LONGINT; 
 		body*: PROCEDURE ; 
 
@@ -151,15 +109,13 @@ VAR
 	freeRoot*: Module; 
 	root-: Module; 
 	initBlock: ANY; 
-	procOffsets-: ProcOffsetTable; 
-	numProcs: LONGINT; 
-	ptrOffsets-: PtrTable; 
-	numPtrs: LONGINT; 
 	shutdown*: LONGINT; 
 	trace: BOOLEAN; 
 	register: RECORD 
 		first, last: Module; 
 	END; 
+	procedureDescriptors-: ProcedureDescs; 
+	mayAllocate: BOOLEAN; 
 	callagain: BOOLEAN; 
 
 	PROCEDURE ^ AddLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc); 
@@ -170,8 +126,10 @@ VAR
 	PROCEDURE ^ Initialize0*(module: Module); 
 	PROCEDURE ^ ModuleByName*(CONST name: ARRAY OF CHAR): Module; 
 	PROCEDURE ^ GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
-	PROCEDURE ^ SortProcTable(m: Module); 
-	PROCEDURE ^ SelectionSort(exTable: ExceptionTable); 
+	PROCEDURE ^ SortProcedureDescs(p: ProcedureDescs); 
+	PROCEDURE ^ SortExceptionTable(p: ExceptionTable); 
+	PROCEDURE ^ MergeProcedureDescs*(p: ProcedureDescs); 
+	PROCEDURE ^ RemoveProcedureDescs*(p: ProcedureDescs); 
 	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module; 
 	PROCEDURE ^ ThisModuleByAdr0*(pc: ADDRESS): Module; 
 	PROCEDURE ^ ThisModuleByAdr*(pc: ADDRESS): Module; 
@@ -180,12 +138,7 @@ VAR
 	PROCEDURE ^ ThisTypeByAdr*(adr: ADDRESS; VAR m: Module; VAR t: TypeDesc); 
 	PROCEDURE ^ NewObj*(t: TypeDesc; isRealtime: BOOLEAN): ANY; 
 	PROCEDURE ^ TypeOf*(obj: ANY): TypeDesc; 
-	PROCEDURE ^ FindPos(key: ADDRESS; VAR pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ FindProc*(pc: ADDRESS; VAR data: ProcTableEntry; VAR index: LONGINT; VAR success: BOOLEAN); 
-	PROCEDURE ^ FindInsertionPos(VAR entry: ProcTableEntry; VAR pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ NumTotalPtrs(procTable: ProcTable): LONGINT; 
-	PROCEDURE ^ InsertProcOffsets(procTable: ProcTable; ptrTable: PtrTable; maxPtr: LONGINT); 
-	PROCEDURE ^ DeleteProcOffsets(firstProcPC: ADDRESS; noProcsInMod: LONGINT); 
+	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
 	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Shutdown*(code: LONGINT); 

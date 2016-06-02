@@ -61,45 +61,15 @@ TYPE
 
 	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
 	*)
-		
-	EntryType*=RECORD
-		class*: CHAR; 
-		subclass*: CHAR;
-		(* size in bits *)
-		size*: INTEGER;
-		type*: ADDRESS; (* type descriptor or additional information *)
-	END;
-	
-	FieldEntry* = RECORD
-		name*: DynamicName;
-		offset*: SIZE; (* offset of this type *)
-		type*: EntryType;
-		flags*: SET;
-	END;
-	
-	FieldEntries*= POINTER  TO ARRAY OF FieldEntry;
-	ProcedureEntries*=POINTER  TO ARRAY OF ProcedureEntry;
-	
-	ProcedureEntry*=RECORD
-		name*: DynamicName; 
-		address*: ADDRESS;
-		size*: SIZE;
-		parameters* {UNTRACED}: FieldEntries;
-		variables* {UNTRACED}: FieldEntries;
-		procedures* {UNTRACED}: ProcedureEntries;
-		returnType*: EntryType;
-		flags*: SET;
-	END;
 
 	TypeDesc* = POINTER TO RECORD 
 		descSize: LONGINT;
 		sentinel: LONGINT;	(* = MPO-4 *)
-		tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
-		flags*: SET;
-		mod* {UNTRACED}: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
-		name*: Name;
-		fields* {UNTRACED}: FieldEntries;
-		procedures* {UNTRACED}: ProcedureEntries;
+		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
+		flags-: SET;
+		mod- {UNTRACED}: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+		name-: Name;
+		refsOffset-: SIZE;
 	END;
 
 	ExceptionTableEntry* = RECORD
@@ -113,6 +83,7 @@ TYPE
 	ProcedureDescPointer* = POINTER TO ProcedureDesc;
 	ProcedureDesc*= RECORD
 		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
+		refsOffset-: SIZE;
 		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
 	END;
 	
@@ -456,6 +427,9 @@ END Initialize;
 		END;
 	END MergeProcedureDescs;
 
+	PROCEDURE RemoveProcedureDescs*(p: ProcedureDescs);
+	END RemoveProcedureDescs;
+
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
 TYPE Body = PROCEDURE;
@@ -688,7 +662,7 @@ BEGIN
 			(*Trace.String("delete proc offsets"); Trace.Ln;
 			DeleteProcOffsets(m.firstProc, m.noProcs);
 			*)
-			RemoveProcedureDescs(m.procedureDescs);
+			RemoveProcedureDescs(m.procTable);
 		ELSE
 			res := 1901;	(* can not free module in use *)
 			COPY(name, msg); Append(" reference count not zero", msg)

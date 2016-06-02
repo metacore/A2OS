@@ -50,7 +50,6 @@ CONST
 	DefaultRuntimeModuleName = \"Runtime"\; 
 	DefaultTraceModuleName = \"KernelLog"\; 
 	ChannelModuleName = \"Channels"\; 
-	suppressModuleRegistration = FALSE; 
 	NonPointer =  -1; 
 	NoType = 0; 
 	LhsIsPointer = 0; 
@@ -59,7 +58,6 @@ CONST
 	FirstPriority =  -3; 
 	InitPriority =  -2; 
 	ExitPriority =  -1; 
-	StrictChecks = FALSE; 
 	BasePointerTypeSize = 5; 
 	BaseArrayTypeSize = (BasePointerTypeSize + 3); 
 	LengthOffset = (BasePointerTypeSize + 0); 
@@ -382,7 +380,6 @@ TYPE
 		PROCEDURE ^ BoundCheck(index, length: IntermediateCode.Operand); 
 		PROCEDURE ^ DimensionCheck(base, dim: IntermediateCode.Operand; op: ConditionalBranch); 
 		PROCEDURE ^ MathIndexDesignator(x: SyntaxTree.IndexDesignator); 
-		PROCEDURE ^ DumpOperand(operand: Operand); 
 		PROCEDURE ^ ArrayLength(type: SyntaxTree.Type; dim: LONGINT; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
 		PROCEDURE ^ AddInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
 		PROCEDURE ^ MulInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
@@ -514,6 +511,7 @@ TYPE
 		BaseTypesTableOffset: LONGINT; 
 		TypeTags: LONGINT; 
 		TypeRecordBaseOffset: LONGINT; 
+		patchInfoPC, patchProcedurePC: LONGINT; 
 
 		PROCEDURE ^  & InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN); 
 		PROCEDURE ^ SetModule(module: Sections.Module); 
@@ -534,12 +532,14 @@ TYPE
 		PROCEDURE ^ Char(section: IntermediateCode.Section; char: CHAR); 
 		PROCEDURE ^ Integer(section: IntermediateCode.Section; int: LONGINT); 
 		PROCEDURE ^ String(section: IntermediateCode.Section; CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ String0(section: IntermediateCode.Section; str: StringPool.Index); 
 		PROCEDURE ^ NamedSymbol(section: IntermediateCode.Section; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT); 
 		PROCEDURE ^ NamedSymbolAt(section: IntermediateCode.Section; pc: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT); 
 		PROCEDURE ^ Symbol(section: IntermediateCode.Section; symbol: Sections.Section; virtualOffset, realOffset: LONGINT); 
 		PROCEDURE ^ Pointers(offset: LONGINT; symbol: Sections.Section; section: IntermediateCode.Section; type: SyntaxTree.Type; VAR numberPointers: LONGINT); 
 		PROCEDURE ^ EnterDynamicName(source: IntermediateCode.Section; CONST name: ARRAY OF CHAR; index: LONGINT; pool: Basic.HashTableInt): LONGINT; 
 		PROCEDURE ^ DynamicName(source: IntermediateCode.Section; index: StringPool.Index; pool: Basic.HashTableInt): LONGINT; 
+		PROCEDURE ^ NamedBlock(CONST mName, typeName: ARRAY OF CHAR; name: Basic.SegmentedName; VAR offset: LONGINT): IntermediateCode.Section; 
 		PROCEDURE ^ Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section; 
 		PROCEDURE ^ ArrayBlock(source: IntermediateCode.Section; VAR sizePC: LONGINT; CONST baseType: ARRAY OF CHAR; hasPointer: BOOLEAN); 
 		PROCEDURE ^ PatchArray(section: IntermediateCode.Section; pc: LONGINT; size: LONGINT); 
@@ -551,7 +551,9 @@ TYPE
 		PROCEDURE ^ IsFirstDirectOccurence(import: SyntaxTree.Import): BOOLEAN; 
 		PROCEDURE ^ ImportsArray(source: IntermediateCode.Section); 
 		PROCEDURE ^ TypeInfoSection(source: IntermediateCode.Section); 
-		PROCEDURE ^ PointersInProcTables(procArray, pointerArray: IntermediateCode.Section; VAR procArraySize, maxPointers: LONGINT); 
+		PROCEDURE ^ ProcedureDescriptor(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section); 
+		PROCEDURE ^ ProcedureDescriptorPointer(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section); 
+		PROCEDURE ^ ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT); 
 		PROCEDURE ^ BasePointer(section: IntermediateCode.Section); 
 		PROCEDURE ^ BaseObject(section: IntermediateCode.Section); 
 		PROCEDURE ^ ModuleDescriptor(section: IntermediateCode.Section); 
@@ -560,13 +562,6 @@ TYPE
 		PROCEDURE ^ Module(bodyProc: IntermediateCode.Section); 
 		PROCEDURE ^ PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT); 
 		PROCEDURE ^ SymbolSection(symbol: SyntaxTree.Symbol; CONST suffix: ARRAY OF CHAR; VAR pc: LONGINT): IntermediateCode.Section; 
-		PROCEDURE ^ ReflectParameters(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol); 
-		PROCEDURE ^ ReflectVariables(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol); 
-		PROCEDURE ^ ReflectProcedures(in: IntermediateCode.Section; symbol: SyntaxTree.Symbol); 
-		PROCEDURE ^ ParameterArray(source: IntermediateCode.Section; parameter: SyntaxTree.Parameter); 
-		PROCEDURE ^ TypeEntry(source: IntermediateCode.Section; type: SyntaxTree.Type); 
-		PROCEDURE ^ VariableArray(source: IntermediateCode.Section; variable: SyntaxTree.Variable); 
-		PROCEDURE ^ ProcedureArray(source: IntermediateCode.Section; procedure: SyntaxTree.Procedure); 
 		PROCEDURE ^ CheckTypeDeclaration(x: SyntaxTree.Type); 
 	END MetaDataGenerator; 
 

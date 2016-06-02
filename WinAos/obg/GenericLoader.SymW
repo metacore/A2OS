@@ -101,7 +101,6 @@ VAR
 	PROCEDURE ^ IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN; 
 	PROCEDURE ^ DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data); 
 	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): GenericLinker.Address; 
-	PROCEDURE ^ SortProcTable(m: Modules.Module); 
 	PROCEDURE ^ SelectionSort(exTable: Modules.ExceptionTable); 
 	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module; 
 	PROCEDURE ^ Install*; 

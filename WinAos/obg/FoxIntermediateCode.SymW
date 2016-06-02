@@ -119,7 +119,7 @@ TYPE
 		rule-: Rules; 
 	END; 
 
-	Instruction* = RECORD 
+	Instruction* = POINTER TO RECORD 
 		opcode-: SHORTINT; 
 		subtype-: SHORTINT; 
 		textPosition-: LONGINT; 

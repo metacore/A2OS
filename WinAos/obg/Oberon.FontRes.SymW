@@ -1,0 +1,55 @@
+MODULE FontRes IN Oberon;
+	IMPORT Out, Oberon, Texts, Files, SYSTEM;
+CONST 
+	Version = \"Ver 1.0 (MH May 20 1994)"\; 
+	FontFileId = 0DBX; 
+	SPC = 20X; 
+	normal = 0; 
+	italic = 1; 
+	bold = 2; 
+	medium = 3; 
+TYPE 
+	FontInfo = RECORD 
+		version: INTEGER; 
+		size: LONGINT; 
+		copyright: ARRAY 60 OF CHAR; 
+		type: INTEGER; 
+		points: INTEGER; 
+		vertRes, horizRes: INTEGER; 
+		ascent: INTEGER; 
+		internalLeading, externalLeading: INTEGER; 
+		italic, underline, strikeOut: CHAR; 
+		weight: INTEGER; 
+		charSet: CHAR; 
+		pixWidth, pixHeight: INTEGER; 
+		pitchAndFamily: CHAR; 
+		avgWidth, maxWidth: INTEGER; 
+		firstChar, lastChar, defaultChar, breakChar: CHAR; 
+		widthBytes: INTEGER; 
+		device: LONGINT; 
+		face: LONGINT; 
+		bitsPointer: LONGINT; 
+		bitsOffset: LONGINT; 
+		res: CHAR; 
+	END; 
+
+	CharEntry = RECORD 
+		width: INTEGER; 
+		offs: INTEGER; 
+	END; 
+VAR 
+	oname: ARRAY 64 OF CHAR; 
+	Info: FontInfo; 
+	CharTab: ARRAY 257 OF CharEntry; 
+	PowTwo: ARRAY 9 OF INTEGER; 
+	C: ARRAY 50 OF LONGINT; 
+
+	PROCEDURE ^ Append(VAR s: ARRAY OF CHAR; suff: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteStringFix(VAR out: Files.Rider; s: ARRAY OF CHAR; len: INTEGER); 
+	PROCEDURE ^ Do(VAR R, out: Files.Rider; face: ARRAY OF CHAR; size: INTEGER; style: INTEGER; res: INTEGER); 
+	PROCEDURE ^ ParseName(VAR name, faceName: ARRAY OF CHAR; VAR res, size, style: INTEGER); 
+	PROCEDURE ^ Convert*; 
+	PROCEDURE ^ SetUnsigned(VAR dest: LONGINT; src: HUGEINT); 
+	PROCEDURE ^ Init; 
+BEGIN
+END FontRes.

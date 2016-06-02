@@ -1,0 +1,12 @@
+MODULE Types IN Oberon;
+	IMPORT S := SYSTEM, Modules IN A2, Heaps IN A2;
+TYPE 
+	Type* = Modules.TypeDesc; 
+
+	PROCEDURE ^ This*(mod: Modules.Module; name: ARRAY OF CHAR): Type; 
+	PROCEDURE ^ BaseOf*(t: Type; level: INTEGER): Type; 
+	PROCEDURE ^ LevelOf*(t: Type): INTEGER; 
+	PROCEDURE ^ TypeOf*(o: ANY): Type; 
+	PROCEDURE ^ NewObj*(VAR o: ANY; t: Type); 
+BEGIN
+END Types.

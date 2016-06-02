@@ -1,0 +1,29 @@
+MODULE ObjExplorer IN Oberon;
+	IMPORT Objects, Display, Strings, Texts, Oberon, Attributes, Gadgets, ListRiders, ListModels, ListGadgets, Columbus;
+CONST 
+TYPE 
+	Item = POINTER TO ItemDesc; 
+
+	ItemDesc = RECORD (ListRiders.StringDesc)
+		obj: Objects.Object; 
+	END; 
+
+	ObjList = POINTER TO ObjListDesc; 
+
+	ObjListDesc = RECORD 
+		obj: Objects.Object; 
+		next: ObjList; 
+	END; 
+VAR 
+	objList: ObjList; 
+	enumObj, dlink, curList: Objects.Object; 
+
+	PROCEDURE ^ FindObj(obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ AddObj(obj: Objects.Object); 
+	PROCEDURE ^ WriteObj(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT); 
+	PROCEDURE ^ EnumObjs(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Object(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT); 
+	PROCEDURE ^ Inspect*; 
+	PROCEDURE ^ ShowObj*; 
+BEGIN
+END ObjExplorer.

@@ -1,0 +1,49 @@
+MODULE HTMLPlugIns IN Oberon;
+	IMPORT Files, Objects, Modules, Display, Fonts, Texts, Oberon, Attributes, Links, Views, Strings, PlugIns, Gadgets, Documents, Desktops, HyperDocs, HTTPDocs0, HTMLDocs;
+CONST 
+TYPE 
+	View = POINTER TO ViewDesc; 
+
+	ViewDesc = RECORD (Views.ViewDesc)
+		plugin: PlugIns.PlugIn; 
+		base: HTMLDocs.DocURL; 
+	END; 
+
+	StreamList = POINTER TO StreamListDesc; 
+
+	StreamListDesc = RECORD 
+		stream: PlugIns.Stream; 
+		next: StreamList; 
+	END; 
+
+	Notifier = POINTER TO NotifierDesc; 
+
+	NotifierDesc = RECORD (Oberon.TaskDesc)
+		stream: PlugIns.Stream; 
+	END; 
+VAR 
+	cache: StreamList; 
+	createF: BOOLEAN; 
+	context: Objects.Object; 
+	rec: LONGINT; 
+
+	PROCEDURE ^ Error(plugin: PlugIns.PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
+	PROCEDURE ^ GetStream(plugin: PlugIns.PlugIn; url: ARRAY OF CHAR): PlugIns.Stream; 
+	PROCEDURE ^ DoNotify(me: Oberon.Task); 
+	PROCEDURE ^ GetURL0(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetURL(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ FindContext(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ FindPlugIn(V: View; VAR F: Objects.FindMsg); 
+	PROCEDURE ^ ViewHandler(view: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ PlugInHandler(plugin: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitPlugIn(plugin: PlugIns.PlugIn; V: View); 
+	PROCEDURE ^ InitView(V: View; plugin: PlugIns.PlugIn); 
+	PROCEDURE ^ EMBED(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ ClearCache; 
+	PROCEDURE ^ StartStop(P: HTMLDocs.Page); 
+	PROCEDURE ^ NewEMBED*; 
+	PROCEDURE ^ install(VAR V: View; create: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ OpenAsDoc*; 
+BEGIN
+END HTMLPlugIns.

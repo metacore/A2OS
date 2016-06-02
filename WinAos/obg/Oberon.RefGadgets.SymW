@@ -1,0 +1,42 @@
+MODULE RefGadgets IN Oberon;
+	IMPORT Files, Display, Display3, Printer, Printer3, Effects, Objects, Attributes, Texts, Gadgets, Oberon;
+CONST 
+TYPE 
+	Reference* = POINTER TO ReferenceDesc; 
+
+	ReferenceDesc* = RECORD (Gadgets.ObjDesc)
+		val*: Objects.Object; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		val*: Objects.Object; 
+		locked*: BOOLEAN; 
+		canDrag*: BOOLEAN; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ ToLog; 
+	PROCEDURE ^ CopyReference*(VAR M: Objects.CopyMsg; from, to: Reference); 
+	PROCEDURE ^ ReferenceHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitReference*(obj: Reference); 
+	PROCEDURE ^ NewReference*; 
+	PROCEDURE ^ SetFrameModel(F: Frame); 
+	PROCEDURE ^ UpdateFrameModel(F: Frame); 
+	PROCEDURE ^ FrameAttrs(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: Frame; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; pressed: BOOLEAN); 
+	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ DropObject(obj: Objects.Object; X, Y: INTEGER; copy: BOOLEAN); 
+	PROCEDURE ^ TrackRight(F: Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackMiddle(F: Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackLeft(F: Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ FrameHandle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(F: Frame); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ Create*; 
+BEGIN
+END RefGadgets.

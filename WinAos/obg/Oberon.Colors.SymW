@@ -1,0 +1,57 @@
+MODULE Colors IN Oberon;
+	IMPORT Files, Objects, Plugins IN A2, Displays IN A2, Display, Strings;
+CONST 
+	undefined* =  -1; 
+	red* = 0; 
+	yellow* = (1 / 6); 
+	green* = (2 / 6); 
+	cyan* = (3 / 6); 
+	blue* = (4 / 6); 
+	magenta* = (5 / 6); 
+TYPE 
+	Color* = POINTER TO ColorDesc; 
+
+	ColorDesc* = RECORD (Objects.ObjDesc)
+		r, g, b: REAL; 
+	END; 
+
+	Index* = RECORD 
+		bits: INTEGER; 
+		cube: POINTER TO ARRAY OF CHAR; 
+	END; 
+VAR 
+	DisplayIndex*: Index; 
+	DisplayBits*: INTEGER; 
+	Red*, Green*, Blue*: ARRAY 256 OF INTEGER; 
+
+	PROCEDURE ^ Match*(index: Index; bits, red, green, blue: INTEGER): LONGINT; 
+	PROCEDURE ^ MakeIndex*(VAR index: Index; bits: INTEGER; colors: LONGINT; VAR red, green, blue: ARRAY OF INTEGER); 
+	PROCEDURE ^ Update*; 
+	PROCEDURE ^ DisplayToRGB*(dcol: Display.Color; VAR r, g, b: REAL); 
+	PROCEDURE ^ RGBToDisplay*(r, g, b: REAL; VAR dcol: Display.Color); 
+	PROCEDURE ^ RGBToHSV*(r, g, b: REAL; VAR h, s, v: REAL); 
+	PROCEDURE ^ HSVToRGB*(h, s, v: REAL; VAR r, g, b: REAL); 
+	PROCEDURE ^ RGBToCMY*(r, g, b: REAL; VAR c, m, y: REAL); 
+	PROCEDURE ^ CMYToRGB*(c, m, y: REAL; VAR r, g, b: REAL); 
+	PROCEDURE ^ RGBToCMYK*(r, g, b: REAL; VAR c, m, y, k: REAL); 
+	PROCEDURE ^ CMYKToRGB*(c, m, y, k: REAL; VAR r, g, b: REAL); 
+	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Color); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ InitRGB*(col: Color; r, g, b: REAL); 
+	PROCEDURE ^ InitDisplay*(col: Color; dcol: Display.Color); 
+	PROCEDURE ^ InitHSV*(col: Color; h, s, v: REAL); 
+	PROCEDURE ^ InitCMY*(col: Color; c, m, y: REAL); 
+	PROCEDURE ^ InitCMYK*(col: Color; c, m, y, k: REAL); 
+	PROCEDURE ^ GetRGB*(col: Color; VAR r, g, b: REAL); 
+	PROCEDURE ^ GetDisplay*(col: Color; VAR dcol: Display.Color); 
+	PROCEDURE ^ GetHSV*(col: Color; VAR h, s, v: REAL); 
+	PROCEDURE ^ GetCMY*(col: Color; VAR c, m, y: REAL); 
+	PROCEDURE ^ GetCMYK*(col: Color; VAR c, m, y, k: REAL); 
+	PROCEDURE ^ SetRGB*(col: Color; r, g, b: REAL); 
+	PROCEDURE ^ SetDisplay*(col: Color; dcol: Display.Color); 
+	PROCEDURE ^ SetHSV*(col: Color; h, s, v: REAL); 
+	PROCEDURE ^ SetCMY*(col: Color; c, m, y: REAL); 
+	PROCEDURE ^ SetCMYK*(col: Color; c, m, y, k: REAL); 
+BEGIN
+END Colors.

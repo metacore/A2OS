@@ -1,0 +1,22 @@
+MODULE Modules IN Oberon;
+	IMPORT Modules IN A2;
+CONST 
+TYPE 
+	Command* = PROCEDURE ; 
+
+	Module* = Modules.Module; 
+
+	ModuleName* = Modules.Name; 
+VAR 
+	res*: INTEGER; 
+	resMsg*: ARRAY 256 OF CHAR; 
+	extension*: ARRAY 8 OF CHAR; 
+
+	PROCEDURE ^ CreateContext(VAR context: ARRAY OF CHAR; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ FindMod*(CONST name: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ ThisMod*(CONST name: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ ThisCommand*(mod: Module; CONST name: ARRAY OF CHAR): Command; 
+	PROCEDURE ^ Free*(CONST name: ARRAY OF CHAR; all: BOOLEAN); 
+	PROCEDURE ^ InstallTermHandler*(h: Modules.TerminationHandler); 
+BEGIN
+END Modules.

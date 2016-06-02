@@ -1,0 +1,369 @@
+MODULE PELinker;
+	IMPORT SYSTEM, Streams, Files, Dates, Strings, KernelLog, Commands, Options, Texts, TextUtilities, UTF8Strings, Linker0, Linker1;
+CONST 
+	DefaultFileExtension = \".Obw"\; 
+	NULL = 0; 
+	ImageDosSignature = 23117; 
+	ImageNtSignature = 17744; 
+	ImageFileRelocsStripped = 1; 
+	ImageFileExecutableImage = 2; 
+	ImageFileLineNumsStripped = 4; 
+	ImageFileLocalSymsStripped = 8; 
+	ImageFileLargeAddressAware = 32; 
+	ImageFile32BitMachine = 256; 
+	ImageFileDll = 8192; 
+	ImageFileMachineI386 = 332; 
+	ImageNumberofDirectoryEntries = 16; 
+	ImageOptionalMagic = 267; 
+	ImageSubsystemNative = 1; 
+	ImageSubsystemWindowsGui = 2; 
+	ImageSubsystemWindowsCui = 3; 
+	ImageDirectoryEntryExport = 0; 
+	ImageDirectoryEntryImport = 1; 
+	ImageDirectoryEntryResource = 2; 
+	ImageDirectoryEntryBasereloc = 5; 
+	ImageDirectoryEntryIat = 12; 
+	ImageSizeofShortName = 8; 
+	ImageScnCntCode = 32; 
+	ImageScnCntInitializedData = 64; 
+	ImageScnCntUninitializedData = 128; 
+	ImageScnMemDiscardable = 33554432; 
+	ImageScnNotPaged = SHORT(134217728); 
+	ImageScnMemShared = 268435456; 
+	ImageScnMemExecute = 536870912; 
+	ImageScnMemRead = 1073741824; 
+	ImageScnMemWrite = LONGINT(80000000H); 
+	ImageRelBasedAbsolute = 0; 
+	ImageRelBasedHigh = 1; 
+	ImageRelBasedLow = 2; 
+	ImageRelBasedHighLow = 3; 
+	ImageRelBasedHighAdj = 4; 
+	ImageRelBasedMipsJmpAddr = 5; 
+	ImageRelBasedSection = 6; 
+	ImageRelBasedRel32 = 7; 
+	RtCursor = 1; 
+	RtIcon = 3; 
+	RtGroupCursor = (RtCursor + 11); 
+	RtGroupIcon = (RtIcon + 11); 
+	RtVersion = 16; 
+	DefaultLanguage = 1024; 
+	VsFfiSignature = LONGINT(0FEEF04BDH); 
+	VsFfiStrucVersion = 65536; 
+	VsFfiFileFlagsMask = 63; 
+	VosNtWindows32 = 262148; 
+	VftApp = 1; 
+	VftDll = 2; 
+	Vft2Unknown = 0; 
+	MajorLinkerVersion = CHR(0); 
+	MinorLinkerVersion = CHR(90); 
+	PageSize = 4096; 
+	SectorSize = 512; 
+	DefaultFileAlign = SectorSize; 
+	DefaultSectionAlign = PageSize; 
+	BaseRVA = DefaultSectionAlign; 
+	DefaultHeapSize = (64 * 1024); 
+	DefaultStackSize = (1024 * 1024); 
+	DefaultImageSubsystem = ImageSubsystemWindowsGui; 
+	DefaultEXEImageBase = 4194304; 
+	DefaultDLLImageBase = 268435456; 
+	DefaultStub = \"stub.exe"\; 
+	MaxRelocs = (16 * 1024); 
+TYPE 
+	Buffer = POINTER TO ARRAY OF CHAR; 
+
+	ImageDosHeader = RECORD 
+		emagic: INTEGER; 
+		ecblp: INTEGER; 
+		ecp: INTEGER; 
+		ecrlc: INTEGER; 
+		ecparhdr: INTEGER; 
+		eminalloc: INTEGER; 
+		emaxalloc: INTEGER; 
+		ess: INTEGER; 
+		esp: INTEGER; 
+		ecsum: INTEGER; 
+		eip: INTEGER; 
+		ecs: INTEGER; 
+		elfarlc: INTEGER; 
+		eovno: INTEGER; 
+		eres: ARRAY 4 OF INTEGER; 
+		eoemid: INTEGER; 
+		eoeminfo: INTEGER; 
+		eres2: ARRAY 10 OF INTEGER; 
+		elfanew: LONGINT; 
+	END; 
+
+	ImageFileHeader = RECORD 
+		Machine: INTEGER; 
+		NumberOfSections: INTEGER; 
+		TimeDateStamp: LONGINT; 
+		PointerToSymbolTable: LONGINT; 
+		NumberOfSymbols: LONGINT; 
+		SizeOfOptionalHeader: INTEGER; 
+		Characteristics: INTEGER; 
+	END; 
+
+	ImageDataDirectory = RECORD 
+		VirtualAddress: LONGINT; 
+		Size: LONGINT; 
+	END; 
+
+	ImageOptionalHeader = RECORD 
+		Magic: INTEGER; 
+		MajorLinkerVersion: CHAR; 
+		MinorLinkerVersion: CHAR; 
+		SizeOfCode: LONGINT; 
+		SizeOfInitializedData: LONGINT; 
+		SizeOfUninitializedData: LONGINT; 
+		AddressOfEntryPoint: LONGINT; 
+		BaseOfCode: LONGINT; 
+		BaseOfData: LONGINT; 
+		ImageBase: LONGINT; 
+		SectionAlignment: LONGINT; 
+		FileAlignment: LONGINT; 
+		MajorOperatingSystemVersion: INTEGER; 
+		MinorOperatingSystemVersion: INTEGER; 
+		MajorImageVersion: INTEGER; 
+		MinorImageVersion: INTEGER; 
+		MajorSubsystemVersion: INTEGER; 
+		MinorSubsystemVersion: INTEGER; 
+		Win32VersionValue: LONGINT; 
+		SizeOfImage: LONGINT; 
+		SizeOfHeaders: LONGINT; 
+		CheckSum: LONGINT; 
+		Subsystem: INTEGER; 
+		DllCharacteristics: INTEGER; 
+		SizeOfStackReserve: LONGINT; 
+		SizeOfStackCommit: LONGINT; 
+		SizeOfHeapReserve: LONGINT; 
+		SizeOfHeapCommit: LONGINT; 
+		LoaderFlags: LONGINT; 
+		NumberOfRvaAndSizes: LONGINT; 
+		DataDirectory: ARRAY ImageNumberofDirectoryEntries OF ImageDataDirectory; 
+	END; 
+
+	ImageSectionHeader = RECORD 
+		Name: ARRAY ImageSizeofShortName OF CHAR; 
+		VirtualSize: LONGINT; 
+		VirtualAddress: LONGINT; 
+		SizeOfRawData: LONGINT; 
+		PointerToRawData: LONGINT; 
+		PointerToRelocations: LONGINT; 
+		PointerToLinenumbers: LONGINT; 
+		NumberOfRelocations: INTEGER; 
+		NumberOfLinenumbers: INTEGER; 
+		Characteristics: LONGINT; 
+	END; 
+
+	ImageImportDescriptor = RECORD 
+		Characteristics: LONGINT; 
+		TimeDateStamp: LONGINT; 
+		ForwarderChain: LONGINT; 
+		Name: LONGINT; 
+		FirstThunk: LONGINT; 
+	END; 
+
+	ImageExportDirectory = RECORD 
+		Characteristics: LONGINT; 
+		TimeDateStamp: LONGINT; 
+		MajorVersion: INTEGER; 
+		MinorVersion: INTEGER; 
+		Name: LONGINT; 
+		Base: LONGINT; 
+		NumberOfFunctions: LONGINT; 
+		NumberOfNames: LONGINT; 
+		AddressOfFunctions: LONGINT; 
+		AddressOfNames: LONGINT; 
+		AddressOfNameOrdinals: LONGINT; 
+	END; 
+
+	ImageBaseRelocation = RECORD 
+		VirtualAddress: LONGINT; 
+		SizeOfBlock: LONGINT; 
+	END; 
+
+	ImageResourceDirectory = RECORD 
+		Characteristics: LONGINT; 
+		TimeDateStamp: LONGINT; 
+		MajorVersion: INTEGER; 
+		MinorVersion: INTEGER; 
+		NumberOfNamedEntries: INTEGER; 
+		NumberOfIdEntries: INTEGER; 
+	END; 
+
+	ImageResourceDirectoryEntry = RECORD 
+		Name: LONGINT; 
+		OffsetToData: LONGINT; 
+	END; 
+
+	ImageResourceDataEntry = RECORD 
+		OffsetToData: LONGINT; 
+		Size: LONGINT; 
+		CodePage: LONGINT; 
+		Reserved: LONGINT; 
+	END; 
+
+	ResourceHeader = RECORD 
+		reserved, type, count: INTEGER; 
+	END; 
+
+	Bitmapinfoheader = RECORD 
+		biSize: LONGINT; 
+		biWidth: LONGINT; 
+		biHeight: LONGINT; 
+		biPlanes: INTEGER; 
+		biBitCount: INTEGER; 
+		biCompression: LONGINT; 
+		biSizeImage: LONGINT; 
+		biXpelsPerMeter: LONGINT; 
+		biYpelsPerMeter: LONGINT; 
+		biClrUsed: LONGINT; 
+		biClrImportant: LONGINT; 
+	END; 
+
+	IconDirEntry = RECORD 
+		width, height, colorCount, res: CHAR; 
+		planes, bitCount: INTEGER; 
+		bytes: LONGINT; 
+		name: INTEGER; 
+	END; 
+
+	CursorDirEntry = RECORD 
+		width, height, planes, bitCount: INTEGER; 
+		bytes: LONGINT; 
+		name: INTEGER; 
+	END; 
+
+	VsFixedFileInfo = RECORD 
+		dwSignature: LONGINT; 
+		dwStrucVersion: LONGINT; 
+		dwFileVersionMs: LONGINT; 
+		dwFileVersionLs: LONGINT; 
+		dwProductVersionMs: LONGINT; 
+		dwProductVersionLs: LONGINT; 
+		dwFileFlagsMask: LONGINT; 
+		dwFileFlags: LONGINT; 
+		dwFileOs: LONGINT; 
+		dwFileType: LONGINT; 
+		dwFileSubtype: LONGINT; 
+		dwFileDateMs: LONGINT; 
+		dwFileDateLs: LONGINT; 
+	END; 
+
+	NameList = POINTER TO RECORD 
+		name: Files.FileName; 
+		next: NameList; 
+	END; 
+
+	ValueList = POINTER TO RECORD (NameList)
+		value: Files.FileName; 
+	END; 
+
+	EntryList = POINTER TO RECORD (ValueList)
+		entry, fixup: LONGINT; 
+	END; 
+
+	ImportList = POINTER TO RECORD (NameList)
+		impDesc: ImageImportDescriptor; 
+		entries: EntryList; 
+	END; 
+
+	ExportEntryList = POINTER TO RECORD (EntryList)
+		nextOrd: ExportEntryList; 
+	END; 
+
+	ResList = POINTER TO RECORD (EntryList)
+		adr: LONGINT; 
+		head: ResourceHeader; 
+	END; 
+
+	IconList = POINTER TO RECORD (ResList)
+		dentry: IconDirEntry; 
+	END; 
+
+	CursorList = POINTER TO RECORD (ResList)
+		dentry: CursorDirEntry; 
+	END; 
+
+	ScanProc = PROCEDURE (reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+
+	FindAdrDataStructure = POINTER TO RECORD 
+		moduleName: Linker0.Name; 
+		refs{UNTRACED} : Linker0.Bytes; 
+		module{UNTRACED} : Linker0.Module; 
+		next: FindAdrDataStructure; 
+	END; 
+VAR 
+	image, stub: Files.FileName; 
+	isEXE: BOOLEAN; 
+	imgHead: ImageOptionalHeader; 
+	text, idata, edata, reloc, rsrc: ImageSectionHeader; 
+	version: ValueList; 
+	imports: ImportList; 
+	exports, exportOrds: ExportEntryList; 
+	modules: NameList; 
+	icons: IconList; 
+	cursors: CursorList; 
+	relocs: ARRAY MaxRelocs OF LONGINT; 
+	nRelocs: LONGINT; 
+	OberonToISO: ARRAY 256 OF CHAR; 
+	log: Streams.Writer; 
+	refs: FindAdrDataStructure; 
+
+	PROCEDURE ^ Error(CONST str1, str2: ARRAY OF CHAR); 
+	PROCEDURE ^ Assert(cond: BOOLEAN; CONST str1, str2: ARRAY OF CHAR); 
+	PROCEDURE ^ LongOr(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ SetHighBit(VAR i: LONGINT); 
+	PROCEDURE ^ Align(value, align: LONGINT): LONGINT; 
+	PROCEDURE ^ FileAlign(R: Streams.Writer; align: LONGINT; pad: CHAR); 
+	PROCEDURE ^ InitImageOptionalHeader(VAR head: ImageOptionalHeader); 
+	PROCEDURE ^ InitSectionHeader(VAR head: ImageSectionHeader; CONST name: ARRAY OF CHAR; scnCnt, scnMem: LONGINT); 
+	PROCEDURE ^ InitImageImportDescriptor(VAR impDesc: ImageImportDescriptor); 
+	PROCEDURE ^ TimeDateStamp(): LONGINT; 
+	PROCEDURE ^ WriteImageHeader(R: Streams.Writer; sections: INTEGER); 
+	PROCEDURE ^ IsNameChar(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ ScanName(R: Streams.Reader; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ScanString(R: Streams.Reader; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ ScanInt(R: Streams.Reader; VAR i: LONGINT); 
+	PROCEDURE ^ Expect(R: Streams.Reader; ch: CHAR); 
+	PROCEDURE ^ Clean; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ ScanVersion(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanImport(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanExport(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanModule(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanIcon(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanCursor(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ ScanList(reader: Streams.Reader; entry: ScanProc; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ Concat(CONST s0, s1, s2: ARRAY OF CHAR; VAR s3: ARRAY OF CHAR); 
+	PROCEDURE ^ ScanLinkText(reader: Streams.Reader; verbose: BOOLEAN; log: Streams.Writer); 
+	PROCEDURE ^ AddReloc(offs, val: LONGINT); 
+	PROCEDURE ^ AddFileReloc(R: Streams.Writer; val: LONGINT); 
+	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR moduleName, selectorName: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteText(R: Streams.Writer; offs: LONGINT); 
+	PROCEDURE ^ WriteIData(R: Files.Writer; F: Files.File); 
+	PROCEDURE ^ AssignExportOrdinals(): LONGINT; 
+	PROCEDURE ^ WriteEData(R: Streams.Writer); 
+	PROCEDURE ^ QuickSortRelocs(lo, hi: LONGINT); 
+	PROCEDURE ^ WriteOffs(R: Streams.Writer; offs, type: LONGINT); 
+	PROCEDURE ^ WriteReloc(R: Streams.Writer); 
+	PROCEDURE ^ WriteResDir(R: Streams.Writer; named, id: LONGINT); 
+	PROCEDURE ^ WriteResEntry(R: Streams.Writer; name, offset: LONGINT; leaf: BOOLEAN); 
+	PROCEDURE ^ WriteUString(R: Streams.Writer; CONST str: ARRAY OF CHAR; zero: BOOLEAN); 
+	PROCEDURE ^ WriteResNameTable(R: Streams.Writer; res: ResList); 
+	PROCEDURE ^ WriteResLeafDir(R: Streams.Writer; res: ResList); 
+	PROCEDURE ^ CopyIcon(icoRes: IconList; rR: Streams.Writer); 
+	PROCEDURE ^ CopyCursor(curRes: CursorList; VAR rR: Streams.Writer); 
+	PROCEDURE ^ WriteVersionRes(R: Streams.Writer); 
+	PROCEDURE ^ WriteRSRC(R: Streams.Writer); 
+	PROCEDURE ^ GetNum(refs: Linker0.Bytes; VAR i, num: LONGINT); 
+	PROCEDURE ^ FindAdr(CONST refs: Linker0.Bytes; CONST pat: ARRAY OF CHAR; proc, var: BOOLEAN): LONGINT; 
+	PROCEDURE ^ GetProcAdr(CONST name: ARRAY OF CHAR): ADDRESS; 
+	PROCEDURE ^ GetVariableAdr(CONST name: ARRAY OF CHAR): ADDRESS; 
+	PROCEDURE ^ GetRefs(CONST moduleName: ARRAY OF CHAR): FindAdrDataStructure; 
+	PROCEDURE ^ InitWithText(t: Texts.Text; pos: LONGINT): Streams.Reader; 
+	PROCEDURE ^ DoLink(T: Texts.Text; CONST pref, dest, suff: ARRAY OF CHAR; verbose: BOOLEAN; log: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ Link*(context: Commands.Context); 
+	PROCEDURE ^ InitModule; 
+BEGIN
+END PELinker.

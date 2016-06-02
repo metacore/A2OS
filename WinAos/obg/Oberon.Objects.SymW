@@ -1,0 +1,201 @@
+MODULE Objects IN Oberon;
+	IMPORT SYSTEM, Kernel, Files, Modules;
+CONST 
+	enum* = 0; 
+	get* = 1; 
+	set* = 2; 
+	shallow* = 0; 
+	deep* = 1; 
+	load* = 0; 
+	store* = 1; 
+	Inval* = 0; 
+	String* = 2; 
+	Int* = 3; 
+	Real* = 4; 
+	LongReal* = 5; 
+	Char* = 6; 
+	Bool* = 7; 
+	MaxNews = 64; 
+	MaxRuns = 64; 
+	StepSize = 64; 
+	Version = 1380272450; 
+TYPE 
+	Name* = ARRAY 256 OF CHAR; 
+
+	Object* = POINTER TO ObjDesc; 
+
+	Dummy* = POINTER TO DummyDesc; 
+
+	Library* = POINTER TO LibDesc; 
+
+	ObjMsg* = RECORD 
+		stamp*: LONGINT; 
+		dlink*: Object; 
+	END; 
+
+	Handler* = PROCEDURE (obj: Object; VAR M: ObjMsg); 
+
+	ObjDesc* = RECORD 
+		stamp*: LONGINT; 
+		dlink*, slink*: Object; 
+		lib*: Library; 
+		ref*: INTEGER; 
+		handle*: Handler; 
+	END; 
+
+	AttrMsg* = RECORD (ObjMsg)
+		id*: INTEGER; 
+		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR); 
+		name*: Name; 
+		res*: INTEGER; 
+		class*: INTEGER; 
+		i*: LONGINT; 
+		x*: REAL; 
+		y*: LONGREAL; 
+		c*: CHAR; 
+		b*: BOOLEAN; 
+		s*: ARRAY 256 OF CHAR; 
+	END; 
+
+	LinkMsg* = RECORD (ObjMsg)
+		id*: INTEGER; 
+		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR); 
+		name*: Name; 
+		res*: INTEGER; 
+		obj*: Object; 
+	END; 
+
+	CopyMsg* = RECORD (ObjMsg)
+		id*: INTEGER; 
+		obj*: Object; 
+	END; 
+
+	BindMsg* = RECORD (ObjMsg)
+		lib*: Library; 
+	END; 
+
+	FileMsg* = RECORD (ObjMsg)
+		id*: INTEGER; 
+		len*: LONGINT; 
+		R*: Files.Rider; 
+	END; 
+
+	FindMsg* = RECORD (ObjMsg)
+		name*: Name; 
+		obj*: Object; 
+	END; 
+
+	DummyDesc* = RECORD (ObjDesc)
+		GName*: Name; 
+		len: LONGINT; 
+		blk: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	Index* = POINTER TO IndexDesc; 
+
+	IndexDesc* = RECORD 
+	END; 
+
+	Dictionary* = POINTER TO DictionaryDesc; 
+
+	DictionaryDesc* = RECORD 
+	END; 
+
+	Block = POINTER TO ARRAY OF Object; 
+
+	ArrayIndex = POINTER TO ArrayIndexDesc; 
+
+	ArrayIndexDesc = RECORD (IndexDesc)
+		index: Block; 
+		org: LONGINT; 
+		size: INTEGER; 
+	END; 
+
+	Entry = POINTER TO EntryDesc; 
+
+	EntryDesc = RECORD 
+		next: Entry; 
+		key: INTEGER; 
+		name: Name; 
+	END; 
+
+	ListDict = POINTER TO ListDictDesc; 
+
+	ListDictDesc = RECORD (DictionaryDesc)
+		key: INTEGER; 
+		first: Entry; 
+	END; 
+
+	GenName = ARRAY 256 OF CHAR; 
+
+	LibDesc* = RECORD 
+		next{UNTRACED} : Library; 
+		ind*: Index; 
+		f: Files.File; 
+		R: Files.Rider; 
+		name*: Name; 
+		dict*: Dictionary; 
+		maxref*: INTEGER; 
+		GName: POINTER TO ARRAY OF GenName; 
+		GenRef*: PROCEDURE (L: Library; VAR ref: INTEGER); 
+		GetObj*: PROCEDURE (L: Library; ref: INTEGER; VAR obj: Object); 
+		PutObj*: PROCEDURE (L: Library; ref: INTEGER; obj: Object); 
+		FreeObj*: PROCEDURE (L: Library; ref: INTEGER); 
+		Load*: PROCEDURE (L: Library); 
+		Store*: PROCEDURE (L: Library); 
+	END; 
+
+	NewProc* = PROCEDURE ():Library; 
+
+	EnumProc* = PROCEDURE (L: Library); 
+
+	RunRec = RECORD 
+		beg, end: INTEGER; 
+	END; 
+
+	Alias = POINTER TO AliasDesc; 
+
+	AliasDesc = RECORD 
+		next: Alias; 
+		name: Name; 
+		lib{UNTRACED} : Library; 
+	END; 
+VAR 
+	LibBlockId*: CHAR; 
+	FirstLib: Library; 
+	NoObj: Object; 
+	NewObj*: Object; 
+	stamp: LONGINT; 
+	nofreg: INTEGER; 
+	LibExt: ARRAY 8 OF ARRAY 8 OF CHAR; 
+	LibNew: ARRAY 8 OF NewProc; 
+	FirstAlias: Alias; 
+
+	PROCEDURE ^ Stamp*(VAR M: ObjMsg); 
+	PROCEDURE ^ Cleanup(L: ANY); 
+	PROCEDURE ^ Match(CONST s, ext: ARRAY OF CHAR; VAR len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ThisLibrary*(CONST name: ARRAY OF CHAR): Library; 
+	PROCEDURE ^ FreeLibrary*(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Enumerate*(P: EnumProc); 
+	PROCEDURE ^ Register*(CONST ext: ARRAY OF CHAR; new: NewProc); 
+	PROCEDURE ^ ReadName(VAR R: Files.Rider; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR MName, PName: ARRAY OF CHAR); 
+	PROCEDURE ^ HandleDummy(obj: Object; VAR M: ObjMsg); 
+	PROCEDURE ^ NewDummy(CONST GName: ARRAY OF CHAR); 
+	PROCEDURE ^ GetObj(L: Library; ref: INTEGER; VAR obj: Object); 
+	PROCEDURE ^ PutObj(L: Library; ref: INTEGER; obj: Object); 
+	PROCEDURE ^ FreeObj(L: Library; ref: INTEGER); 
+	PROCEDURE ^ GenRef(L: Library; VAR ref: INTEGER); 
+	PROCEDURE ^ OldLoadLibrary(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ LoadLibrary*(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ StoreLibrary*(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ LoadFileLib(L: Library); 
+	PROCEDURE ^ StoreFileLib(L: Library); 
+	PROCEDURE ^ OpenLibrary*(L: Library); 
+	PROCEDURE ^ NewLibrary(): Library; 
+	PROCEDURE ^ GetRef*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR ref: INTEGER); 
+	PROCEDURE ^ GetKey*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR key: INTEGER); 
+	PROCEDURE ^ GetName*(VAR D: Dictionary; key: INTEGER; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ PutName*(VAR D: Dictionary; key: INTEGER; CONST name: ARRAY OF CHAR); 
+BEGIN
+END Objects.

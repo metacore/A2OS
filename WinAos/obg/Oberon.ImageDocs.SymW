@@ -1,0 +1,15 @@
+MODULE ImageDocs IN Oberon;
+	IMPORT Files, Objects, Texts, Oberon, Strings, Documents, Desktops, Images, ImageGadgets;
+CONST 
+	MenuString = \"Desktops.Copy[Copy] Desktops.StoreDoc[Store]"\; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ LoadDoc(doc: Documents.Document); 
+	PROCEDURE ^ StoreDoc(doc: Documents.Document); 
+	PROCEDURE ^ HandleDoc(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitDoc*(doc: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Open*; 
+BEGIN
+END ImageDocs.

@@ -1,0 +1,106 @@
+MODULE TextFields IN Oberon;
+	IMPORT Objects, Gadgets, Display, Display3, Effects, Oberon, Texts, Files, Input, Printer, Printer3, Fonts, Attributes, Strings, Colors;
+CONST 
+	MaxLen = 256; 
+	CarHeight = 14; 
+	CarWidth = 2; 
+	Yoffset = 2; 
+	Xoffset = 5; 
+TYPE 
+	Caption* = POINTER TO CaptionDesc; 
+
+	CaptionDesc* = RECORD (Gadgets.FrameDesc)
+		focused*, underlined*: BOOLEAN; 
+		text*: Texts.Text; 
+		time: LONGINT; 
+	END; 
+
+	TextField* = POINTER TO TextFieldDesc; 
+
+	TextFieldDesc* = RECORD (Gadgets.FrameDesc)
+		selbeg*, selend*: INTEGER; 
+		time*: LONGINT; 
+		carpos*, carx*, cary*: INTEGER; 
+		val*: ARRAY MaxLen OF CHAR; 
+		font*: Fonts.Font; 
+		textcol*: INTEGER; 
+		consistent*: BOOLEAN; 
+		col*: INTEGER; 
+		start: INTEGER; 
+		topC, bottomC: INTEGER; 
+	END; 
+
+	TextFieldUpdateMsg = RECORD (Gadgets.UpdateMsg)
+		beg: LONGINT; 
+	END; 
+
+	PassFocusMsg = RECORD (Display.FrameMsg)
+		X, Y, foundX, foundY: INTEGER; 
+		from, to: TextField; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	invTF: INTEGER; 
+	linebuf: ARRAY 256 OF INTEGER; 
+	lastfont, lastlib: Fonts.Font; 
+
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Max(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Lookup(L: Fonts.Font; ch: CHAR; VAR minY, maxY, dx: INTEGER); 
+	PROCEDURE ^ GetFont(T: Texts.Text; VAR font: ARRAY OF CHAR); 
+	PROCEDURE ^ IsFont(lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ ThisFont(name: ARRAY OF CHAR): Fonts.Font; 
+	PROCEDURE ^ SplitFontName(fn: ARRAY OF CHAR; VAR i, j, size: INTEGER); 
+	PROCEDURE ^ CombineFontName(prefix, suffix: ARRAY OF CHAR; i, j, size: INTEGER; VAR fn: ARRAY OF CHAR); 
+	PROCEDURE ^ IncFontSize(T: Texts.Text; beg, end: LONGINT; delta: INTEGER); 
+	PROCEDURE ^ CalcSize*(F: Caption; VAR W, H, nolines: INTEGER; displayspace: BOOLEAN); 
+	PROCEDURE ^ Update(F: Caption); 
+	PROCEDURE ^ RestoreCaption(F: Caption; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CaptionAttributes(F: Caption; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ PrintCaption(F: Caption; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyCaption*(VAR M: Objects.CopyMsg; from, to: Caption); 
+	PROCEDURE ^ ResizeCaptionToFit*(VAR caption: Caption; newW, newH: INTEGER); 
+	PROCEDURE ^ ConsumeCh(F: Caption; ch: CHAR; fnt: Objects.Library; col, voff: SHORTINT); 
+	PROCEDURE ^ LoadCaption(F: Caption; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ CaptionHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitCaption*(F: Caption; T: Texts.Text); 
+	PROCEDURE ^ MakeCaption*; 
+	PROCEDURE ^ NewCaption*; 
+	PROCEDURE ^ Length(VAR S: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ InsertChar(VAR S: ARRAY OF CHAR; pos: INTEGER; ch: CHAR); 
+	PROCEDURE ^ DeleteChar(VAR S: ARRAY OF CHAR; pos: INTEGER); 
+	PROCEDURE ^ Delete(VAR S: ARRAY OF CHAR; beg, end: INTEGER); 
+	PROCEDURE ^ Pass(F: TextField; dlink: Objects.Object); 
+	PROCEDURE ^ passFocusMsg(F: TextField; VAR M: PassFocusMsg); 
+	PROCEDURE ^ Inval(F: TextField; VAR hint: LONGINT); 
+	PROCEDURE ^ UpdateTextField(F: TextField; beg: LONGINT); 
+	PROCEDURE ^ ConsumeChar(F: TextField; ch: CHAR; dlink: Objects.Object); 
+	PROCEDURE ^ LocateChar(F: TextField; x, mx: INTEGER; VAR pos: INTEGER); 
+	PROCEDURE ^ LocatePos(F: TextField; pos: INTEGER; VAR x, y: INTEGER); 
+	PROCEDURE ^ FlipCaret(R: Display3.Mask; F: TextField; x, y: INTEGER); 
+	PROCEDURE ^ SetCaret(R: Display3.Mask; F: TextField; x, y, pos: INTEGER); 
+	PROCEDURE ^ RemoveCaret(R: Display3.Mask; F: TextField; x, y: INTEGER); 
+	PROCEDURE ^ TrackCaret(VAR DR: Display3.Mask; F: TextField; x, y: INTEGER); 
+	PROCEDURE ^ FlipSelection(R: Display3.Mask; F: TextField; x, y: INTEGER; spos, epos: INTEGER); 
+	PROCEDURE ^ RemoveSelection(R: Display3.Mask; F: TextField; x, y: INTEGER); 
+	PROCEDURE ^ TrackSelection(R: Display3.Mask; F: TextField; x, y: INTEGER); 
+	PROCEDURE ^ GetSelection(F: TextField; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ TextFieldAttr(F: TextField; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ ConsumeText(F: TextField; VAR M: Oberon.ConsumeMsg); 
+	PROCEDURE ^ AdaptFontSizeProportional*(F: TextField); 
+	PROCEDURE ^ ComputeColors(F: TextField; col: LONGINT); 
+	PROCEDURE ^ RestoreTextField(R: Display3.Mask; F: TextField; x, y, w, h: INTEGER; beg: LONGINT); 
+	PROCEDURE ^ PrintTextField(F: TextField; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Field(F: TextField; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ SetValue(obj: Objects.Object; field, value: ARRAY OF CHAR; dlink: Objects.Object; VAR res: INTEGER); 
+	PROCEDURE ^ GetValue(obj: Objects.Object; field: ARRAY OF CHAR; VAR value: ARRAY OF CHAR); 
+	PROCEDURE ^ CopyTextField*(VAR M: Objects.CopyMsg; from, to: TextField); 
+	PROCEDURE ^ Recall(F: TextField; dlink: Objects.Object); 
+	PROCEDURE ^ UpdateMsg(F: TextField; VAR M: Gadgets.UpdateMsg); 
+	PROCEDURE ^ MakeConsistent(F: TextField; dlink: Objects.Object); 
+	PROCEDURE ^ TextFieldHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitTextField*(F: TextField); 
+	PROCEDURE ^ NewTextField*; 
+BEGIN
+END TextFields.

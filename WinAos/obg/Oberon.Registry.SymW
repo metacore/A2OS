@@ -1,0 +1,32 @@
+MODULE Registry IN Oberon;
+	IMPORT SYSTEM, Kernel32 IN A2, ADVAPI32 IN A2;
+CONST 
+	ClassesRoot* = ADVAPI32.HKEYClassesRoot; 
+	CurrentUser* = ADVAPI32.HKEYCurrentUser; 
+	Done* = 0; 
+	Failed* = 1; 
+	NotFound* = 2; 
+TYPE 
+	PathEnumerator* = PROCEDURE (path: ARRAY OF CHAR); 
+
+	KeyValueEnumerator* = PROCEDURE (key, value: ARRAY OF CHAR); 
+VAR 
+	oberonRoot*, oberonSystem*: ARRAY Kernel32.MaxPath OF CHAR; 
+	res*: LONGINT; 
+	stamp*: LONGINT; 
+	hFile: Kernel32.HANDLE; 
+	logfile: BOOLEAN; 
+
+	PROCEDURE ^ Append(VAR to: ARRAY OF CHAR; this: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendCh(VAR to: ARRAY OF CHAR; this: CHAR); 
+	PROCEDURE ^ OberonPath*(path: ARRAY OF CHAR; VAR fullPath: ARRAY OF CHAR); 
+	PROCEDURE ^ SetKeyValue*(root: ADVAPI32.HKEY; path, key, value: ARRAY OF CHAR); 
+	PROCEDURE ^ GetKeyValue*(root: ADVAPI32.HKEY; path, key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR); 
+	PROCEDURE ^ DeleteKeyValue*(root: ADVAPI32.HKEY; path, key: ARRAY OF CHAR); 
+	PROCEDURE ^ DeletePath*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR); 
+	PROCEDURE ^ EnumeratePath*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR; enum: PathEnumerator); 
+	PROCEDURE ^ EnumerateKeyValue*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR; enum: KeyValueEnumerator); 
+	PROCEDURE ^ OutputFileString(VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Registry.

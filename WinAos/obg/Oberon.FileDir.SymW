@@ -1,0 +1,18 @@
+MODULE FileDir IN Oberon;
+	IMPORT Files IN A2;
+CONST 
+	Directory* = Files.Directory; 
+TYPE 
+	FileName* = Files.FileName; 
+
+	EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+
+	FileEnumerator* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+VAR 
+	PathChar*: CHAR; 
+
+	PROCEDURE ^ Enumerate*(mask: ARRAY OF CHAR; detail: BOOLEAN; proc: EntryHandler); 
+	PROCEDURE ^ EnumerateFiles*(path, pattern: ARRAY OF CHAR; detail: BOOLEAN; proc: FileEnumerator); 
+	PROCEDURE ^ CreateDirectory*(name: ARRAY OF CHAR; done: BOOLEAN); 
+BEGIN
+END FileDir.

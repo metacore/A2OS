@@ -1,0 +1,52 @@
+MODULE Fonts IN Oberon;
+	IMPORT SYSTEM, Kernel, Files, Objects, Display;
+CONST 
+	MaxRuns = 32; 
+	IndexSize = (256 * 4); 
+	substitute* =  -1; 
+	font* = 0; 
+	metric* = 1; 
+	TraceMissing = TRUE; 
+	TraceAlias = FALSE; 
+TYPE 
+	Char* = POINTER TO CharDesc; 
+
+	Font* = POINTER TO FontDesc; 
+
+	CharDesc* = RECORD (Objects.ObjDesc)
+		dx*, x*, y*, w*, h*: INTEGER; 
+		pat*: Display.Pattern; 
+	END; 
+
+	FontDesc* = RECORD (Objects.LibDesc)
+		type*: SHORTINT; 
+		height*, minX*, maxX*, minY*, maxY*: INTEGER; 
+	END; 
+
+	RunRec = RECORD 
+		beg, end: INTEGER; 
+	END; 
+
+	BoxRec = RECORD 
+		dx, x, y, w, h: INTEGER; 
+	END; 
+VAR 
+	FontId*: CHAR; 
+	Default*: Font; 
+	theChar: Char; 
+	conv: BOOLEAN; 
+
+	PROCEDURE ^ Put1(VAR a: LONGINT; x: INTEGER); 
+	PROCEDURE ^ Put2(VAR a: LONGINT; x: LONGINT); 
+	PROCEDURE ^ Put4(VAR a: LONGINT; x: LONGINT); 
+	PROCEDURE ^ ReadInt(VAR R: Files.Rider; VAR x: INTEGER); 
+	PROCEDURE ^ GetCharObj(L: Objects.Library; ref: INTEGER; VAR obj: Objects.Object); 
+	PROCEDURE ^ GetChar*(F: Font; ch: CHAR; VAR dx, x, y, w, h: INTEGER; VAR pat: Display.Pattern); 
+	PROCEDURE ^ Internalize(F: Font; VAR R: Files.Rider; type: SHORTINT); 
+	PROCEDURE ^ Substitute(F: Font); 
+	PROCEDURE ^ Load(L: Objects.Library); 
+	PROCEDURE ^ This*(CONST name: ARRAY OF CHAR): Font; 
+	PROCEDURE ^ New(): Objects.Library; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Fonts.

@@ -43,8 +43,8 @@ TYPE
 	TerminationHandler* = PROCEDURE ; 
 
 	TypeDesc* = POINTER TO RECORD 
-		descSize: LONGINT; 
-		sentinel: LONGINT; 
+		descSize-: LONGINT; 
+		sentinel-: LONGINT; 
 		tag-: ADDRESS; 
 		flags-: SET; 
 		mod-{UNTRACED} : Module; 
@@ -83,15 +83,11 @@ TYPE
 		typeInfo*: POINTER TO ARRAY OF TypeDesc; 
 		module*: POINTER TO ARRAY OF Module; 
 		procTable*: ProcedureDescs; 
-		ptrTable*: ADDRESS; 
 		data*, code*, staticTypeDescs*, refs*: Bytes; 
 		export*: ExportDesc; 
 		term*: TerminationHandler; 
 		exTable*: ExceptionTable; 
-		noProcs*: LONGINT; 
-		firstProc*: ADDRESS; 
-		maxPtrs*: LONGINT; 
-		internal: POINTER TO ARRAY OF ANY; 
+		internal-: POINTER TO ARRAY OF ANY; 
 		crc*: LONGINT; 
 		body*: PROCEDURE ; 
 
@@ -105,10 +101,8 @@ VAR
 	extension-: ARRAY MaxObjFormats OF ARRAY 8 OF CHAR; 
 	loader: ARRAY MaxObjFormats OF LoaderProc; 
 	numLoaders: LONGINT; 
-	kernelProc*: ARRAY 11 OF ADDRESS; 
 	freeRoot*: Module; 
 	root-: Module; 
-	initBlock: ANY; 
 	shutdown*: LONGINT; 
 	trace: BOOLEAN; 
 	register: RECORD 
@@ -145,10 +139,9 @@ VAR
 	PROCEDURE ^ IsExceptionHandled*(VAR pc, fp: ADDRESS; deep: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetExceptionHandler*(pc: ADDRESS): ADDRESS; 
 	PROCEDURE ^ Initialized*(m: Module): BOOLEAN; 
-	PROCEDURE ^ GetKernelProc*(num: LONGINT): ADDRESS; 
 	PROCEDURE ^ Register-(module{UNTRACED} : Module); 
 	PROCEDURE ^ PublishRegisteredModules; 
-	PROCEDURE ^ Main; 
+	PROCEDURE ^ Main-; 
 	PROCEDURE ^ Init; 
 BEGIN
 END Modules.

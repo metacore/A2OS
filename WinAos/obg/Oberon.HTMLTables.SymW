@@ -1,0 +1,16 @@
+MODULE HTMLTables IN Oberon;
+	IMPORT Display, Texts, HTMLDocs;
+
+	PROCEDURE ^ TABLE(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ TR(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ TH(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ TD(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ CAPTION(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ Dummy(P: HTMLDocs.Page); 
+	PROCEDURE ^ NewTABLE*; 
+	PROCEDURE ^ NewTR*; 
+	PROCEDURE ^ NewTH*; 
+	PROCEDURE ^ NewTD*; 
+	PROCEDURE ^ NewCAPTION*; 
+BEGIN
+END HTMLTables.

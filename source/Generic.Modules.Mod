@@ -63,8 +63,8 @@ TYPE
 	*)
 
 	TypeDesc* = POINTER TO RECORD 
-		descSize: LONGINT;
-		sentinel: LONGINT;	(* = MPO-4 *)
+		descSize-: LONGINT;
+		sentinel-: LONGINT;	(* = MPO-4 *)
 		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags-: SET;
 		mod- {UNTRACED}: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
@@ -102,16 +102,12 @@ TYPE
 			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
 			procTable*: ProcedureDescs; (* information inserted by loader, removed after use in Publish *)
-			ptrTable*: ADDRESS;  (*! legacy, can be removed *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
 			export*: ExportDesc;
 			term*: TerminationHandler;
 			exTable*: ExceptionTable;
-			noProcs*: LONGINT;	(*! legacy, can be removed *)
-			firstProc*: ADDRESS; (*! legacy, can be removed *)
-			maxPtrs*: LONGINT; (*! legacy, can be removed *)
 			(* internal pointer array: to protect internal data structures from being GCed *)
-			internal: POINTER TO ARRAY OF ANY;
+			internal-: POINTER TO ARRAY OF ANY;
 			crc*: LONGINT;
 			body*: PROCEDURE;
 
@@ -138,13 +134,11 @@ VAR
 	extension-: ARRAY MaxObjFormats, 8 OF CHAR;
 	loader: ARRAY MaxObjFormats OF LoaderProc;
 	numLoaders: LONGINT;
-	kernelProc*: ARRAY 11 OF ADDRESS;	(** kernel call addresses for loader *)
 
 	freeRoot*: Module;	(** list of freed modules (temporary) *)
 
 	(* the following two variables are initialized by Linker *)
 	root-: Module;	(** list of modules (read-only) *)
-	initBlock: ANY;	(* placeholder - anchor for module init code (initialized by linker) *)
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
 	register: RECORD
@@ -427,13 +421,25 @@ END Initialize;
 		END;
 	END MergeProcedureDescs;
 
+	(* remove sorted procedure descriptors from sorted global array *)
 	PROCEDURE RemoveProcedureDescs*(p: ProcedureDescs);
+	VAR i,j,k: LONGINT; n: ProcedureDescs;
+	BEGIN
+		IF ~mayAllocate THEN RETURN END; 
+		NEW(n, LEN(procedureDescriptors) - LEN(p));
+		i := 0; j := 0; k := 0; 
+		WHILE i < LEN(procedureDescriptors) DO 
+			IF (j < LEN(p)) & (procedureDescriptors[i] = p[j]) THEN INC(j);
+			ELSE n[k] := procedureDescriptors[i]; INC(k);
+			END;
+			INC(i); 
+		END;
+		procedureDescriptors := n;
 	END RemoveProcedureDescs;
 
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
-TYPE Body = PROCEDURE;
-VAR m, p: Module; fileName: ARRAY 64 OF CHAR; body: Body; new: BOOLEAN; i: LONGINT;
+VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ModuleByName(name);
 	IF m = NIL THEN
@@ -770,15 +776,6 @@ BEGIN
 	RETURN m.init;
 END Initialized;
 
-(** Return the specified kernel procedure address. *)
-PROCEDURE GetKernelProc*(num: LONGINT): ADDRESS;
-VAR adr: ADDRESS;
-BEGIN
-	adr := kernelProc[253-num];
-	ASSERT(adr # 0);
-	RETURN adr
-END GetKernelProc;
-
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(*TRACE(module.name);*)
@@ -824,7 +821,7 @@ BEGIN
 END PublishRegisteredModules;
 
 (* procedure that will be called last in a linked kernel *)
-PROCEDURE {FINAL, NOPAF} Main;
+PROCEDURE {FINAL, NOPAF} Main-;
 BEGIN
 	(*Machine.Init;*)
 	Trace.String("publish registered modules"); Trace.Ln;
@@ -833,30 +830,11 @@ END Main;
 
 PROCEDURE Init;
 VAR
-	newArr: PROCEDURE (VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN);
-	newSys: PROCEDURE (VAR p: ANY; size: SIZE; isRealtime: BOOLEAN);
-	newRec: PROCEDURE (VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN);
-	getProcedure: PROCEDURE(CONST m, p : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
 	s: ARRAY 4 OF CHAR;
 	module: Module;
 BEGIN
-	(* root and initBlock are initialized by the linker *)
+	(* root is initialized by the linker *)
 	shutdown := None;
-	newArr := Heaps.NewArr;
-	newSys := Heaps.NewSys;
-	newRec := Heaps.NewRec;
-	getProcedure := GetProcedure;
-	kernelProc[0] := SYSTEM.VAL (ADDRESS, newRec);	(* 253 *)
-	kernelProc[1] := SYSTEM.VAL (ADDRESS, newSys);	(* 252 *)
-	kernelProc[2] := SYSTEM.VAL (ADDRESS, newArr);	(* 251 *)
-	kernelProc[3] := 0;	(* 250 *)
-	kernelProc[4] := 0;	(* 249 *)
-	kernelProc[5] := 0;	(* 248 *)
-	kernelProc[6] := 0;	(* 247 *)
-	kernelProc[7] := 0;	(* 246 *)
-	kernelProc[8] := 0;	(* 245 *)
-	kernelProc[9] := 0;	(* 244 *)
-	kernelProc[10] := SYSTEM.VAL(ADDRESS, getProcedure);	(* 243 *)
 	numLoaders := 0;
 	freeRoot := NIL;
 	Machine.GetConfig("TraceModules", s);

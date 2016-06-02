@@ -749,16 +749,7 @@ TYPE
 	END Convert;
 
 	PROCEDURE Init;
-	BEGIN
-		Modules.kernelProc[0] := ADDRESSOF( Heaps.NewRec );
-		Modules.kernelProc[1] := ADDRESSOF( Heaps.NewSys );
-		Modules.kernelProc[2] := ADDRESSOF( Heaps.NewArr );
-		Modules.kernelProc[3] := ADDRESSOF( CreateProcess );	(* 250 *)
-		Modules.kernelProc[4] := ADDRESSOF( Await);				(* 249 *)
-		Modules.kernelProc[6] := ADDRESSOF( Lock);				(* 247 *)
-		Modules.kernelProc[7] := ADDRESSOF( Unlock);			(* 246 *)
-		Modules.kernelProc[10] := ADDRESSOF( Modules.GetProcedure );
-		
+	BEGIN		
 		Unix.Dlsym( 0, "mtxInit",		ADDRESSOF( mtxInit ) );
 		Unix.Dlsym( 0, "mtxDestroy",	ADDRESSOF( mtxDestroy ) );
 		Unix.Dlsym( 0, "mtxLock",		ADDRESSOF( mtxLock ) );

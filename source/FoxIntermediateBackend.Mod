@@ -12466,9 +12466,9 @@ TYPE
 		PROCEDURE Module(bodyProc: IntermediateCode.Section);
 		VAR
 			moduleSection, pointerSection, importSection, emptyArraySection, exceptionSection, commandsSection,
-			typeInfoSection, procTableSection, ptrTableSection, referenceSection : IntermediateCode.Section;
+			typeInfoSection, procTableSection,  referenceSection : IntermediateCode.Section;
 			emptyArraySectionOffset, pointerSectionOffset, importSectionOffset, numberPointers,
-			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, ptrTableSectionOffset, maxPointers, numberProcs,temp,
+			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, maxPointers, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
 			name: Basic.SegmentedName; offset: LONGINT;
 		BEGIN
@@ -12487,11 +12487,6 @@ TYPE
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
 			References(referenceSection);
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
-			(*IF ~implementationVisitor.backend.cooperative THEN
-				ptrTableSection := Block("Heaps","SystemBlockDesc",".@PtrTable",ptrTableSectionOffset);
-			ELSE*)
-				ptrTableSection := NIL;
-			(*END;*)
 			ProcedureDescriptorArray(procTableSection, numberProcs);
 			name := "Heaps.AnyPtr";
 			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
@@ -12529,12 +12524,6 @@ TYPE
 			Symbol(moduleSection,importSection,emptyArraySectionOffset,0);
 			Info(moduleSection, "procTable*: ProcTable");
 			Symbol(moduleSection,procTableSection,procTableSectionOffset,0);
-			Info(moduleSection, "ptrTable*: PtrTable");
-			IF ptrTableSection # NIL THEN
-				Symbol(moduleSection,ptrTableSection,ptrTableSectionOffset,0);
-			ELSE
-				Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
-			END;
 			Info(moduleSection, "data*, code*, staticTypeDescs*, refs*: Bytes");
 			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
 			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
@@ -12546,13 +12535,7 @@ TYPE
 			Address(moduleSection,0);
 			Info(moduleSection, "exTable*: ExceptionTable");
 			Symbol(moduleSection,exceptionSection,exceptionSectionOffset,0);
-			Info(moduleSection, "noProcs*: LONGINT");
-			Longint(moduleSection,numberProcs);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END;
-			Info(moduleSection, "firstProc*: ADDRESS");
-			Address(moduleSection,0);
-			Info(moduleSection, "maxPtrs*: LONGINT");
-			Longint(moduleSection,maxPointers);
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END; (* padding -> alignment *)
 			Info(moduleSection,"internal: POINTER TO ARRAY OF Pointer");
 			Symbol(moduleSection, modulePointerSection, modulePointerSectionOffset, 0);
 			Info(moduleSection, "crc*: LONGINT");

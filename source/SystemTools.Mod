@@ -98,7 +98,7 @@ BEGIN
 		m := Modules.root;
 		WHILE m # NIL DO
 			context.out.String(m.name);
-			IF options.GetFlag("base") THEN context.out.String(" base="); context.out.Hex(m.firstProc,-8) END;
+			(*IF options.GetFlag("base") THEN context.out.String(" base="); context.out.Hex(m.firstProc,-8) END;*)
 			IF options.GetFlag("crc") THEN context.out.String(" crc="); context.out.Hex(m.crc,-8); context.out.String("") END;
 			m := m.next;
 			IF m # NIL THEN

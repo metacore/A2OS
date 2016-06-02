@@ -657,7 +657,7 @@ BEGIN
 	FOR i := 0 TO LEN(link)-1 DO
 		ASSERT(link[i].mod = 0);	(* only fix local things *)
 		CASE link[i].entry OF
-			243..253: FixRelative(link[i].link, Modules.GetKernelProc(m, link[i].entry))
+			243..253: HALT(100); (*FixRelative(link[i].link, Modules.GetKernelProc(m, link[i].entry))*)
 			|254: FixEntry(link[i].link, fixupCounts)	(* local procedure address *)
 			|255: FixCase(link[i].link, caseTableSize)	(* case table *)
 			ELSE res := 3406; RETURN				(* unknown fixup type *)

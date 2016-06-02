@@ -1715,10 +1715,6 @@ END Start;
 (* Initialize module. *)
 PROCEDURE Init; (* can not use NEW *)
 VAR
-	lock: PROCEDURE (obj: ProtectedObject; exclusive: BOOLEAN);
-	unlock: PROCEDURE (obj: ProtectedObject; dummy: BOOLEAN);
-	await: PROCEDURE (cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET);
-	create: PROCEDURE (body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
 	i: LONGINT;
 BEGIN
 	ProcessorHLT := NIL;
@@ -1730,11 +1726,6 @@ BEGIN
 	FOR i := 0 TO NumIRQ-1 DO processingIRQ[i] := FALSE END;
 	nextProcessID := 0; Machine.ticks := 0;
 	traceProcess := NIL;
-	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;
-	Modules.kernelProc[3] := SYSTEM.VAL (ADDRESS, create);	(* 250 *)
-	Modules.kernelProc[4] := SYSTEM.VAL (ADDRESS, await);	(* 249 *)
-	Modules.kernelProc[6] := SYSTEM.VAL (ADDRESS, lock);	(* 247 *)
-	Modules.kernelProc[7] := SYSTEM.VAL (ADDRESS, unlock);	(* 246 *)
 	terminate := Terminate;
 	trap[0] := Halt;
 	trap[1] := HaltUnbreakable;

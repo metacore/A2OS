@@ -1883,8 +1883,6 @@ VAR
 		header.refSize := LEN(module.refs);
 		header.constSize := 0;
 		header.exTableLen := LEN(module.exTable);
-		header.procs := module.noProcs;
-		header.maxPtrs := module.maxPtrs;
 		header.staticTdSize := LEN(module.typeInfo);
 		header.crc := module.crc;
 		header.name := module.name;

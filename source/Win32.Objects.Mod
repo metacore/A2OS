@@ -1212,11 +1212,6 @@ BEGIN
 	numberOfProcessors := Machine.NumberOfProcessors();
 	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;
 
-	Modules.kernelProc[3] := SYSTEM.VAL(LONGINT, create);   (* 250 *)
-	Modules.kernelProc[4] := SYSTEM.VAL(LONGINT, await);   (* 249 *)
-	Modules.kernelProc[6] := SYSTEM.VAL(LONGINT, lock);   (* 247 *)
-	Modules.kernelProc[7] := SYSTEM.VAL(LONGINT, unlock);   (* 246 *)
-
 	NEW(t);  NEW(fn);
 
 	Machine.Acquire(Machine.Objects);

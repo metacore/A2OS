@@ -11684,21 +11684,22 @@ TYPE
 				sfTypeMathTensor = 28X;
 				sfTypeDelegate = 29X;
 				sfTypeENUM = 2AX; 
-				sfTypeCellType = 2BX;
-				sfTypePortType = 2CX;
+				sfTypeCELL = 2BX;
+				sfTypePORT = 2CX;
 				
-				sfInPort = 0X;
-				sfOutPort = 1X;
-				sfValPar = 0X;
-				sfVarPar = 1X;
-				sfConstPar = 2X; 
+				sfIN = 0X;
+				sfOUT = 1X;
+				
+				(* variable / parameter addressing modes *)
+				sfAbsolute = 0X; (* global vars *)
+				sfRelative = 1X; (* variables, value parameters *)
+				sfIndirect = 2X; (* var parameters *) 
 
 				sfScopeBegin = 0F0X;
 				sfScopeEnd = 0F1X; 
 				sfProcedure = 0F2X; 
 				sfVariable = 	0F3X;
-				sfParameter = 0F4X;
-				sfTypeDeclaration = 0F5X;
+				sfTypeDeclaration = 0F4X;
 
 				RefInfo = TRUE;
 
@@ -11719,8 +11720,7 @@ TYPE
 			(*
 					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
 					Procedure = sfProcedure prevSymbol:SIZE name:STRING from:ADDRESS to:ADDRESS {Parameter} returnType:Type Scope.
-					Variable = sfVariable prevSymbol:SIZE name:STRING (address:ADDRESS|offset:SIZE) Type.
-					Parameter = sfParameter prevSymbol:SIZE name:STRING offset:SIZE (sfVarPar|sfConstPar|sfValPar) Type.
+					Variable = sfVariable prevSymbol:SIZE name:STRING (sfAbsolute address:ADDRESS| sfIndirect offset:SIZE | sfRelative offset:SIZE) Type.
 					TypeDeclaration = sfTypeDeclaration prevSymbol:SIZE name:STRING td:ADDRESS Scope.
 					Type = 
 						sfTypePointerToRecord 
@@ -11733,6 +11733,7 @@ TYPE
 						| sfTypeMathTensor Type
 						| sfTypeRecord tdAdr:ADDRESS 
 						| sfTypeDelegate {Parameter} return:Type
+						| sfTypePort (sfIN | sfOUT)
 						| sfTypeBOOLEAN
 						| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
 						| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
@@ -11833,11 +11834,11 @@ TYPE
 									Address(section, 0);
 								END;
 						| type: SyntaxTree.PortType DO
-							Char(section, sfTypePortType);
+							Char(section, sfTypePORT);
 							IF type.direction = SyntaxTree.OutPort THEN
-								Char(section, sfOutPort)
+								Char(section, sfOUT)
 							ELSE
-								Char(section, sfInPort)
+								Char(section, sfIN)
 							END;
 						| type: SyntaxTree.ProcedureType DO
 								Char(section, sfTypeDelegate);
@@ -11971,23 +11972,30 @@ TYPE
 				END NType;
 				
 				(*
-					Parameter = sfParameter prevSymbol:SIZE name:STRING offset:SIZE (sfVarPar|sfConstPar|sfValPar) Type.
+					Parameter = sfVariable prevSymbol:SIZE name:STRING (sfIndirec|sfRelative) offset:SIZE Type.
 				*)
 				PROCEDURE NParameter(parameter: SyntaxTree.Parameter; procOffset: LONGINT);
-				VAR pos: LONGINT; 
+				VAR pos: LONGINT; type: SyntaxTree.Type;
 				BEGIN
 					IF RefInfo THEN Info(section, "Parameter") END;
-					Char(section, sfParameter);
+					Char(section, sfVariable);
 					Size(section, procOffset);
 					String0(section, parameter.name);
-					Size(section, ToMemoryUnits(module.system,parameter.offsetInBits));
+					type := parameter.type.resolved;
 					IF parameter.kind = SyntaxTree.VarParameter THEN
-						Char(section, sfVarPar);
+						IF IsOpenArray(type) THEN Char(section, sfRelative)
+						ELSE Char(section, sfIndirect)
+						END;
 					ELSIF parameter.kind = SyntaxTree.ConstParameter THEN
-						Char(section, sfConstPar);
+						IF (type IS SyntaxTree.RecordType) OR IsStaticArray(type) THEN 
+							Char(section, sfIndirect);
+						ELSE
+							Char(section, sfRelative);
+						END;
 					ELSE
-						Char(section, sfValPar);
+						Char(section, sfRelative);
 					END;
+					Size(section, ToMemoryUnits(module.system,parameter.offsetInBits));
 					NType(parameter.type);
 				END NParameter;
 
@@ -12018,7 +12026,7 @@ TYPE
 					IF RefInfo THEN Info(section, "Parameters") END;
 					parameter := procedureType.firstParameter;
 					WHILE(parameter # NIL) DO
-						NParameter(parameter, pos); (*!treat  exceptions !*)
+						NParameter(parameter, pos);
 						parameter := parameter.nextParameter;
 					END;
 					IF RefInfo THEN Info(section, "ReturnType") END;
@@ -12028,7 +12036,7 @@ TYPE
 				END NProcedure;
 				
 				(*
-					Variable = sfVariable prevSymbol:SIZE name:STRING (address:ADDRESS|offset:SIZE) Type.
+					Variable = sfVariable prevSymbol:SIZE name:STRING (sfAbsolute address:ADDRESS| sfRelative offset:SIZE) Type.
 				*)
 				PROCEDURE NVariable(variable: SyntaxTree.Variable; scopeOffset: LONGINT);
 				VAR s: Sections.Section; sn: Basic.SegmentedName; pos: LONGINT; 
@@ -12039,9 +12047,11 @@ TYPE
 					Size(section, scopeOffset); 
 					String0(section, variable.name);
 					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
+						Char(section, sfAbsolute);
 						implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
 						NamedSymbol(section, sn,variable, 0,0);
 					ELSE
+						Char(section, sfRelative);
 						Size(section, ToMemoryUnits(module.system,variable.offsetInBits));
 					END;
 					NType(variable.type);
@@ -14067,13 +14077,13 @@ END FoxIntermediateBackend.
 
 Compiler.Compile FoxIntermediateBackend.Mod ~
 
-#	Release.Build --path="/temp/obh/" WinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H --path="/temp/obh/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+#	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2H.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
-Compiler.Compile -p=Win32G  --destPath=/temp/obh/
+Compiler.Compile -p=Win32G  --destPath=/temp/obg/
 Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

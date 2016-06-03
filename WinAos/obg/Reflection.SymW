@@ -51,15 +51,18 @@ CONST
 	sfTypeMathTensor* = 28X; 
 	sfTypeDelegate* = 29X; 
 	sfTypeENUM* = 2AX; 
-	sfValPar* = 0X; 
-	sfVarPar* = 1X; 
-	sfConstPar* = 2X; 
+	sfTypeCELL = 2BX; 
+	sfTypePORT = 2CX; 
+	sfIN = 0X; 
+	sfOUT = 1X; 
+	sfAbsolute = 0X; 
+	sfRelative = 1X; 
+	sfIndirect = 2X; 
 	sfScopeBegin* = 0F0X; 
 	sfScopeEnd* = 0F1X; 
 	sfProcedure* = 0F2X; 
 	sfVariable* = 0F3X; 
-	sfParameter* = 0F4X; 
-	sfTypeDeclaration* = 0F5X; 
+	sfTypeDeclaration* = 0F4X; 
 TYPE 
 	Name = ARRAY 128 OF CHAR; 
 
@@ -101,13 +104,11 @@ VAR
 	PROCEDURE ^ WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS); 
 	PROCEDURE ^ SkipType*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipProcedure*(refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ SkipParameter*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipVariable*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipScope*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ FindString(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInProcedure(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInParameter(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInVariable(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInScope(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
@@ -124,7 +125,6 @@ VAR
 	PROCEDURE ^ WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT); 
 	PROCEDURE ^ ReportType(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportProcedure(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportParameter(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportVariable(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportTypeDeclaration(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportScope(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 

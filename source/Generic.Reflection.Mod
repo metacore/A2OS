@@ -74,6 +74,7 @@ CONST
 	sfProcedure* = 0F2X; 
 	sfVariable* = 	0F3X;
 	sfTypeDeclaration* = 0F4X;
+	sfModule*= 0FFX;
 
 	(*
 		References section format: 
@@ -266,7 +267,8 @@ CONST
 		ELSE
 			w.String(mod.name);
 			refs := mod.refs;
-			IF FindByAdr(refs, refpos, pc) THEN
+			refpos := FindByAdr(refs, 0, pc);
+			IF refpos >= 0 THEN
 				offset := refpos;
 				IF GetChar(refs, offset) = sfProcedure THEN
 					w.Char(".");
@@ -597,7 +599,7 @@ CONST
 		nameOffset: LONGINT;				(* to incrementally search through scopes *)
 		minLevel: LONGINT; 					(* in order to stop scope search *)
 		pc: ADDRESS;							(* for search by address *)
-		pos: LONGINT;							(* symbol position in stream *)
+		pos: LONGINT;							(* symbol position in stream, -1 if not found *)
 		found: BOOLEAN;						(* if found *)
 	END;
 
@@ -680,6 +682,14 @@ CONST
 		SkipAddress(offset);
 		IF refs[offset] = sfScopeBegin THEN FindInScope(refs, offset, level+1, find) END;
 	END FindInTypeDeclaration; 
+	
+	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
+	VAR pos: LONGINT;
+	BEGIN
+		pos := offset;
+		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
+		FindInScope(refs, offset, level+1, find);
+	END FindInModule;
 
 	(* find a symbol by name or pc in a scope in the stream *)
 	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
@@ -702,34 +712,38 @@ CONST
 	PROCEDURE InitSearch(VAR search: Search);
 	BEGIN
 		search.found := FALSE;
+		search.pos := -1;
 		search.name := "";
 		search.nameOffset := 0;
 		search.minLevel := 0;
 		search.pc := 0;
 	END InitSearch;
 	
-	PROCEDURE FindByName*(refs: Modules.Bytes; VAR offset: LONGINT; CONST name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR): SIZE; 
 	VAR search: Search; 
 	BEGIN
 		InitSearch(search); 
 		COPY(name, search.name);
-		offset := 0;
-		IF ~Expect(GetChar(refs, offset) = 0FFX) THEN RETURN FALSE END;
-		FindInScope(refs, offset, 0, search);
-		offset := search.pos;
-		RETURN search.found;	
+		CASE refs[offset] OF
+			sfModule: FindInModule(refs, offset, 0, search);
+			|sfVariable: FindInVariable(refs, offset, 0, search);
+			|sfProcedure: FindInProcedure(refs, offset, 0, search);
+			|sfTypeDeclaration: FindInTypeDeclaration(refs, offset, 0, search);
+		ELSE (* wrong position in stream *)
+		END;
+		RETURN search.pos;
 	END FindByName;
 
-	PROCEDURE FindByAdr*(refs: Modules.Bytes; VAR offset: LONGINT; pc: ADDRESS): BOOLEAN;
+	PROCEDURE FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE;
 	VAR search: Search;
 	BEGIN
 		InitSearch(search);
 		search.pc := pc;
 		offset := 0;
-		IF GetChar(refs, offset) # 0FFX THEN RETURN FALSE END; 
-		FindInScope(refs, offset, 0, search);
-		offset := search.pos;
-		RETURN search.found; 
+		IF GetChar(refs, offset) = sfModule THEN 
+			FindInScope(refs, offset, 0, search);
+		END;
+		RETURN search.pos;
 	END FindByAdr;
 
 	(** service procedures *) 
@@ -750,7 +764,7 @@ CONST
 		offset := 0; 
 		
 		w.String("State "); w.String(mod.name); w.Char(":"); w.Ln; Wait(w);
-		IF (GetChar(refs, offset) = 0FFX) &  (GetChar(refs, offset) = sfScopeBegin) THEN
+		IF (GetChar(refs, offset) = sfModule) &  (GetChar(refs, offset) = sfScopeBegin) THEN
 			WriteVariables(w, refs, offset, 0)
 		END;
 	END ModuleState;
@@ -927,14 +941,14 @@ TYPE
 		w.String(name); 
 		start := GetAddress(refs, offset);
 		end := GetAddress(refs, offset);
-		w.String("("); 
+		w.String("[@"); w.Address(start); w.String(" - "); w.Address(end); w.String("]");
+		w.String("("); w.Ln;
 		WHILE refs[offset] = sfVariable DO
 			ReportVariable(w, refs, offset);
 		END;
 		w.String(")"); 
 		w.String(":"); 
 		ReportType(w, refs, offset); 
-		w.String("[@"); w.Address(start); w.String(" - "); w.Address(end); w.String("]");
 		w.Ln;
 		ReportScope(w, refs, offset);
 	END ReportProcedure;
@@ -993,13 +1007,22 @@ TYPE
 		IF ~Expect(GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
 		w.String("END"); w.Ln; 
 	END ReportScope;
-					
-	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes);
-	VAR offset: LONGINT; 
+	
+	PROCEDURE ReportModule(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
 	BEGIN
-		offset := 0; 
-		IF Expect(GetChar(refs, offset) = 0FFX) THEN
-			ReportScope(w, refs, offset)
+		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END; 		
+		ReportScope(w, refs, offset); 
+	END ReportModule;
+	
+					
+	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
+	BEGIN
+		CASE refs[offset] OF
+			sfModule: ReportModule(w, refs, offset);
+			|sfVariable: ReportVariable(w, refs, offset);
+			|sfProcedure: ReportProcedure(w, refs, offset);
+			|sfTypeDeclaration: ReportTypeDeclaration(w, refs, offset);
+		ELSE (* wrong position in stream *)
 		END;
 	END Report;
 

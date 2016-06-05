@@ -345,7 +345,6 @@ TYPE
 			IF GetModel(object, model) THEN
 				type.value := value;
 				model.SetGeneric(type, res);
-
 			END;
 		END UpdateModel;
 
@@ -569,7 +568,7 @@ TYPE
 	VAR
 		value : LONGINT;
 		min, max : LONGINT;
-		bounded, silent : BOOLEAN;
+		bounded : BOOLEAN;
 
 		PROCEDURE UpdateProperty;
 		VAR integer: Types.Integer; model: Models.Model; res: LONGINT;
@@ -628,23 +627,6 @@ TYPE
 			ReleaseRead;
 		END GetIsBounded;
 
-		PROCEDURE SetSilent*(isSilent : BOOLEAN);
-		BEGIN
-			AcquireWrite;
-			IF isSilent # silent THEN
-				silent := isSilent;
-				Stamp;
-			END;
-			ReleaseWrite
-		END SetSilent;
-
-		PROCEDURE GetSilent*(VAR isSilent : BOOLEAN);
-		BEGIN
-			AcquireRead;
-			isSilent := silent;
-			ReleaseRead;
-		END GetSilent;
-
 		PROCEDURE Validate(v : LONGINT) : LONGINT;
 		BEGIN
 			IF bounded THEN RETURN Strings.Max(min, Strings.Min(max, v))
@@ -678,24 +660,33 @@ TYPE
 			ReleaseRead;
 			RETURN r
 		END Get;
-
-		PROCEDURE Set*(value : LONGINT);
+		
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value: LONGINT);
+		VAR v: LONGINT;
 		BEGIN
+			v := Validate(value);
 			AcquireWrite;
-			IF Validate(value) # SELF.value THEN
-				SELF.value := Validate(value);
-				IF ~silent THEN
-					Changed;
-					IF object # NIL THEN UpdateModel END;
-				END
-			ELSIF ~nonDefault & ~silent THEN
+			SELF.value := v;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
+		
+		PROCEDURE Set*(value : LONGINT);
+		VAR v: LONGINT;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				Changed;
+				IF object # NIL THEN UpdateModel END;
+			ELSIF ~nonDefault THEN
 				Changed;
 			END;
 			NotDefault;
 			ReleaseWrite
 		END Set;
-
-
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -756,7 +747,7 @@ TYPE
 	VAR
 		value : LONGREAL;
 		min, max : LONGREAL;
-		bounded, silent : BOOLEAN;
+		bounded : BOOLEAN;
 
 		(** Confines the possible input values between min and max. Implicitly activates the bounds check. If the current value
 			lies outside the bounds, it is truncated to the nearest and a change notification is sent after the end of the transaction. *)
@@ -796,23 +787,6 @@ TYPE
 			ReleaseRead;
 		END GetIsBounded;
 
-		PROCEDURE SetSilent*(isSilent : BOOLEAN);
-		BEGIN
-			AcquireWrite;
-			IF isSilent # silent THEN
-				silent := isSilent;
-				Stamp;
-			END;
-			ReleaseWrite
-		END SetSilent;
-
-		PROCEDURE GetSilent*(VAR isSilent : BOOLEAN);
-		BEGIN
-			AcquireRead;
-			isSilent := silent;
-			ReleaseRead;
-		END GetSilent;
-
 		PROCEDURE Validate(v : LONGREAL) : LONGREAL;
 		VAR result : LONGREAL;
 		BEGIN
@@ -840,11 +814,11 @@ TYPE
 		END ToStream;
 
 		PROCEDURE UpdateProperty;
-		VAR boolean: Types.Longreal; model: Models.Model; res: LONGINT;
+		VAR longreal: Types.Longreal; model: Models.Model; res: LONGINT; silent: BOOLEAN; 
 		BEGIN
 			IF GetModel(object, model) THEN
-				 model.GetGeneric(boolean, res);
-				 IF res = 0 THEN Set(boolean.value) END;
+				 model.GetGeneric(longreal, res);
+				 IF res = 0 THEN Set(longreal.value) END;
 			END;
 		END UpdateProperty;
 
@@ -869,20 +843,33 @@ TYPE
 			RETURN r
 		END Get;
 
-		PROCEDURE Set*(value : LONGREAL);
+		PROCEDURE SetPassive*(value: LONGREAL);
+		VAR v: LONGREAL;
 		BEGIN
+			v := Validate(value);
 			AcquireWrite;
-			IF Validate(value) # SELF.value THEN
-				SELF.value := Validate(value);
-				IF ~silent THEN Changed
-				END;
-				IF (object # NIL) THEN UpdateModel END;
-			ELSIF ~nonDefault & ~silent THEN
-				Changed
+			SELF.value := v;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
+		
+		PROCEDURE Set*(value : LONGREAL);
+		VAR v: LONGREAL;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				Changed;
+				IF object # NIL THEN UpdateModel END;
+			ELSIF ~nonDefault THEN
+				Changed;
 			END;
 			NotDefault;
 			ReleaseWrite
 		END Set;
+		
+		
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -1038,6 +1025,16 @@ TYPE
 				model.SetGeneric(type, res);
 			END;
 		END UpdateModel;
+
+		PROCEDURE SetPassive*(value : String);
+		BEGIN
+			AcquireWrite;
+				IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
+					SELF.value := value; Translate;
+				END;
+				NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE Set*(value : String);
 		BEGIN

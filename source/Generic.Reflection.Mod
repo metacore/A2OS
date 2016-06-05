@@ -856,8 +856,21 @@ CONST
 	END GetVariableAdr;
 	
 	PROCEDURE GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS);
+	VAR m: Modules.Module; offset: LONGINT;
 	BEGIN
-		name := ""
+		name := "";
+		m := Modules.ThisModuleByAdr0(pc);
+		IF m # NIL THEN
+			offset := FindByAdr(m.refs,0,pc);
+			IF offset >= 0 THEN
+				GetFullName(m.refs, offset, name);
+				IF GetChar(m.refs, offset) = sfProcedure THEN
+					SkipSize(offset);
+					SkipString(m.refs,offset);
+					startpc := GetAddress(m.refs, offset);
+				END;
+			END;
+		END;
 	END GetProcedureName;
 
 TYPE

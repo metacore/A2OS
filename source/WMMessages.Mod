@@ -25,6 +25,7 @@ CONST
 	(** Gather statistics about added/discarded messages? *)
 	Statistics* = FALSE;
 	TraceQueue = FALSE;
+	TraceOverflows = TRUE;
 	MsgTypeMax* = 13;
 
 
@@ -144,7 +145,7 @@ TYPE
 			IF stopped THEN TRACE("!!!!!!!!!!!!!", stopped) END;
 			FOR i := 0 TO LEN(msgQ)-1 DO
 				new[i] := msgQ[(head+i) MOD LEN(msgQ)];
-				IF TraceQueue OR stopped (* OR (LEN(new) > 1024) *) THEN
+				IF TraceOverflows OR stopped THEN
 				msg := new[i];
 				IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
 				TRACE(i,"***************", name);
@@ -267,7 +268,12 @@ TYPE
 							END;
 							(* keep *)
 							RETURN TRUE;
-
+						ELSE (* we assume that invaidates on the same component
+									that immediately follow each other are very close to each other
+									If this turns out to be untrue, we could add a heuristics here *)
+								Merge(msgQ[pos].x, msgQ[pos].y, msgQ[pos].dx, msgQ[pos].dy, msg.x, msg.y, msg.dx, msg.dy);
+								(* keep *)
+								RETURN TRUE;
 						END;
 					ELSIF msg.msgSubType = MsgSubAll THEN
 						(* keep *)

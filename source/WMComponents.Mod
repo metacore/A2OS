@@ -1299,7 +1299,11 @@ TYPE
 
 		(** Is called before any sub-components are drawn *)
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR color : LONGINT; name:Strings.String;
+		VAR color,i : LONGINT; name:Strings.String;
+		(* DebugUpdates can be used in order to visualize updates via some color cycling 
+			Moreover, it slows down display extremely such that updates can be seen
+		*)
+		CONST DebugUpdates = FALSE;
 		BEGIN
 			(* message tracing
 			IF sequencer = Messages.debug THEN
@@ -1316,8 +1320,14 @@ TYPE
 			END;
 			*)
 			CheckReadLock;
-			color := fillColor.Get();
-			IF color # 0 THEN canvas.Fill(GetClientRect(), color, WMGraphics.ModeSrcOverDst) END;
+			
+			IF DebugUpdates THEN
+				canvas.Fill(GetClientRect(), Kernel.GetTicks()*100H +0FFH, WMGraphics.ModeSrcOverDst);
+				FOR i := 0 TO 10000000 DO END;
+			ELSE
+				color := fillColor.Get();			
+				IF color # 0 THEN canvas.Fill(GetClientRect(), color, WMGraphics.ModeSrcOverDst) END;
+			END;
 		END DrawBackground;
 
 		(** Is called after all sub-components are drawn *)
@@ -1396,7 +1406,7 @@ TYPE
 				END;
 				c := GetNext(c);
 			END;
-		END DrawSubComponents;
+			END DrawSubComponents;
 
 		PROCEDURE GetFont*() : WMGraphics.Font;
 		BEGIN

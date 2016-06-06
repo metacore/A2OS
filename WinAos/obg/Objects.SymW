@@ -99,7 +99,6 @@ TYPE
 		lastThreadTimes: HUGEINT; 
 
 		PROCEDURE ^ FindRoots*; 
-		PROCEDURE ^ FindPointers(bp, pc: ADDRESS; VAR diff0, diff1: SIZE); 
 	END Process; 
 
 	ExceptionHandler* = PROCEDURE (VAR context: Kernel32.Context; VAR excpRec: Kernel32.ExceptionRecord; VAR handled: BOOLEAN); 
@@ -148,6 +147,7 @@ VAR
 	excplock: Kernel32.CriticalSection; 
 	exceptionhandler: ExceptionHandler; 
 
+	PROCEDURE ^ FindPointers(bp, pc: ADDRESS; VAR diff0, diff1: SIZE); 
 	PROCEDURE ^ SetPriority*(priority: LONGINT); 
 	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 
 	PROCEDURE ^ Yield*; 

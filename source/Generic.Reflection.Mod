@@ -58,16 +58,16 @@ CONST
 	sfTypeMathTensor* = 28X;
 	sfTypeDelegate* = 29X; 
 	sfTypeENUM* = 2AX;
-	sfTypeCELL = 2BX;
-	sfTypePORT = 2CX;
+	sfTypeCELL* = 2BX;
+	sfTypePORT* = 2CX;
 	
-	sfIN = 0X;
-	sfOUT = 1X;
+	sfIN* = 0X;
+	sfOUT* = 1X;
 	
 	(* variable / parameter addressing modes *)
-	sfAbsolute = 0X; (* global vars *)
-	sfRelative = 1X; (* variables, value parameters *)
-	sfIndirect = 2X; (* var parameters *) 
+	sfAbsolute* = 0X; (* global vars *)
+	sfRelative* = 1X; (* variables, value parameters *)
+	sfIndirect* = 2X; (* var parameters *) 
 
 	sfScopeBegin* = 0F0X;
 	sfScopeEnd* = 0F1X; 
@@ -653,7 +653,7 @@ CONST
 			RETURN; 
 		END;
 		WHILE (refs[offset] = sfVariable) DO
-			IF find.minLevel <= level THEN
+			IF find.minLevel <= level+1 THEN
 				FindInVariable(refs, offset, level+1, find);
 				IF find.found THEN RETURN END;
 			ELSE
@@ -1080,3 +1080,5 @@ TYPE
 BEGIN
 	modes := " rdy run awl awc awe rip";   (* 4 characters per mode from Objects.Ready to Objects.Terminated *)
 END Reflection.
+
+

@@ -12343,10 +12343,10 @@ TYPE
 				Symbol(section,procedureSection, procedureSection.validPAFEnter,0);
 				Info(section,"pcStatementEnd");
 				Symbol(section, procedureSection, procedureSection.validPAFExit,0);
-				Info(section,"pointer to offsets array");
-				Symbol(section, section,section.pc+1,0);
 				patchProcedurePC := section.pc;
 				Size(section, 0);
+				Info(section,"pointer to offsets array");
+				Symbol(section, section,section.pc+1,0);
 				Info(section,"offsets array");
 				procedure := procedureSection.symbol(SyntaxTree.Procedure);
 				PointerArray(section, procedure.procedureScope, numberPointers);

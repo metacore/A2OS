@@ -716,11 +716,15 @@ TYPE
 				IF symbol.token # FoxScanner.RightBrace THEN
 					LOOP
 						Check(FoxScanner.Identifier);
-						IF symbol.token = FoxScanner.LeftParenthesis THEN
+						IF (symbol.token = FoxScanner.LeftParenthesis) THEN
 							NextSymbol;
 							NEW (ignore);
 							ConstExprP	 (FoxScanner.RightParenthesis, -1, ignore);
 							Check (FoxScanner.RightParenthesis);
+						ELSIF  (symbol.token = FoxScanner.Equal) THEN
+							NextSymbol;
+							NEW (ignore);
+							ConstExprP	 (FoxScanner.RightBrace, FoxScanner.Comma, ignore);
 						END;
 						IF symbol.token # FoxScanner.Comma THEN EXIT END;
 						NextSymbol;

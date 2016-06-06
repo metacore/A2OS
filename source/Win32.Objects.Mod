@@ -178,7 +178,7 @@ TYPE
 			res := Kernel32.GetThreadContext( handle, state );
 
 			ASSERT ( res # 0, 1004 );
-			sp := state.SP;  bp := state.BP; pc := state.PC;
+			sp := state.SP;  bp := state.BP; pc := state.PC; curbp := 0;
 
 			(* stack garbage collection *)
 
@@ -190,7 +190,8 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				first := TRUE; curbp := bp;
+				first := TRUE; curbp := 0;
+
 				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp < stackBottom)  DO
 					FindPointers(bp, pc, d0, d1);
  					IF first THEN
@@ -212,6 +213,8 @@ TYPE
  							ELSE
  								SYSTEM.GET(state.SP + AddressSize, pc);		(* matching pc is at 4 bytes after stack pointer, pushed base pointer is at stack pointer position *)
 							END;
+							curbp := bp;
+							SYSTEM.GET(curbp, bp);
  						ELSE
  							(* regular case: bp and pc were synchronized *)
  							curbp := bp;
@@ -230,31 +233,29 @@ TYPE
 			END
 		END FindRoots;
 
+
+	END Process;
+
 		PROCEDURE FindPointers(bp, pc : ADDRESS; VAR diff0, diff1: SIZE);
-		(*
-		VAR procDesc: Modules.ProcedureDescPointer; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
-		*)
+		VAR procDesc: Modules.ProcedureDescPointer; startIndex, i: LONGINT; ptr : ADDRESS;
 		BEGIN
-			(*! adapt me
 			diff0 := InitDiff; diff1 := InitDiff;
 			procDesc := Modules.FindProc(pc, Modules.procedureDescriptors);
-			IF success THEN
+			IF procDesc # NIL THEN
 				diff0 := pc - procDesc.pcFrom;
-				diff1 := pc - procDesc.pcStatementEnd;
-				IF (LEN(procDescs.offsets) > 0) & (pc >= procDesc.pcStatementBegin) & (pc <= procDescs.pcStatementEnd) THEN
-					FOR i := 0 TO procDescs.noPtr - 1 DO
-						SYSTEM.GET(bp + Modules.ptrOffsets[startIndex + i], ptr);
+				diff1 := pc - procDesc.pcLimit;
+				IF (LEN(procDesc.offsets) > 0) & (pc >= procDesc.pcValid) & (pc <= procDesc.pcEnd) THEN
+					FOR i := 0 TO LEN(procDesc.offsets) - 1 DO
+						ptr := bp + procDesc.offsets[i];
 						IF ptr # Heaps.NilVal THEN
 							Heaps.Mark(SYSTEM.VAL(ANY, ptr))
 						END
 					END
 				END
 			END
-			*)
 		END FindPointers;
 
-	END Process;
-
+TYPE
 	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;
 										VAR excpRec: Kernel32.ExceptionRecord;
 										VAR handled: BOOLEAN);
@@ -1402,3 +1403,8 @@ o if process is not running, at least state.ESP is valid, and between stack.adr 
 o when releasing the Ready lock, make sure the process state is up to date
 *)
 
+SystemTools.ShowStacks ~
+
+Heaps.SetMetaData 
+
+StaticLinker.Link --fileFormat=PE32 --fileName=A2GC.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~

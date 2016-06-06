@@ -88,7 +88,7 @@ TYPE
 	VAR 
 		value: LONGINT; 
 		min, max: LONGINT; 
-		bounded, silent: BOOLEAN; 
+		bounded: BOOLEAN; 
 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
@@ -96,12 +96,11 @@ TYPE
 		PROCEDURE ^ GetBounds*(VAR min, max: LONGINT); 
 		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
 		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
-		PROCEDURE ^ SetSilent*(isSilent: BOOLEAN); 
-		PROCEDURE ^ GetSilent*(VAR isSilent: BOOLEAN); 
 		PROCEDURE ^ Validate(v: LONGINT): LONGINT; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ Get*(): LONGINT; 
+		PROCEDURE ^ SetPassive*(value: LONGINT); 
 		PROCEDURE ^ Set*(value: LONGINT); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
@@ -112,20 +111,19 @@ TYPE
 	VAR 
 		value: LONGREAL; 
 		min, max: LONGREAL; 
-		bounded, silent: BOOLEAN; 
+		bounded: BOOLEAN; 
 
 		PROCEDURE ^ SetBounds*(min, max: LONGREAL); 
 		PROCEDURE ^ GetBounds*(VAR min, max: LONGREAL); 
 		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
 		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
-		PROCEDURE ^ SetSilent*(isSilent: BOOLEAN); 
-		PROCEDURE ^ GetSilent*(VAR isSilent: BOOLEAN); 
 		PROCEDURE ^ Validate(v: LONGREAL): LONGREAL; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
 		PROCEDURE ^ Get*(): LONGREAL; 
+		PROCEDURE ^ SetPassive*(value: LONGREAL); 
 		PROCEDURE ^ Set*(value: LONGREAL); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
@@ -147,6 +145,7 @@ TYPE
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ Get*(): String; 
 		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetPassive*(value: String); 
 		PROCEDURE ^ Set*(value: String); 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ GetAOC*(VAR value: ARRAY OF CHAR); 

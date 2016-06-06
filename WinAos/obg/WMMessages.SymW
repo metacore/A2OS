@@ -30,6 +30,7 @@ CONST
 	MsgDragDropped* = 1; 
 	Statistics* = FALSE; 
 	TraceQueue = FALSE; 
+	TraceOverflows = TRUE; 
 	MsgTypeMax* = 13; 
 TYPE 
 	CompCommand* = PROCEDURE {DELEGATE}(sender, par: ANY); 

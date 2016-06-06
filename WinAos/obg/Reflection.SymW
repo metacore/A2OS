@@ -63,6 +63,7 @@ CONST
 	sfProcedure* = 0F2X; 
 	sfVariable* = 0F3X; 
 	sfTypeDeclaration* = 0F4X; 
+	sfModule* = 0FFX; 
 TYPE 
 	Name = ARRAY 128 OF CHAR; 
 
@@ -111,10 +112,11 @@ VAR
 	PROCEDURE ^ FindInProcedure(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInVariable(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
+	PROCEDURE ^ FindInModule(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInScope(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ InitSearch(VAR search: Search); 
-	PROCEDURE ^ FindByName*(refs: Modules.Bytes; VAR offset: LONGINT; CONST name: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ FindByAdr*(refs: Modules.Bytes; VAR offset: LONGINT; pc: ADDRESS): BOOLEAN; 
+	PROCEDURE ^ FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE; 
 	PROCEDURE ^ WriteProc*(w: Streams.Writer; pc: ADDRESS); 
 	PROCEDURE ^ ModuleState*(w: Streams.Writer; mod: Modules.Module); 
 	PROCEDURE ^ StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stackhigh: ADDRESS; long, overflow: BOOLEAN); 
@@ -128,6 +130,7 @@ VAR
 	PROCEDURE ^ ReportVariable(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportTypeDeclaration(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportScope(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes); 
+	PROCEDURE ^ ReportModule(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
+	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
 BEGIN
 END Reflection.

@@ -107,6 +107,7 @@ VAR
 	PROCEDURE ^ SkipProcedure*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipVariable*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ SkipModule*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipScope*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ FindString(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInProcedure(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
@@ -115,7 +116,7 @@ VAR
 	PROCEDURE ^ FindInModule(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ FindInScope(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search); 
 	PROCEDURE ^ InitSearch(VAR search: Search); 
-	PROCEDURE ^ FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
 	PROCEDURE ^ FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE; 
 	PROCEDURE ^ WriteProc*(w: Streams.Writer; pc: ADDRESS); 
 	PROCEDURE ^ ModuleState*(w: Streams.Writer; mod: Modules.Module); 

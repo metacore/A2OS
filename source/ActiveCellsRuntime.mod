@@ -398,7 +398,8 @@ type
 
 		copy(typeName, name);
 		Strings.Append(name, ".@Body");
-		if Reflection.FindByName(m.refs, offset, name) then
+		offset := Reflection.FindByName(m.refs, 0, name, true);
+		if offset # 0 then
 			if Reflection.GetChar(m.refs,offset) = Reflection.sfProcedure then
 				Reflection.SkipSize(offset);
 				Reflection.SkipString(m.refs,offset);
@@ -419,7 +420,7 @@ type
 			new(launcher, context); 
 			launcher.Start(starter.P, true);
 		else 
-			Reflection.Report(Commands.GetContext().out, m.refs);
+			Reflection.Report(Commands.GetContext().out, m.refs, offset);
 		end;
 	end Execute;
 	

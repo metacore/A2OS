@@ -11700,6 +11700,7 @@ TYPE
 				sfProcedure = 0F2X; 
 				sfVariable = 	0F3X;
 				sfTypeDeclaration = 0F4X;
+				sfModule = 0FFX;
 
 				RefInfo = TRUE;
 
@@ -11719,6 +11720,7 @@ TYPE
 			
 			(*
 					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
+					Module = sfModule prevSymbol:SIZE name:String Scope.
 					Procedure = sfProcedure prevSymbol:SIZE name:STRING from:ADDRESS to:ADDRESS {Parameter} returnType:Type Scope.
 					Variable = sfVariable prevSymbol:SIZE name:STRING (sfAbsolute address:ADDRESS| sfIndirect offset:SIZE | sfRelative offset:SIZE) Type.
 					TypeDeclaration = sfTypeDeclaration prevSymbol:SIZE name:STRING td:ADDRESS Scope.
@@ -12101,6 +12103,16 @@ TYPE
 					END;					
 				END NTypeDeclaration;
 				
+				PROCEDURE NModule(module: SyntaxTree.Module; prevSymbol: LONGINT);
+				VAR pos: LONGINT;
+				BEGIN
+					pos := CurrentIndex();
+					Char(section,sfModule);
+					Size(section, prevSymbol);
+					String0(section, module.name);
+					NScope(module.moduleScope, pos);
+				END NModule;
+				
 				(*
 					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
 				*)
@@ -12138,12 +12150,13 @@ TYPE
 					Char(section, sfScopeEnd); (* scope ends *)
 				END NScope;
 				
+	
+				
 			BEGIN
 				ArrayBlock(section,sizePC,"", FALSE);
 				
 				startPC := section.pc;
-				Char(section,0FFX); (* sign for trap writer *)
-				NScope(module.module.moduleScope, -1);				
+				NModule(module.module, -1);
 				PatchArray(section,sizePC,CurrentIndex());
 			END References;
 			

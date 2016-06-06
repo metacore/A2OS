@@ -79,10 +79,11 @@ CONST
 	(*
 		References section format: 
 		
-		Scope = sfScopeBegin {variable:Variable} {procedure:Procedure} {typeDecl:TypeDeclaration} sfScopeEnd
-		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR returnType:Type {parameter:Variable} Scope
-		Variable = sfVariable prevSymbolOffset:SIZE name:String (sfRelative offset: SIZE | sfIndirec offset: SIZE | sfAbsolute address:ADDRESS) type:Type 
-		TypeDeclaration = sfTypeDeclaration prevSymbolOffset:SIZE name:String typeInfo:ADR Scope
+		Scope = sfScopeBegin {variable:Variable} {procedure:Procedure} {typeDecl:TypeDeclaration} sfScopeEnd.
+		Module = sfModule prevSymbolOffset:SIZE name:String Scope.
+		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR returnType:Type {parameter:Variable} Scope.
+		Variable = sfVariable prevSymbolOffset:SIZE name:String (sfRelative offset: SIZE | sfIndirec offset: SIZE | sfAbsolute address:ADDRESS) type:Type.
+		TypeDeclaration = sfTypeDeclaration prevSymbolOffset:SIZE name:String typeInfo:ADR Scope.
 	*)
 
 
@@ -191,7 +192,7 @@ CONST
 		BEGIN
 			IF offset >= 0 THEN
 				c := GetChar(refs, offset);
-				IF (c = sfProcedure) OR (c=sfVariable) OR (c=sfTypeDeclaration) THEN
+				IF (c = sfProcedure) OR (c=sfVariable) OR (c=sfTypeDeclaration) OR (c=sfModule) THEN
 					Traverse(GetSize(refs, offset));
 				END;
 				IF (n > 0) & (n<LEN(name)) THEN name[n] := "."; INC(n); END;
@@ -265,13 +266,11 @@ CONST
 				w.String(" FP="); w.Address(fp); w.Char("H")
 			END
 		ELSE
-			w.String(mod.name);
 			refs := mod.refs;
 			refpos := FindByAdr(refs, 0, pc);
 			IF refpos >= 0 THEN
 				offset := refpos;
 				IF GetChar(refs, offset) = sfProcedure THEN
-					w.Char(".");
 					SkipSize(offset);
 					SkipString(refs, offset); 
 					GetFullName(refs, refpos, name); 
@@ -282,6 +281,8 @@ CONST
 					base := fp; (*! only for local !! *)
 					refpos := offset; 
 				END;
+			ELSE
+				w.String("procedure not found in module "); w.String(mod.name);
 			END;
 			w.String(" pc="); w.Int(LONGINT(pc),1); w.String(" ["); w.Address (pc); w.String("H]");
 			w.String(" = "); w.Int(LONGINT(startpc),1);  w.String(" + "); w.Int(LONGINT(pc-startpc),1);
@@ -582,6 +583,15 @@ CONST
 		SkipAddress(offset);
 		IF refs[offset] = sfScopeBegin THEN SkipScope(refs, offset) END;	
 	END SkipTypeDeclaration;
+
+	(* skip type declaration meta data in stream *)
+	PROCEDURE SkipModule*(refs: Modules.Bytes; VAR offset: LONGINT);
+	BEGIN
+		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
+		SkipSize(offset);
+		SkipString(refs, offset); 
+		IF refs[offset] = sfScopeBegin THEN SkipScope(refs, offset) END;	
+	END SkipModule;
 	
 	(* skip a scope in stream *)
 	PROCEDURE SkipScope*(refs: Modules.Bytes; VAR offset: LONGINT);
@@ -607,20 +617,24 @@ CONST
 	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
 	VAR ofs: LONGINT;
 	BEGIN
-		ofs := find.nameOffset;
-		WHILE (refs[offset] # 0X) & (find.name[ofs] = refs[offset]) DO
-			INC(offset); INC(ofs);
-		END;
-		IF (refs[offset] = 0X) THEN
-			IF find.name[ofs] = 0X THEN
-				find.found := TRUE;
-			ELSIF find.name[ofs] = "." THEN
-				find.minLevel := level+1;
-				find.nameOffset := ofs+1;
+		IF find.minLevel > level THEN
+			SkipString(refs, offset)
+		ELSE
+			ofs := find.nameOffset;
+			WHILE (refs[offset] # 0X) & (find.name[ofs] = refs[offset]) DO
+				INC(offset); INC(ofs);
 			END;
+			IF (refs[offset] = 0X) THEN
+				IF find.name[ofs] = 0X THEN
+					find.found := TRUE;
+				ELSIF find.name[ofs] = "." THEN
+					find.minLevel := level+1;
+					find.nameOffset := ofs+1;
+				END;
+			END;
+			WHILE(refs[offset] # 0X) DO INC(offset) END;
+			INC(offset);
 		END;
-		WHILE(refs[offset] # 0X) DO INC(offset) END;
-		INC(offset);
 	END FindString;
 
 	(* find a symbol by name or pc starting from the procedure stream section *)
@@ -688,6 +702,12 @@ CONST
 	BEGIN
 		pos := offset;
 		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
+		SkipSize(offset);
+		FindString(refs, offset, level, find); 
+		IF find.found THEN 
+			find.pos := pos;
+			RETURN;
+		END;
 		FindInScope(refs, offset, level+1, find);
 	END FindInModule;
 
@@ -719,11 +739,18 @@ CONST
 		search.pc := 0;
 	END InitSearch;
 	
-	PROCEDURE FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR): SIZE; 
+	(* Find a symbol in the stream starting at offset. 
+		If name is supposed to contain the referred to symbol, choose skipFirstSymbol = FALSE
+			Example FindByName(m.refs, 0, "Reflection.FindByName", FALSE)
+		otherwise choose skipFirstSymbol = TRUE
+			Example FindByName(m.refs, 0, "FindByName", TRUE);
+	*)
+	PROCEDURE FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
 	VAR search: Search; 
 	BEGIN
 		InitSearch(search); 
 		COPY(name, search.name);
+		IF skipFirstSymbol THEN search.minLevel := 1 END;
 		CASE refs[offset] OF
 			sfModule: FindInModule(refs, offset, 0, search);
 			|sfVariable: FindInVariable(refs, offset, 0, search);
@@ -739,9 +766,12 @@ CONST
 	BEGIN
 		InitSearch(search);
 		search.pc := pc;
-		offset := 0;
-		IF GetChar(refs, offset) = sfModule THEN 
-			FindInScope(refs, offset, 0, search);
+		CASE refs[offset] OF
+			sfModule: FindInModule(refs, offset, 0, search);
+			|sfVariable: FindInVariable(refs, offset, 0, search);
+			|sfProcedure: FindInProcedure(refs, offset, 0, search);
+			|sfTypeDeclaration: FindInTypeDeclaration(refs, offset, 0, search);
+		ELSE (* wrong position in stream *)
 		END;
 		RETURN search.pos;
 	END FindByAdr;
@@ -764,8 +794,12 @@ CONST
 		offset := 0; 
 		
 		w.String("State "); w.String(mod.name); w.Char(":"); w.Ln; Wait(w);
-		IF (GetChar(refs, offset) = sfModule) &  (GetChar(refs, offset) = sfScopeBegin) THEN
-			WriteVariables(w, refs, offset, 0)
+		IF (GetChar(refs, offset) = sfModule) THEN
+			SkipSize(offset);
+			SkipString(refs, offset);
+			IF (GetChar(refs, offset) = sfScopeBegin) THEN
+				WriteVariables(w, refs, offset, 0)
+			END;
 		END;
 	END ModuleState;
 
@@ -1022,11 +1056,15 @@ TYPE
 	END ReportScope;
 	
 	PROCEDURE ReportModule(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
+	VAR name: Name;
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END; 		
+		w.String("MODULE "); 
+		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END; 
+		SkipSize(offset);
+		GetString(refs, offset, name); 
+		w.String(name); 
 		ReportScope(w, refs, offset); 
 	END ReportModule;
-	
 					
 	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
 	BEGIN

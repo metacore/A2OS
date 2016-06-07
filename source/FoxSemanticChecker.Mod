@@ -8735,7 +8735,7 @@ TYPE
 					result := IsCharacterType(this)
 				ELSIF (to IS SyntaxTree.SizeType) & ((this IS SyntaxTree.SizeType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.AddressType)) THEN
 					result := to.sizeInBits >= this.sizeInBits (*! weak compatibility: signed size type may be assigned with unsigned address type of same size *)
-				ELSIF (to IS SyntaxTree.AddressType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.SizeType) OR IsPointerType(this)) THEN
+				ELSIF (to IS SyntaxTree.AddressType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.SizeType) OR IsPointerType(this) OR (this IS SyntaxTree.ProcedureType)) THEN
 					result := to.sizeInBits >= this.sizeInBits; (*! weak compatibility: addresses may be assigned with signed integer *)
 				ELSIF (to IS SyntaxTree.RangeType) & (this IS SyntaxTree.RangeType) THEN
 					result := TRUE;

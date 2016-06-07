@@ -10855,7 +10855,9 @@ TYPE
 		PROCEDURE Body(x: SyntaxTree.Body; scope: SyntaxTree.Scope; ir: IntermediateCode.Section; moduleBody: BOOLEAN);
 		VAR prevScope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType; procedure: SyntaxTree.Procedure;
 			cellScope: SyntaxTree.CellScope; op: Operand; string: SyntaxTree.IdentifierString;
-			saved: RegisterEntry;
+			saved: RegisterEntry; left, right: IntermediateCode.Operand;
+			name: Basic.SegmentedName;
+			offset: LONGINT;
 		BEGIN
 			IF Trace THEN TraceEnter("Body") END;
 			ReleaseUsedRegisters(saved); (* just in case ... *)
@@ -10914,6 +10916,16 @@ TYPE
 				InitVariables(scope);
 				
 				
+				IF PreciseGCSupport THEN
+					GetCodeSectionNameForSymbol(procedure, name);
+					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
+					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
+					offset := ToMemoryUnits(module.system,meta.RecordBaseOffset*module.system.addressSize)+1;
+					IntermediateCode.SetOffset(right,offset); (* tag *)
+					IntermediateCode.InitMemory(left,addressType,fp,0);
+					Emit(Mov(position, left, right));
+				END;
+				
 				ir.EnterValidPAF;
 				(* procedure activation frame is valid from here on *)
 				
@@ -10963,6 +10975,7 @@ TYPE
  		
 		simple: BOOLEAN; (* simple = no methods, no module loading, no reflection *)
 
+		RecordBaseOffset: LONGINT;
 		MethodTableOffset: LONGINT; (* method table offset from zero *)
 		BaseTypesTableOffset: LONGINT;	(* table with all record extensions offset *)
 		TypeTags: LONGINT; (* type extension level support *)
@@ -10977,17 +10990,20 @@ TYPE
 				TypeTags := MAX(LONGINT); 
 				BaseTypesTableOffset := 0;
 				MethodTableOffset := 2;
-				TypeRecordBaseOffset := 0;			
+				TypeRecordBaseOffset := 0;	
+				RecordBaseOffset := 0; 		
 			ELSIF simple THEN
 				TypeTags := 3; (* only 3 extensions allowed *)
 				BaseTypesTableOffset := 1;
 				MethodTableOffset := BaseTypesTableOffset+TypeTags;
 				TypeRecordBaseOffset := 0;
+				RecordBaseOffset := 1; 		
 			ELSE
 				TypeTags := 16;
 				BaseTypesTableOffset := -2; (* typeInfo and size field *)
 				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
 				TypeRecordBaseOffset := TypeTags + 2; (* MPO, typeInfo *)
+				RecordBaseOffset := 8; 		
 			END;
 			SELF.simple := simple;
 			SELF.implementationVisitor := implementationVisitor;

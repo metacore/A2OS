@@ -230,16 +230,27 @@ VAR
 	*)
 	END SetLastExceptionState;
 
+	PROCEDURE CheckBP(fp: ADDRESS): ADDRESS;
+	VAR n: ADDRESS;
+	BEGIN
+		IF (fp # NIL) THEN
+			SYSTEM.GET(fp, n);
+			IF ODD(n) THEN RETURN fp + SIZEOF(ADDRESS) END;
+		END;
+		RETURN fp;
+	END CheckBP;
+	
 
 	(**  Handles an exception. Interrupts are on during this procedure. *)
 	PROCEDURE HandleException( VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  VAR handled: BOOLEAN );
-	VAR fp, sp, pc, handler: LONGINT;
+	VAR fp, newFP, sp, pc, handler: ADDRESS;
 	BEGIN
 		fp := int.BP;  sp := int.SP;  pc := int.PC;  handler := Modules.GetExceptionHandler( pc );
 		IF handler # -1 THEN  (* Handler in the current PAF *)
 			int.PC := handler;  handled := TRUE;  SetTrapVariable( pc, fp );  SetLastExceptionState( int )
-		ELSE
+		ELSE			
 			WHILE (fp # 0) & (handler = -1) DO
+				fp := CheckBP(fp);
 				SYSTEM.GET( fp + 4, pc );
 				pc := pc - 1;   (*  CALL instruction, machine dependant!!! *)
 				handler := Modules.GetExceptionHandler( pc );
@@ -264,7 +275,7 @@ VAR
 	(* Unbreakable stack trace back with regard to every FINALLY on the way *)
 	PROCEDURE Unbreakable( p: Objects.Process;  VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;
 											 VAR handled: BOOLEAN );
-	VAR ebp, ebpSave, pc, handler, ebpBottom: LONGINT;  hasFinally: BOOLEAN;
+	VAR ebp, ebpSave, pc, handler, ebpBottom: ADDRESS; checkedBP: ADDRESS;  hasFinally: BOOLEAN;
 	BEGIN
 		ebp := int.BP;  pc := int.PC;  hasFinally := FALSE;
 
@@ -274,24 +285,25 @@ VAR
 		IF handler # -1 THEN int.PC := handler;  hasFinally := TRUE;  SetTrapVariable( pc, ebp );  END;
 
 		(* The first waypoint is the ebp of the top PAF *)
-		ebpSave := ebp;
+		ebpSave := CheckBP(ebp);
 
 		WHILE (ebp # 0) DO
 			(* Did we reach the last PAF? *)
-			SYSTEM.GET( ebp, pc );
+			checkedBP := CheckBP(ebp);
+			SYSTEM.GET( checkedBP, pc );
 			IF (pc = 0) THEN
 				ebpBottom := ebp;   (* Save the FP of the last PAF *)
 			END;
 
 			(* Get the return pc *)
-			SYSTEM.GET( ebp + 4, pc );
+			SYSTEM.GET( checkedBP + 4, pc );
 
 			handler := Modules.GetExceptionHandler( pc );
 
 			(* Save the last framepointer as stackpointer *)
 			IF ~hasFinally THEN int.SP := ebp;  END;
 
-			SYSTEM.GET( ebp, ebp );
+			SYSTEM.GET( checkedBP, ebp );
 
 			(* Here ebp may be 0. *)
 
@@ -300,8 +312,9 @@ VAR
 					(* Connect Finally to Finally *)
 					SYSTEM.PUT( ebpSave + 4, handler );   (* Adapt the return pc *)
 					SYSTEM.PUT( ebpSave, ebp );   (* Adapt the dynamic link *)
-					ebpSave := ebp;
-				ELSE int.PC := handler;  int.BP := ebp;  ebpSave := ebp;  hasFinally := TRUE;
+					ebpSave := checkedBP;
+				ELSE 
+					int.PC := handler;  int.BP := ebp;  ebpSave := checkedBP;  hasFinally := TRUE;
 				END;
 				SetTrapVariable( pc, ebp )
 			END

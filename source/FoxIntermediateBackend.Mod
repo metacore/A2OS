@@ -100,6 +100,11 @@ CONST
 		Size8Flag = 10; (* size = 8 *)
 		
 		ReflectionSupport = TRUE;
+		PreciseGCSupport = FALSE;
+		(* Solution for identifying procedure descriptors on the stack and for being able to differentiate "old school" stack frames from the underlying operating system stack frames:
+			push a procedure desriptor plus one to where the BP pointer would be located. The misalignment of the procedure descriptor makes it possible to identify that it is not
+			a base pointer but a procedure descriptor. The base pointer itself is in such cases located at BP + address size.
+		*)
 		
 TYPE
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
@@ -833,7 +838,7 @@ TYPE
 								implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE) 
 							END;
 						END;
-						implementationVisitor.EmitLeave(ir, x.position,cc);
+						implementationVisitor.EmitLeave(ir, x.position,x,cc);
 						IF finalizer THEN
 							IF backend.hasLinkRegister THEN
 								ir.Emit(Pop(-1, implementationVisitor.lr));
@@ -876,12 +881,12 @@ TYPE
 								END;
 							END;
 							
-							implementationVisitor.EmitLeave(ir,x.position,cc);
+							implementationVisitor.EmitLeave(ir,x.position,x,cc);
 							ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 						ELSE
 							ir.Emit(Nop(x.position));
 							IF scope.body.isUnchecked OR backend.noRuntimeChecks THEN (* return from procedure in any case *)
-								implementationVisitor.EmitLeave(ir,x.position,cc);
+								implementationVisitor.EmitLeave(ir,x.position,x,cc);
 								ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 							END;
 						END;
@@ -893,7 +898,7 @@ TYPE
 				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
 				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
 				ir.ExitValidPAF;
-				implementationVisitor.EmitLeave(ir,x.position,cc);
+				implementationVisitor.EmitLeave(ir,x.position,x,cc);
 				ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 			END;
 			Scope(scope);
@@ -1062,7 +1067,7 @@ TYPE
 			Scope(x.moduleScope);
 
 			IF hasDynamicOperatorDeclarations THEN
-				implementationVisitor.EmitLeave(implementationVisitor.operatorInitializationCodeSection,-1,0);
+				implementationVisitor.EmitLeave(implementationVisitor.operatorInitializationCodeSection,-1,NIL,0);
 				implementationVisitor.operatorInitializationCodeSection.Emit(Exit(-1,0,0,0));
 			END;
 
@@ -1283,7 +1288,7 @@ TYPE
 		
 
 		(* useful operands and types *)
-		nil,fp,sp,ap,lr,true,false: IntermediateCode.Operand;
+		nil,one,fp,sp,ap,lr,true,false: IntermediateCode.Operand;
 		bool,addressType,setType, sizeType, byteType: IntermediateCode.Type;
 
 		commentPrintout: Printout.Printer;
@@ -1349,6 +1354,7 @@ TYPE
 			ap := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.AP);
 			lr := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.LR);
 			nil := IntermediateCode.Immediate(addressType,0);
+			one := IntermediateCode.Immediate(addressType,1);
 
 			IntermediateCode.InitOperand(destination);
 			tagsAvailable := TRUE;
@@ -1518,8 +1524,10 @@ TYPE
 		VAR prevSection: IntermediateCode.Section;
 		VAR prevDump: Streams.Writer;
 		VAR body: SyntaxTree.Body;
+		VAR procedureType: SyntaxTree.ProcedureType;
 		BEGIN
-			ASSERT((procedure = NIL) OR ~procedure.type(SyntaxTree.ProcedureType).noPAF);
+			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			ASSERT((procedure = NIL) OR ~procedureType.noPAF);
 			prevSection := SELF.section;
 			SELF.section := section;
 			prevDump := dump;
@@ -1560,6 +1568,16 @@ TYPE
 					nocall.Resolve(section.pc);
 				END;
 			ELSE
+				IF procedure # NIL THEN
+					body := procedure.procedureScope.body;
+				ELSE
+					body := NIL;
+				END;
+				IF PreciseGCSupport & (body # NIL) & (body.code = NIL) THEN
+					Emit(Push(-1, one)) ;
+					procedureType.SetParametersOffset(1); 
+					ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
+				END;
 				Emit(Mov(-1, fp, sp));
 			END;
 			Emit(Enter(-1, callconv, varSize));
@@ -1586,14 +1604,21 @@ TYPE
 			RETURN instruction
 		END Leave;
 		
-		PROCEDURE EmitLeave(section: IntermediateCode.Section; position: LONGINT; callconv: LONGINT);
+		PROCEDURE EmitLeave(section: IntermediateCode.Section; position: LONGINT; procedure: SyntaxTree.Procedure; callconv: LONGINT);
 		VAR prevSection: IntermediateCode.Section;
-		VAR op2: IntermediateCode.Operand;
+		VAR op2, size: IntermediateCode.Operand;
+		VAR body: SyntaxTree.Body;
 		BEGIN
 			prevSection := SELF.section;
 			SELF.section := section;
 			Emit(Leave(position, callconv)); 
-			IF backend.cooperative THEN
+			IF procedure # NIL THEN
+				body := procedure.procedureScope.body;
+			ELSE 
+				body := NIL;
+			END;
+
+			IF backend.cooperative OR PreciseGCSupport & (body # NIL) & (body.code = NIL) THEN
 				IntermediateCode.InitImmediate(op2,addressType, ToMemoryUnits(system, system.addressSize));
 				Emit(Add(position, sp, fp, op2));
 			ELSE
@@ -6062,7 +6087,7 @@ TYPE
 		BEGIN
 			IntermediateCode.InitImmediate(reg, IntermediateCode.GetType(system,system.longintType), numberProcedures);
 			profileInit.EmitAt(profileInitPatchPosition,Push(position,reg));
-			EmitLeave(profileInit,position,0);
+			EmitLeave(profileInit,position,NIL,0);
 			profileInit.Emit(Exit(position,0,0,0));
 		END ProfilerPatchInit;
 
@@ -6907,7 +6932,7 @@ TYPE
 		
 		PROCEDURE CloseInitializer(prev: IntermediateCode.Section);
 		BEGIN
-			EmitLeave(section, 0, 0 );
+			EmitLeave(section, 0, NIL, 0 );
 			Emit(Exit(-1,ToMemoryUnits(system,addressType.sizeInBits),0, 0));
 			section := prev;
 		END CloseInitializer;
@@ -9283,13 +9308,13 @@ TYPE
 			IF scope # baseScope THEN
 				(* left := [fp+8] *)
 				IntermediateCode.InitMemory(right,addressType,fp,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative OR PreciseGCSupport THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				ReuseCopy(left,right);
 				ReleaseIntermediateOperand(right);
 				scope := scope.outerScope; DEC(level);
 				(* { left := [left+8] } *)
 				IntermediateCode.InitMemory(right,addressType,left,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative  OR PreciseGCSupport THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				WHILE (scope # baseScope) & (scope IS SyntaxTree.ProcedureScope) DO
 					Emit(Mov(position,left,right));
 					scope := scope.outerScope; DEC(level);
@@ -10428,7 +10453,7 @@ TYPE
 					parametersSize := 0;
 				END;
 
-				EmitLeave(section, position,procedure.type(SyntaxTree.ProcedureType).callingConvention);
+				EmitLeave(section, position,procedure, procedure.type(SyntaxTree.ProcedureType).callingConvention);
 				Emit(Exit(position,procedure.type(SyntaxTree.ProcedureType).pcOffset,procedure.type(SyntaxTree.ProcedureType).callingConvention, parametersSize));
 			END;
 			IF Trace THEN TraceExit("VisitReturnStatement") END;
@@ -10706,7 +10731,7 @@ TYPE
 				ELSE
 					parametersSize := 0;
 				END;
-				EmitLeave(section, position,cc);
+				EmitLeave(section, position,NIL, cc);
 				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,cc, parametersSize));
 				ReleaseIntermediateOperand(return);
 			END;
@@ -10887,6 +10912,11 @@ TYPE
 
 				ParameterCopies(procedureType);
 				InitVariables(scope);
+				
+				
+				ir.EnterValidPAF;
+				(* procedure activation frame is valid from here on *)
+				
 				IF x.code = NIL THEN
 					VisitStatementBlock(x);
 				ELSE
@@ -13072,7 +13102,6 @@ TYPE
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
-
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
 			simpleMetaData := FALSE;
@@ -14091,12 +14120,12 @@ END FoxIntermediateBackend.
 Compiler.Compile FoxIntermediateBackend.Mod ~
 
 #	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2H.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
-Compiler.Compile -p=Win32G  --destPath=/temp/obg/
+Compiler.Compile -p=Win32G 
 Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

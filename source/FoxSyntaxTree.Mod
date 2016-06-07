@@ -1711,7 +1711,7 @@ TYPE
 			pcOffset-: LONGINT; (* PC offset: used for ARM interrupt procedures *)
 			callingConvention-: CallingConvention;
 			stackAlignment-: LONGINT;
-			parameterOffset-: LONGINT; (* stack parameter offset caused by parameters on stack *)
+			parametersOffset-: LONGINT; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
 
 		PROCEDURE & InitProcedureType( position: LONGINT; scope: Scope);
 		BEGIN
@@ -1723,7 +1723,7 @@ TYPE
 			stackAlignment := 1;
 			isDelegate := FALSE; isInterrupt := FALSE; noPAF := FALSE;
 			callingConvention := OberonCallingConvention;
-			parameterOffset := 0;
+			parametersOffset := 0;
 			pcOffset := 0;
 			hasUntracedReturn := FALSE;
 			returnTypeModifiers := NIL;
@@ -1767,9 +1767,9 @@ TYPE
 			stackAlignment := alignment;
 		END SetStackAlignment;
 
-		PROCEDURE SetParameterOffset*(ofs: LONGINT);
-		BEGIN parameterOffset := ofs
-		END SetParameterOffset;
+		PROCEDURE SetParametersOffset*(ofs: LONGINT);
+		BEGIN parametersOffset := ofs
+		END SetParametersOffset;
 
 		PROCEDURE SetReturnParameter*(parameter: Parameter);
 		BEGIN returnParameter := parameter

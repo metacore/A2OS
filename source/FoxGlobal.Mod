@@ -383,7 +383,7 @@ TYPE
 		
 
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
-		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; parameterOffset :LONGINT;
+		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; 
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
 				RETURN GenerateRecordOffsets(scope(SyntaxTree.RecordScope).ownerRecord)
@@ -392,11 +392,6 @@ TYPE
 			ELSE (* module scope or procedure scope: decreasing indices *)
 				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope));
 				offset := 0;
-				IF scope IS SyntaxTree.ProcedureScope THEN
-					parameterOffset := scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).parameterOffset
-				ELSE
-					parameterOffset := 0
-				END;
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
@@ -427,7 +422,7 @@ TYPE
 			IF (procedure.isInline) THEN
 				offset := 0
 			ELSE
-				offset := SELF.offsetFirstParameter;
+				offset := SELF.offsetFirstParameter + procedureType.parametersOffset * addressSize;
 			END;
 			IF nestedProcedure THEN
 				INC(offset,addressSize); (* parameter offset of static link *) (*! check alternative: add hidden parameter *)
@@ -465,7 +460,6 @@ TYPE
 			IF (procedureType.isDelegate) THEN
 				INC(offset,addressSize); (* parameter offset of delegate *)
 			END;
-			procedureType.SetParameterOffset(offset);
 			RETURN TRUE
 		END GenerateParameterOffsets;
 

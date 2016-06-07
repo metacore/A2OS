@@ -9102,7 +9102,7 @@ TYPE
 				result.op := basereg;
 				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
-				IF backend.cooperative THEN
+				IF backend.cooperative OR PreciseGCSupport THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
 				(* tag must be loaded when dereferencing SELF pointer *)

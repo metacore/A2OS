@@ -152,11 +152,12 @@ TYPE
 		first: ADDRESS;
 	END;
 	
-	StackBlock = POINTER{UNSAFE} TO StackBlockDesc;
+	(*StackBlock = POINTER{UNSAFE} TO StackBlockDesc;
 	StackBlockDesc= RECORD
 		link: StackBlock;
 		pc: ADDRESS;
 	END;
+	*)
 	
 	(* a single pointer -- required as base type TD for array of pointer
 		Don't rename this. Compiler refers to this TD by name
@@ -1092,12 +1093,26 @@ BEGIN
 	END;
 END NewBlock;
 
+PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
+VAR n: ADDRESS;
+BEGIN
+	SYSTEM.GET(bp,n);
+	IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
+	RETURN bp;
+END CheckBP;
+
 PROCEDURE SetPC(p: DataBlockU);
-VAR stackDesc: StackBlock;
+VAR bp: ADDRESS;
 BEGIN
 	IF p # NIL THEN
+		bp := CheckBP(Machine.CurrentBP()); 
+		SYSTEM.GET(bp, bp); 
+		bp := CheckBP(bp);
+		SYSTEM.GET(bp+SIZEOF(ADDRESS), p.heapBlock.heapBlock);
+		(*
 		stackDesc := Machine.CurrentBP();
 		p.heapBlock.heapBlock := stackDesc.link.pc;
+		*)
 	END;
 END SetPC;
 

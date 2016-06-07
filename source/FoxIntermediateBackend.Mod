@@ -10576,7 +10576,7 @@ TYPE
 				GetBaseRegister(op.op,currentScope,scope);
 				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
 				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
-				IF backend.cooperative THEN
+				IF backend.cooperative OR PreciseGCSupport THEN
 					IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
 				IntermediateCode.MakeMemory(op.op,addressType);
@@ -10916,7 +10916,7 @@ TYPE
 				InitVariables(scope);
 				
 				
-				IF PreciseGCSupport THEN
+				IF PreciseGCSupport & (x.code = NIL) & (~procedureType.noPAF) THEN
 					GetCodeSectionNameForSymbol(procedure, name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
@@ -14135,13 +14135,16 @@ END FoxIntermediateBackend.
 
 Compiler.Compile FoxIntermediateBackend.Mod ~
 
+#	Release.Build --path="/temp/obg/"  WinAosNewObjectFile ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2X.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+
 #	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-FSTools.CloseFiles A2H.exe ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+FSTools.CloseFiles A2X.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
-Compiler.Compile -p=Win32G 
+Compiler.Compile -p=Win32G --destPath=/temp/obg/
 Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

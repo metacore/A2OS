@@ -162,10 +162,8 @@ TYPE
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp, curbp: ADDRESS;
-			d0, d1: SIZE; first : BOOLEAN;
+			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 		BEGIN
-		(*ALEX 2005.12.13 senseless ASSERT that blocks for AWAITING THREADS that were closed*)
-
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
@@ -190,70 +188,27 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				first := TRUE; curbp := 0;
-
 				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp < stackBottom)  DO
-					FindPointers(bp, pc, d0, d1);
- 					IF first THEN
- 						ASSERT(d0#2);
- 						ASSERT(d1 # 1);
- 						IF (d0 = 0) OR (d0 = 1) OR (d1 = 3)  THEN
- 							(* 	situation where pc and bp are not synchronized: *)
- 							(* 	entry protocol of a procedure:
- 								PUSH 	EBP			-- 1 byte instruction length, if pc points to this instruction at offset 0 from the codeoffset then bp still refers to caller frame -> critical
- 								MOV	EBP, ESP	-- 2 bytes instruction length, do. for offset 1 from the codeoffset
- 								(followed by initialization of local variables)
- 								exit protocol of a procedure:
- 								MOV	ESP, EBP	-- 2 bytes instruction length
- 								POP	EBP			-- 1 byte instruction length
- 								RET		n			-- 3 bytes instruction length, if pc points to this instruction at offset 3 from the last statement then bp already refers to caller's frame -> critical
- 							*)
- 							IF (d0 = 0) OR (d1 = 3) THEN
- 								SYSTEM.GET(state.SP, pc);		(* matching pc is at position of stack pointer *)
- 							ELSE
- 								SYSTEM.GET(state.SP + AddressSize, pc);		(* matching pc is at 4 bytes after stack pointer, pushed base pointer is at stack pointer position *)
+					SYSTEM.GET(bp, n);
+					IF ODD(n) THEN (* procedure descriptor at bp *)
+						DEC(n);
+						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n);
+						IF desc # NIL THEN
+							FOR i := 0 TO LEN(desc.offsets)-1 DO
+								adr := bp + desc.offsets[i]; (* pointer at offset *)
+								SYSTEM.GET(adr, p); (* load pointer *)
+								Heaps.Mark(p);
 							END;
-							curbp := bp;
-							SYSTEM.GET(curbp, bp);
- 						ELSE
- 							(* regular case: bp and pc were synchronized *)
- 							curbp := bp;
-							SYSTEM.GET(curbp + AddressSize, pc);
-							SYSTEM.GET(curbp, bp);
- 						END;
- 						first := FALSE;
- 					ELSE
-	 					(* regular case: bp and pc were synchronized *)
- 						curbp := bp;
-						SYSTEM.GET(curbp, bp);
-						SYSTEM.GET(curbp + AddressSize, pc);
-					END
-				END
-			ELSE HALT(101);
-			END
+							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
+						END;
+					ELSE (* classical stack frame *)
+						bp := n; 
+					END;
+				END;
+			END;
 		END FindRoots;
-
-
+		
 	END Process;
-
-		PROCEDURE FindPointers(bp, pc : ADDRESS; VAR diff0, diff1: SIZE);
-		VAR procDesc: Modules.ProcedureDescPointer; startIndex, i: LONGINT; ptr : ADDRESS;
-		BEGIN
-			diff0 := InitDiff; diff1 := InitDiff;
-			procDesc := Modules.FindProc(pc, Modules.procedureDescriptors);
-			IF procDesc # NIL THEN
-				diff0 := pc - procDesc.pcFrom;
-				diff1 := pc - procDesc.pcLimit;
-				IF (LEN(procDesc.offsets) > 0) & (pc >= procDesc.pcValid) & (pc <= procDesc.pcEnd) THEN
-					FOR i := 0 TO LEN(procDesc.offsets) - 1 DO
-						ptr := bp + procDesc.offsets[i];
-						IF ptr # Heaps.NilVal THEN
-							Heaps.Mark(SYSTEM.VAL(ANY, ptr))
-						END
-					END
-				END
-			END
-		END FindPointers;
 
 TYPE
 	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;

@@ -199,8 +199,8 @@ TYPE
 								SYSTEM.GET(adr, p); (* load pointer *)
 								Heaps.Mark(p);
 							END;
-							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 						END;
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 					ELSE (* classical stack frame *)
 						bp := n; 
 					END;

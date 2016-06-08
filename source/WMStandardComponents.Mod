@@ -268,7 +268,7 @@ TYPE
 			blink := blinking.Get();
 		END Init;
 		
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			PropertyChanged(SELF,blinking)
@@ -397,7 +397,7 @@ TYPE
 		END Init;
 		
 	
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			SetFont(font.Get());
@@ -655,7 +655,7 @@ TYPE
 			Release;
 		END ScaleFont;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR element : XML.Element; s : String;
 		BEGIN
 			RecacheProperties^;
@@ -1679,7 +1679,7 @@ TYPE
 			arrowDownPressed := GetImage( arrowDownPressedName);
 		END RecacheImages;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR element : XML.Element;
 		BEGIN
 			RecacheProperties^;
@@ -2182,7 +2182,7 @@ TYPE
 			handled := FALSE
 		END TrackerPointerMove;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			tracker.useBgBitmaps.Set(useTrackerImages.Get());
@@ -2352,7 +2352,7 @@ TYPE
 			bounds.SetPrototype(PrototypeRBounds)
 		END Init;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR align: LONGINT;
 		BEGIN
 			RecacheProperties^;
@@ -2623,7 +2623,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : String;
 		BEGIN
 			RecacheProperties^;
@@ -2811,7 +2811,7 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : String;
 		BEGIN
 			RecacheProperties^;
@@ -2885,7 +2885,7 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : String;
 		BEGIN
 			s := imgName.Get(); IF s # NIL THEN SetImage(SELF, WMGraphics.LoadImage(s^, TRUE)) END

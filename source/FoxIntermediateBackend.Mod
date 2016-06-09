@@ -1521,7 +1521,10 @@ TYPE
 		VAR body: SyntaxTree.Body;
 		VAR procedureType: SyntaxTree.ProcedureType;
 		BEGIN
-			procedureType := procedure.type(SyntaxTree.ProcedureType);
+			IF procedure # NIL THEN 
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
+			ELSE procedureType := NIL;
+			END;
 			ASSERT((procedure = NIL) OR ~procedureType.noPAF);
 			prevSection := SELF.section;
 			SELF.section := section;

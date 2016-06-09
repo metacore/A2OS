@@ -186,6 +186,7 @@ TYPE
 		CONST
 			MergePointers = TRUE;
 			MergeInvalidates = TRUE;
+			MergeInvokeEvents = TRUE;
 
 			PROCEDURE Merge(VAR x,y,dx,dy: LONGINT; X,Y,dX,dY: LONGINT);
 			VAR nx, ny, ndx, ndy: LONGINT;
@@ -245,6 +246,20 @@ TYPE
 					DEC(i)
 				END
 			END;
+
+						
+			(*	PH *)
+			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  (* reduce pointer moves in buffer *)
+				i := num - 1;
+				WHILE i >= 0 DO
+					pos := (head + i) MOD LEN(msgQ);
+					IF (msgQ[pos].msgType = MsgInvokeEvent) & (msgQ[pos].msgSubType = 0) & (msgQ[pos].event = msg.event)& (msgQ[pos].sender = msg.sender) & (msgQ[pos].ext = msg.ext) THEN
+						RETURN TRUE
+					END;
+					DEC(i)
+				END
+			END;
+			(*  /PH*)
 
 			IF MergeInvalidates & (msg.msgType = MsgInvalidate) & (num > 0)  THEN
 				i := num-1;

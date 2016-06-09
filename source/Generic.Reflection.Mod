@@ -647,7 +647,7 @@ CONST
 		FindString(refs, offset, level, find);
 		start := GetAddress(refs, offset);
 		end := GetAddress(refs, offset);
-		find.found := find.found OR (start <= find.pc) & (find.pc <= end);
+		find.found := find.found OR (start <= find.pc) & (find.pc < end);
 		IF find.found THEN
 			find.pos := pos; 
 			RETURN; 

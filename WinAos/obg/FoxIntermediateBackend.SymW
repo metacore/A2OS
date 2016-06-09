@@ -82,6 +82,7 @@ CONST
 	Size7Flag = 9; 
 	Size8Flag = 10; 
 	ReflectionSupport = TRUE; 
+	PreciseGCSupport = TRUE; 
 TYPE 
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE}(CONST instr: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR):BOOLEAN; 
 
@@ -255,7 +256,7 @@ TYPE
 		locked: BOOLEAN; 
 		registerUsageCount: RegisterUsageCount; 
 		usedRegisters: RegisterEntry; 
-		nil, fp, sp, ap, lr, true, false: IntermediateCode.Operand; 
+		nil, one, fp, sp, ap, lr, true, false: IntermediateCode.Operand; 
 		bool, addressType, setType, sizeType, byteType: IntermediateCode.Type; 
 		commentPrintout: Printout.Printer; 
 		dump: Streams.Writer; 
@@ -301,7 +302,7 @@ TYPE
 		PROCEDURE ^ EmitEnter(section: IntermediateCode.Section; position: LONGINT; procedure: SyntaxTree.Procedure; callconv: LONGINT; varSize: LONGINT; numRegs: LONGINT); 
 		PROCEDURE ^ Enter(position: LONGINT; callconv: LONGINT; varSize: LONGINT): IntermediateCode.Instruction; 
 		PROCEDURE ^ Leave(position: LONGINT; callconv: LONGINT): IntermediateCode.Instruction; 
-		PROCEDURE ^ EmitLeave(section: IntermediateCode.Section; position: LONGINT; callconv: LONGINT); 
+		PROCEDURE ^ EmitLeave(section: IntermediateCode.Section; position: LONGINT; procedure: SyntaxTree.Procedure; callconv: LONGINT); 
 		PROCEDURE ^ Symbol(x: SyntaxTree.Symbol; VAR op: Operand); 
 		PROCEDURE ^ Expression(x: SyntaxTree.Expression); 
 		PROCEDURE ^ Statement(x: SyntaxTree.Statement); 
@@ -507,11 +508,12 @@ TYPE
 		modulePointerSectionOffset: LONGINT; 
 		modulePointers: LONGINT; 
 		simple: BOOLEAN; 
+		RecordBaseOffset: LONGINT; 
 		MethodTableOffset: LONGINT; 
 		BaseTypesTableOffset: LONGINT; 
 		TypeTags: LONGINT; 
 		TypeRecordBaseOffset: LONGINT; 
-		patchInfoPC, patchProcedurePC: LONGINT; 
+		patchInfoPC: LONGINT; 
 
 		PROCEDURE ^  & InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN); 
 		PROCEDURE ^ SetModule(module: Sections.Module); 

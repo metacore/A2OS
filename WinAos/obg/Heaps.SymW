@@ -148,13 +148,6 @@ TYPE
 		first: ADDRESS; 
 	END; 
 
-	StackBlock = POINTER {UNSAFE} TO StackBlockDesc; 
-
-	StackBlockDesc = RECORD 
-		link: StackBlock; 
-		pc: ADDRESS; 
-	END; 
-
 	AnyPtr = RECORD 
 		a: ANY; 
 	END; 
@@ -236,6 +229,7 @@ VAR
 	PROCEDURE ^ LazySweepGC*; 
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
+	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ SetPC(p: DataBlockU); 
 	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 

@@ -63,8 +63,7 @@ TYPE
 	ProcedureDescPointer* = POINTER TO ProcedureDesc; 
 
 	ProcedureDesc* = RECORD 
-		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
-		refsOffset-: SIZE; 
+		pcFrom-, pcLimit-: ADDRESS; 
 		offsets-{UNTRACED} : POINTER TO ARRAY OF ADDRESS; 
 	END; 
 
@@ -109,7 +108,6 @@ VAR
 		first, last: Module; 
 	END; 
 	procedureDescriptors-: ProcedureDescs; 
-	mayAllocate: BOOLEAN; 
 	callagain: BOOLEAN; 
 
 	PROCEDURE ^ AddLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc); 
@@ -122,8 +120,6 @@ VAR
 	PROCEDURE ^ GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ SortProcedureDescs(p: ProcedureDescs); 
 	PROCEDURE ^ SortExceptionTable(p: ExceptionTable); 
-	PROCEDURE ^ MergeProcedureDescs*(p: ProcedureDescs); 
-	PROCEDURE ^ RemoveProcedureDescs*(p: ProcedureDescs); 
 	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module; 
 	PROCEDURE ^ ThisModuleByAdr0*(pc: ADDRESS): Module; 
 	PROCEDURE ^ ThisModuleByAdr*(pc: ADDRESS): Module; 

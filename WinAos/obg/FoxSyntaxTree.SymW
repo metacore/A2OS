@@ -519,7 +519,7 @@ TYPE
 		pcOffset-: LONGINT; 
 		callingConvention-: CallingConvention; 
 		stackAlignment-: LONGINT; 
-		parameterOffset-: LONGINT; 
+		parametersOffset-: LONGINT; 
 
 		PROCEDURE ^  & InitProcedureType(position: LONGINT; scope: Scope); 
 		PROCEDURE ^ SetNoPAF*(noPAF: BOOLEAN); 
@@ -531,7 +531,7 @@ TYPE
 		PROCEDURE ^ SetDelegate*(delegate: BOOLEAN); 
 		PROCEDURE ^ SetUntracedReturn*(untraced: BOOLEAN); 
 		PROCEDURE ^ SetStackAlignment*(alignment: LONGINT); 
-		PROCEDURE ^ SetParameterOffset*(ofs: LONGINT); 
+		PROCEDURE ^ SetParametersOffset*(ofs: LONGINT); 
 		PROCEDURE ^ SetReturnParameter*(parameter: Parameter); 
 		PROCEDURE ^ SetCallingConvention*(cc: CallingConvention); 
 		PROCEDURE ^ AddParameter*(p: Parameter); 

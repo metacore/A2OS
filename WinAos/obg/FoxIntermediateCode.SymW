@@ -143,7 +143,6 @@ TYPE
 		resolved-, alias-: BinaryCode.Section; 
 		aliasOffset-: LONGINT; 
 		comments-: Sections.CommentWriter; 
-		validPAFEnter-, validPAFExit-: LONGINT; 
 		sizeInUnits: LONGINT; 
 		exported-: BOOLEAN; 
 
@@ -151,8 +150,6 @@ TYPE
 		PROCEDURE ^  & InitIntermediateSection*(type: SHORTINT; priority: INTEGER; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
 		PROCEDURE ^ SetExported*(e: BOOLEAN); 
 		PROCEDURE ^ EnableComments*(enabled: BOOLEAN); 
-		PROCEDURE ^ EnterValidPAF*; 
-		PROCEDURE ^ ExitValidPAF*; 
 		PROCEDURE ^ DeleteComments*; 
 		PROCEDURE ^ SetResolved*(section: BinaryCode.Section); 
 		PROCEDURE ^ SetAlias*(section: BinaryCode.Section; offset: LONGINT); 

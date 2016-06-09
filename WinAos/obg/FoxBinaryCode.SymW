@@ -77,14 +77,11 @@ TYPE
 		finally-: Unit; 
 		comments-: Sections.CommentWriter; 
 		bigEndian-: BOOLEAN; 
-		validPAFEnter-, validPAFExit-: Unit; 
 		pc-: Unit; 
 
 		PROCEDURE ^ GetPC(): LONGINT; 
 		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ EnterValidPAF*; 
-		PROCEDURE ^ ExitValidPAF*; 
 		PROCEDURE ^ AddLabel*(position: Unit); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
 		PROCEDURE ^ Align*(alignment: Unit); 

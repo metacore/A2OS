@@ -147,7 +147,6 @@ VAR
 	excplock: Kernel32.CriticalSection; 
 	exceptionhandler: ExceptionHandler; 
 
-	PROCEDURE ^ FindPointers(bp, pc: ADDRESS; VAR diff0, diff1: SIZE); 
 	PROCEDURE ^ SetPriority*(priority: LONGINT); 
 	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 
 	PROCEDURE ^ Yield*; 

@@ -120,6 +120,7 @@ VAR
 	PROCEDURE ^ FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE; 
 	PROCEDURE ^ WriteProc*(w: Streams.Writer; pc: ADDRESS); 
 	PROCEDURE ^ ModuleState*(w: Streams.Writer; mod: Modules.Module); 
+	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stackhigh: ADDRESS; long, overflow: BOOLEAN); 
 	PROCEDURE ^ WriteProcess*(w: Streams.Writer; p: Objects.Process); 
 	PROCEDURE ^ GetVariableAdr*(fp, pc: ADDRESS; CONST name: ARRAY OF CHAR): SIZE; 

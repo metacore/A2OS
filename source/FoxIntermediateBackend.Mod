@@ -100,7 +100,7 @@ CONST
 		Size8Flag = 10; (* size = 8 *)
 		
 		ReflectionSupport = TRUE;
-		PreciseGCSupport = FALSE;
+		PreciseGCSupport = TRUE;
 		(* Solution for identifying procedure descriptors on the stack and for being able to differentiate "old school" stack frames from the underlying operating system stack frames:
 			push a procedure desriptor plus one to where the BP pointer would be located. The misalignment of the procedure descriptor makes it possible to identify that it is not
 			a base pointer but a procedure descriptor. The base pointer itself is in such cases located at BP + address size.
@@ -12663,7 +12663,7 @@ TYPE
 		END Module;
 
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
-		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section;
+		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter;
 		BEGIN
 			ArrayBlock(source,pc,"",FALSE);
 			Info(source, "pointer offsets array data");
@@ -12682,7 +12682,13 @@ TYPE
 					variable := variable.nextVariable;
 				END;
 			ELSIF scope IS SyntaxTree.ProcedureScope THEN
-				(*! parameters required ? *)
+					parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
+					WHILE parameter # NIL DO
+						IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) THEN
+							Pointers(ToMemoryUnits(module.system,parameter.offsetInBits), NIL,  source, parameter.type, numberPointers);
+						END;
+						parameter := parameter.nextParameter;
+					END;
 					variable := scope(SyntaxTree.ProcedureScope).firstVariable;
 					WHILE(variable # NIL) DO
 						IF ~(variable.untraced) & (variable.externalName = NIL) THEN
@@ -12690,6 +12696,7 @@ TYPE
 						END;
 						variable := variable.nextVariable
 					END;
+					
 			END;
 			PatchArray(source,pc,numberPointers);
 		END PointerArray;
@@ -14136,15 +14143,15 @@ END FoxIntermediateBackend.
 Compiler.Compile FoxIntermediateBackend.Mod ~
 
 #	Release.Build --path="/temp/obg/"  WinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2X.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2Z.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 
 #	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-FSTools.CloseFiles A2X.exe ~
+FSTools.CloseFiles A2Z.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
-Compiler.Compile -p=Win32G --destPath=/temp/obg/
+Compiler.Compile -p=Win32G --destPath=/temp/obg/ --traceModule=Trace
 Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

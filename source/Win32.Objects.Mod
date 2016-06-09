@@ -163,20 +163,28 @@ TYPE
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp, curbp: ADDRESS;
 			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			name: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
 			END;
-			(*
-			ASSERT( SYSTEM.VAL( Process, Kernel32.TlsGetValue( tlsIndex ) ) # SELF); (* should not trace gc process *)
-			*)
-
+						
 			state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 			res := Kernel32.GetThreadContext( handle, state );
+			IF SYSTEM.VAL( Process, Kernel32.TlsGetValue( tlsIndex ) ) = SELF THEN
+				Trace.String("bp = "); Trace.Address(state.BP);
+				Trace.String(" =?= "); Trace.Address(Machine.CurrentBP()); Trace.Ln;
+				Trace.String("sp = "); Trace.Address(state.SP);
+				Trace.String(" =?= "); Trace.Address(Machine.CurrentSP()); Trace.Ln;
+				Trace.String("pc = "); Trace.Address(state.PC);
+				Trace.String(" =?= "); Trace.Address(Machine.CurrentPC()); Trace.Ln;
+				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
+			ELSE
+				sp := state.SP;  bp := state.BP; pc := state.PC;
+			END;
 
 			ASSERT ( res # 0, 1004 );
-			sp := state.SP;  bp := state.BP; pc := state.PC; curbp := 0;
 
 			(* stack garbage collection *)
 
@@ -188,28 +196,57 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp < stackBottom)  DO
+				IF WriteProcess # NIL THEN 
+					WriteProcess(SELF);Trace.Ln;
+				END;
+				Trace.String("Heuristic:"); Trace.Ln; 
+				Heaps.ReportCandidates(sp, stackBottom-sp); 
+				Trace.String("Metadata:"); Trace.Ln; 
+				Trace.String("sp = "); Trace.Address(sp); Trace.String(" bp= "); Trace.Address(bp);
+				Trace.String("bot = "); Trace.Address(stackBottom); Trace.Ln; 
+				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp <= stackBottom)  DO
+					Trace.String("proc ");
+					IF WriteProc # NIL THEN
+						WriteProc(pc); Trace.String("@ ");Trace.Address(bp); Trace.String(":"); Trace.Address(pc);
+					END;
+
 					SYSTEM.GET(bp, n);
 					IF ODD(n) THEN (* procedure descriptor at bp *)
+						Trace.String(" has descriptor"); Trace.Ln;
 						DEC(n);
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n);
 						IF desc # NIL THEN
+							IF WriteProc # NIL THEN
+								Trace.String("proc from desc: "); WriteProc((desc.pcFrom+desc.pcLimit) DIV 2); Trace.Ln;
+							END;
 							FOR i := 0 TO LEN(desc.offsets)-1 DO
 								adr := bp + desc.offsets[i]; (* pointer at offset *)
 								SYSTEM.GET(adr, p); (* load pointer *)
-								Heaps.Mark(p);
+								IF p # NIL THEN 
+ 									Trace.Int(desc.offsets[i],1); Trace.String(":"); Trace.Address(adr); Trace.String(":"); Trace.Address(p); Trace.Ln; 
+									Heaps.Mark(p);
+								END;
 							END;
+						ELSE
+								Trace.String("has nil desc: "); Trace.Ln;
 						END;
+						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc); (* next pc for tracing *)
 						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 					ELSE (* classical stack frame *)
+						Trace.String(" has no descriptor"); Trace.Ln;
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc); (* next pc for tracing *)
 						bp := n; 
 					END;
+					Trace.String("next bp "); Trace.Address(bp); Trace.Ln;
 				END;
 			END;
 		END FindRoots;
 		
 	END Process;
 
+VAR 
+	WriteProc* : PROCEDURE (pc: ADDRESS);
+	WriteProcess*: PROCEDURE(p: Process);
 TYPE
 	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;
 										VAR excpRec: Kernel32.ExceptionRecord;

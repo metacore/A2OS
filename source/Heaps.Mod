@@ -751,6 +751,65 @@ BEGIN
 END CheckCandidates;
 
 (* Check validity of single pointer candidate and enter it into the list of candidates *)
+PROCEDURE ReportCandidate*(p: ADDRESS): BOOLEAN;
+VAR memBlock, memBlockX {UNTRACED}: Machine.MemoryBlock; 
+	tdAdr, heapBlockAdr: ADDRESS;
+	tdPtr: POINTER {UNSAFE} TO RECORD typeAdr: ADDRESS END;
+	hbPtr: POINTER {UNSAFE} TO RECORD heapBlock: HeapBlock END;
+	heapBlock {UNTRACED}: HeapBlock;
+BEGIN
+	IF p MOD SIZEOF(ADDRESS) # 0 THEN RETURN FALSE END; 
+	IF (p >= Machine.memBlockHead.beginBlockAdr) & (p < Machine.memBlockTail.endBlockAdr) THEN
+		memBlock := Machine.memBlockHead;
+		WHILE memBlock # NIL DO
+			IF (p + HeapBlockOffset >= memBlock.beginBlockAdr) & (p + HeapBlockOffset < memBlock.endBlockAdr) THEN
+				hbPtr := p + HeapBlockOffset; 
+				heapBlock := hbPtr.heapBlock;
+				heapBlockAdr := heapBlock ;
+				IF heapBlockAdr MOD SIZEOF(ADDRESS) # 0 THEN RETURN FALSE END; 
+				tdAdr :=heapBlockAdr + TypeDescOffset;
+				(* check if tdAdr is a valid pointer in the heap *)
+				memBlockX := Machine.memBlockHead;
+				WHILE memBlockX # NIL DO 
+					IF (tdAdr >= memBlockX.beginBlockAdr) & (tdAdr < memBlockX.endBlockAdr) THEN
+						(* IF (heapBlock.mark >= currentMarkValue) THEN RETURN END;*)
+						tdPtr := tdAdr;
+						tdAdr := tdPtr.typeAdr;
+						(* check whether tdAdr is a valid type descriptor address *)
+						IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
+							RETURN TRUE;
+							candidates[numCandidates] := p;
+							INC(numCandidates);
+							IF numCandidates = LEN(candidates) THEN CheckCandidates END
+						END;
+						RETURN FALSE; (* found *)
+					END;
+					memBlockX := memBlockX.next
+				END;
+				RETURN FALSE; (* not found *)
+			END;
+			memBlock := memBlock.next
+		END
+	END;
+	RETURN FALSE;
+END ReportCandidate;
+
+(** RegisterCandidates - Register a block of pointer candidates *)
+PROCEDURE ReportCandidates*(adr: ADDRESS; size: SIZE);
+VAR end, p: ADDRESS;
+BEGIN
+	(* current processor must hold Heaps lock *)
+	end := adr + size;
+	WHILE adr # end DO
+		SYSTEM.GET(adr, p);
+		IF ReportCandidate(p) THEN
+			Trace.Address(adr); Trace.String(":"); Trace.Address(p); Trace.Ln; 
+		END;
+		INC(adr, AddressSize)
+	END
+END ReportCandidates;
+
+(* Check validity of single pointer candidate and enter it into the list of candidates *)
 PROCEDURE Candidate*(p: ADDRESS);
 VAR memBlock, memBlockX {UNTRACED}: Machine.MemoryBlock; 
 	tdAdr, heapBlockAdr: ADDRESS;
@@ -804,6 +863,8 @@ BEGIN
 		INC(adr, AddressSize)
 	END
 END RegisterCandidates;
+
+
 
 (* Check reachability of finalized objects. *)
 PROCEDURE CheckFinalizedObjects;

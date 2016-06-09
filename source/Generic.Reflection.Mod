@@ -1089,8 +1089,25 @@ TYPE
 		END;
 	END Report;
 
+VAR w: Streams.Writer; 
+
+	PROCEDURE WP(pc: ADDRESS);
+	BEGIN
+		WriteProc(w,pc);w.Update;
+	END WP;
+
+	PROCEDURE WPr(p: Objects.Process);
+	BEGIN
+		WriteProcess(w,p);w.Update;
+	END WPr;
+	
+
+
 BEGIN
 	modes := " rdy run awl awc awe rip";   (* 4 characters per mode from Objects.Ready to Objects.Terminated *)
+	Streams.OpenWriter(w, Trace.Send);
+	Objects.WriteProc := WP; 
+	Objects.WriteProcess := WPr;
 END Reflection.
 
 

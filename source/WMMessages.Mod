@@ -249,7 +249,7 @@ TYPE
 
 						
 			(*	PH *)
-			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  (* reduce pointer moves in buffer *)
+			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  
 				i := num - 1;
 				WHILE i >= 0 DO
 					pos := (head + i) MOD LEN(msgQ);

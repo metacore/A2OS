@@ -6926,7 +6926,7 @@ TYPE
 			procedure.SetAccess(SyntaxTree.Hidden);
 			currentScope := procedureScope;
 			section := NewSection(module.allSections, Sections.CodeSection, name, NIL,commentPrintout # NIL);
-			EmitEnter(section, -1,NIL,0,0,0);
+			EmitEnter(section, -1,procedure,0,0,0);
 			RETURN section;
 		END OpenInitializer;
 		

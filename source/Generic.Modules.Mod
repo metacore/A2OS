@@ -81,8 +81,7 @@ TYPE
 	
 	ProcedureDescPointer* = POINTER TO ProcedureDesc;
 	ProcedureDesc*= RECORD
-		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
-		refsOffset-: SIZE;
+		pcFrom-, pcLimit-: ADDRESS; 
 		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
 	END;
 	
@@ -100,7 +99,7 @@ TYPE
 			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
 			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
-			procTable*: ProcedureDescs; (* information inserted by loader, removed after use in Publish *)
+			procTable*: ProcedureDescs; (* information inserted by loader, sorted by pc after loading *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
 			export*: ExportDesc;
 			term*: TerminationHandler;
@@ -145,7 +144,6 @@ VAR
 	
 	(* global sorted table of all procedures , basically for GC *)
 	procedureDescriptors-: ProcedureDescs;
-	mayAllocate: BOOLEAN;
 
 (** Register a module loader. *)
 
@@ -207,7 +205,6 @@ BEGIN
 		m.refcnt := 0;
 		SortExceptionTable(m.exTable);
 		SortProcedureDescs(m.procTable);
-		MergeProcedureDescs(m.procTable);
 
 		IF m.module # NIL THEN
 			FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
@@ -386,46 +383,6 @@ END Initialize;
 		Quick(0, LEN(p)-1);
 	END SortExceptionTable;
 	
-		
-	(* sort and merge procedure descriptors with the global procedure desc array, replacing the global procedure array *)
-	PROCEDURE MergeProcedureDescs*(p: ProcedureDescs);
-	VAR n: ProcedureDescs;
-		i,j,k: LONGINT;
-	BEGIN
-		IF ~mayAllocate THEN RETURN END; 
-		IF (p = NIL) OR (LEN(p) = 0) THEN RETURN END; 
-		IF procedureDescriptors = NIL THEN 
-			procedureDescriptors := p;
-		ELSE
-			NEW(n, LEN(procedureDescriptors) + LEN(p));
-			k := 0; i := 0; j := 0;
-			FOR k := 0 TO LEN(n)-1 DO
-				IF (i<LEN(p)) & ((j=LEN(procedureDescriptors)) OR (p[i].pcFrom < procedureDescriptors[j].pcFrom)) THEN
-					n[k] := p[i]; INC(i);
-				ELSE
-					n[k] := procedureDescriptors[j]; INC(j);
-				END;
-			END;
-			procedureDescriptors := n;
-		END;
-	END MergeProcedureDescs;
-
-	(* remove sorted procedure descriptors from sorted global array *)
-	PROCEDURE RemoveProcedureDescs*(p: ProcedureDescs);
-	VAR i,j,k: LONGINT; n: ProcedureDescs;
-	BEGIN
-		IF ~mayAllocate THEN RETURN END; 
-		NEW(n, LEN(procedureDescriptors) - LEN(p));
-		i := 0; j := 0; k := 0; 
-		WHILE i < LEN(procedureDescriptors) DO 
-			IF (j < LEN(p)) & (procedureDescriptors[i] = p[j]) THEN INC(j);
-			ELSE n[k] := procedureDescriptors[i]; INC(k);
-			END;
-			INC(i); 
-		END;
-		procedureDescriptors := n;
-	END RemoveProcedureDescs;
-
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
 VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
@@ -650,7 +607,6 @@ BEGIN
 			(* do not clear m.data or m.code, as they are used in ThisModuleByAdr (for debugging). *)
 			(* do not clear m.refs, as they are used in Traps (for debugging). *)
 			m.export.dsc := NIL; m.exTable := NIL;
-			RemoveProcedureDescs(m.procTable);
 		ELSE
 			res := 1901;	(* can not free module in use *)
 			COPY(name, msg); Append(" reference count not zero", msg)
@@ -813,7 +769,6 @@ END Main;
 PROCEDURE Init;
 VAR
 	s: ARRAY 4 OF CHAR;
-	module: Module;
 BEGIN
 	(* root is initialized by the linker *)
 	shutdown := None;
@@ -821,30 +776,6 @@ BEGIN
 	freeRoot := NIL;
 	Machine.GetConfig("TraceModules", s);
 	trace := (s[0] = "1");
-	
-	
-	module := root;
-	WHILE (module # NIL) DO 
-		MergeProcedureDescs(module.procTable);
-		module := module.next;
-	END;
-	mayAllocate := TRUE;
-	
-	(*
-	FOR i := 0 TO Runtime.modules-1 DO
-		module := SYSTEM.VAL(Module,Runtime.kernelModule[i]);
-		IF TraceBoot THEN
-			Trace.String("publishing module ");
-			Trace.String(module.name); Trace.Ln;
-		END;
-		Publish(module,new);
-		ASSERT(new,112233);
-	END;
-	*)
-	(*
-	module := SYSTEM.VAL(Module,SELF);
-	Publish(module,new);
-	*)
 END Init;
 
 BEGIN

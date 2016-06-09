@@ -197,7 +197,6 @@ TYPE
 		finally-: Unit; (* position of finally section in bitstream -1 if none *)
 		comments-: Sections.CommentWriter; (* writer to write comment text between instructions *)
 		bigEndian-: BOOLEAN; (* endianess of bits (not bytes) *)
-		validPAFEnter-,validPAFExit-: Unit; (* begin and end of code section where current PAF (procedure activation frame) is considered valid *)
 		pc-: Unit; (* current position, in units *)
 
 		PROCEDURE GetPC(): LONGINT;
@@ -229,7 +228,6 @@ TYPE
 			SELF.bigEndian := bigEndian;
 			NEW(fixupList);
 			NEW(aliasList);
-			validPAFEnter := 0; validPAFExit := 0;
 			pc := 0;
 			os.fixed := FALSE;
 			SELF.os.priority := priority;
@@ -240,19 +238,9 @@ TYPE
 			NEW(os.bits,0);
 			NEW(fixupList);
 			IF comments # NIL THEN comments.Reset END;
-			validPAFEnter := 0; validPAFExit := 0;
 			pc := 0;
 		END Reset;
 
-		PROCEDURE EnterValidPAF*;
-		BEGIN
-			validPAFEnter := pc;
-		END EnterValidPAF;
-
-		PROCEDURE ExitValidPAF*;
-		BEGIN
-			validPAFExit := pc;
-		END ExitValidPAF;
 
 		PROCEDURE AddLabel*(position: Unit);
 		VAR new: LabelList;

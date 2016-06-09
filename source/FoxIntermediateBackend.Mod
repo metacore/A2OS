@@ -768,7 +768,6 @@ TYPE
 							END;
 						END;
 					END;
-					ir.EnterValidPAF;
 				END;
 
 				implementationVisitor.tagsAvailable := procedureType.callingConvention = SyntaxTree.OberonCallingConvention;
@@ -814,8 +813,6 @@ TYPE
 						ir.EmitAt(pc+3,Fill(fp,null,size,TRUE));
 						*)
 					END;
-
-					ir.ExitValidPAF;
 
 					IF procedureType.callingConvention = SyntaxTree.WinAPICallingConvention THEN
 						parametersSize := ProcedureParametersSize(backend.system,x);
@@ -894,10 +891,8 @@ TYPE
 				END;
 			ELSE (* force body for procedures *)
 				implementationVisitor.EmitEnter(ir, x.position,x,cc,0,0);
-				ir.EnterValidPAF;
 				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
 				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
-				ir.ExitValidPAF;
 				implementationVisitor.EmitLeave(ir,x.position,x,cc);
 				ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 			END;
@@ -10925,10 +10920,7 @@ TYPE
 					IntermediateCode.InitMemory(left,addressType,fp,0);
 					Emit(Mov(position, left, right));
 				END;
-				
-				ir.EnterValidPAF;
-				(* procedure activation frame is valid from here on *)
-				
+								
 				IF x.code = NIL THEN
 					VisitStatementBlock(x);
 				ELSE
@@ -10981,7 +10973,7 @@ TYPE
 		TypeTags: LONGINT; (* type extension level support *)
 		TypeRecordBaseOffset: LONGINT; (* offset of type zero offset (without method entries) *)
 		
-		patchInfoPC, patchProcedurePC: LONGINT;
+		patchInfoPC: LONGINT;
 		
 
 		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
@@ -12066,10 +12058,6 @@ TYPE
 					
 					Global.GetSymbolSegmentedName(procedure,name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
-					s := module.allSections.FindByName(name); 
-					IF s # NIL THEN (*! should always work, check this *)
-						PatchSize(s(IntermediateCode.Section), patchProcedurePC, pos);
-					END;
 
 					IF RefInfo THEN Info(section, "Parameters") END;
 					parameter := procedureType.firstParameter;
@@ -12385,12 +12373,6 @@ TYPE
 				Symbol(section,procedureSection,0,0);
 				Info(section,"pcTo");
 				Symbol(section, procedureSection, procedureSection.pc, 0);
-				Info(section,"pcStatementBegin");
-				Symbol(section,procedureSection, procedureSection.validPAFEnter,0);
-				Info(section,"pcStatementEnd");
-				Symbol(section, procedureSection, procedureSection.validPAFExit,0);
-				patchProcedurePC := section.pc;
-				Size(section, 0);
 				Info(section,"pointer to offsets array");
 				Symbol(section, section,section.pc+1,0);
 				Info(section,"offsets array");

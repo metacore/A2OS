@@ -456,8 +456,6 @@ TYPE
 				inPC := pc; outPC := out.pc;
 				in.SetPC(pc, outPC);
 				IF pc = in.finally THEN out.SetFinally(out.pc) END;
-				IF pc = in.validPAFEnter THEN out.EnterValidPAF END;
-				IF pc = in.validPAFExit THEN out.ExitValidPAF END;
 				instruction := in.instructions[pc];
 				SetLiveness(instruction);
 				IF dump # NIL THEN DumpInstruction(instruction); dump.Ln END;

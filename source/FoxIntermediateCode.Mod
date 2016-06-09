@@ -147,7 +147,6 @@ TYPE
 		aliasOffset-: LONGINT; (* for aliases *)
 
 		comments-: Sections.CommentWriter;
-		validPAFEnter-,validPAFExit-: LONGINT; (* begin and end of code section where current PAF (procedure activation frame) is considered valid *)
 		sizeInUnits: LONGINT;
 		exported-: BOOLEAN;
 
@@ -160,7 +159,6 @@ TYPE
 			InitSection(type,priority,n,symbol); (*InitArray;*) pc := 0; resolved := NIL;
 			IF comment THEN NEW(comments,GetPC) ELSE comments := NIL END;
 			finally := -1;
-			validPAFEnter := 0; validPAFExit := 0;
 			sizeInUnits := NotYetCalculatedSize;
 			exported := FALSE;
 		END InitIntermediateSection;
@@ -177,14 +175,6 @@ TYPE
 			ELSIF ~enabled THEN comments := NIL
 			END;
 		END EnableComments;
-
-		PROCEDURE EnterValidPAF*;
-		BEGIN validPAFEnter := pc
-		END EnterValidPAF;
-
-		PROCEDURE ExitValidPAF*;
-		BEGIN validPAFExit := pc
-		END ExitValidPAF;
 
 		PROCEDURE DeleteComments*;
 		BEGIN comments := NIL

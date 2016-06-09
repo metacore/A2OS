@@ -1728,8 +1728,9 @@ TYPE
 				*)
 
 				w.RawNum((destination.offset ));
-				w.RawNum(destination.offset+destination.resolved.validPAFEnter);
-				w.RawNum(destination.offset+destination.resolved.validPAFExit);
+				(* the metadata GC is screwed -- validPAF does not work -- removed from compiler *)
+				w.RawNum(0);
+				w.RawNum(0); 
 				(*!
 				w.RawNum(destination.beginOffset);
 				w.RawNum(destination.endOffset);

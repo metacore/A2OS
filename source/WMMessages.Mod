@@ -186,7 +186,7 @@ TYPE
 		CONST
 			MergePointers = TRUE;
 			MergeInvalidates = TRUE;
-			MergeInvokeEvents = TRUE;
+			(*MergeInvokeEvents = FALSE;*)
 
 			PROCEDURE Merge(VAR x,y,dx,dy: LONGINT; X,Y,dX,dY: LONGINT);
 			VAR nx, ny, ndx, ndy: LONGINT;
@@ -248,7 +248,8 @@ TYPE
 			END;
 
 						
-			(*	PH *)
+			
+			(*(* filter out duplicate MsgInvokeEvents - was a hack (but effecting in avoiding MessageQ congestion)*)
 			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  
 				i := num - 1;
 				WHILE i >= 0 DO
@@ -259,7 +260,7 @@ TYPE
 					DEC(i)
 				END
 			END;
-			(*  /PH*)
+			*)
 
 			IF MergeInvalidates & (msg.msgType = MsgInvalidate) & (num > 0)  THEN
 				i := num-1;

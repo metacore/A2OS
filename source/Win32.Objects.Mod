@@ -190,12 +190,13 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp <= stackBottom)  DO
+				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp < stackBottom)  DO
 					SYSTEM.GET(bp, n);
 					IF ODD(n) THEN (* procedure descriptor at bp *)
 						DEC(n);
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n);
 						IF desc # NIL THEN
+							(*TRACE(desc.pcFrom, desc.pcLimit, desc.offsets);*)
 							FOR i := 0 TO LEN(desc.offsets)-1 DO
 								adr := bp + desc.offsets[i]; (* pointer at offset *)
 								SYSTEM.GET(adr, p); (* load pointer *)

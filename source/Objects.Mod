@@ -999,8 +999,10 @@ PROCEDURE CancelTimeout*(t: Timer);
 BEGIN
 	Machine.Acquire(Machine.Objects);
 	ASSERT(t # event);
-	IF t.prev #NIL THEN t.prev.next := t.next END;
-	IF t.next # NIL THEN t.next.prev := t.prev; END;
+	IF t.next # NIL THEN 
+		t.next.prev := t.prev; 
+		IF t.prev #NIL THEN t.prev.next := t.next END;
+	END;
 	t.next := NIL; t.prev := NIL
 	Machine.Release(Machine.Objects)
 END CancelTimeout;

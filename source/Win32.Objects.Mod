@@ -36,10 +36,6 @@ CONST
 	halt* = 2222;
 	haltUnbreakable* = 2223;
 
-	(* constant used in GC Process.FindPointers *)
-	InitDiff = MAX(LONGINT);
-
-	AddressSize = SIZEOF (ADDRESS);
 
 TYPE
 	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
@@ -163,8 +159,6 @@ TYPE
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp: ADDRESS;
 			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
-			name: ARRAY 256 OF CHAR;
-			sb, startbp,startsp,startpc,endpc,ignored: ADDRESS;
 		BEGIN
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
@@ -187,7 +181,6 @@ TYPE
 					ASSERT(res >= 0);
 				END;
 			END;
-			sb := stackBottom; startbp := bp; startsp := sp; 
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
@@ -201,28 +194,8 @@ TYPE
 				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp <= stackBottom)  DO
 					SYSTEM.GET(bp, n);
 					IF ODD(n) THEN (* procedure descriptor at bp *)
-						DEC(n);
-						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n);
+						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
 						IF desc # NIL THEN
-							(*
-							GetProcedureName(pc, name, ignored);
-							*)
-							startpc := desc.pcFrom;
-							endpc := desc.pcLimit;
-							IF endpc = 0CCCCCCCCH THEN
-								TRACE(sp,state.SP);
-								TRACE(bp,state.BP);
-								TRACE(pc, state.PC);
-								TRACE(n, desc);
-								TRACE(sb, stackBottom);
-								TRACE(mode);
-								Trace.Ln;
-								Trace.Memory(sp, sb-sp);
-								Trace.Ln;
-								Trace.String("id = "); Trace.Int(id,1); Trace.Ln;
-								LOOP END;
-							END;
-							(*TRACE(desc.pcFrom, desc.pcLimit, desc.offsets);*)
 							FOR i := 0 TO LEN(desc.offsets)-1 DO
 								adr := bp + desc.offsets[i]; (* pointer at offset *)
 								SYSTEM.GET(adr, p); (* load pointer *)
@@ -231,10 +204,8 @@ TYPE
 								END;
 							END;
 						END;
-						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
 						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 					ELSE (* classical stack frame *)
-						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
 						bp := n; 
 					END;
 				END;
@@ -1215,7 +1186,7 @@ END NumReady;
 	return the number of cycles since the process has been created. If FALSE, return the number of cycles
 	consumed since the last time asked. *)
 PROCEDURE GetCpuCycles*(process : Process; VAR cpuCycles : CpuCyclesArray; all : BOOLEAN);
-VAR res : Kernel32.BOOL; temp : HUGEINT; i : LONGINT;
+VAR res : Kernel32.BOOL; temp : HUGEINT; 
 BEGIN
 	ASSERT(process # NIL);
 	IF (Kernel32.QueryThreadCycleTime # NIL) THEN

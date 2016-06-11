@@ -75,7 +75,6 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 		PROCEDURE ColorToGfxColor(color:LONGINT):Gfx.Color;
 			VAR gfxcolor:Gfx.Color;
 		BEGIN
-			SetColor^(color);
 			gfxcolor.a := INTEGER(color MOD 100H);
 			gfxcolor.b := INTEGER(color DIV 100H MOD 100H);
 			gfxcolor.g := INTEGER(color DIV 10000H MOD 100H);
@@ -85,7 +84,7 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 		
 		PROCEDURE GfxColorToColor(gfxColor:Gfx.Color):WMGraphics.Color;
 		BEGIN
-			color:=LONGINT (((HUGEINT(gfxColor.r*100H)+gfxColor.g)*100+gfxColor.b)*100+gfxColor.a)
+			RETURN LONGINT (((HUGEINT(gfxColor.r*100H)+gfxColor.g)*100H+gfxColor.b)*100H+gfxColor.a)
 		END GfxColorToColor;
 		
 		(* ????

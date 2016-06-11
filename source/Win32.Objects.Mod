@@ -161,25 +161,33 @@ TYPE
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
-		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp, curbp: ADDRESS;
+		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp: ADDRESS;
 			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 			name: ARRAY 256 OF CHAR;
+			sb, startbp,startsp,startpc,endpc,ignored: ADDRESS;
 		BEGIN
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
 			END;
 						
-			state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
-			res := Kernel32.GetThreadContext( handle, state );
-			IF SYSTEM.VAL( Process, Kernel32.TlsGetValue( tlsIndex ) ) = SELF THEN
+			IF CurrentProcess() = SELF THEN
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
-				sp := state.SP;  bp := state.BP; pc := state.PC;
+				IF mode # Suspended THEN
+					res := Kernel32.SuspendThread(handle);
+					ASSERT(res >= 0);
+				END;
+				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				res := Kernel32.GetThreadContext( handle, state );
+				ASSERT(res >= 0);
+				sp := state.SP; bp := state.BP; pc := state.PC;
+				IF mode # Suspended THEN
+					res := Kernel32.ResumeThread(handle);
+					ASSERT(res >= 0);
+				END;
 			END;
-
-			ASSERT ( res # 0, 1004 );
-
+			sb := stackBottom; startbp := bp; startsp := sp; 
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
@@ -190,12 +198,30 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp < stackBottom)  DO
+				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp <= stackBottom)  DO
 					SYSTEM.GET(bp, n);
 					IF ODD(n) THEN (* procedure descriptor at bp *)
 						DEC(n);
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n);
 						IF desc # NIL THEN
+							(*
+							GetProcedureName(pc, name, ignored);
+							*)
+							startpc := desc.pcFrom;
+							endpc := desc.pcLimit;
+							IF endpc = 0CCCCCCCCH THEN
+								TRACE(sp,state.SP);
+								TRACE(bp,state.BP);
+								TRACE(pc, state.PC);
+								TRACE(n, desc);
+								TRACE(sb, stackBottom);
+								TRACE(mode);
+								Trace.Ln;
+								Trace.Memory(sp, sb-sp);
+								Trace.Ln;
+								Trace.String("id = "); Trace.Int(id,1); Trace.Ln;
+								LOOP END;
+							END;
 							(*TRACE(desc.pcFrom, desc.pcLimit, desc.offsets);*)
 							FOR i := 0 TO LEN(desc.offsets)-1 DO
 								adr := bp + desc.offsets[i]; (* pointer at offset *)
@@ -205,8 +231,10 @@ TYPE
 								END;
 							END;
 						END;
+						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
 						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 					ELSE (* classical stack frame *)
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
 						bp := n; 
 					END;
 				END;
@@ -222,79 +250,7 @@ TYPE
 
 
 	GCStatusExt = OBJECT(Heaps.GCStatus)
-		VAR
-			(*
-			gcOngoing: BOOLEAN;
-			event: Kernel32.HANDLE;
-			caller: Process;
-
-		PROCEDURE &Init;
-		BEGIN
-			gcOngoing := FALSE;
-			event := Kernel32.CreateEvent( NIL, Kernel32.False (* auto-reset *), Kernel32.False, NIL );   (* manual set event with initial state = reset *)
-			ASSERT(event # 0);
-		END Init;
-			*)
-
-		(*
-		(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing
-		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
-		    if the lock is not taken. *)
-		PROCEDURE SetgcOngoing(value: BOOLEAN);
-		VAR p: Heaps.ProcessLink; cur, r: Process; res: Kernel32.BOOL; num: LONGINT;
-		BEGIN (* serialize writers *)
-			IF value THEN
-				(* Low, Medium or High priority process calls this *)
-				Machine.Acquire(Machine.Objects);
-				Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)
-				r := CurrentProcess();
-				caller := r;
-				r.mode := AwaitingEvent;
-				num := 0;
-				IF ~gcOngoing THEN
-					gcOngoing := TRUE;
-					p := ready.head;
-					WHILE p # NIL DO
-						cur := p(Process);
-						IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
-							res := Kernel32.SuspendThread(cur.handle);
-							cur.mode := Suspended
-						ELSE INC(num);
-						END;
-						p := p.next
-					END;
-					(* start GC *)
-					gcActivity.Activate;
-				END;
-				Machine.Release(Machine.Heaps);
-				Machine.Release(Machine.Objects);
-				(* no process is running except the caller process and the GC process, no race here *)
-				res := Kernel32.WaitForSingleObject(event, Kernel32.Infinite); (* block execution *)
-				ASSERT(res = Kernel32.WaitObject0)
-			ELSE
-				(* gcProcess calls this *)
-				Machine.Acquire(Machine.Objects);
-				gcOngoing := FALSE;
-				p := ready.head;
-				WHILE (p # NIL) DO
-					cur := p(Process);
-					(* only suspended and awaiting processes of ready queue are resumed *)
-					IF cur.mode = Suspended THEN
-						res := Kernel32.ResumeThread(cur.handle);
-						cur.mode := Running
-					END;
-					p := p.next
-				END;
-				caller.mode := Running;
-				Kernel32.SetEvent(event);
-				r := CurrentProcess();
-				ASSERT(r = gcActivity.process);
-				r.mode := AwaitingEvent;
-				Machine.Release(Machine.Objects);
-			END;
-		END SetgcOngoing;
-		*)
-
+	
 	(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing
 		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
 		    if the lock is not taken. *)
@@ -313,6 +269,7 @@ TYPE
 					cur := p(Process);
 					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
 						res := Kernel32.SuspendThread(cur.handle);
+						ASSERT(res >= 0);
 						cur.mode := Suspended
 					ELSE INC(num);
 					END;
@@ -326,6 +283,7 @@ TYPE
 					(* only suspended and awaiting processes of ready queue are resumed *)
 					IF cur.mode = Suspended THEN
 						res := Kernel32.ResumeThread(cur.handle);
+						ASSERT(res >= 0);
 						cur.mode := Running
 					END;
 					p := p.next
@@ -341,47 +299,6 @@ TYPE
 		END SetgcOngoing;
 
 	END GCStatusExt;
-
-	GCActivity = OBJECT
-	(*
-	VAR
-		res: Kernel32.BOOL;
-		event: Kernel32.HANDLE;
-		process: Process;
-
-		PROCEDURE &Init;
-		BEGIN
-			ASSERT(gcActivity = NIL); (* should only exist once *)
-			event := Kernel32.CreateEvent( NIL, Kernel32.False (* auto-reset *), Kernel32.False, NIL );   (* manual set event with initial state = reset *)
-		END Init;
-
-		PROCEDURE Activate;
-		BEGIN
-			process.mode := Running;
-			res := Kernel32.SetEvent(event);
-		END Activate;
-
-		PROCEDURE Wait;
-		BEGIN
-			process.mode := AwaitingEvent;
-			res := Kernel32.WaitForSingleObject(event, Kernel32.Infinite); (* block execution *)
-			ASSERT(res = Kernel32.WaitObject0);
-		END Wait;
-
-	BEGIN {ACTIVE, SAFE, PRIORITY(GCPriority)}
-		Machine.Acquire(Machine.Objects);
-		process := CurrentProcess();
-		process.mode := AwaitingEvent;
-		Machine.Release(Machine.Objects);
-		LOOP
-			Wait;
-			(* process is scheduled -> perform garbage collection now *)
-			Heaps.CollectGarbage(Modules.root);
-			Heaps.gcStatus.SetgcOngoing(FALSE); (* resumes waiting processes and suspends itself *)
-			IF finalizerCaller # NIL THEN finalizerCaller.Activate() END;
-		END
-	*)
-	END GCActivity;
 
 	FinalizedCollection* = OBJECT
 		PROCEDURE RemoveAll*(obj: ANY); (** abstract *)
@@ -445,7 +362,6 @@ VAR
 
 	numberOfProcessors: LONGINT; (* cached value of Machine.NumberOfProcessors() *)
 	finalizerCaller: FinalizerCaller; (* active object for finalizer process, regarded as aprt of GC *)
-	gcActivity: GCActivity;
 
 	event: Timer; (* list of events *)
 	clock: Clock;
@@ -1259,7 +1175,6 @@ END InitEventHandling;
 
 PROCEDURE InitGCHandling;
 BEGIN
-	NEW(gcActivity);
 	NEW(finalizerCaller);
 END InitGCHandling;
 
@@ -1327,6 +1242,9 @@ PROCEDURE TimerFrequency*(): HUGEINT;
 BEGIN
 	RETURN 1000000000;
 END TimerFrequency;
+
+
+VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 
 BEGIN
 	exceptionhandler := NIL;

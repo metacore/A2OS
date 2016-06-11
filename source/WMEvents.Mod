@@ -62,7 +62,7 @@ TYPE
 
 		(** Add an listener to this event. The listener is found by findig the component referenced in the string and then
 			querying the component for the listener. Listeners can be added more then once.
-			The dereferencing is done on demant at the first call. If the EventListener can not be found, the call to the
+			The dereferencing is done on demand at the first call. If the EventListener can not be found, the call to the
 			respective listener is ignored. On each call, the EventListener is searched again *)
 		PROCEDURE AddByString*(link : String);
 		VAR new : EventListenerLink;

@@ -56,7 +56,7 @@ TYPE
 			out.String("   Color: "); out.Int(nofColorProperties, 0); out.Ln;
 			out.String("   Rectangle: "); out.Int(nofRectangleProperties, 0); out.Ln;
 			out.String("   String: "); out.Int(nofStringProperties, 0); out.Ln;
-			out.String("   Ohter: "); out.Int(nofOtherProperties, 0); out.Ln;
+			out.String("   Other: "); out.Int(nofOtherProperties, 0); out.Ln;
 		END Show;
 
 	END Statistics;
@@ -266,5 +266,7 @@ END ComponentInfo.
 SystemTools.Free ComponentInfo ~
 
 ComponentInfo.ShowStatistics * ~
+
+ComponentInfo.ShowStatistics File* ~
 
 ComponentInfo.ShowPrototypes ~

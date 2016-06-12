@@ -1132,7 +1132,9 @@ BEGIN
 	Machine.Acquire(Machine.Objects);
 	ASSERT (t # event );
 	IF t.next # NIL THEN
-		t.next.prev := t.prev;  t.prev.next := t.next;  t.next := NIL;
+		t.next.prev := t.prev;  
+		IF t.prev#NIL THEN t.prev.next := t.next; END;
+		t.next := NIL;
 		t.prev := NIL
 	END;
 	Machine.Release(Machine.Objects);

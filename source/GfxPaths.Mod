@@ -472,7 +472,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		BEGIN
 			subdiv(0.5, data.x, x1, x2, x, x01, x11, x12, x22, x23);
 			subdiv(0.5, data.y, y1, y2, y, y01, y11, y12, y22, y23);
-			dx := x11 - data.x; dy := y11 - data.y;
+			dx := x12 - data.x; dy := y12 - data.y;
 			ex := x - data.x; ey := y - data.y;
 			cp := dx*ey - dy*ex;
 			IF cp*cp <= f2 * (ex*ex + ey*ey) THEN	(* flat enough *)

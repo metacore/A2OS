@@ -1927,12 +1927,6 @@ TYPE
 			);
 		END Init;
 
-		PROCEDURE Initialize;
-		BEGIN
-			Initialize^;
-			ResetProperties;
-		END Initialize;
-
 		PROCEDURE ResetProperties;
 		BEGIN
 			alignmentView.SetProperty(NIL);

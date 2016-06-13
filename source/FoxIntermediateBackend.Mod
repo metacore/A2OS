@@ -11064,7 +11064,7 @@ TYPE
 			Info(section,"nextRealtime: HeapBlock;");
 			Address(section,0);
 		END HeapBlock;
-
+		
 		PROCEDURE ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
 		VAR i: LONGINT;
 		BEGIN
@@ -11233,10 +11233,8 @@ TYPE
 		VAR variable: SyntaxTree.Variable; i,n,size: LONGINT; base: SyntaxTree.Type;
 		BEGIN
 			type := type.resolved;
-			IF type IS SyntaxTree.AnyType THEN
-				Symbol(section, symbol, 0, (offset ));
-				INC(numberPointers);
-
+			IF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType) THEN
+				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
 			ELSIF (type IS SyntaxTree.PortType) & implementationVisitor.backend.cellsAreObjects THEN
 				Symbol(section, symbol, 0, offset); INC(numberPointers);
@@ -12648,7 +12646,7 @@ TYPE
 		END Module;
 
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
-		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter;
+		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter; parametersSize: SIZE;
 		BEGIN
 			ArrayBlock(source,pc,"",FALSE);
 			Info(source, "pointer offsets array data");
@@ -12673,6 +12671,14 @@ TYPE
 							Pointers(ToMemoryUnits(module.system,parameter.offsetInBits), NIL,  source, parameter.type, numberPointers);
 						END;
 						parameter := parameter.nextParameter;
+					END;
+					IF scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).isDelegate THEN 
+						parametersSize := ProcedureParametersSize(module.system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
+						INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
+						IF PreciseGCSupport THEN
+							INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
+						END;
+						Symbol(source, NIL, 0, parametersSize); INC(numberPointers);
 					END;
 					variable := scope(SyntaxTree.ProcedureScope).firstVariable;
 					WHILE(variable # NIL) DO

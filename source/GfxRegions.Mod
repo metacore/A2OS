@@ -357,7 +357,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	(* merge two runs of data points *)
 	PROCEDURE Merge (reg: Region; split: LONGINT);
 		VAR data: RegionData; n, N, m, M, p, tmp: LONGINT; nu, nv, ndir, mu, mv, mdir, sum, u, v, inc, nsum: INTEGER;
-	BEGIN
+	BEGIN{EXCLUSIVE}
 		data := reg.data;
 		n := 0; N := split;
 		Decode(data[n], nu, nv, ndir);
@@ -1014,7 +1014,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** add rectangle to region **)
 	PROCEDURE AddRect* (reg: Region; llx, lly, urx, ury: INTEGER);
-	BEGIN
+	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Add(reg, RectRegion)
 	END AddRect;
@@ -1080,7 +1080,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** subtract rectangle from region **)
 	PROCEDURE SubtractRect* (reg: Region; llx, lly, urx, ury: INTEGER);
-	BEGIN
+	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Subtract(reg, RectRegion)
 	END SubtractRect;
@@ -1176,7 +1176,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** intersect region with rectangle **)
 	PROCEDURE IntersectRect* (reg: Region; llx, lly, urx, ury: INTEGER);
-	BEGIN
+	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Intersect(reg, RectRegion)
 	END IntersectRect;

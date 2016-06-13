@@ -30,8 +30,6 @@ CONST
 	Realtime* = 5; 
 	halt* = 2222; 
 	haltUnbreakable* = 2223; 
-	InitDiff = MAX(LONGINT); 
-	AddressSize = SIZEOF(ADDRESS); 
 TYPE 
 	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT; 
 
@@ -77,6 +75,10 @@ TYPE
 
 	Win32Event = Kernel32.HANDLE; 
 
+	GCContext = RECORD 
+		ebp: ADDRESS; 
+	END; 
+
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
 		rootedNext: Process; 
@@ -97,6 +99,7 @@ TYPE
 		restartPC-: LONGINT; 
 		restartSP-: LONGINT; 
 		lastThreadTimes: HUGEINT; 
+		gcContext: GCContext; 
 
 		PROCEDURE ^ FindRoots*; 
 	END Process; 
@@ -107,9 +110,6 @@ TYPE
 
 		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
 	END GCStatusExt; 
-
-	GCActivity = OBJECT 
-	END GCActivity; 
 
 	FinalizedCollection* = OBJECT 
 
@@ -139,13 +139,13 @@ VAR
 	ready: ProcessQueue; 
 	numberOfProcessors: LONGINT; 
 	finalizerCaller: FinalizerCaller; 
-	gcActivity: GCActivity; 
 	event: Timer; 
 	clock: Clock; 
 	tlsIndex: LONGINT; 
 	nProcs: LONGINT; 
 	excplock: Kernel32.CriticalSection; 
 	exceptionhandler: ExceptionHandler; 
+	GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS); 
 
 	PROCEDURE ^ SetPriority*(priority: LONGINT); 
 	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 
@@ -207,5 +207,7 @@ VAR
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
+	PROCEDURE ^ LeaveA2; 
+	PROCEDURE ^ ReenterA2; 
 BEGIN
 END Objects.

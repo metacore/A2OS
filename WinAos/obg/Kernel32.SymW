@@ -204,6 +204,10 @@ TYPE
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: LONGINT; 
 	END; 
 
+	Wow64Context* = RECORD (Context)
+		extension: ARRAY 512 OF CHAR; 
+	END; 
+
 	ExceptionRecordPtr* = POINTER TO ExceptionRecord; 
 
 	ExceptionRecord* = RECORD 
@@ -335,7 +339,7 @@ VAR
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
 	DisableThreadLibraryCalls-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
 	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: SET; bInheritHandle: BOOL; dwOptions: SET):BOOL; 
-	EnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
+	enterCriticalSection: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	EscapeCommFunction-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFunc: LONGINT):BOOL; 
 	ExitProcess-: PROCEDURE {WINAPI}(uExitCode: LONGINT); 
 	ExitThread-: PROCEDURE {WINAPI}(dwExitCode: LONGINT); 
@@ -379,6 +383,7 @@ VAR
 	GetTempFileName-: PROCEDURE {WINAPI}(VAR lpPathName, lpPrefixName: ARRAY OF CHAR; uUnique: LONGINT; VAR lpTempFileName: ARRAY OF CHAR):LONGINT; 
 	GetTempPath-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
 	GetThreadContext-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR lpContext: Context):BOOL; 
+	Wow64GetThreadContext-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR lpContext: Wow64Context):BOOL; 
 	GetThreadPriority-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
 	GetThreadTimes-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime):LONGINT; 
 	GetTickCount-: PROCEDURE {WINAPI}():LONGINT; 
@@ -400,7 +405,7 @@ VAR
 	InitializeCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	InterlockedDecrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
 	InterlockedIncrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
-	LeaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
+	leaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	LocalFileTimeToFileTime-: PROCEDURE {WINAPI}(VAR lpLocalFileTime: FileTime; VAR lpFileTime: FileTime):BOOL; 
 	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: SET):BOOL; 
 	outputDebugString-: PROCEDURE {WINAPI}(CONST lpOutputString: ARRAY OF CHAR); 
@@ -437,6 +442,7 @@ VAR
 	SetupComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwInQueue, dwOutQueue: LONGINT):BOOL; 
 	Sleep-: PROCEDURE {WINAPI}(dwMilliseconds: LONGINT); 
 	SuspendThread-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
+	Wow64SuspendThread-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
 	SystemTimeToFileTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime; VAR lpFileTime: FileTime):BOOL; 
 	TerminateThread-: PROCEDURE {WINAPI}(hThread: HANDLE; dwExitCode: LONGINT):BOOL; 
 	TlsAlloc-: PROCEDURE {WINAPI}():LONGINT; 
@@ -449,14 +455,18 @@ VAR
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
 	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ANY):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
+	LeaveA2*, ReenterA2*: PROCEDURE ; 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 
+	PROCEDURE ^ EnterCriticalSection*(VAR lpCriticalSection: CriticalSection); 
+	PROCEDURE ^ LeaveCriticalSection*(VAR lpCriticalSection: CriticalSection); 
 	PROCEDURE ^ GetProcAddress*(hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ CopyString*(lpString: LPSTR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutputDebugString*(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ NoOutputString(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ SendToDebugger*(CONST str: ARRAY OF CHAR; x: LONGINT); 
 	PROCEDURE ^ ShutdownP(l: LONGINT); 
+	PROCEDURE ^ Nothing; 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ {FIXED(4198400)} EntryPoint; 
 BEGIN

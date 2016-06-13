@@ -120,6 +120,10 @@ TYPE
 TYPE
 
 	Win32Event = Kernel32.HANDLE;
+	
+	GCContext = RECORD
+		ebp: ADDRESS;
+	END;
 
 	Process* = OBJECT(Heaps.ProcessLink)
 	VAR
@@ -155,10 +159,13 @@ TYPE
 		oldReturnPC: LONGINT;
 		*)
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
+		gcContext: GCContext;
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
-		VAR sp: LONGINT; res: Kernel32.BOOL; pc, bp: ADDRESS;
+		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
 			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			context: Kernel32.Wow64Context;
+			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
 		BEGIN
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
@@ -169,47 +176,75 @@ TYPE
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
 				IF mode # Suspended THEN
-					res := Kernel32.SuspendThread(handle);
-					ASSERT(res >= 0);
+					IF Kernel32.Wow64SuspendThread # NIL THEN 
+						res := Kernel32.Wow64SuspendThread(handle);
+					ELSE
+						res := Kernel32.SuspendThread(handle);
+					END;
+					ASSERT(res # -1);
 				END;
+
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
-				ASSERT(res >= 0);
-				sp := state.SP; bp := state.BP; pc := state.PC;
-				IF mode # Suspended THEN
-					res := Kernel32.ResumeThread(handle);
-					ASSERT(res >= 0);
+				
+				context.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				IF Kernel32.Wow64GetThreadContext # NIL THEN 
+					res := Kernel32.Wow64GetThreadContext( handle, context );
+				ELSE
+					res := Kernel32.GetThreadContext( handle, context );
 				END;
+				ASSERT(res # 0);
+				sp := context.SP; bp := context.BP; pc := context.PC;
+				
+				
+				obp := bp; osb := stackBottom; opc := pc;
+				osbp := state.BP;
 			END;
+			gbp := gcContext.ebp;
+			IF gbp # NIL THEN bp := gbp END;
+			
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
-				Heaps.Candidate( state.EDI );  Heaps.Candidate( state.ESI );
-				Heaps.Candidate( state.EBX ); Heaps.Candidate( state.EDX );
-				Heaps.Candidate( state.ECX ); Heaps.Candidate( state.EAX );
+				Heaps.Candidate( context.EDI );  Heaps.Candidate( context.ESI );
+				Heaps.Candidate( context.EBX ); Heaps.Candidate( context.EDX );
+				Heaps.Candidate( context.ECX ); Heaps.Candidate( context.EAX );
 				IF (stackBottom # 0) & (sp # 0) THEN
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				WHILE (bp # Heaps.NilVal) & (sp <= bp) & (bp <= stackBottom)  DO
-					SYSTEM.GET(bp, n);
-					IF ODD(n) THEN (* procedure descriptor at bp *)
-						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-						IF desc # NIL THEN
-							FOR i := 0 TO LEN(desc.offsets)-1 DO
-								adr := bp + desc.offsets[i]; (* pointer at offset *)
-								SYSTEM.GET(adr, p); (* load pointer *)
-								IF p # NIL THEN 
-									Heaps.Mark(p);
+				IF bp < stackBottom THEN
+					WHILE (bp # Heaps.NilVal) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
+						SYSTEM.GET(bp, n);
+						IF ODD(n) THEN (* procedure descriptor at bp *)
+							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
+							IF desc # NIL THEN
+								a0 := ADDRESSOF(desc.offsets);
+								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
+								ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
+								FOR i := 0 TO LEN(desc.offsets)-1 DO
+									adr := bp + desc.offsets[i]; (* pointer at offset *)
+									SYSTEM.GET(adr, p); (* load pointer *)
+									IF p # NIL THEN 
+										Heaps.Mark(p);
+									END;
 								END;
 							END;
+							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
+						ELSE (* classical stack frame *)
+							bp := n; 
 						END;
-						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
-					ELSE (* classical stack frame *)
-						bp := n; 
 					END;
-				END;
+					
+					ASSERT((bp = stackBottom) OR (bp=0) ,12345);
+				END; 
 			END;
+			
+			IF (CurrentProcess() # SELF) & (mode # Suspended) THEN
+				res := Kernel32.ResumeThread(handle);
+				ASSERT(res # -1);
+			END;
+
 		END FindRoots;
 		
 	END Process;
@@ -239,7 +274,11 @@ TYPE
 				WHILE p # NIL DO
 					cur := p(Process);
 					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
-						res := Kernel32.SuspendThread(cur.handle);
+						IF Kernel32.Wow64SuspendThread # NIL THEN 
+							res := Kernel32.Wow64SuspendThread(cur.handle);
+						ELSE
+							res := Kernel32.SuspendThread(cur.handle);
+						END;
 						ASSERT(res >= 0);
 						cur.mode := Suspended
 					ELSE INC(num);
@@ -1001,7 +1040,11 @@ END Await;
 		IF CurrentProcess() # t THEN
 			Machine.Acquire( Machine.Objects );
 			LOOP
-				retBOOL := Kernel32.SuspendThread( t.handle );
+				IF Kernel32.Wow64SuspendThread # NIL THEN 
+					retBOOL := Kernel32.Wow64SuspendThread(t.handle);
+				ELSE
+					retBOOL := Kernel32.SuspendThread( t.handle );
+				END;
 				t.state.ContextFlags := Kernel32.ContextControl;
 				retBOOL := Kernel32.GetThreadContext( t.handle, t.state );
 				mod := Modules.ThisModuleByAdr( t.state.PC );  Trace.String( "Objects Break at adr: " );
@@ -1083,6 +1126,8 @@ BEGIN
 	ASSERT(t.handle # 0);
 	Machine.Release(Machine.Objects);
 	InitEventHandling; (* implicit call of NewProcess! *)
+	Kernel32.LeaveA2 := LeaveA2;
+	Kernel32.ReenterA2 := ReenterA2;
 	InitGCHandling; (* do. *)
 	Heaps.gcStatus := GCStatusFactory()
 END Init;
@@ -1219,6 +1264,28 @@ END TimerFrequency;
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 
+
+PROCEDURE LeaveA2;
+VAR cur: Process; ebp,n: ADDRESS;
+BEGIN
+	cur := CurrentProcess();
+	IF cur # NIL THEN 
+		ebp := Machine.CurrentBP();
+		SYSTEM.GET(ebp, n);
+		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
+		cur.gcContext.ebp := ebp;
+	END;
+END LeaveA2;
+
+PROCEDURE ReenterA2;
+VAR cur: Process;
+BEGIN
+	cur := CurrentProcess();
+	IF cur # NIL THEN 
+		cur.gcContext.ebp := NIL;
+	END;	
+END ReenterA2;
+
 BEGIN
 	exceptionhandler := NIL;
 	terminateProc := TerminateProc;
@@ -1226,6 +1293,12 @@ BEGIN
 	tlsIndex := Kernel32.TlsAlloc();
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
+	IF Kernel32.Wow64GetThreadContext # NIL THEN
+		Trace.String("Use Wow64 Context"); Trace.Ln;
+	END;
+	IF Kernel32.Wow64SuspendThread # NIL THEN
+		Trace.String("Use Wow64 suspend"); Trace.Ln;
+	END;
 	Init
 END Objects.
 

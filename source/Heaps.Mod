@@ -1019,6 +1019,7 @@ VAR p {UNTRACED}: FreeBlock;
 BEGIN
 	(* invoke mark phase, mark phase starts at next scheduler interrupt *)
 	GC;
+	RETURN;
 	(* return blocks now *)
 	Machine.Acquire(Machine.Heaps);
 	(* trying to satisfy a request of MAX(LONGINT) bytes will never succeed - lazy sweep runs until end of heap *)
@@ -1110,7 +1111,9 @@ BEGIN
 		bp := CheckBP(Machine.CurrentBP()); 
 		SYSTEM.GET(bp, bp); 
 		bp := CheckBP(bp);
+		(*! somthing wrong?
 		SYSTEM.GET(bp+SIZEOF(ADDRESS), p.heapBlock.heapBlock);
+		*)
 		(*
 		stackDesc := Machine.CurrentBP();
 		p.heapBlock.heapBlock := stackDesc.link.pc;

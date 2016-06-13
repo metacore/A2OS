@@ -212,6 +212,10 @@ TYPE
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: LONGINT; (* whereas BP is EBP and SP is ESP *)
 	END;
 
+	Wow64Context*= RECORD (Context)
+		extension: ARRAY 512 (* MaxWOW64Extension *) OF CHAR;
+	END;
+	
 	ExceptionRecordPtr* = POINTER TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
@@ -404,9 +408,17 @@ VAR
 																			 bInheritHandle: BOOL;
 																			 dwOptions: SET ): BOOL;
 	(** The EnterCriticalSection function waits for ownership of the specified critical section object. *)
-	EnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+	enterCriticalSection: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+	
+	PROCEDURE EnterCriticalSection*(VAR lpCriticalSection: CriticalSection);
+	BEGIN
+		LeaveA2;
+		enterCriticalSection(lpCriticalSection);
+		ReenterA2;
+	END EnterCriticalSection;
+
 	(** The EscapeCommFunction function directs a specified communications device to perform an extended function. *)
-	EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+	VAR EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																					  dwFunc: LONGINT ): BOOL;
 	(** The ExitProcess function ends a process and all its threads. *)
 	ExitProcess-: PROCEDURE {WINAPI} ( uExitCode: LONGINT );
@@ -536,6 +548,11 @@ VAR
 	(** The GetThreadContext function retrieves the context of the specified thread. *)
 	GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;
+
+	(** The GetThreadContext function retrieves the context of the specified thread. *)
+	Wow64GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
+																			  VAR lpContext: Wow64Context ): BOOL;
+
 	(** The GetThreadPriority function returns the priority value for the specified thread. This value, together with
 			the priority class of the thread's process, determines the thread's base-priority level. *)
 	GetThreadPriority-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
@@ -599,11 +616,20 @@ VAR
 	(** The InterlockedIncrement function both increments (increases by one) the value of the specified 32-bit variable
 			and checks the resulting value. *)
 	InterlockedIncrement-: PROCEDURE {WINAPI} ( VAR lpAddend: LONGINT ): LONGINT;
+
 	(** The LeaveCriticalSection function releases ownership of the specified critical section object. *)
-	LeaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+	leaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+	
+	PROCEDURE LeaveCriticalSection*(VAR lpCriticalSection: CriticalSection);
+	BEGIN
+		LeaveA2;
+		leaveCriticalSection(lpCriticalSection);
+		ReenterA2;
+	END LeaveCriticalSection;
+	
 	(** The LocalFileTimeToFileTime function converts a local file time to a file time based on the Coordinated
 			Universal Time (UTC). *)
-	LocalFileTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpLocalFileTime: FileTime;
+	VAR LocalFileTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpLocalFileTime: FileTime;
 																						   VAR lpFileTime: FileTime ): BOOL;
 	(** The MoveFileEx function renames an existing file or directory. *)
 	MoveFileEx-: PROCEDURE {WINAPI} ( VAR lpExistingFileName, lpNewFileName: ARRAY   OF CHAR;
@@ -709,6 +735,8 @@ VAR
 	Sleep-: PROCEDURE {WINAPI} ( dwMilliseconds: LONGINT );
 	(** The SuspendThread function suspends the specified thread. *)
 	SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	(** The SuspendThread function suspends the specified thread. *)
+	Wow64SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
 	(** The SystemTimeToFileTime function converts a system time to a file time. *)
 	SystemTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime;
 																					   VAR lpFileTime: FileTime ): BOOL;
@@ -744,6 +772,9 @@ VAR
 
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
+	
+	(** methods to store the GC context before temporarily escaping to Windows -- required because GetContext does not work correctly any more  *)
+	LeaveA2*, ReenterA2*: PROCEDURE;
 
 	(* OutputString*: OutputStringProc; *)
 	Shutdown*: PROCEDURE ( code: LONGINT );
@@ -795,10 +826,16 @@ VAR
 		outputDebugString("Kernel32.Shutdown");
 		ExitProcess(l);
 	END ShutdownP;
+	
+	PROCEDURE Nothing;
+	BEGIN
+	END Nothing;
 
 	PROCEDURE Init*;
 	VAR mod: HMODULE;
 	BEGIN
+		LeaveA2 := Nothing;
+		ReenterA2 := Nothing;
 		Shutdown := ShutdownP;
 		mod := LoadLibrary("Kernel32.DLL");
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
@@ -817,7 +854,7 @@ VAR
 		GetProcAddress(mod, "DeleteFileA",SYSTEM.VAL(ADDRESS,DeleteFile));
 		GetProcAddress(mod, "DisableThreadLibraryCalls",SYSTEM.VAL(ADDRESS,DisableThreadLibraryCalls));
 		GetProcAddress(mod, "DuplicateHandle",SYSTEM.VAL(ADDRESS,DuplicateHandle));
-		GetProcAddress(mod, "EnterCriticalSection",SYSTEM.VAL(ADDRESS,EnterCriticalSection));
+		GetProcAddress(mod, "EnterCriticalSection",SYSTEM.VAL(ADDRESS,enterCriticalSection));
 		GetProcAddress(mod, "EscapeCommFunction",SYSTEM.VAL(ADDRESS,EscapeCommFunction));
 		GetProcAddress(mod, "ExitProcess",SYSTEM.VAL(ADDRESS,ExitProcess));
 		GetProcAddress(mod, "ExitThread",SYSTEM.VAL(ADDRESS,ExitThread));
@@ -862,6 +899,7 @@ VAR
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
 		GetProcAddress(mod, "GetTempPathA",SYSTEM.VAL(ADDRESS,GetTempPath));
 		GetProcAddress(mod, "GetThreadContext",SYSTEM.VAL(ADDRESS,GetThreadContext));
+		GetProcAddress(mod, "Wow64GetThreadContext",SYSTEM.VAL(ADDRESS,Wow64GetThreadContext));
 		GetProcAddress(mod, "GetThreadPriority",SYSTEM.VAL(ADDRESS,GetThreadPriority));
 		GetProcAddress(mod, "GetThreadTimes",SYSTEM.VAL(ADDRESS,GetThreadTimes));
 		GetProcAddress(mod, "GetTickCount",SYSTEM.VAL(ADDRESS,GetTickCount));
@@ -883,7 +921,7 @@ VAR
 		GetProcAddress(mod, "InterlockedDecrement",SYSTEM.VAL(ADDRESS,InterlockedDecrement));
 		GetProcAddress(mod, "InterlockedIncrement",SYSTEM.VAL(ADDRESS,InterlockedIncrement));
 		GetProcAddress(mod, "IsDebuggerPresent",SYSTEM.VAL(ADDRESS,IsDebuggerPresent));
-		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
+		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,leaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
 		GetProcAddress(mod, "MoveFileExA",SYSTEM.VAL(ADDRESS,MoveFileEx));
@@ -920,6 +958,7 @@ VAR
 		GetProcAddress(mod, "SetupComm",SYSTEM.VAL(ADDRESS,SetupComm));
 		GetProcAddress(mod, "Sleep",SYSTEM.VAL(ADDRESS,Sleep));
 		GetProcAddress(mod, "SuspendThread",SYSTEM.VAL(ADDRESS,SuspendThread));
+		GetProcAddress(mod, "Wow64SuspendThread",SYSTEM.VAL(ADDRESS,Wow64SuspendThread));
 		GetProcAddress(mod, "SystemTimeToFileTime",SYSTEM.VAL(ADDRESS,SystemTimeToFileTime));
 		GetProcAddress(mod, "TerminateThread",SYSTEM.VAL(ADDRESS,TerminateThread));
 		GetProcAddress(mod, "TlsAlloc",SYSTEM.VAL(ADDRESS,TlsAlloc));

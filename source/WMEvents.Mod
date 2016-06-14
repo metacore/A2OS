@@ -1,5 +1,19 @@
 MODULE WMEvents; (** AUTHOR "TF"; PURPOSE "Events"; *)
 
+(* EventSource can be extended, e.g. for gatekeeping or statistics.
+ 
+TYPE MyEventSource=OBJECT(WMEvents.EventSource); 
+	PROCEDURE Call();... 
+	
+and in the application:
+TYPE myObject (WMComponents.Component)
+with its initializer containing
+	...
+	NEW(myEventSource,NIL,NIL,NIL,NIL);
+	onChanged:=myEventSource;
+	...
+*)
+
 IMPORT
 	Strings, KernelLog;
 

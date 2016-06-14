@@ -1,21 +1,8 @@
 MODULE WMEvents; (** AUTHOR "TF"; PURPOSE "Events"; *)
-
-(* EventSource can be extended, e.g. for gatekeeping or statistics.
- 
-TYPE MyEventSource=OBJECT(WMEvents.EventSource); 
-	PROCEDURE Call();... 
-	
-and in the application:
-TYPE myObject (WMComponents.Component)
-with its initializer containing
-	...
-	NEW(myEventSource,NIL,NIL,NIL,NIL);
-	onChanged:=myEventSource;
-	...
-*)
+(* PH added rate limited Call procedure*)
 
 IMPORT
-	Strings, KernelLog;
+	Kernel, Objects, Strings, KernelLog;
 
 TYPE
 	String = Strings.String;
@@ -44,14 +31,29 @@ TYPE
 		owner : ANY;
 		finder : CompCommandFinder;
 		next : EventSource;
+		
+		minimalDelay: LONGINT;
+		updateTimer:Kernel.MilliTimer;
+		lastFrameTimer: Objects.Timer;
+		lastPar: ANY;
 
 		(** create an EventInfo for a component owner. Report name as the name of this event *)
 		PROCEDURE &New*(owner : ANY; name, info : String; finder : CompCommandFinder);
 		BEGIN
 			SELF.owner := owner; SELF.name := name; SELF.info := info; SELF.finder := finder;
 			listeners.event := NIL; listeners.string := NIL; listeners.next := NIL;
-			next := NIL;
+			next := NIL; 
+			minimalDelay:=0;
 		END New;
+		
+		PROCEDURE SetMinimalDelay*(ms:LONGINT);
+		BEGIN
+			minimalDelay:=MAX(0,ms);
+			IF minimalDelay>0 THEN
+				Kernel.SetTimer(updateTimer,0);
+				NEW(lastFrameTimer);
+			END;
+		END SetMinimalDelay;
 
 		PROCEDURE GetName*() : String;
 		BEGIN
@@ -160,11 +162,30 @@ TYPE
 				END;
 			END;
 		END CallWithSender;
-
-		(** Call the event with parameter par. The owner of the EventInfo class will be added in the event's sender parameter *)
-		PROCEDURE Call*(par : ANY);
-		BEGIN CallWithSender(owner, par)
+		
+		(** Call the event with parameter par. 
+		The owner of the EventInfo class will be added in the event's sender parameter.
+		The rate of triggered events can be limited by setting minimalDelay>0. *)
+		PROCEDURE Call*(par: ANY);
+		BEGIN
+			IF minimalDelay=0 THEN 
+				CallWithSender(owner, par);  
+			ELSE
+				Objects.CancelTimeout(lastFrameTimer);
+				IF Kernel.Expired(updateTimer) THEN  (* limit rate of triggered events *)	
+					CallWithSender(owner, par);
+					Kernel.SetTimer(updateTimer,minimalDelay);
+				ELSE 
+					lastPar:=par;
+					Objects.SetTimeout(lastFrameTimer, Call0, minimalDelay); (* guarantee that the last call leads to a message*)
+				END;
+			END;
 		END Call;
+
+		PROCEDURE Call0;
+		BEGIN
+			CallWithSender(owner, lastPar);
+		END Call0;
 
 		(** return true if listeners are installed; Can be used to avoid calculating parameters, if there
 		are no listeners *)

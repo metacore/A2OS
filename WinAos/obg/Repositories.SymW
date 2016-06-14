@@ -72,7 +72,7 @@ TYPE
 		refNum: LONGINT; 
 		flags: SET; 
 		timestamp-: LONGINT; 
-		onChanged-: WMEvents.EventSource; 
+		onChanged*: WMEvents.EventSource; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetGenerator*(CONST gen: ARRAY OF CHAR); 

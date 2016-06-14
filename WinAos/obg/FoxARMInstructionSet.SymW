@@ -423,6 +423,7 @@ CONST
 	RESHI* = R1; 
 	RES* = R0; 
 	RESFS* = SR0; 
+	RESFD* = DR0; 
 	NumberRegisters* = 117; 
 	NumberRegisterEntries* = 123; 
 	shiftLSL* = 0; 

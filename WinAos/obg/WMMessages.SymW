@@ -1,5 +1,5 @@
 MODULE WMMessages;
-	IMPORT Strings, KernelLog, Objects, Kernel, Locks, Modules, Reflection, SYSTEM;
+	IMPORT Strings, KernelLog, Objects, Kernel, Locks, Modules, Reflection, SYSTEM, D := Debugging;
 CONST 
 	InitialMsgQSize = 64; 
 	MaxMsgQSize = (32 * 1024); 
@@ -30,7 +30,6 @@ CONST
 	MsgDragDropped* = 1; 
 	Statistics* = FALSE; 
 	TraceQueue = FALSE; 
-	TraceOverflows = TRUE; 
 	MsgTypeMax* = 13; 
 TYPE 
 	CompCommand* = PROCEDURE {DELEGATE}(sender, par: ANY); 
@@ -65,11 +64,23 @@ TYPE
 
 	TrapHandler* = PROCEDURE {DELEGATE}():BOOLEAN; 
 
-	MsgSequencer* = OBJECT {EXCLUSIVE} 
+	MsgQ = OBJECT 
 	VAR 
 		head, num: LONGINT; 
 		msgQ: POINTER TO ARRAY OF Message; 
-		alive, continue, hadOverflow, waiting, stopped: BOOLEAN; 
+		owner: MsgSequencer; 
+
+		PROCEDURE ^  & InitQ(o: MsgSequencer; size: SIZE); 
+		PROCEDURE ^ Grow(trace: BOOLEAN); 
+		PROCEDURE ^ Add*(VAR msg: Message; debug: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Get(VAR msg: Message; debug: BOOLEAN): BOOLEAN; 
+	END MsgQ; 
+
+	MsgSequencer* = OBJECT {EXCLUSIVE} 
+	VAR 
+		msgQ: MsgQ; 
+		invalidateQ: MsgQ; 
+		alive, continue, waiting, stopped: BOOLEAN; 
 		msg: Message; 
 		handler: MessageHandler; 
 		originator: ANY; 
@@ -77,14 +88,11 @@ TYPE
 		lock-: Locks.RWLock; 
 		th, traphandler: TrapHandler; 
 		name*: String; 
-		trapOnOverflow*: BOOLEAN; 
-		overflows: LONGINT; 
 
 		PROCEDURE ^  & New*(handler: MessageHandler); 
 		PROCEDURE ^ SetTrapHandler*(th: TrapHandler); 
 		PROCEDURE ^ IsCallFromSequencer*(): BOOLEAN; 
 		PROCEDURE ^ GetOriginator*(): ANY; 
-		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(VAR msg: Message): BOOLEAN; 
 		PROCEDURE ^ Handle(VAR msg: Message): BOOLEAN; 
 		PROCEDURE ^ ScheduleEvent*(event: CompCommand; sender, par: ANY); 

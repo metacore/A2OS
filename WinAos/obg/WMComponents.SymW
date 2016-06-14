@@ -254,6 +254,7 @@ TYPE
 		PROCEDURE ^ ScaleFont*(height: LONGINT; percent: LONGINT); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ InvalidateRect*(r: Rectangles.Rectangle); 
+		PROCEDURE ^ PostInvalidateCommand*(sender, par: ANY); 
 		PROCEDURE ^ InvalidateCommand*(sender, par: ANY); 
 		PROCEDURE ^ Invalidate*; 
 		PROCEDURE ^ DisableUpdate*; 

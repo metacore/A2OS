@@ -171,6 +171,7 @@ CONST
 	PACK = 17; 
 	UNPK = 18; 
 	UseFPUFlag = \"useFPU"\; 
+	UseFPU64Flag = \"useFPU64"\; 
 TYPE 
 	Operand = InstructionSet.Operand; 
 
@@ -224,9 +225,10 @@ TYPE
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN; 
 		unusable: Ticket; 
 		hint: LONGINT; 
-		useFPU: BOOLEAN; 
+		useFPU32: BOOLEAN; 
+		useFPU64: BOOLEAN; 
 
-		PROCEDURE ^  & InitPhysicalRegisters(supportFramePointer, useFPU, cooperative: BOOLEAN); 
+		PROCEDURE ^  & InitPhysicalRegisters(supportFramePointer, useFPU32, useFPU64, cooperative: BOOLEAN); 
 		PROCEDURE ^ NumberRegisters*(): LONGINT; 
 		PROCEDURE ^ Allocate*(physicalRegisterNumber: LONGINT; ticket: Ticket); 
 		PROCEDURE ^ SetReserved*(physicalRegisterNumber: LONGINT; isReserved: BOOLEAN); 
@@ -242,7 +244,7 @@ TYPE
 	VAR 
 		runtimeModuleName: SyntaxTree.IdentifierString; 
 		backend: BackendARM; 
-		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS: InstructionSet.Operand; 
+		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD: InstructionSet.Operand; 
 		listOfReferences: ListOfReferences; 
 		spillStackStart, pushChainLength: LONGINT; 
 		stackSize: LONGINT; 
@@ -301,6 +303,7 @@ TYPE
 		PROCEDURE ^ EmitFixupBlock; 
 		PROCEDURE ^ OperandFromValue(value: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ SinglePrecisionFloatRegisterFromValue(value: REAL; registerHint: Operand): Operand; 
+		PROCEDURE ^ DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterFromValue(value: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ AllocateStack(allocationSize: LONGINT; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: Operand): BOOLEAN; 
@@ -352,7 +355,8 @@ TYPE
 	VAR 
 		cg: CodeGeneratorARM; 
 		system: Global.System; 
-		useFPU: BOOLEAN; 
+		useFPU32: BOOLEAN; 
+		useFPU64: BOOLEAN; 
 		initLocals: BOOLEAN; 
 
 		PROCEDURE ^  & InitBackendARM; 

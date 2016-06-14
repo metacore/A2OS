@@ -1,7 +1,7 @@
 MODULE WMMessages; (** AUTHOR "TF"; PURPOSE "Support for messages and events"; *)
 
 IMPORT
-	Strings, KernelLog, Objects, Kernel, Locks, Modules, Reflection, SYSTEM;
+	Strings, KernelLog, Objects, Kernel, Locks, Modules, Reflection, SYSTEM, D:= Debugging;
 
 CONST
 	InitialMsgQSize = 64;
@@ -25,7 +25,6 @@ CONST
 	(** Gather statistics about added/discarded messages? *)
 	Statistics* = FALSE;
 	TraceQueue = FALSE;
-	TraceOverflows = TRUE;
 	MsgTypeMax* = 13;
 
 
@@ -86,93 +85,54 @@ TYPE
 	(** The TrapHandler must return TRUE if the process should restart. Otherwise the process is stopped *)
 	TrapHandler* = PROCEDURE {DELEGATE} () : BOOLEAN;
 
-	(** Message sequencer *)
-	MsgSequencer* = OBJECT
+	MsgQ = OBJECT
 	VAR
-		head, num : LONGINT;
-		msgQ : POINTER TO ARRAY (* MsgQSize*)  OF Message;
-		alive, continue, hadOverflow , waiting, stopped: BOOLEAN;
-		msg : Message;
-		handler : MessageHandler;
-		originator : ANY;
-		me : ANY; (* Thread for caller identification *)
-		lock- : Locks.RWLock;
-		th, traphandler : TrapHandler;
-		name* : String;
-		trapOnOverflow* : BOOLEAN;
-		overflows: LONGINT;
-
-		PROCEDURE &New*(handler : MessageHandler);
+		head, num: LONGINT;
+		msgQ: POINTER TO ARRAY OF Message;
+		owner: MsgSequencer;
+		
+		PROCEDURE &InitQ(o: MsgSequencer; size: SIZE);
 		BEGIN
-			SELF.handler := handler;
-			NEW(lock);
 			head := 0; num := 0;
-			originator := NIL; me := NIL; th := NIL; traphandler := NIL;
-			name := NIL;
-			alive := FALSE; continue := TRUE; hadOverflow := FALSE; trapOnOverflow := FALSE;
-			waiting := FALSE; stopped := FALSE;
-			NEW(msgQ, InitialMsgQSize);
-		END New;
-
-		(** Add a trap handler for this process. This handler only decides whether to continue or to abort the process.
-			If continued, the lock will be reset *)
-		PROCEDURE SetTrapHandler*(th : TrapHandler);
-		BEGIN {EXCLUSIVE}
-			traphandler := th
-		END SetTrapHandler;
-
-		(** Return true if called from (this) sequencer *)
-		PROCEDURE IsCallFromSequencer*() : BOOLEAN;
-		BEGIN
-			RETURN Objects.ActiveObject() = me
-		END IsCallFromSequencer;
-
-		(** RETURN the originator (view) of the message that lead directly or indirectly to this request.
-			Returns NIL if the call is not from the sequencer  *)
-		PROCEDURE GetOriginator*() : ANY;
-		BEGIN
-			IF Objects.ActiveObject() = me THEN RETURN originator
-			ELSE RETURN NIL
-			END
-		END GetOriginator;
-
-		PROCEDURE Grow;
+			NEW(msgQ, size);
+			SELF.owner := o;			
+		END InitQ;
+		
+		PROCEDURE Grow(trace: BOOLEAN);
 		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: LONGINT; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
 			type: Modules.TypeDesc; msg: Message;
 		BEGIN
 			NEW(new, LEN(msgQ) * 3 DIV 2);
-
-			IF stopped THEN TRACE("!!!!!!!!!!!!!", stopped) END;
 			FOR i := 0 TO LEN(msgQ)-1 DO
 				new[i] := msgQ[(head+i) MOD LEN(msgQ)];
-				IF TraceOverflows OR stopped THEN
-				msg := new[i];
-				IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
-				TRACE(i,"***************", name);
-				TRACE(i, msg.msgType, msg.msgSubType);
-				TRACE(msg.x, msg.y, msg.dx, msg.dy, msg.flags);
-				IF msg.sender # NIL THEN
-					type := Modules.TypeOf(msg.sender);
-					IF (type # NIL) THEN
-						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
-						TRACE(msg.sender, name);
-					ELSE
-						TRACE(msg.sender);
+				IF trace THEN
+					msg := new[i];
+					IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
+					TRACE(i,"***************", name);
+					TRACE(i, msg.msgType, msg.msgSubType);
+					TRACE(msg.x, msg.y, msg.dx, msg.dy, msg.flags);
+					IF msg.sender # NIL THEN
+						type := Modules.TypeOf(msg.sender);
+						IF (type # NIL) THEN
+							COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
+							TRACE(msg.sender, name);
+						ELSE
+							TRACE(msg.sender);
+						END;
 					END;
-				END;
-				IF msg.msgType = MsgInvokeEvent THEN
-					Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
-					TRACE("Event procedure ", name);
-				END;
-				IF msg.ext # NIL THEN
-					type := Modules.TypeOf(msg.ext);
-					IF (type # NIL) THEN
-						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
-						TRACE(msg.ext, name);
-					ELSE
-						TRACE(msg.ext);
+					IF msg.msgType = MsgInvokeEvent THEN
+						Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
+						TRACE("Event procedure ", name);
 					END;
-				END;
+					IF msg.ext # NIL THEN
+						type := Modules.TypeOf(msg.ext);
+						IF (type # NIL) THEN
+							COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
+							TRACE(msg.ext, name);
+						ELSE
+							TRACE(msg.ext);
+						END;
+					END;
 				END;
 			END;
 			msgQ := new;	head := 0;
@@ -180,9 +140,9 @@ TYPE
 		END Grow;
 
 		(** Add a message to a queue. Discards the message if the queue is full *)
-		PROCEDURE Add*(VAR msg : Message): BOOLEAN;
+		PROCEDURE Add*(VAR msg : Message; debug:BOOLEAN): BOOLEAN;
 		VAR i, pos: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
-		module: Modules.Module; type: Modules.TypeDesc;
+		type: Modules.TypeDesc;
 		CONST
 			MergePointers = TRUE;
 			MergeInvalidates = TRUE;
@@ -202,12 +162,12 @@ TYPE
 			END Merge;
 
 
-		BEGIN {EXCLUSIVE}
-			IF debug = SELF THEN
+		BEGIN
+			IF debug  THEN
 				KernelLog.String("<----");
 				IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
 				TRACE("WMMessages.MsgSequencer.Add", name);
-				TRACE(i, msg.msgType, msg.msgSubType);
+				TRACE(num, msg.msgType, msg.msgSubType);
 				TRACE(msg.x, msg.y, msg.dx, msg.dy);
 				IF msg.sender # NIL THEN
 					type := Modules.TypeOf(msg.sender);
@@ -231,6 +191,7 @@ TYPE
 						TRACE(msg.ext);
 					END;
 				END;
+				D.TraceBack;
 			END;
 
 			IF MergePointers & (msg.msgType = MsgPointer) & (msg.msgSubType = MsgSubPointerMove) & (num > 0) THEN  (* reduce pointer moves in buffer *)
@@ -268,7 +229,7 @@ TYPE
 				IF (msgQ[pos].sender = msg.sender) & (msgQ[pos].msgType = MsgInvalidate) & (msgQ[pos].msgSubType = msg.msgSubType) THEN
 					IF msg.msgSubType= MsgSubRectangle THEN
 						IF Contained(msgQ[pos], msg) THEN
-							IF TraceQueue OR (debug = SELF) THEN
+							IF TraceQueue OR debug THEN
 								TRACE("container first ", msg.x, msg.dx, msg.y, msg.dy);
 								TRACE(msgQ[pos].x, msgQ[pos].dx, msgQ[pos].y, msgQ[pos].dy);
 								KernelLog.Ln;
@@ -277,7 +238,7 @@ TYPE
 							msgQ[pos].x := msg.x; msgQ[pos].y := msg.y; msgQ[pos].dx := msg.dx; msgQ[pos].dy := msg.dy;
 							RETURN TRUE;
 						ELSIF Contained(msg, msgQ[pos]) THEN
-							IF TraceQueue OR (debug = SELF) THEN
+							IF TraceQueue OR debug THEN
 								TRACE("contained first ", msg.x, msg.dx, msg.y, msg.dy);
 								TRACE(msgQ[pos].x, msgQ[pos].dx, msgQ[pos].y, msgQ[pos].dy);
 								KernelLog.Ln;
@@ -293,7 +254,7 @@ TYPE
 						END;
 					ELSIF msg.msgSubType = MsgSubAll THEN
 						(* keep *)
-						IF TraceQueue OR (debug = SELF) THEN
+						IF TraceQueue OR debug THEN
 							TRACE("keep first");
 							KernelLog.Ln;
 						END;
@@ -307,7 +268,7 @@ TYPE
 					IF (msgQ[pos].sender = msg.sender) & (msgQ[pos].msgType = MsgInvalidate) & (msgQ[pos].msgSubType = msg.msgSubType) THEN
 						IF msg.msgSubType= MsgSubRectangle THEN
 							IF Contained(msgQ[pos], msg) THEN
-								IF TraceQueue OR (debug = SELF) THEN
+								IF TraceQueue OR debug THEN
 									TRACE("container  ", pos);
 									TRACE( msg.x, msg.dx, msg.y, msg.dy);
 									TRACE(msgQ[pos].x, msgQ[pos].dx, msgQ[pos].y, msgQ[pos].dy);
@@ -316,7 +277,7 @@ TYPE
 								msgQ[pos].msgSubType := MsgSubNothing;
 								i := 0;
 							ELSIF Contained(msg, msgQ[pos]) THEN
-								IF TraceQueue OR (debug = SELF)  THEN
+								IF TraceQueue OR debug  THEN
 									TRACE("contained  ", pos);
 									TRACE(msg.x, msg.dx, msg.y, msg.dy);
 									TRACE(msgQ[pos].x, msgQ[pos].dx, msgQ[pos].y, msgQ[pos].dy);
@@ -331,7 +292,7 @@ TYPE
 							*)
 							END;
 						ELSIF msgQ[pos].msgSubType = MsgSubAll THEN
-							IF TraceQueue OR (debug = SELF)  THEN
+							IF TraceQueue OR debug  THEN
 								TRACE("replace ", pos);
 							END;
 							msgQ[pos].msgSubType := MsgSubNothing;
@@ -345,7 +306,7 @@ TYPE
 
 			IF num >= MaxMsgQSize THEN RETURN FALSE END;
 			IF num >= LEN(msgQ) THEN
-				Grow
+				Grow(debug)
 			END;
 			IF Statistics THEN
 				INC(messagesAdded);
@@ -354,14 +315,123 @@ TYPE
 				END;
 			END;
 			msgQ[(head + num) MOD LEN(msgQ)] := msg; INC(num);
-			overflows := 0;
 
-			IF debug = SELF THEN
+			IF debug  THEN
+				KernelLog.Ln;
+			END;
+
+			RETURN TRUE;
+		END Add;
+
+		(* Remove a message from the queue. Block if no message is available but awake if queue is terminated by call to Stop *)
+		(* return if alive *)
+		PROCEDURE Get(VAR msg : Message; debug: BOOLEAN) : BOOLEAN;
+		VAR i: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
+			type: Modules.TypeDesc;
+		BEGIN
+			msg := msgQ[head];
+			(* clear references from the queue *)
+			msgQ[head].originator := NIL;
+			msgQ[head].sender := NIL;
+			msgQ[head].ext := NIL;
+
+			head := (head + 1)  MOD LEN(msgQ);
+			DEC(num);
+			owner.originator := msg.originator;
+
+			IF debug THEN
+				KernelLog.String("---->");
+				IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
+				TRACE("WMMessages.MsgSequencer.Get", name);
+				TRACE(i, msg.msgType, msg.msgSubType);
+				TRACE(msg.x, msg.y, msg.dx, msg.dy);
+				IF msg.sender # NIL THEN
+					type := Modules.TypeOf(msg.sender);
+					IF (type # NIL) THEN
+						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
+						TRACE(msg.sender, name);
+					ELSE
+						TRACE(msg.sender);
+					END;
+				END;
+				IF msg.msgType = MsgInvokeEvent THEN
+					Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
+					TRACE("Event procedure ", name);
+				END;
+				IF msg.ext # NIL THEN
+					type := Modules.TypeOf(msg.ext);
+					IF (type # NIL) THEN
+						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
+						TRACE(msg.ext, name);
+					ELSE
+						TRACE(msg.ext);
+					END;
+				END;
 				KernelLog.Ln;
 			END;
 
 
-			RETURN TRUE;
+			RETURN TRUE
+		END Get;
+
+	END MsgQ;
+
+	(** Message sequencer *)
+	MsgSequencer* = OBJECT
+	VAR
+		msgQ: MsgQ;
+		invalidateQ: MsgQ;
+		alive, continue, waiting, stopped: BOOLEAN;
+		msg : Message;
+		handler : MessageHandler;
+		originator : ANY;
+		me : ANY; (* Thread for caller identification *)
+		lock- : Locks.RWLock;
+		th, traphandler : TrapHandler;
+		name* : String;
+
+		PROCEDURE &New*(handler : MessageHandler);
+		BEGIN
+			SELF.handler := handler;
+			NEW(lock);
+			originator := NIL; me := NIL; th := NIL; traphandler := NIL;
+			name := NIL;
+			alive := FALSE; continue := TRUE;
+			waiting := FALSE; stopped := FALSE;
+			NEW(invalidateQ, SELF, InitialMsgQSize);
+			NEW(msgQ, SELF, InitialMsgQSize);
+		END New;
+
+		(** Add a trap handler for this process. This handler only decides whether to continue or to abort the process.
+			If continued, the lock will be reset *)
+		PROCEDURE SetTrapHandler*(th : TrapHandler);
+		BEGIN {EXCLUSIVE}
+			traphandler := th
+		END SetTrapHandler;
+
+		(** Return true if called from (this) sequencer *)
+		PROCEDURE IsCallFromSequencer*() : BOOLEAN;
+		BEGIN
+			RETURN Objects.ActiveObject() = me
+		END IsCallFromSequencer;
+
+		(** RETURN the originator (view) of the message that lead directly or indirectly to this request.
+			Returns NIL if the call is not from the sequencer  *)
+		PROCEDURE GetOriginator*() : ANY;
+		BEGIN
+			IF Objects.ActiveObject() = me THEN RETURN originator
+			ELSE RETURN NIL
+			END
+		END GetOriginator;
+
+		(** Add a message to a queue. Discards the message if the queue is full *)
+		PROCEDURE Add*(VAR msg : Message): BOOLEAN;
+		BEGIN {EXCLUSIVE}
+			IF msg.msgType = MsgInvalidate THEN
+				RETURN invalidateQ.Add(msg, TraceQueue OR (debug = SELF));
+			ELSE
+				RETURN msgQ.Add(msg, TraceQueue OR (debug = SELF));
+			END;
 		END Add;
 
 		PROCEDURE Handle(VAR msg : Message) : BOOLEAN;
@@ -416,63 +486,22 @@ TYPE
 
 		PROCEDURE WaitFree*;
 		BEGIN {EXCLUSIVE}
-			AWAIT (waiting & (num=0) OR ~alive)
+			AWAIT (waiting & (msgQ.num = 0) & (invalidateQ.num = 0) OR ~alive)
 		END WaitFree;
 
 		(* Remove a message from the queue. Block if no message is available but awake if queue is terminated by call to Stop *)
 		(* return if alive *)
 		PROCEDURE Get(VAR msg : Message) : BOOLEAN;
-		VAR i, pos: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
-			module: Modules.Module; type: Modules.TypeDesc;
 		BEGIN {EXCLUSIVE}
-			IF hadOverflow THEN KernelLog.String(" - Recovered"); hadOverflow := FALSE END;
 			waiting := TRUE;
-			AWAIT((num # 0) OR ~alive);
+			AWAIT((msgQ.num # 0) OR (invalidateQ.num # 0) OR ~alive);
 			waiting := FALSE;
 			IF ~alive THEN RETURN FALSE END;
-			msg := msgQ[head];
-			(* clear references from the queue *)
-			msgQ[head].originator := NIL;
-			msgQ[head].sender := NIL;
-			msgQ[head].ext := NIL;
-
-			head := (head + 1)  MOD LEN(msgQ);
-			DEC(num);
-			originator := msg.originator;
-
-			IF debug = SELF THEN
-				KernelLog.String("---->");
-				IF msg.msgType < LEN(MsgName) THEN COPY(MsgName[msg.msgType], name) ELSE name := "" END;
-				TRACE("WMMessages.MsgSequencer.Get", name);
-				TRACE(i, msg.msgType, msg.msgSubType);
-				TRACE(msg.x, msg.y, msg.dx, msg.dy);
-				IF msg.sender # NIL THEN
-					type := Modules.TypeOf(msg.sender);
-					IF (type # NIL) THEN
-						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
-						TRACE(msg.sender, name);
-					ELSE
-						TRACE(msg.sender);
-					END;
-				END;
-				IF msg.msgType = MsgInvokeEvent THEN
-					Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
-					TRACE("Event procedure ", name);
-				END;
-				IF msg.ext # NIL THEN
-					type := Modules.TypeOf(msg.ext);
-					IF (type # NIL) THEN
-						COPY(type.mod.name, name); Strings.Append(name, "."); Strings.Append(name, type.name);
-						TRACE(msg.ext, name);
-					ELSE
-						TRACE(msg.ext);
-					END;
-				END;
-				KernelLog.Ln;
+			IF msgQ.num # 0 THEN
+				RETURN msgQ.Get(msg, TraceQueue OR (debug = SELF));
+			ELSE
+				RETURN invalidateQ.Get(msg, TraceQueue OR (debug = SELF));
 			END;
-
-
-			RETURN TRUE
 		END Get;
 
 	BEGIN {ACTIVE, SAFE}
@@ -553,3 +582,6 @@ BEGIN
 	MsgName[MsgInvalidate] := "MsgInvalidate";
 	MsgName[MsgSerialize] := "MsgSerialize";
 END WMMessages.
+
+
+Release.Rebuild  --path="" WinAosNewObjectFile WMMessages.Mod ~

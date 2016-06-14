@@ -923,7 +923,7 @@ TYPE
 			ELSIF property = visible THEN Resized (*Implicit Invalidate*)
 			(* ELSIF takesFocus, needsTab...*)			
 			ELSIF property = editMode THEN Invalidate;
-			ELSIF property = model THEN LinkChanged(model, model.Get()); Invalidate;
+			ELSIF property = model THEN LinkChanged(model, model.Get());
 			ELSE PropertyChanged^(sender, property)
 			END;
 		END PropertyChanged;
@@ -1497,27 +1497,34 @@ TYPE
 				END
 			END
 		END InvalidateRect;
+		
+		PROCEDURE PostInvalidateCommand*(sender, par : ANY);
+		VAR m: Messages.Message; r, b: Rectangles.Rectangle; client: VisualComponent; parent: XML.Element;
+		BEGIN
+			IF ~initialized OR ~visible.Get() THEN RETURN END; (*? double call to visible.Get here and below. Which one is better ?*)
+			r := GetClientRect();
+			client := SELF;
+			parent := GetParent();
+			WHILE (parent # NIL) & (parent IS VisualComponent) DO
+				IF ~parent(VisualComponent).visible.Get() THEN RETURN END;
+				b := client.bounds.Get();
+				Rectangles.MoveRel(r, b.l, b.t);
+				client := parent(VisualComponent);
+				parent := client.GetParent();
+			END;
+			m.msgType := Messages.MsgInvalidate;
+			m.msgSubType := Messages.MsgSubRectangle;
+			m.x := r.l; m.y := r.t; m.dx := r.r; m.dy := r.b;
+			m.sender := client;
+			IF sequencer.Add(m) THEN IF CanYield THEN Objects.Yield END END;			
+		END PostInvalidateCommand;
 
 		PROCEDURE InvalidateCommand*(sender, par : ANY);
 		VAR m: Messages.Message; r, b: Rectangles.Rectangle; client: VisualComponent; parent: XML.Element;
 		BEGIN
 			IF ~initialized OR ~visible.Get() THEN RETURN END; (*? double call to visible.Get here and below. Which one is better ?*)
 			IF ~IsCallFromSequencer() OR ~visible.Get() THEN
-				r := GetClientRect();
-				client := SELF;
-				parent := GetParent();
-				WHILE (parent # NIL) & (parent IS VisualComponent) DO
-					IF ~parent(VisualComponent).visible.Get() THEN RETURN END;
-					b := client.bounds.Get();
-					Rectangles.MoveRel(r, b.l, b.t);
-					client := parent(VisualComponent);
-					parent := client.GetParent();
-				END;
-				m.msgType := Messages.MsgInvalidate;
-				m.msgSubType := Messages.MsgSubRectangle;
-				m.x := r.l; m.y := r.t; m.dx := r.r; m.dy := r.b;
-				m.sender := client;
-				IF sequencer.Add(m) THEN IF CanYield THEN Objects.Yield END END;
+				PostInvalidateCommand(sender, par); 
 			ELSE
 				InvalidateRect(GetClientRect());
 			END;
@@ -1525,7 +1532,7 @@ TYPE
 
 		PROCEDURE Invalidate*; (* For convenience in component internal use *)
 		BEGIN
-			InvalidateCommand(SELF, NIL)
+			PostInvalidateCommand(SELF, NIL)
 		END Invalidate;
 
 		(** recursively disable the redrawing of any components in the hierarchy *)

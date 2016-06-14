@@ -102,7 +102,7 @@ TYPE
 		repository : Repository; name : Strings.String; refNum : LONGINT;
 		flags : SET;
 		timestamp- : LONGINT;
-		onChanged- : WMEvents.EventSource; (* for update mechanisms, basically every component needs a feature to inform about updates *)
+		onChanged* : WMEvents.EventSource; (* for update mechanisms, basically every component needs a feature to inform about updates *)
 
 		PROCEDURE &Init*;
 		BEGIN

@@ -10917,7 +10917,7 @@ TYPE
 				InitVariables(scope);
 				
 				
-				IF PreciseGCSupport & (x.code = NIL) & (~procedureType.noPAF) THEN
+				IF PreciseGCSupport & (x.code = NIL) & (~procedureType.noPAF) & ~procedure.isEntry THEN
 					GetCodeSectionNameForSymbol(procedure, name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
@@ -10926,7 +10926,6 @@ TYPE
 					IntermediateCode.InitMemory(left,addressType,fp,0);
 					Emit(Mov(position, left, right));
 				END;
-								
 				IF x.code = NIL THEN
 					VisitStatementBlock(x);
 				ELSE

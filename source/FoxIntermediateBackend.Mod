@@ -100,7 +100,6 @@ CONST
 		Size8Flag = 10; (* size = 8 *)
 		
 		ReflectionSupport = TRUE;
-		PreciseGCSupport = TRUE;
 		(* Solution for identifying procedure descriptors on the stack and for being able to differentiate "old school" stack frames from the underlying operating system stack frames:
 			push a procedure desriptor plus one to where the BP pointer would be located. The misalignment of the procedure descriptor makes it possible to identify that it is not
 			a base pointer but a procedure descriptor. The base pointer itself is in such cases located at BP + address size.
@@ -1571,7 +1570,7 @@ TYPE
 				ELSE
 					body := NIL;
 				END;
-				IF PreciseGCSupport & (body # NIL) & (body.code = NIL) THEN
+				IF backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
 					Emit(Push(-1, one)) ;
 					procedureType.SetParametersOffset(1); 
 					ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
@@ -1616,7 +1615,7 @@ TYPE
 				body := NIL;
 			END;
 
-			IF backend.cooperative OR PreciseGCSupport & (body # NIL) & (body.code = NIL) THEN
+			IF backend.cooperative OR  backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
 				IntermediateCode.InitImmediate(op2,addressType, ToMemoryUnits(system, system.addressSize));
 				Emit(Add(position, sp, fp, op2));
 			ELSE
@@ -9100,7 +9099,7 @@ TYPE
 				result.op := basereg;
 				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
-				IF backend.cooperative OR PreciseGCSupport THEN
+				IF backend.cooperative OR backend.preciseGC THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
 				(* tag must be loaded when dereferencing SELF pointer *)
@@ -9306,13 +9305,13 @@ TYPE
 			IF scope # baseScope THEN
 				(* left := [fp+8] *)
 				IntermediateCode.InitMemory(right,addressType,fp,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative OR PreciseGCSupport THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative OR backend.preciseGC THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				ReuseCopy(left,right);
 				ReleaseIntermediateOperand(right);
 				scope := scope.outerScope; DEC(level);
 				(* { left := [left+8] } *)
 				IntermediateCode.InitMemory(right,addressType,left,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative  OR PreciseGCSupport THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative  OR backend.preciseGC THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				WHILE (scope # baseScope) & (scope IS SyntaxTree.ProcedureScope) DO
 					Emit(Mov(position,left,right));
 					scope := scope.outerScope; DEC(level);
@@ -10917,7 +10916,7 @@ TYPE
 				InitVariables(scope);
 				
 				
-				IF PreciseGCSupport & (x.code = NIL) & (~procedureType.noPAF) & ~procedure.isEntry THEN
+				IF backend.preciseGC & (x.code = NIL) & (~procedureType.noPAF) & ~procedure.isEntry THEN
 					GetCodeSectionNameForSymbol(procedure, name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
@@ -12677,7 +12676,7 @@ TYPE
 					IF scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).isDelegate THEN 
 						parametersSize := ProcedureParametersSize(module.system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
 						INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
-						IF PreciseGCSupport THEN
+						IF implementationVisitor.backend.preciseGC THEN
 							INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
 						END;
 						Symbol(source, NIL, 0, parametersSize); INC(numberPointers);
@@ -13118,6 +13117,8 @@ TYPE
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
+		preciseGC: BOOLEAN; 
+		
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
 			simpleMetaData := FALSE;
@@ -13217,6 +13218,7 @@ TYPE
 			options.Add('o',"optimize", Options.Flag);
 			options.Add(0X,"preregisterStatic", Options.Flag);
 			options.Add(0X,"cellsAreObjects", Options.Flag);
+			options.Add(0X,"preciseGC", Options.Flag);
 		END DefineOptions;
 
 		PROCEDURE GetOptions(options: Options.Options);
@@ -13245,6 +13247,8 @@ TYPE
 			optimize := options.GetFlag("optimize");
 			preregisterStatic := options.GetFlag("preregisterStatic");
 			cellsAreObjects := options.GetFlag("cellsAreObjects");
+			preciseGC := options.GetFlag("preciseGC");
+
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;

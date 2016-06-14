@@ -559,7 +559,7 @@ BEGIN
 	NEW(platforms,8);
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
 	AddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtensions=.Obw --symbolFileExtension=.Obw");
-	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW");
+	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC");
 	AddPlatform("Minos","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
 	AddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
 	AddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");

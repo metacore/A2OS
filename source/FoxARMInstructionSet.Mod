@@ -279,7 +279,7 @@ CONST
 	FPSID* = 114; FPSCR* = 115; FPEXC* = 116;
 
 	(* register aliases *)
-	PC*= R15; LR*= R14; SP*= R13; FP*= R12; RESHI *= R1; RES *= R0; RESFS *= SR0;
+	PC*= R15; LR*= R14; SP*= R13; FP*= R12; RESHI *= R1; RES *= R0; RESFS *= SR0; RESFD* = DR0;
 
 	NumberRegisters*= 117; (* the number of physical registers *)
 	NumberRegisterEntries*= 123; (* the number of register names *)

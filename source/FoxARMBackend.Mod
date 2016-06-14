@@ -104,6 +104,7 @@ CONST
 	PACK = 17; UNPK = 18;
 
 	UseFPUFlag = "useFPU";
+	UseFPU64Flag = "useFPU64";
 
 TYPE
 	Operand = InstructionSet.Operand;
@@ -260,14 +261,16 @@ TYPE
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN;
 		unusable: Ticket;
 		hint: LONGINT;
-		useFPU: BOOLEAN;
+		useFPU32:BOOLEAN;
+		useFPU64:BOOLEAN;
 
-		PROCEDURE & InitPhysicalRegisters(supportFramePointer, useFPU, cooperative: BOOLEAN);
+		PROCEDURE & InitPhysicalRegisters(supportFramePointer, useFPU32, useFPU64, cooperative: BOOLEAN);
 		VAR
 			i: LONGINT;
 			unusable: Ticket;
 		BEGIN
-			SELF.useFPU := useFPU;
+			SELF.useFPU32 := useFPU32;
+			SELF.useFPU64 := useFPU64;
 
 			FOR i := 0 TO LEN(toVirtual) - 1 DO
 				toVirtual[i] := NIL;
@@ -279,6 +282,7 @@ TYPE
 			toVirtual[InstructionSet.RES] := unusable; (* low part result register *)
 			toVirtual[InstructionSet.RESHI] := unusable; (* high part result register *)
 			toVirtual[InstructionSet.RESFS] := unusable; (* single precision floatin point result register *)
+			toVirtual[InstructionSet.RESFD] := unusable; (* single precision floatin point result register *)
 			toVirtual[InstructionSet.SP] := unusable; (* stack pointer *)
 			toVirtual[InstructionSet.FP] := unusable; (* frame pointer *)
 			toVirtual[InstructionSet.PC] := unusable; (* program counter *)
@@ -293,14 +297,16 @@ TYPE
 			(* disable coprocessor registers *)
 			FOR i := InstructionSet.CR0 TO InstructionSet.CR15 DO toVirtual[i] := unusable END;
 
-			IF ~useFPU THEN
+			IF ~useFPU32 THEN
 				(* disable single precision VFP registers *)
 				FOR i := InstructionSet.SR0 TO InstructionSet.SR15 DO toVirtual[i] := unusable END
 			END;
 
-			(* disable double precision VFP registers *)
-			FOR i := InstructionSet.DR0 TO InstructionSet.DR15 DO toVirtual[i] := unusable END;
-
+			IF ~useFPU64 THEN
+				(* disable double precision VFP registers *)
+				FOR i := InstructionSet.DR0 TO InstructionSet.DR15 DO toVirtual[i] := unusable END;
+			END; 
+			
 		END InitPhysicalRegisters;
 
 		(** the number of physical registers **)
@@ -342,7 +348,7 @@ TYPE
 		BEGIN
 			result := None;
 
-			IF (type.form IN IntermediateCode.Integer) OR ~useFPU THEN
+			IF (type.form IN IntermediateCode.Integer) THEN
 				ASSERT(type.sizeInBits <= 32); (* integers of larger size have already been split *)
 
 				(* allocate a regular general purpose ARM register *)
@@ -351,16 +357,20 @@ TYPE
 				END
 
 			ELSIF type.form = IntermediateCode.Float THEN
-				IF type.sizeInBits = 32 THEN
+				IF (type.sizeInBits = 32) & useFPU32 THEN
 					(* allocate a single precision VFP register *)
 					FOR i := InstructionSet.SR0 TO InstructionSet.SR31 DO
 						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
 					END
-				ELSIF type.sizeInBits = 64 THEN
-					(* allocate a double precision VFP register *)
-					HALT(200); (* not supported yet *)
+				ELSIF (type.sizeInBits = 64) & (useFPU64)  THEN
+						FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO
+							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
+						END				
 				ELSE
-					HALT(100)
+						(* allocate a regular general purpose ARM register *)
+						FOR i := InstructionSet.R0 TO InstructionSet.R15 DO
+							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
+						END
 				END
 
 			ELSE
@@ -406,7 +416,7 @@ TYPE
 		runtimeModuleName: SyntaxTree.IdentifierString;
 		backend: BackendARM;
 
-		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS: InstructionSet.Operand;
+		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD: InstructionSet.Operand;
 
 		listOfReferences: ListOfReferences;
 
@@ -426,9 +436,9 @@ TYPE
 			SELF.runtimeModuleName := runtimeModuleName;
 			SELF.backend := backend;
 
-			IF Trace THEN IF backend.useFPU THEN D.String("use FPU"); D.Ln ELSE D.String("don't use FPU"); D.Ln END END;
+			IF Trace THEN IF backend.useFPU32 THEN D.String("use FPU"); D.Ln ELSE D.String("don't use FPU"); D.Ln END END;
 
-			NEW(physicalRegisters, TRUE, backend.useFPU, backend.cooperative);
+			NEW(physicalRegisters, TRUE, backend.useFPU32, backend.useFPU64, backend.cooperative);
 			InitTicketGenerator(diagnostics, backend.optimize, 2, physicalRegisters);
 			error := FALSE;
 
@@ -442,6 +452,7 @@ TYPE
 			opRES := InstructionSet.NewRegister(InstructionSet.RES, None, None, 0);
 			opRESHI := InstructionSet.NewRegister(InstructionSet.RESHI, None, None, 0);
 			opRESFS := InstructionSet.NewRegister(InstructionSet.RESFS, None, None, 0);
+			opRESFD := InstructionSet.NewRegister(InstructionSet.RESFD, None, None, 0);
 
 			dump := NIL;
 
@@ -515,27 +526,26 @@ TYPE
 				IF (irInstruction.opcode = IntermediateCode.mul) & IsInteger(irInstruction.op1) & IsInteger(irInstruction.op2) & (IsComplex(irInstruction.op1) OR IsComplex(irInstruction.op2)) THEN
 					result := FALSE;
 				ELSE
-					result := backend.useFPU & IsSinglePrecisionFloat(irInstruction.op1) OR ~IsFloat(irInstruction.op1)
+					result :=  ~IsFloat(irInstruction.op1) OR backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
 				END;
 
 			| IntermediateCode.div:
-				result := backend.useFPU & IsSinglePrecisionFloat(irInstruction.op1);
+				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
 				(*
 				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
 				*)
 
 			| IntermediateCode.conv:
-				result := backend.useFPU & (IsSinglePrecisionFloat(irInstruction.op1) OR IsSinglePrecisionFloat(irInstruction.op2)) OR ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2) (* if no FPU and either operand is a float *)
-
+				result := ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2)
+									OR backend.useFPU32 & ~IsDoublePrecisionFloat(irInstruction.op1) & ~IsDoublePrecisionFloat(irInstruction.op2)
+									OR backend.useFPU64;
 			| IntermediateCode.mod:
 				result := FALSE;
 				(*
 				result := IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
 				*)
-
 			| IntermediateCode.rol, IntermediateCode.ror:
 				result := ~IsComplex(irInstruction.op1)
-
 			ELSE
 				result := TRUE
 			END;
@@ -958,9 +968,10 @@ TYPE
 		(** whether a register can hold data of a certain IR type **)
 		PROCEDURE IsRegisterForType(registerNumber: LONGINT; CONST type: IntermediateCode.Type): BOOLEAN;
 		VAR
-			result: BOOLEAN;
+			result: BOOLEAN; form:LONGINT;
 		BEGIN
 			result := FALSE;
+			form := type.form;
 			IF type.form IN IntermediateCode.Integer THEN
 				IF type.sizeInBits <= 32 THEN
 					result := (registerNumber >= InstructionSet.R0) & (registerNumber <= InstructionSet.R15)
@@ -969,7 +980,7 @@ TYPE
 				IF type.sizeInBits = 32 THEN
 					result := (registerNumber >= InstructionSet.SR0) & (registerNumber <= InstructionSet.SR31)
 				ELSE
-					HALT(200)
+					result := (registerNumber >= InstructionSet.DR0) & (registerNumber <= InstructionSet.DR31)
 				END
 			ELSE
 				HALT(100)
@@ -1014,7 +1025,7 @@ TYPE
 
 		PROCEDURE Load(targetRegister, memoryOperand: Operand; irType: IntermediateCode.Type);
 		BEGIN
-			IF (irType.form IN IntermediateCode.Integer) OR ~(backend.useFPU) THEN
+			IF (irType.form IN IntermediateCode.Integer)  THEN
 				CASE irType.sizeInBits OF
 				| 8: Emit2WithFlags(opLDR, targetRegister, memoryOperand, {InstructionSet.flagB}) (* LDRB *)
 				| 16: Emit2WithFlags(opLDR, targetRegister, memoryOperand, {InstructionSet.flagH}) (* LDRH *)
@@ -1023,8 +1034,21 @@ TYPE
 				ELSE HALT(100)
 				END
 			ELSIF irType.form = IntermediateCode.Float THEN
-				ASSERT(irType.sizeInBits = 32, 200);
-				Emit2(opFLDS, targetRegister, memoryOperand)
+				IF irType.sizeInBits=32 THEN
+					IF backend.useFPU32 THEN
+						ASSERT(irType.sizeInBits = 32, 200);
+						Emit2(opFLDS, targetRegister, memoryOperand)
+					ELSE
+						Emit2(opLDR, targetRegister, memoryOperand)
+					END;
+				ELSE
+					IF backend.useFPU64 THEN
+						ASSERT(irType.sizeInBits = 64, 200);
+						Emit2(opFLDD, targetRegister, memoryOperand)
+					ELSE
+						Emit2(opLDR, targetRegister, memoryOperand)
+					END;
+				END;
 			ELSE
 				HALT(100)
 			END
@@ -1032,7 +1056,7 @@ TYPE
 
 		PROCEDURE Store(sourceRegister, memoryOperand: Operand; type: IntermediateCode.Type);
 		BEGIN
-			IF (type.form IN IntermediateCode.Integer) OR ~backend.useFPU THEN
+			IF (type.form IN IntermediateCode.Integer) THEN
 				CASE type.sizeInBits OF
 				| 8: Emit2WithFlags(opSTR, sourceRegister, memoryOperand, {InstructionSet.flagB}) (* STRB *)
 				| 16: Emit2WithFlags(opSTR, sourceRegister, memoryOperand, {InstructionSet.flagH}) (* STRH *)
@@ -1040,8 +1064,13 @@ TYPE
 				ELSE HALT(100)
 				END
 			ELSIF type.form = IntermediateCode.Float THEN
-				ASSERT(type.sizeInBits = 32, 200);
-				Emit2(opFSTS, sourceRegister, memoryOperand)
+				IF (type.sizeInBits = 32) & backend.useFPU32 THEN
+					Emit2(opFSTS, sourceRegister, memoryOperand)
+				ELSIF (type.sizeInBits=64) & backend.useFPU64 THEN
+					Emit2(opFSTD, sourceRegister, memoryOperand)
+				ELSE
+					Emit2(opSTR, sourceRegister, memoryOperand)
+				END;
 			ELSE
 				HALT(100)
 			END
@@ -1188,14 +1217,14 @@ TYPE
 				ELSE
 					ASSERT(irOperand.offset = 0);
 					IF IsInteger(irOperand) THEN result := RegisterFromValue(ValueOfPart(irOperand.intValue, part), registerHint)
-					ELSIF ~backend.useFPU THEN
+					ELSIF IsSinglePrecisionFloat(irOperand) & backend.useFPU32 THEN result := SinglePrecisionFloatRegisterFromValue(REAL(irOperand.floatValue), registerHint)
+					ELSIF IsDoublePrecisionFloat(irOperand) & backend.useFPU64 THEN result := DoublePrecisionFloatRegisterFromValue(irOperand.floatValue, registerHint)
+					ELSE
 						IF IsSinglePrecisionFloat(irOperand) THEN
 							result := RegisterFromValue(BinaryCode.ConvertReal(SHORT(irOperand.floatValue)), registerHint)
 						ELSE
 							result := RegisterFromValue(ValueOfPart(BinaryCode.ConvertLongreal(irOperand.floatValue),part), registerHint);
 						END;
-					ELSIF IsSinglePrecisionFloat(irOperand) THEN result := SinglePrecisionFloatRegisterFromValue(REAL(irOperand.floatValue), registerHint)
-					ELSE HALT(200)
 					END
 
 				END
@@ -1213,10 +1242,10 @@ TYPE
 		VAR
 			result: BOOLEAN;
 		BEGIN
-			IF (irOperand.type.form IN IntermediateCode.Integer) OR ~backend.useFPU THEN
+			IF (irOperand.type.form IN IntermediateCode.Integer) THEN
 				result := irOperand.type.sizeInBits > 32 (* integers above 32 bits have to be represented in multiple registers *)
 			ELSIF irOperand.type.form = IntermediateCode.Float THEN
-				result := FALSE (* for all types of floating point numbers there are dedicated VFP registers *)
+				result := (irOperand.type.sizeInBits > 32) & ~backend.useFPU64 (* integers above 32 bits have to be represented in multiple registers *)
 			ELSE
 				HALT(100)
 			END;
@@ -1257,27 +1286,17 @@ TYPE
 		PROCEDURE GetPartType(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type);
 		BEGIN
 			ASSERT((part = Low) OR (part = High));
-			IF (type.form = IntermediateCode.Float) & backend.useFPU THEN
+			IF (type.sizeInBits <= 32) OR (type.form = IntermediateCode.Float) & backend.useFPU64 THEN
 				IF part = Low THEN
 					partType := type
 				ELSE
 					partType := IntermediateCode.undef
 				END
-			ELSIF (type.form IN IntermediateCode.Integer) OR ~backend.useFPU THEN
-				IF type.sizeInBits <= 32 THEN
-					IF part = Low THEN
-						partType := type
-					ELSE
-						partType := IntermediateCode.undef
-					END
-				ELSIF type.sizeInBits = 64 THEN
-					IF part = Low THEN
-						partType := IntermediateCode.NewType(IntermediateCode.UnsignedInteger, 32) (* conceptually the low part is always unsigned *)
-					ELSE
-						partType := IntermediateCode.NewType(type.form, 32)
-					END
+			ELSIF type.sizeInBits = 64 THEN
+				IF part = Low THEN
+					partType := IntermediateCode.NewType(IntermediateCode.UnsignedInteger, 32) (* conceptually the low part is always unsigned *)
 				ELSE
-					HALT(100)
+					partType := IntermediateCode.NewType(type.form, 32)
 				END
 			ELSE
 				HALT(100)
@@ -1526,6 +1545,25 @@ TYPE
 			ASSERT((result.register >= InstructionSet.SR0) & (result.register <= InstructionSet.SR31));
 			RETURN result;
 		END SinglePrecisionFloatRegisterFromValue;
+
+		(** get a single precision VFP register that holds a certain floating point value **)
+		PROCEDURE DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand;
+		VAR
+			intValue, dummy: LONGINT;
+			result, temp: Operand;
+		BEGIN
+			intValue := SYSTEM.VAL(LONGINT, value);
+			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
+
+			temp := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(64), registerHint);
+			dummy := ValueComposition(intValue, TRUE, temp);
+			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(64), registerHint);
+			Emit2(opFMSR, result, temp);
+
+			ASSERT(result.mode = InstructionSet.modeRegister);
+			ASSERT((result.register >= InstructionSet.SR0) & (result.register <= InstructionSet.SR31));
+			RETURN result;
+		END DoublePrecisionFloatRegisterFromValue;
 
 		(** get an ARM register that holds a certain integer value
 		- if a register hint is present, it is used **)
@@ -1923,7 +1961,7 @@ TYPE
 			(* registerSR0, registerSR1, registerSR2: Operand; *)
 		BEGIN
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
-				ASSERT(backend.useFPU);
+				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				IF irInstruction.opcode = IntermediateCode.add THEN
 					Emit3(opFADDS, destination, left, right)
@@ -2032,11 +2070,15 @@ TYPE
 			destination, left, right: ARRAY 2 OF Operand;
 		BEGIN
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
-				ASSERT(backend.useFPU);
+				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
 				Emit3(opFMULS, destination[Low], left[Low], right[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
-
+			ELSIF IsDoublePrecisionFloat(irInstruction.op1) THEN
+				ASSERT(backend.useFPU64);
+				PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
+				Emit3(opFMULD, destination[Low], left[Low], right[Low]);
+				WriteBack(irInstruction.op1, Low, destination[Low])
 			ELSIF IsInteger(irInstruction.op1) THEN
 				IF IsComplex(irInstruction.op1) THEN
 					ASSERT(irInstruction.op1.type.form = IntermediateCode.SignedInteger);
@@ -2070,7 +2112,7 @@ TYPE
 			destination, left, right: Operand;
 		BEGIN
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
-				ASSERT(backend.useFPU);
+				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				Emit3(opFDIVS, destination, left, right);
 				WriteBack(irInstruction.op1, Low, destination)
@@ -2117,7 +2159,7 @@ TYPE
 					WriteBack(irInstruction.op1, Low, destination[Low])
 				END
 			ELSIF IsSinglePrecisionFloat(irInstruction.op1) THEN
-				ASSERT(backend.useFPU);
+				ASSERT(backend.useFPU32);
 				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
 				Emit2(opFABSS, destination[Low], source[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
@@ -2148,7 +2190,7 @@ TYPE
 					WriteBack(irInstruction.op1, Low, destination[Low])
 				END
 			ELSIF IsSinglePrecisionFloat(irInstruction.op1) THEN
-				ASSERT(backend.useFPU);
+				ASSERT(backend.useFPU32);
 				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
 				Emit2(opFNEGS, destination[Low], source[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
@@ -2595,7 +2637,7 @@ TYPE
 			PROCEDURE Cmp(CONST left, right: InstructionSet.Operand; float: BOOLEAN);
 			BEGIN
 				IF float THEN
-					IF ~backend.useFPU OR IsComplex(irLeft) (* 64 bit *) THEN
+					IF ~backend.useFPU32 OR IsComplex(irLeft) (* 64 bit *) THEN
 						(* floating point comparisons without VFP unit *)
 						temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
 						Emit3WithFlags(opAND, temp, left, right, {InstructionSet.flagS});
@@ -2813,7 +2855,7 @@ TYPE
 						END
 
 					ELSIF IsSinglePrecisionFloat(irSource) THEN
-						ASSERT(backend.useFPU);
+						ASSERT(backend.useFPU32);
 						(* single precision float to complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
@@ -2842,7 +2884,7 @@ TYPE
 						SignOrZeroExtendOperand(source[Low], partType);
 						MovIfDifferent(destination[Low], source[Low])
 					ELSIF IsSinglePrecisionFloat(irSource) THEN
-						ASSERT(backend.useFPU);
+						ASSERT(backend.useFPU32);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
@@ -2893,14 +2935,28 @@ TYPE
 		VAR
 			result: Operand;
 		BEGIN
-			IF (type.form IN IntermediateCode.Integer) OR ~(backend.useFPU) THEN
+			IF (type.form IN IntermediateCode.Integer) THEN
 				IF part = Low THEN result := opRES
 				ELSIF part = High THEN result := opRESHI
 				ELSE HALT(200)
 				END
 			ELSIF type.form = IntermediateCode.Float THEN
-				ASSERT(type.sizeInBits = 32, 200);
-				result := opRESFS
+				IF (type.sizeInBits = 32) THEN 
+					IF backend.useFPU32 THEN
+						result := opRESFS
+					ELSE 
+						result := opRES
+					END;
+				ELSE
+					IF backend.useFPU64 THEN
+						result := opRESFD
+					ELSE
+						IF part = Low THEN result := opRES
+						ELSIF part = High THEN result := opRESHI
+						ELSE HALT(200)
+						END
+					END;
+				END;
 			END;
 			RETURN result
 		END ResultRegister;
@@ -3071,12 +3127,14 @@ TYPE
 	VAR
 		cg: CodeGeneratorARM;
 		system: Global.System;
-		useFPU: BOOLEAN;
+		useFPU32: BOOLEAN;
+		useFPU64: BOOLEAN;
 		initLocals: BOOLEAN;
 
 		PROCEDURE & InitBackendARM;
 		BEGIN
-			useFPU := FALSE;
+			useFPU32 := FALSE;
+			useFPU64 := FALSE;
 			InitIntermediateBackend;
 			SetRuntimeModuleName(DefaultRuntimeModuleName);
 			SetNewObjectFile(TRUE,FALSE);
@@ -3401,13 +3459,15 @@ TYPE
 		PROCEDURE DefineOptions(options: Options.Options);
 		BEGIN
 			options.Add(0X, UseFPUFlag, Options.Flag);
+			options.Add(0X, UseFPU64Flag, Options.Flag);
 			options.Add(0X, "noInitLocals", Options.Flag);
 			DefineOptions^(options);
 		END DefineOptions;
 
 		PROCEDURE GetOptions(options: Options.Options);
 		BEGIN
-			IF options.GetFlag(UseFPUFlag) THEN useFPU := TRUE END;
+			IF options.GetFlag(UseFPUFlag) THEN useFPU32 := TRUE END;
+			IF options.GetFlag(UseFPU64Flag) THEN useFPU64 := TRUE; useFPU32 := TRUE END;
 			IF options.GetFlag("noInitLocals") THEN initLocals := FALSE END;
 			GetOptions^(options);
 		END GetOptions;

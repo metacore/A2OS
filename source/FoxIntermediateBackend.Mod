@@ -10551,7 +10551,8 @@ TYPE
 		END StatementSequence;
 
 		PROCEDURE PushSelfPointer;
-		VAR scope: SyntaxTree.Scope;  op: Operand; moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
+		VAR scope: SyntaxTree.Scope;  op: Operand; moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT; procedure: SyntaxTree.Procedure;
+			procedureType: SyntaxTree.ProcedureType;
 		BEGIN
 			scope := currentScope;
 			WHILE(scope.outerScope IS SyntaxTree.ProcedureScope) DO
@@ -10572,9 +10573,11 @@ TYPE
 				END;
 			ELSE
 				GetBaseRegister(op.op,currentScope,scope);
-				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
-				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
-				IF backend.cooperative OR PreciseGCSupport THEN
+				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
+				parametersSize := ProcedureParametersSize(system,procedure);
+				IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits)*(procedureType.parametersOffset+1)+parametersSize);
+				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(op.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
 				IntermediateCode.MakeMemory(op.op,addressType);

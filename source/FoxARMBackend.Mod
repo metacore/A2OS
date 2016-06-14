@@ -151,6 +151,17 @@ TYPE
 
 	END ImmediateReference;
 
+	ImmediateHReference = OBJECT (Reference)
+	VAR value: HUGEINT;
+
+		PROCEDURE & InitImm(v: HUGEINT);
+		BEGIN
+			Init;
+			SELF.value := v;
+		END InitImm;
+
+	END ImmediateHReference;
+
 	(* a reference to a symbol and offset in IR units that is used by at least one instruction *)
 	SymbolReference = OBJECT (Reference)
 	VAR
@@ -251,6 +262,43 @@ TYPE
 			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
 
 		END AddImmediate;
+
+		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT);
+		VAR
+			reference, foundReference: Reference;  immediateHReference: ImmediateHReference;
+		BEGIN
+			(* go through the list of symbol/offset-combinations and check if there already is an entry for the symbol and offset in question *)
+			reference := firstReference;
+			WHILE reference # NIL DO
+				IF reference IS ImmediateHReference THEN
+				WITH reference: ImmediateHReference DO
+					IF (reference.value = value) THEN
+						foundReference := reference (* an entry already exists *)
+					END;
+				END;
+				END;
+				reference := reference.next
+			END;
+
+			IF foundReference # NIL THEN
+				reference := foundReference
+			ELSE
+				(* no entry was found for the symbol/offset combination: create a new one *)
+				NEW(immediateHReference, value);
+				reference := immediateHReference;
+
+				IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
+				lastReference := reference;
+
+				INC(referenceCount)
+			END;
+
+			(* add a citation to the reference *)
+			reference.AddCitation(pc);
+
+			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
+
+		END AddHImmediate;
 
 
 	END ListOfReferences;
@@ -536,9 +584,13 @@ TYPE
 				*)
 
 			| IntermediateCode.conv:
-				result := ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2)
+				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH *)
+					result := FALSE
+				ELSE
+					result := ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2)
 									OR backend.useFPU32 & ~IsDoublePrecisionFloat(irInstruction.op1) & ~IsDoublePrecisionFloat(irInstruction.op2)
 									OR backend.useFPU64;
+				END;
 			| IntermediateCode.mod:
 				result := FALSE;
 				(*
@@ -1273,6 +1325,11 @@ TYPE
 		BEGIN RETURN irOperand.type.form IN IntermediateCode.Integer
 		END IsInteger;
 
+		(** whether an IR operand hold am integer value **)
+		PROCEDURE IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
+		BEGIN RETURN (irOperand.type.form IN IntermediateCode.Integer) & (irOperand.type.sizeInBits = 64)
+		END IsInteger64;
+
 		PROCEDURE PartType(CONST type: IntermediateCode.Type; part: LONGINT): IntermediateCode.Type;
 		VAR
 			result: IntermediateCode.Type;
@@ -1549,19 +1606,16 @@ TYPE
 		(** get a single precision VFP register that holds a certain floating point value **)
 		PROCEDURE DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand;
 		VAR
-			intValue, dummy: LONGINT;
+			intValue: HUGEINT; dummy: LONGINT;
 			result, temp: Operand;
 		BEGIN
-			intValue := SYSTEM.VAL(LONGINT, value);
+			intValue := SYSTEM.VAL(HUGEINT, value);
 			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
-
-			temp := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(64), registerHint);
-			dummy := ValueComposition(intValue, TRUE, temp);
 			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(64), registerHint);
-			Emit2(opFMSR, result, temp);
-
+			listOfReferences.AddHImmediate(intValue, out.pc);
+			Emit2(opFLDD, result, InstructionSet.NewImmediateOffsetMemory(opPC.register, 0, {InstructionSet.Increment})); (* LDR ..., [PC, #+???] *)
 			ASSERT(result.mode = InstructionSet.modeRegister);
-			ASSERT((result.register >= InstructionSet.SR0) & (result.register <= InstructionSet.SR31));
+			ASSERT((result.register >= InstructionSet.DR0) & (result.register <= InstructionSet.DR31));
 			RETURN result;
 		END DoublePrecisionFloatRegisterFromValue;
 
@@ -1752,7 +1806,7 @@ TYPE
 			(*pc: LONGINT;*)
 		BEGIN
 			register := RegisterFromIrOperand(irOperand, part, emptyOperand);
-			IF ~IsRegisterForType(register.register, IntermediateCode.FloatType(32)) THEN
+			IF ~IsRegisterForType(register.register, IntermediateCode.FloatType(32)) & ~IsRegisterForType(register.register, IntermediateCode.FloatType(64)) THEN
 				Emit2(opSTR, register, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Decrement, InstructionSet.PreIndexed}));
 			ELSE
 				partType := PartType(irOperand.type, part);
@@ -1969,7 +2023,15 @@ TYPE
 					Emit3(opFSUBS, destination, left, right)
 				END;
 				WriteBack(irInstruction.op1, Low, destination)
-
+			ELSIF IsDoublePrecisionFloat(irInstruction.op1) THEN
+				ASSERT(backend.useFPU32);
+				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
+				IF irInstruction.opcode = IntermediateCode.add THEN
+					Emit3(opFADDD, destination, left, right)
+				ELSE
+					Emit3(opFSUBD, destination, left, right)
+				END;
+				WriteBack(irInstruction.op1, Low, destination)
 			ELSIF IsInteger(irInstruction.op1) THEN
 				IF IsComplex(irInstruction.op1) THEN
 					EmitPartialAddOrSub(irInstruction, Low, TRUE);
@@ -2116,6 +2178,11 @@ TYPE
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				Emit3(opFDIVS, destination, left, right);
 				WriteBack(irInstruction.op1, Low, destination)
+			ELSIF IsDoublePrecisionFloat(irInstruction.op1) THEN
+				ASSERT(backend.useFPU64);
+				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
+				Emit3(opFDIVD, destination, left, right);
+				WriteBack(irInstruction.op1, Low, destination)
 			ELSE
 				HALT(200)
 			END
@@ -2193,6 +2260,11 @@ TYPE
 				ASSERT(backend.useFPU32);
 				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
 				Emit2(opFNEGS, destination[Low], source[Low]);
+				WriteBack(irInstruction.op1, Low, destination[Low])
+			ELSIF IsDoublePrecisionFloat(irInstruction.op1) THEN
+				ASSERT(backend.useFPU64);
+				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
+				Emit2(opFNEGD, destination[Low], source[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
 			ELSE
 				HALT(200)
@@ -2834,6 +2906,7 @@ TYPE
 			IF IsInteger(irDestination) THEN
 				(* to integer: *)
 				IF IsComplex(irDestination) THEN
+					ASSERT(IsInteger(irDestination));
 					(* to complex integer: *)
 					IF IsInteger(irSource) THEN
 						(* integer to complex integer: *)
@@ -2853,29 +2926,11 @@ TYPE
 								Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftASR, None, 32))
 							END
 						END
-
-					ELSIF IsSinglePrecisionFloat(irSource) THEN
-						ASSERT(backend.useFPU32);
-						(* single precision float to complex integer: *)
-						temp := GetFreeRegister(IntermediateCode.FloatType(32));
-						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
-							(* single precision float to non-complex unsigned integer: *)
-							Emit2(opFTOUIS, temp, source[Low]);
-						ELSE
-							(* single precision float to non-complex signed integer: *)
-							Emit2(opFTOSIS, temp, source[Low]);
-						END;
-						Emit2(opFMRS, destination[Low], temp);
-						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
-							Emit2(opMOV, destination[High], InstructionSet.NewImmediate(0));
-						ELSE
-							(* for signed values the high part is set to 0...0 or 1...1, depending on the sign of the low part *)
-							Emit2(opMOV, destination[High], InstructionSet.NewRegister(destination[Low].register, InstructionSet.shiftASR, None, 32))
-						END
+					ELSIF IsFloat(irSource) THEN (* ENTIERH not supported natively *)
+						HALT(200);
 					ELSE
-						(* anything else to complex-integer: *)
-						HALT(200)
-					END
+						HALT(100);
+					END;
 				ELSE
 					(* to non-complex integer: *)
 					IF IsInteger(irSource) THEN
@@ -2884,6 +2939,7 @@ TYPE
 						SignOrZeroExtendOperand(source[Low], partType);
 						MovIfDifferent(destination[Low], source[Low])
 					ELSIF IsSinglePrecisionFloat(irSource) THEN
+						(* REAL --> INTEGER *)
 						ASSERT(backend.useFPU32);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
@@ -2895,12 +2951,24 @@ TYPE
 							Emit2(opFTOSIS, temp, source[Low]);
 						END;
 						Emit2(opFMRS, destination[Low], temp)
+					ELSIF IsDoublePrecisionFloat(irSource) THEN
+						(* LONGREAL --> INTEGER *)
+						ASSERT(backend.useFPU64);
+						(* single precision float to non-complex integer: *)
+						temp := GetFreeRegister(IntermediateCode.FloatType(32));
+						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
+							(* single precision float to non-complex unsigned integer: *)
+							Emit2(opFTOUID, temp, source[Low]);
+						ELSE
+							(* single precision float to non-complex signed integer: *)
+							Emit2(opFTOSID, temp, source[Low]);
+						END;
+						Emit2(opFMRS, destination[Low], temp)
 					ELSE
 						(* anything to non-complex integer: *)
 						HALT(200)
 					END
 				END
-
 			ELSIF IsSinglePrecisionFloat(irDestination) THEN
 				(* to single precision float: *)
 			 	IF IsInteger(irSource) THEN
@@ -2917,10 +2985,36 @@ TYPE
 			 	ELSIF IsSinglePrecisionFloat(irSource) THEN
 			 		(* single precision float to single precision float: *)
 			 		MovIfDifferent(destination[Low], source[Low])
+			 	ELSIF IsDoublePrecisionFloat(irSource) THEN
+			 		(* LONGREAL --> REAL *)
+			 		Emit2(opFCVTSD, destination[Low], source[Low])
 			 	ELSE
 			 		(* anything else to single precision float: *)
 			 		HALT(200)
 			 	END
+			ELSIF IsDoublePrecisionFloat(irDestination) THEN
+				(* to double precision float: *)
+			 	IF IsInteger(irSource) THEN
+			 		(* integer to double precision float: ignore high part of source *)
+			 		temp := GetFreeRegister(IntermediateCode.FloatType(32));
+			 		Emit2(opFMSR, temp, source[Low]);
+		 			IF irSource.type.form = IntermediateCode.UnsignedInteger THEN
+						(* non-complex unsigned integer to double precision float: *)
+						Emit2(opFUITOD, destination[Low], temp)
+					ELSE
+						(* non-complex signed integer to double precision float: *)
+						Emit2(opFSITOD, destination[Low], temp)
+					END
+			 	ELSIF IsSinglePrecisionFloat(irSource) THEN
+			 		(* REAL --> LONGREAL *)
+			 		Emit2(opFCVTDS, destination[Low], source[Low])
+			 	ELSIF IsDoublePrecisionFloat(irSource) THEN
+			 		(* single precision float to single precision float: *)
+			 		MovIfDifferent(destination[Low], source[Low])
+			 	ELSE
+			 		(* anything else to single precision float: *)
+			 		HALT(200)
+			 	END				
 			ELSE
 				(* to anything else: *)
 				HALT(200)

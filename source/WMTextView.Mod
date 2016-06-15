@@ -6,7 +6,7 @@ IMPORT
 	WMStandardComponents, Strings, WMDropTarget, Raster,
 	WMRectangles, WMWindowManager, WMProperties,
 	Commands, FileHandlers, Streams, WMPopups, FP1616,
-	WMPieMenu, WMEvents, UnicodeBidirectionality, PositionDebugging, ContextualDependency;
+	WMPieMenu, WMEvents, UnicodeBidirectionality, PositionDebugging, ContextualDependency, D := Debugging;
 
 CONST
 	TraceRenderOptimize = 0;
@@ -992,7 +992,7 @@ TYPE
 				leftShift.Set(0); leftShiftI := 0; (* no scrollbars -> don't shift *)
 			END;
 			optimize := TRUE;
-			Resized;
+			layout.FullLayout(optimize);
 			optimize := FALSE;
 			UpdateScrollbars;
 			(*Invalidate;*)
@@ -1058,12 +1058,16 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE Resized;
+		VAR prevWidth: LONGINT;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			Resized^;
+			prevWidth := layout.paperWidth;
 			layout.paperWidth := bounds.GetWidth() - (bordersI.l + bordersI.r);
 			borderClip.r := bounds.GetWidth() - bordersI.r; borderClip.b := bounds.GetHeight() - bordersI.b;
-			layout.FullLayout(optimize);
+			IF (prevWidth # layout.paperWidth) & (wrapMode.Get()#NoWrap) THEN
+				layout.FullLayout(optimize);
+			END;
 			CheckNumberOfLines;
 		END Resized;
 
@@ -1096,8 +1100,9 @@ TYPE
 			layout.FullLayout(TRUE);
 			CheckNumberOfLines;
 			ASSERT(((highlighter = NIL) & (state = NIL)) OR ((highlighter # NIL) & (state # NIL)));
+
 			text.ReleaseRead;
-			Invalidate;(*! Redundant ?*)
+			(*Invalidate;(*! Redundant ?*)*)
 			Release;
 		END SetText;
 

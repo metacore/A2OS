@@ -1901,6 +1901,7 @@ TYPE
 			syntaxHighlighterName : ARRAY 32 OF CHAR;
 			file : Files.File;
 			in: Streams.Reader;
+			
 		BEGIN
 			DisableUpdate;
 			res := -1;
@@ -1960,6 +1961,12 @@ TYPE
 			currentPage.editor.tv.onLinkClicked.Add(LinkClickedHandler);
 			text.ReleaseWrite;
 
+			GetSyntaxHighlighterName(filename, syntaxHighlighterName);
+			IF (syntaxHighlighterName # "") THEN
+				currentPage.editor.highlighting.SetAOC(syntaxHighlighterName);
+				currentPage.splitEditor.highlighting.SetAOC(syntaxHighlighterName);
+			END;
+
 			IF (file # NIL) THEN
 				IF (format = "AUTO") THEN
 					decoder := TextUtilities.DecodeAuto(fullname, autoCodecFormat);
@@ -1975,9 +1982,9 @@ TYPE
 						decoder.Open(in, res);
 						IF res = 0 THEN
 							currentPage.editor.text.onTextChanged.Remove(currentPage.TextChanged);
-							currentPage.editor.SetText(decoder.GetText());
+							text := decoder.GetText();
+							currentPage.editor.SetText(text);
 							currentPage.searchPanel.SetText(decoder.GetText());
-							currentPage.splitEditor.SetText(currentPage.editor.text);
 							currentPage.editor.text.onTextChanged.Add(currentPage.TextChanged);
 							currentPage.editor.text.SetUndoManager(currentPage.editor.undoMgr)
 						END;
@@ -2003,11 +2010,6 @@ TYPE
 			currentPage.compilerSettings := settings.GetCompilerSettings(filename);
 			currentPage.options := currentPage.compilerSettings.options;
 
-			GetSyntaxHighlighterName(filename, syntaxHighlighterName);
-			IF (syntaxHighlighterName # "") THEN
-				currentPage.editor.highlighting.SetAOC(syntaxHighlighterName);
-				currentPage.splitEditor.highlighting.SetAOC(syntaxHighlighterName);
-			END;
 
 			currentPage.CreateSidePanel(currentPage.compilerSettings);
 
@@ -2281,9 +2283,11 @@ TYPE
 			IF (currentPage # NIL) THEN
 				IF currentPage.splitted THEN
 					currentPage.splitPanel.visible.Set(FALSE);
+					currentPage.splitEditor.SetText(NIL);
 					currentPage.editor.SetFocus;
 				ELSE
 					currentPage.splitPanel.visible.Set(TRUE);
+					currentPage.splitEditor.SetText(currentPage.editor.text);				
 				END;
 				currentPage.splitted := ~currentPage.splitted
 			END

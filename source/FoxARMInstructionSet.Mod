@@ -2453,9 +2453,9 @@ CONST
 		EnterInstruction(opCMP, {20, 22, 24}, {20..24, 26, 27}, {flagCondition}, encodingR16, encodingAddressingMode1, None, None, None, None);
 		EnterInstruction(opEOR, {21}, {21..24, 26, 27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingAddressingMode1, None, None, None);
 		EnterInstruction(opFABSD, {6,7,8,9,11,20,21,23,25,26,27}, {4..11,16..27}, {flagCondition}, encodingDR12, encodingDR0, None, None, None, None);
-		EnterInstruction(opFABSS, {4,6,7,9,11,20,21,23,25,26,27}, {4,6..11,16..21,23..27}, {flagCondition}, encodingFR12, encodingFR0, None, None, None, None);
+		EnterInstruction(opFABSS, {6,7,   9,11,20,21,23,25,26,27}, {4,6..11,16..21,23..27}, {flagCondition}, encodingFR12, encodingFR0, None, None, None, None);
 		EnterInstruction(opFADDD, {8,9,11,20,21,25,26,27}, {4..11,20..27}, {flagCondition}, encodingDR12, encodingDR16, encodingDR0, None, None, None);
-		EnterInstruction(opFADDS, {9,11,20,21,25,26,27}, {4,6,8..11,20,21,23..27}, {flagCondition}, encodingFR12, encodingFR16, encodingFR0, None, None, None);
+		EnterInstruction(opFADDS, {   9,11,20,21,25,26,27}, {4,6,8..11,20,21,23..27}, {flagCondition}, encodingFR12, encodingFR16, encodingFR0, None, None, None);
 		EnterInstruction(opFCMPD, {6,8,9,11,18,20,21,23,25,26,27}, {4..11,16..27}, {flagCondition}, encodingDR12, encodingDR0, None, None, None, None);
 		EnterInstruction(opFCMPED, {6,7,8,9,11,18,20,21,23,25,26,27}, {4..11,16..27}, {flagCondition}, encodingDR12, encodingDR0, None, None, None, None);
 		EnterInstruction(opFCMPES, {6,7,9,11,18,20,21,23,25,26,27}, {4,6..11,16..21,23..27}, {flagCondition}, encodingFR12, encodingFR0, None, None, None, None);

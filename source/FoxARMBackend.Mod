@@ -90,8 +90,6 @@ CONST
 	opTEQ = InstructionSet.opTEQ; opTST = InstructionSet.opTST;
 	opUMLAL = InstructionSet.opUMLAL; opUMULL = InstructionSet.opUMULL;
 
-	MaximumFixupDistance = (*4103*) 128; (* = 2^12-1+8 (maximum distance [in bytes] between a symbol fixup location and an instruction that uses the symbol) *)
-
 	(* builtin backend specific system instructions *)
 	GetSP = 0; SetSP = 1;
 	GetFP = 2; SetFP = 3;
@@ -115,7 +113,7 @@ TYPE
 	Citation = OBJECT
 	VAR
 		pc: LONGINT; (* program counter of the ARM instruction *)
-		bits: LONGINT;
+		bits: SIZE;
 		next: Citation;
 	END Citation;
 
@@ -124,17 +122,24 @@ TYPE
 	VAR
 		firstCitation, lastCitation: Citation; (* linked list of citations *)
 		next: Reference;
+		size: SIZE; (* storage size of this reference *) 
 
-		PROCEDURE & Init;
+		PROCEDURE & Init(size: SIZE);
 		BEGIN
-			firstCitation := NIL; lastCitation := NIL; next := NIL;
+			firstCitation := NIL; lastCitation := NIL; next := NIL; SELF.size := size;
 		END Init;
+		
+		PROCEDURE Emit(out: BinaryCode.Section);
+		BEGIN
+			HALT(100);
+		END Emit;
+		
 
-		PROCEDURE AddCitation(pc: LONGINT; bits: LONGINT);
+		PROCEDURE AddCitation(pc: LONGINT; bits: SIZE);
 		VAR
 			citation: Citation;
 		BEGIN
-			NEW(citation); citation.pc := pc; citation.bits := bits; citation.next := NIL;
+			NEW(citation); citation.pc := pc; citation.next := NIL; citation.bits := bits;
 			IF firstCitation = NIL THEN firstCitation := citation ELSE lastCitation.next := citation END;
 			lastCitation := citation
 		END AddCitation;
@@ -146,9 +151,18 @@ TYPE
 
 		PROCEDURE & InitImm(v: LONGINT);
 		BEGIN
-			Init;
+			Init(4);
 			SELF.value := v;
 		END InitImm;
+		
+		PROCEDURE Emit(out: BinaryCode.Section);
+		BEGIN
+			IF out.comments # NIL THEN
+				out.comments.String("longint/real");
+				out.comments.Ln; out.comments.Update
+			END;
+			out.PutBits(value,32);
+		END Emit;
 
 	END ImmediateReference;
 
@@ -157,41 +171,91 @@ TYPE
 
 		PROCEDURE & InitImm(v: HUGEINT);
 		BEGIN
-			Init;
+			Init(8);
 			SELF.value := v;
 		END InitImm;
 
+		PROCEDURE Emit(out: BinaryCode.Section);
+		BEGIN
+			IF out.comments # NIL THEN
+				out.comments.String("hugeint/longreal");
+				out.comments.Ln; out.comments.Update
+			END;
+			(* assumption: big endian *)
+			out.PutBits(SHORT(value),32);
+			out.PutBits(SHORT(ASH(value,-32)),32);
+		END Emit;
 	END ImmediateHReference;
 
 	(* a reference to a symbol and offset in IR units that is used by at least one instruction *)
 	SymbolReference = OBJECT (Reference)
 	VAR
-		symbol: Sections.SectionName;
-		fingerprint: LONGINT;
+		identifier: ObjectFile.Identifier;
 		symbolOffset: LONGINT; (* offset to the symbol in IR units *)
 
 		PROCEDURE & InitSym(s: Sections.SectionName; fp: LONGINT; offs: LONGINT);
 		BEGIN
-			Init;
-			SELF.symbol := s; SELF.symbolOffset := offs; fingerprint := fp;
+			Init(4);
+			identifier.name := s;
+			identifier.fingerprint := fp;
+			symbolOffset := offs;
 		END InitSym;
 
+		PROCEDURE Emit(out: BinaryCode.Section);
+		VAR
+			fixup: BinaryCode.Fixup;
+		BEGIN
+			IF out.comments # NIL THEN
+				out.comments.String("fixup location for ");
+				Basic.WriteSegmentedName(out.comments, identifier.name);
+				out.comments.String(":"); out.comments.Int(symbolOffset, 0);
+				out.comments.String(" :"); out.comments.Ln; out.comments.Update
+			END;
+
+			fixup := BinaryCode.NewFixup(BinaryCode.Absolute, out.pc, identifier, symbolOffset, 0, 0, rFixupPattern);
+			out.fixupList.AddFixup(fixup);
+			out.PutBits(0, 32);
+		END Emit; 
+		
 	END SymbolReference;
 
 	ListOfReferences = OBJECT
 	VAR
 		firstReference, lastReference: Reference; (* linked list of all symbol references *)
-		referenceCount: LONGINT; (* the number of reference = length of the required fixup block *)
-		pcOfFirstCitation: LONGINT; (* the PC of the first instruction that cites a symbol or immediate *)
+		size: SIZE; (* length of the required fixup block *)
+		due: SIZE; (* the PC at which the reference block has to be written (the latest) *) 
 
 		PROCEDURE & Init;
 		BEGIN
 			firstReference := NIL; lastReference := NIL;
-			referenceCount := 0;
-			pcOfFirstCitation := None;
+			size := 0;
+			due := MAX(SIZE);
 		END Init;
+		
+		PROCEDURE UpdateDue(pc: SIZE; bits: SIZE);
+		VAR max: SIZE;
+		BEGIN
+			max := ASH(1, bits) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 16 (* safety *);
+			IF due > max THEN
+				due := max;
+			END;
+		END UpdateDue;
+		
+		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: SIZE);
+		BEGIN
+			reference.AddCitation(pc, bits);
+			UpdateDue(pc, bits);
+		END AddCitation;
+		
+		PROCEDURE AddReference(reference: Reference): Reference;
+		BEGIN
+			IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
+			lastReference := reference;
+			INC(size, reference.size);
+			RETURN reference;
+		END AddReference;
 
-		PROCEDURE AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT);
+		PROCEDURE AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT);
 		VAR
 			reference, foundReference: Reference; symbolReference: SymbolReference;
 		BEGIN
@@ -200,7 +264,7 @@ TYPE
 			WHILE reference # NIL DO
 				IF reference IS SymbolReference THEN
 				WITH reference: SymbolReference DO
-					IF (reference.symbol = symbol) & (reference.symbolOffset = symbolOffset) THEN
+					IF (reference.identifier.name = symbol) & (reference.symbolOffset = symbolOffset) THEN
 						foundReference := reference (* an entry already exists *)
 					END;
 				END;
@@ -213,21 +277,13 @@ TYPE
 			ELSE
 				(* no entry was found for the symbol/offset combination: create a new one *)
 				NEW(symbolReference, symbol, fingerprint, symbolOffset);
-				reference := symbolReference;
-
-				IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
-				lastReference := reference;
-
-				INC(referenceCount)
+				reference := AddReference(symbolReference);
 			END;
-
 			(* add a citation to the reference *)
-			reference.AddCitation(pc, 12);
-
-			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
+			AddCitation(reference, pc, bits);
 		END AddSymbol;
 
-		PROCEDURE AddImmediate(value: LONGINT; pc: LONGINT);
+		PROCEDURE AddImmediate(value: LONGINT; pc: SIZE; bits: SIZE);
 		VAR
 			reference, foundReference: Reference; immediateReference: ImmediateReference;
 		BEGIN
@@ -249,22 +305,13 @@ TYPE
 			ELSE
 				(* no entry was found for the symbol/offset combination: create a new one *)
 				NEW(immediateReference, value);
-				reference := immediateReference;
-
-				IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
-				lastReference := reference;
-
-				INC(referenceCount)
+				reference := AddReference(immediateReference);
 			END;
-
 			(* add a citation to the reference *)
-			reference.AddCitation(pc, 12);
-
-			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
-
+			AddCitation(reference, pc, bits);
 		END AddImmediate;
 
-		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT);
+		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT; bits: SIZE);
 		VAR
 			reference, foundReference: Reference;  immediateHReference: ImmediateHReference;
 		BEGIN
@@ -272,11 +319,11 @@ TYPE
 			reference := firstReference;
 			WHILE reference # NIL DO
 				IF reference IS ImmediateHReference THEN
-				WITH reference: ImmediateHReference DO
-					IF (reference.value = value) THEN
-						foundReference := reference (* an entry already exists *)
+					WITH reference: ImmediateHReference DO
+						IF (reference.value = value) THEN
+							foundReference := reference (* an entry already exists *)
+						END;
 					END;
-				END;
 				END;
 				reference := reference.next
 			END;
@@ -286,21 +333,11 @@ TYPE
 			ELSE
 				(* no entry was found for the symbol/offset combination: create a new one *)
 				NEW(immediateHReference, value);
-				reference := immediateHReference;
-
-				IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
-				lastReference := reference;
-
-				INC(referenceCount)
+				reference := AddReference(immediateHReference);
 			END;
-
 			(* add a citation to the reference *)
-			reference.AddCitation(pc, 8);
-
-			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
-
+			AddCitation(reference, pc, bits);
 		END AddHImmediate;
-
 
 	END ListOfReferences;
 
@@ -476,7 +513,7 @@ TYPE
 
 		inStackAllocation: BOOLEAN;
 
-		fixupPattern: ObjectFile.FixupPatterns; (* pattern for an absolute 32-bit fixup *)
+
 
 		PROCEDURE & InitGeneratorARM(CONST runtimeModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM);
 		VAR
@@ -504,10 +541,6 @@ TYPE
 			opRESFD := InstructionSet.NewRegister(InstructionSet.RESFD, None, None, 0);
 
 			dump := NIL;
-
-			NEW(fixupPattern, 1);
-			fixupPattern[0].offset := 0;
-			fixupPattern[0].bits := 32;
 
 			NEW(listOfReferences);
 
@@ -1147,7 +1180,7 @@ TYPE
 				result := RegisterFromValue(address, registerHint)
 			ELSE
 				result := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(32), registerHint);
-				listOfReferences.AddSymbol(symbol, fingerprint, symbolOffset, out.pc);
+				listOfReferences.AddSymbol(symbol, fingerprint, symbolOffset, out.pc, 12);
 				Emit2(opLDR, result, InstructionSet.NewImmediateOffsetMemory(opPC.register, 0, {InstructionSet.Increment})); (* LDR ..., [PC, #+???] *)
 			END;
 
@@ -1486,11 +1519,11 @@ TYPE
 
 		PROCEDURE EmitFinalFixupBlock;
 		BEGIN
-			IF listOfReferences.referenceCount > 0 THEN
+			IF listOfReferences.size > 0 THEN
 				ASSERT(in.pc > 0);
 				IF in.instructions[in.pc - 1].opcode # IntermediateCode.exit THEN
 					(* there is no exit instruction at the end of the IR section -> emit a branch that skips the fixup block (in particular used by @BodyStub procedures)*)
-					Emit1(opB, InstructionSet.NewImmediate((listOfReferences.referenceCount + 1) * 4 - 8))
+					Emit1(opB, InstructionSet.NewImmediate(4 + listOfReferences.size - 8))
 				END
 			END;
 			EmitFixupBlock; (* emit the fixup block *)
@@ -1502,8 +1535,8 @@ TYPE
 		*)
 		PROCEDURE EmitFixupBlockIfNeeded;
 		BEGIN
-			IF out.pc - listOfReferences.pcOfFirstCitation + listOfReferences.referenceCount + 1 > MaximumFixupDistance THEN
-				Emit1(opB, InstructionSet.NewImmediate((listOfReferences.referenceCount + 1) * 4 - 8)); (* emit branch instruction that skips the fixup block *)
+			IF out.pc >= listOfReferences.due THEN 
+				Emit1(opB, InstructionSet.NewImmediate(4 + listOfReferences.size - 8 )); (* emit branch instruction that skips the fixup block *)
 				EmitFixupBlock; (* emit the fixup block *)
 				listOfReferences.Init (* clear the list *)
 			END
@@ -1514,15 +1547,13 @@ TYPE
 		VAR
 			reference: Reference;
 			citation: Citation;
-			fixup: BinaryCode.Fixup;
 			patchValue: LONGINT;
-			identifier: ObjectFile.Identifier;
 		BEGIN
-			IF listOfReferences.referenceCount > 0 THEN
+			IF listOfReferences.size > 0 THEN
 				IF out.comments # NIL THEN
 					out.comments.String("REFERENCES BLOCK"); out.comments.String(" (");
-					out.comments.Int(listOfReferences.referenceCount, 0);
-					out.comments.String(" references):"); out.comments.Ln; out.comments.Update
+					out.comments.Int(listOfReferences.size, 0);
+					out.comments.String(" bytes):"); out.comments.Ln; out.comments.Update
 				END;
 
 				reference := listOfReferences.firstReference;
@@ -1531,45 +1562,11 @@ TYPE
 					citation := reference.firstCitation;
 					WHILE citation # NIL DO
 						patchValue := out.pc - 8 - citation.pc;
-						ASSERT((0 <= patchValue) & (patchValue < InstructionSet.Bits12));
+						ASSERT((0 <= patchValue) & (patchValue < ASH(1, citation.bits)));
 						out.PutBitsAt(citation.pc, patchValue, citation.bits);
 						citation := citation.next
 					END;
-
-					IF reference IS SymbolReference THEN
-					WITH reference: SymbolReference DO
-
-						(* alternative version that relies on the fixup mechanism:
-						NEW(fixupPattern12, 1);
-						fixupPattern12[0].offset := 0;
-						fixupPattern12[0].bits := 12;
-						fixup := BinaryCode.NewFixup(BinaryCode.Relative, entry.pc, in, 0, out.pc - 8, 0, fixupPattern12); (* TODO: determine the correct displacement *)
-						out.fixupList.AddFixup(fixup);
-						*)
-
-						(* 2. add an absolute fixup for the symbol reference and emit space *)
-						IF out.comments # NIL THEN
-							out.comments.String("fixup location for ");
-							Basic.WriteSegmentedName(out.comments, reference.symbol);
-							out.comments.String(":"); out.comments.Int(reference.symbolOffset, 0);
-							out.comments.String(" :"); out.comments.Ln; out.comments.Update
-						END;
-						identifier.name := reference.symbol;
-						identifier.fingerprint := reference.fingerprint;
-
-						fixup := BinaryCode.NewFixup(BinaryCode.Absolute, out.pc, identifier, reference.symbolOffset, 0, 0, fixupPattern);
-						out.fixupList.AddFixup(fixup);
-						out.PutBits(0, 32);
-					END;
-					ELSIF reference IS ImmediateReference THEN
-					WITH reference: ImmediateReference DO
-						IF out.comments # NIL THEN
-							out.comments.String("immediate value"); out.comments.Ln; out.comments.Update;
-						END;
-						out.PutBits(reference.value,32);
-					END
-					END;
-
+					reference.Emit(out);
 					reference := reference.next
 				END
 			END
@@ -1616,7 +1613,7 @@ TYPE
 			intValue := SYSTEM.VAL(HUGEINT, value);
 			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
 			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(64), registerHint);
-			listOfReferences.AddHImmediate(intValue, out.pc);
+			listOfReferences.AddHImmediate(intValue, out.pc, 8);
 			Emit2(opFLDD, result, InstructionSet.NewImmediateOffsetMemory(opPC.register, 0, {InstructionSet.Increment})); (* LDR ..., [PC, #+???] *)
 			ASSERT(result.mode = InstructionSet.modeRegister);
 			ASSERT((result.register >= InstructionSet.DR0) & (result.register <= InstructionSet.DR31));
@@ -1635,7 +1632,7 @@ TYPE
 				dummy := ValueComposition(value, TRUE, result);
 			ELSE
 				result := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(32), registerHint);
-				listOfReferences.AddImmediate(value, out.pc);
+				listOfReferences.AddImmediate(value, out.pc, 12);
 				Emit2(opLDR, result, InstructionSet.NewImmediateOffsetMemory(opPC.register, 0, {InstructionSet.Increment})); (* LDR ..., [PC, #+???] *)
 			END;
 
@@ -3638,7 +3635,8 @@ TYPE
 
 VAR
 	emptyOperand: Operand;
-
+	rFixupPattern: ObjectFile.FixupPatterns; (* pattern for an absolute 32-bit fixup *)
+	
 	PROCEDURE Assert(condition: BOOLEAN; CONST message: ARRAY OF CHAR);
 	BEGIN ASSERT(condition, 100)
 	END Assert;
@@ -3683,7 +3681,11 @@ VAR
 
 	(** initialize the module **)
 	PROCEDURE Init;
-	BEGIN InstructionSet.InitOperand(emptyOperand)
+	BEGIN 
+		InstructionSet.InitOperand(emptyOperand);
+		NEW(rFixupPattern, 1);
+		rFixupPattern[0].offset := 0;
+		rFixupPattern[0].bits := 32;
 	END Init;
 
 	(** get an instance of the ARM backend **)

@@ -11,14 +11,15 @@ CONST
 	NEON = FALSE;
 
 (** Returns the mantissa *)
-PROCEDURE Mantissa (x: LONGREAL): HUGEINT;
+PROCEDURE Mantissa (x: LONGREAL):HUGEINT;
 TYPE
 	Flt = ARRAY 2 OF LONGINT;
 VAR
-	y: Flt;
+	y: Flt; h: HUGEINT;
 BEGIN
 	y := SYSTEM.VAL(Flt, x);
-	RETURN y[0] + LSH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, y[1]) * {0 .. 19}), 32)
+	h := y[0] + LSH(SYSTEM.VAL(HUGEINT, SYSTEM.VAL(SET, y[1])*{0..19}), 32); 
+	RETURN h;
 END Mantissa;
 
 PROCEDURE Equal (x, y: LONGREAL): BOOLEAN;
@@ -144,6 +145,7 @@ PROCEDURE ln*(x: LONGREAL): LONGREAL;
 VAR
 	res, y, yk: LONGREAL;
 	k: LONGINT;
+	mantissa: HUGEINT;
 BEGIN
 	IF x <= 0 THEN HALT(80)
 	ELSIF NEON THEN
@@ -157,7 +159,8 @@ BEGIN
 
 			ln(m * 2^e) = e ln(2) + ln(m)
 		*)
-		RETURN (Reals.ExpoL(x) - 1023) * ln2 + ln(SYSTEM.VAL(LONGREAL, Mantissa(x) + 3FF0000000000000H))
+		mantissa := Mantissa(x) + 3FF0000000000000H;
+		RETURN (Reals.ExpoL(x) - 1023) * ln2 + ln(SYSTEM.VAL(LONGREAL, mantissa))
 	ELSE
 		(* ln(x) = 2 * sum_k 1/(2 k + 1) y^k, where y = (x - 1) / (x + 1), x real *)
 		y := (x - 1) / (x + 1);

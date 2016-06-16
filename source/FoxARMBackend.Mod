@@ -1362,7 +1362,8 @@ TYPE
 				END
 			ELSE
 				HALT(100)
-			END
+			END;
+			ASSERT(partType.form > IntermediateCode.Undefined);
 		END GetPartType;
 
 		(** the value of a 32 bit part **)
@@ -1693,8 +1694,21 @@ TYPE
 			IF ~IsSameRegister(a, b) THEN
 				ASSERT(a.mode = InstructionSet.modeRegister);
 
-				IF IsRegisterForType(a.register, IntermediateCode.FloatType(32)) THEN
-					IF IsRegisterForType(b.register, IntermediateCode.FloatType(32)) THEN
+				IF IsRegisterForType(a.register, IntermediateCode.FloatType(64)) THEN
+					IF IsRegisterForType(b.register, IntermediateCode.FloatType(64)) THEN
+						(* mov float, double: *)
+						Emit2(opFCPYD, a, b)
+					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(32)) THEN
+						(* mov float, float: *)
+						Emit2(opFCVTSD, a, b)
+					ELSE
+						HALT(200);
+					END
+				ELSIF IsRegisterForType(a.register, IntermediateCode.FloatType(32)) THEN
+					IF IsRegisterForType(b.register, IntermediateCode.FloatType(64)) THEN
+						(* mov float, double: *)
+						Emit2(opFCVTSD, a, b)
+					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(32)) THEN
 						(* mov float, float: *)
 						Emit2(opFCPYS, a, b)
 					ELSE
@@ -1705,6 +1719,8 @@ TYPE
 					IF IsRegisterForType(b.register, IntermediateCode.FloatType(32)) THEN
 						(* mov int, float: *)
 						Emit2(opFMRS, a, b)
+					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(64)) THEN
+						HALT(200)
 					ELSE
 						(* mov int, int: *)
 						Emit2(opMOV, a, b)
@@ -2717,7 +2733,7 @@ TYPE
 			PROCEDURE Cmp(CONST left, right: InstructionSet.Operand; float: BOOLEAN);
 			BEGIN
 				IF float THEN
-					IF ~backend.useFPU32 OR IsComplex(irLeft) (* 64 bit *) THEN
+					IF ~backend.useFPU32 (* NO FPU *) OR IsComplex(irLeft) (* 64 bit but not DP FPU *) THEN
 						(* floating point comparisons without VFP unit *)
 						temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
 						Emit3WithFlags(opAND, temp, left, right, {InstructionSet.flagS});
@@ -2726,8 +2742,11 @@ TYPE
 						Emit2(opCMP, left, right);
 						Emit1(opB, InstructionSet.NewImmediate(0)); (* skip one instructions  *)
 						Emit2(opCMP, right, left);
-					ELSE
+					ELSIF IsSinglePrecisionFloat(irLeft) THEN
 						Emit2(opFCMPS, left, right);
+						Emit0(opFMSTAT); (* transfer the VFP flags to the standard ARM flags *)
+					ELSIF IsDoublePrecisionFloat(irLeft) THEN
+						Emit2(opFCMPD, left, right);
 						Emit0(opFMSTAT); (* transfer the VFP flags to the standard ARM flags *)
 					END
 				ELSE
@@ -2815,7 +2834,7 @@ TYPE
 						END
 					END
 
-				ELSIF IsSinglePrecisionFloat(irLeft) THEN
+				ELSIF IsSinglePrecisionFloat(irLeft) OR IsDoublePrecisionFloat(irLeft) & backend.useFPU64 THEN
 					left[Low] := RegisterFromIrOperand(irLeft, Low, emptyOperand);
 					right[Low] := RegisterFromIrOperand(irRight, Low, emptyOperand);
 					Cmp(left[Low], right[Low], TRUE);
@@ -2827,7 +2846,6 @@ TYPE
 					| IntermediateCode.brge: (* left >= right *) lowHit := InstructionSet.conditionGE
 					ELSE HALT(100)
 					END
-
 				ELSIF IsDoublePrecisionFloat(irLeft) THEN
 					CASE irInstruction.opcode OF
 					IntermediateCode.breq:

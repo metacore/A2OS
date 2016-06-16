@@ -90,7 +90,7 @@ CONST
 	opTEQ = InstructionSet.opTEQ; opTST = InstructionSet.opTST;
 	opUMLAL = InstructionSet.opUMLAL; opUMULL = InstructionSet.opUMULL;
 
-	MaximumFixupDistance = (*4103*) 1024; (* = 2^12-1+8 (maximum distance [in bytes] between a symbol fixup location and an instruction that uses the symbol) *)
+	MaximumFixupDistance = (*4103*) 128; (* = 2^12-1+8 (maximum distance [in bytes] between a symbol fixup location and an instruction that uses the symbol) *)
 
 	(* builtin backend specific system instructions *)
 	GetSP = 0; SetSP = 1;
@@ -115,6 +115,7 @@ TYPE
 	Citation = OBJECT
 	VAR
 		pc: LONGINT; (* program counter of the ARM instruction *)
+		bits: LONGINT;
 		next: Citation;
 	END Citation;
 
@@ -129,11 +130,11 @@ TYPE
 			firstCitation := NIL; lastCitation := NIL; next := NIL;
 		END Init;
 
-		PROCEDURE AddCitation(pc: LONGINT);
+		PROCEDURE AddCitation(pc: LONGINT; bits: LONGINT);
 		VAR
 			citation: Citation;
 		BEGIN
-			NEW(citation); citation.pc := pc; citation.next := NIL;
+			NEW(citation); citation.pc := pc; citation.bits := bits; citation.next := NIL;
 			IF firstCitation = NIL THEN firstCitation := citation ELSE lastCitation.next := citation END;
 			lastCitation := citation
 		END AddCitation;
@@ -221,7 +222,7 @@ TYPE
 			END;
 
 			(* add a citation to the reference *)
-			reference.AddCitation(pc);
+			reference.AddCitation(pc, 12);
 
 			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
 		END AddSymbol;
@@ -257,7 +258,7 @@ TYPE
 			END;
 
 			(* add a citation to the reference *)
-			reference.AddCitation(pc);
+			reference.AddCitation(pc, 12);
 
 			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
 
@@ -294,7 +295,7 @@ TYPE
 			END;
 
 			(* add a citation to the reference *)
-			reference.AddCitation(pc);
+			reference.AddCitation(pc, 8);
 
 			IF pcOfFirstCitation = None THEN pcOfFirstCitation := pc END
 
@@ -1530,7 +1531,7 @@ TYPE
 					WHILE citation # NIL DO
 						patchValue := out.pc - 8 - citation.pc;
 						ASSERT((0 <= patchValue) & (patchValue < InstructionSet.Bits12));
-						out.PutBitsAt(citation.pc, patchValue, 12);
+						out.PutBitsAt(citation.pc, patchValue, citation.bits);
 						citation := citation.next
 					END;
 

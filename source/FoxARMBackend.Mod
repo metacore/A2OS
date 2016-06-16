@@ -1353,7 +1353,11 @@ TYPE
 				IF part = Low THEN
 					partType := IntermediateCode.NewType(IntermediateCode.UnsignedInteger, 32) (* conceptually the low part is always unsigned *)
 				ELSE
-					partType := IntermediateCode.NewType(type.form, 32)
+					IF type.form = IntermediateCode.Float THEN
+						partType := IntermediateCode.NewType(IntermediateCode.SignedInteger, 32)
+					ELSE
+						partType := IntermediateCode.NewType(type.form, 32)
+					END;
 				END
 			ELSE
 				HALT(100)

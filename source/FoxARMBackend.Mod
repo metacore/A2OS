@@ -235,8 +235,8 @@ TYPE
 		PROCEDURE UpdateDue(pc: SIZE; bits: SIZE);
 		VAR max: SIZE;
 		BEGIN
-			max := ASH(1, bits) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 16 (* safety *);
-			IF due > max THEN
+			max := ASH(1, bits) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 8 (* offset *) - 20 (* five instructions safety *);
+			IF max < due THEN
 				due := max;
 			END;
 		END UpdateDue;
@@ -708,7 +708,10 @@ TYPE
 			*)
 
 			(* emit the instruction *)
-			InstructionSet.Emit(opCode, condition, flags, operands, out)
+			InstructionSet.Emit(opCode, condition, flags, operands, out);
+			EmitFixupBlockIfNeeded;
+			
+			
 		END Emit;
 
 		(** emit an ARM instruction with no operand **)
@@ -1446,7 +1449,6 @@ TYPE
 		PROCEDURE Generate(VAR irInstruction: IntermediateCode.Instruction);
 		BEGIN
 			(* CheckFixups; *)
-			EmitFixupBlockIfNeeded;
 
 			(*
 			IF ((irInstruction.opcode = IntermediateCode.mov) OR (irInstruction.opcode = IntermediateCode.pop)) & (instruction.op1.register <= IntermediateCode.ParameterRegister) THEN
@@ -1536,6 +1538,7 @@ TYPE
 		PROCEDURE EmitFixupBlockIfNeeded;
 		BEGIN
 			IF out.pc >= listOfReferences.due THEN 
+				listOfReferences.due := MAX(LONGINT);
 				Emit1(opB, InstructionSet.NewImmediate(4 + listOfReferences.size - 8 )); (* emit branch instruction that skips the fixup block *)
 				EmitFixupBlock; (* emit the fixup block *)
 				listOfReferences.Init (* clear the list *)

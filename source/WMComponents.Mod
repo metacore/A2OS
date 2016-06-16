@@ -698,16 +698,16 @@ TYPE
 			END
 		END InternalPropertyChanged;
 
-		PROCEDURE InternalLinkChanged(sender, property : ANY);
+		PROCEDURE InternalLinkChanged(sender, link : ANY);
 		BEGIN
 			IF ~initialized THEN RETURN END;
 			IF ~IsCallFromSequencer() THEN
-				sequencer.ScheduleEvent(SELF.InternalLinkChanged, sender, property);
+				sequencer.ScheduleEvent(SELF.InternalLinkChanged, sender, link);
 				IF CanYield THEN Objects.Yield END;
 			ELSE
 				IF ~inLinkUpdate THEN
 					inLinkUpdate := TRUE;
-					LinkChanged(sender, property);
+					LinkChanged(sender, link);
 					inLinkUpdate := FALSE
 				END;
 			END

@@ -1596,9 +1596,7 @@ TYPE
 		BEGIN
 			intValue := SYSTEM.VAL(LONGINT, value);
 			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
-
-			temp := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(32), registerHint);
-			dummy := ValueComposition(intValue, TRUE, temp);
+			temp := RegisterFromValue(intValue, registerHint);
 			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(32), registerHint);
 			Emit2(opFMSR, result, temp);
 
@@ -2233,6 +2231,11 @@ TYPE
 				ASSERT(backend.useFPU32);
 				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
 				Emit2(opFABSS, destination[Low], source[Low]);
+				WriteBack(irInstruction.op1, Low, destination[Low])
+			ELSIF IsDoublePrecisionFloat(irInstruction.op1) THEN
+				ASSERT(backend.useFPU64);
+				PrepareSingleSourceOp(irInstruction, Low, destination[Low], source[Low]);
+				Emit2(opFABSD, destination[Low], source[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
 			ELSE
 				HALT(200)

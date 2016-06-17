@@ -114,6 +114,7 @@ TYPE
 	VAR
 		pc: LONGINT; (* program counter of the ARM instruction *)
 		bits: SIZE;
+		shift: SIZE; (* fixup shift ! *)
 		next: Citation;
 	END Citation;
 
@@ -135,11 +136,11 @@ TYPE
 		END Emit;
 		
 
-		PROCEDURE AddCitation(pc: LONGINT; bits: SIZE);
+		PROCEDURE AddCitation(pc: LONGINT; bits: SIZE; shift: SIZE);
 		VAR
 			citation: Citation;
 		BEGIN
-			NEW(citation); citation.pc := pc; citation.next := NIL; citation.bits := bits;
+			NEW(citation); citation.pc := pc; citation.next := NIL; citation.bits := bits; citation.shift := shift;
 			IF firstCitation = NIL THEN firstCitation := citation ELSE lastCitation.next := citation END;
 			lastCitation := citation
 		END AddCitation;
@@ -232,19 +233,20 @@ TYPE
 			due := MAX(SIZE);
 		END Init;
 		
-		PROCEDURE UpdateDue(pc: SIZE; bits: SIZE);
+		PROCEDURE UpdateDue(pc: SIZE; bits: SIZE; shift: SIZE);
 		VAR max: SIZE;
 		BEGIN
-			max := ASH(1, bits) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 8 (* offset *) - 20 (* five instructions safety *);
+			(* bits determine the address size in words *)
+			max := ASH(1, bits+shift) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 8 (* offset *) - 64 (* 16 instructions safety *);
 			IF max < due THEN
 				due := max;
 			END;
 		END UpdateDue;
 		
-		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: SIZE);
+		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: SIZE; shift: SIZE);
 		BEGIN
-			reference.AddCitation(pc, bits);
-			UpdateDue(pc, bits);
+			reference.AddCitation(pc, bits, shift);
+			UpdateDue(pc, bits, shift);
 		END AddCitation;
 		
 		PROCEDURE AddReference(reference: Reference): Reference;
@@ -280,7 +282,7 @@ TYPE
 				reference := AddReference(symbolReference);
 			END;
 			(* add a citation to the reference *)
-			AddCitation(reference, pc, bits);
+			AddCitation(reference, pc, bits, 0);
 		END AddSymbol;
 
 		PROCEDURE AddImmediate(value: LONGINT; pc: SIZE; bits: SIZE);
@@ -308,7 +310,7 @@ TYPE
 				reference := AddReference(immediateReference);
 			END;
 			(* add a citation to the reference *)
-			AddCitation(reference, pc, bits);
+			AddCitation(reference, pc, bits, 0);
 		END AddImmediate;
 
 		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT; bits: SIZE);
@@ -336,7 +338,7 @@ TYPE
 				reference := AddReference(immediateHReference);
 			END;
 			(* add a citation to the reference *)
-			AddCitation(reference, pc, bits);
+			AddCitation(reference, pc, bits, 2);
 		END AddHImmediate;
 
 	END ListOfReferences;
@@ -709,7 +711,6 @@ TYPE
 
 			(* emit the instruction *)
 			InstructionSet.Emit(opCode, condition, flags, operands, out);
-			EmitFixupBlockIfNeeded;
 			
 			
 		END Emit;
@@ -1449,6 +1450,7 @@ TYPE
 		PROCEDURE Generate(VAR irInstruction: IntermediateCode.Instruction);
 		BEGIN
 			(* CheckFixups; *)
+			EmitFixupBlockIfNeeded;
 
 			(*
 			IF ((irInstruction.opcode = IntermediateCode.mov) OR (irInstruction.opcode = IntermediateCode.pop)) & (instruction.op1.register <= IntermediateCode.ParameterRegister) THEN
@@ -1565,6 +1567,7 @@ TYPE
 					citation := reference.firstCitation;
 					WHILE citation # NIL DO
 						patchValue := out.pc - 8 - citation.pc;
+						patchValue := ASH(patchValue, -citation.shift); (* FLDS/VLDR reference counts number of words *)
 						ASSERT((0 <= patchValue) & (patchValue < ASH(1, citation.bits)));
 						out.PutBitsAt(citation.pc, patchValue, citation.bits);
 						citation := citation.next

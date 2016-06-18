@@ -411,26 +411,29 @@ CONST
 		w.Update;
 	END WriteBasicValue;
 	
-	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT);
+	PROCEDURE OnHeapOrStack(adr: ADDRESS; low, high: ADDRESS): BOOLEAN;
+	BEGIN
+		RETURN (low <= adr) & (adr < high) OR CheckHeapAddress(adr);
+	END OnHeapOrStack;
+	
+	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT; low, high: ADDRESS);
 	CONST MaxString = 32; 
 	VAR ch: CHAR;
 	BEGIN
 		IF maxLen > MaxString THEN maxLen := MaxString END; 
 		w.Char('"');
-		IF CheckHeapAddress(adr) THEN
-			LOOP
-				IF maxLen <= 0 THEN EXIT END;
-				SYSTEM.GET(adr, ch);
-				IF (ch < " ") OR (ch > "~") THEN EXIT END;
-				w.Char(ch);
-				INC(adr);
-				DEC(maxLen);
-			END;
+		LOOP
+			IF (maxLen <= 0) OR ~OnHeapOrStack(adr, low, high) THEN EXIT END;
+			SYSTEM.GET(adr, ch);
+			IF (ch < " ") OR (ch > "~") THEN EXIT END;
+			w.Char(ch);
+			INC(adr);
+			DEC(maxLen);
 		END;
 		w.Char('"');
 	END WriteValueString;
 
-	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS);
+	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
 	VAR type: CHAR; a: ADDRESS; size: SIZE; len: SIZE;
 	BEGIN
 		type := GetChar(refs, offset);
@@ -449,17 +452,17 @@ CONST
 			WriteBasicValue(w, sfTypeANY, adr, size);
 			w.String("->");
 			SYSTEM.GET(adr, a);
-			WriteValue(w,refs,offset, a);
+			WriteValue(w,refs,offset, a, low,high);
 			(*SkipType(refs, offset);*)
 		| sfTypeOpenArray: 
 			IF refs[offset] = sfTypeCHAR THEN (* ARRAY OF CHAR *)
-				WriteValueString(w, adr, MaxString);
+				WriteValueString(w, adr, MaxString, low, high);
 			END;
 			SkipType(refs, offset);
 		| sfTypeStaticArray: 
 			len := GetSize(refs, offset); 
 			IF refs[offset] = sfTypeCHAR THEN (* ARRAY x OF CHAR *)
-				WriteValueString(w, adr, len);
+				WriteValueString(w, adr, len, low, high);
 			END;
 			SkipType(refs, offset);
 		| sfTypeDynamicArray: 
@@ -492,7 +495,7 @@ CONST
 		w.Update;
 	END WriteValue;
 		
-	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT;  base: ADDRESS);
+	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT;  base: ADDRESS; low, high: ADDRESS);
 	VAR name: ARRAY 128 OF CHAR;  adr: LONGINT;  prevScope: SIZE; c: CHAR;
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
@@ -509,16 +512,16 @@ CONST
 		ELSE (* absolute *)
 			adr := GetAddress(refs, offset);
 		END;
-		WriteValue(w, refs, offset, adr); 
+		WriteValue(w, refs, offset, adr, low, high); 
 	END WriteVariable; 
 	
 	(* write variables taking meta information from stream in stream at offset, potentially stored at base address
 	 *)
-	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS);
+	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS);
 	VAR count: LONGINT; 
 	BEGIN
 		WHILE refs[offset] = sfVariable DO
-			WriteVariable(w, refs, offset, base); w.Ln;
+			WriteVariable(w, refs, offset, base, low, high); w.Ln;
 			(*INC(count); *)
 		END; 
 		IF count > 0 THEN w.Ln; Wait(w); END;
@@ -782,7 +785,7 @@ CONST
 	PROCEDURE WriteProc*(w: Streams.Writer; pc: ADDRESS);
 	VAR refs: Modules.Bytes; refpos: LONGINT; base: ADDRESS;
 	BEGIN
-		WriteProc0(w, Modules.ThisModuleByAdr0(pc), pc, -1, refs, refpos, base)
+		WriteProc0(w, Modules.ThisModuleByAdr0(pc), pc,  -1, refs, refpos, base)
 	END WriteProc;
 	
 	(** Write the state of the specified module. *)
@@ -798,7 +801,7 @@ CONST
 			SkipSize(offset);
 			SkipString(refs, offset);
 			IF (GetChar(refs, offset) = sfScopeBegin) THEN
-				WriteVariables(w, refs, offset, 0)
+				WriteVariables(w, refs, offset, 0, 0, 0)
 			END;
 		END;
 	END ModuleState;
@@ -827,10 +830,10 @@ CONST
 					WriteProc0(w, m, pc, bp, refs, offset, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
 						IF offset >= 0 THEN 
-							WriteVariables(w,refs,offset, base); 
+							WriteVariables(w,refs,offset, stacklow, stackhigh, base); 
 							SkipType(refs, offset);
 							IF Expect(GetChar(refs, offset) = sfScopeBegin) THEN
-								WriteVariables(w,refs,offset, base); 
+								WriteVariables(w,refs,offset, base, stacklow, stackhigh); 
 							END;
 						END;
 						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END

@@ -566,4 +566,5 @@ BEGIN
 	AddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");
 	AddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	AddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
+	AddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
 END Compiler.

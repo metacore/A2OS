@@ -503,7 +503,8 @@ TYPE
 		prefixes : ARRAY MaxPrefixes OF Name;
 		excludedPackages : Strings.StringArray;
 		onlyPackages: Strings.StringArray;
-		compiler, compileOptions, linker, linkOptions : ARRAY 128 OF CHAR;
+		compileOptions, linkOptions: Options.Parameter; 
+		compiler, linker: ARRAY 128 OF CHAR;
 		target : ARRAY 8 OF CHAR;
 		extension : ARRAY 8 OF CHAR;
 		symbolFileExtension : ARRAY 8 OF CHAR;

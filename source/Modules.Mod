@@ -84,6 +84,15 @@ TYPE
 
 	ProcOffsetTable* = POINTER TO ARRAY OF ProcOffsetEntry;
 
+	(* only for interface compatibility with generic loader based system
+	-- does not provide functionality. Used for precise GC.
+	*)
+	ProcedureDescPointer* = POINTER TO ProcedureDesc;
+	ProcedureDesc*= RECORD
+		pcFrom-, pcLimit-: ADDRESS; 
+		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
+	END;
+
 	Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
 		VAR
 			next*: Module;	(** once a module is published, all fields are read-only *)

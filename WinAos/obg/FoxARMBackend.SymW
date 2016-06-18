@@ -150,7 +150,6 @@ CONST
 	opTST = InstructionSet.opTST; 
 	opUMLAL = InstructionSet.opUMLAL; 
 	opUMULL = InstructionSet.opUMULL; 
-	MaximumFixupDistance = 1024; 
 	GetSP = 0; 
 	SetSP = 1; 
 	GetFP = 2; 
@@ -170,7 +169,7 @@ CONST
 	ADDC = 16; 
 	PACK = 17; 
 	UNPK = 18; 
-	UseFPUFlag = \"useFPU"\; 
+	UseFPU32Flag = \"useFPU32"\; 
 	UseFPU64Flag = \"useFPU64"\; 
 TYPE 
 	Operand = InstructionSet.Operand; 
@@ -180,6 +179,8 @@ TYPE
 	Citation = OBJECT 
 	VAR 
 		pc: LONGINT; 
+		bits: SIZE; 
+		shift: SIZE; 
 		next: Citation; 
 	END Citation; 
 
@@ -187,9 +188,11 @@ TYPE
 	VAR 
 		firstCitation, lastCitation: Citation; 
 		next: Reference; 
+		size: SIZE; 
 
-		PROCEDURE ^  & Init; 
-		PROCEDURE ^ AddCitation(pc: LONGINT); 
+		PROCEDURE ^  & Init(size: SIZE); 
+		PROCEDURE ^ Emit(out: BinaryCode.Section); 
+		PROCEDURE ^ AddCitation(pc: LONGINT; bits: SIZE; shift: SIZE); 
 	END Reference; 
 
 	ImmediateReference = OBJECT (Reference)
@@ -197,26 +200,39 @@ TYPE
 		value: LONGINT; 
 
 		PROCEDURE ^  & InitImm(v: LONGINT); 
+		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END ImmediateReference; 
+
+	ImmediateHReference = OBJECT (Reference)
+	VAR 
+		value: HUGEINT; 
+
+		PROCEDURE ^  & InitImm(v: HUGEINT); 
+		PROCEDURE ^ Emit(out: BinaryCode.Section); 
+	END ImmediateHReference; 
 
 	SymbolReference = OBJECT (Reference)
 	VAR 
-		symbol: Sections.SectionName; 
-		fingerprint: LONGINT; 
+		identifier: ObjectFile.Identifier; 
 		symbolOffset: LONGINT; 
 
 		PROCEDURE ^  & InitSym(s: Sections.SectionName; fp: LONGINT; offs: LONGINT); 
+		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END SymbolReference; 
 
 	ListOfReferences = OBJECT 
 	VAR 
 		firstReference, lastReference: Reference; 
-		referenceCount: LONGINT; 
-		pcOfFirstCitation: LONGINT; 
+		size: SIZE; 
+		due: SIZE; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT); 
-		PROCEDURE ^ AddImmediate(value: LONGINT; pc: LONGINT); 
+		PROCEDURE ^ UpdateDue(pc: SIZE; bits: SIZE; shift: SIZE); 
+		PROCEDURE ^ AddCitation(reference: Reference; pc: SIZE; bits: SIZE; shift: SIZE); 
+		PROCEDURE ^ AddReference(reference: Reference): Reference; 
+		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT); 
+		PROCEDURE ^ AddImmediate(value: LONGINT; pc: SIZE; bits: SIZE); 
+		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: LONGINT; bits: SIZE); 
 	END ListOfReferences; 
 
 	PhysicalRegisters* = OBJECT (CodeGenerators.PhysicalRegisters)
@@ -250,7 +266,6 @@ TYPE
 		stackSize: LONGINT; 
 		stackSizeKnown: BOOLEAN; 
 		inStackAllocation: BOOLEAN; 
-		fixupPattern: ObjectFile.FixupPatterns; 
 
 		PROCEDURE ^  & InitGeneratorARM(CONST runtimeModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM); 
 		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
@@ -290,6 +305,7 @@ TYPE
 		PROCEDURE ^ IsDoublePrecisionFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ PartType(CONST type: IntermediateCode.Type; part: LONGINT): IntermediateCode.Type; 
 		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type); 
 		PROCEDURE ^ ValueOfPart(value: HUGEINT; part: LONGINT): LONGINT; 
@@ -376,6 +392,7 @@ TYPE
 	END BackendARM; 
 VAR 
 	emptyOperand: Operand; 
+	rFixupPattern: ObjectFile.FixupPatterns; 
 
 	PROCEDURE ^ Assert(condition: BOOLEAN; CONST message: ARRAY OF CHAR); 
 	PROCEDURE ^ Halt(CONST message: ARRAY OF CHAR); 

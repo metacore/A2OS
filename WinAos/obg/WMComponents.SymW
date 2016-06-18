@@ -164,7 +164,7 @@ TYPE
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ InternalPropertyChanged(sender, property: ANY); 
-		PROCEDURE ^ InternalLinkChanged(sender, property: ANY); 
+		PROCEDURE ^ InternalLinkChanged(sender, link: ANY); 
 	END Component; 
 
 	Macro* = ARRAY 128 OF CHAR; 

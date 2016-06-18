@@ -1,5 +1,5 @@
 MODULE WMEvents;
-	IMPORT Strings, KernelLog;
+	IMPORT Kernel, Objects, Strings, KernelLog;
 CONST 
 TYPE 
 	String = Strings.String; 
@@ -27,8 +27,13 @@ TYPE
 		owner: ANY; 
 		finder: CompCommandFinder; 
 		next: EventSource; 
+		minimalDelay: LONGINT; 
+		updateTimer: Kernel.MilliTimer; 
+		lastFrameTimer: Objects.Timer; 
+		lastPar: ANY; 
 
 		PROCEDURE ^  & New*(owner: ANY; name, info: String; finder: CompCommandFinder); 
+		PROCEDURE ^ SetMinimalDelay*(ms: LONGINT); 
 		PROCEDURE ^ GetName*(): String; 
 		PROCEDURE ^ GetInfo*(): String; 
 		PROCEDURE ^ Add*(observer: EventListener); 
@@ -37,6 +42,7 @@ TYPE
 		PROCEDURE ^ RemoveByString*(string: String); 
 		PROCEDURE ^ CallWithSender*(sender, par: ANY); 
 		PROCEDURE ^ Call*(par: ANY); 
+		PROCEDURE ^ Call0; 
 		PROCEDURE ^ HasListeners*(): BOOLEAN; 
 	END EventSource; 
 

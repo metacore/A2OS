@@ -1,5 +1,5 @@
 MODULE WMTextView;
-	IMPORT Kernel, Modules, Inputs, KernelLog, XML, Texts, TextUtilities, SyntaxHighlighter, WMGraphics, WMGraphicUtilities, WMMessages, WMComponents, WMStandardComponents, Strings, WMDropTarget, Raster, WMRectangles, WMWindowManager, WMProperties, Commands, FileHandlers, Streams, WMPopups, FP1616, WMPieMenu, WMEvents, UnicodeBidirectionality, PositionDebugging, ContextualDependency;
+	IMPORT Kernel, Modules, Inputs, KernelLog, XML, Texts, TextUtilities, SyntaxHighlighter, WMGraphics, WMGraphicUtilities, WMMessages, WMComponents, WMStandardComponents, Strings, WMDropTarget, Raster, WMRectangles, WMWindowManager, WMProperties, Commands, FileHandlers, Streams, WMPopups, FP1616, WMPieMenu, WMEvents, UnicodeBidirectionality, PositionDebugging, ContextualDependency, D := Debugging;
 CONST 
 	TraceRenderOptimize = 0; 
 	TraceLayout = 1; 

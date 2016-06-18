@@ -82,7 +82,6 @@ CONST
 	Size7Flag = 9; 
 	Size8Flag = 10; 
 	ReflectionSupport = TRUE; 
-	PreciseGCSupport = TRUE; 
 TYPE 
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE}(CONST instr: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR):BOOLEAN; 
 
@@ -582,6 +581,7 @@ TYPE
 		preregisterStatic-: BOOLEAN; 
 		dump-: Basic.Writer; 
 		cellsAreObjects: BOOLEAN; 
+		preciseGC: BOOLEAN; 
 
 		PROCEDURE ^  & InitIntermediateBackend*; 
 		PROCEDURE ^ GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module; 

@@ -99,10 +99,11 @@ VAR
 	PROCEDURE ^ WriteType*(w: Streams.Writer; adr: ADDRESS); 
 	PROCEDURE ^ WriteProc0(w: Streams.Writer; mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Modules.Bytes; VAR refpos: LONGINT; VAR base: ADDRESS); 
 	PROCEDURE ^ WriteBasicValue*(w: Streams.Writer; type: CHAR; adr: ADDRESS; VAR size: SIZE); 
-	PROCEDURE ^ WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT); 
-	PROCEDURE ^ WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS); 
-	PROCEDURE ^ WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS); 
-	PROCEDURE ^ WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS); 
+	PROCEDURE ^ OnHeapOrStack(adr: ADDRESS; low, high: ADDRESS): BOOLEAN; 
+	PROCEDURE ^ WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT; low, high: ADDRESS); 
+	PROCEDURE ^ WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS); 
+	PROCEDURE ^ WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS); 
+	PROCEDURE ^ WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS); 
 	PROCEDURE ^ SkipType*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipProcedure*(refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ SkipVariable*(refs: Modules.Bytes; VAR offset: LONGINT); 

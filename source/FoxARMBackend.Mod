@@ -2972,7 +2972,6 @@ TYPE
 					(* to non-complex integer: *)
 					IF IsInteger(irSource) THEN
 						(* integer to non-complex integer *)
-						ASSERT(~IsComplex(irSource));
 						GetPartType(irSource.type, Low, partType);
 						SignOrZeroExtendOperand(source[Low], partType);
 						MovIfDifferent(destination[Low], source[Low])
@@ -3034,6 +3033,7 @@ TYPE
 			ELSIF IsDoublePrecisionFloat(irDestination) THEN
 				(* to double precision float: *)
 			 	IF IsInteger(irSource) THEN
+					ASSERT(~IsComplex(irSource));
 			 		(* integer to double precision float: ignore high part of source *)
 			 		temp := GetFreeRegister(IntermediateCode.FloatType(32));
 			 		Emit2(opFMSR, temp, source[Low]);

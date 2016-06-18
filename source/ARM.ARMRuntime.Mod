@@ -450,6 +450,12 @@ TYPE
 		FPE64.FloatInt64(x, SYSTEM.VAL(FPE64.Float64, flt)); RETURN flt
 	END ConvF64S64;
 
+	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
+	PROCEDURE ConvF64U32*(x: UNSIGNED32): FLOAT64;
+	BEGIN
+		HALT(100); 
+	END ConvF64U32;
+
 	(* if an FPU64 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF64S64F*(x: DoubleWord): LONGREAL;
 	VAR l,h:LONGREAL;
@@ -613,6 +619,12 @@ TYPE
 		RETURN ConvF32F64(ConvF64S64(x))
 	END ConvF32S64;
 
+	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
+	PROCEDURE ConvF32U32*(x: UNSIGNED32): FLOAT32;
+	BEGIN
+		HALT(100); 
+	END ConvF32U32;
+	
 	(* if an FPU32 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF32S64F*(x: DoubleWord): REAL;
 	VAR l,h:REAL;

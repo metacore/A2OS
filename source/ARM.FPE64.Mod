@@ -9,6 +9,8 @@ MODULE FPE64;
 		Float64* = RECORD
 			low*, high*: LONGINT
 		END;
+		
+		Float32* = LONGINT;
 
 	PROCEDURE Addd(VAR x1, x0: LONGINT; y1, y0: LONGINT);
 	CODE
@@ -505,8 +507,9 @@ MODULE FPE64;
 		RETURN x1
 	END Fix;
 
-	PROCEDURE Single*(VAR a: Float64): REAL;
-		VAR x0, x1, s, xe, m, i: LONGINT; x: REAL;
+	(* do not return floating point values in a register: on platforms supporting FPU this will be misinterpreted *)
+	PROCEDURE Single*(VAR a: Float64): Float32;
+		VAR x0, x1, s, xe, m: LONGINT; i: Float32;
 	BEGIN
 		x0 := a.low;
 		x1 := a.high;
@@ -524,8 +527,7 @@ MODULE FPE64;
 			(* make short float value *)
 			i := xe*800000H + m + s;
 		END;
-		SYSTEM.PUT32(ADDRESSOF(x), i);
-		RETURN x
+		RETURN i;
 	END Single;
 
 	PROCEDURE Double*(x: REAL; VAR z: Float64);

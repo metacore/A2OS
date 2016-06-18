@@ -101,7 +101,7 @@ CONST
 	NULL = 13; XOR = 14; MULD = 15; ADDC = 16;
 	PACK = 17; UNPK = 18;
 
-	UseFPUFlag = "useFPU";
+	UseFPU32Flag = "useFPU32";
 	UseFPU64Flag = "useFPU64";
 
 TYPE
@@ -620,8 +620,10 @@ TYPE
 				*)
 
 			| IntermediateCode.conv:
-				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH *)
+				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH: REAL/LONGREAL --> HUGEINT*)
 					result := FALSE
+				ELSIF IsInteger64(irInstruction.op2) & IsFloat(irInstruction.op1) THEN (* HUGEINT --> REAL / HUGEINT --> LONGREAL *)
+					result := FALSE;
 				ELSE
 					result := ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2)
 									OR backend.useFPU32 & ~IsDoublePrecisionFloat(irInstruction.op1) & ~IsDoublePrecisionFloat(irInstruction.op2)
@@ -668,6 +670,12 @@ TYPE
 			IF irInstruction.op1.mode # IntermediateCode.Undefined THEN
 				IF (irInstruction.op1.type.form # irInstruction.op2.type.form) OR (irInstruction.op1.type.sizeInBits # irInstruction.op2.type.sizeInBits) THEN
 					AppendType(resultingName, irInstruction.op2.type);
+					(* special case: result returned in FPU register *)
+					IF IsSinglePrecisionFloat(irInstruction.op1) & backend.useFPU32 THEN
+						Strings.Append(resultingName, 'F')
+					ELSIF IsDoublePrecisionFloat(irInstruction.op1) & backend.useFPU64 THEN
+						Strings.Append(resultingName, 'F')
+					END;
 				END
 			END;
 
@@ -2963,7 +2971,8 @@ TYPE
 				ELSE
 					(* to non-complex integer: *)
 					IF IsInteger(irSource) THEN
-						(* integer to non-complex integer: ignore high part of source *)
+						(* integer to non-complex integer *)
+						ASSERT(~IsComplex(irSource));
 						GetPartType(irSource.type, Low, partType);
 						SignOrZeroExtendOperand(source[Low], partType);
 						MovIfDifferent(destination[Low], source[Low])
@@ -3001,6 +3010,7 @@ TYPE
 			ELSIF IsSinglePrecisionFloat(irDestination) THEN
 				(* to single precision float: *)
 			 	IF IsInteger(irSource) THEN
+					ASSERT(~IsComplex(irSource));
 			 		(* integer to single precision float: ignore high part of source *)
 			 		temp := GetFreeRegister(IntermediateCode.FloatType(32));
 			 		Emit2(opFMSR, temp, source[Low]);
@@ -3581,7 +3591,7 @@ TYPE
 
 		PROCEDURE DefineOptions(options: Options.Options);
 		BEGIN
-			options.Add(0X, UseFPUFlag, Options.Flag);
+			options.Add(0X, UseFPU32Flag, Options.Flag);
 			options.Add(0X, UseFPU64Flag, Options.Flag);
 			options.Add(0X, "noInitLocals", Options.Flag);
 			DefineOptions^(options);
@@ -3589,7 +3599,7 @@ TYPE
 
 		PROCEDURE GetOptions(options: Options.Options);
 		BEGIN
-			IF options.GetFlag(UseFPUFlag) THEN useFPU32 := TRUE END;
+			IF options.GetFlag(UseFPU32Flag) THEN useFPU32 := TRUE END;
 			IF options.GetFlag(UseFPU64Flag) THEN useFPU64 := TRUE; useFPU32 := TRUE END;
 			IF options.GetFlag("noInitLocals") THEN initLocals := FALSE END;
 			GetOptions^(options);

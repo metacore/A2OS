@@ -6,14 +6,17 @@ CONST
 	C = 800000H;
 	E = 100H;
 	S = LONGINT(80000000H); (* used by VFP unit emulation *)
-	MAXREAL = LONGINT(7F7FFFFFH);
+	MAXFLOAT32 = LONGINT(7F7FFFFFH);
 
 TYPE
 	ULONGINT = LONGINT; (* alias to make distinction between signed and unsigned more clear *)
 	UHUGEINT = HUGEINT;
 	FLOAT32 = LONGINT; (* alias to make clear that the integer actually contains a IEEE 32 bit float *)
 	FLOAT64= HUGEINT;
-
+	DoubleWord = RECORD
+		low*: UNSIGNED32; high*: SIGNED32;
+	END;
+		
 	PROCEDURE DivS8*(left, right: SHORTINT): SHORTINT;
 	VAR result, dummy: LONGINT;
 	BEGIN	 DivModS32(left, right, result, dummy); RETURN SHORTINT(result)
@@ -322,18 +325,21 @@ TYPE
 	*)
 	END DivModU64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE NegF32*(float: FLOAT32): FLOAT32;
 	CODE
 		LDR R0, [FP, #+float] ; R0 := float
 		EOR R0, R0, #S ; invert only the sign bit
 	END NegF32;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE AbsF32*(float: FLOAT32): FLOAT32;
 	CODE
 		LDR R0, [FP, #+float] ; R0 := float
 		BIC R0, R0, #S ; clear the sign bit
 	END AbsF32;
 
+	(* only called when no FPU32 is available *)
 	PROCEDURE AddF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, ye, s: LONGINT;
 	BEGIN
@@ -359,7 +365,7 @@ TYPE
 					WHILE x < C DO x := 2*x; DEC(xe) END
 				END ;
 				IF xe < 0 THEN x := 0  (*underflow*)
-				ELSIF xe > 0FEH THEN x := MAXREAL + s; (* overflow *)
+				ELSIF xe > 0FEH THEN x := MAXFLOAT32 + s; (* overflow *)
 				ELSE x := xe*C + (x - C) + s;
 				END;
 			END
@@ -367,31 +373,37 @@ TYPE
 		RETURN x
 	END AddF32;
 	
+	(* only called when no FPU64 is available *)
 	PROCEDURE AddF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Add(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END AddF64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE MulF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Mul(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END MulF64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE DivF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Div(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END DivF64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE SubF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Sub(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END SubF64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE AbsF64*(x: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Abs(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END AbsF64;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE NegF64*(x: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Neg(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
@@ -412,50 +424,77 @@ TYPE
 		RETURN FPE64.FixInt64(d)
 	END ConvS64F32;
 
+	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32F64*(x: FLOAT64): FLOAT32;
-	BEGIN RETURN SYSTEM.VAL(FLOAT32, FPE64.Single(SYSTEM.VAL(FPE64.Float64,x)))
+	BEGIN RETURN FPE64.Single(SYSTEM.VAL(FPE64.Float64,x))
 	END ConvF32F64;
 
-	PROCEDURE ConvF64F32*(x: REAL): FLOAT64;
+	(* if an FPU32 is available, the result must be made available via FPU register *)
+	PROCEDURE ConvF32F64F*(x: FLOAT64): REAL;
+	VAR r: FLOAT32;
+	BEGIN 
+		r := FPE64.Single(SYSTEM.VAL(FPE64.Float64,x));
+		RETURN SYSTEM.VAL(REAL, r);
+	END ConvF32F64F;
+
+	(* only called when no FPU64 is available *)
+	PROCEDURE ConvF64F32*(x: FLOAT32): FLOAT64;
 	VAR z: FLOAT64;
 	BEGIN FPE64.Double(x,SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END ConvF64F32;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S64*(x: HUGEINT): FLOAT64;
 	VAR flt: FLOAT64;
 	BEGIN
 		FPE64.FloatInt64(x, SYSTEM.VAL(FPE64.Float64, flt)); RETURN flt
 	END ConvF64S64;
 
+	(* if an FPU64 is available, the result must be made available via FPU register *)
+	PROCEDURE ConvF64S64F*(x: DoubleWord): LONGREAL;
+	VAR l,h:LONGREAL;
+	BEGIN
+		l := x.low;
+		h := x.high;
+		RETURN  h * 100000000H + l;
+	END ConvF64S64F;
+
+	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S32*(x: LONGINT): FLOAT64;
 	VAR flt: FLOAT64;
 	BEGIN FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
 	END ConvF64S32;
 
+	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S16*(x: INTEGER): FLOAT64;
 	VAR flt: FLOAT64;
 	BEGIN FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
 	END ConvF64S16;
 
-	PROCEDURE ConvF32S16*(x: INTEGER): REAL;
+	(* only called when no FPU32 is available *)
+	PROCEDURE ConvF32S16*(x: INTEGER): FLOAT32;
 	BEGIN
 		RETURN ConvF32S32(LONGINT(x))
 	END ConvF32S16;
 	
-	PROCEDURE ConvF32S8*(x: SHORTINT): REAL;
+	(* only called when no FPU32 is available *)
+	PROCEDURE ConvF32S8*(x: SHORTINT): FLOAT32;
 	BEGIN
 		RETURN ConvF32S16(INTEGER(x))
 	END ConvF32S8;
 	
+	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S8*(x: SHORTINT): FLOAT64;
 	BEGIN
 		RETURN ConvF64S16(INTEGER(x))
 	END ConvF64S8;
 
+	(* only called when no FPU32 is available *)
 	PROCEDURE SubF32*(left, right: FLOAT32): FLOAT32;
 	BEGIN RETURN AddF32(left, NegF32(right))
 	END SubF32;
 
+	(* only called when no FPU32 is available *)
 	PROCEDURE MulF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, zh, ye, s: LONGINT;  (*zh, ye in this order; ye used as zh in MULD*)
 	BEGIN
@@ -479,7 +518,7 @@ TYPE
 			IF xe < 0 THEN (* underflow *)
 				x := 0;
 			ELSIF xe > 0FEH THEN (* overflow *)
-				x := MAXREAL + s;
+				x := MAXFLOAT32 + s;
 			ELSE
 				x := xe*C + (x-C) + s;
 			END;
@@ -487,12 +526,13 @@ TYPE
 		RETURN x
 	END MulF32;
 	
+	(* only called when no FPU32 is available *)
 	PROCEDURE DivF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, ye, q, s: LONGINT;
 	BEGIN
 		s := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.XOR(x, y))*{31});
 		IF SYSTEM.NULL(y) = TRUE THEN
-			x := MAXREAL + s;
+			x := MAXFLOAT32 + s;
 		ELSIF SYSTEM.NULL(x) = FALSE THEN
 			xe := x DIV C MOD E; (* exponent with bias *)
 			ye := y DIV C MOD E; (* exponent with bias *)
@@ -505,7 +545,7 @@ TYPE
 			IF xe < 0 THEN (* underflow *)
 				x := 0;
 			ELSIF xe > 0FEH THEN (* overflow *)
-				x := MAXREAL + s;
+				x := MAXFLOAT32 + s;
 			ELSE (* divide *)
 				q := 0;
 				WHILE q < LONGINT(1000000H) DO (* 2*C *)
@@ -545,6 +585,7 @@ TYPE
 	(** converts an integer into a float, ignores the non-integer part
 	- corresponds to REAL(int)
 	- note that no rounding occurs
+	only called when no FPU32 is available
 	**)
 	PROCEDURE ConvF32S32*(x: LONGINT): FLOAT32;
 	VAR xe, s: LONGINT;
@@ -566,10 +607,20 @@ TYPE
 		RETURN x
 	END ConvF32S32;
 
+	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32S64*(x: HUGEINT): FLOAT32;
 	BEGIN
 		RETURN ConvF32F64(ConvF64S64(x))
 	END ConvF32S64;
+
+	(* if an FPU32 is available, the result must be made available via FPU register *)
+	PROCEDURE ConvF32S64F*(x: DoubleWord): REAL;
+	VAR l,h:REAL;
+	BEGIN
+		l := x.low;
+		h := x.high;
+		RETURN  h * 100000000H + l;
+	END ConvF32S64F;
 
 	(* ---- STRING OPERATIONS ---- *)
 

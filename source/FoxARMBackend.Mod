@@ -387,12 +387,16 @@ TYPE
 
 			IF ~useFPU32 THEN
 				(* disable single precision VFP registers *)
-				FOR i := InstructionSet.SR0 TO InstructionSet.SR15 DO toVirtual[i] := unusable END
+				FOR i := InstructionSet.SR0 TO InstructionSet.SR31 DO toVirtual[i] := unusable END
+			ELSE (* disable upper 16 registers, because context is not saved *)
+				FOR i := InstructionSet.SR16 TO InstructionSet.SR31 DO toVirtual[i] := unusable END
 			END;
 
 			IF ~useFPU64 THEN
 				(* disable double precision VFP registers *)
-				FOR i := InstructionSet.DR0 TO InstructionSet.DR15 DO toVirtual[i] := unusable END;
+				FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO toVirtual[i] := unusable END;
+			ELSE (* disable upper 16 registers, because context is not saved *)
+				FOR i := InstructionSet.DR16 TO InstructionSet.DR31 DO toVirtual[i] := unusable END;
 			END; 
 			
 		END InitPhysicalRegisters;
@@ -448,12 +452,12 @@ TYPE
 				IF (type.sizeInBits = 32) & useFPU32 THEN
 					(* allocate a single precision VFP register *)
 					FOR i := InstructionSet.SR0 TO InstructionSet.SR31 DO
-						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
-					END
+						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i; END;
+					END;
 				ELSIF (type.sizeInBits = 64) & (useFPU64)  THEN
-						FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO
-							IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END
-						END				
+					FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO
+						IF (toVirtual[i] = NIL) & ((result = None) OR (i = hint)) THEN result := i END;
+					END;
 				ELSE
 						(* allocate a regular general purpose ARM register *)
 						FOR i := InstructionSet.R0 TO InstructionSet.R15 DO
@@ -2960,7 +2964,7 @@ TYPE
 								Emit2(opMOV, destination[High], InstructionSet.NewImmediate(0));
 							ELSE
 								(* for signed values the high part is set to 0...0 or 1...1, depending on the sign of the low part *)
-								Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftASR, None, 32))
+								Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftASR, None, 31))
 							END
 						END
 					ELSIF IsFloat(irSource) THEN (* ENTIERH not supported natively *)

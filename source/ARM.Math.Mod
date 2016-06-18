@@ -54,8 +54,8 @@ BEGIN
 	IF NEON THEN
 		IF x < 0.0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
 	ELSE
-		WHILE x >= 2 * pi DO x := x - pi END;
-		WHILE x < 0 DO x := x + pi END;
+		WHILE x >= 2 * pi DO x := x - 2*pi END;
+		WHILE x < 0 DO x := x + 2*pi END;
 		res := x;
 		xk := x;
 		k := 1;
@@ -77,8 +77,8 @@ BEGIN
 	IF NEON THEN
 		IF x < 0.0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
 	ELSE
-		WHILE x >= 2 * pi DO x := x - pi END;
-		WHILE x < 0 DO x := x + pi END;
+		WHILE x >= 2 * pi DO x := x - 2*pi END;
+		WHILE x < 0 DO x := x + 2*pi END;
 		res := 1.0;
 		xk := 1.0;
 		kf := 1;

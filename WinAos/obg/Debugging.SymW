@@ -9,7 +9,7 @@ VAR
 	PROCEDURE ^ Memory*(from, tov: ADDRESS); 
 	PROCEDURE ^ ViewStack(ebp, esp: LONGINT; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Stack*(CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stackhigh: LONGINT); 
+	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stacklow, stackhigh: LONGINT); 
 	PROCEDURE ^ TraceBack*; 
 	PROCEDURE ^ FileStart*(context: Commands.Context); 
 	PROCEDURE ^ FileEnd*; 

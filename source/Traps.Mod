@@ -123,7 +123,7 @@ VAR
 				KernelLog.Memory(int.ESP-16, 64)	(* show stack *)
 			END;*)
 			w.String( "StackTraceBack:" );  w.Ln;
-			Reflection.StackTraceBack(w, int.PC, int.BP, Objects.GetStackBottom(p), long, overflow);
+			Reflection.StackTraceBack(w, int.PC, int.BP, int.SP, Objects.GetStackBottom(p), long, overflow);
 		END;
 		w.String("---------------------------------"); w.Ln;
 		w.Char(02X);	(* "end of trap" *)

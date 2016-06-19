@@ -177,7 +177,7 @@ BEGIN
 	out.String("Flags: "); WriteFlags(p.flags, out); out.Ln;
 
 	out.String("Stack Trace Back:"); out.Ln; out.Update;
-	Reflection.StackTraceBack(out, p.state.PC, p.state.BP, Objects.GetStackBottom(p), TRUE, FALSE);
+	Reflection.StackTraceBack(out, p.state.PC, p.state.BP, p.state.SP, Objects.GetStackBottom(p), TRUE, FALSE);
 	out.Ln; out.Update;
 END ShowStack;
 

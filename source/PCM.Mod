@@ -335,7 +335,7 @@ IMPORT
 		log.Ln;  log.String( "##################" );
 		log.Ln;  log.String( "# Debugging.TraceBack #" );
 		log.Ln;  log.String( "##################" );
-		log.Ln;  Reflection.StackTraceBack( log, eip, ebp, 0, TRUE , FALSE );
+		log.Ln;  Reflection.StackTraceBack( log, eip, ebp, ebp, 0, TRUE , FALSE );
 		log.Update;
 	END TraceBackThis;
 

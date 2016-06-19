@@ -818,22 +818,22 @@ CONST
 	
 
 	(* Display call trackback. *)
-	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stackhigh: ADDRESS; long, overflow: BOOLEAN);
+	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; low,high: ADDRESS; long, overflow: BOOLEAN);
 	VAR count,offset: LONGINT; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
 	BEGIN
 		count := 0;	(* frame count *)
-		stacklow := bp;
+		low := bp;
 		REPEAT
 			m := Modules.ThisModuleByAdr0(pc);
-			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= stacklow) & (bp <= stackhigh) THEN
+			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= low) & (bp <= high) THEN
 				IF CheckHeapAddress( pc ) THEN
 					WriteProc0(w, m, pc, bp, refs, offset, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
 						IF offset >= 0 THEN 
-							WriteVariables(w,refs,offset, stacklow, stackhigh, base); 
+							WriteVariables(w,refs,offset, base, low, high); 
 							SkipType(refs, offset);
 							IF Expect(GetChar(refs, offset) = sfScopeBegin) THEN
-								WriteVariables(w,refs,offset, base, stacklow, stackhigh); 
+								WriteVariables(w,refs,offset, base, low, high); 
 							END;
 						END;
 						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END

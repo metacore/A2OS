@@ -568,11 +568,10 @@ VAR
 	END WriteSimpleVar;
 
 	(* Display call trackback. *)
-	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stackhigh: ADDRESS; long, overflow: BOOLEAN);
-	VAR count,refpos: LONGINT; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
+	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS; long, overflow: BOOLEAN);
+	VAR count,refpos: LONGINT; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
 	BEGIN
 		count := 0;	(* frame count *)
-		stacklow := bp;
 		REPEAT
 			m := Modules.ThisModuleByAdr0(pc);
 			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= stacklow) & (bp <= stackhigh) THEN

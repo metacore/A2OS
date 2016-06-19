@@ -194,7 +194,7 @@ VAR
 			w.Ln;
 			w.String("Process:"); Reflection.WriteProcess(w, p); w.Ln;
 			w.String("Stack Traceback:"); w.Ln;
-			Reflection.StackTraceBack(w, int.PC, int.BP, Objects.GetStackBottom(p), long, overflow);
+			Reflection.StackTraceBack(w, int.PC, int.BP, int.SP, Objects.GetStackBottom(p), long, overflow);
 		END;
 		w.String("---------------------------------"); w.Ln;
 		w.Char(02X);	(* "end of trap" *)

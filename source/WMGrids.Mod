@@ -151,14 +151,10 @@ TYPE
 			NEW(onClickSelected, SELF, GSonClickSelected, GSonClickSelectedInfo, SELF.StringToCompCommand); events.Add(onClickSelected);
 		END Init;
 
-	PROCEDURE Initialize*; (*to do: drop this altogether*)
+		PROCEDURE RecacheProperties;
 		BEGIN
-			Initialize^;
-			(*RecacheAllProperties*)
-		END Initialize;
-
-		PROCEDURE RecacheAllProperties;
-		BEGIN
+			RecacheProperties^;
+			
 			defaultColWidthC := defaultColWidth.Get();
 			defaultRowHeightC := defaultRowHeight.Get();
 			fixedColsC := fixedCols.Get();
@@ -176,17 +172,11 @@ TYPE
 			alwaysShowScrollYC := alwaysShowScrollY.Get();
 			CheckScrollbarsNeeded;
 			AlignSubComponents
-		END RecacheAllProperties;
-
-		PROCEDURE RecacheProperties;
-		BEGIN
-			RecacheProperties^;
-			RecacheAllProperties
 		END RecacheProperties;
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
-			RecacheAllProperties;
+			RecacheProperties;
 			Invalidate;
 			PropertyChanged^(sender, property)
 		END PropertyChanged;

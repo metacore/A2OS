@@ -94,7 +94,6 @@ TYPE
 		printer: Printout.Printer;
 		system: Global.System;
 		generatedModule: Formats.GeneratedModule;
-		name: SyntaxTree.IdentifierString;
 		split: Strings.StringArray;
 		sectionOffset: LONGINT;
 		flags: SET;

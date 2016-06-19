@@ -423,7 +423,8 @@ CONST
 		IF maxLen > MaxString THEN maxLen := MaxString END; 
 		w.Char('"');
 		LOOP
-			IF (maxLen <= 0) OR ~OnHeapOrStack(adr, low, high) THEN EXIT END;
+			IF (maxLen <= 0) OR ~OnHeapOrStack(adr, low, high) THEN
+			 EXIT END;
 			SYSTEM.GET(adr, ch);
 			IF (ch < " ") OR (ch > "~") THEN EXIT END;
 			w.Char(ch);
@@ -439,43 +440,52 @@ CONST
 		type := GetChar(refs, offset);
 		CASE type OF
 			sfTypeNone:
+			w.String("NONE");
 		| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
 			WriteBasicValue(w,type, adr, size);
 			SYSTEM.GET(adr, a);
-			IF CheckHeapAddress(a) THEN
+			IF a = 0 THEN
+				w.String("NIL");
+			ELSIF CheckHeapAddress(a) THEN
 				SYSTEM.GET(a + Heaps.TypeDescOffset, a);
 				w.String(" (");
 				WriteType(w,a);
 				w.String(")");
+			ELSE
+				w.String("(UNKNOWN)");
 			END;
 		| sfTypePointerToArray: 
 			WriteBasicValue(w, sfTypeANY, adr, size);
-			w.String("->");
 			SYSTEM.GET(adr, a);
-			WriteValue(w,refs,offset, a, low,high);
-			(*SkipType(refs, offset);*)
+			IF ~OnHeapOrStack(a,low,high) THEN w.String(" (INVALID)") END;
+			SkipType(refs, offset)
 		| sfTypeOpenArray: 
-			IF refs[offset] = sfTypeCHAR THEN (* ARRAY OF CHAR *)
-				WriteValueString(w, adr, MaxString, low, high);
+			IF (refs[offset] = sfTypeCHAR) OR (refs[offset] = sfTypeCHAR8)  THEN (* ARRAY OF CHAR *)
+				SYSTEM.GET(adr, a);
+				WriteValueString(w, a, MaxString, low, high);
+			ELSE
+				w.String("... (NO STRING)")
 			END;
 			SkipType(refs, offset);
 		| sfTypeStaticArray: 
 			len := GetSize(refs, offset); 
-			IF refs[offset] = sfTypeCHAR THEN (* ARRAY x OF CHAR *)
+			IF (refs[offset] = sfTypeCHAR)  OR (refs[offset] = sfTypeCHAR8) THEN (* ARRAY x OF CHAR *)
 				WriteValueString(w, adr, len, low, high);
+			ELSE
+				w.String("... (NO STRING)");
 			END;
 			SkipType(refs, offset);
 		| sfTypeDynamicArray: 
-			w.String("...");
+			w.String("... (DYNAMIC ARRAY)");
 			SkipType(refs, offset); 
 		| sfTypeMathOpenArray: 
-			w.String("...");
+			w.String("... (MATH OPEN ARRAY)");
 			SkipType(refs, offset);
 		| sfTypeMathStaticArray: 
-			w.String("...");
+			w.String("... (MATH STATIC ARRAY)");
 			SkipSize(offset); SkipType(refs, offset);
 		| sfTypeMathTensor: 
-			w.String("...");
+			w.String("...(MATH TENSOR)");
 			SkipType(refs, offset); 
 		| sfTypeRecord: 
 			w.String("...");
@@ -484,6 +494,7 @@ CONST
 			WriteType(w,a);
 			w.String(")");
 		| sfTypeDelegate: 
+			w.String("(DELEGATE)");
 			WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
 			SkipType(refs, offset); 
 		| sfTypePORT:
@@ -1097,3 +1108,4 @@ BEGIN
 END Reflection.
 
 
+StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~

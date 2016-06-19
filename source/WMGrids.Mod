@@ -151,10 +151,10 @@ TYPE
 			NEW(onClickSelected, SELF, GSonClickSelected, GSonClickSelectedInfo, SELF.StringToCompCommand); events.Add(onClickSelected);
 		END Init;
 
-		PROCEDURE Initialize*;
+	PROCEDURE Initialize*; (*to do: drop this altogether*)
 		BEGIN
 			Initialize^;
-			RecacheAllProperties
+			(*RecacheAllProperties*)
 		END Initialize;
 
 		PROCEDURE RecacheAllProperties;

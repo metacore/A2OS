@@ -833,14 +833,14 @@ TYPE
 		PROCEDURE Initialize*;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
-			Initialize^;
-			RecacheProperties;
+			(*Initialize^;
+			RecacheProperties;*)
+			
 			cursor.SetVisible(FALSE);
 			IF text#NIL THEN	Resized 	END;
-
 			(* from now on, bidi-formatting can be done *)
 			layout.initialized := TRUE;
-			(*Initialize^;*)
+			Initialize^;
 		END Initialize;
 
 		PROCEDURE Finalize;

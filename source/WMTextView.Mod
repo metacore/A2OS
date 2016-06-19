@@ -833,14 +833,14 @@ TYPE
 		PROCEDURE Initialize*;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
-			(*Initialize^;
-			RecacheProperties;*)
+			(*Initialize^; RecacheProperties;*)
 			
-			cursor.SetVisible(FALSE);
-			IF text#NIL THEN	Resized 	END;
+			IF text#NIL THEN	Resized 	END; (*implicit redundant invalidate in Resized *)(*! Resized is probably redundant*)
+			
 			(* from now on, bidi-formatting can be done *)
 			layout.initialized := TRUE;
 			Initialize^;
+			cursor.SetVisible(FALSE);
 		END Initialize;
 
 		PROCEDURE Finalize;
@@ -900,6 +900,7 @@ TYPE
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			RecacheProperties^;
+			
 			defaultTextColorI := defaultTextColor.Get();
 			defaultTextBgColorI := defaultTextBgColor.Get();
 			isMultiLineI := isMultiLine.Get();
@@ -1061,7 +1062,7 @@ TYPE
 		VAR prevWidth: LONGINT;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
-			Resized^;
+			Resized^; (*? here, an implicit Invalidate() is triggered - this is probably redundant *)
 			prevWidth := layout.paperWidth;
 			layout.paperWidth := bounds.GetWidth() - (bordersI.l + bordersI.r);
 			borderClip.r := bounds.GetWidth() - bordersI.r; borderClip.b := bounds.GetHeight() - bordersI.b;

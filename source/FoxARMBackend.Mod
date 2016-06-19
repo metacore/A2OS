@@ -1806,6 +1806,8 @@ TYPE
 				ELSE
 					HALT(100)
 				END
+			ELSIF (sizeInBits < 32)  THEN
+				ASSERT(operand.mode = InstructionSet.modeImmediate);
 			END
 		END ZeroExtendOperand;
 
@@ -1817,6 +1819,8 @@ TYPE
 					Emit2(opMOV, operand, InstructionSet.NewRegister(operand.register, InstructionSet.shiftLSL, None, 32 - sizeInBits));
 					Emit2(opMOV, operand, InstructionSet.NewRegister(operand.register, InstructionSet.shiftASR, None, 32 - sizeInBits))
 				END
+			ELSIF (sizeInBits < 32)  THEN
+				ASSERT(operand.mode = InstructionSet.modeImmediate);
 			END
 		END SignExtendOperand;
 

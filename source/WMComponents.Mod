@@ -589,7 +589,7 @@ TYPE
 						END;
 						c := GetNext(c);
 					END;	
-					Initialize;
+					IF ~initialized THEN Initialize END;
 				END;
 			END
 		END Reset;

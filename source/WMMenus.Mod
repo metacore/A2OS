@@ -116,6 +116,8 @@ TYPE
 			ELSIF (property = openDirection) THEN
 				openDirectionI := openDirection.Get();
 				Invalidate;
+			ELSIF property=properties THEN
+				RecacheProperties; Invalidate
 			ELSE
 				PropertyChanged^(sender, property);
 			END;
@@ -126,7 +128,7 @@ TYPE
 			RecacheProperties^;
 			horizontalI := horizontal.Get();
 			openDirectionI := openDirection.Get();
-			Invalidate;
+			(*Invalidate;*)
 		END RecacheProperties;
 
 		PROCEDURE SetParent(parentMenuPanel : MenuPanel);

@@ -126,7 +126,7 @@ TYPE
 				(property = bgLeftSelected) OR (property = bgMiddleSelected) OR (property = bgRightSelected) OR
 				(property = bgLeftAttention) OR (property = bgMiddleAttention) OR (property = bgRightAttention)
 			THEN
-				RecacheProperties;
+				RecacheProperties; Invalidate;
 			ELSIF (property = borderWidth) OR
 				(property = clDefault) OR (property = clHover) OR (property = clSelected) OR (property = clAttention) OR
 				(property = clSelectedAttention) OR (property = clTextDefault) OR (property = clTextHover) OR
@@ -166,7 +166,7 @@ TYPE
 				imgLeftSelected := NIL; imgMiddleSelected := NIL; imgRightSelected := NIL;
 				imgLeftAttention := NIL; imgMiddleAttention := NIL; imgRightAttention := NIL;
 			END;
-			Invalidate
+			(*Invalidate*)
 		END RecacheProperties;
 
 		PROCEDURE FindTabFromPos(x,y: LONGINT) : Tab;

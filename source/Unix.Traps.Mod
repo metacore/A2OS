@@ -153,7 +153,7 @@ VAR
 			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp ); 
 			w.String( ", pc = " );  w.Address( pc );  w.Ln;  
 			w.Ln;  
-			Reflection.StackTraceBack( w, pc, bp, Objects.GetStackBottom( process ), TRUE, FALSE );
+			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
 			SearchExceptionHandler( process, ucp, handler ); 
 		END;
 		w.Ln; w.Ln; 

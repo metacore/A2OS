@@ -181,8 +181,8 @@ TYPE
 		PROCEDURE Initialize;
 		BEGIN
 			Initialize^;
-			Resized;
-			RecacheProperties;
+			(*Resized;
+			RecacheProperties;*)
 		END Initialize;
 
 		PROCEDURE SetCurrentCursorVisibility(isVisible : BOOLEAN);
@@ -214,9 +214,9 @@ TYPE
 			ELSIF (property = alignH) OR (property = alignV) THEN Invalidate
 			ELSIF (property = model) THEN Invalidate
 			ELSIF (property = scaleFont)& (scaleFont.Get()>0) THEN
-				ScaleFont(TextHeight(),scaleFont.Get());
+				ScaleFont(TextHeight(),scaleFont.Get()); (* implied Invalidate;*)
 			ELSE
-				IF (property = bounds) & (scaleFont.Get()>0) THEN ScaleFont(TextHeight(),scaleFont.Get()); END;
+				IF (property = bounds) & (scaleFont.Get()>0) THEN ScaleFont(TextHeight(),scaleFont.Get()); (* implied Invalidate;*) END;
 				PropertyChanged^(sender, property);
 			END;
 		END PropertyChanged;
@@ -227,7 +227,7 @@ TYPE
 			typeI := type.Get();
 			readOnlyI := readOnly.Get();
 			textColorI := textColor.Get();
-			Invalidate;
+			(*Invalidate;*)(*!PH*)
 		END RecacheProperties;
 
 		(** Resize the internal buffer so that it can hold a string of the length <min> (incl. 0X).
@@ -1328,7 +1328,7 @@ TYPE
 			tv.takesFocus.Set(takesFocus.Get());
 			tv.needsTab.Set(needsTab.Get());
 			tv.highlighting.Set(highlighting.Get());
-			Resized;
+			(*Resized;**)(*PH implied Invalidate - redundant*)
 		END Initialize;
 
 		PROCEDURE SetUndoManager*(uMgr: UndoManager.UndoManager);

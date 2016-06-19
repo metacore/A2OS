@@ -320,6 +320,8 @@ TYPE
 			IF arrow.Get() THEN INCL(state,Arrow) ELSE EXCL(state, Arrow) END;
 			RecacheProperties^;
 			RecachePoints;
+			Normalize;
+			Resized;(* implied Invalidate - that is redundant*)
 		END RecacheProperties;
 		
 		PROCEDURE RecachePoints; (*build point list in parent coordinates*)
@@ -729,7 +731,7 @@ TYPE
 				RecacheProperties;
 				SplineToPoly(points, Closed IN state, pointArray, nSegments); 
 				Normalize;
-				Resized;(* implied Invalidate *)
+				Resized;(* implied Invalidate - that is redundant*)
 				IF ~(property IS WMProperties.PointProperty) & ~(property=closed) THEN
 					PropertyChanged^(sender,property);
 				END;
@@ -1173,4 +1175,4 @@ END TestFigures.
 TestFigures.Do
 TestFigures.Do1
 
-SystemTools.FreeDownTo TestFigures ~
+SystemTools.FreeDownTo WMFigures TestFigures ~

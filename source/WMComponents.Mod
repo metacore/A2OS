@@ -3721,7 +3721,7 @@ BEGIN
 	NEW(selection);
 END WMComponents.
 
-WMComponents.Open Test.Cwd ~
+WMComponents.Open FigureExample.Cwd ~
 WMComponents.Open DictEntry.wm ~
 
 The message sequencer contains a reader writer lock that can be used to block the hierarchy.

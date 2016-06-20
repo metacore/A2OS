@@ -1300,7 +1300,7 @@ BEGIN
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
 	
 	(* determine whether it is WOW64 environment *)
-	isWow64 := Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0; 
+	isWow64 := (Kernel32.Wow64GetThreadContext # NIL) & (Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0); 
 	IF isWow64 THEN
 		Trace.String("Use Wow64"); Trace.Ln;
 	END;

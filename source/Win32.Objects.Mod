@@ -176,7 +176,7 @@ TYPE
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
 				IF mode # Suspended THEN
-					IF Kernel32.Wow64SuspendThread # NIL THEN 
+					IF isWow64 THEN 
 						res := Kernel32.Wow64SuspendThread(handle);
 					ELSE
 						res := Kernel32.SuspendThread(handle);
@@ -188,7 +188,7 @@ TYPE
 				res := Kernel32.GetThreadContext( handle, state );
 				
 				context.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
-				IF Kernel32.Wow64GetThreadContext # NIL THEN 
+				IF isWow64 THEN 
 					res := Kernel32.Wow64GetThreadContext( handle, context );
 				ELSE
 					res := Kernel32.GetThreadContext( handle, context );
@@ -274,7 +274,7 @@ TYPE
 				WHILE p # NIL DO
 					cur := p(Process);
 					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
-						IF Kernel32.Wow64SuspendThread # NIL THEN 
+						IF isWow64 THEN 
 							res := Kernel32.Wow64SuspendThread(cur.handle);
 						ELSE
 							res := Kernel32.SuspendThread(cur.handle);
@@ -379,6 +379,8 @@ VAR
 	nProcs: LONGINT;
 
 	excplock: Kernel32.CriticalSection;  exceptionhandler: ExceptionHandler;
+	
+	isWow64: BOOLEAN; (* TRUE for WOW64 environment *)
 
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
@@ -1040,7 +1042,7 @@ END Await;
 		IF CurrentProcess() # t THEN
 			Machine.Acquire( Machine.Objects );
 			LOOP
-				IF Kernel32.Wow64SuspendThread # NIL THEN 
+				IF isWow64 THEN 
 					retBOOL := Kernel32.Wow64SuspendThread(t.handle);
 				ELSE
 					retBOOL := Kernel32.SuspendThread( t.handle );
@@ -1286,6 +1288,9 @@ BEGIN
 	END;	
 END ReenterA2;
 
+VAR
+	lpContext: Kernel32.Wow64Context;
+	
 BEGIN
 	exceptionhandler := NIL;
 	terminateProc := TerminateProc;
@@ -1293,11 +1298,11 @@ BEGIN
 	tlsIndex := Kernel32.TlsAlloc();
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
-	IF Kernel32.Wow64GetThreadContext # NIL THEN
-		Trace.String("Use Wow64 Context"); Trace.Ln;
-	END;
-	IF Kernel32.Wow64SuspendThread # NIL THEN
-		Trace.String("Use Wow64 suspend"); Trace.Ln;
+	
+	(* determine whether it is WOW64 environment *)
+	isWow64 := Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0; 
+	IF isWow64 THEN
+		Trace.String("Use Wow64"); Trace.Ln;
 	END;
 	Init
 END Objects.

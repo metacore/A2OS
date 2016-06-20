@@ -389,7 +389,7 @@ BEGIN
 END AddSample;
 
 PROCEDURE HandleTimer(id: LONGINT; process : Objects.Process;  pc, bp, lowAdr, highAdr : ADDRESS);
-VAR index, depth : LONGINT;
+VAR index, depth : LONGINT; n: ADDRESS;
 BEGIN
 	(* acquire lock that protects currentIndex *)
 	WHILE Machine.AtomicTestSet(locked) DO Machine.SpinHint; (* busy wait *) END;
@@ -411,6 +411,10 @@ BEGIN
 	samples[index][0] := pc;
 	depth := 1;
 	WHILE (bp # 0) & (lowAdr <= bp) & (bp < highAdr) (* Machine.Less(bp, highAdr)*)  & (depth < MaxUnwindingDepth) DO
+		SYSTEM.GET(bp, n);
+		IF ODD(n) THEN
+			INC(bp, SIZEOF(ADDRESS));
+		END;
 		SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
 		SYSTEM.GET(bp, bp);
 		samples[index][depth] := pc;

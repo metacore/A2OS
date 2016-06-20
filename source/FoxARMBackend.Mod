@@ -508,7 +508,7 @@ TYPE
 		runtimeModuleName: SyntaxTree.IdentifierString;
 		backend: BackendARM;
 
-		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD: InstructionSet.Operand;
+		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD, fpscr: InstructionSet.Operand;
 
 		listOfReferences: ListOfReferences;
 
@@ -546,6 +546,7 @@ TYPE
 			opRESFS := InstructionSet.NewRegister(InstructionSet.RESFS, None, None, 0);
 			opRESFD := InstructionSet.NewRegister(InstructionSet.RESFD, None, None, 0);
 
+			fpscr := InstructionSet.NewRegister(InstructionSet.FPSCR, None, None, 0);
 			dump := NIL;
 
 			NEW(listOfReferences);
@@ -1879,10 +1880,9 @@ TYPE
 			register: Operand; partType: IntermediateCode.Type;
 		BEGIN
 			register := AcquireDestinationRegister(irOperand, part, emptyOperand);
-			IF ~IsRegisterForType(register.register, IntermediateCode.FloatType(32)) THEN
+			IF ~IsRegisterForType(register.register, IntermediateCode.FloatType(32)) & ~IsRegisterForType(register.register, IntermediateCode.FloatType(64)) THEN
 				(*Emit2(opLDR, register, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment, InstructionSet.PostIndexed}));*)
 				Load(register, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment, InstructionSet.PostIndexed}), PartType(irOperand.type, part));
-
 			ELSE
 				Load(register, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 0, {InstructionSet.Increment}), PartType(irOperand.type, part));
 				partType := PartType(irOperand.type, part);
@@ -2937,8 +2937,26 @@ TYPE
 		VAR
 			irDestination, irSource: IntermediateCode.Operand;
 			destination, source: ARRAY 2 OF Operand;
-			temp: Operand;
+			temp, fpstatus: Operand;
 			partType: IntermediateCode.Type;
+			
+			PROCEDURE RoundDown;
+			BEGIN
+				fpstatus := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+				(* round to minus infitinity *)
+				Emit2(InstructionSet.opVMRS, fpstatus, fpscr);
+				Emit3(opORR, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
+				Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
+			END RoundDown;
+			
+			PROCEDURE ResetRounding;
+			BEGIN
+				(* reset rounding mode *)
+				Emit3(opBIC, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
+				Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
+			END ResetRounding;
+			
+			
 		BEGIN
 			irDestination := irInstruction.op1; irSource := irInstruction.op2;
 
@@ -2988,12 +3006,17 @@ TYPE
 						ASSERT(backend.useFPU32);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
+						
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
 							(* single precision float to non-complex unsigned integer: *)
+							RoundDown;
 							Emit2(opFTOUIS, temp, source[Low]);
+							ResetRounding;
 						ELSE
 							(* single precision float to non-complex signed integer: *)
+							RoundDown;
 							Emit2(opFTOSIS, temp, source[Low]);
+							ResetRounding;
 						END;
 						Emit2(opFMRS, destination[Low], temp)
 					ELSIF IsDoublePrecisionFloat(irSource) THEN
@@ -3003,10 +3026,14 @@ TYPE
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
 							(* single precision float to non-complex unsigned integer: *)
+							RoundDown;
 							Emit2(opFTOUID, temp, source[Low]);
+							ResetRounding;
 						ELSE
 							(* single precision float to non-complex signed integer: *)
+							RoundDown;
 							Emit2(opFTOSID, temp, source[Low]);
+							ResetRounding;
 						END;
 						Emit2(opFMRS, destination[Low], temp)
 					ELSE

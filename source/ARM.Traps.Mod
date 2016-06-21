@@ -355,7 +355,6 @@ VAR
 		IF ~handled THEN
 			(* Taken from Machine to allow the FINALLY in the kernel *)
 			exc.locks := Machine.BreakAll();
-			Machine.EnableInterrupts();
 			IF ~traceTrap THEN	(* trap *)
 				IF user THEN	(* return to outer level *)
 					IF TraceVerbose THEN
@@ -364,10 +363,10 @@ VAR
 						KernelLog.Hex(t.restartSP, 9);  KernelLog.Hex(t.stack.high, 9);
 						KernelLog.Exit
 					END;
-					(*INCL(int.FLAGS, Machine.IFBit);	(* enable interrupts *)*)
 					int.BP := t.restartSP; int.SP := t.restartSP;	(* reset stack *)
 					int.PC := t.restartPC;	(* restart object body or terminate *)
 				ELSE	(* trap was in kernel (interrupt handler) *)	(* fixme: recover from trap in stack traceback *)
+					Machine.EnableInterrupts();
 					KernelLog.Enter;  KernelLog.String("Kernel halt");  KernelLog.Exit;
 					Machine.Shutdown(FALSE)
 				END

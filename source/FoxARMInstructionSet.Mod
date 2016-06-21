@@ -1023,9 +1023,9 @@ CONST
 					ELSIF (operand.register < DR0) OR (operand.register > DR15) THEN error := TRUE
 					END;
 					CASE operandEncoding OF
-					|encodingDR16: Unsigned(operand.register-DR0,16,19);
-					|encodingDR12: Unsigned(operand.register-DR0,12,15);
-					|encodingDR0: Unsigned(operand.register-DR0,0,3);
+					|encodingDR16: Unsigned((operand.register-DR0) MOD 16,16,19); Unsigned((operand.register-DR0) DIV 16,7,7);
+					|encodingDR12: Unsigned((operand.register-DR0) MOD 16,12,15); Unsigned((operand.register-DR0) DIV 16,22,22);
+					|encodingDR0: Unsigned((operand.register-DR0) MOD 16,0,3); Unsigned((operand.register-DR0) DIV 16,5,5);
 					END;
 				|encodingFR0, encodingFR12, encodingFR16:
 					IF operand.mode # modeRegister THEN error := TRUE
@@ -1033,9 +1033,9 @@ CONST
 					ELSIF (operand.register < SR0) OR (operand.register > SR31) THEN error := TRUE
 					END;
 					CASE operandEncoding OF
-					|encodingFR16: Unsigned((operand.register-SR0) MOD 16,16,19); Unsigned((operand.register-SR0) DIV 16,7,7);
-					|encodingFR12: Unsigned((operand.register-SR0) MOD 16,12,15); Unsigned((operand.register-SR0) DIV 16,22,22);
-					|encodingFR0: Unsigned((operand.register-SR0) MOD 16,0,3);Unsigned((operand.register-SR0) DIV 16,5,5);
+					|encodingFR16: Unsigned((operand.register-SR0) DIV 2,16,19); Unsigned((operand.register-SR0) MOD 2,7,7);
+					|encodingFR12: Unsigned((operand.register-SR0) DIV 2,12,15); Unsigned((operand.register-SR0) MOD 2,22,22);
+					|encodingFR0: Unsigned((operand.register-SR0) DIV 2,0,3);Unsigned((operand.register-SR0) MOD 2,5,5);
 					END;
 				|encodingAddressingMode1:
 					IF operand.mode = modeImmediate THEN
@@ -1617,12 +1617,12 @@ CONST
 				|encodingR12: InitRegister(operand, R0+Unsigned(12, 15), None, None, 0);
 				|encodingR8: InitRegister(operand, R0+Unsigned(8, 11), None, None, 0);
 				|encodingR0: InitRegister(operand, R0+Unsigned(0, 3), None, None, 0);
-				|encodingFR0: InitRegister(operand, SR0+Unsigned(0, 3)+16*Unsigned(5,5), None, None, 0);
-				|encodingFR12: InitRegister(operand, SR0+Unsigned(12, 15)+16*Unsigned(22,22), None, None, 0);
-				|encodingFR16: InitRegister(operand, SR0+Unsigned(16, 19)+16*Unsigned(7,7), None, None, 0);
-				|encodingDR0: InitRegister(operand, DR0+Unsigned(0, 3), None, None, 0);
-				|encodingDR12: InitRegister(operand, DR0+Unsigned(12, 15), None, None, 0);
-				|encodingDR16: InitRegister(operand, DR0+Unsigned(16, 19), None, None, 0);
+				|encodingFR0: InitRegister(operand, SR0+2*Unsigned(0, 3)+Unsigned(5,5), None, None, 0);
+				|encodingFR12: InitRegister(operand, SR0+2*Unsigned(12, 15)+Unsigned(22,22), None, None, 0);
+				|encodingFR16: InitRegister(operand, SR0+2*Unsigned(16, 19)+Unsigned(7,7), None, None, 0);
+				|encodingDR0: InitRegister(operand, DR0+Unsigned(0, 3) + 16*Unsigned(5,5), None, None, 0);
+				|encodingDR12: InitRegister(operand, DR0+Unsigned(12, 15) + 16*Unsigned(7,7), None, None, 0);
+				|encodingDR16: InitRegister(operand, DR0+Unsigned(16, 19) + 16*Unsigned(5,5), None, None, 0);
 				|encodingCR0: InitRegister(operand, CR0+Unsigned(0, 3), None, None, 0);
 				|encodingCR12: InitRegister(operand, CR0+Unsigned(12, 15), None, None, 0);
 				|encodingCR16: InitRegister(operand, CR0+Unsigned(16, 19), None, None, 0);
@@ -2271,7 +2271,7 @@ CONST
 		EnterMnemonic(opFCMPES, "FCMPED");
 		EnterMnemonic(opFCMPEZD, "FCMPEZD");
 		EnterMnemonic(opFCMPEZS, "FCMPEZS");
-		EnterMnemonic(opFCMPS, "FCMPDS");
+		EnterMnemonic(opFCMPS, "FCMPS");
 		EnterMnemonic(opFCMPZD, "FCMPZED");
 		EnterMnemonic(opFCMPZS, "FCMPZS");
 		EnterMnemonic(opFCPYD, "FCPYD");

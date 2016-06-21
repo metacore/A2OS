@@ -437,6 +437,11 @@ CONST
 	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
 	VAR type: CHAR; a: ADDRESS; size: SIZE; len: SIZE;
 	BEGIN
+		IF ~OnHeapOrStack(adr, low, high) THEN
+			SkipType(refs, offset);
+			w.String("INVALID ADR:"); w.Address(adr);
+			RETURN;
+		END;
 		type := GetChar(refs, offset);
 		CASE type OF
 			sfTypeNone:
@@ -519,6 +524,10 @@ CONST
 		ELSIF c = sfIndirect THEN
 			adr := base + GetSize(refs, offset);
 			w.Address(adr); w.String("->"); 
+			IF ~OnHeapOrStack(adr,low,high) THEN w.String(" (INVALID)"); 
+				SkipType(refs,offset);
+				RETURN;
+			END;
 			SYSTEM.GET(adr, adr);
 		ELSE (* absolute *)
 			adr := GetAddress(refs, offset);

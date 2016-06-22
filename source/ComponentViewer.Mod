@@ -63,7 +63,8 @@ TYPE
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
 			IF (keys = {0}) & (FlagMoveable IN flags) THEN
-				dragging := TRUE
+				dragging := TRUE;
+				PointerDown^(x,y,keys);
 			ELSE
 				PointerDown^(x,y,keys); 
 			END;

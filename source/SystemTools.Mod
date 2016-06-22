@@ -1,7 +1,7 @@
 MODULE SystemTools; (** AUTHOR "TF"; PURPOSE "Access to System Functions"; *)
 
 IMPORT
-	Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion;
+	Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion, Heaps;
 
 CONST
 	MaxTimers = 16;
@@ -350,6 +350,17 @@ BEGIN
 		context.error.Ln;
 	END;
 END ShowStack;
+
+(** Inspect free Heaps space *)
+PROCEDURE Watch*(context : Commands.Context);
+VAR total, free, largest: SIZE;
+BEGIN
+	Heaps.GetHeapInfo(total,free,largest);
+	context.out.String("Heaps: total="); context.out.Int(total,0);
+	context.out.String(" bytes; free="); context.out.Int(free,0);
+	context.out.String(" bytes; largest free block size="); context.out.Int(largest,0);
+	context.out.String(" bytes");
+END Watch;
 
 (* Changes the extension, Usage: RenameExtension extFrom extTo~ *)
 PROCEDURE RenameExtension*(context : Commands.Context);

@@ -367,19 +367,25 @@ CONST
 			SYSTEM.GET(adr, u8); Unsigned(u8, SIZEOF(UNSIGNED8));	
 		| sfTypeUNSIGNED16:
 			size := SIZEOF(UNSIGNED16); 
-			SYSTEM.GET(adr, u16); Unsigned(u8, SIZEOF(UNSIGNED16));	
+			SYSTEM.GET(adr, u16); Unsigned(u16, SIZEOF(UNSIGNED16));	
 		| sfTypeUNSIGNED32:
 			size := SIZEOF(UNSIGNED32); 
-			SYSTEM.GET(adr, u32); Unsigned(u8, SIZEOF(UNSIGNED32));	
+			SYSTEM.GET(adr, u32); Unsigned(u32, SIZEOF(UNSIGNED32));	
 		| sfTypeUNSIGNED64:
 			size := SIZEOF(UNSIGNED64); 
-			SYSTEM.GET(adr, u64); Unsigned(u8, SIZEOF(UNSIGNED64));	
+			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));	
 		| sfTypeREAL:
 			size := SIZEOF(REAL);
 			SYSTEM.GET(adr, r); w.Float(r,7);
+			w.String(" ("); 
+			SYSTEM.GET(adr, u32); Unsigned(u32, SIZEOF(UNSIGNED32));	
+			w.String(")"); 
 		| sfTypeLONGREAL:
 			size := SIZEOF(LONGREAL);
 			SYSTEM.GET(adr, x); w.Float(x,13);
+			w.String(" ("); 
+			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));	
+			w.String(")"); 
 		| sfTypeCOMPLEX:
 			size := SIZEOF(COMPLEX);
 			SYSTEM.GET(adr, cplx); w.Float(RE(cplx),7); w.String("+ i*"); w.Float(IM(cplx),7);

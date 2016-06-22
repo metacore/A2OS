@@ -8,13 +8,15 @@ CONST
 	DefaultWidth = 320;
 	DefaultHeight = 240;
 	InvalidPosition* =MIN(LONGINT);
-
+	FlagMoveable = 20; 
+	
 TYPE
 
 	KillerMsg = OBJECT
 	END KillerMsg;
 
 	Window* = OBJECT(WMComponents.FormWindow)
+	VAR dragging: BOOLEAN; lastX, lastY: LONGINT;
 
 		PROCEDURE RestoreWindow*(c : WMRestorable.Context);
 		BEGIN
@@ -56,7 +58,35 @@ TYPE
 			ELSE Handle^(m);
 			END;
 		END Handle;
+		
+		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		BEGIN
+			lastX := bounds.l + x; lastY:=bounds.t + y;
+			IF (keys = {0}) & (FlagMoveable IN flags) THEN
+				dragging := TRUE
+			ELSE
+				PointerDown^(x,y,keys); 
+			END;
+		END PointerDown;
 
+		PROCEDURE PointerMove(x,y:LONGINT; keys:SET);
+		VAR dx, dy, width, height : LONGINT;
+		BEGIN
+			IF dragging THEN
+				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
+				lastX := lastX + dx; lastY := lastY + dy;
+				IF (dx # 0) OR (dy # 0) THEN
+					manager.SetWindowPos(SELF, bounds.l + dx, bounds.t + dy);
+				END;
+			END;
+		END PointerMove;
+
+		PROCEDURE PointerUp(x, y:LONGINT; keys:SET);
+		BEGIN
+			dragging := FALSE;
+			PointerDown^(x,y,keys);
+		END PointerUp;
+		
 	END Window;
 
 VAR
@@ -186,6 +216,7 @@ BEGIN
 	options.Add("n","noFocus", Options.Flag);
 	options.Add("t","onTop", Options.Flag);
 	options.Add("F","noFrame",Options.Flag);
+	options.Add("m","moveable",Options.Flag);
 	IF options.Parse(context.arg, context.error) & context.arg.GetString(filename) THEN
 		IF ~options.GetInteger("width",width) THEN width := 0 END;
 		IF ~options.GetInteger("height",height) THEN height := 0 END;
@@ -193,6 +224,7 @@ BEGIN
 		IF ~options.GetInteger("y",y) THEN y := InvalidPosition END;
 		IF options.GetFlag("fullscreen") THEN flags := {} ELSE flags := {WMWindowManager.FlagFrame, WMWindowManager.FlagClose, WMWindowManager.FlagMinimize} END;
 		IF options.GetFlag("noFrame") THEN flags := {} ELSE flags := {WMWindowManager.FlagFrame, WMWindowManager.FlagClose, WMWindowManager.FlagMinimize} END;
+		IF options.GetFlag("moveable") THEN flags := {FlagMoveable} ELSE flags := {WMWindowManager.FlagFrame, WMWindowManager.FlagClose, WMWindowManager.FlagMinimize} END;
 		IF options.GetFlag("noFocus") THEN INCL(flags, WMWindowManager.FlagNoFocus) END;
 		IF options.GetFlag("onTop") THEN INCL(flags, WMWindowManager.FlagStayOnTop) END;
 		c := DoOpen(filename, context.error, x , y, width, height, options.GetFlag("client"), options.GetFlag("alpha"), options.GetFlag("fullscreen"), flags);
@@ -277,7 +309,8 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END ComponentViewer.
 
-SystemTools.Free ComponentViewer ~
+SystemTools.FreeDownTo  ComponentViewer ~
 ComponentViewer.Open FractalDemo.XML ~
 
-ComponentViewer.Open --width=128 --height=64 --client WMStandardComponents.GenButton ~
+ComponentViewer.Open ComponentHelper:Panel:1 ~
+ComponentViewer.Open TLEmulator:Panel:1 ~

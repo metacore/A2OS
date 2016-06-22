@@ -1167,7 +1167,7 @@ TYPE
 							KernelLog.Boolean(element # NIL); KernelLog.Ln;
 						END;
 					ELSE
-						KernelLog.String("Repository not found"); KernelLog.Ln;
+						KernelLog.String("Repository not found:"); KernelLog.String(repositoryName); KernelLog.Ln;
 					END;
 				ELSIF (componentName = "Properties") THEN
 					NEW(properties,SELF.repository);

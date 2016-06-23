@@ -348,6 +348,7 @@ TYPE
 		toVirtual: ARRAY InstructionSet.NumberRegisters OF Ticket; (* registers real register -> none / reserved / split / blocked / virtual register (>0) *)
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN;
 		unusable: Ticket;
+		blocked: Ticket; 
 		hint: LONGINT;
 		useFPU32:BOOLEAN;
 		useFPU64:BOOLEAN;
@@ -365,6 +366,7 @@ TYPE
 				reserved[i] := FALSE
 			END;
 			NEW(unusable);
+			NEW(blocked);
 
 			(* reserve special purpose registers *)
 			toVirtual[InstructionSet.RES] := unusable; (* low part result register *)
@@ -388,17 +390,13 @@ TYPE
 			IF ~useFPU32 THEN
 				(* disable single precision VFP registers *)
 				FOR i := InstructionSet.SR0 TO InstructionSet.SR31 DO toVirtual[i] := unusable END
-			ELSE (* disable upper 16 registers, because context is not saved *)
-				FOR i := InstructionSet.SR16 TO InstructionSet.SR31 DO toVirtual[i] := unusable END
 			END;
 
 			IF ~useFPU64 THEN
 				(* disable double precision VFP registers *)
 				FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO toVirtual[i] := unusable END;
-			ELSE (* disable upper 16 registers, because context is not saved *)
-				FOR i := InstructionSet.DR16 TO InstructionSet.DR31 DO toVirtual[i] := unusable END;
 			END; 
-			
+
 		END InitPhysicalRegisters;
 
 		(** the number of physical registers **)
@@ -408,10 +406,22 @@ TYPE
 
 		(** allocate, i.e., map, a physical register to a ticket **)
 		PROCEDURE Allocate(physicalRegisterNumber: LONGINT; ticket: Ticket);
+		VAR index: LONGINT;
 		BEGIN
 			ASSERT(~ticket.spilled);
 			Assert(toVirtual[physicalRegisterNumber] = NIL,"register already allocated");
-			toVirtual[physicalRegisterNumber] := ticket
+			toVirtual[physicalRegisterNumber] := ticket;
+			(* FP register overlap: *)
+			IF (InstructionSet.SR0 <= physicalRegisterNumber) & (physicalRegisterNumber <= InstructionSet.SR31) THEN
+				index := physicalRegisterNumber - InstructionSet.SR0;
+				toVirtual[InstructionSet.DR0 + index DIV 2] := blocked;
+			ELSIF (InstructionSet.DR0 <= physicalRegisterNumber) & (physicalRegisterNumber <= InstructionSet.DR31) THEN
+				index := physicalRegisterNumber - InstructionSet.DR0;
+				IF index*2 < 32 THEN
+					toVirtual[InstructionSet.SR0 + index *2] := blocked;
+					toVirtual[InstructionSet.SR0 + index *2 + 1] := blocked;				
+				END;
+			END; 
 		END Allocate;
 
 		(** set whether a certain physical register is reserved or not **)
@@ -426,9 +436,27 @@ TYPE
 
 		(** free a certain physical register **)
 		PROCEDURE Free(physicalRegisterNumber: LONGINT);
+		VAR index: LONGINT;
 		BEGIN
 			Assert((toVirtual[physicalRegisterNumber] # NIL), "register not reserved");
-			toVirtual[physicalRegisterNumber] := NIL
+			toVirtual[physicalRegisterNumber] := NIL;
+			(* FP register overlap: *)
+			IF (InstructionSet.SR0 <= physicalRegisterNumber) & (physicalRegisterNumber <= InstructionSet.SR31) THEN
+				index := physicalRegisterNumber - InstructionSet.SR0;
+				IF ODD(index) & (toVirtual[InstructionSet.SR0+index-1] = NIL) OR
+					~ODD(index) & (toVirtual[InstructionSet.SR0+index+1] = NIL) THEN
+					ASSERT(toVirtual[InstructionSet.DR0 + index DIV 2] = blocked);
+					toVirtual[InstructionSet.DR0 + index DIV 2] := NIL;
+				END;
+			ELSIF (InstructionSet.DR0 <= physicalRegisterNumber) & (physicalRegisterNumber <= InstructionSet.DR31) THEN
+				index := physicalRegisterNumber - InstructionSet.DR0;
+				IF index*2 < 32 THEN
+					ASSERT(toVirtual[InstructionSet.SR0 + index *2]  = blocked);
+					ASSERT(toVirtual[InstructionSet.SR0 + index *2+1]  = blocked);
+					toVirtual[InstructionSet.SR0 + index *2] := NIL;
+					toVirtual[InstructionSet.SR0 + index *2 + 1] := NIL;
+				END;
+			END; 
 		END Free;
 
 		(** get the number of the next free physical register for a certain data type
@@ -490,7 +518,7 @@ TYPE
 			w.String("---- registers ----"); w.Ln;
 			FOR i := 0 TO LEN(toVirtual)-1 DO
 				virtual := toVirtual[i];
-				IF virtual # unusable THEN
+				IF (virtual # unusable) & (virtual # blocked) THEN
 					w.String("reg "); w.Int(i,1); w.String(": ");
 					IF virtual = NIL THEN w.String("free")
 					ELSE	w.String(" r"); w.Int(virtual.register,1);

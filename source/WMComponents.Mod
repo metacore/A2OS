@@ -1649,12 +1649,16 @@ TYPE
 			Acquire; extGetPositionOwner := handler; Release;
 		END SetExtGetPositionOwnerHandler;
 
+
+
 		(** Indicates the pointing device has left the component without a key pressed down.
 			May only be called from the sequencer thread.
 			Components interested in this message can override this method instead of searching for the message in HandleInternal. *)
 		PROCEDURE PointerLeave*; (** PROTECTED *)
 		BEGIN ASSERT(IsCallFromSequencer());
 		END PointerLeave;
+
+
 
 	(** Indicates one of the pointer keys went down. keys is the set of buttons currently pressed. x, y is the position in component
 		coordinates.
@@ -1669,7 +1673,10 @@ TYPE
 	(** Indicates the pointer was moved. keys is the set of buttons currently pressed. x, y is the position in component
 		coordinates.
 		May only be called from the sequencer thread.
-		Components interested in this message can override this method instead of searching for the message in HandleInternal. *)
+		Components interested in this message can override this method instead of searching for the message in HandleInternal. 
+		When using PointerMove to move the component itself within a context (window or parent component), 
+		remember that Component.PointerMove are given in component coordinates (thus, a moving coordinate origin ...), but you want to move the component in context coordinates !
+		*)
 		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET); (** PROTECTED *)
 		BEGIN ASSERT(IsCallFromSequencer());
 		END PointerMove;

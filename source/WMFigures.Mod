@@ -1,4 +1,4 @@
-MODULE WMFigures; (** AUTHOR "Patrick Hunziker, staubesv, gadgets source"; PURPOSE "Geometric shapes"; *)
+MODULE WMFigures; (** AUTHOR "Patrick Hunziker, with inspirations from staubesv, gadgets source"; PURPOSE "Geometric shapes"; *)
 
 IMPORT
 	KernelLog, Streams, Math, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMComponents;
@@ -32,7 +32,7 @@ TYPE
 		points- : Point;
 		nofPoints : LONGINT;
 
-		hover, selected:WMProperties.Property;
+		hover, selectedPoint:WMProperties.Property;
 		selectedLine:BOOLEAN;
 		mouseOver:BOOLEAN;
 
@@ -60,7 +60,7 @@ TYPE
 			points := NIL;
 			nofPoints := 0;
 			hover := NIL;
-			selected := NIL;
+			selectedPoint := NIL;
 			lastKeys := {};
 			NEW(PArray,0); 
 		END Init;
@@ -75,7 +75,8 @@ TYPE
 			Strings.Concat("Point",s,s);
 			INC(nofPoints);
 			NEW(pp,NIL,Strings.NewString(s),NIL);  
-			pp.SetCoordinate(x,y); 
+			pp.SetCoordinate(x,y); 			
+			selectedPoint:=pp;
 			Acquire;
 			properties.Add(pp);
 			Release;
@@ -87,6 +88,7 @@ TYPE
 			point(WMProperties.PointProperty).SetCoordinate(fx+bounds.GetLeft(), fy+bounds.GetTop()); 
 		END MovePoint;
 		
+		(* remove point coordinates are currently in figure coordinates, in contrast to AddPoint() *)
 		PROCEDURE RemovePoint*(fx, fy : LONGINT);
 		VAR 
 			pp:WMProperties.Property; 
@@ -99,7 +101,7 @@ TYPE
 			END;
 		END RemovePoint;
 		
-		(** Return point located at mouse position mx. my, which are in Figure coordinates that change, e.g. when points are added. (NIL if no point at location). *)
+		(** Return point located at mouse position fx. fy, which are in Figure coordinates that change, e.g. when points are added. (NIL if no point at location). *)
 		PROCEDURE ThisPoint*(fx, fy : LONGINT): WMProperties.Property;
 		VAR  i:LONGINT; px,py: LONGINT;
 		BEGIN
@@ -163,10 +165,13 @@ TYPE
 			lastKeys := keys;
 			IF (0 IN keys) THEN
 				oldx:=fx+bounds.GetLeft(); oldy:=fy+bounds.GetTop();
-				selected := ThisPoint(fx, fy);
-				IF (selected # NIL) THEN Invalidate ELSE selectedLine:=TRUE; mouseOver:=FALSE END;
+				selectedPoint := ThisPoint(fx, fy);
+				IF (selectedPoint # NIL) THEN (*Invalidate*) ELSE selectedLine:=TRUE; mouseOver:=FALSE END;
+				Invalidate;
+			ELSIF (EditPoints IN state) & (keys={1})  THEN
+				AddPoint(bounds.GetLeft()+fx, bounds.GetTop()+fy); 
+				PropertyChanged(SELF, properties);
 			END;
-			Invalidate;
 		END PointerDown;
 
 		PROCEDURE PointerUp*(fx, fy : LONGINT; keys : SET);
@@ -174,34 +179,38 @@ TYPE
 		BEGIN
 			bl:=bounds.GetLeft(); 
 			bt:=bounds.GetTop();
-			IF (keys={0}) & (Reshape IN state)  THEN
-				IF (selected # NIL) THEN MovePoint(selected, fx, fy); selected := NIL; selectedLine:=FALSE;
-				ELSE  
-					dx:=fx+bl-oldx; oldx:=fx+bl; 
-					dy:=fy+bt-oldy; oldy:=fy+bt;
-					MoveFigure(dx, dy); 
-					selectedLine:=FALSE;
-					selected:=NIL;
+			IF Reshape IN state THEN
+				IF keys*{0,1}#{}  THEN
+					IF (selectedPoint # NIL) THEN 
+						MovePoint(selectedPoint, fx, fy); 
+					ELSE  
+						dx:=fx+bl-oldx; oldx:=fx+bl; 
+						dy:=fy+bt-oldy; oldy:=fy+bt;
+						MoveFigure(dx, dy); 
+					END;
+				ELSIF (EditPoints IN state) THEN
+					IF (lastKeys={2}) & (keys#{2}) THEN
+						RemovePoint(fx,fy); 
+						PropertyChanged(SELF, properties);
+					ELSE
+					END;
+				(*ELSIF (2 IN lastKeys) & ~(2 IN keys) THEN
+					IF Reshape IN state THEN EXCL(state, Reshape); ELSE INCL(state, Reshape); END;
+					Invalidate;
+					*)
+				ELSE
 				END;
-			END;
-			(*IF (2 IN lastKeys) & ~(2 IN keys) THEN
-				IF reshape.Get() THEN EXCL(state, Reshape); ELSE INCL(state, Reshape); END;
-			ELS*)
-			IF (Reshape IN state) (*reshape.Get()*) & (EditPoints IN state) & (1 IN lastKeys) & ~(1 IN keys)  THEN
-				AddPoint(fx, fy); (*!partly functional - wrong coordinates*)
-			ELSIF (Reshape IN state) (*reshape.Get()*) & (EditPoints IN state) & (lastKeys={0,2}) & (keys#{0,2}) THEN
-				RemovePoint(fx,fy); 
 			ELSE(* PointerUp^(x, y, keys);*)
 			END;
 			selectedLine:=FALSE;
-			selected:=NIL;
+			selectedPoint:=NIL;
 		END PointerUp;
 		
 		PROCEDURE PointerMove*(fx, fy : LONGINT; keys : SET);
 		VAR dx,dy,bl,bt:LONGINT; pp:WMProperties.Property;
 		BEGIN 
-			IF (Reshape IN state)  & (keys={0})  & (selected # NIL) THEN 
-				MovePoint(selected, fx, fy);
+			IF (Reshape IN state)  & (keys*{0,1}#{})  & (selectedPoint # NIL) THEN 
+				MovePoint(selectedPoint, fx, fy);
 			ELSIF (Reshape IN state)  & (keys={0})  & selectedLine THEN 
 				bl:=bounds.GetLeft(); 
 				bt:=bounds.GetTop();
@@ -343,7 +352,7 @@ TYPE
 		VAR rect : WMRectangles.Rectangle; color, x,y,fx,fy : LONGINT;
 		BEGIN
 			ASSERT(pp # NIL);
-			IF (pp = selected) THEN color := WMGraphics.Yellow;
+			IF (pp = selectedPoint) THEN color := WMGraphics.Yellow;
 			ELSIF (pp = hover) THEN color := WMGraphics.Blue;
 			ELSE color := WMGraphics.White;
 			END;
@@ -506,7 +515,7 @@ TYPE
 			Init^;
 			SetGenerator("WMFigures.GenCircle");
 			SetNameAsString(StrCircle);
-			INCL(state, EditPoints);
+			EXCL(state, EditPoints);
 		END Init;
 
 		PROCEDURE Initialize*;
@@ -540,7 +549,6 @@ TYPE
 			END;
 			bounds.Set(rect);
 		END Normalize;
-		
 		
 		PROCEDURE IsHit*(mx, my: LONGINT): BOOLEAN;
 		VAR radius0, radius: LONGINT;
@@ -582,7 +590,7 @@ TYPE
 			Init^;
 			SetGenerator("WMFigures.GenRectangle");
 			SetNameAsString(StrRectangle);
-			INCL(state, EditPoints);
+			EXCL(state, EditPoints);
 		END Init;
 		
 		PROCEDURE Initialize*;
@@ -611,6 +619,7 @@ TYPE
 				InLineVicinity(mx, my, points.next.x, points.y, points.next.x, points.next.y) 
 			END;
 		END IsHit;
+
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR p, q : Point; rect : WMRectangles.Rectangle;

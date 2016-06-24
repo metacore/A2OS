@@ -359,7 +359,7 @@ BEGIN
 	context.out.String("Heaps: total="); context.out.Int(total,0);
 	context.out.String(" bytes; free="); context.out.Int(free,0);
 	context.out.String(" bytes; largest free block size="); context.out.Int(largest,0);
-	context.out.String(" bytes");
+	context.out.String(" bytes"); context.out.Ln;
 END Watch;
 
 (* Changes the extension, Usage: RenameExtension extFrom extTo~ *)

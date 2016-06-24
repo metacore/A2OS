@@ -441,6 +441,9 @@ TYPE
 			IF m.msgType = Messages.MsgKey THEN
 				KeyEvent(m.x, m.flags, m.y)
 			ELSIF m.msgType = Messages.MsgPointer THEN
+				(* global to local transformation by sequencer thread: *)
+				m.x := m.x-bounds.l;
+				m.y := m.y-bounds.t;
 				IF m.msgSubType = Messages.MsgSubPointerMove THEN
 					IF (m.dz # 0) THEN WheelMove(m.dz) END;
 					PointerMove(m.x, m.y, m.flags)
@@ -561,7 +564,9 @@ TYPE
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height)) & (m.msgType = Messages.MsgPointer) THEN
-				fx := img.width / w; fy := img.height / h; m.x := ENTIER(m.x * fx); m.y := ENTIER(m.y * fy)
+				m.x := m.x-bounds.l; m.y := m.y-bounds.t;
+				fx := img.width / w; fy := img.height / h; m.x := ENTIER(m.x * fx); m.y := ENTIER(m.y * fy);
+				m.x := m.x + bounds.l; m.y := m.y+bounds.l;
 			END;
 			Handle^(m)
 		END Handle;

@@ -1054,7 +1054,8 @@ TYPE
 							END;
 						ELSE
 							bounds := pointerOwner.bounds;
-							m.x := msg.x - bounds.l; m.y := msg.y - bounds.t;
+							(* do not translate to local coordinates here: must be done by sequencer! *)
+							m.x := msg.x; m.y := msg.y;
 						END;
 						m.flags := keys;
 						IF pointerOwner.sequencer # NIL THEN IF ~pointerOwner.sequencer.Add(m) THEN END (* ignore missed mouse messages *)

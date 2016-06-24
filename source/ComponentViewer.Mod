@@ -314,4 +314,4 @@ SystemTools.FreeDownTo  ComponentViewer ~
 ComponentViewer.Open FractalDemo.XML ~
 
 ComponentViewer.Open ComponentHelper:Panel:1 ~
-ComponentViewer.Open TLEmulator:Panel:1 ~
+ComponentViewer.Open --moveable --width=100 --height=100 WMStandardComponents.GenButton  ~

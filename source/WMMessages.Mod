@@ -191,7 +191,7 @@ TYPE
 						TRACE(msg.ext);
 					END;
 				END;
-				D.TraceBack;
+				(*D.TraceBack;*)
 			END;
 
 			IF MergePointers & (msg.msgType = MsgPointer) & (msg.msgSubType = MsgSubPointerMove) & (num > 0) THEN  (* reduce pointer moves in buffer *)

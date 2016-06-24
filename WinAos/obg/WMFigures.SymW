@@ -23,7 +23,7 @@ TYPE
 		arrow-: WMProperties.BooleanProperty; 
 		points-: Point; 
 		nofPoints: LONGINT; 
-		hover, selected: WMProperties.Property; 
+		hover, selectedPoint: WMProperties.Property; 
 		selectedLine: BOOLEAN; 
 		mouseOver: BOOLEAN; 
 		lastKeys, state: SET; 

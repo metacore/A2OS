@@ -84,8 +84,6 @@ TYPE
 		lastkeys: SET; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ RecacheAllProperties; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ GetColWidth*(i: LONGINT): LONGINT; 

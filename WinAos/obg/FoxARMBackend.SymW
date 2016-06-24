@@ -240,6 +240,7 @@ TYPE
 		toVirtual: ARRAY InstructionSet.NumberRegisters OF Ticket; 
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN; 
 		unusable: Ticket; 
+		blocked: Ticket; 
 		hint: LONGINT; 
 		useFPU32: BOOLEAN; 
 		useFPU64: BOOLEAN; 
@@ -260,7 +261,7 @@ TYPE
 	VAR 
 		runtimeModuleName: SyntaxTree.IdentifierString; 
 		backend: BackendARM; 
-		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD: InstructionSet.Operand; 
+		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD, fpscr: InstructionSet.Operand; 
 		listOfReferences: ListOfReferences; 
 		spillStackStart, pushChainLength: LONGINT; 
 		stackSize: LONGINT; 

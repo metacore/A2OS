@@ -1,5 +1,5 @@
 MODULE SystemTools;
-	IMPORT Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion;
+	IMPORT Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion, Heaps;
 CONST 
 	MaxTimers = 16; 
 	DateTimeFormat = \"dd.mm.yyyy hh:nn:ss"\; 
@@ -38,6 +38,7 @@ VAR
 	PROCEDURE ^ ShowProcesses*(context: Commands.Context); 
 	PROCEDURE ^ ShowStacks*(context: Commands.Context); 
 	PROCEDURE ^ ShowStack*(context: Commands.Context); 
+	PROCEDURE ^ Watch*(context: Commands.Context); 
 	PROCEDURE ^ RenameExtension*(context: Commands.Context); 
 	PROCEDURE ^ IsDelimiter(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ DoCommands*(context: Commands.Context); 

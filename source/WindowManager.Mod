@@ -1041,6 +1041,7 @@ TYPE
 				PROCEDURE MouseMessage(sub:LONGINT);
 				VAR bounds : Rect.Rectangle; vp : ViewPort;
 				BEGIN
+					(* do not translate to local coordinates here: must be done by sequencer! *)
 					IF (pointerOwner # NIL)  THEN
 						m.msgType := Messages.MsgPointer;
 						m.msgSubType := sub;
@@ -1050,11 +1051,9 @@ TYPE
 								bounds := pointerOwner.bounds;
 								m.x := ENTIER((msg.x - vp.range.l) * vp.fx);
 								m.y := ENTIER((msg.y - vp.range.t) * vp.fy);
-								m.x := m.x - bounds.l; m.y := m.y - bounds.t;
 							END;
 						ELSE
 							bounds := pointerOwner.bounds;
-							(* do not translate to local coordinates here: must be done by sequencer! *)
 							m.x := msg.x; m.y := msg.y;
 						END;
 						m.flags := keys;

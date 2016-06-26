@@ -79,14 +79,14 @@ TYPE
 			
 	ProtRecBlock* = POINTER TO ProtRecBlockDesc;
 	ProtRecBlockDesc* = RECORD 
-		recSize-: SIZE;	(* needed by SizeOf(blk) in Sweep *)
+		recSize-: SIZE;	(* needed by procedure SizeOf(blk) *)
 		
-		awaitingLock*:	ProcessQueue;	(* unused in UnixAos *)
-		awaitingCond*: ProcessQueue;
+		awaitingLock*	: ProcessQueue;	(* unused in UnixAos *)
+		awaitingCond*	: ProcessQueue;
 		lockedBy*: ANY;	
 		lock*: ANY;	(* used by Win32, unused for I386 and UnixAos *)
 		
-		mtx*: Unix.Mutex_t;			(* processes blocked awaiting lock (UnixAos only) *)
+		mtx*: Unix.Mutex_t;		(* processes blocked awaiting lock (UnixAos only) *)
 		enter*: Unix.Condition_t;	(* processes blocked awaiting lock (UnixAos only) *)
 	END;
 
@@ -108,7 +108,7 @@ TYPE
 VAR
 	freeLists: ARRAY MaxFreeLists + 1 OF FreeList;
 
-	candidates, candbuf: CandBuffer;
+	candidates: CandBuffer;
 	nofcand: LONGINT;
 	
 	deferred: ARRAY 1000 OF ADDRESS;
@@ -262,18 +262,16 @@ VAR
 	(* Add a root object to the set of traversable objects. If in allocated heap then mark and traverse, if in Module Heap (Bootfile) then only traverse. *)
 	PROCEDURE AddRootObject*( rootObject: RootObject );
 	BEGIN
-		IF rootObject = NIL THEN (* nothing *)
-		(*
+		Mark( rootObject )
+		
+(*		IF rootObject = NIL THEN (* nothing *)
 		ELSIF CheckPointer(SYSTEM.VAL(ADDRESS,rootObject)) THEN
 			(* object in heap, must be fully marked and traversed *)
 			Mark(rootObject)
 		ELSE
 			(* object in bootfile, traverse as root object only *)
 			rootObject.nextRoot := rootList; rootList := rootObject;	(* link root list *)
-		*)
-		ELSE
-			IF collecting THEN  Mark( rootObject )  END
-		END;
+		END  *)
 	END AddRootObject;
 
 
@@ -317,34 +315,33 @@ VAR
 		END
 	END MarkRecordFields;
 	
-	PROCEDURE Mark*( ptr: ANY );
+	PROCEDURE Mark*( ptr: ADDRESS );
 	VAR 
-		block, cur, lastElem, tag: ADDRESS;  
+		cur, lastElem, tag: ADDRESS;  
 		sTB{UNTRACED}: StaticTypeBlock;
 	BEGIN
 		IF Stats THEN  INC(Nmark)  END;
 		INC( markDepth );  
 		
-		IF UnmarkedObject( ptr ) THEN
-			block := S.VAL( ADDRESS, ptr );
-			S.GET( block - AddrSize, tag );
+		IF UnmarkedObject( S.VAL( ANY, ptr ) ) THEN
+			S.GET( ptr - AddrSize, tag );
 			sTB := S.VAL( StaticTypeBlock, tag DIV 4 * 4 );
-			IF ODD( tag DIV 2 )THEN
+			IF ODD( tag DIV 2 ) THEN (* array *)
 				IF markDepth <= MaxMarkDepth - 10 THEN
-					 S.GET( block, lastElem );
-					 S.GET( block + 2*AddrSize, cur );   
+					 S.GET( ptr, lastElem );
+					 S.GET( ptr + 2*AddrSize, cur );   
 					 REPEAT
 						MarkRecordFields( cur, sTB );						
 						INC( cur, sTB.recSize );
 					UNTIL cur > lastElem
 				ELSE
-					deferred[noDeferred] := block;  INC( noDeferred );
+					deferred[noDeferred] := ptr;  INC( noDeferred );
 				END;
 			ELSE  
 				IF markDepth <= MaxMarkDepth THEN
-					MarkRecordFields( block, sTB )
+					MarkRecordFields( ptr, sTB )
 				ELSE
-					deferred[noDeferred] := block;  INC( noDeferred );
+					deferred[noDeferred] := ptr;  INC( noDeferred );
 				END;	
 			END;			
 		END;
@@ -354,24 +351,24 @@ VAR
 
 	PROCEDURE MarkDeferred;
 	VAR 
-		block, cur, lastElem, tag: ADDRESS;  
+		ptr, cur, lastElem, tag: ADDRESS;  
 		sTB{UNTRACED}: StaticTypeBlock;
 	BEGIN
 		markDepth := 1;
 		WHILE noDeferred > 0 DO
 			DEC( noDeferred );  
-			block := deferred[noDeferred];  
-			S.GET( block - AddrSize, tag );
+			ptr := deferred[noDeferred];  
+			S.GET( ptr - AddrSize, tag );
 			sTB := S.VAL( StaticTypeBlock, tag DIV 4 * 4 );
 			IF ODD( tag DIV 2 )THEN
-				 S.GET( block, lastElem );
-				 S.GET( block + 2*AddrSize, cur );   
+				 S.GET( ptr, lastElem );
+				 S.GET( ptr + 2*AddrSize, cur );   
 				 REPEAT
 					MarkRecordFields( cur, sTB );						
 					INC( cur, sTB.recSize );
 				UNTIL cur > lastElem
 			ELSE  
-				MarkRecordFields( block, sTB )
+				MarkRecordFields( ptr, sTB )
 			END;			
 		END;
 	END MarkDeferred;
@@ -509,7 +506,7 @@ VAR
 					Recycle( freeBlock, freeSize ); (* last collected block: *)
 				ELSE 
 					Machine.FreeMemBlock( memBlock );
-					heapSize := GetHeapSize()
+					heapSize := DetermineHeapSize()
 				END
 			ELSIF freeSize > 0 THEN
 				Recycle( freeBlock, freeSize ); (* last collected block: *)
@@ -526,7 +523,7 @@ VAR
 	BEGIN
 		S.GET( block, tag );
 		S.GET( tag DIV 4 * 4, recSize );
-		IF ODD( tag DIV 2 ) THEN
+		IF ODD( tag DIV 2 ) THEN  (* array *)
 			S.GET( block + AddrSize, lastElem );
 			blockSize := lastElem + recSize - block
 		ELSE
@@ -536,79 +533,77 @@ VAR
 		RETURN blockSize
 	END SizeOf;
 	
-	
-	PROCEDURE SortCandidates( nc: LONGINT );
-	VAR i, j, h: LONGINT;  p: ADDRESS;
-	BEGIN
-		(* sort them in increasing order using shellsort *)
-		h := 1;
-		REPEAT  h := h*3 + 1  UNTIL h > nc;
-		REPEAT
-			h := h DIV 3;  i := h;
-			WHILE i < nc DO
-				p := candbuf[i];  j := i;
-				WHILE (j >= h) & (candbuf[j - h] > p) DO  
-					candbuf[j] := candbuf[j - h];  j := j - h  
-				END;
-				candbuf[j] := p;  INC( i )
-			END
-		UNTIL h = 1;
-	END SortCandidates;
-	
-	
 
 	PROCEDURE CheckCandidates;  
 	VAR
-		i, nc: LONGINT; mb: Machine.MemoryBlock;
-		p, tag1, tag2, block: ADDRESS;
+		i, j, h, nc: LONGINT; mb: Machine.MemoryBlock;
+		buffer: CandBuffer;
+		cand, p, tag, tag2, block: ADDRESS;
 		blkSize: SIZE;
 		
 		PROCEDURE NextCandidate(): ADDRESS;
 		VAR cand: ADDRESS;
 		BEGIN
-			IF i < nc THEN  cand := candbuf[i];  INC( i )  ELSE  cand := 0  END;
+			IF i < nc THEN  cand := buffer[i];  INC( i )  ELSE  cand := 0  END;
 			RETURN cand
 		END NextCandidate;
 		
 	BEGIN
 		IF nofcand = 0 THEN  RETURN  END;
 		
-		candbuf := candidates;  nc := nofcand;  nofcand := 0;  
-		SortCandidates( nc );
+		buffer := candidates;  nc := nofcand;  nofcand := 0;  
+		(* sort buffer in increasing order using shellsort *)
+		h := 1;
+		REPEAT  h := h*3 + 1  UNTIL h > nc;
+		REPEAT
+			h := h DIV 3;  i := h;
+			WHILE i < nc DO
+				p := buffer[i];  j := i;
+				WHILE (j >= h) & (buffer[j - h] > p) DO  
+					buffer[j] := buffer[j - h];  j := j - h  
+				END;
+				buffer[j] := p;  INC( i )
+			END
+		UNTIL h = 1;
 
-		i := 0;
-		p := NextCandidate();  
+		i := 0;  cand := NextCandidate();  
 		mb := Machine.memBlockHead;
 		REPEAT
-			IF (p < mb.endBlockAdr) & (candbuf[nc-1] > mb.beginBlockAdr) THEN	
+			IF (cand < mb.endBlockAdr) & (buffer[nc-1] > mb.beginBlockAdr) THEN	
 				block := mb.beginBlockAdr;  
-				blkSize := SizeOf( block );
 				REPEAT
-					IF p <= block + AddrSize THEN
-						IF p = block + AddrSize THEN
-							S.GET( block, tag1 );
-							IF tag1 # p THEN  (* not a free block *) Mark( S.VAL( ANY, p ) )  END
+					blkSize := SizeOf( block );
+					IF cand <= block + AddrSize THEN
+						IF cand = block + AddrSize THEN
+							S.GET( block, tag );
+							IF tag = cand THEN  (* free block *) 
+							ELSE  (* record or array *) Mark( cand )  
+							END
 						END;
-						p := NextCandidate();  
-					ELSIF p = block + AddrSize + SysOfs THEN  (* system block ? *)
-						S.GET( block, tag1 );
-						S.GET( p - AddrSize, tag2 );
-						IF (tag2 = p - SysOfs) & (tag2 = tag1)  THEN
-							(* really a sysblock *)  Mark( S.VAL( ANY, p ) );
+						cand := NextCandidate( );  
+					ELSIF cand = block + AddrSize + SysOfs THEN  (* sysblock ? *)
+						IF blkSize > AddrSize + SysOfs THEN
+							S.GET( block, tag );  S.GET( cand - AddrSize, tag2 );
+							IF (tag2 = cand - SysOfs) & (tag2 = tag) THEN  (* sysblock *) Mark( cand )  END;
+							cand := NextCandidate( )
+						ELSE
+							block := block + blkSize
+						END
+					ELSIF cand = block + AddrSize + ProtOfs THEN  (* protected record ? *)
+						IF blkSize > AddrSize + ProtOfs THEN
+							S.GET( block, tag );
+							IF tag = block + AddrSize THEN  (* protected record *) Mark( cand )  END;
+							cand := NextCandidate( )
+						ELSE
+							block := block + blkSize
 						END;
-						p := NextCandidate();  
-					ELSIF (blkSize > AddrSize + ProtOfs) & (p = block + AddrSize + ProtOfs)  THEN  (* prot. obj. ? *)
-						S.GET( block, tag1 );
-						IF tag1 = block + AddrSize THEN  Mark( S.VAL( ANY, p ) )  END;
-						p := NextCandidate();  
 					ELSE
-						block := block + blkSize;
-						IF block < mb.endBlockAdr THEN  blkSize := SizeOf( block ) END;
+						block := block + blkSize
 					END;
-				UNTIL (p = 0) OR (block >= mb.endBlockAdr) OR (p >= mb.endBlockAdr);
+				UNTIL (cand = 0) OR (block >= mb.endBlockAdr) OR (cand >= mb.endBlockAdr);
 			END;	
 			mb := mb.next;
-		UNTIL (mb = NIL) OR (p = 0);
+		UNTIL (mb = NIL) OR (cand = 0);
 	END CheckCandidates;
 	
 
@@ -618,19 +613,22 @@ VAR
 		IF p MOD 32 = 0 THEN
 			tag0Addr := p - AddrSize (* RecBlk, ArrBlk *)
 		ELSIF p MOD 32 = 16 THEN
-			tag0Addr := p - ProtOfs - AddrSize (* ProtObj *)
+			tag0Addr := p - ProtOfs - AddrSize (* ProtRecBlk *)
 		ELSIF p MOD 16 = 8 THEN
 			tag0Addr := p - SysOfs - AddrSize (* SysBlk *)
-		ELSE  RETURN
+		ELSE  
+			(* p is not a pointer *) RETURN
 		END;
 		
-		i := 0;
-		WHILE (i < nofcand) & (candidates[i] # p) DO  INC( i )  END;
-		IF i < nofcand THEN  (* double *) RETURN  END; 
+		i := 0;  
+		WHILE i < nofcand DO  
+			IF p = candidates[i] THEN  (* double *) RETURN  END;
+			INC( i )  
+		END;
 		
 		IF ValidAddress( tag0Addr ) THEN
 			S.GET( tag0Addr, tag0 );
-			IF ODD( tag0 ) THEN  RETURN  END;  (* already marked *)
+			IF ODD( tag0 ) THEN  (* already marked *) RETURN  END;  
 			S.GET ( p - AddrSize, tag );
 			IF ValidAddress( tag DIV 4 * 4 ) THEN
 				candidates[nofcand] := p;  INC( nofcand );
@@ -717,7 +715,7 @@ VAR
 				(*	ShowFreeLists( "befor ExpandHeap" );	*)
 					Machine.ExpandHeap( 0, size, S.VAL( ADDRESS, block ), adr2 );
 					IF block # NIL  THEN  
-						heapSize := GetHeapSize();
+						heapSize := DetermineHeapSize();
 					ELSE
 						Trace.Ln;  
 						Trace.String( "Heapspace exhausted" ); Trace.Ln;  
@@ -772,8 +770,8 @@ VAR
 		
 		Machine.Acquire( Machine.Heaps );
 		ptr0 := GetBlock( size ) + AddrSize;
-		S.PUT( ptr0 - AddrSize, ptr0 );		(* set the tag used by Sweep *)
-		S.PUT( ptr0, size - AddrSize );		(* size, needed by SizeOf(blk) in Sweep *)
+		S.PUT( ptr0 - AddrSize, ptr0 );		(* set the tag needed by Sweep *)
+		S.PUT( ptr0, size - AddrSize );		(* size, needed by procedure SizeOf(blk) *)
 		
 		ptr := ptr0 + ProtOfs;				(* mod 32 = 16 ! *)
 		S.PUT( ptr + HeapBlockOffset, ptr0 );
@@ -791,8 +789,8 @@ VAR
 		size := size + AddrSize + SysOfs;  INC( size, (-size) MOD BlockSize );
 		Machine.Acquire( Machine.Heaps );
 		ptr := GetBlock( size ) + AddrSize;  
-		S.PUT( ptr - AddrSize, ptr );		(* tag used by Sweep *)
-		S.PUT( ptr, size - AddrSize );		(* size, needed by SizeOf(blk) in Sweep *)
+		S.PUT( ptr - AddrSize, ptr );		(* tag needed by Sweep *)
+		S.PUT( ptr, size - AddrSize );	(* size, needed by procedure SizeOf(blk) *)
 		S.PUT( ptr + AddrSize, S.VAL( ADDRESS, -AddrSize ) );	
 		
 		S.PUT( ptr + SysOfs - AddrSize, ptr );	(* tag *)
@@ -985,13 +983,13 @@ VAR
 		RETURN used
 	END Used;
 
-	PROCEDURE GetHeapSize( ): SIZE;
+	PROCEDURE DetermineHeapSize( ): SIZE;
 	VAR heap: SIZE;  sb: Machine.MemoryBlock;
 	BEGIN
 		sb := Machine.memBlockHead;  heap := 0;
 		WHILE sb # NIL DO  heap := heap + sb.size;  sb := sb.next  END;
 		RETURN heap;
-	END GetHeapSize;
+	END DetermineHeapSize;
 
 
 
@@ -1045,9 +1043,11 @@ VAR
 		n: LONGINT;
 		str: ARRAY 32 OF CHAR;
 	BEGIN
-		n := 0;
+		GC := EmptyProc;			(* no GC until EmptyProc gets replaced (in module Objects) *)
+		nofcand := 0; 
+		
 		block := Machine.memBlockHead.beginBlockAdr;
-		S.GET( block, tag );
+		S.GET( block, tag );  n := 0;
 		WHILE tag # 0 DO
 		(*	IF n < 200 THEN  BlockInfo( block );  INC( n )  END;	*)
 			INC( block, SizeOf( block ) );
@@ -1064,32 +1064,22 @@ VAR
 		Machine.ExpandHeap( 0, 3*Machine.MemBlockSize - 2*BlockSize, S.VAL( ADDRESS, frBlock ), adr2 );
 		IF frBlock # NIL  THEN  freeLists[MaxFreeLists].first.next := frBlock  END;
 
-		heapSize := GetHeapSize();
+		heapSize := DetermineHeapSize();
 		heapAvailable := Available();
 		
 		Machine.GetConfig( "DisableShrinkHeap", str );
 		shrinkDisabled := str[0] = '1';
 		IF shrinkDisabled THEN
 			Trace.StringLn( "#### Heap shrinking disabled" );
-		END
-	END InitHeap;
-
-
-	PROCEDURE Init;
-	BEGIN
+		END;
 		IF Stats THEN
 			Ngc := 0;
 			Nmark := 0; Nmarked := 0; NfinalizeAlive := 0; NfinalizeDead := 0;
 			NgcCyclesMark := 0; NgcCyclesLastRun := 0; NgcCyclesMax := 0; NgcCyclesAllRuns := 0;
-		END;
-
-		GC := EmptyProc;			(* no GC until EmptyProc gets replaced (in module Objects) *)
-		nofcand := 0; 
-
-		InitHeap;
-	END Init;
+		END
+	END InitHeap
 
 
 BEGIN
-	Init;
+	InitHeap;
 END Heaps.

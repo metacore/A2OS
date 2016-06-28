@@ -3003,7 +3003,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Get;
 
 	(** put pixel into image **)
-	PROCEDURE Put* (img: Image; x, y: LONGINT; pix: Pixel; VAR mode: Mode);
+	PROCEDURE Put* (img: Image; x, y: LONGINT; CONST pix: Pixel; VAR mode: Mode);
 		VAR bit: LONGINT; adr: ADDRESS;
 	BEGIN
 		(*ASSERT((0 <= x) & (x < img.width) & (0 <= y) & (y < img.height), 100);*) (*avoid a HALT if roundoff errors from higher levels occur here*)
@@ -3014,7 +3014,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Put;
 
 	(** fill rectangular area **)
-	PROCEDURE Fill* (img: Image; llx, lly, urx, ury: LONGINT; pix: Pixel; VAR mode: Mode);
+	PROCEDURE Fill* (img: Image; llx, lly, urx, ury: LONGINT; CONST pix: Pixel; VAR mode: Mode);
 		VAR bit, bb, x, c, t: LONGINT; m: Mode; adr, aa: ADDRESS;
 	BEGIN
 		ASSERT((0 <= llx) & (llx < urx) & (urx <= img.width) & (0 <= lly) & (lly < ury) & (ury <= img.height), 100);

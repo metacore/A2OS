@@ -128,12 +128,12 @@ VAR
 	PROCEDURE ^ GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS); 
 	PROCEDURE ^ FindVar*(mod: Modules.Module; CONST name: ARRAY OF CHAR; VAR v: Variable): BOOLEAN; 
 	PROCEDURE ^ WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT); 
-	PROCEDURE ^ ReportType*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportTypeDeclaration*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportScope*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
-	PROCEDURE ^ ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
+	PROCEDURE ^ ReportType(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ ReportProcedure(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ ReportVariable(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ ReportTypeDeclaration(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ ReportScope(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
+	PROCEDURE ^ ReportModule(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
 	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
 BEGIN
 END Reflection.

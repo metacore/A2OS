@@ -230,8 +230,8 @@ VAR
 	PROCEDURE ^ SSE2BGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ Bind*(VAR mode: Mode; VAR src, dst: Format); 
 	PROCEDURE ^ Get*(img: Image; x, y: LONGINT; VAR pix: Pixel; VAR mode: Mode); 
-	PROCEDURE ^ Put*(img: Image; x, y: LONGINT; pix: Pixel; VAR mode: Mode); 
-	PROCEDURE ^ Fill*(img: Image; llx, lly, urx, ury: LONGINT; pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Put*(img: Image; x, y: LONGINT; CONST pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Fill*(img: Image; llx, lly, urx, ury: LONGINT; CONST pix: Pixel; VAR mode: Mode); 
 	PROCEDURE ^ Clear*(img: Image); 
 	PROCEDURE ^ GetPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 
 	PROCEDURE ^ PutPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 

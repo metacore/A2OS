@@ -7,7 +7,7 @@ import
 	system, Heaps, Modules, Diagnostics, Strings, Objects, Reflection, Commands;
 
 const
-	EnableTrace* = true;
+	EnableTrace* = false;
 
 type
 	(* do not inherit from this object -- not supported. This object contains hidden fields instantiated by the compiler that would be lost. *)

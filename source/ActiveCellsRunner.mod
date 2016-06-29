@@ -6,7 +6,7 @@ module ActiveCellsRunner;
 
 import ActiveCellsRuntime, Commands, Modules;
 const
-	EnableTrace = true;
+	EnableTrace = false;
 	
 type 
 	Cell = object 
@@ -70,7 +70,7 @@ type
 			else
 				fifo := f;
 			end;
-		end SetFifo
+		end SetFifo;
 		
 		procedure Send(value: longint);
 		begin

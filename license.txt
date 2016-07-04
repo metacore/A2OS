@@ -1,10 +1,9 @@
 This is a compilation of the 
-- ETH WinAos System (Windows Emulation of the Active Object System, aka A2)
+- ETH Oberon/Aos/A2 System (named "A2" in the following), including Windows and Linux Emulations of the Active Object System and the Fox Compiler tool chain
 and 
 - the software packages Voyager and AntsInFields. 
 
-
-Nearly all parts of this compilation belong to the ETH WinAos System, exceptions are the files of "AntsInFields" and "Voyager"
+Nearly all parts of this compilation belong to the ETH A2 System, exceptions are the files of "AntsInFields" and "Voyager"
 
 ----
 
@@ -26,19 +25,19 @@ by Felix Friedrich.
 
 ----
 
-Voyager is - in this distribution - located in the directory "Work/vy"
+Voyager is - in this distribution - located in the directory "Winaos/vy.ants"
 Source code of Voyager is marked by preceding "vy" for all Module-Names
 
-AntsInFields is - in this distribution - located in the directory "Work/ants"
+AntsInFields is - in this distribution - located in the directory "Winaos/vy.ants"
 Source code of AntsInFields is marked by preceding letters "ants" for all Module Names.
 
 ----
 
-The WinAos System is protected by the following copyright, start and end marked by ">>" and "<<" respectively:
+The A2 System is protected by the following copyright, start and end marked by ">>" and "<<" respectively:
 
 >>
- ETH Bluebottle
-Copyright (c) 2002-2008, Computer Systems Institute, ETH Zurich
+ETH Bluebottle/Aos/A2
+Copyright (c) 2002-2016, Computer Systems Institute, ETH Zurich
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: 
@@ -59,7 +58,6 @@ concerns either of the software packages
 
 Voyager 
 (C) 1993-2002 Project Voyager, StatLab Heidelberg ; (C) 1993-2002 G. Sawitzki et al.
-
 
 and 
 
@@ -84,5 +82,5 @@ AntsInFields
 
 <<
 
-the copy of the LGPL can be found in this directory as file "LGPL.TXT"
+the copy of the LGPL can be found in the vy.ants/documents directory as file "copying.txt"
 

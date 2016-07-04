@@ -86,8 +86,6 @@ TYPE
 		item-: Item;
 		module-: Modules.Module;
 		typeDesc-: Modules.TypeDesc;
-		procedureDesc-: Modules.ProcedureEntry;
-
 		scope-: Scope;
 		exit: BOOLEAN;
 		error-: BOOLEAN;
@@ -1283,13 +1281,41 @@ BEGIN
 	NEW(global, NIL, container);
 END InitGlobalScope;
 
+VAR c: LONGINT;
+VAR d: RECORD e: LONGINT END;
+
+	PROCEDURE Getter(): LONGINT;
+	BEGIN
+		RETURN 123;
+	END Getter;
+
+	PROCEDURE Setter(a: LONGINT): LONGINT;
+	BEGIN
+		TRACE(a);
+		RETURN a+123;
+	END Setter;
+	
+
 BEGIN
 	InitGlobalScope;
+	c := 10; 
+	d.e := 20;
 END FoxInterpreter.
 
-SystemTools.Free FoxInterpreter FoxInterpreterSymbols ~
+SystemTools.Free FoxInterpreter FoxInterpreterSymbols Reflection2 ~
 
+FoxInterpreter.Expression
+	FoxInterpreter.c ~
 
+FoxInterpreter.Expression
+	FoxInterpreter.d.e ~
+
+FoxInterpreter.Expression
+	FoxInterpreter.Getter() ~
+
+FoxInterpreter.Expression
+	FoxInterpreter.Setter(1000) ~
+	
 
 FoxInterpreter.Expression
 	Test.c.b;

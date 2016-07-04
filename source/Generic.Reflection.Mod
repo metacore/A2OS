@@ -84,6 +84,28 @@ CONST
 		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR returnType:Type {parameter:Variable} Scope.
 		Variable = sfVariable prevSymbolOffset:SIZE name:String (sfRelative offset: SIZE | sfIndirec offset: SIZE | sfAbsolute address:ADDRESS) type:Type.
 		TypeDeclaration = sfTypeDeclaration prevSymbolOffset:SIZE name:String typeInfo:ADR Scope.
+		Type = 
+			sfTypePointerToRecord 
+			| sfTypePointerToArray Type
+			| sfTypeOpenArray Type
+			| sfTypeDynamicArray Type
+			| sfTypeStaticArray length:SIZE Type
+			| sfTypeMathOpenArray Type 
+			| sfTypeMathStaticArray length:SIZE Type
+			| sfTypeMathTensor Type
+			| sfTypeRecord tdAdr:ADDRESS 
+			| sfTypeDelegate {Parameter} return:Type
+			| sfTypePort (sfIN | sfOUT)
+			| sfTypeBOOLEAN
+			| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
+			| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
+			| sfTypeSIGNED8 | sfTypeSIGNED16 | sfTypeSIGNED32 | sfTypeSIGNED64
+			| sfTypeUNSIGNED8 | sfTypeUNSIGNED16 | sfTypeUNSIGNED32 | sfTypeUNSIGNED64
+			| sfTypeWORD | sfTypeLONGWORD
+			| sfTypeREAL | sfTypeLONGREAL
+			| sfTypeCOMPLEX | sfTypeLONGCOMPLEX
+			| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE.
+
 	*)
 
 
@@ -93,6 +115,12 @@ CONST
 	TYPE 
 		Name = ARRAY 128 OF CHAR;
 
+		Meta* = RECORD
+			module-: Modules.Module;
+			refs-: Modules.Bytes;
+			offset*: LONGINT;
+		END;
+    
 	PROCEDURE CheckHeapAddress(address: ADDRESS): BOOLEAN;
 	BEGIN
 		RETURN Machine.ValidHeapAddress(address);
@@ -963,7 +991,7 @@ TYPE
 
 
 	
-	PROCEDURE ReportType(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportType*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
 	VAR size: SIZE;  adr: LONGINT; c: CHAR;
 	BEGIN
 		c := GetChar(refs, offset);
@@ -1017,7 +1045,7 @@ TYPE
 		END;
 	END ReportType;
 
-	PROCEDURE ReportProcedure(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
 	VAR name: Name;  start, end: LONGINT; 
 	BEGIN
 		w.Int(offset,1); w.String(":");
@@ -1041,7 +1069,7 @@ TYPE
 	END ReportProcedure;
 
 
-	PROCEDURE ReportVariable(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
 	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  size: SIZE;
 	BEGIN
 		w.Int(offset,1); w.String(":");
@@ -1062,7 +1090,7 @@ TYPE
 		w.Ln;
 	END ReportVariable; 
 
-	PROCEDURE ReportTypeDeclaration(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportTypeDeclaration*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
 	VAR name: ARRAY 128 OF CHAR;  adr: LONGINT; 
 	BEGIN
 		w.Int(offset,1); w.String(":");
@@ -1078,7 +1106,7 @@ TYPE
 		IF refs[offset] = sfScopeBegin THEN ReportScope(w, refs, offset) END;
 	END ReportTypeDeclaration; 
 
-	PROCEDURE ReportScope(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
 		w.Int(offset,1); w.String(": Scope"); w.Ln;
@@ -1095,7 +1123,7 @@ TYPE
 		w.String("END"); w.Ln; 
 	END ReportScope;
 	
-	PROCEDURE ReportModule(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
+	PROCEDURE ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
 	VAR name: Name;
 	BEGIN
 		w.String("MODULE "); 

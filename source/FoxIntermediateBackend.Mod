@@ -9068,6 +9068,8 @@ TYPE
 		VAR basereg: IntermediateCode.Operand; scope: SyntaxTree.Scope; dest: IntermediateCode.Operand;
 			moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
 			name: Basic.SegmentedName;
+			procedure: SyntaxTree.Procedure;
+			procedureType: SyntaxTree.ProcedureType;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSelfDesignator") END;
 			dest := destination; destination := emptyOperand;
@@ -9097,9 +9099,11 @@ TYPE
 				GetBaseRegister(basereg,currentScope,scope);
 				InitOperand(result,ModeReference);
 				result.op := basereg;
-				parametersSize := ProcedureParametersSize(system,scope(SyntaxTree.ProcedureScope).ownerProcedure);
-				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits)+parametersSize);
-				IF backend.cooperative OR backend.preciseGC THEN
+				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
+				parametersSize := ProcedureParametersSize(system,procedure);
+				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits)*(procedureType.parametersOffset+1)+parametersSize);
+				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
 				(* tag must be loaded when dereferencing SELF pointer *)

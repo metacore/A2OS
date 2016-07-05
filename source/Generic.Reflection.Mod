@@ -64,6 +64,9 @@ CONST
 	sfIN* = 0X;
 	sfOUT* = 1X;
 	
+	flagDelegate*=0;
+	flagConstructor*=1;
+	
 	(* variable / parameter addressing modes *)
 	sfAbsolute* = 0X; (* global vars *)
 	sfRelative* = 1X; (* variables, value parameters *)
@@ -81,7 +84,7 @@ CONST
 		
 		Scope = sfScopeBegin {variable:Variable} {procedure:Procedure} {typeDecl:TypeDeclaration} sfScopeEnd.
 		Module = sfModule prevSymbolOffset:SIZE name:String Scope.
-		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR returnType:Type {parameter:Variable} Scope.
+		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR flags:SET {parameter:Variable} returnType:Type Scope.
 		Variable = sfVariable prevSymbolOffset:SIZE name:String (sfRelative offset: SIZE | sfIndirec offset: SIZE | sfAbsolute address:ADDRESS) type:Type.
 		TypeDeclaration = sfTypeDeclaration prevSymbolOffset:SIZE name:String typeInfo:ADR Scope.
 		Type = 
@@ -193,6 +196,24 @@ CONST
 		INC(offset, SIZEOF(SIZE)); 
 	END SkipSize;
 
+	(* consume a set in the byte stream *)
+	PROCEDURE GetSet*(refs: Modules.Bytes; VAR offset: LONGINT): SET;
+	VAR set: SET; i: LONGINT;
+	BEGIN
+		IF ~Expect(offset < LEN(refs)) THEN RETURN {} END; 
+		FOR i := 0 TO SIZEOF(SET)-1 DO
+			SYSTEM.PUT8(ADDRESSOF(set)+i, refs[offset]);
+			INC(offset);
+		END;
+		RETURN set;
+	END GetSet;
+
+	(* skip a set in the byte stream *)
+	PROCEDURE SkipSet*(VAR offset: LONGINT);
+	BEGIN
+		INC(offset, SIZEOF(SET)); 
+	END SkipSet;
+
 	(* consume a string in the byte stream *)
 	PROCEDURE GetString*(refs: Modules.Bytes; VAR offset: LONGINT; VAR string: ARRAY OF CHAR);
 	VAR ch: CHAR; i: LONGINT; 
@@ -300,10 +321,11 @@ CONST
 				offset := refpos;
 				IF GetChar(refs, offset) = sfProcedure THEN
 					SkipSize(offset);
-					SkipString(refs, offset); 
+					SkipString(refs, offset);
 					GetFullName(refs, refpos, name); 
 					startpc := GetAddress(refs, offset);
 					end := GetAddress(refs, offset); 
+					SkipSet(offset);
 					w.String(name); 
 					w.Char(":"); w.Int(LONGINT(pc-startpc),1);
 					base := fp; (*! only for local !! *)
@@ -614,6 +636,7 @@ CONST
 		SkipString(refs, offset);
 		SkipAddress(offset);
 		SkipAddress(offset);
+		SkipSet(offset);
 		WHILE (refs[offset] = sfVariable)  DO	SkipVariable(refs, offset) END;
 		SkipType(refs, offset); 
 		SkipScope(refs, offset);
@@ -704,6 +727,7 @@ CONST
 		FindString(refs, offset, level, find);
 		start := GetAddress(refs, offset);
 		end := GetAddress(refs, offset);
+		SkipSet(offset);
 		find.found := find.found OR (start <= find.pc) & (find.pc < end);
 		IF find.found THEN
 			find.pos := pos; 
@@ -1046,7 +1070,7 @@ TYPE
 	END ReportType;
 
 	PROCEDURE ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
-	VAR name: Name;  start, end: LONGINT; 
+	VAR name: Name;  start, end: LONGINT;  flags: SET; 
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("PROCEDURE "); 
@@ -1056,6 +1080,10 @@ TYPE
 		w.String(name); 
 		start := GetAddress(refs, offset);
 		end := GetAddress(refs, offset);
+		flags := GetSet(refs, offset); 
+		IF flags # {} THEN
+			w.Set(flags);
+		END;
 		w.String("[@"); w.Address(start); w.String(" - "); w.Address(end); w.String("]");
 		w.String("("); w.Ln;
 		WHILE refs[offset] = sfVariable DO

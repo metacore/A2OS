@@ -11734,6 +11734,9 @@ TYPE
 				sfIN = 0X;
 				sfOUT = 1X;
 				
+				flagDelegate = 0;
+				flagConstructor = 1;
+				
 				(* variable / parameter addressing modes *)
 				sfAbsolute = 0X; (* global vars *)
 				sfRelative = 1X; (* variables, value parameters *)
@@ -12050,7 +12053,7 @@ TYPE
 				*)
 				PROCEDURE NProcedure(procedure: SyntaxTree.Procedure; scopeOffset: LONGINT);
 				VAR s: Sections.Section; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; pos: LONGINT;
-					name: Basic.SegmentedName;
+					name: Basic.SegmentedName; flags: SET;
 				BEGIN
 					IF RefInfo THEN Info(section, "Procedure") END;
 					pos := CurrentIndex(); 
@@ -12061,6 +12064,15 @@ TYPE
 					s := module.allSections.FindBySymbol(procedure); 
 					Symbol(section,s,0,0); (* start *)
 					Symbol(section,s,s(IntermediateCode.Section).pc,0); (* end *)
+					
+					flags := {};
+					IF procedureType.isDelegate THEN
+						INCL(flags, flagDelegate);
+					END;
+					IF procedure.isConstructor THEN
+						INCL(flags, flagConstructor);
+					END;
+					Set(section, flags);
 					
 					Global.GetSymbolSegmentedName(procedure,name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));

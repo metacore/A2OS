@@ -12,6 +12,7 @@ TYPE
 	Object* = PersistentObjects.Object;
 	Content* = PersistentObjects.Content;
 	
+	Name*= ARRAY 128 OF CHAR;
 
 	Meta* = RECORD
 		module*: Modules.Module;
@@ -135,13 +136,10 @@ TYPE
 		address: ADDRESS;
 		
 		PROCEDURE & InitType(CONST name: ARRAY OF CHAR; t: Meta);
-		VAR typeDesc: Modules.TypeDesc; adr: ADDRESS;
 		BEGIN
 			InitSymbol(name); 
 			type := t;
-			adr := SymbolAddress(type, 0);
-			typeDesc := SYSTEM.VAL(Modules.TypeDesc, adr);
-			address := typeDesc.tag;
+			address := SymbolAddress(type, 0);
 		END InitType;
 
 		PROCEDURE Address(): ADDRESS;
@@ -151,7 +149,7 @@ TYPE
 					
 		PROCEDURE Constructor*(): ProcedureResult;
 		BEGIN
-			RETURN FindConstructor(SELF, type);
+			RETURN FindConstructor(SELF, address);
 		END Constructor;
 
 	END TypeResult;
@@ -177,34 +175,14 @@ TYPE
 				f: Meta;
 		BEGIN
 				f := FindSymbol(name, self);
-				TRACE(f.offset);
 				IF f.offset >= 0 THEN
 					kind := SymbolKind(f); 
-					TRACE(ORD(kind));
 					CASE kind OF
 					Reflection.sfVariable: NEW(field, name, f, Address()); RETURN field;
 					| Reflection.sfProcedure: NEW(proc, SELF, name, f); RETURN proc; 
 					| Reflection.sfTypeDeclaration: NEW(typeResult, name, f); RETURN typeResult;
 					END;
 				END;
-				(*
-				
-				IF FindProc(self.procedures, name,num) THEN
-					NEW(proc, SELF, name, self.procedures[num]);
-					proc.address := self.procedures[num].address;
-					RETURN proc
-				ELSIF FindField(self.fields, name, num) THEN
-					NEW(field, name, self.fields[num]);
-					field.address := self.fields[num].offset;
-					RETURN field;
-				ELSE 
-					type := FindType(mod.typeInfo, name);
-					IF type # NIL THEN
-						NEW(typeResult, name, type);
-					END;
-					RETURN typeResult;
-				END;
-				*)
 				RETURN NIL;
 		END Find;
 
@@ -384,6 +362,7 @@ TYPE
 		index: LONGINT;
 		caller-: Result;
 		parameters: Meta;
+		flags: SET; 
 		
 		PROCEDURE Parameters(): Meta;
 		VAR m: Meta;
@@ -394,6 +373,7 @@ TYPE
 			Reflection.SkipString(m.refs, m.offset);
 			address := Reflection.GetAddress(m.refs, m.offset);
 			Reflection.SkipAddress(m.offset);
+			flags := Reflection.GetSet(m.refs, m.offset);
 			RETURN m;
 		END Parameters;
 		
@@ -452,11 +432,11 @@ TYPE
 			a: ADDRESS;
 			type,mode: CHAR;
 		BEGIN
-			TRACE(ORD(parameters.refs[parameters.offset])); 
 			IF Reflection.GetChar(parameters.refs, parameters.offset) # Reflection.sfVariable THEN RETURN FALSE END;			
 			Reflection.SkipSize(parameters.offset);
 			Reflection.SkipString(parameters.refs, parameters.offset);
 			mode := Reflection.GetChar(parameters.refs, parameters.offset);
+			Reflection.SkipSize(parameters.offset);
 			type := Reflection.GetChar(parameters.refs, parameters.offset);
 			
 			(*type := proc.parameters[index].type;
@@ -486,10 +466,8 @@ TYPE
 				END;
 			ELSE (* by value *)
 				v := o.Evaluate();
-				TRACE(v);
 				IF v = NIL THEN RETURN FALSE END;
 				WITH v: Value DO 
-					TRACE(type);
 					CASE type OF
 					Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
 						IF v.GetInt(h) THEN
@@ -668,9 +646,11 @@ TYPE
 			b: BOOLEAN;
 			set: SET;
 			type: Meta;
+			c: CHAR;
 		BEGIN
 			type := VariableType(meta);
-			CASE Reflection.GetChar(meta.refs, meta.offset) OF
+			c := Reflection.GetChar(type.refs, type.offset);
+			CASE c OF
 				Reflection.sfTypeSHORTINT, Reflection.sfTypeSIGNED8:
 				IF v.GetInt(h) THEN
 					s:= SHORTINT(h); SYSTEM.PUT(address, s);
@@ -722,7 +702,6 @@ TYPE
 		BEGIN
 			type := VariableType(meta);
 			base := Reflection.GetChar(type.refs, type.offset); 
-			TRACE(ORD(base));
 			CASE base OF
 				Reflection.sfTypePointerToRecord, Reflection.sfTypeANY, Reflection.sfTypeOBJECT:
 					SYSTEM.GET(address, value);
@@ -752,12 +731,10 @@ TYPE
 				meta.module := typeInfo.mod;
 				meta.offset := typeInfo.refsOffset;
 				meta.refs := meta.module.refs;
-				Reflection.Report(Commands.GetContext().out, meta.refs, meta.offset); 
+				(*Reflection.Report(Commands.GetContext().out, meta.refs, meta.offset); *)
 				meta := FindSymbol(name, meta);
-				TRACE(meta.offset);
 				IF meta.offset >= 0 THEN 
 					kind := SymbolKind(meta);
-					TRACE(ORD(kind));
 					CASE kind OF
 					Reflection.sfProcedure:
 						NEW(proc, scope, name, meta); RETURN proc;
@@ -766,42 +743,54 @@ TYPE
 					ELSE (* none *)
 					END;
 				END;
-				(*
-				IF FindProc(typeInfo.procedures, name,num) THEN
-					NEW(proc, scope, name, typeInfo.procedures[num]);
-					proc.address := typeInfo.procedures[num].address;
-					RETURN proc
-				ELSIF FindField(typeInfo.fields, name, num) THEN
-					NEW(f, name, typeInfo.fields[num]);
-					f.address := address + typeInfo.fields[num].offset;
-					RETURN f;
-				END;
-				*)
 			END;
 		END;
 		RETURN NIL; 
 	END FindInType;
 	
 		
-	PROCEDURE FindConstructor(scope: Result; type: Meta): ProcedureResult;
+	PROCEDURE FindConstructor(scope: Result; type: ADDRESS): ProcedureResult;
 	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT; 
 			proc: ProcedureResult; f: FieldResult;	
+				meta: Meta; c: CHAR; pos: SIZE; flags: SET; 
+				name: Name;
 	BEGIN
-		(*
+		(* find constructor in a (base) type *)
 		FOR i := 15 TO 0 BY -1 DO
 			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag); 
 			IF tag # NIL THEN
 				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo); 
-				FOR num := 0 TO LEN(typeInfo.procedures)-1 DO
-					IF SyntaxTree.FlagProcedureConstructor IN typeInfo.procedures[num].flags THEN
-						NEW(proc, scope, typeInfo.procedures[num].name^, typeInfo.procedures[num]);
-						proc.address := typeInfo.procedures[num].address;
-						RETURN proc
+				meta.module := typeInfo.mod;
+				meta.offset := typeInfo.refsOffset;
+				meta.refs := meta.module.refs;
+				
+				c := Reflection.GetChar(meta.refs, meta.offset);
+				ASSERT(c = Reflection.sfTypeDeclaration); 
+				Reflection.SkipSize(meta.offset); 
+				Reflection.SkipString(meta.refs, meta.offset);
+				Reflection.SkipAddress(meta.offset); 
+				c := Reflection.GetChar(meta.refs, meta.offset); 
+				ASSERT(c= Reflection.sfScopeBegin);
+				WHILE meta.refs[meta.offset] = Reflection.sfVariable DO
+					Reflection.SkipVariable(meta.refs, meta.offset); 
+				END;
+				WHILE meta.refs[meta.offset] = Reflection.sfProcedure DO
+					pos := meta.offset; 
+					Reflection.SkipChar(meta.offset);
+					Reflection.SkipSize(meta.offset); 
+					Reflection.GetString(meta.refs, meta.offset, name);
+					Reflection.SkipAddress(meta.offset);
+					Reflection.SkipAddress(meta.offset);
+					flags := Reflection.GetSet(meta.refs, meta.offset); 
+					meta.offset := pos;
+					IF Reflection.flagConstructor IN flags THEN 
+						NEW(proc, scope, name, meta); 
+						RETURN proc;
 					END;
+					Reflection.SkipProcedure(meta.refs, meta.offset); 
 				END;
 			END;
 		END;
-		*)
 		RETURN NIL; 
 	END FindConstructor;
 	

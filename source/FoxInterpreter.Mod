@@ -45,22 +45,29 @@ TYPE
 
 	END CommandStatement;
 
+	PrintStatement = OBJECT (SyntaxTree.Statement)
+	VAR expression: SyntaxTree.Expression;
+
+		PROCEDURE & InitPrintStatement(e: SyntaxTree.Expression);
+		BEGIN
+			expression := e;
+		END InitPrintStatement;
+
+	END PrintStatement;
+
 	Parser*= OBJECT(FoxParser.Parser)
 
 		PROCEDURE Statement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
 		VAR statement: SyntaxTree.Statement;
 		BEGIN
-			IF (symbol.token = Scanner.Identifier) & (symbol.identifier = StringPool.GetIndex1("CMD")) THEN
+			IF (Token() = Scanner.ExclamationMark) THEN
 				statement := Cmd();
 				statements.AddStatement(statement);
 				RETURN TRUE
-			(*
-			ELSIF (symbol.token = Scanner.Identifier) & (symbol.identifier = StringPool.GetIndex1("CMDS")) THEN
-				REPEAT
-					statement := Cmd();
-					statements.AddStatement(statement);
-				UNTIL (symbol.token = Scanner.Identifier) & (symbol.identifier = StringPool.GetIndex1("ENDCMDS"))
-			*)
+			ELSIF (Token() = Scanner.Questionmark) THEN
+				statement := Print();
+				statements.AddStatement(statement);
+				RETURN TRUE
 			ELSE
 				RETURN Statement^(statements, outer);
 			END;
@@ -76,6 +83,14 @@ TYPE
 			END;
 			RETURN cmd;
 		END Cmd;
+
+		PROCEDURE Print(): SyntaxTree.Statement;
+		VAR print: PrintStatement;
+		BEGIN
+			NextSymbol;
+			NEW(print, Expression());
+			RETURN print;
+		END Print;
 
 
 	END Parser;
@@ -120,6 +135,7 @@ TYPE
 			IF diagnostics # NIL THEN
 				diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
 			END;
+			D.TraceBack;
 		END Error;
 
 		PROCEDURE ErrorSS(CONST msg: ARRAY OF CHAR; id: StringPool.Index);
@@ -211,7 +227,10 @@ TYPE
 		VAR value: Value; i: HUGEINT; r: LONGREAL; b: BOOLEAN; operator: LONGINT;
 		BEGIN
 			operator := x.operator;
-			IF ~GetValue(x, value) THEN RETURN END;
+			IF ~GetValue(x.left, value) THEN 
+				Error("no operand");
+				RETURN 
+			END;
 			IF value IS Integer THEN
 				i := value(Integer).value;
 				CASE operator OF
@@ -915,11 +934,35 @@ TYPE
 			IF res # 0 THEN Error(msg) END;
 		END VisitCommandStatement;
 
+		PROCEDURE VisitPrintStatement(x: PrintStatement);
+		VAR out: Streams.Writer; printout: Printout.Printer; expression: SyntaxTree.Expression; value: Value;
+		BEGIN
+		
+			out := context.out;
+			printout := Printout.NewPrinter(out,Printout.SourceCode,FALSE);
+				expression := x.expression;
+				IF ~(expression IS SyntaxTree.StringValue) THEN
+					printout.Expression(expression);
+					out.String("= ");
+				END;
+				value := Evaluate(expression);
+				IF value # NIL THEN
+					value.WriteValue(out);
+				ELSE
+					out.String("UNKNOWN")
+				END;
+				out.String("; ");
+			out.Ln;
+			out.Update;
+		END VisitPrintStatement;
+
 		(** statements *)
 		PROCEDURE VisitStatement*(x: SyntaxTree.Statement);
 		BEGIN
 			IF x IS CommandStatement THEN
 				VisitCommandStatement(x(CommandStatement));
+			ELSIF x IS PrintStatement THEN
+				VisitPrintStatement(x(PrintStatement));
 			ELSE HALT(100)
 			END;
 		END VisitStatement;
@@ -1295,6 +1338,15 @@ VAR d: RECORD e: LONGINT END;
 		RETURN a+123;
 	END Setter;
 	
+	TYPE TestO= OBJECT
+	VAR i: LONGINT;
+	PROCEDURE &P(s: SHORTINT);
+	BEGIN
+		i := 999+s;
+	END P;
+	
+	END TestO;
+	
 
 BEGIN
 	InitGlobalScope;
@@ -1302,10 +1354,13 @@ BEGIN
 	d.e := 20;
 END FoxInterpreter.
 
-SystemTools.Free FoxInterpreter FoxInterpreterSymbols Reflection2 ~
+SystemTools.FreeDownTo FoxInterpreterSymbols ~ FoxInterpreter FoxInterpreterSymbols Reflection2 ~
 
 FoxInterpreter.Expression
 	FoxInterpreter.c ~
+
+FoxInterpreter.Expression
+	-8 ~
 
 FoxInterpreter.Expression
 	FoxInterpreter.d.e ~
@@ -1315,7 +1370,14 @@ FoxInterpreter.Expression
 
 FoxInterpreter.Expression
 	FoxInterpreter.Setter(1000) ~
-	
+
+FoxInterpreter.Statements
+	a := NEW FoxInterpreter.TestO(-8);
+	trace(a.i);
+	a.i := 10;
+	KernelLog.Int(a.i,1);
+	KernelLog.Ln;
+	~
 
 FoxInterpreter.Expression
 	Test.c.b;
@@ -1348,8 +1410,8 @@ FoxInterpreter.Statements
 		ELSE suffix := "th"
 		END;
 		IF i MOD 9 = 0 THEN
-			CMD SystemTools.Show This is the ?{i}?{suffix} run. ;
-			CMD SystemTools.Ln;
+			! "SystemTools.Show This is the ?{i}??{suffix}? run." ;
+			! "SystemTools.Ln";
 		END;
 	END;
 ~
@@ -1359,6 +1421,7 @@ FoxInterpreter.Expression
 FoxInterpreter.Statements
 	o := Test.TestO();
 	~
+	
 	
 
 FoxInterpreter.Statements
@@ -1401,166 +1464,14 @@ FoxInterpreter.Statements
 	a := [[1,2,3],[4,5,6],[7,8,9]];
 	FOR i := 0 TO 2 DO
 	FOR j := 0 TO 2 DO
-		CMD \+"SystemTools.Show ?{a[i,j]}? ;"+\
+		! \+"SystemTools.Show ?{a[i,j]}? ;"+\
 	END;
-		CMD \+"SystemTools.Ln;"+\
+		! \+"SystemTools.Ln;"+\ 
 	END;
-	CMD \+"SystemTools.Show ?{a}? "+\
+	! "SystemTools.Show ?{a}? ";
+	? a;
+	? 1+1;
+	? 1+2;
 	~
 
 SystemTools.FreeDownTo FoxInterpreter FoxInterpreterSymbols ~
-
-FoxInterpreter.Statements
-	version := 02000302H;
-	a := [
-	(* development , version base, TL300, CN, SingleSensor, Version *)
-	[FALSE, "TLxDev", FALSE, FALSE, FALSE, version],
-	[FALSE, "TL400", FALSE, FALSE, FALSE, version],
-	[FALSE, "TL300", TRUE, FALSE, TRUE, version],
-	[FALSE, "TL300CN", TRUE, TRUE, FALSE, version],
-	[FALSE, "TL300USsu", TRUE, FALSE, TRUE, version],
-	[FALSE, "TL300USrt", TRUE, FALSE, FALSE, version]
-	];
-	FOR i := 0 TO 5 DO
-		major := a[i,5] DIV 1000000H MOD 100H;
-		minor := a[i,5] DIV 10000H MOD 100H;
-		release := a[i,5] DIV 100H MOD 100H;
-		internal := a[i,5] MOD 100H;
-		CMD \+"
-		SystemTools.Show Building ?{a[i,1]}? Version ?{major}?.?{minor}?.?{release}?.?{internal}? ~
-		SystemTools.Ln ~
-		FSTools.CreateFile -c -r TLHostConst.Mod
-			MODULE TLHostConst;
-			(**
-				purpose: GUI Configuration Controller. Sets basics for differentiation of different product lines.
-				author: Felix Friedrich
-			*)
-
-			CONST
-				Development*=?{a[i,0]}?;
-				VersionBase*="?{a[i,1]}? ";
-				TL300*=?{a[i,2]}?;
-				CN*=?{a[i,3]}?;
-				SingleSensor*=?{a[i,4]}?;
-				Version* = ?{a[i,5]}?;
-			END TLHostConst.
-		~
-		Compiler.Compile  --objectFile=Generic Runtime.Mod Trace.Mod  A2/Win32.MiniKernel.Mod A2/Win32.WatchdogServer.Mod ~
-
-		StaticLinker.Link
-			--fileFormat=PE32
-			--fileName=A2Watchdog.exe
-			--extension=Gof
-			--displacement=401000H
-
-			Runtime Trace MiniKernel WatchdogServer ~
-
-		SystemTools.Show Create ramdisk and format with FAT file system... ~ SystemTools.Ln ~
-		VirtualDisks.InstallRamdisk RAMDISK 240000 ~
-		Partitions.WriteMBR RAMDISK#0 OBEMBR.Bin ~
-		Partitions.Create RAMDISK#1 12 1000 ~
-		Partitions.Format RAMDISK#1 FatFS  ~
-		FSTools.Mount WINAOS FatFS RAMDISK#1 ~
-
-		SystemTools.Ln ~ SystemTools.Show Create WinAOS directory structure... ~
-		FSTools.CreateDirectory WINAOS:/TL ~
-		FSTools.CreateDirectory WINAOS:/TL/obj ~
-		FSTools.CreateDirectory WINAOS:/TL/source ~
-		FSTools.CreateDirectory WINAOS:/TL/data ~
-		FSTools.CreateDirectory WINAOS:/TL/skins ~
-		FSTools.CreateDirectory WINAOS:/TL/fonts ~
-		FSTools.CreateDirectory WINAOS:/TL/work ~
-		SystemTools.Show Done. ~ SystemTools.Ln ~
-
-		SystemTools.Ln ~ SystemTools.Show Create build directory and build WinAos... ~ SystemTools.Ln ~
-		Release.Build
-			-f=TL/TLHost.Tool --path="WINAOS:/TL/obj/" --build --zip WinAosMini ~
-
-		SystemTools.Ln ~ SystemTools.Show Extracting data ... ~ SystemTools.Ln ~
-		ZipTool.ExtractAll --prefix=WINAOS:/TL/data/ --sourcePath=WINAOS:/TL/obj/ --overwrite -d --silent
-			Kernel.zip System.zip Drivers.zip
-			ApplicationsMini.zip Compiler.zip GuiApplicationsMini.zip TL.zip
-		~
-
-		SystemTools.Ln ~ SystemTools.Show Removing object files from data folder... ~ SystemTools.Ln ~
-		FSTools.DeleteFiles --silent WINAOS:/TL/data/*.Obw ~
-
-		SystemTools.Ln ~ SystemTools.Show Extracting  fonts ... ~ SystemTools.Ln ~
-		ZipTool.ExtractAll --prefix=WINAOS:/TL/fonts/ --sourcePath=WINAOS:/TL/obj/ --overwrite -d --silent
-			ScreenFonts.zip TrueTypeFonts.zip
-		~
-
-		SystemTools.Ln ~ SystemTools.Show Delete ZIP archives from obj folder... ~ SystemTools.Ln ~
-		FSTools.DeleteFiles --silent WINAOS:/TL/obj/*.zip ~
-
-		SystemTools.Ln ~ SystemTools.Show Copy skins ... ~ SystemTools.Ln ~
-		FSTools.CopyFiles  -o ../../source/*.skin => WINAOS:/TL/skins/*.skin ~
-
-
-		SystemTools.Ln ~ SystemTools.Show Delete some large files that are not stricly required... ~ SystemTools.Ln ~
-		FSTools.DeleteFiles
-			WINAOS:/TL/data/UnicodeData.txt
-			WINAOS:/TL/data/Setup.Text
-			WINAOS:/TL/data/BootManager.Text
-		~
-
-		SystemTools.Ln ~ SystemTools.Show Delete some files from data folder... ~ SystemTools.Ln ~
-		FSTools.DeleteFiles WINAOS:/TL/data/*.Bin ~
-		FSTools.DeleteFiles
-			WINAOS:/TL/data/TestContext.xml
-			WINAOS:/TL/data/Release.Auto.dsk
-			WINAOS:/TL/data/AosDefault.Pal
-			WINAOS:/TL/data/OBL.Text
-			WINAOS:/TL/data/License.Text
-			WINAOS:/TL/data/bluebottle.xsl
-			WINAOS:/TL/data/WMPerfMonAlerts.XML
-			WINAOS:/TL/data/config.txt
-			WINAOS:/TL/data/WMPerfMon.Text
-			WINAOS:/TL/obj/CompileCommand.Tool
-		~
-		FSTools.CopyFiles WINAOS:/TL/data/ZeroSkin.zip => WINAOS:/TL/skins/ZeroSkin.zip ~
-		FSTools.CopyFiles A2Watchdog.exe => WINAOS:/TL/A2Watchdog.exe ~
-		FSTools.DeleteFiles WINAOS:/TL/data/ZeroSkin.zip ~
-
-
-		SystemTools.Show Linking aos.exe ... ~ SystemTools.Ln ~
-		PELinker.Link --path=WINAOS:/TL/obj/ --destination=WINAOS:/TL/tl.exe Win32.Aos.Link ~
-
-		FSTools.CreateFile -c -r WINAOS:/TL/aos.ini
-			[Configuration]
-			Paths.Search = work;obj;source;data;skins;fonts;c:/windows/fonts/
-			Paths.Work = work
-			Oberon = OberonExternal.Text
-			Boot  = Traps.Install
-			Boot1 = FileTrapWriter.Install
-			Boot2  = Display.Install --fullscreen --bits16 --noMouseCursor
-			Boot3 = WindowManager.Install --noMouseCursor --bgColor=0F2EFFH
-			Boot4 = Clipboard.Install
-			Boot6 = HotKeys.Open
-			Boot7 = TLC.EnableTrace
-			Boot8 = TLC.SetClientTraceLog tltrace
-			Boot9 = TLHost.Boot
-			Trace = File
-		~
-
-		FSTools.CreateFile -c -r WINAOS:/TL/TL.bat
-			A2Watchdog tl.exe
-		~
-
-		FSTools.DeleteFiles TL.zip ~
-		SystemTools.Ln ~ SystemTools.Show Creating archive TL.zip... ~
-		FSTools.Enumerate -s WINAOS:/TL/*.*
-			ZipTool.Add --silent -r   TL.zip <#filename#>
-		~
-		FSTools.CloseFiles TL.zip ~
-		SystemTools.Show Done ~ SystemTools.Ln ~
-
-		FSTools.Unmount WINAOS ~
-		VirtualDisks.Uninstall RAMDISK ~
-		FSTools.CopyFiles -o TL.zip => ?{a[i,1]}?_?{major}?_?{minor}?_?{release}?_?{internal}?.zip ~
-		"+\;
-	END;
-	~
-
-
-

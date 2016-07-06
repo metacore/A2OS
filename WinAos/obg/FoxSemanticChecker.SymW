@@ -1,5 +1,5 @@
 MODULE FoxSemanticChecker;
-	IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Parser := FoxParser, Diagnostics, Global := FoxGlobal, Printout := FoxPrintout, Formats := FoxFormats, SYSTEM, Streams, Strings;
+	IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Diagnostics, Global := FoxGlobal, Printout := FoxPrintout, Formats := FoxFormats, SYSTEM, Strings;
 CONST 
 	Trace = FALSE; 
 	Infinity = MAX(LONGINT); 
@@ -328,7 +328,7 @@ TYPE
 	PROCEDURE ^ IsDynamicArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ Dimension*(t: SyntaxTree.Type; form: SET): LONGINT; 
 	PROCEDURE ^ IsVariable(expression: SyntaxTree.Expression): BOOLEAN; 
-	PROCEDURE ^ IsVariableParameter(symbol: SyntaxTree.Symbol): BOOLEAN; 
+	PROCEDURE ^ IsVariableParameter*(symbol: SyntaxTree.Symbol): BOOLEAN; 
 	PROCEDURE ^ IsPointerType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsUnsafePointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsDisposable*(type: SyntaxTree.Type): BOOLEAN; 

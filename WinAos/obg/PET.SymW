@@ -14,10 +14,9 @@ CONST
 	DefaultShowLineNumbers = FALSE; 
 	DefaultIndicateTabs = FALSE; 
 	DefaultCurrentLineColor = 0; 
-	DefaultBackgroundColor = WMGraphics.White; 
 	DefaultCompilerName = \"Fox"\; 
 	DefaultCompilerCaption = \"Compile"\; 
-	DefaultCompilerOptions = \"-b=AMD --warnings"\; 
+	DefaultCompilerOptions = \"-p=Win32G --warnings"\; 
 	DefaultCompilerLoadModule = \"Compiler"\; 
 	DefaultCompilerFileExtension = \"MOD"\; 
 	DefaultCompilerFindPC = TRUE; 
@@ -67,7 +66,6 @@ TYPE
 		showLineNumbers: BOOLEAN; 
 		indicateTabs: BOOLEAN; 
 		currentLineColor: LONGINT; 
-		backgroundColor: LONGINT; 
 		defaultCompilerOptions: CompilerOptions; 
 		defaultCompilerSettings: CompilerSettings; 
 		compilers: ARRAY MaxNbrOfCompilers OF CompilerSettings; 
@@ -284,7 +282,6 @@ VAR
 	StrScratchPanel, StrPETPanel: Strings.String; 
 	timeout: BOOLEAN; 
 
-	PROCEDURE ^ FindOpenedFile*(CONST filename: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ OpenState*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

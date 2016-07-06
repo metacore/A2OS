@@ -15,7 +15,7 @@ CONST
 	ChangeCase* = 12; 
 	Cooperative* = 13; 
 	CellsAreObjects* = 14; 
-	DefaultBackend = \"AMD"\; 
+	DefaultBackend = \"Win32G"\; 
 	DefaultFrontend = \"Oberon"\; 
 TYPE 
 	SectionName = ARRAY 256 OF CHAR; 

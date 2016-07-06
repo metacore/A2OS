@@ -1,5 +1,5 @@
 MODULE FoxSyntaxTree;
-	IMPORT Basic := FoxBasic, Scanner := FoxScanner, BitSets, Commands, StringPool, Strings;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, BitSets, StringPool, Strings;
 CONST 
 	OberonCallingConvention* = 0; 
 	CCallingConvention* = 1; 
@@ -31,7 +31,6 @@ CONST
 	Resolved* = 2; 
 	FingerPrinted* = 3; 
 	Warned* = 4; 
-	RecursionFlag = 31; 
 	ArrayIndex* = 0; 
 	SetElement* = 1; 
 	CaseGuard* = 2; 
@@ -438,12 +437,15 @@ TYPE
 		direction-: LONGINT; 
 		sizeExpression-: Expression; 
 		sizeInBits-: LONGINT; 
+		cellsAreObjects-: BOOLEAN; 
 
 		PROCEDURE ^  & InitPortType(position: LONGINT; direction: LONGINT; sizeExpression: Expression; scope: Scope); 
 		PROCEDURE ^ SetSize*(size: LONGINT); 
 		PROCEDURE ^ SetSizeExpression*(sizeExpression: Expression); 
+		PROCEDURE ^ SetCellsAreObjects*(b: BOOLEAN); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
+		PROCEDURE ^ IsPointer*(): BOOLEAN; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END PortType; 
 

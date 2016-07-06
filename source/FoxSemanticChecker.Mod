@@ -2,8 +2,8 @@
 MODULE FoxSemanticChecker; (* AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Semantic Checker"; *)
 (* (c) fof ETHZ 2009 *)
 
-IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Parser := FoxParser,
-Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, SYSTEM, Streams, Strings;
+IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, 
+Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, SYSTEM, Strings;
 
 CONST
 	Trace = FALSE;
@@ -749,6 +749,7 @@ TYPE
 		VAR value: LONGINT;
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
+				x.SetCellsAreObjects(cellsAreObjects);
 				x.SetSizeExpression(ResolveExpression(x.sizeExpression));
 				IF (x.sizeExpression # NIL) & CheckPositiveIntegerValue(x.sizeExpression,value,FALSE) THEN
 					x.SetSize(value)
@@ -1046,7 +1047,6 @@ TYPE
 			real: LONGREAL;
 			bool: BOOLEAN;
 			set: SET;
-			variable: SyntaxTree.Variable;
 			v: SyntaxTree.Expression;
 			str: Scanner.StringType;
 			atype: SyntaxTree.ArrayType;
@@ -6495,8 +6495,6 @@ TYPE
 			type: SyntaxTree.Type;
 			name: Basic.SegmentedName;
 			replacement: Replacement;
-			stringReader: Streams.StringReader;
-			scanner: Scanner.Scanner; parser: Parser.Parser;
 		BEGIN
 			IF Trace THEN D.Str("VisitConstant "); D.Str0(constant.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(constant) THEN
@@ -8188,8 +8186,6 @@ TYPE
 			symbol: SyntaxTree.Symbol;
 			prevPhase: LONGINT;
 			prevError : BOOLEAN;
-			type: SyntaxTree.Type;
-			atype : SyntaxTree.ArrayType;
 			
 			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
 			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
@@ -9384,7 +9380,7 @@ TYPE
 		RETURN expression.assignable;
 	END IsVariable;
 
-	PROCEDURE IsVariableParameter (symbol: SyntaxTree.Symbol): BOOLEAN;
+	PROCEDURE IsVariableParameter*(symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN 
 		IF (symbol IS SyntaxTree.Parameter) THEN
 			WITH symbol: SyntaxTree.Parameter DO

@@ -864,7 +864,7 @@ TYPE
 		VAR svalue: ARRAY 32 OF CHAR; position: LONGINT;
 		BEGIN
 			IF cellsAreObjects THEN RETURN FALSE END;
-			IF (backendName = "TRM") & x.isCellNet THEN RETURN TRUE END;
+			IF (backendName = "TRM") & x.isCellNet THEN D.TraceBack; RETURN TRUE END;
 			IF HasStringValue(x.modifiers,Global.NameBackend,position,svalue) THEN 
 				IF svalue[0] = "~" THEN
 					Strings.TrimLeft(svalue, "~");
@@ -1079,6 +1079,136 @@ TYPE
 			resolvedType := ResolvedType(x);
 		END VisitRecordType;
 
+		(** declaration phase:
+			check and resolve all declarations of a scope (module scope, procedure scope, record scope):
+			- import lists (for module scopes)
+			- parameter list (for procedure scopes)
+			- constant declarations
+			- type declarations
+			- variable declarations
+			- procedure declarations
+			preformed in two stages:
+				- first all symbols are entered into the symbol table (with uniqueness check),
+				- then all symbols are resolved
+			after declaration check, bodies are entered into the global list of implementations that remain to be resolved after all declarations.
+
+			Declarations depend on other declarations, this procedure is neither thread safe not would it be wise to try concurrency here
+		**)
+		PROCEDURE Declarations2(scope: SyntaxTree.Scope);
+		VAR
+			constant: SyntaxTree.Constant;
+			typeDeclaration: SyntaxTree.TypeDeclaration;
+			variable: SyntaxTree.Variable;
+			procedure: SyntaxTree.Procedure;
+			prevScope: SyntaxTree.Scope;
+			parameter: SyntaxTree.Parameter;
+			import: SyntaxTree.Import;
+			symbol: SyntaxTree.Symbol;
+			prevPhase: LONGINT;
+			prevError : BOOLEAN;
+			
+			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
+			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
+			BEGIN
+				IF type.baseType # NIL THEN 
+					baseType := type.baseType.resolved;
+					IF baseType IS SyntaxTree.PointerType THEN
+						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF baseType IS SyntaxTree.CellType THEN
+						DeclareCell(baseType(SyntaxTree.CellType));
+					END;
+				END;
+				parameter := type.firstParameter;
+				WHILE(parameter # NIL) DO (* duplicates forbidden *)
+					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
+					variable.SetType(parameter.type);
+					variable.SetAccess(SyntaxTree.Hidden);
+					variable.SetModifiers(parameter.modifiers);
+					currentScope.PushVariable(variable);
+					(*
+					Register(parameter,scope, FALSE); 
+					*)
+					parameter := parameter.nextParameter;
+				END;
+				
+				property := type.firstProperty;
+				WHILE (property # NIL) DO (* duplicates allowed : overwrite *)
+					variable := currentScope.FindVariable(property.name);
+					IF (variable # NIL) & (variable IS SyntaxTree.Property) THEN (* overwrite *)
+						prop := variable(SyntaxTree.Property); 
+					ELSE (* add, duplicate symbols detection later *)
+						prop := SyntaxTree.NewProperty(property.position, property.name);
+						currentScope.PushVariable(prop);
+					END;
+					prop.SetType(property.type);
+					prop.SetValue(property.value);
+					prop.SetAccess(SyntaxTree.Hidden);
+					property := property.nextProperty;
+				END;
+			END DeclareCell;
+			
+			
+		BEGIN
+			prevError := error;
+			prevPhase := phase;
+			phase := DeclarationPhase;
+			prevScope := currentScope;
+			currentScope := scope;
+			error := FALSE;
+
+			IF scope IS SyntaxTree.CellScope THEN
+				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
+			END;
+			IF error THEN RETURN END;
+
+			(* constants *)
+			constant := scope.firstConstant;
+			WHILE (constant # NIL) DO
+				Register(constant, currentScope, FALSE); constant := constant.nextConstant;
+			END;
+			(* type declarations *)
+			typeDeclaration := scope.firstTypeDeclaration;
+			WHILE (typeDeclaration # NIL) DO
+				Register(typeDeclaration, currentScope, FALSE); typeDeclaration := typeDeclaration.nextTypeDeclaration;
+			END;
+			(* variables *)
+			variable := scope.firstVariable;
+			WHILE (variable # NIL) DO
+				Register(variable, currentScope, FALSE); variable := variable.nextVariable;
+			END;
+			(* procedures *)
+			procedure := scope.firstProcedure;
+			WHILE (procedure # NIL) DO
+				Register(procedure, currentScope, procedure IS SyntaxTree.Operator); procedure := procedure.nextProcedure;
+			END;
+
+			(*
+			(* now process all symbols without any presumption on the order *)
+			symbol := scope.firstSymbol;
+			WHILE(symbol # NIL) DO
+				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
+					ResolveSymbol(symbol);
+				END;
+				symbol := symbol.nextSymbol;
+			END;
+			*)
+
+
+			(*
+			IF scope.ownerModule # NIL THEN
+				IF ~(scope IS SyntaxTree.CellScope) OR ~SkipImplementation(scope(SyntaxTree.CellScope).ownerCell) THEN
+					(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
+					scope.ownerModule.AddScope(scope);
+				END;
+			END;
+			*)
+			
+			phase := prevPhase;
+			currentScope := prevScope;
+			error := error OR prevError;
+		END Declarations2;
+
 			(** check and resolve cell type
 			- check base type: must be cell
 			- check declarations
@@ -1100,6 +1230,69 @@ TYPE
 			prev: SyntaxTree.Scope;
 			skip: BOOLEAN;
 			svalue: ARRAY 32 OF CHAR;
+			
+			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
+			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
+			BEGIN
+				IF type.baseType # NIL THEN 
+					baseType := type.baseType.resolved;
+					IF baseType IS SyntaxTree.PointerType THEN
+						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
+					END;
+					IF baseType IS SyntaxTree.CellType THEN
+						DeclareCell(baseType(SyntaxTree.CellType));
+					END;
+				END;
+				
+				parameter := type.firstParameter;
+				WHILE(parameter # NIL) DO (* duplicates forbidden *)
+					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
+					variable.SetType(parameter.type);
+					variable.SetAccess(SyntaxTree.Hidden);
+					variable.SetModifiers(parameter.modifiers);
+					currentScope.PushVariable(variable);
+					(*
+					Register(parameter,scope, FALSE); 
+					*)
+					parameter := parameter.nextParameter;
+				END;
+				
+				
+				(*
+				property := type.firstProperty;
+				WHILE (property # NIL) DO (* duplicates allowed : overwrite *)
+					variable := currentScope.FindVariable(property.name);
+					IF (variable # NIL) & (variable IS SyntaxTree.Property) THEN (* overwrite *)
+						prop := variable(SyntaxTree.Property); 
+					ELSE (* add, duplicate symbols detection later *)
+						prop := SyntaxTree.NewProperty(property.position, property.name);
+						currentScope.PushVariable(prop);
+					END;
+					prop.SetType(property.type);
+					prop.SetValue(property.value);
+					prop.SetAccess(SyntaxTree.Hidden);
+					(*Register(prop,currentScope,FALSE);*)
+					property := property.nextProperty;
+				END;
+				*)
+				
+							variable := currentScope.firstVariable;
+			WHILE (variable # NIL) DO
+				D.Str0(variable.name);D.Ln;
+				Register(variable, currentScope, FALSE); variable := variable.nextVariable;
+			END;
+				
+				(* now process all symbols without any presumption on the order *)
+				symbol := currentScope.firstSymbol;
+				WHILE(symbol # NIL) DO
+					IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
+						ResolveSymbol(symbol);
+					END;
+					symbol := symbol.nextSymbol;
+				END;
+		
+			END DeclareCell;
+
 		BEGIN
 		
 			IF TypeNeedsResolution(x) THEN
@@ -1199,11 +1392,23 @@ TYPE
 				IF ~SkipImplementation(x) THEN
 					Declarations(x.cellScope);
 				ELSE
+		
+					Declarations2(x.cellScope);
+					
+					(*
+					prev := currentScope;
+					currentScope := x.cellScope;
+
+					DeclareCell(x);
+					currentScope := prev;
+					
 					parameter :=x.firstParameter;
 					WHILE(parameter # NIL) DO
 						parameter.SetScope(x.cellScope);
 						parameter := parameter.nextParameter;
 					END;
+					*)
+				
 				END;
 				
 				(* process parameters *)
@@ -3640,7 +3845,7 @@ TYPE
 				OR (left = NIL) & (symbol.scope IS SyntaxTree.CellScope) & cellsAreObjects
 			THEN
 				left := ResolveDesignator(SyntaxTree.NewSelfDesignator(position)); (* auto self *)
-				IF IsPointerType(left.type) OR (left.type.resolved IS SyntaxTree.CellType) & cellsAreObjects THEN
+				IF (IsPointerType(left.type) OR (left.type.resolved IS SyntaxTree.CellType) & cellsAreObjects) &~(symbol IS SyntaxTree.Import) THEN
 					left := NewDereferenceDesignator(position,left);
 					left.SetHidden(TRUE);
 				END;
@@ -8331,6 +8536,17 @@ TYPE
 				parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType).returnParameter;
 				IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
 			ELSIF scope IS SyntaxTree.CellScope THEN
+				import := scope(SyntaxTree.CellScope).firstImport;
+				WHILE(import # NIL) DO
+					IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(scope.ownerModule.context) END;
+					Register(import, currentScope, FALSE);
+					import := import.nextImport;
+				END;
+				import := scope(SyntaxTree.CellScope).firstImport;
+				WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
+					ResolveSymbol(import);
+					import := import.nextImport;
+				END;
 				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
 			END;
 			IF error THEN RETURN END;

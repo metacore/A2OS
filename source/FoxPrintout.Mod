@@ -154,7 +154,9 @@ TYPE
 			IF x.qualifiedIdentifier # NIL THEN
 				(* Problem: how to distinguish betwteen type aliases, e.g. Status = LONGINT and actual use of LONGINT?
 					This tries to use scope level: if the type is declared in the global scope, it should be a basic type use. *)
-				useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope.Level() = 0);
+				IF x.resolved # NIL THEN
+					useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope.Level() = 0);
+				END;
 				QualifiedIdentifier(x.qualifiedIdentifier);
 				useCase := FALSE;
 			ELSE

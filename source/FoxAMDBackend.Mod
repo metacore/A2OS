@@ -3140,6 +3140,7 @@ TYPE
 			cRegisters[4] := R8 - RAX;
 			cRegisters[5] := R9 - RAX; 
 			
+			SetName("AMD");
 		END InitBackendAMD64;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);

@@ -4839,6 +4839,7 @@ TYPE
 		ownerCell-: CellType;
 		bodyProcedure-: Procedure;
 		constructor-: Procedure;
+		firstImport-,lastImport-: Import; numberImports: LONGINT; (* imported modules *)
 
 		PROCEDURE & InitCellScope(outer: Scope);
 		BEGIN
@@ -4861,7 +4862,35 @@ TYPE
 		PROCEDURE SetConstructor*(p: Procedure);
 		BEGIN constructor := p
 		END SetConstructor;
-		
+
+		PROCEDURE AddImport*(i: Import);
+		BEGIN
+			ASSERT(i # NIL);
+			ASSERT(i.nextImport = NIL);
+			IF lastImport= NIL THEN firstImport:= i ELSE lastImport.nextImport := i END;
+			lastImport := i;
+			INC(numberImports);
+		END AddImport;
+
+		PROCEDURE FindImport*(identifier: Identifier): Import;
+		VAR p: Import;
+		BEGIN
+			p := firstImport;
+			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextImport END; (* finds imports and re-imports! *)
+			RETURN p;
+		END FindImport;
+
+		PROCEDURE GetImport*( index: LONGINT ): Import;
+		VAR import: Import;
+		BEGIN
+			import := firstImport;
+			WHILE(import # NIL) & (index > 0) DO
+				import := import.nextImport;
+				DEC(index);
+			END;
+			RETURN import;
+		END GetImport;
+				
 		PROCEDURE FindSymbol*(identifier: Identifier): Symbol;
 		VAR p: Symbol; base: Type;
 		BEGIN

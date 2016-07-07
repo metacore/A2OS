@@ -97,6 +97,7 @@ TYPE
 		split: Strings.StringArray;
 		sectionOffset: LONGINT;
 		flags: SET;
+		backendName: ARRAY 32 OF CHAR;
 
 		PROCEDURE FinalMessage(error: BOOLEAN; CONST msg: ARRAY OF CHAR);
 		VAR message,name: ARRAY 256 OF CHAR;
@@ -174,7 +175,12 @@ TYPE
 				IF (options.symbolFile # NIL) THEN
 					options.symbolFile.Initialize(diagnostics,system,options.destPath);
 				END;
-				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,importCache);
+				IF options.backend # NIL THEN
+					COPY(options.backend.name, backendName);
+				ELSE
+					backendName := "";
+				END;
+				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,importCache,backendName);
 				checker.replacements := options.replacements;
 				checker.Module(module);
 				IF checker.error THEN

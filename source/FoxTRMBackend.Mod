@@ -2183,6 +2183,7 @@ TYPE
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;
 			recentInstructionWidth := Sections.UnknownSize;
+			SetName("TRM");
 		END InitBackendTRM;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);

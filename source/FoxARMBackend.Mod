@@ -3337,6 +3337,7 @@ TYPE
 			system := NIL;
 			initLocals := TRUE;
 			SetHasLinkRegister;
+			SetName("ARM");
 		END InitBackendARM;
 
 		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);

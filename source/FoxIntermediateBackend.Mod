@@ -324,7 +324,12 @@ TYPE
 			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN INCL(capabilities, Global.FloatingPointCapability) END;
 			IF HasFlag(x.modifiers, Global.StringVector) THEN INCL(capabilities, Global.VectorCapability) END;
 			backend.SetCapabilities(capabilities);
-			Scope(x.cellScope);
+			
+			IF ~implementationVisitor.checker.SkipImplementation(x) THEN
+				Scope(x.cellScope);
+			END;
+			
+			
 		END VisitCellType;
 
 		PROCEDURE VisitProcedureType(x: SyntaxTree.ProcedureType);

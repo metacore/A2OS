@@ -1424,6 +1424,8 @@ TYPE
 
 			IF Optional( Scanner.Semicolon ) THEN END;
 
+			
+			IF Optional(Scanner.Import) THEN ImportList(cellScope) END;
 			DeclarationSequence( cellScope);
 			IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
 				cellScope.SetBodyProcedure(BodyProcedure(cellScope));
@@ -2133,7 +2135,7 @@ TYPE
 			ImportList = 'import' Import { ',' Import } ';'.
 			Import     = Identifier [':=' Identifier] ['in' Identifier].
 		**)
-		PROCEDURE ImportList( moduleScope: SyntaxTree.ModuleScope );
+		PROCEDURE ImportList( scope: SyntaxTree.Scope );
 		VAR alias, name, context: SyntaxTree.Identifier;  import: SyntaxTree.Import; position,idPosition: LONGINT;
 		BEGIN
 			IF Trace THEN S( "ImportList" ) END;
@@ -2150,7 +2152,11 @@ TYPE
 						context := Identifier(idPosition);
 						IF context # SyntaxTree.invalidIdentifier THEN  import.SetContext(context) END;
 					END;
-					moduleScope.AddImport( import );
+					WITH scope: SyntaxTree.ModuleScope DO
+						scope.AddImport( import );
+					| scope: SyntaxTree.CellScope DO
+						scope.AddImport( import );
+					END;
 				END;
 			UNTIL ~Optional( Scanner.Comma );
 			IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;

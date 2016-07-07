@@ -23,6 +23,7 @@ TYPE
 		oberon07-: BOOLEAN;
 		instructionWidth -: LONGINT;
 		hasLinkRegister-: BOOLEAN;
+		name-: ARRAY 32 OF CHAR;
 
 		(* constructor *)
 		PROCEDURE & InitBackend *;
@@ -77,6 +78,11 @@ TYPE
 			SELF.checker := checker;
 			SELF.system := system;
 		END Initialize;
+		
+		PROCEDURE SetName*(CONST name: ARRAY OF CHAR);
+		BEGIN
+			COPY(name, SELF.name);
+		END SetName;
 
 		(* Get the system used by this backend (singleton) *)
 		PROCEDURE GetSystem*():Global.System;

@@ -86,6 +86,8 @@ TYPE
 		phase: LONGINT;
 		system-: Global.System;
 		symbolFileFormat-: Formats.SymbolFileFormat;
+		backendName-: ARRAY 32 OF CHAR;
+
 
 		(* temporary variables for the visitors
 		    they replace variables on a stack during use of the visitor pattern and may only be
@@ -108,7 +110,7 @@ TYPE
 		cellsAreObjects: BOOLEAN;
 		variableAccessed: BOOLEAN;
 
-		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope);
+		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
 		BEGIN
 			SELF.diagnostics := diagnostics;
 			SELF.useDarwinCCalls := useDarwinCCalls;
@@ -135,6 +137,7 @@ TYPE
 			currentIsExclusive := FALSE;
 			withEntries := NIL;
 			SELF.cellsAreObjects := system.cellsAreObjects;
+			COPY(backend, backendName);
 		END InitChecker;
 
 		(** report error **)
@@ -201,6 +204,8 @@ TYPE
 				s := NIL;
 				IF (symbol # NIL) & (symbol.access * SyntaxTree.Public = {}) & (symbol.scope IS SyntaxTree.CellScope) (* hidden copies of parameters *) THEN
 					s := symbol.scope(SyntaxTree.CellScope).ownerCell.FindParameter(name);
+				ELSIF (symbol = NIL) & (scope IS SyntaxTree.CellScope) THEN
+					symbol := scope(SyntaxTree.CellScope).ownerCell.FindParameter(name);
 				END;
 
 				IF (symbol # NIL) & (symbol IS SyntaxTree.Parameter) & (symbol.scope IS SyntaxTree.CellScope) THEN (* ok, symbol auto-export in scope *)
@@ -834,6 +839,48 @@ TYPE
 			END;
 		END HasValue;
 
+		PROCEDURE HasStringValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT; VAR value: ARRAY OF CHAR): BOOLEAN;
+		VAR prev,this: SyntaxTree.Modifier;
+		BEGIN
+			this := modifiers;prev := NIL;
+			WHILE (this # NIL) & (this.identifier # name) DO
+				prev := this; this := this.nextModifier;
+			END;
+			IF this # NIL THEN
+				IF this.expression = NIL THEN
+					Error(this.position,Diagnostics.Invalid,"expected expression value");
+				ELSE
+					this.SetExpression(ConstantExpression(this.expression));
+					IF CheckStringValue(this.expression,value) THEN END;
+				END;
+				this.Resolved;
+				position := this.position;
+				RETURN TRUE
+			ELSE RETURN FALSE
+			END;
+		END HasStringValue;
+
+		PROCEDURE SkipImplementation*(x: SyntaxTree.CellType): BOOLEAN;
+		VAR svalue: ARRAY 32 OF CHAR; position: LONGINT;
+		BEGIN
+			IF cellsAreObjects THEN RETURN FALSE END;
+			IF (backendName = "TRM") & x.isCellNet THEN RETURN TRUE END;
+			IF HasStringValue(x.modifiers,Global.NameBackend,position,svalue) THEN 
+				IF svalue[0] = "~" THEN
+					Strings.TrimLeft(svalue, "~");
+					IF svalue = backendName THEN
+						RETURN TRUE;
+					END;
+				ELSIF svalue # backendName THEN
+					RETURN TRUE;
+				END;
+			END;
+			IF x.baseType # NIL THEN
+				RETURN SkipImplementation(x.baseType.resolved(SyntaxTree.CellType));
+			END;
+			RETURN FALSE;
+		END SkipImplementation;
+
 		PROCEDURE CheckModifiers(modifiers: SyntaxTree.Modifier; checkUse: BOOLEAN);
 		VAR this: SyntaxTree.Modifier;
 		BEGIN
@@ -1051,6 +1098,8 @@ TYPE
 			str: Scanner.StringType;
 			atype: SyntaxTree.ArrayType;
 			prev: SyntaxTree.Scope;
+			skip: BOOLEAN;
+			svalue: ARRAY 32 OF CHAR;
 		BEGIN
 		
 			IF TypeNeedsResolution(x) THEN
@@ -1119,6 +1168,7 @@ TYPE
 								atype.SetArrayBase(modifier.expression.type(SyntaxTree.StringType).baseType);
 								atype.SetLength(Global.NewIntegerValue(system,-1, (* type(SyntaxTree.StringType).length *) 256 (*! check if this is a good idea *) ));
 								property.SetType(atype);
+								
 							ELSE
 								Error(modifier.position, Diagnostics.Invalid, "unsupported property type");
 							END;
@@ -1146,9 +1196,16 @@ TYPE
 				END;*)
 				CheckModifiers(modifier, FALSE);
 
-
-				Declarations(x.cellScope);
-
+				IF ~SkipImplementation(x) THEN
+					Declarations(x.cellScope);
+				ELSE
+					parameter :=x.firstParameter;
+					WHILE(parameter # NIL) DO
+						parameter.SetScope(x.cellScope);
+						parameter := parameter.nextParameter;
+					END;
+				END;
+				
 				(* process parameters *)
 				prev := currentScope;
 				currentScope := x.cellScope;
@@ -4867,6 +4924,20 @@ TYPE
 			RETURN result;
 		END CheckIntegerValue;
 
+		PROCEDURE CheckStringValue(x: SyntaxTree.Expression; VAR value: ARRAY OF CHAR): BOOLEAN;
+		VAR result: BOOLEAN;
+		BEGIN
+			result := FALSE;
+			IF x = SyntaxTree.invalidExpression THEN
+			ELSIF (x.resolved # NIL) & (x.resolved IS SyntaxTree.StringValue) THEN
+				result := TRUE;
+				COPY(x.resolved(SyntaxTree.StringValue).value^, value);
+			ELSE
+				Error(x.position,Diagnostics.Invalid,"expression is not an integer constant");
+			END;
+			RETURN result;
+		END CheckStringValue;
+
 		PROCEDURE IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: LONGINT): BOOLEAN;
 		BEGIN
 			IF (x.resolved # NIL) & (x.resolved IS SyntaxTree.IntegerValue) THEN
@@ -8315,8 +8386,10 @@ TYPE
 			END;
 
 			IF scope.ownerModule # NIL THEN
-				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
-				scope.ownerModule.AddScope(scope);
+				IF ~(scope IS SyntaxTree.CellScope) OR ~SkipImplementation(scope(SyntaxTree.CellScope).ownerCell) THEN
+					(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
+					scope.ownerModule.AddScope(scope);
+				END;
 			END;
 
 			phase := prevPhase;
@@ -9730,10 +9803,10 @@ TYPE
 	END EnterCase;
 
 	(** generate and return a new checker object, errors are entered into diagnostics **)
-	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope): Checker;
+	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker;
 	VAR checker: Checker;
 	BEGIN
-		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,importCache);
+		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,importCache,backend);
 		RETURN checker
 	END NewChecker;
 
@@ -9890,5 +9963,7 @@ TYPE
 	BEGIN
 		RETURN ~OptimizeMethodTable OR IsStaticProcedure(procedure)
 	END InMethodTable;
+	
+
 
 END FoxSemanticChecker.

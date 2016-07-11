@@ -534,7 +534,11 @@ TYPE
 					pointerType := SyntaxTree.NewPointerType(x.position, x.scope);
 					pointerType.SetPointerBase(arrayBase);
 					pointerType.SetHidden(TRUE);
-					x.SetArrayBase(pointerType);
+					IF x.arrayBase IS SyntaxTree.QualifiedType THEN
+						x.arrayBase(SyntaxTree.QualifiedType).SetResolved(pointerType)
+					ELSE
+						x.SetArrayBase(pointerType);
+					END;
 				END;
 				IF x.length # NIL THEN
 				
@@ -9960,3 +9964,5 @@ TYPE
 
 
 END FoxSemanticChecker.
+
+SystemTools.FreeDownTo FoxSemanticChecker ~ 

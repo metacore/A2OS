@@ -5187,6 +5187,9 @@ TYPE
 					IF (first =0) OR CheckVariable(parameter0) THEN
 						IF type0 IS SyntaxTree.PointerType THEN
 							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
+						ELSIF type0 IS SyntaxTree.CellType THEN
+						ELSE
+							Error(position, Diagnostics.Invalid, "forbidden new on value type");
 						END;
 						IF type0 IS SyntaxTree.ArrayType THEN
 							arrayType := type0(SyntaxTree.ArrayType);

@@ -25072,7 +25072,7 @@ negative: capital letter of variable integer
 positive: arithmetic shift of variable integers
 
 	MODULE Test;
-	VAR integer, result: INTEGER;
+	VAR integer: INTEGER; result: LONGINT;
 	BEGIN result := ASH (integer, integer)
 	END Test.
 

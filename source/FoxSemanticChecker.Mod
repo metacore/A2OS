@@ -1977,20 +1977,16 @@ TYPE
 						ELSIF (rightInteger<0) OR (rightInteger >= system.setType.sizeInBits) THEN
 							Error(right.position,Diagnostics.Invalid,"not allowed set integer value");
 						ELSE
-							IF leftInteger > rightInteger THEN
-								temp := leftInteger;  leftInteger := rightInteger;  rightInteger := temp
-							END;
-							IF leftInteger > MAX(SET) THEN leftInteger := MAX(SET) END;
-							IF rightInteger > MAX(SET) THEN rightInteger := MAX(SET) END; (*!!!!!!!!! this is a hack !!!!!!! *)
-							(*!	in case of MAX(SET) =31 and --bits=64 some kind of sign extension
+							IF (leftInteger > MAX(SET)) OR (rightInteger <0) THEN 
+								s := {};
+							ELSE
+								IF rightInteger > MAX(SET) THEN rightInteger := MAX(SET) END; 
+								IF leftInteger < 0 THEN leftInteger := 0 END;
+								(*!!!!!!!!! this is a hack !!!!!!! *)
+								(*!	in case of MAX(SET) =31 and --bits=64 some kind of sign extension
 								extends the range  x..31  to  x..63 !!!!!! *)
-							s := s + {leftInteger..rightInteger};	
-							(* same but more explicit:
-							WHILE (leftInteger <= rightInteger) DO
-								INCL(s,leftInteger);
-								INC(leftInteger);
+								s := s + {leftInteger..rightInteger};	
 							END;
-							*)
 						END;
 					ELSE
 						constant := FALSE;

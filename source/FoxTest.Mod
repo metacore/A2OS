@@ -28,7 +28,7 @@ TYPE
 		VAR result: INTEGER; msg: ARRAY 128 OF CHAR; res: LONGINT; f: Files.File; w: Files.Writer; ch: CHAR;
 		BEGIN
 			result := TestSuite.Failure;
-			IF log # NIL THEN log.String ("testing: "); log.String (name); log.String("@"); log.Int(position,0); log.Ln END;
+			IF log # NIL THEN log.String ("testing: "); log.String (name); log.String("@"); log.Int(position,0); log.Ln; log.Update; END;
 
 			(* prepare tester input as a file for all test cases *)
 			f := Files.New(fileName);

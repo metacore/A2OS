@@ -1099,21 +1099,21 @@ negative: procedure section before import section
 	IMPORT Import := Dummy;
 	END Test.
 
-negative: procedure section before const section
+positive: procedure section before const section
 
 	MODULE Test;
 	PROCEDURE Procedure; END Procedure;
 	CONST Constant = 0;
 	END Test.
-
-negative: procedure section before type section
+	
+positive: procedure section before type section
 
 	MODULE Test;
 	PROCEDURE Procedure; END Procedure;
 	TYPE Type = RECORD END;
 	END Test.
 
-negative: procedure section before var section
+positive: procedure section before var section
 
 	MODULE Test;
 	PROCEDURE Procedure; END Procedure;
@@ -10153,7 +10153,7 @@ negative: procedure marked as exported within procedure in object
 	END Object;
 	END Test.
 
-negative: procedure marked as read-only
+positive: procedure marked as read-only
 
 	MODULE Test;
 	PROCEDURE Procedure-;
@@ -10180,7 +10180,7 @@ negative: procedure marked as read-only within nested procedure
 	END Procedure;
 	END Test.
 
-negative: procedure marked as read-only within object
+positive: procedure marked as read-only within object
 
 	MODULE Test;
 	TYPE Object = OBJECT
@@ -20267,7 +20267,7 @@ negative: pointer to variable integer assignment
 	BEGIN result := variable;
 	END Test.
 
-negative: variable procedure to variable integer assignment
+negative: variable eto variable integer assignment
 
 	MODULE Test;
 	VAR variable: PROCEDURE; result: INTEGER;

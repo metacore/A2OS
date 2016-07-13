@@ -11720,6 +11720,7 @@ TYPE
 				sfTypeBYTE = 1CX; 
 				sfTypeADDRESS = 1DX; 
 				sfTypeSIZE = 1EX; 
+				sfTypeIndirect = 1FX;
 				
 				sfTypeRecord = 20X;	
 
@@ -11758,6 +11759,8 @@ TYPE
 
 			VAR
 				s: Sections.Section; sizePC, i, startPC, lastOffset: LONGINT;
+				indirectTypes: Basic.HashTable;
+
 
 				PROCEDURE CurrentIndex(): SIZE;
 				VAR i: LONGINT;
@@ -11796,9 +11799,24 @@ TYPE
 						| sfTypeWORD | sfTypeLONGWORD
 						| sfTypeREAL | sfTypeLONGREAL
 						| sfTypeCOMPLEX | sfTypeLONGCOMPLEX
-						| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE.
+						| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE
+						| sfTypeIndirect offset:SIZE.
 		*) 
-		
+				
+				PROCEDURE Indirect(type: SyntaxTree.Type): BOOLEAN;
+				VAR offset: SIZE; 
+				BEGIN
+					IF indirectTypes.Has(type) THEN
+						offset := indirectTypes.GetInt(type);
+						Char(section, sfTypeIndirect);
+						Size(section, offset);
+						RETURN TRUE;
+					ELSE
+						indirectTypes.PutInt(type, CurrentIndex());
+						RETURN FALSE;
+					END;
+				END Indirect;
+				
 				PROCEDURE NType(type: SyntaxTree.Type);
 				VAR size: SIZE; td: SyntaxTree.TypeDeclaration; tir: Sections.Section; 
 					segmentedName: Basic.SegmentedName; offset: SIZE; parameter: SyntaxTree.Parameter;
@@ -11813,79 +11831,88 @@ TYPE
 							IF type.pointerBase.resolved IS SyntaxTree.RecordType THEN
 								IF RefInfo THEN Info(section,"PointerToRecord") END;
 								Char(section, sfTypePointerToRecord);
+								(*! do we ever need the pointer base?  NType(type.pointerBase);*)
 							ELSE
 								IF RefInfo THEN Info(section,"PointerToArray") END;
 								Char(section, sfTypePointerToArray);
 								NType(type.pointerBase);
 							END;
 						| type: SyntaxTree.ArrayType DO
-							IF type.form = SyntaxTree.Open THEN
-								IF RefInfo THEN Info(section,"OpenArray") END;
-								Char(section, sfTypeOpenArray);
-							ELSIF type.form = SyntaxTree.SemiDynamic THEN
-								IF RefInfo THEN Info(section,"DynamicArray") END;
-								Char(section, sfTypeDynamicArray); 
-							ELSIF type.form = SyntaxTree.Static THEN
-								IF RefInfo THEN Info(section,"StaticArray") END;
-								Char(section, sfTypeStaticArray);
-								Size(section, type.staticLength);
-							ELSE 
-								HALT(100);
+							IF ~Indirect(type) THEN
+								IF type.form = SyntaxTree.Open THEN
+									IF RefInfo THEN Info(section,"OpenArray") END;
+									Char(section, sfTypeOpenArray);
+								ELSIF type.form = SyntaxTree.SemiDynamic THEN
+									IF RefInfo THEN Info(section,"DynamicArray") END;
+									Char(section, sfTypeDynamicArray); 
+								ELSIF type.form = SyntaxTree.Static THEN
+									IF RefInfo THEN Info(section,"StaticArray") END;
+									Char(section, sfTypeStaticArray);
+									Size(section, type.staticLength);
+								ELSE 
+									HALT(100);
+								END;
+								NType(type.arrayBase);
 							END;
-							NType(type.arrayBase);
 						| type: SyntaxTree.MathArrayType DO
-							IF type.form = SyntaxTree.Open THEN
-								IF RefInfo THEN Info(section,"MathOpenArray") END;
-								Char(section, sfTypeMathOpenArray); 
-							ELSIF type.form = SyntaxTree.Static THEN
-								IF RefInfo THEN Info(section,"MathStaticArray") END;
-								Char(section, sfTypeMathStaticArray);
-								Size(section, type.staticLength);
-							ELSIF type.form = SyntaxTree.Tensor THEN
-								IF RefInfo THEN Info(section,"MathTensor") END;
-								Char(section, sfTypeMathTensor);
-							ELSE
-								HALT(100);
-							END;
-							NType(type.arrayBase);
-						| type: SyntaxTree.RecordType DO
-							IF type.pointerType # NIL (* OBJECT *) THEN
-								IF RefInfo THEN Info(section,"PointerToRecord") END;
-								Char(section, sfTypePointerToRecord)
-							ELSE
-								IF RefInfo THEN Info(section,"Record") END;
-								Char(section, sfTypeRecord);
-								td := type.typeDeclaration;		
-								IF RefInfo THEN Info(section,"TD") END;
-								IF (td # NIL) THEN
-									Global.GetSymbolSegmentedName(td,segmentedName);
-									IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-										tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-									ELSE
-										tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
-									END;
-									offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
-									Symbol(section, tir,  0, offset);
+							IF ~Indirect(type) THEN
+								IF type.form = SyntaxTree.Open THEN
+									IF RefInfo THEN Info(section,"MathOpenArray") END;
+									Char(section, sfTypeMathOpenArray); 
+								ELSIF type.form = SyntaxTree.Static THEN
+									IF RefInfo THEN Info(section,"MathStaticArray") END;
+									Char(section, sfTypeMathStaticArray);
+									Size(section, type.staticLength);
+								ELSIF type.form = SyntaxTree.Tensor THEN
+									IF RefInfo THEN Info(section,"MathTensor") END;
+									Char(section, sfTypeMathTensor);
 								ELSE
-									Address(section, 0);
+									HALT(100);
+								END;
+								NType(type.arrayBase);
+							END;
+						| type: SyntaxTree.RecordType DO
+							IF ~Indirect(type) THEN
+								IF type.pointerType # NIL (* OBJECT *) THEN
+									IF RefInfo THEN Info(section,"PointerToRecord") END;
+									Char(section, sfTypePointerToRecord)
+								ELSE
+									IF RefInfo THEN Info(section,"Record") END;
+									Char(section, sfTypeRecord);
+									td := type.typeDeclaration;		
+									IF RefInfo THEN Info(section,"TD") END;
+									IF (td # NIL) THEN
+										Global.GetSymbolSegmentedName(td,segmentedName);
+										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+											tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+										ELSE
+											tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+										END;
+										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
+										Symbol(section, tir,  0, offset);
+									ELSE
+										Address(section, 0);
+									END;
 								END;
 							END;
 						| type: SyntaxTree.CellType DO
-								IF RefInfo THEN Info(section,"Record") END;
-								Char(section, sfTypeRecord);
-								td := type.typeDeclaration;		
-								IF RefInfo THEN Info(section,"TD") END;
-								IF (td # NIL) THEN
-									Global.GetSymbolSegmentedName(td,segmentedName);
-									IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-										tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+								IF ~Indirect(type) THEN
+									IF RefInfo THEN Info(section,"Record") END;
+									Char(section, sfTypeRecord);
+									td := type.typeDeclaration;		
+									IF RefInfo THEN Info(section,"TD") END;
+									IF (td # NIL) THEN
+										Global.GetSymbolSegmentedName(td,segmentedName);
+										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+											tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+										ELSE
+											tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+										END;
+										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
+										Symbol(section, tir,  0, offset);
 									ELSE
-										tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+										Address(section, 0);
 									END;
-									offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
-									Symbol(section, tir,  0, offset);
-								ELSE
-									Address(section, 0);
 								END;
 						| type: SyntaxTree.PortType DO
 							Char(section, sfTypePORT);
@@ -11895,13 +11922,15 @@ TYPE
 								Char(section, sfIN)
 							END;
 						| type: SyntaxTree.ProcedureType DO
-								Char(section, sfTypeDelegate);
-								parameter := type.firstParameter;
-								WHILE(parameter # NIL) DO
-									NParameter(parameter, -1);
-									parameter := parameter.nextParameter;
-								END;
-								NType(type.returnType);															
+								IF ~Indirect(type) THEN
+									Char(section, sfTypeDelegate);
+									parameter := type.firstParameter;
+									WHILE(parameter # NIL) DO
+										NParameter(parameter, -1);
+										parameter := parameter.nextParameter;
+									END;
+									NType(type.returnType);
+								END;															
 						| type:SyntaxTree.EnumerationType DO
 								Char(section, sfTypeENUM);
 						| type: SyntaxTree.BasicType DO
@@ -12210,6 +12239,7 @@ TYPE
 	
 				
 			BEGIN
+				NEW(indirectTypes, 32); 
 				ArrayBlock(section,sizePC,"", FALSE);
 				
 				startPC := section.pc;

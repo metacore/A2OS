@@ -45,6 +45,7 @@ CONST
 	sfTypeBYTE* = 1CX; 
 	sfTypeADDRESS* = 1DX; 
 	sfTypeSIZE* = 1EX; 
+	sfTypeIndirect*= 1FX; 
 
 	sfTypeRecord* = 20X;	
 
@@ -60,6 +61,7 @@ CONST
 	sfTypeENUM* = 2AX;
 	sfTypeCELL* = 2BX;
 	sfTypePORT* = 2CX;
+
 	
 	sfIN* = 0X;
 	sfOUT* = 1X;
@@ -81,7 +83,6 @@ CONST
 
 	(*
 		References section format: 
-		
 		Scope = sfScopeBegin {variable:Variable} {procedure:Procedure} {typeDecl:TypeDeclaration} sfScopeEnd.
 		Module = sfModule prevSymbolOffset:SIZE name:String Scope.
 		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR flags:SET {parameter:Variable} returnType:Type Scope.
@@ -107,8 +108,8 @@ CONST
 			| sfTypeWORD | sfTypeLONGWORD
 			| sfTypeREAL | sfTypeLONGREAL
 			| sfTypeCOMPLEX | sfTypeLONGCOMPLEX
-			| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE.
-
+			| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE
+			| sfTypeIndirect offset:SIZE.
 	*)
 
 
@@ -491,7 +492,7 @@ CONST
 	END WriteValueString;
 
 	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
-	VAR type: CHAR; a: ADDRESS; size: SIZE; len: SIZE;
+	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len: SIZE;
 	BEGIN
 		IF ~OnHeapOrStack(adr, low, high) THEN
 			SkipType(refs, offset);
@@ -499,72 +500,77 @@ CONST
 			RETURN;
 		END;
 		type := GetChar(refs, offset);
-		CASE type OF
-			sfTypeNone:
-			w.String("NONE");
-		| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
-			WriteBasicValue(w,type, adr, size);
-			SYSTEM.GET(adr, a);
-			IF a = 0 THEN
-				w.String("NIL");
-			ELSIF CheckHeapAddress(a) THEN
-				SYSTEM.GET(a + Heaps.TypeDescOffset, a);
-				w.String(" (");
+		IF type = sfTypeIndirect THEN
+			ofs := GetSize(refs, offset); 
+			WriteValue(w, refs, ofs, adr, low, high);
+		ELSE
+			CASE type OF
+				sfTypeNone:
+				w.String("NONE");
+			| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
+				WriteBasicValue(w,type, adr, size);
+				SYSTEM.GET(adr, a);
+				IF a = 0 THEN
+					w.String("NIL");
+				ELSIF CheckHeapAddress(a) THEN
+					SYSTEM.GET(a + Heaps.TypeDescOffset, a);
+					w.String(" (");
+					WriteType(w,a);
+					w.String(")");
+				ELSE
+					w.String("(UNKNOWN)");
+				END;
+			| sfTypePointerToArray: 
+				WriteBasicValue(w, sfTypeANY, adr, size);
+				SYSTEM.GET(adr, a);
+				IF ~OnHeapOrStack(a,low,high) THEN w.String(" (INVALID)") END;
+				SkipType(refs, offset);
+			| sfTypeOpenArray: 
+				IF (refs[offset] = sfTypeCHAR) OR (refs[offset] = sfTypeCHAR8)  THEN (* ARRAY OF CHAR *)
+					SYSTEM.GET(adr, a);
+					WriteValueString(w, a, MaxString, low, high);
+				ELSE
+					w.String("... (NO STRING)")
+				END;
+				SkipType(refs, offset);
+			| sfTypeStaticArray: 
+				len := GetSize(refs, offset); 
+				IF (refs[offset] = sfTypeCHAR)  OR (refs[offset] = sfTypeCHAR8) THEN (* ARRAY x OF CHAR *)
+					WriteValueString(w, adr, len, low, high);
+				ELSE
+					w.String("... (NO STRING)");
+				END;
+				SkipType(refs, offset);
+			| sfTypeDynamicArray: 
+				w.String("... (DYNAMIC ARRAY)");
+				SkipType(refs, offset); 
+			| sfTypeMathOpenArray: 
+				w.String("... (MATH OPEN ARRAY)");
+				SkipType(refs, offset);
+			| sfTypeMathStaticArray: 
+				w.String("... (MATH STATIC ARRAY)");
+				SkipSize(offset); SkipType(refs, offset);
+			| sfTypeMathTensor: 
+				w.String("...(MATH TENSOR)");
+				SkipType(refs, offset); 
+			| sfTypeRecord: 
+				w.String("...");
+				w.String("(");
+				a := GetAddress(refs, offset); 
 				WriteType(w,a);
 				w.String(")");
+			| sfTypeDelegate: 
+				w.String("(DELEGATE)");
+				WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
+				SkipType(refs, offset); 
+			| sfTypePORT:
+				WriteBasicValue(w, type, adr, size);
+				SkipChar(offset);
 			ELSE
-				w.String("(UNKNOWN)");
+				WriteBasicValue(w, type, adr, size);
 			END;
-		| sfTypePointerToArray: 
-			WriteBasicValue(w, sfTypeANY, adr, size);
-			SYSTEM.GET(adr, a);
-			IF ~OnHeapOrStack(a,low,high) THEN w.String(" (INVALID)") END;
-			SkipType(refs, offset)
-		| sfTypeOpenArray: 
-			IF (refs[offset] = sfTypeCHAR) OR (refs[offset] = sfTypeCHAR8)  THEN (* ARRAY OF CHAR *)
-				SYSTEM.GET(adr, a);
-				WriteValueString(w, a, MaxString, low, high);
-			ELSE
-				w.String("... (NO STRING)")
-			END;
-			SkipType(refs, offset);
-		| sfTypeStaticArray: 
-			len := GetSize(refs, offset); 
-			IF (refs[offset] = sfTypeCHAR)  OR (refs[offset] = sfTypeCHAR8) THEN (* ARRAY x OF CHAR *)
-				WriteValueString(w, adr, len, low, high);
-			ELSE
-				w.String("... (NO STRING)");
-			END;
-			SkipType(refs, offset);
-		| sfTypeDynamicArray: 
-			w.String("... (DYNAMIC ARRAY)");
-			SkipType(refs, offset); 
-		| sfTypeMathOpenArray: 
-			w.String("... (MATH OPEN ARRAY)");
-			SkipType(refs, offset);
-		| sfTypeMathStaticArray: 
-			w.String("... (MATH STATIC ARRAY)");
-			SkipSize(offset); SkipType(refs, offset);
-		| sfTypeMathTensor: 
-			w.String("...(MATH TENSOR)");
-			SkipType(refs, offset); 
-		| sfTypeRecord: 
-			w.String("...");
-			w.String("(");
-			a := GetAddress(refs, offset); 
-			WriteType(w,a);
-			w.String(")");
-		| sfTypeDelegate: 
-			w.String("(DELEGATE)");
-			WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
-			SkipType(refs, offset); 
-		| sfTypePORT:
-			WriteBasicValue(w, type, adr, size);
-			SkipChar(offset);
-		ELSE
-			WriteBasicValue(w, type, adr, size);
+			w.Update;
 		END;
-		w.Update;
 	END WriteValue;
 		
 	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT;  base: ADDRESS; low, high: ADDRESS);
@@ -611,7 +617,7 @@ CONST
 		CASE c OF
 			sfTypeNone .. sfTypeSIZE: 
 		| sfTypePointerToRecord:
-		| sfTypePointerToArray: SkipType(refs, offset);
+		| sfTypePointerToArray:SkipType(refs, offset);
 		| sfTypeOpenArray: SkipType(refs, offset);
 		| sfTypeStaticArray: SkipSize(offset); SkipType(refs, offset);
 		| sfTypeDynamicArray: SkipType(refs, offset); 
@@ -624,6 +630,7 @@ CONST
 			SkipType(refs, offset);
 		| sfTypeENUM:
 		| sfTypePORT: SkipChar(offset);
+		| sfTypeIndirect: SkipSize(offset);
 		ELSE (* ?? *)
 		END;
 	END SkipType;
@@ -1022,7 +1029,7 @@ TYPE
 		CASE c OF
 			sfTypeNone: w.String("no type");
 		| sfTypePointerToRecord: w.String("POINTER TO RECORD");
-		| sfTypePointerToArray: w.String("POINTER TO "); ReportType(w, refs, offset);
+		| sfTypePointerToArray: w.String("POINTER TO"); ReportType(w, refs, offset);
 		| sfTypeOpenArray: w.String("ARRAY OF "); ReportType(w, refs, offset);
 		| sfTypeStaticArray: w.String("ARRAY "); w.Int(GetSize(refs, offset),1 ); w.String(" OF "); ReportType(w, refs, offset);
 		| sfTypeDynamicArray: w.String("DARRAY OF "); ReportType(w,refs, offset); 
@@ -1065,6 +1072,7 @@ TYPE
 		| sfTypeADDRESS: w.String("ADDRESS"); 
 		| sfTypeSIZE: w.String("SIZE"); 
 		| sfTypePORT: w.String("PORT"); IF GetChar(refs,offset) = sfIN THEN w.String("IN") ELSE w.String("OUT") END;
+		| sfTypeIndirect: w.String ("INDIRECT AT "); w.Int(GetSize(refs, offset),1);
 		ELSE w.String("????? TYPE ?????");
 		END;
 	END ReportType;

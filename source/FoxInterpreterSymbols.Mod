@@ -422,6 +422,111 @@ TYPE
 			stack.PushA(adr);
 		END PushAddress;
 		
+		PROCEDURE PushTyped*(o: Result; mode: CHAR; refs: Modules.Bytes; VAR offset: SIZE): BOOLEAN;
+		VAR ofs: SIZE; 
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+			r: REAL; x: LONGREAL;
+			b: BOOLEAN;
+			set: SET;
+			v:Value;
+			a: ADDRESS;
+			type: CHAR;
+		BEGIN
+			type := Reflection.GetChar(refs, offset);
+			IF type = Reflection.sfTypeIndirect THEN
+				ofs := Reflection.GetSize(refs, offset);
+				RETURN PushTyped(o, mode, refs, ofs); 
+			ELSE
+				INC(index);
+				IF mode  = Reflection.sfIndirect THEN (* by reference *)
+					IF type = Reflection.sfTypeOpenArray THEN 
+						type := Reflection.GetChar(refs, offset);
+						CASE type OF
+						Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
+							IF o IS StringValue THEN
+								stack.PushSz(LEN(o(StringValue).value));
+								stack.PushA(ADDRESSOF(o(StringValue).value[0])); 
+								RETURN TRUE;
+							END;
+						END;
+					ELSE
+						CASE type OF
+							Reflection.sfTypeCHAR .. Reflection.sfTypeSIZE, Reflection.sfTypePointerToRecord, Reflection.sfTypePointerToArray:
+							(*! check type ! *)
+							 stack.PushA(o.Address());
+							 RETURN TRUE;
+						ELSE
+							RETURN FALSE
+						END;
+					END;
+				ELSE (* by value *)
+					v := o.Evaluate();
+					IF v = NIL THEN RETURN FALSE END;
+					WITH v: Value DO 
+						CASE type OF
+						Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
+							IF v.GetInt(h) THEN
+								s:= SHORTINT(h); stack.PushS(s);
+								RETURN TRUE;
+							END;
+						| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 : 
+							IF v.GetInt(h) THEN
+								i:= INTEGER(h); stack.PushI(i);
+								RETURN TRUE;
+							END;
+						| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32: 
+							IF v.GetInt(h) THEN
+								l:= LONGINT(h); stack.PushL(l);
+								RETURN TRUE;
+							END;
+						| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64: 
+							IF v.GetInt(h) THEN
+								stack.PushH(h);
+								RETURN TRUE;
+							END;
+						|Reflection.sfTypeREAL:
+							IF v.GetReal(x) THEN
+								r := REAL(x);stack.PushR(r);
+								RETURN TRUE;
+							END;
+						|Reflection.sfTypeLONGREAL:
+							IF v.GetReal(x) THEN
+								stack.PushX(x);
+								RETURN TRUE;
+							END;
+						|Reflection.sfTypeBOOLEAN:
+							IF v.GetBoolean(b) THEN
+								stack.PushB(b);
+							RETURN TRUE
+							END;
+						|Reflection.sfTypeSET:
+							IF v.GetSet(set) THEN
+								stack.PushSet(set);
+								RETURN TRUE
+							END;
+						|Reflection.sfTypePointerToRecord:
+							IF v.GetAddress(a) THEN
+								stack.PushA(a);
+								RETURN TRUE
+							END;
+						|Reflection.sfTypeOpenArray:
+							type := Reflection.GetChar(refs, offset);
+							CASE type OF
+							Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
+								IF v IS StringValue THEN
+									stack.PushSz(LEN(v(StringValue).value));
+									stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+									RETURN TRUE;
+								END;
+							END;
+						END;
+					END;
+				END;
+			END;
+			RETURN FALSE;
+		END PushTyped;
+		
+		
 		PROCEDURE Push*(o: Result): BOOLEAN;
 		VAR 
 			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
@@ -437,97 +542,8 @@ TYPE
 			Reflection.SkipString(parameters.refs, parameters.offset);
 			mode := Reflection.GetChar(parameters.refs, parameters.offset);
 			Reflection.SkipSize(parameters.offset);
-			type := Reflection.GetChar(parameters.refs, parameters.offset);
-			
-			(*type := proc.parameters[index].type;
-			var := 1 IN proc.parameters[index].flags;
-			*)
-			INC(index);
-			IF mode  = Reflection.sfIndirect THEN (* by reference *)
-				IF type = Reflection.sfTypeOpenArray THEN 
-					type := Reflection.GetChar(parameters.refs, parameters.offset);
-					CASE type OF
-					Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
-						IF o IS StringValue THEN
-							stack.PushSz(LEN(o(StringValue).value));
-							stack.PushA(ADDRESSOF(o(StringValue).value[0])); 
-							RETURN TRUE;
-						END;
-					END;
-				ELSE
-					CASE type OF
-						Reflection.sfTypeCHAR .. Reflection.sfTypeSIZE, Reflection.sfTypePointerToRecord, Reflection.sfTypePointerToArray:
-						(*! check type ! *)
-						 stack.PushA(o.Address());
-						 RETURN TRUE;
-					ELSE
-						RETURN FALSE
-					END;
-				END;
-			ELSE (* by value *)
-				v := o.Evaluate();
-				IF v = NIL THEN RETURN FALSE END;
-				WITH v: Value DO 
-					CASE type OF
-					Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
-						IF v.GetInt(h) THEN
-							s:= SHORTINT(h); stack.PushS(s);
-							RETURN TRUE;
-						END;
-					| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 : 
-						IF v.GetInt(h) THEN
-							i:= INTEGER(h); stack.PushI(i);
-							RETURN TRUE;
-						END;
-					| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32: 
-						IF v.GetInt(h) THEN
-							l:= LONGINT(h); stack.PushL(l);
-							RETURN TRUE;
-						END;
-					| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64: 
-						IF v.GetInt(h) THEN
-							stack.PushH(h);
-							RETURN TRUE;
-						END;
-					|Reflection.sfTypeREAL:
-						IF v.GetReal(x) THEN
-							r := REAL(x);stack.PushR(r);
-							RETURN TRUE;
-						END;
-					|Reflection.sfTypeLONGREAL:
-						IF v.GetReal(x) THEN
-							stack.PushX(x);
-							RETURN TRUE;
-						END;
-					|Reflection.sfTypeBOOLEAN:
-						IF v.GetBoolean(b) THEN
-							stack.PushB(b);
-						RETURN TRUE
-						END;
-					|Reflection.sfTypeSET:
-						IF v.GetSet(set) THEN
-							stack.PushSet(set);
-							RETURN TRUE
-						END;
-					|Reflection.sfTypePointerToRecord:
-						IF v.GetAddress(a) THEN
-							stack.PushA(a);
-							RETURN TRUE
-						END;
-					|Reflection.sfTypeOpenArray:
-						type := Reflection.GetChar(parameters.refs, parameters.offset);
-						CASE type OF
-						Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
-							IF v IS StringValue THEN
-								stack.PushSz(LEN(v(StringValue).value));
-								stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
-								RETURN TRUE;
-							END;
-						END;
-					END;
-				END;
-			END;
-			RETURN FALSE;
+			RETURN PushTyped(o, mode, parameters.refs, parameters.offset);
+				
 		END Push;
 		
 		PROCEDURE Check*(): BOOLEAN;

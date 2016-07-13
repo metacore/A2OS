@@ -89,7 +89,7 @@ The following describes how a documentation is generated from a module:
 
 	or, if an alternative text should be displayed, it can be written as
 
-	{{{ [[labelName|alternative text] }}}
+	{{{ [[labelName|alternative text]] }}}
 
 === Document Structure
 	Documents consist of sections. A section is started with a sequence of {{{@}}} letter as the first characters on a separate line. Examples:

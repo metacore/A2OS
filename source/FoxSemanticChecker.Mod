@@ -5152,7 +5152,7 @@ TYPE
 					END;
 				(* ---- EXCL, INCL----- *)
 				ELSIF ((id = Global.Excl) OR (id = Global.Incl)) & CheckArity(2,2) THEN
-					IF CheckVariable(parameter0) & CheckSetType(parameter0) & CheckSizeType(parameter1) THEN
+					IF CheckVariable(parameter0) & CheckSetType(parameter0) & CheckIntegerType(parameter1) THEN
 						IF IsIntegerValue(parameter1,i0) THEN
 							IF (i0 < 0) OR (i0>= system.setType.sizeInBits) THEN
 								Error(position,Diagnostics.Invalid,"parameter out of SET range")

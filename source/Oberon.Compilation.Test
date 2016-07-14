@@ -37902,7 +37902,7 @@ positive: realtime object containing basic type fields
 	IMPORT SYSTEM;
 	TYPE A = OBJECT {REALTIME}
 		VAR a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-		a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: SYSTEM.ADDRESS; a12:SYSTEM.SIZE; a13: SYSTEM.BYTE;
+		a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
 		END A;
 	END Test.
 
@@ -37912,7 +37912,7 @@ positive: realtime pointer to record that contains basic type fields
 	IMPORT SYSTEM;
 	TYPE A = POINTER {REALTIME} TO RECORD
 			a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: SYSTEM.ADDRESS; a12:SYSTEM.SIZE; a13: SYSTEM.BYTE;
+			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
 			END;
 	END Test.
 
@@ -37922,7 +37922,7 @@ positive: realtime pointer to array where the elements contain basic type fields
 	IMPORT SYSTEM;
 	TYPE A0 = POINTER {REALTIME} TO ARRAY OF RECORD
 			a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: SYSTEM.ADDRESS; a12:SYSTEM.SIZE; a13: SYSTEM.BYTE;
+			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
 			END;
 	END Test.
 
@@ -38559,7 +38559,7 @@ positive: system address type size
 	MODULE Test;
 	IMPORT SYSTEM;
 	VAR a: LONGINT;
-	BEGIN a := SYSTEM.SIZEOF(SYSTEM.ADDRESS)
+	BEGIN a := SIZEOF(ADDRESS)
 	END Test.
 
 negative: system address function on size-incompatible type
@@ -38582,7 +38582,7 @@ positive: unsigned system address function
 
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	BEGIN a := SYSTEM.ADR(a)
 	END Test.
 
@@ -38613,7 +38613,7 @@ positive: shift of unsigned type by signed value
 	IMPORT SYSTEM;
 	VAR ebx: SET;
 	BEGIN
-		ebx := SYSTEM.LSH(ebx, -16)
+		ebx := LSH(ebx, -16)
 	END Test.
 
 positive: shift of unsigned type by signed variable
@@ -38622,7 +38622,7 @@ positive: shift of unsigned type by signed variable
 	IMPORT SYSTEM;
 	VAR ebx: SET; a: LONGINT;
 	BEGIN
-		ebx := SYSTEM.LSH(ebx, a)
+		ebx := LSH(ebx, a)
 	END Test.
 
 positive: assignment of converted unsigned type to signed type
@@ -38631,7 +38631,7 @@ positive: assignment of converted unsigned type to signed type
 	IMPORT SYSTEM;
 	VAR ebx: SET; a,i: LONGINT;
 	BEGIN
-		i := SYSTEM.VAL(LONGINT, SYSTEM.LSH(ebx * {16..23}, -16));
+		i := SYSTEM.VAL(LONGINT, LSH(ebx * {16..23}, -16));
 	END Test.
 
 positive: getprocedure builtin call
@@ -38720,7 +38720,7 @@ positive: SYSTEM.TYPECODE on records, pointer to record and object
 		O1 = OBJECT END O1; O2=OBJECT(O1) END O2;
 
 	PROCEDURE P(VAR r: R1; p: P1; o: O1);
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	BEGIN
 		IF r IS R2 THEN END;
 		a := SYSTEM.TYPECODE(R2);
@@ -39207,7 +39207,7 @@ positive: use a value for a the address in SYSTEM.GET
 	IMPORT SYSTEM;
 
 	PROCEDURE P(VAR buf: SYSTEM.BYTE);
-	VAR adr: SYSTEM.ADDRESS;
+	VAR adr: ADDRESS;
 	BEGIN
 	adr := 0;
 	SYSTEM.GET (040EH, SYSTEM.VAL (INTEGER, adr));	(* EBDA address *)
@@ -39222,23 +39222,23 @@ negative: use a non variable for destination in SYSTEM.GET
 	IMPORT SYSTEM;
 
 	PROCEDURE P(VAR buf: SYSTEM.BYTE);
-	VAR adr: SYSTEM.ADDRESS;
+	VAR adr: ADDRESS;
 	BEGIN
 		SYSTEM.GET (adr, adr+1);	(* EBDA address *)
 	END P;
 
 	END Test.
 
-negative: negative values in address
+positive: negative values in address
 
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	BEGIN
 		a := -1;
 	END Test.
 
-negative: negative values in address in SYSTEM.GET
+positive: negative values in address in SYSTEM.GET
 
 	MODULE Test;
 	IMPORT SYSTEM;
@@ -39301,10 +39301,10 @@ positive: export and import real number
 		ASSERT(A.e = e);
 	END Test.
 
-positive: addition of SYSTEM.ADDRESS and SYSTEM.SIZE
+positive: addition of ADDRESS and SIZE
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS; s: SYSTEM.SIZE;
+	VAR a: ADDRESS; s: SIZE;
 
 	BEGIN
 		a := a + s;
@@ -39317,67 +39317,67 @@ positive: implicit HUGEINT conversion in comparison
 		IF h < 0 THEN END
 	END Test.
 
-positive: SYSTEM.ADDRESS as variable in for loop
+positive: ADDRESS as variable in for loop
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a,b,i: SYSTEM.ADDRESS;
+	VAR a,b,i: ADDRESS;
 	BEGIN
 		FOR i := a TO b DO
 		END;
 	END Test.
 
-positive: subtract a SYSTEM.ADDRESS from SYSTEM.ADDRESS
+positive: subtract a ADDRESS from ADDRESS
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a,b: SYSTEM.ADDRESS; size: SYSTEM.SIZE;
+	VAR a,b: ADDRESS; size: SIZE;
 	BEGIN
 		size := a-b;
 		size := -size
 	END Test.
 
-positive: LONG conversion on SYSTEM.ADDRESS
+negative: LONG conversion on ADDRESS
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS; v: HUGEINT;
+	VAR a: ADDRESS; v: HUGEINT;
 	BEGIN
 		v := LONG(a)
 	END Test.
 
-positive: add negative value to SYSTEM.ADDRESS
+positive: add negative value to ADDRESS
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	CONST const = -4;
 	BEGIN
 		a := a + const;
 	END Test.
 
-positive: unary negation of SYSTEM.ADDRESS
+positive: unary negation of ADDRESS
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	BEGIN
 		a := a + (-a) MOD 4;
 	END Test.
 
-positive: export and import SYSTEM.ADDRESS parameter
+positive: export and import ADDRESS parameter
 	MODULE A;
 	IMPORT SYSTEM;
-	PROCEDURE P*(VAR a: SYSTEM.ADDRESS);
+	PROCEDURE P*(VAR a: ADDRESS);
 	BEGIN
 	END P;
 	END A.
 
 	MODULE Test;
 	IMPORT SYSTEM,A;
-	VAR a: SYSTEM.ADDRESS;
+	VAR a: ADDRESS;
 	BEGIN A.P(a)
 	END Test.
 
-positive: use SYSTEM.ADDRESS as array index
+positive: use ADDRESS as array index
 	MODULE Test;
 	IMPORT SYSTEM;
-	VAR a: SYSTEM.ADDRESS; b: ARRAY 32 OF SYSTEM.ADDRESS;
+	VAR a: ADDRESS; b: ARRAY 32 OF ADDRESS;
 	BEGIN b[a] := b[a]
 	END Test.
 

@@ -6837,6 +6837,9 @@ TYPE
 				IF procedure.scope IS SyntaxTree.RecordScope THEN
 					record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
 					procedureType.SetDelegate(TRUE);
+					IF procedureType.isRealtime & ~record.isRealtime THEN
+						Error(procedure.position, Diagnostics.Invalid, "invalid realtime procedure in non-realtime object");
+					END;
 
 					selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
 					IF record.pointerType.typeDeclaration = NIL THEN

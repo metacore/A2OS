@@ -5188,6 +5188,7 @@ TYPE
 						IF type0 IS SyntaxTree.PointerType THEN
 							type0 := type0(SyntaxTree.PointerType).pointerBase.resolved;
 						ELSIF type0 IS SyntaxTree.CellType THEN
+						ELSIF type0 IS SyntaxTree.MathArrayType THEN
 						ELSE
 							Error(position, Diagnostics.Invalid, "forbidden new on value type");
 						END;

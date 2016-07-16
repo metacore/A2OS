@@ -38305,7 +38305,7 @@ positive: overwriting realtime procedure with realtime procedure
 	END Object;
 	END Test.
 
-positive: overwriting non-realtime procedure with realtime procedure
+negative: overwriting non-realtime procedure with realtime procedure
 
 	MODULE Test;
 	TYPE Base = OBJECT {REALTIME}

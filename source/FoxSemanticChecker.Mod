@@ -739,6 +739,7 @@ TYPE
 				*)
 				IF x.pointerBase IS SyntaxTree.RecordType THEN
 					recordType := x.pointerBase(SyntaxTree.RecordType);
+					IF x.isRealtime THEN recordType.SetRealtime(TRUE) END;
 					recordBaseType := ResolveType(recordType.baseType);
 					recordType.SetBaseType(recordBaseType);
 					recordType.SetProtected(HasFlag(modifiers, Global.NameExclusive, position));
@@ -1040,10 +1041,13 @@ TYPE
 				END;
 
 				isRealtime := TRUE;
+				IF x.isRealtime & (x.recordScope.bodyProcedure # NIL) THEN
+					x.recordScope.bodyProcedure.type.SetRealtime(TRUE)
+				END;
 				symbol := x.recordScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
 				WHILE symbol # NIL DO
+					isRealtime := isRealtime & symbol.type.resolved.isRealtime;
 					IF symbol IS SyntaxTree.Variable THEN
-						isRealtime := isRealtime & symbol.type.resolved.isRealtime;
 						hasPointers := hasPointers OR symbol.type.resolved.hasPointers & ~symbol(SyntaxTree.Variable).untraced;
 					END;
 					IF symbol IS SyntaxTree.Procedure THEN
@@ -1053,8 +1057,15 @@ TYPE
 						ELSIF InMethodTable(procedure) THEN (* not a static method *)
 							procedure.SetMethodNumber(numberMethods);
 							INC(numberMethods);
-						END;
+						END;	
+					IF ~x.isRealtime & procedure.type.resolved.isRealtime THEN
+						Error(procedure.position, Diagnostics.Invalid,"realtime procedure in non-realtime object")
 					END;
+					END;
+					IF x.isRealtime & ~symbol.type.resolved.isRealtime THEN
+						Error(symbol.position, Diagnostics.Invalid,"non-realtime symbol in realtime object")
+					END;
+
 					symbol := symbol.nextSymbol;
 				END;
 				IF isRealtime THEN x.SetRealtime(TRUE) END;
@@ -6838,9 +6849,7 @@ TYPE
 				IF procedure.scope IS SyntaxTree.RecordScope THEN
 					record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
 					procedureType.SetDelegate(TRUE);
-					IF procedureType.isRealtime & ~record.isRealtime THEN
-						Error(procedure.position, Diagnostics.Invalid, "invalid realtime procedure in non-realtime object");
-					END;
+
 
 					selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
 					IF record.pointerType.typeDeclaration = NIL THEN
@@ -8189,6 +8198,7 @@ TYPE
 				ELSIF (phase = ImplementationPhase) & ~IsOberonInline(procedure) THEN
 					Body(scope(SyntaxTree.ProcedureScope).body)
 				END;
+				
 			END;
 			currentScope := prevScope;
 			currentIsRealtime := prevIsRealtime;

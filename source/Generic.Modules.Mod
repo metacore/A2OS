@@ -185,6 +185,7 @@ BEGIN
 	to[j] := 0X
 END Append;
 
+
 (** Add a module to the pool of accessible modules, or return named module. *)
 PROCEDURE Publish*(VAR m: Module; VAR new: BOOLEAN);
 VAR n: Module; i: LONGINT;
@@ -194,12 +195,13 @@ BEGIN
 	IF n # NIL THEN	(* module with same name exists, return it and ignore new m *)
 		m := n; new := FALSE
 	ELSE
-		IF TraceBoot THEN
+		IF TraceBoot OR trace THEN
 			Machine.Acquire(Machine.TraceOutput);
 			Trace.String("publish "); Trace.String(m.name);
 			Trace.Ln;
 			Machine.Release(Machine.TraceOutput);
 		END;
+		Unregister(m);
 		m.published := TRUE;
 		m.next := root; root := m;
 		m.refcnt := 0;
@@ -216,13 +218,21 @@ BEGIN
 END Publish;
 
 PROCEDURE Initialize*(VAR module: Module);
-VAR new: BOOLEAN;
+VAR new: BOOLEAN; import: LONGINT;
 BEGIN
 	IF (module = NIL) THEN RETURN END;
 	Publish (module, new);
 	IF new THEN
-		IF module.body # NIL THEN
+		FOR import := 0 TO LEN (module.module) - 1 DO
+			IF ~module.module[import].published THEN
+				ASSERT(register.first # NIL);
+				Initialize(module.module[import]);
+			END
+		END;
+		IF (module.code # NIL) & (LEN(module.code) > 0)  THEN
 			Machine.FlushDCacheRange(ADDRESSOF(module.code[0]), LEN(module.code));
+		END;
+		IF module.body # NIL THEN
 			module.body
 		END;
 		module.init := TRUE;
@@ -236,7 +246,7 @@ END Initialize;
 	BEGIN
 		(*TRACE(module.name);*)
 		(* module MUST have been removed from register list and must not have been initialized yet *)
-		ASSERT(module.next = NIL);
+		(* ASSERT(module.next = NIL); *)
 		Publish (module, new);
 		callagain := FALSE;
 		IF new THEN
@@ -294,6 +304,20 @@ END Initialize;
 		Machine.Release(Machine.Modules);
 		RETURN m
 	END ModuleByName;
+
+	PROCEDURE ByName(CONST name: ARRAY OF CHAR; VAR referenced: BOOLEAN): Module;
+	VAR m: Module;
+	BEGIN
+		Machine.Acquire(Machine.Modules);
+		referenced := FALSE;
+		m := root; WHILE (m # NIL) & (m.name # name) DO m := m.next END;
+		IF m = NIL THEN
+			referenced := TRUE;
+			m := register.first; WHILE (m#NIL) & (m.name # name) DO m := m.next END;
+		END;
+		Machine.Release(Machine.Modules);
+		RETURN m
+	END ByName;
 
 	(* Generate a module file name. *)
 	PROCEDURE GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
@@ -385,13 +409,27 @@ END Initialize;
 	
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
-VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
+VAR m: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT; registered: BOOLEAN;
 BEGIN
-	res := Ok; msg[0] := 0X; m := ModuleByName(name);
-	IF m = NIL THEN
+	res := Ok; msg[0] := 0X; m := ByName(name, registered);
+	IF (m#NIL) & (registered) THEN
 		IF trace THEN
 			Machine.Acquire (Machine.TraceOutput);
-			Trace.String(">"); Trace.StringLn (name);
+			Trace.String(">R>"); Trace.StringLn (name);
+			Machine.Release (Machine.TraceOutput);
+		END;
+		IF ~m.published THEN	(* no race on m.published, as update is done in Publish *)
+			Initialize(m);
+		END;
+		IF trace THEN
+			Machine.Acquire (Machine.TraceOutput);
+			Trace.String("<R<"); Trace.StringLn (name);
+			Machine.Release (Machine.TraceOutput);
+		END;
+	ELSIF m = NIL THEN
+		IF trace THEN
+			Machine.Acquire (Machine.TraceOutput);
+			Trace.String(">L>"); Trace.StringLn (name);
 			Machine.Release (Machine.TraceOutput);
 		END;
 		IF numLoaders = 0 THEN
@@ -409,7 +447,6 @@ BEGIN
 			Trace.String("?"); Trace.StringLn (name);
 			Machine.Release (Machine.TraceOutput);
 		END;
-		p := m;
 		IF (m # NIL) & ~m.published THEN	(* no race on m.published, as update is done below in Publish *)
 			Initialize(m);
 		END;
@@ -420,7 +457,7 @@ BEGIN
 			ELSIF ~m.published THEN
 				Trace.String("not published "); Trace.StringLn(name)
 			ELSE
-				Trace.String("<"); Trace.StringLn (name);
+				Trace.String("<L<"); Trace.StringLn (name);
 			END;
 			Machine.Release (Machine.TraceOutput);
 		END;
@@ -725,18 +762,41 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	register.last := module;
 END Register;
 
+PROCEDURE Unregister(m: Module);
+VAR prev: Module;
+BEGIN
+	ASSERT(m#NIL);
+	IF register.first = NIL THEN RETURN
+	ELSIF m = register.first THEN
+		register.first := m.next;
+		IF register.first = NIL THEN register.last := NIL END;
+	ELSE
+		prev := register.first;
+		WHILE (prev.next # NIL) & (prev.next # m) DO
+			prev := prev.next;
+		END;
+		IF prev.next = m THEN 
+			prev.next := prev.next.next;
+			IF prev.next = NIL THEN register.last := prev END;
+		 END;
+	END;
+	m.next := NIL;
+END Unregister;
+
 PROCEDURE PublishRegisteredModules;
 VAR m {UNTRACED}, prev {UNTRACED}, cur {UNTRACED}: Module; import: SIZE;
 BEGIN
 	WHILE register.first # NIL DO
 		m := register.first;
-		register.first := m.next;
-		m.next := NIL;
+		(*
+			register.first := m.next;
+			m.next := NIL;
+		*)
 		IF m.module # NIL THEN
 			FOR import := 0 TO LEN (m.module) - 1 DO
 				IF ~m.module[import].published THEN
 					ASSERT(register.first # NIL);
-					prev := NIL;
+					(*prev := NIL;
 					cur := register.first;
 					WHILE (cur # NIL) & (cur # m.module[import]) DO
 						prev := cur;
@@ -750,6 +810,7 @@ BEGIN
 						prev.next := cur.next;
 					END;
 					cur.next := NIL;
+					*)
 					Initialize0 (m.module[import]);
 				END
 			END;
@@ -789,3 +850,151 @@ END Modules.
 Note:
 o GetProcedure race: process A calls ThisModule, the module is published, but before its body has finished executing, process B calls GetProcedure, causing the assert (m.init) to fail. Process B should perhaps wait in this case until the body has executed, or GetProcedure should return NIL (but that will just move the race to the user).
 *)
+
+
+StaticLinker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H  
+Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands 
+FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  
+GenericLoader  BootConsole
+
+Traps
+TrapWriters
+SystemVersion
+CRC
+FileTrapWriter
+Display
+User32
+GDI32
+Displays
+Plugins
+Inputs
+Options
+WindowManager
+WMGraphics
+WMRectangles
+Raster
+CLUTs
+UTF8Strings
+WMRasterScale
+Codecs
+SoundDevices
+Configuration
+XMLObjects
+XML
+DynamicStrings
+XMLScanner
+XMLParser
+Unzip
+Inflate
+Texts
+WMEvents
+Locks
+FP1616
+Archives
+WMMessages
+Debugging
+WMDefaultWindows
+WMWindowManager
+WMGraphicUtilities
+WMFontManager
+WMDefaultFont
+WMOTFonts
+OpenType
+OpenTypeInt
+OpenTypeScan
+WMCCGFonts
+PNGDecoder
+Clipboard
+TextUtilities
+Repositories
+Localization
+UnicodeProperties
+HostClipboard
+FSTools
+RelativeFileSystem
+Autostart
+WMTrapWriter
+WMUtilities
+WMComponents
+Events
+WMProperties
+Models
+Types
+WMDropTarget
+WMDocumentEditor
+WMMacros
+WMTextView
+SyntaxHighlighter
+WMStandardComponents
+FileHandlers
+WMPopups
+WMPieMenu
+UnicodeBidirectionality
+PositionDebugging
+ContextualDependency
+WMEditors
+UndoManager
+WMInputMethods
+WMSearchComponents
+WMDialogs
+WMRestorable
+UpTime
+StartMenu
+MainMenu
+WMTabComponents
+Tar
+SkinEngine
+SkinLanguage
+Pipes
+WMFileManager
+WMSystemComponents
+WMTrees
+WMGrids
+WMStringGrids
+Notepad
+WMKernelLog
+KernelLogger
+WMClock
+Math
+WMTextTool
+PET
+CompilerInterface
+WhitespaceRemover
+WMDiagnostics
+WMBitmapFont
+PETTrees
+WMOberonFonts
+WMNavigate
+HotKeys
+Errors
+Zip
+Zlib
+ZlibReaders
+ZlibBuffers
+ZlibInflate
+ZlibWriters
+ZlibDeflate
+FoxBasic
+FoxA2Interface
+FoxScanner
+FoxSyntaxTree
+FoxGlobal
+FoxParser
+FoxPrintout
+FoxFormats
+FoxSemanticChecker
+FoxBackend
+FoxFrontend
+Compiler
+ReleaseThreadPool
+Release
+PETReleaseTree
+ModuleParser
+PETModuleTree
+ProcessInfo0
+ProcessInfo
+SystemTools
+StaticLinker
+~
+
+SystemTools.ListModules -l ~

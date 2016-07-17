@@ -88,25 +88,30 @@ END UnlockOberon;
 
 (** List all currently loaded modules *)
 PROCEDURE ListModules*(context : Commands.Context);
-VAR m: Modules.Module; options: Options.Options; details: BOOLEAN;
+VAR m: Modules.Module; options: Options.Options; details: BOOLEAN; first, reverse: BOOLEAN;
+
+	PROCEDURE List(m: Modules.Module);
+	BEGIN
+		IF m = NIL THEN RETURN END;
+		IF reverse THEN List(m.next) END;
+		IF ~first & options.GetFlag("l") THEN context.out.Ln ELSE context.out.String(" ") END;
+		first := FALSE;
+		context.out.String(m.name);
+		IF options.GetFlag("crc") THEN context.out.String(" crc="); context.out.Hex(m.crc,-8); context.out.String("") END;
+		IF~reverse THEN List(m.next) END;
+	END List;
+	
+
 BEGIN
 	NEW(options);
 	options.Add("c", "crc", Options.Flag);
 	options.Add("l", "ln", Options.Flag);
 	options.Add("b", "base", Options.Flag);
+	options.Add("r", "reverse", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
-		m := Modules.root;
-		WHILE m # NIL DO
-			context.out.String(m.name);
-			(*IF options.GetFlag("base") THEN context.out.String(" base="); context.out.Hex(m.firstProc,-8) END;*)
-			IF options.GetFlag("crc") THEN context.out.String(" crc="); context.out.Hex(m.crc,-8); context.out.String("") END;
-			m := m.next;
-			IF m # NIL THEN
-				IF options.GetFlag("l") THEN context.out.Ln ELSE context.out.String(" ") END;
-			ELSE
-				context.out.Ln
-			END;
-		END;
+		reverse := ~options.GetFlag("r");
+		first := FALSE;
+		List(Modules.root);
 	END;
 END ListModules;
 
@@ -684,7 +689,7 @@ END Version;
 
 END SystemTools.
 
-SystemTools.Free S  ~
+SystemTools.Free SystemTools  ~
 SystemTools.Kill 57 ~
 
 SystemTools.Time ~
@@ -699,4 +704,6 @@ SystemTools.DoCommands
 ~
 
 SystemTools.CollectGarbage ~
+
+SystemTools.ListModules -r ~
 

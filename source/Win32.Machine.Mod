@@ -82,7 +82,7 @@ TYPE
 
 VAR
 
-
+	LastAddress: RECORD END;
 
 	MMXSupport*: BOOLEAN;
 	SSESupport*: BOOLEAN;
@@ -753,9 +753,7 @@ END GetStaticHeap;
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
 	RETURN (p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
-
-		OR (p>=401000H) & (p<=500000H) (*! guess until kernel size known *)
-
+		OR (p>=401000H) & (p<=ADDRESSOF(LastAddress))
 END ValidHeapAddress;
 
 

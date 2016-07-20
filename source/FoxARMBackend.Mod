@@ -647,7 +647,9 @@ TYPE
 				END;
 
 			| IntermediateCode.div:
-				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
+				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 
+							OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1)
+							OR backend.useFPU64 & IsInteger32(irInstruction.op1);
 				(*
 				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
 				*)
@@ -1403,6 +1405,11 @@ TYPE
 		PROCEDURE IsInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
 		BEGIN RETURN irOperand.type.form IN IntermediateCode.Integer
 		END IsInteger;
+
+		(** whether an IR operand hold am integer value **)
+		PROCEDURE IsInteger32(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
+		BEGIN RETURN (irOperand.type.form IN IntermediateCode.Integer) & (irOperand.type.sizeInBits = 32)
+		END IsInteger32;
 
 		(** whether an IR operand hold am integer value **)
 		PROCEDURE IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
@@ -2237,7 +2244,7 @@ TYPE
 
 		PROCEDURE EmitDiv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			destination, left, right: Operand;
+			destination, left, right, float, leftd, rightd: Operand;
 		BEGIN
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
@@ -2248,6 +2255,35 @@ TYPE
 				ASSERT(backend.useFPU64);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				Emit3(opFDIVD, destination, left, right);
+				WriteBack(irInstruction.op1, Low, destination)
+			ELSIF IsInteger32(irInstruction.op1) THEN
+				ASSERT(backend.useFPU64);
+				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
+				(* left and right operands to double *)
+				float := GetFreeRegister(IntermediateCode.FloatType(32));
+		 		Emit2(opFMSR, float, left);
+				leftd := GetFreeRegister(IntermediateCode.FloatType(64));
+	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+					Emit2(opFUITOD, leftd, float)
+				ELSE
+					Emit2(opFSITOD,leftd, float)
+				END;
+		 		Emit2(opFMSR, float,right);
+				rightd := GetFreeRegister(IntermediateCode.FloatType(64));
+	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+					Emit2(opFUITOD, rightd, float)
+				ELSE
+					Emit2(opFSITOD,rightd, float)
+				END;
+				(* div *)
+				Emit3(opFDIVD, leftd, leftd, rightd);
+				(* result to destination *)
+	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+					Emit2(opFTOUID, float, leftd)
+				ELSE
+					Emit2(opFTOSID, float, leftd)
+				END;
+		 		Emit2(opFMRS, destination, float);
 				WriteBack(irInstruction.op1, Low, destination)
 			ELSE
 				HALT(200)

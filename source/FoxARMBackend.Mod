@@ -649,7 +649,7 @@ TYPE
 			| IntermediateCode.div:
 				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 
 							OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1)
-							OR backend.useFPU64 & IsInteger32(irInstruction.op1);
+							OR backend.useFPU64 & IsNonComplexInteger(irInstruction.op1);
 				(*
 				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
 				*)
@@ -1407,9 +1407,9 @@ TYPE
 		END IsInteger;
 
 		(** whether an IR operand hold am integer value **)
-		PROCEDURE IsInteger32(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
-		BEGIN RETURN (irOperand.type.form IN IntermediateCode.Integer) & (irOperand.type.sizeInBits = 32)
-		END IsInteger32;
+		PROCEDURE IsNonComplexInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
+		BEGIN RETURN (irOperand.type.form IN IntermediateCode.Integer) & (irOperand.type.sizeInBits <= 32)
+		END IsNonComplexInteger;
 
 		(** whether an IR operand hold am integer value **)
 		PROCEDURE IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
@@ -2244,7 +2244,7 @@ TYPE
 
 		PROCEDURE EmitDiv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			destination, left, right, float, leftd, rightd: Operand;
+			destination, left, right, float, leftd, rightd, fpstatus: Operand;
 		BEGIN
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
@@ -2256,7 +2256,7 @@ TYPE
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				Emit3(opFDIVD, destination, left, right);
 				WriteBack(irInstruction.op1, Low, destination)
-			ELSIF IsInteger32(irInstruction.op1) THEN
+			ELSIF IsNonComplexInteger(irInstruction.op1) THEN
 				ASSERT(backend.useFPU64);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				(* left and right operands to double *)
@@ -2278,11 +2278,13 @@ TYPE
 				(* div *)
 				Emit3(opFDIVD, leftd, leftd, rightd);
 				(* result to destination *)
+				RoundDown(fpstatus);
 	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 					Emit2(opFTOUID, float, leftd)
 				ELSE
 					Emit2(opFTOSID, float, leftd)
 				END;
+				ResetRounding(fpstatus);
 		 		Emit2(opFMRS, destination, float);
 				WriteBack(irInstruction.op1, Low, destination)
 			ELSE
@@ -2996,29 +2998,29 @@ TYPE
 
 		END EmitBr;
 
-		(* TODO: floats *)
+		PROCEDURE RoundDown(VAR fpstatus: Operand);
+		BEGIN
+			fpstatus := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+			(* round to minus infitinity *)
+			Emit2(InstructionSet.opVMRS, fpstatus, fpscr);
+			Emit3(opORR, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
+			Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
+		END RoundDown;
+		
+		PROCEDURE ResetRounding(VAR fpstatus: Operand);
+		BEGIN
+			(* reset rounding mode *)
+			Emit3(opBIC, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
+			Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
+		END ResetRounding;
+		
+
 		PROCEDURE EmitConv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
 			irDestination, irSource: IntermediateCode.Operand;
 			destination, source: ARRAY 2 OF Operand;
 			temp, fpstatus: Operand;
 			partType: IntermediateCode.Type;
-			
-			PROCEDURE RoundDown;
-			BEGIN
-				fpstatus := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
-				(* round to minus infitinity *)
-				Emit2(InstructionSet.opVMRS, fpstatus, fpscr);
-				Emit3(opORR, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
-				Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
-			END RoundDown;
-			
-			PROCEDURE ResetRounding;
-			BEGIN
-				(* reset rounding mode *)
-				Emit3(opBIC, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
-				Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
-			END ResetRounding;
 			
 			
 		BEGIN
@@ -3071,34 +3073,30 @@ TYPE
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
 						
+						RoundDown(fpstatus);
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
 							(* single precision float to non-complex unsigned integer: *)
-							RoundDown;
 							Emit2(opFTOUIS, temp, source[Low]);
-							ResetRounding;
 						ELSE
 							(* single precision float to non-complex signed integer: *)
-							RoundDown;
 							Emit2(opFTOSIS, temp, source[Low]);
-							ResetRounding;
 						END;
+						ResetRounding(fpstatus);
 						Emit2(opFMRS, destination[Low], temp)
 					ELSIF IsDoublePrecisionFloat(irSource) THEN
 						(* LONGREAL --> INTEGER *)
 						ASSERT(backend.useFPU64);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
+						RoundDown(fpstatus);
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
 							(* single precision float to non-complex unsigned integer: *)
-							RoundDown;
 							Emit2(opFTOUID, temp, source[Low]);
-							ResetRounding;
 						ELSE
 							(* single precision float to non-complex signed integer: *)
-							RoundDown;
 							Emit2(opFTOSID, temp, source[Low]);
-							ResetRounding;
 						END;
+						ResetRounding(fpstatus);
 						Emit2(opFMRS, destination[Low], temp)
 					ELSE
 						(* anything to non-complex integer: *)

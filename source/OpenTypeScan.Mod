@@ -233,13 +233,14 @@ VAR
 	END IntersectLine;
 
 	PROCEDURE IntersectBezier (x0, y0, x1, y1, x2, y2: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed);
-		VAR dx, dy, d, x01, y01, x12, y12, xm, ym: F26D6;
+	VAR dx, dy, d, x01, y01, x12, y12, xm, ym: F26D6;
+	CONST Resolution = 10H;
 	BEGIN
 		dx := x1 - x0; dy := y1 - y0;
 		d := dx * dx + dy * dy;
 		dx := x2 - x1; dy := y2 - y1;
 		INC(d, dx * dx + dy * dy);
-		IF d < 40H THEN	(* total curve length is smaller than an eighth a pixel *)
+		IF d < (Resolution * 40H) THEN	(* total curve length is smaller 40, an eighth a pixel *)
 			IntersectLine(x0, y0, x2, y2, scans, hint, t, dt)
 		ELSE
 			dt := dt DIV 2;

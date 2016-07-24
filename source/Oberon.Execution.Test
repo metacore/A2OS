@@ -2143,7 +2143,7 @@ negative: unsatisfied type guard on pointer to record
 	BEGIN NEW (p0); p1 := p0(P1);
 	END Test.
 
-negative: type guard on nil pointer to same record
+positive: type guard on nil pointer to same record
 
 	MODULE Test;
 	TYPE R = RECORD END; P = POINTER TO R;
@@ -2210,7 +2210,7 @@ negative: unsatisfied type guard on object
 	BEGIN NEW (o0); o1 := o0(O1);
 	END Test.
 
-negative: type guard on same nil object
+positive: type guard on same nil object
 
 	MODULE Test;
 	TYPE O = OBJECT END O;
@@ -2416,7 +2416,7 @@ positive: unsatisfied type test on returned pointer to record
 	BEGIN ASSERT (~(Function () IS P1)); ASSERT (~(Function ()^ IS R1));
 	END Test.
 
-negative: type test on nil pointer to same record
+positive: type test on nil pointer to same record
 
 	MODULE Test;
 	TYPE R = RECORD END; P = POINTER TO R;
@@ -2495,7 +2495,7 @@ positive: unsatisfied type test on returned object
 	BEGIN ASSERT (~(Function () IS O1));
 	END Test.
 
-negative: type test on same nil object
+positive: type test on same nil object
 
 	MODULE Test;
 	TYPE O = OBJECT END O;

@@ -2999,7 +2999,7 @@ TYPE
 					END;
 				ELSIF IsUnsafePointer(left.type) THEN
 					Error(binaryExpression.position,Diagnostics.Invalid,"forbidden type test on unsafe pointer");
-				ELSIF (leftType.SameType(right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved)) & ~(leftType IS SyntaxTree.PointerType) THEN
+				ELSIF (leftType.SameType(right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved)) THEN
 					NewBool(TRUE)
 				ELSIF right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved IS SyntaxTree.AnyType THEN
 					NewBool(TRUE);

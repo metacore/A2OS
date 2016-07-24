@@ -9,6 +9,7 @@ CONST
 	(** Activate flags. *)
 	Wait* = 0;	(** Wait until the activated command returns. *)
 	InheritContext*= 1; (** Inherit context (as far as not overwritten) of the caller *)
+	Silent*= 2;
 
 	Ok* = 0;
 	CommandNotFound* = 3901;
@@ -169,6 +170,7 @@ TYPE
 
 VAR
 	emptyString : ARRAY 1 OF CHAR;
+	silentWriter: Streams.Writer;
 	trace: BOOLEAN;
 	defaultContext: Context; (* Fallback. Note that this context would be shared by different users -- may be used for tracing though *)
 
@@ -181,6 +183,9 @@ BEGIN
 	NEW(reader, 1); reader.SetRaw(emptyString, 0, 1);
 	RETURN reader;
 END GetEmptyReader;
+
+PROCEDURE SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+END SendNothing;
 
 (** Splits a command string of the form moduleName.commandProcName into its components. Can be used to check whether a
 	command string is syntactically correct, i.e. is of the form 'ModuleName "." [ProcedureName]' *)
@@ -280,6 +285,8 @@ BEGIN
 		IF InheritContext IN flags THEN
 			outer := GetContext();
 			NEW(context, outer.in, arg, outer.out, outer.error, outer.caller);
+		ELSIF Silent IN flags THEN
+			NEW(context,NIL, arg, silentWriter, silentWriter, NIL);
 		ELSE
 			NEW(context, NIL, arg, NIL, NIL, NIL)
 		END;
@@ -294,6 +301,7 @@ BEGIN
 	emptyString[0] := 0X;
 	Machine.GetConfig("TraceCommands", s);
 	trace := (s[0] = "1");
+	NEW(silentWriter, SendNothing, 128);
 	NEW(defaultContext,NIL,NIL,NIL,NIL,NIL);
 END Init;
 

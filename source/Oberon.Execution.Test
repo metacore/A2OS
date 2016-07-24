@@ -5457,30 +5457,7 @@ negative: include statement with too large long integer as set element
 	BEGIN set := {}; element := MAX (SET) + 1; INCL (set, element);
 	END Test.
 
-positive: include statement with huge integer as set element
 
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
-	BEGIN
-		set := {}; element := MIN (SET); INCL (set, element); ASSERT (set = {element}); ASSERT (set = {MIN (SET)}); ASSERT (element IN set);
-		set := {}; element := MAX (SET); INCL (set, element); ASSERT (set = {element}); ASSERT (set = {MAX (SET)}); ASSERT (element IN set);
-		element := MIN (SET); set := {element}; INCL (set, element); ASSERT (set = {element}); ASSERT (set = {MIN (SET)}); ASSERT (element IN set);
-		element := MAX (SET); set := {element}; INCL (set, element); ASSERT (set = {element}); ASSERT (set = {MAX (SET)}); ASSERT (element IN set);
-	END Test.
-
-negative: include statement with too small huge integer as set element
-
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
-	BEGIN set := {}; element := MIN (SET) - 1; INCL (set, element);
-	END Test.
-
-negative: include statement with too large huge integer as set element
-
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
-	BEGIN set := {}; element := MAX (SET) + 1; INCL (set, element);
-	END Test.
 
 
 # exclude statement
@@ -5557,31 +5534,6 @@ negative: exclude statement with too large long integer as set element
 
 	MODULE Test;
 	VAR set: SET; element: LONGINT;
-	BEGIN set := {}; element := MAX (SET) + 1; EXCL (set, element);
-	END Test.
-
-positive: exclude statement with huge integer as set element
-
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
-	BEGIN
-		set := {}; element := MIN (SET); EXCL (set, element); ASSERT (set = {}); ASSERT (~(element IN set));
-		set := {}; element := MAX (SET); EXCL (set, element); ASSERT (set = {}); ASSERT (~(element IN set));
-		element := MIN (SET); set := {element}; EXCL (set, element); ASSERT (set = {}); ASSERT (~(element IN set));
-		element := MAX (SET); set := {element}; EXCL (set, element); ASSERT (set = {}); ASSERT (~(element IN set));
-	END Test.
-
-negative: exclude statement with too small huge integer as set element
-
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
-	BEGIN set := {}; element := MIN (SET) - 1; EXCL (set, element);
-	END Test.
-
-negative: exclude statement with too large huge integer as set element
-
-	MODULE Test;
-	VAR set: SET; element: HUGEINT;
 	BEGIN set := {}; element := MAX (SET) + 1; EXCL (set, element);
 	END Test.
 

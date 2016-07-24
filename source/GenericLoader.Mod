@@ -8,7 +8,8 @@ CONST
 	Ok = 0;
 	LinkerError=3400;
 	FileNotFound = 3401;
-
+	CommandTrapped* = 3904; (* cf module Commands *) 
+	
 	SupportOldObjectFileFormat = FALSE;
 	TraceLoading = FALSE;
 TYPE
@@ -589,6 +590,7 @@ VAR
 		END
 	END SelectionSort;
 	
+	
 	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module;
 	TYPE Body=PROCEDURE;
 	VAR
@@ -641,8 +643,6 @@ VAR
 					Here this is made sure to enter the module in the data structure before returning it. 
 				*) 
 				Modules.Initialize(module);
-
-
 			ELSE module := NIL; res := LinkerError; stringWriter.Update; stringWriter.Get(msg);
 
 			END;
@@ -653,6 +653,7 @@ VAR
 		IF (res # Ok) & (res # FileNotFound) THEN D.String(msg);D.Ln END;
 		RETURN module
 	FINALLY
+		res := CommandTrapped;
 		RETURN NIL
 	END LoadObj;
 

@@ -9485,6 +9485,7 @@ TYPE
 				END;
 			ELSIF IsStaticArray(type) & (x.kind = SyntaxTree.ValueParameter) THEN
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				IntermediateCode.InitImmediate(result.tag,addressType,type(SyntaxTree.ArrayType).staticLength);
 			ELSIF IsStaticArray(type) THEN
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 				IntermediateCode.MakeMemory(result.op,addressType);

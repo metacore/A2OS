@@ -5073,14 +5073,14 @@ positive: copy statement with open array of character parameter as source
 	BEGIN Procedure ("source");
 	END Test.
 
-negative: copy statement with too long open array of character parameter as source
+positive: copy statement with too long open array of character parameter as source (truncate)
 
 	MODULE Test;
 	PROCEDURE Procedure (source: ARRAY OF CHAR);
 	VAR dest: ARRAY 2 OF CHAR;
-	BEGIN COPY (source, dest);
+	BEGIN COPY (source, dest); ASSERT(dest="s");
 	END Procedure;
-	BEGIN Procedure ("source");
+	BEGIN Procedure ("source"); 
 	END Test.
 
 positive: copy statement with open variable array of character parameter as source
@@ -5094,15 +5094,15 @@ positive: copy statement with open variable array of character parameter as sour
 	BEGIN source := "source"; Procedure (source);
 	END Test.
 
-negative: copy statement with too long open variable array of character parameter as source
+positive: copy statement with too long open variable array of character parameter as source (truncate)
 
 	MODULE Test;
 	VAR source: ARRAY 20 OF CHAR;
 	PROCEDURE Procedure (VAR source: ARRAY OF CHAR);
 	VAR dest: ARRAY 2 OF CHAR;
-	BEGIN COPY (source, dest);
+	BEGIN COPY (source, dest);ASSERT(dest="s");
 	END Procedure;
-	BEGIN source := "source"; Procedure (source);
+	BEGIN source := "source"; Procedure (source); 
 	END Test.
 
 positive: copy statement with open constant array of character parameter as source
@@ -5115,14 +5115,14 @@ positive: copy statement with open constant array of character parameter as sour
 	BEGIN Procedure ("source");
 	END Test.
 
-negative: copy statement with too long open constant array of character parameter as source
+positive: copy statement with too long open constant array of character parameter as source (truncate)
 
 	MODULE Test;
 	PROCEDURE Procedure (CONST source: ARRAY OF CHAR);
 	VAR dest: ARRAY 2 OF CHAR;
-	BEGIN COPY (source, dest);
+	BEGIN COPY (source, dest); ASSERT(dest="s");
 	END Procedure;
-	BEGIN Procedure ("source");
+	BEGIN Procedure ("source"); 
 	END Test.
 
 positive: copy statement with array of character parameter as destination
@@ -5156,12 +5156,12 @@ positive: copy statement with open array of character parameter as destination
 	BEGIN Procedure ("destination");
 	END Test.
 
-negative: copy statement with too short open array of character parameter as destination
+positive: copy statement with too short open array of character parameter as destination (truncate)
 
 	MODULE Test;
 	PROCEDURE Procedure (dest: ARRAY OF CHAR);
 	VAR source: ARRAY 20 OF CHAR;
-	BEGIN source := "source"; COPY (source, dest);
+	BEGIN source := "source"; COPY (source, dest); ASSERT(dest="");
 	END Procedure;
 	BEGIN Procedure ("");
 	END Test.
@@ -5177,13 +5177,13 @@ positive: copy statement with open variable array of character parameter as dest
 	BEGIN Procedure (dest); ASSERT (dest = "source");
 	END Test.
 
-negative: copy statement with too short open variable array of character parameter as destination
+positive: copy statement with too short open variable array of character parameter as destination (truncate)
 
 	MODULE Test;
 	VAR dest: ARRAY 2 OF CHAR;
 	PROCEDURE Procedure (VAR dest: ARRAY OF CHAR);
 	VAR source: ARRAY 20 OF CHAR;
-	BEGIN source := "source"; COPY (source, dest);
+	BEGIN source := "source"; COPY (source, dest); ASSERT(dest="s");
 	END Procedure;
 	BEGIN Procedure (dest);
 	END Test.
@@ -5250,12 +5250,12 @@ positive: copy statement with empty string as source and open array of character
 	BEGIN Procedure ("destination");
 	END Test.
 
-negative: copy statement with string as source and too short open array of character parameter as destination
+positive: copy statement with string as source and too short open array of character parameter as destination (truncate)
 
 	MODULE Test;
 	CONST Source = "source";
 	PROCEDURE Procedure (dest: ARRAY OF CHAR);
-	BEGIN COPY (Source, dest); ASSERT (dest = Source);
+	BEGIN COPY (Source, dest); ASSERT (dest = "");
 	END Procedure;
 	BEGIN Procedure ("");
 	END Test.
@@ -5282,7 +5282,7 @@ positive: copy statement with empty string as source and open variable array of 
 	BEGIN Procedure (dest); ASSERT (dest = Source); ASSERT (dest[0] = 0X);
 	END Test.
 
-negative: copy statement with string as source and too short open variable array of character parameter as destination
+positive: copy statement with string as source and too short open variable array of character parameter as destination (truncate)
 
 	MODULE Test;
 	CONST Source = "source";
@@ -5290,7 +5290,7 @@ negative: copy statement with string as source and too short open variable array
 	PROCEDURE Procedure (VAR dest: ARRAY OF CHAR);
 	BEGIN COPY (Source, dest);
 	END Procedure;
-	BEGIN Procedure (dest);
+	BEGIN Procedure (dest); ASSERT(dest="s");
 	END Test.
 
 
@@ -5356,7 +5356,7 @@ positive: string assignment on open variable array of character parameter
 	BEGIN Procedure (dest); ASSERT (dest = Source);
 	END Test.
 
-negative: string assignment on too short open variable array of character parameter
+positive: string assignment on too short open variable array of character parameter (truncate)
 
 	MODULE Test;
 	CONST Source = "source";
@@ -5364,7 +5364,7 @@ negative: string assignment on too short open variable array of character parame
 	PROCEDURE Procedure (VAR dest: ARRAY OF CHAR);
 	BEGIN dest := Source;
 	END Procedure;
-	BEGIN Procedure (dest);
+	BEGIN Procedure (dest); ASSERT(dest="s");
 	END Test.
 
 

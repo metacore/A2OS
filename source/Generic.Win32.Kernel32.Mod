@@ -658,11 +658,25 @@ VAR
 	(** Retrieves the cycle time for the specified thread (both user and kernel mode, Windows Vista and newer) *)
 	QueryThreadCycleTime- : PROCEDURE {WINAPI} (hThread : HANDLE; VAR cycleTime : HUGEINT) : BOOL;
 	(** The ReadFile function reads data from a file, starting at the position indicated by the file pointer. *)
-	ReadFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
-															  VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
+	readFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+															  VAR lpBuffer: ARRAY OF SYSTEM.BYTE;
 															  nNumberOfBytesToRead: LONGINT;
 															  VAR lpNumberOfBytesRead: LONGINT;
 															  lpOverlapped: ANY ): BOOL;
+
+	PROCEDURE ReadFile- ( hFile: HANDLE;
+															  VAR lpBuffer: ARRAY OF SYSTEM.BYTE;
+															  nNumberOfBytesToRead: LONGINT;
+															  VAR lpNumberOfBytesRead: LONGINT;
+															  lpOverlapped: ANY ): BOOL;
+	VAR b: BOOL;
+	BEGIN
+		LeaveA2;
+		b := readFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+		ReenterA2;
+		RETURN b;
+	END ReadFile;
+	VAR
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				   lpBaseAddress: ADDRESS;
@@ -762,14 +776,27 @@ VAR
 	WaitForSingleObject-: PROCEDURE {WINAPI} ( hHandle: HANDLE;
 																				   dwMilliseconds: LONGINT ): LONGINT;
 	(** The WriteFile function writes data to a file and is designed for both synchronous and asynchronous operation. *)
-	WriteFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+	writeFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															   nNumberOfBytesToWrite: LONGINT;
 															   VAR lpNumberOfBytesWritten: LONGINT;
 															   lpOverlapped: ANY ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
-
+	PROCEDURE WriteFile- ( hFile: HANDLE;
+															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
+															   nNumberOfBytesToWrite: LONGINT;
+															   VAR lpNumberOfBytesWritten: LONGINT;
+															   lpOverlapped: ANY ): BOOL;
+	VAR b: BOOL;
+	BEGIN
+		LeaveA2;
+		b := writeFile(hFile,lpBuffer,nNumberOfBytesToWrite, lpNumberOfBytesWritten,lpOverlapped);
+		ReenterA2;
+		RETURN b;
+	END WriteFile;
+	VAR
+	
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
 	
@@ -931,7 +958,7 @@ VAR
 		GetProcAddress(mod, "QueryPerformanceCounter",SYSTEM.VAL(ADDRESS,QueryPerformanceCounter));
 		GetProcAddress(mod, "QueryPerformanceFrequency",SYSTEM.VAL(ADDRESS,QueryPerformanceFrequency));
 		GetProcAddress(mod, "QueryThreadCycleTime", SYSTEM.VAL(ADDRESS, QueryThreadCycleTime));
-		GetProcAddress(mod, "ReadFile",SYSTEM.VAL(ADDRESS,ReadFile));
+		GetProcAddress(mod, "ReadFile",SYSTEM.VAL(ADDRESS,readFile));
 		GetProcAddress(mod, "ReadProcessMemory",SYSTEM.VAL(ADDRESS,ReadProcessMemory));
 		GetProcAddress(mod, "RemoveDirectoryA",SYSTEM.VAL(ADDRESS,RemoveDirectory));
 		GetProcAddress(mod, "ResetEvent",SYSTEM.VAL(ADDRESS,ResetEvent));
@@ -969,7 +996,7 @@ VAR
 		GetProcAddress(mod, "VirtualAlloc",SYSTEM.VAL(ADDRESS,VirtualAlloc));
 		GetProcAddress(mod, "VirtualFree",SYSTEM.VAL(ADDRESS,VirtualFree));
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
-		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
+		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,writeFile));
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
 		isEXE := hInstance = NULL;
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;

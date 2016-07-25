@@ -1966,7 +1966,7 @@ TYPE
 					(* the element is not a range expression *)
 
 					(* check type and add conversion if needed *)
-					IF IsSizeType(elementResult.type.resolved, system.addressSize) THEN
+					IF IsIntegerType(elementResult.type.resolved) THEN
 						elementResult := NewConversion(elementResult.position, elementResult, system.sizeType, NIL)
 					ELSE
 						Error(elementResult.position, Diagnostics.Invalid, "non integer element in set");

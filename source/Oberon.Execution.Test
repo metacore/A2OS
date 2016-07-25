@@ -7131,16 +7131,16 @@ positive: bitwise rotate
 	VAR val,rot: SET; by: LONGINT;
 	BEGIN
 		val := {1,2,3,30,31};
-		rot := SYSTEM.VAL(SET,SYSTEM.ROT(SYSTEM.VAL(LONGINT,val),7));
+		rot := SYSTEM.VAL(SET,ROT(SYSTEM.VAL(LONGINT,val),7));
 		ASSERT(rot ={5..6,8..10});
-		rot :=  SYSTEM.VAL(SET,SYSTEM.ROT(SYSTEM.VAL(LONGINT,val),-7));
+		rot :=  SYSTEM.VAL(SET,ROT(SYSTEM.VAL(LONGINT,val),-7));
 		ASSERT(rot={23..24,26..28});
 		val := {1,2,3,30,31};
 		by := 7;
-		rot := SYSTEM.VAL(SET,SYSTEM.ROT(SYSTEM.VAL(LONGINT,val),by));
+		rot := SYSTEM.VAL(SET,ROT(SYSTEM.VAL(LONGINT,val),by));
 		ASSERT(rot ={5..6,8..10});
 		by := -7;
-		rot := SYSTEM.VAL(SET,SYSTEM.ROT(SYSTEM.VAL(LONGINT,val),by));
+		rot := SYSTEM.VAL(SET,ROT(SYSTEM.VAL(LONGINT,val),by));
 		ASSERT(rot={23..24,26..28});
 
 	END P;
@@ -7437,7 +7437,7 @@ positive: test for correct use of SYSTEM.VAL (without conversion)
 	BEGIN
 		r := 10;
 		(* trick to store real value in original format in longint variable wihout using SYSTEM.VAL, for testing SYSTEM.VAL ! *)
-		SYSTEM.MOVE(SYSTEM.ADR(r),SYSTEM.ADR(l),SYSTEM.SIZEOF(REAL));
+		SYSTEM.MOVE(SYSTEM.ADR(r),SYSTEM.ADR(l),SIZEOF(REAL));
 		RETURN l;
 	END Real;
 
@@ -7446,7 +7446,7 @@ positive: test for correct use of SYSTEM.VAL (without conversion)
 	BEGIN
 		r := 10;
 		(* trick to store real value in original format in longint variable wihout using SYSTEM.VAL, for testing SYSTEM.VAL ! *)
-		SYSTEM.MOVE(SYSTEM.ADR(r),SYSTEM.ADR(l),SYSTEM.SIZEOF(HUGEINT));
+		SYSTEM.MOVE(SYSTEM.ADR(r),SYSTEM.ADR(l),SIZEOF(HUGEINT));
 		RETURN l;
 	END Longreal;
 
@@ -7455,7 +7455,7 @@ positive: test for correct use of SYSTEM.VAL (without conversion)
 	BEGIN
 		l := 10;
 		(* trick to store real value in original format in longint variable wihout using SYSTEM.VAL, for testing SYSTEM.VAL ! *)
-		SYSTEM.MOVE(SYSTEM.ADR(l),SYSTEM.ADR(r),SYSTEM.SIZEOF(REAL));
+		SYSTEM.MOVE(SYSTEM.ADR(l),SYSTEM.ADR(r),SIZEOF(REAL));
 		RETURN r;
 	END Longint;
 
@@ -7464,7 +7464,7 @@ positive: test for correct use of SYSTEM.VAL (without conversion)
 	BEGIN
 		l := 10;
 		(* trick to store real value in original format in longint variable wihout using SYSTEM.VAL, for testing SYSTEM.VAL ! *)
-		SYSTEM.MOVE(SYSTEM.ADR(l),SYSTEM.ADR(r),SYSTEM.SIZEOF(LONGREAL));
+		SYSTEM.MOVE(SYSTEM.ADR(l),SYSTEM.ADR(r),SIZEOF(LONGREAL));
 		RETURN r;
 	END Hugeint;
 

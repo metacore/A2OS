@@ -2010,7 +2010,7 @@ negative: plain new statement
 
 	MODULE Test;
 	VAR object: OBJECT END;
-	BEGIN (object);
+	BEGIN NEW;
 	END Test.
 
 negative: new statement missing new

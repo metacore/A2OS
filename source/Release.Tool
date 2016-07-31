@@ -257,30 +257,32 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	LinuxAos64 {
-		INCLUDE "UNIX UNIX64 LINUX64 UNCOOP"
+#
+#	exceeds max. releases !
+#	LinuxAos64 {
+#		INCLUDE "UNIX UNIX64 LINUX64 UNCOOP"
+#		COMPILER "Compiler.Compile"
+#		COMPILEOPTIONS "--bits=64"
+#		TARGET "AMD"
+#		EXTENSION "Obz"
+#		SYMBOLEXTENSION "Obz"
+#		PATH "NewAos/"
+#		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+#		DISABLED "FALSE"
+#	}
+	DarwinAos {
+		INCLUDE "UNIX UNIX32 DARWIN UNCOOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--bits=64"
+		COMPILEOPTIONS "--darwinHost"
 		TARGET "AMD"
-		EXTENSION "Obz"
-		SYMBOLEXTENSION "Obz"
+		EXTENSION "Obj"
+		SYMBOLEXTENSION "Obj"
 		PATH "NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 #
 #	exceeds max. releases !
-#	DarwinAos {
-#		INCLUDE "UNIX UNIX32 DARWIN UNCOOP"
-#		COMPILER "Compiler.Compile"
-#		COMPILEOPTIONS "--darwinHost"
-#		TARGET "AMD"
-#		EXTENSION "Obj"
-#		SYMBOLEXTENSION "Obj"
-#		PATH "NewAos/"
-#		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-#		DISABLED "FALSE"
-#	}
 #	DarwinAos64 {
 #		INCLUDE "UNIX UNIX64 DARWIN64 UNCOOP"
 #		COMPILER "Compiler.Compile"
@@ -349,9 +351,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Win32.Environment.Mod }
 
 	UNIX { Unix.Glue.Mod }
-#	DARWIN { Darwin.I386.Unix.Mod }  DARWIN64 { Darwin.AMD64.Unix.Mod } 
-	LINUX { Linux.I386.Unix.Mod }  LINUX64 { Linux.AMD64.Unix.Mod } 
-	SOLARIS { Solaris.I386.Unix.Mod }  SOLARIS64 { Solaris.AMD64.Unix.Mod } 
+	DARWIN { Darwin.I386.Unix.Mod }  
+#	DARWIN64 { Darwin.AMD64.Unix.Mod } 
+	LINUX { Linux.I386.Unix.Mod }
+#	LINUX64 { Linux.AMD64.Unix.Mod } 
+	SOLARIS { Solaris.I386.Unix.Mod }
+	SOLARIS64 { Solaris.AMD64.Unix.Mod } 
 	
 
 	WINORIG { Win32.Kernel32.Mod}
@@ -1428,7 +1433,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	PrettyPrint.Mod  PrettyPrintHighlighter.XML
 	
 	# streams and files compression
-	Huffman.mod
+	OZip.mod
 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod I386.NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	I386.NbrRe32.Mod I386.NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod

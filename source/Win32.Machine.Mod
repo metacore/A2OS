@@ -419,7 +419,7 @@ PROCEDURE TraceChar(c: CHAR);
 VAR len: LONGINT;
 BEGIN
 	len := 1;
-	Kernel32.WriteFile(hout,c,len,len,NIL);
+	IF Kernel32.WriteFile(hout,c,len,len,NIL) = 0 THEN END;
 END TraceChar;
 
 PROCEDURE SetTraceFile(VAR filename: ARRAY OF CHAR);

@@ -12,7 +12,7 @@ VAR
 PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
 BEGIN
 	IF mode # none THEN
-		Kernel32.WriteFile (hout, buf[ofs], len, len, NIL);
+		IF Kernel32.WriteFile (hout, buf[ofs], len, len, NIL) = 0 THEN END;
 		Kernel32.FlushFileBuffers(hout);
 	END;
 END Send;
@@ -20,7 +20,7 @@ END Send;
 (* Receiver to be used with Stream.Reader *)
 PROCEDURE Receive* (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
 BEGIN
-	Kernel32.ReadFile (hin, buf[ofs], min, len, NIL);
+	IF Kernel32.ReadFile (hin, buf[ofs], min, len, NIL) = 0 THEN END;
 END Receive;
 
 PROCEDURE Init;
@@ -81,7 +81,7 @@ PROCEDURE Char(c: CHAR);
 VAR len: LONGINT;
 BEGIN
 	len := 1;
-	Kernel32.WriteFile(hout,c,len,len,NIL);
+	IF Kernel32.WriteFile(hout,c,len,len,NIL) = 0 THEN END;
 END Char;
 
 BEGIN

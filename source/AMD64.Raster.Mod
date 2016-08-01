@@ -1835,16 +1835,27 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END AnyOverA8;
 
 	PROCEDURE A8OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-		VAR dpix: Pixel;
+	VAR spix, dpix: Pixel; alpha, rc,gc,bc,ac: CHAR;
 	BEGIN
+		ac := mode.col[a];
+		rc := mode.col[r];
+		gc := mode.col[g];
+		bc := mode.col[b];
+		
 		WHILE len > 0 DO
-			SYSTEM.GET(sadr, mode.buf[a]);
-			IF mode.buf[a] = 0FFX THEN
+			SYSTEM.GET(sadr, alpha);
+			alpha := CHR(ORD(ac) * ORD(alpha) DIV 255);
+			IF alpha = 0FFX THEN
 				mode.dst.pack(mode.dst, dadr, dbit, mode.buf)
-			ELSIF mode.buf[a] # 0X THEN
+			ELSIF alpha # 0X THEN
+				spix[a] := alpha;
+				(* the following computation of the colors has to be done because the blending method seems to assume this *)
+				spix[r] := CHR(ORD(rc) * ORD(alpha) DIV 255);
+				spix[g] := CHR(ORD(gc) * ORD(alpha) DIV 255);
+				spix[b] := CHR(ORD(bc) * ORD(alpha) DIV 255);
 				mode.dst.unpack(mode.dst, dadr, dbit, dpix);
-				Blend(mode.op, mode.buf, dpix);
-				mode.dst.pack(mode.dst, dadr, dbit, dpix)
+				Blend(mode.op, spix, dpix);
+				mode.dst.pack(mode.dst, dadr, dbit, dpix);
 			END;
 			INC(sadr); DEC(len);
 			dbit := dbit + mode.dst.bpp; INC(dadr, dbit DIV 8); dbit := dbit MOD 8

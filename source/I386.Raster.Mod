@@ -1949,7 +1949,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(* A8 *)
 	PROCEDURE AnyOverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-		VAR pix: Pixel; b: CHAR;
+	VAR pix: Pixel; b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
 			mode.src.unpack(mode.src, sadr, sbit, pix);
@@ -1964,18 +1964,24 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END AnyOverA8;
 
 	PROCEDURE A8OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-	VAR spix, dpix: Pixel; alpha: CHAR;
+	VAR spix, dpix: Pixel; alpha, rc,gc,bc,ac: CHAR;
 	BEGIN
+		ac := mode.col[a];
+		rc := mode.col[r];
+		gc := mode.col[g];
+		bc := mode.col[b];
+		
 		WHILE len > 0 DO
 			SYSTEM.GET(sadr, alpha);
+			alpha := CHR(ORD(ac) * ORD(alpha) DIV 255);
 			IF alpha = 0FFX THEN
 				mode.dst.pack(mode.dst, dadr, dbit, mode.buf)
-			ELSIF mode.buf[a] # 0X THEN
+			ELSIF alpha # 0X THEN
 				spix[a] := alpha;
 				(* the following computation of the colors has to be done because the blending method seems to assume this *)
-				spix[r] := CHR(ORD(mode.col[r]) * ORD(alpha) DIV 255);
-				spix[g] := CHR(ORD(mode.col[g]) * ORD(alpha) DIV 255);
-				spix[b] := CHR(ORD(mode.col[b]) * ORD(alpha) DIV 255);
+				spix[r] := CHR(ORD(rc) * ORD(alpha) DIV 255);
+				spix[g] := CHR(ORD(gc) * ORD(alpha) DIV 255);
+				spix[b] := CHR(ORD(bc) * ORD(alpha) DIV 255);
 				mode.dst.unpack(mode.dst, dadr, dbit, dpix);
 				Blend(mode.op, spix, dpix);
 				mode.dst.pack(mode.dst, dadr, dbit, dpix);
@@ -1986,16 +1992,18 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END A8OverAny;
 	
 	PROCEDURE A8OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-	VAR src , dst: Pixel; rc,gc,bc, fd, fs: LONGINT;
+	VAR src , dst: Pixel; rc,gc,bc,ac, fd, fs: LONGINT;
 	BEGIN
 		rc := ORD(mode.col[r]);
 		gc := ORD(mode.col[g]);
 		bc := ORD(mode.col[b]);
+		ac := ORD(mode.col[a]);
 		fs := 255;
 		WHILE len > 0 DO
 			SYSTEM.GET(sadr, src[a]);
 			SYSTEM.MOVE(dadr, ADDRESSOF(dst), 4);
 				(* the following computation of the colors has to be done because the blending method seems to assume this *)
+				src[a] := CHR(ac * ORD(src[a]) DIV 255);
 				src[r] := CHR(rc * ORD(src[a]) DIV 255);
 				src[g] := CHR(gc * ORD(src[a]) DIV 255);
 				src[b] := CHR(bc * ORD(src[a]) DIV 255);

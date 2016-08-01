@@ -416,10 +416,10 @@ BEGIN
 END ParseLine;
 
 PROCEDURE TraceChar(c: CHAR);
-VAR len: LONGINT;
+VAR len: LONGINT; b: Kernel32.BOOL;
 BEGIN
 	len := 1;
-	IF Kernel32.WriteFile(hout,c,len,len,NIL) = 0 THEN END;
+	b := Kernel32.WriteFile(hout,c,len,len,NIL);
 END TraceChar;
 
 PROCEDURE SetTraceFile(VAR filename: ARRAY OF CHAR);

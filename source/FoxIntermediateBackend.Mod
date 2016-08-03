@@ -6935,11 +6935,10 @@ TYPE
 		PROCEDURE CloseInitializer(prev: IntermediateCode.Section);
 		BEGIN
 			EmitLeave(section, 0, NIL, 0 );
-			Emit(Exit(-1,ToMemoryUnits(system,addressType.sizeInBits),0, 0));
+			Emit(Exit(-1,0 ,0, 0));
 			section := prev;
 		END CloseInitializer;
 		
-
 		PROCEDURE AddPorts(cell: SyntaxTree.Symbol; x: SyntaxTree.CellType);
 		VAR name: SyntaxTree.IdentifierString; 
 			variable: SyntaxTree.Variable;

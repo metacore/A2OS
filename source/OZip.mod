@@ -1,6 +1,6 @@
 module OZip; (** AUTHOR GF; PURPOSE "files and streams compression tool"; *)
 
-import Streams, Commands, Files, Strings, Kernel, Log := KernelLog;
+import Streams, Commands, Files, Strings, Log := KernelLog;
 
 const 
 	BlockSize = 8*1024;
@@ -33,7 +33,7 @@ type
 		val: longint
 	end;
 	
-	CodeTable = array 256 of Codebits;
+	CodeTable = pointer to array 256 of Codebits;
 	
 		
 	HuffmanCode = object
@@ -95,7 +95,7 @@ type
 			end
 		end AppendBits;
 				
-		procedure EncodeBlock( const tab: CodeTable;  const buf: array of char;  length: longint );
+		procedure EncodeBlock( tab: CodeTable;  const buf: array of char;  length: longint );
 		var i: longint;
 		begin
 			Clear;
@@ -127,6 +127,7 @@ type
 	end;
 	
 	PatternArray = array 256 of Pattern;
+	
 	PatternFrequencies = pointer to array of Pattern;		(* ordered by frequency *)
 	
 	MTFList = pointer to record
@@ -137,40 +138,22 @@ type
 	
 	procedure Compress*( r: Streams.Reader;  w: Streams.Writer );
 	var 
-		huff: HuffmanCode;  n, needed, ofs, got, chunksize, timeout: longint;
+		huff: HuffmanCode;  chunksize: longint;
 		codeTable: CodeTable;
 		pf: PatternFrequencies;
 		bwIndex: longint;
-		buffer: pointer to array of char;
-		timer: Kernel.Timer;
+		buffer: array BlockSize of char;
 	begin 
-		new( huff );  new( timer );  new( buffer, BlockSize );
+		new( huff );  new( codeTable );
 		w.RawLInt( ComprTag );
 		loop
-			if r is Files.Reader then
-				r.Bytes( buffer^, 0, BlockSize, chunksize );
-			else
-				(* give reader some time (~3 sec) to accumulate data *)
-				timeout := 100;  ofs := 0;  needed := BlockSize;
-				repeat  n := r.Available( );
-					if n > 0 then
-						if n > needed then  n := needed  end;
-						r.Bytes( buffer^, ofs, n, got );  inc( ofs, got );  dec( needed, got )
-					end;
-					if needed > 0 then 
-						if timeout <= 1600 then  timer.Sleep( timeout );  timeout := 2*timeout
-						else  needed := 0
-						end;  
-					end;
-				until needed = 0;
-				chunksize := ofs
-			end;
+			r.Bytes( buffer, 0, BlockSize, chunksize );
 			if chunksize < 1 then  exit  end;
-			BWEncode( buffer^, chunksize, bwIndex );
-			pf := CountPatterns( buffer^, chunksize );
+			BWEncode( buffer, chunksize, bwIndex );
+			pf := CountPatterns( buffer, chunksize );
 			WriteFrequencies( pf, w );
-			InitCodeTable( codeTable, BuildHuffmanTree( pf ) );
-			huff.EncodeBlock( codeTable, buffer^, chunksize );
+			codeTable := BuildCodeTable( BuildHuffmanTree( pf ) );
+			huff.EncodeBlock( codeTable, buffer, chunksize );
 			huff.WriteCode( w );
 			w.RawLInt( bwIndex );
 			w.Update;
@@ -184,21 +167,21 @@ type
 	var 
 		tree: HuffmanNode;
 		huff: HuffmanCode;
-		buffer: pointer to array of char;
 		tag, chunksize, i, bwIndex: longint;
+		buffer: array BlockSize of char;
 	begin 
 		r.RawLInt( tag );
 		if tag # ComprTag  then
 			msg := "OZip.Uncompress: bad input (compressed stream expected)"; 
 			return false
 		end;
-		new( huff ); new( buffer, BlockSize );
+		new( huff ); 
 		while r.Available( ) >= 15 (* min size of a compressed block *) do
 			tree := BuildHuffmanTree( ReadFrequencies( r ) );
 			huff.ReadCode( r );
-			huff.DecodeBlock( tree,  buffer^, chunksize );
+			huff.DecodeBlock( tree,  buffer, chunksize );
 			r.RawLInt( bwIndex );
-			BWDecode( buffer^, chunksize, bwIndex );
+			BWDecode( buffer, chunksize, bwIndex );
 			for i := 0 to chunksize - 1 do  w.Char( buffer[i] )  end
 		end;
 		w.Update;
@@ -208,10 +191,9 @@ type
 	
 	procedure BuildPatternFrequencies( var a: PatternArray ): PatternFrequencies;
 	var 
-		i, n, start: longint;
-		pf: PatternFrequencies;
+		i, n, start: longint;  pf: PatternFrequencies;
 		
-		procedure SortPF( low, high: longint );  
+		procedure SortPatterns( low, high: longint );  
 		var 
 			i, j, m: longint;  tmp: Pattern;
 		begin
@@ -226,12 +208,12 @@ type
 						inc( i );  dec( j )
 					end;
 				until i > j;
-				SortPF( low, j );  SortPF( i, high )
+				SortPatterns( low, j );  SortPatterns( i, high )
 			end
-		end SortPF;
+		end SortPatterns;
 		
 	begin
-		SortPF( 0, 255 );	(* sort patterns by frequency *)
+		SortPatterns( 0, 255 );	(* sort patterns by frequency *)
 		i := 0;
 		while a[i].frequency = 0 do  inc( i )  end; 	(* skip unused patterns *)
 		n := 256 - i;  start := i;
@@ -281,9 +263,10 @@ type
 	end BuildHuffmanTree;
 	
 	
-	procedure InitCodeTable( var table: CodeTable; huffmanTree: HuffmanNode );
+	procedure BuildCodeTable( huffmanTree: HuffmanNode ): CodeTable;
 	var 
 		start: Codebits; i: longint;
+		table: CodeTable;
 	
 		procedure Traverse( node: HuffmanNode;  bits: Codebits );
 		begin
@@ -297,10 +280,12 @@ type
 		end Traverse;
 	
 	begin
+		new( table );
 		for i := 0 to 255 do  table[i].bitsize := 0;  table[i].val := 0  end;
 		start.bitsize := 0;  start.val := 0;
 		Traverse( huffmanTree, start );
-	end InitCodeTable;
+		return table
+	end BuildCodeTable;
 	
 	
 	procedure ReadFrequencies( r: Streams.Reader ): PatternFrequencies;
@@ -344,8 +329,7 @@ type
 			lastbyte: char  
 		end;
 	var 
-		r: pointer to array of Rotation;
-		i, j: longint;
+		i, j: longint;  r: pointer to array of Rotation;
 	
 		procedure Less( a, b: longint ): boolean;
 		var i, x1, x2, i1, i2: longint;  c1, c2: char;
@@ -361,7 +345,7 @@ type
 			return false
 		end Less;
 				
-		procedure SortR( lo, hi: longint );
+		procedure SortRotations( lo, hi: longint );
 		var i, j, m: longint;  tmp: Rotation;
 		begin
 			if lo < hi then
@@ -375,9 +359,9 @@ type
 						inc( i );  dec( j )
 					end
 				until i > j;
-				SortR( lo, j );  SortR( i, hi )
+				SortRotations( lo, j );  SortRotations( i, hi )
 			end
-		end SortR;
+		end SortRotations;
 		
 	begin
 		new( r, length );
@@ -386,7 +370,7 @@ type
 			if i = 0 then  j := length - 1  else  j := i - 1  end;
 			r[i].lastbyte := buf[j]
 		end;
-		SortR( 0, length -1 );
+		SortRotations( 0, length - 1 );
 		(* replace buffer by column L *)
 		for i := 0 to length -1 do  buf[i] := r[i].lastbyte  end;
 		(* find index of the original row *)
@@ -494,7 +478,7 @@ type
 		return Files.New( name )
 	end NewFile;
 	
-	
+	(** OZip.CompressFile  infile [outfile] ~ *)
 	procedure CompressFile*( c: Commands.Context );
 	var
 		f1, f2: Files.File;
@@ -510,7 +494,6 @@ type
 				Files.OpenReader( r, f1, 0 ); 
 				f2 := NewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				Compress( r, w );  w.Update;  Files.Register( f2 );
-				Log.Ln;
 				Log.String( "Compression finished, outfile = " );  Log.String( name2 );  Log.Ln; 
 			else
 				c.error.String( "could not open file  " );  c.error.String( name1 );  c.error.Ln
@@ -522,6 +505,7 @@ type
 	end CompressFile;
 	
 	
+	(** OZip.UncompressFile  infile [outfile] ~ *)
 	procedure UncompressFile*( c: Commands.Context );
 	var
 		f1, f2: Files.File;
@@ -540,7 +524,8 @@ type
 				Files.OpenReader( r, f1, 0 );	 
 				f2 := NewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				if Uncompress( r, w, msg ) then
-					w.Update;  Files.Register( f2 )	
+					w.Update;  Files.Register( f2 );
+					Log.String( "Uncompression finished, outfile = " );  Log.String( name2 );  Log.Ln; 
 				else
 					c.error.String( msg );  c.error.Ln
 				end

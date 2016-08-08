@@ -144,7 +144,7 @@ type
 		bwIndex: longint;
 		buffer: array BlockSize of char;
 	begin 
-		new( huff );  new( codeTable );
+		new( huff ); 
 		w.RawLInt( ComprTag );
 		loop
 			r.Bytes( buffer, 0, BlockSize, chunksize );

@@ -1205,8 +1205,8 @@ TYPE
 					ELSE
 						EmitArithmetic3XMM(instruction, InstructionSet.opSUBSS, InstructionSet.opSUBSD)
 					END;
-				ELSE EmitArithmetic3(instruction,Low,InstructionSet.opSUB);
-					IF IsComplex(instruction.op1) THEN EmitArithmetic3(instruction, High, InstructionSet.opSBB) END;
+				ELSE EmitArithmetic3Part(instruction,Low,InstructionSet.opSUB);
+					IF IsComplex(instruction.op1) THEN EmitArithmetic3Part(instruction, High, InstructionSet.opSBB) END;
 				END;
 			|IntermediateCode.add:
 				IF IsFloat(instruction.op1) THEN
@@ -1215,21 +1215,18 @@ TYPE
 					ELSE
 						EmitArithmetic3XMM(instruction, InstructionSet.opADDSS, InstructionSet.opADDSD)
 					END;
-				ELSE EmitArithmetic3(instruction,Low,InstructionSet.opADD);
-					IF IsComplex(instruction.op1) THEN EmitArithmetic3(instruction, High, InstructionSet.opADC) END;
+				ELSE EmitArithmetic3Part(instruction,Low,InstructionSet.opADD);
+					IF IsComplex(instruction.op1) THEN EmitArithmetic3Part(instruction, High, InstructionSet.opADC) END;
 				END;
 			|IntermediateCode.and:
 				Assert(~IsFloat(instruction.op1),"operation not defined on float");
-				EmitArithmetic3(instruction,Low,InstructionSet.opAND);
-				IF IsComplex(instruction.op1) THEN EmitArithmetic3(instruction, High, InstructionSet.opAND) END;
+				EmitArithmetic3(instruction,InstructionSet.opAND);
 			|IntermediateCode.or:
 				Assert(~IsFloat(instruction.op1),"operation not defined on float");
-				EmitArithmetic3(instruction,Low,InstructionSet.opOR);
-				IF IsComplex(instruction.op1) THEN EmitArithmetic3(instruction, High, InstructionSet.opOR) END;
+				EmitArithmetic3(instruction,InstructionSet.opOR);
 			|IntermediateCode.xor:
 				Assert(~IsFloat(instruction.op1),"operation not defined on float");
-				EmitArithmetic3(instruction,Low,InstructionSet.opXOR);
-				IF IsComplex(instruction.op1) THEN EmitArithmetic3(instruction, High, InstructionSet.opXOR) END;
+				EmitArithmetic3(instruction,InstructionSet.opXOR);
 			|IntermediateCode.shl: EmitShift(instruction);
 			|IntermediateCode.shr: EmitShift(instruction);
 			|IntermediateCode.rol: EmitShift(instruction);
@@ -2056,19 +2053,25 @@ TYPE
 			END;
 		END FinishOp;
 
-		PROCEDURE EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT);
+		PROCEDURE EmitArithmetic3Part(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT);
 		VAR left,right: Assembler.Operand; ticket: Ticket;
 		BEGIN
 			PrepareOp3(instruction, part, left,right,ticket);
 			emitter.Emit2(opcode,left,right);
 			FinishOp(instruction.op1,part,left,ticket);
+		END EmitArithmetic3Part;
+
+		PROCEDURE EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; opcode: LONGINT);
+		BEGIN
+				EmitArithmetic3Part(instruction,Low,InstructionSet.opXOR);
+				IF IsComplex(instruction.op1) THEN EmitArithmetic3Part(instruction, High, InstructionSet.opXOR) END;
 		END EmitArithmetic3;
 
 		PROCEDURE EmitArithmetic3XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT);
 		VAR op: LONGINT;
 		BEGIN
 			IF instruction.op1.type.sizeInBits = 32 THEN op := op32 ELSE op := op64 END;
-			EmitArithmetic3(instruction, Low, op);
+			EmitArithmetic3Part(instruction, Low, op);
 		END EmitArithmetic3XMM;
 
 		PROCEDURE EmitArithmetic2(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT);
@@ -2122,7 +2125,7 @@ TYPE
 			inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
-				IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
+				IntermediateCode.InitImmediate(iop3, IntermediateCode.uint32, exp);
 				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
 				EmitShift(inst);
 				RETURN;
@@ -2211,12 +2214,17 @@ TYPE
 			inst: IntermediateCode.Instruction;
 
 		BEGIN
-			IF instruction.opcode = IntermediateCode.div THEN
-				IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
-					IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
+			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
+				IF instruction.opcode = IntermediateCode.div THEN					
+					IntermediateCode.InitImmediate(iop3, IntermediateCode.uint32, exp);
 					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
 					EmitShift(inst);
 					RETURN;
+				ELSE
+					IntermediateCode.InitImmediate(iop3, instruction.op3.type, value-1);
+					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.and, instruction.op1, instruction.op2, iop3);
+					EmitArithmetic3(inst,InstructionSet.opAND);
+					RETURN;					
 				END;
 			END;
 

@@ -663,7 +663,7 @@ TYPE
 									OR backend.useFPU64;
 				END;
 			| IntermediateCode.mod:
-				result := IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
+				result :=  IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
 				
 			| IntermediateCode.rol, IntermediateCode.ror:
 				result := ~IsComplex(irInstruction.op1)
@@ -1534,7 +1534,7 @@ TYPE
 			| IntermediateCode.div: EmitDiv(irInstruction)
 			| IntermediateCode.mod: EmitMod(irInstruction)
 			| IntermediateCode.sub, IntermediateCode.add: EmitAddOrSub(irInstruction)
-			| IntermediateCode.and: EmitAnd(irInstruction, Low); IF IsComplex(irInstruction.op1) THEN EmitAnd(irInstruction, High) END
+			| IntermediateCode.and: EmitAnd(irInstruction);
 			| IntermediateCode.or: EmitOr(irInstruction, Low); IF IsComplex(irInstruction.op1) THEN EmitOr(irInstruction, High) END
 			| IntermediateCode.xor: EmitXor(irInstruction, Low); IF IsComplex(irInstruction.op1) THEN EmitXor(irInstruction, High) END
 			| IntermediateCode.shl: EmitShiftOrRotation(irInstruction)
@@ -2042,7 +2042,7 @@ TYPE
 			WriteBack(irInstruction.op1, part, destination)
 		END EmitNot;
 
-		PROCEDURE EmitAnd(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
 		VAR
 			dummy: BOOLEAN;
 			destination, left, right: Operand;
@@ -2050,6 +2050,12 @@ TYPE
 			PrepareDoubleSourceOpWithImmediate(irInstruction, part, destination, left, right, dummy);
 			Emit3(opAND, destination, left, right);
 			WriteBack(irInstruction.op1, part, destination)
+		END EmitAndP;
+
+		PROCEDURE EmitAnd(VAR irInstruction: IntermediateCode.Instruction);
+		BEGIN
+			EmitAndP(irInstruction, Low);
+			IF IsComplex(irInstruction.op1) THEN EmitAndP(irInstruction, High) END
 		END EmitAnd;
 
 		PROCEDURE EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
@@ -2198,10 +2204,11 @@ TYPE
 
 		PROCEDURE EmitMul(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction; value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
+			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction; 
+			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
-				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, exp);
+				IntermediateCode.InitImmediate(op3, IntermediateCode.uint32, exp);
 				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, irInstruction.op1, irInstruction.op2, op3);
 				EmitShiftOrRotation(inst);
 				RETURN;
@@ -2253,7 +2260,7 @@ TYPE
 			inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
-				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, exp);
+				IntermediateCode.InitImmediate(op3, IntermediateCode.uint32, exp);
 				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, irInstruction.op1, irInstruction.op2, op3);
 				EmitShiftOrRotation(inst);
 				RETURN;
@@ -2307,7 +2314,16 @@ TYPE
 		END EmitDiv;
 
 		PROCEDURE EmitMod(CONST irInstruction: IntermediateCode.Instruction);
-		BEGIN HALT(100) (* handled by a runtime call *)
+		VAR
+			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
+		BEGIN
+			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
+				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, value-1);
+				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.and, irInstruction.op1, irInstruction.op2, op3);
+				EmitAnd(inst);
+				RETURN;
+			END;
+			HALT(100) (* handled by a runtime call *)
 		END EmitMod;
 
 		PROCEDURE EmitAbs(VAR irInstruction: IntermediateCode.Instruction);

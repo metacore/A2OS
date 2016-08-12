@@ -402,7 +402,9 @@ TYPE
 				IF instr.op1.type.sizeInBits = IntermediateCode.Bits64 THEN
 					CASE instr.opcode OF
 					IntermediateCode.div: procedureName := "DivH";  RETURN FALSE
-					| IntermediateCode.mod: procedureName := "ModH"; RETURN FALSE
+					| IntermediateCode.mod: 
+						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE END;
+						procedureName := "ModH"; RETURN FALSE
 					| IntermediateCode.abs: procedureName := "AbsH"; RETURN FALSE;
 					| IntermediateCode.shl :
 						IF instr.op1.type.form = IntermediateCode.SignedInteger THEN
@@ -425,7 +427,9 @@ TYPE
 					IntermediateCode.div:	
 						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE 
 						ELSE procedureName := "DivL"; RETURN FALSE END;
-					| IntermediateCode.mod: procedureName := "ModL"; RETURN FALSE
+					| IntermediateCode.mod: 
+						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE END;
+						procedureName := "ModL"; RETURN FALSE
 					| IntermediateCode.mul:
 						IF (Global.NoMulCapability IN backend.capabilities) THEN  (*mul forbidden*)
 							IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE 
@@ -684,10 +688,7 @@ TYPE
 					EmitAdd(instruction)
 				END
 			|IntermediateCode.and:
-				EmitAnd(instruction,Low);
-				IF IsComplex(instruction.op1) THEN
-					EmitAnd(instruction,High);
-				END;
+				EmitAnd(instruction);
 			|IntermediateCode.or:
 				EmitOr(instruction,Low);
 				IF IsComplex(instruction.op1) THEN
@@ -1513,18 +1514,35 @@ TYPE
 		END EmitDiv;
 
 		(* undefined for float and huegint, huegint version as library *)
-		PROCEDURE EmitMod(CONST instr: IntermediateCode.Instruction);
+		PROCEDURE EmitMod(CONST instruction: IntermediateCode.Instruction);
+		VAR
+			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
 		BEGIN
+			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
+				IntermediateCode.InitImmediate(op3, instruction.op3.type, value-1);
+				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.and, instruction.op1, instruction.op2, op3);
+				EmitAnd(inst);
+				RETURN;
+			END;
 			HALT(100); (*! mod is not supported by hardware, must be runtime call -- cf. method Supported *)
 		END EmitMod;
 
-		PROCEDURE EmitAnd(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitAndPart(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
 		VAR left, right, dest: Operand; negate: BOOLEAN;
 		BEGIN
 			PrepareOp3(instruction,part,FALSE,negate,dest,left,right);
 			Emit2(opAND,left,right);
 			FinishOp(instruction.op1, part,dest, left)
+		END EmitAndPart;
+
+		PROCEDURE EmitAnd(VAR instruction: IntermediateCode.Instruction);
+		BEGIN
+				EmitAndPart(instruction,Low);
+				IF IsComplex(instruction.op1) THEN
+					EmitAndPart(instruction,High);
+				END;
 		END EmitAnd;
+
 
 		PROCEDURE EmitOr(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
 		VAR left, right, dest: Operand; negate: BOOLEAN;

@@ -13557,7 +13557,7 @@ TYPE
 		END;
 	END IsIntegerConstant;
 
-	PROCEDURE PowerOf2(val: HUGEINT;  VAR exp: LONGINT): BOOLEAN;
+	PROCEDURE PowerOf2*(val: HUGEINT;  VAR exp: LONGINT): BOOLEAN;
 	BEGIN
 		IF val <= 0 THEN RETURN FALSE END;
 		exp := 0;

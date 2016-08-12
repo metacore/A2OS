@@ -62,11 +62,15 @@ TYPE
 		BEGIN
 			IF (Token() = Scanner.ExclamationMark) THEN
 				statement := Cmd();
-				statements.AddStatement(statement);
+				IF statement # NIL THEN 
+					statements.AddStatement(statement);
+				END;
 				RETURN TRUE
 			ELSIF (Token() = Scanner.Questionmark) THEN
 				statement := Print();
-				statements.AddStatement(statement);
+				IF statement # NIL THEN 
+					statements.AddStatement(statement);
+				END;
 				RETURN TRUE
 			ELSE
 				RETURN Statement^(statements, outer);

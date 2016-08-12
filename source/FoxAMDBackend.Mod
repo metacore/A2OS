@@ -2118,7 +2118,16 @@ TYPE
 
 		PROCEDURE EmitMul(CONST instruction: IntermediateCode.Instruction);
 		VAR op1,op2,op3,temp: Assembler.Operand; ra,rd: Ticket;
+			value: HUGEINT; exp: LONGINT; iop3: IntermediateCode.Operand;
+			inst: IntermediateCode.Instruction;
 		BEGIN
+			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
+				IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
+				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
+				EmitShift(inst);
+				RETURN;
+			END;
+
 			ASSERT(~IsComplex(instruction.op1));
 			ASSERT(instruction.op1.type.form IN IntermediateCode.Integer);
 			IF (instruction.op1.type.sizeInBits = IntermediateCode.Bits8) THEN
@@ -2198,7 +2207,19 @@ TYPE
 			dividend,quotient,remainder,imm,target,memop: Assembler.Operand;
 			op1,op2,op3: Assembler.Operand; ra,rd: Ticket;
 			size: LONGINT;
+			value: HUGEINT; exp: LONGINT; iop3: IntermediateCode.Operand;
+			inst: IntermediateCode.Instruction;
+
 		BEGIN
+			IF instruction.opcode = IntermediateCode.div THEN
+				IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
+					IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
+					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
+					EmitShift(inst);
+					RETURN;
+				END;
+			END;
+
 			(*
 			In general it must obviously hold that
 				a = (a div b) * b + a mod b and

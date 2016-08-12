@@ -2063,8 +2063,8 @@ TYPE
 
 		PROCEDURE EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; opcode: LONGINT);
 		BEGIN
-				EmitArithmetic3Part(instruction,Low,InstructionSet.opXOR);
-				IF IsComplex(instruction.op1) THEN EmitArithmetic3Part(instruction, High, InstructionSet.opXOR) END;
+				EmitArithmetic3Part(instruction,Low,opcode);
+				IF IsComplex(instruction.op1) THEN EmitArithmetic3Part(instruction, High, opcode) END;
 		END EmitArithmetic3;
 
 		PROCEDURE EmitArithmetic3XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT);

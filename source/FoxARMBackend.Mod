@@ -650,7 +650,7 @@ TYPE
 				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 
 							OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1)
 							OR backend.useFPU64 & IsNonComplexInteger(irInstruction.op1);
-				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
+				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
 
 			| IntermediateCode.conv:
 				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH: REAL/LONGREAL --> HUGEINT*)
@@ -663,7 +663,7 @@ TYPE
 									OR backend.useFPU64;
 				END;
 			| IntermediateCode.mod:
-				result := IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp)
+				result := IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
 				
 			| IntermediateCode.rol, IntermediateCode.ror:
 				result := ~IsComplex(irInstruction.op1)
@@ -2200,7 +2200,7 @@ TYPE
 		VAR
 			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction; value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
 		BEGIN
-			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp) THEN
+			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, exp);
 				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, irInstruction.op1, irInstruction.op2, op3);
 				EmitShiftOrRotation(inst);
@@ -2252,7 +2252,7 @@ TYPE
 			value: HUGEINT; exp: LONGINT; op3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
-			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & PowerOf2(value,exp) THEN
+			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, exp);
 				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, irInstruction.op1, irInstruction.op2, op3);
 				EmitShiftOrRotation(inst);
@@ -3772,17 +3772,6 @@ VAR
 	PROCEDURE Halt(CONST message: ARRAY OF CHAR);
 	BEGIN HALT(100)
 	END Halt;
-
-	PROCEDURE PowerOf2(val: HUGEINT;  VAR exp: LONGINT): BOOLEAN;
-	BEGIN
-		IF val <= 0 THEN RETURN FALSE END;
-		exp := 0;
-		WHILE ~ODD(val) DO
-			val := val DIV 2;
-			INC(exp)
-		END;
-		RETURN val = 1
-	END PowerOf2;
 
 	(** get the ARM code section that corresponds to an intermediate code section **)
 	PROCEDURE ResolvedSection(irSection: IntermediateCode.Section): BinaryCode.Section;

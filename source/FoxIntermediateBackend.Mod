@@ -4256,6 +4256,20 @@ TYPE
 				RETURN IntermediateCode.Immediate(addressType,size);
 			END;
 		END ArrayLength;
+		
+		PROCEDURE CopyInt(VAR res: IntermediateCode.Operand; x: IntermediateCode.Operand);
+		BEGIN
+			IF IsImmediate(x) THEN
+				IntermediateCode.InitImmediate(res,x.type,x.intValue);
+			ELSE
+				IF ~ReusableRegister(res) THEN
+					IntermediateCode.InitRegister(res,x.type,IntermediateCode.GeneralPurposeRegister,AcquireRegister(x.type,IntermediateCode.GeneralPurposeRegister));
+				ELSE
+					UseIntermediateOperand(res);
+				END;
+				Emit(Mov(position,res,x))
+			END;
+		END CopyInt;
 
 		PROCEDURE AddInt(VAR res: IntermediateCode.Operand; x,y: IntermediateCode.Operand);
 		BEGIN
@@ -7860,7 +7874,7 @@ TYPE
 						ReleaseIntermediateOperand(pointer);
 						ReleaseOperand(l);
 						IF needsTrace THEN ModifyAssignments(false) END;
-					ELSE
+					ELSE (* not cooperative backend *)
 						temporaryVariable := GetTemporaryVariable(type, FALSE);
 						IF temporaryVariable # NIL THEN
 							Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
@@ -7957,7 +7971,7 @@ TYPE
 					type := type(SyntaxTree.PointerType).pointerBase.resolved;
 
 					dim := 0;
-
+					IntermediateCode.InitOperand(reg);
 					IF p1 # NIL THEN
 						FOR i := firstPar TO x.parameters.Length()-1 DO
 							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
@@ -7969,9 +7983,9 @@ TYPE
 							END;
 							Emit(Push(position,r.op));
 							IF i=1 THEN
-								ReuseCopy(reg,r.op);
+								CopyInt(reg,r.op);
 							ELSE
-								Emit(Mul(position,reg,reg,r.op)); (*! optimize the multiplication of immediate operands *)
+								MulInt(reg, reg, r.op);
 							END;
 							ReleaseOperand(r);
 							INC(dim);
@@ -8079,7 +8093,7 @@ TYPE
 									type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 								END;
 								tmp := IntermediateCode.Immediate(reg.type,staticLength);
-								Emit(Mul(position,reg,reg,tmp));
+								MulInt(reg,reg,tmp);
 							END;
 							Designate(p0,l);
 							IF openDim > 0 THEN
@@ -8107,11 +8121,17 @@ TYPE
 						ELSE
 							size := ToMemoryUnits(system,system.SizeOf(type));
 							IF (size # 1) THEN
+								MulInt(reg, reg, IntermediateCode.Immediate(addressType,size)); 
+								(*
 								Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+								*)
 							END;
 							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrayDimTable * system.addressSize+ system.addressSize+  system.addressSize * 2 * (openDim DIV 2)));
 							(* DIV 2 term for some strange alignment, don't understand it at the moment - copied from PCC *)
+							AddInt(reg, reg, tmp);
+							(*
 							Emit(Add(position,reg,reg,tmp));
+							*)
 							Designate(p0,l);
 							IF openDim >0 THEN
 								Emit(Push(position,l.op)); (* address for use after syscall *)
@@ -13952,6 +13972,7 @@ TYPE
 	VAR instruction: IntermediateCode.Instruction;
 	BEGIN
 		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.mul,dest,left,right);
+		ASSERT(~IsImmediate(instruction.op1));
 		RETURN instruction
 	END Mul;
 

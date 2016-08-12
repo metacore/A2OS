@@ -3408,11 +3408,6 @@ TYPE
 					InitOperand(result,ModeValue);
 					Reuse2a(result.op,left.op,right.op,dest);
 					Emit(And(position,result.op,left.op,right.op));
-				ELSIF (x.type.resolved IS SyntaxTree.IntegerType) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
-					InitOperand(result,ModeValue);
-					Reuse1a(result.op,left.op,dest);
-					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system, system.longintType),exp);
-					Emit(Shl(position,result.op,left.op,right.op));
 				ELSIF leftType IS SyntaxTree.ComplexType THEN
 					InitOperand(result, ModeValue);
 					componentType := left.op.type;
@@ -3442,48 +3437,34 @@ TYPE
 			|Scanner.Div:
 				Evaluate(x.left,left);
 				Evaluate(x.right,right);
-				IF ((x.type.resolved IS SyntaxTree.IntegerType) OR (x.type.resolved IS SyntaxTree.AddressType)) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
-					InitOperand(result,ModeValue);
-					Reuse1a(result.op,left.op,dest);
-					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system, system.longintType),exp);
-					Emit(Shr(position,result.op,left.op,right.op));
-				ELSE
-					IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
-						IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
-						IF ~isUnchecked THEN
-							exit := NewLabel();
-							BrltL(exit,zero,right.op);
-							EmitTrap(position,NegativeDivisorTrap);
-							SetLabel(exit);
-						END;
+				IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+					IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
+					IF ~isUnchecked THEN
+						exit := NewLabel();
+						BrltL(exit,zero,right.op);
+						EmitTrap(position,NegativeDivisorTrap);
+						SetLabel(exit);
 					END;
-					InitOperand(result,ModeValue);
-					Reuse2a(result.op,left.op,right.op,dest);
-					Emit(Div(position,result.op,left.op,right.op));
 				END;
+				InitOperand(result,ModeValue);
+				Reuse2a(result.op,left.op,right.op,dest);
+				Emit(Div(position,result.op,left.op,right.op));
 				ReleaseOperand(left); ReleaseOperand(right);
 			|Scanner.Mod:
 				Evaluate(x.left,left);
 				Evaluate(x.right,right);
-				IF ((x.type.resolved IS SyntaxTree.IntegerType) OR (x.type.resolved IS SyntaxTree.AddressType)) & IsIntegerConstant(x.right,value) & PowerOf2(value,exp) THEN
-					IntermediateCode.InitImmediate(right.op,IntermediateCode.GetType(system,x.type),value-1);
-					InitOperand(result,ModeValue);
-					Reuse1a(result.op,left.op,dest);
-					Emit(And(position,result.op,left.op,right.op));
-				ELSE
-					IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
-						IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
-						IF ~isUnchecked THEN
-							exit := NewLabel();
-							BrltL(exit,zero,right.op);
-							EmitTrap(position,NegativeDivisorTrap);
-							SetLabel(exit);
-						END;
+				IF (x.type.resolved IS SyntaxTree.IntegerType) & (x.right.resolved = NIL) THEN (* divisor negative check *)
+					IntermediateCode.InitImmediate(zero,IntermediateCode.GetType(system,rightType),0);
+					IF ~isUnchecked THEN
+						exit := NewLabel();
+						BrltL(exit,zero,right.op);
+						EmitTrap(position,NegativeDivisorTrap);
+						SetLabel(exit);
 					END;
-					InitOperand(result,ModeValue);
-					Reuse2a(result.op,left.op,right.op,dest);
-					Emit(Mod(position,result.op,left.op,right.op));
 				END;
+				InitOperand(result,ModeValue);
+				Reuse2a(result.op,left.op,right.op,dest);
+				Emit(Mod(position,result.op,left.op,right.op));
 				ReleaseOperand(left); ReleaseOperand(right);
 			|Scanner.Slash:
 				Evaluate(x.left,left);

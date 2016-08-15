@@ -645,6 +645,7 @@ TYPE
 				ELSE
 					result :=  ~IsFloat(irInstruction.op1) OR backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
 				END;
+				result := result OR (irInstruction.opcode = IntermediateCode.mul) & IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
 
 			| IntermediateCode.div:
 				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 

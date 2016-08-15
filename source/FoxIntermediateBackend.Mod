@@ -8244,9 +8244,9 @@ TYPE
 							END;
 							Emit(Push(position,r.op));
 							IF i=1 THEN
-								ReuseCopy(reg,r.op);
+								CopyInt(reg, r.op);
 							ELSE
-								Emit(Mul(position,reg,reg,r.op)); (*! optimize the multiplication of immediate operands *)
+								MulInt(reg, reg, r.op);
 							END;
 							ReleaseOperand(r);
 							INC(dim);
@@ -8266,7 +8266,7 @@ TYPE
 									t := t(SyntaxTree.MathArrayType).arrayBase.resolved;
 								END;
 								tmp := IntermediateCode.Immediate(reg.type,staticLength);
-								Emit(Mul(position,reg,reg,tmp));
+								MulInt(reg,reg,tmp);
 							END;
 							Designate(p0,l);
 							IF isTensor THEN
@@ -8295,7 +8295,7 @@ TYPE
 							Emit(Pop(position,adr));
 							GetMathArrayField(tmp,adr,MathPtrOffset);
 							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrDataArrayOffset))));
+							AddInt(reg, tmp, IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrDataArrayOffset)));
 							PutMathArrayField(adr,reg,MathAdrOffset);
 							ReleaseIntermediateOperand(tmp);
 							ReleaseIntermediateOperand(reg);
@@ -8306,10 +8306,10 @@ TYPE
 								size := ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,openDim)));
 							END;
 							IF (size # 1) THEN
-								Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+								MulInt(reg,reg,IntermediateCode.Immediate(addressType,size)); (*! optimize the multiplication of immediate operands *)
 							END;
 							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset));
-							Emit(Add(position,reg,reg,tmp));
+							AddInt(reg,reg,tmp);
 
 							Designate(p0,l);
 							IF isTensor THEN
@@ -8328,7 +8328,7 @@ TYPE
 							Emit(Pop(position,adr));
 							GetMathArrayField(tmp,adr,MathPtrOffset);
 							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset))));
+							AddInt(reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset)));
 							PutMathArrayField(adr,reg,MathAdrOffset);
 							ReleaseIntermediateOperand(tmp);
 							ReleaseIntermediateOperand(reg);
@@ -8358,9 +8358,9 @@ TYPE
 							PutMathArrayIncrement(adr,tmp,i);
 							IF i > 0 THEN
 								IF i=openDim-1 THEN
-									ReuseCopy(tmp,tmp);
+									CopyInt(tmp,tmp);
 								END;
-								Emit(Mul(position,tmp,tmp,reg));
+								MulInt(tmp,tmp,reg);
 							END;
 							DEC(i);
 						END;

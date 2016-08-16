@@ -161,8 +161,8 @@ BUILDS
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--objectFile=Generic --newObjectFile --mergeSections"
 		TARGET "AMD"
-		EXTENSION "Gox"
-		SYMBOLEXTENSION "Syx"
+		EXTENSION "GofG"
+		SYMBOLEXTENSION "SymG"
 		PATH "AOS:"
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -454,7 +454,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	NATIVE,WIN,UNIX { RelativeFileSystem.Mod } # file system relative to path
 
-	NATIVE,WINORIG,UNIX { Loader.Mod }
+	NATIVEORIG,WINORIG,UNIX { Loader.Mod }
 	NATIVEGEN, WINGEN, COOP {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }
 
 	# binding modules

@@ -175,7 +175,7 @@ TYPE
 		END FindRoots;
 
 		PROCEDURE FindPointers(bp, pc : ADDRESS; VAR diff0, diff1: SIZE);
-		VAR data: Modules.ProcTableEntry; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
+		(*VAR data: Modules.ProcTableEntry; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
 		BEGIN
 			diff0 := InitDiff; diff1 := InitDiff;
 			Modules.FindProc(pc, data, startIndex, success);
@@ -190,7 +190,7 @@ TYPE
 						END
 					END
 				END
-			END
+			END*)
 		END FindPointers;
 
 	END Process;
@@ -1003,7 +1003,7 @@ BEGIN
 		t.next.prev := t.prev; 
 		IF t.prev #NIL THEN t.prev.next := t.next END;
 	END;
-	t.next := NIL; t.prev := NIL
+	t.next := NIL; t.prev := NIL;
 	Machine.Release(Machine.Objects)
 END CancelTimeout;
 

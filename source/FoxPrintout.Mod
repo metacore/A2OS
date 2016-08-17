@@ -1243,9 +1243,6 @@ TYPE
 				(*
 				flags := type.flags;
 				*)
-				IF x.isInline THEN w.String(" - ") END;
-				IF x.isConstructor THEN w.String(" & ") END;
-				IF x.isFinalizer THEN w.String(" ~ ") END;
 
 				first := TRUE;
 				IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;
@@ -1255,6 +1252,10 @@ TYPE
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;
 				FlagEnd(first);
+
+				IF x.isInline THEN w.String(" - ") END;
+				IF x.isConstructor THEN w.String(" & ") END;
+				IF x.isFinalizer THEN w.String(" ~ ") END;
 
 				IF info THEN
 					BeginComment;

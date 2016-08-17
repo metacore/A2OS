@@ -2432,6 +2432,7 @@ TYPE
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.PortType) THEN
 					result := ConvertValue(position, expression, system.integerType);
+				
 				ELSE
 					Error(position,Diagnostics.Invalid,"integer value cannot be converted");
 					result := SyntaxTree.invalidExpression;
@@ -7457,7 +7458,7 @@ TYPE
 						IF CheckVariable(left) THEN
 							IF inPort.direction # SyntaxTree.InPort THEN
 								Error(left.position,Diagnostics.Invalid,"not an in-port")
-							ELSIF inPort.sizeInBits # system.SizeOf(right.type) THEN
+							ELSIF inPort.sizeInBits # system.SizeOf(left.type) THEN
 								Error(right.position,Diagnostics.Invalid,"incompatible to port type");
 							END;
 						END;
@@ -9099,7 +9100,7 @@ TYPE
 	**)
 	PROCEDURE Distance(system: Global.System; procedureType: SyntaxTree.ProcedureType; actualParameters: SyntaxTree.ExpressionList): LONGINT;
 	VAR result: LONGINT; formalParameter: SyntaxTree.Parameter; actualParameter: SyntaxTree.Expression;
-	distance: LONGINT; baseFormal,baseActual: SyntaxTree.Type; i: LONGINT;
+	distance: LONGINT; baseFormal,baseActual, to: SyntaxTree.Type; i: LONGINT;
 	BEGIN
 		IF actualParameters.Length() # (procedureType.numberParameters) THEN
 			result := Infinity
@@ -9110,6 +9111,10 @@ TYPE
 			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)
 			WHILE (formalParameter # NIL) & (result # Infinity) DO
 				actualParameter := actualParameters.GetExpression(i);
+				
+				
+
+
 				ASSERT(formalParameter.type # NIL);
 				IF (actualParameter.type = NIL) THEN distance := Infinity
 				ELSE
@@ -9118,12 +9123,13 @@ TYPE
 				IF distance = Infinity THEN
 					result := Infinity;
 				ELSE
+					to := formalParameter.type.resolved; 
 					IF (formalParameter.kind = SyntaxTree.VarParameter) & (distance # 0) THEN
-						IF (formalParameter.type.resolved IS SyntaxTree.MathArrayType) & (actualParameter.type.resolved IS SyntaxTree.MathArrayType) THEN
+						IF (to IS SyntaxTree.MathArrayType) & (actualParameter.type.resolved IS SyntaxTree.MathArrayType) THEN
 							(* already handled varpar *)
 							(*
 							baseActual := actualParameter.type.resolved(SyntaxTree.MathArrayType).arrayBase.resolved;
-							baseFormal := formalParameter.type.resolved(SyntaxTree.MathArrayType).arrayBase.resolved;
+							baseFormal := to(SyntaxTree.MathArrayType).arrayBase.resolved;
 							WHILE(baseActual IS SyntaxTree.MathArrayType) & (baseFormal IS SyntaxTree.MathArrayType) DO
 								baseActual := baseActual(SyntaxTree.MathArrayType).arrayBase.resolved;
 								baseFormal := baseFormal(SyntaxTree.MathArrayType).arrayBase.resolved;
@@ -9132,9 +9138,12 @@ TYPE
 								result := Infinity
 							END;
 							*)
-						ELSIF (formalParameter.type.resolved IS SyntaxTree.ArrayType) & (actualParameter.type.resolved IS SyntaxTree.ArrayType) THEN
+							INC(result, distance);
+						ELSIF (to IS SyntaxTree.ArrayType) & (to(SyntaxTree.ArrayType).length = NIL) & (to(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
+							INC(result, distance);
+						ELSIF (to IS SyntaxTree.ArrayType) & (actualParameter.type.resolved IS SyntaxTree.ArrayType) THEN
 							baseActual := actualParameter.type.resolved(SyntaxTree.ArrayType).arrayBase.resolved;
-							baseFormal := formalParameter.type.resolved(SyntaxTree.ArrayType).arrayBase.resolved;
+							baseFormal := to(SyntaxTree.ArrayType).arrayBase.resolved;
 							WHILE(baseActual IS SyntaxTree.ArrayType) & (baseFormal IS SyntaxTree.ArrayType) DO
 								baseActual := baseActual(SyntaxTree.ArrayType).arrayBase.resolved;
 								baseFormal := baseFormal(SyntaxTree.ArrayType).arrayBase.resolved;
@@ -9149,6 +9158,11 @@ TYPE
 						INC(result,distance);
 					END;
 				END;
+				(*
+				Printout.Info("actual=", actualParameter);
+				Printout.Info("formal=", formalParameter);
+				TRACE(result);
+				*)
 				formalParameter := formalParameter.nextParameter; INC(i);
 			END;
 		END;
@@ -9200,7 +9214,7 @@ TYPE
 		ELSIF (from IS SyntaxTree.NilType) OR (to IS SyntaxTree.NilType) THEN
 			i := Infinity;
 		ELSIF (to IS SyntaxTree.ArrayType) & (to(SyntaxTree.ArrayType).length = NIL) & (to(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
-			i := 1
+			i := 10;
 		ELSIF (from IS SyntaxTree.StringType) THEN
 			IF (to IS SyntaxTree.ArrayType) & (to(SyntaxTree.ArrayType).length = NIL) & (to(SyntaxTree.ArrayType).arrayBase.resolved  IS SyntaxTree.CharacterType) THEN  i := 1  END
 		ELSIF (from IS SyntaxTree.CharacterType) THEN

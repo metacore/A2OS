@@ -4603,7 +4603,16 @@ TYPE
 			oldArrayDestinationDimension := arrayDestinationDimension;
 
 			IF IsArrayOfSystemByte(parameter.type) THEN
-				Designate(expression,operand);
+				IF SemanticChecker.HasAddress(expression) THEN
+					Designate(expression,operand);
+				ELSE
+					Evaluate(expression, tmpOperand);
+					variable := GetTemporaryVariable(expression.type, FALSE);
+					Symbol(variable, operand);
+					MakeMemory(tmp,operand.op,operand.op.type,0);
+					Emit(Mov(position,tmp, tmpOperand.op));
+					ReleaseOperand(tmpOperand);
+				END;
 				tmp := GetArrayOfBytesSize(expression,operand.tag);
 				ReleaseIntermediateOperand(operand.tag);
 				operand.tag := tmp;

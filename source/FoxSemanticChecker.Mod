@@ -9941,13 +9941,13 @@ TYPE
 	END IsStaticMathArray;
 
 
-	PROCEDURE SymbolHasAddress(symbol: SyntaxTree.Symbol): BOOLEAN;
+	PROCEDURE SymbolHasAddress*(symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN
 		RETURN (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) OR (symbol IS SyntaxTree.Procedure)
 	END SymbolHasAddress;
 
 
-	PROCEDURE HasAddress(expression: SyntaxTree.Expression): BOOLEAN;
+	PROCEDURE HasAddress*(expression: SyntaxTree.Expression): BOOLEAN;
 	BEGIN
 		RETURN (expression # NIL) & (expression IS SyntaxTree.SymbolDesignator) & SymbolHasAddress(expression(SyntaxTree.SymbolDesignator).symbol) OR (expression IS SyntaxTree.ResultDesignator)
 			OR (expression IS SyntaxTree.IndexDesignator) OR (expression IS SyntaxTree.DereferenceDesignator)

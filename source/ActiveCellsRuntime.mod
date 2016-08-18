@@ -25,7 +25,7 @@ type
 		
 		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint);
 		end AddPort;
-
+		
 		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint);
 		end AddPortArray;
 
@@ -68,11 +68,17 @@ type
 		procedure Send*(p: any; value: longint);
 		end Send;
 		
+		procedure BulkSend*(p: any; const value: array of system.byte);
+		end BulkSend;
+		
 		procedure SendNonBlocking*(p: any; value: longint): boolean;
 		end SendNonBlocking;
 
 		procedure Receive*(p: any; var value: longint);
 		end Receive;
+		
+		procedure BulkReceive*(p: any; var value: array of system.byte);
+		end BulkReceive;
 		
 		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
 		end ReceiveNonBlocking;
@@ -232,6 +238,11 @@ type
 		GetContext().Send(p, value);
 	end Send;
 	
+	procedure BulkSend*(p: any; const value: array of system.byte);
+	begin
+		GetContext().BulkSend(p,value);
+	end BulkSend;
+	
 	procedure SendNonBlocking*(p: any; value: longint): boolean;
 	begin
 		return GetContext().SendNonBlocking(p, value);
@@ -241,6 +252,11 @@ type
 	begin
 		GetContext().Receive(p, value);
 	end Receive;
+	
+	procedure BulkReceive*(p: any; var value: array of system.byte);
+	begin
+		GetContext().BulkReceive(p,value);
+	end BulkReceive;
 	
 	procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
 	begin
@@ -398,6 +414,8 @@ type
 
 		copy(typeName, name);
 		Strings.Append(name, ".@Body");
+		trace(name);
+		trace(m.refs);
 		offset := Reflection.FindByName(m.refs, 0, name, true);
 		if offset # 0 then
 			if Reflection.GetChar(m.refs,offset) = Reflection.sfProcedure then
@@ -424,14 +442,47 @@ type
 		end;
 	end Execute;
 	
-(*	type LA = array of longint;
-	operator "<<"* (p: port out; const a: LA);
-	var i: longint;
+	type la= array of system.byte; 
+	operator "<<"* (p: port out; const a: la);
 	begin
-		for i := 0 to len(a)-1 do
-			p << a[i];
-		end;
+		if EnableTrace then trace('bulk send'); end;
+		BulkSend(system.val(any,p),a);
 	end "<<";
-*)
+	
+	
+	operator "<<"* (var  a: la; p: port in);
+	begin
+		if EnableTrace then trace('bulk rec');end;
+		BulkReceive(system.val(any,p),a);
+	end "<<";
+	
+	type li= longint;
+	operator "<<"* (p: port out; a: li);
+	begin
+		if EnableTrace then trace('normal send');end;
+		BulkSend(system.val(any,p),a);
+	end "<<";
+	
+	operator "<<"* (var  a: li; p: port in);
+	begin
+		if EnableTrace then trace('normal rec');end;
+		BulkReceive(system.val(any,p),a);
+	end "<<";
+
+	type r= real;
+	operator "<<"* (p: port out; a: r);
+	begin
+		if EnableTrace then trace('normal send');end;
+		BulkSend(system.val(any,p),a);
+	end "<<";
+	
+	operator "<<"* (var  a:r; p: port in);
+	begin
+		if EnableTrace then trace('normal rec');end;
+		BulkReceive(system.val(any,p),a);
+	end "<<";
+	
+	
+
 end ActiveCellsRuntime.
 

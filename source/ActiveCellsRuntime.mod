@@ -442,41 +442,42 @@ type
 		end;
 	end Execute;
 	
-	type la= array of system.byte; 
-	operator "<<"* (p: port out; const a: la);
+	type bytearray= array of system.byte; 
+	operator "<<"* (p: port out; const a: bytearray);
 	begin
 		if EnableTrace then trace('bulk send'); end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
 	
-	operator "<<"* (var  a: la; p: port in);
+	operator "<<"* (var  a: bytearray; p: port in);
 	begin
 		if EnableTrace then trace('bulk rec');end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 	
-	type li= longint;
-	operator "<<"* (p: port out; a: li);
+	(*The extra functions for longint and real were introduced because right now primitive types cannot be passed as byte arrays*)
+	type longintSpecial= longint; 
+	operator "<<"* (p: port out; a: longintSpecial);
 	begin
 		if EnableTrace then trace('normal send');end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
-	operator "<<"* (var  a: li; p: port in);
+	operator "<<"* (var  a: longintSpecial; p: port in); 
 	begin
 		if EnableTrace then trace('normal rec');end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 
-	type r= real;
-	operator "<<"* (p: port out; a: r);
+	type realSpecial= real;
+	operator "<<"* (p: port out; a: realSpecial);
 	begin
 		if EnableTrace then trace('normal send');end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
-	operator "<<"* (var  a:r; p: port in);
+	operator "<<"* (var  a:realSpecial; p: port in); 
 	begin
 		if EnableTrace then trace('normal rec');end;
 		BulkReceive(system.val(any,p),a);

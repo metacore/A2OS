@@ -7802,3 +7802,26 @@ positive: pass record size to array of system.byte with dynamic dize for varpars
 		TestI(a^);
 		TestI(c);
 	END Test.
+
+positive: pass variables and values to array of byte
+
+	MODULE Test;
+
+	IMPORT SYSTEM; 
+
+	PROCEDURE Pass(CONST a: ARRAY OF SYSTEM.BYTE; len: LONGINT);
+	VAR i: LONGINT;
+	BEGIN
+		ASSERT(LEN(a) = len);
+	END Pass;
+
+	PROCEDURE Test*;
+	VAR i: LONGINT;
+	BEGIN
+		Pass(3,1);
+		Pass(i,4);
+		Pass(3+i,4);
+		Pass(65000, 2); 
+	END Test;
+
+	END Test.

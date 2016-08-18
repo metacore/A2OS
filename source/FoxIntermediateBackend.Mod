@@ -4609,7 +4609,7 @@ TYPE
 					Evaluate(expression, tmpOperand);
 					variable := GetTemporaryVariable(expression.type, FALSE);
 					Symbol(variable, operand);
-					MakeMemory(tmp,operand.op,operand.op.type,0);
+					MakeMemory(tmp,operand.op,tmpOperand.op.type,0);
 					Emit(Mov(position,tmp, tmpOperand.op));
 					ReleaseOperand(tmpOperand);
 				END;

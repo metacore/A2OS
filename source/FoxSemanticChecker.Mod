@@ -2402,7 +2402,9 @@ TYPE
 		VAR result: SyntaxTree.Expression; int: HUGEINT; real, imaginary: LONGREAL; set: SET; char: CHAR; string: Scanner.StringType;
 		BEGIN
 			result := expression; type := type.resolved;
-			IF (expression IS SyntaxTree.IntegerValue)  THEN
+			IF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
+				(* skip, no conversion *)
+			ELSIF (expression IS SyntaxTree.IntegerValue)  THEN
 				int := expression(SyntaxTree.IntegerValue).hvalue;
 				IF (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.SizeType) THEN
 					int := Global.ConvertSigned(int,system.SizeOf(type));

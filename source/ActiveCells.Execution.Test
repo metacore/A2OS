@@ -1,0 +1,133 @@
+# Oberon language test and validation suite
+# options 	--mayTrap --prolog="Compiler.Compile -p=Win32G --cellsAreObjects TesterInput.txt" --command="SystemTools.Free Test Tester;ActiveCellsRunner.Execute Test.Cellnet" --logFile="ActiveCells.ExecutionTest.Log" --result="ActiveCells.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: tester module
+
+	MODULE Tester; 
+
+	IMPORT Kernel;
+	TYPE Tester* = OBJECT
+		VAR 
+			set: SET;
+			timeout: Kernel.Timer;
+		
+			PROCEDURE Await*(s: SET): BOOLEAN;
+			BEGIN{EXCLUSIVE}
+				AWAIT(s <= set) OR (31 IN set);
+				RETURN ~(31 IN set);
+			END Await;
+			
+			PROCEDURE Done*(i: LONGINT);
+			BEGIN{EXCLUSIVE}
+				INCL(set, i);
+			END Done;
+			
+			PROCEDURE Error;
+			BEGIN{EXCLUSIVE}
+				IF ~(31 IN set) THEN
+					INCL(set, 31); 
+					timeout.Wakeup;
+				END;
+			END Error;
+			
+			PROCEDURE Assert*(b: BOOLEAN);
+			BEGIN
+				IF ~b THEN Error END;
+			END Assert;
+			
+		BEGIN{ACTIVE}
+			NEW(timeout);
+			timeout.Sleep(500);
+			Error;
+		END Tester;
+		
+	END Tester.
+
+	MODULE Test;
+	TYPE
+		Cellnet = CELLNET
+		BEGIN
+		END Cellnet;
+		
+	END Test.
+
+negative: simple communication with error
+
+	MODULE Test;
+
+	IMPORT Tester;
+		
+	VAR tester: Tester.Tester; 
+
+	TYPE
+		Out = CELL (out: PORT OUT);
+		VAR data: LONGINT;
+		BEGIN
+			data := 122;
+			out << data;
+			tester.Done(1);
+		END Out;
+
+		In = CELL(in: PORT IN);
+		VAR data: LONGINT;
+		BEGIN
+			data << in;
+			tester.Assert(data = 123);
+			tester.Done(0);
+		END In;
+
+
+		Cellnet = CELLNET
+		VAR in: In; out: Out;
+		BEGIN
+			NEW(tester); 
+			NEW(in);
+			NEW(out);
+			CONNECT(out.out, in.in);
+			ASSERT(tester.Await({0,1}));
+			TRACE("done");
+		END Cellnet;
+		
+	END Test.
+
+positive: simple communication without error
+
+	MODULE Test;
+
+	IMPORT Tester;
+		
+	VAR tester: Tester.Tester; 
+
+	TYPE
+		Out = CELL (out: PORT OUT);
+		VAR data: LONGINT;
+		BEGIN
+			data := 123;
+			out << data;
+			tester.Done(1);
+		END Out;
+
+		In = CELL(in: PORT IN);
+		VAR data: LONGINT;
+		BEGIN
+			data << in;
+			tester.Assert(data = 123);
+			tester.Done(0);
+		END In;
+
+
+		Cellnet = CELLNET
+		VAR in: In; out: Out;
+		BEGIN
+			NEW(tester); 
+			NEW(in);
+			NEW(out);
+			CONNECT(out.out, in.in);
+			ASSERT(tester.Await({0,1}));
+			TRACE("done");
+		END Cellnet;
+		
+	END Test.
+

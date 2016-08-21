@@ -1,9 +1,7 @@
 Fox - Flexible Oberon Cross Compiler
 Build and Test Tool
-(c) Felix Friedrich (fof), ETH Zürich, 2008-2015
+(c) Felix Friedrich (fof), ETH Zürich, 2008-2016
 Conceptual design of the compiler has been worked out together with Florian Negele.
-
-compile the compiler
 
 
 Compiler.Compile --noInterfaceCheck
@@ -46,23 +44,24 @@ SystemTools.Timer elapsed ~ SystemTools.Ln ~
 ~
 
 compiler options:
-	-p 	--print			flag		printout source code (for debugging)
+	 	--print			flag		printout source code (for debugging)
 		--silent			flag		do not printout success messages
 	-c	--check			flag		semantically check module (auto-check if backend is installed)
 	-e	--traceError	flag		report a stack traceback for each error (for debugging)
 	-I	--interface		flag		printout interface (for debugging)
-	-i	--info			flag		report more detailed information in error messages and in printout (for debugging)
+	-i	--info				flag		report more detailed information in error messages and in printout (for debugging)
 	-b	--backend		string	specification of backend (such as, for example, -b=AMD or -b=Intermediate)
-	-f	--findPC		integer	specification of a pc to be located in code
+	-f	--findPC			integer	specification of a pc to be located in code
 		--symbolFile	string	specification of a symbol file format (example: --symbolFile=Binary)
 		--objectFile		string	specification of an object file format(example: --objectFile=Binary)
 		--activeCells	flag		use active cells language extension
 	-w	--warnings		flag		show warnings
 		--darwinHost	flag		use Darwin (MacOSX) calling convention for ext. C procedures
-		--hardware		string	hardware generation hint for ActiveCells
+		--hardware	string	hardware generation hint for ActiveCells
 	-d	--documentation	string	install documentation engine
 	-S	--sourcePath	string	specification of a source path
-	-D 	--destPath		string	specification of a destination path
+	-D --destPath		string	specification of a destination path
+	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32G, defined in FoxCompiler.Mod
 
 backend options (intermediate and AMD)
 		--trace			string	display trace information for sections (--trace=* : all sections)
@@ -90,19 +89,29 @@ AMD backend options
 		--traceable				flag			include instructions in procedure call in order to make a trace possible -- for debugging only
 		--useFPU				flag			use FPU for floating point computations (in contrast to SSE and SSE2)
 		
+ARM backend options
+		--useFPU32				flag			use FPU (32 bit) for floating point computations
+		--useFPU64				flag			use FPU (64 bit and 32 bit) for floating point computations
 
+ActiveCells options
+		--cellsAreObjects	flag	Cells are compiled to (active) Objects. For simulation/emulation and for code generation.
 
 
 
 run regression tests
 
+SystemTools.DoCommands
 	FoxTest.Compile	 -l=Test.Log  Oberon.Compilation.Test Oberon.Compilation.AMD64TestDiff ~
 	FoxTest.Compile	-l=Test.Log Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
+	FoxTest.Compile	-l=Test.Log ActiveCells.Execution.Test ActiveCells.Execution.TestDiff ~
 
+~
 
 open regression test files
 PET.Open Oberon.Compilation.Test ~
 PET.Open Oberon.Execution.Test ~
+
+
 PET.Open MathArrays.Compilation.Test ~
 PET.Open MathArrays.Execution.Test ~
 

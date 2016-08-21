@@ -90,6 +90,7 @@ type
 		proc: procedure {DELEGATE};
 		context: Context;
 		finished: boolean;
+		error-: boolean;
 		
 		procedure & Init*(context: Context);
 		begin
@@ -99,15 +100,26 @@ type
 		end Init;
 		
 		procedure Start*(p: procedure{DELEGATE}; doWait: boolean);
-		begin{EXCLUSIVE}
-			proc := p;
-			await(~doWait or finished);
+			begin{EXCLUSIVE}
+				proc := p;
+				await(~doWait or finished);
 		end Start;
 		
-	begin{ACTIVE,EXCLUSIVE}
-		await(proc # nil);
+	begin{ACTIVE}
+		begin{EXCLUSIVE}
+			await(proc # nil);
+		end;
 		proc;
-		finished := true;
+		begin{EXCLUSIVE}
+			finished := true
+		end;
+		finally
+		begin{EXCLUSIVE}
+			if ~finished then
+				error := true;
+				finished := true;
+			end;
+		end;
 	end Launcher;
 	
 	procedure GetContext(): Context;
@@ -437,6 +449,7 @@ type
 			end;
 			new(launcher, context); 
 			launcher.Start(starter.P, true);
+			assert(~launcher.error);
 		else 
 			Reflection.Report(Commands.GetContext().out, m.refs, offset);
 		end;

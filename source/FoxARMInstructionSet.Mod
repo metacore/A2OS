@@ -150,8 +150,10 @@ CONST
 	opUXTH* = 177;
 	opWFE* = 178;
 	opWFI* = 179;
+	
+	opMOVW* = 180;
 
-	NumberMnemonics*= 180;
+	NumberMnemonics*= 181;
 
 	MaxOperands* = 6;
 
@@ -213,6 +215,7 @@ CONST
 	encodingNEONDRegList = 50; encodingNEONSysReg = 51; encodingNEONSigned8bitImm = 52;
 	
 	encodingImm7to11 = 53;
+	encodingImm12a0imm4a16 = 54; (* immediate encoded 19...16, 11..0 *)
 
 	(* NEON instruction mode encoding. These modes are used in EnterNEONInstruction. Values do not matter for encoding.
 		The values mean (see the ARM manual):
@@ -687,7 +690,8 @@ CONST
 					RETURN (operand.mode = modeCoprocessor)
 				|encodingFields:
 					RETURN operand.mode = modeRegisterWithFields
-				|encodingImm16,encodingSignedImm24,encodingImm24,encodingRotImm8, encodingImm7to11:
+				|encodingImm16,encodingSignedImm24,encodingImm24,encodingRotImm8, encodingImm7to11,	encodingImm12a0imm4a16:
+
 					RETURN operand.mode = modeImmediate
 				|encodingOpcode20,encodingOpcode21,encodingOpcode5,encodingOpcode4:
 					RETURN (operand.mode = modeOpcode) OR (operand.mode = None) (* note: missing opcode operand means opcode = 0 *)
@@ -1153,6 +1157,12 @@ CONST
 						error := TRUE
 					END;
 					Unsigned(operand.immediate,0,23);
+				|encodingImm12a0imm4a16:
+					IF operand.mode # modeImmediate THEN
+						error := TRUE
+					END;
+					Unsigned(operand.immediate MOD ASH(1,12),0,11);
+					Unsigned(operand.immediate DIV ASH(1,12),16,19);
 				|encodingImm16:
 					IF operand.mode # modeImmediate THEN
 						error := TRUE
@@ -1706,6 +1716,7 @@ CONST
 				|encodingCoprocessor: InitCoprocessor(operand, Unsigned(8, 11));
 				|encodingFields: IF 22 IN codeSet THEN register := SPSR ELSE register := CPSR END; InitRegisterWithFields(operand, register,Bits(16, 19));
 				|encodingImm16: imm := Unsigned(0, 3)+Unsigned(8, 19)*16; InitImmediate(operand, imm);
+				|encodingImm12a0imm4a16: imm := Unsigned(0, 11)+Unsigned(16, 19)*ASH(1,12); InitImmediate(operand, imm);
 				|encodingSignedImm24: imm := Signed(0, 23); InitImmediate(operand, imm*4);
 				|encodingImm24: imm := Unsigned(0, 23); InitImmediate(operand, imm);
 				|encodingRotImm8: imm := Unsigned(0, 7); rot := Unsigned(8, 11); imm := RotateRight(imm, rot*2); InitImmediate(operand, imm);
@@ -2344,6 +2355,7 @@ CONST
 		EnterMnemonic(opMCRR, "MCRR");
 		EnterMnemonic(opMLA, "MLA");
 		EnterMnemonic(opMOV, "MOV");
+		EnterMnemonic(opMOVW, "MOVW");
 		EnterMnemonic(opMRC, "MRC");
 		EnterMnemonic(opMRC2, "MRC2");
 		EnterMnemonic(opMRRC, "MRRC");
@@ -2585,11 +2597,12 @@ CONST
 		EnterInstruction(opTST, {20, 24}, {20..24, 26, 27}, {flagCondition}, encodingR16, encodingAddressingMode1, None, None, None, None);
 		EnterInstruction(opUMLAL, {4, 7, 21, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
 		EnterInstruction(opUMULL, {4, 7, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
-
-		EnterNEONInstruction(opLDM, "XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
-		EnterNEONInstruction(opSTM, "XXXX 100X X100 XXXX XXXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
-		EnterNEONInstruction(opISB, "1111 0101 0111 1111 1111 0000 0110 1111", {}, None, None, None, None, None, None);
-		EnterNEONInstruction(opLSL, "XXXX 0001 1010 0000 XXXX XXXX X000 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
+		
+		EnterNEONInstruction(opMOVW,	"XXXX 0011 0000 XXXX XXXX XXXX XXXX XXXX",{flagCondition}, encodingR12, encodingImm12a0imm4a16, None, None, None, None);
+		EnterNEONInstruction(opLDM, 	"XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
+		EnterNEONInstruction(opSTM, 	"XXXX 100X X100 XXXX XXXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
+		EnterNEONInstruction(opISB, 		"1111 0101 0111 1111 1111 0000 0110 1111", {}, None, None, None, None, None, None);
+		EnterNEONInstruction(opLSL, 		"XXXX 0001 1010 0000 XXXX XXXX X000 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
 		EnterNEONInstruction(opLSL, "XXXX 0001 1010 0000 XXXX XXXX 0001 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingR8, None, None, None);
 		EnterNEONInstruction(opLSR, "XXXX 0001 1010 0000 XXXX XXXX X010 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
 		EnterNEONInstruction(opSEV, "XXXX 0011 0010 0000 1111 0000 0000 0100", {flagCondition}, None, None, None, None, None, None);

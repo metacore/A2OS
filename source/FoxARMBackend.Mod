@@ -10,6 +10,7 @@ IMPORT
 CONST
 	Trace = FALSE; (* general trace *)
 	DefaultRuntimeModuleName = "ARMRuntime";
+	SupportMovW = TRUE; (* movw is only available on ARM from V6/V7, not on older platforms *)
 
 	None = -1;
 
@@ -67,6 +68,7 @@ CONST
 	opMCR = InstructionSet.opMCR; opMCR2 = InstructionSet.opMCR2;
 	opMCRR = InstructionSet.opMCRR; opMLA = InstructionSet.opMLA;
 	opMOV = InstructionSet.opMOV; opMRC = InstructionSet.opMRC;
+	opMOVW = InstructionSet.opMOVW;
 	opMRC2 = InstructionSet.opMRC2; opMRRC = InstructionSet.opMRRC;
 	opMRS = InstructionSet.opMRS; opMSR = InstructionSet.opMSR;
 	opMUL = InstructionSet.opMUL; opMVN = InstructionSet.opMVN;
@@ -966,6 +968,11 @@ TYPE
 				result := 1;
 				IF doEmit THEN
 					Emit2(opMOV, targetRegister, InstructionSet.NewImmediate(value))
+				END
+			ELSIF SupportMovW & (value >=0) & (value <= ASH(1,16)) THEN
+				result := 1;
+				IF doEmit THEN
+					Emit2(opMOVW, targetRegister, InstructionSet.NewImmediate(value))
 				END
 			ELSE
 				valueAsSet := SYSTEM.VAL(SET, value);

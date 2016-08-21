@@ -7815,7 +7815,7 @@ positive: pass variables and values to array of byte
 		ASSERT(LEN(a) = len);
 	END Pass;
 
-	PROCEDURE Test*;
+	PROCEDURE Test;
 	VAR i: LONGINT;
 	BEGIN
 		Pass(3,1);
@@ -7823,5 +7823,51 @@ positive: pass variables and values to array of byte
 		Pass(3+i,4);
 		Pass(65000, 2); 
 	END Test;
-
+	
+	BEGIN
+		Test;
 	END Test.
+	
+positive: pass three-dimensional arrays A[x,y,z] with missing dimensions, e.g. A[x]
+	
+	MODULE Test;
+
+	IMPORT SYSTEM; 
+
+	PROCEDURE Pass(CONST a: ARRAY OF SYSTEM.BYTE; adr, len: ADDRESS);
+	VAR i: LONGINT;
+	BEGIN
+		ASSERT(ADDRESS OF a[0] = adr);
+		ASSERT(LEN(a) = len);
+	END Pass;
+
+	PROCEDURE Test;
+	TYPE
+		R= RECORD a,b,c: LONGINT END;
+		S= ARRAY 3 OF LONGINT;
+	VAR 
+		b: POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT;
+		c: POINTER TO ARRAY OF ARRAY OF ARRAY OF R;
+		d: POINTER TO ARRAY OF ARRAY OF ARRAY OF S;
+	BEGIN
+		NEW(b,7,8,9);
+		Pass(b^, ADDRESS OF b[0,0,0], LEN(b,0)*LEN(b,1)*LEN(b,2)*SIZEOF(LONGINT));
+		Pass(b[1], ADDRESS OF b[1,0,0], LEN(b,1)*LEN(b,2)*SIZEOF(LONGINT));
+		Pass(b[1,2], ADDRESS OF b[1,2,0], LEN(b,2)*SIZEOF(LONGINT));
+		Pass(b[1,2,3], ADDRESS OF b[1,2,3], SIZEOF(LONGINT));
+		NEW(c,7,8,9);
+		Pass(c^, ADDRESS OF c[0,0,0], LEN(c,0)*LEN(c,1)*LEN(c,2)*SIZEOF(R));
+		Pass(c[1], ADDRESS OF c[1,0,0], LEN(c,1)*LEN(c,2)*SIZEOF(R));
+		Pass(c[1,2], ADDRESS OF c[1,2,0], LEN(c,2)*SIZEOF(R));
+		Pass(c[1,2,3], ADDRESS OF c[1,2,3], SIZEOF(R));
+		NEW(d,7,8,9);
+		Pass(d^, ADDRESS OF d[0,0,0], LEN(d,0)*LEN(d,1)*LEN(d,2)*SIZEOF(S));
+		Pass(d[1], ADDRESS OF d[1,0,0], LEN(d,1)*LEN(d,2)*SIZEOF(S));
+		Pass(d[1,2], ADDRESS OF d[1,2,0], LEN(d,2)*SIZEOF(S));
+		Pass(d[1,2,3], ADDRESS OF d[1,2,3], SIZEOF(S));
+	END Test;
+
+	BEGIN
+		Test;
+	END Test.
+

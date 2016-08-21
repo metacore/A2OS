@@ -4347,7 +4347,7 @@ TYPE
 		END DivInt;
 
 		PROCEDURE IndexDesignator(x: SyntaxTree.IndexDesignator);
-		VAR length,res: IntermediateCode.Operand; type: SyntaxTree.Type; maxDim: LONGINT; array:Operand;
+		VAR length,res: IntermediateCode.Operand; type,ttype: SyntaxTree.Type; maxDim: LONGINT; array:Operand;
 			index: Operand; e: SyntaxTree.Expression;i: LONGINT; size: LONGINT; atype: SyntaxTree.ArrayType;
 		BEGIN
 			type := x.left.type.resolved;
@@ -4361,6 +4361,12 @@ TYPE
 
 			IntermediateCode.InitImmediate(res,addressType,0);
 			maxDim := x.parameters.Length()-1;
+			(*
+				computation rule:
+				a: ARRAY X,Y,Z OF Element with size S
+				a[i,j,k] -->
+				( ( ( ( i ) * Y  + j ) * Z) + k) * S 
+			*)
 			FOR i := 0 TO maxDim DO
 				e := x.parameters.GetExpression(i);
 				Evaluate(e,index);
@@ -4398,6 +4404,22 @@ TYPE
 				END;
 				ReleaseIntermediateOperand(length);
 			END;
+			
+			(* remaining open dimensions -- compute address *)
+			i := maxDim+1;
+			IF type IS SyntaxTree.ArrayType THEN
+				ttype := type(SyntaxTree.ArrayType).arrayBase.resolved;
+				WHILE (ttype IS SyntaxTree.ArrayType) & (ttype(SyntaxTree.ArrayType).form # SyntaxTree.Static) DO
+					length := ArrayLength(ttype,array.dimOffset+i-1,array.tag);
+					IF (length.mode # IntermediateCode.ModeImmediate) OR (length.intValue # 1) THEN
+						MulInt(res,res,length);
+					END;
+					ReleaseIntermediateOperand(length);
+					INC(i);
+					ttype := ttype(SyntaxTree.ArrayType).arrayBase.resolved;
+				END;
+			END;
+			
 			IF (type IS SyntaxTree.ArrayType) THEN
 				IF (type(SyntaxTree.ArrayType).form # SyntaxTree.Static) THEN
 					size := StaticSize(system, type);

@@ -9951,10 +9951,13 @@ TYPE
 
 	PROCEDURE HasAddress*(expression: SyntaxTree.Expression): BOOLEAN;
 	BEGIN
-		RETURN (expression # NIL) & (expression IS SyntaxTree.SymbolDesignator) & SymbolHasAddress(expression(SyntaxTree.SymbolDesignator).symbol) OR (expression IS SyntaxTree.ResultDesignator)
+		RETURN 
+			(expression # NIL) & (expression IS SyntaxTree.SymbolDesignator) & SymbolHasAddress(expression(SyntaxTree.SymbolDesignator).symbol) OR (expression IS SyntaxTree.ResultDesignator)
 			OR (expression IS SyntaxTree.IndexDesignator) OR (expression IS SyntaxTree.DereferenceDesignator)
 			OR (expression IS SyntaxTree.TypeGuardDesignator) OR (expression IS SyntaxTree.StringValue)
-			OR (expression IS SyntaxTree.StatementDesignator) & HasAddress(expression(SyntaxTree.StatementDesignator).result);
+			OR (expression IS SyntaxTree.StatementDesignator) & HasAddress(expression(SyntaxTree.StatementDesignator).result)
+			OR (expression IS SyntaxTree.BuiltinCallDesignator) & (expression(SyntaxTree.BuiltinCallDesignator).id = Global.systemVal) & HasAddress(expression(SyntaxTree.BuiltinCallDesignator).parameters.GetExpression(1))
+			;
 	END HasAddress;
 	
 	PROCEDURE IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN;

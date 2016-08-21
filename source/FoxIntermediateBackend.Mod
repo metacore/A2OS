@@ -4625,7 +4625,7 @@ TYPE
 			oldArrayDestinationDimension := arrayDestinationDimension;
 
 			IF IsArrayOfSystemByte(parameter.type) THEN
-				IF SemanticChecker.HasAddress(expression) THEN
+				IF SemanticChecker.HasAddress(expression) OR (callingConvention = SyntaxTree.WinAPICallingConvention) & (expression IS SyntaxTree.NilValue) THEN
 					Designate(expression,operand);
 				ELSE
 					Evaluate(expression, tmpOperand);

@@ -88,7 +88,7 @@ TYPE
 		PROCEDURE ^ TypeDeclaration(parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ ConstDeclaration(parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ DeclarationSequence(parentScope: SyntaxTree.Scope); 
-		PROCEDURE ^ ImportList(moduleScope: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ ImportList(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ Module*(): SyntaxTree.Module; 
 		PROCEDURE ^ NextModule*(): BOOLEAN; 
 	END Parser; 

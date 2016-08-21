@@ -1520,11 +1520,16 @@ TYPE
 		ownerCell-: CellType; 
 		bodyProcedure-: Procedure; 
 		constructor-: Procedure; 
+		firstImport-, lastImport-: Import; 
+		numberImports: LONGINT; 
 
 		PROCEDURE ^  & InitCellScope(outer: Scope); 
 		PROCEDURE ^ SetOwnerCell*(owner: CellType); 
 		PROCEDURE ^ SetBodyProcedure*(bodyProcedure: Procedure); 
 		PROCEDURE ^ SetConstructor*(p: Procedure); 
+		PROCEDURE ^ AddImport*(i: Import); 
+		PROCEDURE ^ FindImport*(identifier: Identifier): Import; 
+		PROCEDURE ^ GetImport*(index: LONGINT): Import; 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
 	END CellScope; 
 

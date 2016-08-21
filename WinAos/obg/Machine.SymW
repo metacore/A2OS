@@ -58,7 +58,11 @@ TYPE
 		adr*: ADDRESS; 
 		high*: ADDRESS; 
 	END; 
+
+	; 
 VAR 
+	LastAddress: RECORD 
+	END; 
 	MMXSupport*: BOOLEAN; 
 	SSESupport*: BOOLEAN; 
 	SSE2Support*: BOOLEAN; 

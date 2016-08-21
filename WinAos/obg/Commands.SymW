@@ -3,6 +3,7 @@ MODULE Commands;
 CONST 
 	Wait* = 0; 
 	InheritContext* = 1; 
+	Silent* = 2; 
 	Ok* = 0; 
 	CommandNotFound* = 3901; 
 	CommandError* = 3902; 
@@ -61,10 +62,12 @@ TYPE
 	END Runner; 
 VAR 
 	emptyString: ARRAY 1 OF CHAR; 
+	silentWriter: Streams.Writer; 
 	trace: BOOLEAN; 
 	defaultContext: Context; 
 
 	PROCEDURE ^ GetEmptyReader(): Streams.Reader; 
+	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
 	PROCEDURE ^ Split*(CONST cmdstr: ARRAY OF CHAR; VAR moduleName, procedureName: Modules.Name; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ GetContext*(): Context; 
 	PROCEDURE ^ Activate*(CONST cmd: ARRAY OF CHAR; context: Context; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 

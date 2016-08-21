@@ -21,6 +21,7 @@ TYPE
 		oberon07-: BOOLEAN; 
 		instructionWidth-: LONGINT; 
 		hasLinkRegister-: BOOLEAN; 
+		name-: ARRAY 32 OF CHAR; 
 
 		PROCEDURE ^  & InitBackend*; 
 		PROCEDURE ^ SetOberon07*; 
@@ -29,6 +30,7 @@ TYPE
 		PROCEDURE ^ SetInstructionWidth*(instructionWidth: LONGINT); 
 		PROCEDURE ^ ResetError*; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
+		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetSystem*(): Global.System; 
 		PROCEDURE ^ GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Registers; 
 		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; errorNumber, errorPosition: LONGINT; CONST err: ARRAY OF CHAR); 

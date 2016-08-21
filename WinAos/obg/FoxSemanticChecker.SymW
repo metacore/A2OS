@@ -54,6 +54,7 @@ TYPE
 		phase: LONGINT; 
 		system-: Global.System; 
 		symbolFileFormat-: Formats.SymbolFileFormat; 
+		backendName-: ARRAY 32 OF CHAR; 
 		resolvedType: SyntaxTree.Type; 
 		resolvedExpression: SyntaxTree.Expression; 
 		resolvedStatement: SyntaxTree.Statement; 
@@ -70,7 +71,7 @@ TYPE
 		cellsAreObjects: BOOLEAN; 
 		variableAccessed: BOOLEAN; 
 
-		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope); 
+		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: LONGINT; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(position: LONGINT; CONST msg, msg2: ARRAY OF CHAR); 
@@ -108,6 +109,8 @@ TYPE
 		PROCEDURE ^ FixProcedureType(procedureType: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ HasFlag(VAR modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT): BOOLEAN; 
 		PROCEDURE ^ HasValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HasStringValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT; VAR value: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SkipImplementation*(x: SyntaxTree.CellType): BOOLEAN; 
 		PROCEDURE ^ CheckModifiers(modifiers: SyntaxTree.Modifier; checkUse: BOOLEAN); 
 		PROCEDURE ^ VisitProcedureType*(procedureType: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
@@ -186,6 +189,7 @@ TYPE
 		PROCEDURE ^ CheckStringType(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckTypeDeclarationType(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CheckStringValue(x: SyntaxTree.Expression; VAR value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IsAddressValue(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ IsAddressExpression(x: SyntaxTree.Expression): BOOLEAN; 
@@ -247,7 +251,7 @@ TYPE
 		PROCEDURE ^ Register(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; allowDuplicate: BOOLEAN); 
 		PROCEDURE ^ Implementation(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ Implementations(x: SyntaxTree.Module); 
-		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN); 
 		PROCEDURE ^ CheckInterOperatorConformity(thisModuleScope, thatModuleScope: SyntaxTree.ModuleScope); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 	END Checker; 
@@ -352,7 +356,7 @@ TYPE
 	PROCEDURE ^ FindSuperProcedure*(scope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure): SyntaxTree.Procedure; 
 	PROCEDURE ^ GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure; 
 	PROCEDURE ^ EnterCase(VAR root: SyntaxTree.CaseConstant; min, max: LONGINT): BOOLEAN; 
-	PROCEDURE ^ NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope): Checker; 
+	PROCEDURE ^ NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker; 
 	PROCEDURE ^ NewWarnings*(diagnostics: Diagnostics.Diagnostics): Warnings; 
 	PROCEDURE ^ IsRangeType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsMathArrayType(type: SyntaxTree.Type): BOOLEAN; 
@@ -363,8 +367,8 @@ TYPE
 	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsTensor(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticMathArray*(type: SyntaxTree.Type; VAR length: LONGINT; VAR baseType: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ SymbolHasAddress(symbol: SyntaxTree.Symbol): BOOLEAN; 
-	PROCEDURE ^ HasAddress(expression: SyntaxTree.Expression): BOOLEAN; 
+	PROCEDURE ^ SymbolHasAddress*(symbol: SyntaxTree.Symbol): BOOLEAN; 
+	PROCEDURE ^ HasAddress*(expression: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsStaticProcedure*(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InMethodTable*(procedure: SyntaxTree.Procedure): BOOLEAN; 

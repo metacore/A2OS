@@ -40,6 +40,7 @@ CONST
 	sfTypeBYTE* = 1CX; 
 	sfTypeADDRESS* = 1DX; 
 	sfTypeSIZE* = 1EX; 
+	sfTypeIndirect* = 1FX; 
 	sfTypeRecord* = 20X; 
 	sfTypePointerToRecord* = 21X; 
 	sfTypePointerToArray* = 22X; 

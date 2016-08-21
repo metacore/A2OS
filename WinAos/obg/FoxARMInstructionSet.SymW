@@ -207,7 +207,8 @@ CONST
 	opUXTH* = 177; 
 	opWFE* = 178; 
 	opWFI* = 179; 
-	NumberMnemonics* = 180; 
+	opMOVW* = 180; 
+	NumberMnemonics* = 181; 
 	MaxOperands* = 6; 
 	flagB* = 0; 
 	flagBT* = 1; 
@@ -291,6 +292,7 @@ CONST
 	encodingNEONSysReg = 51; 
 	encodingNEONSigned8bitImm = 52; 
 	encodingImm7to11 = 53; 
+	encodingImm12a0imm4a16 = 54; 
 	modeImmediate* = 0; 
 	modeRegister* = 1; 
 	modeMemory* = 2; 

@@ -3,6 +3,7 @@ MODULE FoxARMBackend;
 CONST 
 	Trace = FALSE; 
 	DefaultRuntimeModuleName = \"ARMRuntime"\; 
+	SupportMovW = TRUE; 
 	None =  -1; 
 	Low = 0; 
 	High = 1; 
@@ -106,6 +107,7 @@ CONST
 	opMLA = InstructionSet.opMLA; 
 	opMOV = InstructionSet.opMOV; 
 	opMRC = InstructionSet.opMRC; 
+	opMOVW = InstructionSet.opMOVW; 
 	opMRC2 = InstructionSet.opMRC2; 
 	opMRRC = InstructionSet.opMRRC; 
 	opMRS = InstructionSet.opMRS; 
@@ -306,6 +308,7 @@ TYPE
 		PROCEDURE ^ IsDoublePrecisionFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ IsNonComplexInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ PartType(CONST type: IntermediateCode.Type; part: LONGINT): IntermediateCode.Type; 
 		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type); 
@@ -339,7 +342,8 @@ TYPE
 		PROCEDURE ^ EmitExit(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitMov(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
-		PROCEDURE ^ EmitAnd(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitAnd(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitXor(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitAddOrSub(VAR irInstruction: IntermediateCode.Instruction); 
@@ -353,6 +357,8 @@ TYPE
 		PROCEDURE ^ EmitAsm(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitSpecial(VAR instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitBr(VAR irInstruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ RoundDown(VAR fpstatus: Operand); 
+		PROCEDURE ^ ResetRounding(VAR fpstatus: Operand); 
 		PROCEDURE ^ EmitConv(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ ResultRegister(part: LONGINT; type: IntermediateCode.Type): InstructionSet.Operand; 
 		PROCEDURE ^ EmitReturn(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
@@ -397,7 +403,6 @@ VAR
 
 	PROCEDURE ^ Assert(condition: BOOLEAN; CONST message: ARRAY OF CHAR); 
 	PROCEDURE ^ Halt(CONST message: ARRAY OF CHAR); 
-	PROCEDURE ^ PowerOf2(val: HUGEINT; VAR exp: LONGINT): BOOLEAN; 
 	PROCEDURE ^ ResolvedSection(irSection: IntermediateCode.Section): BinaryCode.Section; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Get*(): Backend.Backend; 

@@ -167,9 +167,10 @@ TYPE
 		PROCEDURE ^ EmitFSub(VAR instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitMul(VAR instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitFMul(VAR instruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitDiv(CONST instr: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitMod(CONST instr: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitAnd(VAR instruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitDiv(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitMod(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitAndPart(VAR instruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitAnd(VAR instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitOr(VAR instruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitXor(VAR instruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ GetTemporaryRegister(VAR op: Operand); 

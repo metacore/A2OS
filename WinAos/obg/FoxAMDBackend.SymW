@@ -175,7 +175,8 @@ TYPE
 		PROCEDURE ^ PrepareOp3(CONST instruction: IntermediateCode.Instruction; part: LONGINT; VAR left, right: Assembler.Operand; VAR ticket: Ticket); 
 		PROCEDURE ^ PrepareOp2(CONST instruction: IntermediateCode.Instruction; part: LONGINT; VAR left: Assembler.Operand; VAR ticket: Ticket); 
 		PROCEDURE ^ FinishOp(CONST vop: IntermediateCode.Operand; part: LONGINT; left: Assembler.Operand; ticket: Ticket); 
-		PROCEDURE ^ EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT); 
+		PROCEDURE ^ EmitArithmetic3Part(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT); 
+		PROCEDURE ^ EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; opcode: LONGINT); 
 		PROCEDURE ^ EmitArithmetic3XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT); 
 		PROCEDURE ^ EmitArithmetic2(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT); 
 		PROCEDURE ^ EmitArithmetic2XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT); 

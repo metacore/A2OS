@@ -381,6 +381,7 @@ TYPE
 		PROCEDURE ^ DimensionCheck(base, dim: IntermediateCode.Operand; op: ConditionalBranch); 
 		PROCEDURE ^ MathIndexDesignator(x: SyntaxTree.IndexDesignator); 
 		PROCEDURE ^ ArrayLength(type: SyntaxTree.Type; dim: LONGINT; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
+		PROCEDURE ^ CopyInt(VAR res: IntermediateCode.Operand; x: IntermediateCode.Operand); 
 		PROCEDURE ^ AddInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
 		PROCEDURE ^ MulInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
 		PROCEDURE ^ DivInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
@@ -632,7 +633,7 @@ VAR
 	PROCEDURE ^ HasVariableParameters(scope: SyntaxTree.ProcedureScope): BOOLEAN; 
 	PROCEDURE ^ HasExplicitTraceMethod(recordType: SyntaxTree.RecordType): BOOLEAN; 
 	PROCEDURE ^ IsIntegerConstant(expression: SyntaxTree.Expression; VAR val: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ PowerOf2(val: HUGEINT; VAR exp: LONGINT): BOOLEAN; 
+	PROCEDURE ^ PowerOf2*(val: HUGEINT; VAR exp: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure; 
 	PROCEDURE ^ IsIntegerImmediate(CONST op: IntermediateCode.Operand; VAR value: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsStrictlyPointerToRecord(type: SyntaxTree.Type): BOOLEAN; 

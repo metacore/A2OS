@@ -16,7 +16,7 @@ CONST
 	DefaultCurrentLineColor = 0; 
 	DefaultCompilerName = \"Fox"\; 
 	DefaultCompilerCaption = \"Compile"\; 
-	DefaultCompilerOptions = \"-p=Win32G --warnings"\; 
+	DefaultCompilerOptions = \"-b=AMD --warnings"\; 
 	DefaultCompilerLoadModule = \"Compiler"\; 
 	DefaultCompilerFileExtension = \"MOD"\; 
 	DefaultCompilerFindPC = TRUE; 

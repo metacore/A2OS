@@ -4,6 +4,7 @@ CONST
 	Ok = 0; 
 	LinkerError = 3400; 
 	FileNotFound = 3401; 
+	CommandTrapped* = 3904; 
 	SupportOldObjectFileFormat = FALSE; 
 	TraceLoading = FALSE; 
 TYPE 

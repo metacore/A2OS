@@ -1,21 +1,24 @@
 (* Minimal ELF header for self contained linux Oberon programs *)
 (* Copyright (c) Felix Friedrich, ETH Zürich *)
 
-MODULE ElfHeader; 
+MODULE Glue; 
 
 IMPORT SYSTEM, Trace;
 
-
+CONST 
+	base = 08048000H;
+	debug* = {0};
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
-
+	
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS): ADDRESS;
 	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
 	exit-		: PROCEDURE {C} (status: LONGINT);
 
+
+
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
-	CONST base = 08048000H;
 	CODE
 		; ELF header
 		DB 07FH, 'ELF', 1, 1, 1, 0
@@ -123,6 +126,12 @@ VAR
 		entry:
 	END EntryPoint;
 
+	
+	PROCEDURE {FINAL} ExitPoint;
+	BEGIN
+		Trace.String("exiting"); Trace.Ln;
+		exit(0);
+	END ExitPoint;
 
 	PROCEDURE {NOPAF} putc*(file: ADDRESS; c: CHAR);
 	CODE
@@ -163,23 +172,35 @@ VAR
 		ASSERT(dlclose # NIL); 
 		Dlsym(0,"exit", ADDRESS OF exit);
 		ASSERT(exit # NIL);
+		
+		TRACE(ADDRESS OF last);
+		TRACE(base);
+		TRACE(ADDRESS OF last - base);
 	END Init;
 	
-	PROCEDURE {FINAL} ExitPoint;
-	BEGIN
-		exit(0);
-	END ExitPoint;
+
 
 BEGIN
 	Init;
-	Trace.String("ElfHeader loaded"); Trace.Ln;
-END ElfHeader.
+	Trace.String("Glue loaded"); Trace.Ln;
+END Glue.
+SystemTools.FreeDownTo FoxIntermediateBackend ~
 
 SystemTools.DoCommands
-	Compiler.Compile -b=AMD --objectFile=Generic --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU
-		Runtime.Mod Trace.Mod Linux.I386.ElfHeader.Mod  ~ 
+	Compiler.Compile -b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU
+		Runtime.Mod Trace.Mod Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod Unix.Objects.Mod  ~ 
 
 	StaticLinker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
-		Runtime Trace ElfHeader
+		Runtime Trace Glue Unix Machine Heaps Modules ~
 		~ 
 
+	FSTools.CloseFiles simple_elf ~
+
+#	Release.Build --path="../obg/"  WinAosNewObjectFile ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H --path="../obg/" 
+
+Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog 
+Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics 
+BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+
+FoxGenericObjectFile.Show Machine.GofU ~

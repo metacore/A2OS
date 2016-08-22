@@ -83,12 +83,55 @@ CONST
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
 	SCHED_OTHER = 0;
-	SIGUSR1 = 10;
-	SIGUSR2 = 12;
 
 	T_SIGRESUME = SIGUSR1;
 	T_SIGSUSPEND = SIGUSR2; 
-		
+
+	SIGHUP = 1;
+	SIGINT = 2;
+	SIGQUIT=3;
+	SIGILL = 4;
+	SIGTRAP = 5;
+	SIGABRT = 6;
+	SIGIOT = 6;
+	SIGBUS = 7;
+	SIGFPE = 8;
+	SIGKILL = 9;
+	SIGUSR1 = 10;
+	SIGSEGV = 11;
+	SIGUSR2 = 12;
+	SIGPIPE = 13;
+	SIGALRM = 14;
+	SIGTERM = 15;
+	SIGSTKFLT = 16;
+	SIGCHLD = 17;
+	SIGCONT = 18;
+	SIGSTOP = 19;
+	SIGTSTP = 20;
+	SIGTTIN = 21;
+	SIGTTOU = 22;
+	SIGURG = 23;
+	SIGXCPU = 24;
+	SIGXFSZ = 25;
+	SIGVTALRM = 26;
+	SIGPROF = 27;
+	SIGWINCH=28;
+	SIGIO=29;
+	SIGPOLL = SIGIO;
+	SIGPWR = 30;
+	SIGSYS = 31;
+	SIGUNUSED =31;
+	
+	SIG_BLOCK = 0;
+	SIG_UNBLOCK=1;
+	SIG_SETMASK=2;
+	
+  PTHREAD_CANCEL_ENABLE 	= 0;
+  PTHREAD_CANCEL_DISABLE	= 1;
+
+  PTHREAD_CANCEL_ASYNCHRONOUS	=0;
+  PTHREAD_CANCEL_DEFERRED	= 1;
+
 	(*--------------------------- Threads -------------------------------*)
 
 TYPE
@@ -101,6 +144,9 @@ TYPE
 	*)
 	Condition_t* = ADDRESS;
 	ConditionType = ARRAY 12 OF WORD;
+
+	Sigset_t= ARRAY 2 OF ADDRESS; 
+
 	
 CONST
 	(* Thread priorities *)
@@ -318,6 +364,8 @@ VAR
 	sysinfo-: RECORD
 				sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
 			END;
+			
+	sigstack-: ARRAY 32*4096 OF CHAR;
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -329,7 +377,7 @@ VAR
 	pthread_cond_wait: PROCEDURE {C} (cond: ADDRESS; mutex: ADDRESS): WORD;
 	pthread_cond_signal: PROCEDURE {C} (cond: ADDRESS): WORD; 
 	
-	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: ADDRESS); arg: ADDRESS): WORD;
+	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
 	pthread_exit: PROCEDURE {C} (return: ADDRESS);
 
 	pthread_attr_init: PROCEDURE {C} (attr: ADDRESS);
@@ -342,12 +390,16 @@ VAR
 	sched_get_priority_min: PROCEDURE {C} (policy: LONGINT): LONGINT;
 	pthread_setschedparam: PROCEDURE {C} (thread: Thread_t; policy: LONGINT; param: ADDRESS): WORD;
 	pthread_getschedparam: PROCEDURE {C} (thread: Thread_t; policy: LONGINT; param: ADDRESS): WORD;
-	
+	pthread_setcancelstate: PROCEDURE {C} (state: LONGINT; oldstate: ADDRESS): LONGINT;
+	pthread_setcanceltype: PROCEDURE {C} (type: LONGINT; oldtype: ADDRESS): LONGINT;
 	sigaction: PROCEDURE {C} (signum: LONGINT; CONST act, oldact: ADDRESS): LONGINT;
 	sigemptyset: PROCEDURE {C} (set: ADDRESS);
+	sigfillset: PROCEDURE {C} (set: ADDRESS): LONGINT;
 	sigaddset: PROCEDURE {C} (set: ADDRESS; signo: LONGINT);
+	sigdelset: PROCEDURE {C} (set: ADDRESS; signo: LONGINT);
 	nanosleep: PROCEDURE {C} (req, rem: ADDRESS): LONGINT;
-
+	sigaltstack: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT; 
+	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS): LONGINT;
 	
 	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
 	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
@@ -532,25 +584,75 @@ VAR
 	    RETURN  param.sched_priority;
 	END ThrGetPriority;
 	
-	PROCEDURE {C} Starter(arg: ADDRESS);
+	VAR 
+		sigstk: Stack;
+	
+	PROCEDURE SetSigaltstack;
 	BEGIN
-		TRACE("starter has started");
+		IF sigaltstack(ADDRESS OF sigstk, NIL) < 0 THEN
+			Perror("sigaltstack")
+		END;
+	END SetSigaltstack;
+	
+	PROCEDURE {C} Starter(proc: PROCEDURE): ADDRESS;
+	VAR 
+		me: Thread_t;
+		
+		aligner1: ARRAY 32 OF ADDRESS; (* I don't know why this is required but it does not work without ??? *)
+		old, new: Sigset_t;
+
+		param: Sched_param;
+		res: LONGINT;
+
+	BEGIN
+	 	TRACE("starter has started (self?)");
+		me := pthread_self();
+		SetSigaltstack();
+		
+	    IF sigfillset( ADDRESS OF new ) < 0 THEN
+	    	Perror("sigfillset");
+	    END;
+	    TRACE(new[0],new[1]);
+	    sigdelset( ADDRESS OF new, SIGILL );
+	    sigdelset( ADDRESS OF new, SIGTRAP );
+	    sigdelset( ADDRESS OF new, SIGFPE );
+	    sigdelset( ADDRESS OF new, SIGBUS );
+	    sigdelset( ADDRESS OF new, SIGSEGV );
+	    sigdelset( ADDRESS OF new, SIGTERM );
+	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
+	    
+	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
+		TRACE(res);
+		TRACE(4,me);
+	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
+	    res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
+		TRACE(res);
+	    param.sched_priority := 0;
+	    res := pthread_setschedparam( me, SCHED_OTHER, ADDRESS OF param );
+		TRACE(proc);
+	    proc();
+
+	    pthread_exit( NIL );
+	    RETURN NIL;
 	END Starter;
 	
 	PROCEDURE ThrStart*(p: PROCEDURE; stackSize: SIZE): Thread_t;
 	VAR 
 		attr: PThreadAttr;
 		id: Thread_t;
+		res,i: LONGINT;
 	CONST 
 		PTHREAD_SCOPE_SYSTEM = 0;
 		PTHREAD_CREATE_DETACHED = 1;
-	
 	BEGIN
 		pthread_attr_init(ADDRESS OF attr);
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
 		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
 		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
-		ASSERT(pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p) = 0);
+		TRACE(p);
+		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
+		FOR i := 0 TO 1000000000 DO END;
+		RETURN id;
 	END ThrStart;
 
 	PROCEDURE ThrSleep*(ms: LONGINT);
@@ -649,7 +751,8 @@ END ThrSuspend;
 TYPE
 	Sigaction = RECORD
 		sa_handler: ADDRESS;
-		sa_mask: HUGEINT; 
+		sa_mask0: ADDRESS; 
+		sa_mask1: ADDRESS; 
 		sa_flags: ADDRESS;
 		filler: ADDRESS;
 	END;
@@ -662,12 +765,14 @@ TYPE
 VAR 
 	suspend_mutex: MutexType;
 	mainthread: Thread_t;
+
+
 	sasuspend, saresume: Sigaction;
 
 	PROCEDURE ThrInitialize*(VAR low, high: LONGINT): BOOLEAN;
 	VAR
 		param: Sched_param;
-	BEGIN
+		BEGIN
 	    (*struct sched_param param;*)
 	    
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
@@ -682,19 +787,19 @@ VAR
 			Perror("ThrInitialize: setparam");
 		END;
 		
-		
-	    (*
-	    sigemptyset( ADDRESS OF sasuspend.sa_mask );
-	    sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
+	    TRACE(ADDRESS OF sasuspend.sa_mask0);
+	  (*  
+	    sigemptyset( ADDRESS OF sasuspend.sa_mask0 );
+	    sigaddset(  ADDRESS OF sasuspend.sa_mask0, T_SIGRESUME );
 	    sasuspend.sa_flags := 0;
 	    sasuspend.sa_handler := suspend_handler;
 	    ASSERT(sigaction( T_SIGSUSPEND, ADDRESS OF sasuspend, NIL ) = 0);
 
-	    sigemptyset( ADDRESS OF saresume.sa_mask );
+	    sigemptyset( ADDRESS OF saresume.sa_mask0 );
 	    saresume.sa_flags := 0;
 	    saresume.sa_handler := resume_handler;
 	    ASSERT(sigaction( T_SIGRESUME, ADDRESS OF saresume, NIL ) = 0);
-	    *)
+	  *)  
 	    RETURN TRUE;
 	END ThrInitialize;
 
@@ -718,7 +823,8 @@ VAR
 		S.GET( objAddr, val );
 		IF val = 0 THEN
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
-			Trace.Ln
+			Trace.Ln;
+			LOOP END;
 		ELSE
 			Trace.String( "Unix.Dlsym found " );  Trace.String( sym ); 
 			Trace.Ln
@@ -805,11 +911,13 @@ VAR
 	VAR test: ADDRESS; 
 	BEGIN
 		TRACE("Unix init start");
+		(*
 		Dlsym( 0, "argc", ADDRESSOF( aargc ) );  
 		IF aargc # NIL THEN
 			S.GET( aargc, argc );
 		END;
 		Dlsym( 0, "argv", ADDRESSOF( argv ) );
+		*)
 
 		libraryPaths[0] := "/lib/i386-linux-gnu";
 		libraryPaths[1] := "/usr/lib/i386-linux-gnu";
@@ -832,41 +940,38 @@ VAR
 		Dlsym( libc, "pthread_cond_signal", ADDRESSOF(pthread_cond_signal));
 
 		Dlsym( libp, "pthread_create", ADDRESSOF(pthread_create));
-		Dlsym( libc, "pthread_exit", ADDRESSOF(pthread_exit));
-
+		Dlsym( libp, "pthread_exit", ADDRESSOF(pthread_exit));
+		Dlsym( libp, "pthread_sigmask", ADDRESSOF(pthread_sigmask));
+		Dlsym( libp, "pthread_setcancelstate", ADDRESSOF(pthread_setcancelstate));
+		Dlsym( libp, "pthread_setcanceltype", ADDRESSOF(pthread_setcanceltype));
 		Dlsym( libp, "pthread_attr_init", ADDRESSOF(pthread_attr_init));
 		Dlsym( libp, "pthread_attr_setscope", ADDRESSOF(pthread_attr_setscope));
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF(pthread_attr_setdetachstate));
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF(pthread_attr_setstacksize));
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self));
+		
 		Dlsym( libc, "sched_get_priority_max", ADDRESSOF(sched_get_priority_max));
 		Dlsym( libc, "sched_get_priority_min", ADDRESSOF(sched_get_priority_min));
 		Dlsym( libc, "pthread_setschedparam", ADDRESSOF(pthread_setschedparam));
+		Dlsym( libc, "pthread_getschedparam", ADDRESSOF(pthread_getschedparam));
 		Dlsym( libc, "sigaction", ADDRESSOF(sigaction));
 		Dlsym( libc, "sigemptyset", ADDRESSOF(sigemptyset));
+		Dlsym( libc, "sigfillset", ADDRESSOF(sigfillset));
 		Dlsym( libc, "sigaddset", ADDRESSOF(sigaddset));
+		Dlsym( libc, "sigdelset", ADDRESSOF(sigdelset));
 		Dlsym( libc, "nanosleep", ADDRESSOF(nanosleep));
+		Dlsym( libc, "sigaltstack", ADDRESSOF(sigaltstack));
 				
 				
-				
+		(*
 		Dlsym( libc, "putc", ADDRESSOF(test));
 
-		
-		Dlsym( libc, "sigaltstack", ADDRESSOF(test));
-		Dlsym( libc, "sigaddset", ADDRESSOF(test));
-		Dlsym( libc, "sigaction", ADDRESSOF(test));
-		Dlsym( libc, "sigfillset", ADDRESSOF(test));
-		Dlsym( libc, "sigdelset", ADDRESSOF(test));
 		Dlsym( libc, "sigsuspend", ADDRESSOF(test));
 		Dlsym( libc, "pthread_detach", ADDRESSOF(test));
-		Dlsym( libc, "pthread_sigmask", ADDRESSOF(test));
-		Dlsym( libc, "pthread_setcancelstate", ADDRESSOF(test));
-		Dlsym( libc, "pthread_setcanceltype", ADDRESSOF(test));
-		Dlsym( libc, "pthread_getschedparam", ADDRESSOF(test));
-		Dlsym( libc, "pthread_setschedparam", ADDRESSOF(test));
 		Dlsym( libc, "pthread_cancel", ADDRESSOF(test));
 		Dlsym( libc, "pthread_create", ADDRESSOF(test));
 		Dlsym( libc, "pthread_kill", ADDRESSOF(test));
+		*)
 		
 		Dlsym( libc, "read",		ADDRESSOF( read ) );
 		Dlsym( libc, "write",	ADDRESSOF( write ) );
@@ -887,9 +992,11 @@ VAR
 		Dlsym( libc, "mkdir",	ADDRESSOF( mkdir ) );
 		Dlsym( libc, "rmdir",	ADDRESSOF( rmdir ) );
 
+		(*
 		Dlsym( libc, "stat",		ADDRESSOF( stat ) );
 		Dlsym( libc, "lstat",	ADDRESSOF( lstat ) );
 		Dlsym( libc, "fstat",	ADDRESSOF( fstat ) );
+		*)
 
 		Dlsym( libc, "getpid",	ADDRESSOF( getpid ) );
 		Dlsym( libc, "getuid",	ADDRESSOF( getuid ) );
@@ -911,8 +1018,10 @@ VAR
 		Dlsym( libc, "readdir",		ADDRESSOF( readdir ) );
 		Dlsym( libc, "closedir",	ADDRESSOF( closedir ) );
 
+(*
 		Dlsym( libc, "sigsetjmp",	ADDRESSOF( sigsetjmp ) );
 		Dlsym( libc, "siglongjmp",	ADDRESSOF( siglongjmp ) );
+*)
 
 		Dlsym( libc, "malloc",		ADDRESSOF( malloc ) );
 		Dlsym( libc, "posix_memalign",	ADDRESSOF( posix_memalign ) );
@@ -928,6 +1037,10 @@ VAR
 		Dlsym( libc, "errno",	ADDRESSOF( errno ) );
 
 		getSysinfo;
+		
+		sigstk.sp := ADDRESS OF sigstack;
+		sigstk.size := LEN(sigstack);
+		sigstk.flags := {};
 		
 		TRACE("Unix init end");
 	END Init;

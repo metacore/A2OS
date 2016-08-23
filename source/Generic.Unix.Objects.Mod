@@ -61,22 +61,6 @@ VAR
 	finalizerCaller	: FinalizerCaller;
 	finCaller			: Process;
 	
-	
-	(* the dummy parameters assure proper stack alignment when compiled with 
-		option "\A" or "--darwinHost" *)
-	(*
-	thrStart: 			PROCEDURE {REALTIME, C} ( p: PROCEDURE;  stackLen: LONGINT ): Unix.Thread_t;
-	Unix.ThrThis: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Thread_t;
-	Unix.ThrSleep: 			PROCEDURE {REALTIME, C} ( ms: LONGINT );
-	Unix.ThrYield: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT );
-	Unix.ThrExit: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT );
-	Unix.ThrSuspend: 		PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	Unix.ThrResume: 		PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	Unix.ThrSetPriority: 	PROCEDURE {REALTIME, C} ( t: Unix.Thread_t;  prio: LONGINT );
-	Unix.ThrGetPriority: 	PROCEDURE {REALTIME, C} ( t: Unix.Thread_t ): LONGINT;
-	thrKill: 			PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	*)
-	
 
 TYPE
 
@@ -263,11 +247,14 @@ TYPE
 				body := bodyProc;  
 				Unix.MtxLock( startProcess );
 				TRACE(body);
-					thr := Unix.ThrStart( BodyStarter, stacksize );
-				TRACE(body);
-					Unix.ConWait( childrunning, startProcess );
+				thr := Unix.ThrStart( BodyStarter, stacksize );
+				TRACE(1,thr);
+				TRACE(1, childrunning, startProcess);
+				Unix.ConWait( childrunning, startProcess );
 				Unix.MtxUnlock( startProcess );
+				TRACE(2,thr);
 				RegisterFinalizer( SELF, FinalizeProcess );
+				TRACE(3,thr);
 			ELSE 
 				(* first process *)
 				stackBottom := Glue.stackBottom;  
@@ -286,9 +273,11 @@ TYPE
 
 	
 	PROCEDURE BodyStarter;
-	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP: ADDRESS;
+	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP: ADDRESS; i: LONGINT;
 	BEGIN
+		TRACE("Bodystarter running");
 		Unix.MtxLock( startProcess );
+		TRACE("start process");
 			p := newProcess;  newProcess := NIL;
 			p.threadId := Unix.ThrThis(0);  
 			p.id := nextPID;  INC( nextPID );
@@ -303,9 +292,11 @@ TYPE
 		Unix.MtxUnlock( startProcess );
 
 		p.SetPriority( p.priority );
+		(*!
 		IF Restart IN p.flags THEN
 			res := Unix.sigsetjmp( ADDRESSOF( p.state0[0] ), 1 );
 		END;
+		*)
 		p.mode := Running;
 		p.body( p.obj );
 		p.mode := Terminated;
@@ -561,7 +552,7 @@ TYPE
 				IF prev = NIL THEN  root := p.nextProcess  ELSE  prev.nextProcess := p.nextProcess  END;
 			END;
 		Unix.MtxUnlock( processList );
-		Unix.ThrExit(0)
+		Unix.ThrExit(0);
 	END Exit;
 
 	PROCEDURE ExitTrap*;
@@ -792,8 +783,16 @@ TYPE
 		Heaps.InvokeGC := InvokeGC;
 		*)
 	END Init;
+	
+	PROCEDURE {FINAL} Final;
+	BEGIN
+		TRACE("FINAL END ");
+		Machine.Shutdown(FALSE);
+	END Final;
 
 BEGIN
+	TRACE("Objects.Body1");
 	Init;
+	TRACE("Objects.Body2");
 END Objects.
 

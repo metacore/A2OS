@@ -198,10 +198,10 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 SystemTools.DoCommands
 	Compiler.Compile -p=Linux32G
 		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
-		Generic.Unix.Objects.Mod  ~ 
+		Generic.Unix.Objects.Mod  TestLinux.Mod ~ 
 
 	StaticLinker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
-		Runtime Trace Glue Unix Machine Heaps Modules Objects ~
+		Runtime Trace Glue Unix Machine Heaps Modules Objects Test ~
 
 	FSTools.CloseFiles simple_elf ~
 		~ 

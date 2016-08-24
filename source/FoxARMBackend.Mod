@@ -969,7 +969,7 @@ TYPE
 				IF doEmit THEN
 					Emit2(opMOV, targetRegister, InstructionSet.NewImmediate(value))
 				END
-			ELSIF SupportMovW & (value >=0) & (value <= ASH(1,16)) THEN
+			ELSIF SupportMovW & (value >=0) & (value < ASH(1,16)) THEN
 				result := 1;
 				IF doEmit THEN
 					Emit2(opMOVW, targetRegister, InstructionSet.NewImmediate(value))

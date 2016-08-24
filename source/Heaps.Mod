@@ -105,7 +105,6 @@ TYPE
 		locked*: BOOLEAN;
 		awaitingLock*, awaitingCond*: ProcessQueue;
 		lockedBy*: ANY;
-		lock*: ANY;	(* used by Win32, unused for I386 *)
 		waitingPriorities*: ARRAY NumPriorities OF LONGINT;
 	END;
 
@@ -342,7 +341,6 @@ BEGIN
 			Inspect(protected.awaitingLock.head);
 			Inspect(protected.awaitingCond.head);
 			Inspect(protected.lockedBy);
-			Inspect(protected.lock)
 		END;
 		orgHeapBlock := ExtractFromMarkList();
 	END;
@@ -1250,7 +1248,6 @@ BEGIN
 		protRecBlock.awaitingCond.head := NIL;
 		protRecBlock.awaitingCond.tail := NIL;
 		protRecBlock.lockedBy := NIL;
-		protRecBlock.lock := NIL;
 		protRecBlock.locked := FALSE;
 		FOR i := 0 TO NumPriorities - 1 DO
 			protRecBlock.waitingPriorities[i] := 0

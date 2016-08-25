@@ -6064,9 +6064,9 @@ TYPE
 					END;
 				(* ------- CONNECT -------*)
 				ELSIF (id = Global.Connect) & (CheckArity(2,3)) THEN
-					IF 	~(currentIsCellNet) THEN
+					(*IF 	~(currentIsCellNet) THEN
 						Error(position,Diagnostics.Invalid,"connection outside activeCells body block");
-					END;
+					END;*)
 
 					IF CheckPortType(parameter0, outPort) & CheckPortType(parameter1, inPort) THEN
 						IF (outPort.direction # SyntaxTree.OutPort) THEN Error(parameter0.position,Diagnostics.Invalid,"not an out-port") END;
@@ -6085,9 +6085,11 @@ TYPE
 					activeCellsStatement := TRUE;
 				(* ---------- DELEGATE --------*)
 				ELSIF (id = Global.Delegate) & (CheckArity(2,2)) THEN
+					(*
 					IF 	~(currentIsCellNet) THEN
 						Error(position,Diagnostics.Invalid,"connection delegation outside activeCells body block");
 					END;
+					*)
 					IF ~CheckPortType(parameter1, inPort) THEN
 						Error(parameter0.position,Diagnostics.Invalid,"not a port")
 					ELSIF ~CheckPortType(parameter0, outPort) THEN

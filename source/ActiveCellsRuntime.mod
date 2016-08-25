@@ -495,8 +495,24 @@ type
 		if EnableTrace then trace('normal rec');end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
-	
-	
 
+	type Pin = port in; Pout = port out;
+	
+	operator ">>"* (pout: Pout; pin: Pin); 
+	begin
+		connect(pout, pin);
+	end ">>";
+	
+	operator ">>"* (p0: Pout; p1: Pout); 
+	begin
+		delegate(p0,p1);
+	end ">>";
+	
+	operator ">>"* (p0: Pin; p1: Pin); 
+	begin
+		delegate(p0,p1);
+	end ">>";
 end ActiveCellsRuntime.
 
+
+SystemTools.FreeDownTo FoxSemanticChecker ~

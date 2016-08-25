@@ -230,6 +230,9 @@ TYPE
 		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
 		BEGIN (* no code emission *)   END VisitArrayType;
 
+		PROCEDURE VisitPortType(x: SyntaxTree.PortType);
+		BEGIN (* no code emission *)   END VisitPortType;
+
 		PROCEDURE VisitMathArrayType(x: SyntaxTree.MathArrayType);
 		BEGIN
 			meta.CheckTypeDeclaration(x);

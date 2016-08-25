@@ -500,17 +500,17 @@ type
 	
 	operator ">>"* (pout: Pout; pin: Pin); 
 	begin
-		connect(pout, pin);
+		Connect(system.val(any, pout), system.val(any, pin), 0);
 	end ">>";
 	
 	operator ">>"* (p0: Pout; p1: Pout); 
 	begin
-		delegate(p0,p1);
+		Delegate(system.val(any, p0), system.val(any, p1));
 	end ">>";
 	
 	operator ">>"* (p0: Pin; p1: Pin); 
 	begin
-		delegate(p0,p1);
+		Delegate(system.val(any, p0), system.val(any, p1));
 	end ">>";
 end ActiveCellsRuntime.
 

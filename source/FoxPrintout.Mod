@@ -1491,6 +1491,10 @@ TYPE
 			prevScope := currentScope;
 			currentScope := x;
 			(* ASSERT(currentScope.outerScope = prevScope); (* sanity check *) *)
+			WITH x: SyntaxTree.CellScope DO
+				IF x.firstImport # NIL THEN ImportList(x.firstImport) END;
+			ELSE
+			END;
 			IF x.firstConstant # NIL THEN ConstantList(x.firstConstant); END;
 			IF x.firstTypeDeclaration # NIL THEN TypeDeclarationList(x.firstTypeDeclaration); END;
 			IF x.firstVariable # NIL THEN Indent;  Keyword("VAR " );  VariableList(x.firstVariable);  END;

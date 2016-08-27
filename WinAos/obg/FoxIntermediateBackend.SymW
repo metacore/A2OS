@@ -143,6 +143,7 @@ TYPE
 		PROCEDURE ^ VisitStringType*(x: SyntaxTree.StringType); 
 		PROCEDURE ^ VisitArrayRangeType(x: SyntaxTree.RangeType); 
 		PROCEDURE ^ VisitArrayType*(x: SyntaxTree.ArrayType); 
+		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
 		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
 		PROCEDURE ^ VisitPointerType*(x: SyntaxTree.PointerType); 
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 

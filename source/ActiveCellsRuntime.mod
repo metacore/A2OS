@@ -19,6 +19,8 @@ type
 	Context*= object
 	var
 		topNet-: any; (** top-level CELLNET object specific to this runtime context *)
+		finishedAssembly-: boolean; (** assigned to TRUE after the whole architecture has been assembled *)
+		res*: longint; (** error code, 0 in case of success *)
 		
 		procedure Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellNet, isEngine: boolean);
 		end Allocate;
@@ -82,6 +84,17 @@ type
 		
 		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
 		end ReceiveNonBlocking;
+		
+		(* called in Execute after the architecture is fully assembled *)
+		procedure FinishedAssembly();
+		begin{EXCLUSIVE}
+			finishedAssembly := true;
+		end FinishedAssembly;
+
+		procedure WaitUntilFinishedAssembly();
+		begin{EXCLUSIVE}
+			await(finishedAssembly or (res # 0));
+		end WaitUntilFinishedAssembly;
 			
 	end Context;
 	
@@ -89,7 +102,7 @@ type
 	var 
 		proc: procedure {DELEGATE};
 		context: Context;
-		finished: boolean;
+		finished, delayedStart: boolean;
 		error-: boolean;
 		
 		procedure & Init*(context: Context);
@@ -100,16 +113,22 @@ type
 		end Init;
 		
 		procedure Start*(p: procedure{DELEGATE}; doWait: boolean);
-			begin{EXCLUSIVE}
-				proc := p;
-				await(~doWait or finished);
+		begin{EXCLUSIVE}
+			proc := p;
+			if ~doWait then delayedStart := true; end; (* delay actual start until the whole architecture is fully assembled *)
+			await(~doWait or finished);
 		end Start;
 		
 	begin{ACTIVE}
 		begin{EXCLUSIVE}
 			await(proc # nil);
 		end;
-		proc;
+		if delayedStart then
+			context.WaitUntilFinishedAssembly;
+		end;
+		if context.res = 0 then
+			proc;
+		end;
 		begin{EXCLUSIVE}
 			finished := true
 		end;
@@ -447,8 +466,9 @@ type
 
 				new(starter, pc, scope);
 			end;
-			new(launcher, context); 
+			new(launcher, context);
 			launcher.Start(starter.P, true);
+			context.FinishedAssembly;
 			assert(~launcher.error);
 		else 
 			Reflection.Report(Commands.GetContext().out, m.refs, offset);

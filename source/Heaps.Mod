@@ -106,6 +106,7 @@ TYPE
 		awaitingLock*, awaitingCond*: ProcessQueue;
 		lockedBy*: ANY;
 		waitingPriorities*: ARRAY NumPriorities OF LONGINT;
+		lock*: ANY; (* generic implementation slot -- used by LinuxAos *)
 	END;
 
 	ArrayBlock* = POINTER TO ArrayBlockDesc;

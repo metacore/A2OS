@@ -11113,7 +11113,7 @@ TYPE
 		PROCEDURE ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
 		VAR i: LONGINT;
 		BEGIN
-			INC(dataAdrOffset,14);
+			INC(dataAdrOffset,14); (*! change this when changing data structure below *)
 			HeapBlock(moduleName,typeName,section,dataAdrOffset);
 			Info(section,"count*: LONGINT");
 			Longint(section,0);
@@ -11127,13 +11127,13 @@ TYPE
 			Address(section,0);
 			Info(section,"lockedBy*: ANY");
 			Address(section,0);
-			Info(section,"lock*: ANY");
-			Address(section,0);
 			Info(section,"waitingPriorities*: ARRAY NumPriorities OF LONGINT");
 			Longint(section,1);
 			FOR i := 2 TO 6 DO
 			Longint(section,0);
 			END;
+			Info(section,"lock*: ANY");
+			Address(section,0);
 		END ProtectedHeapBlock;
 
 		PROCEDURE Info(section: IntermediateCode.Section; CONST s: ARRAY OF CHAR);

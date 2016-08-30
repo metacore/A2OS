@@ -982,7 +982,7 @@ TYPE
 		a := Unix.getenv( ADDRESSOF( "AOSPATH" ) );  i := 0;
 		IF a = 0 THEN
 			Log.String( "UnixFiles.Initialize: environment variable AOSPATH not defined" );  Log.Ln;
-			Unix.exit( 1 )
+			(* Unix.exit( 1 ) *)
 		ELSE
 			REPEAT
 				S.GET( a, ch );  INC( a );

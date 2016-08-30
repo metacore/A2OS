@@ -39,7 +39,7 @@ CONST
 	MaxLocks* = 11;   (* { <= 32 } *)
 	
 	MaxCPU* = 4;
-	
+	IsCooperative* = FALSE;
 
 TYPE	
 	Vendor* = ARRAY 13 OF CHAR;	
@@ -302,6 +302,7 @@ VAR
 			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
 			mb := mb.next;  
 		END;  
+		RETURN TRUE;
 		RETURN FALSE  
 	END ValidHeapAddress;
 	

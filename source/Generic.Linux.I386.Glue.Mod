@@ -187,6 +187,12 @@ VAR
 	BEGIN
 		Init;
 	END Init0;
+	
+	PROCEDURE Initialize*;
+	BEGIN
+		(* nothing, only for compatibility *)
+	END Initialize;
+	
 
 
 BEGIN
@@ -198,10 +204,21 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 SystemTools.DoCommands
 	Compiler.Compile -p=Linux32G
 		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
-		Generic.Unix.Objects.Mod  TestLinux.Mod ~ 
+		Generic.Unix.Objects.Mod
+		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
+		Pipes.Mod Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
+		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
+		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
+		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
+		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
+		TestLinux.Mod  ~
 
 	StaticLinker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Test ~
+		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Test 
+Streams Commands StdIO TrapWriters Traps FIles UnixFiles Clock Dates Reals Strings Diagnostics 
+BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole 
+ ~
+~
 
 	FSTools.CloseFiles simple_elf ~
 		~ 

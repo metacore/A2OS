@@ -125,6 +125,13 @@ CONST
 	SIG_BLOCK = 0;
 	SIG_UNBLOCK=1;
 	SIG_SETMASK=2;
+
+	SA_NOCLDSTOP  = 0x00000001;
+	SA_SIGINFO =       0x00000004;
+	SA_ONSTACK  =    0x08000000;
+	SA_RESTART  =    0x10000000;
+	SA_NODEFER  =     0x40000000;
+	SA_RESETHAND  =  0x80000000;
 	
   PTHREAD_CANCEL_ENABLE 	= 0;
   PTHREAD_CANCEL_DISABLE	= 1;
@@ -146,6 +153,7 @@ TYPE
 	ConditionType = ARRAY 12 OF WORD;
 
 	Sigset_t= ARRAY 32 OF ADDRESS; 
+	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp, dum: ADDRESS );  
 
 	
 CONST
@@ -532,6 +540,7 @@ VAR
 	VAR cond: Condition_t;
 	BEGIN
 		cond := malloc(SIZEOF(ConditionType));
+		TRACE(cond);
 		ASSERT(cond # 0);
 		ASSERT(pthread_cond_init(cond, NIL)=0);
 		RETURN cond;
@@ -861,6 +870,7 @@ VAR
 	END GetArgval;
 
 
+
 	PROCEDURE getSysinfo;
 	VAR res: LONGINT;  p: INTEGER;
 		buf: ARRAY 4096 OF CHAR;
@@ -884,6 +894,64 @@ VAR
 		copy( p, sysinfo.version );
 		copy( p, sysinfo.machine );
 	END getSysinfo;
+
+	PROCEDURE CreateSignalStack;
+	BEGIN
+		sigstk.sp := ADDRESS OF sigstack;
+		sigstk.size := LEN(sigstack);
+		sigstk.flags := {};
+	END CreateSignalStack;
+	
+	(*
+static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
+	
+	if (debug | (AosTrap == NULL)) {
+	    printf("\nhandler for signal %d got called, ucp = %p\n", sig, ucp);
+	    if (AosTrap == NULL) exit(1);
+	}
+	AosTrap(0, ucp, scp, sig); /* rev. order: Oberon <--> C */
+}
+	*)
+	
+	VAR trap: SignalHandler; 
+	
+	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS); (* reversed arguments !! *)
+	BEGIN
+		TRACE(sig, scp, ucp);
+		trap(sig, scp, ucp, 0);  
+	END SigHandler;
+	
+	PROCEDURE InstallSignalHandler* ( h: SignalHandler );
+	BEGIN
+		trap := h;
+	END InstallSignalHandler;
+
+	
+	
+	PROCEDURE InstallHandler(sig: LONGINT);
+	VAR 
+		act: Sigaction;
+		mask: Sigset_t;
+	BEGIN
+		sigemptyset(ADDRESS OF mask);
+		act.sa_mask := mask;
+		act.sa_flags :=  SA_SIGINFO + SA_ONSTACK + SA_NODEFER;
+		act.sa_handler := ADDRESS OF SigHandler;
+		IF sigaction( sig, ADDRESS OF act, 0 ) # 0 THEN
+			Perror("sigaction");
+		END;
+
+	END InstallHandler;
+	
+	
+	PROCEDURE InitSignalHandler;
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 1 TO 15 DO
+			IF i # 9 THEN InstallHandler(i) END;
+		END;
+	END InitSignalHandler;
+	
 	
 	PROCEDURE Init;
 	VAR test: ADDRESS; 
@@ -1014,9 +1082,8 @@ VAR
 
 		getSysinfo;
 		
-		sigstk.sp := ADDRESS OF sigstack;
-		sigstk.size := LEN(sigstack);
-		sigstk.flags := {};
+		CreateSignalStack;
+		InitSignalHandler;
 		
 		TRACE("Unix init end");
 	END Init;

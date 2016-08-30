@@ -64,6 +64,10 @@ VAR
 
 TYPE
 
+	LockT= POINTER TO RECORD
+		mtx, enter: ADDRESS;
+	END;
+
 	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
 
 	ProtectedObject = POINTER TO RECORD END;
@@ -309,8 +313,11 @@ TYPE
 	(*---------------------   create,  lock,  await,  unlock   -------------------------*)
 	
 	PROCEDURE InitProtHeader( hdr: ObjectHeader );
+	VAR lock: LockT;
 	BEGIN
-		hdr.mtx := Unix.MtxInit( 0 );  hdr.enter := Unix.ConInit( 0 );  hdr.lockedBy := NIL;  
+		NEW(lock);
+		hdr.lock := lock;
+		lock.mtx := Unix.MtxInit( 0 );  lock.enter := Unix.ConInit( 0 );  hdr.lockedBy := NIL;  
 	END InitProtHeader;
 	
 	
@@ -327,51 +334,62 @@ TYPE
 	END CreateProcess;
 
 	PROCEDURE Lock*( obj: ProtectedObject;  exclusive: BOOLEAN );
-	VAR hdr: ObjectHeader;  p: Process; 
+	VAR hdr: ObjectHeader;  p: Process; lock: LockT;
 	BEGIN
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
+		TRACE(hdr);
 		p := CurrentProcess();
 		p.mode := AwaitingLock;
-		IF hdr.mtx = 0 THEN  InitProtHeader( hdr )  END;
-		Unix.MtxLock( hdr.mtx );
+		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
+		lock := S.VAL(LockT, hdr.lock);
+		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
 			(* wait until threads with complied AWAIT conditions have left the monitor *)
-			Unix.ConWait( hdr.enter, hdr.mtx );
+			Unix.ConWait( lock.enter, lock.mtx );
 		END;
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
 	END Lock;
 
 	PROCEDURE Await*( cond: Condition;  slink: ADDRESS;  obj: ProtectedObject;  flags: SET );
-	VAR hdr: ObjectHeader;  p, c: Process;
+	VAR hdr: ObjectHeader;  p, c: Process; lock: LockT;
 	BEGIN
 		IF 1 IN flags THEN  (* compiler did not generate IF *)
 			IF cond( slink ) THEN  (* condition already true *)  RETURN  END
 		END;
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
+		lock := S.VAL(LockT, hdr.lock);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
 		
 		p := CurrentProcess();  p.succ := NIL;  p.condition := cond;  p.condFP := slink;   
 		p.waitingOn := obj;  p.mode := AwaitingCond;
 		
 		Put( hdr.awaitingCond, p );
-		
 		hdr.lockedBy := c;
-		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( hdr.enter )  END;
-		Unix.ConWait( p.continue, hdr.mtx );   
+		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( lock.enter )  END;
+		Unix.ConWait( p.continue, lock.mtx );   
 		
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
 	END Await;
 
 	PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
-	VAR hdr: ObjectHeader;  c: Process;
+	VAR hdr: ObjectHeader;  c: Process; lock: LockT;
 	BEGIN
+		TRACE("unlock");
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
+		lock := S.VAL(LockT,hdr.lock);
+		TRACE(hdr);
+		TRACE(c);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
+		TRACE(c);
+		TRACE("unlock2");
 		
 		hdr.lockedBy := c;
-		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( hdr.enter )  END;
-		Unix.MtxUnlock( hdr.mtx );
+		TRACE("unlock3");
+		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( lock.enter )  END;
+		TRACE("unlock4");
+		Unix.MtxUnlock( lock.mtx );
+		TRACE("unlock5");
 	END Unlock;
 	
 	
@@ -521,11 +539,12 @@ TYPE
 	END FinalizeActiveObj;
 
 	PROCEDURE FinalizeProtObject( obj: ANY );
-	VAR hdr: ObjectHeader;
+	VAR hdr: ObjectHeader; lock: LockT;
 	BEGIN
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
-		IF hdr.mtx # 0 THEN
-			Unix.MtxDestroy( hdr.mtx );  hdr.mtx := 0
+		IF hdr.lock # NIL THEN
+			lock := S.VAL(LockT, hdr.lock);
+			Unix.MtxDestroy( lock.mtx );  lock.mtx := 0
 		END
 	END FinalizeProtObject;
 

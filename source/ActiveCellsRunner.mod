@@ -83,6 +83,8 @@ type
 		fifo-: Fifo;
 		delegatedTo-: Port;
 		inout-: set;
+		
+		owner: Cell;
 
 		procedure & InitPort(inout: set; width: longint);
 		begin
@@ -167,6 +169,7 @@ type
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			new(cel); c := cel;
 			cel.isCellnet := isCellnet;
+			if scope # nil then cel.scope := scope(Cell); end;
 		end Allocate;
 
 		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint);
@@ -174,7 +177,8 @@ type
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			if EnableTrace then trace(c,p,name, inout, width); end;
-			new(por,inout,width); p := por;
+			new(por,inout,width); por.owner := c(Cell);
+			p := por;
 		end AddPort;
 
 		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint);
@@ -248,6 +252,11 @@ type
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			if EnableTrace then trace(netPort, cellPort); end;
+			(*! check correctness of delegation which is not 100% guaranteed by the operator ">>" *)
+			if ~netPort(Port).owner.isCellnet or (cellPort(Port).owner = netPort(Port).owner) then
+				res := -1;
+				return;
+			end;
 			netPort(Port).Delegate(cellPort(Port));
 		end Delegate;
 

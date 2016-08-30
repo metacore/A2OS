@@ -523,14 +523,14 @@ type
 		Connect(system.val(any, pout), system.val(any, pin), 0);
 	end ">>";
 	
-	operator ">>"* (p0: Pout; p1: Pout); 
+	operator ">>"* (cellPort: Pout; netPort: Pout); 
 	begin
-		Delegate(system.val(any, p0), system.val(any, p1));
+		Delegate(system.val(any, netPort), system.val(any, cellPort));
 	end ">>";
 	
-	operator ">>"* (p0: Pin; p1: Pin); 
+	operator ">>"* (netPort: Pin; cellPort: Pin); 
 	begin
-		Delegate(system.val(any, p0), system.val(any, p1));
+		Delegate(system.val(any, netPort), system.val(any, cellPort));
 	end ">>";
 end ActiveCellsRuntime.
 

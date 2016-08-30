@@ -514,10 +514,8 @@ VAR
 		mtx: Mutex_t;
 	BEGIN
 		mtx := malloc(SIZEOF(MutexType));
-		TRACE(mtx);
 		ASSERT(mtx # 0);
 		ASSERT(pthread_mutex_init(mtx, NIL) = 0);
-		TRACE(mtx);
 		RETURN mtx;
 	END MtxInit;
 	
@@ -540,7 +538,6 @@ VAR
 	VAR cond: Condition_t;
 	BEGIN
 		cond := malloc(SIZEOF(ConditionType));
-		TRACE(cond);
 		ASSERT(cond # 0);
 		ASSERT(pthread_cond_init(cond, NIL)=0);
 		RETURN cond;
@@ -617,14 +614,12 @@ VAR
 		res: LONGINT;
 
 	BEGIN
-	 	TRACE("starter has started (self?)");
 		me := pthread_self();
 		SetSigaltstack();
 		
 	    IF sigfillset( ADDRESS OF new ) < 0 THEN
 	    	Perror("sigfillset");
 	    END;
-	    TRACE(new[0],new[1]);
 	    sigdelset( ADDRESS OF new, SIGILL );
 	    sigdelset( ADDRESS OF new, SIGTRAP );
 	    sigdelset( ADDRESS OF new, SIGFPE );
@@ -634,14 +629,10 @@ VAR
 	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
 	    
 	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
-		TRACE(res);
-		TRACE(4,me);
 	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
 	    res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
-		TRACE(res);
 	    param.sched_priority := 0;
 	    res := pthread_setschedparam( me, SCHED_OTHER, ADDRESS OF param );
-		TRACE(proc);
 	    proc();
 
 	    pthread_exit( NIL );
@@ -661,7 +652,6 @@ VAR
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
 		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
 		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
-		TRACE(p);
 		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
 		RETURN id;
 	END ThrStart;
@@ -764,17 +754,14 @@ VAR
 	    
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
 	    mainthread := pthread_self();
-	    TRACE(mainthread);
 	    high := sched_get_priority_max(SCHED_OTHER);
 	    low := sched_get_priority_min(SCHED_OTHER);
-	    TRACE(low, high);
 	    
 	    param.sched_priority := high;
 		IF pthread_setschedparam( mainthread, SCHED_OTHER, ADDRESS OF param)#0 THEN
 			Perror("ThrInitialize: setparam");
 		END;
 		
-	    TRACE(ADDRESS OF sasuspend.sa_mask);
 
 	    sigemptyset( ADDRESS OF sasuspend.sa_mask );
 	    sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
@@ -917,8 +904,11 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	
 	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS); (* reversed arguments !! *)
 	BEGIN
-		TRACE(sig, scp, ucp);
-		trap(sig, scp, ucp, 0);  
+		IF trap # NIL THEN 
+			trap(sig, scp, ucp, 0);  
+		ELSE
+			TRACE(sig, scp, ucp)
+		END;
 	END SigHandler;
 	
 	PROCEDURE InstallSignalHandler* ( h: SignalHandler );

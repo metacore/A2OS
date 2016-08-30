@@ -894,7 +894,7 @@ TYPE
 	BEGIN
 		i := 0;  j := 0;
 		WHILE dir[i] # 0X DO  dest[i] := dir[i];  INC( i )  END;
-		IF dest[i - 1] # "/" THEN  dest[i] := "/";  INC( i )  END;
+		IF (i>0) & (dest[i - 1] # "/") THEN  dest[i] := "/";  INC( i )  END;
 		WHILE name[j] # 0X DO  dest[i] := name[j];  INC( i );  INC( j )  END;
 		dest[i] := 0X
 	END MakePath;

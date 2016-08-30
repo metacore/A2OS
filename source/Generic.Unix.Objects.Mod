@@ -240,7 +240,6 @@ TYPE
 		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
 		VAR  thr: Unix.Thread_t;
 		BEGIN
-			TRACE(root);
 			SELF.obj := obj;  condition := NIL;  continue := Unix.ConInit(0);
 			flags := fl;
 			priority := prio;
@@ -250,20 +249,14 @@ TYPE
 				ASSERT( bodyProc # NIL );
 				body := bodyProc;  
 				Unix.MtxLock( startProcess );
-				TRACE(body);
 				thr := Unix.ThrStart( BodyStarter, stacksize );
-				TRACE(1,thr);
-				TRACE(1, childrunning, startProcess);
 				Unix.ConWait( childrunning, startProcess );
 				Unix.MtxUnlock( startProcess );
-				TRACE(2,thr);
 				RegisterFinalizer( SELF, FinalizeProcess );
-				TRACE(3,thr);
 			ELSE 
 				(* first process *)
 				stackBottom := Glue.stackBottom;  
 				SP := Machine.CurrentSP( );
-				TRACE(root);
 				threadId := Unix.ThrThis(0);
 				id := 0;  nextPID := 1;
 				root := SELF;
@@ -279,9 +272,7 @@ TYPE
 	PROCEDURE BodyStarter;
 	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP: ADDRESS; i: LONGINT;
 	BEGIN
-		TRACE("Bodystarter running");
 		Unix.MtxLock( startProcess );
-		TRACE("start process");
 			p := newProcess;  newProcess := NIL;
 			p.threadId := Unix.ThrThis(0);  
 			p.id := nextPID;  INC( nextPID );
@@ -324,7 +315,6 @@ TYPE
 	PROCEDURE CreateProcess*( body: Body;  priority: LONGINT;  flags: SET;  obj: ProtectedObject );
 	VAR p: Process;  hdr: ObjectHeader;
 	BEGIN
-		TRACE(body);
 		Unix.MtxLock( createProcess );
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  InitProtHeader( hdr );
 		IF priority = 0 THEN  priority := Normal  END;
@@ -338,7 +328,6 @@ TYPE
 	BEGIN
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
-		TRACE(hdr);
 		p := CurrentProcess();
 		p.mode := AwaitingLock;
 		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
@@ -375,21 +364,13 @@ TYPE
 	PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
 	VAR hdr: ObjectHeader;  c: Process; lock: LockT;
 	BEGIN
-		TRACE("unlock");
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
 		lock := S.VAL(LockT,hdr.lock);
-		TRACE(hdr);
-		TRACE(c);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
-		TRACE(c);
-		TRACE("unlock2");
 		
 		hdr.lockedBy := c;
-		TRACE("unlock3");
 		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( lock.enter )  END;
-		TRACE("unlock4");
 		Unix.MtxUnlock( lock.mtx );
-		TRACE("unlock5");
 	END Unlock;
 	
 	
@@ -751,9 +732,7 @@ TYPE
 	VAR p: Process;
 	BEGIN
 		(* make current thread the first active object  *)
-		TRACE(p);
 		NEW( p, NIL, NIL, 0, {}, 0 );
-		TRACE(p);
 	END Convert;
 
 	PROCEDURE Init;
@@ -788,14 +767,10 @@ TYPE
 		igc := Unix.MtxInit( 0 );  gcFinished := Unix.ConInit( 0 ); 
 							
 		GetStacksize;  
-		TRACE(0);
 		Convert;
-		TRACE(1);
 		StartTimerActivity;
-		TRACE(2);
 		
 		NEW( finalizerCaller );
-		TRACE(3);
 		(*
 		Heaps.saveSP := SaveSP;
 		Heaps.GC := InvokeGC;

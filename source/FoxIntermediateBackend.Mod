@@ -3110,11 +3110,11 @@ TYPE
 
 		BEGIN
 			type := type.resolved;
-			IF IsOpenArray(type)  THEN
+			IF IsOpenArray(type)   THEN
 				ASSERT(tag.mode # IntermediateCode.ModeImmediate);
 				RETURN  GetLength(type.resolved(SyntaxTree.ArrayType),0)
 			ELSE
-				RETURN IntermediateCode.Immediate(addressType,1)
+				RETURN IntermediateCode.Immediate(addressType,StaticArrayNumElements(type))
 			END;
 		END GetArrayLength;
 		
@@ -6335,11 +6335,14 @@ TYPE
 				END;
 			END Address;
 
-			PROCEDURE StringOperand(op,tag: IntermediateCode.Operand);
+			PROCEDURE StringOperand(op: Operand; type: SyntaxTree.Type);
+			VAR len: IntermediateCode.Operand;
 			BEGIN
 				IF GetProcedure("String") THEN
-					Emit(Push(position,tag));
-					Emit(Push(position,op));
+					len := GetArrayLength(type, op.tag);
+					Emit(Push(position,len));
+					ReleaseIntermediateOperand(len);
+					Emit(Push(position,op.op));
 					CallProcedure;
 				END;
 			END StringOperand;
@@ -6385,7 +6388,7 @@ TYPE
 					String(msg);
 					IF SemanticChecker.IsStringType(expression.type) THEN
 						Designate(expression,res);
-						StringOperand(res.op,res.tag);
+						StringOperand(res, expression.type);
 					ELSE
 						Evaluate(expression,res);
 						IF expression.type.resolved IS SyntaxTree.IntegerType THEN
@@ -11060,7 +11063,7 @@ TYPE
 			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple & ~implementationVisitor.backend.cooperative THEN 
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
-				modulePointerSection := Block("Heaps","ArrayBlockDesc","@ModulePointerArray", modulePointerSectionOffset);
+				modulePointerSection := Block("Heaps","ArrayBlockDesc",".@ModulePointerArray", modulePointerSectionOffset);
 				name := "Heaps.AnyPtr";
 				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
 				(* set base pointer *)

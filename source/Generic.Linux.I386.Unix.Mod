@@ -432,9 +432,9 @@ VAR
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
-	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;
-	lstat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;
-	fstat-			: PROCEDURE {C} ( fd: LONGINT;  VAR buf: Status ): LONGINT;
+	xstat-			: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;
+	lxstat-			: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;
+	fxstat-			: PROCEDURE {C} ( ver: LONGINT; fd: LONGINT;  VAR buf: Status ): LONGINT;
 
 	getpid-		: PROCEDURE {C} ( ): LONGINT;
 	getuid-		: PROCEDURE {C} ( ): LONGINT;
@@ -470,7 +470,7 @@ VAR
 	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
 	exit-			: PROCEDURE {C} ( status: LONGINT );
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
-	errno-			: PROCEDURE {C} ( ): LONGINT;
+	errnum			: ADDRESS; (* PROCEDURE {C} ( ): LONGINT;*)
 
 
 	libc-: LONGINT;
@@ -798,7 +798,7 @@ VAR
 		IF val = 0 THEN
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
 			Trace.Ln;
-			LOOP END;
+			exit(0);
 		ELSE
 			Trace.String( "Unix.Dlsym found " );  Trace.String( sym ); 
 			Trace.Ln
@@ -933,6 +933,39 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 
 	END InstallHandler;
 	
+	PROCEDURE fstat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
+	VAR res: LONGINT;
+	BEGIN
+		(* 
+						dev-		: DevT;
+				unused1-	: LONGINT;
+				ino-		: LONGINT;
+				mode-	: LONGINT;
+				nlink-		: LONGINT;
+				uid-		: LONGINT;
+				gid-		: LONGINT;
+				rdev-		: DevT;
+				unused2-	: LONGINT;
+				size-		: LONGINT;
+				blksize-	: LONGINT;
+				blocks-	: LONGINT;
+				atime-	: Timeval;
+				mtime-	: Timeval;
+				ctime-	: Timeval;
+				unused-	: ARRAY 2 OF LONGINT;
+		*)
+			TRACE(fd);
+		res := fxstat(3, fd, buf);
+		TRACE(res, buf.ino, buf.rdev, buf.size);
+		RETURN res;
+	END fstat;
+
+	PROCEDURE stat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
+	BEGIN
+		RETURN xstat(3, fd, buf);
+	END stat;
+
+	
 	
 	PROCEDURE InitSignalHandler;
 	VAR i: LONGINT;
@@ -941,6 +974,11 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 			IF i # 9 THEN InstallHandler(i) END;
 		END;
 	END InitSignalHandler;
+	
+	PROCEDURE errno*(): LONGINT;
+	BEGIN
+		RETURN S.GET32(errnum);
+	END errno;
 	
 	
 	PROCEDURE Init;
@@ -964,6 +1002,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2); 
 		
+		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init));
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy));
@@ -1026,11 +1065,9 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "mkdir",	ADDRESSOF( mkdir ) );
 		Dlsym( libc, "rmdir",	ADDRESSOF( rmdir ) );
 
-		(*
-		Dlsym( libc, "stat",		ADDRESSOF( stat ) );
-		Dlsym( libc, "lstat",	ADDRESSOF( lstat ) );
-		Dlsym( libc, "fstat",	ADDRESSOF( fstat ) );
-		*)
+		Dlsym( libc, "__xstat",		ADDRESSOF( xstat ) );
+		Dlsym( libc, "__lxstat",	ADDRESSOF( lxstat ) );
+		Dlsym( libc, "__fxstat",	ADDRESSOF( fxstat ) );
 
 		Dlsym( libc, "getpid",	ADDRESSOF( getpid ) );
 		Dlsym( libc, "getuid",	ADDRESSOF( getuid ) );
@@ -1066,9 +1103,8 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "uname",	ADDRESSOF( uname ) );
 
 		Dlsym( libc, "kill",		ADDRESSOF( kill ) );
-		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 		Dlsym( libc, "perror",	ADDRESSOF( perror ) );
-		Dlsym( libc, "errno",	ADDRESSOF( errno ) );
+		Dlsym( libc, "errno",	ADDRESSOF( errnum ) );
 
 		getSysinfo;
 		

@@ -204,7 +204,7 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 SystemTools.DoCommands
 	Compiler.Compile -p=Linux32G
 		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
-		Generic.Unix.Objects.Mod
+		Generic.Unix.Objects.Mod 
 		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
 		Pipes.Mod Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
 		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
@@ -214,8 +214,9 @@ SystemTools.DoCommands
 		TestLinux.Mod  ~
 
 	StaticLinker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Test 
-Streams Commands StdIO TrapWriters Traps FIles UnixFiles Clock Dates Reals Strings Diagnostics 
+		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
+Streams Commands StdIO TrapWriters Traps 
+Files UnixFiles Clock Dates Reals Strings Diagnostics 
 BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole 
  ~
 ~

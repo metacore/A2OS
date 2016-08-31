@@ -534,7 +534,10 @@ END GetTimer;
 				UNTIL ch <= ' '
 			END
 		END;
+		IF name = "ObjectFileExtension" THEN val := ".GofU"
+		ELSE
 		val[0] := 0X
+		END;
 	END GetConfig;
 
 

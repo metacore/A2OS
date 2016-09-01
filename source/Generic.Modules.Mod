@@ -438,8 +438,6 @@ BEGIN
 			i:= 0;
 			REPEAT
 				GetFileName(name, extension[i], fileName);
-				Trace.String(name); Trace.String(":"); Trace.String(extension[i]); Trace.String(":"); Trace.String(fileName); Trace.Ln;
-				TRACE(name, extension[i], fileName);
 				m := loader[i](name, fileName, res, msg);
 				INC(i);
 			UNTIL (m # NIL) OR (i=numLoaders);

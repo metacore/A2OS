@@ -11,7 +11,7 @@ CONST
 	CommandTrapped* = 3904; (* cf module Commands *) 
 	
 	SupportOldObjectFileFormat = FALSE;
-	TraceLoading = TRUE;
+	TraceLoading = FALSE;
 TYPE
 
 	HashEntryIntInt = RECORD
@@ -599,9 +599,8 @@ VAR
 		module: Modules.Module; heapBlockAdr,moduleAdr: LONGINT;
 		Log: Streams.Writer;
 	BEGIN
-		TRACE(name, fileName);
 		file := Files.Old(fileName);
-		TRACE(file);
+
 		IF file # NIL THEN
 			IF TraceLoading THEN Trace.String("loading"); Trace.String(fileName); Trace.Ln END;
 			res := Ok; msg[0] := 0X;

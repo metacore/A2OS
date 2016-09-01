@@ -799,9 +799,6 @@ VAR
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
 			Trace.Ln;
 			exit(0);
-		ELSE
-			Trace.String( "Unix.Dlsym found " );  Trace.String( sym ); 
-			Trace.Ln
 		END
 	END Dlsym;
 

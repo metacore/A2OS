@@ -572,5 +572,5 @@ BEGIN
 	AddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	AddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
 	AddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
-	AddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU");
+	AddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
 END Compiler.

@@ -394,13 +394,13 @@ type
 			begin
 				Start(c, p)
 			end P;
-		end Starter
+		end Starter;
 				
 	var
 		moduleName, typeName, name: array 256 of char;
 		m: Modules.Module;
 		typeInfo: Modules.TypeDesc;
-		i, res: longint;
+		i, res: longint; 
 		str: array 256 of char;
 		scope: Cell;
 		unloaded: longint;
@@ -478,14 +478,14 @@ type
 	type bytearray= array of system.byte; 
 	operator "<<"* (p: port out; const a: bytearray);
 	begin
-		if EnableTrace then trace('bulk send'); end;
+		if EnableTrace then trace('bulk send',len(a)); end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
 	
 	operator "<<"* (var  a: bytearray; p: port in);
 	begin
-		if EnableTrace then trace('bulk rec');end;
+		if EnableTrace then trace('bulk rec',len(a));end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 	
@@ -493,26 +493,26 @@ type
 	type longintSpecial= longint; 
 	operator "<<"* (p: port out; a: longintSpecial);
 	begin
-		if EnableTrace then trace('normal send');end;
+		if EnableTrace then trace('longint send');end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
 	operator "<<"* (var  a: longintSpecial; p: port in); 
 	begin
-		if EnableTrace then trace('normal rec');end;
+		if EnableTrace then trace('longint rec');end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 
 	type realSpecial= real;
 	operator "<<"* (p: port out; a: realSpecial);
 	begin
-		if EnableTrace then trace('normal send');end;
+		if EnableTrace then trace('real send');end;
 		BulkSend(system.val(any,p),a);
 	end "<<";
 	
 	operator "<<"* (var  a:realSpecial; p: port in); 
 	begin
-		if EnableTrace then trace('normal rec');end;
+		if EnableTrace then trace('real rec');end;
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 

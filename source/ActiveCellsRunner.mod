@@ -18,14 +18,19 @@ type
 
 	Fifo=object
 	var
-		data: array 256 of system.byte;
-		inPos, outPos: longint; length: longint;
+		data: array 8*1024 of system.byte;   
+(*		inPos, outPos: longint; *)
+		length: longint;  
+		rdPos,numEle: longint;
 
 		inPort: Port; outPort: Port;
 
 		procedure &Init(outP: Port; inP: Port; length: longint);
 		begin
-			inPos := 0; outPos := 0; self.length := length;
+			(*inPos := 0; outPos := 0; *)
+			rdPos:=0; 
+			numEle:=0;
+			self.length := length; (*for some reason this is -1 usually. don't trust it!*)
 			assert(length < len(data));
 			inPort := inP; outPort := outP;
 			inPort.SetFifo(self); outPort.SetFifo(self);
@@ -34,46 +39,92 @@ type
 		procedure Put(value: longint);
 		begin{EXCLUSIVE}
 			halt(100);(*broken+deprecated*)
-			(*wait for 4 bytes of free space*)
-			await( ( len(data)- ( (inPos-outPos  +len(data) ) mod len(data) ) )>= sizeof(longint));
-			system.move(addressof(value) , addressof(data[inPos]) , sizeof(longint) );
-			inPos := inPos+sizeof(longint);
-			inPos := inPos mod len(data);
 		end Put;
 
 		procedure Get(var value: longint);
 		begin{EXCLUSIVE}
 			halt(100); (*broken+deprecated*)
-			(*wait for 4 bytes of available data*)
-			await( (inPos - outPos  +len(data) ) mod len(data) >= sizeof(longint));
-			system.move(addressof(data[outPos]) , addressof(value) ,  sizeof(longint) );
-			outPos:=outPos+sizeof(longint);
-			outPos := outPos mod len(data);
 		end Get;
 
 
 		(*todo: instead of looping byte by byte, figure out how much we can safely copy over and just do that.*)
 		procedure BulkPut(const value: array of system.byte);
 		var i: longint;
+		numCopy, writePos: longint;
 		begin{EXCLUSIVE}
 			(*because of the exclusive semantics, this bulk put will fill the entire buffer before any get operation has a chance to run*)
+			
+			i:=0;
+			while i<len(value) do
+				await(numEle<len(data));
+				writePos:=(rdPos+numEle) mod len(data);
+				
+				numCopy:= len(data)-numEle;  (*total free space*)
+				numCopy:= min( numCopy, len(data)- writePos);(* if free space wraps around, only copy into space from write  pointer to top*)
+				numCopy :=min(numCopy,len(value)-i ); (*copy at most as much data as is left over.*)
+				(*trace(i,rdPos,writePos,numCopy,numEle,len(value),len(data));*)
+				
+				system.move(addressof(  value[i] ) , addressof ( data[writePos] ), numCopy) ;
+				numEle:=numEle+numCopy;
+				i:=i+numCopy;
+			end;
+			
+			(*
+			(*confirmed working using lengths*)
 			for i:=0 to len(value)-1 do
+				await(numEle<len(data));
+				data[(rdPos+numEle) mod len(data)]:=value[i];
+				inc(numEle);
+			end;*)
+		
+			(*
+			(*old version using pointer comparision. effectively makes the buffer 1 smaller than allocated *)
+			for i:=0 to len(value)-1 do  
 				await((inPos+1) mod len(data) # outPos);
 				data[inPos]:=value[i];
 				inc(inPos); inPos := inPos mod len(data);
-			end;
+			end;			
+			*)
+			
 		end BulkPut;
 
 		procedure BulkGet(var value: array of system.byte);
 		var
+		
 			i: longint;
+			numCopy: longint;
 		begin{EXCLUSIVE}
 			(*because of the exclusive semantics, this bulk get will empty the entire buffer before any put operation has a chance to run*)
+			
+			i:=0; (*pointer into the value array of the receiver*)
+			while i<len(value) do
+				await(numEle>0);
+				numCopy:= min(numEle, len(data)-rdPos); (*total valid data or until it wraps around*)
+				numCopy:=min(numCopy,len(value)-i); (*don't copy more than there's space in the receiver*)
+				(*trace(i,rdPos,numCopy,numEle,len(value),len(data));*)
+				
+				system.move( addressof(data[rdPos]), addressof(value[i]),numCopy);
+				rdPos:=(rdPos+numCopy) mod len(data);
+				numEle:=numEle-numCopy;
+				i:=i+numCopy;
+			end;
+			
+			(*(*confirmed working using lengths*)
+			for i:=0 to len(value) -1 do
+				await(numEle>0);
+				value[i]:=data[rdPos];
+				inc(rdPos);rdPos:=rdPos mod len(data);
+				dec(numEle);
+			end;*)
+			
+			(*
+			(*old version using pinter comparison. effectively makes the buffer 1 smaller than allocated*)
 			for i:=0 to len(value)-1 do
 				await(inPos#outPos);
 				value[i]:=data[outPos];
 				inc(outPos);outPos:=outPos mod len(data);
-			end;
+			end;*)
+			
 		end BulkGet;
 
 	end Fifo;
@@ -169,7 +220,7 @@ type
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			new(cel); c := cel;
 			cel.isCellnet := isCellnet;
-			if scope # nil then cel.scope := scope(Cell); end;
+			(*if scope # nil then cel.scope := scope(Cell); end;*)
 		end Allocate;
 
 		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint);

@@ -8,7 +8,9 @@ import system,ActiveCellsRuntime, Commands, Modules,D:=Diagnostics;
 
 
 const
-	EnableTrace = false;
+	DefaultChanDepth* = 2048; (** default FIFO channel depth in number of address-wide items *)
+	
+	EnableTrace* = false;
 
 type
 	Cell = object
@@ -18,7 +20,7 @@ type
 
 	Fifo=object
 	var
-		data: array 8*1024 of system.byte;   
+		data: pointer to array of system.byte;
 (*		inPos, outPos: longint; *)
 		length: longint;  
 		rdPos,numEle: longint;
@@ -30,8 +32,11 @@ type
 			(*inPos := 0; outPos := 0; *)
 			rdPos:=0; 
 			numEle:=0;
-			self.length := length; (*for some reason this is -1 usually. don't trust it!*)
-			assert(length < len(data));
+			if length <= 0 then (* channel depth is 0 or not specified explicitly by the user (-1) - use default depth *)
+				length := DefaultChanDepth;
+			end;
+			self.length := length;
+			new(data,length*sizeof(address));
 			inPort := inP; outPort := outP;
 			inPort.SetFifo(self); outPort.SetFifo(self);
 		end Init;

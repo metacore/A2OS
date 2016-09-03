@@ -244,6 +244,21 @@ CONST
 	HUPCL*		= {10};
 	CLOCAL*	= {11};
 	
+	PTRACE_TRACEME     =        0;
+PTRACE_PEEKTEXT    =        1;
+PTRACE_PEEKDATA     =       2;
+PTRACE_PEEKUSR     =        3;
+PTRACE_POKETEXT    =        4;
+PTRACE_POKEDATA    =        5;
+PTRACE_POKEUSR    =         6;
+PTRACE_CONT       =         7;
+PTRACE_KILL           =     8;
+PTRACE_SINGLESTEP    =      9;
+PTRACE_ATTACH         =    16;
+PTRACE_DETACH           =  17;
+	PTRACE_GETREGS  = 12;
+	PTRACE_SETREGS    = 13;
+
 TYPE
 	Termios* = RECORD
 		iflags*, oflags*, cflags*, lflags*: SET;
@@ -364,7 +379,15 @@ TYPE
 		reserved1-: ARRAY 5 OF ADDRESS;
 		reserved2-: ARRAY 4 OF WORD;
 	END;
-
+	
+	PtraceRegsStruct = RECORD
+		ebx, ecx, edx, esi, edi, ebp, eax: WORD;
+		DS, ES, FS, GS, AX, IP, CS: WORD;
+		flags: SET; 
+		esp: WORD;
+		ss: WORD;
+	END;
+	
 VAR
 	argc-: LONGINT;  argv-: ADDRESS;
 	aargc: ADDRESS;
@@ -374,6 +397,8 @@ VAR
 			END;
 			
 	sigstack-: ARRAY 32*4096 OF CHAR;
+	
+	ptrace: PROCEDURE {C} (request: WORD; pid: Thread_t; adr, data: ADDRESS): WORD;
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -627,7 +652,9 @@ VAR
 	    sigdelset( ADDRESS OF new, SIGSEGV );
 	    sigdelset( ADDRESS OF new, SIGTERM );
 	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
-	    
+	    res := ptrace(PTRACE_TRACEME, 0,0,0);
+	    TRACE(res);
+
 	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
 	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
 	    res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
@@ -650,7 +677,8 @@ VAR
 	BEGIN
 		pthread_attr_init(ADDRESS OF attr);
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
-		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
+		(*pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);*)
+		pthread_attr_setdetachstate(ADDRESS OF attr, 0);
 		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
 		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
 		RETURN id;
@@ -682,6 +710,22 @@ VAR
 	        END
 	    END;  
     END ThrKill;
+    
+    PROCEDURE TraceThread*(p: Thread_t);
+    VAR regs: PtraceRegsStruct; res: WORD;
+    BEGIN
+    	TRACE(p, pthread_self());
+    	res := ptrace(PTRACE_ATTACH, p , NIL, NIL); 
+    	IF res < 0 THEN Perror("attach") END; 
+    	TRACE(res);
+    	res := ptrace(PTRACE_GETREGS,p,NIL, ADDRESS OF regs);
+    	IF res < 0 THEN Perror("getregs") END; 
+    	TRACE(res); 
+    	TRACE(regs.ebx, regs.ecx, regs.edx, regs.eax); 
+    	TRACE(regs.ebp, regs.esp, regs.IP, regs.flags);
+    	res := ptrace(PTRACE_DETACH, p, NIL, NIL);
+    END TraceThread;
+    
 	
 	
 
@@ -1000,6 +1044,8 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		libp := Dlopen( libpthreadname, 2); 
 		
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
+		
+		Dlsym( libc, "ptrace", ADDRESSOF(ptrace));
 
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init));
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy));

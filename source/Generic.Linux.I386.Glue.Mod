@@ -217,9 +217,8 @@ SystemTools.DoCommands
 		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
 Streams Commands StdIO TrapWriters Traps 
 Files UnixFiles Clock Dates Reals Strings Diagnostics 
-BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole 
+BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  Test BootConsole  
  ~
-~
 
 	FSTools.CloseFiles simple_elf ~
 		~ 

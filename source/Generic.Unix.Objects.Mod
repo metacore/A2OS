@@ -649,6 +649,23 @@ TYPE
 		END;
 	END ResumeActivities;
 	
+	PROCEDURE TraceAll*;
+	VAR t, me: Process;  
+	BEGIN
+		me:= CurrentProcess();
+		t := root;
+		WHILE t # NIL DO
+			(*IF (t # mainProcess) & (t # finCaller) &(t # me) THEN  
+				Unix.ThrSuspend( t.threadId )  
+			END;
+			*)
+			Unix.TraceThread(t.threadId);
+			t := t.nextProcess
+		END;
+		ResumeActivities;
+	END TraceAll;
+	
+	
 
 	PROCEDURE SaveSP;   (* save current SP for usage by the GC *)
 	VAR me: Unix.Thread_t;  t: Process;

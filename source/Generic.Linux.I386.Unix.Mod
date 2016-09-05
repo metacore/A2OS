@@ -413,7 +413,7 @@ VAR
 	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
 	pthread_exit: PROCEDURE {C} (thr: ADDRESS);
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
-	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT);
+	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
 
 	pthread_attr_init: PROCEDURE {C} (attr: ADDRESS);
@@ -652,8 +652,10 @@ VAR
 	    sigdelset( ADDRESS OF new, SIGSEGV );
 	    sigdelset( ADDRESS OF new, SIGTERM );
 	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
+	    (*
 	    res := ptrace(PTRACE_TRACEME, 0,0,0);
 	    TRACE(res);
+	    *)
 
 	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
 	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
@@ -677,8 +679,8 @@ VAR
 	BEGIN
 		pthread_attr_init(ADDRESS OF attr);
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
-		(*pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);*)
-		pthread_attr_setdetachstate(ADDRESS OF attr, 0);
+		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
+		(*pthread_attr_setdetachstate(ADDRESS OF attr, 0);*)
 		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
 		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
 		RETURN id;
@@ -728,8 +730,6 @@ VAR
     
 	
 	
-
-
 PROCEDURE {C} resume_handler(sig: LONGINT);
 BEGIN
 END resume_handler;
@@ -739,7 +739,8 @@ VAR n: LONGINT; res: LONGINT;
 BEGIN
     res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
     resume_done := 0; n := 1;
-    pthread_kill( thr, T_SIGRESUME ); 
+    res := pthread_kill( thr, T_SIGRESUME ); 
+    
     WHILE (resume_done # 1) & (n < 50) DO ThrSleep(1); INC(n) END; 
     res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 END ThrResume;
@@ -747,13 +748,11 @@ END ThrResume;
 PROCEDURE {C} suspend_handler(sig: LONGINT);
 VAR block: Sigset_t; res: LONGINT;
 BEGIN
-
+	TRACE(sig);
     res := sigfillset( ADDRESS OF block );
     sigdelset(  ADDRESS OF block, T_SIGRESUME );
     suspend_done := 1;
-
     res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
-
     resume_done := 1;
 END suspend_handler;
 
@@ -762,15 +761,15 @@ VAR res: LONGINT;
 BEGIN
     res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
     suspend_done := 0;
-    pthread_kill( thr, T_SIGSUSPEND );
+    res := pthread_kill( thr, T_SIGSUSPEND );
     WHILE (suspend_done # 1) DO ThrSleep( 1 ) END;
     res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 END ThrSuspend;
 
-
 TYPE
 	Sigaction = RECORD
 		sa_handler: ADDRESS;
+		filler1: ADDRESS;
 		sa_mask: Sigset_t;
 		sa_flags: ADDRESS;
 		filler: ADDRESS;
@@ -806,7 +805,6 @@ VAR
 			Perror("ThrInitialize: setparam");
 		END;
 		
-
 	    sigemptyset( ADDRESS OF sasuspend.sa_mask );
 	    sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
 	    sasuspend.sa_flags := 0;

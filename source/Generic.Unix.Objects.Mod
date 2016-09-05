@@ -653,13 +653,16 @@ TYPE
 	VAR t, me: Process;  
 	BEGIN
 		me:= CurrentProcess();
+		TRACE(me, me.threadId);
 		t := root;
+				
 		WHILE t # NIL DO
-			(*IF (t # mainProcess) & (t # finCaller) &(t # me) THEN  
+			IF (t # me) & (t # mainProcess) & (t#finCaller) THEN  
+				TRACE(t, t.threadId);
 				Unix.ThrSuspend( t.threadId )  
 			END;
-			*)
-			Unix.TraceThread(t.threadId);
+			(*Unix.TraceThread(t.threadId);*)
+			IF (t # me) THEN  Unix.ThrResume( t.threadId )  END;
 			t := t.nextProcess
 		END;
 		ResumeActivities;
@@ -692,6 +695,7 @@ TYPE
 		SetPriority( GCPriority );
 		LOOP
 			IF collect THEN  
+				TRACE(collect);
 				collect := FALSE;
 				Machine.Acquire( Machine.Heaps );
 				SuspendActivities;

@@ -273,56 +273,8 @@ TYPE
 
 		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
 		VAR port,adr: LONGINT; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
-
-			(*
-			PROCEDURE CreatePorts(type: SyntaxTree.Type; len: LONGINT);
-			VAR i,len2: LONGINT; baseType: SyntaxTree.Type;
-			BEGIN
-				FOR i := 0 TO len-1 DO
-					IF SemanticChecker.IsStaticArray(type, baseType, len2) THEN
-						CreatePorts(baseType, len*len2);
-					ELSIF IsSemiDynamicArray(type) THEN
-						port := MIN(LONGINT); (* unknown port address from here on *)
-					ELSE
-						IntermediateCode.InitImmediate(op,addressType,adr);
-						symbol.Emit(Data(-1,op));
-						INC(port);
-					END;
-				END;
-			END CreatePorts;
-			*)
-
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
-			(*
-			IF (x.cellScope.ownerModule = module.module)  THEN
-				td := x.typeDeclaration;
-				Global.GetSymbolSegmentedName(td,name);
-				(* code section for object *)
-			END;
-			*)
-			(* unnecessary to generate space for ports: already represented as hidden variables *)
-			(*
-			port := 0;
-			parameter := x.firstParameter;
-			WHILE parameter # NIL DO
-				type := parameter.type.resolved;
-				Global.GetSymbolSegmentedName(parameter,name);
-				symbol := implementationVisitor.NewSection(module.allSections, Sections.ConstSection,name,parameter,dump);
-				IF port >= 0 THEN
-					(*! could be used for optimization: query value here ???
-					parameter.SetResolved(SyntaxTree.NewIntegerValue(-1, port));
-					*)
-				END;
-				CreatePorts(type, 1); 
-				IF backend.cellsAreObjects THEN
-					IF IsStaticArray(parameter.type.resolved) THEN
-						Error(parameter.position, "static arrays of ports are currently not implemented, please use a property (array property of port)");
-					END;
-				END;
-				parameter := parameter.nextParameter;
-			END;
-			*)
 			capabilities := {};
 			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN INCL(capabilities, Global.FloatingPointCapability) END;
 			IF HasFlag(x.modifiers, Global.StringVector) THEN INCL(capabilities, Global.VectorCapability) END;
@@ -331,8 +283,6 @@ TYPE
 			IF ~implementationVisitor.checker.SkipImplementation(x) THEN
 				Scope(x.cellScope);
 			END;
-			
-			
 		END VisitCellType;
 
 		PROCEDURE VisitProcedureType(x: SyntaxTree.ProcedureType);
@@ -501,31 +451,6 @@ TYPE
 		VAR name: Basic.SegmentedName; irv, irl: IntermediateCode.Section; op: Operand; dim: LONGINT;
 		BEGIN
 			HALT(100);
-			(*
-			ASSERT(currentScope.outerScope IS SyntaxTree.CellScope);
-			(* code section for variable *)
-			Global.GetSymbolSegmentedName(x,name);
-			irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
-			irv.SetPositionOrAlignment(x.fixed, x.alignment);
-			(*
-			irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
-			*)
-			IF IsSemiDynamicArray(x.type) & ~backend.cellsAreObjects THEN
-				HALT(100);
-				irv.Emit(Reserve(x.position, system.addressSize));
-				Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
-				irl := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
-				irl.Emit(Reserve(x.position, DynamicDim(x.type) * system.addressSize));
-			ELSIF x.defaultValue = NIL THEN
-				irv.Emit(Reserve(x.position,ToMemoryUnits(system,system.SizeOf(x.type))))
-			ELSE
-				implementationVisitor.inData := TRUE;
-				implementationVisitor.Evaluate(x.defaultValue, op);
-				irv.Emit(Data(x.position,op.op));
-				implementationVisitor.inData := FALSE;
-			END;
-			meta.CheckTypeDeclaration(x.type);
-			*)
 		END VisitParameter;
 
 
@@ -7025,18 +6950,7 @@ TYPE
 						CallThis(position,"ActiveCellsRuntime","AddPortFlagProperty",3);
 					END;
 			END AddPortProperty;
-			
-			(*PROCEDURE AddPortProperties(variable: SyntaxTree.Variable);
-			VAR modifier: SyntaxTree.Modifier;
-			BEGIN
-				modifier := variable.modifiers;
-				WHILE modifier # NIL DO
-					AddPortProperty(variable,modifier, modifier.expression);
-					modifier := modifier.nextModifier;
-				END;
-			END AddPortProperties;
-			*)
-			
+					
 			PROCEDURE AddPortProperties(parameter: SyntaxTree.Parameter);
 			VAR modifier: SyntaxTree.Modifier;
 			BEGIN
@@ -7046,82 +6960,6 @@ TYPE
 					modifier := modifier.nextModifier;
 				END;
 			END AddPortProperties;
-			
-			(*
-			PROCEDURE Variable(name: ARRAY OF CHAR; variable: SyntaxTree.Variable);
-			VAR op : Operand; portType: SyntaxTree.PortType; baseType: SyntaxTree.Type; 
-				size, reg: IntermediateCode.Operand; dim, len: LONGINT;
-				
-				PROCEDURE PushLens(type: SyntaxTree.Type);
-				BEGIN
-					IF IsSemiDynamicArray(type) THEN
-						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
-						Evaluate(type(SyntaxTree.ArrayType).length, op);
-						Emit(Push(-1, op.op));
-						ReleaseOperand(op);
-						INC(dim);
-					ELSIF IsStaticArray(type) THEN
-						len := len * type(SyntaxTree.ArrayType).staticLength;
-						PushLens(type(SyntaxTree.ArrayType).arrayBase.resolved);
-						INC(dim);
-					ELSE
-						baseType := type;
-					END;
-				END PushLens;
-				
-			BEGIN
-				(* cell *)
-					IF variable.type IS SyntaxTree.ArrayType THEN
-						type := variable.type;
-						dim := 0; 
-						len := 1;
-						PushLens(type);
-						portType := baseType.resolved(SyntaxTree.PortType);
-					ELSE
-						portType := variable.type(SyntaxTree.PortType);
-					END;
-					
-					PushSelfPointer();
-				(* port / array of ports *)
-					IF IsStaticArray(type) THEN
-						PushConstInteger(len);
-					END;
-					Field(variable, op);
-					(*left := SyntaxTree.NewSymbolDesignator(-1,left,cell); left.SetType(system.anyType);
-					left := SyntaxTree.NewDereferenceDesignator(-1, left); left.SetType(x);
-					d := SyntaxTree.NewSymbolDesignator(-1, left, variable); d.SetType(variable.type);
-					Designate(d, op);*)
-					Emit(Push(-1, op.op));
-					ReleaseOperand(op);
-				(* name *)
-					PushConstString(name);
-				(* inout *)
-					PushConstSet(Direction(portType.direction));
-				(* width *)
-					PushConstInteger(portType.sizeInBits);
-				
-				IF variable.type IS SyntaxTree.PortType THEN
-					CallThis(variable.position,"ActiveCellsRuntime","AddPort",6);
-					AddPortProperties(variable);
-				ELSIF IsStaticArray(type)THEN
-					CallThis(variable.position,"ActiveCellsRuntime","AddStaticPortArray",7);
-				ELSIF IsSemiDynamicArray(type) THEN
-					IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,6*addressType.sizeInBits));
-					Emit(Add(position,reg, sp, size));
-					(* dim *)
-					PushConstInteger(dim);
-					(* len array *)
-					Emit(Push(position, reg));
-					ReleaseIntermediateOperand(reg);
-					CallThis(position,"ActiveCellsRuntime","AddPortArray",8);
-					size :=  IntermediateCode.Immediate(addressType, ToMemoryUnits(system,dim*addressType.sizeInBits));
-					Emit(Add(position, sp,sp, size));
-				ELSE
-					HALT(100);
-				END;
-			END Variable;
-			*)
 			
 			PROCEDURE Parameter(name: ARRAY OF CHAR; parameter: SyntaxTree.Parameter);
 			VAR op : Operand; portType: SyntaxTree.PortType; baseType: SyntaxTree.Type; 
@@ -7197,12 +7035,11 @@ TYPE
 				END;
 			END Parameter;
 
-			
-
-
 		BEGIN
-		
 			IF backend.cellsAreObjects THEN
+				IF (x.baseType # NIL)  & (x.baseType.resolved IS SyntaxTree.CellType) THEN
+					AddPorts(cell, x.baseType.resolved(SyntaxTree.CellType));
+				END;
 				parameter := x.firstParameter;
 				WHILE (parameter # NIL) DO
 					type := parameter.type.resolved;
@@ -7215,84 +7052,9 @@ TYPE
 					END;
 					parameter := parameter.nextParameter;
 				END;
-				(*
-				variable := x.cellScope.firstVariable;
-				WHILE (variable # NIL) DO
-					type := variable.type.resolved;
-					WHILE (type IS SyntaxTree.ArrayType) DO
-						type := type(SyntaxTree.ArrayType).arrayBase.resolved;
-					END;
-					IF (type IS SyntaxTree.PortType) THEN (* port found *)
-						Global.GetSymbolNameInScope(variable,x.cellScope,name);
-						Variable(name,variable);
-					END;
-					variable := variable.nextVariable;
-				END;
-				*)
 			ELSE HALT(200) 
 			END;
 		
-			(*prevActiveCellsScope := currentActiveCellsScope;*)
-			(*
-			x.typeDeclaration.GetName(componentName);
-			instanceType := currentActiveCellsScope.NewType(componentName); (*backend.cification.NewType(componentName);*)
-			IF HasValue(x.modifiers,Global.StringDataMemorySize,dataMemorySize) THEN
-				instanceType.SetDataMemorySize(dataMemorySize);
-			END;
-			IF HasValue(x.modifiers,Global.StringCodeMemorySize,codeMemorySize) THEN
-				instanceType.SetInstructionMemorySize(codeMemorySize)
-			END;
-			IF HasFlag(x.modifiers, Global.StringVector) THEN
-				instanceType.AddCapability(ActiveCells.VectorCapability)
-			END;
-			IF HasFlag(x.modifiers, Global.StringTRMS) THEN
-				instanceType.AddCapability(ActiveCells.TRMSCapability)
-			END;
-			IF HasFlag(x.modifiers, Global.StringFloatingPoint) THEN
-				instanceType.AddCapability(ActiveCells.FloatingPointCapability)
-			END;
-			AddDevices(instanceType, x);
-			*)
-			(*
-			IF x.isCellNet THEN
-				IF HasValue(x.modifiers,Global.StringFrequencyDivider,value) THEN backend.activeCellsSpecification.SetFrequencyDivider(value) END;
-			END;
-			*)
-
-			(*currentActiveCellsScope := instanceType;*)
-			(*
-			parameter := x.firstParameter;
-			portIndex := 0;
-			WHILE parameter # NIL DO
-				parameter.GetName(parameterName);
-				parameterType := parameter.type.resolved;
-				Parameter(parameterName, parameterType);
-				(*
-				IF SemanticChecker.IsStaticArray(parameterType,parameterType,len) THEN
-					ParameterArray(parameterType);
-					direction := Direction(parameterType(SyntaxTree.PortType).direction);
-					FOR i := 0 TO len-1 DO
-						COPY(parameterName,name);
-						AppendIndex(name,i);
-						port := instanceType.NewPort(name,direction,backend.activeCellsSpecification.GetPortAddress(portIndex));
-						port.SetWidth(parameterType(SyntaxTree.PortType).sizeInBits);
-						INC(portIndex);
-					END;
-				ELSE
-					direction := Direction(parameterType(SyntaxTree.PortType).direction);
-					port := instanceType.NewPort(parameterName,direction,backend.activeCellsSpecification.GetPortAddress(portIndex));
-					port.SetWidth(parameterType(SyntaxTree.PortType).sizeInBits);
-					INC(portIndex);
-				END;
-				*)
-				parameter := parameter.nextParameter;
-			END;
-			*)
-			(*
-			Scope(x.cellScope);
-			currentActiveCellsScope := prevActiveCellsScope;
-			AddModules(instanceType,x.cellScope);
-			*)
 		END AddPorts;
 		
 	

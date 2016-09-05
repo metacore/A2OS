@@ -8269,9 +8269,11 @@ TYPE
 					IF baseType IS SyntaxTree.PointerType THEN
 						baseType := baseType(SyntaxTree.PointerType).pointerBase.resolved;
 					END;
+					(*
 					IF baseType IS SyntaxTree.CellType THEN
 						DeclareCell(baseType(SyntaxTree.CellType));
 					END;
+					*)
 				END;
 
 				parameter := type.firstParameter;

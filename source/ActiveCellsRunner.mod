@@ -309,10 +309,12 @@ type
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			if EnableTrace then trace(netPort, cellPort); end;
 			(*! check correctness of delegation which is not 100% guaranteed by the operator ">>" *)
+			(*
 			if ~netPort(Port).owner.isCellnet or (cellPort(Port).owner = netPort(Port).owner) then
 				res := -1;
 				return;
 			end;
+			*)
 			netPort(Port).Delegate(cellPort(Port));
 		end Delegate;
 

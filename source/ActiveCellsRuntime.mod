@@ -525,7 +525,7 @@ type
 	
 	operator ">>"* (cellPort: Pout; netPort: Pout); 
 	begin
-		Delegate(system.val(any, netPort), system.val(any, cellPort));
+		Delegate(system.val(any, cellPort), system.val(any, netPort));
 	end ">>";
 	
 	operator ">>"* (netPort: Pin; cellPort: Pin); 

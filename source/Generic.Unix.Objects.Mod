@@ -170,10 +170,10 @@ TYPE
 	
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR
-		threadId			: Unix.Thread_t;
+		threadId-			: Unix.Thread_t;
 		nextProcess-	: Process;	(* next in list of all processes *)
 		stackBottom	-	: ADDRESS;
-		SP-				: ADDRESS;	(* SP value at last NEW *)
+		context*: Unix.McontextDesc;
 		id-				: LONGINT;
 		body			: Body;
 		mode-		: LONGINT;
@@ -194,7 +194,7 @@ TYPE
 		VAR sp, ptr: ADDRESS;
 		BEGIN
 			IF mode # Terminated THEN
-				sp := SP;
+				sp := context.r_sp;
 				WHILE sp < stackBottom DO  
 					S.GET( sp, ptr );  
 					IF (ptr # 0) & (ptr MOD 8 = 0) THEN  Heaps.Candidate( ptr )  END;  
@@ -256,7 +256,6 @@ TYPE
 			ELSE 
 				(* first process *)
 				stackBottom := Glue.stackBottom;  
-				SP := Machine.CurrentSP( );
 				threadId := Unix.ThrThis(0);
 				id := 0;  nextPID := 1;
 				root := SELF;
@@ -276,7 +275,6 @@ TYPE
 			p := newProcess;  newProcess := NIL;
 			p.threadId := Unix.ThrThis(0);  
 			p.id := nextPID;  INC( nextPID );
-			p.SP := Machine.CurrentSP(  );  
 			p.stackBottom := Machine.CurrentBP( );
 			S.GET( p.stackBottom, prevBP );
 			S.PUT( prevBP, S.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
@@ -629,13 +627,12 @@ TYPE
 
 	(*--------------------  Garbage Collection  ------------------------------------*)
 	
-	PROCEDURE SuspendMe(ctxt: Unix.Ucontext);
-	VAR bp: ADDRESS; i: LONGINT; res: LONGINT;
-		
+	PROCEDURE GetContext(ctxt: Unix.Ucontext);
+	VAR t: Process;
 	BEGIN
-		bp := ctxt.mc.r_bp;
-		TRACE(CurrentProcess(), bp);
-	END SuspendMe;
+		t := CurrentProcess();
+		Unix.CopyContext(ctxt.mc, t.context);
+	END GetContext;
 	
 	PROCEDURE SuspendActivities;
 	VAR t: Process;  
@@ -656,39 +653,6 @@ TYPE
 			t := t.nextProcess
 		END;
 	END ResumeActivities;
-	
-	PROCEDURE TraceAll*;
-	VAR t, me: Process;  
-	BEGIN
-		me:= CurrentProcess();
-		TRACE(me, me.threadId, mainProcess);
-		t := root;
-				
-		WHILE t # NIL DO
-			IF (t # me) (* & (t # mainProcess) & (t#finCaller) *) THEN  
-				Unix.suspendMe := SuspendMe;
-				TRACE(t, t.threadId);
-				Unix.ThrSuspend( t.threadId ); 
-				(*Unix.TraceThread(t.threadId);*)
-			END;
-			(*IF (t # me) THEN  Unix.ThrResume( t.threadId )  END;*)
-			t := t.nextProcess
-		END;
-		
-		ResumeActivities;
-		
-	END TraceAll;
-	
-	
-
-	PROCEDURE SaveSP;   (* save current SP for usage by the GC *)
-	VAR me: Unix.Thread_t;  t: Process;
-	BEGIN
-		me := Unix.ThrThis(0);  t := root;
-		WHILE (t # NIL ) & (t.threadId # me) DO  t := t.nextProcess  END;
-		IF t # NIL THEN  t.SP := Machine.CurrentSP( )  END
-	END SaveSP;
-		
 	
 	PROCEDURE InvokeGC;
 	BEGIN
@@ -770,6 +734,7 @@ TYPE
 	PROCEDURE Init;
 	BEGIN
 		TRACE("Init");
+		Unix.suspendHandler := GetContext;
 		(*
 		Unix.Dlsym( 0, "Unix.MtxInit",		ADDRESSOF( Unix.MtxInit ) );
 		Unix.Dlsym( 0, "Unix.MtxDestroy",	ADDRESSOF( Unix.MtxDestroy ) );

@@ -352,18 +352,18 @@ TYPE
 				r_ds-		: LONGINT;
 				r_di-		: LONGINT;
 				r_si-		: LONGINT;
-				r_bp-		: ADDRESS;
-				r_sp_ -	: LONGINT;
+				r_bp *	: ADDRESS;
+				r_sp_ 	: LONGINT;
 				r_bx-		: LONGINT;
 				r_dx-		: LONGINT;
 				r_cx-		: LONGINT;
 				r_ax-		: LONGINT;
 				r_trapno-	: LONGINT;
 				r_err-		: LONGINT;
-				r_pc-		: LONGINT;
+				r_pc *	: LONGINT;
 				r_cs-		: LONGINT;
 				r_flags-	: LONGINT;
-				r_sp-		: LONGINT;		(* sp at error (signal) *)
+				r_sp *	: LONGINT;		(* sp at error (signal) *)
 				r_ss-		: LONGINT;
 				fpc-		: ADDRESS; 	(* FPcontext *)
 				oldmask-	: LONGINT;
@@ -746,13 +746,13 @@ BEGIN
     res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 END ThrResume;
 
-VAR suspendMe*: PROCEDURE(c: Ucontext);
+VAR suspendHandler*: PROCEDURE(c: Ucontext);
 
 PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
 VAR block: Sigset_t; res: LONGINT;
 BEGIN
 	TRACE(sig, scp, ucp);
-	IF suspendMe # NIL THEN suspendMe(S.VAL(Ucontext,ucp)) END;
+	IF suspendHandler # NIL THEN suspendHandler(S.VAL(Ucontext,ucp)) END;
     res := sigfillset( ADDRESS OF block );
     sigdelset(  ADDRESS OF block, T_SIGRESUME );
     suspend_done := 1;
@@ -823,6 +823,11 @@ VAR
 	    RETURN TRUE;
 	END ThrInitialize;
 
+	PROCEDURE CopyContext*(CONST from: McontextDesc; VAR to: McontextDesc);
+	BEGIN
+		S.MOVE(ADDRESS OF from, ADDRESS OF to, SIZE OF McontextDesc);
+	END CopyContext;
+	
 
 	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: LONGINT );
 	BEGIN

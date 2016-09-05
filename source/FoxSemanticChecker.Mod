@@ -8564,6 +8564,9 @@ TYPE
 			SELF.diagnostics := diagnostics
 		END InitWarnings;
 
+		PROCEDURE VisitPortType(x: SyntaxTree.PortType);
+		BEGIN	END VisitPortType;
+
 		(** types *)
 		PROCEDURE Type(x: SyntaxTree.Type);
 		BEGIN x.Accept(SELF)

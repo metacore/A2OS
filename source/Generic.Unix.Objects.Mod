@@ -629,6 +629,14 @@ TYPE
 
 	(*--------------------  Garbage Collection  ------------------------------------*)
 	
+	PROCEDURE SuspendMe(ctxt: Unix.Ucontext);
+	VAR bp: ADDRESS; i: LONGINT; res: LONGINT;
+		
+	BEGIN
+		bp := ctxt.mc.r_bp;
+		TRACE(CurrentProcess(), bp);
+	END SuspendMe;
+	
 	PROCEDURE SuspendActivities;
 	VAR t: Process;  
 	BEGIN
@@ -653,19 +661,22 @@ TYPE
 	VAR t, me: Process;  
 	BEGIN
 		me:= CurrentProcess();
-		TRACE(me, me.threadId);
+		TRACE(me, me.threadId, mainProcess);
 		t := root;
 				
 		WHILE t # NIL DO
-			IF (t # me) & (t # mainProcess) & (t#finCaller) THEN  
+			IF (t # me) (* & (t # mainProcess) & (t#finCaller) *) THEN  
+				Unix.suspendMe := SuspendMe;
 				TRACE(t, t.threadId);
-				Unix.ThrSuspend( t.threadId )  
+				Unix.ThrSuspend( t.threadId ); 
+				(*Unix.TraceThread(t.threadId);*)
 			END;
-			(*Unix.TraceThread(t.threadId);*)
-			IF (t # me) THEN  Unix.ThrResume( t.threadId )  END;
+			(*IF (t # me) THEN  Unix.ThrResume( t.threadId )  END;*)
 			t := t.nextProcess
 		END;
+		
 		ResumeActivities;
+		
 	END TraceAll;
 	
 	

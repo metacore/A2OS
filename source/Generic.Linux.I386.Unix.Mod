@@ -352,7 +352,7 @@ TYPE
 				r_ds-		: LONGINT;
 				r_di-		: LONGINT;
 				r_si-		: LONGINT;
-				r_bp-		: LONGINT;
+				r_bp-		: ADDRESS;
 				r_sp_ -	: LONGINT;
 				r_bx-		: LONGINT;
 				r_dx-		: LONGINT;
@@ -399,6 +399,7 @@ VAR
 	sigstack-: ARRAY 32*4096 OF CHAR;
 	
 	ptrace: PROCEDURE {C} (request: WORD; pid: Thread_t; adr, data: ADDRESS): WORD;
+	getcontext-: PROCEDURE {C} (context: ADDRESS): WORD; 
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -716,6 +717,7 @@ VAR
     PROCEDURE TraceThread*(p: Thread_t);
     VAR regs: PtraceRegsStruct; res: WORD;
     BEGIN
+    
     	TRACE(p, pthread_self());
     	res := ptrace(PTRACE_ATTACH, p , NIL, NIL); 
     	IF res < 0 THEN Perror("attach") END; 
@@ -727,8 +729,7 @@ VAR
     	TRACE(regs.ebp, regs.esp, regs.IP, regs.flags);
     	res := ptrace(PTRACE_DETACH, p, NIL, NIL);
     END TraceThread;
-    
-	
+    	
 	
 PROCEDURE {C} resume_handler(sig: LONGINT);
 BEGIN
@@ -745,10 +746,13 @@ BEGIN
     res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 END ThrResume;
 
-PROCEDURE {C} suspend_handler(sig: LONGINT);
+VAR suspendMe*: PROCEDURE(c: Ucontext);
+
+PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
 VAR block: Sigset_t; res: LONGINT;
 BEGIN
-	TRACE(sig);
+	TRACE(sig, scp, ucp);
+	IF suspendMe # NIL THEN suspendMe(S.VAL(Ucontext,ucp)) END;
     res := sigfillset( ADDRESS OF block );
     sigdelset(  ADDRESS OF block, T_SIGRESUME );
     suspend_done := 1;
@@ -769,7 +773,7 @@ END ThrSuspend;
 TYPE
 	Sigaction = RECORD
 		sa_handler: ADDRESS;
-		filler1: ADDRESS;
+		(*filler1: ADDRESS;*)
 		sa_mask: Sigset_t;
 		sa_flags: ADDRESS;
 		filler: ADDRESS;
@@ -807,7 +811,7 @@ VAR
 		
 	    sigemptyset( ADDRESS OF sasuspend.sa_mask );
 	    sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
-	    sasuspend.sa_flags := 0;
+	    sasuspend.sa_flags := SA_SIGINFO + (*SA_ONSTACK +*) SA_NODEFER;;
 	    sasuspend.sa_handler := suspend_handler;
 	    ASSERT(sigaction( T_SIGSUSPEND, ADDRESS OF sasuspend, NIL ) = 0);
 
@@ -1044,6 +1048,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 		
 		Dlsym( libc, "ptrace", ADDRESSOF(ptrace));
+		Dlsym( libc, "getcontext", ADDRESSOF(getcontext));
 
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init));
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy));

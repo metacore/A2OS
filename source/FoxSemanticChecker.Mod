@@ -8273,21 +8273,23 @@ TYPE
 						DeclareCell(baseType(SyntaxTree.CellType));
 					END;
 				END;
+
 				parameter := type.firstParameter;
 				WHILE(parameter # NIL) DO (* duplicates forbidden *)
+					(*
 					variable := SyntaxTree.NewVariable(parameter.position, parameter.name);
 					variable.SetType(parameter.type);
 					variable.SetAccess(SyntaxTree.Hidden);
 					variable.SetModifiers(parameter.modifiers);
 					currentScope.PushVariable(variable);
-					(*
-					Register(parameter,scope, FALSE); 
 					*)
+					Register(parameter,scope, FALSE); 
 					parameter := parameter.nextParameter;
 				END;
 				
 				property := type.firstProperty;
 				WHILE (property # NIL) DO (* duplicates allowed : overwrite *)
+					(*
 					variable := currentScope.FindVariable(property.name);
 					IF (variable # NIL) & (variable IS SyntaxTree.Property) THEN (* overwrite *)
 						prop := variable(SyntaxTree.Property); 
@@ -8298,6 +8300,8 @@ TYPE
 					prop.SetType(property.type);
 					prop.SetValue(property.value);
 					prop.SetAccess(SyntaxTree.Hidden);
+					*)
+					Register(property, scope, FALSE);
 					property := property.nextProperty;
 				END;
 			END DeclareCell;

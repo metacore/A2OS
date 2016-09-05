@@ -334,6 +334,7 @@ TYPE
 
 		PROCEDURE GenerateCellOffsets(x: SyntaxTree.CellType): BOOLEAN;
 		VAR baseType: SyntaxTree.Type; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+			parameter: SyntaxTree.Parameter; property: SyntaxTree.Property;
 		BEGIN
 			baseType := x.baseType;
 			IF (baseType # NIL) THEN
@@ -356,6 +357,44 @@ TYPE
 				IF alignment <= 0 THEN alignment := dataUnit END;
 			END;
 
+			IF cellsAreObjects THEN
+				(* ports *)
+				parameter := x.cellScope.ownerCell.firstParameter;
+				WHILE (parameter # NIL) DO
+					size := SizeOf(parameter.type.resolved);
+					IF size < 0 THEN RETURN FALSE END;
+
+					IF parameter.alignment > 0 THEN
+						thisAlignment := parameter.alignment*dataUnit;
+					ELSE
+						thisAlignment := AlignmentOf(SELF.variableAlignment, parameter.type.resolved);
+					END;
+					Basic.Align(offset, thisAlignment);
+					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
+					parameter.SetOffset(offset);
+					INC(offset,size);
+					parameter := parameter.nextParameter;
+				END;
+				(* properties *)
+				property := x.cellScope.ownerCell.firstProperty;
+				WHILE (property # NIL) DO
+					size := SizeOf(property.type.resolved);
+					IF size < 0 THEN RETURN FALSE END;
+
+					IF property.alignment > 0 THEN
+						thisAlignment := property.alignment*dataUnit;
+					ELSE
+						thisAlignment := AlignmentOf(SELF.variableAlignment, property.type.resolved);
+					END;
+					Basic.Align(offset, thisAlignment);
+					IF thisAlignment  > alignment THEN alignment := thisAlignment END;
+
+					property.SetOffset(offset);
+					INC(offset,size);
+					property := property.nextProperty;
+				END;
+			END;
+			(* variables *)
 			variable := x.cellScope.firstVariable;
 			WHILE (variable # NIL) DO
 				IF ~variable.fictive THEN

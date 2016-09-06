@@ -869,6 +869,14 @@ TYPE
 		VAR svalue: ARRAY 32 OF CHAR; position: LONGINT;
 		BEGIN
 			IF cellsAreObjects THEN RETURN FALSE END;
+			IF HasStringValue(x.modifiers, Global.NameRuntime, position, svalue) THEN
+				IF  svalue = "A2" THEN 
+					RETURN TRUE 
+				END;
+			END;
+			RETURN FALSE; 
+			(*
+			(*IF cellsAreObjects THEN RETURN FALSE END;*)
 			IF (backendName = "TRM") & x.isCellNet THEN  RETURN TRUE END;
 			IF HasStringValue(x.modifiers,Global.NameBackend,position,svalue) THEN 
 				IF svalue[0] = "~" THEN
@@ -880,10 +888,11 @@ TYPE
 					RETURN TRUE;
 				END;
 			END;
-			IF x.baseType # NIL THEN
+			IF (x.baseType # NIL) & (x.baseType.resolved IS SyntaxTree.CellType) THEN
 				RETURN SkipImplementation(x.baseType.resolved(SyntaxTree.CellType));
 			END;
 			RETURN FALSE;
+			*)
 		END SkipImplementation;
 
 		PROCEDURE CheckModifiers(modifiers: SyntaxTree.Modifier; checkUse: BOOLEAN);
@@ -1242,7 +1251,7 @@ TYPE
 				x.SetState(SyntaxTree.Resolved);
 
 				IF (x.cellScope.bodyProcedure = NIL) & (~isEngine)THEN
-					Error(x.position, Diagnostics.Invalid, "Forbidden empty Body.");
+					Warning(x.position, "Forbidden empty Body.");
 				ELSIF (x.cellScope.bodyProcedure # NIL) & (isEngine)THEN
 					Warning(x.position, "Non-empty body for an engine?");
 				END;
@@ -8340,6 +8349,7 @@ TYPE
 				parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType).returnParameter;
 				IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
 			ELSIF scope IS SyntaxTree.CellScope THEN
+				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
 				IF~skipImplementation THEN
 					import := scope(SyntaxTree.CellScope).firstImport;
 					WHILE(import # NIL) DO
@@ -8353,10 +8363,13 @@ TYPE
 						import := import.nextImport;
 					END;
 				END;
-				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
 			END;
 			IF error THEN RETURN END;
 
+			IF skipImplementation THEN
+				scope.Clear;
+			END;
+		
 			(* constants *)
 			constant := scope.firstConstant;
 			WHILE (constant # NIL) DO
@@ -8378,39 +8391,37 @@ TYPE
 				Register(procedure, currentScope, procedure IS SyntaxTree.Operator); procedure := procedure.nextProcedure;
 			END;
 
-			IF ~skipImplementation THEN
-				(* now process all symbols without any presumption on the order *)
+			(* now process all symbols without any presumption on the order *)
+			symbol := scope.firstSymbol;
+			WHILE(symbol # NIL) DO
+				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
+					ResolveSymbol(symbol);
+				END;
+				symbol := symbol.nextSymbol;
+			END;
+
+			IF (scope IS SyntaxTree.ProcedureScope) & scope(SyntaxTree.ProcedureScope).ownerProcedure.type.isRealtime THEN
 				symbol := scope.firstSymbol;
-				WHILE(symbol # NIL) DO
-					IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
-						ResolveSymbol(symbol);
-					END;
-					symbol := symbol.nextSymbol;
-				END;
-
-				IF (scope IS SyntaxTree.ProcedureScope) & scope(SyntaxTree.ProcedureScope).ownerProcedure.type.isRealtime THEN
-					symbol := scope.firstSymbol;
-					WHILE symbol # NIL DO
-						IF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
-							IF (symbol.type IS SyntaxTree.PointerType) OR (symbol.type IS SyntaxTree.QualifiedType) THEN
-								pointerFixes.Add(symbol, currentScope);
-							END;
-							IF ~symbol.type.resolved.isRealtime THEN
-								Error(symbol.position,Diagnostics.Invalid,"symbol has no realtime type");
-							END;
+				WHILE symbol # NIL DO
+					IF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
+						IF (symbol.type IS SyntaxTree.PointerType) OR (symbol.type IS SyntaxTree.QualifiedType) THEN
+							pointerFixes.Add(symbol, currentScope);
 						END;
-						symbol := symbol.nextSymbol
+						IF ~symbol.type.resolved.isRealtime THEN
+							Error(symbol.position,Diagnostics.Invalid,"symbol has no realtime type");
+						END;
 					END;
+					symbol := symbol.nextSymbol
 				END;
+			END;
 
-				IF ~error & ~system.GenerateVariableOffsets(scope) THEN
-					Error(Diagnostics.Invalid,Diagnostics.Invalid,"problems during offset computation in module");
-				END;
+			IF ~error & ~system.GenerateVariableOffsets(scope) THEN
+				Error(Diagnostics.Invalid,Diagnostics.Invalid,"problems during offset computation in module");
+			END;
 
-				IF  (scope.ownerModule # NIL) THEN
-					(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
-					scope.ownerModule.AddScope(scope);
-				END;
+			IF  (scope.ownerModule # NIL) THEN
+				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
+				scope.ownerModule.AddScope(scope);
 			END;
 
 			phase := prevPhase;

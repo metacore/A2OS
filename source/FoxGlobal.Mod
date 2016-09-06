@@ -60,6 +60,7 @@ CONST
 	StringTRM*="TRM";
 	StringTRMS*="TRMS";
 	StringBackend*="Backend";
+	StringRuntime*="Runtime";
 
 	(* traps *)
 	WithTrap* = 1;
@@ -189,7 +190,7 @@ VAR
 	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
-	NameBackend-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
+	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
 
@@ -1692,6 +1693,7 @@ TYPE
 		NameTRM := SyntaxTree.NewIdentifier(StringTRM);
 		NameTRMS := SyntaxTree.NewIdentifier(StringTRMS);
 		NameBackend := SyntaxTree.NewIdentifier(StringBackend);
+		NameRuntime := SyntaxTree.NewIdentifier(StringRuntime);
 		NameEngine := SyntaxTree.NewIdentifier(StringEngine);
 		NameFinal := SyntaxTree.NewIdentifier(StringFinal);
 		NameAbstract := SyntaxTree.NewIdentifier(StringAbstract);

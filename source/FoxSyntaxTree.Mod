@@ -4501,6 +4501,14 @@ TYPE
 			END;
 			nextScope := NIL;
 		END InitScope;
+		
+		PROCEDURE Clear*;
+		BEGIN
+			firstConstant := NIL; lastConstant := NIL; numberConstants := 0;
+			firstTypeDeclaration := NIL; lastTypeDeclaration := NIL; numberTypeDeclarations := 0;
+			firstVariable := NIL; lastVariable := NIL; numberVariables := 0;
+			firstProcedure := NIL; lastProcedure := NIL; numberProcedures := 0;
+		END Clear;
 
 		(** Enter a symbol in the scope, aplhabetically sorted, duplicate = TRUE if multiply identifier *)
 		PROCEDURE EnterSymbol*(symbol: Symbol; VAR duplicate: BOOLEAN);
@@ -4847,7 +4855,17 @@ TYPE
 			ownerCell := NIL;
 			bodyProcedure := NIL;
 			constructor := NIL;
+			firstImport := NIL; lastImport := NIL; numberImports := 0; 
 		END InitCellScope;
+		
+		PROCEDURE Clear*;
+		BEGIN
+			Clear^;
+			firstImport := NIL; lastImport := NIL; numberImports := 0; 
+			constructor := NIL;
+			bodyProcedure := NIL;
+		END Clear;
+		
 
 		PROCEDURE SetOwnerCell*(owner: CellType);
 		BEGIN

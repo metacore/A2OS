@@ -874,6 +874,9 @@ TYPE
 					RETURN TRUE 
 				END;
 			END;
+			IF (x.baseType # NIL) & (x.baseType.resolved IS SyntaxTree.CellType) THEN
+				RETURN SkipImplementation(x.baseType.resolved(SyntaxTree.CellType));
+			END;
 			RETURN FALSE; 
 			(*
 			(*IF cellsAreObjects THEN RETURN FALSE END;*)

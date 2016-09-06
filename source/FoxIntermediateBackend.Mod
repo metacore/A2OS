@@ -447,11 +447,43 @@ TYPE
 			(* do not call Type(x.type) here as this must already performed in the type declaration section ! *)
 		END VisitVariable;
 
-		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
-		VAR name: Basic.SegmentedName; irv, irl: IntermediateCode.Section; op: Operand; dim: LONGINT;
+		PROCEDURE VisitProperty(x: SyntaxTree.Property);
 		BEGIN
-			HALT(100);
+			VisitVariable(x)
+		END VisitProperty; 
+
+		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
+			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
+		BEGIN
+			ASSERT(currentScope IS SyntaxTree.CellScope);
+			Global.GetSymbolSegmentedName(x,name);
+			irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+			irv.SetExported(IsExported(x));
+			irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
+			IF (currentScope IS SyntaxTree.CellScope) & IsSemiDynamicArray(x.type) THEN
+				irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
+				Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
+				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+				FOR i := 0 TO DynamicDim(x.type)-1 DO
+					irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
+				END;
+			ELSE
+				lastUpdated:= 0;
+				size := ToMemoryUnits(system,system.SizeOf(x.type)) - lastUpdated;	
+				IF size > 0 THEN
+					irv.Emit(Reserve(x.position,size));
+				END;
+				IF ~x.fixed THEN
+					align := CommonAlignment(x.alignment, ToMemoryUnits(system, system.AlignmentOf(system.variableAlignment, x.type)));
+				ELSE
+					align := x.alignment;
+				END;
+				irv.SetPositionOrAlignment(x.fixed, align);
+				meta.CheckTypeDeclaration(x.type);
+			END;
 		END VisitParameter;
+		
 
 
 		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
@@ -475,10 +507,29 @@ TYPE
 			constant: SyntaxTree.Constant;
 			variable: SyntaxTree.Variable;
 			prevScope: SyntaxTree.Scope;  typeDeclaration: SyntaxTree.TypeDeclaration;
+			cell: SyntaxTree.CellType;
+			parameter: SyntaxTree.Parameter;
+			property: SyntaxTree.Property;
 		BEGIN
 			prevScope := currentScope;
 			currentScope := x;
 			(* constants treated in implementation visitor  *)
+
+
+			WITH x: SyntaxTree.CellScope DO
+				cell := x.ownerCell;
+				parameter := cell.firstParameter;
+				WHILE parameter # NIL DO
+					VisitParameter(parameter);
+					parameter := parameter.nextParameter;
+				END;
+				property := cell.firstProperty;
+				WHILE property # NIL DO
+					VisitProperty(property);
+					property := property.nextProperty;
+				END;
+			ELSE
+			END;
 
 			typeDeclaration := x.firstTypeDeclaration;
 			WHILE typeDeclaration # NIL DO

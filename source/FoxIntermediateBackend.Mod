@@ -7119,7 +7119,10 @@ TYPE
 				Emit(Push(position,op.op));
 				ReleaseOperand(op);
 
+				property.GetName(name);
+				(* does not work  when inheritance is used:
 				Global.GetSymbolNameInScope(property, cellType.cellScope , name);
+				*)
 				PushConstString(name);
 				
 				IF (value # NIL) THEN 
@@ -7183,7 +7186,10 @@ TYPE
 		VAR symbol: SyntaxTree.Symbol; 
 		BEGIN
 			WHILE modifier # NIL DO
+				symbol := cellType.FindProperty(modifier.identifier); 
+				(*
 				symbol := cellType.cellScope.FindSymbol(modifier.identifier);
+				*)
 				IF (symbol # NIL) & (symbol IS SyntaxTree.Property) THEN
 					AddProperty(cellType, cell, symbol(SyntaxTree.Property), modifier.expression);
 				ELSE

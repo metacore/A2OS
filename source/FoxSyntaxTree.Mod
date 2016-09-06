@@ -1666,13 +1666,12 @@ TYPE
 		PROCEDURE FindProperty*(identifier: Identifier): Property;
 		VAR p: Property;
 		BEGIN
-			p := NIL;
-			IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
-				p := baseType.resolved(CellType).FindProperty(identifier);
-			END;
+			p := firstProperty;
+			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
 			IF p = NIL THEN 
-				p := firstProperty;
-				WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
+				IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
+					p := baseType.resolved(CellType).FindProperty(identifier);
+				END;
 			END;
 			RETURN p;
 		END FindProperty;

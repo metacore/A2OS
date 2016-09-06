@@ -75,6 +75,16 @@ VAR
 		Machine.Release( Machine.Trap )
 	END FinishTrap;
 	
+	PROCEDURE Registers(CONST c:Unix.McontextDesc; w: Streams.Writer);
+	BEGIN
+		w.String("EAX= "); w.Address(c.r_ax);
+		w.String(" EBX= "); w.Address(c.r_bx);
+		w.String(" ECX= "); w.Address(c.r_cx);
+		w.String(" EDX= "); w.Address(c.r_dx);
+		w.String(" ESI= "); w.Address(c.r_si);
+		w.String(" EDI= "); w.Address(c.r_di);
+		w.Ln;
+	END Registers;
 	
 
 	PROCEDURE Trap( sig: LONGINT;  ucp: Unix.Ucontext;  fatalerror: BOOLEAN );  
@@ -99,6 +109,7 @@ VAR
 			w := TrapWriters.GetWriter();
 			w.Char( 1X );   (* begin of trap text *) 
 		END;
+		
 
 		w.Ln;  
 		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln; 
@@ -108,13 +119,13 @@ VAR
 		ELSE  
 			w.String( "[recursive Trap] " )  
 		END;  
+		sp := ucp.mc.r_sp;
 		CASE sig OF 
 		| 1:		w.String( "1 (Hangup signal)" );   
 		| 2:  	w.String( "2 (User interrupt)" );   
 		| 3:		w.String( "3 (Quit signal)" );   
 		| 4:  	w.String( "4 (Illegal instruction)" );   
 		| 5:   	w.String( "5." );  
-				sp := ucp.mc.r_sp;
 				S.GET( sp, trapno );  w.Int( trapno, 0 );  
 				CASE trapno OF 
 				| 1:		w.String( "  (WITH guard failed)" ) 
@@ -151,6 +162,7 @@ VAR
 			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp ); 
 			w.String( ", pc = " );  w.Address( pc );  w.Ln;  
 			w.Ln;  
+			Registers(ucp.mc,w);
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
 			SearchExceptionHandler( process, ucp, handler ); 
 		END;

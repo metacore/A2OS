@@ -6,8 +6,8 @@ MODULE Glue;
 IMPORT SYSTEM, Trace;
 
 CONST 
-	base = 08048000H;
-	debug* = {0};
+	base* = 08048000H;
+	debug* = {0,1};
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
 	
@@ -217,7 +217,7 @@ SystemTools.DoCommands
 		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
 Streams Commands StdIO TrapWriters Traps 
 Files UnixFiles Clock Dates Reals Strings Diagnostics 
-BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  Test BootConsole  
+BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole  
  ~
 
 	FSTools.CloseFiles simple_elf ~

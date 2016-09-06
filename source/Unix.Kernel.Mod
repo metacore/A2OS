@@ -199,7 +199,7 @@ END Left;
 BEGIN
 	ASSERT(1000 MOD Second = 0);	(* for Elapsed *)
 	second := Second;
-	
+	Heaps.GC := Heaps.InvokeGC;
 	Machine.Acquire(Machine.TraceOutput);
 	Trace.String( Machine.version ); Trace.String(": Kernel: Initialized and started."); Trace.Ln;
 	Machine.Release(Machine.TraceOutput);

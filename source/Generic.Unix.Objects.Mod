@@ -139,10 +139,10 @@ TYPE
 	VAR 
 		n: Heaps.FinalizerNode;  start: BOOLEAN;
 	
-		PROCEDURE Start;
+		PROCEDURE Activate;
 		BEGIN {EXCLUSIVE}
 			start := TRUE
-		END Start;
+		END Activate;
 		
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
 		finCaller := CurrentProcess( );  start := FALSE;
@@ -191,15 +191,65 @@ TYPE
 					
 				
 		PROCEDURE FindRoots*;
-		VAR sp, ptr: ADDRESS;
+		VAR sp, ptr, bp, n, a0, a1, adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			me: Process;
 		BEGIN
 			IF mode # Terminated THEN
+			
+
+			IF SELF = CurrentProcess() THEN
+				context.r_sp := Machine.CurrentSP();
+				context.r_bp := Machine.CurrentBP();
+				context.r_pc := ADDRESS OF FindRoots;
+			END;
+
+			sp := context.r_sp; bp := context.r_bp; (*pc := context.r_pc;*)
+
+			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
+				Heaps.Candidate( context.r_di);  Heaps.Candidate( context.r_si );
+				Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx);
+				Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax);
+				TRACE(sp, stackBottom);
+				IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
+					TRACE(sp, stackBottom -sp);
+					Heaps.RegisterCandidates( sp, stackBottom - sp );
+				END;
+			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+				IF bp < stackBottom THEN
+					WHILE (bp # Heaps.NilVal) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
+						S.GET(bp, n);
+						IF ODD(n) THEN (* procedure descriptor at bp *)
+							desc := S.VAL(Modules.ProcedureDescPointer, n-1);
+							IF desc # NIL THEN
+								a0 := ADDRESSOF(desc.offsets);
+								a1 :=  S.VAL(ADDRESS, desc.offsets);
+								ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
+								FOR i := 0 TO LEN(desc.offsets)-1 DO
+									adr := bp + desc.offsets[i]; (* pointer at offset *)
+									S.GET(adr, p); (* load pointer *)
+									IF p # NIL THEN 
+										Heaps.Mark(p);
+									END;
+								END;
+							END;
+							S.GET(bp + SIZEOF(ADDRESS), bp);
+						ELSE (* classical stack frame *)
+							bp := n; 
+						END;
+					END;
+					
+					ASSERT((bp = stackBottom) OR (bp=0) ,12345);
+				END; 
+			END;
+
+			(*
 				sp := context.r_sp;
 				WHILE sp < stackBottom DO  
 					S.GET( sp, ptr );  
 					IF (ptr # 0) & (ptr MOD 8 = 0) THEN  Heaps.Candidate( ptr )  END;  
 					INC( sp, AddrSize )  
 				END;
+				*)
 			END;
 			Heaps.Mark( nextProcess ) 
 		END FindRoots;
@@ -265,6 +315,39 @@ TYPE
 		END Initialize;
 				
 	END Process;
+
+	GCStatusExt = OBJECT(Heaps.GCStatus)
+	
+	(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing
+		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
+		    if the lock is not taken. *)
+		PROCEDURE SetgcOngoing(value: BOOLEAN);
+		VAR p: Heaps.ProcessLink; cur, r: Process; res: LONGINT; num: LONGINT; time: LONGINT;
+		BEGIN (* serialize writers *)
+			cur:= CurrentProcess();
+			IF value THEN
+				(*collect := TRUE; 
+				
+				TRACE(collect); 
+				collect := FALSE;
+				*)
+				Machine.Acquire( Machine.Heaps );
+				cur.context.r_sp := Machine.CurrentSP();
+				cur.context.r_bp := Machine.CurrentBP();
+				cur.context.r_pc := ADDRESS OF GCLoop;
+				TRACE(cur.context.r_sp, cur.context.r_bp, cur.context.r_pc);
+				SuspendActivities;
+				
+				Heaps.CollectGarbage( Modules.root );
+				Machine.Release( Machine.Heaps );
+				ResumeActivities;
+				finalizerCaller.Activate;
+
+				
+			END;
+		END SetgcOngoing;
+
+	END GCStatusExt;
 
 
 	
@@ -635,13 +718,27 @@ TYPE
 	END GetContext;
 	
 	PROCEDURE SuspendActivities;
-	VAR t: Process;  
+	VAR t,me: Process;  res: LONGINT;
 	BEGIN
+		me := CurrentProcess();
+		t := root;
+				
+		WHILE t # NIL DO
+			IF (t # me) THEN  
+				Unix.ThrSuspend(t.threadId ); 
+			END;
+			t := t.nextProcess
+		END;
+	(*
+	VAR t, me: Process;  
+	BEGIN
+		
 		t := root;
 		WHILE t # NIL DO
 			IF (t # mainProcess) & (t # finCaller) THEN  Unix.ThrSuspend( t.threadId )  END;
 			t := t.nextProcess
 		END;
+	*)
 	END SuspendActivities;
 
 	PROCEDURE ResumeActivities;
@@ -665,19 +762,27 @@ TYPE
 	(*!	GCLoop gets called as last procedure in BootConsole (main thread). 
 		The stack of the main thread is not limited by the  boot parameter 'StackSize' !!
 	*)
+	
 	PROCEDURE GCLoop*;	(* Timer and GC activity *)
+	VAR cur: Process;
 	BEGIN
+		cur:= CurrentProcess();
 		SetPriority( GCPriority );
 		LOOP
 			IF collect THEN  
-				TRACE(collect);
+				TRACE(collect); 
 				collect := FALSE;
 				Machine.Acquire( Machine.Heaps );
+				cur.context.r_sp := Machine.CurrentSP();
+				cur.context.r_bp := Machine.CurrentBP();
+				cur.context.r_sp := ADDRESS OF GCLoop;
+
 				SuspendActivities;
+				
 				Heaps.CollectGarbage( Modules.root );
 				Machine.Release( Machine.Heaps );
 				ResumeActivities;
-				finalizerCaller.Start;
+				finalizerCaller.Activate;
 				Unix.ConSignal( gcFinished );
 			ELSE
 				Unix.ThrSleep( 10 ); 
@@ -685,6 +790,7 @@ TYPE
 			timerActivity.UpdateTicks
 		END
 	END GCLoop;	
+	
 	
 	
 	
@@ -770,6 +876,9 @@ TYPE
 		NEW( finalizerCaller );
 		(*
 		Heaps.saveSP := SaveSP;
+		*)
+		Heaps.gcStatus := GCStatusFactory()
+		(*
 		Heaps.GC := InvokeGC;
 		Heaps.InvokeGC := InvokeGC;
 		*)
@@ -780,6 +889,15 @@ TYPE
 		TRACE("FINAL END ");
 		Machine.Shutdown(FALSE);
 	END Final;
+
+
+	PROCEDURE GCStatusFactory(): Heaps.GCStatus;
+	VAR gcStatusExt : GCStatusExt;
+	BEGIN
+		ASSERT(Heaps.gcStatus = NIL);
+		NEW(gcStatusExt);
+		RETURN gcStatusExt
+	END GCStatusFactory;
 
 BEGIN
 	TRACE("Objects.Body1");

@@ -342,6 +342,7 @@ BEGIN
 			Inspect(protected.awaitingLock.head);
 			Inspect(protected.awaitingCond.head);
 			Inspect(protected.lockedBy);
+			Inspect(protected.lock);
 		END;
 		orgHeapBlock := ExtractFromMarkList();
 	END;

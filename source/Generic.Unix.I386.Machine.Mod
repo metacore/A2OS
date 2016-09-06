@@ -292,18 +292,20 @@ VAR
 		endBlockAdr := memBlockHead.endBlockAdr;
 		freeBlockAdr := beginBlockAdr;
 	END GetStaticHeap;
+	
+	VAR Last: RECORD END; (* linked to the end *)
 
 	(* returns if an address is a currently allocated heap address *)
 	PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
 	VAR mb: MemoryBlock; 
 	BEGIN
+		IF (p>=Glue.base) & (p<=ADDRESSOF(Last)) THEN RETURN TRUE END;
 		mb := memBlockHead;  
 		WHILE mb # NIL DO
 			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
 			mb := mb.next;  
 		END;  
-		RETURN TRUE;
-		RETURN FALSE  
+		RETURN FALSE;
 	END ValidHeapAddress;
 	
 

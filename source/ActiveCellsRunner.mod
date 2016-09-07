@@ -259,23 +259,23 @@ type
 			case len(lens,0) of
 				|1:
 					new(p1d,lens[0]);
-					for i0 := lens[0]-1 to 0 by -1 do (*! add ports in reverse order to be consistent with what the runtime does *)
+					for i0 := 0 to lens[0]-1 do 
 						AddPort(c,p1d[i0],name,inout,width);
 					end;
 					ports := p1d;
 				|2:
 					new(p2d,lens[0],lens[1]);
-					for i0 := lens[0]-1 to 0 by -1 do (*! add ports in reverse order to be consistent with what the runtime does *)
-						for i1 := lens[1]-1 to 0 by -1 do
+					for i0 := 0 to lens[0]-1  do
+						for i1 := 0 to lens[1]-1 do
 							AddPort(c,p2d[i0,i1],name,inout,width);
 						end;
 					end;
 					ports := p2d;
 				|3:
 					new(p3d,lens[0],lens[1],lens[2]);
-					for i0 := lens[0]-1 to 0 by -1 do (*! add ports in reverse order to be consistent with what the runtime does *)
-						for i1 := lens[1]-1 to 0 by -1 do
-							for i2 := lens[2]-1 to 0 by -1 do
+					for i0 := 0 to lens[0]-1 do
+						for i1 := 0 to lens[1]-1  do
+							for i2 := 0 to lens[2]-1  do
 								AddPort(c,p3d[i0,i1,i2],name,inout,width);
 							end;
 						end;

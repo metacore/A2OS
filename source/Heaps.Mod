@@ -1251,6 +1251,7 @@ BEGIN
 		protRecBlock.awaitingCond.tail := NIL;
 		protRecBlock.lockedBy := NIL;
 		protRecBlock.locked := FALSE;
+		protRecBlock.lock := NIL;
 		FOR i := 0 TO NumPriorities - 1 DO
 			protRecBlock.waitingPriorities[i] := 0
 		END;

@@ -259,9 +259,11 @@ VAR
 	BEGIN
 		Trace.Ln;
 		Trace.String( "Heap expanded" );  Trace.Ln;
+		Trace.String("Static Heap: "); Trace.Hex(Glue.baseAdr, -8); Trace.String(" - "); Trace.Hex(Glue.endAdr, -8); 
+		Trace.Ln;
 		cur := memBlockHead;
 		WHILE cur # NIL DO
-			Trace.Hex( cur.startAdr, -8 );  Trace.String( "   " );  Trace.Int( cur.size, 15 );
+			Trace.Hex( cur.startAdr, -8 );  Trace.String( "   " );  Trace.Hex( cur.startAdr + cur.size, -8 );
 			IF cur = new THEN  Trace.String( "  (new)" )  END;
 			Trace.Ln;
 			cur := cur.next
@@ -299,7 +301,7 @@ VAR
 	PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
 	VAR mb: MemoryBlock; 
 	BEGIN
-		IF (p>=Glue.base) & (p<=ADDRESSOF(Last)) THEN RETURN TRUE END;
+		IF (p>=Glue.baseAdr) & (p<=Glue.endAdr) THEN RETURN TRUE END;
 		mb := memBlockHead;  
 		WHILE mb # NIL DO
 			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  

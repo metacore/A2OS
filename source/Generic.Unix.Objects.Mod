@@ -204,19 +204,19 @@ TYPE
 			END;
 
 			sp := context.r_sp; bp := context.r_bp; (*pc := context.r_pc;*)
+			TRACE(sp, bp, stackBottom);
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
 				Heaps.Candidate( context.r_di);  Heaps.Candidate( context.r_si );
 				Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx);
 				Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax);
-				TRACE(sp, stackBottom);
 				IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
 					TRACE(sp, stackBottom -sp);
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 				IF bp < stackBottom THEN
-					WHILE (bp # Heaps.NilVal) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
+					WHILE (bp # Heaps.NilVal) & (bp > 4) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
 						S.GET(bp, n);
 						IF ODD(n) THEN (* procedure descriptor at bp *)
 							desc := S.VAL(Modules.ProcedureDescPointer, n-1);
@@ -238,7 +238,7 @@ TYPE
 						END;
 					END;
 					
-					ASSERT((bp = stackBottom) OR (bp=0) ,12345);
+					ASSERT((bp = stackBottom) OR (bp<4) ,12345);
 				END; 
 			END;
 
@@ -766,6 +766,7 @@ TYPE
 	PROCEDURE GCLoop*;	(* Timer and GC activity *)
 	VAR cur: Process;
 	BEGIN
+		RETURN;
 		cur:= CurrentProcess();
 		SetPriority( GCPriority );
 		LOOP
@@ -790,6 +791,7 @@ TYPE
 			timerActivity.UpdateTicks
 		END
 	END GCLoop;	
+	
 	
 	
 	

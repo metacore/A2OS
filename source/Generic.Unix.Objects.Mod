@@ -216,7 +216,7 @@ TYPE
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 				IF bp < stackBottom THEN
-					WHILE (bp # Heaps.NilVal) & (bp > 4) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
+					WHILE (bp # Heaps.NilVal) & (bp > 1024) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
 						S.GET(bp, n);
 						IF ODD(n) THEN (* procedure descriptor at bp *)
 							desc := S.VAL(Modules.ProcedureDescPointer, n-1);
@@ -238,7 +238,7 @@ TYPE
 						END;
 					END;
 					
-					ASSERT((bp = stackBottom) OR (bp<4) ,12345);
+					ASSERT((bp = stackBottom) OR (bp<1024) ,12345);
 				END; 
 			END;
 
@@ -331,15 +331,17 @@ TYPE
 				TRACE(collect); 
 				collect := FALSE;
 				*)
+				Machine.Acquire(Machine.Objects);
 				Machine.Acquire( Machine.Heaps );
 				cur.context.r_sp := Machine.CurrentSP();
 				cur.context.r_bp := Machine.CurrentBP();
 				cur.context.r_pc := ADDRESS OF GCLoop;
-				TRACE(cur.context.r_sp, cur.context.r_bp, cur.context.r_pc);
+				TRACE(cur, cur.threadId, cur.context.r_sp, cur.context.r_bp, cur.context.r_pc);
 				SuspendActivities;
 				
 				Heaps.CollectGarbage( Modules.root );
 				Machine.Release( Machine.Heaps );
+				Machine.Release(Machine.Objects);
 				ResumeActivities;
 				finalizerCaller.Activate;
 
@@ -714,6 +716,7 @@ TYPE
 	VAR t: Process;
 	BEGIN
 		t := CurrentProcess();
+		TRACE(t, t.threadId);
 		Unix.CopyContext(ctxt.mc, t.context);
 	END GetContext;
 	
@@ -742,15 +745,17 @@ TYPE
 	END SuspendActivities;
 
 	PROCEDURE ResumeActivities;
-	VAR t: Process;  
+	VAR t, me: Process;  
 	BEGIN
+		me := CurrentProcess();
 		t := root;
 		WHILE t # NIL DO
-			IF (t # mainProcess) & (t # finCaller) THEN  Unix.ThrResume( t.threadId )  END;
+			IF (t # me) (* (t # mainProcess) & (t # finCaller)*)  THEN  Unix.ThrResume( t.threadId )  END;
 			t := t.nextProcess
 		END;
 	END ResumeActivities;
 	
+	(*
 	PROCEDURE InvokeGC;
 	BEGIN
 		IF Machine.AcquireGC() THEN (* gets released by FinalizerCaller *)
@@ -758,6 +763,8 @@ TYPE
 			Unix.ConWait( gcFinished, igc )
 		END;
 	END InvokeGC;
+	
+	*)
 	
 	(*!	GCLoop gets called as last procedure in BootConsole (main thread). 
 		The stack of the main thread is not limited by the  boot parameter 'StackSize' !!
@@ -767,6 +774,7 @@ TYPE
 	VAR cur: Process;
 	BEGIN
 		RETURN;
+		(*
 		cur:= CurrentProcess();
 		SetPriority( GCPriority );
 		LOOP
@@ -784,12 +792,13 @@ TYPE
 				Machine.Release( Machine.Heaps );
 				ResumeActivities;
 				finalizerCaller.Activate;
-				Unix.ConSignal( gcFinished );
+				(*Unix.ConSignal( gcFinished );*)
 			ELSE
 				Unix.ThrSleep( 10 ); 
 			END;
 			timerActivity.UpdateTicks
 		END
+		*)
 	END GCLoop;	
 	
 	
@@ -889,6 +898,8 @@ TYPE
 	PROCEDURE {FINAL} Final;
 	BEGIN
 		TRACE("FINAL END ");
+		LOOP Unix.ThrSleep( 10 ) END;
+
 		Machine.Shutdown(FALSE);
 	END Final;
 

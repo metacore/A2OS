@@ -498,9 +498,12 @@ VAR
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
 	errnum			: ADDRESS; (* PROCEDURE {C} ( ): LONGINT;*)
 
+	xSetErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
+	xSetIOErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
 
 	libc-: LONGINT;
 	libp-: LONGINT;
+	libx-: LONGINT;
 
 	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR;
 	noPaths: LONGINT;
@@ -1028,6 +1031,39 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		RETURN S.GET32(errnum);
 	END errno;
 	
+	TYPE OberonXErrorHandler* = PROCEDURE (disp, err: ADDRESS): LONGINT;
+	TYPE OberonXIOErrorHandler* = PROCEDURE (disp: ADDRESS): LONGINT;
+	VAR oberonXErrorHandler:OberonXErrorHandler; 
+	VAR oberonXIOErrorHandler: OberonXIOErrorHandler;
+
+	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
+	VAR res: LONGINT;
+	BEGIN
+		TRACE(d,err);
+		IF oberonXErrorHandler # NIL THEN 
+			res := oberonXErrorHandler(d, err);
+		END;
+		RETURN 0;
+	END X11ErrorHandler;
+
+	PROCEDURE X11IOErrorHandler(d: ADDRESS): WORD;
+	VAR res: LONGINT;
+	BEGIN
+		TRACE(d);
+		IF oberonXIOErrorHandler # NIL THEN
+			res := oberonXIOErrorHandler(d);
+		END;
+		RETURN 0;
+	END X11IOErrorHandler;
+
+	PROCEDURE InitXErrorHandlers*(xErrorHandler: OberonXErrorHandler; xIOErrorHandler: OberonXIOErrorHandler);
+	VAR res: WORD;
+	BEGIN
+		oberonXErrorHandler := xErrorHandler;
+		oberonXIOErrorHandler := xIOErrorHandler;
+		res := xSetErrorHandler(ADDRESS OF X11ErrorHandler);
+		res := xSetIOErrorHandler(ADDRESS OF X11IOErrorHandler);
+	END InitXErrorHandlers;
 	
 	PROCEDURE Init;
 	VAR test: ADDRESS; 
@@ -1049,6 +1085,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2); 
+		libx := Dlopen( libX11name, 2); 
 		
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 		
@@ -1156,6 +1193,9 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "kill",		ADDRESSOF( kill ) );
 		Dlsym( libc, "perror",	ADDRESSOF( perror ) );
 		Dlsym( libc, "errno",	ADDRESSOF( errnum ) );
+		
+		Dlsym( libx, "XSetErrorHandler", ADDRESS OF xSetErrorHandler);
+		Dlsym( libx, "XSetIOErrorHandler", ADDRESS OF xSetIOErrorHandler);
 
 		getSysinfo;
 		

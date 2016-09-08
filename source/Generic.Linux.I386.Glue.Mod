@@ -308,7 +308,7 @@ DynamicWebpagePlugin.Mod PrevalenceSystem.Mod WMDropTarget.Mod GenericSort.Mod W
 WMCharCodes.Mod HTMLScanner.Mod HTMLParser.Mod NewHTTPClient.Mod UnihanParser.Mod CSV.Mod 
 ColorModels.Mod WMDefaultWindows.Mod WMDefaultFont.Mod WMFontManager.Mod WMOberonFonts.Mod 
 WMCCGFonts.Mod WMBitmapFont.Mod OpenTypeInt.Mod OpenTypeScan.Mod OpenType.Mod OpenTypeFonts.Mod 
-WMOTFonts.Mod WindowManager.Mod Unix.X11.Mod Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod 
+WMOTFonts.Mod WindowManager.Mod Generic.Unix.X11.Mod Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod 
 Unix.KbdMouse.Mod Unix.Clipboard.Mod Attributes.Mod WMStandardComponents.Mod WMProgressComponents.Mod 
 WMShapes.Mod WMFigures.Mod WMScrollableComponents.Mod WMPieMenu.Mod WMPopups.Mod 
 PositionDebugging.Mod SyntaxHighlighter.Mod WMTextView.Mod WMInputMethods.Mod WMEditors.Mod 

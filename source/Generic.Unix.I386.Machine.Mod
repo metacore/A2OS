@@ -799,18 +799,18 @@ END GetTimer;
 		memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
 		IF memBlkSize < MemBlockSize THEN memBlkSize := MemBlockSize END; 	(* MemBlockSize implicitly multiple of StaticBlockSize *)
 
-		initVal := 8*1024*1024;
+		(*initVal := 8*1024*1024;
 		TRACE(initVal, adr);
-		IF Unix.posix_memalign( adr, Unix.PageSize, initVal ) # 0 THEN
+		*)
+		IF Unix.posix_memalign( adr, Unix.PageSize, memBlkSize ) # 0 THEN
 			Unix.Perror( "Machine.ExpandHeap: posix_memalign" );
 			beginBlockAdr := 0;
 			endBlockAdr := 0
 		ELSE
-			TRACE(adr, initVal);
-			IF Unix.mprotect( adr, initVal, 7 (* READ WRITE EXEC *) ) # 0 THEN
+			IF Unix.mprotect( adr, memBlkSize, 7 (* READ WRITE EXEC *) ) # 0 THEN
 				Unix.Perror( "Machine.ExpandHeap: mprotect" )
 			END;
-			TRACE(adr, initVal);
+			TRACE(adr, memBlkSize);
 		END;
 		(*
 		adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});

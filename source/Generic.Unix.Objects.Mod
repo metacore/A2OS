@@ -202,8 +202,13 @@ TYPE
 				context.r_bp := Machine.CurrentBP();
 				context.r_pc := ADDRESS OF FindRoots;
 			END;
-
+			
 			sp := context.r_sp; bp := context.r_bp; (*pc := context.r_pc;*)
+
+			TRACE(context.r_si, context.r_di, context.r_bp, context.r_sp_x);
+			TRACE(context.r_bx, context.r_dx, context.r_cx, context.r_ax);
+			TRACE(context.r_pc, context.r_sp, context.fpc);
+			
 			TRACE(sp, bp, stackBottom);
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
@@ -217,8 +222,11 @@ TYPE
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 				IF bp < stackBottom THEN
 					WHILE (bp # Heaps.NilVal) & (bp > 1024) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
+						TRACE(bp);
 						S.GET(bp, n);
+						TRACE(n);
 						IF ODD(n) THEN (* procedure descriptor at bp *)
+							IF n > 1024 THEN
 							desc := S.VAL(Modules.ProcedureDescPointer, n-1);
 							IF desc # NIL THEN
 								a0 := ADDRESSOF(desc.offsets);
@@ -232,10 +240,12 @@ TYPE
 									END;
 								END;
 							END;
+							END;
 							S.GET(bp + SIZEOF(ADDRESS), bp);
 						ELSE (* classical stack frame *)
 							bp := n; 
 						END;
+						TRACE(bp);
 					END;
 					
 					ASSERT((bp = stackBottom) OR (bp<1024) ,12345);
@@ -713,11 +723,17 @@ TYPE
 	(*--------------------  Garbage Collection  ------------------------------------*)
 	
 	PROCEDURE GetContext(ctxt: Unix.Ucontext);
-	VAR t: Process;
+	VAR t: Process; bp: ADDRESS;
 	BEGIN
 		t := CurrentProcess();
 		TRACE(t, t.threadId);
+		TRACE(Machine.CurrentBP(), ctxt.mc.r_bp);
 		Unix.CopyContext(ctxt.mc, t.context);
+		bp := Machine.CurrentBP(); 
+		TRACE(bp);
+		S.GET(bp+4, bp); 
+		TRACE(bp);
+		t.context.r_bp := bp;
 	END GetContext;
 	
 	PROCEDURE SuspendActivities;

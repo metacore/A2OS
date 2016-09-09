@@ -22,6 +22,9 @@ VAR
 	stackBottom-	: ADDRESS;	(* of main thread *)
 
 
+	argc-: WORD; 
+	argv-: ADDRESS;
+
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
 	CODE
 		; ELF header
@@ -175,6 +178,7 @@ VAR
 		
 		Trace.Init;
 		Trace.Char := Char;
+		
 		stackBottom := ADDRESSOF( i ) + 2*SIZEOF(ADDRESS);
 		ASSERT(dlsym # NIL);
 		Dlsym(0,"dlopen", ADDRESS OF dlopen);
@@ -183,14 +187,16 @@ VAR
 		ASSERT(dlclose # NIL); 
 		Dlsym(0,"exit", ADDRESS OF exit);
 		ASSERT(exit # NIL);
-		
-		TRACE(ADDRESS OF last);
-		TRACE(base);
-		TRACE(ADDRESS OF last - base);
 	END Init;
 	
 	PROCEDURE {INITIAL,NOPAF} Init0;
 	BEGIN
+		CODE{SYSTEM.i386}
+			MOV EAX, [ESP]
+			MOV argc, EAX
+			LEA EAX, [ESP+4]
+			MOV argv, EAX
+		END;
 		Init;
 	END Init0;
 	
@@ -205,10 +211,12 @@ BEGIN
 	Trace.String("Glue loaded"); Trace.Ln;
 END Glue.
 
+
+
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
 SystemTools.DoCommands
-	Compiler.Compile -p=Linux32G  --preciseGC 
+	Compiler.Compile -p=Linux32G
 		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
 		Generic.Unix.Objects.Mod 
 		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
@@ -227,7 +235,28 @@ BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConso
  ~
 
 	FSTools.CloseFiles simple_elf ~
-		~ 
+~ 
+
+MODULE Test;
+
+IMPORT StdIO, Commands, Streams, Modules;
+
+PROCEDURE Execute(context: Commands.Context);
+VAR str, msg: ARRAY 256 OF CHAR;  res: LONGINT;
+BEGIN
+	IF ~context.arg.GetString(str) THEN RETURN END;
+	IF ~context.arg.GetString(str) THEN 
+		context.out.String("no command"); context.out.Ln;
+		RETURN
+	END;
+	Commands.Activate(str, context, {Commands.Wait}, res, msg);
+END Execute;
+
+BEGIN
+	Execute(StdIO.env);
+	Modules.Shutdown(1);
+END Test.
+
 
 #	Release.Build --path="../obg/"  WinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H --path="../obg/" 
@@ -254,7 +283,7 @@ UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod
 DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
 ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod Loader.Mod Unix.BootConsole.Mod
 
-Compiler.Compile -p=Linux32G --preciseGC
+Compiler.Compile -p=Linux32G
 Displays.Mod Inputs.Mod Options.Mod Events.Mod EventsUtils.Mod EventsKernelLog.Mod 
 EventsFileLog.Mod EventsMemoryLog.Mod DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod 
 XMLParser.Mod Configuration.Mod FileHandlers.Mod BootShell.Mod I386.Network.Mod ActiveTimers.Mod 

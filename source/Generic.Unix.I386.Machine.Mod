@@ -706,9 +706,7 @@ END GetTimer;
 	VAR i: LONGINT;  a: ADDRESS;
 	BEGIN 
 		i := 0;  
-		WHILE i < MaxLocks DO  
-			TRACE(i);
-		mtx[i] := Unix.MtxInit(0);  INC( i )  END;   
+		WHILE i < MaxLocks DO  	mtx[i] := Unix.MtxInit(0);  INC( i )  END;   
 	END InitLocks;  
 
 	PROCEDURE CleanupLocks*;  
@@ -1004,20 +1002,14 @@ END GetTimer;
 		COPY( Unix.Version, version );  Append( version, Version );
 		timer0 := GetTimer( );  ticks := 0;
 		InitThreads;
-		TRACE(0);
 		InitLocks;
-		TRACE(1);
 		traceHeap := 1 IN Glue.debug;
 		InitConfig;
-		TRACE(2);
 		InitLog;
-		TRACE(3);
 		CPUSpeed;
-		TRACE(4);
 		IF CpuIdSupported() THEN
 			CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext
 		END;
-		TRACE(5);
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
 		TRACE("Machine Init End");
 	END Init;

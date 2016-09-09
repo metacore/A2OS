@@ -244,21 +244,23 @@ CONST
 	HUPCL*		= {10};
 	CLOCAL*	= {11};
 	
+	(*
 	PTRACE_TRACEME     =        0;
-PTRACE_PEEKTEXT    =        1;
-PTRACE_PEEKDATA     =       2;
-PTRACE_PEEKUSR     =        3;
-PTRACE_POKETEXT    =        4;
-PTRACE_POKEDATA    =        5;
-PTRACE_POKEUSR    =         6;
-PTRACE_CONT       =         7;
-PTRACE_KILL           =     8;
-PTRACE_SINGLESTEP    =      9;
-PTRACE_ATTACH         =    16;
-PTRACE_DETACH           =  17;
+	PTRACE_PEEKTEXT    =        1;
+	PTRACE_PEEKDATA     =       2;
+	PTRACE_PEEKUSR     =        3;
+	PTRACE_POKETEXT    =        4;
+	PTRACE_POKEDATA    =        5;
+	PTRACE_POKEUSR    =         6;
+	PTRACE_CONT       =         7;
+	PTRACE_KILL           =     8;
+	PTRACE_SINGLESTEP    =      9;
+	PTRACE_ATTACH         =    16;
+	PTRACE_DETACH           =  17;
 	PTRACE_GETREGS  = 12;
 	PTRACE_SETREGS    = 13;
-
+	*)
+	
 TYPE
 	Termios* = RECORD
 		iflags*, oflags*, cflags*, lflags*: SET;
@@ -346,24 +348,24 @@ TYPE
 
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
-				r_gs-		: LONGINT;
-				r_fs-		: LONGINT;
-				r_es-		: LONGINT;
-				r_ds-		: LONGINT;
-				r_di-		: LONGINT;
-				r_si-		: LONGINT;
+				r_gs-		: ADDRESS;
+				r_fs-		: ADDRESS;
+				r_es-		: ADDRESS;
+				r_ds-		: ADDRESS;
+				r_di-		: ADDRESS;
+				r_si-		: ADDRESS;
 				r_bp *	: ADDRESS;
-				r_sp_ 	: LONGINT;
-				r_bx-		: LONGINT;
-				r_dx-		: LONGINT;
-				r_cx-		: LONGINT;
-				r_ax-		: LONGINT;
+				r_sp_x-	: ADDRESS;
+				r_bx-		: ADDRESS;
+				r_dx-		: ADDRESS;
+				r_cx-		: ADDRESS;
+				r_ax-		: ADDRESS;
 				r_trapno-	: LONGINT;
 				r_err-		: LONGINT;
-				r_pc *	: LONGINT;
-				r_cs-		: LONGINT;
+				r_pc *	: ADDRESS;
+				r_cs-		: ADDRESS;
 				r_flags-	: LONGINT;
-				r_sp *	: LONGINT;		(* sp at error (signal) *)
+				r_sp *	: ADDRESS;		(* sp at error (signal) *)
 				r_ss-		: LONGINT;
 				fpc-		: ADDRESS; 	(* FPcontext *)
 				oldmask-	: LONGINT;
@@ -388,13 +390,32 @@ TYPE
 		ss: WORD;
 	END;
 	
-VAR
+	Sigaction = RECORD
+		sa_handler: ADDRESS;
+		(*filler1: ADDRESS;*)
+		sa_mask: Sigset_t;
+		sa_flags: ADDRESS;
+		filler: ADDRESS;
+	END;
+	
+	Sched_param = RECORD
+		sched_priority: LONGINT;
+		safety: ARRAY 8 OF ADDRESS; 
+	END;
+	
+
+VAR 
+	suspend_mutex: MutexType;
+	mainthread: Thread_t;
+	suspend_done: LONGINT;
+	resume_done: LONGINT;
+	sasuspend, saresume: Sigaction;
+	
 	argc-: LONGINT;  argv-: ADDRESS;
-	aargc: ADDRESS;
 
 	sysinfo-: RECORD
-				sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
-			END;
+		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
+	END;
 			
 	sigstack-: ARRAY 32*4096 OF CHAR;
 	
@@ -490,7 +511,9 @@ VAR
 	readdir-		: PROCEDURE {C} ( dir: ADDRESS ): Dirent;
 	closedir-		: PROCEDURE {C} ( dir: ADDRESS );
 
+	(*
 	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: LONGINT ): LONGINT;
+	*)
 	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: LONGINT );
 
 	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
@@ -656,10 +679,6 @@ VAR
 	    sigdelset( ADDRESS OF new, SIGSEGV );
 	    sigdelset( ADDRESS OF new, SIGTERM );
 	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
-	    (*
-	    res := ptrace(PTRACE_TRACEME, 0,0,0);
-	    TRACE(res);
-	    *)
 
 	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
 	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
@@ -717,12 +736,11 @@ VAR
 	    END;  
     END ThrKill;
     
+    (* did not work 
     PROCEDURE TraceThread*(p: Thread_t);
     VAR regs: PtraceRegsStruct; res: WORD;
     BEGIN
-    
-    	TRACE(p, pthread_self());
-    	res := ptrace(PTRACE_ATTACH, p , NIL, NIL); 
+       	res := ptrace(PTRACE_ATTACH, p , NIL, NIL); 
     	IF res < 0 THEN Perror("attach") END; 
     	TRACE(res);
     	res := ptrace(PTRACE_GETREGS,p,NIL, ADDRESS OF regs);
@@ -732,69 +750,49 @@ VAR
     	TRACE(regs.ebp, regs.esp, regs.IP, regs.flags);
     	res := ptrace(PTRACE_DETACH, p, NIL, NIL);
     END TraceThread;
-    	
+    *)
 	
-PROCEDURE {C} resume_handler(sig: LONGINT);
-BEGIN
-END resume_handler;
+	PROCEDURE {C} resume_handler(sig: LONGINT);
+	BEGIN
+	END resume_handler;
 
-PROCEDURE ThrResume*(thr: Thread_t);
-VAR n: LONGINT; res: LONGINT;
-BEGIN
-    res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
-    resume_done := 0; n := 1;
-    res := pthread_kill( thr, T_SIGRESUME ); 
-    
-    WHILE (resume_done # 1) & (n < 50) DO ThrSleep(1); INC(n) END; 
-    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
-END ThrResume;
+	PROCEDURE ThrResume*(thr: Thread_t);
+	VAR n: LONGINT; res: LONGINT;
+	BEGIN
+	    res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
+	    resume_done := 0; n := 1;
+	    res := pthread_kill( thr, T_SIGRESUME ); 
+	    
+	    WHILE (resume_done # 1) & (n < 50) DO ThrSleep(1); INC(n) END; 
+	    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
+	END ThrResume;
 
-VAR suspendHandler*: PROCEDURE(c: Ucontext);
+	VAR suspendHandler*: PROCEDURE(c: Ucontext);
 
-PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
-VAR block: Sigset_t; res: LONGINT;
-BEGIN
-	TRACE(sig, scp, ucp);
-	IF suspendHandler # NIL THEN suspendHandler(S.VAL(Ucontext,ucp)) END;
-    res := sigfillset( ADDRESS OF block );
-    sigdelset(  ADDRESS OF block, T_SIGRESUME );
-    suspend_done := 1;
-    res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
-    resume_done := 1;
-END suspend_handler;
+	PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
+	VAR block: Sigset_t; res: LONGINT;
+	BEGIN
+		IF suspendHandler # NIL THEN suspendHandler(S.VAL(Ucontext,ucp)) END;
+	    res := sigfillset( ADDRESS OF block );
+	    sigdelset(  ADDRESS OF block, T_SIGRESUME );
+	    suspend_done := 1;
+	    res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
+	    resume_done := 1;
+	END suspend_handler;
 
-PROCEDURE ThrSuspend*(thr: Thread_t);
-VAR res: LONGINT;
-BEGIN
-    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
-    suspend_done := 0;
-    res := pthread_kill( thr, T_SIGSUSPEND );
-    WHILE (suspend_done # 1) DO ThrSleep( 1 ) END;
-    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
-END ThrSuspend;
-
-TYPE
-	Sigaction = RECORD
-		sa_handler: ADDRESS;
-		(*filler1: ADDRESS;*)
-		sa_mask: Sigset_t;
-		sa_flags: ADDRESS;
-		filler: ADDRESS;
-	END;
-	
-	Sched_param = RECORD
-		sched_priority: LONGINT;
-		safety: ARRAY 8 OF ADDRESS; 
-	END;
-	
-VAR 
-	suspend_mutex: MutexType;
-	mainthread: Thread_t;
-	suspend_done: LONGINT;
-	resume_done: LONGINT;
+	PROCEDURE ThrSuspend*(thr: Thread_t);
+	VAR res: LONGINT;
+	BEGIN
+	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
+	    suspend_done := 0;
+	    res := pthread_kill( thr, T_SIGSUSPEND );
+	    WHILE (suspend_done # 1) DO ThrSleep( 1 ) END;
+	    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
+	END ThrSuspend;
 
 
-	sasuspend, saresume: Sigaction;
+
+
 
 	PROCEDURE ThrInitialize*(VAR low, high: LONGINT): BOOLEAN;
 	VAR
@@ -1005,9 +1003,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 				ctime-	: Timeval;
 				unused-	: ARRAY 2 OF LONGINT;
 		*)
-			TRACE(fd);
 		res := fxstat(3, fd, buf);
-		TRACE(res, buf.ino, buf.rdev, buf.size);
 		RETURN res;
 	END fstat;
 
@@ -1066,16 +1062,12 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	END InitXErrorHandlers;
 	
 	PROCEDURE Init;
-	VAR test: ADDRESS; 
+	VAR test: ADDRESS; i: LONGINT; s: ARRAY 256 OF CHAR;
 	BEGIN
 		TRACE("Unix init start");
-		(*
-		Dlsym( 0, "argc", ADDRESSOF( aargc ) );  
-		IF aargc # NIL THEN
-			S.GET( aargc, argc );
-		END;
-		Dlsym( 0, "argv", ADDRESSOF( argv ) );
-		*)
+		
+		argc := Glue.argc;
+		argv := Glue.argv;
 
 		libraryPaths[0] := "/lib/i386-linux-gnu";
 		libraryPaths[1] := "/usr/lib/i386-linux-gnu";
@@ -1130,10 +1122,6 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "sigaltstack", ADDRESSOF(sigaltstack));
 		Dlsym( libc, "sigsuspend", ADDRESSOF(sigsuspend));
 				
-		(*
-		Dlsym( libc, "putc", ADDRESSOF(test));
-		*)
-		
 		Dlsym( libc, "read",		ADDRESSOF( read ) );
 		Dlsym( libc, "write",	ADDRESSOF( write ) );
 		Dlsym( libc, "open",		ADDRESSOF( open ) );
@@ -1179,7 +1167,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 
 
 		(*Dlsym( libp, "sigsetjmp",	ADDRESSOF( sigsetjmp ) );*)
-		(*Dlsym( libc, "siglongjmp",	ADDRESSOF( siglongjmp ) );*)
+		Dlsym( libc, "siglongjmp",	ADDRESSOF( siglongjmp ) );
 
 
 		Dlsym( libc, "malloc",		ADDRESSOF( malloc ) );
@@ -1198,7 +1186,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libx, "XSetIOErrorHandler", ADDRESS OF xSetIOErrorHandler);
 
 		getSysinfo;
-		
+				
 		CreateSignalStack;
 		InitSignalHandler;
 		

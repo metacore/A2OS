@@ -171,7 +171,7 @@ TYPE
 			FOR i :=	 0 TO len-1 DO context.out.Char(Backspace); END;
 		END DeleteStringFromDisplay;
 
-		PROCEDURE ReadCommand(VAR command : ARRAY OF CHAR);
+		PROCEDURE ReadCommand(VAR command : ARRAY OF CHAR): CHAR;
 		VAR
 			ch: CHAR;
 			currentIndex : LONGINT;
@@ -257,11 +257,12 @@ TYPE
 
 			command[currentIndex+1] := 0X;
 
-			IF ch = CR THEN
+			IF (ch = LF) (*OR (ch =CR)*)  THEN
 				commandHistory.AddCommand(command);
-				IF (context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;
+				
 				IF echo THEN context.out.Ln; context.out.Update END
 			END;
+			RETURN ch;
 		END ReadCommand;
 
 		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): LONGINT;
@@ -570,7 +571,7 @@ TYPE
 		END Execute;
 
 		PROCEDURE Run;
-		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT;
+		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; ch: CHAR; 
 		BEGIN
 			exit := FALSE;
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO
@@ -581,12 +582,17 @@ TYPE
 					END;
 					context.out.Update
 				END;
-				ReadCommand(command);
+				ch := ReadCommand(command);
 				IF (context.in.res = Streams.Ok) & (command # "") THEN
 					IF (Parse(cmdList, wait) = 0) THEN
 						Execute(cmdList, wait, exit)
 					END
-				END
+				END;
+				(* do this here because Available can block for in-streams in WIndows/Linux *)
+				(*
+				IF (context.in.Available() > 0) & ((ch = CR) & (context.in.Peek() = LF) OR (ch = LF) & (context.in.Peek() = CR)) THEN ch := context.in.Get() END;
+				*)
+
 			END;
 			context.out.Update; context.error.Update
 		END Run;

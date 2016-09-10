@@ -911,12 +911,14 @@ TYPE
 		*)
 	END Init;
 	
+	
 	PROCEDURE {FINAL} Final;
 	BEGIN
 		TRACE("FINAL END ");
-		LOOP Unix.ThrSleep( 10 ) END;
-
+		(* LOOP Unix.ThrSleep( 10 ) END; *)
+		(*
 		Machine.Shutdown(FALSE);
+		*)
 	END Final;
 
 

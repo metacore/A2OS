@@ -1,0 +1,92 @@
+MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
+
+(* Commands.Context for programs running outside Aos *)
+
+IMPORT S := SYSTEM, Modules, Commands, Streams, WinTrace, Kernel32;
+
+CONST 
+	AddrSize = SIZEOF( ADDRESS );
+TYPE
+	String=POINTER TO ARRAY OF CHAR;
+VAR 
+	env-: Commands.Context;
+
+	hin-, hout-, herr-: Kernel32.HANDLE;
+
+PROCEDURE Args(): String;
+VAR size, pos: SIZE; i,j: LONGINT; str: String;
+	cmdLine {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF CHAR;
+BEGIN
+	cmdLine := Kernel32.GetCommandLine();
+	pos := 0;
+	WHILE cmdLine[pos] # 0X DO
+		INC(pos);
+	END;
+	size := pos + 1;
+	NEW(str, size);
+	pos := 0;
+	WHILE cmdLine[pos] # 0X DO
+		str[pos] := cmdLine[pos];
+		INC(pos);
+	END;
+	str[pos] := 0X;
+	RETURN str;
+END Args;
+
+PROCEDURE Cleanup;
+BEGIN
+	env.error.Update;
+	env.out.Update
+END Cleanup;
+
+PROCEDURE Setup;
+VAR
+	arg: Streams.StringReader;
+	stdin: Streams.Reader;
+	stdout: Streams.Writer;
+	errout: Streams.Writer;
+	str: String;
+BEGIN
+	WinTrace.OpenConsole;
+	str := Args();
+	TRACE(str^); 
+	NEW( arg, LEN(str) ); arg.Set(str^);
+	NEW( stdin, WinTrace.Receive, 1024 );
+	NEW( stdout, WinTrace.Send, 1024 );
+	NEW( errout, WinTrace.SendError, 512 );
+	NEW( env, stdin, arg, stdout, errout, NIL );
+	Modules.InstallTermHandler( Cleanup )
+END Setup
+
+BEGIN
+	Setup
+END  StdIO.
+
+SystemTools.DoCommands 
+
+	Compiler.Compile  -b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
+		Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
+		Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
+		I386.Reals.Mod Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
+
+		Win32.WinTrace.Mod Win32.WinFS.Mod 
+
+		Diagnostics.Mod StringPool.Mod BitSets.Mod ObjectFile.Mod 
+		GenericLinker.Mod GenericLoader.Mod Options.Mod Debugging.Mod
+		
+		Win32.StdIO.Mod 		Pipes.Mod Shell.Mod TestStdIO.Mod
+		
+		
+		
+		~ 
+		
+		
+	StaticLinker.Link --fileFormat=PE32CUI --fileName=fox.exe --extension=Gox --displacement=401000H
+		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
+		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
+		WinTrace StdIO Pipes Shell TestStdIO ~
+		
+		FSTools.CloseFiles fox.exe ~ 
+		
+	~
+

@@ -1063,9 +1063,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	
 	PROCEDURE Init;
 	VAR test: ADDRESS; i: LONGINT; s: ARRAY 256 OF CHAR;
-	BEGIN
-		TRACE("Unix init start");
-		
+	BEGIN		
 		argc := Glue.argc;
 		argv := Glue.argv;
 
@@ -1189,8 +1187,6 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 				
 		CreateSignalStack;
 		InitSignalHandler;
-		
-		TRACE("Unix init end");
 	END Init;
 
 	PROCEDURE {INITIAL} Init0;

@@ -49,7 +49,6 @@ VAR
 BEGIN
 	WinTrace.OpenConsole;
 	str := Args();
-	TRACE(str^); 
 	NEW( arg, LEN(str) ); arg.Set(str^);
 	NEW( stdin, WinTrace.Receive, 1024 );
 	NEW( stdout, WinTrace.Send, 1024 );

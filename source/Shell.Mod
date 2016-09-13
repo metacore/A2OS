@@ -520,7 +520,7 @@ TYPE
 			IF (cmd.command = "alias") THEN
 				ReadAlias(cmd, TRUE)
 			ELSIF (cmd.command = "loadalias") THEN
-				LoadAliasesFromFile(cmd.parameters);
+				LoadAliasesFromFile(cmd.parameters, TRUE);
 			ELSIF (cmd.command = "batch") THEN
 				context.out.String(Version); context.out.Ln; context.out.Update;
 				oldContext := context; context := cmd.context;
@@ -621,7 +621,7 @@ TYPE
 		END ParseAliases;
 
 		(* Read aliases from specified file. Returns NIL if file not found or parsing failed. *)
-		PROCEDURE LoadAliasesFromFile(filename : ARRAY OF CHAR);
+		PROCEDURE LoadAliasesFromFile(filename : ARRAY OF CHAR; critical: BOOLEAN);
 		VAR in : Files.Reader; f : Files.File;
 		BEGIN
 			IF filename = "" THEN COPY(DefaultAliasFile, filename); END;
@@ -633,7 +633,7 @@ TYPE
 					ParseAliases(in);
 					context.out.String("done."); context.out.Ln;
 				END;
-			ELSE
+			ELSIF critical THEN
 				context.out.String("Loading aliases failed: File "); context.out.String(filename);
 				context.out.String(" not found."); context.out.Ln;
 			END;
@@ -643,7 +643,7 @@ TYPE
 	BEGIN {ACTIVE, SAFE}
 		context.out.String(Version); context.out.Ln;
 		context.out.String("Enter 'help' if needed"); context.out.Ln;
-		LoadAliasesFromFile(DefaultAliasFile);
+		LoadAliasesFromFile(DefaultAliasFile, FALSE);
 		context.out.Update;
 		Run;
 		IF (upcall # NIL) THEN upcall(ExitShell); END;

@@ -7,7 +7,7 @@ IMPORT SYSTEM, Trace;
 
 CONST 
 	base* = 08048000H;
-	debug* = {0,1};
+	debug* = {};
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
 	
@@ -206,9 +206,6 @@ VAR
 	END Initialize;
 	
 
-
-BEGIN
-	Trace.String("Glue loaded"); Trace.Ln;
 END Glue.
 
 

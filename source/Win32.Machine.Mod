@@ -279,6 +279,13 @@ END SetSP;
 		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), userConfigFile) # 0 THEN
 		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), defaultConfigFile) # 0 THEN
 		END;
+		IF (name = "ObjectFileExtension") & (val = "") THEN
+			IF Kernel32.Generic THEN
+				val := ".GofW";
+			ELSE
+				val := ".Obw"
+			END;
+		END;
 	END GetConfig;
 
 	PROCEDURE Shutdown*( restart: BOOLEAN );
@@ -1080,3 +1087,4 @@ BEGIN
 		Init
 	END;
 END Machine.
+

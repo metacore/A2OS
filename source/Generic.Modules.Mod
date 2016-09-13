@@ -26,7 +26,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=TRUE;
+	TraceBoot=FALSE;
 
 TYPE
 	(* definitions for object-model loader support *)
@@ -823,7 +823,9 @@ END PublishRegisteredModules;
 PROCEDURE {FINAL, NOPAF} Main-;
 BEGIN
 	(*Machine.Init;*)
-	Trace.String("publish registered modules"); Trace.Ln;
+	IF TraceBoot THEN
+		Trace.String("publish registered modules"); Trace.Ln;
+	END;
 	PublishRegisteredModules;
 END Main;
 

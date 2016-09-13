@@ -41,6 +41,8 @@ CONST
 	MaxCPU* = 4;
 	IsCooperative* = FALSE;
 
+	TraceMemBlocks = FALSE;
+
 TYPE	
 	Vendor* = ARRAY 13 OF CHAR;	
 
@@ -808,7 +810,7 @@ END GetTimer;
 			IF Unix.mprotect( adr, memBlkSize, 7 (* READ WRITE EXEC *) ) # 0 THEN
 				Unix.Perror( "Machine.ExpandHeap: mprotect" )
 			END;
-			TRACE(adr, memBlkSize);
+			IF TraceMemBlocks THEN TRACE(adr, memBlkSize) END;
 		END;
 		(*
 		adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
@@ -816,9 +818,11 @@ END GetTimer;
 			adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
 		END;
 		*)
-		Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
-		Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
-		Trace.String("first heap block adr "); Trace.Int(adr,1); Trace.Ln;
+		IF TraceMemBlocks THEN
+			Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
+			Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
+			Trace.String("first heap block adr "); Trace.Int(adr,1); Trace.Ln;
+		END;
 		ASSERT(adr # 0);
 
 		alignOffset := (-adr) MOD StaticBlockSize;
@@ -853,8 +857,6 @@ END GetTimer;
 		S.PUT(beginBlockAdr+6*AddressSize,0);
 
 		memoryBlock := memBlock;
-		
-		TRACE("InitHeap done");
 	END InitHeap;
 
 	(*
@@ -945,14 +947,7 @@ END GetTimer;
 			pid := pid DIV 10;		
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( name ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-		IF Unix.argc > 2 THEN
-			Unix.GetArgval( "-x", cmd );
-			IF cmd # "" THEN  SilentLog;  standaloneAppl := TRUE 
-			ELSE  VerboseLog 
-			END
-		ELSE
-			VerboseLog
-		END
+		SilentLog;
 	END InitLog;
 	
 	PROCEDURE SilentLog*;
@@ -979,24 +974,6 @@ END GetTimer;
 	PROCEDURE Init;
 	VAR vendor: Vendor; ver: LONGINT;
 	BEGIN
-		TRACE("Machine Init Start");
-
-		(*
-		Unix.Dlsym( 0, "Unix.ThrInitialize",	ADDRESSOF( Unix.ThrInitialize ) );
-		
-		Unix.Dlsym( 0, "Unix.MtxInit",		ADDRESSOF( Unix.MtxInit ) );
-		Unix.Dlsym( 0, "Unix.MtxDestroy",	ADDRESSOF( Unix.MtxDestroy ) );
-		Unix.Dlsym( 0, "Unix.MtxLock",		ADDRESSOF( Unix.MtxLock ) );
-		Unix.Dlsym( 0, "Unix.MtxUnlock",	ADDRESSOF( Unix.MtxUnlock ) );
-		
-		Unix.Dlsym( 0, "conInit",		ADDRESSOF( conInit ) );
-		Unix.Dlsym( 0, "conDestroy",	ADDRESSOF( conDestroy ) );
-		Unix.Dlsym( 0, "conWait",		ADDRESSOF( conWait ) );
-		Unix.Dlsym( 0, "conSignal",	ADDRESSOF( conSignal ) );
-			
-		Unix.Dlsym( 0, "thrSleep",	ADDRESSOF( thrSleep ) );
-		Unix.Dlsym( 0, "thrThis",		ADDRESSOF( thrThis ) );
-		*) 
 		standaloneAppl := FALSE;
 		
 		COPY( Unix.Version, version );  Append( version, Version );
@@ -1011,7 +988,6 @@ END GetTimer;
 			CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext
 		END;
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
-		TRACE("Machine Init End");
 	END Init;
 
 	PROCEDURE {INITIAL} Init0;

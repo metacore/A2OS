@@ -2,7 +2,7 @@ MODULE FoxBasic;   (**  AUTHOR "fof"; PURPOSE "Oberon Compiler: basic helpers: s
 (* (c) fof ETH Zürich, 2009 *)
 
 
-IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, D:= Debugging;
+IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, Modules, D:= Debugging;
 
 CONST
 	(* error numbers *)
@@ -2076,7 +2076,9 @@ VAR
 	VAR install: PROCEDURE;
 	BEGIN
 		getDebugWriter := NIL; getWriter := NIL;
-		GETPROCEDURE("FoxA2Interface","Install",install);
+		IF Modules.ModuleByName("WindowManager") # NIL THEN
+			GETPROCEDURE("FoxA2Interface","Install",install);
+		END;
 		IF install # NIL THEN install END;
 	END InitWindowWriter;
 

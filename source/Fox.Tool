@@ -10,6 +10,11 @@ Compiler.Compile --noInterfaceCheck
 	SystemTools.Timer start ~
 
 	Compiler.Compile -p=Win32G *)
+(* 
+	SystemTools.DoCommands
+	SystemTools.Timer start ~
+
+	Compiler.Compile -p=Linux32G *)
 
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
@@ -34,7 +39,7 @@ Compiler.Compile --noInterfaceCheck
 	ActiveCellsRunner.mod 
 
 	FoxProfiler.Mod
-	FoxTextCompiler.Mod FoxA2Interface.Mod FoxTest.Mod
+	FoxTextCompiler.Mod FoxA2Interface.Mod Versioning.Mod TestSuite.Mod FoxTest.Mod
 	
 	PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
 	InterpreterShell.Mod WMInterpreterShell.Mod 

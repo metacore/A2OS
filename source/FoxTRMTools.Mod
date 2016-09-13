@@ -274,6 +274,38 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		END;
 	END SplitFiles;
 
+	(*numBase words of 36 bits each are assembled to a base, and each base holds baseDiv words of 18 bits each.*)
+	PROCEDURE SplitColumnsCmd* (context: Commands.Context);  (*todo: rename as splitColumns, fix all call sites*)
+	VAR options: Options.Options;
+		name: Files.FileName;
+		insW,numB,baseD: LONGINT;
+		diagnostics: Diagnostics.StreamDiagnostics;
+		done: BOOLEAN;
+		targetName: ARRAY 128 OF CHAR;
+	BEGIN
+		NEW (options);
+		options.Add('i',"instructionWidth",Options.Integer);
+		options.Add('n',"numBases",Options.Integer);
+		options.Add('b',"baseDivider",Options.Integer);
+		options.Add('t',"target",Options.String);
+
+		IF ~options.Parse (context.arg, context.error) THEN context.result := Commands.CommandParseError; RETURN; END;
+		IF ~options.GetInteger("instructionWidth",insW) THEN insW:= 18 END;
+		IF ~options.GetInteger("numBases",numB) THEN numB:=1 END;
+		IF ~options.GetInteger("baseDivider",baseD) THEN baseD:=2 END;
+		IF ~options.GetString("target",targetName) THEN targetName:="default.mem" END;
+		NEW(diagnostics,context.out);
+		
+		diagnostics.Information("target name", 0, 0, targetName);
+		done:=TRUE;
+		WHILE done & context.arg.GetString (name) DO
+		
+			diagnostics.Information("source name", 0, 0, name);
+			done := SplitColumns(name,  targetName, insW, numB, baseD, diagnostics);
+		END;
+	END SplitColumnsCmd;
+
+
 	PROCEDURE CompareFiles*(context: Commands.Context);
 	VAR f1,f2,f3: Files.File; name1, name2, matrixname: Files.FileName; r1, r2: Files.Reader;  x,y: ARRAY 32 OF CHAR; i: LONGINT; line1: LONGINT;
 		matrix: ARRAY 16 OF ARRAY 16 OF LONGINT; j: LONGINT; p1, p2: LONGINT; writer: Files.Writer;

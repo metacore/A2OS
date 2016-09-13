@@ -1,12 +1,4 @@
-MODULE InterpreterShell; (** AUTHOR "be"; PURPOSE "Simple command shell" **)
-(**
- * Simple echo-based command shell.
- *
- * History:
- *
- *	16.05.2006	Added command history, backspace key handling, factored out serial port related code into ShellSerials.Mod (staubesv)
- *
- *)
+MODULE InterpreterShell; (** AUTHOR "fof"; PURPOSE "Shell of the Fox Interpreter " **)
 
 IMPORT Modules, Commands, Streams, Pipes, Strings, Files, Interpreter := FoxInterpreter, Diagnostics, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Printout := FoxPrintout, InterpreterSymbols := FoxInterpreterSymbols;
 
@@ -265,7 +257,7 @@ TYPE
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
 
-						IF (ch = CR) OR (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+						IF (*(ch = CR) OR*) (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
 							EXIT
 
 						ELSIF (ch = Backspace) OR (ch = Delete)THEN
@@ -304,9 +296,9 @@ TYPE
 
 			command[currentIndex+1] := 0X;
 
-			IF (ch = CR) OR (ch = LF) THEN
+			IF (* (ch = CR) OR*)  (ch = LF) THEN
 				commandHistory.AddCommand(command);
-				IF (context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;
+				(*IF (*(ch = CR) & *)(context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;*)
 				IF echo THEN context.out.Ln; context.out.Update END
 			END;
 			w.String(command);
@@ -971,6 +963,14 @@ TYPE
 		IF (upcall # NIL) THEN upcall(ExitShell); END;
 		BEGIN {EXCLUSIVE} dead := TRUE; END;
 	END Shell;
+	
+	PROCEDURE Start*(context: Commands.Context);
+	VAR shell: Shell;
+	BEGIN
+		NEW(shell, context.in, context.out, context.error, FALSE, ">");
+		shell.AwaitDeath()
+	END Start;
+	
 
 END InterpreterShell.
 
@@ -985,4 +985,6 @@ o := context.out
 for i := 0 to 100 do
 o.String("i = "); o.Int(i,1); o.Ln
 end
+
+CMD "SystemTools.Show ?{i}?"
 

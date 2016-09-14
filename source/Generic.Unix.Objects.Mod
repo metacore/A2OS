@@ -380,11 +380,11 @@ TYPE
 		Unix.MtxUnlock( startProcess );
 
 		p.SetPriority( p.priority );
-		(*!
+
 		IF Restart IN p.flags THEN
 			res := Unix.sigsetjmp( ADDRESSOF( p.state0[0] ), 1 );
 		END;
-		*)
+
 		p.mode := Running;
 		p.body( p.obj );
 		p.mode := Terminated;

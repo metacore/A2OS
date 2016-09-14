@@ -19,7 +19,7 @@ BEGIN
 	END;
 
 	Commands.Activate(str, context, {Commands.Wait}, res, msg);
-	IF res # 0 THEN context.error.String(msg) END;
+	IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
 END Execute;
 
 BEGIN
@@ -39,19 +39,20 @@ SystemTools.DoCommands
 		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
 		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
 		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
+		ISO9660Files.Mod Generic.Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod 
+		ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
 		Pipes.Mod Shell.Mod StdIOShell.Mod  
 		~
 
-	StaticLinker.Link --fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H
+	StaticLinker.Link -p=Linux32G
 		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
 		Streams Commands StdIO TrapWriters Traps 
 		Files UnixFiles Clock Dates Reals Strings Diagnostics 
 		BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  
 		Pipes Shell StdIOShell
 	~
-
-	FSTools.CloseFiles oberon ~
+	FSTools.CloseFiles oberon
+	~
 ~ 
 
 
@@ -62,10 +63,11 @@ SystemTools.DoCommands
 		Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 		Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
 		I386.Reals.Mod Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
-
+		
 		Diagnostics.Mod StringPool.Mod BitSets.Mod ObjectFile.Mod 
 		GenericLinker.Mod GenericLoader.Mod Options.Mod Debugging.Mod
-		
+
+		TrapWriters.Mod CRC.Mod SystemVersion.Mod Win32.Traps.Mod 
 		Win32.WinTrace.Mod Win32.WinFS.Mod 
 		Win32.StdIO.Mod Pipes.Mod Shell.Mod StdIOShell.Mod
 
@@ -87,7 +89,7 @@ SystemTools.DoCommands
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 
-		FoxProfiler.Mod
+		FoxProfiler.Mod System.Mod
 		~
 	
 
@@ -96,7 +98,9 @@ SystemTools.DoCommands
 	StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
 		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
 		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
-		WinTrace StdIO Pipes Shell StdIOShell
+		WinTrace StdIO 
+		TrapWriters 	CRC SystemVersion Traps
+		Pipes  Shell StdIOShell
 		
 		Options Locks Debugging
 		StaticLinker 
@@ -123,7 +127,7 @@ SystemTools.DoCommands
 		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
 		FoxDocumentationParser FoxDocumentationBackend
 		
-		SystemTools
+		System
 	~
 	
 	FSTools.CloseFiles oberon.exe ~

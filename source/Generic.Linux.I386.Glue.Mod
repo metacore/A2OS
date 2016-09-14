@@ -221,17 +221,16 @@ SystemTools.DoCommands
 		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
 		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
 		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
-		Pipes.Mod Shell.Mod TestStdIO.Mod
-		TestLinux.Mod  ~
+		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod 
+		ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
+	~
 
 	StaticLinker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
 		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
 Streams Commands StdIO TrapWriters Traps 
 Files UnixFiles Clock Dates Reals Strings Diagnostics 
 BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  
-Pipes Shell TestStdIo
-(*BootConsole  *)
+BootConsole 
  ~
 
 	FSTools.CloseFiles simple_elf ~

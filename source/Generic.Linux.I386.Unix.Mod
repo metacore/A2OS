@@ -511,9 +511,7 @@ VAR
 	readdir-		: PROCEDURE {C} ( dir: ADDRESS ): Dirent;
 	closedir-		: PROCEDURE {C} ( dir: ADDRESS );
 
-	(*
 	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: LONGINT ): LONGINT;
-	*)
 	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: LONGINT );
 
 	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
@@ -1164,7 +1162,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "closedir",	ADDRESSOF( closedir ) );
 
 
-		(*Dlsym( libp, "sigsetjmp",	ADDRESSOF( sigsetjmp ) );*)
+		Dlsym( libp, "__sigsetjmp",	ADDRESSOF( sigsetjmp ) );
 		Dlsym( libc, "siglongjmp",	ADDRESSOF( siglongjmp ) );
 
 

@@ -266,21 +266,6 @@ TYPE
 
 		RETURN TRUE;
 	END Modules;
-	
-
-	
-	PROCEDURE GetDefaults(CONST name: ARRAY OF CHAR): Streams.Reader;
-	VAR s: Streams.StringReader; platform: Platform;
-	BEGIN
-		s := NIL;
-		platform := GetPlatform(name);
-		IF platform # NIL THEN
-			NEW(s, LEN(platform.defaults));
-			s.Set(platform.defaults);
-		END;
-		RETURN s;
-	END GetDefaults;
-	
 
 	PROCEDURE GetOptions*(input: Streams.Reader; error:Streams.Writer; diagnostics: Diagnostics.Diagnostics;
 		VAR compilerOptions: CompilerOptions): BOOLEAN;
@@ -328,7 +313,7 @@ TYPE
 		position := input.Pos();
 		parsed := options.Parse(input,NIL);
 		IF options.GetString("platform", name) THEN
-			defaults := GetDefaults(name);
+			defaults := platforms.Get(name);
 			IF defaults = NIL THEN 	
 				error.String("Unknown platform"); error.Ln 
 			ELSE
@@ -520,52 +505,27 @@ TYPE
 			context.out.Update;
 		END;
 	END CompileReader;
-	
-	TYPE 
-	Platform = POINTER TO RECORD
-		name: ARRAY 32 OF CHAR;
-		defaults: ARRAY 256 OF CHAR;
-	END;
-	
-	Platforms = OBJECT(Basic.List)
-		PROCEDURE GetPlatform(i: LONGINT): Platform;
-		BEGIN
-			RETURN Get(i)(Platform);
-		END GetPlatform;
-	END Platforms;
-	
-	VAR platforms: Platforms;
+
+	VAR platforms: Options.Defaults;
 	
 	PROCEDURE AddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
-	VAR i: LONGINT; platform: Platform;
 	BEGIN
-		platform := GetPlatform(name);
-		IF platform = NIL THEN 
-			NEW(platform);
-			COPY(name, platform.name);
-			platforms.Add(platform);
-		END;
-		COPY(defaults, platform.defaults);
+		platforms.Add(name, defaults);
 	END AddPlatform;
 	
-	PROCEDURE GetPlatform(CONST name: ARRAY OF CHAR): Platform;
-	VAR i: LONGINT; platform: Platform;
+	PROCEDURE ShowDefaults*(context: Commands.Context);
 	BEGIN
-		FOR i := 0 TO platforms.Length()-1 DO
-			platform := platforms.GetPlatform(i);
-			IF platform.name = name THEN
-				RETURN platform
-			END;
-		END;
-		RETURN  NIL;
-	END GetPlatform;
+		platforms.Show(context.out)
+	END ShowDefaults;
+	
 
 BEGIN
-	NEW(platforms,8);
+	NEW(platforms);
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
 	AddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtensions=.Obw --symbolFileExtension=.Obw");
 	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC");
-	AddPlatform("Minos","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
+	AddPlatform("ARM","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
+	AddPlatform("Minos","-b=ARM --objectFile=Minos"); 
 	AddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
 	AddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
 	AddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");

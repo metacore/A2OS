@@ -948,6 +948,7 @@ END GetTimer;
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( name ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 		SilentLog;
+		VerboseLog;
 	END InitLog;
 	
 	PROCEDURE SilentLog*;

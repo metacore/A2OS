@@ -39,6 +39,7 @@ CONST
 VAR
 	(* timer *)
 	timerActivity		: TimerActivity;
+	clock					: Clock;
 	timers				: Timer;  
 	timerListMutex	: Unix.Mutex_t;
 	
@@ -122,6 +123,14 @@ TYPE
 			END
 		END
 	END TimerActivity;
+	
+	Clock* = OBJECT
+	BEGIN{ACTIVE}
+		LOOP
+				Unix.ThrSleep( 10 ); 
+				timerActivity.UpdateTicks
+		END;
+	END Clock;
 
 
 
@@ -205,18 +214,19 @@ TYPE
 			
 			sp := context.r_sp; bp := context.r_bp; (*pc := context.r_pc;*)
 
+			(*
 			TRACE(context.r_si, context.r_di, context.r_bp, context.r_sp_x);
 			TRACE(context.r_bx, context.r_dx, context.r_cx, context.r_ax);
 			TRACE(context.r_pc, context.r_sp, context.fpc);
-			
 			TRACE(sp, bp, stackBottom);
+			*)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
 				Heaps.Candidate( context.r_di);  Heaps.Candidate( context.r_si );
 				Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx);
 				Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax);
 				IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
-					TRACE(sp, stackBottom -sp);
+					(*TRACE(sp, stackBottom -sp);*)
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
@@ -346,7 +356,9 @@ TYPE
 				cur.context.r_sp := Machine.CurrentSP();
 				cur.context.r_bp := Machine.CurrentBP();
 				cur.context.r_pc := ADDRESS OF GCLoop;
+				(*
 				TRACE(cur, cur.threadId, cur.context.r_sp, cur.context.r_bp, cur.context.r_pc);
+				*)
 				SuspendActivities;
 				
 				Heaps.CollectGarbage( Modules.root );
@@ -726,14 +738,18 @@ TYPE
 	VAR t: Process; bp: ADDRESS;
 	BEGIN
 		t := CurrentProcess();
+		(*
 		TRACE(t, t.threadId);
 		TRACE(Machine.CurrentBP(), ctxt.mc.r_bp);
+		*)
 		Unix.CopyContext(ctxt.mc, t.context);
+		(*
 		bp := Machine.CurrentBP(); 
 		TRACE(bp);
 		S.GET(bp+4, bp); 
 		TRACE(bp);
 		t.context.r_bp := bp;
+		*)
 	END GetContext;
 	
 	PROCEDURE SuspendActivities;
@@ -898,6 +914,7 @@ TYPE
 							
 		GetStacksize;  
 		Convert;
+		NEW(clock);
 		StartTimerActivity;
 		
 		NEW( finalizerCaller );

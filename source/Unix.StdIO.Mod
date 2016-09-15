@@ -43,14 +43,26 @@ BEGIN
 END Args;
 
 PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
-VAR ures: LONGINT;
+VAR ures,i,err: LONGINT;
 BEGIN
 	len := 0;
 	REPEAT
 		ures := Unix.read( 0, ADDRESSOF( data[ofs] ), size );
 		IF ures > 0 THEN  INC( ofs, ures );  DEC( size, ures );  INC( len, ures )  END;
-	UNTIL (len >= min) OR ((ures <= 0) & (Unix.errno() # Unix.EINTR));
-	IF len > 0 THEN  res := Streams.Ok  ELSE  res := Streams.EOF  END
+		IF ures < 0 THEN err := Unix.errno() END;
+	UNTIL (len >= min) OR ((ures <= 0) & (err # Unix.EINTR) & (err # 0));
+	IF len >= min THEN  res := Streams.Ok  ELSE  res := Streams.EOF  END;
+	(*
+	TRACE(len, size, min, ures, Unix.errno(),err);
+	IF len < min THEN
+		Unix.Perror("receive: ")
+	END;
+	Trace.String("received: "); 
+	FOR i := ofs-len TO ofs-1 DO
+		Trace.Char(data[i]); 
+	END;
+	Trace.Ln;
+	*)
 END ReceiveStdin;
 
 PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: LONGINT );

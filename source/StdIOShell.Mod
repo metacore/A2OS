@@ -25,7 +25,13 @@ END Execute;
 BEGIN
 	Execute(StdIO.env);
 	Modules.Shutdown(Modules.PowerDown);
+	LOOP END;
 END StdIOShell.
+
+
+TODOS:
+	- check linux file system (new files dot not work)
+	- add interpreter to linked image
 
 
 (** LINUX **)
@@ -42,6 +48,30 @@ SystemTools.DoCommands
 		ISO9660Files.Mod Generic.Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod 
 		ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
 		Pipes.Mod Shell.Mod StdIOShell.Mod  
+
+		Options.Mod Debugging.Mod
+		
+		StaticLinker.Mod
+		FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
+		FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
+		FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
+		FoxBackend.Mod FoxSections.Mod 
+		FoxFrontend.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+		FoxCompiler.Mod FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+		FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
+		FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
+		FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
+		FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
+		FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
+		FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod 
+		FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod
+		FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
+		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
+		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
+
+		FoxProfiler.Mod 
+		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
+
 		~
 
 	StaticLinker.Link -p=Linux32G
@@ -50,6 +80,36 @@ SystemTools.DoCommands
 		Files UnixFiles Clock Dates Reals Strings Diagnostics 
 		BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  
 		Pipes Shell StdIOShell
+
+		
+		Options Locks Debugging
+		StaticLinker 
+		FoxBasic  FoxProgTools  FoxScanner FoxSyntaxTree FoxGlobal
+		FoxActiveCells FoxHardware FoxFormats FoxPrintout
+		FoxParser  FoxSemanticChecker
+		FoxBackend FoxSections 
+		
+		FoxFrontend FoxOberonFrontend 
+		Compiler FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
+		
+		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
+		FoxBinaryObjectFile FoxGenericObjectFile
+		FoxAMD64InstructionSet FoxAMD64Assembler FoxAMDBackend
+
+		
+		FoxAssembler FoxIntermediateAssembler FoxDisassembler
+		FoxARMInstructionSet FoxARMAssembler FoxARMBackend	
+
+		FoxMinosObjectFile
+
+		FoxIntermediateParser FoxIntermediateObjectFile FoxIntermediateLinker 
+		FoxTRMInstructionSet FoxTRMAssembler FoxTRMBackend
+		FoxInterpreterBackend FoxTranspilerBackend
+		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
+		FoxDocumentationParser FoxDocumentationBackend
+		
+		CRC SystemVersion ProcessInfo0 ProcessInfo Plugins SystemTools
+
 	~
 	FSTools.CloseFiles oberon
 	~
@@ -62,7 +122,7 @@ SystemTools.DoCommands
 	Compiler.Compile  -p=Win32G
 		Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
 		Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
-		I386.Reals.Mod Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
+		I386.Reals.Mod Generic.Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
 		
 		Diagnostics.Mod StringPool.Mod BitSets.Mod ObjectFile.Mod 
 		GenericLinker.Mod GenericLoader.Mod Options.Mod Debugging.Mod
@@ -89,7 +149,8 @@ SystemTools.DoCommands
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 
-		FoxProfiler.Mod System.Mod
+		FoxProfiler.Mod 
+		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
 		~
 	
 
@@ -127,7 +188,8 @@ SystemTools.DoCommands
 		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
 		FoxDocumentationParser FoxDocumentationBackend
 		
-		System
+		ProcessInfo0 ProcessInfo Plugins SystemTools
+	
 	~
 	
 	FSTools.CloseFiles oberon.exe ~

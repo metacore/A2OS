@@ -398,7 +398,7 @@ VAR
 	END Patch;
 
 	PROCEDURE Diagnose (block: Block);
-	VAR source, msg,num,name: ARRAY 128 OF CHAR;
+	VAR source, num,name: ARRAY 128 OF CHAR; msg: ARRAY 512 OF CHAR;
 	BEGIN
 		IF block.used THEN
 			Strings.IntToHexStr(block.address, 8, num);

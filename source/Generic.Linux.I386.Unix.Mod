@@ -517,7 +517,7 @@ VAR
 	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
 	exit-			: PROCEDURE {C} ( status: LONGINT );
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
-	errnum			: ADDRESS; (* PROCEDURE {C} ( ): LONGINT;*)
+	errno_location: PROCEDURE {C} ( ): ADDRESS;
 
 	xSetErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
 	xSetIOErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
@@ -1021,8 +1021,10 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	END InitSignalHandler;
 	
 	PROCEDURE errno*(): LONGINT;
+	VAR loc: ADDRESS;
 	BEGIN
-		RETURN S.GET32(errnum);
+		loc := errno_location();
+		RETURN S.GET32(loc);
 	END errno;
 	
 	TYPE OberonXErrorHandler* = PROCEDURE (disp, err: ADDRESS): LONGINT;
@@ -1176,7 +1178,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 
 		Dlsym( libc, "kill",		ADDRESSOF( kill ) );
 		Dlsym( libc, "perror",	ADDRESSOF( perror ) );
-		Dlsym( libc, "errno",	ADDRESSOF( errnum ) );
+		Dlsym( libc, "__errno_location",	ADDRESSOF(errno_location ) );
 		
 		Dlsym( libx, "XSetErrorHandler", ADDRESS OF xSetErrorHandler);
 		Dlsym( libx, "XSetIOErrorHandler", ADDRESS OF xSetIOErrorHandler);

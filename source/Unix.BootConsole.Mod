@@ -166,14 +166,9 @@ VAR
 	BEGIN
 		IF ~TryCommand()  THEN
 			(* normal system start *)
-			LoadModule("Test");
-			
-			
 			LoadModule( "Clock" );
 			Execute( "XDisplay",  "Install" );
 			Execute( "KbdMouse",  "Init" );
-			Execute("Test", "Test");
-
 
 			Command( "WindowManager.Install" );
 			Command( "DisplayRefresher.Install" );

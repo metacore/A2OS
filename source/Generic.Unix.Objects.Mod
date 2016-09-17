@@ -931,7 +931,7 @@ TYPE
 	
 	PROCEDURE {FINAL} Final;
 	BEGIN
-		TRACE("FINAL END ");
+		TRACE("Main Thread is terminating.");
 		(* LOOP Unix.ThrSleep( 10 ) END; *)
 		(*
 		Machine.Shutdown(FALSE);
@@ -948,8 +948,6 @@ TYPE
 	END GCStatusFactory;
 
 BEGIN
-	TRACE("Objects.Body1");
 	Init;
-	TRACE("Objects.Body2");
 END Objects.
 

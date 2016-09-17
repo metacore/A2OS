@@ -474,7 +474,7 @@ CONST
 	END OnHeapOrStack;
 	
 	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT; low, high: ADDRESS);
-	CONST MaxString = 32; 
+	CONST MaxString = 96; 
 	VAR ch: CHAR;
 	BEGIN
 		IF maxLen > MaxString THEN maxLen := MaxString END; 
@@ -489,6 +489,7 @@ CONST
 			DEC(maxLen);
 		END;
 		w.Char('"');
+		IF maxLen = 0 THEN w.String("..."); END;
 	END WriteValueString;
 
 	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);

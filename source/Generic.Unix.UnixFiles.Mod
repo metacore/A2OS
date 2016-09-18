@@ -401,12 +401,10 @@ TYPE
 						IF (r >= 0) & ((ostat.dev # nstat.dev) OR (ostat.ino # nstat.ino)) THEN
 							 r := Unix.unlink( ADDRESSOF( new ) )  (* work around stale nfs handles *);
 						END;
-						
-						
 						r := Unix.rename( ADDRESSOF( old ), ADDRESSOF( new ) );
 						IF r < 0 THEN
 							res := Unix.errno( );
-							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file *)
+							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
 
 								fdold := Unix.open( ADDRESSOF( old ), Unix.rdonly, {} );
 								IF fdold < 0 THEN    
@@ -430,9 +428,9 @@ TYPE
 									END;
 									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize )
 								END;
-								r := Unix.close( fdold );
-
 								r := Unix.unlink( ADDRESSOF( old ) );  								
+								r := Unix.close( fdold );
+								r := Unix.unlink( ADDRESSOF( old ) );  (* for virtual box to work *)
 								r := Unix.close( fdnew );  
 								res := Files.Ok
 							ELSE

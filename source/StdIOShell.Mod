@@ -37,7 +37,7 @@ TODOS:
 (** LINUX **)
 
 SystemTools.DoCommands
-	Compiler.Compile -p=Linux32G --traceModule=Trace
+	Compiler.Compile -p=Linux32G --mergeSections
 		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
 		Generic.Unix.Objects.Mod 
 		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
@@ -68,10 +68,13 @@ SystemTools.DoCommands
 		FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
+	
+		XML.Mod XMLScanner.Mod DynamicStrings.Mod UTF8Strings.Mod XMLParser.Mod XMLObjects.Mod
+		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
+		InterpreterShell.Mod
 
 		FoxProfiler.Mod 
 		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
-
 		~
 
 	StaticLinker.Link -p=Linux32G
@@ -108,6 +111,10 @@ SystemTools.DoCommands
 		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
 		FoxDocumentationParser FoxDocumentationBackend
 		
+		XML XMLScanner DynamicStrings UTF8Strings XMLParser XMLObjects
+		PersistentObjects FoxInterpreterSymbols FoxInterpreter
+		InterpreterShell
+
 		CRC SystemVersion ProcessInfo0 ProcessInfo Plugins SystemTools
 
 	~
@@ -149,6 +156,10 @@ SystemTools.DoCommands
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 
+		XML.Mod XMLScanner.Mod DynamicStrings.Mod UTF8Strings.Mod XMLParser.Mod XMLObjects.Mod
+		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
+		InterpreterShell.Mod
+
 		FoxProfiler.Mod 
 		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
 		~
@@ -187,6 +198,10 @@ SystemTools.DoCommands
 		FoxInterpreterBackend FoxTranspilerBackend
 		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
 		FoxDocumentationParser FoxDocumentationBackend
+		
+		XML XMLScanner DynamicStrings UTF8Strings XMLParser XMLObjects
+		PersistentObjects FoxInterpreterSymbols FoxInterpreter
+		InterpreterShell
 		
 		ProcessInfo0 ProcessInfo Plugins SystemTools
 	

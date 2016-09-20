@@ -547,7 +547,7 @@ TYPE
 	
 	File* = OBJECT (Files.File)
 			VAR
-				fd: LONGINT;
+				fd, fdTemp: LONGINT;
 				workName, registerName: Filename;
 				tempFile: BOOLEAN;
 				dev: Unix.DevT;
@@ -560,7 +560,7 @@ TYPE
 
 				PROCEDURE & Init( fs: Files.FileSystem );
 				BEGIN
-					SELF.fs := fs;  flags := {};  
+					SELF.fs := fs;  flags := {};  fdTemp := 0;
 				END Init;
 
 				
@@ -584,10 +584,10 @@ TYPE
 					done := fd >= 0;  r := Unix.errno();
 					IF (~done & (r IN {Unix.ENFILE, Unix.EMFILE})) THEN
 						Kernel.GC; (*! + wait ? *)
-													
 						fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
 						done := fd >= 0
 					END;
+					IF tempFile THEN fdTemp:= fd END;
 					IF done THEN
 						(*IF fd >= FileTabSize THEN  
 							r := Unix.close( fd );  
@@ -819,10 +819,10 @@ TYPE
 							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )  
 						END;
 						
-						IF tempFile & (fd # 0) THEN
-							res := Unix.close(fd); 
-							fd := NoDesc; 
+						IF tempFile & (fdTemp # 0) THEN
+							res := Unix.close(fdTemp); 
 							res := Unix.unlink( ADDRESSOF( workName ) ); 
+							fdTemp := 0;
 						END;
 						
 						workName := registerName;  registerName := "";  tempFile := FALSE;
@@ -855,8 +855,8 @@ TYPE
 						r := Unix.unlink( ADDRESSOF( registerName ) );
 						fd := NoDesc;
 					ELSE  
+						FlushBuffers;
 						IF fd # NoDesc THEN
-							FlushBuffers;
 							r := Unix.close( fd );
 							fd := NoDesc;
 						END;

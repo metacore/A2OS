@@ -319,7 +319,7 @@ TYPE
 			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
 			SELF.position := position;
 			line := 0;
-			useLineNumbers := TRUE;
+			useLineNumbers := FALSE;
 		END InitializeScanner;
 
 		PROCEDURE ResetCase*; (*! needs a better naming ! *)

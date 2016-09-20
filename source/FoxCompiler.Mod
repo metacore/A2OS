@@ -286,6 +286,7 @@ TYPE
 		
 		options.Add("p","platform",Options.String);
 		options.Add(0X,"showOptions",Options.Flag);
+		options.Add("l","lineNumbers", Options.Flag);
 		
 		options.Add(0X,"print",Options.Flag);
 		options.Add(0X,"Print",Options.Flag);
@@ -427,6 +428,10 @@ TYPE
 			IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.GetOptions(options) END;
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
+		END;
+
+		IF (compilerOptions.frontend # NIL) THEN
+			compilerOptions.frontend.lineNumbers := options.GetFlag("lineNumbers");
 		END;
 		
 		IF options.GetFlag("showOptions") THEN options.Show(error) END;

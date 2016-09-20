@@ -7,6 +7,8 @@ TYPE
 
 	Frontend* = OBJECT
 	VAR		
+		lineNumbers*: BOOLEAN;
+		
 		PROCEDURE & InitFrontEnd*;
 		BEGIN
 			Initialize(NIL, NIL, "", 0);

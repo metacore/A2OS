@@ -14,6 +14,7 @@ TYPE
 		BEGIN
 			Initialize^(diagnostics, reader, fileName, pos);
 			scanner := Scanner.NewScanner(fileName, reader, pos, diagnostics);
+			scanner.useLineNumbers := lineNumbers;
 			parser := Parser.NewParser( scanner, diagnostics );
 		END Initialize;
 		

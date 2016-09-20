@@ -294,6 +294,8 @@ TYPE
 		case-: LONGINT;
 		stringWriter: Streams.Writer;
 		stringMaker: StringMaker;
+	
+		useLineNumbers*: BOOLEAN;
 
 		(*
 			source: name of the source code for reference in error outputs
@@ -317,6 +319,7 @@ TYPE
 			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
 			SELF.position := position;
 			line := 0;
+			useLineNumbers := TRUE;
 		END InitializeScanner;
 
 		PROCEDURE ResetCase*; (*! needs a better naming ! *)
@@ -333,7 +336,11 @@ TYPE
 		PROCEDURE ErrorS(CONST msg: ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
+				IF useLineNumbers THEN
+				diagnostics.Error(source^, line+1, Diagnostics.Invalid, msg)
+				ELSE
 				diagnostics.Error(source^, position, Diagnostics.Invalid, msg)
+				END;
 			END;
 			error := TRUE;
 		END ErrorS;
@@ -344,7 +351,11 @@ TYPE
 		BEGIN
 			IF diagnostics # NIL THEN
 				Basic.GetErrorMessage(code,"",errorMessage);
+				IF useLineNumbers THEN
+				diagnostics.Error(source^, line+1, code, errorMessage)
+				ELSE
 				diagnostics.Error(source^, position, code, errorMessage)
+				END;
 			END;
 			error := TRUE;
 		END Error;
@@ -850,7 +861,12 @@ TYPE
 		VAR s,token: LONGINT;
 		BEGIN
 			SkipBlanks;
-			symbol.start := position; symbol.line := line;
+			IF useLineNumbers THEN
+				symbol.start := line+1; 
+			ELSE
+				symbol.start := position
+			END;
+			symbol.line := line;
 			stringMaker.Clear;
 			CASE ch OF  (* ch > " " *)
 			EOT: s := EndOfText
@@ -1122,7 +1138,12 @@ TYPE
 		BEGIN
 			REPEAT
 				SkipBlanks;
-				symbol.start := position; symbol.line := line;
+				IF useLineNumbers THEN
+					symbol.start := line+1; 
+				ELSE
+					symbol.start := position
+				END;
+				symbol.line := line;
 				CASE ch OF  (* ch > ' ' *)
 				| EOT: 	s := EndOfText;
 				| DoubleQuote:

@@ -23,6 +23,7 @@ CONST
 	ChangeCase*=12;
 	Cooperative*=13;
 	CellsAreObjects*=14;
+	UseLineNumbers*=15;
 
 	DefaultBackend = "AMD";
 	DefaultFrontend = "Oberon";
@@ -160,7 +161,7 @@ TYPE
 
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
-		options.frontend.Initialize(diagnostics, reader, source, position);
+		options.frontend.Initialize(diagnostics, flags, reader, source, position);
 		REPEAT
 			(** first phase: scan and parse **)
 			module := options.frontend.Parse();
@@ -428,12 +429,9 @@ TYPE
 			IF compilerOptions.symbolFile # NIL THEN compilerOptions.symbolFile.GetOptions(options) END;
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
+			IF options.GetFlag("lineNumbers") THEN INCL(compilerOptions.flags, UseLineNumbers) END;
 		END;
 
-		IF (compilerOptions.frontend # NIL) THEN
-			compilerOptions.frontend.lineNumbers := options.GetFlag("lineNumbers");
-		END;
-		
 		IF options.GetFlag("showOptions") THEN options.Show(error) END;
 		RETURN result
 	END GetOptions;

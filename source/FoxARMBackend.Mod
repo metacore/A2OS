@@ -4,7 +4,7 @@ IMPORT
 	Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections,
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, CodeGenerators := FoxCodeGenerators, BinaryCode := FoxBinaryCode,
 	SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxARMAssembler, InstructionSet := FoxARMInstructionSet,
-	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile,
+	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile, Compiler,
 	D := Debugging;
 
 CONST
@@ -2645,6 +2645,7 @@ TYPE
 
 			NEW(assembler, diagnostics);
 			scanner := Scanner.NewAssemblerScanner(module.moduleName(*module.module.sourceName*), reader, LONGINT(irInstruction.op1.intValue) (* ? *), diagnostics);
+			scanner.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
 			assembler.InlineAssemble(scanner, in, scope, module);
 			error := error OR assembler.error
 		END EmitAsm;

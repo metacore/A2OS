@@ -318,7 +318,7 @@ TYPE
 			IF reader = NIL THEN ch := EOT ELSE 	GetNextCharacter END;
 			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
 			SELF.position := position;
-			line := 0;
+			SELF.line := position;
 			useLineNumbers := FALSE;
 		END InitializeScanner;
 
@@ -814,6 +814,7 @@ TYPE
 			ASSERT(case # Unknown);
 			stringMaker.Clear;
 			startPos := symbol.end;
+			IF useLineNumbers THEN startPos := line END;
 			s := symbol.token;
 			WHILE (s # EndOfText) & (s # End) & (s # With) DO
 				symbol.start := position;
@@ -990,7 +991,7 @@ TYPE
 	END Scanner;
 
 	Context*=RECORD
-		position, readerPosition : LONGINT;
+		position, readerPosition, line : LONGINT;
 		ch: CHAR;
 	END;
 
@@ -1023,6 +1024,7 @@ TYPE
 		BEGIN
 			context.ch := ch;
 			context.position := position;
+			context.line := line;
 			context.readerPosition := reader.Pos();
 		END GetContext;
 
@@ -1030,6 +1032,7 @@ TYPE
 		BEGIN
 			reader.SetPos(context.readerPosition);
 			ch := context.ch;
+			line := context.line;
 			position := context.position;
 		END SetContext;
 
@@ -1160,7 +1163,7 @@ TYPE
 						IF ch = '*' THEN GetNextCharacter; ReadComment(symbol);  s := Comment; ELSE s := LeftParenthesis END
 				| ')':     s := RightParenthesis;  GetNextCharacter
 				| CR: GetNextCharacter; s := Ln;IF ch = LF THEN GetNextCharacter END;
-				| LF: GetNextCharacter; s := Ln;
+				| LF: GetNextCharacter; s := Ln; IF ch = CR THEN GetNextCharacter END;
 				| '*':    s := Times; GetNextCharacter;
 				| '+':    s := Plus ; GetNextCharacter;
 				| ',':     s := Comma;  GetNextCharacter

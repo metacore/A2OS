@@ -6,17 +6,18 @@ IMPORT
 TYPE
 
 	Frontend* = OBJECT
-	VAR		
-		lineNumbers*: BOOLEAN;
+	VAR
+		flags-: SET;
 		
 		PROCEDURE & InitFrontEnd*;
 		BEGIN
-			Initialize(NIL, NIL, "", 0);
+			Initialize(NIL, {}, NIL, "", 0);
 		END InitFrontEnd;
 		
 		(* initialize frontend for usage *)
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader;CONST fileName: ARRAY OF CHAR; pos: LONGINT);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
+			SELF.flags := flags;
 		END Initialize;
 
 		PROCEDURE Parse*(): SyntaxTree.Module;

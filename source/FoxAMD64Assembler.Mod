@@ -205,7 +205,8 @@ TYPE
 		code-: Code;
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
-
+		assembly: Assembly; (* for error position *)
+		
 		(* overal state *)
 		cpuBits: Size; (* supported bit width for this cpu / target *)
 		cpuOptions: InstructionSet.CPUOptions;
@@ -237,14 +238,15 @@ TYPE
 		END SetBits;
 
 		PROCEDURE Error(CONST message: ARRAY OF CHAR);
-		VAR msg,name: ARRAY 256 OF CHAR;
+		VAR msg,name: ARRAY 256 OF CHAR; errPos: LONGINT;
 		BEGIN
 			COPY(message,msg);
 			Strings.Append(msg," in ");
 			ObjectFile.SegmentedNameToString(code.os.identifier.name,name);
 			Strings.Append(msg, name);
 			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid,msg);
+				IF assembly # NIL THEN errPos := assembly.errPos ELSE errPos := Diagnostics.Invalid END;
+				diagnostics.Error("",Diagnostics.Invalid,errPos,msg);
 			END;
 			error := TRUE;
 			IF dump # NIL THEN dump.Update; END;
@@ -1067,6 +1069,7 @@ TYPE
 		(* output *)
 		errPos: LONGINT;
 		error-: BOOLEAN;
+		useLineNumbers*: BOOLEAN;
 		emitter: Emitter;
 
 		(* overal state *)
@@ -1139,9 +1142,10 @@ TYPE
 			orgCodePos: LONGINT;
 			prevSourceName: Basic.FileName;
 			position: LONGINT;
+			line: LONGINT;
 			prevCpuBits: Size;
 			prevCpuOptions: InstructionSet.CPUOptions;
-
+			prevAssembly: Assembly;
 			PROCEDURE NextChar;
 			BEGIN
 				(*
@@ -1215,7 +1219,11 @@ TYPE
 			PROCEDURE NextSymbol;
 			BEGIN
 				SkipBlanks;
-				errPos := position- 1;
+				IF useLineNumbers THEN
+					errPos := line
+				ELSE
+					errPos := position- 1;
+				END;
 
 				CASE char OF
 				'A' .. 'Z', 'a' .. 'z', '_' :
@@ -1237,8 +1245,12 @@ TYPE
 					NextChar;
 				| ':': symbol := symColon;
 					NextChar;
-				| CR, LF: symbol := symLn;
-					NextChar;
+				| CR: symbol := symLn;
+					NextChar; INC(line);
+					IF char = LF THEN NextChar END;
+				| LF: symbol := symLn;
+					NextChar;INC(line);
+					IF char = CR THEN NextChar END;
 				| ',': symbol := symComma;
 					NextChar;
 				| '+': symbol := symPlus;
@@ -1908,6 +1920,7 @@ TYPE
 			PROCEDURE Reset;
 			BEGIN
 				position := orgPos;
+				IF useLineNumbers THEN line := orgPos END;
 				reader.SetPos(orgReaderPos);
 				emitter.code.SetPC(orgCodePos);
 				NextChar;
@@ -1964,9 +1977,11 @@ TYPE
 			END FixupLabels;
 
 		BEGIN
+			prevAssembly := emitter.assembly;
 			prevSourceName := sourceName;
 			prevCpuBits := emitter.cpuBits;
 			prevCpuOptions := emitter.cpuOptions;
+			emitter.assembly := SELF;
 
 			IF scope # NIL THEN
 				sourceName := scope.ownerModule.sourceName;
@@ -2002,7 +2017,7 @@ TYPE
 								RETURN
 							END;
 							IF ident # "SYSTEM" THEN
-								Error("unsupported target identifier");
+								Error("unsupportorted target identifier");
 								RETURN
 							END;
 							IF symbol # symPeriod THEN
@@ -2144,6 +2159,7 @@ TYPE
 			sourceName := prevSourceName;
 			emitter.cpuBits := prevCpuBits;
 			emitter.cpuOptions := prevCpuOptions;
+			emitter.assembly := prevAssembly;
 		END Assemble;
 
 	END Assembly;

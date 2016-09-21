@@ -5,7 +5,7 @@ IMPORT
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode,
 	SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxTRMAssembler, InstructionSet := FoxTRMInstructionSet,
 	SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxIntermediateObjectFile,
-	CodeGenerators := FoxCodeGenerators, D := Debugging;
+	CodeGenerators := FoxCodeGenerators, D := Debugging, Compiler;
 
 CONST
 	TraceFixups = FALSE;
@@ -2183,6 +2183,7 @@ TYPE
 
 			NEW(assembler, diagnostics, backend.capabilities,instructionSet );
 			scanner := Scanner.NewAssemblerScanner(module.moduleName(*module.module.sourceName*), reader, SHORT(instr.op1.intValue), diagnostics);
+			scanner.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
 			assembler.InlineAssemble(scanner, in, scope, module);
 			error := error OR assembler.error
 		END EmitAsm;

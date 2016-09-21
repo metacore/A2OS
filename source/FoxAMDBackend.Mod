@@ -4,7 +4,7 @@ IMPORT
 	Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections,
 	IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode,
 	InstructionSet := FoxAMD64InstructionSet, Assembler := FoxAMD64Assembler, SemanticChecker := FoxSemanticChecker, Formats := FoxFormats,
-	Diagnostics, Streams, Options, Strings, ObjectFileFormat := FoxBinaryObjectFile, 
+	Diagnostics, Streams, Options, Strings, ObjectFileFormat := FoxBinaryObjectFile, Compiler,
 	Machine, D := Debugging, CodeGenerators := FoxCodeGenerators, ObjectFile;
 
 CONST
@@ -3114,6 +3114,7 @@ TYPE
 			procedure := symbol(SyntaxTree.Procedure);
 			scope := procedure.procedureScope;
 			NEW(assembler,diagnostics,emitter);
+			assembler.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
 			assembler.Assemble(reader,SHORT(instruction.op1.intValue),scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
 			error := error OR assembler.error;
 

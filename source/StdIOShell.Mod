@@ -56,8 +56,10 @@ SystemTools.DoCommands
 		FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
 		FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
 		FoxBackend.Mod FoxSections.Mod 
-		FoxFrontend.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-		FoxCompiler.Mod FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+		FoxFrontend.Mod 
+		FoxCompiler.Mod 
+		FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+		FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
 		FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 		FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
 		FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
@@ -92,8 +94,9 @@ SystemTools.DoCommands
 		FoxParser  FoxSemanticChecker
 		FoxBackend FoxSections 
 		
-		FoxFrontend FoxOberonFrontend 
-		Compiler FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
+		FoxFrontend
+		Compiler  FoxOberonFrontend 
+		FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
 		
 		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
 		FoxBinaryObjectFile FoxGenericObjectFile
@@ -143,8 +146,10 @@ SystemTools.DoCommands
 		FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
 		FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
 		FoxBackend.Mod FoxSections.Mod 
-		FoxFrontend.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-		FoxCompiler.Mod FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+		FoxFrontend.Mod
+		FoxCompiler.Mod 
+		FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+		FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
 		FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 		FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
 		FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
@@ -181,8 +186,10 @@ SystemTools.DoCommands
 		FoxParser  FoxSemanticChecker
 		FoxBackend FoxSections 
 		
-		FoxFrontend FoxOberonFrontend 
-		Compiler FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
+		FoxFrontend
+		Compiler 
+		FoxOberonFrontend 
+		FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
 		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
 		FoxBinaryObjectFile FoxGenericObjectFile
 		FoxAMD64InstructionSet FoxAMD64Assembler FoxAMDBackend

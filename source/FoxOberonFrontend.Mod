@@ -1,7 +1,7 @@
 MODULE FoxOberonFrontend; (**  AUTHOR "fof"; PURPOSE "Oberon Compiler: Oberon frontend module";  **)
 
 IMPORT
-	Streams, Diagnostics,  SyntaxTree := FoxSyntaxTree, Parser := FoxParser, Scanner := FoxScanner,FoxFrontend;
+	Streams, Diagnostics,  SyntaxTree := FoxSyntaxTree, Parser := FoxParser, Scanner := FoxScanner,FoxFrontend, Compiler;
 
 TYPE
 
@@ -10,11 +10,11 @@ TYPE
 		scanner: Scanner.Scanner;
 		parser: Parser.Parser;
 		
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
-			Initialize^(diagnostics, reader, fileName, pos);
+			Initialize^(diagnostics, flags, reader, fileName, pos);
 			scanner := Scanner.NewScanner(fileName, reader, pos, diagnostics);
-			scanner.useLineNumbers := lineNumbers;
+			scanner.useLineNumbers := Compiler.UseLineNumbers IN flags;
 			parser := Parser.NewParser( scanner, diagnostics );
 		END Initialize;
 		

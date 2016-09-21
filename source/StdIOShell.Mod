@@ -71,7 +71,7 @@ SystemTools.DoCommands
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 	
-		XML.Mod XMLScanner.Mod DynamicStrings.Mod UTF8Strings.Mod XMLParser.Mod XMLObjects.Mod
+		DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod UTF8Strings.Mod XMLParser.Mod
 		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
 		InterpreterShell.Mod
 
@@ -114,7 +114,7 @@ SystemTools.DoCommands
 		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
 		FoxDocumentationParser FoxDocumentationBackend
 		
-		XML XMLScanner DynamicStrings UTF8Strings XMLParser XMLObjects
+		DynamicStrings XMLObjects XML XMLScanner UTF8Strings XMLParser 
 		PersistentObjects FoxInterpreterSymbols FoxInterpreter
 		InterpreterShell
 
@@ -161,7 +161,7 @@ SystemTools.DoCommands
 		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
 		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 
-		XML.Mod XMLScanner.Mod DynamicStrings.Mod UTF8Strings.Mod XMLParser.Mod XMLObjects.Mod
+		DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod  UTF8Strings.Mod XMLParser.Mod 
 		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
 		InterpreterShell.Mod
 

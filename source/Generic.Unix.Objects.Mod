@@ -882,7 +882,6 @@ TYPE
 
 	PROCEDURE Init;
 	BEGIN
-		TRACE("Init");
 		Unix.suspendHandler := GetContext;
 		(*
 		Unix.Dlsym( 0, "Unix.MtxInit",		ADDRESSOF( Unix.MtxInit ) );

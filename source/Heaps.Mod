@@ -1496,11 +1496,9 @@ BEGIN
 END SetMetaData;
 
 BEGIN
-	Trace.String("Heaps: Initializing heap...");
 	(* The meta data stack inspection is more efficient than the heuristics *)
-	SetHeuristic;
+	GCType := HeuristicStackInspectionGC;
 	Init;
-	Trace.Green; Trace.StringLn("... Ok"); Trace.Default;
 END Heaps.
 
 

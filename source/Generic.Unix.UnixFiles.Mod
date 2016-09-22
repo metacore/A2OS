@@ -13,6 +13,7 @@ CONST
 	Open = 0;  Create = 1;  Closed = 2;	(* file states *)
 	
 	NoKey = -1;
+	CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
 	
 	TraceCollection = 0;
 	TraceSearch=1;
@@ -388,12 +389,14 @@ TYPE
 					END;
 					key := 0;
 				END Delete0;
-
-				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT );
+				
+				(* return remaining old file, if any *)
+				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT ): LONGINT;
 				CONST Bufsize = 4096;
-				VAR fdold, fdnew, n, r: LONGINT;  ostat, nstat: Unix.Status;
+				VAR fdold, fdnew, fo, n, r: LONGINT;  ostat, nstat: Unix.Status;
 					buf: ARRAY Bufsize OF CHAR;
 				BEGIN {EXCLUSIVE}
+					fo := NoDesc;
 					r:= Unix.stat( ADDRESSOF( old ), ostat );
 
 					IF r >= 0 THEN
@@ -402,20 +405,19 @@ TYPE
 							 r := Unix.unlink( ADDRESSOF( new ) )  (* work around stale nfs handles *);
 						END;
 						r := Unix.rename( ADDRESSOF( old ), ADDRESSOF( new ) );
-						IF r < 0 THEN
+						IF r < 0 THEN (* could not rename, try copy *)
 							res := Unix.errno( );
 							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
-
 								fdold := Unix.open( ADDRESSOF( old ), Unix.rdonly, {} );
+								fo := fdold;
 								IF fdold < 0 THEN    
 									res := Unix.errno( );  
-									RETURN
+									RETURN NoDesc;
 								END;
 								fdnew := Unix.open( ADDRESSOF( new ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 								IF fdnew < 0 THEN    
 									res := Unix.errno( );  
-
-									RETURN
+									RETURN NoDesc;
 								END;
 								n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize );
 								WHILE n > 0 DO
@@ -424,23 +426,29 @@ TYPE
 										res := Unix.errno();  
 										r := Unix.close( fdold );  
 										r := Unix.close( fdnew );
-										RETURN
+										RETURN NoDesc;
 									END;
 									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize )
 								END;
-								r := Unix.unlink( ADDRESSOF( old ) );  								
+								r := Unix.unlink( ADDRESSOF( old ) );
 								r := Unix.close( fdold );
-								r := Unix.unlink( ADDRESSOF( old ) );  (* for virtual box to work *)
 								r := Unix.close( fdnew );  
 								res := Files.Ok
 							ELSE
-								RETURN  (* res is Unix.rename return code *)
+								RETURN NoDesc (* res is Unix.rename return code *)
 							END
 						END;
 						res := Files.Ok
 					ELSE  
 						res := Unix.errno();
-					END
+					END;
+					RETURN fo;
+				END TryRename;
+
+				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT );
+				VAR of: LONGINT;
+				BEGIN
+					of := TryRename(old, new, f, res);
 				END Rename0;
 				
 
@@ -547,7 +555,7 @@ TYPE
 	
 	File* = OBJECT (Files.File)
 			VAR
-				fd, fdTemp: LONGINT;
+				fd: LONGINT;
 				workName, registerName: Filename;
 				tempFile: BOOLEAN;
 				dev: Unix.DevT;
@@ -560,20 +568,21 @@ TYPE
 
 				PROCEDURE & Init( fs: Files.FileSystem );
 				BEGIN
-					SELF.fs := fs;  flags := {};  fdTemp := 0;
+					SELF.fs := fs;  flags := {};
 				END Init;
 
-				
 				PROCEDURE CreateUnixFile;
-				CONST 
-					CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
 				VAR 
 					stat: Unix.Status;  done: BOOLEAN;  r: LONGINT;
 				BEGIN
 					IF state = Create THEN  
 						GetTempName( registerName, workName );  tempFile := TRUE
-					ELSIF state = Closed THEN  
-						workName := registerName;  registerName := "";  tempFile := FALSE;
+					ELSIF state = Closed THEN
+						IF registerName # "" THEN
+							workName := registerName;  registerName := "";  tempFile := FALSE;
+						ELSE
+							RETURN;
+						END;
 					END;
 					r := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
@@ -587,7 +596,6 @@ TYPE
 						fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
 						done := fd >= 0
 					END;
-					IF tempFile THEN fdTemp:= fd END;
 					IF done THEN
 						(*IF fd >= FileTabSize THEN  
 							r := Unix.close( fd );  
@@ -807,24 +815,27 @@ TYPE
 
 
 				PROCEDURE Register0*( VAR res: LONGINT );
+				VAR fo: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF (state = Create) & (registerName # "") THEN  
 						state := Closed (* shortcut renaming *)   ;
 					END;
-
+					
 					FlushBuffers;
+					
 					IF registerName # "" THEN
-						fs.Rename0( workName, registerName, SELF, res );
+						fo := unixFS.TryRename( workName, registerName, SELF, res );
 						IF res # Files.Ok THEN  
 							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )  
 						END;
-						
-						IF tempFile & (fdTemp # 0) THEN
-							res := Unix.close(fdTemp); 
-							res := Unix.unlink( ADDRESSOF( workName ) ); 
-							fdTemp := 0;
+
+						IF fo # NoDesc THEN 
+							TRACE(fo, fd); 
+							res := Unix.close(fo); 
+							res := Unix.unlink(ADDRESSOF(workName));  (* VirtualBox ! Can only delete file when closed. *)
+							fd := Unix.open( ADDRESSOF( registerName ), CreateFlags, Unix.rwrwr );
 						END;
-						
+
 						workName := registerName;  registerName := "";  tempFile := FALSE;
 					END;
 					(*collection.Register(SELF);*)
@@ -861,7 +872,7 @@ TYPE
 							fd := NoDesc;
 						END;
 					END;
-					DEC( openfiles );  state := Closed
+					DEC( openfiles );  state := Closed;
 				END Finalize;
 				
 				PROCEDURE Close;

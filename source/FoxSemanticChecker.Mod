@@ -5483,12 +5483,17 @@ TYPE
 
 					IF (base IS SyntaxTree.PointerType) & (parameter0 IS SyntaxTree.Designator) THEN
 						IF base(SyntaxTree.PointerType).isUnsafe THEN
-							Error(position, Diagnostics.Invalid, "forbidden len on unsafe pointer");
+							base := base(SyntaxTree.PointerType).pointerBase.resolved;
+							IF~(base IS SyntaxTree.ArrayType) OR (base(SyntaxTree.ArrayType).form # SyntaxTree.Static) THEN
+								Error(position, Diagnostics.Invalid, "forbidden len on unsafe pointer");
+							END;
+							type0 := base;
+						ELSE
+							parameter0 := NewDereferenceDesignator(position,parameter0(SyntaxTree.Designator));
+							type0 := parameter0.type.resolved;
+							actualParameters.SetExpression(0,parameter0);
+							base := type0;
 						END;
-						parameter0 := NewDereferenceDesignator(position,parameter0(SyntaxTree.Designator));
-						actualParameters.SetExpression(0,parameter0);
-						type0 := parameter0.type.resolved;
-						base := type0;
 					END;
 
 					IF (numberActualParameters=1) OR (numberActualParameters =2) & CheckIntegerType(parameter1) THEN

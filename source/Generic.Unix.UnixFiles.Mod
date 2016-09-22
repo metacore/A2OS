@@ -829,11 +829,10 @@ TYPE
 							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )  
 						END;
 
-						IF fo # NoDesc THEN 
-							TRACE(fo, fd); 
-							res := Unix.close(fo); 
+						IF fo # NoDesc THEN (* SELF still refers to old file *)
+							res := Unix.close(fd); 
 							res := Unix.unlink(ADDRESSOF(workName));  (* VirtualBox ! Can only delete file when closed. *)
-							fd := Unix.open( ADDRESSOF( registerName ), CreateFlags, Unix.rwrwr );
+							fd := Unix.open( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
 						END;
 
 						workName := registerName;  registerName := "";  tempFile := FALSE;

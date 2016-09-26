@@ -112,20 +112,22 @@ CONST
 	No = 3; (* per default, don't install package *)
 
 	(* File.release*)
-	All = {0..31};
 
-	MaxBuilds = 32;
-	MaxPrefixes = 32;
-	MaxNofImports = 64; (* Maximum number of entries in a module import section *)
+	MaxBuilds = 128;
+	MaxPrefixes = 128;
+	MaxNofImports = 128; (* Maximum number of entries in a module import section *)
 
 	Tab = 9X;
 
 	Mode_ShowImported = 0;
 	Mode_ShowImporting = 1;
 
+	SetSize = MAX(SET)+1;
+
 TYPE
 
 	Name = ARRAY 72 OF CHAR;
+	Set = ARRAY (MaxPrefixes-1) DIV SetSize + 1 OF SET;
 
 TYPE
 
@@ -147,12 +149,12 @@ TYPE
 		nofFilesAll : LONGINT;
 		nofSourcesAll : LONGINT;
 
-		PROCEDURE Get(VAR nofFiles, nofSources : LONGINT; release : SET);
+		PROCEDURE Get(VAR nofFiles, nofSources : LONGINT; CONST release : Set);
 		VAR i : LONGINT;
 		BEGIN
 			nofFiles := 0; nofSources := 0;
 			FOR i := 0 TO MaxPrefixes-1 DO
-				IF i IN release THEN
+				IF Has(release, i) THEN
 					nofFiles := nofFiles + stats[i].nofFiles;
 					nofSources := nofSources + stats[i].nofSources;
 				END;
@@ -164,9 +166,9 @@ TYPE
 		BEGIN
 			INC(nofFiles);
 			IF file.IsSourceCode() THEN INC(nofSources); END;
-			IF (file.release # All) THEN
+			IF ~IsAll(file.release) THEN
 				FOR i := 0 TO MaxPrefixes-1 DO
-					IF i IN file.release THEN
+					IF Has(file.release, i) THEN
 						INC(stats[i].nofFiles);
 						IF file.IsSourceCode() THEN INC(stats[i].nofSources); END;
 					END;
@@ -384,7 +386,7 @@ TYPE
 
 		package- : Package;
 		options: ARRAY 8 OF CHAR;
-		release- : SET;
+		release- : Set;
 		flags-: SET;
 		file : Files.File;
 		pos : LONGINT; (* Position in package description file *)
@@ -407,16 +409,21 @@ TYPE
 			doCompile := TRUE;
 			package := NIL;
 			COPY("", options);
-			release := {};
+			SetEmpty(release);
 			flags := {};
 			file := NIL;
 			pos := 0;
 			prev := NIL; next := NIL;
 		END Init;
 
-		PROCEDURE IsInRelease*(release : SET) : BOOLEAN;
+		PROCEDURE IsInRelease*(release : Set) : BOOLEAN;
+		VAR i: LONGINT;
 		BEGIN
-			RETURN (SELF.release = All) OR (SELF.release * release # {});
+			IF IsAll(SELF.release) THEN RETURN TRUE END; 
+			FOR i := 0 TO LEN(release)-1 DO 
+				IF SELF.release[i] * release[i] # {} THEN RETURN TRUE END;
+			END;
+			RETURN FALSE;
 		END IsInRelease;
 
 		PROCEDURE IsSourceCode*() : BOOLEAN;
@@ -442,6 +449,7 @@ TYPE
 					Strings.Append(temp, ": Import # not found in file #");
 					MakeMessage(message, temp, module.imports[i], name);
 					diagnostics.Error(builds.source, pos, Diagnostics.Invalid, message);
+					HALT(100);
 				END;
 			END;
 		END CheckImports;
@@ -505,7 +513,7 @@ TYPE
 		onlyPackages: Strings.StringArray;
 		compileOptions, linkOptions: Options.Parameter; 
 		compiler, linker: ARRAY 128 OF CHAR;
-		target : ARRAY 8 OF CHAR;
+		target : ARRAY 32 OF CHAR;
 		extension : ARRAY 8 OF CHAR;
 		symbolFileExtension : ARRAY 8 OF CHAR;
 		path : Files.FileName;
@@ -525,7 +533,7 @@ TYPE
 		(* Name of the package description file *)
 		builds : Builds;
 
-		include : SET;
+		include : Set;
 
 		position- : LONGINT;
 
@@ -548,7 +556,7 @@ TYPE
 			files := NIL;
 			packages := NIL;
 			builds := NIL;
-			include := {};
+			SetEmpty(include);
 			position := -1;
 		END Init;
 
@@ -1461,7 +1469,7 @@ TYPE
 
 		(* Add the specified prefix to the prefixes array if its not already contained *)
 		PROCEDURE AddPrefix(CONST prefix : Name; diagnostics : Diagnostics.Diagnostics) : BOOLEAN;
-		VAR error : BOOLEAN; i : LONGINT;
+		VAR error : BOOLEAN; i : LONGINT; j: LONGINT;
 		BEGIN
 			ASSERT((prefix # "") & (diagnostics # NIL));
 			error := FALSE;
@@ -1474,6 +1482,9 @@ TYPE
 				ELSE
 					error := TRUE;
 					diagnostics.Warning("", Diagnostics.Invalid, Diagnostics.Invalid, "Maximum number of prefixes exceeded");
+					FOR j := 0 TO LEN(prefixes)-1 DO
+						TRACE(prefixes[j]);
+					END;
 				END;
 			END;
 			RETURN ~error;
@@ -1581,7 +1592,7 @@ TYPE
 					nofFiles := 0;
 					file := files;
 					WHILE (file # NIL) DO
-						IF (file.release # All) & (prefix IN file.release) THEN
+						IF ~IsAll(file.release) & Has(file.release, prefix) THEN
 							w.Char(Tab); w.String(file.name); w.Ln;
 							INC(nofFiles);
 						END;
@@ -1613,20 +1624,22 @@ TYPE
 			w.Update;
 		END Show;
 
-		PROCEDURE GetReleaseSet(build : BuildObj; VAR release : SET);
-		VAR prefix, index : LONGINT;
+		PROCEDURE GetReleaseSet(build : BuildObj; VAR release : Set): BOOLEAN;
+		VAR prefix, index, i : LONGINT;
 		BEGIN
-			release := {};
+			SetEmpty(release);
 			FOR prefix := 0 TO LEN(build.prefixes)-1 DO
 				IF (build.prefixes[prefix] # "") THEN
 					index := GetPrefixIndex(build.prefixes[prefix]);
 					IF (index >= 0) THEN
-						INCL(release, index);
+						Incl(release, index);
 					ELSE
-						HALT(99);
+						TRACE("GETRELEASE SET FAILED", build.prefixes[prefix], index);
+						RETURN FALSE;
 					END;
 				END;
 			END;
+			RETURN TRUE;
 		END GetReleaseSet;
 
 		(** Get a reference to a BuildObj by name *)
@@ -1660,7 +1673,7 @@ TYPE
 			RETURN ~error;
 		END AddBuild;
 
-		PROCEDURE AddFile(CONST filename : ARRAY OF CHAR;  release : SET; package : Package;  pos : LONGINT);
+		PROCEDURE AddFile(CONST filename : ARRAY OF CHAR;  release : Set; package : Package;  pos : LONGINT);
 		VAR file, f : File; pre, suf : Files.FileName;
 		BEGIN
 			ASSERT(package # NIL);
@@ -1729,7 +1742,7 @@ TYPE
 			ASSERT(diagnostics # NIL);
 			FOR build := 0 TO LEN(builds)-1 DO
 				IF (builds[build] # NIL) THEN
-					GetReleaseSet(builds[build], builds[build].include);
+					IF GetReleaseSet(builds[build], builds[build].include) THEN
 					builds[build].files := files;
 					builds[build].packages := packages;
 					IF (builds[build].excludedPackages # NIL) THEN
@@ -1742,6 +1755,7 @@ TYPE
 								diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, message);
 							END;
 						END;
+					END;
 					END;
 				END;
 			END;
@@ -2259,15 +2273,15 @@ TYPE
 			Prefix = prefix {"," prefix}
 			FileList = filename {" " filename} *)
 		PROCEDURE ParsePackage(builds : Builds;  VAR token : Token) : BOOLEAN;
-		VAR currentRelease : SET; index : LONGINT; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
+		VAR currentRelease : Set; index : LONGINT; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
 		BEGIN
-			currentRelease := All;
+			SetAll(currentRelease);
 			LOOP
 				IF scanner.Get(token) THEN
 					index := builds.GetPrefixIndex(token);
 					IF (index >= 0) THEN
-						IF (currentRelease = All) THEN
-							currentRelease := {};
+						IF IsAll(currentRelease) THEN
+							SetEmpty(currentRelease);
 							IF ~ParseBuildPrefixes(builds, token, currentRelease, pos) THEN
 								RETURN FALSE;
 							END;
@@ -2277,8 +2291,8 @@ TYPE
 							RETURN FALSE;
 						END;
 					ELSIF (token = CLOSESECTION) THEN
-						IF (currentRelease # All) THEN
-							currentRelease := All;
+						IF ~IsAll(currentRelease) THEN
+							SetAll(currentRelease);
 						ELSE
 							Error(scanner.pos, "No matching opening bracket", "", "");
 							RETURN FALSE;
@@ -2306,15 +2320,15 @@ TYPE
 					EXIT;
 				END;
 			END;
-			RETURN (currentRelease = All);
+			RETURN IsAll(currentRelease);
 		END ParsePackage;
 
-		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : SET; VAR pos : LONGINT) : BOOLEAN;
+		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : Set; VAR pos : LONGINT) : BOOLEAN;
 		VAR index : LONGINT; message : ARRAY 128 OF CHAR;
 		BEGIN
 			index := builds.GetPrefixIndex(token);
 			IF (index >= 0) THEN
-				INCL(release, index);
+				Incl(release,index);
 			ELSE
 				MakeMessage(message, "Unknown build prefix #", token, "");
 				diagnostics.Warning(scanner.source, scanner.pos, Diagnostics.Invalid, message);
@@ -2343,6 +2357,47 @@ TYPE
 
 	END Parser;
 
+
+	PROCEDURE SetAll(VAR s: Set);
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			s[i] := {MIN(SET)..MAX(SET)};
+		END;
+	END SetAll;
+	
+	PROCEDURE SetEmpty(VAR s: Set);
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			s[i] := {};
+		END;
+	END SetEmpty;
+	
+	PROCEDURE IsAll(CONST s: Set): BOOLEAN;
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			IF s[i] # {MIN(SET)..MAX(SET)} THEN RETURN FALSE END; 
+		END;
+		RETURN TRUE;
+	END IsAll;
+	
+	PROCEDURE Incl(VAR s: Set; i: LONGINT);
+	BEGIN
+		INCL(s[i DIV SetSize], i MOD SetSize); 
+	END Incl;
+
+	PROCEDURE Excl(VAR s: Set; i: LONGINT);
+	BEGIN
+		EXCL(s[i DIV SetSize], i MOD SetSize); 
+	END Excl;
+	
+	PROCEDURE Has(CONST s: Set; i: LONGINT): BOOLEAN;
+	BEGIN
+		RETURN i MOD SetSize IN s[i DIV SetSize];
+	END Has;
+	
 PROCEDURE GetModuleInfo(
 					in : Streams.Reader;
 					VAR mi : ModuleInfo;
@@ -3302,6 +3357,7 @@ PROCEDURE Cleanup;
 BEGIN
 	CompilerInterface.Unregister("ReleaseTool");
 END Cleanup;
+
 
 BEGIN
 	CompilerInterface.Register("ReleaseTool", "Parse release description file", "Tool", ParseText);

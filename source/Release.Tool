@@ -47,7 +47,7 @@
 #	PELinker.Link  --path=../ObjE/ Win32.Aos.Link ~
 #
 # WINAOS generic
-#	Release.Build --path="../obg/"  WinAosNewObjectFile ~
+#	Release.Build WinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H --path="../obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 #  Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
 # 
@@ -263,7 +263,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32G {
-		INCLUDE "UNIXG LINUXG UNIX32 UNCOOP"
+		INCLUDE "UNIXG UNIXG32 LINUXG UNCOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32G"
 		TARGET "AMD"
@@ -363,7 +363,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Win32.Environment.Mod }
 
 	LINUXG { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
-	UNIXG { Generic.Unix.I386.Machine.Mod }
+	UNIXG32 { Generic.Unix.I386.Machine.Mod }
 	UNIX { Unix.Glue.Mod }
 	DARWIN { Darwin.I386.Unix.Mod }  
 	DARWIN64 { Darwin.AMD64.Unix.Mod } 
@@ -415,7 +415,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# Services and device drivers
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 
-	I386, WIN, UNIX32 { I386.Reals.Mod }
+	I386, WIN, UNIX32, UNIXG32 { I386.Reals.Mod }
 	AMD64, UNIX64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
@@ -502,7 +502,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BootShell.Mod
 
-	I386,UNIX32 { I386.Network.Mod }
+	I386,UNIX32, UNIXG32 { I386.Network.Mod }
 	AMD64, UNIX64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
@@ -686,12 +686,12 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WIN, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WIN, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	FoxArrayBase.Mod
-	I386, WIN, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
+	I386, WIN, UNIX32,UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -714,7 +714,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386, WIN, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WIN, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
@@ -730,7 +730,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386, WIN, UNIX32 { I386.Raster.Mod }
+	I386, WIN, UNIX32,UNIXG32 { I386.Raster.Mod }
 	AMD64, UNIX64 { AMD64.Raster.Mod }
 
 	Localization.Mod
@@ -763,7 +763,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	I386, WIN, UNIX32 { I386.WMRasterScale.Mod }
+	I386, WIN, UNIX32,UNIXG32 { I386.WMRasterScale.Mod }
 	AMD64, UNIX64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
@@ -861,7 +861,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386, WIN, UNIX32 { I386.CPUID.Mod }
+	I386, WIN, UNIX32,UNIXG32 { I386.CPUID.Mod }
 	AMD64, UNIX64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
@@ -940,7 +940,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin  # MP3 Decoder
 
 	# Video codecs
-	I386, WIN, UNIX32 {
+	I386, WIN, UNIX32,UNIXG32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
@@ -1239,7 +1239,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WIN, UNIX32 { I386.WMTransitions.Mod }
+	I386, WIN, UNIX32,UNIXG32 { I386.WMTransitions.Mod }
 	AMD64, UNIX64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
@@ -1408,7 +1408,7 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WIN, UNIX32 {I386.EFIMachine.Mod}
+	I386, WIN, UNIX32,UNIXG32 {I386.EFIMachine.Mod}
 	AMD64, UNIX64 { AMD64.EFIMachine.Mod }
 
 

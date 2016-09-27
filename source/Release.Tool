@@ -269,7 +269,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "GofU"
 		SYMBOLEXTENSION "SymU"
-		PATH "."
+		PATH "./"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}		
@@ -977,7 +977,9 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	cjkfont.bfnt # since used as fallback
 
 	WindowManager.Mod
-	UNIX, UNIXG { Unix.X11.Mod Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod Unix.KbdMouse.Mod Unix.Clipboard.Mod }
+	UNIX { Unix.X11.Mod }
+	UNIXG { Generic.Unix.X11.Mod }
+	UNIX, UNIXG { Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod Unix.KbdMouse.Mod Unix.Clipboard.Mod Unix.Display.Mod }
 
 
 	# Icons representing applications (don't put icons used by applications inside!)

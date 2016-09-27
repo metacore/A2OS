@@ -449,7 +449,6 @@ TYPE
 					Strings.Append(temp, ": Import # not found in file #");
 					MakeMessage(message, temp, module.imports[i], name);
 					diagnostics.Error(builds.source, pos, Diagnostics.Invalid, message);
-					HALT(100);
 				END;
 			END;
 		END CheckImports;

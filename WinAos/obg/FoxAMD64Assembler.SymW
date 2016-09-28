@@ -202,6 +202,7 @@ TYPE
 		code-: Code; 
 		error-: BOOLEAN; 
 		diagnostics: Diagnostics.Diagnostics; 
+		assembly: Assembly; 
 		cpuBits: Size; 
 		cpuOptions: InstructionSet.CPUOptions; 
 		dump: Streams.Writer; 
@@ -244,6 +245,7 @@ TYPE
 	VAR 
 		errPos: LONGINT; 
 		error-: BOOLEAN; 
+		useLineNumbers*: BOOLEAN; 
 		emitter: Emitter; 
 		diagnostics: Diagnostics.Diagnostics; 
 		dump: Streams.Writer; 

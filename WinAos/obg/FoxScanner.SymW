@@ -201,6 +201,7 @@ TYPE
 		case-: LONGINT; 
 		stringWriter: Streams.Writer; 
 		stringMaker: StringMaker; 
+		useLineNumbers*: BOOLEAN; 
 
 		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ ResetCase*; 
@@ -222,7 +223,7 @@ TYPE
 	END Scanner; 
 
 	Context* = RECORD 
-		position, readerPosition: LONGINT; 
+		position, readerPosition, line: LONGINT; 
 		ch: CHAR; 
 	END; 
 

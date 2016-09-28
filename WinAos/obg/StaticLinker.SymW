@@ -52,6 +52,8 @@ TYPE
 	END Arrangement; 
 
 	FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
+VAR 
+	defaults: Options.Defaults; 
 
 	PROCEDURE ^ Align(this, to: LONGINT): LONGINT; 
 	PROCEDURE ^ ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; linker: GenericLinker.Linker); 
@@ -75,5 +77,6 @@ TYPE
 	PROCEDURE ^ ParseExports(CONST names: ARRAY OF CHAR): ExportInfo; 
 	PROCEDURE ^ CheckExports(info: ExportInfo; error: Streams.Writer): BOOLEAN; 
 	PROCEDURE ^ Link*(context: Commands.Context); 
+	PROCEDURE ^ ShowDefaults*(context: Commands.Context); 
 BEGIN
 END StaticLinker.

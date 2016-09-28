@@ -26,13 +26,13 @@ CONST
 	Required = 1; 
 	Yes = 2; 
 	No = 3; 
-	All = {0 .. 31}; 
-	MaxBuilds = 32; 
-	MaxPrefixes = 32; 
-	MaxNofImports = 64; 
+	MaxBuilds = 128; 
+	MaxPrefixes = 128; 
+	MaxNofImports = 128; 
 	Tab = 9X; 
 	Mode_ShowImported = 0; 
 	Mode_ShowImporting = 1; 
+	SetSize = (MAX(SET) + 1); 
 	PACKAGE = \"PACKAGE"\; 
 	ARCHIVE = \"ARCHIVE"\; 
 	SOURCE = \"SOURCE"\; 
@@ -59,6 +59,8 @@ CONST
 TYPE 
 	Name = ARRAY 72 OF CHAR; 
 
+	Set = ARRAY (((MaxPrefixes - 1) DIV SetSize) + 1) OF SET; 
+
 	Statistic = RECORD 
 		nofFiles: LONGINT; 
 		nofSources: LONGINT; 
@@ -72,7 +74,7 @@ TYPE
 		nofFilesAll: LONGINT; 
 		nofSourcesAll: LONGINT; 
 
-		PROCEDURE ^ Get(VAR nofFiles, nofSources: LONGINT; release: SET); 
+		PROCEDURE ^ Get(VAR nofFiles, nofSources: LONGINT; CONST release: Set); 
 		PROCEDURE ^ AddFile(file: File); 
 		PROCEDURE ^  & Reset; 
 	END Statistics; 
@@ -136,7 +138,7 @@ TYPE
 		jobID: LONGINT; 
 		package-: Package; 
 		options: ARRAY 8 OF CHAR; 
-		release-: SET; 
+		release-: Set; 
 		flags-: SET; 
 		file: Files.File; 
 		pos: LONGINT; 
@@ -144,7 +146,7 @@ TYPE
 		prev-, next-: File; 
 
 		PROCEDURE ^  & Init(builds: Builds); 
-		PROCEDURE ^ IsInRelease*(release: SET): BOOLEAN; 
+		PROCEDURE ^ IsInRelease*(release: Set): BOOLEAN; 
 		PROCEDURE ^ IsSourceCode*(): BOOLEAN; 
 		PROCEDURE ^ CheckImports*(diagnostics: Diagnostics.Diagnostics; build: BuildObj; VAR error: BOOLEAN); 
 		PROCEDURE ^ ParseModule*(diagnostics: Diagnostics.Diagnostics); 
@@ -168,7 +170,7 @@ TYPE
 		onlyPackages: Strings.StringArray; 
 		compileOptions, linkOptions: Options.Parameter; 
 		compiler, linker: ARRAY 128 OF CHAR; 
-		target: ARRAY 8 OF CHAR; 
+		target: ARRAY 32 OF CHAR; 
 		extension: ARRAY 8 OF CHAR; 
 		symbolFileExtension: ARRAY 8 OF CHAR; 
 		path: Files.FileName; 
@@ -180,7 +182,7 @@ TYPE
 		files: File; 
 		packages: PackageList; 
 		builds: Builds; 
-		include: SET; 
+		include: Set; 
 		position-: LONGINT; 
 
 		PROCEDURE ^  & Init; 
@@ -234,10 +236,10 @@ TYPE
 		PROCEDURE ^ GetPrefixIndex(CONST prefix: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CheckAll*(out: Streams.Writer; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ Show*(w: Streams.Writer; details: BOOLEAN); 
-		PROCEDURE ^ GetReleaseSet(build: BuildObj; VAR release: SET); 
+		PROCEDURE ^ GetReleaseSet(build: BuildObj; VAR release: Set): BOOLEAN; 
 		PROCEDURE ^ GetBuild*(CONST buildname: ARRAY OF CHAR): BuildObj; 
 		PROCEDURE ^ AddBuild(build: BuildObj; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
-		PROCEDURE ^ AddFile(CONST filename: ARRAY OF CHAR; release: SET; package: Package; pos: LONGINT); 
+		PROCEDURE ^ AddFile(CONST filename: ARRAY OF CHAR; release: Set; package: Package; pos: LONGINT); 
 		PROCEDURE ^ FindFile(CONST filename: ARRAY OF CHAR): File; 
 		PROCEDURE ^ FindFileCheckCase(CONST filename: ARRAY OF CHAR; VAR caseEqual: BOOLEAN): File; 
 		PROCEDURE ^ Initialize(diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
@@ -286,10 +288,16 @@ TYPE
 		PROCEDURE ^ ParseBuild(): BuildObj; 
 		PROCEDURE ^ ParsePackageHeader(): Package; 
 		PROCEDURE ^ ParsePackage(builds: Builds; VAR token: Token): BOOLEAN; 
-		PROCEDURE ^ ParseBuildPrefixes(builds: Builds; VAR token: Token; VAR release: SET; VAR pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ParseBuildPrefixes(builds: Builds; VAR token: Token; VAR release: Set; VAR pos: LONGINT): BOOLEAN; 
 		PROCEDURE ^  & Init(scanner: Scanner; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics); 
 	END Parser; 
 
+	PROCEDURE ^ SetAll(VAR s: Set); 
+	PROCEDURE ^ SetEmpty(VAR s: Set); 
+	PROCEDURE ^ IsAll(CONST s: Set): BOOLEAN; 
+	PROCEDURE ^ Incl(VAR s: Set; i: LONGINT); 
+	PROCEDURE ^ Excl(VAR s: Set; i: LONGINT); 
+	PROCEDURE ^ Has(CONST s: Set; i: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetModuleInfo(in: Streams.Reader; VAR mi: ModuleInfo; CONST source, filename: ARRAY OF CHAR; errorPosition: LONGINT; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ VersionToString(major, minor: LONGINT; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR pre, mid, suf: ARRAY OF CHAR); 

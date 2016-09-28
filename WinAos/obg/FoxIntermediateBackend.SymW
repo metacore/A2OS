@@ -154,6 +154,7 @@ TYPE
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
 		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
+		PROCEDURE ^ VisitProperty*(x: SyntaxTree.Property); 
 		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 
 		PROCEDURE ^ VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration); 
 		PROCEDURE ^ VisitConstant*(x: SyntaxTree.Constant); 

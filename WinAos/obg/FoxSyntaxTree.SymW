@@ -1454,6 +1454,7 @@ TYPE
 		ownerModule-: Module; 
 
 		PROCEDURE ^  & InitScope(outer: Scope); 
+		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ EnterSymbol*(symbol: Symbol; VAR duplicate: BOOLEAN); 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
 		PROCEDURE ^ AddConstant*(c: Constant); 
@@ -1524,6 +1525,7 @@ TYPE
 		numberImports: LONGINT; 
 
 		PROCEDURE ^  & InitCellScope(outer: Scope); 
+		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ SetOwnerCell*(owner: CellType); 
 		PROCEDURE ^ SetBodyProcedure*(bodyProcedure: Procedure); 
 		PROCEDURE ^ SetConstructor*(p: Procedure); 

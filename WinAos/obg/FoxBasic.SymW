@@ -1,5 +1,5 @@
 MODULE FoxBasic;
-	IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, D := Debugging;
+	IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, Modules, D := Debugging;
 CONST 
 	UndeclaredIdentifier* = 256; 
 	MultiplyDefinedIdentifier* = 257; 

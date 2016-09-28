@@ -1,0 +1,15 @@
+MODULE StdIO;
+	IMPORT S := SYSTEM, Modules, Commands, Streams, WinTrace, Kernel32;
+CONST 
+	AddrSize = SIZEOF(ADDRESS); 
+TYPE 
+	String = POINTER TO ARRAY OF CHAR; 
+VAR 
+	env-: Commands.Context; 
+	hin-, hout-, herr-: Kernel32.HANDLE; 
+
+	PROCEDURE ^ Args(): String; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Setup; 
+BEGIN
+END StdIO.

@@ -262,6 +262,7 @@ TYPE
 		module: SyntaxTree.Module; 
 
 		PROCEDURE ^  & InitWarnings*(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
 		PROCEDURE ^ Type(x: SyntaxTree.Type); 
 		PROCEDURE ^ VisitType*(x: SyntaxTree.Type); 
 		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 

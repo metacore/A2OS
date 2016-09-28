@@ -83,7 +83,7 @@ TYPE
 		PROCEDURE ^  & Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR); 
 		PROCEDURE ^ Exit*; 
 		PROCEDURE ^ DeleteStringFromDisplay(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ ReadCommand(VAR command: ARRAY OF CHAR); 
+		PROCEDURE ^ ReadCommand(VAR command: ARRAY OF CHAR): CHAR; 
 		PROCEDURE ^ Parse(VAR cmd: Command; VAR wait: BOOLEAN): LONGINT; 
 		PROCEDURE ^ ReadAlias(cmd: Command; verbose: BOOLEAN); 
 		PROCEDURE ^ ReplaceAlias(cmd: Command): BOOLEAN; 
@@ -93,7 +93,7 @@ TYPE
 		PROCEDURE ^ AwaitDeath*; 
 		PROCEDURE ^ SetUpcall*(proc: NotifyProcedure); 
 		PROCEDURE ^ ParseAliases(r: Files.Reader); 
-		PROCEDURE ^ LoadAliasesFromFile(filename: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadAliasesFromFile(filename: ARRAY OF CHAR; critical: BOOLEAN); 
 	BEGIN{ACTIVE, SAFE} 
 	END Shell; 
 

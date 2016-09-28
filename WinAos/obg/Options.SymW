@@ -1,5 +1,5 @@
 MODULE Options;
-	IMPORT KernelLog, Streams, Commands;
+	IMPORT KernelLog, Streams, Strings, Commands;
 CONST 
 	Flag* = 0; 
 	String* = 1; 
@@ -60,6 +60,22 @@ TYPE
 		PROCEDURE ^ ShowOption(ch: CHAR; CONST name: Name); 
 		PROCEDURE ^ Show*(out: Streams.Writer); 
 	END Options; 
+
+	Default = POINTER TO RECORD 
+		name: Name; 
+		defaults: Strings.String; 
+		next: Default; 
+	END; 
+
+	Defaults* = OBJECT 
+	VAR 
+		head, tail: Default; 
+
+		PROCEDURE ^  & InitDefaults*; 
+		PROCEDURE ^ Add*(CONST name, defaults: ARRAY OF CHAR); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR): Streams.Reader; 
+		PROCEDURE ^ Show*(out: Streams.Writer); 
+	END Defaults; 
 
 	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 
 	PROCEDURE ^ IsValidChar(ch: CHAR): BOOLEAN; 

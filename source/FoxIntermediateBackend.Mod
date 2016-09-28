@@ -8801,6 +8801,7 @@ TYPE
 				IF backend.cellsAreObjects THEN
 					CallThis(position,"ActiveCellsRuntime","Send",2);
 				ELSE
+					
 					CallThis(position,ChannelModuleName,"Send",2);
 				END;
 			(* ----- RECEIVE ------*)
@@ -9409,27 +9410,11 @@ TYPE
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 					RETURN;
 				ELSE
-					IF ptype IS SyntaxTree.ArrayType THEN ptype := ptype(SyntaxTree.ArrayType).arrayBase.resolved END;
-					IF ~(ptype IS SyntaxTree.PortType) THEN
-						InitOperand(result,ModeReference);
-						GetCodeSectionNameForSymbol(x,name);
-						symbol := NewSection(module.allSections, Sections.ConstSection, name,x,commentPrintout # NIL);
-						IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol),0);
-						RETURN
-					ELSE
-						InitOperand(result, ModeValue);
-						parameter := x.ownerType(SyntaxTree.CellType).firstParameter;
-						adr := 0;
-						WHILE parameter # x DO
-							parameterType := parameter.type;
-							inc := 1;
-							WHILE SemanticChecker.IsStaticArray(parameterType, parameterType, len) DO inc := inc * len END;
-							INC(adr, inc);
-							parameter := parameter.nextParameter
-						END;
-						IntermediateCode.InitImmediate(result.op,addressType,adr);
-						RETURN
-					END;
+					InitOperand(result,ModeReference);
+					GetCodeSectionNameForSymbol(x,name);
+					symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
+					IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
+					RETURN;
 				END;
 			ELSIF ~backend.cellsAreObjects & (currentScope IS SyntaxTree.ProcedureScope) & (currentScope(SyntaxTree.ProcedureScope).ownerProcedure.isConstructor) & (currentScope.outerScope IS SyntaxTree.CellScope) THEN
 				InitOperand(result,ModeReference);

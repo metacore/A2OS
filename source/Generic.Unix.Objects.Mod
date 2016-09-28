@@ -917,26 +917,38 @@ TYPE
 		StartTimerActivity;
 		
 		NEW( finalizerCaller );
-		(*
-		Heaps.saveSP := SaveSP;
-		*)
 		Heaps.gcStatus := GCStatusFactory()
-		(*
-		Heaps.GC := InvokeGC;
-		Heaps.InvokeGC := InvokeGC;
-		*)
 	END Init;
+
+TYPE 
+	MainThread = OBJECT
+	VAR exit: BOOLEAN;
+		
+		PROCEDURE&  Init;
+		BEGIN
+			exit := FALSE;
+		END Init;
+		
+		PROCEDURE Await();
+		BEGIN{EXCLUSIVE}
+			AWAIT(exit);
+		END Await;
+
+	END MainThread;
 	
+	VAR main: MainThread;
+	
+	PROCEDURE MainThreadSleep;
+	BEGIN
+		NEW(main);
+		main.Await();
+		Unix.exit(0);
+	END MainThreadSleep;
 	
 	PROCEDURE {FINAL} Final;
 	BEGIN
-		TRACE("Main Thread is terminating.");
-		(* LOOP Unix.ThrSleep( 10 ) END; *)
-		(*
-		Machine.Shutdown(FALSE);
-		*)
+		MainThreadSleep;
 	END Final;
-
 
 	PROCEDURE GCStatusFactory(): Heaps.GCStatus;
 	VAR gcStatusExt : GCStatusExt;

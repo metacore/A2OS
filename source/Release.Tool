@@ -54,7 +54,10 @@
 #
 # LinuxAOS Generic
 #	Release.Build Linux32G ~
+# Command line version:
 # 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  Pipes Shell StdIOShell ~
+# X11 Bootconsole:
+# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 #
 # WINAOS Cooperative
 #	Release.Build  --path="./" WinAosCooperative ~

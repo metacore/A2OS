@@ -371,6 +371,7 @@ VAR
 	PROCEDURE LinkToX;
 	VAR xlib: ADDRESS;
 	BEGIN
+		Unix.LinkToX;
 		xlib := Unix.Dlopen( Unix.libX11name, 2 );
 		IF xlib = 0 THEN  (* try default version *)
 		 xlib := Unix.Dlopen( "libX11.so", 2 )

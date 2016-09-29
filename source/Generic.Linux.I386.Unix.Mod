@@ -1075,7 +1075,6 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2); 
-		libx := Dlopen( libX11name, 2); 
 		
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 		
@@ -1180,14 +1179,21 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "perror",	ADDRESSOF( perror ) );
 		Dlsym( libc, "__errno_location",	ADDRESSOF(errno_location ) );
 		
-		Dlsym( libx, "XSetErrorHandler", ADDRESS OF xSetErrorHandler);
-		Dlsym( libx, "XSetIOErrorHandler", ADDRESS OF xSetIOErrorHandler);
-
 		getSysinfo;
 				
 		CreateSignalStack;
 		InitSignalHandler;
 	END Init;
+	
+	(* load X11 related libaries only on demand *)
+	PROCEDURE LinkToX*;
+	BEGIN
+		libx := Dlopen( libX11name, 2); 
+
+		Dlsym( libx, "XSetErrorHandler", ADDRESS OF xSetErrorHandler);
+		Dlsym( libx, "XSetIOErrorHandler", ADDRESS OF xSetIOErrorHandler);
+	END LinkToX;
+	
 
 	PROCEDURE {INITIAL} Init0;
 	BEGIN

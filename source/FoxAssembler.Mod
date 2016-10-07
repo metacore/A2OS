@@ -27,6 +27,7 @@ CONST
 
 TYPE
 	OperandString=ARRAY 256 OF CHAR;
+	Position= Basic.Position;
 
 	FixupElement=POINTER TO RECORD
 		fixup: BinaryCode.Fixup; next: FixupElement;
@@ -155,7 +156,7 @@ TYPE
 	VAR
 		diagnostics: Diagnostics.Diagnostics;
 		error-: BOOLEAN;
-		errorPosition-: LONGINT;
+		errorPosition-: Position;
 		symbol-: Scanner.Symbol;
 		scanner: Scanner.AssemblerScanner;
 		orgOffset: LONGINT;
@@ -169,7 +170,7 @@ TYPE
 
 		PROCEDURE &Init*(diagnostics: Diagnostics.Diagnostics);
 		BEGIN
-			SELF.diagnostics := diagnostics; errorPosition := Diagnostics.Invalid; orgOffset := 0;
+			SELF.diagnostics := diagnostics; errorPosition := Basic.invalidPosition; orgOffset := 0;
 		END Init;
 
 		PROCEDURE SetContext(CONST context: Scanner.Context);
@@ -177,21 +178,21 @@ TYPE
 			scanner.SetContext(context); NextSymbol;
 		END SetContext;
 
-		PROCEDURE Error*(pos: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error*(pos: SyntaxTree.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			error := TRUE;
 			IF diagnostics # NIL THEN
-				diagnostics.Error(scanner.source^,pos,Diagnostics.Invalid,msg);
+				diagnostics.Error(scanner.source^,pos.start,Diagnostics.Invalid,msg);
 			END;
 		END Error;
 
-		PROCEDURE ErrorSS*(pos: LONGINT; CONST s1,s2: ARRAY OF CHAR);
+		PROCEDURE ErrorSS*(pos: SyntaxTree.Position; CONST s1,s2: ARRAY OF CHAR);
 		VAR msg: Basic.MessageString;
 		BEGIN COPY(s1,msg); Strings.Append(msg,s2); Error(pos, msg);
 		END ErrorSS;
 
 		PROCEDURE NextSymbol*;
-		BEGIN error := error OR ~scanner.GetNextSymbol(symbol); errorPosition := symbol.start;
+		BEGIN error := error OR ~scanner.GetNextSymbol(symbol); errorPosition := symbol.position;
 		END NextSymbol;
 
 		PROCEDURE ThisToken*(x: LONGINT): BOOLEAN;
@@ -199,9 +200,9 @@ TYPE
 			IF ~error & (symbol.token = x) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
 		END ThisToken;
 
-		PROCEDURE GetIdentifier*(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN;
+		PROCEDURE GetIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			pos := symbol.start;
+			pos := symbol.position;
 			IF symbol.token # Scanner.Identifier THEN RETURN FALSE
 			ELSE COPY(symbol.identifierString,identifier); NextSymbol; RETURN TRUE
 			END;
@@ -212,7 +213,7 @@ TYPE
 			IF ~error & (symbol.token = Scanner.Identifier) & (this = symbol.identifierString) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
 		END ThisIdentifier;
 
-		PROCEDURE ExpectIdentifier*(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN;
+		PROCEDURE ExpectIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
 			IF ~GetIdentifier(pos,identifier)THEN Error(errorPosition,"identifier expected"); RETURN FALSE
 			ELSE RETURN TRUE
@@ -241,7 +242,7 @@ TYPE
 		END ExpectConstantInteger;
 
 		PROCEDURE Section;
-		VAR sectionType: Scanner.IdentifierString; pos: LONGINT;
+		VAR sectionType: Scanner.IdentifierString; pos: Position;
 		BEGIN
 			IF ExpectToken(Scanner.Period) THEN
 				IF ExpectIdentifier(pos,sectionType) THEN
@@ -257,7 +258,7 @@ TYPE
 			END;
 		END Section;
 
-		PROCEDURE DefineLabel(pos: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE DefineLabel(pos: Position; CONST name: ARRAY OF CHAR);
 		VAR label: NamedLabel;
 		BEGIN
 			IF Trace THEN D.String("define label: "); D.String(name); D.Ln END;
@@ -270,7 +271,7 @@ TYPE
 			END;
 		END DefineLabel;
 
-		PROCEDURE SetLabel(pos: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE SetLabel(pos: Position; CONST name: ARRAY OF CHAR);
 		VAR label: NamedLabel;
 		BEGIN
 			IF Trace THEN D.String("set label: "); D.String(name); D.String(" "); D.Int(code.pc,1); D.Ln END;
@@ -287,7 +288,7 @@ TYPE
 			to.fixup := from.fixup;
 		END CopyResult;
 
-		PROCEDURE DefineResult(pos: LONGINT; CONST name: ARRAY OF CHAR; CONST r: Result);
+		PROCEDURE DefineResult(pos: Position; CONST name: ARRAY OF CHAR; CONST r: Result);
 		VAR result: NamedResult;
 		BEGIN
 			IF Trace THEN D.String("define result: "); D.String(name); D.Ln END;
@@ -341,7 +342,7 @@ TYPE
 			RETURN sym
 		END SymbolInScope;
 
-		PROCEDURE ConstantSymbol(pos: LONGINT; constant: SyntaxTree.Constant; VAR result: Result): BOOLEAN;
+		PROCEDURE ConstantSymbol(pos: Position; constant: SyntaxTree.Constant; VAR result: Result): BOOLEAN;
 		BEGIN
 			IF constant.type.resolved IS SyntaxTree.CharacterType THEN
 				result.value := ORD(constant.value.resolved(SyntaxTree.CharacterValue).value);
@@ -368,7 +369,7 @@ TYPE
 		END GetFingerprint;
 
 
-		PROCEDURE NonConstantSymbol(pos: LONGINT; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN;
+		PROCEDURE NonConstantSymbol(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN;
 		VAR
 			name: Basic.SegmentedName; moduleScope: SyntaxTree.Scope; fixupSection: IntermediateCode.Section;
 			fixupPatternList: ObjectFile.FixupPatterns; identifier: ObjectFile.Identifier;
@@ -423,7 +424,7 @@ TYPE
 			RETURN TRUE
 		END NonConstantSymbol;
 
-		PROCEDURE GetNonConstant*(pos: LONGINT; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN;
+		PROCEDURE GetNonConstant*(pos: Position; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN;
 		VAR symbol: SyntaxTree.Symbol; namedLabel: NamedLabel;
 			name: Basic.SegmentedName;fixupPatternList: ObjectFile.FixupPatterns;
 			string: ARRAY 256 OF CHAR;
@@ -456,7 +457,7 @@ TYPE
 			END;
 		END GetNonConstant;
 
-		PROCEDURE LocalOffset(pos: LONGINT; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN;
+		PROCEDURE LocalOffset(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN;
 		BEGIN
 			IF symbol.scope IS SyntaxTree.ProcedureScope THEN (* symbol in procedure (local) scope *)
 				IF symbol.scope = scope THEN
@@ -472,7 +473,7 @@ TYPE
 			RETURN FALSE
 		END LocalOffset;
 
-		PROCEDURE GetConstant*(pos: LONGINT; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN;
+		PROCEDURE GetConstant*(pos: Position; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN;
 		VAR symbol: SyntaxTree.Symbol; namedResult: NamedResult;
 		BEGIN
 			namedResult := results.Find(ident);
@@ -486,7 +487,7 @@ TYPE
 		END GetConstant;
 
 		PROCEDURE Factor (VAR x: Result; critical: BOOLEAN): BOOLEAN;
-		VAR label: NamedLabel; identifier: Scanner.IdentifierString; pos: LONGINT;
+		VAR label: NamedLabel; identifier: Scanner.IdentifierString; pos: Position;
 		BEGIN
 			IF ThisToken(Scanner.Number) THEN
 				(* ASSERT(symbol.numberType = Scanner.Integer); *)
@@ -614,7 +615,7 @@ TYPE
 		END Expression;
 
 		PROCEDURE Data(CONST ident: ARRAY OF CHAR): BOOLEAN;
-		VAR size,i,nr: LONGINT; x: Result; pos: LONGINT; result: Result; patterns: ObjectFile.FixupPatterns;
+		VAR size,i,nr: LONGINT; x: Result; pos: Position; result: Result; patterns: ObjectFile.FixupPatterns;
 			PROCEDURE Number(ch: CHAR; VAR nr: LONGINT): BOOLEAN;
 			BEGIN
 				IF (ch >= "0") & (ch <="9") THEN
@@ -726,7 +727,7 @@ TYPE
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
 		VAR numberOperands: LONGINT;
 
-			PROCEDURE ParseOperand(pos: LONGINT; numberOperand: LONGINT);
+			PROCEDURE ParseOperand(pos: Position; numberOperand: LONGINT);
 			(* stub, must be overwritten by implementation *)
 			VAR operand: OperandString;
 				result: Result; first: BOOLEAN; str: ARRAY 256 OF CHAR;
@@ -773,7 +774,7 @@ TYPE
 		END IgnoreNewLines;
 
 		PROCEDURE DoAssemble();
-		VAR result: Result; line,pos, orgCodePos: LONGINT; identifier: Scanner.IdentifierString; context: Scanner.Context;
+		VAR result: Result; pos: Position; line,orgCodePos: LONGINT; identifier: Scanner.IdentifierString; context: Scanner.Context;
 		BEGIN
 			IF Trace THEN
 				D.Str("DoAssemble: ");
@@ -790,7 +791,7 @@ TYPE
 				IF ThisToken(Scanner.Number) THEN
 					line := symbol.integer;
 					IF ThisToken(Scanner.Colon) THEN (* line number *)
-					ELSE Error(symbol.start,"Identifier expected");
+					ELSE Error(symbol.position,"Identifier expected");
 					END;
 				END;
 				IF ExpectIdentifier(pos,identifier) THEN
@@ -814,7 +815,7 @@ TYPE
 					IF ThisToken(Scanner.Number) THEN
 						line := symbol.integer;
 						IF ThisToken(Scanner.Colon) THEN (* line number *)
-						ELSE Error(symbol.start,"Identifier expected");
+						ELSE Error(symbol.position,"Identifier expected");
 						END;
 					END;
 					IF ExpectIdentifier(pos,identifier) THEN
@@ -870,7 +871,7 @@ TYPE
 		END Assemble;
 
 		PROCEDURE AllSections*;
-		VAR pos: LONGINT; sectionType, sectionName: Scanner.IdentifierString;
+		VAR pos: Position; sectionType, sectionName: Scanner.IdentifierString;
 		BEGIN
 			IF Trace THEN D.String("AllSections"); D.Ln END;
 			SetContext(scanner.startContext);

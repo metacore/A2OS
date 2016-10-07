@@ -370,7 +370,7 @@ TYPE
 		BEGIN
 			BeginRuntimeCall (backend.traceModule, "String"); writer.Char ('"'); pos := writer.Pos ();
 			currentProcedureScope.ownerModule.GetName (name); writer.String (name); writer.Char ('@');
-			writer.Int (expression.position, 0); writer.Char (':'); writer.Char (' ');
+			writer.Int (expression.position.start, 0); writer.Char (':'); writer.Char (' ');
 			printer := Printout.NewPrinter (writer, Printout.SourceCode, FALSE);
 			printer.Expression (expression); writer.Char (' '); writer.Char ('=');
 			writer.Char (' '); writer.Char ('"'); writer.Char (','); writer.Char (' ');
@@ -1143,7 +1143,7 @@ TYPE
 			FOR i := 0 TO LEN (argument) - 1 DO
 				IF i < expression.parameters.Length () THEN argument[i] := expression.parameters.GetExpression (i); ELSE argument[i] := NIL; END;
 			END;
-			position := expression.position;
+			position := expression.position.start;
 			CASE expression.id OF
 			| Global.Incl: PrintExpression (argument[0]); writer.String (" |= 1 << ("); PrintExpression (argument[1]); writer.Char (')');
 			| Global.Excl: PrintExpression (argument[0]); writer.String (" &= ~(1 << ("); PrintExpression (argument[1]); writer.Char (')'); writer.Char (')');

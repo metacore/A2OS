@@ -1473,7 +1473,7 @@ TYPE
 			IF info THEN
 				WHILE (x#NIL) DO
 					Indent;
-					w.String("comment at position "); w.Int(x.position,1);
+					w.String("comment at position "); w.Int(x.position.start,1);
 					IF x.sameLine THEN w.String("(in line with item)") END;
 					IF x.item = NIL THEN w.String("(no item)"); END;
 					w.String(":");

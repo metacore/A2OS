@@ -1,6 +1,6 @@
 MODULE FoxARMAssembler; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT InstructionSet := FoxARMInstructionSet, FoxAssembler,  (*D := Debugging,*) Scanner := FoxScanner, Diagnostics, Strings;
+IMPORT InstructionSet := FoxARMInstructionSet, FoxAssembler,  (*D := Debugging,*) Scanner := FoxScanner, Diagnostics, Strings, Basic := FoxBasic;
 
 CONST Trace = FoxAssembler.Trace;
 
@@ -169,7 +169,8 @@ TYPE
 		VAR
 			instruction: InstructionSet.Instruction;
 			operands: ARRAY InstructionSet.MaxOperands OF InstructionSet.Operand;
-			position, opCode, condition, i, operandNumber: LONGINT;
+			position: Basic.Position; 
+			opCode, condition, i, operandNumber: LONGINT;
 			flags: SET;
 			newOperandExpected: BOOLEAN;
 			result: FoxAssembler.Result;
@@ -182,7 +183,8 @@ TYPE
 			VAR
 				operand: InstructionSet.Operand;
 				indexingMode, fields: SET;
-				registerNumber, offsetRegisterNumber, shiftModeNumber, shiftRegisterNumber, shiftImmediateValue, position, offsetImmediateValue, value: LONGINT;
+				registerNumber, offsetRegisterNumber, shiftModeNumber, shiftRegisterNumber, shiftImmediateValue, offsetImmediateValue, value: LONGINT;
+				position: Basic.Position;
 				isImmediateOffset, bracketIsOpen: BOOLEAN;
 				registerList: SET;
 			BEGIN

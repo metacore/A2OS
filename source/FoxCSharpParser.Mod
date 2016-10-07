@@ -14,9 +14,11 @@ CONST
 
     LynxCase = FoxScanner.Lowercase;
 
-    invalidPosition = -1;
+
 
 TYPE
+	Position*= Scanner.Position;
+	
     LocalIdentEntry = OBJECT
     VAR
         next: LocalIdentEntry;
@@ -228,7 +230,7 @@ TYPE
             D.Str("start: ");
             D.Str(s);
             D.Str(" at pos ");
-            D.Int(symbol.start, 1);
+            D.Int(symbol.position.start, 1);
         END S;
 
         PROCEDURE E(CONST s: ARRAY OF CHAR);    (* for debugging purposes only *)
@@ -242,7 +244,7 @@ TYPE
             D.Str("end : ");
             D.Str(s);
             D.Str(" at pos ");
-            D.Int(symbol.start, 1);
+            D.Int(symbol.position.start, 1);
         END E;
 
         PROCEDURE EE(CONST s, t: ARRAY OF CHAR);    (* for debugging purposes only *)
@@ -261,12 +263,12 @@ TYPE
         END EE;
 
         (** output error message and / or given code *)
-        PROCEDURE Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR);
+        PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
             VAR errorMessage: ARRAY 256 OF CHAR;
         BEGIN
             IF diagnostics # NIL THEN
                 Basic.GetErrorMessage(code,message,errorMessage);
-                diagnostics.Error(scanner.source^, position, code, errorMessage);
+                diagnostics.Error(scanner.source^, position.start, code, errorMessage);
             END;
             error := TRUE;
 (* @@@ *)
@@ -281,11 +283,11 @@ HALT(100);
         BEGIN
             error := ~scanner.GetNextSymbol(symbol) OR error;
             WHILE ~error & (symbol.token = Scanner.Comment) DO
-                comment := SyntaxTree.NewComment(symbol.start, currentScope, symbol.string^, symbol.stringLength);
+                comment := SyntaxTree.NewComment(symbol.position, currentScope, symbol.string^, symbol.stringLength);
                 moduleScope.AddComment(comment);
                 IF recentComment = NIL THEN
                     recentComment := comment;
-                    IF symbol.line = recentLine THEN
+                    IF symbol.position.line = recentLine THEN
                         IF recentCommentItem # NIL THEN
                             IF (recentCommentItem IS SyntaxTree.Symbol) THEN
                                 IF recentCommentItem(SyntaxTree.Symbol).comment = NIL THEN
@@ -325,7 +327,7 @@ HALT(100);
             VAR comment: SyntaxTree.Comment;
         BEGIN
             WHILE ~error & (symbol.token = Scanner.Comment) DO
-                comment := SyntaxTree.NewComment(symbol.start, currentScope, symbol.string^, symbol.stringLength);
+                comment := SyntaxTree.NewComment(symbol.position, currentScope, symbol.string^, symbol.stringLength);
                 moduleScope.AddComment(comment);
                 IF recentComment = NIL THEN
                     recentComment := comment;
@@ -353,7 +355,7 @@ KernelLog.Ln();
             ASSERT(token # Scanner.CharacterLiteral);
             ASSERT(token # Scanner.StringLiteral);
             IF ~Peek(token) THEN
-                Error(symbol.start, token, "");
+                Error(symbol.position, token, "");
                 RETURN FALSE
             ELSE
                 NextSymbol;
@@ -377,18 +379,18 @@ KernelLog.Ln();
                 NextSymbol;
                 RETURN TRUE
             ELSE
-                Error(symbol.start, Scanner.Identifier, "");
+                Error(symbol.position, Scanner.Identifier, "");
                 name := SyntaxTree.invalidIdentifier;
                 RETURN FALSE
             END
         END MandatoryIdentifier;
 
         (** Expect an identifier (using MandatoryIdentifier) and return identifier object **)
-        PROCEDURE Identifier(VAR position: LONGINT): SyntaxTree.Identifier;
+        PROCEDURE Identifier(VAR position: Position): SyntaxTree.Identifier;
             VAR name: SyntaxTree.Identifier; 
                 identifier: SyntaxTree.Identifier;
         BEGIN
-            position := symbol.start;
+            position := symbol.position;
             IF MandatoryIdentifier(name) THEN
                 identifier := name;
             ELSE
@@ -434,7 +436,7 @@ KernelLog.Ln();
                 SetNextInComment(recentComment, symbol);
                 recentComment := NIL
             END;
-            recentLine := scanner.line;
+            recentLine := scanner.position.line;
             recentCommentItem := symbol;
         END CommentSymbol;
 
@@ -546,7 +548,7 @@ KernelLog.Ln();
         END MapOperator;
 
         PROCEDURE NewUnaryExpression(
-                position: LONGINT; 
+                position: Position; 
                 operand: SyntaxTree.Expression; 
                 operator: LONGINT): SyntaxTree.Expression;
             VAR expressionList: SyntaxTree.ExpressionList;
@@ -568,7 +570,7 @@ KernelLog.Ln();
         END NewUnaryExpression;
 
         PROCEDURE NewBinaryExpression(
-                position: LONGINT; 
+                position: Position; 
                 left, right: SyntaxTree.Expression; 
                 operator: LONGINT): SyntaxTree.Expression;
             VAR expressionList: SyntaxTree.ExpressionList;
@@ -590,13 +592,13 @@ KernelLog.Ln();
             RETURN expression;
         END NewBinaryExpression;
 
-        PROCEDURE NewTypeExpression(position: LONGINT): SyntaxTree.Expression;
+        PROCEDURE NewTypeExpression(position: Position): SyntaxTree.Expression;
         BEGIN
             RETURN SyntaxTree.NewIdentifierDesignator(position, lynxType);
         END NewTypeExpression;
 
         PROCEDURE NewReceiveExpression(
-                position: LONGINT; left, right: SyntaxTree.Expression): SyntaxTree.Expression;
+                position: Position; left, right: SyntaxTree.Expression): SyntaxTree.Expression;
             VAR expressionList: SyntaxTree.ExpressionList;
                 expression: SyntaxTree.Expression;
                 designator: SyntaxTree.Designator;
@@ -654,7 +656,7 @@ KernelLog.Ln();
         PROCEDURE QualifiedIdentifier(): SyntaxTree.QualifiedIdentifier;
             VAR prefix, suffix: SyntaxTree.Identifier; 
                 qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
-                position0, position1: LONGINT;
+                position0, position1: Position;
         BEGIN
             IF Trace THEN 
                 S("QualifiedIdentifier") 
@@ -803,10 +805,10 @@ KernelLog.Ln();
         PROCEDURE Accessors(expression: SyntaxTree.Expression; arrayCreation: BOOLEAN): SyntaxTree.Expression;
             VAR identifier: SyntaxTree.Identifier;
                 expressionList: SyntaxTree.ExpressionList;
-                position: LONGINT;
+                position: Position;
         BEGIN
             LOOP
-                position := symbol.start;
+                position := symbol.position;
                 IF Optional(Scanner.Period) THEN
                     identifier := Identifier(position);
                     expression := SyntaxTree.NewSelectorDesignator(position, expression(SyntaxTree.Designator), identifier);
@@ -840,7 +842,7 @@ KernelLog.Ln();
                 type: SyntaxTree.Type;
                 typeExpression: SyntaxTree.Expression;
                 expressionList: SyntaxTree.ExpressionList;
-                position: LONGINT;
+                position: Position;
                 arrayCreation: BOOLEAN;
                 arrayType: SyntaxTree.ArrayType;
                 pointerType: SyntaxTree.PointerType;
@@ -851,24 +853,20 @@ KernelLog.Ln();
                 S("PrimaryExpression")
             END;
 
-            position := symbol.start;
+            position := symbol.position;
             arrayCreation := FALSE;
 
             IF Peek(Scanner.True) THEN
                 expression := SyntaxTree.NewBooleanValue(position, TRUE);
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Peek(Scanner.False) THEN
                 expression := SyntaxTree.NewBooleanValue(position, FALSE);
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Peek(Scanner.IntegerLiteral) THEN
                 IF symbol.numberType = Scanner.IntNumber THEN
                     expression := SyntaxTree.NewIntegerValue(position, symbol.integer);
-                    expression.End(symbol.end);
                 ELSIF symbol.numberType = Scanner.LongNumber THEN
                     expression := SyntaxTree.NewIntegerValue(position, symbol.hugeint);
-                    expression.End(symbol.end);
                 ELSE
                     HALT(100);
                 END;
@@ -877,11 +875,9 @@ KernelLog.Ln();
                 realValue := SyntaxTree.NewRealValue(position, symbol.real);
                 realValue.SetSubtype(MapNumberType(symbol.numberType));
                 expression := realValue;
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Peek(Scanner.CharacterLiteral) THEN
                 expression := SyntaxTree.NewCharacterValue(position, symbol.character);
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Peek(Scanner.StringLiteral) THEN
                 (* 
@@ -889,7 +885,6 @@ KernelLog.Ln();
                           ... and symbol.stringLength may be important too 
                 *)
                 expression := SyntaxTree.NewStringValue(position, symbol.string);
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Peek(Scanner.Identifier) THEN
                 identifier := Identifier(position);
@@ -897,7 +892,6 @@ KernelLog.Ln();
                 expression := SyntaxTree.NewIdentifierDesignator(position, identifier);
             ELSIF Peek(Scanner.Null) THEN
                 expression := SyntaxTree.NewNilValue(position);
-                expression.End(symbol.end);
                 NextSymbol;
             ELSIF Optional(Scanner.LeftParenthesis) THEN
                 expression := Expression();
@@ -906,7 +900,7 @@ KernelLog.Ln();
                 expression := SyntaxTree.NewSelfDesignator(position);
             ELSIF Optional(Scanner.Base) THEN
                 Check(Scanner.Period);
-                position := symbol.start;
+                position := symbol.position;
                 identifier := Identifier(position);
                 expression := SyntaxTree.NewIdentifierDesignator(position, identifier);
                 expression := SyntaxTree.NewArrowDesignator(position, expression(SyntaxTree.Designator));
@@ -947,14 +941,14 @@ KernelLog.Ln();
                     expression := SyntaxTree.NewParameterDesignator(position, designator, expressionList);
                 END;
              ELSE
-                Error(symbol.start, Diagnostics.Invalid, "Invalid primary expression");
+                Error(symbol.position, Diagnostics.Invalid, "Invalid primary expression");
                 NextSymbol;
                 expression := SyntaxTree.invalidExpression;
             END;
 
             expression := Accessors(expression, arrayCreation);
 
-            position := symbol.start;
+            position := symbol.position;
             IF Optional(Scanner.QuestionQuestion) THEN
                 rightExpression := PrimaryExpression();
                 expression := NewReceiveExpression(position, expression, rightExpression);
@@ -978,12 +972,12 @@ KernelLog.Ln();
         PROCEDURE UnaryExpression(): SyntaxTree.Expression;
             VAR expression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("UnaryExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             IF Peek(Scanner.Plus) OR Peek(Scanner.Minus) OR 
                     Peek(Scanner.Exclamation) OR Peek(Scanner.Tilde) THEN
                 operator := symbol.token;
@@ -1010,12 +1004,12 @@ KernelLog.Ln();
         PROCEDURE MultiplicativeExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("MultiplicativeExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := UnaryExpression();
             WHILE Peek(Scanner.Times) OR Peek(Scanner.Slash) OR Peek(Scanner.Percent) DO
                 operator := symbol.token;
@@ -1038,12 +1032,12 @@ KernelLog.Ln();
         PROCEDURE AdditiveExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("AdditiveExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := MultiplicativeExpression();
             WHILE Peek(Scanner.Plus) OR Peek(Scanner.Minus) DO
                 operator := symbol.token;
@@ -1066,12 +1060,12 @@ KernelLog.Ln();
         PROCEDURE ShiftExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("ShiftExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := AdditiveExpression();
             WHILE Peek(Scanner.LeftShift) OR Peek(Scanner.RightShift) DO
                 operator := symbol.token;
@@ -1098,12 +1092,12 @@ KernelLog.Ln();
         PROCEDURE RelationalExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("RelationalExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := ShiftExpression();
             WHILE Peek(Scanner.Less) OR Peek(Scanner.Greater) OR
                     Peek(Scanner.LessEqual) OR Peek(Scanner.GreaterEqual) OR
@@ -1128,12 +1122,12 @@ KernelLog.Ln();
         PROCEDURE EqualityExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("EqualityExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := RelationalExpression();
             WHILE Peek(Scanner.EqualEqual) OR Peek(Scanner.ExclamationEqual) DO
                 operator := symbol.token;
@@ -1155,12 +1149,12 @@ KernelLog.Ln();
         PROCEDURE AndExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("AndExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := EqualityExpression();
             WHILE Peek(Scanner.And) DO
                 operator := symbol.token;
@@ -1182,12 +1176,12 @@ KernelLog.Ln();
         PROCEDURE ExclusiveOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("ExclusiveOrExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := AndExpression();
             WHILE Peek(Scanner.Arrow) DO
                 operator := symbol.token;
@@ -1209,12 +1203,12 @@ KernelLog.Ln();
         PROCEDURE InclusiveOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("InclusiveOrExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := ExclusiveOrExpression();
             WHILE Peek(Scanner.Bar) DO
                 operator := symbol.token;
@@ -1236,12 +1230,12 @@ KernelLog.Ln();
         PROCEDURE ConditionalAndExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("ConditionalAndExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := InclusiveOrExpression();
             WHILE Peek(Scanner.AndAnd) DO
                 operator := symbol.token;
@@ -1263,12 +1257,12 @@ KernelLog.Ln();
         PROCEDURE ConditionalOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("ConditionalOrExpression")
             END;
-            position := symbol.start;
+            position := symbol.position;
             expression := ConditionalAndExpression();
             WHILE Peek(Scanner.BarBar) DO
                 operator := symbol.token;
@@ -1357,13 +1351,14 @@ KernelLog.Ln();
 
         **)
         PROCEDURE Block(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement);
-            VAR block: SyntaxTree.StatementBlock;
+            VAR block: SyntaxTree.StatementBlock; position: Position;
         BEGIN
             IF Trace THEN 
                 S("Block")
             END;
             Check(Scanner.LeftBrace);
-            block := SyntaxTree.NewStatementBlock(symbol.end, outer);
+            position := symbol.position; position.start := position.end; 
+            block := SyntaxTree.NewStatementBlock(position, outer);
             (* CommentStatement(block); *)
             IF ~Optional(Scanner.RightBrace) THEN
                 localIdentTable.OpenScope;
@@ -1416,7 +1411,7 @@ KernelLog.Ln();
                 primary-expression '<=' primary-expression
         **)
         PROCEDURE NewAsopStatement(
-                position: LONGINT;
+                position: Position;
                 operator: LONGINT;
                 left: SyntaxTree.Designator;
                 right: SyntaxTree.Expression;
@@ -1490,7 +1485,7 @@ KernelLog.Ln();
         END PatchPortReference;
 
         PROCEDURE NewPortStatement(
-                position: LONGINT;
+                position: Position;
                 name: SyntaxTree.Identifier;
                 left: SyntaxTree.Designator;
                 right: SyntaxTree.Expression;
@@ -1514,7 +1509,7 @@ KernelLog.Ln();
                 expressionList: SyntaxTree.ExpressionList;
                 statement: SyntaxTree.Statement;
                 operator: LONGINT;
-                position: LONGINT;
+                position: Position;
                 length, i: LONGINT;
                 temp: SyntaxTree.Expression;
         BEGIN
@@ -1525,7 +1520,7 @@ KernelLog.Ln();
                    in place of primary-expression in the above productions. This is
                    required for compatibility with Fox back-end *)
             statement := NIL;
-            position := symbol.start;
+            position := symbol.position;
             IF expression = NIL THEN
                 expression := PrimaryExpression();
             END;
@@ -1533,7 +1528,7 @@ KernelLog.Ln();
                 Error(position, Diagnostics.Invalid, "Invalid expression statement");
             ELSE
                 designator := expression(SyntaxTree.Designator);
-                position := symbol.start;
+                position := symbol.position;
                 IF Optional(Scanner.Equal) THEN
                     expression := Expression();
                     statement := SyntaxTree.NewAssignment(position, designator, expression, outer);
@@ -1662,7 +1657,7 @@ KernelLog.Ln();
                 S("IfStatement")
             END;
             Check(Scanner.If);
-            ifStatement := SyntaxTree.NewIfStatement(symbol.start, outer);
+            ifStatement := SyntaxTree.NewIfStatement(symbol.position, outer);
             (* CommentStatement(ifStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -1711,7 +1706,7 @@ KernelLog.Ln();
                 last: SyntaxTree.Statement;
                 element: SyntaxTree.Expression;
                 defaultSection: BOOLEAN;
-                length, position: LONGINT;
+                length: LONGINT; position: Position;
         BEGIN
             IF Trace THEN 
                 S("SwitchSection")
@@ -1725,7 +1720,7 @@ KernelLog.Ln();
                     Check(Scanner.Colon);
                     casePart.elements.AddExpression(element);
                 ELSE
-                    position := symbol.start;
+                    position := symbol.position;
                     Check(Scanner.Default);
                     Check(Scanner.Colon);
                     IF haveDefault THEN
@@ -1739,13 +1734,13 @@ KernelLog.Ln();
             statements := StatementList(caseStatement);
             length := statements.Length();
             IF length = 0 THEN
-                Error(symbol.start, Diagnostics.Invalid, "Fall through in switch section");
+                Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
             ELSE
                 last := statements.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     statements.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(symbol.start, Diagnostics.Invalid, "Fall through in switch section");
+                    Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
                 END;
             END;
             IF ~defaultSection THEN
@@ -1770,7 +1765,7 @@ KernelLog.Ln();
                 S("SwitchStatement")
             END;
             Check(Scanner.Switch);
-            caseStatement := SyntaxTree.NewCaseStatement(symbol.start, outer);
+            caseStatement := SyntaxTree.NewCaseStatement(symbol.position, outer);
             (* CommentStatement(caseStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -1840,7 +1835,7 @@ KernelLog.Ln();
         **)
 
         PROCEDURE NewLynxNewsel(
-                position: LONGINT; outer: SyntaxTree.Statement): SyntaxTree.Statement;
+                position: Position; outer: SyntaxTree.Statement): SyntaxTree.Statement;
             VAR parameters: SyntaxTree.ExpressionList;
                 designator: SyntaxTree.Designator;
         BEGIN
@@ -1851,7 +1846,7 @@ KernelLog.Ln();
         END NewLynxNewsel;
 
         PROCEDURE NewLynxAddsel(
-                position: LONGINT;
+                position: Position;
                 index: LONGINT;
                 variable: SyntaxTree.Identifier;
                 channel: SyntaxTree.Expression;
@@ -1873,7 +1868,7 @@ KernelLog.Ln();
             RETURN SyntaxTree.NewProcedureCallStatement(position, designator, outer);
         END NewLynxAddsel;
 
-        PROCEDURE NewLynxSelect(position: LONGINT): SyntaxTree.Expression;
+        PROCEDURE NewLynxSelect(position: Position): SyntaxTree.Expression;
             VAR left: SyntaxTree.Designator;
                 parameters: SyntaxTree.ExpressionList;
         BEGIN
@@ -1883,7 +1878,7 @@ KernelLog.Ln();
         END NewLynxSelect;
 
         PROCEDURE NewLynxSelidx(
-                position: LONGINT; 
+                position: Position; 
                 variable: SyntaxTree.Identifier;
                 outer: SyntaxTree.Statement): SyntaxTree.Statement;
             VAR left: SyntaxTree.Designator;
@@ -1905,7 +1900,7 @@ KernelLog.Ln();
             VAR typename, varname: SyntaxTree.Identifier;
                 type: SyntaxTree.Type;
                 variable: SyntaxTree.Variable;
-                position: LONGINT;
+                position: Position;
                 from, to: SyntaxTree.Expression;
                 channel, target: SyntaxTree.Expression;
                 statement: SyntaxTree.Statement;
@@ -1920,7 +1915,7 @@ KernelLog.Ln();
             IF Trace THEN 
                 S("SelectSection")
             END;
-            position := symbol.start;
+            position := symbol.position;
             Check(Scanner.Case);
             localIdentTable.OpenScope;
             IF Optional(Scanner.LeftParenthesis) THEN
@@ -1966,7 +1961,7 @@ KernelLog.Ln();
                 statement := NewLynxAddsel(position, index, varname, channel, outer);
                 statements.AddStatement(statement);
             ELSE
-                forStatement := SyntaxTree.NewForStatement(symbol.start, outer);
+                forStatement := SyntaxTree.NewForStatement(symbol.position, outer);
                 designator := SyntaxTree.NewIdentifierDesignator(position, varname);
                 forStatement.SetVariable(designator);
                 forStatement.SetFrom(from);
@@ -1987,13 +1982,13 @@ KernelLog.Ln();
             caseBody := StatementList(caseStatement);
             length := caseBody.Length();
             IF length = 0 THEN
-                Error(symbol.start, Diagnostics.Invalid, "Fall through in switch section");
+                Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
             ELSE
                 last := caseBody.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     caseBody.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(symbol.start, Diagnostics.Invalid, "Fall through in switch section");
+                    Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
                 END;
             END;
 
@@ -2019,12 +2014,12 @@ KernelLog.Ln();
                 caseStatement: SyntaxTree.CaseStatement;
                 expression: SyntaxTree.Expression;
                 index: LONGINT;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Trace THEN 
                 S("SelectStatement")
             END;
-            position := symbol.start;
+            position := symbol.position;
             Check(Scanner.Select);
             statement := NewLynxNewsel(position, outer);
             statements.AddStatement(statement);
@@ -2037,7 +2032,7 @@ KernelLog.Ln();
                 SelectSection(statements, caseStatement, index, outer);
                 INC(index);
             END;
-            position := symbol.start;
+            position := symbol.position;
             Check(Scanner.RightBrace);
             IF index = 0 THEN
                 Error(position, Diagnostics.Invalid, "Empty select statement");
@@ -2062,7 +2057,7 @@ KernelLog.Ln();
                 S("WhileStatement")
             END;
             Check(Scanner.While);
-            whileStatement := SyntaxTree.NewWhileStatement(symbol.start, outer);
+            whileStatement := SyntaxTree.NewWhileStatement(symbol.position, outer);
             (* CommentStatement(whileStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -2085,21 +2080,21 @@ KernelLog.Ln();
             VAR expression: SyntaxTree.Expression;
                 repeatStatement: SyntaxTree.RepeatStatement;
                 statementSequence: SyntaxTree.StatementSequence;
-                position: LONGINT;
+                position: Position;
                 b: BOOLEAN;
         BEGIN
             IF Trace THEN 
                 S("DoStatement")
             END;
             Check(Scanner.Do);
-            repeatStatement := SyntaxTree.NewRepeatStatement(symbol.start, outer);
+            repeatStatement := SyntaxTree.NewRepeatStatement(symbol.position, outer);
             (* CommentStatement(repeatStatement); *)
             statementSequence := SyntaxTree.NewStatementSequence();
             b := EmbeddedStatement(statementSequence, repeatStatement);
             repeatStatement.SetStatements(statementSequence);
             Check(Scanner.While);
             Check(Scanner.LeftParenthesis);
-            position := symbol.start;
+            position := symbol.position;
             expression := Expression();
             Check(Scanner.RightParenthesis);
             expression := NewUnaryExpression(position, expression, Scanner.Exclamation); 
@@ -2190,7 +2185,7 @@ KernelLog.Ln();
                 whileStatement: SyntaxTree.WhileStatement;
                 statementSequence: SyntaxTree.StatementSequence;
                 iterator: SyntaxTree.StatementSequence;
-                position0, position1: LONGINT;
+                position: Position;
                 i: LONGINT;
                 b: BOOLEAN;
         BEGIN
@@ -2199,21 +2194,19 @@ KernelLog.Ln();
             END;
             Check(Scanner.For);
             localIdentTable.OpenScope;
-            whileStatement := SyntaxTree.NewWhileStatement(symbol.start, outer);
+            whileStatement := SyntaxTree.NewWhileStatement(symbol.position, outer);
             (* CommentStatement(whileStatement); *)
             Check(Scanner.LeftParenthesis);
             IF ~Optional(Scanner.Semicolon) THEN
                 ForInitializer(statements, outer);
                 Check(Scanner.Semicolon);
             END;
-            position0 := symbol.start;
-            position1 := symbol.end;
+            position := symbol.position;
             IF ~Optional(Scanner.Semicolon) THEN
                 expression := Expression();
                 Check(Scanner.Semicolon);
             ELSE
-                expression := SyntaxTree.NewBooleanValue(position0, TRUE);
-                expression.End(position1);
+                expression := SyntaxTree.NewBooleanValue(position, TRUE);
             END;
             IF ~Optional(Scanner.RightParenthesis) THEN
                 iterator := SyntaxTree.NewStatementSequence();
@@ -2250,7 +2243,7 @@ KernelLog.Ln();
                 S("ReturnStatement")
             END;
             Check(Scanner.Return);
-            returnStatement := SyntaxTree.NewReturnStatement(symbol.start, outer);
+            returnStatement := SyntaxTree.NewReturnStatement(symbol.position, outer);
             (* CommentStatement(returnStatement); *)
             IF ~Optional(Scanner.Semicolon) THEN
                 expression := Expression();
@@ -2274,7 +2267,7 @@ KernelLog.Ln();
                 S("BreakStatement")
             END;
             Check(Scanner.Break);
-            statement := SyntaxTree.NewExitStatement(symbol.start, outer);
+            statement := SyntaxTree.NewExitStatement(symbol.position, outer);
             (* CommentStatement(statement); *)
             statements.AddStatement(statement);
             Check(Scanner.Semicolon);
@@ -2368,7 +2361,7 @@ KernelLog.Ln();
                 VAR isDeclaration: BOOLEAN): BOOLEAN;
             VAR result: BOOLEAN;
                 name0, name1: SyntaxTree.Identifier;
-                position0, position1, position2: LONGINT;
+                position0, position1, position2: Position;
                 leftBracket: BOOLEAN;
                 qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
                 type: SyntaxTree.Type;
@@ -2383,7 +2376,7 @@ KernelLog.Ln();
             END;
             isDeclaration := FALSE;
             leftBracket := FALSE;
-            position2 := symbol.start;
+            position2 := symbol.position;
             IF Peek(Scanner.Identifier) THEN
                 isDeclaration := TRUE;
             ELSIF Optional(Scanner.LeftBracket) THEN
@@ -2497,7 +2490,7 @@ KernelLog.Ln();
             previousScope := currentScope;
             currentScope := scope;
             Check(Scanner.LeftBrace);
-            body := SyntaxTree.NewBody(symbol.start, scope);
+            body := SyntaxTree.NewBody(symbol.position, scope);
             IF ~Optional(Scanner.RightBrace) THEN
                 body.SetStatementSequence(StatementList(body));
                 Check(Scanner.RightBrace);
@@ -2574,14 +2567,14 @@ KernelLog.Ln();
                 type-name
         **)
         PROCEDURE RankSpecifier(type: SyntaxTree.Type): SyntaxTree.Type;
-            VAR position: LONGINT;
+            VAR position: Position;
                 arrayType: SyntaxTree.ArrayType;
                 pointerType: SyntaxTree.PointerType;
         BEGIN
             IF Trace THEN 
                 S("RankSpecifier")
             END;
-            position := symbol.start;
+            position := symbol.position;
             REPEAT
                 arrayType := SyntaxTree.NewArrayType(position, currentScope, SyntaxTree.Open);
                 arrayType.SetArrayBase(type);
@@ -2598,7 +2591,7 @@ KernelLog.Ln();
 
         PROCEDURE NonArrayType(): SyntaxTree.Type;
             VAR type: SyntaxTree.Type;
-                position: LONGINT;
+                position: Position;
                 name: SyntaxTree.Identifier;
                 direction: LONGINT;
                 qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
@@ -2606,7 +2599,7 @@ KernelLog.Ln();
             IF Trace THEN 
                 S("NonArrayType")
             END;
-            position := symbol.start;
+            position := symbol.position;
             name := SyntaxTree.invalidIdentifier;
             direction := -1;
             IF Optional(Scanner.Bool) THEN
@@ -2709,7 +2702,7 @@ KernelLog.Ln();
         PROCEDURE Attributes(): SyntaxTree.Modifier;
             VAR identifier: SyntaxTree.Identifier;
                 modifier, list: SyntaxTree.Modifier;
-                position: LONGINT;
+                position: Position;
                 expression: SyntaxTree.Expression;
         BEGIN
             IF Trace THEN
@@ -2718,7 +2711,7 @@ KernelLog.Ln();
             (* left bracket already consumed *)
             list := NIL;
             REPEAT            
-                position := symbol.start;
+                position := symbol.position;
                 identifier := Identifier(position);
                 IF Optional(Scanner.LeftParenthesis) THEN
                     expression := Expression();
@@ -2805,13 +2798,13 @@ KernelLog.Ln();
             VAR access: SET;
         BEGIN
             IF modifiers * {Public, Internal} = {Public, Internal} THEN
-                Error(symbol.start, Diagnostics.Invalid, "conflicting modifiers");
+                Error(symbol.position, Diagnostics.Invalid, "conflicting modifiers");
             END;
             IF Public IN modifiers THEN
                 access := SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal;
             ELSIF Internal IN modifiers THEN
                 IF ~allowedReadOnly THEN
-                    Error(symbol.start, Diagnostics.Invalid, "may not be defined internal")
+                    Error(symbol.position, Diagnostics.Invalid, "may not be defined internal")
                 ELSE
                     access :=  SyntaxTree.ReadOnly + {SyntaxTree.InternalWrite};
                 END;
@@ -2837,7 +2830,7 @@ KernelLog.Ln();
                 modifiers: SET; 
                 type: SyntaxTree.Type);
             VAR name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 constant: SyntaxTree.Constant;
                 expression: SyntaxTree.Expression;
                 access: SET;
@@ -2903,12 +2896,12 @@ KernelLog.Ln();
                 modifiers: SET; 
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT);
+                position: Position);
             VAR variable: SyntaxTree.Variable;
                 expression: SyntaxTree.Expression;
                 designator: SyntaxTree.Designator;
                 statement: SyntaxTree.Statement;
-                start: LONGINT;
+                start: Position;
                 access: SET;
         BEGIN
             IF Trace THEN 
@@ -2924,7 +2917,7 @@ KernelLog.Ln();
             variable.SetAccess(access);
             variable.SetType(type);
             parentScope.AddVariable(variable);
-            start := symbol.start;
+            start := symbol.position;
             (* 'initOuter' is set to NIL in contexts where initialization is not yet implemented *)
             IF (initOuter # NIL) & Optional(Scanner.Equal) THEN
                 (* ACHTUNG: array-initializer form is not supported *)
@@ -2943,7 +2936,7 @@ KernelLog.Ln();
                 modifiers: SET;
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT);
+                position: Position);
         BEGIN
             IF Trace THEN 
                 S("FieldDeclaration") 
@@ -2977,7 +2970,7 @@ KernelLog.Ln();
             VAR type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
                 parameter: SyntaxTree.Parameter;
-                kind, position: LONGINT;
+                kind: LONGINT; position: Position;
         BEGIN
             IF Trace THEN 
                 S("FixedParameter")
@@ -3066,7 +3059,7 @@ KernelLog.Ln();
                 modifiers: SET;
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 isConstructor: BOOLEAN);
             VAR procedure: SyntaxTree.Procedure;
                 procedureType: SyntaxTree.ProcedureType;
@@ -3101,7 +3094,7 @@ KernelLog.Ln();
                 modifiers: SET;
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT);
+                position: Position);
         BEGIN
             IF Trace THEN 
                 S("MethodDeclaration") 
@@ -3124,7 +3117,7 @@ KernelLog.Ln();
                 parentScope: SyntaxTree.Scope; 
                 modifiers: SET;
                 name: SyntaxTree.Identifier;
-                position: LONGINT);
+                position: Position);
         BEGIN
             IF Trace THEN 
                 S("ConstructorDeclaration") 
@@ -3148,7 +3141,7 @@ KernelLog.Ln();
                 modifiers: SET;
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT);
+                position: Position);
             VAR procedureScope: SyntaxTree.ProcedureScope;
                 procedureType: SyntaxTree.ProcedureType;
                 procedure: SyntaxTree.Procedure;
@@ -3212,7 +3205,7 @@ KernelLog.Ln();
                 modifiers: SET;
                 type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
         BEGIN
             IF Optional(Scanner.LeftBracket) THEN
                 attributes := Attributes();
@@ -3279,7 +3272,7 @@ KernelLog.Ln();
 
         PROCEDURE ClassDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET);
             VAR name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 typeDeclaration: SyntaxTree.TypeDeclaration;
                 access: SET;
                 objectType: SyntaxTree.RecordType;
@@ -3387,7 +3380,7 @@ KernelLog.Ln();
 
         PROCEDURE StructDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET);
             VAR name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 typeDeclaration: SyntaxTree.TypeDeclaration;
                 access: SET;
                 recordType: SyntaxTree.RecordType;
@@ -3440,7 +3433,7 @@ KernelLog.Ln();
         PROCEDURE DelegateDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET);
             VAR returnType: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 typeDeclaration: SyntaxTree.TypeDeclaration;
                 access: SET;
                 procedureType: SyntaxTree.ProcedureType;
@@ -3488,7 +3481,7 @@ KernelLog.Ln();
                 'out'
         **)
         PROCEDURE PortDeclaration(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope);
-            VAR position: LONGINT;
+            VAR position: Position;
                 direction: LONGINT;
                 type: SyntaxTree.Type;
                 arrayType: SyntaxTree.ArrayType;
@@ -3499,7 +3492,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("PortDeclaration")
             END;
-            position := symbol.start;
+            position := symbol.position;
             IF Optional(Scanner.In) THEN
                 direction := SyntaxTree.InPort;
             ELSIF Optional(Scanner.Out) THEN
@@ -3597,7 +3590,7 @@ KernelLog.Ln();
                 attributes: SyntaxTree.Modifier; 
                 isCellNet: BOOLEAN);
             VAR name: SyntaxTree.Identifier;
-                position: LONGINT;
+                position: Position;
                 access: SET;
                 typeDeclaration: SyntaxTree.TypeDeclaration;
                 cellScope: SyntaxTree.CellScope;
@@ -3676,13 +3669,13 @@ KernelLog.Ln();
         PROCEDURE ImportDirective(moduleScope: SyntaxTree.ModuleScope);
             VAR alias, name, context: SyntaxTree.Identifier;
                 import: SyntaxTree.Import; 
-                position, idPosition: LONGINT;
+                position, idPosition: Position;
         BEGIN
             IF Trace THEN 
                 S("ImportDirective") 
             END;
             (* import symbol already consumed *)
-            position := symbol.start;
+            position := symbol.position;
             alias := Identifier(idPosition);
             IF alias # SyntaxTree.invalidIdentifier THEN
                 IF Optional(Scanner.Equal) THEN
@@ -3721,7 +3714,7 @@ KernelLog.Ln();
         PROCEDURE Module*(): SyntaxTree.Module;
             VAR moduleName, context: SyntaxTree.Identifier;
                 module: SyntaxTree.Module;
-                position: LONGINT;
+                position: Position;
                 isCellNet: BOOLEAN;
                 scannerDiagnostics: Diagnostics.Diagnostics;
                 b: BOOLEAN;
@@ -3729,7 +3722,7 @@ KernelLog.Ln();
             IF Trace THEN 
                 S("Module") 
             END;
-            position := symbol.start;
+            position := symbol.position;
             (* needed to feed in comment already before module starts: *)
             moduleScope := SyntaxTree.NewModuleScope(); 
             currentScope := moduleScope;
@@ -3770,6 +3763,8 @@ KernelLog.Ln();
 
     END Parser;    (* Parser *)
 
+	VAR invalidPosition: Position;
+
     (** parser retrieval **)
     PROCEDURE NewParser*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics): Parser;
         VAR parser: Parser;
@@ -3778,4 +3773,6 @@ KernelLog.Ln();
         RETURN parser;
     END NewParser;
 
+BEGIN
+	invalidPosition.start := -1;
 END FoxCSharpParser.

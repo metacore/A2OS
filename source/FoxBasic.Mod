@@ -62,6 +62,11 @@ TYPE
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index;
 
 	ComparisonFunction = PROCEDURE {DELEGATE} (object1, object2: ANY): BOOLEAN;
+	
+	Position*= RECORD
+		start*, end*, line*, linepos*: LONGINT;
+	END;
+
 
 	List* = OBJECT  (* by Luc Bläser *)
 	VAR
@@ -1697,6 +1702,7 @@ VAR
 	getWriter: WriterFactory;
 	getDiagnostics: DiagnosticsFactory;
 	CRC32Table: ARRAY 256 OF SET;
+	invalidPosition-: Position;
 
 	(* Make a string out of a series of characters. *)
 	PROCEDURE MakeString*( CONST s: ARRAY OF CHAR ): String;
@@ -1735,6 +1741,15 @@ VAR
 		END;
 		Strings.Append(res, msg);
 	END GetErrorMessage;
+	
+	PROCEDURE AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position);
+	BEGIN
+		Strings.Append(msg, " in line "); 
+		Strings.AppendInt(msg, pos.line); 
+		Strings.Append(msg, ", col "); 
+		Strings.AppendInt(msg, pos.start- pos.linepos);
+	END AppendPosition;
+	
 
 	(** SetErrorMsg - Set message for error n *)
 
@@ -2227,6 +2242,10 @@ BEGIN
 	lists := 0;  enlarged := 0;  strings := 0;
 	emptyString := MakeString("");
 	debug := FALSE;
+	invalidPosition.start := -1;
+	invalidPosition.end := -1;
+	invalidPosition.line := -1;
+	invalidPosition.linepos := -1;
 	NEW(integerObjects, 128);
 END FoxBasic.
 

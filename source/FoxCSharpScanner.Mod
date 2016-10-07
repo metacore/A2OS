@@ -155,13 +155,13 @@ TYPE
 
 TYPE
     Token* = LONGINT;
-
+	Position* = Basic.Position;
     (**
         symbol: data structure for the data transfer of 
         the last read input from the scanner to the parser
     **)
     Symbol* = RECORD
-        start*, end*, line-: LONGINT;
+    	position*: Position;
         token*: Token;
         identifier*: IdentifierType;
         identifierString*: IdentifierString;
@@ -182,8 +182,7 @@ TYPE
         reader: Streams.Reader;
         diagnostics: Diagnostics.Diagnostics;
         ch: CHAR;
-        position: LONGINT;
-        line-: LONGINT;
+        position-: Position;
         error-: BOOLEAN;
         stringWriter: Streams.Writer;
         stringMaker: StringMaker;
@@ -217,15 +216,15 @@ TYPE
                 D.Str("New scanner  ");
                 D.Ln;  
             END;
-            SELF.position := position;
-            line := 0;
+            SELF.position.start := position;
+            SELF.position.line := 0;
         END InitializeScanner;
 
         (** report an error occured during scanning **)
         PROCEDURE ErrorS(CONST msg: ARRAY OF CHAR);
         BEGIN
             IF diagnostics # NIL THEN
-                diagnostics.Error(source^, position, Diagnostics.Invalid, msg)
+                diagnostics.Error(source^, position.start, Diagnostics.Invalid, msg)
             END;
             error := TRUE;
         END ErrorS;
@@ -236,7 +235,7 @@ TYPE
         BEGIN
             IF diagnostics # NIL THEN
                 Basic.GetErrorMessage(code, "", errorMessage);
-                diagnostics.Error(source^, position, code, errorMessage)
+                diagnostics.Error(source^, position.start, code, errorMessage)
             END;
             error := TRUE;
         END Error;
@@ -245,9 +244,9 @@ TYPE
         PROCEDURE GetNextCharacter;
         BEGIN
             reader.Char(ch); 
-            INC(position);
+            INC(position.start);
             IF ch = LF THEN 
-                INC(line) 
+                INC(position.line); position.linepos := position.start;
             END;
         END GetNextCharacter;
 
@@ -835,8 +834,7 @@ TYPE
             VAR s, token: LONGINT;
         BEGIN
             SkipBlanks;
-            symbol.start := position;
-            symbol.line := line;
+            symbol.position := position;
             stringMaker.Clear;
 (* @@@ *)
 (*
@@ -1048,7 +1046,7 @@ KernelLog.Ln();
             END;
 
             symbol.token := s;
-            symbol.end := position;
+            symbol.position.end := position.start;
 
             IF Trace THEN 
                 OutSymbol(D.Log, symbol); 
@@ -1130,9 +1128,9 @@ KernelLog.Ln();
         END OutChar;
 
     BEGIN
-        w.Int(symbol.start, 1); 
+        w.Int(symbol.position.start, 1); 
         w.String("-");
-        w.Int(symbol.end, 1); 
+        w.Int(symbol.position.end, 1); 
         w.String(":");
         w.String(tokens[symbol.token]);
         IF (symbol.token = IntegerLiteral) OR (symbol.token = RealLiteral) THEN

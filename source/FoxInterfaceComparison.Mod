@@ -60,13 +60,13 @@ CONST
 		RETURN TRUE
 	END CompareSymbols;
 
-	PROCEDURE ErrorSS(pos: LONGINT; CONST s1,s2: ARRAY OF CHAR);
+	PROCEDURE ErrorSS(pos: SyntaxTree.Position; CONST s1,s2: ARRAY OF CHAR);
 	VAR msg: ARRAY 256 OF CHAR;
 	BEGIN
 		COPY(s1,msg);
 		Strings.Append(msg,s2);
 		IF (diagnostics # NIL) & (module # NIL) THEN
-			diagnostics.Information(module.sourceName,pos,Diagnostics.Invalid,msg);
+			diagnostics.Information(module.sourceName,pos.start,Diagnostics.Invalid,msg);
 		END;
 	END ErrorSS;
 
@@ -110,7 +110,7 @@ CONST
 				newSymbol := NextSymbol(newSymbol.nextSymbol);
 			ELSIF oldName < newName THEN
 				IF oldPublic THEN
-					ErrorSS(Diagnostics.Invalid,oldName," is no longer visible");
+					ErrorSS(Basic.invalidPosition,oldName," is no longer visible");
 					INCL(flags,Redefined);
 				END;
 				oldSymbol := NextSymbol(oldSymbol.nextSymbol);
@@ -127,7 +127,7 @@ CONST
 			oldSymbol.GetName(oldName);
 			oldPublic := oldSymbol.access * SyntaxTree.Public # {};
 			IF oldSymbol.access * SyntaxTree.Public # {} THEN
-				ErrorSS(Diagnostics.Invalid,oldName," is no longer visible");
+				ErrorSS(Basic.invalidPosition,oldName," is no longer visible");
 				INCL(flags,Redefined);
 			END;
 			oldSymbol := NextSymbol(oldSymbol.nextSymbol);

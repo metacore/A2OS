@@ -205,9 +205,12 @@ VAR
 	Byte32: SyntaxTree.ByteType;
 
 TYPE
+	Position = SyntaxTree.Position;
+	
 	Alignment* = RECORD
 		min, max: LONGINT; (* alignments in bits *)
 	END;
+
 
 	PassInRegisterProc = PROCEDURE {DELEGATE} (type: SyntaxTree.Type): BOOLEAN;
 
@@ -688,12 +691,12 @@ TYPE
 		END;
 		system.globalScope[Scanner.Uppercase] := SyntaxTree.NewModuleScope();
 		system.globalScope[Scanner.Lowercase] := SyntaxTree.NewModuleScope();
-		system.globalModule[Scanner.Uppercase] := SyntaxTree.NewModule("",-1,SyntaxTree.NewIdentifier("@GLOBAL"),system.globalScope[Scanner.Uppercase],Scanner.Uppercase);
-		system.globalModule[Scanner.Lowercase] := SyntaxTree.NewModule("",-1,SyntaxTree.NewIdentifier("@global"),system.globalScope[Scanner.Lowercase],Scanner.Lowercase);
+		system.globalModule[Scanner.Uppercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier("@GLOBAL"),system.globalScope[Scanner.Uppercase],Scanner.Uppercase);
+		system.globalModule[Scanner.Lowercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier("@global"),system.globalScope[Scanner.Lowercase],Scanner.Lowercase);
 		system.systemScope[Scanner.Uppercase] := SyntaxTree.NewModuleScope();
 		system.systemScope[Scanner.Lowercase] := SyntaxTree.NewModuleScope();
-		system.systemModule[Scanner.Uppercase] := SyntaxTree.NewModule("",-1,SystemName,system.systemScope[Scanner.Uppercase],Scanner.Uppercase);
-		system.systemModule[Scanner.Lowercase] := SyntaxTree.NewModule("",-1,systemName,system.systemScope[Scanner.Lowercase],Scanner.Lowercase);
+		system.systemModule[Scanner.Uppercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SystemName,system.systemScope[Scanner.Uppercase],Scanner.Uppercase);
+		system.systemModule[Scanner.Lowercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,systemName,system.systemScope[Scanner.Lowercase],Scanner.Lowercase);
 	END BuildScopes;
 
 	PROCEDURE SetDefaultDeclarations*(system: System; minBits: LONGINT);
@@ -1017,7 +1020,7 @@ TYPE
 	PROCEDURE DeclareType0(type: SyntaxTree.Type; CONST name: ARRAY OF CHAR; in: SyntaxTree.Scope);
 	VAR basic: SyntaxTree.TypeDeclaration; duplicate: BOOLEAN;
 	BEGIN
-		basic := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier(name));
+		basic := SyntaxTree.NewTypeDeclaration(SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier(name));
 		basic.SetDeclaredType(type);
 		basic.SetState(SyntaxTree.Resolved);
 		basic.SetAccess(SyntaxTree.ReadOnly);
@@ -1048,9 +1051,9 @@ TYPE
 	PROCEDURE NewConstant0(CONST name: ARRAY OF CHAR; int: LONGINT; type: SyntaxTree.Type; in: SyntaxTree.Scope);
 	VAR constant: SyntaxTree.Constant; value: SyntaxTree.IntegerValue;duplicate: BOOLEAN;
 	BEGIN
-		value := SyntaxTree.NewIntegerValue(-1,int);
+		value := SyntaxTree.NewIntegerValue(SyntaxTree.invalidPosition,int);
 		value.SetType(type);
-		constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
+		constant := SyntaxTree.NewConstant(SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier(name));
 		constant.SetValue(value);
 		constant.SetType(value.type);
 		constant.SetAccess(SyntaxTree.ReadOnly);
@@ -1072,9 +1075,9 @@ TYPE
 	PROCEDURE NewStringConstant0(CONST name: ARRAY OF CHAR; string: SyntaxTree.String; baseType: SyntaxTree.Type; in: SyntaxTree.Scope);
 	VAR constant: SyntaxTree.Constant; value: SyntaxTree.StringValue;duplicate: BOOLEAN;
 	BEGIN
-		value := SyntaxTree.NewStringValue(-1,string);
-		value.SetType(SyntaxTree.NewStringType(-1,baseType,value.length));
-		constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
+		value := SyntaxTree.NewStringValue(SyntaxTree.invalidPosition,string);
+		value.SetType(SyntaxTree.NewStringType(SyntaxTree.invalidPosition,baseType,value.length));
+		constant := SyntaxTree.NewConstant(SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier(name));
 		constant.SetValue(value);
 		constant.SetType(value.type);
 		constant.SetAccess(SyntaxTree.ReadOnly);
@@ -1102,9 +1105,9 @@ TYPE
 	PROCEDURE NewBuiltin0( id: LONGINT; CONST name: ARRAY OF CHAR; in:  SyntaxTree.ModuleScope; realtime: BOOLEAN);
 	VAR basic: SyntaxTree.Builtin; duplicate: BOOLEAN; type: SyntaxTree.ProcedureType;
 	BEGIN
-		basic := SyntaxTree.NewBuiltin(-1,SyntaxTree.NewIdentifier(name),id);
+		basic := SyntaxTree.NewBuiltin(SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier(name),id);
 		basic.SetAccess(SyntaxTree.ReadOnly);
-		type := SyntaxTree.NewProcedureType(-1,in);
+		type := SyntaxTree.NewProcedureType(SyntaxTree.invalidPosition,in);
 		type.SetRealtime(realtime);
 		type.SetReturnType(SyntaxTree.invalidType); (* make incompatible to any procedure *)
 		basic.SetType(type);
@@ -1134,7 +1137,7 @@ TYPE
 		isDuplicate: BOOLEAN;
 		customBuiltin: SyntaxTree.CustomBuiltin;
 	BEGIN
-		customBuiltin := SyntaxTree.NewCustomBuiltin(-1, SyntaxTree.NewIdentifier(name), systemSpecial, subType);
+		customBuiltin := SyntaxTree.NewCustomBuiltin(SyntaxTree.invalidPosition, SyntaxTree.NewIdentifier(name), systemSpecial, subType);
 		customBuiltin.SetAccess(SyntaxTree.ReadOnly); (* TODO: this might be changed *)
 		procedureType.SetRealtime(TRUE);
 		customBuiltin.SetType(procedureType); (* TODO: make incompatible to any procedure *)
@@ -1465,7 +1468,7 @@ TYPE
 		END;
 	END GetIntegerType;
 	
-	PROCEDURE NewIntegerValue*(system: System; position: LONGINT; hugeint: HUGEINT): SyntaxTree.Value;
+	PROCEDURE NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value;
 	VAR value: SyntaxTree.IntegerValue;
 	BEGIN
 		value := SyntaxTree.NewIntegerValue(position,hugeint);
@@ -1473,7 +1476,7 @@ TYPE
 		RETURN value
 	END NewIntegerValue;
 
-	PROCEDURE NewBooleanValue*(system: System; position: LONGINT; b: BOOLEAN): SyntaxTree.Value;
+	PROCEDURE NewBooleanValue*(system: System; position: Position; b: BOOLEAN): SyntaxTree.Value;
 	VAR value: SyntaxTree.BooleanValue;
 	BEGIN
 		value := SyntaxTree.NewBooleanValue(position,b);
@@ -1481,7 +1484,7 @@ TYPE
 		RETURN value
 	END NewBooleanValue;
 
-	PROCEDURE NewSetValue*(system: System; position: LONGINT; s: SET): SyntaxTree.Value;
+	PROCEDURE NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value;
 	VAR value: SyntaxTree.SetValue;
 	BEGIN
 		value := SyntaxTree.NewSetValue(position,s);
@@ -1489,7 +1492,7 @@ TYPE
 		RETURN value
 	END NewSetValue;
 
-	PROCEDURE NewCharacterValue*(system: System; position: LONGINT; c: CHAR): SyntaxTree.Value;
+	PROCEDURE NewCharacterValue*(system: System; position: Position; c: CHAR): SyntaxTree.Value;
 	VAR value: SyntaxTree.CharacterValue;
 	BEGIN
 		value := SyntaxTree.NewCharacterValue(position,c);
@@ -1497,7 +1500,7 @@ TYPE
 		RETURN value
 	END NewCharacterValue;
 
-	PROCEDURE NewNilValue*(system: System; position: LONGINT): SyntaxTree.Value;
+	PROCEDURE NewNilValue*(system: System; position: Position): SyntaxTree.Value;
 	VAR value: SyntaxTree.NilValue;
 	BEGIN
 		value := SyntaxTree.NewNilValue(position);

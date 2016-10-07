@@ -63,6 +63,7 @@ CONST
 	FlagParameterConst*=2;
 
 TYPE
+	Position*= Scanner.Position;
 	SourceCode*= Scanner.StringType;
 	BinaryCode*= BitSets.BitSet;
 	String*= Scanner.StringType;
@@ -363,9 +364,9 @@ TYPE
 	QualifiedIdentifier* = OBJECT
 		VAR
 			prefix-, suffix-: Identifier;   (* use string index instead ? *)
-			position-: LONGINT;
+			position-: Position;
 
-		PROCEDURE & InitQualifiedIdentifier( position: LONGINT;  prefix, suffix: Identifier);
+		PROCEDURE & InitQualifiedIdentifier( position: Position;  prefix, suffix: Identifier);
 		BEGIN
 			(* ASSERT(suffix # invalidIdentifier); can happen but should be catched by the parser with error report and not here with trap *)
 			SELF.position := position;
@@ -417,7 +418,7 @@ TYPE
 			typeDeclaration-: TypeDeclaration; (* link to declaration (if any), needed for printing, debugging and symbol lookup *)
 			scope-: Scope; (* scope where the type has been declared *)
 			resolved-: Type; (* indirection to resolved type to preserve qualified types *)
-			position-,endposition-: LONGINT;
+			position-: Position;
 			state-: SET;
 			hasPointers-: BOOLEAN;
 
@@ -429,7 +430,7 @@ TYPE
 			sizeInBits-: LONGINT; (* allocation size of this type in bits *)
 			alignmentInBits-: LONGINT;
 
-		PROCEDURE & InitType*( position: LONGINT);
+		PROCEDURE & InitType*( position: Position);
 		BEGIN
 			SELF.position := position; state := Undefined;
 			typeDeclaration := NIL;
@@ -452,7 +453,7 @@ TYPE
 		END SetAlignmentInBits;
 
 		PROCEDURE End*( position: LONGINT );
-		BEGIN SELF.endposition := position;
+		BEGIN SELF.position.end := position;
 		END End;
 
 		PROCEDURE SetFingerPrint*(CONST fp: FingerPrint);
@@ -510,7 +511,7 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitType(SELF)
 		END Accept;
 				
@@ -529,7 +530,7 @@ TYPE
 		VAR str: IdentifierString;
 		BEGIN
 			COPY(id, str);Basic.AppendNumber(str,sizeInBits); name := NewIdentifier(str);
-			InitType(-1);
+			InitType(invalidPosition);
 			SetSize(sizeInBits);
 			SELF.name := name
 		END InitBasicType;
@@ -544,7 +545,7 @@ TYPE
 		END SetTypeDeclaration;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBasicType(SELF)
 		END Accept;
 
@@ -570,7 +571,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitObjectType(SELF)
 		END Accept;
 
@@ -605,7 +606,7 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitNilType(SELF)
 		END Accept;
 	END NilType;
@@ -634,7 +635,7 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitAnyType(SELF)
 		END Accept;
 	END AnyType;
@@ -651,7 +652,7 @@ TYPE
 		END InitByteType;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitByteType(SELF)
 		END Accept;
 
@@ -685,7 +686,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitAddressType(SELF)
 		END Accept;
 	END AddressType;
@@ -710,7 +711,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSizeType(SELF)
 		END Accept;
 	END SizeType;
@@ -736,7 +737,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBooleanType(SELF)
 		END Accept;
 	END BooleanType;
@@ -762,7 +763,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSetType(SELF)
 		END Accept;
 
@@ -788,7 +789,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCharacterType(SELF)
 		END Accept;
 
@@ -817,7 +818,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitRangeType(SELF)
 		END Accept;
 	END RangeType;
@@ -860,7 +861,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitIntegerType(SELF)
 		END Accept;
 
@@ -887,7 +888,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitFloatType(SELF)
 		END Accept;
 
@@ -920,7 +921,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitComplexType(SELF)
 		END Accept;
 
@@ -933,7 +934,7 @@ TYPE
 		VAR
 			qualifiedIdentifier-: QualifiedIdentifier;
 
-		PROCEDURE & InitQualifiedType( position: LONGINT; scope: Scope;  qualifiedIdentifier: QualifiedIdentifier);
+		PROCEDURE & InitQualifiedType( position: Position; scope: Scope;  qualifiedIdentifier: QualifiedIdentifier);
 		BEGIN
 			ASSERT(qualifiedIdentifier # NIL);
 			InitType( position);
@@ -963,7 +964,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitQualifiedType(SELF)
 		END Accept;
 
@@ -985,7 +986,7 @@ TYPE
 		length-: LONGINT;
 		baseType-: Type;
 
-		PROCEDURE & InitStringType(position: LONGINT; baseType: Type; length: LONGINT);
+		PROCEDURE & InitStringType(position: Position; baseType: Type; length: LONGINT);
 		BEGIN
 			InitType(position);
 			SetRealtime(TRUE);
@@ -1018,7 +1019,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitStringType(SELF)
 		END Accept;
 
@@ -1031,7 +1032,7 @@ TYPE
 		enumerationBase-: Type;
 		rangeLowest-,rangeHighest-: LONGINT;
 
-		PROCEDURE &InitEnumerationType(position: LONGINT; scope: Scope; enumerationScope: EnumerationScope);
+		PROCEDURE &InitEnumerationType(position: Position; scope: Scope; enumerationScope: EnumerationScope);
 		BEGIN
 			InitType(position);
 			SetRealtime(TRUE);
@@ -1063,7 +1064,7 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitEnumerationType(SELF)
 		END Accept;
 
@@ -1077,7 +1078,7 @@ TYPE
 			staticLength-: LONGINT;
 			form-: LONGINT; (* redundant: (form = Open) = (staticLength = 0) else (form = Static) *)
 
-		PROCEDURE & InitArrayType(position: LONGINT; scope: Scope;  form: LONGINT);
+		PROCEDURE & InitArrayType(position: Position; scope: Scope;  form: LONGINT);
 		BEGIN
 			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; SELF.form := form; SELF.scope := scope;
 		END InitArrayType;
@@ -1145,7 +1146,7 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitArrayType(SELF)
 		END Accept;
 
@@ -1160,7 +1161,7 @@ TYPE
 			staticIncrementInBits-: LONGINT;
 			form-: LONGINT;
 
-		PROCEDURE & InitMathArrayType(position: LONGINT;scope: Scope; form: LONGINT);
+		PROCEDURE & InitMathArrayType(position: Position;scope: Scope; form: LONGINT);
 		BEGIN
 			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SELF.form := form; SELF.scope := scope;
 		END InitMathArrayType;
@@ -1281,7 +1282,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitMathArrayType(SELF)
 		END Accept;
 
@@ -1297,7 +1298,7 @@ TYPE
 			isDisposable-: BOOLEAN;
 			isHidden-: BOOLEAN;
 
-		PROCEDURE & InitPointerType(position: LONGINT; scope: Scope);
+		PROCEDURE & InitPointerType(position: Position; scope: Scope);
 		BEGIN
 			modifiers := NIL;
 			pointerBase := NIL;
@@ -1372,7 +1373,7 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitPointerType(SELF)
 		END Accept;
 
@@ -1386,7 +1387,7 @@ TYPE
 			sizeInBits-: LONGINT; (* computed by checker *)
 			cellsAreObjects-: BOOLEAN;
 
-		PROCEDURE & InitPortType(position: LONGINT; direction: LONGINT; sizeExpression: Expression; scope: Scope);
+		PROCEDURE & InitPortType(position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope);
 		BEGIN
 			InitType(position);
 			SELF.sizeExpression := sizeExpression;
@@ -1422,7 +1423,7 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitPortType(SELF)
 		END Accept;
 
@@ -1445,7 +1446,7 @@ TYPE
 			(* list of all operators needed to access an array-structured object type *)
 			arrayAccessOperators-: ArrayAccessOperators;
 
-		PROCEDURE & InitRecordType( position: LONGINT; scope: Scope; recordScope: RecordScope);
+		PROCEDURE & InitRecordType( position: Position; scope: Scope; recordScope: RecordScope);
 		BEGIN
 			InitType( position);
 			SELF.scope := scope;
@@ -1571,7 +1572,7 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitRecordType(SELF)
 		END Accept;
 		
@@ -1591,7 +1592,7 @@ TYPE
 		modifiers-: Modifier;
 		baseType-: Type;
 
-		PROCEDURE &InitCellType(position: LONGINT; scope: Scope;  cellScope: CellScope);
+		PROCEDURE &InitCellType(position: Position; scope: Scope;  cellScope: CellScope);
 		BEGIN
 			InitType(position);
 			SELF.scope := scope;
@@ -1697,7 +1698,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCellType(SELF)
 		END Accept;
 
@@ -1722,7 +1723,7 @@ TYPE
 			stackAlignment-: LONGINT;
 			parametersOffset-: LONGINT; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
 
-		PROCEDURE & InitProcedureType( position: LONGINT; scope: Scope);
+		PROCEDURE & InitProcedureType( position: Position; scope: Scope);
 		BEGIN
 			InitType( position);
 			SELF.scope := scope;
@@ -1858,7 +1859,7 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitProcedureType(SELF)
 		END Accept;
 		
@@ -1875,21 +1876,21 @@ TYPE
 		VAR
 			type-: Type; (* the expression's type. Resolved by checker *)
 			assignable-: BOOLEAN;  (* expression can be assigned to (or used as var-parameter): expression := ... *)
-			position-,endposition-: LONGINT;
+			position-: Position;
 			state-: SET;
 			resolved-: Value;
 			isHidden-: BOOLEAN;
 
 
 		PROCEDURE End*( position: LONGINT );
-		BEGIN SELF.endposition := position;
+		BEGIN SELF.position.end := position;
 		END End;
 
 		PROCEDURE SetState*(state: LONGINT);
 		BEGIN	INCL(SELF.state,state);
 		END SetState;
 
-		PROCEDURE &InitExpression(position: LONGINT);
+		PROCEDURE &InitExpression(position: Position);
 		BEGIN	SELF.position := position; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
 		END InitExpression;
 
@@ -1920,7 +1921,7 @@ TYPE
 
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitExpression(SELF)
 		END Accept;
 
@@ -1988,7 +1989,7 @@ TYPE
 	Set* = OBJECT (Expression)
 		VAR elements-: ExpressionList; (* an element of the form from .. to is represented as a RangeExpression *)
 
-		PROCEDURE & InitSet( position: LONGINT );
+		PROCEDURE & InitSet( position: Position );
 		BEGIN
 			InitExpression( position );
 			elements := NewExpressionList();
@@ -2001,7 +2002,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSet(SELF)
 		END Accept;
 
@@ -2011,7 +2012,7 @@ TYPE
 	MathArrayExpression* = OBJECT (Expression)
 		VAR elements-: ExpressionList; (* an element of the form from .. to is represented as a RangeExpression *)
 
-		PROCEDURE & InitMathArrayExpression( position: LONGINT );
+		PROCEDURE & InitMathArrayExpression( position: Position );
 		BEGIN
 			InitExpression( position );
 			elements := NewExpressionList();
@@ -2024,7 +2025,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitMathArrayExpression(SELF)
 		END Accept;
 
@@ -2036,7 +2037,7 @@ TYPE
 			left-: Expression;
 			operator-: LONGINT;  (* one of Scanner.Minus ... Scanner.Not *)
 
-		PROCEDURE & InitUnaryExpression( position: LONGINT;  operand: Expression;  operator: LONGINT );
+		PROCEDURE & InitUnaryExpression( position: Position;  operand: Expression;  operator: LONGINT );
 		BEGIN
 			InitExpression( position );  SELF.left := operand;  SELF.operator := operator;
 		END InitUnaryExpression;
@@ -2052,7 +2053,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitUnaryExpression(SELF)
 		END Accept;
 
@@ -2064,7 +2065,7 @@ TYPE
 			left-, right-: Expression;
 			operator-: LONGINT;  (* one of Scanner.Equal ... Scanner.Minus *)
 
-		PROCEDURE & InitBinaryExpression( position: LONGINT;  left, right: Expression;  operator: LONGINT );
+		PROCEDURE & InitBinaryExpression( position: Position;  left, right: Expression;  operator: LONGINT );
 		BEGIN
 			InitExpression( position );  SELF.left := left;  SELF.right := right;  SELF.operator := operator;
 		END InitBinaryExpression;
@@ -2084,7 +2085,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBinaryExpression(SELF)
 		END Accept;
 
@@ -2099,7 +2100,7 @@ TYPE
 		missingFirst-, missingLast-, missingStep-: BOOLEAN; (* only for printout*)
 		context-: SHORTINT; (* one of ArrayIndex, SetElement or CaseGuard *)
 
-		PROCEDURE &InitRangeExpression(position: LONGINT; first, last, step: Expression);
+		PROCEDURE &InitRangeExpression(position: Position; first, last, step: Expression);
 		BEGIN
 			context := ArrayIndex; (* by default, a range represents array indices *)
 			InitExpression(position);
@@ -2136,7 +2137,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitRangeExpression(SELF)
 		END Accept;
 
@@ -2145,7 +2146,7 @@ TYPE
 	(** << ? >> **)
 	TensorRangeExpression*=OBJECT (Expression);
 
-		PROCEDURE &InitTensorRangeExpression(position: LONGINT);
+		PROCEDURE &InitTensorRangeExpression(position: Position);
 		BEGIN
 			InitExpression(position);
 		END InitTensorRangeExpression;
@@ -2157,7 +2158,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitTensorRangeExpression(SELF)
 		END Accept;
 
@@ -2169,7 +2170,7 @@ TYPE
 			expression-: Expression;
 			typeExpression-: Expression; (* for printout *)
 
-		PROCEDURE & InitConversion( position: LONGINT;  expression: Expression; type: Type; typeExpression: Expression);
+		PROCEDURE & InitConversion( position: Position;  expression: Expression; type: Type; typeExpression: Expression);
 		BEGIN
 			InitExpression( position );  SELF.expression := expression;  SELF.typeExpression := typeExpression; SELF.type := type;
 		END InitConversion;
@@ -2185,7 +2186,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitConversion(SELF)
 		END Accept;
 
@@ -2205,7 +2206,7 @@ TYPE
 			relatedIndexList-: ExpressionList; (* the index list *)
 			modifiers-: Modifier;
 
-		PROCEDURE &InitDesignator*(position: LONGINT);
+		PROCEDURE &InitDesignator*(position: Position);
 		BEGIN
 			InitExpression(position);
 			left := NIL;
@@ -2243,7 +2244,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitDesignator(SELF)
 		END Accept;
 
@@ -2258,7 +2259,7 @@ TYPE
 	IdentifierDesignator* = OBJECT(Designator)
 		VAR identifier-: Identifier;
 
-		PROCEDURE &InitIdentifierDesignator(position: LONGINT; id: Identifier);
+		PROCEDURE &InitIdentifierDesignator(position: Position; id: Identifier);
 		BEGIN InitDesignator(position); identifier := id
 		END InitIdentifierDesignator;
 
@@ -2269,7 +2270,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitIdentifierDesignator(SELF)
 		END Accept;
 
@@ -2281,7 +2282,7 @@ TYPE
 	SelectorDesignator* = OBJECT (Designator)
 		VAR identifier-: Identifier;
 
-		PROCEDURE & InitSelector(position: LONGINT; left: Designator; identifier: Identifier);
+		PROCEDURE & InitSelector(position: Position; left: Designator; identifier: Identifier);
 		BEGIN   InitDesignator(position); SELF.left := left; SELF.identifier := identifier;
 		END InitSelector;
 
@@ -2292,7 +2293,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSelectorDesignator(SELF)
 		END Accept;
 
@@ -2306,7 +2307,7 @@ TYPE
 		VAR
 			parameters-: ExpressionList;
 
-		PROCEDURE &InitParameterDesignator(position: LONGINT; left: Designator; parameters: ExpressionList);
+		PROCEDURE &InitParameterDesignator(position: Position; left: Designator; parameters: ExpressionList);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.parameters := parameters
 		END InitParameterDesignator;
 
@@ -2317,7 +2318,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitParameterDesignator(SELF)
 		END Accept;
 
@@ -2329,7 +2330,7 @@ TYPE
 	**)
 	ArrowDesignator* = OBJECT (Designator)
 
-		PROCEDURE &InitArrowDesignator(position: LONGINT; left: Designator);
+		PROCEDURE &InitArrowDesignator(position: Position; left: Designator);
 		BEGIN InitDesignator(position); SELF.left := left;
 		END InitArrowDesignator;
 
@@ -2340,7 +2341,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitArrowDesignator(SELF)
 		END Accept;
 
@@ -2352,7 +2353,7 @@ TYPE
 	BracketDesignator* = OBJECT(Designator)
 		VAR parameters-: ExpressionList;
 
-		PROCEDURE &InitBracketDesignator(position: LONGINT; left: Designator; parameters: ExpressionList);
+		PROCEDURE &InitBracketDesignator(position: Position; left: Designator; parameters: ExpressionList);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.parameters := parameters;
 		END InitBracketDesignator;
 
@@ -2363,7 +2364,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBracketDesignator(SELF)
 		END Accept;
 
@@ -2377,7 +2378,7 @@ TYPE
 	VAR
 		symbol-: Symbol;
 
-		PROCEDURE &InitSymbolDesignator(position: LONGINT; left: Designator; symbol: Symbol);
+		PROCEDURE &InitSymbolDesignator(position: Position; left: Designator; symbol: Symbol);
 		BEGIN
 			InitDesignator(position);
 			SELF.left := left;
@@ -2385,7 +2386,7 @@ TYPE
 		END InitSymbolDesignator;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN
 			position := SELF.position; v.VisitSymbolDesignator(SELF);
 		END Accept;
@@ -2415,7 +2416,7 @@ TYPE
 			hasRange-: BOOLEAN;
 			hasTensorRange-: BOOLEAN;
 
-		PROCEDURE &InitIndexDesignator(position: LONGINT; left: Designator);
+		PROCEDURE &InitIndexDesignator(position: Position; left: Designator);
 		BEGIN
 			InitDesignator(position);
 			SELF.left := left;
@@ -2441,7 +2442,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitIndexDesignator(SELF)
 		END Accept;
 		
@@ -2456,7 +2457,7 @@ TYPE
 		statement-: Statement;
 		result-: Expression;
 
-		PROCEDURE & InitStatementDesignator(position: LONGINT; s: Statement);
+		PROCEDURE & InitStatementDesignator(position: Position; s: Statement);
 		BEGIN
 			InitDesignator(position); statement := s; result := NIL;
 		END InitStatementDesignator;
@@ -2474,7 +2475,7 @@ TYPE
 		END SetResult;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitStatementDesignator(SELF)
 		END Accept;
 
@@ -2486,7 +2487,7 @@ TYPE
 	ProcedureCallDesignator*= OBJECT (Designator)
 		VAR parameters-: ExpressionList;
 
-		PROCEDURE & InitProcedureCallDesignator(position: LONGINT; left: Designator;  parameters: ExpressionList);
+		PROCEDURE & InitProcedureCallDesignator(position: Position; left: Designator;  parameters: ExpressionList);
 		BEGIN
 			InitDesignator(position); SELF.left := left; SELF.parameters := parameters;
 		END InitProcedureCallDesignator;
@@ -2498,7 +2499,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitProcedureCallDesignator(SELF)
 		END Accept;
 
@@ -2513,7 +2514,7 @@ TYPE
 			builtin-: Builtin;
 			returnType-: Type;
 
-		PROCEDURE & InitBuiltinCallDesignator(position: LONGINT; id: LONGINT; left: Designator; parameters: ExpressionList);
+		PROCEDURE & InitBuiltinCallDesignator(position: Position; id: LONGINT; left: Designator; parameters: ExpressionList);
 		BEGIN
 			InitDesignator(position); SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL;
 		END InitBuiltinCallDesignator;
@@ -2530,7 +2531,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBuiltinCallDesignator(SELF)
 		END Accept;
 
@@ -2543,7 +2544,7 @@ TYPE
 	VAR
 		typeExpression-: Expression; (* for printing only *)
 
-		PROCEDURE &InitTypeGuardDesignator(position: LONGINT; left: Designator; type: Type);
+		PROCEDURE &InitTypeGuardDesignator(position: Position; left: Designator; type: Type);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.type := type; typeExpression := NIL;
 		END InitTypeGuardDesignator;
 
@@ -2558,7 +2559,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitTypeGuardDesignator(SELF)
 		END Accept;
 		
@@ -2571,7 +2572,7 @@ TYPE
 	(** <<left^>> resolved as dereference operation on pointer variable left **)
 	DereferenceDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitDereferenceDesignator(position: LONGINT; left: Designator);
+		PROCEDURE &InitDereferenceDesignator(position: Position; left: Designator);
 		BEGIN InitDesignator(position); SELF.left := left;
 		END InitDereferenceDesignator;
 
@@ -2582,7 +2583,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitDereferenceDesignator(SELF)
 		END Accept;
 
@@ -2595,7 +2596,7 @@ TYPE
 	(** <<left^>> resolved as supercall operation on method left **)
 	SupercallDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitSupercallDesignator(position: LONGINT; left: Designator);
+		PROCEDURE &InitSupercallDesignator(position: Position; left: Designator);
 		BEGIN InitDesignator(position); SELF.left := left;
 		END InitSupercallDesignator;
 
@@ -2606,7 +2607,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSupercallDesignator(SELF)
 		END Accept;
 
@@ -2615,7 +2616,7 @@ TYPE
 	(**  <<SELF.x>> **)
 	SelfDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitSelfDesignator(position: LONGINT);
+		PROCEDURE &InitSelfDesignator(position: Position);
 		BEGIN InitDesignator(position);
 		END InitSelfDesignator;
 
@@ -2626,7 +2627,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSelfDesignator(SELF)
 		END Accept;
 		
@@ -2640,7 +2641,7 @@ TYPE
 	(** <<RESULT>> **)
 		ResultDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitResultDesignator(position: LONGINT);
+		PROCEDURE &InitResultDesignator(position: Position);
 		BEGIN InitDesignator(position);
 		END InitResultDesignator;
 
@@ -2651,7 +2652,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitResultDesignator(SELF)
 		END Accept;
 
@@ -2662,7 +2663,7 @@ TYPE
 	Value* = OBJECT (Expression)
 	VAR fingerprint-: FingerPrint;
 
-		PROCEDURE &InitValue(position: LONGINT);
+		PROCEDURE &InitValue(position: Position);
 		BEGIN SELF.position := position; resolved := SELF; InitFingerPrint(fingerprint);
 		END InitValue;
 
@@ -2672,7 +2673,7 @@ TYPE
 		END SetFingerPrint;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitValue(SELF)
 		END Accept;
 
@@ -2686,7 +2687,7 @@ TYPE
 		VAR
 			value-: BOOLEAN;
 
-		PROCEDURE & InitBooleanValue(position: LONGINT; value: BOOLEAN);
+		PROCEDURE & InitBooleanValue(position: Position; value: BOOLEAN);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitBooleanValue;
@@ -2702,7 +2703,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBooleanValue(SELF)
 		END Accept;
 
@@ -2717,7 +2718,7 @@ TYPE
 			hvalue-: HUGEINT;
 			value-: LONGINT;
 
-		PROCEDURE & InitIntegerValue(position: LONGINT; hvalue: HUGEINT);
+		PROCEDURE & InitIntegerValue(position: Position; hvalue: HUGEINT);
 		BEGIN
 			InitValue(position);  SELF.hvalue := hvalue; SELF.value := SHORT(hvalue);
 		END InitIntegerValue;
@@ -2733,7 +2734,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitIntegerValue(SELF)
 		END Accept;
 
@@ -2747,7 +2748,7 @@ TYPE
 		VAR
 			value-: CHAR; (* potential for extension to support CHAR16 and CHAR32 *)
 
-		PROCEDURE & InitCharacterValue(position:LONGINT; value: CHAR);
+		PROCEDURE & InitCharacterValue(position: Position; value: CHAR);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitCharacterValue;
@@ -2763,7 +2764,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCharacterValue(SELF)
 		END Accept;
 
@@ -2778,7 +2779,7 @@ TYPE
 		VAR
 			value-: SET;
 
-		PROCEDURE & InitSetValue(position: LONGINT; value: SET);
+		PROCEDURE & InitSetValue(position: Position; value: SET);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitSetValue;
@@ -2794,7 +2795,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSetValue(SELF)
 		END Accept;
 
@@ -2804,7 +2805,7 @@ TYPE
 	MathArrayValue* = OBJECT (Value)
 		VAR array-: MathArrayExpression; (* an element of the form from .. to is represented as a RangeExpression *)
 
-		PROCEDURE & InitMathArrayValue(position: LONGINT);
+		PROCEDURE & InitMathArrayValue(position: Position);
 		BEGIN
 			InitValue(position);
 			array := NIL;
@@ -2823,7 +2824,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitMathArrayValue(SELF)
 		END Accept;
 
@@ -2835,7 +2836,7 @@ TYPE
 			value-: LONGREAL;
 			subtype-: LONGINT; (* accuracy information: REAL vs. LONGREAL *)
 
-		PROCEDURE & InitRealValue(position: LONGINT; value: LONGREAL);
+		PROCEDURE & InitRealValue(position: Position; value: LONGREAL);
 		BEGIN
 			InitValue(position);  SELF.value := value; SELF.subtype := 0;
 		END InitRealValue;
@@ -2855,7 +2856,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitRealValue(SELF)
 		END Accept;
 
@@ -2869,7 +2870,7 @@ TYPE
 			realValue-, imagValue-: LONGREAL;
 			subtype-: LONGINT; (* accuracy information of components: REAL vs. LONGREAL *)
 
-		PROCEDURE & InitComplexValue(position: LONGINT; realValue, imagValue: LONGREAL);
+		PROCEDURE & InitComplexValue(position: Position; realValue, imagValue: LONGREAL);
 		BEGIN
 			InitValue(position); SELF.realValue := realValue; SELF.imagValue := imagValue; SELF.subtype := 0;
 		END InitComplexValue;
@@ -2898,7 +2899,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitComplexValue(SELF)
 		END Accept;
 
@@ -2916,7 +2917,7 @@ TYPE
 			value-: String;
 			length-: LONGINT;
 
-		PROCEDURE & InitStringValue(position: LONGINT; value: String);
+		PROCEDURE & InitStringValue(position: Position; value: String);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 			length := 0;
@@ -2957,7 +2958,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitStringValue(SELF)
 		END Accept;
 
@@ -2970,7 +2971,7 @@ TYPE
 	NilValue* = OBJECT (Value)
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitNilValue(SELF)
 		END Accept;
 
@@ -2990,7 +2991,7 @@ TYPE
 	VAR
 		value-: LONGINT;
 
-		PROCEDURE & InitEnumerationValue(position: LONGINT; value: LONGINT);
+		PROCEDURE & InitEnumerationValue(position: Position; value: LONGINT);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitEnumerationValue;
@@ -3006,7 +3007,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitEnumerationValue(SELF)
 		END Accept;
 
@@ -3031,13 +3032,13 @@ TYPE
 		fixed-: BOOLEAN;
 		alignment-: LONGINT;
 
-		position-: LONGINT; state-: SET;
+		position-: Position; state-: SET;
 		fingerprint-: FingerPrint;
 
 		comment-: Comment;
 
 
-		PROCEDURE & InitSymbol(position: LONGINT; name:Identifier);
+		PROCEDURE & InitSymbol(position: Position; name:Identifier);
 		BEGIN
 			SELF.position := position; state := Undefined;
 			nextSymbol := NIL;
@@ -3111,7 +3112,7 @@ TYPE
 		END SetComment;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitSymbol(SELF)
 		END Accept;
 		
@@ -3136,7 +3137,7 @@ TYPE
 		nextTypeDeclaration-: TypeDeclaration;
 		declaredType-: Type;
 
-		PROCEDURE &InitTypeDeclaration(position: LONGINT; name: Identifier);
+		PROCEDURE &InitTypeDeclaration(position: Position; name: Identifier);
 		BEGIN
 			InitSymbol(position,name);
 			nextTypeDeclaration := NIL;
@@ -3158,7 +3159,7 @@ TYPE
 		END SetType;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitTypeDeclaration(SELF)
 		END Accept;
 
@@ -3174,7 +3175,7 @@ TYPE
 		value-: Expression;
 		nextConstant-: Constant;
 
-		PROCEDURE & InitConstant( position: LONGINT;  name: Identifier );
+		PROCEDURE & InitConstant( position: Position;  name: Identifier );
 		BEGIN
 			InitSymbol(position,name);
 			value := NIL;
@@ -3187,7 +3188,7 @@ TYPE
 		END SetValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitConstant(SELF)
 		END Accept;
 
@@ -3209,7 +3210,7 @@ TYPE
 
 		usedAsReference-: BOOLEAN;
 
-		PROCEDURE & InitVariable*( position: LONGINT;  name: Identifier);
+		PROCEDURE & InitVariable*( position: Position;  name: Identifier);
 		BEGIN
 			InitSymbol(position,name);
 			nextVariable := NIL;
@@ -3257,7 +3258,7 @@ TYPE
 		END SetInitializer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitVariable(SELF)
 		END Accept;
 
@@ -3282,7 +3283,7 @@ TYPE
 		untraced-: BOOLEAN;
 		movable-: BOOLEAN;
 
-		PROCEDURE & InitParameter( position: LONGINT;  ownerType: Type ; name: Identifier; kind: LONGINT);
+		PROCEDURE & InitParameter( position: Position;  ownerType: Type ; name: Identifier; kind: LONGINT);
 		BEGIN
 			InitSymbol( position, name );
 			SELF.kind := kind;
@@ -3312,7 +3313,7 @@ TYPE
 		END SetDefaultValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitParameter(SELF)
 		END Accept;
 
@@ -3331,7 +3332,7 @@ TYPE
 		value-: Expression;
 
 
-		PROCEDURE & InitProperty(position: LONGINT;  name: Identifier);
+		PROCEDURE & InitProperty(position: Position;  name: Identifier);
 		BEGIN
 			InitSymbol( position, name );
 		END InitProperty;
@@ -3341,7 +3342,7 @@ TYPE
 		END SetValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitProperty(SELF)
 		END Accept;
 
@@ -3360,7 +3361,7 @@ TYPE
 			level-, methodNumber-: LONGINT;
 			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
 
-		PROCEDURE & InitProcedure( position: LONGINT;  name: Identifier; scope: ProcedureScope);
+		PROCEDURE & InitProcedure( position: Position;  name: Identifier; scope: ProcedureScope);
 		BEGIN
 			InitSymbol(position,name);
 			nextProcedure := NIL;
@@ -3436,7 +3437,7 @@ TYPE
 		END SetMethodNumber;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitProcedure(SELF)
 		END Accept;
 
@@ -3449,13 +3450,13 @@ TYPE
 		nextBuiltin-: Builtin;
 		id-: LONGINT;
 
-		PROCEDURE & InitBuiltin(position: LONGINT; name:Identifier; id: LONGINT);
+		PROCEDURE & InitBuiltin(position: Position; name:Identifier; id: LONGINT);
 		BEGIN
 			InitSymbol(position,name); SELF.id := id;
 		END InitBuiltin;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitBuiltin(SELF)
 		END Accept;
 
@@ -3465,7 +3466,7 @@ TYPE
 	VAR
 		subType-: SHORTINT;
 
-		PROCEDURE & InitCustomBuiltin(position: LONGINT; name: Identifier; id: LONGINT; subType: SHORTINT);
+		PROCEDURE & InitCustomBuiltin(position: Position; name: Identifier; id: LONGINT; subType: SHORTINT);
 		BEGIN
 			InitBuiltin(position,name,id);
 			SELF.subType := subType;
@@ -3483,7 +3484,7 @@ TYPE
 		nextOperator-: Operator;
 		isDynamic-: BOOLEAN; (* nopov *)
 
-		PROCEDURE & InitOperator(position: LONGINT; name: Identifier; scope: ProcedureScope);
+		PROCEDURE & InitOperator(position: Position; name: Identifier; scope: ProcedureScope);
 		BEGIN
 			InitProcedure(position,name,scope);
 			nextOperator := NIL;
@@ -3496,7 +3497,7 @@ TYPE
 		END SetDynamic;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitOperator(SELF)
 		END Accept;
 
@@ -3510,7 +3511,7 @@ TYPE
 			context-: Identifier;
 			direct-: BOOLEAN; (* direct import *)
 
-		PROCEDURE & InitImport( position: LONGINT;  name, moduleName: Identifier; direct: BOOLEAN );
+		PROCEDURE & InitImport( position: Position;  name, moduleName: Identifier; direct: BOOLEAN );
 		BEGIN
 			InitSymbol(position,name);
 			SELF.direct := direct;
@@ -3545,7 +3546,7 @@ TYPE
 		END SetContext;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitImport(SELF)
 		END Accept;
 
@@ -3610,12 +3611,12 @@ TYPE
 
 	Statement*= OBJECT
 	VAR outer-: Statement;
-		position-: LONGINT;
+		position-: Position;
 		isUnreachable-: BOOLEAN;
 
 		comment-: Comment;
 
-		PROCEDURE & InitStatement*(position: LONGINT; outer: Statement);
+		PROCEDURE & InitStatement*(position: Position; outer: Statement);
 		BEGIN
 			SELF.position := position;
 			SELF.outer := outer;
@@ -3632,7 +3633,7 @@ TYPE
 		END SetUnreachable;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitStatement(SELF)
 		END Accept;
 
@@ -3652,7 +3653,7 @@ TYPE
 	ProcedureCallStatement*= OBJECT(Statement)
 		VAR call-: Designator;
 
-		PROCEDURE & InitProcedureCallStatement(position: LONGINT; call: Designator; outer: Statement);
+		PROCEDURE & InitProcedureCallStatement(position: Position; call: Designator; outer: Statement);
 		BEGIN	InitStatement(position,outer); SELF.call := call;
 		END InitProcedureCallStatement;
 
@@ -3668,7 +3669,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitProcedureCallStatement(SELF)
 		END Accept;
 
@@ -3678,7 +3679,7 @@ TYPE
 	Assignment* = OBJECT (Statement)
 	VAR left-: Designator; right-: Expression;
 
-		PROCEDURE & InitAssignment*( position: LONGINT;  left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: Position;  left: Designator;  right: Expression; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  SELF.left := left;  SELF.right := right;
 		END InitAssignment;
@@ -3699,7 +3700,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitAssignment(SELF)
 		END Accept;
 
@@ -3710,7 +3711,7 @@ TYPE
 	VAR 
 		left-: Designator; right-: Expression; op-: LONGINT;
 
-		PROCEDURE & InitAssignment*( position: LONGINT; op: LONGINT; left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: Position; op: LONGINT; left: Designator;  right: Expression; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  SELF.op := op; SELF.left := left;  SELF.right := right;
 		END InitAssignment;
@@ -3724,7 +3725,7 @@ TYPE
 		END SetRight;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCommunicationStatement(SELF)
 		END Accept;
 
@@ -3773,7 +3774,7 @@ TYPE
 			elsifParts: Basic.List;
 			elsePart-: StatementSequence;
 
-		PROCEDURE & InitIfStatement( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitIfStatement( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement( position,outer ); ifPart := NewIfPart(); elsePart := NIL;  elsifParts := NIL;
 		END InitIfStatement;
@@ -3812,7 +3813,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitIfStatement(SELF)
 		END Accept;
 
@@ -3868,7 +3869,7 @@ TYPE
 			withParts-: Basic.List;
 			elsePart-: StatementSequence;
 
-		PROCEDURE & InitWithStatement( position: LONGINT; outer: Statement );
+		PROCEDURE & InitWithStatement( position: Position; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );
 			NEW(withParts,4); elsePart := NIL;
@@ -3905,7 +3906,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitWithStatement(SELF)
 		END Accept;
 
@@ -3961,7 +3962,7 @@ TYPE
 			caseParts-: Basic.List;
 			min-,max-: LONGINT;
 
-		PROCEDURE & InitCaseStatement( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitCaseStatement( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement(position,outer );  variable := NIL;  elsePart := NIL;  caseParts := NIL;
 			min := MAX(LONGINT); max := MIN(LONGINT);
@@ -4005,7 +4006,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCaseStatement(SELF)
 		END Accept;
 
@@ -4037,7 +4038,7 @@ TYPE
 			condition-: Expression;
 			statements-: StatementSequence;
 
-		PROCEDURE & InitWhileStatement( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitWhileStatement( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement( position,outer );  condition := NIL;  statements := NIL;
 		END InitWhileStatement;
@@ -4062,7 +4063,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitWhileStatement(SELF)
 		END Accept;
 
@@ -4074,7 +4075,7 @@ TYPE
 			condition-: Expression;
 			statements-: StatementSequence;
 
-		PROCEDURE & InitRepeatStatement( position: LONGINT; outer: Statement );
+		PROCEDURE & InitRepeatStatement( position: Position; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  condition := NIL;  statements := NIL;
 		END InitRepeatStatement;
@@ -4099,7 +4100,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitRepeatStatement(SELF)
 		END Accept;
 
@@ -4112,7 +4113,7 @@ TYPE
 			from-, to-, by-: Expression;
 			statements-: StatementSequence;
 
-		PROCEDURE & InitForStatement( position: LONGINT; outer: Statement );
+		PROCEDURE & InitForStatement( position: Position; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  variable := NIL;from := NIL;  to := NIL;  by := NIL; statements := NIL;
 		END InitForStatement;
@@ -4153,7 +4154,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitForStatement(SELF)
 		END Accept;
 
@@ -4162,7 +4163,7 @@ TYPE
 	ExitableBlock*= OBJECT (Statement)
 	VAR statements-: StatementSequence;
 
-		PROCEDURE & InitExitableBlock( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitExitableBlock( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement( position ,outer);  statements := NIL;
 		END InitExitableBlock;
@@ -4180,7 +4181,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitExitableBlock(SELF)
 		END Accept;
 
@@ -4198,7 +4199,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitLoopStatement(SELF)
 		END Accept;
 
@@ -4208,7 +4209,7 @@ TYPE
 	ExitStatement* = OBJECT (Statement)
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitExitStatement(SELF)
 		END Accept;
 
@@ -4225,7 +4226,7 @@ TYPE
 	ReturnStatement* = OBJECT (Statement)
 		VAR returnValue-: Expression; (* strictly speaking this is not a value but this term is in common use here *)
 
-		PROCEDURE & InitReturnStatement( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitReturnStatement( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement( position,outer );  returnValue := NIL
 		END InitReturnStatement;
@@ -4243,7 +4244,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitReturnStatement(SELF)
 		END Accept;
 
@@ -4253,7 +4254,7 @@ TYPE
 	AwaitStatement* = OBJECT (Statement)
 		VAR condition-: Expression;
 
-		PROCEDURE & InitAwaitStatement( position: LONGINT; outer: Statement );
+		PROCEDURE & InitAwaitStatement( position: Position; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  condition := NIL
 		END InitAwaitStatement;
@@ -4271,7 +4272,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitAwaitStatement(SELF)
 		END Accept;
 
@@ -4283,9 +4284,9 @@ TYPE
 		identifier-: Identifier; expression-: Expression;
 		resolved-: BOOLEAN;
 		nextModifier-: Modifier;
-		position-: LONGINT;
+		position-: Position;
 
-		PROCEDURE & InitModifier(position: LONGINT; identifier: Identifier; expression: Expression);
+		PROCEDURE & InitModifier(position: Position; identifier: Identifier; expression: Expression);
 		BEGIN
 			SELF.position := position;
 			SELF.identifier := identifier; SELF.expression := expression; nextModifier := NIL; resolved := FALSE;
@@ -4315,7 +4316,7 @@ TYPE
 			isUnchecked-: BOOLEAN;
 			isUncooperative-: BOOLEAN;
 
-		PROCEDURE & InitStatementBlock( position: LONGINT ; outer: Statement);
+		PROCEDURE & InitStatementBlock( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement( position ,outer);  statements := NIL;  blockModifiers := NIL;
 			isExclusive := FALSE;
@@ -4353,7 +4354,7 @@ TYPE
 		END SetStatementSequence;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitStatementBlock(SELF)
 		END Accept;
 
@@ -4366,7 +4367,7 @@ TYPE
 		inlineCode-: BinaryCode;
 		inRules-, outRules-: StatementSequence;
 
-		PROCEDURE & InitCode(position: LONGINT; outer: Statement);
+		PROCEDURE & InitCode(position: Position; outer: Statement);
 		BEGIN
 			InitStatement(position,outer);
 			inlineCode := NIL;
@@ -4397,7 +4398,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitCode(SELF)
 		END Accept;
 
@@ -4412,7 +4413,7 @@ TYPE
 		code-: Code;
 		isActive-, isSafe-: BOOLEAN;
 
-		PROCEDURE & InitBody(position: LONGINT; scope: ProcedureScope);
+		PROCEDURE & InitBody(position: Position; scope: ProcedureScope);
 		BEGIN
 			InitStatementBlock(position,NIL); finally := NIL; priority := NIL; inScope := scope; code := NIL;
 			isActive := FALSE; isSafe := FALSE; isRealtime := FALSE;
@@ -4442,13 +4443,13 @@ TYPE
 
 	(** (* comment *)  *)
 	Comment*=OBJECT
-	VAR position-: LONGINT;
+	VAR position-: Position;
 		source-: String; (* currently: POINTER TO ARRAY OF CHAR *)
 		scope-: Scope;
 		item-: ANY; sameLine-: BOOLEAN;
 		nextComment-: Comment;
 
-		PROCEDURE & InitComment(pos: LONGINT; scope: Scope; CONST s: ARRAY OF CHAR; length: LONGINT);
+		PROCEDURE & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: LONGINT);
 		VAR i: LONGINT;
 		BEGIN
 			SELF.scope := scope;
@@ -5092,7 +5093,7 @@ TYPE
 			closingComment-: Comment;
 			modifiers-: Modifier;
 
-		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: LONGINT; name: Identifier; scope: ModuleScope; case: LONGINT);
+		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT);
 		BEGIN
 			InitSymbol(position,name);
 			COPY (sourceName, SELF.sourceName);
@@ -5143,7 +5144,7 @@ TYPE
 		END AddScope;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: LONGINT;
+		VAR position: Position;
 		BEGIN position := SELF.position; v.VisitModule(SELF)
 		END Accept;
 
@@ -5201,6 +5202,7 @@ VAR
 	invalidDesignator-: Designator;
 	invalidValue-: Value;
 	invalidSymbol-: Symbol;
+	invalidPosition-: Position;
 
 	anonymousIdentifier-: Identifier;
 	importType-: Type;
@@ -5218,49 +5220,49 @@ VAR
 		fingerprint.public := 0;
 	END InitFingerPrint;
 
-	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: LONGINT;  name: Identifier;scope: ModuleScope; case: LONGINT ): Module;
+	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: Position;  name: Identifier;scope: ModuleScope; case: LONGINT ): Module;
 	VAR module: Module;
 	BEGIN
 		NEW( module, sourceName, position, name, scope, case);  RETURN module;
 	END NewModule;
 
-	PROCEDURE NewComment*(position: LONGINT; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment;
+	PROCEDURE NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment;
 	VAR comment: Comment;
 	BEGIN
 		NEW(comment,position,scope,source,length); RETURN comment;
 	END NewComment;
 
-	PROCEDURE NewImport*( position: LONGINT;  alias, name: Identifier; direct: BOOLEAN): Import;
+	PROCEDURE NewImport*( position: Position;  alias, name: Identifier; direct: BOOLEAN): Import;
 	VAR import: Import;
 	BEGIN
 		NEW( import, position, alias, name, direct );  RETURN import
 	END NewImport;
 
-	PROCEDURE NewConstant*( position: LONGINT;  name: Identifier ): Constant;
+	PROCEDURE NewConstant*( position: Position;  name: Identifier ): Constant;
 	VAR constant: Constant;
 	BEGIN
 		NEW( constant, position, name );  RETURN constant
 	END NewConstant;
 
-	PROCEDURE NewProcedure*( position: LONGINT;  name: Identifier; scope: ProcedureScope ): Procedure;
+	PROCEDURE NewProcedure*( position: Position;  name: Identifier; scope: ProcedureScope ): Procedure;
 	VAR procedure: Procedure;
 	BEGIN
 		NEW( procedure, position, name, scope);  RETURN procedure
 	END NewProcedure;
 
-	PROCEDURE NewBuiltin*(position: LONGINT; name: Identifier; id: LONGINT): Builtin;
+	PROCEDURE NewBuiltin*(position: Position; name: Identifier; id: LONGINT): Builtin;
 	VAR builtin: Builtin;
 	BEGIN
 		NEW(builtin,position,name,id); RETURN builtin
 	END NewBuiltin;
 
-	PROCEDURE NewCustomBuiltin*(position: LONGINT; name: Identifier; id: LONGINT; subType: SHORTINT): CustomBuiltin;
+	PROCEDURE NewCustomBuiltin*(position: Position; name: Identifier; id: LONGINT; subType: SHORTINT): CustomBuiltin;
 	VAR builtin:CustomBuiltin;
 	BEGIN
 		NEW(builtin,position,name,id,subType); RETURN builtin
 	END NewCustomBuiltin;
 
-	PROCEDURE NewOperator*( position: LONGINT;  name: Identifier; scope: ProcedureScope): Operator;
+	PROCEDURE NewOperator*( position: Position;  name: Identifier; scope: ProcedureScope): Operator;
 	VAR operator: Operator;
 	BEGIN
 		NEW( operator, position, name, scope);  RETURN operator
@@ -5269,7 +5271,7 @@ VAR
 	PROCEDURE NewType*(): Type;  (* for error handling: invalid Type, is realtime type *)
 	VAR type: Type;
 	BEGIN
-		NEW( type, -1);
+		NEW( type, invalidPosition);
 		type.SetRealtime(TRUE);
 		RETURN type
 	END NewType;
@@ -5352,68 +5354,68 @@ VAR
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewFloatType;
 
-	PROCEDURE NewTypeDeclaration*(position: LONGINT; name: Identifier): TypeDeclaration;
+	PROCEDURE NewTypeDeclaration*(position: Position; name: Identifier): TypeDeclaration;
 	VAR typeDeclaration: TypeDeclaration;
 	BEGIN
 		ASSERT(name # invalidIdentifier);
 		NEW(typeDeclaration,position,name); RETURN typeDeclaration
 	END NewTypeDeclaration;
 
-	PROCEDURE NewStringType*( position: LONGINT; baseType: Type; length: LONGINT): StringType;
+	PROCEDURE NewStringType*( position: Position; baseType: Type; length: LONGINT): StringType;
 	VAR stringType: StringType;
 	BEGIN
 		NEW( stringType, position, baseType, length);  RETURN stringType;
 	END NewStringType;
 
-	PROCEDURE NewEnumerationType*( position: LONGINT; scope: Scope; enumerationScope: EnumerationScope): EnumerationType;
+	PROCEDURE NewEnumerationType*( position: Position; scope: Scope; enumerationScope: EnumerationScope): EnumerationType;
 	VAR enumerationType: EnumerationType;
 	BEGIN
 		NEW( enumerationType, position, scope, enumerationScope);  RETURN enumerationType;
 	END NewEnumerationType;
 
-	PROCEDURE NewArrayType*( position: LONGINT; scope: Scope; form: LONGINT): ArrayType;
+	PROCEDURE NewArrayType*( position: Position; scope: Scope; form: LONGINT): ArrayType;
 	VAR arrayType: ArrayType;
 	BEGIN
 		NEW( arrayType, position,scope, form);  RETURN arrayType;
 	END NewArrayType;
 
-	PROCEDURE NewMathArrayType*( position: LONGINT; scope: Scope; form: LONGINT): MathArrayType;
+	PROCEDURE NewMathArrayType*( position: Position; scope: Scope; form: LONGINT): MathArrayType;
 	VAR mathArrayType: MathArrayType;
 	BEGIN
 		NEW( mathArrayType,  position,scope,form);  RETURN mathArrayType;
 	END NewMathArrayType;
 
-	PROCEDURE NewPointerType*( position: LONGINT; scope: Scope): PointerType;
+	PROCEDURE NewPointerType*( position: Position; scope: Scope): PointerType;
 	VAR pointerType: PointerType;
 	BEGIN
 		NEW( pointerType, position,scope);  RETURN pointerType;
 	END NewPointerType;
 
-	PROCEDURE NewPortType*( position: LONGINT; direction: LONGINT; sizeExpression: Expression; scope: Scope): PortType;
+	PROCEDURE NewPortType*( position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope): PortType;
 	VAR portType: PortType;
 	BEGIN
 		NEW( portType, position, direction, sizeExpression, scope);  RETURN portType;
 	END NewPortType;
 
-	PROCEDURE NewRecordType*( position: LONGINT; scope: Scope; recordScope: RecordScope): RecordType;
+	PROCEDURE NewRecordType*( position: Position; scope: Scope; recordScope: RecordScope): RecordType;
 	VAR recordType: RecordType;
 	BEGIN
 		NEW( recordType, position, scope, recordScope);  RETURN recordType
 	END NewRecordType;
 
-	PROCEDURE NewCellType*(position: LONGINT; scope:Scope; cellScope: CellScope): CellType;
+	PROCEDURE NewCellType*(position: Position; scope:Scope; cellScope: CellScope): CellType;
 	VAR actorType: CellType;
 	BEGIN
 		NEW(actorType, position, scope, cellScope); RETURN actorType;
 	END NewCellType;
 
-	PROCEDURE NewProcedureType*( position: LONGINT; scope: Scope): ProcedureType;
+	PROCEDURE NewProcedureType*( position: Position; scope: Scope): ProcedureType;
 	VAR procedureType: ProcedureType;
 	BEGIN
 		NEW( procedureType, position,scope);  RETURN procedureType;
 	END NewProcedureType;
 
-	PROCEDURE NewQualifiedType*( position: LONGINT;   scope: Scope; qualifiedIdentifier: QualifiedIdentifier): QualifiedType;
+	PROCEDURE NewQualifiedType*( position: Position;   scope: Scope; qualifiedIdentifier: QualifiedIdentifier): QualifiedType;
 	VAR qualifiedType: QualifiedType;
 	BEGIN
 		NEW( qualifiedType, position,scope,qualifiedIdentifier );  RETURN qualifiedType
@@ -5422,16 +5424,16 @@ VAR
 	PROCEDURE NewSymbol*(name: Identifier): Symbol; (* for error handling: invalid Symbol *)
 	VAR symbol: Symbol;
 	BEGIN
-		NEW(symbol,-1,name); RETURN symbol
+		NEW(symbol,invalidPosition,name); RETURN symbol
 	END NewSymbol;
 
-	PROCEDURE NewVariable*( position: LONGINT;  name: Identifier): Variable;
+	PROCEDURE NewVariable*( position: Position;  name: Identifier): Variable;
 	VAR variable: Variable;
 	BEGIN
 		NEW( variable, position, name );  RETURN variable
 	END NewVariable;
 
-	PROCEDURE NewQualifiedIdentifier*( position: LONGINT;  prefix, suffix: Identifier ): QualifiedIdentifier;
+	PROCEDURE NewQualifiedIdentifier*( position: Position;  prefix, suffix: Identifier ): QualifiedIdentifier;
 	VAR qualifiedIdentifier: QualifiedIdentifier;
 	BEGIN
 		NEW( qualifiedIdentifier, position, prefix, suffix );  RETURN qualifiedIdentifier
@@ -5442,13 +5444,13 @@ VAR
 		RETURN Basic.MakeString(name);
 	END NewIdentifier;
 
-	PROCEDURE NewParameter*( position: LONGINT; ownerType:Type ;  name: Identifier; passAs: LONGINT): Parameter;
+	PROCEDURE NewParameter*( position: Position; ownerType:Type ;  name: Identifier; passAs: LONGINT): Parameter;
 	VAR parameter: Parameter;
 	BEGIN
 		NEW( parameter, position, ownerType, name, passAs);  RETURN parameter;
 	END NewParameter;
 
-	PROCEDURE NewProperty*( position: LONGINT; name: Identifier): Property;
+	PROCEDURE NewProperty*( position: Position; name: Identifier): Property;
 	VAR property: Property;
 	BEGIN
 		NEW( property, position, name);  RETURN property;
@@ -5470,88 +5472,88 @@ VAR
 	PROCEDURE NewDesignator*(): Designator; (* for error handling: invalid Designator *)
 	VAR designator: Designator;
 	BEGIN
-		NEW(designator,-1); RETURN designator;
+		NEW(designator,invalidPosition); RETURN designator;
 	END NewDesignator;
 
-	PROCEDURE NewIdentifierDesignator*( position: LONGINT; identifier: Identifier): IdentifierDesignator;
+	PROCEDURE NewIdentifierDesignator*( position: Position; identifier: Identifier): IdentifierDesignator;
 	VAR identifierDesignator: IdentifierDesignator;
 	BEGIN
 		NEW( identifierDesignator, position, identifier );  RETURN identifierDesignator
 	END NewIdentifierDesignator;
 
-	PROCEDURE NewSelectorDesignator*( position: LONGINT;  left: Designator; name: Identifier ): SelectorDesignator;
+	PROCEDURE NewSelectorDesignator*( position: Position;  left: Designator; name: Identifier ): SelectorDesignator;
 	VAR selectorDesignator: SelectorDesignator;
 	BEGIN
 		NEW( selectorDesignator, position, left, name );  RETURN selectorDesignator
 	END NewSelectorDesignator;
 
-	PROCEDURE NewParameterDesignator*( position: LONGINT; left: Designator; expressionList: ExpressionList ): ParameterDesignator;
+	PROCEDURE NewParameterDesignator*( position: Position; left: Designator; expressionList: ExpressionList ): ParameterDesignator;
 	VAR parameterDesignator: ParameterDesignator;
 	BEGIN
 		NEW( parameterDesignator,position, left, expressionList );  RETURN parameterDesignator
 	END NewParameterDesignator;
 
-	PROCEDURE NewArrowDesignator*( position: LONGINT; left: Designator ): ArrowDesignator;
+	PROCEDURE NewArrowDesignator*( position: Position; left: Designator ): ArrowDesignator;
 	VAR dereferenceDesignator: ArrowDesignator;
 	BEGIN
 		NEW( dereferenceDesignator, position, left );  RETURN dereferenceDesignator;
 	END NewArrowDesignator;
 
-	PROCEDURE NewBracketDesignator*( position: LONGINT; left: Designator; expressionList: ExpressionList ): BracketDesignator;
+	PROCEDURE NewBracketDesignator*( position: Position; left: Designator; expressionList: ExpressionList ): BracketDesignator;
 	VAR bracketDesignator: BracketDesignator;
 	BEGIN
 		NEW( bracketDesignator, position, left, expressionList );  RETURN bracketDesignator
 	END NewBracketDesignator;
 
-	PROCEDURE NewSymbolDesignator*( position: LONGINT; left: Designator; symbol: Symbol ): SymbolDesignator;
+	PROCEDURE NewSymbolDesignator*( position: Position; left: Designator; symbol: Symbol ): SymbolDesignator;
 	VAR symbolDesignator: SymbolDesignator;
 	BEGIN
 		NEW( symbolDesignator, position, left, symbol); RETURN symbolDesignator
 	END NewSymbolDesignator;
 
-	PROCEDURE NewIndexDesignator*( position: LONGINT; left: Designator): IndexDesignator;
+	PROCEDURE NewIndexDesignator*( position: Position; left: Designator): IndexDesignator;
 	VAR indexDesignator: IndexDesignator;
 	BEGIN
 		NEW( indexDesignator, position, left);  RETURN indexDesignator
 	END NewIndexDesignator;
 
-	PROCEDURE NewProcedureCallDesignator*(position: LONGINT; left: Designator; parameters: ExpressionList): ProcedureCallDesignator;
+	PROCEDURE NewProcedureCallDesignator*(position: Position; left: Designator; parameters: ExpressionList): ProcedureCallDesignator;
 	VAR procedureCallDesignator: ProcedureCallDesignator;
 	BEGIN
 		NEW(procedureCallDesignator, position, left, parameters); RETURN procedureCallDesignator
 	END NewProcedureCallDesignator;
 
-	PROCEDURE NewBuiltinCallDesignator*(position: LONGINT; id: LONGINT; left: Designator; parameters: ExpressionList): BuiltinCallDesignator;
+	PROCEDURE NewBuiltinCallDesignator*(position: Position; id: LONGINT; left: Designator; parameters: ExpressionList): BuiltinCallDesignator;
 	VAR builtinCallDesignator: BuiltinCallDesignator;
 	BEGIN
 		NEW(builtinCallDesignator, position, id, left,parameters); RETURN builtinCallDesignator
 	END NewBuiltinCallDesignator;
 
-	PROCEDURE NewTypeGuardDesignator*(position: LONGINT; left: Designator; type: Type): TypeGuardDesignator;
+	PROCEDURE NewTypeGuardDesignator*(position: Position; left: Designator; type: Type): TypeGuardDesignator;
 	VAR guardDesignator: TypeGuardDesignator;
 	BEGIN
 		NEW(guardDesignator,position,left,type); RETURN guardDesignator;
 	END NewTypeGuardDesignator;
 
-	PROCEDURE NewDereferenceDesignator*( position: LONGINT; left: Designator): DereferenceDesignator;
+	PROCEDURE NewDereferenceDesignator*( position: Position; left: Designator): DereferenceDesignator;
 	VAR dereferenceDesignator: DereferenceDesignator;
 	BEGIN
 		NEW( dereferenceDesignator, position, left);  RETURN dereferenceDesignator
 	END NewDereferenceDesignator;
 
-	PROCEDURE NewSupercallDesignator*( position: LONGINT; left: Designator): SupercallDesignator;
+	PROCEDURE NewSupercallDesignator*( position: Position; left: Designator): SupercallDesignator;
 	VAR supercallDesignator: SupercallDesignator;
 	BEGIN
 		NEW( supercallDesignator, position, left);  RETURN supercallDesignator
 	END NewSupercallDesignator;
 
-	PROCEDURE NewSelfDesignator*( position: LONGINT): SelfDesignator;
+	PROCEDURE NewSelfDesignator*( position: Position): SelfDesignator;
 	VAR selfDesignator: SelfDesignator;
 	BEGIN
 		NEW( selfDesignator, position);  RETURN selfDesignator
 	END NewSelfDesignator;
 
-	PROCEDURE NewResultDesignator*( position: LONGINT): ResultDesignator;
+	PROCEDURE NewResultDesignator*( position: Position): ResultDesignator;
 	VAR resultDesignator: ResultDesignator;
 	BEGIN
 		NEW( resultDesignator, position);  RETURN resultDesignator
@@ -5560,7 +5562,7 @@ VAR
 	PROCEDURE NewExpression*(): Expression; (* for error handling: invalid Expression *)
 	VAR expression: Expression;
 	BEGIN
-		NEW(expression,-1); RETURN expression;
+		NEW(expression,invalidPosition); RETURN expression;
 	END NewExpression;
 
 	PROCEDURE CloneExpression*(e: Expression): Expression;
@@ -5586,48 +5588,48 @@ VAR
 		IF e = NIL THEN RETURN NIL ELSE RETURN CloneExpression(e)(Designator) END;
 	END CloneDesignator;
 
-	PROCEDURE NewElement*( position: LONGINT;  from,to: Expression ): Expression;
+	PROCEDURE NewElement*( position: Position;  from,to: Expression ): Expression;
 	BEGIN
 			IF from = to THEN RETURN from
 			ELSE RETURN NewRangeExpression(position,from,to,NIL)
 			END;
 	END NewElement;
 
-	PROCEDURE NewSet*( position: LONGINT ): Set;
+	PROCEDURE NewSet*( position: Position ): Set;
 	VAR set: Set;
 	BEGIN NEW( set, position );  RETURN set
 	END NewSet;
 
-	PROCEDURE NewMathArrayExpression*( position: LONGINT ): MathArrayExpression;
+	PROCEDURE NewMathArrayExpression*( position: Position ): MathArrayExpression;
 	VAR mathArrayExpression: MathArrayExpression;
 	BEGIN NEW( mathArrayExpression, position );  RETURN mathArrayExpression
 	END NewMathArrayExpression;
 
-	PROCEDURE NewBinaryExpression*( position: LONGINT;  left, right: Expression;  operator: LONGINT ): BinaryExpression;
+	PROCEDURE NewBinaryExpression*( position: Position;  left, right: Expression;  operator: LONGINT ): BinaryExpression;
 	VAR binaryExpression: BinaryExpression;
 	BEGIN
 		NEW( binaryExpression, position, left, right, operator );  RETURN binaryExpression;
 	END NewBinaryExpression;
 
-	PROCEDURE NewRangeExpression*(position: LONGINT; first, last, step: Expression): RangeExpression;
+	PROCEDURE NewRangeExpression*(position: Position; first, last, step: Expression): RangeExpression;
 	VAR rangeExpression: RangeExpression;
 	BEGIN
 		NEW(rangeExpression, position, first, last, step); RETURN rangeExpression
 	END NewRangeExpression;
 
-	PROCEDURE NewTensorRangeExpression*(position: LONGINT): TensorRangeExpression;
+	PROCEDURE NewTensorRangeExpression*(position: Position): TensorRangeExpression;
 	VAR tensorRangeExpression: TensorRangeExpression;
 	BEGIN
 		NEW(tensorRangeExpression,position); RETURN tensorRangeExpression
 	END NewTensorRangeExpression;
 
-	PROCEDURE NewUnaryExpression*( position: LONGINT;  operand: Expression;  operator: LONGINT ): UnaryExpression;
+	PROCEDURE NewUnaryExpression*( position: Position;  operand: Expression;  operator: LONGINT ): UnaryExpression;
 	VAR unaryExpression: UnaryExpression;
 	BEGIN
 		NEW( unaryExpression, position, operand, operator );  RETURN unaryExpression;
 	END NewUnaryExpression;
 
-	PROCEDURE NewConversion*( position: LONGINT;  expression: Expression; type: Type; typeExpression: Expression): Conversion;
+	PROCEDURE NewConversion*( position: Position;  expression: Expression; type: Type; typeExpression: Expression): Conversion;
 	VAR conversion: Conversion;
 	BEGIN
 		ASSERT(type # NIL);
@@ -5637,63 +5639,63 @@ VAR
 	PROCEDURE NewValue*(): Value;(* for error handling: invalid Value *)
 	VAR value: Value;
 	BEGIN
-		NEW(value,-1); RETURN value;
+		NEW(value,invalidPosition); RETURN value;
 	END NewValue;
 
-	PROCEDURE NewIntegerValue*( position: LONGINT;  value: HUGEINT): IntegerValue;
+	PROCEDURE NewIntegerValue*( position: Position;  value: HUGEINT): IntegerValue;
 	VAR integerValue: IntegerValue;
 	BEGIN
 		NEW( integerValue, position, value);  RETURN integerValue;
 	END NewIntegerValue;
 
-	PROCEDURE NewCharacterValue*( position: LONGINT;  value: CHAR): CharacterValue;
+	PROCEDURE NewCharacterValue*( position: Position;  value: CHAR): CharacterValue;
 	VAR characterValue: CharacterValue;
 	BEGIN
 		NEW( characterValue, position, value);  RETURN characterValue;
 	END NewCharacterValue;
 
-	PROCEDURE NewSetValue*(position: LONGINT; value: SET): SetValue;
+	PROCEDURE NewSetValue*(position: Position; value: SET): SetValue;
 	VAR setValue: SetValue;
 	BEGIN
 		NEW(setValue, position, value); RETURN setValue
 	END NewSetValue;
 
-	PROCEDURE NewMathArrayValue*( position: LONGINT ): MathArrayValue;
+	PROCEDURE NewMathArrayValue*( position: Position ): MathArrayValue;
 	VAR mathArrayValue: MathArrayValue;
 	BEGIN NEW( mathArrayValue, position );  RETURN mathArrayValue
 	END NewMathArrayValue;
 
-	PROCEDURE NewRealValue*( position: LONGINT;  value: LONGREAL): RealValue;
+	PROCEDURE NewRealValue*( position: Position;  value: LONGREAL): RealValue;
 	VAR realValue: RealValue;
 	BEGIN
 		NEW( realValue, position, value);  RETURN realValue
 	END NewRealValue;
 
-	PROCEDURE NewComplexValue*( position: LONGINT;  realValue, imagValue: LONGREAL): ComplexValue;
+	PROCEDURE NewComplexValue*( position: Position;  realValue, imagValue: LONGREAL): ComplexValue;
 	VAR complexValue: ComplexValue;
 	BEGIN
 		NEW( complexValue, position, realValue, imagValue);  RETURN complexValue
 	END NewComplexValue;
 
-	PROCEDURE NewStringValue*( position: LONGINT;  value: String): StringValue;
+	PROCEDURE NewStringValue*( position: Position;  value: String): StringValue;
 	VAR stringValue: StringValue;
 	BEGIN
 		NEW( stringValue, position, value );  RETURN stringValue
 	END NewStringValue;
 
-	PROCEDURE NewBooleanValue*( position: LONGINT;  value: BOOLEAN): BooleanValue;
+	PROCEDURE NewBooleanValue*( position: Position;  value: BOOLEAN): BooleanValue;
 	VAR booleanValue: BooleanValue;
 	BEGIN
 		NEW( booleanValue, position, value );  RETURN booleanValue;
 	END NewBooleanValue;
 
-	PROCEDURE NewNilValue*( position: LONGINT ): NilValue;
+	PROCEDURE NewNilValue*( position: Position ): NilValue;
 	VAR nilValue: NilValue;
 	BEGIN
 		NEW( nilValue, position );  RETURN nilValue
 	END NewNilValue;
 
-	PROCEDURE NewEnumerationValue*( position: LONGINT; value: LONGINT ): EnumerationValue;
+	PROCEDURE NewEnumerationValue*( position: Position; value: LONGINT ): EnumerationValue;
 	VAR enumeratorValue: EnumerationValue;
 	BEGIN
 		NEW( enumeratorValue, position, value );  RETURN enumeratorValue
@@ -5701,7 +5703,7 @@ VAR
 
 	PROCEDURE NewStatement*(outer: Statement): Statement; (* for error handling: invalid Statement *)
 	VAR statement: Statement;
-	BEGIN NEW(statement,-1,outer); RETURN statement;
+	BEGIN NEW(statement,invalidPosition,outer); RETURN statement;
 	END NewStatement;
 
 	PROCEDURE CloneStatement*(statement: Statement): Statement;
@@ -5719,26 +5721,26 @@ VAR
 	BEGIN IF statementSequence = NIL THEN RETURN NIL ELSE statementSequence.Clone(copy); RETURN copy END
 	END CloneStatementSequence;
 
-	PROCEDURE NewModifier*(position: LONGINT; identifier: Identifier; expression: Expression): Modifier;
+	PROCEDURE NewModifier*(position: Position; identifier: Identifier; expression: Expression): Modifier;
 	VAR blockModifier: Modifier;
 	BEGIN
 		NEW(blockModifier,position,identifier,expression); RETURN blockModifier
 	END NewModifier;
 
-	PROCEDURE NewStatementBlock*( position: LONGINT ; outer: Statement): StatementBlock;
+	PROCEDURE NewStatementBlock*( position: Position ; outer: Statement): StatementBlock;
 	VAR statementBlock: StatementBlock;
 	BEGIN
 		NEW( statementBlock, position, outer );  RETURN statementBlock
 	END NewStatementBlock;
 
-	PROCEDURE NewStatementDesignator*(position: LONGINT; s: Statement): StatementDesignator;
+	PROCEDURE NewStatementDesignator*(position: Position; s: Statement): StatementDesignator;
 	VAR statementDesignator: StatementDesignator;
 	BEGIN
 		NEW( statementDesignator, position, s); RETURN statementDesignator
 	END NewStatementDesignator;
 
 
-	PROCEDURE NewBody*( position: LONGINT ; scope: ProcedureScope): Body;
+	PROCEDURE NewBody*( position: Position ; scope: ProcedureScope): Body;
 	VAR body: Body;
 	BEGIN
 		NEW( body, position,scope );  RETURN body
@@ -5750,31 +5752,31 @@ VAR
 		NEW( ifPart);  RETURN ifPart
 	END NewIfPart;
 
-	PROCEDURE NewIfStatement*( position: LONGINT ; outer: Statement): IfStatement;
+	PROCEDURE NewIfStatement*( position: Position ; outer: Statement): IfStatement;
 	VAR ifStatement: IfStatement;
 	BEGIN
 		NEW( ifStatement, position,outer );  RETURN ifStatement
 	END NewIfStatement;
 
-	PROCEDURE NewAssignment*( position: LONGINT;  left: Designator; right: Expression; outer: Statement): Assignment;
+	PROCEDURE NewAssignment*( position: Position;  left: Designator; right: Expression; outer: Statement): Assignment;
 	VAR assignment: Assignment;
 	BEGIN
 		NEW( assignment, position, left, right,outer );  RETURN assignment
 	END NewAssignment;
 
-	PROCEDURE NewCommunicationStatement*( position: LONGINT;  op: LONGINT; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
+	PROCEDURE NewCommunicationStatement*( position: Position;  op: LONGINT; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
 	VAR communication: CommunicationStatement;
 	BEGIN
 		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
-	PROCEDURE NewProcedureCallStatement*(position: LONGINT; call: Designator; outer: Statement): ProcedureCallStatement;
+	PROCEDURE NewProcedureCallStatement*(position: Position; call: Designator; outer: Statement): ProcedureCallStatement;
 	VAR caller: ProcedureCallStatement;
 	BEGIN
 		NEW(caller,position,call,outer); RETURN caller
 	END NewProcedureCallStatement;
 
-	PROCEDURE NewCaseStatement*( position: LONGINT ; outer: Statement): CaseStatement;
+	PROCEDURE NewCaseStatement*( position: Position ; outer: Statement): CaseStatement;
 	VAR caseStatement: CaseStatement;
 	BEGIN
 		NEW( caseStatement, position,outer );  RETURN caseStatement
@@ -5792,61 +5794,61 @@ VAR
 		NEW( withPart);  RETURN withPart
 	END NewWithPart;
 
-	PROCEDURE NewWithStatement*( position: LONGINT; outer: Statement): WithStatement;
+	PROCEDURE NewWithStatement*( position: Position; outer: Statement): WithStatement;
 	VAR withStatement: WithStatement;
 	BEGIN
 		NEW( withStatement, position, outer );  RETURN withStatement
 	END NewWithStatement;
 
-	PROCEDURE NewWhileStatement*( position: LONGINT ; outer: Statement): WhileStatement;
+	PROCEDURE NewWhileStatement*( position: Position ; outer: Statement): WhileStatement;
 	VAR whileStatement: WhileStatement;
 	BEGIN
 		NEW( whileStatement, position,outer );  RETURN whileStatement
 	END NewWhileStatement;
 
-	PROCEDURE NewRepeatStatement*( position: LONGINT ; outer: Statement): RepeatStatement;
+	PROCEDURE NewRepeatStatement*( position: Position ; outer: Statement): RepeatStatement;
 	VAR repeatStatement: RepeatStatement;
 	BEGIN
 		NEW( repeatStatement, position ,outer);  RETURN repeatStatement
 	END NewRepeatStatement;
 
-	PROCEDURE NewForStatement*( position: LONGINT; outer: Statement ): ForStatement;
+	PROCEDURE NewForStatement*( position: Position; outer: Statement ): ForStatement;
 	VAR forStatement: ForStatement;
 	BEGIN
 		NEW( forStatement, position,outer );  RETURN forStatement
 	END NewForStatement;
 
-	PROCEDURE NewLoopStatement*( position: LONGINT ; outer: Statement): LoopStatement;
+	PROCEDURE NewLoopStatement*( position: Position ; outer: Statement): LoopStatement;
 	VAR loopStatement: LoopStatement;
 	BEGIN
 		NEW( loopStatement, position ,outer);  RETURN loopStatement
 	END NewLoopStatement;
 
-	PROCEDURE NewExitableBlock*( position: LONGINT ; outer: Statement): ExitableBlock;
+	PROCEDURE NewExitableBlock*( position: Position ; outer: Statement): ExitableBlock;
 	VAR loopStatement: ExitableBlock;
 	BEGIN
 		NEW( loopStatement, position ,outer);  RETURN loopStatement
 	END NewExitableBlock;
 
-	PROCEDURE NewExitStatement*( position: LONGINT ; outer: Statement): ExitStatement;
+	PROCEDURE NewExitStatement*( position: Position ; outer: Statement): ExitStatement;
 	VAR exitStatement: ExitStatement;
 	BEGIN
 		NEW( exitStatement, position, outer);  RETURN exitStatement
 	END NewExitStatement;
 
-	PROCEDURE NewReturnStatement*( position: LONGINT; outer: Statement ): ReturnStatement;
+	PROCEDURE NewReturnStatement*( position: Position; outer: Statement ): ReturnStatement;
 	VAR returnStatement: ReturnStatement;
 	BEGIN
 		NEW( returnStatement, position,outer );  RETURN returnStatement
 	END NewReturnStatement;
 
-	PROCEDURE NewAwaitStatement*( position: LONGINT; outer: Statement ): AwaitStatement;
+	PROCEDURE NewAwaitStatement*( position: Position; outer: Statement ): AwaitStatement;
 	VAR awaitStatement: AwaitStatement;
 	BEGIN
 		NEW( awaitStatement, position, outer );  RETURN awaitStatement
 	END NewAwaitStatement;
 
-	PROCEDURE NewCode*(position: LONGINT; outer: Statement): Code;
+	PROCEDURE NewCode*(position: Position; outer: Statement): Code;
 	VAR code: Code;
 	BEGIN
 		NEW(code,position,outer); RETURN code
@@ -5879,8 +5881,9 @@ VAR
 
 	PROCEDURE Init;
 	BEGIN;
+		invalidPosition.start := -1;
 		invalidIdentifier := Basic.invalidString;
-		invalidQualifiedIdentifier := NewQualifiedIdentifier(-1,invalidIdentifier,Basic.emptyString);
+		invalidQualifiedIdentifier := NewQualifiedIdentifier(invalidPosition,invalidIdentifier,Basic.emptyString);
 		invalidType := NewType();
 		invalidDesignator := NewDesignator();
 		invalidDesignator.SetType(invalidType);

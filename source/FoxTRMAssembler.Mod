@@ -1,6 +1,6 @@
 MODULE FoxTRMAssembler; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT InstructionSet := FoxTRMInstructionSet, FoxAssembler, D := Debugging, Scanner := FoxScanner, Diagnostics;
+IMPORT InstructionSet := FoxTRMInstructionSet, FoxAssembler, D := Debugging, Scanner := FoxScanner, Diagnostics, Basic := FoxBasic;
 
 CONST Trace=FoxAssembler.Trace;
 
@@ -21,7 +21,8 @@ TYPE
 		END Init2;
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
-		VAR i,numberOperands,mnem,pos: LONGINT; VAR operands: ARRAY 3 OF Operand; instruction: InstructionSet.Instruction;
+		VAR i,numberOperands,mnem: LONGINT; VAR operands: ARRAY 3 OF Operand; instruction: InstructionSet.Instruction;
+			pos: Basic.Position;
 
 			PROCEDURE ParseOperand;
 			(* stub, must be overwritten by implementation *)

@@ -663,7 +663,7 @@ TYPE
 			parameter: SyntaxTree.Parameter;
 			name: Basic.SectionName;
 			modifier: SyntaxTree.Modifier;
-			position: LONGINT;
+			position: SyntaxTree.Position;
 			value: Value;
 			result: Result;
 			address: ADDRESS;
@@ -1103,7 +1103,7 @@ TYPE
 		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
 		VAR binary: SyntaxTree.BinaryExpression; i: LONGINT;
 		BEGIN
-			binary := SyntaxTree.NewBinaryExpression(0, x.variable, x.variable, Scanner.Equal);
+			binary := SyntaxTree.NewBinaryExpression(Basic.invalidPosition, x.variable, x.variable, Scanner.Equal);
 			FOR i := 0 TO x.CaseParts()-1 DO
 				IF CasePart(x.GetCasePart(i), binary) THEN RETURN END;
 			END;

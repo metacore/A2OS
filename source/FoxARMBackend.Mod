@@ -3425,7 +3425,7 @@ TYPE
 			parameter: SyntaxTree.Parameter;
 
 			PROCEDURE New;
-			BEGIN procedureType := SyntaxTree.NewProcedureType(-1, NIL)
+			BEGIN procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition, NIL)
 			END New;
 
 			PROCEDURE BoolRet;
@@ -3438,25 +3438,25 @@ TYPE
 
 			PROCEDURE IntPar;
 			BEGIN
-				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
 				parameter.SetType(Global.Integer32); procedureType.AddParameter(parameter)
 			END IntPar;
 
 			PROCEDURE AddressPar;
 			BEGIN
-				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
 				parameter.SetType(Global.Unsigned32); procedureType.AddParameter(parameter)
 			END AddressPar;
 
 			PROCEDURE IntVarPar;
 			BEGIN
-				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
 				parameter.SetType(Global.Integer32); procedureType.AddParameter(parameter)
 			END IntVarPar;
 
 			PROCEDURE RealVarPar;
 			BEGIN
-				parameter := SyntaxTree.NewParameter(-1, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
 				parameter.SetType(Global.Float32); procedureType.AddParameter(parameter)
 			END RealVarPar;
 

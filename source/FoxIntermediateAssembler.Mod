@@ -1,6 +1,6 @@
 MODULE FoxIntermediateAssembler; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Scanner := FoxScanner;
+IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Scanner := FoxScanner, Basic := FoxBasic;
 
 CONST Trace=FoxAssembler.Trace;
 TYPE
@@ -11,7 +11,7 @@ TYPE
 	Assembler*= OBJECT (FoxAssembler.Assembler)
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
-		VAR i,numberOperands,mnem,pos: LONGINT; VAR operands: ARRAY 3 OF Operand; instruction: IntermediateCode.Instruction;
+		VAR i,numberOperands,mnem: LONGINT; pos: Basic.Position; VAR operands: ARRAY 3 OF Operand; instruction: IntermediateCode.Instruction;
 
 			PROCEDURE ParseOperand;
 			(* stub, must be overwritten by implementation *)

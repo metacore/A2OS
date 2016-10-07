@@ -174,7 +174,7 @@ TYPE
 
 		PROCEDURE & InitTypeReference(nr: LONGINT);
 		BEGIN
-			InitType(-1); SELF.nr := nr;
+			InitType(Basic.invalidPosition); SELF.nr := nr;
 		END InitTypeReference;
 
 	END TypeReference;
@@ -491,7 +491,7 @@ TYPE
 			returnType := ResolveType(procedureType.returnType);
 			procedureType.SetReturnType(ResolveType(returnType));
 			IF returnType# NIL THEN
-				parameter := SyntaxTree.NewParameter(-1,procedureType,Global.ReturnParameterName,SyntaxTree.VarParameter);
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition,procedureType,Global.ReturnParameterName,SyntaxTree.VarParameter);
 				parameter.SetType(returnType);
 				parameter.SetState(SyntaxTree.Resolved);
 				procedureType.SetReturnParameter(parameter);
@@ -710,7 +710,7 @@ TYPE
 					ELSE
 						importedModule := Import(moduleName,importCache);
 						IF importedModule # NIL THEN
-							import := SyntaxTree.NewImport(-1,importedModule.name,importedModule.name,FALSE);
+							import := SyntaxTree.NewImport(Basic.invalidPosition,importedModule.name,importedModule.name,FALSE);
 							import.SetContext(importedModule.context);
 							import.SetModule(importedModule);
 							import.SetState(SyntaxTree.Resolved);
@@ -720,7 +720,7 @@ TYPE
 
 					(* create new import symbol for this module scope *)
 					IF importedModule # NIL THEN
-						import := SyntaxTree.NewImport(-1,moduleIdentifier,moduleIdentifier,TRUE);
+						import := SyntaxTree.NewImport(Basic.invalidPosition,moduleIdentifier,moduleIdentifier,TRUE);
 						import.SetModule(importedModule);
 						import.SetContext(moduleContext);
 						import.SetState(SyntaxTree.Resolved);
@@ -739,39 +739,39 @@ TYPE
 				size := type.sizeInBits;
 				IF type IS SyntaxTree.BooleanType THEN R.RawNum(i);
 					IF TraceImport IN Trace THEN D.Str("InConst / Bool / "); D.Int(i,1); D.Ln;  END;
-					IF	i = 0	THEN	value := Global.NewBooleanValue(system,-1,FALSE)	 ELSE value := Global.NewBooleanValue(system,-1,TRUE)	END
+					IF	i = 0	THEN	value := Global.NewBooleanValue(system,Basic.invalidPosition,FALSE)	 ELSE value := Global.NewBooleanValue(system,Basic.invalidPosition,TRUE)	END
 				ELSIF (type IS SyntaxTree.CharacterType) THEN
 					IF  (size=8) OR (size=16) OR (size=32) THEN
 						R.RawNum(i);
 						IF TraceImport IN Trace THEN D.Str("InConst / Char / "); D.Int(i,1); D.Ln;  END;
-						value := SyntaxTree.NewCharacterValue(-1,CHR(i));
+						value := SyntaxTree.NewCharacterValue(Basic.invalidPosition,CHR(i));
 					END;
 				ELSIF type IS SyntaxTree.IntegerType THEN
 					IF (size = 32) & ~type(SyntaxTree.IntegerType).signed THEN
 						R.RawHInt(huge);
 						IF TraceImport IN Trace THEN  D.Str("InConst / Unsigned32 / "); D.Ln END;
-						value := SyntaxTree.NewIntegerValue (-1,huge);
+						value := SyntaxTree.NewIntegerValue (Basic.invalidPosition,huge);
 					ELSIF size <=32 THEN
 						R.RawNum(i);
 						IF TraceImport IN Trace THEN  D.Str("InConst / Int"); D.Int(size,1); D.String(" "); D.Int(i,1); D.Ln END;
-						value := SyntaxTree.NewIntegerValue(-1,i);
+						value := SyntaxTree.NewIntegerValue(Basic.invalidPosition,i);
 					ELSIF size=64 THEN
 						R.RawHInt(huge);
 						IF TraceImport IN Trace THEN  D.Str("InConst / HInt / "); D.Ln END;
-						value := SyntaxTree.NewIntegerValue (-1,huge);
+						value := SyntaxTree.NewIntegerValue (Basic.invalidPosition,huge);
 					END;
 				ELSIF type IS SyntaxTree.SetType THEN R.RawNum(SYSTEM.VAL(LONGINT, set));
 					IF TraceImport IN Trace THEN  D.Str("InConst / Set / "); D.Hex(SYSTEM.VAL(LONGINT, set),1); D.Ln END;
-					value := SyntaxTree.NewSetValue(-1,set);
+					value := SyntaxTree.NewSetValue(Basic.invalidPosition,set);
 				ELSIF type IS SyntaxTree.FloatType THEN
 					IF size = 32 THEN
 						R.RawReal(r);
 						IF TraceImport IN Trace THEN  D.Str("InConst / Real / "); D.Ln END;
-						value := SyntaxTree.NewRealValue(-1,r);
+						value := SyntaxTree.NewRealValue(Basic.invalidPosition,r);
 					ELSIF size = 64 THEN
 						R.RawLReal(lr);
 						IF TraceImport IN Trace THEN  D.Str("InConst / LongReal / "); D.Ln END;
-						value := SyntaxTree.NewRealValue(-1,lr);
+						value := SyntaxTree.NewRealValue(Basic.invalidPosition,lr);
 					END;
 				ELSIF type IS SyntaxTree.StringType THEN
 					IF version <= FileVersionOC THEN NEW(string, 256)
@@ -779,15 +779,15 @@ TYPE
 					END;
 					R.RawString(string^);
 					IF TraceImport IN Trace THEN  D.Str("InConst / String / "); D.Str(string^); D.Ln END;
-					value := SyntaxTree.NewStringValue(-1,string);
+					value := SyntaxTree.NewStringValue(Basic.invalidPosition,string);
 					type(SyntaxTree.StringType).SetLength(value(SyntaxTree.StringValue).length);
 					type.SetState(SyntaxTree.Resolved);
 				ELSIF type IS SyntaxTree.EnumerationType THEN R.RawNum(i);
 					IF TraceImport IN Trace THEN  D.Str("InConst / LInt / "); D.Int(i,1); D.Ln END;
-					value := SyntaxTree.NewEnumerationValue(-1,i);
+					value := SyntaxTree.NewEnumerationValue(Basic.invalidPosition,i);
 				ELSIF type IS SyntaxTree.NilType THEN
 					IF TraceImport IN Trace THEN  D.Str("InConst / Nil"); D.Ln END;
-					value := SyntaxTree.NewNilValue(-1);
+					value := SyntaxTree.NewNilValue(Basic.invalidPosition);
 				END;
 				value.SetType(type);
 				value.SetState(SyntaxTree.Resolved);
@@ -802,7 +802,7 @@ TYPE
 				R.RawString(name);
 				WHILE name # "" DO
 					identifier := SyntaxTree.NewIdentifier(name);
-					enumerator := SyntaxTree.NewConstant(-1,identifier);
+					enumerator := SyntaxTree.NewConstant(Basic.invalidPosition,identifier);
 					enumerationScope.AddConstant(enumerator);
 					enumerationScope.EnterSymbol(enumerator,b);
 					IF name # "@" THEN enumerationScope.lastConstant.SetAccess(SyntaxTree.Public+SyntaxTree.Internal+SyntaxTree.Protected)
@@ -859,7 +859,7 @@ TYPE
 
 					R.RawString(name);
 
-					parameter := SyntaxTree.NewParameter(-1,procedureType,SyntaxTree.NewIdentifier(name),kind);
+					parameter := SyntaxTree.NewParameter(Basic.invalidPosition,procedureType,SyntaxTree.NewIdentifier(name),kind);
 					parameter.SetType(type);
 					parameter.SetState(SyntaxTree.Resolved);
 					(*! remove this after a rebuild of the release - for compatibility only *)
@@ -940,7 +940,7 @@ TYPE
 					Symbol(recordScope,type,name,visibility,untraced, realtime, constructor, isOperator, isDynamic, isFictive, fOffset);
 					ASSERT(type # NIL);
 					IF  name = "" THEN visibility := SyntaxTree.Internal END;
-					variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier(name));
+					variable := SyntaxTree.NewVariable(Basic.invalidPosition,SyntaxTree.NewIdentifier(name));
 					variable.SetType(type);
 					variable.SetUntraced(untraced);
 					variable.SetAccess(visibility);
@@ -964,12 +964,12 @@ TYPE
 
 						procedureScope := SyntaxTree.NewProcedureScope(recordScope);
 						IF isOperator THEN
-							operator := SyntaxTree.NewOperator(-1,SyntaxTree.NewIdentifier(name),procedureScope);
+							operator := SyntaxTree.NewOperator(Basic.invalidPosition,SyntaxTree.NewIdentifier(name),procedureScope);
 							procedure := operator
 						ELSE
-							procedure := SyntaxTree.NewProcedure(-1,SyntaxTree.NewIdentifier(name),procedureScope);
+							procedure := SyntaxTree.NewProcedure(Basic.invalidPosition,SyntaxTree.NewIdentifier(name),procedureScope);
 						END;
-						procedureType := SyntaxTree.NewProcedureType(-1,recordScope);
+						procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition,recordScope);
 						procedureType.SetReturnType(type);
 						procedureType.SetRealtime(realtime);
 						procedure.SetConstructor(constructor);
@@ -1003,7 +1003,7 @@ TYPE
 						END;
 						IF (procedure.name=Global.RecordBodyName) THEN
 							recordScope.SetBodyProcedure(procedure);
-							recordBody := SyntaxTree.NewBody(-1,procedureScope);
+							recordBody := SyntaxTree.NewBody(Basic.invalidPosition,procedureScope);
 							recordBody.SetSafe(safe);
 							recordBody.SetActive(active);
 							procedureScope.SetBody(recordBody);
@@ -1087,7 +1087,7 @@ TYPE
 						D.Str("Type / OldStr "); D.Int(-tag,1); D.Ln
 					END
 				ELSIF tag = sfTypeString THEN
-					type := SyntaxTree.NewStringType(-1,system.characterType,0);
+					type := SyntaxTree.NewStringType(Basic.invalidPosition,system.characterType,0);
 					IF TraceImport IN Trace THEN
 						D.Str("Type / String "); D.Int(tag,1); D.Ln
 					END
@@ -1128,7 +1128,7 @@ TYPE
 						identifier := SyntaxTree.NewIdentifier(typeName);
 						typeDeclaration := importedModule.moduleScope.FindTypeDeclaration(identifier); (* find type in module *)
 						IF (typeDeclaration # NIL) THEN
-							qualifiedType := SyntaxTree.NewQualifiedType(-1,moduleScope,SyntaxTree.NewQualifiedIdentifier(-1,importedModule.name,identifier));
+							qualifiedType := SyntaxTree.NewQualifiedType(Basic.invalidPosition,moduleScope,SyntaxTree.NewQualifiedIdentifier(Basic.invalidPosition,importedModule.name,identifier));
 							qualifiedType.SetResolved(typeDeclaration.declaredType);
 							qualifiedType.SetTypeDeclaration(typeDeclaration);
 							type := qualifiedType;
@@ -1169,7 +1169,7 @@ TYPE
 								D.Str("Type / User / OpenArr "); D.Str(name); D.Ln
 							END;
 							ASSERT(baseType # NIL);
-							arrayType := SyntaxTree.NewArrayType(-1,moduleScope,SyntaxTree.Open);
+							arrayType := SyntaxTree.NewArrayType(Basic.invalidPosition,moduleScope,SyntaxTree.Open);
 							arrayType.SetArrayBase(baseType);
 							type := arrayType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
@@ -1180,13 +1180,13 @@ TYPE
 								D.Int(len,1); D.Str(name); D.Ln
 							END;
 							ASSERT(baseType # NIL);
-							arrayType :=SyntaxTree.NewArrayType(-1,moduleScope,SyntaxTree.Static);
+							arrayType :=SyntaxTree.NewArrayType(Basic.invalidPosition,moduleScope,SyntaxTree.Static);
 							arrayType.SetArrayBase(baseType);
 							type := arrayType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
 							IF sfRealtime IN flags THEN type.SetRealtime(TRUE) END;
 							R.RawNum(len);
-							size := SyntaxTree.NewIntegerValue(-1,len);
+							size := SyntaxTree.NewIntegerValue(Basic.invalidPosition,len);
 							size.SetType(system.longintType);
 							arrayType.SetLength(size);
 					| sfTypeOpenMathArray:
@@ -1194,7 +1194,7 @@ TYPE
 								D.Str("Type / User / MathArray (open) "); D.Str(name); D.Ln
 							END;
 							ASSERT(baseType # NIL);
-							mathArrayType := SyntaxTree.NewMathArrayType(-1,moduleScope,SyntaxTree.Open);
+							mathArrayType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,moduleScope,SyntaxTree.Open);
 							mathArrayType.SetArrayBase(baseType);
 							type := mathArrayType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
@@ -1203,7 +1203,7 @@ TYPE
 							IF TraceImport IN Trace THEN
 								D.Str("Type / User / Tensor "); D.Str(name); D.Ln
 							END;
-							mathArrayType := SyntaxTree.NewMathArrayType(-1,moduleScope,SyntaxTree.Tensor);
+							mathArrayType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,moduleScope,SyntaxTree.Tensor);
 							mathArrayType.SetArrayBase(baseType);
 							type := mathArrayType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
@@ -1214,20 +1214,20 @@ TYPE
 								D.Int(len,1); D.Str(name); D.Ln
 							END;
 							ASSERT(baseType # NIL);
-							mathArrayType :=SyntaxTree.NewMathArrayType(-1,moduleScope,SyntaxTree.Static);
+							mathArrayType :=SyntaxTree.NewMathArrayType(Basic.invalidPosition,moduleScope,SyntaxTree.Static);
 							mathArrayType.SetArrayBase(baseType);
 							type := mathArrayType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
 							IF sfRealtime IN flags THEN type.SetRealtime(TRUE) END;
 							R.RawNum(len);
-							size := SyntaxTree.NewIntegerValue(-1,len);
+							size := SyntaxTree.NewIntegerValue(Basic.invalidPosition,len);
 							size.SetType(system.longintType);
 							mathArrayType.SetLength(size);
 					| sfTypePointer:
 							IF TraceImport IN Trace THEN
 								D.Str("Type / User / Pointer "); D.Str(name); D.Ln
 							END;
-							pointerType := SyntaxTree.NewPointerType(-1,moduleScope);
+							pointerType := SyntaxTree.NewPointerType(Basic.invalidPosition,moduleScope);
 							type := pointerType;
 							pointerType.SetPointerBase(baseType);
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
@@ -1241,7 +1241,7 @@ TYPE
 								D.Str("Type / User / Record "); D.Str(name); D.Ln
 							END;
 							recordScope := SyntaxTree.NewRecordScope(moduleScope);
-							recordType := SyntaxTree.NewRecordType(-1,moduleScope,recordScope);
+							recordType := SyntaxTree.NewRecordType(Basic.invalidPosition,moduleScope,recordScope);
 							type := recordType;
 							R.RawNum(SYSTEM.VAL(LONGINT,flags));
 							IF sfRealtime IN flags THEN type.SetRealtime(TRUE) END;
@@ -1251,7 +1251,7 @@ TYPE
 								D.Str("Type / User / Proc "); D.Str(name); D.Ln
 							END;
 							procedureScope := SyntaxTree.NewProcedureScope(NIL);
-							procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
+							procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition,moduleScope);
 							procedureType.SetReturnType(baseType);
 							type := procedureType;
 
@@ -1270,19 +1270,19 @@ TYPE
 								D.Str("Type / User / Enumerator "); D.Str(name); D.Ln
 							END;
 							enumerationScope := SyntaxTree.NewEnumerationScope(moduleScope);
-							enumerationType := SyntaxTree.NewEnumerationType(-1,moduleScope,enumerationScope);
+							enumerationType := SyntaxTree.NewEnumerationType(Basic.invalidPosition,moduleScope,enumerationScope);
 							type := enumerationType;
 							enumerationType.SetEnumerationBase(baseType);
 							EnumerationList(enumerationScope);
 					END;
 
 					IF name # "" THEN
-						typeDeclaration := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier(name));
+						typeDeclaration := SyntaxTree.NewTypeDeclaration(Basic.invalidPosition,SyntaxTree.NewIdentifier(name));
 						typeDeclaration.SetDeclaredType(type);
 						type.SetTypeDeclaration(typeDeclaration);
 						typeDeclaration.SetAccess(visibility);
 						typeDeclaration.SetState(SyntaxTree.Resolved);
-						qualifiedType := SyntaxTree.NewQualifiedType(-1,moduleScope, SyntaxTree.NewQualifiedIdentifier(-1,SyntaxTree.invalidIdentifier,typeDeclaration.name));
+						qualifiedType := SyntaxTree.NewQualifiedType(Basic.invalidPosition,moduleScope, SyntaxTree.NewQualifiedIdentifier(Basic.invalidPosition,SyntaxTree.invalidIdentifier,typeDeclaration.name));
 						qualifiedType.SetResolved(type);
 						type := qualifiedType;
 						type.SetTypeDeclaration(typeDeclaration);
@@ -1324,8 +1324,8 @@ TYPE
 					WHILE len > 0 DO  R.Char(ch); Append(ch);  DEC(len)  END;
 					R.Char(ch);
 				UNTIL ch = 0X;
-				body := SyntaxTree.NewBody(-1,scope);
-				newcode := SyntaxTree.NewCode(-1,body);
+				body := SyntaxTree.NewBody(Basic.invalidPosition,scope);
+				newcode := SyntaxTree.NewCode(Basic.invalidPosition,body);
 				body.SetCode(newcode);
 				scope.SetBody(body);
 				newcode.SetBinaryCode(array);
@@ -1403,7 +1403,7 @@ TYPE
 						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(type # NIL);
 						value := Value(type);
-						constant := SyntaxTree.NewConstant(-1,SyntaxTree.NewIdentifier(name));
+						constant := SyntaxTree.NewConstant(Basic.invalidPosition,SyntaxTree.NewIdentifier(name));
 						constant.SetValue(value);
 						constant.SetType(value.type);
 						constant.SetAccess(visibility);
@@ -1420,7 +1420,7 @@ TYPE
 						operator := FALSE;
 						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic,isFictive, fOffset);
 						ASSERT(type # NIL);
-						variable := SyntaxTree.NewVariable(-1,SyntaxTree.NewIdentifier(name));
+						variable := SyntaxTree.NewVariable(Basic.invalidPosition,SyntaxTree.NewIdentifier(name));
 						variable.SetType(type);
 						variable.SetAccess(visibility);
 						variable.SetState(SyntaxTree.Resolved);
@@ -1442,9 +1442,9 @@ TYPE
 						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
-						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
+						procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition,moduleScope);
 						procedureType.SetReturnType(type);
-						procedure := SyntaxTree.NewProcedure(-1,SyntaxTree.NewIdentifier(name),procedureScope);
+						procedure := SyntaxTree.NewProcedure(Basic.invalidPosition,SyntaxTree.NewIdentifier(name),procedureScope);
 						procedure.SetType(procedureType);
 						procedure.SetAccess(visibility);
 						ParameterList(callingConvention,procedureScope,procedureType);
@@ -1464,10 +1464,10 @@ TYPE
 						Symbol(moduleScope,type,name, visibility,untraced,realtime,constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
-						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
+						procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition,moduleScope);
 						procedureType.SetReturnType(type);
 						procedureType.SetRealtime(realtime);
-						procedure := SyntaxTree.NewOperator(-1,SyntaxTree.NewIdentifier(name),procedureScope);
+						procedure := SyntaxTree.NewOperator(Basic.invalidPosition,SyntaxTree.NewIdentifier(name),procedureScope);
 						procedure.SetType(procedureType);
 						procedure.SetAccess(visibility);
 						procedure(SyntaxTree.Operator).SetDynamic(isDynamic);
@@ -1492,8 +1492,8 @@ TYPE
 						Symbol(moduleScope,type,name, visibility,untraced, realtime, constructor,operator, isDynamic, isFictive, fOffset);
 						ASSERT(~(constructor));
 						procedureScope := SyntaxTree.NewProcedureScope(moduleScope);
-						procedureType := SyntaxTree.NewProcedureType(-1,moduleScope);
-						procedure := SyntaxTree.NewProcedure(-1,SyntaxTree.NewIdentifier(name),procedureScope);
+						procedureType := SyntaxTree.NewProcedureType(Basic.invalidPosition,moduleScope);
+						procedure := SyntaxTree.NewProcedure(Basic.invalidPosition,SyntaxTree.NewIdentifier(name),procedureScope);
 						procedureType.SetReturnType(type);
 						procedure.SetInline(TRUE);
 						procedure.SetType(procedureType);
@@ -1512,7 +1512,7 @@ TYPE
 						type := Type();
 						R.RawString(name);
 						IF TraceImport IN Trace  THEN  D.Str("alias:"); D.Str(name); D.Ln  END;
-						typeDeclaration := SyntaxTree.NewTypeDeclaration(-1,SyntaxTree.NewIdentifier(name));
+						typeDeclaration := SyntaxTree.NewTypeDeclaration(Basic.invalidPosition,SyntaxTree.NewIdentifier(name));
 						typeDeclaration.SetDeclaredType(type);
 						visibility := SyntaxTree.Public+SyntaxTree.Protected+SyntaxTree.Internal;
 						typeDeclaration.SetAccess(visibility);
@@ -1588,7 +1588,7 @@ TYPE
 			Global.ContextFromName(moduleName,moduleIdentifier,contextIdentifier);
 
 			moduleScope := SyntaxTree.NewModuleScope();
-			module:= SyntaxTree.NewModule(fileName,-1,moduleIdentifier,moduleScope,Scanner.Uppercase);
+			module:= SyntaxTree.NewModule(fileName,Basic.invalidPosition,moduleIdentifier,moduleScope,Scanner.Uppercase);
 			module.SetContext(contextIdentifier);
 			IF importCache = NIL THEN importCache := SyntaxTree.NewModuleScope(); END;
 

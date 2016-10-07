@@ -462,7 +462,7 @@ TYPE
 						D.Str0(typeDeclaration.name);
 					END;
 				ELSIF (typeDeclaration # NIL) & (typeDeclaration.scope = NIL) THEN
-					D.Str("typedeclaration without scope: "); D.Str0(x.typeDeclaration.name); D.Int(x.typeDeclaration.position,5); D.Ln;
+					D.Str("typedeclaration without scope: "); D.Str0(x.typeDeclaration.name); D.Int(x.typeDeclaration.position.start,5); D.Ln;
 					D.Update;
 				ELSE
 					FPNumber(fp,0);

@@ -183,7 +183,7 @@ TYPE
 	END FixupList;
 
 	LabelList*= POINTER TO RECORD
-		offset-: LONGINT; position-: LONGINT;
+		offset-: LONGINT; position-: Basic.Position;
 		prev-: LabelList;
 	END;
 
@@ -242,7 +242,7 @@ TYPE
 		END Reset;
 
 
-		PROCEDURE AddLabel*(position: Unit);
+		PROCEDURE AddLabel*(position: Basic.Position);
 		VAR new: LabelList;
 		BEGIN
 			NEW(new);

@@ -84,7 +84,7 @@ TYPE
 				END;
 
 				IF ~error THEN
-					IntermediateCode.InitInstruction(instruction, 0, SHORTINT(mnem), operands[0], operands[1], operands[2]);
+					IntermediateCode.InitInstruction(instruction, pos, SHORTINT(mnem), operands[0], operands[1], operands[2]);
 					section.Emit(instruction);
 					(*
 

@@ -181,9 +181,7 @@ TYPE
 		PROCEDURE Error*(pos: SyntaxTree.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			error := TRUE;
-			IF diagnostics # NIL THEN
-				diagnostics.Error(scanner.source^,pos.start,Diagnostics.Invalid,msg);
-			END;
+			Basic.Error(diagnostics, scanner.source^,pos, msg);
 		END Error;
 
 		PROCEDURE ErrorSS*(pos: SyntaxTree.Position; CONST s1,s2: ARRAY OF CHAR);

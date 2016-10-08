@@ -214,7 +214,7 @@ TYPE
 			SELF.diagnostics := diagnostics;
 			error := ~scanner.GetNextSymbol(symbol);
 			hasSymbol := TRUE;
-			IF error THEN diagnostics.Error(scanner.source^, Diagnostics.Invalid, Diagnostics.Invalid, "no input stream") END;
+			IF error THEN Basic.Error(diagnostics, scanner.source^, Basic.invalidPosition, "no input stream") END;
 			recentCommentItem := NIL; recentComment := NIL;
 			(* debugging *)
 			indent := 0;
@@ -235,13 +235,8 @@ TYPE
 
 		(** output error message and / or given code *)
 		PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
-		VAR errorMessage: ARRAY 256 OF CHAR;
 		BEGIN
-			IF diagnostics # NIL THEN
-				Basic.GetErrorMessage(code,message,errorMessage);
-				Basic.AppendPosition(errorMessage, position);
-				diagnostics.Error(scanner.source^, position.start, code, errorMessage);
-			END;
+			Basic.ErrorC(diagnostics, scanner.source^, position, code, message);
 			error := TRUE
 		END Error;
 

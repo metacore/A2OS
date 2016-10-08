@@ -35,7 +35,7 @@ TYPE
 			IF Trace THEN D.Str("FoxBinaryObjectFile.ObjectFileFormat.Export "); D.Str(moduleName); D.Ln; END;
 
 			IF ~(module IS Sections.Module) THEN
-				diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid,"generated module format does not match object file format");
+				Basic.Error(diagnostics, module.module.sourceName, Basic.invalidPosition, "generated module format does not match object file format");
 				RETURN FALSE;
 			ELSIF module.findPC # MAX(LONGINT) THEN
 				MakeSectionOffsets(module(Sections.Module),varSize, codeSize, bodyOffset, code);
@@ -103,7 +103,7 @@ TYPE
 							temp.fixupSection := section;
 							temp.nextFixup := first;
 							IF fixup.displacement # 0 THEN
-								diagnostics.Error(module.moduleName,Diagnostics.Invalid, Diagnostics.Invalid,"Fixups with displacement # 0 not supported in Minos Object File.");
+								Basic.Error(diagnostics, module.moduleName, Basic.invalidPosition, "Fixups with displacement # 0 not supported in Minos Object File.");
 							END;
 							first := temp;
 						END;
@@ -135,12 +135,12 @@ TYPE
 					label := label.prev;
 				END;
 				IF label # NIL THEN
-					diagnostics.Information(module.module.sourceName,label.position,Diagnostics.Invalid," pc position");
+					Basic.Information(diagnostics, module.module.sourceName,label.position," pc position");
 					RETURN TRUE
 				END;
 			END
 		END;
-		diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+		Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, " could not locate pc");
 		RETURN FALSE
 	END FindPC;
 
@@ -369,7 +369,7 @@ TYPE
 						fixup := binarySection.fixupList.firstFixup;
 						WHILE fixup # NIL DO
 							IF (fixup.mode = BinaryCode.Relative)  & InModule(fixup.symbol.name) THEN
-								diagnostics.Error(module.moduleName,Diagnostics.Invalid, Diagnostics.Invalid,"Relative self fixup not supported by Minos Object File.");
+								Basic.Error(diagnostics, module.moduleName, Basic.invalidPosition, "Relative self fixup not supported by Minos Object File.");
 							ELSIF (fixup.mode = BinaryCode.Absolute) & InModule(fixup.symbol.name) THEN
 								this := section.offset  + fixup.offset; (* location of the fixup *)
 								(*
@@ -387,7 +387,7 @@ TYPE
 									Strings.Append(msg," : ");
 									Strings.AppendInt(msg, patchOffset);
 
-									diagnostics.Error(module.moduleName,Diagnostics.Invalid, Diagnostics.Invalid,msg);
+									Basic.Error(diagnostics, module.moduleName,Basic.invalidPosition, msg);
 
 									error := TRUE
 								END;

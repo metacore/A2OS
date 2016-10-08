@@ -35,9 +35,7 @@ TYPE
 		PROCEDURE Error(pos: Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			error := TRUE;
-			IF diagnostics # NIL THEN
-				diagnostics.Error(scanner.source^,pos.start,Diagnostics.Invalid,msg);
-			END;
+			Basic.Error(diagnostics, scanner.source^,pos,msg);
 
 			D.Update;
 			IF Trace THEN D.TraceBack END
@@ -342,7 +340,7 @@ TYPE
 					END;
 
 					IF ~error THEN
-						IntermediateCode.InitInstruction(instruction, positionOfInstruction.start, opCode, operands[0], operands[1], operands[2]);
+						IntermediateCode.InitInstruction(instruction, positionOfInstruction, opCode, operands[0], operands[1], operands[2]);
 						IF Strict & ~IntermediateCode.CheckInstruction(instruction, message) THEN
 							Error(positionOfInstruction, message)
 						END
@@ -617,7 +615,7 @@ TYPE
 		IF reader = NIL THEN
 			msg := "failed to open ";
 			Strings.Append(msg, filename);
-			diagnostics.Error(filename, Diagnostics.Invalid, Diagnostics.Invalid, msg);
+			Basic.Error(diagnostics, filename, Basic.invalidPosition, msg);
 			RETURN NIL
 		ELSE
 			NEW(module, NIL, system);

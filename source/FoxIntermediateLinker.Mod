@@ -75,7 +75,7 @@ TYPE
 				section.EmitAt(index, instruction)
 			ELSE
 				IntermediateCode.InitImmediate(op, instruction.op1.type, 1);
-				IntermediateCode.InitInstruction1(reserve,0, IntermediateCode.reserve, op);
+				IntermediateCode.InitInstruction1(reserve,Basic.invalidPosition, IntermediateCode.reserve, op);
 				WHILE (section.pc < index) DO
 					section.Emit(reserve);
 				END;
@@ -96,7 +96,7 @@ TYPE
 			END; (* nothing to patch *)
 			itype := IntermediateCode.GetType(backend.system, type);
 			IntermediateCode.InitImmediate(op1,itype, value);
-			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+			IntermediateCode.InitInstruction1(instruction, Basic.invalidPosition,  IntermediateCode.data, op1);
 			EmitAt(section(IntermediateCode.Section),index, instruction);
 			RETURN TRUE;
 		END PatchIntegerValue;
@@ -116,7 +116,7 @@ TYPE
 			ELSE
 				IntermediateCode.InitImmediate(op1, type, 0);
 			END;
-			IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+			IntermediateCode.InitInstruction1(instruction, Basic.invalidPosition,  IntermediateCode.data, op1);
 			EmitAt(section(IntermediateCode.Section), index, instruction);
 			RETURN TRUE;
 		END PatchBooleanValue;
@@ -135,7 +135,7 @@ TYPE
 			REPEAT
 				char := value[i];
 				IntermediateCode.InitImmediate(op1, type, ORD(char));
-				IntermediateCode.InitInstruction1(instruction, 0,  IntermediateCode.data, op1);
+				IntermediateCode.InitInstruction1(instruction, Basic.invalidPosition,  IntermediateCode.data, op1);
 				section(IntermediateCode.Section).Emit(instruction);
 				INC(i); 
 			UNTIL char = 0X; 
@@ -165,7 +165,7 @@ TYPE
 					IF module = NIL THEN
 						msg := "failed to import IR file ";
 						Strings.Append(msg, moduleFileName);
-						diagnostics.Error(filename, Diagnostics.Invalid, Diagnostics.Invalid, msg);
+						Basic.Error(diagnostics, filename, Basic.invalidPosition, msg);
 						RETURN FALSE
 					ELSE
 						loadedModules.AddName(moduleName); (* to avoid recursive reloading this must be done before parsing *)
@@ -175,7 +175,7 @@ TYPE
 								IF  ~LoadModule(name, recursive) THEN
 									msg := "failed to import ";
 									Strings.Append(msg, name);
-									diagnostics.Error(filename, Diagnostics.Invalid, Diagnostics.Invalid, msg);
+									Basic.Error(diagnostics, filename, Basic.invalidPosition, msg);
 									RETURN FALSE
 								END;
 							END;
@@ -474,7 +474,7 @@ TYPE
 
 			IntermediateCode.InitImmediate(dataOperand, IntermediateCode.GetType(backend.GetSystem(), syntaxTreeValue.type.resolved), hugeintValue);
 			IntermediateCode.InitOperand(emptyOperand);
-			IntermediateCode.InitInstruction(dataInstruction, -1, IntermediateCode.data, dataOperand, emptyOperand, emptyOperand);
+			IntermediateCode.InitInstruction(dataInstruction, Basic.invalidPosition, IntermediateCode.data, dataOperand, emptyOperand, emptyOperand);
 
 			ASSERT(section IS IntermediateCode.Section);
 			section(IntermediateCode.Section).EmitAt(0, dataInstruction)
@@ -661,15 +661,15 @@ TYPE
 
 
 			IF binaryModule = NIL THEN
-				diagnostics.Error(desiredName, Diagnostics.Invalid, Diagnostics.Invalid, "the specified backend cannot process intermediate code");
+				Basic.Error(diagnostics, desiredName,Basic.invalidPosition, "the specified backend cannot process intermediate code");
 				result := FALSE
 			ELSIF backend.error THEN
-				diagnostics.Error(desiredName, Diagnostics.Invalid, Diagnostics.Invalid, "binary code could not be generated (backend error)");
+				Basic.Error(diagnostics, desiredName, Basic.invalidPosition, "binary code could not be generated (backend error)");
 				result := FALSE
 			ELSE
 				IF Trace THEN D.String(">>> binary code successfully generated"); D.Ln END;
 				IF objectFileFormat = NIL THEN
-					diagnostics.Error(desiredName, Diagnostics.Invalid, Diagnostics.Invalid, "no object file format specified");
+					Basic.Error(diagnostics, desiredName, Basic.invalidPosition, "no object file format specified");
 					result := FALSE
 				ELSE
 					(* write the generated code into an object file *)
@@ -683,7 +683,7 @@ TYPE
 						END;
 						IF Trace THEN D.String(">>> object file successfully written"); D.Ln END;
 					ELSE
-						diagnostics.Error(desiredName, Diagnostics.Invalid, Diagnostics.Invalid, "object file could not be written");
+						Basic.Error(diagnostics, desiredName, Basic.invalidPosition, "object file could not be written");
 						result := FALSE
 					END
 				END
@@ -719,7 +719,7 @@ TYPE
 			IF (inExtension # "") THEN irLinker.objectFile.SetExtension(inExtension) END;
 			IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
 				error := TRUE;
-				diagnostics.Error(backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 			END;
 			backend := irLinker.backend;
 			system := backend.system;
@@ -744,7 +744,7 @@ TYPE
 		BEGIN
 			irLinker.PrearrangeReachableDataSections;
 			IF irLinker.GenerateObjectFile(outputFormat, NIL, instanceName) THEN
-				diagnostics.Information(instanceName, Diagnostics.Invalid, Diagnostics.Invalid, "generated.");
+				Basic.Information(diagnostics, instanceName, Diagnostics.Invalid, Diagnostics.Invalid, "generated.");
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -810,7 +810,7 @@ TYPE
 						Strings.Append(msg, device.name);
 						Strings.Append(msg," in cell ");
 						instance.AppendToMsg(msg);
-						diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, msg);
+						Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, msg);
 						error := TRUE;
 					END;
 				ELSE
@@ -819,7 +819,7 @@ TYPE
 						Strings.Append(msg, device.name);
 						Strings.Append(msg," in cell ");
 						instance.AppendToMsg(msg);
-						diagnostics.Warning(specification.name,Diagnostics.Invalid,Diagnostics.Invalid,msg);
+						Basic.Warning(diagnostics, specification.name,Diagnostics.Invalid,Diagnostics.Invalid,msg);
 					END;
 				END;
 			END;
@@ -829,7 +829,7 @@ TYPE
 			objectFileFormat.GetExtension(objectFileExtension);
 			irLinker.PrearrangeReachableDataSections;
 			IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-				diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not generate object file");
+				Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not generate object file");
 				RETURN FALSE
 			END;
 
@@ -861,7 +861,7 @@ TYPE
 			END;
 
 			IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-				diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
+				Basic.Error(diagnostics, instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
 				error := TRUE;
 			ELSIF instructionMemorySize = 0 THEN
 				instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
@@ -872,7 +872,7 @@ TYPE
 			instance.SetDataMemorySize(dataMemorySize);
 
 			IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-				diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
+				Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
 				error := TRUE;
 			END;
 
@@ -900,7 +900,7 @@ TYPE
 			ELSE
 				msg := "could not link ";
 				Strings.Append(msg,linkRoot);
-				diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+				Basic.Error(diagnostics, "",Diagnostics.Invalid, Diagnostics.Invalid, msg);
 			END;
 			RETURN ~linker.error & ~error
 		END LinkInstance;
@@ -1018,11 +1018,11 @@ TYPE
 				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
 				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
 					error := TRUE;
-					diagnostics.Error(backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 				END;
 				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
 					error := TRUE;
-					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 				END;
 				backend := irLinker.backend;
 				system := backend.system;
@@ -1082,7 +1082,7 @@ TYPE
 				objectFileFormat.GetExtension(objectFileExtension);
 				irLinker.PrearrangeReachableDataSections;
 				IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not generate object file");
+					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "could not generate object file");
 					RETURN FALSE
 				END;
 
@@ -1114,7 +1114,7 @@ TYPE
 				END;
 
 				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
+					Basic.Error(diagnostics, instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
 					error := TRUE;
 				ELSIF instructionMemorySize = 0 THEN
 					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
@@ -1125,7 +1125,7 @@ TYPE
 				instance.SetDataMemorySize(dataMemorySize);
 
 				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-					diagnostics.Error(specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
+					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
 					error := TRUE;
 				END;
 
@@ -1153,7 +1153,7 @@ TYPE
 				ELSE
 					msg := "could not link ";
 					Strings.Append(msg,linkRoot);
-					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+					Basic.Error(diagnostics, "",Diagnostics.Invalid, Diagnostics.Invalid, msg);
 				END;
 				RETURN ~linker.error & ~error
 			END LinkInstance;
@@ -1186,7 +1186,7 @@ TYPE
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid,error);
+				Basic.Error(diagnostics, "",Basic.invalidPosition, error);
 			END;
 		END Error;
 
@@ -1248,9 +1248,9 @@ TYPE
 				assemblinker.MarkReachabilityOfAll(TRUE);
 				FileNameToModuleName(filename, moduleName);
 				IF (targetFile = "") & assemblinker.GenerateObjectFile(objectFileFormat, context.out, moduleName) THEN
-					diagnostics.Information(filename, Diagnostics.Invalid, Diagnostics.Invalid, "done.")
+					Basic.Information(diagnostics, filename, Basic.invalidPosition, "done.")
 				ELSIF targetFile # "" THEN
-					diagnostics.Information(filename,  Diagnostics.Invalid, Diagnostics.Invalid, "loaded.")
+					Basic.Information(diagnostics, filename,  Basic.invalidPosition, "loaded.")
 				ELSE
 					error := TRUE
 				END
@@ -1262,7 +1262,7 @@ TYPE
 			assemblinker.PrearrangeReachableDataSections;
 			IF 	assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
 			THEN
-				diagnostics.Information(targetFile, Diagnostics.Invalid, Diagnostics.Invalid, "generated.")
+				Basic.Information(diagnostics, targetFile, Basic.invalidPosition, "generated.")
 			ELSE error := FALSE
 			END;
 		END;
@@ -1293,7 +1293,7 @@ TYPE
 				
 
 				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified instruction memory size too small");
+					Basic.Error(diagnostics, instanceName, Basic.invalidPosition, "specified instruction memory size too small");
 					error := TRUE;
 				ELSIF instructionMemorySize = 0 THEN
 					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
@@ -1302,7 +1302,7 @@ TYPE
 				dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
 
 				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-					diagnostics.Error(instanceName,Diagnostics.Invalid, Diagnostics.Invalid, "specified data memory size too small");
+					Basic.Error(diagnostics, instanceName,Basic.invalidPosition, "specified data memory size too small");
 					error := TRUE;
 				END;
 
@@ -1333,7 +1333,7 @@ TYPE
 				ELSE
 					msg := "could not link ";
 					Strings.Append(msg,instanceName);
-					diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+					Basic.Error(diagnostics, "",Basic.invalidPosition, msg);
 				END;
 				RETURN ~linker.error & ~error
 		
@@ -1371,7 +1371,7 @@ TYPE
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid,error);
+				Basic.Error(diagnostics, "",Basic.invalidPosition, error);
 			END;
 		END Error;
 
@@ -1460,9 +1460,9 @@ TYPE
 				assemblinker.MarkReachabilityOfAll(TRUE);
 				FileNameToModuleName(filename, moduleName);
 				IF (targetFile = "") & assemblinker.GenerateObjectFile(objectFileFormat, context.out, moduleName) THEN
-					diagnostics.Information(filename, Diagnostics.Invalid, Diagnostics.Invalid, "done.")
+					Basic.Information(diagnostics, filename, Diagnostics.Invalid, Diagnostics.Invalid, "done.")
 				ELSIF targetFile # "" THEN
-					diagnostics.Information(filename,  Diagnostics.Invalid, Diagnostics.Invalid, "loaded.")
+					Basic.Information(diagnostics, filename,  Diagnostics.Invalid, Diagnostics.Invalid, "loaded.")
 				ELSE
 					error := TRUE
 				END
@@ -1476,7 +1476,7 @@ TYPE
 			assemblinker.PrearrangeReachableDataSections;
 			IF 	assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
 			THEN
-				diagnostics.Information(targetFile, Diagnostics.Invalid, Diagnostics.Invalid, "generated.")
+				Basic.Information(diagnostics, targetFile, Diagnostics.Invalid, Diagnostics.Invalid, "generated.")
 			ELSE error := FALSE
 			END;
 		END;

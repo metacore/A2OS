@@ -238,16 +238,14 @@ TYPE
 		END SetBits;
 
 		PROCEDURE Error(CONST message: ARRAY OF CHAR);
-		VAR msg,name: ARRAY 256 OF CHAR; errPos: LONGINT;
+		VAR msg,name: ARRAY 256 OF CHAR; errPos: Basic.Position;
 		BEGIN
 			COPY(message,msg);
 			Strings.Append(msg," in ");
 			ObjectFile.SegmentedNameToString(code.os.identifier.name,name);
 			Strings.Append(msg, name);
-			IF diagnostics # NIL THEN
-				IF assembly # NIL THEN errPos := assembly.errPos ELSE errPos := Diagnostics.Invalid END;
-				diagnostics.Error("",Diagnostics.Invalid,errPos,msg);
-			END;
+			IF assembly # NIL THEN errPos := assembly.errPos ELSE errPos := Basic.invalidPosition END;
+			Basic.Error(diagnostics,"",errPos,msg);
 			error := TRUE;
 			IF dump # NIL THEN dump.Update; END;
 		END Error;
@@ -1067,7 +1065,7 @@ TYPE
 	Assembly* = OBJECT
 	VAR
 		(* output *)
-		errPos: LONGINT;
+		errPos: Basic.Position;
 		error-: BOOLEAN;
 		useLineNumbers*: BOOLEAN;
 		emitter: Emitter;
@@ -1086,24 +1084,24 @@ TYPE
 		PROCEDURE & InitAssembly*(diagnostics: Diagnostics.Diagnostics; emit: Emitter);
 		BEGIN
 			SELF.diagnostics := diagnostics;
-			errPos := Diagnostics.Invalid;
+			errPos := Basic.invalidPosition;
 			error := FALSE;
 			SELF.emitter := emit;
 			sourceName := "";
 		END InitAssembly;
 
 		PROCEDURE Error( CONST message: ARRAY OF CHAR);
-		VAR pos: LONGINT; msg,name: ARRAY 256 OF CHAR;
+		VAR pos: Basic.Position; msg,name: ARRAY 256 OF CHAR;
 		BEGIN
 			pos := errPos;
-			IF (pos = Diagnostics.Invalid) OR (sourceName = "") THEN
-				COPY(message,msg);
+			COPY(message,msg);
+			IF (pos.start = Diagnostics.Invalid) OR (sourceName = "") THEN
 				Strings.Append(msg," in ");
 				ObjectFile.SegmentedNameToString(emitter.code.os.identifier.name, name);
 				Strings.Append(msg, name);
-				diagnostics.Error(sourceName,errPos,Diagnostics.Invalid,msg);
+				Basic.Error(diagnostics, sourceName,errPos,msg);
 			ELSE
-				diagnostics.Error(sourceName,errPos,Diagnostics.Invalid,message);
+				Basic.Error(diagnostics, sourceName,errPos,msg);
 			END;
 			error := TRUE;
 			IF dump # NIL THEN dump.Update; END;
@@ -1119,7 +1117,7 @@ TYPE
 		END ErrorSS;
 
 
-		PROCEDURE Assemble* (reader: Streams.Reader;  orgPos: LONGINT; scope: SyntaxTree.Scope; in: IntermediateCode.Section; out: IntermediateCode.Section; module: Sections.Module; exported, inlined: BOOLEAN;
+		PROCEDURE Assemble* (reader: Streams.Reader;  orgPos: Basic.Position; scope: SyntaxTree.Scope; in: IntermediateCode.Section; out: IntermediateCode.Section; module: Sections.Module; exported, inlined: BOOLEAN;
 			map: RegisterMap
 		);
 		CONST maxPasses = 2;
@@ -1141,8 +1139,7 @@ TYPE
 			orgReaderPos: LONGINT;
 			orgCodePos: LONGINT;
 			prevSourceName: Basic.FileName;
-			position: LONGINT;
-			line: LONGINT;
+			position: Basic.Position;
 			prevCpuBits: Size;
 			prevCpuOptions: InstructionSet.CPUOptions;
 			prevAssembly: Assembly;
@@ -1151,7 +1148,7 @@ TYPE
 				(*
 				IF (dump # NIL) & (pass = maxPasses) THEN dump.Char (char) END;
 				*)
-				reader.Char(char); INC(position);
+				reader.Char(char); INC(position.start);
 			END NextChar;
 
 			PROCEDURE SkipBlanks;
@@ -1219,11 +1216,8 @@ TYPE
 			PROCEDURE NextSymbol;
 			BEGIN
 				SkipBlanks;
-				IF useLineNumbers THEN
-					errPos := line
-				ELSE
-					errPos := position- 1;
-				END;
+				errPos := position;
+
 
 				CASE char OF
 				'A' .. 'Z', 'a' .. 'z', '_' :
@@ -1246,10 +1240,12 @@ TYPE
 				| ':': symbol := symColon;
 					NextChar;
 				| CR: symbol := symLn;
-					NextChar; INC(line);
+					NextChar; INC(position.line);
+					position.linepos := position.start;
 					IF char = LF THEN NextChar END;
 				| LF: symbol := symLn;
-					NextChar;INC(line);
+					NextChar;INC(position.line);
+					position.linepos := position.start;
 					IF char = CR THEN NextChar END;
 				| ',': symbol := symComma;
 					NextChar;
@@ -1920,7 +1916,6 @@ TYPE
 			PROCEDURE Reset;
 			BEGIN
 				position := orgPos;
-				IF useLineNumbers THEN line := orgPos END;
 				reader.SetPos(orgReaderPos);
 				emitter.code.SetPC(orgCodePos);
 				NextChar;

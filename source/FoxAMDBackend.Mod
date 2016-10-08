@@ -552,7 +552,7 @@ TYPE
 
 			PROCEDURE CheckEmptySpillStack;
 			BEGIN
-				IF spillStack.Size()#0 THEN Error(inPC,"implementation error, spill stack not cleared") END;
+				IF spillStack.Size()#0 THEN Error(Basic.invalidPosition,"implementation error, spill stack not cleared") END;
 			END CheckEmptySpillStack;
 
 		BEGIN
@@ -2126,7 +2126,7 @@ TYPE
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(iop3, IntermediateCode.uint32, exp);
-				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
+				IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
 				EmitShift(inst);
 				RETURN;
 			END;
@@ -2217,12 +2217,12 @@ TYPE
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IF instruction.opcode = IntermediateCode.div THEN					
 					IntermediateCode.InitImmediate(iop3, IntermediateCode.uint32, exp);
-					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
+					IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
 					EmitShift(inst);
 					RETURN;
 				ELSE
 					IntermediateCode.InitImmediate(iop3, instruction.op3.type, value-1);
-					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.and, instruction.op1, instruction.op2, iop3);
+					IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.and, instruction.op1, instruction.op2, iop3);
 					EmitArithmetic3(inst,InstructionSet.opAND);
 					RETURN;					
 				END;
@@ -3115,7 +3115,7 @@ TYPE
 			scope := procedure.procedureScope;
 			NEW(assembler,diagnostics,emitter);
 			assembler.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
-			assembler.Assemble(reader,SHORT(instruction.op1.intValue),scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
+			assembler.Assemble(reader,instruction.textPosition,scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
 			error := error OR assembler.error;
 
 			IF outr # NIL THEN
@@ -3364,7 +3364,7 @@ TYPE
 		 	END;
 			*)
 
-			IF cg.error THEN Error("",Diagnostics.Invalid, Diagnostics.Invalid,"") END;
+			IF cg.error THEN Error("",Basic.invalidPosition, Diagnostics.Invalid,"") END;
 		END GenerateBinary;
 
 		(* genasm *)
@@ -3420,7 +3420,7 @@ TYPE
 			UNTIL (i = module(Sections.Module).allSections.Length()) OR (section.name = pooledName);
 
 			IF section.name # pooledName THEN
-				diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+				Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, " could not locate pc");
 			ELSE
 				binarySection := section(IntermediateCode.Section).resolved;
 				label := binarySection.labels;
@@ -3428,9 +3428,9 @@ TYPE
 					label := label.prev;
 				END;
 				IF label # NIL THEN
-					diagnostics.Information(module.module.sourceName,label.position,Diagnostics.Invalid," pc position");
+					Basic.Information(diagnostics, module.module.sourceName,label.position, " pc position");
 				ELSE
-					diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+					Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, " could not locate pc");
 				END;
 			END;
 		END FindPC;

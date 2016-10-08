@@ -177,7 +177,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			IF Trace THEN D.String(">>> export intermediate object file"); D.Ln END;
 
 			IF ~(module IS Sections.Module) THEN
-				diagnostics.Error(module.moduleName, Diagnostics.Invalid, Diagnostics.Invalid, "generated module format does not match object file format");
+				Basic.Error(diagnostics, module.moduleName, Basic.invalidPosition, "generated module format does not match object file format");
 				RETURN FALSE;
 			END;
 
@@ -188,7 +188,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 			file := Files.New(filename);
 			IF file = NIL THEN
-				diagnostics.Error(module.moduleName, Diagnostics.Invalid,Diagnostics.Invalid, "failed to open object file for writting");
+				Basic.Error(diagnostics, module.moduleName, Basic.invalidPosition, "failed to open object file for writting");
 				RETURN FALSE
 			END;
 
@@ -316,7 +316,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				ReadOperand(op1);
 				ReadOperand(op2);
 				ReadOperand(op3);
-				IntermediateCode.InitInstruction(instruction, 0, SHORTINT(opcode), op1, op2, op3);
+				IntermediateCode.InitInstruction(instruction, Basic.invalidPosition, SHORTINT(opcode), op1, op2, op3);
 				IntermediateCode.SetSubType(instruction, SHORTINT(subtype));
 				section.Emit(instruction);
 			END ReadInstruction;

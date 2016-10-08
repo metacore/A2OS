@@ -2333,13 +2333,13 @@ TYPE
 
 				IF noRedefinition OR noModification THEN
 					IF (InterfaceComparison.Redefined IN flags) THEN
-						diagnostics.Error(module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," no redefinition of symbol file allowed");
+						Basic.Error(diagnostics, module.sourceName, Basic.invalidPosition, " no redefinition of symbol file allowed");
 						RETURN FALSE;
 					END;
 				END;
 				IF noModification THEN
 					IF (InterfaceComparison.Extended IN flags) THEN
-						diagnostics.Error(module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," no extension of symbol file allowed");
+						Basic.Error(diagnostics, module.sourceName,Basic.invalidPosition, " no extension of symbol file allowed");
 						RETURN FALSE;
 					END;
 				END;

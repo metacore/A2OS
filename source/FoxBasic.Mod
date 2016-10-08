@@ -45,7 +45,7 @@ CONST
 	MaxSet* = 31;   (* must be >= 15, else the bootstraped compiler cannot run (IN-tests) *)
 
 	invalidString*=-1;
-
+	InvalidCode*=Diagnostics.Invalid;
 TYPE
 	(*
 	String* = POINTER TO ARRAY OF CHAR;
@@ -66,6 +66,8 @@ TYPE
 	Position*= RECORD
 		start*, end*, line*, linepos*: LONGINT;
 	END;
+	
+	ErrorCode*=LONGINT;
 
 
 	List* = OBJECT  (* by Luc Bläser *)
@@ -1744,12 +1746,55 @@ VAR
 	
 	PROCEDURE AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position);
 	BEGIN
-		Strings.Append(msg, " in line "); 
-		Strings.AppendInt(msg, pos.line); 
-		Strings.Append(msg, ", col "); 
-		Strings.AppendInt(msg, pos.start- pos.linepos);
+		IF pos.line >= 0 THEN
+			Strings.Append(msg, " in line "); 
+			Strings.AppendInt(msg, pos.line); 
+			Strings.Append(msg, ", col "); 
+			Strings.AppendInt(msg, pos.start- pos.linepos);
+		END;
 	END AppendPosition;
 	
+	PROCEDURE MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR);
+	BEGIN
+		GetErrorMessage(code, msg, message);
+		AppendPosition(message, pos);
+	END MakeMessage;
+	
+	(* error message with code *)
+	PROCEDURE ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR);
+	VAR message: ARRAY 256 OF CHAR;
+	BEGIN
+		IF diagnostics # NIL THEN
+			MakeMessage(pos, code, msg,message);
+			diagnostics.Error(source, pos.start, code, message);
+		END;
+	END ErrorC;
+
+	(* error message without code *)
+	PROCEDURE Error*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR);
+	BEGIN
+		ErrorC(diagnostics, source, pos, InvalidCode, msg);
+	END Error;
+	
+	
+
+	PROCEDURE Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR);
+	VAR message: ARRAY 256 OF CHAR;
+	BEGIN
+		IF diagnostics # NIL THEN
+			MakeMessage(pos, InvalidCode, msg,message);
+			diagnostics.Warning(source, pos.start, InvalidCode, message);
+		END;
+	END Warning;
+
+	PROCEDURE Information*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position;CONST msg: ARRAY OF CHAR);
+	VAR message: ARRAY 256 OF CHAR;
+	BEGIN
+		IF diagnostics # NIL THEN
+			MakeMessage(pos, InvalidCode, msg,message);
+			diagnostics.Information(source, pos.start, InvalidCode, message);
+		END;
+	END Information;
 
 	(** SetErrorMsg - Set message for error n *)
 

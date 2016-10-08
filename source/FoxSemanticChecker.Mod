@@ -142,49 +142,38 @@ TYPE
 
 		(** report error **)
 		PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
-		VAR errorMessage: ARRAY 256 OF CHAR; errModule: SyntaxTree.Module;
+		VAR errModule: SyntaxTree.Module;
 		BEGIN
-			IF diagnostics # NIL THEN
-				Basic.GetErrorMessage(code,message,errorMessage);
-				ASSERT(currentScope # NIL);
-				IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
-				Basic.AppendPosition(errorMessage, position);
-				diagnostics.Error(errModule.sourceName, position.start, code, errorMessage);
-			END;
+			ASSERT(currentScope # NIL);
+			IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
+			Basic.ErrorC(diagnostics, errModule.sourceName, position, code, message);
 			error := TRUE;
 		END Error;
 
 		PROCEDURE Warning(position: Position; CONST message: ARRAY OF CHAR);
 		VAR errModule: SyntaxTree.Module;
 		BEGIN
-			IF diagnostics # NIL THEN
-				IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
-				diagnostics.Warning(errModule.sourceName, position.start, Diagnostics.Invalid, message);
-			END;
+			IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
+			Basic.Warning(diagnostics, errModule.sourceName, position, message);
 		END Warning;
 
 
 		PROCEDURE ErrorSS(position: Position; CONST msg,msg2: ARRAY OF CHAR);
 		VAR errorMessage: ARRAY 256 OF CHAR;
 		BEGIN
-			IF diagnostics # NIL THEN
-				Basic.Concat(errorMessage,msg," ", msg2);
-				Basic.AppendPosition(errorMessage, position);
-				diagnostics.Error(currentScope.ownerModule.sourceName, position.start, Diagnostics.Invalid, errorMessage);
-			END;
+			Basic.Concat(errorMessage,msg," ", msg2);
+			Basic.Error(diagnostics, currentScope.ownerModule.sourceName, position, errorMessage);
 			error := TRUE;
 		END ErrorSS;
 
 		PROCEDURE InfoSS(position: Position; CONST msg1: ARRAY OF CHAR; CONST s: Basic.String);
 		VAR msg, msg2: ARRAY 256 OF CHAR;
 		BEGIN
-			IF diagnostics # NIL THEN
-				COPY(msg1, msg);
-				Strings.Append(msg, " = ");
-				Basic.GetString(s, msg2);
-				Strings.Append(msg, msg2);
-				diagnostics.Information(currentScope.ownerModule.sourceName, position.start, Diagnostics.Invalid, msg);
-			END;
+			COPY(msg1, msg);
+			Strings.Append(msg, " = ");
+			Basic.GetString(s, msg2);
+			Strings.Append(msg, msg2);
+			Basic.Information(diagnostics, currentScope.ownerModule.sourceName, position, msg);
 		END InfoSS;
 
 
@@ -8659,7 +8648,7 @@ TYPE
 			Global.GetSymbolName(x,msg);
 			Strings.Append(msg," ");
 			Strings.Append(msg,text);
-			diagnostics.Warning(module.sourceName,x.position.start,Diagnostics.Invalid,msg);
+			Basic.Warning(diagnostics, module.sourceName,x.position, msg);
 		END Warning;
 
 		(** symbols *)

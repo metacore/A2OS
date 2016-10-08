@@ -304,7 +304,7 @@ TYPE
 
 			PROCEDURE CheckEmptySpillStack(): BOOLEAN;
 			BEGIN
-				IF spillStack.Size()#0 THEN Error(inPC,"implementation error, spill stack not cleared");
+				IF spillStack.Size()#0 THEN Error(Basic.invalidPosition,"implementation error, spill stack not cleared");
 					IF dump # NIL THEN
 						spillStack.Dump(dump);
 						tickets.Dump(dump);
@@ -1460,7 +1460,7 @@ TYPE
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
-				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
+				IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.shl, instruction.op1, instruction.op2, iop3);
 				EmitShift(inst);
 				RETURN;
 			END;
@@ -1505,7 +1505,7 @@ TYPE
 			IF instruction.opcode = IntermediateCode.div THEN
 				IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 					IntermediateCode.InitImmediate(iop3, instruction.op3.type, exp);
-					IntermediateCode.InitInstruction(inst, -1, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
+					IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
 					EmitShift(inst);
 					RETURN;
 				END;
@@ -1520,7 +1520,7 @@ TYPE
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, instruction.op3.type, value-1);
-				IntermediateCode.InitInstruction(inst, -1, IntermediateCode.and, instruction.op1, instruction.op2, op3);
+				IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.and, instruction.op1, instruction.op2, op3);
 				EmitAnd(inst);
 				RETURN;
 			END;
@@ -2367,7 +2367,7 @@ TYPE
 		 		PatchFixups(in(IntermediateCode.Section).resolved)
 		 	END;
 
-			IF cg.error THEN Error("", Diagnostics.Invalid, Diagnostics.Invalid,  "") END;
+			IF cg.error THEN Error("", Basic.invalidPosition, Diagnostics.Invalid,  "") END;
 		END GenerateBinary;
 
 		(* genasm *)
@@ -2455,7 +2455,7 @@ TYPE
 			UNTIL (i = module(Sections.Module).allSections.Length()) OR (section.name = pooledName);
 
 			IF section.name # pooledName THEN
-				diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+				Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition," could not locate pc");
 			ELSE
 				binarySection := section(IntermediateCode.Section).resolved;
 				label := binarySection.labels;
@@ -2463,9 +2463,9 @@ TYPE
 					label := label.prev;
 				END;
 				IF label # NIL THEN
-					diagnostics.Information(module.module.sourceName,label.position,Diagnostics.Invalid," pc position");
+					Basic.Information(diagnostics, module.module.sourceName,label.position," pc position");
 				ELSE
-					diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+					Basic.Error(diagnostics, module.module.sourceName, Basic.invalidPosition," could not locate pc");
 				END;
 			END;
 		END FindPC;

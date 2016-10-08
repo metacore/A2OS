@@ -217,7 +217,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 									Strings.Append(msg, ", ");
 									ObjectFile.SegmentedNameToString(test(IntermediateCode.Section).resolved.os.identifier.name,name);
 									Strings.Append(msg, name);
-									diagnostics.Warning(module.moduleName,Diagnostics.Invalid,Diagnostics.Invalid,msg);
+									Basic.Warning(diagnostics, module.moduleName,Basic.invalidPosition, msg);
 								END
 							END
 						END
@@ -276,7 +276,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			IF Trace THEN D.String(">>> export generic object file"); D.Ln END;
 
 			IF ~(module IS Sections.Module) THEN
-				diagnostics.Error (module.moduleName, Diagnostics.Invalid, Diagnostics.Invalid, "generated module format does not match object file format");
+				Basic.Error (diagnostics, module.moduleName, Basic.invalidPosition,  "generated module format does not match object file format");
 				RETURN FALSE;
 			END;
 
@@ -287,7 +287,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 			file := Files.New (fileName);
 			IF file = NIL THEN
-				diagnostics.Error(module.moduleName,Diagnostics.Invalid,Diagnostics.Invalid,"failed to open object file");
+				Basic.Error(diagnostics, module.moduleName,Basic.invalidPosition, "failed to open object file");
 				RETURN FALSE;
 			END;
 

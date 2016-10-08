@@ -266,10 +266,7 @@ TYPE
         PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
             VAR errorMessage: ARRAY 256 OF CHAR;
         BEGIN
-            IF diagnostics # NIL THEN
-                Basic.GetErrorMessage(code,message,errorMessage);
-                diagnostics.Error(scanner.source^, position.start, code, errorMessage);
-            END;
+            Basic.ErrorC(diagnostics, scanner.source^, position, code, errorMessage);
             error := TRUE;
 (* @@@ *)
 HALT(100);

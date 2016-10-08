@@ -136,9 +136,7 @@ TYPE
 			IF error THEN RETURN END;
 			(*! use diagnostics *)
 			error := TRUE;
-			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
-			END;
+			Basic.Error(diagnostics, "", Basic.invalidPosition, msg);
 			D.TraceBack;
 		END Error;
 
@@ -150,9 +148,7 @@ TYPE
 			error := TRUE;
 			COPY(msg, message);
 			IF id # 0 THEN Strings.Append(message," "); StringPool.GetString(id, name); Strings.Append(message, name); END;
-			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, message);
-			END;
+			Basic.Error(diagnostics, "", Basic.invalidPosition, message);
 		END ErrorSS;
 
 		(** syntax tree types omitted -- unused *)

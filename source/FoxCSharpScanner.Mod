@@ -223,20 +223,14 @@ TYPE
         (** report an error occured during scanning **)
         PROCEDURE ErrorS(CONST msg: ARRAY OF CHAR);
         BEGIN
-            IF diagnostics # NIL THEN
-                diagnostics.Error(source^, position.start, Diagnostics.Invalid, msg)
-            END;
+            Basic.Error(diagnostics, source^, position,  msg);
             error := TRUE;
         END ErrorS;
 
         (** report an error occured during scanning **)
         PROCEDURE Error(code: INTEGER);
-            VAR errorMessage: ARRAY 256 OF CHAR;
         BEGIN
-            IF diagnostics # NIL THEN
-                Basic.GetErrorMessage(code, "", errorMessage);
-                diagnostics.Error(source^, position.start, code, errorMessage)
-            END;
+            Basic.ErrorC(diagnostics, source^, position, code, "");
             error := TRUE;
         END Error;
 

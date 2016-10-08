@@ -130,7 +130,7 @@ TYPE
 			IF Trace THEN D.Str("FoxBinaryObjectFile.ObjectFileFormat.Export "); D.Str(moduleName); D.Ln; END;
 
 			IF ~(module IS Sections.Module) THEN
-				diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid,"generated module format does not match object file format");
+				Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, "generated module format does not match object file format");
 				RETURN FALSE;
 			ELSIF module.findPC # MAX(LONGINT) THEN
 				MakeSectionOffsets(module(Sections.Module),constSize, varSize, codeSize, caseTableSize,const,code);
@@ -385,12 +385,12 @@ TYPE
 					label := label.prev;
 				END;
 				IF label # NIL THEN
-					diagnostics.Information(module.module.sourceName,label.position,Diagnostics.Invalid," pc position");
+					Basic.Information(diagnostics, module.module.sourceName,label.position," pc position");
 					RETURN TRUE
 				END;
 			END
 		END;
-		diagnostics.Error(module.module.sourceName,Diagnostics.Invalid,Diagnostics.Invalid," could not locate pc");
+		Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, " could not locate pc");
 		RETURN FALSE
 	END FindPC;
 

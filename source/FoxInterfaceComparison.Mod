@@ -65,8 +65,8 @@ CONST
 	BEGIN
 		COPY(s1,msg);
 		Strings.Append(msg,s2);
-		IF (diagnostics # NIL) & (module # NIL) THEN
-			diagnostics.Information(module.sourceName,pos.start,Diagnostics.Invalid,msg);
+		IF (module # NIL) THEN
+			Basic.Information(diagnostics, module.sourceName,pos,msg);
 		END;
 	END ErrorSS;
 

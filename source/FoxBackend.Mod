@@ -1,7 +1,7 @@
 MODULE FoxBackend; (**  AUTHOR "kaeserm,fof"; PURPOSE "Oberon Compiler: Common backend module";  **)
 
 IMPORT
-	Streams, Diagnostics, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
+	Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
 
 
 TYPE
@@ -95,10 +95,10 @@ TYPE
 			RETURN NIL; (* default case: no parameter registers *)
 		END GetParameterRegisters;
 
-		PROCEDURE Error*(CONST source: ARRAY OF CHAR; errorNumber, errorPosition: LONGINT; CONST err: ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR);
 		BEGIN
-			IF (err # "") & (diagnostics # NIL) THEN
-				diagnostics.Error(source,errorNumber, errorPosition,err);
+			IF (errorNumber # Basic.InvalidCode) OR (err # "") THEN
+				Basic.ErrorC(diagnostics, source, position, errorNumber, err);
 			END;
 			error := TRUE;
 		END Error;

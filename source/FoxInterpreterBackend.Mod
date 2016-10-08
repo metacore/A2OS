@@ -269,7 +269,7 @@ TYPE
 		END Stop;
 
 		PROCEDURE Error (CONST msg: ARRAY OF CHAR);
-		BEGIN backend.Error ("", Diagnostics.Invalid, Diagnostics.Invalid, msg); Stop;
+		BEGIN backend.Error ("", Basic.invalidPosition, Diagnostics.Invalid, msg); Stop;
 		END Error;
 
 		PROCEDURE Execute (VAR instr: Intermediate.Instruction; VAR pc: PC);

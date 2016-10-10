@@ -306,7 +306,7 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align,  dim, i: LONGINT;
 			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
@@ -354,7 +354,7 @@ TYPE
 			
 
 			PROCEDURE Initialize(type: SyntaxTree.Type; initializer: SyntaxTree.Expression; offset: LONGINT);
-			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable;
+			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable; i: LONGINT; size: SIZE;
 			BEGIN
 				IF type = NIL THEN RETURN ELSE type := type.resolved END;
 				WITH type: SyntaxTree.RecordType DO

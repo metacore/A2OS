@@ -761,7 +761,7 @@ TYPE
 				compiler := CompilerInterface.GetCompilerByName(compilerSettings.name);
 			END;
 			IF (compiler # NIL) THEN
-				compiler.CompileText(editor.text, filename, 0, pc, options, tw, diagnostics, errors);
+				compiler.CompileText(editor.text, "" (* filename*) , 0, pc, options, tw, diagnostics, errors);
 			ELSE
 				tw.String("No compiler available for file '"); tw.String(filename); tw.String("'");
 				logPanel.visible.Set(TRUE);

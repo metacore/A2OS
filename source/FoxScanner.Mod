@@ -355,7 +355,7 @@ TYPE
 		PROCEDURE GetNextCharacter*;
 		BEGIN
 			reader.Char(ch); INC(position.start);
-			IF ch = LF THEN INC(position.line); position.linepos := position.start END;
+			IF ch = LF THEN INC(position.line); position.linepos := position.start+1 END;
 			(*
 			(* not necessary, as Streams returns 0X if reading failed, but in case Streams.Reader.Char is modified ...  *)
 			IF reader.res # Streams.Ok THEN ch := EOT END;
@@ -805,7 +805,6 @@ TYPE
 			ASSERT(case # Unknown);
 			stringMaker.Clear;
 			startPos := symbol.position.end;
-			IF useLineNumbers THEN startPos := position.line END;
 			s := symbol.token;
 			WHILE (s # EndOfText) & (s # End) & (s # With) DO
 				symbol.position := position;
@@ -854,14 +853,6 @@ TYPE
 		BEGIN
 			SkipBlanks;
 			symbol.position := position;
-			(*
-			IF useLineNumbers THEN
-				symbol.position.start := position.line+1; 
-			ELSE
-				symbol.position.start := position.start
-			END;
-			symbol.position.line := position.line;
-			*)
 			stringMaker.Clear;
 			CASE ch OF  (* ch > " " *)
 			EOT: s := EndOfText
@@ -1135,14 +1126,6 @@ TYPE
 			REPEAT
 				SkipBlanks;
 				symbol.position := position;
-				(*
-				IF useLineNumbers THEN
-					symbol.position.start := position.line+1; 
-				ELSE
-					symbol.position.start := position.start;
-				END;
-				symbol.position.line := position.line;
-				*)
 				CASE ch OF  (* ch > ' ' *)
 				| EOT: 	s := EndOfText;
 				| DoubleQuote:

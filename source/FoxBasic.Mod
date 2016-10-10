@@ -1762,11 +1762,32 @@ VAR
 	
 	(* error message with code *)
 	PROCEDURE ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR);
-	VAR message: ARRAY 256 OF CHAR;
+	VAR message,err: ARRAY 512 OF CHAR; ch: CHAR; b: BOOLEAN; oldpos: LONGINT;
+		file: Files.File; reader: Files.Reader;
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeMessage(pos, code, msg,message);
+			IF (source # "") & (pos.linepos >= 0) THEN
+				err[0] := 0AX;
+				err[1] := 0X;
+				file := Files.Old(source);
+				IF file # NIL THEN 
+					NEW(reader, file, pos.linepos); 
+					reader.SetPos(pos.linepos);
+					reader.Char(ch);
+					WHILE (ch # 0X) & (ch # 0AX) DO
+						Strings.AppendChar(err, ch);
+						IF reader.Pos() = pos.start THEN
+							Strings.Append(err,"(*!*)");
+						END;
+						reader.Char(ch);
+					END;
+					Strings.Append(message, err);
+					(*diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, err);*)
+				END;
+			END;
 			diagnostics.Error(source, pos.start, code, message);
+			
 		END;
 	END ErrorC;
 

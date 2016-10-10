@@ -683,10 +683,12 @@ TYPE
 					designator := SyntaxTree.NewParameterDesignator( position,designator,expressionList);
 				ELSIF OptionalB( Scanner.Period ) THEN
 					IF ~Optional(Scanner.Identifier) THEN (* make sure symbol is read *) END;
+					position := symbol.position;
 					CASE symbol.identifierString[0] OF
 						"a".."z", "A" .. "Z":
 					(*IF Peek(Scanner.Size) (* special rule: support for SYSTEM.SIZE *) THEN*)
-						identifier := symbol.identifier; NextSymbol;
+						identifier := symbol.identifier; 
+						NextSymbol;
 					ELSE
 						identifier := Identifier(position);
 					END;
@@ -2132,8 +2134,8 @@ TYPE
 			IF Trace THEN S( "ImportList" ) END;
 			(* import symbol already consumed *)
 			REPEAT
-				position := symbol.position;
 				alias := Identifier(idPosition);
+				position := symbol.position;
 				IF alias # SyntaxTree.invalidIdentifier THEN
 					IF Optional( Scanner.Becomes ) THEN name := Identifier(idPosition) ELSE name := alias;  END;
 					import := SyntaxTree.NewImport( position, alias, name, TRUE );

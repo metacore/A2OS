@@ -8351,7 +8351,7 @@ Sufficient (but not necessary) conditions:
 
 				Mat2x2:
 					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat2x2 THEN
-						IF dadr = 0 THEN NEW(RESULT,2,2);
+						IF dadr = 0 THEN NEW(RESULT,2,2); dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
 					END;
@@ -8366,7 +8366,7 @@ Sufficient (but not necessary) conditions:
 
 				|Mat3x3:
 					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat3x3 THEN
-						IF dadr = 0 THEN NEW(RESULT,3,3);
+						IF dadr = 0 THEN NEW(RESULT,3,3);dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
 					END;
@@ -8389,7 +8389,7 @@ Sufficient (but not necessary) conditions:
 
 				|Mat4x4:
 					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat4x4 THEN
-						IF dadr = 0 THEN NEW(RESULT,4,4);
+						IF dadr = 0 THEN NEW(RESULT,4,4); dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
 					END;
@@ -8448,7 +8448,7 @@ Sufficient (but not necessary) conditions:
 
 			MatVec2x2:
 				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec2 THEN
-					IF dadr = 0 THEN NEW(RESULT,2);
+					IF dadr = 0 THEN NEW(RESULT,2);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
 				END;
@@ -8463,7 +8463,7 @@ Sufficient (but not necessary) conditions:
 
 			|MatVec3x3:
 				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec3 THEN
-					IF dadr = 0 THEN NEW(RESULT,3);
+					IF dadr = 0 THEN NEW(RESULT,3);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
 				END;
@@ -8479,7 +8479,7 @@ Sufficient (but not necessary) conditions:
 
 			|MatVec4x4:
 				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec4 THEN
-					IF dadr = 0 THEN NEW(RESULT,4);
+					IF dadr = 0 THEN NEW(RESULT,4);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
 				END;

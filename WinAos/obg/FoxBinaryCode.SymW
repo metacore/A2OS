@@ -64,7 +64,7 @@ TYPE
 
 	LabelList* = POINTER TO RECORD 
 		offset-: LONGINT; 
-		position-: LONGINT; 
+		position-: Basic.Position; 
 		prev-: LabelList; 
 	END; 
 
@@ -82,7 +82,7 @@ TYPE
 		PROCEDURE ^ GetPC(): LONGINT; 
 		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ AddLabel*(position: Unit); 
+		PROCEDURE ^ AddLabel*(position: Basic.Position); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
 		PROCEDURE ^ Align*(alignment: Unit); 
 		PROCEDURE ^ SetFinally*(atPC: Unit); 

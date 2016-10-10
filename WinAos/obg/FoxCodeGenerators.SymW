@@ -50,7 +50,7 @@ TYPE
 
 		PROCEDURE ^  & InitGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN); 
 		PROCEDURE ^ SetModule*(module: Sections.Module); 
-		PROCEDURE ^ Error*(position: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(position: Basic.Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
 		PROCEDURE ^ FirstUse*(virtualRegister: LONGINT): LONGINT; 
 		PROCEDURE ^ LastUse*(virtualRegister: LONGINT): LONGINT; 

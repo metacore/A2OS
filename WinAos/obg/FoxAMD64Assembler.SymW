@@ -243,7 +243,7 @@ TYPE
 
 	Assembly* = OBJECT 
 	VAR 
-		errPos: LONGINT; 
+		errPos: Basic.Position; 
 		error-: BOOLEAN; 
 		useLineNumbers*: BOOLEAN; 
 		emitter: Emitter; 
@@ -258,7 +258,7 @@ TYPE
 		PROCEDURE ^  & InitAssembly*(diagnostics: Diagnostics.Diagnostics; emit: Emitter); 
 		PROCEDURE ^ Error(CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(CONST msg1, msg2: ARRAY OF CHAR); 
-		PROCEDURE ^ Assemble*(reader: Streams.Reader; orgPos: LONGINT; scope: SyntaxTree.Scope; in: IntermediateCode.Section; out: IntermediateCode.Section; module: Sections.Module; exported, inlined: BOOLEAN; map: RegisterMap); 
+		PROCEDURE ^ Assemble*(reader: Streams.Reader; orgPos: Basic.Position; scope: SyntaxTree.Scope; in: IntermediateCode.Section; out: IntermediateCode.Section; module: Sections.Module; exported, inlined: BOOLEAN; map: RegisterMap); 
 	END Assembly; 
 VAR 
 	kernelWriter: Streams.Writer; 

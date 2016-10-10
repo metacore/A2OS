@@ -3,13 +3,14 @@ MODULE FoxSemanticChecker;
 CONST 
 	Trace = FALSE; 
 	Infinity = MAX(LONGINT); 
-	InvalidPosition* = Diagnostics.Invalid; 
 	MaxTensorIndexOperatorSize = 4; 
 	UndefinedPhase = 0; 
 	DeclarationPhase = 1; 
 	InlinePhase = 2; 
 	ImplementationPhase = 3; 
 TYPE 
+	Position = SyntaxTree.Position; 
+
 	FileName = ARRAY 256 OF CHAR; 
 
 	LateFix = POINTER TO RECORD 
@@ -72,10 +73,10 @@ TYPE
 		variableAccessed: BOOLEAN; 
 
 		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning(position: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ ErrorSS(position: LONGINT; CONST msg, msg2: ARRAY OF CHAR); 
-		PROCEDURE ^ InfoSS(position: LONGINT; CONST msg1: ARRAY OF CHAR; CONST s: Basic.String); 
+		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning(position: Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ ErrorSS(position: Position; CONST msg, msg2: ARRAY OF CHAR); 
+		PROCEDURE ^ InfoSS(position: Position; CONST msg1: ARRAY OF CHAR; CONST s: Basic.String); 
 		PROCEDURE ^ Find(inScope: SyntaxTree.Scope; name: SyntaxTree.Identifier; traverse: BOOLEAN): SyntaxTree.Symbol; 
 		PROCEDURE ^ ResolveNamedType(qualifiedIdentifier: SyntaxTree.QualifiedIdentifier; VAR typeDeclaration: SyntaxTree.TypeDeclaration): SyntaxTree.Type; 
 		PROCEDURE ^ TypeNeedsResolution(x: SyntaxTree.Type): BOOLEAN; 
@@ -100,16 +101,16 @@ TYPE
 		PROCEDURE ^ VisitRangeType*(x: SyntaxTree.RangeType); 
 		PROCEDURE ^ VisitQualifiedType*(x: SyntaxTree.QualifiedType); 
 		PROCEDURE ^ VisitArrayType*(x: SyntaxTree.ArrayType); 
-		PROCEDURE ^ ImportModule(name: SyntaxTree.Identifier; position: LONGINT); 
+		PROCEDURE ^ ImportModule(name: SyntaxTree.Identifier; position: Position); 
 		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
 		PROCEDURE ^ AnonymousTypeDeclaration(x: SyntaxTree.Type; CONST prefix: ARRAY OF CHAR); 
 		PROCEDURE ^ FixPointerType(type: SyntaxTree.PointerType); 
 		PROCEDURE ^ VisitPointerType*(x: SyntaxTree.PointerType); 
 		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
 		PROCEDURE ^ FixProcedureType(procedureType: SyntaxTree.ProcedureType); 
-		PROCEDURE ^ HasFlag(VAR modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT): BOOLEAN; 
-		PROCEDURE ^ HasValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT; VAR value: LONGINT): BOOLEAN; 
-		PROCEDURE ^ HasStringValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: LONGINT; VAR value: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ HasFlag(VAR modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position): BOOLEAN; 
+		PROCEDURE ^ HasValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HasStringValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position; VAR value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SkipImplementation*(x: SyntaxTree.CellType): BOOLEAN; 
 		PROCEDURE ^ CheckModifiers(modifiers: SyntaxTree.Modifier; checkUse: BOOLEAN); 
 		PROCEDURE ^ VisitProcedureType*(procedureType: SyntaxTree.ProcedureType); 
@@ -123,8 +124,8 @@ TYPE
 		PROCEDURE ^ CheckIndexOperator(operator: SyntaxTree.Operator; arrayStructure: SyntaxTree.MathArrayType; VAR isReadOperator, isGeneralOperator: BOOLEAN; VAR indexListSize, indexListKind: LONGINT): BOOLEAN; 
 		PROCEDURE ^ FixTypes; 
 		PROCEDURE ^ ResolveType(x: SyntaxTree.Type): SyntaxTree.Type; 
-		PROCEDURE ^ RegularType(position: LONGINT; type: SyntaxTree.Type): SyntaxTree.Type; 
-		PROCEDURE ^ SignatureCompatible(position: LONGINT; this, to: SyntaxTree.ProcedureType): BOOLEAN; 
+		PROCEDURE ^ RegularType(position: Position; type: SyntaxTree.Type): SyntaxTree.Type; 
+		PROCEDURE ^ SignatureCompatible(position: Position; this, to: SyntaxTree.ProcedureType): BOOLEAN; 
 		PROCEDURE ^ ParameterCompatible(formal: SyntaxTree.Parameter; actual: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ AssignmentCompatible(left: SyntaxTree.Designator; right: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ VisitIntegerValue*(value: SyntaxTree.IntegerValue); 
@@ -140,14 +141,14 @@ TYPE
 		PROCEDURE ^ VisitSet*(set: SyntaxTree.Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
 		PROCEDURE ^ VisitUnaryExpression*(unaryExpression: SyntaxTree.UnaryExpression); 
-		PROCEDURE ^ MathArrayConversion(position: LONGINT; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression; 
-		PROCEDURE ^ ConvertValue(position: LONGINT; expression: SyntaxTree.Value; type: SyntaxTree.Type): SyntaxTree.Expression; 
-		PROCEDURE ^ NewConversion*(position: LONGINT; expression: SyntaxTree.Expression; type: SyntaxTree.Type; reference: SyntaxTree.Expression): SyntaxTree.Expression; 
-		PROCEDURE ^ CompatibleConversion(position: LONGINT; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ MathArrayConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ ConvertValue(position: Position; expression: SyntaxTree.Value; type: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewConversion*(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type; reference: SyntaxTree.Expression): SyntaxTree.Expression; 
+		PROCEDURE ^ CompatibleConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ ConvertOperands(VAR left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ FindOperator*(system: Global.System; operator: LONGINT; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator; 
 		PROCEDURE ^ SetCurrentScope*(scope: SyntaxTree.Scope); 
-		PROCEDURE ^ NewOperatorCall*(position: LONGINT; op: LONGINT; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewOperatorCall*(position: Position; op: LONGINT; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ VisitBinaryExpression*(binaryExpression: SyntaxTree.BinaryExpression); 
 		PROCEDURE ^ VisitRangeExpression*(x: SyntaxTree.RangeExpression); 
 		PROCEDURE ^ VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression); 
@@ -155,21 +156,21 @@ TYPE
 		PROCEDURE ^ VisitSymbolDesignator*(x: SyntaxTree.SymbolDesignator); 
 		PROCEDURE ^ VisitSelfDesignator*(x: SyntaxTree.SelfDesignator); 
 		PROCEDURE ^ VisitResultDesignator*(x: SyntaxTree.ResultDesignator); 
-		PROCEDURE ^ NewSymbolDesignator*(position: LONGINT; left: SyntaxTree.Designator; symbol: SyntaxTree.Symbol): SyntaxTree.Expression; 
+		PROCEDURE ^ NewSymbolDesignator*(position: Position; left: SyntaxTree.Designator; symbol: SyntaxTree.Symbol): SyntaxTree.Expression; 
 		PROCEDURE ^ VisitIdentifierDesignator*(identifierDesignator: SyntaxTree.IdentifierDesignator); 
 		PROCEDURE ^ VisitSelectorDesignator*(selectorDesignator: SyntaxTree.SelectorDesignator); 
 		PROCEDURE ^ IndexCheck(index, length: SyntaxTree.Expression); 
 		PROCEDURE ^ SetIndexBaseType(indexDesignator: SyntaxTree.IndexDesignator; newBaseType: SyntaxTree.Type); 
-		PROCEDURE ^ AppendMathIndex(position: LONGINT; indexDesignator: SyntaxTree.IndexDesignator; indexListItem: SyntaxTree.Expression; sourceArray: SyntaxTree.MathArrayType); 
-		PROCEDURE ^ AppendIndex(position: LONGINT; index: SyntaxTree.IndexDesignator; expression: SyntaxTree.Expression; over: SyntaxTree.Type); 
+		PROCEDURE ^ AppendMathIndex(position: Position; indexDesignator: SyntaxTree.IndexDesignator; indexListItem: SyntaxTree.Expression; sourceArray: SyntaxTree.MathArrayType); 
+		PROCEDURE ^ AppendIndex(position: Position; index: SyntaxTree.IndexDesignator; expression: SyntaxTree.Expression; over: SyntaxTree.Type); 
 		PROCEDURE ^ ConvertToMathArray(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ ListOfOpenRanges(itemCount: LONGINT): SyntaxTree.ExpressionList; 
-		PROCEDURE ^ NewIndexOperatorCall*(position: LONGINT; left: SyntaxTree.Expression; indexList: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
-		PROCEDURE ^ NewObjectOperatorCall*(position: LONGINT; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
+		PROCEDURE ^ NewIndexOperatorCall*(position: Position; left: SyntaxTree.Expression; indexList: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
+		PROCEDURE ^ NewObjectOperatorCall*(position: Position; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ VisitBracketDesignator*(bracketDesignator: SyntaxTree.BracketDesignator); 
 		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList): BOOLEAN; 
 		PROCEDURE ^ CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN; 
-		PROCEDURE ^ NewProcedureCallDesignator(position: LONGINT; left: SyntaxTree.Designator; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Designator; 
+		PROCEDURE ^ NewProcedureCallDesignator(position: Position; left: SyntaxTree.Designator; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Designator; 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
@@ -198,11 +199,11 @@ TYPE
 		PROCEDURE ^ CheckCharacterValue(x: SyntaxTree.Expression; VAR value: CHAR): BOOLEAN; 
 		PROCEDURE ^ CheckPositiveIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT; includeZero: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ CheckPortType(x: SyntaxTree.Expression; VAR portType: SyntaxTree.PortType): BOOLEAN; 
-		PROCEDURE ^ NewBuiltinCallDesignator(position: LONGINT; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
-		PROCEDURE ^ NewTypeGuardDesignator(position: LONGINT; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
+		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewTypeGuardDesignator(position: Position; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ VisitParameterDesignator*(designator: SyntaxTree.ParameterDesignator); 
-		PROCEDURE ^ NewDereferenceDesignator(position: LONGINT; left: SyntaxTree.Designator): SyntaxTree.Designator; 
-		PROCEDURE ^ NewSupercallDesignator(position: LONGINT; left: SyntaxTree.Designator): SyntaxTree.Designator; 
+		PROCEDURE ^ NewDereferenceDesignator(position: Position; left: SyntaxTree.Designator): SyntaxTree.Designator; 
+		PROCEDURE ^ NewSupercallDesignator(position: Position; left: SyntaxTree.Designator): SyntaxTree.Designator; 
 		PROCEDURE ^ VisitArrowDesignator*(arrowDesignator: SyntaxTree.ArrowDesignator); 
 		PROCEDURE ^ ResolveExpression(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ ConstantExpression(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
@@ -243,7 +244,7 @@ TYPE
 		PROCEDURE ^ VisitExitStatement*(exitStatement: SyntaxTree.ExitStatement); 
 		PROCEDURE ^ VisitReturnStatement*(returnStatement: SyntaxTree.ReturnStatement); 
 		PROCEDURE ^ VisitAwaitStatement*(awaitStatement: SyntaxTree.AwaitStatement); 
-		PROCEDURE ^ CheckSystemImport(position: LONGINT); 
+		PROCEDURE ^ CheckSystemImport(position: Position); 
 		PROCEDURE ^ VisitCode*(code: SyntaxTree.Code); 
 		PROCEDURE ^ BlockFlags(block: SyntaxTree.StatementBlock); 
 		PROCEDURE ^ VisitStatementBlock*(statementBlock: SyntaxTree.StatementBlock); 

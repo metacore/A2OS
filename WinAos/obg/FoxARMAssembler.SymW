@@ -1,5 +1,5 @@
 MODULE FoxARMAssembler;
-	IMPORT InstructionSet := FoxARMInstructionSet, FoxAssembler, Scanner := FoxScanner, Diagnostics, Strings;
+	IMPORT InstructionSet := FoxARMInstructionSet, FoxAssembler, Scanner := FoxScanner, Diagnostics, Strings, Basic := FoxBasic;
 CONST 
 	Trace = FoxAssembler.Trace; 
 TYPE 

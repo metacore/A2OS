@@ -6,6 +6,8 @@ CONST
 TYPE 
 	MessageString = ARRAY 256 OF CHAR; 
 
+	Position = Basic.Position; 
+
 	IntermediateCodeParser* = OBJECT 
 	CONST 
 		Trace = FALSE; 
@@ -18,13 +20,13 @@ TYPE
 		system: Global.System; 
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; s: Global.System); 
-		PROCEDURE ^ Error(pos: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos: Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ NextSymbol; 
 		PROCEDURE ^ ThisToken(x: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetIdentifier(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectToken(x: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ ExpectAnyIdentifier(VAR pos: LONGINT; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectAnyIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IgnoreNewLines; 

@@ -30,6 +30,7 @@ CONST
 	MaxLInt* = 2147483647; 
 	MaxSet* = 31; 
 	invalidString* =  -1; 
+	InvalidCode* = Diagnostics.Invalid; 
 TYPE 
 	String* = StringPool.Index; 
 
@@ -48,6 +49,12 @@ TYPE
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index; 
 
 	ComparisonFunction = PROCEDURE {DELEGATE}(object1, object2: ANY):BOOLEAN; 
+
+	Position* = RECORD 
+		start*, end*, line*, linepos*: LONGINT; 
+	END; 
+
+	ErrorCode* = LONGINT; 
 
 	List* = OBJECT 
 	VAR 
@@ -450,11 +457,18 @@ VAR
 	getWriter: WriterFactory; 
 	getDiagnostics: DiagnosticsFactory; 
 	CRC32Table: ARRAY 256 OF SET; 
+	invalidPosition-: Position; 
 
 	PROCEDURE ^ MakeString*(CONST s: ARRAY OF CHAR): String; 
 	PROCEDURE ^ GetString*(s: String; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ StringEqual*(s, t: String): BOOLEAN; 
 	PROCEDURE ^ GetErrorMessage*(err: LONGINT; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position); 
+	PROCEDURE ^ MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR); 
+	PROCEDURE ^ ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Information*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ SetErrorMessage*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ SetErrorExpected*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: LONGINT); 

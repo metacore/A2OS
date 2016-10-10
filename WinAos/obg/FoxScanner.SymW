@@ -159,8 +159,10 @@ TYPE
 
 	Token* = LONGINT; 
 
+	Position* = Basic.Position; 
+
 	Symbol* = RECORD 
-		start*, end*, line-: LONGINT; 
+		position*: Position; 
 		token*: Token; 
 		identifier*: IdentifierType; 
 		identifierString*: IdentifierString; 
@@ -194,8 +196,7 @@ TYPE
 		reader-: Streams.Reader; 
 		diagnostics: Diagnostics.Diagnostics; 
 		ch-: CHAR; 
-		position-: LONGINT; 
-		line-: LONGINT; 
+		position-: Position; 
 		error-: BOOLEAN; 
 		firstIdentifier: BOOLEAN; 
 		case-: LONGINT; 
@@ -223,7 +224,8 @@ TYPE
 	END Scanner; 
 
 	Context* = RECORD 
-		position, readerPosition, line: LONGINT; 
+		position: Position; 
+		readerPosition: LONGINT; 
 		ch: CHAR; 
 	END; 
 

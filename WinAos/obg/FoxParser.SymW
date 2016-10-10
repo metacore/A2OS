@@ -4,6 +4,8 @@ CONST
 	Trace = FALSE; 
 	CascadedWithSupport = TRUE; 
 TYPE 
+	Position* = Scanner.Position; 
+
 	Parser* = OBJECT 
 	VAR 
 		scanner-: Scanner.Scanner; 
@@ -25,7 +27,7 @@ TYPE
 		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ SetLax*; 
-		PROCEDURE ^ Error(position: LONGINT; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ SkipComments(b: BOOLEAN); 
 		PROCEDURE ^ NextSymbol*; 
 		PROCEDURE ^ Token*(): LONGINT; 
@@ -35,7 +37,7 @@ TYPE
 		PROCEDURE ^ Mandatory*(token: Scanner.Token): BOOLEAN; 
 		PROCEDURE ^ Check(token: Scanner.Token); 
 		PROCEDURE ^ MandatoryIdentifier(VAR name: SyntaxTree.Identifier): BOOLEAN; 
-		PROCEDURE ^ Identifier(VAR position: LONGINT): SyntaxTree.Identifier; 
+		PROCEDURE ^ Identifier(VAR position: Position): SyntaxTree.Identifier; 
 		PROCEDURE ^ MandatoryString*(VAR name: Scanner.StringType): BOOLEAN; 
 		PROCEDURE ^ ExpectThisIdentifier(name: SyntaxTree.Identifier): BOOLEAN; 
 		PROCEDURE ^ ExpectThisString(CONST name: ARRAY OF CHAR): BOOLEAN; 
@@ -61,14 +63,14 @@ TYPE
 		PROCEDURE ^ Code(outer: SyntaxTree.Statement): SyntaxTree.Code; 
 		PROCEDURE ^ Body(scope: SyntaxTree.ProcedureScope): SyntaxTree.Body; 
 		PROCEDURE ^ BodyProcedure(parentScope: SyntaxTree.Scope): SyntaxTree.Procedure; 
-		PROCEDURE ^ ProcedureType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType; 
-		PROCEDURE ^ ObjectType(position: LONGINT; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
-		PROCEDURE ^ CellType(position: LONGINT; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type; 
-		PROCEDURE ^ PointerType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.PointerType; 
-		PROCEDURE ^ RecordType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.RecordType; 
-		PROCEDURE ^ ArrayType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
-		PROCEDURE ^ EnumerationType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
-		PROCEDURE ^ PortType(position: LONGINT; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ ProcedureType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType; 
+		PROCEDURE ^ ObjectType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ CellType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type; 
+		PROCEDURE ^ PointerType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.PointerType; 
+		PROCEDURE ^ RecordType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.RecordType; 
+		PROCEDURE ^ ArrayType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ EnumerationType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ PortType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
 		PROCEDURE ^ Type(name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
 		PROCEDURE ^ PortDeclaration(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ PortList(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 

@@ -1,5 +1,5 @@
 MODULE FoxIntermediateAssembler;
-	IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Scanner := FoxScanner;
+	IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Scanner := FoxScanner, Basic := FoxBasic;
 CONST 
 	Trace = FoxAssembler.Trace; 
 TYPE 

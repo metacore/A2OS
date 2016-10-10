@@ -128,8 +128,10 @@ TYPE
 
 	Token* = LONGINT; 
 
+	Position* = Basic.Position; 
+
 	Symbol* = RECORD 
-		start*, end*, line-: LONGINT; 
+		position*: Position; 
 		token*: Token; 
 		identifier*: IdentifierType; 
 		identifierString*: IdentifierString; 
@@ -150,8 +152,7 @@ TYPE
 		reader: Streams.Reader; 
 		diagnostics: Diagnostics.Diagnostics; 
 		ch: CHAR; 
-		position: LONGINT; 
-		line-: LONGINT; 
+		position-: Position; 
 		error-: BOOLEAN; 
 		stringWriter: Streams.Writer; 
 		stringMaker: StringMaker; 

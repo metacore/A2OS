@@ -197,6 +197,8 @@ CONST
 	SymLynxSelidx* = (endFox + 9); 
 	end = (endFox + 10); 
 TYPE 
+	Position = SyntaxTree.Position; 
+
 	Alignment* = RECORD 
 		min, max: LONGINT; 
 	END; 
@@ -285,11 +287,11 @@ VAR
 	PROCEDURE ^ IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetSignedIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
-	PROCEDURE ^ NewIntegerValue*(system: System; position: LONGINT; hugeint: HUGEINT): SyntaxTree.Value; 
-	PROCEDURE ^ NewBooleanValue*(system: System; position: LONGINT; b: BOOLEAN): SyntaxTree.Value; 
-	PROCEDURE ^ NewSetValue*(system: System; position: LONGINT; s: SET): SyntaxTree.Value; 
-	PROCEDURE ^ NewCharacterValue*(system: System; position: LONGINT; c: CHAR): SyntaxTree.Value; 
-	PROCEDURE ^ NewNilValue*(system: System; position: LONGINT): SyntaxTree.Value; 
+	PROCEDURE ^ NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value; 
+	PROCEDURE ^ NewBooleanValue*(system: System; position: Position; b: BOOLEAN): SyntaxTree.Value; 
+	PROCEDURE ^ NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value; 
+	PROCEDURE ^ NewCharacterValue*(system: System; position: Position; c: CHAR): SyntaxTree.Value; 
+	PROCEDURE ^ NewNilValue*(system: System; position: Position): SyntaxTree.Value; 
 	PROCEDURE ^ BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): LONGINT; 
 	PROCEDURE ^ GetIdentifier*(symbol: LONGINT; case: LONGINT): SyntaxTree.Identifier; 
 	PROCEDURE ^ GetSymbol*(case: LONGINT; id: SyntaxTree.Identifier): LONGINT; 

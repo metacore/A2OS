@@ -122,7 +122,7 @@ TYPE
 	Instruction* = POINTER TO RECORD 
 		opcode-: SHORTINT; 
 		subtype-: SHORTINT; 
-		textPosition-: LONGINT; 
+		textPosition-: Basic.Position; 
 		pc-: LONGINT; 
 		op1*, op2*, op3*: Operand; 
 	END; 
@@ -192,10 +192,10 @@ VAR
 	PROCEDURE ^ Equals*(CONST i1, i2: Instruction): BOOLEAN; 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ InitInstructions; 
-	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: LONGINT; opcode: SHORTINT; op1, op2, op3: Operand); 
-	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: LONGINT; opcode: SHORTINT; op1, op2: Operand); 
-	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: LONGINT; opcode: SHORTINT; op1: Operand); 
-	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: LONGINT; opcode: SHORTINT); 
+	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2, op3: Operand); 
+	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2: Operand); 
+	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1: Operand); 
+	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT); 
 	PROCEDURE ^ SetSubType*(VAR instr: Instruction; subType: SHORTINT); 
 	PROCEDURE ^ InitOperand*(VAR op: Operand); 
 	PROCEDURE ^ InitRegister*(VAR op: Operand; type: Type; registerClass: RegisterClass; register: LONGINT); 

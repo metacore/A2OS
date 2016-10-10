@@ -403,7 +403,7 @@ TYPE
 					NEW(module.ident);
 					COPY(symbol.identifierString, modName);
 					module.ident.name := Strings.NewString(symbol.identifierString);
-					module.ident.pos := symbol.start;
+					module.ident.pos := symbol.position.start;
 				END;
 				NextSymbol;
 				IF symbol.token = FoxScanner.In THEN
@@ -411,7 +411,7 @@ TYPE
 					IF symbol.token = FoxScanner.Identifier THEN
 						NEW(module.context);
 						module.context.name := Strings.NewString(symbol.identifierString);
-						module.context.pos := symbol.start;
+						module.context.pos := symbol.position.start;
 					END;
 					Check (FoxScanner.Identifier);
 				END;
@@ -436,7 +436,7 @@ TYPE
 					DeclSeqP(module.declSeq);
 				END;
 				IF (symbol.token = FoxScanner.Begin) THEN
-					module.bodyPos := symbol.start;
+					module.bodyPos := symbol.position.start;
 				ELSE
 					module.bodyPos := 0;
 				END;
@@ -446,7 +446,7 @@ TYPE
 				ELSE
 					(* maybe missing END or wrong module name *)
 					hasError := TRUE;
-					KernelLog.String("err3: "); KernelLog.Int(symbol.start, 0); KernelLog.Ln;
+					KernelLog.String("err3: "); KernelLog.Int(symbol.position.start, 0); KernelLog.Ln;
 				END;
 				module.hasError := hasError;
 			END;
@@ -459,19 +459,19 @@ TYPE
 			WHILE symbol.token = FoxScanner.Identifier DO
 				NEW(import.ident);
 				import.ident.name := Strings.NewString(symbol.identifierString);
-				import.ident.pos := symbol.start;
+				import.ident.pos := symbol.position.start;
 				NextSymbol;	(* avoids endless loop *)
 				IF symbol.token = FoxScanner.Becomes THEN
 					NextSymbol;
 					IF symbol.token = FoxScanner.Identifier THEN
 						NEW(import.alias);
 						import.alias.name := Strings.NewString(symbol.identifierString);
-						import.alias.pos := symbol.start;
+						import.alias.pos := symbol.position.start;
 						NextSymbol;
 					ELSE
 						(* Error *)
 						hasError := TRUE;
-						KernelLog.String("err2: "); KernelLog.Int(symbol.start, 0); KernelLog.Ln;
+						KernelLog.String("err2: "); KernelLog.Int(symbol.position.start, 0); KernelLog.Ln;
 					END;
 				END;
 				IF symbol.token = FoxScanner.In THEN
@@ -479,7 +479,7 @@ TYPE
 					IF symbol.token = FoxScanner.Identifier THEN
 						NEW(import.context);
 						import.context.name := Strings.NewString(symbol.identifierString);
-						import.context.pos := symbol.start;
+						import.context.pos := symbol.position.start;
 					END;
 					Check (FoxScanner.Identifier);
 				END;
@@ -502,7 +502,7 @@ TYPE
 				IF symbol.token = FoxScanner.Identifier THEN
 					NEW(definition.ident);
 					definition.ident.name := Strings.NewString(symbol.identifierString);
-					definition.ident.pos := symbol.start;
+					definition.ident.pos := symbol.position.start;
 					NextSymbol;
 				END;
 				WHILE symbol.token = FoxScanner.Semicolon DO NextSymbol END;
@@ -669,7 +669,7 @@ TYPE
 				END;
 			END;
 			IF (symbol.token = FoxScanner.Begin) THEN
-				proc.bodyPos := symbol.start;
+				proc.bodyPos := symbol.position.start;
 			ELSE
 				proc.bodyPos := 0;
 			END;
@@ -788,7 +788,7 @@ TYPE
 				SysFlag;
 				(*
 				fpSection.identList.ident.name := Strings.NewString(name);
-				fpSection.identList.ident.pos := symbol.start;
+				fpSection.identList.ident.pos := symbol.position.start;
 				NextSymbol;
 				*)
 				IF symbol.token = FoxScanner.Equal THEN NextSymbol; ConstExprP(FoxScanner.Comma, FoxScanner.Colon, dummy) END; (* added for optional parameters *)
@@ -806,7 +806,7 @@ TYPE
 						NEW(identDef);
 						NEW(identDef.ident);
 						identDef.ident.name := Strings.NewString(name);
-						identDef.ident.pos := symbol.start;
+						identDef.ident.pos := symbol.position.start;
 						AppendLast(fpSection.identlist, identDef);
 						NextSymbol;
 					END;
@@ -832,10 +832,10 @@ TYPE
 			| FoxScanner.Procedure, FoxScanner.Operator: NextSymbol; NEW(type.procedure, type); ProcedureP(type.procedure);
 			| FoxScanner.Identifier: NEW(type.qualident, type); QualidentP(type.qualident);
 			| FoxScanner.Address, FoxScanner.Size: NEW(type.qualident, type); NEW(type.qualident.ident);
-				type.qualident.ident.name := Strings.NewString(symbol.identifierString); type.qualident.ident.pos := symbol.start; NextSymbol;
+				type.qualident.ident.name := Strings.NewString(symbol.identifierString); type.qualident.ident.pos := symbol.position.start; NextSymbol;
 			ELSE
 				(* Error *)
-				hasError := TRUE; KernelLog.String("err4: "); KernelLog.Int(symbol.start, 0); KernelLog.Ln;
+				hasError := TRUE; KernelLog.String("err4: "); KernelLog.Int(symbol.position.start, 0); KernelLog.Ln;
 				NextSymbol;	(* ??? *)
 			END;
 		END TypeP;
@@ -866,7 +866,7 @@ TYPE
 				ELSE
 					(* Error *)
 					hasError := TRUE;
-					KernelLog.String("err1: "); KernelLog.Int(symbol.start, 0); KernelLog.Ln;
+					KernelLog.String("err1: "); KernelLog.Int(symbol.position.start, 0); KernelLog.Ln;
 				END;
 			END;
 		END ArrayP;
@@ -986,8 +986,8 @@ TYPE
 			pos := -1;
 			WHILE (symbol.token # FoxScanner.Begin) & (symbol.token # FoxScanner.End) & (symbol.token # FoxScanner.EndOfText) DO
 					(* avoid endless-loop *)
-				IF pos = symbol.start THEN NextSymbol END;
-				pos := symbol.start;
+				IF pos = symbol.position.start THEN NextSymbol END;
+				pos := symbol.position.start;
 				NEW(declSeq, object);
 				DeclSeqP(declSeq);
 				IF object.declSeq = NIL THEN object.declSeq := declSeq;
@@ -995,7 +995,7 @@ TYPE
 				END;
 			END;
 			IF (symbol.token = FoxScanner.Begin) THEN
-				object.bodyPos := symbol.start;
+				object.bodyPos := symbol.position.start;
 			ELSE
 				object.bodyPos := 0;
 			END;
@@ -1016,8 +1016,8 @@ TYPE
 			pos := -1;
 			WHILE (symbol.token # FoxScanner.Begin) & (symbol.token # FoxScanner.End) & (symbol.token # FoxScanner.EndOfText) DO
 					(* avoid endless-loop *)
-				IF pos = symbol.start THEN NextSymbol END;
-				pos := symbol.start;
+				IF pos = symbol.position.start THEN NextSymbol END;
+				pos := symbol.position.start;
 				NEW(declSeq, cell);
 				DeclSeqP(declSeq);
 				IF cell.declSeq = NIL THEN cell.declSeq := declSeq;
@@ -1025,7 +1025,7 @@ TYPE
 				END;
 			END;
 			IF (symbol.token = FoxScanner.Begin) THEN
-				cell.bodyPos := symbol.start;
+				cell.bodyPos := symbol.position.start;
 			ELSE
 				cell.bodyPos := 0;
 			END;
@@ -1078,7 +1078,7 @@ TYPE
 			END Add;
 
 		BEGIN
-			expr.pos := symbol.start;
+			expr.pos := symbol.position.start;
 			IF (symbol.token = delimiter1) OR (symbol.token = delimiter2) THEN RETURN END;
 			REPEAT
 				CASE symbol.token OF
@@ -1164,7 +1164,7 @@ TYPE
 							modifiers := modifiers + {Uncooperative};
 							NextSymbol;
 						ELSE
-							Error(symbol.start); NextSymbol (* skip the ident, probably a typo *)
+							Error(symbol.position.start); NextSymbol (* skip the ident, probably a typo *)
 						END;
 					END;
 					IF symbol.token # FoxScanner.Comma THEN EXIT END;
@@ -1186,7 +1186,7 @@ TYPE
 							IF symbol.identifierString = InterruptStr THEN NextSymbol; procHead.modifiers := procHead.modifiers + {Interrupt}
 							ELSE NextSymbol;
 							END;
-						ELSE Error(symbol.start); NextSymbol; (* skip the ident, probably a typo *)
+						ELSE Error(symbol.position.start); NextSymbol; (* skip the ident, probably a typo *)
 						END;
 						IF (symbol.token = FoxScanner.LeftParenthesis) THEN
 							NextSymbol;
@@ -1213,7 +1213,7 @@ TYPE
 			ELSIF symbol.token = FoxScanner.LeftParenthesis THEN
 				NextSymbol; Check(FoxScanner.Number); value := symbol.integer; Check(FoxScanner.RightParenthesis)
 			ELSE
-				Error(symbol.start); NextSymbol
+				Error(symbol.position.start); NextSymbol
 			END
 		END ModifierValueP;
 
@@ -1261,7 +1261,7 @@ TYPE
 		BEGIN
 			IF symbol.token = FoxScanner.Identifier THEN
 				COPY(symbol.identifierString, name);
-				pos := symbol.start;
+				pos := symbol.position.start;
 				NextSymbol;
 				IF symbol.token = FoxScanner.Period THEN
 					NextSymbol;
@@ -1282,11 +1282,11 @@ TYPE
 			IF (symbol.token = FoxScanner.Identifier) OR (symbol.token = FoxScanner.Number) & (symbol.numberType = FoxScanner.Character)  THEN
 				NEW(identDef.ident);
 				identDef.ident.name := Strings.NewString(symbol.identifierString);
-				identDef.ident.pos := symbol.start;
+				identDef.ident.pos := symbol.position.start;
 			ELSIF (symbol.token = FoxScanner.String) THEN
 				NEW(identDef.ident);
 				identDef.ident.name := Strings.NewString(symbol.string^);
-				identDef.ident.pos := symbol.start;
+				identDef.ident.pos := symbol.position.start;
 			END;
 			NextSymbol;
 			IF symbol.token = FoxScanner.Times THEN
@@ -1319,7 +1319,7 @@ TYPE
 				(* error *)
 
 				KernelLog.String("******* Check error **********  ");
-				KernelLog.Int(symbol.start, 0);
+				KernelLog.Int(symbol.position.start, 0);
 				KernelLog.Ln;
 
 				hasError := TRUE;

@@ -731,16 +731,16 @@ positive: array structured object type (was: problem with register restoration w
 	  ASSERT(asot[*, *][*, 0] = [LONGINT(0),0,0,0]);
 	 END Test.
 
-positive: correct use of SYSTEM.ADR and SYSTEM.VAL for tensors and open math arrays
+positive: correct use of ADDRESS OF and SYSTEM.VAL for tensors and open math arrays
 
 	MODULE Test;
 	IMPORT SYSTEM;
 
 	VAR a: ARRAY [*,*,*] OF REAL;
 
-	PROCEDURE GetDim(adr: SYSTEM.ADDRESS): LONGINT;
+	PROCEDURE GetDim(adr: ADDRESS): LONGINT;
 	CONST
-		AddressSize=SYSTEM.SIZEOF(SYSTEM.ADDRESS);
+		AddressSize=SIZEOF(ADDRESS);
 		MathDimOffset=3*AddressSize;
 	BEGIN
 		SYSTEM.GET(adr+MathDimOffset,adr); RETURN adr;

@@ -324,6 +324,7 @@ TYPE
 			SELF.position.start := position;
 			SELF.position.line := 1;
 			SELF.position.linepos := 0;
+			IF source = "" THEN SELF.position.reader := reader END; 
 			useLineNumbers := FALSE;
 		END InitializeScanner;
 

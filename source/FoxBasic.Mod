@@ -65,6 +65,7 @@ TYPE
 	
 	Position*= RECORD
 		start*, end*, line*, linepos*: LONGINT;
+		reader*: Streams.Reader;
 	END;
 	
 	ErrorCode*=LONGINT;
@@ -1763,16 +1764,22 @@ VAR
 	(* error message with code *)
 	PROCEDURE ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR);
 	VAR message,err: ARRAY 512 OF CHAR; ch: CHAR; b: BOOLEAN; oldpos: LONGINT;
-		file: Files.File; reader: Files.Reader;
+		file: Files.File; reader: Streams.Reader;
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeMessage(pos, code, msg,message);
-			IF (source # "") & (pos.linepos >= 0) THEN
-				err[0] := 0AX;
-				err[1] := 0X;
-				file := Files.Old(source);
-				IF file # NIL THEN 
-					NEW(reader, file, pos.linepos); 
+			IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
+				reader := pos.reader;
+				IF reader = NIL THEN 
+					file := Files.Old(source);
+					IF file # NIL THEN 
+						reader := NEW Files.Reader(file, pos.linepos); 
+					END;
+				END;
+				IF (reader # NIL) & (reader.CanSetPos()) THEN 
+					err[0] := 0AX;
+					err[1] := 0X;
+					oldpos := reader.Pos();
 					reader.SetPos(pos.linepos);
 					reader.Char(ch);
 					WHILE (ch # 0X) & (ch # 0AX) DO
@@ -1782,6 +1789,7 @@ VAR
 						END;
 						reader.Char(ch);
 					END;
+					reader.SetPos(oldpos); 
 					Strings.Append(message, err);
 					(*diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, err);*)
 				END;

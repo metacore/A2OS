@@ -4,7 +4,7 @@ MODULE UnixFiles;   (** AUTHOR "gf"; PURPOSE "Unix file systems" *)
 
 (*  derived fron (SPARCOberon) Files.Mod by J. Templ 1.12. 89/14.05.93 *)
 
-IMPORT S := SYSTEM, Unix, Machine, Heaps, Objects, Kernel, Modules, Log := KernelLog, Files;
+IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files;
 
 
 CONST
@@ -16,7 +16,7 @@ CONST
 	CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
 	
 	TraceCollection = 0;
-	TraceSearch=1;
+(*	TraceSearch=1;*)
 	Trace = {};
 VAR
 	tempno: INTEGER;
@@ -128,32 +128,6 @@ TYPE
 
 	END FinalizeFiles;
 	
-	
-	SearchByName = OBJECT
-	VAR sname: Filename;
-		found: File;
-
-		PROCEDURE Init( name: ARRAY OF CHAR );
-		BEGIN
-			found := NIL;  COPY(name, sname); (* UpperCase( name, sname )*)
-		END Init;
-
-		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
-		VAR F: File;  fname: Filename;
-		BEGIN
-			F := f( File );  (* UpperCase( F.workName, fname );*)
-
-			IF TraceSearch IN Trace THEN Log.String( "Enumerate: " );  Log.String( fname );
-			END;
-			IF sname = fname THEN found := F;  cont := FALSE ELSE cont := TRUE END;
-			IF TraceSearch IN Trace THEN
-				IF cont THEN Log.String( " # " );  ELSE Log.String( " = " );  END;
-				Log.String( sname );  Log.Ln;
-			END;
-		END EnumFile;
-
-	END SearchByName;
-	
 
 	SearchByFstat = OBJECT
 	VAR 
@@ -167,7 +141,6 @@ TYPE
 		END Init;
 
 		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
-		VAR F: File;  fname: Filename;
 		BEGIN
 			WITH f: File DO
 				IF (stat.ino = f.ino) & (stat.dev = f.dev) THEN
@@ -185,31 +158,13 @@ TYPE
 	
 	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
 	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
-		search: SearchByName;
 		ssearch: SearchByFstat;
 		fileKey: LONGINT;
 
 		PROCEDURE & Init*;
 		BEGIN
-			NEW( oldFiles );  NEW( newFiles );  NEW( search );   NEW(ssearch); fileKey := -1;
+			NEW( oldFiles );  NEW( newFiles );   NEW(ssearch); fileKey := -1;
 		END Init;
-
-		PROCEDURE GetNextFileKey( ): LONGINT;
-		BEGIN {EXCLUSIVE}
-			DEC( fileKey );  RETURN fileKey
-		END GetNextFileKey;
-
-		PROCEDURE Register( F: File );
-		BEGIN {EXCLUSIVE}
-			IF TraceCollection IN Trace THEN Log.String( "Collections.Register " );  Log.String( F.workName );  Log.Ln;  END;
-			oldFiles.Add( F, FinalizeFile );  newFiles.Remove( F );  DEC( fileKey );  (*F.Init( F.workName, F.hfile, fileKey,F.fileSystem );*)
-		END Register;
-
-		PROCEDURE Unregister( F: File );
-		BEGIN {EXCLUSIVE}
-			IF TraceCollection IN Trace THEN Log.String( "Unregister " );  Log.String( F.workName );  Log.Ln;  END;
-			oldFiles.Remove( F );  newFiles.Add( F, FinalizeFile (* FinalizeFile*) );  (*F.Init( F.workName, Kernel32.InvalidHandleValue, 0, F.fileSystem );*)
-		END Unregister;
 
 		PROCEDURE AddNew( F: File );
 		BEGIN {EXCLUSIVE}
@@ -239,19 +194,6 @@ TYPE
 			RETURN ssearch.found;
 		END ByStat;
 		
-
-		PROCEDURE ByName( VAR fname: ARRAY OF CHAR ): File;
-		BEGIN {EXCLUSIVE}
-			IF TraceCollection IN Trace THEN Log.String( "Collections.ByName: " );  Log.String( fname );  Log.Ln;  END;
-			search.Init( fname );  oldFiles.Enumerate( search.EnumFile );  RETURN search.found
-		END ByName;
-
-		PROCEDURE ByNameNotGC( VAR fname: ARRAY OF CHAR ): File;
-		BEGIN {EXCLUSIVE}
-			IF TraceCollection IN Trace THEN Log.String( "Collections.ByName: " );  Log.String( fname );  Log.Ln;  END;
-			search.Init( fname );  oldFiles.EnumerateN( search.EnumFile );  RETURN search.found;
-		END ByNameNotGC;
-
 		PROCEDURE Finalize;
 		VAR fin: FinalizeFiles;
 		BEGIN {EXCLUSIVE}
@@ -544,7 +486,7 @@ TYPE
 					checkSet := NIL;
 				END Enumerate0;
 
-			END UnixFileSystem;
+	END UnixFileSystem;
 	
 	
 	Buffer =	POINTER TO RECORD (Files.Hint)
@@ -880,7 +822,6 @@ TYPE
 					collection.oldFiles.Remove(SELF);
 				END Close;
 				
-				
 				PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
 				BEGIN {EXCLUSIVE}
 					IF registerName = "" THEN  COPY( workName, name ) ;
@@ -1135,15 +1076,6 @@ TYPE
 		pid := Unix.getpid();
 		AppendInt( tempName, pid )
 	END GetTempName;
-
-	
-
-	
-	PROCEDURE Cleanup( obj: ANY );
-	VAR f: File;
-	BEGIN
-		f := S.VAL( File, obj );  f.Close
-	END Cleanup;
 
 (*
 	PROCEDURE CloseFiles;

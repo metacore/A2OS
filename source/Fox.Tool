@@ -107,9 +107,9 @@ SystemTools.DoCommands
 	FoxTest.Compile	-l=Test.Log Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
 	FoxTest.Compile	-l=Test.Log ActiveCells.Execution.Test ActiveCells.Execution.TestDiff ~
 	FoxTest.Compile	-l=Test.Log MathArrays.Execution.Test  ~ 
-
 ~
-
+	TextCompiler.CompileClipboard -p=Win32G  ~
+	TextCompiler.CompileSelection -p=Win32G ~
 
 open regression test files
 PET.Open Oberon.Compilation.Test ~

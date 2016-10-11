@@ -2008,7 +2008,9 @@ TYPE
 		(* exit <parSize>, <pcOffset> *)
 		PROCEDURE EmitExit(CONST irInstruction: IntermediateCode.Instruction);
 		BEGIN
-			Emit2(opLDR, opLR, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment, InstructionSet.PostIndexed}));
+			IF (irInstruction.op2.intValue # SyntaxTree.InterruptCallingConvention) THEN
+				Emit2(opLDR, opLR, InstructionSet.NewImmediateOffsetMemory(InstructionSet.SP, 4, {InstructionSet.Increment, InstructionSet.PostIndexed}));
+			END;
 			IF (irInstruction.op1.intValue = 0) & (irInstruction.op2.intValue # SyntaxTree.InterruptCallingConvention) THEN
 				(* Emit2(opMOV, opPC, opLR) *)
 				Emit1(opBX, opLR) (* recommended for better interoperability between ARM and Thumb *)

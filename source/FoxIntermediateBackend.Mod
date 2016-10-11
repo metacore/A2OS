@@ -1514,10 +1514,12 @@ TYPE
 			SELF.section := section;
 			prevDump := dump;
 			dump := section.comments;
-			IF backend.hasLinkRegister THEN
-				Emit(Push(Basic.invalidPosition, lr));
+			IF callconv # SyntaxTree.InterruptCallingConvention THEN
+				IF backend.hasLinkRegister THEN
+					Emit(Push(Basic.invalidPosition, lr));
+				END;
+				Emit(Push(Basic.invalidPosition,fp));
 			END;
-			Emit(Push(Basic.invalidPosition,fp));
 			
 			IF backend.cooperative & (callconv = SyntaxTree.OberonCallingConvention) THEN
 				IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
@@ -1549,7 +1551,7 @@ TYPE
 					Emit(Result(Basic.invalidPosition, sp));
 					nocall.Resolve(section.pc);
 				END;
-			ELSE
+			ELSIF callconv # SyntaxTree.InterruptCallingConvention THEN
 				IF procedure # NIL THEN
 					body := procedure.procedureScope.body;
 				ELSE
@@ -1599,14 +1601,15 @@ TYPE
 			ELSE 
 				body := NIL;
 			END;
-
-			IF backend.cooperative OR  backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
-				IntermediateCode.InitImmediate(op2,addressType, ToMemoryUnits(system, system.addressSize));
-				Emit(Add(position, sp, fp, op2));
-			ELSE
-				Emit(Mov(position, sp, fp));
+			IF callconv # SyntaxTree.InterruptCallingConvention THEN
+				IF backend.cooperative OR  backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
+					IntermediateCode.InitImmediate(op2,addressType, ToMemoryUnits(system, system.addressSize));
+					Emit(Add(position, sp, fp, op2));
+				ELSE
+					Emit(Mov(position, sp, fp));
+				END;
+				Emit(Pop(position, fp));
 			END;
-			Emit(Pop(position, fp));
 			SELF.section := prevSection;
 		END EmitLeave;
 

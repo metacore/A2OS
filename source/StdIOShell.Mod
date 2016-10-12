@@ -45,7 +45,7 @@ SystemTools.DoCommands
 		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
 		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
 		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-		ISO9660Files.Mod Generic.Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod 
+		ISO9660Files.Mod Generic.Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod Diagnostics.Mod 
 		ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
 		Pipes.Mod Shell.Mod StdIOShell.Mod  
 

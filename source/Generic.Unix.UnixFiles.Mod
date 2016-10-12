@@ -20,7 +20,7 @@ CONST
 	Trace = {};
 VAR
 	tempno: INTEGER;
-	openfiles: INTEGER;
+	openfiles: LONGINT;
 	
 	searchPath: ARRAY 1024 OF CHAR;
 	cwd: ARRAY 256 OF CHAR;
@@ -243,7 +243,7 @@ TYPE
 
 				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
 				VAR f: File;  stat: Unix.Status;  fd, r, errno, pos: LONGINT;
-					oflags: SET;  nextdir, path: Filename; 
+					oflags: SET;  nextdir, path: Filename;  fo: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					IF name = "" THEN  RETURN NIL  END;
 					
@@ -265,8 +265,13 @@ TYPE
 							fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
 							IF ((fd < 0) & (errno IN {Unix.ENFILE, Unix.EMFILE})) (* OR (fd >= FileTabSize)*)  THEN
 								(*IF fd > 0 THEN  r := Unix.p( fd )  END;*)
-								(*!GC ;*)
-								fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
+								REPEAT
+									TRACE(errno, openfiles);
+									fo := openfiles;
+									Kernel.GC;
+									WaitClose(fo);
+									fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
+								UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE})
 							END;
 
 							IF fd >= 0 THEN
@@ -292,7 +297,7 @@ TYPE
 									END;
 									f.key := NoKey;  f.fs := SELF;
 									(*fileTab[fd].f := f;  (* cache file *)*)
-									INC( openfiles );  
+									IncOpenFiles();
 									collection.AddOld(f);
 									(*RegisterFinalizer( f, Cleanup );*)
 									EXIT
@@ -515,7 +520,7 @@ TYPE
 
 				PROCEDURE CreateUnixFile;
 				VAR 
-					stat: Unix.Status;  done: BOOLEAN;  r: LONGINT;
+					stat: Unix.Status;  done: BOOLEAN;  errno,fo: LONGINT;
 				BEGIN
 					IF state = Create THEN  
 						GetTempName( registerName, workName );  tempFile := TRUE
@@ -526,16 +531,26 @@ TYPE
 							RETURN;
 						END;
 					END;
-					r := Unix.unlink( ADDRESSOF( workName ) );
+					errno := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
 					
 					(*IF (FileTabSize - openfiles) < ResFiles THEN  Kernel.GC  END;*)
 						
 					fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
-					done := fd >= 0;  r := Unix.errno();
-					IF (~done & (r IN {Unix.ENFILE, Unix.EMFILE})) THEN
+					done := fd >= 0;  errno := Unix.errno();
+					IF (~done & (errno IN {Unix.ENFILE, Unix.EMFILE})) THEN
+						REPEAT
+							TRACE(errno, openfiles);
+							fo := openfiles;
+							Kernel.GC;
+							WaitClose(fo);
+							fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr);  errno := Unix.errno();
+						UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE});
+						(*
+						TRACE(r, openfiles);
 						Kernel.GC; (*! + wait ? *)
 						fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
+						*)
 						done := fd >= 0
 					END;
 					IF done THEN
@@ -543,11 +558,11 @@ TYPE
 							r := Unix.close( fd );  
 							Halt( SELF, FALSE, "UnixFiles.File.Create: too many files open" )
 						ELSE*)
-							r := Unix.fstat( fd, stat );  
+							errno := Unix.fstat( fd, stat );  
 							dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
 							state := Open;  fpos := 0;
 							(*fileTab[fd].f := SELF;*)
-							INC( openfiles );  
+							IncOpenFiles();
 							
 							collection.AddNew(SELF);
 
@@ -813,7 +828,8 @@ TYPE
 							fd := NoDesc;
 						END;
 					END;
-					DEC( openfiles );  state := Closed;
+					DecOpenFiles();
+					state := Closed;
 				END Finalize;
 				
 				PROCEDURE Close;
@@ -1150,6 +1166,23 @@ TYPE
 		collection.Finalize;
 		unixFS.Finalize;
 	END Finalization;
+	
+	PROCEDURE DecOpenFiles;
+	BEGIN{EXCLUSIVE}
+		DEC(openfiles);
+	END DecOpenFiles;
+
+	PROCEDURE IncOpenFiles;
+	BEGIN{EXCLUSIVE}
+		INC(openfiles);
+	END IncOpenFiles;
+	
+	
+	PROCEDURE WaitClose(no: LONGINT);
+	BEGIN{EXCLUSIVE}
+		AWAIT(openfiles < no);
+	END WaitClose;
+	
 
 BEGIN
 	Initialize;

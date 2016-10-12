@@ -476,28 +476,24 @@ VAR
 	BEGIN
 		CASE xformat OF
 		| index8:
-				FOR i := 1 TO width DO
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip )
-				END;
+				S.MOVE(bp, ip, width);
 		| color565, color555, color664:
+				S.MOVE(bp, ip, 2*width);
+		| color888: (* x-format (destination) is 888, A ignored (?) , Aos Format (source) is 8888 *)
+				S.MOVE(bp, ip, 4*width);
+				(*
 				FOR i := 1 TO width DO
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip )
-				END;
-		| color888:
-				FOR i := 1 TO width DO
+					S.MOVE(bp,ip,3); INC(bp,3); INC(ip,3);
+					(*
 					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* B *)
 					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* G *)
 					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* R *)
+					*)
 					byte := 0X;  S.PUT( ip, byte );  INC( ip )
 				END;
+				*)
 		ELSE  (* color8888 *)
-				FOR i := 1 TO width DO
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* B *)
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* G *)
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* R *)
-					S.GET( bp, byte );  S.PUT( ip, byte );  INC( bp );  INC( ip );   (* X *)
-				END
+				S.MOVE(bp, ip, 4*width);
 		END
 	END PutLine;
 
@@ -508,28 +504,21 @@ VAR
 	BEGIN			
 		CASE xformat OF
 		| index8:
-				FOR i := 1 TO width DO
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp )
-				END;
+				S.MOVE(ip, bp, width);
 		| color565, color555, color664:
-				FOR i := 1 TO width DO
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp )
-				END
+				S.MOVE(ip, bp, 2*width);
 		| color888:
+				S.MOVE(ip, bp, 4*width);
+				(*
 				FOR i := 1 TO width DO
 					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* B *)
 					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* G *)
 					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* R *)
 					INC( ip )
 				END
+				*)
 		ELSE  (* color8888 *)
-				FOR i := 1 TO width DO
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* B *)
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* G *)
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* R *)
-					S.GET( ip, byte );  S.PUT( bp, byte );  INC( ip );  INC( bp );   (* X *)
-				END
+				S.MOVE(ip, bp, 4*width);
 		END;
 	END GetLine;
 
@@ -550,11 +539,11 @@ VAR
 				END
 		| color888:
 				FOR i := 1 TO width DO
-					byte := 0X;  S.PUT( ip, byte );  INC( ip );
+					S.PUT8( ip, 0X );  INC( ip );
 					S.GET( bp + 2, byte );  S.PUT( ip, byte );  INC( ip );   (* B *)
 					S.GET( bp + 1, byte );  S.PUT( ip, byte );  INC( ip );   (* G *)
 					S.GET( bp + 0, byte );  S.PUT( ip, byte );  INC( ip );   (* R *)
-					INC( bp, 3 )
+					INC( bp, 4 )
 				END
 		ELSE  (* color8888 *)
 				FOR i := 1 TO width DO
@@ -767,7 +756,7 @@ VAR
 			ELSE  d.xformat := color565
 			END
 		ELSIF d.depth = 24 THEN  
-			d.format := Displays.color888;
+			d.format := Displays.color8888;
 			d.xformat := color888
 		ELSIF d.depth = 32 THEN  
 			d.format := Displays.color8888;

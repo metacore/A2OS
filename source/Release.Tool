@@ -1023,7 +1023,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMCharMap.Mod
 	WMUnicodeMarkerTool.Mod
 
-	UNIX { Unix.DisplayRefresher.Mod }
+	UNIX, UNIXG { Unix.DisplayRefresher.Mod }
 
 	Standard.rep Models.rep Shapes.rep Colors.rep System.rep
 

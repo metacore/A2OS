@@ -310,28 +310,50 @@ PROCEDURE LoadExactFont*(fi : WMFontManager.FontInfo) : WMGraphics.Font;
 VAR exactName : ARRAY 256 OF CHAR; f : WMGraphics.Font; try: LONGINT;
 BEGIN
 	try := 0;
-	REPEAT
+	LOOP
 		COPY(fi.name^, exactName);
-
-		IF try > 0 THEN  Strings.Append(exactName, "_")  END;
-		(*	ALEX 2006.06.05 bold fonts are suffixed with bd; ex.: arialbd.ttf
-			fof: but not all of them, such as calibri --> calibrib
+		
+		(* possible suffixes
+			bold:  b, B, bd, Bd, _bd
+			italic: i, I, _i
+			bold+italic: bi, BI, _bi
 		*)
-
-		IF WMGraphics.FontBold IN fi.style THEN Strings.Append(exactName, "b") END;
-		IF WMGraphics.FontItalic IN fi.style THEN Strings.Append(exactName, "i") END;
+		IF WMGraphics.FontBold IN fi.style THEN
+			IF WMGraphics.FontItalic IN fi.style THEN
+				CASE try OF
+				|0: Strings.Append(exactName, "bi");
+				|1: Strings.Append(exactName, "_bi");
+				|2: Strings.Append(exactName, "BI");
+				ELSE EXIT 
+				END
+			ELSE
+				CASE try OF
+				|0: Strings.Append(exactName, "b");
+				|1: Strings.Append(exactName, "bd");
+				|2: Strings.Append(exactName, "_bd");
+				|3: Strings.Append(exactName, "B");
+				|4: Strings.Append(exactName, "Bd");
+				ELSE EXIT 
+				END
+			END;
+		ELSIF WMGraphics.FontItalic IN fi.style THEN
+				CASE try OF
+				|0: Strings.Append(exactName, "i");
+				|1: Strings.Append(exactName, "_i");
+				|2: Strings.Append(exactName, "I");
+				ELSE
+					EXIT
+				END;
+		ELSIF try > 0 THEN
+			EXIT
+		END;
+		
 		Strings.Append(exactName, ".ttf");
 		f := LoadFont(exactName, fi.size);
+		IF f # NIL THEN EXIT END;
 		
-		IF (f = NIL) & (WMGraphics.FontBold IN fi.style) & ~(WMGraphics.FontItalic IN fi.style) THEN
-			(* some fonts do use "bd" or "_bd" as suffix *)
-			COPY(fi.name^, exactName);
-			IF try > 0 THEN  Strings.Append(exactName, "_")  END;
-			Strings.Append(exactName, "bd.ttf");
-			f := LoadFont(exactName, fi.size);
-		END;
 		INC( try )
-	UNTIL (f # NIL) OR (try >= 2);
+	END;
 	IF f # NIL THEN
 		COPY(fi.name^, f.name);
 		f.size := fi.size;

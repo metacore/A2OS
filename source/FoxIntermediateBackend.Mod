@@ -7153,8 +7153,7 @@ TYPE
 				ELSIF SemanticChecker.IsStringType(property.type) THEN 
 					ASSERT(SemanticChecker.IsStringType(value.type));
 					Designate(value, op);
-					Emit(Push(property.position, op.tag));
-					Emit(Push(property.position, op.op));
+					PushString(op, value.type);
 					ReleaseOperand(op);
 					CallThis(position,"ActiveCellsRuntime","AddStringProperty",7);
 				ELSIF (property.type.resolved IS SyntaxTree.IntegerType) THEN
@@ -7248,8 +7247,7 @@ TYPE
 			IF SemanticChecker.IsStringType(modifier.expression.type) THEN 
 				ASSERT(SemanticChecker.IsStringType(value.type));
 				Designate(value, op);
-				Emit(Push(modifier.position, op.tag));
-				Emit(Push(modifier.position, op.op));
+				PushString(op, value.type);
 				ReleaseOperand(op);
 				CallThisChecked(position,"ActiveCellsRuntime","AddPortStringProperty",4,FALSE);
 			ELSIF (modifier.expression.type.resolved IS SyntaxTree.IntegerType) THEN
@@ -7283,6 +7281,21 @@ TYPE
 			END;
 		END PushPort;
 
+		PROCEDURE PushString(op: Operand; actualType: SyntaxTree.Type);
+		VAR tmp: IntermediateCode.Operand;
+		BEGIN
+			actualType := actualType.resolved;
+			IF actualType IS SyntaxTree.StringType THEN
+				Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
+			ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
+				Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.ArrayType).staticLength)));
+			ELSE
+				tmp := op.tag;
+				IntermediateCode.MakeMemory(tmp,addressType);
+				Emit(Push(position,tmp));
+			END;
+			Emit(Push(position,op.op))
+		END PushString;
 
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
 		VAR
@@ -7362,20 +7375,6 @@ TYPE
 				END;
 			END CallBodies;
 
-			PROCEDURE PushString(op: Operand; actualType: SyntaxTree.Type);
-			BEGIN
-				actualType := actualType.resolved;
-				IF actualType IS SyntaxTree.StringType THEN
-					Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.StringType).length)));
-				ELSIF actualType(SyntaxTree.ArrayType).form = SyntaxTree.Static THEN
-					Emit(Push(position,IntermediateCode.Immediate(addressType,actualType(SyntaxTree.ArrayType).staticLength)));
-				ELSE
-					tmp := op.tag;
-					IntermediateCode.MakeMemory(tmp,addressType);
-					Emit(Push(position,tmp));
-				END;
-				Emit(Push(position,op.op))
-			END PushString;
 
 			PROCEDURE PushTD(type: SyntaxTree.Type);
 			VAR op: IntermediateCode.Operand;

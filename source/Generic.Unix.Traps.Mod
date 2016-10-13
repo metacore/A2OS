@@ -11,14 +11,14 @@ IMPORT S := SYSTEM, Trace, Glue, Unix, Objects, Machine, Heaps, Streams, Modules
 
 CONST
 	AddrSize = SIZEOF( ADDRESS );
-	
+	MaxConcurrentTraps = 16;	
 TYPE 		
 	
 	ExceptionHandler = RECORD  pc, fp, sp: ADDRESS  END;
 	
 VAR 
 	
-	TrapHandlingLevel: INTEGER;  
+	TrapHandlingLevel: LONGINT;  
 	
 	trace: BOOLEAN;  
 	
@@ -71,7 +71,10 @@ VAR
 				IF name = "Oberon.System.OberonRunner" THEN  UnlockOberon  END
 			END
 		END;
+		DEC(TrapHandlingLevel);
+		(*
 		TrapHandlingLevel := 0;
+		*)
 		Machine.Release( Machine.Trap )
 	END FinishTrap;
 	
@@ -113,7 +116,7 @@ VAR
 
 		w.Ln;  
 		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln; 
-		IF TrapHandlingLevel = 1 THEN  
+		IF TrapHandlingLevel < MaxConcurrentTraps THEN  
 			IF ~fatalerror THEN  Machine.Acquire( Machine.Trap )  END;
 			w.String( "Trap " ) 
 		ELSE  
@@ -151,7 +154,7 @@ VAR
 			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );  
 		END;  
 		w.Ln;
-		IF TrapHandlingLevel = 1 THEN
+		IF TrapHandlingLevel < MaxConcurrentTraps THEN
 			process := Objects.CurrentProcess( ); 
 			pc := ucp.mc.r_pc;  bp := ucp.mc.r_bp;
 			IF pc = 0 THEN  
@@ -169,7 +172,7 @@ VAR
 		w.Ln; w.Ln; 
 		w.String("----------------------------------------------------"); w.Ln; 
 		
-		IF fatalerror OR (TrapHandlingLevel > 2) THEN  Machine.Shutdown( FALSE )  END;
+		IF fatalerror OR (TrapHandlingLevel > MaxConcurrentTraps) THEN  Machine.Shutdown( FALSE )  END;
 		
 		FinishTrap( w, process );
 		
@@ -189,7 +192,7 @@ VAR
 			unix.error.String( "### Program aborted. Stack traceback in logfile" );  unix.error.Ln;
 			unix.error.Update;
 			Machine.Shutdown( FALSE )
-		ELSIF TrapHandlingLevel > 1 THEN 
+		ELSIF TrapHandlingLevel > MaxConcurrentTraps THEN 
 			Objects.Terminate
 		ELSE
 			Objects.ExitTrap() 

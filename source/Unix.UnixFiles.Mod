@@ -4,25 +4,28 @@ MODULE UnixFiles;   (** AUTHOR "gf"; PURPOSE "Unix file systems" *)
 
 (*  derived fron (SPARCOberon) Files.Mod by J. Templ 1.12. 89/14.05.93 *)
 
-IMPORT S := SYSTEM, Unix, Machine, Heaps, Objects, Kernel, Modules, Log := KernelLog, Files;
+IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files;
 
 
 CONST
-	NBufs = 4;  Bufsize = 4096;  FileTabSize = 1024;  ResFiles = 128;  NoDesc = -1;
+	NBufs = 4;  Bufsize = 4096;  NoDesc = -1;
 
 	Open = 0;  Create = 1;  Closed = 2;	(* file states *)
 	
 	NoKey = -1;
+	CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
 	
+	TraceCollection = 0;
+	Trace = {};
 VAR
-	fileTab: ARRAY FileTabSize OF RECORD  f {UNTRACED}: File  END;
 	tempno: INTEGER;
-	openfiles: INTEGER;
+	openfiles: LONGINT;
 	
 	searchPath: ARRAY 1024 OF CHAR;
 	cwd: ARRAY 256 OF CHAR;
 	
-	unixFS: UnixFileSystem;
+	unixFS: UnixFileSystem; (* must be unique *)
+	collection: Collection; (* must be unique *)
 
 TYPE	
 	Filename = ARRAY 256 OF CHAR;
@@ -112,7 +115,101 @@ TYPE
 			END RemoveDirectory0;
 
 	END AliasFileSystem;
+	
+	
+	FinalizeFiles = OBJECT
+
+		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
+		VAR F: File;
+		BEGIN
+			F := f( File );  F.Finalize();  cont := TRUE
+		END EnumFile;
+
+	END FinalizeFiles;
+	
+
+	SearchByFstat = OBJECT
+	VAR 
+		found: File;
+		stat: Unix.Status;
 		
+		PROCEDURE Init( s: Unix.Status );
+		BEGIN
+			found := NIL;  
+			stat := s;
+		END Init;
+
+		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
+		BEGIN
+			WITH f: File DO
+				IF (stat.ino = f.ino) & (stat.dev = f.dev) THEN
+					(* possible different name but same file! *)
+					ResetBuffers( f, stat );
+					found := f; cont := FALSE;
+				END;
+			END;
+		END EnumFile;
+
+	END SearchByFstat;
+
+
+	
+	
+	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
+	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
+		ssearch: SearchByFstat;
+		fileKey: LONGINT;
+
+		PROCEDURE & Init*;
+		BEGIN
+			NEW( oldFiles );  NEW( newFiles );   NEW(ssearch); fileKey := -1;
+		END Init;
+
+		PROCEDURE AddNew( F: File );
+		BEGIN {EXCLUSIVE}
+			IF TraceCollection IN Trace THEN Log.String( "Collections.AddNew: " );  Log.String( F.workName );  Log.Ln;  END;
+			newFiles.Add( F, FinalizeFile );
+		END AddNew;
+
+		PROCEDURE AddOld( F: File );
+		BEGIN {EXCLUSIVE}
+			IF TraceCollection IN Trace THEN Log.String( "Collections.AddOld: " );  Log.String( F.workName );  Log.Ln;  END;
+			oldFiles.Add( F, FinalizeFile );
+		END AddOld;
+
+		PROCEDURE ByStat(CONST stat: Unix.Status): File;
+		BEGIN{EXCLUSIVE}
+			ssearch.Init(stat); 
+			oldFiles.Enumerate(ssearch.EnumFile); 
+			IF ssearch.found = NIL THEN
+				newFiles.Enumerate(ssearch.EnumFile)
+			END;
+			
+			IF TraceCollection IN Trace THEN 
+				Log.String( "Collections.ByStatus: " );  Log.Ln;  
+				IF ssearch.found = NIL THEN Log.String("not found") ELSE Log.String("found") END;
+			END;
+			
+			RETURN ssearch.found;
+		END ByStat;
+		
+		PROCEDURE Finalize;
+		VAR fin: FinalizeFiles;
+		BEGIN {EXCLUSIVE}
+			IF TraceCollection IN Trace THEN Log.String( "Collections.Finalize " );  Log.Ln;  END;
+			NEW( fin );  newFiles.Enumerate( fin.EnumFile );  newFiles.Clear();  oldFiles.Enumerate( fin.EnumFile );  oldFiles.Clear();
+		END Finalize;
+
+		PROCEDURE FinalizeFile( obj: ANY );
+		VAR F: File;
+		BEGIN
+			F := obj( File );
+			IF TraceCollection IN Trace THEN Log.String( "Collections.FinalizeFile " );  Log.String( F.workName );  Log.Ln;  END;
+			F.Finalize()
+		END FinalizeFile;
+
+	END Collection;
+
 
 	UnixFileSystem* = OBJECT (Files.FileSystem)
 
@@ -125,7 +222,7 @@ TYPE
 				PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
 				VAR f: File;
 				BEGIN {EXCLUSIVE}
-					AwaitFinalizingDone;
+					(*AwaitFinalizingDone;*)
 					NEW( f, SELF );
 					f.workName := "";  COPY( name, f.registerName );
 					f.fd := NoDesc;  f.state := Create;  f.fsize := 0;  f.fpos := 0;
@@ -145,7 +242,7 @@ TYPE
 
 				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
 				VAR f: File;  stat: Unix.Status;  fd, r, errno, pos: LONGINT;
-					oflags: SET;  nextdir, path: Filename; 
+					oflags: SET;  nextdir, path: Filename;  fo: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					IF name = "" THEN  RETURN NIL  END;
 					
@@ -155,29 +252,27 @@ TYPE
 						pos := 0;  ScanPath( pos, nextdir );  MakePath( nextdir, name, path );
 						ScanPath( pos, nextdir )
 					END;
-					
-					IF (FileTabSize - openfiles) < ResFiles THEN  GC   END;
-						
+											
 					LOOP
 						r := Unix.access( ADDRESSOF( path ), Unix.R_OK );
 						IF r >= 0 THEN
 							r := Unix.access( ADDRESSOF( path ), Unix.W_OK );
 							IF r < 0 THEN  oflags := Unix.rdonly  ELSE  oflags := Unix.rdwr  END;
-							
+						
 							fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
-							IF ((fd < 0) & (errno IN {Unix.ENFILE, Unix.EMFILE})) OR (fd >= FileTabSize) THEN
-								IF fd > 0 THEN  r := Unix.close( fd )  END;
-								GC ;
-								fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
+							IF ((fd < 0) & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL}))  THEN
+								REPEAT
+									fo := openfiles;  Kernel.GC;  WaitClose( fo );
+									fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
+								UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})
 							END;
-
+							
 							IF fd >= 0 THEN
 								r := Unix.fstat( fd, stat );
-								f := FindCachedEntry( stat );
+								f := collection.ByStat(stat);
 								IF f # NIL THEN
 									(* use the file already cached *)  r := Unix.close( fd );  EXIT
-								ELSIF fd < FileTabSize THEN
-									AwaitFinalizingDone;
+								ELSE
 									NEW( f, SELF );
 									f.fd := fd;  f.dev := stat.dev;  f.ino := stat.ino;  
 									f.mtime := stat.mtime.sec;  f.fsize := stat.size;  f.fpos := 0;  
@@ -190,12 +285,9 @@ TYPE
 										f.flags := {Files.ReadOnly}
 									END;
 									f.key := NoKey;  f.fs := SELF;
-									fileTab[fd].f := f;  (* cache file *)
-									INC( openfiles );  RegisterFinalizer( f, Cleanup );
+									IncOpenFiles();
+									collection.AddOld(f);
 									EXIT
-								ELSE  
-									r := Unix.close( fd );  
-									Halt( f, FALSE, "UnixFiles.File.Old0: too many files open" );
 								END
 							END
 						ELSIF nextdir # "" THEN
@@ -227,52 +319,66 @@ TYPE
 					END;
 					key := 0;
 				END Delete0;
-
-
-				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT );
+				
+				(* return remaining old file, if any *)
+				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT ): LONGINT;
 				CONST Bufsize = 4096;
-				VAR fdold, fdnew, n, r: LONGINT;  ostat, nstat: Unix.Status;
+				VAR fdold, fdnew, fo, n, r: LONGINT;  ostat, nstat: Unix.Status;
 					buf: ARRAY Bufsize OF CHAR;
 				BEGIN {EXCLUSIVE}
+					fo := NoDesc;
 					r:= Unix.stat( ADDRESSOF( old ), ostat );
+
 					IF r >= 0 THEN
 						r := Unix.stat( ADDRESSOF( new ), nstat );
-						IF (r >= 0) & (ostat.dev # nstat.dev) OR (ostat.ino # nstat.ino) THEN
-							 r := Unix.unlink( ADDRESSOF( new ) )  (* work around stale nfs handles *)
+						IF (r >= 0) & ((ostat.dev # nstat.dev) OR (ostat.ino # nstat.ino)) THEN
+							 r := Unix.unlink( ADDRESSOF( new ) )  (* work around stale nfs handles *);
 						END;
 						r := Unix.rename( ADDRESSOF( old ), ADDRESSOF( new ) );
-						IF r < 0 THEN
+						IF r < 0 THEN (* could not rename, try copy *)
 							res := Unix.errno( );
-							IF res = Unix.EXDEV THEN  (* cross device link, move the file *)
+							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
 								fdold := Unix.open( ADDRESSOF( old ), Unix.rdonly, {} );
+								fo := fdold;
 								IF fdold < 0 THEN    
-									res := Unix.errno( );  RETURN
+									res := Unix.errno( );  
+									RETURN NoDesc;
 								END;
 								fdnew := Unix.open( ADDRESSOF( new ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 								IF fdnew < 0 THEN    
-									res := Unix.errno( );  RETURN
+									res := Unix.errno( );  
+									RETURN NoDesc;
 								END;
 								n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize );
 								WHILE n > 0 DO
 									r := Unix.write( fdnew, ADDRESSOF( buf ), n );
 									IF r < 0 THEN
 										res := Unix.errno();  
-										r := Unix.close( fdold );  r := Unix.close( fdnew );
-										RETURN
+										r := Unix.close( fdold );  
+										r := Unix.close( fdnew );
+										RETURN NoDesc;
 									END;
 									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize )
 								END;
-								r := Unix.unlink( ADDRESSOF( old ) );  
-								r := Unix.close( fdold );  r := Unix.close( fdnew );  
+								r := Unix.unlink( ADDRESSOF( old ) );
+								r := Unix.close( fdold );
+								r := Unix.close( fdnew );  
 								res := Files.Ok
-							ELSE  
-								RETURN  (* res is Unix.rename return code *)
+							ELSE
+								RETURN NoDesc (* res is Unix.rename return code *)
 							END
 						END;
 						res := Files.Ok
 					ELSE  
-						res := Unix.errno()
-					END
+						res := Unix.errno();
+					END;
+					RETURN fo;
+				END TryRename;
+
+				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT );
+				VAR of: LONGINT;
+				BEGIN
+					of := TryRename(old, new, f, res);
 				END Rename0;
 				
 
@@ -368,7 +474,7 @@ TYPE
 					checkSet := NIL;
 				END Enumerate0;
 
-			END UnixFileSystem;
+	END UnixFileSystem;
 	
 	
 	Buffer =	POINTER TO RECORD (Files.Hint)
@@ -392,45 +498,40 @@ TYPE
 
 				PROCEDURE & Init( fs: Files.FileSystem );
 				BEGIN
-					SELF.fs := fs;  flags := {};  
+					SELF.fs := fs;  flags := {};
 				END Init;
 
-				
 				PROCEDURE CreateUnixFile;
-				CONST 
-					CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
 				VAR 
-					stat: Unix.Status;  done: BOOLEAN;  r: LONGINT;
+					stat: Unix.Status;  done: BOOLEAN;  errno,fo: LONGINT;
 				BEGIN
 					IF state = Create THEN  
 						GetTempName( registerName, workName );  tempFile := TRUE
-					ELSIF state = Closed THEN  
-						workName := registerName;  registerName := "";  tempFile := FALSE
+					ELSIF state = Closed THEN
+						IF registerName # "" THEN
+							workName := registerName;  registerName := "";  tempFile := FALSE;
+						ELSE
+							RETURN;
+						END;
 					END;
-					r := Unix.unlink( ADDRESSOF( workName ) );
+					errno := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
-					
-					IF (FileTabSize - openfiles) < ResFiles THEN  GC  END;
-						
+											
 					fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
-					done := fd >= 0;  r := Unix.errno();
-					IF (~done & (r IN {Unix.ENFILE, Unix.EMFILE})) OR (done & (fd >= FileTabSize)) THEN
-						IF done THEN  r := Unix.close( fd )  END;
-						GC ;
-						fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
+					done := fd >= 0;  errno := Unix.errno();
+					IF (~done & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})) THEN
+						REPEAT
+							fo := openfiles;  Kernel.GC;  WaitClose( fo );
+							fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr);  errno := Unix.errno();
+						UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL});
 						done := fd >= 0
 					END;
 					IF done THEN
-						IF fd >= FileTabSize THEN  
-							r := Unix.close( fd );  
-							Halt( SELF, FALSE, "UnixFiles.File.Create: too many files open" )
-						ELSE
-							r := Unix.fstat( fd, stat );  
-							dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
-							state := Open;  fpos := 0;
-							fileTab[fd].f := SELF;
-							INC( openfiles );  RegisterFinalizer( SELF, Cleanup );
-						END
+						errno := Unix.fstat( fd, stat );  
+						dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
+						state := Open;  fpos := 0;
+						IncOpenFiles();
+						collection.AddNew(SELF);
 					ELSE  
 						Halt( SELF, TRUE, "UnixFiles.File.Create: open failed" );
 					END
@@ -634,18 +735,29 @@ TYPE
 
 
 				PROCEDURE Register0*( VAR res: LONGINT );
+				VAR fo: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF (state = Create) & (registerName # "") THEN  
-						state := Closed (* shortcut renaming *)   
+						state := Closed (* shortcut renaming *)   ;
 					END;
+					
 					FlushBuffers;
+					
 					IF registerName # "" THEN
-						fs.Rename0( workName, registerName, SELF, res );
+						fo := unixFS.TryRename( workName, registerName, SELF, res );
 						IF res # Files.Ok THEN  
 							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )  
 						END;
-						workName := registerName;  registerName := "";  tempFile := FALSE
+
+						IF fo # NoDesc THEN (* SELF still refers to old file *)
+							res := Unix.close(fd); 
+							res := Unix.unlink(ADDRESSOF(workName));  (* VirtualBox ! Can only delete file when closed. *)
+							fd := Unix.open( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
+						END;
+
+						workName := registerName;  registerName := "";  tempFile := FALSE;
 					END;
+					(*collection.Register(SELF);*)
 				END Register0;
 				
 
@@ -665,19 +777,29 @@ TYPE
 				END FlushBuffers;
 				
 				
-				PROCEDURE Close*;
+				PROCEDURE Finalize*;
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
-					IF fileTab[fd].f # NIL THEN
-						IF tempFile THEN  r := Unix.unlink( ADDRESSOF( workName ) )  
-						ELSE  FlushBuffers;
+					IF tempFile THEN  
+						IF fd # NoDesc THEN r := Unix.close(fd) END;
+						r := Unix.unlink( ADDRESSOF( registerName ) );
+						fd := NoDesc;
+					ELSE  
+						FlushBuffers;
+						IF fd # NoDesc THEN
+							r := Unix.close( fd );
+							fd := NoDesc;
 						END;
-						fileTab[fd].f := NIL;
-						r := Unix.close( fd );
-						DEC( openfiles );  state := Closed
 					END;
-				END Close;
+					DecOpenFiles();
+					state := Closed;
+				END Finalize;
 				
+				PROCEDURE Close;
+				BEGIN
+					Finalize;
+					collection.oldFiles.Remove(SELF);
+				END Close;
 				
 				PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
 				BEGIN {EXCLUSIVE}
@@ -844,23 +966,6 @@ TYPE
 		HALT( 99 )
 	END Halt;
 
-	PROCEDURE RegisterFinalizer( obj: ANY;  fin: Heaps.Finalizer );
-	VAR n: Heaps.FinalizerNode;
-	BEGIN
-		NEW( n ); n.finalizer := fin;  Heaps.AddFinalizer( obj, n );
-	END RegisterFinalizer;
-	
-	PROCEDURE GC;
-	BEGIN
-		Kernel.GC;
-		AwaitFinalizingDone
-	END GC;
-	
-	PROCEDURE AwaitFinalizingDone;
-	BEGIN
-		(* wait until finalizers have finished! (Cleanup)*)
-		WHILE Machine.GCacquired DO  Objects.Sleep( 10 )  END
-	END AwaitFinalizingDone;
 
 	PROCEDURE ResetBuffers( f: File;  VAR stat: Unix.Status );
 	VAR i: INTEGER;
@@ -874,20 +979,6 @@ TYPE
 		END
 	END ResetBuffers;
 
-	PROCEDURE FindCachedEntry( VAR stat: Unix.Status ): File;
-	VAR f: File;  i: INTEGER;
-	BEGIN
-		FOR i := 0 TO FileTabSize - 1 DO
-			f := fileTab[i].f;
-			IF (f # NIL ) & (stat.ino = f.ino) & (stat.dev = f.dev) THEN
-				(* possible different name but same file! *)
-				ResetBuffers( f, stat );
-				RETURN f
-			END;
-		END;
-		RETURN NIL
-	END FindCachedEntry;
-	
 
 	PROCEDURE MakePath( CONST dir, name: ARRAY OF CHAR;  VAR dest: ARRAY OF CHAR );
 	VAR i, j: INTEGER;
@@ -929,32 +1020,11 @@ TYPE
 		AppendInt( tempName, pid )
 	END GetTempName;
 
-	
-
-	
-	PROCEDURE Cleanup( obj: ANY );
-	VAR f: File;
-	BEGIN
-		f := S.VAL( File, obj );  f.Close
-	END Cleanup;
-
-
-	PROCEDURE CloseFiles;
-	VAR i: LONGINT;  f: File;
-	BEGIN
-		i := 0;
-		WHILE i < FileTabSize DO
-			f := fileTab[i].f;
-			IF f # NIL THEN  f.Close  END;
-			INC( i )
-		END;
-	END CloseFiles;
-
-
 
 	PROCEDURE Install;
 	VAR aliasFS: AliasFileSystem;
 	BEGIN
+		NEW(collection);
 		NEW( unixFS );  (*  Files.Add( unixFS, "" );	*)
 		NEW( aliasFS, unixFS );  Files.Add( aliasFS, "searcher" )
 	END Install;
@@ -982,7 +1052,6 @@ TYPE
 		a := Unix.getenv( ADDRESSOF( "AOSPATH" ) );  i := 0;
 		IF a = 0 THEN
 			Log.String( "UnixFiles.Initialize: environment variable AOSPATH not defined" );  Log.Ln;
-			(* Unix.exit( 1 ) *)
 		ELSE
 			REPEAT
 				S.GET( a, ch );  INC( a );
@@ -990,11 +1059,39 @@ TYPE
 				searchPath[i] := ch;  INC( i )
 			UNTIL ch = 0X;
 		END;
-		i := 0;
-		WHILE i < FileTabSize DO  fileTab[i].f := NIL;  INC( i )  END;
 		tempno := 1;  openfiles := 0;  
-		Modules.InstallTermHandler( CloseFiles )	
+		Modules.InstallTermHandler( Finalization )	
 	END Initialize;
+
+	PROCEDURE Finalization;
+	VAR ft: Files.FileSystemTable;  i: LONGINT;
+	BEGIN
+		Files.GetList( ft );
+		IF ft # NIL THEN
+			FOR i := 0 TO LEN( ft^ ) - 1 DO
+				IF ft[i] IS AliasFileSystem THEN Files.Remove( ft[i] ) END
+			END
+		END;
+		collection.Finalize;
+		unixFS.Finalize;
+	END Finalization;
+	
+	PROCEDURE DecOpenFiles;
+	BEGIN{EXCLUSIVE}
+		DEC(openfiles);
+	END DecOpenFiles;
+
+	PROCEDURE IncOpenFiles;
+	BEGIN{EXCLUSIVE}
+		INC(openfiles);
+	END IncOpenFiles;
+	
+	
+	PROCEDURE WaitClose(no: LONGINT);
+	BEGIN{EXCLUSIVE}
+		AWAIT(openfiles < no);
+	END WaitClose;
+	
 
 BEGIN
 	Initialize;

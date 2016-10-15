@@ -437,6 +437,7 @@ TYPE
 		PROCEDURE ^ AddPortProperty(modifier: SyntaxTree.Modifier; value: SyntaxTree.Expression); 
 		PROCEDURE ^ AddPortProperties(modifier: SyntaxTree.Modifier); 
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
+		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ Dereference(VAR operand: Operand; type: SyntaxTree.Type; isUnsafe: BOOLEAN); 

@@ -52,6 +52,7 @@ TYPE
 
 	Position* = RECORD 
 		start*, end*, line*, linepos*: LONGINT; 
+		reader*: Streams.Reader; 
 	END; 
 
 	ErrorCode* = LONGINT; 

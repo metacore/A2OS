@@ -1254,7 +1254,11 @@ END GetCpuCycles;
 PROCEDURE CurrentProcessTime*(): HUGEINT;
 VAR res: LONGINT; result: HUGEINT;
 BEGIN
-	res := Kernel32.QueryThreadCycleTime(CurrentProcess().handle, result);
+	IF (Kernel32.QueryThreadCycleTime # NIL) THEN
+		res := Kernel32.QueryThreadCycleTime(CurrentProcess().handle, result);
+	ELSE (* fallback *)
+		result := Machine.GetTimer();
+	END;
 	RETURN result;
 END CurrentProcessTime;
 

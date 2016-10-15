@@ -468,8 +468,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	FATVolumes.Mod FATFiles.Mod
 	ISO9660Volumes.Mod ISO9660Files.Mod
 
-	UNIX { Unix.UnixFiles.Mod }
-	UNIXG { Generic.Unix.UnixFiles.Mod } 
+	UNIX, UNIXG { Unix.UnixFiles.Mod }
 
 	WIN {
 		Win32.User32.Mod Win32.WinTrace.Mod Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod

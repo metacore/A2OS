@@ -5073,6 +5073,29 @@ TYPE
 				END;
 				RETURN resultB
 			END CheckArity;
+			
+			PROCEDURE CheckModifiers(cellType: SyntaxTree.CellType; modifier: SyntaxTree.Modifier);
+			VAR propertyType, modifierType: SyntaxTree.Type; symbol: SyntaxTree.Symbol;
+			BEGIN
+				WHILE modifier # NIL DO
+					symbol := cellType.FindProperty(modifier.identifier); 
+					IF (symbol # NIL) & (symbol IS SyntaxTree.Property) THEN
+						propertyType := symbol.type.resolved; 
+						modifierType := modifier.expression.type.resolved;
+						IF ~CompatibleTo(system, modifierType, propertyType) &
+							~(
+								(modifierType IS SyntaxTree.ArrayType) & (propertyType IS SyntaxTree.ArrayType) & 
+								OpenArrayCompatible(modifierType(SyntaxTree.ArrayType), propertyType(SyntaxTree.ArrayType))) THEN
+							Error(modifier.position,Diagnostics.Invalid,"incompatible to cell property");
+						END;
+					ELSE
+						Error(modifier.position, Diagnostics.Invalid, "undefined property");
+					END;
+					modifier := modifier.nextModifier;
+				END;
+			END CheckModifiers;
+					
+
 
 		BEGIN
 			type := NIL; result := NIL;
@@ -5352,6 +5375,9 @@ TYPE
 
 								END;
 							END;
+
+							CheckModifiers(type0(SyntaxTree.CellType), parameter0(SyntaxTree.Designator).modifiers);
+
 							activeCellsStatement := TRUE;
 						ELSE
 							Error(position,Diagnostics.Invalid,"cannot be allocated");

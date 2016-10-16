@@ -7190,15 +7190,8 @@ TYPE
 		BEGIN
 			WHILE modifier # NIL DO
 				symbol := cellType.FindProperty(modifier.identifier); 
-				(*
-				symbol := cellType.cellScope.FindSymbol(modifier.identifier);
-				*)
-				IF (symbol # NIL) & (symbol IS SyntaxTree.Property) THEN
-					AddProperty(cellType, cell, symbol(SyntaxTree.Property), modifier.expression);
-				ELSE
-					(*! move this check to checker *)
-					Error(modifier.position, "undefined property");
-				END;
+				ASSERT ((symbol # NIL) & (symbol IS SyntaxTree.Property));
+				AddProperty(cellType, cell, symbol(SyntaxTree.Property), modifier.expression);
 				modifier := modifier.nextModifier;
 			END;
 		END AddModifiers;

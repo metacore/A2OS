@@ -4577,7 +4577,7 @@ TYPE
 		PROCEDURE CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN;
 		BEGIN
 			type := type.resolved;
-			IF (type IS SyntaxTree.BasicType) & ~type.IsPointer() & ~type.IsComposite() THEN
+			IF (type IS SyntaxTree.BasicType) & ~type.IsPointer() & ~type.IsComposite() OR (type IS SyntaxTree.PortType) THEN
 				RETURN TRUE
 			ELSIF system.CanPassInRegister # NIL THEN
 				RETURN system.CanPassInRegister(type);

@@ -1886,7 +1886,9 @@ TYPE
 			END;
 
 			IF Peek(Scanner.String) OR Peek(Scanner.Character)  THEN (* for compatibility with release *)
-				OperatorDeclaration( parentScope );  RETURN
+				OperatorDeclaration( parentScope );  
+				procedure.SetInline(isInline);
+				RETURN
 			END;
 
 			position:= symbol.position;
@@ -1945,7 +1947,7 @@ TYPE
 				modifiers := Flags();
 			END;
 			IF Optional( Scanner.Minus ) THEN  (* inline *)
-				isInline := TRUE
+				isInline := TRUE;
 			END;
 
 			IF MandatoryString( string ) THEN
@@ -1960,6 +1962,8 @@ TYPE
 			ELSIF Optional( Scanner.Minus ) THEN access := SyntaxTree.ReadOnly;
 			ELSE access := SyntaxTree.Internal;
 			END;
+			
+
 			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 			operator := SyntaxTree.NewOperator( symbol.position, SyntaxTree.NewIdentifier(string^), procedureScope);
 			CommentSymbol(operator);

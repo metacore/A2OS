@@ -6,25 +6,25 @@ MODULE Traps;  (** AUTHOR "G.F."; PURPOSE "Exception Trap and symbolic debugging
 (* 2000.02.06	g.f.	UnixOberon release 2.3.6d	*)
 (* 2006.07.09	g.f.	UnixAos version	*)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Objects, Machine, Heaps, Streams, Modules, Reflection, 
-		TrapWriters, Commands, StdIO;  
+IMPORT S := SYSTEM, Trace, Glue, Unix, Objects, Machine, Heaps, Streams, Modules, Reflection,
+		TrapWriters, Commands, StdIO;
 
 CONST
 	AddrSize = SIZEOF( ADDRESS );
-	MaxConcurrentTraps = 16;	
-TYPE 		
-	
+	MaxRecursion = 4;
+TYPE
+
 	ExceptionHandler = RECORD  pc, fp, sp: ADDRESS  END;
-	
-VAR 
-	
-	TrapHandlingLevel: LONGINT;  
-	
-	trace: BOOLEAN;  
-	
+
+VAR
+
+	TrapHandlingLevel: LONGINT;
+
+	trace: BOOLEAN;
+
 	unix: Commands.Context;
-			
-	
+	trapMutex: Unix.Mutex_t;
+
 	PROCEDURE Append( VAR ar: ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
 	VAR i, j: LONGINT;
 	BEGIN
@@ -33,51 +33,49 @@ VAR
 		WHILE (i < LEN( ar ) - 1) & (this[j] # 0X) DO  ar[i] := this[j];  INC( i );  INC( j )  END;
 		ar[i] := 0X
 	END Append;
-	
-	
+
+
 	PROCEDURE TimeTag( w: Streams.Writer );
-	VAR 
+	VAR
 		tv: Unix.Timeval;  tz: Unix.Timezone;  t: Unix.TmPtr;  ret: LONGINT;
-			
+
 		PROCEDURE Int( i: LONGINT );
 		BEGIN
 			IF i < 10 THEN  w.Char( '0' )  END;
 			w.Int( i, 0 )
 		END Int;
-			
+
 	BEGIN
 		ret := Unix.gettimeofday( tv, tz );
 		t := Unix.localtime( tv );
-		w.Int( 1900 + t.year, 4 );  w.Char( '/' );  Int( t.mon + 1 );  w.Char( '/' );  Int( t.mday );  
+		w.Int( 1900 + t.year, 4 );  w.Char( '/' );  Int( t.mon + 1 );  w.Char( '/' );  Int( t.mday );
 		w.String( "  " );  Int( t.hour );  w.Char( ':' );  Int( t.min );  w.Ln;
 	END TimeTag;
-	
-	
-		
+
+
+
 	PROCEDURE FinishTrap( w: Streams.Writer;  p: Objects.Process );
 	VAR tag: ADDRESS;  td: Modules.TypeDesc;  name: ARRAY 72 OF CHAR;
 	BEGIN
-		w.Char( 2X );   (* end of trap text *) 
+		w.Char( 2X );   (* end of trap text *)
 		w.Update;
+		
 		TrapWriters.Trapped;
 			
 		IF p.obj = NIL THEN	(* the main thread is not associated with any object *)
 			Unix.exit( -1 )
 		ELSE
 			S.GET( S.VAL( ADDRESS, p.obj ) - AddrSize, tag );
-			S.GET( tag - AddrSize, td );  
-			IF td.mod # NIL THEN  
+			S.GET( tag - AddrSize, td );
+			IF td.mod # NIL THEN
 				COPY( td.mod.name, name );  Append( name,  "." );  Append( name, td.name );
 				IF name = "Oberon.System.OberonRunner" THEN  UnlockOberon  END
 			END
 		END;
-		DEC(TrapHandlingLevel);
-		(*
-		TrapHandlingLevel := 0;
-		*)
-		Machine.Release( Machine.Trap )
+		
+
 	END FinishTrap;
-	
+
 	PROCEDURE Registers(CONST c:Unix.McontextDesc; w: Streams.Writer);
 	BEGIN
 		w.String("EAX= "); w.Address(c.r_ax);
@@ -88,118 +86,122 @@ VAR
 		w.String(" EDI= "); w.Address(c.r_di);
 		w.Ln;
 	END Registers;
-	
 
-	PROCEDURE Trap( sig: LONGINT;  ucp: Unix.Ucontext;  fatalerror: BOOLEAN );  
-	VAR 
-		pc, sp, bp: ADDRESS;  
-		trapno: LONGINT;  
-		process: Objects.Process;  
-		handler: ExceptionHandler;  
+
+	PROCEDURE Trap( sig: LONGINT;  ucp: Unix.Ucontext);
+	VAR
+		pc, sp, bp: ADDRESS;
+		trapno: LONGINT;
+		process: Objects.Process;
+		handler: ExceptionHandler;
 		w: Streams.Writer;
-	BEGIN 
-		INC( TrapHandlingLevel ); 
-		IF trace THEN  
-			Trace.String( "Aos Trap:  signal = " );  Trace.Int( sig, 0 );  
-			Trace.String( ",  ucp = " );  Trace.Address( S.VAL( ADDRESS, ucp ) );  
-			Trace.String( ", traphandling  level = " ); Trace.Int( TrapHandlingLevel, 1 );  
-			Trace.Ln;  
-		END;  
-		
-		IF fatalerror THEN 
-			w := unix.error  
-		ELSE  
-			w := TrapWriters.GetWriter();
-			w.Char( 1X );   (* begin of trap text *) 
+	BEGIN
+		Trace.Char("Z");
+		IF trace THEN
+			Trace.String( "Aos Trap:  signal = " );  Trace.Int( sig, 0 );
+			Trace.String( ",  ucp = " );  Trace.Address( S.VAL( ADDRESS, ucp ) );
+			Trace.String( ", traphandling  level = " ); Trace.Int( TrapHandlingLevel, 1 );
+			Trace.Ln;
 		END;
-		
 
-		w.Ln;  
-		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln; 
-		IF TrapHandlingLevel < MaxConcurrentTraps THEN  
-			IF ~fatalerror THEN  Machine.Acquire( Machine.Trap )  END;
-			w.String( "Trap " ) 
-		ELSE  
-			w.String( "[recursive Trap] " )  
-		END;  
-		sp := ucp.mc.r_sp;
-		CASE sig OF 
-		| 1:		w.String( "1 (Hangup signal)" );   
-		| 2:  	w.String( "2 (User interrupt)" );   
-		| 3:		w.String( "3 (Quit signal)" );   
-		| 4:  	w.String( "4 (Illegal instruction)" );   
-		| 5:   	w.String( "5." );  
-				S.GET( sp, trapno );  w.Int( trapno, 0 );  
-				CASE trapno OF 
-				| 1:		w.String( "  (WITH guard failed)" ) 
-				| 2:		w.String( "  (CASE invalid)" ) 
-				| 3:		w.String( "  (RETURN missing)" ) 
-				| 5:		w.String( "  (implicit type guard failed)" ) 
-				| 6:		w.String( "  (type guard failed)" ) 
-				| 7:		w.String( "  (index out of range)" ) 
-				| 8:		w.String( "  (ASSERT failed)" ) 
-				| 9:		w.String( "  (array dimension error)" ) 
-				|12:	w.String( "  (division error)" )
-				ELSE 
-					IF trapno >= 30 THEN  w.String( "  (programmed HALT)" )  
-					ELSE  w.String( "  (unknown exception)" )   
-					END  
-				END;   
-		|  8:	w.String( "8 (Arithmetic exception)" );   
-		|10: 	w.String( "10 (Bus Error)" ) 
-		|11:	w.String( "11 (Segmentation violation)" ) 
-		|13:	w.String( "13 (Broken pipe)" ) 
-		|14:	w.String( "14 (Alarm signal)" ) 
-		ELSE 
-			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );  
-		END;  
+		Unix.MtxLock(trapMutex);
+
+		INC( TrapHandlingLevel );
+
+		w := TrapWriters.GetWriter();
+		w.Char( 1X );   (* begin of trap text *)
+ 		Trace.Char("Y");
+
 		w.Ln;
-		IF TrapHandlingLevel < MaxConcurrentTraps THEN
-			process := Objects.CurrentProcess( ); 
+		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln;
+		IF TrapHandlingLevel <= MaxRecursion THEN
+			w.String( "Trap " );
+		ELSE
+			w.String( "[recursive Trap] " );
+		END;
+		sp := ucp.mc.r_sp;
+		CASE sig OF
+		| 1:		w.String( "1 (Hangup signal)" );
+		| 2:  	w.String( "2 (User interrupt)" );
+		| 3:		w.String( "3 (Quit signal)" );
+		| 4:  	w.String( "4 (Illegal instruction)" );
+		| 5:   	w.String( "5." );
+				S.GET( sp, trapno );  w.Int( trapno, 0 );
+				CASE trapno OF
+				| 1:		w.String( "  (WITH guard failed)" )
+				| 2:		w.String( "  (CASE invalid)" )
+				| 3:		w.String( "  (RETURN missing)" )
+				| 5:		w.String( "  (implicit type guard failed)" )
+				| 6:		w.String( "  (type guard failed)" )
+				| 7:		w.String( "  (index out of range)" )
+				| 8:		w.String( "  (ASSERT failed)" )
+				| 9:		w.String( "  (array dimension error)" )
+				|12:	w.String( "  (division error)" )
+				ELSE
+					IF trapno >= 30 THEN  w.String( "  (programmed HALT)" )
+					ELSE  w.String( "  (unknown exception)" )
+					END
+				END;
+		|  8:	w.String( "8 (Arithmetic exception)" );
+		|10: 	w.String( "10 (Bus Error)" )
+		|11:	w.String( "11 (Segmentation violation)" )
+		|13:	w.String( "13 (Broken pipe)" )
+		|14:	w.String( "14 (Alarm signal)" )
+		ELSE
+			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );
+		END;
+		w.Ln;
+		IF TrapHandlingLevel <= MaxRecursion THEN
+			process := Objects.CurrentProcess( );
 			pc := ucp.mc.r_pc;  bp := ucp.mc.r_bp;
-			IF pc = 0 THEN  
+			IF pc = 0 THEN
 				(* assume call of procedure variable with value NIL *)
 				S.GET( sp, pc );   (* get return address on top of stack *)
-			END;  	
+			END;
 			w.Ln;
-			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp ); 
-			w.String( ", pc = " );  w.Address( pc );  w.Ln;  
-			w.Ln;  
+			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp );
+			w.String( ", pc = " );  w.Address( pc );  w.Ln;
+			w.Ln;
 			Registers(ucp.mc,w);
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
 			SearchExceptionHandler( process, ucp, handler ); 
 		END;
-		w.Ln; w.Ln; 
-		w.String("----------------------------------------------------"); w.Ln; 
+		w.Ln; w.Ln;
+		w.String("----------------------------------------------------"); w.Ln;
+
+		IF (TrapHandlingLevel > MaxRecursion) THEN  Machine.Shutdown( FALSE )  END;
+
+		FinishTrap( w, process);
 		
-		IF fatalerror OR (TrapHandlingLevel > MaxConcurrentTraps) THEN  Machine.Shutdown( FALSE )  END;
-		
-		FinishTrap( w, process );
-		
-		IF handler.pc # 0 THEN  
+		TrapHandlingLevel := 0;
+
+		Unix.MtxUnlock(trapMutex);
+
+
+		IF handler.pc # 0 THEN
 			IF Unix.Version # "Darwin" THEN
 				(* in the Darwin port Unix.ModifyContext fails with bus error. Stack alignment problem? *)
-				w.Ln;  
+				w.Ln;
 				w.String( "### program continues with exception handler ###" );   w.Ln;
-				
+
 				Unix.ModifyContext( ucp, handler.pc, handler.fp, handler.sp );
-				RETURN  (*! to exception handler !! *)  
+				RETURN  (*! to exception handler !! *)
 			END
 		END;
-			
-		IF Machine.standaloneAppl THEN	
+
+		IF Machine.standaloneAppl THEN
 			unix.error.Ln;  unix.error.Ln;
 			unix.error.String( "### Program aborted. Stack traceback in logfile" );  unix.error.Ln;
 			unix.error.Update;
 			Machine.Shutdown( FALSE )
-		ELSIF TrapHandlingLevel > MaxConcurrentTraps THEN 
+		ELSIF TrapHandlingLevel > MaxRecursion THEN
 			Objects.Terminate
 		ELSE
-			Objects.ExitTrap() 
+			Objects.ExitTrap()
 		END
-	END Trap;  
-	
-	
+	END Trap;
+
+
 	PROCEDURE UnlockOberon;
 	CONST OberonKernel = "Oberon.Kernel";
 	VAR c: PROCEDURE;
@@ -209,7 +211,7 @@ VAR
 			IF c # NIL THEN  c  END
 		END;
 	END UnlockOberon;
-	
+
 	PROCEDURE CheckBP(fp: ADDRESS): ADDRESS;
 	VAR n: ADDRESS;
 	BEGIN
@@ -219,58 +221,57 @@ VAR
 		END;
 		RETURN fp;
 	END CheckBP;
-	
-	PROCEDURE SearchExceptionHandler( process: Objects.Process;  cont: Unix.Ucontext;  VAR handler: ExceptionHandler );  
+
+	PROCEDURE SearchExceptionHandler( process: Objects.Process;  cont: Unix.Ucontext;  VAR handler: ExceptionHandler );
 	VAR entry, fp, sp, pc: ADDRESS;
-	BEGIN 
+	BEGIN
 		handler.pc := 0;  (* no handler *)
 		pc := cont.mc.r_pc;  fp := cont.mc.r_bp;  sp := cont.mc.r_sp;
-		IF pc = 0 THEN  
+		IF pc = 0 THEN
 			(* assume call of procedure variable with value NIL *)
 			S.GET( sp, pc );   (* get return address on top of stack *)
-		END;  
-		entry := Modules.GetExceptionHandler( pc );   
-		WHILE (entry = -1) & (fp <= process.stackBottom) DO  
-			fp := CheckBP(fp);
-			S.GET( fp + AddrSize, pc );  
-			pc := pc - 1;   (*  CALL instruction, machine dependent!!! *)
-			entry := Modules.GetExceptionHandler( pc );  
+		END;
+		entry := Modules.GetExceptionHandler( pc );
+		WHILE (entry = -1) & (fp <= process.stackBottom) & (fp#0) DO
 			sp := fp;   (* Save the old framepointer into the stack pointer *)
-
+			fp := CheckBP(fp);
+			S.GET( fp + AddrSize, pc );
+			pc := pc - 1;   (*  CALL instruction, machine dependent!!! *)
+			entry := Modules.GetExceptionHandler( pc );
 			S.GET( fp, fp ) (* Unwind PAF *)
-		END;  
-		IF entry # -1 THEN 
+		END;
+		IF entry # -1 THEN
 			handler.pc := entry;  handler.fp := fp;  handler.sp := sp
-		END  
-	END SearchExceptionHandler;  
-	
-	
-	PROCEDURE SignalHandler( signal: LONGINT;  scp, ucp, dummy: ADDRESS );   
+		END
+	END SearchExceptionHandler;
+
+
+	PROCEDURE SignalHandler( signal: LONGINT;  scp, ucp, dummy: ADDRESS );
 		(* 'dummy' for 16 byte stack alignment, MacOS! *)
-	BEGIN 
-		IF ~(signal IN  {1, 2, 14, 15}) (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN  
-			IF trace THEN  
-				Trace.String( "Traps.SignalHander: received signal " );  
-				Trace.Int( signal, 1 );  Trace.Ln  
+	BEGIN
+		IF ~(signal IN  {1, 2, 14, 15}) (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
+			IF trace THEN
+				Trace.String( "Traps.SignalHander: received signal " );
+				Trace.Int( signal, 1 );  Trace.Ln
 			END;
-			(*IF Heaps.collecting THEN  
-				Trace.Ln;  Trace.String( "PANIC: Trap " );  Trace.Int( signal, 0 );  
+			(*IF Heaps.collecting THEN
+				Trace.Ln;  Trace.String( "PANIC: Trap " );  Trace.Int( signal, 0 );
 				Trace.String( " in garbage collector" );  Trace.Ln;  Trace.Ln;
 				Machine.Release( Machine.Heaps );
-			
-				Trap( signal, S.VAL( Unix.Ucontext, ucp ), TRUE )  
-			ELSE  
+
+				Trap( signal, S.VAL( Unix.Ucontext, ucp ), TRUE )
+			ELSE
 			*)
-				Trap( signal, S.VAL( Unix.Ucontext, ucp ), FALSE )  
+				Trap( signal, S.VAL( Unix.Ucontext, ucp ))
 	(*		END  *)
 		END
-	END SignalHandler;  
-	
+	END SignalHandler;
 
 
-BEGIN 
-	trace := 3 IN Glue.debug; 
-	(*Unix.Dlsym( 0, "InstallTrap", ADDRESSOF( InstallSignalHandler ) );*)
+
+BEGIN
+	trapMutex := Unix.RecursiveMtxInit(0);
+	trace := 3 IN Glue.debug;
 	Unix.InstallSignalHandler( SignalHandler );
 	unix := StdIO.env
 END Traps.

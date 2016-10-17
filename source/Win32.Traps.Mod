@@ -115,6 +115,7 @@ VAR
 
 	BEGIN
 		overflow := FALSE;
+		(*! we need a reentrant lock here, use Kernel32 !! *)
 		Machine.Acquire( Machine.KernelLog );   (* like KernelLog.Enter, but without output *)
 		w := TrapWriters.GetWriter();
 		w.Update;   (* flush previous output stuck in global writer w *)

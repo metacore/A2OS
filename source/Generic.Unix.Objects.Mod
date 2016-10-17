@@ -51,7 +51,8 @@ VAR
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
 	startProcess	: Unix.Mutex_t;
-	childrunning		: Unix.Condition_t;
+	lockMutex		: Unix.Mutex_t;
+	childrunning	: Unix.Condition_t;
 		
 	newProcess: Process;
 	nextPID: LONGINT;
@@ -61,6 +62,7 @@ VAR
 	collect: BOOLEAN;
 	finalizerCaller	: FinalizerCaller;
 	finCaller			: Process;
+	
 	
 
 TYPE
@@ -435,7 +437,11 @@ TYPE
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
 		p.mode := AwaitingLock;
+
+		(*! we might want to replace the lock mutex by a lock free construct *)
+		Unix.MtxLock(lockMutex);
 		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
+		Unix.MtxUnlock(lockMutex);
 		lock := S.VAL(LockT, hdr.lock);
 		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
@@ -907,6 +913,7 @@ TYPE
 		
 		createProcess := Unix.MtxInit( 0 );  processList := Unix.MtxInit( 0 );
 		startProcess := Unix.MtxInit(0);  childrunning := Unix.ConInit(0); 
+		lockMutex := Unix.MtxInit(0);
 				
 		collect := FALSE;
 		igc := Unix.MtxInit( 0 );  gcFinished := Unix.ConInit( 0 ); 

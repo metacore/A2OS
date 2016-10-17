@@ -996,7 +996,11 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	BEGIN
 		sigemptyset(ADDRESS OF mask);
 		act.sa_mask := mask;
-		act.sa_flags :=  SA_SIGINFO + SA_ONSTACK + SA_NODEFER;
+		IF sig = SIGSEGV THEN (* segmentation violation *)
+			act.sa_flags :=  SA_SIGINFO +  SA_ONSTACK +  SA_NODEFER;
+		ELSE
+			act.sa_flags :=  SA_SIGINFO + (* SA_ONSTACK + *) SA_NODEFER;
+		END;
 		act.sa_handler := ADDRESS OF SigHandler;
 		IF sigaction( sig, ADDRESS OF act, 0 ) # 0 THEN
 			Perror("sigaction");
@@ -1191,7 +1195,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "closedir",	ADDRESSOF( closedir ) );
 
 
-		Dlsym( libp, "__sigsetjmp",	ADDRESSOF( sigsetjmp ) );
+		Dlsym( libc, "__sigsetjmp",	ADDRESSOF( sigsetjmp ) );
 		Dlsym( libc, "siglongjmp",	ADDRESSOF( siglongjmp ) );
 
 

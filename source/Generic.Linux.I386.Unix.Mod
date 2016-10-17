@@ -154,6 +154,8 @@ TYPE
 
 	Sigset_t= ARRAY 32 OF ADDRESS; 
 	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp, dum: ADDRESS );  
+	
+	MutexAttributeType = ARRAY 1 OF WORD;
 
 	
 CONST
@@ -426,6 +428,9 @@ VAR
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
 	pthread_mutex_lock: PROCEDURE {C} (mutex: ADDRESS): WORD;
 	pthread_mutex_unlock: PROCEDURE {C} (mutex: ADDRESS): WORD;
+	
+	pthread_mutexattr_init: PROCEDURE {C} (mutexattr: ADDRESS): WORD;
+	pthread_mutexattr_settype: PROCEDURE {C} (mutexattr: ADDRESS; type: WORD): WORD;
 
 	pthread_cond_init: PROCEDURE {C} (cond: ADDRESS; condAttr: ADDRESS): WORD;
 	pthread_cond_destroy: PROCEDURE {C} (cond: ADDRESS): WORD;
@@ -568,6 +573,25 @@ VAR
 		ASSERT(pthread_mutex_init(mtx, NIL) = 0);
 		RETURN mtx;
 	END MtxInit;
+
+	PROCEDURE RecursiveMtxInit*(dummy: LONGINT): Mutex_t;
+	VAR 
+		mtx: Mutex_t;
+		attr: MutexAttributeType;
+		res: WORD;
+	CONST 
+		Recursive = 1;
+	BEGIN
+		mtx := malloc(SIZEOF(MutexType));
+		res := pthread_mutexattr_init(ADDRESS OF attr);
+		res := pthread_mutexattr_settype(ADDRESS OF attr, Recursive);
+		
+		ASSERT(mtx # 0);
+		ASSERT(pthread_mutex_init(mtx, ADDRESS OF attr) = 0);
+		RETURN mtx;
+	END RecursiveMtxInit;
+	
+	
 	
 	PROCEDURE MtxDestroy*(mtx: Mutex_t);
 	BEGIN
@@ -1085,6 +1109,10 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy));
 		Dlsym( libc, "pthread_mutex_lock", ADDRESSOF(pthread_mutex_lock));
 		Dlsym( libc, "pthread_mutex_unlock", ADDRESSOF(pthread_mutex_unlock));
+		
+		Dlsym( libp, "pthread_mutexattr_init", ADDRESSOF(pthread_mutexattr_init));
+		Dlsym( libp, "pthread_mutexattr_settype", ADDRESSOF(pthread_mutexattr_settype));
+		
 		
 		Dlsym( libc, "pthread_cond_init", ADDRESSOF(pthread_cond_init));
 		Dlsym( libc, "pthread_cond_destroy", ADDRESSOF(pthread_cond_destroy));

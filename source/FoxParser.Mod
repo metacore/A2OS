@@ -1887,8 +1887,8 @@ TYPE
 			END;
 
 			IF Peek(Scanner.String) OR Peek(Scanner.Character)  THEN (* for compatibility with release *)
+				Error (position, Diagnostics.Invalid, "Invalid operator declaration: replace 'procedure' by 'operator' keyword!");
 				OperatorDeclaration( parentScope );
-				IF isInline THEN Error(position, Diagnostics.Invalid, "Invalid inline operator syntax, replace procedure by operator") END;
 				RETURN
 			END;
 

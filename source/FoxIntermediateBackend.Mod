@@ -10630,8 +10630,8 @@ TYPE
 					statement := x.outRules.GetStatement(i);
 					IF statement IS SyntaxTree.StatementBlock THEN statement := statement(SyntaxTree.StatementBlock).statements.GetStatement(0) END;
 					WITH statement: SyntaxTree.Assignment DO
-						Evaluate(statement.left, operand); (*?? or designate *)
-						result := operand.op;
+						Designate(statement.left, operand); 
+						MakeMemory(result, operand.op, IntermediateCode.GetType(system,statement.left.type) , 0);
 						NEW(str, 64);
 						Basic.GetString(statement.right(SyntaxTree.IdentifierDesignator).identifier, str^);
 						out[i] := result; IntermediateCode.SetString(out[i], str);
@@ -10641,8 +10641,10 @@ TYPE
 						Basic.GetString(statement.returnValue(SyntaxTree.IdentifierDesignator).identifier, str^);
 						IF currentIsInline THEN
 							map := currentMapper.Get(NIL);
-							Evaluate(map.to, operand);
-							out[i] := operand.op;
+							Designate(map.to, operand); 
+							MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
+							(*Evaluate(map.to, operand);*)
+							out[i] := result;
 						ELSE
 							out[i] :=NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
 						END;
@@ -10664,10 +10666,11 @@ TYPE
 				FOR i := 0 TO LEN(out)-1 DO
 					WITH statement: SyntaxTree.Assignment DO
 						ReleaseIntermediateOperand(out[i]);
-					ELSE
+					|statement: SyntaxTree.ReturnStatement DO
 						IF currentIsInline THEN
 							ReleaseIntermediateOperand(out[i]);
 						END;
+					ELSE
 					END;
 					statement := x.outRules.GetStatement(i);
 				END;

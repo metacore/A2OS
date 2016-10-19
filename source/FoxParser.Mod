@@ -1866,6 +1866,7 @@ TYPE
 			isConstructor := FALSE; isFinalizer := FALSE; isInline := FALSE;
 
 			procedureType := SyntaxTree.NewProcedureType(symbol.position, parentScope);
+			position := symbol.position;
 
 			IF Optional( Scanner.Arrow) THEN (* ignore forward declarations *)
 				forwardDeclaration := TRUE;
@@ -1886,8 +1887,8 @@ TYPE
 			END;
 
 			IF Peek(Scanner.String) OR Peek(Scanner.Character)  THEN (* for compatibility with release *)
-				OperatorDeclaration( parentScope );  
-				procedure.SetInline(isInline);
+				OperatorDeclaration( parentScope );
+				IF isInline THEN Error(position, Diagnostics.Invalid, "Invalid inline operator syntax, replace procedure by operator") END;
 				RETURN
 			END;
 

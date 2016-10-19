@@ -239,7 +239,7 @@ TYPE
 
 	END HCube;
 
-	PROCEDURE ":="*( VAR l: HCube;  VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: HCube;  VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value );
 	BEGIN
 		(* IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN NEW( l, 0, LEN( r, 3 ), 0, LEN( r, 2 ), 0, LEN( r, 1 ), 0, LEN( r, 0 ) )
@@ -248,81 +248,81 @@ TYPE
 		ArrayXdBytes.CopyMemoryToArrayPart( ADDRESSOF( r[0, 0, 0, 0] ), l, LEN( r, 0 ) * LEN( r, 1 ) * LEN( r, 2 ) * LEN( r, 3 ), NIL , NIL );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: HCube;  r: Value );
+	OPERATOR ":="*( VAR l: HCube;  r: Value );
 	BEGIN
 		IF l # NIL THEN ArrayXd.Fill( l, r );  END;
 	END ":=";
 
-	PROCEDURE "+"*( l, r: HCube ): HCube;
+	OPERATOR "+"*( l, r: HCube ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.Add( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "-"*( l, r: HCube ): HCube;
+	OPERATOR "-"*( l, r: HCube ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.Sub( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "+"*( l: HCube;  r: Value ): HCube;
+	OPERATOR "+"*( l: HCube;  r: Value ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.AddAV( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: Value;  r: HCube ): HCube;
+	OPERATOR "+"*( l: Value;  r: HCube ): HCube;
 	BEGIN
 		RETURN r + l
 	END "+";
 
-	PROCEDURE "-"*( l: HCube;  r: Value ): HCube;
+	OPERATOR "-"*( l: HCube;  r: Value ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.SubAV( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Value;  r: HCube ): HCube;
+	OPERATOR "-"*( l: Value;  r: HCube ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := r.Alike();  ArrayXd.SubVA( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: HCube ): HCube;
+	OPERATOR "-"*( l: HCube ): HCube;
 	BEGIN
 		RETURN 0 - l;
 	END "-";
 
-	PROCEDURE "*"*( l: HCube;  r: Value ): HCube;
+	OPERATOR "*"*( l: HCube;  r: Value ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.MulAV( l, r, res );  RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l: Value;  r: HCube ): HCube;
+	OPERATOR "*"*( l: Value;  r: HCube ): HCube;
 	BEGIN
 		RETURN r * l;
 	END "*";
 
-	PROCEDURE "DIV"*( l: HCube;  r: Value ): HCube;
+	OPERATOR "DIV"*( l: HCube;  r: Value ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.DivAV( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "DIV"*( l: Value;  r: HCube ): HCube;
+	OPERATOR "DIV"*( l: Value;  r: HCube ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := r.Alike();  ArrayXd.DivVA( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: HCube;  r: Value ): HCube;
+	OPERATOR "MOD"*( l: HCube;  r: Value ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := l.Alike();  ArrayXd.ModAV( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "MOD"*( l: Value;  r: HCube ): HCube;
+	OPERATOR "MOD"*( l: Value;  r: HCube ): HCube;
 	VAR res: HCube;
 	BEGIN
 		res := r.Alike();  ArrayXd.ModVA( l, r, res );  RETURN res;

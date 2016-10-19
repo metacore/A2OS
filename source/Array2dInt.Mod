@@ -150,7 +150,7 @@ TYPE
 
 
 (** Monadic Operator - does not overwrite the argument *)
-	PROCEDURE "-"*( x: Array ): Array;
+	OPERATOR "-"*( x: Array ): Array;
 	VAR i, k, cols, rows: Index;  minus: Array;
 	BEGIN
 		IF x # NIL THEN
@@ -163,12 +163,12 @@ TYPE
 		RETURN minus
 	END "-";
 
-	PROCEDURE ":="*( VAR l: Array;  r: Value );
+	OPERATOR ":="*( VAR l: Array;  r: Value );
 	BEGIN
 		IF l # NIL THEN Fill( r, l^, 0, 0, LEN( l[0] ), LEN( l ) );  ELSE DataErrors.Error( "The supplied instance of Array2dInt.Array was NIL." ) END
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF Value );
 	VAR i, k, cols, rows: Index;
 	BEGIN
 		rows := LEN( r, 0 );  cols := LEN( r, 1 );
@@ -182,7 +182,7 @@ TYPE
 	END ":=";
 
 (** Arithmetic. Operators do not overwrite the arguments. *)
-	PROCEDURE "+"*( l, r: Array ): Array;
+	OPERATOR "+"*( l, r: Array ): Array;
 	VAR i, k, cols, rows: Index;  sum: Array;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -198,7 +198,7 @@ TYPE
 		RETURN sum
 	END "+";
 
-	PROCEDURE "-"*( l, r: Array ): Array;
+	OPERATOR "-"*( l, r: Array ): Array;
 	VAR i, k, cols, rows: Index;  diff: Array;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -215,7 +215,7 @@ TYPE
 	END "-";
 
 (** Array dot product *)
-	PROCEDURE "*"*( l, r: Array ): Array;
+	OPERATOR "*"*( l, r: Array ): Array;
 	(** Caution:  Use brackets to ensure proper matrix multiplication when contracting three or more matrices,
 				e.g., A*(B*C) is correct, whereas A*B*C is not.  This is because matrix multiplician is from right to left;
 				whereas, the Oberon programming languages multiplies from left to right. *)
@@ -239,7 +239,7 @@ TYPE
 	END "*";
 
 (** Array-Vector contraction,  returns  x = A v  or x[i] = A[i, k] v[k] *)
-	PROCEDURE "*"*( l: Array;  r: ArrayXd.Array1 ): ArrayXd.Array1;
+	OPERATOR "*"*( l: Array;  r: ArrayXd.Array1 ): ArrayXd.Array1;
 	VAR i, k, dummy, rows, sum: Index;  dot: ArrayXd.Array1;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -258,7 +258,7 @@ TYPE
 	END "*";
 
 (** Vector-Array contraction,  returns  x = ATv = vTA  or x[i] = A[k, i] v[k] = v[k] A[k, i]  *)
-	PROCEDURE "*"*( l: ArrayXd.Array1;  r: Array ): ArrayXd.Array1;
+	OPERATOR "*"*( l: ArrayXd.Array1;  r: Array ): ArrayXd.Array1;
 	VAR i, k, cols, dummy, sum: Index;  dot: ArrayXd.Array1;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -277,7 +277,7 @@ TYPE
 	END "*";
 
 (** Scalar multiplication *)
-	PROCEDURE "*"*( l: Value;  r: Array ): Array;
+	OPERATOR "*"*( l: Value;  r: Array ): Array;
 	VAR i, k, cols, rows: Index;  prod: Array;
 	BEGIN
 		IF r # NIL THEN
@@ -290,7 +290,7 @@ TYPE
 		RETURN prod
 	END "*";
 
-	PROCEDURE "*"*( l: Array;  r: Value ): Array;
+	OPERATOR "*"*( l: Array;  r: Value ): Array;
 	VAR i, k, cols, rows: Index;  prod: Array;
 	BEGIN
 		IF l # NIL THEN
@@ -304,7 +304,7 @@ TYPE
 	END "*";
 
 (** Scalar division *)
-	PROCEDURE "DIV"*( l: Array;  r: Value ): Array;
+	OPERATOR "DIV"*( l: Array;  r: Value ): Array;
 	VAR i, k, cols, rows: Index;  div: Array;
 	BEGIN
 		IF l # NIL THEN
@@ -320,7 +320,7 @@ TYPE
 		RETURN div
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: Array;  r: Value ): Array;
+	OPERATOR "MOD"*( l: Array;  r: Value ): Array;
 	VAR i, k, cols, rows: Index;  mod: Array;
 	BEGIN
 		IF l # NIL THEN

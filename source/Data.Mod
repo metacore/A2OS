@@ -88,74 +88,74 @@ VAR
 
 
 	(** Assignment operators for Keys. *)
-	PROCEDURE ":="*( VAR l: Key;  r: NbrInt.Integer );
+	OPERATOR ":="*( VAR l: Key;  r: NbrInt.Integer );
 	BEGIN
 		l.k := r
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Key;  r: NbrInt64.Integer );
+	OPERATOR ":="*( VAR l: Key;  r: NbrInt64.Integer );
 	BEGIN
 		l.k := r
 	END ":=";
 
 (** Comparison Operators between Keys. *)
-	PROCEDURE "="*( l, r: Key ): BOOLEAN;
+	OPERATOR "="*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k = r.k
 	END "=";
 
-	PROCEDURE "#"*( l, r: Key ): BOOLEAN;
+	OPERATOR "#"*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k # r.k
 	END "#";
 
-	PROCEDURE "<"*( l, r: Key ): BOOLEAN;
+	OPERATOR "<"*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k < r.k
 	END "<";
 
-	PROCEDURE ">"*( l, r: Key ): BOOLEAN;
+	OPERATOR ">"*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k > r.k
 	END ">";
 
-	PROCEDURE "<="*( l, r: Key ): BOOLEAN;
+	OPERATOR "<="*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k <= r.k
 	END "<=";
 
-	PROCEDURE ">="*( l, r: Key ): BOOLEAN;
+	OPERATOR ">="*( l, r: Key ): BOOLEAN;
 	BEGIN
 		RETURN l.k >= r.k
 	END ">=";
 
 (** Comparison Operators between Data. *)
-	PROCEDURE "="*( l, r: Datum ): BOOLEAN;
+	OPERATOR "="*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key = r.key
 	END "=";
 
-	PROCEDURE "#"*( l, r: Datum ): BOOLEAN;
+	OPERATOR "#"*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key # r.key
 	END "#";
 
-	PROCEDURE "<"*( l, r: Datum ): BOOLEAN;
+	OPERATOR "<"*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key < r.key
 	END "<";
 
-	PROCEDURE ">"*( l, r: Datum ): BOOLEAN;
+	OPERATOR ">"*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key > r.key
 	END ">";
 
-	PROCEDURE "<="*( l, r: Datum ): BOOLEAN;
+	OPERATOR "<="*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key <= r.key
 	END "<=";
 
-	PROCEDURE ">="*( l, r: Datum ): BOOLEAN;
+	OPERATOR ">="*( l, r: Datum ): BOOLEAN;
 	BEGIN
 		RETURN l.key >= r.key
 	END ">=";

@@ -43,7 +43,7 @@ VAR
 	END Simplify;
 
 (** Monadic Operator *)
-	PROCEDURE "-"*( x: Rational ): Rational;
+	OPERATOR "-"*( x: Rational ): Rational;
 	VAR n: Rational;
 	BEGIN
 		n.n := -x.n;  n.d := x.d;  RETURN n
@@ -51,43 +51,43 @@ VAR
 
 	(** Dyadic Operators *)
 (** Type Conversion *)
-	PROCEDURE ":="*( VAR l: Rational;  r: NbrInt.Integer );
+	OPERATOR ":="*( VAR l: Rational;  r: NbrInt.Integer );
 	BEGIN
 		l.n := r;  l.d := 1
 	END ":=";
 
 (** Comparison Operators *)
-	PROCEDURE "="*( l, r: Rational ): BOOLEAN;
+	OPERATOR "="*( l, r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l.n = r.n) & (l.d = r.d)
 	END "=";
 
-	PROCEDURE "="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN (l.n = r) & (l.d = 1)
 	END "=";
 
-	PROCEDURE "="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR "="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l = r.n) & (r.d = 1)
 	END "=";
 
-	PROCEDURE "#"*( l, r: Rational ): BOOLEAN;
+	OPERATOR "#"*( l, r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l.n # r.n) OR (l.d # r.d)
 	END "#";
 
-	PROCEDURE "#"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "#"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN (l.n # r) OR (l.d # 1)
 	END "#";
 
-	PROCEDURE "#"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR "#"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l # r.n) OR (r.d # 1)
 	END "#";
 
-	PROCEDURE "<"*( l, r: Rational ): BOOLEAN;
+	OPERATOR "<"*( l, r: Rational ): BOOLEAN;
 	VAR a, b: NbrInt64.Integer;
 	BEGIN
 		a := l.n DIV l.d;  b := r.n DIV r.d;
@@ -98,12 +98,12 @@ VAR
 		END
 	END "<";
 
-	PROCEDURE "<"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "<"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		IF (l.n DIV l.d) < r THEN RETURN TRUE ELSE RETURN FALSE END
 	END "<";
 
-	PROCEDURE "<"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR "<"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	VAR b: NbrInt64.Integer;
 	BEGIN
 		b := r.n DIV r.d;
@@ -114,7 +114,7 @@ VAR
 		END
 	END "<";
 
-	PROCEDURE ">"*( l, r: Rational ): BOOLEAN;
+	OPERATOR ">"*( l, r: Rational ): BOOLEAN;
 	VAR a, b: NbrInt64.Integer;
 	BEGIN
 		a := l.n DIV l.d;  b := r.n DIV r.d;
@@ -125,7 +125,7 @@ VAR
 		END
 	END ">";
 
-	PROCEDURE ">"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR ">"*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	VAR a: NbrInt64.Integer;
 	BEGIN
 		a := l.n DIV l.d;
@@ -136,115 +136,115 @@ VAR
 		END
 	END ">";
 
-	PROCEDURE ">"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR ">"*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	BEGIN
 		IF l > (r.n DIV r.d) THEN RETURN TRUE ELSE RETURN FALSE END
 	END ">";
 
-	PROCEDURE "<="*( l, r: Rational ): BOOLEAN;
+	OPERATOR "<="*( l, r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN ~(l > r)
 	END "<=";
 
-	PROCEDURE "<="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "<="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN ~(l > r)
 	END "<=";
 
-	PROCEDURE "<="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR "<="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN ~(l > r)
 	END "<=";
 
-	PROCEDURE ">="*( l, r: Rational ): BOOLEAN;
+	OPERATOR ">="*( l, r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN ~(l < r)
 	END ">=";
 
-	PROCEDURE ">="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR ">="*( l: Rational;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN ~(l < r)
 	END ">=";
 
-	PROCEDURE ">="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
+	OPERATOR ">="*( l: NbrInt.Integer;  r: Rational ): BOOLEAN;
 	BEGIN
 		RETURN ~(l < r)
 	END ">=";
 
 (** Arithmetic *)
-	PROCEDURE "+"*( l, r: Rational ): Rational;
+	OPERATOR "+"*( l, r: Rational ): Rational;
 	VAR cd, ld, rd: NbrInt64.Integer;  sum: Rational;
 	BEGIN
 		CommonDenominator( l.d, r.d, cd );  ld := l.d DIV cd;  rd := r.d DIV cd;  sum.n := l.n * rd + r.n * ld;  sum.d := l.d * rd;
 		Simplify( sum );  RETURN sum
 	END "+";
 
-	PROCEDURE "+"*( l: Rational;  r: NbrInt.Integer ): Rational;
+	OPERATOR "+"*( l: Rational;  r: NbrInt.Integer ): Rational;
 	VAR sum: Rational;
 	BEGIN
 		sum.n := l.n + r * l.d;  sum.d := l.d;  Simplify( sum );  RETURN sum
 	END "+";
 
-	PROCEDURE "+"*( l: NbrInt.Integer;  r: Rational ): Rational;
+	OPERATOR "+"*( l: NbrInt.Integer;  r: Rational ): Rational;
 	VAR sum: Rational;
 	BEGIN
 		sum.n := l * r.d + r.n;  sum.d := r.d;  Simplify( sum );  RETURN sum
 	END "+";
 
-	PROCEDURE "-"*( l, r: Rational ): Rational;
+	OPERATOR "-"*( l, r: Rational ): Rational;
 	VAR cd, ld, rd: NbrInt64.Integer;  diff: Rational;
 	BEGIN
 		CommonDenominator( l.d, r.d, cd );  ld := l.d DIV cd;  rd := r.d DIV cd;  diff.n := l.n * rd - r.n * ld;  diff.d := l.d * rd;
 		Simplify( diff );  RETURN diff
 	END "-";
 
-	PROCEDURE "-"*( l: Rational;  r: NbrInt.Integer ): Rational;
+	OPERATOR "-"*( l: Rational;  r: NbrInt.Integer ): Rational;
 	VAR diff: Rational;
 	BEGIN
 		diff.n := l.n - r * l.d;  diff.d := l.d;  Simplify( diff );  RETURN diff
 	END "-";
 
-	PROCEDURE "-"*( l: NbrInt.Integer;  r: Rational ): Rational;
+	OPERATOR "-"*( l: NbrInt.Integer;  r: Rational ): Rational;
 	VAR diff: Rational;
 	BEGIN
 		diff.n := l * r.d - r.n;  diff.d := r.d;  Simplify( diff );  RETURN diff
 	END "-";
 
-	PROCEDURE "*"*( l, r: Rational ): Rational;
+	OPERATOR "*"*( l, r: Rational ): Rational;
 	VAR cd, ld, ln, rd, rn: NbrInt64.Integer;  prod: Rational;
 	BEGIN
 		CommonDenominator( l.n, r.d, cd );  ln := l.n DIV cd;  ld := r.d DIV cd;  CommonDenominator( r.n, l.d, cd );
 		rn := r.n DIV cd;  rd := l.d DIV cd;  prod.n := ln * rn;  prod.d := ld * rd;  Simplify( prod );  RETURN prod
 	END "*";
 
-	PROCEDURE "*"*( l: Rational;  r: NbrInt.Integer ): Rational;
+	OPERATOR "*"*( l: Rational;  r: NbrInt.Integer ): Rational;
 	VAR cd, int: NbrInt64.Integer;  prod: Rational;
 	BEGIN
 		int := r;  CommonDenominator( l.d, int, cd );  prod.n := l.n * (int DIV cd);  prod.d := l.d DIV cd;  Simplify( prod );
 		RETURN prod
 	END "*";
 
-	PROCEDURE "*"*( l: NbrInt.Integer;  r: Rational ): Rational;
+	OPERATOR "*"*( l: NbrInt.Integer;  r: Rational ): Rational;
 	VAR cd, int: NbrInt64.Integer;  prod: Rational;
 	BEGIN
 		int := l;  CommonDenominator( int, r.d, cd );  prod.n := (int DIV cd) * r.n;  prod.d := r.d DIV cd;  Simplify( prod );
 		RETURN prod
 	END "*";
 
-	PROCEDURE "/"*( l, r: Rational ): Rational;
+	OPERATOR "/"*( l, r: Rational ): Rational;
 	VAR cd, ld, ln, rd, rn: NbrInt64.Integer;  div: Rational;
 	BEGIN
 		CommonDenominator( l.n, r.n, cd );  ln := l.n DIV cd;  ld := r.n DIV cd;  CommonDenominator( r.d, l.d, cd );
 		rn := r.d DIV cd;  rd := l.d DIV cd;  div.n := ln * rn;  div.d := ld * rd;  Simplify( div );  RETURN div
 	END "/";
 
-	PROCEDURE "/"*( l: Rational;  r: NbrInt.Integer ): Rational;
+	OPERATOR "/"*( l: Rational;  r: NbrInt.Integer ): Rational;
 	VAR cd, int: NbrInt64.Integer;  div: Rational;
 	BEGIN
 		int := r;  CommonDenominator( l.n, int, cd );  div.n := l.n DIV cd;  div.d := l.d * (int DIV cd);  Simplify( div );  RETURN div
 	END "/";
 
-	PROCEDURE "/"*( l: NbrInt.Integer;  r: Rational ): Rational;
+	OPERATOR "/"*( l: NbrInt.Integer;  r: Rational ): Rational;
 	VAR cd, int: NbrInt64.Integer;  div: Rational;
 	BEGIN
 		int := l;  CommonDenominator( int, r.n, cd );  div.n := (int DIV cd) * r.d;  div.d := r.n DIV cd;  Simplify( div );  RETURN div

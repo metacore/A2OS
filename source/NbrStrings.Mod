@@ -15,77 +15,77 @@ TYPE
 	String* = POINTER TO ARRAY OF CHAR;
 
 	(** Assignment Operators *)
-	PROCEDURE ":="*( VAR string: String;  x: CHAR );
+	OPERATOR ":="*( VAR string: String;  x: CHAR );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < 2) THEN NEW( string, 2 );  END;
 		string[0] := x;  string[1] := 0X
 	END ":=";
 
-	PROCEDURE ":="*( VAR string: String;  x: ARRAY OF CHAR );
+	OPERATOR ":="*( VAR string: String;  x: ARRAY OF CHAR );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < LEN( x )) THEN NEW( string, LEN( x ) );  END;
 		COPY( x, string^ )
 	END ":=";
 
 (** String conversion for the core numeric types. *)
-	PROCEDURE ":="*( VAR string: String;  x: NbrInt8.Integer );
+	OPERATOR ":="*( VAR string: String;  x: NbrInt8.Integer );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < sIntStringLen) THEN NEW( string, sIntStringLen );  END;
 		NbrInt8.IntToString( x, string^ )
 	END ":=";
 
-	PROCEDURE ":="*( VAR string: String;  x: NbrInt16.Integer );
+	OPERATOR ":="*( VAR string: String;  x: NbrInt16.Integer );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < intStringLen) THEN NEW( string, intStringLen );  END;
 		NbrInt16.IntToString( x, string^ )
 	END ":=";
 
-(**  PROCEDURE ":="*( VAR string: String;  x: NbrRe32.Integer )
+(**  OPERATOR ":="*( VAR string: String;  x: NbrRe32.Integer )
 	is not needed because NbrInt.Integer = NbrInt32.Integer.  *)
 
-	PROCEDURE ":="*( VAR string: String;  x: NbrInt64.Integer );
+	OPERATOR ":="*( VAR string: String;  x: NbrInt64.Integer );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < hIntStringLen) THEN NEW( string, hIntStringLen );  END;
 		NbrInt64.IntToString( x, string^ )
 	END ":=";
 
-(**  PROCEDURE ":="*( VAR string: String;  x: NbrRe32.Real )
+(**  OPERATOR ":="*( VAR string: String;  x: NbrRe32.Real )
 	is not needed because NbrRe.Real = NbrRe32.Real.  *)
 
-	PROCEDURE ":="*( VAR string: String;  x: NbrRe64.Real );
+	OPERATOR ":="*( VAR string: String;  x: NbrRe64.Real );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < lReStringLen) THEN NEW( string, lReStringLen );  END;
 		NbrRe64.ReToString( x, 15, string^ )
 	END ":=";
 
 (** String conversion for the base numeric types. *)
-	PROCEDURE ":="*( VAR string: String;  x: NbrInt.Integer );
+	OPERATOR ":="*( VAR string: String;  x: NbrInt.Integer );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < lIntStringLen) THEN NEW( string, lIntStringLen );  END;
 		NbrInt.IntToString( x, string^ )
 	END ":=";
 
-	PROCEDURE ":="*( VAR string: String;  x: NbrRat.Rational );
+	OPERATOR ":="*( VAR string: String;  x: NbrRat.Rational );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < ratStringLen) THEN NEW( string, ratStringLen );  END;
 		NbrRat.RatToString( x, string^ )
 	END ":=";
 
-	PROCEDURE ":="*( VAR string: String;  x: NbrRe.Real );
+	OPERATOR ":="*( VAR string: String;  x: NbrRe.Real );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < reStringLen) THEN NEW( string, reStringLen );  END;
 		NbrRe.ReToString( x, 7, string^ )
 	END ":=";
 
 (** The returned string will be in Cartesian format.  To get a string in polar format use:  NbrCplx.CplxToPolarString. *)
-	PROCEDURE ":="*( VAR string: String;  x: NbrCplx.Complex );
+	OPERATOR ":="*( VAR string: String;  x: NbrCplx.Complex );
 	BEGIN
 		IF (string = NIL ) OR (LEN( string ) < cplxStringLen) THEN NEW( string, cplxStringLen );  END;
 		NbrCplx.CplxToString( x, 7, string^ );
 	END ":=";
 
 (** String concatination *)
-	PROCEDURE "+"*( l, r: String ): String;
+	OPERATOR "+"*( l, r: String ): String;
 	VAR i, j: NbrInt32.Integer;  res: String;
 
 		PROCEDURE Copy( src: String ): String;
@@ -114,25 +114,25 @@ TYPE
 		END;
 	END "+";
 
-	PROCEDURE "+"*( l: String;  r: CHAR ): String;
+	OPERATOR "+"*( l: String;  r: CHAR ): String;
 	VAR res: String;
 	BEGIN
 		res := r;  res := l + res;  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: CHAR;  r: String ): String;
+	OPERATOR "+"*( l: CHAR;  r: String ): String;
 	VAR res: String;
 	BEGIN
 		res := l;  res := res + r;  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: String;  r: ARRAY OF CHAR ): String;
+	OPERATOR "+"*( l: String;  r: ARRAY OF CHAR ): String;
 	VAR res: String;
 	BEGIN
 		res := r;  res := l + res;  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: ARRAY OF CHAR;  r: String ): String;
+	OPERATOR "+"*( l: ARRAY OF CHAR;  r: String ): String;
 	VAR res: String;
 	BEGIN
 		res := l;  res := res + r;  RETURN res;
@@ -141,20 +141,20 @@ TYPE
 	(* nopov *)
 	(* the following procedures (operators) are not conforming to the new rules:
 	
-	PROCEDURE "+"*( l, r: ARRAY OF CHAR ): String;
+	OPERATOR "+"*( l, r: ARRAY OF CHAR ): String;
 	VAR res: String;
 	BEGIN
 		res := l;  res := res + r;  RETURN res;
 	END "+";
 
 (** Mixing CHAR and ARRAY OF CHAR isn't a problem since CHAR+CHAR is not defined. *)
-	PROCEDURE "+"*( l: ARRAY OF CHAR;  r: CHAR ): String;
+	OPERATOR "+"*( l: ARRAY OF CHAR;  r: CHAR ): String;
 	VAR res: String;
 	BEGIN
 		res := l;  res := res + r;  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: CHAR;  r: ARRAY OF CHAR ): String;
+	OPERATOR "+"*( l: CHAR;  r: ARRAY OF CHAR ): String;
 	VAR res: String;
 	BEGIN
 		res := l;  res := res + r;  RETURN res;

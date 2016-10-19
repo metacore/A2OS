@@ -184,7 +184,7 @@ BUILDS
 		EXTENSION "GofW"
 		SYMBOLEXTENSION "SymW"
 		PATH "AOS:"
-		EXCLUDEPACKAGES "OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
+		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
 	A2_64 {

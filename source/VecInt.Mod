@@ -257,94 +257,94 @@ TYPE
 
 	END Vector;
 
-	PROCEDURE ":="*( VAR l: Vector;  VAR r: ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Vector;  VAR r: ARRAY OF Value );
 	BEGIN
 		(*		IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN NEW( l, 0, LEN( r, 0 ) ) ELSE l.NewRange( 0, LEN( r, 0 ), FALSE );  END;
 		ArrayXdBytes.CopyMemoryToArray( ADDRESSOF( r[0] ), l, LEN( r, 0 ) );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Vector;  r: Value );
+	OPERATOR ":="*( VAR l: Vector;  r: Value );
 	BEGIN
 		IF l # NIL THEN ArrayXd.Fill( l, r ) END;
 	END ":=";
 
-	PROCEDURE "+"*( l, r: Vector ): Vector;
+	OPERATOR "+"*( l, r: Vector ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.Add( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "-"*( l, r: Vector ): Vector;
+	OPERATOR "-"*( l, r: Vector ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.Sub( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "+"*( l: Vector;  r: Value ): Vector;
+	OPERATOR "+"*( l: Vector;  r: Value ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.AddAV( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: Value;  r: Vector ): Vector;
+	OPERATOR "+"*( l: Value;  r: Vector ): Vector;
 	BEGIN
 		RETURN r + l
 	END "+";
 
-	PROCEDURE "-"*( l: Vector;  r: Value ): Vector;
+	OPERATOR "-"*( l: Vector;  r: Value ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.SubAV( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Value;  r: Vector ): Vector;
+	OPERATOR "-"*( l: Value;  r: Vector ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := r.Alike();  ArrayXd.SubVA( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Vector ): Vector;
+	OPERATOR "-"*( l: Vector ): Vector;
 	BEGIN
 		RETURN 0 - l;
 	END "-";
 
-	PROCEDURE "*"*( l: Vector;  r: Value ): Vector;
+	OPERATOR "*"*( l: Vector;  r: Value ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.MulAV( l, r, res );  RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l: Value;  r: Vector ): Vector;
+	OPERATOR "*"*( l: Value;  r: Vector ): Vector;
 	BEGIN
 		RETURN r * l;
 	END "*";
 
-	PROCEDURE "DIV"*( l: Vector;  r: Value ): Vector;
+	OPERATOR "DIV"*( l: Vector;  r: Value ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.DivAV( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "DIV"*( l: Value;  r: Vector ): Vector;
+	OPERATOR "DIV"*( l: Value;  r: Vector ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := r.Alike();  ArrayXd.DivVA( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: Vector;  r: Value ): Vector;
+	OPERATOR "MOD"*( l: Vector;  r: Value ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := l.Alike();  ArrayXd.ModAV( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "MOD"*( l: Value;  r: Vector ): Vector;
+	OPERATOR "MOD"*( l: Value;  r: Vector ): Vector;
 	VAR res: Vector;
 	BEGIN
 		res := r.Alike();  ArrayXd.ModVA( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "*"*( l, r: Vector ): Value;   (* scalar product *)
+	OPERATOR "*"*( l, r: Vector ): Value;   (* scalar product *)
 	(*! replace by operation on memory *)
 	VAR res: Value;  i: LONGINT;
 	BEGIN

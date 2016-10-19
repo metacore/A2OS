@@ -32,14 +32,14 @@ VAR
 
 	(** Monadic Operators *)
 (** Negative, i.e., -z = -x - i y *)
-	PROCEDURE "-"*( x: Complex ): Complex;
+	OPERATOR "-"*( x: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := -x.re;  cplx.im := -x.im;  RETURN cplx
 	END "-";
 
 (** Complex conjugate, i.e., ~z = x - i y  *)
-	PROCEDURE "~"*( x: Complex ): Complex;
+	OPERATOR "~"*( x: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := x.re;  cplx.im := -x.im;  RETURN cplx
@@ -47,221 +47,221 @@ VAR
 
 	(** Dyadic Operators *)
 (** Type Conversions *)
-	PROCEDURE ":="*( VAR l: Complex;  r: NbrInt.Integer );
+	OPERATOR ":="*( VAR l: Complex;  r: NbrInt.Integer );
 	BEGIN
 		l.re := r;  l.im := 0
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Complex;  r: NbrRat.Rational );
+	OPERATOR ":="*( VAR l: Complex;  r: NbrRat.Rational );
 	BEGIN
 		l.re := r;  l.im := 0
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Complex;  r: NbrRe.Real );
+	OPERATOR ":="*( VAR l: Complex;  r: NbrRe.Real );
 	BEGIN
 		l.re := r;  l.im := 0
 	END ":=";
 
 (** Comparison Operators *)
-	PROCEDURE "="*( l, r: Complex ): BOOLEAN;
+	OPERATOR "="*( l, r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l.re = r.re) & (l.im = r.im)
 	END "=";
 
-	PROCEDURE "="*( l: Complex;  r: NbrRe.Real ): BOOLEAN;
+	OPERATOR "="*( l: Complex;  r: NbrRe.Real ): BOOLEAN;
 	BEGIN
 		RETURN (l.re = r) & (l.im = 0)
 	END "=";
 
-	PROCEDURE "="*( l: Complex;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "="*( l: Complex;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l.re = r) & (l.im = 0)
 	END "=";
 
-	PROCEDURE "="*( l: Complex;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "="*( l: Complex;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN (l.re = r) & (l.im = 0)
 	END "=";
 
-	PROCEDURE "="*( l: NbrRe.Real;  r: Complex ): BOOLEAN;
+	OPERATOR "="*( l: NbrRe.Real;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l = r.re) & (r.im = 0)
 	END "=";
 
-	PROCEDURE "="*( l: NbrRat.Rational;  r: Complex ): BOOLEAN;
+	OPERATOR "="*( l: NbrRat.Rational;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l = r.re) & (r.im = 0)
 	END "=";
 
-	PROCEDURE "="*( l: NbrInt.Integer;  r: Complex ): BOOLEAN;
+	OPERATOR "="*( l: NbrInt.Integer;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l = r.re) & (r.im = 0)
 	END "=";
 
-	PROCEDURE "#"*( l, r: Complex ): BOOLEAN;
+	OPERATOR "#"*( l, r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l.re # r.re) OR (l.im # r.im)
 	END "#";
 
-	PROCEDURE "#"*( l: Complex;  r: NbrRe.Real ): BOOLEAN;
+	OPERATOR "#"*( l: Complex;  r: NbrRe.Real ): BOOLEAN;
 	BEGIN
 		RETURN (l.re # r) OR (l.im # 0)
 	END "#";
 
-	PROCEDURE "#"*( l: Complex;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "#"*( l: Complex;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN (l.re # r) OR (l.im # 0)
 	END "#";
 
-	PROCEDURE "#"*( l: Complex;  r: NbrInt.Integer ): BOOLEAN;
+	OPERATOR "#"*( l: Complex;  r: NbrInt.Integer ): BOOLEAN;
 	BEGIN
 		RETURN (l.re # r) OR (l.im # 0)
 	END "#";
 
-	PROCEDURE "#"*( l: NbrRe.Real;  r: Complex ): BOOLEAN;
+	OPERATOR "#"*( l: NbrRe.Real;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l # r.re) OR (r.im # 0)
 	END "#";
 
-	PROCEDURE "#"*( l: NbrRat.Rational;  r: Complex ): BOOLEAN;
+	OPERATOR "#"*( l: NbrRat.Rational;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l # r.re) OR (r.im # 0)
 	END "#";
 
-	PROCEDURE "#"*( l: NbrInt.Integer;  r: Complex ): BOOLEAN;
+	OPERATOR "#"*( l: NbrInt.Integer;  r: Complex ): BOOLEAN;
 	BEGIN
 		RETURN (l # r.re) OR (r.im # 0)
 	END "#";
 
 (** Arithmetic *)
-	PROCEDURE "+"*( l, r: Complex ): Complex;
+	OPERATOR "+"*( l, r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re + r.re;  cplx.im := l.im + r.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: Complex;  r: NbrRe.Real ): Complex;
+	OPERATOR "+"*( l: Complex;  r: NbrRe.Real ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re + r;  cplx.im := l.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: Complex;  r: NbrRat.Rational ): Complex;
+	OPERATOR "+"*( l: Complex;  r: NbrRat.Rational ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re + r;  cplx.im := l.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: Complex;  r: NbrInt.Integer ): Complex;
+	OPERATOR "+"*( l: Complex;  r: NbrInt.Integer ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re + r;  cplx.im := l.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: NbrRe.Real;  r: Complex ): Complex;
+	OPERATOR "+"*( l: NbrRe.Real;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l + r.re;  cplx.im := r.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: NbrRat.Rational;  r: Complex ): Complex;
+	OPERATOR "+"*( l: NbrRat.Rational;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l + r.re;  cplx.im := r.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "+"*( l: NbrInt.Integer;  r: Complex ): Complex;
+	OPERATOR "+"*( l: NbrInt.Integer;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l + r.re;  cplx.im := r.im;  RETURN cplx
 	END "+";
 
-	PROCEDURE "-"*( l, r: Complex ): Complex;
+	OPERATOR "-"*( l, r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re - r.re;  cplx.im := l.im - r.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: Complex;  r: NbrRe.Real ): Complex;
+	OPERATOR "-"*( l: Complex;  r: NbrRe.Real ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re - r;  cplx.im := l.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: Complex;  r: NbrRat.Rational ): Complex;
+	OPERATOR "-"*( l: Complex;  r: NbrRat.Rational ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re - r;  cplx.im := l.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: Complex;  r: NbrInt.Integer ): Complex;
+	OPERATOR "-"*( l: Complex;  r: NbrInt.Integer ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re - r;  cplx.im := l.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: NbrRe.Real;  r: Complex ): Complex;
+	OPERATOR "-"*( l: NbrRe.Real;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l - r.re;  cplx.im := -r.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: NbrRat.Rational;  r: Complex ): Complex;
+	OPERATOR "-"*( l: NbrRat.Rational;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l - r.re;  cplx.im := -r.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "-"*( l: NbrInt.Integer;  r: Complex ): Complex;
+	OPERATOR "-"*( l: NbrInt.Integer;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l - r.re;  cplx.im := -r.im;  RETURN cplx
 	END "-";
 
-	PROCEDURE "*"*( l, r: Complex ): Complex;
+	OPERATOR "*"*( l, r: Complex ): Complex;
 	VAR cplx: Complex;  left, right: NbrRe.Real;
 	BEGIN
 		left := l.re * r.re;  right := l.im * r.im;  cplx.re := left - right;  left := l.re * r.im;  right := l.im * r.re;
 		cplx.im := left + right;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: Complex;  r: NbrRe.Real ): Complex;
+	OPERATOR "*"*( l: Complex;  r: NbrRe.Real ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re * r;  cplx.im := l.im * r;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: Complex;  r: NbrRat.Rational ): Complex;
+	OPERATOR "*"*( l: Complex;  r: NbrRat.Rational ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re * r;  cplx.im := l.im * r;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: Complex;  r: NbrInt.Integer ): Complex;
+	OPERATOR "*"*( l: Complex;  r: NbrInt.Integer ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l.re * r;  cplx.im := l.im * r;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: NbrRe.Real;  r: Complex ): Complex;
+	OPERATOR "*"*( l: NbrRe.Real;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l * r.re;  cplx.im := l * r.im;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: NbrRat.Rational;  r: Complex ): Complex;
+	OPERATOR "*"*( l: NbrRat.Rational;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l * r.re;  cplx.im := l * r.im;  RETURN cplx
 	END "*";
 
-	PROCEDURE "*"*( l: NbrInt.Integer;  r: Complex ): Complex;
+	OPERATOR "*"*( l: NbrInt.Integer;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx.re := l * r.re;  cplx.im := l * r.im;  RETURN cplx
 	END "*";
 
-	PROCEDURE "/"*( l, r: Complex ): Complex;
+	OPERATOR "/"*( l, r: Complex ): Complex;
 	(* Algorithm can be found in Press et al. *)
 	VAR cplx: Complex;  denom, ratio: NbrRe.Real;
 	BEGIN
@@ -275,37 +275,37 @@ VAR
 		RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: Complex;  r: NbrRe.Real ): Complex;
+	OPERATOR "/"*( l: Complex;  r: NbrRe.Real ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx := l * (1 / r);  RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: Complex;  r: NbrRat.Rational ): Complex;
+	OPERATOR "/"*( l: Complex;  r: NbrRat.Rational ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx := l * (1 / r);  RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: Complex;  r: NbrInt.Integer ): Complex;
+	OPERATOR "/"*( l: Complex;  r: NbrInt.Integer ): Complex;
 	VAR re: NbrRe.Real;  cplx: Complex;
 	BEGIN
 		re := r;  cplx := l * (1 / re);  RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: NbrRe.Real;  r: Complex ): Complex;
+	OPERATOR "/"*( l: NbrRe.Real;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx := l * Reciprocal( r );  RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: NbrRat.Rational;  r: Complex ): Complex;
+	OPERATOR "/"*( l: NbrRat.Rational;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx := l * Reciprocal( r );  RETURN cplx
 	END "/";
 
-	PROCEDURE "/"*( l: NbrInt.Integer;  r: Complex ): Complex;
+	OPERATOR "/"*( l: NbrInt.Integer;  r: Complex ): Complex;
 	VAR cplx: Complex;
 	BEGIN
 		cplx := l * Reciprocal( r );  RETURN cplx

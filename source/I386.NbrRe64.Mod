@@ -34,109 +34,109 @@ VAR
 	END RealToInt64;
 
 (** Type Conversion *)
-	PROCEDURE ":="*( VAR l: Real;  r: NbrInt64.Integer );
+	OPERATOR ":="*( VAR l: Real;  r: NbrInt64.Integer );
 	BEGIN
 		l := Int64ToReal( r )
 	END ":=";
 
 (** Comparison Operators *)
-	PROCEDURE "="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR "="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l = Int64ToReal( r )
 	END "=";
 
-	PROCEDURE "="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR "="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) = r
 	END "=";
 
-	PROCEDURE "#"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR "#"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l # Int64ToReal( r )
 	END "#";
 
-	PROCEDURE "#"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR "#"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) # r
 	END "#";
 
-	PROCEDURE "<"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR "<"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l < Int64ToReal( r )
 	END "<";
 
-	PROCEDURE "<"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR "<"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) < r
 	END "<";
 
-	PROCEDURE ">"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR ">"*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l > Int64ToReal( r )
 	END ">";
 
-	PROCEDURE ">"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR ">"*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) > r
 	END ">";
 
-	PROCEDURE "<="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR "<="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l <= Int64ToReal( r )
 	END "<=";
 
-	PROCEDURE "<="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR "<="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) <= r
 	END "<=";
 
-	PROCEDURE ">="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
+	OPERATOR ">="*( l: Real;  r: NbrInt64.Integer ): BOOLEAN;
 	BEGIN
 		RETURN l >= Int64ToReal( r )
 	END ">=";
 
-	PROCEDURE ">="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
+	OPERATOR ">="*( l: NbrInt64.Integer;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN Int64ToReal( l ) >= r
 	END ">=";
 
 (** Arithmetic *)
-	PROCEDURE "+"*( l: Real;  r: NbrInt64.Integer ): Real;
+	OPERATOR "+"*( l: Real;  r: NbrInt64.Integer ): Real;
 	BEGIN
 		RETURN l + Int64ToReal( r )
 	END "+";
 
-	PROCEDURE "+"*( l: NbrInt64.Integer;  r: Real ): Real;
+	OPERATOR "+"*( l: NbrInt64.Integer;  r: Real ): Real;
 	BEGIN
 		RETURN Int64ToReal( l ) + r
 	END "+";
 
-	PROCEDURE "-"*( l: Real;  r: NbrInt64.Integer ): Real;
+	OPERATOR "-"*( l: Real;  r: NbrInt64.Integer ): Real;
 	BEGIN
 		RETURN l - Int64ToReal( r )
 	END "-";
 
-	PROCEDURE "-"*( l: NbrInt64.Integer;  r: Real ): Real;
+	OPERATOR "-"*( l: NbrInt64.Integer;  r: Real ): Real;
 	BEGIN
 		RETURN Int64ToReal( l ) - r
 	END "-";
 
-	PROCEDURE "*"*( l: Real;  r: NbrInt64.Integer ): Real;
+	OPERATOR "*"*( l: Real;  r: NbrInt64.Integer ): Real;
 	BEGIN
 		RETURN l * Int64ToReal( r )
 	END "*";
 
-	PROCEDURE "*"*( l: NbrInt64.Integer;  r: Real ): Real;
+	OPERATOR "*"*( l: NbrInt64.Integer;  r: Real ): Real;
 	BEGIN
 		RETURN Int64ToReal( l ) * r
 	END "*";
 
-	PROCEDURE "/"*( l: Real;  r: NbrInt64.Integer ): Real;
+	OPERATOR "/"*( l: Real;  r: NbrInt64.Integer ): Real;
 	BEGIN
 		RETURN l / Int64ToReal( r )
 	END "/";
 
-	PROCEDURE "/"*( l: NbrInt64.Integer;  r: Real ): Real;
+	OPERATOR "/"*( l: NbrInt64.Integer;  r: Real ): Real;
 	BEGIN
 		RETURN Int64ToReal( l ) / r
 	END "/";

@@ -233,88 +233,88 @@ TYPE
 
 	END Cube;
 
-	PROCEDURE ":="*( VAR l: Cube;  VAR r: ARRAY OF ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Cube;  VAR r: ARRAY OF ARRAY OF ARRAY OF Value );
 	BEGIN
 		(*	IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN NEW( l, 0, LEN( r, 2 ), 0, LEN( r, 1 ), 0, LEN( r, 0 ) );  ELSE l.NewRange( 0, LEN( r, 2 ), 0, LEN( r, 1 ), 0, LEN( r, 0 ), FALSE );  END;
 		ArrayXdBytes.CopyMemoryToArrayPart( ADDRESSOF( r[0, 0, 0] ), l, LEN( r, 0 ) * LEN( r, 1 ) * LEN( r, 2 ), NIL , NIL );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Cube;  r: Value );
+	OPERATOR ":="*( VAR l: Cube;  r: Value );
 	BEGIN
 		IF l # NIL THEN ArrayXd.Fill( l, r );  END;
 	END ":=";
 
-	PROCEDURE "+"*( l, r: Cube ): Cube;
+	OPERATOR "+"*( l, r: Cube ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.Add( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "-"*( l, r: Cube ): Cube;
+	OPERATOR "-"*( l, r: Cube ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.Sub( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "+"*( l: Cube;  r: Value ): Cube;
+	OPERATOR "+"*( l: Cube;  r: Value ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.AddAV( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: Value;  r: Cube ): Cube;
+	OPERATOR "+"*( l: Value;  r: Cube ): Cube;
 	BEGIN
 		RETURN r + l
 	END "+";
 
-	PROCEDURE "-"*( l: Cube;  r: Value ): Cube;
+	OPERATOR "-"*( l: Cube;  r: Value ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.SubAV( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Value;  r: Cube ): Cube;
+	OPERATOR "-"*( l: Value;  r: Cube ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := r.Alike();  ArrayXd.SubVA( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Cube ): Cube;
+	OPERATOR "-"*( l: Cube ): Cube;
 	BEGIN
 		RETURN 0 - l;
 	END "-";
 
-	PROCEDURE "*"*( l: Cube;  r: Value ): Cube;
+	OPERATOR "*"*( l: Cube;  r: Value ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.MulAV( l, r, res );  RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l: Value;  r: Cube ): Cube;
+	OPERATOR "*"*( l: Value;  r: Cube ): Cube;
 	BEGIN
 		RETURN r * l;
 	END "*";
 
-	PROCEDURE "DIV"*( l: Cube;  r: Value ): Cube;
+	OPERATOR "DIV"*( l: Cube;  r: Value ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.DivAV( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "DIV"*( l: Value;  r: Cube ): Cube;
+	OPERATOR "DIV"*( l: Value;  r: Cube ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := r.Alike();  ArrayXd.DivVA( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: Cube;  r: Value ): Cube;
+	OPERATOR "MOD"*( l: Cube;  r: Value ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := l.Alike();  ArrayXd.ModAV( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "MOD"*( l: Value;  r: Cube ): Cube;
+	OPERATOR "MOD"*( l: Value;  r: Cube ): Cube;
 	VAR res: Cube;
 	BEGIN
 		res := r.Alike();  ArrayXd.ModVA( l, r, res );  RETURN res;

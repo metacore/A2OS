@@ -28,218 +28,218 @@ CONST
 	END Compare;
 
 (** Comparison Operators*)
-	PROCEDURE ">"*( a, b: Integer ): BOOLEAN;
+	OPERATOR ">"*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() = Gt
 	END ">";
 
-	PROCEDURE ">"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR ">"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a > Long( b )
 	END ">";
 
-	PROCEDURE ">"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR ">"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a > Long( NbrInt32.Long( b ) )
 	END ">";
 
-	PROCEDURE ">"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR ">"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a > Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END ">";
 
-	PROCEDURE ">"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) > b
 	END ">";
 
-	PROCEDURE ">"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) > b
 	END ">";
 
-	PROCEDURE ">"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) > b
 	END ">";
 
-	PROCEDURE ">="*( a, b: Integer ): BOOLEAN;
+	OPERATOR ">="*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() # Lt
 	END ">=";
 
-	PROCEDURE ">="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR ">="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a >= Long( b )
 	END ">=";
 
-	PROCEDURE ">="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR ">="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a >= Long( NbrInt32.Long( b ) )
 	END ">=";
 
-	PROCEDURE ">="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR ">="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a >= Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END ">=";
 
-	PROCEDURE ">="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) >= b
 	END ">=";
 
-	PROCEDURE ">="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) >= b
 	END ">=";
 
-	PROCEDURE ">="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR ">="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) >= b
 	END ">=";
 
-	PROCEDURE "<"*( a, b: Integer ): BOOLEAN;
+	OPERATOR "<"*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() = Lt
 	END "<";
 
-	PROCEDURE "<"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR "<"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a < Long( b )
 	END "<";
 
-	PROCEDURE "<"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR "<"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a < Long( NbrInt32.Long( b ) )
 	END "<";
 
-	PROCEDURE "<"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR "<"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a < Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "<";
 
-	PROCEDURE "<"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) < b
 	END "<";
 
-	PROCEDURE "<"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) < b
 	END "<";
 
-	PROCEDURE "<"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) < b
 	END "<";
 
-	PROCEDURE "<="*( a, b: Integer ): BOOLEAN;
+	OPERATOR "<="*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() # Gt
 	END "<=";
 
-	PROCEDURE "<="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR "<="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a <= Long( b )
 	END "<=";
 
-	PROCEDURE "<="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR "<="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a <= Long( NbrInt32.Long( b ) )
 	END "<=";
 
-	PROCEDURE "<="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR "<="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a <= Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "<=";
 
-	PROCEDURE "<="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) <= b
 	END "<=";
 
-	PROCEDURE "<="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) <= b
 	END "<=";
 
-	PROCEDURE "<="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "<="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) <= b
 	END "<=";
 
-	PROCEDURE "="*( a, b: Integer ): BOOLEAN;
+	OPERATOR "="*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() = Eq
 	END "=";
 
-	PROCEDURE "="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR "="*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a = Long( b )
 	END "=";
 
-	PROCEDURE "="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR "="*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a = Long( NbrInt32.Long( b ) )
 	END "=";
 
-	PROCEDURE "="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR "="*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a = Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "=";
 
-	PROCEDURE "="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "="*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) = b
 	END "=";
 
-	PROCEDURE "="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "="*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) = b
 	END "=";
 
-	PROCEDURE "="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "="*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) = b
 	END "=";
 
-	PROCEDURE "#"*( a, b: Integer ): BOOLEAN;
+	OPERATOR "#"*( a, b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Compare() # Eq
 	END "#";
 
-	PROCEDURE "#"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
+	OPERATOR "#"*( a: Integer;  b: NbrInt32.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a # Long( b )
 	END "#";
 
-	PROCEDURE "#"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
+	OPERATOR "#"*( a: Integer;  b: NbrInt16.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a # Long( NbrInt32.Long( b ) )
 	END "#";
 
-	PROCEDURE "#"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
+	OPERATOR "#"*( a: Integer;  b: NbrInt8.Integer ): BOOLEAN;
 	BEGIN
 		RETURN a # Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "#";
 
-	PROCEDURE "#"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "#"*( a: NbrInt32.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( a ) # b
 	END "#";
 
-	PROCEDURE "#"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "#"*( a: NbrInt16.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) # b
 	END "#";
 
-	PROCEDURE "#"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
+	OPERATOR "#"*( a: NbrInt8.Integer;  b: Integer ): BOOLEAN;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) # b
 	END "#";
 
 (** Monadic Arithmetic Operators*)
-	PROCEDURE "-"*( a: Integer ): Integer;
+	OPERATOR "-"*( a: Integer ): Integer;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+12]
 		MOV	EBX, [EBP+8]
@@ -252,24 +252,24 @@ CONST
 	END "-";
 
 (** Dyadic Assignment Operators *)
-	PROCEDURE ":="*( VAR a: Integer;  b: NbrInt32.Integer );
+	OPERATOR ":="*( VAR a: Integer;  b: NbrInt32.Integer );
 	BEGIN
 		a := Long( b )
 	END ":=";
 
-	PROCEDURE ":="*( VAR a: Integer;  b: NbrInt16.Integer );
+	OPERATOR ":="*( VAR a: Integer;  b: NbrInt16.Integer );
 	BEGIN
 		a := Long( NbrInt32.Long( b ) )
 	END ":=";
 
-	PROCEDURE ":="*( VAR a: Integer;  b: NbrInt8.Integer );
+	OPERATOR ":="*( VAR a: Integer;  b: NbrInt8.Integer );
 	BEGIN
 		a := Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END ":=";
 
 	(** Dyadic Arithmetic Operators*)
 (*ASM Version *)
-	PROCEDURE "+"*( a, b: Integer ): Integer;
+	OPERATOR "+"*( a, b: Integer ): Integer;
 	CODE {SYSTEM.i386}
 		MOV	EAX, [EBP+16]
 		MOV	EBX, [EBP+20]
@@ -280,38 +280,38 @@ CONST
 		MOV	[EDX+4], EBX
 	END "+";
 
-	PROCEDURE "+"*( a: Integer;  b: NbrInt32.Integer ): Integer;
+	OPERATOR "+"*( a: Integer;  b: NbrInt32.Integer ): Integer;
 	BEGIN
 		RETURN a + Long( b )
 	END "+";
 
-	PROCEDURE "+"*( a: Integer;  b: NbrInt16.Integer ): Integer;
+	OPERATOR "+"*( a: Integer;  b: NbrInt16.Integer ): Integer;
 	BEGIN
 		RETURN a + Long( NbrInt32.Long( b ) )
 	END "+";
 
-	PROCEDURE "+"*( a: Integer;  b: NbrInt8.Integer ): Integer;
+	OPERATOR "+"*( a: Integer;  b: NbrInt8.Integer ): Integer;
 	BEGIN
 		RETURN a + Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "+";
 
-	PROCEDURE "+"*( a: NbrInt32.Integer;  b: Integer ): Integer;
+	OPERATOR "+"*( a: NbrInt32.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( a ) + b
 	END "+";
 
-	PROCEDURE "+"*( a: NbrInt16.Integer;  b: Integer ): Integer;
+	OPERATOR "+"*( a: NbrInt16.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) + b
 	END "+";
 
-	PROCEDURE "+"*( a: NbrInt8.Integer;  b: Integer ): Integer;
+	OPERATOR "+"*( a: NbrInt8.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) + b
 	END "+";
 
 (* ASM Version*)
-	PROCEDURE "-"*( a, b: Integer ): Integer;
+	OPERATOR "-"*( a, b: Integer ): Integer;
 	CODE {SYSTEM.i386}
 		MOV	EAX, [EBP+16]
 		MOV	EBX, [EBP+20]
@@ -322,37 +322,37 @@ CONST
 		MOV	[EDX+4], EBX
 	END "-";
 
-	PROCEDURE "-"*( a: Integer;  b: NbrInt32.Integer ): Integer;
+	OPERATOR "-"*( a: Integer;  b: NbrInt32.Integer ): Integer;
 	BEGIN
 		RETURN a - Long( b )
 	END "-";
 
-	PROCEDURE "-"*( a: Integer;  b: NbrInt16.Integer ): Integer;
+	OPERATOR "-"*( a: Integer;  b: NbrInt16.Integer ): Integer;
 	BEGIN
 		RETURN a - Long( NbrInt32.Long( b ) )
 	END "-";
 
-	PROCEDURE "-"*( a: Integer;  b: NbrInt8.Integer ): Integer;
+	OPERATOR "-"*( a: Integer;  b: NbrInt8.Integer ): Integer;
 	BEGIN
 		RETURN a - Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "-";
 
-	PROCEDURE "-"*( a: NbrInt32.Integer;  b: Integer ): Integer;
+	OPERATOR "-"*( a: NbrInt32.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( a ) - b
 	END "-";
 
-	PROCEDURE "-"*( a: NbrInt16.Integer;  b: Integer ): Integer;
+	OPERATOR "-"*( a: NbrInt16.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) - b
 	END "-";
 
-	PROCEDURE "-"*( a: NbrInt8.Integer;  b: Integer ): Integer;
+	OPERATOR "-"*( a: NbrInt8.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) - b
 	END "-";
 
-	PROCEDURE "*"*( a, b: Integer ): Integer;
+	OPERATOR "*"*( a, b: Integer ): Integer;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		FILD	QWORD [EBP+a]
 		FILD	QWORD [EBP+b]
@@ -362,37 +362,37 @@ CONST
 		FWAIT
 	END "*";
 
-	PROCEDURE "*"*( a: Integer;  b: NbrInt32.Integer ): Integer;
+	OPERATOR "*"*( a: Integer;  b: NbrInt32.Integer ): Integer;
 	BEGIN
 		RETURN a * Long( b )
 	END "*";
 
-	PROCEDURE "*"*( a: Integer;  b: NbrInt16.Integer ): Integer;
+	OPERATOR "*"*( a: Integer;  b: NbrInt16.Integer ): Integer;
 	BEGIN
 		RETURN a * Long( NbrInt32.Long( b ) )
 	END "*";
 
-	PROCEDURE "*"*( a: Integer;  b: NbrInt8.Integer ): Integer;
+	OPERATOR "*"*( a: Integer;  b: NbrInt8.Integer ): Integer;
 	BEGIN
 		RETURN a * Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "*";
 
-	PROCEDURE "*"*( a: NbrInt32.Integer;  b: Integer ): Integer;
+	OPERATOR "*"*( a: NbrInt32.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( a ) * b
 	END "*";
 
-	PROCEDURE "*"*( a: NbrInt16.Integer;  b: Integer ): Integer;
+	OPERATOR "*"*( a: NbrInt16.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) * b
 	END "*";
 
-	PROCEDURE "*"*( a: NbrInt8.Integer;  b: Integer ): Integer;
+	OPERATOR "*"*( a: NbrInt8.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) * b
 	END "*";
 
-	PROCEDURE "DIV"*( a, b: Integer ): Integer;
+	OPERATOR "DIV"*( a, b: Integer ): Integer;
 	VAR cw, cw0: INTEGER;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+12]	;  b must be positive(check msb)
@@ -414,37 +414,37 @@ CONST
 		FWAIT
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: Integer;  b: NbrInt32.Integer ): Integer;
+	OPERATOR "DIV"*( a: Integer;  b: NbrInt32.Integer ): Integer;
 	BEGIN
 		RETURN a DIV Long( b )
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: Integer;  b: NbrInt16.Integer ): Integer;
+	OPERATOR "DIV"*( a: Integer;  b: NbrInt16.Integer ): Integer;
 	BEGIN
 		RETURN a DIV Long( NbrInt32.Long( b ) )
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: Integer;  b: NbrInt8.Integer ): Integer;
+	OPERATOR "DIV"*( a: Integer;  b: NbrInt8.Integer ): Integer;
 	BEGIN
 		RETURN a DIV Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: NbrInt32.Integer;  b: Integer ): Integer;
+	OPERATOR "DIV"*( a: NbrInt32.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( a ) DIV b
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: NbrInt16.Integer;  b: Integer ): Integer;
+	OPERATOR "DIV"*( a: NbrInt16.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) DIV b
 	END "DIV";
 
-	PROCEDURE "DIV"*( a: NbrInt8.Integer;  b: Integer ): Integer;
+	OPERATOR "DIV"*( a: NbrInt8.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) DIV b
 	END "DIV";
 
-	PROCEDURE "MOD"*( a, b: Integer ): Integer;
+	OPERATOR "MOD"*( a, b: Integer ): Integer;
 	VAR cw, cw0: INTEGER;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+12]	;  b must be positive(check msb)
@@ -470,32 +470,32 @@ CONST
 		FWAIT
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: Integer;  b: NbrInt32.Integer ): Integer;
+	OPERATOR "MOD"*( a: Integer;  b: NbrInt32.Integer ): Integer;
 	BEGIN
 		RETURN a MOD Long( b )
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: Integer;  b: NbrInt16.Integer ): Integer;
+	OPERATOR "MOD"*( a: Integer;  b: NbrInt16.Integer ): Integer;
 	BEGIN
 		RETURN a MOD Long( NbrInt32.Long( b ) )
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: Integer;  b: NbrInt8.Integer ): Integer;
+	OPERATOR "MOD"*( a: Integer;  b: NbrInt8.Integer ): Integer;
 	BEGIN
 		RETURN a MOD Long( NbrInt32.Long( NbrInt16.Long( b ) ) )
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: NbrInt32.Integer;  b: Integer ): Integer;
+	OPERATOR "MOD"*( a: NbrInt32.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( a ) MOD b
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: NbrInt16.Integer;  b: Integer ): Integer;
+	OPERATOR "MOD"*( a: NbrInt16.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( a ) ) MOD b
 	END "MOD";
 
-	PROCEDURE "MOD"*( a: NbrInt8.Integer;  b: Integer ): Integer;
+	OPERATOR "MOD"*( a: NbrInt8.Integer;  b: Integer ): Integer;
 	BEGIN
 		RETURN Long( NbrInt32.Long( NbrInt16.Long( a ) ) ) MOD b
 	END "MOD";

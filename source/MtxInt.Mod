@@ -323,101 +323,101 @@ TYPE
 		res := u.Copy();  res.Transpose;  RETURN res;
 	END Transpose;
 
-	PROCEDURE ":="*( VAR l: Matrix;  VAR r: ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Matrix;  VAR r: ARRAY OF ARRAY OF Value );
 	BEGIN
 		(*		IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN NEW( l, 0, LEN( r, 1 ), 0, LEN( r, 0 ) ) ELSE l.NewRange( 0, LEN( r, 1 ), 0, LEN( r, 0 ), FALSE );  END;
 		ArrayXdBytes.CopyMemoryToArrayPart( ADDRESSOF( r[0, 0] ), l, LEN( r, 1 ) * LEN( r, 0 ), NIL , NIL );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Matrix;  r: Vec.Vector );
+	OPERATOR ":="*( VAR l: Matrix;  r: Vec.Vector );
 	BEGIN
 		(*		IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN NEW( l, 0, 1, 0, r.len[0] ) ELSE l.NewRange( 0, 1, 0, r.len[0], FALSE );  END;
 		ArrayXdBytes.CopyDataRaw( r, l );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Matrix;  r: Value );
+	OPERATOR ":="*( VAR l: Matrix;  r: Value );
 	BEGIN
 		IF l # NIL THEN ArrayXd.Fill( l, r );  END;
 	END ":=";
 
-	PROCEDURE "+"*( l, r: Matrix ): Matrix;
+	OPERATOR "+"*( l, r: Matrix ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.Add( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "-"*( l, r: Matrix ): Matrix;
+	OPERATOR "-"*( l, r: Matrix ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.Sub( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "+"*( l: Matrix;  r: Value ): Matrix;
+	OPERATOR "+"*( l: Matrix;  r: Value ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.AddAV( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "+"*( l: Value;  r: Matrix ): Matrix;
+	OPERATOR "+"*( l: Value;  r: Matrix ): Matrix;
 	BEGIN
 		RETURN r + l
 	END "+";
 
-	PROCEDURE "-"*( l: Matrix;  r: Value ): Matrix;
+	OPERATOR "-"*( l: Matrix;  r: Value ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.SubAV( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Value;  r: Matrix ): Matrix;
+	OPERATOR "-"*( l: Value;  r: Matrix ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := r.Alike();  ArrayXd.SubVA( l, r, res );  RETURN res;
 	END "-";
 
-	PROCEDURE "-"*( l: Matrix ): Matrix;
+	OPERATOR "-"*( l: Matrix ): Matrix;
 	BEGIN
 		RETURN 0 - l;
 	END "-";
 
-	PROCEDURE "*"*( l: Matrix;  r: Value ): Matrix;
+	OPERATOR "*"*( l: Matrix;  r: Value ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.MulAV( l, r, res );  RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l: Value;  r: Matrix ): Matrix;
+	OPERATOR "*"*( l: Value;  r: Matrix ): Matrix;
 	BEGIN
 		RETURN r * l;
 	END "*";
 
-	PROCEDURE "DIV"*( l: Matrix;  r: Value ): Matrix;
+	OPERATOR "DIV"*( l: Matrix;  r: Value ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.DivAV( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "DIV"*( l: Value;  r: Matrix ): Matrix;
+	OPERATOR "DIV"*( l: Value;  r: Matrix ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := r.Alike();  ArrayXd.DivVA( l, r, res );  RETURN res;
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: Matrix;  r: Value ): Matrix;
+	OPERATOR "MOD"*( l: Matrix;  r: Value ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := l.Alike();  ArrayXd.ModAV( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "MOD"*( l: Value;  r: Matrix ): Matrix;
+	OPERATOR "MOD"*( l: Value;  r: Matrix ): Matrix;
 	VAR res: Matrix;
 	BEGIN
 		res := r.Alike();  ArrayXd.ModVA( l, r, res );  RETURN res;
 	END "MOD";
 
-	PROCEDURE "*"*( l: Vec.Vector;  r: Matrix ): Vec.Vector;
+	OPERATOR "*"*( l: Vec.Vector;  r: Matrix ): Vec.Vector;
 	VAR res: Vec.Vector;  rc, rr, lc, i, j: LONGINT;  sum: Value;
 	BEGIN
 		rc := r.cols;  rr := r.rows;  lc := l.lenx;
@@ -434,7 +434,7 @@ TYPE
 		RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l: Matrix;  r: Vec.Vector ): Vec.Vector;
+	OPERATOR "*"*( l: Matrix;  r: Vec.Vector ): Vec.Vector;
 	VAR res: Vec.Vector;  lr, lc, rr, i, j: LONGINT;  sum: Value;
 	BEGIN
 		lr := l.rows;  lc := l.cols;  rr := r.lenx;
@@ -450,7 +450,7 @@ TYPE
 		RETURN res;
 	END "*";
 
-	PROCEDURE "*"*( l, r: Matrix ): Matrix;
+	OPERATOR "*"*( l, r: Matrix ): Matrix;
 	VAR res: Matrix;  rr, rc, lr, lc, i, j, k: LONGINT;  sum: Value;
 		(**! far from opimal: use internal routines of ArrayXdBytes *)
 	BEGIN

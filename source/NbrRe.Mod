@@ -36,7 +36,7 @@ VAR
 		RETURN r
 	END RatToRe;
 
-	PROCEDURE ":="*( VAR l: Real;  r: NbrRat.Rational );
+	OPERATOR ":="*( VAR l: Real;  r: NbrRat.Rational );
 	BEGIN
 		l := RatToRe( r )
 	END ":=";
@@ -75,103 +75,103 @@ VAR
 	END ReToRat;
 
 (** Comparison Operators *)
-	PROCEDURE "="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l = RatToRe( r )
 	END "=";
 
-	PROCEDURE "="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR "="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) = r
 	END "=";
 
-	PROCEDURE "#"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "#"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l # RatToRe( r )
 	END "#";
 
-	PROCEDURE "#"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR "#"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) # r
 	END "#";
 
-	PROCEDURE "<"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "<"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l < RatToRe( r )
 	END "<";
 
-	PROCEDURE "<"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR "<"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) < r
 	END "<";
 
-	PROCEDURE ">"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR ">"*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l > RatToRe( r )
 	END ">";
 
-	PROCEDURE ">"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR ">"*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) > r
 	END ">";
 
-	PROCEDURE "<="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR "<="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l <= RatToRe( r )
 	END "<=";
 
-	PROCEDURE "<="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR "<="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) <= r
 	END "<=";
 
-	PROCEDURE ">="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
+	OPERATOR ">="*( l: Real;  r: NbrRat.Rational ): BOOLEAN;
 	BEGIN
 		RETURN l >= RatToRe( r )
 	END ">=";
 
-	PROCEDURE ">="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
+	OPERATOR ">="*( l: NbrRat.Rational;  r: Real ): BOOLEAN;
 	BEGIN
 		RETURN RatToRe( l ) >= r
 	END ">=";
 
 (** Arithmetic *)
-	PROCEDURE "+"*( l: Real;  r: NbrRat.Rational ): Real;
+	OPERATOR "+"*( l: Real;  r: NbrRat.Rational ): Real;
 	BEGIN
 		RETURN l + RatToRe( r )
 	END "+";
 
-	PROCEDURE "+"*( l: NbrRat.Rational;  r: Real ): Real;
+	OPERATOR "+"*( l: NbrRat.Rational;  r: Real ): Real;
 	BEGIN
 		RETURN RatToRe( l ) + r
 	END "+";
 
-	PROCEDURE "-"*( l: Real;  r: NbrRat.Rational ): Real;
+	OPERATOR "-"*( l: Real;  r: NbrRat.Rational ): Real;
 	BEGIN
 		RETURN l - RatToRe( r )
 	END "-";
 
-	PROCEDURE "-"*( l: NbrRat.Rational;  r: Real ): Real;
+	OPERATOR "-"*( l: NbrRat.Rational;  r: Real ): Real;
 	BEGIN
 		RETURN RatToRe( l ) - r
 	END "-";
 
-	PROCEDURE "*"*( l: Real;  r: NbrRat.Rational ): Real;
+	OPERATOR "*"*( l: Real;  r: NbrRat.Rational ): Real;
 	BEGIN
 		RETURN l * RatToRe( r )
 	END "*";
 
-	PROCEDURE "*"*( l: NbrRat.Rational;  r: Real ): Real;
+	OPERATOR "*"*( l: NbrRat.Rational;  r: Real ): Real;
 	BEGIN
 		RETURN RatToRe( l ) * r
 	END "*";
 
-	PROCEDURE "/"*( l: Real;  r: NbrRat.Rational ): Real;
+	OPERATOR "/"*( l: Real;  r: NbrRat.Rational ): Real;
 	BEGIN
 		RETURN l / RatToRe( r )
 	END "/";
 
-	PROCEDURE "/"*( l: NbrRat.Rational;  r: Real ): Real;
+	OPERATOR "/"*( l: NbrRat.Rational;  r: Real ): Real;
 	BEGIN
 		RETURN RatToRe( l ) / r
 	END "/";

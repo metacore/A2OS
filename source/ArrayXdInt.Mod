@@ -883,7 +883,7 @@ TYPE
 		END;
 	END CopyArrayToArrayPartB;
 
-	PROCEDURE ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value );
 	BEGIN
 		(* IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN l := New4d( 0, LEN( r, 3 ), 0, LEN( r, 2 ), 0, LEN( r, 1 ), 0, LEN( r, 0 ) );
@@ -892,7 +892,7 @@ TYPE
 		ArrayXdBytes.CopyMemoryToArray( ADDRESSOF( r[0, 0, 0, 0] ), l, LEN( r, 0 ) * LEN( r, 1 ) * LEN( r, 2 ) * LEN( r, 3 ) );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Array;  VAR r: ARRAY OF ARRAY OF ARRAY OF Value );
 	BEGIN
 		(*	IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN l := New3d( 0, LEN( r, 2 ), 0, LEN( r, 1 ), 0, LEN( r, 0 ) );
@@ -902,7 +902,7 @@ TYPE
 	END ":=";
 
 (*
-	PROCEDURE ":="( VAR l: Array;  VAR r: ARRAY OF ARRAY OF Value );
+	OPERATOR ":="( VAR l: Array;  VAR r: ARRAY OF ARRAY OF Value );
 	BEGIN
 		(*		IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN l := New2d( 0, LEN( r, 1 ), 0, LEN( r, 0 ) )
@@ -911,7 +911,7 @@ TYPE
 		ArrayXdBytes.CopyMemoryToArray( ADDRESSOF( r[0, 0] ), l, LEN( r, 0 ) * LEN( r, 1 ) );
 	END ":=";
 
-	PROCEDURE ":="( VAR l: Array;  VAR r: ARRAY OF Value );
+	OPERATOR ":="( VAR l: Array;  VAR r: ARRAY OF Value );
 	BEGIN
 		(*		IF r = NIL THEN l := NIL;  RETURN END;  *)
 		IF l = NIL THEN l := New1d( 0, LEN( r, 0 ) )
@@ -923,7 +923,7 @@ TYPE
 
 (***!never do this : *
 
-		PROCEDURE ":="( VAR l: Array;  r: Vector );
+		OPERATOR ":="( VAR l: Array;  r: Vector );
 	BEGIN
 		IF r = NIL THEN l := NIL;  RETURN END;
 		IF l = NIL THEN NEW( l, r.origin^, r.len^ ) ELSE l.NewRangeX( r.origin^, r.len^, TRUE );  END;
@@ -931,7 +931,7 @@ TYPE
 	END ":=";
  *)
 
-	PROCEDURE ":="*( VAR l: Array1;  r: Array );
+	OPERATOR ":="*( VAR l: Array1;  r: Array );
 	BEGIN
 		IF r = NIL THEN l := NIL;  RETURN END;
 		ArrayXdBytes.CheckEQ( 1, r.dim );   (*ArrayXdBytes.CheckEQ( r.origin[0], 0 );  *)
@@ -939,7 +939,7 @@ TYPE
 		ArrayXdBytes.CopyArrayToMemory( r, ADDRESSOF( l[0] ), LEN( l, 0 ) );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Array2;  r: Array );
+	OPERATOR ":="*( VAR l: Array2;  r: Array );
 	BEGIN
 		IF r = NIL THEN l := NIL;  RETURN END;
 		ArrayXdBytes.CheckEQ( 2, r.dim );   (*ArrayXdBytes.CheckEQ( r.origin[0], 0 );  ArrayXdBytes.CheckEQ( r.origin[1], 0 );  *)
@@ -947,7 +947,7 @@ TYPE
 		ArrayXdBytes.CopyArrayToMemory( r, ADDRESSOF( l[0, 0] ), LEN( l, 0 ) * LEN( l, 1 ) );
 	END ":=";
 
-	PROCEDURE ":="*( VAR l: Array3;  r: Array );
+	OPERATOR ":="*( VAR l: Array3;  r: Array );
 	BEGIN
 		IF r = NIL THEN l := NIL;  RETURN END;
 		ArrayXdBytes.CheckEQ( 3, r.dim );   (*ArrayXdBytes.CheckEQ( r.origin[0], 0 );  ArrayXdBytes.CheckEQ( r.origin[1], 0 );  ArrayXdBytes.CheckEQ( r.origin[2], 0 );  *)
@@ -956,7 +956,7 @@ TYPE
 	END ":=";
 
 (*
-	PROCEDURE ":="( VAR l: Array4;  r: Array );
+	OPERATOR ":="( VAR l: Array4;  r: Array );
 	BEGIN
 		IF r = NIL THEN l := NIL;  RETURN END;
 		ArrayXdBytes.CheckEQ( 4, r.dim );   (*ArrayXdBytes.CheckEQ( r.origin[0], 0 );  ArrayXdBytes.CheckEQ( r.origin[1], 0 );  ArrayXdBytes.CheckEQ( r.origin[2], 0 );
@@ -973,7 +973,7 @@ TYPE
 		Array1d.Fill( r, l.data^, 0, LEN( l.data ) );
 	END Fill;
 
-	PROCEDURE ":="*( VAR l: Array;  r: Value );
+	OPERATOR ":="*( VAR l: Array;  r: Value );
 	BEGIN
 		IF l # NIL THEN Fill( l, r ) END;
 	END ":=";
@@ -983,7 +983,7 @@ TYPE
 		ArrayXdBytes.CheckEqDimensions( l, r );  Array1d.AddAA( l.data^, r.data^, res.data^, 0, LEN( res.data ) );
 	END Add;
 
-	PROCEDURE "+"*( l, r: Array ): Array;
+	OPERATOR "+"*( l, r: Array ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin, l.len );  Add( l, r, res );  RETURN res;
@@ -994,7 +994,7 @@ TYPE
 		ArrayXdBytes.CheckEqDimensions( l, r );  Array1d.SubtractAA( l.data^, r.data^, res.data^, 0, LEN( res.data ) );
 	END Sub;
 
-	PROCEDURE "-"*( l, r: Array ): Array;
+	OPERATOR "-"*( l, r: Array ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin, l.len);  Sub( l, r, res );  RETURN res;
@@ -1020,13 +1020,13 @@ TYPE
 		Array1d.AddAV( l.data^, r, res.data^, 0, LEN( res.data ) );
 	END AddAV;
 
-	PROCEDURE "+"( l: Array;  r: Value ): Array;
+	OPERATOR "+"( l: Array;  r: Value ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin, l.len );  AddAV( l, r, res );  RETURN res;
 	END "+";
 
-	PROCEDURE "+"( l: Value;  r: Array ): Array;
+	OPERATOR "+"( l: Value;  r: Array ): Array;
 	BEGIN
 		RETURN r + l
 	END "+";
@@ -1036,13 +1036,13 @@ TYPE
 		Array1d.MultAV( l.data^, r, res.data^, 0, LEN( res.data ) );
 	END MulAV;
 
-	PROCEDURE "*"( l: Array;  r: Value ): Array;
+	OPERATOR "*"( l: Array;  r: Value ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin, l.len );  MulAV( l, r, res );  RETURN res;
 	END "*";
 
-	PROCEDURE "*"( l: Value;  r: Array ): Array;
+	OPERATOR "*"( l: Value;  r: Array ): Array;
 	BEGIN
 		RETURN r * l
 	END "*";
@@ -1053,7 +1053,7 @@ TYPE
 	END DivAV;
 
 (*
-	PROCEDURE "DIV"( l: Array;  r: Value ): Array;
+	OPERATOR "DIV"( l: Array;  r: Value ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin^, l.len^ );  DivAV( l, r, res );  RETURN res;
@@ -1066,7 +1066,7 @@ TYPE
 	END DivVA;
 
 (*
-	PROCEDURE "DIV"( l: Value;  r: Array ): Array;
+	OPERATOR "DIV"( l: Value;  r: Array ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, r.origin^, r.len^ );  DivVA( l, r, res );  RETURN res;
@@ -1079,7 +1079,7 @@ TYPE
 	END ModAV;
 
 (*
-	PROCEDURE "MOD"( l: Array;  r: Value ): Array;
+	OPERATOR "MOD"( l: Array;  r: Value ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin^, l.len^ );  ModAV( l, r, res );  RETURN res;
@@ -1092,7 +1092,7 @@ TYPE
 	END ModVA;
 
 (*
-	PROCEDURE "MOD"( l: Value;  r: Array ): Array;
+	OPERATOR "MOD"( l: Value;  r: Array ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, r.origin^, r.len^ );  ModVA( l, r, res );  RETURN res;
@@ -1105,7 +1105,7 @@ TYPE
 	END SubAV;
 
 (*
-	PROCEDURE "-"( l: Array;  r: Value ): Array;
+	OPERATOR "-"( l: Array;  r: Value ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, l.origin^, l.len^ );  SubAV( l, r, res );  RETURN res;
@@ -1117,7 +1117,7 @@ TYPE
 		Array1d.SubtractVA( l, r.data^, res.data^, 0, LEN( res.data ) );
 	END SubVA;
 
-	PROCEDURE "-"*( l: Value;  r: Array ): Array;
+	OPERATOR "-"*( l: Value;  r: Array ): Array;
 	VAR res: Array;
 	BEGIN
 		NEW( res, r.origin, r.len );  SubVA( l, r, res );  RETURN res;

@@ -966,7 +966,7 @@ TYPE
 
 	(** Overloaded operators for type:  Array. *)
 (** Monadic Operator -  does not overwrite the argument *)
-	PROCEDURE "-"*( x: Array ): Array;
+	OPERATOR "-"*( x: Array ): Array;
 	VAR minus: Array;
 	BEGIN
 		IF x # NIL THEN minus := CreateCopy( x^ );  Negate( minus^, 0, LEN( minus ) );  ELSE DataErrors.Error( "The supplied vector was NIL." ) END;
@@ -975,7 +975,7 @@ TYPE
 
 (** Dyadic Operators *)
 
-	PROCEDURE ":="*( VAR l: Array;  VAR r: ARRAY OF Value );
+	OPERATOR ":="*( VAR l: Array;  VAR r: ARRAY OF Value );
 	BEGIN
 		IF l = NIL THEN NEW( l, LEN( r ) )
 		ELSIF LEN( l ) # LEN( r ) THEN NEW( l, LEN( r ) )
@@ -984,27 +984,27 @@ TYPE
 		Copy( l^, r, 0, 0, LEN( r ) );
 	END ":=";
 
-	PROCEDURE "="*( l: Array;  VAR r: ARRAY OF Value ): BOOLEAN;
+	OPERATOR "="*( l: Array;  VAR r: ARRAY OF Value ): BOOLEAN;
 	BEGIN
 		IF (l # NIL ) & (LEN( l ) = LEN( r )) THEN RETURN EqualsAA( l^, r, 0, LEN( l ) );  ELSE DataErrors.Error( "The lengths of the two supplied Array vectors were not equal." );  END;
 		RETURN FALSE;
 	END "=";
 
-	PROCEDURE "="*( VAR l: ARRAY OF Value;  r: Array ): BOOLEAN;
+	OPERATOR "="*( VAR l: ARRAY OF Value;  r: Array ): BOOLEAN;
 	BEGIN
 		IF (r # NIL ) & (LEN( l ) = LEN( r )) THEN RETURN EqualsAA( r^, l, 0, LEN( r ) );  ELSE DataErrors.Error( "The lengths of the two supplied Array vectors were not equal." );  END;
 		RETURN FALSE;
 	END "=";
 
 (* filling *)
-	PROCEDURE ":="*( VAR l: Array;  r: Value );
+	OPERATOR ":="*( VAR l: Array;  r: Value );
 	BEGIN
 		IF l = NIL THEN RETURN END;
 		Fill( r, l^, 0, LEN( l ) );
 	END ":=";
 
 (** Arithmetic. Operators do not overwrite the arguments. *)
-	PROCEDURE "+"*( l, r: Array ): Array;
+	OPERATOR "+"*( l, r: Array ): Array;
 	VAR len: Index;  sum: Array;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -1014,35 +1014,35 @@ TYPE
 		RETURN sum
 	END "+";
 
-	PROCEDURE "+"*( l: Array;  r: Value ): Array;
+	OPERATOR "+"*( l: Array;  r: Value ): Array;
 	VAR sum: Array;
 	BEGIN
 		IF (l # NIL ) THEN NEW( sum, LEN( l ) );  AddAV( l^, r, sum^, 0, LEN( l ) );  ELSE DataErrors.Error( "Supplied Array was NIL" );  END;
 		RETURN sum
 	END "+";
 
-	PROCEDURE "+"*( r: Value;  l: Array ): Array;
+	OPERATOR "+"*( r: Value;  l: Array ): Array;
 	VAR sum: Array;
 	BEGIN
 		IF (l # NIL ) THEN NEW( sum, LEN( l ) );  AddAV( l^, r, sum^, 0, LEN( l ) );  ELSE DataErrors.Error( "Supplied Array was NIL" );  END;
 		RETURN sum
 	END "+";
 
-	PROCEDURE "-"*( l: Array;  r: Value ): Array;
+	OPERATOR "-"*( l: Array;  r: Value ): Array;
 	VAR sum: Array;
 	BEGIN
 		IF (l # NIL ) THEN NEW( sum, LEN( l ) );  SubtractAV( l^, r, sum^, 0, LEN( l ) );  ELSE DataErrors.Error( "Supplied Array was NIL" );  END;
 		RETURN sum
 	END "-";
 
-	PROCEDURE "-"*( l: Value;  r: Array ): Array;
+	OPERATOR "-"*( l: Value;  r: Array ): Array;
 	VAR sum: Array;
 	BEGIN
 		IF (r # NIL ) THEN NEW( sum, LEN( r ) );  SubtractVA( l, r^, sum^, 0, LEN( r ) );  ELSE DataErrors.Error( "Supplied Array was NIL" );  END;
 		RETURN sum
 	END "-";
 
-	PROCEDURE "-"*( l, r: Array ): Array;
+	OPERATOR "-"*( l, r: Array ): Array;
 	VAR len: Index;  diff: Array;
 	BEGIN
 		IF (l # NIL ) & (r # NIL ) THEN
@@ -1053,7 +1053,7 @@ TYPE
 	END "-";
 
 (** Array dot product *)
-	PROCEDURE "*"*( l, r: Array ): Value;
+	OPERATOR "*"*( l, r: Array ): Value;
 	VAR len: Index;  dot: Value;
 	BEGIN
 		dot := 0;
@@ -1065,14 +1065,14 @@ TYPE
 	END "*";
 
 (** Scalar multiplication *)
-	PROCEDURE "*"*( l: Value;  r: Array ): Array;
+	OPERATOR "*"*( l: Value;  r: Array ): Array;
 	VAR len: Index;  prod: Array;
 	BEGIN
 		IF r # NIL THEN len := LEN( r );  NEW( prod, len );  MultAV( r^, l, prod^, 0, len );  ELSE DataErrors.Error( "The supplied Array vector was NIL." ) END;
 		RETURN prod
 	END "*";
 
-	PROCEDURE "*"*( l: Array;  r: Value ): Array;
+	OPERATOR "*"*( l: Array;  r: Value ): Array;
 	VAR len: Index;  prod: Array;
 	BEGIN
 		IF l # NIL THEN len := LEN( l );  NEW( prod, len );  MultAV( l^, r, prod^, 0, len );  ELSE DataErrors.Error( "The supplied Array vector was NIL." ) END;
@@ -1080,7 +1080,7 @@ TYPE
 	END "*";
 
 (** Scalar division *)
-	PROCEDURE "DIV"*( l: Array;  r: Value ): Array;
+	OPERATOR "DIV"*( l: Array;  r: Value ): Array;
 	VAR len: Index;  div: Array;
 	BEGIN
 		IF l # NIL THEN
@@ -1090,14 +1090,14 @@ TYPE
 		RETURN div
 	END "DIV";
 
-	PROCEDURE "DIV"*( l: Value;  r: Array ): Array;
+	OPERATOR "DIV"*( l: Value;  r: Array ): Array;
 	VAR len: Index;  div: Array;
 	BEGIN
 		IF r # NIL THEN len := LEN( r );  NEW( div, len );  DivVA( l, r^, div^, 0, len );  ELSE DataErrors.Error( "The supplied Array vector was NIL." ) END;
 		RETURN div
 	END "DIV";
 
-	PROCEDURE "MOD"*( l: Array;  r: Value ): Array;
+	OPERATOR "MOD"*( l: Array;  r: Value ): Array;
 	VAR len: Index;  mod: Array;
 	BEGIN
 		IF l # NIL THEN
@@ -1107,7 +1107,7 @@ TYPE
 		RETURN mod
 	END "MOD";
 
-	PROCEDURE "MOD"*( l: Value;  r: Array ): Array;
+	OPERATOR "MOD"*( l: Value;  r: Array ): Array;
 	VAR len: Index;  div: Array;
 	BEGIN
 		IF r # NIL THEN len := LEN( r );  NEW( div, len );  ModVA( l, r^, div^, 0, len );  ELSE DataErrors.Error( "The supplied Array vector was NIL." ) END;

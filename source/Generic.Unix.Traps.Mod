@@ -159,6 +159,7 @@ VAR
 				S.GET( sp, pc );   (* get return address on top of stack *)
 			END;
 			w.Ln;
+			w.String(" pid = "); w.Hex(process.id , -8 );
 			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp );
 			w.String( ", pc = " );  w.Address( pc );  w.Ln;
 			w.Ln;

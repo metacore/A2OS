@@ -170,7 +170,8 @@ END Arrangement;
 
 TYPE FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
 
-VAR defaults: Options.Defaults;
+VAR defaults: Options.Defaults; 
+	processing, finished: GenericLinker.Block;
 
 PROCEDURE Align(this, to: LONGINT): LONGINT;
 BEGIN
@@ -178,10 +179,17 @@ BEGIN
 	RETURN this;
 END Align;
 
-PROCEDURE ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; linker: GenericLinker.Linker);
-VAR fileName: Files.FileName; file: Files.File; reader: Files.Reader;
+PROCEDURE ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; linker: GenericLinker.Linker; moduleList: GenericLinker.HashTableSegmentedName);
+VAR fileName: Files.FileName; file: Files.File; reader: Files.Reader; i: LONGINT;
+offers, requires: ObjectFile.NameList;name: ARRAY 256 OF CHAR; sn: ObjectFile.SegmentedName;
 BEGIN
 	linker.Information (moduleName, "processing");
+	sn := moduleName;
+	IF (moduleList # NIL) & (moduleList.Get(sn) = finished) THEN
+		linker.Warning(moduleName, "duplicate");
+		RETURN;
+	END;
+	
 	IF path # "" THEN Files.JoinPath (path, moduleName, fileName); ELSE COPY(moduleName,fileName); END;
 	file := Files.Old (fileName);
 	IF file = NIL THEN (* try with extension *)
@@ -193,7 +201,32 @@ BEGIN
 	END;
 	IF file = NIL THEN linker.Error (fileName, "failed to open file"); RETURN; END;
 	Files.OpenReader (reader, file, 0);
-	GenericLinker.Process (reader, linker) ;
+	
+	GenericLinker.OffersRequires(reader, offers, requires);
+	reader.SetPos(0);
+	IF moduleList # NIL THEN
+		moduleList.Put(sn,processing);
+	END;
+	
+	IF (moduleList # NIL) & (requires # NIL) THEN
+		FOR i := 0 TO LEN(requires)-1 DO
+			IF moduleList.Get(requires[i]) = NIL THEN 
+				name := requires[i];
+				TRACE(name);
+				ReadObjectFile(name,path,extension, linker, moduleList);
+				IF linker.error THEN RETURN END;
+			ELSIF moduleList.Get(requires[i]) = processing THEN
+				name := requires[i];
+				Strings.Append(name, moduleName);
+				linker.Error(name, "cyclic import!");
+				RETURN;
+			END;
+		END;
+	END;
+	GenericLinker.Process (reader, linker);
+	IF moduleList # NIL THEN
+		moduleList.Put(sn,finished);
+	END;
 	IF reader.res # Files.Ok THEN linker.Error (fileName, "failed to parse"); END;
 END ReadObjectFile;
 
@@ -908,6 +941,8 @@ VAR options: Options.Options;
 	position: LONGINT;
 	name: ARRAY 32 OF CHAR;
 	reader: Streams.Reader;
+	moduleList: GenericLinker.HashTableSegmentedName;
+	segmentedName: ObjectFile.SegmentedName;
 BEGIN
 	NEW (options);
 	options.Add('p',"platform", Options.String);
@@ -970,8 +1005,14 @@ BEGIN
 
 	IF options.GetString("linkRoot",linkRoot) THEN linker.SetLinkRoot(linkRoot) END;
 
+	NEW(moduleList,32);
+	segmentedName := "SYSTEM";
+	moduleList.Put(segmentedName, finished);
+	segmentedName := "system";
+	moduleList.Put(segmentedName, finished);
+	
 	WHILE ~linker.error & context.arg.GetString (moduleName) DO
-		ReadObjectFile (moduleName, path, extension, linker);
+		ReadObjectFile (moduleName, path, extension, linker, moduleList);
 		IF strict & ~linker.error THEN linker.Resolve END;
 	END;
 	(* do linking after having read in all blocks to account for potential constraints *)
@@ -1009,6 +1050,8 @@ BEGIN
 END ShowDefaults;
 
 BEGIN
+	NEW(processing);
+	NEW(finished);
 	NEW(defaults);
 	defaults.Add("Win32C","--fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H");
 	defaults.Add("Linux32G","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");

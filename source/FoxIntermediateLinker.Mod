@@ -1284,7 +1284,7 @@ TYPE
 		COPY(instanceName, fileName); Strings.Append(fileName,".log");	logFile := Files.New(fileName);
 		IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
 		NEW (linker, diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
-		StaticLinker.ReadObjectFile(instanceName, "",objectFile.extension, linker);
+		StaticLinker.ReadObjectFile(instanceName, "",objectFile.extension, linker, NIL);
 
 				(* do linking after having read in all blocks to account for potential constraints *)
 				IF ~linker.error THEN linker.Link; END;

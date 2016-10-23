@@ -1,3 +1,4 @@
+
  MODULE GenericLinker;	(* AUTHOR "negelef"; PURPOSE "Generic Object File Linker"; *)
 
 IMPORT ObjectFile, Streams, Diagnostics, Strings, SYSTEM;
@@ -20,7 +21,7 @@ TYPE
 	END;
 	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName;
 
-	HashTableSegmentedName = OBJECT
+	HashTableSegmentedName* = OBJECT
 	VAR
 		table: HashSegmentedNameArray;
 		size: LONGINT;
@@ -29,7 +30,7 @@ TYPE
 
 		(* Interface *)
 
-		PROCEDURE & Init (initialSize: LONGINT);
+		PROCEDURE & Init* (initialSize: LONGINT);
 		BEGIN
 			ASSERT(initialSize > 2);
 			NEW(table, initialSize);
@@ -39,7 +40,7 @@ TYPE
 			Clear;
 		END Init;
 
-		PROCEDURE Put(CONST key: ObjectFile.SegmentedName; value: Block);
+		PROCEDURE Put*(CONST key: ObjectFile.SegmentedName; value: Block);
 		VAR hash: LONGINT;
 		BEGIN
 			ASSERT(used < size);
@@ -52,10 +53,15 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END Put;
 
-		PROCEDURE Get(CONST key: ObjectFile.SegmentedName):Block;
+		PROCEDURE Get*(CONST key: ObjectFile.SegmentedName):Block;
 		BEGIN
-			RETURN table[HashValue(key)].value;
+			IF table[HashValue(key)].key = key THEN
+				RETURN table[HashValue(key)].value;
+			ELSE
+				RETURN NIL
+			END;
 		END Get;
+		
 
 		PROCEDURE Clear;
 		VAR i: LONGINT;
@@ -158,6 +164,10 @@ VAR
 	PROCEDURE Error* (CONST source, message: ARRAY OF CHAR);
 	BEGIN diagnostics.Error (source, Diagnostics.Invalid, Diagnostics.Invalid, message); error := TRUE;
 	END Error;
+
+	PROCEDURE Warning* (CONST source, message: ARRAY OF CHAR);
+	BEGIN diagnostics.Warning (source, Diagnostics.Invalid, Diagnostics.Invalid, message);
+	END Warning;
 
 	PROCEDURE ErrorP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR);
 	VAR source: ARRAY 256 OF CHAR;
@@ -461,29 +471,49 @@ BEGIN
 	HALT(100); (* undefined type *)
 END GetPriority;
 
-PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
-VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap;
-
-	PROCEDURE Header;
-	VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR;
-	BEGIN
-		reader.String(string);
-		binary := string="FoxOFB";
-		IF ~binary THEN ASSERT(string="FoxOFT") END;
-		reader.SkipWhitespace;
-		reader.Char(ch); ASSERT(ch='v');
-		reader.Int(version,FALSE);
-		IF version <2 THEN linker.Error("","old object file version encountered. Recompile sources.") END;
-		reader.Char(ch); ASSERT(ch='.');
-		IF ~binary THEN reader.SkipWhitespace
-		ELSE
-			NEW(poolMap,64);
-			poolMap.Read(reader);
-		END;
-	END Header;
-
+PROCEDURE Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
+VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR;
 BEGIN
-	Header;
+	reader.String(string);
+	binary := string="FoxOFB";
+	IF ~binary THEN ASSERT(string="FoxOFT") END;
+	reader.SkipWhitespace;
+	reader.Char(ch); ASSERT(ch='v');
+	reader.Int(version,FALSE);
+	IF (version <2) & (linker # NIL) THEN linker.Error("","old object file version encountered. Recompile sources.") END;
+	reader.Char(ch); ASSERT(ch='.');
+	IF ~binary THEN reader.SkipWhitespace
+	ELSE
+		NEW(poolMap,64);
+		poolMap.Read(reader);
+	END;
+	
+	offers := NIL;
+	requires := NIL;
+	IF version >= 4 THEN
+		IF ~binary THEN 
+			reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+			reader.SkipWhitespace;
+			reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+			reader.SkipWhitespace;
+		ELSE
+			ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+			ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+		END
+	END;
+
+END Header;
+
+PROCEDURE OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList);
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; 
+BEGIN
+	Header(reader, NIL, binary, poolMap, offers, requires);
+END OffersRequires;
+
+PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList;
+BEGIN
+	Header(reader, linker, binary, poolMap, offers, requires);
 	WHILE reader.Peek () # 0X DO
 		ObjectFile.ReadSection (reader, section,binary,poolMap);
 		reader.SkipWhitespace;

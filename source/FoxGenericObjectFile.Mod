@@ -6,7 +6,7 @@ IMPORT
 	FingerPrinter := FoxFingerPrinter, Files, Options, ObjectFile, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
-	Version = 3;
+	Version = 4;
 	Trace = FALSE;
 	TraceAliases = FALSE;
 	WarnDuplicateFingerprints = FALSE;
@@ -258,14 +258,36 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END MakeStatistics;
 
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
-			VAR result: BOOLEAN; pos: LONGINT;
+			VAR result: BOOLEAN; pos,i: LONGINT;
+				offers, requires: ObjectFile.NameList;
+				numImports: LONGINT; 
+				name: ObjectFile.SectionName;
+				import: SyntaxTree.Import;
 			BEGIN
 				pos := writer.Pos();
 				IF DetailedStatistics THEN
 					MakeStatistics(module.allSections);
 				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
-				WriteHeader(writer,binary,module.allSections,poolMap, fingerPrinter);
+				NEW (offers, 1); offers[0] := module.moduleName;
+				import := module.module.moduleScope.firstImport;
+				numImports := 0;
+				WHILE import # NIL DO
+					IF import.direct THEN INC(numImports) END;
+					import := import.nextImport;
+				END;
+				NEW(requires, numImports);
+				numImports := 0;
+				import := module.module.moduleScope.firstImport;
+				WHILE import # NIL DO
+					IF import.direct THEN
+						import.module.GetName(name);
+						requires[numImports] := name;
+						INC(numImports);
+					END;
+					import := import.nextImport;
+				END;
+				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerPrinter);
 				INC(statHeaders); INC(statHeadersSize, writer.Pos()-pos);
 				result := ExportSections (module.allSections);
 				INC(statModules); INC(statModulesSize, writer.Pos()-pos);
@@ -450,8 +472,9 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	BEGIN NEW(objectFileFormat); RETURN objectFileFormat
 	END Get;
 
-	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap);
-	VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
+	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
+	VAR ch: CHAR; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
+	VAR version: LONGINT
 	BEGIN
 		reader.String(string);
 		binary := string="FoxOFB";
@@ -466,9 +489,22 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			NEW(poolMap,64);
 			poolMap.Read(reader);
 		END;
+		offers := NIL;
+		requires := NIL;
+		IF version >= 4 THEN
+			IF ~binary THEN 
+				reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+				reader.SkipWhitespace;
+				reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+				reader.SkipWhitespace;
+			ELSE
+				ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+				ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+			END
+		END;
 	END ReadHeader;
 
-	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; fingerPrinter:FingerPrinter.FingerPrinter);
+	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerPrinter:FingerPrinter.FingerPrinter);
 	VAR p1,p2, size,i: LONGINT; section: Sections.Section; fixups: LONGINT; fixupList: ObjectFile.Fixups;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
@@ -495,6 +531,15 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				END;
 			END;
 		END ProcessSection;
+		
+		PROCEDURE NameList(CONST names: ObjectFile.NameList);
+		BEGIN
+			IF names # NIL THEN
+				FOR i := 0 TO LEN(names)-1 DO
+					poolMap.PutSegmentedName(names[i]);
+				END;
+			END;
+		END NameList;
 
 	BEGIN
 		IF binary THEN writer.String("FoxOFB");
@@ -502,7 +547,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 		writer.Char(' ');
 		writer.Char('v'); writer.Int(Version,0); writer.Char(".");
-		IF ~binary THEN writer.Ln
+		IF ~binary THEN 
+				writer.Ln;
+				writer.String("offers "); ObjectFile.WriteNameList(writer, offers, binary, poolMap);
+				writer.String("requires "); ObjectFile.WriteNameList(writer, requires, binary, poolMap);
 		ELSE
 			NEW(poolMap,512);
 			poolMap.BeginWriting(writer);
@@ -510,8 +558,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				section := sections.GetSection(i);
 				ProcessSection(section(IntermediateCode.Section));
 			END;
+			NameList(offers); NameList(requires);
 			poolMap.EndWriting;
-
+			ObjectFile.WriteNameList(writer, offers, binary, poolMap);
+			ObjectFile.WriteNameList(writer, requires, binary, poolMap);
 			(*
 			FOR i := 0 TO fixups-1 DO
 				D.String("fingerprint: "); Basic.WriteSegmentedName(D.Log, fixupList[i].identifier.name); D.Ln;
@@ -549,14 +599,15 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	VAR
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; writer: Streams.Writer;
 		section: ObjectFile.Section; binary: BOOLEAN; poolMap, poolMapDummy: ObjectFile.PoolMap;
+		offers, requires: ObjectFile.NameList;
 	BEGIN
 		IF context.arg.GetString(fileName) THEN
 			file := Files.Old(fileName);
 			IF file # NIL THEN
 				NEW(reader,file,0);
 				writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));
-				ReadHeader(reader, binary, poolMap);
-				WriteHeader(writer, FALSE, NIL, poolMapDummy, NIL);
+				ReadHeader(reader, binary, poolMap, offers, requires);
+				WriteHeader(writer, FALSE, NIL, poolMapDummy, offers, requires, NIL);
 				WHILE reader.Peek () # 0X DO
 					ObjectFile.ReadSection (reader, section,binary, poolMap);
 					ObjectFile.WriteSection(writer, section, FALSE, NIL); (* textual *)
@@ -583,6 +634,8 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		 dest: Files.FileName;
 		 writer: Files.Writer;
 		 name: ObjectFile.SegmentedName;
+		 version: LONGINT;
+		 offers, requires: ObjectFile.NameList;
 	BEGIN
 		NEW(sectionList);
 		IF context.arg.GetString(dest) THEN
@@ -591,7 +644,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				file := Files.Old(fileName);
 				IF file # NIL THEN
 					NEW(reader,file,0);
-					ReadHeader(reader, binary, poolMap);
+					ReadHeader(reader, binary, poolMap,offers, requires);
 					WHILE reader.Peek () # 0X DO
 						ObjectFile.InitSection(section);
 						ObjectFile.ReadSection (reader, section, binary, poolMap);
@@ -609,7 +662,8 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END;
 			file := Files.New(dest);
 			Files.OpenWriter(writer, file, 0);
-			WriteHeader(writer, TRUE, sectionList, poolMapDummy, NIL);
+			WriteHeader(writer, TRUE, sectionList, poolMapDummy, NIL, NIL, NIL);
+			
 			FOR i := 0 TO sectionList.Length()-1 DO
 				is := sectionList.GetSection(i)(IntermediateCode.Section);
 				ObjectFile.WriteSection(writer, is.resolved.os, TRUE, poolMapDummy); (* binary *)

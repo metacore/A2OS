@@ -233,6 +233,8 @@ TYPE
 		END EndWriting;
 
 	END PoolMap;
+	
+	NameList*= POINTER TO ARRAY OF SegmentedName;
 
 VAR
 	categories: ARRAY 6 OF ARRAY 10 OF CHAR;
@@ -640,6 +642,78 @@ VAR
 			reader.SkipWhitespace()
 		UNTIL ~ReadSegment()
 	END ReadSectionTextual;
+
+	PROCEDURE ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
+	VAR i,len,num: LONGINT; name: ARRAY 256 OF CHAR;
+
+		PROCEDURE ReadIdentifier(VAR name: SegmentedName);
+		(*VAR name: SectionName;*)
+		VAR i,num: LONGINT;
+		BEGIN
+			i := 0;
+			REPEAT
+				reader.RawNum(num);
+				name[i] := poolMap.Get(num);
+				INC(i);
+			UNTIL (i = LEN(name)) OR (num < 0);
+			WHILE i < LEN(name) DO
+				name[i] := -1; INC(i);
+			END;
+		END ReadIdentifier;
+
+	BEGIN
+		IF binary THEN
+			reader.RawNum(len);
+			NEW(nameList, len);
+			FOR i := 0 TO len-1 DO
+				ReadIdentifier(nameList[i]);
+			END;
+		ELSE
+			reader.Int(len,FALSE);
+			NEW(nameList, len);
+			FOR i := 0 TO len-1 DO
+				reader.SkipWhitespace;
+				reader.String(name);
+				nameList[i] := name;
+			END;
+		END;
+	END ReadNameList;
+
+	PROCEDURE WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
+	VAR i,len,num: LONGINT; name: ARRAY 256 OF CHAR;
+	CONST Separator = ' ';
+
+		PROCEDURE WriteIdentifier(CONST name: SegmentedName);
+		VAR i,num: LONGINT;
+		BEGIN
+			i := 0;
+			REPEAT
+				num := poolMap.Get(name[i]);
+				writer.RawNum(num);
+				INC(i);
+			UNTIL (i = LEN(name)) OR (num < 0);
+		END WriteIdentifier;
+
+	BEGIN
+		IF nameList = NIL THEN len := 0
+		ELSE len := LEN(nameList);
+		END;
+		IF binary THEN
+			writer.RawNum(len);
+			FOR i := 0 TO len-1 DO
+				WriteIdentifier(nameList[i]);
+			END;
+		ELSE
+			writer.Int(len,0);
+			FOR i := 0 TO len-1 DO
+				name := nameList[i];
+				writer.Char(Separator);
+				writer.String(name);
+			END;
+			writer.Ln;
+		END;
+	END WriteNameList;
+	
 
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
 	VAR pos, i, offset, start, len: LONGINT; size: Bits; bits: LONGINT; name: ARRAY 256 OF CHAR;

@@ -183,10 +183,12 @@ PROCEDURE ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; link
 VAR fileName: Files.FileName; file: Files.File; reader: Files.Reader; i: LONGINT;
 offers, requires: ObjectFile.NameList;name: ARRAY 256 OF CHAR; sn: ObjectFile.SegmentedName;
 BEGIN
-	linker.Information (moduleName, "processing");
 	sn := moduleName;
 	IF (moduleList # NIL) & (moduleList.Get(sn) = finished) THEN
 		linker.Warning(moduleName, "duplicate");
+		RETURN;
+	ELSIF (moduleList # NIL) & (moduleList.Get(sn) = processing) THEN
+		linker.Error(moduleName, "cyclic import");
 		RETURN;
 	END;
 	
@@ -204,15 +206,15 @@ BEGIN
 	
 	GenericLinker.OffersRequires(reader, offers, requires);
 	reader.SetPos(0);
-	IF moduleList # NIL THEN
-		moduleList.Put(sn,processing);
+	FOR i := 0 TO LEN(offers)-1 DO
+		moduleList.Put(offers[i],processing);
 	END;
 	
 	IF (moduleList # NIL) & (requires # NIL) THEN
 		FOR i := 0 TO LEN(requires)-1 DO
 			IF moduleList.Get(requires[i]) = NIL THEN 
 				name := requires[i];
-				TRACE(name);
+				(*linker.Information(name, "auto");*)
 				ReadObjectFile(name,path,extension, linker, moduleList);
 				IF linker.error THEN RETURN END;
 			ELSIF moduleList.Get(requires[i]) = processing THEN
@@ -223,9 +225,12 @@ BEGIN
 			END;
 		END;
 	END;
+	linker.Information (moduleName, "processing");
 	GenericLinker.Process (reader, linker);
 	IF moduleList # NIL THEN
-		moduleList.Put(sn,finished);
+		FOR i := 0 TO LEN(offers)-1 DO
+			moduleList.Put(offers[i],finished);
+		END;
 	END;
 	IF reader.res # Files.Ok THEN linker.Error (fileName, "failed to parse"); END;
 END ReadObjectFile;

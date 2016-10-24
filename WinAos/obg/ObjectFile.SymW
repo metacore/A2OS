@@ -105,6 +105,8 @@ TYPE
 		PROCEDURE ^ BeginWriting*(w: Streams.Writer); 
 		PROCEDURE ^ EndWriting*; 
 	END PoolMap; 
+
+	NameList* = POINTER TO ARRAY OF SegmentedName; 
 VAR 
 	categories: ARRAY 6 OF ARRAY 10 OF CHAR; 
 	modes: ARRAY 2 OF ARRAY 4 OF CHAR; 
@@ -133,6 +135,8 @@ VAR
 	PROCEDURE ^ CharacterToNibble*(char: CHAR): LONGINT; 
 	PROCEDURE ^ WriteSectionTextual(writer: Streams.Writer; CONST section: Section); 
 	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; VAR section: Section); 
+	PROCEDURE ^ ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
 	PROCEDURE ^ WriteSectionBinary(writer: Streams.Writer; CONST section: Section; poolMap: PoolMap); 
 	PROCEDURE ^ ReadSectionBinary(reader: Streams.Reader; VAR section: Section; poolMap: PoolMap); 
 	PROCEDURE ^ ReadSection*(reader: Streams.Reader; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap); 

@@ -22,16 +22,16 @@ TYPE
 
 	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName; 
 
-	HashTableSegmentedName = OBJECT 
+	HashTableSegmentedName* = OBJECT 
 	VAR 
 		table: HashSegmentedNameArray; 
 		size: LONGINT; 
 		used-: LONGINT; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init(initialSize: LONGINT); 
-		PROCEDURE ^ Put(CONST key: ObjectFile.SegmentedName; value: Block); 
-		PROCEDURE ^ Get(CONST key: ObjectFile.SegmentedName): Block; 
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(CONST key: ObjectFile.SegmentedName; value: Block); 
+		PROCEDURE ^ Get*(CONST key: ObjectFile.SegmentedName): Block; 
 		PROCEDURE ^ Clear; 
 		PROCEDURE ^ Hash(CONST name: ObjectFile.SegmentedName): LONGINT; 
 		PROCEDURE ^ HashValue(CONST key: ObjectFile.SegmentedName): LONGINT; 
@@ -68,6 +68,7 @@ TYPE
 		PROCEDURE ^  & InitLinker*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; useCategories: SET; code, data: Arrangement); 
 		PROCEDURE ^ SetLinkRoot*(CONST root: ARRAY OF CHAR); 
 		PROCEDURE ^ Error*(CONST source, message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source, message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Information*(CONST source, message: ARRAY OF CHAR); 
 		PROCEDURE ^ InformationP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR); 
@@ -89,6 +90,8 @@ TYPE
 
 	PROCEDURE ^ GetType*(block: Block): LONGINT; 
 	PROCEDURE ^ GetPriority(block: Block): LONGINT; 
+	PROCEDURE ^ Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList); 
+	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ Process*(reader: Streams.Reader; linker: Linker); 
 BEGIN
 END GenericLinker.

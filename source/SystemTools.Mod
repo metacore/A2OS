@@ -402,6 +402,30 @@ BEGIN
 	RETURN (ch = " ") OR (ch = CR) OR (ch = LF) OR (ch = TAB) OR (ch = ";") OR (ch = 0X);
 END IsDelimiter;
 
+PROCEDURE DoFile*(context: Commands.Context);
+VAR 
+	newContext: Commands.Context;
+	file: Files.File; 
+	r: Streams.Reader;
+	filename: Files.FileName;
+	res: LONGINT;
+	msg: ARRAY 256 OF CHAR;
+BEGIN
+	IF context.arg.GetString(filename) THEN
+		file := Files.Old(filename); 
+		IF file # NIL THEN
+			r := NEW Files.Reader(file, 0);
+			NEW(newContext, context.in, r, context.out, context.error, context.caller);
+			Commands.Activate("SystemTools.DoCommands", newContext, {Commands.Wait}, res, msg);
+		ELSE
+			context.error.String("Error: no such file: "); context.error.String(filename); context.error.Ln;
+		END;
+	ELSE
+		context.error.String("Error: mo filename provided."); context.error.String(filename); context.error.Ln;
+	END;
+END DoFile;
+
+
 (** Sequentially execute a list of commands .
 IMPORTANT: This command is specially handled by command interpreters that support it. It is the only command
 in the system for which two tilde characters (only separated by whitespace) are used to delimit the parameter string.

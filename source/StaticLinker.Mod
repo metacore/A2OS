@@ -205,9 +205,10 @@ BEGIN
 	Files.OpenReader (reader, file, 0);
 	
 	GenericLinker.OffersRequires(reader, offers, requires);
-	reader.SetPos(0);
-	FOR i := 0 TO LEN(offers)-1 DO
-		moduleList.Put(offers[i],processing);
+	IF (moduleList # NIL) & (offers # NIL) THEN
+		FOR i := 0 TO LEN(offers)-1 DO
+			moduleList.Put(offers[i],processing);
+		END;
 	END;
 	
 	IF (moduleList # NIL) & (requires # NIL) THEN
@@ -226,8 +227,10 @@ BEGIN
 		END;
 	END;
 	linker.Information (moduleName, "processing");
+	
+	reader.SetPos(0);
 	GenericLinker.Process (reader, linker);
-	IF moduleList # NIL THEN
+	IF (moduleList # NIL) & (offers # NIL) THEN
 		FOR i := 0 TO LEN(offers)-1 DO
 			moduleList.Put(offers[i],finished);
 		END;
@@ -1061,7 +1064,7 @@ BEGIN
 	defaults.Add("Win32C","--fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H");
 	defaults.Add("Linux32G","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
-	
+	defaults.Add("A2G","--fileName=kernel.img --extension=.GofG --displacement=0100000H");
 END StaticLinker.
 
 StaticLinker.Link --fileName=test.exe --fileFormat=PE32 --displacement=401000H Test ~

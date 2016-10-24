@@ -65,6 +65,8 @@ VAR
 				-14:	(* page fault *)
 					IF (int.CS MOD 4 > Machine.KernelLevel) & (exc.pf+4 = int.SP) THEN
 						w.String("stack overflow"); overflow := TRUE
+					ELSE
+						w.String("memory access violation (page fault)");
 					END
 				|0: w.String("division error")
 				|1: w.String("WITH guard failed")

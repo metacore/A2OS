@@ -478,7 +478,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	NATIVE,WIN,UNIX { RelativeFileSystem.Mod } # file system relative to path
 
 	NATIVEORIG,WINORIG,UNIX { Loader.Mod }
-	NATIVEGEN, WINGEN, COOP {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }
+	NATIVEGEN, WINGEN, COOP, UNIXG {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }
 
 	# binding modules
 	NATIVE,WIN { BootConsole.Mod }

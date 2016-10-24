@@ -16,6 +16,7 @@ BEGIN
 	IF str = "compile" THEN str := "Compiler.Compile"
 	ELSIF str="link" THEN str := "StaticLinker.Link"
 	ELSIF (str="i") OR (str = "interpreter") THEN str := "InterpreterShell.Start"
+	ELSIF (str = "run") OR (str="r") THEN str := "SystemTools.DoFile"
 	END;
 
 	Commands.Activate(str, context, {Commands.Wait}, res, msg);
@@ -27,8 +28,27 @@ BEGIN
 	Modules.Shutdown(Modules.PowerDown);
 	LOOP END;
 END StdIOShell.
+SystemTools.Free StaticLinker ~
 
-
+	StaticLinker.Link -p=Linux32G
+		Runtime  Traps UnixFiles RelativeFileSystem GenericLoader
+		WMDefaultFont
+		StdIOShell
+		Compiler
+		StaticLinker
+		FoxOberonFrontend
+		FoxAMDBackend
+		FoxGenericObjectFile
+		InterpreterShell
+		SystemTools
+		FSTools
+		PCAAMD64
+		BootManager
+		VirtualDisks
+		DiskFS
+		Partitions
+		~
+		FSTools.CloseFiles oberon ~
 TODOS:
 	- check linux file system (new files dot not work)
 	- add interpreter to linked image

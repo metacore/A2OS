@@ -373,7 +373,7 @@ TYPE
 		
 			(* stupid implementation: just search for fp in all exports *)
 			PROCEDURE CheckScope(CONST scope: Modules.ExportDesc; level: LONGINT): LONGINT;
-			VAR adr,i,lo,hi,m,res: LONGINT;
+			VAR adr,lo,hi,m,res: LONGINT;
 			BEGIN
 				adr := 0;
 				(* export names are sorted, binary search: *)
@@ -499,7 +499,7 @@ VAR
 	END DoPreallocate;
 
 	PROCEDURE DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): GenericLinker.Address;
-	VAR address: ObjectFile.Bits; bitPos, size, value: LONGINT;
+	VAR address: ObjectFile.Bits; size: SIZE;
 	BEGIN
 		IF (data.bytes = NIL) OR (LEN(data.bytes) # data.size) THEN NEW(data.bytes, data.size) END;
 
@@ -521,75 +521,6 @@ VAR
 		IF data.firstAddress = 0 THEN data.firstAddress := address END;
 		RETURN address
 	END DoAllocate;
-
-	(*
-	PROCEDURE SortProcTable(m: Modules.Module);
-		VAR i, j, min : LONGINT;
-
-		PROCEDURE Max(a,b: LONGINT): LONGINT;
-		BEGIN
-			IF a > b THEN RETURN a ELSE RETURN b END;
-		END Max;
-
-
-		PROCEDURE SwapProcTableEntries(p, q : LONGINT);
-		VAR procentry : Modules.ProcTableEntry;
-			k, i, basep, baseq: LONGINT; ptr: SIZE;
-		BEGIN
-			k := Max(m.procTable[p].noPtr, m.procTable[q].noPtr);
-			IF k > 0 THEN (* swap entries in ptrTable first *)
-				basep := p * m.maxPtrs; baseq := q * m.maxPtrs;
-				FOR i := 0 TO k - 1 DO
-					ptr := m.ptrTable[basep + i];
-					m.ptrTable[basep + i] := m.ptrTable[baseq + i];
-					m.ptrTable[baseq + i] := ptr
-				END
-			END;
-			procentry := m.procTable[p];
-			m.procTable[p] := m.procTable[q];
-			m.procTable[q] := procentry
-		END SwapProcTableEntries;
-
-		PROCEDURE NormalizePointerArray;
-		VAR ptrTable: Modules.PtrTable; i,j,k: LONGINT;
-		BEGIN
-			NEW(ptrTable, m.maxPtrs*m.noProcs);
-			k := 0;
-			FOR i := 0 TO LEN(m.procTable)-1 DO
-				FOR j := 0 TO m.procTable[i].noPtr-1 DO
-					ptrTable[i*m.maxPtrs+j] := m.ptrTable[k];
-					INC(k);
-				END;
-			END;
-			m.ptrTable := ptrTable;
-		END NormalizePointerArray;
-
-
-	BEGIN
-		NormalizePointerArray;
-		FOR i := 0 TO m.noProcs - 2 DO
-			min := i;
-			FOR j := i + 1 TO m.noProcs - 1 DO
-				IF m.procTable[j].pcFrom < m.procTable[min].pcFrom THEN min:= j END
-			END;
-			IF min # i THEN SwapProcTableEntries(i, min) END
-		END
-	END SortProcTable;
-	*) 
-	PROCEDURE SelectionSort(exTable: Modules.ExceptionTable);
-	VAR
-		p, q, min: LONGINT;
-		entry: Modules.ExceptionTableEntry;
-	BEGIN
-		FOR p := 0 TO LEN(exTable) - 2 DO
-			min := p;
-			FOR q := p + 1 TO LEN(exTable) - 1 DO
-				IF exTable[min].pcFrom > exTable[q].pcFrom THEN min := q END;
-				entry := exTable[min]; exTable[min] := exTable[p]; exTable[p] := entry;
-			END
-		END
-	END SelectionSort;
-	
 	
 	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module;
 	TYPE Body=PROCEDURE;

@@ -35,6 +35,19 @@ CONST
 	TlsDhRsaWithDesCbcSha* = 000FH; TlsDhRsaWith3DesEdeCbcSha* = 0010H;
 	TlsDhAnonWithRc4128Md5* = 0018H; TlsDhAnonWithDesCbcSha* = 001AH; TlsDhAnonWith3DesEdeCbcSha* = 001BH;
 	*)
+	(* TLS 1.2 cipher suites, not implemented yet *)
+	(*TlsRsaWithAes128CbcSha* = 002FH;
+	(* not supported
+	TlsDhDssWithAes128CbcSha* = 0030H; TlsDhRsaWithAes128CbcSha* = 0031H;
+	TlsDheDssWithAes128CbcSha* = 0032H; TlsDheRsaWithAes128CbcSha* = 0033H;
+	TlsDhAnonWithAes128CbcSha* = 0034H;
+	*)
+	TlsRsaWithAes256CbcSha* = 0035H;
+	(* not supported
+	TlsDhDssWithAes256CbcSha* = 0036H; TlsDhRsaWithAes256CbcSha* = 0037H;
+	TlsDheDssWithAes256CbcSha* = 0038H; TlsDheRsaWithAes256CbcSha* = 0039H;
+	TlsDhAnonWithAes256CbcSha* = 003AH;
+	*)*)
 
 	(** record layer content type *)
 	ChangeCipherSpec* = 20; Alert* = 21; Handshake* = 22; ApplicationData* = 23; SSLv2ClientHello* = 128;
@@ -73,6 +86,7 @@ CONST
 	SessionCleanUpInterval = 60;	(* seconds *)
 	DefaultSessionLifetime = 3600; (* seconds *)
 
+	DefaultSuitesNbr = 4;
 
 TYPE
 	SecurityParameters = OBJECT
@@ -615,8 +629,13 @@ TYPE
 		PROCEDURE Open*(  lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT );
 		BEGIN
 			(*ASSERT( IP.IsNilAdr(fip) );	(* only server-side is implemented *)*)
-			ASSERT( context # NIL );	(* context must be set before calling Open *)
+			(*ASSERT( context # NIL );*)	(* context must be set before calling Open *)
 			ASSERT( conn = NIL );	(* invoke this method only once per instance *)
+			
+			IF context=NIL THEN
+				SetDefaultPolicy
+			END;
+			
 			client := ~IP.IsNilAdr(fip);
 			
 			(* open TCPConnection *)
@@ -628,6 +647,13 @@ TYPE
 			IF client THEN Connect END;
 			ASSERT( conn # NIL )
 		END Open;
+		
+		PROCEDURE SetDefaultPolicy*;
+		VAR ctx:Context;
+		BEGIN
+			NEW(ctx, defaultCipherPolicy);
+			SetContext(ctx);
+		END SetDefaultPolicy;
 
 		(* set a TCP Connection for communication; this method should only be invoked by the Accept-method *)
 		PROCEDURE SetConnection*( c: TCP.Connection );
@@ -1775,10 +1801,37 @@ TYPE
 	END Connection;
 VAR
 	version: ARRAY 2 OF CHAR;
+	defaultCipherPolicy: Policy;
+
+	(** Returns a new connection with a reasonnable default policy *)
+	PROCEDURE GetConnection * (): Connection;
+	VAR
+		con: Connection;
+	BEGIN
+		NEW(con);
+		RETURN con
+	END GetConnection;
+
+	(** Prepares default ciphers for TLS v1.1 *)
+	PROCEDURE InitDefaults;
+	VAR
+		defaultSuites:ARRAY DefaultSuitesNbr OF LONGINT;
+	BEGIN
+		(*! THESE CIPHERS ARE NOT SECURE, IMPLEMENT AND USE TLS v1.2 *)
+		defaultSuites[0] := TlsRsaWithIdeaCbcSha;
+		defaultSuites[1] := TlsRsaWith3DesEdeCbcSha;
+		defaultSuites[2] := TlsRsaWithRc4128Sha;
+		defaultSuites[3] := TlsRsaWithDesCbcSha;
+		NEW(defaultCipherPolicy);
+		defaultCipherPolicy.SetCipherSuites(defaultSuites, DefaultSuitesNbr)
+	END InitDefaults;
+	
 
 BEGIN
 	version[ 0 ] := CHR( 3 ); (* this implementation supports only TLS 1.0 = SSL 3.1 *)
 	version[ 1 ] := CHR( 1 );
+
+	InitDefaults
 END TLS.
 
 

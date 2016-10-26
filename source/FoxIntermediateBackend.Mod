@@ -5523,7 +5523,7 @@ TYPE
 
 			IF (x.left IS SyntaxTree.SymbolDesignator) & (x.left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
 				procedure := x.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
-				IF procedure.isOberonInline & (procedure.scope.ownerModule = module.module) THEN
+				IF procedure.isOberonInline (* & (procedure.scope.ownerModule = module.module) *) THEN
 					IF  InlineProcedureCall(x) THEN
 						RETURN
 					ELSE

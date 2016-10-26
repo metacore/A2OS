@@ -1330,7 +1330,7 @@ TYPE
 				Keyword("OPERATOR ");
 
 				first := TRUE;
-				IF x.isInline THEN
+				IF x.isInline  OR x.isOberonInline THEN
 					ASSERT(~x.isDynamic);
 					w.String("-");
 				ELSE
@@ -1361,7 +1361,7 @@ TYPE
 				END;
 
 				IF x.externalName = NIL THEN
-					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline) THEN
+					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline OR x.isOberonInline) THEN
 						w.String( ";" );
 						Comments(x.comment,x,TRUE);
 						IF mode >= SymbolFile THEN

@@ -5226,6 +5226,7 @@ TYPE
 			prevInlineExit : Label;
 			prevMapper: SymbolMapper;
 			tooComplex: BOOLEAN;
+			resultDesignator: SyntaxTree.Expression;
 
 			PROCEDURE SimpleExpression(e: SyntaxTree.Expression): BOOLEAN;
 			BEGIN
@@ -5258,6 +5259,7 @@ TYPE
 
 
 		BEGIN
+			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
 			wasInline := currentIsInline;
 			prevInlineExit := currentInlineExit;
 			prevMapper := currentMapper;
@@ -5330,7 +5332,11 @@ TYPE
 
 
 			IF ~tooComplex & (procedureType.returnType # NIL) THEN
-				returnDesignator := GetTemp(procedureType.returnType, TRUE);
+				IF resultDesignator # NIL THEN
+					returnDesignator := resultDesignator
+				ELSE
+					returnDesignator := GetTemp(procedureType.returnType, TRUE);
+				END;
 				currentMapper.Add(NIL, returnDesignator, NIL);
 			END;
 

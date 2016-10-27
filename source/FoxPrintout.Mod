@@ -318,7 +318,7 @@ TYPE
 			IF x.firstParameter # NIL THEN ParameterList(x.firstParameter) END;
 			Scope(x.cellScope);
 
-			IF (x.cellScope IS SyntaxTree.CellScope) & (x.cellScope(SyntaxTree.CellScope).bodyProcedure # NIL) THEN
+			IF (x.cellScope IS SyntaxTree.CellScope) & (x.cellScope(SyntaxTree.CellScope).bodyProcedure # NIL) & (mode >= SourceCode) THEN
 				Body(x.cellScope(SyntaxTree.CellScope).bodyProcedure.procedureScope.body)
 			END;
 
@@ -355,7 +355,7 @@ TYPE
 				END;
 				Scope(x.recordScope);
 
-				IF (x.recordScope.bodyProcedure # NIL) THEN
+				IF (x.recordScope.bodyProcedure # NIL)  & (mode >= SourceCode) THEN
 					Body(x.recordScope.bodyProcedure.procedureScope.body)
 				END;
 
@@ -381,37 +381,6 @@ TYPE
 				Indent; Keyword("END" );
 			END;
 		END VisitRecordType;
-
-		PROCEDURE Flags((*flags: SET*));
-		(*
-		VAR first: BOOLEAN;
-			PROCEDURE Flag(CONST name: ARRAY OF CHAR);
-			BEGIN
-				IF first THEN w.String("{"); first := FALSE; ELSE w.String(", ") END;
-				w.String(name);
-			END Flag;
-		BEGIN
-			first := TRUE;
-			IF SyntaxTree.ActiveFlag IN flags THEN Flag("ACTIVE") END;
-			IF SyntaxTree.ExclusiveFlag IN flags THEN Flag("EXCLUSIVE") END;
-			IF SyntaxTree.SafeFlag IN flags THEN Flag("SAFE") END;
-			IF SyntaxTree.RealtimeFlag IN flags THEN Flag("REALTIME") END;
-			IF SyntaxTree.WinAPIFlag IN flags THEN Flag("WINAPI") END;
-			IF SyntaxTree.CFlag IN flags THEN Flag("C") END;
-			IF SyntaxTree.DelegateFlag IN flags THEN Flag("DELEGATE") END;
-			IF SyntaxTree.UntracedFlag IN flags THEN Flag("UNTRACED") END;
-			IF ~first THEN w.String("} ") END;
-
-			IF info THEN
-				BeginComment;
-				IF SyntaxTree.AccessedFlag IN flags THEN Flag("ACCESSED") END;
-				IF SyntaxTree.WrittenFlag IN flags THEN Flag("WRITTEN") END;
-				IF SyntaxTree.UnreachableFlag IN flags THEN Flag("UNREACHABLE") END;
-				IF ~first THEN w.String("}") END;
-				EndComment;
-			END;
-			*)
-		END Flags;
 
 		PROCEDURE Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN);
 		VAR name: SyntaxTree.IdentifierString;
@@ -964,7 +933,6 @@ TYPE
 		END Visible;
 
 		PROCEDURE PrintSymbol(x: SyntaxTree.Symbol);
-		VAR first: BOOLEAN;
 		BEGIN
 			IF x IS SyntaxTree.Operator THEN
 				w.String('"');Identifier(x.name);  w.String('"')
@@ -1063,7 +1031,6 @@ TYPE
 		END ConstantList;
 
 		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
-		VAR first: BOOLEAN;
 		BEGIN
 			IF Visible(x) THEN
 				IF (x.access # SyntaxTree.Hidden) THEN
@@ -1226,7 +1193,7 @@ TYPE
 		END Access;
 
 		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
-		VAR type: SyntaxTree.ProcedureType;  flags: SET; first: BOOLEAN;
+		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN;
 		BEGIN
 			IF Visible(x) THEN
 				Indent;
@@ -1507,8 +1474,9 @@ TYPE
 		BEGIN
 			prevScope := currentScope;
 			currentScope := x;
-			IF (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) THEN Scope(x) END;
-			IF (mode >= SymbolFile) & (x.body # NIL) THEN Body(x.body)
+			IF (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) THEN 
+				Scope(x); 
+				IF x.body # NIL THEN Body(x.body) END;
 			END;
 			currentScope := prevScope;
 		END ProcedureScope;
@@ -1849,6 +1817,7 @@ TYPE
 				Indent; Keyword("CODE");
 				Code(x.code);
 			ELSE
+				Keyword("(* BODY *)");
 				Indent;  Keyword("BEGIN" ); Modifiers(x.blockModifiers);
 				IF x.statements # NIL THEN
 					w.IncIndent;
@@ -1989,18 +1958,6 @@ VAR
 		END;
 		D.Update();
 	END Info;
-
-	PROCEDURE IsIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN;
-	VAR result: BOOLEAN;
-	BEGIN
-		IF (x.resolved # NIL) & (x.resolved IS SyntaxTree.IntegerValue) THEN
-			value :=  x.resolved(SyntaxTree.IntegerValue).value;
-			result := TRUE
-		ELSE
-			result := FALSE
-		END;
-		RETURN result
-	END IsIntegerValue;
 
 	PROCEDURE Init;
 	BEGIN

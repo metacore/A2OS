@@ -318,8 +318,8 @@ TYPE
 			IF x.firstParameter # NIL THEN ParameterList(x.firstParameter) END;
 			Scope(x.cellScope);
 
-			IF (x.cellScope IS SyntaxTree.CellScope) & (x.cellScope(SyntaxTree.CellScope).bodyProcedure # NIL) & (mode >= SourceCode) THEN
-				Body(x.cellScope(SyntaxTree.CellScope).bodyProcedure.procedureScope.body)
+			IF (x.cellScope IS SyntaxTree.CellScope) & (x.cellScope(SyntaxTree.CellScope).bodyProcedure # NIL) THEN
+				Body(x.cellScope(SyntaxTree.CellScope).bodyProcedure.procedureScope.body, mode >= SourceCode)
 			END;
 
 			Indent; Keyword("END ");
@@ -355,8 +355,8 @@ TYPE
 				END;
 				Scope(x.recordScope);
 
-				IF (x.recordScope.bodyProcedure # NIL)  & (mode >= SourceCode) THEN
-					Body(x.recordScope.bodyProcedure.procedureScope.body)
+				IF (x.recordScope.bodyProcedure # NIL) THEN
+					Body(x.recordScope.bodyProcedure.procedureScope.body, mode >= SourceCode)
 				END;
 
 				Indent; Keyword("END ");
@@ -1476,8 +1476,8 @@ TYPE
 			currentScope := x;
 			IF (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) THEN 
 				Scope(x); 
-				IF x.body # NIL THEN Body(x.body) END;
 			END;
+			IF (mode >= SymbolFile) & (x.body # NIL) THEN Body(x.body,  (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) ) END;
 			currentScope := prevScope;
 		END ProcedureScope;
 
@@ -1810,25 +1810,28 @@ TYPE
 			Indent; Keyword("END");
 		END VisitCode;
 
-		PROCEDURE Body(x: SyntaxTree.Body);
+		PROCEDURE Body(x: SyntaxTree.Body; implementation: BOOLEAN);
 		VAR
 		BEGIN
 			IF x.code # NIL THEN
 				Indent; Keyword("CODE");
-				Code(x.code);
-			ELSE
-				Keyword("(* BODY *)");
-				Indent;  Keyword("BEGIN" ); Modifiers(x.blockModifiers);
-				IF x.statements # NIL THEN
-					w.IncIndent;
-					StatementSequence(x.statements);
-					w.DecIndent;
+				IF implementation THEN
+					Code(x.code);
 				END;
-				IF x.finally # NIL THEN
-					Indent;  Keyword("FINALLY" );
-					w.IncIndent;
-					StatementSequence(x.finally);
-					w.DecIndent
+			ELSE
+				Indent;  Keyword("BEGIN" ); Modifiers(x.blockModifiers);
+				IF implementation THEN
+					IF x.statements # NIL THEN
+						w.IncIndent;
+						StatementSequence(x.statements);
+						w.DecIndent;
+					END;
+					IF x.finally # NIL THEN
+						Indent;  Keyword("FINALLY" );
+						w.IncIndent;
+						StatementSequence(x.finally);
+						w.DecIndent
+					END;
 				END;
 			END;
 			(* "END" written by caller *)
@@ -1865,8 +1868,8 @@ TYPE
 					BuiltinList(x.moduleScope.firstBuiltin)
 				END;
 
-				IF (x.moduleScope.bodyProcedure # NIL) & (x.moduleScope.bodyProcedure.procedureScope.body # NIL) & (mode >= SourceCode) THEN
-					Body(x.moduleScope.bodyProcedure.procedureScope.body)
+				IF (x.moduleScope.bodyProcedure # NIL) & (x.moduleScope.bodyProcedure.procedureScope.body # NIL) THEN
+					Body(x.moduleScope.bodyProcedure.procedureScope.body, mode >= SourceCode)
 				END;
 				Indent; Keyword("END "); Identifier(x.name); w.String( "." ); w.Ln;  w.Update;
 

@@ -5259,7 +5259,7 @@ TYPE
 
 
 		BEGIN
-			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
+			(* resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL; *)
 			wasInline := currentIsInline;
 			prevInlineExit := currentInlineExit;
 			prevMapper := currentMapper;
@@ -10298,6 +10298,10 @@ TYPE
 					map := currentMapper.Get(NIL);
 					IF map # NIL THEN
 						Assign(map.to, expression);
+					ELSE
+						Evaluate(expression,res);
+						Emit(Return(position,res.op));
+						ReleaseOperand(res);
 					END;
 				END;
 				BrL(currentInlineExit);
@@ -10648,7 +10652,10 @@ TYPE
 						IF currentIsInline THEN
 							map := currentMapper.Get(NIL);
 							Designate(map.to, operand); 
+							(*! only if it does not fit into register
 							MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
+							*)
+							result := operand.op;
 							(*Evaluate(map.to, operand);*)
 							out[i] := result;
 						ELSE

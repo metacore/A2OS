@@ -511,8 +511,8 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitType(SELF)
 		END Accept;
 				
 		PROCEDURE IsRecordType*(): BOOLEAN;
@@ -545,8 +545,8 @@ TYPE
 		END SetTypeDeclaration;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBasicType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBasicType(SELF)
 		END Accept;
 
 	END BasicType;
@@ -571,8 +571,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitObjectType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitObjectType(SELF)
 		END Accept;
 
 		PROCEDURE IsPointer(): BOOLEAN;
@@ -606,8 +606,8 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitNilType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitNilType(SELF)
 		END Accept;
 	END NilType;
 
@@ -635,8 +635,8 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitAnyType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitAnyType(SELF)
 		END Accept;
 	END AnyType;
 
@@ -652,8 +652,8 @@ TYPE
 		END InitByteType;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitByteType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitByteType(SELF)
 		END Accept;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
@@ -686,8 +686,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitAddressType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitAddressType(SELF)
 		END Accept;
 	END AddressType;
 
@@ -711,8 +711,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSizeType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSizeType(SELF)
 		END Accept;
 	END SizeType;
 
@@ -737,8 +737,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBooleanType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBooleanType(SELF)
 		END Accept;
 	END BooleanType;
 
@@ -763,8 +763,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSetType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSetType(SELF)
 		END Accept;
 
 	END SetType;
@@ -789,8 +789,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCharacterType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCharacterType(SELF)
 		END Accept;
 
 	END CharacterType;
@@ -818,8 +818,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitRangeType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitRangeType(SELF)
 		END Accept;
 	END RangeType;
 
@@ -861,8 +861,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitIntegerType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitIntegerType(SELF)
 		END Accept;
 
 	END IntegerType;
@@ -888,8 +888,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitFloatType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitFloatType(SELF)
 		END Accept;
 
 	END FloatType;
@@ -921,8 +921,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitComplexType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitComplexType(SELF)
 		END Accept;
 
 	END ComplexType;
@@ -964,8 +964,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitQualifiedType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitQualifiedType(SELF)
 		END Accept;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -1019,8 +1019,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitStringType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitStringType(SELF)
 		END Accept;
 
 	END StringType;
@@ -1064,8 +1064,8 @@ TYPE
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitEnumerationType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitEnumerationType(SELF)
 		END Accept;
 
 	END EnumerationType;
@@ -1146,8 +1146,8 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitArrayType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitArrayType(SELF)
 		END Accept;
 
 	END ArrayType;
@@ -1282,8 +1282,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitMathArrayType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitMathArrayType(SELF)
 		END Accept;
 
 	END MathArrayType;
@@ -1373,8 +1373,8 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitPointerType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitPointerType(SELF)
 		END Accept;
 
 	END PointerType;
@@ -1423,8 +1423,8 @@ TYPE
 		END IsPointer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitPortType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitPortType(SELF)
 		END Accept;
 
 	END PortType;
@@ -1572,8 +1572,8 @@ TYPE
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitRecordType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitRecordType(SELF)
 		END Accept;
 		
 		PROCEDURE IsRecordType(): BOOLEAN;
@@ -1698,8 +1698,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCellType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCellType(SELF)
 		END Accept;
 
 	END CellType;
@@ -1859,8 +1859,8 @@ TYPE
 		END IsComposite;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitProcedureType(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitProcedureType(SELF)
 		END Accept;
 		
 		(** Returns if the type needs to be traced for garbage collection *)
@@ -1921,8 +1921,8 @@ TYPE
 
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitExpression(SELF)
 		END Accept;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -2002,8 +2002,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSet(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSet(SELF)
 		END Accept;
 
 	END Set;
@@ -2025,8 +2025,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitMathArrayExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitMathArrayExpression(SELF)
 		END Accept;
 
 	END MathArrayExpression;
@@ -2053,8 +2053,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitUnaryExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitUnaryExpression(SELF)
 		END Accept;
 
 	END UnaryExpression;
@@ -2085,8 +2085,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBinaryExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBinaryExpression(SELF)
 		END Accept;
 
 	END BinaryExpression;
@@ -2137,8 +2137,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitRangeExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitRangeExpression(SELF)
 		END Accept;
 
 	END RangeExpression;
@@ -2158,8 +2158,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitTensorRangeExpression(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitTensorRangeExpression(SELF)
 		END Accept;
 
 	END TensorRangeExpression;
@@ -2186,8 +2186,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitConversion(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitConversion(SELF)
 		END Accept;
 
 	END Conversion;
@@ -2244,8 +2244,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitDesignator(SELF)
 		END Accept;
 
 	END Designator;
@@ -2270,8 +2270,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitIdentifierDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitIdentifierDesignator(SELF)
 		END Accept;
 
 	END IdentifierDesignator;
@@ -2293,8 +2293,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSelectorDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSelectorDesignator(SELF)
 		END Accept;
 
 	END SelectorDesignator;
@@ -2318,8 +2318,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitParameterDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitParameterDesignator(SELF)
 		END Accept;
 
 	END ParameterDesignator;
@@ -2341,8 +2341,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitArrowDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitArrowDesignator(SELF)
 		END Accept;
 
 	END ArrowDesignator;
@@ -2364,8 +2364,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBracketDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBracketDesignator(SELF)
 		END Accept;
 
 
@@ -2386,9 +2386,9 @@ TYPE
 		END InitSymbolDesignator;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
+		VAR position: LONGINT;
 		BEGIN
-			position := SELF.position; v.VisitSymbolDesignator(SELF);
+			position := SELF.position.start; v.VisitSymbolDesignator(SELF);
 		END Accept;
 
 		PROCEDURE Clone(): Expression;
@@ -2442,8 +2442,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitIndexDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitIndexDesignator(SELF)
 		END Accept;
 		
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -2475,8 +2475,8 @@ TYPE
 		END SetResult;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitStatementDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitStatementDesignator(SELF)
 		END Accept;
 
 	END StatementDesignator;
@@ -2499,8 +2499,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitProcedureCallDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitProcedureCallDesignator(SELF)
 		END Accept;
 
 	END ProcedureCallDesignator;
@@ -2531,8 +2531,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBuiltinCallDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBuiltinCallDesignator(SELF)
 		END Accept;
 
 	END BuiltinCallDesignator;
@@ -2559,8 +2559,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitTypeGuardDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitTypeGuardDesignator(SELF)
 		END Accept;
 		
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -2583,8 +2583,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitDereferenceDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitDereferenceDesignator(SELF)
 		END Accept;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -2607,8 +2607,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSupercallDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSupercallDesignator(SELF)
 		END Accept;
 
 	END SupercallDesignator;
@@ -2627,8 +2627,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSelfDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSelfDesignator(SELF)
 		END Accept;
 		
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -2652,8 +2652,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitResultDesignator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitResultDesignator(SELF)
 		END Accept;
 
 	END ResultDesignator;
@@ -2673,8 +2673,8 @@ TYPE
 		END SetFingerPrint;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2703,8 +2703,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBooleanValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBooleanValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2734,8 +2734,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitIntegerValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitIntegerValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2764,8 +2764,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCharacterValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCharacterValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2795,8 +2795,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSetValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSetValue(SELF)
 		END Accept;
 
 	END SetValue;
@@ -2824,8 +2824,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitMathArrayValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitMathArrayValue(SELF)
 		END Accept;
 
 	END MathArrayValue;
@@ -2856,8 +2856,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitRealValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitRealValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2899,8 +2899,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitComplexValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitComplexValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2958,8 +2958,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitStringValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitStringValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2971,8 +2971,8 @@ TYPE
 	NilValue* = OBJECT (Value)
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitNilValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitNilValue(SELF)
 		END Accept;
 
 		PROCEDURE Clone(): Expression;
@@ -3007,8 +3007,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitEnumerationValue(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitEnumerationValue(SELF)
 		END Accept;
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -3112,8 +3112,8 @@ TYPE
 		END SetComment;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitSymbol(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitSymbol(SELF)
 		END Accept;
 		
 		PROCEDURE SetExternalName*(name: Scanner.StringType);
@@ -3159,8 +3159,8 @@ TYPE
 		END SetType;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitTypeDeclaration(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitTypeDeclaration(SELF)
 		END Accept;
 
 	END TypeDeclaration;
@@ -3188,8 +3188,8 @@ TYPE
 		END SetValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitConstant(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitConstant(SELF)
 		END Accept;
 
 	END Constant;
@@ -3258,8 +3258,8 @@ TYPE
 		END SetInitializer;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitVariable(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitVariable(SELF)
 		END Accept;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -3313,8 +3313,8 @@ TYPE
 		END SetDefaultValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitParameter(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitParameter(SELF)
 		END Accept;
 
 		PROCEDURE SetKind*(kind: LONGINT);
@@ -3342,8 +3342,8 @@ TYPE
 		END SetValue;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitProperty(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitProperty(SELF)
 		END Accept;
 
 	END Property;
@@ -3437,8 +3437,8 @@ TYPE
 		END SetMethodNumber;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitProcedure(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitProcedure(SELF)
 		END Accept;
 
 	END Procedure;
@@ -3456,8 +3456,8 @@ TYPE
 		END InitBuiltin;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitBuiltin(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitBuiltin(SELF)
 		END Accept;
 
 	END Builtin;
@@ -3497,8 +3497,8 @@ TYPE
 		END SetDynamic;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitOperator(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitOperator(SELF)
 		END Accept;
 
 	END Operator;
@@ -3546,8 +3546,8 @@ TYPE
 		END SetContext;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitImport(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitImport(SELF)
 		END Accept;
 
 	END Import;
@@ -3633,8 +3633,8 @@ TYPE
 		END SetUnreachable;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitStatement(SELF)
 		END Accept;
 
 		PROCEDURE SetComment*(comment: Comment);
@@ -3669,8 +3669,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitProcedureCallStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitProcedureCallStatement(SELF)
 		END Accept;
 
 	END ProcedureCallStatement;
@@ -3700,8 +3700,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitAssignment(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitAssignment(SELF)
 		END Accept;
 
 	END Assignment;
@@ -3725,8 +3725,8 @@ TYPE
 		END SetRight;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCommunicationStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCommunicationStatement(SELF)
 		END Accept;
 
 	END CommunicationStatement;
@@ -3813,8 +3813,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitIfStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitIfStatement(SELF)
 		END Accept;
 
 	END IfStatement;
@@ -3906,8 +3906,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitWithStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitWithStatement(SELF)
 		END Accept;
 
 	END WithStatement;
@@ -4006,8 +4006,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCaseStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCaseStatement(SELF)
 		END Accept;
 
 		PROCEDURE MaxConstant*(): LONGINT;
@@ -4063,8 +4063,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitWhileStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitWhileStatement(SELF)
 		END Accept;
 
 	END WhileStatement;
@@ -4100,8 +4100,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitRepeatStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitRepeatStatement(SELF)
 		END Accept;
 
 	END RepeatStatement;
@@ -4154,8 +4154,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitForStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitForStatement(SELF)
 		END Accept;
 
 	END ForStatement;
@@ -4181,8 +4181,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitExitableBlock(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitExitableBlock(SELF)
 		END Accept;
 
 	END ExitableBlock;
@@ -4199,8 +4199,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitLoopStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitLoopStatement(SELF)
 		END Accept;
 
 	END LoopStatement;
@@ -4209,8 +4209,8 @@ TYPE
 	ExitStatement* = OBJECT (Statement)
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitExitStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitExitStatement(SELF)
 		END Accept;
 
 		PROCEDURE Clone(): Statement;
@@ -4244,8 +4244,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitReturnStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitReturnStatement(SELF)
 		END Accept;
 
 	END ReturnStatement;
@@ -4272,8 +4272,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitAwaitStatement(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitAwaitStatement(SELF)
 		END Accept;
 
 	END AwaitStatement;
@@ -4354,8 +4354,8 @@ TYPE
 		END SetStatementSequence;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitStatementBlock(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitStatementBlock(SELF)
 		END Accept;
 
 	END StatementBlock;
@@ -4398,8 +4398,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitCode(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitCode(SELF)
 		END Accept;
 
 	END Code;
@@ -5144,8 +5144,8 @@ TYPE
 		END AddScope;
 
 		PROCEDURE Accept*(v: Visitor);
-		VAR position: Position;
-		BEGIN position := SELF.position; v.VisitModule(SELF)
+		VAR position: LONGINT;
+		BEGIN position := SELF.position.start; v.VisitModule(SELF)
 		END Accept;
 
 	END Module;

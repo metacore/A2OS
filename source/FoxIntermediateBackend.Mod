@@ -876,7 +876,7 @@ TYPE
 			ELSE (* force body for procedures *)
 				implementationVisitor.EmitEnter(ir, x.position,x,cc,0,0);
 				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
-				IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;
+				(*IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;*)
 				implementationVisitor.EmitLeave(ir,x.position,x,cc);
 				ir.Emit(Exit(x.position,procedureType.pcOffset,cc, parametersSize));
 			END;
@@ -1827,7 +1827,7 @@ TYPE
 					IF dump # NIL THEN
 						dump.String("register removed too often"); dump.Ln; dump.Update;
 					END;
-					D.TraceBack;
+					(*D.TraceBack;*)
 				END;
 			END;
 		END UnuseRegister;
@@ -5258,6 +5258,7 @@ TYPE
 
 
 
+
 		BEGIN
 			(* resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL; *)
 			wasInline := currentIsInline;
@@ -5300,7 +5301,13 @@ TYPE
 					Emit(Mov(x.position, dest.op, src.op));
 					ReleaseOperand(dest);
 					ReleaseOperand(src);
+					
+					(*!???????????
+					(*! it is not entirely clear why this is necessary for double inline calls -- temporary objects .. *)
+					ReleaseOperand(src);
+					*)
 
+					
 					currentMapper.Add(formalParameter, variableDesignator, NIL);
 				ELSE tooComplex := TRUE
 				END;
@@ -5330,7 +5337,6 @@ TYPE
 				INC(i);
 			END;
 
-
 			IF ~tooComplex & (procedureType.returnType # NIL) THEN
 				IF resultDesignator # NIL THEN
 					returnDesignator := resultDesignator
@@ -5359,8 +5365,9 @@ TYPE
 						ValueToCondition(result)
 					END;
 				END;
+				
 			END;
-
+			
 			currentMapper := prevMapper;
 			currentInlineExit := prevInlineExit;
 			currentIsInline := wasInline;
@@ -10680,9 +10687,11 @@ TYPE
 					WITH statement: SyntaxTree.Assignment DO
 						ReleaseIntermediateOperand(out[i]);
 					|statement: SyntaxTree.ReturnStatement DO
-						IF currentIsInline THEN
+						(*! return any register only if memory storage was used *)
+						(*IF currentIsInline THEN
 							ReleaseIntermediateOperand(out[i]);
 						END;
+						*)
 					ELSE
 					END;
 					statement := x.outRules.GetStatement(i);
@@ -10702,6 +10711,8 @@ TYPE
 				END;
 				IF currentIsInline THEN RETURN END;
 
+				ReleaseIntermediateOperand(return);
+
 				cc := procedureType(SyntaxTree.ProcedureType).callingConvention;
 				IF cc = SyntaxTree.WinAPICallingConvention THEN
 					parametersSize := ProcedureParametersSize(backend.system,procedure);
@@ -10710,7 +10721,6 @@ TYPE
 				END;
 				EmitLeave(section, position,NIL, cc);
 				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,cc, parametersSize));
-				ReleaseIntermediateOperand(return);
 			END;
 
 			IF Trace THEN TraceExit("VisitCode") END;

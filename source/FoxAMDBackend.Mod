@@ -241,7 +241,7 @@ TYPE
 			sizeInBits := type.sizeInBits;
 			form := type.form;
 			IF (type.length > 1) THEN
-				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits=32) & (type.length =4) THEN
+				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
 					i := Get(XMM7, XMM0);
 				ELSE
 					HALT(100)
@@ -639,8 +639,13 @@ TYPE
 			IF type.length > 1 THEN
 				IF type.length = 4 THEN
 					(*ASSERT(type.form = IntermediateCode.Float);*)
-					ASSERT(type.sizeInBits = 32);
+					IF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
 					SpecialMove(InstructionSet.opMOVUPS, InstructionSet.opMOVUPS, TRUE, dest, src, type);
+					ELSIF (type.sizeInBits = 16) THEN
+						SpecialMove(InstructionSet.opMOVQ, InstructionSet.opMOVQ, TRUE, dest, src, type);
+					ELSIF  (type.sizeInBits = 8) THEN
+						SpecialMove(InstructionSet.opMOVD, InstructionSet.opMOVD, TRUE, dest, src, type);
+					END;
 				ELSE
 					(*
 					ASSERT(type.form = IntermediateCode.Float);

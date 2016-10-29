@@ -1205,6 +1205,16 @@ TYPE
 			RETURN GetType(system,system.addressType);
 		ELSIF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.SemiDynamic) THEN
 			RETURN GetType(system,system.addressType);
+		ELSIF type IS SyntaxTree.ArrayType THEN
+			WITH type: SyntaxTree.ArrayType DO
+				IF type.form = SyntaxTree.Static THEN
+					t := GetType(system, type.arrayBase);
+					ASSERT(t.length = 1);
+					ToVectorType(t, type.staticLength);
+					RETURN t
+				END;
+			END;		
+			RETURN GetType(system,system.addressType);
 		ELSIF type IS SyntaxTree.PortType THEN
 			RETURN GetType(system, system.addressType);
 		ELSIF type IS SyntaxTree.CellType THEN

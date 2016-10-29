@@ -9083,12 +9083,23 @@ TYPE
 		END VisitSelfDesignator;
 
 		PROCEDURE VisitResultDesignator(x: SyntaxTree.ResultDesignator);
-		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter;
+		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; map: SymbolMap;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitResultDesignator") END;
 			procedure := currentScope(SyntaxTree.ProcedureScope).ownerProcedure;
 			procedureType := procedure.type(SyntaxTree.ProcedureType);
 			parameter := procedureType.returnParameter;
+			
+			IF currentIsInline THEN
+				map := currentMapper.Get(NIL);
+				IF map # NIL THEN
+					Designate(map.to, result);
+				ELSE
+					HALT(200);
+				END;
+				RETURN;
+			END;
+			
 			VisitParameter(parameter);
 			IF Trace THEN TraceExit("VisitResultDesignator") END;
 		END VisitResultDesignator;

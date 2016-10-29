@@ -8024,6 +8024,7 @@ TYPE
 						statement.SetLeft(ResolveDesignator(statement.left));
 					END;
 				ELSIF statement IS SyntaxTree.ReturnStatement THEN
+					(* must be a reference to some register *)
 				ELSIF statement IS SyntaxTree.StatementBlock THEN
 				ELSE
 					Printout.Info("out statement ", statement);

@@ -1198,7 +1198,10 @@ TYPE
 
 	END Variables;
 
-	SymbolMap = POINTER TO RECORD this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; next: SymbolMap; END;
+	SymbolMap = POINTER TO RECORD 
+		this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; next: SymbolMap; 
+		isAddress: BOOLEAN;
+	END;
 
 	SymbolMapper = OBJECT
 	VAR
@@ -1209,10 +1212,10 @@ TYPE
 			first := NIL;
 		END Init;
 
-		PROCEDURE Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression);
+		PROCEDURE Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; isAddress: BOOLEAN);
 		VAR new: SymbolMap;
 		BEGIN
-			NEW(new); new.this := this; new.to := to; new.tag := tag;
+			NEW(new); new.this := this; new.to := to; new.tag := tag; new.isAddress := isAddress;
 			new.next := first;	first := new;
 		END Add;
 
@@ -1827,7 +1830,6 @@ TYPE
 					IF dump # NIL THEN
 						dump.String("register removed too often"); dump.Ln; dump.Update;
 					END;
-					(*D.TraceBack;*)
 				END;
 			END;
 		END UnuseRegister;
@@ -5053,7 +5055,6 @@ TYPE
 					Designate(expression,operand);
 					IF operand.op.type.length > 1 THEN
 						Emit(Push(position, operand.op));
-						ReleaseOperand(operand);
 					ELSE
 						size := system.SizeOf(type);
 						Basic.Align(size,system.AlignmentOf(system.parameterAlignment,type));
@@ -5260,7 +5261,7 @@ TYPE
 
 
 		BEGIN
-			(* resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL; *)
+			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
 			wasInline := currentIsInline;
 			prevInlineExit := currentInlineExit;
 			prevMapper := currentMapper;
@@ -5289,7 +5290,7 @@ TYPE
 
 				(* cases where the expression can be mapped identically *)
 				IF SimpleExpression(actualParameter) & (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter})  THEN
-					currentMapper.Add(formalParameter, actualParameter, NIL);
+					currentMapper.Add(formalParameter, actualParameter, NIL,FALSE);
 				ELSIF FitsInRegister(actualParameter.type) & (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.ValueParameter}) THEN
 					variableDesignator := GetTemp(formalParameter.type, TRUE);
 					(*
@@ -5301,14 +5302,9 @@ TYPE
 					Emit(Mov(x.position, dest.op, src.op));
 					ReleaseOperand(dest);
 					ReleaseOperand(src);
+					(* the src operand should now have been completely released ! *)
 					
-					(*!???????????
-					(*! it is not entirely clear why this is necessary for double inline calls -- temporary objects .. *)
-					ReleaseOperand(src);
-					*)
-
-					
-					currentMapper.Add(formalParameter, variableDesignator, NIL);
+					currentMapper.Add(formalParameter, variableDesignator, NIL, FALSE);
 				ELSE tooComplex := TRUE
 				END;
 
@@ -5343,13 +5339,13 @@ TYPE
 				ELSE
 					returnDesignator := GetTemp(procedureType.returnType, TRUE);
 				END;
-				currentMapper.Add(NIL, returnDesignator, NIL);
+				currentMapper.Add(NIL, returnDesignator, NIL, resultDesignator # NIL);
 			END;
 
 			localVariable := procedure.procedureScope.firstVariable;
 			WHILE ~tooComplex & (localVariable # NIL) DO
 				variableDesignator := GetTemp(localVariable.type, FALSE);
-				currentMapper.Add(localVariable, variableDesignator, NIL);
+				currentMapper.Add(localVariable, variableDesignator, NIL, FALSE);
 				localVariable := localVariable.nextVariable;
 			END;
 
@@ -9923,6 +9919,13 @@ TYPE
 					HALT(201)
 				END;
 			ELSIF (leftType IS SyntaxTree.MathArrayType) THEN
+				IF (leftType(SyntaxTree.MathArrayType).staticLength # 0) & (rightType IS SyntaxTree.MathArrayType) & (rightType(SyntaxTree.MathArrayType).staticLength # 0) THEN
+					Designate(right,rightO);
+					Designate(left,leftO);
+					size := ToMemoryUnits(system,system.SizeOf(rightType));
+					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+					ReleaseOperand(leftO); ReleaseOperand(rightO);
+				END;
 				AssignMathArray(left,right);
 			ELSE
 				HALT(200);
@@ -10652,17 +10655,21 @@ TYPE
 						NEW(str, 64);
 						Basic.GetString(statement.right(SyntaxTree.IdentifierDesignator).identifier, str^);
 						out[i] := result; IntermediateCode.SetString(out[i], str);
-						ReleaseIntermediateOperand(operand.tag);
+						ReleaseOperand(operand); (* implicit increase of use of operand.op in MakeMemory *)
 					|statement: SyntaxTree.ReturnStatement DO
 						NEW(str, 64);
 						Basic.GetString(statement.returnValue(SyntaxTree.IdentifierDesignator).identifier, str^);
 						IF currentIsInline THEN
 							map := currentMapper.Get(NIL);
 							Designate(map.to, operand); 
+							IF map.isAddress THEN
+								MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
+							ELSE
+								result := operand.op;
+							END;
 							(*! only if it does not fit into register
 							MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
 							*)
-							result := operand.op;
 							(*Evaluate(map.to, operand);*)
 							out[i] := result;
 						ELSE
@@ -10687,11 +10694,7 @@ TYPE
 					WITH statement: SyntaxTree.Assignment DO
 						ReleaseIntermediateOperand(out[i]);
 					|statement: SyntaxTree.ReturnStatement DO
-						(*! return any register only if memory storage was used *)
-						(*IF currentIsInline THEN
-							ReleaseIntermediateOperand(out[i]);
-						END;
-						*)
+						(* release happens below *)
 					ELSE
 					END;
 					statement := x.outRules.GetStatement(i);
@@ -10709,9 +10712,9 @@ TYPE
 				ELSE
 					Emit(Return(position,return));
 				END;
-				IF currentIsInline THEN RETURN END;
-
 				ReleaseIntermediateOperand(return);
+
+				IF currentIsInline THEN RETURN END;
 
 				cc := procedureType(SyntaxTree.ProcedureType).callingConvention;
 				IF cc = SyntaxTree.WinAPICallingConvention THEN

@@ -69,7 +69,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 			used*: LONGINT;	(** number of valid entries in color table **)
 			clut: CLUTs.CLUT;	(* reverse color lookup structure *)
 			PROCEDURE &New*; BEGIN NEW(col,256); used:=256 END New; (*initialized to 256 colors; for backwards compatibility*)
-			PROCEDURE Init*(used:LONGINT); BEGIN SELF.used:=used; NEW(col,used) END Init; (*initialize to size # 256*) (*bugfix PH090122*)
+			PROCEDURE Init*(used:LONGINT); BEGIN SELF.used:=used; IF LEN(col,0)#used THEN NEW(col,used) END END Init; (*initialize to size # 256*) (*bugfix PH090122*)
 		END Palette;
 
 		(** image format **)

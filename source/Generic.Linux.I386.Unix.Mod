@@ -465,6 +465,8 @@ VAR
 	sigaltstack: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT; 
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS): LONGINT;
 	
+	posix_spawnp- : PROCEDURE{C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
+	
 	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
 	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
 	open-			: PROCEDURE {C} ( name: ADDRESS;  flags, mode: SET ): LONGINT;
@@ -774,6 +776,7 @@ VAR
     END TraceThread;
     *)
 	
+	
 	PROCEDURE {C} resume_handler(sig: LONGINT);
 	BEGIN
 	END resume_handler;
@@ -1059,6 +1062,11 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	TYPE OberonXIOErrorHandler* = PROCEDURE (disp: ADDRESS): LONGINT;
 	VAR oberonXErrorHandler:OberonXErrorHandler; 
 	VAR oberonXIOErrorHandler: OberonXIOErrorHandler;
+	
+	TYPE pid_t *= LONGINT;
+	TYPE path_t *= ARRAY OF CHAR;
+	TYPE arg_t *= ARRAY OF CHAR;
+	TYPE argv_t *= ARRAY OF arg_t;
 
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
 	VAR res: LONGINT;
@@ -1137,6 +1145,8 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF(pthread_attr_setdetachstate));
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF(pthread_attr_setstacksize));
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self));
+		
+		Dlsym( libc, "posix_spawnp", ADDRESSOF(posix_spawnp));
 		
 		Dlsym( libc, "sched_get_priority_max", ADDRESSOF(sched_get_priority_max));
 		Dlsym( libc, "sched_get_priority_min", ADDRESSOF(sched_get_priority_min));

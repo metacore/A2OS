@@ -1843,12 +1843,12 @@ TYPE
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
 					IF result THEN
-						(*
+						
 						p1 := selfParameter; p2 := this.selfParameter;
-						IF (p1 = NIL) # (p2=NIL) OR (p1 # NIL) & ((p1.access # p2.access) OR (p1.kind # p2.kind) OR ~p1.type.SameType(p2.type)) THEN
+						IF (p1 = NIL) # (p2=NIL) OR (p1 # NIL) & ((p1.kind # p2.kind)) THEN
 							RETURN FALSE
 						END;
-						*)
+						
 						p1 := firstParameter; p2 := this.firstParameter;
 						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved) OR (p1.type.resolved IS AddressType) & (p2.type.resolved IS PointerType) & p2.type.resolved(PointerType).isUnsafe) DO
 							p1 := p1.nextParameter; p2 := p2.nextParameter

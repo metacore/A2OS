@@ -9498,8 +9498,6 @@ TYPE
 					END;
 				END;
 			ELSIF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & (type IS SyntaxTree.RecordType) THEN
-			
-				IF x.selfParameter THEN TRACE(x, x.offsetInBits) END;
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 				IntermediateCode.MakeMemory(result.op,addressType);
 			ELSIF (x.kind = SyntaxTree.ValueParameter) OR (x.kind = SyntaxTree.ConstParameter) THEN

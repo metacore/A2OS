@@ -4604,6 +4604,7 @@ TYPE
 			formalParameter: SyntaxTree.Parameter;
 			actualParameter: SyntaxTree.Expression;
 			i: LONGINT;
+			self: SyntaxTree.Expression;
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
@@ -4615,7 +4616,12 @@ TYPE
 				Error(position, "forbidden call of non-realtime procedure in realtime block");
 			END;
 			
-			
+			IF (formalType.selfParameter # NIL) & (formalType.selfParameter.kind = SyntaxTree.VarParameter) THEN
+				self := left.left;
+				IF (self # NIL) & ~IsVariable(self) THEN
+					Error(self.position, "Non-variable expression on variable receiver");
+				END;
+			END;
 			
 			IF ~ExpressionList(actualParameters) THEN
 				result := SyntaxTree.invalidDesignator

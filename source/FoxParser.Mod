@@ -1287,7 +1287,7 @@ TYPE
 				(*! todo: make this a hidden symbol. Problematic when used with paco. *)
 				procedure.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
 			END;
-			parentScope.AddProcedure(procedure);
+			parentScope.AddProcedureDeclaration(procedure);
 			procedure.SetType(SyntaxTree.NewProcedureType(SyntaxTree.invalidPosition,parentScope));
 			procedure.SetBodyProcedure(TRUE);
 			procedureScope.SetBody(Body(procedureScope));
@@ -1858,6 +1858,10 @@ TYPE
 			modifiers: SyntaxTree.Modifier;
 			forwardDeclaration: BOOLEAN;
 			string: Scanner.StringType;
+			parameter: SyntaxTree.Parameter;
+			qualifiedIdentifier : SyntaxTree.QualifiedIdentifier;
+			identifier: SyntaxTree.Identifier;
+			kind: LONGINT;
 		BEGIN
 			IF Trace THEN S( "Procedure" ) END;
 			(* symbol procedure has already been consumed *)
@@ -1891,11 +1895,30 @@ TYPE
 				OperatorDeclaration( parentScope );
 				RETURN
 			END;
+			
+			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
+
+			IF Optional(Scanner.LeftParenthesis) THEN (* type bound *)
+				IF Optional(Scanner.Var) THEN
+					kind := SyntaxTree.VarParameter
+				ELSIF Optional(Scanner.Const) THEN
+					kind := SyntaxTree.ConstParameter;
+				ELSE
+					kind := SyntaxTree.ConstParameter;
+				END;
+				identifier := Identifier(position);
+				parameter := SyntaxTree.NewParameter(position, procedureType, identifier, kind);
+				Check(Scanner.Colon);
+				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position, SyntaxTree.invalidIdentifier, Identifier(position));
+				parameter.SetType(SyntaxTree.NewQualifiedType(position, procedureScope, qualifiedIdentifier));
+				Check(Scanner.RightParenthesis);
+				procedureType.SetSelfParameter(parameter);
+				parameter.SetSelfParameter(TRUE);
+			END;
 
 			position:= symbol.position;
 			IdentifierDefinition( name, access,TRUE);
 
-			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 			procedure := SyntaxTree.NewProcedure( position, name, procedureScope);
 			procedure.SetConstructor(isConstructor);
 			procedure.SetFinalizer(isFinalizer);
@@ -1917,7 +1940,7 @@ TYPE
 				Check(Scanner.End);
 				IF ExpectThisIdentifier( name ) THEN END;
 			END;
-			parentScope.AddProcedure( procedure );
+			parentScope.AddProcedureDeclaration( procedure );
 
 			IF Trace THEN E( "Procedure") END;
 		END ProcedureDeclaration;
@@ -1982,7 +2005,7 @@ TYPE
 				END;
 				IF Mandatory(Scanner.End) & ExpectThisString(string^) THEN END;
 			END;
-			parentScope.AddProcedure(operator);
+			parentScope.AddProcedureDeclaration(operator);
 			IF parentScope IS SyntaxTree.ModuleScope THEN
 				parentScope(SyntaxTree.ModuleScope).AddOperator(operator);
 			ELSIF parentScope IS SyntaxTree.RecordScope THEN

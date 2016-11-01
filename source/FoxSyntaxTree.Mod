@@ -1716,6 +1716,7 @@ TYPE
 			hasUntracedReturn-: BOOLEAN;
 			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters *)
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
+			selfParameter-: Parameter;
 
 			isDelegate-,isInterrupt-,noPAF-,noReturn-: BOOLEAN;
 			pcOffset-: LONGINT; (* PC offset: used for ARM interrupt procedures *)
@@ -1737,6 +1738,7 @@ TYPE
 			pcOffset := 0;
 			hasUntracedReturn := FALSE;
 			returnTypeModifiers := NIL;
+			selfParameter := NIL;
 		END InitProcedureType;
 
 		PROCEDURE SetNoPAF*(noPAF: BOOLEAN);
@@ -1784,6 +1786,10 @@ TYPE
 		PROCEDURE SetReturnParameter*(parameter: Parameter);
 		BEGIN returnParameter := parameter
 		END SetReturnParameter;
+		
+		PROCEDURE SetSelfParameter*(parameter: Parameter);
+		BEGIN selfParameter := parameter
+		END SetSelfParameter;
 
 		PROCEDURE SetCallingConvention*(cc: CallingConvention);
 		BEGIN callingConvention := cc
@@ -1837,6 +1843,12 @@ TYPE
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
 					IF result THEN
+						(*
+						p1 := selfParameter; p2 := this.selfParameter;
+						IF (p1 = NIL) # (p2=NIL) OR (p1 # NIL) & ((p1.access # p2.access) OR (p1.kind # p2.kind) OR ~p1.type.SameType(p2.type)) THEN
+							RETURN FALSE
+						END;
+						*)
 						p1 := firstParameter; p2 := this.firstParameter;
 						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved) OR (p1.type.resolved IS AddressType) & (p2.type.resolved IS PointerType) & p2.type.resolved(PointerType).isUnsafe) DO
 							p1 := p1.nextParameter; p2 := p2.nextParameter
@@ -3282,6 +3294,7 @@ TYPE
 		ownerType-: Type;
 		untraced-: BOOLEAN;
 		movable-: BOOLEAN;
+		selfParameter-: BOOLEAN;
 
 		PROCEDURE & InitParameter( position: Position;  ownerType: Type ; name: Identifier; kind: LONGINT);
 		BEGIN
@@ -3294,6 +3307,7 @@ TYPE
 			untraced := FALSE;
 			defaultValue := NIL;
 			movable := FALSE;
+			selfParameter := FALSE;
 		END InitParameter;
 
 		PROCEDURE SetModifiers*(flag: Modifier);
@@ -3307,6 +3321,11 @@ TYPE
 		PROCEDURE SetMoveable*(movable: BOOLEAN);
 		BEGIN SELF.movable := movable
 		END SetMoveable;
+		
+		PROCEDURE SetSelfParameter*(b: BOOLEAN);
+		BEGIN
+			selfParameter := b;
+		END SetSelfParameter;
 
 		PROCEDURE SetDefaultValue*(e: Expression);
 		BEGIN defaultValue := e
@@ -4481,6 +4500,8 @@ TYPE
 		firstVariable-,lastVariable-: Variable; numberVariables-: LONGINT;  (* variables *)
 		firstProcedure-,lastProcedure-: Procedure; numberProcedures-: LONGINT;  (* procedures *)
 
+		procedures-: ProcedureList;
+		
 		outerScope-: Scope; nextScope-: Scope;
 
 		ownerModule-: Module;
@@ -4606,6 +4627,13 @@ TYPE
 			INC(numberProcedures);
 			lastProcedure := p;
 		END AddProcedure;
+		
+		PROCEDURE AddProcedureDeclaration*(p: Procedure);
+		BEGIN
+			IF procedures = NIL THEN NEW(procedures) END;
+			procedures.AddProcedure(p);
+		END AddProcedureDeclaration;
+		
 
 		PROCEDURE FindProcedure*(identifier: Identifier): Procedure;
 		VAR p: Procedure;
@@ -5192,6 +5220,48 @@ TYPE
 		*)
 
 	END SymbolList;
+
+	ProcedureList* = OBJECT
+		VAR list: Basic.List;
+
+		PROCEDURE & InitList*;
+		BEGIN NEW( list,8 );
+		END InitList;
+
+		PROCEDURE Length*( ): LONGINT;
+		BEGIN RETURN list.Length();
+		END Length;
+
+		PROCEDURE AddProcedure*( d: Procedure );
+		BEGIN list.Add(d)
+		END AddProcedure;
+
+		PROCEDURE GetProcedure*( index: LONGINT ): Procedure;
+		VAR p: ANY;
+		BEGIN
+			p := list.Get(index); RETURN p(Procedure);
+		END GetProcedure;
+
+		PROCEDURE SetProcedure*(index: LONGINT; expression: Procedure);
+		BEGIN list.Set(index,expression)
+		END SetProcedure;
+
+		PROCEDURE RemoveProcedure*(i: LONGINT);
+		BEGIN list.RemoveByIndex(i);
+		END RemoveProcedure;
+
+		(*
+		PROCEDURE Clone*(VAR list: ProcedureList);
+		VAR i: LONGINT;
+		BEGIN
+			IF list = NIL THEN NEW(list) END;
+			FOR i := 0 TO Length()-1 DO
+				list.AddProcedure(CloneProcedure(GetProcedure(i)));
+			END;
+		END Clone;
+		*)
+
+	END ProcedureList;
 
 VAR
 	(* invalid items used, for example, by parser and checker *)

@@ -778,7 +778,7 @@ TYPE
 				END;
 
 				procedureType.SetReturnType(resolved);
-				IF (resolved # NIL) THEN
+				IF (resolved # NIL) & StructuredReturnType (procedureType) THEN
 					parameter := SyntaxTree.NewParameter(procedureType.position,procedureType,Global.ResultName, SyntaxTree.VarParameter);
 					parameter.SetType(procedureType.returnType);
 					parameter.SetAccess(SyntaxTree.Hidden);
@@ -792,6 +792,10 @@ TYPE
 				WHILE (parameter # NIL) DO
 					VisitParameter(parameter);
 					parameter := parameter.nextParameter;
+				END;
+				parameter := procedureType.selfParameter;
+				IF parameter # NIL THEN 
+					VisitParameter(parameter) 
 				END;
 		END FixProcedureType;
 
@@ -4610,7 +4614,9 @@ TYPE
 			IF (currentIsRealtime) & ~(formalType.isRealtime) THEN
 				Error(position, "forbidden call of non-realtime procedure in realtime block");
 			END;
-
+			
+			
+			
 			IF ~ExpressionList(actualParameters) THEN
 				result := SyntaxTree.invalidDesignator
 			ELSE
@@ -6889,17 +6895,19 @@ TYPE
 					record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
 					procedureType.SetDelegate(TRUE);
 
-
-					selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
-					IF record.pointerType.typeDeclaration = NIL THEN
-						selfParameter.SetType(record.pointerType);
-					ELSE
-						qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(procedure.position,SyntaxTree.invalidIdentifier,record.pointerType.typeDeclaration.name);
-						qualifiedType := SyntaxTree.NewQualifiedType(procedure.position,procedure.scope,qualifiedIdentifier);
-						qualifiedType.SetResolved(record.pointerType);
-						selfParameter.SetType(qualifiedType);
+					IF (record.pointerType # NIL) & (procedureType.selfParameter = NIL) THEN
+						(* add auto-self *)
+						selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.ValueParameter);
+						IF (record.pointerType.typeDeclaration = NIL) THEN
+							selfParameter.SetType(record.pointerType);
+						ELSE
+							qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(procedure.position,SyntaxTree.invalidIdentifier,record.pointerType.typeDeclaration.name);
+							qualifiedType := SyntaxTree.NewQualifiedType(procedure.position,procedure.scope,qualifiedIdentifier);
+							qualifiedType.SetResolved(record.pointerType);
+							selfParameter.SetType(qualifiedType);
+						END;
+						selfParameter.SetAccess(SyntaxTree.Hidden);
 					END;
-					selfParameter.SetAccess(SyntaxTree.Hidden);
 
 					(*! constructor information is redundant, we can remove "isConstructor" and repplace by constructor procedure reference *)
 					IF procedure.isConstructor THEN
@@ -8289,12 +8297,14 @@ TYPE
 			typeDeclaration: SyntaxTree.TypeDeclaration;
 			variable: SyntaxTree.Variable;
 			procedure: SyntaxTree.Procedure;
+			procedureType : SyntaxTree.ProcedureType;
 			prevScope: SyntaxTree.Scope;
 			parameter: SyntaxTree.Parameter;
 			import: SyntaxTree.Import;
 			symbol: SyntaxTree.Symbol;
 			prevPhase: LONGINT;
 			prevError : BOOLEAN;
+			i: LONGINT;
 			
 			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
 			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
@@ -8368,12 +8378,18 @@ TYPE
 				END;
 			ELSIF scope IS SyntaxTree.ProcedureScope THEN
 				(* enter parameters for a procedure scope *)
-				parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType).firstParameter;
+				procedureType := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType);
+				parameter := procedureType.firstParameter;
 				WHILE(parameter # NIL) DO
 					Register(parameter,currentScope, FALSE); parameter := parameter.nextParameter;
 				END;
-				parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType).returnParameter;
+				parameter := procedureType.returnParameter;
 				IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
+				parameter := procedureType.selfParameter;
+				IF parameter # NIL THEN 
+					Register(parameter, currentScope, FALSE); 
+					parameter.SetState(SyntaxTree.Resolved); (* would lead to cycles, otherwise *)
+				END;
 			ELSIF scope IS SyntaxTree.CellScope THEN
 				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
 				IF~skipImplementation THEN
@@ -8412,10 +8428,55 @@ TYPE
 				Register(variable, currentScope, FALSE); variable := variable.nextVariable;
 			END;
 			(* procedures *)
+			IF scope.procedures # NIL THEN
+				FOR i := 0 TO scope.procedures.Length()-1 DO
+					procedure := scope.procedures.GetProcedure(i);
+					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+					IF procedureType.selfParameter = NIL THEN
+						scope.AddProcedure(procedure);
+						Register(procedure, currentScope, procedure IS SyntaxTree.Operator);
+					ELSE
+						typeDeclaration := currentScope.FindTypeDeclaration(procedureType.selfParameter.type(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
+						IF typeDeclaration = NIL THEN 
+							Error(procedureType.selfParameter.position, "No such type declaration");
+						ELSE
+							procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
+							procedureType.selfParameter.SetState(SyntaxTree.Resolved);
+							typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
+							Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+						END;
+					END;
+				END;
+			END;
+			(*
 			procedure := scope.firstProcedure;
 			WHILE (procedure # NIL) DO
-				Register(procedure, currentScope, procedure IS SyntaxTree.Operator); procedure := procedure.nextProcedure;
+				procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+				IF procedureType.selfParameter = NIL THEN
+					Register(procedure, currentScope, procedure IS SyntaxTree.Operator);
+				END;
+				procedure := procedure.nextProcedure;
 			END;
+			*)
+
+			(* type bound procedures *)
+			(*
+			procedure := scope.firstProcedure;
+			WHILE (procedure # NIL) DO
+				procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+				IF procedureType.selfParameter # NIL THEN
+					typeDeclaration := currentScope.FindTypeDeclaration(procedureType.selfParameter.type(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
+					IF typeDeclaration = NIL THEN 
+						Error(procedureType.selfParameter.position, "No such type declaration");
+					ELSE
+						procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
+						procedureType.selfParameter.SetState(SyntaxTree.Resolved);
+					END;
+					Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+				END;
+				procedure := procedure.nextProcedure;
+			END;
+			*)
 
 			(* now process all symbols without any presumption on the order *)
 			symbol := scope.firstSymbol;
@@ -10041,6 +10102,22 @@ TYPE
 		RETURN ~OptimizeMethodTable OR IsStaticProcedure(procedure)
 	END InMethodTable;
 	
+	PROCEDURE ReturnedAsParameter*(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE
+		ELSE
+			type := type.resolved;
+			RETURN (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ProcedureType) OR IsPointerType(type)
+				OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.MathArrayType);
+		END
+	END ReturnedAsParameter;
+
+	PROCEDURE StructuredReturnType*(procedureType: SyntaxTree.ProcedureType): BOOLEAN;
+	BEGIN
+		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(procedureType.returnType);
+	END StructuredReturnType;
+
+
 
 
 END FoxSemanticChecker.

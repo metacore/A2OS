@@ -837,7 +837,7 @@ TYPE
 						implementationVisitor.SetLabel(implementationVisitor.exitLabel);
 						IF backend.cooperative THEN
 							IF HasPointers (scope) THEN 
-								IF ~ReturnedAsParameter(procedureType.returnType) THEN
+								IF ~SemanticChecker.ReturnedAsParameter(procedureType.returnType) THEN
 									res := implementationVisitor.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
 									ir.Emit(Result(x.position, res));
 									ir.Emit(Push(x.position, res)); 
@@ -850,7 +850,7 @@ TYPE
 									IF implementationVisitor.profile & ~isModuleBody THEN implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE) END;
 								END;
 							ELSIF  implementationVisitor.profile & ~isModuleBody THEN
-								IF ~ReturnedAsParameter(procedureType.returnType) THEN
+								IF ~SemanticChecker.ReturnedAsParameter(procedureType.returnType) THEN
 									res := implementationVisitor.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
 									ir.Emit(Result(x.position, res));
 									ir.Emit(Push(x.position, res)); 
@@ -5600,13 +5600,17 @@ TYPE
 			Evaluate(x.left, operand);
 
 			IF symbol IS SyntaxTree.Procedure THEN
-				IF x.left IS SyntaxTree.SupercallDesignator THEN
+				IF (procedureType.selfParameter # NIL) THEN
+					Emit(Push(position,operand.tag));
+				ELSIF x.left IS SyntaxTree.SupercallDesignator THEN
 					Emit(Push(position,operand.tag));
 				ELSIF (procedureType.isDelegate) THEN
 					Emit(Push(position,operand.tag));
 				END;
 			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
-				IF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
+				IF (procedureType.selfParameter # NIL) THEN
+					Emit(Push(position,operand.tag));
+				ELSIF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
 					Emit(Push(position,operand.tag));
 				END;
 			ELSE HALT(200);
@@ -5616,7 +5620,7 @@ TYPE
 			operand.tag := emptyOperand;
 
 			(* determine if a structured return type is needed *)
-			structuredReturnType := StructuredReturnType(procedureType);
+			structuredReturnType := SemanticChecker.StructuredReturnType(procedureType);
 
 			IF structuredReturnType THEN
 				IF resultDesignator  # NIL THEN
@@ -9494,9 +9498,10 @@ TYPE
 					END;
 				END;
 			ELSIF (x.kind = SyntaxTree.VarParameter) OR (x.kind = SyntaxTree.ConstParameter) & (type IS SyntaxTree.RecordType) THEN
+			
+				IF x.selfParameter THEN TRACE(x, x.offsetInBits) END;
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 				IntermediateCode.MakeMemory(result.op,addressType);
-
 			ELSIF (x.kind = SyntaxTree.ValueParameter) OR (x.kind = SyntaxTree.ConstParameter) THEN
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 			END;
@@ -9518,13 +9523,13 @@ TYPE
 					result.tag := nil;
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) THEN
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) & ~(x.selfParameter) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := basereg;
 				IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+system.addressSize));
 				IntermediateCode.MakeMemory(result.tag,addressType);
 				UseIntermediateOperand(result.tag);
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind = SyntaxTree.ValueParameter) THEN
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & ((x.kind = SyntaxTree.ValueParameter) OR x.selfParameter) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := TypeDescriptorAdr(type);
 				IF ~newObjectFile THEN
@@ -9620,7 +9625,7 @@ TYPE
 		(* handle expressions of the form designator.procedure or procedure *)
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedure") END;
-			IF  (x.type(SyntaxTree.ProcedureType).isDelegate) & ~SemanticChecker.IsStaticProcedure(x) THEN
+			IF  (x.type(SyntaxTree.ProcedureType).isDelegate) & ~SemanticChecker.IsStaticProcedure(x) & ~(result.tag.mode = IntermediateCode.ModeImmediate) THEN
 				DynamicCallOperand(result,x);
 			ELSIF x.isInline THEN
 				StaticCallOperand(result,x);
@@ -9763,7 +9768,7 @@ TYPE
 			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
 			VAR procedureType: SyntaxTree.ProcedureType;
 			BEGIN
-				IF ReturnedAsParameter(right.type)  THEN
+				IF SemanticChecker.ReturnedAsParameter(right.type)  THEN
 					IF right IS SyntaxTree.ProcedureCallDesignator THEN
 						procedureType := right(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType);
 						RETURN procedureType.callingConvention = SyntaxTree.OberonCallingConvention
@@ -10714,7 +10719,7 @@ TYPE
 			IF return.mode # IntermediateCode.Undefined THEN
 
 				IF currentIsInline THEN
-				ELSIF ReturnedAsParameter(procedureType.returnType) THEN
+				ELSIF SemanticChecker.ReturnedAsParameter(procedureType.returnType) THEN
 					Symbol(procedureType.returnParameter, par);
 					MakeMemory(mem, par.op, return.type, 0);
 					ReleaseOperand(par);
@@ -13751,7 +13756,7 @@ TYPE
 	BEGIN
 		parSize := 0;
 
-		IF StructuredReturnType(procedureType) THEN
+		IF SemanticChecker.StructuredReturnType(procedureType) THEN
 			parameter := procedureType.returnParameter;
 			INC(parSize,system.SizeOfParameter(parameter));
 			parSize := parSize + (-parSize) MOD system.addressSize;
@@ -13764,26 +13769,17 @@ TYPE
 			parameter := parameter.prevParameter;
 		END;
 
-		IF procedureType.isDelegate THEN INC(parSize,system.addressSize) END; (* method => self pointer *)
+		IF procedureType.selfParameter # NIL THEN
+			parameter := procedureType.selfParameter;
+			INC(parSize,system.SizeOfParameter(parameter));
+			parSize := parSize + (-parSize) MOD system.addressSize;
+		ELSIF procedureType.isDelegate THEN INC(parSize,system.addressSize) 
+		END; (* method => self pointer *)
+		
 		IF isNested THEN INC(parSize,system.addressSize) END; (* nested procedure => static base *)
 
 		RETURN ToMemoryUnits(system,parSize)
 	END ParametersSize;
-
-	PROCEDURE ReturnedAsParameter(type: SyntaxTree.Type): BOOLEAN;
-	BEGIN
-		IF type = NIL THEN RETURN FALSE
-		ELSE
-			type := type.resolved;
-			RETURN (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ProcedureType) OR SemanticChecker.IsPointerType(type)
-				OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.MathArrayType);
-		END
-	END ReturnedAsParameter;
-
-	PROCEDURE StructuredReturnType(procedureType: SyntaxTree.ProcedureType): BOOLEAN;
-	BEGIN
-		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(procedureType.returnType);
-	END StructuredReturnType;
 
 	PROCEDURE IsNested(procedure: SyntaxTree.Procedure): BOOLEAN;
 	BEGIN
@@ -13797,7 +13793,6 @@ TYPE
 		END;
 		RETURN scope # NIL;
 	END InCellScope;
-	
 
 	PROCEDURE ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT;
 	BEGIN

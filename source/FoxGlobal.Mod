@@ -479,7 +479,7 @@ TYPE
 					parameter.SetOffset(offset);
 					size := SizeOfParameter(parameter);
 					IF size < 0 THEN RETURN FALSE END;
-					INC(offset,SizeOfParameter(parameter));
+					INC(offset,size);
 					parameter := parameter.prevParameter;
 				END;
 				parameter := procedureType.returnParameter;
@@ -488,7 +488,15 @@ TYPE
 					parameter.SetOffset(offset);
 					size := SizeOfParameter(parameter);
 					IF size < 0 THEN RETURN FALSE END;
-					INC(offset,SizeOfParameter(parameter));
+					INC(offset,size);
+				END;
+				parameter := procedureType.selfParameter;
+				IF parameter # NIL THEN
+					Basic.Align(offset,addressSize);
+					parameter.SetOffset(offset);
+					size := SizeOfParameter(parameter);
+					IF size < 0 THEN RETURN FALSE END;
+					INC(offset,size);
 				END;
 			ELSE
 				parameter := procedureType.firstParameter;
@@ -501,7 +509,7 @@ TYPE
 					parameter := parameter.nextParameter;
 				END;
 			END;
-			IF (procedureType.isDelegate) THEN
+			IF procedureType.isDelegate & (procedureType.selfParameter = NIL) THEN
 				INC(offset,addressSize); (* parameter offset of delegate *)
 			END;
 			RETURN TRUE
@@ -614,7 +622,9 @@ TYPE
 					RETURN SizeOf(rangeType) (* array range components are materialized on stack for both value and const parameters *)
 				END
 			ELSIF par.type.resolved IS SyntaxTree.RecordType THEN
-				IF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
+				IF par.selfParameter THEN
+					RETURN addressSize
+				ELSIF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
 					IF IsOberonProcedure(par.ownerType) THEN
 						RETURN 2*addressSize
 					ELSE

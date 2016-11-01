@@ -1224,6 +1224,10 @@ TYPE
 				IF x.isConstructor THEN w.String(" & ") END;
 				IF x.isFinalizer THEN w.String(" ~ ") END;
 
+				IF type.selfParameter # NIL THEN
+					ParameterList(type.selfParameter);
+				END;
+
 				IF info THEN
 					BeginComment;
 					Modifiers(x.type(SyntaxTree.ProcedureType).modifiers);
@@ -1340,18 +1344,17 @@ TYPE
 			END
 		END VisitOperator;
 
-		PROCEDURE ProcedureList(x: SyntaxTree.Procedure);
+		PROCEDURE ProcedureList(list: SyntaxTree.ProcedureList);
+		VAR x: SyntaxTree.Procedure; i: LONGINT;
 		BEGIN
 			w.IncIndent;
-			WHILE(x # NIL) DO
+			FOR i := 0 TO list.Length()-1 DO
+				x := list.GetProcedure(i);
 				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)  THEN
 					Symbol(x);
 					w.String( "; " );
 				END;
-				x := x.nextProcedure;
-
-				IF (x# NIL) & (mode > SymbolFile) & ((x.access # SyntaxTree.Hidden) OR (mode > SourceCode)) THEN w.Ln END;
-
+				IF (i# list.Length()-1) & (mode > SymbolFile) & ((x.access # SyntaxTree.Hidden) OR (mode > SourceCode)) THEN w.Ln END;
 			END;
 			w.DecIndent;
 		END ProcedureList;
@@ -1465,7 +1468,7 @@ TYPE
 			IF x.firstConstant # NIL THEN ConstantList(x.firstConstant); END;
 			IF x.firstTypeDeclaration # NIL THEN TypeDeclarationList(x.firstTypeDeclaration); END;
 			IF x.firstVariable # NIL THEN Indent;  Keyword("VAR " );  VariableList(x.firstVariable);  END;
-			IF x.firstProcedure # NIL THEN w.Ln; ProcedureList(x.firstProcedure) END;
+			IF x.procedures # NIL THEN w.Ln; ProcedureList(x.procedures) END;
 			currentScope := prevScope;
 		END Scope;
 

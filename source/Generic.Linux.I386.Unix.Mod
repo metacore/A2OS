@@ -465,7 +465,12 @@ VAR
 	sigaltstack: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT; 
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS): LONGINT;
 	
-	posix_spawnp- : PROCEDURE{C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
+	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
+	posix_spawnp- 	: PROCEDURE{C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
+	waitpid-			: PROCEDURE{C}(pid: pid_t; status: ADDRESS; options: LONGINT): pid_t;
+	pipe-				:PROCEDURE{C}(pipefd: ADDRESS); (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)	
+	dup2-				:PROCEDURE{C}(oldfd,newfd: LONGINT): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
+	dup-				:PROCEDURE{C}(oldfd: LONGINT): LONGINT;
 	
 	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
 	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
@@ -1147,6 +1152,10 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self));
 		
 		Dlsym( libc, "posix_spawnp", ADDRESSOF(posix_spawnp));
+		Dlsym( libc, "waitpid", ADDRESSOF(waitpid));		
+		Dlsym( libc, "pipe", ADDRESSOF(pipe));
+		Dlsym( libc, "dup2",ADDRESSOF(dup2));
+		Dlsym( libc, "dup", ADDRESSOF(dup));
 		
 		Dlsym( libc, "sched_get_priority_max", ADDRESSOF(sched_get_priority_max));
 		Dlsym( libc, "sched_get_priority_min", ADDRESSOF(sched_get_priority_min));

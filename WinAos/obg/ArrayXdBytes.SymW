@@ -85,7 +85,7 @@ TYPE
 	PROCEDURE ^ CheckIndexArray(dim: Index; VAR a: IndexArray); 
 	PROCEDURE ^ CopyIndexArray(src: ARRAY OF Index; dest: IndexArray); 
 	PROCEDURE ^ Intersect*(org1, len1, org2, len2: IndexArray; VAR org, len: IndexArray): BOOLEAN; 
-	PROCEDURE  - CheckLEQ*(lesseq, than: LONGINT);
+	PROCEDURE {FingerPrint(-269175839)}  - CheckLEQ*(lesseq, than: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
 		MOV	EBX, [ESP+4]	;  less
@@ -97,7 +97,7 @@ TYPE
 		ADD	ESP, 8
 	
 	END CheckLEQ; 
-	PROCEDURE  - CheckLE*(lesseq, than: LONGINT);
+	PROCEDURE {FingerPrint(-238922078)}  - CheckLE*(lesseq, than: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
 		MOV	EBX, [ESP+4]	;  less
@@ -109,7 +109,7 @@ TYPE
 		ADD	ESP, 8
 	
 	END CheckLE; 
-	PROCEDURE  - CheckEQ*(equals, this: LONGINT);
+	PROCEDURE {FingerPrint(-2019807603)}  - CheckEQ*(equals, this: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  this
 		MOV	EBX, [ESP+4]	;  equals
@@ -175,7 +175,7 @@ TYPE
 	PROCEDURE ^ CopyMemoryToArray*(srcadr: Index; destmem: ArrayMemoryStructure; nrelems: Index); 
 	PROCEDURE ^ CopyArrayPartToMemory*(srcmem: ArrayMemoryStructure; destadr: Index; srcpos, srclen: IndexArray; destlen: Index); 
 	PROCEDURE ^ CopyMemoryToArrayPart*(srcadr: Index; destmem: ArrayMemoryStructure; srclen: Index; destpos, destlen: IndexArray); 
-	PROCEDURE  - InBounds*(origin, len: Index; idx: Index): BOOLEAN;
+	PROCEDURE {FingerPrint(-677094810)}  - InBounds*(origin, len: Index; idx: Index): BOOLEAN;
 	CODE {SYSTEM.i386}
 		; if (idx < origin) or (idx-origin >= len) then return false end;
 		; return true;
@@ -196,7 +196,7 @@ TYPE
 		ADD	ESP, 12
 	
 	END InBounds; 
-	PROCEDURE  - PeriodicBounds*(origin, len: Index; idx: Index): Index;
+	PROCEDURE {FingerPrint(1387277801)}  - PeriodicBounds*(origin, len: Index; idx: Index): Index;
 	CODE {SYSTEM.i386}
 		; DEC( idx, origin );  idx := idx MOD len;  INC( idx, origin );
 

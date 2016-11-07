@@ -73,7 +73,7 @@ TYPE
 		variableAccessed: BOOLEAN; 
 
 		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(position: Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(position: Position; CONST msg, msg2: ARRAY OF CHAR); 
 		PROCEDURE ^ InfoSS(position: Position; CONST msg1: ARRAY OF CHAR; CONST s: Basic.String); 
@@ -374,5 +374,7 @@ TYPE
 	PROCEDURE ^ IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsStaticProcedure*(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InMethodTable*(procedure: SyntaxTree.Procedure): BOOLEAN; 
+	PROCEDURE ^ ReturnedAsParameter*(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ StructuredReturnType*(procedureType: SyntaxTree.ProcedureType): BOOLEAN; 
 BEGIN
 END FoxSemanticChecker.

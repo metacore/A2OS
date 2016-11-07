@@ -6,7 +6,7 @@ CONST
 	Version = \"Shell v1.0"\; 
 	DefaultAliasFile = \"Shell.Alias"\; 
 	NestingLevelIndicator = \">"\; 
-	MaxLen = 4096; 
+	MaxLen = 512; 
 	CmdLen = 64; 
 	ParamLen = MaxLen; 
 	CR = 0DX; 

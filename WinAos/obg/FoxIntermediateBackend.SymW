@@ -216,6 +216,7 @@ TYPE
 		this: SyntaxTree.Symbol; 
 		to, tag: SyntaxTree.Expression; 
 		next: SymbolMap; 
+		isAddress: BOOLEAN; 
 	END; 
 
 	SymbolMapper = OBJECT 
@@ -223,7 +224,7 @@ TYPE
 		first: SymbolMap; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression); 
+		PROCEDURE ^ Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; isAddress: BOOLEAN); 
 		PROCEDURE ^ Get(this: SyntaxTree.Symbol): SymbolMap; 
 	END SymbolMapper; 
 
@@ -659,8 +660,6 @@ VAR
 	PROCEDURE ^ IsRegister(x: IntermediateCode.Operand): BOOLEAN; 
 	PROCEDURE ^ GetRecordTypeName(recordType: SyntaxTree.RecordType; VAR name: Basic.SegmentedName); 
 	PROCEDURE ^ ParametersSize(system: Global.System; procedureType: SyntaxTree.ProcedureType; isNested: BOOLEAN): LONGINT; 
-	PROCEDURE ^ ReturnedAsParameter(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ StructuredReturnType(procedureType: SyntaxTree.ProcedureType): BOOLEAN; 
 	PROCEDURE ^ IsNested(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InCellScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT; 

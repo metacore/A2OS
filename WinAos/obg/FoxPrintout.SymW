@@ -1,5 +1,5 @@
 MODULE FoxPrintout;
-	IMPORT Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Streams, D := Debugging, SYSTEM;
+	IMPORT Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, FingerPrinter := FoxFingerPrinter, Streams, D := Debugging, SYSTEM;
 CONST 
 	Exported* = 0; 
 	SymbolFile* = 1; 
@@ -17,6 +17,7 @@ TYPE
 		case: LONGINT; 
 		useCase: BOOLEAN; 
 		alertCount, commentCount: LONGINT; 
+		fingerPrinter: FingerPrinter.FingerPrinter; 
 
 		PROCEDURE ^ Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 		PROCEDURE ^ Big(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
@@ -52,7 +53,6 @@ TYPE
 		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
 		PROCEDURE ^ VisitCellType*(x: SyntaxTree.CellType); 
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
-		PROCEDURE ^ Flags; 
 		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
 		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
 		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN); 
@@ -112,7 +112,7 @@ TYPE
 		PROCEDURE ^ Access(access: SET); 
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
-		PROCEDURE ^ ProcedureList(x: SyntaxTree.Procedure); 
+		PROCEDURE ^ ProcedureList(list: SyntaxTree.ProcedureList); 
 		PROCEDURE ^ VisitImport*(x: SyntaxTree.Import); 
 		PROCEDURE ^ ImportList(x: SyntaxTree.Import); 
 		PROCEDURE ^ VisitBuiltin*(x: SyntaxTree.Builtin); 
@@ -148,7 +148,7 @@ TYPE
 		PROCEDURE ^ VisitStatementBlock*(x: SyntaxTree.StatementBlock); 
 		PROCEDURE ^ Code(x: SyntaxTree.Code); 
 		PROCEDURE ^ VisitCode*(x: SyntaxTree.Code); 
-		PROCEDURE ^ Body(x: SyntaxTree.Body); 
+		PROCEDURE ^ Body(x: SyntaxTree.Body; implementation: BOOLEAN); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 		PROCEDURE ^ SingleStatement*(b: BOOLEAN); 
 		PROCEDURE ^  & Init*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN); 
@@ -158,7 +158,6 @@ VAR
 
 	PROCEDURE ^ NewPrinter*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN): Printer; 
 	PROCEDURE ^ Info*(CONST info: ARRAY OF CHAR; a: ANY); 
-	PROCEDURE ^ IsIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Init; 
 BEGIN
 END FoxPrintout.

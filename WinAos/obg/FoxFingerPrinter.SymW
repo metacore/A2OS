@@ -62,12 +62,11 @@ TYPE
 	VAR 
 		fp-: LONGINT; 
 		fingerprint: FingerPrint; 
-		system-: Global.System; 
 		deep: BOOLEAN; 
 		traceLevel: LONGINT; 
 		level: LONGINT; 
 
-		PROCEDURE ^  & InitFingerPrinter*(system: Global.System); 
+		PROCEDURE ^  & InitFingerPrinter*; 
 		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 
 		PROCEDURE ^ SetTypeFingerprint(x: SyntaxTree.Type; fp: LONGINT); 
 		PROCEDURE ^ VisitRangeType*(x: SyntaxTree.RangeType); 

@@ -89,7 +89,7 @@ VAR
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
 	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE  - Inc*(VAR x: LONGINT);
+	PROCEDURE {FingerPrint(109449456)}  - Inc*(VAR x: LONGINT);
 	CODE {SYSTEM.i386}
 		POP	EAX
 		LOCK
@@ -97,48 +97,48 @@ VAR
 	
 	END Inc; 
 	PROCEDURE ^ Excl*(VAR s: SET; bit: LONGINT); 
-	PROCEDURE  - SpinHint*;
+	PROCEDURE {FingerPrint(-2093825980)}  - SpinHint*;
 	CODE {SYSTEM.i386}
 		XOR	ECX, ECX	;  just in case some processor interprets REP this way
 		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
 	
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE  - CurrentBP*(): ADDRESS;
+	PROCEDURE {FingerPrint(-905203345)}  - CurrentBP*(): ADDRESS;
 	CODE {SYSTEM.i386}
 	MOV EAX, EBP
 
 	END CurrentBP; 
-	PROCEDURE  - SetBP*(bp: ADDRESS);
+	PROCEDURE {FingerPrint(-2112276049)}  - SetBP*(bp: ADDRESS);
 	CODE {SYSTEM.i386}
 	POP EBP
 
 	END SetBP; 
-	PROCEDURE  - CurrentSP*(): ADDRESS;
+	PROCEDURE {FingerPrint(-903237273)}  - CurrentSP*(): ADDRESS;
 	CODE {SYSTEM.i386}
 	MOV EAX, ESP
 
 	END CurrentSP; 
-	PROCEDURE  - SetSP*(sp: ADDRESS);
+	PROCEDURE {FingerPrint(-1827063378)}  - SetSP*(sp: ADDRESS);
 	CODE {SYSTEM.i386}
 	POP ESP
 
 	END SetSP; 
 	PROCEDURE ^ Fill32*(destAdr, size, filler: LONGINT); 
-	PROCEDURE  - SetFCR(s: SET);
+	PROCEDURE {FingerPrint(1201501690)}  - SetFCR(s: SET);
 	CODE
 	END SetFCR; 
-	PROCEDURE  - FCR(): SET;
+	PROCEDURE {FingerPrint(538123933)}  - FCR(): SET;
 	CODE
 	END FCR; 
-	PROCEDURE  - InitFPU;
+	PROCEDURE {FingerPrint(971517682)}  - InitFPU;
 	CODE
 	END InitFPU; 
 	PROCEDURE ^ SetupFPU*; 
 	PROCEDURE ^ CPUID*(VAR vendor: Vendor; VAR version: LONGINT; VAR features1, features2: SET); 
 	PROCEDURE ^ GetConfig*(CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ Shutdown*(restart: BOOLEAN); 
-	PROCEDURE  - GetTimer*(): HUGEINT;
+	PROCEDURE {FingerPrint(1951073877)}  - GetTimer*(): HUGEINT;
 	CODE {SYSTEM.Pentium}
 	RDTSC	; set EDX:EAX
 
@@ -175,21 +175,21 @@ VAR
 	PROCEDURE ^ SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS); 
 	PROCEDURE ^ FreeMemBlock*(memBlock: MemoryBlock); 
 	PROCEDURE ^ PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS; 
-	PROCEDURE  - AtomicInc*(VAR x: LONGINT);
+	PROCEDURE {FingerPrint(753519207)}  - AtomicInc*(VAR x: LONGINT);
 	CODE {SYSTEM.i386}
 		POP	EAX
 		LOCK
 		INC	DWORD[EAX]
 	
 	END AtomicInc; 
-	PROCEDURE  - AtomicDec*(VAR x: LONGINT);
+	PROCEDURE {FingerPrint(741911151)}  - AtomicDec*(VAR x: LONGINT);
 	CODE {SYSTEM.i386}
 		POP	EAX
 		LOCK
 		DEC	DWORD[EAX]
 	
 	END AtomicDec; 
-	PROCEDURE  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	PROCEDURE {FingerPrint(806537763)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
 	CODE {SYSTEM.i386}
 		POP	EBX
 		POP	EAX
@@ -197,14 +197,14 @@ VAR
 		ADD	DWORD[EAX], EBX
 	
 	END AtomicAdd; 
-	PROCEDURE  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
+	PROCEDURE {FingerPrint(-1667119161)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
 	CODE {SYSTEM.i386}
 		POP	EBX
 		MOV	AL, 1
 		XCHG	[EBX], AL
 	
 	END AtomicTestSet; 
-	PROCEDURE  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE {FingerPrint(-618502421)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
 	CODE {SYSTEM.i386}
 		POP EBX		; new
 		POP EAX		; old
@@ -216,40 +216,40 @@ VAR
 	PROCEDURE ^ ChangeByteOrder*(n: LONGINT): LONGINT; 
 	PROCEDURE ^ TraceColor(c: SHORTINT); 
 	PROCEDURE ^ LogChar(c: CHAR); 
-	PROCEDURE  - GetEAX*(): LONGINT;
+	PROCEDURE {FingerPrint(1709791086)}  - GetEAX*(): LONGINT;
 	CODE{SYSTEM.i386}
 
 	END GetEAX; 
-	PROCEDURE  - GetECX*(): LONGINT;
+	PROCEDURE {FingerPrint(1440686669)}  - GetECX*(): LONGINT;
 	CODE{SYSTEM.i386}
 	MOV EAX,ECX
 
 	END GetECX; 
-	PROCEDURE  - SetEAX*(n: LONGINT);
+	PROCEDURE {FingerPrint(1286422002)}  - SetEAX*(n: LONGINT);
 	CODE{SYSTEM.i386}	POP EAX
 
 	END SetEAX; 
-	PROCEDURE  - SetEBX*(n: LONGINT);
+	PROCEDURE {FingerPrint(1336753649)}  - SetEBX*(n: LONGINT);
 	CODE{SYSTEM.i386}
 	POP EBX
 
 	END SetEBX; 
-	PROCEDURE  - SetECX*(n: LONGINT);
+	PROCEDURE {FingerPrint(1319976435)}  - SetECX*(n: LONGINT);
 	CODE{SYSTEM.i386}
 	POP ECX
 
 	END SetECX; 
-	PROCEDURE  - SetEDX*(n: LONGINT);
+	PROCEDURE {FingerPrint(1236090352)}  - SetEDX*(n: LONGINT);
 	CODE{SYSTEM.i386}
 	POP EDX
 
 	END SetEDX; 
-	PROCEDURE  - SetESI*(n: LONGINT);
+	PROCEDURE {FingerPrint(1586445812)}  - SetESI*(n: LONGINT);
 	CODE{SYSTEM.i386}
 	POP ESI
 
 	END SetESI; 
-	PROCEDURE  - SetEDI*(n: LONGINT);
+	PROCEDURE {FingerPrint(1234124277)}  - SetEDI*(n: LONGINT);
 	CODE{SYSTEM.i386}
 	POP EDI
 

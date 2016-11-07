@@ -19,34 +19,34 @@ VAR
 	mouseGrabber: MouseGrabber; 
 	textbuffer: Strings.String; 
 
-	PROCEDURE  - ReadMouse(): LONGINT;
+	PROCEDURE {FingerPrint(1358130412)}  - ReadMouse(): LONGINT;
 	CODE
 	END ReadMouse; 
-	PROCEDURE  - WriteMouse(pos: LONGINT);
+	PROCEDURE {FingerPrint(-1155347524)}  - WriteMouse(pos: LONGINT);
 	CODE
 	END WriteMouse; 
-	PROCEDURE  - SendLength(l: LONGINT);
+	PROCEDURE {FingerPrint(271179232)}  - SendLength(l: LONGINT);
 	CODE
 	END SendLength; 
-	PROCEDURE  - Send4Chars(chars: LONGINT);
+	PROCEDURE {FingerPrint(371898467)}  - Send4Chars(chars: LONGINT);
 	CODE
 	END Send4Chars; 
-	PROCEDURE  - ReceiveLength(): LONGINT;
+	PROCEDURE {FingerPrint(-812544433)}  - ReceiveLength(): LONGINT;
 	CODE
 	END ReceiveLength; 
-	PROCEDURE  - Receive4Chars(): LONGINT;
+	PROCEDURE {FingerPrint(1503499842)}  - Receive4Chars(): LONGINT;
 	CODE
 	END Receive4Chars; 
-	PROCEDURE  - GetVirtualHWVersion(): LONGINT;
+	PROCEDURE {FingerPrint(272035970)}  - GetVirtualHWVersion(): LONGINT;
 	CODE
 	END GetVirtualHWVersion; 
-	PROCEDURE  - GetVMWareVersion(): LONGINT;
+	PROCEDURE {FingerPrint(1738347114)}  - GetVMWareVersion(): LONGINT;
 	CODE
 	END GetVMWareVersion; 
-	PROCEDURE  - SetGUIOptions(options: SET);
+	PROCEDURE {FingerPrint(1347886038)}  - SetGUIOptions(options: SET);
 	CODE
 	END SetGUIOptions; 
-	PROCEDURE  - GetGUIOptions(): SET;
+	PROCEDURE {FingerPrint(2102215645)}  - GetGUIOptions(): SET;
 	CODE
 	END GetGUIOptions; 
 	PROCEDURE ^ SetMousePos(x, y: LONGINT); 

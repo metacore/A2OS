@@ -41,6 +41,7 @@ VAR
 	PROCEDURE ^ Watch*(context: Commands.Context); 
 	PROCEDURE ^ RenameExtension*(context: Commands.Context); 
 	PROCEDURE ^ IsDelimiter(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ DoFile*(context: Commands.Context); 
 	PROCEDURE ^ DoCommands*(context: Commands.Context); 
 	PROCEDURE ^ RemoveComments(VAR string: ARRAY OF CHAR; length: LONGINT); 
 	PROCEDURE ^ Repeat*(context: Commands.Context); 

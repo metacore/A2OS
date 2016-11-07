@@ -29,8 +29,8 @@ VAR
 	PROCEDURE ^ SimulateImage*(context: Commands.Context); 
 	PROCEDURE ^ GetTimer(): HUGEINT; 
 	PROCEDURE ^ GetFreq(): HUGEINT; 
-	PROCEDURE ^ FrameReceived(hWnd: VfW.HWND; VAR lpVHdr: VfW.VHdr): User32.LResult; 
-	PROCEDURE ^ YieldCallback(hWnd: VfW.HWND): User32.LResult; 
+	PROCEDURE ^ {WINAPI} FrameReceived(hWnd: VfW.HWND; VAR lpVHdr: VfW.VHdr): User32.LResult; 
+	PROCEDURE ^ {WINAPI} YieldCallback(hWnd: VfW.HWND): User32.LResult; 
 	PROCEDURE ^ SnapshotFirstPossible*; 
 	PROCEDURE ^ Start*; 
 	PROCEDURE ^ Stop*; 

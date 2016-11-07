@@ -430,7 +430,7 @@ VAR
 	ValidateRect-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpRect: Rect):Kernel32.BOOL; 
 	GetConsoleWindow-: PROCEDURE {WINAPI}():LONGINT; 
 
-	PROCEDURE ^ EqualSize*(VAR a, b: Size): BOOLEAN; 
+	PROCEDURE ^ {WINAPI} EqualSize*(VAR a, b: Size): BOOLEAN; 
 	PROCEDURE ^ Init; 
 BEGIN
 END User32.

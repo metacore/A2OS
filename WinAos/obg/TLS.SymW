@@ -86,6 +86,7 @@ CONST
 	SessionHashtableSize = 1023; 
 	SessionCleanUpInterval = 60; 
 	DefaultSessionLifetime = 3600; 
+	DefaultSuitesNbr = 4; 
 TYPE 
 	SecurityParameters = OBJECT 
 	VAR 
@@ -212,6 +213,7 @@ TYPE
 		PROCEDURE ^ ChangeReadState; 
 		PROCEDURE ^ SetContext*(cxt: Context); 
 		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetDefaultPolicy*; 
 		PROCEDURE ^ SetConnection*(c: TCP.Connection); 
 		PROCEDURE ^ Accept*(VAR client: TCP.Connection; VAR res: LONGINT); 
 		PROCEDURE ^ Connect*; 
@@ -256,6 +258,9 @@ TYPE
 	END Connection; 
 VAR 
 	version: ARRAY 2 OF CHAR; 
+	defaultCipherPolicy: Policy; 
 
+	PROCEDURE ^ GetConnection*(): Connection; 
+	PROCEDURE ^ InitDefaults; 
 BEGIN
 END TLS.

@@ -6,7 +6,7 @@ TYPE
 	PROCEDURE ^ E*(VAR p: srBase.PT; VAR ijk: srBase.IPT); 
 	PROCEDURE ^ Eprime(VAR in: ARRAY OF SREAL; VAR out: ARRAY OF INTEGER); 
 	PROCEDURE ^ E2*(in: srBase.PT; VAR out: srBase.IPT); 
-	PROCEDURE  - ROUND*(x: SREAL; VAR y: LONGINT);
+	PROCEDURE {FingerPrint(-1605997811)}  - ROUND*(x: SREAL; VAR y: LONGINT);
 	CODE {SYSTEM.i386, SYSTEM.FPU}
        POP EAX
        FLD DWORD [EBP]

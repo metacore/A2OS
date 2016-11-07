@@ -158,7 +158,7 @@ VAR
 	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
-	PROCEDURE  - StackBottom*(): LONGINT;
+	PROCEDURE {FingerPrint(435550672)}  - StackBottom*(): LONGINT;
 	CODE {SYSTEM.i386}
 	DB	064H
 	DB	08BH
@@ -169,12 +169,12 @@ VAR
 	DB	000H
 
 	END StackBottom; 
-	PROCEDURE ^ ExcpFrmHandler(VAR excpRec: Kernel32.ExceptionRecord; excpFrame: Kernel32.ExcpFrmPtr; VAR context: Kernel32.Context; dispatch: LONGINT): LONGINT; 
-	PROCEDURE  - GetCur;
+	PROCEDURE ^ {WINAPI} ExcpFrmHandler(VAR excpRec: Kernel32.ExceptionRecord; excpFrame: Kernel32.ExcpFrmPtr; VAR context: Kernel32.Context; dispatch: LONGINT): LONGINT; 
+	PROCEDURE {FingerPrint(-974582836)}  - GetCur;
 	CODE
 	END GetCur; 
 	PROCEDURE ^ GetCurrent(): Kernel32.ExcpFrmPtr; 
-	PROCEDURE  - SetCur;
+	PROCEDURE {FingerPrint(-974582842)}  - SetCur;
 	CODE
 	END SetCur; 
 	PROCEDURE ^ SetCurrent(cur: Kernel32.ExcpFrmPtr); 
@@ -184,7 +184,7 @@ VAR
 	PROCEDURE ^ Remove(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ WriteType(obj: ANY); 
 	PROCEDURE ^ terminate(t: Process); 
-	PROCEDURE ^ Wrapper(lpParameter: ANY): LONGINT; 
+	PROCEDURE ^ {WINAPI} Wrapper(lpParameter: ANY): LONGINT; 
 	PROCEDURE ^ FinalizeProcess(t: ANY); 
 	PROCEDURE ^ TerminateProc; 
 	PROCEDURE ^ NewProcess(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject; VAR new: Process); 

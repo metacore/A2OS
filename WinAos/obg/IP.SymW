@@ -51,7 +51,7 @@ VAR
 	PROCEDURE ^ InterfaceByDstIP*(dst: Adr): Interface; 
 	PROCEDURE ^ InitInterfaces(hostname: ARRAY OF CHAR; VAR res: LONGINT); 
 	PROCEDURE ^ Init; 
-	PROCEDURE  - SwapEndian(VAR adr: LONGINT);
+	PROCEDURE {FingerPrint(1732388717)}  - SwapEndian(VAR adr: LONGINT);
 	CODE
 	END SwapEndian; 
 BEGIN

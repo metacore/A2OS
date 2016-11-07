@@ -297,7 +297,7 @@ VAR
 	PROCEDURE ^ Copy2(ladr, dadr, linc, dinc, len: LONGINT); 
 	PROCEDURE ^ Copy1(ladr, dadr, linc, dinc, len: LONGINT); 
 	PROCEDURE ^ Copy8(ladr, dadr, linc, dinc, len: LONGINT); 
-	PROCEDURE  - MoveB*(srcadr, destadr, len: LONGINT);
+	PROCEDURE {FingerPrint(1857348743)}  - MoveB*(srcadr, destadr, len: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  len
 		MOV	EDI, [ESP+4]	;  destadr

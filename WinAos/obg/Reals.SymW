@@ -24,7 +24,7 @@ VAR
 	PROCEDURE ^ NaNL*(h, l: LONGINT): LONGREAL; 
 	PROCEDURE ^ FCR*(): SET; 
 	PROCEDURE ^ SetFCR*(s: SET); 
-	PROCEDURE  - Round*(x: REAL): LONGINT;
+	PROCEDURE {FingerPrint(-2082488222)}  - Round*(x: REAL): LONGINT;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 	FLD DWORD [ESP]
 	FISTP DWORD [ESP]	; store integer using current rounding mode
@@ -32,7 +32,7 @@ VAR
 	POP EAX	; return value
 
 	END Round; 
-	PROCEDURE  - RoundL*(x: LONGREAL): LONGINT;
+	PROCEDURE {FingerPrint(-433597060)}  - RoundL*(x: LONGREAL): LONGINT;
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 	FLD QWORD [ESP]
 	FISTP DWORD [ESP]	; store integer using current rounding mode

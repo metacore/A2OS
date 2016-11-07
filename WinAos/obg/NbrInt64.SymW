@@ -11,7 +11,7 @@ TYPE
 VAR 
 	MinNbr-, MaxNbr-, One, Two: Integer; 
 
-	PROCEDURE  - Compare(): NbrInt32.Integer;
+	PROCEDURE {FingerPrint(-1109347231)}  - Compare(): NbrInt32.Integer;
 	CODE
 	END Compare; 
 	OPERATOR ^ ">"-(a, b: Integer): BOOLEAN; 

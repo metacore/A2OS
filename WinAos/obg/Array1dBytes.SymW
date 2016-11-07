@@ -11,7 +11,7 @@ TYPE
 
 	QWord* = ARRAY 8 OF SYSTEM.BYTE; 
 
-	PROCEDURE  - AdrCheck*(adr, lower, size: LONGINT);
+	PROCEDURE {FingerPrint(-1807882291)}  - AdrCheck*(adr, lower, size: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper
 		MOV	EBX, [ESP+4]	;  lower
@@ -30,7 +30,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	
 	END AdrCheck; 
-	PROCEDURE  - RangeCheck*(offset, len, upper: LONGINT);
+	PROCEDURE {FingerPrint(-712869057)}  - RangeCheck*(offset, len, upper: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper
 		MOV	EBX, [ESP+4]	;  len
@@ -54,7 +54,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	
 	END RangeCheck; 
-	PROCEDURE  - RangeCheck2*(x, y, w, h, width, height: LONGINT);
+	PROCEDURE {FingerPrint(1427773561)}  - RangeCheck2*(x, y, w, h, width, height: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper = height
 		MOV	EBX, [ESP+8]	;  len = h
@@ -97,7 +97,7 @@ TYPE
 		ADD	ESP, 24	;  adjust stack pointer(inline procedure!)
 	
 	END RangeCheck2; 
-	PROCEDURE  - PatRangeCheck*(offset, step, piecelen, pieces, upper: LONGINT);
+	PROCEDURE {FingerPrint(2123246868)}  - PatRangeCheck*(offset, step, piecelen, pieces, upper: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP]	;  upper
 		MOV	EDX, [ESP+4]	;  pieces
@@ -139,7 +139,7 @@ TYPE
 		ADD	ESP, 20	;  adjust stack pointer(inline procedure!)
 	
 	END PatRangeCheck; 
-	PROCEDURE  - MoveB*(srcadr, destadr, len: LONGINT);
+	PROCEDURE {FingerPrint(1857348743)}  - MoveB*(srcadr, destadr, len: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  len
 		MOV	EDI, [ESP+4]	;  destadr

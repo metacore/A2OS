@@ -519,6 +519,7 @@ TYPE
 		firstParameter-, lastParameter-: Parameter; 
 		numberParameters-: LONGINT; 
 		returnParameter-: Parameter; 
+		selfParameter-: Parameter; 
 		isDelegate-, isInterrupt-, noPAF-, noReturn-: BOOLEAN; 
 		pcOffset-: LONGINT; 
 		callingConvention-: CallingConvention; 
@@ -537,6 +538,7 @@ TYPE
 		PROCEDURE ^ SetStackAlignment*(alignment: LONGINT); 
 		PROCEDURE ^ SetParametersOffset*(ofs: LONGINT); 
 		PROCEDURE ^ SetReturnParameter*(parameter: Parameter); 
+		PROCEDURE ^ SetSelfParameter*(parameter: Parameter); 
 		PROCEDURE ^ SetCallingConvention*(cc: CallingConvention); 
 		PROCEDURE ^ AddParameter*(p: Parameter); 
 		PROCEDURE ^ RevertParameters*; 
@@ -1031,11 +1033,13 @@ TYPE
 		ownerType-: Type; 
 		untraced-: BOOLEAN; 
 		movable-: BOOLEAN; 
+		selfParameter-: BOOLEAN; 
 
 		PROCEDURE ^  & InitParameter(position: Position; ownerType: Type; name: Identifier; kind: LONGINT); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetUntraced*(untraced: BOOLEAN); 
 		PROCEDURE ^ SetMoveable*(movable: BOOLEAN); 
+		PROCEDURE ^ SetSelfParameter*(b: BOOLEAN); 
 		PROCEDURE ^ SetDefaultValue*(e: Expression); 
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ SetKind*(kind: LONGINT); 
@@ -1451,6 +1455,7 @@ TYPE
 		numberVariables-: LONGINT; 
 		firstProcedure-, lastProcedure-: Procedure; 
 		numberProcedures-: LONGINT; 
+		procedures-: ProcedureList; 
 		outerScope-: Scope; 
 		nextScope-: Scope; 
 		ownerModule-: Module; 
@@ -1467,6 +1472,7 @@ TYPE
 		PROCEDURE ^ PushVariable*(v: Variable); 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 
 		PROCEDURE ^ AddProcedure*(p: Procedure); 
+		PROCEDURE ^ AddProcedureDeclaration*(p: Procedure); 
 		PROCEDURE ^ FindProcedure*(identifier: Identifier): Procedure; 
 		PROCEDURE ^ FindMethod*(number: LONGINT): Procedure; 
 		PROCEDURE ^ Level*(): LONGINT; 
@@ -1597,6 +1603,18 @@ TYPE
 		PROCEDURE ^ SetSymbol*(index: LONGINT; expression: Symbol); 
 		PROCEDURE ^ RemoveSymbol*(i: LONGINT); 
 	END SymbolList; 
+
+	ProcedureList* = OBJECT 
+	VAR 
+		list: Basic.List; 
+
+		PROCEDURE ^  & InitList*; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ AddProcedure*(d: Procedure); 
+		PROCEDURE ^ GetProcedure*(index: LONGINT): Procedure; 
+		PROCEDURE ^ SetProcedure*(index: LONGINT; expression: Procedure); 
+		PROCEDURE ^ RemoveProcedure*(i: LONGINT); 
+	END ProcedureList; 
 VAR 
 	invalidIdentifier-: Identifier; 
 	invalidQualifiedIdentifier-: QualifiedIdentifier; 

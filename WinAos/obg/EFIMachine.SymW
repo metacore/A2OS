@@ -8,7 +8,7 @@ MODULE EFIMachine;
 	PROCEDURE ^ Portout8*(port: LONGINT; val: CHAR); 
 	PROCEDURE ^ Portout16*(port: LONGINT; val: INTEGER); 
 	PROCEDURE ^ Portout32*(port: LONGINT; val: LONGINT); 
-	PROCEDURE  - GetParameter(offset: LONGINT): LONGINT;
+	PROCEDURE {FingerPrint(-1732093645)}  - GetParameter(offset: LONGINT): LONGINT;
 	CODE
 	END GetParameter; 
 BEGIN

@@ -253,7 +253,7 @@ VAR
 	PROCEDURE ^ HandleFocus(win: Window; uMsg: LONGINT; wParam: User32.WParam); 
 	PROCEDURE ^ Add(disp: Window; noView: BOOLEAN); 
 	PROCEDURE ^ SetupWin(win: Window); 
-	PROCEDURE ^ DummyProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} DummyProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ ChangeCursor; 
 	PROCEDURE ^ SetCursor(hCursor: User32.HCursor); 
 	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
@@ -273,7 +273,7 @@ VAR
 	PROCEDURE ^ Restore(win: Window); 
 	PROCEDURE ^ PosChanging(win: Window; lParam: User32.LParam); 
 	PROCEDURE ^ WindowHandler(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
-	PROCEDURE ^ WindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} WindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ GetDC(win: Window); 
 	PROCEDURE ^ InstallW(win: Window; ctrl: BOOLEAN); 
 	PROCEDURE ^ Init(win: Window); 
@@ -281,8 +281,8 @@ VAR
 	PROCEDURE ^ UnregisterClasses; 
 	PROCEDURE ^ FirstWindow(): Window; 
 	PROCEDURE ^ CreateWin(create: CreateStruct); 
-	PROCEDURE ^ ControlWindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
-	PROCEDURE ^ UnregisterControlWinClass; 
+	PROCEDURE ^ {WINAPI} ControlWindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} UnregisterControlWinClass; 
 	PROCEDURE ^ InitMod; 
 	PROCEDURE ^ DisableCursor*; 
 	PROCEDURE ^ InitBMI; 

@@ -170,7 +170,6 @@ TYPE
 					n.finalizer(n.objStrong)	(* may acquire locks *)
 				END;
 			END;
-			Machine.ReleaseGC
 		END
 	END FinalizerCaller;
 	
@@ -368,7 +367,6 @@ TYPE
 				Machine.Release(Machine.Objects);
 				ResumeActivities;
 				finalizerCaller.Activate;
-
 				
 			END;
 		END SetgcOngoing;
@@ -410,12 +408,18 @@ TYPE
 
 	(*---------------------   create,  lock,  await,  unlock   -------------------------*)
 	
-	PROCEDURE InitProtHeader( hdr: ObjectHeader );
+	(* initialize the ObjectHeader, requires lockMutex temporarily *)
+	PROCEDURE InitProtHeader( hdr: ObjectHeader);
 	VAR lock: LockT;
 	BEGIN
+		(* we cannot hold the lockMute here because allocation can trigger the GC that requires the lock when activating the finalizers *)
 		NEW(lock);
-		hdr.lock := lock;
-		lock.mtx := Unix.MtxInit( 0 );  lock.enter := Unix.ConInit( 0 );  hdr.lockedBy := NIL;  
+		Unix.MtxLock(lockMutex);
+		IF hdr.lock = NIL THEN
+			hdr.lock := lock;
+			lock.mtx := Unix.MtxInit( 0 );  lock.enter := Unix.ConInit( 0 );  hdr.lockedBy := NIL; 
+		END;
+		Unix.MtxUnlock(lockMutex);
 	END InitProtHeader;
 	
 	
@@ -423,7 +427,8 @@ TYPE
 	VAR p: Process;  hdr: ObjectHeader;
 	BEGIN
 		Unix.MtxLock( createProcess );
-		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  InitProtHeader( hdr );
+		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  
+		InitProtHeader( hdr );
 		IF priority = 0 THEN  priority := Normal  END;
 		NEW( p, obj, body, priority, flags, stacksize ) ;	(* execute BodyStarter as new (posix or solaris) thread *)
 		Unix.MtxUnlock( createProcess );
@@ -439,9 +444,7 @@ TYPE
 		p.mode := AwaitingLock;
 
 		(*! we might want to replace the lock mutex by a lock free construct *)
-		Unix.MtxLock(lockMutex);
-		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
-		Unix.MtxUnlock(lockMutex);
+		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;		
 		lock := S.VAL(LockT, hdr.lock);
 		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO

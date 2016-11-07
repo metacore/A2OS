@@ -313,7 +313,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				RETURN FALSE;
 			END;
 
-			NEW (fingerPrinter, module.system);
+			NEW (fingerPrinter);
 			Files.OpenWriter (writer, file, 0);
 			IF ExportModule (module(Sections.Module)) THEN
 				writer.Update;

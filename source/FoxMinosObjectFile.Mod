@@ -547,7 +547,7 @@ TYPE
 	BEGIN
 		error := FALSE;
 		moduleScope := module.module.moduleScope;
-		NEW(fingerprinter,module.system);
+		NEW(fingerprinter);
 		MakeSectionOffsets(module,dataSize,codeSize,bodyOffset,code); (* --> all sections are now assembled as one piece in code *)
 		ObjectFile(bodyOffset);
 		w.Update;

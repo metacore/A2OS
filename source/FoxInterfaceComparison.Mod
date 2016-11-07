@@ -148,7 +148,7 @@ CONST
 		Global.ModuleFileName(module.name,module.context,fname);
 		importedModule := symbolFileFormat.Import(fname,importCache);
 
-		NEW(fingerprinter,symbolFileFormat.system);
+		NEW(fingerprinter);
 		IF importedModule # NIL THEN
 			CompareScopes(module.moduleScope,importedModule.moduleScope);
 			IF importCache # NIL THEN SemanticChecker.RemoveModuleFromCache(importCache, importedModule) END;

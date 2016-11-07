@@ -38,6 +38,8 @@ CONST
 	StringRealtime* = "REALTIME";
 	StringDynamic* = "DYNAMIC";
 	
+	StringFingerprint*="FingerPrint";
+	
 	StringInstructionWidth*="InstructionWidth";
 	StringDataMemorySize*= "DataMemorySize";
 	StringCodeMemorySize*= "CodeMemorySize";
@@ -188,7 +190,7 @@ VAR
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,OberonName-,ArrayBaseName-,RecordBodyName-,ModuleBodyName-,
 	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
-	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameDataMemorySize-, NameCodeMemorySize-
+	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
 
@@ -1718,6 +1720,7 @@ TYPE
 		NameDisposable := SyntaxTree.NewIdentifier(StringDisposable);
 		NameUnchecked := SyntaxTree.NewIdentifier(StringUnchecked);
 		NameUncooperative := SyntaxTree.NewIdentifier(StringUncooperative);
+		NameFingerprint := SyntaxTree.NewIdentifier(StringFingerprint);
 
 		(* types *)
 		Boolean8 := SyntaxTree.NewBooleanType(8);

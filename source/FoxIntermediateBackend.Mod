@@ -1356,7 +1356,7 @@ TYPE
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
 			procedureResultDesignator := NIL;
-			NEW(fingerPrinter, system);
+			NEW(fingerPrinter);
 			NEW(temporaries);
 			currentIsInline := FALSE;
 			NeedDescriptor := FALSE;
@@ -11644,7 +11644,7 @@ TYPE
 			END Export;
 			
 		BEGIN
-			NEW(fingerPrinter, module.system);
+			NEW(fingerPrinter);
 			NEW(poolMap, 64);
 			(* this is the name pool private to the export table -- it is sorted and should not be mixed / used for other names in a module *)
 			namePool := Block("Heaps","SystemBlockDesc",".@NamePool",namePoolOffset); 

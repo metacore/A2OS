@@ -2,7 +2,7 @@ MODULE FoxPrintout; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler Module Outpu
 (* (c) fof ETHZ 2009 *)
 
 IMPORT
-	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Streams, D:=Debugging, SYSTEM;
+	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, FingerPrinter := FoxFingerPrinter, Streams, D:=Debugging, SYSTEM;
 
 CONST
 	(* print modes *)
@@ -18,6 +18,7 @@ TYPE
 		useCase: BOOLEAN; (* TRUE to enable case conversion in "Identifier" *)
 
 		alertCount, commentCount: LONGINT;
+		fingerPrinter:FingerPrinter.FingerPrinter;
 
 		PROCEDURE Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
 		VAR ch: CHAR; i: LONGINT;
@@ -1193,7 +1194,7 @@ TYPE
 		END Access;
 
 		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
-		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN;
+		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.FingerPrint;
 		BEGIN
 			IF Visible(x) THEN
 				Indent;
@@ -1217,6 +1218,17 @@ TYPE
 				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
 				IF (x.fixed) THEN Value(Global.NameFixed, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
+				END;
+				IF type.callingConvention = SyntaxTree.WinAPICallingConvention THEN
+					Flag(Global.NameWinAPI,first)
+				ELSIF type.callingConvention = SyntaxTree.CCallingConvention THEN
+					Flag(Global.NameC,first)
+				END;
+
+				IF x.isInline & (mode = SymbolFile) THEN
+					IF fingerPrinter = NIL THEN NEW(fingerPrinter) END;
+					fp := fingerPrinter.SymbolFP(x);
+					Value(Global.NameFingerprint, fp.shallow, first) 
 				END;
 				FlagEnd(first);
 

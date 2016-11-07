@@ -133,14 +133,13 @@ TYPE
 	VAR
 		fp-: LONGINT; (* temporary fingerprint for values etc. *)
 		fingerprint: FingerPrint;
-		system-: Global.System;
 		deep: BOOLEAN; (* public / private field of FP needed ? *)
 		traceLevel: LONGINT;
 
 		level: LONGINT;
 
-		PROCEDURE & InitFingerPrinter*(system: Global.System);
-		BEGIN fp:= 0; SELF.system := system; deep := FALSE; traceLevel := 0;
+		PROCEDURE & InitFingerPrinter*();
+		BEGIN fp:= 0; deep := FALSE; traceLevel := 0;
 		END InitFingerPrinter;
 		(** types *)
 
@@ -449,23 +448,27 @@ TYPE
 					D.Str("TypeName  ");
 					D.Str0(x.scope.ownerModule.name);
 				END;
-				FPName(fp,x.scope.ownerModule.name);
 				typeDeclaration := x.typeDeclaration;
-				IF (typeDeclaration # NIL) & (typeDeclaration.declaredType.resolved # x) THEN
-					(* in record type: pointer to type declaration of a pointer *)
-					typeDeclaration := NIL
-				END;
-				IF (typeDeclaration # NIL) & (typeDeclaration.scope # NIL)THEN
-					FPName(fp,typeDeclaration.name);
-					IF Trace THEN
-						D.Str(".");
-						D.Str0(typeDeclaration.name);
+				IF(typeDeclaration # NIL) & (typeDeclaration.access * SyntaxTree.Public # {}) THEN 
+					FPName(fp,x.scope.ownerModule.name);
+					IF (typeDeclaration.declaredType.resolved # x) THEN
+						(* in record type: pointer to type declaration of a pointer *)
+						typeDeclaration := NIL
 					END;
-				ELSIF (typeDeclaration # NIL) & (typeDeclaration.scope = NIL) THEN
-					D.Str("typedeclaration without scope: "); D.Str0(x.typeDeclaration.name); D.Int(x.typeDeclaration.position.start,5); D.Ln;
-					D.Update;
+					IF (typeDeclaration # NIL) & (typeDeclaration.scope # NIL)THEN
+						FPName(fp,typeDeclaration.name);
+						IF Trace THEN
+							D.Str(".");
+							D.Str0(typeDeclaration.name);
+						END;
+					ELSIF (typeDeclaration # NIL) & (typeDeclaration.scope = NIL) THEN
+						D.Str("typedeclaration without scope: "); D.Str0(x.typeDeclaration.name); D.Int(x.typeDeclaration.position.start,5); D.Ln;
+						D.Update;
+					ELSE
+						FPNumber(fp,0);
+					END;
 				ELSE
-					FPNumber(fp,0);
+					FPNumber(fp, 0);
 				END;
 				IF Trace THEN
 					D.Str(", fp = "); D.Hex(fp,-8); D.Ln;

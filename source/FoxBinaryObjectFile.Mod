@@ -2242,7 +2242,7 @@ TYPE
 
 		IF Trace THEN module.Dump(D.Log);D.Ln; D.Update; END;
 
-		NEW(fingerprinter,module.system);
+		NEW(fingerprinter);
 		(* module.module.name,moduleName);*)
 		Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 		NEW(crc32);

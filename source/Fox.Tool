@@ -13,13 +13,13 @@ Compiler.Compile --noInterfaceCheck
 
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
-	FoxFormats.Mod FoxPrintout.Mod
+	FoxFormats.Mod 	FoxFingerPrinter.Mod FoxPrintout.Mod
 	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
 	FoxBackend.Mod FoxSections.Mod 
 	FoxFrontend.Mod 
 	FoxCompiler.Mod 
 	FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-	FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+  	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod

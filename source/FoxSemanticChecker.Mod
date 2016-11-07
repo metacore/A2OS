@@ -6820,6 +6820,7 @@ TYPE
 			value: LONGINT;
 			modifiers: SyntaxTree.Modifier; recentIsRealtime, recentIsBodyProcedure: BOOLEAN;
 			position: Position;
+			fp: SyntaxTree.FingerPrint;
 		BEGIN
 			IF Trace THEN D.Str("VisitProcedure "); D.Str0(procedure.name);  D.Ln;  END;
 			IF IsOberonInline(procedure) THEN
@@ -6871,6 +6872,12 @@ TYPE
 				IF HasFlag(modifiers,Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
 				IF HasFlag(modifiers,Global.NameFinal,position) THEN procedure.SetFinal(TRUE)
 				ELSIF HasFlag(modifiers,Global.NameAbstract,position) THEN procedure.SetAbstract(TRUE)
+				END;
+				IF HasValue(modifiers, Global.NameFingerprint, position, value) THEN 
+					SyntaxTree.InitFingerPrint(fp);
+					fp.shallow := value;
+					fp.shallowAvailable := TRUE;
+					procedure.SetFingerPrint(fp);
 				END;
 
 				CheckModifiers(modifiers, TRUE);

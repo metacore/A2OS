@@ -7982,7 +7982,8 @@ TYPE
 						IF (size # 1) THEN
 							Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
 						END;
-						Emit(Add(position,reg,reg,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize))));
+						AddInt(reg, reg, IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize)));
+						(*Emit(Add(position,reg,reg,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize))));*)
 						Emit(Push(position,reg));
 						ReleaseIntermediateOperand(reg);
 						CallThis(position,"Runtime","New", 1);
@@ -11035,10 +11036,12 @@ TYPE
 		
 		PROCEDURE AddPointer(section: IntermediateCode.Section; offset: LONGINT);
 		BEGIN
-			NamedSymbol(modulePointerSection, section.name, NIL, 0, offset);
-			INC(modulePointers);
-			(* optimization hint: this can be done once at the end but for consistency of the first tests we keep it like this *)
-			PatchSize(modulePointerSection, modulePointerSizePC, modulePointers); 
+			IF ~implementationVisitor.backend.cooperative THEN
+				NamedSymbol(modulePointerSection, section.name, NIL, 0, offset);
+				INC(modulePointers);
+				(* optimization hint: this can be done once at the end but for consistency of the first tests we keep it like this *)
+				PatchSize(modulePointerSection, modulePointerSizePC, modulePointers); 
+			END;
 		END AddPointer;
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
@@ -12182,17 +12185,20 @@ TYPE
 						Global.GetSymbolSegmentedName(typeDeclaration,name);
 						Basic.AppendToSegmentedName(name,".@Info");
 						s := module.allSections.FindByName(name); 
-						PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
-
-						NScope(declared.recordScope, pos);
+						IF s # NIL THEN (* does not work for coop *)
+							PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
+							NScope(declared.recordScope, pos);
+						END;
 					|declared: SyntaxTree.CellType DO
 						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
 						Symbol(section, s,  0, offset);
 						Global.GetSymbolSegmentedName(typeDeclaration,name);
 						Basic.AppendToSegmentedName(name,".@Info");
 						s := module.allSections.FindByName(name); 
-						PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
-						NScope(declared.cellScope, pos);
+						IF s # NIL THEN
+							PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
+							NScope(declared.cellScope, pos);
+						END;
 					ELSE
 						Address(section, 0);
 					END;					
@@ -12251,9 +12257,11 @@ TYPE
 				NEW(indirectTypes, 32); 
 				ArrayBlock(section,sizePC,"", FALSE);
 				
-				startPC := section.pc;
-				NModule(module.module, -1);
-				PatchArray(section,sizePC,CurrentIndex());
+				IF ~implementationVisitor.backend.cooperative THEN
+					startPC := section.pc;
+					NModule(module.module, -1);
+					PatchArray(section,sizePC,CurrentIndex());
+				END;
 			END References;
 			
 		(*
@@ -12639,7 +12647,9 @@ TYPE
 			name := "Heaps.AnyPtr";
 			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
 			(* set base pointer *)
-			NamedSymbolAt(procTableSection, procTableSectionOffset -1, name, NIL, 0, offset);
+			IF procTableSectionOffset > 0 THEN (*? for coop ? *)
+				NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
+			END;
 
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);
 			ArrayBlock(emptyArraySection,temp,"", FALSE);

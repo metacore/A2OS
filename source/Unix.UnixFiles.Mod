@@ -180,9 +180,9 @@ TYPE
 		PROCEDURE ByStat(CONST stat: Unix.Status): File;
 		BEGIN{EXCLUSIVE}
 			ssearch.Init(stat); 
-			oldFiles.Enumerate(ssearch.EnumFile); 
+			oldFiles.EnumerateN(ssearch.EnumFile); 
 			IF ssearch.found = NIL THEN
-				newFiles.Enumerate(ssearch.EnumFile)
+				newFiles.EnumerateN(ssearch.EnumFile)
 			END;
 			
 			IF TraceCollection IN Trace THEN 

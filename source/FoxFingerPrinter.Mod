@@ -449,7 +449,7 @@ TYPE
 					D.Str0(x.scope.ownerModule.name);
 				END;
 				typeDeclaration := x.typeDeclaration;
-				IF(typeDeclaration # NIL) & (typeDeclaration.access * SyntaxTree.Public # {}) THEN 
+				IF(typeDeclaration # NIL) & (typeDeclaration.access # SyntaxTree.Hidden) THEN 
 					FPName(fp,x.scope.ownerModule.name);
 					IF (typeDeclaration.declaredType.resolved # x) THEN
 						(* in record type: pointer to type declaration of a pointer *)

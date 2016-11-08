@@ -315,6 +315,7 @@ END GetInit;
 PROCEDURE Initialize-;
 CONST Channel0 = 0; RateGenerator = 4;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity (NIL);
 	CPU.Initialize;
 	ACPI.Initialize;
 	Timer.Initialize;

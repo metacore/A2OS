@@ -81,8 +81,7 @@ TYPE
 	
 	ProcedureDescPointer* = POINTER TO ProcedureDesc;
 	ProcedureDesc*= RECORD
-		pcFrom-, pcLimit-, pcValid-, pcEnd-: ADDRESS; 
-		refsOffset-: SIZE;
+		pcFrom-, pcLimit-: ADDRESS; 
 		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
 	END;
 	
@@ -97,8 +96,8 @@ TYPE
 			sb*: ADDRESS; (* reference address between constants and local variables *)
 			entry*: POINTER TO ARRAY OF ADDRESS;
 			command*: POINTER TO ARRAY OF Command;
-			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
-			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
+			ptrAdr*: POINTER TO ARRAY OF ADDRESS;
+			typeInfo*: POINTER TO ARRAY OF TypeDesc;	(* traced explicitly in FindRoots *)
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
 			procTable*: ProcedureDescs; (* information inserted by loader, removed after use in Publish *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
@@ -189,12 +188,12 @@ BEGIN
 			Trace.Ln;
 			Machine.Release(Machine.TraceOutput);
 		END;
+		Unregister(m);
 		m.published := TRUE;
 		m.next := root; root := m;
 		m.refcnt := 0;
 		SortExceptionTable(m.exTable);
 		SortProcedureDescs(m.procTable);
-		MergeProcedureDescs(m.procTable);
 
 		IF m.module # NIL THEN
 			FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
@@ -214,62 +213,6 @@ BEGIN
 		module.init := TRUE;
 	END;
 END Initialize;
-
-	VAR callagain: BOOLEAN;
-
-	PROCEDURE Initialize0*(module: Module);
-	VAR new: BOOLEAN;
-	BEGIN
-		(*TRACE(module.name);*)
-		(* module MUST have been removed from register list and must not have been initialized yet *)
-		ASSERT(module.next = NIL);
-		Publish (module, new);
-		callagain := FALSE;
-		IF new THEN
-			IF module.name = "Objects" THEN
-				callagain := TRUE;
-				module.init := TRUE;
-			END;
-			(*
-			Trace.Memory(SYSTEM.VAL(ADDRESS, module), 256);
-			TRACE(module, module.name, module.body);
-			TRACE(module);
-			TRACE(ADDRESS OF module.next);
-			TRACE(ADDRESS OF module.name);
-			TRACE(ADDRESS OF module.init);
-			TRACE(ADDRESS OF module.published);
-			TRACE(ADDRESS OF module.body);
-			TRACE(ADDRESS OF module.refcnt);
-			TRACE(ADDRESS OF module.sb);
-			TRACE(ADDRESS OF module.entry);
-			TRACE(ADDRESS OF module.command); 
-			TRACE(ADDRESS OF module.ptrAdr);
-			TRACE(ADDRESS OF module.typeInfo);
-			TRACE(ADDRESS OF module.module);
-			TRACE(ADDRESS OF module.procTable);
-			TRACE(ADDRESS OF module.ptrTable);
-			TRACE(ADDRESS OF module.data); 
-			TRACE(ADDRESS OF module.code);
-			TRACE(ADDRESS OF module.staticTypeDescs);
-			TRACE(ADDRESS OF module.refs);
-			TRACE(ADDRESS OF module.export);
-			TRACE(ADDRESS OF module.term);
-			TRACE(ADDRESS OF module.exTable);
-			TRACE(ADDRESS OF module.noProcs);
-			TRACE(ADDRESS OF module.firstProc);
-			TRACE(ADDRESS OF module.maxPtrs);
-			TRACE(ADDRESS OF module.crc);
-			TRACE(ADDRESS OF module.body);
-			*)
-						
-			IF module.body # NIL THEN module.body END;
-			IF callagain THEN
-				PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
-			ELSE
-				module.init := TRUE;
-			END;
-		END;
-	END Initialize0;
 
 	(** Return the named module or NIL if it is not loaded yet. *)
 	PROCEDURE ModuleByName*(CONST name: ARRAY OF CHAR): Module;
@@ -370,45 +313,6 @@ END Initialize;
 	END SortExceptionTable;
 	
 		
-	(* sort and merge procedure descriptors with the global procedure desc array, replacing the global procedure array *)
-	PROCEDURE MergeProcedureDescs*(p: ProcedureDescs);
-	VAR n: ProcedureDescs;
-		i,j,k: LONGINT;
-	BEGIN
-		IF ~mayAllocate THEN RETURN END; 
-		IF (p = NIL) OR (LEN(p) = 0) THEN RETURN END; 
-		IF procedureDescriptors = NIL THEN 
-			procedureDescriptors := p;
-		ELSE
-			NEW(n, LEN(procedureDescriptors) + LEN(p));
-			k := 0; i := 0; j := 0;
-			FOR k := 0 TO LEN(n)-1 DO
-				IF (i<LEN(p)) & ((j=LEN(procedureDescriptors)) OR (p[i].pcFrom < procedureDescriptors[j].pcFrom)) THEN
-					n[k] := p[i]; INC(i);
-				ELSE
-					n[k] := procedureDescriptors[j]; INC(j);
-				END;
-			END;
-			procedureDescriptors := n;
-		END;
-	END MergeProcedureDescs;
-
-	(* remove sorted procedure descriptors from sorted global array *)
-	PROCEDURE RemoveProcedureDescs*(p: ProcedureDescs);
-	VAR i,j,k: LONGINT; n: ProcedureDescs;
-	BEGIN
-		IF ~mayAllocate THEN RETURN END; 
-		NEW(n, LEN(procedureDescriptors) - LEN(p));
-		i := 0; j := 0; k := 0; 
-		WHILE i < LEN(procedureDescriptors) DO 
-			IF (j < LEN(p)) & (procedureDescriptors[i] = p[j]) THEN INC(j);
-			ELSE n[k] := procedureDescriptors[i]; INC(k);
-			END;
-			INC(i); 
-		END;
-		procedureDescriptors := n;
-	END RemoveProcedureDescs;
-
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
 VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
@@ -622,7 +526,6 @@ BEGIN
 			(* do not clear m.data or m.code, as they are used in ThisModuleByAdr (for debugging). *)
 			(* do not clear m.refs, as they are used in Traps (for debugging). *)
 			m.export.dsc := NIL; m.exTable := NIL;
-			RemoveProcedureDescs(m.procTable);
 		ELSE
 			res := 1901;	(* can not free module in use *)
 			COPY(name, msg); Append(" reference count not zero", msg)
@@ -744,16 +647,41 @@ END Init;
 
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	register[registered] := module;
-	INC (registered);
+	IF register.first = NIL THEN
+		register.first := module;
+	ELSE
+		register.last.next := module;
+	END;
+	register.last := module;
 END Register;
+
+PROCEDURE Unregister(m: Module);
+VAR prev: Module;
+BEGIN
+	ASSERT(m#NIL);
+	IF register.first = NIL THEN RETURN
+	ELSIF m = register.first THEN
+		register.first := m.next;
+		IF register.first = NIL THEN register.last := NIL END;
+	ELSE
+		prev := register.first;
+		WHILE (prev.next # NIL) & (prev.next # m) DO
+			prev := prev.next;
+		END;
+		IF prev.next = m THEN 
+			prev.next := prev.next.next;
+			IF prev.next = NIL THEN register.last := prev END;
+		 END;
+	END;
+	m.next := NIL;
+END Unregister;
 
 PROCEDURE PublishRegisteredModules;
 VAR m {UNTRACED}: Module; module, import: SIZE;
 BEGIN
 	Activities.Call (Activities.Idle);
-	FOR module := 0 TO registered - 1 DO
-		m := register[module];
+	WHILE register.first # NIL DO
+		m := register.first;
 		IF m.module # NIL THEN
 			FOR import := 0 TO LEN (m.module) - 1 DO
 				Initialize (m.module[import]);

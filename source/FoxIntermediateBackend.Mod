@@ -12643,11 +12643,11 @@ TYPE
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
 			References(referenceSection);
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
-			ProcedureDescriptorArray(procTableSection, numberProcs);
-			name := "Heaps.AnyPtr";
-			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
-			(* set base pointer *)
-			IF procTableSectionOffset > 0 THEN (*? for coop ? *)
+			IF ~implementationVisitor.backend.cooperative THEN
+				ProcedureDescriptorArray(procTableSection, numberProcs);
+				name := "Heaps.AnyPtr";
+				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+				(* set base pointer *)
 				NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
 			END;
 

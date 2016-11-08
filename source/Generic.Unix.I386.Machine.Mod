@@ -5,7 +5,7 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = "Aos (rev.6640)";
+	Version = " A2 ";
 
 	DefaultObjectFileExtension* = ".Obj";
 	
@@ -977,7 +977,7 @@ END GetTimer;
 	BEGIN
 		standaloneAppl := FALSE;
 		
-		COPY( Unix.Version, version );  Append( version, Version );
+		COPY( Unix.Version, version );  Append( version, Version ); Append(version, S.Date);
 		timer0 := GetTimer( );  ticks := 0;
 		InitThreads;
 		InitLocks;

@@ -5,7 +5,7 @@ MODULE Machine;
 IMPORT SYSTEM, Trace, Kernel32;
 
 CONST
-	Version = "WinAos Revision 5614 (04.07.2014)";
+	Version = "WinAos (32bit) ";
 
 	DefaultConfigFile = "aos.ini";
 	DefaultGenericConfigFile = "aosg.ini";
@@ -533,6 +533,19 @@ BEGIN
 	fullName[j] := 0X;
 END ToExecutablePath;
 
+PROCEDURE Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR);
+VAR i,j: LONGINT;
+BEGIN
+	i := 0; 
+	WHILE(s[i] # 0X) DO INC(i) END;
+	j := 0;
+	WHILE (t[j] # 0X) DO
+		s[i] := t[j];
+		INC(i); INC(j);
+	END;
+	s[i] := 0X;
+END Append;
+
 PROCEDURE Init*;
 VAR vendor: Vendor; ver: LONGINT; hfile: Kernel32.HANDLE;
 BEGIN
@@ -543,6 +556,7 @@ BEGIN
 	boottime:=GetTimer();
 
 	COPY( Version, version );
+	Append(version, SYSTEM.Date);
 	CPUID(vendor, ver, features,features2);	 SetupSSE2Ext;
 	fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
 

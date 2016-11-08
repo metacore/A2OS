@@ -5,7 +5,7 @@ MODULE Machine;	(** AUTHOR "pjm"; PURPOSE "Bootstrapping, configuration and mach
 IMPORT SYSTEM, Trace;
 
 CONST
-	Version = "A2 Revision 5387 (23.08.2013)";
+	Version = "A2(I386) ";
 
 	MaxCPU* = 32;	(** maximum number of processors (up to 256) *)
 
@@ -3658,6 +3658,20 @@ CODE{SYSTEM.i386}
 	POP EAX
 END GetBootValue;
 
+PROCEDURE Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR);
+VAR i,j: LONGINT;
+BEGIN
+	i := 0; 
+	WHILE(s[i] # 0X) DO INC(i) END;
+	j := 0;
+	WHILE (t[j] # 0X) DO
+		s[i] := t[j];
+		INC(i); INC(j);
+	END;
+	s[i] := 0X;
+END Append;
+
+
 (* Init code called from OBL. EAX = boot table offset. ESI, EDI=initRegs. 2k stack is available. No trap handling. *)
 BEGIN
 	PushBootValues;
@@ -3670,11 +3684,12 @@ BEGIN
 	SYSTEM.PUT16(0472H, 01234H);	(* soft boot flag, for when we reboot *)
 	ReadBootTable(bootFlag);
 	InitTrace;
-	Trace.String("Machine: "); Trace.Blue;Trace.StringLn (Version); Trace.Default;
+	version := Version;
+	Append(version, SYSTEM.Date);
+	Trace.String("Machine: "); Trace.Blue;Trace.StringLn (version); Trace.Default;
 	CheckMemory;
 	SearchMP;
 	AllocateDMA;	(* must be called after SearchMP, as lowTop is modified *)
-	version := Version;
 	InitBoot;
 	InitProcessor;
 

@@ -11,7 +11,7 @@ IMPORT S := SYSTEM, Glue, Trace;
 
 
 CONST
-	Version* = "Linux";
+	Version* = "LinuxG32";
 
   	libcname* = "libc.so.6";
 	libmname* = "libm.so.6";

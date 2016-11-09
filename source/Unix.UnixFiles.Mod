@@ -220,15 +220,27 @@ TYPE
 
 
 				PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
-				VAR f: File;
+				VAR f: File; stat: Unix.Status;		
+					  res,err: LONGINT;
+					  path,nameonly: ARRAY 512 OF CHAR;
 				BEGIN {EXCLUSIVE}
 					(*AwaitFinalizingDone;*)
-					NEW( f, SELF );
-					f.workName := "";  COPY( name, f.registerName );
-					f.fd := NoDesc;  f.state := Create;  f.fsize := 0;  f.fpos := 0;
-					f.swapper := -1;   (*all f.buf[i] = NIL*)
-					f.key := NoKey;  f.fs := SELF;
-					RETURN f
+					
+					(*first check if the path actually exits first using fstat. fstat returns -1 and sets erno to ENOENT when a component of the path doesn't exist or the entire path is empty*)
+					Files.SplitPath(name,path, nameonly);
+					res:=Unix.stat( ADDRESSOF( path ), stat ) ;
+					err:=Unix.errno();
+					IF (name="") OR (path="") OR (res>=0) OR (err#Unix.ENOENT) THEN
+						NEW( f, SELF );
+						f.workName := "";  COPY( name, f.registerName );
+						f.fd := NoDesc;  f.state := Create;  f.fsize := 0;  f.fpos := 0;
+						f.swapper := -1;   (*all f.buf[i] = NIL*)
+						f.key := NoKey;  f.fs := SELF;
+						RETURN f;
+					ELSE				
+						Log.String( "UnixFileSystem.New0: file allocation failed. Probably a nonexistent path." );  Log.Ln;
+						RETURN NIL;
+					END;
 				END New0;
 				
 				
@@ -519,7 +531,8 @@ TYPE
 											
 					fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
 					done := fd >= 0;  errno := Unix.errno();
-					IF (~done & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})) THEN
+
+					IF ( (~done) & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})) THEN
 						REPEAT
 							fo := openfiles;  Kernel.GC;  WaitClose( fo );
 							fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr);  errno := Unix.errno();

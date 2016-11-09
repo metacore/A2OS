@@ -30,6 +30,5 @@ TYPE
 		PROCEDURE ^ Render*(img: Raster.Image; movingOnly: BOOLEAN); 
 		PROCEDURE ^ GetOwnerIndex*(x, y: LONGINT): LONGINT; 
 	END World; 
-
 BEGIN
 END W3dAbstractWorld.

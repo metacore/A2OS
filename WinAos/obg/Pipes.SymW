@@ -15,6 +15,5 @@ TYPE
 		PROCEDURE ^  & Init*(size: LONGINT); 
 		PROCEDURE ^ Close*; 
 	END Pipe; 
-
 BEGIN
 END Pipes.

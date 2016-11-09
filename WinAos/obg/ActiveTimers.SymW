@@ -14,6 +14,5 @@ TYPE
 		PROCEDURE ^ Finalize*; 
 	BEGIN{ACTIVE} 
 	END Timer; 
-
 BEGIN
 END ActiveTimers.

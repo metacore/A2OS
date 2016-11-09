@@ -52,6 +52,5 @@ TYPE
 		PROCEDURE ^ FlushCallback(pc: LONGINT); 
 		PROCEDURE ^ Error(pc: LONGINT; CONST msg: ARRAY OF CHAR); 
 	END ConstantPool; 
-
 BEGIN
 END PCARMCP.

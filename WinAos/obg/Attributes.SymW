@@ -31,6 +31,5 @@ TYPE
 		PROCEDURE ^ SetData*(object, data: ANY); 
 		PROCEDURE ^ Clear*; 
 	END Attributes; 
-
 BEGIN
 END Attributes.

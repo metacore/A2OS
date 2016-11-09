@@ -30,6 +30,5 @@ TYPE
 		PROCEDURE ^  & Init*(c: Commands.Context); 
 		PROCEDURE ^ Print*(num: LONGINT; CONST msg: ARRAY OF CHAR); 
 	END Message; 
-
 BEGIN
 END SVNOutput.

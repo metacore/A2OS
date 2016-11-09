@@ -10,6 +10,5 @@ TYPE
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^  & Init*; 
 	END RecursiveLock; 
-
 BEGIN
 END Example7.

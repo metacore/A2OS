@@ -13,6 +13,5 @@ TYPE
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
 		PROCEDURE ^ GetMac*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 	END HMac; 
-
 BEGIN
 END CryptoHMAC.

@@ -8,6 +8,5 @@ TYPE
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^  & Init*; 
 	END Semaphore; 
-
 BEGIN
 END Example1.

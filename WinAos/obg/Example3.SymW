@@ -8,6 +8,5 @@ TYPE
 		PROCEDURE ^ Tick*; 
 		PROCEDURE ^  & Init*; 
 	END Clock; 
-
 BEGIN
 END Example3.

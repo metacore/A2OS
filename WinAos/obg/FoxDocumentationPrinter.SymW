@@ -22,6 +22,5 @@ TYPE
 		PROCEDURE ^ TextElement*(textElement: Tree.TextElement); 
 		PROCEDURE ^ Text*(text: Tree.Text); 
 	END Printer; 
-
 BEGIN
 END FoxDocumentationPrinter.

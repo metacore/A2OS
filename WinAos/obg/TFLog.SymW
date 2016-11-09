@@ -34,6 +34,5 @@ TYPE
 		PROCEDURE ^ TimeStamp*; 
 		PROCEDURE ^ Close*; 
 	END Log; 
-
 BEGIN
 END TFLog.

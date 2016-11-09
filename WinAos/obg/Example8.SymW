@@ -8,6 +8,5 @@ TYPE
 		PROCEDURE ^ P*; 
 		PROCEDURE ^  & Init*(s: INTEGER); 
 	END Semaphore; 
-
 BEGIN
 END Example8.

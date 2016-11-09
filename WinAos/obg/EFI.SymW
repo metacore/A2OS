@@ -299,6 +299,5 @@ TYPE
 VAR 
 	imageHandle-: Handle; 
 	table-{UNTRACED} : POINTER TO SystemTable; 
-
 BEGIN
 END EFI.

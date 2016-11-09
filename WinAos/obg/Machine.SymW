@@ -1,7 +1,7 @@
 MODULE Machine;
 	IMPORT SYSTEM, Trace, Kernel32;
 CONST 
-	Version = \"WinAos Revision 5614 (04.07.2014)"\; 
+	Version = \"WinAos (32bit) "\; 
 	DefaultConfigFile = \"aos.ini"\; 
 	DefaultGenericConfigFile = \"aosg.ini"\; 
 	UserConfigFile = \"myaos.ini"\; 
@@ -156,6 +156,7 @@ VAR
 	PROCEDURE ^ SetupTraceName(VAR traceName: ARRAY OF CHAR); 
 	PROCEDURE ^ RemoveTraceFile; 
 	PROCEDURE ^ ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR); 
+	PROCEDURE ^ Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR); 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ Start; 
 	PROCEDURE ^ InitLocks; 

@@ -32,6 +32,5 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetError*(statusCode: LONGINT; CONST source: ARRAY OF CHAR; rc: LONGINT); 
 	END OdCond; 
-
 BEGIN
 END OdCond.

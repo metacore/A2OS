@@ -59,6 +59,5 @@ TYPE
 
 		PROCEDURE ^ Send*(m: Message; VAR result: LONGINT); 
 	END Sender; 
-
 BEGIN
 END Mail.

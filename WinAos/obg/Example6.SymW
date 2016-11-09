@@ -11,6 +11,5 @@ TYPE
 		PROCEDURE ^ EndWrite*; 
 		PROCEDURE ^  & Init*; 
 	END ReadersWritersScheduler; 
-
 BEGIN
 END Example6.

@@ -54,6 +54,5 @@ TYPE
 
 		PROCEDURE ^ Set*(object: ANY; VAR res: LONGINT); 
 	END DropObject; 
-
 BEGIN
 END WMDropTarget.

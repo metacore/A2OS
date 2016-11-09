@@ -33,6 +33,5 @@ TYPE
 		PROCEDURE ^ Uniform*(): REAL; 
 		PROCEDURE ^ Exp*(mu: REAL): REAL; 
 	END Sequence; 
-
 BEGIN
 END Random.

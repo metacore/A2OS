@@ -27,6 +27,5 @@ TYPE
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^  & Init*; 
 	END DiskScheduler; 
-
 BEGIN
 END Example5.

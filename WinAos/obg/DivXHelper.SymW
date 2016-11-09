@@ -72,6 +72,5 @@ TYPE
 		PROCEDURE ^ VldTableB16(code: LONGINT; VAR r: DT.VideoBuffer): DT.TabType; 
 		PROCEDURE ^ VldTableB17(code: LONGINT; VAR r: DT.VideoBuffer): DT.TabType; 
 	END VLD; 
-
 BEGIN
 END DivXHelper.

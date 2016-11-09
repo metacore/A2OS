@@ -58,6 +58,5 @@ TYPE
 		PROCEDURE ^ Add*(CONST key: ARRAY OF CHAR; value: ANY); 
 		PROCEDURE ^ GetKeys; 
 	END StringHashMap; 
-
 BEGIN
 END TFClasses.

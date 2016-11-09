@@ -85,6 +85,5 @@ TYPE
 		PROCEDURE ^ Enumerate*(): EventListenerArray; 
 		PROCEDURE ^ GetHandlerByName*(name: String): EventListener; 
 	END EventListenerList; 
-
 BEGIN
 END WMEvents.

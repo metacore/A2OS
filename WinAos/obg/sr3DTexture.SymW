@@ -35,6 +35,5 @@ TYPE
 
 		PROCEDURE ^  & new*(n, m: Name); 
 	END image3D2; 
-
 BEGIN
 END sr3DTexture.

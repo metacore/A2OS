@@ -62,6 +62,5 @@ TYPE
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ BuildPalette; 
 	END ColorSwatchPanel; 
-
 BEGIN
 END WMPopups.

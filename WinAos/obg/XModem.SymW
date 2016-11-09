@@ -81,6 +81,5 @@ TYPE
 		PROCEDURE ^ ReceiveData; 
 		PROCEDURE ^ Receive*(): LONGINT; 
 	END XMReceiver; 
-
 BEGIN
 END XModem.

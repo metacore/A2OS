@@ -11,6 +11,5 @@ TYPE
 		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR; VAR stream: Streams.Writer); 
 		PROCEDURE ^ Close*; 
 	END LogWindow; 
-
 BEGIN
 END MultiLogger.

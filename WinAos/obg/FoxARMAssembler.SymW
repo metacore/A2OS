@@ -16,6 +16,5 @@ TYPE
 		PROCEDURE ^ GetImmediateValue*(VAR immediateValue: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 	END Assembler; 
-
 BEGIN
 END FoxARMAssembler.

@@ -26,6 +26,5 @@ TYPE
 		PROCEDURE ^ Transform*(VAR p: Point): Point; 
 		PROCEDURE ^ TransformLength*(VAR p: Number): Number; 
 	END Matrix; 
-
 BEGIN
 END SVGMatrix.

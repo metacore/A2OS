@@ -96,6 +96,5 @@ TYPE
 		PROCEDURE ^ LoadAliasesFromFile(filename: ARRAY OF CHAR; critical: BOOLEAN); 
 	BEGIN{ACTIVE, SAFE} 
 	END Shell; 
-
 BEGIN
 END Shell.

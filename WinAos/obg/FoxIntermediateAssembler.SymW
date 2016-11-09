@@ -11,6 +11,5 @@ TYPE
 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 	END Assembler; 
-
 BEGIN
 END FoxIntermediateAssembler.

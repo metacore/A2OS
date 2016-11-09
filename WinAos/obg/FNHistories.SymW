@@ -21,6 +21,5 @@ TYPE
 		PROCEDURE ^ ForwardTo*(item: ANY): BOOLEAN; 
 		PROCEDURE ^ Dump*; 
 	END History; 
-
 BEGIN
 END FNHistories.

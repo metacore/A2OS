@@ -29,6 +29,5 @@ TYPE
 		PROCEDURE ^ Text*(text: Tree.Text); 
 		PROCEDURE ^ Document*(document: Tree.Document); 
 	END Printer; 
-
 BEGIN
 END FoxDocumentationHtml.

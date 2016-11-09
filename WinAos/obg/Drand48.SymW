@@ -19,6 +19,5 @@ TYPE
 		PROCEDURE ^ Seed48*(seed: HUGEINT): HUGEINT; 
 		PROCEDURE ^ Lcong48*(par: ARRAY OF HUGEINT); 
 	END Generator; 
-
 BEGIN
 END Drand48.

@@ -13,6 +13,5 @@ TYPE
 		PROCEDURE ^ Release*(buf: Buffer); 
 		PROCEDURE ^  & Init*; 
 	END BufferPool; 
-
 BEGIN
 END Example4.

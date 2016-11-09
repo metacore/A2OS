@@ -21,6 +21,5 @@ TYPE
 		PROCEDURE ^ Squeeze*(VAR data: ARRAY OF CHAR; offset, len: LONGINT); 
 		PROCEDURE ^ AbsorbLastFewBits*(data: CHAR); 
 	END Instance; 
-
 BEGIN
 END CryptoKeccakSponge.

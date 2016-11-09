@@ -135,6 +135,5 @@ TYPE
 
 		PROCEDURE ^  & init*(opt: DecoderOptions); 
 	END MP4Buffers; 
-
 BEGIN
 END DivXTypes.

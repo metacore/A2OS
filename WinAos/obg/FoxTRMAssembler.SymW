@@ -16,6 +16,5 @@ TYPE
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 		PROCEDURE ^ GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SHORTINT): BOOLEAN; 
 	END Assembler; 
-
 BEGIN
 END FoxTRMAssembler.

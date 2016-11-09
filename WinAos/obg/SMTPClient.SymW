@@ -29,6 +29,5 @@ TYPE
 		PROCEDURE ^ FinishSendRaw*(): BOOLEAN; 
 		PROCEDURE ^ SendComplete*(m: Mail.Message; VAR result: LONGINT); 
 	END SMTPSession; 
-
 BEGIN
 END SMTPClient.

@@ -147,6 +147,5 @@ TYPE
 		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
 		PROCEDURE ^ Close*; 
 	END PropertyWindow; 
-
 BEGIN
 END DTPView.

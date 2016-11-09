@@ -26,6 +26,5 @@ TYPE
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^  & Start*(lock: JavaLock; ms: LONGINT); 
 	END Sleeper; 
-
 BEGIN
 END JavaLocks.

@@ -19,6 +19,5 @@ TYPE
 		PROCEDURE ^ set*(b, w: Color); 
 		PROCEDURE ^ Shade*(VAR x, y, z, r, g, b, a: SREAL); 
 	END checkerboard3d; 
-
 BEGIN
 END srVolShader.

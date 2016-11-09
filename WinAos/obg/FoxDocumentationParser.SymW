@@ -31,6 +31,5 @@ TYPE
 		PROCEDURE ^ ParseText(text: Tree.Text; sentinel: Token); 
 		PROCEDURE ^ ParseParagraphs(paragraphs: Tree.Paragraphs); 
 	END Parser; 
-
 BEGIN
 END FoxDocumentationParser.

@@ -12,6 +12,5 @@ TYPE
 		PROCEDURE ^ Remove*(): Item; 
 		PROCEDURE ^  & Init*(n: LONGINT); 
 	END Buffer; 
-
 BEGIN
 END Example2.

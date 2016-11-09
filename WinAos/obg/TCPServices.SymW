@@ -38,6 +38,5 @@ TYPE
 	END Agent; 
 
 	NewAgent* = PROCEDURE {DELEGATE}(c: TCP.Connection; s: Service):Agent; 
-
 BEGIN
 END TCPServices.

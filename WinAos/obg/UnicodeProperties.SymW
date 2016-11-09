@@ -74,6 +74,5 @@ TYPE
 	END BidiMirroringTxtReader; 
 VAR 
 	error-: BOOLEAN; 
-
 BEGIN
 END UnicodeProperties.

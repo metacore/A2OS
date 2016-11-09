@@ -89,6 +89,5 @@ TYPE
 		PROCEDURE ^ DBGString(VAR text: String); 
 		PROCEDURE ^ DBGAtom(VAR text: String); 
 	END Connection; 
-
 BEGIN
 END IMAP.

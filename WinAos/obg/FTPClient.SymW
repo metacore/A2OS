@@ -78,6 +78,5 @@ TYPE
 		PROCEDURE ^ Raw*(CONST cmd: ARRAY OF CHAR; VAR res: LONGINT); 
 		PROCEDURE ^ SplitCommand(CONST cmd: ARRAY OF CHAR; VAR command, args: ARRAY OF CHAR); 
 	END FTPClient; 
-
 BEGIN
 END FTPClient.

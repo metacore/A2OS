@@ -270,22 +270,25 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
 				NEW (offers, 1); offers[0] := module.moduleName;
-				import := module.module.moduleScope.firstImport;
-				numImports := 0;
-				WHILE import # NIL DO
-					IF import.direct THEN INC(numImports) END;
-					import := import.nextImport;
-				END;
-				NEW(requires, numImports);
-				numImports := 0;
-				import := module.module.moduleScope.firstImport;
-				WHILE import # NIL DO
-					IF import.direct THEN
-						import.module.GetName(name);
-						requires[numImports] := name;
-						INC(numImports);
+				
+				IF module.module#NIL THEN
+					import := module.module.moduleScope.firstImport;
+					numImports := 0;
+					WHILE import # NIL DO
+						IF import.direct THEN INC(numImports) END;
+						import := import.nextImport;
 					END;
-					import := import.nextImport;
+					NEW(requires, numImports);
+					numImports := 0;
+					import := module.module.moduleScope.firstImport;
+					WHILE import # NIL DO
+						IF import.direct THEN
+							import.module.GetName(name);
+							requires[numImports] := name;
+							INC(numImports);
+						END;
+						import := import.nextImport;
+					END;
 				END;
 				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerPrinter);
 				INC(statHeaders); INC(statHeadersSize, writer.Pos()-pos);
@@ -474,7 +477,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
 	VAR ch: CHAR; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
-	VAR version: LONGINT
+	VAR version: LONGINT;
 	BEGIN
 		reader.String(string);
 		binary := string="FoxOFB";
@@ -551,6 +554,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				writer.Ln;
 				writer.String("offers "); ObjectFile.WriteNameList(writer, offers, binary, poolMap);
 				writer.String("requires "); ObjectFile.WriteNameList(writer, requires, binary, poolMap);
+				writer.Ln;
 		ELSE
 			NEW(poolMap,512);
 			poolMap.BeginWriting(writer);

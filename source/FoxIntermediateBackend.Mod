@@ -3361,8 +3361,12 @@ TYPE
 					Emit(Add(position,result.tag,left.tag,right.tag))
 				ELSE
 					InitOperand(result,ModeValue);
-					Reuse2a(result.op,left.op,right.op,dest);
-					Emit(Add(position,result.op,left.op,right.op));
+					IF SemanticChecker.IsIntegerType(leftType) THEN 
+						AddInt(result.op, left.op, right.op) ;
+					ELSE
+						Reuse2a(result.op,left.op,right.op,dest);
+						Emit(Add(position,result.op,left.op,right.op));
+					END;
 				END;
 				ReleaseOperand(left); ReleaseOperand(right);
 			|Scanner.Minus:

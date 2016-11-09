@@ -613,7 +613,9 @@ BEGIN
 		IF m.term # NIL THEN	(* call termination handler *)
 			term := m.term; m.term := NIL; term	(* may trap *)
 		END;
-		Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
+		IF m.code # NIL THEN
+			Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
+		END;
 	END;
 	res := Ok; msg[0] := 0X;
 	Machine.Acquire(Machine.Modules);

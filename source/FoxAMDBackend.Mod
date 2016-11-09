@@ -1036,11 +1036,7 @@ TYPE
 				previous := op;
 				temp := TemporaryTicket(vop.registerClass,vop.type);
 				TicketToOperand(temp,op);
-				IF vop.type.length > 1 THEN
-					emitter.Emit2(InstructionSet.opMOVUPS, op, previous);
-				ELSE
-					Move(op, previous, vop.type);
-				END;
+				Move(op, previous, vop.type);
 			END;
 		END MakeRegister;
 
@@ -3131,11 +3127,7 @@ TYPE
 						IF ticket.lastuse = inPC THEN UnmapTicket(ticket); physicalRegisters.AllocationHint(register) END; (* try to reuse register here *)
 						Assembler.InitRegister(reg, register);
 						MakeOperand(outr[i], Low, dest, NIL);
-						IF outr[i].type.length > 1 THEN
-							SpecialMove(InstructionSet.opMOVUPS,InstructionSet.opMOVUPS, TRUE, dest, reg, outr[i].type)
-						ELSE
-							Move( dest, reg,outr[i].type)
-						END;
+						Move( dest, reg,outr[i].type)
 					END;
 				END;
 			END;
@@ -3443,7 +3435,12 @@ TYPE
 		PROCEDURE CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN;
 		VAR length: LONGINT; baseType: SyntaxTree.Type; b: BOOLEAN;
 		BEGIN
-			b := SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.FloatType) & (baseType.sizeInBits = 32) & (length = 4);
+			b := SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.FloatType) & 
+			(baseType.sizeInBits <= 32) & (length = 4);
+			b := b OR SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.CharacterType) & 
+			(baseType.sizeInBits = 8) & (length = 4);
+			b := b OR SemanticChecker.IsStaticArray(type, baseType, length) & (baseType.resolved IS SyntaxTree.CharacterType) & 
+			(baseType.resolved.sizeInBits = 8) & (length = 4);
 			RETURN b
 		END CanPassInRegister;
 

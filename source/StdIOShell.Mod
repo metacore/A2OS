@@ -9,9 +9,7 @@ BEGIN
 		context.out.String("Critical error: no arg"); 
 		RETURN END;
 	IF ~context.arg.GetString(str) THEN 
-		NEW(shell, context.in, context.out, context.error, FALSE, ">"); 
-		shell.AwaitDeath;
-		RETURN
+		str := "Shell.Start";
 	END;
 	IF str = "compile" THEN str := "Compiler.Compile"
 	ELSIF str="link" THEN str := "StaticLinker.Link"
@@ -30,6 +28,7 @@ BEGIN
 END StdIOShell.
 SystemTools.Free StaticLinker ~
 
+SystemTools.DoCommands
 	StaticLinker.Link -p=Linux32G
 		Runtime  Traps UnixFiles RelativeFileSystem GenericLoader
 		WMDefaultFont
@@ -49,6 +48,7 @@ SystemTools.Free StaticLinker ~
 		Partitions
 		~
 		FSTools.CloseFiles oberon ~
+		~
 TODOS:
 	- check linux file system (new files dot not work)
 	- add interpreter to linked image

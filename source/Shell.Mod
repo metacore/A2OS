@@ -650,6 +650,13 @@ TYPE
 		BEGIN {EXCLUSIVE} dead := TRUE; END;
 	END Shell;
 
+	PROCEDURE Start*(context: Commands.Context);
+	VAR shell: Shell;
+	BEGIN
+		NEW(shell, context.in, context.out, context.error, FALSE, ">");
+		shell.AwaitDeath()
+	END Start;
+	
 END Shell.
 
 SystemTools.Free Shell ~

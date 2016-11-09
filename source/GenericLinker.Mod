@@ -492,9 +492,13 @@ BEGIN
 	requires := NIL;
 	IF version >= 4 THEN
 		IF ~binary THEN 
-			reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+			reader.String(string); 
+			ASSERT(string = "offers");
+			ObjectFile.ReadNameList(reader, offers, binary, poolMap);
 			reader.SkipWhitespace;
-			reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+			reader.String(string); 
+			ASSERT(string = "requires");
+			ObjectFile.ReadNameList(reader, requires, binary, poolMap);
 			reader.SkipWhitespace;
 		ELSE
 			ObjectFile.ReadNameList(reader, offers, binary, poolMap);

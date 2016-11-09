@@ -669,6 +669,7 @@ VAR
 				ReadIdentifier(nameList[i]);
 			END;
 		ELSE
+			reader.SkipWhitespace;
 			reader.Int(len,FALSE);
 			NEW(nameList, len);
 			FOR i := 0 TO len-1 DO

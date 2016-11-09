@@ -189,7 +189,7 @@ END MaskIn;
 	
 (* interrupt handling *)
 CONST Interrupts* = 7;
-CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6;
+CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6; IRQ0* = IRQ;
 
 TYPE InterruptHandler* = PROCEDURE (index: SIZE);
 
@@ -217,6 +217,17 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF index = IRQ THEN WriteMask (IRQDisable1, ReadMask (IRQEnable1)); WriteMask (IRQDisable2, ReadMask (IRQEnable2)) END;
 	REPEAT previous := CAS (handlers[index], NIL, NIL) UNTIL CAS (handlers[index], previous, NIL) = previous;
 END DisableInterrupt;
+
+PROCEDURE EnableIRQ- (index: SIZE);
+BEGIN
+	(* no effect -- only for compatibility *)
+END EnableIRQ;
+
+PROCEDURE DisableIRQ-(index: SIZE);
+BEGIN
+	(* no effect -- only for compatibility *)
+END DisableIRQ;
+
 
 PROCEDURE Initialize-;
 CODE

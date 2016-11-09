@@ -146,7 +146,7 @@ PROCEDURE DisableInterrupt- (index: SIZE);
 VAR previous: InterruptHandler;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (index < Interrupts);
-	IF previous = NIL THEN DisableIRQ (index) END;
+	DisableIRQ (index);
 	REPEAT previous := CAS (handlers[index], NIL, NIL) UNTIL CAS (handlers[index], previous, NIL) = previous;
 END DisableInterrupt;
 

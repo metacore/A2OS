@@ -994,7 +994,7 @@ TYPE
 					TicketToOperand(ticket, tmp);
 					ticket := NIL;
 				END;
-				IF Assembler.IsRegisterOperand(physical) THEN
+				IF Assembler.IsRegisterOperand(physical) & (type.sizeInBits > 8) THEN
 					Assembler.InitMem(physical,SHORTINT(type.length * type.sizeInBits DIV 8) , physical.register, virtual.offset);
 					emitter.Emit2(InstructionSet.opLEA, tmp,physical);
 				ELSE
@@ -1495,8 +1495,9 @@ TYPE
 		VAR op1,op2: Assembler.Operand; tmp: IntermediateCode.Operand;
 			t: CodeGenerators.Ticket;
 			type: IntermediateCode.Type;
+			offset: LONGINT;
 		BEGIN
-			IF (vdest.mode = IntermediateCode.ModeRegister) & (vsrc.mode = IntermediateCode.ModeRegister) & (vsrc.offset # 0) THEN
+			IF (vdest.mode = IntermediateCode.ModeRegister) & (vsrc.mode = IntermediateCode.ModeRegister) & (vsrc.type.sizeInBits > 8) & (vsrc.offset # 0)THEN
 				(* MOV R1, R2+offset => LEA EAX, [EBX+offset] *)
 				tmp := vsrc;
 				IntermediateCode.MakeMemory(tmp,vsrc.type);
@@ -1511,7 +1512,6 @@ TYPE
 					UnSpill(t); (* make sure this has not spilled *)
 					MakeOperand(vdest,part, op1,NIL);
 				END;
-
 				emitter.Emit2(InstructionSet.opLEA,op1,op2);
 			ELSE
 				MakeOperand(vsrc,part,op2,NIL);

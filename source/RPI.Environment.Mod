@@ -95,11 +95,21 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 END HandleTimer;
 
-PROCEDURE LED- (status: BOOLEAN);
+PROCEDURE LED- (led: LONGINT; status: BOOLEAN);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	IF led = 0 THEN 
 	CPU.MaskIn (CPU.GPFSEL4, {21..23}, {21});
 	IF status THEN CPU.WriteMask (CPU.GPSET1, {15}) ELSE CPU.WriteMask (CPU.GPCLR1, {15}) END;
+	ELSE (* power led *)
+		IF status THEN 
+			CPU.MaskIn (CPU.GPFSEL3, {15..17}, {17});
+		ELSE 
+			CPU.MaskIn (CPU.GPFSEL3, {15..17}, {15});
+		END;
+	END;
 END LED;
+
+
 
 PROCEDURE Shutdown*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -149,9 +159,21 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	memory := memTag.start + memTag.size - ADDRESS OF KernelEnd;
 END InitMemory;
 
-PROCEDURE Initialize-;
+PROCEDURE Blink-(num, speed: LONGINT);
+VAR i,j: LONGINT;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	SYSTEM.SetActivity (NIL); LED (TRUE);
+	FOR  j:= 1 TO num DO
+		LED (0, TRUE); LED(1, FALSE);
+		FOR i := 0 TO speed*1000000 DO END;
+		LED(0, FALSE); LED(1, TRUE);
+		FOR i := 0 TO speed*1000000 DO END;
+	END;
+END Blink;
+
+PROCEDURE Initialize-;
+VAR i: LONGINT;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity (NIL); 
 	CPU.Initialize; InitTrace; InitMemory;
 	frequency := Timer.GetFrequency () DIV 1000;
 END Initialize;
@@ -159,7 +181,7 @@ END Initialize;
 PROCEDURE Terminate-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Interrupts.Terminate;
-	LED (FALSE);
+	LED (0, FALSE);
 END Terminate;
 
 PROCEDURE {NOPAF, INITIAL, FIXED(8000H)} KernelBegin;

@@ -125,7 +125,7 @@ VAR
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
 	register: RECORD
-		first, last: Module;
+		first {UNTRACED}, last {UNTRACED}: Module;
 	END;
 	
 	(* global sorted table of all procedures , basically for GC *)
@@ -650,7 +650,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF register.first = NIL THEN
 		register.first := module;
 	ELSE
-		register.last.next := module;
+		register.last.next := module; (* transitively unsafe access via register.last *)
 	END;
 	register.last := module;
 END Register;

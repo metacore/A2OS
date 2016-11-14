@@ -2414,7 +2414,8 @@ TYPE
 		END SetSymbol;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN RETURN symbol.NeedsTrace() & ((left = NIL) OR (left.NeedsTrace()));
+		BEGIN 
+			RETURN symbol.NeedsTrace() & ((left = NIL) OR (left.NeedsTrace()));
 		END NeedsTrace;
 
 	END SymbolDesignator;
@@ -2600,7 +2601,11 @@ TYPE
 		END Accept;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
+		BEGIN 
+			(*! semantic of x.y.z := new : if x is untraced then the effect of y.z := new remains untraced! 
+				In other words: difference between y := x.y; y.z := new and x.y.z := new.
+			*)
+			RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
 		END NeedsTrace;
 
 	END DereferenceDesignator;

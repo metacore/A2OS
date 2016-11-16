@@ -3,7 +3,7 @@
 MODULE WebHTTPTools; (** AUTHOR "TF"; PURPOSE "HTTP download tool"; *)
 
 IMPORT
-	Commands, Files, TCP, WebHTTP, WebHTTPClient, Streams, TFLog, Modules;
+	Commands, Files, IP, TCP, WebHTTP, WebHTTPClient, Streams, TFLog, Modules;
 
 VAR log : TFLog.Log;
 
@@ -64,7 +64,7 @@ BEGIN
 			in.SkipSpaces(); in.Token(token); cs := HexStrToIntDef(token, 0); in.SkipLn();
 			WHILE cs # 0 DO
 				FOR i := 0 TO cs - 1 DO in.Char(ch); fw.Char( ch) END;
-				 in.SkipLn;in.SkipSpaces; in.Token(token); cs := HexStrToIntDef(token, 0); in.SkipLn;
+				in.SkipLn;in.SkipSpaces; in.Token(token); cs := HexStrToIntDef(token, 0); in.SkipLn;
 			END;
 			IF fw.res = Streams.Ok THEN log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - OK"); log.Exit
 			ELSE log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - failed"); log.Exit
@@ -104,6 +104,105 @@ BEGIN
 	END;
 END Head;
 
+PROCEDURE GetAll*(context : Commands.Context);
+VAR
+	baseUrl, baseDir, fileName, url, name, token: ARRAY 256 OF CHAR;
+	file: Files.File;
+	fw: Files.Writer;
+	rh: WebHTTP.RequestHeader;
+	h: WebHTTP.ResponseHeader;
+	con: TCP.Connection;
+	in: Streams.Reader;
+	res, i, cs: LONGINT;
+	ch : CHAR;
+BEGIN
+	IF ~context.arg.GetString(baseUrl) THEN
+		context.error.String("Expected base URL");
+		context.error.Ln;
+		RETURN;
+	END;
+	IF ~context.arg.GetString(baseDir) THEN
+		context.error.String("Expected base directory");
+		context.error.Ln;
+		RETURN;
+	END;
+
+	WHILE context.arg.GetString(fileName) DO
+		Files.JoinPath(baseUrl, fileName, url);
+		Files.JoinPath(baseDir, fileName, name);
+		log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" to "); log.String(name); log.Exit;
+		rh.fadr := IP.NilAdr;
+		rh.fport := 0;
+		rh.method := 0;
+		rh.maj := 0; rh.min := 0;
+		rh.uri := '';
+		rh.host := '';
+		rh.referer := '';
+		rh.useragent := "WebHTTPTool/0.1";
+		rh.accept := '';
+		rh.transferencoding := '';
+		rh.additionalFields := NIL;
+		res := WebHTTPClient.Ok;
+		con := NIL;
+		in := NIL;
+		WebHTTPClient.Get(url, rh, con, h, in, res);
+		IF res = WebHTTPClient.Ok THEN
+			file := Files.New(name);
+			Files.OpenWriter(fw, file, 0);
+			IF (h.transferencoding # "") & MatchPrefixI("chunked", h.transferencoding) THEN
+				in.SkipSpaces(); in.Token(token); cs := HexStrToIntDef(token, 0); in.SkipLn();
+				WHILE cs # 0 DO
+					FOR i := 0 TO cs - 1 DO in.Char(ch); fw.Char( ch) END;
+					 in.SkipLn;in.SkipSpaces; in.Token(token); cs := HexStrToIntDef(token, 0); in.SkipLn;
+				END;
+				IF fw.res = Streams.Ok THEN log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - OK"); log.Exit
+				ELSE log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - failed"); log.Exit
+				END
+			ELSE
+				IF h.contentlength >= 0 THEN
+					FOR i := 0 TO h.contentlength - 1 DO in.Char(ch);  fw.Char(ch) END;
+					IF fw.res = Streams.Ok THEN log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - OK"); log.Exit
+					ELSE log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - failed"); log.Exit
+					END
+				ELSE
+					WHILE in.res = Streams.Ok DO in.Char(ch); fw.Char(ch) END;
+					log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - OK"); log.Exit
+				END
+			END;
+			fw.Update;
+			Files.Register(file);
+			con.Close
+		ELSE
+			log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.String(" - "); log.Int(h.statuscode, 5);
+			log.String(" ("); log.Int(res, 0); log.String(") ");
+			log.String(h.reasonphrase); log.Exit
+		END
+	END;
+END GetAll;
+
+PROCEDURE Read*(context : Commands.Context);
+VAR
+	url: ARRAY 512 OF CHAR;
+	reader: WebHTTPClient.ContentReader;
+	rh: WebHTTP.RequestHeader;
+	h: WebHTTP.ResponseHeader;
+	in: Streams.Reader;
+	con: TCP.Connection;
+	res: LONGINT;
+BEGIN
+	IF ~context.arg.GetString(url) THEN RETURN END;
+	
+	log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.Exit;
+	rh.useragent := "WebHTTPTool/0.1";
+	WebHTTPClient.Get(url, rh, con, h, in, res);
+	IF res = WebHTTPClient.Ok THEN
+		NEW(reader, in, h);
+		WHILE reader.res = 0 DO
+			context.out.Char(reader.Get());
+		END
+	END
+END Read;
+
 PROCEDURE Cleanup;
 BEGIN
 	log.Close
@@ -121,6 +220,10 @@ WebHTTPTools.Head http://212.254.73.92/~
 WebHTTPTools.Head http://www.microsoft.com~
 WebHTTPTools.Head http://slashdot.org~ (* whats wrong with slashdot ? telnet worked... *)
 
+WebHTTPTools.Get https://www.mediapart.fr/ test.html ~
+WebHTTPTools.Get http://files.rcsb.org/download/4hhb.cif.gz test.gz ~
+WebHTTPTools.Get https://highdim.com/ test.html ~
+WebHTTPTools.Get https://www.startpage.com/ test.html ~
 WebHTTP.Mod
 
 SystemTools.Free WebHTTPTools
@@ -129,3 +232,5 @@ WebHTTPClient WebWormWatch WebHTTPServer WebHTTP~
 WebHTTPServer.Start~
 WebWormWatch.Install~
 
+WebHTTPTools.GetAll http://files.rcsb.org/download/ WORK: 4hhb.cif 4hhb.cif.gz 4hhb.cif 4hhb.cif.gz ~
+WebHTTPTools.Read http://www.highdim.com ~

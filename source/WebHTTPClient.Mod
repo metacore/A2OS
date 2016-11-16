@@ -3,11 +3,68 @@
 MODULE WebHTTPClient; (** AUTHOR "TF"; PURPOSE "HTTP client"; *)
 
 IMPORT
-	TFLog, Streams, IP, DNS, TCP, WebHTTP, Modules;
+	TFLog, Streams, Strings, IP, DNS, TCP, TLS, WebHTTP, Modules;
 
 VAR log : TFLog.Log;
 
 CONST Ok* = 0;
+
+TYPE
+	ContentReader * = OBJECT (Streams.Reader)
+	VAR
+		in: Streams.Reader;
+		encoding: ARRAY 64 OF CHAR;
+		length: LONGINT;
+
+		PROCEDURE & InitContentReader * (in: Streams.Reader; CONST h: WebHTTP.ResponseHeader);
+		VAR
+			token: ARRAY 64 OF CHAR;
+			res: LONGINT;
+		BEGIN
+			InitReader(Receive, 1024);
+			SELF.in := in;
+			COPY(h.transferencoding, encoding);
+			IF (encoding # "") & Strings.Match("chunked", encoding) THEN
+				in.SkipSpaces(); in.Token(token); Strings.HexStrToInt(token, length, res); in.SkipLn();
+			ELSE
+				length := h.contentlength;
+			END;
+		END InitContentReader;
+
+		PROCEDURE Receive * (VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT);
+		VAR
+			token: ARRAY 16 OF CHAR;
+			i, total, r: LONGINT;
+			ch: CHAR;
+		BEGIN
+			IF (encoding # "") & Strings.Match("chunked", encoding) THEN
+				WHILE (length # 0) & (in.res = Streams.Ok) DO
+					WHILE (total < size) & (i < length) DO
+						in.Char(ch);
+						buf[ofs + total] := ch;
+						INC(i);
+						INC(total)
+					END;
+					i := 0;
+					in.SkipLn;in.SkipSpaces; in.Token(token); Strings.HexStrToInt(token, length, r); in.SkipLn;
+				END;
+				len := total
+			ELSE
+				IF length >= 0 THEN
+					WHILE (i < size) & (i < length) DO in.Char(ch);  buf[ofs + i] := ch; INC(i) END;
+					DEC(length, i);
+				ELSE
+					WHILE (in.res = Streams.Ok) & (i < size) DO in.Char(ch); buf[ofs + i] := ch; INC(i) END;
+				END;
+				len := i
+			END;
+			IF len < min THEN
+				res := Streams.EOF
+			ELSE
+				res := Streams.Ok
+			END
+		END Receive;
+	END ContentReader;
 
 PROCEDURE Head*(CONST url : ARRAY OF CHAR; VAR con : TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res : LONGINT);
 VAR
@@ -49,12 +106,21 @@ VAR
 	fadr : IP.Adr;
 	w : Streams.Writer;
 	x : WebHTTP.AdditionalField;
+	tls: TLS.Connection;
 BEGIN
 	IF WebHTTP.SplitHTTPAdr(url, host, path, port) THEN
 		IF path = "" THEN path := "/" END;
 		DNS.HostByName(host, fadr, res);
 		IF res = DNS.Ok THEN
-			IF  con = NIL THEN NEW(con); con.Open(TCP.NilPort, fadr, port, res); END;
+			IF  con = NIL THEN
+				IF port = WebHTTP.HTTPPort THEN
+					NEW(con);
+				ELSE
+					NEW(tls);
+					con := tls;
+				END;
+				con.Open(TCP.NilPort, fadr, port, res);
+			END;
 			IF res = TCP.Ok THEN
 				Streams.OpenWriter(w, con.Send);
 				Streams.OpenReader(out, con.Receive);

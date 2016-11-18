@@ -9088,6 +9088,9 @@ TYPE
 				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
+				IF ~x.type.resolved.IsPointer() THEN (* var par ! *)
+					MakeMemory(result.op, result.op, addressType, 0);
+				END;
 				(* tag must be loaded when dereferencing SELF pointer *)
 			END;
 			destination := dest;

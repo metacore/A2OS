@@ -861,7 +861,7 @@ TYPE
 	                      <*> FP(parameterType) [-> Name(parameterName)]  }
 		 *)
 		PROCEDURE FPSignature(VAR fp: LONGINT; t: SyntaxTree.ProcedureType; isOperator: BOOLEAN);
-		VAR par,self: SyntaxTree.Parameter;
+		VAR par,self: SyntaxTree.Parameter; deep: BOOLEAN;
 
 			(* fp = fp & (fpModeVarPar | fpModeConstPar | fpModePar) [ & Name ] *)
 			PROCEDURE FPPar(VAR fp: LONGINT;  par: SyntaxTree.Parameter);
@@ -894,7 +894,11 @@ TYPE
 			IF Trace THEN
 				TraceIndent; D.Str("FPSignature enter "); D.Hex(fp,-8); D.Ln;
 			END;
+			deep := SELF.deep;
+			SELF.deep := FALSE;
 			FPType(fp,t.returnType);
+			SELF.deep := deep;
+			
 			IF Trace THEN
 				TraceIndent; D.Str("FPSignature after return type "); D.Hex(fp,-8); D.Ln;
 			END;

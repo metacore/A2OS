@@ -1035,7 +1035,11 @@ TYPE
 						Error(position, "invalid inheritance of disposable types");
 					END;
 				END;
-				Declarations(x.recordScope, FALSE);
+				Declarations(x.recordScope, FALSE, FALSE, TRUE);
+				
+				x.SetState(SyntaxTree.Resolved);
+				
+				Declarations(x.recordScope, FALSE, TRUE, FALSE);
 
 				ResolveArrayStructure(x);
 
@@ -1207,7 +1211,7 @@ TYPE
 					END;
 				CheckModifiers(modifier, FALSE);
 
-				Declarations(x.cellScope, SkipImplementation(x));
+				Declarations(x.cellScope, SkipImplementation(x),TRUE,TRUE);
 				
 				(* process parameters *)
 				prev := currentScope;
@@ -6412,7 +6416,7 @@ TYPE
 					resolvedExpression := NewSupercallDesignator(arrowDesignator.position,left);
 				ELSE
 					IF IsPointerToObject(left.type) THEN
-						Warning(arrowDesignator.position,  "forbidden dereference on object"); 
+						(* Warning(arrowDesignator.position,  "forbidden dereference on object"); *)
 					END;
 					resolvedExpression := NewDereferenceDesignator(arrowDesignator.position,left)
 				END
@@ -6592,6 +6596,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.Str("VisitTypeDeclaration "); D.Str0(typeDeclaration.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(typeDeclaration) THEN
+				typeDeclaration.SetState(SyntaxTree.Resolved);
 				prevScope := currentScope;
 				currentScope := typeDeclaration.scope;
 				typeDeclaration.SetType(SyntaxTree.typeDeclarationType);
@@ -6815,6 +6820,7 @@ TYPE
 		PROCEDURE VisitProcedure(procedure: SyntaxTree.Procedure);
 		VAR super,proc: SyntaxTree.Procedure; record: SyntaxTree.RecordType;
 			procedureType: SyntaxTree.ProcedureType;
+			type: SyntaxTree.Type;
 			selfParameter: SyntaxTree.Parameter; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType: SyntaxTree.QualifiedType;
 			value: LONGINT;
@@ -6887,6 +6893,7 @@ TYPE
 				CheckModifiers(modifiers, TRUE);
 				
 
+				procedure.SetState(SyntaxTree.Resolved);
 				
 				FixProcedureType(procedureType);
 				currentIsRealtime := procedureType.isRealtime;
@@ -6989,7 +6996,7 @@ TYPE
 				ELSIF procedure.isConstructor THEN
 					Error(procedure.position,"procedure illegaly marked as initializer - not in object scope");
 				END;
-				Declarations(procedure.procedureScope, FALSE);
+				Declarations(procedure.procedureScope, FALSE, TRUE,TRUE);
 				(* body resolution part done as late fix of the procedure type *)
 				procedure.SetState(SyntaxTree.Resolved);
 				currentIsRealtime := recentIsRealtime;
@@ -8304,7 +8311,7 @@ TYPE
 
 			Declarations depend on other declarations, this procedure is neither thread safe not would it be wise to try concurrency here
 		**)
-		PROCEDURE Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN);
+		PROCEDURE Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; procedures, nonProcedures: BOOLEAN);
 		VAR
 			constant: SyntaxTree.Constant;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
@@ -8374,7 +8381,8 @@ TYPE
 			prevScope := currentScope;
 			currentScope := scope;
 			error := FALSE;
-
+			
+			IF nonProcedures THEN
 			(* first enter all symbols in scope *)
 			IF scope IS SyntaxTree.ModuleScope THEN
 				(* treat imports first for a module scope, , set default context if necessary *)
@@ -8461,6 +8469,7 @@ TYPE
 					END;
 				END;
 			END;
+			END;
 			(*
 			procedure := scope.firstProcedure;
 			WHILE (procedure # NIL) DO
@@ -8495,10 +8504,20 @@ TYPE
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO
 				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
-					ResolveSymbol(symbol);
+					IF (symbol IS SyntaxTree.Procedure) THEN
+						IF procedures THEN
+							ResolveSymbol(symbol);
+						END;
+					ELSE
+						IF nonProcedures THEN
+							ResolveSymbol(symbol);
+						END;
+					END;
 				END;
 				symbol := symbol.nextSymbol;
 			END;
+			
+			
 
 			IF (scope IS SyntaxTree.ProcedureScope) & scope(SyntaxTree.ProcedureScope).ownerProcedure.type.isRealtime THEN
 				symbol := scope.firstSymbol;
@@ -8515,11 +8534,11 @@ TYPE
 				END;
 			END;
 
-			IF ~error & ~system.GenerateVariableOffsets(scope) THEN
+			IF ~error & procedures & ~system.GenerateVariableOffsets(scope) THEN
 				Error(Basic.invalidPosition,"problems during offset computation in module");
 			END;
 
-			IF  (scope.ownerModule # NIL) THEN
+			IF  (scope.ownerModule # NIL) & procedures   THEN
 				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
 				scope.ownerModule.AddScope(scope);
 			END;
@@ -8632,7 +8651,7 @@ TYPE
 			IF (x.name = Global.SystemName) OR (x.name = Global.systemName) THEN Error(x.position,"name reserved") END;
 			IF x.context = SyntaxTree.invalidIdentifier THEN x.SetContext(Global.A2Name) END;
 			RemoveModuleFromCache(importCache,x);
-			Declarations(x.moduleScope, FALSE);
+			Declarations(x.moduleScope, FALSE, TRUE, TRUE);
 			FixTypes();
 
 			IF module.isCellNet THEN
@@ -8782,7 +8801,9 @@ TYPE
 		BEGIN	END VisitParameter;
 
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
-		BEGIN Scope(x.procedureScope) END VisitProcedure;
+		BEGIN 
+			Scope(x.procedureScope) 
+		END VisitProcedure;
 
 		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
 		BEGIN END VisitOperator;

@@ -1035,11 +1035,11 @@ TYPE
 						Error(position, "invalid inheritance of disposable types");
 					END;
 				END;
-				Declarations(x.recordScope, FALSE, FALSE, TRUE);
+				Declarations(x.recordScope, FALSE, {0});
 				
 				x.SetState(SyntaxTree.Resolved);
 				
-				Declarations(x.recordScope, FALSE, TRUE, FALSE);
+				Declarations(x.recordScope, FALSE, {1});
 
 				ResolveArrayStructure(x);
 
@@ -1211,7 +1211,7 @@ TYPE
 					END;
 				CheckModifiers(modifier, FALSE);
 
-				Declarations(x.cellScope, SkipImplementation(x),TRUE,TRUE);
+				Declarations(x.cellScope, SkipImplementation(x),{0,1});
 				
 				(* process parameters *)
 				prev := currentScope;
@@ -6996,7 +6996,7 @@ TYPE
 				ELSIF procedure.isConstructor THEN
 					Error(procedure.position,"procedure illegaly marked as initializer - not in object scope");
 				END;
-				Declarations(procedure.procedureScope, FALSE, TRUE,TRUE);
+				Declarations(procedure.procedureScope, FALSE, {0,1});
 				(* body resolution part done as late fix of the procedure type *)
 				procedure.SetState(SyntaxTree.Resolved);
 				currentIsRealtime := recentIsRealtime;
@@ -8310,8 +8310,11 @@ TYPE
 			after declaration check, bodies are entered into the global list of implementations that remain to be resolved after all declarations.
 
 			Declarations depend on other declarations, this procedure is neither thread safe not would it be wise to try concurrency here
+			phases : 
+				0 = before procedures
+				1 = procedures and later
 		**)
-		PROCEDURE Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; procedures, nonProcedures: BOOLEAN);
+		PROCEDURE Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; phases: SET);
 		VAR
 			constant: SyntaxTree.Constant;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
@@ -8382,134 +8385,105 @@ TYPE
 			currentScope := scope;
 			error := FALSE;
 			
-			IF nonProcedures THEN
-			(* first enter all symbols in scope *)
-			IF scope IS SyntaxTree.ModuleScope THEN
-				(* treat imports first for a module scope, , set default context if necessary *)
-				import := scope(SyntaxTree.ModuleScope).firstImport;
-				WHILE(import # NIL) DO
-					IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(scope.ownerModule.context) END;
-					Register(import, currentScope, FALSE);
-					import := import.nextImport;
-				END;
-				import := scope(SyntaxTree.ModuleScope).firstImport;
-				WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
-					ResolveSymbol(import);
-					import := import.nextImport;
-				END;
-			ELSIF scope IS SyntaxTree.ProcedureScope THEN
-				(* enter parameters for a procedure scope *)
-				procedureType := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType);
-				parameter := procedureType.firstParameter;
-				WHILE(parameter # NIL) DO
-					Register(parameter,currentScope, FALSE); parameter := parameter.nextParameter;
-				END;
-				parameter := procedureType.returnParameter;
-				IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
-				parameter := procedureType.selfParameter;
-				IF parameter # NIL THEN 
-					Register(parameter, currentScope, FALSE); 
-					parameter.SetState(SyntaxTree.Resolved); (* would lead to cycles, otherwise *)
-				END;
-			ELSIF scope IS SyntaxTree.CellScope THEN
-				DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
-				IF~skipImplementation THEN
-					import := scope(SyntaxTree.CellScope).firstImport;
+			IF 0 IN phases THEN
+				(* first enter all symbols in scope *)
+				IF scope IS SyntaxTree.ModuleScope THEN
+					(* treat imports first for a module scope, , set default context if necessary *)
+					import := scope(SyntaxTree.ModuleScope).firstImport;
 					WHILE(import # NIL) DO
 						IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(scope.ownerModule.context) END;
 						Register(import, currentScope, FALSE);
 						import := import.nextImport;
 					END;
-					import := scope(SyntaxTree.CellScope).firstImport;
+					import := scope(SyntaxTree.ModuleScope).firstImport;
 					WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
 						ResolveSymbol(import);
 						import := import.nextImport;
 					END;
+				ELSIF scope IS SyntaxTree.ProcedureScope THEN
+					(* enter parameters for a procedure scope *)
+					procedureType := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType);
+					parameter := procedureType.firstParameter;
+					WHILE(parameter # NIL) DO
+						Register(parameter,currentScope, FALSE); parameter := parameter.nextParameter;
+					END;
+					parameter := procedureType.returnParameter;
+					IF parameter # NIL THEN Register(parameter, currentScope, FALSE); END;
+					parameter := procedureType.selfParameter;
+					IF parameter # NIL THEN 
+						Register(parameter, currentScope, FALSE); 
+						parameter.SetState(SyntaxTree.Resolved); (* would lead to cycles, otherwise *)
+					END;
+				ELSIF scope IS SyntaxTree.CellScope THEN
+					DeclareCell(scope(SyntaxTree.CellScope).ownerCell);
+					IF~skipImplementation THEN
+						import := scope(SyntaxTree.CellScope).firstImport;
+						WHILE(import # NIL) DO
+							IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(scope.ownerModule.context) END;
+							Register(import, currentScope, FALSE);
+							import := import.nextImport;
+						END;
+						import := scope(SyntaxTree.CellScope).firstImport;
+						WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
+							ResolveSymbol(import);
+							import := import.nextImport;
+						END;
+					END;
 				END;
-			END;
-			IF error THEN RETURN END;
+				IF error THEN RETURN END;
 
-			IF skipImplementation THEN
-				scope.Clear;
-			END;
-		
-			(* constants *)
-			constant := scope.firstConstant;
-			WHILE (constant # NIL) DO
-				Register(constant, currentScope, FALSE); constant := constant.nextConstant;
-			END;
-			(* type declarations *)
-			typeDeclaration := scope.firstTypeDeclaration;
-			WHILE (typeDeclaration # NIL) DO
-				Register(typeDeclaration, currentScope, FALSE); typeDeclaration := typeDeclaration.nextTypeDeclaration;
-			END;
-			(* variables *)
-			variable := scope.firstVariable;
-			WHILE (variable # NIL) DO
-				Register(variable, currentScope, FALSE); variable := variable.nextVariable;
-			END;
-			(* procedures *)
-			IF scope.procedures # NIL THEN
-				FOR i := 0 TO scope.procedures.Length()-1 DO
-					procedure := scope.procedures.GetProcedure(i);
-					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
-					IF procedureType.selfParameter = NIL THEN
-						scope.AddProcedure(procedure);
-						Register(procedure, currentScope, procedure IS SyntaxTree.Operator);
-					ELSE
-						typeDeclaration := currentScope.FindTypeDeclaration(procedureType.selfParameter.type(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
-						IF typeDeclaration = NIL THEN 
-							Error(procedureType.selfParameter.position, "No such type declaration");
+				IF skipImplementation THEN
+					scope.Clear;
+				END;
+			
+				(* constants *)
+				constant := scope.firstConstant;
+				WHILE (constant # NIL) DO
+					Register(constant, currentScope, FALSE); constant := constant.nextConstant;
+				END;
+				(* type declarations *)
+				typeDeclaration := scope.firstTypeDeclaration;
+				WHILE (typeDeclaration # NIL) DO
+					Register(typeDeclaration, currentScope, FALSE); typeDeclaration := typeDeclaration.nextTypeDeclaration;
+				END;
+				(* variables *)
+				variable := scope.firstVariable;
+				WHILE (variable # NIL) DO
+					Register(variable, currentScope, FALSE); variable := variable.nextVariable;
+				END;
+				(* procedures *)
+				IF scope.procedures # NIL THEN
+					FOR i := 0 TO scope.procedures.Length()-1 DO
+						procedure := scope.procedures.GetProcedure(i);
+						procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
+						IF procedureType.selfParameter = NIL THEN
+							scope.AddProcedure(procedure);
+							Register(procedure, currentScope, procedure IS SyntaxTree.Operator);
 						ELSE
-							procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
-							procedureType.selfParameter.SetState(SyntaxTree.Resolved);
-							typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
-							Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+							typeDeclaration := currentScope.FindTypeDeclaration(procedureType.selfParameter.type(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
+							IF typeDeclaration = NIL THEN 
+								Error(procedureType.selfParameter.position, "No such type declaration");
+							ELSE
+								procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
+								procedureType.selfParameter.SetState(SyntaxTree.Resolved);
+								typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
+								Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+							END;
 						END;
 					END;
 				END;
 			END;
-			END;
-			(*
-			procedure := scope.firstProcedure;
-			WHILE (procedure # NIL) DO
-				procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
-				IF procedureType.selfParameter = NIL THEN
-					Register(procedure, currentScope, procedure IS SyntaxTree.Operator);
-				END;
-				procedure := procedure.nextProcedure;
-			END;
-			*)
-
-			(* type bound procedures *)
-			(*
-			procedure := scope.firstProcedure;
-			WHILE (procedure # NIL) DO
-				procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
-				IF procedureType.selfParameter # NIL THEN
-					typeDeclaration := currentScope.FindTypeDeclaration(procedureType.selfParameter.type(SyntaxTree.QualifiedType).qualifiedIdentifier.suffix);
-					IF typeDeclaration = NIL THEN 
-						Error(procedureType.selfParameter.position, "No such type declaration");
-					ELSE
-						procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
-						procedureType.selfParameter.SetState(SyntaxTree.Resolved);
-					END;
-					Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
-				END;
-				procedure := procedure.nextProcedure;
-			END;
-			*)
 
 			(* now process all symbols without any presumption on the order *)
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO
 				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
 					IF (symbol IS SyntaxTree.Procedure) THEN
-						IF procedures THEN
+						IF 1 IN phases THEN
 							ResolveSymbol(symbol);
 						END;
 					ELSE
-						IF nonProcedures THEN
+						IF 0 IN phases THEN
 							ResolveSymbol(symbol);
 						END;
 					END;
@@ -8534,11 +8508,11 @@ TYPE
 				END;
 			END;
 
-			IF ~error & procedures & ~system.GenerateVariableOffsets(scope) THEN
+			IF ~error & (1 IN phases) & ~system.GenerateVariableOffsets(scope) THEN
 				Error(Basic.invalidPosition,"problems during offset computation in module");
 			END;
 
-			IF  (scope.ownerModule # NIL) & procedures   THEN
+			IF  (scope.ownerModule # NIL) & (1 IN phases)   THEN
 				(* add scope to global list of all scopes, very handy for code generation and for checking implementations *)
 				scope.ownerModule.AddScope(scope);
 			END;
@@ -8651,7 +8625,7 @@ TYPE
 			IF (x.name = Global.SystemName) OR (x.name = Global.systemName) THEN Error(x.position,"name reserved") END;
 			IF x.context = SyntaxTree.invalidIdentifier THEN x.SetContext(Global.A2Name) END;
 			RemoveModuleFromCache(importCache,x);
-			Declarations(x.moduleScope, FALSE, TRUE, TRUE);
+			Declarations(x.moduleScope, FALSE, {0,1});
 			FixTypes();
 
 			IF module.isCellNet THEN

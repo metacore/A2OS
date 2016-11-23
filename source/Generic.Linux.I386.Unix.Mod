@@ -413,7 +413,7 @@ VAR
 	resume_done: LONGINT;
 	sasuspend, saresume: Sigaction;
 	
-	argc-: LONGINT;  argv-: ADDRESS;
+	argc-: LONGINT;  argv-: ADDRESS;  environ-: ADDRESS;
 
 	sysinfo-: RECORD
 		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
@@ -1107,6 +1107,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 	BEGIN		
 		argc := Glue.argc;
 		argv := Glue.argv;
+		environ := Glue.environ;
 
 		libraryPaths[0] := "/lib/i386-linux-gnu";
 		libraryPaths[1] := "/usr/lib/i386-linux-gnu";

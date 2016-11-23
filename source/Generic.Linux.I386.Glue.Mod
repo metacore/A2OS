@@ -24,6 +24,7 @@ VAR
 
 	argc-: WORD; 
 	argv-: ADDRESS;
+	environ-: ADDRESS;
 
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
 	CODE
@@ -191,11 +192,21 @@ VAR
 	
 	PROCEDURE {INITIAL,NOPAF} Init0;
 	BEGIN
+		(*initial stack layout:
+			argc at esp
+			argv at esp+4
+			0 at esp+4+argc*4
+			env at esp+4+argc*4+4      =   (2+argc)<<2 + esp*)
 		CODE{SYSTEM.i386}
 			MOV EAX, [ESP]
 			MOV argc, EAX
 			LEA EAX, [ESP+4]
 			MOV argv, EAX
+			MOV EAX, [ESP]
+			ADD EAX, 2
+			SHL EAX, 2
+			ADD EAX, ESP
+			MOV environ, EAX
 		END;
 		Init;
 	END Init0;

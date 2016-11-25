@@ -9088,7 +9088,7 @@ TYPE
 				IF backend.cooperative THEN
 					IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,addressType.sizeInBits));
 				END;
-				IF ~x.type.resolved.IsPointer() THEN (* var par ! *)
+				IF ~(x.type.resolved.IsPointer() OR (x.type.resolved IS SyntaxTree.CellType) &  backend.cellsAreObjects) THEN (* var par ! *)
 					MakeMemory(result.op, result.op, addressType, 0);
 				END;
 				(* tag must be loaded when dereferencing SELF pointer *)

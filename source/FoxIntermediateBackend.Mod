@@ -105,6 +105,8 @@ CONST
 			a base pointer but a procedure descriptor. The base pointer itself is in such cases located at BP + address size.
 		*)
 		
+		WarningDynamicLoading = FALSE;
+		
 TYPE
 	Position=SyntaxTree.Position;
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
@@ -2969,8 +2971,10 @@ TYPE
 						IF force THEN
 							Error(position,s);
 						ELSIF canBeLoaded THEN
-							Strings.Append(s, "=> no dynamic linking.");
-							Warning(position, s);
+							IF WarningDynamicLoading THEN
+								Strings.Append(s, "=> no dynamic linking.");
+								Warning(position, s);
+							END;
 							canBeLoaded := FALSE;
 						END;
 						RETURN FALSE

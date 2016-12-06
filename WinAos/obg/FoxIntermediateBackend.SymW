@@ -82,6 +82,7 @@ CONST
 	Size7Flag = 9; 
 	Size8Flag = 10; 
 	ReflectionSupport = TRUE; 
+	WarningDynamicLoading = FALSE; 
 TYPE 
 	Position = SyntaxTree.Position; 
 

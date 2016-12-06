@@ -1,5 +1,5 @@
 MODULE WebHTTPTools;
-	IMPORT Commands, Files, TCP, WebHTTP, WebHTTPClient, Streams, TFLog, Modules;
+	IMPORT Commands, Files, IP, TCP, WebHTTP, WebHTTPClient, Streams, TFLog, Modules;
 CONST 
 VAR 
 	log: TFLog.Log; 
@@ -8,6 +8,8 @@ VAR
 	PROCEDURE ^ MatchPrefixI(CONST prefix, str: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Get*(context: Commands.Context); 
 	PROCEDURE ^ Head*(context: Commands.Context); 
+	PROCEDURE ^ GetAll*(context: Commands.Context); 
+	PROCEDURE ^ Read*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END WebHTTPTools.

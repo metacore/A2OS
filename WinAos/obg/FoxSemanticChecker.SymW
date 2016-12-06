@@ -252,7 +252,7 @@ TYPE
 		PROCEDURE ^ Register(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; allowDuplicate: BOOLEAN); 
 		PROCEDURE ^ Implementation(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ Implementations(x: SyntaxTree.Module); 
-		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN); 
+		PROCEDURE ^ Declarations(scope: SyntaxTree.Scope; skipImplementation: BOOLEAN; phases: SET); 
 		PROCEDURE ^ CheckInterOperatorConformity(thisModuleScope, thatModuleScope: SyntaxTree.ModuleScope); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 	END Checker; 

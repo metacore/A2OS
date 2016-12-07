@@ -417,6 +417,7 @@ TYPE
 				PROCEDURE Enumerate0*( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 				VAR 
 					path, filemask: Filename;
+					isPath: BOOLEAN;
 					i, j: INTEGER;  dirName, fileName, fullName: Filename;
 					checkSet: NameSet;  ent: Unix.Dirent; 
 					
@@ -438,6 +439,7 @@ TYPE
 							ent := Unix.readdir( dir );
 							WHILE ent # NIL DO
 								COPY( dirName, fullName );  
+								
 								GetEntryName;  AppendName( fullName, fileName );
 								IF (fileName[0] # '.')  & Match( fileName, filemask, 0, 0 ) THEN
 									IF checkSet.Add( fileName ) THEN  (* not a covered name *)
@@ -466,14 +468,21 @@ TYPE
 					Files.SplitName( mask, prefix, fullName );
 					Files.SplitPath( fullName, path, filemask );
 					NEW( checkSet, "M###N" );
-					IF path # "" THEN
-						CleanPath( path );
-						EnumDir( path )
-					ELSE
+					isPath:= path#"";
+
+					IF isPath THEN
+						CleanPath(path); (*get rid of xxx/../xxx and  xxx/./xxx in the path string*)
+					END;
+					IF isPath & (path[0] = '/') THEN (*check for absolute path*)
+						EnumDir( path);
+					ELSE (*no path or relative path*)
 						i := 0;  j := 0;  
-						LOOP
+						LOOP (*go through the search paths, every time a complete search path has been traversed, look for the element there*)
 							IF (searchPath[i] = " ") OR (searchPath[i] = 0X) THEN
 								dirName[j] := 0X;
+								IF isPath THEN (*if relative path: add relative path to the current search path*)
+									Files.JoinPath(dirName, path, dirName);
+								END;
 								EnumDir( dirName );
 								IF searchPath[i] = 0X THEN  EXIT   
 								ELSE  INC( i );  j := 0  

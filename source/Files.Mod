@@ -1110,6 +1110,21 @@ BEGIN
 	RETURN FALSE;
 END Exists;
 
+(* add a search path to the system *)
+PROCEDURE AddSearchPath*(context: Commands.Context);
+VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
+BEGIN
+	(* preliminary implementation until we know how to solve this generically *)
+	IF Modules.ModuleByName("WinFS") # NIL THEN 
+		cmd := "WinFS.AddSearchPath";
+	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN 
+		cmd := "UnixFiles.AddSearchPath";
+	END;
+	IF cmd # "" THEN 
+		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
+		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
+	END
+END AddSearchPath;
 (* Find an open file. *)
 
 PROCEDURE FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File;

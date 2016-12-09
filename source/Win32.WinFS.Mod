@@ -1211,6 +1211,25 @@ VAR
 
 		notifications := NIL;
 	END Init;
+	
+	PROCEDURE AddSearchPath*(context: Commands.Context);
+	VAR name: FileName; i,j: LONGINT; ch : CHAR;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			i := 0; j := 0;
+			ConvertChar( name, Files.PathDelimiter, PathDelimiter );
+			WHILE(searchPath[i] # 0X) DO
+				INC(i);
+			END;
+			searchPath[i] := ";";INC(i);
+			REPEAT
+				ch := name[j];
+				searchPath[i] := name[j];
+				INC(j);INC(i);
+			UNTIL ch = 0X;
+		END;
+	END AddSearchPath;
+	
 
 	PROCEDURE Mount*(context : Commands.Context);
 	VAR diskname: ARRAY 256 OF CHAR;

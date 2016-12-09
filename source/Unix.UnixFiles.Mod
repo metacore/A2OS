@@ -4,7 +4,7 @@ MODULE UnixFiles;   (** AUTHOR "gf"; PURPOSE "Unix file systems" *)
 
 (*  derived fron (SPARCOberon) Files.Mod by J. Templ 1.12. 89/14.05.93 *)
 
-IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files;
+IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files, Commands;
 
 
 CONST
@@ -1108,6 +1108,23 @@ TYPE
 		tempno := 1;  openfiles := 0;  
 		Modules.InstallTermHandler( Finalization )	
 	END Initialize;
+	
+	PROCEDURE AddSearchPath*(context: Commands.Context);
+	VAR name: Files.FileName; i,j: LONGINT; ch : CHAR;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			i := 0; j := 0;
+			WHILE(searchPath[i] # 0X) DO
+				INC(i);
+			END;
+			searchPath[i] := " ";INC(i);
+			REPEAT
+				ch := name[j];
+				searchPath[i] := name[j];
+				INC(j);INC(i);
+			UNTIL ch = 0X;
+		END;
+	END AddSearchPath;
 
 	PROCEDURE Finalization;
 	VAR ft: Files.FileSystemTable;  i: LONGINT;

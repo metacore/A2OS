@@ -16,10 +16,12 @@ BEGIN
 	ELSIF (str="i") OR (str = "interpreter") THEN str := "InterpreterShell.Start"
 	ELSIF (str = "run") OR (str="r") THEN str := "SystemTools.DoFile"
 	END;
-
+	
 	Commands.Activate(str, context, {Commands.Wait}, res, msg);
 	IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
 END Execute;
+
+(* do not add commands here -- the module loader does not finish here and they will not become available *)
 
 BEGIN
 	Execute(StdIO.env);
@@ -37,6 +39,7 @@ SystemTools.DoCommands
 		StaticLinker
 		FoxOberonFrontend
 		FoxAMDBackend
+		FoxARMBackend
 		FoxGenericObjectFile
 		InterpreterShell
 		SystemTools
@@ -49,10 +52,33 @@ SystemTools.DoCommands
 		~
 		FSTools.CloseFiles oberon ~
 		~
-TODOS:
-	- check linux file system (new files dot not work)
-	- add interpreter to linked image
 
+SystemTools.DoCommands
+	StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
+		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
+		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
+		WinTrace StdIO 
+
+		Runtime  Traps RelativeFileSystem GenericLoader
+		WMDefaultFont
+		StdIOShell
+		Compiler
+		StaticLinker
+		FoxOberonFrontend
+		FoxAMDBackend
+		FoxARMBackend
+		FoxGenericObjectFile
+		InterpreterShell
+		SystemTools
+		FSTools
+		PCAAMD64
+		BootManager
+		VirtualDisks
+		DiskFS
+		Partitions
+		~
+		FSTools.CloseFiles oberon.exe ~
+		~
 
 (** LINUX **)
 

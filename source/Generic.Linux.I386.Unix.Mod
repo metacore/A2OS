@@ -486,6 +486,7 @@ VAR
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
+	realpath-	: PROCEDURE {C} (file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
@@ -1176,6 +1177,7 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		Dlsym( libc, "open",		ADDRESSOF( open ) );
 		Dlsym( libc, "close",	ADDRESSOF( close ) );
 		Dlsym( libc, "lseek",	ADDRESSOF( lseek ) );
+		Dlsym( libc, "realpath",	ADDRESSOF( realpath ) );
 		Dlsym( libc, "fsync",	ADDRESSOF( fsync ) );
 		Dlsym( libc, "ioctl",	ADDRESSOF( ioctl ) );
 		Dlsym( libc, "unlink",	ADDRESSOF( unlink ) );

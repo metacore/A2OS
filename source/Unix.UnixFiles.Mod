@@ -418,7 +418,7 @@ TYPE
 				VAR 
 					path, filemask: Filename;
 					isPath: BOOLEAN;
-					i, j: INTEGER;  dirName, fileName, fullName: Filename;
+					i, j: INTEGER;  dirName, fileName, fullName, xName: Filename;
 					checkSet: NameSet;  ent: Unix.Dirent; 
 					
 					PROCEDURE GetEntryName;
@@ -454,6 +454,8 @@ TYPE
 											r := Unix.access( ADDRESSOF( fullName ), Unix.W_OK ); 
 											IF r < 0 THEN  flags := {Files.ReadOnly}  END
 										END;
+										r := Unix.realpath(ADDRESSOF(fullName), ADDRESSOF(xName));
+										IF (r # 0) THEN COPY(xName, fullName) END;
 										enum.PutEntry( fullName, flags, time, date, stat.size );
 									END
 								END;

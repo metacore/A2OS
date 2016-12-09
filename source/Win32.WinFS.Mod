@@ -140,7 +140,7 @@ TYPE
 	VAR fs: WinFileSystem;
 		useprefix*: BOOLEAN;
 
-		PROCEDURE Prefix( VAR name, res: ARRAY OF CHAR );
+		PROCEDURE Prefix( CONST name: ARRAY OF CHAR; VAR res: ARRAY OF CHAR );
 		BEGIN
 			IF useprefix & (name # "") THEN Join( prefix, ":", name, res );  ELSE COPY( name, res );  END;
 		END Prefix;
@@ -197,6 +197,13 @@ TYPE
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
 		END RemoveDirectory0;
+		
+		PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+		VAR fname: FileName;
+		BEGIN
+			Prefix(name, fname );  RETURN fs.Has(fname, fullName, flags);
+		END Has;
+		
 
 	END AliasFileSystem;
 
@@ -405,6 +412,20 @@ TYPE
 		BEGIN
 			collection.Finalize();
 		END Finalize;
+
+		PROCEDURE Has*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+		VAR name: FileName;
+		BEGIN
+			COPY(fileName, name);
+			ConvertChar(name, Files.PathDelimiter, PathDelimiter );  
+			IF FindFile(fileName, fullName) THEN 
+				flags := FileFlags(Kernel32.GetFileAttributes(fullName));
+				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);  
+				RETURN TRUE
+			ELSE
+				RETURN FALSE
+			END;
+		END Has;
 
 	END WinFileSystem;
 

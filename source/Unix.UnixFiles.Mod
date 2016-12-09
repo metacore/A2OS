@@ -113,6 +113,11 @@ TYPE
 			BEGIN
 				fs.RemoveDirectory0( name, force, key, res );
 			END RemoveDirectory0;
+			
+			PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+			BEGIN
+				RETURN fs.Has(name, fullName, flags);
+			END Has;
 
 	END AliasFileSystem;
 	
@@ -496,6 +501,25 @@ TYPE
 					END;
 					checkSet := NIL;
 				END Enumerate0;
+				
+				PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+				VAR r: LONGINT;stat: Unix.Status;
+				BEGIN
+					r := Unix.stat( ADDRESSOF( name ), stat );
+					TRACE(r);
+					IF r  # 0 THEN RETURN FALSE END;
+					flags := {};
+					IF IsDirectory( stat ) THEN
+						flags := {Files.ReadOnly, Files.Directory}
+					ELSE
+						r := Unix.access( ADDRESSOF( name ), Unix.W_OK ); 
+						IF r < 0 THEN  flags := {Files.ReadOnly}  END
+					END;
+					r := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
+					TRACE(r,name,fullName);
+					IF (r = 0) THEN COPY(name, fullName) END; (* no success *)
+					RETURN TRUE;
+				END Has;
 
 	END UnixFileSystem;
 	

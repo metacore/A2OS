@@ -316,6 +316,19 @@ TYPE
 		BEGIN	(* see note in Volume.Finalize *)
 			vol := NIL
 		END Finalize;
+		
+		(* default implementation using an enumerator *)
+		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+		VAR enum: Enumerator; time, date, size: LONGINT;
+		BEGIN
+			NEW(enum);
+			enum.Open(name,{});
+			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN 
+				RETURN TRUE 
+			ELSE 
+				RETURN FALSE 
+			END;
+		END Has;
 
 (* GC
 		PROCEDURE Purge*(f: File);	(* race! *)
@@ -1056,8 +1069,8 @@ END RemoveDirectory;
 PROCEDURE Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
 VAR
 	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
-	prefix: Prefix; fmask: FileName
-;BEGIN
+	prefix: Prefix; fmask: FileName;
+BEGIN
 	SplitName(mask, prefix, fmask);
 	IF prefix = "" THEN
 		GetList(ft);
@@ -1074,6 +1087,28 @@ VAR
 		IF fs # NIL THEN fs.Enumerate0(fmask, flags, enum) END
 	END
 END Enumerate;
+
+PROCEDURE Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+VAR
+	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
+	prefix: Prefix;
+BEGIN
+	IF prefix = "" THEN
+		GetList(ft);
+		IF ft # NIL THEN
+				(* FIX: deadlock possible if fs containing anonymous file does not allow concurrent Enumerate and Write *)
+			FOR i := 0 TO LEN(ft^)-1 DO
+				IF ~(NeedsPrefix IN ft[i].flags) THEN
+					IF ft[i].Has(fileName, fullName, flags) THEN RETURN TRUE END;
+				END;
+			END
+		END
+	ELSE
+		fs := This(prefix);
+		RETURN fs.Has(fileName, fullName, flags);
+	END;
+	RETURN FALSE;
+END Exists;
 
 (* Find an open file. *)
 

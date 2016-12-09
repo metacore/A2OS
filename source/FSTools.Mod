@@ -1117,11 +1117,8 @@ END CloseFiles;
 
 (* returns if a file or directory exists. If yes, then fullname is set to filename *)
 PROCEDURE Exists*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-VAR enum: Files.Enumerator; fname, suffix: Files.FileName; time, date, size: LONGINT;
 BEGIN
-	NEW(enum);
-	enum.Open(name,{});
-	IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN RETURN TRUE ELSE RETURN FALSE END;
+	RETURN Files.Exists(name, fullName, flags);
 END Exists;
 
 END FSTools.

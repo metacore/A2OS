@@ -506,7 +506,6 @@ TYPE
 				VAR r: LONGINT;stat: Unix.Status;
 				BEGIN
 					r := Unix.stat( ADDRESSOF( name ), stat );
-					TRACE(r);
 					IF r  # 0 THEN RETURN FALSE END;
 					flags := {};
 					IF IsDirectory( stat ) THEN
@@ -516,7 +515,6 @@ TYPE
 						IF r < 0 THEN  flags := {Files.ReadOnly}  END
 					END;
 					r := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
-					TRACE(r,name,fullName);
 					IF (r = 0) THEN COPY(name, fullName) END; (* no success *)
 					RETURN TRUE;
 				END Has;

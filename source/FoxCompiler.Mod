@@ -314,7 +314,7 @@ TYPE
 
 		position := input.Pos();
 		parsed := options.Parse(input,NIL);
-		IF options.GetString("platform", name) THEN
+		IF options.GetString("platform", name) OR GetDefaultPlatform(name) THEN
 			defaults := platforms.Get(name);
 			IF defaults = NIL THEN 	
 				error.String("Unknown platform"); error.Ln 
@@ -509,31 +509,60 @@ TYPE
 		END;
 	END CompileReader;
 
-	VAR platforms: Options.Defaults;
+	VAR 
+		platforms: Options.Defaults;
+		defaultPlatform: ARRAY 32 OF CHAR;
 	
-	PROCEDURE AddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
+	PROCEDURE DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
 	BEGIN
 		platforms.Add(name, defaults);
-	END AddPlatform;
+	END DoAddPlatform;
 	
 	PROCEDURE ShowDefaults*(context: Commands.Context);
 	BEGIN
 		platforms.Show(context.out)
 	END ShowDefaults;
 	
-
+	PROCEDURE AddPlatform*(context: Commands.Context);
+	VAR name: ARRAY 32 OF CHAR; defaults: ARRAY 1024 OF CHAR;
+	BEGIN
+		IF context.arg.GetString(name) & context.arg.GetString(defaults) THEN
+			DoAddPlatform(name, defaults);
+		END;
+	END AddPlatform;
+	
+	PROCEDURE SetDefaultPlatform*(context: Commands.Context);
+	VAR name: ARRAY 32 OF CHAR;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			COPY(name, defaultPlatform);
+		END;
+	END SetDefaultPlatform;
+	
+	PROCEDURE GetDefaultPlatform(VAR name: ARRAY OF CHAR): BOOLEAN;
+	BEGIN
+		IF defaultPlatform # "" THEN
+			COPY(defaultPlatform, name);
+			RETURN TRUE
+		ELSE
+			RETURN FALSE
+		END
+	END GetDefaultPlatform;
+	
+	
 BEGIN
 	NEW(platforms);
+	defaultPlatform := "";
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
-	AddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtensions=.Obw --symbolFileExtension=.Obw");
-	AddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC");
-	AddPlatform("ARM","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
-	AddPlatform("Minos","-b=ARM --objectFile=Minos"); 
-	AddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
-	AddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
-	AddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");
-	AddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
-	AddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
-	AddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
-	AddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
+	DoAddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtensions=.Obw --symbolFileExtension=.Obw");
+	DoAddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC");
+	DoAddPlatform("ARM","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
+	DoAddPlatform("Minos","-b=ARM --objectFile=Minos"); 
+	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
+	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
+	DoAddPlatform("A2","-b=AMD --objectFile=Binary --objectFileExtension=.Obx --symbolFileExtension=.Obx");
+	DoAddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
+	DoAddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
+	DoAddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
+	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
 END Compiler.

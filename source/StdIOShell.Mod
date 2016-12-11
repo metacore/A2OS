@@ -2,23 +2,33 @@ MODULE StdIOShell; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT StdIO, Commands, Streams, Modules, Objects, Shell;
 
+PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
+VAR msg: ARRAY 256 OF CHAR;  res: LONGINT; 
+BEGIN
+	Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
+	IF res # 0 THEN context.error.String(msg); context.error.Ln; RETURN FALSE END;
+	RETURN TRUE;
+END Activate;
+
 PROCEDURE Execute(context: Commands.Context);
-VAR str, msg: ARRAY 256 OF CHAR;  res: LONGINT; shell: Shell.Shell; 
+VAR str, msg: ARRAY 256 OF CHAR;  res: LONGINT; shell: Shell.Shell; b: BOOLEAN;
 BEGIN
 	IF ~context.arg.GetString(str) THEN  
 		context.out.String("Critical error: no arg"); 
-		RETURN END;
+		RETURN 
+	END;
 	IF ~context.arg.GetString(str) THEN 
 		str := "Shell.Start";
-	END;
-	IF str = "compile" THEN str := "Compiler.Compile"
+	ELSIF str = "compile" THEN str := "Compiler.Compile"
 	ELSIF str="link" THEN str := "StaticLinker.Link"
 	ELSIF (str="i") OR (str = "interpreter") THEN str := "InterpreterShell.Start"
-	ELSIF (str = "run") OR (str="r") THEN str := "SystemTools.DoFile"
+	ELSIF (str = "execute") OR (str="e") THEN str := "SystemTools.DoFile";
+	ELSIF (str = "run") OR (str="r") THEN 
+		IF ~Activate(context, "SystemTools.DoFile") THEN RETURN END;
+		str := "Shell.Start";
 	END;
 	
-	Commands.Activate(str, context, {Commands.Wait}, res, msg);
-	IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
+	b := Activate(context, str);
 END Execute;
 
 (* do not add commands here -- the module loader does not finish here and they will not become available *)

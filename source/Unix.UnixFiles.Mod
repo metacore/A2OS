@@ -366,17 +366,18 @@ TYPE
 									res := Unix.errno( );  
 									RETURN NoDesc;
 								END;
-								n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize );
-								WHILE n > 0 DO
-									r := Unix.write( fdnew, ADDRESSOF( buf ), n );
-									IF r < 0 THEN
-										res := Unix.errno();  
-										r := Unix.close( fdold );  
-										r := Unix.close( fdnew );
-										RETURN NoDesc;
-									END;
-									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize )
-								END;
+								REPEAT
+									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize ); (*can return -1 with EINTR without any particular reason*)
+									IF n>0 THEN
+										r := Unix.write( fdnew, ADDRESSOF( buf ), n );
+										IF r < 0 THEN
+											res := Unix.errno();  
+											r := Unix.close( fdold );  
+											r := Unix.close( fdnew );
+											RETURN NoDesc;
+										END;
+									END
+								UNTIL n=0;
 								r := Unix.unlink( ADDRESSOF( old ) );
 								r := Unix.close( fdold );
 								r := Unix.close( fdnew );  
@@ -631,7 +632,9 @@ TYPE
 							IF fd = NoDesc THEN  CreateUnixFile  END;
 							IF fpos # org THEN  res := Unix.lseek( fd, org, 0 )  END;
 							IF res < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" )  END;
-							n := Unix.read( fd, ADDRESSOF( buf.data ), Bufsize );
+							REPEAT
+								n := Unix.read( fd, ADDRESSOF( buf.data ), Bufsize ); (*can return -1 with EINTR without warning*)
+							UNTIL n>=0;
 							IF n < 0 THEN  
 								IF p < fsize THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: read failed" )  
 								ELSE n := 0

@@ -369,7 +369,10 @@ TYPE
 								REPEAT
 									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize ); (*can return -1 with EINTR without any particular reason*)
 									IF n>0 THEN
-										r := Unix.write( fdnew, ADDRESSOF( buf ), n );
+										REPEAT
+											r := Unix.write( fdnew, ADDRESSOF( buf ), n );
+											res:= Unix.errno();
+										UNTIL (r>=0) OR (res#Unix.EINTR);   (*ignore EINTR, retry*)
 										IF r < 0 THEN
 											res := Unix.errno();  
 											r := Unix.close( fdold );  
@@ -586,12 +589,17 @@ TYPE
 				
 						
 				PROCEDURE Flush( buf: Buffer );
-				VAR res: LONGINT;  stat: Unix.Status;
+				VAR res,err: LONGINT;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
 						IF fd = NoDesc THEN  CreateUnixFile  END;
 						IF buf.org # fpos THEN  res := Unix.lseek( fd, buf.org, 0 )  END;
-						res := Unix.write( fd, ADDRESSOF( buf.data ), buf.size );
+						REPEAT
+							res := Unix.write( fd, ADDRESSOF( buf.data ), buf.size );
+							IF res<0 THEN
+								err:=Unix.errno();
+							END;
+						UNTIL (res>=0) OR (err#Unix.EINTR);   (*ignore EINTR, retry*)
 						IF res < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Flush: write failed" )  END;
 						fpos := buf.org + buf.size;  buf.chg := FALSE;
 						res := Unix.fstat( fd, stat );  mtime := stat.mtime.sec

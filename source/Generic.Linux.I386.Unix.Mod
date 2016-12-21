@@ -470,7 +470,7 @@ VAR
 	(*more restrictive than spawnp*)
 	posix_spawn- 	: PROCEDURE{C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
 	waitpid-			: PROCEDURE{C}(pid: pid_t; status: ADDRESS; options: LONGINT): pid_t;
-	pipe-				:PROCEDURE{C}(pipefd: ADDRESS); (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)	
+	pipe-				:PROCEDURE{C}(pipefd: ADDRESS): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)	
 	dup2-				:PROCEDURE{C}(oldfd,newfd: LONGINT): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
 	dup-				:PROCEDURE{C}(oldfd: LONGINT): LONGINT;
 	

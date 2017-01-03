@@ -258,8 +258,8 @@ TYPE
 
 
 				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
-				VAR f: File;  stat: Unix.Status;  fd, r, errno, pos: LONGINT;
-					oflags: SET;  nextdir, path: Filename;  fo: LONGINT;
+				VAR f: File;  stat: Unix.Status;  fd, r, pos: LONGINT; 
+					oflags: SET;  nextdir, path: Filename; 
 				BEGIN  {EXCLUSIVE}
 					IF name = "" THEN  RETURN NIL  END;
 					
@@ -275,15 +275,7 @@ TYPE
 						IF r >= 0 THEN
 							r := Unix.access( ADDRESSOF( path ), Unix.W_OK );
 							IF r < 0 THEN  oflags := Unix.rdonly  ELSE  oflags := Unix.rdwr  END;
-						
-							fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
-							IF ((fd < 0) & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL}))  THEN
-								REPEAT
-									fo := openfiles;  Kernel.GC;  WaitClose( fo );
-									fd := Unix.open( ADDRESSOF( path ), oflags, {} );  errno := Unix.errno();
-								UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})
-							END;
-							
+							fd := UnixOpen( ADDRESSOF( path ), oflags, {} );
 							IF fd >= 0 THEN
 								r := Unix.fstat( fd, stat );
 								f := collection.ByStat(stat);
@@ -337,6 +329,7 @@ TYPE
 					key := 0;
 				END Delete0;
 				
+				
 				(* return remaining old file, if any *)
 				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT ): LONGINT;
 				CONST Bufsize = 4096;
@@ -355,24 +348,21 @@ TYPE
 						IF r < 0 THEN (* could not rename, try copy *)
 							res := Unix.errno( );
 							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
-								fdold := Unix.open( ADDRESSOF( old ), Unix.rdonly, {} );
+								fdold := UnixOpen( ADDRESSOF( old ), Unix.rdonly, {} );
 								fo := fdold;
 								IF fdold < 0 THEN    
 									res := Unix.errno( );  
 									RETURN NoDesc;
 								END;
-								fdnew := Unix.open( ADDRESSOF( new ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
+								fdnew := UnixOpen( ADDRESSOF( new ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 								IF fdnew < 0 THEN    
 									res := Unix.errno( );  
 									RETURN NoDesc;
 								END;
 								REPEAT
-									n := Unix.read( fdold, ADDRESSOF( buf ), Bufsize ); (*can return -1 with EINTR without any particular reason*)
+									n := UnixRead( fdold, ADDRESSOF( buf ), Bufsize ); 
 									IF n > 0 THEN
-										REPEAT
-											r := Unix.write( fdnew, ADDRESSOF( buf ), n );
-											IF r < 0 THEN  res:= Unix.errno( )  END;
-										UNTIL (r >= 0) OR (res # Unix.EINTR); (*ignore EINTR, retry*)
+										r := UnixWrite( fdnew, ADDRESSOF( buf ), n );
 										IF r < 0 THEN
 											r := Unix.close( fdold );  
 											r := Unix.close( fdnew );
@@ -551,7 +541,7 @@ TYPE
 
 				PROCEDURE CreateUnixFile;
 				VAR 
-					stat: Unix.Status;  done: BOOLEAN;  errno,fo: LONGINT;
+					stat: Unix.Status;  errno: LONGINT;
 				BEGIN
 					IF state = Create THEN  
 						GetTempName( registerName, workName );  tempFile := TRUE
@@ -565,17 +555,8 @@ TYPE
 					errno := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
 											
-					fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
-					done := fd >= 0;  errno := Unix.errno();
-
-					IF ( (~done) & (errno IN {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL})) THEN
-						REPEAT
-							fo := openfiles;  Kernel.GC;  WaitClose( fo );
-							fd := Unix.open( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr);  errno := Unix.errno();
-						UNTIL (fd >= 0) OR ~ (errno IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL});
-						done := fd >= 0
-					END;
-					IF done THEN
+					fd := UnixOpen( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
+					IF fd >= 0 THEN
 						errno := Unix.fstat( fd, stat );  
 						dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
 						state := Open;  fpos := 0;
@@ -588,15 +569,12 @@ TYPE
 				
 						
 				PROCEDURE Flush( buf: Buffer );
-				VAR res,err: LONGINT;  stat: Unix.Status;
+				VAR res: LONGINT;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
 						IF fd = NoDesc THEN  CreateUnixFile  END;
 						IF buf.org # fpos THEN  res := Unix.lseek( fd, buf.org, 0 )  END;
-						REPEAT
-							res := Unix.write( fd, ADDRESSOF( buf.data ), buf.size );
-							IF res < 0 THEN  err := Unix.errno()  END;
-						UNTIL (res >= 0) OR (err # Unix.EINTR);   (*ignore EINTR, retry*)
+						res := UnixWrite( fd, ADDRESSOF( buf.data ), buf.size );
 						IF res < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Flush: write failed" )  END;
 						fpos := buf.org + buf.size;  buf.chg := FALSE;
 						res := Unix.fstat( fd, stat );  mtime := stat.mtime.sec
@@ -637,11 +615,7 @@ TYPE
 							IF fd = NoDesc THEN  CreateUnixFile  END;
 							IF fpos # org THEN  res := Unix.lseek( fd, org, 0 )  END;
 							IF res < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" )  END;
-							REPEAT
-								n := Unix.read( fd, ADDRESSOF( buf.data ), Bufsize ); (*can return -1 with EINTR without warning*)
-								IF n < 0 THEN  res:= Unix.errno( )  END;
-							UNTIL (n >= 0) OR ((res # Unix.EINTR) & (res # Unix.EINVAL));
-									(* Solaris returns EINVAL instead of EINTR ! ??? *)
+							n := UnixRead( fd, ADDRESSOF( buf.data ), Bufsize ); 
 							IF n < 0 THEN  
 								IF p < fsize THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: read failed" )  
 								ELSE n := 0
@@ -808,7 +782,7 @@ TYPE
 						IF fo # NoDesc THEN (* SELF still refers to old file *)
 							res := Unix.close(fd); 
 							res := Unix.unlink(ADDRESSOF(workName));  (* VirtualBox ! Can only delete file when closed. *)
-							fd := Unix.open( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
+							fd := UnixOpen( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
 						END;
 
 						workName := registerName;  registerName := "";  tempFile := FALSE;
@@ -866,7 +840,9 @@ TYPE
 				END GetName;
 
 			END File;
-
+			
+		
+	
 (*===================================================================*)
 
 	(** Get the current directory. *)
@@ -1118,6 +1094,48 @@ TYPE
 		tempno := 1;  openfiles := 0;  
 		Modules.InstallTermHandler( Finalization )	
 	END Initialize;
+	
+	
+	(*!	The system calls open, read and write return -1 when they get interrupted 
+		by receiving a signal. Possibly through Objects.SuspendActivities() (GC).
+	*)
+	PROCEDURE UnixOpen( path: ADDRESS; flags, permissions: SET ): LONGINT;
+	VAR 
+		fd, fo, error: LONGINT;  failure: BOOLEAN;
+	BEGIN
+		failure := FALSE;
+		REPEAT
+			fd := Unix.open( path, flags, permissions );
+			IF fd < 0 THEN
+				error := Unix.errno();
+				IF error IN  {Unix.ENFILE, Unix.EMFILE} THEN
+					fo := openfiles;  Kernel.GC;  WaitClose( fo )
+				ELSIF error # Unix.EINTR THEN
+					failure := TRUE
+				END
+			END
+		UNTIL (fd >= 0) OR failure;
+		RETURN fd
+	END UnixOpen;
+	
+	PROCEDURE UnixRead( fd: LONGINT; buf: ADDRESS; len: SIZE ): LONGINT;
+	VAR n: LONGINT;
+	BEGIN
+		REPEAT
+			n := Unix.read( fd, buf, len )
+		UNTIL (n >= 0) OR (Unix.errno() # Unix.EINTR);
+		RETURN n
+	END UnixRead;	
+	
+	PROCEDURE UnixWrite( fd: LONGINT; buf: ADDRESS; len: SIZE ): LONGINT;
+	VAR n: LONGINT;
+	BEGIN
+		REPEAT
+			n := Unix.write( fd, buf, len )
+		UNTIL (n >= 0) OR (Unix.errno() # Unix.EINTR);
+		RETURN n
+	END UnixWrite;	
+	
 	
 	PROCEDURE AddSearchPath*(context: Commands.Context);
 	VAR name: Files.FileName; i,j: LONGINT; ch : CHAR;

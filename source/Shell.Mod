@@ -218,7 +218,15 @@ TYPE
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
 
-						IF (* (ch = CR) OR*)  (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+						IF (ch = CR) OR (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+							
+							(* skip redundant CR and LF to avoid generation of empty commands *)
+							WHILE (context.in.res = Streams.Ok) & (context.in.Available() # 0) & ((context.in.Peek() = CR) OR (context.in.Peek() = LF)) DO
+								context.in.SkipBytes(1);
+							END;
+							
+							ch := LF;
+
 							EXIT
 
 						ELSIF (ch = Backspace) OR (ch = Delete)THEN

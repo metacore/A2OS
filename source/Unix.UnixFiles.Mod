@@ -163,11 +163,10 @@ TYPE
 	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
 	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
 		ssearch: SearchByFstat;
-		fileKey: LONGINT;
-
+	
 		PROCEDURE & Init*;
 		BEGIN
-			NEW( oldFiles );  NEW( newFiles );   NEW(ssearch); fileKey := -1;
+			NEW( oldFiles );  NEW( newFiles );   NEW( ssearch ); 
 		END Init;
 
 		PROCEDURE AddNew( F: File );
@@ -202,7 +201,9 @@ TYPE
 		VAR fin: FinalizeFiles;
 		BEGIN {EXCLUSIVE}
 			IF TraceCollection IN Trace THEN Log.String( "Collections.Finalize " );  Log.Ln;  END;
-			NEW( fin );  newFiles.Enumerate( fin.EnumFile );  newFiles.Clear();  oldFiles.Enumerate( fin.EnumFile );  oldFiles.Clear();
+			NEW( fin );  
+			newFiles.Enumerate( fin.EnumFile );  newFiles.Clear();  
+			oldFiles.Enumerate( fin.EnumFile );  oldFiles.Clear();
 		END Finalize;
 
 		PROCEDURE FinalizeFile( obj: ANY );
@@ -542,7 +543,7 @@ TYPE
 				PROCEDURE CreateUnixFile;
 				VAR 
 					stat: Unix.Status;  errno: LONGINT;
-				BEGIN
+				BEGIN				
 					IF state = Create THEN  
 						GetTempName( registerName, workName );  tempFile := TRUE
 					ELSIF state = Closed THEN
@@ -765,7 +766,7 @@ TYPE
 
 
 				PROCEDURE Register0*( VAR res: LONGINT );
-				VAR fo: LONGINT;
+				VAR fo, r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF (state = Create) & (registerName # "") THEN  
 						state := Closed (* shortcut renaming *)   ;
@@ -780,14 +781,13 @@ TYPE
 						END;
 
 						IF fo # NoDesc THEN (* SELF still refers to old file *)
-							res := Unix.close(fd); 
-							res := Unix.unlink(ADDRESSOF(workName));  (* VirtualBox ! Can only delete file when closed. *)
+							r := Unix.close( fd );  (* VirtualBox ! Can only delete file when closed. *)
+							r := Unix.unlink( ADDRESSOF( workName ) ); 
 							fd := UnixOpen( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
 						END;
 
 						workName := registerName;  registerName := "";  tempFile := FALSE;
 					END;
-					(*collection.Register(SELF);*)
 				END Register0;
 				
 
@@ -811,8 +811,8 @@ TYPE
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF tempFile THEN  
-						IF fd # NoDesc THEN r := Unix.close(fd) END;
-						r := Unix.unlink( ADDRESSOF( registerName ) );
+						IF fd # NoDesc THEN  r := Unix.close( fd )  END;
+						r := Unix.unlink( ADDRESSOF( workName ) );
 						fd := NoDesc;
 					ELSE  
 						FlushBuffers;
@@ -828,6 +828,7 @@ TYPE
 				PROCEDURE Close;
 				BEGIN
 					Finalize;
+					collection.newFiles.Remove(SELF);
 					collection.oldFiles.Remove(SELF);
 				END Close;
 				
@@ -1108,7 +1109,8 @@ TYPE
 			fd := Unix.open( path, flags, permissions );
 			IF fd < 0 THEN
 				error := Unix.errno();
-				IF error IN  {Unix.ENFILE, Unix.EMFILE} THEN
+				IF error IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL} THEN
+					(* in Solaris open fails with EINVAL ??? *)
 					fo := openfiles;  Kernel.GC;  WaitClose( fo )
 				ELSIF error # Unix.EINTR THEN
 					failure := TRUE

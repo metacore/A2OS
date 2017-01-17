@@ -299,6 +299,8 @@ TYPE
 									collection.AddOld(f);
 									EXIT
 								END
+							ELSE
+								(* file exists but open failed *)  f := NIL;  EXIT
 							END
 						ELSIF nextdir # "" THEN
 							MakePath( nextdir, name, path );  ScanPath( pos, nextdir );

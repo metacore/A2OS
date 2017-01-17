@@ -272,6 +272,7 @@ TYPE
 					END;
 											
 					LOOP
+						f := NIL;
 						r := Unix.access( ADDRESSOF( path ), Unix.R_OK );
 						IF r >= 0 THEN
 							r := Unix.access( ADDRESSOF( path ), Unix.W_OK );
@@ -1104,17 +1105,19 @@ TYPE
 	*)
 	PROCEDURE UnixOpen( path: ADDRESS; flags, permissions: SET ): LONGINT;
 	VAR 
-		fd, fo, error: LONGINT;  failure: BOOLEAN;
+		fd, fo, errno: LONGINT;  failure: BOOLEAN;
 	BEGIN
 		failure := FALSE;
 		REPEAT
 			fd := Unix.open( path, flags, permissions );
 			IF fd < 0 THEN
-				error := Unix.errno();
-				IF error IN  {Unix.ENFILE, Unix.EMFILE, Unix.EINVAL} THEN
+				errno := Unix.errno();
+				IF errno IN  {Unix.ENFILE, Unix.EMFILE} THEN
+					fo := openfiles;  Kernel.GC;  WaitClose( fo )
+				ELSIF (errno = Unix.EINVAL) & (openfiles > 1000) THEN
 					(* in Solaris open fails with EINVAL ??? *)
 					fo := openfiles;  Kernel.GC;  WaitClose( fo )
-				ELSIF error # Unix.EINTR THEN
+				ELSIF errno # Unix.EINTR THEN
 					failure := TRUE
 				END
 			END

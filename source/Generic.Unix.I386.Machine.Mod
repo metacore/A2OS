@@ -570,6 +570,7 @@ END GetTimer;
 	(* function returning the number of processors that are available to Aos *)
 	PROCEDURE NumberOfProcessors*( ): LONGINT;
 	BEGIN
+		(*todo: use unix command nproc*)
 		RETURN 1
 	END NumberOfProcessors;
 

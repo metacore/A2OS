@@ -71,6 +71,44 @@ TYPE
 
 	END Pipe;
 
+
+(** Any stream input procedure or method. Identical to the definition in Streams.Mod, but I don't want to import that here*)
+TYPE	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+(*makes a decoupled copy of a receiver*)
+(*internally it's a pipe that automatically reads the input in a continuous loop*)
+TYPE ReadDecoupler*= OBJECT
+	VAR
+		pipe: Pipe;
+		inputReceiver: Receiver;
+		numR: LONGINT;
+		smallbuf: ARRAY[128] OF CHAR;
+		len,res: LONGINT;
+
+	PROCEDURE &InitReadDecoupler*(inputReceiver: Receiver);
+	BEGIN
+		NEW(pipe,128);
+		SELF.inputReceiver:=inputReceiver;
+	END InitReadDecoupler;
+	
+	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+	BEGIN
+		pipe.Receive(buf,ofs,size,min,len,res);
+	END Receive;
+	
+BEGIN{ACTIVE}
+		
+		LOOP
+			(*todo: check res, if inputReceiver throws anything but 'OK' exit the loop*)
+			inputReceiver(smallbuf, 0, 128, 1, len,res); (*read at least 1 byte into the small buffer*)
+			pipe.Send(smallbuf, 0, len, FALSE,  res);   (*feed the amount read (usually 1 entire line) into the pipe to cross threads*)
+		END;
+END ReadDecoupler;
+
+
+
+
+
+
 END Pipes.
 
 (*
@@ -145,3 +183,5 @@ END Pipes.
 
 
 *)
+
+

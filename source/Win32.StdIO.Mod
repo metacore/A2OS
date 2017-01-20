@@ -2,7 +2,7 @@ MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
 
 (* Commands.Context for programs running outside Aos *)
 
-IMPORT S := SYSTEM, Modules, Commands, Streams, WinTrace, Kernel32;
+IMPORT S := SYSTEM, Modules, Commands, Streams, Pipes, WinTrace, Kernel32;
 
 CONST 
 	AddrSize = SIZEOF( ADDRESS );
@@ -12,6 +12,8 @@ VAR
 	env-: Commands.Context;
 
 	hin-, hout-, herr-: Kernel32.HANDLE;
+	stdInDecoupler: Pipes.ReadDecoupler;
+	
 
 PROCEDURE Args(): String;
 VAR size, pos: SIZE; i,j: LONGINT; str: String;
@@ -50,7 +52,8 @@ BEGIN
 	WinTrace.OpenConsole;
 	str := Args();
 	NEW( arg, LEN(str) ); arg.Set(str^);
-	NEW( stdin, WinTrace.Receive, 1024 );
+	NEW(stdInDecoupler, WinTrace.Receive);
+	NEW( stdin, stdInDecoupler.Receive, 1024 );
 	NEW( stdout, WinTrace.Send, 1024 );
 	NEW( errout, WinTrace.SendError, 512 );
 	NEW( env, stdin, arg, stdout, errout, NIL );

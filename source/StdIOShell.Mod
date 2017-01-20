@@ -1,6 +1,6 @@
 MODULE StdIOShell; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT StdIO, Commands, Streams, Modules, Objects, Shell;
+IMPORT StdIO, Commands, Modules, Streams, Pipes, Strings;
 
 PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
 VAR msg: ARRAY 256 OF CHAR;  res: LONGINT; 
@@ -11,7 +11,7 @@ BEGIN
 END Activate;
 
 PROCEDURE Execute(context: Commands.Context);
-VAR str, msg: ARRAY 256 OF CHAR;  res: LONGINT; shell: Shell.Shell; b: BOOLEAN;
+VAR str: ARRAY 256 OF CHAR;  b: BOOLEAN;
 BEGIN
 	IF ~context.arg.GetString(str) THEN  
 		context.out.String("Critical error: no arg"); 
@@ -33,8 +33,15 @@ END Execute;
 
 (* do not add commands here -- the module loader does not finish here and they will not become available *)
 
-BEGIN
+VAR
+	env: Commands.Context;
+	str: Strings.String;
+	decoupler: Pipes.ReadDecoupler;
+	inDecoupled: Streams.Receiver;
+	inStreamDecoupled: Streams.Reader;
+BEGIN	
 	Execute(StdIO.env);
+	TRACE('shell died');
 	Modules.Shutdown(Modules.PowerDown);
 	LOOP END;
 END StdIOShell.
@@ -146,13 +153,13 @@ SystemTools.DoCommands
 		Options Locks Debugging
 		StaticLinker 
 		FoxBasic  FoxProgTools  FoxScanner FoxSyntaxTree FoxGlobal
-		FoxActiveCells FoxHardware FoxFormats FoxPrintout
+		FoxActiveCells FoxHardware FoxFormats FoxFingerPrinter  FoxPrintout
 		FoxParser  FoxSemanticChecker
 		FoxBackend FoxSections 
 		
 		FoxFrontend
 		Compiler  FoxOberonFrontend 
-		FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
+		FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
 		
 		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
 		FoxBinaryObjectFile FoxGenericObjectFile

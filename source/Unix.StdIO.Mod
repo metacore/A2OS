@@ -2,7 +2,7 @@ MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
 
 (* Commands.Context for programs running outside Aos *)
 
-IMPORT S := SYSTEM, Modules, Commands, Streams, Unix;
+IMPORT S := SYSTEM, Modules, Commands, Streams,Pipes , Unix;
 
 CONST 
 	AddrSize = SIZEOF( ADDRESS );
@@ -10,7 +10,8 @@ TYPE
 	String=POINTER TO ARRAY OF CHAR;
 VAR 
 	env-: Commands.Context;
-
+	stdInDecoupler: Pipes.ReadDecoupler;
+	
 PROCEDURE Args(): String;
 VAR size, pos: SIZE; i,j: LONGINT; str: String;
 	argc: LONGINT;
@@ -94,7 +95,8 @@ VAR
 BEGIN
 	str := Args();
 	NEW( arg, LEN(str) ); arg.Set(str^);
-	NEW( stdin, ReceiveStdin, 1024 );
+	NEW(stdInDecoupler, ReceiveStdin);
+	NEW( stdin, stdInDecoupler.Receive, 1024 );
 	NEW( stdout, SendStdout, 1024 );
 	NEW( errout, SendErrout, 512 );
 	NEW( env, stdin, arg, stdout, errout, NIL );

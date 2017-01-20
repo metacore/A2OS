@@ -219,16 +219,12 @@ TYPE
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
 
 						IF (ch = CR) OR (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
-							
-							(* skip redundant CR and LF to avoid generation of empty commands *)
+							(* skip redundant CR and LF to avoid generation of empty commands. This requires peek functionality which doesn't work on the Input stream from an underlying OS, so a decoupler is needed that transforms that into an oberon stream*)
 							WHILE (context.in.res = Streams.Ok) & (context.in.Available() # 0) & ((context.in.Peek() = CR) OR (context.in.Peek() = LF)) DO
 								context.in.SkipBytes(1);
 							END;
-							
 							ch := LF;
-
 							EXIT
-
 						ELSIF (ch = Backspace) OR (ch = Delete)THEN
 							IF currentIndex >= 0 THEN (* There is a character at the left of the cursor *)
 								command[currentIndex] := 0X;
@@ -262,7 +258,6 @@ TYPE
 					(* ignore non-ascii characters *)
 				END;
 			END;
-
 			command[currentIndex+1] := 0X;
 
 			IF (ch = LF) (*OR (ch =CR)*)  THEN

@@ -1044,9 +1044,9 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		RETURN res;
 	END fstat;
 
-	PROCEDURE stat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
+	PROCEDURE stat*  ( path: ADDRESS;  VAR buf: Status ): LONGINT;
 	BEGIN
-		RETURN xstat(3, fd, buf);
+		RETURN xstat( 3, path, buf );
 	END stat;
 
 	

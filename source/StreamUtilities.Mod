@@ -254,6 +254,7 @@ TYPE
 		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
+			size := MAX(min,MIN(in.Available(),size));
 			in.Bytes(buf, ofs, size, len);
 			INC(received,len);
 			res:=in.res;

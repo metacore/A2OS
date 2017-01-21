@@ -79,6 +79,8 @@ TYPE
 		handle: Kernel32.HANDLE;
 		portname: ARRAY 6 OF CHAR; (* Name COM1 to COM8 must terminate with a 0X *)
 		timer : Kernel.Timer;
+		
+		rOverlapped, wOverlapped: Kernel32.Overlapped;
 
 		PROCEDURE & Init*( port: LONGINT );
 		VAR fn: Heaps.FinalizerNode;
@@ -102,6 +104,10 @@ TYPE
 			IF handle = Kernel32.InvalidHandleValue THEN
 				SetPortState( bps, data, parity, stop, res );
 				IF res = Serials.Ok THEN
+					rOverlapped.hEvent := Kernel32.CreateEvent(NIL,Kernel32.True,Kernel32.False,NIL);
+					ASSERT(rOverlapped.hEvent # NIL);
+					wOverlapped.hEvent := Kernel32.CreateEvent(NIL,Kernel32.True,Kernel32.False,NIL);
+					ASSERT(wOverlapped.hEvent # NIL);
 					KernelLog.String( portname );  KernelLog.String( " opened" ); KernelLog.Ln
 				END;
 			ELSE
@@ -115,9 +121,13 @@ TYPE
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
 			IF (handle # Kernel32.InvalidHandleValue) THEN
-				ret := Kernel32.WriteFile( handle, buf[ofs], len, written, NIL );
+				written := 0;
+				ret := Kernel32.WriteFile( handle, buf[ofs], len, written, ADDRESSOF(wOverlapped) );
+				IF ret = Kernel32.False THEN
+					ret := Kernel32.GetOverlappedResult(handle,wOverlapped,written,Kernel32.True);
+				END;
+				INC(charactersSent,written);
 				IF (ret # Kernel32.False) & (written = len) THEN
-					charactersSent  := charactersSent + written;
 					res := Serials.Ok;
 				ELSE
 					res := Serials.TransportError;
@@ -132,9 +142,13 @@ TYPE
 		VAR ret: Kernel32.BOOL;  written: LONGINT;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
-				ret := Kernel32.WriteFile( handle, ch, 1, written, NIL );
+				written := 0;
+				ret := Kernel32.WriteFile( handle, ch, 1, written, ADDRESSOF(wOverlapped) );
+				IF ret = Kernel32.False THEN
+					ret := Kernel32.GetOverlappedResult(handle,wOverlapped,written,Kernel32.True);
+				END;
+				INC(charactersSent,written);
 				IF (ret # Kernel32.False) & (written=1) THEN
-					INC(charactersSent);
 					res := Serials.Ok;
 				ELSE
 					res := Serials.TransportError;
@@ -153,30 +167,39 @@ TYPE
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
 			ASSERT ( LEN( buf ) >= ofs + min );   (* array bound check not implemented in Kernel32.ReadFile *)
-			res := Serials.Ok; len := 0;
-			i := ofs;  l := Available();
-			WHILE (res = Serials.Ok) & ((min > 0) OR ((l > 0) & (size > 0))) DO  (* fof 060804 *)
-				IF l > size THEN l := size END;
-				IF (handle # Kernel32.InvalidHandleValue) THEN
-					IF  (l > 0) THEN
-						ret := Kernel32.ReadFile( handle, buf[i], l, read, NIL );
-						IF (ret # Kernel32.False) & (read = l) THEN
-							charactersReceived := charactersReceived + read;
-							DEC( min, l );  DEC( size, l );  INC( len, l );  INC( i, l );
-						ELSE
-							(* If we've already received <min> bytes, <res> will become Serials.Ok later *)
-							res := Serials.TransportError;
-						END;
+			IF handle # Kernel32.InvalidHandleValue THEN
+				
+				res := Serials.Ok; len := 0;
+				
+				(* blocking read of the minimally required amount of data *)
+				IF min > 0 THEN
+					read := 0;
+					ret := Kernel32.ReadFile( handle, buf[ofs], min, read, ADDRESSOF(rOverlapped) );
+					IF ret = Kernel32.False THEN
+						ret := Kernel32.GetOverlappedResult(handle,rOverlapped,read,Kernel32.True);
 					END;
-				ELSE
-					res := Serials.Closed;
+					INC(ofs,read); INC(len,read); INC(charactersReceived,read); DEC(size,read);
+					IF ret = Kernel32.False THEN
+						res := Serials.TransportError; RETURN;
+					END;
 				END;
-				l := Available();
-				IF (res = Serials.Ok) & ( (min > 0) OR ((l > 0) & (size > 0)) ) THEN
-					Wait;
+				
+				(* Non-blocking read of available data *)
+				l := MIN(size,Available());
+				IF l > 0 THEN
+					read := 0;
+					ret := Kernel32.ReadFile( handle, buf[ofs], l, read, ADDRESSOF(rOverlapped) );
+					IF ret = Kernel32.False THEN
+						ret := Kernel32.GetOverlappedResult(handle,rOverlapped,read,Kernel32.True);
+					END;
+					INC(len,read); INC(charactersReceived,read);
+					IF ret = Kernel32.False THEN (* we've already received <min> bytes, but there was an error and we are going to report it anyway! *)
+						res := Serials.TransportError;
+					END; 
 				END;
+			ELSE
+				res := Serials.Closed;
 			END;
-			IF min <= 0 THEN res := Serials.Ok END;
 		END Receive;
 
 	(** Wait for the next character is received in the input buffer.  *)
@@ -184,17 +207,17 @@ TYPE
 		VAR l, ret, read: LONGINT;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
-				REPEAT
-					l := Available();
-					IF l = 0 THEN Wait; END;
-				UNTIL (l > 0) OR (handle = Kernel32.InvalidHandleValue);
-				ret := Kernel32.ReadFile( handle, ch, 1, read, NIL );
+				read := 0;
+				ret := Kernel32.ReadFile( handle, ch, 1, read, ADDRESSOF(rOverlapped) );
+				IF ret = Kernel32.False THEN
+					ret := Kernel32.GetOverlappedResult(handle,rOverlapped,read,Kernel32.True);
+				END;
+				INC(charactersReceived,read);
 				IF (ret # Kernel32.False) & (read = 1) THEN
-					INC(charactersReceived);
-					res := Serials.Ok
+					res := Serials.Ok;
 				ELSE
 					res := Serials.TransportError;
-				END
+				END;
 			ELSE
 				res := Serials.Closed;
 			END
@@ -371,7 +394,9 @@ TYPE
 		PROCEDURE Close*;
 		BEGIN {EXCLUSIVE}
 			IF handle # Kernel32.InvalidHandleValue THEN
-				Kernel32.CloseHandle( handle );  handle := Kernel32.InvalidHandleValue
+				Kernel32.CloseHandle( handle );  handle := Kernel32.InvalidHandleValue;
+				IF rOverlapped.hEvent # NIL THEN Kernel32.CloseHandle(rOverlapped.hEvent); rOverlapped.hEvent := NIL; END;
+				IF wOverlapped.hEvent # NIL THEN Kernel32.CloseHandle(wOverlapped.hEvent); wOverlapped.hEvent := NIL; END;
 			END
 		END Close;
 

@@ -424,6 +424,9 @@ VAR
 	ptrace: PROCEDURE {C} (request: WORD; pid: Thread_t; adr, data: ADDRESS): WORD;
 	getcontext-: PROCEDURE {C} (context: ADDRESS): WORD; 
 
+	sysconf: PROCEDURE {C} (name: LONGINT):WORD;	
+	
+	
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
 	pthread_mutex_lock: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -573,7 +576,14 @@ VAR
 	*)
 	
 	TYPE 
+	
+	
+	PROCEDURE getnprocs* (): LONGINT;
+	BEGIN
+		RETURN sysconf(0x54); (*0x53 for number of processors configured, 0x54 for number of processors online *)
+	END getnprocs;
 
+	
 	PROCEDURE MtxInit*(dummy: LONGINT): Mutex_t;
 	VAR 
 		mtx: Mutex_t;
@@ -1125,7 +1135,8 @@ static void sighandler( int sig, siginfo_t *scp, void *ucp ) {
 		
 		Dlsym( libc, "ptrace", ADDRESSOF(ptrace));
 		Dlsym( libc, "getcontext", ADDRESSOF(getcontext));
-
+		Dlsym( libc, "sysconf", ADDRESSOF(sysconf));
+		
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init));
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy));
 		Dlsym( libc, "pthread_mutex_lock", ADDRESSOF(pthread_mutex_lock));

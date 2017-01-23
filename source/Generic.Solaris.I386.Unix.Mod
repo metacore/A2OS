@@ -415,7 +415,7 @@ VAR
 
 	sigstack-: ARRAY 32*4096 OF CHAR;
 	
-	 
+	sysconf	: PROCEDURE {C} ( name: LONGINT ): WORD;
 	
 	pthread_mutex_init		: PROCEDURE {C} ( mutex: ADDRESS; mutexattr: ADDRESS ): WORD;
 	pthread_mutex_destroy	: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
@@ -565,6 +565,12 @@ VAR
 		loc := errno_location();
 		RETURN S.GET32( loc );
 	END errno;	
+	
+	PROCEDURE getnprocs* ( ): LONGINT;
+	BEGIN
+		RETURN sysconf( 15 ); (* 14 for number of processors configured, 15 for number of processors online *)
+	END getnprocs;
+
 
 	(*------------------------------------------------------------------------------------------------------*)
 	
@@ -1015,6 +1021,7 @@ VAR
 		libp := Dlopen( libpthreadname, 2 ); 
 		
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
+		Dlsym( libc, "sysconf", ADDRESSOF( sysconf ) );
 
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF( pthread_mutex_init ) );
 		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF( pthread_mutex_destroy ) );

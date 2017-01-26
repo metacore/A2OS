@@ -233,7 +233,7 @@ VAR
 			S.GET( sp, pc );   (* get return address on top of stack *)
 		END;
 		entry := Modules.GetExceptionHandler( pc );
-		WHILE (entry = -1) & (fp <= process.stackBottom) & (fp#0) DO
+		WHILE (entry = -1) & (fp <= process.stackBottom) & (fp#0) & (fp MOD SIZEOF(ADDRESS)=0) DO
 			fp := CheckBP(fp);
 			S.GET( fp + AddrSize, pc );
 			pc := pc - 1;   (*  CALL instruction, machine dependent!!! *)

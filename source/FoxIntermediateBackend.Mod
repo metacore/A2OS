@@ -10751,7 +10751,7 @@ TYPE
 				ELSE
 					parametersSize := 0;
 				END;
-				EmitLeave(section, position,NIL, cc);
+				EmitLeave(section, position,procedure, cc);
 				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,cc, parametersSize));
 			END;
 

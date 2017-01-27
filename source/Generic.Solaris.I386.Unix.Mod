@@ -1131,7 +1131,7 @@ VAR
 		Dlsym( libc, "kill",		ADDRESSOF( kill ) );
 		Dlsym( libc, "exit",		ADDRESSOF( exit ) );
 		Dlsym( libc, "perror",	ADDRESSOF( perror ) );
-		Dlsym( libc, "__errno",	ADDRESSOF( errno_location ) );
+		Dlsym( libc, "___errno",	ADDRESSOF( errno_location ) );
 
 
 		getSysinfo;

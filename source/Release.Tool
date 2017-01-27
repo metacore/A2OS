@@ -127,7 +127,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "Obx"
 		SYMBOLEXTENSION "Obx"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
@@ -138,7 +138,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -149,7 +149,7 @@ BUILDS
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -160,7 +160,7 @@ BUILDS
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -172,7 +172,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "GofG"
 		SYMBOLEXTENSION "SymG"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -184,7 +184,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "GofW"
 		SYMBOLEXTENSION "SymW"
-		PATH "AOS:"
+		PATH "AOS"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}

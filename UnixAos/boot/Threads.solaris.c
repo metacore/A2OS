@@ -75,6 +75,7 @@ void* starter( void* p ) {
     sigdelset( &new, SIGSYS );
     sigdelset( &new, SIGPIPE );
     sigdelset( &new, SIGALRM );
+    sigdelset( &new, SIGUSR1 );
     thr_sigsetmask( SIG_SETMASK, &new, &orig );
     pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
     pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NULL );
@@ -142,13 +143,14 @@ int o_thrGetprio(o_thr_t thr) {
 }
 
 
-void o_thrKill(o_thr_t thr) {
-    if (thr != mainthread) {
+void o_thrKill(o_thr_t thr, int sig) {
+    thr_kill( thr, sig );
+/*    if (thr != mainthread) {
         if (thr == thr_self())
             thr_exit( 0 );
         else 
 	    pthread_cancel( thr );
-    }
+    }  */
 }
 
 

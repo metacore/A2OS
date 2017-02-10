@@ -45,9 +45,13 @@
 #include <sys/mman.h>
 #include <X11/Xlib.h>
 
+#define true 1
+#define false 0
+
 typedef void (*OberonProc)();
 
 typedef void*	address;
+typedef unsigned int ADDR32;
 
 FILE *fd;
 char *AOSPATH;
@@ -55,7 +59,7 @@ char path[4096];
 char *dirs[255];
 char fullname[512];
 int nofdir;
-char defaultpath[] = ".:/usr/aos/obj:/usr/aos/system:/usr/aos/fonts";
+char defaultpath[] = ".:/usr/aos/obj:/usr/aos/system:/usr/aos/fonts/Oberon";
 #ifdef SOLARIS
   char bootname[64] = "SolarisAosCore";
 #endif
@@ -66,9 +70,11 @@ char defaultpath[] = ".:/usr/aos/obj:/usr/aos/system:/usr/aos/fonts";
   char bootname[64] = "DarwinAosCore";
 #endif
 
-size_t heapSize;
+size_t heapSize = 0x200000;
 size_t codeSize;
-address heapAdr;
+address heapAdr, maxHeapAdr;
+int addrshift;
+unsigned int startOffset;
 int Argc;
 char **Argv;
 int debug;
@@ -76,7 +82,7 @@ int debug;
 static stack_t sigstk;
 
 #define BLSIZE	4096
-#define SIGSTACKSIZE 32*BLSIZE
+#define SIGSTACKSIZE 64*BLSIZE
 
 typedef	void(*trap_t)(long, void*, void*, int);
 
@@ -98,7 +104,10 @@ static void installHandler(int sig) {
 	sigset_t mask;
 	sigemptyset(&mask);
 	act.sa_mask = mask;
-	act.sa_flags =  SA_SIGINFO|SA_ONSTACK|SA_NODEFER;
+	if (sig == SIGSEGV)
+	    act.sa_flags = SA_SIGINFO|SA_ONSTACK|SA_NODEFER;
+	else 
+	    act.sa_flags = SA_SIGINFO|SA_NODEFER;
 	act.sa_sigaction = sighandler;
 	if (sigaction( sig, &act, NULL ) != 0) {
 		perror("sigaction");
@@ -214,6 +223,11 @@ int o_cout( char c ) {
 	printf( "%c", c );
 }
 
+address o_paramtest(int p1, int p2, int p3, int p4, int p5, int p6, int p7, address p8){
+	printf("parameter test, p7=%d, p8=%p\n", p7, p8);
+	return (address)-8;
+}
+
 
 static void (*oberonXErrorHandler) (long p4, long p3, long err, long displ );
 static void (*oberonXIOErrorHandler) (long p4, long p3, long p2, long displ );
@@ -244,8 +258,6 @@ void SetupXErrHandlers( void* XE, void* XIOE ) {
 
 void o_dlsym(void* handle, char* symbol, void** adr)
 {
-  if (debug==(-1)) printf("o_dlsym: %p %s\n", handle, symbol);
-  
   if      (strcmp("dlopen",		symbol) == 0) *adr = o_dlopen;
   else if (strcmp("dlclose",		symbol) == 0) *adr = o_dlclose;
   else if (strcmp("debug",		symbol) == 0) *(int*)adr = debug;
@@ -255,6 +267,7 @@ void o_dlsym(void* handle, char* symbol, void** adr)
   else if (strcmp("argv",		symbol) == 0) *adr = Argv;
   else if (strcmp("errno",		symbol) == 0) *adr = o_errno;
   else if (strcmp("cout",		symbol) == 0) *adr = o_cout;
+  else if (strcmp("paramtest",		symbol) == 0) *adr = o_paramtest;
   
   else if (strcmp("open",		symbol) == 0) *adr = o_open;
   else if (strcmp("stat",		symbol) == 0) *adr = o_stat;
@@ -329,32 +342,39 @@ int RNum() {
     shift += 7;
     x = fgetc(fd);
   }
-  return n + (((x & 0x3f) - ((x >> 6) << 6)) << shift);
+  return n + (((x & 0x3f) - ((x >> 6) << 6)) << shift); 
 }
 
-void Assert( address x ) {
-  address y;
-
-  if((x < heapAdr) | (x >= heapAdr + heapSize)) {
-    printf("bad reloc. pos %p [%p, %p]\n", x, heapAdr, heapAdr+heapSize);
-  }
-  if (x > heapAdr+codeSize) {
-    y = *(address*)x;
-    if((y < heapAdr) | (y >= heapAdr+heapSize)) {
-      printf("bad reloc. value %p [%p, %p]\n", y, heapAdr, heapAdr+heapSize);
-    }
+int CheckAddr( int no, int ofs, address adr ){
+  if (adr >= heapAdr+startOffset & adr < maxHeapAdr) return 1;
+  else {
+    printf("bad relocation offset: no=%d, ofs=%x, pos=%p [%p...%p]\n", 
+            no, ofs, adr, heapAdr+startOffset, maxHeapAdr);
+    return 0;
   }
 }
 
-	
-void Relocate(size_t shift) {
-  int len; address *adr; 
+void Assert( int no, int ofs, address adr ){
+  if (adr < heapAdr+startOffset || adr > maxHeapAdr)
+    printf("bad relocated pointer value: no=%d, ofs=%x, ptr=%p [%p...%p]\n", 
+            no, ofs, adr, heapAdr+startOffset, maxHeapAdr);
+}
+
+
+void Relocate() {
+  int no, len, ofs; ADDR32 *adr; ADDR32 val; 
   
-  len = RNum(); 
+  len = RNum(); no = 0;
+  if (debug) printf("relocate %d pointers\n", len);
   while (len != 0) { 
-    adr = heapAdr + RNum();
-    *adr += shift; 
-    Assert( adr );
+    ofs = RNum(); ++no;
+    adr = heapAdr + ofs;
+    if (CheckAddr(no, ofs, adr)) {
+      val = *adr;
+      val += addrshift;
+      *adr = val; 
+      Assert(no, ofs, (address)val); 
+    }
     len--; 
   } 
 }
@@ -362,10 +382,11 @@ void Relocate(size_t shift) {
 
 void Boot() {
   address adr, fileHeapAdr, dlsymAdr;
-  size_t shift, len, fileHeapSize;
+  size_t len, fileHeapSize;
   int arch, d, notfound;  
   OberonProc body;
 
+  if (sizeof(address)==8) strcat(bootname, ".amd64");
   d = 0; notfound = 1;
   while ((d < nofdir) && notfound) {
     strcat(strcat(strcpy(fullname, dirs[d++]), "/"), bootname);
@@ -378,8 +399,9 @@ void Boot() {
   }
   arch = Rint();
   if (arch != 8*sizeof(address)) {
-    printf("bootfile %s has wrong architecture, got %d, expected %d\n", bootname, arch, (int)(8*sizeof(address)) );
-    exit(-1);
+    printf("bootfile %s has wrong architecture, got %d, expected %d\n", 
+    	   bootname, arch, (int)(8*sizeof(address)) );
+    exit(-1);	
   }
   fileHeapAdr = RAddress(); 
   fileHeapSize = Rint();
@@ -392,22 +414,28 @@ void Boot() {
     *((int*)adr) = 0; 
     len -= 4; adr += 4; 
   } 
-  shift = heapAdr - fileHeapAdr;
+  addrshift = heapAdr - fileHeapAdr;
+
   
-  adr = heapAdr + Rint();
+  startOffset = Rint();
   len = Rint();  /* used heap */
+  adr = heapAdr + startOffset;
   while (len > 0) {
     *(int*)adr = Rint(); adr += 4; len -= 4;
   }
+  maxHeapAdr = adr - 32;
+  if (debug) printf("code loading done [%p .. %p]\n", heapAdr, adr);
   body = (OberonProc)heapAdr + Rint();
   dlsymAdr = heapAdr + Rint();
+  if (debug) printf("dlsymAdr, entrypoint: %p, %p\n", dlsymAdr, body);
 
-  Relocate(shift);
+  Relocate();
   *(address*)dlsymAdr = o_dlsym;
-  
+ 
   fclose(fd);
   if(mprotect((void*)heapAdr, heapSize, PROT_READ|PROT_WRITE|PROT_EXEC) != 0)
      perror("mprotect");
+  if (debug) printf("jump to AOS entrypoint\n");
   (*body)();
 }
 
@@ -439,19 +467,11 @@ int main(int argc, char *argv[])
   debug = 0;
   p = getenv("AOSDEBUG");
   if (p != NULL) debug = atoi(p);
-
   if (debug) {
-     printf( "UnixAos Boot Loader 27.10.2013\n" );
+     printf( "UnixAos Boot Loader 06.01.2016\n" );
      printf( "debug = %d\n", debug );
   }
-
-  heapSize = 0x200000;
-#ifdef _use_valloc
-  heapAdr = valloc( heapSize );
-  if (heapAdr == 0) {
-#else
   if (posix_memalign(&heapAdr, 4096, heapSize) != 0) {
-#endif
     printf("Aos BootLoader: cannot allocate initial heap space\n");  
     exit(-1);
   }

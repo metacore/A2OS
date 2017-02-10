@@ -36,7 +36,7 @@ extern void	o_thrSuspend( o_thr_t thr );
 extern void	o_thrResume(  o_thr_t thr );
 extern void	o_thrSetprio( o_thr_t thr, int prio );
 extern int 	o_thrGetprio( o_thr_t thr );
-extern void	o_thrKill(    o_thr_t thr );
+extern void	o_thrKill(    o_thr_t thr, int sig );
 
 extern int 	o_thrInitialize( int* low, int* high );
 

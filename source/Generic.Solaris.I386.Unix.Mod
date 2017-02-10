@@ -16,7 +16,7 @@ IMPORT S := SYSTEM, Glue, Trace;
 
 
 CONST
-	Version* = "SolarisG32";
+	Version* = "Solaris";
 
 	libcname* = "libc.so.1";
 	libmname* = "libm.so.1";
@@ -124,8 +124,6 @@ CONST
 	SIGJVM1		= 39;		(* reserved signal for Java Virtual Machine *)
 	SIGJVM2		= 40;		(* reserved signal for Java Virtual Machine *)
 	
-	T_SIGRESUME = SIGUSR1;
-	T_SIGSUSPEND = SIGUSR2; 
 	
 	SIG_BLOCK = 1;
 	SIG_UNBLOCK=2;
@@ -397,10 +395,9 @@ TYPE
 	
 VAR
 	suspend_mutex: MutexDesc;
+	handler_done: BOOLEAN;
 	mainthread: Thread_t;
-	suspend_done: LONGINT;
-	resume_done: LONGINT;
-	sasuspend, saresume: Sigaction;
+	sasuspend: Sigaction;
 	
 	argc-: LONGINT;  argv-: ADDRESS;  environ: ADDRESS;
 	
@@ -430,11 +427,11 @@ VAR
 	pthread_cond_wait		: PROCEDURE {C} ( cond: ADDRESS; mutex: ADDRESS ): WORD;
 	pthread_cond_signal		: PROCEDURE {C} ( cond: ADDRESS ): WORD; 
 	
-	pthread_create	: PROCEDURE {C} ( newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
+	pthread_create	: PROCEDURE {C} ( newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): Thread_t;
 	pthread_exit		: PROCEDURE {C} ( thr: ADDRESS );
-	pthread_detach	: PROCEDURE {C} ( thr: ADDRESS );
-	pthread_kill		: PROCEDURE {C} ( thr: ADDRESS; sigid: LONGINT ): LONGINT;
-	pthread_cancel	: PROCEDURE {C} ( thr: ADDRESS );
+	pthread_detach	: PROCEDURE {C} ( thr: Thread_t );
+	pthread_kill		: PROCEDURE {C} ( thr: Thread_t; sigid: LONGINT ): LONGINT;
+	pthread_cancel	: PROCEDURE {C} ( thr: Thread_t );
 	pthread_self		: PROCEDURE {C} ( ): Thread_t;
 	
 	pthread_attr_init: PROCEDURE {C} ( attr: ADDRESS );
@@ -442,14 +439,16 @@ VAR
 	pthread_attr_setdetachstate: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
 	pthread_attr_setstacksize: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
 	
-
-
 	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): WORD;
 	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): WORD;
 	pthread_setcancelstate		: PROCEDURE {C} ( state: LONGINT; oldstate: ADDRESS ): LONGINT;
 	pthread_setcanceltype		: PROCEDURE {C} ( type: LONGINT; oldtype: ADDRESS ): LONGINT;
+	
+	thr_suspend		: PROCEDURE {C} ( thread: Thread_t ): LONGINT;
+	thr_continue		: PROCEDURE {C} ( thread: Thread_t ): LONGINT;
+	
 	sigaction			: PROCEDURE {C} ( signum: LONGINT; CONST act, oldact: ADDRESS ): LONGINT;
 	sigemptyset		: PROCEDURE {C} ( set: ADDRESS );
 	sigfillset			: PROCEDURE {C} ( set: ADDRESS ): LONGINT;
@@ -548,7 +547,7 @@ VAR
 		cont.mc.r_sp := sp;	
 	END ModifyContext;
 	
-	PROCEDURE CopyContext*(CONST from: McontextDesc; VAR to: McontextDesc);
+	PROCEDURE CopyContext*( CONST from: McontextDesc; VAR to: McontextDesc );
 	BEGIN
 		S.MOVE( ADDRESSOF( from ), ADDRESSOF( to ), SIZEOF( McontextDesc ) );
 	END CopyContext;
@@ -574,12 +573,21 @@ VAR
 
 	(*------------------------------------------------------------------------------------------------------*)
 	
-	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS ); (* reversed arguments !! *)
+	VAR suspendHandler*: PROCEDURE( c: Ucontext );
+	
+	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
+	VAR r: LONGINT;  thr: Thread_t;
 	BEGIN
-		IF trap # NIL THEN 
-			trap( sig, scp, ucp, 0 )
+		IF sig = SIGUSR1 THEN
+			suspendHandler( ucp );
+			thr := pthread_self( );
+			r := thr_suspend( thr )
+		ELSIF sig = SIGUSR2 THEN
+			suspendHandler( ucp );
+		ELSIF trap # NIL THEN 
+			trap( sig, scp, ucp, 0 );
 		ELSE
-			TRACE( sig, scp, ucp )
+			Trace.String( "Unix.SigHandler: sig = " ); Trace.Int( sig, 0 ); Trace.Ln;  exit( -1 );
 		END;
 	END SigHandler;
 	
@@ -614,6 +622,8 @@ VAR
 		FOR i := 1 TO 15 DO
 			IF i # 9 THEN InstallHandler( i ) END;
 		END;
+		InstallHandler( SIGUSR1 );
+		InstallHandler( SIGUSR2 );
 	END InitSignalHandler;
 	
 	(*-------------------------------------------------------------------------------------------------------------*)
@@ -627,66 +637,38 @@ VAR
 		mainthread := pthread_self();
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );
-	    
-		param.sched_priority := high;
-		IF pthread_setschedparam( mainthread, SCHED_OTHER, ADDRESSOF( param ) ) # 0 THEN
-			Perror("ThrInitialize: setparam");
-		END;
-		
-	    sigemptyset( ADDRESSOF( sasuspend.sa_mask ) );
-	    sigaddset(  ADDRESSOF( sasuspend.sa_mask ), T_SIGRESUME );
-	    sasuspend.sa_flags := SA_SIGINFO +  SA_NODEFER;;
-	    sasuspend.sa_handler := suspend_handler;
-	    ASSERT(sigaction( T_SIGSUSPEND, ADDRESSOF( sasuspend ), NIL ) = 0);
-
-	    sigemptyset( ADDRESS OF saresume.sa_mask );
-	    saresume.sa_flags := 0;
-	    saresume.sa_handler := resume_handler;
-	    ASSERT(sigaction( T_SIGRESUME, ADDRESSOF( saresume ), NIL ) = 0);
-
-	    RETURN TRUE;
+	 
+		RETURN TRUE;
 	END ThrInitialize;
 	
+
 	
-	PROCEDURE {C} resume_handler( sig: LONGINT );
-	BEGIN
-	END resume_handler;
-
 	PROCEDURE ThrResume*( thr: Thread_t );
-	VAR n, r: LONGINT; 
-	BEGIN
-	    r := pthread_mutex_lock( ADDRESSOF( suspend_mutex ) );
-	    resume_done := 0; n := 1;
-	    r := pthread_kill( thr, T_SIGRESUME ); 
-	    
-	    WHILE (resume_done # 1) & (n < 50) DO  ThrSleep( 1 ); INC( n )  END; 
-	    r := pthread_mutex_unlock( ADDRESSOF( suspend_mutex ) );
-	END ThrResume;
-
-	VAR suspendHandler*: PROCEDURE( c: Ucontext );
-
-	PROCEDURE {C} suspend_handler( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS );
-	VAR block: Sigset; r: LONGINT;
-	BEGIN
-		IF suspendHandler # NIL THEN  suspendHandler( S.VAL( Ucontext, ucp ) ) END;
-		r := sigfillset( ADDRESSOF( block ) );
-		sigdelset(  ADDRESSOF( block ), T_SIGRESUME );
-		suspend_done := 1;
-		r := sigsuspend(  ADDRESSOF( block ) ); (* await T_SIGRESUME *)
-		resume_done := 1;
-	END suspend_handler;
-
-	PROCEDURE ThrSuspend*( thr: Thread_t );
 	VAR r: LONGINT;
 	BEGIN
-	    r := pthread_mutex_lock( ADDRESSOF( suspend_mutex ) );
-	    suspend_done := 0;
-	    r := pthread_kill( thr, T_SIGSUSPEND );
-	    WHILE (suspend_done # 1) DO  ThrSleep( 1 )  END;
-	    r := pthread_mutex_unlock( ADDRESSOF( suspend_mutex ) );
-	END ThrSuspend;
+		r := thr_continue( thr )
+	END ThrResume;	
 
+	
+	PROCEDURE ThrSuspend*( thr: Thread_t; saveContext: BOOLEAN );
+	VAR r: LONGINT;
+	BEGIN
+		IF saveContext THEN
+			r := pthread_kill( thr, SIGUSR1 );	
+			(*	not working in Solaris when the thread is stalled 
+				in a mutex.
+				handler gets arrived but has bad side effects, 
+				yields traps and locks the system *)
+		ELSE
+			r := thr_suspend( thr )
+		END
+	END ThrSuspend;	
 
+	PROCEDURE GetThreadContext*( thr: Thread_t );
+	VAR r: LONGINT;
+	BEGIN
+		r := pthread_kill( thr, SIGUSR2 );	
+	END GetThreadContext;
 	
 	
 	PROCEDURE SetSigaltstack;
@@ -722,7 +704,8 @@ VAR
 		sigdelset( ADDRESSOF( new ), SIGBUS );
 		sigdelset( ADDRESSOF( new ), SIGSEGV );
 		sigdelset( ADDRESSOF( new ), SIGTERM );
-		sigdelset( ADDRESSOF( new ), T_SIGSUSPEND );
+		sigdelset( ADDRESSOF( new ), SIGUSR1 );	
+		sigdelset( ADDRESSOF( new ), SIGUSR2 );	
 		r := pthread_sigmask( SIG_SETMASK, ADDRESSOF( new ), ADDRESSOF( old ) );
 		r := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
 		r := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
@@ -796,11 +779,11 @@ VAR
 		param: Sched_param;
 		policy, r: LONGINT;
 	BEGIN
-		r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
+	(*	r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 		param.sched_priority := prio;
 		IF pthread_setschedparam( thr, SCHED_OTHER, ADDRESSOF( param ) ) # 0 THEN
 			Perror( "pthread_setschedparam" );
-		END
+		END	*)
 	END ThrSetPriority;
 
 	PROCEDURE ThrGetPriority*( thr: Thread_t ):LONGINT;
@@ -887,7 +870,6 @@ VAR
 	PROCEDURE {C} X11ErrorHandler( d: ADDRESS; err: ADDRESS ): WORD;
 	VAR res: LONGINT;
 	BEGIN
-		TRACE( d, err );
 		IF oberonXErrorHandler # NIL THEN 
 			res := oberonXErrorHandler( d, err );
 		END;
@@ -897,7 +879,6 @@ VAR
 	PROCEDURE {C} X11IOErrorHandler( d: ADDRESS ): WORD;
 	VAR res: LONGINT;
 	BEGIN
-		TRACE( d );
 		IF oberonXIOErrorHandler # NIL THEN
 			res := oberonXIOErrorHandler( d );
 		END;
@@ -925,7 +906,6 @@ VAR
 		IF val = 0 THEN
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
 			Trace.Ln;
-			exit( 0 )
 		END
 	END Dlsym;
 
@@ -1050,6 +1030,9 @@ VAR
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF( pthread_attr_setdetachstate ) );
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF( pthread_attr_setstacksize ) );
 		Dlsym( libp, "pthread_self", ADDRESSOF( pthread_self ) );
+		
+		Dlsym( libc, "thr_suspend", ADDRESSOF( thr_suspend ) );
+		Dlsym( libc, "thr_continue", ADDRESSOF( thr_continue ) );
 		
 		Dlsym( libc, "posix_spawnp",	ADDRESSOF( posix_spawnp ) );
 		Dlsym( libc, "posix_spawn",	ADDRESSOF( posix_spawn ) );

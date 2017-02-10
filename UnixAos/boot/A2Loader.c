@@ -4,14 +4,14 @@
    Loader for the statically linked A2 core.
 
    Compile command:
-      gcc -m32 Solaris.A2Loader.c -ldl -o A2Loader.elf
+      gcc -m32 A2Loader.c -ldl -o A2Loader.elf
 
-   The command 'A2Loader.elf -h' shows the correct
+   The command 'A2Loader.elf -h' shows the needed
    displacement of the A2 core.
 
-   The A2 core has to be appended to the binary ot this 
+   The A2 core has to be appended to the binary of this 
    program by the A2 command:
-      SolarisELF.Build ~
+      SolarisELF.Build Solaris32G.elf ~
 
 */
 #include <stdlib.h>

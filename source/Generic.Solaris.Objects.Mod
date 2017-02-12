@@ -194,7 +194,6 @@ TYPE
 		procID-		: LONGINT;				(* processor ID where running, not used in UnixAos *)
 		state-			: Machine.State;		(*! not used in UnixAos! *)
 		context		: Unix.McontextDesc;
-		contsp			: ADDRESS;
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
 					
 				
@@ -205,17 +204,50 @@ TYPE
 			IF mode # Terminated THEN
 				
 				IF SELF = CurrentProcess() THEN
-					context.r_sp := Machine.CurrentSP();
-					context.r_bp := Machine.CurrentBP();
+					context.r_sp := Machine.CurrentSP( );
+					context.r_bp := Machine.CurrentBP( );
 				END;
 				sp := context.r_sp; bp := context.r_bp; 
+			
+				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
+				(*	Heaps.Candidate( context.r_di );  Heaps.Candidate( context.r_si );
+					Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx );
+					Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax);	*)
+					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
+						Heaps.RegisterCandidates( sp, stackBottom - sp );
+					END;
+				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+					IF bp < stackBottom THEN
+						WHILE (bp # Heaps.NilVal) & (bp > 1024) & (bp < stackBottom) DO (* do not test for bp >= sp: could be wrong temporarily! *)
+							TRACE( bp );
+							S.GET( bp, n );
+							TRACE( n );
+							IF ODD( n ) THEN (* procedure descriptor at bp *)
+								IF n > 1024 THEN
+									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
+									IF desc # NIL THEN
+										a0 := ADDRESSOF( desc.offsets );
+										a1 :=  S.VAL( ADDRESS, desc.offsets );
+										ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+										FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+											adr := bp + desc.offsets[i]; (* pointer at offset *)
+											S.GET( adr, p ); (* load pointer *)
+											IF p # NIL THEN 
+												Heaps.Mark( p );
+											END
+										END
+									END
+								END;
+								S.GET( bp + SIZEOF( ADDRESS ), bp );
+							ELSE (* classical stack frame *)
+								bp := n; 
+							END;
+							TRACE( bp );
+						END;
+						ASSERT( (bp = stackBottom) OR (bp < 1024) , 12345 );
+					END; 
+				END
 				
-				Heaps.Candidate( context.r_di );  Heaps.Candidate( context.r_si );
-				Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx );
-				Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax) ;
-				IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
-					Heaps.RegisterCandidates( sp, stackBottom - sp );
-				END;
 			END;
 			Heaps.Mark( nextProcess ) 
 		END FindRoots;
@@ -283,9 +315,7 @@ TYPE
 
 	GCStatusExt = OBJECT (Heaps.GCStatus)
 	
-		PROCEDURE SetgcOngoing( value: BOOLEAN );
-		VAR p: Heaps.ProcessLink; cur, r: Process; res: LONGINT; num: LONGINT; time: LONGINT;
-			
+		PROCEDURE SetgcOngoing( value: BOOLEAN );			
 		BEGIN 
 			IF value THEN
 				IF Machine.AcquireGC( ) THEN
@@ -378,6 +408,8 @@ TYPE
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
+		p.context.r_sp := Machine.CurrentSP( );
+		p.context.r_bp := Machine.CurrentBP( );
 		p.mode := AwaitingLock;
 
 		(*! we might want to replace the lock mutex by a lock free construct *)
@@ -409,11 +441,9 @@ TYPE
 		Put( hdr.awaitingCond, p );
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.ConSignal( c.continue )  ELSE  Unix.ConSignal( lock.enter )  END;
-		sp := Machine.CurrentSP( );
-		IF p.contsp # sp THEN
-			p.contsp := sp;
-			Unix.GetThreadContext( p.threadId )
-		END;
+
+		p.context.r_sp := Machine.CurrentSP( );
+		p.context.r_bp := Machine.CurrentBP( );
 		Unix.ConWait( p.continue, lock.mtx );   
 		
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -704,12 +734,7 @@ TYPE
 		WHILE t # NIL DO
 			IF t # me THEN  
 			(*	Trace.String( "suspend " ); Trace.Hex( t.id, 2 );  Trace.Ln;		*)
-				IF t.mode = Running THEN
-					t.contsp := 0;
-					Unix.ThrSuspend( t.threadId, TRUE );
-				ELSE
-					Unix.ThrSuspend( t.threadId, FALSE )
-				END
+				Unix.ThrSuspend( t.threadId, t.mode = Running );
 			END;
 			t := t.nextProcess
 		END;

@@ -249,16 +249,17 @@ o_thrGetprio(o_thr_t thr) {
 
 
 void 
-o_thrKill(o_thr_t thr) {
+o_thrKill(o_thr_t thr, int sig) {
 
-    if (thr != mainthread) {
+    pthread_kill( thr, sig );
+/*  if (thr != mainthread) {
     	pthread_detach( thr );
     	if (thr == pthread_self())
     	    pthread_exit( 0 );
     	else {
     	    pthread_cancel( thr );
         } 
-    }
+    }	*/
 }
 
 

@@ -121,6 +121,14 @@ VAR
 
 	timer0	: HUGEINT;
 
+
+	(** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
+	PROCEDURE -SpinHint*;
+	CODE {SYSTEM.i386}
+		XOR	ECX, ECX	;  just in case some processor interprets REP this way
+		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
+	END SpinHint;
+
 	(** Return current processor ID (0 to MaxNum-1). *)
 	PROCEDURE {REALTIME} ID* (): LONGINT;
 	BEGIN

@@ -589,10 +589,22 @@ TYPE
 
 	
 	PROCEDURE GetCpuCycles*( process : Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN );
-	VAR i: LONGINT;
+	VAR
+		i,res: LONGINT;
+		time: Unix.tvPtr;
 	BEGIN
 		ASSERT( process # NIL );
-		FOR i := 0 TO Machine.MaxCPU-1 DO  cpuCycles[i] := 0  END;
+		NEW(time);
+		(*res:=Unix.clock_gettime(3,time);
+		cpuCycles[0]:=time.usec;*)
+		cpuCycles[0]:=5;
+		(*todo*)
+		
+		(*FOR i := 0 TO Machine.MaxCPU-1 DO  
+		
+			cpuCycles[i] := 0  
+			
+		END;*)
 	END GetCpuCycles;
 	
 	

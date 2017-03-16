@@ -575,6 +575,7 @@ BEGIN {EXCLUSIVE}
 		maxNofSamples := maxTime * Kernel.Second * Machine.NumberOfProcessors();
 		NEW(samples, maxNofSamples);
 		NEW(sampleInfos, maxNofSamples);
+		TRACE('enabling hprop0');
 		HierarchicalProfiler0.Enable(HandleTimer);
 		state := Running;
 		res := Ok;

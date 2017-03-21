@@ -1,0 +1,195 @@
+MODULE HierarchicalProfiler0; (** AUTHOR "skoster"; PURPOSE "UnixAOS platform-specific part of the hierarchical profiler"; *)
+
+IMPORT
+	SYSTEM, Kernel, Unix, Objects, Modules, ProcessInfo;
+
+CONST
+	Initialized = 0;
+	Running = 1;
+	Terminating = 2;
+	Terminated = 3;
+
+	Intervall = 1; (* milliseconds *)
+
+TYPE
+
+	ProcessTimeArray = POINTER TO ARRAY ProcessInfo.MaxNofProcesses OF HUGEINT;
+
+	Callback = PROCEDURE (id : LONGINT; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
+
+	Poller = OBJECT
+	VAR
+		processes, oldProcesses : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
+		nofProcesses, oldNofProcesses : LONGINT;
+		times, oldTimes : ProcessTimeArray;
+		me : Objects.Process;
+		state : LONGINT;
+		timer: Kernel.Timer;
+
+		PROCEDURE &Init;
+		BEGIN
+			state := Running;
+			ProcessInfo.Clear(processes); nofProcesses := 0;
+			ProcessInfo.Clear(oldProcesses); oldNofProcesses := 0;
+			NEW(times); Clear(times);
+			NEW(oldTimes); Clear(oldTimes);
+		END Init;
+
+		PROCEDURE Terminate;
+		BEGIN {EXCLUSIVE}
+			IF (state # Terminated) THEN state := Terminating; END;
+			AWAIT(state = Terminated);
+		END Terminate;
+
+		PROCEDURE Clear(array : ProcessTimeArray);
+		VAR i : LONGINT;
+		BEGIN
+			FOR i := 0 TO LEN(array)-1 DO array[i] := 0; END;
+		END Clear;
+
+		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : HUGEINT) : BOOLEAN;
+		VAR i : LONGINT;
+		BEGIN
+
+			IF ~(process.mode IN {Objects.Running,Objects.Ready}) THEN RETURN FALSE END;
+
+			i := 0; WHILE (i < oldNofProcesses) &	(oldProcesses[i] # process) DO INC(i); END;
+			RETURN (i >= oldNofProcesses) OR (oldTimes[i] < currentCycles);
+		END RanMeanwhile;
+
+		PROCEDURE Process;
+		VAR process : Objects.Process; cycles : Objects.CpuCyclesArray; temp : ProcessTimeArray; i : LONGINT;
+		BEGIN
+		
+			(*todo: stop gc*)
+			ProcessInfo.GetProcesses(processes, nofProcesses);
+			TRACE(nofProcesses);
+			FOR i := 0 TO nofProcesses - 1 DO
+				process := processes[i];
+
+				Objects.GetCpuCycles(process, cycles, FALSE); 
+				times[i] := cycles[0];
+				TRACE(process,me,cycles[0],process.mode,Objects.Running);
+				IF (process # me) & (cycles[0] # 0)  & (process.mode = Objects.Running) (* (process.mode # Objects.AwaitingEvent) & (process.mode # Objects.AwaitingCond)  & (process.mode < Objects.Suspended) & (process.mode >= Objects.Ready)  (*RanMeanwhile(process, times[i]) *) *) THEN
+					HandleProcess(process);
+				END;
+			END;
+			temp := oldTimes;
+			oldTimes := times;
+			times := temp;
+			ProcessInfo.Copy(processes, oldProcesses); 
+			oldNofProcesses := nofProcesses;
+			ProcessInfo.Clear(processes);
+			(*todo: reenable gc*)
+		END Process;
+
+	BEGIN {ACTIVE, PRIORITY(Objects.Realtime)}
+		NEW(timer);
+		me := Objects.CurrentProcess();
+		TRACE('poller starting');
+		LOOP
+			WHILE (state = Running) DO
+				Process;
+				timer.Sleep(100);
+			END;
+			IF (state = Terminating) THEN EXIT; END;
+		END;
+		ProcessInfo.Clear(processes);
+		ProcessInfo.Clear(oldProcesses);
+		BEGIN {EXCLUSIVE} state := Terminated; END;
+	END Poller;
+
+VAR
+	poller : Poller;
+	callback : Callback;
+	state : LONGINT;
+
+PROCEDURE HandleProcess(process : Objects.Process);
+(*VAR context : Kernel32.Context; handle : Kernel32.HANDLE; res : Kernel32.BOOL;*) 
+
+VAR
+	threadId: Unix.Thread_t;
+	stackBottom, sp, bp: ADDRESS;
+	context: Unix.McontextDesc;
+BEGIN
+	ASSERT(process # NIL);
+	threadId:=process.threadId;
+	
+	(*from check at callsite it's guaranteed that the process is running (mode=Objects.Running) *)
+	
+	(*todo: validate thread ID*)
+	Unix.ThrSuspend(threadId);
+	(*because thread suspending is under a mutex in Unix.Mod, this call is guaranteed to have finished with the handler when it returns.*)
+	context:=process.context;
+	IF (context.r_pc #0) THEN
+		stackBottom:=Objects.GetStackBottom(process);
+		sp:=context.r_sp_x;
+		bp:=context.r_bp;
+		IF bp<=stackBottom THEN
+			callback(1, process, context.r_pc,bp,sp,  stackBottom  );
+		ELSE
+				Unix.ThrResume(threadId);
+				ASSERT(bp<=stackBottom);
+		END;
+	END;
+	Unix.ThrResume(threadId);
+	
+(*	handle := process.handle;
+	IF (handle # Kernel32.NULL) & (handle # Kernel32.InvalidHandleValue) THEN
+		res := Kernel32.SuspendThread(handle);
+		IF (res >= 0) THEN
+			context.ContextFlags := Kernel32.ContextControl+Kernel32.ContextInteger;
+			res := Kernel32.GetThreadContext(handle, context);
+			IF (res = Kernel32.True) THEN
+				IF (context.PC # 0) THEN
+					stackBottom := Objects.GetStackBottom(process);
+					bp := context.BP;
+					sp := context.SP;
+					ASSERT(context.BP <= stackBottom);
+					callback(1, process, context.PC, context.BP, context.SP,  stackBottom(*  LONGINT(0FFFFFFFFH)*)  );
+				END;
+			END;
+			res := Kernel32.ResumeThread(handle);
+		END;
+	END;
+	*)
+END HandleProcess;
+
+PROCEDURE Enable*(proc : Callback);
+BEGIN {EXCLUSIVE}
+	(*todo: disable gc*)
+	ASSERT(proc # NIL);
+	ASSERT((state = Initialized) & (poller = NIL));
+	callback := proc;
+	NEW(poller);
+	state := Running;
+END Enable;
+
+PROCEDURE Disable*;
+BEGIN {EXCLUSIVE}
+	(*todo: re-enable gc*)
+	ASSERT((state = Running) & (poller # NIL));
+	poller.Terminate;
+	poller := NIL;
+	state := Initialized;
+END Disable;
+
+PROCEDURE Cleanup;
+BEGIN
+	IF (poller # NIL) THEN poller.Terminate; poller := NIL; END;
+END Cleanup;
+
+BEGIN
+	state := Initialized;
+	Modules.InstallTermHandler(Cleanup);
+END HierarchicalProfiler0.
+
+WMProfiler.Open~
+HierarchicalProfiler.Start~
+HierarchicalProfiler.Stop~
+HierarchicalProfiler.Show~
+SystemTools.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
+
+Test.Busyloop~
+
+Debugging.DisableGC~

@@ -807,7 +807,9 @@ VAR
 	    resume_done := 0; n := 1;
 	    res := pthread_kill( thr, T_SIGRESUME );
 
-	    WHILE (resume_done # 1) & (n < 50) DO ThrSleep(1); INC(n) END;
+	 (*   WHILE (resume_done # 1) & (n < 50) DO ThrSleep(1); INC(n) END; *)
+		WHILE (resume_done # 1)  DO ThrSleep(1); END;
+
 	    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 	END ThrResume;
 
@@ -819,7 +821,7 @@ VAR
 		IF suspendHandler # NIL THEN suspendHandler(S.VAL(Ucontext,ucp)) END;
 	    res := sigfillset( ADDRESS OF block );
 	    sigdelset(  ADDRESS OF block, T_SIGRESUME );
-	    suspend_done := 1;
+	    suspend_done := 1;   (*this is ok because ThrSuspend is protected by a mutex*)
 	    res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
 	    resume_done := 1;
 	END suspend_handler;

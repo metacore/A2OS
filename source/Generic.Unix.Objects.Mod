@@ -186,7 +186,7 @@ TYPE
 		context*: Unix.McontextDesc;
 		id-				: LONGINT;
 		body			: Body;
-		mode-		: LONGINT;
+		mode-		: LONGINT; (*states: 	Unknown,  Ready, Running, AwaitingLock,	AwaitingCond, AwaitingEvent,  Terminated as defined in the constants *)
 		flags-			: SET;
 		priority-		: LONGINT;	(* only effective if Aos is running SUID root *)
 		succ			: Process;   		  	(* in ProcessQueue *)
@@ -198,7 +198,6 @@ TYPE
 		procID-		: LONGINT;				(* processor ID where running, not used in UnixAos *)
 		state-			: Machine.State;		(*! not used in UnixAos! *)
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
-					
 				
 		PROCEDURE FindRoots*;
 		VAR sp, ptr, bp, n, a0, a1, adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
@@ -595,16 +594,13 @@ TYPE
 	BEGIN
 		ASSERT( process # NIL );
 		NEW(time);
-		(*res:=Unix.clock_gettime(3,time);
-		cpuCycles[0]:=time.usec;*)
-		cpuCycles[0]:=5;
-		(*todo*)
-		
-		(*FOR i := 0 TO Machine.MaxCPU-1 DO  
-		
+		res:=Unix.clock_gettime(3,time); (*constant 3 for clock_thread_cputime_id*)
+		FOR i := 0 TO Machine.MaxCPU-1 DO  
 			cpuCycles[i] := 0  
-			
-		END;*)
+		END;
+		
+		cpuCycles[0]:=time.usec;
+		
 	END GetCpuCycles;
 	
 	

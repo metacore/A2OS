@@ -821,9 +821,9 @@ VAR
 		IF suspendHandler # NIL THEN suspendHandler(S.VAL(Ucontext,ucp)) END;
 	    res := sigfillset( ADDRESS OF block );
 	    sigdelset(  ADDRESS OF block, T_SIGRESUME );
-	    suspend_done := 1;   (*this is ok because ThrSuspend is protected by a mutex*)
+	    suspend_done := 1;   (*this is ok because ThrSuspend is protected by a mutex, so no race condidtion. It may alert the ThrSuspend too early though!*)
 	    res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
-	    resume_done := 1;
+	    resume_done := 1; (*makes no difference if we do that here or in the resume handler*)
 	END suspend_handler;
 
 	PROCEDURE ThrSuspend*(thr: Thread_t);
@@ -832,7 +832,9 @@ VAR
 	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 	    suspend_done := 0;
 	    res := pthread_kill( thr, T_SIGSUSPEND );
-	    WHILE (suspend_done # 1) DO ThrSleep( 1 ) END;
+	    WHILE (suspend_done # 1) DO ThrSleep( 1 ) END; (*this should bettr check the actual thread status!*)
+	    ThrSleep( 1 ); (*improves the probability of the suspednd actually being done*)
+	    
 	    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 	END ThrSuspend;
 

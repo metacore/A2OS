@@ -72,6 +72,7 @@ TYPE
 				Objects.GetCpuCycles(process, cycles, FALSE); 
 				times[i] := cycles[0];
 				(*TRACE(process,me,cycles[0],process.mode,Objects.Running);*)
+				(*the damned thing might go into waiting or some other unwanted state before we suspend it todo*)
 				IF (process # me) & (cycles[0] # 0)  & (process.mode = Objects.Running) (* (process.mode # Objects.AwaitingEvent) & (process.mode # Objects.AwaitingCond)  & (process.mode < Objects.Suspended) & (process.mode >= Objects.Ready)  (*RanMeanwhile(process, times[i]) *) *) THEN
 					HandleProcess(process);
 				END;
@@ -122,12 +123,13 @@ BEGIN
 	ASSERT(process # NIL);
 	threadId:=process.threadId;
 	
-	(*from check at callsite it's guaranteed that the process is running (mode=Objects.Running) *)
 	
 	(*todo: validate thread ID*)
 	TRACE('suspending thread',threadId);
 	Unix.ThrSuspend(threadId);
 	(*because thread suspending is under a mutex in Unix.Mod, this call is guaranteed to have finished with the handler when it returns.*)
+	TRACE('suspend successful',threadId);
+	
 	context:=process.context;
 	IF (context.r_pc #0) THEN
 		stackBottom:=Objects.GetStackBottom(process);
@@ -201,5 +203,6 @@ HierarchicalProfiler.Show~
 SystemTools.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
 
 Test.Busyloop~
+Test.PingPongTest~
 
 Debugging.DisableGC~

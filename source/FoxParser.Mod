@@ -1486,7 +1486,13 @@ TYPE
 					IF Peek(Scanner.Identifier) THEN VariableDeclaration( recordScope ) END;
 				UNTIL ~Optional( Scanner.Semicolon );
 			END;
-			WHILE Optional(Scanner.Procedure) DO ProcedureDeclaration(recordScope); Ignore(Scanner.Semicolon) END; 
+			LOOP 
+				IF Optional(Scanner.Procedure) THEN ProcedureDeclaration(recordScope); Ignore(Scanner.Semicolon);
+				ELSIF Optional(Scanner.Operator) THEN OperatorDeclaration(recordScope); Ignore(Scanner.Semicolon);
+				ELSE EXIT 
+				END;
+			END;
+			(*WHILE Optional(Scanner.Procedure) DO ProcedureDeclaration(recordScope); Ignore(Scanner.Semicolon) END; *)
 			Check( Scanner.End );
 			IF Trace THEN E( "RecordType" ) END;
 			RETURN recordType

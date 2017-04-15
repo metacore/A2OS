@@ -4225,6 +4225,7 @@ TYPE
 		PROCEDURE NewObjectOperatorCall*(position: Position; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR type: SyntaxTree.Type; expression: SyntaxTree.Expression; op: SyntaxTree.Operator; recordType: SyntaxTree.RecordType;
 			actualParameters: SyntaxTree.ExpressionList; i: LONGINT; result: SyntaxTree.Designator;
+			pointer: BOOLEAN; designator: SyntaxTree.Designator;
 
 			PROCEDURE FindOperator(recordType: SyntaxTree.RecordType; identifier: SyntaxTree.Identifier; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Operator;
 			VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
@@ -4270,8 +4271,14 @@ TYPE
 			END FindOperator;
 		BEGIN
 			type := left.type.resolved;
-			IF ~(type IS SyntaxTree.PointerType) THEN RETURN NIL END;
-			recordType := type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+			IF type IS SyntaxTree.RecordType THEN
+				pointer := FALSE;
+				recordType := type(SyntaxTree.RecordType);
+			ELSE
+				pointer := TRUE;
+				IF ~(type IS SyntaxTree.PointerType) THEN RETURN NIL END;
+				recordType := type(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
+			END;
 
 			actualParameters := SyntaxTree.NewExpressionList();
 			IF parameters # NIL THEN
@@ -4284,7 +4291,9 @@ TYPE
 
 			op := FindOperator(recordType, SyntaxTree.NewIdentifier("[]"), actualParameters);
 			IF op # NIL THEN
-				expression := NewSymbolDesignator(position, NewDereferenceDesignator(Basic.invalidPosition, left(SyntaxTree.Designator)) , op);
+				designator := left(SyntaxTree.Designator);
+				IF pointer THEN designator := NewDereferenceDesignator(Basic.invalidPosition, designator) END;
+				expression := NewSymbolDesignator(position, designator , op);
 				ASSERT(expression IS SyntaxTree.Designator);
 				result := NewProcedureCallDesignator(position, expression(SyntaxTree.Designator), actualParameters);
 				result.SetRelatedAsot(left);
@@ -4394,7 +4403,9 @@ TYPE
 				indexDesignator := NIL;
 
 				(*!!! clean up *)
-				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) & ~IsArrayStructuredObjectType(type) THEN
+				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) & ~IsArrayStructuredObjectType(type) 
+					OR (type IS SyntaxTree.RecordType)
+				THEN
 					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
 					IF resolvedExpression = NIL THEN 
 						Error(bracketDesignator.position,"undefined operator");

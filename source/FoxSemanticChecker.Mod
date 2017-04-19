@@ -7148,8 +7148,10 @@ TYPE
 						| Global.Odd: (* TODO: arity? *)
 						| Global.Sum: (* TODO: arity? *)
 						| Global.All: (* TODO: arity? *)
+						| Global.Re, Global.Im:
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
+						
 						| Scanner.GreaterGreater, Scanner.LessLess:
 							mustBeBinary := TRUE; hasReturnType := FALSE;
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:

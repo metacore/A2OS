@@ -992,6 +992,8 @@ TYPE
 		OperatorDefined(system,Scanner.Size, TRUE);
 		OperatorDefined(system,Scanner.Alias, TRUE);
 		OperatorDefined(system,All,TRUE);
+		OperatorDefined(system,Re,TRUE);
+		OperatorDefined(system,Im,TRUE);
 		
 		OperatorDefined(system, Scanner.Questionmarks, TRUE);
 
@@ -1645,6 +1647,8 @@ TYPE
 		NewBuiltinIdentifier(Inc,"INC");
 		NewBuiltinIdentifier(Incl,"INCL");
 		NewBuiltinIdentifier(All,"ALL");
+		NewBuiltinIdentifier(Re,"RE");
+		NewBuiltinIdentifier(Im,"IM");
 
 
 		(* TODO: check if ok. The operators defined in FoxArrayBase require the following identifiers *)

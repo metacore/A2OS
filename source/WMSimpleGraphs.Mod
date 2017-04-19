@@ -37,6 +37,13 @@ TYPE
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
 		
+		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
+		BEGIN
+			SELF.data:=data;
+			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		END NewData;
+
+		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 		VAR i:LONGINT;
 		BEGIN
@@ -75,6 +82,18 @@ TYPE
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
+		
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		BEGIN
+			SELF.data:=data;
+			min:=MIN(data); max:=MAX(data);
+			max:=MAX(ABS(min), ABS(max));
+			min:=MIN(0, min); 
+			IF max=0 THEN max:=1 END;
+			offset:=0; gain:=255/max;
+			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		END NewData;
+
 		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 		VAR col: WMGraphics.Color; x,y:LONGINT; val:LONGREAL; valI:LONGINT;
@@ -120,6 +139,15 @@ TYPE
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
 		
+		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
+		BEGIN
+			SELF.data:=data;
+			max:=MAX(1, MAX(data));
+			min:=MIN(0, MIN(data)); 
+			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		END NewData;
+
+		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 		VAR i:LONGINT; mn,mx,x0,y0,x1,y1:LONGINT;
 		BEGIN
@@ -161,6 +189,14 @@ Graphs* = OBJECT (Window);
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
+
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		BEGIN
+			SELF.data:=data;
+			max:=MAX(1, MAX(data));
+			min:=MIN(0, MIN(data)); 
+			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		END NewData;
 		
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 		VAR i,j:LONGINT; mn,mx, x0,x1,y0,y1:LONGINT;
@@ -207,6 +243,15 @@ GraphXY* = OBJECT (Window);
 			SetPointerInfo(manager.pointerCrosshair);
 			GetTicks;
 		END New;
+		
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		BEGIN
+			SELF.data:=data;
+			maxx:=MAX(0,MAX(data[0]));maxy:=MAX(0,MAX(data[1]));
+			minx:=MIN(0, MIN(data[0])); miny:=MIN(0, MIN(data[1])); 
+			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		END NewData;
+
 		
 		PROCEDURE GetTicks ; (*ticks along X, along Y, at decimal units*)
 		VAR maxx,maxy,stepx,stepy: LONGREAL; log:LONGREAL; steps,i:LONGINT;
@@ -292,13 +337,21 @@ END Scatter;
 
 (** Regression plot. requires computation of slope,intercept by suited procedure, e.g. derived from /Matrix/StatisticsLinearRegression.SimpleRegression()  *)
 TYPE Regression*= OBJECT (Scatter)
-	VAR slope,intercept: LONGREAL;
+	VAR slope,intercept: LONGREAL; regressor:Regressor;
 	
-	PROCEDURE &Initialize*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR; regressor:Regressor);
+	PROCEDURE &Initialize*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR; regress:Regressor);
 	BEGIN
 		New(data,title);
-		regressor(data,slope,intercept);
+		regress(data,slope,intercept);
+		regressor:=regress;
 	END Initialize;
+	
+	PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+	BEGIN
+		SELF.data:=data;
+		regressor(data,slope,intercept);
+		Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+	END NewData;
 	
 	PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
 	VAR mnw,mnh,x,y,xx,yy:LONGINT; scalex,scaley, x0, y0, x1, y1:LONGREAL; 
@@ -364,6 +417,23 @@ BEGIN {EXCLUSIVE}
 	NEW(m, [[1,2,3,4],[4,3,2,4],[5,4,-2,-6],[3,1,0,-1]], "Matrix"); 
 END Demo;
 
+(*PROCEDURE Demo1*; (*associate new dataset with existing graph*)
+VAR h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix; s:Scatter; r:Regression; i:LONGINT;
+BEGIN {EXCLUSIVE}
+	NEW(k, [[-2,7,8,4,5,9,6,4,7,8,4,5,9,6],
+			[5,3,2,12,21,3,0,5,3,-2,12,17,4,1]], "MultiGraph"); 
+	NEW(g, [4,7,8,4,5,9,6,5,3,2,12,17,3,-3,2], "Graph"); 
+			FOR i:=0 TO 100000000 DO END;
+	k.NewData(
+			[[5,3,2,12,21,3,0,5,3,-2,12,17,4,1],
+			[-2,7,8,4,5,9,6,4,7,8,4,5,9,6],
+			[5-1,3,2-1,12,21-1,3,0,5-1,3,-2,12-1,17,4,1]]
+			);
+	g.NewData([-2,7,8,4,5,9,6,4,7,8,4,5,9,6]);
+END Demo1;*)
+
+
+
 PROCEDURE Cleanup;
 VAR manager:WM.WindowManager; w,remove:WM.Window;
 BEGIN {EXCLUSIVE}
@@ -388,5 +458,5 @@ SystemTools.FreeDownTo MatrixBase ~
 
 Compiler.Compile -p=Win32G WMSimpleGraphs.Mod ~
 
-WMSimpleGraphs.Demo ~
+WMSimpleGraphs.Demo1 ~
 

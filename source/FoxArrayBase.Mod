@@ -2115,17 +2115,20 @@ Sufficient (but not necessary) conditions:
 			DEC( len );
 		END;
 	END GenericLoopZ;
-(*
+
 (** LONGCOMPLEX *)
 	PROCEDURE GenericLoopLZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 	VAR lval: LONGCOMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			SYSTEM.MOVE(ladr, ADDRESS OF lval, SIZE OF LONGCOMPLEX);
+			lval := op(lval);
+			SYSTEM.MOVE(ADDRESS OF lval, dadr, SIZE OF LONGCOMPLEX);
+			INC( ladr, linc );  INC( dadr, dinc );
 			DEC( len );
 		END;
 	END GenericLoopLZ;
-*)
+
 	(*** monadic minus A -> -A  ********************************************************************)
 
 (** SHORTINT *)
@@ -10079,6 +10082,12 @@ Sufficient (but not necessary) conditions:
 	OPERATOR "ALL"*(CONST x: ARRAY [?] OF COMPLEX; op: PROCEDURE(x: COMPLEX): COMPLEX): ARRAY[?] OF COMPLEX; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpZ(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(COMPLEX),GenericLoopZ,op);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGCOMPLEX; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX): ARRAY[?] OF LONGCOMPLEX; (*should also accept operator ?*)
+	BEGIN
+		ApplyGenericUnaryAAOpLZ(ADDRESSOF(RESULT),ADDRESSOF(x),SIZEOF(LONGCOMPLEX),GenericLoopLZ,op);
 		RETURN RESULT;
 	END "ALL";
 

@@ -2108,22 +2108,25 @@ Sufficient (but not necessary) conditions:
 	
 (** COMPLEX *)
 	PROCEDURE GenericLoopZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: COMPLEX): COMPLEX );
-	VAR lval: COMPLEX;
+	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: COMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );  INC( ladr, linc );  INC( dadr, dinc );
+			lval := ladr;
+			dval := dadr;
+			dval.val := op(lval.val);
+			(* SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );*)  INC( ladr, linc );  INC( dadr, dinc );
 			DEC( len );
 		END;
 	END GenericLoopZ;
 
 (** LONGCOMPLEX *)
 	PROCEDURE GenericLoopLZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
-	VAR lval: LONGCOMPLEX;
+	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: LONGCOMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.MOVE(ladr, ADDRESS OF lval, SIZE OF LONGCOMPLEX);
-			lval := op(lval);
-			SYSTEM.MOVE(ADDRESS OF lval, dadr, SIZE OF LONGCOMPLEX);
+			lval := ladr;
+			dval := dadr;
+			dval.val := op (lval.val);
 			INC( ladr, linc );  INC( dadr, dinc );
 			DEC( len );
 		END;

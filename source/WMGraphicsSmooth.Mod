@@ -21,7 +21,7 @@ TYPE
 	VAR
 		lineWidth-: REAL; (** line width in pixels *)
 		capType-: LONGINT; (** line cap type *)
-		
+
 		srcOverDstMode: Raster.Mode;
 		pixAlphaMap: ARRAY 256 OF Raster.Pixel;
 
@@ -43,11 +43,13 @@ TYPE
 		PROCEDURE SetColor(x: WMGraphics.Color);
 		VAR
 			i: LONGINT;
+			s: LONGINT;
 			r, g, b, a: LONGINT;
 		BEGIN
 			SetColor^(x);
 			WMGraphics.ColorToRGBA(color,r,g,b,a);
-			FOR i := 0 TO 255 DO Raster.SetRGBA(pixAlphaMap[i],r,g,b,255-i); END;
+			s := (256 * a) DIV 255;
+			FOR i := 0 TO 255 DO Raster.SetRGBA(pixAlphaMap[i],r,g,b,a - (s*i+128) DIV 256); END;
 		END SetColor;
 
 		(**
@@ -58,7 +60,7 @@ TYPE
 			IF w < 0.5 THEN w := 0.5; END;
 			lineWidth := w;
 		END SetLineWidth;
-		
+
 		(**
 			Setup line cap type
 		*)
@@ -197,6 +199,12 @@ TYPE
 		dx := x1 - x0;
 		dy := y1 - y0;
 
+		IF dx < 0 THEN
+			x0 := x0 + dx; x1 := x1 - dx;
+			y0 := y0 + dy; y1 := y1 - dy;
+			dx := -dx; dy := -dy;
+		END;
+
 		IF ABS(dy) > ABS(dx) THEN (* slope > 1 *)
 			v := x0; x0 := y0; y0 := v;
 			v := x1; x1 := y1; y1 := v;
@@ -298,7 +306,7 @@ TYPE
 		END;
 
 	END ThinSmoothLineReal;
-	
+
 	(**
 		Draw a thick (>1 pixel wide) antialiased line defined by starting and ending points with real coordinates
 
@@ -308,7 +316,7 @@ TYPE
 		pixAlphaMap: pixel map for 256 alpha values for a given line color
 		srcOverDstMode: raster mode corresponding to source over destination transfer (use Raster.InitMode(srcOverDstMode,Raster.srcOverDst);)
 		lineWidth: real-value line width
-		
+
 		REMARK:
 			In this code the signed distance function is defined as: sdist(x,y) = (dx*(y-y0) - dy*(x-x0)) / sqrt(dx*dx+dy*dy), where dx = x1-x0, dy = y1-y0
 
@@ -328,6 +336,12 @@ TYPE
 
 		dx := x1 - x0;
 		dy := y1 - y0;
+
+		IF dx < 0 THEN
+			x0 := x0 + dx; x1 := x1 - dx;
+			y0 := y0 + dy; y1 := y1 - dy;
+			dx := -dx; dy := -dy;
+		END;
 
 		IF ABS(dy) > ABS(dx) THEN (* slope > 1 *)
 			v := x0; x0 := y0; y0 := v;

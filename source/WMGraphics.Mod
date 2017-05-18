@@ -28,6 +28,7 @@ CONST
 
 
 TYPE
+	Real = REAL;
 	Char32 = LONGINT;
 	Point2d* = RECORD x*, y* : LONGINT END;
 	Image* = OBJECT(Raster.Image)
@@ -91,7 +92,7 @@ TYPE
 		END HasChar;
 
 		(** Render an UTF8 string to a canvas *)
-		PROCEDURE RenderString*(canvas : Canvas ; x, y : REAL; CONST text : ARRAY OF CHAR);
+		PROCEDURE RenderString*(canvas : Canvas ; x, y : Real; CONST text : ARRAY OF CHAR);
 		VAR i, len, code : LONGINT; g : GlyphSpacings;
 		BEGIN
 			len := LEN(text); i := 0;
@@ -128,7 +129,7 @@ TYPE
 		END GetStringSize;
 
 		(** Render character char to canvas at x, y (baseline) *)
-		PROCEDURE RenderChar*(canvas : Canvas ; x, y : REAL; char : Char32);
+		PROCEDURE RenderChar*(canvas : Canvas ; x, y : Real; char : Char32);
 		VAR g : GlyphSpacings; img : Image;
 		BEGIN
 			GetGlyphSpacings(char, g);
@@ -258,7 +259,7 @@ TYPE
 			END
 		END DrawString;
 
-		PROCEDURE SetLineWidth*(w:REAL);
+		PROCEDURE SetLineWidth*(w : Real);
 		BEGIN
 			(* Dummy. But is implemented in WMGraphicsGfx *)
 		END SetLineWidth;
@@ -294,6 +295,11 @@ TYPE
 				END
 			END
 		END Line;
+		
+		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : LONGINT);
+		BEGIN
+			Line(ENTIER(x0+0.5),ENTIER(y0+0.5),ENTIER(x1+0.5),ENTIER(y1+0.5),color,mode);
+		END LineReal;
 
 		(** set a pixel within the current clipping rectangle *)
 		PROCEDURE SetPixel*(x, y : LONGINT; color : Color; mode : LONGINT);
@@ -780,7 +786,7 @@ BEGIN { EXCLUSIVE }
 END GetFont;
 
 (** Render the fallback case of the character char to canvas at x, y (baseline) *)
-PROCEDURE FBRenderChar*(canvas : Canvas ; x, y : REAL; char : Char32);
+PROCEDURE FBRenderChar*(canvas : Canvas ; x, y : Real; char : Char32);
 VAR i, w, h : LONGINT; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR; r: Rectangles.Rectangle;
 BEGIN
 	i := 0; found := FALSE;

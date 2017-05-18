@@ -8,8 +8,8 @@ CONST
 	DefaultWidth = 320;
 	DefaultHeight = 240;
 	InvalidPosition* =MIN(LONGINT);
-	FlagMoveable = 20;
-	FlagSmoothGraphics = 21;
+	FlagMoveable* = 20;
+	FlagSmoothGraphics* = 21;
 	
 TYPE
 

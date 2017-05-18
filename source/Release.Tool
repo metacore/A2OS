@@ -770,7 +770,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	AMD64, UNIX64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
-
+	WMGraphicsSmooth.Mod
 
 	TextUtilities.Mod bluebottle.xsl	# Text Utilities
 

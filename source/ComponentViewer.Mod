@@ -2,13 +2,14 @@ MODULE ComponentViewer;	(** AUTHOR "TF"; PURPOSE "Testbed for the component syst
 
 IMPORT
 	Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents,
-	WMRestorable, Streams, D:= Debugging, Files, WMRectangles;
+	WMRestorable, Streams, D:= Debugging, Files, WMRectangles, WMGraphicsSmooth;
 
 CONST
 	DefaultWidth = 320;
 	DefaultHeight = 240;
 	InvalidPosition* =MIN(LONGINT);
-	FlagMoveable = 20; 
+	FlagMoveable = 20;
+	FlagSmoothGraphics = 21;
 	
 TYPE
 
@@ -123,6 +124,9 @@ BEGIN
 
 	IF window = NIL THEN
 		NEW(window, width, height, alpha);
+		IF FlagSmoothGraphics IN flags THEN
+			window.SetCanvasGenerator(WMGraphicsSmooth.GenCanvas);
+		END;
 		window.SetTitle(vc.GetName());
 		window.SetContent(vc);
 		window.flags := window.flags + flags;
@@ -138,6 +142,7 @@ BEGIN
 	ELSE
 		window.SetContent(vc);
 	END;
+	
 END DoShow;
 
 PROCEDURE DoLoad*(CONST filename: ARRAY OF CHAR; error: Streams.Writer): WMComponents.VisualComponent;
@@ -218,6 +223,7 @@ BEGIN
 	options.Add("t","onTop", Options.Flag);
 	options.Add("F","noFrame",Options.Flag);
 	options.Add("m","moveable",Options.Flag);
+	options.Add("s","smoothGraphics",Options.Flag);
 	IF options.Parse(context.arg, context.error) & context.arg.GetString(filename) THEN
 		IF ~options.GetInteger("width",width) THEN width := 0 END;
 		IF ~options.GetInteger("height",height) THEN height := 0 END;
@@ -228,6 +234,7 @@ BEGIN
 		IF options.GetFlag("moveable") THEN flags := {FlagMoveable} ELSE flags := {WMWindowManager.FlagFrame, WMWindowManager.FlagClose, WMWindowManager.FlagMinimize} END;
 		IF options.GetFlag("noFocus") THEN INCL(flags, WMWindowManager.FlagNoFocus) END;
 		IF options.GetFlag("onTop") THEN INCL(flags, WMWindowManager.FlagStayOnTop) END;
+		IF options.GetFlag("smoothGraphics") THEN INCL(flags,FlagSmoothGraphics); END;
 		c := DoOpen(filename, context.error, x , y, width, height, options.GetFlag("client"), options.GetFlag("alpha"), options.GetFlag("fullscreen"), flags);
 	ELSE
 		context.error.String("Usage: ComponentViewer.Open [Options] <string> ~"); context.error.Ln;

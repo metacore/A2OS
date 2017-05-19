@@ -14,12 +14,14 @@ CONST
 
 TYPE
 
+	Real* = WMGraphics.Real;
+
 	(**
 		Cancas used for smooth (antialiased) graphics
 	*)
 	Canvas* = OBJECT(WMGraphics.BufferCanvas)
 	VAR
-		lineWidth-: REAL; (** line width in pixels *)
+		lineWidth-: Real; (** line width in pixels *)
 		capType-: LONGINT; (** line cap type *)
 
 		srcOverDstMode: Raster.Mode;
@@ -55,7 +57,7 @@ TYPE
 		(**
 			Set line width in pixels
 		*)
-		PROCEDURE SetLineWidth*(w: REAL);
+		PROCEDURE SetLineWidth*(w: Real);
 		BEGIN
 			IF w < 0.5 THEN w := 0.5; END;
 			lineWidth := w;
@@ -71,7 +73,7 @@ TYPE
 		END SetLineCap;
 
 		PROCEDURE Line(x0, y0, x1, y1: LONGINT; lineColor: WMGraphics.Color; mode: LONGINT);
-		VAR xr0, yr0, xr1, yr1: REAL;
+		VAR xr0, yr0, xr1, yr1: Real;
 		BEGIN
 			IF lineColor # color THEN SetColor(lineColor); END;
 
@@ -93,11 +95,11 @@ TYPE
 		(**
 			Draw an antialiased line represented by real-valued coordinates of the starting and ending points
 		*)
-		PROCEDURE LineReal*(x0, y0, x1, y1: REAL; lineColor: WMGraphics.Color; mode: LONGINT);
+		PROCEDURE LineReal*(x0, y0, x1, y1: Real; lineColor: WMGraphics.Color; mode: LONGINT);
 		VAR
-			dx, dy, g: REAL;
-			x01, y01, x02, y02: REAL;
-			x11, y11, x12, y12: REAL;
+			dx, dy, g: Real;
+			x01, y01, x02, y02: Real;
+			x11, y11, x12, y12: Real;
 			points : ARRAY 4 OF WMGraphics.Point2d;
 		BEGIN
 
@@ -162,7 +164,7 @@ TYPE
 		Based on the "0x5f3759df" algorithm described in Wikipedia ( https://en.wikipedia.org/wiki/Fast_inverse_square_root )
 	*)
 	PROCEDURE InvSqrt(x: REAL): REAL;
-	VAR y: REAL;
+	VAR y: Real;
 	BEGIN
 		y := SYSTEM.VAL(REAL,0x5f3759df - SYSTEM.VAL(LONGINT,x) DIV 2); (* ~4% of error *)
 		RETURN y * ( 1.5E0 - y * y * (x * 0.5E0) ); (* ~0.15% of error *)
@@ -185,15 +187,15 @@ TYPE
 	(*!TODO: optimize the code for performance; consider to use fixed point arithmetics *)
 	PROCEDURE ThinSmoothLineReal(
 												img: Raster.Image;
-												x0, y0, x1, y1: REAL;
+												x0, y0, x1, y1: Real;
 												CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel;
 												VAR srcOverDstMode: Raster.Mode
 												);
 	VAR
 		swapped: BOOLEAN;
 		a, i, incx, incy, x, y, yy, xend: LONGINT;
-		dx, dy, sdx, sdy, dc, dm, dd, d0, d1, v, v0, v1, w: REAL;
-		x0p, y0p, x1p: REAL;
+		dx, dy, sdx, sdy, dc, dm, dd, d0, d1, v, v0, v1, w: Real;
+		x0p, y0p, x1p: Real;
 	BEGIN
 
 		dx := x1 - x0;
@@ -323,13 +325,13 @@ TYPE
 		POSSIBLE COMPILER BUG: if "CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel" is replaced by "CONST pixAlphaMap: ARRAY OF Raster.Pixel" the generated code traps with an access violation!!!
 	*)
 	(*!TODO: optimize the code for performance; consider to use fixed point arithmetics *)
-	PROCEDURE ThickSmoothLineReal(img: Raster.Image; x0, y0, x1, y1: REAL; CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel; VAR srcOverDstMode: Raster.Mode; lineWidth: REAL);
+	PROCEDURE ThickSmoothLineReal(img: Raster.Image; x0, y0, x1, y1: Real; CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel; VAR srcOverDstMode: Raster.Mode; lineWidth: Real);
 	VAR
 		swapped: BOOLEAN;
 		a, i, incx, incy, x, y, yy, xend: LONGINT;
-		dx, dy, sdx, sdy, dc, dm, dd, d0, d1, v, v0, v1, w: REAL;
-		x0p, y0p, x1p: REAL;
-		halfWidth: REAL;
+		dx, dy, sdx, sdy, dc, dm, dd, d0, d1, v, v0, v1, w: Real;
+		x0p, y0p, x1p: Real;
+		halfWidth: Real;
 	BEGIN
 
 		halfWidth := 0.5*lineWidth;
@@ -431,9 +433,9 @@ TYPE
 			INC(x,incx);
 		END;
 	(*VAR
-		dx, dy, ig: REAL;
-		x01, y01, x02, y02: REAL;
-		x11, y11, x12, y12: REAL;
+		dx, dy, ig: Real;
+		x01, y01, x02, y02: Real;
+		x11, y11, x12, y12: Real;
 	BEGIN
 		dx := x1 - x0;
 		dy := y1 - y0;
@@ -459,7 +461,7 @@ TYPE
 		ThinSmoothLineReal(img, x11,y11, x12,y12, pixAlphaMap, srcOverDstMode);*)
 	END ThickSmoothLineReal;
 
-	PROCEDURE Round(x: REAL): LONGINT;
+	PROCEDURE Round(x: Real): LONGINT;
 	BEGIN
 		IF x >= 0 THEN
 			RETURN ENTIER(x+0.5);
@@ -477,9 +479,9 @@ TYPE
 
 		Intersection points are returned in x0, y0, x1, y1
 	*)
-	PROCEDURE ClipLineReal(l, t, r, b: REAL; VAR x0, y0, x1, y1: REAL): BOOLEAN;
+	PROCEDURE ClipLineReal(l, t, r, b: Real; VAR x0, y0, x1, y1: Real): BOOLEAN;
 	VAR
-		dy, dx, x00, y00: REAL;
+		dy, dx, x00, y00: Real;
 	BEGIN
 
 		dx := x1 - x0;

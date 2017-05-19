@@ -28,7 +28,7 @@ CONST
 
 
 TYPE
-	Real = REAL;
+	Real* = REAL;
 	Char32 = LONGINT;
 	Point2d* = RECORD x*, y* : LONGINT END;
 	Image* = OBJECT(Raster.Image)

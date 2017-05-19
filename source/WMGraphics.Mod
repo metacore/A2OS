@@ -298,7 +298,7 @@ TYPE
 		
 		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : LONGINT);
 		BEGIN
-			Line(ENTIER(x0+0.5),ENTIER(y0+0.5),ENTIER(x1+0.5),ENTIER(y1+0.5),color,mode);
+			Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
 		END LineReal;
 
 		(** set a pixel within the current clipping rectangle *)

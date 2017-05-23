@@ -8,7 +8,7 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, MathL;
 
 CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
-		MinSize=30
+		MinSize=30;
 	
 TYPE 
 	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept: LONGREAL);
@@ -341,16 +341,15 @@ TYPE Regression*= OBJECT (Scatter)
 	
 	PROCEDURE &Initialize*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR; regress:Regressor);
 	BEGIN
-		New(data,title);
-		regress(data,slope,intercept);
 		regressor:=regress;
+		regressor(data,slope,intercept);
+		New(data,title);
 	END Initialize;
 	
 	PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
 	BEGIN
-		SELF.data:=data;
 		regressor(data,slope,intercept);
-		Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+		NewData^(data);
 	END NewData;
 	
 	PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);

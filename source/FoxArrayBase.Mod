@@ -9342,15 +9342,16 @@ Sufficient (but not necessary) conditions:
 			i, n: LONGINT;
 			continue: BOOLEAN;
 		BEGIN
-			i := oldDim-1; n := GetIncr(src,i);
+			i := GetDim(dest)-1; n := GetIncr(dest,i);
 			continue := TRUE;
 			WHILE (i > 0) & continue DO
-				n := n * GetLen(src,i);
+				n := n * GetLen(dest,i);
 				DEC(i);
-				continue := GetIncr(src,i) = n;
+				continue := GetIncr(dest,i) = n;
 			END;
-			(*todo: also check that dest is *)
-			IF (i = 0) & continue   THEN (* array can be fully linearized and, therefore, can be reshaped to any size *)
+			(*TRACE(i,continue,Size,GetSize(dest));*)
+			(*tod obviously size is not what I expect it to be*)
+			IF (i = 0) & continue & (Size=GetSize(dest))  THEN (* destination array is continuous memory of the proper lenght *)
 				RETURN TRUE;
 			ELSE 
 				RETURN FALSE;
@@ -9502,7 +9503,6 @@ Sufficient (but not necessary) conditions:
 			2.) descriptor may be reshaped: dest = ARRAY but no RANGE
 			3.) descriptor may not be reshaped: dest = RANGE
 		*)
-		
 		(* first check invariants *)
 		oldDim := GetDim( src );
 		IF oldDim = 0 THEN oldSize := 0
@@ -9533,6 +9533,8 @@ Sufficient (but not necessary) conditions:
 			END;
 		ELSIF (dest = 0) THEN  (* is tensor for sure *)
 			NewDescriptor;  NewData;  CopyData;  dest := new;
+		ELSIF TargetContinuous() THEN
+			NewDescriptor; new:=dest;  CopyData;
 		(*todo: check if target continous memory of correct size, if so don't allocate memory*)
 		ELSIF (newDim # GetDim( dest )) THEN  (* must be tensor *)
 			IF ~(TensorFlag IN GetFlags( dest )) THEN  (* no, not allowed*)

@@ -9335,7 +9335,27 @@ Sufficient (but not necessary) conditions:
 
 			RETURN squeezingReshape;
 		END SqueezingReshape;
-
+		
+		(*returns TRUE if the target is already allocated coninuous memory of correct length*)
+		PROCEDURE TargetContinuous(): BOOLEAN;
+		VAR
+			i, n: LONGINT;
+			continue: BOOLEAN;
+		BEGIN
+			i := oldDim-1; n := GetIncr(src,i);
+			continue := TRUE;
+			WHILE (i > 0) & continue DO
+				n := n * GetLen(src,i);
+				DEC(i);
+				continue := GetIncr(src,i) = n;
+			END;
+			(*todo: also check that dest is *)
+			IF (i = 0) & continue   THEN (* array can be fully linearized and, therefore, can be reshaped to any size *)
+				RETURN TRUE;
+			ELSE 
+				RETURN FALSE;
+			END;
+		END TargetContinuous;
 		(* returns TRUE if reshape preserves contiguity pattern and thus is valid even for subranged arrays *)
 		PROCEDURE PreservesContiguity(): BOOLEAN;
 		VAR
@@ -9482,6 +9502,7 @@ Sufficient (but not necessary) conditions:
 			2.) descriptor may be reshaped: dest = ARRAY but no RANGE
 			3.) descriptor may not be reshaped: dest = RANGE
 		*)
+		
 		(* first check invariants *)
 		oldDim := GetDim( src );
 		IF oldDim = 0 THEN oldSize := 0
@@ -9512,6 +9533,7 @@ Sufficient (but not necessary) conditions:
 			END;
 		ELSIF (dest = 0) THEN  (* is tensor for sure *)
 			NewDescriptor;  NewData;  CopyData;  dest := new;
+		(*todo: check if target continous memory of correct size, if so don't allocate memory*)
 		ELSIF (newDim # GetDim( dest )) THEN  (* must be tensor *)
 			IF ~(TensorFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				Err( "RESHAPE: new dimension only allowed for TENSOR" );

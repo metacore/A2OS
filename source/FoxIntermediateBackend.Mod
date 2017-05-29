@@ -8199,19 +8199,27 @@ TYPE
 						result := ResolveExpression(SyntaxTree.NewParameterDesignator(InvalidPosition, designator, actualParameters));
 						*)
 					ELSE
+						(* 
+						 	push len0
+						 	push len1
+						 	push len2
+						 	
+						 	push size
+						 	push len_adr
+						 	push element_size
+						 	push tag
+						 	push adr
+						*)
 
 						dim := 0;
 
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-							(* generate geometry descriptor *)
-							Designate(p0,l);
-							NewMathArrayDescriptor(l, x.parameters.Length()-1);
-							ReleaseOperand(l);
 							isTensor := TRUE;
 						ELSE
 							isTensor := FALSE;
 						END;
 
+						
 						FOR i := firstPar TO x.parameters.Length()-1 DO
 							IF ~isTensor THEN
 								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
@@ -8223,141 +8231,61 @@ TYPE
 								TrapC(BrgeL,r.op,tmp,ArraySizeTrap);
 							END;
 							Emit(Push(position,r.op));
-							IF i=1 THEN
-								CopyInt(reg, r.op);
-							ELSE
-								MulInt(reg, reg, r.op);
-							END;
 							ReleaseOperand(r);
 							INC(dim);
 						END;
-						Convert(reg,addressType);
+						
+						IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						Emit(Mov(position, adr, sp));
+						Emit(Push(position, IntermediateCode.Immediate(sizeType, dim)));
+						Emit(Push(position, adr)); 
+						ReleaseIntermediateOperand(adr); 
 
 						openDim := dim;
 						ASSERT(~(type IS SyntaxTree.MathArrayType) OR (type(SyntaxTree.MathArrayType).form IN {SyntaxTree.Static,SyntaxTree.Tensor}));
 
-						(*! the following code is only correct for "standard" Oberon calling convention *)
-						IF SemanticChecker.ContainsPointer(SemanticChecker.ArrayBase(type,MAX(LONGINT))) THEN
-							t := type;
-							IF ~isTensor & (t IS SyntaxTree.MathArrayType) THEN
-								staticLength := 1;
-								WHILE (t IS SyntaxTree.MathArrayType) DO (* static array *)
-									staticLength := staticLength * t(SyntaxTree.MathArrayType).staticLength;
-									t := t(SyntaxTree.MathArrayType).arrayBase.resolved;
-								END;
-								tmp := IntermediateCode.Immediate(reg.type,staticLength);
-								MulInt(reg,reg,tmp);
-							END;
-							Designate(p0,l);
-							IF isTensor THEN
-								Dereference(l,type,FALSE);
-								t := SemanticChecker.ArrayBase(type,MAX(LONGINT));
-							END;
-							Emit(Push(position,l.tag)); (* address for use after syscall *)
-							Emit(Push(position,l.tag)); (* address *)
-							ReleaseOperand(l);
+						IF isTensor THEN
+							baseType := SemanticChecker.ArrayBase(type,MAX(LONGINT));
+						ELSE
+							baseType := SemanticChecker.ArrayBase(type,openDim);
+						END;
 
-							tmp := TypeDescriptorAdr(t);
+
+						staticLength := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
+						Emit(Push(position, IntermediateCode.Immediate(sizeType, staticLength)));
+
+						IF SemanticChecker.ContainsPointer(baseType) THEN
+							tmp := TypeDescriptorAdr(baseType);
 							IF ~newObjectFile THEN
 								IntermediateCode.MakeMemory(tmp,addressType);
 							END;
-							Emit(Push(position,tmp)); (* type descriptor *)
-							ReleaseIntermediateOperand(tmp);
-
-							Emit(Push(position,reg)); (* number Elements *)
-							ReleaseIntermediateOperand(reg);
-							tmp := IntermediateCode.Immediate(addressType,0);
-							Emit(Push(position,tmp)); (* dimensions = 0, we control dimensions in the geometry descriptor *)
-							(* push realtime flag: false by default *)
-							Emit(Push(position,false));
-							CallThis(position,"Heaps","NewArr",5);
-							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							Emit(Pop(position,adr));
-							GetMathArrayField(tmp,adr,MathPtrOffset);
-							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							AddInt(reg, tmp, IntermediateCode.Immediate(addressType,ToMemoryUnits(system,ArrDataArrayOffset)));
-							PutMathArrayField(adr,reg,MathAdrOffset);
-							ReleaseIntermediateOperand(tmp);
-							ReleaseIntermediateOperand(reg);
 						ELSE
-							IF isTensor THEN
-								size := ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,MAX(LONGINT))));
-							ELSE
-								size := ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,openDim)));
-							END;
-							IF (size # 1) THEN
-								MulInt(reg,reg,IntermediateCode.Immediate(addressType,size)); (*! optimize the multiplication of immediate operands *)
-							END;
-							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset));
-							AddInt(reg,reg,tmp);
-
-							Designate(p0,l);
-							IF isTensor THEN
-								Dereference(l,type,FALSE);
-							END;
-							Emit(Push(position,l.tag)); (* address for use after syscall *)
-							Emit(Push(position,l.tag)); (* address for syscall *)
-							ReleaseOperand(l); (* pointer address *)
-
-							Emit(Push(position,reg)); (* size *)
-							ReleaseIntermediateOperand(reg);
-							(* push realtime flag: false by default *)
-							Emit(Push(position,false));
-							CallThis(position,"Heaps","NewSys",3);
-							IntermediateCode.InitRegister(adr,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							Emit(Pop(position,adr));
-							GetMathArrayField(tmp,adr,MathPtrOffset);
-							IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
-							AddInt(reg,tmp,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,SysDataArrayOffset)));
-							PutMathArrayField(adr,reg,MathAdrOffset);
-							ReleaseIntermediateOperand(tmp);
-							ReleaseIntermediateOperand(reg);
+							tmp := nil;
 						END;
+						Emit(Push(position,tmp)); (* type descriptor *)
 
-
-						flags := {};
-						IntermediateCode.InitImmediate(tmp,addressType,SYSTEM.VAL(LONGINT,flags));
-						PutMathArrayField(adr,tmp,MathFlagsOffset);
-						IntermediateCode.InitImmediate(tmp,addressType,openDim);
-						PutMathArrayField(adr,tmp,MathDimOffset);
-
-						else := NewLabel();
-						BreqL(else,IntermediateCode.Memory(addressType,adr,0),IntermediateCode.Immediate(addressType,0));
-
-						i := openDim-1;
-						IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
+						IF isTensor & GetRuntimeProcedure ("FoxArrayBase","AllocateTensorA", procedure, TRUE) THEN
+						ELSIF GetRuntimeProcedure ("FoxArrayBase","AllocateArrayA", procedure, TRUE) THEN
+						ELSE (* error message has already been emited *)
+							RETURN;
+						END;
+						 
+						Designate(p0,l);
 						IF isTensor THEN
-							IntermediateCode.InitImmediate(tmp,addressType,ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,MAX(LONGINT)))));
+							Emit(Push(position,l.op)); (* address *)
 						ELSE
-							IntermediateCode.InitImmediate(tmp,addressType,ToMemoryUnits(system,system.AlignedSizeOf(SemanticChecker.ArrayBase(type,openDim))));
+							Emit(Push(position,l.tag)); (* address *)
 						END;
-						PutMathArrayField(adr,tmp,MathElementSizeOffset);
-						WHILE (i >= 0) DO
-							Emit(Pop(position,reg));
-							PutMathArrayLength(adr,reg,i);
-							PutMathArrayIncrement(adr,tmp,i);
-							IF i > 0 THEN
-								IF i=openDim-1 THEN
-									CopyInt(tmp,tmp);
-								END;
-								MulInt(tmp,tmp,reg);
-							END;
-							DEC(i);
-						END;
-						ReleaseIntermediateOperand(adr);
-						ReleaseIntermediateOperand(reg);
-						ReleaseIntermediateOperand(tmp);
+						ReleaseOperand(l);
 
-						exit := NewLabel();
-						BrL(exit);
-						SetLabel(else);
-						(* else part: array could not be allocated *)
-						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,openDim*system.addressSize));
+						StaticCallOperand(result,procedure);
+						Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
+						ReleaseOperand(result);
+						
+						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,dim*system.addressSize));
 						Emit(Add(position,sp,sp,tmp));
-
-						SetLabel(exit);
-					END;
-				ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved  IS SyntaxTree.CellType) 
+				END;
+			ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved  IS SyntaxTree.CellType) 
 				THEN
 					IF ~backend.cellsAreObjects THEN RETURN END;
 					IF InCellScope(currentScope) THEN

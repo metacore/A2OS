@@ -90,6 +90,44 @@ TYPE
 	FastMatMul* = PROCEDURE ( matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: LONGINT ): BOOLEAN;
 	TransposeP* = PROCEDURE ( ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT );
 
+	LenInc = RECORD
+		len: SIZE;
+		inc: SIZE
+	END;
+
+	ArrayDescriptor*= RECORD
+		ptr: ANY;
+		adr: ADDRESS;
+		flags: SET;
+		dim: SIZE;
+		elementSize: SIZE;
+	END;
+	
+	UnsafeArray*= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
+		lens: ARRAY 8 OF LenInc;
+	END;
+	
+	A0 = RECORD(ArrayDescriptor) END;
+	A1 = RECORD(ArrayDescriptor) lens : ARRAY 1 OF LenInc; END;
+	A2 = RECORD(ArrayDescriptor) lens : ARRAY 2 OF LenInc; END;
+	A3 = RECORD(ArrayDescriptor) lens : ARRAY 3 OF LenInc; END;
+	A4 = RECORD(ArrayDescriptor) lens : ARRAY 4 OF LenInc; END;
+	A5 = RECORD(ArrayDescriptor) lens : ARRAY 5 OF LenInc; END;
+	A6 = RECORD(ArrayDescriptor) lens : ARRAY 6 OF LenInc; END;
+	A7 = RECORD(ArrayDescriptor) lens : ARRAY 7 OF LenInc; END;
+	A8 = RECORD(ArrayDescriptor) lens : ARRAY 8 OF LenInc; END;
+	
+	T0 = POINTER TO A0;
+	T1 = POINTER TO A1;
+	T2 = POINTER TO A2;
+	T3 = POINTER TO A3;
+	T4 = POINTER TO A4;
+	T5 = POINTER TO A5;
+	T6 = POINTER TO A6;
+	T7 = POINTER TO A7;
+	T8 = POINTER TO A8;
+	
+	(*
 	(* tensor shape descriptors, statically typed, maximal dimension of a tensor limited to 32 for the time being *)
 	T0 = POINTER TO RECORD ptr: ANY; a: ARRAY MathLenOffset + 0* 8 OF CHAR END;
 	T1 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 1 * 8 OF CHAR END;
@@ -100,6 +138,7 @@ TYPE
 	T6 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 6 * 8 OF CHAR END;
 	T7 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 7 * 8 OF CHAR END;
 	T8 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 8 * 8 OF CHAR END;
+	*)
 	T9 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 9 * 8 OF CHAR END;
 	T10 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 10 * 8 OF CHAR END;
 	T11 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 11 * 8 OF CHAR END;
@@ -2114,7 +2153,7 @@ Sufficient (but not necessary) conditions:
 			lval := ladr;
 			dval := dadr;
 			dval.val := op(lval.val);
-			(* SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, op(lval) );*)  INC( ladr, linc );  INC( dadr, dinc );
+			INC( ladr, linc );  INC( dadr, dinc );
 			DEC( len );
 		END;
 	END GenericLoopZ;
@@ -9550,6 +9589,58 @@ Sufficient (but not necessary) conditions:
 			CopyContent( src, dest, Size );  RETURN;
 		END;
 	END DoReshape;
+
+	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: ADDRESS );
+	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT;
+
+		PROCEDURE NewData;
+		VAR len, size, i: LONGINT;
+		BEGIN
+			size := elementSize;
+			FOR i := dim - 1 TO 0 BY -1 DO
+				len := a[i];
+				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
+			END;
+			IF tag = 0 THEN
+				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
+				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
+			ELSE
+				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
+				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) + ArrDataArrayOffset );
+			END;
+			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );  PutSize( dest, elementSize );
+		END NewData;
+
+		PROCEDURE ClearData;
+			(*! todo *)
+		END ClearData;
+
+	BEGIN
+		dim := LEN( a,0 );
+		IF (dest = 0) OR (dim # GetDim( dest )) THEN
+			IF dest # 0 THEN
+				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
+			END;
+			descr := GetArrayDesc( LEN( a,0 ) );  dest := SYSTEM.VAL( LONGINT, descr );
+			NewData;
+		ELSE
+			i := 0;
+			WHILE (i < dim) & same DO
+				IF GetLen( dest, i ) # a[i] THEN same := FALSE;  END;
+				INC( i );
+			END;
+			IF ~same THEN
+				IF (RangeFlag IN GetFlags( dest )) THEN Err( "Array's shape must not be modified (is RANGE !) " );  END;
+				NewData
+			ELSE ClearData
+			END;
+		END;		
+	END AllocateTensorA;
+
+	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: ADDRESS );
+	BEGIN
+		AllocateTensorA(a,elementSize,tag,dest);
+	END AllocateArrayA;
 
 	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF LONGINT;  Size: LONGINT; tag: LONGINT );
 	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT; dest: Address;

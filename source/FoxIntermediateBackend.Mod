@@ -8220,7 +8220,7 @@ TYPE
 						END;
 
 						
-						FOR i := firstPar TO x.parameters.Length()-1 DO
+						FOR i := x.parameters.Length()-1 TO firstPar BY -1 DO
 							IF ~isTensor THEN
 								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
 							END;

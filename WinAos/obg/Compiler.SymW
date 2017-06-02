@@ -34,13 +34,17 @@ TYPE
 	END; 
 VAR 
 	platforms: Options.Defaults; 
+	defaultPlatform: ARRAY 32 OF CHAR; 
 
 	PROCEDURE ^ ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
 	PROCEDURE ^ Modules*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; CONST options: CompilerOptions; VAR importCache: SyntaxTree.ModuleScope): BOOLEAN; 
 	PROCEDURE ^ GetOptions*(input: Streams.Reader; error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR compilerOptions: CompilerOptions): BOOLEAN; 
 	PROCEDURE ^ Compile*(context: Commands.Context); 
 	PROCEDURE ^ CompileReader*(context: Commands.Context; reader: Streams.Reader); 
-	PROCEDURE ^ AddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR); 
+	PROCEDURE ^ DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR); 
 	PROCEDURE ^ ShowDefaults*(context: Commands.Context); 
+	PROCEDURE ^ AddPlatform*(context: Commands.Context); 
+	PROCEDURE ^ SetDefaultPlatform*(context: Commands.Context); 
+	PROCEDURE ^ GetDefaultPlatform(VAR name: ARRAY OF CHAR): BOOLEAN; 
 BEGIN
 END Compiler.

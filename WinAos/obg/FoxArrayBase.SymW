@@ -91,50 +91,75 @@ TYPE
 
 	TransposeP* = PROCEDURE (ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT); 
 
-	T0 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (0 * 8)) OF CHAR; 
+	LenInc = RECORD 
+		len: SIZE; 
+		inc: SIZE; 
 	END; 
 
-	T1 = POINTER TO RECORD 
+	ArrayDescriptor* = RECORD 
 		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (1 * 8)) OF CHAR; 
+		adr: ADDRESS; 
+		flags: SET; 
+		dim: SIZE; 
+		elementSize: SIZE; 
 	END; 
 
-	T2 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (2 * 8)) OF CHAR; 
+	UnsafeArray* = POINTER {UNSAFE} TO RECORD (ArrayDescriptor)
+		lens: ARRAY 8 OF LenInc; 
 	END; 
 
-	T3 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (3 * 8)) OF CHAR; 
+	A0 = RECORD (ArrayDescriptor)
 	END; 
 
-	T4 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (4 * 8)) OF CHAR; 
+	A1 = RECORD (ArrayDescriptor)
+		lens: ARRAY 1 OF LenInc; 
 	END; 
 
-	T5 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (5 * 8)) OF CHAR; 
+	A2 = RECORD (ArrayDescriptor)
+		lens: ARRAY 2 OF LenInc; 
 	END; 
 
-	T6 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (6 * 8)) OF CHAR; 
+	A3 = RECORD (ArrayDescriptor)
+		lens: ARRAY 3 OF LenInc; 
 	END; 
 
-	T7 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (7 * 8)) OF CHAR; 
+	A4 = RECORD (ArrayDescriptor)
+		lens: ARRAY 4 OF LenInc; 
 	END; 
 
-	T8 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (8 * 8)) OF CHAR; 
+	A5 = RECORD (ArrayDescriptor)
+		lens: ARRAY 5 OF LenInc; 
 	END; 
+
+	A6 = RECORD (ArrayDescriptor)
+		lens: ARRAY 6 OF LenInc; 
+	END; 
+
+	A7 = RECORD (ArrayDescriptor)
+		lens: ARRAY 7 OF LenInc; 
+	END; 
+
+	A8 = RECORD (ArrayDescriptor)
+		lens: ARRAY 8 OF LenInc; 
+	END; 
+
+	T0 = POINTER TO A0; 
+
+	T1 = POINTER TO A1; 
+
+	T2 = POINTER TO A2; 
+
+	T3 = POINTER TO A3; 
+
+	T4 = POINTER TO A4; 
+
+	T5 = POINTER TO A5; 
+
+	T6 = POINTER TO A6; 
+
+	T7 = POINTER TO A7; 
+
+	T8 = POINTER TO A8; 
 
 	T9 = POINTER TO RECORD 
 		ptr: ANY; 
@@ -421,6 +446,7 @@ VAR
 	PROCEDURE ^ GenericLoopR(ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE (x: REAL):REAL); 
 	PROCEDURE ^ GenericLoopX(ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE (x: LONGREAL):LONGREAL); 
 	PROCEDURE ^ GenericLoopZ(ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE (x: COMPLEX):COMPLEX); 
+	PROCEDURE ^ GenericLoopLZ(ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
 	PROCEDURE ^ MinusLoopS(ladr, dadr, linc, dinc, len: LONGINT); 
 	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ MinusLoopI(ladr, dadr, linc, dinc, len: LONGINT); 
@@ -1167,6 +1193,8 @@ VAR
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGREAL): ARRAY [*, *] OF LONGREAL; 
 	PROCEDURE ^ CheckTensorGeometry(left, right, dest: Address; ldim, rdim: LONGINT): BOOLEAN; 
 	PROCEDURE ^ DoReshape*(VAR dest: LONGINT; src: LONGINT; CONST shape: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ AllocateTensorA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: ADDRESS); 
+	PROCEDURE ^ AllocateArrayA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; dest: ADDRESS); 
 	PROCEDURE ^ AllocateTensorX*(VAR destA: ARRAY [?] ; CONST a: ARRAY [*] OF LONGINT; Size: LONGINT; tag: LONGINT); 
 	PROCEDURE ^ LenA*(VAR dest: ARRAY [*] OF LONGINT; src: Address); 
 	PROCEDURE ^ IncrA*(VAR dest: ARRAY [*] OF LONGINT; src: Address); 
@@ -1215,5 +1243,6 @@ VAR
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF REAL; op: PROCEDURE (x: REAL):REAL): ARRAY [?] OF REAL; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGREAL; op: PROCEDURE (x: LONGREAL):LONGREAL): ARRAY [?] OF LONGREAL; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX; op: PROCEDURE (x: COMPLEX):COMPLEX): ARRAY [?] OF COMPLEX; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGCOMPLEX; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 BEGIN
 END FoxArrayBase.

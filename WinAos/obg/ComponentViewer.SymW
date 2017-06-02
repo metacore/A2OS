@@ -1,10 +1,11 @@
 MODULE ComponentViewer;
-	IMPORT Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents, WMRestorable, Streams, D := Debugging, Files, WMRectangles;
+	IMPORT Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents, WMRestorable, Streams, D := Debugging, Files, WMRectangles, WMGraphicsSmooth;
 CONST 
 	DefaultWidth = 320; 
 	DefaultHeight = 240; 
 	InvalidPosition* = MIN(LONGINT); 
-	FlagMoveable = 20; 
+	FlagMoveable* = 20; 
+	FlagSmoothGraphics* = 21; 
 TYPE 
 	KillerMsg = OBJECT 
 	END KillerMsg; 

@@ -1,5 +1,5 @@
 MODULE StdIO;
-	IMPORT S := SYSTEM, Modules, Commands, Streams, WinTrace, Kernel32;
+	IMPORT S := SYSTEM, Modules, Commands, Streams, Pipes, WinTrace, Kernel32;
 CONST 
 	AddrSize = SIZEOF(ADDRESS); 
 TYPE 
@@ -7,6 +7,7 @@ TYPE
 VAR 
 	env-: Commands.Context; 
 	hin-, hout-, herr-: Kernel32.HANDLE; 
+	stdInDecoupler: Pipes.ReadDecoupler; 
 
 	PROCEDURE ^ Args(): String; 
 	PROCEDURE ^ Cleanup; 

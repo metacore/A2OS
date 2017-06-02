@@ -116,6 +116,7 @@ TYPE
 		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END FileSystem; 
 
 	FileSystemTable* = POINTER TO ARRAY OF FileSystem; 
@@ -208,6 +209,8 @@ VAR
 	PROCEDURE ^ CreateDirectory*(path: ARRAY OF CHAR; VAR res: LONGINT); 
 	PROCEDURE ^ RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: LONGINT); 
 	PROCEDURE ^ Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
+	PROCEDURE ^ Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
+	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
 	PROCEDURE ^ FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File; 
 	PROCEDURE ^ ReadSInt*(VAR r: Rider; VAR x: SHORTINT); 
 	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 

@@ -25,6 +25,8 @@ CONST
 	AlignTop* = 0; 
 	AlignBottom* = 2; 
 TYPE 
+	Real* = REAL; 
+
 	Char32 = LONGINT; 
 
 	Point2d* = RECORD 
@@ -58,9 +60,9 @@ TYPE
 		PROCEDURE ^ GetAscent*(): LONGINT; 
 		PROCEDURE ^ GetDescent*(): LONGINT; 
 		PROCEDURE ^ HasChar*(char: Char32): BOOLEAN; 
-		PROCEDURE ^ RenderString*(canvas: Canvas; x, y: REAL; CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ RenderString*(canvas: Canvas; x, y: Real; CONST text: ARRAY OF CHAR); 
 		PROCEDURE ^ GetStringSize*(CONST text: ARRAY OF CHAR; VAR dx, dy: LONGINT); 
-		PROCEDURE ^ RenderChar*(canvas: Canvas; x, y: REAL; char: Char32); 
+		PROCEDURE ^ RenderChar*(canvas: Canvas; x, y: Real; char: Char32); 
 		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: Image); 
 		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: GlyphSpacings); 
 	END Font; 
@@ -99,8 +101,9 @@ TYPE
 		PROCEDURE ^ SetFont*(f: Font); 
 		PROCEDURE ^ GetFont*(): Font; 
 		PROCEDURE ^ DrawString*(x, y: LONGINT; CONST text: ARRAY OF CHAR); 
-		PROCEDURE ^ SetLineWidth*(w: REAL); 
+		PROCEDURE ^ SetLineWidth*(w: Real); 
 		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; color: Color; mode: LONGINT); 
+		PROCEDURE ^ LineReal*(x0, y0, x1, y1: Real; color: Color; mode: LONGINT); 
 		PROCEDURE ^ SetPixel*(x, y: LONGINT; color: Color; mode: LONGINT); 
 		PROCEDURE ^ Fill*(rect: Rectangle; color: Color; mode: LONGINT); 
 		PROCEDURE ^ FillPolygonFlat*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; color: Color; mode: LONGINT); 
@@ -172,7 +175,7 @@ VAR
 	PROCEDURE ^ GetDefaultFont*(): Font; 
 	PROCEDURE ^ InstallFontManager*(fm: FontManager); 
 	PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET): Font; 
-	PROCEDURE ^ FBRenderChar*(canvas: Canvas; x, y: REAL; char: Char32); 
+	PROCEDURE ^ FBRenderChar*(canvas: Canvas; x, y: Real; char: Char32); 
 	PROCEDURE ^ FBGetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: GlyphSpacings); 
 	PROCEDURE ^ IsBitmapHit*(x, y, threshold: LONGINT; img: Raster.Image): BOOLEAN; 
 	PROCEDURE ^ IsScaledBitmapHit*(x, y, w, h, threshold: LONGINT; img: Raster.Image): BOOLEAN; 

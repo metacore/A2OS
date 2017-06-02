@@ -66,7 +66,7 @@ TYPE
 		fs: WinFileSystem; 
 		useprefix*: BOOLEAN; 
 
-		PROCEDURE ^ Prefix(VAR name, res: ARRAY OF CHAR); 
+		PROCEDURE ^ Prefix(CONST name: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
@@ -76,6 +76,7 @@ TYPE
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
 
 	WinFileSystem = OBJECT {EXCLUSIVE} 
@@ -92,6 +93,7 @@ TYPE
 		PROCEDURE ^ CreateDirectory0(name: ARRAY OF CHAR; VAR res: LONGINT); 
 		PROCEDURE ^ RemoveDirectory0(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Finalize; 
+		PROCEDURE ^ Has*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END WinFileSystem; 
 
 	Buffer = POINTER TO RECORD 
@@ -168,6 +170,7 @@ VAR
 	PROCEDURE ^ DeviceNotification*(type: LONGINT; drives: SET); 
 	PROCEDURE ^ RegisterNotification*(p: NotificationProc); 
 	PROCEDURE ^ Init; 
+	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
 	PROCEDURE ^ Mount*(context: Commands.Context); 
 	PROCEDURE ^ Unmount*(context: Commands.Context); 
 BEGIN

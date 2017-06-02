@@ -31,6 +31,7 @@ CONST
 	FileAttributeNotContentIndexed* = 13; 
 	FileFlagDeleteOnClose* = 26; 
 	FileFlagRandomAccess* = 28; 
+	FileFlagOverlapped* = 30; 
 	FileFlagWriteThrough* = 31; 
 	FileBegin* = 0; 
 	MoveFileReplaceExisting* = 0; 
@@ -148,6 +149,7 @@ CONST
 	ErrorFileNotFound* = 2; 
 	ErrorAccessDenied* = 5; 
 	ErrorInvalidParameter* = 87; 
+	ErrorIoPending* = 997; 
 TYPE 
 	BOOL* = LONGINT; 
 
@@ -318,6 +320,14 @@ TYPE
 		DaylightDate*: SystemTime; 
 		DaylightBias*: LONGINT; 
 	END; 
+
+	Overlapped* = RECORD 
+		Internal*: LONGINT; 
+		InternalHigh*: LONGINT; 
+		Offset*: LONGINT; 
+		OffsetHigh*: LONGINT; 
+		hEvent*: HANDLE; 
+	END; 
 VAR 
 	hInstance-: HINSTANCE; 
 	isEXE-: BOOLEAN; 
@@ -373,6 +383,7 @@ VAR
 	GetLogicalDrives-: PROCEDURE ():SET; 
 	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: LONGINT):LONGINT; 
 	GetModuleHandle-: PROCEDURE {WINAPI}(CONST lpModuleName: ARRAY OF CHAR):HMODULE; 
+	GetOverlappedResult-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL):BOOL; 
 	GetPrivateProfileString-: PROCEDURE {WINAPI}(CONST lpAppName: ARRAY OF CHAR; CONST lpKeyName: ARRAY OF CHAR; CONST lpDefault: ARRAY OF CHAR; CONST lpReturnedString: ARRAY OF CHAR; nSize: LONGINT; CONST lpFileName: ARRAY OF CHAR):LONGINT; 
 	GetProcessHeap-: PROCEDURE {WINAPI}():HANDLE; 
 	GetProcessTimes-: PROCEDURE {WINAPI}(CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime):LONGINT; 
@@ -415,7 +426,7 @@ VAR
 	QueryPerformanceCounter-: PROCEDURE {WINAPI}(VAR lpPerformaceCount: LargeInteger):BOOL; 
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI}(VAR lpFrequency: LargeInteger):BOOL; 
 	QueryThreadCycleTime-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR cycleTime: HUGEINT):BOOL; 
-	readFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ANY):BOOL; 
+	readFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	ReadProcessMemory-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpBaseAddress: ADDRESS; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nSize: LONGINT; VAR lpNumberOfBytesRead: LONGINT):BOOL; 
 	RemoveDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
 	ResetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
@@ -453,15 +464,15 @@ VAR
 	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; flAllocationType, flProtect: SET):ADDRESS; 
 	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; dwFreeType: SET):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
-	writeFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ANY):BOOL; 
+	writeFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
 	LeaveA2*, ReenterA2*: PROCEDURE ; 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 
 	PROCEDURE ^ EnterCriticalSection*(VAR lpCriticalSection: CriticalSection); 
 	PROCEDURE ^ LeaveCriticalSection*(VAR lpCriticalSection: CriticalSection); 
-	PROCEDURE ^ ReadFile-(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ANY): BOOL; 
-	PROCEDURE ^ WriteFile-(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ANY): BOOL; 
+	PROCEDURE ^ ReadFile-(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS): BOOL; 
+	PROCEDURE ^ WriteFile-(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS): BOOL; 
 	PROCEDURE ^ GetProcAddress*(hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ CopyString*(lpString: LPSTR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutputDebugString*(CONST str: ARRAY OF CHAR); 

@@ -15,5 +15,20 @@ TYPE
 		PROCEDURE ^  & Init*(size: LONGINT); 
 		PROCEDURE ^ Close*; 
 	END Pipe; 
+
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+
+	ReadDecoupler* = OBJECT {EXCLUSIVE} 
+	VAR 
+		pipe: Pipe; 
+		inputReceiver: Receiver; 
+		numR: LONGINT; 
+		smallbuf: ARRAY [128] OF CHAR; 
+		len, res: LONGINT; 
+
+		PROCEDURE ^  & InitReadDecoupler*(inputReceiver: Receiver); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+	BEGIN{ACTIVE} 
+	END ReadDecoupler; 
 BEGIN
 END Pipes.

@@ -206,7 +206,7 @@ VAR
 
 	PROCEDURE SetDefaults*;   (* set standard procedures *)
 	BEGIN
-		KernelLog.String( "ArrayBase: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
+		KernelLog.String( "ArrayBase XXXXXXX: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
 		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;
 		loopSPAZAZ := SPAZAZLoop; loopSPALZALZ := SPALZALZLoop;
 		loopAddARAR := AddARARLoop;  loopMatMulAXAX := MatMulAXAXLoop;

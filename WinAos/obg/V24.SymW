@@ -8,6 +8,7 @@ TYPE
 		handle: Kernel32.HANDLE; 
 		portname: ARRAY 6 OF CHAR; 
 		timer: Kernel.Timer; 
+		rOverlapped, wOverlapped: Kernel32.Overlapped; 
 
 		PROCEDURE ^  & Init*(port: LONGINT); 
 		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 

@@ -352,7 +352,8 @@ CONST
 		s8: SIGNED8; s16: SIGNED16; s32: SIGNED32; s64: SIGNED64;
 		u8: UNSIGNED8; u16: UNSIGNED16; u32: UNSIGNED32; u64: UNSIGNED64;
 		r: REAL; x: LONGREAL;
-		cplx: COMPLEX; lcplx: LONGCOMPLEX;
+		cplx: POINTER {UNSAFE} TO RECORD re,im: REAL END;
+		lcplx: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
 		set: SET;
 		byte: SYSTEM.BYTE;
 
@@ -439,10 +440,11 @@ CONST
 			w.String(")"); 
 		| sfTypeCOMPLEX:
 			size := SIZEOF(COMPLEX);
-			SYSTEM.GET(adr, cplx); w.Float(RE(cplx),7); w.String("+ i*"); w.Float(IM(cplx),7);
+			cplx := adr; w.Float(cplx.re,7); w.String("+ i*"); w.Float(cplx.im,7);
 		| sfTypeLONGCOMPLEX:
 			size := SIZEOF(LONGCOMPLEX);
-			SYSTEM.GET(adr, x); w.Float(x,13); SYSTEM.GET(adr + SIZEOF(LONGREAL), x); w.String("+ i*"); w.Float(x,13);
+			lcplx := adr;
+			w.Float(lcplx.re,13); w.String("+ i*"); w.Float(lcplx.im,13);
 		| sfTypeSET:
 			size := SIZEOF(SET);
 			SYSTEM.GET(adr, set); w.Set(set);

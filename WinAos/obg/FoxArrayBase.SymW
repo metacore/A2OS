@@ -97,15 +97,17 @@ TYPE
 	END; 
 
 	ArrayDescriptor* = RECORD 
-		ptr: ANY; 
-		adr: ADDRESS; 
-		flags: SET; 
-		dim: SIZE; 
-		elementSize: SIZE; 
+		ptr*: ANY; 
+		adr*: ADDRESS; 
+		flags*: SET; 
+		dim*: SIZE; 
+		elementSize*: SIZE; 
 	END; 
 
+	Tensor = POINTER TO ArrayDescriptor; 
+
 	UnsafeArray* = POINTER {UNSAFE} TO RECORD (ArrayDescriptor)
-		lens: ARRAY 8 OF LenInc; 
+		lens*: ARRAY 8 OF LenInc; 
 	END; 
 
 	A0 = RECORD (ArrayDescriptor)
@@ -160,126 +162,6 @@ TYPE
 	T7 = POINTER TO A7; 
 
 	T8 = POINTER TO A8; 
-
-	T9 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (9 * 8)) OF CHAR; 
-	END; 
-
-	T10 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (10 * 8)) OF CHAR; 
-	END; 
-
-	T11 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (11 * 8)) OF CHAR; 
-	END; 
-
-	T12 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (12 * 8)) OF CHAR; 
-	END; 
-
-	T13 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (13 * 8)) OF CHAR; 
-	END; 
-
-	T14 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (14 * 8)) OF CHAR; 
-	END; 
-
-	T15 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (15 * 8)) OF CHAR; 
-	END; 
-
-	T16 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (16 * 8)) OF CHAR; 
-	END; 
-
-	T17 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (17 * 8)) OF CHAR; 
-	END; 
-
-	T18 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (18 * 8)) OF CHAR; 
-	END; 
-
-	T19 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (19 * 8)) OF CHAR; 
-	END; 
-
-	T20 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (20 * 8)) OF CHAR; 
-	END; 
-
-	T21 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (21 * 8)) OF CHAR; 
-	END; 
-
-	T22 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (22 * 8)) OF CHAR; 
-	END; 
-
-	T23 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (23 * 8)) OF CHAR; 
-	END; 
-
-	T24 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (24 * 8)) OF CHAR; 
-	END; 
-
-	T25 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (25 * 8)) OF CHAR; 
-	END; 
-
-	T26 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (26 * 8)) OF CHAR; 
-	END; 
-
-	T27 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (27 * 8)) OF CHAR; 
-	END; 
-
-	T28 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (28 * 8)) OF CHAR; 
-	END; 
-
-	T29 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (29 * 8)) OF CHAR; 
-	END; 
-
-	T30 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (30 * 8)) OF CHAR; 
-	END; 
-
-	T31 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (31 * 8)) OF CHAR; 
-	END; 
-
-	T32 = POINTER TO RECORD 
-		ptr: ANY; 
-		a: ARRAY (MathLenOffset + (32 * 8)) OF CHAR; 
-	END; 
 
 	SmallMatMul* = PROCEDURE (dadr, ladr, radr: LONGINT); 
 VAR 

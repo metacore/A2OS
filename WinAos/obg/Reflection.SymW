@@ -1,5 +1,5 @@
 MODULE Reflection;
-	IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace, FoxArrayBase;
+	IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace;
 CONST 
 	ShowAllProcs = TRUE; 
 	MaxFrames = 128; 

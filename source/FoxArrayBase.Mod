@@ -96,15 +96,17 @@ TYPE
 	END;
 
 	ArrayDescriptor*= RECORD
-		ptr: ANY;
-		adr: ADDRESS;
-		flags: SET;
-		dim: SIZE;
-		elementSize: SIZE;
+		ptr*: ANY;
+		adr*: ADDRESS;
+		flags*: SET;
+		dim*: SIZE;
+		elementSize*: SIZE;
 	END;
 	
+	Tensor = POINTER TO ArrayDescriptor;
+	
 	UnsafeArray*= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
-		lens: ARRAY 8 OF LenInc;
+		lens*: ARRAY 8 OF LenInc;
 	END;
 	
 	A0 = RECORD(ArrayDescriptor) END;
@@ -127,42 +129,6 @@ TYPE
 	T7 = POINTER TO A7;
 	T8 = POINTER TO A8;
 	
-	(*
-	(* tensor shape descriptors, statically typed, maximal dimension of a tensor limited to 32 for the time being *)
-	T0 = POINTER TO RECORD ptr: ANY; a: ARRAY MathLenOffset + 0* 8 OF CHAR END;
-	T1 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 1 * 8 OF CHAR END;
-	T2 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 2 * 8 OF CHAR END;
-	T3 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 3 * 8 OF CHAR END;
-	T4 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 4 * 8 OF CHAR END;
-	T5 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 5 * 8 OF CHAR END;
-	T6 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 6 * 8 OF CHAR END;
-	T7 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 7 * 8 OF CHAR END;
-	T8 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 8 * 8 OF CHAR END;
-	*)
-	T9 = POINTER TO RECORD ptr: ANY; a:ARRAY MathLenOffset + 9 * 8 OF CHAR END;
-	T10 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 10 * 8 OF CHAR END;
-	T11 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 11 * 8 OF CHAR END;
-	T12 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 12 * 8 OF CHAR END;
-	T13 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 13 * 8 OF CHAR END;
-	T14 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 14 * 8 OF CHAR END;
-	T15 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 15 * 8 OF CHAR END;
-	T16 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 16 * 8 OF CHAR END;
-	T17 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 17 * 8 OF CHAR END;
-	T18 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 18 * 8 OF CHAR END;
-	T19 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 19 * 8 OF CHAR END;
-	T20 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 20 * 8 OF CHAR END;
-	T21 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 21 * 8 OF CHAR END;
-	T22 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 22 * 8 OF CHAR END;
-	T23 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 23 * 8 OF CHAR END;
-	T24 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 24 * 8 OF CHAR END;
-	T25 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 25 * 8 OF CHAR END;
-	T26 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 26 * 8 OF CHAR END;
-	T27 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 27 * 8 OF CHAR END;
-	T28 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 28 * 8 OF CHAR END;
-	T29 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 29 * 8 OF CHAR END;
-	T30 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 30 * 8 OF CHAR END;
-	T31 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 31 * 8 OF CHAR END;
-	T32 =POINTER TO  RECORD ptr: ANY;a: ARRAY MathLenOffset + 32 * 8 OF CHAR END;
 
 	(* used for optimizations of MatMul with small sizes (Alexey Morozov) *)
 	SmallMatMul* = PROCEDURE(dadr, ladr, radr: LONGINT);
@@ -303,7 +269,9 @@ VAR
 	PROCEDURE GetFlags( base: Address ): SET;
 	VAR set: SET;
 	BEGIN
-		SYSTEM.GET( base + MathFlagsOffset, set );  RETURN set;
+		SYSTEM.GET( base + MathFlagsOffset, set );  
+		
+		RETURN set;
 	END GetFlags;
 
 	PROCEDURE PutDim( base: Address;  dim: LONGINT );
@@ -357,12 +325,9 @@ VAR
 	END Report;
 
 	PROCEDURE GetArrayDesc( dim: LONGINT ): ANY;
-	VAR (* t: TensorType;  *) ptr: ANY;
+	VAR (* t: TensorType;  *) ptr: Tensor;
 		p0: T0;
-		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8; p9: T9;
-		p10: T10; p11: T11; p12: T12; p13: T13; p14: T14; p15: T15; p16: T16; p17: T17; p18: T18; p19: T19;
-		p20: T20; p21: T21; p22: T22; p23: T23; p24: T24; p25: T25; p26: T26; p27: T27; p28: T28; p29: T29;
-		p30: T30; p31: T31; p32: T32;
+		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8; 
 
 	BEGIN
 		(*
@@ -382,34 +347,13 @@ VAR
 		|6:NEW(p6); ptr := p6;
 		|7:NEW(p7); ptr := p7;
 		|8:NEW(p8); ptr := p8;
-		|9:NEW(p9); ptr := p9;
-		|10:NEW(p10); ptr := p10;
-		|11:NEW(p11); ptr := p11;
-		|12:NEW(p12); ptr := p12;
-		|13:NEW(p13); ptr := p13;
-		|14:NEW(p14); ptr := p14;
-		|15:NEW(p15); ptr := p15;
-		|16:NEW(p16); ptr := p16;
-		|17:NEW(p17); ptr := p17;
-		|18:NEW(p18); ptr := p18;
-		|19:NEW(p19); ptr := p19;
-		|20:NEW(p20); ptr := p20;
-		|21:NEW(p21); ptr := p21;
-		|22:NEW(p22); ptr := p22;
-		|23:NEW(p23); ptr := p23;
-		|24:NEW(p24); ptr := p24;
-		|25:NEW(p25); ptr := p25;
-		|26:NEW(p26); ptr := p26;
-		|27:NEW(p27); ptr := p27;
-		|28:NEW(p28); ptr := p28;
-		|29:NEW(p29); ptr := p29;
-		|30:NEW(p30); ptr := p30;
-		|31:NEW(p31); ptr := p31;
-		|32:NEW(p32); ptr := p32;
+		ELSE 
+			HALT(200)
 		END;
-
-		PutDim( SYSTEM.VAL( LONGINT, ptr ), dim );
-		PutFlags( SYSTEM.VAL( LONGINT, ptr ), {TensorFlag} );  RETURN ptr;
+		
+		ptr.dim := dim;
+		ptr.flags := {TensorFlag};
+		RETURN ptr;
 	END GetArrayDesc;
 
 	PROCEDURE Halt( code: LONGINT;  left, right, dest: LONGINT );

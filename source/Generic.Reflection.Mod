@@ -495,7 +495,28 @@ CONST
 	END WriteValueString;
 
 	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
-	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len: SIZE;
+	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len,i: SIZE;
+
+	TYPE 
+	LenInc = RECORD
+		len: SIZE;
+		inc: SIZE
+	END;
+
+	ArrayDescriptor= RECORD
+		ptr: ANY;
+		adr: ADDRESS;
+		flags: SET;
+		dim: SIZE;
+		elementSize: SIZE;
+	END;
+
+	UnsafeArray= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
+		lens: ARRAY 8 OF LenInc;
+	END;
+	
+	VAR t: UnsafeArray;
+	
 	BEGIN
 		IF ~OnHeapOrStack(adr, low, high) THEN
 			SkipType(refs, offset);
@@ -554,7 +575,29 @@ CONST
 				w.String("... (MATH STATIC ARRAY)");
 				SkipSize(offset); SkipType(refs, offset);
 			| sfTypeMathTensor: 
-				w.String("...(MATH TENSOR)");
+				w.String("TENSOR ");
+				SYSTEM.GET(adr, a);
+				WriteBasicValue(w, sfTypeANY, adr, size);				
+				IF a = NIL THEN w.String(" (NIL)"); 
+				ELSIF CheckHeapAddress(a) THEN
+					t := a;
+					w.String(" len/inc=[ ");
+					IF t.dim < 8 THEN
+						FOR i := 0 TO t.dim-1 DO
+							w.Int(t.lens[i].len,0);
+							w.String("/");
+							w.Int(t.lens[i].inc,0);
+							IF i < t.dim-1 THEN w.String(" , ") END;
+						END;
+					END;
+					w.String(" ]");
+					w.String(" flags = "); w.Set(t.flags);
+					w.String(" adr = "); w.Address(t.adr); 
+					w.String(" ptr = "); w.Address(t.ptr); 
+					w.String(" elementSize = "); w.Int(t.elementSize,0);
+				ELSE
+					w.String("(UNKNOWN)");
+				END;
 				SkipType(refs, offset); 
 			| sfTypeRecord: 
 				w.String("...");

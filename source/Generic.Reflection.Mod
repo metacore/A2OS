@@ -493,30 +493,50 @@ CONST
 		w.Char('"');
 		IF maxLen = 0 THEN w.String("..."); END;
 	END WriteValueString;
+	
+	PROCEDURE WriteMathArray*(w: Streams.Writer; adr: ADDRESS);
+		TYPE 
+		LenInc = RECORD
+			len: SIZE;
+			inc: SIZE
+		END;
+
+		UnsafeArray= POINTER {UNSAFE} TO RECORD
+			ptr: ANY;
+			adr: ADDRESS;
+			flags: SET;
+			dim: SIZE;
+			elementSize: SIZE;
+			lens: ARRAY 8 OF LenInc;
+		END;
+		
+		VAR t: UnsafeArray; i: SIZE;
+	BEGIN
+		IF adr = NIL THEN w.String(" (NIL)"); 
+		ELSIF CheckHeapAddress(adr) THEN
+			t := adr;
+			w.String(" len/inc=[ ");
+			IF t.dim < 8 THEN
+				FOR i := 0 TO t.dim-1 DO
+					w.Int(t.lens[i].len,0);
+					w.String("/");
+					w.Int(t.lens[i].inc,0);
+					IF i < t.dim-1 THEN w.String(" , ") END;
+				END;
+			END;
+			w.String(" ]");
+			w.String(" flags = "); w.Set(t.flags);
+			w.String(" adr = "); w.Address(t.adr); 
+			w.String(" ptr = "); w.Address(t.ptr); 
+			w.String(" elementSize = "); w.Int(t.elementSize,0);
+		ELSE
+			w.String("(UNKNOWN)");
+		END;
+	END WriteMathArray;
+	
 
 	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
 	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len,i: SIZE;
-
-	TYPE 
-	LenInc = RECORD
-		len: SIZE;
-		inc: SIZE
-	END;
-
-	ArrayDescriptor= RECORD
-		ptr: ANY;
-		adr: ADDRESS;
-		flags: SET;
-		dim: SIZE;
-		elementSize: SIZE;
-	END;
-
-	UnsafeArray= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
-		lens: ARRAY 8 OF LenInc;
-	END;
-	
-	VAR t: UnsafeArray;
-	
 	BEGIN
 		IF ~OnHeapOrStack(adr, low, high) THEN
 			SkipType(refs, offset);
@@ -569,35 +589,17 @@ CONST
 				w.String("... (DYNAMIC ARRAY)");
 				SkipType(refs, offset); 
 			| sfTypeMathOpenArray: 
-				w.String("... (MATH OPEN ARRAY)");
+				w.String("OPEN MATH ARRAY ");
 				SkipType(refs, offset);
+				WriteMathArray(w, adr);
 			| sfTypeMathStaticArray: 
 				w.String("... (MATH STATIC ARRAY)");
 				SkipSize(offset); SkipType(refs, offset);
 			| sfTypeMathTensor: 
 				w.String("TENSOR ");
 				SYSTEM.GET(adr, a);
-				WriteBasicValue(w, sfTypeANY, adr, size);				
-				IF a = NIL THEN w.String(" (NIL)"); 
-				ELSIF CheckHeapAddress(a) THEN
-					t := a;
-					w.String(" len/inc=[ ");
-					IF t.dim < 8 THEN
-						FOR i := 0 TO t.dim-1 DO
-							w.Int(t.lens[i].len,0);
-							w.String("/");
-							w.Int(t.lens[i].inc,0);
-							IF i < t.dim-1 THEN w.String(" , ") END;
-						END;
-					END;
-					w.String(" ]");
-					w.String(" flags = "); w.Set(t.flags);
-					w.String(" adr = "); w.Address(t.adr); 
-					w.String(" ptr = "); w.Address(t.ptr); 
-					w.String(" elementSize = "); w.Int(t.elementSize,0);
-				ELSE
-					w.String("(UNKNOWN)");
-				END;
+				WriteBasicValue(w, sfTypeANY, adr, size);
+				WriteMathArray(w, a);
 				SkipType(refs, offset); 
 			| sfTypeRecord: 
 				w.String("...");

@@ -3051,6 +3051,12 @@ TYPE
 				(* IsPointerType(leftType) OR ~IsPointerType(rightType) THEN *)
 					Error(binaryExpression.position,"incompatible operands");
 					IF VerboseErrorMessage THEN Printout.Info("leftType",leftType); Printout.Info("right",rightType) END
+				ELSIF (operator = Scanner.Plus) OR (operator = Scanner.Minus) THEN
+					left := NewConversion(left.position, left, system.addressType, NIL);
+					right := NewConversion(right.position, right, system.addressType, NIL);
+					binaryExpression.SetLeft(left);
+					binaryExpression.SetRight(right);
+					type := system.addressType;
 				ELSIF (operator = Scanner.Equal) OR (operator = Scanner.Unequal) THEN
 					ConvertOperands(left, right);
 					binaryExpression.SetLeft(left);
@@ -8945,7 +8951,7 @@ TYPE
 					result := (this IS SyntaxTree.IntegerType) & (to.sizeInBits = 8) OR IsCharacterType(this)
 				ELSIF to IS SyntaxTree.CharacterType THEN
 					result := IsCharacterType(this)
-				ELSIF (to IS SyntaxTree.SizeType) & ((this IS SyntaxTree.SizeType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.AddressType)) THEN
+				ELSIF (to IS SyntaxTree.SizeType) & ((this IS SyntaxTree.SizeType) OR (this IS SyntaxTree.IntegerType) OR IsAddressType(this, system.addressSize)) THEN
 					result := to.sizeInBits >= this.sizeInBits (*! weak compatibility: signed size type may be assigned with unsigned address type of same size *)
 				ELSIF (to IS SyntaxTree.AddressType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.SizeType) OR IsPointerType(this) OR (this IS SyntaxTree.ProcedureType)) THEN
 					result := to.sizeInBits >= this.sizeInBits; (*! weak compatibility: addresses may be assigned with signed integer *)
@@ -9408,7 +9414,10 @@ TYPE
 
 	PROCEDURE IsAddressType*(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;
 	BEGIN
-		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) & (type(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType))
+		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) & (type(SyntaxTree.IntegerType).sizeInBits <= addressWidth) 
+					OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType)
+					OR IsPointerType(type)
+					)
 	END IsAddressType;
 
 	PROCEDURE IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;

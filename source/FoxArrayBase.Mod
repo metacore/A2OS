@@ -30,7 +30,7 @@ CONST
 	statistics= FALSE;
 	conservative=TRUE;
 
-	ArrDataArrayOffset=16; (* offset of data in array with pointers *)
+	ArrDataArrayOffset=ADDRESS(16); (* offset of data in array with pointers *)
 
 	AddressSize=SIZEOF(Address);
 	MathPtrOffset=0*AddressSize;
@@ -194,94 +194,82 @@ VAR
 	END Err;
 
 	(* get increment of dimension dim *)
-	PROCEDURE GetIncr(base,dim: Address): LONGINT;
-	VAR result: LONGINT;
-	BEGIN
-		SYSTEM.GET(base+MathIncrOffset+8*dim,result);
-		RETURN result
+	PROCEDURE GetIncr(base: UnsafeArray; dim: SIZE): SIZE;
+	BEGIN{UNCHECKED}
+		RETURN base.lens[dim].inc
 	END GetIncr;
 
 	(* set increment of dimension dim *)
-	PROCEDURE PutInc(base,dim,val: Address);
-	BEGIN
-		SYSTEM.PUT(base+MathIncrOffset+8*dim,val)
+	PROCEDURE PutInc(base: UnsafeArray; dim,val: SIZE);
+	BEGIN{UNCHECKED}
+		base.lens[dim].inc := val
 	END PutInc;
 
 	(* get length of dimension dim *)
-	PROCEDURE GetLen(base,dim: Address): LONGINT;
-	VAR result: LONGINT;
-	BEGIN
-		SYSTEM.GET(base+MathLenOffset+8*dim,result);
-		RETURN result
+	PROCEDURE GetLen(base: UnsafeArray; dim: SIZE): LONGINT;
+	BEGIN{UNCHECKED}
+		RETURN base.lens[dim].len
 	END GetLen;
 
 	(* set length of dimension dim *)
-	PROCEDURE PutLen(base,dim,val: Address);
-	BEGIN
-		SYSTEM.PUT(base+MathLenOffset+8*dim,val)
+	PROCEDURE PutLen(base: UnsafeArray; dim,val: SIZE);
+	BEGIN{UNCHECKED}
+		base.lens[dim].len := val
 	END PutLen;
 
 	(* get data address *)
-	PROCEDURE GetAdr(base: Address): Address;
-	VAR result: LONGINT;
+	PROCEDURE GetAdr(base: UnsafeArray): ADDRESS;
 	BEGIN
-		SYSTEM.GET(base+MathAdrOffset,result);
-		RETURN result
+		RETURN base.adr;
 	END GetAdr;
 
 	(* set data address *)
-	PROCEDURE PutAdr(base,value: Address);
+	PROCEDURE PutAdr(base: UnsafeArray; value: ADDRESS);
 	BEGIN
-		SYSTEM.PUT(base+MathAdrOffset,value)
+		base.adr := value
 	END PutAdr;
 
 	(* get data base pointer (GC protection) *)
-	PROCEDURE GetPtr(base: Address): Address;
-	VAR result: LONGINT;
+	PROCEDURE GetPtr(base: UnsafeArray): ANY;
 	BEGIN
-		SYSTEM.GET(base+MathPtrOffset,result);
-		RETURN result
+		RETURN base.ptr;
 	END GetPtr;
 
 	(* set data base pointer (GC protection) *)
-	PROCEDURE PutPtr(base,value: Address);
+	PROCEDURE PutPtr(base: UnsafeArray; value: ANY);
 	BEGIN
-		SYSTEM.PUT(base+MathPtrOffset,value)
+		base.ptr := value
 	END PutPtr;
 
-	PROCEDURE GetSize( base: Address ): LONGINT;
-	VAR dim: LONGINT;
+	PROCEDURE GetSize( base: UnsafeArray ): LONGINT;
 	BEGIN
-		IF base = 0 THEN RETURN 0 ELSE SYSTEM.GET( base + MathElementSizeOffset, dim );  RETURN dim;  END;
+		IF base = NIL THEN RETURN 0 ELSE RETURN base.elementSize END
 	END GetSize;
 
-	PROCEDURE PutSize( base: Address;  dim: LONGINT );
+	PROCEDURE PutSize( base: UnsafeArray;  val: SIZE );
 	BEGIN
-		SYSTEM.PUT( base + MathElementSizeOffset, dim );
+		base.elementSize := val
 	END PutSize;
 
-	PROCEDURE GetDim( base: Address ): LONGINT;
+	PROCEDURE GetDim( base: UnsafeArray ): SIZE;
 	VAR dim: LONGINT;
 	BEGIN
-		IF base = 0 THEN RETURN 0 ELSE SYSTEM.GET( base + MathDimOffset, dim );  RETURN dim;  END;
+		IF base = 0 THEN RETURN 0 ELSE RETURN base.dim END;
 	END GetDim;
 
-	PROCEDURE GetFlags( base: Address ): SET;
-	VAR set: SET;
+	PROCEDURE GetFlags( base: UnsafeArray ): SET;
 	BEGIN
-		SYSTEM.GET( base + MathFlagsOffset, set );  
-		
-		RETURN set;
+		RETURN base.flags
 	END GetFlags;
 
-	PROCEDURE PutDim( base: Address;  dim: LONGINT );
+	PROCEDURE PutDim( base: UnsafeArray;  dim: SIZE );
 	BEGIN
-		SYSTEM.PUT( base + MathDimOffset, dim );
+		base.dim := dim
 	END PutDim;
 
-	PROCEDURE PutFlags( base: Address;  flags: SET );
+	PROCEDURE PutFlags( base: UnsafeArray;  flags: SET );
 	BEGIN
-		SYSTEM.PUT( base + MathFlagsOffset, flags );
+		base.flags := flags
 	END PutFlags;
 
 (* report geometry of array passed via address s *)
@@ -306,8 +294,8 @@ VAR
 		IF s = 0 THEN KernelLog.String( " : NIL " );  KernelLog.Ln;
 		ELSE
 			KernelLog.String( " at adr " );  KernelLog.Int( s, 1 );  KernelLog.String( "; ptr= " );
-			KernelLog.Int( GetPtr( s ), 1 );  KernelLog.String( "; adr= " );
-			KernelLog.Int( GetAdr( s ), 1 );  KernelLog.String( "; dim=" );
+			KernelLog.Address( GetPtr( s ));  KernelLog.String( "; adr= " );
+			KernelLog.Address( GetAdr( s ));  KernelLog.String( "; dim=" );
 			KernelLog.Int( GetDim( s ), 1 );  KernelLog.String( "; flags=" );  Set( GetFlags( s ) );
 			KernelLog.Ln;  dim := GetDim( s );
 			IF dim > 32 THEN dim := 0 END;
@@ -478,11 +466,13 @@ Sufficient (but not necessary) conditions:
 		END;
 	END CopyUpCompatible;
 
-	PROCEDURE AllocateTemp( VAR dest: Address;  src: Address;
+	PROCEDURE AllocateTemp( VAR dest: ADDRESS;  src: ADDRESS;
 												  Size: LONGINT ): ANY;
 	(* allocate a temporary block containing both descriptor and data *)
 	VAR d, len, i: LONGINT;  p: ANY;  dim: LONGINT;
 	BEGIN
+		HALT(100); 
+		(*
 		IF statistics THEN INC( allocTemp ) END;
 		d := 0;  len := Size;  dim := GetDim( src );
 		WHILE (d < dim) DO len := len * GetLen( src, d );  INC( d );  END;
@@ -496,7 +486,9 @@ Sufficient (but not necessary) conditions:
 		END;
 		(* Report("allocdest",dest,dim); *)
 		RETURN p;
+		*)
 	END AllocateTemp;
+	
 
 
 	(*** procedures to traverse arrays and apply operators *)
@@ -505,7 +497,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpS( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
-			dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 			
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -553,7 +545,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpI( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
-			dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 			
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -601,7 +593,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpL( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
-			dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 			
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -649,7 +641,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpH( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
-	VAR dest, left, dim: LONGINT;
+	VAR dest, left: ADDRESS;  dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -700,7 +692,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpR( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
-			dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 			
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -748,7 +740,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpX( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
-	VAR dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -799,7 +791,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
-	VAR dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -850,7 +842,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyGenericUnaryAAOpLZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
-	VAR dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -902,7 +894,7 @@ Sufficient (but not necessary) conditions:
 														Loop: UnaryAALoop );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
-	VAR dest, left, dim: LONGINT;
+			dest, left: ADDRESS;  dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -1021,7 +1013,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ApplyBinaryAAAOp( d, l, r: Address;  elementSize: LONGINT;
 														    Loop: BinaryAAALoop );
 	VAR loopd, looplen, loopli, loopri, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
-		origdest: LONGINT;  modes: SET;  left, right, dest: Address;  dim: LONGINT;
+		origdest: LONGINT;  modes: SET;  left, right, dest: ADDRESS;  dim: LONGINT;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, radr, dadr: Address );
 		VAR len: LONGINT;  linc, rinc, dinc: LONGINT;
@@ -1079,7 +1071,7 @@ Sufficient (but not necessary) conditions:
 														   elementSize: LONGINT;
 														   Loop: BinaryASALoop );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
-		origdest: LONGINT;  modes: SET;  dest, left, dim: LONGINT;
+		origdest: LONGINT;  modes: SET;  dest, left: ADDRESS; dim: SIZE;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
@@ -1348,9 +1340,9 @@ Sufficient (but not necessary) conditions:
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	END MoveB;
 
-	PROCEDURE CopyContent( dest, src, elementSize: LONGINT );   (**! optimize *)
+	PROCEDURE CopyContent( dest, src: ADDRESS; elementSize: SIZE );   (**! optimize *)
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
-		origdest: LONGINT;  modes: SET;  dim: LONGINT;
+		origdest: ADDRESS;  modes: SET;  dim: LONGINT;
 
 		PROCEDURE Loop( ladr, dadr, linc, dinc, len: LONGINT );
 		BEGIN
@@ -1443,7 +1435,7 @@ Sufficient (but not necessary) conditions:
 		END;
 	END CopyContent;
 
-	PROCEDURE AllocateSame( VAR dest: LONGINT;  src: LONGINT;
+	PROCEDURE AllocateSame( VAR dest: ADDRESS;  src: ADDRESS;
 												   elementsize: LONGINT ): ANY;
 	VAR ptr, data: ANY;  Size: LONGINT;
 		(* allocate a structure in dest compatible with src, if necessary. returns if allocation has taken place *)
@@ -1467,8 +1459,8 @@ Sufficient (but not necessary) conditions:
 				PutInc( dest, dim, size );  size := size * len;
 			END;
 			SYSTEM.NEW( data, size );
-			PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
-			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );
+			PutAdr( dest, data);
+			PutPtr( dest, data );
 		END NewData;
 
 	BEGIN
@@ -1507,7 +1499,7 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		dim := GetDim( src );  SYSTEM.NEW( p, dim * 8 + MathLenOffset );
 		SYSTEM.MOVE( src, SYSTEM.VAL( LONGINT, p ), dim * 8 + MathLenOffset );  PutAdr( src, 0 );
-		PutPtr( src, 0 );  PutFlags( src, {} );  RETURN p;
+		PutPtr( src, NIL );  PutFlags( src, {} );  RETURN p;
 	END TempDescCopy;
 
 	PROCEDURE CopyArraySelf*( dest, src: Address;  elementsize: LONGINT );
@@ -1517,7 +1509,7 @@ Sufficient (but not necessary) conditions:
 		CopyArray( dest, SYSTEM.VAL( LONGINT, p ), elementsize );
 	END CopyArraySelf;
 
-	PROCEDURE CopyArray*( dest: Address;  src: Address; elementsize: LONGINT );
+	PROCEDURE CopyArray*( dest: ADDRESS;  src: ADDRESS; elementsize: SIZE );
 	VAR p: ANY; srcdim, destdim: LONGINT;
 	BEGIN
 		ASSERT( dest # 0 );   (* impossible unless compiler error *)
@@ -1537,13 +1529,13 @@ Sufficient (but not necessary) conditions:
 		END;
 	END CopyArray;
 
-	PROCEDURE CopyTensorSelf*( VAR dest: Address; src: Address; elementsize: LONGINT );
+	PROCEDURE CopyTensorSelf*( VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE );
 	BEGIN
 		dest := 0;  CopyTensor( dest, src, elementsize );
 	END CopyTensorSelf;
 
-	PROCEDURE CopyTensor*( VAR dest: Address;  src: Address;
-												 elementsize: LONGINT );
+	PROCEDURE CopyTensor*( VAR dest: ADDRESS;  src: ADDRESS;
+												 elementsize: SIZE );
 	VAR p: ANY;
 	BEGIN
 		(* Report("dest",dest); Report("src",src); *)
@@ -7974,7 +7966,7 @@ Sufficient (but not necessary) conditions:
 		SYSTEM.NEW( p, rows * cols * elementsize );  PutLen( dest, 1, cols );
 		PutLen( dest, 0, rows );  PutInc( dest, 1, elementsize );
 		PutInc( dest, 0, elementsize * cols );  PutAdr( dest, SYSTEM.VAL( LONGINT, p ) );
-		PutPtr( dest, SYSTEM.VAL( LONGINT, p ) );  RETURN p;
+		PutPtr( dest, p);  RETURN p;
 	END AllocateMatrix;
 
 	PROCEDURE AllocateVector( dest: Address;  l0, elementsize: LONGINT ): ANY;
@@ -7982,14 +7974,14 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		SYSTEM.NEW( p, l0 * elementsize );  PutLen( dest, 0, l0 );
 		PutInc( dest, 0, elementsize );  PutAdr( dest, SYSTEM.VAL( LONGINT, p ) );
-		PutPtr( dest, SYSTEM.VAL( LONGINT, p ) );  RETURN p;
+		PutPtr( dest, p );  RETURN p;
 	END AllocateVector;
 
 	PROCEDURE ApplyMatMulLoop( dest, left, right: Address;  Size: LONGINT;
 														 loop: BinaryAASLoop;
 	fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, dadri, radri, rowsL, colsL, rowsR, colsR, incL, incR, incD, strideR, strideL, strideD, colsRi: LONGINT;
-		p: ANY;  overlap: BOOLEAN;  destOld, destNew: LONGINT;
+		p: ANY;  overlap: BOOLEAN;  destOld, destNew: ADDRESS;
 	BEGIN
 	(*
 				<- 1 ->
@@ -8070,7 +8062,7 @@ Sufficient (but not necessary) conditions:
 															   Size: LONGINT;  loop: BinaryAASLoop;
 															   fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li1, li0, ri0, di0, l1, l2: LONGINT;  p: ANY;
-		overlap: BOOLEAN;  destOld, destNew: LONGINT;
+		overlap: BOOLEAN;  destOld, destNew: ADDRESS;
 
 	BEGIN
 	(*
@@ -8137,7 +8129,7 @@ Sufficient (but not necessary) conditions:
 															   Size: LONGINT;  loop: BinaryAASLoop;
 															   fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li0, ri1, ri0, di0, l0, l2: LONGINT;  p: ANY;
-		overlap: BOOLEAN;  destOld, destNew: LONGINT;
+		overlap: BOOLEAN;  destOld, destNew: ADDRESS;
 
 	BEGIN
 	(*
@@ -9146,8 +9138,8 @@ Sufficient (but not necessary) conditions:
 				PutInc( dest, dim, size );  size := size * len;
 			END;
 			SYSTEM.NEW( data, size );
-			PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
-			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );
+			PutAdr( dest, data );
+			PutPtr( dest, data );
 		END NewData;
 
 	BEGIN
@@ -9402,8 +9394,8 @@ Sufficient (but not necessary) conditions:
 				size := size * len;
 			END;
 			SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-			PutAdr( new, SYSTEM.VAL( LONGINT, data ) );
-			PutPtr( new, SYSTEM.VAL( LONGINT, data ) );  PutDim( new, newDim );
+			PutAdr( new, data );
+			PutPtr( new, data );  PutDim( new, newDim );
 			PutSize( new, Size );
 		END NewData;
 
@@ -9534,7 +9526,7 @@ Sufficient (but not necessary) conditions:
 		END;
 	END DoReshape;
 
-	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: ADDRESS );
+	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray );
 	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT;
 
 		PROCEDURE NewData;
@@ -9547,12 +9539,13 @@ Sufficient (but not necessary) conditions:
 			END;
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
+				PutAdr( dest, data );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
-				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) + ArrDataArrayOffset );
+				dest.adr := data;
+				INC(dest.adr, ArrDataArrayOffset);
 			END;
-			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );  PutSize( dest, elementSize );
+			PutPtr( dest, data );  PutSize( dest, elementSize );
 		END NewData;
 
 		PROCEDURE ClearData;
@@ -9581,7 +9574,7 @@ Sufficient (but not necessary) conditions:
 		END;		
 	END AllocateTensorA;
 
-	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: ADDRESS );
+	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray );
 	BEGIN
 		AllocateTensorA(a,elementSize,tag,dest);
 	END AllocateArrayA;
@@ -9602,12 +9595,12 @@ Sufficient (but not necessary) conditions:
 			END;
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
+				PutAdr( dest, data );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
-				PutAdr( dest, SYSTEM.VAL( LONGINT, data ) + ArrDataArrayOffset );
+				PutAdr( dest, data+ ArrDataArrayOffset );
 			END;
-			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );  PutSize( dest, Size );
+			PutPtr( dest, data );  PutSize( dest, Size );
 		END NewData;
 
 		PROCEDURE ClearData;
@@ -9703,8 +9696,8 @@ Sufficient (but not necessary) conditions:
 			FOR i := ldim + rdim - 1 TO 0 BY -1 DO
 				PutInc( dest, i, size );  size := size * GetLen( dest, i );
 			END;
-			PutAdr( dest, SYSTEM.VAL( LONGINT, data ) );
-			PutPtr( dest, SYSTEM.VAL( LONGINT, data ) );
+			PutAdr( dest, data );
+			PutPtr( dest, data );
 		END NewData;
 
 	BEGIN

@@ -7,7 +7,6 @@ MODULE FoxArrayBase; (* stubs for array base runtime - can only be compiled by o
 IMPORT SYSTEM, KernelLog, Heaps, Math, MathL;
 
 TYPE
-	Address = LONGINT;
 	
 	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
 	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
@@ -32,7 +31,7 @@ CONST
 
 	ArrDataArrayOffset=ADDRESS(16); (* offset of data in array with pointers *)
 
-	AddressSize=SIZEOF(Address);
+	AddressSize=SIZEOF(ADDRESS);
 	MathPtrOffset=0*AddressSize;
 	MathAdrOffset=1*AddressSize;
 	MathFlagsOffset=2*AddressSize;
@@ -366,7 +365,7 @@ VAR
 
  (* find the largest block with a regular pattern of the form offset+{i*li: 0<=i<len}. d is dimension applying to the resulting loop *)
 
-	PROCEDURE FindPattern1( left, dim: Address;  VAR d, len, linc: LONGINT );
+	PROCEDURE FindPattern1( left, dim: ADDRESS;  VAR d, len, linc: LONGINT );
 	BEGIN
 		d := dim - 1;  len := GetLen( left, d );
 		WHILE (len = 1) & (d > 0) DO DEC( d );  len := GetLen( left, d );
@@ -383,7 +382,7 @@ VAR
 	END FindPattern1;
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for two arrays simultaneously. d is dimension applying to the resulting loop *)
-	PROCEDURE FindPattern2( left, right: Address;  dim: LONGINT;
+	PROCEDURE FindPattern2( left, right: ADDRESS;  dim: LONGINT;
 												 VAR d, len, linc, ri: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	BEGIN
@@ -401,7 +400,7 @@ VAR
 	END FindPattern2;
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for three arrays simultaneously. d is dimension applying to the resulting loop *)
-	PROCEDURE FindPattern3( left, right, dest: Address;  dim: LONGINT;
+	PROCEDURE FindPattern3( left, right, dest: ADDRESS;  dim: LONGINT;
 												 VAR d, len, linc, ri, di: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	BEGIN
@@ -422,7 +421,7 @@ VAR
 		END;
 	END FindPattern3;
 
-	PROCEDURE Reverse( src: Address;  dim: LONGINT );
+	PROCEDURE Reverse( src: ADDRESS;  dim: LONGINT );
 	VAR d, sl, sr: LONGINT;
 	BEGIN
 		d := 0;  sl := GetAdr( src );
@@ -434,7 +433,7 @@ VAR
 	END Reverse;
 
 (* check if forward copy may be performed *)
-	PROCEDURE CopyUpCompatible( dest, src: Address;  VAR modes: SET );
+	PROCEDURE CopyUpCompatible( dest, src: ADDRESS;  VAR modes: SET );
 	VAR d, sl, sr, dl, dr: LONGINT;  dim: LONGINT;
 		(* precondition: len(src,i)=len(dest,i) *)
 		(* for forward src -> dest copy compatibility src must not be overwritten before src is copied.
@@ -494,12 +493,12 @@ Sufficient (but not necessary) conditions:
 	(*** procedures to traverse arrays and apply operators *)
 	
 	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
-	PROCEDURE ApplyGenericUnaryAAOpS( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	PROCEDURE ApplyGenericUnaryAAOpS( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 			
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -542,12 +541,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpS;
 
 	(** apply unary operator to array:  array INTEGER -> array INTEGER *)
-	PROCEDURE ApplyGenericUnaryAAOpI( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
+	PROCEDURE ApplyGenericUnaryAAOpI( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 			
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -590,12 +589,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpI;
 
 	(** apply unary operator to array:  array LONGINT -> array LONGINT *)
-	PROCEDURE ApplyGenericUnaryAAOpL( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
+	PROCEDURE ApplyGenericUnaryAAOpL( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 			
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -638,12 +637,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpL;
 	
 	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
-	PROCEDURE ApplyGenericUnaryAAOpH( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	PROCEDURE ApplyGenericUnaryAAOpH( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
 	VAR dest, left: ADDRESS;  dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -689,12 +688,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpH;
 
 	(** apply unary operator to array:  array REAL -> array REAL *)
-	PROCEDURE ApplyGenericUnaryAAOpR( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
+	PROCEDURE ApplyGenericUnaryAAOpR( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 			origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 			
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -737,12 +736,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpR;
 	
 	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
-	PROCEDURE ApplyGenericUnaryAAOpX( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	PROCEDURE ApplyGenericUnaryAAOpX( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -788,12 +787,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpX;
 	
 	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpZ( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -839,12 +838,12 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpZ;
 	
 	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpLZ( d, l: Address;  elementSize: LONGINT; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpLZ( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -890,13 +889,13 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpLZ;
 
 (** apply unary operator to array:  array -> array *)
-	PROCEDURE ApplyUnaryAAOp( d, l: Address;  elementSize: LONGINT;
+	PROCEDURE ApplyUnaryAAOp( d, l: ADDRESS;  elementSize: LONGINT;
 														Loop: UnaryAALoop );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -944,11 +943,11 @@ Sufficient (but not necessary) conditions:
 	END ApplyUnaryAAOp;
 
 (** apply unary operator to array:  array -> scalar *)
-	PROCEDURE ApplyUnaryASOp( dest, l: Address;  Loop: UnaryASLoop );
+	PROCEDURE ApplyUnaryASOp( dest, l: ADDRESS;  Loop: UnaryASLoop );
 	VAR loopd, looplen, loopli: LONGINT;  glen: LONGINT;
 	VAR left, dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr: ADDRESS );
 		VAR len: LONGINT;  linc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -976,11 +975,11 @@ Sufficient (but not necessary) conditions:
 	END ApplyUnaryASOp;
 
 (** apply unary operator to array:  scalar -> array *)
-	PROCEDURE ApplyUnarySAOp( d, right: Address;  Loop: UnarySALoop );
+	PROCEDURE ApplyUnarySAOp( d, right: ADDRESS;  Loop: UnarySALoop );
 	VAR loopd, looplen, loopdi: LONGINT;  glen: LONGINT;
 	VAR dest, dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  dadr: ADDRESS );
 		VAR len: LONGINT;  dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -1010,12 +1009,12 @@ Sufficient (but not necessary) conditions:
 (** apply binary operator : array x array -> array *)
 
 
-	PROCEDURE ApplyBinaryAAAOp( d, l, r: Address;  elementSize: LONGINT;
+	PROCEDURE ApplyBinaryAAAOp( d, l, r: ADDRESS;  elementSize: LONGINT;
 														    Loop: BinaryAAALoop );
 	VAR loopd, looplen, loopli, loopri, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;  left, right, dest: ADDRESS;  dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, radr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, radr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, rinc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -1067,13 +1066,13 @@ Sufficient (but not necessary) conditions:
 
 (** apply binary operator: array x scalar -> array *)
 
-	PROCEDURE ApplyBinaryASAOp( d, l, right: Address;
+	PROCEDURE ApplyBinaryASAOp( d, l, right: ADDRESS;
 														   elementSize: LONGINT;
 														   Loop: BinaryASALoop );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;  dest, left: ADDRESS; dim: SIZE;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -1125,11 +1124,11 @@ Sufficient (but not necessary) conditions:
 
 (** apply binary operator: array x array -> scalar *)
 
-	PROCEDURE ApplyBinaryAASOp( dest, l, r: Address;  Loop: BinaryAASLoop );
+	PROCEDURE ApplyBinaryAASOp( dest, l, r: ADDRESS;  Loop: BinaryAASLoop );
 	VAR loopd, looplen, loopli, loopri: LONGINT;  glen: LONGINT;
 		left, right, dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, radr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, radr: ADDRESS );
 		VAR len: LONGINT;  linc, rinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -1168,11 +1167,11 @@ Sufficient (but not necessary) conditions:
 
 (** special binary operator: array x array -> boolean *)
 
-	PROCEDURE ApplyBinaryAABOp( l, r: Address;
+	PROCEDURE ApplyBinaryAABOp( l, r: ADDRESS;
 														    Loop: BinaryAABLoop; geometryMismatchDefault: BOOLEAN ): BOOLEAN;
 	VAR loopd, looplen, loopli, loopri: LONGINT;  left, right, dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, radr: Address ): BOOLEAN;
+		PROCEDURE Traverse( dim: LONGINT;  ladr, radr: ADDRESS ): BOOLEAN;
 		VAR len: LONGINT;  linc, rinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN RETURN Loop( ladr, radr, loopli, loopri, looplen );
@@ -1203,11 +1202,11 @@ Sufficient (but not necessary) conditions:
 
 (** special binary operator: array x scalar -> boolean *)
 
-	PROCEDURE ApplyBinaryASBOp( l, right: Address;
+	PROCEDURE ApplyBinaryASBOp( l, right: ADDRESS;
 														   Loop: BinaryASBLoop ): BOOLEAN;
 	VAR loopd, looplen, loopli: LONGINT;  left, dim: LONGINT;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr: Address ): BOOLEAN;
+		PROCEDURE Traverse( dim: LONGINT;  ladr: ADDRESS ): BOOLEAN;
 		VAR len: LONGINT;  linc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN RETURN Loop( ladr, right, loopli, looplen );
@@ -1392,7 +1391,7 @@ Sufficient (but not necessary) conditions:
 			END;
 		END Loop;
 
-		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: Address );
+		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
 		VAR len: LONGINT;  linc, dinc: LONGINT;
 		BEGIN
 			IF dim = loopd THEN
@@ -1506,7 +1505,7 @@ Sufficient (but not necessary) conditions:
 		RETURN p;
 	END TempDescCopy;
 
-	PROCEDURE CopyArraySelf*( dest, src: Address;  elementsize: LONGINT );
+	PROCEDURE CopyArraySelf*( dest, src: ADDRESS;  elementsize: LONGINT );
 	VAR p: ANY;
 	BEGIN
 		ASSERT( src = dest );  p := TempDescCopy( src );
@@ -1552,7 +1551,7 @@ Sufficient (but not necessary) conditions:
 	END CopyTensor;
 
 	(* copy descriptor of src to that of dest. If not existent then create.*)
-	PROCEDURE ShallowCopy*(VAR dest: Address; src: Address);
+	PROCEDURE ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS);
 	VAR ptr: ANY; flags: SET;
 
 		PROCEDURE UseTypeDescriptor;
@@ -1564,7 +1563,7 @@ Sufficient (but not necessary) conditions:
 
 		PROCEDURE CopyDescriptor;
 		BEGIN
-			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(Address) *  GetDim( src ) *2 );
+			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(ADDRESS) *  GetDim( src ) *2 );
 		END CopyDescriptor;
 
 	BEGIN
@@ -1613,12 +1612,12 @@ Sufficient (but not necessary) conditions:
 			KernelLog.String( "DescriptorCopy from " );  KernelLog.Int( src, 1 );  KernelLog.String( " to " );
 			KernelLog.Int( dest, 1 );  KernelLog.Ln;
 		END;
-		SYSTEM.MOVE( src, dest, 2*SIZEOF(Address) );   (* adr and ptr *)
-		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(Address) *  GetDim( src ) *2 );   (* lens and increments *)
+		SYSTEM.MOVE( src, dest, 2*SIZEOF(ADDRESS) );   (* adr and ptr *)
+		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(ADDRESS) *  GetDim( src ) *2 );   (* lens and increments *)
 	END DescriptorCopy;
 
 	PROCEDURE ZeroCopy*(CONST src: ARRAY [?]; VAR dest: ARRAY [?]);
-	VAR s,d: LONGINT;
+	VAR s,d: ADDRESS;
 	BEGIN
 		s := SYSTEM.VAL(LONGINT,src); d := SYSTEM.VAL(LONGINT,dest);
 		ShallowCopy(d,s);
@@ -1644,7 +1643,7 @@ Sufficient (but not necessary) conditions:
 	END SameShape;
 
 	(*
-	PROCEDURE ZeroCopyArray*( dest: Address;  src: Address; elementsize: LONGINT );
+	PROCEDURE ZeroCopyArray*( dest: ADDRESS;  src: ADDRESS; elementsize: LONGINT );
 	(*
 		called as ZeroCopy(A,B,Size) with enhanced arrays A,B
 		check if deep copy can be avoided and if so then do a shallow copy
@@ -1664,7 +1663,7 @@ Sufficient (but not necessary) conditions:
 		END;
 	END ZeroCopyArray;
 
-	PROCEDURE ZeroCopyTensor*( VAR dest: Address;  src: Address; elementsize: LONGINT );
+	PROCEDURE ZeroCopyTensor*( VAR dest: ADDRESS;  src: ADDRESS; elementsize: LONGINT );
 	(*
 		called as ZeroCopy(A,B,Size) with A,B: ARRAY [?] OF ...
 		check if deep copy can be avoided and if so then do a shallow copy
@@ -7977,7 +7976,7 @@ TYPE
 
 (*** matrix multipliation ********************************************************************)
 
-	PROCEDURE AllocateMatrix( dest: Address;
+	PROCEDURE AllocateMatrix( dest: ADDRESS;
 													rows, cols, elementsize: LONGINT ): ANY;
 	VAR p: ANY;
 	BEGIN
@@ -7990,7 +7989,7 @@ TYPE
 		PutPtr( dest, p);  RETURN p;
 	END AllocateMatrix;
 
-	PROCEDURE AllocateVector( dest: Address;  l0, elementsize: LONGINT ): ANY;
+	PROCEDURE AllocateVector( dest: ADDRESS;  l0, elementsize: LONGINT ): ANY;
 	VAR p: ANY;
 	BEGIN
 		SYSTEM.NEW( p, l0 * elementsize );  PutLen( dest, 0, l0 );
@@ -7998,7 +7997,7 @@ TYPE
 		PutPtr( dest, p );  RETURN p;
 	END AllocateVector;
 
-	PROCEDURE ApplyMatMulLoop( dest, left, right: Address;  Size: LONGINT;
+	PROCEDURE ApplyMatMulLoop( dest, left, right: ADDRESS;  Size: LONGINT;
 														 loop: BinaryAASLoop;
 	fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, dadri, radri, rowsL, colsL, rowsR, colsR, incL, incR, incD, strideR, strideL, strideD, colsRi: LONGINT;
@@ -8079,7 +8078,7 @@ TYPE
 		END;
 	END ApplyMatMulLoop;
 
-	PROCEDURE ApplyMatVecMulLoop( dest, left, right: Address;
+	PROCEDURE ApplyMatVecMulLoop( dest, left, right: ADDRESS;
 															   Size: LONGINT;  loop: BinaryAASLoop;
 															   fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li1, li0, ri0, di0, l1, l2: LONGINT;  p: ANY;
@@ -8146,7 +8145,7 @@ TYPE
 
 	END ApplyMatVecMulLoop;
 
-	PROCEDURE ApplyVecMatMulLoop( dest, left, right: Address;
+	PROCEDURE ApplyVecMatMulLoop( dest, left, right: ADDRESS;
 															   Size: LONGINT;  loop: BinaryAASLoop;
 															   fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li0, ri1, ri0, di0, l0, l2: LONGINT;  p: ANY;
@@ -9084,8 +9083,8 @@ TYPE
 
 
 
-	PROCEDURE Overlap( src1, src2: Address ): BOOLEAN;
-	VAR from1, from2, to1, to2: Address;  dim: LONGINT;
+	PROCEDURE Overlap( src1, src2: ADDRESS ): BOOLEAN;
+	VAR from1, from2, to1, to2: ADDRESS;  dim: LONGINT;
 	BEGIN
 		from1 := GetAdr( src1 );  from2 := GetAdr( src2 );  to1 := from1;  to2 := from2;
 		dim := GetDim( src1 ) - 1;
@@ -9104,8 +9103,8 @@ TYPE
 
 
 (*
-	PROCEDURE Overlap( src1, src2, dim: Address ): BOOLEAN;
-	VAR from1, from2, to1, to2: Address;
+	PROCEDURE Overlap( src1, src2, dim: ADDRESS ): BOOLEAN;
+	VAR from1, from2, to1, to2: ADDRESS;
 	BEGIN
 		from1 := GetAdr( src1 );  from2 := GetAdr( src2 );  to1 := from1;  to2 := from2;
 		DEC( dim );
@@ -9120,8 +9119,8 @@ TYPE
 	END Overlap;
 	*)
 
-	PROCEDURE AllocateTransposed( VAR dest: LONGINT;  src: LONGINT;
-												   elementsize: LONGINT ): ANY;
+	PROCEDURE AllocateTransposed( VAR dest: ADDRESS;  src: ADDRESS;
+												   elementsize: SIZE ): ANY;
 	VAR ptr, data: ANY;  Size: LONGINT;
 		(* allocate a structure in dest compatible with src, if necessary. returns if allocation has taken place *)
 
@@ -9195,7 +9194,7 @@ TYPE
 	END AllocateTransposed;
 
 
-	PROCEDURE Transpose*( dest, left: Address;  Size: LONGINT );
+	PROCEDURE Transpose*( dest, left: ADDRESS;  Size: LONGINT );
 	VAR len0, len1, linc0, linc1, dinc0, dinc1, ladr, dadr: LONGINT;  p: ANY;
 
 		PROCEDURE CopyLoop( src, dest, srcinc, destinc, len: LONGINT );
@@ -9272,7 +9271,7 @@ TYPE
 		RETURN RESULT
 	END "`";
 
-	PROCEDURE CheckTensorGeometry( left, right, dest: Address; ldim, rdim: LONGINT ): BOOLEAN;
+	PROCEDURE CheckTensorGeometry( left, right, dest: ADDRESS; ldim, rdim: LONGINT ): BOOLEAN;
 	VAR i: LONGINT;
 	BEGIN
 		FOR i := 0 TO rdim - 1 DO
@@ -9601,7 +9600,7 @@ TYPE
 	END AllocateArrayA;
 
 	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF LONGINT;  Size: LONGINT; tag: LONGINT );
-	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT; dest: Address;
+	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT; dest: ADDRESS;
 
 		PROCEDURE NewData;
 		VAR len, size, i: LONGINT;
@@ -9630,7 +9629,7 @@ TYPE
 
 	BEGIN
 		dim := LEN( a,0 );
-		dest := SYSTEM.VAL(Address,destA);
+		dest := SYSTEM.VAL(ADDRESS,destA);
 
 		(*! check range flag! *)
 
@@ -9655,7 +9654,7 @@ TYPE
 		SYSTEM.PUT(ADDRESSOF(destA),dest);
 	END AllocateTensorX;
 
-	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: Address );
+	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: ADDRESS );
 	VAR dim, i: LONGINT;
 	BEGIN
 		dim := GetDim( src );
@@ -9663,7 +9662,7 @@ TYPE
 		FOR i := 0 TO dim - 1 DO dest[i] := GetLen( src, i );  END;
 	END LenA;
 
-	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: Address );
+	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: ADDRESS );
 	VAR dim, i, len: LONGINT;
 	BEGIN
 		dim := GetDim( src );  len := LEN( dest, 0 );
@@ -9671,7 +9670,7 @@ TYPE
 		FOR i := 0 TO dim - 1 DO dest[i] := GetIncr( src, i );  END;
 	END IncrA;
 
-	PROCEDURE Len*(src: Address; d: LONGINT): LONGINT;
+	PROCEDURE Len*(src: ADDRESS; d: LONGINT): LONGINT;
 	VAR dim: LONGINT;
 	BEGIN
 		dim := GetDim(src);
@@ -9681,7 +9680,7 @@ TYPE
 		END;
 	END Len;
 
-	PROCEDURE Incr*(src: Address; d: LONGINT): LONGINT;
+	PROCEDURE Incr*(src: ADDRESS; d: LONGINT): LONGINT;
 	VAR dim: LONGINT;
 	BEGIN
 		dim := GetDim(src);
@@ -9692,7 +9691,7 @@ TYPE
 	END Incr;
 
 
-	PROCEDURE AllocateTensor( VAR dest: LONGINT;  left, right: Address;
+	PROCEDURE AllocateTensor( VAR dest: ADDRESS;  left, right: ADDRESS;
 												    Size: LONGINT ): ANY;
 	VAR ldim, rdim: LONGINT;  ptr, data: ANY;
 
@@ -9741,7 +9740,7 @@ TYPE
 	END AllocateTensor;
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for two arrays simultaneously. d is dimension applying to the resulting loop *)
-	PROCEDURE FindPatternTensor( left, right: Address;
+	PROCEDURE FindPatternTensor( left, right: ADDRESS;
 														 VAR rdim, len, linc, ri: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	VAR ldim: LONGINT;
@@ -9767,12 +9766,12 @@ TYPE
 		END;
 	END FindPatternTensor;
 
-	PROCEDURE ApplyTensorAAAOp( d, l, r: Address;  elementSize: LONGINT;
+	PROCEDURE ApplyTensorAAAOp( d, l, r: ADDRESS;  elementSize: LONGINT;
 														    Loop: BinaryASALoop );
 	VAR loopd, looplen, loopri, loopdi, lDim, rDim: LONGINT;  p: ANY;
-		origdest: LONGINT;  left, right, dest: Address;
+		origdest: LONGINT;  left, right, dest: ADDRESS;
 
-		PROCEDURE Traverse( ladr, radr, dadr: Address;  ldim, rdim: LONGINT );
+		PROCEDURE Traverse( ladr, radr, dadr: ADDRESS;  ldim, rdim: LONGINT );
 		VAR len: LONGINT;  linc, rinc, dinc: LONGINT;
 		BEGIN
 			IF (ldim < lDim) THEN
@@ -9890,7 +9889,7 @@ TYPE
 	END InitOptimization;
 
 	PROCEDURE CopyDescriptor*(VAR destPtr: ANY; src: LONGINT; prefixIndices, prefixRanges, suffixIndices, suffixRanges: LONGINT);
-	VAR size: SIZE; srcDim, destDim,i,len,incr: LONGINT; dest: Address;
+	VAR size: SIZE; srcDim, destDim,i,len,incr: LONGINT; dest: ADDRESS;
 	BEGIN
 		IF src = 0 THEN
 			HALT(100);
@@ -9964,19 +9963,19 @@ TYPE
 	PROCEDURE ExpandDimensions*(CONST sourceArray: ARRAY [?]; CONST keptDimensions: ARRAY [*] OF BOOLEAN): ARRAY [?];
 	VAR
 		targetDimensionality, sourceIndex, targetIndex: LONGINT;
-		sourceAddress, targetAddress: LONGINT;
+		sourceADDRESS, targetADDRESS: LONGINT;
 		targetArrayDescriptor: ANY;
 	BEGIN
-		sourceAddress := SYSTEM.VAL(LONGINT, sourceArray);
+		sourceADDRESS := SYSTEM.VAL(LONGINT, sourceArray);
 		targetDimensionality := LEN(keptDimensions, 0);
 		targetArrayDescriptor := GetArrayDesc(targetDimensionality); (* create a new array descriptor *)
 		SYSTEM.PUT(ADDRESSOF(RESULT), targetArrayDescriptor);
-		targetAddress := SYSTEM.VAL(LONGINT, RESULT);
+		targetADDRESS := SYSTEM.VAL(LONGINT, RESULT);
 
-		PutAdr(targetAddress, GetAdr(sourceAddress));
-		PutPtr(targetAddress, GetPtr(sourceAddress));
-		PutFlags(targetAddress, {TensorFlag});
-		PutSize(targetAddress, GetSize(sourceAddress));
+		PutAdr(targetADDRESS, GetAdr(sourceADDRESS));
+		PutPtr(targetADDRESS, GetPtr(sourceADDRESS));
+		PutFlags(targetADDRESS, {TensorFlag});
+		PutSize(targetADDRESS, GetSize(sourceADDRESS));
 
 		(* set increments and lengths *)
 		sourceIndex := 0;
@@ -9984,17 +9983,17 @@ TYPE
 			IF keptDimensions[targetIndex] THEN
 				(* reuse length and increment from source array *)
 				ASSERT(sourceIndex < DIM(sourceArray));
-				PutLen(targetAddress, targetIndex, GetLen(sourceAddress, sourceIndex));
-				PutInc(targetAddress, targetIndex, GetIncr(sourceAddress, sourceIndex));
+				PutLen(targetADDRESS, targetIndex, GetLen(sourceADDRESS, sourceIndex));
+				PutInc(targetADDRESS, targetIndex, GetIncr(sourceADDRESS, sourceIndex));
 				INC(sourceIndex)
 			ELSE
 				(* set length = 1 and increment = 0 *)
-				PutLen(targetAddress, targetIndex, 1);
-				PutInc(targetAddress, targetIndex, 0);
+				PutLen(targetADDRESS, targetIndex, 1);
+				PutInc(targetADDRESS, targetIndex, 0);
 			END
 		END;
 
-		(* Report("expand dimensions: ", targetAddress); *)
+		(* Report("expand dimensions: ", targetADDRESS); *)
 		RETURN RESULT
 	END ExpandDimensions;
 

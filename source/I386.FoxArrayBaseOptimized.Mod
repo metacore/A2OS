@@ -1127,7 +1127,7 @@ VAR
 	END MovR5;
 
 (* *)
-	PROCEDURE AddAXAXLoopA( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;
 		MOV	EBX, [EBP+ladr]	;
@@ -1149,7 +1149,7 @@ VAR
 		FWAIT	;
 	END AddAXAXLoopA;
 
-	PROCEDURE AddARARLoopA( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddARARLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;
 		MOV	EBX, [EBP+ladr]	;
@@ -1171,7 +1171,7 @@ VAR
 		FWAIT	;
 	END AddARARLoopA;
 
-	PROCEDURE AddAXAXLoopSSE( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddAXAXLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MOV	EAX, [EBP+len]	;
 		CMP	EAX, 0	;
@@ -1323,7 +1323,7 @@ VAR
 		endL:
 	END AddAXAXLoopSSE;
 
-	PROCEDURE AddARARLoopSSE( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddARARLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MOV	EAX, [EBP+len]	;
 		CMP	EAX, 0	;
@@ -1482,7 +1482,7 @@ VAR
 		endL:
 	END AddARARLoopSSE;
 
-	PROCEDURE SPAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE SPAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) : ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1505,7 +1505,7 @@ VAR
 		FWAIT	;
 	END SPAXAXLoopA;
 
-	PROCEDURE SPARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE SPARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1529,7 +1529,7 @@ VAR
 	END SPARARLoopA;
 
 (* sse version of scalar product *)
-	PROCEDURE SPAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE SPAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		;  register initialization
 		MOV	EAX, [EBP+len]	;  EAX reserverd FOR length
@@ -1666,7 +1666,7 @@ VAR
 	END SPAXAXLoopSSE;
 
 (* sse version of scalar product *)
-	PROCEDURE SPARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE SPARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		;  register initialization
 		MOV	EAX, [EBP+len]	;  EAX reserverd FOR length
@@ -1813,7 +1813,7 @@ VAR
 		endL:
 	END SPARARLoopSSE;
 
-	PROCEDURE MulAXSXLoopA( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulAXSXLoopA( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1834,7 +1834,7 @@ VAR
 		FWAIT	;
 	END MulAXSXLoopA;
 
-	PROCEDURE MulARSRLoopA( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulARSRLoopA( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1855,7 +1855,7 @@ VAR
 		FWAIT	;
 	END MulARSRLoopA;
 
-	PROCEDURE IncMulAXSXLoopA( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulAXSXLoopA( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1878,7 +1878,7 @@ VAR
 		FWAIT	;
 	END IncMulAXSXLoopA;
 
-	PROCEDURE IncMulARSRLoopA( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulARSRLoopA( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1901,7 +1901,7 @@ VAR
 		FWAIT	;
 	END IncMulARSRLoopA;
 
-	PROCEDURE MulAXSXLoopSSE( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulAXSXLoopSSE( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	(* simple version, does not yet check for alignment, no parallel executions yet: use full 8 registers! *)
 	(*
 		1.) check for same alignment of ladr and dadr (ladr MOD 128 = dadr MOD 128)
@@ -2036,7 +2036,7 @@ VAR
 		endL:
 	END MulAXSXLoopSSE;
 
-	PROCEDURE MulARSRLoopSSE( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulARSRLoopSSE( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	(* simple version, does not yet check for alignment, no parallel executions yet: use full 8 registers! *)
 	(*
 		1.) check for same alignment of ladr and dadr (ladr MOD 128 = dadr MOD 128)
@@ -2177,7 +2177,7 @@ VAR
 		endL:
 	END MulARSRLoopSSE;
 
-	PROCEDURE IncMulAXSXLoopSSE( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulAXSXLoopSSE( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	(* simple version, does not yet check for alignment, no parallel executions yet: use full 8 registers! *)
 	(*
 		1.) check for same alignment of ladr and dadr (ladr MOD 128 = dadr MOD 128)
@@ -2336,7 +2336,7 @@ VAR
 		endL:
 	END IncMulAXSXLoopSSE;
 
-	PROCEDURE IncMulARSRLoopSSE( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulARSRLoopSSE( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	(* simple version, does not yet check for alignment, no parallel executions yet: use full 8 registers! *)
 	(*
 		1.) check for same alignment of ladr and dadr (ladr MOD 128 = dadr MOD 128)
@@ -5117,46 +5117,46 @@ VAR
 	*)
 (******  matrix multiplication using fast scalar product ******)
 
-	PROCEDURE MatMulAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0D0 );   (* initialization of scalar product to 0 *)
 		SPAXAXLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulAXAXLoopA;
 
-	PROCEDURE MatMulAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0D0 );   (* initialization of scalar product to 0 *)
 		SPAXAXLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulAXAXLoopSSE;
 
-	PROCEDURE MatMulARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0E0 );   (* initialization of scalar product to 0 *)
 		SPARARLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulARARLoopA;
 
-	PROCEDURE MatMulARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0E0 );   (* initialization of scalar product to 0 *)
 		SPARARLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulARARLoopSSE;
 
-	PROCEDURE MatMulIncAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulIncAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SPAXAXLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncAXAXLoopA;
 
-	PROCEDURE MatMulIncAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulIncAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SPAXAXLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncAXAXLoopSSE;
 
-	PROCEDURE MatMulIncARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulIncARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SPARARLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncARARLoopA;
 
-	PROCEDURE MatMulIncARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*) , linc (*16*) , rinc (*12*) , len (*8*) : LONGINT );
+	PROCEDURE MatMulIncARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
 	BEGIN
 		SPARARLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncARARLoopSSE;

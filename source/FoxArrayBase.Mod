@@ -1498,17 +1498,20 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		dim := GetDim(src);
 		p := GetArrayDesc(dim);
+		adr := p;
 		SYSTEM.MOVE( src, adr, dim * SIZEOF(LenInc) + MathLenOffset );
-		PutAdr( adr, 0 );
-		PutPtr( adr, NIL );  
-		PutFlags( adr, {} );  
+		PutAdr( src, 0 );
+		PutPtr( src, NIL );  
+		PutFlags( src, {} );  
 		RETURN p;
 	END TempDescCopy;
 
+	(* used when arrays are passed by value *)
 	PROCEDURE CopyArraySelf*( dest, src: ADDRESS;  elementsize: LONGINT );
 	VAR p: ANY;
 	BEGIN
-		ASSERT( src = dest );  p := TempDescCopy( src );
+		ASSERT( src = dest );  
+		p := TempDescCopy( dest ); (* copy and prepare dest to be copied over *)
 		CopyArray( dest, p, elementsize );
 	END CopyArraySelf;
 

@@ -9,22 +9,22 @@ IMPORT SYSTEM, KernelLog, Heaps, Math, MathL;
 TYPE
 	Address = LONGINT;
 	
-	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: SHORTINT): SHORTINT );
-	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: INTEGER): INTEGER );
-	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGINT): LONGINT );
-	GenericUnaryAALoopH = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: HUGEINT): HUGEINT );
-	GenericUnaryAALoopR = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: REAL): REAL );
-	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGREAL): LONGREAL );
-	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: COMPLEX): COMPLEX );
-	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr, linc, dinc, len: Address; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
-	UnaryAALoop = PROCEDURE ( ladr, dadr, linc, dinc, len: Address );
-	UnaryASLoop = PROCEDURE ( ladr, dadr, linc, len: Address );
-	UnarySALoop = PROCEDURE ( ladr, dadr, dinc, len: Address );
-	BinaryAAALoop = PROCEDURE ( ladr, radr, dadr, linc, rinc, dinc, len: Address );
-	BinaryASALoop = PROCEDURE ( ladr, radr, dadr, linc, dinc, len: Address );
-	BinaryAASLoop = PROCEDURE ( ladr, radr, dadr, linc, rinc, len: Address );
-	BinaryAABLoop = PROCEDURE ( ladr, radr, linc, rinc, len: Address ): BOOLEAN;
-	BinaryASBLoop = PROCEDURE ( ladr, radr, linc, len: Address ): BOOLEAN;
+	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
+	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGINT): LONGINT );
+	GenericUnaryAALoopH = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	GenericUnaryAALoopR = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: REAL): REAL );
+	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	UnaryAALoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	UnaryASLoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, len: SIZE );
+	UnarySALoop = PROCEDURE ( ladr, dadr: ADDRESS; dinc, len: SIZE );
+	BinaryAAALoop = PROCEDURE ( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	BinaryASALoop = PROCEDURE ( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	BinaryAASLoop = PROCEDURE ( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
+	BinaryAABLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	BinaryASBLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 CONST
 	debug = FALSE;   (* warning: debug=true -> a lot of output is generated -> traps are not displayed in Oberon (Kernel overflow) *)
 	statistics= FALSE;
@@ -1235,7 +1235,7 @@ Sufficient (but not necessary) conditions:
 	(**** operators *)
 
 (*** copy *)
-	PROCEDURE Copy4( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy4( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
@@ -1252,7 +1252,7 @@ Sufficient (but not necessary) conditions:
 		end:
 	END Copy4;
 
-	PROCEDURE Copy2( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy2( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
@@ -1269,7 +1269,7 @@ Sufficient (but not necessary) conditions:
 		end:
 	END Copy2;
 
-	PROCEDURE Copy1( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy1( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
@@ -1286,7 +1286,7 @@ Sufficient (but not necessary) conditions:
 		end:
 	END Copy1;
 
-	PROCEDURE Copy8( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy8( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
@@ -1344,7 +1344,7 @@ Sufficient (but not necessary) conditions:
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: ADDRESS;  modes: SET;  dim: LONGINT;
 
-		PROCEDURE Loop( ladr, dadr, linc, dinc, len: LONGINT );
+		PROCEDURE Loop( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 		BEGIN
 			IF (dinc = elementSize) & (linc = elementSize) THEN
 				MoveB( ladr, dadr, len * elementSize );
@@ -1494,19 +1494,23 @@ Sufficient (but not necessary) conditions:
 		END;
 	END AllocateSame;
 
-	PROCEDURE TempDescCopy( src: Address ): ANY;
-	VAR p: ANY;  dim: LONGINT;
+	PROCEDURE TempDescCopy( src: ADDRESS ): ANY;
+	VAR p: ANY; adr: ADDRESS;dim: SIZE;
 	BEGIN
-		dim := GetDim( src );  SYSTEM.NEW( p, dim * 8 + MathLenOffset );
-		SYSTEM.MOVE( src, SYSTEM.VAL( LONGINT, p ), dim * 8 + MathLenOffset );  PutAdr( src, 0 );
-		PutPtr( src, NIL );  PutFlags( src, {} );  RETURN p;
+		dim := GetDim(src);
+		p := GetArrayDesc(dim);
+		SYSTEM.MOVE( src, adr, dim * SIZEOF(LenInc) + MathLenOffset );
+		PutAdr( adr, 0 );
+		PutPtr( adr, NIL );  
+		PutFlags( adr, {} );  
+		RETURN p;
 	END TempDescCopy;
 
 	PROCEDURE CopyArraySelf*( dest, src: Address;  elementsize: LONGINT );
 	VAR p: ANY;
 	BEGIN
 		ASSERT( src = dest );  p := TempDescCopy( src );
-		CopyArray( dest, SYSTEM.VAL( LONGINT, p ), elementsize );
+		CopyArray( dest, p, elementsize );
 	END CopyArraySelf;
 
 	PROCEDURE CopyArray*( dest: ADDRESS;  src: ADDRESS; elementsize: SIZE );
@@ -1716,7 +1720,7 @@ Sufficient (but not necessary) conditions:
 	(*** conversions ****)
 
 (** SHORTINT -> INTEGER *)
-	PROCEDURE ConvertASAILoop( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertASAILoop( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	BEGIN
 		WHILE (len > 0) DO  (* SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval ); *)
 			SYSTEM.PUT16( dadr, SYSTEM.GET8( ladr ) );  INC( ladr, linc );  INC( dadr, dinc );
@@ -1737,7 +1741,7 @@ Sufficient (but not necessary) conditions:
 	END "LONG";
 
 (** SHORTINT -> LONGINT *)
-	PROCEDURE ConvertLoopSL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopSL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	BEGIN
 		WHILE (len > 0) DO  (* SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval ); *)
 			SYSTEM.PUT32( dadr, SYSTEM.GET8( ladr ) );  INC( ladr, linc );  INC( dadr, dinc );
@@ -1752,7 +1756,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** SHORTINT -> REAL *)
-	PROCEDURE ConvertLoopSR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopSR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: SHORTINT;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1768,7 +1772,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** SHORTINT -> LONGREAL *)
-	PROCEDURE ConvertLoopSX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopSX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: SHORTINT;  dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1784,7 +1788,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** INTEGER -> SHORTINT (SHORT) *)
-	PROCEDURE ConvertLoopIS( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopIS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: INTEGER;  dval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1807,7 +1811,7 @@ Sufficient (but not necessary) conditions:
 
 	(** INTEGER -> LONGINT *)
 
-	PROCEDURE ConvertLoopIL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopIL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	BEGIN
 		WHILE (len > 0) DO  (* SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval );  *)
 			SYSTEM.PUT32( dadr, SYSTEM.GET16( ladr ) );  INC( ladr, linc );  INC( dadr, dinc );
@@ -1828,7 +1832,7 @@ Sufficient (but not necessary) conditions:
 	END "LONG";
 
 (** INTEGER -> REAL *)
-	PROCEDURE ConvertLoopIR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopIR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: INTEGER;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1844,7 +1848,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** INTEGER -> LONGREAL *)
-	PROCEDURE ConvertLoopIX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopIX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: INTEGER;  dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1860,7 +1864,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** LONGINT -> INTEGER (SHORT) *)
-	PROCEDURE ConvertLoopLI( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopLI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGINT;  dval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1882,7 +1886,7 @@ Sufficient (but not necessary) conditions:
 	END "SHORT";
 
 (** LONGINT -> REAL *)
-	PROCEDURE ConvertLoopLR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopLR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGINT;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1898,7 +1902,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** LONGINT -> LONGREAL *)
-	PROCEDURE ConvertLoopLX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopLX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGINT;  dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1914,7 +1918,7 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 (** REAL -> LONGINT (ENTIER) *)
-	PROCEDURE ConvertLoopRL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopRL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: REAL;  dval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1936,7 +1940,7 @@ Sufficient (but not necessary) conditions:
 	END "ENTIER";
 
 (** REAL -> LONGREAL *)
-	PROCEDURE ConvertLoopRX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopRX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: REAL;  dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1958,7 +1962,7 @@ Sufficient (but not necessary) conditions:
 	END "LONG";
 
 (** LONGREAL -> REAL (SHORT) *)
-	PROCEDURE ConvertLoopXR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopXR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGREAL;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -1980,7 +1984,7 @@ Sufficient (but not necessary) conditions:
 	END "SHORT";
 
 (** LONGREAL -> LONGINT (ENTIER) *)
-	PROCEDURE ConvertLoopXL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ConvertLoopXL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGREAL;  dval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2004,7 +2008,7 @@ Sufficient (but not necessary) conditions:
 	(*** monadic not A -> ~A ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE NotLoopAB( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE NotLoopAB( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2022,7 +2026,7 @@ Sufficient (but not necessary) conditions:
 	(*** monadic generic (A) -> -A  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE GenericLoopS( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	PROCEDURE GenericLoopS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
 	VAR lval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2032,7 +2036,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopS;
 	
 (** INTEGER *)
-	PROCEDURE GenericLoopI( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: INTEGER): INTEGER );
+	PROCEDURE GenericLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
 	VAR lval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2042,7 +2046,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopI;
 
 (** LONGINT *)
-	PROCEDURE GenericLoopL( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGINT): LONGINT );
+	PROCEDURE GenericLoopL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGINT): LONGINT );
 	VAR lval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2052,7 +2056,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopL;
 
 (** HUGEINT *)
-	PROCEDURE GenericLoopH( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	PROCEDURE GenericLoopH( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: HUGEINT): HUGEINT );
 	VAR lval: HUGEINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2062,7 +2066,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopH;
 
 (** REAL *)
-	PROCEDURE GenericLoopR( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: REAL): REAL );
+	PROCEDURE GenericLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: REAL): REAL );
 	VAR lval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2072,7 +2076,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopR;
 
 (** LONGREAL *)
-	PROCEDURE GenericLoopX( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	PROCEDURE GenericLoopX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGREAL): LONGREAL );
 	VAR lval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2082,7 +2086,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopX;
 	
 (** COMPLEX *)
-	PROCEDURE GenericLoopZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	PROCEDURE GenericLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
 	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: COMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
@@ -2095,7 +2099,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopZ;
 
 (** LONGCOMPLEX *)
-	PROCEDURE GenericLoopLZ( ladr, dadr, linc, dinc, len: LONGINT; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	PROCEDURE GenericLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: LONGCOMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
@@ -2110,7 +2114,7 @@ Sufficient (but not necessary) conditions:
 	(*** monadic minus A -> -A  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE MinusLoopS( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MinusLoopS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2126,7 +2130,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** INTEGER *)
-	PROCEDURE MinusLoopI( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MinusLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2142,7 +2146,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGINT *)
-	PROCEDURE MinusLoopL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MinusLoopL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2158,7 +2162,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** REAL *)
-	PROCEDURE MinusLoopR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MinusLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2175,7 +2179,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGREAL *)
-	PROCEDURE MinusLoopX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MinusLoopX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2194,7 +2198,7 @@ Sufficient (but not necessary) conditions:
 	(*** add array + array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE AddASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2211,7 +2215,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** INTEGER *)
-	PROCEDURE AddAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2228,7 +2232,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** LONGINT *)
-	PROCEDURE AddALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2245,7 +2249,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** REAL *)
-	PROCEDURE AddARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2262,7 +2266,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** LONGREAL *)
-	PROCEDURE AddAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2279,7 +2283,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** COMPLEX *)
-	PROCEDURE AddAZAZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddAZAZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2297,7 +2301,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** LONGCOMPLEX *)
-	PROCEDURE AddALZALZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE AddALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2319,7 +2323,7 @@ Sufficient (but not necessary) conditions:
 	(*** add array + scalar -> array and scalar + array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE AddASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2344,7 +2348,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** INTEGER *)
-	PROCEDURE AddAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2369,7 +2373,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** LONGINT *)
-	PROCEDURE AddALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2394,7 +2398,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** REAL *)
-	PROCEDURE AddARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2419,7 +2423,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** LONGREAL *)
-	PROCEDURE AddAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2445,7 +2449,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE AddAZSZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddAZSZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2470,7 +2474,7 @@ Sufficient (but not necessary) conditions:
 	END "+";
 
 (** LONGCOMPLEX *)
-	PROCEDURE AddALZSLZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AddALZSLZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rvalRe ); SYSTEM.GET( radr+SIZEOF(LONGREAL), rvalIm );
@@ -2499,7 +2503,7 @@ Sufficient (but not necessary) conditions:
 	(*** subtraction array - array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE SubASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2516,7 +2520,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** INTEGER *)
-	PROCEDURE SubAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2533,7 +2537,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGINT *)
-	PROCEDURE SubALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2550,7 +2554,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** REAL *)
-	PROCEDURE SubARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2567,7 +2571,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGREAL *)
-	PROCEDURE SubAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2584,7 +2588,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** COMPLEX *)
-	PROCEDURE SubAZAZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubAZAZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2601,7 +2605,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGCOMPLEX *)
-	PROCEDURE SubALZALZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE SubALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2674,7 +2678,7 @@ Sufficient (but not necessary) conditions:
 	(*** subtraction scalar-array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE SubSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSSASLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2692,7 +2696,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** INTEGER *)
-	PROCEDURE SubSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSIAILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2710,7 +2714,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGINT *)
-	PROCEDURE SubSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSLALLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2728,7 +2732,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** REAL *)
-	PROCEDURE SubSRARLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSRARLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2746,7 +2750,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGREAL *)
-	PROCEDURE SubSXAXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSXAXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2765,7 +2769,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE SubSZAZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSZAZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -2783,7 +2787,7 @@ Sufficient (but not necessary) conditions:
 	END "-";
 
 (** LONGCOMPLEX *)
-	PROCEDURE SubSLZALZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE SubSLZALZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rvalRe ); SYSTEM.GET( radr+SIZEOF(LONGREAL), rvalIm );
@@ -2805,7 +2809,7 @@ Sufficient (but not necessary) conditions:
 	(*** element-wise multiply array x array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EMulASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2822,7 +2826,7 @@ Sufficient (but not necessary) conditions:
 	END ".*";
 
 (** INTEGER *)
-	PROCEDURE EMulAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2840,7 +2844,7 @@ Sufficient (but not necessary) conditions:
 	END ".*";
 
 (** LONGINT *)
-	PROCEDURE EMulALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2857,7 +2861,7 @@ Sufficient (but not necessary) conditions:
 	END ".*";
 
 (** REAL *)
-	PROCEDURE EMulARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2874,7 +2878,7 @@ Sufficient (but not necessary) conditions:
 	END ".*";
 
 (** LONGREAL *)
-	PROCEDURE EMulAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2892,7 +2896,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE EMulAZAZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulAZAZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2909,7 +2913,7 @@ Sufficient (but not necessary) conditions:
 	END ".*";
 
 (** LONGCOMPLEX *)
-	PROCEDURE EMulALZALZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2931,7 +2935,7 @@ Sufficient (but not necessary) conditions:
 	(*** element-wise multiply and add array x array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EMulIncASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulIncASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval,dval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2947,7 +2951,7 @@ Sufficient (but not necessary) conditions:
 	END  ".*+";
 
 (** INTEGER *)
-	PROCEDURE EMulIncAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulIncAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval,dval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2964,7 +2968,7 @@ Sufficient (but not necessary) conditions:
 	END  ".*+";
 
 (** LONGINT *)
-	PROCEDURE EMulIncALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulIncALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval,dval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2980,7 +2984,7 @@ Sufficient (but not necessary) conditions:
 	END  ".*+";
 
 (** REAL *)
-	PROCEDURE EMulIncARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulIncARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval,dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2996,7 +3000,7 @@ Sufficient (but not necessary) conditions:
 	END  ".*+";
 
 (** LONGREAL *)
-	PROCEDURE EMulIncAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EMulIncAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval,dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3013,7 +3017,7 @@ Sufficient (but not necessary) conditions:
 	(*** multiply array x scalar -> array and scalar + array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE MulASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3038,7 +3042,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** INTEGER *)
-	PROCEDURE MulAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3063,7 +3067,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** LONGINT *)
-	PROCEDURE MulALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3088,7 +3092,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** REAL *)
-	PROCEDURE MulARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3113,7 +3117,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** LONGREAL *)
-	PROCEDURE MulAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		IF debug THEN
@@ -3145,7 +3149,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE MulAZSZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulAZSZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3170,7 +3174,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** LONGCOMPLEX *)
-	PROCEDURE MulALZSLZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE MulALZSLZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rvalRe ); SYSTEM.GET( radr+SIZEOF(LONGREAL), rvalIm );
@@ -3199,7 +3203,7 @@ Sufficient (but not necessary) conditions:
 	(*** multiply and add array * scalar -> array and scalar *  array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE IncMulASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3244,7 +3248,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** INTEGER *)
-	PROCEDURE IncMulAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3287,7 +3291,7 @@ Sufficient (but not necessary) conditions:
 	END "DecMul";
 
 (** LONGINT *)
-	PROCEDURE IncMulALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3331,7 +3335,7 @@ Sufficient (but not necessary) conditions:
 	END "DecMul";
 
 (** REAL *)
-	PROCEDURE IncMulARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3374,7 +3378,7 @@ Sufficient (but not necessary) conditions:
 	END "DecMul";
 
 (** LONGREAL *)
-	PROCEDURE IncMulAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE IncMulAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: LONGREAL;
 	BEGIN
 		IF debug THEN
@@ -3425,7 +3429,7 @@ Sufficient (but not necessary) conditions:
 	(*** element-wise division array / array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EDivideASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3443,7 +3447,7 @@ Sufficient (but not necessary) conditions:
 	END "./";
 
 (** INTEGER *)
-	PROCEDURE EDivideAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3461,7 +3465,7 @@ Sufficient (but not necessary) conditions:
 	END "./";
 
 (** LONGINT *)
-	PROCEDURE EDivideALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3479,7 +3483,7 @@ Sufficient (but not necessary) conditions:
 	END "./";
 
 (** REAL *)
-	PROCEDURE EDivideARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;  dval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3497,7 +3501,7 @@ Sufficient (but not necessary) conditions:
 	END "./";
 
 (** LONGREAL *)
-	PROCEDURE EDivideAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;  dval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3515,7 +3519,7 @@ Sufficient (but not necessary) conditions:
 	END "./";
 
 (** COMPLEX *)
-	PROCEDURE EDivideAZAZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideAZAZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;  dval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3534,7 +3538,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** LONGCOMPLEX *)
-	PROCEDURE EDivideALZALZLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivideALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;  dvalRe, dvalIm: LONGREAL; v: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3565,7 +3569,7 @@ Sufficient (but not necessary) conditions:
 	(*** division array / scalar -> array and scalar / array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE DivideASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3582,7 +3586,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSSASLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3600,7 +3604,7 @@ Sufficient (but not necessary) conditions:
 	END "/";
 
 (** INTEGER *)
-	PROCEDURE DivideAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3617,7 +3621,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSIAILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3635,7 +3639,7 @@ Sufficient (but not necessary) conditions:
 	END "/";
 
 (** LONGINT *)
-	PROCEDURE DivideALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3652,7 +3656,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSLALLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3670,7 +3674,7 @@ Sufficient (but not necessary) conditions:
 	END "/";
 
 (** REAL *)
-	PROCEDURE DivideARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3687,7 +3691,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSRARLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSRARLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3705,7 +3709,7 @@ Sufficient (but not necessary) conditions:
 	END "/";
 
 (** LONGREAL *)
-	PROCEDURE DivideAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;  dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3722,7 +3726,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSXAXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSXAXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;  dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3741,7 +3745,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE DivideAZSZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideAZSZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;  dval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3758,7 +3762,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSZAZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSZAZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: COMPLEX;  dval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3777,7 +3781,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** LONGCOMPLEX *)
-	PROCEDURE DivideALZSLZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideALZSLZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;  dvalRe, dvalIm: LONGREAL; v: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rvalRe ); SYSTEM.GET( radr+SIZEOF(LONGREAL), rvalIm );
@@ -3810,7 +3814,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "/";
 
-	PROCEDURE DivideSLZALZLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivideSLZALZLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;  dvalRe, dvalIm: LONGREAL; v: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rvalRe ); SYSTEM.GET( radr+SIZEOF(LONGREAL), rvalIm );
@@ -3835,7 +3839,7 @@ Sufficient (but not necessary) conditions:
 	(*** element-wise DIV array DIV array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EDivASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3853,7 +3857,7 @@ Sufficient (but not necessary) conditions:
 	END "DIV";
 
 (** INTEGER *)
-	PROCEDURE EDivAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3871,7 +3875,7 @@ Sufficient (but not necessary) conditions:
 	END "DIV";
 
 (** LONGINT *)
-	PROCEDURE EDivALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EDivALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -3892,7 +3896,7 @@ Sufficient (but not necessary) conditions:
 	(*** division array DIV scalar -> array and scalar DIV  array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE DivASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3909,7 +3913,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "DIV";
 
-	PROCEDURE DivSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivSSASLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3927,7 +3931,7 @@ Sufficient (but not necessary) conditions:
 	END "DIV";
 
 (** INTEGER *)
-	PROCEDURE DivAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3944,7 +3948,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "DIV";
 
-	PROCEDURE DivSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivSIAILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3962,7 +3966,7 @@ Sufficient (but not necessary) conditions:
 	END "DIV";
 
 (** LONGINT *)
-	PROCEDURE DivALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3979,7 +3983,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "DIV";
 
-	PROCEDURE DivSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE DivSLALLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -3999,7 +4003,7 @@ Sufficient (but not necessary) conditions:
 	(*** element-wise modulus array MOD array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EModASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EModASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4017,7 +4021,7 @@ Sufficient (but not necessary) conditions:
 	END "MOD";
 
 (** INTEGER *)
-	PROCEDURE EModAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EModAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4035,7 +4039,7 @@ Sufficient (but not necessary) conditions:
 	END "MOD";
 
 (** LONGINT *)
-	PROCEDURE EModALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EModALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4056,7 +4060,7 @@ Sufficient (but not necessary) conditions:
 	(*** modulus array MOD scalar -> array and scalar MOD  array -> array ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE ModASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4073,7 +4077,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MOD";
 
-	PROCEDURE ModSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModSSASLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4091,7 +4095,7 @@ Sufficient (but not necessary) conditions:
 	END "MOD";
 
 (** INTEGER *)
-	PROCEDURE ModAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4108,7 +4112,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MOD";
 
-	PROCEDURE ModSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModSIAILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4126,7 +4130,7 @@ Sufficient (but not necessary) conditions:
 	END "MOD";
 
 (** LONGINT *)
-	PROCEDURE ModALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4143,7 +4147,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MOD";
 
-	PROCEDURE ModSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ModSLALLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4163,7 +4167,7 @@ Sufficient (but not necessary) conditions:
 	(*** scalar product <array,array> -> scalar  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE SPASASLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval: SHORTINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -4183,7 +4187,7 @@ Sufficient (but not necessary) conditions:
 	END "+*";
 
 (** INTEGER *)
-	PROCEDURE SPAIAILoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval: INTEGER;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -4203,7 +4207,7 @@ Sufficient (but not necessary) conditions:
 	END "+*";
 
 (** LONGINT *)
-	PROCEDURE SPALALLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval: LONGINT;  dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -4223,7 +4227,7 @@ Sufficient (but not necessary) conditions:
 	END "+*";
 
 (** REAL *)
-	PROCEDURE SPARARLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval: REAL;  dval: REAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -4242,7 +4246,7 @@ Sufficient (but not necessary) conditions:
 		RETURN dest;
 	END "+*";
 
-	PROCEDURE SPAXAXLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: LONGREAL;
 	BEGIN
 		IF debug THEN
@@ -4268,7 +4272,7 @@ Sufficient (but not necessary) conditions:
 	END "+*";
 
 (** COMPLEX *)
-	PROCEDURE SPAZAZLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPAZAZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval: COMPLEX;  dval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -4290,7 +4294,7 @@ Sufficient (but not necessary) conditions:
 	END "+*";
 
 	(** COMPLEX *)
-	PROCEDURE SPALZALZLoop( ladr, radr, dadr, linc, rinc, len: LONGINT );
+	PROCEDURE SPALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;  dvalRe, dvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dvalRe ); SYSTEM.GET( dadr+SIZEOF(LONGREAL), dvalIm );
@@ -4316,7 +4320,7 @@ Sufficient (but not necessary) conditions:
 
 (** BOOLEAN *)
 
-	PROCEDURE EEqlABABLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlABABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4334,7 +4338,7 @@ Sufficient (but not necessary) conditions:
 
 (** SHORTINT *)
 
-	PROCEDURE EEqlASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4352,7 +4356,7 @@ Sufficient (but not necessary) conditions:
 
 (** INTEGER *)
 
-	PROCEDURE EEqlAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4370,7 +4374,7 @@ Sufficient (but not necessary) conditions:
 
 (** LONGINT *)
 
-	PROCEDURE EEqlALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4387,7 +4391,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** REAL *)
-	PROCEDURE EEqlARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4404,7 +4408,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** LONGREAL *)
-	PROCEDURE EEqlAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EEqlAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4423,7 +4427,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise equal  array x scalar ->  array of boolean ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE EEqlABSBLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlABSBLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4448,7 +4452,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** SHORTINT *)
-	PROCEDURE EEqlASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4473,7 +4477,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** INTEGER *)
-	PROCEDURE EEqlAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4498,7 +4502,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** LONGINT *)
-	PROCEDURE EEqlALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4523,7 +4527,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** REAL *)
-	PROCEDURE EEqlARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4548,7 +4552,7 @@ Sufficient (but not necessary) conditions:
 	END ".=";
 
 (** LONGREAL *)
-	PROCEDURE EEqlAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EEqlAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4575,7 +4579,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise nequal: array x array -> array of boolean  ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE ENeqABABLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqABABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4592,7 +4596,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** SHORTINT *)
-	PROCEDURE ENeqASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4609,7 +4613,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** INTEGER*)
-	PROCEDURE ENeqAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4626,7 +4630,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** LONGINT*)
-	PROCEDURE ENeqALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4643,7 +4647,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** REAL *)
-	PROCEDURE ENeqARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4660,7 +4664,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** LONGREAL *)
-	PROCEDURE ENeqAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ENeqAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4679,7 +4683,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise nequal  array x scalar ->  array of boolean ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE ENeqABSBLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqABSBLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4704,7 +4708,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** SHORTINT *)
-	PROCEDURE ENeqASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4729,7 +4733,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** INTEGER *)
-	PROCEDURE ENeqAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4754,7 +4758,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** LONGINT *)
-	PROCEDURE ENeqALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4779,7 +4783,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** REAL *)
-	PROCEDURE ENeqARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4804,7 +4808,7 @@ Sufficient (but not necessary) conditions:
 	END ".#";
 
 (** LONGREAL *)
-	PROCEDURE ENeqAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ENeqAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4832,7 +4836,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise greater than: array x array -> array of boolean  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EGtrASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGtrASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4849,7 +4853,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** INTEGER *)
-	PROCEDURE EGtrAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGtrAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4866,7 +4870,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** LONGINT *)
-	PROCEDURE EGtrALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGtrALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4883,7 +4887,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** REAL *)
-	PROCEDURE EGtrARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGtrARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4900,7 +4904,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** LONGREAL *)
-	PROCEDURE EGtrAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGtrAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -4919,7 +4923,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise greater  array x scalar ->  array of boolean ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EGtrASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGtrASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4944,7 +4948,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** INTEGER *)
-	PROCEDURE EGtrAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGtrAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4969,7 +4973,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** LONGINT *)
-	PROCEDURE EGtrALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGtrALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -4994,7 +4998,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** REAL *)
-	PROCEDURE EGtrARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGtrARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5019,7 +5023,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** LONGREAL *)
-	PROCEDURE EGtrAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGtrAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5047,7 +5051,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise greater or equal: array x array -> array of boolean  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EGeqASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGeqASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5064,7 +5068,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** INTEGER *)
-	PROCEDURE EGeqAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGeqAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5081,7 +5085,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** LONGINT *)
-	PROCEDURE EGeqALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGeqALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5098,7 +5102,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** REAL *)
-	PROCEDURE EGeqARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGeqARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5115,7 +5119,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** LONGREAL *)
-	PROCEDURE EGeqAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE EGeqAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5134,7 +5138,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise geq  array x scalar ->  array of boolean ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE EGeqASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGeqASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5159,7 +5163,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** INTEGER *)
-	PROCEDURE EGeqAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGeqAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5184,7 +5188,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** LONGINT *)
-	PROCEDURE EGeqALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGeqALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5209,7 +5213,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** REAL *)
-	PROCEDURE EGeqARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGeqARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5234,7 +5238,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** LONGREAL *)
-	PROCEDURE EGeqAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE EGeqAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5261,7 +5265,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise less than: array x array -> array of boolean  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE ELssASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELssASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5278,7 +5282,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** INTEGER *)
-	PROCEDURE ELssAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELssAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5295,7 +5299,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** LONGINT*)
-	PROCEDURE ELssALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELssALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5312,7 +5316,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** REAL *)
-	PROCEDURE ELssARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELssARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5329,7 +5333,7 @@ Sufficient (but not necessary) conditions:
 	END ".<";
 
 (** LONGREAL *)
-	PROCEDURE ELssAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELssAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5348,7 +5352,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise less  array x scalar ->  array of boolean ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE ELssASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELssASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5373,7 +5377,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** INTEGER *)
-	PROCEDURE ELssAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELssAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5398,7 +5402,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** LONGINT *)
-	PROCEDURE ELssALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELssALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5423,7 +5427,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** REAL *)
-	PROCEDURE ELssARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELssARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5448,7 +5452,7 @@ Sufficient (but not necessary) conditions:
 	END ".>";
 
 (** LONGREAL *)
-	PROCEDURE ELssAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELssAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5476,7 +5480,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise less or equal: array x array -> array of boolean ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE ELeqASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELeqASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5493,7 +5497,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** INTEGER *)
-	PROCEDURE ELeqAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELeqAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5510,7 +5514,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** LONGINT *)
-	PROCEDURE ELeqALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELeqALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5527,7 +5531,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** REAL  *)
-	PROCEDURE ELeqARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELeqARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5544,7 +5548,7 @@ Sufficient (but not necessary) conditions:
 	END ".<=";
 
 (** LONGREAL*)
-	PROCEDURE ELeqAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ELeqAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5563,7 +5567,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise leq  array x scalar ->  array of boolean ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE ELeqASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELeqASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5588,7 +5592,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** INTEGER *)
-	PROCEDURE ELeqAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELeqAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5613,7 +5617,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** LONGINT *)
-	PROCEDURE ELeqALSLLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELeqALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5638,7 +5642,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** REAL *)
-	PROCEDURE ELeqARSRLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELeqARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5663,7 +5667,7 @@ Sufficient (but not necessary) conditions:
 	END ".>=";
 
 (** LONGREAL *)
-	PROCEDURE ELeqAXSXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ELeqAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5691,7 +5695,7 @@ Sufficient (but not necessary) conditions:
 	(*** elementwise or, elementwise and  ********************************************************************)
 
 (** array x array *)
-	PROCEDURE ElOrABABLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ElOrABABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5707,7 +5711,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "OR";
 
-	PROCEDURE ElAndABABLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
+	PROCEDURE ElAndABABLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len:SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5724,7 +5728,7 @@ Sufficient (but not necessary) conditions:
 	END "&";
 
 (** array x boolean *)
-	PROCEDURE ElOrABSBLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ElOrABSBLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5748,7 +5752,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "OR";
 
-	PROCEDURE ElAndABSBLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE ElAndABSBLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -5776,7 +5780,7 @@ Sufficient (but not necessary) conditions:
 	(*** less than, greater or equal: array x array -> boolean  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE LssASASLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssASASLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5792,7 +5796,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssASASLoop , FALSE);
 	END "<";
 
-	PROCEDURE GeqASASLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqASASLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5809,7 +5813,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** INTEGER *)
-	PROCEDURE LssAIAILoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssAIAILoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5825,7 +5829,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAIAILoop , FALSE);
 	END "<";
 
-	PROCEDURE GeqAIAILoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqAIAILoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5842,7 +5846,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** LONGINT *)
-	PROCEDURE LssALALLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssALALLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5858,7 +5862,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssALALLoop , FALSE);
 	END "<";
 
-	PROCEDURE GeqALALLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqALALLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5875,7 +5879,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** REAL *)
-	PROCEDURE LssARARLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5891,7 +5895,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssARARLoop , FALSE);
 	END "<";
 
-	PROCEDURE GeqARARLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5908,7 +5912,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** LONGREAL *)
-	PROCEDURE LssAXAXLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssAXAXLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5924,7 +5928,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAXAXLoop , FALSE);
 	END "<";
 
-	PROCEDURE GeqAXAXLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqAXAXLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5943,7 +5947,7 @@ Sufficient (but not necessary) conditions:
 	(*** less than, greater or equal: array x array -> boolean  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE GtrASASLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrASASLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5959,7 +5963,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrASASLoop , FALSE);
 	END ">";
 
-	PROCEDURE LeqASASLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqASASLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5976,7 +5980,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** INTEGER *)
-	PROCEDURE GtrAIAILoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrAIAILoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -5992,7 +5996,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAIAILoop , FALSE);
 	END ">";
 
-	PROCEDURE LeqAIAILoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqAIAILoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6009,7 +6013,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** LONGINT *)
-	PROCEDURE GtrALALLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrALALLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6025,7 +6029,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrALALLoop , FALSE);
 	END ">";
 
-	PROCEDURE LeqALALLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqALALLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6042,7 +6046,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** REAL *)
-	PROCEDURE GtrARARLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6058,7 +6062,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrARARLoop , FALSE);
 	END ">";
 
-	PROCEDURE LeqARARLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6075,7 +6079,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** LONGREAL *)
-	PROCEDURE GtrAXAXLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrAXAXLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6091,7 +6095,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAXAXLoop , FALSE);
 	END ">";
 
-	PROCEDURE LeqAXAXLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqAXAXLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6111,7 +6115,7 @@ Sufficient (but not necessary) conditions:
 	(*** equals: array x array -> boolean  ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE EqlABABLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlABABLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6133,7 +6137,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** SHORTINT *)
-	PROCEDURE EqlASASLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlASASLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6155,7 +6159,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** INTEGER *)
-	PROCEDURE EqlAIAILoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlAIAILoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6177,7 +6181,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** LONGINT *)
-	PROCEDURE EqlALALLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlALALLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6199,7 +6203,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** REAL *)
-	PROCEDURE EqlARARLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6221,7 +6225,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** LONGREAL *)
-	PROCEDURE EqlAXAXLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlAXAXLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6243,7 +6247,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** COMPLEX *)
-	PROCEDURE EqlAZAZLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6265,7 +6269,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** LONGCOMPLEX *)
-	PROCEDURE EqlALZALZLoop( ladr, radr, linc, rinc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlALZALZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lvalRe, lvalIm, rvalRe, rvalIm: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6290,7 +6294,7 @@ Sufficient (but not necessary) conditions:
 	(*** equals: array x scalar -> boolean  ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE EqlABSBLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlABSBLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6327,7 +6331,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** SHORTINT *)
-	PROCEDURE EqlASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlASSSLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6360,7 +6364,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** INTEGER *)
-	PROCEDURE EqlAISILoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlAISILoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6393,7 +6397,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** LONGINT *)
-	PROCEDURE EqlALSLLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlALSLLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6430,7 +6434,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** REAL *)
-	PROCEDURE EqlARSRLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6467,7 +6471,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** LONGREAL *)
-	PROCEDURE EqlAXSXLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE EqlAXSXLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6507,7 +6511,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE GtrASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrASSSLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6530,7 +6534,7 @@ Sufficient (but not necessary) conditions:
 	END "<";
 
 (** INTEGER *)
-	PROCEDURE GtrAISILoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrAISILoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6553,7 +6557,7 @@ Sufficient (but not necessary) conditions:
 	END "<";
 
 (** LONGINT *)
-	PROCEDURE GtrALSLLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrALSLLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6576,7 +6580,7 @@ Sufficient (but not necessary) conditions:
 	END "<";
 
 (** REAL *)
-	PROCEDURE GtrARSRLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6601,7 +6605,7 @@ Sufficient (but not necessary) conditions:
 	END "<";
 
 (** LONGREAL *)
-	PROCEDURE GtrAXSXLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GtrAXSXLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6629,7 +6633,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE GeqASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqASSSLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6654,7 +6658,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** INTEGER *)
-	PROCEDURE GeqAISILoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqAISILoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6678,7 +6682,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** LONGINT *)
-	PROCEDURE GeqALSLLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqALSLLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6703,7 +6707,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** REAL *)
-	PROCEDURE GeqARSRLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6727,7 +6731,7 @@ Sufficient (but not necessary) conditions:
 	END "<=";
 
 (** LONGREAL *)
-	PROCEDURE GeqAXSXLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE GeqAXSXLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6753,7 +6757,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE LeqASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqASSSLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6776,7 +6780,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** INTEGER *)
-	PROCEDURE LeqAISILoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqAISILoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6799,7 +6803,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** LONGINT *)
-	PROCEDURE LeqALSLLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqALSLLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6822,7 +6826,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** REAL *)
-	PROCEDURE LeqARSRLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6845,7 +6849,7 @@ Sufficient (but not necessary) conditions:
 	END ">=";
 
 (** LONGREAL *)
-	PROCEDURE LeqAXSXLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LeqAXSXLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6873,7 +6877,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE LssASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssASSSLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6896,7 +6900,7 @@ Sufficient (but not necessary) conditions:
 	END ">";
 
 (** INTEGER *)
-	PROCEDURE LssAISILoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssAISILoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6919,7 +6923,7 @@ Sufficient (but not necessary) conditions:
 	END ">";
 
 (** LONGINT *)
-	PROCEDURE LssALSLLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssALSLLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6942,7 +6946,7 @@ Sufficient (but not necessary) conditions:
 	END ">";
 
 (** REAL *)
-	PROCEDURE LssARSRLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6967,7 +6971,7 @@ Sufficient (but not necessary) conditions:
 	END ">";
 
 (** LONGREAL *)
-	PROCEDURE LssAXSXLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
+	PROCEDURE LssAXSXLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, rval );
@@ -6993,7 +6997,7 @@ Sufficient (but not necessary) conditions:
 
 	(**** binary max/min operators array x scalar-> array ********************************************************************)
 	
-	PROCEDURE MaxAXSXLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MaxAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7012,7 +7016,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxARSRLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MaxARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: REAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7032,7 +7036,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 	
 	
-	PROCEDURE MaxALSLLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MaxALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7052,7 +7056,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 	
 
-	PROCEDURE MaxAISILoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MaxAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7071,7 +7075,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxASSSLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MaxASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7091,7 +7095,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 	
 
-	PROCEDURE MinAXSXLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MinAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7111,7 +7115,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 	
 
-	PROCEDURE MinARSRLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MinARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: REAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7130,7 +7134,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 	
-	PROCEDURE MinALSLLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MinALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7149,7 +7153,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 
-	PROCEDURE MinAISILoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MinAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7168,7 +7172,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 	
-	PROCEDURE MinASSSLoop( ladr, radr, dadr, linc, dinc, len: Address ); 
+	PROCEDURE MinASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
 	VAR lval, val: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7189,7 +7193,7 @@ Sufficient (but not necessary) conditions:
 
 	(**** binary max/min operators array x array -> array ********************************************************************)
 
-	PROCEDURE MaxAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MaxAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7207,7 +7211,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 	
 
-	PROCEDURE MaxARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MaxARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: REAL ;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7224,7 +7228,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MaxALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7241,7 +7245,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 	
-		PROCEDURE MaxAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+		PROCEDURE MaxAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7258,7 +7262,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 	
-	PROCEDURE MaxASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MaxASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7275,7 +7279,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MinAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MinAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7293,7 +7297,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 		
 
-	PROCEDURE MinARARLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MinARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: REAL ;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7310,7 +7314,9 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 
-	PROCEDURE MinALALLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+
+	
+	(*PROCEDURE MinALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7320,6 +7326,21 @@ Sufficient (but not necessary) conditions:
 			INC(dadr,dinc); 
 		END;
 	END MinALALLoop;
+	*)
+
+TYPE 
+	LongintPtr = POINTER {UNSAFE} TO RECORD val: LONGINT END;
+	
+	PROCEDURE MinALALLoop( ladr, radr, dadr: LongintPtr; linc, rinc, dinc, len: SIZE); 
+	BEGIN
+		WHILE (len > 0) DO
+			IF ladr.val < ladr.val THEN dadr.val := ladr.val ELSE dadr.val := radr.val END;
+			ladr := ladr + linc;
+			radr := radr + rinc;
+			dadr := dadr + dinc;
+			DEC(len); 
+		END;
+	END MinALALLoop;
 
 	OPERATOR "MIN"*(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT ;
 	BEGIN
@@ -7327,7 +7348,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 	
-	PROCEDURE MinAIAILoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MinAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7344,7 +7365,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 	
-	PROCEDURE MinASASLoop( ladr, radr, dadr, linc, rinc, dinc, len: Address ); 
+	PROCEDURE MinASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7366,7 +7387,7 @@ Sufficient (but not necessary) conditions:
 	(*** min: array -> scalar ****************************************)
 
 (** SHORTINT *)
-	PROCEDURE MinASLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MinASLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7387,7 +7408,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 
 (** INTEGER *)
-	PROCEDURE MinAILoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MinAILoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7408,7 +7429,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 
 (** LONGINT *)
-	PROCEDURE MinALLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MinALLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7429,7 +7450,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 
 (** REAL *)
-	PROCEDURE MinARLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MinARLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7450,7 +7471,7 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 
 (** LONGREAL *)
-	PROCEDURE MinAXLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MinAXLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7473,7 +7494,7 @@ Sufficient (but not necessary) conditions:
 	(*** max: array -> scalar  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE MaxASLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MaxASLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7494,7 +7515,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 
 (** INTEGER *)
-	PROCEDURE MaxAILoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MaxAILoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7515,7 +7536,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 
 (** LONGINT *)
-	PROCEDURE MaxALLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MaxALLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7536,7 +7557,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 
 (** REAL *)
-	PROCEDURE MaxARLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MaxARLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7557,7 +7578,7 @@ Sufficient (but not necessary) conditions:
 	END "MAX";
 
 (** LONGREAL *)
-	PROCEDURE MaxAXLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE MaxAXLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7593,7 +7614,7 @@ Sufficient (but not necessary) conditions:
 	(*** SUM: array -> scalar  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE SumASLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumASLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7612,7 +7633,7 @@ Sufficient (but not necessary) conditions:
 	END "SUM";
 
 (** INTEGER *)
-	PROCEDURE SumAILoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumAILoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7631,7 +7652,7 @@ Sufficient (but not necessary) conditions:
 	END "SUM";
 
 (** LONGINT *)
-	PROCEDURE SumALLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumALLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7650,7 +7671,7 @@ Sufficient (but not necessary) conditions:
 	END "SUM";
 
 (** REAL *)
-	PROCEDURE SumARLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumARLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7669,7 +7690,7 @@ Sufficient (but not necessary) conditions:
 	END "SUM";
 
 (** LONGREAL *)
-	PROCEDURE SumAXLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumAXLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7689,7 +7710,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** COMPLEX *)
-	PROCEDURE SumAZLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumAZLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -7708,7 +7729,7 @@ Sufficient (but not necessary) conditions:
 	END "SUM";
 
 (** LONGCOMPLEX *)
-	PROCEDURE SumALZLoop( ladr, dadr, linc, len: LONGINT );
+	PROCEDURE SumALZLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lvalRe, lvalIm, dvalRe, dvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dvalRe ); SYSTEM.GET( dadr+SIZEOF(LONGREAL), dvalIm );
@@ -7731,7 +7752,7 @@ Sufficient (but not necessary) conditions:
 	(*** monadic ABS array -> array  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE AbsLoopS( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7747,7 +7768,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** INTEGER *)
-	PROCEDURE AbsLoopI( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7763,7 +7784,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** LONGINT *)
-	PROCEDURE AbsLoopL( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7779,7 +7800,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** REAL *)
-	PROCEDURE AbsLoopR( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7795,7 +7816,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** LONGREAL *)
-	PROCEDURE AbsLoopX( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7811,7 +7832,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** COMPLEX *)
-	PROCEDURE AbsLoopZ( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7827,7 +7848,7 @@ Sufficient (but not necessary) conditions:
 	END "ABS";
 
 (** LONGCOMPLEX *)
-	PROCEDURE AbsLoopLZ( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE AbsLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lvalRe, lvalIm: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -7847,7 +7868,7 @@ Sufficient (but not necessary) conditions:
 	(*** assign number to array  (initialisation) ********************************************************************)
 
 (** BOOLEAN *)
-	PROCEDURE AssignSBABLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSBABLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: BOOLEAN;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7860,7 +7881,7 @@ Sufficient (but not necessary) conditions:
 	END ":=";
 
 (** SHORTINT*)
-	PROCEDURE AssignSSASLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSSASLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7873,7 +7894,7 @@ Sufficient (but not necessary) conditions:
 	END ":=";
 
 (**INTEGER *)
-	PROCEDURE AssignSIAILoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSIAILoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: INTEGER;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7887,7 +7908,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** LONGINT *)
-	PROCEDURE AssignSLALLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSLALLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: LONGINT;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7901,7 +7922,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** REAL *)
-	PROCEDURE AssignSRARLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSRARLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: REAL;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7915,7 +7936,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** LONGREAL *)
-	PROCEDURE AssignSXAXLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSXAXLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7928,7 +7949,7 @@ Sufficient (but not necessary) conditions:
 	END ":=";
 
 (** COMPLEX *)
-	PROCEDURE AssignSZAZLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSZAZLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lval: COMPLEX;
 	BEGIN
 		SYSTEM.GET( ladr, lval );
@@ -7941,7 +7962,7 @@ Sufficient (but not necessary) conditions:
 	END ":=";
 
 (** LONGCOMPLEX *)
-	PROCEDURE AssignSLZALZLoop( ladr, dadr, dinc, len: LONGINT );
+	PROCEDURE AssignSLZALZLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR lvalRe, lvalIm: LONGREAL;
 	BEGIN
 		SYSTEM.GET( ladr, lvalRe ); SYSTEM.GET( ladr+SIZEOF(LONGREAL), lvalIm );
@@ -8188,7 +8209,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE MatMulASASLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: SHORTINT;
 	BEGIN
 		dval := 0;
@@ -8222,7 +8243,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** INTEGER *)
-	PROCEDURE MatMulAIAILoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: INTEGER;
 	BEGIN
 		dval := 0;
@@ -8257,7 +8278,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** LONGINT *)
-	PROCEDURE MatMulALALLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: LONGINT;
 	BEGIN
 		dval := 0;
@@ -8299,7 +8320,7 @@ Sufficient (but not necessary) conditions:
 	END "*";
 
 (** REAL *)
-	PROCEDURE MatMulARARLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: REAL;
 	BEGIN
 		dval := 0;
@@ -8492,7 +8513,7 @@ Sufficient (but not necessary) conditions:
 
 (** LONGREAL *)
 
-	PROCEDURE MatMulAXAXLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: LONGREAL;
 	BEGIN
 		dval := 0;
@@ -8687,7 +8708,7 @@ Sufficient (but not necessary) conditions:
 
 
 (** SHORTINT *)
-	PROCEDURE MatMulIncASASLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulIncASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: SHORTINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -8752,7 +8773,7 @@ Sufficient (but not necessary) conditions:
 	END "@MulDec";
 
 (** INTEGER *)
-	PROCEDURE MatMulIncAIAILoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulIncAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: INTEGER;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -8812,7 +8833,7 @@ Sufficient (but not necessary) conditions:
 	END "@MulDec";
 
 (** LONGINT *)
-	PROCEDURE MatMulIncALALLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulIncALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: LONGINT;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -8872,7 +8893,7 @@ Sufficient (but not necessary) conditions:
 	END "@MulDec";
 
 	(** REAL *)
-	PROCEDURE MatMulIncARARLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulIncARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: REAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -8932,7 +8953,7 @@ Sufficient (but not necessary) conditions:
 	END "@MulDec";
 (** LONGREAL *)
 
-	PROCEDURE MatMulIncAXAXLoop( ladr, radr, dadr, linc, rinc, len: Address );
+	PROCEDURE MatMulIncAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	VAR lval, rval, dval: LONGREAL;
 	BEGIN
 		SYSTEM.GET( dadr, dval );
@@ -9641,8 +9662,6 @@ Sufficient (but not necessary) conditions:
 		IF LEN( dest, 0 ) # dim THEN NEW( dest, dim );  END;
 		FOR i := 0 TO dim - 1 DO dest[i] := GetLen( src, i );  END;
 	END LenA;
-
-
 
 	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: Address );
 	VAR dim, i, len: LONGINT;

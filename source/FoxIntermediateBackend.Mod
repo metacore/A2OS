@@ -12071,6 +12071,12 @@ TYPE
 						NParameter(parameter, pos);
 						parameter := parameter.nextParameter;
 					END;
+					IF procedureType.returnParameter # NIL THEN
+						NParameter(procedureType.returnParameter, pos); 
+					END;
+					IF procedureType.selfParameter # NIL THEN
+						NParameter(procedureType.selfParameter, pos); 
+					END;
 					IF RefInfo THEN Info(section, "ReturnType") END;
 					NType(procedureType.returnType);
 

@@ -191,11 +191,13 @@ VAR
 	PROCEDURE DisableGC*;
 	BEGIN
 		Heaps.GC := Nothing;
+		TRACE(Heaps.GC, "disabled"); 
 	END DisableGC;
 
 	PROCEDURE EnableGC*;
 	BEGIN
 		Heaps.GC := Heaps.InvokeGC;
+		TRACE(Heaps.GC, "enabled"); 
 	END EnableGC;
 
 

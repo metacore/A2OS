@@ -494,7 +494,7 @@ CONST
 		IF maxLen = 0 THEN w.String("..."); END;
 	END WriteValueString;
 	
-	PROCEDURE WriteMathArray*(w: Streams.Writer; adr: ADDRESS);
+	PROCEDURE WriteMathArray*(w: Streams.Writer; adr: ADDRESS; check: BOOLEAN);
 		TYPE 
 		LenInc = RECORD
 			len: SIZE;
@@ -513,7 +513,7 @@ CONST
 		VAR t: UnsafeArray; i: SIZE;
 	BEGIN
 		IF adr = NIL THEN w.String(" (NIL)"); 
-		ELSIF CheckHeapAddress(adr) THEN
+		ELSIF ~check OR CheckHeapAddress(adr) THEN
 			t := adr;
 			w.String(" len/inc=[ ");
 			IF t.dim < 8 THEN
@@ -591,7 +591,7 @@ CONST
 			| sfTypeMathOpenArray: 
 				w.String("OPEN MATH ARRAY ");
 				SkipType(refs, offset);
-				WriteMathArray(w, adr);
+				WriteMathArray(w, adr, FALSE);
 			| sfTypeMathStaticArray: 
 				w.String("... (MATH STATIC ARRAY)");
 				SkipSize(offset); SkipType(refs, offset);
@@ -599,7 +599,7 @@ CONST
 				w.String("TENSOR ");
 				SYSTEM.GET(adr, a);
 				WriteBasicValue(w, sfTypeANY, adr, size);
-				WriteMathArray(w, a);
+				WriteMathArray(w, a, TRUE);
 				SkipType(refs, offset); 
 			| sfTypeRecord: 
 				w.String("...");

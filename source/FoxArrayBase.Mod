@@ -317,13 +317,6 @@ VAR
 		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8; 
 
 	BEGIN
-		(*
-		IF dim < LEN( TensorTypePool ) THEN t := TensorTypePool[dim]
-		ELSE NewTensorType( dim, t );
-		END;
-		Heaps.NewRec( ptr, t.tag );
-		*)
-
 		CASE dim OF
 		|0: NEW(p0); ptr := p0;
 		|1:NEW(p1); ptr := p1;
@@ -510,7 +503,7 @@ Sufficient (but not necessary) conditions:
 	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
 	PROCEDURE ApplyGenericUnaryAAOpS( d, l: ADDRESS;  elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
-			origdest: LONGINT;  modes: SET;
+			origdest: ADDRESS;  modes: SET;
 			dest, left: ADDRESS;  dim: SIZE;
 			
 		PROCEDURE Traverse( dim: LONGINT;  ladr, dadr: ADDRESS );
@@ -1449,18 +1442,9 @@ Sufficient (but not necessary) conditions:
 		END;
 	END CopyContent;
 
-	PROCEDURE AllocateSame( VAR dest: ADDRESS;  src: ADDRESS;
-												   elementsize: LONGINT ): ANY;
+	PROCEDURE AllocateSame( VAR dest: ADDRESS;  src: ADDRESS; elementsize: LONGINT ): ANY;
 	VAR ptr, data: ANY;  Size: LONGINT;
 		(* allocate a structure in dest compatible with src, if necessary. returns if allocation has taken place *)
-
-		PROCEDURE UseDescriptor;
-		VAR tag: LONGINT;
-		BEGIN
-			SYSTEM.GET( src - 4, tag );
-			Heaps.NewRec( ptr, tag, FALSE );
-			dest := ptr;
-		END UseDescriptor;
 
 		PROCEDURE NewData;
 		VAR dim, len, size: LONGINT;
@@ -1481,9 +1465,7 @@ Sufficient (but not necessary) conditions:
 		IF dest # NIL THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = NIL THEN  (* NIL pointer, guaranteed to be tensor *)
-			IF TensorFlag IN GetFlags( src ) THEN UseDescriptor();
-			ELSE ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
-			END;
+			ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
 			PutFlags(dest, {TensorFlag});
 			NewData();  RETURN ptr;
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
@@ -1492,16 +1474,16 @@ Sufficient (but not necessary) conditions:
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			UseDescriptor();
+			ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
 			PutFlags(dest, {TensorFlag});
-			NewData();  RETURN ptr;
+			NewData();  
+			RETURN ptr;
 		ELSIF (GetAdr( dest ) = 0) OR ~SameShape( dest, src ) THEN
 			(* check if re-allocation of array data is allowed *)
 			IF RangeFlag IN GetFlags( dest ) THEN  (* no! not allowed *)
 				HALT( 100 );
 			END;
 			NewData();
-
 			RETURN data;
 		ELSE  (* nothing to do *)
 			RETURN NIL;
@@ -1573,31 +1555,19 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS);
 	VAR ptr: ANY; flags: SET;
 
-		PROCEDURE UseTypeDescriptor;
-		VAR tag: LONGINT;  ptr: ANY;
-		BEGIN
-			SYSTEM.GET( src + Heaps.TypeDescOffset, tag );  Heaps.NewRec( ptr, tag, FALSE );
-			dest := SYSTEM.VAL( LONGINT, ptr );
-		END UseTypeDescriptor;
-
 		PROCEDURE CopyDescriptor;
 		BEGIN
-			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(ADDRESS) *  GetDim( src ) *2 );
+			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(LenInc) *  GetDim( src ));
 		END CopyDescriptor;
 
 	BEGIN
 		(*
-		KernelLog.String("ShallowCopy called with ");
-		KernelLog.Int(src,10); KernelLog.Int(dest,10);
-		KernelLog.Ln;
-		Report( "scopy source", src );  Report( "scopy dest", dest );
-		*)
+			ShallowCopy is either called with a reference to a pointer in which case the dest pointer is safe
+			or it is called with an array descriptor in which case a reallocation is forbidden. The pointer cannot escape.
+		 *)
 
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			IF TensorFlag IN GetFlags( src ) THEN UseTypeDescriptor();
-			ELSE
-				ptr := GetArrayDesc( GetDim( src ) );  dest := SYSTEM.VAL( LONGINT, ptr );  (* ??? *)
-			END;
+			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
 			CopyDescriptor();
 			PutFlags(dest, {TensorFlag});
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
@@ -1608,7 +1578,7 @@ Sufficient (but not necessary) conditions:
 			END;
 
 			(* create a new descriptor!!! (added by Alexey) *)
-			ptr := GetArrayDesc( GetDim( src ) );  dest := SYSTEM.VAL( LONGINT, ptr );
+			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
 
 			CopyDescriptor();
 			PutFlags(dest, flags);
@@ -1621,7 +1591,6 @@ Sufficient (but not necessary) conditions:
 			CopyDescriptor();
 			PutFlags(dest, flags);
 		END;
-
 	END ShallowCopy;
 
 
@@ -1632,7 +1601,7 @@ Sufficient (but not necessary) conditions:
 			KernelLog.Int( dest, 1 );  KernelLog.Ln;
 		END;
 		SYSTEM.MOVE( src, dest, 2*SIZEOF(ADDRESS) );   (* adr and ptr *)
-		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(ADDRESS) *  GetDim( src ) *2 );   (* lens and increments *)
+		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(LenInc) *  GetDim( src ));   (* lens and increments *)
 	END DescriptorCopy;
 
 	PROCEDURE ZeroCopy*(CONST src: ARRAY [?]; VAR dest: ARRAY [?]);
@@ -9209,8 +9178,7 @@ TYPE
 	END Overlap;
 	*)
 
-	PROCEDURE AllocateTransposed( VAR dest: ADDRESS;  src: ADDRESS;
-												   elementsize: SIZE ): ANY;
+	PROCEDURE AllocateTransposed( VAR dest: ADDRESS;  src: ADDRESS; elementsize: SIZE ): ANY;
 	VAR ptr, data: ANY;  Size: LONGINT;
 		(* allocate a structure in dest compatible with src, if necessary. returns if allocation has taken place *)
 
@@ -9226,14 +9194,6 @@ TYPE
 			END;
 			RETURN TRUE;
 		END TransposedShape;
-
-		PROCEDURE UseDescriptor;
-		VAR tag: LONGINT;
-		BEGIN
-			SYSTEM.GET( src - 4, tag );
-			Heaps.NewRec( ptr, tag, FALSE );
-			dest := SYSTEM.VAL( LONGINT, ptr );
-		END UseDescriptor;
 
 		PROCEDURE NewData;
 		VAR max,dim, len, size: LONGINT;
@@ -9256,18 +9216,17 @@ TYPE
 		IF dest # 0 THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			IF TensorFlag IN GetFlags( src ) THEN UseDescriptor();
-			ELSE ptr := GetArrayDesc( GetDim( src ) );  dest := SYSTEM.VAL( LONGINT, ptr );
-			END;
+			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
 			PutFlags(dest, {TensorFlag});
-			NewData();  RETURN ptr;
+			NewData();  
+			RETURN ptr;
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
 			(* check if re-allocation of descriptor is allowed *)
 			IF ~(TensorFlag IN GetFlags( dest )) &
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			UseDescriptor();
+			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
 			PutFlags(dest, {TensorFlag});
 			NewData();  RETURN ptr;
 		ELSIF (GetAdr( dest ) = 0) OR ~TransposedShape( dest, src ) THEN
@@ -9386,7 +9345,7 @@ TYPE
 
 
 	PROCEDURE DoReshape*( VAR dest: LONGINT;  src: LONGINT; CONST shape: ARRAY [ * ] OF LONGINT );
-	VAR i, Size: LONGINT;  ptr, data: ANY;  new: LONGINT;
+	VAR i, Size: LONGINT;  ptr, data: ANY;  new: ADDRESS;
 
 		oldSize, newSize: LONGINT;  oldDim, newDim: LONGINT;
 
@@ -9394,7 +9353,7 @@ TYPE
 
 		PROCEDURE NewDescriptor;
 		BEGIN
-			ptr := GetArrayDesc( newDim );  new := SYSTEM.VAL( LONGINT, ptr );
+			ptr := GetArrayDesc( newDim );  new := ptr;
 		END NewDescriptor;
 
 		(* 	Added by Alexey
@@ -9467,7 +9426,7 @@ TYPE
 		PROCEDURE NewDescriptorForSameData;
 		VAR len, size, i, j: LONGINT;
 		BEGIN
-			ptr := GetArrayDesc( newDim );  new := SYSTEM.VAL( LONGINT, ptr );
+			ptr := GetArrayDesc( newDim );  new := ptr;
 
 			IF ~squeezingReshape THEN
 				size := Size;
@@ -9612,7 +9571,7 @@ TYPE
 				dest := new;
 			ELSIF ((newDim = oldDim) & ~ShapeDiffers()) THEN
 				(* create a copy of the original descriptor *)
-				ptr := GetArrayDesc(newDim);  dest := SYSTEM.VAL(LONGINT,ptr); CopyDescriptor(src,dest);
+				ptr := GetArrayDesc(newDim);  dest := ptr; CopyDescriptor(src,dest);
 			ELSE
 				Err( "RESHAPE: given RANGE array can not be reshaped!" );
 			END;
@@ -9636,6 +9595,7 @@ TYPE
 		END;
 	END DoReshape;
 
+	(* this is memory safe: the allocation result is written to a pointer in the call chain *)
 	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray );
 	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT;
 
@@ -9649,12 +9609,13 @@ TYPE
 			END;
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-				PutAdr( dest, data );
+				dest.adr := data;
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
-				PutAdr(dest, data + ArrDataArrayOffset); 
+				dest.adr := data + ArrDataArrayOffset;
 			END;
-			PutPtr( dest, data );  PutSize( dest, elementSize );
+			dest.ptr := data;
+			PutSize( dest, elementSize );
 		END NewData;
 
 		PROCEDURE ClearData;
@@ -9667,7 +9628,8 @@ TYPE
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
 			END;
-			descr := GetArrayDesc( LEN( a,0 ) );  dest := descr; 
+			descr := GetArrayDesc( LEN( a,0 ) );  
+			dest := descr;
 			NewData;
 		ELSE
 			i := 0;

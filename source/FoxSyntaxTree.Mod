@@ -1163,7 +1163,7 @@ TYPE
 
 		PROCEDURE & InitMathArrayType(position: Position;scope: Scope; form: LONGINT);
 		BEGIN
-			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SELF.form := form; SELF.scope := scope;
+			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SetForm(form); SELF.scope := scope;
 		END InitMathArrayType;
 
 		PROCEDURE SetForm*(form: LONGINT);
@@ -1277,6 +1277,10 @@ TYPE
 			RETURN result
 		END IsFullyDynamic;
 
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN hasPointers OR arrayBase.resolved.NeedsTrace ();
+		END NeedsTrace;
+		
 		PROCEDURE IsComposite(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;

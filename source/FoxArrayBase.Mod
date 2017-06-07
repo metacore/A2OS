@@ -227,6 +227,12 @@ VAR
 	BEGIN
 		base.adr := value
 	END PutAdr;
+	
+	PROCEDURE Align(value: ADDRESS): ADDRESS;
+	CONST ArrayAlignment = 8;
+	BEGIN RETURN value + (-value) MOD ArrayAlignment;
+	END Align;
+	
 
 	(* get data base pointer (GC protection) *)
 	PROCEDURE GetPtr(base: UnsafeArray): ANY;
@@ -1457,7 +1463,7 @@ Sufficient (but not necessary) conditions:
 				PutInc( dest, dim, size );  size := size * len;
 			END;
 			SYSTEM.NEW( data, size );
-			PutAdr( dest, data);
+			PutAdr( dest, Align(data));
 			PutPtr( dest, data );
 		END NewData;
 
@@ -7973,7 +7979,7 @@ TYPE
 		*)
 		SYSTEM.NEW( p, rows * cols * elementsize );  PutLen( dest, 1, cols );
 		PutLen( dest, 0, rows );  PutInc( dest, 1, elementsize );
-		PutInc( dest, 0, elementsize * cols );  PutAdr( dest, SYSTEM.VAL( LONGINT, p ) );
+		PutInc( dest, 0, elementsize * cols );  PutAdr( dest, Align(p) );
 		PutPtr( dest, p);  RETURN p;
 	END AllocateMatrix;
 
@@ -7981,7 +7987,7 @@ TYPE
 	VAR p: ANY;
 	BEGIN
 		SYSTEM.NEW( p, l0 * elementsize );  PutLen( dest, 0, l0 );
-		PutInc( dest, 0, elementsize );  PutAdr( dest, SYSTEM.VAL( LONGINT, p ) );
+		PutInc( dest, 0, elementsize );  PutAdr( dest, Align(p) );
 		PutPtr( dest, p );  RETURN p;
 	END AllocateVector;
 
@@ -9208,7 +9214,7 @@ TYPE
 				PutInc( dest, dim, size );  size := size * len;
 			END;
 			SYSTEM.NEW( data, size );
-			PutAdr( dest, data );
+			PutAdr( dest, Align(data) );
 			PutPtr( dest, data );
 		END NewData;
 
@@ -9243,8 +9249,8 @@ TYPE
 	END AllocateTransposed;
 
 
-	PROCEDURE Transpose*( dest, left: ADDRESS;  Size: LONGINT );
-	VAR len0, len1, linc0, linc1, dinc0, dinc1, ladr, dadr: LONGINT;  p: ANY;
+	PROCEDURE Transpose*( dest, left: ADDRESS;  Size: SIZE );
+	VAR len0, len1, linc0, linc1, dinc0, dinc1: SIZE; ladr, dadr: ADDRESS;  p: ANY;
 
 		PROCEDURE CopyLoop( src, dest, srcinc, destinc, len: LONGINT );
 		BEGIN
@@ -9264,14 +9270,14 @@ TYPE
 			p := AllocateTransposed(dest,left,Size);
 			IF Overlap( left, dest ) THEN  (* copy data first, then transpose *)
 				SYSTEM.NEW( p, len0 * len1 * Size );  dinc0 := Size;  dinc1 := len0 * Size;
-				dadr := SYSTEM.VAL( LONGINT, p );  linc0 := GetIncr( left, 0 );
+				dadr := Align(p);  linc0 := GetIncr( left, 0 );
 				linc1 := GetIncr( left, 1 );  ladr := GetAdr( left );
 				WHILE (len0 > 0) DO
 					CopyLoop( ladr, dadr, linc1, dinc1, len1 );  INC( ladr, linc0 );
 					INC( dadr, dinc0 );  DEC( len0 );
 				END;
 				len0 := GetLen( left, 0 );  linc0 := Size;  linc1 := len0 * Size;
-				ladr := SYSTEM.VAL( LONGINT, p );
+				ladr := p;
 			ELSE
 				linc0 := GetIncr( left, 0 );  linc1 := GetIncr( left, 1 );  ladr := GetAdr( left );
 			END;
@@ -9344,7 +9350,7 @@ TYPE
 *)
 
 
-	PROCEDURE DoReshape*( VAR dest: LONGINT;  src: LONGINT; CONST shape: ARRAY [ * ] OF LONGINT );
+	PROCEDURE DoReshape*( VAR dest: ADDRESS;  src: LONGINT; CONST shape: ARRAY [ * ] OF LONGINT );
 	VAR i, Size: LONGINT;  ptr, data: ANY;  new: ADDRESS;
 
 		oldSize, newSize: LONGINT;  oldDim, newDim: LONGINT;
@@ -9463,7 +9469,7 @@ TYPE
 				size := size * len;
 			END;
 			SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-			PutAdr( new, data );
+			PutAdr( new, Align(data) );
 			PutPtr( new, data );  PutDim( new, newDim );
 			PutSize( new, Size );
 		END NewData;
@@ -9609,7 +9615,7 @@ TYPE
 			END;
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-				dest.adr := data;
+				dest.adr := Align(data);
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
 				dest.adr := data + ArrDataArrayOffset;
@@ -9666,7 +9672,7 @@ TYPE
 			END;
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
-				PutAdr( dest, data );
+				PutAdr( dest, Align(data) );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
 				PutAdr( dest, data+ ArrDataArrayOffset );
@@ -9765,7 +9771,7 @@ TYPE
 			FOR i := ldim + rdim - 1 TO 0 BY -1 DO
 				PutInc( dest, i, size );  size := size * GetLen( dest, i );
 			END;
-			PutAdr( dest, data );
+			PutAdr( dest, Align(data) );
 			PutPtr( dest, data );
 		END NewData;
 
@@ -9986,7 +9992,7 @@ TYPE
 	*)
 	PROCEDURE Reshape*(CONST left: ARRAY [?]; CONST right: ARRAY [*] OF LONGINT): ARRAY [?];
 	BEGIN
-		DoReshape(SYSTEM.VAL(LONGINT,RESULT), SYSTEM.VAL(LONGINT,left), right);
+		DoReshape(SYSTEM.VAL(ADDRESS,RESULT), SYSTEM.VAL(ADDRESS,left), right);
 		RETURN RESULT
 	END Reshape;
 

@@ -188,7 +188,7 @@ CONST
 VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
-	A2Name-,OberonName-,ArrayBaseName-,RecordBodyName-,ModuleBodyName-,
+	A2Name-,OberonName-,ArrayBaseName-, ComplexNumbersName-, RecordBodyName-,ModuleBodyName-,
 	NameWinAPI-,NameC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
@@ -1687,6 +1687,7 @@ TYPE
 		A2Name := SyntaxTree.NewIdentifier("A2");
 		OberonName := SyntaxTree.NewIdentifier("Oberon");
 		ArrayBaseName := SyntaxTree.NewIdentifier("FoxArrayBase");
+		ComplexNumbersName := SyntaxTree.NewIdentifier("ComplexNumbers");
 		RecordBodyName := SyntaxTree.NewIdentifier("@Body");
 		ModuleBodyName := SyntaxTree.NewIdentifier("@Body");
 

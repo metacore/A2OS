@@ -272,7 +272,7 @@ VAR
 	END PutFlags;
 
 (* report geometry of array passed via address s *)
-	PROCEDURE Report(CONST name: ARRAY OF CHAR;  s: LONGINT );
+	PROCEDURE Report(CONST name: ARRAY OF CHAR;  s: ADDRESS );
 	VAR i: LONGINT;  dim: LONGINT;
 
 		PROCEDURE Set( s: SET );
@@ -311,7 +311,7 @@ VAR
 		END;
 	END Report;
 
-	PROCEDURE GetArrayDesc( dim: LONGINT ): ANY;
+	PROCEDURE GetArrayDesc( dim: LONGINT ): Tensor;
 	VAR (* t: TensorType;  *) ptr: Tensor;
 		p0: T0;
 		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8; 
@@ -1444,7 +1444,7 @@ Sufficient (but not necessary) conditions:
 		BEGIN
 			SYSTEM.GET( src - 4, tag );
 			Heaps.NewRec( ptr, tag, FALSE );
-			dest := SYSTEM.VAL( LONGINT, ptr );
+			dest := ptr;
 		END UseDescriptor;
 
 		PROCEDURE NewData;
@@ -1463,11 +1463,11 @@ Sufficient (but not necessary) conditions:
 		END NewData;
 
 	BEGIN
-		IF dest # 0 THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
+		IF dest # NIL THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
-		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
+		IF dest = NIL THEN  (* NIL pointer, guaranteed to be tensor *)
 			IF TensorFlag IN GetFlags( src ) THEN UseDescriptor();
-			ELSE ptr := GetArrayDesc( GetDim( src ) );  dest := SYSTEM.VAL( LONGINT, ptr );
+			ELSE ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
 			END;
 			PutFlags(dest, {TensorFlag});
 			NewData();  RETURN ptr;
@@ -1633,7 +1633,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "ALIAS";
 
-	PROCEDURE SameShape( l, r: LONGINT ): BOOLEAN;
+	PROCEDURE SameShape( l, r: ADDRESS ): BOOLEAN;
 	VAR dim: LONGINT;
 	BEGIN
 		dim := GetDim( l );
@@ -9553,7 +9553,7 @@ TYPE
 	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT;
 
 		PROCEDURE NewData;
-		VAR len, size, i: LONGINT;
+		VAR len, size, i: SIZE;
 		BEGIN
 			size := elementSize;
 			FOR i := dim - 1 TO 0 BY -1 DO
@@ -9565,8 +9565,7 @@ TYPE
 				PutAdr( dest, data );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
-				dest.adr := data;
-				INC(dest.adr, ArrDataArrayOffset);
+				PutAdr(dest, data + ArrDataArrayOffset); 
 			END;
 			PutPtr( dest, data );  PutSize( dest, elementSize );
 		END NewData;
@@ -9581,7 +9580,7 @@ TYPE
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
 			END;
-			descr := GetArrayDesc( LEN( a,0 ) );  dest := SYSTEM.VAL( LONGINT, descr );
+			descr := GetArrayDesc( LEN( a,0 ) );  dest := descr; 
 			NewData;
 		ELSE
 			i := 0;
@@ -9602,11 +9601,11 @@ TYPE
 		AllocateTensorA(a,elementSize,tag,dest);
 	END AllocateArrayA;
 
-	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF LONGINT;  Size: LONGINT; tag: LONGINT );
-	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT; dest: ADDRESS;
+	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF LONGINT;  Size: SIZE; tag: ADDRESS );
+	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: SIZE; dest: ADDRESS;
 
 		PROCEDURE NewData;
-		VAR len, size, i: LONGINT;
+		VAR len, size: SIZE; i: LONGINT;
 		BEGIN
 			size := Size;
 			FOR i := dim - 1 TO 0 BY -1 DO
@@ -9640,7 +9639,7 @@ TYPE
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
 			END;
-			descr := GetArrayDesc( LEN( a,0 ) );  dest := SYSTEM.VAL( LONGINT, descr );
+			descr := GetArrayDesc( LEN( a,0 ) );  dest := descr;
 			NewData;
 		ELSE
 			i := 0;
@@ -9657,7 +9656,7 @@ TYPE
 		SYSTEM.PUT(ADDRESSOF(destA),dest);
 	END AllocateTensorX;
 
-	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: ADDRESS );
+	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );
 	VAR dim, i: LONGINT;
 	BEGIN
 		dim := GetDim( src );
@@ -9665,16 +9664,16 @@ TYPE
 		FOR i := 0 TO dim - 1 DO dest[i] := GetLen( src, i );  END;
 	END LenA;
 
-	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: ADDRESS );
-	VAR dim, i, len: LONGINT;
+	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );
+	VAR dim, len: SIZE; i: LONGINT;
 	BEGIN
 		dim := GetDim( src );  len := LEN( dest, 0 );
 		IF len # dim THEN NEW( dest, dim );  END;
 		FOR i := 0 TO dim - 1 DO dest[i] := GetIncr( src, i );  END;
 	END IncrA;
 
-	PROCEDURE Len*(src: ADDRESS; d: LONGINT): LONGINT;
-	VAR dim: LONGINT;
+	PROCEDURE Len*(src: ADDRESS; d: SIZE): SIZE;
+	VAR dim: SIZE;
 	BEGIN
 		dim := GetDim(src);
 		IF (d<0) OR (d>=dim) THEN HALT(100)
@@ -9683,8 +9682,8 @@ TYPE
 		END;
 	END Len;
 
-	PROCEDURE Incr*(src: ADDRESS; d: LONGINT): LONGINT;
-	VAR dim: LONGINT;
+	PROCEDURE Incr*(src: ADDRESS; d: SIZE): SIZE;
+	VAR dim: SIZE;
 	BEGIN
 		dim := GetDim(src);
 		IF (d<0) OR (d>=dim) THEN HALT(100)
@@ -9695,11 +9694,11 @@ TYPE
 
 
 	PROCEDURE AllocateTensor( VAR dest: ADDRESS;  left, right: ADDRESS;
-												    Size: LONGINT ): ANY;
-	VAR ldim, rdim: LONGINT;  ptr, data: ANY;
+												    Size: SIZE ): ANY;
+	VAR ldim, rdim: SIZE;  ptr, data: ANY;
 
 		PROCEDURE NewData;
-		VAR len, size, i: LONGINT;
+		VAR len, size, i: SIZE;
 		BEGIN
 			size := 1;
 			FOR i := 0 TO ldim - 1 DO
@@ -9724,14 +9723,14 @@ TYPE
 	BEGIN
 		ldim := GetDim( left );  rdim := GetDim( right );
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			ptr := GetArrayDesc( ldim + rdim );  dest := SYSTEM.VAL( LONGINT, ptr );
+			ptr := GetArrayDesc( ldim + rdim );  dest := ptr;
 			NewData();  RETURN ptr;
 		ELSIF (ldim + rdim # GetDim( dest )) THEN
 			IF ~(TensorFlag IN GetFlags( dest )) &
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			ptr := GetArrayDesc( ldim + rdim );  dest := SYSTEM.VAL( LONGINT, ptr );
+			ptr := GetArrayDesc( ldim + rdim );  dest := ptr;
 			NewData();  RETURN ptr;
 		ELSIF ~CheckTensorGeometry( left, right, dest, ldim, rdim ) THEN  (* dimension matches but not geometry *)
 			IF RangeFlag IN GetFlags( dest ) THEN  (* no! not allowed *)
@@ -9744,7 +9743,7 @@ TYPE
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for two arrays simultaneously. d is dimension applying to the resulting loop *)
 	PROCEDURE FindPatternTensor( left, right: ADDRESS;
-														 VAR rdim, len, linc, ri: LONGINT );
+														 VAR rdim, len, linc, ri: SIZE );
 	(* geometric precondition: lengths must coincide *)
 	VAR ldim: LONGINT;
 	BEGIN
@@ -10023,101 +10022,6 @@ TYPE
 		RETURN result
 	END "LEN";
 
-	(* complex numbers *)
-
-	OPERATOR "+"*(CONST left, right: COMPLEX): COMPLEX;
-	VAR result: COMPLEX;
-	BEGIN
-		RE(result) := RE(left) + RE(right);
-		IM(result) := IM(left) + IM(right);
-		RETURN result
-	END "+";
-
-	OPERATOR "+"*(CONST left, right: LONGCOMPLEX): LONGCOMPLEX;
-	VAR result: LONGCOMPLEX;
-	BEGIN
-		RE(result) := RE(left) + RE(right);
-		IM(result) := IM(left) + IM(right);
-		RETURN result
-	END "+";
-
-	OPERATOR "-"*(CONST left, right: COMPLEX): COMPLEX;
-	VAR result: COMPLEX;
-	BEGIN
-		RE(result) := RE(left) - RE(right);
-		IM(result) := IM(left) - IM(right);
-		RETURN result
-	END "-";
-
-	OPERATOR "-"*(CONST left, right: LONGCOMPLEX): LONGCOMPLEX;
-	VAR result: LONGCOMPLEX;
-	BEGIN
-		RE(result) := RE(left) - RE(right);
-		IM(result) := IM(left) - IM(right);
-		RETURN result
-	END "-";
-
-	OPERATOR "*"*(CONST left, right: COMPLEX): COMPLEX;
-	VAR result: COMPLEX;
-	BEGIN
-		RE(result) := RE(left) * RE(right) - IM(left) * IM(right);
-		IM(result) := RE(left) * IM(right) + IM(left) * RE(right);
-		RETURN result
-	END "*";
-
-	OPERATOR "*"*(CONST left, right: LONGCOMPLEX): LONGCOMPLEX;
-	VAR result: LONGCOMPLEX;
-	BEGIN
-		RE(result) := RE(left) * RE(right) - IM(left) * IM(right);
-		IM(result) := RE(left) * IM(right) + IM(left) * RE(right);
-		RETURN result
-	END "*";
-
-	OPERATOR "/"*(CONST left, right: COMPLEX): COMPLEX;
-	VAR result: COMPLEX; iDivisor: REAL;
-	BEGIN
-		iDivisor := 1.0 / (RE(right) * RE(right) + IM(right) * IM(right));
-		RE(result) := (RE(left) * RE(right) + IM(left) * IM(right)) * iDivisor;
-		IM(result) := (IM(left) * RE(right) - RE(left) * IM(right)) * iDivisor;
-		RETURN result
-	END "/";
-
-	OPERATOR "/"*(CONST left, right: LONGCOMPLEX): LONGCOMPLEX;
-	VAR result: LONGCOMPLEX; iDivisor: LONGREAL;
-	BEGIN
-		iDivisor := 1.0D0 / (RE(right) * RE(right) + IM(right) * IM(right));
-		RE(result) := (RE(left) * RE(right) + IM(left) * IM(right)) * iDivisor;
-		IM(result) := (IM(left) * RE(right) - RE(left) * IM(right)) * iDivisor;
-		RETURN result
-	END "/";
-
-	OPERATOR "ABS"*(CONST arg: COMPLEX): REAL;
-	BEGIN RETURN Math.sqrt(RE(arg) * RE(arg) + IM(arg) * IM(arg))
-	END "ABS";
-
-	OPERATOR "ABS"*(CONST arg: LONGCOMPLEX): LONGREAL;
-	BEGIN RETURN MathL.sqrt(RE(arg) * RE(arg) + IM(arg) * IM(arg))
-	END "ABS";
-
-	OPERATOR "~"*(CONST left: COMPLEX): COMPLEX;
-	BEGIN
-		RETURN RE(left) - IM(left) * IMAG
-	END "~";
-
-	OPERATOR "~"*(CONST left: LONGCOMPLEX): LONGCOMPLEX;
-	BEGIN
-		RETURN RE(left) - IM(left) * IMAG
-	END "~";
-
-	OPERATOR "<="*(CONST x, y: COMPLEX): BOOLEAN; BEGIN RETURN ABS(x) <= ABS(y); END "<=";
-	OPERATOR ">="*(CONST x, y: COMPLEX): BOOLEAN; BEGIN RETURN ABS(x) >= ABS(y); END ">=";
-	OPERATOR "<"*(CONST x, y: COMPLEX): BOOLEAN; BEGIN RETURN ABS(x) < ABS(y); END "<";
-	OPERATOR ">"*(CONST x, y: COMPLEX): BOOLEAN; BEGIN RETURN ABS(x) > ABS(y); END ">";
-
-	OPERATOR "<="*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) <= ABS(y); END "<=";
-	OPERATOR ">="*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) >= ABS(y); END ">=";
-	OPERATOR "<"*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) < ABS(y); END "<";
-	OPERATOR ">"*(CONST x, y: LONGCOMPLEX): BOOLEAN; BEGIN RETURN ABS(x) > ABS(y); END ">";
 	
 	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SHORTINT; op: PROCEDURE(x: SHORTINT): SHORTINT): ARRAY[?] OF SHORTINT; (*should also accept operator ?*)
 	BEGIN

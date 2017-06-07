@@ -83,6 +83,7 @@ TYPE
 		typeFixes, pointerFixes: LateFixList;
 		importCache-: SyntaxTree.ModuleScope; (* contains global imports, did not take ImportList as it was much slower, for whatever reasons *)
 		arrayBaseImported: BOOLEAN;
+		complexNumbersImported: BOOLEAN;
 		phase: LONGINT;
 		system-: Global.System;
 		symbolFileFormat-: Formats.SymbolFileFormat;
@@ -127,6 +128,7 @@ TYPE
 			IF importCache = NIL THEN importCache := SyntaxTree.NewModuleScope() END;
 			SELF.importCache := importCache;
 			arrayBaseImported := FALSE;
+			complexNumbersImported := FALSE;
 			SELF.VerboseErrorMessage := verboseErrorMessage;
 			global := NIL;
 			phase := UndefinedPhase;
@@ -2807,13 +2809,19 @@ TYPE
 					END
 				END;
 			ELSE
+				IF ~complexNumbersImported THEN
+					IF (leftExpression # NIL) & IsComplexType(leftExpression.type) 
+						OR (rightExpression # NIL) & IsComplexType(rightExpression.type)
+					THEN
+						(* operators on complex numbers *)
+						ImportModule(Global.ComplexNumbersName,position);
+						complexNumbersImported := TRUE;
+					END;
+				END;
+				
 				(* import OCArrayBase if needed *)
 				IF ~arrayBaseImported THEN
-					IF (leftExpression # NIL) & IsComplexType(leftExpression.type) THEN
-						(* operators on complex numbers *)
-						ImportModule(Global.ArrayBaseName,position);
-						arrayBaseImported := TRUE;
-					ELSIF (leftExpression # NIL) & IsMathArrayType(leftExpression.type) OR (rightExpression # NIL) & IsMathArrayType(rightExpression.type) THEN
+					IF (leftExpression # NIL) & IsMathArrayType(leftExpression.type) OR (rightExpression # NIL) & IsMathArrayType(rightExpression.type) THEN
 						IF op = Global.Dim THEN
 							(* not existing in OCArrayBase *)
 						ELSIF (op = Global.Len) & (rightExpression # NIL) THEN
@@ -7097,7 +7105,7 @@ TYPE
 						END;
 
 						(* check whether at least one of the operand types is declared in the current module (this check is skipped for the module FoxArrayBase) *)
-						IF currentScope.ownerModule.name # Global.ArrayBaseName THEN
+						IF (currentScope.ownerModule.name # Global.ArrayBaseName) & (currentScope.ownerModule.name # Global.ComplexNumbersName) THEN
 							IF ~(IsLocallyDefined(leftType) OR IsLocallyDefined(rightType)) THEN
 								Error(operator.position, "none of the operands is declared in the same module")
 							END

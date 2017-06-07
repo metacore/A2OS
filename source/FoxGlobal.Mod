@@ -905,6 +905,9 @@ TYPE
 		NewBuiltin(Send,"SEND",system.globalScope,FALSE);
 		NewBuiltin(Delegate,"DELEGATE",system.globalScope,FALSE);
 
+		NewBuiltin(IncMul,"INCMUL",system.globalScope,TRUE);
+		NewBuiltin(DecMul,"DECMUL",system.globalScope,TRUE);
+
 
 		(*!
 
@@ -1649,6 +1652,8 @@ TYPE
 		NewBuiltinIdentifier(All,"ALL");
 		NewBuiltinIdentifier(Re,"RE");
 		NewBuiltinIdentifier(Im,"IM");
+		NewBuiltinIdentifier(IncMul,"INCMUL");
+		NewBuiltinIdentifier(DecMul,"DECMUL");
 
 
 		(* TODO: check if ok. The operators defined in FoxArrayBase require the following identifiers *)
@@ -1663,10 +1668,6 @@ TYPE
 		identifiers[Scanner.Uppercase, AtMulDec] := SyntaxTree.NewIdentifier("@MulDec");
 		identifiers[Scanner.Lowercase, AtMulInc] := SyntaxTree.NewIdentifier("@MulInc");
 		identifiers[Scanner.Uppercase, AtMulInc] := SyntaxTree.NewIdentifier("@MulInc");
-		identifiers[Scanner.Lowercase, DecMul] := SyntaxTree.NewIdentifier("DecMul");
-		identifiers[Scanner.Uppercase, DecMul] := SyntaxTree.NewIdentifier("DecMul");
-		identifiers[Scanner.Lowercase, IncMul] := SyntaxTree.NewIdentifier("IncMul");
-		identifiers[Scanner.Uppercase, IncMul] := SyntaxTree.NewIdentifier("IncMul");
 
 		identifiers[Scanner.Lowercase,Conversion] := SyntaxTree.NewIdentifier("@Convert");
 		identifiers[Scanner.Uppercase,Conversion] := SyntaxTree.NewIdentifier("@Convert");

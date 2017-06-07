@@ -3231,37 +3231,37 @@ Sufficient (but not necessary) conditions:
 		END;
 	END IncMulASSSLoop;
 
-	OPERATOR "IncMul"*(CONST left: ARRAY [ ? ] OF SHORTINT; right: SHORTINT ): ARRAY [ ? ] OF SHORTINT;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ ? ] OF SHORTINT; right: SHORTINT ): ARRAY [ ? ] OF SHORTINT;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( SHORTINT ), IncMulASSSLoop );
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "IncMul"*(left: SHORTINT; CONST right: ARRAY [ ? ] OF SHORTINT): ARRAY [ ? ] OF SHORTINT;
+	OPERATOR "INCMUL"*(left: SHORTINT; CONST right: ARRAY [ ? ] OF SHORTINT): ARRAY [ ? ] OF SHORTINT;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( SHORTINT ), IncMulASSSLoop );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
 
-	OPERATOR "DecMul"*(CONST left: ARRAY [ ? ] OF SHORTINT; right: SHORTINT ): ARRAY [ ? ] OF SHORTINT;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ ? ] OF SHORTINT; right: SHORTINT ): ARRAY [ ? ] OF SHORTINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( SHORTINT ), IncMulASSSLoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
-	OPERATOR "DecMul"*(left: SHORTINT; CONST right: ARRAY [ ? ] OF SHORTINT): ARRAY [ ? ] OF SHORTINT;
+	OPERATOR "DECMUL"*(left: SHORTINT; CONST right: ARRAY [ ? ] OF SHORTINT): ARRAY [ ? ] OF SHORTINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( SHORTINT ), IncMulASSSLoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
 
 
@@ -3276,37 +3276,37 @@ Sufficient (but not necessary) conditions:
 		END;
 	END IncMulAISILoop;
 
-	OPERATOR "IncMul"*(CONST left: ARRAY [ ? ] OF INTEGER; right: INTEGER ): ARRAY [ ? ] OF INTEGER;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ ? ] OF INTEGER; right: INTEGER ): ARRAY [ ? ] OF INTEGER;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( INTEGER ), IncMulAISILoop );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "IncMul"*(left: INTEGER; CONST right: ARRAY [ ? ] OF INTEGER): ARRAY [ ? ] OF INTEGER;
+	OPERATOR "INCMUL"*(left: INTEGER; CONST right: ARRAY [ ? ] OF INTEGER): ARRAY [ ? ] OF INTEGER;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( INTEGER ), IncMulAISILoop );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "DecMul"*(CONST left: ARRAY [ ? ] OF INTEGER; right: INTEGER ): ARRAY [ ? ] OF INTEGER;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ ? ] OF INTEGER; right: INTEGER ): ARRAY [ ? ] OF INTEGER;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( INTEGER ), IncMulAISILoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
-	OPERATOR "DecMul"*(left: INTEGER; CONST right: ARRAY [ ? ] OF INTEGER): ARRAY [ ? ] OF INTEGER;
+	OPERATOR "DECMUL"*(left: INTEGER; CONST right: ARRAY [ ? ] OF INTEGER): ARRAY [ ? ] OF INTEGER;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( INTEGER ), IncMulAISILoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
 (** LONGINT *)
 	PROCEDURE IncMulALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
@@ -3319,38 +3319,38 @@ Sufficient (but not necessary) conditions:
 		END;
 	END IncMulALSLLoop;
 
-	OPERATOR "IncMul"*(CONST left: ARRAY [ ? ] OF LONGINT; right: LONGINT ): ARRAY [ ? ] OF LONGINT;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ ? ] OF LONGINT; right: LONGINT ): ARRAY [ ? ] OF LONGINT;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( LONGINT ), IncMulALSLLoop );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "IncMul"*(left: LONGINT; CONST right: ARRAY [ ? ] OF LONGINT): ARRAY [ ? ] OF LONGINT;
+	OPERATOR "INCMUL"*(left: LONGINT; CONST right: ARRAY [ ? ] OF LONGINT): ARRAY [ ? ] OF LONGINT;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( LONGINT ), IncMulALSLLoop );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
 
-	OPERATOR "DecMul"*(CONST left: ARRAY [ ? ] OF LONGINT; right: LONGINT ): ARRAY [ ? ] OF LONGINT;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ ? ] OF LONGINT; right: LONGINT ): ARRAY [ ? ] OF LONGINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( LONGINT ), IncMulALSLLoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
-	OPERATOR "DecMul"*(left: LONGINT; CONST right: ARRAY [ ? ] OF LONGINT): ARRAY [ ? ] OF LONGINT;
+	OPERATOR "DECMUL"*(left: LONGINT; CONST right: ARRAY [ ? ] OF LONGINT): ARRAY [ ? ] OF LONGINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( LONGINT ), IncMulALSLLoop );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
 (** REAL *)
 	PROCEDURE IncMulARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
@@ -3363,37 +3363,37 @@ Sufficient (but not necessary) conditions:
 		END;
 	END IncMulARSRLoop;
 
-	OPERATOR "IncMul"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY [ ? ] OF REAL;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY [ ? ] OF REAL;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
 										  loopIncMulARSR );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "IncMul"*(left: REAL; CONST right: ARRAY [ ? ] OF REAL): ARRAY [ ? ] OF REAL;
+	OPERATOR "INCMUL"*(left: REAL; CONST right: ARRAY [ ? ] OF REAL): ARRAY [ ? ] OF REAL;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
 										  loopIncMulARSR );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "DecMul"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY [ ? ] OF REAL;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY [ ? ] OF REAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
 										  loopIncMulARSR );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
-	OPERATOR "DecMul"*(left: REAL; CONST right: ARRAY [ ? ] OF REAL): ARRAY [ ? ] OF REAL;
+	OPERATOR "DECMUL"*(left: REAL; CONST right: ARRAY [ ? ] OF REAL): ARRAY [ ? ] OF REAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
 										  loopIncMulARSR );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
 (** LONGREAL *)
 	PROCEDURE IncMulAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
@@ -3412,37 +3412,37 @@ Sufficient (but not necessary) conditions:
 		END;
 	END IncMulAXSXLoop;
 
-	OPERATOR "IncMul"*(CONST left: ARRAY [ ? ] OF LONGREAL; right: LONGREAL ): ARRAY [ ? ] OF LONGREAL;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ ? ] OF LONGREAL; right: LONGREAL ): ARRAY [ ? ] OF LONGREAL;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( LONGREAL ), loopIncMulAXSX );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "IncMul"*(left: LONGREAL; CONST right: ARRAY [ ? ] OF LONGREAL): ARRAY [ ? ] OF LONGREAL;
+	OPERATOR "INCMUL"*(left: LONGREAL; CONST right: ARRAY [ ? ] OF LONGREAL): ARRAY [ ? ] OF LONGREAL;
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( LONGREAL ), loopIncMulAXSX );
 		RETURN RESULT
-	END "IncMul";
+	END "INCMUL";
 
-	OPERATOR "DecMul"*(CONST left: ARRAY [ ? ] OF LONGREAL; right: LONGREAL ): ARRAY [ ? ] OF LONGREAL;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ ? ] OF LONGREAL; right: LONGREAL ): ARRAY [ ? ] OF LONGREAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 										  SIZEOF( LONGREAL ), loopIncMulAXSX );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
-	OPERATOR "DecMul"*(left: LONGREAL; CONST right: ARRAY [ ? ] OF LONGREAL): ARRAY [ ? ] OF LONGREAL;
+	OPERATOR "DECMUL"*(left: LONGREAL; CONST right: ARRAY [ ? ] OF LONGREAL): ARRAY [ ? ] OF LONGREAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( LONGREAL ), loopIncMulAXSX );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "DecMul";
+	END "DECMUL";
 
 	(*** element-wise division array / array -> array  ********************************************************************)
 
@@ -8738,39 +8738,39 @@ TYPE
 		SYSTEM.PUT( dadr, dval );
 	END MatMulIncASASLoop;
 
-	OPERATOR "@MulInc"*(CONST left, right: ARRAY [ * , * ] OF SHORTINT ): ARRAY [ * , * ] OF SHORTINT;
+	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF SHORTINT ): ARRAY [ * , * ] OF SHORTINT;
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*(CONST left: ARRAY [ * , * ] OF SHORTINT;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF SHORTINT;
 															  CONST right: ARRAY [ * ] OF SHORTINT  ): ARRAY [ * ] OF SHORTINT;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*( CONST left: ARRAY [ * ] OF SHORTINT;
+	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF SHORTINT;
 															  CONST right: ARRAY [ * , * ] OF SHORTINT  ): ARRAY [ * ] OF SHORTINT;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulDec"*(CONST left, right: ARRAY [ * , * ] OF SHORTINT  ): ARRAY [ * , * ] OF SHORTINT;
+	OPERATOR "DECMUL"*(CONST left, right: ARRAY [ * , * ] OF SHORTINT  ): ARRAY [ * , * ] OF SHORTINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*(CONST left: ARRAY [ * , * ] OF SHORTINT;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ * , * ] OF SHORTINT;
 															  CONST right: ARRAY [ * ] OF SHORTINT  ): ARRAY [ * ] OF SHORTINT;
 	BEGIN
 		RESULT := -RESULT;
@@ -8778,9 +8778,9 @@ TYPE
 											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * ] OF SHORTINT;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * ] OF SHORTINT;
 															  CONST right: ARRAY [ * , * ] OF SHORTINT ): ARRAY [ * ] OF SHORTINT;
 	BEGIN
 		RESULT := -RESULT;
@@ -8788,7 +8788,7 @@ TYPE
 											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
 (** INTEGER *)
 	PROCEDURE MatMulIncAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
@@ -8802,53 +8802,53 @@ TYPE
 		SYSTEM.PUT( dadr, dval );
 	END MatMulIncAIAILoop;
 
-	OPERATOR "@MulInc"*(CONST left, right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * , * ] OF INTEGER;
+	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * , * ] OF INTEGER;
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*(CONST left: ARRAY [ * , * ] OF INTEGER; CONST right: ARRAY [ * ] OF INTEGER): ARRAY [ * ] OF INTEGER;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF INTEGER; CONST right: ARRAY [ * ] OF INTEGER): ARRAY [ * ] OF INTEGER;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*( CONST left: ARRAY [ * ] OF INTEGER; CONST right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * ] OF INTEGER;
+	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF INTEGER; CONST right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * ] OF INTEGER;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulDec"*(CONST left, right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * , * ] OF INTEGER;
+	OPERATOR "DECMUL"*(CONST left, right: ARRAY [ * , * ] OF INTEGER ): ARRAY [ * , * ] OF INTEGER;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * , * ] OF INTEGER; CONST right: ARRAY [ * ] OF INTEGER ): ARRAY [ * ] OF INTEGER;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * , * ] OF INTEGER; CONST right: ARRAY [ * ] OF INTEGER ): ARRAY [ * ] OF INTEGER;
 		BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * ] OF INTEGER; CONST right: ARRAY [ * , * ] OF INTEGER  ): ARRAY [ * ] OF INTEGER;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * ] OF INTEGER; CONST right: ARRAY [ * , * ] OF INTEGER  ): ARRAY [ * ] OF INTEGER;
 		BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
 (** LONGINT *)
 	PROCEDURE MatMulIncALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
@@ -8862,53 +8862,53 @@ TYPE
 		SYSTEM.PUT( dadr, dval );
 	END MatMulIncALALLoop;
 
-	OPERATOR "@MulInc"*(CONST left, right: ARRAY [ * , * ] OF LONGINT ): ARRAY [ * , * ] OF LONGINT;
+	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF LONGINT ): ARRAY [ * , * ] OF LONGINT;
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*(CONST left: ARRAY [ * , * ] OF LONGINT; CONST right: ARRAY [ * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF LONGINT; CONST right: ARRAY [ * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*( CONST left: ARRAY [ * ] OF LONGINT; CONST right: ARRAY [ * , * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
+	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF LONGINT; CONST right: ARRAY [ * , * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulDec"*( CONST left, right: ARRAY [ * , * ] OF LONGINT  ): ARRAY [ * , * ] OF LONGINT;
+	OPERATOR "DECMUL"*( CONST left, right: ARRAY [ * , * ] OF LONGINT  ): ARRAY [ * , * ] OF LONGINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*(CONST left: ARRAY [ * , * ] OF LONGINT; CONST right: ARRAY [ * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ * , * ] OF LONGINT; CONST right: ARRAY [ * ] OF LONGINT ): ARRAY [ * ] OF LONGINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*(CONST left: ARRAY [ * ] OF LONGINT; CONST right: ARRAY [ * , * ] OF LONGINT  ): ARRAY [ * ] OF LONGINT;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ * ] OF LONGINT; CONST right: ARRAY [ * , * ] OF LONGINT  ): ARRAY [ * ] OF LONGINT;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
 	(** REAL *)
 	PROCEDURE MatMulIncARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
@@ -8922,53 +8922,53 @@ TYPE
 		SYSTEM.PUT( dadr, dval );
 	END MatMulIncARARLoop;
 
-	OPERATOR "@MulInc"*(CONST left, right: ARRAY [ * , * ] OF REAL ): ARRAY [ * , * ] OF REAL;
+	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF REAL ): ARRAY [ * , * ] OF REAL;
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
 									    loopMatMulIncARAR, matMulIncR );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*(CONST left: ARRAY [ * , * ] OF REAL;CONST right: ARRAY [ * ] OF REAL ): ARRAY [ * ] OF REAL;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF REAL;CONST right: ARRAY [ * ] OF REAL ): ARRAY [ * ] OF REAL;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*( CONST left: ARRAY [ * ] OF REAL; CONST right: ARRAY [ * , * ] OF REAL ): ARRAY [ * ] OF REAL;
+	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF REAL; CONST right: ARRAY [ * , * ] OF REAL ): ARRAY [ * ] OF REAL;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulDec"*(CONST left, right: ARRAY [ * , * ] OF REAL ): ARRAY [ * , * ] OF REAL;
+	OPERATOR "DECMUL"*(CONST left, right: ARRAY [ * , * ] OF REAL ): ARRAY [ * , * ] OF REAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
 									    loopMatMulIncARAR, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * , * ] OF REAL; CONST right: ARRAY [ * ] OF REAL ): ARRAY [ * ] OF REAL;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * , * ] OF REAL; CONST right: ARRAY [ * ] OF REAL ): ARRAY [ * ] OF REAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*(CONST left: ARRAY [ * ] OF REAL; CONST right: ARRAY [ * , * ] OF REAL ): ARRAY [ * ] OF REAL;
+	OPERATOR "DECMUL"*(CONST left: ARRAY [ * ] OF REAL; CONST right: ARRAY [ * , * ] OF REAL ): ARRAY [ * ] OF REAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 (** LONGREAL *)
 
 	PROCEDURE MatMulIncAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
@@ -8982,54 +8982,54 @@ TYPE
 		SYSTEM.PUT( dadr, dval );
 	END MatMulIncAXAXLoop;
 
-	OPERATOR "@MulInc"*(CONST left, right: ARRAY [ * , * ] OF LONGREAL  ): ARRAY [ * , * ] OF LONGREAL;
+	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF LONGREAL  ): ARRAY [ * , * ] OF LONGREAL;
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*(CONST left: ARRAY [ * , * ] OF LONGREAL; CONST right: ARRAY [ * ] OF LONGREAL  ): ARRAY [ * ] OF LONGREAL;
+	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF LONGREAL; CONST right: ARRAY [ * ] OF LONGREAL  ): ARRAY [ * ] OF LONGREAL;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
-	OPERATOR "@MulInc"*( CONST left: ARRAY [ * ] OF LONGREAL; CONST right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
+	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF LONGREAL; CONST right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RETURN RESULT
-	END "@MulInc";
+	END "INCMUL";
 
 
-	OPERATOR "@MulDec"*(CONST left, right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * , * ] OF LONGREAL;
+	OPERATOR "DECMUL"*(CONST left, right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * , * ] OF LONGREAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 									    SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * , * ] OF LONGREAL; CONST right: ARRAY [ * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * , * ] OF LONGREAL; CONST right: ARRAY [ * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
-	OPERATOR "@MulDec"*( CONST left: ARRAY [ * ] OF LONGREAL; CONST right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
+	OPERATOR "DECMUL"*( CONST left: ARRAY [ * ] OF LONGREAL; CONST right: ARRAY [ * , * ] OF LONGREAL ): ARRAY [ * ] OF LONGREAL;
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
 											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
-	END "@MulDec";
+	END "DECMUL";
 
 (*** Cross product ********************************************************************)
 
@@ -9104,10 +9104,12 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
-			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( LONGREAL ),
-									    loopMatMulAXAX, matMulX );
+		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
+			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
 		ELSE HALT(200);
 		END;
+		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( LONGREAL ),
+									    loopMatMulAXAX, matMulX );
 		RETURN RESULT
 	END "*";
 
@@ -9115,10 +9117,13 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
-			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( REAL ),
-									    loopMatMulARAR, matMulR );
+		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
+			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
 		ELSE HALT(200);
 		END;
+
+		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( REAL ),
+									    loopMatMulARAR, matMulR );
 		RETURN RESULT
 	END "*";
 
@@ -9126,10 +9131,12 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
-			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( LONGINT ),
-									    MatMulALALLoop, NIL );
+		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
+			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
 		ELSE HALT(200);
 		END;
+		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( LONGINT ),
+									    MatMulALALLoop, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9138,10 +9145,12 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
-			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( INTEGER ),
-									    MatMulAIAILoop,NIL );
+		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
+			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
 		ELSE HALT(200);
 		END;
+		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( INTEGER ),
+									    MatMulAIAILoop,NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9149,10 +9158,12 @@ TYPE
 	BEGIN
 		IF (DIM(left) = 2) & (DIM(right)=2) THEN
 			EnsureArrayDesc(2, SYSTEM.VAL(Tensor, RESULT));
-			ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SHORTINT ),
-									    MatMulASASLoop, NIL );
+		ELSIF (DIM(left) = 2) & (DIM(right)=1) THEN
+			EnsureArrayDesc(1, SYSTEM.VAL(Tensor, RESULT));
 		ELSE HALT(200);
 		END;
+		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SHORTINT ),
+									    MatMulASASLoop, NIL );
 		RETURN RESULT
 	END "*";
 

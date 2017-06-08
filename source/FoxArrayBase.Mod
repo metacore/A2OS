@@ -9357,8 +9357,15 @@ TYPE
 
 		squeezingReshape: BOOLEAN;
 
+		PROCEDURE CheckAlloc;
+		BEGIN
+			ASSERT( (dest = NIL) OR (TensorFlag IN GetFlags(dest)) & ~(RangeFlag IN GetFlags(dest)) );
+		END CheckAlloc;
+		
+
 		PROCEDURE NewDescriptor;
 		BEGIN
+			CheckAlloc;
 			ptr := GetArrayDesc( newDim );  new := ptr;
 		END NewDescriptor;
 
@@ -9432,6 +9439,7 @@ TYPE
 		PROCEDURE NewDescriptorForSameData;
 		VAR len, size, i, j: LONGINT;
 		BEGIN
+			CheckAlloc();
 			ptr := GetArrayDesc( newDim );  new := ptr;
 
 			IF ~squeezingReshape THEN
@@ -9577,6 +9585,7 @@ TYPE
 				dest := new;
 			ELSIF ((newDim = oldDim) & ~ShapeDiffers()) THEN
 				(* create a copy of the original descriptor *)
+				CheckAlloc();
 				ptr := GetArrayDesc(newDim);  dest := ptr; CopyDescriptor(src,dest);
 			ELSE
 				Err( "RESHAPE: given RANGE array can not be reshaped!" );

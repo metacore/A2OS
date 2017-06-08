@@ -52,6 +52,7 @@ TYPE
 		typeFixes, pointerFixes: LateFixList; 
 		importCache-: SyntaxTree.ModuleScope; 
 		arrayBaseImported: BOOLEAN; 
+		complexNumbersImported: BOOLEAN; 
 		phase: LONGINT; 
 		system-: Global.System; 
 		symbolFileFormat-: Formats.SymbolFileFormat; 

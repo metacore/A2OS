@@ -112,6 +112,7 @@ VAR
 	PROCEDURE ^ WriteBasicValue*(w: Streams.Writer; type: CHAR; adr: ADDRESS; VAR size: SIZE); 
 	PROCEDURE ^ OnHeapOrStack(adr: ADDRESS; low, high: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT; low, high: ADDRESS); 
+	PROCEDURE ^ WriteMathArray*(w: Streams.Writer; adr: ADDRESS; check: BOOLEAN); 
 	PROCEDURE ^ WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS); 
 	PROCEDURE ^ WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS); 
 	PROCEDURE ^ WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS); 

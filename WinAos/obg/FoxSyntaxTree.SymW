@@ -407,6 +407,7 @@ TYPE
 		PROCEDURE ^ ElementType*(): Type; 
 		PROCEDURE ^ Dimensionality*(): LONGINT; 
 		PROCEDURE ^ IsFullyDynamic*(): BOOLEAN; 
+		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END MathArrayType; 

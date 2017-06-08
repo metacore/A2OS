@@ -1278,7 +1278,7 @@ TYPE
 		END IsFullyDynamic;
 
 		PROCEDURE NeedsTrace*(): BOOLEAN;
-		BEGIN RETURN hasPointers OR arrayBase.resolved.NeedsTrace ();
+		BEGIN RETURN hasPointers OR (arrayBase # NIL) & (arrayBase.resolved.NeedsTrace());
 		END NeedsTrace;
 		
 		PROCEDURE IsComposite(): BOOLEAN;

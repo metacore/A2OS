@@ -1,0 +1,32 @@
+MODULE WMGraphicsSmooth;
+	IMPORT SYSTEM, Raster, Strings, WMGraphics;
+CONST 
+	CapButt* = 0; 
+	CapRound* = 1; 
+	CapSquare* = 2; 
+TYPE 
+	Real* = WMGraphics.Real; 
+
+	Canvas* = OBJECT (WMGraphics.BufferCanvas)
+	VAR 
+		lineWidth-: Real; 
+		capType-: LONGINT; 
+		srcOverDstMode: Raster.Mode; 
+		pixAlphaMap: ARRAY 256 OF Raster.Pixel; 
+
+		PROCEDURE ^  & New*(img: Raster.Image); 
+		PROCEDURE ^ SetColor*(x: WMGraphics.Color); 
+		PROCEDURE ^ SetLineWidth*(w: Real); 
+		PROCEDURE ^ SetLineCap*(lineCap: LONGINT); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; lineColor: WMGraphics.Color; mode: LONGINT); 
+		PROCEDURE ^ LineReal*(x0, y0, x1, y1: Real; lineColor: WMGraphics.Color; mode: LONGINT); 
+	END Canvas; 
+
+	PROCEDURE ^ GenCanvas*(img: Raster.Image): WMGraphics.BufferCanvas; 
+	PROCEDURE ^ InvSqrt(x: REAL): REAL; 
+	PROCEDURE ^ ThinSmoothLineReal(img: Raster.Image; x0, y0, x1, y1: Real; CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel; VAR srcOverDstMode: Raster.Mode); 
+	PROCEDURE ^ ThickSmoothLineReal(img: Raster.Image; x0, y0, x1, y1: Real; CONST pixAlphaMap: ARRAY 256 OF Raster.Pixel; VAR srcOverDstMode: Raster.Mode; lineWidth: Real); 
+	PROCEDURE ^ Round(x: Real): LONGINT; 
+	PROCEDURE ^ ClipLineReal(l, t, r, b: Real; VAR x0, y0, x1, y1: Real): BOOLEAN; 
+BEGIN
+END WMGraphicsSmooth.

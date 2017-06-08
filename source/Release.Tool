@@ -693,6 +693,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
+	ComplexNumbers.Mod
 	FoxArrayBase.Mod
 	I386, WIN, UNIX32,UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
 END

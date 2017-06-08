@@ -10859,7 +10859,6 @@ TYPE
 					END;
 				END;
 
-				ParameterCopies(procedureType);
 				InitVariables(scope);
 				
 				
@@ -10872,6 +10871,10 @@ TYPE
 					IntermediateCode.InitMemory(left,addressType,fp,0);
 					Emit(Mov(position, left, right));
 				END;
+				
+				(* must be done after the descriptor is there, otherwise copied parameters are forgotten to be traced *)
+				ParameterCopies(procedureType);
+
 				IF x.code = NIL THEN
 					VisitStatementBlock(x);
 				ELSE

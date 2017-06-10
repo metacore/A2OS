@@ -163,7 +163,7 @@ TYPE
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
-			n,adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 			context: Kernel32.Wow64Context;
 			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
 		BEGIN

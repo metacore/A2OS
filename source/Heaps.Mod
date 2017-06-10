@@ -13,6 +13,10 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 IMPORT SYSTEM, Trace, Machine;
 
 CONST
+	Paranoid = TRUE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them
+									paranoid = false enforces correct metadata and correct settings of untraced variables
+									moreover, it should improve GC mark speed *)
+
 	DebugValue = LONGINT(0DEADDEADH);	(* set non-0 to clear free storage to this value *)
 
 	Stats* = TRUE;					(* maintain statistical counters *)
@@ -242,20 +246,24 @@ END SetAllocationLogger;
 
 (* check validity of p *)
 PROCEDURE CheckPointer(p: ADDRESS): BOOLEAN;
-VAR ret: BOOLEAN; heapBlockAdr, tdAdr: ADDRESS;
+VAR 
+	tdAdr: ADDRESS;
+	block: Block; 
 BEGIN
-	ret := FALSE;
-	IF Machine.ValidHeapAddress(p+HeapBlockOffset)THEN
-		SYSTEM.GET(p + HeapBlockOffset, heapBlockAdr);
-		IF Machine.ValidHeapAddress(heapBlockAdr + TypeDescOffset) THEN
-			SYSTEM.GET(heapBlockAdr + TypeDescOffset, tdAdr);
+	block := p;
+	IF (block # NIL) & Machine.ValidHeapAddress(ADDRESS OF block.heapBlock)THEN
+		block := block.heapBlock;
+		IF (block # NIL) & Machine.ValidHeapAddress(ADDRESS OF block.typeBlock) THEN
+			tdAdr := block.typeBlock;
 			IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
-				ret := TRUE
+				RETURN TRUE;
 			END
 		END
 	END;
-	RETURN ret
+	Trace.String("Heaps: invalid pointer encountered: "); Trace.Address(p); Trace.String(","); Trace.Address(block); Trace.Ln;
+	RETURN FALSE
 END CheckPointer;
+
 
 PROCEDURE AppendToMarkList(heapBlock: HeapBlock);
 BEGIN
@@ -286,7 +294,7 @@ VAR
 	blockMeta : Block;
 BEGIN
 	(* ug: check for validity of block is necessary since users may assign values to pointer variables that are not real heap blocks, e.g. by using SYSTEM.VAL or ADDRESSOF *)
-	IF (block = NIL) OR ~CheckPointer(block) THEN RETURN END;
+	IF (block = NIL) OR Paranoid & ~CheckPointer(block) THEN RETURN END;
 	blockMeta := block;
 	heapBlock := blockMeta.heapBlock; 
 	IF (heapBlock = NIL) OR (heapBlock.mark >= currentMarkValue) THEN RETURN END;
@@ -319,6 +327,13 @@ BEGIN
 		orgBlock := orgHeapBlock.dataAdr;
 		meta := orgBlock;
 		staticTypeBlock := meta.staticTypeBlock;
+		(*
+		IF TraceInvalid THEN 
+			TRACE(orgBlock);  
+			IF staticTypeBlock # NIL THEN WriteType(staticTypeBlock); END
+		END;
+		*)
+		
 		IF ~(orgHeapBlock IS ArrayBlock) THEN
 			FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 				b := orgBlock + staticTypeBlock.pointerOffsets[i];
@@ -1552,7 +1567,7 @@ TraceHeap:
 11.07.2008 	ug	new heap data structures and adaption to GC
 *)
 
-Compiler.Compile -p=Win32G --traceModule=Trace Heaps.Mod ~
+Compiler.Compile -p=Win32G --traceModule=Trace  Heaps.Mod ~
 StaticLinker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2M.exe ~
 

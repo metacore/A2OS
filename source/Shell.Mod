@@ -21,7 +21,7 @@ CONST
 
 	NestingLevelIndicator = ">";
 
-	MaxLen = 512;
+	MaxLen = 4096;
 	CmdLen = 64;
 	ParamLen = MaxLen;
 	CR = 0DX; LF = 0AX; TAB = 9X;

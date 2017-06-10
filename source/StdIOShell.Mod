@@ -289,4 +289,78 @@ SystemTools.DoCommands
 		GenericLoader.GofW
 		WinTrace.GofW WinApplication.GofW
 		~ 
+		
+		
 	~
+
+	FoxGenericObjectFile.MakeLibrary
+		Fox.Lib
+		FoxBasic.GofW  FoxProgTools.GofW  FoxScanner.GofW FoxCSharpScanner.GofW FoxSyntaxTree.GofW FoxGlobal.GofW
+		FoxActiveCells.GofW FoxHardware.GofW FoxFormats.GofW FoxPrintout.GofW
+		FoxParser.GofW FoxCSharpParser.GofW  FoxSemanticChecker.GofW
+		FoxBackend.GofW FoxSections.GofW 
+		FoxFrontend.GofW 
+		Compiler.GofW 
+		FoxOberonFrontend.GofW FoxCSharpFrontend.GofW
+		FoxFingerPrinter.GofW  FoxInterfaceComparison.GofW FoxTextualSymbolFile.GofW FoxBinarySymbolFile.GofW
+		FoxBinaryCode.GofW FoxIntermediateCode.GofW FoxIntermediateBackend.GofW FoxCodeGenerators.GofW
+		FoxBinaryObjectFile.GofW FoxGenericObjectFile.GofW
+		FoxAMD64InstructionSet.GofW FoxAMD64Assembler.GofW FoxAMDBackend.GofW
+		FoxAssembler.GofW FoxIntermediateAssembler.GofW FoxDisassembler.GofW
+		FoxARMInstructionSet.GofW FoxARMAssembler.GofW FoxARMBackend.GofW	FoxMinosObjectFile.GofW
+		FoxIntermediateParser.GofW FoxIntermediateObjectFile.GofW FoxIntermediateLinker.GofW 
+		FoxTRMInstructionSet.GofW FoxTRMAssembler.GofW FoxTRMBackend.GofW
+		FoxInterpreterBackend.GofW FoxTranspilerBackend.GofW
+		FoxDocumentationScanner.GofW FoxDocumentationTree.GofW FoxDocumentationPrinter.GofW FoxDocumentationHtml.GofW 
+		FoxDocumentationParser.GofW FoxDocumentationBackend.GofW
+		
+		XML.GofW XMLScanner.GofW DynamicStrings.GofW UTF8Strings.GofW XMLParser.GofW XMLObjects.GofW
+		PersistentObjects.GofW FoxInterpreterSymbols.GofW FoxInterpreter.GofW
+
+	~		
+
+
+
+	StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
+		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
+		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
+		
+		TrapWriters 	CRC SystemVersion Traps
+
+		WinTrace StdIO Pipes  Shell StdIOShell
+		
+		Options Locks Debugging
+		
+		StaticLinker 
+		Fox.Lib
+
+		InterpreterShell
+		
+		ProcessInfo0 ProcessInfo Plugins SystemTools
+	
+	~
+
+	StaticLinker.Link -p=Linux32G
+		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
+		Streams Commands 
+		Files UnixFiles Clock Dates Reals Strings Diagnostics 
+		BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader  
+
+		StdIO TrapWriters Traps 
+
+		Pipes Shell StdIOShell
+		
+		Options Locks Debugging
+		StaticLinker 
+		
+		Fox.Lib 
+		InterpreterShell
+
+		CRC SystemVersion ProcessInfo0 ProcessInfo Plugins SystemTools
+
+	~
+	FSTools.CloseFiles oberon
+	~
+~ 
+
+

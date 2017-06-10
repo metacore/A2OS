@@ -810,11 +810,13 @@ VAR address : ADDRESS; module : Modules.Module; variable : Reflection.Variable;
 BEGIN
 	address := Heaps.NilVal;
 	module := Modules.ModuleByName("Heaps");
+	ASSERT(module # NIL); 
 	IF (module # NIL) THEN
 		IF Reflection.FindVar(module, "currentMarkValue", variable) THEN
 			ASSERT(variable.n = 1); (* currentMarkValue is not an array *)
 			ASSERT(variable.type = 6); (*? type is LONGINT, currently no support for 64-bit addresses *)
 			address := variable.adr;
+		ELSE HALT(100);
 		END;
 	END;
 	RETURN address;
@@ -833,17 +835,21 @@ END Info.
 
 SystemTools.Free Info ~
 
+Debugging.DisableGC
+Debugging.EnableGC 
+Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 Info.AllObjects ~
 Info.AllObjects * ~
 
 Info.AllObjects --sort=0 * ~
 Info.AllObjects --sort=1 * ~
 Info.AllObjects --sort=2 * ~
+Info.AllObjects --sort=3 * ~
 
 Info.TraceModule PET ~
 
 Info.TraceModule Info ~
-Info.TraceModule Info * ~
+Info.TraceModule FoxIntermediateBackend * ~
 
 Info.TraceReference HotKeys.hotkeys ~
 Info.TraceReference HotKeys.hotkeys * ~

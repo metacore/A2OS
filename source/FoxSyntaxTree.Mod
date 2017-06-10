@@ -1375,6 +1375,10 @@ TYPE
 		PROCEDURE IsPointer(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
+		
+		PROCEDURE NeedsTrace*(): BOOLEAN;
+		BEGIN RETURN ~isUnsafe;
+		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);
 		VAR position: LONGINT;

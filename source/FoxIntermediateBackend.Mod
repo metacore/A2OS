@@ -11191,7 +11191,7 @@ TYPE
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
 			ELSIF (type IS SyntaxTree.PortType) & implementationVisitor.backend.cellsAreObjects THEN
 				Symbol(section, symbol, 0, offset); INC(numberPointers);
-			ELSIF type IS SyntaxTree.PointerType THEN
+			ELSIF (type IS SyntaxTree.PointerType) & type.NeedsTrace() THEN
 				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1);D.Ln;  END;
 			ELSIF (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate) THEN
@@ -11331,12 +11331,10 @@ TYPE
 			ELSE
 				HeapBlock(mName,typeName,section,2);
 				Info(section, "HeapBlock");
-				(*
 				Symbol(section,section,2,0);
-				*)
-				Address(section,0); (* empty such that GC does not go on traversing *)
 				Info(section, "TypeDescriptor");
 				Address(section,0);
+				
 				offset := section.pc;
 			END;
 			RETURN section
@@ -12622,7 +12620,7 @@ TYPE
 			Info(moduleSection, "sb*: ADDRESS");
 			Address(moduleSection,0);
 			Info(moduleSection, "entry*: POINTER TO ARRAY OF ADDRESS");
-			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Address(moduleSection,0);
 			Info(moduleSection, "command*: POINTER TO ARRAY OF Command");
 			Symbol(moduleSection,commandsSection,commandsSectionOffset,0);
 			Info(moduleSection, "ptrAdr*: POINTER TO ARRAY OF ADDRESS");
@@ -12630,13 +12628,13 @@ TYPE
 			Info(moduleSection, "typeInfo*: POINTER TO ARRAY OF TypeDesc");
 			Symbol(moduleSection,typeInfoSection,typeInfoSectionOffset,0);
 			Info(moduleSection, "module*: POINTER TO ARRAY OF Module");
-			Symbol(moduleSection,importSection,emptyArraySectionOffset,0);
+			Symbol(moduleSection,importSection,importSectionOffset,0);
 			Info(moduleSection, "procTable*: ProcTable");
 			Symbol(moduleSection,procTableSection,procTableSectionOffset,0);
 			Info(moduleSection, "data*, code*, staticTypeDescs*, refs*: Bytes");
-			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
-			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
-			Symbol(moduleSection,emptyArraySection,emptyArraySectionOffset,0);
+			Address(moduleSection,0);
+			Address(moduleSection,0);
+			Address(moduleSection,0);
 			Symbol(moduleSection,referenceSection,referenceSectionOffset,0);
 			Info(moduleSection, "export*: ExportDesc");
 			ExportDesc(moduleSection);
@@ -13494,7 +13492,7 @@ TYPE
 	END HasPointers;
 	
 	PROCEDURE IsVariableParameter (parameter: SyntaxTree.Parameter): BOOLEAN;
-	BEGIN RETURN (parameter.kind = SyntaxTree.VarParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ((parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType));
+	BEGIN RETURN (parameter.kind = SyntaxTree.VarParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ((parameter.type.resolved IS SyntaxTree.RecordType) OR (parameter.type.resolved IS SyntaxTree.ArrayType) OR (parameter.type.resolved IS SyntaxTree.MathArrayType));
 	END IsVariableParameter;
 	
 	PROCEDURE HasVariableParameters(scope: SyntaxTree.ProcedureScope): BOOLEAN;

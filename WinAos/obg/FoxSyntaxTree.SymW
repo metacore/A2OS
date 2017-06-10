@@ -432,6 +432,7 @@ TYPE
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsPointer*(): BOOLEAN; 
+		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END PointerType; 
 

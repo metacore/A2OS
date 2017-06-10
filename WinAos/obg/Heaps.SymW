@@ -1,6 +1,7 @@
 MODULE Heaps;
 	IMPORT SYSTEM, Trace, Machine;
 CONST 
+	Paranoid = TRUE; 
 	DebugValue = LONGINT(0DEADDEADH); 
 	Stats* = TRUE; 
 	AddressSize = SIZEOF(ADDRESS); 

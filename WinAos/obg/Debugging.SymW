@@ -31,5 +31,6 @@ VAR
 	PROCEDURE ^ Nothing; 
 	PROCEDURE ^ DisableGC*; 
 	PROCEDURE ^ EnableGC*; 
+	PROCEDURE ^ ReportProcedureDescriptors*; 
 BEGIN
 END Debugging.

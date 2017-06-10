@@ -200,7 +200,35 @@ VAR
 		TRACE(Heaps.GC, "enabled"); 
 	END EnableGC;
 
+	(* useful for debugging the GC / metadata *)
+	PROCEDURE ReportProcedureDescriptors*;
+	VAR m: Modules.Module; i,j: LONGINT;
+	BEGIN
+		m := Modules.root;
+		WHILE (m # NIL) DO
+			TRACE(m.name); 
+			IF m.procTable # NIL THEN 
+				FOR i := 0 TO LEN(m.procTable)-1 DO
+					(*TRACE(m.procTable[i]);*)
+					Log.Address(m.procTable[i]); 
+					Log.String(":"); 
+					Reflection.WriteProc(Log, m.procTable[i].pcFrom); 
+					Log.String(" ptrs @ ");
+					FOR j := 0 TO LEN(m.procTable[i].offsets)-1 DO
+						Log.Int(m.procTable[i].offsets[j],1); 
+						Log.String(" "); 
+					END;
+					Log.Ln;
+				END;
+			END;
+			m := m.next;
+		END;
+	END ReportProcedureDescriptors;
+
 
 BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );
 END Debugging.
+
+SystemTools.FreeDownTo Debugging ~
+Debugging.ReportProcedureDescriptors

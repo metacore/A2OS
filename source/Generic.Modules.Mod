@@ -678,7 +678,7 @@ BEGIN
 		(* clean up finalizers *)
 		m := root;
 		WHILE m # NIL DO
-			IF LEN(m.code)>0 THEN
+			IF (m.code # NIL) & (LEN(m.code)>0) THEN
 				Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
 			END;
 			m := m.next

@@ -6809,6 +6809,10 @@ TYPE
 						END;
 					END;
 				END;
+				IF (parameter.kind = SyntaxTree.ValueParameter) & IsMathArrayType(parameter.type)THEN 
+					Error(parameter.position, "forbidden value parameter of math array type ");
+				END; 
+				
 				IF HasFlag(modifiers, Global.NameUntraced,position) THEN
 					parameter.SetUntraced(TRUE);
 					IF ~ContainsPointer(parameter.type) THEN

@@ -1183,13 +1183,13 @@ TYPE
 			Add(v);
 		END AddVariable;
 
-		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; VAR pos: LONGINT): SyntaxTree.Variable;
+		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable;
 		VAR var : SyntaxTree.Variable;
 		BEGIN
 			FOR pos := 0 TO Length()-1 DO
 				IF ~((pos MOD 32) IN inUse[pos DIV 32]) THEN
 					var := GetVariable(pos);
-					IF type.SameType(var.type) THEN
+					IF type.SameType(var.type) & (var.untraced = untraced) THEN
 						Occupy(pos); RETURN var
 					END;
 				END;
@@ -2276,7 +2276,7 @@ TYPE
 			END RecursiveAssignment;
 
 		BEGIN
-			variable := GetTemporaryVariable(x.type, FALSE);
+			variable := GetTemporaryVariable(x.type, FALSE, TRUE (* untraced *));
 			designator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 			designator.SetType(variable.type);
 			dim := SemanticChecker.Dimension(x.type,{SyntaxTree.Static});
@@ -3901,7 +3901,7 @@ TYPE
 					IntermediateCode.InitOperand(arrayDestinationTag)
 				ELSE
 					(* otherwise, create a temporary variable and use it to store the array destination tag *)
-					variable := GetTemporaryVariable(GetMathArrayDescriptorType(targetArrayDimensionality), FALSE);
+					variable := GetTemporaryVariable(GetMathArrayDescriptorType(targetArrayDimensionality), FALSE, TRUE (* untraced *));
 					Symbol(variable, variableOp);
 					ReuseCopy(localResult.tag, variableOp.op);
 					ReleaseOperand(variableOp);
@@ -4482,7 +4482,7 @@ TYPE
 			parameters: SyntaxTree.ExpressionList; e: SyntaxTree.Expression;
 			prefixIndices, prefixRanges, suffixIndices, suffixRanges,i : LONGINT; tensorFound: BOOLEAN;
 		BEGIN
-			variable := GetTemporaryVariable(expression.left.type, FALSE);
+			variable := GetTemporaryVariable(expression.left.type, FALSE, TRUE (* untraced *));
 			parameters := expression.parameters;
 
 			moduleName := "FoxArrayBase";
@@ -4627,7 +4627,7 @@ TYPE
 					Designate(expression,operand);
 				ELSE
 					Evaluate(expression, tmpOperand);
-					variable := GetTemporaryVariable(expression.type, FALSE);
+					variable := GetTemporaryVariable(expression.type, FALSE, FALSE);
 					Symbol(variable, operand);
 					MakeMemory(tmp,operand.op,tmpOperand.op.type,0);
 					Emit(Mov(position,tmp, tmpOperand.op));
@@ -4752,7 +4752,7 @@ TYPE
 					(* case 2b *)
 					IF expression IS SyntaxTree.IndexDesignator THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
-						variable := GetTemporaryVariable(descriptorType, FALSE);
+						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
 						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
@@ -4773,7 +4773,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
-							variable := GetTemporaryVariable(descriptorType, FALSE);
+							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
@@ -4804,7 +4804,7 @@ TYPE
 					(* case 2f *)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
-						variable := GetTemporaryVariable(descriptorType, FALSE);
+						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
@@ -4864,7 +4864,7 @@ TYPE
 							LoadValue(variableOp,system.addressType);
 						ELSE
 							descriptorType := GetMathArrayDescriptorType(dim);
-							variable := GetTemporaryVariable(descriptorType, FALSE);
+							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 						END;
 						arrayDestinationTag := variableOp.op;
@@ -4885,7 +4885,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
-							variable := GetTemporaryVariable(descriptorType, FALSE);
+							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
@@ -4918,12 +4918,12 @@ TYPE
 					(* case 3f *)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
-						variable := GetTemporaryVariable(descriptorType, FALSE);
+						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
 						IF operand.op.type.length >1 THEN (* vector register *)
-							variable2 := GetTemporaryVariable(type, FALSE);
+							variable2 := GetTemporaryVariable(type, FALSE, TRUE (* untraced *));
 							Symbol(variable2, variable2Op);
 							MakeMemory(tmp,variable2Op.op,operand.op.type,0);
 							Emit(Mov(position,tmp, operand.op));
@@ -4960,7 +4960,7 @@ TYPE
 							LoadValue(variableOp,system.addressType);
 						ELSE
 							descriptorType := GetMathArrayDescriptorType(dim);
-							variable := GetTemporaryVariable(descriptorType, FALSE);
+							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 						END;
 						arrayDestinationTag := variableOp.op;
@@ -4970,7 +4970,7 @@ TYPE
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 							Symbol(variable,variableOp);
 						ELSE
-							variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+							variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							MakeMemory(tmp,variableOp.op,addressType,0);
 							Emit(Mov(position,tmp,operand.tag));
@@ -4991,7 +4991,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
-							variable := GetTemporaryVariable(descriptorType, FALSE);
+							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
 							Designate(expression,operand);
@@ -5012,7 +5012,7 @@ TYPE
 							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 						END;
-						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,addressType,0);
 						Emit(Mov(position,tmp,arrayDestinationTag));
@@ -5032,7 +5032,7 @@ TYPE
 					(* case 4f *)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
-						variable := GetTemporaryVariable(descriptorType, FALSE);
+						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
@@ -5052,7 +5052,7 @@ TYPE
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
-						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,addressType,0);
 						Emit(Mov(position,tmp,arrayDestinationTag));
@@ -5077,7 +5077,7 @@ TYPE
 				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) THEN
 					Designate(expression,operand);
 					IF operand.op.type.length > 1 THEN (* need temporary to pass register *)
-						variable := GetTemporaryVariable(parameter.type.resolved, FALSE);
+						variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,operand.op.type,0);
 						Emit(Mov(position,tmp,operand.op));
@@ -5262,7 +5262,7 @@ TYPE
 				variable: SyntaxTree.Variable;
 				variableDesignator: SyntaxTree.Designator;
 			BEGIN
-				variable :=  GetTemporaryVariable(type, tryRegister & FitsInRegister(type));
+				variable :=  GetTemporaryVariable(type, tryRegister & FitsInRegister(type), FALSE (* untraced *));
 				variableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, variable);
 				variableDesignator.SetType(type);
 				RETURN variableDesignator
@@ -5483,7 +5483,7 @@ TYPE
 						(* allocate temporary variable *)
 						ASSERT(actualParameter.type # NIL);
 						ASSERT(actualParameter.type.resolved IS SyntaxTree.MathArrayType);
-						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE);
+						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE, TRUE (* untraced *));
 						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, variable);
 						tempVariableDesignator.SetType(actualParameter.type.resolved);
 						ASSERT(tempVariableDesignator IS SyntaxTree.SymbolDesignator);
@@ -5513,7 +5513,7 @@ TYPE
 						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
 					ELSIF (formalParameter.kind = SyntaxTree.VarParameter) & (designator.relatedAsot # NIL)  THEN
 						(* prepare writeback for any other "normal" indexer *)
-						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE);
+						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE, TRUE (* untraced *));
 						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, variable);
 						tempVariableDesignator.SetType(actualParameter.type.resolved);
 						Assign(tempVariableDesignator, actualParameter);
@@ -5637,8 +5637,7 @@ TYPE
 				IF resultDesignator  # NIL THEN
 					d := resultDesignator;
 				ELSE
-					variable := GetTemporaryVariable(procedureType.returnType, FALSE);
-					variable.SetUntraced(procedureType.hasUntracedReturn);
+					variable := GetTemporaryVariable(procedureType.returnType, FALSE, procedureType.hasUntracedReturn);
 					d := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 					d.SetType(variable.type);
 				END;
@@ -6791,12 +6790,12 @@ TYPE
 		(**
 			create a temporary variable in current scope
 		**)
-		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN): SyntaxTree.Variable;
+		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
 		VAR name: SyntaxTree.Identifier; string: SyntaxTree.IdentifierString ; variable: SyntaxTree.Variable;
 		scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
 		BEGIN
 			IF ~register THEN
-				variable := temporaries.GetFreeVariable(type, index);
+				variable := temporaries.GetFreeVariable(type, untraced, index);
 			ELSE
 				index := temporaries.registerIndex; INC(temporaries.registerIndex);
 			END;
@@ -6836,6 +6835,7 @@ TYPE
 				ASSERT(variable.type.resolved = type.resolved)
 				*)
 			END;
+			variable.SetUntraced(untraced);
 			RETURN variable(SyntaxTree.Variable)
 		END GetTemporaryVariable;
 
@@ -7854,7 +7854,7 @@ TYPE
 						ReleaseOperand(l);
 						IF needsTrace THEN ModifyAssignments(false) END;
 					ELSE (* not cooperative backend *)
-						temporaryVariable := GetTemporaryVariable(type, FALSE);
+						temporaryVariable := GetTemporaryVariable(type, FALSE, FALSE (* untraced *));
 						IF temporaryVariable # NIL THEN
 							Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
 						ELSE
@@ -8295,7 +8295,7 @@ TYPE
 					END;
 					(* push temp address *)
 					baseType := type(SyntaxTree.PointerType).pointerBase.resolved; 
-					temporaryVariable := GetTemporaryVariable(type, FALSE);
+					temporaryVariable := GetTemporaryVariable(type, FALSE, FALSE (* untraced *));
 					Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
 					(* l.op contains address of pointer to record *)
 					Emit(Push(position,l.op)); (* address for use after syscall *)
@@ -10160,7 +10160,7 @@ TYPE
 			start := NewLabel();
 
 			Assign(x.variable,x.from);
-			temporaryVariable := GetTemporaryVariable(x.variable.type, FALSE);
+			temporaryVariable := GetTemporaryVariable(x.variable.type, FALSE, FALSE);
 			temporaryVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, temporaryVariable);
 			temporaryVariableDesignator.SetType(x.variable.type.resolved);
 

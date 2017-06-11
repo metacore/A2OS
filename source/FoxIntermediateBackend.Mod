@@ -2253,6 +2253,9 @@ TYPE
 			IF Trace THEN TraceExit("VisitSet") END;
 		END VisitSet;
 
+		(* math arrays of the form [a,b,c] 
+			x is a static array and thus does not provide any pointers
+		*)
 		PROCEDURE VisitMathArrayExpression(x: SyntaxTree.MathArrayExpression);
 		VAR variable: SyntaxTree.Variable; index: SyntaxTree.IndexDesignator; dim: LONGINT;
 			designator: SyntaxTree.Designator; i: LONGINT; element: SyntaxTree.IntegerValue;
@@ -2276,7 +2279,8 @@ TYPE
 			END RecursiveAssignment;
 
 		BEGIN
-			variable := GetTemporaryVariable(x.type, FALSE, TRUE (* untraced *));
+			(*static math array not providing pointers anyway *)
+			variable := GetTemporaryVariable(x.type, FALSE, FALSE (* untraced *));
 			designator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 			designator.SetType(variable.type);
 			dim := SemanticChecker.Dimension(x.type,{SyntaxTree.Static});
@@ -2290,7 +2294,6 @@ TYPE
 			RecursiveAssignment(x,0);
 			Expression(designator);
 		END VisitMathArrayExpression;
-
 
 		PROCEDURE VisitUnaryExpression(x: SyntaxTree.UnaryExpression);
 		VAR type,t0: SyntaxTree.Type; operand: Operand; dest: IntermediateCode.Operand;
@@ -3901,6 +3904,7 @@ TYPE
 					IntermediateCode.InitOperand(arrayDestinationTag)
 				ELSE
 					(* otherwise, create a temporary variable and use it to store the array destination tag *)
+					(* the result is of array range type and thus does not provide any collectable pointers *)
 					variable := GetTemporaryVariable(GetMathArrayDescriptorType(targetArrayDimensionality), FALSE, TRUE (* untraced *));
 					Symbol(variable, variableOp);
 					ReuseCopy(localResult.tag, variableOp.op);
@@ -4482,6 +4486,7 @@ TYPE
 			parameters: SyntaxTree.ExpressionList; e: SyntaxTree.Expression;
 			prefixIndices, prefixRanges, suffixIndices, suffixRanges,i : LONGINT; tensorFound: BOOLEAN;
 		BEGIN
+			(* variable represents a range array -- no allocation possible, untraced *)
 			variable := GetTemporaryVariable(expression.left.type, FALSE, TRUE (* untraced *));
 			parameters := expression.parameters;
 
@@ -4627,6 +4632,7 @@ TYPE
 					Designate(expression,operand);
 				ELSE
 					Evaluate(expression, tmpOperand);
+					(* array of system byte does not provide any pointers *)
 					variable := GetTemporaryVariable(expression.type, FALSE, FALSE);
 					Symbol(variable, operand);
 					MakeMemory(tmp,operand.op,tmpOperand.op.type,0);
@@ -4648,7 +4654,10 @@ TYPE
 				END;
 				Pass((operand.op)); (* address of the array *)
 			ELSIF parameter.type.resolved IS SyntaxTree.MathArrayType THEN
-			(* case 1 *)
+
+				(* case 1 
+					procedure P([left args], [const] A: array [*,*] of Type, [right args])
+				*)
 				IF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) &
 				(parameter.kind IN {SyntaxTree.ValueParameter, SyntaxTree.ConstParameter}) THEN
 					size := MathLenOffset + 2*SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
@@ -4657,22 +4666,19 @@ TYPE
 					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
 					arrayDestinationTag := sp;
 
-					(* case 1b *)
+					(* case 1b 
+						 P(...,A[a..b,c..d],...): push: push array range descriptor to stack
+					*)
 					IF expression IS SyntaxTree.IndexDesignator THEN
-					(*
-						dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
-						descriptorType := GetMathArrayDescriptorType(dim);
-						variable := GetTemporaryVariable(descriptorType,expression.position);
-						Symbol(variable,variableOp);
-						arrayDestinationTag := variableOp.op;
-						*)
 						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
 						dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
 						arrayDestinationDimension := dim;
 						Designate(expression,operand);
-					(* case 1a *)
+					(* case 1a 
+						P(...,A,...) push: push array descriptor to stack
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
-					Designate(expression,operand);
+						Designate(expression,operand);
 						Emit(Copy(position,arrayDestinationTag,operand.tag,IntermediateCode.Immediate(addressType,size)));
 						i := 0;
 						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
@@ -4692,14 +4698,24 @@ TYPE
 						dimOp := IntermediateCode.Immediate(addressType,dim);
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
-					(* case 1d *)
+
+					(* case 1d 
+						P(...,T,...) push: process left arguments, create array descriptor with given number of dimensions from T on stack						
+						+ case 1e
+						P(.. PT() ... ); 
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
 						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
 						Emit(Copy(position,sp(*arrayDestinationTag*),operand.tag,IntermediateCode.Immediate(addressType,size)));
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
-					(* case 1f *)
+
+					(* case 1f 
+						P(...,S,...) push: create array descriptor to S on stack
+						case 1g
+						P(... PS()...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						Designate(expression,operand);
 						FOR i := 0 TO dim-1 DO
@@ -4747,11 +4763,19 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 					ELSE HALT(100);
 					END;
+				(* case 2  
+					procedure P([left args], var A: array [*,*] of Type, [right args])
+				*)
 				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & (parameter.kind = SyntaxTree.VarParameter) THEN
 					dim := SemanticChecker.Dimension(parameter.type.resolved,{SyntaxTree.Open});
-					(* case 2b *)
+					(* case 2b 
+						 P(...,A[a..b,c..d],...) pre: emit range and push array range descriptor, memorize stack position
+							push: push reference to pushed array descriptor
+							post: remove array descriptor.
+					*)
 					IF expression IS SyntaxTree.IndexDesignator THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
+						(* range type : no allocation possible, should be untraced *)
 						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
@@ -4761,7 +4785,10 @@ TYPE
 						Designate(expression,operand);
 						Pass((operand.tag));
 						NeedDescriptor := FALSE;
-					(* case 2a *)
+					(* case 2a 
+						 P(...,A,...)
+						push: push reference to array descriptor on stack
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
 							type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
@@ -4773,6 +4800,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
+							(* static array , cannot be reallocated, untraced !*) 
 							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
@@ -4795,15 +4823,22 @@ TYPE
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 							Pass((arrayDestinationTag));
 						END;
-					(* case 2d *)
+					(* case 2d 
+						 P(...,T,...) push: emit dimension check, push T
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
 						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
 						Pass((operand.tag));
-					(* case 2f *)
+					(* case 2f 
+						 P(...,S,...) pre: allocate array descriptor on stack and memorize stack position
+							push: push reference to pushed array descriptor
+							post: remove array descriptor
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
+						(* static array -- cannot be reallocatated, untraced *)
 						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
@@ -4854,9 +4889,14 @@ TYPE
 						Pass((arrayDestinationTag));
 					ELSE HALT(100);
 					END;
+				(* case 3
+					procedure P([left args], [const] A: array [?] of Type, [right args])
+				*)
 				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind IN {SyntaxTree.ConstParameter,SyntaxTree.ValueParameter}) THEN
 					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
-					(* case 3b *)
+					(* case 3b 
+						 P(...,A[a..b,c..d],...)
+					*)
 					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
 							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
@@ -4864,6 +4904,7 @@ TYPE
 							LoadValue(variableOp,system.addressType);
 						ELSE
 							descriptorType := GetMathArrayDescriptorType(dim);
+							(* range -- cannot be reallocated *)
 							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 						END;
@@ -4872,7 +4913,9 @@ TYPE
 						arrayDestinationDimension := 0;
 						Designate(expression,operand);
 						Pass((operand.tag));
-					(* case 3a *)
+					(* case 3a 
+						P(...,A,...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						i := 0;
 						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
@@ -4885,6 +4928,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
+							(* static array -- cannot be reallocated -- no pointer to be traced *)
 							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
@@ -4907,22 +4951,29 @@ TYPE
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 							Pass((arrayDestinationTag));
 						END;
-					(* case 3d *)
+					(* case 3d 
+						P(...,T,...)
+						case 3e
+						 P(...,PT(...),...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
-						(*
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
-						*)
 						Pass((operand.tag));
-					(* case 3f *)
+					(* case 3f 
+						 P(...,S,...)
+						 case 3g
+						 P(...,PS(...),...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
+						(* static array does not need to be traced *) 
 						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
 						Designate(expression,operand);
 						IF operand.op.type.length >1 THEN (* vector register *)
+							(* static array does not need to be traced *) 
 							variable2 := GetTemporaryVariable(type, FALSE, TRUE (* untraced *));
 							Symbol(variable2, variable2Op);
 							MakeMemory(tmp,variable2Op.op,operand.op.type,0);
@@ -4952,7 +5003,9 @@ TYPE
 					END;
 				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) & (parameter.kind = SyntaxTree.VarParameter) THEN
 					dim := SemanticChecker.Dimension(type,{SyntaxTree.Open,SyntaxTree.Static});
-					(* case 4b *)
+					(* case 4b 
+						P(...,A[a..b,c..d],...)
+					*)
 					IF (expression IS SyntaxTree.IndexDesignator) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
 							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
@@ -4960,6 +5013,7 @@ TYPE
 							LoadValue(variableOp,system.addressType);
 						ELSE
 							descriptorType := GetMathArrayDescriptorType(dim);
+							(* range array -- cannot be allocated *)
 							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 						END;
@@ -4970,6 +5024,7 @@ TYPE
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 							Symbol(variable,variableOp);
 						ELSE
+							(* alias to range -- untraced *)
 							variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							MakeMemory(tmp,variableOp.op,addressType,0);
@@ -4978,7 +5033,9 @@ TYPE
 						END;
 						Pass((variableOp.op));
 						ReleaseOperand(variableOp);
-					(* case 4a *)
+					(* case 4a 
+						P(...,A,...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open THEN
 						i := 0;
 						WHILE (i< dim) & (type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Open) DO
@@ -4991,6 +5048,7 @@ TYPE
 						ELSE (* open-static *)
 							type := expression.type.resolved;
 							descriptorType := GetMathArrayDescriptorType(dim);
+							(* static array -- untraced *)
 							variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 							Symbol(variable,variableOp);
 							arrayDestinationTag := variableOp.op;
@@ -5012,6 +5070,7 @@ TYPE
 							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
 						END;
+						(* tensor alias to open array -- untraced *)
 						variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,addressType,0);
@@ -5019,19 +5078,18 @@ TYPE
 						ReleaseIntermediateOperand(tmp);
 						Pass((variableOp.op));
 						ReleaseOperand(variableOp);
-					(* case 4d *)
+					(* case 4d 
+						P(...,T,...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
-						(*
-						Dereference(operand,type.resolved,FALSE);
-						*)
-						(*
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
-						*)
 						Pass((operand.op));
-					(* case 4f *)
+					(* case 4f 
+						P(...,S,...)
+					*)
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
 						descriptorType := GetMathArrayDescriptorType(dim);
+						(* static array -- cannot be reallocated, untraced *)
 						variable := GetTemporaryVariable(descriptorType, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						arrayDestinationTag := variableOp.op;
@@ -5077,6 +5135,7 @@ TYPE
 				ELSIF (parameter.type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (parameter.kind IN {SyntaxTree.VarParameter,SyntaxTree.ConstParameter}) THEN
 					Designate(expression,operand);
 					IF operand.op.type.length > 1 THEN (* need temporary to pass register *)
+						(* static array no pointer *)
 						variable := GetTemporaryVariable(parameter.type.resolved, FALSE, TRUE (* untraced *));
 						Symbol(variable,variableOp);
 						MakeMemory(tmp,variableOp.op,operand.op.type,0);
@@ -5637,6 +5696,7 @@ TYPE
 				IF resultDesignator  # NIL THEN
 					d := resultDesignator;
 				ELSE
+					(* temporary result that might be allocated, must potentially be traced *)
 					variable := GetTemporaryVariable(procedureType.returnType, FALSE, procedureType.hasUntracedReturn);
 					d := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 					d.SetType(variable.type);

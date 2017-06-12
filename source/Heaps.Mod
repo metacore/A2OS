@@ -13,8 +13,8 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 IMPORT SYSTEM, Trace, Machine;
 
 CONST
-	Paranoid = TRUE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them
-									paranoid = false enforces correct metadata and correct settings of untraced variables
+	Paranoid = FALSE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them
+									paranoid = false expects correct metadata and correct settings of untraced variables
 									moreover, it should improve GC mark speed *)
 
 	DebugValue = LONGINT(0DEADDEADH);	(* set non-0 to clear free storage to this value *)
@@ -257,10 +257,14 @@ BEGIN
 			tdAdr := block.typeBlock;
 			IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
 				RETURN TRUE;
+			ELSE HALT(103);
 			END
+		ELSE HALT(102);
 		END
+	ELSE HALT(101);
 	END;
 	Trace.String("Heaps: invalid pointer encountered: "); Trace.Address(p); Trace.String(","); Trace.Address(block); Trace.Ln;
+	HALT(100);
 	RETURN FALSE
 END CheckPointer;
 

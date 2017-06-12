@@ -4508,8 +4508,8 @@ TYPE
 			parameters: SyntaxTree.ExpressionList; e: SyntaxTree.Expression;
 			prefixIndices, prefixRanges, suffixIndices, suffixRanges,i : LONGINT; tensorFound: BOOLEAN;
 		BEGIN
-			(* variable represents a range array -- no allocation possible, untraced *)
-			variable := GetTemporaryVariable(expression.left.type, FALSE, TRUE (* untraced *));
+			(* variable represents a newly allocaed range array in a tensor, this is allocated in CopyDescriptor and must thus not be untraced *)
+			variable := GetTemporaryVariable(expression.left.type, FALSE, FALSE (* untraced *));
 			parameters := expression.parameters;
 
 			moduleName := "FoxArrayBase";
@@ -6891,6 +6891,7 @@ TYPE
 				variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
 				variable.SetType(type);
 				variable.SetAccess(SyntaxTree.Hidden);
+				variable.SetUntraced(untraced);
 				IF ~register THEN
 					temporaries.AddVariable(variable);
 
@@ -6912,12 +6913,12 @@ TYPE
 					variable(SyntaxTree.Variable).SetOffset(0);
 				END;
 			ELSE
+				variable.SetUntraced(untraced);
 				InitVariable(variable(SyntaxTree.Variable));
 				(*
 				ASSERT(variable.type.resolved = type.resolved)
 				*)
 			END;
-			variable.SetUntraced(untraced);
 			RETURN variable(SyntaxTree.Variable)
 		END GetTemporaryVariable;
 

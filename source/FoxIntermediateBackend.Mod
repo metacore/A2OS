@@ -1182,6 +1182,27 @@ TYPE
 			Occupy(Length());
 			Add(v);
 		END AddVariable;
+		
+		PROCEDURE CompatibleType(t1, t2: SyntaxTree.Type): BOOLEAN;
+		BEGIN
+			t1 := t1.resolved;
+			t2 := t2.resolved;
+			RETURN 
+				(t1.SameType(t2)) 
+				OR
+				SemanticChecker.IsPointerType(t1) & SemanticChecker.IsPointerType(t2)
+				OR
+				~t1.NeedsTrace() & ~t2.NeedsTrace() & (t1.sizeInBits = t2.sizeInBits)
+				OR
+				(t1 IS SyntaxTree.MathArrayType) & (t2 IS SyntaxTree.MathArrayType) & 
+				(t1(SyntaxTree.MathArrayType).form = t2(SyntaxTree.MathArrayType).form) & 
+				(	(t1(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) 
+					OR
+					(t1(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & 
+					(DynamicDim(t1) = DynamicDim(t2))
+				);
+		END CompatibleType;
+		
 
 		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable;
 		VAR var : SyntaxTree.Variable;
@@ -1189,7 +1210,8 @@ TYPE
 			FOR pos := 0 TO Length()-1 DO
 				IF ~((pos MOD 32) IN inUse[pos DIV 32]) THEN
 					var := GetVariable(pos);
-					IF type.SameType(var.type) & (var.untraced = untraced) THEN
+					IF CompatibleType(type, var.type) & (var.untraced = untraced) THEN
+						var.SetType(type);
 						Occupy(pos); RETURN var
 					END;
 				END;

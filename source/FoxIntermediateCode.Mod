@@ -802,7 +802,7 @@ TYPE
 		AddFormat(special,"special",Any, Any, Any, {} );
 	END InitInstructions;
 
-	PROCEDURE InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1,op2,op3: Operand);
+	PROCEDURE InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; CONST op1,op2,op3: Operand);
 	VAR format: InstructionFormat; mode1, mode2, mode3: LONGINT; (* debugging *)
 	BEGIN
 		IF instr = NIL THEN NEW(instr) END;

@@ -9408,7 +9408,7 @@ TYPE
 			END;
 			(*TRACE(i,continue,Size,GetSize(dest));*)
 			(*tod obviously size is not what I expect it to be*)
-			IF (i = 0) & continue & (Size=GetSize(dest))  THEN (* destination array is continuous memory of the proper lenght *)
+			IF (i = 0) & (n#0) & continue & (Size=GetSize(dest))  THEN (* destination array is continuous memory of the proper lenght *)
 				RETURN TRUE;
 			ELSE 
 				RETURN FALSE;
@@ -9602,7 +9602,11 @@ TYPE
 			NewDescriptor;  NewData;  CopyData;  dest := new;
 		ELSIF ShapeDiffers() THEN  (* same dim but shape of destination does not match *)
 			IF RangeFlag IN GetFlags( dest ) THEN Err( "RESHAPE: new shape not allowed for RANGE" );  END;
-			NewDescriptor;  NewData;  CopyData;  CopyDescriptor( new, dest );
+			(*
+			NewDescriptor;  *) 
+			new := dest;
+			NewData;  CopyData;  
+			(*CopyDescriptor( new, dest );*)
 		ELSIF ~SameShape( src, dest ) THEN  (* shape for destination matches but that of src is different *)
 			NewDescriptor;  NewData;  CopyData;  CopyDataBack;
 		ELSE  (* same shape, just copy *)

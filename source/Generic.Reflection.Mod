@@ -555,14 +555,14 @@ CONST
 				WriteBasicValue(w,type, adr, size);
 				SYSTEM.GET(adr, a);
 				IF a = 0 THEN
-					w.String("NIL");
+					w.String(" NIL");
 				ELSIF CheckHeapAddress(a) THEN
 					SYSTEM.GET(a + Heaps.TypeDescOffset, a);
 					w.String(" (");
 					WriteType(w,a);
 					w.String(")");
 				ELSE
-					w.String("(UNKNOWN)");
+					w.String(" (UNKNOWN)");
 				END;
 			| sfTypePointerToArray: 
 				WriteBasicValue(w, sfTypeANY, adr, size);
@@ -589,14 +589,14 @@ CONST
 				w.String("... (DYNAMIC ARRAY)");
 				SkipType(refs, offset); 
 			| sfTypeMathOpenArray: 
-				w.String("OPEN MATH ARRAY ");
+				w.String(" OPEN MATH ARRAY ");
 				SkipType(refs, offset);
 				WriteMathArray(w, adr, FALSE);
 			| sfTypeMathStaticArray: 
-				w.String("... (MATH STATIC ARRAY)");
+				w.String(" ... (MATH STATIC ARRAY)");
 				SkipSize(offset); SkipType(refs, offset);
 			| sfTypeMathTensor: 
-				w.String("TENSOR ");
+				w.String(" TENSOR ");
 				SYSTEM.GET(adr, a);
 				WriteBasicValue(w, sfTypeANY, adr, size);
 				WriteMathArray(w, a, TRUE);
@@ -608,7 +608,7 @@ CONST
 				WriteType(w,a);
 				w.String(")");
 			| sfTypeDelegate: 
-				w.String("(DELEGATE)");
+				w.String(" (DELEGATE)");
 				WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
 				SkipType(refs, offset); 
 			| sfTypePORT:
@@ -642,6 +642,7 @@ CONST
 		ELSE (* absolute *)
 			adr := GetAddress(refs, offset);
 		END;
+		w.String(" [@");w.Int(adr-base,1); w.String("] ");
 		WriteValue(w, refs, offset, adr, low, high); 
 	END WriteVariable; 
 	

@@ -345,7 +345,7 @@ VAR
 
 (* Common base handler for all variants of windows provided by this module. *)
 	PROCEDURE DummyHandler( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam ): User32.LResult;
-	VAR res: User32.LResult; proc: User32.WndProc; hhWnd: ANY;  ret: Kernel32.BOOL;
+	VAR res: User32.LResult; proc: User32.WndProc; hhWnd: ADDRESS;  ret: Kernel32.BOOL;
 	BEGIN
 		IF (uMsg = User32.WMDestroy) & ~(external IN win.state) THEN
 			EXCL( win.state, update );  DEC( nWindows );

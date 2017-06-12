@@ -13,7 +13,7 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 IMPORT SYSTEM, Trace, Machine;
 
 CONST
-	Paranoid = FALSE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them
+	Paranoid = TRUE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them
 									paranoid = false expects correct metadata and correct settings of untraced variables
 									moreover, it should improve GC mark speed *)
 
@@ -323,7 +323,7 @@ VAR orgBlock: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	protected: ProtRecBlock;
 	b : POINTER {UNSAFE} TO RECORD p: ANY END;
 	meta: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
-BEGIN
+BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;
 	Inspect(p);
 	orgHeapBlock := ExtractFromMarkList();
@@ -337,7 +337,7 @@ BEGIN
 			IF staticTypeBlock # NIL THEN WriteType(staticTypeBlock); END
 		END;
 		*)
-		
+
 		IF ~(orgHeapBlock IS ArrayBlock) THEN
 			FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 				b := orgBlock + staticTypeBlock.pointerOffsets[i];
@@ -565,7 +565,7 @@ VAR
 	blockMark: LONGINT; blockSize: SIZE;
 	time1, time2: HUGEINT;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
-BEGIN
+BEGIN{UNCHECKED}
 	time1 := Machine.GetTimer();
 	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
 	found := FALSE;

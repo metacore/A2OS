@@ -561,6 +561,7 @@ END GetFreeBlock;
 PROCEDURE LazySweep(size: SIZE; VAR p: FreeBlock);
 VAR 
 	lastFreeBlockAdr: ADDRESS;
+	lastFreeBlockSize: SIZE;
 	block {UNTRACED}: HeapBlock ; freeBlock{UNTRACED}, lastFreeBlock{UNTRACED}: FreeBlock; 
 	blockMark: LONGINT; blockSize: SIZE;
 	time1, time2: HUGEINT;
@@ -584,7 +585,7 @@ BEGIN{UNCHECKED}
 			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
-			IF (blockMark < sweepMarkValue) THEN
+			IF (blockMark - sweepMarkValue < 0) THEN
 				IF (block IS SystemBlock) OR (block IS RecordBlock) OR (block IS ProtRecBlock) OR (block IS ArrayBlock) THEN
 					freeBlock := SYSTEM.VAL(FreeBlock, block);
 					InitFreeBlock(freeBlock, Unmarked, NilVal, blockSize); (* convert this block into a free heap block and clear its data *)
@@ -596,8 +597,11 @@ BEGIN{UNCHECKED}
 				IF lastFreeBlockAdr = NilVal THEN
 					lastFreeBlockAdr := sweepBlockAdr;
 					lastFreeBlock := freeBlock;
-				ELSIF lastFreeBlockAdr + lastFreeBlock.size = sweepBlockAdr THEN
+					lastFreeBlockSize := blockSize;
+				ELSE
+					ASSERT(lastFreeBlockAdr + lastFreeBlockSize = sweepBlockAdr);
 					(* there are two contiguous free blocks - merge them *)
+					INC(lastFreeBlockSize, blockSize);
 					INC(lastFreeBlock.size,blockSize);
 					(* overwrite free block -- for GC tracing in case something's wrong 
 						should be moved down to merging phase
@@ -608,17 +612,17 @@ BEGIN{UNCHECKED}
 				ASSERT(~(block IS FreeBlock));
 			END;
 			IF (lastFreeBlockAdr # NilVal) & ((blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) 
-				OR (ADDRESS(lastFreeBlock.size) >= ADDRESS (size))
+				OR (ADDRESS(lastFreeBlockSize) >= ADDRESS (size))
 			)
 			THEN (* no further merging is possible *)
 				ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr);
 				(*IF lastFreeBlockAdr # NilVal THEN*)
-					IF ADDRESS(lastFreeBlock.size) >= ADDRESS (size) THEN (* block found - may be too big *)
+					IF ADDRESS(lastFreeBlockSize (*lastFreeBlock.size*) ) >= ADDRESS (size) THEN (* block found - may be too big *)
 						p := lastFreeBlock;
-						IF ADDRESS(p.size) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-							ASSERT(ADDRESS(p.size - size) >= FreeBlockHeaderSize);
+						IF ADDRESS(lastFreeBlockSize) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
+							ASSERT(ADDRESS(lastFreeBlockSize - size) >= FreeBlockHeaderSize);
 							freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
-							InitFreeBlock(freeBlock, Unmarked, NilVal, p.size - size);
+							InitFreeBlock(freeBlock, Unmarked, NilVal, lastFreeBlockSize - size);
 							p.size := size;
 						END;
 						sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)

@@ -533,6 +533,7 @@ BEGIN
 		adr := p;
 		remainder := adr + size;
 		InitFreeBlock(remainder, Unmarked, NilVal, p.size - size);
+
 		AppendFreeBlock(remainder);
 		p.size := size;
 	END;
@@ -566,12 +567,13 @@ VAR
 	blockMark: LONGINT; blockSize: SIZE;
 	time1, time2: HUGEINT;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
+CONST StrongChecks = FALSE;
 BEGIN{UNCHECKED}
 	time1 := Machine.GetTimer();
 	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
 	lastFreeBlockAdr := NilVal;
 	lastFreeBlock := NIL;
-	IF (sweepMemBlock = NIL) OR (sweepMarkValue < currentMarkValue) THEN (* restart lazy sweep including clearance of lists *)
+	IF (sweepMemBlock = NIL) (* OR (sweepMarkValue < currentMarkValue)*) THEN (* restart lazy sweep including clearance of lists *)
 		(* note that the order of the blocks does not necessarily represent the historical order of insertion
 			as they are potentially provided by the underlying host system in with non-increasing address ranges
 			blocks are sorted by Machine.Mod in an increased address range order
@@ -585,56 +587,49 @@ BEGIN{UNCHECKED}
 			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
-			IF (blockMark - sweepMarkValue < 0) THEN
-				IF (block IS SystemBlock) OR (block IS RecordBlock) OR (block IS ProtRecBlock) OR (block IS ArrayBlock) THEN
-					freeBlock := SYSTEM.VAL(FreeBlock, block);
-					InitFreeBlock(freeBlock, Unmarked, NilVal, blockSize); (* convert this block into a free heap block and clear its data *)
+			IF (blockMark < sweepMarkValue) THEN
+				IF ~(block IS FreeBlock) THEN
 					Machine.Fill32(sweepBlockAdr + FreeBlockHeaderSize, blockSize - FreeBlockHeaderSize, DebugValue);
-				ELSE
-					ASSERT(block IS FreeBlock);
-					freeBlock := block(FreeBlock); (* free block has data cleared by definition *)
+				ELSIF StrongChecks THEN ASSERT((block IS SystemBlock) OR (block IS RecordBlock) OR (block IS ProtRecBlock) OR (block IS ArrayBlock));
 				END;
+				freeBlock := SYSTEM.VAL(FreeBlock, block);
+				
 				IF lastFreeBlockAdr = NilVal THEN
 					lastFreeBlockAdr := sweepBlockAdr;
 					lastFreeBlock := freeBlock;
 					lastFreeBlockSize := blockSize;
 				ELSE
-					ASSERT(lastFreeBlockAdr + lastFreeBlockSize = sweepBlockAdr);
-					(* there are two contiguous free blocks - merge them *)
+					IF StrongChecks THEN ASSERT(lastFreeBlockAdr + lastFreeBlockSize = sweepBlockAdr) END;
+					(* there are at least two contiguous free blocks - merge them *)
 					INC(lastFreeBlockSize, blockSize);
-					INC(lastFreeBlock.size,blockSize);
-					(* overwrite free block -- for GC tracing in case something's wrong 
-						should be moved down to merging phase
-					*)
-					Machine.Fill32(sweepBlockAdr, blockSize, DebugValue);
+					Machine.Fill32(sweepBlockAdr, FreeBlockHeaderSize, DebugValue); (* rest was already cleared before *)
 				END
-			ELSE
+			ELSIF StrongChecks THEN 
 				ASSERT(~(block IS FreeBlock));
 			END;
 			IF (lastFreeBlockAdr # NilVal) & ((blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) 
 				OR (ADDRESS(lastFreeBlockSize) >= ADDRESS (size))
 			)
 			THEN (* no further merging is possible *)
-				ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr);
-				(*IF lastFreeBlockAdr # NilVal THEN*)
-					IF ADDRESS(lastFreeBlockSize (*lastFreeBlock.size*) ) >= ADDRESS (size) THEN (* block found - may be too big *)
-						p := lastFreeBlock;
-						IF ADDRESS(lastFreeBlockSize) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-							ASSERT(ADDRESS(lastFreeBlockSize - size) >= FreeBlockHeaderSize);
-							freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
-							InitFreeBlock(freeBlock, Unmarked, NilVal, lastFreeBlockSize - size);
-							p.size := size;
-						END;
-						sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)
-						RETURN;
-					ELSE
-						IF EnableFreeLists THEN 
-							AppendFreeBlock(lastFreeBlock);
-						END;
+				IF StrongChecks THEN ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr) END;
+				IF ADDRESS(lastFreeBlockSize (*lastFreeBlock.size*) ) >= ADDRESS (size) THEN (* block found - may be too big *)
+					p := lastFreeBlock;
+					InitFreeBlock(lastFreeBlock, Unmarked, NilVal, size); (* convert this block into a free heap block and clear its data *)
+					IF ADDRESS(lastFreeBlockSize) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
+						ASSERT(ADDRESS(lastFreeBlockSize - size) >= FreeBlockHeaderSize);
+						freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
+						InitFreeBlock(freeBlock, Unmarked, NilVal, lastFreeBlockSize - size);
 					END;
-					lastFreeBlockAdr := NilVal;
-					lastFreeBlock := NIL;
-				(*END*)
+					sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)
+					RETURN;
+				ELSE
+					InitFreeBlock(lastFreeBlock, Unmarked, NilVal, lastFreeBlockSize); (* convert this block into a free heap block and clear its data *)
+					IF EnableFreeLists THEN 
+						AppendFreeBlock(lastFreeBlock);
+					END;
+				END;
+				lastFreeBlockAdr := NilVal;
+				lastFreeBlock := NIL;
 			END;
 			sweepBlockAdr := sweepBlockAdr + blockSize
 		END;
@@ -1056,15 +1051,18 @@ BEGIN
 END LazySweepGC;
 
 (* initialize a free heap block *)
-PROCEDURE InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE);
+PROCEDURE InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE);
+CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 BEGIN
-	freeBlock.mark := mark;
-	freeBlock.dataAdr := dataAdr;
-	freeBlock.size := size;
-	freeBlock.next := NIL;
 	(* initialize heap block header *)
 	freeBlock.typeDesc := freeBlockTag;
 	freeBlock.heapBlock := NIL;
+	(* initialize heap block fields *)
+	freeBlock.mark := mark;
+	freeBlock.dataAdr := dataAdr;
+	freeBlock.size := size;
+	(* initialize free block fields *)
+	freeBlock.next := NIL;
 END InitFreeBlock;
 
 VAR throughput := 0 : SIZE;

@@ -560,7 +560,7 @@ END GetFreeBlock;
 (* Sweep phase *)
 PROCEDURE LazySweep(size: SIZE; VAR p: FreeBlock);
 VAR 
-	lastFreeBlockAdr: ADDRESS; found : BOOLEAN;
+	lastFreeBlockAdr: ADDRESS;
 	block {UNTRACED}: HeapBlock ; freeBlock{UNTRACED}, lastFreeBlock{UNTRACED}: FreeBlock; 
 	blockMark: LONGINT; blockSize: SIZE;
 	time1, time2: HUGEINT;
@@ -568,7 +568,6 @@ CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 BEGIN{UNCHECKED}
 	time1 := Machine.GetTimer();
 	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
-	found := FALSE;
 	lastFreeBlockAdr := NilVal;
 	lastFreeBlock := NIL;
 	IF (sweepMemBlock = NIL) OR (sweepMarkValue < currentMarkValue) THEN (* restart lazy sweep including clearance of lists *)
@@ -580,8 +579,8 @@ BEGIN{UNCHECKED}
 		sweepBlockAdr := Machine.memBlockHead.beginBlockAdr;
 		sweepMarkValue := currentMarkValue;
 	END;
-	WHILE ~found & (sweepMemBlock # NIL) DO
-		WHILE ~found & (sweepBlockAdr < sweepMemBlock.endBlockAdr) DO
+	WHILE  (sweepMemBlock # NIL) DO
+		WHILE  (sweepBlockAdr < sweepMemBlock.endBlockAdr) DO
 			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
@@ -600,15 +599,20 @@ BEGIN{UNCHECKED}
 				ELSIF lastFreeBlockAdr + lastFreeBlock.size = sweepBlockAdr THEN
 					(* there are two contiguous free blocks - merge them *)
 					INC(lastFreeBlock.size,blockSize);
-					(* clear header fields of concatenated block *)
-					Machine.Fill32(sweepBlockAdr, FreeBlockHeaderSize, DebugValue);
+					(* overwrite free block -- for GC tracing in case something's wrong 
+						should be moved down to merging phase
+					*)
+					Machine.Fill32(sweepBlockAdr, blockSize, DebugValue);
 				END
 			ELSE
 				ASSERT(~(block IS FreeBlock));
 			END;
-			IF (blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) THEN (* no further merging is possible *)
+			IF (lastFreeBlockAdr # NilVal) & ((blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) 
+				OR (ADDRESS(lastFreeBlock.size) >= ADDRESS (size))
+			)
+			THEN (* no further merging is possible *)
 				ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr);
-				IF lastFreeBlockAdr # NilVal THEN
+				(*IF lastFreeBlockAdr # NilVal THEN*)
 					IF ADDRESS(lastFreeBlock.size) >= ADDRESS (size) THEN (* block found - may be too big *)
 						p := lastFreeBlock;
 						IF ADDRESS(p.size) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
@@ -618,22 +622,23 @@ BEGIN{UNCHECKED}
 							p.size := size;
 						END;
 						sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)
-						found := TRUE;
-					ELSIF EnableFreeLists THEN AppendFreeBlock(lastFreeBlock);
+						RETURN;
+					ELSE
+						IF EnableFreeLists THEN 
+							AppendFreeBlock(lastFreeBlock);
+						END;
 					END;
 					lastFreeBlockAdr := NilVal;
 					lastFreeBlock := NIL;
-				END
+				(*END*)
 			END;
-			IF ~found THEN sweepBlockAdr := sweepBlockAdr + blockSize END
+			sweepBlockAdr := sweepBlockAdr + blockSize
 		END;
-		IF ~found THEN
-			sweepMemBlock := sweepMemBlock.next;
-			IF sweepMemBlock # NIL THEN
-				sweepBlockAdr := sweepMemBlock.beginBlockAdr
-			ELSE
-				sweepBlockAdr := NilVal
-			END
+		sweepMemBlock := sweepMemBlock.next;
+		IF sweepMemBlock # NIL THEN
+			sweepBlockAdr := sweepMemBlock.beginBlockAdr
+		ELSE
+			sweepBlockAdr := NilVal
 		END
 	END;
 	time2 := Machine.GetTimer()-time1;
@@ -1572,7 +1577,7 @@ TraceHeap:
 *)
 
 Compiler.Compile -p=Win32G --traceModule=Trace  Heaps.Mod ~
-StaticLinker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+StaticLinker.Link --fileFormat=PE32 --fileName=A2P.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FSTools.CloseFiles A2M.exe ~
 
 

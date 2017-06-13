@@ -559,11 +559,11 @@ BEGIN
 END GetFreeBlock;
 
 (* Sweep phase *)
-PROCEDURE LazySweep(size: SIZE; VAR p: FreeBlock);
+PROCEDURE LazySweep(size: ADDRESS; VAR p: FreeBlock);
 VAR 
 	lastFreeBlockAdr: ADDRESS;
-	lastFreeBlockSize: SIZE;
-	block {UNTRACED}: HeapBlock ; freeBlock{UNTRACED}, lastFreeBlock{UNTRACED}: FreeBlock; 
+	lastFreeBlockSize: ADDRESS;
+	block : HeapBlockU ; freeBlock, lastFreeBlock: FreeBlockU; 
 	blockMark: LONGINT; blockSize: SIZE;
 	time1, time2: HUGEINT;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
@@ -584,15 +584,14 @@ BEGIN{UNCHECKED}
 	END;
 	WHILE  (sweepMemBlock # NIL) DO
 		WHILE  (sweepBlockAdr < sweepMemBlock.endBlockAdr) DO
-			block := SYSTEM.VAL(HeapBlock, sweepBlockAdr + BlockHeaderSize); (* get heap block *)
+			block := sweepBlockAdr + BlockHeaderSize;
 			blockMark := block.mark; (* cache these values since they may be overwritten during concatenation *)
 			blockSize := block.size;
 			IF (blockMark < sweepMarkValue) THEN
-				IF ~(block IS FreeBlock) THEN
+				IF (block.typeDesc # freeBlockTag) THEN
 					Machine.Fill32(sweepBlockAdr + FreeBlockHeaderSize, blockSize - FreeBlockHeaderSize, DebugValue);
-				ELSIF StrongChecks THEN ASSERT((block IS SystemBlock) OR (block IS RecordBlock) OR (block IS ProtRecBlock) OR (block IS ArrayBlock));
 				END;
-				freeBlock := SYSTEM.VAL(FreeBlock, block);
+				freeBlock := block;
 				
 				IF lastFreeBlockAdr = NilVal THEN
 					lastFreeBlockAdr := sweepBlockAdr;
@@ -605,22 +604,23 @@ BEGIN{UNCHECKED}
 					Machine.Fill32(sweepBlockAdr, FreeBlockHeaderSize, DebugValue); (* rest was already cleared before *)
 				END
 			ELSIF StrongChecks THEN 
-				ASSERT(~(block IS FreeBlock));
+				ASSERT(block.typeDesc = freeBlockTag);
 			END;
-			IF (lastFreeBlockAdr # NilVal) & ((blockMark >= sweepMarkValue) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) 
-				OR (ADDRESS(lastFreeBlockSize) >= ADDRESS (size))
-			)
+			IF (lastFreeBlockAdr # NIL) & ((blockMark >= sweepMarkValue) OR (lastFreeBlockSize >= size) OR (sweepBlockAdr + blockSize = sweepMemBlock.endBlockAdr) )
 			THEN (* no further merging is possible *)
 				IF StrongChecks THEN ASSERT(sweepBlockAdr + blockSize <= sweepMemBlock.endBlockAdr) END;
-				IF ADDRESS(lastFreeBlockSize (*lastFreeBlock.size*) ) >= ADDRESS (size) THEN (* block found - may be too big *)
+				IF lastFreeBlockSize >= size THEN (* block found - may be too big *)
 					p := lastFreeBlock;
 					InitFreeBlock(lastFreeBlock, Unmarked, NilVal, size); (* convert this block into a free heap block and clear its data *)
-					IF ADDRESS(lastFreeBlockSize) > ADDRESS (size) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-						ASSERT(ADDRESS(lastFreeBlockSize - size) >= FreeBlockHeaderSize);
-						freeBlock := SYSTEM.VAL(FreeBlock, SYSTEM.VAL(ADDRESS, p) + size);
+					IF lastFreeBlockSize > size THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
+						IF StrongChecks THEN ASSERT(lastFreeBlockSize - size >= FreeBlockHeaderSize) END;
+						freeBlock := p + size;
 						InitFreeBlock(freeBlock, Unmarked, NilVal, lastFreeBlockSize - size);
 					END;
 					sweepBlockAdr := lastFreeBlockAdr + size; (* make sure next lazy sweep continues after block p *)
+					time2 := Machine.GetTimer()-time1;
+					INC(NgcSweepTime, time2);
+					IF time2 > NgcSweepMax THEN NgcSweepMax := time2 END;
 					RETURN;
 				ELSE
 					InitFreeBlock(lastFreeBlock, Unmarked, NilVal, lastFreeBlockSize); (* convert this block into a free heap block and clear its data *)

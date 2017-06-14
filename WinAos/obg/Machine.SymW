@@ -28,7 +28,7 @@ CONST
 	HeaderSize = 64; 
 	EndBlockOfs = 56; 
 	MemoryBlockOfs = ((BlockHeaderSize + RecordDescSize) + BlockHeaderSize); 
-	MemBlockSize = ((4 * 1024) * 1024); 
+	MemBlockSize = ((32 * 1024) * 1024); 
 	MinMemBlockSize = ((4 * 1024) * 1024); 
 	NilVal = 0; 
 	Second* = 1000; 

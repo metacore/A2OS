@@ -210,7 +210,8 @@ TYPE
 		PROCEDURE ^ GetVariable(i: LONGINT): SyntaxTree.Variable; 
 		PROCEDURE ^ Occupy(pos: LONGINT); 
 		PROCEDURE ^ AddVariable(v: SyntaxTree.Variable); 
-		PROCEDURE ^ GetFreeVariable(type: SyntaxTree.Type; VAR pos: LONGINT): SyntaxTree.Variable; 
+		PROCEDURE ^ CompatibleType(t1, t2: SyntaxTree.Type): BOOLEAN; 
+		PROCEDURE ^ GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable; 
 	END Variables; 
 
 	SymbolMap = POINTER TO RECORD 
@@ -421,7 +422,7 @@ TYPE
 		PROCEDURE ^ GetMathArrayIncrementAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: LONGINT; check: BOOLEAN; VAR result: Operand); 
 		PROCEDURE ^ MathArrayLenOrIncr(type: SyntaxTree.MathArrayType; CONST operand: Operand; VAR dim: IntermediateCode.Operand; increment: BOOLEAN; check: BOOLEAN; VAR result: Operand); 
 		PROCEDURE ^ ArrayLen(type: SyntaxTree.ArrayType; VAR operand: Operand; VAR dim: IntermediateCode.Operand; VAR result: Operand); 
-		PROCEDURE ^ GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN): SyntaxTree.Variable; 
+		PROCEDURE ^ GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable; 
 		PROCEDURE ^ GetMathArrayDescriptorType(dimensions: LONGINT): SyntaxTree.Type; 
 		PROCEDURE ^ NewMathArrayDescriptor(op: Operand; dimensions: LONGINT); 
 		PROCEDURE ^ PushConstString(CONST s: ARRAY OF CHAR); 
@@ -503,6 +504,8 @@ TYPE
 	END ImplementationVisitor; 
 
 	MetaDataGenerator = OBJECT 
+	CONST 
+		EmptyBlockOffset = 2; 
 	VAR 
 		implementationVisitor: ImplementationVisitor; 
 		declarationVisitor: DeclarationVisitor; 
@@ -529,8 +532,8 @@ TYPE
 		PROCEDURE ^ HeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT); 
 		PROCEDURE ^ ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT); 
 		PROCEDURE ^ Info(section: IntermediateCode.Section; CONST s: ARRAY OF CHAR); 
-		PROCEDURE ^ Address(section: IntermediateCode.Section; value: LONGINT); 
-		PROCEDURE ^ Size(section: IntermediateCode.Section; value: LONGINT); 
+		PROCEDURE ^ Address(section: IntermediateCode.Section; value: ADDRESS); 
+		PROCEDURE ^ Size(section: IntermediateCode.Section; value: SIZE); 
 		PROCEDURE ^ Set(section: IntermediateCode.Section; value: SET); 
 		PROCEDURE ^ Longint(section: IntermediateCode.Section; value: LONGINT); 
 		PROCEDURE ^ PatchAddress(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 

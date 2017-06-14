@@ -170,6 +170,12 @@ TYPE
 	MarkList = RECORD 
 		first{UNTRACED} , last{UNTRACED} : HeapBlock; 
 	END; 
+
+	UnsafeArray = POINTER {UNSAFE} TO UnsafeArrayDesc; 
+
+	UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
+		len: ARRAY 8 OF SIZE; 
+	END; 
 VAR 
 	markList: MarkList; 
 	freeLists: FreeLists; 
@@ -216,7 +222,7 @@ VAR
 	PROCEDURE ^ FindFreeBlock(size: SIZE): FreeBlock; 
 	PROCEDURE ^ GetFreeBlockAndSplit(size: SIZE): FreeBlock; 
 	PROCEDURE ^ GetFreeBlock(size: SIZE; VAR p: FreeBlock); 
-	PROCEDURE ^ LazySweep(size: SIZE; VAR p: FreeBlock); 
+	PROCEDURE ^ LazySweep(size: ADDRESS; VAR p: FreeBlock); 
 	PROCEDURE ^ CheckCandidates*; 
 	PROCEDURE ^ Candidate*(p: ADDRESS); 
 	PROCEDURE ^ RegisterCandidates*(adr: ADDRESS; size: SIZE); 
@@ -228,7 +234,7 @@ VAR
 	PROCEDURE ^ InvokeGC*; 
 	PROCEDURE ^ ReturnBlocks; 
 	PROCEDURE ^ LazySweepGC*; 
-	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
 	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ SetPC(p: DataBlockU); 
@@ -236,6 +242,7 @@ VAR
 	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: ANY); 
 	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
 	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 

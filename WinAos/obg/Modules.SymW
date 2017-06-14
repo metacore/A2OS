@@ -43,7 +43,7 @@ TYPE
 	TerminationHandler* = PROCEDURE ; 
 
 	TypeDesc* = POINTER TO RECORD 
-		descSize-: LONGINT; 
+		descSize-: SIZE; 
 		sentinel-: LONGINT; 
 		tag-: ADDRESS; 
 		flags-: SET; 

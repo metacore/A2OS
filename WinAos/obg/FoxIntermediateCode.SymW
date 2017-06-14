@@ -192,7 +192,7 @@ VAR
 	PROCEDURE ^ Equals*(CONST i1, i2: Instruction): BOOLEAN; 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ InitInstructions; 
-	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2, op3: Operand); 
+	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; CONST op1, op2, op3: Operand); 
 	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2: Operand); 
 	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1: Operand); 
 	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT); 

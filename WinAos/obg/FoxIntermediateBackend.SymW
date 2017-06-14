@@ -82,6 +82,7 @@ CONST
 	Size7Flag = 9; 
 	Size8Flag = 10; 
 	ReflectionSupport = TRUE; 
+	ProtectModulesPointers = FALSE; 
 	WarningDynamicLoading = FALSE; 
 TYPE 
 	Position = SyntaxTree.Position; 
@@ -564,6 +565,7 @@ TYPE
 		PROCEDURE ^ ImportsArray(source: IntermediateCode.Section); 
 		PROCEDURE ^ TypeInfoSection(source: IntermediateCode.Section); 
 		PROCEDURE ^ ProcedureDescriptor(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section); 
+		PROCEDURE ^ MakeProcedureDescriptorTag(procedureSection: IntermediateCode.Section): IntermediateCode.Section; 
 		PROCEDURE ^ ProcedureDescriptorPointer(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section); 
 		PROCEDURE ^ ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT); 
 		PROCEDURE ^ BasePointer(section: IntermediateCode.Section); 

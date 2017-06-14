@@ -129,7 +129,7 @@ TYPE
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Wait; 
 		PROCEDURE ^ Activate; 
-	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
+	BEGIN{ACTIVE, SAFE, PRIORITY(Normal)} 
 	END FinalizerCaller; 
 VAR 
 	awc-, awl-: LONGINT; 

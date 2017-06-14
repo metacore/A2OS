@@ -242,7 +242,7 @@ VAR
 	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
-	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: ANY); 
+	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY); 
 	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
 	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 

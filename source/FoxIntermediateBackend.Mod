@@ -105,6 +105,9 @@ CONST
 			a base pointer but a procedure descriptor. The base pointer itself is in such cases located at BP + address size.
 		*)
 		
+		(* I am not 100% sure if it is necessary or not -- so I keep a flag to be able to re-enable this *)
+		ProtectModulesPointers = FALSE;
+		
 		WarningDynamicLoading = FALSE;
 		
 TYPE
@@ -11017,7 +11020,13 @@ TYPE
 					GetCodeSectionNameForSymbol(procedure, name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
-					offset := ToMemoryUnits(module.system,meta.RecordBaseOffset*module.system.addressSize)+1;
+					
+					IF ProtectModulesPointers THEN
+						offset := ToMemoryUnits(module.system,meta.RecordBaseOffset*module.system.addressSize)+1;
+					ELSE
+						offset := ToMemoryUnits(module.system, 2 * module.system.addressSize)+1;
+					END; 
+					
 					IntermediateCode.SetOffset(right,offset); (* tag *)
 					IntermediateCode.InitMemory(left,addressType,fp,0);
 					Emit(Mov(position, left, right));
@@ -11120,10 +11129,12 @@ TYPE
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
 				modulePointerSection := Block("Heaps","ArrayBlockDesc",".@ModulePointerArray", modulePointerSectionOffset);
-				name := "Heaps.AnyPtr";
-				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
-				(* set base pointer *)
-				NamedSymbolAt(modulePointerSection, modulePointerSectionOffset -1, name, NIL, 0, offset);
+				IF ProtectModulesPointers THEN
+					name := "Heaps.AnyPtr";
+					offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+					(* set base pointer *)
+					NamedSymbolAt(modulePointerSection, modulePointerSectionOffset -1, name, NIL, 0, offset);
+				END;
 				ArrayBlock(modulePointerSection, modulePointerSizePC, "", TRUE);
 				modulePointers := 0; 
 
@@ -11482,9 +11493,17 @@ TYPE
 				BasePointer(section);
 				offset := 0;
 			ELSE
-				HeapBlock(mName,typeName,section,2);
+				IF ProtectModulesPointers THEN
+					HeapBlock(mName,typeName,section,2);
+				END;
 				Info(section, "HeapBlock");
-				Symbol(section,section,2,0);
+
+				IF ProtectModulesPointers THEN
+					Symbol(section,section,2,0);
+				ELSE
+					Address(section,0);
+				END;
+				
 				Info(section, "TypeDescriptor");
 				Address(section,0);
 				
@@ -11492,6 +11511,8 @@ TYPE
 			END;
 			RETURN section
 		END NamedBlock;		
+
+	
 				
 		PROCEDURE Block(CONST mName, typeName, suffix: ARRAY OF CHAR; VAR offset: LONGINT): IntermediateCode.Section;
 		VAR name: ARRAY 128 OF CHAR; pooledName: Basic.SegmentedName;
@@ -12195,7 +12216,7 @@ TYPE
 				*)
 				PROCEDURE NProcedure(procedure: SyntaxTree.Procedure; scopeOffset: LONGINT);
 				VAR s: Sections.Section; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; pos: LONGINT;
-					name: Basic.SegmentedName; flags: SET;
+					flags: SET;
 				BEGIN
 					IF RefInfo THEN Info(section, "Procedure") END;
 					pos := CurrentIndex(); 
@@ -12216,9 +12237,6 @@ TYPE
 					END;
 					Set(section, flags);
 					
-					Global.GetSymbolSegmentedName(procedure,name);
-					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
-
 					IF RefInfo THEN Info(section, "Parameters") END;
 					parameter := procedureType.firstParameter;
 					WHILE(parameter # NIL) DO
@@ -12756,10 +12774,12 @@ TYPE
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
 			IF ~implementationVisitor.backend.cooperative THEN
 				ProcedureDescriptorArray(procTableSection, numberProcs);
-				name := "Heaps.AnyPtr";
-				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
-				(* set base pointer *)
-				NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
+				IF ProtectModulesPointers THEN
+					name := "Heaps.AnyPtr";
+					offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+					(* set base pointer *)
+					NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
+				END;
 			END;
 
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);

@@ -253,7 +253,8 @@ BEGIN
 	block := p;
 	IF (block # NIL) & Machine.ValidHeapAddress(ADDRESS OF block.heapBlock)THEN
 		block := block.heapBlock;
-		IF (block # NIL) & Machine.ValidHeapAddress(ADDRESS OF block.typeBlock) THEN
+		IF (block = NIL) THEN RETURN TRUE (* block without heap header -- considered untraced *)
+		ELSIF Machine.ValidHeapAddress(ADDRESS OF block.typeBlock) THEN
 			tdAdr := block.typeBlock;
 			IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
 				RETURN TRUE;
@@ -1083,7 +1084,7 @@ BEGIN
 	CheckPostGC;
 	try := 1;
 	p := NIL;
-	IF  (GC = NilGC) OR (throughput < 64*1024*1024) THEN
+	IF  (GC = NilGC) OR (throughput < 128*1024*1024) THEN
 		GetFreeBlock(size, p);
 	ELSE
 		throughput := 0;
@@ -1368,6 +1369,46 @@ BEGIN
 		END
 	END
 END NewArr;
+
+TYPE
+UnsafeArray= POINTER {UNSAFE} TO UnsafeArrayDesc;
+UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
+	len: ARRAY 8 OF SIZE;
+END;
+
+(* replacement for overcomplicated code emission -- at the cost of a slightly increased runtime cost *)
+PROCEDURE NewArray*(CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: ANY);
+VAR p: ANY; dim: SIZE;
+		
+		PROCEDURE GetSize(): SIZE;
+		VAR i: SIZE; size: SIZE;
+		BEGIN
+			size := 1;
+			FOR i := 0 TO dim-1 DO
+				size := size * a[i];
+			END;
+			RETURN size;
+		END GetSize;
+		
+		PROCEDURE SetSizes(dest: UnsafeArray);
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO dim-1 DO
+				dest.len[i] := a[i];
+			END;
+		END SetSizes;
+
+	BEGIN
+		dim := LEN( a,0 );
+		IF tag = NIL THEN
+			NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 3 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
+		ELSE
+			NewArr(p, tag, GetSize(), dim, FALSE);
+		END;
+		SetSizes(p);
+		dest := p;
+END NewArray;
+
 
 (* obsolete for generic object file / required only for old loader *)
 PROCEDURE FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE;

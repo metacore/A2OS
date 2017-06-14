@@ -8031,22 +8031,24 @@ TYPE
 					END;
 				ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType)  THEN
 					type := type(SyntaxTree.PointerType).pointerBase.resolved;
-					IF FALSE THEN  (* simpler version *)
+					IF TRUE THEN  (* simpler version *)
 						(* 
 						 	push len0
 						 	push len1
 						 	push len2
-						 	
-						 	push size
+						 	push len_size
 						 	push len_adr
-						 	push element_size
-						 	push tag
+
+							push tag
+						 	push static elements
+						 	push element size
 						 	push adr
 						*)
 
 						dim := 0;
 
 						FOR i := x.parameters.Length()-1 TO firstPar BY -1 DO
+							type := type(SyntaxTree.ArrayType).arrayBase.resolved;
 							parameter := x.parameters.GetExpression(i);
 							Evaluate(parameter,r);
 							IF (r.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
@@ -8066,12 +8068,16 @@ TYPE
 
 						openDim := dim;
 
-						baseType := SemanticChecker.ArrayBase(type,openDim);
-						staticLength := ToMemoryUnits(system,system.AlignedSizeOf(baseType));
-						Emit(Push(position, IntermediateCode.Immediate(sizeType, staticLength)));
 
-						IF SemanticChecker.ContainsPointer(baseType) THEN
-							tmp := TypeDescriptorAdr(baseType);
+						staticLength := 1;
+						IF type IS SyntaxTree.ArrayType THEN
+							WHILE (type IS SyntaxTree.ArrayType) DO (* static array *)
+								staticLength := staticLength * type(SyntaxTree.ArrayType).staticLength;
+								type := type(SyntaxTree.ArrayType).arrayBase.resolved;
+							END;
+						END;
+						IF SemanticChecker.ContainsPointer(type) THEN
+							tmp := TypeDescriptorAdr(type);
 							IF ~newObjectFile THEN
 								IntermediateCode.MakeMemory(tmp,addressType);
 							END;
@@ -8079,13 +8085,16 @@ TYPE
 							tmp := nil;
 						END;
 						Emit(Push(position,tmp)); (* type descriptor *)
+						Emit(Push(position, IntermediateCode.Immediate(sizeType, staticLength))); (* static length *)
+						staticLength := ToMemoryUnits(system,system.AlignedSizeOf(type));
+						Emit(Push(position, IntermediateCode.Immediate(sizeType, staticLength))); (* element size *)
 
 						
 						Designate(p0,l);
 						Emit(Push(position,l.op)); (* address *)
 						ReleaseOperand(l);
 
-						CallThis(position,"Heaps","NewArray", 5);
+						CallThis(position,"Heaps","NewArray", 6);
 						
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,dim*system.addressSize));
 						Emit(Add(position,sp,sp,tmp));

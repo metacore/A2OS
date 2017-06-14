@@ -108,6 +108,8 @@ CONST
 		(* I am not 100% sure if it is necessary or not -- so I keep a flag to be able to re-enable this *)
 		ProtectModulesPointers = FALSE;
 		
+		CreateProcedureDescInfo = TRUE;
+		
 		WarningDynamicLoading = FALSE;
 		
 TYPE
@@ -12570,12 +12572,55 @@ TYPE
 				PointerArray(section, procedure.procedureScope, numberPointers);
 		END ProcedureDescriptor; 
 		
+		(* only for tracing, the descriptor is otherwise not complete ! *)
+		PROCEDURE MakeProcedureDescriptorTag(procedureSection: IntermediateCode.Section): IntermediateCode.Section;
+		VAR section: IntermediateCode.Section; infoName: Basic.SectionName;  offset: LONGINT; moduleSection: IntermediateCode.Section; name: Basic.SegmentedName;
+		BEGIN
+			(* mini pseudo type tag that only refers to the information data for debugging purposes -- then the descriptor in the GC can be identified *)
+			name := procedureSection.name;
+			Basic.AppendToSegmentedName(name,".@Info");
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+			Address(section,0);
+			Symbol(section,section,2,0);
+			(*
+				TypeDesc* = POINTER TO RECORD   (* ug: adapt constant TypeDescRecSize if this type is changed !!! *)
+					descSize: LONGINT;
+					sentinel: LONGINT;	(* = MPO-4 *)
+					tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
+					flags*: SET;
+					mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
+					name*: Name;
+				END;
+			*)
+			Size(section, 0);
+			Longint(section,0);
+			Address(section,0);
+			Set(section,{});
+			moduleSection := ModuleSection();
+			Symbol( section, moduleSection, moduleSection.pc,0);
+			IF procedureSection.symbol = NIL THEN 
+				Basic.SegmentedNameToString(procedureSection.name, infoName);
+			ELSE
+				Global.GetSymbolNameInScope(procedureSection.symbol, module.module.moduleScope, infoName);
+			END;
+			Name(section, infoName);
+			Size(section, 0);
+			RETURN section;
+		END MakeProcedureDescriptorTag;
+		
 		PROCEDURE ProcedureDescriptorPointer(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section);
 		VAR dest: IntermediateCode.Section; name: Basic.SegmentedName;  offset: LONGINT;
 		BEGIN
 			name := procedureSection.name;
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@Descriptor"));
-			dest := NamedBlock("Heaps","SystemBlock",name,offset);
+			IF CreateProcedureDescInfo THEN
+				dest := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+				Address(dest,0);
+				Symbol(dest, MakeProcedureDescriptorTag(procedureSection),2,0);
+				offset := dest.pc;
+			ELSE
+				dest := NamedBlock("Heaps","SystemBlock",name,offset);
+			END;
 			ProcedureDescriptor(dest, procedureSection);
 			Symbol(section, dest, offset, 0);
 		END ProcedureDescriptorPointer;

@@ -61,8 +61,8 @@ TYPE
 	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
 	*)
 
-	TypeDesc* = POINTER TO RECORD 
-		descSize-: LONGINT;
+	TypeDesc* = POINTER  TO RECORD 
+		descSize-: SIZE;
 		sentinel-: LONGINT;	(* = MPO-4 *)
 		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags-: SET;

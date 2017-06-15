@@ -3240,10 +3240,8 @@ TYPE
 				IF ~hasFocus & ~alwaysShowCursorI THEN cursor.SetVisible(FALSE) END;
 				dragInfo.data := dropTarget;
 				ConfirmDrag(TRUE, dragInfo);
-				IF dragInfo.onAccept # NIL THEN dragInfo.onAccept(SELF, dragInfo) END;
 			ELSE
 				ConfirmDrag(FALSE, dragInfo);
-				IF dragInfo.onReject # NIL THEN dragInfo.onReject(SELF, dragInfo) END;
 			END;
 		END DragDropped;
 

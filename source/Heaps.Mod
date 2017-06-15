@@ -1038,6 +1038,16 @@ BEGIN
 	ClearFreeLists;
 END ReturnBlocks;
 
+(* 
+	caller must hold the Heaps lock 
+	required for low level tracing
+*)
+PROCEDURE FullSweep*;
+VAR p {UNTRACED}: FreeBlock;
+BEGIN
+	GetFreeBlock(MAX(LONGINT), p);
+END FullSweep;
+
 PROCEDURE LazySweepGC*;
 VAR p {UNTRACED}: FreeBlock;
 BEGIN

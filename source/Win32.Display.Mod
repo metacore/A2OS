@@ -84,7 +84,7 @@ TYPE
 		dbch_devicetype: LONGINT ;
 		dbch_reserved: LONGINT;
 	END;
-	DEV_BROADCAST_HDRP  = POINTER TO DEV_BROADCAST_HDR;
+	DEV_BROADCAST_HDRP  = POINTER  TO DEV_BROADCAST_HDR;
 
 	DEV_BROADCAST_VOLUME = RECORD   (DEV_BROADCAST_HDR)
 		dbcv_unitmask: SET;
@@ -824,7 +824,7 @@ VAR
 
 	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
-	VAR win: Window;  dbh: DEV_BROADCAST_HDRP; dbv : DEV_BROADCAST_VOLUMEP; i: LONGINT;
+	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: LONGINT;
 	BEGIN
 
 		IF uMsg = WM_DEVICECHANGE THEN

@@ -785,7 +785,7 @@ VAR
 
 	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  dbh: DEV_BROADCAST_HDRP; dbv : DEV_BROADCAST_VOLUMEP; i: LONGINT;
+	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv {UNTRACED} : DEV_BROADCAST_VOLUMEP; i: LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
 		IF win # NIL THEN SYSTEM.SetActivity (win.processor) END;

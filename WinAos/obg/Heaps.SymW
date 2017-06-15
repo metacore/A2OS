@@ -233,6 +233,7 @@ VAR
 	PROCEDURE ^ CollectGarbage*(root: RootObject); 
 	PROCEDURE ^ InvokeGC*; 
 	PROCEDURE ^ ReturnBlocks; 
+	PROCEDURE ^ FullSweep*; 
 	PROCEDURE ^ LazySweepGC*; 
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 

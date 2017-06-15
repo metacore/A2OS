@@ -1299,6 +1299,7 @@ TYPE
 			pointerBase-: Type;
 			isPlain-: BOOLEAN;
 			isUnsafe-: BOOLEAN;
+			isUntraced-: BOOLEAN;
 			isDisposable-: BOOLEAN;
 			isHidden-: BOOLEAN;
 
@@ -1313,6 +1314,7 @@ TYPE
 			SELF.scope := scope;
 			hasPointers := TRUE;
 			isHidden := FALSE;
+			isUntraced := FALSE;
 		END InitPointerType;
 
 		PROCEDURE SetHidden*(hidden: BOOLEAN);
@@ -1338,6 +1340,11 @@ TYPE
 		BEGIN
 			isUnsafe := unsafe;
 		END SetUnsafe;
+		
+		PROCEDURE SetUntraced*(untraced: BOOLEAN);
+		BEGIN
+			isUntraced := untraced;
+		END SetUntraced;
 
 		PROCEDURE SetDisposable*(disposable: BOOLEAN);
 		BEGIN
@@ -1377,7 +1384,7 @@ TYPE
 		END IsPointer;
 		
 		PROCEDURE NeedsTrace*(): BOOLEAN;
-		BEGIN RETURN ~isUnsafe;
+		BEGIN RETURN ~isUnsafe & ~isUntraced;
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);

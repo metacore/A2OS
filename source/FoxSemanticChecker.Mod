@@ -725,6 +725,7 @@ TYPE
 				x.SetPlain(HasFlag(modifiers,Global.NamePlain,position));
 				x.SetDisposable(HasFlag(modifiers,Global.NameDisposable, position));
 				x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
+				x.SetUntraced(HasFlag(modifiers,Global.NameUntraced,position));
 				(* inheritance cycle check
 					example:
 					A=POINTER TO RECORD(B) END;

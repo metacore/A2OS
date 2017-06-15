@@ -83,6 +83,7 @@ CONST
 	Size8Flag = 10; 
 	ReflectionSupport = TRUE; 
 	ProtectModulesPointers = FALSE; 
+	CreateProcedureDescInfo = TRUE; 
 	WarningDynamicLoading = FALSE; 
 TYPE 
 	Position = SyntaxTree.Position; 

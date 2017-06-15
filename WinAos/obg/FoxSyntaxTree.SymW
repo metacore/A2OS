@@ -418,6 +418,7 @@ TYPE
 		pointerBase-: Type; 
 		isPlain-: BOOLEAN; 
 		isUnsafe-: BOOLEAN; 
+		isUntraced-: BOOLEAN; 
 		isDisposable-: BOOLEAN; 
 		isHidden-: BOOLEAN; 
 
@@ -427,6 +428,7 @@ TYPE
 		PROCEDURE ^ SetPointerBase*(type: Type); 
 		PROCEDURE ^ SetPlain*(plain: BOOLEAN); 
 		PROCEDURE ^ SetUnsafe*(unsafe: BOOLEAN); 
+		PROCEDURE ^ SetUntraced*(untraced: BOOLEAN); 
 		PROCEDURE ^ SetDisposable*(disposable: BOOLEAN); 
 		PROCEDURE ^ Extends*(this: Type): BOOLEAN; 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 

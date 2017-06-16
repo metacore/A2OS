@@ -166,6 +166,8 @@ TYPE
 	ToggleEditMode* = POINTER TO RECORD
 		recursion*: Recursion;
 	END;
+	
+	FindComponentMode* = POINTER TO RECORD END;
 
 	Event* = RECORD
 	END;
@@ -2094,7 +2096,11 @@ TYPE
 						END
 					ELSIF msg.msgSubType = Messages.MsgDragDropped THEN
 						IF (msg.ext # NIL) THEN
-							IF (msg.ext(WM.DragInfo).data # NIL) & (msg.ext(WM.DragInfo).data IS ToggleEditMode) THEN
+							IF (msg.ext(WM.DragInfo).data # NIL) & (msg.ext(WM.DragInfo).data IS FindComponentMode) THEN
+								IF msg.ext(WM.DragInfo).onAccept # NIL THEN 
+									msg.ext(WM.DragInfo).onAccept(po, msg.ext(WM.DragInfo));
+								END;
+							ELSIF (msg.ext(WM.DragInfo).data # NIL) & (msg.ext(WM.DragInfo).data IS ToggleEditMode) THEN
 								SetEditMode(~editMode.Get(), msg.ext(WM.DragInfo).data(ToggleEditMode).recursion # Recursion.None);
 								Invalidate;
 							ELSIF editMode.Get() THEN

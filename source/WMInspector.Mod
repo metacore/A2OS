@@ -985,7 +985,7 @@ TYPE
 		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
 		VAR
 			img,icon: WMGraphics.Image; canvas, iconCanvas: WMGraphics.BufferCanvas; color: LONGINT;
-			r: WMRectangles.Rectangle;
+			r: WMRectangles.Rectangle; data: WMComponents.FindComponentMode;
 		BEGIN
 			IF 0 IN keys THEN
 				r := GetClientRect();
@@ -994,8 +994,8 @@ TYPE
 				Raster.Create(img, 30,30, Raster.BGRA8888);
 				NEW(canvas,img);
 				canvas.Fill(WMRectangles.MakeRect(0, 0, 30,30), color , WMGraphics.ModeSrcOverDst);
-
-				IF StartDrag(NIL, img, 0,0,Accept,Accept) THEN
+				NEW(data);
+				IF StartDrag(data, img, 0,0,Accept,Accept) THEN
 				END;
 			END
 		END PointerDown;

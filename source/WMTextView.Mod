@@ -3216,7 +3216,14 @@ TYPE
 				text.ReleaseRead
 			END;
 		END DragOver;
-
+		
+		PROCEDURE ConfirmDrag(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo);
+		BEGIN
+			IF dragInfo.onAccept # NIL THEN 
+				dragInfo.onAccept(SELF, dragInfo) 
+			END;
+		END ConfirmDrag;
+		
 		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR dropTarget : TextDropTarget;
 			pos, internalPos : LONGINT;

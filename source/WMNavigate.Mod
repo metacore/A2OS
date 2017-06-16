@@ -1778,9 +1778,12 @@ BEGIN {EXCLUSIVE}
 			SetIsVisibleNavigation(FALSE);
 		END;
 		manager.SetWindowSize(window, newWidth, newHeight);
+		(* potentially another thread has the sequencer lock of this window and might require the manager lock. Lock order: never take manager lock before sequencer lock *)
+		manager.lock.ReleaseWrite;
 		window.Resized(newWidth, newHeight);
+	ELSE
+		manager.lock.ReleaseWrite;
 	END;
-	manager.lock.ReleaseWrite;
 END ToggleFullscreen;
 
 PROCEDURE MoveWindow*(context : Commands.Context);

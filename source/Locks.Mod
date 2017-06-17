@@ -125,10 +125,11 @@ TYPE
 
 		(** acquire a write-lock on the object *)
 		PROCEDURE AcquireWrite*;
-		VAR me : ANY;
+		VAR me, other : ANY;
 		BEGIN
 			IF Statistics THEN INC(nofWriteLocks); END;
 			me := Objects.ActiveObject();
+			other := lockedBy;
 			IF lockedBy = me THEN (* recursive use *)
 				INC(lockLevel);
 				ASSERT(lockLevel # -1, 3015)	(* overflow *)
@@ -178,10 +179,11 @@ TYPE
 
 		(** acquire a read-lock on the object *)
 		PROCEDURE AcquireRead*;
-		VAR me : ANY; i : LONGINT; found : BOOLEAN; t : ReaderLockList;
+		VAR me, other : ANY; i : LONGINT; found : BOOLEAN; t : ReaderLockList;
 		BEGIN {EXCLUSIVE}
 			IF Statistics THEN INC(nofReadLocks); END;
 			me := Objects.ActiveObject();
+			other := lockedBy;
 			AWAIT(DEADLOCK OR (lockedBy = NIL) OR (lockedBy = me));  (* write owner may acquire a read *)
 			IF DEADLOCK THEN HALT(3099) END;
 			lastReader := me;

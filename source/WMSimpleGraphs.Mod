@@ -15,7 +15,7 @@ TYPE
 	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept: LONGREAL);
 
 TYPE
-	Window=OBJECT(WM.Window);
+	Window=OBJECT(WM.BufferWindow);
 	VAR width,height:LONGINT;
 	END Window;
 	

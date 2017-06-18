@@ -9,6 +9,7 @@ IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, M
 
 CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
 		MinSize=30;
+		MaxSize=2048;
 	
 TYPE 
 	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept: LONGREAL);
@@ -28,7 +29,7 @@ TYPE
 			SELF.data:=data;
 			max:=MAX(data);
 			width:=LEN(data,0); height:=ENTIER(max)+1;
-			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=MIN(width,MaxSize) END;
 			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
 			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
@@ -70,8 +71,8 @@ TYPE
 			max:=MAX(ABS(min), ABS(max));
 			min:=MIN(0, min); 
 			IF max=0 THEN max:=1 END;
-			width:=MAX(1,LEN(data,0)); 
-			height:=MAX(1,LEN(data,1));
+			width:=MIN(MaxSize, MAX(1,LEN(data,0))); 
+			height:=MIN(MaxSize, MAX(1,LEN(data,1)));
 			Init(width, height, TRUE);
 			offset:=0; gain:=255/max;
 			IF( width<10) OR (height<10) THEN 
@@ -130,8 +131,8 @@ TYPE
 			width:=LEN(data,0); height:=ENTIER(max-min)+1;
 			IF Reals.IsNaNL(width) THEN width:=100 END;
 			IF Reals.IsNaNL(height) THEN height:=100 END;
-			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
-			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=MIN(MaxSize, width) END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=MIN(MaxSize, height) END;
 			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
@@ -155,11 +156,13 @@ TYPE
 			mn:=-border+ENTIER(0.5+min*h / height);
 			mx:=ENTIER(0.5+max*h / height);
 			FOR i:=0 TO LEN(data,0)-2 DO
-				x0:=border+i*w DIV width;
-				y0:=h+mn-ENTIER(0.5+data[i]*h / height);
-				x1:=border+(i+1)*w DIV width;
-				y1:=h+mn-ENTIER(0.5+data[i+1]*h / height); 
-				canvas.Line(x0,y0,x1,y1, WMGraphics.Black, WMGraphics.ModeCopy);
+				IF ~Reals.IsNaNL(data[i]) &~Reals.IsNaNL(data[i+1]) THEN
+					x0:=border+i*w DIV width;
+					y0:=h+mn-ENTIER(0.5+data[i]*h / height);
+					x1:=border+(i+1)*w DIV width;
+					y1:=h+mn-ENTIER(0.5+data[i+1]*h / height); 
+					canvas.Line(x0,y0,x1,y1, WMGraphics.Black, WMGraphics.ModeCopy);
+				END;
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);	END;
 			INC(timestamp);
@@ -178,11 +181,11 @@ Graphs* = OBJECT (Window);
 			SELF.data:=data;
 			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
-			width:=LEN(data,1); height:=ENTIER(max-min)+1;
+			width:=MAX(2,LEN(data,1)); height:=MAX(2, ENTIER(max-min)+1);
 			IF Reals.IsNaNL(width) THEN width:=100 END;
 			IF Reals.IsNaNL(height) THEN height:=100 END;
-			IF width<MinSize THEN w0:=10*width ELSE w0:=width END;
-			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			IF width<MinSize THEN w0:=10*width ELSE w0:=MIN(width,MaxSize) END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=MIN(height,MaxSize) END;
 			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
@@ -206,11 +209,13 @@ Graphs* = OBJECT (Window);
 			mx:=ENTIER(0.5+max*h / height);
 			FOR j:=0 TO LEN(data,0)-1 DO
 				FOR i:=0 TO LEN(data,1)-2 DO
-					x0:=border+i*w DIV width;
-					y0:=h+mn-ENTIER(0.5+data[j,i]*h / height);
-					x1:=border+(i+1)*w DIV width;
-					y1:=h+mn-ENTIER(0.5+data[j,i+1]*h / height);
-					canvas.Line(x0, y0,	x1, y1, Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
+					IF ~Reals.IsNaNL(data[j,i]) &~Reals.IsNaNL(data[j,i+1]) THEN
+						x0:=border+i*w DIV width;
+						y0:=h+mn-ENTIER(0.5+data[j,i]*h / height);
+						x1:=border+(i+1)*w DIV width;
+						y1:=h+mn-ENTIER(0.5+data[j,i+1]*h / height);
+						canvas.Line(x0, y0,	x1, y1, Colors[j MOD LEN(Colors,0)], WMGraphics.ModeCopy);
+					END;
 				END;
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy); END;
@@ -234,8 +239,8 @@ GraphXY* = OBJECT (Window);
 			width:=ENTIER(maxx-minx)+1; height:=ENTIER(maxy-miny)+1;
 			IF Reals.IsNaNL(width) THEN width:=100 END;
 			IF Reals.IsNaNL(height) THEN height:=100 END;
-			IF (width<MinSize) THEN w0:=10*width ELSE w0:=width END;
-			IF height<MinSize THEN h0:=10*height ELSE h0:=height END;
+			IF (width<MinSize) THEN w0:=10*width ELSE w0:=MIN(MaxSize,width) END;
+			IF height<MinSize THEN h0:=10*height ELSE h0:=MIN(MaxSize, height) END;
 			Init(w0,h0,FALSE);
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
@@ -291,11 +296,13 @@ GraphXY* = OBJECT (Window);
 			mnw:=-border+ENTIER(0.5+minx* scalex);	mxw:=ENTIER(0.5+maxx* scalex);
 			mnh:=-border+ENTIER(0.5+miny* scaley);	mxh:=ENTIER(0.5+maxy* scaley);
 			FOR i:=0 TO LEN(data,1)-2 DO
-				x0:=-mnw+ENTIER(0.5+data[0,i]*scalex);
-				y0:= h+mnh-ENTIER(0.5+data[1,i]*scaley);
-				x1:= -mnw+ENTIER(0.5+data[0,i+1]*scalex);
-				y1:= h+mnh-ENTIER(0.5+data[1,i+1]*scaley); 
-				canvas.Line(x0,y0,x1,y1, WMGraphics.Blue, WMGraphics.ModeCopy);
+				IF ~Reals.IsNaNL(data[0,i]) &~Reals.IsNaNL(data[1,i]) & ~Reals.IsNaNL(data[0,i+1]) &~Reals.IsNaNL(data[1,i+1])THEN
+					x0:=-mnw+ENTIER(0.5+data[0,i]*scalex);
+					y0:= h+mnh-ENTIER(0.5+data[1,i]*scaley);
+					x1:= -mnw+ENTIER(0.5+data[0,i+1]*scalex);
+					y1:= h+mnh-ENTIER(0.5+data[1,i+1]*scaley); 
+					canvas.Line(x0,y0,x1,y1, WMGraphics.Blue, WMGraphics.ModeCopy);
+				END;
 			END;
 			Axes(canvas, w,h,mnw,mnh,scalex,scaley);
 			INC(timestamp);
@@ -449,7 +456,7 @@ END Cleanup;
 
 BEGIN
 	Modules.InstallTermHandler(Cleanup);
-	Pos:=0; NewWindowPos(0);
+	Pos:=50; NewWindowPos(0);
 END WMSimpleGraphs.
 
 SystemTools.Free WMSimpleGraphs ~

@@ -264,11 +264,110 @@ TYPE
 			(* Dummy. But is implemented in WMGraphicsGfx *)
 		END SetLineWidth;
 
-
 		(** draw a line within the current clipping rectangle *)
 		(** Override for improved speed *)
 		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
 		VAR t, xi, mi, xf, mf, dt2, ds2 : LONGINT; r: Rectangles.Rectangle;
+		
+		
+		(* clipped bresenham algorithm according to 
+			Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
+		*)
+		
+		PROCEDURE ClippedLine(sx1,sy1,sx2,sy2,wx1,wy1,wx2,wy2: LONGINT; color : Color; mode : LONGINT);
+
+		VAR
+			dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: LONGINT;
+			tmp: HUGEINT;
+			rev,setx: BOOLEAN;
+		BEGIN
+			(* standardization && trivial reject *)
+			IF( sx1 < sx2 ) THEN 
+				IF ( sx1 > wx2) OR (sx2 < wx1 ) THEN RETURN END; 
+				stx := 1; 
+			ELSE 
+				IF ( sx2 > wx2) OR ( sx1 < wx1 ) THEN RETURN END;
+				stx := -1; 
+				sx1 :=-sx1; sx2 :=-sx2; 
+				wx1 :=-wx1; wx2 :=-wx2; 
+				Swap(wx1,wx2); 
+			END;
+
+			IF ( sy1 < sy2 ) THEN 
+				IF ( sy1 > wy2) OR (sy2 < wy1 ) THEN RETURN END; 
+				sty:=1; 
+			ELSE 
+				IF ( sy2 > wy2) OR (sy1 < wy1 ) THEN RETURN END; 
+				sty :=-1; 
+				sy1 :=-sy1; sy2 :=-sy2; 
+				wy1 :=-wy1; wy2 :=-wy2; 
+				Swap(wy1,wy2);
+			END; 
+			
+			dsx := sx2-sx1; dsy := sy2-sy1; 
+			IF ( dsx < dsy ) THEN
+				rev := TRUE;
+				Swap(sx1,sy1); Swap(sx2,sy2); Swap(dsx,dsy); 
+				Swap(wx1,wy1); Swap(wx2,wy2); Swap(stx,sty); 
+			ELSE
+				rev := FALSE;
+			END;
+		
+			(* Bresenham's set up *) 
+			dx2 := 2*dsx; dy2 := 2*dsy; 
+			xd := sx1; yd :=sy1; 
+			e := 2*dsy-dsx; term := sx2; 
+			setx := TRUE;
+			IF (sy1 < wy1) THEN
+				(* window horizontal entry *) 
+				tmp := HUGEINT(dx2) *(wy1-sy1)-dsx; 
+				INC(xd,LONGINT(tmp DIV dy2));
+				rem := LONGINT(tmp MOD dy2); 
+				IF ( xd>wx2 ) THEN RETURN END; 
+				IF ( xd+1>=wx1 ) THEN
+					yd := wy1; DEC(e,rem+dsx); 
+					IF (rem>0 ) THEN INC(xd); INC(e,dy2) END; 
+					setx := FALSE;
+				END;
+			END;
+			
+			IF setx & ( sx1 < wx1 )  THEN
+				(* window vertical entry *) 
+				tmp := HUGEINT(dy2) * (wx1-sx1); 
+				INC(yd, LONGINT(tmp DIV dx2)); 
+				rem := LONGINT(tmp MOD dx2); 
+				IF ( yd>wy2) OR (yd=wy2) & (rem>=dsx) THEN RETURN END; 
+				xd :=wx1; INC(e,rem); 
+				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END; 
+			END;
+			
+			IF ( sy2 > wy2 )  THEN
+				(* window exit *) 
+				tmp := HUGEINT(dx2)*(wy2-sy1)+dsx; 
+				term := sx1+LONGINT(tmp DIV dy2); 
+				rem := LONGINT(tmp MOD dy2); 
+				IF ( rem=0 ) THEN DEC(term) END;
+			END;
+			IF ( term>wx2) THEN term := wx2; END;
+			INC(term); 
+			IF ( sty =-1 ) THEN yd := -yd END;
+			
+			(* reverse transformation *)
+			IF ( stx =-1 ) THEN xd := -xd; term := -term; END;
+			DEC(dx2,dy2);
+			
+			WHILE ( xd # term ) DO (* Bresenham's line drawing *) 
+				IF rev THEN
+					SetPixel(yd, xd, color, mode);
+				ELSE
+					SetPixel(xd,yd, color, mode);
+				END;
+				IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
+				ELSE INC(xd, stx); INC(e, dy2); 
+				END;
+			END;
+		END ClippedLine;
+		
 		BEGIN
 			IF y0 = y1 THEN (* horizontal case *)
 				IF x0 > x1 THEN t := x0; x0 := x1; x1 := t END;
@@ -277,6 +376,9 @@ TYPE
 				IF y0 > y1 THEN t := y0; y0 := y1; y1 := t END;
 				Fill(Rectangles.MakeRect(x0, y0, x0 + 1, y1 + 1), color, mode)
 			ELSE (* general case *)
+				GetClipRect(r);
+				ClippedLine(x0,y0,x1,y1,r.l,r.t,r.r,r.b,color,mode);
+				(*
 				IF ABS(y1 - y0) > ABS(x1 - x0) THEN
 					IF y0 > y1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
 					xi := x0; xf :=	y0 - y1; mi := (x1 - x0) DIV (y1 - y0); mf := 2 * ( (x1 - x0) MOD (y1 - y0)); dt2 := 2 * (y1 - y0);
@@ -319,6 +421,7 @@ TYPE
 						IF xf > 0 THEN INC(xi); DEC(xf, dt2) END
 					END
 				END
+				*)
 			END
 		END Line;
 		
@@ -620,6 +723,12 @@ PROCEDURE Max(a, b:LONGINT):LONGINT;
 BEGIN
 	IF a>b THEN RETURN a ELSE RETURN b END
 END Max;
+
+PROCEDURE Swap(VAR a,b: LONGINT);
+VAR t: LONGINT;
+BEGIN
+	t := a; a := b; b := t;
+END Swap;
 
 (* Tool Functions *)
 PROCEDURE MakeRectangle*(l, t, r, b: LONGINT):Rectangle;

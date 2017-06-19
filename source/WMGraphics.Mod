@@ -273,82 +273,80 @@ TYPE
 		(* clipped bresenham algorithm according to 
 			Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
 		*)
-		
-		PROCEDURE ClippedLine(sx1,sy1,sx2,sy2,wx1,wy1,wx2,wy2: LONGINT; color : Color; mode : LONGINT);
-
+		PROCEDURE ClippedLine(x0,y0,x1,y1: LONGINT; r: Rectangle; color : Color; mode : LONGINT);
 		VAR
 			dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: LONGINT;
 			tmp: HUGEINT;
 			rev,setx: BOOLEAN;
 		BEGIN
 			(* standardization && trivial reject *)
-			IF( sx1 < sx2 ) THEN 
-				IF ( sx1 > wx2) OR (sx2 < wx1 ) THEN RETURN END; 
+			IF( x0 < x1 ) THEN 
+				IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END; 
 				stx := 1; 
 			ELSE 
-				IF ( sx2 > wx2) OR ( sx1 < wx1 ) THEN RETURN END;
+				IF ( x1 > r.r) OR ( x0 < r.l ) THEN RETURN END;
 				stx := -1; 
-				sx1 :=-sx1; sx2 :=-sx2; 
-				wx1 :=-wx1; wx2 :=-wx2; 
-				Swap(wx1,wx2); 
+				x0 :=-x0; x1 :=-x1; 
+				r.l :=-r.l; r.r :=-r.r; 
+				Swap(r.l,r.r); 
 			END;
 
-			IF ( sy1 < sy2 ) THEN 
-				IF ( sy1 > wy2) OR (sy2 < wy1 ) THEN RETURN END; 
+			IF ( y0 < y1 ) THEN 
+				IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END; 
 				sty:=1; 
 			ELSE 
-				IF ( sy2 > wy2) OR (sy1 < wy1 ) THEN RETURN END; 
+				IF ( y1 > r.b) OR (y0 < r.t ) THEN RETURN END; 
 				sty :=-1; 
-				sy1 :=-sy1; sy2 :=-sy2; 
-				wy1 :=-wy1; wy2 :=-wy2; 
-				Swap(wy1,wy2);
+				y0 :=-y0; y1 :=-y1; 
+				r.t :=-r.t; r.b :=-r.b; 
+				Swap(r.t,r.b);
 			END; 
 			
-			dsx := sx2-sx1; dsy := sy2-sy1; 
+			dsx := x1-x0; dsy := y1-y0; 
 			IF ( dsx < dsy ) THEN
 				rev := TRUE;
-				Swap(sx1,sy1); Swap(sx2,sy2); Swap(dsx,dsy); 
-				Swap(wx1,wy1); Swap(wx2,wy2); Swap(stx,sty); 
+				Swap(x0,y0); Swap(x1,y1); Swap(dsx,dsy); 
+				Swap(r.l,r.t); Swap(r.r,r.b); Swap(stx,sty); 
 			ELSE
 				rev := FALSE;
 			END;
 		
 			(* Bresenham's set up *) 
 			dx2 := 2*dsx; dy2 := 2*dsy; 
-			xd := sx1; yd :=sy1; 
-			e := 2*dsy-dsx; term := sx2; 
+			xd := x0; yd :=y0; 
+			e := 2*dsy-dsx; term := x1; 
 			setx := TRUE;
-			IF (sy1 < wy1) THEN
+			IF (y0 < r.t) THEN
 				(* window horizontal entry *) 
-				tmp := HUGEINT(dx2) *(wy1-sy1)-dsx; 
+				tmp := HUGEINT(dx2) *(r.t-y0)-dsx; 
 				INC(xd,LONGINT(tmp DIV dy2));
 				rem := LONGINT(tmp MOD dy2); 
-				IF ( xd>wx2 ) THEN RETURN END; 
-				IF ( xd+1>=wx1 ) THEN
-					yd := wy1; DEC(e,rem+dsx); 
+				IF ( xd>r.r ) THEN RETURN END; 
+				IF ( xd+1>=r.l ) THEN
+					yd := r.t; DEC(e,rem+dsx); 
 					IF (rem>0 ) THEN INC(xd); INC(e,dy2) END; 
 					setx := FALSE;
 				END;
 			END;
 			
-			IF setx & ( sx1 < wx1 )  THEN
+			IF setx & ( x0 < r.l )  THEN
 				(* window vertical entry *) 
-				tmp := HUGEINT(dy2) * (wx1-sx1); 
+				tmp := HUGEINT(dy2) * (r.l-x0); 
 				INC(yd, LONGINT(tmp DIV dx2)); 
 				rem := LONGINT(tmp MOD dx2); 
-				IF ( yd>wy2) OR (yd=wy2) & (rem>=dsx) THEN RETURN END; 
-				xd :=wx1; INC(e,rem); 
+				IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END; 
+				xd :=r.l; INC(e,rem); 
 				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END; 
 			END;
 			
-			IF ( sy2 > wy2 )  THEN
+			IF ( y1 > r.b )  THEN
 				(* window exit *) 
-				tmp := HUGEINT(dx2)*(wy2-sy1)+dsx; 
-				term := sx1+LONGINT(tmp DIV dy2); 
+				tmp := HUGEINT(dx2)*(r.b-y0)+dsx; 
+				term := x0+LONGINT(tmp DIV dy2); 
 				rem := LONGINT(tmp MOD dy2); 
 				IF ( rem=0 ) THEN DEC(term) END;
 			END;
-			IF ( term>wx2) THEN term := wx2; END;
+			IF ( term>r.r) THEN term := r.r; END;
 			INC(term); 
 			IF ( sty =-1 ) THEN yd := -yd END;
 			
@@ -356,14 +354,20 @@ TYPE
 			IF ( stx =-1 ) THEN xd := -xd; term := -term; END;
 			DEC(dx2,dy2);
 			
-			WHILE ( xd # term ) DO (* Bresenham's line drawing *) 
-				IF rev THEN
+			(* Bresenham's line drawing *) 
+			IF rev THEN
+				WHILE ( xd # term ) DO 
 					SetPixel(yd, xd, color, mode);
-				ELSE
-					SetPixel(xd,yd, color, mode);
+					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
+					ELSE INC(xd, stx); INC(e, dy2); 
+					END;
 				END;
-				IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
-				ELSE INC(xd, stx); INC(e, dy2); 
+			ELSE
+				WHILE ( xd # term ) DO (* Bresenham's line drawing *) 
+						SetPixel(xd,yd, color, mode);
+					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
+					ELSE INC(xd, stx); INC(e, dy2); 
+					END;
 				END;
 			END;
 		END ClippedLine;
@@ -377,7 +381,7 @@ TYPE
 				Fill(Rectangles.MakeRect(x0, y0, x0 + 1, y1 + 1), color, mode)
 			ELSE (* general case *)
 				GetClipRect(r);
-				ClippedLine(x0,y0,x1,y1,r.l,r.t,r.r,r.b,color,mode);
+				ClippedLine(x0,y0,x1,y1,r,color,mode);
 				(*
 				IF ABS(y1 - y0) > ABS(x1 - x0) THEN
 					IF y0 > y1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;

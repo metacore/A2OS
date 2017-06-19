@@ -264,10 +264,11 @@ TYPE
 			(* Dummy. But is implemented in WMGraphicsGfx *)
 		END SetLineWidth;
 
+
 		(** draw a line within the current clipping rectangle *)
 		(** Override for improved speed *)
 		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
-		VAR t, xi, mi, xf, mf, dt2 : LONGINT;
+		VAR t, xi, mi, xf, mf, dt2, ds2 : LONGINT; r: Rectangles.Rectangle;
 		BEGIN
 			IF y0 = y1 THEN (* horizontal case *)
 				IF x0 > x1 THEN t := x0; x0 := x1; x1 := t END;
@@ -279,6 +280,19 @@ TYPE
 				IF ABS(y1 - y0) > ABS(x1 - x0) THEN
 					IF y0 > y1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
 					xi := x0; xf :=	y0 - y1; mi := (x1 - x0) DIV (y1 - y0); mf := 2 * ( (x1 - x0) MOD (y1 - y0)); dt2 := 2 * (y1 - y0);
+					GetClipRect(r);
+					IF y0 < r.t THEN 
+						(* this loop should be replaced by a closed expression *)
+						FOR t := y0 TO r.t-1 DO
+							INC(xi, mi); INC(xf, mf);
+							IF xf > 0 THEN INC(xi); DEC(xf, dt2) END
+						END;
+						y0 := r.t;
+					END;
+					IF y1 > r.b THEN
+						y1 := r.b;
+					END;
+					
 					FOR t := y0 TO y1 DO
 						SetPixel(xi, t, color, mode);
 						INC(xi, mi); INC(xf, mf);
@@ -287,6 +301,18 @@ TYPE
 				ELSE
 					IF x0 > x1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
 					xi := y0; xf :=	x0 - x1; mi := (y1 - y0) DIV (x1 - x0); mf := 2 * ( (y1 - y0) MOD (x1 - x0)); dt2 := 2 * (x1 - x0);
+					GetClipRect(r);
+					IF x0 < r.l THEN 
+						(* this loop should be replaced by a closed expression *)
+						FOR t := x0 TO r.l-1 DO
+							INC(xi, mi); INC(xf, mf);
+							IF xf > 0 THEN INC(xi); DEC(xf, dt2) END
+						END;
+						x0 := r.l;
+					END;
+					IF x1 > r.r THEN
+						x1 := r.r;
+					END;
 					FOR t := x0 TO x1 DO
 						SetPixel(t, xi, color, mode);
 						INC(xi, mi); INC(xf, mf);

@@ -4,7 +4,7 @@
 
 MODULE Kernel;   (** AUTHOR "pjm, ejz, fof, ug"; PURPOSE "Implementation-independent kernel interface"; *)
 
-IMPORT SYSTEM, Kernel32, Machine, Heaps, (* Modules, *) Objects;
+IMPORT SYSTEM, Kernel32, Machine, Heaps, (* Modules, *) Objects, Reflection, Streams, Trace;
 
 CONST
 
@@ -224,8 +224,30 @@ VAR
 	BEGIN
 		RETURN (t.target - Kernel32.GetTickCount()) * (1000 DIV Machine.Second)
 	END Left;
+	
+
+VAR trace: Streams.Writer;
+
+	PROCEDURE TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	BEGIN
+		trace.String("----------- Process = "); 
+		trace.Address(process); 
+		trace.String(", Object = "); trace.Address(process.obj); 
+		trace.Ln;
+		Reflection.StackTraceBack(trace, pc, bp, stacklow ,stackhigh, TRUE, FALSE);
+		trace.Update;
+	END TraceH;
+
+	(* tracing the stacks of all processes during GC phase (needs to identify and stop all processes) *)
+	PROCEDURE TraceProcesses*;
+	BEGIN
+		Objects.TraceProcessHook := TraceH;
+		GC;
+		Objects.TraceProcessHook := NIL;
+	END TraceProcesses;
 
 BEGIN
+	NEW(trace, Trace.Send, 4096); 
 	ASSERT (1000 MOD Machine.Second = 0);   (* for Elapsed *)
 	second := Machine.Second;
 	Heaps.GC := Heaps.InvokeGC; (* must be done after all processors have started *)

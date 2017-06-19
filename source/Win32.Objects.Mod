@@ -203,6 +203,10 @@ TYPE
 			gbp := gcContext.ebp;
 			IF gbp # NIL THEN bp := gbp END;
 			
+			IF TraceProcessHook # NIL THEN
+				TraceProcessHook(SELF,pc,bp,sp,stackBottom);
+			END;
+			
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
@@ -1294,8 +1298,10 @@ END ReenterA2;
 
 VAR
 	lpContext: Kernel32.Wow64Context;
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
 	
 BEGIN
+	TraceProcessHook := NIL;
 	exceptionhandler := NIL;
 	terminateProc := TerminateProc;
 	ready.head := NIL; ready.tail := NIL;

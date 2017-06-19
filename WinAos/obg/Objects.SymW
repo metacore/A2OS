@@ -148,6 +148,7 @@ VAR
 	isWow64: BOOLEAN; 
 	GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS); 
 	lpContext: Kernel32.Wow64Context; 
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
 	PROCEDURE ^ SetPriority*(priority: LONGINT); 
 	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 

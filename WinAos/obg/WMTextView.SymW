@@ -330,6 +330,7 @@ TYPE
 		PROCEDURE ^ AutoStartDrag*; 
 		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
 		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ CopySelection*; 
 		PROCEDURE ^ DeleteSelection*; 

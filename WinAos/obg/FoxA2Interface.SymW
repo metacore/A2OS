@@ -9,6 +9,7 @@ TYPE
 
 		PROCEDURE ^  & InitA2Writer(w: Streams.Writer); 
 		PROCEDURE ^ SetFontStyle*(style: SET); 
+		PROCEDURE ^ SetColor; 
 		PROCEDURE ^ SetStyle; 
 		PROCEDURE ^ BeginAlert*; 
 		PROCEDURE ^ EndAlert*; 

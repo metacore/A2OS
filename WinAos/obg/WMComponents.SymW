@@ -87,6 +87,9 @@ TYPE
 		recursion*: Recursion; 
 	END; 
 
+	FindComponentMode* = POINTER TO RECORD 
+	END; 
+
 	Event* = RECORD 
 	END; 
 

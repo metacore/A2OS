@@ -1,5 +1,5 @@
 MODULE WMGraphicsSmooth;
-	IMPORT SYSTEM, Raster, Strings, WMGraphics, WMRectangles;
+	IMPORT SYSTEM, Raster, Strings, WMGraphics, WMRectangles, Reals;
 CONST 
 	CapButt* = 0; 
 	CapRound* = 1; 

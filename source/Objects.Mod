@@ -1781,7 +1781,12 @@ BEGIN
 	FOR i := 0 TO LEN(init.prioRequests) - 1 DO init.prioRequests[i] := 0 END;
 END InitPrioRequest;
 
+VAR
+	(* for compatibility and later extension *)
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	
 BEGIN
+	TraceProcessHook := NIL;
 	IF Stats THEN InitStats; END;
 	Init;
 	(* initialize memory management *)

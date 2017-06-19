@@ -5,7 +5,7 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 (*ToDo: ticks for Graph. labels on axes *)
 (*ToDo: catch NaN and Inf in data and other strategies to avoid erratic window sizes*)
 
-IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, MathL;
+IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, MathL, Raster;
 
 CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
 		MinSize=30;
@@ -16,7 +16,32 @@ TYPE
 
 TYPE
 	Window=OBJECT(WM.BufferWindow);
-	VAR width,height:LONGINT;
+	VAR width,height:LONGINT
+	
+		PROCEDURE Update(w,h: LONGINT);
+		BEGIN
+			(* overwrite me *)
+		END Update;
+
+		PROCEDURE & Init(w,h: LONGINT; alpha: BOOLEAN);
+		BEGIN
+			Init^(w,h, alpha); 
+			Update(w,h);
+		END Init;
+
+		PROCEDURE Resized( width, height: LONGINT);
+		VAR rect: WMRectangles.Rectangle;
+		BEGIN
+			Resized^(width, height);
+			IF useAlpha THEN Raster.Create(img, width, height, Raster.BGRA8888) 
+			ELSE Raster.Create(img, width, height, WM.format) 
+			END;
+			canvas:=canvasGen(img);
+			Update(width, height);
+			rect := WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight());
+			Invalidate(rect);
+		END Resized;
+		
 	END Window;
 	
 	Histogram* = OBJECT (Window);
@@ -41,11 +66,11 @@ TYPE
 		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
 		BEGIN
 			SELF.data:=data;
+			Update(GetWidth(), GetHeight());
 			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
 		END NewData;
-
 		
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Update(w,h: LONGINT);
 		VAR i:LONGINT;
 		BEGIN
 			IF Reals.IsNaNL(data[i]) THEN RETURN END;
@@ -55,7 +80,9 @@ TYPE
 														(i+1)*w DIV width , h), WMGraphics.Black, WMGraphics.ModeCopy);
 			END;
 			INC(timestamp);
-		END Draw;
+		END Update;
+
+		
 	END Histogram;
 	
 	(** display matrix values in checkerboard like fashion. positive values are in black/grey/white, negative values in red*)
@@ -73,10 +100,11 @@ TYPE
 			IF max=0 THEN max:=1 END;
 			width:=MIN(MaxSize, MAX(1,LEN(data,0))); 
 			height:=MIN(MaxSize, MAX(1,LEN(data,1)));
-			Init(width, height, TRUE);
+			Init(width, height, TRUE );
 			offset:=0; gain:=255/max;
 			IF( width<10) OR (height<10) THEN 
 				bounds := WMGraphics.MakeRectangle(0, 0, 10*width, 10*height);(* grow small images *)
+				Resized(GetWidth(), GetHeight());
 			END;
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
 			NewWindowPos(GetWidth());
@@ -92,11 +120,12 @@ TYPE
 			min:=MIN(0, min); 
 			IF max=0 THEN max:=1 END;
 			offset:=0; gain:=255/max;
+			Update(GetWidth(), GetHeight());
 			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
-		
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Update(w,h: LONGINT);
+		VAR i:LONGINT;
 		VAR col: WMGraphics.Color; x,y:LONGINT; val:LONGREAL; valI:LONGINT;
 		BEGIN
 			FOR y:=0 TO LEN(data,0)-1 DO
@@ -113,7 +142,8 @@ TYPE
 				END;
 			END;
 			INC(timestamp);
-		END Draw;
+		END Update;
+
 	END Matrix;
 
 	Graph* = OBJECT (Window);
@@ -145,11 +175,11 @@ TYPE
 			SELF.data:=data;
 			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
+			Update(GetWidth(), GetHeight());
 			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
-		
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Update(w,h: LONGINT);
 		VAR i:LONGINT; mn,mx,x0,y0,x1,y1:LONGINT;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
@@ -166,7 +196,7 @@ TYPE
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy);	END;
 			INC(timestamp);
-		END Draw;
+		END Update;
 END Graph;
 
 Graphs* = OBJECT (Window);
@@ -198,10 +228,11 @@ Graphs* = OBJECT (Window);
 			SELF.data:=data;
 			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
+			Update(GetWidth(), GetHeight());
 			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
 		END NewData;
-		
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+
+		PROCEDURE Update(w,h: LONGINT);		
 		VAR i,j:LONGINT; mn,mx, x0,x1,y0,y1:LONGINT;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
@@ -220,7 +251,7 @@ Graphs* = OBJECT (Window);
 			END;
 			IF mn#0 THEN canvas.Line(0, h+mn, w, h+mn, WMGraphics.Black, WMGraphics.ModeCopy); END;
 			INC(timestamp);
-		END Draw;
+		END Update;
 END Graphs;
 
 GraphXY* = OBJECT (Window);
@@ -254,6 +285,7 @@ GraphXY* = OBJECT (Window);
 			SELF.data:=data;
 			maxx:=MAX(0,MAX(data[0]));maxy:=MAX(0,MAX(data[1]));
 			minx:=MIN(0, MIN(data[0])); miny:=MIN(0, MIN(data[1])); 
+			Update(GetWidth(), GetHeight());
 			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
@@ -288,7 +320,7 @@ GraphXY* = OBJECT (Window);
 			END;
 		END Axes;
 		
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Update(w,h: LONGINT);
 		VAR i:LONGINT; mnw,mnh,mxw,mxh,x0,x1,y0,y1:LONGINT; scalex,scaley:REAL;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
@@ -306,7 +338,7 @@ GraphXY* = OBJECT (Window);
 			END;
 			Axes(canvas, w,h,mnw,mnh,scalex,scaley);
 			INC(timestamp);
-		END Draw;
+		END Update;
 END GraphXY;
 
 	(** scatter plot with optional error bars. 
@@ -315,7 +347,8 @@ END GraphXY;
 	optional data[2,..]: y error bars
 	optional data[3,..]: x error bars *)
 TYPE Scatter* = OBJECT (GraphXY);
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+
+		PROCEDURE Update(w,h: LONGINT);
 		VAR i:LONGINT; mnw,mnh,mxw,mxh, x,y, ex,ey:LONGINT; scalex,scaley:REAL; rect:WMRectangles.Rectangle;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
@@ -339,7 +372,7 @@ TYPE Scatter* = OBJECT (GraphXY);
 			END;
 			Axes(canvas,w,h,mnw,mnh,scalex,scaley); 
 			INC(timestamp);
-		END Draw;
+		END Update;
 END Scatter;
 
 (** Regression plot. requires computation of slope,intercept by suited procedure, e.g. derived from /Matrix/StatisticsLinearRegression.SimpleRegression()  *)
@@ -359,10 +392,10 @@ TYPE Regression*= OBJECT (Scatter)
 		NewData^(data);
 	END NewData;
 	
-	PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+	PROCEDURE Update(w,h: LONGINT);
 	VAR mnw,mnh,x,y,xx,yy:LONGINT; scalex,scaley, x0, y0, x1, y1:LONGREAL; 
 	BEGIN
-		Draw^(canvas,w,h,q);
+		Update^(w,h);
 		x0:= minx; y0:= x0*slope+intercept;
 		IF (y0<miny) THEN y0:=miny; x0:=(y0-intercept)/slope;
 		ELSIF y1>maxy THEN y0:=maxy; x0:=(y0-intercept)/slope;
@@ -377,8 +410,8 @@ TYPE Regression*= OBJECT (Scatter)
 		x:=-mnw+ENTIER(0.5+x0*scalex);  y:=h+mnh-ENTIER(0.5+y0*scaley);
 		xx:=-mnw+ENTIER(0.5+x1*scalex); yy:=h+mnh-ENTIER(0.5+y1*scaley);
 		canvas.Line(x,y,xx,yy,WMGraphics.Red, WMGraphics.ModeCopy);  
-	END Draw;	
-	END Regression;
+	END Update;	
+END Regression;
 
 PROCEDURE NewWindowPos(dx:LONGINT);
 BEGIN
@@ -464,5 +497,5 @@ SystemTools.FreeDownTo MatrixBase ~
 
 Compiler.Compile -p=Win32G WMSimpleGraphs.Mod ~
 
-WMSimpleGraphs.Demo1 ~
+WMSimpleGraphs.Demo 1 ~
 

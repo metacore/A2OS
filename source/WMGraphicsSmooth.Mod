@@ -4,7 +4,7 @@
 *)
 MODULE WMGraphicsSmooth;
 
-IMPORT SYSTEM, Raster, Strings, WMGraphics, WMRectangles;
+IMPORT SYSTEM, Raster, Strings, WMGraphics, WMRectangles, Reals;
 
 CONST
 	(** Line cap types *)
@@ -45,8 +45,8 @@ TYPE
 				SetColor(WMGraphics.Blue);
 
 				Raster.InitMode(rasterMode,Raster.srcOverDst);
-				Raster.Bind(rasterMode, Raster.PixelFormat, img.fmt);
 			END;
+			Raster.Bind(rasterMode, Raster.PixelFormat, img.fmt);
 		END New;
 
 		PROCEDURE SetColor(x: WMGraphics.Color);
@@ -66,13 +66,15 @@ TYPE
 		*)
 		PROCEDURE SetLineWidth*(w: Real);
 		BEGIN
+			IF w < 0.5 THEN w := 0.5; END;
 			IF w # lineWidth THEN
-				IF w < 0.1 THEN w := 0.1; END;
+				IF w > 0.5 THEN
+					halfLineWidth := 0.5*w;
+					halfLineWidthBy255 := 255*halfLineWidth;
+					invLineWidthBy255 := 255/w;
+					halfLineWidthSqr := halfLineWidth*halfLineWidth;
+				END;
 				lineWidth := w;
-				halfLineWidth := 0.5*lineWidth;
-				halfLineWidthBy255 := 255*halfLineWidth;
-				invLineWidthBy255 := 255/lineWidth;
-				halfLineWidthSqr := halfLineWidth*halfLineWidth;
 			END;
 		END SetLineWidth;
 
@@ -90,6 +92,11 @@ TYPE
 		PROCEDURE LineReal*(x0, y0, x1, y1: Real; lineColor: WMGraphics.Color; mode: LONGINT);
 		BEGIN
 
+			(*! do not do anything in case of an invalid line specification *)
+			IF Reals.IsNaN(x0) OR Reals.IsNaN(y0) OR Reals.IsNaN(x1) OR Reals.IsNaN(y1) THEN
+				RETURN;
+			END;
+
 			IF lineColor # color THEN SetColor(lineColor); END;
 
 			(* transform local coordinates to the global coordinate system *)
@@ -97,9 +104,14 @@ TYPE
 			x1 := x1 + dx; y1 := y1 + dy;
 
 			(* check whether the line crosses the canvas rectangle with account of line width and a few pixels for antialiasing *)
-			IF ~ClipLineReal(limits.l-lineWidth-2,limits.t-lineWidth-2,limits.r+lineWidth+1,limits.b+lineWidth+1, x0,y0,x1,y1) THEN
+			IF WMGraphics.ClipRect IN clipMode THEN
+				IF ~ClipLineReal((clipRect.l-2)-lineWidth,(clipRect.t-2)-lineWidth,(clipRect.r+1)+lineWidth,(clipRect.b+1)+lineWidth, x0,y0,x1,y1) THEN
+					RETURN;
+				END;
+			ELSIF ~ClipLineReal((limits.l-2)-lineWidth,(limits.t-2)-lineWidth,(limits.r+1)+lineWidth,(limits.b+1)+lineWidth, x0,y0,x1,y1) THEN
 				RETURN;
 			END;
+
 			IF x0 <= x1 THEN
 				IF lineWidth <= 0.5 THEN
 					DrawThinLine(x0,y0, x1,y1);
@@ -117,6 +129,10 @@ TYPE
 
 		PROCEDURE Disk*(x0, y0: Real; radius: Real; color: WMGraphics.Color; mode: LONGINT);
 		BEGIN
+			(*! do not do anything in case of an invalid disk specification *)
+			IF Reals.IsNaN(x0) OR Reals.IsNaN(y0) OR Reals.IsNaN(radius) OR (radius <= 0) THEN
+				RETURN;
+			END;
 			IF color # SELF.color THEN SetColor(color); END;
 			DrawDisk(x0,y0,radius);
 		END Disk;
@@ -197,8 +213,12 @@ TYPE
 			outer.t := ENTIER(y0-radius)-4;
 			outer.b := ENTIER(y0+radius)+3;
 
-			IF WMGraphics.ClipRect IN clipMode THEN WMRectangles.ClipRect(outer, clipRect);END;
-			WMRectangles.ClipRect(outer, limits);
+			IF WMGraphics.ClipRect IN clipMode THEN
+				WMRectangles.ClipRect(outer, clipRect);
+			ELSE
+				WMRectangles.ClipRect(outer, limits);
+			END;
+
 			IF ~WMRectangles.RectEmpty(outer) THEN
 				(* inner rectangle *)
 				d := radius*0.707106781186547; (* half of the edge of the square inside the circle *)
@@ -940,11 +960,11 @@ TYPE
 								(* intersection with x = left *)
 								y0 := y00 + (dy*(l-x00)) / dx; x0 := l;
 								IF y0 < t THEN
-									(* intersection with y = tody *)
+									(* intersection with y = top *)
 									x0 := x00 + (dx*(t-y00)) / dy; y0 := t;
 								END;
 							ELSIF y0 < t THEN
-								(* intersection with y = tody *)
+								(* intersection with y = top *)
 								x0 := x00 + (dx*(t-y00)) / dy; y0 := t;
 								IF x0 < l THEN
 									(* intersection with x = left *)
@@ -1004,11 +1024,11 @@ TYPE
 							(* intersection with x = right *)
 							y1 := y00 - (dy*(r-x00)) / dx; x1 := r;
 							IF y1 < t THEN
-								(* intersection with y = tody *)
+								(* intersection with y = top *)
 								x1 := x00 - (dx*(t-y00)) / dy; y1 := t;
 							END;
 						ELSIF y1 < t THEN
-							(* intersection with y = tody *)
+							(* intersection with y = top *)
 							x1 := x00 - (dx*(t-y00)) / dy; y1 := t;
 							IF x1 > r THEN
 								(* intersection with x = right *)
@@ -1044,11 +1064,11 @@ TYPE
 								(* intersection with x = right *)
 								y0 := y00 - (dy*(r-x00)) / dx; x0 := r;
 								IF y0 < t THEN
-									(* intersection with y = tody *)
+									(* intersection with y = top *)
 									x0 := x00 - (dx*(t-y00)) / dy; y0 := t;
 								END;
 							ELSIF y0 < t THEN
-								(* intersection with y = tody *)
+								(* intersection with y = top *)
 								x0 := x00 - (dx*(t-y00)) / dy; y0 := t;
 								IF x0 > r THEN
 									(* intersection with x = right *)
@@ -1108,11 +1128,11 @@ TYPE
 							(* intersection with x = left *)
 							y1 := y00 + (dy*(l-x00)) / dx; x1 := l;
 							IF y1 < t THEN
-								(* intersection with y = tody *)
+								(* intersection with y = top *)
 								x1 := x00 + (dx*(t-y00)) / dy; y1 := t;
 							END;
 						ELSIF y1 < t THEN
-							(* intersection with y = tody *)
+							(* intersection with y = top *)
 							x1 := x00 + (dx*(t-y00)) / dy; y1 := t;
 							IF x1 < l THEN
 								(* intersection with x = left *)

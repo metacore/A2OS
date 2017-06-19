@@ -527,7 +527,9 @@ TYPE
 		END IsHit;
 
 		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		VAR img: Graphics.Image;
 		BEGIN
+			img := SELF.img;
 			IF reduceQuality THEN q := 0 END;
 			IF img # NIL THEN
 				IF (w = img.width) & (h = img.height) THEN

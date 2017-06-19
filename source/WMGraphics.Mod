@@ -669,8 +669,10 @@ TYPE
 		PROCEDURE DrawImage*(x, y: LONGINT; img: Raster.Image; mode : LONGINT);
 		VAR imgBounds : Rectangle;
 			rm : Raster.Mode;
+			dx, dy: LONGINT;
 		BEGIN
 			IF img = NIL THEN RETURN END;
+			dx := SELF.dx; dy := SELF.dy; (* avoid race below *)
 			imgBounds := MakeRectangle(0, 0, img.width, img.height);
 
 			(* to super coordinates *)

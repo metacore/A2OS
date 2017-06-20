@@ -10038,8 +10038,9 @@ TYPE
 					size := ToMemoryUnits(system,system.SizeOf(rightType));
 					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
+				ELSE
+					AssignMathArray(left,right);
 				END;
-				AssignMathArray(left,right);
 			ELSE
 				HALT(200);
 			END;

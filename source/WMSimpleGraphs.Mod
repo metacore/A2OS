@@ -16,7 +16,7 @@ TYPE
 
 TYPE
 	Window=OBJECT(WM.BufferWindow);
-	VAR width,height:LONGINT
+	VAR width,height:LONGINT;
 	
 		PROCEDURE Update(w,h: LONGINT);
 		BEGIN

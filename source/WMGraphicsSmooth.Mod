@@ -26,7 +26,8 @@ TYPE
 		capType-: LONGINT; (** line cap type *)
 
 		rasterMode: Raster.Mode;
-		colorMap: ARRAY 256 OF Raster.Pixel;
+		drawColor: WMGraphics.Color;
+		drawColorMap: ARRAY 256 OF Raster.Pixel;
 
 		halfLineWidth: Real;
 		halfLineWidthBy255: Real;
@@ -42,24 +43,24 @@ TYPE
 				generator := Strings.NewString("WMGraphicsSmooth.GenCanvas");
 				SetLineWidth(1);
 				SetLineCap(CapRound);
-				SetColor(WMGraphics.Blue);
+				SetDrawColor(WMGraphics.Blue);
 
 				Raster.InitMode(rasterMode,Raster.srcOverDst);
 			END;
 			Raster.Bind(rasterMode, Raster.PixelFormat, img.fmt);
 		END New;
 
-		PROCEDURE SetColor(x: WMGraphics.Color);
+		PROCEDURE SetDrawColor(color: WMGraphics.Color);
 		VAR
 			i: LONGINT;
 			s: LONGINT;
 			r, g, b, a: LONGINT;
 		BEGIN
-			SetColor^(x);
 			WMGraphics.ColorToRGBA(color,r,g,b,a);
 			s := (256 * a) DIV 255;
-			FOR i := 0 TO 255 DO Raster.SetRGBA(colorMap[i],r,g,b,a - (s*i+128) DIV 256); END;
-		END SetColor;
+			FOR i := 0 TO 255 DO Raster.SetRGBA(drawColorMap[i],r,g,b,a - (s*i+128) DIV 256); END;
+			drawColor := color;
+		END SetDrawColor;
 
 		(**
 			Set line width in pixels
@@ -89,7 +90,7 @@ TYPE
 		(**
 			Draw an antialiased line represented by real-valued coordinates of the starting and end points
 		*)
-		PROCEDURE LineReal*(x0, y0, x1, y1: Real; lineColor: WMGraphics.Color; mode: LONGINT);
+		PROCEDURE LineReal*(x0, y0, x1, y1: Real; color: WMGraphics.Color; mode: LONGINT);
 		BEGIN
 
 			(*! do not do anything in case of an invalid line specification *)
@@ -97,7 +98,7 @@ TYPE
 				RETURN;
 			END;
 
-			IF lineColor # color THEN SetColor(lineColor); END;
+			IF color # drawColor THEN SetDrawColor(color); END;
 
 			(* transform local coordinates to the global coordinate system *)
 			x0 := x0 + dx; y0 := y0 + dy;
@@ -133,7 +134,8 @@ TYPE
 			IF Reals.IsNaN(x0) OR Reals.IsNaN(y0) OR Reals.IsNaN(radius) OR (radius <= 0) THEN
 				RETURN;
 			END;
-			IF color # SELF.color THEN SetColor(color); END;
+
+			IF color # drawColor THEN SetDrawColor(color); END;
 			DrawDisk(x0,y0,radius);
 		END Disk;
 
@@ -162,9 +164,9 @@ TYPE
 					REPEAT
 						w := ENTIER(v*s);
 						IF w < 0 THEN
-							Raster.Put(img,xx,y,colorMap[0],rasterMode);
+							Raster.Put(img,xx,y,drawColorMap[0],rasterMode);
 						ELSIF w <= 255 THEN
-							Raster.Put(img,xx,y,colorMap[w],rasterMode);
+							Raster.Put(img,xx,y,drawColorMap[w],rasterMode);
 						END;
 						v := v + v0 + k; INC(k,2); (*v := v + 1 + 2*incx*(xx-x0);*)
 						INC(xx,incx);
@@ -193,9 +195,9 @@ TYPE
 					REPEAT
 						w := ENTIER(v*s);
 						IF w < 0 THEN
-							Raster.Put(img,x,yy,colorMap[0],rasterMode);
+							Raster.Put(img,x,yy,drawColorMap[0],rasterMode);
 						ELSIF w <= 255 THEN
-							Raster.Put(img,x,yy,colorMap[w],rasterMode);
+							Raster.Put(img,x,yy,drawColorMap[w],rasterMode);
 						END;
 						v := v + v1 + m; INC(m,2); (*v := v + 1 + 2*incy*(yy-y0);*)
 						INC(yy,incy);
@@ -237,11 +239,11 @@ TYPE
 				radiusSqr := radius*radius;
 
 				IF ~WMRectangles.RectEmpty(inner) & WMRectangles.IsContained(outer,inner) THEN
-					Raster.Fill(img, inner.l, inner.t, inner.r, inner.b, colorMap[0], rasterMode); (*Fill(inner,color,WMGraphics.ModeSrcOverDst);*)
+					Raster.Fill(img, inner.l, inner.t, inner.r, inner.b, drawColorMap[0], rasterMode); (*Fill(inner,color,WMGraphics.ModeSrcOverDst);*)
 				ELSE
 					WMRectangles.ClipRect(inner, outer);
 					IF ~WMRectangles.RectEmpty(inner) THEN
-						Raster.Fill(img, inner.l, inner.t, inner.r, inner.b, colorMap[0], rasterMode);
+						Raster.Fill(img, inner.l, inner.t, inner.r, inner.b, drawColorMap[0], rasterMode);
 					END;
 				END;
 
@@ -253,28 +255,28 @@ TYPE
 
 		END DrawDisk;
 
-		PROCEDURE PutPixel(x, y: LONGINT; colorMapIndex: LONGINT);
+		PROCEDURE PutPixel(x, y: LONGINT; drawColorMapIndex: LONGINT);
 		VAR bit: LONGINT; adr: ADDRESS;
 		BEGIN
 			(*
-				Implements Raster.Put(img,x,y,colorMap[colorMapIndex],rasterMode);
+				Implements Raster.Put(img,x,y,drawColorMap[drawColorMapIndex],rasterMode);
 			*)
 			IF (0 > x) OR (x >= img.width) OR (0 > y) OR (y >= img.height) THEN RETURN END;
 			bit := x * img.fmt.bpp; adr := img.adr + y * img.bpr + bit DIV 8; bit := bit MOD 8;
 			(*Raster.Bind(rasterMode, Raster.PixelFormat, img.fmt);*)
-			rasterMode.transfer(rasterMode, ADDRESSOF(colorMap[colorMapIndex]), 0, adr, bit, 1)
+			rasterMode.transfer(rasterMode, ADDRESSOF(drawColorMap[drawColorMapIndex]), 0, adr, bit, 1)
 		END PutPixel;
 
-		PROCEDURE PutPixelSwapped(x, y: LONGINT; colorMapIndex: LONGINT);
+		PROCEDURE PutPixelSwapped(x, y: LONGINT; drawColorMapIndex: LONGINT);
 		VAR bit: LONGINT; adr: ADDRESS;
 		BEGIN
 			(*
-				Implements Raster.Put(img,y,x,colorMap[colorMapIndex],rasterMode);
+				Implements Raster.Put(img,y,x,drawColorMap[drawColorMapIndex],rasterMode);
 			*)
 			IF (0 > y) OR (y >= img.width) OR (0 > x) OR (x >= img.height) THEN RETURN END;
 			bit := y * img.fmt.bpp; adr := img.adr + x * img.bpr + bit DIV 8; bit := bit MOD 8;
 			(*Raster.Bind(rasterMode, Raster.PixelFormat, img.fmt);*)
-			rasterMode.transfer(rasterMode, ADDRESSOF(colorMap[colorMapIndex]), 0, adr, bit, 1)
+			rasterMode.transfer(rasterMode, ADDRESSOF(drawColorMap[drawColorMapIndex]), 0, adr, bit, 1)
 		END PutPixelSwapped;
 
 		PROCEDURE DrawThinLine(x0, y0, x1, y1: Real);
@@ -282,7 +284,7 @@ TYPE
 			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: LONGINT;
 			dx, dy, sdx, sdy, dc, dm, dd, d0, d1, dr0, dr1, v, v0, v1, w: Real;
 
-			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; colorMapIndex: LONGINT);
+			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; drawColorMapIndex: LONGINT);
 
 			PROCEDURE DrawCapNone;
 			BEGIN
@@ -604,7 +606,7 @@ TYPE
 			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: LONGINT;
 			dx, dy, sdx, sdy, dc, dm, dd, d0, d1, dr0, dr1, v, v0, v1, w: Real;
 
-			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; colorMapIndex: LONGINT);
+			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; drawColorMapIndex: LONGINT);
 
 			PROCEDURE DrawCapNone;
 			BEGIN

@@ -4188,32 +4188,27 @@ BEGIN
 			ELSIF (currentSize <= 14) THEN newSize := 16;
 			ELSIF (currentSize <= 16) THEN newSize := 20;
 			ELSIF (currentSize <= 20) THEN newSize := 24;
-			ELSIF (currentSize <= 24) THEN newSize := 24;
 			ELSE (* go to default *)
 				newSize := 24; (* max. size of Oberon font *)
 			END;
 		ELSE
-			IF (currentSize <= 8) THEN newSize := 8;
-			ELSIF (currentSize <= 10) THEN newSize := 8;
-			ELSIF (currentSize <= 12) THEN newSize := 10;
-			ELSIF (currentSize <= 14) THEN newSize := 12;
-			ELSIF (currentSize <= 16) THEN newSize := 14;
-			ELSIF (currentSize <= 20) THEN newSize := 16;
-			ELSIF (currentSize <= 24) THEN newSize := 20;
+			IF (currentSize >= 24) THEN newSize := 20;
+			ELSIF (currentSize >= 20) THEN newSize := 16;
+			ELSIF (currentSize >= 16) THEN newSize := 14;
+			ELSIF (currentSize >= 14) THEN newSize := 12;
+			ELSIF (currentSize >= 12) THEN newSize := 10;
 			ELSE
-				newSize := 24;
+				newSize := 8;
 			END;
 		END;
 	ELSIF (fontname = "Courier") THEN
 		IF (value > 0) THEN
 			IF (currentSize <= 8) THEN newSize := 10;
-			ELSIF (currentSize <= 10) THEN newSize := 12;
 			ELSE
 				newSize := 12;
 			END;
 		ELSE
 			IF (currentSize >= 12) THEN newSize := 10;
-			ELSIF (currentSize >= 10) THEN newSize := 8;
 			ELSE
 				newSize := 8;
 			END;
@@ -4222,6 +4217,7 @@ BEGIN
 		newSize := currentSize + value * currentSize DIV 4;
 	END;
 	IF (newSize < 8) THEN newSize := 8; END;
+	TRACE(currentSize, value, newSize);
 END GetNewSize;
 
 TYPE 

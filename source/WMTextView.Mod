@@ -2725,6 +2725,7 @@ TYPE
 		BEGIN
 			IF modifierFlags * Inputs.Ctrl # {} THEN (* CTRL pressed -> Resize Font*)
 				text.AcquireWrite;
+				IF dz > 0 THEN dz := 1 ELSIF dz<0 THEN dz := -1 END;
 				NEW(ddz, dz); 
 				text.UpdateAttributes(0, text.GetLength(), ChangeAttribute, ddz);
 				text.ReleaseWrite;
@@ -4217,7 +4218,6 @@ BEGIN
 		newSize := currentSize + value * currentSize DIV 4;
 	END;
 	IF (newSize < 8) THEN newSize := 8; END;
-	TRACE(currentSize, value, newSize);
 END GetNewSize;
 
 TYPE 

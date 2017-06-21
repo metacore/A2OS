@@ -65,7 +65,7 @@ TYPE
 
 		PROCEDURE IsEqual*(attr : Attributes) : BOOLEAN;
 		BEGIN
-			RETURN (attr # NIL) & (color = attr.color) & (bgcolor = attr.bgcolor) & (voff = attr.voff) &
+			RETURN (attr=SELF) OR (attr # NIL) & (color = attr.color) & (bgcolor = attr.bgcolor) & (voff = attr.voff) &
 				( (fontInfo = NIL) & (attr.fontInfo = NIL) OR fontInfo.IsEqual(attr.fontInfo))
 		END IsEqual;
 
@@ -1007,7 +1007,7 @@ TYPE
 			is forwarded to the attributeChanger as context.
 		 [Must hold write lock] *)
 		PROCEDURE UpdateAttributes*(pos, len : LONGINT; attributeChanger : AttributeChangerProc; userData : ANY);
-		VAR al, ar, bl, br, cur : Piece;
+		VAR al, ar, bl, br, cur : Piece; attributes: Attributes;
 		BEGIN
 			IF len = 0 THEN RETURN END;
 			(* don't do illegal changes *)
@@ -1019,16 +1019,19 @@ TYPE
 			GetSplittedPos(pos + len, bl, br);
 			cur := ar;
 			IF um # NIL THEN um.BeginObjectChange(pos) END;
-			WHILE cur # br DO
-				IF um # NIL THEN
-					IF cur.attributes = NIL THEN
-						um.ObjectChanged(cur.startpos, cur.len, 102, NIL)
-					ELSE
-						um.ObjectChanged(cur.startpos, cur.len, 102, cur.attributes.Clone())
-					END
-				END;
+			WHILE (cur # br)  DO
 				attributeChanger(cur.attributes, userData);
-				cur := cur.next
+				attributes := cur.attributes;
+				REPEAT
+					IF um # NIL THEN
+						IF cur.attributes = NIL THEN
+							um.ObjectChanged(cur.startpos, cur.len, 102, NIL)
+						ELSE
+							um.ObjectChanged(cur.startpos, cur.len, 102, cur.attributes.Clone())
+						END
+					END;
+					cur := cur.next;
+				UNTIL (cur = br) OR (cur.attributes # attributes);
 			END;
 			IF um # NIL THEN
 				IF userData # NIL THEN

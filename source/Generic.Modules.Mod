@@ -111,7 +111,9 @@ TYPE
 
 		PROCEDURE FindRoots;	(* override *)
 		VAR i: LONGINT; ptr: ANY; false: BOOLEAN;
+		VAR name: Name;
 		BEGIN
+			name := SELF.name;
 			false := FALSE; IF false THEN BEGIN{EXCLUSIVE} END END; (* trick to make a module a protected record ... *)
 			IF published THEN	(* mark global pointers *)
 				FOR i := 0 TO LEN(ptrAdr) - 1 DO

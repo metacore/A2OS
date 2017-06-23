@@ -2875,7 +2875,13 @@ TYPE
 			SetNameAsString(StrImagePanel);
 			dx := 0;  dy := 0
 		END Init;
-
+		
+		PROCEDURE GetOffsets*(VAR x,y: LONGINT); (*returns offset caused by scrollbars*)
+		BEGIN
+			x :=-( dx * hScrollbar.pos.Get() DIV 100);
+			y :=-(dy * vScrollbar.pos.Get() DIV 100);
+		END GetOffsets;	
+		
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF property = imgName THEN
@@ -2928,9 +2934,8 @@ TYPE
 			IF show THEN
 				DrawBackground^(canvas);
 				IF img # NIL THEN
-					x := dx * hScrollbar.pos.Get() DIV 100;
-					y := dy * vScrollbar.pos.Get() DIV 100;
-					canvas.DrawImage(-x, -y, img, WMGraphics.ModeSrcOverDst)
+					GetOffsets(x,y);
+					canvas.DrawImage(x, y, img, WMGraphics.ModeSrcOverDst)
 				END
 			END;
 		END DrawBackground;

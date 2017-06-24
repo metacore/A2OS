@@ -1076,7 +1076,7 @@ VAR
 	OPERATOR ^ "*"-(CONST left, right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ Overlap(src1, src2: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ AllocateTransposed(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE): ANY; 
-	PROCEDURE ^ Transpose*(dest: ADDRESS; left: ADDRESS; Size: SIZE); 
+	PROCEDURE ^ Transpose*(dest, left: ADDRESS; Size: SIZE); 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF SHORTINT): ARRAY [*, *] OF SHORTINT; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF INTEGER): ARRAY [*, *] OF INTEGER; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGINT): ARRAY [*, *] OF LONGINT; 

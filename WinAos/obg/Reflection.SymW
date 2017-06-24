@@ -1,5 +1,5 @@
 MODULE Reflection;
-	IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace;
+	IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace, Kernel;
 CONST 
 	ShowAllProcs = TRUE; 
 	MaxFrames = 128; 
@@ -91,6 +91,7 @@ TYPE
 	END; 
 VAR 
 	modes: ARRAY 25 OF CHAR; 
+	trace: Streams.Writer; 
 
 	PROCEDURE ^ CheckHeapAddress(address: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ Wait(w: Streams.Writer); 
@@ -147,5 +148,7 @@ VAR
 	PROCEDURE ^ ReportScope*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT); 
 	PROCEDURE ^ ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
 	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT); 
+	PROCEDURE ^ TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
+	PROCEDURE ^ TraceProcesses*; 
 BEGIN
 END Reflection.

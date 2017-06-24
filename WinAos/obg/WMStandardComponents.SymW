@@ -359,6 +359,7 @@ TYPE
 		dx, dy: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetOffsets*(VAR x, y: LONGINT); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 

@@ -392,6 +392,13 @@ TYPE
 		PROCEDURE ^ GetFont(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET): WMGraphics.Font; 
 	END FontCache; 
 
+	DZ = OBJECT (Texts.Attributes)
+	VAR 
+		value: LONGINT; 
+
+		PROCEDURE ^  & Init(v: LONGINT); 
+	END DZ; 
+
 	; 
 VAR 
 	manager: WMWindowManager.WindowManager; 
@@ -413,6 +420,9 @@ VAR
 	END; 
 
 	PROCEDURE ^ Limit(x, min, max: LONGINT): LONGINT; 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; value, currentSize: LONGINT; VAR newSize: LONGINT); 
+	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
+	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ GetFontFromAttr(info: Texts.FontInfo): WMGraphics.Font; 
 	PROCEDURE ^ IsSameFont(f1, f2: WMGraphics.Font): BOOLEAN; 
 	PROCEDURE ^ CheckFont(style: SyntaxHighlighter.Style; font: WMGraphics.Font; VAR fontCache: FontCache); 

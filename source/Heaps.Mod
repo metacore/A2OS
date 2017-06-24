@@ -1096,9 +1096,14 @@ BEGIN
 	p := NIL;
 	IF  (GC = NilGC) OR (throughput < 128*1024*1024) THEN
 		GetFreeBlock(size, p);
+		IF  (p=NIL) THEN (* try restart sweep for once *)
+			GetFreeBlock(size, p);
+		END;
 	ELSE
 		throughput := 0;
 	END;
+
+	
 	WHILE (p = NIL) & (try <= MaxTries) DO
 		Machine.Release(Machine.Heaps);	(* give up control *)
 		GC;	(* try to free memory (other processes may also steal memory now) *)

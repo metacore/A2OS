@@ -6584,8 +6584,8 @@ TYPE
 			END;
 		END InitFields;
 
-		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable);
-		VAR type: SyntaxTree.Type; operand: Operand; tmp: IntermediateCode.Operand; reference: SyntaxTree.Expression;
+		PROCEDURE InitVariable(VAR variable: SyntaxTree.Variable; temporary: BOOLEAN);
+		VAR type: SyntaxTree.Type; operand: Operand; tmp, mem: IntermediateCode.Operand; reference: SyntaxTree.Expression; symbol: SyntaxTree.Symbol;
 		BEGIN
 			type := variable.type.resolved;
 			IF (type IS SyntaxTree.MathArrayType) THEN
@@ -6593,11 +6593,24 @@ TYPE
 					IF type.form = SyntaxTree.Open THEN
 						Symbol(variable,operand);
 						InitFields(type, operand.tag,0);
+						IF temporary THEN
+							PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StackFlag})),MathFlagsOffset);
+						END;
 					ELSIF type.form = SyntaxTree.Tensor THEN
 						Symbol(variable, operand);
 						MakeMemory(tmp,operand.op,addressType,0);
 						ReleaseOperand(operand);
-						Emit(Mov(position,tmp, nil ) );
+						IF temporary THEN
+							(* trick -- temporary object from array base *)
+							symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
+							Symbol(symbol,operand);
+							MakeMemory(mem,operand.op,addressType,0);
+							ReleaseOperand(operand);
+							Emit(Mov(position,tmp, mem) );
+							ReleaseOperand(operand);
+						ELSE
+							Emit(Mov(position,tmp, nil ) );
+						END;
 						ReleaseIntermediateOperand(tmp);
 					END;
 				END;
@@ -6912,14 +6925,14 @@ TYPE
 					scope.AddVariable(variable(SyntaxTree.Variable));
 					scope.EnterSymbol(variable, duplicate);
 					ASSERT(~duplicate);
-					InitVariable(variable(SyntaxTree.Variable));
+					InitVariable(variable(SyntaxTree.Variable),TRUE);
 				ELSE
 					variable.SetUseRegister(TRUE);
 					variable(SyntaxTree.Variable).SetOffset(0);
 				END;
 			ELSE
 				variable.SetUntraced(untraced);
-				InitVariable(variable(SyntaxTree.Variable));
+				InitVariable(variable(SyntaxTree.Variable),TRUE);
 				(*
 				ASSERT(variable.type.resolved = type.resolved)
 				*)
@@ -10941,7 +10954,7 @@ TYPE
 		BEGIN
 			x := scope.firstVariable;
 			WHILE x # NIL DO
-				InitVariable(x);
+				InitVariable(x,FALSE);
 				x := x.nextVariable;
 			END;
 		END InitVariables;

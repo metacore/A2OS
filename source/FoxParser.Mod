@@ -645,7 +645,8 @@ TYPE
 				designator := SyntaxTree.NewSelfDesignator(position);
 			ELSIF Optional(Scanner.Result) THEN
 				designator := SyntaxTree.NewResultDesignator(position);
-			ELSIF (Token() = Scanner.Address) OR (Token()=Scanner.Size) OR (Token() = Scanner.Alias) THEN
+			(* ADDRESS AND SIZE can be type identifiers used for type conversion *)
+			ELSIF (Token() = Scanner.Address) OR (Token()=Scanner.Size) THEN
 				identifier := symbol.identifier;
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 				NextSymbol;
@@ -752,7 +753,7 @@ TYPE
 
 		(** Factor = Number | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
 			 			  | '(' Expression ')' | '~' Factor | Factor '`' | Designator | MathArray.
-			 			  | 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator
+			 			  | 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
 			 			  **)
 		PROCEDURE Factor( ): SyntaxTree.Expression;
 		VAR factor: SyntaxTree.Expression; position: Position; operator: LONGINT;
@@ -811,11 +812,19 @@ TYPE
 					factor := Factor();
 					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Not );
 					factor.End( symbol.position.end );
-			| Scanner.Address, Scanner.Size, Scanner.Alias:
+			| Scanner.Address, Scanner.Size:
 					operator := Token();
-					factor := Designator();
+					factor := Designator(); (* ADDRESS AND SIZE can be type identifiers used for type conversion *)
 					IF Optional(Scanner.Of) THEN
 						factor := Designator();
+						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
+					END;
+					factor.End (symbol.position.end)
+			| Scanner.Alias:
+					operator := Token();
+					NextSymbol();
+					IF Mandatory(Scanner.Of) THEN
+						factor := Factor();
 						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
 					END;
 					factor.End (symbol.position.end)

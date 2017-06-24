@@ -131,9 +131,13 @@ TYPE
 
 	(* used for optimizations of MatMul with small sizes (Alexey Morozov) *)
 	SmallMatMul* = PROCEDURE(dadr, ladr, radr: LONGINT);
+	
+	
 
 
 VAR
+	temporary*:  T0;
+
 	alloc*: LONGINT;   (* statistics *)
 	allocTemp*: LONGINT;   (* statistics *)
 
@@ -1468,7 +1472,7 @@ Sufficient (but not necessary) conditions:
 		END NewData;
 
 	BEGIN
-		IF dest # NIL THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
+		IF dest # NIL THEN Size := GetSize( dest );  ASSERT ((Size=0) OR (Size = elementsize ));  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = NIL THEN  (* NIL pointer, guaranteed to be tensor *)
 			ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
@@ -9592,6 +9596,9 @@ TYPE
 			END;
 		ELSIF (dest = 0) THEN  (* is tensor for sure *)
 			NewDescriptor;  NewData;  CopyData;  dest := new;
+		ELSIF (dest = temporary) THEN
+			NewDescriptorForSameData;
+			dest := new;
 		ELSIF TargetContinuous() THEN
 			NewDescriptor; new:=dest;  CopyData;
 		(*todo: check if target continous memory of correct size, if so don't allocate memory*)
@@ -10140,7 +10147,10 @@ TYPE
 	END "ALL";
 
 BEGIN
-	alloc := 0;  SetDefaults();  InitOptimization();  (* CreateTypePool;  *)
+	alloc := 0;  NEW(temporary); 
+	PutFlags(temporary,{TensorFlag});
+	PutDim(temporary, 0);
+	SetDefaults();  InitOptimization();  (* CreateTypePool;  *)
 END FoxArrayBase.
 
 Compiler.Compile FoxArrayBase.Mod ~

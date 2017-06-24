@@ -167,6 +167,7 @@ TYPE
 		val: LONGINT; 
 	END; 
 VAR 
+	temporary*: T0; 
 	alloc*: LONGINT; 
 	allocTemp*: LONGINT; 
 	loopSPAXAX*, loopSPARAR*: BinaryAASLoop; 

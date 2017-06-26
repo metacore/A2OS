@@ -2876,6 +2876,25 @@ TYPE
 			dx := 0;  dy := 0
 		END Init;
 		
+		PROCEDURE Resized*;
+		BEGIN			
+			Resized^;
+			IF img.width > bounds.GetWidth() THEN
+				dx := img.width - bounds.GetWidth();
+				hScrollbar.visible.Set(TRUE)
+			ELSE
+				dx := 0;
+				hScrollbar.visible.Set(FALSE)
+			END;
+			IF img.height > bounds.GetHeight() THEN
+				dy := img.height - bounds.GetHeight();
+				vScrollbar.visible.Set(TRUE)
+			ELSE
+				dx := 0;
+				vScrollbar.visible.Set(FALSE)
+			END;
+		END Resized;
+		
 		PROCEDURE GetOffsets*(VAR x,y: LONGINT); (*returns offset caused by scrollbars*)
 		BEGIN
 			x :=-( dx * hScrollbar.pos.Get() DIV 100);

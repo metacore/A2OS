@@ -381,11 +381,11 @@ TYPE
 		BEGIN
 			e := ExpoL( x );
 			IF e = 2047 THEN
-				WHILE n > 9 DO Char( " " );  DEC( n ) END;
+				WHILE n > 5 DO Char( " " );  DEC( n ) END;
 				NaNCodeL( x, h, l );
-				IF (h # 0) OR (l # 0) THEN String( "      NaN" )
-				ELSIF x < 0 THEN String( "     -INF" )
-				ELSE String( "      INF" )
+				IF (h # 0) OR (l # 0) THEN String( "  NaN" )
+				ELSIF x < 0 THEN String(" -INF" )
+				ELSE String("  INF" )
 				END
 			ELSE
 				IF n <= 9 THEN n := 1 ELSE DEC( n, 8 ) END;
@@ -423,11 +423,11 @@ TYPE
 		BEGIN
 			e := ExpoL( x );
 			IF (e = 2047) OR (ABS( D ) > 308) THEN
-				WHILE n > 9 DO Char( " " );  DEC( n ) END;
+				WHILE n > 5 DO Char( " " );  DEC( n ) END;
 				NaNCodeL( x, h, l );
-				IF (h # 0) OR (l # 0) THEN String( "      NaN" )
-				ELSIF x < 0 THEN String( "     -INF" )
-				ELSE String( "      INF" )
+				IF (h # 0) OR (l # 0) THEN String( "  NaN" )
+				ELSIF x < 0 THEN String( " -INF" )
+				ELSE String( "  INF" )
 				END
 			ELSE
 				IF D = 0 THEN IF (f=0) THEN dot := FALSE; DEC( n, 1 ) ELSE dot := TRUE; DEC(n,2);  END;  ELSE dot := TRUE; DEC( n, 7 ) END;

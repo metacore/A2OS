@@ -1,5 +1,5 @@
 MODULE FoxIntermediateBackend;
-	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal, Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode, Printout := FoxPrintout, SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging, FingerPrinter := FoxFingerPrinter, StringPool;
+	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal, Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode, Printout := FoxPrintout, SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging, FingerPrinter := FoxFingerPrinter, StringPool, CRC, Kernel;
 CONST 
 	ModeUndefined = 0; 
 	ModeReference = 1; 
@@ -526,6 +526,7 @@ TYPE
 		TypeTags: LONGINT; 
 		TypeRecordBaseOffset: LONGINT; 
 		patchInfoPC: LONGINT; 
+		patchCRC: LONGINT; 
 
 		PROCEDURE ^  & InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN); 
 		PROCEDURE ^ SetModule(module: Sections.Module); 
@@ -575,6 +576,7 @@ TYPE
 		PROCEDURE ^ ModuleSection(): IntermediateCode.Section; 
 		PROCEDURE ^ NewModuleInfo; 
 		PROCEDURE ^ Module(bodyProc: IntermediateCode.Section); 
+		PROCEDURE ^ PatchCRC(crc: LONGINT); 
 		PROCEDURE ^ PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT); 
 		PROCEDURE ^ SymbolSection(symbol: SyntaxTree.Symbol; CONST suffix: ARRAY OF CHAR; VAR pc: LONGINT): IntermediateCode.Section; 
 		PROCEDURE ^ CheckTypeDeclaration(x: SyntaxTree.Type); 

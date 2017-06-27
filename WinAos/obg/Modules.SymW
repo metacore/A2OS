@@ -16,6 +16,7 @@ CONST
 	DefaultContext* = \"A2"\; 
 	NoLoader = 3400; 
 	TraceBoot = FALSE; 
+	PreciseGC* = 0; 
 	ModuleInitTimeout = HUGEINT(0B2D05E00H); 
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
@@ -89,6 +90,7 @@ TYPE
 		internal-: POINTER TO ARRAY OF ANY; 
 		crc*: LONGINT; 
 		body*: PROCEDURE ; 
+		flags*: SET; 
 
 		PROCEDURE ^ FindRoots*; 
 	END Module; 

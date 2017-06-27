@@ -3,7 +3,7 @@ MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
 	Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode,  Printout := FoxPrintout,
 	SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
-	FingerPrinter := FoxFingerPrinter, StringPool;
+	FingerPrinter := FoxFingerPrinter, StringPool, CRC;
 
 CONST
 		(* operand modes *)
@@ -11104,6 +11104,7 @@ TYPE
 		TypeRecordBaseOffset: LONGINT; (* offset of type zero offset (without method entries) *)
 		
 		patchInfoPC: LONGINT;
+		patchCRC: LONGINT;
 	CONST
 		EmptyBlockOffset = 2;
 		
@@ -12815,6 +12816,7 @@ TYPE
 			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, maxPointers, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
 			name: Basic.SegmentedName; offset: LONGINT;
+			flags: SET; 
 		BEGIN
 			NewModuleInfo();
 			pointerSection := Block("Heaps","SystemBlockDesc",".@PointerArray",pointerSectionOffset);
@@ -12887,9 +12889,14 @@ TYPE
 			Info(moduleSection,"internal: POINTER TO ARRAY OF Pointer");
 			Symbol(moduleSection, modulePointerSection, modulePointerSectionOffset, 0);
 			Info(moduleSection, "crc*: LONGINT");
+			patchCRC:= moduleSection.pc;
 			Longint(moduleSection, 0); (*!  must be implemented *)
 			Info(moduleSection, "body*: ADDRESS");
 			Symbol(moduleSection, bodyProc, 0,0);
+			Info(moduleSection, "module flags");
+			flags := {};
+			IF  implementationVisitor.backend.preciseGC THEN INCL(flags,0) END;
+			Set( moduleSection, flags);
 
 			IF implementationVisitor.backend.cooperative THEN
 				PatchSymbol(moduleSection,MonitorOffset,moduleSection.name,NIL,moduleSection.pc,0);
@@ -12905,6 +12912,12 @@ TYPE
 				Address(moduleSection,0);
 			END;
 		END Module;
+		
+		PROCEDURE PatchCRC(crc: LONGINT);
+		BEGIN
+			PatchLongint(ModuleSection(), patchCRC, crc);
+		END PatchCRC;
+		
 
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
 		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter; parametersSize: SIZE;
@@ -13405,6 +13418,7 @@ TYPE
 			module: Sections.Module;
 			name, platformName: SyntaxTree.IdentifierString;
 			meta: MetaDataGenerator; 
+			crc: CRC.CRC32Stream;
 		BEGIN
 			ResetError;
 			Global.GetSymbolName(x,name);
@@ -13427,6 +13441,10 @@ TYPE
 			GetDescription(platformName);
 			module.SetPlatformName(platformName);
 
+			NEW(crc);
+			module.allSections.Dump(crc);
+			meta.PatchCRC(crc.GetCRC());
+			
 			RETURN module
 		END GenerateIntermediate;
 

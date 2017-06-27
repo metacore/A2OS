@@ -28,6 +28,9 @@ CONST
 
 	TraceBoot=FALSE;
 
+	(* flags *)
+	PreciseGC* = 0;
+
 TYPE
 	(* definitions for object-model loader support *)
 	Name* = ARRAY 32 OF CHAR;
@@ -108,14 +111,15 @@ TYPE
 			internal-: POINTER TO ARRAY OF ANY;
 			crc*: LONGINT;
 			body*: PROCEDURE;
-
+			flags*: SET;	 (* e.g. compilation flags *)
+			
 		PROCEDURE FindRoots;	(* override *)
 		VAR i: LONGINT; ptr: ANY; false: BOOLEAN;
 		VAR name: Name;
 		BEGIN
 			name := SELF.name;
 			false := FALSE; IF false THEN BEGIN{EXCLUSIVE} END END; (* trick to make a module a protected record ... *)
-			IF published THEN	(* mark global pointers *)
+			IF published THEN	(* mark global pointers *)				
 				FOR i := 0 TO LEN(ptrAdr) - 1 DO
 					SYSTEM.GET (ptrAdr[i], ptr);
 					IF ptr # NIL THEN Heaps.Mark(ptr) END
@@ -190,7 +194,7 @@ END Append;
 
 (** Add a module to the pool of accessible modules, or return named module. *)
 PROCEDURE Publish*(VAR m: Module; VAR new: BOOLEAN);
-VAR n: Module; i: LONGINT;
+VAR n: Module; i: LONGINT; name: Name;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	n := root; WHILE (n # NIL) & (n.name # m.name) DO n := n.next END;
@@ -216,7 +220,11 @@ BEGIN
 
 		new := TRUE;
 	END;
-	Machine.Release(Machine.Modules)
+	Machine.Release(Machine.Modules);
+	IF (Heaps.GCType = Heaps.MetaDataForStackGC) & ~(PreciseGC IN m.flags) THEN
+		name := m.name;
+		HALT(100);
+	END;
 END Publish;
 
 PROCEDURE Initialize*(VAR module: Module);

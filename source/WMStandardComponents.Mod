@@ -2879,6 +2879,9 @@ TYPE
 		PROCEDURE Resized*;
 		BEGIN			
 			Resized^;
+			IF img=NIL THEN
+				RETURN;
+			END;
 			IF img.width > bounds.GetWidth() THEN
 				dx := img.width - bounds.GetWidth();
 				hScrollbar.visible.Set(TRUE)
@@ -2890,7 +2893,7 @@ TYPE
 				dy := img.height - bounds.GetHeight();
 				vScrollbar.visible.Set(TRUE)
 			ELSE
-				dx := 0;
+				dy := 0;
 				vScrollbar.visible.Set(FALSE)
 			END;
 		END Resized;
@@ -2938,7 +2941,7 @@ TYPE
 					dy := img.height - bounds.GetHeight();
 					vScrollbar.visible.Set(TRUE)
 				ELSE
-					dx := 0;
+					dy := 0;
 					vScrollbar.visible.Set(FALSE)
 				END;
 				Invalidate

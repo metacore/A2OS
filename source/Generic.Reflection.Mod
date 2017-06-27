@@ -930,7 +930,9 @@ CONST
 		refs := mod.refs;
 		offset := 0; 
 		
-		w.String("State "); w.String(mod.name); w.Char(":"); w.Ln; Wait(w);
+		w.String("State "); w.String(mod.name); w.Char(":"); 
+		w.String(" (CRC = "); w.Hex(mod.crc,-8) ; w.String(")");
+		w.Ln; Wait(w);
 		IF (GetChar(refs, offset) = sfModule) THEN
 			SkipSize(offset);
 			SkipString(refs, offset);

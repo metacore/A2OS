@@ -153,6 +153,12 @@ VAR
 
 (** Register a module loader. *)
 
+PROCEDURE Halt(CONST reason: ARRAY OF CHAR);
+BEGIN
+	HALT(999);
+END Halt;
+
+
 PROCEDURE AddLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc);
 BEGIN
 	Machine.Acquire(Machine.Modules);
@@ -223,7 +229,7 @@ BEGIN
 	Machine.Release(Machine.Modules);
 	IF (Heaps.GCType = Heaps.MetaDataForStackGC) & ~(PreciseGC IN m.flags) THEN
 		name := m.name;
-		HALT(100);
+		Halt("Module does not provide metadata required by the GC.");
 	END;
 END Publish;
 

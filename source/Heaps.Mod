@@ -1506,6 +1506,28 @@ BEGIN
 	RETURN total-free;
 END Used;
 
+VAR assigns*: LONGINT;
+
+PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
+BEGIN
+	(*TRACE(dest,src);*)
+	dest := src;
+	INC(assigns);
+END Assign;
+
+PROCEDURE AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS);
+BEGIN
+	(*TRACE(dest,tag.recSize,LEN(tag.pointerOffsets),src);*)
+	SYSTEM.MOVE(src,dest,tag.recSize);
+	INC(assigns);
+END AssignRecord;
+
+PROCEDURE AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU;  numElems: SIZE; src: ADDRESS);
+BEGIN
+	(*TRACE(dest,tag.recSize,LEN(tag.pointerOffsets),numElems,src);*)
+	SYSTEM.MOVE(src,dest,tag.recSize * numElems);
+	INC(assigns);	
+END AssignArray;
 
 (* NilGC - Default garbage collector. *)
 PROCEDURE NilGC;

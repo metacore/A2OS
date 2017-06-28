@@ -1574,11 +1574,11 @@ TYPE
 					IntermediateCode.InitMemory(op2, addressType,ap,ToMemoryUnits(system,system.addressSize*10));
 					BrgeL(nocall, sp, op2);
 					call.Resolve(section.pc);
+					Emit(Push(Basic.invalidPosition, reg));
+					ReleaseIntermediateOperand(reg);
 					parametersSize := ProcedureParametersSize(backend.system,procedure);
 					IntermediateCode.InitImmediate(op2,addressType, parametersSize);
 					Emit(Push(Basic.invalidPosition, op2));
-					Emit(Push(Basic.invalidPosition, reg));
-					ReleaseIntermediateOperand(reg);
 					CallThis(position, "Activities","ExpandStack",2);
 					Emit(Result(Basic.invalidPosition, sp));
 					nocall.Resolve(section.pc);

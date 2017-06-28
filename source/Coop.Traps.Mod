@@ -50,7 +50,7 @@ BEGIN
 		w.Ln;
 		w.String( "StackTraceBack:" );  w.Ln;
 		frame := ADDRESS OF frame + SIZE OF ADDRESS; frame := frame.previous;
-		Reflection.StackTraceBack(w, frame.caller, frame.previous, ADDRESS OF frame + Activities.MaximumStackSize, TRUE, FALSE);
+		Reflection.StackTraceBack(w, frame.caller, frame.previous, ADDRESS OF frame, ADDRESS OF frame + Activities.MaximumStackSize, TRUE, FALSE);
 	END;
 	w.String("---------------------------------"); w.Ln;
 	w.Char(02X);	(* "end of trap" *)

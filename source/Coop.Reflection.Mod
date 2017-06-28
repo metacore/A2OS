@@ -1,6 +1,6 @@
 MODULE Reflection; (** AUTHOR "fof"; PURPOSE "tools for module, stack and process reflection"; *)
 
-IMPORT Modules,Streams,Machine,Heaps,Objects,SYSTEM;
+IMPORT Modules,Streams,Machine,Heaps,Objects,Kernel,Trace,SYSTEM;
 
 CONST
 	ShowAllProcs = TRUE;
@@ -40,13 +40,13 @@ VAR
 	*)
 
 	(** Write a variable value.  The v parameter is a variable descriptor obtained with NextVar.  Parameter col is incremented with the (approximate) number of characters written. *)
-	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT);
+	PROCEDURE WriteVar*(w: Streams.Writer; VAR v: Variable; VAR col: LONGINT);
 	VAR ch: CHAR;
 	BEGIN
 		IF v.type = 15 THEN
 			w.Char(22X);
 			LOOP
-				IF (v.n = 0) (*OR (~CheckHeapAddress(v.adr))*) THEN EXIT END;
+				IF (v.n = 0) OR (~CheckHeapAddress(v.adr)) THEN EXIT END;
 				SYSTEM.GET(v.adr, ch);
 				INC(v.adr);
 				IF (ch < " ") OR (ch > "~") THEN EXIT END;
@@ -72,14 +72,20 @@ VAR
 
 	(* Get a compressed refblk number. *)
 	PROCEDURE GetNum( refs: Modules.Bytes;  VAR i, num: LONGINT );
-	VAR n, s: LONGINT;  x: CHAR;
+	VAR
+		n, s, x: LONGINT;
 	BEGIN
 		IF NewObjectFile(refs) THEN
-			num := SYSTEM.VAL(LONGINT,refs[i]); INC(i,4);
+			(* Copying byte by byte to avoid unaligned memory accesses on ARM *)
+			SYSTEM.PUT8(ADDRESSOF(num), refs[i]);
+			SYSTEM.PUT8(ADDRESSOF(num) + 1, refs[i + 1]);
+			SYSTEM.PUT8(ADDRESSOF(num) + 2, refs[i + 2]);
+			SYSTEM.PUT8(ADDRESSOF(num) + 3, refs[i + 3]);
+			INC(i,4);
 		ELSE
-			s := 0;  n := 0;  x := refs[i];  INC( i );
-			WHILE ORD( x ) >= 128 DO INC( n, ASH( ORD( x ) - 128, s ) );  INC( s, 7 );  x := refs[i];  INC( i ) END;
-			num := n + ASH( ORD( x ) MOD 64 - ORD( x ) DIV 64 * 64, s )
+			s := 0;  n := 0;  x := ORD(refs[i]);  INC( i );
+			WHILE x >= 128 DO  INC( n, ASH( x - 128, s ) );  INC( s, 7 );  x := ORD(refs[i]);  INC( i )  END;
+			num := n + ASH( x MOD 64 - x DIV 64 * 64, s )
 		END;
 	END GetNum;
 
@@ -145,13 +151,15 @@ VAR
 
 	(** Find global variables of mod (which may be NIL) and return it in the refs, refpos and base parameters for use by NextVar.  If not found, refpos returns -1. *)
 	PROCEDURE InitVar*(mod: Modules.Module; VAR refs: Modules.Bytes; VAR refpos: LONGINT; VAR base: ADDRESS);
-	VAR ch: CHAR; startpc: ADDRESS;
+	VAR ch: CHAR; startpc,pc,end: ADDRESS;
 	BEGIN
 		refpos := -1;
 		IF mod # NIL THEN
 			refs := mod.refs; base := mod.sb;
 			IF (refs # NIL) & (LEN(refs) # 0) THEN
-				refpos := FindProc(refs, 0, startpc);
+				IF FindProcByName(mod,"$$",pc,end) THEN
+					refpos := FindProc(refs, pc, startpc);
+				END;
 				IF refpos # -1 THEN
 					ch := refs[refpos]; INC(refpos);
 					WHILE ch # 0X DO ch := refs[refpos]; INC(refpos) END
@@ -175,6 +183,7 @@ VAR
 		IF newObjectFile THEN INC(pos) END;
 		ch := refs[pos]; INC(pos); tstart := 0;
 		found := FALSE;
+
 		WHILE ~found & (pos < len) & ((ch = 0F8X) OR (ch = 0F9X)) DO	(* proc *)
 			GetNum(refs, pos, tstart);	(* procedure offset *)
 			IF newObjectFile THEN
@@ -217,8 +226,9 @@ VAR
 
 	(* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 	PROCEDURE FindProcByName*(mod: Modules.Module; CONST name: ARRAY OF CHAR;  VAR from, to: ADDRESS): BOOLEAN;
-	VAR i, namePos, m, t, tstart, tend: LONGINT; ch: CHAR; newObjectFile: BOOLEAN;
+	VAR i, namePos, m, t, temp: LONGINT; ch: CHAR; newObjectFile: BOOLEAN;
 		refs: Modules.Bytes; success: BOOLEAN;
+		tstart, tend: ADDRESS;
 	BEGIN
 		IF mod = NIL THEN RETURN FALSE END;
 		refs := mod.refs;
@@ -229,8 +239,9 @@ VAR
 		ch := refs[i]; INC(i); tstart := 0;
 		success := FALSE;
 		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) & ~success DO	(* proc *)
-			GetNum(refs, i, tstart);	(* pofs *)
-			IF newObjectFile THEN GetNum(refs,i,tend) END;
+			GetNum(refs, i, temp);	(* pofs *)
+			tstart := temp;
+			IF newObjectFile THEN GetNum(refs,i,temp); tend := temp END;
 			IF ch = 0F9X THEN
 				GetNum(refs, i, t);	(* nofPars *)
 				INC(i, 3)	(* RetType, procLev, slFlag *);
@@ -253,7 +264,7 @@ VAR
 		END;
 		IF success & ~newObjectFile THEN
 			IF (ch = 0F8X) OR (ch = 0F9X) THEN
-				GetNum(refs, i, tend)
+				GetNum(refs, i, temp); tend := temp;
 			ELSE
 				tend :=LEN(mod.code);
 			END;
@@ -493,71 +504,74 @@ VAR
 
 	PROCEDURE WriteSimpleVar( w: Streams.Writer;  adr, type, tdadr: ADDRESS;  VAR col: LONGINT );
 	VAR ch: CHAR;  sval: SHORTINT;  ival: INTEGER;  lval: LONGINT;  rval: REAL; xval: LONGREAL; hval : HUGEINT;
-		address: ADDRESS; pos0: LONGINT;
+		address: ADDRESS; pos0: LONGINT; setval: SET;
 	BEGIN
 		pos0 := w.Pos();
-		CASE type OF
-		1, 3:  (* BYTE, CHAR *)
-				SYSTEM.GET( adr, ch );
-				IF (ch > " ") & (ch <= "~") THEN w.Char( ch ); ELSE w.Hex( ORD( ch ), -2 );  w.Char( "X" ) END;
-		| 2:    (* BOOLEAN *)
-				SYSTEM.GET( adr, ch );
-				IF ch = 0X THEN w.String( "FALSE" )
-				ELSIF ch = 1X THEN w.String( "TRUE" )
-				ELSE w.Int( ORD( ch ), 1 );
-				END;
-		| 4:    (* SHORTINT *)
-				SYSTEM.GET( adr, sval );
-				w.Int( sval, 1 );
-				IF sval > 0H THEN w.String(" ("); w.Hex(sval, -2); w.String("H)") END;
-		| 5:    (* INTEGER *)
-				SYSTEM.GET( adr, ival );
-				w.Int( ival, 1 );
-				IF ival > 0H THEN w.String(" (");w.Hex(ival,-4);w.Char("H");w.String(")"); END;
-		| 6:    (* LONGINT *)
-				SYSTEM.GET( adr, lval );
-				w.Int( lval, 1 );
-				IF lval > 0H THEN w.String( " (" );  w.Hex( lval,-8 );  w.String( "H)" );  END;
-		| 7:     (* REAL *)
-				SYSTEM.GET(adr,rval); SYSTEM.GET(adr,lval);
-				w.Float(rval,15);
-				IF lval > 0H THEN w.String(" ("); w.Hex(lval,-8);w.Char( "H" ); w.String(")"); END;
-		| 8:      (* LONGREAL *)
-				SYSTEM.GET(adr,xval);SYSTEM.GET(adr,hval);
-				w.Float(xval,15);
-				IF hval > 0H THEN  w.String( " (" );  w.Hex(hval,-16);  w.String( "H)" );  END;
-		| 13,29: (* POINTER *)
-				SYSTEM.GET( adr, address ); w.Address( address );  w.String( "H" );
-				(* output type information, if available: *)
-				w.String(" (");
-				(* do a check if the address is in the heap range *)
-				IF CheckHeapAddress(address) THEN
-					SYSTEM.GET(address + Heaps.TypeDescOffset, address);
-					WriteType(w,address);
-				ELSE w.String("NIL");
-				END;
-				w.String(")");
-		| 16:   (* HUGEINT *)
-				SYSTEM.GET( adr , hval );
-				w.Hex(hval,1);
-				IF hval < 0 THEN w.String( "H (" ); w.Hex(hval,-16); w.String(")") END;
-		| 9:    (* SET *)
-				SYSTEM.GET( adr, lval );
-				w.Set( SYSTEM.VAL( SET, lval ) );
-		| 22:  (* RECORD *)
-				w.String( "Rec@" );  w.Hex( tdadr, -8 );  w.Char( "H" );
-		| 14:  (* PROC *)
-				SYSTEM.GET( adr, lval );  WriteProc( w, lval );
+		IF (adr # 0) OR (type = 22) THEN
+			CASE type OF
+			1, 3:  (* BYTE, CHAR *)
+					SYSTEM.GET( adr, ch );
+					IF (ch > " ") & (ch <= "~") THEN w.Char( ch ); ELSE w.Hex( ORD( ch ), -2 );  w.Char( "X" ) END;
+			| 2:    (* BOOLEAN *)
+					SYSTEM.GET( adr, ch );
+					IF ch = 0X THEN w.String( "FALSE" )
+					ELSIF ch = 1X THEN w.String( "TRUE" )
+					ELSE w.Int( ORD( ch ), 1 );
+					END;
+			| 4:    (* SHORTINT *)
+					SYSTEM.GET( adr, sval );
+					w.Int( sval, 1 );
+					IF sval > 0H THEN w.String(" ("); w.Hex(sval, -2); w.String("H)") END;
+			| 5:    (* INTEGER *)
+					SYSTEM.GET( adr, ival );
+					w.Int( ival, 1 );
+					IF ival > 0H THEN w.String(" (");w.Hex(ival,-4);w.Char("H");w.String(")"); END;
+			| 6:    (* LONGINT *)
+					SYSTEM.GET( adr, lval );
+					w.Int( lval, 1 );
+					IF lval > 0H THEN w.String( " (" );  w.Hex( lval,-8 );  w.String( "H)" );  END;
+			| 7:     (* REAL *)
+					SYSTEM.GET(adr,rval); SYSTEM.GET(adr,lval);
+					w.Float(rval,15);
+					IF lval > 0H THEN w.String(" ("); w.Hex(lval,-8);w.Char( "H" ); w.String(")"); END;
+			| 8:      (* LONGREAL *)
+					SYSTEM.GET(adr,xval);SYSTEM.GET(adr,hval);
+					w.Float(xval,15);
+					IF hval > 0H THEN  w.String( " (" );  w.Hex(hval,-16);  w.String( "H)" );  END;
+			| 13,29: (* POINTER *)
+					SYSTEM.GET( adr, address ); w.Address( address );  w.String( "H" );
+					(* output type information, if available: *)
+					w.String(" (");
+					(* do a check if the address is in the heap range *)
+					IF CheckHeapAddress(address) THEN
+						SYSTEM.GET(address + Heaps.TypeDescOffset, address);
+						WriteType(w,address);
+					ELSE w.String("NIL");
+					END;
+					w.String(")");
+			| 16:   (* HUGEINT *)
+					SYSTEM.GET( adr , hval );
+					IF hval = 0 THEN  w.Char( '0' );
+					ELSIF hval > 0 THEN  w.Hex( hval, 1 ); w.Char( 'H' )
+					ELSE w.Hex( hval, -16 );
+					END;
+			| 9:    (* SET *)
+					SYSTEM.GET( adr, setval );
+					w.Set( setval );
+			| 22:  (* RECORD *)
+					w.String( "Rec@" );  w.Hex( tdadr, -8 );  w.Char( "H" );
+			| 14:  (* PROC *)
+					SYSTEM.GET( adr, lval );  WriteProc( w, lval );
+			END;
 		END;
 		INC(col,w.Pos()-pos0);
 	END WriteSimpleVar;
 
 	(* Display call trackback. *)
-	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stackhigh: ADDRESS; long, overflow: BOOLEAN);
-	VAR count,refpos: LONGINT; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
+	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS; long, overflow: BOOLEAN);
+	VAR count,refpos: LONGINT; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
 	BEGIN
 		count := 0;	(* frame count *)
-		stacklow := bp;
 		REPEAT
 			m := Modules.ThisModuleByAdr0(pc);
 			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= stacklow) & (bp <= stackhigh) THEN
@@ -565,7 +579,7 @@ VAR
 					WriteProc0(w, m, pc, bp, refs, refpos, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
 						IF refpos # -1 THEN Variables(w, refs, refpos, base) END;
-						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
+						IF FALSE & (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
 					END;
 				ELSE
 					w.String( "Unknown external procedure, pc = " );  w.Address( pc );  w.Ln; Wait(w);
@@ -626,6 +640,29 @@ VAR
 		END
 	END WriteProcess;
 
+
+
+VAR trace: Streams.Writer;
+
+	PROCEDURE TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	BEGIN
+		trace.String("----------- Process = ");
+		trace.Address(process);
+		trace.String(", Object = "); trace.Address(process.obj);
+		trace.Ln;
+		StackTraceBack(trace, pc, bp, stacklow ,stackhigh, TRUE, FALSE);
+		trace.Update;
+	END TraceH;
+
+	(* tracing the stacks of all processes during GC phase (needs to identify and stop all processes) *)
+	PROCEDURE TraceProcesses*;
+	BEGIN
+		Objects.TraceProcessHook := TraceH;
+		Kernel.GC;
+		Objects.TraceProcessHook := NIL;
+	END TraceProcesses;
+
 BEGIN
+	NEW(trace, Trace.Send, 4096);
 	modes := " rdy run awl awc awe rip";   (* 4 characters per mode from Objects.Ready to Objects.Terminated *)
 END Reflection.

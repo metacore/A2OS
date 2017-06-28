@@ -186,6 +186,9 @@ VAR
 	clock: Clock;
 	interrupt: ARRAY CPU.Interrupts OF Interrupter;
 
+	(* for compatibility and later extension *)
+	TraceProcessHook* := NIL: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
 BEGIN

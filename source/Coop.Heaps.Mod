@@ -479,6 +479,10 @@ BEGIN
 	total := 0; free := 0; largest := 0;
 END GetHeapInfo;
 
+PROCEDURE FullSweep-;
+(* Required for compatibility with ProcessInfo0.Mod *)
+END FullSweep;
+
 (* Init - Initialize the heap. *)
 PROCEDURE Init;
 BEGIN

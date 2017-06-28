@@ -205,6 +205,7 @@ VAR
 	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
 	throughput: SIZE; 
+	assigns*: LONGINT; 
 
 	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
@@ -249,6 +250,10 @@ VAR
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
 	PROCEDURE ^ HeapSize*(): SIZE; 
 	PROCEDURE ^ Used*(): SIZE; 
+	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
+	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
+	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
+	PROCEDURE ^ AssignDelegate*(dest: ADDRESS; src: ADDRESS); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ SetHeuristic*; 

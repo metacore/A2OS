@@ -112,6 +112,7 @@ VAR
 	procedureDescriptors-: ProcedureDescs; 
 	callagain: BOOLEAN; 
 
+	PROCEDURE ^ Halt(CONST reason: ARRAY OF CHAR); 
 	PROCEDURE ^ AddLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc); 
 	PROCEDURE ^ RemoveLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc); 
 	PROCEDURE ^ Append*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 

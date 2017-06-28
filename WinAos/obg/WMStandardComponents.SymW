@@ -359,6 +359,7 @@ TYPE
 		dx, dy: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ GetOffsets*(VAR x, y: LONGINT); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 

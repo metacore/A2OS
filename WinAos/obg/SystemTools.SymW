@@ -1,5 +1,5 @@
 MODULE SystemTools;
-	IMPORT Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion, Heaps;
+	IMPORT Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion, Heaps, Reflection;
 CONST 
 	MaxTimers = 16; 
 	DateTimeFormat = \"dd.mm.yyyy hh:nn:ss"\; 
@@ -31,6 +31,7 @@ VAR
 	PROCEDURE ^ ModuleIsLoaded(CONST name: Modules.Name): BOOLEAN; 
 	PROCEDURE ^ WhoImports*(context: Commands.Context); 
 	PROCEDURE ^ IsLoaded*(context: Commands.Context); 
+	PROCEDURE ^ ModuleState*(context: Commands.Context); 
 	PROCEDURE ^ Load*(context: Commands.Context); 
 	PROCEDURE ^ FreeDownTo*(context: Commands.Context); 
 	PROCEDURE ^ Free*(context: Commands.Context); 

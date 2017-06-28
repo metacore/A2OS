@@ -419,17 +419,10 @@ VAR
 																			 bInheritHandle: BOOL;
 																			 dwOptions: SET ): BOOL;
 	(** The EnterCriticalSection function waits for ownership of the specified critical section object. *)
-	enterCriticalSection: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+	EnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	
-	PROCEDURE EnterCriticalSection*(VAR lpCriticalSection: CriticalSection);
-	BEGIN
-		LeaveA2;
-		enterCriticalSection(lpCriticalSection);
-		ReenterA2;
-	END EnterCriticalSection;
-
 	(** The EscapeCommFunction function directs a specified communications device to perform an extended function. *)
-	VAR EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+	EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																					  dwFunc: LONGINT ): BOOL;
 	(** The ExitProcess function ends a process and all its threads. *)
 	ExitProcess-: PROCEDURE {WINAPI} ( uExitCode: LONGINT );
@@ -634,18 +627,11 @@ VAR
 	InterlockedIncrement-: PROCEDURE {WINAPI} ( VAR lpAddend: LONGINT ): LONGINT;
 
 	(** The LeaveCriticalSection function releases ownership of the specified critical section object. *)
-	leaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
-	
-	PROCEDURE LeaveCriticalSection*(VAR lpCriticalSection: CriticalSection);
-	BEGIN
-		LeaveA2;
-		leaveCriticalSection(lpCriticalSection);
-		ReenterA2;
-	END LeaveCriticalSection;
-	
+	LeaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
+		
 	(** The LocalFileTimeToFileTime function converts a local file time to a file time based on the Coordinated
 			Universal Time (UTC). *)
-	VAR LocalFileTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpLocalFileTime: FileTime;
+	LocalFileTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpLocalFileTime: FileTime;
 																						   VAR lpFileTime: FileTime ): BOOL;
 	(** The MoveFileEx function renames an existing file or directory. *)
 	MoveFileEx-: PROCEDURE {WINAPI} ( VAR lpExistingFileName, lpNewFileName: ARRAY   OF CHAR;
@@ -674,25 +660,12 @@ VAR
 	(** Retrieves the cycle time for the specified thread (both user and kernel mode, Windows Vista and newer) *)
 	QueryThreadCycleTime- : PROCEDURE {WINAPI} (hThread : HANDLE; VAR cycleTime : HUGEINT) : BOOL;
 	(** The ReadFile function reads data from a file, starting at the position indicated by the file pointer. *)
-	readFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+	ReadFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															  VAR lpBuffer: ARRAY OF SYSTEM.BYTE;
 															  nNumberOfBytesToRead: LONGINT;
 															  VAR lpNumberOfBytesRead: LONGINT;
 															  lpOverlapped: ADDRESS ): BOOL;
 
-	PROCEDURE ReadFile- ( hFile: HANDLE;
-															  VAR lpBuffer: ARRAY OF SYSTEM.BYTE;
-															  nNumberOfBytesToRead: LONGINT;
-															  VAR lpNumberOfBytesRead: LONGINT;
-															  lpOverlapped: ADDRESS ): BOOL;
-	VAR b: BOOL;
-	BEGIN
-		LeaveA2;
-		b := readFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
-		ReenterA2;
-		RETURN b;
-	END ReadFile;
-	VAR
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				   lpBaseAddress: ADDRESS;
@@ -792,32 +765,17 @@ VAR
 	WaitForSingleObject-: PROCEDURE {WINAPI} ( hHandle: HANDLE;
 																				   dwMilliseconds: LONGINT ): LONGINT;
 	(** The WriteFile function writes data to a file and is designed for both synchronous and asynchronous operation. *)
-	writeFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
+	WriteFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															   nNumberOfBytesToWrite: LONGINT;
 															   VAR lpNumberOfBytesWritten: LONGINT;
 															   lpOverlapped: ADDRESS ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
-	PROCEDURE WriteFile- ( hFile: HANDLE;
-															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
-															   nNumberOfBytesToWrite: LONGINT;
-															   VAR lpNumberOfBytesWritten: LONGINT;
-															   lpOverlapped: ADDRESS ): BOOL;
-	VAR b: BOOL;
-	BEGIN
-		LeaveA2;
-		b := writeFile(hFile,lpBuffer,nNumberOfBytesToWrite, lpNumberOfBytesWritten,lpOverlapped);
-		ReenterA2;
-		RETURN b;
-	END WriteFile;
-	VAR
 	
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
 	
-	(** methods to store the GC context before temporarily escaping to Windows -- required because GetContext does not work correctly any more  *)
-	LeaveA2*, ReenterA2*: PROCEDURE;
 
 	(* OutputString*: OutputStringProc; *)
 	Shutdown*: PROCEDURE ( code: LONGINT );
@@ -870,15 +828,9 @@ VAR
 		ExitProcess(l);
 	END ShutdownP;
 	
-	PROCEDURE Nothing;
-	BEGIN
-	END Nothing;
-
 	PROCEDURE Init*;
 	VAR mod: HMODULE;
 	BEGIN
-		LeaveA2 := Nothing;
-		ReenterA2 := Nothing;
 		Shutdown := ShutdownP;
 		mod := LoadLibrary("Kernel32.DLL");
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
@@ -897,7 +849,7 @@ VAR
 		GetProcAddress(mod, "DeleteFileA",SYSTEM.VAL(ADDRESS,DeleteFile));
 		GetProcAddress(mod, "DisableThreadLibraryCalls",SYSTEM.VAL(ADDRESS,DisableThreadLibraryCalls));
 		GetProcAddress(mod, "DuplicateHandle",SYSTEM.VAL(ADDRESS,DuplicateHandle));
-		GetProcAddress(mod, "EnterCriticalSection",SYSTEM.VAL(ADDRESS,enterCriticalSection));
+		GetProcAddress(mod, "EnterCriticalSection",SYSTEM.VAL(ADDRESS,EnterCriticalSection));
 		GetProcAddress(mod, "EscapeCommFunction",SYSTEM.VAL(ADDRESS,EscapeCommFunction));
 		GetProcAddress(mod, "ExitProcess",SYSTEM.VAL(ADDRESS,ExitProcess));
 		GetProcAddress(mod, "ExitThread",SYSTEM.VAL(ADDRESS,ExitThread));
@@ -965,7 +917,7 @@ VAR
 		GetProcAddress(mod, "InterlockedDecrement",SYSTEM.VAL(ADDRESS,InterlockedDecrement));
 		GetProcAddress(mod, "InterlockedIncrement",SYSTEM.VAL(ADDRESS,InterlockedIncrement));
 		GetProcAddress(mod, "IsDebuggerPresent",SYSTEM.VAL(ADDRESS,IsDebuggerPresent));
-		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,leaveCriticalSection));
+		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
 		GetProcAddress(mod, "MoveFileExA",SYSTEM.VAL(ADDRESS,MoveFileEx));
@@ -975,7 +927,7 @@ VAR
 		GetProcAddress(mod, "QueryPerformanceCounter",SYSTEM.VAL(ADDRESS,QueryPerformanceCounter));
 		GetProcAddress(mod, "QueryPerformanceFrequency",SYSTEM.VAL(ADDRESS,QueryPerformanceFrequency));
 		GetProcAddress(mod, "QueryThreadCycleTime", SYSTEM.VAL(ADDRESS, QueryThreadCycleTime));
-		GetProcAddress(mod, "ReadFile",SYSTEM.VAL(ADDRESS,readFile));
+		GetProcAddress(mod, "ReadFile",SYSTEM.VAL(ADDRESS,ReadFile));
 		GetProcAddress(mod, "ReadProcessMemory",SYSTEM.VAL(ADDRESS,ReadProcessMemory));
 		GetProcAddress(mod, "RemoveDirectoryA",SYSTEM.VAL(ADDRESS,RemoveDirectory));
 		GetProcAddress(mod, "ResetEvent",SYSTEM.VAL(ADDRESS,ResetEvent));
@@ -1013,7 +965,7 @@ VAR
 		GetProcAddress(mod, "VirtualAlloc",SYSTEM.VAL(ADDRESS,VirtualAlloc));
 		GetProcAddress(mod, "VirtualFree",SYSTEM.VAL(ADDRESS,VirtualFree));
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
-		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,writeFile));
+		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
 		isEXE := hInstance = NULL;
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;

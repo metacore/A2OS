@@ -428,7 +428,7 @@ END Yield;
 
 (** Return current process. (DEPRECATED, use ActiveObject) *)
 PROCEDURE CurrentProcess*( ): Process;
-BEGIN
+BEGIN{UNCHECKED} (* makes sure that Enter and Leave are not emitted *)
 	RETURN SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
 END CurrentProcess;
 
@@ -1132,8 +1132,6 @@ BEGIN
 	ASSERT(t.handle # 0);
 	Machine.Release(Machine.Objects);
 	InitEventHandling; (* implicit call of NewProcess! *)
-	Kernel32.LeaveA2 := LeaveA2;
-	Kernel32.ReenterA2 := ReenterA2;
 	InitGCHandling; (* do. *)
 	Heaps.gcStatus := GCStatusFactory()
 END Init;
@@ -1278,6 +1276,7 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 PROCEDURE LeaveA2;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
+	IF clock = NIL THEN RETURN END;
 	cur := CurrentProcess();
 	IF cur # NIL THEN 
 		ebp := Machine.CurrentBP();
@@ -1290,6 +1289,7 @@ END LeaveA2;
 PROCEDURE ReenterA2;
 VAR cur: Process;
 BEGIN
+	IF clock = NIL THEN RETURN END;
 	cur := CurrentProcess();
 	IF cur # NIL THEN 
 		cur.gcContext.ebp := NIL;

@@ -5476,7 +5476,7 @@ TYPE
 			formalParameter: SyntaxTree.Parameter;
 			operand, returnValue: Operand;
 			reg, size, mask, dest: IntermediateCode.Operand;
-			saved: RegisterEntry;
+			saved,saved2: RegisterEntry;
 			symbol: SyntaxTree.Symbol;
 			variable: SyntaxTree.Variable;
 			i,  parametersSize, returnTypeSize : LONGINT;
@@ -5898,6 +5898,12 @@ TYPE
 
 						
 			ReleaseParameterRegisters();
+			
+			IF backend.preciseGC & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved2);
+				CallThis(position,"Objects","LeaveA2",0);
+				RestoreRegisters(saved2);
+			END;
 			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) OR SysvABI(procedureType.callingConvention) THEN
 				Emit(Call(position,operand.op,0));
 			ELSE
@@ -5912,6 +5918,16 @@ TYPE
 			IF (procedureType.returnType # NIL) & ~structuredReturnType THEN
 				return := NewRegisterOperand(IntermediateCode.GetType(system,procedureType.returnType));
 				Emit(Result(position,return));
+			END;
+
+			IF  backend.preciseGC & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+				IF  (procedureType.returnType # NIL) & ~structuredReturnType  THEN 
+					Emit(Push(position, return));
+					CallThis(position,"Objects","ReenterA2",0);
+					Emit(Pop(position, return));
+				ELSE
+					CallThis(position,"Objects","ReenterA2",0);
+				END;
 			END;
 			
 			(* === return parameter space === *)
@@ -13457,6 +13473,7 @@ TYPE
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
 		preciseGC, writeBarriers: BOOLEAN; 
+		experiment: BOOLEAN; 
 		
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
@@ -13564,6 +13581,7 @@ TYPE
 			options.Add(0X,"cellsAreObjects", Options.Flag);
 			options.Add(0X,"preciseGC", Options.Flag);
 			options.Add(0X,"writeBarriers", Options.Flag);
+			options.Add(0X,"experiment", Options.Flag);
 		END DefineOptions;
 
 		PROCEDURE GetOptions(options: Options.Options);
@@ -13594,7 +13612,7 @@ TYPE
 			cellsAreObjects := options.GetFlag("cellsAreObjects");
 			preciseGC := options.GetFlag("preciseGC");
 			writeBarriers := options.GetFlag("writeBarriers");
-
+			experiment := options.GetFlag("experiment");
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;

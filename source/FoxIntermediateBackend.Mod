@@ -8051,7 +8051,7 @@ TYPE
 					END;
 				ELSIF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType)  THEN
 					type := type(SyntaxTree.PointerType).pointerBase.resolved;
-					IF TRUE THEN  (* simpler version *)
+					IF ~backend.cooperative THEN  (* simpler version *)
 						(* 
 						 	push len0
 						 	push len1
@@ -8156,12 +8156,12 @@ TYPE
 							END;
 							size := size DIV ToMemoryUnits(system,system.SizeOf(type));
 							IF (size # 1) THEN
-								Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+								MulInt(reg,reg,IntermediateCode.Immediate(addressType,size));
 							END;
 							Emit(Push(position,reg));
 							size := ToMemoryUnits(system,system.SizeOf(type));
 							IF (size # 1) THEN
-								Emit(Mul(position,reg,reg,IntermediateCode.Immediate(addressType,size))); (*! optimize the multiplication of immediate operands *)
+								MulInt(reg,reg,IntermediateCode.Immediate(addressType,size));
 							END;
 							AddInt(reg, reg, IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize)));
 							(*Emit(Add(position,reg,reg,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,(BaseArrayTypeSize + openDim)* system.addressSize))));*)

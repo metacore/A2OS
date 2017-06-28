@@ -37,6 +37,7 @@ CONST
 	(** file creation flags *)
 	FileFlagDeleteOnClose*=26;
 	FileFlagRandomAccess* = 28;
+	FileFlagOverlapped* = 30; (** The file or device is being opened or created for asynchronous I/O *)
 	FileFlagWriteThrough*= 31;
 
 	(** move method *)
@@ -151,7 +152,8 @@ CONST
 	(** GetLastError *)
 	ErrorSuccess* = 0;  ErrorFileNotFound* = 2;  ErrorAccessDenied* = 5;
 	ErrorInvalidParameter* = 87;
-
+	
+	ErrorIoPending* = 997; (** Overlapped I/O operation is in progress *)
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
 
@@ -211,6 +213,10 @@ TYPE
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: LONGINT; (* whereas BP is EBP and SP is ESP *)
 	END;
 
+	Wow64Context*= RECORD (Context)
+		extension: ARRAY 512 (* MaxWOW64Extension *) OF CHAR;
+	END;
+	
 	ExceptionRecordPtr* = POINTER TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
@@ -331,6 +337,15 @@ TYPE
 		DaylightDate*: SystemTime;
 		DaylightBias*: LONGINT;
 	END;
+	
+	(** Contains information used in asynchronous (or overlapped) input and output (I/O). *)
+	Overlapped* = RECORD
+		Internal*: LONGINT;
+		InternalHigh*: LONGINT;
+		Offset*: LONGINT;
+		OffsetHigh*: LONGINT;
+		hEvent*: HANDLE;
+	END;
 
 VAR
 	(* the procedure variables getProcAddress and LoadLibrary  must be patched by linker / PE loader *)
@@ -343,6 +358,8 @@ VAR
 
 	(** The AllocConsole function allocates a new console for the calling process. *)
 	AllocConsole-: PROCEDURE {WINAPI} ( ): BOOL;
+	(** The AttachConsole function attaches the calling process to the console of the specified process. *)
+	AttachConsole-: PROCEDURE {WINAPI} (in: LONGINT): BOOL;
 	(**The Beep function generates simple tones on the speaker. The function is synchronous; it does not return control to its caller until the sound finishes.*)
 	Beep-: PROCEDURE {WINAPI} ( dwFreq, dwDuration: LONGINT ): BOOL;
 	(** The ClearCommBreak function restores character transmission for a specified communications device and places the transmission line in a nonbreak state. *)
@@ -500,6 +517,11 @@ VAR
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
+	
+	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device. 
+			To specify a timeout interval or wait on an alertable thread. *)
+	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL ): BOOL;
+	
 	(** The GetPrivateProfileString function retrieves a string from the specified section in an initialization file.*)
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
@@ -534,6 +556,9 @@ VAR
 	(** The GetThreadContext function retrieves the context of the specified thread. *)
 	GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;
+	(** The GetThreadContext function retrieves the context of the specified thread. *)
+	Wow64GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
+																			  VAR lpContext: Wow64Context ): BOOL;
 	(** The GetThreadPriority function returns the priority value for the specified thread. This value, together with
 			the priority class of the thread's process, determines the thread's base-priority level. *)
 	GetThreadPriority-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
@@ -634,7 +659,7 @@ VAR
 															  VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															  nNumberOfBytesToRead: LONGINT;
 															  VAR lpNumberOfBytesRead: LONGINT;
-															  lpOverlapped {UNTRACED}: ANY ): BOOL;
+															  lpOverlapped: ADDRESS ): BOOL;
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				   lpBaseAddress: ADDRESS;
@@ -713,6 +738,8 @@ VAR
 	Sleep-: PROCEDURE {WINAPI} ( dwMilliseconds: LONGINT );
 	(** The SuspendThread function suspends the specified thread. *)
 	SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	(** The SuspendThread function suspends the specified thread. *)
+	Wow64SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
 	(** The SystemTimeToFileTime function converts a system time to a file time. *)
 	SystemTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime;
 																					   VAR lpFileTime: FileTime ): BOOL;
@@ -742,7 +769,7 @@ VAR
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															   nNumberOfBytesToWrite: LONGINT;
 															   VAR lpNumberOfBytesWritten: LONGINT;
-															   lpOverlapped {UNTRACED}: ANY ): BOOL;
+															   lpOverlapped: ADDRESS ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
 
@@ -820,6 +847,7 @@ VAR
 		InstallExceptionHandler;
 		mod := LoadLibrary("Kernel32.DLL");
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
+		GetProcAddress(mod, "AttachConsole",SYSTEM.VAL(ADDRESS,AttachConsole));
 		GetProcAddress(mod, "Beep",SYSTEM.VAL(ADDRESS,Beep));
 		GetProcAddress(mod, "ClearCommBreak",SYSTEM.VAL(ADDRESS,ClearCommBreak));
 		GetProcAddress(mod, "ClearCommError",SYSTEM.VAL(ADDRESS,ClearCommError));
@@ -869,6 +897,7 @@ VAR
 		GetProcAddress(mod, "GetLogicalDrives",SYSTEM.VAL(ADDRESS,GetLogicalDrives));
 		GetProcAddress(mod, "GetModuleFileNameA",SYSTEM.VAL(ADDRESS,GetModuleFileName));
 		GetProcAddress(mod, "GetModuleHandleA",SYSTEM.VAL(ADDRESS,GetModuleHandle));
+		GetProcAddress(mod, "GetOverlappedResult",SYSTEM.VAL(ADDRESS,GetOverlappedResult));
 		GetProcAddress(mod, "GetPrivateProfileStringA",SYSTEM.VAL(ADDRESS,GetPrivateProfileString));
 		(* must be done by linker: GetProcAddress(mod, "GetProcAddress",SYSTEM.VAL(ADDRESS,getProcAddress)); *)
 		GetProcAddress(mod, "GetProcessAffinityMask",SYSTEM.VAL(ADDRESS,GetProcessAffinityMask));
@@ -881,6 +910,7 @@ VAR
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
 		GetProcAddress(mod, "GetTempPathA",SYSTEM.VAL(ADDRESS,GetTempPath));
 		GetProcAddress(mod, "GetThreadContext",SYSTEM.VAL(ADDRESS,GetThreadContext));
+		GetProcAddress(mod, "Wow64GetThreadContext",SYSTEM.VAL(ADDRESS,Wow64GetThreadContext));
 		GetProcAddress(mod, "GetThreadPriority",SYSTEM.VAL(ADDRESS,GetThreadPriority));
 		GetProcAddress(mod, "GetThreadTimes",SYSTEM.VAL(ADDRESS,GetThreadTimes));
 		GetProcAddress(mod, "GetTickCount",SYSTEM.VAL(ADDRESS,GetTickCount));
@@ -942,6 +972,7 @@ VAR
 		GetProcAddress(mod, "SetupComm",SYSTEM.VAL(ADDRESS,SetupComm));
 		GetProcAddress(mod, "Sleep",SYSTEM.VAL(ADDRESS,Sleep));
 		GetProcAddress(mod, "SuspendThread",SYSTEM.VAL(ADDRESS,SuspendThread));
+		GetProcAddress(mod, "Wow64SuspendThread",SYSTEM.VAL(ADDRESS,Wow64SuspendThread));
 		GetProcAddress(mod, "SystemTimeToFileTime",SYSTEM.VAL(ADDRESS,SystemTimeToFileTime));
 		GetProcAddress(mod, "TerminateThread",SYSTEM.VAL(ADDRESS,TerminateThread));
 		GetProcAddress(mod, "TlsAlloc",SYSTEM.VAL(ADDRESS,TlsAlloc));

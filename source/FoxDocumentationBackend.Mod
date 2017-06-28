@@ -588,7 +588,7 @@ TYPE
 			PROCEDURE InBounds(val: HUGEINT; bits: LONGINT): BOOLEAN;
 			VAR m: HUGEINT;
 			BEGIN
-				m := Runtime.AslH(1,bits-1);
+				m := ASH(HUGEINT(1),bits-1);
 				RETURN (val < m) & (-val <= m)
 			END InBounds;
 		BEGIN

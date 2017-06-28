@@ -5728,16 +5728,18 @@ TYPE
 					d := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 					d.SetType(variable.type);
 				END;
-				IF (procedureType.returnType.resolved IS SyntaxTree.RecordType) THEN
+				(*IF (procedureType.returnType.resolved IS SyntaxTree.RecordType) THEN
 					Designate(d,returnValue);
 					returnTypeSize := system.SizeOf(procedureType.returnType.resolved);
 					size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,returnTypeSize));
 			 		Emit(Push(position,size));
 			 		Emit(Push(position,returnValue.op));
 			 		ReleaseOperand(returnValue);
-				ELSE
+				ELSE*)
 					PushParameter(d,procedureType.returnParameter,procedureType.callingConvention, FALSE, dummy,-1)
+					(*
 		 		END;
+		 		*)
 		 	END;
 
 			firstWriteBackCall := NIL; (* reset write-back call list *)
@@ -9850,15 +9852,19 @@ TYPE
 			ReleaseIntermediateOperand(dst);
 		END ModifyAssignments;
 
-		PROCEDURE CopySize(left: SyntaxTree.Expression): IntermediateCode.Operand;
-		VAR type: SyntaxTree.Type; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter;
+		PROCEDURE CopySize(left: SyntaxTree.Expression; tag: IntermediateCode.Operand): IntermediateCode.Operand;
+		VAR type: SyntaxTree.Type; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; mem: IntermediateCode.Operand;
 		BEGIN
 			type := left.type.resolved;
 			IF (type IS SyntaxTree.RecordType) & (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Parameter) THEN
 				parameter := left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Parameter);
 				procedureType := parameter.ownerType.resolved(SyntaxTree.ProcedureType);
 				IF procedureType.returnParameter = parameter THEN
-					RETURN IntermediateCode.Memory(addressType, fp, ToMemoryUnits(system, parameter.offsetInBits + system.addressSize));
+					(* this is the only case where the destination can be dynamically smaller than the source 
+						in all other cases the dynamic size has to be taken
+					*)
+					MakeMemory(mem, tag, addressType, 0);
+					RETURN mem;
 				END;
 			END;
 			RETURN IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.SizeOf(type)));
@@ -9867,8 +9873,8 @@ TYPE
 		PROCEDURE Assign(left,right: SyntaxTree.Expression);
 		VAR
 			leftO, rightO: Operand;
-			mem, sizeOp: IntermediateCode.Operand;
-			leftType, rightType, componentType: SyntaxTree.Type;
+			arg,mem, sizeOp: IntermediateCode.Operand;
+			leftType, rightType, componentType, base: SyntaxTree.Type;
 			size: LONGINT;
 			parameters: SyntaxTree.ExpressionList;
 			procedure: SyntaxTree.Procedure;
@@ -9909,8 +9915,9 @@ TYPE
 					CallAssignMethod(leftO.op, rightO.op, left.type);
 					Emit(Pop(position, rightO.op));
 					Emit(Pop(position, leftO.op));
-					sizeOp := CopySize(left);
+					sizeOp := CopySize(left, leftO.tag);
 					Emit(Copy(position,leftO.op,rightO.op,sizeOp));
+					ReleaseIntermediateOperand(sizeOp);
 					ReleaseOperand(leftO); 
 					ReleaseOperand(rightO);
 				ELSE
@@ -9933,6 +9940,56 @@ TYPE
 					ReleaseOperand(rightO);
 				END;
 				ModifyAssignments(false);
+				RETURN;
+			ELSIF backend.writeBarriers & left.NeedsTrace() THEN
+				IF SemanticChecker.IsPointerType(leftType) THEN
+					Evaluate(right,rightO);
+					Designate(left,leftO);
+					Emit(Push(position,leftO.op));
+					ReleaseOperand(leftO);
+					Emit(Push(position,rightO.op));
+					ReleaseOperand(rightO);
+					CallThis(position,"Heaps","Assign",2);
+				ELSIF leftType.IsRecordType() THEN
+					Designate(right,rightO);
+					Designate(left,leftO);
+					Emit(Push(position,leftO.op));
+					Emit(Push(position,leftO.tag)); (* type desc *)
+					ReleaseOperand(leftO);
+					Emit(Push(position,rightO.op));
+					ReleaseOperand(rightO);
+					CallThis(position,"Heaps","AssignRecord",3);
+				ELSIF IsStaticArray(leftType) THEN
+					size := StaticArrayNumElements(leftType);
+					base := StaticArrayBaseType(leftType);
+					Designate(right,rightO);
+					Designate(left,leftO);
+					Emit(Push(position,leftO.op));
+					ReleaseOperand(leftO);
+					
+					arg := TypeDescriptorAdr(base);
+					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
+					Emit(Push(position,arg));
+
+					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+					Emit(Push(position,rightO.op));
+					ReleaseOperand(rightO);
+					CallThis(position,"Heaps","AssignArray",4);
+				ELSIF leftType IS SyntaxTree.ProcedureType THEN
+					ASSERT(leftType(SyntaxTree.ProcedureType).isDelegate); 
+					Evaluate(right,rightO);
+					Designate(left,leftO);
+					MakeMemory(mem,leftO.op,addressType,0);
+					Emit(Mov(position,mem,rightO.op));
+					ReleaseIntermediateOperand(mem);
+					IntermediateCode.MakeAddress(leftO.tag, addressType);
+					Emit (Push(position, leftO.tag));
+					ReleaseOperand(leftO);
+					Emit (Push(position, rightO.tag));
+					ReleaseOperand(rightO);
+					CallThis(position,"Heaps","Assign", 2);
+				ELSE HALT(100); (* missing ? *)
+				END;
 				RETURN;
 			END;
 
@@ -10029,13 +10086,14 @@ TYPE
 			ELSIF (leftType IS SyntaxTree.RecordType) THEN
 				Designate(right,rightO);
 				Designate(left,leftO);
-				sizeOp := CopySize(left);
+				sizeOp := CopySize(left, leftO.tag);
 				Emit(Copy(position,leftO.op,rightO.op,sizeOp));
+				ReleaseIntermediateOperand(sizeOp);
 				ReleaseOperand(leftO); ReleaseOperand(rightO);
 			ELSIF (leftType IS SyntaxTree.ArrayType) THEN
 				IF (rightType IS SyntaxTree.StringType) THEN
 					CopyString(left,right);
-				ELSIF ((rightType IS SyntaxTree.ArrayType) & (rightType(SyntaxTree.ArrayType).staticLength # 0) OR (rightType IS SyntaxTree.MathArrayType) & (rightType(SyntaxTree.MathArrayType).staticLength # 0)) & (leftType(SyntaxTree.ArrayType).staticLength # 0) THEN
+				ELSIF ((rightType IS SyntaxTree.ArrayType) & (rightType(SyntaxTree.ArrayType).staticLength # 0) OR (rightType IS SyntaxTree.MathArrayType) & (rightType(SyntaxTree.MathArrayType).staticLength # 0)) & (leftType(SyntaxTree.ArrayType).staticLength # 0) THEN	
 					Designate(right,rightO);
 					Designate(left,leftO);
 					size := ToMemoryUnits(system,system.SizeOf(rightType));
@@ -13400,7 +13458,7 @@ TYPE
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
-		preciseGC: BOOLEAN; 
+		preciseGC, writeBarriers: BOOLEAN; 
 		
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
@@ -13507,6 +13565,7 @@ TYPE
 			options.Add(0X,"preregisterStatic", Options.Flag);
 			options.Add(0X,"cellsAreObjects", Options.Flag);
 			options.Add(0X,"preciseGC", Options.Flag);
+			options.Add(0X,"writeBarriers", Options.Flag);
 		END DefineOptions;
 
 		PROCEDURE GetOptions(options: Options.Options);
@@ -13536,6 +13595,7 @@ TYPE
 			preregisterStatic := options.GetFlag("preregisterStatic");
 			cellsAreObjects := options.GetFlag("cellsAreObjects");
 			preciseGC := options.GetFlag("preciseGC");
+			writeBarriers := options.GetFlag("writeBarriers");
 
 		END GetOptions;
 

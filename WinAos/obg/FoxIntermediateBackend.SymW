@@ -598,6 +598,7 @@ TYPE
 		dump-: Basic.Writer; 
 		cellsAreObjects: BOOLEAN; 
 		preciseGC, writeBarriers: BOOLEAN; 
+		experiment: BOOLEAN; 
 
 		PROCEDURE ^  & InitIntermediateBackend*; 
 		PROCEDURE ^ GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module; 

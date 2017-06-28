@@ -349,7 +349,7 @@ VAR
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
 	DisableThreadLibraryCalls-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
 	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: SET; bInheritHandle: BOOL; dwOptions: SET):BOOL; 
-	enterCriticalSection: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
+	EnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	EscapeCommFunction-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFunc: LONGINT):BOOL; 
 	ExitProcess-: PROCEDURE {WINAPI}(uExitCode: LONGINT); 
 	ExitThread-: PROCEDURE {WINAPI}(dwExitCode: LONGINT); 
@@ -416,7 +416,7 @@ VAR
 	InitializeCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	InterlockedDecrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
 	InterlockedIncrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
-	leaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
+	LeaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	LocalFileTimeToFileTime-: PROCEDURE {WINAPI}(VAR lpLocalFileTime: FileTime; VAR lpFileTime: FileTime):BOOL; 
 	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: SET):BOOL; 
 	outputDebugString-: PROCEDURE {WINAPI}(CONST lpOutputString: ARRAY OF CHAR); 
@@ -426,7 +426,7 @@ VAR
 	QueryPerformanceCounter-: PROCEDURE {WINAPI}(VAR lpPerformaceCount: LargeInteger):BOOL; 
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI}(VAR lpFrequency: LargeInteger):BOOL; 
 	QueryThreadCycleTime-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR cycleTime: HUGEINT):BOOL; 
-	readFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS):BOOL; 
+	ReadFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	ReadProcessMemory-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpBaseAddress: ADDRESS; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nSize: LONGINT; VAR lpNumberOfBytesRead: LONGINT):BOOL; 
 	RemoveDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
 	ResetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
@@ -464,22 +464,16 @@ VAR
 	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; flAllocationType, flProtect: SET):ADDRESS; 
 	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; dwFreeType: SET):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
-	writeFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS):BOOL; 
+	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
-	LeaveA2*, ReenterA2*: PROCEDURE ; 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 
-	PROCEDURE ^ EnterCriticalSection*(VAR lpCriticalSection: CriticalSection); 
-	PROCEDURE ^ LeaveCriticalSection*(VAR lpCriticalSection: CriticalSection); 
-	PROCEDURE ^ ReadFile-(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS): BOOL; 
-	PROCEDURE ^ WriteFile-(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS): BOOL; 
 	PROCEDURE ^ GetProcAddress*(hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ CopyString*(lpString: LPSTR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutputDebugString*(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ NoOutputString(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ SendToDebugger*(CONST str: ARRAY OF CHAR; x: LONGINT); 
 	PROCEDURE ^ ShutdownP(l: LONGINT); 
-	PROCEDURE ^ Nothing; 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ {FIXED(4198400)} EntryPoint; 
 BEGIN

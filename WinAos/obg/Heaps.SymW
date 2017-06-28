@@ -253,7 +253,6 @@ VAR
 	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
 	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
 	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
-	PROCEDURE ^ AssignDelegate*(dest: ADDRESS; src: ADDRESS); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ SetHeuristic*; 

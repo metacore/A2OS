@@ -12701,7 +12701,7 @@ TYPE
 		PROCEDURE ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT);
 		VAR sizePC, i: LONGINT; destination: Sections.Section;
 		BEGIN
-			ArrayBlock(section, sizePC,"Modules.ProcedureDescPointer",FALSE);
+			ArrayBlock(section, sizePC,"Modules.ProcedureDesc.@Pointer",FALSE);
 			numberProcs := 0;
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				destination := module.allSections.GetSection(i);
@@ -12891,14 +12891,12 @@ TYPE
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
 			References(referenceSection);
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
-			IF ~implementationVisitor.backend.cooperative THEN
-				ProcedureDescriptorArray(procTableSection, numberProcs);
-				IF ProtectModulesPointers THEN
-					name := "Heaps.AnyPtr";
-					offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
-					(* set base pointer *)
-					NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
-				END;
+			ProcedureDescriptorArray(procTableSection, numberProcs);
+			IF ProtectModulesPointers THEN
+				name := "Heaps.AnyPtr";
+				offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
+				(* set base pointer *)
+				NamedSymbolAt(procTableSection, procTableSectionOffset  -1 , name, NIL, 0, offset);
 			END;
 
 			emptyArraySection := Block("Heaps","SystemBlockDesc",".@EmptyArray",emptyArraySectionOffset);

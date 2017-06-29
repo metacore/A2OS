@@ -370,6 +370,14 @@ TYPE
 				END;
 				RETURN ORD(s[i]) - ORD(name[i]);
 			END CheckName;
+			
+			PROCEDURE Error(n: StringPool.Index);
+			VAR name: ARRAY 256 OF CHAR;
+			BEGIN
+				StringPool.GetString(n, name); 
+				TRACE("Fingerprint does not match",name);
+			END Error;
+			
 		
 			(* stupid implementation: just search for fp in all exports *)
 			PROCEDURE CheckScope(CONST scope: Modules.ExportDesc; level: LONGINT): LONGINT;
@@ -384,7 +392,8 @@ TYPE
 					IF res = 0 THEN 
 						IF (level = LEN(identifier.name)-1) OR (identifier.name[level+1] <= 0) THEN
 							IF (scope.dsc[m].fp # identifier.fingerprint) & (scope.dsc[m].fp # 0) & (identifier.fingerprint # 0) THEN
-								TRACE("fingerprints don't match");
+								Error(identifier.name[level]);
+								RETURN 0;
 							END;
 							RETURN scope.dsc[m].adr
 						ELSE

@@ -130,7 +130,7 @@ TYPE
 
 			IF priority # 0 THEN w.String(" priority="); w.Int(priority,0) END;
 
-			IF fingerprint # 0 THEN w.String(" fingerprint="); w.Int(fingerprint, 0) END;
+			IF fingerprint # 0 THEN w.String(" fingerprint="); w.Hex(fingerprint, -8) END;
 
 			IF bitsPerUnit # UnknownSize THEN w.String(" unit="); w.Int(bitsPerUnit, 0) END;
 

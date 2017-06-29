@@ -2448,7 +2448,7 @@ TYPE
 			Global.GetModuleName(mod,name);
 			Strings.Append(name,".@Trace");
 			Basic.ToSegmentedName(name, pooledName);
-			section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, pooledName,NIL,TRUE);
+			section := NewSection(module.allSections, Sections.CodeSection, pooledName,NIL,TRUE);
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
 				Emit(Push(Basic.invalidPosition, lr));
@@ -2543,7 +2543,7 @@ TYPE
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
 
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
@@ -2586,7 +2586,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2673,7 +2673,7 @@ TYPE
 			parameter1 (* address *) := IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,1*addressType.sizeInBits));
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 
 			IF backend.hasLinkRegister THEN
@@ -2731,7 +2731,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 				IF dump # NIL THEN dump := section.comments END;
@@ -2753,7 +2753,7 @@ TYPE
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2791,7 +2791,7 @@ TYPE
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 
 			IF dump # NIL THEN dump := section.comments END;
 
@@ -2830,7 +2830,7 @@ TYPE
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			section := IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+			section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
 
@@ -2860,7 +2860,7 @@ TYPE
 		BEGIN
 			GetCodeSectionNameForSymbol(scope.ownerProcedure, name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
 				Emit(Push(Basic.invalidPosition, lr));
@@ -2957,7 +2957,7 @@ TYPE
 			previousSection := section;
 			GetCodeSectionNameForSymbol(procedure, name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
-			context := SwitchContext(IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,dump # NIL));
+			context := SwitchContext(NewSection(module.allSections, Sections.ConstSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 			Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
 
@@ -9257,7 +9257,7 @@ TYPE
 		BEGIN
 			Global.GetModuleSegmentedName(module.module, name);
 			Basic.SuffixSegmentedName(name,Basic.MakeString("@Immediates"));
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL, dump # NIL);
+			section := NewSection(module.allSections, Sections.ConstSection, name,NIL, dump # NIL);
 			RETURN section
 		END GetDataSection;
 
@@ -12104,9 +12104,9 @@ TYPE
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
 										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-											tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 										ELSE
-											tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 										END;
 										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
 										Symbol(section, tir,  0, offset);
@@ -12124,9 +12124,9 @@ TYPE
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
 										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-											tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 										ELSE
-											tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
 										END;
 										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
 										Symbol(section, tir,  0, offset);
@@ -12530,7 +12530,7 @@ TYPE
 						ELSE
 							Global.GetSymbolSegmentedName(typeDeclaration,name);
 							(* TODO *)
-							section := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,typeDeclaration, source.comments # NIL);
+							section := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,typeDeclaration, source.comments # NIL);
 						END;
 						IF implementationVisitor.backend.cooperative THEN
 							offset := 0;
@@ -12668,7 +12668,7 @@ TYPE
 			(* mini pseudo type tag that only refers to the information data for debugging purposes -- then the descriptor in the GC can be identified *)
 			name := procedureSection.name;
 			Basic.AppendToSegmentedName(name,".@Info");
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+			section := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
 			Address(section,0);
 			Symbol(section,section,2,0);
 			(*
@@ -12703,7 +12703,7 @@ TYPE
 			name := procedureSection.name;
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@Descriptor"));
 			IF CreateProcedureDescInfo THEN
-				dest := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+				dest := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
 				Address(dest,0);
 				Symbol(dest, MakeProcedureDescriptorTag(procedureSection),2,0);
 				offset := dest.pc;
@@ -12785,7 +12785,7 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module.@Descriptor");
 			Basic.ToSegmentedName(name, pooledName);
-			descriptorSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
+			descriptorSection := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
 			Symbol(section,descriptorSection,0,0);
 			
 			Info(descriptorSection, "descriptor");
@@ -12810,7 +12810,7 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module");
 			Basic.ToSegmentedName(name, pooledName);
-			moduleSection := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
+			moduleSection := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
 			moduleSection.SetExported(TRUE);
 			IF moduleSection.pc = 0 THEN
 				IF implementationVisitor.backend.cooperative THEN
@@ -12851,7 +12851,7 @@ TYPE
 
 					Global.GetSymbolSegmentedName(module.module,name);
 					Basic.AppendToSegmentedName(name,".@Info");
-					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					
 					Info(source, "HeapBlock");
 					Address(source,0); (* an empty heap block prevents GC marking *)
@@ -13047,7 +13047,7 @@ TYPE
 					Global.GetSymbolSegmentedName(symbol,name);
 					Basic.AppendToSegmentedName(name,suffix);
 
-					section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL,declarationVisitor.dump);
+					section := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL,declarationVisitor.dump);
 					HeapBlock("Heaps","SystemBlockDesc", section, 2);
 					Info(section, "HeapBlock");
 					Address(section,0); (* empty such that GC does not go on traversing *)
@@ -13084,7 +13084,7 @@ TYPE
 					(* source := module.sections.FindByName(...) *)
 					Global.GetSymbolSegmentedName(td,name);
 					Basic.AppendToSegmentedName(name,".@Info");
-					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					Info(source, "HeapBlock"); (* an empty heap block prevents GC marking *)
 					Address(source,0);
 					Info(source, "TypeDescriptor");
@@ -13134,9 +13134,9 @@ TYPE
 							baseTD := record.typeDeclaration;
 							Global.GetSymbolSegmentedName(baseTD,name);
 							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-								tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
 							ELSE
-								tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+								tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
 							END;
 							offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(record.recordScope.numberMethods)*module.system.addressSize);
 							Symbol(source, tir,  0, offset);
@@ -13213,7 +13213,7 @@ TYPE
 						ELSE
 							Basic.ToSegmentedName ("BaseTypes.Record.@Trace",name);
 						END;
-						tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+						tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 						Symbol(source, tir,  0, 0);
 						start := 0;
 						
@@ -13243,7 +13243,7 @@ TYPE
 						ELSE
 							Global.GetSymbolSegmentedName(baseRecord.recordScope.finalizer, name);
 						END;
-						tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+						tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 						Symbol(source, tir,  0, 0);
 					END;
 					methods := recordType.recordScope.numberMethods;
@@ -13258,7 +13258,7 @@ TYPE
 
 			BEGIN
 					Global.GetSymbolSegmentedName(td,name);
-					source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,declarationVisitor.dump);
+					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,td,declarationVisitor.dump);
 					source.SetExported(IsExported(td));
 					
 					IF (cellType # NIL) THEN recordType := cellType.GetBaseRecord() END;
@@ -13276,9 +13276,9 @@ TYPE
 							IF baseRecord # NIL THEN
 								Global.GetSymbolSegmentedName(baseTD,name);
 								IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-									tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+									tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
 								ELSE
-									tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+									tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
 								END;
 								Symbol(source, tir,  0, 0);
 							ELSE
@@ -13293,7 +13293,7 @@ TYPE
 							base := source;
 							Global.GetSymbolSegmentedName(td,name);
 							Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
-							source := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+							source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 							source.SetExported(IsExported(td));
 							source.SetReferenced(FALSE);
 						END;
@@ -13308,9 +13308,9 @@ TYPE
 								sym := NIL;
 							END;
 							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-								tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
+								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
 							ELSE
-								tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
+								tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
 							END;
 							Symbol(source, tir,  0, 0);
 						ELSIF (recordType.pointerType # NIL) & recordType.pointerType.isPlain THEN
@@ -13321,7 +13321,7 @@ TYPE
 							ELSE
 								Basic.ToSegmentedName ("BaseTypes.Record",name);
 							END;
-							tir := IntermediateCode.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+							tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 							Symbol(source, tir,  0, 0);
 						END;
 
@@ -13435,7 +13435,7 @@ TYPE
 						Basic.SuffixSegmentedName (name, Basic.MakeString("@"));
 						Basic.SuffixSegmentedName (name, module.module.name);
 
-						tir := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
+						tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
 						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),0);
 						tir.Emit(Data(Basic.invalidPosition,op));
 					END;

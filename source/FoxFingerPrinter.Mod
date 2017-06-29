@@ -615,7 +615,7 @@ TYPE
 		VAR scope: SyntaxTree.RecordScope; fp: LONGINT; variable: SyntaxTree.Variable;
 			fingerprint,variableFingerPrint,variableTypeFingerPrint,baseFingerPrint: FingerPrint;flags: SET;
 			symbol: SyntaxTree.Symbol; procedure: SyntaxTree.Procedure;  baseType: SyntaxTree.Type;
-			body: SyntaxTree.Body;
+			body: SyntaxTree.Body; name: ARRAY 256 OF CHAR;
 			deep: BOOLEAN;
 		(* for dealing with cycles the private and public fingerprint are computed here
 			while FP is computed completely during call of Type0 *)
@@ -637,8 +637,25 @@ TYPE
 					baseType := x.GetBaseRecord();
 					FPType(fp,baseType);
 				END;
+				
+				SELF.deep := TRUE;
+				(* methods, sorted *)
+				scope := x.recordScope;
+				symbol := scope.firstSymbol;
+				WHILE symbol # NIL DO (* number and names of procedures -- method table ! *)
+					IF symbol IS SyntaxTree.Procedure THEN
+						procedure := symbol(SyntaxTree.Procedure);
+						FPNumber(fp,fpModeMethod);
+						Global.GetSymbolName(procedure,name);
+						FPString(fp,name);
+						IF Trace THEN TraceIndent; D.Str("RecordType Method "); TraceFP(fingerprint); D.Ln; END;
+					END;
+					symbol := symbol.nextSymbol
+				END;
+
 				fingerprint.shallow := fp;
 				fingerprint.shallowAvailable := TRUE;
+
 				x.SetFingerPrint(fingerprint);
 				SELF.deep := deep;
 				IF Trace THEN TraceIndent; D.Str("RecordType Shallow Done "); TraceFP(fingerprint); D.Ln;  END;

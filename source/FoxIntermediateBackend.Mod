@@ -11212,10 +11212,11 @@ TYPE
 		END InitMetaDataGenerator;
 
 		PROCEDURE SetModule(module: Sections.Module);
-		VAR namePoolOffset,  offset: LONGINT; name: Basic.SegmentedName; 
+		VAR namePoolOffset,  offset: LONGINT; name: Basic.SegmentedName;
 		BEGIN
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
+			Global.GetSymbolSegmentedName(module.module, name);
 			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple & ~implementationVisitor.backend.cooperative THEN 
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
@@ -12835,6 +12836,7 @@ TYPE
 			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
 				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
 				sectionName: Basic.SectionName;
+				
 			CONST MPO=-40000000H;
 			BEGIN
 					(*
@@ -12848,8 +12850,9 @@ TYPE
 							refsOffset: SIZE;
 						END;
 					*)
-
-					Global.GetSymbolSegmentedName(module.module,name);
+					
+					(*name is missing prefixes sometimes*)
+					Global.GetModuleSegmentedName(module.module,name);
 					Basic.AppendToSegmentedName(name,".@Info");
 					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					

@@ -56,9 +56,9 @@
 # LinuxAOS Generic
 #	Release.Build Linux32G ~
 # Command line version:
-# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  Pipes Shell SystemTools StdIOShell ~
+# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  Shell SystemTools StdIOShell ~
 # X11 Bootconsole:
-# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
 #
 # WINAOS Cooperative
 #	Release.Build  --path="./" WinAosCooperative ~
@@ -483,7 +483,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# binding modules
 	NATIVE,WIN { BootConsole.Mod }
-	UNIX { Unix.BootConsole.Mod }
+	UNIX, UNIXG { Unix.BootConsole.Mod }
 
 	UNIXG,WINGEN { Shell.Mod StdIOShell.Mod }
 

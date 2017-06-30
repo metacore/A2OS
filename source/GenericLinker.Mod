@@ -247,7 +247,7 @@ VAR
 	VAR block: Block; used: BOOLEAN; name: ARRAY 256 OF CHAR;
 	BEGIN
 		IF ~error THEN block := firstBlock;
-			WHILE block # firstLinkedBlock DO
+			WHILE (block # firstLinkedBlock) & ~error DO
 				ObjectFile.SegmentedNameToString(block.identifier.name, name);
 				used := (GetType (block) IN usedCategories) OR (linkRoot # "") & Strings.StartsWith(linkRoot,0,name) OR (block.aliases > 0);
 				Reference (block, used); block := block.next;
@@ -321,7 +321,10 @@ VAR
 		IF used & ~block.used THEN block.used := TRUE;
 		ELSIF block.referenced THEN RETURN; END; block.referenced := TRUE;
 		IF ~used THEN RETURN END;
-		FOR i := 0 TO block.fixups - 1 DO ReferenceFixup (block.fixup[i]); END;
+		FOR i := 0 TO block.fixups - 1 DO 
+			ReferenceFixup (block.fixup[i]); 
+			IF error THEN RETURN END;
+		END;
 	END Reference;
 
 	PROCEDURE Prearrange (block: Block);

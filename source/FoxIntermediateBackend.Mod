@@ -5899,7 +5899,7 @@ TYPE
 						
 			ReleaseParameterRegisters();
 			
-			IF backend.preciseGC & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+			IF backend.trackLeave & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved2);
 				CallThis(position,"Objects","LeaveA2",0);
 				RestoreRegisters(saved2);
@@ -5920,7 +5920,7 @@ TYPE
 				Emit(Result(position,return));
 			END;
 
-			IF  backend.preciseGC & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+			IF  backend.trackLeave & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
 				IF  (procedureType.returnType # NIL) & ~structuredReturnType  THEN 
 					Emit(Push(position, return));
 					CallThis(position,"Objects","ReenterA2",0);
@@ -13472,7 +13472,7 @@ TYPE
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
-		preciseGC, writeBarriers: BOOLEAN; 
+		preciseGC, trackLeave, writeBarriers: BOOLEAN; 
 		experiment: BOOLEAN; 
 		
 		PROCEDURE &InitIntermediateBackend*;
@@ -13580,6 +13580,7 @@ TYPE
 			options.Add(0X,"preregisterStatic", Options.Flag);
 			options.Add(0X,"cellsAreObjects", Options.Flag);
 			options.Add(0X,"preciseGC", Options.Flag);
+			options.Add(0X,"trackLeave", Options.Flag);
 			options.Add(0X,"writeBarriers", Options.Flag);
 			options.Add(0X,"experiment", Options.Flag);
 		END DefineOptions;
@@ -13611,6 +13612,7 @@ TYPE
 			preregisterStatic := options.GetFlag("preregisterStatic");
 			cellsAreObjects := options.GetFlag("cellsAreObjects");
 			preciseGC := options.GetFlag("preciseGC");
+			trackLeave := options.GetFlag("trackLeave");
 			writeBarriers := options.GetFlag("writeBarriers");
 			experiment := options.GetFlag("experiment");
 		END GetOptions;

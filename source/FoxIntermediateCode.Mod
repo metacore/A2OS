@@ -376,6 +376,17 @@ TYPE
 				ww.DecIndent;
 			END;
 		END Dump;
+		
+		PROCEDURE WriteRaw(w: Streams.Writer);
+		VAR i: LONGINT;
+		BEGIN
+			FOR i := 0 TO pc-1 DO
+				w.Int(i,2); w.String(": ");
+				WriteRawInstruction(w,instructions[i]); w.Ln;
+				INC(i);
+			END;
+		END WriteRaw;
+		
 
 	END Section;
 
@@ -676,6 +687,55 @@ TYPE
 		CheckOperand(operand);
 		*)
 	END DumpOperand;
+	
+	PROCEDURE WriteRawOperand*(w: Streams.Writer; CONST operand: Operand );
+	VAR i: LONGINT;
+	BEGIN
+		w.RawLInt(operand.type.form);
+		w.RawLInt(operand.type.sizeInBits);
+		w.RawLInt(operand.type.length);
+		CASE operand.mode OF
+			Undefined:
+		|ModeMemory:
+			IF operand.register # None THEN
+				w.RawLInt(operand.register);
+				w.RawSInt(operand.registerClass.class);
+				w.RawInt(operand.registerClass.number);
+				w.RawLInt(operand.offset);
+			ELSIF operand.symbol.name # "" THEN
+				Basic.WriteSegmentedName(w,operand.symbol.name);
+				IF operand.symbol.fingerprint # 0 THEN w.RawLInt(operand.symbol.fingerprint);END;
+				w.RawLInt(operand.symbolOffset);
+				w.RawLInt(operand.offset);
+			ELSE w.RawLInt(SHORT(operand.intValue));
+			END;
+		|ModeRegister:
+			w.RawLInt(operand.register);
+			w.RawSInt(operand.registerClass.class);
+			w.RawInt(operand.registerClass.number);
+			w.RawLInt(operand.offset);
+		|ModeImmediate:
+			IF operand.symbol.name # "" THEN
+				Basic.WriteSegmentedName(w,operand.symbol.name);
+				IF operand.symbol.fingerprint # 0 THEN w.RawLInt(operand.symbol.fingerprint);END;
+				w.RawLInt(operand.symbolOffset);
+				w.RawLInt(operand.offset);
+			ELSE
+				IF operand.type.form IN Integer THEN
+						w.RawLInt(SHORT(operand.intValue));
+				ELSE
+					w.RawLReal(operand.floatValue);
+				END;
+			END;
+		|ModeString:
+			w.RawString(operand.string^);
+		|ModeNumber: w.RawLInt(SHORT(operand.intValue));
+		|ModeRule:
+			FOR i := 0 TO LEN(operand.rule)-1 DO
+				WriteRawOperand(w,operand.rule[i]);  w.RawString(operand.rule[i].string^);
+			END;
+		END;
+	END WriteRawOperand;
 
 	PROCEDURE TypeEquals*(CONST s1,s2: Type): BOOLEAN;
 	BEGIN RETURN (s1.form = s2.form) & (s1.sizeInBits = s2.sizeInBits) & (s1.length = s2.length);
@@ -697,6 +757,16 @@ TYPE
 		IF ~OperandEquals(i1.op3, i2.op3) THEN RETURN FALSE END;
 		RETURN TRUE
 	END Equals;
+
+	PROCEDURE WriteRawInstruction*(w: Streams.Writer; CONST instr: Instruction);
+	BEGIN
+		w.RawLInt(instr.opcode);
+		IF instr.op1.mode # Undefined THEN WriteRawOperand(w,instr.op1) END;
+		IF instr.op2.mode # Undefined THEN WriteRawOperand(w,instr.op2) END;
+		IF instr.op3.mode # Undefined THEN WriteRawOperand(w,instr.op3) END;
+		IF instr.opcode = special THEN w.RawLInt(instr.subtype) END;		
+	END WriteRawInstruction;
+	
 
 	PROCEDURE DumpInstruction*(w: Streams.Writer; CONST instr: Instruction);
 	BEGIN

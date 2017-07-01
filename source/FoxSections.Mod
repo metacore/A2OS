@@ -139,6 +139,17 @@ TYPE
 
 			w.Update
 		END Dump;
+		
+		PROCEDURE WriteRaw*(w: Streams.Writer);
+		BEGIN
+			w.RawInt(type); 
+			Basic.WriteSegmentedName(w,name);
+			w.RawBool(fixed);
+			w.RawLInt(positionOrAlignment); 
+			w.RawLInt(priority);
+			w.RawLInt(fingerprint);
+			w.RawLInt(bitsPerUnit);
+		END WriteRaw;
 
 		PROCEDURE DumpName*(w: Streams.Writer);
 		BEGIN
@@ -351,7 +362,22 @@ TYPE
 				section.Dump(w); w.Ln
 			END;
 		END Dump;
+
+		PROCEDURE WriteRaw*(w: Streams.Writer);
+		VAR
+			i: LONGINT;
+			section: Section;
+		BEGIN
+			FOR i := 0 TO Length() - 1 DO
+				section := GetSection(i);
+				section.WriteRaw(w);
+			END;
+		END WriteRaw;
+		
+		
 	END SectionList;
+	
+	
 
 	NameEntry = POINTER TO RECORD
 		name: SyntaxTree.IdentifierString;

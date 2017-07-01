@@ -12808,6 +12808,7 @@ TYPE
 			moduleSection: IntermediateCode.Section; offset: LONGINT; pooledName: Basic.SegmentedName;
 			symbol: SyntaxTree.Symbol;
 		BEGIN
+			ASSERT(implementationVisitor.backend.newObjectFile);
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module");
 			Basic.ToSegmentedName(name, pooledName);
@@ -13517,9 +13518,12 @@ TYPE
 			GetDescription(platformName);
 			module.SetPlatformName(platformName);
 
-			NEW(crc);
-			module.allSections.Dump(crc);
-			meta.PatchCRC(crc.GetCRC());
+			IF newObjectFile THEN
+				NEW(crc);
+				module.allSections.WriteRaw(crc);
+				crc.Update;
+				meta.PatchCRC(crc.GetCRC());
+			END;
 			
 			RETURN module
 		END GenerateIntermediate;

@@ -356,8 +356,9 @@ TYPE
 
 		PROCEDURE ImportBlock(CONST fixup: ObjectFile.Fixup): GenericLinker.Block;
 		VAR name: Modules.Name; res: LONGINT;
-		msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: LONGINT; m: HashTableInt;
-		s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
+			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: LONGINT; m: HashTableInt;
+			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
+			fp: LONGINT;
 
 			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): LONGINT;
 			VAR s: ObjectFile.SectionName; i: LONGINT;
@@ -391,10 +392,11 @@ TYPE
 					res := CheckName(identifier.name[level], scope.dsc[m].name);
 					IF res = 0 THEN 
 						IF (level = LEN(identifier.name)-1) OR (identifier.name[level+1] <= 0) THEN
-							IF (scope.dsc[m].fp # identifier.fingerprint) & (scope.dsc[m].fp # 0) & (identifier.fingerprint # 0) THEN
+							(*IF (scope.dsc[m].fp # identifier.fingerprint) & (scope.dsc[m].fp # 0) & (identifier.fingerprint # 0) THEN
 								Error(identifier.name[level]);
-								RETURN 0;
 							END;
+							*)
+							fp := scope.dsc[m].fp;
 							RETURN scope.dsc[m].adr
 						ELSE
 							RETURN CheckScope(scope.dsc[m], level+1);
@@ -458,10 +460,10 @@ TYPE
 			END;
 
 			IF adr = 0 THEN
-				D.String("GenericLoader Fatal error: did not find block "); s := identifier.name; D.String(s); D.Ln;
+				(*D.String("GenericLoader Fatal error: did not find block "); s := identifier.name; D.String(s); D.Ln;*)
 				RETURN NIL;
 			ELSE (* found *)
-				importBlock.identifier.fingerprint := identifier.fingerprint; importBlock.address := adr
+				importBlock.identifier.fingerprint := fp; importBlock.address := adr
 			END;
 			RETURN importBlock
 		END ImportBlock;

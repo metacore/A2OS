@@ -309,7 +309,7 @@ VAR
 				ObjectFile.SegmentedNameToString(block.identifier.name,name);
 				Strings.Append(str,  name);
 				Error(str, "unresolved");
-			ELSIF (reference.identifier.fingerprint # 0) & (block.fixup[i].identifier.fingerprint # 0) & (reference.identifier.fingerprint # block.fixup[i].identifier.fingerprint) THEN
+			ELSIF (reference.identifier.fingerprint # 0) & (fixup.identifier.fingerprint # 0) & (reference.identifier.fingerprint # fixup.identifier.fingerprint) THEN
 				ObjectFile.SegmentedNameToString(fixup.identifier.name,str); Strings.Append(str," in " );
 				ObjectFile.SegmentedNameToString(block.identifier.name,name);
 				Strings.Append(str,  name);

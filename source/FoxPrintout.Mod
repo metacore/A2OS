@@ -1229,7 +1229,7 @@ TYPE
 				IF x.isInline & (mode = SymbolFile) THEN
 					IF fingerPrinter = NIL THEN NEW(fingerPrinter) END;
 					fp := fingerPrinter.SymbolFP(x);
-					Value(Global.NameFingerprint, fp.shallow, first) 
+					Value(Global.NameFingerprint, fp.public, first) 
 				END;
 				FlagEnd(first);
 

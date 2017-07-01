@@ -1443,7 +1443,7 @@ TYPE
 		BEGIN
 			fingerPrint := fingerPrinter.SymbolFP(symbol);
 			string := "[";
-			Strings.IntToHexStr(fingerPrint.shallow, 8, fingerPrintString);
+			Strings.IntToHexStr(fingerPrint.public, 8, fingerPrintString);
 			Strings.Append(string, fingerPrintString);
 			Strings.Append(string, "]");
 		END GetFingerprintString;
@@ -5866,7 +5866,7 @@ TYPE
 							(* push fingerprint *)
 							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 							fingerPrint := fingerPrinter.TypeFP(formalParameter.type.resolved);
-							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow))) (* TODO: push the type's fingerprint *)
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.public))) (* TODO: push the type's fingerprint *)
 						END
 					END;
 					formalParameter := formalParameter.nextParameter
@@ -6262,7 +6262,7 @@ TYPE
 					(* non-pointer to record type: push fingerprint *)
 					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 					fingerPrint := fingerPrinter.TypeFP(type.resolved);
-					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.shallow)
+					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.public)
 				END;
 				operatorInitializationCodeSection.Emit(Push(position,arg))
 			END PushTypeInfo;
@@ -11036,7 +11036,7 @@ TYPE
 		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT;
 		BEGIN
 			IF (symbol # NIL) THEN
-				RETURN fingerPrinter.SymbolFP(symbol).shallow
+				RETURN fingerPrinter.SymbolFP(symbol).public
 			ELSE
 				RETURN 0
 			END;
@@ -11736,7 +11736,7 @@ TYPE
 				IF (symbol = NIL) OR (symbol # NIL) & (symbol.type # Sections.InlineCodeSection) THEN
 					IF (symbol # NIL) & (symbol.symbol # NIL) THEN 
 						fingerPrint := fingerPrinter.SymbolFP(symbol.symbol);
-						Longint(source,fingerPrint.shallow);
+						Longint(source,fingerPrint.public);
 					ELSE
 						Longint(source, 0);
 					END;

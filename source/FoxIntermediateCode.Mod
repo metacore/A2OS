@@ -449,7 +449,7 @@ TYPE
 
 		(* create a new section and enter it *)
 		NEW(section, type, 0 (* initial priority = 0 *), name, syntaxTreeSymbol, dump);
-		IF syntaxTreeSymbol # NIL THEN section.SetFingerprint(syntaxTreeSymbol.fingerprint.shallow) END;
+		IF syntaxTreeSymbol # NIL THEN section.SetFingerprint(syntaxTreeSymbol.fingerprint.public) END;
 		list.AddSection(section);
 		RETURN section
 	END NewSection;

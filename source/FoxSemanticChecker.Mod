@@ -6912,6 +6912,8 @@ TYPE
 				IF HasValue(modifiers, Global.NameFingerprint, position, value) THEN 
 					SyntaxTree.InitFingerPrint(fp);
 					fp.shallow := value;
+					fp.public := value;
+					fp.private := value;
 					fp.shallowAvailable := TRUE;
 					procedure.SetFingerPrint(fp);
 				END;

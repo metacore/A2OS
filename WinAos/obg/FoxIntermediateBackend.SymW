@@ -597,7 +597,7 @@ TYPE
 		preregisterStatic-: BOOLEAN; 
 		dump-: Basic.Writer; 
 		cellsAreObjects: BOOLEAN; 
-		preciseGC, writeBarriers: BOOLEAN; 
+		preciseGC, trackLeave, writeBarriers: BOOLEAN; 
 		experiment: BOOLEAN; 
 
 		PROCEDURE ^  & InitIntermediateBackend*; 

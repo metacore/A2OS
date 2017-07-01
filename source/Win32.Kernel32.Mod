@@ -40,6 +40,7 @@ CONST
 	(** file creation flags *)
 	FileFlagDeleteOnClose*=26;
 	FileFlagRandomAccess* = 28;
+	FileFlagOverlapped* = 30; (** The file or device is being opened or created for asynchronous I/O *)
 	FileFlagWriteThrough*= 31;
 
 	(** move method *)
@@ -155,6 +156,7 @@ CONST
 	ErrorSuccess* = 0;  ErrorFileNotFound* = 2;  ErrorAccessDenied* = 5;
 	ErrorInvalidParameter* = 87;
 
+	ErrorIoPending* = 997; (** Overlapped I/O operation is in progress *)
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
 
@@ -339,6 +341,15 @@ TYPE
 		DaylightBias*: LONGINT;
 	END;
 
+	(** Contains information used in asynchronous (or overlapped) input and output (I/O). *)
+	Overlapped* = RECORD
+		Internal*: LONGINT;
+		InternalHigh*: LONGINT;
+		Offset*: LONGINT;
+		OffsetHigh*: LONGINT;
+		hEvent*: HANDLE;
+	END;
+
 VAR
 	(* the procedure variables getProcAddress and LoadLibrary  must be patched by linker / PE loader *)
 	(** The GetProcAddress function returns the address of the specified exported dynamic-link library (DLL) function.
@@ -509,6 +520,11 @@ VAR
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
+	
+	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device. 
+			To specify a timeout interval or wait on an alertable thread. *)
+	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL ): BOOL;
+	
 	(** The GetPrivateProfileString function retrieves a string from the specified section in an initialization file.*)
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
@@ -646,7 +662,7 @@ VAR
 															  VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															  nNumberOfBytesToRead: LONGINT;
 															  VAR lpNumberOfBytesRead: LONGINT;
-															  lpOverlapped: ANY ): BOOL;
+															  lpOverlapped: ADDRESS ): BOOL;
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				   lpBaseAddress: ADDRESS;
@@ -756,16 +772,13 @@ VAR
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															   nNumberOfBytesToWrite: LONGINT;
 															   VAR lpNumberOfBytesWritten: LONGINT;
-															   lpOverlapped: ANY ): BOOL;
+															   lpOverlapped: ADDRESS ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
 
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
 
-	(** methods to store the GC context before temporarily escaping to Windows -- required because GetContext does not work correctly any more  *)
-	(* entered here for interface compatibility only *)
-	LeaveA2*, ReenterA2*: PROCEDURE;
 
 	hInstance-: HINSTANCE;   (* init by linker/loader *)
 	isEXE-: BOOLEAN;
@@ -879,6 +892,7 @@ VAR
 		GetProcAddress(mod, "GetLogicalDrives",SYSTEM.VAL(ADDRESS,GetLogicalDrives));
 		GetProcAddress(mod, "GetModuleFileNameA",SYSTEM.VAL(ADDRESS,GetModuleFileName));
 		GetProcAddress(mod, "GetModuleHandleA",SYSTEM.VAL(ADDRESS,GetModuleHandle));
+		GetProcAddress(mod, "GetOverlappedResult",SYSTEM.VAL(ADDRESS,GetOverlappedResult));
 		GetProcAddress(mod, "GetPrivateProfileStringA",SYSTEM.VAL(ADDRESS,GetPrivateProfileString));
 		(* must be done by linker: GetProcAddress(mod, "GetProcAddress",SYSTEM.VAL(ADDRESS,getProcAddress)); *)
 		GetProcAddress(mod, "GetProcessAffinityMask",SYSTEM.VAL(ADDRESS,GetProcessAffinityMask));
@@ -891,7 +905,8 @@ VAR
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
 		GetProcAddress(mod, "GetTempPathA",SYSTEM.VAL(ADDRESS,GetTempPath));
 		GetProcAddress(mod, "GetThreadContext",SYSTEM.VAL(ADDRESS,GetThreadContext));
-		GetProcAddress(mod, "Wow64GetThreadContext",SYSTEM.VAL(ADDRESS,Wow64GetThreadContext));		GetProcAddress(mod, "GetThreadPriority",SYSTEM.VAL(ADDRESS,GetThreadPriority));
+		GetProcAddress(mod, "Wow64GetThreadContext",SYSTEM.VAL(ADDRESS,Wow64GetThreadContext));		
+		GetProcAddress(mod, "GetThreadPriority",SYSTEM.VAL(ADDRESS,GetThreadPriority));
 		GetProcAddress(mod, "GetThreadTimes",SYSTEM.VAL(ADDRESS,GetThreadTimes));
 		GetProcAddress(mod, "GetTickCount",SYSTEM.VAL(ADDRESS,GetTickCount));
 		GetProcAddress(mod, "GetWindowsDirectoryA",SYSTEM.VAL(ADDRESS,GetWindowsDirectory));

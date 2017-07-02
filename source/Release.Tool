@@ -1560,7 +1560,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 		Oberon.Viewers.Mod Oberon.Fonts.Mod
 	}
 	
-	NATIVE,iWIN, UNIX {Oberon.Mod}
+	NATIVE, iWIN, UNIX, UNIXG {Oberon.Mod}
 	
 	eWIN {
 	Win32.Oberon.Mod

@@ -245,7 +245,7 @@ TYPE
 		BEGIN
 			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
 			IF ~(ReadOnly IN flags) THEN
-				maplen := (size+1+SetSize - 1) DIV SetSize;
+				maplen := (size + SetSize) DIV SetSize;
 				NEW(map, maplen);
 				WHILE maplen > 0 DO DEC(maplen); map[maplen] := {} END;
 				INCL(map[0], 0);	(* reserve sector 0 (illegal to use) *)

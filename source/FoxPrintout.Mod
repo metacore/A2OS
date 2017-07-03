@@ -379,6 +379,7 @@ TYPE
 				prevScope := currentScope;
 				currentScope := x.recordScope;
 				VariableList(x.recordScope.firstVariable);
+				IF x.recordScope.procedures # NIL THEN w.Ln; ProcedureList(x.recordScope.procedures) END;
 				currentScope := prevScope;
 				Indent; Keyword("END" );
 			END;

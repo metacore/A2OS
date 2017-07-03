@@ -828,6 +828,52 @@ VAR
 			END
 		END;
 	END NewArr;
+	
+TYPE
+	ArrayDataBlockDesc*= RECORD 
+		numElems: SIZE;
+		current: ADDRESS; (* unused *)
+		first: ADDRESS;
+	END;
+	UnsafeArray= POINTER {UNSAFE} TO UnsafeArrayDesc;
+	UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
+		len: ARRAY 8 OF SIZE;
+	END;	
+	
+	(* replacement for overcomplicated code emission -- at the cost of a slightly increased runtime cost *)
+	PROCEDURE NewArray*(CONST a: ARRAY OF SIZE;  tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY);
+	VAR p: ANY; dim: SIZE;
+			
+			PROCEDURE GetSize(): SIZE;
+			VAR i: SIZE; size: SIZE;
+			BEGIN
+				size := 1;
+				FOR i := 0 TO dim-1 DO
+					size := size * a[i];
+				END;
+				RETURN size*staticElements;
+			END GetSize;
+			
+			PROCEDURE SetSizes(dest: UnsafeArray);
+			VAR i: SIZE;
+			BEGIN
+				FOR i := 0 TO dim-1 DO
+					dest.len[i] := a[dim-1-i];
+				END;
+			END SetSizes;
+
+		BEGIN
+			(* static elements is requred for this case : POINTER TO ARRAY OF ARRAY X OF RecordWithPointer *)
+			dim := LEN( a,0 );
+			IF tag = NIL THEN
+				NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 3 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
+			ELSE
+				NewArr(p, tag, GetSize(), dim, FALSE);
+			END;
+			SetSizes(p);
+			dest := p;
+	END NewArray;
+	
 
 	PROCEDURE FillStaticType* ( VAR staticTypeAddr: ADDRESS;
 								   startAddr, typeInfoAdr: ADDRESS;

@@ -787,8 +787,13 @@ TYPE
 		Heaps.GC := InvokeGC;
 		Heaps.InvokeGC := InvokeGC;
 	END Init;
-
+	
+VAR
+	(* for compatibility and later extension *)
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	
 BEGIN
+	TraceProcessHook := NIL;
 	Init;
 END Objects.
 

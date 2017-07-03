@@ -201,47 +201,75 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** graphics state **)
 			PROCEDURE SetStrokeColor* (color: Color);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
 				SELF.strokeCol := color
 			END SetStrokeColor;
 
 			PROCEDURE SetStrokePattern* (pat: Pattern);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
 				SELF.strokePat := pat
 			END SetStrokePattern;
 
 			PROCEDURE SetFillColor* (color: Color);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
 				SELF.fillCol := color
 			END SetFillColor;
 
 			PROCEDURE SetFillPattern* (pat: Pattern);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
 				SELF.fillPat := pat
 			END SetFillPattern;
 
 			PROCEDURE SetLineWidth* (width: REAL);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
+				ASSERT(width >= 0.0, 101);
 				SELF.lineWidth := width
 			END SetLineWidth;
 
 			PROCEDURE SetDashPattern* (VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
 			BEGIN
-				SetDashArray(SELF, on, off, len);
+				ASSERT(~(InPath IN SELF.mode), 100);
+				ASSERT((len <= LEN(on)) & (len <= LEN(off)), 101);
+				SELF.SetDashArray(on, off, len);
 				SELF.dashPhase := phase
 			END SetDashPattern;
 
+			(** copy values from parameter, and calculate dash period **)
+			PROCEDURE SetDashArray* (VAR on, off: ARRAY OF REAL; len: LONGINT);
+			BEGIN
+				SELF.dashPatLen := len;
+				SELF.dashPeriod := 0;
+				IF len > 0 THEN
+					REPEAT
+						DEC(len);
+						SELF.dashPatOn[len] := on[len]; SELF.dashPatOff[len] := off[len];
+						SELF.dashPeriod := SELF.dashPeriod + on[len] + off[len]
+					UNTIL len = 0
+				END;
+				ASSERT((SELF.dashPatLen = 0) OR (SELF.dashPeriod # 0), 120)
+			END SetDashArray;
+			
 			PROCEDURE SetCapStyle* (style: CapStyle);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
+				ASSERT((NoCap <= style) & (style <= RoundCap), 101);
 				SELF.capStyle := style
 			END SetCapStyle;
 
 			PROCEDURE SetJoinStyle* (style: JoinStyle);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
+				ASSERT((NoJoin <= style) & (style <= RoundJoin), 101);
 				SELF.joinStyle := style
 			END SetJoinStyle;
 
 			PROCEDURE SetStyleLimit* (limit: REAL);
 			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
 				SELF.styleLimit := limit
 			END SetStyleLimit;
 
@@ -252,9 +280,19 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 			PROCEDURE SetFont* (font: GfxFonts.Font);
 			BEGIN
+				ASSERT(font # NIL, 100);
 				SELF.font := font
 			END SetFont;
 
+			(** set current font using name and size **)
+			PROCEDURE SetFontName* (fontname: ARRAY OF CHAR; size: INTEGER);
+				VAR font: GfxFonts.Font;
+			BEGIN
+				font := GfxFonts.OpenSize(fontname, size);
+				IF font = NIL THEN font := GfxFonts.Default END;
+				SELF.SetFont(font)
+			END SetFontName;
+			
 			PROCEDURE GetStringWidth* (VAR str: ARRAY OF CHAR; VAR dx, dy: REAL); (*GetStringWidth*)
 			BEGIN
 				GfxFonts.GetStringWidth(SELF.font, str, dx, dy)
@@ -482,9 +520,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** rotate coordinate system at specified point **)
 	PROCEDURE RotateAt* (ctxt: Context; sin, cos, x, y: REAL);
 	BEGIN
-		ctxt.Translate(x, y);
-		ctxt.Rotate(sin, cos);
-		ctxt.Translate(-x, -y)
+		ctxt.RotateAt(sin, cos, x, y);
 	END RotateAt;
 
 	(** concat transformation matrix to CTM **)
@@ -526,82 +562,60 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** set stroke color **)
 	PROCEDURE SetStrokeColor* (ctxt: Context; color: Color);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.SetStrokeColor(color)
 	END SetStrokeColor;
 
 	(** set stroke pattern (NIL = solid) **)
 	PROCEDURE SetStrokePattern* (ctxt: Context; pat: Pattern);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.SetStrokePattern(pat)
 	END SetStrokePattern;
 
 	(** set fill color **)
 	PROCEDURE SetFillColor* (ctxt: Context; color: Color);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.SetFillColor(color)
 	END SetFillColor;
 
 	(** set fill pattern (NIL = solid) **)
 	PROCEDURE SetFillPattern* (ctxt: Context; pat: Pattern);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.SetFillPattern(pat)
 	END SetFillPattern;
 
 	(** set line width **)
 	PROCEDURE SetLineWidth* (ctxt: Context; width: REAL);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
-		ASSERT(width >= 0.0, 101);
 		ctxt.SetLineWidth(width)
 	END SetLineWidth;
 
 	(** set dash pattern **)
 	PROCEDURE SetDashPattern* (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
-		ASSERT((len <= LEN(on)) & (len <= LEN(off)), 101);
 		ctxt.SetDashPattern(on, off, len, phase)
 	END SetDashPattern;
 
 	(** copy values from parameter, and calculate dash period **)
 	PROCEDURE SetDashArray* (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT);
 	BEGIN
-		ctxt.dashPatLen := len;
-		ctxt.dashPeriod := 0;
-		IF len > 0 THEN
-			REPEAT
-				DEC(len);
-				ctxt.dashPatOn[len] := on[len]; ctxt.dashPatOff[len] := off[len];
-				ctxt.dashPeriod := ctxt.dashPeriod + on[len] + off[len]
-			UNTIL len = 0
-		END;
-		ASSERT((ctxt.dashPatLen = 0) OR (ctxt.dashPeriod # 0), 120)
+		ctxt.SetDashArray(on, off, len);
 	END SetDashArray;
 
 	(** set line cap style **)
 	PROCEDURE SetCapStyle* (ctxt: Context; style: CapStyle);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
-		ASSERT((NoCap <= style) & (style <= RoundCap), 101);
 		ctxt.SetCapStyle(style)
 	END SetCapStyle;
 
 	(** set line join style **)
 	PROCEDURE SetJoinStyle* (ctxt: Context; style: JoinStyle);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
-		ASSERT((NoJoin <= style) & (style <= RoundJoin), 101);
 		ctxt.SetJoinStyle(style)
 	END SetJoinStyle;
 
 	(** set style border factor **)
 	PROCEDURE SetStyleLimit* (ctxt: Context; limit: REAL);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.SetStyleLimit(limit)
 	END SetStyleLimit;
 
@@ -614,17 +628,13 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** set current font **)
 	PROCEDURE SetFont* (ctxt: Context; font: GfxFonts.Font);
 	BEGIN
-		ASSERT(font # NIL, 100);
 		ctxt.SetFont(font)
 	END SetFont;
 
 	(** set current font using name and size **)
 	PROCEDURE SetFontName* (ctxt: Context; fontname: ARRAY OF CHAR; size: INTEGER);
-		VAR font: GfxFonts.Font;
 	BEGIN
-		font := GfxFonts.OpenSize(fontname, size);
-		IF font = NIL THEN font := GfxFonts.Default END;
-		ctxt.SetFont(font)
+		ctxt.SetFontName(fontname, size);
 	END SetFontName;
 
 	(** calculate distance that current point would move if given string were rendered **)

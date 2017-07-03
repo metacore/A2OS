@@ -90,11 +90,11 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 				SELF.col := col; SELF.pat := pat
 			END SetColPat;
 
-			PROCEDURE{ABSTRACT} PaintDot* (x, y: LONGINT);	(** current dot procedure **)
-			END PaintDot;
+			PROCEDURE{ABSTRACT} FillDot* (x, y: LONGINT);	(** current dot procedure **)
+			END FillDot;
 
-			PROCEDURE{ABSTRACT} PaintRect* (lx, ly, rx, uy: LONGINT);	(** current rect procedure **)
-			END PaintRect;
+			PROCEDURE{ABSTRACT} FillRect* (lx, ly, rx, uy: LONGINT);	(** current rect procedure **)
+			END FillRect;
 
 			(** clipping **)
 			PROCEDURE ResetClip* ();
@@ -462,7 +462,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 							ELSE SELF.clipState := InOut
 							END;
 							SELF.SetColPat(SELF.fillCol, SELF.fillPat);
-							SELF.PaintRect(llx, lly, urx, ury)
+							SELF.FillRect(llx, lly, urx, ury)
 						END
 					ELSIF Gfx.Stroke IN SELF.mode THEN
 						IF (SELF.dashPatLen > 0) OR (SELF.devWidth > 0.75) THEN
@@ -476,8 +476,8 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 								IF SELF.clipReg.RectInside(llx, lly, urx, ury) THEN SELF.clipState := In
 								ELSE SELF.clipState := InOut
 								END;
-								SELF.PaintRect(llx, lly, urx, lly+1); SELF.PaintRect(urx, lly, urx+1, ury+1);
-								SELF.PaintRect(llx, ury, urx, ury+1); SELF.PaintRect(llx, lly+1, llx+1, ury)
+								SELF.FillRect(llx, lly, urx, lly+1); SELF.FillRect(urx, lly, urx+1, ury+1);
+								SELF.FillRect(llx, ury, urx, ury+1); SELF.FillRect(llx, lly+1, llx+1, ury)
 							END
 						END
 					END
@@ -564,7 +564,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 				SELF.u := u; SELF.v := v;
 				SELF.px := ENTIER(u); SELF.py := ENTIER(v);
 				SELF.InitClipState(SHORT(SELF.px), SHORT(SELF.py));
-				SELF.PaintDot(SELF.px, SELF.py)
+				SELF.FillDot(SELF.px, SELF.py)
 			END HairLineEnter;
 
 			PROCEDURE HairLineTo (u, v: REAL);
@@ -573,13 +573,13 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 				px := ENTIER(u); py := ENTIER(v);
 				SELF.UpdateClipState(SHORT(px), SHORT(py));
 				IF px = SELF.px THEN	(* horizontal line *)
-					IF py > SELF.py THEN SELF.PaintRect(px, SELF.py + 1, px + 1, py + 1)
-					ELSIF py < SELF.py THEN SELF.PaintRect(px, py, px + 1, SELF.py)
+					IF py > SELF.py THEN SELF.FillRect(px, SELF.py + 1, px + 1, py + 1)
+					ELSIF py < SELF.py THEN SELF.FillRect(px, py, px + 1, SELF.py)
 					END;
 					SELF.py := py
 				ELSIF py = SELF.py THEN	(* vertical line *)
-					IF px > SELF.px THEN SELF.PaintRect(SELF.px + 1, py, px + 1, py + 1)
-					ELSE SELF.PaintRect(px, py, SELF.px, py + 1)
+					IF px > SELF.px THEN SELF.FillRect(SELF.px + 1, py, px + 1, py + 1)
+					ELSE SELF.FillRect(px, py, SELF.px, py + 1)
 					END;
 					SELF.px := px
 				ELSE
@@ -601,7 +601,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 								INC(SELF.py, ystep); e := e - du
 							END;
 							INC(SELF.px, xstep); e := e + dv;
-							SELF.PaintDot(SELF.px, SELF.py);
+							SELF.FillDot(SELF.px, SELF.py);
 							DEC(steps)
 						END
 					ELSE	(* y-dominant case *)
@@ -612,7 +612,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 								INC(SELF.px, xstep); e := e - dv
 							END;
 							INC(SELF.py, ystep); e := e + du;
-							SELF.PaintDot(SELF.px, SELF.py);
+							SELF.FillDot(SELF.px, SELF.py);
 							DEC(steps)
 						END
 					END
@@ -629,17 +629,17 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 					ELSE SELF.clipState := InOut
 					END;
 					x := 0; y := r; d := 1-r; de := 3; dse := -2*r + 5;
-					SELF.PaintDot(mx, my + y); SELF.PaintDot(mx, my - y); SELF.PaintDot(mx + y, my); SELF.PaintDot(mx - y, my);
+					SELF.FillDot(mx, my + y); SELF.FillDot(mx, my - y); SELF.FillDot(mx + y, my); SELF.FillDot(mx - y, my);
 					WHILE y > x DO
 						IF d < 0 THEN
 							INC(d, de); INC(de, 2); INC(dse, 2); INC(x)
 						ELSE
 							INC(d, dse); INC(de, 2); INC(dse, 4); INC(x); DEC(y)
 						END;
-						SELF.PaintDot(mx + x, my + y); SELF.PaintDot(mx + y, my + x);
-						SELF.PaintDot(mx + x, my - y); SELF.PaintDot(mx - y, my + x);
-						SELF.PaintDot(mx - x, my - y); SELF.PaintDot(mx - y, my - x);
-						SELF.PaintDot(mx - x, my + y); SELF.PaintDot(mx + y, my - x)
+						SELF.FillDot(mx + x, my + y); SELF.FillDot(mx + y, my + x);
+						SELF.FillDot(mx + x, my - y); SELF.FillDot(mx - y, my + x);
+						SELF.FillDot(mx - x, my - y); SELF.FillDot(mx - y, my - x);
+						SELF.FillDot(mx - x, my + y); SELF.FillDot(mx + y, my - x)
 					END
 				END
 			END HairCircle;
@@ -658,8 +658,8 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 					dy := -4*aa; dx := -db * (x-1);
 					d := bb * (4*x - 1);
 					WHILE db * x < da * y DO
-						SELF.PaintDot(mx + x, my + y); SELF.PaintDot(mx + x, my - y);
-						SELF.PaintDot(mx - x, my + y); SELF.PaintDot(mx - x, my - y);
+						SELF.FillDot(mx + x, my + y); SELF.FillDot(mx + x, my - y);
+						SELF.FillDot(mx - x, my + y); SELF.FillDot(mx - x, my - y);
 						INC(d, dy); INC(dy, da); INC(y);
 						IF d < 0 THEN
 							INC(d, dx); INC(dx, db); DEC(x)
@@ -668,8 +668,8 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 					dx := 4 * bb * (2*x - 1); dy := da * (y+1);
 					d := d - bb * (4*x - 1) - aa * (4*y + 1);
 					WHILE x >= 0 DO
-						SELF.PaintDot(mx + x, my + y); SELF.PaintDot(mx + x, my - y);
-						SELF.PaintDot(mx - x, my + y); SELF.PaintDot(mx - x, my - y);
+						SELF.FillDot(mx + x, my + y); SELF.FillDot(mx + x, my - y);
+						SELF.FillDot(mx - x, my + y); SELF.FillDot(mx - x, my - y);
 						INC(d, dx); INC(dx, db); DEC(x);
 						IF d >= 0 THEN
 							INC(d, dy); INC(dy, da); INC(y)
@@ -886,7 +886,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 					right := ENTIER(lu + 0.5); left := right - ENTIER(2*SELF.devWidth + 0.5);
 					bot := ENTIER(v1 + 0.5); top := ENTIER(v0 + 0.5)
 				END;
-				SELF.PaintRect(SHORT(left), SHORT(bot), SHORT(right), SHORT(top))
+				SELF.FillRect(SHORT(left), SHORT(bot), SHORT(right), SHORT(top))
 			END ThickVerticalLine;
 
 			PROCEDURE ThickHorizontalLine (rv, u0, u1: REAL);
@@ -899,7 +899,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 					left := ENTIER(u1 + 0.5); right := ENTIER(u0 + 0.5);
 					top := ENTIER(rv + 0.5); bot := top - ENTIER(2*SELF.devWidth + 0.5)
 				END;
-				SELF.PaintRect(SHORT(left), SHORT(bot), SHORT(right), SHORT(top))
+				SELF.FillRect(SHORT(left), SHORT(bot), SHORT(right), SHORT(top))
 			END ThickHorizontalLine;
 
 			PROCEDURE ThickLine (su, sv, eu, ev, du, dv: REAL);
@@ -1263,7 +1263,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 		VAR rc: Context;
 	BEGIN
 		rc := data(RegData).context;
-		rc.PaintRect(lx, ly, rx, uy)
+		rc.FillRect(lx, ly, rx, uy)
 	END EnumRegion;
 
 	PROCEDURE AddPathElem (VAR data: GfxPaths.EnumData);

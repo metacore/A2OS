@@ -93,7 +93,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 				Images.SetRGBA(SELF.pix, col.r, col.g, col.b, col.a)
 			END SetColPat;
 
-			PROCEDURE PaintDot* (x, y: LONGINT);
+			PROCEDURE FillDot* (x, y: LONGINT);
 				VAR px, py: LONGINT; mode: Images.Mode;
 			BEGIN
 				IF (SELF.clipState = GfxRaster.In) OR
@@ -109,9 +109,9 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 						Images.Copy(SELF.pat.img, SELF.img, px, py, px+1, py+1, SHORT(x), SHORT(y), mode)
 					END
 				END
-			END PaintDot;
+			END FillDot;
 
-			PROCEDURE PaintRect* (llx, lly, urx, ury: LONGINT);
+			PROCEDURE FillRect* (llx, lly, urx, ury: LONGINT);
 				VAR data: RegData; mode: Images.Mode;
 			BEGIN
 				IF (SELF.clipState # GfxRaster.Out) & (llx < urx) & (lly < ury) THEN
@@ -131,7 +131,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 						SELF.clipReg.Enumerate(SHORT(llx), SHORT(lly), SHORT(urx), SHORT(ury), Tile, data)
 					END
 				END
-			END PaintRect;
+			END FillRect;
 
 			(*--- Exported Interface ---*)
 

@@ -60,6 +60,12 @@
 # X11 Bootconsole:
 # 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
 #
+# SolarisAOS Generic
+#    Release.Build Solaris32G ~
+# X11 Bootconsole:
+#    StaticLinker.Link -p=Solaris32G 	Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
+#    ElfBinary.Build  Solaris32G.core -> SolarisA2 ~
+#
 # WINAOS Cooperative
 #	Release.Build  --path="./" WinAosCooperative ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader BootConsole ~
@@ -317,6 +323,17 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	Solaris32G {
+		INCLUDE "UNIXG UNIXG32 SOLARISG UNCOOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux32G"
+		TARGET "AMD"
+		EXTENSION "GofU"
+		SYMBOLEXTENSION "SymU"
+		PATH "./"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}		
 	SolarisAos64 {
 		INCLUDE "UNIX UNIX64 SOLARIS64 UNCOOP"
 		COMPILER "Compiler.Compile"
@@ -363,6 +380,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Win32.Environment.Mod }
 
 	LINUXG { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
+	SOLARISG { Generic.Solaris.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
 	UNIXG32 { Generic.Unix.I386.Machine.Mod }
 	UNIX { Unix.Glue.Mod }
 	DARWIN { Darwin.I386.Unix.Mod }  
@@ -537,6 +555,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Unix.Sockets.Mod
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}
+	
+	SOLARISG { ElfBinary.Mod }
 
 	# Serial port interface
 	Serials.Mod

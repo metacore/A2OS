@@ -1065,6 +1065,7 @@ BEGIN
 	defaults.Add("Linux32G","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
 	defaults.Add("A2G","--fileName=kernel.img --extension=.GofG --displacement=0100000H");
+	defaults.Add("Solaris32G","--fileFormat=Raw --fileName=Solaris32G.core --extension=.GofU --displacement=08070000H");
 END StaticLinker.
 
 StaticLinker.Link --fileName=test.exe --fileFormat=PE32 --displacement=401000H Test ~

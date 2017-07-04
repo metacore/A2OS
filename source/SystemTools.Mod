@@ -220,7 +220,9 @@ BEGIN
 	module := Modules.ThisModule(name, res, msg);
 	context.result := res;
 	IF (res = Modules.Ok) THEN
-		context.out.String(name); context.out.String(" state: "); context.out.Ln;
+		context.out.String(name); 
+		context.out.String(" crc "); context.out.Hex(module.crc,-8); 
+		context.out.String(" state: "); context.out.Ln;
 		Reflection.ModuleState(context.out, module);
 	ELSE
 		context.error.String("Could not load module "); context.error.String(name);

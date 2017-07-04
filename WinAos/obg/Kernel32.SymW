@@ -344,6 +344,7 @@ VAR
 	CreateEvent-: PROCEDURE {WINAPI}(lpEventAttributes: ANY; bManualReset, bInitialState: BOOL; CONST lpName: ARRAY OF CHAR):HANDLE; 
 	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: SET; lpSecurityAttributes: ANY; dwCreationDistribution: LONGINT; dwFlagsAndAttributes: SET; hTemplateFile: HANDLE):HANDLE; 
 	CreateProcess-: PROCEDURE {WINAPI}(CONST lpApplicationName, lpCommandLine: ARRAY OF CHAR; lpProcessAttributes, lpThreadAttributes: ANY; bInheritHandles: BOOL; dwCreationFlags: LONGINT; lpEnvironment: ANY; VAR lpCurrentDirectory: ARRAY OF CHAR; VAR lpStartupInfo: StartupInfo; VAR lpProcessInformation: ProcessInformation):BOOL; 
+	CreateSemaphore-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; lInitialCount: LONGINT; lMaximumCount: LONGINT; lpName: LPSTR):HANDLE; 
 	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: LONGINT; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: SET; VAR lpThreadId: LONGINT):HANDLE; 
 	DeleteCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
@@ -380,11 +381,12 @@ VAR
 	GetLastError-: PROCEDURE {WINAPI}():LONGINT; 
 	GetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime); 
 	GetLogicalDriveStrings-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
-	GetLogicalDrives-: PROCEDURE ():SET; 
+	GetLogicalDrives-: PROCEDURE {WINAPI}():SET; 
 	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: LONGINT):LONGINT; 
 	GetModuleHandle-: PROCEDURE {WINAPI}(CONST lpModuleName: ARRAY OF CHAR):HMODULE; 
 	GetOverlappedResult-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL):BOOL; 
 	GetPrivateProfileString-: PROCEDURE {WINAPI}(CONST lpAppName: ARRAY OF CHAR; CONST lpKeyName: ARRAY OF CHAR; CONST lpDefault: ARRAY OF CHAR; CONST lpReturnedString: ARRAY OF CHAR; nSize: LONGINT; CONST lpFileName: ARRAY OF CHAR):LONGINT; 
+	GetProcessAffinityMask-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpProcessAffinityMask: ADDRESS; lpSystemAffinityMask: ADDRESS):BOOL; 
 	GetProcessHeap-: PROCEDURE {WINAPI}():HANDLE; 
 	GetProcessTimes-: PROCEDURE {WINAPI}(CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime):LONGINT; 
 	GetStartupInfo-: PROCEDURE {WINAPI}(VAR lpStartupInfo: StartupInfo); 
@@ -428,6 +430,7 @@ VAR
 	QueryThreadCycleTime-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR cycleTime: HUGEINT):BOOL; 
 	ReadFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	ReadProcessMemory-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpBaseAddress: ADDRESS; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nSize: LONGINT; VAR lpNumberOfBytesRead: LONGINT):BOOL; 
+	ReleaseSemaphore-: PROCEDURE {WINAPI}(hSemaphore: HANDLE; lReleaseCount: LONGINT; lpPreviousCount: ADDRESS):BOOL; 
 	RemoveDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
 	ResetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
 	ResumeThread-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
@@ -438,6 +441,7 @@ VAR
 	SetCommTimeouts-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCommTimeouts: CommTimeouts):BOOL; 
 	SetConsoleCursorPosition-: PROCEDURE {WINAPI}(hConsoleOutput: HANDLE; dwCursorPosition: LONGINT):BOOL; 
 	SetConsoleScreenBufferSize-: PROCEDURE {WINAPI}(hConsoleOuput: HANDLE; dwSize: LONGINT):BOOL; 
+	SetConsoleTextAttribute-: PROCEDURE {WINAPI}(hConsoleOutput: HANDLE; wAttributes: LONGINT):BOOL; 
 	SetConsoleTitle-: PROCEDURE {WINAPI}(VAR lpConsoleTitle: ARRAY OF CHAR):BOOL; 
 	SetConsoleWindowInfo-: PROCEDURE {WINAPI}(hConsoleOuput: HANDLE; bAbsolute: BOOL; VAR lpConsoleWindow: SmallRect):BOOL; 
 	SetCurrentDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
@@ -448,6 +452,7 @@ VAR
 	SetFilePointer-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
 	SetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
 	SetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime):BOOL; 
+	SetThreadAffinityMask-: PROCEDURE {WINAPI}(hThread: HANDLE; dwThreadAffinityMask: SET):SET; 
 	SetThreadContext-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR lpContext: Context):BOOL; 
 	SetThreadPriority-: PROCEDURE {WINAPI}(hThread: HANDLE; nPriority: LONGINT):BOOL; 
 	SetupComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwInQueue, dwOutQueue: LONGINT):BOOL; 

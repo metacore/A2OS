@@ -164,6 +164,7 @@ TYPE
 		PROCEDURE ^ SetPC*(at: LONGINT; pc: LONGINT); 
 		PROCEDURE ^ DumpCode*(w: Streams.Writer; from, to: LONGINT); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
+		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
 	END Section; 
 
 	IntermediateBackend* = OBJECT (Backend.Backend)
@@ -187,9 +188,11 @@ VAR
 	PROCEDURE ^ DumpRegister*(w: Streams.Writer; registerNumber: LONGINT; CONST registerClass: RegisterClass); 
 	PROCEDURE ^ DumpType*(w: Streams.Writer; type: Type); 
 	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
+	PROCEDURE ^ WriteRawOperand*(w: Streams.Writer; CONST operand: Operand); 
 	PROCEDURE ^ TypeEquals*(CONST s1, s2: Type): BOOLEAN; 
 	PROCEDURE ^ OperandEquals*(CONST s1, s2: Operand): BOOLEAN; 
 	PROCEDURE ^ Equals*(CONST i1, i2: Instruction): BOOLEAN; 
+	PROCEDURE ^ WriteRawInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ InitInstructions; 
 	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; CONST op1, op2, op3: Operand); 

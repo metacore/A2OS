@@ -1,0 +1,72 @@
+MODULE ElfBinary;  (** AUTHOR "GF"; PURPOSE "build ELF binary"; *)
+
+(* Build an ELF binary by concatenating the loader and a statically linked program *)
+
+IMPORT Files, Commands, Streams, Strings;
+
+CONST 
+	HeaderPart = "A2Loader.elf";
+	StartPos = 10*1024;	(* cf. A2Loader.c *)
+
+	
+	PROCEDURE NewFile( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
+	VAR
+		name2: ARRAY 128 OF CHAR;  res: LONGINT;
+	BEGIN
+		IF Files.Old( name ) # NIL THEN
+			COPY( name, name2);  Strings.Append( name2, ".Bak" );
+			Files.Rename( name, name2, res );
+			log.String( "Backup created in " ); log.String( name2 );  log.Ln
+		END;
+		RETURN Files.New( name )
+	END NewFile;
+	
+	PROCEDURE Open( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
+	VAR f: Files.File;
+	BEGIN
+		f := Files.Old( name );
+		IF f = NIL THEN
+			log.String( name );  log.String( " not found" ); log.Ln;
+			log.Update;
+		END;
+		RETURN f
+	END Open;
+	
+	PROCEDURE Build*( cc: Commands.Context );
+	VAR in1, in2, out: Files.File;  r: Files.Reader; w: Files.Writer;
+		inputname, token, outputname: ARRAY 64 OF CHAR;
+		size, i: SIZE; c: CHAR;
+	BEGIN
+		IF 	cc.arg.GetString( inputname ) &
+			cc.arg.GetString( token ) & (token = "->") &
+			cc.arg.GetString( outputname ) THEN
+			
+				in1 := Open( HeaderPart, cc.error );
+				in2 := Open( inputname, cc.error );
+				IF (in1 = NIL) OR (in2 = NIL) THEN  RETURN  END;
+			
+				size := in1.Length();  Files.OpenReader( r, in1, 0 );
+				out := NewFile( outputname, cc.out );  Files.OpenWriter( w, out, 0 );
+				
+				FOR i := 1 TO size DO  r.Char( c ); w.Char( c )  END;
+				
+				FOR i := 1 TO StartPos - size DO  w.Char( '#' )  END;
+				
+				size := in2.Length();  Files.OpenReader( r, in2, 0 );
+				FOR i := 1 TO size DO  r.Char( c ); w.Char( c )  END;
+				
+				w.Update;  Files.Register( out );
+				cc.out.String( outputname );  cc.out.String( " created" ); cc.out.Ln;
+		ELSE
+			cc.error.String( "usage: ElfBinary.Build StatLinkedProgram -> ElfProgram" );  cc.error.Ln
+		END;
+		cc.error.Update;
+		cc.out.Update
+	END Build;
+
+END ElfBinary.
+
+   SystemTools.Free  ElfBinary ~
+   
+   ElfBinary.Build  Solaris32G.core -> SolarisA2 ~
+   

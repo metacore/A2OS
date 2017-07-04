@@ -166,7 +166,9 @@ TYPE
 			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 			context: Kernel32.Wow64Context;
 			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
+			O: ANY; ID: LONGINT;
 		BEGIN
+			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN

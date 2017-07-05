@@ -264,7 +264,7 @@ Compiler.Compile -p=Linux32G
 		I386.Reals.Mod  Unix.Clock.Mod  Dates.Mod  Strings.Mod  Diagnostics.Mod 
 		GenericLinker.Mod  GenericLoader.Mod  Unix.BootConsole.Mod 
 		
-		SolarisELF.Mod 
+		ElfBinary.Mod 
 		~
 		
 		
@@ -280,6 +280,6 @@ StaticLinker.Link
 		~
 
  
- Build 'Solaris32G.elf' by concatenating 'A2Loader.elf' (C) and 'Solaris32G.core' (Oberon).	
+ Build 'SolarisA2' by concatenating 'A2Loader.elf' (C) and 'Solaris32G.core' (Oberon).	
  
- SolarisELF.Build Solaris32G.elf ~
+ ElfBinary.Build  Solaris32G.core -> SolarisA2 ~

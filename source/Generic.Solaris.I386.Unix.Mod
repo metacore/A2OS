@@ -576,14 +576,10 @@ VAR
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
 	
 	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
-	VAR r: LONGINT;  thr: Thread_t;
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
-			thr := pthread_self( );
-			r := thr_suspend( thr )
-		ELSIF sig = SIGUSR2 THEN
-			suspendHandler( ucp );
+			handler_done := TRUE;
 		ELSIF trap # NIL THEN 
 			trap( sig, scp, ucp, 0 );
 		ELSE
@@ -623,15 +619,12 @@ VAR
 			IF i # 9 THEN InstallHandler( i ) END;
 		END;
 		InstallHandler( SIGUSR1 );
-		InstallHandler( SIGUSR2 );
 	END InitSignalHandler;
 	
 	(*-------------------------------------------------------------------------------------------------------------*)
 	
 	
 	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
-	VAR
-		param: Sched_param;
 	BEGIN	    
 		ASSERT( pthread_mutex_init( ADDRESSOF( suspend_mutex ), NIL ) = 0);
 		mainthread := pthread_self();
@@ -654,22 +647,16 @@ VAR
 	VAR r: LONGINT;
 	BEGIN
 		IF saveContext THEN
+			handler_done := FALSE;
 			r := pthread_kill( thr, SIGUSR1 );	
-			(*	not working in Solaris when the thread is stalled 
-				in a mutex.
+			(*	not working in Solaris when the thread is stalled in a mutex.
 				handler gets arrived but has bad side effects, 
 				yields traps and locks the system *)
-		ELSE
-			r := thr_suspend( thr )
-		END
+			WHILE ~handler_done DO  ThrSleep( 1 )  END;
+		END;
+		r := thr_suspend( thr )
 	END ThrSuspend;	
 
-	PROCEDURE GetThreadContext*( thr: Thread_t );
-	VAR r: LONGINT;
-	BEGIN
-		r := pthread_kill( thr, SIGUSR2 );	
-	END GetThreadContext;
-	
 	
 	PROCEDURE SetSigaltstack;
 	VAR sigstk: Stack;

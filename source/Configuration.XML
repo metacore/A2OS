@@ -373,7 +373,7 @@ To update: Configuration.Init ~
 			<Setting name="Open archive" value="WMArchives.Open"/>
 		</Section>
 		<Section name="svg">
-			<Setting name="Open" value="WebBrowser.Open"/>
+			<Setting name="Open" value="WebBrowser.OpenFile"/>
 		</Section>
 		<Section name="tar">
 			<Setting name="Open" value="WMArchives.Open"/>

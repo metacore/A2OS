@@ -826,7 +826,7 @@ VAR
 	    resume_done := 1; (*makes no difference if we do that here or in the resume handler*)
 	END suspend_handler;
 
-	PROCEDURE ThrSuspend*(thr: Thread_t);
+	PROCEDURE ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN);
 	VAR res: LONGINT;
 	BEGIN
 	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );

@@ -5899,7 +5899,7 @@ TYPE
 						
 			ReleaseParameterRegisters();
 			
-			IF backend.trackLeave & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+			IF backend.trackLeave & ~isUnchecked & (procedureType.callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved2);
 				CallThis(position,"Objects","LeaveA2",0);
 				RestoreRegisters(saved2);
@@ -5920,7 +5920,7 @@ TYPE
 				Emit(Result(position,return));
 			END;
 
-			IF  backend.trackLeave & ~isUnchecked & (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+			IF  backend.trackLeave & ~isUnchecked & (procedureType.callingConvention  IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				IF  (procedureType.returnType # NIL) & ~structuredReturnType  THEN 
 					Emit(Push(position, return));
 					CallThis(position,"Objects","ReenterA2",0);

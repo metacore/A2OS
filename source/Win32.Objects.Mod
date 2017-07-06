@@ -167,6 +167,9 @@ TYPE
 			context: Kernel32.Wow64Context;
 			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
 			O: ANY; ID: LONGINT;
+			mod {UNTRACED}: Modules.Module;
+			proc {UNTRACED}: Modules.ProcedureDescPointer;
+			modName: ARRAY 128 OF CHAR;
 		BEGIN
 			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
@@ -198,6 +201,11 @@ TYPE
 				ASSERT(res # 0);
 				sp := context.SP; bp := context.BP; pc := context.PC;
 				
+				mod := Modules.ThisModuleByAdr0(pc);
+				IF mod # NIL THEN
+					COPY(mod.name, modName);
+					proc := Modules.FindProc(pc,mod.procTable);
+				END;
 				
 				obp := bp; osb := stackBottom; opc := pc;
 				osbp := state.BP;

@@ -87,11 +87,6 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 			prev, next: Font;	(* previous and next font in font cache *)
 			char: ARRAY 256 OF Char;	(* cached characters *)
 			rfile: RasterFile;	(* link to raster file *)
-			
-			PROCEDURE Derive*(ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): Font; END Derive;
-			PROCEDURE GetWidth*(ch: CHAR; VAR dx, dy: REAL); END GetWidth;
-			PROCEDURE GetMap*(ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Raster.Image); END GetMap;
-			PROCEDURE GetOutline*(ch: CHAR; x, y: REAL; path: GfxPaths.Path); END GetOutline;
 		END;
 
 		MethodDesc* = RECORD
@@ -988,7 +983,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 		tmpRegion.Clear();
 		pathdata.region := tmpRegion;
 		tmpPath.EnumFlattened(0.5, AddElem, pathdata);
-		IF tmpRegion.Empty( ) THEN
+		IF tmpRegion.Empty() THEN
 			x := 0; y := 0; map := NIL
 		ELSE
 			llx := tmpRegion.llx; lly := tmpRegion.lly; urx := tmpRegion.urx; ury := tmpRegion.ury;
@@ -1052,7 +1047,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 					path.AddEnter(x, y, dx, dy)
 				| GfxPaths.Line:
 					GfxMatrix.Apply(mat, s.x, s.y, x, y);
-					path.AddLine( x, y)
+					path.AddLine(x, y)
 				| GfxPaths.Arc:
 					GfxMatrix.Apply(mat, s.x, s.y, x, y); GfxMatrix.Apply(mat, s.x0, s.y0, x0, y0);
 					GfxMatrix.Apply(mat, s.x1, s.y1, x1, y1); GfxMatrix.Apply(mat, s.x2, s.y2, x2, y2);
@@ -1066,7 +1061,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 					path.AddExit(dx, dy);
 					DEC(len)
 				END;
-				s.Scan( )
+				s.Scan()
 			UNTIL len = 0
 		END
 	END OGetOutline;

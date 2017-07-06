@@ -18,7 +18,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 
 
 	TYPE
-		Context* = OBJECT(GfxRaster.Context)
+		Context* = OBJECT (GfxRaster.Context)
 		VAR
 			orgX*, orgY*: REAL;	(** origin of default coordinate system **)
 			scale*: REAL;	(** default scale factor **)
@@ -30,7 +30,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 			(** initialize buffered context **)
 			PROCEDURE InitBuffer* (img: Images.Image);
 			BEGIN
-				InitRaster();
+				SELF.InitRaster();
 				SELF.compOp := 1; (* Copy Op is default *)
 				SELF.img := img;
 				SELF.SetCoordinates(0, 0, 1);
@@ -38,24 +38,51 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 				SELF.Reset();
 			END InitBuffer;
 
-			(*--- Methods ---*)
+
+			PROCEDURE{FINAL} SetColPat* (col: Gfx.Color; pat: Gfx.Pattern);
+			BEGIN
+				SetColPat^(col, pat);
+				Images.SetRGBA(SELF.pix, col.r, col.g, col.b, col.a)
+			END SetColPat;
+
+			(** set default coordinate origin and scale factor **)
+			PROCEDURE{FINAL} SetCoordinates* (x, y, scale: REAL);
+			BEGIN
+				SELF.orgX := x; SELF.orgY := y; SELF.scale := scale
+			END SetCoordinates;
+
+			(** set background color **)
+			PROCEDURE{FINAL} SetBGColor* (col: Gfx.Color);
+			BEGIN
+				SELF.bgCol := col
+			END SetBGColor;
+
+			(** set composition operation as defined in Raster **)
+			PROCEDURE{FINAL} SetCompOp* (op:SHORTINT);
+			BEGIN
+				SELF.compOp := op
+			END SetCompOp;
+
+		(**--- Coordinate System ---**)
 
 			(** current transformation matrix **)
-			PROCEDURE ResetCTM*();
+			PROCEDURE{FINAL} ResetCTM* ();
 			BEGIN
 				GfxMatrix.Translate(GfxMatrix.Identity, SELF.orgX, SELF.orgY, SELF.ctm);
 				GfxMatrix.Scale(SELF.ctm, SELF.scale, SELF.scale, SELF.ctm)
 			END ResetCTM;
 
-			(** clipping **)
-			PROCEDURE ResetClip*();
+		(**--- Clipping ---**)
+
+			PROCEDURE{FINAL} ResetClip* ();
 			BEGIN
-				ResetClip^();
+				SELF.ResetClip^();
 				SELF.clipReg.SetToRect(0, 0, SHORT(SELF.img.width), SHORT(SELF.img.height))
 			END ResetClip;
 
-			(** images and patterns **)
-			PROCEDURE Image* (x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter);
+		(**--- Raster ---**)
+
+			PROCEDURE{FINAL} DrawImage* (x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter);
 				VAR m: GfxMatrix.Matrix; dx, dy, llx, lly, urx, ury: INTEGER; col: Images.Pixel;
 			BEGIN
 				GfxMatrix.Translate(SELF.ctm, x, y, m);
@@ -85,15 +112,9 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 					END
 				END;
 				Images.SetModeColor(filter, ORD(col[Images.r]), ORD(col[Images.g]), ORD(col[Images.b]))
-			END Image;
+			END DrawImage;
 
-			PROCEDURE SetColPat* (col: Gfx.Color; pat: Gfx.Pattern);
-			BEGIN
-				SELF.col := col; SELF.pat := pat;
-				Images.SetRGBA(SELF.pix, col.r, col.g, col.b, col.a)
-			END SetColPat;
-
-			PROCEDURE FillDot* (x, y: LONGINT);
+			PROCEDURE{FINAL} dot*(x, y: LONGINT);	(** current dot procedure **)
 				VAR px, py: LONGINT; mode: Images.Mode;
 			BEGIN
 				IF (SELF.clipState = GfxRaster.In) OR
@@ -109,9 +130,9 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 						Images.Copy(SELF.pat.img, SELF.img, px, py, px+1, py+1, SHORT(x), SHORT(y), mode)
 					END
 				END
-			END FillDot;
+			END dot;
 
-			PROCEDURE FillRect* (llx, lly, urx, ury: LONGINT);
+			PROCEDURE{FINAL} rect* (llx, lly, urx, ury: LONGINT);	(** current rect procedure **)
 				VAR data: RegData; mode: Images.Mode;
 			BEGIN
 				IF (SELF.clipState # GfxRaster.Out) & (llx < urx) & (lly < ury) THEN
@@ -131,27 +152,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 						SELF.clipReg.Enumerate(SHORT(llx), SHORT(lly), SHORT(urx), SHORT(ury), Tile, data)
 					END
 				END
-			END FillRect;
-
-			(*--- Exported Interface ---*)
-
-			(** set default coordinate origin and scale factor **)
-			PROCEDURE SetCoordinates* (x, y, scale: REAL);
-			BEGIN
-				SELF.orgX := x; SELF.orgY := y; SELF.scale := scale
-			END SetCoordinates;
-
-			(** set background color **)
-			PROCEDURE SetBGColor* (col: Gfx.Color);
-			BEGIN
-				SELF.bgCol := col
-			END SetBGColor;
-
-			(** set composition operation as defined in Raster **)
-			PROCEDURE SetCompOp* (op:SHORTINT);
-			BEGIN
-				SELF.compOp := op
-			END SetCompOp;
+			END rect;
 
 		END Context;
 
@@ -160,7 +161,6 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 			bc: Context;
 			mode: Images.Mode;
 		END;
-
 
 	(*--- Rendering ---*)
 
@@ -181,30 +181,29 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 		END
 	END Tile;
 
-	(*--- Exported Interface ---*)
 
 	(** set default coordinate origin and scale factor **)
 	PROCEDURE SetCoordinates* (bc: Context; x, y, scale: REAL);
 	BEGIN
-		bc.SetCoordinates (x, y, scale);
+		bc.SetCoordinates(x, y, scale);
 	END SetCoordinates;
 
 	(** set background color **)
 	PROCEDURE SetBGColor* (bc: Context; col: Gfx.Color);
 	BEGIN
-		bc.SetBGColor (col);
+		bc.SetBGColor(col);
 	END SetBGColor;
 
 	(** set composition operation as defined in Raster **)
 	PROCEDURE SetCompOp* (bc: Context; op:SHORTINT);
 	BEGIN
-		bc.SetCompOp (op);
+		bc.SetCompOp(op);
 	END SetCompOp;
 
 	(** initialize buffered context **)
 	PROCEDURE Init* (bc: Context; img: Images.Image);
 	BEGIN
-		bc.InitBuffer(img);
+		bc.InitBuffer( img );
 	END Init;
 
 END GfxBuffer.

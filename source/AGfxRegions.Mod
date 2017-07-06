@@ -59,7 +59,9 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 			typically the case with AddPoint. This is why regions have a valid flag, indicating whether encoded points are sorted
 			or not. Invalidating operations only have to set valid to FALSE, other operations will eventually validate the region
 			again, at the same time eliminating multiple points and overlapping spans.
-		*)			
+		*)
+		
+		
 		Region* = OBJECT
 		VAR
 			llx*, lly*, urx*, ury*: INTEGER;	(** bounding box **)
@@ -68,14 +70,404 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 			data: RegionData;	(* points defining region boundary *)
 			points: LONGINT;	(* number of data points actually used *)
 
+			
+	(**--- Region Construction ---**)
+
+			(** make region empty **)
+			PROCEDURE Clear* ();
+			BEGIN
+				SELF.llx := UBound; SELF.lly := UBound;
+				SELF.urx := LBound; SELF.ury := LBound;
+				SELF.valid := TRUE;
+				SELF.points := 0
+			END Clear;
+
+			(** set region mode **)
+			PROCEDURE SetMode* (mode: INTEGER);
+			BEGIN
+				SELF.mode := mode
+			END SetMode;
+
 			(** initialize region **)
 			PROCEDURE Init* (mode: INTEGER);
 			BEGIN
 				SELF.mode := mode;
+				(* SELF.data := NIL; *)
 				SELF.Clear()
 			END Init;
+
+			(** make region rectangular **)
+			PROCEDURE SetToRect* (llx, lly, urx, ury: INTEGER);
+			BEGIN
+				IF RectEmpty(llx, lly, urx, ury) THEN
+					SELF.Clear()
+				ELSE
+					ClipRect(llx, lly, urx, ury, LBound, LBound, UBound, UBound);
+					SELF.llx := llx; SELF.lly := lly; SELF.urx := urx; SELF.ury := ury;
+					SELF.valid := TRUE;
+					SELF.points := 0
+				END
+			END SetToRect;
+
+			(** shift region **)
+			PROCEDURE Shift* (dx, dy: INTEGER);
+				VAR rdata: RegionData; rn: LONGINT; ru, rv, rdir: INTEGER;
+			BEGIN
+				IF (dx # 0) OR (dy # 0) THEN
+					INC(SELF.llx, dx); INC(SELF.lly, dy); INC(SELF.urx, dx); INC(SELF.ury, dy);
+					IF SELF.points > 0 THEN
+						rdata := SELF.data; rn := FirstSlice;
+						Decode(rdata[rn], ru, rv, rdir);
+						WHILE rv < Top DO
+							IF (ru <= LBound) OR (ru + dx <= LBound) THEN ru := LBound
+							ELSIF (ru >= UBound) OR (ru + dx >= UBound) THEN ru := UBound
+							ELSE INC(ru, dx)
+							END;
+							IF (dy < 0) & (rv < Bottom - dy) THEN rv := Bottom
+							ELSIF (dy > 0) & (rv > Top - dy) THEN rv := Top
+							ELSE INC(rv, dy)
+							END;
+							Encode(rdata[rn], ru, rv, rdir);
+							INC(rn);
+							Decode(rdata[rn], ru, rv, rdir)
+						END
+					END
+				END
+			END Shift;
+
+			(** copy region **)
+			PROCEDURE Copy* (to: Region);
+			BEGIN
+				to.mode := SELF.mode;
+				SELF.CopyData(to)
+			END Copy;
+
+			(** add second region to first **)
+			PROCEDURE Add* (arg: Region);
+				VAR rdata, adata: RegionData; points, aslice, an, rn, rslice: LONGINT; au, av, adir, ru, rv, rdir, top, ry, ay, y: INTEGER;
+			BEGIN
+				IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
+					IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
+						arg.CopyData(SELF)
+					ELSIF arg.IsRect() & SELF.RectInside(arg.llx, arg.lly, arg.urx, arg.ury) THEN
+						(* do nothing *)
+					ELSIF SELF.IsRect() & arg.RectInside(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
+						arg.CopyData(SELF)
+					ELSE
+						SELF.Validate(); arg.Validate();
+						SELF.MakeData(); arg.MakeData();
+						rdata := SELF.data; adata := arg.data;
+						points := SELF.points;
+
+						IF arg.lly < SELF.lly THEN
+							(* copy scanlines below SELF *)
+							arg.FindUpper(SELF.lly, aslice);
+							an := FirstSlice;
+							WHILE an < aslice DO
+								Decode(adata[an], au, av, adir);
+								SELF.Append(au, av, adir);
+								INC(an)
+							END;
+							rn := FirstSlice;
+							arg.FindLower(SELF.lly, an)
+						ELSE
+							SELF.FindLower(arg.lly, rn);
+							an := FirstSlice
+						END;
+
+						Decode(rdata[rn], ru, rv, rdir);
+						Decode(adata[an], au, av, adir);
+						rslice := rn; aslice := an;
+						top := MIN(SELF.ury, arg.ury);
+
+						WHILE (av < top) OR (rv < top) DO
+							(* merge slices *)
+							ry := rv; ay := av; y := MAX(ry, ay);
+							REPEAT
+								IF (av > ay) OR (rv = ry) & (ru <= au) THEN
+									IF rv # y THEN	(* do not duplicate points *)
+										SELF.Append(ru, y, rdir)
+									END;
+									INC(rn);
+									Decode(rdata[rn], ru, rv, rdir)
+								ELSE
+									SELF.Append(au, y, adir);
+									INC(an);
+									Decode(adata[an], au, av, adir)
+								END
+							UNTIL (rv > ry) & (av > ay);
+
+							(* advance to next slice *)
+							IF rv < av THEN
+								an := aslice; rslice := rn;
+								Decode(adata[an], au, av, adir)
+							ELSIF av < rv THEN
+								rn := rslice; aslice := an;
+								Decode(rdata[rn], ru, rv, rdir)
+							ELSE
+								rslice := rn; aslice := an
+							END
+						END;
+
+						(* copy slices above SELF *)
+						IF arg.ury > SELF.ury THEN
+							REPEAT
+								SELF.Append(au, av, adir);
+								INC(an);
+								Decode(adata[an], au, av, adir)
+							UNTIL av = Top
+						END;
+
+						SELF.Merge(points);
+						IncludeRect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury)
+					END
+				END
+			END Add;
+
+			(** add rectangle to region **)
+			PROCEDURE AddRect* (llx, lly, urx, ury: INTEGER);
+				VAR reg: Region;
+			BEGIN{EXCLUSIVE}
+				reg.SetToRect(llx, lly, urx, ury);
+				SELF.Add(reg)
+			END AddRect;
+
+			(** subtract second region from first **)
+			PROCEDURE Subtract* (arg: Region);
+				VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, top, ry, ay, y: INTEGER;
+			BEGIN
+				IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
+					IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) OR SELF.RegionInside(arg) THEN
+						SELF.Clear()
+					ELSIF RectsIntersect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
+						SELF.Validate(); arg.Validate();
+						SELF.MakeData(); arg.MakeData();
+						rdata := SELF.data; adata := arg.data;
+						points := SELF.points;
+						IF SELF.lly <= arg.lly THEN
+							SELF.FindLower(arg.lly, rn);
+							an := FirstSlice
+						ELSE
+							rn := FirstSlice;
+							arg.FindLower(SELF.lly, an)
+						END;
+						Decode(rdata[rn], ru, rv, rdir);
+						Decode(adata[an], au, av, adir);
+
+						rslice := rn; aslice := an;
+						top := MIN(SELF.ury, arg.ury);
+						WHILE (rv < top) OR (av < top) DO
+							(* merge slices *)
+							ry := rv; ay := av; y := MAX(ry, ay);
+							REPEAT
+								IF (av > ay) OR (rv = ry) & (ru <= au) THEN
+									IF rv # y THEN	(* do not duplicate points *)
+										SELF.Append(ru, y, rdir)
+									END;
+									INC(rn);
+									Decode(rdata[rn], ru, rv, rdir)
+								ELSE
+									SELF.Append(au, y, -adir);
+									INC(an);
+									Decode(adata[an], au, av, adir)
+								END
+							UNTIL (rv > ry) & (av > ay);
+
+							(* advance to next slice *)
+							IF rv < av THEN
+								an := aslice; rslice := rn;
+								Decode(adata[an], au, av, adir)
+							ELSIF av < rv THEN
+								rn := rslice; aslice := an;
+								Decode(rdata[rn], ru, rv, rdir)
+							ELSE
+								rslice := rn; aslice := an
+							END
+						END;
+
+						SELF.Merge(points);
+						SELF.CalcRect()
+					END
+				END
+			END Subtract;
+
+			(** subtract rectangle from region **)
+			PROCEDURE SubtractRect* (llx, lly, urx, ury: INTEGER);
+				VAR reg: Region;
+			BEGIN{EXCLUSIVE}
+				reg.SetToRect(llx, lly, urx, ury);
+				SELF.Subtract(reg)
+			END SubtractRect;
+
+		(** intersect first region with second region **)
+		PROCEDURE Intersect* (arg: Region);
+			VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, ry, ay, y: INTEGER;
+		BEGIN
+			IF ~RectsIntersect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
+				SELF.Clear()
+
+			ELSIF ~arg.RectInside(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
+				SELF.Validate(); arg.Validate();
+				SELF.MakeData(); arg.MakeData();
+				rdata := SELF.data; adata := arg.data;
+				points := SELF.points;
+
+				(* cut off slices above arg *)
+				IF SELF.ury > arg.ury THEN
+					SELF.FindUpper(arg.ury, points);
+					Encode(rdata[points], UBound, arg.ury, Enter); INC(points);
+					Encode(rdata[points], UBound, arg.ury, Exit); INC(points);
+					Encode(rdata[points], UBound, Top, Exit); INC(points);
+					SELF.points := points
+				END;
+
+				(* delete slices below arg *)
+				IF SELF.lly < arg.lly THEN
+					SELF.FindLower(arg.lly, rn);
+					IF rn > FirstSlice THEN
+						points := FirstSlice;
+						WHILE rn < SELF.points DO
+							rdata[points] := rdata[rn];
+							INC(points); INC(rn)
+						END;
+						SELF.points := points
+					END;
+
+					rn := FirstSlice;
+					Decode(rdata[rn], ru, rv, rdir);
+					ry := rv;
+					REPEAT
+						Encode(rdata[rn], ru, arg.lly, rdir);
+						INC(rn);
+						Decode(rdata[rn], ru, rv, rdir)
+					UNTIL rv > ry;
+
+					rn := FirstSlice; an := FirstSlice
+				ELSE
+					rn := FirstSlice;
+					arg.FindLower(SELF.lly, an)
+				END;
+
+				Decode(rdata[rn], ru, rv, rdir);
+				Decode(adata[an], au, av, adir);
+				rslice := rn; aslice := an;
+
+				WHILE rv < SELF.ury DO
+					(* merge intersecting slices *)
+					ry := rv; ay := av; y := MAX(ry, ay);
+					SELF.Append(LBound, y, Exit);
+					REPEAT
+						IF (av > ay) OR (rv = ry) & (ru <= au) THEN
+							IF rv # y THEN	(* do not duplicate existing points *)
+								SELF.Append(ru, y, rdir)
+							END;
+							INC(rn);
+							Decode(rdata[rn], ru, rv, rdir)
+						ELSE
+							SELF.Append(au, y, adir);
+							INC(an);
+							Decode(adata[an], au, av, adir)
+						END
+					UNTIL (rv > ry) & (av > ay);
+					SELF.Append(UBound, y, Enter);
+
+					(* advance to next slice *)
+					IF rv < av THEN
+						an := aslice; rslice := rn;
+						Decode(adata[an], au, av, adir)
+					ELSIF av < rv THEN
+						rn := rslice; aslice := an;
+						Decode(rdata[rn], ru, rv, rdir)
+					ELSE
+						rslice := rn; aslice := an
+					END
+				END;
+
+				SELF.Merge(points);
+				SELF.CalcRect()
+			END
+		END Intersect;
+
+			(** intersect region with rectangle **)
+			PROCEDURE IntersectRect* (llx, lly, urx, ury: INTEGER);
+				VAR reg: Region;
+			BEGIN{EXCLUSIVE}
+				reg.SetToRect(llx, lly, urx, ury);
+				SELF.Intersect(reg)
+			END IntersectRect;
+
+			(** invert region **)
+			PROCEDURE Invert* ();
+				VAR data: RegionData; points, n: LONGINT; u, v, dir, y: INTEGER;
+			BEGIN
+				IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
+					SELF.SetToRect(LBound, LBound, UBound, UBound)
+				ELSE
+					SELF.Validate();
+					SELF.MakeData();
+					data := SELF.data;
+					points := SELF.points;
+					n := FirstSlice;
+					Decode(data[n], u, v, dir);
+
+					IF SELF.lly > LBound THEN
+						SELF.Append(LBound, LBound, Enter);
+						SELF.Append(UBound, LBound, Exit)
+					END;
+
+					REPEAT
+						y := v;
+						SELF.Append(LBound, y, Enter);
+						REPEAT
+							Encode(data[n], u, y, -dir);
+							INC(n);
+							Decode(data[n], u, y, dir)
+						UNTIL v > y;
+						SELF.Append(UBound, y, Exit)
+					UNTIL v >= UBound;
+
+					IF y < UBound THEN
+						SELF.Append(LBound, y, Enter);
+						SELF.Append(UBound, y, Exit)
+					END;
+
+					SELF.Merge(points);
+					SELF.CalcRect()
+				END
+			END Invert;
+
+			(**
+				In addition to creating rectangular regions and using Boolean operations to combine several regions, a region
+				can also be built by tracing its outline with AddPoint. In order to allow the correct handling of self_intersecting
+				contours, a direction parameter is needed which indicates whether the curve is going up (dy = 1) or down
+				(dy = -1) at the given point.
+
+				When performing Boolean operations upon regions or when building regions from self_intersecting contours,
+				it is possible that some areas in the resulting region get "covered" more than once. Since most query operations
+				reduce regions to non_overlapping areas, a rule which decides whether a point is inside a region or not is needed.
+				Imagine a ray originating at such a point and counting every intersection of the ray with the boundary curve of the
+				region as +1 if the curve crosses the ray from right to left and as -1 otherwise.
+					- for mode Winding (the default), a point is inside the region if the resulting sum is non_zero
+					- for mode EvenOdd, a point is inside the region if the resulting sum is odd
+
+				Behaviour of all region queries and region operations is undefined for contours which are not closed.
+			**)
+
+			(** add a scanline intersection to a region **)
+			PROCEDURE AddPoint* (x, y, dy: INTEGER);
+			BEGIN
+				IF (dy # 0) & (y >= LBound) & (y <= UBound) THEN
+					IF x < LBound THEN x := LBound
+					ELSIF x > UBound THEN x := UBound
+					END;
+					SELF.MakeData();
+					IncludePoint(SELF.llx, SELF.lly, SELF.urx, SELF.ury, x, y);
+					SELF.Append(x, y + (-dy) DIV 2, dy);	(* dy = -1 => y, dy = 1 => y - 1 *)
+					SELF.valid := FALSE
+				END
+			END AddPoint;
 			
-			(**--- Region Queries ---**)
+		(**--- Region Queries ---**)
 
 			(** return whether region is empty **)
 			PROCEDURE Empty* (): BOOLEAN;
@@ -317,404 +709,9 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 					enum(llx, lly, urx, ury, edata)
 				END
 			END EnumerateInv;
+	
+		(*--- Auxiliary Routines For Managing Regions ---*)			
 
-
-			(**--- Region Construction ---**)
-
-			(** make region empty **)
-			PROCEDURE Clear* ();
-			BEGIN
-				SELF.llx := UBound; SELF.lly := UBound;
-				SELF.urx := LBound; SELF.ury := LBound;
-				SELF.valid := TRUE;
-				SELF.points := 0
-			END Clear;
-
-			(** set region mode **)
-			PROCEDURE SetMode* (mode: INTEGER);
-			BEGIN
-				SELF.mode := mode
-			END SetMode;
-
-			(** make region rectangular **)
-			PROCEDURE SetToRect* (llx, lly, urx, ury: INTEGER);
-			BEGIN
-				IF RectEmpty(llx, lly, urx, ury) THEN
-					SELF.Clear()
-				ELSE
-					ClipRect(llx, lly, urx, ury, LBound, LBound, UBound, UBound);
-					SELF.llx := llx; SELF.lly := lly; SELF.urx := urx; SELF.ury := ury;
-					SELF.valid := TRUE;
-					SELF.points := 0
-				END
-			END SetToRect;
-
-			(** shift region **)
-			PROCEDURE Shift* (dx, dy: INTEGER);
-				VAR rdata: RegionData; rn: LONGINT; ru, rv, rdir: INTEGER;
-			BEGIN
-				IF (dx # 0) OR (dy # 0) THEN
-					INC(SELF.llx, dx); INC(SELF.lly, dy); INC(SELF.urx, dx); INC(SELF.ury, dy);
-					IF SELF.points > 0 THEN
-						rdata := SELF.data; rn := FirstSlice;
-						Decode(rdata[rn], ru, rv, rdir);
-						WHILE rv < Top DO
-							IF (ru <= LBound) OR (ru + dx <= LBound) THEN ru := LBound
-							ELSIF (ru >= UBound) OR (ru + dx >= UBound) THEN ru := UBound
-							ELSE INC(ru, dx)
-							END;
-							IF (dy < 0) & (rv < Bottom - dy) THEN rv := Bottom
-							ELSIF (dy > 0) & (rv > Top - dy) THEN rv := Top
-							ELSE INC(rv, dy)
-							END;
-							Encode(rdata[rn], ru, rv, rdir);
-							INC(rn);
-							Decode(rdata[rn], ru, rv, rdir)
-						END
-					END
-				END
-			END Shift;
-
-			(** copy region **)
-			PROCEDURE Copy* (to: Region);
-			BEGIN
-				to.mode := SELF.mode;
-				SELF.CopyData(to)
-			END Copy;
-
-			(** add second region to first **)
-			PROCEDURE Add* (arg: Region);
-				VAR rdata, adata: RegionData; points, aslice, an, rn, rslice: LONGINT; au, av, adir, ru, rv, rdir, top, ry, ay, y: INTEGER;
-			BEGIN
-				IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
-					IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
-						arg.CopyData(SELF)
-					ELSIF arg.IsRect() & SELF.RectInside(arg.llx, arg.lly, arg.urx, arg.ury) THEN
-						(* do nothing *)
-					ELSIF SELF.IsRect() & arg.RectInside(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
-						arg.CopyData(SELF)
-					ELSE
-						SELF.Validate(); arg.Validate();
-						SELF.MakeData(); arg.MakeData();
-						rdata := SELF.data; adata := arg.data;
-						points := SELF.points;
-
-						IF arg.lly < SELF.lly THEN
-							(* copy scanlines below SELF *)
-							arg.FindUpper(SELF.lly, aslice);
-							an := FirstSlice;
-							WHILE an < aslice DO
-								Decode(adata[an], au, av, adir);
-								SELF.Append(au, av, adir);
-								INC(an)
-							END;
-							rn := FirstSlice;
-							arg.FindLower(SELF.lly, an)
-						ELSE
-							SELF.FindLower(arg.lly, rn);
-							an := FirstSlice
-						END;
-
-						Decode(rdata[rn], ru, rv, rdir);
-						Decode(adata[an], au, av, adir);
-						rslice := rn; aslice := an;
-						top := MIN(SELF.ury, arg.ury);
-
-						WHILE (av < top) OR (rv < top) DO
-							(* merge slices *)
-							ry := rv; ay := av; y := MAX(ry, ay);
-							REPEAT
-								IF (av > ay) OR (rv = ry) & (ru <= au) THEN
-									IF rv # y THEN	(* do not duplicate points *)
-										SELF.Append(ru, y, rdir)
-									END;
-									INC(rn);
-									Decode(rdata[rn], ru, rv, rdir)
-								ELSE
-									SELF.Append(au, y, adir);
-									INC(an);
-									Decode(adata[an], au, av, adir)
-								END
-							UNTIL (rv > ry) & (av > ay);
-
-							(* advance to next slice *)
-							IF rv < av THEN
-								an := aslice; rslice := rn;
-								Decode(adata[an], au, av, adir)
-							ELSIF av < rv THEN
-								rn := rslice; aslice := an;
-								Decode(rdata[rn], ru, rv, rdir)
-							ELSE
-								rslice := rn; aslice := an
-							END
-						END;
-
-						(* copy slices above SELF *)
-						IF arg.ury > SELF.ury THEN
-							REPEAT
-								SELF.Append(au, av, adir);
-								INC(an);
-								Decode(adata[an], au, av, adir)
-							UNTIL av = Top
-						END;
-
-						SELF.Merge(points);
-						IncludeRect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury)
-					END
-				END
-			END Add;
-
-			(** add rectangle to region **)
-			PROCEDURE AddRect* (llx, lly, urx, ury: INTEGER);
-				VAR rectRegion: Region; (*TODO use rect *)
-			BEGIN
-				rectRegion := NEW Region( );
-				rectRegion.Init( Winding );
-				rectRegion.SetToRect(llx, lly, urx, ury);
-				SELF.Add(rectRegion)
-			END AddRect;
-
-			(** subtract second region from first **)
-			PROCEDURE Subtract* (arg: Region);
-				VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, top, ry, ay, y: INTEGER;
-			BEGIN
-				IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
-					IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) OR SELF.RegionInside(arg) THEN
-						SELF.Clear()
-					ELSIF RectsIntersect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
-						SELF.Validate(); arg.Validate();
-						SELF.MakeData(); arg.MakeData();
-						rdata := SELF.data; adata := arg.data;
-						points := SELF.points;
-						IF SELF.lly <= arg.lly THEN
-							SELF.FindLower(arg.lly, rn);
-							an := FirstSlice
-						ELSE
-							rn := FirstSlice;
-							arg.FindLower(SELF.lly, an)
-						END;
-						Decode(rdata[rn], ru, rv, rdir);
-						Decode(adata[an], au, av, adir);
-
-						rslice := rn; aslice := an;
-						top := MIN(SELF.ury, arg.ury);
-						WHILE (rv < top) OR (av < top) DO
-							(* merge slices *)
-							ry := rv; ay := av; y := MAX(ry, ay);
-							REPEAT
-								IF (av > ay) OR (rv = ry) & (ru <= au) THEN
-									IF rv # y THEN	(* do not duplicate points *)
-										SELF.Append(ru, y, rdir)
-									END;
-									INC(rn);
-									Decode(rdata[rn], ru, rv, rdir)
-								ELSE
-									SELF.Append(au, y, -adir);
-									INC(an);
-									Decode(adata[an], au, av, adir)
-								END
-							UNTIL (rv > ry) & (av > ay);
-
-							(* advance to next slice *)
-							IF rv < av THEN
-								an := aslice; rslice := rn;
-								Decode(adata[an], au, av, adir)
-							ELSIF av < rv THEN
-								rn := rslice; aslice := an;
-								Decode(rdata[rn], ru, rv, rdir)
-							ELSE
-								rslice := rn; aslice := an
-							END
-						END;
-
-						SELF.Merge(points);
-						SELF.CalcRect()
-					END
-				END
-			END Subtract;
-
-			(** subtract rectangle from region **)
-			PROCEDURE SubtractRect* (llx, lly, urx, ury: INTEGER);
-				VAR rectRegion: Region;
-			BEGIN
-				rectRegion := NEW Region( );
-				rectRegion.Init( Winding );
-				rectRegion.SetToRect(llx, lly, urx, ury);
-				SELF.Subtract(rectRegion)
-			END SubtractRect;
-
-			(** intersect first region with second region **)
-			PROCEDURE Intersect* (arg: Region);
-				VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, ry, ay, y: INTEGER;
-			BEGIN
-				IF ~RectsIntersect(SELF.llx, SELF.lly, SELF.urx, SELF.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
-					SELF.Clear()
-
-				ELSIF ~arg.RectInside(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
-					SELF.Validate(); arg.Validate();
-					SELF.MakeData(); arg.MakeData();
-					rdata := SELF.data; adata := arg.data;
-					points := SELF.points;
-
-					(* cut off slices above arg *)
-					IF SELF.ury > arg.ury THEN
-						SELF.FindUpper(arg.ury, points);
-						Encode(rdata[points], UBound, arg.ury, Enter); INC(points);
-						Encode(rdata[points], UBound, arg.ury, Exit); INC(points);
-						Encode(rdata[points], UBound, Top, Exit); INC(points);
-						SELF.points := points
-					END;
-
-					(* delete slices below arg *)
-					IF SELF.lly < arg.lly THEN
-						SELF.FindLower(arg.lly, rn);
-						IF rn > FirstSlice THEN
-							points := FirstSlice;
-							WHILE rn < SELF.points DO
-								rdata[points] := rdata[rn];
-								INC(points); INC(rn)
-							END;
-							SELF.points := points
-						END;
-
-						rn := FirstSlice;
-						Decode(rdata[rn], ru, rv, rdir);
-						ry := rv;
-						REPEAT
-							Encode(rdata[rn], ru, arg.lly, rdir);
-							INC(rn);
-							Decode(rdata[rn], ru, rv, rdir)
-						UNTIL rv > ry;
-
-						rn := FirstSlice; an := FirstSlice
-					ELSE
-						rn := FirstSlice;
-						arg.FindLower(SELF.lly, an)
-					END;
-
-					Decode(rdata[rn], ru, rv, rdir);
-					Decode(adata[an], au, av, adir);
-					rslice := rn; aslice := an;
-
-					WHILE rv < SELF.ury DO
-						(* merge intersecting slices *)
-						ry := rv; ay := av; y := MAX(ry, ay);
-						SELF.Append(LBound, y, Exit);
-						REPEAT
-							IF (av > ay) OR (rv = ry) & (ru <= au) THEN
-								IF rv # y THEN	(* do not duplicate existing points *)
-									SELF.Append(ru, y, rdir)
-								END;
-								INC(rn);
-								Decode(rdata[rn], ru, rv, rdir)
-							ELSE
-								SELF.Append(au, y, adir);
-								INC(an);
-								Decode(adata[an], au, av, adir)
-							END
-						UNTIL (rv > ry) & (av > ay);
-						SELF.Append(UBound, y, Enter);
-
-						(* advance to next slice *)
-						IF rv < av THEN
-							an := aslice; rslice := rn;
-							Decode(adata[an], au, av, adir)
-						ELSIF av < rv THEN
-							rn := rslice; aslice := an;
-							Decode(rdata[rn], ru, rv, rdir)
-						ELSE
-							rslice := rn; aslice := an
-						END
-					END;
-
-					SELF.Merge(points);
-					SELF.CalcRect()
-				END
-			END Intersect;
-
-			(** intersect region with rectangle **)
-			PROCEDURE IntersectRect* (llx, lly, urx, ury: INTEGER);
-				VAR rectRegion: Region; (**TODO use rect *)
-			BEGIN
-				rectRegion := NEW Region( ); rectRegion.Init( Winding );
-				rectRegion.SetToRect(llx, lly, urx, ury);
-				SELF.Intersect(rectRegion)
-			END IntersectRect;
-
-			(** invert region **)
-			PROCEDURE Invert* ();
-				VAR data: RegionData; points, n: LONGINT; u, v, dir, y: INTEGER;
-			BEGIN
-				IF RectEmpty(SELF.llx, SELF.lly, SELF.urx, SELF.ury) THEN
-					SELF.SetToRect(LBound, LBound, UBound, UBound)
-				ELSE
-					SELF.Validate();
-					SELF.MakeData();
-					data := SELF.data;
-					points := SELF.points;
-					n := FirstSlice;
-					Decode(data[n], u, v, dir);
-
-					IF SELF.lly > LBound THEN
-						SELF.Append(LBound, LBound, Enter);
-						SELF.Append(UBound, LBound, Exit)
-					END;
-
-					REPEAT
-						y := v;
-						SELF.Append(LBound, y, Enter);
-						REPEAT
-							Encode(data[n], u, y, -dir);
-							INC(n);
-							Decode(data[n], u, y, dir)
-						UNTIL v > y;
-						SELF.Append(UBound, y, Exit)
-					UNTIL v >= UBound;
-
-					IF y < UBound THEN
-						SELF.Append(LBound, y, Enter);
-						SELF.Append(UBound, y, Exit)
-					END;
-
-					SELF.Merge(points);
-					SELF.CalcRect()
-				END
-			END Invert;
-
-			(**
-				In addition to creating rectangular regions and using Boolean operations to combine several regions, a region
-				can also be built by tracing its outline with AddPoint. In order to allow the correct handling of self_intersecting
-				contours, a direction parameter is needed which indicates whether the curve is going up (dy = 1) or down
-				(dy = -1) at the given point.
-
-				When performing Boolean operations upon regions or when building regions from self_intersecting contours,
-				it is possible that some areas in the resulting region get "covered" more than once. Since most query operations
-				reduce regions to non_overlapping areas, a rule which decides whether a point is inside a region or not is needed.
-				Imagine a ray originating at such a point and counting every intersection of the ray with the boundary curve of the
-				region as +1 if the curve crosses the ray from right to left and as -1 otherwise.
-					- for mode Winding (the default), a point is inside the region if the resulting sum is non_zero
-					- for mode EvenOdd, a point is inside the region if the resulting sum is odd
-
-				Behaviour of all region queries and region operations is undefined for contours which are not closed.
-			**)
-
-			(** add a scanline intersection to a region **)
-			PROCEDURE AddPoint* (x, y, dy: INTEGER);
-			BEGIN
-				IF (dy # 0) & (y >= LBound) & (y <= UBound) THEN
-					IF x < LBound THEN x := LBound
-					ELSIF x > UBound THEN x := UBound
-					END;
-					SELF.MakeData();
-					IncludePoint(SELF.llx, SELF.lly, SELF.urx, SELF.ury, x, y);
-					SELF.Append(x, y + (-dy) DIV 2, dy);	(* dy = -1 => y, dy = 1 => y - 1 *)
-					SELF.valid := FALSE
-				END
-			END AddPoint;			
-			
-			(*--- Auxiliary Routines For Managing Regions ---*)			
-
-			
 			(* append point to region data *)
 			PROCEDURE Append (u, v, dir: INTEGER);
 				VAR size: LONGINT; data: RegionData;
@@ -822,7 +819,9 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 			(* merge two runs of data points *)
 			PROCEDURE Merge (split: LONGINT);
 				VAR data: RegionData; n, N, m, M, p, tmp: LONGINT; nu, nv, ndir, mu, mv, mdir, sum, u, v, inc, nsum: INTEGER;
-			BEGIN
+					Data: RegionData;	(* temporary region data for merging *)
+					DataSize: LONGINT;	(* number of points allocated for Data *)				
+			BEGIN{EXCLUSIVE}
 				data := SELF.data;
 				n := 0; N := split;
 				Decode(data[n], nu, nv, ndir);
@@ -1085,11 +1084,6 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		EnumData* = RECORD END;
 		Enumerator* = PROCEDURE (llx, lly, urx, ury: INTEGER; VAR edata: EnumData);
 
-
-	VAR
-		Data: RegionData;	(* temporary region data for merging *)
-		DataSize: LONGINT;	(* number of points allocated for Data *)
-
 	(**--- Rectangles ---**)
 
 	(** make rectangle large enough to include a point **)
@@ -1145,35 +1139,6 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 
 	(*--- Auxiliary Routines For Managing Regions ---*)
-
-	(*
-		Implementation notes:
-
-		Regions are managed by slicing them horizontally. For each scanline y, a set of spans on the scanline defines which
-		parts of the scanline are part of the region. The spans are defined through the x_coordinates of their end points.
-		Every point on a scanline has a direction attribute, which specifies whether the point starts a span (Enter) or ends
-		one (Exit), allowing spans to nest or overlap.
-
-		The x_ and y_coordinates of a point along with its direction are encoded into a LONGINT. The chosen encoding
-		weights the y_coordinate most, followed by the x_coordinate and the direction of an intersection. Visiting all
-		encoded points in ascending order therefore traverses all spans of the region from the bottom left corner to the
-		top right corner.
-
-		In order to save space, identical slices adjacent to each other are stored only once. The bottommost scanline of
-		an identical sequence of scanlines serves as a representant for the whole sequence; all others are eliminated.
-		This means that if no points exist for a certain y_coordinate, the spans of the corresponding scanline are identical
-		to those of the one below it. As a consequence, scanlines that are completely outside the region need an empty
-		filler span to distinguish them from eliminated scanlines. A filler span consists of two points located at UBound,
-		one entering the region and the other leaving it.
-
-		Most operations modifying regions append new points in ascending order to the sequence of existing points and
-		then merge the two sequences again. If points cannot be appended in order, the whole set of points has to be
-		sorted before any other operation can be executed. Doing this immediately after the sequence of points has been
-		invalidated can decrease performance significantly if a lot of invalidating operations are issued in sequence, as is
-		typically the case with AddPoint. This is why regions have a valid flag, indicating whether encoded points are sorted
-		or not. Invalidating operations only have to set valid to FALSE, other operations will eventually validate the region
-		again, at the same time eliminating multiple points and overlapping spans.
-	*)
 
 	(* encode point coordinates and curve direction into a LONGINT *)
 	PROCEDURE Encode (VAR item: LONGINT; u, v, dir: LONGINT);
@@ -1302,7 +1267,6 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		reg.EnumerateInv(llx, lly, urx, ury, enum, edata);
 	END EnumerateInv;
 
-
 	(**--- Region Construction ---**)
 
 	(** make region empty **)
@@ -1382,23 +1346,6 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	BEGIN
 		reg.Invert();
 	END Invert;
-
-	(**
-		In addition to creating rectangular regions and using Boolean operations to combine several regions, a region
-		can also be built by tracing its outline with AddPoint. In order to allow the correct handling of self_intersecting
-		contours, a direction parameter is needed which indicates whether the curve is going up (dy = 1) or down
-		(dy = -1) at the given point.
-
-		When performing Boolean operations upon regions or when building regions from self_intersecting contours,
-		it is possible that some areas in the resulting region get "covered" more than once. Since most query operations
-		reduce regions to non_overlapping areas, a rule which decides whether a point is inside a region or not is needed.
-		Imagine a ray originating at such a point and counting every intersection of the ray with the boundary curve of the
-		region as +1 if the curve crosses the ray from right to left and as -1 otherwise.
-			- for mode Winding (the default), a point is inside the region if the resulting sum is non_zero
-			- for mode EvenOdd, a point is inside the region if the resulting sum is odd
-
-		Behaviour of all region queries and region operations is undefined for contours which are not closed.
-	**)
 
 	(** add a scanline intersection to a region **)
 	PROCEDURE AddPoint* (reg: Region; x, y, dy: INTEGER);

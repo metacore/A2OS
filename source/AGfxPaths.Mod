@@ -13,8 +13,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		15.9.98 - minor cleanup: removed position, Save/Restore, GetBBox; simplified scanner interface
 		26.11.98 - added procedure Close
 		26.1.99 - added procedure Split
-		21.5.99 - fixed major bug in Reverse (no update of destination path fields)
-		12.7.99 - fixed another bug in Reverse (wrong direction when reverting Exit element)
+		21.5.99 - fixed major bug in ReverseTo (no update of destination path fields)
+		12.7.99 - fixed another bug in ReverseTo (wrong direction when reverting Exit element)
 		12.7.99 - approximate arc with line if radius is smaller than flatness
 		18.02.2000 - simpler initial step without sqrt in EnumArc
 		18.02.2000 - more robust bezier code (deals with folded curves and cusps)
@@ -53,6 +53,33 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		END;
 
 		(** path abstraction **)
+		(**
+			A paths consists of any number of subpaths, where each subpath starts with a Enter element, followed by
+			any number of curve elements, and terminated by an Exit element.
+
+			Enter
+				(x, y) is the starting point for the following curve element
+				(dx, dy) is the tangent vector at the end of an adjacent subpath or (0, 0) if there is none
+
+			Line
+				(x, y) is the end point of the line and the starting point of any subsequent curve
+
+			Arc
+				(x, y) is the end point of the arc and the starting point of any subsequent curve (may coincide with the
+						current point, resulting in a circle or ellipse)
+				(x0, y0) is the center of the circle/ellipse this arc is part of
+				(x1, y1) is the end point of the first half axis vector
+				(x2, y2) is the end point of the first half axis vector (not necessarily perpendicular to the first HAV)
+
+			Bezier
+				(x, y) is the end point of the cubic bezier curve and the starting point of any subsequent curve
+				(x1, y1) is the first control point of the cubic bezier curve
+				(x1, y1) is the second control point of the cubic bezier curve
+
+			Exit
+				(dx, dy) is the tangent vector at the starting point of an adjacent subpath or (0, 0) if there is none
+		**)
+		
 		Path* = OBJECT
 		VAR
 			elems* := 0, coords* := 0: INTEGER;	(** number of elements/coordinate pairs in path **)
@@ -69,7 +96,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 				SELF.elems := 0; SELF.coords := 0;
 				SELF.firstEB.coords := 0
 			END Clear;
-			
+
 			(** append enter element **)
 			PROCEDURE AddEnter* (x, y, dx, dy: REAL);
 			BEGIN
@@ -77,7 +104,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 				AddCoord(SELF, dx, dy);
 				AddCoord(SELF, x, y)
 			END AddEnter;
-			
+
 			(** append line element **)
 			PROCEDURE AddLine* (x, y: REAL);
 			BEGIN
@@ -409,7 +436,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 					INC(pos); INC(epos)
 				END
 			END Apply;
-
+			
 			(** try to close disconnected enter/exit points by modifying their direction vectors **)
 			PROCEDURE Close* ();
 				CONST
@@ -477,7 +504,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 					INC(pos); INC(epos)
 				END
 			END Close;
-			
+
 			(** split subpath in two at given offset (resulting subpaths may be flattened in the process) **)
 			PROCEDURE Split* (offset: REAL; head, tail: Path);
 				VAR data: SplitData;
@@ -492,15 +519,15 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 					SELF.EnumFlattened(1, EnumSplit, data)
 				END
 			END Split;
-			
+
 			(** return projection of point onto path **)
-			PROCEDURE ProjectTo* (x, y: REAL; VAR u, v: REAL);
+			PROCEDURE ProjectToPath* (x, y: REAL; VAR u, v: REAL);
 				VAR data: ProjectData;
 			BEGIN
 				data.px := x; data.py := y; data.dist := MAX(REAL); data.rx := MAX(REAL); data.ry := MAX(REAL);
 				SELF.EnumFlattened(1, EnumProject, data);
 				u := data.rx; v := data.ry
-			END ProjectTo;
+			END ProjectToPath;
 
 			(**--- Path Queries ---**)
 
@@ -522,7 +549,6 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 				RETURN data.hit
 			END OnPath;
 
-			
 		END Path;
 
 		(** path scanner **)
@@ -530,7 +556,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			Path scanners can be used to iterate over a path under client control. The scanner's elem field specifies what
 			the current element is, whereas the remaining fields contain the parameters for that element. A Stop element
 			indicates that the end of the path has been reached.
-		**)
+		**)		
 		Scanner* = RECORD
 			path*: Path;	(** visited path **)
 			pos*: INTEGER;	(** element position **)
@@ -541,7 +567,6 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			curEB: ElemBlock;	(* current element block *)
 			curCB: CoordBlock;	(* current coordinate block *)
 			epos, cpos: INTEGER;	(* next element and coordinate position within current block *)
-			
 			
 			(** open scanner on path and load parameters of element at given position **)
 			PROCEDURE Open* (path: Path; pos: INTEGER);
@@ -578,7 +603,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 					END
 				END
 			END Open;
-			
+
 			(** advance to next element and load its parameters **)
 			PROCEDURE Scan* ();
 			BEGIN
@@ -601,15 +626,15 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 					END
 				END
 			END Scan;
-	
-			PROCEDURE get (VAR x, y: REAL);
+			
+			PROCEDURE- get (VAR x, y: REAL);
 			BEGIN
 				IF SELF.cpos = CoordBlockSize THEN
 					SELF.curCB := SELF.curCB.next; SELF.cpos := 0
 				END;
 				x := SELF.curCB.x[SELF.cpos]; y := SELF.curCB.y[SELF.cpos]; INC(SELF.cpos)
 			END get;			
-	
+
 		END (* Scanner *);
 
 		(** path enumeration **)
@@ -652,34 +677,6 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			sx, sy: REAL;
 			sdx, sdy: REAL
 		END;
-
-
-	(**
-		A paths consists of any number of subpaths, where each subpath starts with a Enter element, followed by
-		any number of curve elements, and terminated by an Exit element.
-
-		Enter
-			(x, y) is the starting point for the following curve element
-			(dx, dy) is the tangent vector at the end of an adjacent subpath or (0, 0) if there is none
-
-		Line
-			(x, y) is the end point of the line and the starting point of any subsequent curve
-
-		Arc
-			(x, y) is the end point of the arc and the starting point of any subsequent curve (may coincide with the
-					current point, resulting in a circle or ellipse)
-			(x0, y0) is the center of the circle/ellipse this arc is part of
-			(x1, y1) is the end point of the first half axis vector
-			(x2, y2) is the end point of the first half axis vector (not necessarily perpendicular to the first HAV)
-
-		Bezier
-			(x, y) is the end point of the cubic bezier curve and the starting point of any subsequent curve
-			(x1, y1) is the first control point of the cubic bezier curve
-			(x1, y1) is the second control point of the cubic bezier curve
-
-		Exit
-			(dx, dy) is the tangent vector at the starting point of an adjacent subpath or (0, 0) if there is none
-	**)
 
 
 	VAR
@@ -1091,7 +1088,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		END
 	END EnumSpline;
 
-
+	
 	(**--- Path Queries ---**)
 
 	PROCEDURE Code (VAR data: QueryData; x, y: REAL): SET;
@@ -1401,12 +1398,6 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			END
 		END
 	END EnumProject;
-
-	(** return projection of point onto path **)
-	PROCEDURE ProjectToPath* (path: Path; x, y: REAL; VAR u, v: REAL);
-	BEGIN
-		path.ProjectTo(x, y, u, v);
-	END ProjectToPath;
 
 BEGIN
 	Coords[Enter] := 2; Coords[Line] := 1; Coords[Arc] := 4; Coords[Bezier] := 3; Coords[Exit] := 1

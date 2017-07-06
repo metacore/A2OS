@@ -307,32 +307,77 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		(**--- Current Path ---**)
 
 			(** start new path **)
-			PROCEDURE{ABSTRACT} DoBegin*(mode: SET); END DoBegin;
+			PROCEDURE Begin* (mode: SET);
+			BEGIN
+				ASSERT(~(InPath IN SELF.mode), 100);
+				SELF.DoBegin(mode);
+				INCL(SELF.mode, InPath)
+			END Begin;
 
 			(** exit current subpath (if open) and end current path **)
-			PROCEDURE{ABSTRACT} DoEnd*(); END DoEnd;
-(*
+			PROCEDURE End* ();
+			BEGIN
+				ASSERT(InPath IN SELF.mode, 100);
+				IF InSubpath IN SELF.mode THEN SELF.DoExit(0, 0) END;
+				SELF.DoEnd();
+				EXCL(SELF.mode, InPath)
+			END End;
+
 			(** end current subpath (if open) and begin new subpath **)
-			PROCEDURE MoveTo* (ctxt: Context; x, y: REAL);
-*)
+			PROCEDURE MoveTo* (x, y: REAL);
+			BEGIN
+				ASSERT(InPath IN SELF.mode, 100);
+				IF InSubpath IN SELF.mode THEN SELF.DoExit(0, 0) END;
+				SELF.DoEnter(x, y, 0, 0);
+				INCL(SELF.mode, InSubpath)
+			END MoveTo;
+
 			(** start subpath at inner point **)
-			PROCEDURE{ABSTRACT} DoEnter*(x, y, dx, dy: REAL); END DoEnter;
+			PROCEDURE Enter* (x, y, dx, dy: REAL);
+			BEGIN
+				ASSERT(InPath IN SELF.mode, 100);
+				IF InSubpath IN SELF.mode THEN SELF.DoExit(0, 0) END;
+				SELF.DoEnter(x, y, dx, dy);
+				INCL(SELF.mode, InSubpath)
+			END Enter;
 
 			(** end subpath at inner point **)
-			PROCEDURE{ABSTRACT} DoExit*(dx, dy: REAL); END DoExit;
+			PROCEDURE Exit* (dx, dy: REAL);
+			BEGIN
+				ASSERT(InSubpath IN SELF.mode, 100);
+				SELF.DoExit(dx, dy);
+				EXCL(SELF.mode, InSubpath)
+			END Exit;
 
 			(** close current subpath **)
-			PROCEDURE{ABSTRACT} DoClose*(); END DoClose;
+			PROCEDURE Close* ();
+			BEGIN
+				ASSERT(InSubpath IN SELF.mode, 100);
+				SELF.DoClose();
+				EXCL(SELF.mode, InSubpath)
+			END Close;
 
 			(** append line to current path **)
-			PROCEDURE{ABSTRACT} DoLine*(x, y: REAL); END DoLine;
+			PROCEDURE LineTo* (x, y: REAL);
+			BEGIN
+				ASSERT(InSubpath IN SELF.mode, 100);
+				SELF.DoLine(x, y)
+			END LineTo;
 
 			(** append arc to current path **)
-			PROCEDURE{ABSTRACT} DoArc*(x, y, x0, y0, x1, y1, x2, y2: REAL); END DoArc;
+			PROCEDURE ArcTo* (x, y, x0, y0, x1, y1, x2, y2: REAL);
+			BEGIN
+				ASSERT(InSubpath IN SELF.mode, 100);
+				SELF.DoArc(x, y, x0, y0, x1, y1, x2, y2)
+			END ArcTo;
 
 			(** append cubic bezier to current path **)
-			PROCEDURE{ABSTRACT} DoBezier*(x, y, x1, y1, x2, y2: REAL); END DoBezier;
-
+			PROCEDURE BezierTo* (x, y, x1, y1, x2, y2: REAL);
+			BEGIN
+				ASSERT(InSubpath IN SELF.mode, 100);
+				SELF.DoBezier(x, y, x1, y1, x2, y2)
+			END BezierTo;
+	
 			(** append character outlines to current path at given point; advance current point to position after last character **)
 			PROCEDURE ShowAt* (x, y: REAL; str: ARRAY OF CHAR);
 			BEGIN
@@ -340,28 +385,14 @@ MODULE Gfx; (** portable *)	(* eos  *)
 				IF InSubpath IN SELF.mode THEN SELF.DoExit(0, 0) END;
 				SELF.DoShow(x, y, str)
 			END ShowAt;
-
+			
 			(** append character outlines to current path at current point; advance current point to position after last character **)
-			PROCEDURE{ABSTRACT} DoShow*(x, y: REAL; VAR str: ARRAY OF CHAR); END DoShow;
-
-			(** painting operators (potential for optimization) **)
-			PROCEDURE{ABSTRACT} DoRect*(x0, y0, x1, y1: REAL); (* default implementation *)
+			PROCEDURE Show* (str: ARRAY OF CHAR);
 			BEGIN
-				SELF.DoEnter(x0, y0, 0, y0 - y1);
-				SELF.DoLine(x1, y0); SELF.DoLine(x1, y1); SELF.DoLine(x0, y1); SELF.DoLine(x0, y0);
-				SELF.DoExit(x1 - x0, 0)
-			END DoRect;
-
-			PROCEDURE{ABSTRACT} DoEllipse*(x, y, rx, ry: REAL); (* default implementation *)
-				VAR xr: REAL;
-			BEGIN
-				xr := x + rx;
-				IF xr # x THEN
-					SELF.DoEnter(xr, y, 0, ry);
-					SELF.DoArc(xr, y, x, y, xr, y, x, y + ry);
-					SELF.DoExit(0, ry)
-				END
-			END DoEllipse;
+				ASSERT(InPath IN SELF.mode, 100);
+				IF InSubpath IN SELF.mode THEN SELF.DoExit(0, 0) END;
+				SELF.DoShow(SELF.cpx, SELF.cpy, str)
+			END Show;
 
 		(**--- Path Flattening ---**)
 
@@ -835,11 +866,9 @@ MODULE Gfx; (** portable *)	(* eos  *)
 			END GetOutline;
 
 		(**--- Drawing Operations ---**)
+
 			(** draw current path in requested mode **)
-			PROCEDURE{ABSTRACT} DoRender*(mode: SET); END DoRender;
-(*
-			(** draw current path in requested mode **)
-			PROCEDURE Render* (SELF: Context; mode: SET);
+			PROCEDURE Render* (mode: SET);
 			BEGIN
 				ASSERT(~(InPath IN SELF.mode), 100);
 				EXCL(mode, Record);
@@ -847,14 +876,13 @@ MODULE Gfx; (** portable *)	(* eos  *)
 					SELF.DoRender(mode)
 				END
 			END Render;
-*)
+
 			(** draw given path in requested mode **)
 			PROCEDURE DrawPath* (path: GfxPaths.Path; mode: SET);
 				VAR scan: GfxPaths.Scanner;
 			BEGIN
 				ASSERT(~(InPath IN SELF.mode), 100);
 				IF path = SELF.path THEN
-					ASSERT(~(InPath IN SELF.mode), 100);
 					EXCL(mode, Record);
 					IF mode # {} THEN
 						SELF.DoRender(mode)
@@ -966,6 +994,56 @@ MODULE Gfx; (** portable *)	(* eos  *)
 				NEW(pat); pat.img := img; pat.px := px; pat.py := py;
 				RETURN pat
 			END NewPattern;
+
+		(**--- Implementation ---**)
+			(** draw current path in requested mode **)
+			PROCEDURE{ABSTRACT} DoRender*(mode: SET); END DoRender;
+
+			(** start new path **)
+			PROCEDURE{ABSTRACT} DoBegin*(mode: SET); END DoBegin;
+
+			(** exit current subpath (if open) and end current path **)
+			PROCEDURE{ABSTRACT} DoEnd*(); END DoEnd;
+
+			(** start subpath at inner point **)
+			PROCEDURE{ABSTRACT} DoEnter*(x, y, dx, dy: REAL); END DoEnter;
+
+			(** end subpath at inner point **)
+			PROCEDURE{ABSTRACT} DoExit*(dx, dy: REAL); END DoExit;
+
+			(** close current subpath **)
+			PROCEDURE{ABSTRACT} DoClose*(); END DoClose;
+
+			(** append line to current path **)
+			PROCEDURE{ABSTRACT} DoLine*(x, y: REAL); END DoLine;
+
+			(** append arc to current path **)
+			PROCEDURE{ABSTRACT} DoArc*(x, y, x0, y0, x1, y1, x2, y2: REAL); END DoArc;
+
+			(** append cubic bezier to current path **)
+			PROCEDURE{ABSTRACT} DoBezier*(x, y, x1, y1, x2, y2: REAL); END DoBezier;
+
+			(** append character outlines to current path at current point; advance current point to position after last character **)
+			PROCEDURE{ABSTRACT} DoShow*(x, y: REAL; VAR str: ARRAY OF CHAR); END DoShow;
+
+			(** painting operators (potential for optimization) **)
+			PROCEDURE{ABSTRACT} DoRect*(x0, y0, x1, y1: REAL); (* default implementation *)
+			BEGIN
+				SELF.DoEnter(x0, y0, 0, y0 - y1);
+				SELF.DoLine(x1, y0); SELF.DoLine(x1, y1); SELF.DoLine(x0, y1); SELF.DoLine(x0, y0);
+				SELF.DoExit(x1 - x0, 0)
+			END DoRect;
+
+			PROCEDURE{ABSTRACT} DoEllipse*(x, y, rx, ry: REAL); (* default implementation *)
+				VAR xr: REAL;
+			BEGIN
+				xr := x + rx;
+				IF xr # x THEN
+					SELF.DoEnter(xr, y, 0, ry);
+					SELF.DoArc(xr, y, x, y, xr, y, x, y + ry);
+					SELF.DoExit(0, ry)
+				END
+			END DoEllipse;
 
 		END Context;
 
@@ -1244,73 +1322,55 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** start new path **)
 	PROCEDURE Begin* (ctxt: Context; mode: SET);
 	BEGIN
-		ASSERT(~(InPath IN ctxt.mode), 100);
-		ctxt.DoBegin(mode);
-		INCL(ctxt.mode, InPath)
+		ctxt.Begin(mode);
 	END Begin;
 
 	(** exit current subpath (if open) and end current path **)
 	PROCEDURE End* (ctxt: Context);
 	BEGIN
-		ASSERT(InPath IN ctxt.mode, 100);
-		IF InSubpath IN ctxt.mode THEN ctxt.DoExit(0, 0) END;
-		ctxt.DoEnd();
-		EXCL(ctxt.mode, InPath)
+		ctxt.End();
 	END End;
 
 	(** end current subpath (if open) and begin new subpath **)
 	PROCEDURE MoveTo* (ctxt: Context; x, y: REAL);
 	BEGIN
-		ASSERT(InPath IN ctxt.mode, 100);
-		IF InSubpath IN ctxt.mode THEN ctxt.DoExit(0, 0) END;
-		ctxt.DoEnter(x, y, 0, 0);
-		INCL(ctxt.mode, InSubpath)
+		ctxt.MoveTo(x, y);
 	END MoveTo;
 
 	(** start subpath at inner point **)
 	PROCEDURE Enter* (ctxt: Context; x, y, dx, dy: REAL);
 	BEGIN
-		ASSERT(InPath IN ctxt.mode, 100);
-		IF InSubpath IN ctxt.mode THEN ctxt.DoExit(0, 0) END;
-		ctxt.DoEnter(x, y, dx, dy);
-		INCL(ctxt.mode, InSubpath)
+		ctxt.Enter(x, y, dx, dy);
 	END Enter;
 
 	(** end subpath at inner point **)
 	PROCEDURE Exit* (ctxt: Context; dx, dy: REAL);
 	BEGIN
-		ASSERT(InSubpath IN ctxt.mode, 100);
-		ctxt.DoExit(dx, dy);
-		EXCL(ctxt.mode, InSubpath)
+		ctxt.Exit(dx, dy);
 	END Exit;
 
 	(** close current subpath **)
 	PROCEDURE Close* (ctxt: Context);
 	BEGIN
-		ASSERT(InSubpath IN ctxt.mode, 100);
-		ctxt.DoClose();
-		EXCL(ctxt.mode, InSubpath)
+		ctxt.Close();
 	END Close;
 
 	(** append line to current path **)
 	PROCEDURE LineTo* (ctxt: Context; x, y: REAL);
 	BEGIN
-		ASSERT(InSubpath IN ctxt.mode, 100);
-		ctxt.DoLine(x, y)
+		ctxt.LineTo(x, y);
 	END LineTo;
 
 	(** append arc to current path **)
 	PROCEDURE ArcTo* (ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: REAL);
 	BEGIN
-		ASSERT(InSubpath IN ctxt.mode, 100);
-		ctxt.DoArc(x, y, x0, y0, x1, y1, x2, y2)
+		ctxt.ArcTo(x, y, x0, y0, x1, y1, x2, y2);
 	END ArcTo;
 
 	(** append cubic bezier to current path **)
 	PROCEDURE BezierTo* (ctxt: Context; x, y, x1, y1, x2, y2: REAL);
 	BEGIN
-		ASSERT(InSubpath IN ctxt.mode, 100);
-		ctxt.DoBezier(x, y, x1, y1, x2, y2)
+		ctxt.BezierTo(x, y, x1, y1, x2, y2);
 	END BezierTo;
 
 	(** append character outlines to current path at given point; advance current point to position after last character **)
@@ -1322,9 +1382,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(** append character outlines to current path at current point; advance current point to position after last character **)
 	PROCEDURE Show* (ctxt: Context; str: ARRAY OF CHAR);
 	BEGIN
-		ASSERT(InPath IN ctxt.mode, 100);
-		IF InSubpath IN ctxt.mode THEN ctxt.DoExit(0, 0) END;
-		ctxt.DoShow(ctxt.cpx, ctxt.cpy, str)
+		ctxt.Show(str);
 	END Show;
 
 
@@ -1349,12 +1407,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 	(** store flattened current path in given path  **)
 	PROCEDURE GetFlattenedPath* (ctxt: Context; path: GfxPaths.Path);
-		VAR data: PathData;
 	BEGIN
-		ASSERT(ctxt.path # path, 100);
-		path.Clear();
-		data.path := path;
-		ctxt.path.EnumFlattened(ctxt.flatness, EnumPathElem, data)
+		ctxt.GetFlattenedPath(path);
 	END GetFlattenedPath;
 
 

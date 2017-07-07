@@ -495,6 +495,7 @@ VAR
 	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): SET;
 	(** The GetFileSize function retrieves the size, in bytes, of the specified file. *)
 	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: LONGINT ): LONGINT;
+	GetFileSizeEx-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSize: HUGEINT ): BOOL;
 	(** The GetFileTime function retrieves the date and time that a file was created, last accessed, and last modified. *)
 	GetFileTime-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																	VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime ): BOOL;
@@ -728,6 +729,9 @@ VAR
 	SetFilePointer-: PROCEDURE {WINAPI} ( hFile: HANDLE;  lDistanceToMove: LONGINT;
 																	    VAR lpDistanceToMoveHigh: LONGINT;
 																	    dwMoveMethod: LONGINT ): LONGINT;
+	SetFilePointerEx-: PROCEDURE {WINAPI} ( hFile: HANDLE;  lDistanceToMove: HUGEINT;
+																		VAR lpNewFilePointer: HUGEINT;
+																		dwMoveMethod: LONGINT ): BOOL;
 	(** The SetFileTime function sets the date and time that a file was created, last accessed, or last modified. *)
 	SetFileTime-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																    VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime ): BOOL;
@@ -886,6 +890,7 @@ VAR
 		GetProcAddress(mod, "GetExitCodeProcess",SYSTEM.VAL(ADDRESS,GetExitCodeProcess));
 		GetProcAddress(mod, "GetFileAttributesA",SYSTEM.VAL(ADDRESS,GetFileAttributes));
 		GetProcAddress(mod, "GetFileSize",SYSTEM.VAL(ADDRESS,GetFileSize));
+		GetProcAddress(mod, "GetFileSizeEx",SYSTEM.VAL(ADDRESS,GetFileSizeEx));
 		GetProcAddress(mod, "GetFileTime",SYSTEM.VAL(ADDRESS,GetFileTime));
 		GetProcAddress(mod, "GetFullPathNameA",SYSTEM.VAL(ADDRESS,GetFullPathName));
 		GetProcAddress(mod, "GetLastError",SYSTEM.VAL(ADDRESS,GetLastError));
@@ -961,6 +966,7 @@ VAR
 		GetProcAddress(mod, "SetEvent",SYSTEM.VAL(ADDRESS,SetEvent));
 		GetProcAddress(mod, "SetFileAttributesA",SYSTEM.VAL(ADDRESS,SetFileAttributes));
 		GetProcAddress(mod, "SetFilePointer",SYSTEM.VAL(ADDRESS,SetFilePointer));
+		GetProcAddress(mod, "SetFilePointerEx",SYSTEM.VAL(ADDRESS,SetFilePointerEx));
 		GetProcAddress(mod, "SetFileTime",SYSTEM.VAL(ADDRESS,SetFileTime));
 		GetProcAddress(mod, "SetLocalTime",SYSTEM.VAL(ADDRESS,SetLocalTime));
 		GetProcAddress(mod, "SetThreadAffinityMask",SYSTEM.VAL(ADDRESS,SetThreadAffinityMask));

@@ -14,6 +14,7 @@ CONST
 	MsgSetLanguage* = 10;
 	MsgInvalidate*= 11;
 	MsgSerialize*=12;
+	MsgMerged*=15;
 	
 	MsgSubPointerMove* = 0; MsgSubPointerDown* = 1; MsgSubPointerUp* = 2; MsgSubPointerLeave* = 3;
 	MsgSubFocusGot* = 0; MsgSubFocusLost* = 1; MsgSubMasterFocusGot* = 2; MsgSubMasterFocusLost* = 3;
@@ -90,7 +91,7 @@ TYPE
 		head, num: LONGINT;
 		msgQ: POINTER TO ARRAY OF Message;
 		owner: MsgSequencer;
-		
+
 		PROCEDURE &InitQ(o: MsgSequencer; size: SIZE);
 		BEGIN
 			head := 0; num := 0;
@@ -146,7 +147,7 @@ TYPE
 		CONST
 			MergePointers = TRUE;
 			MergeInvalidates = TRUE;
-			(*MergeInvokeEvents = FALSE;*)
+			MergeInvokeEvents = FALSE;
 
 			PROCEDURE Merge(VAR x,y,dx,dy: LONGINT; X,Y,dX,dY: LONGINT);
 			VAR nx, ny, ndx, ndy: LONGINT;
@@ -210,18 +211,17 @@ TYPE
 
 						
 			
-			(*(* filter out duplicate MsgInvokeEvents - was a hack (but effecting in avoiding MessageQ congestion)*)
+			(* filter out duplicate MsgInvokeEvents - was a hack (but effecting in avoiding MessageQ congestion)*)
 			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  
 				i := num - 1;
 				WHILE i >= 0 DO
 					pos := (head + i) MOD LEN(msgQ);
 					IF (msgQ[pos].msgType = MsgInvokeEvent) & (msgQ[pos].msgSubType = 0) & (msgQ[pos].event = msg.event)& (msgQ[pos].sender = msg.sender) & (msgQ[pos].ext = msg.ext) THEN
-						RETURN TRUE
+						msgQ[pos].msgType := MsgMerged;
 					END;
 					DEC(i)
 				END
 			END;
-			*)
 
 			IF MergeInvalidates & (msg.msgType = MsgInvalidate) & (num > 0)  THEN
 				i := num-1;
@@ -274,7 +274,7 @@ TYPE
 									TRACE(msgQ[pos].x, msgQ[pos].dx, msgQ[pos].y, msgQ[pos].dy);
 								END;
 
-								msgQ[pos].msgSubType := MsgSubNothing;
+								msgQ[pos].msgType := MsgMerged;
 								i := 0;
 							ELSIF Contained(msg, msgQ[pos]) THEN
 								IF TraceQueue OR debug  THEN
@@ -284,7 +284,7 @@ TYPE
 								END;
 
 								msg.x := msgQ[pos].x; msg.y := msgQ[pos].y; msg.dx := msgQ[pos].dx; msg.dy := msgQ[pos].dy;
-								msgQ[pos].msgSubType := MsgSubNothing;
+								msgQ[pos].msgType := MsgMerged;
 								i := 0;
 							(*ELSE
 								Merge(msg.x, msg.y, msg.dx, msg.dy, msgQ[pos].x, msgQ[pos].y, msgQ[pos].dx, msgQ[pos].dy);
@@ -295,7 +295,7 @@ TYPE
 							IF TraceQueue OR debug  THEN
 								TRACE("replace ", pos);
 							END;
-							msgQ[pos].msgSubType := MsgSubNothing;
+								msgQ[pos].msgType := MsgMerged;
 							i := 0;
 						END;
 					END;
@@ -492,16 +492,24 @@ TYPE
 		(* Remove a message from the queue. Block if no message is available but awake if queue is terminated by call to Stop *)
 		(* return if alive *)
 		PROCEDURE Get(VAR msg : Message) : BOOLEAN;
+		VAR b: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			waiting := TRUE;
-			AWAIT((msgQ.num # 0) OR (invalidateQ.num # 0) OR ~alive);
-			waiting := FALSE;
-			IF ~alive THEN RETURN FALSE END;
-			IF msgQ.num # 0 THEN
-				RETURN msgQ.Get(msg, TraceQueue OR (debug = SELF));
-			ELSE
-				RETURN invalidateQ.Get(msg, TraceQueue OR (debug = SELF));
-			END;
+			REPEAT
+				AWAIT((msgQ.num # 0) OR (invalidateQ.num # 0) OR ~alive);
+				waiting := FALSE;
+				IF ~alive THEN RETURN FALSE END;
+				IF (msgQ.num # 0) & (invalidateQ.prio <= 10) THEN
+					b := msgQ.Get(msg, TraceQueue OR (debug = SELF));
+					IF invalidateQ.num > 0 THEN 
+						INC(invalidateQ.prio);
+					END;
+				ELSE
+					 b := invalidateQ.Get(msg, TraceQueue OR (debug = SELF));
+					invalidateQ.prio := 0;
+				END;
+			UNTIL msg.msgType # MsgMerged;
+			RETURN b;
 		END Get;
 
 	BEGIN {ACTIVE, SAFE}

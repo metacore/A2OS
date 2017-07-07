@@ -1551,50 +1551,50 @@ TYPE
 					Emit(Push(Basic.invalidPosition, lr));
 				END;
 				Emit(Push(Basic.invalidPosition,fp));
-			END;
-			
-			IF backend.cooperative & (callconv = SyntaxTree.OberonCallingConvention) THEN
-				IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
-					GetCodeSectionNameForSymbol(procedure, name);
-					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
-				ELSE
-					Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
-				END;
-				IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
-				Emit(Push(Basic.invalidPosition,op1));
-				Emit(Mov(Basic.invalidPosition,fp, sp));
-				body := procedure.procedureScope.body;
-				IF (body # NIL) & (body.code = NIL) & ~procedure.procedureScope.body.isUnchecked THEN
-					NEW(call, section);
-					NEW(nocall, section);
-					reg := NewRegisterOperand(addressType);
-					IntermediateCode.InitImmediate(op1,addressType, varSize);
-					Emit(Sub(Basic.invalidPosition,reg, sp, op1));
-					BrltL(call, sp, reg);
-					IntermediateCode.InitMemory(op2, addressType,ap,ToMemoryUnits(system,system.addressSize*10));
-					BrgeL(nocall, sp, op2);
-					call.Resolve(section.pc);
-					Emit(Push(Basic.invalidPosition, reg));
-					ReleaseIntermediateOperand(reg);
-					parametersSize := ProcedureParametersSize(backend.system,procedure);
-					IntermediateCode.InitImmediate(op2,addressType, parametersSize);
-					Emit(Push(Basic.invalidPosition, op2));
-					CallThis(position, "Activities","ExpandStack",2);
-					Emit(Result(Basic.invalidPosition, sp));
-					nocall.Resolve(section.pc);
-				END;
-			ELSIF callconv # SyntaxTree.InterruptCallingConvention THEN
+
 				IF procedure # NIL THEN
 					body := procedure.procedureScope.body;
 				ELSE
 					body := NIL;
 				END;
-				IF backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
-					Emit(Push(Basic.invalidPosition, one)) ;
-					procedureType.SetParametersOffset(1); 
-					ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
+
+				IF backend.cooperative THEN
+					IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
+						GetCodeSectionNameForSymbol(procedure, name);
+						Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
+					ELSE
+						Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
+					END;
+					IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
+					Emit(Push(Basic.invalidPosition,op1));
+					Emit(Mov(Basic.invalidPosition,fp, sp));
+					IF (body # NIL) & (body.code = NIL) & ~procedure.procedureScope.body.isUnchecked THEN
+						NEW(call, section);
+						NEW(nocall, section);
+						reg := NewRegisterOperand(addressType);
+						IntermediateCode.InitImmediate(op1,addressType, varSize);
+						Emit(Sub(Basic.invalidPosition,reg, sp, op1));
+						BrltL(call, sp, reg);
+						IntermediateCode.InitMemory(op2, addressType,ap,ToMemoryUnits(system,system.addressSize*10));
+						BrgeL(nocall, sp, op2);
+						call.Resolve(section.pc);
+						Emit(Push(Basic.invalidPosition, reg));
+						ReleaseIntermediateOperand(reg);
+						parametersSize := ProcedureParametersSize(backend.system,procedure);
+						IntermediateCode.InitImmediate(op2,addressType, parametersSize);
+						Emit(Push(Basic.invalidPosition, op2));
+						CallThis(position, "Activities","ExpandStack",2);
+						Emit(Result(Basic.invalidPosition, sp));
+						nocall.Resolve(section.pc);
+					END;
+				ELSE
+					IF backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
+						Emit(Push(Basic.invalidPosition, one)) ;
+						procedureType.SetParametersOffset(1); 
+						ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
+					END;
+					Emit(Mov(Basic.invalidPosition, fp, sp));
 				END;
-				Emit(Mov(Basic.invalidPosition, fp, sp));
 			END;
 			Emit(Enter(Basic.invalidPosition, callconv, varSize));
 			SELF.section := prevSection;

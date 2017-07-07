@@ -1145,7 +1145,7 @@ BEGIN
 	RETURN bp;
 END CheckBP;
 
-PROCEDURE SetPC(p: DataBlockU);
+PROCEDURE SetPC*(p: DataBlockU);
 VAR bp: ADDRESS;
 BEGIN
 	IF p # NIL THEN
@@ -1422,6 +1422,7 @@ VAR p: ANY; dim: SIZE;
 			NewArr(p, tag, GetSize(), dim, FALSE);
 		END;
 		SetSizes(p);
+		SetPC(p);
 		dest := p;
 END NewArray;
 

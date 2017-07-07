@@ -1063,8 +1063,27 @@ TYPE
 		type-, size-, n-, tdadr-: LONGINT
 	END;
 	
+	(* half-stub for module Info to work *)
 	PROCEDURE FindVar*(mod: Modules.Module; CONST name: ARRAY OF CHAR; VAR v: Variable): BOOLEAN;
+	VAR offset: SIZE; size: SIZE;adr: ADDRESS;
 	BEGIN
+		offset := FindByName(mod.refs, 0,name, TRUE);
+		IF offset < 0 THEN RETURN FALSE END;
+		IF ~Expect(GetChar(mod.refs, offset) = sfVariable) THEN RETURN FALSE END;
+		SkipSize(offset);
+		SkipString(mod.refs, offset); 
+		IF GetChar(mod.refs, offset) = sfRelative THEN
+			size := GetSize(mod.refs, offset);
+		ELSE (* absolute *)
+			adr := GetAddress(mod.refs, offset);
+		END;
+		
+		v.adr := adr;
+		v.type := 0;
+		v.size := 0;
+		v.n := 0;
+		v.tdadr :=  0;
+		RETURN TRUE;
 	END FindVar;
 	
 	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT);

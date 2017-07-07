@@ -463,11 +463,14 @@ BEGIN
 	NEW(options);
 	options.Add("s", "sort", Options.Integer);
 	options.Add(0X, "pc", Options.Flag);
+	options.Add(0X, "gc", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetInteger("sort", sortMode) THEN sortMode := SortNone; END;
 		context.arg.SkipWhitespace; context.arg.String(mask);
 		NEW(analyzer, MaxNofTypes);
+		IF options.GetFlag("gc") THEN Heaps.LazySweepGC END; (* slight inaccuracy here: other processes can kick in now *)
 		Machine.Acquire(Machine.Heaps);
+		Heaps.FullSweep(); (* the heap might contain wrong pointers in the freed part *)
 		memBlock := Machine.memBlockHead;
 		WHILE memBlock # NIL DO
 			p := memBlock.beginBlockAdr;
@@ -813,8 +816,10 @@ BEGIN
 	ASSERT(module # NIL); 
 	IF (module # NIL) THEN
 		IF Reflection.FindVar(module, "currentMarkValue", variable) THEN
+			(*
 			ASSERT(variable.n = 1); (* currentMarkValue is not an array *)
 			ASSERT(variable.type = 6); (*? type is LONGINT, currently no support for 64-bit addresses *)
+			*)
 			address := variable.adr;
 		ELSE HALT(100);
 		END;
@@ -841,10 +846,22 @@ Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 Info.AllObjects ~
 Info.AllObjects * ~
 
-Info.AllObjects --sort=0 * ~
-Info.AllObjects --sort=1 * ~
-Info.AllObjects --sort=2 * ~
-Info.AllObjects --sort=3 * ~
+(* view by type *)
+Info.AllObjects --sort=0 * ~ sort by none
+Info.AllObjects --sort=1 * ~ sort by count
+Info.AllObjects --sort=2 * ~ sort by size
+Info.AllObjects --sort=3 * ~ sort by total size
+Info.AllObjects --sort=4 * ~ sort by name
+
+(* view by allocation pc *)
+Info.AllObjects --pc --sort=0 * ~ sort by none
+Info.AllObjects --pc --sort=1 * ~ sort by count
+Info.AllObjects --pc --sort=2 * ~ sort by size
+Info.AllObjects --pc --sort=3 * ~ sort by total size
+Info.AllObjects --pc --sort=4 * ~ sort by name
+
+
+
 
 Info.TraceModule PET ~
 

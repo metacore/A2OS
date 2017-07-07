@@ -9657,6 +9657,7 @@ TYPE
 			descr := GetArrayDesc( LEN( a,0 ) );  
 			dest := descr;
 			NewData;
+			Heaps.SetPC(data);
 		ELSE
 			i := 0;
 			WHILE (i < dim) & same DO
@@ -9665,7 +9666,8 @@ TYPE
 			END;
 			IF ~same THEN
 				IF (RangeFlag IN GetFlags( dest )) THEN Err( "Array's shape must not be modified (is RANGE !) " );  END;
-				NewData
+				NewData;
+				Heaps.SetPC(data);
 			ELSE ClearData
 			END;
 		END;		
@@ -9674,6 +9676,7 @@ TYPE
 	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray );
 	BEGIN
 		AllocateTensorA(a,elementSize,tag,dest);
+		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
 	END AllocateArrayA;
 
 	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF LONGINT;  Size: SIZE; tag: ADDRESS );

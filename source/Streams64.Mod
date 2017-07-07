@@ -1,6 +1,6 @@
 (* Aos, Copyright 2001, Pieter Muller, ETH Zurich *)
 
-MODULE Streams;   (** AUTHOR "pjm/be"; PURPOSE "I/O buffering and formatted writing and reading"; *)
+MODULE Streams64;   (** AUTHOR "pjm/be"; PURPOSE "I/O buffering and formatted writing and reading"; *)
 
 IMPORT SYSTEM;
 
@@ -1052,7 +1052,7 @@ VAR
 
 BEGIN
 	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";  InitHL;
-END Streams.
+END Streams64.
 
 (**
 Notes:

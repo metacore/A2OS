@@ -280,7 +280,7 @@ TYPE
 			rev,setx: BOOLEAN;
 		BEGIN
 			(* standardization && trivial reject *)
-			IF( x0 < x1 ) THEN 
+			IF( x1 - x0 > 0 ) THEN 
 				IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END; 
 				stx := 1; 
 			ELSE 
@@ -291,7 +291,7 @@ TYPE
 				Swap(r.l,r.r); 
 			END;
 
-			IF ( y0 < y1 ) THEN 
+			IF ( y1 - y0 > 0 ) THEN 
 				IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END; 
 				sty:=1; 
 			ELSE 

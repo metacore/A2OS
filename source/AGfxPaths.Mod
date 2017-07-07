@@ -627,7 +627,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 				END
 			END Scan;
 			
-			PROCEDURE- get (VAR x, y: REAL);
+			PROCEDURE get (VAR x, y: REAL);
 			BEGIN
 				IF SELF.cpos = CoordBlockSize THEN
 					SELF.curCB := SELF.curCB.next; SELF.cpos := 0

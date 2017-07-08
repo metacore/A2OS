@@ -1,6 +1,6 @@
 MODULE WinFiles64;   (*AUTHOR "fof,ejz"; PURPOSE "Windows file system  for WinAos"; *)
 
-IMPORT SYSTEM, Machine, Kernel32, KernelLog, Modules, Kernel, Files := Files64, Commands := Commands64;
+IMPORT SYSTEM, Machine, Kernel32, KernelLog, Modules, Kernel, Files := Files64, Commands;
 (* orange marked lines denote overloaded methods *)
 
 CONST

@@ -1119,10 +1119,8 @@ PROCEDURE AddSearchPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFS") # NIL THEN 
-		cmd := "WinFS.AddSearchPath";
-	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN 
-		cmd := "UnixFiles.AddSearchPath";
+	IF Modules.ModuleByName("WinFiles64") # NIL THEN 
+		cmd := "WinFiles64.AddSearchPath";
 	END;
 	IF cmd # "" THEN 
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);

@@ -456,7 +456,6 @@ TYPE
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
 			IF hfile # Kernel32.InvalidHandleValue THEN
 				ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False);
-				ASSERT(fsize <= MAX(LONGINT));(*! 32-bit fs *)
 				s := Kernel32.GetFileAttributes( name );
 				IF Kernel32.FileAttributeTemporary IN s THEN EXCL( s, Kernel32.FileAttributeTemporary );  res := Kernel32.SetFileAttributes( name, s );  ASSERT( res # 0 );  s := Kernel32.GetFileAttributes( name ) END;
 				flags := FileFlags( s )
@@ -1269,4 +1268,4 @@ BEGIN
 	Init();  Modules.InstallTermHandler( Finalization ); SetPaths;
 END WinFiles64.
 
-Compiler.Compile -p=Win32G Streams64.Mod Files64.Mod Commands64.Mod Win32.WinFiles64.Mod
+Compiler.Compile -p=Win32G Streams64.Mod Files64.Mod Win32.WinFiles64.Mod

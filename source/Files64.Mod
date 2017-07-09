@@ -58,6 +58,7 @@ CONST
 
 TYPE
 	BESTSIZE* = Streams.BESTSIZE;
+
 (** All record fields are read-only for users, and read-write for extenders. *)
 
 	FileName* = ARRAY PrefixLength+NameLength OF CHAR;
@@ -171,16 +172,16 @@ TYPE
 
 	Volume* = OBJECT	(** shareable *)
 		VAR
-			size*: BESTSIZE;	(** size in blocks *)
+			size*: LONGINT;	(** size in blocks *)
 			blockSize*: LONGINT;	(** block size in bytes *)
 			flags*: SET;	(** ReadOnly, Removable, Boot *)
 			name*: ARRAY 32 OF CHAR;	(** descriptive name - e.g. for matching with Partitions.Show *)
 
 			map: POINTER TO ARRAY OF SET;	(* Block allocation table *)
-			used: BESTSIZE;	(* used blocks *)
-			reserved: BESTSIZE;	(* blocks reserved for system *)
+			used: LONGINT;	(* used blocks *)
+			reserved: LONGINT;	(* blocks reserved for system *)
 
-		PROCEDURE AllocBlock*(hint: BESTSIZE; VAR adr: BESTSIZE);
+		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
 		BEGIN {EXCLUSIVE}
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
 			IF size - used <= reserved THEN HALT(VolumeFull) END;
@@ -200,7 +201,7 @@ TYPE
 			INC(used)
 		END AllocBlock;
 
-		PROCEDURE FreeBlock*(adr: BESTSIZE);
+		PROCEDURE FreeBlock*(adr: Address);
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
@@ -208,7 +209,7 @@ TYPE
 			DEC(used)
 		END FreeBlock;
 
-		PROCEDURE MarkBlock*(adr: BESTSIZE);
+		PROCEDURE MarkBlock*(adr: Address);
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
@@ -216,22 +217,22 @@ TYPE
 			INC(used)
 		END MarkBlock;
 
-		PROCEDURE Marked*(adr: BESTSIZE): BOOLEAN;
+		PROCEDURE Marked*(adr: Address): BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
 			RETURN (adr MOD SetSize) IN map[adr DIV SetSize]
 		END Marked;
 
-		PROCEDURE Available*(): BESTSIZE;
+		PROCEDURE Available*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN size - used
 		END Available;
 
-		PROCEDURE GetBlock*(adr: BESTSIZE; VAR blk: ARRAY OF CHAR);
+		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END GetBlock;	(* abstract *)
 
-		PROCEDURE PutBlock*(adr: BESTSIZE; VAR blk: ARRAY OF CHAR);
+		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END PutBlock;	(* abstract *)
 
 		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem (although it is ugly). *)
@@ -242,14 +243,13 @@ TYPE
 
 		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system (out of disk space trap occurs when less than this amount of blocks are present). *)
 
-		PROCEDURE Init*(flags: SET; size, reserved: BESTSIZE);
-		VAR maplen: BESTSIZE;
+		PROCEDURE Init*(flags: SET; size, reserved: LONGINT);
+		VAR maplen: LONGINT;
 		BEGIN
 			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
 			IF ~(ReadOnly IN flags) THEN
 				maplen := (size + SetSize) DIV SetSize;
-				ASSERT( maplen = LONGINT( maplen)); (*!TODO 64 bit file access *)
-				NEW(map, LONGINT( maplen));
+				NEW(map, maplen);
 				WHILE maplen > 0 DO DEC(maplen); map[maplen] := {} END;
 				INCL(map[0], 0);	(* reserve sector 0 (illegal to use) *)
 				used := 0

@@ -48,6 +48,7 @@ CONST
 	Flag* = 0;
 	String* = 1;
 	Integer* = 2;
+	Real*=3;
 
 	Unknown = -1;
 
@@ -70,6 +71,7 @@ TYPE
 		name : Name; (* multi character name *)
 		type : LONGINT; (* Flag, String or Integer *)
 		value : LONGINT; (* Integer value if type = Integer *)
+		rvalue: LONGREAL; (*real value if type = real*)
 		string : Parameter; (* String value if type = String *)
 	END;
 
@@ -201,6 +203,25 @@ TYPE
 			RETURN SetStringIntern(ch, name, string, FALSE);
 		END SetString;
 
+
+		
+		PROCEDURE GetReal*(CONST name : Name; VAR real: LONGREAL) : BOOLEAN;
+		VAR index: LONGINT;
+		BEGIN{EXCLUSIVE}
+			index:=FindOption(name);
+			IF (index#Invalid) THEN
+				IF (options[index].type=Real) THEN
+					IF(options[index].isSet) THEN
+						real:=options[index].rvalue;
+						RETURN TRUE;
+					END;
+				ELSE
+					WrongUsage(options[index]);
+				END;
+			END;
+			RETURN FALSE;
+		END GetReal;
+
 		(** Unset all options *)
 		PROCEDURE Clear*;
 		VAR i : LONGINT;
@@ -209,7 +230,8 @@ TYPE
 				options[i].isSet := FALSE;
 			END;
 		END Clear;
-
+		
+		
 		(** Remove all declared options *)
 		PROCEDURE Reset*;
 		VAR i : LONGINT;
@@ -222,6 +244,7 @@ TYPE
 				options[i].name := "";
 				options[i].type := Unknown;
 				options[i].value := 0;
+				options[i].rvalue:=0;
 				options[i].string := "";
 			END;
 			setError := FALSE;
@@ -486,6 +509,11 @@ TYPE
 							error.String("Option "); ShowOption(ch, name);
 							error.String(" expects decimal number as parameter"); error.Ln;
 						END;
+					ELSIF (options[index].type=Real) THEN
+						options[index].timestamp:=timestamp;
+						Strings.StrToFloat(string, options[index].rvalue);
+						options[index].isSet:=TRUE;
+						RETURN TRUE;
 					ELSIF (error # NIL) THEN
 						error.String("Option "); ShowOption(ch, name);
 						error.String(" does not have a parameter"); error.Ln;

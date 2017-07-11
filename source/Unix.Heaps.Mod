@@ -780,6 +780,12 @@ VAR
 		p := S.VAL( ANY, ptr );
 		Machine.Release( Machine.Heaps );
 	END NewProtRec;
+	
+	PROCEDURE SetPC*( p: ANY );
+	BEGIN
+		(* not implemented *)
+		HALT( 100 );
+	END SetPC;	
 
 
 	(** Private compiler interface. Do not use. *)

@@ -499,14 +499,10 @@ TYPE
 				AWAIT((msgQ.num # 0) OR (invalidateQ.num # 0) OR ~alive);
 				waiting := FALSE;
 				IF ~alive THEN RETURN FALSE END;
-				IF (msgQ.num # 0) & (invalidateQ.prio <= 10) THEN
+				IF (msgQ.num # 0) THEN
 					b := msgQ.Get(msg, TraceQueue OR (debug = SELF));
-					IF invalidateQ.num > 0 THEN 
-						INC(invalidateQ.prio);
-					END;
 				ELSE
 					 b := invalidateQ.Get(msg, TraceQueue OR (debug = SELF));
-					invalidateQ.prio := 0;
 				END;
 			UNTIL msg.msgType # MsgMerged;
 			RETURN b;

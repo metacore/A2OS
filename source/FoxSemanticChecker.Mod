@@ -3424,7 +3424,7 @@ TYPE
 					hasError := TRUE
 				ELSE
 					first := ResolveExpression(first);
-					IF ~(first.type.resolved IS SyntaxTree.IntegerType) & ~IsCharacterType(first.type.resolved) THEN
+					IF ~IsIntegerType(first.type.resolved) & ~IsCharacterType(first.type.resolved) THEN
 						Error(first.position, "lower bound not integer or character");
 						hasError := TRUE
 					ELSE
@@ -3446,7 +3446,7 @@ TYPE
 					first := SyntaxTree.NewIntegerValue(x.position, 0);
 				END;
 				first := ResolveExpression(first);
-				IF first.type.resolved IS SyntaxTree.IntegerType THEN
+				IF IsIntegerType(first.type.resolved)  THEN
 					first := NewConversion(first.position, first, system.longintType, NIL)
 				ELSE
 					Error(first.position, "lower bound not integer");
@@ -3461,7 +3461,7 @@ TYPE
 					hasError := TRUE
 				ELSE
 					last := ResolveExpression(last);
-					IF ~(last.type.resolved IS SyntaxTree.IntegerType) & ~IsCharacterType(last.type.resolved) THEN
+					IF ~IsIntegerType(last.type.resolved) & ~IsCharacterType(last.type.resolved) THEN
 						Error(last.position, "lower bound not integer or character");
 						hasError := TRUE
 					ELSE
@@ -3494,7 +3494,7 @@ TYPE
 					END
 				END;
 				last := ResolveExpression(last);
-				IF last.type.resolved IS SyntaxTree.IntegerType THEN
+				IF IsIntegerType(last.type.resolved) THEN
 					last := NewConversion(last.position, last, system.longintType, NIL)
 				ELSE
 					Error(last.position, "upper bound not integer");
@@ -3508,7 +3508,7 @@ TYPE
 					step := SyntaxTree.NewIntegerValue(x.position, 1)
 				END;
 				step := ResolveExpression(step);
-				IF step.type.resolved IS SyntaxTree.IntegerType THEN
+				IF IsIntegerType(step.type.resolved) THEN
 					step := NewConversion(step.position, step, system.longintType, NIL)
 				ELSE
 					Error(step.position, "step size not integer");

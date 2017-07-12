@@ -3894,23 +3894,28 @@ TYPE
 			expression: SyntaxTree.Expression;
 			resultingType, leftType, baseType: SyntaxTree.Type;
 			skipLabel1: Label;
-			i, indexListSize, indexDim, rangeCount, indexCount, tensorRangeCount, srcDimOffset, destDimOffset, targetArrayDimensionality: LONGINT;
+			i, indexListSize, indexDim, srcDimOffset, destDimOffset, targetArrayDimensionality: LONGINT;
 			staticSourceLength, staticSourceIncrement, staticIndex, staticFirstIndex, staticLastIndex, staticStepSize, staticTargetLength: LONGINT;
 			variableOp: Operand;
 			variable: SyntaxTree.Variable;
+			prefixIndices, prefixRanges, suffixIndices, suffixRanges : LONGINT; tensorFound: BOOLEAN;
 
-			PROCEDURE CountIndices(parameters: SyntaxTree.ExpressionList; VAR indexCount: LONGINT; VAR rangeCount: LONGINT; VAR tensorRangeCount: LONGINT);
-			VAR expression: SyntaxTree.Expression;
+			PROCEDURE CountIndices(parameters: SyntaxTree.ExpressionList);
+			VAR e: SyntaxTree.Expression; i: LONGINT;
 			BEGIN
-				(* count the number of indices, ranges and tensorRanges in the index list *)
-				indexCount := 0; rangeCount := 0; tensorRangeCount := 0;
-				FOR i := 0 TO parameters.Length() - 1 DO
-					expression := parameters.GetExpression(i);
-					IF expression IS SyntaxTree.TensorRangeExpression THEN INC(tensorRangeCount)
-					ELSIF (expression.type # NIL) & (expression.type.resolved IS SyntaxTree.RangeType) THEN INC(indexCount)
-					ELSE INC(indexCount)
-					END
+				tensorFound := FALSE;
+				FOR i := 0 TO parameters.Length()-1 DO
+					e := parameters.GetExpression(i);
+					IF e IS SyntaxTree.TensorRangeExpression THEN
+						ASSERT(~tensorFound);
+						tensorFound := TRUE;
+					ELSIF e IS SyntaxTree.RangeExpression THEN
+						IF tensorFound THEN INC(suffixRanges) ELSE INC(prefixRanges) END;
+					ELSE
+						IF tensorFound THEN INC(suffixIndices) ELSE INC(prefixIndices) END;
+					END;
 				END;
+
 			END CountIndices;
 
 
@@ -3941,43 +3946,38 @@ TYPE
 
 			indexListSize := x.parameters.Length();
 
-			CountIndices(x.parameters, indexCount, rangeCount, tensorRangeCount);
-			ASSERT(tensorRangeCount <= 1);
+			CountIndices(x.parameters);
+			(*ASSERT(tensorRangeCount <= 1);*)
 
 			(* designate the array to be indexed over, perform tensor range check if known *)
 			Designate(x.left, array);
 
 			IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 				Dereference(array, leftType,FALSE);
-				IF tensorRangeCount=0 THEN
-					DimensionCheck(array.tag, IntermediateCode.Immediate(int32, rangeCount+indexCount), BreqL)
+				IF ~tensorFound THEN
+					DimensionCheck(array.tag, IntermediateCode.Immediate(int32, prefixRanges + prefixIndices), BreqL)
 				END
 			END;
 
-			(* determine source and destination dimension offsets; this depends on if the list starts with a '?' *)
-			IF x.parameters.GetExpression(0) IS SyntaxTree.TensorRangeExpression THEN
-				srcDimOffset := -indexListSize;
-				destDimOffset := -rangeCount
-			ELSE
-				srcDimOffset := 0;
-				destDimOffset := 0
-			END;
+			(* default base offset *)
+			srcDimOffset := 0;
+			destDimOffset := 0;
 
 			indexDim := 0;
 
 			(* use address of source array as basis *)
-			(*
-			ReuseCopy(localResult.op, array.op);
-			*)
+
 			localResult.op := array.op;
 			UseIntermediateOperand(localResult.op);
-
+	
 			(* go through the index list *)
 			FOR i := 0 TO indexListSize - 1 DO
 				expression := x.parameters.GetExpression(i);
 
 				IF expression IS SyntaxTree.TensorRangeExpression THEN
-					(* nothing to do *)
+					(* Questionmark in A[x,*,?,x,*] encountered -- now have to count backwards from the end of source and destination *)
+					srcDimOffset := -indexListSize;
+					destDimOffset := -suffixRanges;
 				ELSE
 					(* determine which dimension of source array is currently looked at *)
 					IF srcDimOffset < 0 THEN (* tensor expression or the form a[?,i,j] *)
@@ -3988,7 +3988,7 @@ TYPE
 						ReleaseIntermediateOperand(tmp);
 						AddInt(srcDim, srcDim, IntermediateCode.Immediate(addressType, i + srcDimOffset));
 					ELSE
-						srcDim := IntermediateCode.Immediate(int32, i)
+						srcDim := IntermediateCode.Immediate(int32, i);
 					END;
 
 					(* get length and increment of source array for current dimension *)
@@ -4153,17 +4153,18 @@ TYPE
 						(* write length and increment of target array to descriptor *)
 						IF destDimOffset < 0 THEN
 							(* determine which dimension of target array is currently looked at *)
-							GetMathArrayField(tmp, array.tag, MathDimOffset);
+							GetMathArrayField(tmp, localResult.tag, MathDimOffset);
 							TransferToRegister(destDim, tmp);
-							AddInt(destDim, destDim, IntermediateCode.Immediate(sizeType, indexDim + destDimOffset));
+							AddInt(destDim, destDim, IntermediateCode.Immediate(sizeType, (* indexDim + *) destDimOffset));
 
 							PutMathArrayLenOrIncr(localResult.tag, targetLength, destDim, FALSE);
 							PutMathArrayLenOrIncr(localResult.tag, targetIncrement, destDim, TRUE);
 
-							ReleaseIntermediateOperand(destDim)
+							ReleaseIntermediateOperand(destDim);
+							INC(destDimOffset); 
 						ELSE
 							PutMathArrayLength(localResult.tag, targetLength, indexDim);
-							PutMathArrayIncrement(localResult.tag , targetIncrement, indexDim)
+							PutMathArrayIncrement(localResult.tag , targetIncrement, indexDim);
 						END;
 						ReleaseIntermediateOperand(targetLength); targetLength := nil;
 						ReleaseIntermediateOperand(targetIncrement); targetIncrement := nil;
@@ -5033,7 +5034,7 @@ TYPE
 					(* case 4b 
 						P(...,A[a..b,c..d],...)
 					*)
-					IF (expression IS SyntaxTree.IndexDesignator) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+					IF (expression IS SyntaxTree.IndexDesignator) & (type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 						IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN (* indexer of form a[e,....,?] *)
 							variable := PrepareTensorDescriptor(expression(SyntaxTree.IndexDesignator));
 							Symbol(variable,variableOp);

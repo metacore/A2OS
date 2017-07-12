@@ -9968,6 +9968,7 @@ TYPE
 		END;
 	END InitOptimization;
 
+	(* functionality used for index designators of including a questiomark such as A[x,*,?,*,x] *)
 	PROCEDURE CopyDescriptor*(VAR destPtr: ANY; src: LONGINT; prefixIndices, prefixRanges, suffixIndices, suffixRanges: LONGINT);
 	VAR size: SIZE; srcDim, destDim,i,len,incr: LONGINT; dest: ADDRESS;
 	BEGIN
@@ -9976,6 +9977,7 @@ TYPE
 		ELSE
 			srcDim := GetDim(src);
 			destDim := srcDim - prefixIndices - suffixIndices;
+			
 			(*
 			KernelLog.String("srcDim "); KernelLog.Int(srcDim,1); KernelLog.Ln;
 			KernelLog.String("prefixIndices "); KernelLog.Int(prefixIndices,1); KernelLog.Ln;
@@ -9985,7 +9987,7 @@ TYPE
 			KernelLog.String("destDim "); KernelLog.Int(destDim,1); KernelLog.Ln;
 			*)
 
-			destPtr := GetArrayDesc(destDim);
+			destPtr := GetArrayDesc(destDim); (* destination dimension included *)
 			dest := SYSTEM.VAL(LONGINT,destPtr);
 			(* SYSTEM.MOVE(src,dest,MathLenOffset); *)
 			PutAdr(dest,GetAdr(src));
@@ -10004,7 +10006,7 @@ TYPE
 			(*
 			Report("copy descriptor src",src);
 			Report("copy descriptor dest",dest);
-			*)
+			*) 
 		END;
 	END CopyDescriptor;
 

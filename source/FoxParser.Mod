@@ -515,7 +515,7 @@ TYPE
 			IF Trace THEN E( "ExpressionList" ) END;
 		END ExpressionList;
 
-		(** IndexList = '?' [',' ExpressionList ] | ExpressionList [',' '?']. **)
+		(** IndexList =   '?' [',' ExpressionList]  |  Expression { ',' Expression } [',' '?' [',' ExpressionList] ] **)
 		PROCEDURE IndexList(expressionList: SyntaxTree.ExpressionList);
 		VAR
 			position: Position;
@@ -537,6 +537,9 @@ TYPE
 					IF Optional(Scanner.Comma) THEN
 						IF Optional(Scanner.Questionmark) THEN
 							expressionList.AddExpression(SyntaxTree.NewTensorRangeExpression(position));
+							IF Optional(Scanner.Comma) THEN
+								ExpressionList(expressionList);
+							END;
 							done := TRUE;
 						ELSE
 							expressionList.AddExpression(Expression())
@@ -2304,3 +2307,5 @@ TYPE
 	END NewParser;
 
 END FoxParser.
+
+SystemTools.FreeDownTo FoxParser ~

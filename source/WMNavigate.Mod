@@ -1153,7 +1153,7 @@ TYPE
 				END;
 				IF (*(window IS WMComponents.FormWindow) &*)  (WMWindowManager.FlagStorable IN window.flags) & (NofSystemCommands > 6) THEN
 					DrawBg(y);
-					canvas.DrawString(LeftBorder, y + 16, "StoreWindow"); INC(y, LineHeight);
+					canvas.DrawString(LeftBorder, y + 16, "StoreWindowData"); INC(y, LineHeight);
 				END;
 			END DrawSystemCommands;
 

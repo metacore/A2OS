@@ -5,7 +5,7 @@ MODULE WMSimpleGraphs;	(** AUTHOR "Patrick Hunziker"; PURPOSE "Minimum-overhead 
 (*ToDo: ticks for Graph. labels on axes *)
 (*ToDo: catch NaN and Inf in data and other strategies to avoid erratic window sizes*)
 
-IMPORT Strings, WMGraphics, WMRectangles, Modules, Reals, WM:=WMWindowManager, MathL, Raster;
+IMPORT Strings, WMGraphics, WMRectangles, WMMessages, Modules, Reals, Files, Streams, WM:=WMWindowManager, MathL, Raster, Commands;
 
 CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray];
 		MinSize=30;
@@ -17,6 +17,7 @@ TYPE
 TYPE
 	Window=OBJECT(WM.BufferWindow);
 	VAR width,height:LONGINT;
+		data:ARRAY [?] OF LONGREAL;
 	
 		PROCEDURE Update(w,h: LONGINT);
 		BEGIN
@@ -27,6 +28,7 @@ TYPE
 		BEGIN
 			Init^(w,h, alpha); 
 			Update(w,h);
+			INCL(flags, WM.FlagStorable);
 		END Init;
 
 		PROCEDURE Resized( width, height: LONGINT);
@@ -42,11 +44,26 @@ TYPE
 			Invalidate(rect);
 		END Resized;
 		
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
+		VAR filename: Files.FileName; f:Files.File; w:Files.Writer;
+		BEGIN
+			IF (x.msgType = WMMessages.MsgSerialize) THEN
+				GenerateName(GetTitle(),filename);
+				Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
+				f:=Files.New(filename);
+				Files.OpenWriter(w,f,0);
+				StoreLR(w, data);
+				w.Update;
+				Files.Register(f);	
+			ELSE Handle^(x)
+			END
+		END Handle;
+
+		
 	END Window;
 	
 	Histogram* = OBJECT (Window);
-	VAR 
-		data:ARRAY [*] OF LONGREAL;
+	
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
 		VAR max:LONGREAL; w0,h0:LONGINT;
@@ -62,6 +79,8 @@ TYPE
 			SetTitle(Strings.NewString(title));
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
+		
+
 		
 		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
 		BEGIN
@@ -88,7 +107,7 @@ TYPE
 	(** display matrix values in checkerboard like fashion. positive values are in black/grey/white, negative values in red*)
 	Matrix* = OBJECT (Window);
 	VAR 
-		data:ARRAY [*,*] OF LONGREAL;
+		(*data:ARRAY [*,*] OF LONGREAL;*)
 		max,min, offset, gain:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -125,7 +144,6 @@ TYPE
 		END NewData;
 
 		PROCEDURE Update(w,h: LONGINT);
-		VAR i:LONGINT;
 		VAR col: WMGraphics.Color; x,y:LONGINT; val:LONGREAL; valI:LONGINT;
 		BEGIN
 			FOR y:=0 TO LEN(data,0)-1 DO
@@ -149,7 +167,7 @@ TYPE
 	Graph* = OBJECT (Window);
 	CONST border=5;
 	VAR 
-		data:ARRAY [*] OF LONGREAL;
+		(*data:ARRAY [*] OF LONGREAL;*)
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -202,7 +220,7 @@ END Graph;
 Graphs* = OBJECT (Window);
 	CONST border=5;
 	VAR 
-		data:ARRAY [*,*] OF LONGREAL;
+		(*data:ARRAY [*,*] OF LONGREAL;*)
 		max,min:LONGREAL;
 
 		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
@@ -257,7 +275,7 @@ END Graphs;
 GraphXY* = OBJECT (Window);
 	CONST border=5; scaleRatio=0.95;
 	VAR 
-		data:ARRAY [*,*] OF LONGREAL;
+		(*data:ARRAY [*,*] OF LONGREAL;*)
 		minx,miny,maxx,maxy:LONGREAL;
 		ticks: ARRAY [*,*] OF LONGREAL;
 
@@ -293,11 +311,11 @@ GraphXY* = OBJECT (Window);
 		PROCEDURE GetTicks ; (*ticks along X, along Y, at decimal units*)
 		VAR maxx,maxy,stepx,stepy: LONGREAL; log:LONGREAL; steps,i:LONGINT;
 		BEGIN
-			maxx:=MAX(ABS(data[0]));
+			maxx:=MAX(ABS(data[0,*]));
 			log:=Log10(maxx);
 			stepx:=Exp10(log);
 			
-			maxy:=MAX(ABS(data[1]));
+			maxy:=MAX(ABS(data[1,*]));
 			log:=Log10(maxy);
 			stepy := Exp10(log);
 			
@@ -435,6 +453,51 @@ BEGIN
 	slope:=1; intercept:=2;
 END DummyRegressor;
 
+PROCEDURE WriteLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
+VAR len: ARRAY [*] OF LONGINT; i:LONGINT;
+BEGIN
+	ASSERT(DIM(t)>0);
+	len:=LEN(t);
+	IF  DIM(t)=1 THEN 
+		FOR i:=0 TO LEN(t,0)-1 DO W.RawLReal(t[i]) END;
+	ELSE
+		FOR i:=0 TO LEN(t,0)-1 DO WriteLR(W, t[i,?]) END;
+	END;
+END WriteLR;
+
+PROCEDURE StoreLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
+VAR i:LONGINT; len: ARRAY [*] OF LONGINT;
+BEGIN
+	W.String("TENSOR 1.0 LR "); (* type, version *) W.Ln;
+	W.Int(DIM(t),0);
+	len:=LEN(t);
+	FOR i:=0 TO LEN(len,0)-1 DO W.Char(" "); W.Int(len[i],0); END;
+	W.Ln;
+	WriteLR(W,t);
+	W.Update;
+END StoreLR;
+
+PROCEDURE GenerateName(prefix: Strings.String; VAR str: ARRAY OF CHAR);
+VAR  i,j:LONGINT; title: Files.FileName; c:CHAR;
+BEGIN
+	i:=0; j:=0;
+	IF prefix#NIL THEN
+		WHILE (i<LEN(prefix)) & (j<LEN(title)-1) DO
+			c:=prefix[i];
+			IF (c>="A")&(c<="Z") OR (c>="a")&(c<="z") OR(c>="0")&(c<="9") OR (c="_") OR (c=" ")THEN
+				IF c=" " THEN c:="_" END;
+				title[j]:=c; INC(i); INC(j);
+			ELSE
+				INC(i);
+			END;
+		END;
+		title[j]:=0X;
+		IF title="" THEN title:="GraphData" END;
+	ELSE title:="GraphData"
+	END;
+	COPY(title, str);
+END GenerateName;
+
 VAR Pos, PosX,PosY: LONGINT;
 
 PROCEDURE Demo*;
@@ -471,6 +534,61 @@ BEGIN {EXCLUSIVE}
 	g.NewData([-2,7,8,4,5,9,6,4,7,8,4,5,9,6]);
 END Demo1;*)
 
+(* from MatrixUtilities.Mod*)
+PROCEDURE LoadData(R:Streams.Reader): ARRAY [?] OF LONGREAL;
+VAR s: ARRAY 16 OF CHAR; i, k:LONGINT; len: ARRAY [*] OF LONGINT;
+BEGIN
+	R.Ln(s);
+	ASSERT(s="TENSOR 1.0 LR "); 
+	IF R.GetInteger(k, FALSE) THEN NEW(len,k) ELSE HALT(200) END;
+	FOR i:=0 TO k-1 DO 
+		IF R.GetInteger(len[i],FALSE) THEN END;
+	END;
+	R.SkipLn;
+	IF (DIM(RESULT)#k) OR (LEN(RESULT)#len) THEN NEW(RESULT,len) END;
+	ReadLR(R,RESULT);
+	RETURN RESULT
+END LoadData;
+
+PROCEDURE ReadLR(R:Streams.Reader; VAR t: ARRAY [?] OF LONGREAL);
+VAR i:LONGINT;
+BEGIN
+	ASSERT(DIM(t)>0);
+	IF  DIM(t)=1 THEN 
+		FOR i:=0 TO LEN(t,0)-1 DO R.RawLReal(t[i]) END;
+	ELSE
+		FOR i:=0 TO LEN(t,0)-1 DO ReadLR(R, t[i,?]) END;
+	END;
+END ReadLR;
+
+(* Draw Graph from File, currently implemented for .MtA Files (see MatrixUtilities.Mod) *)
+PROCEDURE Open*(context:Commands.Context);
+VAR filename: Files.FileName; type: ARRAY 16 OF CHAR; 
+	data: ARRAY [?] OF LONGREAL;
+	f:Files.File; r:Files.Reader;
+	h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix; s:Scatter; rg:Regression;
+BEGIN
+	IF context.arg.GetString(filename) THEN
+		IF Strings.Pos(".MtA",filename)<0 THEN context.out.String("wrong file type of "); context.out.String(filename); context.out.Ln; context.out.Update;
+		ELSE
+			IF ~context.arg.GetString(type) THEN type:="" END;
+			f:=Files.Old(filename);
+			IF f#NIL THEN
+				Files.OpenReader(r,f,0);
+				data:=LoadData(r);
+				IF type="Histogram" THEN NEW(h, data, filename); 
+				ELSIF type="Matrix" THEN NEW(m, data, filename);
+				ELSIF type="Graph" THEN NEW(g, data, filename);
+				ELSIF type="Graphs" THEN NEW(k, data, filename);
+				ELSIF type="GraphXY" THEN NEW(gx, data, filename);
+				ELSIF type="Scatter" THEN NEW(s, data, filename);
+				ELSIF type="Regression" THEN NEW(rg, data, filename,DummyRegressor);
+				ELSE
+				END;
+			END;
+		END
+	END;
+END Open;
 
 
 PROCEDURE Cleanup;
@@ -498,4 +616,5 @@ SystemTools.FreeDownTo MatrixBase ~
 Compiler.Compile -p=Win32G WMSimpleGraphs.Mod ~
 
 WMSimpleGraphs.Demo 1 ~
+WMSimpleGraphs.Open  MultiGraph.MtA Graphs~ 
 

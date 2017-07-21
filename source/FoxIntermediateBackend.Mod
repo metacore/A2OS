@@ -11211,6 +11211,7 @@ TYPE
 				BaseTypesTableOffset := -2; (* typeInfo and size field *)
 				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
 				TypeRecordBaseOffset := TypeTags + 2; (* MPO, typeInfo *)
+				(* change this when Heaps.HeapBlock is modified *)
 				RecordBaseOffset := 8; 		
 			END;
 			SELF.simple := simple;
@@ -11262,25 +11263,34 @@ TYPE
 		PROCEDURE HeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
 		VAR offset: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol;
 		BEGIN
+			(* change this when Heaps.HeapBlock is modified *)
 			INC(dataAdrOffset,6);
+			
 			Info(section,"headerAdr");
 			Address(section,0);
+			
 			Info(section,"typeDesc");
-
 			symbol := implementationVisitor.GetTypeDescriptor(moduleName,typeName, name);
 			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
 			NamedSymbol(section, name, symbol, 0, offset);
 
 			Info(section,"mark: LONGINT;");
 			Longint(section,-1);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0);END;
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0); INC(dataAdrOffset); END;
 			
 			Info(section,"dataAdr-: ADDRESS");
 			Symbol(section,section, dataAdrOffset,0);
+			
 			Info(section,"size-: SIZE");
 			Address(section,0);
-			Info(section,"nextRealtime: HeapBlock;");
+			
+			Info(section,"nextMark: HeapBlock;");
 			Address(section,0);
+			
+(*
+			Info(section,"generation");
+			Longint(section,0);
+*)
 		END HeapBlock;
 		
 		PROCEDURE ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
@@ -12606,8 +12616,10 @@ TYPE
 				offset := 0;
 			ELSE
 				IF module.system.addressType.sizeInBits = 64 THEN 
+					(* change this when Heaps.HeapBlock is modified *)
 					offset := ToMemoryUnits(module.system, 18* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				ELSE
+					(* change this when Heaps.HeapBlock is modified *)
 					offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				END;
 			END;
@@ -14510,7 +14522,7 @@ BEGIN
 END FoxIntermediateBackend.
 
 
-Compiler.Compile FoxIntermediateBackend.Mod ~
+Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 
 #	Release.Build --path="/temp/obg/"  WinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2Z.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~

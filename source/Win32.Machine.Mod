@@ -24,6 +24,7 @@ CONST
 	AddressSize = SIZEOF(ADDRESS);
 	StaticBlockSize = 32;		(* static heap block size *)
 	BlockHeaderSize = 2 * AddressSize;
+	(* change this when Heaps.HeapBlock is modified *)
 	RecordDescSize = 4 * AddressSize;  (* needs to be adapted in case Heaps.RecordBlockDesc is changed *)
 
 (** standard lock levels (in order) *)  (* also refer to Traps.Show *)
@@ -737,10 +738,14 @@ BEGIN
 	SYSTEM.PUT(beginBlockAdr,0);
 	SYSTEM.PUT(beginBlockAdr+AddressSize,0);
 	SYSTEM.PUT(beginBlockAdr+2*AddressSize,0);
+	(* change this when Heaps.HeapBlock is modified *)
 	SYSTEM.PUT(beginBlockAdr+3*AddressSize,beginBlockAdr+7*AddressSize);
 	SYSTEM.PUT(beginBlockAdr+4*AddressSize,endBlockAdr-beginBlockAdr);
 	SYSTEM.PUT(beginBlockAdr+5*AddressSize,beginBlockAdr+2*AddressSize);
 	SYSTEM.PUT(beginBlockAdr+6*AddressSize,0);
+	(*
+	SYSTEM.PUT(beginBlockAdr+7*AddressSize,0);
+	*)
 
 	memoryBlock := memBlock;
 END InitHeap;
@@ -1101,4 +1106,3 @@ BEGIN
 		Init
 	END;
 END Machine.
-

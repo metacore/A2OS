@@ -6640,6 +6640,14 @@ TYPE
 					reference.SetType(variable.type.resolved);
 					reference.SetAssignable(TRUE);
 					Assign(reference,variable.initializer);
+				ELSIF temporary THEN
+					IF SemanticChecker.IsPointerType(variable.type) THEN
+						Symbol(variable, operand);
+						MakeMemory(tmp,operand.op,addressType,0);
+						ReleaseOperand(operand);
+						Emit(Mov(position,tmp, nil ) );
+						ReleaseIntermediateOperand(tmp);
+					END;
 				END;
 				InitFields(type, operand.op,0);
 				ReleaseOperand(operand);

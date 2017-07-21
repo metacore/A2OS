@@ -677,7 +677,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** blend source pixel into destination pixel according to compositing operation **)
 	PROCEDURE Blend* (op: LONGINT; VAR src, dst: Pixel);
-		VAR fs, fd, i: LONGINT;
+		VAR fs, fd: LONGINT;
 	BEGIN
 		CASE op OF
 		| clear: fs := 0; fd := 0
@@ -695,20 +695,22 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END;
 
 		IF fs + fd = 0 THEN
-			FOR i := 0 TO 3 DO dst[i] := 0X END
+			dst := Zero;
 		ELSIF fs = 0 THEN
 			IF fd # 255 THEN
-				FOR i := 0 TO 3 DO
-					dst[i] := Clamp[200H + fd * ORD(dst[i]) DIV 255]
-				END
+				dst[0] := Clamp[200H + fd * ORD(dst[0]) DIV 255];
+				dst[1] := Clamp[200H + fd * ORD(dst[1]) DIV 255];
+				dst[2] := Clamp[200H + fd * ORD(dst[2]) DIV 255];
+				dst[3] := Clamp[200H + fd * ORD(dst[3]) DIV 255];
 			END
 		ELSIF fd = 0 THEN
 			IF fs = 255 THEN
 				dst := src
 			ELSE
-				FOR i := 0 TO 3 DO
-					dst[i] := Clamp[200H + fs * ORD(src[i]) DIV 255]
-				END
+				dst[0] := Clamp[200H + fs * ORD(src[0]) DIV 255];
+				dst[1] := Clamp[200H + fs * ORD(src[1]) DIV 255];
+				dst[2] := Clamp[200H + fs * ORD(src[2]) DIV 255];
+				dst[3] := Clamp[200H + fs * ORD(src[3]) DIV 255];
 			END
 		ELSE
 			dst[0] := Clamp[200H + (fs * ORD(src[0]) + fd * ORD(dst[0])) DIV 255];

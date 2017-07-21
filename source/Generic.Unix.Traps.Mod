@@ -11,19 +11,30 @@ IMPORT S := SYSTEM, Trace, Glue, Unix, Objects, Machine, Heaps, Streams, Modules
 
 CONST
 	AddrSize = SIZEOF( ADDRESS );
-	MaxRecursion = 4;
+	MaxRecursion = 2;
 TYPE
 
 	ExceptionHandler = RECORD  pc, fp, sp: ADDRESS  END;
 
 VAR
 
-	TrapHandlingLevel: LONGINT;
+	trapHandlingLevel: LONGINT;
 
 	trace: BOOLEAN;
 
 	unix: Commands.Context;
 	trapMutex: Unix.Mutex_t;
+	
+	PROCEDURE LockTrap;
+	BEGIN 
+		Unix.MtxLock( trapMutex );
+	END LockTrap;
+	
+	PROCEDURE UnlockTrap;
+	BEGIN
+		trapHandlingLevel := 0;
+		Unix.MtxUnlock( trapMutex )
+	END UnlockTrap;
 
 	PROCEDURE Append( VAR ar: ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
 	VAR i, j: LONGINT;
@@ -96,29 +107,35 @@ VAR
 		handler: ExceptionHandler;
 		w: Streams.Writer;
 	BEGIN
-		Trace.Char("Z");
+		LockTrap;
 		IF trace THEN
+			Machine.Acquire( Machine.TraceOutput );
+			Trace.Ln;
 			Trace.String( "Aos Trap:  signal = " );  Trace.Int( sig, 0 );
 			Trace.String( ",  ucp = " );  Trace.Address( S.VAL( ADDRESS, ucp ) );
-			Trace.String( ", traphandling  level = " ); Trace.Int( TrapHandlingLevel, 1 );
+			Trace.String( ", traphandling  level = " ); Trace.Int( trapHandlingLevel, 1 );
 			Trace.Ln;
+			Machine.Acquire( Machine.TraceOutput );
 		END;
-
-		Unix.MtxLock(trapMutex);
-
-		INC( TrapHandlingLevel );
+		
+		INC( trapHandlingLevel );
+		IF trapHandlingLevel > MaxRecursion THEN  
+			UnlockTrap;
+			Objects.Terminate
+		END;
+		
 
 		w := TrapWriters.GetWriter();
 		w.Char( 1X );   (* begin of trap text *)
- 		Trace.Char("Y");
 
 		w.Ln;
 		w.String( Machine.version ); w.String( "   " );  TimeTag( w );  w.Ln;
-		IF TrapHandlingLevel <= MaxRecursion THEN
+		IF trapHandlingLevel = 1 THEN
 			w.String( "Trap " );
 		ELSE
 			w.String( "[recursive Trap] " );
 		END;
+				
 		sp := ucp.mc.r_sp;
 		CASE sig OF
 		| 1:		w.String( "1 (Hangup signal)" );
@@ -151,33 +168,32 @@ VAR
 			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );
 		END;
 		w.Ln;
-		IF TrapHandlingLevel <= MaxRecursion THEN
-			process := Objects.CurrentProcess( );
-			pc := ucp.mc.r_pc;  bp := ucp.mc.r_bp;
-			IF pc = 0 THEN
-				(* assume call of procedure variable with value NIL *)
-				S.GET( sp, pc );   (* get return address on top of stack *)
-			END;
-			w.Ln;
-			w.String(" pid = "); w.Hex(process.id , -8 );
-			w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp );
-			w.String( ", pc = " );  w.Address( pc );  w.Ln;
-			w.Ln;
-			Registers(ucp.mc,w);
+		
+		process := Objects.CurrentProcess( );
+		pc := ucp.mc.r_pc;  bp := ucp.mc.r_bp;
+		IF pc = 0 THEN
+			(* assume call of procedure variable with value NIL *)
+			S.GET( sp, pc );   (* get return address on top of stack *)
+		END;
+		w.Ln;
+					
+		w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp );
+		w.String( ", pc = " );  w.Address( pc );  w.Ln;
+		w.Ln;
+		Registers( ucp.mc, w );
+		IF process # NIL THEN
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
 			SearchExceptionHandler( process, ucp, handler ); 
-		END;
+		ELSE
+			(* avoid recusive trap in case of faulty module Objects *)
+			Reflection.StackTraceBack( w, pc, bp, sp, sp+512, TRUE, FALSE );
+			END;
 		w.Ln; w.Ln;
 		w.String("----------------------------------------------------"); w.Ln;
 
-		IF (TrapHandlingLevel > MaxRecursion) THEN  Machine.Shutdown( FALSE )  END;
-
 		FinishTrap( w, process);
 		
-		TrapHandlingLevel := 0;
-
-		Unix.MtxUnlock(trapMutex);
-
+		UnlockTrap;
 
 		IF handler.pc # 0 THEN
 			IF Unix.Version # "Darwin" THEN
@@ -195,8 +211,6 @@ VAR
 			unix.error.String( "### Program aborted. Stack traceback in logfile" );  unix.error.Ln;
 			unix.error.Update;
 			Machine.Shutdown( FALSE )
-		ELSIF TrapHandlingLevel > MaxRecursion THEN
-			Objects.Terminate
 		ELSE
 			Objects.ExitTrap()
 		END
@@ -222,6 +236,8 @@ VAR
 		END;
 		RETURN fp;
 	END CheckBP;
+	
+	
 
 	PROCEDURE SearchExceptionHandler( process: Objects.Process;  cont: Unix.Ucontext;  VAR handler: ExceptionHandler );
 	VAR entry, fp, sp, pc: ADDRESS;
@@ -251,20 +267,7 @@ VAR
 		(* 'dummy' for 16 byte stack alignment, MacOS! *)
 	BEGIN
 		IF ~(signal IN  {1, 2, 14, 15}) (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
-			IF trace THEN
-				Trace.String( "Traps.SignalHander: received signal " );
-				Trace.Int( signal, 1 );  Trace.Ln
-			END;
-			(*IF Heaps.collecting THEN
-				Trace.Ln;  Trace.String( "PANIC: Trap " );  Trace.Int( signal, 0 );
-				Trace.String( " in garbage collector" );  Trace.Ln;  Trace.Ln;
-				Machine.Release( Machine.Heaps );
-
-				Trap( signal, S.VAL( Unix.Ucontext, ucp ), TRUE )
-			ELSE
-			*)
-				Trap( signal, S.VAL( Unix.Ucontext, ucp ))
-	(*		END  *)
+			Trap( signal, S.VAL( Unix.Ucontext, ucp ))
 		END
 	END SignalHandler;
 
@@ -272,7 +275,7 @@ VAR
 
 BEGIN
 	trapMutex := Unix.RecursiveMtxInit(0);
-	trace := 3 IN Glue.debug;
+	trace := FALSE;  
 	Unix.InstallSignalHandler( SignalHandler );
 	unix := StdIO.env
 END Traps.

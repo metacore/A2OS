@@ -1268,4 +1268,4 @@ BEGIN
 	Init();  Modules.InstallTermHandler( Finalization ); SetPaths;
 END WinFiles64.
 
-Compiler.Compile -p=Win32G Streams64.Mod Files64.Mod Win32.WinFiles64.Mod
+Compiler.Compile -p=Win32G Streams64.Mod Files64.Mod Win32.WinFiles64.Mod FSTools64.Mod ~

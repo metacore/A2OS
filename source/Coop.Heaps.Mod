@@ -266,13 +266,16 @@ BEGIN
 	END;
 END NewSys;
 
-PROCEDURE SetPC(p: ANY; pc: ADDRESS);
+PROCEDURE SetPC2(p: ANY; pc: ADDRESS);
 VAR blockAdr: ADDRESS;
 BEGIN
 	IF p # NIL THEN
 		SYSTEM.GET(SYSTEM.VAL(ADDRESS, p)+HeapBlockOffset,blockAdr);
 		SYSTEM.PUT(blockAdr+HeapBlockOffset, pc);
 	END;
+END SetPC2;
+
+PROCEDURE SetPC-(p: ANY);
 END SetPC;
 
 (** NewRec - Implementation of NEW with a record. *)
@@ -285,7 +288,7 @@ BEGIN
 	IF ProtTypeBit IN flags THEN
 		NewProtRec(p, tag, isRealtime);
 		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
-		SetPC(p,pc);
+		SetPC2(p,pc);
 	ELSE
 		SYSTEM.GET(tag, size);
 		(* the block size is the sum of the size of the RecordBlock and the DataBlock.
@@ -382,7 +385,7 @@ BEGIN
 	IF arrSize = 0 THEN
 		NewSys(p, numDims * AddressSize + 3 * AddressSize, isRealtime); (* no data, thus no specific alignment *)
 		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
-		SetPC(p,pc);
+		SetPC2(p,pc);
 	ELSE
 		ASSERT(BlockHeaderSize MOD ArrayAlignment = 0);
 		arrayDataOffset := numDims * AddressSize + 3 * AddressSize;
@@ -392,7 +395,7 @@ BEGIN
 			size := arrayDataOffset + arrSize;
 			NewSys(p, size, isRealtime);
 			SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
-			SetPC(p, pc);
+			SetPC2(p, pc);
 		ELSE
 			arrayBlockSize := BlockHeaderSize + SIZEOF(ArrayBlockDesc);
 			INC(arrayBlockSize, (-arrayBlockSize) MOD ArrayAlignment); (* do. *)

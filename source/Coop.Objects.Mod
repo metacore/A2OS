@@ -77,7 +77,7 @@ TYPE
 	Process* = OBJECT(Heaps.ProcessLink)
 	VAR
 		obj-: ProtectedObject;   (* associated active object *)
-		state-: RECORD PC-,BP-: ADDRESS END;
+		state-: RECORD PC-,BP-,SP-: ADDRESS END;
 		condition-: Condition;   (* awaited process' condition *)
 		condFP-: LONGINT;   (* awaited process' condition's context *)
 		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)

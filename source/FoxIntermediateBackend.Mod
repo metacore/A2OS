@@ -12329,6 +12329,7 @@ TYPE
 				VAR s: Sections.Section; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; pos: LONGINT;
 					flags: SET;
 				BEGIN
+					IF procedure.externalName # NIL THEN RETURN END;
 					IF RefInfo THEN Info(section, "Procedure") END;
 					pos := CurrentIndex(); 
 					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
@@ -12487,12 +12488,9 @@ TYPE
 			BEGIN
 				NEW(indirectTypes, 32); 
 				ArrayBlock(section,sizePC,"", FALSE);
-				
-				IF ~implementationVisitor.backend.cooperative THEN
-					startPC := section.pc;
-					NModule(module.module, -1);
-					PatchArray(section,sizePC,CurrentIndex());
-				END;
+				startPC := section.pc;
+				NModule(module.module, -1);
+				PatchArray(section,sizePC,CurrentIndex());
 			END References;
 			
 		(*

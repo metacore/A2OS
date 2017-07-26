@@ -70,11 +70,20 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	END InitializeActivity;
 
 	PROCEDURE ~Finalize;
-	VAR stackFrame {UNTRACED}: BaseTypes.StackFrame; currentActivity {UNTRACED}: Activity; stack{UNTRACED}, next{UNTRACED}: Stack; stackRecord{UNTRACED}: StackRecord;
+	VAR address: ADDRESS; stackFrame {UNTRACED}: BaseTypes.StackFrame; currentActivity {UNTRACED}: Activity; stack{UNTRACED}, next{UNTRACED}: Stack; stackRecord{UNTRACED}: StackRecord;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		stackFrame := framePointer;
+		address := framePointer;
 		currentActivity := SYSTEM.GetActivity ()(Activity); SYSTEM.SetActivity (SELF);
-		WHILE stackFrame # NIL DO stackFrame.Reset; stackFrame := stackFrame.previous END;
+		WHILE address # NIL DO
+			IF ODD (address) THEN
+				DEC (address);
+				stackFrame := address;
+				stackFrame.Reset;
+			ELSE
+				stackFrame := address - SIZE OF ADDRESS;
+			END;
+			address := stackFrame.previous;
+		END;
 		SYSTEM.SetActivity (currentActivity);
 		stack := firstStack;
 		REPEAT

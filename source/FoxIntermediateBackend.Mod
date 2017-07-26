@@ -1566,6 +1566,7 @@ TYPE
 						Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
 					END;
 					IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
+					IntermediateCode.AddOffset(op1, 1);
 					Emit(Push(Basic.invalidPosition,op1));
 					Emit(Mov(Basic.invalidPosition,fp, sp));
 					IF (body # NIL) & (body.code = NIL) & ~procedure.procedureScope.body.isUnchecked THEN

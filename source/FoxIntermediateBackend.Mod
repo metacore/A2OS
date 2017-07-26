@@ -12420,8 +12420,8 @@ TYPE
 						s := module.allSections.FindByName(name); 
 						IF s # NIL THEN (* does not work for coop *)
 							PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
-							NScope(declared.recordScope, pos);
 						END;
+						NScope(declared.recordScope, pos);
 					|declared: SyntaxTree.CellType DO
 						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
 						Symbol(section, s,  0, offset);
@@ -12430,8 +12430,8 @@ TYPE
 						s := module.allSections.FindByName(name); 
 						IF s # NIL THEN
 							PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
-							NScope(declared.cellScope, pos);
 						END;
+						NScope(declared.cellScope, pos);
 					ELSE
 						Address(section, 0);
 					END;					

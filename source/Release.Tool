@@ -440,7 +440,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# default trap handling
 	NATIVEORIG,WINORIG,UNIX { Reflection.Mod }
 	NATIVEGEN, WINGEN, UNIXG {Generic.Reflection.Mod}
-	COOP { Coop.Reflection.Mod }
+	COOP { Generic.Reflection.Mod }
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	NATIVEORIG, NATIVEGEN { Traps.Mod }
 	AMD64 { AMD64.Traps.Mod }

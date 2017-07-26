@@ -61,8 +61,8 @@ TYPE
 	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
 	*)
 
-	TypeDesc* = POINTER TO RECORD 
-		descSize-: LONGINT;
+	TypeDesc* = POINTER  TO RECORD 
+		descSize-: SIZE;
 		sentinel-: LONGINT;	(* = MPO-4 *)
 		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags-: SET;
@@ -96,10 +96,10 @@ TYPE
 			sb*: ADDRESS; (* reference address between constants and local variables *)
 			entry*: POINTER TO ARRAY OF ADDRESS;
 			command*: POINTER TO ARRAY OF Command;
-			ptrAdr*: POINTER TO ARRAY OF ADDRESS;
-			typeInfo*: POINTER TO ARRAY OF TypeDesc;	(* traced explicitly in FindRoots *)
+			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
+			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
-			procTable*: ProcedureDescs; (* information inserted by loader, removed after use in Publish *)
+			procTable*: ProcedureDescs; (* information inserted by loader, sorted by pc after loading *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
 			export*: ExportDesc;
 			term*: TerminationHandler;
@@ -108,6 +108,7 @@ TYPE
 			internal-: POINTER TO ARRAY OF ANY;
 			crc*: LONGINT;
 			body*: PROCEDURE;
+			flags*: SET;	 (* e.g. compilation flags *)
 
 	END Module;
 
@@ -130,9 +131,14 @@ VAR
 	
 	(* global sorted table of all procedures , basically for GC *)
 	procedureDescriptors-: ProcedureDescs;
-	mayAllocate: BOOLEAN;
 
 (** Register a module loader. *)
+
+PROCEDURE Halt(CONST reason: ARRAY OF CHAR);
+BEGIN
+	HALT(999);
+END Halt;
+
 
 PROCEDURE AddLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc);
 BEGIN
@@ -172,17 +178,17 @@ BEGIN
 	to[j] := 0X
 END Append;
 
+
 (** Add a module to the pool of accessible modules, or return named module. *)
 PROCEDURE Publish*(VAR m: Module; VAR new: BOOLEAN);
-VAR n: Module; i: LONGINT;
+VAR n: Module; i: LONGINT; name: Name;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	n := root; WHILE (n # NIL) & (n.name # m.name) DO n := n.next END;
 	IF n # NIL THEN	(* module with same name exists, return it and ignore new m *)
-		m := n; new := FALSE;
-		Machine.Release(Machine.Modules);
+		m := n; new := FALSE
 	ELSE
-		IF TraceBoot THEN
+		IF TraceBoot OR trace THEN
 			Machine.Acquire(Machine.TraceOutput);
 			Trace.String("publish "); Trace.String(m.name);
 			Trace.Ln;
@@ -198,21 +204,89 @@ BEGIN
 		IF m.module # NIL THEN
 			FOR i := 0 TO LEN(m.module)-1 DO INC(m.module[i].refcnt) END;
 		END;
+
 		new := TRUE;
-		Machine.Release(Machine.Modules);
 	END;
+	Machine.Release(Machine.Modules);
 END Publish;
 
 PROCEDURE Initialize*(VAR module: Module);
-VAR new: BOOLEAN;
+VAR new: BOOLEAN; import: LONGINT;
 BEGIN
 	IF (module = NIL) THEN RETURN END;
 	Publish (module, new);
 	IF new THEN
-		IF module.body # NIL THEN module.body END;
+		FOR import := 0 TO LEN (module.module) - 1 DO
+			IF ~module.module[import].published THEN
+				ASSERT(register.first # NIL);
+				Initialize(module.module[import]);
+			END
+		END;
+		IF (module.code # NIL) & (LEN(module.code) > 0)  THEN
+			Machine.FlushDCacheRange(ADDRESSOF(module.code[0]), LEN(module.code));
+		END;
+		IF module.body # NIL THEN
+			module.body
+		END;
 		module.init := TRUE;
 	END;
 END Initialize;
+
+	VAR callagain: BOOLEAN;
+
+	PROCEDURE Initialize0*(module: Module);
+	VAR new: BOOLEAN;
+	BEGIN
+		(*TRACE(module.name);*)
+		(* module MUST have been removed from register list and must not have been initialized yet *)
+		(* ASSERT(module.next = NIL); *)
+		Publish (module, new);
+		callagain := FALSE;
+		IF new THEN
+			IF module.name = "Objects" THEN
+				callagain := TRUE;
+				module.init := TRUE;
+			END;
+			(*
+			Trace.Memory(SYSTEM.VAL(ADDRESS, module), 256);
+			TRACE(module, module.name, module.body);
+			TRACE(module);
+			TRACE(ADDRESS OF module.next);
+			TRACE(ADDRESS OF module.name);
+			TRACE(ADDRESS OF module.init);
+			TRACE(ADDRESS OF module.published);
+			TRACE(ADDRESS OF module.body);
+			TRACE(ADDRESS OF module.refcnt);
+			TRACE(ADDRESS OF module.sb);
+			TRACE(ADDRESS OF module.entry);
+			TRACE(ADDRESS OF module.command); 
+			TRACE(ADDRESS OF module.ptrAdr);
+			TRACE(ADDRESS OF module.typeInfo);
+			TRACE(ADDRESS OF module.module);
+			TRACE(ADDRESS OF module.procTable);
+			TRACE(ADDRESS OF module.ptrTable);
+			TRACE(ADDRESS OF module.data); 
+			TRACE(ADDRESS OF module.code);
+			TRACE(ADDRESS OF module.staticTypeDescs);
+			TRACE(ADDRESS OF module.refs);
+			TRACE(ADDRESS OF module.export);
+			TRACE(ADDRESS OF module.term);
+			TRACE(ADDRESS OF module.exTable);
+			TRACE(ADDRESS OF module.noProcs);
+			TRACE(ADDRESS OF module.firstProc);
+			TRACE(ADDRESS OF module.maxPtrs);
+			TRACE(ADDRESS OF module.crc);
+			TRACE(ADDRESS OF module.body);
+			*)
+						
+			IF module.body # NIL THEN module.body END;
+			IF callagain THEN
+				PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
+			ELSE
+				module.init := TRUE;
+			END;
+		END;
+	END Initialize0;
 
 	(** Return the named module or NIL if it is not loaded yet. *)
 	PROCEDURE ModuleByName*(CONST name: ARRAY OF CHAR): Module;
@@ -223,6 +297,20 @@ END Initialize;
 		Machine.Release(Machine.Modules);
 		RETURN m
 	END ModuleByName;
+	
+	PROCEDURE ByName(CONST name: ARRAY OF CHAR; VAR referenced: BOOLEAN): Module;
+	VAR m: Module;
+	BEGIN
+		Machine.Acquire(Machine.Modules);
+		referenced := FALSE;
+		m := root; WHILE (m # NIL) & (m.name # name) DO m := m.next END;
+		IF m = NIL THEN
+			referenced := TRUE;
+			m := register.first; WHILE (m#NIL) & (m.name # name) DO m := m.next END;
+		END;
+		Machine.Release(Machine.Modules);
+		RETURN m
+	END ByName;
 
 	(* Generate a module file name. *)
 	PROCEDURE GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
@@ -312,16 +400,29 @@ END Initialize;
 		Quick(0, LEN(p)-1);
 	END SortExceptionTable;
 	
-		
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
-VAR m, p: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT;
+VAR m: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT; registered: BOOLEAN;
 BEGIN
-	res := Ok; msg[0] := 0X; m := ModuleByName(name);
-	IF m = NIL THEN
+	res := Ok; msg[0] := 0X; m := ByName(name, registered);
+	IF (m#NIL) & (registered) THEN
 		IF trace THEN
 			Machine.Acquire (Machine.TraceOutput);
-			Trace.String(">"); Trace.StringLn (name);
+			Trace.String(">R>"); Trace.StringLn (name);
+			Machine.Release (Machine.TraceOutput);
+		END;
+		IF ~m.published THEN	(* no race on m.published, as update is done in Publish *)
+			Initialize(m);
+		END;
+		IF trace THEN
+			Machine.Acquire (Machine.TraceOutput);
+			Trace.String("<R<"); Trace.StringLn (name);
+			Machine.Release (Machine.TraceOutput);
+		END;
+	ELSIF m = NIL THEN
+		IF trace THEN
+			Machine.Acquire (Machine.TraceOutput);
+			Trace.String(">L>"); Trace.StringLn (name);
 			Machine.Release (Machine.TraceOutput);
 		END;
 		IF numLoaders = 0 THEN
@@ -339,7 +440,6 @@ BEGIN
 			Trace.String("?"); Trace.StringLn (name);
 			Machine.Release (Machine.TraceOutput);
 		END;
-		p := m;
 		IF (m # NIL) & ~m.published THEN	(* no race on m.published, as update is done below in Publish *)
 			Initialize(m);
 		END;
@@ -350,7 +450,7 @@ BEGIN
 			ELSIF ~m.published THEN
 				Trace.String("not published "); Trace.StringLn(name)
 			ELSE
-				Trace.String("<"); Trace.StringLn (name);
+				Trace.String("<L<"); Trace.StringLn (name);
 			END;
 			Machine.Release (Machine.TraceOutput);
 		END;
@@ -495,7 +595,9 @@ BEGIN
 		IF m.term # NIL THEN	(* call termination handler *)
 			term := m.term; m.term := NIL; term	(* may trap *)
 		END;
-		Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
+		IF m.code # NIL THEN
+			Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
+		END;
 	END;
 	res := Ok; msg[0] := 0X;
 	Machine.Acquire(Machine.Modules);
@@ -558,7 +660,7 @@ BEGIN
 		(* clean up finalizers *)
 		m := root;
 		WHILE m # NIL DO
-			IF LEN(m.code)>0 THEN
+			IF (m.code # NIL) & (LEN(m.code)>0) THEN
 				Heaps.CleanupModuleFinalizers(ADDRESSOF(m.code[0]), LEN(m.code), m.name)
 			END;
 			m := m.next
@@ -633,18 +735,6 @@ BEGIN
 	RETURN m.init;
 END Initialized;
 
-PROCEDURE Init;
-VAR
-	s: ARRAY 4 OF CHAR;
-BEGIN
-	(* root and initBlock are initialized by the linker *)
-	shutdown := None;
-	numLoaders := 0;
-	freeRoot := NIL;
-	Machine.GetConfig("TraceModules", s);
-	trace := (s[0] = "1");
-END Init;
-
 PROCEDURE Register- (module {UNTRACED}: Module);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF register.first = NIL THEN
@@ -684,10 +774,28 @@ BEGIN
 		m := register.first;
 		IF m.module # NIL THEN
 			FOR import := 0 TO LEN (m.module) - 1 DO
-				Initialize (m.module[import]);
+				IF ~m.module[import].published THEN
+					ASSERT(register.first # NIL);
+					(*prev := NIL;
+					cur := register.first;
+					WHILE (cur # NIL) & (cur # m.module[import]) DO
+						prev := cur;
+						cur := cur.next
+					END;
+					(*ASSERT(cur = m.module[import]);*)
+					ASSERT(cur = m.module[import]);
+					IF prev = NIL THEN
+						register.first := cur.next
+					ELSE
+						prev.next := cur.next;
+					END;
+					cur.next := NIL;
+					*)
+					Initialize0 (m.module[import]);
+				END
 			END;
 		END;
-		Initialize (m);
+		Initialize0 (m);
 	END;
 END PublishRegisteredModules;
 
@@ -720,6 +828,18 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	TerminateGC;
 	Environment.Exit (Environment.status);
 END Main;
+
+PROCEDURE Init;
+VAR
+	s: ARRAY 4 OF CHAR;
+BEGIN
+	(* root and initBlock are initialized by the linker *)
+	shutdown := None;
+	numLoaders := 0;
+	freeRoot := NIL;
+	Machine.GetConfig("TraceModules", s);
+	trace := (s[0] = "1");
+END Init;
 
 BEGIN
 	Init

@@ -9889,7 +9889,11 @@ TYPE
 					(* this is the only case where the destination can be dynamically smaller than the source 
 						in all other cases the dynamic size has to be taken
 					*)
-					MakeMemory(mem, tag, addressType, 0);
+					IF backend.cooperative THEN 
+						MakeMemory(mem, tag, addressType, system.addressSize);
+					ELSE
+						MakeMemory(mem, tag, addressType, 0);
+					END;
 					RETURN mem;
 				END;
 			END;

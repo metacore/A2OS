@@ -134,6 +134,8 @@ VAR working, physicalProcessors, virtualProcessors: Counters.AlignedCounter;
 (** The scheduler stops its execution if all processors are idle, unless there are activities waiting for interrupts. *)
 VAR awaiting*: Counters.AlignedCounter;
 
+PROCEDURE StoreActivity EXTERN "Environment.StoreActivity";
+
 PROCEDURE GetProcessTime-(): HUGEINT;
 VAR activity: Activity; diff: Timer.Counter;
 BEGIN{UNCOOPERATIVE, UNCHECKED}
@@ -239,7 +241,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	nextActivity.processor.runningActivity := nextActivity;
 	nextActivity.startTime := Timer.GetCounter();
 	activity := NIL;
-	SYSTEM.SetActivity (nextActivity);
+	SYSTEM.SetActivity (nextActivity); StoreActivity;
 	SYSTEM.SetFramePointer (nextActivity.framePointer);
 END SwitchTo;
 
@@ -295,9 +297,9 @@ PROCEDURE CallVirtual- (procedure: PROCEDURE (value: ADDRESS); value: ADDRESS; p
 VAR currentActivity {UNTRACED}: Activity; stackPointer: ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (processor # NIL);
-	currentActivity := SYSTEM.GetActivity ()(Activity); stackPointer := SYSTEM.GetStackPointer (); SYSTEM.SetActivity (processor);
+	currentActivity := SYSTEM.GetActivity ()(Activity); stackPointer := SYSTEM.GetStackPointer (); SYSTEM.SetActivity (processor); StoreActivity;
 	SYSTEM.SetStackPointer (ADDRESS OF processor.stack[LEN (processor.stack) - CPU.StackDisplacement]);
-	procedure (value); SYSTEM.SetActivity (currentActivity); SYSTEM.SetStackPointer (stackPointer);
+	procedure (value); SYSTEM.SetActivity (currentActivity); StoreActivity; SYSTEM.SetStackPointer (stackPointer);
 END CallVirtual;
 
 (** Creates a new activity that calls the specified procedure. *)

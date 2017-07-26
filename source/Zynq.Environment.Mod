@@ -103,6 +103,14 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	memory := MemorySize - ADDRESS OF KernelEnd;
 END InitMemory;
 
+PROCEDURE StoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+END StoreActivity;
+
+PROCEDURE RestoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+END RestoreActivity;
+
 PROCEDURE Initialize-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.Initialize; InitTrace; InitMemory;

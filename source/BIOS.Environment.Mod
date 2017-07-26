@@ -312,6 +312,14 @@ PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := initRegs[n]
 END GetInit;
 
+PROCEDURE StoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+END StoreActivity;
+
+PROCEDURE RestoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+END RestoreActivity;
+
 PROCEDURE Initialize-;
 CONST Channel0 = 0; RateGenerator = 4;
 BEGIN {UNCOOPERATIVE, UNCHECKED}

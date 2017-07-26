@@ -12,6 +12,7 @@ CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 CONST DefaultConfigFile = "aos.ini";
 CONST UserConfigFile = "myaos.ini";
 
+VAR activity: WORD;
 VAR status* := 0: WORD;
 VAR heap: Kernel32.HANDLE;
 VAR sleepingQueue: Queues.Queue;
@@ -217,9 +218,20 @@ PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := 0;
 END GetInit;
 
+PROCEDURE StoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Kernel32.TlsSetValue(activity, SYSTEM.VAL(ADDRESS, SYSTEM.GetActivity ()));
+END StoreActivity;
+
+PROCEDURE RestoreActivity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity(SYSTEM.VAL(Activities.Activity,Kernel32.TlsGetValue(activity)));
+END RestoreActivity;
+
 PROCEDURE Initialize-;
 VAR trace: ARRAY 32 OF CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	activity := Kernel32.TlsAlloc();
 	heap := Kernel32.GetProcessHeap();
 	stdout := Kernel32.GetStdHandle(Kernel32.STDOutput);
 
@@ -248,6 +260,7 @@ END Initialize;
 
 PROCEDURE Terminate-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Kernel32.TlsFree(activity);
 END Terminate;
 
 BEGIN

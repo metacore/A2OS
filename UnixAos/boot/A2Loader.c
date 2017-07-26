@@ -28,19 +28,21 @@
 typedef void (*OberonProc)();
 typedef void *addr;
 
-typedef struct {
-    char id[32];		/* must be coreID */
-    void *displacement;		/* must be address of buf */
+typedef struct {  /* cf. Glue.EntryPoint */
+    char id[32];		/* must match coreID */
+    void *displacement;		/* must match address of buf */
     OberonProc entry;		/* Glue.Init0 */
     addr *dlopenaddr;
+    addr *dlcloseaddr;
     addr *dlsymaddr;
     int  *argc;
     addr *argv;
+    addr *env;
 } *A2Header;
 
-char *coreID = "Solaris32G.core";
+char *coreID = "Oberon32G.core";
 
-int main( int argc, char *argv[] ) {
+int main( int argc, char *argv[], char *env[] ) {
    int r, n, fd;
    size_t fsize;
    struct stat sb;
@@ -71,8 +73,10 @@ int main( int argc, char *argv[] ) {
       exit( 3 );
    }
    *(header->dlopenaddr) = dlopen;
+   *(header->dlcloseaddr) = dlclose;
    *(header->dlsymaddr) = dlsym;
    *(header->argc) = argc;
    *(header->argv) = argv;
+   *(header->env) = env;
    header->entry();
 }

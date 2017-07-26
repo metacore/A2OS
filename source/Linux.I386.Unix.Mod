@@ -473,12 +473,12 @@ BEGIN
 	Dlsym( 0, "argc", ADDRESSOF( aargc ) );  S.GET( aargc, argc );
 	Dlsym( 0, "argv", ADDRESSOF( argv ) );
 
-	libraryPaths[0] := "/lib/i386-linux-gnu";
+	libraryPaths[0] := "/lib/i386-linux-gnu/i686/cmov";
 	libraryPaths[1] := "/usr/lib/i386-linux-gnu";
-	libraryPaths[2] := "/lib";
-	libraryPaths[3] := "/usr/lib";
-	noPaths := 4;
-
+	libraryPaths[2] := "/lib/i386-linux-gnu";
+	libraryPaths[3] := "/lib";
+	libraryPaths[4] := "/usr/lib";
+	noPaths := 5;
 
 
 	libc := Dlopen( libcname, 2 );

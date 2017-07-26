@@ -5,7 +5,7 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = " A2 ";
+	Version = "A2 Generic, ";
 
 	DefaultObjectFileExtension* = ".Obj";
 	
@@ -34,9 +34,7 @@ CONST
 	Processors* = 6;	(*!  Interprocessor interrupts,  not used in UnixAos *)
 	KernelLog* = 7;		(* Atomic output *)
 	X11* = 8;				(* XWindows I/O *)
-	Trap* = 9;
-	GC = 10;
-	MaxLocks* = 11;   (* { <= 32 } *)
+	MaxLocks* = 9;   (* { <= 32 } *)
 	
 	MaxCPU* = 4;
 	IsCooperative* = FALSE;
@@ -80,9 +78,7 @@ VAR
 	SSE42Support-	: BOOLEAN;
 	SSE5Support-	: BOOLEAN;
 	AVXSupport-		: BOOLEAN;
-	
-	GCacquired- : BOOLEAN;
-	
+		
 	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 	
 	prioLow-, prioHigh-: LONGINT;	(* permitted thread priorities *)
@@ -99,23 +95,7 @@ VAR
 	
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	
-	(*
-	Unix.ThrInitialize	: PROCEDURE {REALTIME, C} ( VAR low, high: LONGINT ): BOOLEAN;
-	
-	Unix.MtxInit			: PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Mutex_t;
-	Unix.MtxDestroy	: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	Unix.MtxLock		: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	Unix.MtxUnlock	: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	
-	conInit			: PROCEDURE {REALTIME, C}  ( dummy: LONGINT ): Unix.Condition_t;
-	conDestroy	: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	conWait		: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t;  mtx: Unix.Mutex_t );
-	conSignal		: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	
-	thrSleep		: PROCEDURE {REALTIME, C} ( ms: LONGINT );
-	thrThis			: PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Thread_t;
-	*)
-	
+
 	logfile: LONGINT;
 	traceHeap: BOOLEAN;
 
@@ -548,10 +528,7 @@ END GetTimer;
 				UNTIL ch <= ' '
 			END
 		END;
-		IF name = "ObjectFileExtension" THEN val := ".GofU"
-		ELSE
-		val[0] := 0X
-		END;
+		IF name = "ObjectFileExtension" THEN  val := ".GofU" ELSE  val[0] := 0X  END;
 	END GetConfig;
 
 
@@ -718,7 +695,7 @@ END GetTimer;
 	VAR i: LONGINT;  a: ADDRESS;
 	BEGIN 
 		i := 0;  
-		WHILE i < MaxLocks DO  	mtx[i] := Unix.MtxInit(0);  INC( i )  END;   
+		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  INC( i )  END;   
 	END InitLocks;  
 
 	PROCEDURE CleanupLocks*;  
@@ -740,22 +717,6 @@ END GetTimer;
 		Unix.MtxUnlock( mtx[level] );
 	END Release;  
 	
-	PROCEDURE  AcquireGC*( ): BOOLEAN;  
-	VAR res: BOOLEAN;
-	BEGIN 
-		Unix.MtxLock( mtx[GC] );
-		IF ~GCacquired THEN  GCacquired := TRUE;  res := TRUE  ELSE  res := FALSE  END;
-		Unix.MtxUnlock( mtx[GC] );
-		RETURN  res
-	END AcquireGC;  
-
-	(** Release a spin-lock. *)
-	PROCEDURE  ReleaseGC*;   
-	BEGIN 
-		Unix.MtxLock( mtx[GC] );
-		GCacquired := FALSE;
-		Unix.MtxUnlock( mtx[GC] )
-	END ReleaseGC;  
 	
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
 	VAR ignore: LONGINT;
@@ -809,9 +770,6 @@ END GetTimer;
 		memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
 		IF memBlkSize < MemBlockSize THEN memBlkSize := MemBlockSize END; 	(* MemBlockSize implicitly multiple of StaticBlockSize *)
 
-		(*initVal := 8*1024*1024;
-		TRACE(initVal, adr);
-		*)
 		IF Unix.posix_memalign( adr, Unix.PageSize, memBlkSize ) # 0 THEN
 			Unix.Perror( "Machine.ExpandHeap: posix_memalign" );
 			beginBlockAdr := 0;
@@ -822,12 +780,7 @@ END GetTimer;
 			END;
 			IF TraceMemBlocks THEN TRACE(adr, memBlkSize) END;
 		END;
-		(*
-		adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
-		IF adr = NilVal THEN (* allocation failed *)
-			adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
-		END;
-		*)
+
 		IF TraceMemBlocks THEN
 			Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
 			Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
@@ -869,25 +822,6 @@ END GetTimer;
 		memoryBlock := memBlock;
 	END InitHeap;
 
-	(*
-	PROCEDURE InitHeap;
-	VAR heapAdr, firstBlock: ADDRESS; size: SIZE;  
-	BEGIN
-		Unix.Dlsym( 0, "heapAdr", ADDRESSOF( heapAdr ) );  
-		Unix.Dlsym( 0, "heapSize", ADDRESSOF( size ) );  
-		firstBlock := heapAdr + ((-heapAdr - AddrSize) MOD BlockSize);
-		size := heapAdr + size - BlockSize - firstBlock;  DEC( size, size MOD BlockSize + BlockSize );
-
-		firstMemBlock.next := NIL;
-		firstMemBlock.startAdr := heapAdr;
-		firstMemBlock.beginBlockAdr :=  firstBlock;
-		firstMemBlock.endBlockAdr := firstBlock + size;  
-		firstMemBlock.size := size;
-	
-		memBlockHead := S.VAL( MemoryBlock, ADDRESSOF( firstMemBlock ) );
-		memBlockTail := memBlockHead;
-	END InitHeap;
-	*)
 
 	PROCEDURE InitConfig;
 	VAR a: ADDRESS;  i: LONGINT;  c: CHAR;

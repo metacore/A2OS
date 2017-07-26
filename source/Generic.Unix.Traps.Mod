@@ -263,7 +263,7 @@ VAR
 	END SearchExceptionHandler;
 
 
-	PROCEDURE SignalHandler( signal: LONGINT;  scp, ucp, dummy: ADDRESS );
+	PROCEDURE SignalHandler( signal: LONGINT;  scp, ucp: ADDRESS );
 		(* 'dummy' for 16 byte stack alignment, MacOS! *)
 	BEGIN
 		IF ~(signal IN  {1, 2, 14, 15}) (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
@@ -274,7 +274,7 @@ VAR
 
 
 BEGIN
-	trapMutex := Unix.RecursiveMtxInit(0);
+	trapMutex := Unix.NewRecursiveMtx( );
 	trace := FALSE;  
 	Unix.InstallSignalHandler( SignalHandler );
 	unix := StdIO.env

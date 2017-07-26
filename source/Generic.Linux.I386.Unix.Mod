@@ -11,7 +11,7 @@ IMPORT S := SYSTEM, Glue, Trace;
 
 
 CONST
-	Version* = "LinuxG32";
+	Version* = "Linux";
 
   	libcname* = "libc.so.6";
 	libX11name* = "libX11.so.6";
@@ -143,19 +143,18 @@ TYPE
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
 	MutexType = ARRAY 8 OF ADDRESS;
+	MutexAttributeType = ARRAY 1 OF WORD;
 
 	Condition_t* = ADDRESS;
 	ConditionType = ARRAY 12 OF WORD;
 
 	Sigset_t= ARRAY 32 OF ADDRESS;
-	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp, dum: ADDRESS );
-
-	MutexAttributeType = ARRAY 1 OF WORD;
+	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp: ADDRESS );
 	
-	pid_t *= LONGINT;
-	path_t *= ARRAY OF CHAR;
-	arg_t *= ARRAY OF CHAR;
-	argv_t *= ARRAY OF arg_t;
+	pid_t*		= LONGINT;
+	path_t*	= ARRAY OF CHAR;
+	arg_t*		= ARRAY OF CHAR;
+	argv_t*	= ARRAY OF arg_t;
 
 
 CONST
@@ -398,11 +397,8 @@ VAR
 
 	sigstack-: ARRAY 32*4096 OF CHAR;
 
-	ptrace: PROCEDURE {C} (request: WORD; pid: Thread_t; adr, data: ADDRESS): WORD;
-	getcontext-: PROCEDURE {C} (context: ADDRESS): WORD;
 
 	sysconf: PROCEDURE {C} (name: LONGINT):WORD;
-
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -529,21 +525,21 @@ VAR
 
 	PROCEDURE getnprocs* (): LONGINT;
 	BEGIN
-		RETURN sysconf(0x54); (*0x53 for number of processors configured, 0x54 for number of processors online *)
+		RETURN sysconf( 0x54 ); (*0x53 for number of processors configured, 0x54 for number of processors online *)
 	END getnprocs;
 
 
-	PROCEDURE MtxInit*(dummy: LONGINT): Mutex_t;
+	PROCEDURE NewMtx*( ): Mutex_t;
 	VAR
 		mtx: Mutex_t;
 	BEGIN
-		mtx := malloc(SIZEOF(MutexType));
+		mtx := malloc( SIZEOF(MutexType) );
 		ASSERT(mtx # 0);
 		ASSERT(pthread_mutex_init(mtx, NIL) = 0);
 		RETURN mtx;
-	END MtxInit;
+	END NewMtx;
 
-	PROCEDURE RecursiveMtxInit*(dummy: LONGINT): Mutex_t;
+	PROCEDURE NewRecursiveMtx*( ): Mutex_t;
 	VAR
 		mtx: Mutex_t;
 		attr: MutexAttributeType;
@@ -551,14 +547,14 @@ VAR
 	CONST
 		Recursive = 1;
 	BEGIN
-		mtx := malloc(SIZEOF(MutexType));
+		mtx := malloc( SIZEOF(MutexType) );
 		res := pthread_mutexattr_init(ADDRESS OF attr);
 		res := pthread_mutexattr_settype(ADDRESS OF attr, Recursive);
 
 		ASSERT(mtx # 0);
 		ASSERT(pthread_mutex_init(mtx, ADDRESS OF attr) = 0);
 		RETURN mtx;
-	END RecursiveMtxInit;
+	END NewRecursiveMtx;
 
 
 
@@ -577,43 +573,43 @@ VAR
 		ASSERT(pthread_mutex_unlock(mtx) = 0);
 	END MtxUnlock;
 
-	PROCEDURE ConInit* (dummy: LONGINT): Condition_t;
+	PROCEDURE NewCond* ( ): Condition_t;
 	VAR cond: Condition_t;
 	BEGIN
-		cond := malloc(SIZEOF(ConditionType));
+		cond := malloc( SIZEOF(ConditionType) );
 		ASSERT(cond # 0);
 		ASSERT(pthread_cond_init(cond, NIL)=0);
 		RETURN cond;
-	END ConInit;
+	END NewCond;
 
-	PROCEDURE ConDestroy*(con: Condition_t);
+	PROCEDURE CondDestroy*(con: Condition_t);
 	BEGIN
 		ASSERT(pthread_cond_destroy(con) = 0);
-	END ConDestroy;
+	END CondDestroy;
 
-	PROCEDURE ConWait*(con: Condition_t; mtx: Mutex_t);
+	PROCEDURE CondWait*(con: Condition_t; mtx: Mutex_t);
 	BEGIN
 		ASSERT(pthread_cond_wait(con, mtx) = 0);
-	END ConWait;
+	END CondWait;
 
-	PROCEDURE ConSignal*(cond: Condition_t);
+	PROCEDURE CondSignal*(cond: Condition_t);
 	BEGIN
 		ASSERT(pthread_cond_signal(cond) = 0);
-	END ConSignal;
+	END CondSignal;
 
-	PROCEDURE ThrThis*(dummy: LONGINT): Thread_t;
+	PROCEDURE ThrThis*(): Thread_t;
 	BEGIN
-		RETURN pthread_self();
+		RETURN pthread_self( );
 	END ThrThis;
 
-	PROCEDURE ThrYield*(dummy: LONGINT);
+	PROCEDURE ThrYield*( );
 	BEGIN
 		ThrSleep(1);
 	END ThrYield;
 
-	PROCEDURE ThrExit*(dummy: LONGINT);
+	PROCEDURE ThrExit*( );
 	BEGIN
-		pthread_exit(0);
+		pthread_exit( 0 );
 	END ThrExit;
 
 	PROCEDURE ThrSetPriority*(thr: Thread_t; prio: LONGINT);
@@ -621,11 +617,11 @@ VAR
 		param: Sched_param;
 		policy: LONGINT;
 	BEGIN
-	    IF pthread_getschedparam( thr, ADDRESS OF policy, ADDRESS OF param ) # 0 THEN END;
-	    param.sched_priority := prio;
-	    IF pthread_setschedparam( thr, SCHED_OTHER, ADDRESS OF param ) # 0 THEN
-	    	Perror("pthread_setschedparam");
-	    END
+		IF pthread_getschedparam( thr, ADDRESS OF policy, ADDRESS OF param ) # 0 THEN END;
+		param.sched_priority := prio;
+		IF pthread_setschedparam( thr, SCHED_OTHER, ADDRESS OF param ) # 0 THEN
+			Perror("pthread_setschedparam");
+		END
 	END ThrSetPriority;
 
 	PROCEDURE ThrGetPriority*(thr: Thread_t):LONGINT;
@@ -650,36 +646,33 @@ VAR
 	PROCEDURE {C} Starter(proc: PROCEDURE): ADDRESS;
 	VAR
 		me: Thread_t;
-
 		old, new: Sigset_t;
-
 		param: Sched_param;
 		res: LONGINT;
-
 	BEGIN
 		me := pthread_self();
 		SetSigaltstack();
 
-	    IF sigfillset( ADDRESS OF new ) < 0 THEN
-	    	Perror("sigfillset");
-	    END;
-	    sigdelset( ADDRESS OF new, SIGILL );
-	    sigdelset( ADDRESS OF new, SIGTRAP );
-	    sigdelset( ADDRESS OF new, SIGFPE );
-	    sigdelset( ADDRESS OF new, SIGBUS );
-	    sigdelset( ADDRESS OF new, SIGSEGV );
-	    sigdelset( ADDRESS OF new, SIGTERM );
-	    sigdelset( ADDRESS OF new, T_SIGSUSPEND );
+		IF sigfillset( ADDRESS OF new ) < 0 THEN
+			Perror("sigfillset");
+		END;
+		sigdelset( ADDRESS OF new, SIGILL );
+		sigdelset( ADDRESS OF new, SIGTRAP );
+		sigdelset( ADDRESS OF new, SIGFPE );
+		sigdelset( ADDRESS OF new, SIGBUS );
+		sigdelset( ADDRESS OF new, SIGSEGV );
+		sigdelset( ADDRESS OF new, SIGTERM );
+		sigdelset( ADDRESS OF new, T_SIGSUSPEND );
 
-	    res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
-	    res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
-	    res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
-	    param.sched_priority := 0;
-	    res := pthread_setschedparam( me, SCHED_OTHER, ADDRESS OF param );
-	    proc();
+		res := pthread_sigmask( SIG_SETMASK, ADDRESS OF new, ADDRESS OF old );
+		res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
+		res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
+		param.sched_priority := 0;
+		res := pthread_setschedparam( me, SCHED_OTHER, ADDRESS OF param );
+		proc();
 
-	    pthread_exit( NIL );
-	    RETURN NIL;
+		pthread_exit( NIL );
+		RETURN NIL;
 	END Starter;
 
 	PROCEDURE ThrStart*(p: PROCEDURE; stackSize: SIZE): Thread_t;
@@ -704,8 +697,8 @@ VAR
 	VAR
 		sltime,rem: RECORD
 			tv_sec: WORD;        (* seconds *)
-            tv_nsec: WORD;       (* nanoseconds *)
-         END;
+			tv_nsec: WORD;       (* nanoseconds *)
+     	END;
 	BEGIN
 		sltime.tv_sec := ms DIV 1000;
 		sltime.tv_nsec := 1000000*(ms MOD 1000);
@@ -777,8 +770,6 @@ VAR
 	VAR
 		param: Sched_param;
 	BEGIN
-	    (*struct sched_param param;*)
-
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
 		mainthread := pthread_self();
 		high := sched_get_priority_max(SCHED_OTHER);
@@ -924,9 +915,9 @@ VAR
 	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS); (* reversed arguments !! *)
 	BEGIN
 		IF trap # NIL THEN
-			trap(sig, scp, ucp, 0);
+			trap( sig, scp, ucp );
 		ELSE
-			TRACE(sig, scp, ucp)
+			TRACE( sig, scp, ucp )
 		END;
 	END SigHandler;
 
@@ -1037,8 +1028,6 @@ VAR
 
 		Dlsym( libc, "exit",		ADDRESSOF(exit) );
 
-		Dlsym( libc, "ptrace", ADDRESSOF(ptrace) );
-		Dlsym( libc, "getcontext", ADDRESSOF(getcontext) );
 		Dlsym( libc, "sysconf", ADDRESSOF(sysconf) );
 
 		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init) );

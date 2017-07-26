@@ -19,9 +19,7 @@ CONST
 	Version* = "Solaris";
 
 	libcname* = "libc.so.1";
-	libmname* = "libm.so.1";
 	libX11name* = "libX11.so.4";
-	libXextname* = "libXext.so.0";
 	libpthreadname = "libpthread.so.1";
 
 	LittleEndian* = TRUE;   (** byte order of basic types *)
@@ -328,7 +326,7 @@ TYPE
 			END;
 
 	Sigset = ARRAY 4 OF SET;
-	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp, dum: ADDRESS ); 
+	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp: ADDRESS ); 
 
 	Stack* = RECORD
 				sp*	: ADDRESS;
@@ -581,7 +579,7 @@ VAR
 			suspendHandler( ucp );
 			handler_done := TRUE;
 		ELSIF trap # NIL THEN 
-			trap( sig, scp, ucp, 0 );
+			trap( sig, scp, ucp );
 		ELSE
 			Trace.String( "Unix.SigHandler: sig = " ); Trace.Int( sig, 0 ); Trace.Ln;  exit( -1 );
 		END;
@@ -746,17 +744,17 @@ VAR
 		END;  
 	END ThrKill;
 	
-	PROCEDURE ThrThis*( dummy: LONGINT ): Thread_t;
+	PROCEDURE ThrThis*( ): Thread_t;
 	BEGIN
-		RETURN pthread_self();
+		RETURN pthread_self( );
 	END ThrThis;
 
-	PROCEDURE ThrYield*( dummy: LONGINT );
+	PROCEDURE ThrYield*( );
 	BEGIN
 		ThrSleep( 1 );
 	END ThrYield;
 
-	PROCEDURE ThrExit*( dummy: LONGINT );
+	PROCEDURE ThrExit*( );
 	BEGIN
 		pthread_exit( 0 );
 	END ThrExit;
@@ -783,7 +781,7 @@ VAR
 	END ThrGetPriority;
 	
 	
-	PROCEDURE MtxInit*( dummy: LONGINT ): Mutex_t;
+	PROCEDURE NewMtx*( ): Mutex_t;
 	VAR 
 		mtx: Mutex_t;
 	BEGIN
@@ -791,9 +789,9 @@ VAR
 		ASSERT(mtx # 0);
 		ASSERT(pthread_mutex_init(mtx, NIL) = 0);
 		RETURN mtx;
-	END MtxInit;
+	END NewMtx;
 
-	PROCEDURE RecursiveMtxInit*(dummy: LONGINT): Mutex_t;
+	PROCEDURE NewRecursiveMtx*( ): Mutex_t;
 	VAR 
 		mtx: Mutex_t;
 		attr: MutexAttributeDesc;
@@ -808,7 +806,7 @@ VAR
 		ASSERT( mtx # 0 );
 		ASSERT( pthread_mutex_init( mtx, ADDRESSOF( attr ) ) = 0);
 		RETURN mtx;
-	END RecursiveMtxInit;
+	END NewRecursiveMtx;
 	
 	PROCEDURE MtxDestroy*( mtx: Mutex_t );
 	BEGIN
@@ -826,29 +824,29 @@ VAR
 	END MtxUnlock;
 	
 	
-	PROCEDURE ConInit* ( dummy: LONGINT ): Condition_t;
+	PROCEDURE NewCond* ( ): Condition_t;
 	VAR cond: Condition_t;
 	BEGIN
 		cond := malloc( SIZEOF( ConditionDesc ) );
 		ASSERT( cond # 0 );
 		ASSERT( pthread_cond_init( cond, NIL ) = 0 );
 		RETURN cond;
-	END ConInit;
+	END NewCond;
 	
-	PROCEDURE ConDestroy*( con: Condition_t );
+	PROCEDURE CondDestroy*( con: Condition_t );
 	BEGIN
 		ASSERT( pthread_cond_destroy( con ) = 0 );
-	END ConDestroy;
+	END CondDestroy;
 
-	PROCEDURE ConWait*( con: Condition_t; mtx: Mutex_t );
+	PROCEDURE CondWait*( con: Condition_t; mtx: Mutex_t );
 	BEGIN
 		ASSERT( pthread_cond_wait( con, mtx ) = 0 );
-	END ConWait;
+	END CondWait;
 
-	PROCEDURE ConSignal*( cond: Condition_t );
+	PROCEDURE CondSignal*( cond: Condition_t );
 	BEGIN
 		ASSERT( pthread_cond_signal( cond ) = 0 );
-	END ConSignal;
+	END CondSignal;
 	
 	
 	(*-------------------------------------------------------------------------------------------------------------*)

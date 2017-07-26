@@ -9,7 +9,6 @@ CONST
 (*	base* = 08050000H;		for true elf core *)
 	base* = 08070000H;	(*  used by A2Loader,  see 'A2Loader.elf  -h' *)
 	debug* = {};
-	NL = 0AX;
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
 	
@@ -19,12 +18,8 @@ VAR
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS ): ADDRESS;
 	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
-	write		: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	exit-		: PROCEDURE {C} ( status: LONGINT );
 
 	stackBottom-	: ADDRESS;	(* of main thread *)
-
-	libc: ADDRESS;
 	
 	argc-: WORD; 
 	argv-: ADDRESS;
@@ -171,7 +166,7 @@ VAR
 
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;		(* header needed by A2Loader *)
 	CODE
-		DB 'Solaris32G.core', 0
+		DB 'Oberon32G.core', 0, 0
 		DD 0
 		DD 0
 		DD 0
@@ -179,16 +174,35 @@ VAR
 		DD base
 		DD @Init0
 		DD @dlopen
+		DD @dlclose
 		DD @dlsym
 		DD @argc
 		DD @argv
+		DD @environ
 	END EntryPoint;		
 	
+	PROCEDURE {NOPAF} putc*( file: ADDRESS; c: CHAR );
+	CODE
+		PUSH ECX
+		MOV EAX, 4
+		MOV EBX, [ESP + 12]
+		LEA ECX, [ESP+8]	
+		MOV EDX, 1
+		INT 80H
+		POP ECX
+		JNE fail
+		MOV EAX, [ESP + 4]
+		RET
+		fail:
+		MOV EAX, -1
+		RET
+	END putc;
+	
  	PROCEDURE Char ( c: CHAR );
-	VAR r: LONGINT;
 	BEGIN
-		r := write( 1, ADDRESSOF( c ), 1 );
+		putc( 1, c )
 	END Char;
+
 
  	PROCEDURE Dlsym*( handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS );
 	VAR val: ADDRESS;
@@ -210,17 +224,16 @@ VAR
 		
 		stackBottom := ADDRESSOF( i ) + 2*SIZEOF( ADDRESS );
 
-	(*	Dlsym( 0, "dlopen" , ADDRESSOF ( dlopen ) );	*)
+	(*	Dlsym( 0, "dlopen" , ADDRESSOF ( dlopen ) );	
 		libdl := dlopen( ADDRESSOF( "/lib/libdl.so.1" ), 2 );
-		Dlsym( libdl, "dlclose", ADDRESSOF ( dlclose ) );
+		Dlsym( libdl, "dlclose", ADDRESSOF ( dlclose ) );  
 		libc := dlopen( ADDRESSOF( "/lib/libc.so.1" ), 2 );	
 		Dlsym( libc, "write", ADDRESSOF ( write ) );
-		Dlsym( libc, "exit", ADDRESSOF ( exit ) );
+		Dlsym( libc, "exit", ADDRESSOF ( exit ) );	*)
 	END Init;
 	
 	PROCEDURE {INITIAL, NOPAF} Init0;
 	BEGIN
-	(*? same layout in Solaris ?? *)
 	(*	(*initial stack layout:
 			argc at esp
 			argv at esp+4

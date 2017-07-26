@@ -1561,7 +1561,7 @@ TYPE
 				IF backend.cooperative THEN
 					IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
 						GetCodeSectionNameForSymbol(procedure, name);
-						Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
+						Basic.SuffixSegmentedName (name, Basic.MakeString ("@StackDescriptor"));
 					ELSE
 						Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
 					END;
@@ -2956,7 +2956,7 @@ TYPE
 		BEGIN
 			previousSection := section;
 			GetCodeSectionNameForSymbol(procedure, name);
-			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
+			Basic.SuffixSegmentedName (name, Basic.MakeString ("@StackDescriptor"));
 			context := SwitchContext(NewSection(module.allSections, Sections.ConstSection, name,NIL,dump # NIL));
 			IF dump # NIL THEN dump := section.comments END;
 			Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
@@ -12722,7 +12722,14 @@ TYPE
 		BEGIN
 			name := procedureSection.name;
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@Descriptor"));
-			IF CreateProcedureDescInfo THEN
+			IF implementationVisitor.backend.cooperative THEN
+				dest := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+				Info(section, "TypeDescriptor");
+				Basic.ToSegmentedName("BaseTypes.Pointer", name);
+				NamedSymbol(dest, name,NIL, 0, 0);
+				BaseRecord(dest);
+				offset := 0;
+			ELSIF CreateProcedureDescInfo THEN
 				dest := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
 				Address(dest,0);
 				Symbol(dest, MakeProcedureDescriptorTag(procedureSection),2,0);
@@ -12796,6 +12803,15 @@ TYPE
 			Info(section, "monitor");
 			Address(section,0);
 		END BaseObject;
+
+		PROCEDURE BaseRecord (section: IntermediateCode.Section);
+		BEGIN
+			BasePointer(section);
+			Info(section, "action");
+			Address(section,0);
+			Info(section, "monitor");
+			Address(section,0);
+		END BaseRecord;
 		
 		PROCEDURE ModuleDescriptor(section: IntermediateCode.Section);
 		VAR descriptorSection: IntermediateCode.Section; name: ARRAY 128 OF CHAR;

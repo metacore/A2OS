@@ -9890,7 +9890,7 @@ TYPE
 						in all other cases the dynamic size has to be taken
 					*)
 					IF backend.cooperative THEN 
-						MakeMemory(mem, tag, addressType, system.addressSize);
+						MakeMemory(mem, tag, addressType, ToMemoryUnits(system,system.addressSize));
 					ELSE
 						MakeMemory(mem, tag, addressType, 0);
 					END;

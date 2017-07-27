@@ -13031,7 +13031,9 @@ TYPE
 		
 		PROCEDURE PatchCRC(crc: LONGINT);
 		BEGIN
-			PatchLongint(ModuleSection(), patchCRC, crc);
+			IF implementationVisitor.newObjectFile & ~simple THEN
+				PatchLongint(ModuleSection(), patchCRC, crc);
+			END;
 		END PatchCRC;
 		
 

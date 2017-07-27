@@ -7,7 +7,7 @@ CONST
 	
 	Version = "A2 Generic, ";
 
-	DefaultObjectFileExtension* = ".Obj";
+	DefaultObjectFileExtension* = ".GofU";
 	
 	Second* = 1000; (* frequency of ticks increments in Hz *)
 
@@ -498,7 +498,8 @@ END GetTimer;
 	VAR i, src: LONGINT; ch: CHAR;
 	BEGIN
 		ASSERT (name[0] # "=");	(* no longer supported, use GetInit instead *)
-		src := -1;
+		
+		src := -1;  val := "";
 		LOOP
 			REPEAT
 				INC( src );  ch := config[src]; 
@@ -528,7 +529,9 @@ END GetTimer;
 				UNTIL ch <= ' '
 			END
 		END;
-		IF name = "ObjectFileExtension" THEN  val := ".GofU" ELSE  val[0] := 0X  END;
+		IF (name = "ObjectFileExtension") & (val = "") THEN  
+			val := DefaultObjectFileExtension
+		END;
 	END GetConfig;
 
 

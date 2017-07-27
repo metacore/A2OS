@@ -15,7 +15,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		canvasGen-: Graphics.CanvasGenerator;
 		pointerThreshold*, 
 		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
-
+		hs,ws: POINTER TO ARRAY OF LONGINT;
 		totalW, totalH: LONGINT;
 		gap: LONGINT;		
 		
@@ -26,15 +26,18 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 			pix: Raster.Pixel;
 		BEGIN
 			gap:=10;
-			
+			NEW(SELF.ws, LEN(Ws));
+			NEW(SELF.hs, LEN(Hs));
 			FOR i:=0 TO LEN(Ws,0)-1 DO
 				ASSERT(Ws[i]>0);
+				SELF.ws[i]:=Ws[i];
 				totalW:=totalW+Ws[i];
 			END;
 			totalW:=totalW+gap*(LEN(Ws,0)-1);
 			
 			FOR i:=0 TO LEN(Hs,0)-1 DO
 				ASSERT(Hs[i]>0);
+				SELF.hs[i]:=Hs[i];
 				totalH:=totalH+Hs[i];
 			END;
 			totalH:=totalH+gap*(LEN(Hs,0)-1);			
@@ -93,7 +96,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				ELSE
 					offX:=offX*w DIV totalW;  (*these are not pixel perfect, but I can't think of anything better*)
 					offY:=offY*h DIV totalH;
-					wscaled:=img.width*w DIV totalW;
+					wscaled:=img.width*w DIV totalW; (*this means if the image is not actually the size suggested by ws[i],hs[j], then it won't be blown up to fill the space.*)
 					hscaled:=img.height*h DIV  totalH;
 					canvas.ScaleImage(img, Rectangles.MakeRect(0, 0, img.width, img.height), Rectangles.MakeRect(offX,offY, offX+wscaled, offY+hscaled), mode, MIN(q,maxInterpolation));
 				END
@@ -115,9 +118,9 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				y:=0;
 				FOR j:=0 TO LEN(imgs,1)-1 DO
 					DrawSingle(imgs[i,j], x,y, isScaled,mode);
-					y:=y+imgs[0,j].height+gap;
+					y:=y+hs[j]+gap;
 				END;				
-				x:=x+imgs[i,0].width+gap;
+				x:=x+ws[i]+gap;
 			END;
 			
 			
@@ -187,5 +190,5 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 END WMImageGrid.
 
 
-SystemTools.FreeDownTo ImageGrid~
-ImageGrid.Test~
+SystemTools.FreeDownTo WMImageGrid~
+WMImageGrid.Test~

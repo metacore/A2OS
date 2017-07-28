@@ -128,7 +128,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		END Draw;
 
 		PROCEDURE Invalidate*(rect : Rectangle);
-		VAR w, h : LONGINT; fx, fy : REAL;
+		VAR w, h : LONGINT; fx, fy : LONGREAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # totalW) OR (h # totalH))  THEN
@@ -149,8 +149,15 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				fy := totalH/ h;
 				m.x := ENTIER(m.x * fx); m.y := ENTIER(m.y * fy);
 				m.x := m.x + bounds.l; m.y := m.y+bounds.l;
+			ELSIF m.msgType = Messages.MsgInvalidate THEN
+				IF m.msgSubType = Messages.MsgSubAll THEN
+					Invalidate(Rectangles.MakeRect(0, 0, totalW, totalH));
+				ELSE
+					HALT(200)
+				END;			
+			ELSE 
+				Handle^(m)
 			END;
-			Handle^(m)
 		END Handle;
 
 	END GridWindow;

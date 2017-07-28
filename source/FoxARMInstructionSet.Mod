@@ -1726,7 +1726,9 @@ CONST
 				|encodingOpcode4: InitOpcode(operand,Unsigned(4,6));
 				|encodingRegisterList: InitRegisterList(operand, R0, Bits(0, 15));
 				|encodingDRegisterList: firstRegister := Unsigned(12,15); lastRegister := firstRegister + Unsigned(0,7) DIV 2 -1;
-					InitRegisterList(operand, DR0, {firstRegister .. lastRegister});
+					IF (firstRegister >= 0)  & (lastRegister >= 0) & (firstRegister < 32) & (lastRegister < 32) THEN
+						InitRegisterList(operand, DR0, {firstRegister .. lastRegister});
+					END;
 				|encodingFRegisterList: firstRegister := Unsigned(12,15)*2+Unsigned(22,22); lastRegister := firstRegister + Unsigned(0,7) -1;
 					IF lastRegister >= 32 THEN RETURN FALSE END;
 					InitRegisterList(operand, SR0, {firstRegister .. lastRegister});

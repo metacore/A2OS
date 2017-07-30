@@ -47,7 +47,7 @@ TYPE
 
 	(*see StreamUtilities.Mod: reader that can daisychained with another reader that extracts a copy of the data flow to a monitor stream*)
 	ReaderMonitor* = OBJECT(Streams.Reader)
-		VAR in: Streams.Reader; tracer: Streams.Writer; receive: Streams.Receiver; pos0: LONGINT;
+		VAR in: Streams.Reader; tracer: Streams.Writer; pos0: LONGINT; tracedPos: LONGINT;
 
 		PROCEDURE &Init(in: Streams.Reader; tracer: Streams.Writer);
 		BEGIN
@@ -55,16 +55,24 @@ TYPE
 			InitReader(Receiver, 1024);
 			SELF.in := in;
 			pos0 := in.Pos();
+			tracedPos := pos0;
 		END Init;
 
 		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		VAR inReader: Streams.Reader;nextPos: LONGINT;
 		BEGIN
+			inReader := in;
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			in.Bytes(buf, ofs, size, len);
-			tracer.Bytes(buf, ofs, len);
-			IF len < size THEN (* end of data indication *)
-				tracer.String("~"); tracer.Ln;
+			(* filter out 0X characters *)
+			nextPos := tracedPos;
+			WHILE (nextPos < ofs + len) & (buf[nextPos] # 0X) DO
+				INC(nextPos);
 			END;
+			IF nextPos > tracedPos THEN
+				tracer.Bytes(buf,tracedPos,nextPos-tracedPos);
+			END;
+			tracedPos := nextPos;
 			res:=in.res
 		END Receiver;
 
@@ -163,7 +171,9 @@ TYPE
 			res := CommandTrapped; COPY("Exception during command execution", msg);
 		END;
 		IF trace THEN
-			tracer.String(" ~"); tracer.Ln; tracer.Update
+			tracer.String(" ~"); 
+			tracer.Ln; 
+			tracer.Update
 		END;
 		BEGIN {EXCLUSIVE} state := Finished; END;
 	END Runner;

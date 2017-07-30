@@ -845,6 +845,8 @@ BEGIN
 		Trace.String("publish registered modules"); Trace.Ln;
 	END;
 	PublishRegisteredModules;
+	(* a standard A2 kernel does not reach this point, but for standalone executables this is required *)
+	Machine.Shutdown(FALSE);
 END Main;
 
 PROCEDURE Init;

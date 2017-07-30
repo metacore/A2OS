@@ -239,7 +239,7 @@ VAR
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
 	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
-	PROCEDURE ^ SetPC(p: DataBlockU); 
+	PROCEDURE ^ SetPC*(p: DataBlockU); 
 	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 

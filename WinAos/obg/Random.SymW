@@ -33,6 +33,7 @@ TYPE
 		PROCEDURE ^ Dice*(sides: LONGINT): LONGINT; 
 		PROCEDURE ^ Uniform*(): REAL; 
 		PROCEDURE ^ Exp*(mu: REAL): REAL; 
+		PROCEDURE ^ Gaussian*(): REAL; 
 	END Sequence; 
 BEGIN
 END Random.

@@ -376,6 +376,7 @@ VAR
 	GetExitCodeProcess-: PROCEDURE {WINAPI}(hProcess: HANDLE; VAR lpExitCode: LONGINT):BOOL; 
 	GetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):SET; 
 	GetFileSize-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSizeHigh: LONGINT):LONGINT; 
+	GetFileSizeEx-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSize: HUGEINT):BOOL; 
 	GetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
 	GetFullPathName-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR; lpFilePart: LPSTR):LONGINT; 
 	GetLastError-: PROCEDURE {WINAPI}():LONGINT; 
@@ -450,6 +451,7 @@ VAR
 	SetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
 	SetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR; dwFileAttributes: SET):BOOL; 
 	SetFilePointer-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
+	SetFilePointerEx-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: HUGEINT; VAR lpNewFilePointer: HUGEINT; dwMoveMethod: LONGINT):BOOL; 
 	SetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
 	SetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime):BOOL; 
 	SetThreadAffinityMask-: PROCEDURE {WINAPI}(hThread: HANDLE; dwThreadAffinityMask: SET):SET; 

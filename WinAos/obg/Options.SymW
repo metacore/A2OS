@@ -4,6 +4,7 @@ CONST
 	Flag* = 0; 
 	String* = 1; 
 	Integer* = 2; 
+	Real* = 3; 
 	Unknown =  -1; 
 	MaxOptions = 64; 
 	OptionDelimiter = \"-"\; 
@@ -21,6 +22,7 @@ TYPE
 		name: Name; 
 		type: LONGINT; 
 		value: LONGINT; 
+		rvalue: LONGREAL; 
 		string: Parameter; 
 	END; 
 
@@ -41,6 +43,7 @@ TYPE
 		PROCEDURE ^ SetInteger*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetString*(CONST name: Name; VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SetString*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetReal*(CONST name: Name; VAR real: LONGREAL): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ Parse*(arg: Streams.Reader; error: Streams.Writer): BOOLEAN; 

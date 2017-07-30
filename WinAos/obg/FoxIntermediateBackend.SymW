@@ -572,6 +572,7 @@ TYPE
 		PROCEDURE ^ ProcedureDescriptorArray(section: IntermediateCode.Section; VAR numberProcs: LONGINT); 
 		PROCEDURE ^ BasePointer(section: IntermediateCode.Section); 
 		PROCEDURE ^ BaseObject(section: IntermediateCode.Section); 
+		PROCEDURE ^ BaseRecord(section: IntermediateCode.Section); 
 		PROCEDURE ^ ModuleDescriptor(section: IntermediateCode.Section); 
 		PROCEDURE ^ ModuleSection(): IntermediateCode.Section; 
 		PROCEDURE ^ NewModuleInfo; 

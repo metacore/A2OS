@@ -15,6 +15,7 @@ CONST
 	MsgSetLanguage* = 10; 
 	MsgInvalidate* = 11; 
 	MsgSerialize* = 12; 
+	MsgMerged* = 15; 
 	MsgSubPointerMove* = 0; 
 	MsgSubPointerDown* = 1; 
 	MsgSubPointerUp* = 2; 

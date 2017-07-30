@@ -1,0 +1,14 @@
+MODULE StdIOShell;
+	IMPORT StdIO, Commands, Modules, Streams, Pipes, Strings;
+CONST 
+VAR 
+	env: Commands.Context; 
+	str: Strings.String; 
+	decoupler: Pipes.ReadDecoupler; 
+	inDecoupled: Streams.Receiver; 
+	inStreamDecoupled: Streams.Reader; 
+
+	PROCEDURE ^ Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Execute(context: Commands.Context); 
+BEGIN
+END StdIOShell.

@@ -59,8 +59,8 @@ To update: Configuration.Init ~
 			<Setting value="WMPinyinIME.Test"/>
 		-->
 
-		<!-- Setting name="Tasklist" value="WMNavigate.Open -vs 1 0 0 Navigation:TaskList"/--> 
-		<!-- Setting name="Hotkey support" value="HotKeys.Open"/ -->
+		<Setting name="Tasklist" value="WMNavigate.Open -vs 1 0 0 Navigation:TaskList"/> 
+		<Setting name="Hotkey support" value="HotKeys.Open"/>
 		<!-- Setting name="Hardware Detection" value="PCITools.DetectHardware"/-->
 	</Section>
 
@@ -75,8 +75,8 @@ To update: Configuration.Init ~
 		</Section>
 		<Section name="FontManager">
 			<Section name="DefaultFont">
-				<Setting name="Name" value="Oberon"/>
-				<Setting name="Size" value="12"/>
+				<Setting name="Name" value="Vera"/>
+				<Setting name="Size" value="14"/>
 			</Section>
 			<Section name="Fonts">
 				<Setting name="Benevento" value="benevento.ttf"/>

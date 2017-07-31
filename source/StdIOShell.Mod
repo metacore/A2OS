@@ -1,6 +1,6 @@
-MODULE StdIOShell; (** AUTHOR ""; PURPOSE ""; *)
+MODULE StdIOShell; (** AUTHOR "Felix Friedrich"; PURPOSE "Command shell for standalone Oberon/A2 Applications"; *)
 
-IMPORT StdIO, Commands, Modules, Streams, Pipes, Strings;
+IMPORT StdIO, Commands, Modules, Trace;
 
 PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
 VAR msg: ARRAY 256 OF CHAR;  res: LONGINT; 
@@ -31,336 +31,39 @@ BEGIN
 	b := Activate(context, str);
 END Execute;
 
+TYPE 
+	(* excute the shell and termination in separate thread with proper process data structure *)
+	Executor=OBJECT
+	VAR done: BOOLEAN;
+
+		PROCEDURE Wait;
+		BEGIN{EXCLUSIVE}
+			AWAIT(done);
+		END Wait;
+		
+	BEGIN{ACTIVE}
+		Execute(StdIO.env);
+	FINALLY
+		Trace.String("Closing Shell"); Trace.Ln;
+		Modules.Shutdown(Modules.PowerDown);
+		done := TRUE
+	END Executor;
+
+VAR execute: Executor;
+
 (* do not add commands here -- the module loader does not finish here and they will not become available *)
-
-VAR
-	env: Commands.Context;
-	str: Strings.String;
-	decoupler: Pipes.ReadDecoupler;
-	inDecoupled: Streams.Receiver;
-	inStreamDecoupled: Streams.Reader;
 BEGIN	
-	Execute(StdIO.env);
-	TRACE('shell died');
-	Modules.Shutdown(Modules.PowerDown);
-	LOOP END;
+	NEW(execute); (* execute shell and termination in separate thread *)
+	execute.Wait; (* will actually never return *)
 END StdIOShell.
-SystemTools.Free StaticLinker ~
 
-SystemTools.DoCommands
-	StaticLinker.Link -p=Linux32G
-		Runtime  Traps UnixFiles RelativeFileSystem GenericLoader
-		WMDefaultFont
-		StdIOShell
-		Compiler
-		StaticLinker
-		FoxOberonFrontend
-		FoxAMDBackend
-		FoxARMBackend
-		FoxGenericObjectFile
-		InterpreterShell
-		SystemTools
-		FSTools
-		PCAAMD64
-		BootManager
-		VirtualDisks
-		DiskFS
-		Partitions
-		~
-		FSTools.CloseFiles oberon ~
-		~
+Linking a command line shell:
 
-SystemTools.DoCommands
-	StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
-		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
-		WinTrace StdIO 
+Command line shell: (Windows):
+StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace StdIO  Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 
-		Runtime  Traps RelativeFileSystem GenericLoader
-		WMDefaultFont
-		StdIOShell
-		Compiler
-		StaticLinker
-		FoxOberonFrontend
-		FoxAMDBackend
-		FoxARMBackend
-		FoxGenericObjectFile
-		InterpreterShell
-		SystemTools
-		FSTools
-		PCAAMD64
-		BootManager
-		VirtualDisks
-		DiskFS
-		Partitions
-		~
-		FSTools.CloseFiles oberon.exe ~
-		~
+Command line shell: (Linux):
+StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  Shell SystemTools StdIOShell ~
 
-(** LINUX **)
-
-SystemTools.DoCommands
-	Compiler.Compile -p=Linux32G --mergeSections
-		Runtime.Mod Trace.Mod Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod Generic.Unix.I386.Machine.Mod Heaps.Mod  Generic.Modules.Mod 
-		Generic.Unix.Objects.Mod 
-		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
-		Pipes.Mod Commands.Mod I386.Reals.Mod Generic.Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
-		Unix.StdIO.Mod Generic.Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
-		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
-		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod Diagnostics.Mod 
-		ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod Unix.BootConsole.Mod 
-		Pipes.Mod Shell.Mod StdIOShell.Mod  
-
-		Options.Mod Debugging.Mod
-		
-		StaticLinker.Mod
-		FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
-		FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
-		FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
-		FoxBackend.Mod FoxSections.Mod 
-		FoxFrontend.Mod 
-		FoxCompiler.Mod 
-		FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-		FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
-		FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
-		FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
-		FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
-		FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
-		FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
-		FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod 
-		FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod
-		FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
-		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
-		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
-	
-		DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod UTF8Strings.Mod XMLParser.Mod
-		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
-		InterpreterShell.Mod
-
-		FoxProfiler.Mod 
-		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
-		~
-
-	StaticLinker.Link -p=Linux32G
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
-		Streams Commands StdIO TrapWriters Traps 
-		Files UnixFiles Clock Dates Reals Strings Diagnostics 
-		BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  
-		Pipes Shell StdIOShell
-
-		
-		Options Locks Debugging
-		StaticLinker 
-		FoxBasic  FoxProgTools  FoxScanner FoxSyntaxTree FoxGlobal
-		FoxActiveCells FoxHardware FoxFormats FoxFingerPrinter  FoxPrintout
-		FoxParser  FoxSemanticChecker
-		FoxBackend FoxSections 
-		
-		FoxFrontend
-		Compiler  FoxOberonFrontend 
-		FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
-		
-		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
-		FoxBinaryObjectFile FoxGenericObjectFile
-		FoxAMD64InstructionSet FoxAMD64Assembler FoxAMDBackend
-
-		
-		FoxAssembler FoxIntermediateAssembler FoxDisassembler
-		FoxARMInstructionSet FoxARMAssembler FoxARMBackend	
-
-		FoxMinosObjectFile
-
-		FoxIntermediateParser FoxIntermediateObjectFile FoxIntermediateLinker 
-		FoxTRMInstructionSet FoxTRMAssembler FoxTRMBackend
-		FoxInterpreterBackend FoxTranspilerBackend
-		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
-		FoxDocumentationParser FoxDocumentationBackend
-		
-		DynamicStrings XMLObjects XML XMLScanner UTF8Strings XMLParser 
-		PersistentObjects FoxInterpreterSymbols FoxInterpreter
-		InterpreterShell
-
-		CRC SystemVersion ProcessInfo0 ProcessInfo Plugins SystemTools
-
-	~
-	FSTools.CloseFiles oberon
-	~
-~ 
-
-
-(** WINDOWS **)
-SystemTools.DoCommands
-
-	Compiler.Compile  -p=Win32G
-		Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
-		Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
-		I386.Reals.Mod Generic.Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
-		
-		Diagnostics.Mod StringPool.Mod BitSets.Mod ObjectFile.Mod 
-		GenericLinker.Mod GenericLoader.Mod Options.Mod Debugging.Mod
-
-		TrapWriters.Mod CRC.Mod SystemVersion.Mod Win32.Traps.Mod 
-		Win32.WinTrace.Mod Win32.WinFS.Mod 
-		Win32.StdIO.Mod Pipes.Mod Shell.Mod StdIOShell.Mod
-
-		StaticLinker.Mod
-		FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
-		FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxPrintout.Mod
-		FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
-		FoxBackend.Mod FoxSections.Mod 
-		FoxFrontend.Mod
-		FoxCompiler.Mod 
-		FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-		FoxFingerPrinter.Mod  FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
-		FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
-		FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
-		FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
-		FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
-		FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
-		FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod 
-		FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod
-		FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
-		FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
-		FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
-
-		DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod  UTF8Strings.Mod XMLParser.Mod 
-		PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
-		InterpreterShell.Mod
-
-		FoxProfiler.Mod 
-		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod SystemTools.Mod
-		~
-	
-
-	(* first lines can be replaced by Kernel.lib *) 
-
-	StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
-		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
-		WinTrace StdIO 
-		TrapWriters 	CRC SystemVersion Traps
-		Pipes  Shell StdIOShell
-		
-		Options Locks Debugging
-		StaticLinker 
-		FoxBasic  FoxProgTools  FoxScanner FoxSyntaxTree FoxGlobal
-		FoxActiveCells FoxHardware FoxFormats FoxPrintout
-		FoxParser  FoxSemanticChecker
-		FoxBackend FoxSections 
-		
-		FoxFrontend
-		Compiler 
-		FoxOberonFrontend 
-		FoxFingerPrinter FoxInterfaceComparison FoxTextualSymbolFile FoxBinarySymbolFile
-		FoxBinaryCode FoxIntermediateCode FoxIntermediateBackend FoxCodeGenerators
-		FoxBinaryObjectFile FoxGenericObjectFile
-		FoxAMD64InstructionSet FoxAMD64Assembler FoxAMDBackend
-
-		
-		FoxAssembler FoxIntermediateAssembler FoxDisassembler
-		FoxARMInstructionSet FoxARMAssembler FoxARMBackend	
-
-		FoxMinosObjectFile
-
-		FoxIntermediateParser FoxIntermediateObjectFile FoxIntermediateLinker 
-		FoxTRMInstructionSet FoxTRMAssembler FoxTRMBackend
-		FoxInterpreterBackend FoxTranspilerBackend
-		FoxDocumentationScanner FoxDocumentationTree FoxDocumentationPrinter FoxDocumentationHtml 
-		FoxDocumentationParser FoxDocumentationBackend
-		
-		XML XMLScanner DynamicStrings UTF8Strings XMLParser XMLObjects
-		PersistentObjects FoxInterpreterSymbols FoxInterpreter
-		InterpreterShell
-		
-		ProcessInfo0 ProcessInfo Plugins SystemTools
-	
-	~
-	
-	FSTools.CloseFiles oberon.exe ~
-~
-
-
-	FoxGenericObjectFile.MakeLibrary 
-		Kernel.Lib Runtime.GofW Trace.GofW
-		Kernel32.GofW Machine.GofW Heaps.GofW Modules.GofW Objects.GofW
-		Kernel.GofW KernelLog.GofW Streams.GofW Commands.GofW Files.GofW 
-		WinFS.GofW Clock.GofW Dates.GofW Reals.GofW Strings.GofW Diagnostics.GofW BitSets.GofW StringPool.GofW ObjectFile.GofW GenericLinker.GofW Reflection.GofW 
-		GenericLoader.GofW
-		WinTrace.GofW WinApplication.GofW
-		~ 
-		
-		
-	~
-
-	FoxGenericObjectFile.MakeLibrary
-		Fox.Lib
-		FoxBasic.GofW  FoxProgTools.GofW  FoxScanner.GofW FoxCSharpScanner.GofW FoxSyntaxTree.GofW FoxGlobal.GofW
-		FoxActiveCells.GofW FoxHardware.GofW FoxFormats.GofW FoxPrintout.GofW
-		FoxParser.GofW FoxCSharpParser.GofW  FoxSemanticChecker.GofW
-		FoxBackend.GofW FoxSections.GofW 
-		FoxFrontend.GofW 
-		Compiler.GofW 
-		FoxOberonFrontend.GofW FoxCSharpFrontend.GofW
-		FoxFingerPrinter.GofW  FoxInterfaceComparison.GofW FoxTextualSymbolFile.GofW FoxBinarySymbolFile.GofW
-		FoxBinaryCode.GofW FoxIntermediateCode.GofW FoxIntermediateBackend.GofW FoxCodeGenerators.GofW
-		FoxBinaryObjectFile.GofW FoxGenericObjectFile.GofW
-		FoxAMD64InstructionSet.GofW FoxAMD64Assembler.GofW FoxAMDBackend.GofW
-		FoxAssembler.GofW FoxIntermediateAssembler.GofW FoxDisassembler.GofW
-		FoxARMInstructionSet.GofW FoxARMAssembler.GofW FoxARMBackend.GofW	FoxMinosObjectFile.GofW
-		FoxIntermediateParser.GofW FoxIntermediateObjectFile.GofW FoxIntermediateLinker.GofW 
-		FoxTRMInstructionSet.GofW FoxTRMAssembler.GofW FoxTRMBackend.GofW
-		FoxInterpreterBackend.GofW FoxTranspilerBackend.GofW
-		FoxDocumentationScanner.GofW FoxDocumentationTree.GofW FoxDocumentationPrinter.GofW FoxDocumentationHtml.GofW 
-		FoxDocumentationParser.GofW FoxDocumentationBackend.GofW
-		
-		XML.GofW XMLScanner.GofW DynamicStrings.GofW UTF8Strings.GofW XMLParser.GofW XMLObjects.GofW
-		PersistentObjects.GofW FoxInterpreterSymbols.GofW FoxInterpreter.GofW
-
-	~		
-
-
-
-	StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
-		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
-		
-		TrapWriters 	CRC SystemVersion Traps
-
-		WinTrace StdIO Pipes  Shell StdIOShell
-		
-		Options Locks Debugging
-		
-		StaticLinker 
-		Fox.Lib
-
-		InterpreterShell
-		
-		ProcessInfo0 ProcessInfo Plugins SystemTools
-	
-	~
-
-	StaticLinker.Link -p=Linux32G
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
-		Streams Commands 
-		Files UnixFiles Clock Dates Reals Strings Diagnostics 
-		BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader  
-
-		StdIO TrapWriters Traps 
-
-		Pipes Shell StdIOShell
-		
-		Options Locks Debugging
-		StaticLinker 
-		
-		Fox.Lib 
-		InterpreterShell
-
-		CRC SystemVersion ProcessInfo0 ProcessInfo Plugins SystemTools
-
-	~
-	FSTools.CloseFiles oberon
-	~
-~ 
 
 

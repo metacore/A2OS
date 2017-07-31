@@ -10,7 +10,7 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 		Knuth, The Art of Computer Programming, Volume 1, Section 2.3.5, Algorithm C
 *)
 
-IMPORT SYSTEM, Trace, Machine;
+IMPORT Runtime (* enforce import order *), SYSTEM, Trace, Machine;
 
 CONST
 	Paranoid = TRUE; (* if paranoid =true, then during mark phase the GC can accept spurious pointers but reports them

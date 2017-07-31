@@ -1,5 +1,5 @@
 MODULE Heaps;
-	IMPORT SYSTEM, Trace, Machine;
+	IMPORT Runtime, SYSTEM, Trace, Machine;
 CONST 
 	Paranoid = TRUE; 
 	DebugValue = LONGINT(0DEADDEADH); 

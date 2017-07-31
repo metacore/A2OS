@@ -1,12 +1,16 @@
 MODULE StdIOShell;
-	IMPORT StdIO, Commands, Modules, Streams, Pipes, Strings;
+	IMPORT StdIO, Commands, Modules, Trace;
 CONST 
+TYPE 
+	Executor = OBJECT {EXCLUSIVE} 
+	VAR 
+		done: BOOLEAN; 
+
+		PROCEDURE ^ Wait; 
+	BEGIN{ACTIVE} 
+	END Executor; 
 VAR 
-	env: Commands.Context; 
-	str: Strings.String; 
-	decoupler: Pipes.ReadDecoupler; 
-	inDecoupled: Streams.Receiver; 
-	inStreamDecoupled: Streams.Reader; 
+	execute: Executor; 
 
 	PROCEDURE ^ Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Execute(context: Commands.Context); 

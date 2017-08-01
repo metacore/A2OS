@@ -310,7 +310,12 @@ VAR
 				ELSE
 					IF v.n > MaxArray THEN etc := TRUE; v.n := MaxArray END
 				END;
-				WriteVar(w, v, col);	(* write value *)
+				IF (v.type <= 8) & ((v.adr > base + 64) OR (v.adr < base - 4096)) & (~CheckHeapAddress( v.adr )) THEN
+					(* CONST parameter ? *)
+					w.String( "???" )
+				ELSE
+					WriteVar(w, v, col);	(* write value *)
+				END;
 				IF etc THEN w.String("..."); INC(col, 3) END;
 				IF ~dense THEN
 					w.Ln; col := 0; Wait(w);

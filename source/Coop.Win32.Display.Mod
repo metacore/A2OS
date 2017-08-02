@@ -84,7 +84,7 @@ TYPE
 		dbch_devicetype: LONGINT ;
 		dbch_reserved: LONGINT;
 	END;
-	DEV_BROADCAST_HDRP  = POINTER TO DEV_BROADCAST_HDR;
+	DEV_BROADCAST_HDRP  = POINTER  TO DEV_BROADCAST_HDR;
 
 	DEV_BROADCAST_VOLUME = RECORD   (DEV_BROADCAST_HDR)
 		dbcv_unitmask: SET;
@@ -135,9 +135,7 @@ TYPE
 	DisplayProc* = PROCEDURE ( disp: Window );
 	PaintProc* = PROCEDURE ( disp: Window;  x, y, w, h: LONGINT );
 
-	CreateStruct = POINTER TO CreateStructDesc;
-
-	CreateStructDesc = RECORD
+	CreateStruct = POINTER TO RECORD
 		win: Window;
 		finished: BOOLEAN;
 		className: ARRAY 32 OF CHAR;
@@ -306,7 +304,7 @@ VAR
 
 (* Common base handler for all variants of windows provided by this module. *)
 	PROCEDURE DummyHandler( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam ): User32.LResult;
-	VAR res: User32.LResult; proc: User32.WndProc; hhWnd {UNTRACED}: ANY;  ret: Kernel32.BOOL;
+	VAR res: User32.LResult; proc: User32.WndProc; hhWnd: ADDRESS;  ret: Kernel32.BOOL;
 	BEGIN
 		IF (uMsg = User32.WMDestroy) & ~(external IN win.state) THEN
 			EXCL( win.state, update );  DEC( nWindows );
@@ -337,7 +335,10 @@ VAR
 
 	PROCEDURE HandleFocus( win: Window;  uMsg: LONGINT;  wParam: User32.WParam );
 	BEGIN
-		IF uMsg = User32.WMKillFocus THEN
+		IF (uMsg = User32.WMSetFocus) & (hook # win) THEN
+			Kernel32.Sleep( 0 );   (* ????????????????????? *)
+		ELSIF uMsg = User32.WMKillFocus THEN
+
 			IF wParam # Kernel32.NULL THEN
 				IF wParam = win.hWnd THEN RETURN END;
 			END;
@@ -360,10 +361,10 @@ VAR
 
 	PROCEDURE {WINAPI} DummyProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															  lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  create {UNTRACED}: CreateStruct;  ret: Kernel32.BOOL;
+	VAR win: Window;  create: CreateStruct;  ret: Kernel32.BOOL;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
+		Environment.RestoreActivity;
 		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
-		IF win # NIL THEN SYSTEM.SetActivity (win.processor) END;
 
 		IF win # NIL THEN RETURN DummyHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN
@@ -371,9 +372,7 @@ VAR
 			lParam := SYSTEM.VAL( User32.LParam, create.win );
 			ret := User32.PostMessage( hwnd, WMSetup, wParam, lParam )
 		ELSIF uMsg = WMSetup THEN
-			win := SYSTEM.VAL( Window, lParam );
-			SYSTEM.SetActivity (win.processor);
-			ret := User32.SetWindowLong( hwnd, GWLWindow, lParam );
+			win := SYSTEM.VAL( Window, lParam );  ret := User32.SetWindowLong( hwnd, GWLWindow, lParam );
 			create := SYSTEM.VAL( CreateStruct, wParam );
 			IF ~(dummy IN win.state) THEN SetupWin( win ) ELSE Add( win, TRUE ) END;
 			IF ~(external IN win.state) THEN INC( nWindows ) END;
@@ -785,11 +784,9 @@ VAR
 
 	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv {UNTRACED} : DEV_BROADCAST_VOLUMEP; i: LONGINT;
+	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
-		IF win # NIL THEN SYSTEM.SetActivity (win.processor) END;
-
+		Environment.RestoreActivity;
 		IF uMsg = WM_DEVICECHANGE THEN
 			IF wParam = DBT_DEVICEARRIVAL THEN
 				dbh := SYSTEM.VAL(DEV_BROADCAST_HDRP,lParam);
@@ -806,6 +803,7 @@ VAR
 			END;
 		END;
 
+		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSE RETURN DummyProc( hwnd, uMsg, wParam, lParam )
 		END
@@ -971,8 +969,9 @@ VAR
 
 	PROCEDURE {WINAPI} ControlWindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 																		    lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  ret: Kernel32.BOOL;
+	VAR win: Window;  ret: Kernel32.BOOL;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
+		Environment.RestoreActivity;
 		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN

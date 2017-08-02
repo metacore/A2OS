@@ -218,12 +218,12 @@ PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := 0;
 END GetInit;
 
-PROCEDURE StoreActivity;
+PROCEDURE StoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Kernel32.TlsSetValue(activity, SYSTEM.VAL(ADDRESS, SYSTEM.GetActivity ()));
 END StoreActivity;
 
-PROCEDURE RestoreActivity;
+PROCEDURE RestoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity(SYSTEM.VAL(Activities.Activity,Kernel32.TlsGetValue(activity)));
 END RestoreActivity;

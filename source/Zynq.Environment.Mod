@@ -103,11 +103,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	memory := MemorySize - ADDRESS OF KernelEnd;
 END InitMemory;
 
-PROCEDURE StoreActivity;
+PROCEDURE StoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StoreActivity;
 
-PROCEDURE RestoreActivity;
+PROCEDURE RestoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END RestoreActivity;
 

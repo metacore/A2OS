@@ -312,11 +312,11 @@ PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := initRegs[n]
 END GetInit;
 
-PROCEDURE StoreActivity;
+PROCEDURE StoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StoreActivity;
 
-PROCEDURE RestoreActivity;
+PROCEDURE RestoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END RestoreActivity;
 

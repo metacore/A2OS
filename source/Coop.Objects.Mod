@@ -226,8 +226,10 @@ END GetStackBottom;
 
 (** Return the active object currently executing. *)
 PROCEDURE ActiveObject* (): ANY;
-BEGIN
-	RETURN Activities.GetCurrentActivity ().object;
+VAR activity {UNTRACED}: Activities.Activity;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	activity := Activities.GetCurrentActivity ();
+	IF activity.object # NIL THEN RETURN activity.object ELSE RETURN activity END;
 END ActiveObject;
 
 (** Return the ID of the active currently executing process. *)

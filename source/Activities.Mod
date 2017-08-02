@@ -237,6 +237,10 @@ END Resume;
 PROCEDURE SwitchTo- (VAR activity: Activity; finalizer: SwitchFinalizer; argument: ADDRESS);
 VAR currentActivity {UNTRACED}, nextActivity {UNTRACED}: Activity; diff: Timer.Counter;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	IF activity.bound & (activity.processor # SYSTEM.GetActivity ()(Activity).processor) THEN
+		REPEAT UNTIL Select (nextActivity, IdlePriority);
+		Resume (activity); activity := nextActivity;
+	END;
 	currentActivity := SYSTEM.GetActivity ()(Activity);
 	currentActivity.framePointer := SYSTEM.GetFramePointer ();
 	currentActivity.quantum := CPU.Quantum;

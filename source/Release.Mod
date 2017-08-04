@@ -855,7 +855,7 @@ TYPE
 					nofFilesAdded := 0;
 					file := files;
 					WHILE (file # NIL) DO
-						IF (file.package = package) & file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+						IF (file.package = package) & file.IsInRelease(include) THEN
 							IF sourceCode THEN
 								IF file.IsSourceCode() THEN
 									AddFile(archive, file.name, file.name, res);
@@ -932,9 +932,9 @@ TYPE
 			PROCEDURE Process(f : File);
 			VAR i : LONGINT;
 			BEGIN
-				IF f.IsSourceCode() & f.IsInRelease(include) & ~PackageIsExcluded(f.package) & CompileThisPackage(file.package) THEN
+				IF f.IsSourceCode() & f.IsInRelease(include) & ~PackageIsExcluded(f.package)THEN
 					FOR i := 0 TO LEN(importOk)-1 DO
-						IF (file.module.imports[i] = f.module.name) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN importOk[i] := TRUE; END;
+						IF (file.module.imports[i] = f.module.name) & ~PackageIsExcluded(file.package)  THEN importOk[i] := TRUE; END;
 					END;
 				END;
 			END Process;
@@ -974,7 +974,7 @@ TYPE
 		BEGIN
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsInRelease(include) & file.IsSourceCode() & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsInRelease(include) & file.IsSourceCode() & ~PackageIsExcluded(file.package) THEN
 					IF (file.module.name = moduleName) THEN
 						RETURN file;
 					END;
@@ -989,7 +989,7 @@ TYPE
 		BEGIN
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsInRelease(include) & file.IsSourceCode() & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsInRelease(include) & file.IsSourceCode() & ~PackageIsExcluded(file.package) THEN
 					IF (file.name = filename) THEN
 						RETURN file;
 					END;
@@ -1005,7 +1005,7 @@ TYPE
 		BEGIN
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
 					IF (file.file = NIL) THEN
 						file.file := Files.Old(file.name);
 					END;
@@ -1030,7 +1030,7 @@ TYPE
 			error := FALSE;
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
 					tempError := FALSE;
 					file.CheckImports(diagnostics, SELF, tempError);
 					error := error OR tempError;
@@ -1071,7 +1071,7 @@ TYPE
 				f := file.prev;
 				LOOP
 					ASSERT(f # NIL);
-					IF f.IsSourceCode() & f.IsInRelease(include) & ~PackageIsExcluded(f.package) & (f.module.name = moduleName) & CompileThisPackage(file.package) THEN
+					IF f.IsSourceCode() & f.IsInRelease(include) & ~PackageIsExcluded(f.package) & (f.module.name = moduleName) THEN
 						EXIT;
 					END;
 					f := f.prev;
@@ -1091,7 +1091,7 @@ TYPE
 				index := 0;
 				file := files;
 				WHILE (file # NIL) DO
-					IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+					IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
 						file.index := index;
 						modules[index] := file;
 						FOR i := 0 TO file.module.nofImports-1 DO
@@ -1156,7 +1156,7 @@ TYPE
 		BEGIN
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsSourceCode() & file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
 					file.doCompile := FALSE;
 				END;
 				file := file.next;
@@ -1263,7 +1263,7 @@ TYPE
 			nofSources := 0; nofFiles := 0;
 			file := files;
 			WHILE (file # NIL) DO
-				IF file.IsInRelease(include) & ~PackageIsExcluded(file.package) & CompileThisPackage(file.package) THEN
+				IF file.IsInRelease(include) & ~PackageIsExcluded(file.package) THEN
 					INC(nofFiles);
 					IF file.IsSourceCode() THEN
 						INC(nofSources);

@@ -25,6 +25,9 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  *		Option f, file		: Specify the package description file [default: Release.Tool]
  *		Option n, nocheck	: Skip file existence and import order checks
  *		Option o, options	: Override the compiler options specified in the package description file
+ *      Option only			: Only compile the packages provided in a list. No other effect applies 
+							  i.e. packages are fully taken into account otherwise.
+							  if packages need to be excluded, use exclude instead
  *		Option p, path		: Override the path option specified in the package description file
  *		Option s, symbolFileExtension : Ovveride the symbolFileExtension option specified in the package description file
  *		Option t, target 	: Override the target option specified in the package description file

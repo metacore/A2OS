@@ -2854,11 +2854,11 @@ TYPE
 	ImagePanel* = OBJECT(Panel)
 	VAR
 		imgName- : WMProperties.StringProperty;
-		img : WMGraphics.Image;
+		img- : WMGraphics.Image;
 		vScrollbar, hScrollbar : Scrollbar;
 		dx, dy : LONGINT;
 
-		PROCEDURE & Init*;
+		PROCEDURE &  Init*;
 		BEGIN
 			Init^;
 			SetGenerator("WMStandardComponents.GenImagePanel");
@@ -2907,7 +2907,7 @@ TYPE
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF property = imgName THEN
-				RecacheProperties; Invalidate;
+				RecacheProperties; Invalidate;(*? invalidate also called in RecacheProperties->SetImage()*)
 			ELSE
 				PropertyChanged^(sender, property)
 			END
@@ -2916,7 +2916,8 @@ TYPE
 		PROCEDURE RecacheProperties*;
 		VAR s : String;
 		BEGIN
-			s := imgName.Get(); IF s # NIL THEN SetImage(SELF, WMGraphics.LoadImage(s^, TRUE)) END
+			s := imgName.Get();
+			IF s # NIL THEN SetImage(SELF, WMGraphics.LoadImage(s^, TRUE)) END (*?implicit invalidate IFF changed*)
 		END RecacheProperties;
 
 		PROCEDURE ScrollbarsChanged(sender, data : ANY);
@@ -3561,10 +3562,6 @@ BEGIN
 	NEW(image); RETURN image;
 END GenImage;
 
-PROCEDURE GenImagePanel*() : XML.Element;
-VAR ip : ImagePanel;
-BEGIN NEW(ip); RETURN ip
-END GenImagePanel;
 
 (**********************************************************************************************)
 

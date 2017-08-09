@@ -48,13 +48,17 @@ TYPE
 		VAR filename: Files.FileName; f:Files.File; w:Files.Writer;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgSerialize) THEN
-				GenerateName(GetTitle(),filename);
-				Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
-				f:=Files.New(filename);
-				Files.OpenWriter(w,f,0);
-				StoreLR(w, data);
-				w.Update;
-				Files.Register(f);	
+				IF x.msgSubType= WMMessages.MsgSubSerializeData THEN
+					GenerateName(GetTitle(),filename);
+					Strings.Append(filename, ".MtA"); (* file type "MathArray" *)
+					f:=Files.New(filename);
+					Files.OpenWriter(w,f,0);
+					StoreLR(w, data);
+					w.Update;
+					Files.Register(f);	
+				ELSIF x.msgSubType=WMMessages.MsgSubSerializeComponent THEN
+					(*TBD*)
+				END;
 			ELSE Handle^(x)
 			END
 		END Handle;

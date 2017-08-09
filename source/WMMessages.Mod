@@ -22,6 +22,8 @@ CONST
 	MsgSubAll*=0; MsgSubRectangle*=1; MsgSubNothing*=2; (* regions: all or rectangle as defined by x, y, dx, dy *)
 
 	MsgDragOver* = 0; MsgDragDropped* = 1;
+	
+	MsgSubSerializeView*=0; MsgSubSerializeComponent*=1; MsgSubSerializeData*=2;
 
 	(** Gather statistics about added/discarded messages? *)
 	Statistics* = FALSE;

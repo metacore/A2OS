@@ -595,6 +595,8 @@ TYPE
 
 		lastKeys : SET;
 		lastWindow : WMWindowManager.Window;
+		
+		msg: WMMessages.Message; 
 
 		PROCEDURE &Init;
 		BEGIN
@@ -750,8 +752,12 @@ TYPE
 									manager.SetWindowFlag(window, WMWindowManager.FlagStayOnBottom, ~(WMWindowManager.FlagStayOnBottom IN window.flags));
 								ELSIF (index2 = SystemCommand_WindowShot) THEN
 									WindowShot(window, windowShotScale);
-								ELSIF (index2 = SystemCommand_StoreWindow) THEN
+								ELSIF (index2 = SystemCommand_StoreComponent) THEN
 									StoreWindow(window);
+								ELSIF (index2 = SystemCommand_StoreData) THEN
+									msg.msgType := WMMessages.MsgSerialize; 
+									msg.msgSubType := WMMessages.MsgSubSerializeData;
+									window.Handle(msg);
 							ELSIF (index2 = SystemCommand_Frame) THEN
 									manager.SetWindowFlag(window, WMWindowManager.FlagFrame, ~(WMWindowManager.FlagFrame IN window.flags));
 								END;
@@ -912,7 +918,7 @@ CONST
 	LeftBorder = 25;
 	RightBorder = 5;
 
-	NofSystemCommands = 7;
+	NofSystemCommands = 8;
 
 	SystemCommand = 99;
 	SystemCommand_Close = 0;
@@ -921,7 +927,8 @@ CONST
 	SystemCommand_StayOnBottom = 3;
 	SystemCommand_Frame = 4;
 	SystemCommand_WindowShot = 5;
-	SystemCommand_StoreWindow = 6;
+	SystemCommand_StoreComponent = 6;
+	SystemCommand_StoreData = 7;
 	Document = 1;
 
 TYPE
@@ -1077,8 +1084,9 @@ TYPE
 					ELSIF (y < commandOffset + 6 * LineHeight) THEN
 						index := SystemCommand_WindowShot;
 					ELSIF (WMWindowManager.FlagStorable IN window.flags) & (y < commandOffset + 7 * LineHeight) THEN
-						index := SystemCommand_StoreWindow;
-					END;
+						index := SystemCommand_StoreComponent;
+					ELSIF (WMWindowManager.FlagStorable IN window.flags) & (y < commandOffset + 8 * LineHeight) THEN
+						index := SystemCommand_StoreData;END;
 				ELSIF (documentOffset <= y) & (y < documentOffset + nofDocuments * LineHeight) THEN
 					type := Document;
 					index := (y - documentOffset) DIV LineHeight;
@@ -1153,7 +1161,11 @@ TYPE
 				END;
 				IF (*(window IS WMComponents.FormWindow) &*)  (WMWindowManager.FlagStorable IN window.flags) & (NofSystemCommands > 6) THEN
 					DrawBg(y);
-					canvas.DrawString(LeftBorder, y + 16, "StoreWindowData"); INC(y, LineHeight);
+					canvas.DrawString(LeftBorder, y + 16, "StoreComponent"); INC(y, LineHeight);
+				END;
+				IF  (WMWindowManager.FlagStorable IN window.flags) & (NofSystemCommands > 7) THEN
+					DrawBg(y);
+					canvas.DrawString(LeftBorder, y + 16, "StoreData"); INC(y, LineHeight);
 				END;
 			END DrawSystemCommands;
 
@@ -1422,7 +1434,7 @@ BEGIN
 	Strings.Concat(fn,str,fn);
 	Strings.Append(fn,".bmp");
 	
-	(* scaled storing not yet implemented *)
+	(* TBD: scaled storing not yet implemented *)
 	
 	IF window IS WMWindowManager.DoubleBufferWindow THEN
 		WMGraphics.StoreImage(window(WMWindowManager.DoubleBufferWindow).backImg, fn, res);
@@ -1439,7 +1451,7 @@ BEGIN
 END WindowShot;
 
 
-PROCEDURE StoreWindow(window: WMWindowManager.Window);
+PROCEDURE StoreWindow(window: WMWindowManager.Window); (*! o do: move this to WMComponents.Mod, or use WMRestorable.Mod *)
 VAR fn0,fn: Files.FileName;  s: ARRAY 6 OF CHAR; i, res: LONGINT; f:Files.File; w:Files.Writer;
 	xml:XML.Content; msg: WMMessages.Message; 
 BEGIN
@@ -1469,14 +1481,14 @@ BEGIN
 				Files.Register(f);
 				KernelLog.String("WMNavigate.StoreWindow  "); KernelLog.String(fn); KernelLog.Ln;
 			END;	
-		ELSE (* try to serialize*)
+		ELSE (* try to serialize by sending a message*)
 			msg.msgType := WMMessages.MsgSerialize; 
+			msg.msgSubType := WMMessages.MsgSubSerializeComponent; 
 			window.Handle(msg);
 		(*	IF (window.manager#NIL) & window.manager.SendMessage(window, msg) THEN END;*)
 		END;
 	END;
 END StoreWindow;
-
 
 PROCEDURE DrawIntoCanvas(window : WMWindowManager.Window; canvas : WMGraphics.BufferCanvas; width, height : LONGINT; VAR offsetX, offsetY : LONGINT);
 VAR image : Raster.Image; winWidth, winHeight, imgWidth, imgHeight : LONGINT; scaleX, scaleY : REAL;

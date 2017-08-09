@@ -621,6 +621,8 @@ TYPE
 				END;
 				LanguageChanged(msg.ext(LanguageExtension).languages);
 				BroadcastSubcomponents(msg);
+			ELSE
+				BroadcastSubcomponents(msg); (*added PH 0816 - unhandled messages may be meant for children !*)
 			END;
 		END HandleInternal;
 

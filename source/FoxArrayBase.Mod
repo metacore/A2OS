@@ -244,10 +244,16 @@ VAR
 		RETURN base.ptr;
 	END GetPtr;
 
+	PROCEDURE SafePut(VAR dest: ANY; src: ANY);
+	BEGIN
+		dest := src;
+	END SafePut;
+	
+
 	(* set data base pointer (GC protection) *)
 	PROCEDURE PutPtr(base: UnsafeArray; value: ANY);
 	BEGIN
-		base.ptr := value
+		SafePut(base.ptr,value);
 	END PutPtr;
 
 	PROCEDURE GetSize( base: UnsafeArray ): LONGINT;
@@ -556,6 +562,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpS;
 
 	(** apply unary operator to array:  array INTEGER -> array INTEGER *)
@@ -604,6 +613,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpI;
 
 	(** apply unary operator to array:  array LONGINT -> array LONGINT *)
@@ -652,6 +664,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpL;
 	
 	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
@@ -703,6 +718,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpH;
 
 	(** apply unary operator to array:  array REAL -> array REAL *)
@@ -751,6 +769,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpR;
 	
 	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
@@ -802,6 +823,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpX;
 	
 	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
@@ -853,6 +877,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpZ;
 	
 	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
@@ -904,6 +931,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyGenericUnaryAAOpLZ;
 
 (** apply unary operator to array:  array -> array *)
@@ -958,6 +988,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyUnaryAAOp;
 
 (** apply unary operator to array:  array -> scalar *)
@@ -1080,6 +1113,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyBinaryAAAOp;
 
 (** apply binary operator: array x scalar -> array *)
@@ -1138,6 +1174,9 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 		SYSTEM.PUT( d, dest );
+		IF d = p THEN (* new block *)
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyBinaryASAOp;
 
 (** apply binary operator: array x array -> scalar *)
@@ -1476,6 +1515,7 @@ Sufficient (but not necessary) conditions:
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = NIL THEN  (* NIL pointer, guaranteed to be tensor *)
 			ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
+			Heaps.CheckAssignment(ADDRESS OF dest, ptr);
 			PutFlags(dest, {TensorFlag});
 			NewData();  RETURN ptr;
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
@@ -1485,6 +1525,7 @@ Sufficient (but not necessary) conditions:
 				HALT( 100 );
 			END;
 			ptr := GetArrayDesc( GetDim( src ) );  dest :=ptr;
+			Heaps.CheckAssignment(ADDRESS OF dest, ptr);
 			PutFlags(dest, {TensorFlag});
 			NewData();  
 			RETURN ptr;
@@ -1562,12 +1603,13 @@ Sufficient (but not necessary) conditions:
 	END CopyTensor;
 
 	(* copy descriptor of src to that of dest. If not existent then create.*)
-	PROCEDURE ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS);
+	PROCEDURE ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS): ANY;
 	VAR ptr: ANY; flags: SET;
 
 		PROCEDURE CopyDescriptor;
 		BEGIN
 			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(LenInc) *  GetDim( src ));
+			PutPtr(dest, GetPtr(src)); (* GC! *)
 		END CopyDescriptor;
 
 	BEGIN
@@ -1578,6 +1620,8 @@ Sufficient (but not necessary) conditions:
 
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
 			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
+			Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
 			CopyDescriptor();
 			PutFlags(dest, {TensorFlag});
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
@@ -1589,6 +1633,7 @@ Sufficient (but not necessary) conditions:
 
 			(* create a new descriptor!!! (added by Alexey) *)
 			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
+			Heaps.CheckAssignment(ADDRESS OF dest, ptr);
 
 			CopyDescriptor();
 			PutFlags(dest, flags);
@@ -1601,9 +1646,10 @@ Sufficient (but not necessary) conditions:
 			CopyDescriptor();
 			PutFlags(dest, flags);
 		END;
+		RETURN ptr;
 	END ShallowCopy;
 
-
+(*
 	PROCEDURE DescriptorCopy( src, dest: LONGINT );
 	BEGIN
 		IF debug THEN
@@ -1613,13 +1659,18 @@ Sufficient (but not necessary) conditions:
 		SYSTEM.MOVE( src, dest, 2*SIZEOF(ADDRESS) );   (* adr and ptr *)
 		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(LenInc) *  GetDim( src ));   (* lens and increments *)
 	END DescriptorCopy;
+*) 
 
 	PROCEDURE ZeroCopy*(CONST src: ARRAY [?]; VAR dest: ARRAY [?]);
-	VAR s,d: ADDRESS;
+	VAR p: ANY; s,d: ADDRESS;
 	BEGIN
-		s := SYSTEM.VAL(LONGINT,src); d := SYSTEM.VAL(LONGINT,dest);
-		ShallowCopy(d,s);
+		s := SYSTEM.VAL(LONGINT,src); 
+		d := SYSTEM.VAL(LONGINT,dest);
+		p := ShallowCopy(d,s);
 		SYSTEM.PUT(ADDRESSOF(dest),d);
+		IF p = d THEN
+			Heaps.CheckAssignment(ADDRESS OF dest, p);
+		END;
 	END ZeroCopy;
 
 	OPERATOR "ALIAS"*(CONST src: ARRAY [?]): ARRAY[?];
@@ -9227,6 +9278,8 @@ TYPE
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
 			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
+						Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
 			PutFlags(dest, {TensorFlag});
 			NewData();  
 			RETURN ptr;
@@ -9237,6 +9290,8 @@ TYPE
 				HALT( 100 );
 			END;
 			ptr := GetArrayDesc( GetDim( src ) );  dest := ptr;
+						Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
 			PutFlags(dest, {TensorFlag});
 			NewData();  RETURN ptr;
 		ELSIF (GetAdr( dest ) = 0) OR ~TransposedShape( dest, src ) THEN
@@ -9542,10 +9597,11 @@ TYPE
 			END;
 		END CopyDataBack;
 
-		PROCEDURE CopyDescriptor( src, dest: LONGINT );
+		PROCEDURE CopyDescriptor( src, dest: ADDRESS );
 		BEGIN
 			ASSERT( GetDim( src ) = GetDim( dest ) );
 			SYSTEM.MOVE( src, dest, MathLenOffset + GetDim( src ) * 8 );
+			PutPtr(dest, GetPtr(src)); (* GC ! *)
 		END CopyDescriptor;
 
 		PROCEDURE ShapeDiffers( ): BOOLEAN;
@@ -9590,7 +9646,10 @@ TYPE
 			ELSIF ((newDim = oldDim) & ~ShapeDiffers()) THEN
 				(* create a copy of the original descriptor *)
 				CheckAlloc();
-				ptr := GetArrayDesc(newDim);  dest := ptr; CopyDescriptor(src,dest);
+				ptr := GetArrayDesc(newDim);  dest := ptr; 
+							Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
+				CopyDescriptor(src,dest);
 			ELSE
 				Err( "RESHAPE: given RANGE array can not be reshaped!" );
 			END;
@@ -9606,19 +9665,25 @@ TYPE
 			IF ~(TensorFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				Err( "RESHAPE: new dimension only allowed for TENSOR" );
 			END;
-			NewDescriptor;  NewData;  CopyData;  dest := new;
+			NewDescriptor;  NewData;  CopyData;  
+			dest := new;
 		ELSIF ShapeDiffers() THEN  (* same dim but shape of destination does not match *)
 			IF RangeFlag IN GetFlags( dest ) THEN Err( "RESHAPE: new shape not allowed for RANGE" );  END;
 			(*
 			NewDescriptor;  *) 
 			new := dest;
 			NewData;  CopyData;  
+			new := NIL;
 			(*CopyDescriptor( new, dest );*)
 		ELSIF ~SameShape( src, dest ) THEN  (* shape for destination matches but that of src is different *)
 			NewDescriptor;  NewData;  CopyData;  CopyDataBack;
 		ELSE  (* same shape, just copy *)
 			CopyContent( src, dest, Size );  RETURN;
 		END;
+		IF dest = new THEN (* new block *)
+			Heaps.CheckAssignment(ADDRESSOF(dest),new);
+		END;
+
 	END DoReshape;
 
 	(* this is memory safe: the allocation result is written to a pointer in the call chain *)
@@ -9640,7 +9705,8 @@ TYPE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
 				dest.adr := data + ArrDataArrayOffset;
 			END;
-			dest.ptr := data;
+			SafePut(dest.ptr, data);
+			(*dest.ptr := data;*)
 			PutSize( dest, elementSize );
 		END NewData;
 
@@ -9732,6 +9798,9 @@ TYPE
 			END;
 		END;
 		SYSTEM.PUT(ADDRESSOF(destA),dest);
+		IF dest = descr THEN (* new block *)
+			Heaps.CheckAssignment(ADDRESSOF(destA),dest);
+		END;
 	END AllocateTensorX;
 
 	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );
@@ -9802,6 +9871,8 @@ TYPE
 		ldim := GetDim( left );  rdim := GetDim( right );
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
 			ptr := GetArrayDesc( ldim + rdim );  dest := ptr;
+						Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
 			NewData();  RETURN ptr;
 		ELSIF (ldim + rdim # GetDim( dest )) THEN
 			IF ~(TensorFlag IN GetFlags( dest )) &
@@ -9809,6 +9880,8 @@ TYPE
 				HALT( 100 );
 			END;
 			ptr := GetArrayDesc( ldim + rdim );  dest := ptr;
+						Heaps.CheckAssignment(ADDRESS OF dest, ptr);
+
 			NewData();  RETURN ptr;
 		ELSIF ~CheckTensorGeometry( left, right, dest, ldim, rdim ) THEN  (* dimension matches but not geometry *)
 			IF RangeFlag IN GetFlags( dest ) THEN  (* no! not allowed *)
@@ -9906,6 +9979,9 @@ TYPE
 		Traverse( GetAdr( left ), GetAdr( right ), GetAdr( dest ), 0, 0 );
 
 		SYSTEM.PUT( d, dest );
+		IF p = dest THEN
+			Heaps.CheckAssignment(d,dest);
+		END;
 	END ApplyTensorAAAOp;
 
 	OPERATOR "**"*(CONST left,right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT;
@@ -9988,7 +10064,7 @@ TYPE
 			*)
 
 			destPtr := GetArrayDesc(destDim); (* destination dimension included *)
-			dest := SYSTEM.VAL(LONGINT,destPtr);
+			dest := SYSTEM.VAL(ADDRESS,destPtr);
 			(* SYSTEM.MOVE(src,dest,MathLenOffset); *)
 			PutAdr(dest,GetAdr(src));
 			PutPtr(dest,GetPtr(src));

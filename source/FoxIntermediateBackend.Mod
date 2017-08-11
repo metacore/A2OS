@@ -7473,6 +7473,7 @@ TYPE
 			previous, init: IntermediateCode.Section;
 			prevScope: SyntaxTree.Scope;
 			firstPar: LONGINT;
+			saved: RegisterEntry;
 
 			PROCEDURE CallBodies(self: IntermediateCode.Operand; type: SyntaxTree.Type);
 			VAR recordScope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; flags: LONGINT;
@@ -8050,8 +8051,16 @@ TYPE
 
 						IF (temporaryVariable # NIL) & (x.type = NIL) THEN
 							Designate(p0,l);
-							ToMemory(l.op,addressType,0);
-							Emit(Mov(position,l.op,pointer));
+							IF backend.writeBarriers THEN
+								SaveRegisters();ReleaseUsedRegisters(saved);
+								Emit(Push(position,l.op));
+								Emit(Push(position,pointer));
+								CallThis(position,"Heaps","Assign",2);
+								RestoreRegisters(saved);
+							ELSE
+								ToMemory(l.op,addressType,0);
+								Emit(Mov(position,l.op,pointer));
+							END;
 							ReleaseOperand(l);
 							result.tag := emptyOperand;
 						ELSIF (x.type # NIL) THEN
@@ -9910,6 +9919,7 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			call: SyntaxTree.ProcedureCallDesignator;
 			designator: SyntaxTree.Designator;
+			saved: RegisterEntry;
 
 			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
 			VAR procedureType: SyntaxTree.ProcedureType;
@@ -9971,7 +9981,8 @@ TYPE
 				END;
 				ModifyAssignments(false);
 				RETURN;
-			ELSIF backend.writeBarriers & left.NeedsTrace() THEN
+			ELSIF backend.writeBarriers & left.NeedsTrace() & ~(leftType IS SyntaxTree.MathArrayType) THEN
+				SaveRegisters();ReleaseUsedRegisters(saved);
 				IF SemanticChecker.IsPointerType(leftType) THEN
 					Evaluate(right,rightO);
 					Designate(left,leftO);
@@ -10020,6 +10031,7 @@ TYPE
 					CallThis(position,"Heaps","Assign", 2);
 				ELSE HALT(100); (* missing ? *)
 				END;
+				RestoreRegisters(saved);
 				RETURN;
 			END;
 
@@ -11291,11 +11303,6 @@ TYPE
 			
 			Info(section,"nextMark: HeapBlock;");
 			Address(section,0);
-			
-(*
-			Info(section,"generation");
-			Longint(section,0);
-*)
 		END HeapBlock;
 		
 		PROCEDURE ProtectedHeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
@@ -11531,7 +11538,7 @@ TYPE
 							base := type.arrayBase.resolved;
 						END;
 						size := ToMemoryUnits(module.system,module.system.AlignedSizeOf(base));
-						IF SemanticChecker.ContainsPointer(base) THEN
+						IF SemanticChecker.ContainsPointer(base) & base.NeedsTrace()  THEN
 							ASSERT(n<1000000); (* not more than one million pointers on the stack ... *)
 							FOR i := 0 TO n-1 DO
 								Pointers(offset+i*size, symbol, section, base,numberPointers);

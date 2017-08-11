@@ -3,13 +3,15 @@ Build and Test Tool
 (c) Felix Friedrich (fof), ETH Zürich, 2008-2016
 Conceptual design of the compiler has been worked out together with Florian Negele.
 
+Heaps.SetYoung 
+Heaps.SetOld 
 
 Compiler.Compile --noInterfaceCheck
 (* 
 	SystemTools.DoCommands
 	SystemTools.Timer start ~
 
-	Compiler.Compile -p=Win32G *)
+	Compiler.Compile -p=Win32G --writeBarriers *)
 
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod

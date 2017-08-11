@@ -743,9 +743,7 @@ BEGIN
 	SYSTEM.PUT(beginBlockAdr+4*AddressSize,endBlockAdr-beginBlockAdr);
 	SYSTEM.PUT(beginBlockAdr+5*AddressSize,beginBlockAdr+2*AddressSize);
 	SYSTEM.PUT(beginBlockAdr+6*AddressSize,0);
-	(*
-	SYSTEM.PUT(beginBlockAdr+7*AddressSize,0);
-	*)
+
 
 	memoryBlock := memBlock;
 END InitHeap;

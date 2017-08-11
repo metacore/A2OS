@@ -99,7 +99,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		(** The Windows Sockets hostent structure is used by functions to store information about a given host,
 			such as host name, IP address, and so forth. *)
 		LPHostent* = ADDRESS;
-		PHostent*= POINTER TO Hostent;
+		PHostent*= POINTER {UNTRACED} TO Hostent;
 		Hostent* = RECORD
 			hName*:ADDRESS; (* pointer to array of char *)
 			hAliases*: ADDRESS; (* pointer to array of pointer to array of char *)

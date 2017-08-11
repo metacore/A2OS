@@ -3420,9 +3420,11 @@ TYPE
 				Basic.Error(diagnostics, module.module.sourceName,Basic.invalidPosition, " could not locate pc");
 			ELSE
 				binarySection := section(IntermediateCode.Section).resolved;
-				label := binarySection.labels;
-				WHILE (label # NIL) & (label.offset >= sectionOffset) DO
-					label := label.prev;
+				IF binarySection # NIL THEN
+					label := binarySection.labels;
+					WHILE (label # NIL) & (label.offset >= sectionOffset) DO
+						label := label.prev;
+					END;
 				END;
 				IF label # NIL THEN
 					Basic.Information(diagnostics, module.module.sourceName,label.position, " pc position");

@@ -6,7 +6,7 @@ CONST
 	Stats* = TRUE; 
 	AddressSize = SIZEOF(ADDRESS); 
 	MaxTries = 16; 
-	Unmarked =  -1; 
+	Unmarked = 0; 
 	BlockSize* = 32; 
 	ArrayAlignment = 8; 
 	BlockHeaderSize* = (2 * AddressSize); 
@@ -24,6 +24,11 @@ CONST
 	NumPriorities* = 6; 
 	HeuristicStackInspectionGC* = 0; 
 	MetaDataForStackGC* = 1; 
+	Old = 1; 
+	Young = 0; 
+	GenerationMask = 2; 
+	CardSize = 4096; 
+	SetSize = (SIZEOF(SET) * 8); 
 	MaxFreeLists = 20; 
 	FreeListBarrier = 7; 
 TYPE 
@@ -182,6 +187,8 @@ VAR
 	GC*: PROCEDURE ; 
 	initBlock{UNTRACED} : ANY; 
 	currentMarkValue: LONGINT; 
+	generationMarkValues: ARRAY 2 OF LONGINT; 
+	currentGeneration: LONGINT; 
 	sweepMarkValue: LONGINT; 
 	sweepBlockAdr: ADDRESS; 
 	sweepMemBlock{UNTRACED} : Machine.MemoryBlock; 
@@ -204,6 +211,8 @@ VAR
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 
 	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
+	cardSet: ARRAY ((100000000H DIV SetSize) DIV CardSize) OF SET; 
+	youngCounts: LONGINT; 
 	throughput: SIZE; 
 	assigns*: LONGINT; 
 
@@ -211,7 +220,12 @@ VAR
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ AppendToMarkList(heapBlock: HeapBlock); 
 	PROCEDURE ^ ExtractFromMarkList(): HeapBlock; 
-	PROCEDURE ^ Inspect(block{UNTRACED} : ANY); 
+	PROCEDURE ^ ShowCards*; 
+	PROCEDURE ^ ClearCardSet; 
+	PROCEDURE ^ EnterInCardSet(adr: ADDRESS); 
+	PROCEDURE ^ CheckAssignment*(dest, src: DataBlockU); 
+	PROCEDURE ^ SweepCardSet; 
+	PROCEDURE ^ Inspect(block{UNTRACED} : ANY; generation: LONGINT); 
 	PROCEDURE ^ Mark*(p{UNTRACED} : ANY); 
 	PROCEDURE ^ MarkRealtimeObjects; 
 	PROCEDURE ^ WriteType*(t: ADDRESS); 
@@ -255,6 +269,8 @@ VAR
 	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 
+	PROCEDURE ^ EnableGenerations*; 
+	PROCEDURE ^ DisableGenerations*; 
 	PROCEDURE ^ SetHeuristic*; 
 	PROCEDURE ^ SetMetaData*; 
 BEGIN

@@ -27,7 +27,7 @@ CONST
 	LineHeight = 20; 
 	LeftBorder = 25; 
 	RightBorder = 5; 
-	NofSystemCommands = 7; 
+	NofSystemCommands = 8; 
 	SystemCommand = 99; 
 	SystemCommand_Close = 0; 
 	SystemCommand_Hide = 1; 
@@ -35,7 +35,8 @@ CONST
 	SystemCommand_StayOnBottom = 3; 
 	SystemCommand_Frame = 4; 
 	SystemCommand_WindowShot = 5; 
-	SystemCommand_StoreWindow = 6; 
+	SystemCommand_StoreComponent = 6; 
+	SystemCommand_StoreData = 7; 
 	Document = 1; 
 	MenuSize = 10; 
 TYPE 
@@ -120,6 +121,7 @@ TYPE
 		dummyInfo: WMWindowManager.WindowInfo; 
 		lastKeys: SET; 
 		lastWindow: WMWindowManager.Window; 
+		msg: WMMessages.Message; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 

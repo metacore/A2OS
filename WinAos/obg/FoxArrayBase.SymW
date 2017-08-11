@@ -204,6 +204,7 @@ VAR
 	PROCEDURE ^ PutAdr(base: UnsafeArray; value: ADDRESS); 
 	PROCEDURE ^ Align(value: ADDRESS): ADDRESS; 
 	PROCEDURE ^ GetPtr(base: UnsafeArray): ANY; 
+	PROCEDURE ^ SafePut(VAR dest: ANY; src: ANY); 
 	PROCEDURE ^ PutPtr(base: UnsafeArray; value: ANY); 
 	PROCEDURE ^ GetSize(base: UnsafeArray): LONGINT; 
 	PROCEDURE ^ PutSize(base: UnsafeArray; val: SIZE); 
@@ -281,8 +282,7 @@ VAR
 	PROCEDURE ^ CopyArray*(dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
 	PROCEDURE ^ CopyTensorSelf*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
 	PROCEDURE ^ CopyTensor*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
-	PROCEDURE ^ ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS); 
-	PROCEDURE ^ DescriptorCopy(src, dest: LONGINT); 
+	PROCEDURE ^ ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS): ANY; 
 	PROCEDURE ^ ZeroCopy*(CONST src: ARRAY [?] ; VAR dest: ARRAY [?] ); 
 	OPERATOR ^ "ALIAS"-(CONST src: ARRAY [?] ): ARRAY [?] ; 
 	PROCEDURE ^ SameShape(l, r: ADDRESS): BOOLEAN; 

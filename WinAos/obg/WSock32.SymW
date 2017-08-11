@@ -97,7 +97,7 @@ TYPE
 
 	LPHostent* = ADDRESS; 
 
-	PHostent* = POINTER TO Hostent; 
+	PHostent* = POINTER {UNTRACED} TO Hostent; 
 
 	Hostent* = RECORD 
 		hName*: ADDRESS; 

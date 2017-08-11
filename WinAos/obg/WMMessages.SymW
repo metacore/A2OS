@@ -29,6 +29,9 @@ CONST
 	MsgSubNothing* = 2; 
 	MsgDragOver* = 0; 
 	MsgDragDropped* = 1; 
+	MsgSubSerializeView* = 0; 
+	MsgSubSerializeComponent* = 1; 
+	MsgSubSerializeData* = 2; 
 	Statistics* = FALSE; 
 	TraceQueue = FALSE; 
 	MsgTypeMax* = 13; 

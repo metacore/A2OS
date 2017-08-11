@@ -445,7 +445,6 @@ VAR
 	PROCEDURE ^ GenCheckbox*(): XML.Element; 
 	PROCEDURE ^ GenGroupPanel*(): XML.Element; 
 	PROCEDURE ^ GenImage*(): XML.Element; 
-	PROCEDURE ^ GenImagePanel*(): XML.Element; 
 	PROCEDURE ^ FindLabel*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Label; 
 	PROCEDURE ^ FindButton*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Button; 
 	PROCEDURE ^ FindCheckbox*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Checkbox; 

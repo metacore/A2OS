@@ -9981,7 +9981,7 @@ TYPE
 				END;
 				ModifyAssignments(false);
 				RETURN;
-			ELSIF backend.writeBarriers & left.NeedsTrace() & ~(leftType IS SyntaxTree.MathArrayType) THEN
+			ELSIF backend.writeBarriers & left.NeedsTrace() & ~((leftType IS SyntaxTree.MathArrayType) & ~IsStaticMathArray(leftType)) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				IF SemanticChecker.IsPointerType(leftType) THEN
 					Evaluate(right,rightO);
@@ -10003,6 +10003,22 @@ TYPE
 				ELSIF IsStaticArray(leftType) THEN
 					size := StaticArrayNumElements(leftType);
 					base := StaticArrayBaseType(leftType);
+					Designate(right,rightO);
+					Designate(left,leftO);
+					Emit(Push(position,leftO.op));
+					ReleaseOperand(leftO);
+					
+					arg := TypeDescriptorAdr(base);
+					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
+					Emit(Push(position,arg));
+
+					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
+					Emit(Push(position,rightO.op));
+					ReleaseOperand(rightO);
+					CallThis(position,"Heaps","AssignArray",4);
+				ELSIF  IsStaticMathArray(leftType) THEN (* the representation of a static math array coincides with static array *)
+					size := StaticMathArrayNumElements(leftType);
+					base := StaticMathArrayBaseType(leftType);
 					Designate(right,rightO);
 					Designate(left,leftO);
 					Emit(Push(position,leftO.op));
@@ -14027,6 +14043,21 @@ TYPE
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static);
 	END IsStaticArray;
 
+	PROCEDURE IsStaticMathArray(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		type := type.resolved;
+		RETURN (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form = SyntaxTree.Static);
+	END IsStaticMathArray;
+
+	PROCEDURE StaticMathArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
+	BEGIN
+		WHILE (IsStaticMathArray(type)) DO
+			type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+		END;
+		RETURN type;
+	END StaticMathArrayBaseType;
+
 	PROCEDURE StaticArrayNumElements(type: SyntaxTree.Type): LONGINT;
 	VAR size: LONGINT;
 	BEGIN
@@ -14037,6 +14068,17 @@ TYPE
 		END;
 		RETURN size;
 	END StaticArrayNumElements;
+
+	PROCEDURE StaticMathArrayNumElements(type: SyntaxTree.Type): LONGINT;
+	VAR size: LONGINT;
+	BEGIN
+		size := 1;
+		WHILE (IsStaticMathArray(type)) DO
+			size := size * type.resolved(SyntaxTree.MathArrayType).staticLength;
+			type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
+		END;
+		RETURN size;
+	END StaticMathArrayNumElements;
 	
 	PROCEDURE StaticArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
 	BEGIN

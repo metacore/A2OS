@@ -384,7 +384,7 @@ BEGIN {UNCHECKED}
 		WHILE  (blockAdr < memBlock.endBlockAdr) DO
 			block := blockAdr + BlockHeaderSize;
 			a1 := blockAdr DIV CardSize;
-			a2 := (blockAdr + block.size -1) DIV CardSize;
+			a2 := (blockAdr + block.size) DIV CardSize;
 			mark := FALSE;
 			REPEAT
 				mark := a1 MOD SetSize IN cardSet[a1 DIV SetSize];
@@ -392,7 +392,7 @@ BEGIN {UNCHECKED}
 			UNTIL mark OR (a1 > a2);
 		
 			IF mark THEN 
-					IF (block.mark MOD GenerationMask = Old) & (block.mark >= generationMarkValues[Old]) THEN
+				IF (block.mark MOD GenerationMask = Old) & (block.mark >= generationMarkValues[Old]) THEN
 					orgBlock := block.dataAdr;
 					ASSERT(orgBlock # NIL);
 					Inspect(orgBlock, Old);

@@ -671,7 +671,7 @@ TYPE
 			rm : Raster.Mode;
 			dx, dy: LONGINT;
 		BEGIN
-			IF img = NIL THEN RETURN END;
+			IF (img = NIL) OR (img.adr = NIL) THEN RETURN END;
 			dx := SELF.dx; dy := SELF.dy; (* avoid race below *)
 			imgBounds := MakeRectangle(0, 0, img.width, img.height);
 

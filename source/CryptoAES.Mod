@@ -112,6 +112,51 @@ TYPE
 				END Decrypt;
 
 
+				PROCEDURE RoundE( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
+				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				BEGIN
+					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
+					r := rounds DIV 2;  p := 0;
+					LOOP
+						split( e0[s0.d]/e1[s1.c]/e2[s2.b]/e3[s3.a]/rk[p + 4], t0 );
+						split( e0[s1.d]/e1[s2.c]/e2[s3.b]/e3[s0.a]/rk[p + 5], t1 );
+						split( e0[s2.d]/e1[s3.c]/e2[s0.b]/e3[s1.a]/rk[p + 6], t2 );
+						split( e0[s3.d]/e1[s0.c]/e2[s1.b]/e3[s2.a]/rk[p + 7], t3 );
+						INC( p, 8 );  DEC( r );
+						IF r = 0 THEN  EXIT  END;
+						split( e0[t0.d]/e1[t1.c]/e2[t2.b]/e3[t3.a]/rk[p + 0], s0 );
+						split( e0[t1.d]/e1[t2.c]/e2[t3.b]/e3[t0.a]/rk[p + 1], s1 );
+						split( e0[t2.d]/e1[t3.c]/e2[t0.b]/e3[t1.a]/rk[p + 2], s2 );
+						split( e0[t3.d]/e1[t0.c]/e2[t1.b]/e3[t2.a]/rk[p + 3], s3 );
+					END;
+					b[0] := (e4[t0.d]*b3)/(e4[t1.c]*b2)/(e4[t2.b]*b1)/(e4[t3.a]*b0)/rk[p + 0];
+					b[1] := (e4[t1.d]*b3)/(e4[t2.c]*b2)/(e4[t3.b]*b1)/(e4[t0.a]*b0)/rk[p + 1];
+					b[2] := (e4[t2.d]*b3)/(e4[t3.c]*b2)/(e4[t0.b]*b1)/(e4[t1.a]*b0)/rk[p + 2];
+					b[3] := (e4[t3.d]*b3)/(e4[t0.c]*b2)/(e4[t1.b]*b1)/(e4[t2.a]*b0)/rk[p + 3];
+				END RoundE;
+
+				PROCEDURE RoundD( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
+				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				BEGIN
+					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
+					r := rounds DIV 2;  p := 0;
+					LOOP
+						split( d0[s0.d]/d1[s3.c]/d2[s2.b]/d3[s1.a]/rk[p + 4], t0 );
+						split( d0[s1.d]/d1[s0.c]/d2[s3.b]/d3[s2.a]/rk[p + 5], t1 );
+						split( d0[s2.d]/d1[s1.c]/d2[s0.b]/d3[s3.a]/rk[p + 6], t2 );
+						split( d0[s3.d]/d1[s2.c]/d2[s1.b]/d3[s0.a]/rk[p + 7], t3 );
+						INC( p, 8 );  DEC( r );
+						IF r = 0 THEN  EXIT  END;
+						split( d0[t0.d]/d1[t3.c]/d2[t2.b]/d3[t1.a]/rk[p + 0], s0 );
+						split( d0[t1.d]/d1[t0.c]/d2[t3.b]/d3[t2.a]/rk[p + 1], s1 );
+						split( d0[t2.d]/d1[t1.c]/d2[t0.b]/d3[t3.a]/rk[p + 2], s2 );
+						split( d0[t3.d]/d1[t2.c]/d2[t1.b]/d3[t0.a]/rk[p + 3], s3 );
+					END;
+					b[0] := (d4[t0.d]*b3)/(d4[t3.c]*b2)/(d4[t2.b]*b1)/(d4[t1.a]*b0)/rk[p + 0];
+					b[1] := (d4[t1.d]*b3)/(d4[t0.c]*b2)/(d4[t3.b]*b1)/(d4[t2.a]*b0)/rk[p + 1];
+					b[2] := (d4[t2.d]*b3)/(d4[t1.c]*b2)/(d4[t0.b]*b1)/(d4[t3.a]*b0)/rk[p + 2];
+					b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/rk[p + 3];
+				END RoundD;
 
 				PROCEDURE & Init*;
 				BEGIN
@@ -129,93 +174,7 @@ TYPE
 (*-------------------------------------------------------------------------------*)
 
 
-
-	PROCEDURE Initialize;
-	VAR i, si, v1, i2, i4, i8, i9, ib, id, ie, v2, v3, t: LONGINT;
-		source: ARRAY 1500 OF CHAR;
-
-		PROCEDURE Append( CONST str: ARRAY OF CHAR );
-		VAR j: LONGINT;  c: CHAR;
-		BEGIN
-			c := str[0];  j := 1;
-			WHILE c >= ' ' DO  source[i] := c;  INC( i );  c := str[j];  INC( j )  END
-		END Append;
-
-		PROCEDURE GetInt( ): LONGINT;
-		VAR x: LONGINT;  c: CHAR;
-		BEGIN
-			WHILE source[si] = ' ' DO  INC( si )  END;
-			x := 0;  c := source[si];  INC( si );
-			WHILE c > ' ' DO  x := 10*x + (ORD( c ) - 48);  c := source[si];  INC( si )  END;
-			RETURN x
-		END GetInt;
-
-		PROCEDURE xor( a, b: LONGINT ): LONGINT;
-		BEGIN
-			RETURN S.VAL( LONGINT, S.VAL( SET, a ) / S.VAL( SET, b ) )
-		END xor;
-
-	BEGIN
-		i := 0;
-		Append( " 99 124 119 123 242 107 111 197  48   1 103  43 254 215 171 118 " );
-		Append( "202 130 201 125 250  89  71 240 173 212 162 175 156 164 114 192 " );
-		Append( "183 253 147  38  54  63 247 204  52 165 229 241 113 216  49  21 " );
-		Append( "  4 199  35 195  24 150   5 154   7  18 128 226 235  39 178 117 " );
-		Append( "  9 131  44  26  27 110  90 160  82  59 214 179  41 227  47 132 " );
-		Append( " 83 209   0 237  32 252 177  91 106 203 190  57  74  76  88 207 " );
-		Append( "208 239 170 251  67  77  51 133  69 249   2 127  80  60 159 168 " );
-		Append( " 81 163  64 143 146 157  56 245 188 182 218  33  16 255 243 210 " );
-		Append( "205  12  19 236  95 151  68  23 196 167 126  61 100  93  25 115 " );
-		Append( " 96 129  79 220  34  42 144 136  70 238 184  20 222  94  11 219 " );
-		Append( "224  50  58  10  73   6  36  92 194 211 172  98 145 149 228 121 " );
-		Append( "231 200  55 109 141 213  78 169 108  86 244 234 101 122 174   8 " );
-		Append( "186 120  37  46  28 166 180 198 232 221 116  31  75 189 139 138 " );
-		Append( "112  62 181 102  72   3 246  14  97  53  87 185 134 193  29 158 " );
-		Append( "225 248 152  17 105 217 142 148 155  30 135 233 206  85  40 223 " );
-		Append( "140 161 137  13 191 230  66 104  65 153  45  15 176  84 187  22 " );
-		si := 0;
-
-		FOR i := 0 TO 255 DO
-			v1 := GetInt();
-
-			v2 := ASH( v1, 1 );
-			IF v2 >= 256  THEN  v2 := xor( v2, 11BH )  END;
-			v3 := xor( v2, v1);
-
-			i2 := ASH( i, 1 );
-			IF i2 >= 256 THEN  i2 := xor( i2, 11BH )  END;
-			i4 := ASH( i2, 1 );
-			IF i4 >= 256 THEN  i4 := xor( i4, 11BH )  END;
-			i8 := ASH( i4, 1 );
-			IF i8 >= 256 THEN  i8 := xor( i8, 11BH )  END;
-			i9 := xor( i8, i);  ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
-
-			e0[i] := S.VAL( SET, ASH( v2, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v3 );
-			e1[i] := S.VAL( SET, ASH( v3, 24 ) + ASH( v2, 16 ) + ASH( v1, 8 ) + v1 );
-			e2[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v3, 16 ) + ASH( v2, 8 ) + v1 );
-			e3[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v3, 8 ) + v2 );
-			e4[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v1 );
-
-			d0[v1] := S.VAL( SET, ASH( ie, 24 ) + ASH( i9, 16 ) + ASH( id, 8 ) + ib );
-			d1[v1] := S.VAL( SET, ASH( ib, 24 ) + ASH( ie, 16 ) + ASH( i9, 8 ) + id );
-			d2[v1] := S.VAL( SET, ASH( id, 24 ) + ASH( ib, 16 ) + ASH( ie, 8 ) + i9 );
-			d3[v1] := S.VAL( SET, ASH( i9, 24 ) + ASH( id, 16 ) + ASH( ib, 8 ) + ie );
-			d4[v1] := S.VAL( SET, ASH(  i,  24 ) + ASH(  i, 16 ) + ASH(  i, 8 ) + i );
-		END;
-		t := 1;
-		FOR i := 0 TO 9 DO
-			rcon[i] := S.VAL( SET, ASH( t, 24 ) );
-			t := ASH( t, 1 );
-			IF t >= 256 THEN  t := xor( t, 11BH )  END;
-		END;
-	END Initialize;
-
-	PROCEDURE ind( s: SET ): LONGINT;   (* get index byte 0 *)
-	BEGIN
-		RETURN S.VAL( LONGINT, s ) MOD 100H
-	END ind;
-
-	PROCEDURE split( s: SET;  VAR b: Ind4 );   (* split word into 4 index bytes *)
+	PROCEDURE -split( s: SET;  VAR b: Ind4 );   (* split set into 4 indexes *)
 	BEGIN
 		b.a := S.VAL( LONGINT, s ) MOD 100H;
 		b.b := S.VAL( LONGINT, s ) DIV 100H MOD 100H;
@@ -240,7 +199,7 @@ TYPE
 		END;
 		RETURN 10
 	END Init128;
-
+	
 	PROCEDURE Init192( VAR rk: RKeys;  CONST src: ARRAY OF CHAR ): SHORTINT;
 	VAR i, p: LONGINT;  ib: Ind4;
 	BEGIN
@@ -283,9 +242,16 @@ TYPE
 		END;
 		RETURN 14
 	END Init256;
-
+	
+	
 	PROCEDURE Invert( VAR rk: RKeys;  rounds: SHORTINT );
 	VAR i, j, k, p: LONGINT;  t: SET;  ib: Ind4;
+	
+		PROCEDURE ind( s: SET ): LONGINT;   (* get index byte 0 *)
+		BEGIN
+			RETURN S.VAL( LONGINT, s ) MOD 100H
+		END ind;
+		
 	BEGIN
 		(* invert the order of the round keys: *)
 		i := 0;  j := 4*rounds;
@@ -305,52 +271,98 @@ TYPE
 			rk[p + 3] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
 		END;
 	END Invert;
+	
+	
+TYPE
+	ConstBuffer = OBJECT
+		VAR 
+			buf: ARRAY 2048 OF CHAR;  ib: LONGINT;
+		
+			PROCEDURE & Initialize;
+			BEGIN
+				ib := 0;
+			END Initialize;
+			
+			PROCEDURE Append( CONST str: ARRAY OF CHAR );
+			VAR i: LONGINT;  c: CHAR;
+			BEGIN
+				i := 0;
+				REPEAT  c := str[i];  buf[ib] := c;  INC( i );  INC( ib )  UNTIL c = 0X;
+				buf[ib - 1] := ' '
+			END Append;
+		
+			PROCEDURE GetInt( ): LONGINT;
+			VAR x: LONGINT;  c: CHAR;
+			BEGIN
+				WHILE buf[ib] <= ' ' DO  INC( ib )  END;
+				x := 0;  c := buf[ib];  INC( ib );
+				WHILE c > ' ' DO  x := 10*x + (ORD( c ) - 48);  c := buf[ib];  INC( ib )  END;
+				RETURN x
+			END GetInt;
+			
+		END ConstBuffer;
 
-	PROCEDURE RoundE( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
-	VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
-	BEGIN
-		split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
-		r := rounds DIV 2;  p := 0;
-		LOOP
-			split( e0[s0.d]/e1[s1.c]/e2[s2.b]/e3[s3.a]/rk[p + 4], t0 );
-			split( e0[s1.d]/e1[s2.c]/e2[s3.b]/e3[s0.a]/rk[p + 5], t1 );
-			split( e0[s2.d]/e1[s3.c]/e2[s0.b]/e3[s1.a]/rk[p + 6], t2 );
-			split( e0[s3.d]/e1[s0.c]/e2[s1.b]/e3[s2.a]/rk[p + 7], t3 );
-			INC( p, 8 );  DEC( r );
-			IF r = 0 THEN  EXIT   END;
-			split( e0[t0.d]/e1[t1.c]/e2[t2.b]/e3[t3.a]/rk[p + 0], s0 );
-			split( e0[t1.d]/e1[t2.c]/e2[t3.b]/e3[t0.a]/rk[p + 1], s1 );
-			split( e0[t2.d]/e1[t3.c]/e2[t0.b]/e3[t1.a]/rk[p + 2], s2 );
-			split( e0[t3.d]/e1[t0.c]/e2[t1.b]/e3[t2.a]/rk[p + 3], s3 );
-		END;
-		b[0] := (e4[t0.d]*b3)/(e4[t1.c]*b2)/(e4[t2.b]*b1)/(e4[t3.a]*b0)/rk[p + 0];
-		b[1] := (e4[t1.d]*b3)/(e4[t2.c]*b2)/(e4[t3.b]*b1)/(e4[t0.a]*b0)/rk[p + 1];
-		b[2] := (e4[t2.d]*b3)/(e4[t3.c]*b2)/(e4[t0.b]*b1)/(e4[t1.a]*b0)/rk[p + 2];
-		b[3] := (e4[t3.d]*b3)/(e4[t0.c]*b2)/(e4[t1.b]*b1)/(e4[t2.a]*b0)/rk[p + 3];
-	END RoundE;
 
-	PROCEDURE RoundD( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
-	VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+	PROCEDURE Initialize;
+	VAR i, v1, i2, i4, i8, i9, ib, id, ie, v2, v3, t: LONGINT;
+		buffer: ConstBuffer;
+
+		PROCEDURE xor( a, b: LONGINT ): LONGINT;
+		BEGIN
+			RETURN S.VAL( LONGINT, S.VAL( SET, a ) / S.VAL( SET, b ) )
+		END xor;
+		
+		PROCEDURE f1( x: LONGINT ): LONGINT;
+		VAR y: LONGINT;
+		BEGIN
+			y := 2*x;
+			IF y < 256 THEN  RETURN y  ELSE  RETURN xor( y, 11BH )  END
+		END f1;
+
 	BEGIN
-		split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
-		r := rounds DIV 2;  p := 0;
-		LOOP
-			split( d0[s0.d]/d1[s3.c]/d2[s2.b]/d3[s1.a]/rk[p + 4], t0 );
-			split( d0[s1.d]/d1[s0.c]/d2[s3.b]/d3[s2.a]/rk[p + 5], t1 );
-			split( d0[s2.d]/d1[s1.c]/d2[s0.b]/d3[s3.a]/rk[p + 6], t2 );
-			split( d0[s3.d]/d1[s2.c]/d2[s1.b]/d3[s0.a]/rk[p + 7], t3 );
-			INC( p, 8 );  DEC( r );
-			IF r = 0 THEN  EXIT   END;
-			split( d0[t0.d]/d1[t3.c]/d2[t2.b]/d3[t1.a]/rk[p + 0], s0 );
-			split( d0[t1.d]/d1[t0.c]/d2[t3.b]/d3[t2.a]/rk[p + 1], s1 );
-			split( d0[t2.d]/d1[t1.c]/d2[t0.b]/d3[t3.a]/rk[p + 2], s2 );
-			split( d0[t3.d]/d1[t2.c]/d2[t1.b]/d3[t0.a]/rk[p + 3], s3 );
+		NEW( buffer );
+		buffer.Append( " 99 124 119 123 242 107 111 197  48   1 103  43 254 215 171 118 " );
+		buffer.Append( "202 130 201 125 250  89  71 240 173 212 162 175 156 164 114 192 " );
+		buffer.Append( "183 253 147  38  54  63 247 204  52 165 229 241 113 216  49  21 " );
+		buffer.Append( "  4 199  35 195  24 150   5 154   7  18 128 226 235  39 178 117 " );
+		buffer.Append( "  9 131  44  26  27 110  90 160  82  59 214 179  41 227  47 132 " );
+		buffer.Append( " 83 209   0 237  32 252 177  91 106 203 190  57  74  76  88 207 " );
+		buffer.Append( "208 239 170 251  67  77  51 133  69 249   2 127  80  60 159 168 " );
+		buffer.Append( " 81 163  64 143 146 157  56 245 188 182 218  33  16 255 243 210 " );
+		buffer.Append( "205  12  19 236  95 151  68  23 196 167 126  61 100  93  25 115 " );
+		buffer.Append( " 96 129  79 220  34  42 144 136  70 238 184  20 222  94  11 219 " );
+		buffer.Append( "224  50  58  10  73   6  36  92 194 211 172  98 145 149 228 121 " );
+		buffer.Append( "231 200  55 109 141 213  78 169 108  86 244 234 101 122 174   8 " );
+		buffer.Append( "186 120  37  46  28 166 180 198 232 221 116  31  75 189 139 138 " );
+		buffer.Append( "112  62 181 102  72   3 246  14  97  53  87 185 134 193  29 158 " );
+		buffer.Append( "225 248 152  17 105 217 142 148 155  30 135 233 206  85  40 223 " );
+		buffer.Append( "140 161 137  13 191 230  66 104  65 153  45  15 176  84 187  22 " );
+		
+		buffer.Initialize;
+		FOR i := 0 TO 255 DO
+			v1 := buffer.GetInt();  v2 := f1( v1 );  v3 := xor( v2, v1);
+			i2 := f1( i );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i);  
+			ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
+
+			e0[i] := S.VAL( SET, ASH( v2, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v3 );
+			e1[i] := S.VAL( SET, ASH( v3, 24 ) + ASH( v2, 16 ) + ASH( v1, 8 ) + v1 );
+			e2[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v3, 16 ) + ASH( v2, 8 ) + v1 );
+			e3[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v3, 8 ) + v2 );
+			e4[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v1 );
+
+			d0[v1] := S.VAL( SET, ASH( ie, 24 ) + ASH( i9, 16 ) + ASH( id, 8 ) + ib );
+			d1[v1] := S.VAL( SET, ASH( ib, 24 ) + ASH( ie, 16 ) + ASH( i9, 8 ) + id );
+			d2[v1] := S.VAL( SET, ASH( id, 24 ) + ASH( ib, 16 ) + ASH( ie, 8 ) + i9 );
+			d3[v1] := S.VAL( SET, ASH( i9, 24 ) + ASH( id, 16 ) + ASH( ib, 8 ) + ie );
+			d4[v1] := S.VAL( SET, ASH(  i,  24 ) + ASH(  i, 16 ) + ASH(  i, 8 ) + i );
 		END;
-		b[0] := (d4[t0.d]*b3)/(d4[t3.c]*b2)/(d4[t2.b]*b1)/(d4[t1.a]*b0)/rk[p + 0];
-		b[1] := (d4[t1.d]*b3)/(d4[t0.c]*b2)/(d4[t3.b]*b1)/(d4[t2.a]*b0)/rk[p + 1];
-		b[2] := (d4[t2.d]*b3)/(d4[t1.c]*b2)/(d4[t0.b]*b1)/(d4[t3.a]*b0)/rk[p + 2];
-		b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/rk[p + 3];
-	END RoundD;
+		t := 1;
+		FOR i := 0 TO 9 DO
+			rcon[i] := S.VAL( SET, ASH( t, 24 ) );
+			t := f1( t );
+		END;
+	END Initialize;
+
 
 BEGIN
 	Initialize;

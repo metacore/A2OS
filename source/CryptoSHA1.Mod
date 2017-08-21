@@ -104,7 +104,7 @@ TYPE
 
 
 
-	PROCEDURE F1( b, c, d: LONGINT ): LONGINT;
+(*	PROCEDURE F1( b, c, d: LONGINT ): LONGINT;
 	BEGIN
 		RETURN S.VAL( LONGINT, ((S.VAL( SET, c ) / S.VAL( SET, d )) * S.VAL( SET, b )) / S.VAL( SET, d ) )
 	END F1;
@@ -118,28 +118,37 @@ TYPE
 	BEGIN
 		RETURN S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((S.VAL( SET, b ) + S.VAL( SET, c )) * S.VAL( SET, d )) )
 	END F3;
+*)
 
-	PROCEDURE tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET );
+	PROCEDURE -tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) + F1( b, c, d );
+		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) + 
+			(*F1( b, c, d );*)
+			S.VAL( LONGINT, ((S.VAL( SET, c ) / S.VAL( SET, d )) * S.VAL( SET, b )) / S.VAL( SET, d ) );
 		b := ROT( b, 30 );
 	END tr0019;
 
-	PROCEDURE tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
+	PROCEDURE -tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) + F2( b, c, d );
+		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) + 
+			(*F2( b, c, d );*)
+			S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
 		b := ROT( b, 30 );
 	END tr2039;
 
-	PROCEDURE tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET);
+	PROCEDURE -tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET);
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) + F3( b, c, d );
+		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) + 
+			(*F3( b, c, d );*)
+			S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((S.VAL( SET, b ) + S.VAL( SET, c )) * S.VAL( SET, d )) );
 		b := ROT( b, 30 )
 	END tr4059;
 
-	PROCEDURE tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
+	PROCEDURE -tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) + F2( b, c, d );
+		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) + 
+			(*F2( b, c, d );*)
+			S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
 		b := ROT( b, 30 );
 	END tr6079;
 

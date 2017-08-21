@@ -92,28 +92,28 @@ VAR
 		NEW( h );  RETURN h
 	END NewHash;
 
-	PROCEDURE -F1( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
+	PROCEDURE F1( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 	VAR f: LONGINT;
 	BEGIN
 		f := S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((-S.VAL( SET, b )) * S.VAL( SET, d )) );
 		a := ROT( a + f + x + t, s ) + b
 	END F1;
 
-	PROCEDURE -F2( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
+	PROCEDURE F2( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 	VAR f: LONGINT;
 	BEGIN
 		f := S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, d )) + (S.VAL( SET, c ) * (-S.VAL( SET, d ))) );
 		a := ROT( a + f + x + t, s ) + b
 	END F2;
 
-	PROCEDURE -F3( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
+	PROCEDURE F3( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 	VAR f: LONGINT;
 	BEGIN
 		f := S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
 		a := ROT( a + f + x + t, s ) + b
 	END F3;
 
-	PROCEDURE -F4( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
+	PROCEDURE F4( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 	VAR f: LONGINT;
 	BEGIN
 		f := S.VAL( LONGINT, S.VAL( SET, c ) / (S.VAL( SET, b ) + (-S.VAL( SET, d ))) );

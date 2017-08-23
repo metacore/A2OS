@@ -780,6 +780,43 @@ TYPE
 			IF (res = 0) & ~ok THEN res := FormatError END
 		END Int;
 
+	(** Read a floating-point number. EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
+		PROCEDURE Real * (VAR real: LONGREAL);
+		VAR
+			sign, dec, exponent, offset: LONGINT;
+			ch: CHAR;
+			dot: BOOLEAN;
+		BEGIN
+			IF Peek() = "-" THEN
+				sign := -1;
+				ch := Get();
+			ELSE
+				sign := 1;
+			END;
+			(* Read mantissa *)
+			LOOP
+				ch := Get();
+				IF (ch = '.') THEN
+					dot := TRUE;
+				ELSIF (ch < '0') OR (ch > '9') THEN
+					EXIT;
+				ELSE
+					dec := dec * 10 + ORD(ch) - ORD('0');
+					IF dot THEN INC(offset); END;
+				END;
+			END;
+			IF ~dot THEN
+				res := FormatError;
+				RETURN;
+			END;
+			IF (ch = 'E') OR (ch = 'e') THEN
+				Int(exponent, FALSE);
+			ELSE
+				exponent := 0;
+			END;
+			real := LONGREAL(sign * dec) * Ten(exponent - offset);
+		END Real;
+
 	(** Return TRUE iff at the end of a line (or file). *)
 		PROCEDURE EOLN*( ): BOOLEAN;
 		VAR ch: CHAR;
@@ -903,6 +940,14 @@ TYPE
 			Int(integer, isHexadecimal);
 			RETURN res = Ok;
 		END GetInteger;
+
+		(** First skip whitespace, then read a real *)
+		PROCEDURE GetReal*(VAR real: LONGREAL): BOOLEAN;
+		BEGIN
+			SkipWhitespace;
+			Real(real);
+			RETURN res = Ok
+		END GetReal;
 
 		(** First skip whitespace, then read 1 byte character *)
 		PROCEDURE GetChar*(VAR ch : CHAR): BOOLEAN;

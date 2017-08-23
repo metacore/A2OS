@@ -5,7 +5,7 @@ MODULE CryptoAES;   (** AES (Rijndael) de/encryption *)
 IMPORT  S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
 
 CONST
-	MaxR = 14;  
+	MaxRounds = 14;  
 	ECB = Ciphers.ECB;  CBC = Ciphers.CBC;  CTR = Ciphers.CTR;
 	
 	b0 = S.VAL( SET, 0FFH );  b1 = S.VAL( SET, 0FF00H );  
@@ -22,22 +22,22 @@ VAR
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			TYPE
-				RKeys = ARRAY 4*(MaxR + 1) OF SET;
+				Key = ARRAY 4*(MaxRounds + 1) OF SET;
 				Block = ARRAY 4 OF SET;
 				Ind4 = RECORD a, b, c, d: LONGINT END;
 			VAR
 				rounds: SHORTINT;
-				ekeys, dkeys: RKeys;
+				key, dkey: Key;
 				iv: Block;
 
 				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
 				BEGIN
 					InitKey^( src, keybits );
-					IF keybits = 128 THEN  rounds := Init128( ekeys, src )
-					ELSIF keybits = 192 THEN  rounds := Init192( ekeys, src )
-					ELSE  rounds := Init256( ekeys, src )
+					IF keybits = 128 THEN  rounds := Init128( src )
+					ELSIF keybits = 192 THEN  rounds := Init192( src )
+					ELSE  rounds := Init256( src )
 					END;
-					dkeys := ekeys;  Invert( dkeys, rounds )
+					InvertKey
 				END InitKey;
 
 				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
@@ -66,15 +66,15 @@ TYPE
 						U.BufferToBlockBE( buf, ofs + i, x );
 						CASE mode OF
 						| ECB:
-							FOR j := 0 TO 3 DO  x[j] := x[j] / ekeys[j]  END;
-							RoundE( ekeys, x, rounds );
+							FOR j := 0 TO 3 DO  x[j] := x[j] / key[j]  END;
+							RoundE( x );
 						| CBC:
-							FOR j := 0 TO 3 DO  x[j] := x[j] / ekeys[j] / iv[j]  END;
-							RoundE( ekeys, x, rounds );
+							FOR j := 0 TO 3 DO  x[j] := x[j] / key[j] / iv[j]  END;
+							RoundE( x );
 							iv := x;
 						| CTR:
-							FOR j := 0 TO 3 DO  y[j] := iv[j] / ekeys[j]  END;
-							RoundE( ekeys, y, rounds );
+							FOR j := 0 TO 3 DO  y[j] := iv[j] / key[j]  END;
+							RoundE( y );
 							FOR j := 0 TO 3 DO  x[j] := x[j] / y[j]  END;
 							IncIV
 						END;
@@ -93,16 +93,16 @@ TYPE
 						U.BufferToBlockBE( buf, ofs + i, x0 );
 						CASE mode OF
 						| ECB:
-							FOR j := 0 TO 3 DO  x[j] := x0[j] / dkeys[j]  END;
-							RoundD( dkeys, x, rounds );
+							FOR j := 0 TO 3 DO  x[j] := x0[j] / dkey[j]  END;
+							RoundD( x );
 						| CBC:
-							FOR j := 0 TO 3 DO  x[j] := x0[j] / dkeys[j]  END;
-							RoundD( dkeys, x, rounds );
+							FOR j := 0 TO 3 DO  x[j] := x0[j] / dkey[j]  END;
+							RoundD( x );
 							FOR j := 0 TO 3 DO  x[j] := x[j] / iv[j]  END;
 							iv := x0;
 						| CTR:
-							FOR j := 0 TO 3 DO  y[j] := iv[j] / ekeys[j]  END;
-							RoundE( ekeys, y, rounds );
+							FOR j := 0 TO 3 DO  y[j] := iv[j] / key[j]  END;
+							RoundE( y );
 							FOR j := 0 TO 3 DO  x[j] := x0[j] / y[j]  END;
 							IncIV
 						END;
@@ -112,50 +112,50 @@ TYPE
 				END Decrypt;
 
 
-				PROCEDURE RoundE( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
+				PROCEDURE RoundE( VAR b: Block );
 				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
 					LOOP
-						split( e0[s0.d]/e1[s1.c]/e2[s2.b]/e3[s3.a]/rk[p + 4], t0 );
-						split( e0[s1.d]/e1[s2.c]/e2[s3.b]/e3[s0.a]/rk[p + 5], t1 );
-						split( e0[s2.d]/e1[s3.c]/e2[s0.b]/e3[s1.a]/rk[p + 6], t2 );
-						split( e0[s3.d]/e1[s0.c]/e2[s1.b]/e3[s2.a]/rk[p + 7], t3 );
+						split( e0[s0.d]/e1[s1.c]/e2[s2.b]/e3[s3.a]/key[p + 4], t0 );
+						split( e0[s1.d]/e1[s2.c]/e2[s3.b]/e3[s0.a]/key[p + 5], t1 );
+						split( e0[s2.d]/e1[s3.c]/e2[s0.b]/e3[s1.a]/key[p + 6], t2 );
+						split( e0[s3.d]/e1[s0.c]/e2[s1.b]/e3[s2.a]/key[p + 7], t3 );
 						INC( p, 8 );  DEC( r );
 						IF r = 0 THEN  EXIT  END;
-						split( e0[t0.d]/e1[t1.c]/e2[t2.b]/e3[t3.a]/rk[p + 0], s0 );
-						split( e0[t1.d]/e1[t2.c]/e2[t3.b]/e3[t0.a]/rk[p + 1], s1 );
-						split( e0[t2.d]/e1[t3.c]/e2[t0.b]/e3[t1.a]/rk[p + 2], s2 );
-						split( e0[t3.d]/e1[t0.c]/e2[t1.b]/e3[t2.a]/rk[p + 3], s3 );
+						split( e0[t0.d]/e1[t1.c]/e2[t2.b]/e3[t3.a]/key[p + 0], s0 );
+						split( e0[t1.d]/e1[t2.c]/e2[t3.b]/e3[t0.a]/key[p + 1], s1 );
+						split( e0[t2.d]/e1[t3.c]/e2[t0.b]/e3[t1.a]/key[p + 2], s2 );
+						split( e0[t3.d]/e1[t0.c]/e2[t1.b]/e3[t2.a]/key[p + 3], s3 );
 					END;
-					b[0] := (e4[t0.d]*b3)/(e4[t1.c]*b2)/(e4[t2.b]*b1)/(e4[t3.a]*b0)/rk[p + 0];
-					b[1] := (e4[t1.d]*b3)/(e4[t2.c]*b2)/(e4[t3.b]*b1)/(e4[t0.a]*b0)/rk[p + 1];
-					b[2] := (e4[t2.d]*b3)/(e4[t3.c]*b2)/(e4[t0.b]*b1)/(e4[t1.a]*b0)/rk[p + 2];
-					b[3] := (e4[t3.d]*b3)/(e4[t0.c]*b2)/(e4[t1.b]*b1)/(e4[t2.a]*b0)/rk[p + 3];
+					b[0] := (e4[t0.d]*b3)/(e4[t1.c]*b2)/(e4[t2.b]*b1)/(e4[t3.a]*b0)/key[p + 0];
+					b[1] := (e4[t1.d]*b3)/(e4[t2.c]*b2)/(e4[t3.b]*b1)/(e4[t0.a]*b0)/key[p + 1];
+					b[2] := (e4[t2.d]*b3)/(e4[t3.c]*b2)/(e4[t0.b]*b1)/(e4[t1.a]*b0)/key[p + 2];
+					b[3] := (e4[t3.d]*b3)/(e4[t0.c]*b2)/(e4[t1.b]*b1)/(e4[t2.a]*b0)/key[p + 3];
 				END RoundE;
 
-				PROCEDURE RoundD( CONST rk: RKeys;  VAR b: Block;  rounds: SHORTINT );
+				PROCEDURE RoundD( VAR b: Block );
 				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
 					LOOP
-						split( d0[s0.d]/d1[s3.c]/d2[s2.b]/d3[s1.a]/rk[p + 4], t0 );
-						split( d0[s1.d]/d1[s0.c]/d2[s3.b]/d3[s2.a]/rk[p + 5], t1 );
-						split( d0[s2.d]/d1[s1.c]/d2[s0.b]/d3[s3.a]/rk[p + 6], t2 );
-						split( d0[s3.d]/d1[s2.c]/d2[s1.b]/d3[s0.a]/rk[p + 7], t3 );
+						split( d0[s0.d]/d1[s3.c]/d2[s2.b]/d3[s1.a]/dkey[p + 4], t0 );
+						split( d0[s1.d]/d1[s0.c]/d2[s3.b]/d3[s2.a]/dkey[p + 5], t1 );
+						split( d0[s2.d]/d1[s1.c]/d2[s0.b]/d3[s3.a]/dkey[p + 6], t2 );
+						split( d0[s3.d]/d1[s2.c]/d2[s1.b]/d3[s0.a]/dkey[p + 7], t3 );
 						INC( p, 8 );  DEC( r );
 						IF r = 0 THEN  EXIT  END;
-						split( d0[t0.d]/d1[t3.c]/d2[t2.b]/d3[t1.a]/rk[p + 0], s0 );
-						split( d0[t1.d]/d1[t0.c]/d2[t3.b]/d3[t2.a]/rk[p + 1], s1 );
-						split( d0[t2.d]/d1[t1.c]/d2[t0.b]/d3[t3.a]/rk[p + 2], s2 );
-						split( d0[t3.d]/d1[t2.c]/d2[t1.b]/d3[t0.a]/rk[p + 3], s3 );
+						split( d0[t0.d]/d1[t3.c]/d2[t2.b]/d3[t1.a]/dkey[p + 0], s0 );
+						split( d0[t1.d]/d1[t0.c]/d2[t3.b]/d3[t2.a]/dkey[p + 1], s1 );
+						split( d0[t2.d]/d1[t1.c]/d2[t0.b]/d3[t3.a]/dkey[p + 2], s2 );
+						split( d0[t3.d]/d1[t2.c]/d2[t1.b]/d3[t0.a]/dkey[p + 3], s3 );
 					END;
-					b[0] := (d4[t0.d]*b3)/(d4[t3.c]*b2)/(d4[t2.b]*b1)/(d4[t1.a]*b0)/rk[p + 0];
-					b[1] := (d4[t1.d]*b3)/(d4[t0.c]*b2)/(d4[t3.b]*b1)/(d4[t2.a]*b0)/rk[p + 1];
-					b[2] := (d4[t2.d]*b3)/(d4[t1.c]*b2)/(d4[t0.b]*b1)/(d4[t3.a]*b0)/rk[p + 2];
-					b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/rk[p + 3];
+					b[0] := (d4[t0.d]*b3)/(d4[t3.c]*b2)/(d4[t2.b]*b1)/(d4[t1.a]*b0)/dkey[p + 0];
+					b[1] := (d4[t1.d]*b3)/(d4[t0.c]*b2)/(d4[t3.b]*b1)/(d4[t2.a]*b0)/dkey[p + 1];
+					b[2] := (d4[t2.d]*b3)/(d4[t1.c]*b2)/(d4[t0.b]*b1)/(d4[t3.a]*b0)/dkey[p + 2];
+					b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/dkey[p + 3];
 				END RoundD;
 				
 				PROCEDURE -split( s: SET;  VAR b: Ind4 );   (* split set into 4 indexes *)
@@ -167,17 +167,17 @@ TYPE
 				END split;
 
 
-				PROCEDURE Init128( VAR rk: RKeys;  CONST src: ARRAY OF CHAR ): SHORTINT;
+				PROCEDURE Init128( CONST src: ARRAY OF CHAR ): SHORTINT;
 				VAR i, p: LONGINT;  ib: Ind4;
 				BEGIN
-					FOR i := 0 TO 3 DO  rk[i] := U.SetFromBufferBE( src, 4*i )  END;
+					FOR i := 0 TO 3 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
 					LOOP
-						split( rk[p + 3], ib );
-						rk[p + 4] := rk[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
-						rk[p + 5] := rk[p + 1] / rk[p + 4];
-						rk[p + 6] := rk[p + 2] / rk[p + 5];
-						rk[p + 7] := rk[p + 3] / rk[p + 6];
+						split( key[p + 3], ib );
+						key[p + 4] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
+						key[p + 5] := key[p + 1] / key[p + 4];
+						key[p + 6] := key[p + 2] / key[p + 5];
+						key[p + 7] := key[p + 3] / key[p + 6];
 						INC( i );
 						IF i = 10 THEN  EXIT   END;
 						INC( p, 4 );
@@ -185,51 +185,51 @@ TYPE
 					RETURN 10
 				END Init128;
 				
-				PROCEDURE Init192( VAR rk: RKeys;  CONST src: ARRAY OF CHAR ): SHORTINT;
+				PROCEDURE Init192( CONST src: ARRAY OF CHAR ): SHORTINT;
 				VAR i, p: LONGINT;  ib: Ind4;
 				BEGIN
-					FOR i := 0 TO 5 DO  rk[i] := U.SetFromBufferBE( src, 4*i )  END;
+					FOR i := 0 TO 5 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
 					LOOP
-						split( rk[p + 5], ib );
-						rk[p + 6] := rk[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
-						rk[p + 7] := rk[p + 1] / rk[p + 6];
-						rk[p + 8] := rk[p + 2] / rk[p + 7];
-						rk[p + 9] := rk[p + 3] / rk[p + 8];
+						split( key[p + 5], ib );
+						key[p + 6] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
+						key[p + 7] := key[p + 1] / key[p + 6];
+						key[p + 8] := key[p + 2] / key[p + 7];
+						key[p + 9] := key[p + 3] / key[p + 8];
 						INC( i );
 						IF i = 8 THEN  EXIT   END;
-						rk[p + 10] := rk[p + 4] / rk[p + 9];
-						rk[p + 11] := rk[p + 5] / rk[p + 10];
+						key[p + 10] := key[p + 4] / key[p + 9];
+						key[p + 11] := key[p + 5] / key[p + 10];
 						INC( p, 6 );
 					END;
 					RETURN 12
 				END Init192;
 	
-				PROCEDURE Init256( VAR rk: RKeys;  CONST src: ARRAY OF CHAR ): SHORTINT;
+				PROCEDURE Init256( CONST src: ARRAY OF CHAR ): SHORTINT;
 				VAR i, p: LONGINT;  ib: Ind4;
 				BEGIN
-					FOR i := 0 TO 7 DO  rk[i] := U.SetFromBufferBE( src, 4*i )  END;
+					FOR i := 0 TO 7 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
 					LOOP
-						split( rk[p + 7], ib );
-						rk[p +   8] := rk[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
-						rk[p +   9] := rk[p + 1] / rk[p + 8];
-						rk[p + 10] := rk[p + 2] / rk[p + 9];
-						rk[p + 11] := rk[p + 3] / rk[p + 10];
+						split( key[p + 7], ib );
+						key[p +   8] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
+						key[p +   9] := key[p + 1] / key[p +  8];
+						key[p + 10] := key[p + 2] / key[p +  9];
+						key[p + 11] := key[p + 3] / key[p + 10];
 						INC( i );
 						IF i = 7 THEN  EXIT   END;
-						split( rk[p + 11], ib );
-						rk[p + 12] := rk[p + 4] / (e4[ib.d]*b3) / (e4[ib.c]*b2) / (e4[ib.b]*b1) / (e4[ib.a]*b0);
-						rk[p + 13] := rk[p + 5] / rk[p + 12];
-						rk[p + 14] := rk[p + 6] / rk[p + 13];
-						rk[p + 15] := rk[p + 7] / rk[p + 14];
+						split( key[p + 11], ib );
+						key[p + 12] := key[p + 4] / (e4[ib.d]*b3) / (e4[ib.c]*b2) / (e4[ib.b]*b1) / (e4[ib.a]*b0);
+						key[p + 13] := key[p + 5] / key[p + 12];
+						key[p + 14] := key[p + 6] / key[p + 13];
+						key[p + 15] := key[p + 7] / key[p + 14];
 						INC( p, 8 );
 					END;
 					RETURN 14
 				END Init256;
 	
-				PROCEDURE Invert( VAR rk: RKeys;  rounds: SHORTINT );
-				VAR i, j, k, p: LONGINT;  t: SET;  ib: Ind4;
+				PROCEDURE InvertKey;
+				VAR i, j, k: LONGINT;  ib: Ind4;
 				
 					PROCEDURE ind( s: SET ): LONGINT;   (* extract index byte 0 *)
 					BEGIN
@@ -240,18 +240,18 @@ TYPE
 					(* invert the order of the round keys: *)
 					i := 0;  j := 4*rounds;
 					WHILE i < j DO
-						FOR k := 0 TO 3 DO  t := rk[i + k];  rk[i + k] := rk[j + k];  rk[j + k] := t  END;
+						FOR k := 0 TO 3 DO dkey[i + k] := key[j + k];  dkey[j + k] := key[i + k]  END;
 						INC( i, 4 );  DEC( j, 4 );
 					END;
 					(* apply the inverse MixColumn transform to all round keys but the first and the last: *)
 					FOR i := 1 TO rounds - 1 DO
 						FOR j := 0 TO 3 DO
-							p := 4*i + j;  
-							split( rk[p], ib );
-							rk[p] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
+							k := 4*i + j;  
+							split( dkey[k], ib );
+							dkey[k] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
 						END
 					END;
-				END Invert;
+				END InvertKey;
 	
 	
 				PROCEDURE & Init*;

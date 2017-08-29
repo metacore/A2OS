@@ -203,6 +203,18 @@ BEGIN
 END DoOpen;
 
 
+PROCEDURE SetProperties(c:WMComponents.Component; CONST attr: ARRAY OF CHAR);
+VAR property, value: ARRAY 32 OF CHAR; ch: CHAR; 
+VAR r: Streams.StringReader;
+BEGIN
+	NEW(r, LEN(attr)); 
+	r.Set(attr);
+	WHILE r.GetString(property) & r.GetString(value) DO
+		IF ~c.properties.SetPropertyValue(property, value) THEN END;
+	END;
+END SetProperties;
+
+
 PROCEDURE Open*(context : Commands.Context); (** [Options] <RepositoryName:ComponentName:ID> | <ModuleName.ProcedureName> | <Filename> ~ *)
 VAR
 	options : Options.Options;
@@ -210,6 +222,7 @@ VAR
 	x,y, width, height: LONGINT;
 	flags: SET;
 	c: WMComponents.Component;
+	properties: ARRAY 256 OF CHAR;
 BEGIN
 	NEW(options);
 	options.Add("x", "xPosition", Options.Integer);
@@ -224,6 +237,7 @@ BEGIN
 	options.Add("F","noFrame",Options.Flag);
 	options.Add("m","moveable",Options.Flag);
 	options.Add("s","smoothGraphics",Options.Flag);
+	options.Add("p","properties",Options.String);
 	IF options.Parse(context.arg, context.error) & context.arg.GetString(filename) THEN
 		IF ~options.GetInteger("width",width) THEN width := 0 END;
 		IF ~options.GetInteger("height",height) THEN height := 0 END;
@@ -236,6 +250,7 @@ BEGIN
 		IF options.GetFlag("onTop") THEN INCL(flags, WMWindowManager.FlagStayOnTop) END;
 		IF options.GetFlag("smoothGraphics") THEN INCL(flags,FlagSmoothGraphics); END;
 		c := DoOpen(filename, context.error, x , y, width, height, options.GetFlag("client"), options.GetFlag("alpha"), options.GetFlag("fullscreen"), flags);
+		IF options.GetString("properties",properties) & (c # NIL) THEN SetProperties(c,properties) END;
 	ELSE
 		context.error.String("Usage: ComponentViewer.Open [Options] <string> ~"); context.error.Ln;
 	END;

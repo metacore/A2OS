@@ -1151,6 +1151,7 @@ TYPE
 	VAR
 		inUse: VariableUse;
 		registerIndex: LONGINT;
+		nameIndex: LONGINT; 
 
 		PROCEDURE & Init;
 		VAR i: LONGINT;
@@ -1158,7 +1159,17 @@ TYPE
 			InitList(16);
 			FOR i := 0 TO LEN(inUse)-1 DO inUse[i] := {} END;
 			registerIndex := 1024;
+			nameIndex := 0; 
 		END Init;
+		
+		PROCEDURE GetUID(): SyntaxTree.Identifier;
+		VAR string: SyntaxTree.IdentifierString ;
+		BEGIN
+				COPY("@hiddenIRVar",string);
+				Basic.AppendNumber(string, nameIndex); INC(nameIndex);
+				RETURN SyntaxTree.NewIdentifier(string);
+		END GetUID;
+		
 
 		PROCEDURE GetUsage(VAR use: VariableUse);
 		BEGIN
@@ -1216,7 +1227,6 @@ TYPE
 				IF ~((pos MOD 32) IN inUse[pos DIV 32]) THEN
 					var := GetVariable(pos);
 					IF CompatibleType(type, var.type) & (var.untraced = untraced) THEN
-						var.SetType(type);
 						Occupy(pos); RETURN var
 					END;
 				END;
@@ -6919,7 +6929,7 @@ TYPE
 			create a temporary variable in current scope
 		**)
 		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
-		VAR name: SyntaxTree.Identifier; string: SyntaxTree.IdentifierString ; variable: SyntaxTree.Variable;
+		VAR name: SyntaxTree.Identifier;  variable: SyntaxTree.Variable;
 		scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
 		BEGIN
 			IF ~register THEN
@@ -6928,12 +6938,11 @@ TYPE
 				index := temporaries.registerIndex; INC(temporaries.registerIndex);
 			END;
 			scope := currentScope;
+			variable := NIL; (* disable free variable managemenet for the time being -- does not work *)
 
 			IF variable = NIL THEN
-				COPY("@hiddenIRVar",string);
-				Basic.AppendNumber(string,index);
-				name := SyntaxTree.NewIdentifier(string);
-
+				name := temporaries.GetUID(); 
+				
 				variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
 				variable.SetType(type);
 				variable.SetAccess(SyntaxTree.Hidden);
@@ -6959,8 +6968,22 @@ TYPE
 					variable(SyntaxTree.Variable).SetOffset(0);
 				END;
 			ELSE
+				name := temporaries.GetUID(); 
+				offset := variable.offsetInBits;
+				
+				(* create new variable on existing slot *)
+				variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
+				variable.SetType(type);
+				variable.SetAccess(SyntaxTree.Hidden);
 				variable.SetUntraced(untraced);
+				
+				variable(SyntaxTree.Variable).SetOffset(offset);
+				
+				scope.AddVariable(variable(SyntaxTree.Variable));
+				scope.EnterSymbol(variable, duplicate);
+				ASSERT(~duplicate);
 				InitVariable(variable(SyntaxTree.Variable),TRUE);
+				
 				(*
 				ASSERT(variable.type.resolved = type.resolved)
 				*)

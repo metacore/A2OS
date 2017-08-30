@@ -164,6 +164,7 @@ TYPE
 			toolbarFMask.AddContent(fmaskLabel);
 
 			NEW(fmaskEdit); fmaskEdit.alignment.Set(WMComponents.AlignLeft);
+			fmaskEdit.SetAsString("*.Mod");
 			fmaskEdit.bounds.SetWidth(300); fmaskEdit.multiLine.Set(FALSE);
 			fmaskEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			fmaskEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));

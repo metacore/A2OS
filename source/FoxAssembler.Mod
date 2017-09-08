@@ -906,7 +906,7 @@ TYPE
 	VAR scanner: Scanner.AssemblerScanner;  diagnostics: Diagnostics.StreamDiagnostics; assembler: Assembler;
 	BEGIN
 		NEW(diagnostics,context.out);
-		NEW(scanner,"command",context.arg,0,diagnostics);
+		scanner := Scanner.NewAssemblerScanner("command",context.arg,0,diagnostics);
 		NEW(assembler,diagnostics);
 		assembler.Text(scanner);
 		(*
@@ -918,7 +918,7 @@ TYPE
 	VAR scanner: Scanner.AssemblerScanner;  diagnostics: Diagnostics.StreamDiagnostics; symbol: Scanner.Symbol;
 	BEGIN
 		NEW(diagnostics,context.out);
-		NEW(scanner,"command",context.arg,0,diagnostics);
+		scanner := Scanner.NewAssemblerScanner("command",context.arg,0,diagnostics);
 		WHILE scanner.GetNextSymbol(symbol) & (symbol.token # Scanner.EndOfText)  DO
 			Scanner.OutSymbol(context.out, symbol); context.out.Ln;
 		END;

@@ -54,7 +54,7 @@ TYPE
 			diagnostics.Error (filename, Diagnostics.Invalid, Diagnostics.Invalid, "failed to open");
 		ELSE
 
-			NEW(scanner, filename, reader,0, diagnostics);
+			scanner := Scanner.NewScanner(filename, reader, 0, diagnostics);
 			NEW(parser, scanner, diagnostics);
 
 			REPEAT (* WHILE parser.Peek(Scanner.Identifier) DO*)

@@ -307,7 +307,7 @@ TYPE
 			position: reference position (offset) of the input stream , for error output
 			diagnostics: error output object
 		*)
-		PROCEDURE & InitializeScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics );
+		PROCEDURE & InitializeScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; pos: Position; diagnostics: Diagnostics.Diagnostics );
 		BEGIN
 			NEW(stringMaker,1024);
 			stringWriter := stringMaker.GetWriter();
@@ -319,15 +319,14 @@ TYPE
 			ch := " ";
 			case := Unknown;
 			firstIdentifier := TRUE;
+			SELF.position := pos; 
+			DEC(position.start, 1); (* one symbol lookahead *)
 			IF reader = NIL THEN ch := EOT ELSE 	GetNextCharacter END;
 			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
-			SELF.position.start := position;
-			SELF.position.line := 1;
-			SELF.position.linepos := 0;
 			IF source = "" THEN SELF.position.reader := reader END; 
 			useLineNumbers := FALSE;
 		END InitializeScanner;
-
+		
 		PROCEDURE ResetCase*; (*! needs a better naming ! *)
 		BEGIN
 			firstIdentifier := TRUE; case := Unknown;
@@ -1001,7 +1000,7 @@ TYPE
 	VAR
 		startContext-: Context;
 
-		PROCEDURE &InitAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics );
+		PROCEDURE &InitAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Position; diagnostics: Diagnostics.Diagnostics );
 		BEGIN
 			InitializeScanner(source,reader,position,diagnostics);
 			GetContext(startContext);
@@ -1190,15 +1189,23 @@ TYPE
 
 	(** return a new scanner on a stream, error output via diagnostics  **)
 	PROCEDURE NewScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): Scanner;
-	VAR s: Scanner;
+	VAR s: Scanner; pos: Position; 
 	BEGIN
-		NEW( s, source, reader, position, diagnostics );  RETURN s;
+		pos.start := position;
+		pos.end := position;
+		pos.line := 1;
+		pos.linepos := 0;
+		NEW( s, source, reader, pos, diagnostics );  RETURN s;
 	END NewScanner;
 
 	PROCEDURE NewAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): AssemblerScanner;
-	VAR s: AssemblerScanner;
+	VAR s: AssemblerScanner;pos: Position; 
 	BEGIN
-		NEW( s, source, reader, position, diagnostics );  RETURN s;
+		pos.start := position;
+		pos.end := position;
+		pos.line := 1;
+		pos.linepos := 0;
+		NEW( s, source, reader, pos, diagnostics );  RETURN s;
 	END NewAssemblerScanner;
 
 	PROCEDURE SymbolToString*(CONST symbol: Symbol; case: LONGINT; VAR str: ARRAY OF CHAR);

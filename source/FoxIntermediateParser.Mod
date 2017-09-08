@@ -593,7 +593,7 @@ TYPE
 		assemblerScanner: Scanner.AssemblerScanner;
 		intermediateCodeParser: IntermediateCodeParser;
 	BEGIN
-		NEW(assemblerScanner, "", reader, 0, diagnostics);
+		assemblerScanner := Scanner.NewAssemblerScanner("",reader,0,diagnostics); 
 		NEW(intermediateCodeParser, diagnostics, module.system);
 		RETURN intermediateCodeParser.ParseModuleContent(assemblerScanner, module)
 	END ParseReader;

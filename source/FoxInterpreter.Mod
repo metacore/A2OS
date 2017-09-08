@@ -815,7 +815,7 @@ TYPE
 			VAR str: Strings.String; reader: Streams.Reader; done: BOOLEAN;
 			BEGIN
 				reader := expMaker.GetReader();
-				NEW(scanner, "", reader, 0, NIL);
+				scanner := Scanner.NewScanner("", reader, 0, NIL);
 				NEW(parser, scanner, NIL);
 				REPEAT
 					error := FALSE;

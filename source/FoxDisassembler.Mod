@@ -177,7 +177,7 @@ TYPE
 			first := NIL; last := NIL;
 			IF file = NIL THEN RETURN NIL END;
 			NEW(reader, file, 0);
-			NEW(scanner, "", reader,0,  NIL);
+			scanner := Scanner.NewAssemblerScanner("",reader,0,NIL);
 			b := scanner.GetNextSymbol(symbol);
 			REPEAT
 				block := ParseLine();

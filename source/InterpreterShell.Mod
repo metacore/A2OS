@@ -802,7 +802,7 @@ TYPE
 				context.out.Ln;
 				context.out.String(">");
 				context.out.Update;
-				NEW(scanner,"", r, 0, diagnostics);
+				scanner := Scanner.NewScanner("", r, 0, diagnostics);
 				scanner.SetCase(Scanner.Lowercase);
 				NEW(parser, scanner, diagnostics); (* silent *) 
 				parser.SetLax;

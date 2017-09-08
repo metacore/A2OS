@@ -2646,7 +2646,7 @@ TYPE
 			END;
 
 			NEW(assembler, diagnostics);
-			scanner := Scanner.NewAssemblerScanner(module.moduleName(*module.module.sourceName*), reader, LONGINT(irInstruction.op1.intValue) (* ? *), diagnostics);
+			NEW(scanner, module.moduleName(*module.module.sourceName*), reader, irInstruction.textPosition, diagnostics);
 			scanner.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
 			assembler.InlineAssemble(scanner, in, scope, module);
 			error := error OR assembler.error

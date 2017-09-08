@@ -161,7 +161,7 @@ TYPE
 		scanner: Scanner.AssemblerScanner;
 		orgOffset: LONGINT;
 		section-: IntermediateCode.Section;
-		code: BinaryCode.Section;
+		code-: BinaryCode.Section;
 		labels: NamedLabelList;
 		results: NamedResultList;
 		scope: SyntaxTree.Scope;

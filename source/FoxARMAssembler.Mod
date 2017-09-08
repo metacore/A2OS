@@ -261,7 +261,24 @@ TYPE
 									END
 								END
 							END
-
+						ELSIF GetPlainValue(offsetImmediateValue) THEN
+							(* pc label of the form [labelName], translated to [PC, #labelName - $ - 8] *)
+							registerNumber := InstructionSet.PC;
+							isImmediateOffset := TRUE;
+							DEC(offsetImmediateValue, 8); 
+							DEC(offsetImmediateValue, code.pc); 
+							IF ABS(offsetImmediateValue) < InstructionSet.Bits12 THEN
+								IF offsetImmediateValue >= 0 THEN
+									INCL(indexingMode, InstructionSet.Increment)
+								ELSE
+									INCL(indexingMode, InstructionSet.Decrement)
+								END;
+								offsetImmediateValue := ABS(offsetImmediateValue)
+							ELSE
+								Error(errorPosition, "immediate offset is out of range")
+							END;
+							IF ExpectToken(Scanner.RightBracket) THEN
+							END;
 						ELSE
 							Error(errorPosition, "register expected")
 						END;
@@ -398,5 +415,5 @@ TYPE
 
 END FoxARMAssembler.
 
-SystemTools.Free FoxARMAssembler FoxARMInstructionSet ~
+SystemTools.FreeDownTo  FoxARMInstructionSet ~
 Alwazs

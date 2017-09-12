@@ -405,7 +405,7 @@ VAR
 		END;
 
 		IF TestTrap & (s[0] = "2") THEN HALT( 99 ) END;
-		Objects.InstallExceptionHandler( Exception );  KernelLog.String( "Traps: TrapHandler installed" );  KernelLog.Ln;
+		Objects.InstallExceptionHandler( Exception );  
 	END Init;
 
 	PROCEDURE Install*; (* for loading this module *)

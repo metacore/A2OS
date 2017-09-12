@@ -3,7 +3,7 @@ MODULE FoxDisassembler; (** AUTHOR ""; PURPOSE ""; *)
 IMPORT Streams, ObjectFile, Scanner := FoxScanner, Basic := FoxBasic, BitSets, D := Debugging, Files, Commands;
 
 
-CONST Trace = TRUE;
+CONST Trace = FALSE;
 TYPE
 	Block*= POINTER TO RECORD (ObjectFile.Section)
 		to-: LONGINT;
@@ -54,12 +54,18 @@ TYPE
 			WHILE (b # NIL) & ((adr < b.alignment-offset) OR (adr > b.to - offset) OR (ObjectFile.IsCode(b.type)#isCode)) DO
 				b := b.next;
 			END;
+			IF b = NIL THEN 
+				(* try to find any matching section *)
+				WHILE (b # NIL) & ((adr < b.alignment-offset) OR (adr > b.to - offset))  DO
+					b := b.next;
+				END;
+			END;
 			IF (b # NIL) & (b # block) THEN
 				Basic.SegmentedNameToString(b.identifier.name, name);
 				w.String(" [");
 				w.String(name);
 				IF adr # b.alignment THEN
-					w.String("+"); w.Int(adr-b.alignment,1)
+					w.String("+"); w.Int(adr-b.alignment+offset,1)
 				END;
 				w.String("]");
 			END;

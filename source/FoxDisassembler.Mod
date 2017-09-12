@@ -56,6 +56,7 @@ TYPE
 			END;
 			IF b = NIL THEN 
 				(* try to find any matching section *)
+				b := first;
 				WHILE (b # NIL) & ((adr < b.alignment-offset) OR (adr > b.to - offset))  DO
 					b := b.next;
 				END;

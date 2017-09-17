@@ -1,0 +1,73 @@
+MODULE DVIFiles IN Oberon;
+	IMPORT Files, Objects, Gadgets, Out, Strings;
+CONST 
+	Version* = 100; 
+TYPE 
+	Special* = POINTER TO SpecialDesc; 
+
+	SpecialDesc* = RECORD 
+		next*: Special; 
+		pos*: LONGINT; 
+	END; 
+
+	PageDesc = RECORD 
+		offset: LONGINT; 
+		specialCacheComplete: BOOLEAN; 
+		spec: Special; 
+	END; 
+
+	FontInfo* = POINTER TO FontInfoDesc; 
+
+	FontInfoDesc* = RECORD 
+		next: FontInfo; 
+		name*: POINTER TO ARRAY OF CHAR; 
+		no: LONGINT; 
+		checksum*: LONGINT; 
+		s, d, a, l: LONGINT; 
+		width*: ARRAY 256 OF LONGREAL; 
+	END; 
+
+	File* = POINTER TO FileDesc; 
+
+	FileDesc* = RECORD (Gadgets.ObjDesc)
+		fileName: ARRAY 128 OF CHAR; 
+		file: Files.File; 
+		num*, den*, mag*: LONGREAL; 
+		pageNr*: LONGINT; 
+		page: POINTER TO ARRAY OF PageDesc; 
+		fonts: FontInfo; 
+	END; 
+
+	PROCEDURE ^ ReadByte*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadSignedByte*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadWord*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadSignedWord*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadTrio*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadSignedTrio*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ ReadSignedQuad*(VAR r: Files.Rider): LONGINT; 
+	PROCEDURE ^ Read*(VAR r: Files.Rider; size: LONGINT): LONGINT; 
+	PROCEDURE ^ ReadSigned*(VAR r: Files.Rider; size: LONGINT): LONGINT; 
+	PROCEDURE ^ ReadFixedWord*(VAR r: Files.Rider): LONGREAL; 
+	PROCEDURE ^ SkipBytes*(VAR r: Files.Rider; numberOfBytes: LONGINT); 
+	PROCEDURE ^ Assert(expr: BOOLEAN; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadCharacterWidths(font: FontInfo); 
+	PROCEDURE ^ ParsePostamble(m: File; postamble: LONGINT): LONGINT; 
+	PROCEDURE ^ ScanPages(m: File; lastPageOffset, postambleOffset: LONGINT); 
+	PROCEDURE ^ LoadDVIFile(m: File); 
+	PROCEDURE ^ GetPage*(m: File; pageNo: LONGINT; VAR r: Files.Rider): BOOLEAN; 
+	PROCEDURE ^ GetFont*(m: File; fontNo: LONGINT): FontInfo; 
+	PROCEDURE ^ IsSpecialCacheComplete*(m: File; pageNo: LONGINT): BOOLEAN; 
+	PROCEDURE ^ CacheComplete*(m: File; pageNo: LONGINT); 
+	PROCEDURE ^ FindSpecial(m: File; pageNo, pos: LONGINT): Special; 
+	PROCEDURE ^ GetCachedSpecial*(m: File; pageNo, pos: LONGINT): Special; 
+	PROCEDURE ^ CacheSpecial*(m: File; pageNo: LONGINT; new: Special); 
+	PROCEDURE ^ DoAttributeMsg(obj: File; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: File); 
+	PROCEDURE ^ DoCopyMsg(obj: File; VAR M: Objects.CopyMsg); 
+	PROCEDURE ^ DoStoreMsg(obj: File; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ DoLoadMsg(obj: File; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(obj: File; fileName: ARRAY OF CHAR); 
+	PROCEDURE ^ New*; 
+BEGIN
+END DVIFiles.

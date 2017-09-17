@@ -204,7 +204,7 @@ TYPE
 		stringMaker: StringMaker; 
 		useLineNumbers*: BOOLEAN; 
 
-		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; pos: Position; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ ResetCase*; 
 		PROCEDURE ^ SetCase*(c: LONGINT); 
 		PROCEDURE ^ ErrorS(CONST msg: ARRAY OF CHAR); 
@@ -233,7 +233,7 @@ TYPE
 	VAR 
 		startContext-: Context; 
 
-		PROCEDURE ^  & InitAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^  & InitAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Position; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ GetContext*(VAR context: Context); 
 		PROCEDURE ^ SetContext*(CONST context: Context); 
 		PROCEDURE ^ SkipToEndOfLine*; 

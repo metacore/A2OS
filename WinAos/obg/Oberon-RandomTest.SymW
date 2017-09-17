@@ -1,0 +1,7 @@
+MODULE RandomTest IN Oberon;
+	IMPORT vyParser, vyRandom, vyLongrealVec, vyBase, vyName;
+CONST 
+
+	PROCEDURE ^ Test3*; 
+BEGIN
+END RandomTest.

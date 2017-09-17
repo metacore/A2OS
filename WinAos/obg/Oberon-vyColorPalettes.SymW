@@ -1,0 +1,42 @@
+MODULE vyColorPalettes IN Oberon;
+	IMPORT Colors, vyBase, Objects, Gadgets, Files, Images;
+CONST 
+TYPE 
+	Palette* = POINTER TO PaletteDesc; 
+
+	PaletteDesc* = RECORD (vyBase.ObjDesc)
+		col-: ARRAY 256 OF Colors.Color; 
+		dcol-: ARRAY 256 OF LONGINT; 
+		icol-: ARRAY 256 OF Images.Pixel; 
+		used*: INTEGER; 
+		first*, last*: INTEGER; 
+	END; 
+
+	NewColMsg* = RECORD (Objects.ObjMsg)
+		pal*: Palette; 
+	END; 
+
+	GetColMsg* = RECORD (Objects.ObjMsg)
+		pal*: Palette; 
+	END; 
+VAR 
+	standard1*, standard2*, current*: Palette; 
+	index: Colors.Index; 
+
+	PROCEDURE ^ PHandleFileMsg(obj: Palette; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ PHandleAttributes(obj: Palette; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ PHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ PNew*; 
+	PROCEDURE ^ SetCol*(p: Palette; index: INTEGER; col: LONGINT); 
+	PROCEDURE ^ GetRGBI(c: Colors.Color; VAR r, g, b: INTEGER); 
+	PROCEDURE ^ RGBPath*(p: Palette; first, last: INTEGER; r1, g1, b1, r2, g2, b2: REAL); 
+	PROCEDURE ^ ShiftPath*(p: Palette; tofirst, tolast: INTEGER); 
+	PROCEDURE ^ PathFromTo*(from, to: Palette); 
+	PROCEDURE ^ DefaultPath*(p: Palette); 
+	PROCEDURE ^ DefaultPath2*(p: Palette); 
+	PROCEDURE ^ CopyPalette*(from, to: Palette); 
+	PROCEDURE ^ InitConversion*(depth: LONGINT; VAR p: Palette); 
+	PROCEDURE ^ Convert*(r, g, b: INTEGER): LONGINT; 
+	PROCEDURE ^ InitPalette*(p: Palette); 
+BEGIN
+END vyColorPalettes.

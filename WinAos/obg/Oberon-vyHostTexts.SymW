@@ -1,0 +1,127 @@
+MODULE vyHostTexts IN Oberon;
+	IMPORT Objects, Oberon, Display, Texts, Viewers, TextFrames, Fonts, PanelDocs, TextGadgets, TextDocs, Gadgets, Documents, Desktops, vyPortability;
+CONST 
+	idversion* = \"vyHostTexts S3R2.1 v0.0d1"\; 
+	cNotify* = 10; 
+	cWarning* = 20; 
+	cAlert* = 30; 
+	cRed = 1; 
+	cBlue = 3; 
+	cGreen = 8; 
+	col7 = 7; 
+	col10 = 10; 
+	cBlack = 15; 
+	cSpace = 32X; 
+	cTab = 9X; 
+TYPE 
+	Style* = POINTER TO StyleDesc; 
+
+	StyleDesc* = RECORD 
+	END; 
+
+	CharStyle* = POINTER TO CharStyleDesc; 
+
+	CharStyleDesc* = RECORD (StyleDesc)
+	END; 
+
+	RulerStyle* = POINTER TO RulerStyleDesc; 
+
+	RulerStyleDesc* = RECORD (StyleDesc)
+	END; 
+
+	ParaStyle* = POINTER TO ParaStyleDesc; 
+
+	ParaStyleDesc* = RECORD (CharStyleDesc)
+	END; 
+
+	NumberStyle* = POINTER TO NumberStyleDesc; 
+
+	NumberStyleDesc* = RECORD (StyleDesc)
+	END; 
+
+	FontItem = POINTER TO FontItemDesc; 
+
+	FontItemDesc = RECORD 
+		Font: Fonts.Font; 
+		prev: FontItem; 
+	END; 
+VAR 
+	T*: Texts.Text; 
+	S*: Texts.Scanner; 
+	beg: LONGINT; 
+	w*: Texts.Writer; 
+	werr*: Texts.Writer; 
+	Log*: Texts.Text; 
+	msgsep*: CHAR; 
+	CaretHasPriority*: BOOLEAN; 
+	StdOut: Display.Frame; 
+	DefaultFont*, TableFont*: Fonts.Font; 
+	PrevFont: FontItem; 
+	hexchars: ARRAY 17 OF CHAR; 
+	foundObj: BOOLEAN; 
+	NewDocument*: Documents.Document; 
+	newF-: TextGadgets.Frame; 
+
+	PROCEDURE ^ InRealRange(x: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ WReal*(VAR w: Texts.Writer; x: LONGREAL; prec: INTEGER); 
+	PROCEDURE ^ DebugNote(s: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteRealFix*(VAR W: Texts.Writer; x: LONGREAL; n, f, E: LONGINT); 
+	PROCEDURE ^ InsertErrW*(level: INTEGER; TB: Texts.Writer); 
+	PROCEDURE ^ InsertErr*(level: INTEGER; buf: Texts.Buffer); 
+	PROCEDURE ^ NoteAttrib(VAR tw: Texts.Writer; level: INTEGER); 
+	PROCEDURE ^ AppendToText*(VAR t: Texts.Text; VAR w: Texts.Writer); 
+	PROCEDURE ^ AppendToLog*(VAR w: Texts.Writer); 
+	PROCEDURE ^ Show*(name: ARRAY OF CHAR; VAR w: Texts.Writer); 
+	PROCEDURE ^ Note*(level: INTEGER; s: ARRAY OF CHAR); 
+	PROCEDURE ^ NoteSS*(level: INTEGER; s1, s2: ARRAY OF CHAR); 
+	PROCEDURE ^ NoteSSS*(level: INTEGER; s1, s2, s3: ARRAY OF CHAR); 
+	PROCEDURE ^ NoteSI*(level: INTEGER; s: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ NoteSIS*(level: INTEGER; s: ARRAY OF CHAR; i: LONGINT; s1: ARRAY OF CHAR); 
+	PROCEDURE ^ NoteSISI*(level: INTEGER; s: ARRAY OF CHAR; i: LONGINT; s1: ARRAY OF CHAR; i1: LONGINT); 
+	PROCEDURE ^ CheckTime; 
+	PROCEDURE ^ OpenScanner*(VAR s: Texts.Scanner): BOOLEAN; 
+	PROCEDURE ^ DoOpenLog*(logname: ARRAY OF CHAR); 
+	PROCEDURE ^ SetCaret*; 
+	PROCEDURE ^ OpenLog*; 
+	PROCEDURE ^ WriteTableStyle*(VAR W: Texts.Writer); 
+	PROCEDURE ^ WritePrevStyle*(VAR W: Texts.Writer); 
+	PROCEDURE ^ WriteInt*(VAR W: Texts.Writer; i: LONGINT); 
+	PROCEDURE ^ WriteLongIntTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF LONGINT; start: LONGINT; n: LONGINT); 
+	PROCEDURE ^ WriteIntTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF INTEGER; start: LONGINT; n: LONGINT); 
+	PROCEDURE ^ WriteLongRealTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF LONGREAL; start: LONGINT; n: LONGINT); 
+	PROCEDURE ^ WriteLongRealFixTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF LONGREAL; start: LONGINT; n, f, E: LONGINT); 
+	PROCEDURE ^ WriteRealTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF REAL; start: LONGINT; n: LONGINT); 
+	PROCEDURE ^ WriteRealFixTab*(VAR W: Texts.Writer; len: LONGINT; x: ARRAY OF REAL; start: LONGINT; n, f, E: LONGINT); 
+	PROCEDURE ^ WriteReal*(VAR W: Texts.Writer; x: LONGREAL); 
+	PROCEDURE ^ WriteBoolTab*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF BOOLEAN; offset, step: LONGINT); 
+	PROCEDURE ^ SetStdOutput*(F: Display.Frame); 
+	PROCEDURE ^ GetInsertionPoint(VAR OFR: Display.Frame; VAR OT: Texts.Text; VAR OPos: LONGINT; VAR caretconst: BOOLEAN); 
+	PROCEDURE ^ InsertBufferAndScroll(B: Texts.Buffer; VAR OutFrame: Display.Frame; OutText: Texts.Text; OutPos: LONGINT; VAR newPos: LONGINT); 
+	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InsertGadgetAndScroll(O: Objects.Object; VAR OutFrame: Display.Frame; OutText: Texts.Text; OutPos: LONGINT; VAR newPos: LONGINT); 
+	PROCEDURE ^ InsertLog*(B: Texts.Buffer); 
+	PROCEDURE ^ InsertGadget*(G: Objects.Object); 
+	PROCEDURE ^ GetCurWidth*(): INTEGER; 
+	PROCEDURE ^ MsgCat*(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Msg*(s: ARRAY OF CHAR); 
+	PROCEDURE ^ MsgSS*(s1, s2: ARRAY OF CHAR); 
+	PROCEDURE ^ MsgI*(i: LONGINT); 
+	PROCEDURE ^ MsgSHex*(s1: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ MsgSI*(s1: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ MsgSISI*(s1: ARRAY OF CHAR; i: LONGINT; s2: ARRAY OF CHAR; j: LONGINT); 
+	PROCEDURE ^ MsgSR*(s1: ARRAY OF CHAR; x: LONGREAL); 
+	PROCEDURE ^ MsgSRR*(s1: ARRAY OF CHAR; x, y: LONGREAL); 
+	PROCEDURE ^ MsgSRSR*(s1: ARRAY OF CHAR; x: LONGREAL; s2: ARRAY OF CHAR; y: LONGREAL); 
+	PROCEDURE ^ DebugTest*; 
+	PROCEDURE ^ DumpBool*(VAR w: Texts.Writer; VAR a: ARRAY OF BOOLEAN); 
+	PROCEDURE ^ DumpReal*(VAR w: Texts.Writer; VAR a: ARRAY OF REAL; prec: INTEGER); 
+	PROCEDURE ^ DumpLongreal*(VAR w: Texts.Writer; VAR a: ARRAY OF LONGREAL; prec: INTEGER); 
+	PROCEDURE ^ DumpInteger*(VAR w: Texts.Writer; VAR a: ARRAY OF INTEGER; prec: INTEGER); 
+	PROCEDURE ^ DumpLongint*(VAR w: Texts.Writer; VAR a: ARRAY OF LONGINT; prec: INTEGER); 
+	PROCEDURE ^ SummaryBool*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF BOOLEAN); 
+	PROCEDURE ^ SummaryReal*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF REAL; prec: INTEGER); 
+	PROCEDURE ^ SummaryLongreal*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF LONGREAL; prec: INTEGER); 
+	PROCEDURE ^ SummaryInteger*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF INTEGER; prec: INTEGER); 
+	PROCEDURE ^ SummaryLongint*(VAR w: Texts.Writer; count: LONGINT; VAR a: ARRAY OF LONGINT; prec: INTEGER); 
+BEGIN
+END vyHostTexts.

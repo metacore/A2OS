@@ -1,0 +1,40 @@
+MODULE antsArrayPictures IN Oberon;
+	IMPORT vyBase, Objects, Pictures, antsObjects, Files, Gadgets, antsCommands, vyName, antsToolbox, vyCommandMenus, antsArrayObjects, vyColorPalettes, aM := antsMessages, vyLinks, antsSecurity;
+CONST 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		synced-: BOOLEAN; 
+		pict*: Pictures.Picture; 
+		w*, h*, depth*: antsObjects.Index; 
+		A*: antsArrayObjects.tINTEGERObject; 
+		trans*: antsObjects.PAConsistTrafoProc; 
+	END; 
+
+	setPictMsg* = RECORD (Objects.ObjMsg)
+		pict*: Pictures.Picture; 
+		changed*: vyBase.Object; 
+	END; 
+
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ CheckDimensions(obj: tObject); 
+	PROCEDURE ^ Sync*(obj: tObject); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(obj: tObject); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ P2A(obj: tObject; depth: LONGINT); 
+	PROCEDURE ^ DoToArray*(obj: tObject; depth: LONGINT; name: vyName.tNameArray); 
+	PROCEDURE ^ SetPicture*(obj: tObject; pict: Pictures.Picture; syncarray: BOOLEAN); 
+	PROCEDURE ^ ToArray*; 
+	PROCEDURE ^ Load*; 
+	PROCEDURE ^ finishFile*(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ DoShow*(A: antsArrayObjects.tINTEGERObject; VAR obj: tObject); 
+	PROCEDURE ^ LoadDialoged*; 
+BEGIN
+END antsArrayPictures.

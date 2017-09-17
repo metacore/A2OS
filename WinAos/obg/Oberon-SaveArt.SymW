@@ -1,0 +1,39 @@
+MODULE SaveArt IN Oberon;
+	IMPORT Out, Display, Display3, RandomNumbers, In, SaveScreen, Modules;
+CONST 
+	versionString = \"SaveArt 15.3.2000 / jaco"\; 
+	MaxRect = 50; 
+	minProp = 2; 
+	maxProp = 99; 
+	defProp = 5; 
+	minLimit = 10; 
+	maxLimit = 200; 
+	defLimit = 50; 
+	minCol = 0; 
+	maxCol = 255; 
+TYPE 
+	Rect = RECORD 
+		x1, y1, x2, y2: INTEGER; 
+	END; 
+VAR 
+	W, H: INTEGER; 
+	rect: ARRAY MaxRect OF Rect; 
+	count: INTEGER; 
+	prop, limit: INTEGER; 
+	cols: ARRAY 8 OF SET; 
+	col: INTEGER; 
+	mask: Display3.Mask; 
+
+	PROCEDURE ^ Proportion(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Add(x1, y1, x2, y2: INTEGER); 
+	PROCEDURE ^ Select(VAR x1, y1, x2, y2: INTEGER); 
+	PROCEDURE ^ Reset; 
+	PROCEDURE ^ Start; 
+	PROCEDURE ^ Step; 
+	PROCEDURE ^ Stop; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove; 
+	PROCEDURE ^ Configuration*; 
+	PROCEDURE ^ InstallDefault*; 
+BEGIN
+END SaveArt.

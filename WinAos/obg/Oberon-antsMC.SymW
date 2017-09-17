@@ -1,0 +1,89 @@
+MODULE antsMC IN Oberon;
+	IMPORT Objects, Gadgets, Files, vyBase, vyRanBase, vyHostTexts, antsObjects, vyLinks, antsCommands, vyName, antsConstRandom, aM := antsMessages, antsRandom;
+CONST 
+TYPE 
+	Msg* = RECORD (Objects.ObjMsg)
+		gen*: vyRanBase.tRandom; 
+		error*: BOOLEAN; 
+		errormsg*: ARRAY 256 OF CHAR; 
+		pos*: LONGINT; 
+		temp*: LONGREAL; 
+	END; 
+
+	InitMsg* = RECORD (Msg)
+	END; 
+
+	StepMsg* = RECORD (Msg)
+		steps-: LONGINT; 
+	END; 
+
+	Seed* = POINTER TO SeedDesc; 
+
+	SeedDesc* = RECORD 
+		pos-: LONGINT; 
+		seed: vyRanBase.tSeed; 
+		seedval-: LONGINT; 
+		next-: Seed; 
+		prev-: Seed; 
+	END; 
+
+	Chain* = OBJECT (vyBase.Object)
+	VAR 
+		pos-: LONGINT; 
+		first, prev, next, last: LONGINT; 
+		seed-: Seed; 
+		gen-: vyRanBase.tRandom; 
+		Kernels: vyLinks.Link; 
+		initgen-: vyLinks.Link; 
+		initseed: vyRanBase.tSeed; 
+		error: BOOLEAN; 
+
+		PROCEDURE ^ forward*(n: LONGINT); 
+		PROCEDURE ^ moveTo*(pos: LONGINT); 
+		PROCEDURE ^ toNext*(): BOOLEAN; 
+		PROCEDURE ^ toLast*; 
+		PROCEDURE ^ jumpTo*(to: LONGINT); 
+		PROCEDURE ^ toFirst*; 
+		PROCEDURE ^ repeat*; 
+		PROCEDURE ^ init*; 
+		PROCEDURE ^ Add*(Kernel: vyBase.Object); 
+		PROCEDURE ^ Remove*(Kernel: vyBase.Object); 
+		PROCEDURE ^ getKernel*(num: LONGINT): vyBase.Object; 
+	END Chain; 
+
+	Transition* = PROCEDURE (c: Chain; n: LONGINT); 
+VAR 
+	stop*: BOOLEAN; 
+
+	PROCEDURE ^ GetSeedCopy(gen: vyRanBase.tRandom): vyRanBase.tSeed; 
+	PROCEDURE ^ SetSeedCopy(gen: vyRanBase.tRandom; seed: vyRanBase.tSeed); 
+	PROCEDURE ^ RSetGenerator(gen: vyRanBase.tRandom); 
+	PROCEDURE ^ CheckError(m: Msg; VAR error: BOOLEAN); 
+	PROCEDURE ^ ApplyKernel(c: Chain; VAR error: BOOLEAN); 
+	PROCEDURE ^ ApplyInit(c: Chain; VAR error: BOOLEAN); 
+	PROCEDURE ^ Insert(VAR s: Seed; VAR temp: Seed); 
+	PROCEDURE ^ SyncSeed(c: Chain); 
+	PROCEDURE ^ GetMinPos(s: Seed; VAR pos: LONGINT); 
+	PROCEDURE ^ StoreSeed(VAR R: Files.Rider; s: Seed); 
+	PROCEDURE ^ LoadSeed(VAR R: Files.Rider; VAR s: Seed; allocs: vyRanBase.tRandom); 
+	PROCEDURE ^ Load(VAR R: Files.Rider; s: Chain); 
+	PROCEDURE ^ Store(VAR R: Files.Rider; s: Chain); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GetNextTo(VAR s: Seed; VAR pos: LONGINT); 
+	PROCEDURE ^ GetNextSeedPos(c: Chain; VAR pos: LONGINT); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoApplyInit*(gen: vyRanBase.tRandom; c: Chain; kernel: vyBase.Object); 
+	PROCEDURE ^ ApplyConstInit*; 
+	PROCEDURE ^ ApplyDefaultInit*; 
+	PROCEDURE ^ ApplyNoInit*; 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ Forward*; 
+	PROCEDURE ^ Jump*; 
+	PROCEDURE ^ MoveTo*; 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ Repeat*; 
+	PROCEDURE ^ WriteSeeds*; 
+BEGIN
+END antsMC.

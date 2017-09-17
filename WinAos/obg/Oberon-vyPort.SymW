@@ -1,0 +1,164 @@
+MODULE vyPort IN Oberon;
+	IMPORT Objects, Display, Display3, Texts, Oberon, Pictures, Files, Panels, Gadgets, vyLinks, vyHostTexts, vyBase, vyName, vyTypes, Fonts, Attributes, Input, vyEvents, vyTracking, vyConsume, vyStrings := vyHostStrings, vyRectangles, vyGraphBase, vyDisplay2d, Effects, antsEffects := vyTracking, antsCommandList := vyCommandMenus, vyHost, Out, vyPortability;
+CONST 
+	idversion* = \"vyPort.S3 v0r0a5"\; 
+	framesize = 3; 
+	BGPictureName = \"Voyager.Pict"\; 
+	Border* = 4; 
+	gold* =   6.1803400E-001; 
+	square* = 1; 
+	ActionLayerRemove = 1; 
+	ActionLayerCopy = 2; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Frame* = Panels.Panel; 
+
+	Picture* = POINTER TO PictureDesc; 
+
+	PictureDesc* = RECORD (vyBase.FrameDesc)
+		Pictx, Picty, Pictw, Picth: REAL; 
+		needsRedraw*: BOOLEAN; 
+		hx, hy: INTEGER; 
+		header: BOOLEAN; 
+		backGround*: Display.Color; 
+		gcontext*: Objects.Object; 
+		db: vyGraphBase.doubleBuffer; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyBase.ObjDesc)
+		style*: vyGraphBase.Style; 
+		highlight*: vyBase.Object; 
+		x*, y*, z*: vyBase.tVector; 
+		prohibitDB*: BOOLEAN; 
+		forceImage*: BOOLEAN; 
+	END; 
+
+	FindMsg = RECORD (Display.FrameMsg)
+		fx, fy: INTEGER; 
+	END; 
+
+	ExtractContentMsg = RECORD (Objects.ObjMsg)
+		o*: vyBase.Object; 
+	END; 
+
+	SetPictureMsg = RECORD (Objects.ObjMsg)
+	END; 
+
+	AdjustCoordMsg* = RECORD (Objects.ObjMsg)
+		pict*: Picture; 
+		layer*: tLayer; 
+	END; 
+
+	setfocusMsg = RECORD (Display.DisplayMsg)
+	END; 
+
+	UpMsg* = RECORD (Objects.ObjMsg)
+	END; 
+VAR 
+	focusFrame-: Frame; 
+	focusPicture-: Picture; 
+	focusLayer-: tLayer; 
+	newpicture-: Picture; 
+	newframe-: Frame; 
+	stdFrameCol: INTEGER; 
+	setfrontmostcalled: BOOLEAN; 
+	DfltFramesPLine-, defFramehwRelation: REAL; 
+	screenRatio*: REAL; 
+	updatesuspend: BOOLEAN; 
+	BGPicture: Pictures.Picture; 
+	foreColor*, backGround: Display.Color; 
+	PrintHeaders*: BOOLEAN; 
+	undoPict: Picture; 
+	undoLayer: tLayer; 
+	undoAction: INTEGER; 
+	onTheFly*: BOOLEAN; 
+	DefaultWidth: INTEGER; 
+
+	PROCEDURE ^ SetFocusPicture*(p: Picture); 
+	PROCEDURE ^ SetFocusPort*(p: Frame); 
+	PROCEDURE ^ SetNewC2d*(p: Picture; x, y, w, h: Real); 
+	PROCEDURE ^ SetC2d*(p: Picture; x, y, w, h: LONGREAL); 
+	PROCEDURE ^ GetPictureScreenRegion*(picture: Picture; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ GetPictureXY*(frame: Frame; X, Y: INTEGER): Picture; 
+	PROCEDURE ^ GetFocus*(): Frame; 
+	PROCEDURE ^ GetFocusPicture*(): Picture; 
+	PROCEDURE ^ PictureCopy(VAR M: Objects.CopyMsg; source, dest: Picture); 
+	PROCEDURE ^ AdjustPict(frame: Frame; ppict: Picture); 
+	PROCEDURE ^ FrameHandleAttributes(obj: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ AddPicture*(frame: Frame; picture: Picture; x, y, w, h: REAL); 
+	PROCEDURE ^ RemovePicture*(frame: Frame; picture: Picture); 
+	PROCEDURE ^ SetDefaultFrameRatio*(framesPerLine, whRelation: REAL); 
+	PROCEDURE ^ InitFrame(frame: Frame; w, h: INTEGER); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ ResizeFrame*(f: Frame; w, h: INTEGER); 
+	PROCEDURE ^ XNewFrame*(w, h: INTEGER): Frame; 
+	PROCEDURE ^ InsertNewFrame*(w, h: INTEGER): Frame; 
+	PROCEDURE ^ PictureUpdate*(picture: Picture); 
+	PROCEDURE ^ RedrawFocusPict*; 
+	PROCEDURE ^ RedrawFocusFrame*; 
+	PROCEDURE ^ UpdateHostPicture*(obj: tLayer; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ FrontLayer(pict: Picture): tLayer; 
+	PROCEDURE ^ FocusLayer*(): tLayer; 
+	PROCEDURE ^ SetFrontMostLayer(pict: Picture; layer: tLayer); 
+	PROCEDURE ^ GetHeader(pict: Picture; VAR header: vyName.tNameArray); 
+	PROCEDURE ^ RemoveLayer*(picture: Picture; layer: tLayer); 
+	PROCEDURE ^ AddLayer*(picture: Picture; layer: tLayer); 
+	PROCEDURE ^ PictureHandleSetPicture*(pict: Picture); 
+	PROCEDURE ^ GetHeaderRect(picture: Picture; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ CopyLayerOver(picture: Picture; layer: tLayer; list: vyTracking.List); 
+	PROCEDURE ^ HeaderEdit(picture: Picture; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ ReverseOrdered(link: vyLinks.Link): vyLinks.Link; 
+	PROCEDURE ^ GetResponder(picture: Picture; VAR msg: vyEvents.EventMsg); 
+	PROCEDURE ^ storepictasgif; 
+	PROCEDURE ^ setfrontmost; 
+	PROCEDURE ^ delfrontlayer; 
+	PROCEDURE ^ CopyLayerEasy(picture: Picture; layer: tLayer); 
+	PROCEDURE ^ copyfrontlayer; 
+	PROCEDURE ^ coordcopy*; 
+	PROCEDURE ^ nextlayer; 
+	PROCEDURE ^ switch; 
+	PROCEDURE ^ layersmenu*; 
+	PROCEDURE ^ alllayers; 
+	PROCEDURE ^ ContextResponding(picture: Picture; VAR msg: vyEvents.EventMsg): BOOLEAN; 
+	PROCEDURE ^ PictureHandleEventMsg(picture: Picture; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ PictureHandleInputMsg(obj: Picture; VAR msg: Oberon.InputMsg; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PictureHandleExtract(picture: Picture; VAR msg: ExtractContentMsg); 
+	PROCEDURE ^ PictureHandleConsume(ppict: Picture; VAR msg: Display.ConsumeMsg); 
+	PROCEDURE ^ PictureHandleUpdate(ppict: Picture); 
+	PROCEDURE ^ ToGContext(F: Picture; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ PictureHandleDisplay(obj: Picture; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ PictureHandleAttributes(pict: Picture; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ PictureHandleLinks(pict: Picture; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ PictureHandleFileMsg(obj: Picture; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ ViewCopyOfPict*(pict: Picture); 
+	PROCEDURE ^ showcopy; 
+	PROCEDURE ^ adjust; 
+	PROCEDURE ^ unlock; 
+	PROCEDURE ^ lock; 
+	PROCEDURE ^ PictureHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ LayerHandleAttributes(o: tLayer; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ LayerCopy*(VAR M: Objects.CopyMsg; obj, obj0: tLayer); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ LayerHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ PictureInit(picture: Picture); 
+	PROCEDURE ^ NewPicture*; 
+	PROCEDURE ^ PictureSetgcontext(picture: Picture; gc: vyBase.Object); 
+	PROCEDURE ^ InsertNewCPicture*(x, y, w, h: REAL; gc: vyBase.Object): Picture; 
+	PROCEDURE ^ XNewCPicture*(x, y, w, h: REAL; gc: vyBase.Object): Picture; 
+	PROCEDURE ^ NewP*(gc: vyBase.Object): Picture; 
+	PROCEDURE ^ InsertNewVecPicture*(vx, vy: vyBase.tVector): Picture; 
+	PROCEDURE ^ Write*(picture: Picture); 
+	PROCEDURE ^ OpenLayer*(layer: tLayer; id: ARRAY OF CHAR); 
+	PROCEDURE ^ StorePictAsGIF*(pict: Picture; R: Files.Rider); 
+	PROCEDURE ^ Undo*; 
+	PROCEDURE ^ ZoomIn*; 
+	PROCEDURE ^ ZoomOut*; 
+	PROCEDURE ^ AdjustPicture(pict: Picture); 
+	PROCEDURE ^ TogglePrintHeaders*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END vyPort.

@@ -1,0 +1,52 @@
+MODULE antsNeighbourhoods IN Oberon;
+	IMPORT antsObjects, Files, vyBase, Objects, vyName, antsCommands, antsMessages, antsArrayObjects, antsGlobals, aM := antsMessages;
+CONST 
+TYPE 
+	NeighbourTable* = antsArrayObjects.tLONGINTArray; 
+
+	pars* = antsGlobals.Parameters; 
+
+	NumOFN* = POINTER TO ARRAY OF INTEGER; 
+
+	Index* = NumOFN; 
+
+	NeighbArray* = POINTER TO ARRAY OF ARRAY 8 OF INTEGER; 
+
+	Neighbours* = POINTER TO NeighboursDesc; 
+
+	NeighboursDesc* = RECORD (vyBase.ObjDesc)
+		dim-: INTEGER; 
+		count-: NumOFN; 
+		x-, y-: NeighbArray; 
+		isotropic-: BOOLEAN; 
+		par*: pars; 
+		parnames: antsGlobals.ParameterNames; 
+		cx-, cy-: Index; 
+		cpar-: pars; 
+		clen-: INTEGER; 
+	END; 
+
+	PROCEDURE ^ FillParCache*(n: Neighbours); 
+	PROCEDURE ^ FillCache*(n: Neighbours); 
+	PROCEDURE ^ WritePars(VAR R: Files.Rider; par: pars); 
+	PROCEDURE ^ ReadPars(VAR R: Files.Rider; VAR par: pars); 
+	PROCEDURE ^ WriteNeighbours(VAR R: Files.Rider; n: Neighbours); 
+	PROCEDURE ^ ReadNeighbours(VAR R: Files.Rider; VAR n: Neighbours); 
+	PROCEDURE ^ ChangeIsotropy*(n: Neighbours; iso: BOOLEAN); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ swap(VAR x, y: INTEGER); 
+	PROCEDURE ^ OpenL2*(n: Neighbours; dim: LONGINT; isotropic: BOOLEAN); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewL2*(dim: LONGINT; isotropic: BOOLEAN): Neighbours; 
+	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ ChangeDim*(n: Neighbours; newdim: INTEGER); 
+	PROCEDURE ^ ReadNew*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoWrite*(n: Neighbours); 
+	PROCEDURE ^ Write*; 
+	PROCEDURE ^ SortTable*; 
+	PROCEDURE ^ st(VAR A, B: ARRAY OF LONGINT; VAR equal: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Insert(VAR A: ARRAY OF LONGINT; VAR to: ARRAY OF ARRAY OF LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ MakeNeighbourTable*(o: antsArrayObjects.tINTEGERObject; x0, y0, w0, h0: LONGINT; n: Neighbours): NeighbourTable; 
+BEGIN
+END antsNeighbourhoods.

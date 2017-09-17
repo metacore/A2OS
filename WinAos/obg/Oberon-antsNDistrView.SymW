@@ -1,0 +1,34 @@
+MODULE antsNDistrView IN Oberon;
+	IMPORT vyPort, Objects, antsArrayObjects, vyName, vyBase, vyGraphBase, Display, vyEvents, Files, Gadgets, antsViews, vyHostStrings, antsCommands, vyLayers2d := vyDisplay2d, antsNeighbourhoods, antsRegions, antsFunctions, aM := antsMessages;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (antsViews.tLayerDesc)
+		n-: antsNeighbourhoods.Neighbours; 
+		r-: antsRegions.tRegion; 
+		mapping: antsFunctions.Function; 
+		maxx, maxy: LONGINT; 
+		dim: INTEGER; 
+		Correlations: POINTER TO ARRAY OF antsArrayObjects.tLONGINTArray; 
+		isotropic: BOOLEAN; 
+	END; 
+
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ GHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(layer: tLayer); 
+	PROCEDURE ^ AdjustXY(layer: tLayer); 
+	PROCEDURE ^ OpenLayer(layer: tLayer; n: antsNeighbourhoods.Neighbours); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewLayer*(n: antsNeighbourhoods.Neighbours): tLayer; 
+	PROCEDURE ^ DoShow*(n: antsNeighbourhoods.Neighbours; r: antsRegions.tRegion; f: antsFunctions.Function): tLayer; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsNDistrView.

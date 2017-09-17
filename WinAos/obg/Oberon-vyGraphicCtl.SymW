@@ -1,0 +1,17 @@
+MODULE vyGraphicCtl IN Oberon;
+	IMPORT Texts, Oberon, Display, Fonts, vyHostStrings, vyHostTexts, vyParser, vyHostDisplay := vyGraphBase, vyPort;
+CONST 
+	idversion* = \"vyGraphicCtl v0r0a3"\; 
+
+	PROCEDURE ^ GetLayer(): vyPort.tLayer; 
+	PROCEDURE ^ Update; 
+	PROCEDURE ^ SetBackColor*; 
+	PROCEDURE ^ SetColor*; 
+	PROCEDURE ^ SetC2d*; 
+	PROCEDURE ^ SetWidth*; 
+	PROCEDURE ^ SetPattern*; 
+	PROCEDURE ^ SetFont*; 
+	PROCEDURE ^ SetPortRatio*; 
+	PROCEDURE ^ DefineUserPalette*; 
+BEGIN
+END vyGraphicCtl.

@@ -1,0 +1,208 @@
+MODULE antsExpressions IN Oberon;
+	IMPORT SYSTEM, Modules, Reals IN A2, Strings, Texts, Oberon, OPM, OPS, OPT, OPV, TextGadgets, Input, Objects, Display, Fonts, Files, Gadgets, vyLongrealVec, vyRealVec, vyIntVec, vyLongintVec, Types, vyBase, vyName, antsExpressionsObjects, Attributes, vyHostTexts, vyPointerVec;
+CONST 
+	Undef = 0; 
+	Byte = 1; 
+	Bool = 2; 
+	Char = 3; 
+	SInt = 4; 
+	Int = 5; 
+	LInt = 6; 
+	Real = 7; 
+	LReal = 8; 
+	Set = 9; 
+	String = 10; 
+	NilTyp = 11; 
+	NoTyp = 12; 
+	Pointer = 13; 
+	ProcTyp = 14; 
+	Comp = 15; 
+	HInt = 16; 
+	Basic = 1; 
+	StaticArr = 2; 
+	SDynArr = 3; 
+	DynArr = 4; 
+	OpenArr = 5; 
+	Record = 6; 
+	Var = 1; 
+	VarPar = 2; 
+	Con = 3; 
+	Fld = 4; 
+	Typ = 5; 
+	LProc = 6; 
+	XProc = 7; 
+	SProc = 8; 
+	CProc = 9; 
+	Mod = 11; 
+	Head = 12; 
+	TProc = 13; 
+	Alias = 14; 
+	Operator = 15; 
+	external = 1; 
+	externalR = 2; 
+	notag = 1; 
+	stdcall = 2; 
+	cdecl = 3; 
+	untraced = 4; 
+TYPE 
+	Value* = RECORD 
+		name*: OPS.String; 
+		class*: SHORTINT; 
+		b*: BOOLEAN; 
+		c*: CHAR; 
+		i*: LONGINT; 
+		x*: REAL; 
+		y*: LONGREAL; 
+		s*: OPS.String; 
+		ptr*: LONGINT; 
+		p*: ANY; 
+		adr*: LONGINT; 
+		obj*: OPT.Object; 
+	END; 
+
+	Item = POINTER TO RECORD 
+		next: Item; 
+	END; 
+
+	ValueItem = POINTER TO RECORD (Item)
+		val: Value; 
+	END; 
+
+	OpItem = POINTER TO RECORD (Item)
+		op: ARRAY 8 OF CHAR; 
+	END; 
+
+	NameItem = POINTER TO RECORD (Item)
+		name: OPS.Name; 
+	END; 
+
+	CallStack = RECORD 
+		code: ARRAY 128 OF CHAR; 
+		i, pc: LONGINT; 
+		resadr, npar: LONGINT; 
+		class: SHORTINT; 
+		obj: OPT.Object; 
+	END; 
+
+	Stack* = RECORD 
+		top: Item; 
+	END; 
+
+	PtrTable = POINTER TO ARRAY OF LONGINT; 
+
+	StringStack = POINTER TO StringStackDesc; 
+
+	StringStackDesc = RECORD 
+		s: OPS.String; 
+		next: StringStack; 
+	END; 
+VAR 
+	oldHook, thisHook: Objects.Handler; 
+	map: ARRAY 17 OF CHAR; 
+	sym: SHORTINT; 
+	W: Texts.Writer; 
+	ptrTab: PtrTable; 
+	nofptrs: INTEGER; 
+	foundSTRING: BOOLEAN; 
+	strings: StringStack; 
+	debug*, Note*: BOOLEAN; 
+	enableCR*: BOOLEAN; 
+	itnr: LONGINT; 
+	WLog: PROCEDURE ; 
+
+	PROCEDURE ^ WriteTextToLog(T: Texts.Text); 
+	PROCEDURE ^ WLogLog; 
+	PROCEDURE ^ WLogToCaret; 
+	PROCEDURE ^ err(n: INTEGER); 
+	PROCEDURE ^ Str(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Ch(ch: CHAR); 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ Nt; 
+	PROCEDURE ^ WChar(ch: CHAR); 
+	PROCEDURE ^ Gap; 
+	PROCEDURE ^ WReal(x: REAL; n: INTEGER); 
+	PROCEDURE ^ WLongReal*(x: LONGREAL; n: INTEGER); 
+	PROCEDURE ^ WInt(i, n: LONGINT); 
+	PROCEDURE ^ WClass(c: INTEGER); 
+	PROCEDURE ^ WMode(c: INTEGER); 
+	PROCEDURE ^ WComp(c: INTEGER); 
+	PROCEDURE ^ OutType*(p: ANY); 
+	PROCEDURE ^ WType*(p: ANY); 
+	PROCEDURE ^ OutVal(VAR val: Value); 
+	PROCEDURE ^ Red; 
+	PROCEDURE ^ Black; 
+	PROCEDURE ^ Green; 
+	PROCEDURE ^ Blue; 
+	PROCEDURE ^ WConst(c: OPT.Const); 
+	PROCEDURE ^ WStruct(s: OPT.Struct); 
+	PROCEDURE ^ WObj(obj: OPT.Object); 
+	PROCEDURE ^ Dump(S: Stack); 
+	PROCEDURE ^ GetSym(VAR sym: SHORTINT); 
+	PROCEDURE ^ NewV(VAR stack: Stack): ValueItem; 
+	PROCEDURE ^ PushBool*(VAR stack: Stack; b: BOOLEAN); 
+	PROCEDURE ^ PushChar*(VAR stack: Stack; c: CHAR); 
+	PROCEDURE ^ PushString*(VAR stack: Stack; str: OPS.String); 
+	PROCEDURE ^ PushSInt*(VAR stack: Stack; i: SHORTINT); 
+	PROCEDURE ^ PushInt*(VAR stack: Stack; i: INTEGER); 
+	PROCEDURE ^ PushLInt*(VAR stack: Stack; i: LONGINT); 
+	PROCEDURE ^ PushReal*(VAR stack: Stack; x: REAL); 
+	PROCEDURE ^ PushLReal*(VAR stack: Stack; y: LONGREAL); 
+	PROCEDURE ^ PushValue*(VAR stack: Stack; VAR val: Value); 
+	PROCEDURE ^ PushOp*(VAR stack: Stack; op: ARRAY OF CHAR); 
+	PROCEDURE ^ PushItem*(VAR stack: Stack; item: ARRAY OF CHAR); 
+	PROCEDURE ^ Factor(VAR stack: Stack); 
+	PROCEDURE ^ Term(VAR stack: Stack); 
+	PROCEDURE ^ SimpleExpr(VAR stack: Stack); 
+	PROCEDURE ^ Expr(VAR stack: Stack); 
+	PROCEDURE ^ StringPtr(VAR s: OPS.String): LONGINT; 
+	PROCEDURE ^ Ptr(ptr: LONGINT): ANY; 
+	PROCEDURE ^ AsPointer(a: Value; VAR varadr: LONGINT): ANY; 
+	PROCEDURE ^ ValPointer(VAR val: Value; p: ANY); 
+	PROCEDURE ^ EvalOp(VAR stack: Stack; op: OpItem; VAR val: Value); 
+	PROCEDURE ^ GetRefNum(mod: Modules.Module; VAR i, num: LONGINT); 
+	PROCEDURE ^ FindAdr(mod: Modules.Module; obj: OPT.Object): LONGINT; 
+	PROCEDURE ^ FindObj(mod: Modules.Module; name: ARRAY OF CHAR): OPT.Object; 
+	PROCEDURE ^ SplitName(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ TryDefaultMods(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ IsTypeOf*(t: Types.Type; ref: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ PointerIs*(p: ANY; ref: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetObjClass(obj: OPT.Object): SHORTINT; 
+	PROCEDURE ^ EvalConObj(obj: OPT.Object; VAR val: Value); 
+	PROCEDURE ^ FindPtrs(typ: OPT.Struct; adr: LONGINT); 
+	PROCEDURE ^ EvalVarObj(obj: OPT.Object; VAR val: Value); 
+	PROCEDURE ^ PopWrVar(VAR stack: Stack; VAR global: BOOLEAN; VAR nil: BOOLEAN): OPT.Object; 
+	PROCEDURE ^ ShortInt(VAR val: Value); 
+	PROCEDURE ^ AssignObj*(this, res: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ OutFile(VAR stack: Stack; VAR res: Value; append: BOOLEAN); 
+	PROCEDURE ^ InFile(VAR stack: Stack; VAR res: Value); 
+	PROCEDURE ^ Assign(VAR stack: Stack; VAR res: Value); 
+	PROCEDURE ^ PushLIntPar(VAR call: CallStack; val: LONGINT); 
+	PROCEDURE ^ PushStringPar(VAR call: CallStack; VAR s: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ PushRealPar(VAR call: CallStack; val: REAL); 
+	PROCEDURE ^ PushLRealPar(VAR call: CallStack; val: LONGREAL); 
+	PROCEDURE ^ PopCallPar(VAR stack: Stack; VAR call: CallStack; fpar: OPT.Object): BOOLEAN; 
+	PROCEDURE ^ PI0Prepare(VAR call: CallStack; obj: OPT.Object); 
+	PROCEDURE ^ PI1Result(VAR call: CallStack); 
+	PROCEDURE ^ PI2Head(VAR call: CallStack); 
+	PROCEDURE ^ PI3CountPars(VAR call: CallStack); 
+	PROCEDURE ^ PI4SetPars(VAR call: CallStack; VAR stack: Stack); 
+	PROCEDURE ^ PI5CreateCall(VAR call: CallStack); 
+	PROCEDURE ^ PI6WriteResult(VAR call: CallStack); 
+	PROCEDURE ^ PI7Call(VAR call: CallStack); 
+	PROCEDURE ^ PI8Finish(VAR call: CallStack; VAR res: Value); 
+	PROCEDURE ^ EvalProcObj(VAR stack: Stack; obj: OPT.Object; VAR res: Value); 
+	PROCEDURE ^ EvalPtrObj(obj: ANY; VAR val: Value): BOOLEAN; 
+	PROCEDURE ^ EvalGlobalObj(name: ARRAY OF CHAR; VAR val: Value): BOOLEAN; 
+	PROCEDURE ^ EvalName(VAR stack: Stack; itm: NameItem; VAR val: Value); 
+	PROCEDURE ^ Eval*(VAR stack: Stack; VAR val: Value); 
+	PROCEDURE ^ Init*(VAR stack: Stack); 
+	PROCEDURE ^ CleanUp; 
+	PROCEDURE ^ Exec*(T: Texts.Text); 
+	PROCEDURE ^ ExecSel*; 
+	PROCEDURE ^ Key(frame: TextGadgets.Frame; ch: CHAR; VAR handled: BOOLEAN); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GetKeyCode*; 
+	PROCEDURE ^ TestAdr*(adr: LONGINT); 
+	PROCEDURE ^ Install*; 
+BEGIN
+END antsExpressions.

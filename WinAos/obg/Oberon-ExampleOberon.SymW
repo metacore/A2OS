@@ -1,0 +1,17 @@
+MODULE ExampleOberon IN Oberon;
+	IMPORT AosKernel := Kernel IN A2, Texts, Oberon, Kernel;
+CONST 
+TYPE 
+	Example = OBJECT {EXCLUSIVE} 
+	VAR 
+		i: LONGINT; 
+		w: Texts.Writer; 
+		t: Texts.Text; 
+		timer: AosKernel.Timer; 
+
+	BEGIN{ACTIVE} 
+	END Example; 
+
+	PROCEDURE ^ Test*; 
+BEGIN
+END ExampleOberon.

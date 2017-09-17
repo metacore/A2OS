@@ -1,0 +1,14 @@
+MODULE vyKolSmirL IN Oberon;
+	IMPORT MathL IN A2;
+TYPE 
+	real = LONGREAL; 
+
+	Function* = PROCEDURE (x: real):real; 
+
+	PROCEDURE ^ probks*(alam: real): real; 
+	PROCEDURE ^ Max(x1, x2: real): real; 
+	PROCEDURE ^ KS1*(data: ARRAY OF real; n: LONGINT; func: Function; VAR d, prob: real); 
+	PROCEDURE ^ KS1Id*(data: ARRAY OF real; n: LONGINT; VAR d, prob: real); 
+	PROCEDURE ^ KS2*(data1: ARRAY OF real; n1: LONGINT; data2: ARRAY OF real; n2: LONGINT; VAR d, prob: real); 
+BEGIN
+END vyKolSmirL.

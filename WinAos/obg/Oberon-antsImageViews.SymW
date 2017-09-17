@@ -1,0 +1,31 @@
+MODULE antsImageViews IN Oberon;
+	IMPORT vyPort, vyName, vyBase, vyGraphBase, Display, vyEvents, antsArrayImages, Images, Attributes, antsArrayObjects, antsViews, antsObjects, Files, antsToolbox, aM := antsMessages, vyRectangles, antsCommands, antsPictCoordinate, Objects, vyCommandMenus, Gadgets, vyHostTexts;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (antsViews.tLayerDesc)
+		E-: antsArrayImages.tObject; 
+	END; 
+VAR 
+	newlayer-: tLayer; 
+	maxw, maxh: INTEGER; 
+	texture: BOOLEAN; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Center; 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ StoreAsGIF; 
+	PROCEDURE ^ Init(layer: tLayer); 
+	PROCEDURE ^ Open*(layer: tLayer; E: antsArrayImages.tObject); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoShow*(E: antsArrayImages.tObject; add: BOOLEAN; VAR c: antsPictCoordinate.tCoordinate): tLayer; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsImageViews.

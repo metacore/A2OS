@@ -1,0 +1,54 @@
+MODULE vyEvents IN Oberon;
+	IMPORT Objects, Oberon, Input, vyHostDisplay := vyGraphBase, vyBase;
+CONST 
+	EvtUnknown* =  -1; 
+	EvtEmpty* = 0; 
+	EvtLoc* = 1; 
+	EvtIdent* = 2; 
+	EvtSelect* = 3; 
+	EvtRemove* = 4; 
+	EvtCopy* = 5; 
+	EvtCopyAttr* = 6; 
+	EvtOpen* = 7; 
+	EvtPointCmd* = 8; 
+	EvtCmdPoint* = 9; 
+	EvtDoubleClick* = 10; 
+	EvtWheelDown* = 11; 
+	EvtWheelUp* = 12; 
+	EvtPointWheelDown* = 13; 
+	EvtPointWheelUp* = 15; 
+	EvtSelectWheelDown* = 16; 
+	EvtSelectWheelUp* = 17; 
+	CdoubleClickTime* = 300; 
+	PrioNone* = 0; 
+	PrioLow* = 10; 
+	PrioNormal* = 20; 
+	PrioHigh* = 30; 
+	PrioUrgent* = 40; 
+	pointKeys = {vyBase.leftKey}; 
+	cmdKeys = {vyBase.middleKey}; 
+	selectKeys = {vyBase.rightKey}; 
+	copyKeys = (selectKeys + cmdKeys); 
+	removeKeys = (selectKeys + pointKeys); 
+	openKeys = (cmdKeys + selectKeys); 
+	copyAttrKeys = (pointKeys + selectKeys); 
+TYPE 
+	EventMsg* = RECORD (Objects.ObjMsg)
+		gesture-: INTEGER; 
+		x-, y-: INTEGER; 
+		time-: LONGINT; 
+		keys: SET; 
+		callForResponder*: BOOLEAN; 
+		responder*: Objects.Object; 
+		priority*: INTEGER; 
+	END; 
+VAR 
+	context: EventMsg; 
+	lastloc: LONGINT; 
+	doubleClickTime*: LONGINT; 
+
+	PROCEDURE ^ GetWheelEvent*(VAR event: EventMsg; up: BOOLEAN); 
+	PROCEDURE ^ GetEvent*(VAR nextEvent: EventMsg); 
+	PROCEDURE ^ ClearCurrentEvent*; 
+BEGIN
+END vyEvents.

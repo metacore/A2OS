@@ -1,0 +1,63 @@
+MODULE antsPortability IN Oberon;
+	IMPORT Display, Objects, Strings, vyHost, Gadgets, antsCommandInvoker, Oberon, Modules, SYSTEM, Attributes, ListRiders, Desktops, vyPortability, Out, Kernel, AosModules := Modules IN A2, Machine IN A2;
+CONST 
+TYPE 
+	display* = ANY; 
+
+	dialog* = POINTER TO RECORD (Objects.ObjDesc)
+		context*: ANY; 
+		cmd*: ARRAY 64 OF CHAR; 
+		time: LONGINT; 
+		filter: ARRAY 256 OF CHAR; 
+	END; 
+
+	storeFileDialog* = POINTER TO RECORD (dialog)
+		name*: ARRAY 256 OF CHAR; 
+	END; 
+
+	openFileDialog* = POINTER TO RECORD (dialog)
+		name*: ARRAY 257 OF CHAR; 
+	END; 
+
+	Type* = vyPortability.Type; 
+
+	FileEnum* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+
+	Hugeint* = HUGEINT; 
+VAR 
+	dialogtime: LONGINT; 
+	thed: dialog; 
+	PathChar*: CHAR; 
+	ONE*: HUGEINT; 
+
+	PROCEDURE ^ SetMousePointDisplay*; 
+	PROCEDURE ^ GetCurrentDisplay*(): display; 
+	PROCEDURE ^ SetCurrentDisplay*(d: display); 
+	PROCEDURE ^ Desktop*(): display; 
+	PROCEDURE ^ EmptyFilter*(d: dialog); 
+	PROCEDURE ^ AddFilter*(d: dialog; filtername, filter: ARRAY OF CHAR); 
+	PROCEDURE ^ FilterName(d: dialog; VAR pos: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ InitDialog*; 
+	PROCEDURE ^ ExecuteDialog*; 
+	PROCEDURE ^ ShowDialog*(d: dialog); 
+	PROCEDURE ^ FinishDialog*; 
+	PROCEDURE ^ TypesThis*(m: Modules.Module; name: ARRAY OF CHAR): Type; 
+	PROCEDURE ^ TypesTypeOf*(p: ANY): Type; 
+	PROCEDURE ^ TypesLevelOf*(t: Type): INTEGER; 
+	PROCEDURE ^ TypesBaseOf*(t: Type; level: INTEGER): Type; 
+	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
+	PROCEDURE ^ ChangeDirectory*(path: ARRAY OF CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ EnumerateFiles*(indir, name: ARRAY OF CHAR; detailed: BOOLEAN; enum: FileEnum); 
+	PROCEDURE ^ HIToLR*(h: HUGEINT): LONGREAL; 
+	PROCEDURE ^ LRToHI*(l: LONGREAL): HUGEINT; 
+	PROCEDURE ^ LIToHI*(l: LONGINT): HUGEINT; 
+	PROCEDURE ^ Modulus*(x, y: HUGEINT): HUGEINT; 
+	PROCEDURE ^ Multiply*(x, y: HUGEINT): HUGEINT; 
+	PROCEDURE ^ Add*(x, y: HUGEINT): HUGEINT; 
+	PROCEDURE ^ Equal*(x, y: HUGEINT): BOOLEAN; 
+	PROCEDURE ^ IdentifyCommand*(m: Modules.Module; pc: LONGINT; VAR pname: ARRAY OF CHAR); 
+	PROCEDURE ^ IdentifyCaller*(VAR m: Modules.Module; VAR pc: LONGINT); 
+	PROCEDURE ^ FileDirSameName*(VAR a, b: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ FileDirRelFileName*(fileName: ARRAY OF CHAR; VAR relFileName: ARRAY OF CHAR); 
+BEGIN
+END antsPortability.

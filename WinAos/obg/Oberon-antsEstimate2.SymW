@@ -1,0 +1,23 @@
+MODULE antsEstimate2 IN Oberon;
+	IMPORT Files, Objects, antsObjects, vyBase, antsArrayObjects, antsCommands, vyName, antsMDimDiscreteS, antsRegions, Gadgets, antsDirSet, Input, antsNeighbourhoods, antsToolbox, Oberon, aM := antsMessages;
+CONST 
+TYPE 
+	tClass* = POINTER TO tClassDesc; 
+
+	tClassDesc* = RECORD (vyBase.ObjDesc)
+		model: antsMDimDiscreteS.tModel; 
+		done: BOOLEAN; 
+	END; 
+VAR 
+	gM: antsMDimDiscreteS.tModel; 
+	gA: antsArrayObjects.tINTEGERObject; 
+	gT: antsNeighbourhoods.NeighbourTable; 
+	lasttime: LONGINT; 
+
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ func(VAR Par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Estimate*; 
+BEGIN
+END antsEstimate2.

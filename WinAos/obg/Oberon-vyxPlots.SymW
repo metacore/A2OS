@@ -1,0 +1,26 @@
+MODULE vyxPlots IN Oberon;
+	IMPORT Objects, Display, vyLinks, vyBase, vyName, vyRealVec, vyDisplay2d, vyPort, vyHostStrings, vyParser;
+CONST 
+	lines* = \"vyCharts.New"\; 
+	points* = \"vyScatter2.New"\; 
+	scatter1* = \"vyScatter1.New"\; 
+	scatter2* = \"vyScatter2.New"\; 
+	scatter3* = \"vyScatter3.New"\; 
+	surface* = \"vySurface.New"\; 
+	boxwhisker* = \"vyBoxWhisker.New"\; 
+	lineplot* = \"vyLinePlot.New"\; 
+	distribution* = \"vyDistribution.New"\; 
+	maxmass* = \"vyMaxMass.New"\; 
+	shorth* = \"vyShorth.New"\; 
+
+	PROCEDURE ^ Register(VAR vx, vy: vyBase.tVector; namex, namey: vyName.tNameArray): Objects.Object; 
+	PROCEDURE ^ DoEmptyPlot(VAR id: ARRAY OF CHAR); 
+	PROCEDURE ^ NewPlot*(PlotId: ARRAY OF CHAR; data: Objects.Object); 
+	PROCEDURE ^ EmptyPlot*; 
+	PROCEDURE ^ Lines*(VAR vx, vy: vyBase.tVector; namex, namey: vyName.tNameArray); 
+	PROCEDURE ^ Points*(VAR vx, vy: vyBase.tVector; namex, namey: vyName.tNameArray); 
+	PROCEDURE ^ AddData*(x, y: REAL; vx, vy: vyBase.tVector); 
+	PROCEDURE ^ AddDataArray*(x, y: ARRAY OF REAL; len: INTEGER; vx, vy: vyBase.tVector); 
+	PROCEDURE ^ Update*(v: vyBase.tVector); 
+BEGIN
+END vyxPlots.

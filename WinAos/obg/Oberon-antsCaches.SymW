@@ -1,0 +1,31 @@
+MODULE antsCaches IN Oberon;
+	IMPORT Out, aM := antsMessages;
+CONST 
+	debug = FALSE; 
+TYPE 
+	Function* = PROCEDURE (VAR A: ARRAY OF INTEGER):LONGREAL; 
+
+	FullCache* = OBJECT 
+	VAR 
+		values*: POINTER TO ARRAY OF LONGREAL; 
+		offset: POINTER TO ARRAY OF LONGINT; 
+		len-: POINTER TO ARRAY OF LONGINT; 
+		d-, size-: LONGINT; 
+
+		PROCEDURE ^ Offset*(VAR point: ARRAY OF INTEGER; level: LONGINT): LONGINT; 
+		PROCEDURE ^ Point*(offset: LONGINT; VAR point: ARRAY OF INTEGER); 
+		PROCEDURE ^ NextPoint*(VAR offset: LONGINT; VAR point: ARRAY OF INTEGER; level: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SetVal*(offset: LONGINT; val: LONGREAL); 
+		PROCEDURE ^ GetVal*(offset: LONGINT): LONGREAL; 
+	END FullCache; 
+VAR 
+	enabled: BOOLEAN; 
+
+	PROCEDURE ^ Create(c: FullCache; d: LONGINT); 
+	PROCEDURE ^ Cuboid*(d: LONGINT; VAR len: ARRAY OF INTEGER; maxsize: LONGINT): FullCache; 
+	PROCEDURE ^ Cube*(d: LONGINT; len: INTEGER; maxsize: LONGINT): FullCache; 
+	PROCEDURE ^ Disable*; 
+	PROCEDURE ^ Enable*; 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsCaches.

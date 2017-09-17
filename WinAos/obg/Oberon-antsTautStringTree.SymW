@@ -1,0 +1,24 @@
+MODULE antsTautStringTree IN Oberon;
+	IMPORT math := MathL IN A2;
+CONST 
+TYPE 
+	Tree = RECORD 
+		root: Node; 
+	END; 
+
+	Node = POINTER TO NodeDesc; 
+
+	NodeDesc = RECORD 
+		left, right: Node; 
+		value: LONGREAL; 
+		start, ende: LONGINT; 
+	END; 
+
+	PROCEDURE ^ InitWithLength(t: Tree; n: LONGINT; y: ARRAY OF LONGREAL); 
+	PROCEDURE ^ Init*(VAR z: ARRAY OF LONGINT; n: LONGINT; y: ARRAY OF LONGREAL; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ Set(VAR x: Node; y: ARRAY OF LONGREAL; n: LONGINT; start: LONGINT; ende: LONGINT); 
+	PROCEDURE ^ SetValue(VAR x: Node): LONGREAL; 
+	PROCEDURE ^ CheckThresh(t: Tree; VAR z: ARRAY OF LONGINT; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ CheckNode(VAR z: ARRAY OF LONGINT; VAR x: Node; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
+BEGIN
+END antsTautStringTree.

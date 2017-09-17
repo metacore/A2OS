@@ -1,0 +1,33 @@
+MODULE antsExpressionsObjects IN Oberon;
+	IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyTypes, vyName, SYSTEM, vyPointerVec;
+
+	PROCEDURE ^ ToVec1(VAR v: vyBase.tData; len: LONGINT): vyBase.tData; 
+	PROCEDURE ^ ToVec(VAR v1, v2: vyBase.tData); 
+	PROCEDURE ^ ConvertSize(fixed: vyBase.tData; VAR var: vyBase.tData; new: BOOLEAN); 
+	PROCEDURE ^ TakeSmaller(VAR v1, v2: vyBase.tData); 
+	PROCEDURE ^ Convert(from, to: vyBase.tData; VAR res: vyBase.tData); 
+	PROCEDURE ^ SortByTyp(VAR smaller, bigger: vyBase.tData): BOOLEAN; 
+	PROCEDURE ^ vyLongintVecAdd(VAR res: vyLongintVec.tVector; x, y: vyBase.tData); 
+	PROCEDURE ^ vyIntVecAdd(VAR res: vyIntVec.tVector; x, y: vyBase.tData); 
+	PROCEDURE ^ Add*(VAR res: vyBase.tData; v1, v2: vyBase.tData); 
+	PROCEDURE ^ Mult*(VAR res: vyBase.tData; v1, v2: vyBase.tData); 
+	PROCEDURE ^ Sub*(VAR res: vyBase.tData; v1, v2: vyBase.tData); 
+	PROCEDURE ^ Div*(VAR res: vyBase.tData; v1, v2: vyBase.tData); 
+	PROCEDURE ^ AddPtr*(VAR res: ANY; p1, p2: ANY); 
+	PROCEDURE ^ SubPtr*(VAR res: ANY; p1, p2: ANY); 
+	PROCEDURE ^ MultPtr*(VAR res: ANY; p1, p2: ANY); 
+	PROCEDURE ^ DivPtr*(VAR res: ANY; p1, p2: ANY); 
+	PROCEDURE ^ NegLR(x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ NegR(x: REAL): REAL; 
+	PROCEDURE ^ NegL(x: LONGINT): LONGINT; 
+	PROCEDURE ^ NegI(x: INTEGER): INTEGER; 
+	PROCEDURE ^ Neg*(VAR res: vyBase.tData; v1: vyBase.tData); 
+	PROCEDURE ^ NegPtr*(VAR res: ANY; p1: ANY); 
+	PROCEDURE ^ AssignPointer*(x: LONGINT; adr: LONGINT; name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Assign*(this: Objects.Object; res: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ AssignLReal*(x: LONGREAL; adr: LONGINT; name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AssignReal*(x: REAL; adr: LONGINT; name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AssignLongint*(x: LONGINT; adr: LONGINT; name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AssignInt*(x: INTEGER; adr: LONGINT; name: ARRAY OF CHAR): BOOLEAN; 
+BEGIN
+END antsExpressionsObjects.

@@ -1,0 +1,58 @@
+MODULE LeoBasic IN Oberon;
+	IMPORT Files, Math IN A2, Objects, Attributes, Gadgets, GfxMatrix, Gfx, Leonardo, LeoPens, LeoPaths;
+CONST 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Leonardo.ContainerDesc)
+		pen*: LeoPens.Pen; 
+		mat*: GfxMatrix.Matrix; 
+	END; 
+
+	Link* = POINTER TO LinkDesc; 
+
+	LinkDesc* = RECORD (LeoPaths.PointDesc)
+		lx*, ly*: REAL; 
+	END; 
+
+	Rectangle* = Frame; 
+
+	Ellipse* = Frame; 
+
+	Group* = Leonardo.Container; 
+
+	PROCEDURE ^ CopyLink*(VAR msg: Objects.CopyMsg; from, to: Link); 
+	PROCEDURE ^ HandleLink*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitLink*(l: Link; lx, ly: REAL); 
+	PROCEDURE ^ NewLink*; 
+	PROCEDURE ^ CalcFrameRect*(f: Frame; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ SelectFrame*(f: Frame; VAR msg: Leonardo.SelectMsg); 
+	PROCEDURE ^ ControlFrame*(f: Frame; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ ValidateFrame*(f: Frame; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ TransformFrame*(f: Frame; VAR msg: Leonardo.TransformMsg); 
+	PROCEDURE ^ GetFrameMatrix*(f: Frame; VAR msg: Leonardo.MatrixMsg); 
+	PROCEDURE ^ HandleFrameAttr*(f: Frame; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleFrameLinks*(f: Frame; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ CopyFrame*(VAR msg: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ HandleFrame*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(f: Frame; handle: Objects.Handler; pen: LeoPens.Pen; m: GfxMatrix.Matrix); 
+	PROCEDURE ^ ConsumeRect(rect: Rectangle; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ SplitRect(rect: Rectangle; VAR msg: LeoPaths.SplitMsg); 
+	PROCEDURE ^ DrawRect(rect: Rectangle; pen: LeoPens.Pen); 
+	PROCEDURE ^ RenderRect(rect: Rectangle; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ LocateRect(rect: Rectangle; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ HandleRect*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitRect*(rect: Rectangle; x0, y0, x1, y1: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ NewRect*; 
+	PROCEDURE ^ ConsumeEllipse(e: Ellipse; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ DrawEllipse(e: Ellipse; pen: LeoPens.Pen); 
+	PROCEDURE ^ RenderEllipse(e: Ellipse; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ LocateEllipse(e: Ellipse; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ HandleEllipse*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitEllipse*(e: Ellipse; x, y, rx, ry: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ NewEllipse*; 
+	PROCEDURE ^ HandleGroup*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitGroup*(group: Group; bottom, top: Leonardo.Shape); 
+	PROCEDURE ^ NewGroup*; 
+BEGIN
+END LeoBasic.

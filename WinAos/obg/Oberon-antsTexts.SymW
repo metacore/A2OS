@@ -1,0 +1,18 @@
+MODULE antsTexts IN Oberon;
+	IMPORT Texts, Objects, Strings, aM := antsMessages;
+VAR 
+	nls: ARRAY 256 OF CHAR; 
+	nll: LONGINT; 
+
+	PROCEDURE ^ CheckPattern(t: Texts.Text; VAR pattern: ARRAY OF CHAR; len, pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ FindPattern*(t: Texts.Text; pattern: ARRAY OF CHAR; len: LONGINT; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ MakeBuf(s: ARRAY OF CHAR; len: LONGINT; NL: BOOLEAN): Texts.Buffer; 
+	PROCEDURE ^ CheckLen(VAR s: ARRAY OF CHAR; VAR len: LONGINT); 
+	PROCEDURE ^ ReplacePatterns*(t: Texts.Text; pattern: ARRAY OF CHAR; slen: LONGINT; by: ARRAY OF CHAR; dlen: LONGINT); 
+	PROCEDURE ^ AppendPatterns*(t: Texts.Text; pattern: ARRAY OF CHAR; slen: LONGINT; by: ARRAY OF CHAR; dlen: LONGINT); 
+	PROCEDURE ^ AppendPatternsNl*(t: Texts.Text; pattern: ARRAY OF CHAR; slen: LONGINT; by: ARRAY OF CHAR; dlen: LONGINT); 
+	PROCEDURE ^ Copy*(t: Texts.Text): Texts.Text; 
+	PROCEDURE ^ ReplaceTextPart*(T: Texts.Text; begpat, endpat: ARRAY OF CHAR; by: Texts.Buffer; VAR pos0: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetTextPart*(T: Texts.Text; begpat, endpat: ARRAY OF CHAR; VAR in: Texts.Buffer; VAR pos0: LONGINT): BOOLEAN; 
+BEGIN
+END antsTexts.

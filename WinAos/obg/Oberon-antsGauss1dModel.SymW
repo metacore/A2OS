@@ -1,0 +1,21 @@
+MODULE antsGauss1dModel IN Oberon;
+	IMPORT antsObjects, Files, vyBase, antsKernel, antsModels, vyRanBase, antsCommands, vyName, Objects, antsVectors, vyLongrealVec, vyRandom, vyHostStrings, aM := antsMessages;
+CONST 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		a: ARRAY 6 OF LONGREAL; 
+	END; 
+
+	PROCEDURE ^ Open*(M: tModel; a: ARRAY OF LONGREAL); 
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
+	PROCEDURE ^ ArrayHandleAttribute(VAR M: Objects.AttrMsg; prefix: ARRAY OF CHAR; VAR array: ARRAY OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsGauss1dModel.

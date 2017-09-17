@@ -1,0 +1,30 @@
+MODULE antsMeanArray IN Oberon;
+	IMPORT vyBase, antsObjects, Objects, antsCommands, vyName, antsArrayObjects, Files, aM := antsMessages;
+CONST 
+TYPE 
+	tMeanArray = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+
+	tArray* = antsArrayObjects.tINTEGERArray; 
+
+	tMean* = POINTER TO tMeanDesc; 
+
+	tMeanDesc = RECORD (vyBase.ObjDesc)
+		A: tMeanArray; 
+		count: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Add*(A: tArray; to: tMean); 
+	PROCEDURE ^ Get*(from: tMean; to: tArray; depth: LONGINT); 
+	PROCEDURE ^ Update*(from: tMean; to: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ DoInit*(m: tMean); 
+	PROCEDURE ^ HandleAttributes(o: tMean; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tMean; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tMean; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ GetDestArray(o: tMean; VAR array: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ GetSrcArray(o: tMean; VAR array: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Init*; 
+BEGIN
+END antsMeanArray.

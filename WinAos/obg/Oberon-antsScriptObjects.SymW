@@ -1,0 +1,49 @@
+MODULE antsScriptObjects IN Oberon;
+	IMPORT Gadgets, Objects, Display, Oberon, Texts, Fonts, Files, Links, Attributes, Strings, aM := antsMessages;
+CONST 
+	cmdLinkName = \"CmdTextObject"\; 
+	cmdTextName = \"CommandText"\; 
+	cmdFileName = \"antsCommandText.Text"\; 
+TYPE 
+	ObjList = POINTER TO ObjListDesc; 
+
+	ObjListDesc = RECORD 
+		obj: Objects.Object; 
+		pos: LONGINT; 
+		next: ObjList; 
+	END; 
+
+	Object = POINTER TO ObjectDesc; 
+
+	ObjectDesc = RECORD (Gadgets.ObjDesc)
+		tobjlist: ObjList; 
+	END; 
+
+	TaskAfterStore = POINTER TO TaskAfterStoreDesc; 
+
+	TaskAfterStoreDesc = RECORD (Oberon.TaskDesc)
+		b: Object; 
+	END; 
+VAR 
+	editmode*: BOOLEAN; 
+
+	PROCEDURE ^ OpenCommandText(b: Object; name: ARRAY OF CHAR; cmd: ARRAY OF CHAR); 
+	PROCEDURE ^ ConvertText(text: Texts.Text; VAR ntext: Texts.Text); 
+	PROCEDURE ^ ExecuteCommandText(b: Object; VAR context: Objects.Object); 
+	PROCEDURE ^ FindObj(VAR sc: Texts.Finder; VAR pos: LONGINT; VAR obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ ComeBack(t: Oberon.Task); 
+	PROCEDURE ^ SetTextLibs(b: Object; lib: Objects.Library); 
+	PROCEDURE ^ RestoreTextList(F: Object); 
+	PROCEDURE ^ WriteTextList(VAR F: Object; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadTextList(VAR F: Object; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ CopyText*(VAR M: Objects.CopyMsg; from, to: Object); 
+	PROCEDURE ^ CopyButton*(VAR M: Objects.CopyMsg; from, to: Object); 
+	PROCEDURE ^ ObjectHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Edit*; 
+	PROCEDURE ^ LinkSelection*; 
+	PROCEDURE ^ UnLinkSelection*; 
+	PROCEDURE ^ ExecuteCmdLink*; 
+	PROCEDURE ^ Debug*; 
+BEGIN
+END antsScriptObjects.

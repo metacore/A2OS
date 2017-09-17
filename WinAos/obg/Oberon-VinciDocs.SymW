@@ -1,0 +1,21 @@
+MODULE VinciDocs IN Oberon;
+	IMPORT Files, Objects, Display, Texts, Oberon, Attributes, Links, Strings, Gadgets, Documents, Desktops, TextGadgets, TextGadgets0, Scheme, Vinci, VinciGadgets, GfxPS;
+CONST 
+	GraphicMenuBar = \"Desktops.Copy[Copy] VinciDocs.ShowText[Source] Desktops.StoreDoc[Store]"\; 
+	TextMenuBar = \"Desktops.Copy[Copy] VinciDocs.ShowGraphics[Display] Desktops.StoreDoc[Store]"\; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ LoadAttachments(VAR r: Files.Rider; doc: Documents.Document); 
+	PROCEDURE ^ Load(doc: Documents.Document); 
+	PROCEDURE ^ Store(doc: Documents.Document); 
+	PROCEDURE ^ Handle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(doc: Documents.Document); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Show*(text: Texts.Text; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ ShowText*; 
+	PROCEDURE ^ ShowGraphics*; 
+	PROCEDURE ^ ToEPS*; 
+BEGIN
+END VinciDocs.

@@ -1,0 +1,37 @@
+MODULE antsFilters IN Oberon;
+	IMPORT antsFunctions, antsCommands, vyBase, Objects, antsSecurity, antsArrayObjects, vyName, antsPlots, antsNeighbourhoods, Math := MathL IN A2, vyRandom, vyLongreal, Files, Gadgets, antsObjects, antsToolbox, Attributes, Strings, vyInteger, aM := antsMessages;
+CONST 
+	mean = 0; 
+	median = 1; 
+	inf = 2; 
+	sup = 3; 
+TYPE 
+	tFilter* = POINTER TO tFilterDesc; 
+
+	tFilterDesc* = RECORD (vyBase.ObjDesc)
+		weights: antsNeighbourhoods.Neighbours; 
+		fct: antsFunctions.Function; 
+		type: INTEGER; 
+	END; 
+
+	PROCEDURE ^ HandleFileMsg(obj: tFilter; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleLinks(obj: tFilter; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tFilter; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ ksmallest(VAR a: ARRAY OF LONGREAL; n, k: LONGINT): LONGREAL; 
+	PROCEDURE ^ Median(VAR a: ARRAY OF LONGREAL; n: LONGINT): LONGREAL; 
+	PROCEDURE ^ WeightsToMedian(filter: tFilter); 
+	PROCEDURE ^ ApplyFilter(A: antsArrayObjects.tINTEGERArray; VAR res: antsArrayObjects.tINTEGERArray; filter: tFilter); 
+	PROCEDURE ^ MinMax(VAR S: ARRAY OF ARRAY OF INTEGER; VAR min, max: INTEGER); 
+	PROCEDURE ^ Rescale*(A: antsArrayObjects.tINTEGERArray; VAR depth: LONGINT); 
+	PROCEDURE ^ ApplyFilters(A: antsArrayObjects.tINTEGERArray; VAR res: antsArrayObjects.tINTEGERArray; filter: tFilter; VAR depth: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Apply*; 
+	PROCEDURE ^ Constant*; 
+	PROCEDURE ^ DoApplyFunction(f: tFilter); 
+	PROCEDURE ^ ApplyFunction*; 
+	PROCEDURE ^ dist(n: antsNeighbourhoods.Neighbours; pos: LONGINT; VAR xd, yd: LONGINT); 
+	PROCEDURE ^ Inverse*; 
+BEGIN
+END antsFilters.

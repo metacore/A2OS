@@ -205,7 +205,7 @@ VAR
 	Ngc-: LONGINT; 
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT; 
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns-: HUGEINT; 
-	NgcSweepTime-, NgcSweepMax-: HUGEINT; 
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT; 
 	gcStatus*: GCStatus; 
 	GCType*: LONGINT; 
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 
@@ -269,8 +269,8 @@ VAR
 	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 
-	PROCEDURE ^ EnableGenerations*; 
-	PROCEDURE ^ DisableGenerations*; 
+	PROCEDURE ^ SetYoung*; 
+	PROCEDURE ^ SetOld*; 
 	PROCEDURE ^ SetHeuristic*; 
 	PROCEDURE ^ SetMetaData*; 
 BEGIN

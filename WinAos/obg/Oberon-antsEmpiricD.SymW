@@ -1,0 +1,20 @@
+MODULE antsEmpiricD IN Oberon;
+	IMPORT antsArrayObjects, vyBase, aM := antsMessages;
+TYPE 
+	EmpiricalDistribution* = POINTER TO EDDesc; 
+
+	EDDesc* = RECORD 
+	END; 
+
+	tParameter* = POINTER TO tParameterDesc; 
+
+	tParameterDesc* = RECORD (vyBase.ObjDesc)
+		ED*: EmpiricalDistribution; 
+		CEDo*: EmpiricalDistribution; 
+		CEDe*: EmpiricalDistribution; 
+		A*: antsArrayObjects.tINTEGERObject; 
+		x*, y*, w*, h*: LONGINT; 
+	END; 
+
+BEGIN
+END antsEmpiricD.

@@ -1,0 +1,45 @@
+MODULE RX IN Oberon;
+	IMPORT RXA, Oberon, Objects, Texts, Display, Files;
+CONST 
+	blank = 32; 
+	tab = 9; 
+	cr = 13; 
+	dq = 34; 
+	noerror = 0; 
+	strtoolong =  -1; 
+	linetoolong =  -2; 
+	nofline = 10000; 
+	nofrepl = 10000; 
+VAR 
+	w: Texts.Writer; 
+	sbeg, send, errorvar: INTEGER; 
+	sdfa: RXA.DFA; 
+	stext: Texts.Text; 
+	stextpos, slinelen: LONGINT; 
+	sline: ARRAY (nofline + 1) OF CHAR; 
+	sreplaced, casesens, replset: BOOLEAN; 
+	replstr: ARRAY (nofrepl + 1) OF CHAR; 
+	ch: CHAR; 
+
+	PROCEDURE ^ GetCaret(VAR f: Display.Frame; VAR t: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ SetSelection(f: Display.Frame; t: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ RemoveSelection(f: Display.Frame; t: Texts.Text); 
+	PROCEDURE ^ MyCAP(ch: CHAR): CHAR; 
+	PROCEDURE ^ ThisFrame(X, Y: INTEGER; VAR F: Display.Frame); 
+	PROCEDURE ^ GetText(VAR text: Texts.Text; VAR name: ARRAY OF CHAR; VAR s: Texts.Scanner); 
+	PROCEDURE ^ GetOption(VAR reader: Texts.Reader; VAR opti: BOOLEAN); 
+	PROCEDURE ^ GetStr(VAR reader: Texts.Reader; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ RXAErrorHandler(error, pos: INTEGER); 
+	PROCEDURE ^ RXErrorHandler(text: ARRAY OF CHAR); 
+	PROCEDURE ^ ParseTexts(text: Texts.Text; name: ARRAY OF CHAR; dfa: RXA.DFA; opti: BOOLEAN); 
+	PROCEDURE ^ Grep*; 
+	PROCEDURE ^ SetSearch*; 
+	PROCEDURE ^ SetReplace*; 
+	PROCEDURE ^ SearchPattern(text: Texts.Text; textpos: LONGINT); 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ Replace*; 
+	PROCEDURE ^ storeToFile(t: Texts.Text; name: ARRAY OF CHAR); 
+	PROCEDURE ^ textName(VAR text: Texts.Text; VAR name: ARRAY OF CHAR; VAR first, last: BOOLEAN; VAR S: Texts.Scanner): BOOLEAN; 
+	PROCEDURE ^ ReplaceAll*; 
+BEGIN
+END RX.

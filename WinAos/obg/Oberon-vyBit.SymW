@@ -1,0 +1,30 @@
+MODULE vyBit IN Oberon;
+	IMPORT Files, vyBase;
+CONST 
+	idversion* = \" v0r0a2"\; 
+	fmtany* = 0; 
+	fmtend* = 0; 
+	fmtplain* = 1; 
+	fmtpacked* = 2; 
+
+	PROCEDURE ^ Write*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
+	PROCEDURE ^ Read*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
+	PROCEDURE ^ WriteFmt*(prefform: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
+	PROCEDURE ^ ReadFmt*(VAR form: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
+	PROCEDURE ^ Fill*(len: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT; val: BOOLEAN); 
+	PROCEDURE ^ FillPat*(count: LONGINT; VAR x: ARRAY OF BOOLEAN; start, step: LONGINT; val: BOOLEAN); 
+	PROCEDURE ^ Copy*(len: LONGINT; VAR src: ARRAY OF BOOLEAN; srcstart: LONGINT; VAR dest: ARRAY OF BOOLEAN; deststart: LONGINT); 
+	PROCEDURE ^ CopyPat*(count: LONGINT; VAR src: ARRAY OF BOOLEAN; start, step: LONGINT; VAR dest: ARRAY OF BOOLEAN; deststart, deststep: LONGINT); 
+	PROCEDURE ^ Count*(len: LONGINT; VAR x: ARRAY OF BOOLEAN): LONGINT; 
+	PROCEDURE ^ And*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
+	PROCEDURE ^ Or*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
+	PROCEDURE ^ XOr*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
+	PROCEDURE ^ Not*(VAR x: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
+	PROCEDURE ^ Get2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Set2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: LONGINT; val: BOOLEAN); 
+	PROCEDURE ^ Get2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR dest: ARRAY OF ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Set2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR src: ARRAY OF ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Get2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Set2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: LONGINT; val: BOOLEAN); 
+BEGIN
+END vyBit.

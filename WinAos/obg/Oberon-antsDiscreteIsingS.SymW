@@ -1,0 +1,41 @@
+MODULE antsDiscreteIsingS IN Oberon;
+	IMPORT antsObjects, Files, vyBase, Math := MathL IN A2, antsKernel, antsArrays, antsArrayObjects, antsModels, antsCommands, vyName, Objects, aM := antsMessages;
+CONST 
+TYPE 
+	nb = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGREAL; 
+
+	pb = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGREAL; 
+
+	RandomArray = POINTER TO ARRAY OF LONGREAL; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		h-, beta-: LONGREAL; 
+		ch, cbeta: LONGREAL; 
+		Z: nb; 
+		U, P, Cdf: pb; 
+		card: LONGINT; 
+		dist: vyName.tNameArray; 
+		ran: RandomArray; 
+	END; 
+VAR 
+	localModel: tModel; 
+
+	PROCEDURE ^ U(m: tModel; x, v1, v2, v3, v4: LONGINT): LONGREAL; 
+	PROCEDURE ^ Z(m: tModel; v1, v2, v3, v4: LONGINT): LONGREAL; 
+	PROCEDURE ^ CalcP(M: tModel); 
+	PROCEDURE ^ SetPars(M: tModel); 
+	PROCEDURE ^ NewDepth(M: tModel; card: LONGINT); 
+	PROCEDURE ^ Open*(M: tModel; beta, h: LONGREAL); 
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ CheckDepth(s: antsKernel.Kernel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h: LONGREAL); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsDiscreteIsingS.

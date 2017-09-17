@@ -1,0 +1,17 @@
+MODULE vyLongComplex IN Oberon;
+	IMPORT M := MathL IN A2;
+TYPE 
+	real = LONGREAL; 
+
+	Complex* = OBJECT 
+	VAR 
+		polarvalid, cartvalid, cartfirst: BOOLEAN; 
+		re, im, rho, phi: real; 
+
+		PROCEDURE ^ GetC*(VAR re, im: real); 
+		PROCEDURE ^ SetC*(re, im: real); 
+		PROCEDURE ^ GetPolar*(VAR rho, phi: real); 
+		PROCEDURE ^ SetPolar*(rho, phi: real); 
+	END Complex; 
+BEGIN
+END vyLongComplex.

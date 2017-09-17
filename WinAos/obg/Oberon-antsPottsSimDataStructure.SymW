@@ -1,0 +1,114 @@
+MODULE antsPottsSimDataStructure IN Oberon;
+	IMPORT vyBase, Objects, antsObjects, antsArrays, vyLongreal, antsSecurity;
+CONST 
+TYPE 
+	SetChain* = POINTER TO SetChainDesc; 
+
+	SetChainDesc* = RECORD (vyBase.ObjDesc)
+		chain: POINTER TO ARRAY OF DataChain; 
+	END; 
+
+	DataChain* = POINTER TO DataChainDesc; 
+
+	DataChainDesc* = RECORD (vyBase.ObjDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		dataChain: POINTER TO ARRAY OF Data; 
+	END; 
+
+	Data* = POINTER TO DataDesc; 
+
+	DataDesc* = RECORD (vyBase.ObjDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		data: antsArrays.X1d; 
+		diffs: antsArrays.X1d; 
+		estimatedNoises: antsArrays.X1d; 
+		datarekoChain: POINTER TO ARRAY OF Reko; 
+		monotoneChain: POINTER TO ARRAY OF Monotone; 
+	END; 
+
+	Monotone* = POINTER TO MonotoneDesc; 
+
+	MonotoneDesc* = RECORD (vyBase.ObjDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		monotone: antsArrays.X1d; 
+		degradedChain: POINTER TO ARRAY OF Degraded; 
+		noisenumbers: antsArrays.L1d; 
+	END; 
+
+	Degraded* = POINTER TO DegradedDesc; 
+
+	DegradedDesc* = RECORD (vyBase.ObjDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		degraded: antsArrays.X1d; 
+		variance: LONGREAL; 
+		rekoChain: POINTER TO ARRAY OF Reko; 
+	END; 
+
+	Reko* = POINTER TO RekoDesc; 
+
+	RekoDesc* = RECORD (vyBase.ObjDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		reko: antsArrays.X1d; 
+		results: antsArrays.X1d; 
+	END; 
+
+	PROCEDURE ^ Gen0*; 
+	PROCEDURE ^ Gen1*; 
+	PROCEDURE ^ Gen2*; 
+	PROCEDURE ^ Gen3*; 
+	PROCEDURE ^ Gen4*; 
+	PROCEDURE ^ Gen5*; 
+	PROCEDURE ^ ExistChain*(set: SetChain): BOOLEAN; 
+	PROCEDURE ^ ExistDataset*(set: SetChain; dataChainname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistDataChain*(set: SetChain; dataChainname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistData*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistDataRekoChain*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistDataReko*(set: SetChain; dataChainname, dataname, datarekoname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistMonotoneChain*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistMonotone*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistDegradedChain*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistDegraded*(set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistRekoChain*(set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExistReko*(set: SetChain; dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSetChainLen*(set: SetChain): LONGINT; 
+	PROCEDURE ^ GetDataChainLen*(set: SetChain; dataChainname: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetDataRekoChainLen*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetMonotoneChainLen*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetDegradedChainLen*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetRekoChainLen*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; degradedname: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetDataSetName*(set: SetChain; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetData*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetDataName*(set: SetChain; dataChainname: ARRAY OF CHAR; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetDataReko*(set: SetChain; dataChainname, dataname, datarekoname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetDataResults*(set: SetChain; dataChainname, dataname, datarekoname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetDataRekoName*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetMonotone*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetMonotoneName*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetDegraded*(set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetDegradedName*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetReko*(set: SetChain; dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetRekoName*(set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR; ind: LONGINT; VAR a: ARRAY OF CHAR); 
+	PROCEDURE ^ GetResults*(set: SetChain; dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetDiff*(set: SetChain; dataChainname, dataname, mon: ARRAY OF CHAR): LONGREAL; 
+	PROCEDURE ^ GetAllDiff*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ GetEN*(set: SetChain; dataChainname, dataname, mon: ARRAY OF CHAR): LONGREAL; 
+	PROCEDURE ^ GetAllEN*(set: SetChain; dataChainname, dataname: ARRAY OF CHAR): antsArrays.X1d; 
+	PROCEDURE ^ IncNoiseNumber*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; type: ARRAY OF CHAR); 
+	PROCEDURE ^ DecNoiseNumber*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; type: ARRAY OF CHAR); 
+	PROCEDURE ^ GetNoiseNumber*(set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; type: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetNoiseVariance*(set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR): LONGREAL; 
+	PROCEDURE ^ NewSetChain*(VAR set: SetChain); 
+	PROCEDURE ^ NewDataChain*(VAR set: SetChain; name: ARRAY OF CHAR); 
+	PROCEDURE ^ NewData*(VAR set: SetChain; dataChainname: ARRAY OF CHAR; name: ARRAY OF CHAR; data, diffs, estimatedNoises, meanM, medianM, hampelM, saegezahnM, huberM: antsArrays.X1d); 
+	PROCEDURE ^ NewDataReko*(VAR set: SetChain; dataChainname, dataname, name: ARRAY OF CHAR; datareko, results: antsArrays.X1d); 
+	PROCEDURE ^ NewMonotone*(VAR set: SetChain; dataChainname, dataname, name: ARRAY OF CHAR; monotone: antsArrays.X1d); 
+	PROCEDURE ^ NewDegraded*(VAR set: SetChain; dataChainname, dataname, monotonename, name: ARRAY OF CHAR; degraded: antsArrays.X1d; parameter: LONGREAL); 
+	PROCEDURE ^ NewReko*(VAR set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR; name: ARRAY OF CHAR; reko: antsArrays.X1d; results: antsArrays.X1d); 
+	PROCEDURE ^ DeleteDataset*(VAR set: SetChain; dataChainname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteData*(VAR set: SetChain; dataChainname, dataname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteDataReko*(VAR set: SetChain; dataChainname, dataname, datarekoname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteMonotone*(VAR set: SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteDegraded*(VAR set: SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteReko*(VAR set: SetChain; dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR): BOOLEAN; 
+BEGIN
+END antsPottsSimDataStructure.

@@ -1,0 +1,34 @@
+MODULE antsCommandInvoker IN Oberon;
+	IMPORT Gadgets, Objects, Display3, Display, Oberon, Attributes, vyHost;
+CONST 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+	END; 
+
+	TaskAfterStore = POINTER TO TaskAfterStoreDesc; 
+
+	TaskAfterStoreDesc = RECORD (Oberon.TaskDesc)
+		f: Frame; 
+	END; 
+VAR 
+	context*: Objects.Object; 
+	visible*: BOOLEAN; 
+	active*: BOOLEAN; 
+
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreFrame(R: Display3.Mask; F: Frame; x, y, w, h, u, v, w1, h1: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ ComeBack(t: Oberon.Task); 
+	PROCEDURE ^ InvokeCommand(F: Frame); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(F: Frame); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ Visible*; 
+	PROCEDURE ^ InVisible*; 
+	PROCEDURE ^ DebugMode*; 
+	PROCEDURE ^ NormalMode*; 
+BEGIN
+END antsCommandInvoker.

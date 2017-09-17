@@ -1,0 +1,34 @@
+MODULE SaveSisyphus IN Oberon;
+	IMPORT SYSTEM, Out, Math IN A2, Files, Display, Modules, SaveScreen;
+CONST 
+	versionString = \"SaveSisyphus 2000.03.31/12:17 - bpsm"\; 
+	dataFileName0 = \"Sisiphus.Data"\; 
+	dataFileName1 = \"Sisyphus.Data"\; 
+	dataFileName2 = \"Sysyphus.Data"\; 
+	dataFileName3 = \"Sysiphus.Data"\; 
+	IStag = 753; 
+	HSide = 31; 
+	Side = 64; 
+	MaxN = 16; 
+	frameRate = 10; 
+	boogieDistance = 9; 
+TYPE 
+	Icon = ARRAY 2 OF RECORD 
+		addr: ADDRESS; 
+		image: ARRAY (Side + 1) OF SET; 
+	END; 
+
+	; 
+VAR 
+	N: LONGINT; 
+	Fig: POINTER TO ARRAY MaxN OF Icon; 
+	State: INTEGER; 
+	x0, y0: INTEGER; 
+
+	PROCEDURE ^ Start; 
+	PROCEDURE ^ Step; 
+	PROCEDURE ^ Stop; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove; 
+BEGIN
+END SaveSisyphus.

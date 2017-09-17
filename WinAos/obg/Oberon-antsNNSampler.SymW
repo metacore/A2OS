@@ -1,0 +1,31 @@
+MODULE antsNNSampler IN Oberon;
+	IMPORT antsObjects, Files, antsKernel, antsModels, antsCommands, vyName, Objects, vyBase, Gadgets, antsFunctions, antsArrayObjects, antsSecurity, vyRanBase, vyRandom, Math := MathL IN A2, Links, antsArrays, aM := antsMessages;
+CONST 
+	version* = 0; 
+	moduleName = \"antsNNSampler.Gen"\; 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		datafct: antsFunctions.Function; 
+		ud, u: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+		fct: antsFunctions.Function; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ Metropolis(s: antsKernel.Kernel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ Init(s: antsKernel.Kernel); 
+	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleBind(o: tModel; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(msg: tModel; name: vyName.tNameArray); 
+	PROCEDURE ^ NewPars(o: tModel); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoNewModel*(name: vyName.tNameArray): tModel; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsNNSampler.

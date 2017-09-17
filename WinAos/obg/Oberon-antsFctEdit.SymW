@@ -1,0 +1,48 @@
+MODULE antsFctEdit IN Oberon;
+	IMPORT Objects, Display, vyBase, vyGraphBase, antsObjects, Attributes, vyName, vyScale, vyDisplay2d, Gadgets, antsCommands, vyPort, vyStrings := vyHostStrings, vyEvents, Files, vyCommandMenus, antsFunctions, aM := antsMessages;
+CONST 
+TYPE 
+	Real = vyGraphBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		f: antsFunctions.Function; 
+		xr, yr, wr, hr: Real; 
+		dx: Real; 
+		grid: INTEGER; 
+		inedit: BOOLEAN; 
+		viewEditWin: BOOLEAN; 
+		fcache: antsFunctions.Array; 
+		commands: vyCommandMenus.List; 
+		edit: BOOLEAN; 
+		noLoc: BOOLEAN; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ sync(o: tLayer); 
+	PROCEDURE ^ Grid(editor: tLayer; v, h: Coordinate); 
+	PROCEDURE ^ Recall(editor: tLayer); 
+	PROCEDURE ^ Edit(editor: tLayer; event: vyEvents.EventMsg): BOOLEAN; 
+	PROCEDURE ^ Responsible(editor: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tLayer); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ IncY; 
+	PROCEDURE ^ DecY; 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ edit; 
+	PROCEDURE ^ symmetric; 
+	PROCEDURE ^ IncAccuracy; 
+	PROCEDURE ^ DecAccuracy; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(editor: tLayer; f: antsFunctions.Function; x, y, w, h, dx: Real); 
+	PROCEDURE ^ DoShow*(f: antsFunctions.Function; x, y, w, h, dx: Real); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ Show*; 
+BEGIN
+END antsFctEdit.

@@ -1,0 +1,72 @@
+MODULE antsOrganizers IN Oberon;
+	IMPORT Objects, Display, Effects, Gadgets, Panels, Oberon, Strings, Out, Attributes, Fonts, Links, vyHost, Texts, EditTools, Documents, Desktops, antsPortability, vyHostTexts;
+CONST 
+	outofboundsmodify = 3; 
+	DontCare = MAX(LONGINT); 
+TYPE 
+	Task = POINTER TO TaskDesc; 
+
+	TaskDesc = RECORD (Oberon.TaskDesc)
+		f: Display.Frame; 
+		w, h: INTEGER; 
+	END; 
+
+	contentList = POINTER TO contentListDesc; 
+
+	contentListDesc = RECORD 
+		obj: Objects.Object; 
+		next: contentList; 
+	END; 
+VAR 
+	methods: Panels.Methods; 
+	thispanel: Panels.Panel; 
+	restrictive*: BOOLEAN; 
+	fallbackfont: Fonts.Font; 
+	globallist: contentList; 
+	inupdate: Panels.Panel; 
+
+	PROCEDURE ^ Parse(s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT); 
+	PROCEDURE ^ Round(x: LONGREAL): LONGINT; 
+	PROCEDURE ^ fParse(pw, ph: INTEGER; w, h: INTEGER; s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT); 
+	PROCEDURE ^ HasConstraints*(f: Display.Frame; pw, ph: INTEGER; VAR l, t, r, b: LONGINT): BOOLEAN; 
+	PROCEDURE ^ SolveGadget*(PW, PH: INTEGER; f: Display.Frame; l, t, r, b: LONGINT; VAR X, Y, W, H: INTEGER); 
+	PROCEDURE ^ Solve*(F: Panels.Panel; dX, dY, W, H: INTEGER; pw, ph: INTEGER; mode: INTEGER); 
+	PROCEDURE ^ minSize(F: Display.Frame; VAR w, h: INTEGER): BOOLEAN; 
+	PROCEDURE ^ toMin(t: Oberon.Task); 
+	PROCEDURE ^ InstallSizer(F: Display.Frame; w, h: INTEGER); 
+	PROCEDURE ^ Max(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Handler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ makefontsize(t: Oberon.Task); 
+	PROCEDURE ^ TryMakeFontSizes*(F: Panels.Panel); 
+	PROCEDURE ^ InsertChild(F: Panels.Panel; f: Display.Frame; u, v: INTEGER); 
+	PROCEDURE ^ TrackMouse(F: Panels.Panel; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ InitPanel*(F: Panels.Panel); 
+	PROCEDURE ^ NewPanel*; 
+	PROCEDURE ^ DoExchange*(F: Objects.Object); 
+	PROCEDURE ^ ToOrig*; 
+	PROCEDURE ^ Exchange*; 
+	PROCEDURE ^ ExchangeThis*; 
+	PROCEDURE ^ SetLockedContent*; 
+	PROCEDURE ^ SplitFontName(fn: ARRAY OF CHAR; VAR i, j, size: INTEGER); 
+	PROCEDURE ^ CombineFontName(prefix, suffix: ARRAY OF CHAR; i, j, size: INTEGER; VAR fn: ARRAY OF CHAR); 
+	PROCEDURE ^ ThisFont(name: ARRAY OF CHAR): Fonts.Font; 
+	PROCEDURE ^ MakeFontSize*(F: Objects.Object; ratio: LONGREAL; offset: INTEGER); 
+	PROCEDURE ^ GetObjectsWithFont(F: Display.Frame; VAR ll: contentList); 
+	PROCEDURE ^ MakeFontSizes*(F: Objects.Object); 
+	PROCEDURE ^ ResetFontSizes*(F: Objects.Object); 
+	PROCEDURE ^ IncFontSizes*(F: Objects.Object; by: INTEGER); 
+	PROCEDURE ^ FontSizeDiff*(F: Objects.Object): INTEGER; 
+	PROCEDURE ^ SetMinSize*; 
+	PROCEDURE ^ ResizeTo(F: Gadgets.Frame; W, H: INTEGER); 
+	PROCEDURE ^ ToMinSize*; 
+	PROCEDURE ^ DoToMin(F: Objects.Object); 
+	PROCEDURE ^ SetSize*; 
+	PROCEDURE ^ IncPanelTextSizes*; 
+	PROCEDURE ^ ToggleVisibility*; 
+	PROCEDURE ^ ReplaceSuffix(VAR name: ARRAY OF CHAR; suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenHelp*; 
+	PROCEDURE ^ ViewObjectCopy*; 
+	PROCEDURE ^ MakeConstraints*; 
+	PROCEDURE ^ Refresh*; 
+BEGIN
+END antsOrganizers.

@@ -1,0 +1,21 @@
+MODULE Skeleton IN Oberon;
+	IMPORT Display, Display3, Effects, Files, Gadgets, Oberon, Objects, Printer, Printer3;
+CONST 
+	red = 1; 
+	middle = 1; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		col*: INTEGER; 
+	END; 
+
+	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: Frame); 
+	PROCEDURE ^ New*; 
+BEGIN
+END Skeleton.

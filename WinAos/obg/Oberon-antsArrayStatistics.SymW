@@ -1,0 +1,25 @@
+MODULE antsArrayStatistics IN Oberon;
+	IMPORT vyBase, antsObjects, antsArrayObjects, Objects, Files, Gadgets, antsCommands, vyName, vyLongrealVec, aM := antsMessages, antsRegions;
+CONST 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		from*: antsArrayObjects.tINTEGERObject; 
+		coocurrence*: antsArrayObjects.tINTEGERObject; 
+		histogram*: vyBase.tVector; 
+	END; 
+
+	PROCEDURE ^ Sync(o: tObject); 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleBind(obj: tObject; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Store(VAR R: Files.Rider; s: tObject); 
+	PROCEDURE ^ Load(VAR R: Files.Rider; s: tObject); 
+	PROCEDURE ^ HandleFileMsg(o: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ NewFromRegion*; 
+BEGIN
+END antsArrayStatistics.

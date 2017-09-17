@@ -9,7 +9,7 @@ CONST
 	TraceCommands = 1; 
 	TraceFreeDownTo = 2; 
 	Trace = {}; 
-	OberonKernel = \"Oberon.Kernel"\; 
+	OberonKernel = \"Oberon-Kernel"\; 
 TYPE 
 	Module = POINTER TO RECORD 
 		next: Module; 

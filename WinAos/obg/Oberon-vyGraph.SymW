@@ -1,0 +1,121 @@
+MODULE vyGraph IN Oberon;
+	IMPORT vyHostTexts, vyName, vyRectangles, vyBase, Files, Gadgets, vyGraphBase, Objects, Out;
+CONST 
+	idversion* = \"Graph v0r0d4"\; 
+	rect* = 0; 
+	circle* = 1; 
+	ellipse* = 2; 
+	specialNode* = 0; 
+	normalNode* = 1; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tEdge* = POINTER TO tEdgeDesc; 
+
+	tNode* = POINTER TO tNodeDesc; 
+
+	tNodeDesc* = RECORD (Gadgets.ObjDesc)
+		x, y: Real; 
+		name*: vyName.tNameArray; 
+		mode: INTEGER; 
+		mark: BOOLEAN; 
+		selected: BOOLEAN; 
+		shape, col, bkCol: INTEGER; 
+		next, nextSelected*: tNode; 
+		firstOutEdge: tEdge; 
+		firstInEdge: tEdge; 
+		inDegree, outDegree: INTEGER; 
+		vis: BOOLEAN; 
+	END; 
+
+	tNodeOperation* = PROCEDURE (v: tNode); 
+
+	tEdgeDesc* = RECORD (Gadgets.ObjDesc)
+		from, to: tNode; 
+		next: tEdge; 
+		vis: BOOLEAN; 
+	END; 
+
+	tGraph* = POINTER TO tGraphDesc; 
+
+	tGraphDesc* = RECORD (Gadgets.ObjDesc)
+		firstNode: tNode; 
+		firstEdge: tEdge; 
+		fnt: ARRAY 32 OF CHAR; 
+	END; 
+VAR 
+	stdFnt: ARRAY 32 OF CHAR; 
+
+	PROCEDURE ^ SendMsg(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ BindIt(o: Objects.Object; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ StoreNode(VAR R: Files.Rider; n: tNode); 
+	PROCEDURE ^ LoadNode(VAR R: Files.Rider; n: tNode); 
+	PROCEDURE ^ StoreEdge(VAR R: Files.Rider; n: tEdge); 
+	PROCEDURE ^ LoadEdge(VAR R: Files.Rider; n: tEdge); 
+	PROCEDURE ^ StoreGraph(VAR R: Files.Rider; n: tGraph); 
+	PROCEDURE ^ LoadGraph(VAR R: Files.Rider; n: tGraph); 
+	PROCEDURE ^ EHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GenE*; 
+	PROCEDURE ^ NHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GenN*; 
+	PROCEDURE ^ GHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GenG*; 
+	PROCEDURE ^ Max*(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Copy*(sg, dg: tGraph); 
+	PROCEDURE ^ UnmarkGraph(graph: tGraph); 
+	PROCEDURE ^ GetGraphFrame*(graph: tGraph; VAR x, y, w, h: Real); 
+	PROCEDURE ^ GetGraphSize*(graph: tGraph; VAR nrVertices, nrEdges: INTEGER); 
+	PROCEDURE ^ GetFont*(graph: tGraph; VAR fnt: ARRAY OF CHAR); 
+	PROCEDURE ^ ChangeFont*(graph: tGraph; fnt: ARRAY OF CHAR); 
+	PROCEDURE ^ GetName*(v: tNode; VAR id: vyName.tNameArray); 
+	PROCEDURE ^ GetNodeByName*(graph: tGraph; name: vyName.tNameArray): tNode; 
+	PROCEDURE ^ Selected*(vertex: tNode): BOOLEAN; 
+	PROCEDURE ^ GetNodeRect*(graph: tGraph; v: tNode; VAR x, y, w, h, dsr: INTEGER); 
+	PROCEDURE ^ ThisNode*(graph: tGraph; x, y: Real): tNode; 
+	PROCEDURE ^ RecallNode(graph: tGraph; v: tNode); 
+	PROCEDURE ^ RecallEdge(g: tGraph; e: tEdge); 
+	PROCEDURE ^ Recall*(graph: tGraph); 
+	PROCEDURE ^ SelectionActor*(graph: tGraph; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; mode: INTEGER); 
+	PROCEDURE ^ GetSelection*(graph: tGraph): tNode; 
+	PROCEDURE ^ SelectNode*(graph: tGraph; sv: tNode); 
+	PROCEDURE ^ ClearSelection*(graph: tGraph); 
+	PROCEDURE ^ AddNode*(graph: tGraph; v: tNode; x, y: Real; name: vyName.tNameArray; mode, shape, col, bkCol: INTEGER); 
+	PROCEDURE ^ AddEdge*(graph: tGraph; e: tEdge; from, to: tNode); 
+	PROCEDURE ^ DeleteEdge(graph: tGraph; from, to: tNode); 
+	PROCEDURE ^ DeleteNode*(graph: tGraph; v: tNode); 
+	PROCEDURE ^ DeleteSelection*(graph: tGraph); 
+	PROCEDURE ^ HideEdge(graph: tGraph; from, to: tNode); 
+	PROCEDURE ^ HideNode(graph: tGraph; v: tNode); 
+	PROCEDURE ^ HideSelection*(graph: tGraph); 
+	PROCEDURE ^ FlipVisible*(graph: tGraph); 
+	PROCEDURE ^ ShowAll*(graph: tGraph); 
+	PROCEDURE ^ Collapse*(graph: tGraph); 
+	PROCEDURE ^ Expand*(graph: tGraph; vertex: tNode); 
+	PROCEDURE ^ MoveNode*(graph: tGraph; v: tNode; dx, dy: INTEGER); 
+	PROCEDURE ^ MoveSelection*(graph: tGraph; dx, dy: INTEGER); 
+	PROCEDURE ^ PlaceNode*(graph: tGraph; v: tNode; x, y: Real); 
+	PROCEDURE ^ GetNodePlace*(graph: tGraph; v: tNode; VAR x, y: Real); 
+	PROCEDURE ^ ClusterNode*(v: tNode); 
+	PROCEDURE ^ AlignSelection*(graph: tGraph; horizontal: BOOLEAN); 
+	PROCEDURE ^ OpenGraph*(graph: tGraph); 
+	PROCEDURE ^ InvertNodeOrder(g: tGraph); 
+	PROCEDURE ^ InvertOutEdgeOrder(v: tNode); 
+	PROCEDURE ^ SortVerticesByInDegree(g: tGraph; ascendent: BOOLEAN); 
+	PROCEDURE ^ SortEdgesByInDegree(g: tGraph; ascendent: BOOLEAN); 
+	PROCEDURE ^ AddRoot(g: tGraph): tNode; 
+	PROCEDURE ^ DFSSortRec(graph: tGraph; root: tNode); 
+	PROCEDURE ^ DFSSort*(graph: tGraph); 
+	PROCEDURE ^ PreOrder*(g: tGraph); 
+	PROCEDURE ^ DFS*(graph: tGraph; start: tNode; op: tNodeOperation); 
+	PROCEDURE ^ ForEachNodeDo*(graph: tGraph; op: tNodeOperation); 
+	PROCEDURE ^ ForEachFollowNodeDo*(v: tNode; op: tNodeOperation); 
+	PROCEDURE ^ ForEachPrevNodeDo*(v: tNode; op: tNodeOperation); 
+	PROCEDURE ^ DFSReachableRec(root, goal: tNode): BOOLEAN; 
+	PROCEDURE ^ Reachable*(g: tGraph; from, to: tNode): BOOLEAN; 
+	PROCEDURE ^ Component*(g: tGraph; v: tNode): tGraph; 
+	PROCEDURE ^ DumpPrevNode(v: tNode); 
+	PROCEDURE ^ DumpFollowNode(v: tNode); 
+	PROCEDURE ^ DumpNode(v: tNode); 
+	PROCEDURE ^ DumpGraph*(graph: tGraph); 
+BEGIN
+END vyGraph.

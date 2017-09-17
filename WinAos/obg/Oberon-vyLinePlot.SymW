@@ -1,0 +1,47 @@
+MODULE vyLinePlot IN Oberon;
+	IMPORT Files, Gadgets, Objects, Display, vyBase, vyGraphBase, vyHostDisplay := vyGraphBase, vyHostTexts, vyLinks, vyLongrealVec, vyName, vyParser, vyPatterns, vyPort, vyRealVec, vyTypes, vyDisplay2d;
+CONST 
+	idversion* = \"vyLinePlot v0r0a3"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tParameter* = POINTER TO tParameterDesc; 
+
+	tParameterDesc* = RECORD 
+	END; 
+
+	tFunction* = PROCEDURE (x: Real; p: tParameter):Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		D1, D2: Real; 
+		f: tFunction; 
+		ticks: LONGINT; 
+		parameter: tParameter; 
+		sign: vyHostDisplay.tSign; 
+	END; 
+VAR 
+	dlink-: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ Recall(linePlot: tLayer); 
+	PROCEDURE ^ InstallData(linePlot: tLayer); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(linePlot: tLayer; data: Objects.Object; D1, D2: Real; f: tFunction; p: tParameter; ticks: LONGINT); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+	PROCEDURE ^ set; 
+	PROCEDURE ^ Set*; 
+	PROCEDURE ^ Changed*(linePlot: tLayer; p: tParameter); 
+BEGIN
+END vyLinePlot.

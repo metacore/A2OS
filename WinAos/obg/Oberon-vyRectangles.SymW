@@ -1,0 +1,18 @@
+MODULE vyRectangles IN Oberon;
+	IMPORT vyGraphBase;
+CONST 
+	idversion* = \"vyRectangles v0r0a3"\; 
+TYPE 
+	integer = vyGraphBase.Coordinate; 
+
+	PROCEDURE ^ Min(a, b: integer): integer; 
+	PROCEDURE ^ Max(a, b: integer): integer; 
+	PROCEDURE ^ StandardizeRect(VAR x, y, w, h: integer); 
+	PROCEDURE ^ InsetRect*(VAR x, y, w, h: integer; dx, dy: integer); 
+	PROCEDURE ^ PointInRect*(px, py, X, Y, W, H: integer): BOOLEAN; 
+	PROCEDURE ^ RectInRect*(x, y, w, h, X, Y, W, H: integer): BOOLEAN; 
+	PROCEDURE ^ RectIntersection*(VAR x, y, w, h: integer; X, Y, W, H: integer); 
+	PROCEDURE ^ RectUnion*(VAR x, y, w, h: integer; X, Y, W, H: integer); 
+	PROCEDURE ^ EmptyIntersection*(x, y, w, h, X, Y, W, H: integer): BOOLEAN; 
+BEGIN
+END vyRectangles.

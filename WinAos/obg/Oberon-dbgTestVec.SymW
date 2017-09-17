@@ -1,0 +1,13 @@
+MODULE dbgTestVec IN Oberon;
+	IMPORT Objects, vyBase, vyName, vyLongrealVec, vyRealVec, vyRandom;
+CONST 
+VAR 
+	lastrndmvec-: vyRealVec.tVector; 
+
+	PROCEDURE ^ LRConstVec128*; 
+	PROCEDURE ^ RConstVec128*; 
+	PROCEDURE ^ RRndmVec128*; 
+	PROCEDURE ^ RRndm2dimVec128*; 
+	PROCEDURE ^ ChangeLastRndmVector*; 
+BEGIN
+END dbgTestVec.

@@ -1,0 +1,25 @@
+MODULE antsPottsMonotone IN Oberon;
+	IMPORT Math := MathL IN A2, Out, vyLongreal, vyLongrealVec, vyBase, antsCommands, Input, vyName, Display3, vyLinks, vyPort, aM := antsMessages, vyHostStrings, antsReadWrite, Objects, antsSecurity, Texts, vyHostTexts, Gadgets, Attributes, antsBellman, antsArrays, antsVecOpt, antsPotts1DSurvey;
+CONST 
+	cMedian* = 0; 
+	cMean* = 1; 
+	cAbs* = 0; 
+	cLog* = 1; 
+	cIncr* = 0; 
+	cDecr* = 1; 
+TYPE 
+	ArrayFunction = PROCEDURE (VAR f: ARRAY OF LONGREAL; i: LONGINT):LONGREAL; 
+
+	PROCEDURE ^ MakeMonotoneRec*; 
+	PROCEDURE ^ DoMonotone(degraded: vyBase.Object; type: INTEGER; VAR vec: vyLongrealVec.tVector); 
+	PROCEDURE ^ DropX1d*(vec: antsArrays.X1d; position: LONGINT; VAR new: antsArrays.X1d); 
+	PROCEDURE ^ DropL1d*(vec: antsArrays.L1d; position: LONGINT; VAR new: antsArrays.L1d); 
+	PROCEDURE ^ TestMonotone(VAR vector: ARRAY OF LONGREAL; montype: INTEGER): BOOLEAN; 
+	PROCEDURE ^ MakeMatrix*(VAR Xstern: antsArrays.X2d; VAR jumps: antsArrays.I1d; VAR gamma: antsArrays.X1d; VAR matrix: antsArrays.X2d); 
+	PROCEDURE ^ LastMonotone*(VAR matrix: antsArrays.X2d; montype: INTEGER; VAR lastmon: antsArrays.X1d); 
+	PROCEDURE ^ FindLastMonotonePotts*; 
+	PROCEDURE ^ FindLastMonotone*; 
+	PROCEDURE ^ ApproxMonotone*; 
+	PROCEDURE ^ DoApproxMonotonePotts(VAR Matrix: antsArrays.X2d; type: INTEGER; VAR MatrixOut: antsArrays.X2d); 
+BEGIN
+END antsPottsMonotone.

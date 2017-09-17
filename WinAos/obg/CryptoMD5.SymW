@@ -21,10 +21,6 @@ VAR
 	T: ARRAY 65 OF LONGINT; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE ^ F1(VAR a: LONGINT; b, c, d, x, s, t: LONGINT); 
-	PROCEDURE ^ F2(VAR a: LONGINT; b, c, d, x, s, t: LONGINT); 
-	PROCEDURE ^ F3(VAR a: LONGINT; b, c, d, x, s, t: LONGINT); 
-	PROCEDURE ^ F4(VAR a: LONGINT; b, c, d, x, s, t: LONGINT); 
 	PROCEDURE ^ MD5(CONST X: Buffer; VAR A, B, C, D: LONGINT); 
 	PROCEDURE ^ Initialize; 
 BEGIN

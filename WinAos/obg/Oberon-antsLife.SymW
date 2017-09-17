@@ -1,0 +1,20 @@
+MODULE antsLife IN Oberon;
+	IMPORT antsObjects, Objects, Files, antsArrayObjects, antsKernel, antsModels, antsCommands, vyName, Links, aM := antsMessages;
+CONST 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		synchroneus: BOOLEAN; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h: LONGREAL); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsLife.

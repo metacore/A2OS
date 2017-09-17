@@ -1,0 +1,24 @@
+MODULE vyRanSkeleton IN Oberon;
+	IMPORT vyRanBase, Objects;
+CONST 
+	idversion* = \"vyRanSkeleton 0.0a5"\; 
+	cModuleName = \"vyRanSkeleton"\; 
+
+	PROCEDURE ^ ParksMiller*(VAR s: LONGINT); 
+	PROCEDURE ^ Next*(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Max(r: vyRanBase.tRandom): vyRanBase.Bits; 
+	PROCEDURE ^ Get(r: vyRanBase.tRandom): vyRanBase.Bits; 
+	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: vyRanBase.tRandom); 
+	PROCEDURE ^ SumPSqr*(gen: vyRanBase.tRandom; top: LONGINT): LONGREAL; 
+	PROCEDURE ^ HandleAttributes(obj: vyRanBase.tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Init(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): vyRanBase.tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END vyRanSkeleton.

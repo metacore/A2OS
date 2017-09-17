@@ -1,0 +1,27 @@
+MODULE antsFctVector IN Oberon;
+	IMPORT vyBase, Objects, antsObjects, Files, Gadgets, antsCommands, vyName, antsFunctions, vyLongrealVec, vyRealVec, aM := antsMessages;
+CONST 
+TYPE 
+	Object* = POINTER TO ObjectDesc; 
+
+	ObjectDesc* = RECORD (vyBase.ObjDesc)
+		x-: vyBase.tVector; 
+		from-, to-: LONGREAL; 
+		f-: antsFunctions.Function; 
+	END; 
+
+	PROCEDURE ^ HandleAttributes(o: Object; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: Object; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: Object; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ Sync*(obj: Object); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoNew*(name: vyName.tNameArray; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: LONGREAL); 
+	PROCEDURE ^ DoSetObject*(VAR obj: Object; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: LONGREAL); 
+	PROCEDURE ^ NewVec*; 
+	PROCEDURE ^ DoNewVec1*(len: LONGINT; VAR vec: vyLongrealVec.tVector); 
+	PROCEDURE ^ DoNewVec2*(from: vyBase.Object; VAR vec: vyLongrealVec.tVector); 
+	PROCEDURE ^ ClearVec*; 
+BEGIN
+END antsFctVector.

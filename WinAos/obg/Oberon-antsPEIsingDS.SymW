@@ -1,0 +1,44 @@
+MODULE antsPEIsingDS IN Oberon;
+	IMPORT antsArrayObjects, Math := MathL IN A2, antsPEV, antsKernel, antsModels, antsCommands, vyCG := vyName, antsCaches, Files, Objects, vyHostStrings, vyRanBase, aM := antsMessages;
+CONST 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		a: ARRAY 14 OF LONGREAL; 
+		cp, ce: antsCaches.FullCache; 
+	END; 
+VAR 
+	GM: tModel; 
+	depth: INTEGER; 
+
+	PROCEDURE ^ Open*(M: tModel); 
+	PROCEDURE ^ dist(e1, e2: INTEGER): LONGREAL; 
+	PROCEDURE ^ f1(e1, e2, e3, e4: INTEGER): LONGREAL; 
+	PROCEDURE ^ f2(e1, e2, e3, e4: INTEGER): LONGREAL; 
+	PROCEDURE ^ f3(e, p1, p2: INTEGER): LONGREAL; 
+	PROCEDURE ^ f4(p: INTEGER): LONGREAL; 
+	PROCEDURE ^ f5(e: INTEGER): LONGREAL; 
+	PROCEDURE ^ f6(p1, p2: INTEGER): LONGREAL; 
+	PROCEDURE ^ UP(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ EP(cooling: LONGREAL; VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ DistriFromLocalChar(F: antsPEV.tField; y, x: LONGINT); 
+	PROCEDURE ^ FastestC(F: antsPEV.tField); 
+	PROCEDURE ^ UE(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ EE(cooling: LONGREAL; VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ DistriFromLocalCharE(F: antsPEV.tField; y, x: LONGINT); 
+	PROCEDURE ^ FastestEC(F: antsPEV.tField); 
+	PROCEDURE ^ CreateCaches(m: tModel; d: INTEGER); 
+	PROCEDURE ^ OneSweep*(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
+	PROCEDURE ^ WriteArray(VAR R: Files.Rider; VAR A: ARRAY OF LONGREAL); 
+	PROCEDURE ^ ReadArray(VAR R: Files.Rider; VAR A: ARRAY OF LONGREAL); 
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ ArrayHandleAttribute(VAR M: Objects.AttrMsg; prefix: ARRAY OF CHAR; VAR array: ARRAY OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyCG.tNameArray); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsPEIsingDS.

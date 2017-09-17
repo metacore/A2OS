@@ -1,0 +1,26 @@
+MODULE antsTautString IN Oberon;
+	IMPORT aC := antsCommands, aA := antsArrays, antsSecurity, vyBase, vyLongreal, vyLongrealVec, vyName, math := MathL IN A2, antsTautStringTree;
+CONST 
+TYPE 
+	Statistic* = POINTER TO StatisticDesc; 
+
+	StatisticDesc* = RECORD (vyBase.ObjDesc)
+		data*, reko*: aA.X1d; 
+		n*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ tautstring(VAR fdist: ARRAY OF LONGREAL; VAR t: ARRAY OF LONGREAL; VAR lower: ARRAY OF LONGREAL; VAR upper: ARRAY OF LONGREAL; VAR y1: LONGREAL; VAR yn: LONGREAL; n: LONGINT; VAR string: ARRAY OF LONGREAL; VAR knotsind: ARRAY OF LONGINT; VAR knotst: ARRAY OF LONGREAL; VAR knotsy: ARRAY OF LONGREAL; VAR nknots: LONGINT); 
+	PROCEDURE ^ multiwdwr(y: ARRAY OF LONGREAL; n: LONGINT; thresh: LONGREAL; squeezing: ARRAY OF CHAR): aA.L1d; 
+	PROCEDURE ^ MakeStatistic*; 
+	PROCEDURE ^ CreateTautString*(VAR s: Statistic; degraded: vyBase.Object; thr: LONGREAL; squfac: LONGREAL; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTautString*(data: ARRAY OF LONGREAL; VAR s: Statistic; thr: LONGREAL; squfac: LONGREAL; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ DoGetTautString(VAR fdistx: ARRAY OF LONGREAL; VAR fdist: ARRAY OF LONGREAL; VAR lower: ARRAY OF LONGREAL; VAR upper: ARRAY OF LONGREAL; start: LONGREAL; ende: LONGREAL; VAR string: ARRAY OF LONGREAL; VAR knotsind: ARRAY OF LONGINT; VAR knotst: ARRAY OF LONGREAL; VAR knotsy: ARRAY OF LONGREAL; VAR nknots: LONGINT; VAR s: Statistic); 
+	PROCEDURE ^ Mad*(y: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Median(y: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Mean(y: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ cumsum(y: ARRAY OF LONGREAL): aA.X1d; 
+	PROCEDURE ^ MakeXInterval(len: LONGINT): aA.X1d; 
+	PROCEDURE ^ Min*(x: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Max*(x: ARRAY OF LONGREAL): LONGREAL; 
+BEGIN
+END antsTautString.

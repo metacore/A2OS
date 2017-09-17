@@ -1,0 +1,23 @@
+MODULE antsExpressionsDefaults IN Oberon;
+	IMPORT SYSTEM, vyBase, vyLinks, antsExpressions, vyTypes, vyHostTexts, Texts, vyLongrealVec, vyRealVec, vyLongintVec, vyRandom, vyScale, vyPort, Objects, Gadgets, Out;
+CONST 
+VAR 
+	defaultPlot*: ARRAY 64 OF CHAR; 
+
+	PROCEDURE ^ ShowAs*(a: vyBase.Object; s: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ Show*(a: Objects.Object): Objects.Object; 
+	PROCEDURE ^ Write*(ob: vyBase.Object); 
+	PROCEDURE ^ RanV*(len: LONGINT): vyBase.Object; 
+	PROCEDURE ^ Ran*(): LONGREAL; 
+	PROCEDURE ^ Vec*(len: LONGINT): vyBase.Object; 
+	PROCEDURE ^ VecR*(len: LONGINT): vyBase.Object; 
+	PROCEDURE ^ VecL*(len: LONGINT): vyBase.Object; 
+	PROCEDURE ^ Len*(ob: ANY): LONGINT; 
+	PROCEDURE ^ ChunkSummary*(v: vyBase.tVector); 
+	PROCEDURE ^ Ptr*(i: LONGINT): ANY; 
+	PROCEDURE ^ Selection*(): ANY; 
+	PROCEDURE ^ EnableCR*; 
+	PROCEDURE ^ DisableCR*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END antsExpressionsDefaults.

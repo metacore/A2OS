@@ -112,6 +112,7 @@ TYPE
 		PROCEDURE ^ RawString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ RawNum*(VAR x: LONGINT); 
 		PROCEDURE ^ Int*(VAR x: LONGINT; hex: BOOLEAN); 
+		PROCEDURE ^ Real*(VAR real: LONGREAL); 
 		PROCEDURE ^ EOLN*(): BOOLEAN; 
 		PROCEDURE ^ Ln*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ LnEOT*(VAR x: ARRAY OF CHAR); 
@@ -122,6 +123,7 @@ TYPE
 		PROCEDURE ^ String*(VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetString*(VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetInteger*(VAR integer: LONGINT; isHexadecimal: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR real: LONGREAL): BOOLEAN; 
 		PROCEDURE ^ GetChar*(VAR ch: CHAR): BOOLEAN; 
 	END Reader; 
 

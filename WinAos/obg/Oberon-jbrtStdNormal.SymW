@@ -1,0 +1,10 @@
+MODULE jbrtStdNormal IN Oberon;
+	IMPORT vyBase, M := MathL IN A2;
+TYPE 
+	Real = vyBase.Real; 
+VAR 
+	v: ARRAY 15 OF Real; 
+
+	PROCEDURE ^ Phi*(x: Real): Real; 
+BEGIN
+END jbrtStdNormal.

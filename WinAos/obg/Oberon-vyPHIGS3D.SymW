@@ -1,0 +1,102 @@
+MODULE vyPHIGS3D IN Oberon;
+	IMPORT vyBase, vyGraphBase, vyHostTexts, Math := MathL IN A2, Oberon, Files, Out, vyHostDisplay := vyGraphBase;
+CONST 
+	idversion* = \"vyPHIGS3D v0r0a2"\; 
+	zeroPlaneNormal = 31; 
+	notYetImplemented = 32; 
+	zeroVectorNorm = 33; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordiate = vyGraphBase.Coordinate; 
+
+	tMatrixARRAY = ARRAY 4 OF ARRAY 4 OF Real; 
+
+	tMatrix = POINTER TO tMatrixDesc; 
+
+	tMatrixDesc = RECORD 
+		m: tMatrixARRAY; 
+		inv: tMatrixARRAY; 
+	END; 
+
+	tCoordinate3d* = POINTER TO tCoordinate3dDesc; 
+
+	tCoordinate3dDesc* = RECORD 
+		VRPx*, VRPy*, VRPz*: Real; 
+		Nx*, Ny*, Nz*: Real; 
+		VUVx, VUVy, VUVz: Real; 
+		OrientationMatrix: tMatrix; 
+		alpha, beta, delta: Real; 
+		mtVRP, mrx, mry, mrxy, mrz, mr: tMatrix; 
+		VWLu0, VWLv0, VWLu1, VWLv1: Real; 
+		PVLu0, PVLu1, PVLv0, PVLv1, PVLn0, PVLn1: Real; 
+		ProjectionType: INTEGER; 
+		PRPu, PRPv, PRPn: Real; 
+		VPd, BPd, FPd: Real; 
+		MappingMatrix: tMatrix; 
+		mtPRP, B1, B2, B: tMatrix; 
+		View: tMatrix; 
+		definitionTime: LONGINT; 
+	END; 
+VAR 
+	m1, m2, m3, m4, m5, smrx, smry, smrz, smr: tMatrix; 
+	defVRPx, defVRPy, defVRPz, defNx, defNy, defNz, defVUVx, defVUVy, defVUVz, defVWLu0, defVWLu1, defVWLv0, defVWLv1, defPVLu0, defPVLu1, defPVLv0, defPVLv1, defPVLn0, defPVLn1, defPRPu, defPRPv, defPRPn, defVPd, defBPd, defFPd: Real; 
+	defProjectionType: INTEGER; 
+	theC3D: tCoordinate3d; 
+	rotate*: PROCEDURE (countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
+	rotation: tMatrix; 
+
+	PROCEDURE ^ CopyMatrixArray(VAR src, dest: tMatrixARRAY); 
+	PROCEDURE ^ CopyMatrix(VAR src, dest: tMatrix); 
+	PROCEDURE ^ WriteMatrix(VAR R: Files.Rider; m: tMatrix); 
+	PROCEDURE ^ ReadMatrix(VAR R: Files.Rider; VAR m: tMatrix); 
+	PROCEDURE ^ StoreCoord3d*(VAR R: Files.Rider; c: tCoordinate3d); 
+	PROCEDURE ^ LoadCoord3d*(VAR R: Files.Rider; VAR c: tCoordinate3d); 
+	PROCEDURE ^ CopyCoordinate*(src, dest: tCoordinate3d); 
+	PROCEDURE ^ ErrorMsg(code: INTEGER); 
+	PROCEDURE ^ SumOfSquare(x, y, z: Real): Real; 
+	PROCEDURE ^ Norm(x, y, z: Real): Real; 
+	PROCEDURE ^ ScalarMultiplication(VAR x, y, z: Real; s: Real); 
+	PROCEDURE ^ NormVector(VAR x, y, z: Real); 
+	PROCEDURE ^ ScalarProduct(x, y, z, u, v, w: Real): Real; 
+	PROCEDURE ^ VectorProduct(x, y, z, u, v, w: Real; VAR nx, ny, nz: Real); 
+	PROCEDURE ^ Angle2(ak, gk: Real): Real; 
+	PROCEDURE ^ Angle3(x, y, z, u, v, w: Real): Real; 
+	PROCEDURE ^ InitMatrix(m: tMatrix); 
+	PROCEDURE ^ InvertMatrix(m, inv: tMatrix); 
+	PROCEDURE ^ ComposeMatrix3(InMatrixA, InMatrixB, m: tMatrix); 
+	PROCEDURE ^ TransformPoint3(x, y, z: Real; VAR m: tMatrixARRAY; VAR tx, ty, tz: Real); 
+	PROCEDURE ^ Translate3(tx, ty, tz: Real; m: tMatrix); 
+	PROCEDURE ^ RotateX(px: Real; m: tMatrix); 
+	PROCEDURE ^ RotateY(py: Real; m: tMatrix); 
+	PROCEDURE ^ RotateZ(pz: Real; m: tMatrix); 
+	PROCEDURE ^ RotateAxis(x, y, z, phi: Real; m: tMatrix); 
+	PROCEDURE ^ EvalViewOrientMatrix3(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: INTEGER); 
+	PROCEDURE ^ EvalViewMappingMatrix3(wlUmin, wlUmax, wlVmin, wlVmax: Real; PVlXmin, PVlXmax, PVlYmin, PVlYmax, PVlBack, PVlFront: Real; projection: INTEGER; PRPu, PRPv, PRPn: Real; VPd, BPd, FPd: Real; VAR err: INTEGER); 
+	PROCEDURE ^ GetViewDirection*(VAR Nx, Ny, Nz: Real); 
+	PROCEDURE ^ SetCoordinate*(c: tCoordinate3d); 
+	PROCEDURE ^ SetViewRefSystem(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: INTEGER); 
+	PROCEDURE ^ SetNormProjSystem(VWLu0, VWLu1, VWLv0, VWLv1, PVLu0, PVLu1, PVLv0, PVLv1, PVLBack, PVLFront: Real; projection: INTEGER; PRPu, PRPv, PRPn, VPd, BPd, FPd: Real; VAR err: INTEGER); 
+	PROCEDURE ^ SetViewMatrix; 
+	PROCEDURE ^ OpenCoordinate*(c: tCoordinate3d; VAR err: INTEGER); 
+	PROCEDURE ^ PointToDisplayPoint*(x3d, y3d, z3d: Real; err: INTEGER; VAR x, y: Coordiate); 
+	PROCEDURE ^ PointToViewPoint*(x3d, y3d, z3d: Real; err: INTEGER; VAR vx, vy, vz: Real); 
+	PROCEDURE ^ ViewPointToDisplayPoint*(vx, vy, vz: Real; err: INTEGER; VAR x, y: Coordiate); 
+	PROCEDURE ^ DisplayPointToPoint*(x, y: Coordiate; err: INTEGER; VAR x3d, y3d, z3d: Real); 
+	PROCEDURE ^ SetViewDirection*(Nx, Ny, Nz: Real); 
+	PROCEDURE ^ RotateFree(countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
+	PROCEDURE ^ RotateN(countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
+	PROCEDURE ^ DisplayRotationControl; 
+	PROCEDURE ^ SetRotationControl*(x, y: Coordiate); 
+	PROCEDURE ^ UpdateCoordinateSystem; 
+	PROCEDURE ^ SetVRP*(VRPx, VRPy, VRPz: Real); 
+	PROCEDURE ^ SetPRP*(PRPu, PRPv, PRPn: Real); 
+	PROCEDURE ^ ResizeVWL*(uFactor, vFactor: Real); 
+	PROCEDURE ^ LookAtScenery*(x, y, z, w, d, h: Real); 
+	PROCEDURE ^ InitGlobals; 
+	PROCEDURE ^ InitDefaults; 
+	PROCEDURE ^ InitCoordinate; 
+	PROCEDURE ^ UpToDate*(date: LONGINT): BOOLEAN; 
+	PROCEDURE ^ DumpSpec*; 
+BEGIN
+END vyPHIGS3D.

@@ -1,0 +1,25 @@
+MODULE ants1dArrayVectors IN Oberon;
+	IMPORT vyBase, Objects, antsObjects, Files, Gadgets, antsCommands, vyName, aM := antsMessages, ants1dArrayObjects, vyLinks, vyLongrealVec, vyHostStrings;
+CONST 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		synced-: BOOLEAN; 
+		vec-: vyLongrealVec.tVector; 
+		w-, depth-: antsObjects.Index; 
+		A-: ants1dArrayObjects.tObject; 
+		trans*: antsObjects.PAConsistTrafoProc; 
+	END; 
+
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ CheckDimensions(obj: tObject); 
+	PROCEDURE ^ Sync*(obj: tObject); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ FromArray*(obj: tObject; A: ants1dArrayObjects.tObject); 
+	PROCEDURE ^ New*; 
+BEGIN
+END ants1dArrayVectors.

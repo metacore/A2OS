@@ -1,0 +1,32 @@
+MODULE antsArrayImages IN Oberon;
+	IMPORT vyBase, Objects, Images, antsObjects, Files, Gadgets, SYSTEM, antsCommands, vyName, antsToolbox, antsArrayObjects, aM := antsMessages, vyColorPalettes, vyLinks, antsSecurity, vyCommandMenus;
+CONST 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		synced-: BOOLEAN; 
+		img*: Images.Image; 
+		w*, h*, depth*: antsObjects.Index; 
+		A*: antsArrayObjects.tINTEGERObject; 
+		trans*: antsObjects.PAConsistTrafoProc; 
+	END; 
+
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ CheckDimensions(obj: tObject); 
+	PROCEDURE ^ MinMax(x, min, max: INTEGER): INTEGER; 
+	PROCEDURE ^ Sync*(obj: tObject); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(obj: tObject); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoToArray*(obj: tObject; depth: LONGINT; name: vyName.tNameArray); 
+	PROCEDURE ^ ToArray*; 
+	PROCEDURE ^ finishFile*(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Load*; 
+	PROCEDURE ^ LoadDialoged*; 
+BEGIN
+END antsArrayImages.

@@ -1,0 +1,38 @@
+MODULE vyRanKiss IN Oberon;
+	IMPORT vyRanBase, Files, Objects, S := SYSTEM;
+CONST 
+	cSeedVersion = 0; 
+	sysMaxUnsigned = vyRanBase.sysMaxUnsigned; 
+	sysSHL = vyRanBase.sysSHL; 
+	sysSHR = vyRanBase.sysSHR; 
+TYPE 
+	Bits = vyRanBase.Bits; 
+
+	tSeed = OBJECT (vyRanBase.tSeed)
+	VAR 
+		x, y, z, w, carry: LONGINT; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ Kiss(VAR x, y, z, w, carry: Bits; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
+	PROCEDURE ^ Next(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Max(r: vyRanBase.tRandom): Bits; 
+	PROCEDURE ^ Get(r: vyRanBase.tRandom): Bits; 
+	PROCEDURE ^ GetV(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
+	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: vyRanBase.tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: vyRanBase.tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Init(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): vyRanBase.tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ DoAsserts; 
+BEGIN
+END vyRanKiss.

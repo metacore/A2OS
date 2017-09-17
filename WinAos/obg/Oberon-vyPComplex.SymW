@@ -1,0 +1,12 @@
+MODULE vyPComplex IN Oberon;
+	IMPORT realmath := Math IN A2;
+CONST 
+	idversion* = \" v0r0d1"\; 
+TYPE 
+	real = REAL; 
+
+	index = LONGINT; 
+
+	PROCEDURE ^ CToPolar*(len: index; VAR Re, Im: ARRAY OF real; rho, phi: ARRAY OF real; start: index); 
+BEGIN
+END vyPComplex.

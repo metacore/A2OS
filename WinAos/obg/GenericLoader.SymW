@@ -96,7 +96,7 @@ TYPE
 VAR 
 	moduleList: ModuleList; 
 	testTypeDescs: Modules.Bytes; 
-	InternalModuleName, OberonName: StringPool.Index; 
+	InternalModuleName: StringPool.Index; 
 
 	PROCEDURE ^ InitData(VAR data: Data); 
 	PROCEDURE ^ IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN; 

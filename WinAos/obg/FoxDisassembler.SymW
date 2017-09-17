@@ -1,7 +1,7 @@
 MODULE FoxDisassembler;
 	IMPORT Streams, ObjectFile, Scanner := FoxScanner, Basic := FoxBasic, BitSets, D := Debugging, Files, Commands;
 CONST 
-	Trace = TRUE; 
+	Trace = FALSE; 
 TYPE 
 	Block* = POINTER TO RECORD (ObjectFile.Section)
 		to-: LONGINT; 

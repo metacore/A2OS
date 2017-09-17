@@ -1,0 +1,11 @@
+MODULE GfxFonts0 IN Oberon;
+	IMPORT FileDir, Strings;
+CONST 
+VAR 
+	Name, Style: ARRAY 32 OF CHAR; 
+	PPM, FPPM, Error: INTEGER; 
+
+	PROCEDURE ^ EnumFile(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ Find*(VAR family, style: ARRAY OF CHAR; ppm: INTEGER; VAR name: ARRAY OF CHAR; VAR fppm: INTEGER); 
+BEGIN
+END GfxFonts0.

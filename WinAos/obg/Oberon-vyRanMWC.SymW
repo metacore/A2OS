@@ -1,0 +1,47 @@
+MODULE vyRanMWC IN Oberon;
+	IMPORT S := SYSTEM, Objects, Files, vyRanBase;
+CONST 
+	cModuleName = \"vyRanMWC"\; 
+	cSeedVersion = 0; 
+	stdSeedA = 1791398085; 
+	sysSHR = vyRanBase.sysSHR; 
+TYPE 
+	tSeed = OBJECT (vyRanBase.tSeed)
+	VAR 
+		x, c: LONGINT; 
+		a: LONGINT; 
+		checkPeriod: BOOLEAN; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	tRandom = vyRanBase.tRandom; 
+
+	Bits = vyRanBase.Bits; 
+VAR 
+	seedA: LONGINT; 
+	seedCheckPeriod: BOOLEAN; 
+	useParam: BOOLEAN; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ LongMultAdd*(VAR high, low: LONGINT; a, b, c: LONGINT); 
+	PROCEDURE ^ MWC*(VAR x, c: LONGINT; a: LONGINT); 
+	PROCEDURE ^ Next(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetV(r: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ SetParam*(a: LONGINT; checkPeriod: BOOLEAN); 
+BEGIN
+END vyRanMWC.

@@ -1,0 +1,44 @@
+MODULE vyXYPlane IN Oberon;
+	IMPORT Objects, Display, vyName, vyBase, vyRealVec, vyHostDisplay := vyGraphBase, vyEvents, vyDisplay2d, vyPort, vyBitmaps, vyCharts, vyScatter2;
+CONST 
+	idversion* = \"vyXYPlane v0r0d0"\; 
+	BLACK = 15; 
+TYPE 
+	BMPLayer = POINTER TO BMPLayerDesc; 
+
+	BMPLayerDesc = RECORD (vyPort.tLayerDesc)
+		Bitmap*: vyBitmaps.tBitmap; 
+	END; 
+
+	identifymsg = RECORD (vyEvents.EventMsg)
+	END; 
+
+	Pattern* = POINTER TO PatternDesc; 
+
+	PatternDesc = RECORD 
+		img: ARRAY 10 OF SET; 
+		w, h: INTEGER; 
+	END; 
+VAR 
+	cross*, bigcross*, dot*, bigdot*, circle*, bigcircle*, rhombus*, bigrhombus*, plus*, bigplus*: Pattern; 
+	PAT: Pattern; 
+
+	PROCEDURE ^ Min*(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Max*(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Recall(layer: BMPLayer; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Responsible(layer: BMPLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(source, dest: BMPLayer); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenBmpLayer(layer: BMPLayer; bmp: vyBitmaps.tBitmap); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ GetBitmapLayer(pict: vyPort.Picture): BMPLayer; 
+	PROCEDURE ^ ClearBmp*; 
+	PROCEDURE ^ Dot*(x, y: REAL; mode: INTEGER); 
+	PROCEDURE ^ Line*(FromX, FromY, ToX, ToY: REAL; mode: INTEGER); 
+	PROCEDURE ^ IsDot*(x, y: REAL): BOOLEAN; 
+	PROCEDURE ^ Scatter*(VAR x, y: ARRAY OF REAL); 
+	PROCEDURE ^ PolyLine*(VAR x, y: ARRAY OF REAL); 
+	PROCEDURE ^ InitPattern; 
+	PROCEDURE ^ SetPattern*(pat: Pattern); 
+BEGIN
+END vyXYPlane.

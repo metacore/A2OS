@@ -29,6 +29,7 @@ VAR
 	PROCEDURE ^ DoShow*(vc: WMComponents.VisualComponent; VAR window: Window; x, y, width, height: LONGINT; client, alpha, fullscreen: BOOLEAN; flags: SET); 
 	PROCEDURE ^ DoLoad*(CONST filename: ARRAY OF CHAR; error: Streams.Writer): WMComponents.VisualComponent; 
 	PROCEDURE ^ DoOpen*(CONST filename: ARRAY OF CHAR; error: Streams.Writer; x, y, width, height: LONGINT; client, alpha, fullscreen: BOOLEAN; flags: SET): WMComponents.VisualComponent; 
+	PROCEDURE ^ SetProperties(c: WMComponents.Component; CONST attr: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Store*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

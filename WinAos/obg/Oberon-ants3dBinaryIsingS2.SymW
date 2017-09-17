@@ -1,0 +1,27 @@
+MODULE ants3dBinaryIsingS2 IN Oberon;
+	IMPORT antsCommands, antsObjects, Objects, Files, Math := MathL IN A2, antsKernel, antsModels, vyName, Gadgets, antsCaches, Links, antsArrays, ants3dArrayObjects, aM := antsMessages;
+CONST 
+TYPE 
+	RandomArray = POINTER TO ARRAY OF LONGREAL; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		ccool: LONGREAL; 
+		ran: RandomArray; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ U(m: tModel; a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ Cache(m: tModel); 
+	PROCEDURE ^ CheckCaches(model: tModel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
+	PROCEDURE ^ CopyOrig(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h, penalty: LONGREAL); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END ants3dBinaryIsingS2.

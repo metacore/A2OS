@@ -1,0 +1,54 @@
+MODULE antsHistogramEdit IN Oberon;
+	IMPORT vyBase, vyLongrealVec, antsObjects, vyPort, Objects, Display, vyGraphBase, vyTypes, vyDisplay2d, vyEvents, vyCommandMenus, Files, Gadgets, aM := antsMessages;
+CONST 
+	grabsize = 5; 
+	outergrab = 20; 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		x, y: vyBase.tVector; 
+		x0, y0, w, h: LONGREAL; 
+	END; 
+
+	tView* = POINTER TO tViewDesc; 
+
+	tViewDesc* = RECORD (vyPort.tLayerDesc)
+		o: tObject; 
+		commands: vyCommandMenus.List; 
+	END; 
+
+	AdaptMsg* = RECORD (Objects.ObjMsg)
+	END; 
+VAR 
+	tempLayer: tView; 
+
+	PROCEDURE ^ GetPosition*(o: tObject; x, y, epsx, epsy: LONGREAL): LONGINT; 
+	PROCEDURE ^ SetXY*(o: tObject; x, y: LONGREAL; pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetValue*(o: tObject; x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ AddPoint*(o: tObject; x: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ AddGenericPoint*(o: tObject); 
+	PROCEDURE ^ InitObject*(o: tObject; x, y, w, h: LONGREAL); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ Nothing; 
+	PROCEDURE ^ InitView*(o: tView; obj: tObject); 
+	PROCEDURE ^ GenV*; 
+	PROCEDURE ^ Edit(layer: tView; event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(editor: tView; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Recall(layer: tView); 
+	PROCEDURE ^ CopyV(VAR M: Objects.CopyMsg; obj, copy: tView); 
+	PROCEDURE ^ StoreV0(obj: tView; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadV0(obj: tView; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Min(a, b: LONGREAL): LONGREAL; 
+	PROCEDURE ^ ViewHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ CopyObject*(from, to: tObject); 
+	PROCEDURE ^ ObjectCopy(from: tObject): tObject; 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ ObjectHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ DoShow*(o: tObject; x, y, w, h: LONGREAL); 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsHistogramEdit.

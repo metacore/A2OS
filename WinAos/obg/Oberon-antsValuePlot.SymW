@@ -1,0 +1,27 @@
+MODULE antsValuePlot IN Oberon;
+	IMPORT Files, Gadgets, Objects, Display, vyBase, vyGraphBase, vyLongrealVec, antsCommands, vyName, vyPort, vyTypes, vyDisplay2d, aM := antsMessages;
+CONST 
+	idversion* = \"antsPointPlot"\; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		xr, yr: vyBase.tData; 
+	END; 
+VAR 
+	dlink-: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ Recall(scatter: tLayer); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(linePlot: tLayer; xr, yr: vyBase.tData); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ NewValue*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsValuePlot.

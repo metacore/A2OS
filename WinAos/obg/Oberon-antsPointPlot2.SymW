@@ -1,0 +1,45 @@
+MODULE antsPointPlot2 IN Oberon;
+	IMPORT Files, Gadgets, Objects, Display, vyBase, vyGraphBase, vyHostDisplay := vyGraphBase, vyLinks, vyName, vyPort, vyHostStrings, vyTypes, vyDisplay2d, vyBooleanVec, vyHighlight, vyEvents, vyRectangles, aM := antsMessages, vyLongrealVec, vyRealVec, vyCommandMenus;
+CONST 
+	idversion* = \"antsPointPlot2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		edit: BOOLEAN; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+	tempNum: LONGINT; 
+	tempX, tempY: LONGREAL; 
+	dlink-: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ Recall(scatter: tLayer); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
+	PROCEDURE ^ Select(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Prompt(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ InPoint(scatter: tLayer; x, y: INTEGER; VAR i: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Loc(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ deletePoint; 
+	PROCEDURE ^ addPoint; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(linePlot: tLayer; data: Objects.Object); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+BEGIN
+END antsPointPlot2.

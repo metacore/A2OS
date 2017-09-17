@@ -1,0 +1,8 @@
+MODULE vyIcons IN Oberon;
+	IMPORT Objects, Icons, vyHostTexts, vyParser, vyName, vyBase, Links;
+CONST 
+
+	PROCEDURE ^ DoMakeIcon(myobj: vyBase.Object; idname: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeIcon*; 
+BEGIN
+END vyIcons.

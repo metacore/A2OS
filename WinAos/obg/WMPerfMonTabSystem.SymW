@@ -6,7 +6,7 @@ TYPE
 	VAR 
 		clockrate: LONGINT; 
 		gcCurrentRun: Perf.Indicator; 
-		line1, line2: Perf.Indicator; 
+		line1, line2, line3: Perf.Indicator; 
 		cpuClockrate: Perf.Indicator; 
 		milliTimer: Kernel.MilliTimer; 
 		lastTimestamp: HUGEINT; 

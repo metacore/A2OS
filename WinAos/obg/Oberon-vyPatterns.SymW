@@ -1,0 +1,36 @@
+MODULE vyPatterns IN Oberon;
+	IMPORT vyGraphBase, vyHostDisplay := vyGraphBase;
+CONST 
+	idversion* = \"vyPatterns v0r0a2"\; 
+TYPE 
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tDesign* = POINTER TO tDesignDesc; 
+
+	tDesignDesc* = RECORD 
+		sgn0*, sgn1*: vyHostDisplay.tSign; 
+	END; 
+VAR 
+	cross*, dot*, circle*, rhombus*, plus*, vLine*, hLine*, ascLine*, descLine*: tDesign; 
+
+	PROCEDURE ^ PrintCross0(x, y: Coordinate); 
+	PROCEDURE ^ PrintCross1(x, y: Coordinate); 
+	PROCEDURE ^ PrintDot0(x, y: Coordinate); 
+	PROCEDURE ^ PrintDot1(x, y: Coordinate); 
+	PROCEDURE ^ PrintPlus0(x, y: Coordinate); 
+	PROCEDURE ^ PrintPlus1(x, y: Coordinate); 
+	PROCEDURE ^ PrintCircle0(x, y: Coordinate); 
+	PROCEDURE ^ PrintCircle1(x, y: Coordinate); 
+	PROCEDURE ^ PrintRhombus0(x, y: Coordinate); 
+	PROCEDURE ^ PrintRhombus1(x, y: Coordinate); 
+	PROCEDURE ^ PrintVLine0(x, y: Coordinate); 
+	PROCEDURE ^ PrintVLine1(x, y: Coordinate); 
+	PROCEDURE ^ PrintHLine0(x, y: Coordinate); 
+	PROCEDURE ^ PrintHLine1(x, y: Coordinate); 
+	PROCEDURE ^ PrintAscLine0(x, y: Coordinate); 
+	PROCEDURE ^ PrintAscLine1(x, y: Coordinate); 
+	PROCEDURE ^ PrintDescLine0(x, y: Coordinate); 
+	PROCEDURE ^ PrintDescLine1(x, y: Coordinate); 
+	PROCEDURE ^ InitPattern; 
+BEGIN
+END vyPatterns.

@@ -1,0 +1,28 @@
+MODULE vyMouseData IN Oberon;
+	IMPORT Objects, Display, vyBase, vyName, vyRealVec, vyTypes, vyRandom, vyPatterns, vyGraphBase, vyPort, vyFctEdit, vyEvents;
+CONST 
+	idversion* = \"vyMouseData v0r0a2"\; 
+	cLength = 256; 
+TYPE 
+	tDrawings = POINTER TO tDrawingsDesc; 
+
+	tDrawingsDesc = RECORD 
+		x, y: vyBase.tVector; 
+	END; 
+VAR 
+	gMouseDense: vyBase.tVector; 
+	gAcceptedData, gRejectedData: tDrawings; 
+	vector: BOOLEAN; 
+
+	PROCEDURE ^ DefaultDense(dense: vyBase.tVector); 
+	PROCEDURE ^ Integral(d: vyBase.tVector): REAL; 
+	PROCEDURE ^ CleanUp; 
+	PROCEDURE ^ Handler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Random*(): LONGREAL; 
+	PROCEDURE ^ RandomVector*(v: vyBase.tVector; nrData: LONGINT); 
+	PROCEDURE ^ Recall(denseEditor: vyFctEdit.tLayer); 
+	PROCEDURE ^ EditHandler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Define*; 
+	PROCEDURE ^ InitMouseData; 
+BEGIN
+END vyMouseData.

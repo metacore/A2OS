@@ -1,0 +1,18 @@
+MODULE antsStatistics IN Oberon;
+	IMPORT antsMessages, antsArrayObjects, antsCommands, vyBase, vyLongrealVec := vyRealVec, Math := MathL IN A2, antsDirSet, aM := antsMessages;
+CONST 
+VAR 
+	v1, v2: vyBase.tVector; 
+	t1d, t2d, ph1, ph2: LONGREAL; 
+	wd, hd: LONGINT; 
+	t1, t2: POINTER TO ARRAY OF LONGREAL; 
+
+	PROCEDURE ^ bin(x: INTEGER): INTEGER; 
+	PROCEDURE ^ t1t2*; 
+	PROCEDURE ^ Max(x1, x2: LONGREAL): LONGREAL; 
+	PROCEDURE ^ est(VAR A: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ DefineValues*; 
+	PROCEDURE ^ Estimate*; 
+	PROCEDURE ^ WriteOutInter*; 
+BEGIN
+END antsStatistics.

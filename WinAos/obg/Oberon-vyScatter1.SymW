@@ -1,0 +1,44 @@
+MODULE vyScatter1 IN Oberon;
+	IMPORT Objects, Gadgets, Display, vyHostStrings, vyHostTexts, vyBase, vyGraphBase, vyLinks, vyName, vyBooleanVec, vyRealVec, vyTypes, vyRectangles, vyDisplay2d, vyPort, vyHighlight, vyEvents;
+CONST 
+	idversion* = \"Scatter1 v0r0a3"\; 
+	cBottom =   2.5000000E-001; 
+	cTop =   7.5000000E-001; 
+	cSelBottom =   1.0000000E-001; 
+	cSelTop =   9.0000000E-001; 
+	cMin = 0; 
+	cMax = 1; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO RECORD (vyPort.tLayerDesc)
+	END; 
+VAR 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: Coordinate); 
+	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR changed: BOOLEAN); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ AdjustCoord(pict: vyPort.Picture; obj: tLayer); 
+	PROCEDURE ^ SetModel(pict: vyPort.Picture; obj: tLayer; data: Objects.Object); 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ NewPict*; 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ AddObservation*(x: Real; layer: tLayer); 
+BEGIN
+END vyScatter1.

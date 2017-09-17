@@ -1,0 +1,68 @@
+MODULE vyHistogram IN Oberon;
+	IMPORT Files, Gadgets, Objects, Display, vyHostTexts, vyBase, vyGraphBase, vyBooleanVec, vyTypes, vyLinks, vyName, vyHostDisplay := vyGraphBase, vyDisplay2d, vyPatterns, vyPort, vyHighlight, vyHostStrings, vyParser, vyEvents;
+CONST 
+	idversion* = \"vyHistogram v0r0a4"\; 
+	toleranz = (5 * vyHostDisplay.pixel); 
+	maxBins* = 256; 
+	cBottom = 0; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		bins-: ARRAY (maxBins + 4096) OF LONGINT; 
+		selectBins-: ARRAY (maxBins + 4096) OF LONGINT; 
+		nrBins-: INTEGER; 
+		maxBinHeight: LONGINT; 
+		leftBound-, rightBound-, offset-: Real; 
+		leftHist-, rightHist-, width-: Real; 
+		adapting: BOOLEAN; 
+		respectBounds-: BOOLEAN; 
+		toosmall-, toolarge-, nans-: LONGINT; 
+	END; 
+VAR 
+	gTop: Real; 
+	slink*, dlink*: Objects.Object; 
+	newlayer*: tLayer; 
+
+	PROCEDURE ^ InEps(x, y: Real): BOOLEAN; 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: Coordinate); 
+	PROCEDURE ^ SelectionActor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
+	PROCEDURE ^ InstallBins(hist: tLayer); 
+	PROCEDURE ^ Recall(hist: tLayer); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Select(histogram: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ PointInOffSet(x, y: Coordinate; hist: tLayer): BOOLEAN; 
+	PROCEDURE ^ PointInDx(x, y: Coordinate; hist: tLayer): BOOLEAN; 
+	PROCEDURE ^ PointInLeft(x, y: Coordinate; hist: tLayer): BOOLEAN; 
+	PROCEDURE ^ PointInRight(x, y: Coordinate; hist: tLayer): BOOLEAN; 
+	PROCEDURE ^ PointInHistogram(x, y: Coordinate; hist: tLayer): BOOLEAN; 
+	PROCEDURE ^ Respond(hist: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(histogram: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ AdjustCoord(pict: vyPort.Picture; obj: tLayer); 
+	PROCEDURE ^ SetModel(pict: vyPort.Picture; obj: tLayer; data: Objects.Object); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ NewPict*; 
+	PROCEDURE ^ DoSetBounds*(h: tLayer; left, right: Real); 
+	PROCEDURE ^ TakeBoundsFromData*(h: tLayer); 
+	PROCEDURE ^ DoSetOffsetWidth*(h: tLayer; offset, width: Real); 
+	PROCEDURE ^ DoSet*(h: tLayer; left, right: Real; nrCells: LONGINT); 
+	PROCEDURE ^ SetBounds*; 
+	PROCEDURE ^ SetOffsetWidth*; 
+	PROCEDURE ^ SetBoundsAndCells*; 
+	PROCEDURE ^ BoundsFromData*; 
+BEGIN
+END vyHistogram.

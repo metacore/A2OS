@@ -1,0 +1,35 @@
+MODULE antsVecOpt IN Oberon;
+	IMPORT vyLongrealVec, antsCommands, vyBase, vyRandom, aM := antsMessages, Objects, antsArrays, Attributes;
+CONST 
+	cNoisedByName* = \"noised by"\; 
+	cGauss* = \"Gauss"\; 
+	cExp* = \"Exponential"\; 
+	cLaplace* = \"Laplace"\; 
+	cUni* = \"Uniform"\; 
+	clocpar* = \"location parameter"\; 
+	cscalepar* = \"scale parameter"\; 
+
+	PROCEDURE ^ DoAddConst*(data, result: vyBase.tVector; const: LONGREAL); 
+	PROCEDURE ^ DoAddGaussNoise*(data, degraded: vyBase.tVector; mu, sigmasq: LONGREAL); 
+	PROCEDURE ^ DoAddCauchyNoise*(data, degraded: vyBase.tVector); 
+	PROCEDURE ^ DoAddLaplaceNoise*(data, degraded: vyBase.tVector; mu: LONGREAL); 
+	PROCEDURE ^ DoAddExpNoise*(data, degraded: vyBase.tVector; mu: LONGREAL); 
+	PROCEDURE ^ DoAddUniformNoise*(data, degraded: vyBase.tVector; len: LONGREAL); 
+	PROCEDURE ^ Copy*; 
+	PROCEDURE ^ AddGaussNoise*; 
+	PROCEDURE ^ AddExpNoise*; 
+	PROCEDURE ^ AddLaplaceNoise*; 
+	PROCEDURE ^ AddUniformNoise*; 
+	PROCEDURE ^ AddConst*; 
+	PROCEDURE ^ Mean(VAR a: ARRAY OF LONGREAL; n: LONGINT): LONGREAL; 
+	PROCEDURE ^ DoUMA(len: LONGINT; v: vyLongrealVec.tVector); 
+	PROCEDURE ^ UniformMovingAverage*; 
+	PROCEDURE ^ DoCutMedian*(len: LONGINT; v: vyLongrealVec.tVector); 
+	PROCEDURE ^ DoTaperedMedian*(len: LONGINT; v: vyLongrealVec.tVector); 
+	PROCEDURE ^ MedianFilter*; 
+	PROCEDURE ^ TaperedMedianFilter*; 
+	PROCEDURE ^ AppendValue*; 
+	PROCEDURE ^ PartialSums*(y: vyBase.tVector; yint: vyBase.tVector); 
+	PROCEDURE ^ CumSum*(y: vyBase.tVector; ysum: vyBase.tVector); 
+BEGIN
+END antsVecOpt.

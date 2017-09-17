@@ -1,0 +1,78 @@
+MODULE DVIViewers IN Oberon;
+	IMPORT Display, Display3, Effects, Files, Gadgets, Oberon, Strings, Input, Objects, Printer, In, Out, Documents, Desktops, DVIFiles, Gfx, GfxImages, GfxDisplay, GfxRegions, GfxMatrix, GfxFonts, GfxPS, Math IN A2, Links, Attributes, Images, BIT IN A2;
+CONST 
+	Version* = 100; 
+	MaxZoom =   2.0000000E+001; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	DrawCharHook = PROCEDURE (c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		pageNo: LONGINT; 
+		zoom: REAL; 
+		conv: LONGREAL; 
+		hOffset, vOffset: LONGREAL; 
+		b, l, h, w: INTEGER; 
+		M: Display3.Mask; 
+		clipReg: GfxRegions.Region; 
+		context: Gfx.Context; 
+		drawChar: DrawCharHook; 
+	END; 
+
+	StackElement = POINTER TO StackElementDesc; 
+
+	StackElementDesc = RECORD 
+		next: StackElement; 
+		h, v, w, x, y, z: LONGREAL; 
+	END; 
+
+	PSFileSpecial = POINTER TO PSFileSpecialDesc; 
+
+	PSFileSpecialDesc = RECORD (DVIFiles.SpecialDesc)
+		name: POINTER TO ARRAY OF CHAR; 
+		llx, lly, urx, ury: LONGREAL; 
+		angle: REAL; 
+		image: Images.Image; 
+	END; 
+VAR 
+	tmpRgn: GfxRegions.Region; 
+
+	PROCEDURE ^ Assert(expr: BOOLEAN; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DVIToScreenX(F: Frame; x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ DVIToScreenY(F: Frame; y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ ScreenToDVIX(F: Frame; x: INTEGER): LONGREAL; 
+	PROCEDURE ^ ScreenToDVIY(F: Frame; y: INTEGER): LONGREAL; 
+	PROCEDURE ^ Push(VAR s: StackElement; h, v, w, x, y, z: LONGREAL); 
+	PROCEDURE ^ Pop(VAR s: StackElement; VAR h, v, w, x, y, z: LONGREAL); 
+	PROCEDURE ^ GetResolution(): LONGREAL; 
+	PROCEDURE ^ DrawCharImage(c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
+	PROCEDURE ^ DrawChar(c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
+	PROCEDURE ^ DrawRule(x, y, h, w: LONGREAL; F: Frame); 
+	PROCEDURE ^ SetCurrentFont(F: Frame; font: DVIFiles.FontInfo); 
+	PROCEDURE ^ ReadPSPreview(s: PSFileSpecial); 
+	PROCEDURE ^ ParseSpecial(M: DVIFiles.File; VAR r: Files.Rider; pageNo, len: LONGINT): DVIFiles.Special; 
+	PROCEDURE ^ DoSpecial(F: Frame; M: DVIFiles.File; h, v: LONGREAL; VAR r: Files.Rider; len: LONGINT); 
+	PROCEDURE ^ DrawPage(F: Frame; M: DVIFiles.File); 
+	PROCEDURE ^ UpdateModels(F: Frame); 
+	PROCEDURE ^ DoAttributeMsg(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ DoCopyMsg(F: Frame; VAR M: Objects.CopyMsg); 
+	PROCEDURE ^ DoStore(F: Frame; M: Objects.FileMsg); 
+	PROCEDURE ^ DoLoad(F: Frame; M: Objects.FileMsg); 
+	PROCEDURE ^ AddMaskRect(x, y, w, h: INTEGER); 
+	PROCEDURE ^ DoRestore(F: Frame); 
+	PROCEDURE ^ DoPrint(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ MoveViewToMouse(F: Frame; dviX, dviY: LONGREAL; mX, mY: INTEGER); 
+	PROCEDURE ^ DoMouseEvent(F: Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ CheckModels(M: Gadgets.UpdateMsg; F: Frame); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: Frame); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ CurrentDVIViewer(): Frame; 
+	PROCEDURE ^ Next*; 
+	PROCEDURE ^ Prev*; 
+	PROCEDURE ^ Home*; 
+	PROCEDURE ^ ToPSFile*; 
+BEGIN
+END DVIViewers.

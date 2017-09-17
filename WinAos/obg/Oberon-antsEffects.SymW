@@ -1,0 +1,23 @@
+MODULE antsEffects IN Oberon;
+	IMPORT vyRandom, vyRectangles, Display, Images, Input, Oberon, Modules, antsPortability, vyPortability, vyGraphBase, vyGraphBase0, aM := antsMessages;
+CONST 
+TYPE 
+	tBuffer = RECORD 
+		X, Y, W, H: INTEGER; 
+		x, y: INTEGER; 
+		buf: Images.Image; 
+		img: Images.Image; 
+	END; 
+VAR 
+	copy: Images.Image; 
+	db: vyGraphBase.doubleBuffer; 
+	fb: tBuffer; 
+
+	PROCEDURE ^ OpenBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Ants*(x, y, w, h: INTEGER; num: INTEGER; dur: LONGINT); 
+	PROCEDURE ^ FadeImage*(fimg, timg: Images.Image; factor: REAL); 
+	PROCEDURE ^ FadeIn*(pict: Images.Image; time: LONGINT; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Launch*(pict: Images.Image; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Init; 
+BEGIN
+END antsEffects.

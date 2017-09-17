@@ -1,0 +1,49 @@
+MODULE vyHighlight IN Oberon;
+	IMPORT Objects, Display, Gadgets, Files, vyHostTexts, vyGraphBase, vyHostStrings, vyParser, vyBase, vyBooleanVec, vyRealVec, vyName, vyPort, vyEvents;
+CONST 
+	idversion* = \"vyHighlight v0r0a3"\; 
+	define* = 0; 
+	invert* = 1; 
+	add* = 2; 
+	remove* = 3; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tVisualizer* = PROCEDURE (x0, y0, x1, y1: Coordinate); 
+
+	tIdentifier* = PROCEDURE (layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
+
+	tSelector* = POINTER TO tSelectorDesc; 
+
+	tSelectorDesc* = RECORD (vyBase.ObjDesc)
+		sel: vyBase.tVector; 
+		selChanges: vyBase.tVector; 
+		oldSelection: vyBase.tVector; 
+		selection: vyBase.tVector; 
+		nrData-: LONGINT; 
+		layer: vyPort.tLayer; 
+		picture: vyPort.Picture; 
+		visualize: tVisualizer; 
+		selectionIdentify: tIdentifier; 
+		do*: PROCEDURE (selector: tSelector; VAR event: vyEvents.EventMsg); 
+	END; 
+VAR 
+	selectionMode*: INTEGER; 
+	lastDataSize: LONGINT; 
+	newselector*: tSelector; 
+
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ HandleFileMsg(obj: tSelector; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tSelector; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GetAttribute(n: LONGINT; type: INTEGER; name: vyName.tNameArray): vyBase.tVector; 
+	PROCEDURE ^ GetSelectionAttribute*(selector: Objects.Object): vyBase.tVector; 
+	PROCEDURE ^ Actor(selector: tSelector; x0, y0, xLast, yLast, xNew, yNew: Coordinate); 
+	PROCEDURE ^ DoSelection(selector: tSelector; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ AdjustHighlight*(layer: vyPort.tLayer); 
+	PROCEDURE ^ OpenSelector*(layer: vyPort.tLayer; n: LONGINT; vizor: tVisualizer; actor: tIdentifier; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ SetMode*; 
+BEGIN
+END vyHighlight.

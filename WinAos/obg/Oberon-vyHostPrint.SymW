@@ -1,0 +1,15 @@
+MODULE vyHostPrint IN Oberon;
+	IMPORT vyParser, vyHostStrings, Files, vyHostTexts, PSPrinter, Attributes, Display, Objects, Documents, Printer, Texts, Oberon, vyPort, vyBase;
+CONST 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ DoPrintFocusPort; 
+	PROCEDURE ^ PrintFocusPort*; 
+	PROCEDURE ^ PrintPic*; 
+	PROCEDURE ^ Print(suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ PS*; 
+	PROCEDURE ^ EPS*; 
+	PROCEDURE ^ FocusPictToGIF*; 
+BEGIN
+END vyHostPrint.

@@ -1,0 +1,62 @@
+MODULE DiffGadgets IN Oberon;
+	IMPORT Input, Files, Objects, Fonts, Texts, Display, Display3, Effects, Gadgets, Oberon, TextGadgets0, TextGadgets, Documents, Desktops;
+CONST 
+	BarW = 14; 
+	TitleH = 14; 
+	CR = 0DX; 
+TYPE 
+	Line = POINTER TO LineDesc; 
+
+	LineDesc = RECORD 
+		prev, next: Line; 
+		p1, p2, nr: LONGINT; 
+	END; 
+
+	Slider = POINTER TO SliderDesc; 
+
+	SliderDesc = RECORD (Gadgets.FrameDesc)
+		lines, curL: INTEGER; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc = RECORD (Gadgets.FrameDesc)
+		T1, T2: TextGadgets.Frame; 
+		slider: Slider; 
+		lines, org: Line; 
+		name1, name2: ARRAY 64 OF CHAR; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ S*; 
+	PROCEDURE ^ AttributesSlider(F: Slider; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreSlider(F: Slider; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CopySlider(VAR M: Objects.CopyMsg; from, to: Slider); 
+	PROCEDURE ^ TrackLine(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: INTEGER; VAR L: Line); 
+	PROCEDURE ^ ScrollTo(F: Frame; L: Line); 
+	PROCEDURE ^ ScrollUp(F: Frame; L: Line); 
+	PROCEDURE ^ Edit(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER); 
+	PROCEDURE ^ HandleSlider(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitSlider(F: Slider; lines: INTEGER); 
+	PROCEDURE ^ NewSlider*; 
+	PROCEDURE ^ SetMask(F: Display.Frame; Q: Display3.Mask); 
+	PROCEDURE ^ SetContentMask(F: Frame; subF: Display.Frame); 
+	PROCEDURE ^ ToContent(F: Frame; to: Display.Frame; x, y: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToKids(F: Frame; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ Modify(F: Frame; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ InChild(F: Display.Frame; x, y, MX, MY: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ MakeLines(t1, t2: Texts.Text; VAR first: Line; VAR lines: INTEGER); 
+	PROCEDURE ^ Init*(F: Frame; t1, t2: Texts.Text; n1, n2: ARRAY OF CHAR); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Load(D: Documents.Document); 
+	PROCEDURE ^ Store(D: Documents.Document); 
+	PROCEDURE ^ Handler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ OpenDoc*(t1, t2: Texts.Text; n1, n2: ARRAY OF CHAR); 
+BEGIN
+END DiffGadgets.

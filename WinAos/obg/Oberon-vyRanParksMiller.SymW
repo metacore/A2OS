@@ -1,0 +1,35 @@
+MODULE vyRanParksMiller IN Oberon;
+	IMPORT vyRanBase, Objects;
+CONST 
+	idversion* = \"vyRanParksMiller 0.0a5"\; 
+	a = 16807; 
+	m = 2147483647; 
+	q = (m DIV a); 
+	r = (m MOD a); 
+TYPE 
+	Bits = vyRanBase.Bits; 
+
+	tRandom = vyRanBase.tRandom; 
+
+	PROCEDURE ^ ParksMiller*(VAR s: LONGINT); 
+	PROCEDURE ^ Next*(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(gen: tRandom): Bits; 
+	PROCEDURE ^ GetV(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
+	PROCEDURE ^ GetUniform(gen: tRandom): LONGREAL; 
+	PROCEDURE ^ RandomUVX(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ RandomUV(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
+	PROCEDURE ^ GetL(gen: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ RandomLV(r: tRandom; top, count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ SumPSqr*(gen: tRandom; top: LONGINT): LONGREAL; 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END vyRanParksMiller.

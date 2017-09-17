@@ -1,0 +1,14 @@
+MODULE dbgSortTest IN Oberon;
+	IMPORT vyParser, vyRandom, vyTypes, vyHostTexts, vyBase, vyOut, vyRealVec, vyLongrealVec, vyLongintVec, vyIntVec;
+CONST 
+
+	PROCEDURE ^ TestReal*; 
+	PROCEDURE ^ TestLongReal*; 
+	PROCEDURE ^ TestInteger*; 
+	PROCEDURE ^ TestLongInt*; 
+	PROCEDURE ^ TestRealWId*; 
+	PROCEDURE ^ TestLongRealWId*; 
+	PROCEDURE ^ TestIntegerWId*; 
+	PROCEDURE ^ TestLongintWId*; 
+BEGIN
+END dbgSortTest.

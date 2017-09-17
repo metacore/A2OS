@@ -1,0 +1,127 @@
+MODULE vyAxis IN Oberon;
+	IMPORT vyBase, vyGraphBase, vyHost, vyHostDisplay := vyGraphBase, vyHostStrings, Files;
+CONST 
+	idversion* = \"vyAxis v0r0a2"\; 
+	DefaultLabelFont* = \"Syntax8.Scn.Fnt"\; 
+	DefaultMinorTicks* = 1; 
+	DefaultEFormat* = FALSE; 
+	DefaultDigitsAfterPoint* = 2; 
+	Automatic* = 0; 
+	Fix* = 1; 
+	horizontal = 0; 
+	vertical = 1; 
+	under = 0; 
+	over = 1; 
+	leftfrom = 2; 
+	rightfrom = 3; 
+	down = 0; 
+	up = 1; 
+	left = 2; 
+	right = 3; 
+	LabelDistance = (10 * vyHostDisplay.pixel); 
+	MinLabelToLabelDistance = (2 * vyHostDisplay.pixel); 
+	TicksLength = (8 * vyHostDisplay.pixel); 
+	MinorTicksLength = (4 * vyHostDisplay.pixel); 
+	EPS = (1 / 10000); 
+	infinity = MAX(INTEGER); 
+	MinLabelRoom = (30 * vyHostDisplay.pixel); 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	Color = vyGraphBase.Color; 
+
+	Label = POINTER TO LabelDesc; 
+
+	LabelDesc = RECORD 
+		x, y, w, h, dsr, pos: Coordinate; 
+		r: Real; 
+		s: ARRAY 32 OF CHAR; 
+		next: Label; 
+	END; 
+
+	Tick = POINTER TO TickDesc; 
+
+	TickDesc = RECORD 
+		x, y: Coordinate; 
+		pos: Coordinate; 
+		r: Real; 
+		next: Tick; 
+	END; 
+
+	tAxe* = POINTER TO tAxeDesc; 
+
+	tAxeDesc* = RECORD 
+		x1, y1, x2, y2: Coordinate; 
+		r1, r2, r, dr: Real; 
+		r1x, r1y, r2x, r2y: Real; 
+		X-, Y-, W-, H-: Coordinate; 
+		TickRoot: Tick; 
+		LabelRoot: Label; 
+		tdx, tdy: Coordinate; 
+		DigitsAfterPoint: INTEGER; 
+		Format: BOOLEAN; 
+		MinorTicks: INTEGER; 
+		Orientation: INTEGER; 
+		RtoXY: PROCEDURE (axe: tAxe; r: Real; VAR x, y: Coordinate); 
+		UsePaint2d: BOOLEAN; 
+	END; 
+VAR 
+	DefaultLabelColor*: vyGraphBase.Color; 
+	DefaultAxeColor*: vyGraphBase.Color; 
+	DefaultTicksColor*: vyGraphBase.Color; 
+	LabelFont: ARRAY 32 OF CHAR; 
+	LabelColor, AxeColor, TicksColor: Color; 
+	MinorTicks, DigitsAfterPoint: INTEGER; 
+	EFormat, Opposite, TicksAutomatic: BOOLEAN; 
+	LabelsPlot: BOOLEAN; 
+	UsePaint2d*: BOOLEAN; 
+	showlast0: BOOLEAN; 
+
+	PROCEDURE ^ StoreTick(VAR R: Files.Rider; t: Tick); 
+	PROCEDURE ^ StoreTicksQueue(VAR R: Files.Rider; t: Tick); 
+	PROCEDURE ^ LoadTick(VAR R: Files.Rider; VAR t: Tick); 
+	PROCEDURE ^ LoadTicksQueue(VAR R: Files.Rider; VAR t: Tick); 
+	PROCEDURE ^ StoreLabel(VAR R: Files.Rider; t: Label); 
+	PROCEDURE ^ StoreLabelsQueue(VAR R: Files.Rider; t: Label); 
+	PROCEDURE ^ LoadLabel(VAR R: Files.Rider; VAR t: Label); 
+	PROCEDURE ^ LoadLabelsQueue(VAR R: Files.Rider; VAR t: Label); 
+	PROCEDURE ^ StoreAxe*(VAR R: Files.Rider; a: tAxe); 
+	PROCEDURE ^ LoadAxe*(VAR R: Files.Rider; VAR a: tAxe); 
+	PROCEDURE ^ DecExpR(m: INTEGER): LONGREAL; 
+	PROCEDURE ^ InRect(VAR X, Y, W, H: INTEGER; x, y, w, h: INTEGER); 
+	PROCEDURE ^ equals(r1, r2: Real): BOOLEAN; 
+	PROCEDURE ^ SetExponent(VAR r: LONGREAL; VAR Expo: INTEGER); 
+	PROCEDURE ^ AppendRealToString(l: LONGREAL; VAR s: ARRAY OF CHAR; E: BOOLEAN; m: INTEGER); 
+	PROCEDURE ^ GetXbyY(axe: tAxe; yval: Coordinate): Coordinate; 
+	PROCEDURE ^ GetYbyX(axe: tAxe; xval: Coordinate): Coordinate; 
+	PROCEDURE ^ GetXYbyR(axe: tAxe; r: Real; VAR x, y: Coordinate); 
+	PROCEDURE ^ GetXYbyR2(axe: tAxe; r: Real; VAR x, y: Coordinate); 
+	PROCEDURE ^ TestTheLabels(axe: tAxe); 
+	PROCEDURE ^ MinStdWidth*(): INTEGER; 
+	PROCEDURE ^ PlotTheLabels(axe: tAxe); 
+	PROCEDURE ^ PlotTheAxe(axe: tAxe); 
+	PROCEDURE ^ CalcTheLabels(axe: tAxe); 
+	PROCEDURE ^ CalcTheTicks(axe: tAxe); 
+	PROCEDURE ^ AutomaticMinorTicks(maxnumoflabels: Coordinate; axe: tAxe); 
+	PROCEDURE ^ Automaticdr(maxnumoflabels: Coordinate; axe: tAxe); 
+	PROCEDURE ^ Automaticr(axe: tAxe); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ UpdateAxis2dCoordinate(axe: tAxe); 
+	PROCEDURE ^ InitPara(axe: tAxe): BOOLEAN; 
+	PROCEDURE ^ Prepare*(Axe: tAxe; x1, y1, x2, y2: Coordinate; r1, r2, dr: Real); 
+	PROCEDURE ^ AxeTo*(Axe: tAxe; x1, y1: Coordinate); 
+	PROCEDURE ^ RealTo*(Axe: tAxe; r1: Real); 
+	PROCEDURE ^ Plot*(Axe: tAxe); 
+	PROCEDURE ^ ForcePlot*(x1, y1, x2, y2: Coordinate; r1, r2, dr: Real); 
+	PROCEDURE ^ PlotLabels*(Labels: BOOLEAN); 
+	PROCEDURE ^ SetExpFormat*(b: BOOLEAN); 
+	PROCEDURE ^ SetColors*(labelcolor, axecolor, tickscolor: Color); 
+	PROCEDURE ^ SetLabelFont*(font: ARRAY OF CHAR); 
+	PROCEDURE ^ SetNumOfMinorTicks*(ticks: INTEGER); 
+	PROCEDURE ^ SetDigitsAfterPoint*(digits: INTEGER); 
+	PROCEDURE ^ FlipAxesOrientation*(flip: BOOLEAN); 
+	PROCEDURE ^ AutomaticTicks*(auto: BOOLEAN); 
+BEGIN
+END vyAxis.

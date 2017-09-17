@@ -1,0 +1,68 @@
+MODULE vyDisplay2d IN Oberon;
+	IMPORT Objects, vyBase, vyGraphBase, vyHostDisplay := vyGraphBase, Display, vyEvents, vyTracking, antsCommandList := vyCommandMenus, Input, Gadgets;
+CONST 
+	idversion* = \"vyDisplay2d v0r0a5"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	Selection* = POINTER TO SelDesc; 
+
+	SelDesc* = RECORD (Objects.ObjDesc)
+		x*, y*, w*, h*: LONGREAL; 
+	END; 
+
+	tCoordinate2d* = POINTER TO tCoordinate2dDesc; 
+
+	tCoordinate2dDesc* = RECORD (vyBase.ObjDesc)
+		c2d*: vyGraphBase.tCoordinate2d; 
+		sel*: Selection; 
+	END; 
+
+	CoordinateMessage* = RECORD (Objects.ObjMsg)
+	END; 
+
+	CoordRgnMessage* = RECORD (CoordinateMessage)
+		X*, Y*, W*, H*: INTEGER; 
+	END; 
+
+	CoordSetMessage* = RECORD (CoordinateMessage)
+	END; 
+
+	CoordZoomMessage* = RECORD (CoordinateMessage)
+		in*: BOOLEAN; 
+		x*, y*, w*, h*: INTEGER; 
+	END; 
+
+	AdjustCoordMsg* = RECORD (CoordinateMessage)
+	END; 
+
+	ttt = RECORD 
+		x, y, dx, dy: INTEGER; 
+		c: tCoordinate2d; 
+	END; 
+VAR 
+	command: ttt; 
+	currentsel*: Selection; 
+	passevent: BOOLEAN; 
+
+	PROCEDURE ^ ShiftCoordinate(c: tCoordinate2d; event: vyEvents.EventMsg); 
+	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ AdjustRect(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ zoomin; 
+	PROCEDURE ^ zoomout; 
+	PROCEDURE ^ AdjustRectR(VAR x, y, w, h: LONGREAL); 
+	PROCEDURE ^ usecurrentsel; 
+	PROCEDURE ^ removesel; 
+	PROCEDURE ^ selectlayer; 
+	PROCEDURE ^ MakeSel*(c: tCoordinate2d; sel: Selection; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Select(c: tCoordinate2d; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ CopyC2d*(source, dest: tCoordinate2d); 
+	PROCEDURE ^ DoHandleC2dAttributes(o: tCoordinate2d; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ C2dHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ C2dGen*; 
+	PROCEDURE ^ OpenC2d*(c: tCoordinate2d; x, y, w, h: Real); 
+	PROCEDURE ^ NewC2d*(x, y, w, h: Real): tCoordinate2d; 
+BEGIN
+END vyDisplay2d.

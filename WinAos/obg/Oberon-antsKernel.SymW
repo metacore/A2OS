@@ -1,0 +1,68 @@
+MODULE antsKernel IN Oberon;
+	IMPORT antsObjects, vyBase, antsArrayObjects, antsCommands, MathL IN A2, Objects, Files, Gadgets, vyName, antsMC, vyHostStrings, aM := antsMessages, vyLinks, Links, vyRanBase;
+CONST 
+	ModelActive* = 10; 
+	ModelSelected* = 9; 
+	staticCacheSize = 1000000; 
+	dynamicCacheSize = 10000; 
+	gibbsSampler* = \"gibbsSampler"\; 
+	metropolisSampler* = \"metropolisSampler"\; 
+	exchangeAlgorithm* = \"exchangeAlgorithm"\; 
+TYPE 
+	Msg* = antsMC.Msg; 
+
+	Init* = antsMC.InitMsg; 
+
+	samplingMsg* = RECORD (Msg)
+		action*: vyName.tNameArray; 
+	END; 
+
+	Kernel* = POINTER TO KernelDesc; 
+
+	temperatureScheme* = PROCEDURE (k: Kernel; pos: LONGINT); 
+
+	visitingScheme* = PROCEDURE (x, w: LONGINT):LONGINT; 
+
+	KernelDesc* = RECORD (vyBase.ObjDesc)
+		A*: vyBase.Object; 
+		initwithorig-: BOOLEAN; 
+		par-: vyBase.Object; 
+		visit-: visitingScheme; 
+		parallel-: BOOLEAN; 
+		ModelClass*: vyLinks.Link; 
+		ModelClassCount*: INTEGER; 
+		makeTemperature*: temperatureScheme; 
+		cacheSize*: LONGINT; 
+		temperature*: LONGREAL; 
+		samplerType*: vyName.tNameArray; 
+	END; 
+VAR 
+	constScheme*, loganneal, expanneal, linanneal: temperatureScheme; 
+	linearv, chequerboardv, randomv: visitingScheme; 
+
+	PROCEDURE ^ linearVisit*(x, w: LONGINT): LONGINT; 
+	PROCEDURE ^ checkerBoardVisit*(x, w: LONGINT): LONGINT; 
+	PROCEDURE ^ randomVisit*(x, w: LONGINT): LONGINT; 
+	PROCEDURE ^ MMCopy(VAR from, to: antsMC.Msg); 
+	PROCEDURE ^ Prepare(s: Kernel; VAR omsg: antsMC.Msg; VAR msg: samplingMsg); 
+	PROCEDURE ^ Finish(s: Kernel; VAR omsg: antsMC.Msg; VAR msg: samplingMsg); 
+	PROCEDURE ^ LogAnneal(s: Kernel; pos: LONGINT); 
+	PROCEDURE ^ LinAnneal(s: Kernel; pos: LONGINT); 
+	PROCEDURE ^ ExpAnneal(s: Kernel; pos: LONGINT); 
+	PROCEDURE ^ Const(s: Kernel; pos: LONGINT); 
+	PROCEDURE ^ Store(VAR R: Files.Rider; s: Kernel); 
+	PROCEDURE ^ Load(VAR R: Files.Rider; s: Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Define*; 
+	PROCEDURE ^ AttachArray*; 
+	PROCEDURE ^ DoAddModel*(sampler: Kernel; model: vyBase.Object); 
+	PROCEDURE ^ DoDeleteModel*(sampler: Kernel; model: vyBase.Object); 
+	PROCEDURE ^ DoAttachModel*(sampler: Kernel; model: vyBase.Object); 
+	PROCEDURE ^ AttachModel*; 
+	PROCEDURE ^ AttachAddModel*; 
+	PROCEDURE ^ DoResetModelClass*(sampler: Kernel); 
+	PROCEDURE ^ ResetModelClass*; 
+	PROCEDURE ^ WriteModels*; 
+BEGIN
+END antsKernel.

@@ -1,0 +1,33 @@
+MODULE vyRandu IN Oberon;
+	IMPORT SYSTEM, vyRanBase, Objects;
+CONST 
+	cModuleName = \"vyRandu"\; 
+	idversion* = \"vyRandu 0.0d1"\; 
+	cut = {((2 * MAX(SET)) DIV 3)}; 
+TYPE 
+	Bits = vyRanBase.Bits; 
+
+	tRandom = vyRanBase.tRandom; 
+VAR 
+	cuti: LONGINT; 
+	maxsi: LONGINT; 
+
+	PROCEDURE ^ Add(VAR x: SET; y: SET; shift: LONGINT); 
+	PROCEDURE ^ TruncatedProd(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ Randu*(VAR s: LONGINT); 
+	PROCEDURE ^ Next*(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ InitConst; 
+BEGIN
+END vyRandu.

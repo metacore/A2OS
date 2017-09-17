@@ -1,0 +1,45 @@
+MODULE vyCommandMenus IN Oberon;
+	IMPORT vyTracking, vyEvents, vyGraphBase, Objects, Strings, vyName, vyBase, Input, vyPortability;
+CONST 
+	emptyLine* = \"______________________________"\; 
+	click* = 0; 
+	select* = 1; 
+TYPE 
+	PROC = PROCEDURE ; 
+
+	List* = POINTER TO ListDesc; 
+
+	ListDesc* = RECORD (vyTracking.ListDesc)
+		command*: PROC; 
+		obj*: Objects.Object; 
+	END; 
+
+	enumProc* = PROCEDURE (name: ARRAY OF CHAR; cmd: PROC; obj: Objects.Object); 
+
+	enumMsg* = RECORD (Objects.ObjMsg)
+		Enum*: enumProc; 
+		EnumSender*: enumProc; 
+		mode*: INTEGER; 
+		x*, y*: INTEGER; 
+	END; 
+VAR 
+	dynamic*: List; 
+	msg*: enumMsg; 
+	res*: vyTracking.List; 
+	recentx*, recenty*: INTEGER; 
+	noWait*: BOOLEAN; 
+	current*: List; 
+	currentmode*: INTEGER; 
+
+	PROCEDURE ^ GetCopy(l: List): List; 
+	PROCEDURE ^ Add*(VAR l: List; command: PROC; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Prev(VAR l: List; command: PROC; name: ARRAY OF CHAR); 
+	PROCEDURE ^ AddGeneric(name: ARRAY OF CHAR; cmd: PROC; obj: Objects.Object); 
+	PROCEDURE ^ AddSender(name: ARRAY OF CHAR; cmd: PROC; obj: Objects.Object); 
+	PROCEDURE ^ Init*(VAR l: List; atx, aty: INTEGER); 
+	PROCEDURE ^ Ask*(obj: Objects.Object); 
+	PROCEDURE ^ Wait*; 
+	PROCEDURE ^ ExecuteListedCommand*(atx, aty: INTEGER; VAR event: vyEvents.EventMsg; from: List); 
+	PROCEDURE ^ Execute*(atx, aty: INTEGER); 
+BEGIN
+END vyCommandMenus.

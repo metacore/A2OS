@@ -1,0 +1,46 @@
+MODULE antsBinaryEmpiricD IN Oberon;
+	IMPORT vyBase, antsArrayObjects, antsEmpiricD, antsCommands, vyCG := vyName, Objects, aM := antsMessages;
+CONST 
+	StateSpaceCard = 2; 
+	Neighbours = 4; 
+	MaxSum = ((StateSpaceCard * Neighbours) + 1); 
+TYPE 
+	Index = LONGINT; 
+
+	States = LONGINT; 
+
+	Sums = ARRAY (MaxSum + 1) OF States; 
+
+	StatesAndSums = ARRAY StateSpaceCard OF Sums; 
+
+	EmpiricalDistribution* = POINTER TO EDDesc; 
+
+	EDDesc = RECORD (antsEmpiricD.EDDesc)
+		v: Sums; 
+		xv: StatesAndSums; 
+	END; 
+
+	tParameter* = POINTER TO tParameterDesc; 
+
+	tParameterDesc* = RECORD (antsEmpiricD.tParameterDesc)
+	END; 
+
+	tEDGenerator* = POINTER TO tEDGeneratorDesc; 
+
+	tEDGeneratorDesc = RECORD (vyBase.ObjDesc)
+		par: tParameter; 
+		gen: PROCEDURE (g: tEDGenerator); 
+	END; 
+
+	PROCEDURE ^ InitED(E: EmpiricalDistribution); 
+	PROCEDURE ^ R*(E: EmpiricalDistribution; x, v: Index): States; 
+	PROCEDURE ^ M*(E: EmpiricalDistribution; v: Index): States; 
+	PROCEDURE ^ F*(E: EmpiricalDistribution; x, v: Index): LONGREAL; 
+	PROCEDURE ^ EmpiricalDistribute(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ EmpiricalDistributeC(Eo, Ee: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ GenerateED(g: tEDGenerator); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(gen: tEDGenerator; from: vyBase.Object); 
+	PROCEDURE ^ New*; 
+BEGIN
+END antsBinaryEmpiricD.

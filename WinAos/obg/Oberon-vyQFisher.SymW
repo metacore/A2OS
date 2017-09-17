@@ -1,0 +1,17 @@
+MODULE vyQFisher IN Oberon;
+	IMPORT MathL IN A2, Texts, In, vyBase, vyHostTexts;
+TYPE 
+	Stattyp* = RECORD 
+		Count*: INTEGER; 
+		Mean*: LONGREAL; 
+		Ssq*: LONGREAL; 
+	END; 
+VAR 
+	w: vyBase.TextsWriter; 
+
+	PROCEDURE ^ Qfisher*(N, M: INTEGER; Percentage: LONGREAL; VAR ErrCode: INTEGER): LONGREAL; 
+	PROCEDURE ^ QF*; 
+	PROCEDURE ^ initstat*(VAR s: Stattyp); 
+	PROCEDURE ^ Addbistat*(X, Y: LONGREAL; VAR Xstat, Ystat: Stattyp; VAR Xyssq: LONGREAL); 
+BEGIN
+END vyQFisher.

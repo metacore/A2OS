@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE ^ IsLynx*(): BOOLEAN; 
 	END System; 
 VAR 
-	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, OberonName-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NameMovable-, NameUntraced-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
+	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NameMovable-, NameUntraced-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier; 
 	Boolean8-, Boolean32-: SyntaxTree.BooleanType; 
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType; 
@@ -268,7 +268,9 @@ VAR
 	PROCEDURE ^ NewBuiltinCamelCase*(id: LONGINT; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN); 
 	PROCEDURE ^ NewCustomBuiltin0(CONST name: ARRAY OF CHAR; scope: SyntaxTree.ModuleScope; subType: SHORTINT; procedureType: SyntaxTree.ProcedureType); 
 	PROCEDURE ^ NewCustomBuiltin*(CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; subType: SHORTINT; procedureType: SyntaxTree.ProcedureType); 
-	PROCEDURE ^ ModuleFileName*(moduleName, context: SyntaxTree.Identifier; VAR fileName: ARRAY OF CHAR); 
+	PROCEDURE ^ GetModuleSectionName*(name, context: SyntaxTree.Identifier; VAR n: ARRAY OF CHAR); 
+	PROCEDURE ^ ModuleFileName*(name, context: SyntaxTree.Identifier; VAR n: ARRAY OF CHAR); 
+	PROCEDURE ^ ModuleSectionIdentifier*(name, context: SyntaxTree.Identifier): SyntaxTree.Identifier; 
 	PROCEDURE ^ ContextFromName*(CONST fileName: ARRAY OF CHAR; VAR module, context: SyntaxTree.Identifier); 
 	PROCEDURE ^ GetModuleName*(module: SyntaxTree.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetModuleSegmentedName*(module: SyntaxTree.Module; VAR name: Basic.SegmentedName); 

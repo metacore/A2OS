@@ -1,0 +1,16 @@
+MODULE antsTextures IN Oberon;
+	IMPORT Objects, vyBase, antsArrayObjects, antsCommands, vyRectangles, aM := antsMessages, vyLinks, antsMDimDiscreteIsingS, antsRegions, antsKernel, antsNeighbourhoods;
+CONST 
+TYPE 
+	tArrayChain* = POINTER TO tArrayChainDesc; 
+
+	tArrayChainDesc* = RECORD 
+		A: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+		msize: INTEGER; 
+		next: tArrayChain; 
+	END; 
+
+	PROCEDURE ^ Try*; 
+	PROCEDURE ^ GoThroughSel*; 
+BEGIN
+END antsTextures.

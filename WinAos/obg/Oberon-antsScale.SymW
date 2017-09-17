@@ -1,0 +1,36 @@
+MODULE antsScale IN Oberon;
+	IMPORT antsContainers, Objects, Display, vyGraphBase, Files, vyDisplay2d, vyPort, vyBase, vyHostTexts, vyAxis, vyEvents, aM := antsMessages;
+CONST 
+	left = 0; 
+	right = 1; 
+	top = 2; 
+	bottom = 3; 
+TYPE 
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		pos: INTEGER; 
+		digits: INTEGER; 
+	END; 
+VAR 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Recall(scale: tLayer; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ DoControl2(scale: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(scale: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Store0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tLayer); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(scale: tLayer; id: ARRAY OF CHAR); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ ScaleToPicture(p: vyPort.Picture; posx, posy: LONGINT); 
+	PROCEDURE ^ ScalesToPort*; 
+BEGIN
+END antsScale.

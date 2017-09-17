@@ -1,0 +1,49 @@
+MODULE ScrollbarsR IN Oberon;
+	IMPORT Input, Files, Effects, Printer, Printer3, Display3, Oberon, Objects, Display, Gadgets, Attributes;
+CONST 
+	VersionNo = 1; 
+	barW = 18; 
+	hasarrows* = 0; 
+	dodrag* = 1; 
+	doverydrag* = 2; 
+	exp* = 3; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		state0*: SET; 
+		backC*, knoblen: INTEGER; 
+		min*, max*, step*, val*, size*: LONGREAL; 
+		stepO*, minO*, maxO*: Objects.Object; 
+		vertical*: BOOLEAN; 
+	END; 
+VAR 
+	HoldTime, WaitTime, mayscroll: LONGINT; 
+
+	PROCEDURE ^ TimeOk(): BOOLEAN; 
+	PROCEDURE ^ Value(F: Frame; x, y, w, h, X, Y: INTEGER; min, max: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Pos(F: Frame; x, y, w, h, bw: INTEGER; min, max, val: LONGREAL): INTEGER; 
+	PROCEDURE ^ SendUpdate(F: Frame; px, py: INTEGER; dlink: Objects.Object; full: BOOLEAN); 
+	PROCEDURE ^ SetValue(F: Frame; val: LONGREAL); 
+	PROCEDURE ^ SetValueAndUpdate(F: Frame; val: LONGREAL; px, py: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ GetValue(F: Frame); 
+	PROCEDURE ^ AdjustKnoblen(F: Frame); 
+	PROCEDURE ^ DrawKnob(Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN); 
+	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ P(x: LONGINT): INTEGER; 
+	PROCEDURE ^ PrintKnob(Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN); 
+	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ TrackFrame(F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ UpdateFrame(F: Frame; VAR M: Gadgets.UpdateMsg); 
+	PROCEDURE ^ ModifyFrame(F: Frame; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ ToLongreal(VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLink(F: Frame; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ FrameBind(F: Frame; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ FrameFile(F: Frame; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(F: Frame); 
+	PROCEDURE ^ New*; 
+BEGIN
+END ScrollbarsR.

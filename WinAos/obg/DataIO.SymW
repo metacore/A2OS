@@ -43,7 +43,6 @@ TYPE
 		PROCEDURE ^ DateTime*(VAR x: Dates.DateTime); 
 		PROCEDURE ^ Integer*(VAR x: NbrInt.Integer); 
 		PROCEDURE ^ Rational*(VAR x: NbrRat.Rational); 
-		PROCEDURE ^ Real*(VAR x: NbrRe.Real); 
 		PROCEDURE ^ Complex*(VAR x: NbrCplx.Complex); 
 		PROCEDURE ^ PtrString*(VAR x: NbrStrings.String); 
 		PROCEDURE ^ Object*(VAR x: OBJECT); 

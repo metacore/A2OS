@@ -1,0 +1,48 @@
+MODULE vyRanMWC1616 IN Oberon;
+	IMPORT vyRanBase, Files, Objects, S := SYSTEM;
+CONST 
+	cModuleName = \"vyRanMWC1616"\; 
+	cSeedVersion = 0; 
+	sysBitsTypeSize = vyRanBase.sysBitsTypeSize; 
+	sysHalfBitsType = vyRanBase.sysHalfBitsType; 
+	sysMaxUnsigned = vyRanBase.sysMaxUnsigned; 
+	sysMaskSecondHalf = vyRanBase.sysMaskSecondHalf; 
+	sysSHR = vyRanBase.sysSHR; 
+	stdSeedA = 18000; 
+	stdSeedB = 30903; 
+TYPE 
+	tRandom = vyRanBase.tRandom; 
+
+	tSeed = OBJECT (vyRanBase.tSeed)
+	VAR 
+		a, b: LONGINT; 
+		x, y: LONGINT; 
+		checkPeriod: BOOLEAN; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	Bits = vyRanBase.Bits; 
+VAR 
+	useParam, seedCheckPeriod: BOOLEAN; 
+	seedA, seedB: LONGINT; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ Next(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ SetParam*(a, b: LONGINT; checkPeriod: BOOLEAN); 
+BEGIN
+END vyRanMWC1616.

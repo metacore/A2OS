@@ -1,0 +1,33 @@
+MODULE antsTravelingS IN Oberon;
+	IMPORT antsObjects, Files, antsKernel, antsModels, antsCommands, vyName, Objects, vyBase, Gadgets, antsFunctions, antsVectors, vyLongrealVec, antsSecurity, Math := MathL IN A2, vyRandom, aM := antsMessages;
+CONST 
+	version* = 0; 
+	moduleName = \"antsTravelingS.Gen"\; 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		cooling: antsFunctions.Function; 
+		curlen, curtemp: LONGREAL; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ Length(vx, vy: vyLongrealVec.tVector): LONGREAL; 
+	PROCEDURE ^ Swap(vx, vy: vyLongrealVec.tVector; a, b: LONGINT); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel; pos: LONGINT); 
+	PROCEDURE ^ Init(s: antsKernel.Kernel); 
+	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleBind(o: tModel; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(msg: tModel; name: vyName.tNameArray; cooling: antsFunctions.Function); 
+	PROCEDURE ^ NewPars(o: tModel); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoNewModel*(name: vyName.tNameArray; cooling: antsFunctions.Function): tModel; 
+	PROCEDURE ^ NewModel*; 
+	PROCEDURE ^ MakeCircle*; 
+	PROCEDURE ^ MakeRandom*; 
+	PROCEDURE ^ Mix*; 
+BEGIN
+END antsTravelingS.

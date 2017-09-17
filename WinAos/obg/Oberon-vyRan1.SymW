@@ -1,0 +1,48 @@
+MODULE vyRan1 IN Oberon;
+	IMPORT SYSTEM, vyRanBase, Objects, Files;
+CONST 
+	cModuleName = \"vyRan1"\; 
+	idversion* = \"vyRan1 v0r0d01"\; 
+	M1 = 259200; 
+	IA1 = 7141; 
+	IC1 = 54773; 
+	RM1 = (  1.0000000E+000 / M1); 
+	M2 = 134456; 
+	IA2 = 8121; 
+	IC2 = 28411; 
+	RM2 = (  1.0000000E+000 / M2); 
+	M3 = 243000; 
+	IA3 = 4561; 
+	IC3 = 51349; 
+TYPE 
+	Bits = vyRanBase.Bits; 
+
+	tRandom = vyRanBase.tRandom; 
+
+	tSeed = OBJECT (vyRanBase.tLongintSeed)
+	VAR 
+		ix1, ix2, ix3: LONGINT; 
+		r: ARRAY 98 OF LONGREAL; 
+		iff: LONGINT; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ Ran1*(s: tSeed): LONGREAL; 
+	PROCEDURE ^ Next*(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END vyRan1.

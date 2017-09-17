@@ -1,0 +1,127 @@
+MODULE vyPolyWorld IN Oberon;
+	IMPORT Oberon, Math := MathL IN A2, Files, vyHostTexts, vyBase, vyRealVec, vyGraphBase, Display, Out, Gadgets, Objects, vyHostDisplay := vyGraphBase, vyPort, vyPHIGS3D, vyPaint3d, SYSTEM, vyLongreal;
+CONST 
+	idversion* = \"vyPolyWorld v0r0d5"\; 
+	wireFrameId* = 0; 
+	niveauLineId* = 1; 
+	backFaceColoringId* = 2; 
+	painterId* = 3; 
+	lightingId* = 4; 
+	smoothLightingId* = 5; 
+	hiddenLineId* = 6; 
+	niveauColoringId* = 7; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tObject* = POINTER TO tObjectDesc; 
+
+	tPlotRoutine = PROCEDURE (o3d: tObject); 
+
+	tObjectDesc* = RECORD 
+		plot*: tPlotRoutine; 
+	END; 
+
+	tVertex = POINTER TO tVertexDesc; 
+
+	tHalfEdge = POINTER TO tHalfEdgeDesc; 
+
+	tFace = POINTER TO tFaceDesc; 
+
+	tVertexDesc = RECORD 
+		i, j: INTEGER; 
+		between: BOOLEAN; 
+		x, y, z: Real; 
+		nx, ny, nz: Real; 
+		next: tVertex; 
+	END; 
+
+	tHalfEdgeDesc = RECORD 
+		startVertex: tVertex; 
+		leftNeighbor: tFace; 
+		visible: BOOLEAN; 
+		done: BOOLEAN; 
+		next: tHalfEdge; 
+	END; 
+
+	tFaceDesc = RECORD 
+		firstHalfEdge: tHalfEdge; 
+		nx, ny, nz: Real; 
+		d: Real; 
+		backFace: BOOLEAN; 
+		sx, sy, sz: Real; 
+		nsx, nsy, nsz: Real; 
+		region: SET; 
+		visible: BOOLEAN; 
+		pref, next: tFace; 
+	END; 
+
+	tMap = POINTER TO tMapDesc; 
+
+	tMapDesc = RECORD (tObjectDesc)
+		x0, y0, x1, y1: Real; 
+		mdata: vyRealVec.tChunkedMatrix; 
+		firstFace, lastFace: tFace; 
+		firstVertex: tVertex; 
+		vx, vy, vz: Real; 
+	END; 
+
+	ColorMap* = ARRAY 256 OF LONGINT; 
+VAR 
+	theHLHSRroutine: tPlotRoutine; 
+	PHIGS3DError: INTEGER; 
+	lightDirX, lightDirY, lightDirZ: Real; 
+	maxFaces: LONGINT; 
+	faceDepths: POINTER TO ARRAY OF LONGREAL; 
+	faceIndex: POINTER TO ARRAY OF LONGINT; 
+	triangulate: BOOLEAN; 
+	lines: BOOLEAN; 
+	colorTable*: ColorMap; 
+
+	PROCEDURE ^ StoreMap*(VAR R: Files.Rider; lib: Objects.Library; m: tMap); 
+	PROCEDURE ^ LoadMap*(VAR R: Files.Rider; lib: Objects.Library; VAR m: tMap); 
+	PROCEDURE ^ LoadObj*(VAR R: Files.Rider; lib: Objects.Library; VAR m: tObject); 
+	PROCEDURE ^ StoreObj*(VAR R: Files.Rider; lib: Objects.Library; VAR m: tObject); 
+	PROCEDURE ^ ReplOnTheFly(o3d: tObject); 
+	PROCEDURE ^ WireFrameMapH(o3d: tObject); 
+	PROCEDURE ^ WireFrameMapV(o3d: tObject); 
+	PROCEDURE ^ WireFrameMap(o3d: tObject); 
+	PROCEDURE ^ VectorProduct(x0, y0, z0, x1, y1, z1: Real; VAR x, y, z: Real); 
+	PROCEDURE ^ Norm(x, y, z: Real): Real; 
+	PROCEDURE ^ FaceEquiation(f: tFace); 
+	PROCEDURE ^ GetFaceDepth(f: tFace): Real; 
+	PROCEDURE ^ PrefFaceConnection(m: tMap); 
+	PROCEDURE ^ InstallHalfEdgeDesc(map: tMap; update: BOOLEAN); 
+	PROCEDURE ^ MapToViewMap(m: tMap); 
+	PROCEDURE ^ RegionSplitting(m: tMap); 
+	PROCEDURE ^ BackFaceIdentification(m: tMap); 
+	PROCEDURE ^ SortFaces(m: tMap); 
+	PROCEDURE ^ ResetFaceVisibleMarker(m: tMap); 
+	PROCEDURE ^ ResetDoneMarker(m: tMap); 
+	PROCEDURE ^ VertexCoverByFace(v: tVertex; f: tFace): BOOLEAN; 
+	PROCEDURE ^ NiveauLineMap(o3d: tObject); 
+	PROCEDURE ^ HiddenLineIdent(map: tMap); 
+	PROCEDURE ^ ReplHiddenLine(map: tMap); 
+	PROCEDURE ^ HiddenLineMap(o3d: tObject); 
+	PROCEDURE ^ ReplPainter(map: tMap); 
+	PROCEDURE ^ PainterMap(o3d: tObject); 
+	PROCEDURE ^ SetLightDirection*(x, y, z: Real); 
+	PROCEDURE ^ SetFaceColor(nx, ny, nz: Real); 
+	PROCEDURE ^ ReplLighting(map: tMap); 
+	PROCEDURE ^ LightingMap(o3d: tObject); 
+	PROCEDURE ^ ReplSmoothLighting(map: tMap); 
+	PROCEDURE ^ SmoothLightingMap(o3d: tObject); 
+	PROCEDURE ^ SetFaceNiveauColor(face: tFace; min, max: Real); 
+	PROCEDURE ^ ReplNiveauColoring(map: tMap); 
+	PROCEDURE ^ NiveauColoringMap(o3d: tObject); 
+	PROCEDURE ^ ReplBackFaceColoring(map: tMap); 
+	PROCEDURE ^ BackFaceColoringMap(o3d: tObject); 
+	PROCEDURE ^ OpenMap*(x0, y0, x1, y1: Real; m: vyRealVec.tChunkedMatrix): tObject; 
+	PROCEDURE ^ SetHLHSRIdentifier*(HLHSRidentifier: INTEGER); 
+	PROCEDURE ^ SetRendering*(map: tObject; HLHSRidentifier: INTEGER); 
+	PROCEDURE ^ GetRendering(map: tObject; VAR HLHSRidentifier: INTEGER); 
+	PROCEDURE ^ SetInteractiveMode*(switch: BOOLEAN); 
+	PROCEDURE ^ InitColorMap; 
+	PROCEDURE ^ SetColorMap*(colors: ARRAY OF LONGINT); 
+	PROCEDURE ^ SetLines*(VAR b: BOOLEAN); 
+BEGIN
+END vyPolyWorld.

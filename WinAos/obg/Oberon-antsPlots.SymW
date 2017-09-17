@@ -1,0 +1,15 @@
+MODULE antsPlots IN Oberon;
+	IMPORT antsCommands, vyBase, vyTracking, antsArrayObjects, ants3dArrayObjects, vyPort, antsPictCoordinate, antsPictureViews, antsHistogramEdit, aM := antsMessages, antsArrayImages, antsArrayPictures, vyLinks, Objects, Input, ants1dArrayVectors, antsFctVector, antsFunctions, antsArrayPictures16, vyName, antsToolbox;
+CONST 
+VAR 
+	port: vyPort.Frame; 
+	c: Objects.Object; 
+	cc: antsPictCoordinate.tCoordinate; 
+
+	PROCEDURE ^ Add(VAR l: vyTracking.List; name: ARRAY OF CHAR); 
+	PROCEDURE ^ DoShow*(obj: vyBase.Object); 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowArray*(a: antsArrayObjects.tObject; name: ARRAY OF CHAR; samecoord, sameport: BOOLEAN); 
+BEGIN
+END antsPlots.

@@ -1,0 +1,12 @@
+MODULE antsPorts IN Oberon;
+	IMPORT vyBase, vyName, vyTypes, vyPort, vyLinePlot, antsPointPlot, vyScatter1, vyHistogram, vyDisplay2d, aM := antsMessages, antsCommands;
+CONST 
+TYPE 
+	PortLink = OBJECT (vyBase.Object)
+	VAR 
+		pict: vyPort.Picture; 
+	END PortLink; 
+
+	PROCEDURE ^ ShowVec*; 
+BEGIN
+END antsPorts.

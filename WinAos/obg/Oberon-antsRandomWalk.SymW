@@ -1,0 +1,31 @@
+MODULE antsRandomWalk IN Oberon;
+	IMPORT antsObjects, Files, antsKernel, antsModels, antsCommands, vyName, Objects, vyBase, Gadgets, vyLongrealVec, vyRandom, vyLinePlot, vyPort, vyDisplay2d, vyLinks, vyTexts := vyHostTexts, Attributes, Strings := vyHostStrings;
+CONST 
+	version* = 0; 
+	moduleName = \"antsRandomWalk.Gen"\; 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		v2: vyBase.Object; 
+		v1: vyBase.Object; 
+		ph: LONGREAL; 
+		pv: LONGREAL; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Init(s: antsKernel.Kernel); 
+	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleBind(o: tModel; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(msg: tModel; name: vyName.tNameArray); 
+	PROCEDURE ^ NewPars(o: tModel); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoNewModel*(name: vyName.tNameArray; v1, v2: vyBase.tVector): tModel; 
+	PROCEDURE ^ NewModel*; 
+	PROCEDURE ^ Many1d*; 
+BEGIN
+END antsRandomWalk.

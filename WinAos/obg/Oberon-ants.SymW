@@ -1,0 +1,14 @@
+MODULE ants IN Oberon;
+	IMPORT antsCommands, vyLinks, vyBase, Modules, Strings, aM := antsMessages, antsArrayObjects, vyLongrealVec, Objects, Links, antsToolbox, antsReadWrite, vyPort, antsFctVector, Texts, Gadgets, antsOnTheFly, SYSTEM;
+CONST 
+VAR 
+	RR: antsReadWrite.Rider; 
+
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ getTimeSeries(x, y: LONGINT; o: Objects.Object; link: Objects.Object); 
+	PROCEDURE ^ GetBrainTimeSeries*; 
+	PROCEDURE ^ GetRowCol*; 
+	PROCEDURE ^ NewVec*; 
+	PROCEDURE ^ RCompileE*; 
+BEGIN
+END ants.

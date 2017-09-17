@@ -1,0 +1,45 @@
+MODULE ants3dArrayViews IN Oberon;
+	IMPORT vyPort, vyName, vyBase, vyGraphBase, Display, Display3, vyEvents, ants3dArrayObjects, antsViews, Files, Pictures, antsCommands, Objects, vyCommandMenus, Gadgets, vyHostTexts, vyDisplay2d, antsObjects, aM := antsMessages;
+CONST 
+	Vertices* = 0; 
+	vEdges* = 1; 
+	hEdges* = 2; 
+	Plain* = 3; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (antsViews.tLayerDesc)
+		E-: ants3dArrayObjects.tObject; 
+		img: Pictures.Picture; 
+		type: INTEGER; 
+		on: BOOLEAN; 
+	END; 
+
+	Pattern = RECORD 
+		w, h, d: INTEGER; 
+		vals: POINTER TO ARRAY OF ARRAY OF INTEGER; 
+	END; 
+VAR 
+	newlayer-: tLayer; 
+	maxw, maxh: INTEGER; 
+	texture: BOOLEAN; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ MakePattern(layer: tLayer; w, h: INTEGER): Pattern; 
+	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Line(p: Pictures.Picture; fx, fy, tx, ty: INTEGER; col: INTEGER); 
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OnOff; 
+	PROCEDURE ^ Init(layer: tLayer); 
+	PROCEDURE ^ Open*(layer: tLayer; E: ants3dArrayObjects.tObject; type: INTEGER); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoShow*(E: ants3dArrayObjects.tObject; type: INTEGER; add: BOOLEAN; VAR c: vyDisplay2d.tCoordinate2d): tLayer; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END ants3dArrayViews.

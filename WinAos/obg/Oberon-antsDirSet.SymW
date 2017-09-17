@@ -1,0 +1,25 @@
+MODULE antsDirSet IN Oberon;
+	IMPORT Math := MathL IN A2;
+TYPE 
+	VectorFunction* = PROCEDURE (VAR A: ARRAY OF LONGREAL):LONGREAL; 
+
+	Func = PROCEDURE (x: LONGREAL):LONGREAL; 
+VAR 
+	tempXI: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+	PT, PTT, XIT: POINTER TO ARRAY OF LONGREAL; 
+	XT: POINTER TO ARRAY OF LONGREAL; 
+	LinMinPCom, LinMinXCom: POINTER TO ARRAY OF LONGREAL; 
+	rcheck*: BOOLEAN; 
+	VFunc: VectorFunction; 
+
+	PROCEDURE ^ Brent*(ax, bx, cx: LONGREAL; func: Func; tol: LONGREAL; VAR xmin: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Golden*(ax, bx, cx: LONGREAL; func: Func; tol: LONGREAL; VAR xmin: LONGREAL): LONGREAL; 
+	PROCEDURE ^ MnBrak*(VAR ax, bx, cx, fa, fb, fc: LONGREAL; func: Func); 
+	PROCEDURE ^ F1Dim*(x: LONGREAL; VAR LinMinPCom, LinMinXCom: ARRAY OF LONGREAL; fnc: VectorFunction): LONGREAL; 
+	PROCEDURE ^ func(x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ LinMin*(VAR P, XI: ARRAY OF LONGREAL; VAR fret: LONGREAL; vf: VectorFunction); 
+	PROCEDURE ^ Powell*(VAR P: ARRAY OF LONGREAL; VAR XI: ARRAY OF ARRAY OF LONGREAL; ftol: LONGREAL; VAR iter: LONGINT; VAR fret: LONGREAL; fncP: VectorFunction; range: LONGREAL); 
+	PROCEDURE ^ EasyMinimize*(VAR P: ARRAY OF LONGREAL; VAR fret: LONGREAL; ftol: LONGREAL; fncP: VectorFunction; init: BOOLEAN); 
+	PROCEDURE ^ mfncP(VAR P: ARRAY OF LONGREAL): LONGREAL; 
+BEGIN
+END antsDirSet.

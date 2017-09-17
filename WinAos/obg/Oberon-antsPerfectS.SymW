@@ -1,0 +1,26 @@
+MODULE antsPerfectS IN Oberon;
+	IMPORT antsObjects, vyBase, antsCommands, antsKernel, antsMC, vyName, aM := antsMessages, antsArrayObjects, vyHostTexts, Objects, Gadgets, Files, Math := MathL IN A2;
+CONST 
+TYPE 
+	tSamplingScheme = POINTER TO tSamplingSchemeDesc; 
+
+	tSamplingSchemeDesc = RECORD (vyBase.ObjDesc)
+		c: antsMC.Chain; 
+		nrsamples: LONGINT; 
+		maxnrsamples: LONGINT; 
+		coalescence: BOOLEAN; 
+	END; 
+
+	PROCEDURE ^ Store0(o: tSamplingScheme; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(o: tSamplingScheme; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tSamplingScheme); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Compare(A1, A2: antsArrayObjects.tINTEGERObject): BOOLEAN; 
+	PROCEDURE ^ Power2(l: LONGINT): LONGINT; 
+	PROCEDURE ^ DoRunScheme(S: tSamplingScheme); 
+	PROCEDURE ^ RunScheme*; 
+	PROCEDURE ^ InitScheme*; 
+	PROCEDURE ^ NewScheme*; 
+BEGIN
+END antsPerfectS.

@@ -1,0 +1,63 @@
+MODULE vyTracking IN Oberon;
+	IMPORT Input, Display, Display3, Fonts, Texts, vyGraphBase, vyBase, vyHostDisplay := vyGraphBase, Effects, vyName, vyRectangles, Oberon, vyPortability;
+CONST 
+	idversion* = \"vyTracking v0r0a5"\; 
+	Font = \"Syntax10.Scn.Fnt"\; 
+	minW = 30; 
+	minH = 10; 
+	Border = 3; 
+	allkeys = {vyBase.leftKey, vyBase.middleKey, vyBase.rightKey}; 
+	maxIdleTime* = 5; 
+	listMaxIdleTime = 2; 
+TYPE 
+	List* = POINTER TO ListDesc; 
+
+	ListDesc* = RECORD 
+		name*: vyName.tNameArray; 
+		x, y, w, h, dsr: INTEGER; 
+		fnt: ARRAY 32 OF CHAR; 
+		nr: INTEGER; 
+		next*: List; 
+	END; 
+
+	fofPopup = RECORD 
+		x, y, w, h, dh: INTEGER; 
+		nr: INTEGER; 
+		e: List; 
+	END; 
+VAR 
+	Wr: vyBase.TextsWriter; 
+	BorderBGColor, BorderFGColor, BGColor, FGColor, SelectColor: Display.Color; 
+	inHelp: BOOLEAN; 
+	Rectangle*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF INTEGER; rectCount: INTEGER; VAR dx, dy: INTEGER); 
+	GrowRectangleRL*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	GrowRectangleR*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	ZoomCentralRect*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	TrackMouse*: PROCEDURE (VAR keys: SET; VAR X, Y: INTEGER; marker: Oberon.Marker); 
+	ScrollList*: PROCEDURE (e0: List; x0, y0: INTEGER; VAR res: List); 
+	MoveListEntry*: PROCEDURE (list: List; VAR x, y, dx, dy: INTEGER); 
+	FramedString*: PROCEDURE (X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	String*: PROCEDURE (X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	Help*: PROCEDURE (s: ARRAY OF CHAR); 
+	HelpAt*: PROCEDURE (x, y: INTEGER; s: ARRAY OF CHAR); 
+	HelpEnd*: PROCEDURE ; 
+	TrackMouseCont*: PROCEDURE (VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
+
+	PROCEDURE ^ rectangle(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ rectangles(x, y, w, h: ARRAY OF INTEGER; rectCount: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ growRectangleRL(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ growRectangleR(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ zoomCentralRect(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ trackMouse(VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
+	PROCEDURE ^ scrollList(e0: List; x0, y0: INTEGER; VAR res: List); 
+	PROCEDURE ^ moveListEntry(list: List; VAR x, y, dx, dy: INTEGER); 
+	PROCEDURE ^ ArrayToList*(names: ARRAY OF ARRAY OF CHAR; nr: INTEGER): List; 
+	PROCEDURE ^ framedString(X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ string(X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ help(s: ARRAY OF CHAR); 
+	PROCEDURE ^ helpAt(x, y: INTEGER; s: ARRAY OF CHAR); 
+	PROCEDURE ^ helpEnd; 
+	PROCEDURE ^ trackMouseCont(VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
+BEGIN
+END vyTracking.

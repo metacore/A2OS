@@ -205,8 +205,10 @@ TYPE
 	VAR 
 		inUse: VariableUse; 
 		registerIndex: LONGINT; 
+		nameIndex: LONGINT; 
 
 		PROCEDURE ^  & Init; 
+		PROCEDURE ^ GetUID(): SyntaxTree.Identifier; 
 		PROCEDURE ^ GetUsage(VAR use: VariableUse); 
 		PROCEDURE ^ SetUsage(CONST use: VariableUse); 
 		PROCEDURE ^ GetVariable(i: LONGINT): SyntaxTree.Variable; 
@@ -443,6 +445,7 @@ TYPE
 		PROCEDURE ^ AddPortProperties(modifier: SyntaxTree.Modifier); 
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
+		PROCEDURE ^ OnHeap(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ Dereference(VAR operand: Operand; type: SyntaxTree.Type; isUnsafe: BOOLEAN); 
@@ -660,7 +663,10 @@ VAR
 	PROCEDURE ^ IsOpenArray(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsSemiDynamicArray(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticArray(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsStaticMathArray(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ StaticMathArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ StaticArrayNumElements(type: SyntaxTree.Type): LONGINT; 
+	PROCEDURE ^ StaticMathArrayNumElements(type: SyntaxTree.Type): LONGINT; 
 	PROCEDURE ^ StaticArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ ArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ IsDelegate(type: SyntaxTree.Type): BOOLEAN; 

@@ -255,7 +255,7 @@ VAR
 	(** Statistics considering the last GC cyle *)
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT;
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
-	NgcSweepTime-, NgcSweepMax-: HUGEINT;
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT;
 
 	gcStatus*: GCStatus;
 
@@ -285,7 +285,9 @@ BEGIN
 			tdAdr := block.typeBlock;
 			IF (tdAdr = systemBlockTag) OR (tdAdr = recordBlockTag) OR (tdAdr = protRecBlockTag) OR (tdAdr = arrayBlockTag) THEN
 				RETURN TRUE;
-			ELSE HALT(103);
+			ELSE 
+				Trace.Memory(p-64, 128);
+				HALT(103);
 			END
 		ELSE HALT(102);
 		END
@@ -686,6 +688,7 @@ VAR
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 CONST StrongChecks = FALSE;
 BEGIN{UNCHECKED}
+	INC(NgcSweeps);
 	time1 := Machine.GetTimer();
 	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
 	lastFreeBlockAdr := NilVal;
@@ -1225,7 +1228,7 @@ BEGIN
 	CheckPostGC;
 	try := 1;
 	p := NIL;
-	IF  (GC = NilGC) OR (throughput < 64*1024*1024) THEN
+	IF  (GC = NilGC) OR (throughput < 32*1024*1024) THEN
 		GetFreeBlock(size, p);
 		IF  (p=NIL) THEN (* try restart sweep for once *)
 			GetFreeBlock(size, p);
@@ -1874,3 +1877,4 @@ Heaps.SetOld
 
 Kernel.GC
 
+SystemTools.ModuleState Heaps ~

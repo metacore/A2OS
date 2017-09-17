@@ -7466,6 +7466,20 @@ TYPE
 			Emit(Push(position,op.op))
 		END PushString;
 
+		(* conservative check if x is potentially on the heap, excluding the module heap 
+			required for generational garbage collector
+		*)
+		PROCEDURE OnHeap(x: SyntaxTree.Expression): BOOLEAN;
+		VAR pos: LONGINT;
+		BEGIN
+			pos := x.position.start;
+			WHILE (x # NIL) & ~(x IS SyntaxTree.DereferenceDesignator) & ~(x IS SyntaxTree.SelfDesignator) DO
+				x := x(SyntaxTree.Designator).left;
+			END;
+			(*TRACE(pos, x # NIL);*)
+			RETURN x # NIL;
+		END OnHeap;
+
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
 		VAR
 			p0,p1,p2,parameter: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
@@ -8074,7 +8088,7 @@ TYPE
 
 						IF (temporaryVariable # NIL) & (x.type = NIL) THEN
 							Designate(p0,l);
-							IF backend.writeBarriers THEN
+							IF backend.writeBarriers & OnHeap(p0) THEN
 								SaveRegisters();ReleaseUsedRegisters(saved);
 								Emit(Push(position,l.op));
 								Emit(Push(position,pointer));
@@ -10004,7 +10018,7 @@ TYPE
 				END;
 				ModifyAssignments(false);
 				RETURN;
-			ELSIF backend.writeBarriers & left.NeedsTrace() & ~((leftType IS SyntaxTree.MathArrayType) & ~IsStaticMathArray(leftType)) THEN
+			ELSIF backend.writeBarriers &  left.NeedsTrace() & OnHeap(left) & ~((leftType IS SyntaxTree.MathArrayType) & ~IsStaticMathArray(leftType)) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				IF SemanticChecker.IsPointerType(leftType) THEN
 					Evaluate(right,rightO);

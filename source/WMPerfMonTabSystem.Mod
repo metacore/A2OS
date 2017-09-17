@@ -13,7 +13,7 @@ TYPE
 
 		(* GC Statistics *)
 		gcCurrentRun : Perf.Indicator;
-		line1, line2 : Perf.Indicator;
+		line1, line2, line3 : Perf.Indicator;
 
 		(* CPU clock rate detection *)
 		cpuClockrate : Perf.Indicator;
@@ -99,6 +99,16 @@ TYPE
 			w.String(" ("); w.Int(Heaps.Nmark, 0); w.String(" calls to Heaps.Mark)");
 			w.Get(string);
 			line2.SetCaption(string);
+
+			(* Sweep phase *)
+			w.Reset;
+			w.String("Sweep phase: "); w.Int(Heaps.NgcSweeps, 0); w.String(" calls to sweep in ");
+			Plugins.MsToString(Plugins.CyclesToMs(Heaps.NgcSweepTime, clockrate), nbr); w.String(nbr);
+			w.String(" (max "); 
+			Plugins.MsToString(Plugins.CyclesToMs(Heaps.NgcSweepMax, clockrate), nbr); w.String(nbr);
+			w.String(")");
+			w.Get(string);
+			line3.SetCaption(string);
 		END HandleGcButton;
 
 		PROCEDURE HandleDetectButton(sender, data : ANY);
@@ -198,7 +208,7 @@ TYPE
 		PROCEDURE CreateGcStatisticsPanel() : WMStandardComponents.Panel;
 		VAR panel : WMStandardComponents.Panel; line : WMStandardComponents.Panel;
 		BEGIN
-			panel := Perf.NewGroupPanel("Garbage Collector", WMComponents.AlignTop, 80);
+			panel := Perf.NewGroupPanel("Garbage Collector", WMComponents.AlignTop, 120);
 
 			line := Perf.NewPanel(WMComponents.AlignTop, 0, 20); panel.AddContent(line);
 			line.AddContent(Perf.NewButton("Run GC", HandleGcButton));
@@ -208,6 +218,7 @@ TYPE
 
 			line1 := Perf.NewIndicator("", WMComponents.AlignTop, 0, 20); panel.AddContent(line1);
 			line2 := Perf.NewIndicator("", WMComponents.AlignTop, 0, 20); panel.AddContent(line2);
+			line3 := Perf.NewIndicator("", WMComponents.AlignTop, 0, 20); panel.AddContent(line3);
 
 			RETURN panel;
 		END CreateGcStatisticsPanel;

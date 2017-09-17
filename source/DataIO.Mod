@@ -128,12 +128,6 @@ TYPE
 			IF ReaderAvailable() THEN NbrRat.Load( SELF, x ) ELSE HALT( 1000 ) END
 		END Rational;
 
-	(** Reads a real number. *)
-		PROCEDURE Real*( VAR x: NbrRe.Real );
-		BEGIN
-			IF ReaderAvailable() THEN NbrRe.Load( SELF, x ) ELSE HALT( 1000 ) END
-		END Real;
-
 	(** Reads a complex number. *)
 		PROCEDURE Complex*( VAR x: NbrCplx.Complex );
 		BEGIN

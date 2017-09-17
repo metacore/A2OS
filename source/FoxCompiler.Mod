@@ -104,15 +104,8 @@ TYPE
 		VAR message,name: ARRAY 256 OF CHAR;
 		BEGIN
 			message := "";
-			IF (module # NIL) & (module.context # SyntaxTree.invalidIdentifier) THEN
-				Basic.GetString(module.context,message);
-				Strings.Append (message, ".");
-			ELSE
-				message := "";
-			END;
-			IF (module # NIL) & (module.name # SyntaxTree.invalidIdentifier) THEN
-				Basic.GetString(module.name,name);
-				Strings.Append (message, name);
+			IF module # NIL THEN
+				Global.GetModuleName(module, message); 
 			END;
 			Strings.Append (message, msg);
 			IF error THEN

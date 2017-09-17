@@ -1464,7 +1464,7 @@ VAR
 				IF ~FileExists(filename) THEN
 					filename := GenerateFilename("Unix.", context, moduleName, ".Mod");
 					IF ~FileExists(filename) THEN
-						filename := GenerateFilename("Oberon.", context, moduleName, ".Mod");
+						filename := GenerateFilename("Oberon-", context, moduleName, ".Mod");
 						IF ~FileExists(filename) THEN
 							filename := GenerateFilename("", context, moduleName, ".Mod");
 						END;

@@ -421,12 +421,6 @@ TYPE
 
 			StringPool.GetString(identifier.name[0], name);
 			isModule := identifier.name[1] = InternalModuleName;
-			IF (identifier.name[0] = OberonName) & (identifier.name[2] >= 0)  THEN (* in Oberon name space *)
-				StringPool.GetString(identifier.name[1], s);
-				Strings.Append(name, ".");
-				Strings.Append(name, s);
-				isModule := identifier.name[2] = InternalModuleName;
-			END;
 
 			(*
 				IF ~isModule & (identifier.fingerprint = 0) THEN
@@ -473,7 +467,7 @@ TYPE
 VAR
 	moduleList: ModuleList;
 	testTypeDescs: Modules.Bytes;
-	InternalModuleName, OberonName: StringPool.Index;
+	InternalModuleName: StringPool.Index;
 
 	PROCEDURE InitData(VAR data: Data);
 	BEGIN
@@ -617,7 +611,6 @@ VAR
 	BEGIN
 		NEW(testTypeDescs,1);
 		Modules.InstallTermHandler(Remove);
-		StringPool.GetIndex("Oberon",OberonName);
 		StringPool.GetIndex("@Module",InternalModuleName);
 		NEW(moduleList);
 		Install;

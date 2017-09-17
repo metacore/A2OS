@@ -10,7 +10,7 @@ IMPORT Modules, Commands, Strings, OberonDisplay, Displays, Plugins ;
 		IF res # Commands.Ok THEN
 			context.error.String (msg); context.error.Ln; RETURN;
 		END;
-		Strings.Concat ("Oberon.", module, module);
+		Strings.Concat ("Oberon-", module, module);
 		GETPROCEDURE (module, command, procedure);
 		IF procedure = NIL THEN
 			context.error.String ("Oberon command '"); context.error.String (string);
@@ -29,7 +29,7 @@ IMPORT Modules, Commands, Strings, OberonDisplay, Displays, Plugins ;
 				context.error.String( "Oberon is already running, only one instance is allowed" ); context.error.Ln
 			ELSE
 				OberonDisplay.Install( context );
-				GETPROCEDURE( "Oberon.System", "Init", proc );
+				GETPROCEDURE( "Oberon-System", "Init", proc );
 				IF proc = NIL  THEN  context.error.String( "Oberon command 'System.Init' not found" ); context.error.Ln  END
 			END;
 		END;

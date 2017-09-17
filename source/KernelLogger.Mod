@@ -99,7 +99,7 @@ VAR
 	kernelLog- : Texts.Text;
 
 PROCEDURE Start*;
-CONST OberonKernel = "Oberon.Kernel"; OberonSystem = "Oberon.System";
+CONST OberonKernel = "Oberon-Kernel"; OberonSystem = "Oberon-System";
 VAR kernelLockOberon, kernelUnlockOberon, systemStopLog : PROCEDURE;
 BEGIN {EXCLUSIVE}
 	IF logger # NIL THEN KernelLog.Enter; KernelLog.String("Logger already running! "); KernelLog.Exit; RETURN END;

@@ -1083,7 +1083,7 @@ TYPE
 						KernelLog.String("found!");
 					ELSE
 						KernelLog.String("not found!, Trying Oberon."); KernelLog.String(entry.name); KernelLog.String(" ... ");
-						filename := "Oberon."; Strings.Append(filename, entry.name); Strings.Append(filename, ".Mod");
+						filename := "Oberon-"; Strings.Append(filename, entry.name); Strings.Append(filename, ".Mod");
 						file := Files.Old(filename);
 						IF (file # NIL) THEN
 							KernelLog.String("found!");

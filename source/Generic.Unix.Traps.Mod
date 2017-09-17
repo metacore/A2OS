@@ -80,7 +80,7 @@ VAR
 			S.GET( tag - AddrSize, td );
 			IF td.mod # NIL THEN
 				COPY( td.mod.name, name );  Append( name,  "." );  Append( name, td.name );
-				IF name = "Oberon.System.OberonRunner" THEN  UnlockOberon  END
+				IF name = "Oberon-System.OberonRunner" THEN  UnlockOberon  END
 			END
 		END;
 		
@@ -218,7 +218,7 @@ VAR
 
 
 	PROCEDURE UnlockOberon;
-	CONST OberonKernel = "Oberon.Kernel";
+	CONST OberonKernel = "Oberon-Kernel";
 	VAR c: PROCEDURE;
 	BEGIN
 		IF Modules.ModuleByName( OberonKernel ) # NIL THEN

@@ -10,7 +10,7 @@ IMPORT Modules, Commands, Strings ;
 		IF res # Commands.Ok THEN
 			context.error.String (msg); context.error.Ln; RETURN;
 		END;
-		Strings.Concat ("Oberon.", module, module);
+		Strings.Concat ("Oberon-", module, module);
 		GETPROCEDURE (module, command, procedure);
 		IF procedure = NIL THEN
 			context.error.String ("Oberon command '"); context.error.String (string);

@@ -15,7 +15,7 @@ CONST
 
 	Trace = {};
 
-	OberonKernel = "Oberon.Kernel";
+	OberonKernel = "Oberon-Kernel";
 
 TYPE
 

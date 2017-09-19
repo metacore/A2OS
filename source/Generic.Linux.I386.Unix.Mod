@@ -1021,7 +1021,8 @@ VAR
 		libraryPaths[2] := "/lib/i386-linux-gnu";
 		libraryPaths[3] := "/lib";
 		libraryPaths[4] := "/usr/lib";
-		noPaths := 5;
+		libraryPaths[5] := "/usr/lib32";
+		noPaths := 6;
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 );

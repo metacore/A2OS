@@ -3562,6 +3562,10 @@ BEGIN
 	NEW(image); RETURN image;
 END GenImage;
 
+PROCEDURE GenImagePanel*() : XML.Element;
+VAR ip : ImagePanel;
+BEGIN NEW(ip); RETURN ip
+END GenImagePanel;
 
 (**********************************************************************************************)
 

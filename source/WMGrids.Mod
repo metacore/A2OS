@@ -397,7 +397,7 @@ TYPE
 			scrolly.visible.Set((alwaysShowScrollYC OR (ymax > 1)) & showScrollYC)
 		END CheckScrollbarsNeeded;
 
-		PROCEDURE GetVisibleCellRect(col, row : LONGINT): WMRectangles.Rectangle;
+		PROCEDURE GetVisibleCellRect*(col, row : LONGINT): WMRectangles.Rectangle;
 		VAR x, y, i, tc, tr, tx, ty, w, h: LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			GetFixedPixels(tx, ty);
@@ -850,7 +850,8 @@ TYPE
 		PROCEDURE WheelMove*(dz: LONGINT); (** PROTECTED *)
 		VAR t, l : LONGINT;
 		BEGIN
-			GetTopPosition(l, t); t := t + dz; SetTopPosition(l, t, TRUE)
+			GetTopPosition(l, t); t := t + dz; SetTopPosition(l, t, TRUE);
+			AlignSubComponents();
 		END WheelMove;
 
 	END GenericGrid;

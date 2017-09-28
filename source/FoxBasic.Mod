@@ -1743,8 +1743,30 @@ VAR
 			Strings.Append(res, " ");
 		END;
 		Strings.Append(res, msg);
+        Strings.Append(res, ". ");
 	END GetErrorMessage;
-	
+
+	PROCEDURE AppendDetailedErrorMessage*(VAR message: ARRAY OF CHAR; pos: Position; reader: Streams.Reader);
+    VAR err: ARRAY 512 OF CHAR; ch: CHAR; oldpos: LONGINT;
+    BEGIN
+        IF (reader # NIL) & (reader.CanSetPos()) THEN
+            oldpos := reader.Pos();
+            reader.SetPos(pos.linepos);
+            reader.Char(ch);
+            (* read until end of source line *)
+            WHILE (ch # 0X) & (ch # 0AX) & (ch # 0DX) DO
+                Strings.AppendChar(err, ch);
+                IF reader.Pos() = pos.start THEN
+                    Strings.Append(err,"(*!*)");
+                END;
+                reader.Char(ch);
+            END;
+            reader.SetPos(oldpos);
+        END;
+        Strings.TrimWS(err);
+        Strings.Append(message, err);
+    END AppendDetailedErrorMessage;
+
 	PROCEDURE AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position);
 	BEGIN
 		IF pos.line >= 0 THEN
@@ -1757,45 +1779,39 @@ VAR
 	
 	PROCEDURE MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR);
 	BEGIN
-		GetErrorMessage(code, msg, message);
-		AppendPosition(message, pos);
+		MakeDetailedMessage(pos, code, msg, NIL, message);
+		Strings.AppendChar(message, 0X); (* terminate message *)
 	END MakeMessage;
-	
+
+	PROCEDURE MakeDetailedMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; reader: Streams.Reader; VAR message: ARRAY OF CHAR);
+	BEGIN
+		GetErrorMessage(code, msg, message);
+		AppendDetailedErrorMessage(message, pos, reader);
+		AppendPosition(message, pos);
+	END MakeDetailedMessage;
+
 	(* error message with code *)
 	PROCEDURE ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR);
-	VAR message,err: ARRAY 512 OF CHAR; ch: CHAR; b: BOOLEAN; oldpos: LONGINT;
-		file: Files.File; reader: Streams.Reader;
+	VAR message: ARRAY 1024 OF CHAR; file: Files.File;
+
+	    PROCEDURE GetReader(): Streams.Reader;
+	    VAR reader := NIL: Streams.Reader;
+	    BEGIN
+            IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
+                reader := pos.reader;
+                IF reader = NIL THEN
+                    file := Files.Old(source);
+                    IF file # NIL THEN
+                        reader := NEW Files.Reader(file, pos.linepos);
+                    END;
+                END;
+            END;
+            RETURN reader;
+	    END GetReader;
 	BEGIN
 		IF diagnostics # NIL THEN
-			MakeMessage(pos, code, msg,message);
-			IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
-				reader := pos.reader;
-				IF reader = NIL THEN 
-					file := Files.Old(source);
-					IF file # NIL THEN 
-						reader := NEW Files.Reader(file, pos.linepos); 
-					END;
-				END;
-				IF (reader # NIL) & (reader.CanSetPos()) THEN 
-					err[0] := 0AX;
-					err[1] := 0X;
-					oldpos := reader.Pos();
-					reader.SetPos(pos.linepos);
-					reader.Char(ch);
-					WHILE (ch # 0X) & (ch # 0AX) DO
-						Strings.AppendChar(err, ch);
-						IF reader.Pos() = pos.start THEN
-							Strings.Append(err,"(*!*)");
-						END;
-						reader.Char(ch);
-					END;
-					reader.SetPos(oldpos); 
-					Strings.Append(message, err);
-					(*diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, err);*)
-				END;
-			END;
+			MakeDetailedMessage(pos, code, msg, GetReader(), message);
 			diagnostics.Error(source, pos.start, code, message);
-			
 		END;
 	END ErrorC;
 

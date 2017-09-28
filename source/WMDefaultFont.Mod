@@ -3,6 +3,8 @@ MODULE WMDefaultFont;	 (** AUTHOR "TF"; PURPOSE "Embedded Oberon font"; *)
 IMPORT
 	KernelLog, Streams, Graphics := WMGraphics, Raster;
 
+CONST TraceInstallation = FALSE;
+
 TYPE
 	Glyph = RECORD
 		img : Graphics.Image;
@@ -316,7 +318,9 @@ BEGIN
 	nof := 0;
 	DefaultFont;
 	Graphics.InstallDefaultFont(LoadDefaultFont());
-	KernelLog.String("Default font installed");
+	IF TraceInstallation THEN
+		KernelLog.String("Default font installed"); KernelLog.Ln;
+	END;
 END WMDefaultFont.
 
 

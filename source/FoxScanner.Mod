@@ -666,7 +666,7 @@ TYPE
 					END;
 					symbol.hugeint := number;
 					symbol.integer := SHORT(number);
-					IF digits > MaxHexDigits THEN
+					IF (digits > MaxHexDigits) OR (digits = MaxHexDigits) & (number > MAX(LONGINT)) THEN
 						symbol.numberType := Hugeint
 					ELSE
 						symbol.numberType := Integer

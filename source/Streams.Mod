@@ -781,40 +781,43 @@ TYPE
 		END Int;
 
 	(** Read a floating-point number. EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-		PROCEDURE Real * (VAR real: LONGREAL);
-		VAR
-			sign, dec, exponent, offset: LONGINT;
-			ch: CHAR;
-			dot: BOOLEAN;
+		PROCEDURE Real* (VAR real: LONGREAL);
+		VAR e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN; ch: CHAR;
 		BEGIN
-			IF Peek() = "-" THEN
-				sign := -1;
+			ch := Get();
+			WHILE (ch = "0") DO ch := Get() END;
+			IF ch = "-" THEN neg := TRUE; ch := Get(); ELSE neg := FALSE END;
+			WHILE (ch = " ") OR (ch = "0") DO ch := Get(); END;
+			y := 0;
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				y := y * 10 + (ORD(ch) - ORD("0"));
 				ch := Get();
-			ELSE
-				sign := 1;
 			END;
-			(* Read mantissa *)
-			LOOP
+			IF ch = "." THEN
 				ch := Get();
-				IF (ch = '.') THEN
-					dot := TRUE;
-				ELSIF (ch < '0') OR (ch > '9') THEN
-					EXIT;
-				ELSE
-					dec := dec * 10 + ORD(ch) - ORD('0');
-					IF dot THEN INC(offset); END;
+				g := 1;
+				WHILE ("0" <= ch) & (ch <= "9") DO
+					g := g / 10; y := y + g * (ORD(ch) - ORD("0"));
+					ch := Get();
 				END;
 			END;
-			IF ~dot THEN
-				res := FormatError;
-				RETURN;
+			IF (ch = "d") OR (ch = "D") OR (ch = "e") OR (ch = "E") THEN
+				ch := Get(); e := 0;
+				IF ch = "-" THEN negE := TRUE; ch := Get()
+				ELSIF ch = "+" THEN negE := FALSE; ch := Get()
+				ELSE negE := FALSE
+				END;
+				WHILE (ch = "0") DO ch := Get() END;
+				WHILE ("0" <= ch) & (ch <= "9") DO
+					e := e * 10 + (ORD(ch) - ORD("0"));
+					ch := Get();
+				END;
+				IF negE THEN y := y / Ten(e)
+				ELSE y := y * Ten(e) 
+				END;
 			END;
-			IF (ch = 'E') OR (ch = 'e') THEN
-				Int(exponent, FALSE);
-			ELSE
-				exponent := 0;
-			END;
-			real := LONGREAL(sign * dec) * Ten(exponent - offset);
+			IF neg THEN y := -y END;
+			real := y
 		END Real;
 
 	(** Return TRUE iff at the end of a line (or file). *)

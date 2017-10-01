@@ -432,6 +432,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# Services and device drivers
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
+	In.Mod Out.Mod
 
 	I386, WIN, UNIX32, UNIXG32 { I386.Reals.Mod }
 	AMD64, UNIX64 { AMD64.Reals.Mod }

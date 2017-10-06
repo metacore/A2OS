@@ -181,6 +181,7 @@ TYPE
 		nestingLevel : LONGINT; (* how many shells run in this shell? *)
 		aliases: Alias;
 		prompt: ARRAY 32 OF CHAR;
+		seenCR: CHAR;
 
 		(* Connection to the entiry hosting this shell instance *)
 		upcall : NotifyProcedure;
@@ -257,9 +258,13 @@ TYPE
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
 
-						IF (*(ch = CR) OR*) (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
-							EXIT
 
+						IF ((ch = CR) OR (ch = LF)) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+							IF seenCR = 0X THEN seenCR := ch 
+							ELSIF seenCR = ch THEN 
+								EXIT
+							ELSE (* ignore *)
+							END;
 						ELSIF (ch = Backspace) OR (ch = Delete)THEN
 							IF currentIndex >= 0 THEN (* There is a character at the left of the cursor *)
 								command[currentIndex] := 0X;
@@ -296,7 +301,7 @@ TYPE
 
 			command[currentIndex+1] := 0X;
 
-			IF (* (ch = CR) OR*)  (ch = LF) THEN
+			IF (ch = CR) OR  (ch = LF) THEN
 				commandHistory.AddCommand(command);
 				(*IF (*(ch = CR) & *)(context.in.Available() > 0) & (context.in.Peek() = LF) THEN ch := context.in.Get() END;*)
 				IF echo THEN context.out.Ln; context.out.Update END

@@ -148,13 +148,14 @@ TYPE
 		upcall : NotifyProcedure;
 
 		commandHistory : CommandHistory;
+		firstCR : CHAR;
 
 		PROCEDURE &Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR);
 		BEGIN
 			ASSERT((in # NIL) & (out # NIL) & (err # NIL));
 			NEW(context, in, NIL, out, err, SELF);
 			close := FALSE; dead := FALSE; command[0] := 0X; res := 0; SELF.echo := echo; COPY(prompt, SELF.prompt);
-			NEW(commandHistory);
+			NEW(commandHistory); firstCR := 0X;
 		END Init;
 
 		PROCEDURE Exit*;
@@ -218,13 +219,17 @@ TYPE
 
 					IF IsControlCharacter(ch) OR (ch = Delete) THEN
 
-						IF (ch = CR) OR (ch = LF) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+						IF (ch = CR) OR (ch = LF) THEN
 							(* skip redundant CR and LF to avoid generation of empty commands. This requires peek functionality which doesn't work on the Input stream from an underlying OS, so a decoupler is needed that transforms that into an oberon stream*)
-							WHILE (context.in.res = Streams.Ok) & (context.in.Available() # 0) & ((context.in.Peek() = CR) OR (context.in.Peek() = LF)) DO
-								context.in.SkipBytes(1);
+							(* actually: it is much simpler: just memorize the first seen CR or LF and start executing from there *)
+							IF firstCR = 0X THEN
+								firstCR := ch;
+								EXIT;
+							ELSIF ch = firstCR THEN
+								EXIT
 							END;
-							ch := LF;
-							EXIT
+						ELSIF (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
+							EXIT;
 						ELSIF (ch = Backspace) OR (ch = Delete)THEN
 							IF currentIndex >= 0 THEN (* There is a character at the left of the cursor *)
 								command[currentIndex] := 0X;
@@ -260,7 +265,7 @@ TYPE
 			END;
 			command[currentIndex+1] := 0X;
 
-			IF (ch = LF) (*OR (ch =CR)*)  THEN
+			IF (ch = LF) OR (ch =CR)  THEN
 				commandHistory.AddCommand(command);
 				
 				IF echo THEN context.out.Ln; context.out.Update END
@@ -591,11 +596,6 @@ TYPE
 						Execute(cmdList, wait, exit)
 					END
 				END;
-				(* do this here because Available can block for in-streams in WIndows/Linux *)
-				(*
-				IF (context.in.Available() > 0) & ((ch = CR) & (context.in.Peek() = LF) OR (ch = LF) & (context.in.Peek() = CR)) THEN ch := context.in.Get() END;
-				*)
-
 			END;
 			context.out.Update; context.error.Update
 		END Run;

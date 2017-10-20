@@ -22,5 +22,5 @@ LINUX32G -- 32 bit linux a2 using generic object files
 	
 	## Command line shell including compiler (and linker) ##
 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
-	Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend
+	Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 

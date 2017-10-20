@@ -79,6 +79,7 @@ TYPE
 		prompt: ARRAY 32 OF CHAR; 
 		upcall: NotifyProcedure; 
 		commandHistory: CommandHistory; 
+		firstCR: CHAR; 
 
 		PROCEDURE ^  & Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR); 
 		PROCEDURE ^ Exit*; 

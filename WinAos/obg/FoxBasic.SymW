@@ -464,8 +464,10 @@ VAR
 	PROCEDURE ^ GetString*(s: String; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ StringEqual*(s, t: String): BOOLEAN; 
 	PROCEDURE ^ GetErrorMessage*(err: LONGINT; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendDetailedErrorMessage*(VAR message: ARRAY OF CHAR; pos: Position; reader: Streams.Reader); 
 	PROCEDURE ^ AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position); 
 	PROCEDURE ^ MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeDetailedMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; reader: Streams.Reader; VAR message: ARRAY OF CHAR); 
 	PROCEDURE ^ ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Error*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 

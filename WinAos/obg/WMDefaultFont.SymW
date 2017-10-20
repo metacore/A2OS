@@ -1,6 +1,7 @@
 MODULE WMDefaultFont;
 	IMPORT KernelLog, Streams, Graphics := WMGraphics, Raster;
 CONST 
+	TraceInstallation = FALSE; 
 TYPE 
 	Glyph = RECORD 
 		img: Graphics.Image; 

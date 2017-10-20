@@ -106,7 +106,7 @@ TYPE
 		PROCEDURE ^ FindMasterCell*(x, y: LONGINT; VAR col, row, xpos, ypos: LONGINT); 
 		PROCEDURE ^ FindCellXY*(x, y: LONGINT; VAR col, row: LONGINT); 
 		PROCEDURE ^ CheckScrollbarsNeeded; 
-		PROCEDURE ^ GetVisibleCellRect(col, row: LONGINT): WMRectangles.Rectangle; 
+		PROCEDURE ^ GetVisibleCellRect*(col, row: LONGINT): WMRectangles.Rectangle; 
 		PROCEDURE ^ DrawBackground*(canvas: Graphics.Canvas); 
 		PROCEDURE ^ InvalidateCell*(col, row: LONGINT); 
 		PROCEDURE ^ SetTopPosition*(col, row: LONGINT; updateScrollbar: BOOLEAN); 

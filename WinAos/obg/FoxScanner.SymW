@@ -238,7 +238,6 @@ TYPE
 		PROCEDURE ^ SetContext*(CONST context: Context); 
 		PROCEDURE ^ SkipToEndOfLine*; 
 		PROCEDURE ^ GetIdentifier(VAR symbol: Symbol); 
-		PROCEDURE ^ GetNumber(VAR symbol: Symbol): Token; 
 		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol): BOOLEAN; 
 	END AssemblerScanner; 
 VAR 

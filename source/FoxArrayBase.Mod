@@ -91,9 +91,9 @@ TYPE
 	FastMatMul* = PROCEDURE ( matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: LONGINT ): BOOLEAN;
 	TransposeP* = PROCEDURE ( ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT );
 
-	LenInc = RECORD
-		len: SIZE;
-		inc: SIZE
+	LenInc* = RECORD
+		len*: SIZE;
+		inc*: SIZE
 	END;
 
 	ArrayDescriptor*= RECORD
@@ -9699,7 +9699,6 @@ TYPE
 				len := a[i];
 				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
 			END;
-			TRACE(size,tag);
 			IF tag = 0 THEN
 				SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 				dest.adr := Align(data);
@@ -9718,7 +9717,6 @@ TYPE
 
 	BEGIN
 		dim := LEN( a,0 );
-		TRACE(dest, dim);
 		IF (dest = 0) OR (dim # GetDim( dest )) THEN
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
@@ -9745,7 +9743,6 @@ TYPE
 
 	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray );
 	BEGIN
-		TRACE(elementSize);
 		AllocateTensorA(a,elementSize,tag,dest);
 		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
 	END AllocateArrayA;

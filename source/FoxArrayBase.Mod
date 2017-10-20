@@ -43,6 +43,8 @@ CONST
 	GeometryMismatch = 400;
 	DimensionMismatch=401;
 	AllocationForbidden=402;
+	
+	ArrayAlignment=8;
 
 	TensorFlag = 0;  RangeFlag = 1;  TemporaryFlag = 2;
 
@@ -233,7 +235,6 @@ VAR
 	END PutAdr;
 	
 	PROCEDURE Align(value: ADDRESS): ADDRESS;
-	CONST ArrayAlignment = 8;
 	BEGIN RETURN value + (-value) MOD ArrayAlignment;
 	END Align;
 	
@@ -1505,7 +1506,7 @@ Sufficient (but not necessary) conditions:
 				DEC( dim );  len := GetLen( src, dim );  PutLen( dest, dim, len );
 				PutInc( dest, dim, size );  size := size * len;
 			END;
-			SYSTEM.NEW( data, size );
+			SYSTEM.NEW( data, size + ArrayAlignment);
 			PutAdr( dest, Align(data));
 			PutPtr( dest, data );
 		END NewData;
@@ -8032,7 +8033,7 @@ TYPE
 		(*
 		KernelLog.String( "ALLOCATE MATRIX WAS CALLED" );  KernelLog.Ln;
 		*)
-		SYSTEM.NEW( p, rows * cols * elementsize );  PutLen( dest, 1, cols );
+		SYSTEM.NEW( p, rows * cols * elementsize  + ArrayAlignment);  PutLen( dest, 1, cols );
 		PutLen( dest, 0, rows );  PutInc( dest, 1, elementsize );
 		PutInc( dest, 0, elementsize * cols );  PutAdr( dest, Align(p) );
 		PutPtr( dest, p);  RETURN p;
@@ -8041,7 +8042,7 @@ TYPE
 	PROCEDURE AllocateVector( dest: ADDRESS;  l0, elementsize: LONGINT ): ANY;
 	VAR p: ANY;
 	BEGIN
-		SYSTEM.NEW( p, l0 * elementsize );  PutLen( dest, 0, l0 );
+		SYSTEM.NEW( p, l0 * elementsize  + ArrayAlignment);  PutLen( dest, 0, l0 );
 		PutInc( dest, 0, elementsize );  PutAdr( dest, Align(p) );
 		PutPtr( dest, p );  RETURN p;
 	END AllocateVector;
@@ -9268,7 +9269,7 @@ TYPE
 				len := GetLen( src, max-dim );  PutLen( dest, dim, len );
 				PutInc( dest, dim, size );  size := size * len;
 			END;
-			SYSTEM.NEW( data, size );
+			SYSTEM.NEW( data, size  + ArrayAlignment);
 			PutAdr( dest, Align(data) );
 			PutPtr( dest, data );
 		END NewData;
@@ -9328,7 +9329,7 @@ TYPE
 			len0 := GetLen( left, 0 );  len1 := GetLen( left, 1 );
 			p := AllocateTransposed(dest,left,Size);
 			IF Overlap( left, dest ) THEN  (* copy data first, then transpose *)
-				SYSTEM.NEW( p, len0 * len1 * Size );  dinc0 := Size;  dinc1 := len0 * Size;
+				SYSTEM.NEW( p, len0 * len1 * Size  + ArrayAlignment);  dinc0 := Size;  dinc1 := len0 * Size;
 				dadr := Align(p);  linc0 := GetIncr( left, 0 );
 				linc1 := GetIncr( left, 1 );  ladr := GetAdr( left );
 				WHILE (len0 > 0) DO
@@ -9535,7 +9536,7 @@ TYPE
 				len := shape[i];  PutInc( new, i, size );  PutLen( new, i, len );
 				size := size * len;
 			END;
-			SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
+			SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 			PutAdr( new, Align(data) );
 			PutPtr( new, data );  PutDim( new, newDim );
 			PutSize( new, Size );
@@ -9698,8 +9699,9 @@ TYPE
 				len := a[i];
 				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
 			END;
+			TRACE(size,tag);
 			IF tag = 0 THEN
-				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
+				SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 				dest.adr := Align(data);
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
@@ -9716,6 +9718,7 @@ TYPE
 
 	BEGIN
 		dim := LEN( a,0 );
+		TRACE(dest, dim);
 		IF (dest = 0) OR (dim # GetDim( dest )) THEN
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
@@ -9726,6 +9729,7 @@ TYPE
 			Heaps.SetPC(data);
 		ELSE
 			i := 0;
+			same := TRUE;
 			WHILE (i < dim) & same DO
 				IF GetLen( dest, i ) # a[i] THEN same := FALSE;  END;
 				INC( i );
@@ -9741,6 +9745,7 @@ TYPE
 
 	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray );
 	BEGIN
+		TRACE(elementSize);
 		AllocateTensorA(a,elementSize,tag,dest);
 		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
 	END AllocateArrayA;
@@ -9760,7 +9765,7 @@ TYPE
 				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
 			END;
 			IF tag = 0 THEN
-				SYSTEM.NEW( data, size );   (* Zero(data,size*Size); *)
+				SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 				PutAdr( dest, Align(data) );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
@@ -9854,7 +9859,7 @@ TYPE
 			FOR i := 0 TO rdim - 1 DO
 				len := GetLen( right, i );  size := size * len;  PutLen( dest, ldim + i, len );
 			END;
-			SYSTEM.NEW( data, size * Size );   (* Zero(data,size*Size); *)
+			SYSTEM.NEW( data, size * Size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 			(*
 			KernelLog.String("adr data="); KernelLog.Int(SYSTEM.VAL(LONGINT,data),10); KernelLog.Ln;
 			KernelLog.String("adr dest="); KernelLog.Int(dest,10); KernelLog.Ln;

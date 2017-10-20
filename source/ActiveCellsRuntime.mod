@@ -7,7 +7,7 @@ import
 	system, Heaps, Modules, Diagnostics, Strings, Objects, Reflection, Commands;
 
 const
-	EnableTrace* = true;
+	EnableTrace* = false;
 
 type
 	(* do not inherit from this object -- not supported. This object contains hidden fields instantiated by the compiler that would be lost. *)
@@ -177,7 +177,6 @@ type
 
 	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: longint);
 	begin
-		trace(address of p);
 		if EnableTrace then trace(c,p,name, inout, width); end;
 		GetContext().AddPort(c.c, p, name, inout, width);
 	end AddPort;

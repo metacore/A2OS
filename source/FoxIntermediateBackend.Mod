@@ -7470,14 +7470,17 @@ TYPE
 			required for generational garbage collector
 		*)
 		PROCEDURE OnHeap(x: SyntaxTree.Expression): BOOLEAN;
-		VAR pos: LONGINT;
+		VAR pos: LONGINT; y: SyntaxTree.Expression;
 		BEGIN
+			RETURN TRUE;
+			(*! find a conservative and simple algorithm. The following does, for example, not work for records on the stack
+				passed by reference. 
 			pos := x.position.start;
 			WHILE (x # NIL) & ~(x IS SyntaxTree.DereferenceDesignator) & ~(x IS SyntaxTree.SelfDesignator) DO
 				x := x(SyntaxTree.Designator).left;
 			END;
-			(*TRACE(pos, x # NIL);*)
 			RETURN x # NIL;
+			 *)
 		END OnHeap;
 
 		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);

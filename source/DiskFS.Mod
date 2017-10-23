@@ -5,6 +5,7 @@ MODULE DiskFS; (** AUTHOR "pjm"; PURPOSE "Aos disk file system"; *)
 IMPORT SYSTEM, Machine, KernelLog, Modules, Clock, Files, Kernel;
 
 CONST
+	SkipIndexFlag = 31; (* DiskFS filesystem flag. Do not write index map back to disk when unmounting *)
 	MinVolSize = 4;
 
 	SectorFactor = 29;
@@ -114,7 +115,7 @@ TYPE
 		VAR
 			vol: Files.Volume;
 			state: CHAR;
-			lastSectorReserved: BOOLEAN;
+			lastSectorReserved, noCleanup: BOOLEAN;
 
 		(* "exported" methods: Search, Insert, Delete *)
 
@@ -499,7 +500,7 @@ TYPE
 			(*KernelLog.String("DiskFS: Cleanup "); KernelLog.String(vol.name); KernelLog.Ln;*)
 			state := Closing;
 			size := vol.size; i := size*SectorFactor;
-			IF ~(Files.ReadOnly IN vol.flags) THEN
+			IF ~(Files.ReadOnly IN vol.flags) & ~noCleanup THEN
 				IF lastSectorReserved THEN FreeSector(vol, i); lastSectorReserved := FALSE END;
 				IF ~Marked(vol, i) THEN	(* last sector is available for us *)
 					j := 0; sec := 1; q := 0;
@@ -1354,8 +1355,15 @@ END NewSub;
 
 (** Generate a new file system object.  Files.NewVol has volume parameter, Files.Par has mount prefix. *)
 PROCEDURE NewFS*(context : Files.Parameters);
-VAR fs: FileSystem; fh: FileHeader;
+VAR fs: FileSystem; fh: FileHeader; skipIndexMapWriteback: BOOLEAN; options: ARRAY 8 OF CHAR;
 BEGIN
+	(* Get options *)
+	context.arg.SkipWhitespace;
+	REPEAT UNTIL ~context.arg.GetString(options) OR (options = '|'); 
+	IF context.arg.GetString(options) THEN
+		skipIndexMapWriteback := options = 'N'
+	END;
+
 	IF Files.This(context.prefix) = NIL THEN
 		IF (context.vol.blockSize = SectorSize) & (context.vol.size >= MinVolSize) THEN
 			GetSector(context.vol, DirRootAdr, fh);
@@ -1365,7 +1373,11 @@ BEGIN
 				fs.desc := "AosFS";
 				NEW(fs.dir, context.vol);	(* initialize directory and volume *)
 				ASSERT(fs.dir.state = Opened);	(* will have to undo changes to vol before continuing *)
-				Files.Add(fs, context.prefix)
+				Files.Add(fs, context.prefix);
+				IF skipIndexMapWriteback THEN
+					INCL(fs.flags, SkipIndexFlag);
+					fs.dir.noCleanup := TRUE
+				END
 			ELSE
 				context.error.String("DiskFS: File system not found on ");
 				context.error.String(context.vol.name);  context.error.Ln

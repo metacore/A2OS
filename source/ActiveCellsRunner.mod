@@ -131,6 +131,32 @@ type
 			end;*)
 			
 		end BulkGet;
+		
+		procedure BulkGetNonBlocking(var value: array of system.byte): boolean;
+		var		
+			i: longint;
+			numCopy: longint;
+		begin{EXCLUSIVE}
+			(*because of the exclusive semantics, this bulk get will empty the entire buffer before any put operation has a chance to run*)
+			
+			if numEle < len(value) then
+				return false
+			else
+				i:=0; (*pointer into the value array of the receiver*)
+				while i<len(value) do
+					await(numEle>0);
+					numCopy:= min(numEle, len(data)-rdPos); (*total valid data or until it wraps around*)
+					numCopy:=min(numCopy,len(value)-i); (*don't copy more than there's space in the receiver*)
+					(*trace(i,rdPos,numCopy,numEle,len(value),len(data));*)
+					
+					system.move( addressof(data[rdPos]), addressof(value[i]),numCopy);
+					rdPos:=(rdPos+numCopy) mod len(data);
+					numEle:=numEle-numCopy;
+					i:=i+numCopy;
+				end;
+				return true;
+			end;
+		end BulkGetNonBlocking;
 
 	end Fifo;
 
@@ -201,6 +227,16 @@ type
 				fifo.BulkGet(value);
 			end;
 		end Receive;
+		
+		procedure ReceiveNonBlocking(var value: longint): boolean;
+		begin
+			if delegatedTo # nil then
+				return delegatedTo.ReceiveNonBlocking(value)
+			else
+				(*fifo.Get(value);*)
+				return fifo.BulkGetNonBlocking(value);
+			end;
+		end ReceiveNonBlocking;
 
 		procedure BulkReceive(var value: array of system.byte);
 		begin
@@ -349,6 +385,12 @@ type
 			if EnableTrace then trace(p, value); end;
 			p(Port).Receive(value);
 		end Receive;
+		
+		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+		begin
+			if EnableTrace then trace(p, value); end;
+			return p(Port).ReceiveNonBlocking(value);
+		end ReceiveNonBlocking;
 
 		procedure BulkReceive*(p:any; var value: array of system.byte);
 		begin

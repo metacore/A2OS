@@ -83,6 +83,7 @@ type
 		end BulkReceive;
 		
 		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+		begin
 		end ReceiveNonBlocking;
 		
 		(* called in Execute after the architecture is fully assembled *)

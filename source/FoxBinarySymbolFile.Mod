@@ -1152,13 +1152,14 @@ TYPE
 					END;
 					thisIndex := numberTypes; INC(numberTypes);
 
-					IF tag = sfInvisible THEN visibility := SyntaxTree.Internal;  R.RawNum(tag)  END;
+					IF tag = sfInvisible THEN visibility := SyntaxTree.Hidden;  R.RawNum(tag)  END;
 					IF tag = sfSysFlag THEN R.RawNum(sysflag); R.RawNum(tag)  END;
-
 
 					(* UserType2 *)
 					typtag := tag;
 					R.RawNum(tag);
+
+
 
 					baseType := Type();
 					R.RawString(name);
@@ -2469,7 +2470,7 @@ END Test;
 END FoxBinarySymbolFile.
 
 
-SystemTools.Free FoxBinarySymbolFile ~
+SystemTools.FreeDownTo FoxBinarySymbolFile ~
 FoxBinarySymbolFile.Test  Visualizer   ~
 
 Compiler.Compile -PCtp Visualizer.Sym ~

@@ -596,6 +596,7 @@ TYPE
 			recordType: SyntaxTree.RecordType;
 			isModuleBody: BOOLEAN;
 			parametersSize: LONGINT;
+			position: LONGINT;
 
 			PROCEDURE Signature;
 			VAR parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType; returnType : SyntaxTree.Type;
@@ -652,6 +653,7 @@ TYPE
 			IF Trace & (dump # NIL) THEN dump.String("DeclarationVisitor:Procedure"); dump.Ln END;
 			*)
 			(* code section for this procedure *)
+			position := x.position.start;
 			scope := x.procedureScope;
 			prevScope := currentScope;
 			currentScope := scope;
@@ -749,9 +751,14 @@ TYPE
 								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
 							ELSE
 								IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, registerParameter[registerNumber]);
-								type := GetType(system, formalParameter.type);
+								IF formalParameter.type.IsRecordType() THEN
+									ASSERT (formalParameter.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter});
+									type := addressType;
+								ELSE
+									type := GetType(system, formalParameter.type);
+								END;
 								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-								IntermediateCode.InitMemory(dest,GetType(system,formalParameter.type),implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+								IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
 								ir.Emit(Mov(Basic.invalidPosition,dest, src));
 								implementationVisitor.ReleaseIntermediateOperand(src);
 								INC(registerNumber);
@@ -5943,7 +5950,7 @@ TYPE
 			END;
 			
 			(* === return parameter space === *)
-			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister THEN
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister & (registerNumber > 0) THEN
 				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
 				IF parametersSize < 32 THEN 
 					(* allocated space for all parameter registers *)

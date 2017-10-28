@@ -2117,6 +2117,8 @@ TYPE
 							IF ~PutData (bits16) THEN SkipLine END;
 						ELSIF ident = "DD" THEN
 							IF ~PutData (bits32) THEN SkipLine END;
+						ELSIF ident = "DQ" THEN
+							IF ~PutData (bits64) THEN SkipLine END;
 						ELSIF ident = "REP" THEN
 							NextSymbol;
 							emitter.code.PutByte (InstructionSet.prfREP);

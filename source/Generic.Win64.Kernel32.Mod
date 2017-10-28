@@ -1,4 +1,7 @@
-(* Copyright (c) Felix Friedrich, ETH Zürich, 2017 *)
+(* Copyright (c) Felix Friedrich, ETH Zürich, 2017 
+	This is the 64-bit version of Kernel32. The name may be misleading but it copies 1:1 what the Microsoft developers did
+	[There is no Kernel64 DLL in WIndows. Kernel32 is chosen according to the bit-width of the application]
+*)
 
 MODULE Kernel32;   (** AUTHOR "ejz,fof"; PURPOSE "Definition of the Win64 Kernel32 API used by (Win)Aos"; *)
 
@@ -158,7 +161,7 @@ CONST
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
 
-	BOOL* = LONGINT;
+	BOOL* = WORD;
 
 	HANDLE* = ADDRESS;  HMODULE* = ADDRESS;
 	HINSTANCE* = ADDRESS;  ATOM* = INTEGER;  HGLOBAL* = HANDLE;
@@ -194,7 +197,7 @@ TYPE
 
 	(** Critical-section object. *)
 	CriticalSection* = RECORD
-		a, b, c, d, e, f: LONGINT
+		a, b, c, d, e, f: SIZE;
 	END;
 
 	(** thread context and exception information *)
@@ -207,11 +210,11 @@ TYPE
 
 	Context* = RECORD
 		ContextFlags*: SET;
-		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: LONGINT;
+		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIZE;
 		FloatSave*: FloatingSaveArea;
-		GS*, FS*, ES*, DS*: LONGINT;
-		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: LONGINT;
-		BP*, PC*, CS*, FLAGS*, SP*, SS*: LONGINT; (* whereas BP is EBP and SP is ESP *)
+		GS*, FS*, ES*, DS*: SIZE;
+		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: SIZE;
+		BP*, PC*, CS*, FLAGS*, SP*, SS*: SIZE; (* whereas BP is EBP and SP is ESP *)
 	END;
 
 	Wow64Context*= RECORD (Context)
@@ -532,7 +535,7 @@ VAR
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
 																			CONST lpDefault: ARRAY OF CHAR;
-																			CONST lpReturnedString: ARRAY OF CHAR;
+																			VAR lpReturnedString: ARRAY OF CHAR;
 																			nSize: LONGINT;
 																			CONST lpFileName: ARRAY OF CHAR): LONGINT;
 	(** The GetProcessAffinityMask function retrieves the process affinity mask for the specified process and the system affinity mask for the system. *)
@@ -767,11 +770,11 @@ VAR
 	(** The TryEnterCriticalSection function attempts to enter a critical section without blocking. *)
 	TryEnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection ): BOOL;
 	(** The VirtualAlloc function reserves or commits a region of pages in the virtual address space of the calling process. *)
-	VirtualAlloc-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
+	VirtualAlloc-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: SIZE;
 																    flAllocationType, flProtect: SET ): ADDRESS;
 	(** The VirtualFree function releases or decommits (or both) a region of pages within the virtual address space of the
 			calling process. *)
-	VirtualFree-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
+	VirtualFree-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: SIZE;
 																  dwFreeType: SET ): BOOL;
 	(** The WaitForSingleObject function returns when one of the following occurs:
 			The specified object is in the signaled state.
@@ -822,10 +825,26 @@ VAR
 	PROCEDURE NoOutputString(CONST str: ARRAY OF CHAR);
 	BEGIN
 	END NoOutputString;
+	
+	PROCEDURE ConsoleString(CONST str: ARRAY OF CHAR);
+	VAR i: LONGINT;
+	BEGIN
+		i := 0; 
+		WHILE (i<LEN(str)) & (str[i] # 0X) DO
+			TraceChar(str[i]);INC(i); 
+		END;
+	END ConsoleString;
 
-	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: LONGINT );
+	PROCEDURE TraceChar(c: CHAR);
+	VAR len: LONGINT; b: BOOL;
+	BEGIN
+		len := 1;
+		b := WriteFile(hout,c,len,len,NIL);
+	END TraceChar;
+
+	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: ADDRESS );
 	VAR s: ARRAY 16 OF CHAR;
-		d, i: LONGINT;
+		d: ADDRESS; i: SIZE;
 	BEGIN
 		outputDebugString( str );  s[8] := 0X;
 		FOR i := 7 TO 0 BY -1 DO
@@ -898,7 +917,9 @@ VAR
 		GetProcAddress(mod, "GetLogicalDriveStringsA",SYSTEM.VAL(ADDRESS,GetLogicalDriveStrings));
 		GetProcAddress(mod, "GetLogicalDrives",SYSTEM.VAL(ADDRESS,GetLogicalDrives));
 		GetProcAddress(mod, "GetModuleFileNameA",SYSTEM.VAL(ADDRESS,GetModuleFileName));
+		
 		GetProcAddress(mod, "GetModuleHandleA",SYSTEM.VAL(ADDRESS,GetModuleHandle));
+		
 		GetProcAddress(mod, "GetOverlappedResult",SYSTEM.VAL(ADDRESS,GetOverlappedResult));
 		GetProcAddress(mod, "GetPrivateProfileStringA",SYSTEM.VAL(ADDRESS,GetPrivateProfileString));
 		(* must be done by linker: GetProcAddress(mod, "GetProcAddress",SYSTEM.VAL(ADDRESS,getProcAddress)); *)
@@ -906,7 +927,9 @@ VAR
 		GetProcAddress(mod, "GetProcessHeap",SYSTEM.VAL(ADDRESS,GetProcessHeap));
 		GetProcAddress(mod, "GetProcessTimes", SYSTEM.VAL(ADDRESS, GetProcessTimes));
 		GetProcAddress(mod, "GetStartupInfoA",SYSTEM.VAL(ADDRESS,GetStartupInfo));
+		
 		GetProcAddress(mod, "GetStdHandle",SYSTEM.VAL(ADDRESS,GetStdHandle));
+		
 		GetProcAddress(mod, "GetSystemInfo",SYSTEM.VAL(ADDRESS,GetSystemInfo));
 		GetProcAddress(mod, "GetSystemTime",SYSTEM.VAL(ADDRESS,GetSystemTime));
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
@@ -933,7 +956,9 @@ VAR
 		GetProcAddress(mod, "InitializeCriticalSection",SYSTEM.VAL(ADDRESS,InitializeCriticalSection));
 		GetProcAddress(mod, "InterlockedDecrement",SYSTEM.VAL(ADDRESS,InterlockedDecrement));
 		GetProcAddress(mod, "InterlockedIncrement",SYSTEM.VAL(ADDRESS,InterlockedIncrement));
+		
 		GetProcAddress(mod, "IsDebuggerPresent",SYSTEM.VAL(ADDRESS,IsDebuggerPresent));
+		
 		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
@@ -986,30 +1011,29 @@ VAR
 		GetProcAddress(mod, "VirtualAlloc",SYSTEM.VAL(ADDRESS,VirtualAlloc));
 		GetProcAddress(mod, "VirtualFree",SYSTEM.VAL(ADDRESS,VirtualFree));
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
+		
 		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
+		
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
+		
 		isEXE := hInstance = NULL;
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
+
+		SetTraceConsole;
 		IF IsDebuggerPresent()=True THEN
 			OutputString := OutputDebugString
 		ELSE
-			OutputString := NoOutputString
+			OutputString := ConsoleString
 		END;
-		
-		SetTraceConsole;
 		Trace.String("Test"); Trace.Ln; 
-		
-		LOOP END;
+		Trace.Address(InitializeCriticalSection);
+		Trace.String(" =="); Trace.Ln; 
 	END Init;
+	
+	VAR g: BOOLEAN;
 
 VAR hout: HANDLE;
 
-	PROCEDURE TraceChar(c: CHAR);
-	VAR len: LONGINT; b: BOOL;
-	BEGIN
-		len := 1;
-		b := WriteFile(hout,c,len,len,NIL);
-	END TraceChar;
 
 	PROCEDURE SetTraceConsole;
 	VAR res: LONGINT;
@@ -1068,8 +1092,11 @@ VAR hout: HANDLE;
 			MOV getProcAddress, RAX
 	END EntryPoint;
 		
+(*BEGIN
+	Init;*)
+	
 BEGIN
-	Init;
+	Trace.String("Kernel32 (64bit)"); Trace.Ln;
 END Kernel32.
 	
 --newObjectFile 
@@ -1086,3 +1113,20 @@ StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --d
 	Runtime Kernel32 ~
 
 FSTools.CloseFiles A264.exe  ~
+
+
+SystemTools.DoCommands 
+
+Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --newObjectFile  --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw 
+	AMD64.Runtime.Mod Trace.Mod Generic.Win64.Kernel32.Mod Win64.Machine.Mod Heaps.Mod Generic.Modules.Mod 
+	Win64.Objects.Mod Win32.Kernel.Mod ~
+
+StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
+	Runtime Trace Kernel32 
+	Heaps Modules Objects Kernel ~
+
+FSTools.CloseFiles A264.exe  ~
+~
+
+	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+	~

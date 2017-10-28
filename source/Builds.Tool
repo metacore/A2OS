@@ -33,4 +33,23 @@ LINUX32G -- 32 bit linux a2 using generic object files
 			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
+Win64G -- work in progress
+================
+
+SystemTools.DoCommands 
+
+Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --newObjectFile  --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw 
+	--traceModule=Trace
+	AMD64.Runtime.Mod Trace.Mod Generic.Win64.Kernel32.Mod Win64.Machine.Mod Heaps.Mod Generic.Modules.Mod 
+	Win64.Objects.Mod Win32.Kernel.Mod ~
+
+StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
+	Runtime Trace Kernel32 
+	Heaps Modules Objects Kernel ~
+
+FSTools.CloseFiles A264.exe  ~
+~
+
+	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+	~
 

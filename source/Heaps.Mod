@@ -1684,7 +1684,7 @@ BEGIN
 END AssignRecord;
 
 PROCEDURE AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU;  numElems: SIZE; src: ADDRESS);
-VAR i, j: LONGINT; sval: ADDRESS; 
+VAR i, j: SIZE; sval: ADDRESS; 
 BEGIN
 	FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
 	FOR i := 0 TO numElems-1 DO

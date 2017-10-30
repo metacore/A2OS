@@ -308,11 +308,11 @@ VAR
 	CONST ConfigKey = "Configuration";
 	BEGIN
 		COPY ("", val);
-		TRACE(name,val,userConfigFile,defaultConfigFile); 
+
 		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), userConfigFile) # 0 THEN
 		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), defaultConfigFile) # 0 THEN
 		END;
-		TRACE(name,val); 
+		
 		IF (name = "ObjectFileExtension") & (val = "") THEN
 			IF Kernel32.Generic THEN
 				val := ".GofW";
@@ -1090,8 +1090,10 @@ CODE{SYSTEM.i386}
 	OUT DX,EAX
 END Portout32;
 
+
 BEGIN
 	IF ~Kernel32.Generic THEN
 		Init
 	END;
+	Trace.String("Machine (64 bit)"); Trace.Ln;
 END Machine.

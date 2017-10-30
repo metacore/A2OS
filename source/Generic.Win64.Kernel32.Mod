@@ -1098,35 +1098,3 @@ VAR hout: HANDLE;
 BEGIN
 	Trace.String("Kernel32 (64bit)"); Trace.Ln;
 END Kernel32.
-	
---newObjectFile 
---preciseGC --trackLeave --writeBarriers
-
-Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --metaData=Simple
-	--symbolFile=Textual 
-	--mergeSections 
-	--objectFileExtension=.GofWw --symbolFileExtension=.SymWw 
-	
-	Runtime.Mod Trace.Mod Generic.Win64.Kernel32.Mod ~
-
-StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
-	Runtime Kernel32 ~
-
-FSTools.CloseFiles A264.exe  ~
-
-
-SystemTools.DoCommands 
-
-Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --newObjectFile  --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw 
-	AMD64.Runtime.Mod Trace.Mod Generic.Win64.Kernel32.Mod Win64.Machine.Mod Heaps.Mod Generic.Modules.Mod 
-	Win64.Objects.Mod Win32.Kernel.Mod ~
-
-StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
-	Runtime Trace Kernel32 
-	Heaps Modules Objects Kernel ~
-
-FSTools.CloseFiles A264.exe  ~
-~
-
-	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-	~

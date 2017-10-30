@@ -5677,6 +5677,9 @@ TYPE
 			END;
 
 			alignment := procedureType.stackAlignment;
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & (system.addressSize = 64) THEN
+				alignment := 16 (* bytes *);
+			END;
 			IF alignment > 1 THEN
 				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,reg, sp));
@@ -5787,7 +5790,8 @@ TYPE
 					END;
 					formalParameter := formalParameter.prevParameter;
 				END;
-				IF passByRegister & (registerNumber > 0) & ~SysvABI(procedureType.callingConvention) THEN
+				IF passByRegister (* & (registerNumber > 0)*)  & ~SysvABI(procedureType.callingConvention) THEN
+					(* WINAPI: always (!) reserve 4 addresses for fastcall registers *)
 					stackSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
 					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
 				END;
@@ -5950,10 +5954,11 @@ TYPE
 			END;
 			
 			(* === return parameter space === *)
-			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister & (registerNumber > 0) THEN
+			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister (* & (registerNumber > 0) *) THEN
 				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
+				(* cleanup all space for all parameters *) 
 				IF parametersSize < 32 THEN 
-					(* allocated space for all parameter registers *)
+					(* allocated space for all parameter registers -- this is the least we have to cleanup *)
 					parametersSize := 32
 				END;
 				size := IntermediateCode.Immediate(addressType,parametersSize);

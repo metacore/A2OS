@@ -536,18 +536,20 @@ VAR res: LONGINT;
 BEGIN
 	IF traceName[0] # 0X THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
-		Trace.Char := LogChar;
+		(*Trace.Char := LogChar;*)
 		res := Kernel32.CloseHandle(hout);
+		TRACE(res); 
 		IF res = 0 THEN
 			res := Kernel32.GetLastError();
 			Trace.String("could not close "); Trace.String("; res = "); Trace.Int(res,1); Trace.Ln;
 		END;
 		res := Kernel32.DeleteFile(traceName);
+		TRACE(res); 
 		IF res = 0 THEN
 			res := Kernel32.GetLastError();
 			Trace.String("could not delete "); Trace.String(traceName); Trace.String("; res = "); Trace.Int(res,1); Trace.Ln;
 		END;
-
+		TRACE(res);
 	END;
 END RemoveTraceFile;
 
@@ -1007,43 +1009,57 @@ VAR trace: ARRAY 2 OF CHAR;
 BEGIN trace[0] := c; trace[1] := 0X; Kernel32.OutputString (trace);
 END LogChar;
 
-PROCEDURE -GetEAX*(): LONGINT;
-CODE{SYSTEM.i386}
-END GetEAX;
+PROCEDURE -GetRAX*(): HUGEINT;
+CODE{SYSTEM.AMD64}
+END GetRAX;
 
-PROCEDURE -GetECX*(): LONGINT;
-CODE{SYSTEM.i386}
-	MOV EAX,ECX
-END GetECX;
+PROCEDURE -GetRCX*(): HUGEINT;
+CODE{SYSTEM.AMD64}
+	MOV RAX,RCX
+END GetRCX;
 
-PROCEDURE -SetEAX*(n: LONGINT);
-CODE{SYSTEM.i386}	POP EAX
-END SetEAX;
+PROCEDURE -GetRSI*(): HUGEINT;
+CODE{SYSTEM.AMD64}
+	MOV RAX,RSI
+END GetRSI;
 
-PROCEDURE -SetEBX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EBX
-END SetEBX;
+PROCEDURE -GetRDI*(): HUGEINT;
+CODE{SYSTEM.AMD64}
+	MOV RAX,RDI
+END GetRDI;
 
-PROCEDURE -SetECX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ECX
-END SetECX;
 
-PROCEDURE -SetEDX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDX
-END SetEDX;
+PROCEDURE -SetRAX*(n: HUGEINT);
+CODE{SYSTEM.AMD64}	
+	NOP
+	POP RAX
+END SetRAX;
 
-PROCEDURE -SetESI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ESI
-END SetESI;
+PROCEDURE -SetRBX*(n: HUGEINT);
+CODE{SYSTEM.AMD64}
+	NOP
+	POP RBX
+END SetRBX;
 
-PROCEDURE -SetEDI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDI
-END SetEDI;
+PROCEDURE -SetRCX*(n: HUGEINT);
+CODE{SYSTEM.AMD64}
+	POP RCX
+END SetRCX;
+
+PROCEDURE -SetRDX*(n: HUGEINT);
+CODE{SYSTEM.AMD64}
+	POP RDX
+END SetRDX;
+
+PROCEDURE -SetRSI*(n: HUGEINT);
+CODE{SYSTEM.AMD64}
+	POP RSI
+END SetRSI;
+
+PROCEDURE -SetRDI*(n: HUGEINT);
+CODE{SYSTEM.AMD64}
+	POP RDI
+END SetRDI;
 
 PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
 CODE{SYSTEM.i386}

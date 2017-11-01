@@ -610,15 +610,16 @@ END ExcpFrmHandler;
 (*	PROCEDURE -GetCur 64H, 8BH, 0DH, 0, 0, 0, 0;   (* MOV ECX, FS:[0] *) *)
 (* Better *)
 PROCEDURE -GetCur;
-CODE {SYSTEM.i386}
-	DB	064H, 08BH, 00DH, 000H, 000H, 000H, 000H
+CODE {SYSTEM.AMD64}
+	MOV RCX, [GS:0]
+	; DB	064H, 08BH, 00DH, 000H, 000H, 000H, 000H
 END GetCur;
 
 PROCEDURE GetCurrent( ): Kernel32.ExcpFrmPtr;
 VAR cur: Kernel32.ExcpFrmPtr;
 BEGIN
 	GetCur;
-	cur := SYSTEM.VAL(Kernel32.ExcpFrmPtr,Machine.GetECX());
+	cur := SYSTEM.VAL(Kernel32.ExcpFrmPtr,Machine.GetRCX());
 	(* RETURN ECX *)
 	RETURN cur
 END GetCurrent;
@@ -627,13 +628,14 @@ END GetCurrent;
 (*	PROCEDURE -SetCur 64H, 0A3H, 0, 0, 0, 0;   (* MOV FS:[0], EAX *)*)
 (* Better *)
 PROCEDURE -SetCur;
-CODE {SYSTEM.i386}
-	DB	064H, 0A3H, 000H, 000H, 000H, 000H
+CODE {SYSTEM.AMD64}
+	;  DB	064H, 0A3H, 000H, 000H, 000H, 000H
+	MOV [GS:0], RAX
 END SetCur;
 
 PROCEDURE SetCurrent( cur: Kernel32.ExcpFrmPtr );
 BEGIN
-	Machine.SetEAX(SYSTEM.VAL(LONGINT,cur));
+	Machine.SetRAX(SYSTEM.VAL(LONGINT,cur));
 	 (* EAX := cur *)
 	SetCur
 END SetCurrent;
@@ -735,7 +737,6 @@ VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: ADDRESS;
 BEGIN
 	(* it may happen that the garbage collector runs right here and ignores this procedure.
 	    This is not a problem since lpParameter (being a reference to a process) is protected by the process lists *)
-
 	Machine.Acquire(Machine.Objects);
 
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, lpParameter));
@@ -840,7 +841,8 @@ BEGIN
 	ELSE  (* terminate process *)
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
-
+	
+	
 	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
 
 	IF TraceVerbose OR TraceOpenClose THEN
@@ -859,11 +861,12 @@ VAR t : Process; heapBlock {UNTRACED}: Heaps.HeapBlock;
 BEGIN
 	ASSERT(priority >= 0, 1000); ASSERT(priority <=Realtime, 1001);
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, heapBlock);
+	
 	ASSERT(heapBlock IS Heaps.ProtRecBlock); (* protected object *)
 	IF Restart IN flags THEN INCL(flags, Resistant) END;   (* SAFE => Restart & Resistant *)
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
 	t.mode := Ready; Put(ready, t);
-	Machine.Release(Machine.Objects)
+	Machine.Release(Machine.Objects);
 END CreateProcess;
 
 
@@ -1108,16 +1111,17 @@ BEGIN
 END Terminate;
 
 PROCEDURE Init;   (* can not use NEW *)
-VAR lock: PROCEDURE(obj: ProtectedObject; exclusive: BOOLEAN);
+(*VAR lock: PROCEDURE(obj: ProtectedObject; exclusive: BOOLEAN);
 	unlock: PROCEDURE(obj: ProtectedObject; dummy: BOOLEAN);
 	await: PROCEDURE(cond: Condition; slink: LONGINT; obj: ProtectedObject; flags: SET);
 	create: PROCEDURE(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
+	*)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
 BEGIN
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
-	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;
+(*	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;*)
 
 	NEW(t);  NEW(fn);
 
@@ -1143,7 +1147,7 @@ BEGIN
 	Machine.Release(Machine.Objects);
 	InitEventHandling; (* implicit call of NewProcess! *)
 	InitGCHandling; (* do. *)
-	Heaps.gcStatus := GCStatusFactory()
+	Heaps.gcStatus := GCStatusFactory();
 END Init;
 
 (** Set (or reset) an event handler object's timeout value. *)
@@ -1202,7 +1206,7 @@ END CancelTimeout;
 PROCEDURE InitEventHandling;
 BEGIN
 	NEW(event); event.next := event; event.prev := event;  (* event: head of timer event queue, only a sentinel *)
-	NEW(clock)
+	NEW(clock);
 END InitEventHandling;
 
 PROCEDURE InitGCHandling;
@@ -1319,12 +1323,17 @@ BEGIN
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
 	
+	
 	(* determine whether it is WOW64 environment *)
+	TRACE(Kernel32.Wow64GetThreadContext); 
+	(*
 	isWow64 := (Kernel32.Wow64GetThreadContext # NIL) & (Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0); 
+	TRACE("Objects 5"); 
 	IF isWow64 THEN
 		Trace.String("Use Wow64"); Trace.Ln;
 	END;
-	Init
+	*)
+	Init;
 END Objects.
 
 (*

@@ -321,9 +321,9 @@ TYPE
 		wProcessorArchitecture*: INTEGER;
 		wReserved: INTEGER;
 		dwPageSize*: LONGINT;
-		lpMinimumApplicationAddress*: LONGINT;
-		lpMaximumApplicationAddress*: LONGINT;
-		dwActiveProcessorMask*: LONGINT;
+		lpMinimumApplicationAddress*: ADDRESS;
+		lpMaximumApplicationAddress*: ADDRESS;
+		dwActiveProcessorMask*: ADDRESS;
 		dwNumberOfProcessors*: LONGINT;
 		dwProcessorType*: LONGINT;
 		dwAllocationGranularity*: LONGINT;
@@ -845,14 +845,18 @@ VAR
 	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: ADDRESS );
 	VAR s: ARRAY 16 OF CHAR;
 		d: ADDRESS; i: SIZE;
+		pad: ARRAY 256 OF CHAR;
 	BEGIN
-		outputDebugString( str );  s[8] := 0X;
-		FOR i := 7 TO 0 BY -1 DO
-			d := x MOD 16;
-			IF d < 10 THEN s[i] := CHR( d + ORD( "0" ) ) ELSE s[i] := CHR( d - 10 + ORD( "A" ) ) END;
-			x := x DIV 16
+		IF IsDebuggerPresent() = True THEN
+			OutputDebugString( str );  
+			s[8] := 0X;
+			FOR i := 7 TO 0 BY -1 DO
+				d := x MOD 16;
+				IF d < 10 THEN s[i] := CHR( d + ORD( "0" ) ) ELSE s[i] := CHR( d - 10 + ORD( "A" ) ) END;
+				x := x DIV 16
+			END;
+			OutputDebugString( s );  s[0] := 0AX;  s[1] := 0X;  OutputDebugString( s )
 		END;
-		outputDebugString( s );  s[0] := 0AX;  s[1] := 0X;  outputDebugString( s )
 	END SendToDebugger;
 
 	PROCEDURE ShutdownP(l: LONGINT);

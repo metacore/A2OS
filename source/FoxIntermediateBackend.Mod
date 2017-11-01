@@ -5685,7 +5685,13 @@ TYPE
 			IF alignment > 1 THEN
 				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,reg, sp));
-				gap := ParametersSize(system, procedureType, FALSE) + ToMemoryUnits(system,system.offsetFirstParameter) + ToMemoryUnits(system,system.addressSize);
+				gap := ParametersSize(system, procedureType, FALSE); 
+				IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & (system.addressSize =64) THEN
+					IF gap < 4*ToMemoryUnits(system,system.addressSize) THEN 
+						gap := 4*ToMemoryUnits(system,system.addressSize); (* at least four registers get pushed*)
+					END;
+				END;
+				gap := gap + ToMemoryUnits(system,system.offsetFirstParameter) + ToMemoryUnits(system,system.addressSize);
 
 				Emit(Sub(position,sp, sp, IntermediateCode.Immediate(addressType,gap)));
 				IntermediateCode.InitImmediate(mask,addressType,-alignment);
@@ -14222,12 +14228,18 @@ TYPE
 			parSize := parSize + (-parSize) MOD system.addressSize;
 		END;
 
+		
 		parameter :=procedureType.lastParameter;
 		WHILE (parameter # NIL) DO
-			INC(parSize,system.SizeOfParameter(parameter));
-			parSize := parSize + (-parSize) MOD system.addressSize;
+			IF SysvABIorWINAPI(procedureType.callingConvention) THEN
+				INC(parSize, system.addressSize); 
+			ELSE
+				INC(parSize,system.SizeOfParameter(parameter));
+				parSize := parSize + (-parSize) MOD system.addressSize;
+			END;
 			parameter := parameter.prevParameter;
 		END;
+		
 
 		IF procedureType.selfParameter # NIL THEN
 			parameter := procedureType.selfParameter;

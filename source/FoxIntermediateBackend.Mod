@@ -730,10 +730,6 @@ TYPE
 					ir.Emit(Nop(position)); (* placeholder for stack frame check *)
 					ir.Emit(Nop(position)); (* placeholder for stack frame check (2) *)
 					*)
-					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
-						implementationVisitor.EmitEnter(ir,x.position,x,cc,ToMemoryUnits(system,stackSize),registerNumber);
-					END;
-					pc := ir.pc-1;
 					(*
 					ir.Emit(Nop(position)); (* placeholder for fill *)
 					*)
@@ -758,7 +754,7 @@ TYPE
 									type := GetType(system, formalParameter.type);
 								END;
 								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-								IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+								IntermediateCode.InitMemory(dest,type,implementationVisitor.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
 								ir.Emit(Mov(Basic.invalidPosition,dest, src));
 								implementationVisitor.ReleaseIntermediateOperand(src);
 								INC(registerNumber);
@@ -766,6 +762,12 @@ TYPE
 							END;
 						END;
 					END;
+					
+					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
+						implementationVisitor.EmitEnter(ir,x.position,x,cc,ToMemoryUnits(system,stackSize),registerNumber);
+					END;
+					pc := ir.pc-1;
+
 				END;
 
 				implementationVisitor.tagsAvailable := procedureType.callingConvention = SyntaxTree.OberonCallingConvention;
@@ -12773,8 +12775,8 @@ TYPE
 			Symbol(section,section,2,0);
 			(*
 				TypeDesc* = POINTER TO RECORD   (* ug: adapt constant TypeDescRecSize if this type is changed !!! *)
-					descSize: LONGINT;
-					sentinel: LONGINT;	(* = MPO-4 *)
+					descSize: SIZE;
+					sentinel: ADDRESS;	(* = MPO-4 *)
 					tag*: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 					flags*: SET;
 					mod*: Module;	(* hint only, because module may have been freed (at Heaps.ModOfs) *)
@@ -12782,9 +12784,10 @@ TYPE
 				END;
 			*)
 			Size(section, 0);
-			Longint(section,0);
+			Address(section,0);
 			Address(section,0);
 			Set(section,{});
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0); END;
 			moduleSection := ModuleSection();
 			Symbol( section, moduleSection, moduleSection.pc,0);
 			IF procedureSection.symbol = NIL THEN 
@@ -12985,6 +12988,7 @@ TYPE
 					Info(source, "type flags");
 					flags := {};
 					Set( source, flags);
+					
 					Info(source, "pointer to module");
 					moduleSection := ModuleSection();
 					Symbol( source, moduleSection, moduleSection.pc,0);
@@ -13220,6 +13224,8 @@ TYPE
 					flags := {};
 					IF isProtected THEN INCL(flags,31) END;
 					Set( source, flags);
+					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
+
 					Info(source, "pointer to module");
 					moduleSection := ModuleSection();
 					Symbol( source, moduleSection, moduleSection.pc,0);
@@ -14646,7 +14652,7 @@ END FoxIntermediateBackend.
 
 Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 
-#	Release.Build --path="/temp/obg/"  WinAosNewObjectFile ~
+#	Release.Build --path="/temp/obg/"  IinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2Z.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 
 #	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~

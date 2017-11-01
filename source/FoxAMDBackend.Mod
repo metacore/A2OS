@@ -487,7 +487,7 @@ TYPE
 		(* static generator state variables, considered constant during generation *)
 		runtimeModuleName: SyntaxTree.IdentifierString;
 		cpuBits: LONGINT;
-		opBP, opSP, opRA, opRB, opRC, opRD, opRS, opR8, opR9: Assembler.Operand; (* base pointer, stack pointer, register A, depends on cpuBits*)
+		opBP, opSP, opRA, opRB, opRC, opRD, opRS, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; (* base pointer, stack pointer, register A, depends on cpuBits*)
 		BP, SP, RA, RD, RS, RC: LONGINT; (* base pointer and stack pointer register index, depends on cpuBits *)
 
 		emitter: Assembler.Emitter; (* assembler generating and containing the machine code *)
@@ -536,6 +536,9 @@ TYPE
 				opBP := opRBP; opSP := opRSP; opRA := registerOperands[RAX]; opRB := registerOperands[RBX]; opRD := registerOperands[RDI];
 				opRS := registerOperands[RSI]; opRC := registerOperands[RCX];
 				opR8 := registerOperands[R8]; opR9 := registerOperands[R9];
+				opR10 := registerOperands[R10]; opR11 := registerOperands[R11];
+				opR12 := registerOperands[R12]; opR13 := registerOperands[R13];
+				opR14 := registerOperands[R14]; opR15 := registerOperands[R15];
 				SP := RSP; BP := RBP; RA := RAX;
 				RD := RDI; RS := RSI; RC := RCX;
 				ASSERT(~error);
@@ -1281,9 +1284,9 @@ TYPE
 					END;
 					IF numberMachineWords >4 THEN
 						Assembler.InitImm(imm, 0, numberMachineWords DIV 4);
-						emitter.Emit2(InstructionSet.opMOV, opRB, imm);
+						emitter.Emit2(InstructionSet.opMOV, opRC, imm); (* is EB register is non-volatile in WINAPI, would ec be better? *)
 						destPC := out.pc;
-						emitter.Emit1(InstructionSet.opDEC, opRB);
+						emitter.Emit1(InstructionSet.opDEC, opRC);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
@@ -1309,10 +1312,20 @@ TYPE
 
 			cc := SHORT(instruction.op1.intValue);
 			IF (cc = SyntaxTree.WinAPICallingConvention) OR (cc = SyntaxTree.CCallingConvention) THEN
-				(* the winapi calling convention presumes that all registers except EAX, EDX and ECX are retained by the callee *)
-				emitter.Emit1(InstructionSet.opPUSH,opEBX);
-				emitter.Emit1(InstructionSet.opPUSH,opEDI);
-				emitter.Emit1(InstructionSet.opPUSH,opESI);
+				IF  cpuBits = 32 THEN
+					(* the winapi calling convention presumes that all registers except EAX, EDX and ECX are retained by the callee *)
+					emitter.Emit1(InstructionSet.opPUSH,opEBX);
+					emitter.Emit1(InstructionSet.opPUSH,opEDI);
+					emitter.Emit1(InstructionSet.opPUSH,opESI);
+				ELSE ASSERT(cpuBits =64);
+					emitter.Emit1(InstructionSet.opPUSH,opRB);
+					emitter.Emit1(InstructionSet.opPUSH,opRD);
+					emitter.Emit1(InstructionSet.opPUSH,opRS);
+					emitter.Emit1(InstructionSet.opPUSH,opR12);
+					emitter.Emit1(InstructionSet.opPUSH,opR13);
+					emitter.Emit1(InstructionSet.opPUSH,opR14);
+					emitter.Emit1(InstructionSet.opPUSH,opR15);
+				END;
 			END;
 			spillStackStart := stackSize;
 		END EmitEnter;
@@ -1322,9 +1335,20 @@ TYPE
 		BEGIN
 			cc := SHORT(instruction.op1.intValue);
 			IF (cc = SyntaxTree.WinAPICallingConvention)  OR (cc = SyntaxTree.CCallingConvention) THEN
-				emitter.Emit1(InstructionSet.opPOP,opESI);
-				emitter.Emit1(InstructionSet.opPOP,opEDI);
-				emitter.Emit1(InstructionSet.opPOP,opEBX);
+				IF cpuBits = 32 THEN
+					emitter.Emit1(InstructionSet.opPOP,opESI);
+					emitter.Emit1(InstructionSet.opPOP,opEDI);
+					emitter.Emit1(InstructionSet.opPOP,opEBX);
+				ELSE ASSERT(cpuBits =64);
+					emitter.Emit1(InstructionSet.opPOP,opR15);
+					emitter.Emit1(InstructionSet.opPOP,opR14);
+					emitter.Emit1(InstructionSet.opPOP,opR13);
+					emitter.Emit1(InstructionSet.opPOP,opR12);
+					emitter.Emit1(InstructionSet.opPOP,opRS);
+					emitter.Emit1(InstructionSet.opPOP,opRD);
+					emitter.Emit1(InstructionSet.opPOP,opRB);
+				END;
+				
 			END;
 		END EmitLeave;
 

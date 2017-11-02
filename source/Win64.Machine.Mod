@@ -315,9 +315,9 @@ VAR
 		
 		IF (name = "ObjectFileExtension") & (val = "") THEN
 			IF Kernel32.Generic THEN
-				val := ".GofW";
+				val := ".GofWw";
 			ELSE
-				val := ".Obw"
+				val := ".Obww"
 			END;
 		END;
 	END GetConfig;
@@ -534,7 +534,7 @@ END SetupTraceName;
 PROCEDURE RemoveTraceFile;
 VAR res: LONGINT;
 BEGIN
-	IF traceName[0] # 0X THEN
+	IF (traceName # "") & (traceName # "Console") THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
 		(*Trace.Char := LogChar;*)
 		res := Kernel32.CloseHandle(hout);
@@ -551,6 +551,7 @@ BEGIN
 		END;
 		TRACE(res);
 	END;
+	TRACE(traceName);
 END RemoveTraceFile;
 
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);

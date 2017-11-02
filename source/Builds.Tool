@@ -24,7 +24,9 @@ LINUX32G -- 32 bit linux a2 using generic object files
 	Release.Build -b Linux32G ~
 	
 	## X11 bootconsole ##
-		StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
+		StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel 
+		KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates 
+		Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
 	
 	## Command line shell including compiler (and linker) ##
 		StaticLinker.Link -p=Linux32G 
@@ -41,15 +43,25 @@ SystemTools.DoCommands
 Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --newObjectFile  --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw 
 	--traceModule=Trace
 	AMD64.Runtime.Mod Trace.Mod Generic.Win64.Kernel32.Mod Win64.Machine.Mod Heaps.Mod Generic.Modules.Mod 
-	Win64.Objects.Mod Win32.Kernel.Mod ~
+	Win64.Objects.Mod Win32.Kernel.Mod  
+	KernelLog.Mod Streams.Mod Commands.Mod Files.Mod Win32.WinFS.Mod Win32.Clock.Mod Dates.Mod 
+	AMD64.Reals.Mod Strings.Mod Diagnostics.Mod BitSets.Mod
+	StringPool.Mod ObjectFile.Mod GenericLinker.Mod Reflection.Mod GenericLoader.Mod BootConsole.Mod 
+	Win32.WinTrace.Mod Pipes.Mod Win32.StdIO.Mod Shell.Mod StdIOShell.Mod 
+	~
 
 StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
 	Runtime Trace Kernel32 
-	Heaps Modules Objects Kernel ~
+	Heaps Modules Objects Kernel
+	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 
+	StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell ~
 
 FSTools.CloseFiles A264.exe  ~
 ~
 
 	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 	~
+	 ConsumerProducer TestBoot ~
+	ProducerConsumer.Mod TestBoot.Mod 	
 
+~ BootConsole ~			

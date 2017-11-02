@@ -166,6 +166,8 @@ TYPE
 	HANDLE* = ADDRESS;  HMODULE* = ADDRESS;
 	HINSTANCE* = ADDRESS;  ATOM* = INTEGER;  HGLOBAL* = HANDLE;
 	LPSTR* = ADDRESS;
+	DWORD* = LONGINT;
+	ULONG*= UNSIGNED32;
 
 	(** The FILETIME structure is a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601. *)
 	FileTime* = RECORD
@@ -208,20 +210,76 @@ TYPE
 		Cr0NpxState*: LONGINT
 	END;
 
+	ContextPtr*= POINTER {UNSAFE} TO Context;
+	(* 32 bit
 	Context* = RECORD
 		ContextFlags*: SET;
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIZE;
 		FloatSave*: FloatingSaveArea;
-		GS*, FS*, ES*, DS*: SIZE;
-		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: SIZE;
-		BP*, PC*, CS*, FLAGS*, SP*, SS*: SIZE; (* whereas BP is EBP and SP is ESP *)
+		GS*, FS*, ES*, DS*: ADDRESS;
+		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: ADDRESS;
+		BP*, PC*, CS*, FLAGS*, SP*, SS*: ADDRESS; (* whereas BP is EBP and SP is ESP *)
 	END;
+	*) 
+	
+	Context*= RECORD
+		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE; 
+		
+		ContextFlags*: DWORD; 
+		MxCsr*: DWORD; 
+		
+		SegCs*, SegDs*, SegEs*, SegFs*, SegGs*, SegSs*: INTEGER; 
+		EFlags*: DWORD;
+		
+		Dr0*, Dr1*, Dr2*, Dr3*, Dr6*, Dr7*: SIZE;
+		
+		RAX*, RCX*, RDX*, RBX*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS;
+		PC*: ADDRESS; 
+		
+		remainder (* leave enough space for the rest here *): ARRAY 1024 OF CHAR;
+		
+		(*    union {
+        XMM_SAVE_AREA32 FltSave;
+        struct {
+            M128A Header[2];
+            M128A Legacy[8];
+            M128A Xmm0;
+            M128A Xmm1;
+            M128A Xmm2;
+            M128A Xmm3;
+            M128A Xmm4;
+            M128A Xmm5;
+            M128A Xmm6;
+            M128A Xmm7;
+            M128A Xmm8;
+            M128A Xmm9;
+            M128A Xmm10;
+            M128A Xmm11;
+            M128A Xmm12;
+            M128A Xmm13;
+            M128A Xmm14;
+            M128A Xmm15;
+        };
+    };
+
+    M128A VectorRegister[26];
+    DWORD64 VectorControl;
+
+    DWORD64 DebugControl;
+    DWORD64 LastBranchToRip;
+    DWORD64 LastBranchFromRip;
+    DWORD64 LastExceptionToRip;
+    DWORD64 LastExceptionFromRip;
+} CONTEXT, *PCONTEXT;
+	*)
+	END; 
+				
 
 	Wow64Context*= RECORD (Context)
 		extension: ARRAY 512 (* MaxWOW64Extension *) OF CHAR;
 	END;
 	
-	ExceptionRecordPtr* = POINTER TO ExceptionRecord;
+	ExceptionRecordPtr* = POINTER {UNSAFE} TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
 		nextExceptionRecord*: ExceptionRecordPtr;
@@ -235,6 +293,14 @@ TYPE
 																														   excpFrame: ExcpFrmPtr;
 																														   VAR context: Context;
 																														   dispatch: LONGINT ): LONGINT;
+
+	ExceptionPointers* = RECORD
+		exception*: ExceptionRecordPtr;
+		context*: ContextPtr;
+	END; 																														   
+
+	VectoredExceptionHandler* = PROCEDURE {WINAPI} ( CONST e: ExceptionPointers): DWORD;
+
 	ExcpFrm* = RECORD
 		link*: ExcpFrmPtr;
 		handler*: ExcpFrmHandler
@@ -299,6 +365,7 @@ TYPE
 		exc*: ExceptionRecord;
 		cont*: Context
 	END;
+	
 
 	CommTimeouts* = RECORD
 		ReadIntervalTimeout*, ReadTotalTimeoutMultiplier*, ReadTotalTimeoutConstant*, WriteTotalTimeoutMultiplier*, WriteTotalTimeoutConstant*: LONGINT
@@ -361,8 +428,10 @@ VAR
 	getProcAddress-: PROCEDURE {WINAPI} ( hModule: HMODULE;  CONST  lpProcName: ARRAY   OF CHAR ): ADDRESS;
 	(** The LoadLibrary function maps the specified executable module into the address space of the calling process. *)
 	LoadLibrary-: PROCEDURE {WINAPI} ( CONST lpLibFileName: ARRAY   OF CHAR ): HINSTANCE;   (* must be patched by linker / PE loader *)
-
-
+	(** registers a vectored continue handler. **)
+	AddVectoredContinueHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
+	(** registers a vectored exception handler. **)
+	AddVectoredExceptionHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
 	(** The AllocConsole function allocates a new console for the calling process. *)
 	AllocConsole-: PROCEDURE {WINAPI} ( ): BOOL;
 	(** The AttachConsole function attaches the calling process to the console of the specified process. *)
@@ -495,7 +564,7 @@ VAR
 	GetExitCodeProcess-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				  VAR lpExitCode: LONGINT ): BOOL;
 	(** The GetFileAttributes function returns attributes for a specified file or directory. *)
-	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): SET;
+	GetFileAttributes-: PROCEDURE {WINAPI} ( CONST lpFileName: ARRAY   OF CHAR ): DWORD;
 	(** The GetFileSize function retrieves the size, in bytes, of the specified file. *)
 	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: LONGINT ): LONGINT;
 	GetFileSizeEx-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSize: HUGEINT ): BOOL;
@@ -519,7 +588,7 @@ VAR
 	(* The GetLogicalDrives function retrieves a bitmask representing the currently available disk drives.
 *)
 
-	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): SET;
+	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): DWORD;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
 																				    nSize: LONGINT ): LONGINT;
@@ -684,6 +753,10 @@ VAR
 	ReleaseSemaphore-: PROCEDURE {WINAPI} ( hSemaphore: HANDLE; lReleaseCount: LONGINT; lpPreviousCount: ADDRESS): BOOL;
 	(** The RemoveDirectory function deletes an existing empty directory. *)
 	RemoveDirectory-: PROCEDURE {WINAPI} ( VAR lpPathName: ARRAY   OF CHAR ): BOOL;
+	(** unregisters a vectored continue handler. **)
+	RemoveVectoredContinueHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG; 
+	(** unregisters a vectored exception handler. **)
+	RemoveVectoredExceptionHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG; 
 	(** The ResetEvent function sets the state of the specified event object to nonsignaled. *)
 	ResetEvent-: PROCEDURE {WINAPI} ( hEvent: HANDLE ): BOOL;
 	(** The ResumeThread function decrements a thread's suspend count. *)
@@ -860,8 +933,10 @@ VAR
 	END SendToDebugger;
 
 	PROCEDURE ShutdownP(l: LONGINT);
+	VAR i: LONGINT;
 	BEGIN
-		outputDebugString("Kernel32.Shutdown");
+		(* FOR i := 0 TO 0x10000000 DO END;*) 
+		OutputString("Kernel32.Shutdown");
 		ExitProcess(l);
 	END ShutdownP;
 	
@@ -871,6 +946,8 @@ VAR
 		Shutdown := ShutdownP;
 		mod := LoadLibrary("Kernel32.DLL");
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
+		GetProcAddress(mod, "AddVectoredExceptionHandler",SYSTEM.VAL(ADDRESS,AddVectoredExceptionHandler));
+		GetProcAddress(mod, "AddVectoredContinueHandler",SYSTEM.VAL(ADDRESS,AddVectoredContinueHandler));
 		GetProcAddress(mod, "AttachConsole",SYSTEM.VAL(ADDRESS,AttachConsole));
 		GetProcAddress(mod, "Beep",SYSTEM.VAL(ADDRESS,Beep));
 		GetProcAddress(mod, "ClearCommBreak",SYSTEM.VAL(ADDRESS,ClearCommBreak));
@@ -977,6 +1054,8 @@ VAR
 		GetProcAddress(mod, "ReadProcessMemory",SYSTEM.VAL(ADDRESS,ReadProcessMemory));
 		GetProcAddress(mod, "ReleaseSemaphore",SYSTEM.VAL(ADDRESS,ReleaseSemaphore));
 		GetProcAddress(mod, "RemoveDirectoryA",SYSTEM.VAL(ADDRESS,RemoveDirectory));
+		GetProcAddress(mod, "RemoveVectoredExceptionHandler",SYSTEM.VAL(ADDRESS,RemoveVectoredExceptionHandler));
+		GetProcAddress(mod, "RemoveVectoredExceptionHandler",SYSTEM.VAL(ADDRESS,RemoveVectoredContinueHandler));
 		GetProcAddress(mod, "ResetEvent",SYSTEM.VAL(ADDRESS,ResetEvent));
 		GetProcAddress(mod, "ResumeThread",SYSTEM.VAL(ADDRESS,ResumeThread));
 		GetProcAddress(mod, "SearchPathA",SYSTEM.VAL(ADDRESS,SearchPath));

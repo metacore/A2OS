@@ -26,7 +26,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=FALSE;
+	TraceBoot=TRUE;
 
 	(* flags *)
 	PreciseGC* = 0;
@@ -684,7 +684,7 @@ BEGIN
 			IF m # NIL THEN term := m.term; m.term := NIL END; (* finalizer only called once *)
 			Machine.Release(Machine.Modules);
 			IF m = NIL THEN EXIT END;
-			IF trace THEN
+			IF TraceBoot OR trace THEN
 				Machine.Acquire (Machine.TraceOutput);
 				Trace.String("TermHandler "); Trace.StringLn (m.name);
 				Machine.Release (Machine.TraceOutput);
@@ -699,7 +699,7 @@ BEGIN
 			END;
 			m := m.next
 		END;
-		IF trace THEN
+		IF TraceBoot OR trace THEN
 			Machine.Acquire (Machine.TraceOutput);
 			Trace.StringLn ("Modules.Shutdown finished");
 			Machine.Release (Machine.TraceOutput);

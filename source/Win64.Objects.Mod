@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = FALSE;
+	TraceVerbose = TRUE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -189,17 +189,17 @@ TYPE
 					ASSERT(res # -1);
 				END;
 
-				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, state );
 				
-				context.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				context.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl + Kernel32.ContextInteger);
 				IF isWow64 THEN 
 					res := Kernel32.Wow64GetThreadContext( handle, context );
 				ELSE
 					res := Kernel32.GetThreadContext( handle, context );
 				END;
 				ASSERT(res # 0);
-				sp := context.SP; bp := context.BP; pc := context.PC;
+				sp :=  context.SP; bp := context.BP; pc := context.PC;
 				
 				mod := Modules.ThisModuleByAdr0(pc);
 				IF mod # NIL THEN
@@ -220,9 +220,9 @@ TYPE
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
-				Heaps.Candidate( context.EDI );  Heaps.Candidate( context.ESI );
-				Heaps.Candidate( context.EBX ); Heaps.Candidate( context.EDX );
-				Heaps.Candidate( context.ECX ); Heaps.Candidate( context.EAX );
+				Heaps.Candidate( context.RDI );  Heaps.Candidate( context.RSI );
+				Heaps.Candidate( context.RBX ); Heaps.Candidate( context.RDX );
+				Heaps.Candidate( context.RCX ); Heaps.Candidate( context.RAX );
 				IF (stackBottom # 0) & (sp # 0) THEN
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
@@ -264,9 +264,7 @@ TYPE
 	END Process;
 
 TYPE
-	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;
-										VAR excpRec: Kernel32.ExceptionRecord;
-										VAR handled: BOOLEAN);
+	ExceptionHandler* = PROCEDURE( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD;
 
 
 	GCStatusExt = OBJECT(Heaps.GCStatus)
@@ -513,10 +511,10 @@ CODE {SYSTEM.i386}
 	DB	000H
 END StackBottom;
 
-PROCEDURE {WINAPI} ExcpFrmHandler( VAR  excpRec: Kernel32.ExceptionRecord; excpFrame: Kernel32.ExcpFrmPtr;
- 										VAR context: Kernel32.Context;  dispatch: LONGINT ): LONGINT;
+PROCEDURE {WINAPI} ExcpFrmHandler( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD ;
 VAR m: Modules.Module;  eip, ebp, stack: ADDRESS;  pc, handler, fp, sp: ADDRESS;  handled: BOOLEAN;  t: Process;
 BEGIN
+	TRACE("TRAP"); 
 	handled := FALSE;
 
 	Kernel32.EnterCriticalSection( excplock );
@@ -533,45 +531,64 @@ BEGIN
 		Trace.StringLn ( "Objects: No exception handler installed" );
 		IF HandleExcp THEN
 
-			Trace.String( "EXCEPTION " );  Trace.Hex( excpRec.ExceptionCode, 1 );
-			Trace.String( " at " );  Trace.Hex( excpRec.ExceptionAddress, 1 );
-			Trace.Ln();  Trace.String( "EAX " );  Trace.Hex( context.EAX, 1 );
-			Trace.String( "  EBX " );  Trace.Hex( context.EBX, 1 );  Trace.Ln();
-			Trace.String( "ECX " );  Trace.Hex( context.ECX, 1 );  Trace.String( "  EDX " );
-			Trace.Hex( context.EDX, 1 );  Trace.Ln();  Trace.String( "EDI " );
-			Trace.Hex( context.EDI, 1 );  Trace.String( "  ESI " );
-			Trace.Hex( context.ESI, 1 );  Trace.Ln();  Trace.String( "EBP " );
-			Trace.Hex( context.BP, 1 );  Trace.String( "  ESP " );
-			Trace.Hex( context.SP, 1 );  Trace.Ln();  Trace.String( "EIP " );
-			Trace.Hex( context.PC, 1 );  Trace.Ln();  Trace.Ln();
-			eip := excpRec.ExceptionAddress;  ebp := context.BP;
-			IF eip = 0 THEN SYSTEM.GET( context.SP, eip ) END;
+			Trace.String( "EXCEPTION " );  Trace.Address(exceptionPointers.exception.ExceptionCode);
+			Trace.String( " at " );  Trace.Address(exceptionPointers.exception.ExceptionAddress);
+			Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RAX);
+			Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RBX);  Trace.Ln();
+			Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RCX);  Trace.String( "  RDX " );
+			Trace.Address(exceptionPointers.context.RDX);  Trace.Ln();  Trace.String( "RDI " );
+			Trace.Address(exceptionPointers.context.RDI);  Trace.String( "  RSI " );
+			Trace.Address(exceptionPointers.context.RSI);  Trace.Ln(); 
+			
+			Trace.String( "R8 " ); Trace.Address(exceptionPointers.context.R8);
+			Trace.String( " R9 " ); Trace.Address(exceptionPointers.context.R9);  Trace.Ln();  
+			Trace.String( "R10 " ); Trace.Address(exceptionPointers.context.R10);
+			Trace.String( " R11 " ); Trace.Address(exceptionPointers.context.R11);  Trace.Ln();  
+			Trace.String( "R12 " ); Trace.Address(exceptionPointers.context.R12);
+			Trace.String( " R13 " ); Trace.Address(exceptionPointers.context.R13);  Trace.Ln();  
+			Trace.String( "R14 " ); Trace.Address(exceptionPointers.context.R14);
+			Trace.String( " R15 " ); Trace.Address(exceptionPointers.context.R15);  Trace.Ln();  
+			Trace.Ln; 
+			
+			Trace.String( "RBP " );
+			Trace.Address(exceptionPointers.context.BP);  Trace.String( "  RSP " );
+			Trace.Address(exceptionPointers.context.SP);  Trace.Ln();  Trace.String( "PC " );
+			Trace.Address(exceptionPointers.context.PC);  Trace.Ln();  
+			
+			
+			Trace.Ln();
+
+			
+			eip := exceptionPointers.exception.ExceptionAddress;  ebp := exceptionPointers.context.BP;
+			IF eip = 0 THEN SYSTEM.GET( exceptionPointers.context.SP, eip ) END;
 			stack := StackBottom();
 			LOOP
-				Trace.String( "at ebp= " );  Trace.Hex( ebp, 1 );  Trace.String( "H : " );
+				Trace.String( "at ebp= " );  Trace.Address(ebp);  Trace.String( "H : " );
 				m := Modules.ThisModuleByAdr( eip );
 				IF m # NIL THEN
 					Trace.String( m.name );  Trace.String( " " );
-					Trace.Hex( eip - SYSTEM.VAL( LONGINT, ADDRESSOF( m.code[0] ) ), 1 );
-				ELSE Trace.String( "EIP " );  Trace.Hex( eip, 1 )
+					Trace.Address(eip - SYSTEM.VAL( LONGINT, ADDRESSOF( m.code[0] ) ));
+				ELSE Trace.String( "EIP " );  Trace.Address(eip)
 				END;
 				Trace.Ln();
 				IF (ebp # 0) & (ebp < stack) THEN  (* if ebp is 0 in first frame *)
-					SYSTEM.GET( ebp + 4, eip );   (* return addr from stack *)
+					SYSTEM.GET( ebp + SIZEOF(ADDRESS), eip );   (* return addr from stack *)
 					SYSTEM.GET( ebp, ebp );   (* follow dynamic link *)
 				ELSE EXIT
 				END
 			END;
 			Trace.Ln();
 
-			handled := FALSE;  fp := context.BP;  sp := context.SP;
-			pc := context.PC;  handler := Modules.GetExceptionHandler( pc );
+			(* finally and all that ...
+
+			handled := FALSE;  fp := exceptionPointers.context.BP;  sp := exceptionPointers.context.SP;
+			pc := exceptionPointers.context.PC;  handler := Modules.GetExceptionHandler( pc );
 			IF handler # -1 THEN  (* Handler in the current PAF *)
-				context.PC := handler;  handled := TRUE;
+				exceptionPointers.context.PC := handler;  handled := TRUE;
 				(*SetTrapVariable(pc, fp);  SetLastExceptionState(exc)*)
 			ELSE
 				WHILE (fp # 0) & (handler = -1) DO
-					SYSTEM.GET( fp + 4, pc );
+					SYSTEM.GET( fp + SIZEOF(ADDRESS), pc );
 					pc := pc - 1;   (*  CALL instruction, machine dependant!!! *)
 					handler := Modules.GetExceptionHandler( pc );
 					sp := fp;   (* Save the old framepointer into the stack pointer *)
@@ -579,33 +596,41 @@ BEGIN
 				END;
 				IF handler = -1 THEN handled := FALSE;
 				ELSE
-					context.PC := handler;  context.BP := fp;  context.SP := sp;
+					TRACE("CHANGED HANDLER ADR "); 
+					exceptionPointers.context.PC := handler;  exceptionPointers.context.BP := fp;  exceptionPointers.context.SP := sp;
 					(* SetTrapVariable(pc, fp); SetLastExceptionState(exc);*)
 					handled := TRUE
 				END
 			END;
+			
+			*)
+			
+			
 		ELSE Trace.StringLn ( "Warning: FINALLY statement cannot be treated !" );
 		END
-	ELSE exceptionhandler( context, excpRec, handled );
+	ELSE RETURN exceptionhandler(exceptionPointers);
 	END;
-	IF ~handled THEN
-		context.PC := t.restartPC;  context.SP := t.restartSP;
-		context.BP := t.stackBottom;
+	TRACE(handled); 
+	IF ~handled THEN 
+		exceptionPointers.context.PC := (*TerminateProc*)  t.restartPC ; 
+		exceptionPointers.context.SP := t.restartSP;
+		exceptionPointers.context.BP := t.stackBottom;
 	ELSIF TraceVerbose THEN Trace.StringLn ( "trying to jump to FINALLY pc..." );
 	END;
 	Kernel32.LeaveCriticalSection( excplock );
 
 	IF TraceVerbose THEN
 		Machine.Acquire (Machine.TraceOutput);
-		Trace.String( "recover process; eip=" );  Trace.Int( context.PC, 10 );
-		Trace.String( "; sp= " );  Trace.Int( context.SP, 10 );  Trace.String( "; ebp= " );
-		Trace.Int( context.BP, 10 ); Trace.Ln;
+		Trace.String( "recover process; pc=" );  Trace.Address( exceptionPointers.context.PC );
+		Trace.String( "; sp= " );  Trace.Address( exceptionPointers.context.SP);  Trace.String( "; bp= " );
+		Trace.Address( exceptionPointers.context.BP); Trace.Ln;
 		Machine.Release (Machine.TraceOutput);
 	END;
 
-	RETURN Kernel32.ExceptionContinueSearch; (* sets thread context and continues where specified in context *)
+	RETURN Kernel32.ExceptionContinueExecution; (* sets thread context and continues where specified in context *)
 END ExcpFrmHandler;
 
+(*
 (* get the currently installed execption frame *)
 (*	PROCEDURE -GetCur 64H, 8BH, 0DH, 0, 0, 0, 0;   (* MOV ECX, FS:[0] *) *)
 (* Better *)
@@ -620,10 +645,12 @@ VAR cur: Kernel32.ExcpFrmPtr;
 BEGIN
 	GetCur;
 	cur := SYSTEM.VAL(Kernel32.ExcpFrmPtr,Machine.GetRCX());
+	TRACE(cur);
 	(* RETURN ECX *)
 	RETURN cur
 END GetCurrent;
-
+*)
+(*
 (* install a new exception frame *)
 (*	PROCEDURE -SetCur 64H, 0A3H, 0, 0, 0, 0;   (* MOV FS:[0], EAX *)*)
 (* Better *)
@@ -635,25 +662,38 @@ END SetCur;
 
 PROCEDURE SetCurrent( cur: Kernel32.ExcpFrmPtr );
 BEGIN
-	Machine.SetRAX(SYSTEM.VAL(LONGINT,cur));
+	TRACE(cur);
+	Machine.SetRAX(cur);
 	 (* EAX := cur *)
-	SetCur
+	CODE{SYSTEM.AMD64}
+		MOV [GS:0], RAX
+	END;
+	TRACE(GetCurrent());
+	(*SetCur*)
 END SetCurrent;
-
+*)
 PROCEDURE RemoveExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 VAR this: Kernel32.ExcpFrmPtr;
 BEGIN
+	(*
 	this := GetCurrent();
 	(* ASSERT ( this = ADDRESSOF( excpfrm ) );  *)
 	IF this # ADDRESSOF( excpfrm ) THEN Trace.StringLn ( "RemoveExcpFrm: Problem with excpfrm pointer" );
 	ELSE SetCurrent( excpfrm.link )
 	END;
+	*)
+	(*
+	Kernel32.RemoveVectoredExceptionHandler(ExcpFrmHandler);
+	*)
 END RemoveExcpFrm;
 
 PROCEDURE InstallExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 BEGIN
+	Kernel32.AddVectoredContinueHandler(1, ExcpFrmHandler); 
+	(*
 	excpfrm.link := GetCurrent();  excpfrm.handler := ExcpFrmHandler;
 	SetCurrent( ADDRESSOF( excpfrm ) )
+	*)
 END InstallExcpFrm;
 
 PROCEDURE InQueue( queue: ProcessQueue;  t: Process ): BOOLEAN;
@@ -694,6 +734,7 @@ END WriteType;
 PROCEDURE terminate( t: Process );
 VAR hdr {UNTRACED}: Heaps.ProtRecBlock; res: Kernel32.BOOL; shutdown: BOOLEAN;
 BEGIN
+	TRACE("terminate"); 
 	IF t = NIL THEN RETURN END;
 	(* see Objects.TerminateThis *)
 	Machine.Acquire( Machine.Objects );
@@ -742,21 +783,21 @@ BEGIN
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, lpParameter));
 	t := lpParameter(Process);  obj := t.obj;
 	ASSERT(res # 0);
-	InstallExcpFrm(excpfrm);
+
 	SetPriority(t.priority);
 
 	bp := Machine.CurrentBP();
 	sp := Machine.CurrentSP();
 	t.restartSP := sp;
 	t.stackBottom := bp;
-	IF t.restartPC = SYSTEM.VAL(ADDRESS, terminateProc) THEN DEC(t.restartSP, 4)
-	ELSE DEC(t.restartSP, 8)
+	IF t.restartPC = SYSTEM.VAL(ADDRESS, terminateProc) THEN DEC(t.restartSP, SIZEOF(ADDRESS))
+	ELSE DEC(t.restartSP, 2*SIZEOF(ADDRESS))
 	END;
 	IF TraceVerbose THEN
 		Machine.Acquire(Machine.TraceOutput);
-		Trace.String("New process; restartPC= "); Trace.Int(t.restartPC, 15);
-		Trace.String("; restartSP= "); Trace.Int(t.restartSP, 15); Trace.String("; stackBottom= ");
-		Trace.Int(t.stackBottom, 15); Trace.Ln;
+		Trace.String("New process; restartPC= "); Trace.Address(t.restartPC);
+		Trace.String("; stackBottom= ");
+		Trace.Address(t.stackBottom); Trace.Ln;
 		Machine.Release(Machine.TraceOutput);
 	END;
 	t.mode := Running;
@@ -809,6 +850,7 @@ END FinalizeProcess;
 
 PROCEDURE TerminateProc;
 BEGIN
+	TRACE("TerminateProc");
 	terminate(CurrentProcess());
 	Kernel32.ExitThread(0);
 	Kernel32.Sleep(999999);   (* wait until dependent threads terminated *)
@@ -842,6 +884,8 @@ BEGIN
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
 	
+
+		(* t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);*) 
 	
 	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
 
@@ -1064,7 +1108,7 @@ END Await;
 				ELSE
 					retBOOL := Kernel32.SuspendThread( t.handle );
 				END;
-				t.state.ContextFlags := Kernel32.ContextControl;
+				t.state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl);
 				retBOOL := Kernel32.GetThreadContext( t.handle, t.state );
 				mod := Modules.ThisModuleByAdr( t.state.PC );  Trace.String( "Objects Break at adr: " );
 				Trace.Int( t.state.PC, 5 );  Trace.Ln;
@@ -1119,6 +1163,8 @@ PROCEDURE Init;   (* can not use NEW *)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
 BEGIN
+	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
+
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
 (*	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;*)

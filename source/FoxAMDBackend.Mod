@@ -1353,10 +1353,11 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instruction: IntermediateCode.Instruction);
-		VAR parSize: LONGINT; operand: Assembler.Operand;
+		VAR parSize,cc: LONGINT; operand: Assembler.Operand;
 		BEGIN
+			cc := SHORT(instruction.op2.intValue);
 			parSize := SHORT(instruction.op3.intValue);
-			IF parSize = 0 THEN
+			IF (parSize = 0) OR (cc = SyntaxTree.WinAPICallingConvention) & (cpuBits = 64) THEN
 				emitter.Emit0(InstructionSet.opRET)
 			ELSE (* e.g. for WINAPI calling convention *)
 				operand := Assembler.NewImm16(parSize);

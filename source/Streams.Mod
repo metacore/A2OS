@@ -230,7 +230,7 @@ TYPE
 		END String;
 
 	(** Write an integer in decimal right-justified in a field of at least w characters. *)
-		PROCEDURE Int*( x: HUGEINT; w: LONGINT );
+		PROCEDURE Int*( x: HUGEINT; w: SIZE );
 		VAR i: SIZE; x0: HUGEINT;
 			a: ARRAY 21 OF CHAR;
 		BEGIN
@@ -293,8 +293,8 @@ TYPE
 			Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 			If w < 0 THEN w least significant hex digits of x are written (potentially including leading zeros)
 		*)
-		PROCEDURE Hex*(x: HUGEINT; w: LONGINT);
-		VAR filler: CHAR; i,maxw: LONGINT; a: ARRAY 20 OF CHAR; y: HUGEINT;
+		PROCEDURE Hex*(x: HUGEINT; w: SIZE);
+		VAR filler: CHAR; i,maxw: SIZE; a: ARRAY 20 OF CHAR; y: HUGEINT;
 		BEGIN
 			IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 16 END;
 			i := 0;

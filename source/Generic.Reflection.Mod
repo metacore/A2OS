@@ -122,7 +122,7 @@ CONST
 		Meta* = RECORD
 			module-: Modules.Module;
 			refs-: Modules.Bytes;
-			offset*: LONGINT;
+			offset*: SIZE;
 		END;
     
 	PROCEDURE CheckHeapAddress(address: ADDRESS): BOOLEAN;
@@ -147,7 +147,7 @@ CONST
 
 
 	(* consume a char from the byte stream *)
-	PROCEDURE GetChar*(refs: Modules.Bytes; VAR offset: LONGINT): CHAR;
+	PROCEDURE GetChar*(refs: Modules.Bytes; VAR offset: SIZE): CHAR;
 	VAR c: CHAR; 
 	BEGIN
 		IF ~Expect(offset < LEN(refs)) THEN RETURN 0X END; 
@@ -157,14 +157,14 @@ CONST
 	END GetChar;
 
 	(* skip a char in the byte stream *)
-	PROCEDURE SkipChar*(VAR offset: LONGINT);
+	PROCEDURE SkipChar*(VAR offset: SIZE);
 	BEGIN
 		INC(offset, SIZEOF(CHAR)); 
 	END SkipChar;
 	
 	(* consume an address in the byte stream *)
-	PROCEDURE GetAddress*(refs: Modules.Bytes; VAR offset: LONGINT): ADDRESS;
-	VAR adr: ADDRESS; i: LONGINT;
+	PROCEDURE GetAddress*(refs: Modules.Bytes; VAR offset: SIZE): ADDRESS;
+	VAR adr: ADDRESS; i: SIZE;
 	BEGIN
 		IF ~Expect(offset < LEN(refs)) THEN RETURN 0 END; 
 		FOR i := 0 TO SIZEOF(ADDRESS)-1 DO
@@ -174,14 +174,14 @@ CONST
 	END GetAddress;
 
 	(* skip an address in the byte stream *)
-	PROCEDURE SkipAddress*(VAR offset: LONGINT);
+	PROCEDURE SkipAddress*(VAR offset: SIZE);
 	BEGIN
 		INC(offset, SIZEOF(ADDRESS)); 
 	END SkipAddress;
 
 	(* consume a size in the byte stream *)
-	PROCEDURE GetSize*(refs: Modules.Bytes; VAR offset: LONGINT): SIZE;
-	VAR size: SIZE; i: LONGINT;
+	PROCEDURE GetSize*(refs: Modules.Bytes; VAR offset: SIZE): SIZE;
+	VAR size: SIZE; i: SIZE;
 	BEGIN
 		IF ~Expect(offset < LEN(refs)) THEN RETURN 0 END; 
 		FOR i := 0 TO SIZEOF(SIZE)-1 DO
@@ -192,17 +192,17 @@ CONST
 	END GetSize;
 
 	(* skip a size in the byte stream *)
-	PROCEDURE SkipSize*(VAR offset: LONGINT);
+	PROCEDURE SkipSize*(VAR offset: SIZE);
 	BEGIN
 		INC(offset, SIZEOF(SIZE)); 
 	END SkipSize;
 
 	(* consume a set in the byte stream *)
-	PROCEDURE GetSet*(refs: Modules.Bytes; VAR offset: LONGINT): SET;
-	VAR set: SET; i: LONGINT;
+	PROCEDURE GetSet*(refs: Modules.Bytes; VAR offset: SIZE): SET;
+	VAR set: SET; i: SIZE;
 	BEGIN
 		IF ~Expect(offset < LEN(refs)) THEN RETURN {} END; 
-		FOR i := 0 TO SIZEOF(SET)-1 DO
+		FOR i := 0 TO SIZEOF(LONGINT)-1 DO
 			SYSTEM.PUT8(ADDRESSOF(set)+i, refs[offset]);
 			INC(offset);
 		END;
@@ -210,14 +210,14 @@ CONST
 	END GetSet;
 
 	(* skip a set in the byte stream *)
-	PROCEDURE SkipSet*(VAR offset: LONGINT);
+	PROCEDURE SkipSet*(VAR offset: SIZE);
 	BEGIN
-		INC(offset, SIZEOF(SET)); 
+		INC(offset, SIZEOF(LONGINT)); 
 	END SkipSet;
 
 	(* consume a string in the byte stream *)
-	PROCEDURE GetString*(refs: Modules.Bytes; VAR offset: LONGINT; VAR string: ARRAY OF CHAR);
-	VAR ch: CHAR; i: LONGINT; 
+	PROCEDURE GetString*(refs: Modules.Bytes; VAR offset: SIZE; VAR string: ARRAY OF CHAR);
+	VAR ch: CHAR; i: SIZE; 
 	BEGIN
 		i := 0; 
 		REPEAT
@@ -228,16 +228,16 @@ CONST
 	END GetString;
 
 	(* skip a string in the byte stream *)
-	PROCEDURE SkipString*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipString*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		WHILE(refs[offset] # 0X) DO INC(offset) END; INC(offset);
 	END SkipString;
 	
 	(* extract a full name from the byte stream by traversing up the symbols in their scopes *)
-	PROCEDURE GetFullName*(refs: Modules.Bytes; offset: LONGINT; VAR name: ARRAY OF CHAR);
-	VAR n: LONGINT; 
+	PROCEDURE GetFullName*(refs: Modules.Bytes; offset: SIZE; VAR name: ARRAY OF CHAR);
+	VAR n: SIZE; 
 	
-		PROCEDURE Traverse(offset: LONGINT);
+		PROCEDURE Traverse(offset: SIZE);
 		VAR c: CHAR;
 		BEGIN
 			IF offset >= 0 THEN
@@ -303,8 +303,8 @@ CONST
 	END WriteType;
 
 	(* Write the specified procedure name and returns parameters for use with Variables  *)
-	PROCEDURE WriteProc0(w: Streams.Writer; mod: Modules.Module; pc, fp: ADDRESS;  VAR refs: Modules.Bytes; VAR refpos: LONGINT; VAR base: ADDRESS);
-	VAR ch: CHAR; startpc, end: ADDRESS; offset: LONGINT;  name: Name;
+	PROCEDURE WriteProc0(w: Streams.Writer; mod: Modules.Module; pc, fp: ADDRESS;  VAR refs: Modules.Bytes; VAR refpos: SIZE; VAR base: ADDRESS);
+	VAR ch: CHAR; startpc, end: ADDRESS; offset: SIZE;  name: Name;
 	BEGIN
 		refpos := -1;
 		IF mod = NIL THEN
@@ -328,15 +328,15 @@ CONST
 					end := GetAddress(refs, offset); 
 					SkipSet(offset);
 					w.String(name); 
-					w.Char(":"); w.Int(LONGINT(pc-startpc),1);
+					w.Char(":"); w.Int(pc-startpc,1);
 					base := fp; (*! only for local !! *)
 					refpos := offset; 
 				END;
 			ELSE
 				w.String("procedure not found in module "); w.String(mod.name);
 			END;
-			w.String(" pc="); w.Int(LONGINT(pc),1); w.String(" ["); w.Address (pc); w.String("H]");
-			w.String(" = "); w.Int(LONGINT(startpc),1);  w.String(" + "); w.Int(LONGINT(pc-startpc),1);
+			w.String(" pc="); w.Int(pc,1); w.String(" ["); w.Address (pc); w.String("H]");
+			w.String(" = "); w.Int(startpc,1);  w.String(" + "); w.Int(pc-startpc,1);
 			w.String(" crc="); w.Hex(mod.crc,-8);
 			(*Wait(w);*)
 		END
@@ -362,7 +362,7 @@ CONST
 			w.Int(i,1);
 		END Signed;
 		
-		PROCEDURE Unsigned(i: HUGEINT; size: LONGINT);
+		PROCEDURE Unsigned(i: HUGEINT; size: SIZE);
 		BEGIN
 			w.Hex(i,-2*size);
 		END Unsigned;
@@ -475,7 +475,7 @@ CONST
 		RETURN (low <= adr) & (adr < high) OR CheckHeapAddress(adr);
 	END OnHeapOrStack;
 	
-	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: LONGINT; low, high: ADDRESS);
+	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: SIZE; low, high: ADDRESS);
 	CONST MaxString = 96; 
 	VAR ch: CHAR;
 	BEGIN
@@ -535,7 +535,7 @@ CONST
 	END WriteMathArray;
 	
 
-	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; adr: ADDRESS; low, high: ADDRESS);
+	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE; adr: ADDRESS; low, high: ADDRESS);
 	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len,i: SIZE;
 	BEGIN
 		IF ~OnHeapOrStack(adr, low, high) THEN
@@ -621,8 +621,8 @@ CONST
 		END;
 	END WriteValue;
 		
-	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT;  base: ADDRESS; low, high: ADDRESS);
-	VAR name: ARRAY 128 OF CHAR;  adr: LONGINT;  prevScope: SIZE; c: CHAR;
+	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE;  base: ADDRESS; low, high: ADDRESS);
+	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  prevScope: SIZE; c: CHAR;
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
 		prevScope := GetSize(refs, offset);
@@ -648,8 +648,8 @@ CONST
 	
 	(* write variables taking meta information from stream in stream at offset, potentially stored at base address
 	 *)
-	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT; base: ADDRESS; low, high: ADDRESS);
-	VAR count: LONGINT; 
+	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE; base: ADDRESS; low, high: ADDRESS);
+	VAR count: SIZE; 
 	BEGIN
 		WHILE refs[offset] = sfVariable DO
 			WriteVariable(w, refs, offset, base, low, high); w.Ln;
@@ -659,8 +659,8 @@ CONST
 	END WriteVariables;
 
 	(* skip type metadata in stream *)
-	PROCEDURE SkipType*(refs: Modules.Bytes; VAR offset: LONGINT);
-	VAR size: SIZE;  adr: LONGINT; c: CHAR;
+	PROCEDURE SkipType*(refs: Modules.Bytes; VAR offset: SIZE);
+	VAR size: SIZE;  adr: SIZE; c: CHAR;
 	BEGIN
 		c := GetChar(refs, offset);
 		CASE c OF
@@ -685,7 +685,7 @@ CONST
 	END SkipType;
 
 	(* skip procedure metadata in stream *)
-	PROCEDURE SkipProcedure*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipProcedure*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
 		SkipSize(offset);
@@ -700,7 +700,7 @@ CONST
 
 
 	(* skip variable metadata in stream *)
-	PROCEDURE SkipVariable*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipVariable*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
 		SkipSize(offset);
@@ -711,7 +711,7 @@ CONST
 	END SkipVariable;
 
 	(* skip type declaration meta data in stream *)
-	PROCEDURE SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
 		SkipSize(offset);
@@ -721,7 +721,7 @@ CONST
 	END SkipTypeDeclaration;
 
 	(* skip type declaration meta data in stream *)
-	PROCEDURE SkipModule*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipModule*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
 		SkipSize(offset);
@@ -730,7 +730,7 @@ CONST
 	END SkipModule;
 	
 	(* skip a scope in stream *)
-	PROCEDURE SkipScope*(refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE SkipScope*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN	
 		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
 		WHILE (refs[offset] = sfVariable)  DO SkipVariable(refs, offset) END;
@@ -742,16 +742,16 @@ CONST
 	TYPE 
 	Search = RECORD
 		name: ARRAY 256 OF CHAR; 	(* for search by name *)
-		nameOffset: LONGINT;				(* to incrementally search through scopes *)
+		nameOffset: SIZE;				(* to incrementally search through scopes *)
 		minLevel: LONGINT; 					(* in order to stop scope search *)
 		pc: ADDRESS;							(* for search by address *)
-		pos: LONGINT;							(* symbol position in stream, -1 if not found *)
+		pos: SIZE;							(* symbol position in stream, -1 if not found *)
 		found: BOOLEAN;						(* if found *)
 	END;
 
 	(* check if stream contains the string part stored in search record with respective offset *)
-	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR ofs: LONGINT;
+	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR ofs: SIZE;
 	BEGIN
 		IF find.minLevel > level THEN
 			SkipString(refs, offset)
@@ -774,8 +774,8 @@ CONST
 	END FindString;
 
 	(* find a symbol by name or pc starting from the procedure stream section *)
-	PROCEDURE FindInProcedure(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR name: ARRAY 128 OF CHAR;  start, end, pos: LONGINT; 
+	PROCEDURE FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  start, end: ADDRESS; pos: SIZE; 
 	BEGIN
 		pos := offset; 
 		IF ~Expect(GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
@@ -785,6 +785,7 @@ CONST
 		end := GetAddress(refs, offset);
 		SkipSet(offset);
 		find.found := find.found OR (start <= find.pc) & (find.pc < end);
+		TRACE(start, end);
 		IF find.found THEN
 			find.pos := pos; 
 			RETURN; 
@@ -802,8 +803,8 @@ CONST
 	END FindInProcedure;
 
 	(* find a symbol by name or pc starting from the variable stream section *)
-	PROCEDURE FindInVariable(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR name: ARRAY 128 OF CHAR;  pos: LONGINT; 
+	PROCEDURE FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  pos: SIZE; 
 	BEGIN
 		pos := offset; 
 		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;  	
@@ -819,8 +820,8 @@ CONST
 	END FindInVariable; 
 
 	(* find a symbol by name or pc starting from the type declaration stream section *)
-	PROCEDURE FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR name: ARRAY 128 OF CHAR;  adr, pos: LONGINT; 
+	PROCEDURE FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  adr, pos: SIZE; 
 	BEGIN
 		pos := offset;
 		IF ~Expect(GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
@@ -834,9 +835,10 @@ CONST
 		IF refs[offset] = sfScopeBegin THEN FindInScope(refs, offset, level+1, find) END;
 	END FindInTypeDeclaration; 
 	
-	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR pos: LONGINT;
+	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR pos: SIZE;
 	BEGIN
+		TRACE(offset);
 		pos := offset;
 		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
 		SkipSize(offset);
@@ -849,9 +851,10 @@ CONST
 	END FindInModule;
 
 	(* find a symbol by name or pc in a scope in the stream *)
-	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: LONGINT; level: LONGINT; VAR find: Search);
-	VAR no,i: LONGINT;
+	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR no,i: SIZE;
 	BEGIN
+		TRACE(offset);
 		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
 		WHILE ~find.found &(refs[offset] = sfVariable) &  (find.minLevel <= level) DO (* Variable *)
 			FindInVariable(refs, offset, level, find); 
@@ -882,7 +885,7 @@ CONST
 		otherwise choose skipFirstSymbol = TRUE
 			Example FindByName(m.refs, 0, "FindByName", TRUE);
 	*)
-	PROCEDURE FindByName*(refs: Modules.Bytes; offset: LONGINT; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
+	PROCEDURE FindByName*(refs: Modules.Bytes; offset: SIZE; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
 	VAR search: Search; 
 	BEGIN
 		InitSearch(search); 
@@ -917,14 +920,14 @@ CONST
 	
 	(** Find procedure name and write it. *)
 	PROCEDURE WriteProc*(w: Streams.Writer; pc: ADDRESS);
-	VAR refs: Modules.Bytes; refpos: LONGINT; base: ADDRESS;
+	VAR refs: Modules.Bytes; refpos: SIZE; base: ADDRESS;
 	BEGIN
 		WriteProc0(w, Modules.ThisModuleByAdr0(pc), pc,  -1, refs, refpos, base)
 	END WriteProc;
 	
 	(** Write the state of the specified module. *)
 	PROCEDURE ModuleState*(w: Streams.Writer; mod: Modules.Module);
-	VAR offset: LONGINT; base: ADDRESS; refs: Modules.Bytes;
+	VAR offset: SIZE; base: ADDRESS; refs: Modules.Bytes;
 	BEGIN
 		IF mod = NIL THEN RETURN END;
 		refs := mod.refs;
@@ -955,7 +958,7 @@ CONST
 
 	(* Display call trackback. *)
 	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; low,high: ADDRESS; long, overflow: BOOLEAN);
-	VAR count,offset: LONGINT; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
+	VAR count,offset: SIZE; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
 	BEGIN
 		count := 0;	(* frame count *)
 		REPEAT
@@ -1040,7 +1043,7 @@ CONST
 	END GetVariableAdr;
 	
 	PROCEDURE GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS);
-	VAR m: Modules.Module; offset: LONGINT;
+	VAR m: Modules.Module; offset: SIZE;
 	BEGIN
 		name := "";
 		m := Modules.ThisModuleByAdr0(pc);
@@ -1060,7 +1063,8 @@ CONST
 TYPE
 	Variable* = RECORD
 		adr-: ADDRESS;
-		type-, size-, n-, tdadr-: LONGINT
+		type-, size-, n-: SIZE;
+		tdadr-: ADDRESS;
 	END;
 	
 	(* half-stub for module Info to work *)
@@ -1092,8 +1096,8 @@ TYPE
 
 
 	
-	PROCEDURE ReportType*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
-	VAR size: SIZE;  adr: LONGINT; c: CHAR;
+	PROCEDURE ReportType*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR size: SIZE; c: CHAR;
 	BEGIN
 		c := GetChar(refs, offset);
 		CASE c OF
@@ -1147,8 +1151,8 @@ TYPE
 		END;
 	END ReportType;
 
-	PROCEDURE ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
-	VAR name: Name;  start, end: LONGINT;  flags: SET; 
+	PROCEDURE ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR name: Name;  start, end: ADDRESS;  flags: SET; 
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("PROCEDURE "); 
@@ -1175,7 +1179,7 @@ TYPE
 	END ReportProcedure;
 
 
-	PROCEDURE ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
 	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  size: SIZE;
 	BEGIN
 		w.Int(offset,1); w.String(":");
@@ -1196,8 +1200,8 @@ TYPE
 		w.Ln;
 	END ReportVariable; 
 
-	PROCEDURE ReportTypeDeclaration*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
-	VAR name: ARRAY 128 OF CHAR;  adr: LONGINT; 
+	PROCEDURE ReportTypeDeclaration*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS; 
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("TYPE "); 
@@ -1212,7 +1216,7 @@ TYPE
 		IF refs[offset] = sfScopeBegin THEN ReportScope(w, refs, offset) END;
 	END ReportTypeDeclaration; 
 
-	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: LONGINT);
+	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
 		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
 		w.Int(offset,1); w.String(": Scope"); w.Ln;
@@ -1229,7 +1233,7 @@ TYPE
 		w.String("END"); w.Ln; 
 	END ReportScope;
 	
-	PROCEDURE ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
+	PROCEDURE ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE);
 	VAR name: Name;
 	BEGIN
 		w.String("MODULE "); 
@@ -1240,7 +1244,7 @@ TYPE
 		ReportScope(w, refs, offset); 
 	END ReportModule;
 					
-	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes; offset: LONGINT);
+	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes; offset: SIZE);
 	BEGIN
 		CASE refs[offset] OF
 			sfModule: ReportModule(w, refs, offset);
@@ -1272,9 +1276,17 @@ VAR trace: Streams.Writer;
 		Kernel.GC;
 		Objects.TraceProcessHook := NIL;
 	END TraceProcesses;
+	
+	PROCEDURE Test*;
+	VAR res: LONGINT; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE; 
+	BEGIN
+		mod := Modules.ThisModule("Reflection",res,msg);
+		ReportModule(trace, mod.refs, pos); 
+	END Test;
+	
 
 BEGIN
-	NEW(trace, Trace.Send, 4096); 
+	NEW(trace, Trace.Send, 4 (*4096*) );  (* trace asap *)
 	modes := " rdy run awl awc awe rip";   (* 4 characters per mode from Objects.Ready to Objects.Terminated *)
 END Reflection.
 

@@ -46,15 +46,16 @@ Compiler.Compile -b=AMD --bits=64 --objectFile=Generic --newObjectFile  --symbol
 	Win64.Objects.Mod Win32.Kernel.Mod  
 	KernelLog.Mod Streams.Mod Commands.Mod Files.Mod Win32.WinFS.Mod Win32.Clock.Mod Dates.Mod 
 	AMD64.Reals.Mod Strings.Mod Diagnostics.Mod BitSets.Mod
-	StringPool.Mod ObjectFile.Mod GenericLinker.Mod Reflection.Mod GenericLoader.Mod BootConsole.Mod 
+	StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod BootConsole.Mod 
 	Win32.WinTrace.Mod Pipes.Mod Win32.StdIO.Mod Shell.Mod StdIOShell.Mod 
+	Generic.Reflection.Mod CRC.Mod SystemVersion.Mod Win64.Traps.Mod TrapWriters.Mod
 	~
 
 StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
 	Runtime Trace Kernel32 
 	Heaps Modules Objects Kernel
 	KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 
-	StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell ~
+	StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell Traps ~
 
 FSTools.CloseFiles A264.exe  ~
 ~

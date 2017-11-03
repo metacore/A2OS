@@ -264,7 +264,11 @@ TYPE
 	END Process;
 
 TYPE
-	ExceptionHandler* = PROCEDURE( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD;
+(*	ExceptionHandler* = PROCEDURE( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; *)
+	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;
+										VAR excpRec: Kernel32.ExceptionRecord;
+										VAR handled: BOOLEAN);
+
 
 
 	GCStatusExt = OBJECT(Heaps.GCStatus)
@@ -608,7 +612,7 @@ BEGIN
 			
 		ELSE Trace.StringLn ( "Warning: FINALLY statement cannot be treated !" );
 		END
-	ELSE RETURN exceptionhandler(exceptionPointers);
+	ELSE exceptionhandler(exceptionPointers.context^, exceptionPointers.exception^,handled );
 	END;
 	TRACE(handled); 
 	IF ~handled THEN 

@@ -228,8 +228,8 @@ TYPE
 		ContextFlags*: DWORD; 
 		MxCsr*: DWORD; 
 		
-		SegCs*, SegDs*, SegEs*, SegFs*, SegGs*, SegSs*: INTEGER; 
-		EFlags*: DWORD;
+		CS*, DS*, ES*, FS*, GS*, SS*: INTEGER; 
+		FLAGS*: DWORD;
 		
 		Dr0*, Dr1*, Dr2*, Dr3*, Dr6*, Dr7*: SIZE;
 		

@@ -238,12 +238,33 @@ BEGIN
 	IF reader.res # Files.Ok THEN linker.Error (fileName, "failed to parse"); END;
 END ReadObjectFile;
 
+PROCEDURE WriteRelocations( arr: Arrangement; w: Files.Writer );
+VAR pb: PatchBlock; i, relocations, binsize: LONGINT;
+BEGIN
+	binsize := w.Pos();
+	pb := arr.relocInfo.patchBlock; relocations := 0;
+	WHILE pb # NIL DO
+		FOR i := 0 TO pb.addresses -1 DO
+			w.RawLInt( pb.address[i] );  INC( relocations );
+		END;
+		pb := pb.next;
+	END;
+	(* now patch header (cf  Generic.Unix.I386.Glue.Mod)  *)
+	w.SetPos( 24 );
+	w.RawLInt( binsize );
+	w.RawLInt( relocations );
+	w.RawLInt( 0 );	(* base *)
+END WriteRelocations;
+
 PROCEDURE WriteOutputFile* (arrangement: Arrangement; CONST fileName: Files.FileName; linker: GenericLinker.Linker; fileFormat: FileFormat);
 VAR file: Files.File; writer: Files.Writer; msg: ARRAY 64 OF CHAR; number: ARRAY 32 OF CHAR;
 BEGIN
 	file := Files.New (fileName);
 	Files.OpenWriter (writer, file, 0);
 	fileFormat (linker, arrangement, writer);
+	IF (arrangement.displacement = 0) & (fileFormat = WriteBinaryFile) THEN
+		WriteRelocations( arrangement, writer )
+	END;
 	writer.Update; Files.Register (file);
 	msg := "written ";
 	Strings.IntToStr(arrangement.SizeInBits(), number);
@@ -1065,12 +1086,15 @@ BEGIN
 	defaults.Add("Linux32G","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
 	defaults.Add("A2G","--fileName=kernel.img --extension=.GofG --displacement=0100000H");
-	defaults.Add("Solaris32G","--fileFormat=Raw --fileName=Solaris32G.core --extension=.GofU --displacement=08070000H");
+	defaults.Add("Solaris32G", "--fileFormat=Raw --fileName=oberon.bin --extension=.GofU --displacement=0" );
+	defaults.Add("Darwin32G",   "--fileFormat=Raw --fileName=oberon.bin --extension=.GofU --displacement=0" );
 END StaticLinker.
 
 StaticLinker.Link --fileName=test.exe --fileFormat=PE32 --displacement=401000H Test ~
 StaticLinker.Link --fileName=a.out --fileFormat=ELF --displacement=08048000H Test ~
 StaticLinker.Link --fileName=a.out --fileFormat=MACHO --displacement=000010E8H Test ~
+
+SystemTools.Free StaticLinker ~
 
 
 

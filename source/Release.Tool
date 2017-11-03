@@ -63,8 +63,20 @@
 # SolarisAOS Generic
 #    Release.Build Solaris32G ~
 # X11 Bootconsole:
-#    StaticLinker.Link -p=Solaris32G 	Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
-#    ElfBinary.Build  Solaris32G.core -> SolarisA2 ~
+#    StaticLinker.Link -p=Solaris32G 	--path=NewAos/
+#		Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  
+#		Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics 
+#		BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
+#    UnixBinary.Build  oberon.bin  ->  A2Core ~
+#
+# DarwinAOS Generic
+#    Release.Build Darwin32G ~
+# X11 Bootconsole:
+#    StaticLinker.Link -p=Darwin32G 	--path=NewAos/
+#		Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  
+#		Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics 
+#		BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
+#    UnixBinary.Build  oberon.bin  ->  A2Core ~
 #
 # WINAOS Cooperative
 #	Release.Build  --path="./" WinAosCooperative ~
@@ -275,32 +287,10 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "GofU"
 		SYMBOLEXTENSION "SymU"
-		PATH "./"
+		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}		
-	LinuxAos64 {
-		INCLUDE "UNIX UNIX64 LINUX64 UNCOOP"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--bits=64"
-		TARGET "AMD"
-		EXTENSION "Obz"
-		SYMBOLEXTENSION "Obz"
-		PATH "NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	DarwinAos64 {
-		INCLUDE "UNIX UNIX64 DARWIN64 UNCOOP"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--bits=64 --darwinHost"
-		TARGET "AMD"
-		EXTENSION "Obz"
-		SYMBOLEXTENSION "Obz"
-		PATH "NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
 	DarwinAos {
 		INCLUDE "UNIX UNIX32 DARWIN UNCOOP"
 		COMPILER "Compiler.Compile"
@@ -308,10 +298,21 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "Obj"
 		SYMBOLEXTENSION "Obj"
-		PATH "NewAos/"
+		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	Darwin32G {
+		INCLUDE "UNIXG UNIXG32 DARWING UNCOOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux32G"
+		TARGET "AMD"
+		EXTENSION "GofU"
+		SYMBOLEXTENSION "SymU"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}		
 	SolarisAos {
 		INCLUDE "UNIX UNIX32 SOLARIS UNCOOP"
 		COMPILER "Compiler.Compile"
@@ -319,7 +320,7 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "Obj"
 		SYMBOLEXTENSION "Obj"
-		PATH "NewAos/"
+		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -330,21 +331,10 @@ BUILDS
 		TARGET "AMD"
 		EXTENSION "GofU"
 		SYMBOLEXTENSION "SymU"
-		PATH "./"
+		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}		
-	SolarisAos64 {
-		INCLUDE "UNIX UNIX64 SOLARIS64 UNCOOP"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--bits=64"
-		TARGET "AMD"
-		EXTENSION "Obz"
-		SYMBOLEXTENSION "Obz"
-		PATH "NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
 END
 
 PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kernel"
@@ -380,17 +370,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Win32.Environment.Mod }
 
 	LINUXG { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
-	SOLARISG { Generic.Solaris.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
-	UNIXG32 { Generic.Unix.I386.Machine.Mod }
-	UNIX { Unix.Glue.Mod }
-	DARWIN { Darwin.I386.Unix.Mod }  
-	DARWIN64 { Darwin.AMD64.Unix.Mod } 
-	LINUX { Linux.I386.Unix.Mod }
-	LINUX64 { Linux.AMD64.Unix.Mod } 
-	SOLARIS64 { Solaris.AMD64.Unix.Mod } 
-	SOLARIS{ Solaris.I386.Unix.Mod }
+	DARWING { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
+	SOLARISG { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
 	
-
+	UNIX { Unix.Glue.Mod }
+	LINUX { Linux.I386.Unix.Mod }
+	DARWIN { Darwin.I386.Unix.Mod }  
+	SOLARIS { Solaris.I386.Unix.Mod }
+	
 	WINORIG { Win32.Kernel32.Mod}
 	WINGEN {Generic.Win32.Kernel32.Mod}
 
@@ -403,11 +390,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
 
 	UNIX32 { Unix.I386.Machine.Mod }
-
-
-	SOLARIS64 { Solaris.AMD64.Unix.Mod } 
-	UNIX64 { Unix.AMD64.Machine.Mod }
-
+	UNIXG32 { Generic.Unix.I386.Machine.Mod }
+	
 	NATIVEORIG, NATIVEGEN, WINORIG, WINGEN, UNIXG { Heaps.Mod }
 	UNIX { Unix.Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
@@ -557,7 +541,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}
 	
-	SOLARISG { ElfBinary.Mod }
+	UNIX, UNIXG { UnixBinary.Mod }
 
 	# Serial port interface
 	Serials.Mod

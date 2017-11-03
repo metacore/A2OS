@@ -1,12 +1,12 @@
-MODULE ElfBinary;  (** AUTHOR "GF"; PURPOSE "build ELF binary"; *)
+MODULE UnixBinary;  (** AUTHOR "GF"; PURPOSE "build Unix programs"; *)
 
-(* Build an ELF binary by concatenating the loader and a statically linked program *)
+(* Build Unix programs by joining the loader and statically linked Oberon programs *)
 
 IMPORT Files, Commands, Streams, Strings;
 
 CONST 
-	HeaderPart = "A2Loader.elf";
-	StartPos = 10*1024;	(* cf. A2Loader.c *)
+	LoaderFilename = "OberonLoader";
+	StartPos = 10*1024;	(* cf. OberonLoader.c *)
 
 	
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
@@ -41,7 +41,7 @@ CONST
 			cc.arg.GetString( token ) & (token = "->") &
 			cc.arg.GetString( outputname ) THEN
 			
-				in1 := Open( HeaderPart, cc.error );
+				in1 := Open( LoaderFilename, cc.error );
 				in2 := Open( inputname, cc.error );
 				IF (in1 = NIL) OR (in2 = NIL) THEN  RETURN  END;
 			
@@ -58,15 +58,15 @@ CONST
 				w.Update;  Files.Register( out );
 				cc.out.String( outputname );  cc.out.String( " created" ); cc.out.Ln;
 		ELSE
-			cc.error.String( "usage: ElfBinary.Build StatLinkedProgram -> ElfProgram" );  cc.error.Ln
+			cc.error.String( "usage: UnixBinary.Build  StaticallyLinkedBinary  ->  Program ~" );  cc.error.Ln
 		END;
 		cc.error.Update;
 		cc.out.Update
 	END Build;
 
-END ElfBinary.
+END UnixBinary.
 
-   SystemTools.Free  ElfBinary ~
+   SystemTools.Free  UnixBinary ~
    
-   ElfBinary.Build  Solaris32G.core -> SolarisA2 ~
+   UnixBinary.Build  oberon.bin -> A2Core ~
    

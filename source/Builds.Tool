@@ -35,6 +35,30 @@ LINUX32G -- 32 bit linux a2 using generic object files
 			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
+DARWIN32G -- 32 bit darwin a2 using generic object files
+================================
+
+	Release.Build -b Darwin32G ~
+	
+	## X11 bootconsole ##
+		StaticLinker.Link -p=Darwin32G  --path=./NewAos/
+				Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection 
+				Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
+		UnixBinary.Build  oberon.bin  ->  A2Core ~
+
+
+SOLARIS32G -- 32 bit solaris a2 using generic object files
+================================
+
+	Release.Build -b Solaris32G ~
+	
+	## X11 bootconsole ##
+		StaticLinker.Link -p=Solaris32G  --path=./NewAos/
+				Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection 
+				Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
+		UnixBinary.Build  oberon.bin  ->  A2Core ~
+
+
 Win64G -- work in progress
 ================
 

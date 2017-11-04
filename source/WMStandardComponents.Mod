@@ -2925,12 +2925,13 @@ TYPE
 			Invalidate
 		END ScrollbarsChanged;
 
-		(** Iff data IS WMGraphics.Image, it is set as background. Else the background is set to white *)
+		(** Iff data IS WMGraphics.Image, it is set as background. Else the background is set to white. bounds may need to be adapted by caller.  *)
 		(* Note: Only use for anonymous Images without a specific Name *)
 		PROCEDURE SetImage*(sender, data : ANY); (*? PH is Invalidate always handled in PropertyChanged here, or does this exporte procedure occur in other contexts ?*)
 		BEGIN
 			IF (data # NIL) & (data IS WMGraphics.Image) THEN
 				img := data(WMGraphics.Image);
+				IF bounds.GetWidth() * bounds.GetHeight() = 0 THEN bounds.SetExtents(img.width, img.height) END;
 				IF img.width > bounds.GetWidth() THEN
 					dx := img.width - bounds.GetWidth();
 					hScrollbar.visible.Set(TRUE)

@@ -785,7 +785,6 @@ CONST
 		end := GetAddress(refs, offset);
 		SkipSet(offset);
 		find.found := find.found OR (start <= find.pc) & (find.pc < end);
-		TRACE(start, end);
 		IF find.found THEN
 			find.pos := pos; 
 			RETURN; 
@@ -838,7 +837,6 @@ CONST
 	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
 	VAR pos: SIZE;
 	BEGIN
-		TRACE(offset);
 		pos := offset;
 		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
 		SkipSize(offset);
@@ -854,7 +852,6 @@ CONST
 	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
 	VAR no,i: SIZE;
 	BEGIN
-		TRACE(offset);
 		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
 		WHILE ~find.found &(refs[offset] = sfVariable) &  (find.minLevel <= level) DO (* Variable *)
 			FindInVariable(refs, offset, level, find); 

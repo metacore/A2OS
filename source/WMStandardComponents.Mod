@@ -2854,7 +2854,7 @@ TYPE
 	ImagePanel* = OBJECT(Panel)
 	VAR
 		imgName- : WMProperties.StringProperty;
-		img : WMGraphics.Image;
+		img- : WMGraphics.Image;
 		vScrollbar, hScrollbar : Scrollbar;
 		dx, dy : LONGINT;
 

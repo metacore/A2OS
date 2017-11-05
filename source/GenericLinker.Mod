@@ -3,10 +3,10 @@
 
 IMPORT ObjectFile, Streams, Diagnostics, Strings, SYSTEM;
 
-TYPE Address* = ObjectFile.Unit;
+TYPE Address* = ADDRESS;
 
 CONST
-	InvalidAddress* = MAX (Address);
+	InvalidAddress* = -1 (* MAX (Address) *);
 
 CONST
 	Fixed* = 0; InitCode*=1; BodyCode* = 2; Code* = 3; Data* = 4; Const* = 5; Empty* = 6;
@@ -363,7 +363,7 @@ VAR
 				FOR i := 0 TO pattern.patterns-1 DO
 					INC(nobits,pattern.pattern[i].bits);
 				END;
-				remainder := ASH(address,-nobits);
+				remainder := LONGINT(ASH(address,-nobits));
 
 				IF  (nobits <32) & ((remainder > 0) OR (remainder < -1)) THEN
 					IF pattern.mode = ObjectFile.Relative THEN (* negative values allowed *)

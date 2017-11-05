@@ -157,7 +157,7 @@ TYPE
 	BEGIN SELF.bits.SetBits ((pos - displacement) * unit + offset, bits, value);
 	END Patch;
 
-	PROCEDURE CheckReloc(target: LONGINT; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
+	PROCEDURE CheckReloc(target: GenericLinker.Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
 	VAR i: LONGINT;
 	BEGIN
 		IF (pattern.mode = ObjectFile.Absolute) & (relocInfo # NIL) THEN
@@ -959,7 +959,7 @@ PROCEDURE Link* (context: Commands.Context);
 VAR options: Options.Options;
 	silent, useAll, strict: BOOLEAN;
 	codeFileFormat, dataFileFormat: FileFormat;
-	codeDisplacement, dataDisplacement: GenericLinker.Address;
+	codeDisplacement, dataDisplacement: LONGINT;
 	path, extension, codeFileName, dataFileName, moduleName, logFileName, tempName: Files.FileName;
 	diagnostics: Diagnostics.StreamDiagnostics; code, data: Arrangement; linker: GenericLinker.Linker;
 	linkRoot: ARRAY 256 OF CHAR; logFile: Files.File; log: Files.Writer;

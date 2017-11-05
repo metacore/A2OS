@@ -121,7 +121,7 @@ BEGIN
 			dest.SetBit (destPos, source.GetBit (sourcePos));
 			INC (sourcePos); INC (destPos); DEC (count);
 		END;
-		WHILE (count > 31) DO
+		WHILE (count >= setSize) DO
 			dest.data[destPos DIV setSize] := source.data[sourcePos DIV setSize];
 			INC(sourcePos,setSize); INC(destPos,setSize); DEC(count,setSize);
 		END;

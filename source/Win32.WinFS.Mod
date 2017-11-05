@@ -317,7 +317,7 @@ TYPE
 			END EnumeratePath;
 
 		BEGIN {EXCLUSIVE}
-			COPY( mask, path );  ConvertChar( path, Files.PathDelimiter, PathDelimiter );  attr := Kernel32.GetFileAttributes( path );  path := "";
+			COPY( mask, path );  ConvertChar( path, Files.PathDelimiter, PathDelimiter );  attr := ToSet(Kernel32.GetFileAttributes( path ));  path := "";
 			IF (Kernel32.FileAttributeDirectory IN attr) & (~(Kernel32.FileAttributeTemporary IN attr)) THEN COPY( mask, path );  COPY( "*", pattern );  ELSE Files.SplitPath( mask, path, pattern );  END;
 			IF TraceFileSystem IN Trace THEN
 				KernelLog.String( "Enumerate0: " );   KernelLog.String( mask );  KernelLog.String( " :: " );  KernelLog.String( path );  KernelLog.String( " :: " );  KernelLog.String( pattern );  KernelLog.Ln;
@@ -419,7 +419,7 @@ TYPE
 			COPY(fileName, name);
 			ConvertChar(name, Files.PathDelimiter, PathDelimiter );  
 			IF FindFile(fileName, fullName) THEN 
-				flags := FileFlags(Kernel32.GetFileAttributes(fullName));
+				flags := FileFlags(ToSet(Kernel32.GetFileAttributes(fullName)));
 				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);  
 				RETURN TRUE
 			ELSE
@@ -444,7 +444,7 @@ TYPE
 		fileSystem: WinFileSystem;
 
 		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: LONGINT ; fs: WinFileSystem);
-		VAR s: SET;  res: Kernel32.BOOL;
+		VAR s: SET;  res: Kernel32.BOOL; 
 		BEGIN
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
@@ -606,7 +606,7 @@ TYPE
 		PROCEDURE GetAttributes(): SET;
 		VAR s: SET;
 		BEGIN
-			s := Kernel32.GetFileAttributes( fname );
+			s := ToSet(Kernel32.GetFileAttributes( fname ));
 			RETURN FileFlags(s);
 		END GetAttributes;
 
@@ -721,6 +721,12 @@ TYPE
 VAR
 	winFS: WinFileSystem;   (* must be unique *)
 
+
+	PROCEDURE ToSet(d: UNSIGNED32): SET;
+	BEGIN
+		RETURN SYSTEM.VAL(SET, ADDRESS(d)); 
+	END ToSet;
+	
 
 	PROCEDURE DebugFile(f: File);
 	BEGIN
@@ -1063,7 +1069,7 @@ VAR
 	END CheckPath;
 
 	PROCEDURE CheckName*( name: ARRAY OF CHAR ): BOOLEAN;
-	VAR fullName: FileName;  fileNamePart: Kernel32.LPSTR;  ret, i: LONGINT;  ch: CHAR;  stream, ok: BOOLEAN;
+	VAR fullName: FileName;  fileNamePart: Kernel32.LPSTR;  ret, i: SIZE;  ch: CHAR;  stream, ok: BOOLEAN;
 	BEGIN
 		ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fullName, fileNamePart );
 		IF (ret > 0) & CheckPath( fullName ) & (fileNamePart # Kernel32.NULL) THEN
@@ -1085,7 +1091,7 @@ VAR
 	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): SET;   (** non-portable *)
 	VAR attrs: SET;
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := Kernel32.GetFileAttributes( file );
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := ToSet(Kernel32.GetFileAttributes( file ));
 		IF attrs = {0..31} THEN RETURN {} ELSE RETURN attrs END
 	END GetAttributes;
 
@@ -1196,7 +1202,7 @@ VAR
 
 		(* now the file system is installed *)
 
-		drives := Kernel32.GetLogicalDrives();
+		drives := ToSet(Kernel32.GetLogicalDrives());
 		drives := drives - {0,1}; (* do not scan for diskettes *)
 		AutoMountWindowsLogicalDrives( drives );
 

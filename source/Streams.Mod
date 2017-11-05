@@ -750,8 +750,8 @@ TYPE
 		VAR ch: CHAR;  n, y: LONGINT;
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
-			WHILE ch >= 80X DO INC( y, LSH( LONG( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( LONG( ORD( ch ) ), 25 ), n - 25 ) + y
+			WHILE ch >= 80X DO INC( y, LSH( LONGINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
 
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)

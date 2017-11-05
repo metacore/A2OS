@@ -492,7 +492,7 @@ VAR
 	GetExitCodeProcess-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				  VAR lpExitCode: LONGINT ): BOOL;
 	(** The GetFileAttributes function returns attributes for a specified file or directory. *)
-	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): SET;
+	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): LONGINT;
 	(** The GetFileSize function retrieves the size, in bytes, of the specified file. *)
 	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: LONGINT ): LONGINT;
 	GetFileSizeEx-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSize: HUGEINT ): BOOL;
@@ -516,7 +516,7 @@ VAR
 	(* The GetLogicalDrives function retrieves a bitmask representing the currently available disk drives.
 *)
 
-	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): SET;
+	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): LONGINT;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
 																				    nSize: LONGINT ): LONGINT;
@@ -717,7 +717,7 @@ VAR
 	SetCurrentDirectory-: PROCEDURE {WINAPI} ( VAR lpPathName: ARRAY   OF CHAR ): BOOL;
 	(** The SetErrorMode function controls whether the system will handle the specified types of serious errors,
 			or whether the process will handle them. *)
-	SetErrorMode-: PROCEDURE {WINAPI} ( uMode: SET ): SET;
+	SetErrorMode-: PROCEDURE {WINAPI} ( uMode: SET ): LONGINT;
 	(** The SetEndOfFile function moves the end-of-file (EOF) position for the specified file to the current position of the file pointer. *)
 	SetEndOfFile-: PROCEDURE {WINAPI} ( hFile: HANDLE ): BOOL;
 	(** The SetEvent function sets the state of the specified event object to signaled. *)
@@ -738,7 +738,7 @@ VAR
 	(** The SetLocalTime function sets the current local time and date. *)
 	SetLocalTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime ): BOOL;
 	(** The SetThreadAffinityMask function sets a processor affinity mask for the specified thread. *)
-	SetThreadAffinityMask-: PROCEDURE {WINAPI} ( hThread: HANDLE; dwThreadAffinityMask: SET): SET;
+	SetThreadAffinityMask-: PROCEDURE {WINAPI} ( hThread: HANDLE; dwThreadAffinityMask: SET): LONGINT;
 	(** The SetThreadContext function sets the context in the specified thread. *)
 	SetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;

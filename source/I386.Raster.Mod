@@ -3236,7 +3236,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 					img.fmt.unpack(img.fmt, adr, bit, pix);
 					pix[r] := clamp[ORD(pix[r])]; pix[g] := clamp[ORD(pix[g])]; pix[b] := clamp[ORD(pix[b])];
 					img.fmt.pack(img.fmt, adr, bit, pix);
-					bit := bit + img.fmt.bpp; INC(adr, bit); bit := bit MOD 8;
+					bit := bit + img.fmt.bpp; INC(adr, bit DIV 8); bit := bit MOD 8;
 					INC(x)
 				END;
 				INC(y)
@@ -3265,7 +3265,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 					pix[r] := clamp[ORD(pix[r])]; pix[g] := clamp[ORD(pix[g])];
 					pix[b] := clamp[ORD(pix[b])]; pix[a] := clamp[ORD(pix[a])];
 					img.fmt.pack(img.fmt, adr, bit, pix);
-					bit := bit + img.fmt.bpp; INC(adr, bit); bit := bit MOD 8;
+					bit := bit + img.fmt.bpp; INC(adr, bit DIV 8); bit := bit MOD 8;
 					INC(x)
 				END;
 				INC(y)
@@ -3293,7 +3293,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 					img.fmt.unpack(img.fmt, adr, bit, pix);
 					pix[a] := clamp[ORD(pix[a])];
 					img.fmt.pack(img.fmt, adr, bit, pix);
-					bit := bit + img.fmt.bpp; INC(adr, bit); bit := bit MOD 8;
+					bit := bit + img.fmt.bpp; INC(adr, bit DIV 8); bit := bit MOD 8;
 					INC(x)
 				END;
 				INC(y)

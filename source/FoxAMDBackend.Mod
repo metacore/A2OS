@@ -439,21 +439,29 @@ TYPE
 			IF type.form IN IntermediateCode.Integer THEN
 				IF type.sizeInBits = IntermediateCode.Bits8 THEN
 					i := GetHint(AL);
+					IF i = none THEN i := Get(BL, AL) END;
+					IF i = none THEN i := Get(BH, AH) END;
 					IF i = none THEN
 						i := Get(AL,R15B)
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits16 THEN
 					i := GetHint(AX);
+					IF i = none THEN i := Get(DI, SI) END;
+					IF i = none THEN i := Get(BX, AX) END;
 					IF i = none THEN
 						i := Get(AX,R15W);
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits32 THEN
 					i := GetHint(EAX);
+					IF i = none THEN i := Get(EDI,ESI) END;
+					IF i = none THEN i := Get(EBX,EAX) END;
 					IF i = none THEN
 						i := Get(EAX,R15D);
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits64 THEN
 					i := GetHint(RAX);
+					IF i = none THEN i := Get(RDI,RSI) END;
+					IF i = none THEN i := Get(RBX,RAX) END;
 					IF i = none THEN
 						i := Get(RAX, R15)
 					END;

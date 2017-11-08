@@ -1,6 +1,7 @@
 MODULE DiskFS;
 	IMPORT SYSTEM, Machine, KernelLog, Modules, Clock, Files, Kernel;
 CONST 
+	SkipIndexFlag = 31; 
 	MinVolSize = 4; 
 	SectorFactor = 29; 
 	FileNameLength = 128; 
@@ -103,7 +104,7 @@ TYPE
 	VAR 
 		vol: Files.Volume; 
 		state: CHAR; 
-		lastSectorReserved: BOOLEAN; 
+		lastSectorReserved, noCleanup: BOOLEAN; 
 
 		PROCEDURE ^ Search(VAR name: FileName; VAR A: DiskAdr); 
 		PROCEDURE ^ insert(VAR name: FileName; dpg0: DiskAdr; VAR h: BOOLEAN; VAR v: DirEntry; fad: DiskAdr); 

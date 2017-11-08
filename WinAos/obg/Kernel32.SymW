@@ -165,12 +165,14 @@ TYPE
 
 	LPSTR* = ADDRESS; 
 
+	DWORD* = LONGINT; 
+
 	FileTime* = RECORD 
 		dwLowDateTime*, dwHighDateTime*: LONGINT; 
 	END; 
 
 	FindData* = RECORD 
-		dwFileAttributes*: SET; 
+		dwFileAttributes*: DWORD; 
 		ftCreationTime*, ftLastAccessTime*, ftLastWriteTime*: FileTime; 
 		nFileSizeHigh*, nFileSizeLow*: LONGINT; 
 		dwReserved0*, dwReserved1*: LONGINT; 
@@ -198,7 +200,7 @@ TYPE
 	END; 
 
 	Context* = RECORD 
-		ContextFlags*: SET; 
+		ContextFlags*: DWORD; 
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: LONGINT; 
 		FloatSave*: FloatingSaveArea; 
 		GS*, FS*, ES*, DS*: LONGINT; 
@@ -264,7 +266,7 @@ TYPE
 		dwX*, dwY*, dwXSize*, dwYSize*: LONGINT; 
 		dwXCountChars*, dwYCountChars*: LONGINT; 
 		dwFillAttribute*: LONGINT; 
-		dwFlags*: SET; 
+		dwFlags*: DWORD; 
 		wShowWindow*, cbReserved2*: INTEGER; 
 		lpReserved2*: ADDRESS; 
 		hStdInput*, hStdOutput*, hStdError*: HANDLE; 
@@ -286,14 +288,14 @@ TYPE
 
 	DCB* = RECORD 
 		DCBlength*, BaudRate*: LONGINT; 
-		flags*: SET; 
+		flags*: DWORD; 
 		wReserved*, XonLim*, XoffLim*: INTEGER; 
 		ByteSize*, Parity*, StopBits*, XonChar*, XoffChar*, ErrorChar*, EofChar*, EvtChar*: CHAR; 
 		wReserved1*: INTEGER; 
 	END; 
 
 	ComStat* = RECORD 
-		status*: SET; 
+		status*: DWORD; 
 		cbInQue*, cbOutQue*: LONGINT; 
 	END; 
 
@@ -337,19 +339,19 @@ VAR
 	AttachConsole-: PROCEDURE {WINAPI}(in: LONGINT):BOOL; 
 	Beep-: PROCEDURE {WINAPI}(dwFreq, dwDuration: LONGINT):BOOL; 
 	ClearCommBreak-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
-	ClearCommError-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpErrors: SET; VAR lpStat: ComStat):BOOL; 
+	ClearCommError-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpErrors: DWORD; VAR lpStat: ComStat):BOOL; 
 	CloseHandle-: PROCEDURE {WINAPI}(hObject: HANDLE):BOOL; 
 	CopyFile-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; bFailIfExists: BOOL):BOOL; 
 	CreateDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR; lpSecurityAttributes: ANY):BOOL; 
 	CreateEvent-: PROCEDURE {WINAPI}(lpEventAttributes: ANY; bManualReset, bInitialState: BOOL; CONST lpName: ARRAY OF CHAR):HANDLE; 
-	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: SET; lpSecurityAttributes: ANY; dwCreationDistribution: LONGINT; dwFlagsAndAttributes: SET; hTemplateFile: HANDLE):HANDLE; 
+	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: DWORD; lpSecurityAttributes: ANY; dwCreationDistribution: LONGINT; dwFlagsAndAttributes: DWORD; hTemplateFile: HANDLE):HANDLE; 
 	CreateProcess-: PROCEDURE {WINAPI}(CONST lpApplicationName, lpCommandLine: ARRAY OF CHAR; lpProcessAttributes, lpThreadAttributes: ANY; bInheritHandles: BOOL; dwCreationFlags: LONGINT; lpEnvironment: ANY; VAR lpCurrentDirectory: ARRAY OF CHAR; VAR lpStartupInfo: StartupInfo; VAR lpProcessInformation: ProcessInformation):BOOL; 
 	CreateSemaphore-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; lInitialCount: LONGINT; lMaximumCount: LONGINT; lpName: LPSTR):HANDLE; 
-	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: LONGINT; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: SET; VAR lpThreadId: LONGINT):HANDLE; 
+	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: LONGINT; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: DWORD; VAR lpThreadId: LONGINT):HANDLE; 
 	DeleteCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
 	DisableThreadLibraryCalls-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
-	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: SET; bInheritHandle: BOOL; dwOptions: SET):BOOL; 
+	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwOptions: DWORD):BOOL; 
 	EnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	EscapeCommFunction-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFunc: LONGINT):BOOL; 
 	ExitProcess-: PROCEDURE {WINAPI}(uExitCode: LONGINT); 
@@ -363,7 +365,7 @@ VAR
 	FreeConsole-: PROCEDURE {WINAPI}():BOOL; 
 	FreeLibrary-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
 	GetCommandLine-: PROCEDURE {WINAPI}():LPSTR; 
-	GetCommModemStatus-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpModemStat: SET):BOOL; 
+	GetCommModemStatus-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpModemStat: DWORD):BOOL; 
 	GetCommState-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpDCB: DCB):BOOL; 
 	GetComputerName-: PROCEDURE {WINAPI}(VAR lpBuffer: ARRAY OF CHAR; VAR lpnSize: LONGINT):BOOL; 
 	GetCurrentDirectory-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
@@ -374,7 +376,7 @@ VAR
 	GetDiskFreeSpace-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters: LONGINT):BOOL; 
 	GetDriveType-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR):LONGINT; 
 	GetExitCodeProcess-: PROCEDURE {WINAPI}(hProcess: HANDLE; VAR lpExitCode: LONGINT):BOOL; 
-	GetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):SET; 
+	GetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):LONGINT; 
 	GetFileSize-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSizeHigh: LONGINT):LONGINT; 
 	GetFileSizeEx-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSize: HUGEINT):BOOL; 
 	GetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
@@ -382,7 +384,7 @@ VAR
 	GetLastError-: PROCEDURE {WINAPI}():LONGINT; 
 	GetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime); 
 	GetLogicalDriveStrings-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
-	GetLogicalDrives-: PROCEDURE {WINAPI}():SET; 
+	GetLogicalDrives-: PROCEDURE {WINAPI}():LONGINT; 
 	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: LONGINT):LONGINT; 
 	GetModuleHandle-: PROCEDURE {WINAPI}(CONST lpModuleName: ARRAY OF CHAR):HMODULE; 
 	GetOverlappedResult-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL):BOOL; 
@@ -407,11 +409,11 @@ VAR
 	GetVersionEx-: PROCEDURE {WINAPI}(VAR lpVersionInfo: OSVersionInfo):BOOL; 
 	GetVolumeInformation-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpVolumeNameBuffer: ARRAY OF CHAR; nVolumeNameSize: LONGINT; VAR lpVolumeSerialNumber: LONGINT; VAR lpMaximumComponentLength: LONGINT; VAR lpFileSystemFlags: LONGINT; VAR lpFileSystemNameBuffer: ARRAY OF CHAR; nFileSystemNameSize: LONGINT):LONGINT; 
 	GlobalAddAtom-: PROCEDURE {WINAPI}(VAR lpString: ARRAY OF CHAR):ATOM; 
-	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: SET; dwBytes: LONGINT):HGLOBAL; 
+	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: DWORD; dwBytes: LONGINT):HGLOBAL; 
 	GlobalDeleteAtom-: PROCEDURE {WINAPI}(nAtom: ATOM):ATOM; 
 	GlobalLock-: PROCEDURE {WINAPI}(hMem: HGLOBAL):ADDRESS; 
 	GlobalMemoryStatusEx-: PROCEDURE {WINAPI}(VAR lpBuffer: MemoryStatusEx):BOOL; 
-	GlobalReAlloc-: PROCEDURE {WINAPI}(hMem: HGLOBAL; dwBytes: LONGINT; uFlags: SET):HGLOBAL; 
+	GlobalReAlloc-: PROCEDURE {WINAPI}(hMem: HGLOBAL; dwBytes: LONGINT; uFlags: DWORD):HGLOBAL; 
 	GlobalSize-: PROCEDURE {WINAPI}(hMem: HGLOBAL):LONGINT; 
 	GlobalUnlock-: PROCEDURE {WINAPI}(hMem: HGLOBAL):BOOL; 
 	HeapAlloc-: PROCEDURE {WINAPI}(hHeap: HANDLE; dwFlags: LONGINT; size: SIZE):ADDRESS; 
@@ -421,10 +423,10 @@ VAR
 	InterlockedIncrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
 	LeaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	LocalFileTimeToFileTime-: PROCEDURE {WINAPI}(VAR lpLocalFileTime: FileTime; VAR lpFileTime: FileTime):BOOL; 
-	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: SET):BOOL; 
+	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: DWORD):BOOL; 
 	outputDebugString-: PROCEDURE {WINAPI}(CONST lpOutputString: ARRAY OF CHAR); 
 	IsDebuggerPresent-: PROCEDURE {WINAPI}():BOOL; 
-	PurgeComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFlags: SET):BOOL; 
+	PurgeComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFlags: DWORD):BOOL; 
 	QueryDosDevice-: PROCEDURE {WINAPI}(lpDeviceName: ARRAY OF CHAR; VAR lpTargetPath: ARRAY OF CHAR; ucchMax: LONGINT):LONGINT; 
 	QueryPerformanceCounter-: PROCEDURE {WINAPI}(VAR lpPerformaceCount: LargeInteger):BOOL; 
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI}(VAR lpFrequency: LargeInteger):BOOL; 
@@ -437,7 +439,7 @@ VAR
 	ResumeThread-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
 	SearchPath-: PROCEDURE {WINAPI}(CONST lpPath, lpFileName, lpExtension: ARRAY OF CHAR; nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR; VAR lpFilePart: LPSTR):LONGINT; 
 	SetCommBreak-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
-	SetCommMask-: PROCEDURE {WINAPI}(hFile: HANDLE; dwEvtMask: SET):BOOL; 
+	SetCommMask-: PROCEDURE {WINAPI}(hFile: HANDLE; dwEvtMask: DWORD):BOOL; 
 	SetCommState-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpDCB: DCB):BOOL; 
 	SetCommTimeouts-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCommTimeouts: CommTimeouts):BOOL; 
 	SetConsoleCursorPosition-: PROCEDURE {WINAPI}(hConsoleOutput: HANDLE; dwCursorPosition: LONGINT):BOOL; 
@@ -446,15 +448,15 @@ VAR
 	SetConsoleTitle-: PROCEDURE {WINAPI}(VAR lpConsoleTitle: ARRAY OF CHAR):BOOL; 
 	SetConsoleWindowInfo-: PROCEDURE {WINAPI}(hConsoleOuput: HANDLE; bAbsolute: BOOL; VAR lpConsoleWindow: SmallRect):BOOL; 
 	SetCurrentDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
-	SetErrorMode-: PROCEDURE {WINAPI}(uMode: SET):SET; 
+	SetErrorMode-: PROCEDURE {WINAPI}(uMode: DWORD):LONGINT; 
 	SetEndOfFile-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
 	SetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
-	SetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR; dwFileAttributes: SET):BOOL; 
+	SetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR; dwFileAttributes: DWORD):BOOL; 
 	SetFilePointer-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
 	SetFilePointerEx-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: HUGEINT; VAR lpNewFilePointer: HUGEINT; dwMoveMethod: LONGINT):BOOL; 
 	SetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
 	SetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime):BOOL; 
-	SetThreadAffinityMask-: PROCEDURE {WINAPI}(hThread: HANDLE; dwThreadAffinityMask: SET):SET; 
+	SetThreadAffinityMask-: PROCEDURE {WINAPI}(hThread: HANDLE; dwThreadAffinityMask: DWORD):LONGINT; 
 	SetThreadContext-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR lpContext: Context):BOOL; 
 	SetThreadPriority-: PROCEDURE {WINAPI}(hThread: HANDLE; nPriority: LONGINT):BOOL; 
 	SetupComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwInQueue, dwOutQueue: LONGINT):BOOL; 
@@ -468,13 +470,15 @@ VAR
 	TlsGetValue-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT):LONGINT; 
 	TlsSetValue-: PROCEDURE {WINAPI}(dwTlsIndex, lpTlsValue: LONGINT):BOOL; 
 	TryEnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection):BOOL; 
-	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; flAllocationType, flProtect: SET):ADDRESS; 
-	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; dwFreeType: SET):BOOL; 
+	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; flAllocationType, flProtect: DWORD):ADDRESS; 
+	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: LONGINT; dwFreeType: DWORD):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
 	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 
+	PROCEDURE ^ SetToDW*(s: SET): DWORD; 
+	PROCEDURE ^ DWToSet*(d: DWORD): SET; 
 	PROCEDURE ^ GetProcAddress*(hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ CopyString*(lpString: LPSTR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutputDebugString*(CONST str: ARRAY OF CHAR); 

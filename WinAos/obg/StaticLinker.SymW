@@ -48,7 +48,7 @@ TYPE
 		PROCEDURE ^ Allocate*(CONST section: ObjectFile.Section): GenericLinker.Address; 
 		PROCEDURE ^ SizeInBits*(): LONGINT; 
 		PROCEDURE ^ Patch*(pos, value: GenericLinker.Address; offset, bits, unit: ObjectFile.Bits); 
-		PROCEDURE ^ CheckReloc*(target: LONGINT; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch); 
+		PROCEDURE ^ CheckReloc*(target: GenericLinker.Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch); 
 	END Arrangement; 
 
 	FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
@@ -58,6 +58,7 @@ VAR
 
 	PROCEDURE ^ Align(this, to: LONGINT): LONGINT; 
 	PROCEDURE ^ ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; linker: GenericLinker.Linker; moduleList: GenericLinker.HashTableSegmentedName); 
+	PROCEDURE ^ WriteRelocations(arr: Arrangement; w: Files.Writer); 
 	PROCEDURE ^ WriteOutputFile*(arrangement: Arrangement; CONST fileName: Files.FileName; linker: GenericLinker.Linker; fileFormat: FileFormat); 
 	PROCEDURE ^ WriteBinaryFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WriteTRMFile(arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: LONGINT); 

@@ -88,7 +88,7 @@ TYPE
 
 	FDSet* = RECORD 
 		fdcount*: LONGINT; 
-		socket*: ARRAY 64 OF LONGINT; 
+		socket*: ARRAY 64 OF Socket; 
 	END; 
 
 	WSAProtocolInfo* = RECORD 

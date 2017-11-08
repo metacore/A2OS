@@ -680,7 +680,7 @@ VAR
 	PROCEDURE ^ IsNested(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InCellScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT; 
-	PROCEDURE ^ ToMemoryUnits*(system: Global.System; size: LONGINT): LONGINT; 
+	PROCEDURE ^ ToMemoryUnits*(system: Global.System; size: SIZE): LONGINT; 
 	PROCEDURE ^ Get*(): Backend.Backend; 
 	PROCEDURE ^ Nop(position: Basic.Position): IntermediateCode.Instruction; 
 	PROCEDURE ^ Mov(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 

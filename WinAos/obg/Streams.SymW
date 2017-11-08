@@ -56,9 +56,9 @@ TYPE
 		PROCEDURE ^ RawNum*(x: LONGINT); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Int*(x: HUGEINT; w: LONGINT); 
+		PROCEDURE ^ Int*(x: HUGEINT; w: SIZE); 
 		PROCEDURE ^ Set*(s: SET); 
-		PROCEDURE ^ Hex*(x: HUGEINT; w: LONGINT); 
+		PROCEDURE ^ Hex*(x: HUGEINT; w: SIZE); 
 		PROCEDURE ^ Address*(x: ADDRESS); 
 		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 

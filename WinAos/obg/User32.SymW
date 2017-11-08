@@ -211,6 +211,8 @@ CONST
 	Color3DFace* = ColorBtnFace; 
 	Color3DShadow* = ColorBtnShadow; 
 TYPE 
+	DWORD = Kernel32.DWORD; 
+
 	HWND* = Kernel32.HANDLE; 
 
 	HDC* = Kernel32.HANDLE; 
@@ -283,7 +285,7 @@ TYPE
 
 	WndClassEx* = RECORD 
 		cbSize*: LONGINT; 
-		style*: SET; 
+		style*: DWORD; 
 		lpfnWndProc*: WndProc; 
 		cbClsExtra*, cbWndExtra*: LONGINT; 
 		hInstance*: Kernel32.HINSTANCE; 
@@ -299,12 +301,12 @@ TYPE
 	WindowPos* = RECORD 
 		hwnd*, hwndInsertAfter*: HWND; 
 		x*, y*, cx*, cy*: LONGINT; 
-		flags*: SET; 
+		flags*: DWORD; 
 	END; 
 
 	WindowPlacement* = RECORD 
 		length*: LONGINT; 
-		flags*: SET; 
+		flags*: DWORD; 
 		showCmd*: LONGINT; 
 		ptMinPosition*, ptMaxPosition*: Point; 
 		rcNormalPosition*: Rect; 
@@ -312,7 +314,7 @@ TYPE
 
 	MenuItemInfo* = RECORD 
 		cbSize*: LONGINT; 
-		fMask*, fType*, fState*: SET; 
+		fMask*, fType*, fState*: DWORD; 
 		wID*: LONGINT; 
 		hSubMenu*: HMenu; 
 		hbmpChecked*, hbmpUnchecked*: HBitmap; 
@@ -342,7 +344,7 @@ VAR
 	CloseClipboard-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
 	CreateAcceleratorTable-: PROCEDURE {WINAPI}(lpaccl: ADDRESS; cEntries: LONGINT):HAccel; 
 	CreateMenu-: PROCEDURE {WINAPI}():HMenu; 
-	CreateWindowEx-: PROCEDURE {WINAPI}(dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY OF CHAR; dwStyle: SET; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LONGINT):HWND; 
+	CreateWindowEx-: PROCEDURE {WINAPI}(dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LONGINT):HWND; 
 	DefWindowProc-: WndProc; 
 	DestroyAcceleratorTable-: PROCEDURE {WINAPI}(hAccel: HAccel):Kernel32.BOOL; 
 	DestroyCursor-: PROCEDURE {WINAPI}(hCursor: HCursor):Kernel32.BOOL; 
@@ -367,7 +369,7 @@ VAR
 	GetKeyState-: PROCEDURE {WINAPI}(vKey: LONGINT):INTEGER; 
 	GetMenu-: PROCEDURE {WINAPI}(hWnd: HWND):HMenu; 
 	GetMenuItemInfo-: PROCEDURE {WINAPI}(hMenu: HMenu; uItem: LONGINT; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo):Kernel32.BOOL; 
-	GetMenuString-: PROCEDURE {WINAPI}(hMenu: HMenu; uIDItem: LONGINT; VAR lpString: ARRAY OF CHAR; nMaxCount: LONGINT; uFlag: SET):Kernel32.BOOL; 
+	GetMenuString-: PROCEDURE {WINAPI}(hMenu: HMenu; uIDItem: LONGINT; VAR lpString: ARRAY OF CHAR; nMaxCount: LONGINT; uFlag: DWORD):Kernel32.BOOL; 
 	GetMessage-: PROCEDURE {WINAPI}(VAR lpMsg: Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax: LONGINT):LONGINT; 
 	GetParent-: PROCEDURE {WINAPI}(hWnd: HWND):HWND; 
 	GetProp-: PROCEDURE {WINAPI}(hWnd: HWND; lpString: LONGINT):LONGINT; 
@@ -380,7 +382,7 @@ VAR
 	GetWindowText-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpString: ARRAY OF CHAR; nMaxCount: LONGINT):LONGINT; 
 	GetUpdateRect-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpRect: Rect; bErase: Kernel32.BOOL):Kernel32.BOOL; 
 	GetUpdateRgn-: PROCEDURE {WINAPI}(hWnd: HWND; VAR hRgn: HRgn; bErase: Kernel32.BOOL):LONGINT; 
-	InsertMenu-: PROCEDURE {WINAPI}(hMenu: HMenu; uPosition: LONGINT; uFlags: SET; uIDNewItem: LONGINT; VAR lpNewItem: ARRAY OF CHAR):Kernel32.BOOL; 
+	InsertMenu-: PROCEDURE {WINAPI}(hMenu: HMenu; uPosition: LONGINT; uFlags: DWORD; uIDNewItem: LONGINT; VAR lpNewItem: ARRAY OF CHAR):Kernel32.BOOL; 
 	IntersectRect-: PROCEDURE {WINAPI}(VAR lprcDst: Rect; lprcSrc1, lprcSrc2: Rect):Kernel32.BOOL; 
 	InvalidateRect-: PROCEDURE {WINAPI}(hWnd: HWND; lpRect: Rect; bErase: Kernel32.BOOL):Kernel32.BOOL; 
 	IsChild-: PROCEDURE {WINAPI}(hWndParent, hWnd: HWND):Kernel32.BOOL; 
@@ -388,7 +390,7 @@ VAR
 	LoadCursorFromFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):HCursor; 
 	LoadIcon-: PROCEDURE {WINAPI}(hInstance: Kernel32.HINSTANCE; VAR lpIconName: ARRAY OF CHAR):HIcon; 
 	MessageBeep-: PROCEDURE {WINAPI}(uType: LONGINT):Kernel32.BOOL; 
-	MessageBox-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpText, lpCaption: ARRAY OF CHAR; uType: SET):LONGINT; 
+	MessageBox-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpText, lpCaption: ARRAY OF CHAR; uType: DWORD):LONGINT; 
 	MoveWindow-: PROCEDURE {WINAPI}(hWnd: HWND; X, Y, nWidth, nHeight: LONGINT; bRepaint: Kernel32.BOOL):Kernel32.BOOL; 
 	OffsetRect-: PROCEDURE {WINAPI}(VAR lprc: Rect; dx, dy: LONGINT):Kernel32.BOOL; 
 	OpenClipboard-: PROCEDURE {WINAPI}(hWndNewOwner: HWND):Kernel32.BOOL; 
@@ -415,13 +417,13 @@ VAR
 	SetProp-: PROCEDURE {WINAPI}(hWnd: HWND; lpString, hData: LONGINT):Kernel32.BOOL; 
 	SetWindowsHookEx-: PROCEDURE {WINAPI}(idHook: LONGINT; lpfn: HookProc; hMod: Kernel32.HINSTANCE; dwThreadId: LONGINT):HHook; 
 	SetWindowLong-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex, dwNewLong: LONGINT):LONGINT; 
-	SetWindowPos-: PROCEDURE {WINAPI}(hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: SET):Kernel32.BOOL; 
+	SetWindowPos-: PROCEDURE {WINAPI}(hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: DWORD):Kernel32.BOOL; 
 	SetWindowRgn-: PROCEDURE {WINAPI}(hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL):LONGINT; 
 	SetWindowText-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpString: ARRAY OF CHAR):Kernel32.BOOL; 
 	ShowCursor-: PROCEDURE {WINAPI}(bShow: Kernel32.BOOL):LONGINT; 
 	ShowWindow-: PROCEDURE {WINAPI}(hWnd: HWND; nCmdShow: LONGINT):Kernel32.BOOL; 
 	ShowWindowAsync-: PROCEDURE {WINAPI}(hWnd: HWND; nCmdShow: LONGINT):Kernel32.BOOL; 
-	TrackPopupMenu-: PROCEDURE {WINAPI}(hMenu: HMenu; uFlags: SET; x, y, nReserved: LONGINT; hWnd: HWND; VAR prcRect: Rect):Kernel32.BOOL; 
+	TrackPopupMenu-: PROCEDURE {WINAPI}(hMenu: HMenu; uFlags: DWORD; x, y, nReserved: LONGINT; hWnd: HWND; VAR prcRect: Rect):Kernel32.BOOL; 
 	TranslateAccelerator-: PROCEDURE {WINAPI}(hWnd: HWND; hAccTable: HAccel; VAR lpMsg: Msg):LONGINT; 
 	TranslateMessage-: PROCEDURE {WINAPI}(VAR lpMsg: Msg):Kernel32.BOOL; 
 	UnhookWindowsHookEx-: PROCEDURE {WINAPI}(hhk: HHook):Kernel32.BOOL; 

@@ -181,8 +181,8 @@ TYPE
 	Citation = OBJECT 
 	VAR 
 		pc: LONGINT; 
-		bits: SIZE; 
-		shift: SIZE; 
+		bits: LONGINT; 
+		shift: LONGINT; 
 		next: Citation; 
 	END Citation; 
 
@@ -190,11 +190,11 @@ TYPE
 	VAR 
 		firstCitation, lastCitation: Citation; 
 		next: Reference; 
-		size: SIZE; 
+		size: LONGINT; 
 
-		PROCEDURE ^  & Init(size: SIZE); 
+		PROCEDURE ^  & Init(size: LONGINT); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
-		PROCEDURE ^ AddCitation(pc: LONGINT; bits: SIZE; shift: SIZE); 
+		PROCEDURE ^ AddCitation(pc: LONGINT; bits: LONGINT; shift: LONGINT); 
 	END Reference; 
 
 	ImmediateReference = OBJECT (Reference)
@@ -225,16 +225,16 @@ TYPE
 	ListOfReferences = OBJECT 
 	VAR 
 		firstReference, lastReference: Reference; 
-		size: SIZE; 
-		due: SIZE; 
+		size: LONGINT; 
+		due: LONGINT; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ UpdateDue(pc: SIZE; bits: SIZE; shift: SIZE); 
-		PROCEDURE ^ AddCitation(reference: Reference; pc: SIZE; bits: SIZE; shift: SIZE); 
+		PROCEDURE ^ UpdateDue(pc: LONGINT; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ AddCitation(reference: Reference; pc: LONGINT; bits: LONGINT; shift: LONGINT); 
 		PROCEDURE ^ AddReference(reference: Reference): Reference; 
 		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT); 
-		PROCEDURE ^ AddImmediate(value: LONGINT; pc: SIZE; bits: SIZE); 
-		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: LONGINT; bits: SIZE); 
+		PROCEDURE ^ AddImmediate(value: LONGINT; pc: LONGINT; bits: LONGINT); 
+		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: LONGINT; bits: LONGINT); 
 	END ListOfReferences; 
 
 	PhysicalRegisters* = OBJECT (CodeGenerators.PhysicalRegisters)

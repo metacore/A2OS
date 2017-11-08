@@ -53,5 +53,6 @@ VAR
 	PROCEDURE ^ Expired*(VAR t: MilliTimer): BOOLEAN; 
 	PROCEDURE ^ Elapsed*(VAR t: MilliTimer): LONGINT; 
 	PROCEDURE ^ Left*(VAR t: MilliTimer): LONGINT; 
+	PROCEDURE ^ Nothing; 
 BEGIN
 END Kernel.

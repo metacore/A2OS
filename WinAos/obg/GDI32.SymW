@@ -60,6 +60,8 @@ CONST
 	ComplexRegion* = 3; 
 	RDHRectangles* = 1; 
 TYPE 
+	DWORD = Kernel32.DWORD; 
+
 	HGDIObj* = User32.HGDIObj; 
 
 	HFont* = User32.HFont; 
@@ -100,9 +102,9 @@ TYPE
 		tmPitchAndFamily*, tmCharSet*: SHORTINT; 
 	END; 
 
-	EnumFontFamProc* = PROCEDURE {WINAPI}(VAR lpelf: EnumLogFont; VAR lpntm: TextMetric; FontType: SET; lParam: User32.LParam):LONGINT; 
+	EnumFontFamProc* = PROCEDURE {WINAPI}(VAR lpelf: EnumLogFont; VAR lpntm: TextMetric; FontType: DWORD; lParam: User32.LParam):LONGINT; 
 
-	EnumFontsProc* = PROCEDURE {WINAPI}(VAR lplf: LogFont; VAR lptm: TextMetric; dwType: SET; lpData: User32.LParam):LONGINT; 
+	EnumFontsProc* = PROCEDURE {WINAPI}(VAR lplf: LogFont; VAR lptm: TextMetric; dwType: DWORD; lpData: User32.LParam):LONGINT; 
 
 	ABC* = RECORD 
 		abcA*, abcB*, abcC*: LONGINT; 
@@ -217,7 +219,7 @@ VAR
 	SetDIBitsToDevice-: PROCEDURE {WINAPI}(hdc: User32.HDC; XDest, YDest, dwWidth, dwHeight, XSrc, YSrc, uStartScan, cScanLines: LONGINT; lpvBits: ADDRESS; VAR lpbmi: BitmapInfo; fuColorUse: LONGINT):LONGINT; 
 	SetMapMode-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnMapMode: LONGINT):LONGINT; 
 	SetROP2-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnDrawMode: LONGINT):LONGINT; 
-	SetTextAlign-: PROCEDURE {WINAPI}(hdc: User32.HDC; fMode: SET):LONGINT; 
+	SetTextAlign-: PROCEDURE {WINAPI}(hdc: User32.HDC; fMode: DWORD):LONGINT; 
 	SetTextColor-: PROCEDURE {WINAPI}(hdc: User32.HDC; crColor: ColorRef):ColorRef; 
 	SetWindowExtEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXExtent, nYExtent: LONGINT; VAR lpSize: User32.Size):Kernel32.BOOL; 
 	SetWindowOrgEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; X, Y: LONGINT; VAR lpPoint: User32.Point):Kernel32.BOOL; 

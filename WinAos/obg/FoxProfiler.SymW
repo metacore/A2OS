@@ -35,7 +35,7 @@ TYPE
 
 	HashEntryInt = RECORD 
 		used: BOOLEAN; 
-		key, value: LONGINT; 
+		key, value: SIZE; 
 	END; 
 
 	HashIntArray = ARRAY (2 * MaxProcesses) OF HashEntryInt; 
@@ -49,10 +49,10 @@ VAR
 	frequency: LONGREAL; 
 	n: LONGINT; 
 
-	PROCEDURE ^ Put*(key, value: LONGINT); 
-	PROCEDURE ^ Get*(key: LONGINT): LONGINT; 
-	PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
-	PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+	PROCEDURE ^ Put*(key, value: SIZE); 
+	PROCEDURE ^ Get*(key: SIZE): SIZE; 
+	PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
+	PROCEDURE ^ HashValue(key: SIZE): SIZE; 
 	PROCEDURE ^ GetProcess(): Process; 
 	PROCEDURE ^ AddModule*(VAR moduleId: LONGINT; procedures: LONGINT; CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ AddProcedure*(moduleId, procedureId: LONGINT; CONST name: ARRAY OF CHAR); 

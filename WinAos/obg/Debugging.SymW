@@ -7,15 +7,15 @@ VAR
 	lock: Locks.RWLock; 
 
 	PROCEDURE ^ Memory*(from, tov: ADDRESS); 
-	PROCEDURE ^ ViewStack(ebp, esp: LONGINT; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ ViewStack(ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Stack*(CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stacklow, stackhigh: LONGINT); 
+	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 	PROCEDURE ^ TraceBack*; 
 	PROCEDURE ^ FileStart*(context: Commands.Context); 
 	PROCEDURE ^ FileEnd*; 
 	PROCEDURE ^ Str*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ String*(CONST name: ARRAY OF CHAR); 
-	PROCEDURE ^ Address*(i: LONGINT); 
+	PROCEDURE ^ Address*(i: ADDRESS); 
 	PROCEDURE ^ Int*(i, j: LONGINT); 
 	PROCEDURE ^ Set*(set: SET); 
 	PROCEDURE ^ Float*(r: LONGREAL; len: LONGINT); 

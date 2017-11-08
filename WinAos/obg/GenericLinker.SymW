@@ -1,7 +1,7 @@
 MODULE GenericLinker;
 	IMPORT ObjectFile, Streams, Diagnostics, Strings, SYSTEM;
 CONST 
-	InvalidAddress* = MAX(Address); 
+	InvalidAddress* =  -1; 
 	Fixed* = 0; 
 	InitCode* = 1; 
 	BodyCode* = 2; 
@@ -13,7 +13,7 @@ CONST
 	UseInitCode* = {Fixed, InitCode}; 
 	UseAllButInitCode* = {Fixed, BodyCode .. Empty}; 
 TYPE 
-	Address* = ObjectFile.Unit; 
+	Address* = ADDRESS; 
 
 	HashEntrySegmentedName = RECORD 
 		key: ObjectFile.SegmentedName; 

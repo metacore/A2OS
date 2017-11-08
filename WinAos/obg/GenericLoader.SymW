@@ -9,13 +9,13 @@ CONST
 	TraceLoading = FALSE; 
 TYPE 
 	HashEntryIntInt = RECORD 
-		key, value: LONGINT; 
+		key, value: SIZE; 
 	END; 
 
 	HashIntArray = POINTER TO ARRAY OF HashEntryIntInt; 
 
 	HashEntryIntAny = RECORD 
-		key: LONGINT; 
+		key: SIZE; 
 		value: ANY; 
 	END; 
 
@@ -29,12 +29,12 @@ TYPE
 		maxLoadFactor: REAL; 
 
 		PROCEDURE ^  & Init*(initialSize: LONGINT); 
-		PROCEDURE ^ Put*(key: LONGINT; value: LONGINT); 
-		PROCEDURE ^ Get*(key: LONGINT): LONGINT; 
-		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Put*(key: SIZE; value: SIZE); 
+		PROCEDURE ^ Get*(key: SIZE): SIZE; 
+		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
 		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
 		PROCEDURE ^ Grow; 
 	END HashTableInt; 
 
@@ -46,26 +46,26 @@ TYPE
 		maxLoadFactor: REAL; 
 
 		PROCEDURE ^  & Init*(initialSize: LONGINT); 
-		PROCEDURE ^ Put*(key: LONGINT; value: ANY); 
+		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
 		PROCEDURE ^ Get*(key: LONGINT): ANY; 
 		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
 		PROCEDURE ^ Grow; 
 	END HashTableIntAny; 
 
 	Data = RECORD 
 		size, pos: LONGINT; 
 		bytes: Modules.Bytes; 
-		firstAddress: LONGINT; 
+		firstAddress: ADDRESS; 
 	END; 
 
 	Arrangement* = OBJECT (GenericLinker.Arrangement)
 	VAR 
 		code, data: Data; 
 		hasBody: BOOLEAN; 
-		bodyAddress: LONGINT; 
+		bodyAddress: ADDRESS; 
 
 		PROCEDURE ^  & InitArrangement; 
 		PROCEDURE ^ Preallocate*(CONST section: ObjectFile.Section); 
@@ -101,7 +101,7 @@ VAR
 	PROCEDURE ^ InitData(VAR data: Data); 
 	PROCEDURE ^ IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN; 
 	PROCEDURE ^ DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data); 
-	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): GenericLinker.Address; 
+	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): ADDRESS; 
 	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Remove*; 

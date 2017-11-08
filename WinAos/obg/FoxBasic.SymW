@@ -402,9 +402,9 @@ TYPE
 		PROCEDURE ^ RawNum*(x: LONGINT); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Int*(x: HUGEINT; wd: LONGINT); 
+		PROCEDURE ^ Int*(x: HUGEINT; wd: SIZE); 
 		PROCEDURE ^ Set*(s: SET); 
-		PROCEDURE ^ Hex*(x: HUGEINT; wd: LONGINT); 
+		PROCEDURE ^ Hex*(x: HUGEINT; wd: SIZE); 
 		PROCEDURE ^ Address*(x: ADDRESS); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 
 		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 

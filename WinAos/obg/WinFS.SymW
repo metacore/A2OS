@@ -138,6 +138,7 @@ VAR
 	notifications: Notification; 
 	winFS: WinFileSystem; 
 
+	PROCEDURE ^ ToSet(d: UNSIGNED32): SET; 
 	PROCEDURE ^ DebugFile(f: File); 
 	PROCEDURE ^ IsLocalPath(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FixDriveLetter(VAR path: ARRAY OF CHAR); 

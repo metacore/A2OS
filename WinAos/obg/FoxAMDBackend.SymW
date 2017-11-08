@@ -118,7 +118,7 @@ TYPE
 	VAR 
 		runtimeModuleName: SyntaxTree.IdentifierString; 
 		cpuBits: LONGINT; 
-		opBP, opSP, opRA, opRB, opRC, opRD, opRS, opR8, opR9: Assembler.Operand; 
+		opBP, opSP, opRA, opRB, opRC, opRD, opRS, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; 
 		BP, SP, RA, RD, RS, RC: LONGINT; 
 		emitter: Assembler.Emitter; 
 		backend: BackendAMD64; 

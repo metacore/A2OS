@@ -189,10 +189,10 @@ TYPE
 					ASSERT(res # -1);
 				END;
 
-				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, state );
 				
-				context.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+				context.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);;
 				IF isWow64 THEN 
 					res := Kernel32.Wow64GetThreadContext( handle, context );
 				ELSE
@@ -841,7 +841,7 @@ BEGIN
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
 
-	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
+	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, Kernel32.SetToDW({}), t.id);
 
 	IF TraceVerbose OR TraceOpenClose THEN
 		Machine.Acquire(Machine.TraceOutput);
@@ -1061,7 +1061,7 @@ END Await;
 				ELSE
 					retBOOL := Kernel32.SuspendThread( t.handle );
 				END;
-				t.state.ContextFlags := Kernel32.ContextControl;
+				t.state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl);
 				retBOOL := Kernel32.GetThreadContext( t.handle, t.state );
 				mod := Modules.ThisModuleByAdr( t.state.PC );  Trace.String( "Objects Break at adr: " );
 				Trace.Int( t.state.PC, 5 );  Trace.Ln;
@@ -1133,7 +1133,7 @@ BEGIN
 	t.handle := Kernel32.GetCurrentThread();
 	t.id := Kernel32.GetCurrentThreadId();
 	proc := Kernel32.GetCurrentProcess();
-	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
+	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, Kernel32.SetToDW({}), 0, Kernel32.SetToDW({Kernel32.DuplicateSameAccess}));
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, t));
 	ASSERT(res # 0);

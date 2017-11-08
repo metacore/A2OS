@@ -18,16 +18,16 @@ VAR
 
 	(* Find the IP address of the specified host. *)
 	PROCEDURE HostByName*( hostname: ARRAY OF CHAR;  VAR adr: IP.Adr;  VAR res: LONGINT );
-	VAR hostent: WSock32.PHostent; str: ARRAY 64 OF CHAR;
+	VAR hostent: WSock32.PHostent; str: ARRAY 64 OF CHAR; addr: ADDRESS;
 	BEGIN
 		hostent := WSock32.gethostbyname(hostname);
 		IF hostent = NIL THEN
 			WSock32.DispError()
 		ELSE
 			adr.usedProtocol := IP.IPv4;
-			adr.ipv4Adr := hostent.hName;
-			SYSTEM.GET(hostent.hAddrList, adr.ipv4Adr);
-			IF adr.ipv4Adr # 0 THEN SYSTEM.GET(adr.ipv4Adr, adr.ipv4Adr); END;
+			(*adr.ipv4Adr := hostent.hName;*)
+			SYSTEM.GET(hostent.hAddrList, addr(*adr.ipv4Adr*));
+			IF addr # NIL (*adr.ipv4Adr # 0*) THEN SYSTEM.GET(addr (*adr.ipv4Adr*), adr.ipv4Adr); END;
 
 			(*
 			IP.AdrToStr(adr,str); KernelLog.String(str); KernelLog.Ln;

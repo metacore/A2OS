@@ -90,7 +90,7 @@ VAR filename: ARRAY 256 OF CHAR;
 BEGIN
 	Close;
 	IF ~context.arg.GetString(filename) THEN filename := "WinTrace.Text" END;
-	hout := Kernel32.CreateFile(filename, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
+	hout := Kernel32.CreateFile(filename, Kernel32.SetToDW({Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead}), NIL, Kernel32.CreateAlways, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), Kernel32.NULL);
 	ASSERT ((hout) # (Kernel32.InvalidHandleValue));
 	herr := hout;
 	Trace.Char := Char;

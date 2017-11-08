@@ -635,7 +635,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END;
 		img.adr := adr;
 		img.mem := mem;
-		adr := a1;
+		adr := LONGINT(a1);
 	END CreateWithBuffer;
 
 	(**--- Transfer Modes ---**)

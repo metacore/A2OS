@@ -6,6 +6,8 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 (** This module defines all the Win32 User32 APIs used by Oberon.
 	Note this module is part of the Oberon inner-core and must be linked with PELinker. *)
 
+	TYPE 
+		DWORD = Kernel32.DWORD;
 	CONST
 		(** window messages *)
 		WMCreate* = 01H; WMDestroy* = 02H; WMMove* = 03H; WMSize* = 05H; WMActivate* = 06H; WMSetFocus* = 07H;
@@ -204,7 +206,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 			GetClassInfoEx functions. *)
 		WndClassEx* = RECORD
 			cbSize*: LONGINT;
-			style*: SET;
+			style*: DWORD;
 			lpfnWndProc*: WndProc;
 			cbClsExtra*, cbWndExtra*: LONGINT;
 			hInstance*: Kernel32.HINSTANCE;
@@ -221,13 +223,13 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The WINDOWPOS structure contains information about the size and position of a window. *)
 		WindowPos* = RECORD  			hwnd*, hwndInsertAfter*: HWND;
 			x*, y*, cx*, cy*: LONGINT;
-			flags*: SET
+			flags*: DWORD;
 		END;
 
 		(** The WINDOWPLACEMENT structure contains information about the placement of a window on the screen. *)
 		WindowPlacement* = RECORD
 			length*: LONGINT;
-			flags*: SET;
+			flags*: DWORD;
 			showCmd*: LONGINT;
 			ptMinPosition*, ptMaxPosition*: Point;
 			rcNormalPosition*: Rect
@@ -235,7 +237,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 
 		(** The MENUITEMINFO structure contains information about a menu item. *)
 		MenuItemInfo* = RECORD  			cbSize*: LONGINT;
-			fMask*, fType*, fState*: SET;
+			fMask*, fType*, fState*: DWORD;
 			wID*: LONGINT;
 			hSubMenu*: HMenu;
 			hbmpChecked*, hbmpUnchecked*: HBitmap;
@@ -275,7 +277,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The CreateMenu function creates a menu. *)
 		CreateMenu-: PROCEDURE {WINAPI} (): HMenu;
 		(** The CreateWindow function creates an overlapped, pop-up, or child window. *)
-		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: SET; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LONGINT): HWND;
+		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LONGINT): HWND;
 		(** The DefWindowProc function calls the default window procedure to provide default processing for any window
 			messages that an application does not process. *)
 		DefWindowProc-: WndProc;
@@ -331,7 +333,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The GetMenuItemInfo function retrieves information about a menu item. *)
 		GetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: LONGINT; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
 		(** The GetMenuString function copies the text string of the specified menu item into the specified buffer. *)
-		GetMenuString-: PROCEDURE {WINAPI} (hMenu: HMenu; uIDItem: LONGINT; VAR lpString: ARRAY   OF CHAR; nMaxCount: LONGINT; uFlag: SET): Kernel32.BOOL;
+		GetMenuString-: PROCEDURE {WINAPI} (hMenu: HMenu; uIDItem: LONGINT; VAR lpString: ARRAY   OF CHAR; nMaxCount: LONGINT; uFlag: DWORD): Kernel32.BOOL;
 		(** The GetMessage function retrieves a message from the calling thread's message queue and places it in the
 			specified structure. *)
 		GetMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax: LONGINT): LONGINT;
@@ -364,7 +366,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 			region. *)
 		GetUpdateRgn-: PROCEDURE {WINAPI} (hWnd: HWND; VAR hRgn: HRgn; bErase: Kernel32.BOOL): LONGINT;
 		(** The InsertMenu function inserts a new menu item into a menu, moving other items down the menu. *)
-		InsertMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uPosition: LONGINT; uFlags: SET; uIDNewItem: LONGINT; VAR lpNewItem: ARRAY   OF CHAR): Kernel32.BOOL;
+		InsertMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uPosition: LONGINT; uFlags: DWORD; uIDNewItem: LONGINT; VAR lpNewItem: ARRAY   OF CHAR): Kernel32.BOOL;
 		(** The IntersectRect function calculates the intersection of two source rectangles and places the coordinates of the
 			intersection rectangle into the destination rectangle. *)
 		IntersectRect-: PROCEDURE {WINAPI} (VAR lprcDst: Rect; lprcSrc1, lprcSrc2: Rect): Kernel32.BOOL;
@@ -383,7 +385,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The MessageBeep function plays a waveform sound. *)
 		MessageBeep-: PROCEDURE {WINAPI} (uType: LONGINT): Kernel32.BOOL;
 		(** The MessageBox function creates, displays, and operates a message box. *)
-		MessageBox-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpText, lpCaption: ARRAY   OF CHAR; uType: SET): LONGINT;
+		MessageBox-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpText, lpCaption: ARRAY   OF CHAR; uType: DWORD): LONGINT;
 		(** The MoveWindow function changes the position and dimensions of the specified window. *)
 		MoveWindow-: PROCEDURE {WINAPI} (hWnd: HWND; X, Y, nWidth, nHeight: LONGINT; bRepaint: Kernel32.BOOL): Kernel32.BOOL;
 		(** The OffsetRect function moves the specified rectangle by the specified offsets. *)
@@ -443,7 +445,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The SetWindowLong function changes an attribute of the specified window. *)
 		SetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex, dwNewLong: LONGINT): LONGINT;
 		(** The SetWindowPos function changes the size, position, and Z order of a child, pop-up, or top-level window. *)
-		SetWindowPos-: PROCEDURE {WINAPI} (hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: SET): Kernel32.BOOL;
+		SetWindowPos-: PROCEDURE {WINAPI} (hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: DWORD): Kernel32.BOOL;
 		(** The SetWindowRgn function sets the window region of a window. *)
 		SetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL): LONGINT;
 		(** The SetWindowText function changes the text of the specified window's title bar (if it has one). *)
@@ -456,7 +458,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		ShowWindowAsync-: PROCEDURE {WINAPI} (hWnd: HWND; nCmdShow: LONGINT): Kernel32.BOOL;
 		(** The TrackPopupMenu function displays a shortcut menu at the specified location and tracks the selection of
 			items on the menu. *)
-		TrackPopupMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uFlags: SET; x, y, nReserved: LONGINT; hWnd: HWND; VAR prcRect: Rect): Kernel32.BOOL;
+		TrackPopupMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uFlags: DWORD; x, y, nReserved: LONGINT; hWnd: HWND; VAR prcRect: Rect): Kernel32.BOOL;
 		(** The TranslateAccelerator function processes accelerator keys for menu commands. *)
 		TranslateAccelerator-: PROCEDURE {WINAPI} (hWnd: HWND; hAccTable: HAccel; VAR lpMsg: Msg): LONGINT;
 		(** The TranslateMessage function translates virtual-key messages into character messages. *)

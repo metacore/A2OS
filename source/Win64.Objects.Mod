@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = TRUE;
+	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -518,7 +518,6 @@ END StackBottom;
 PROCEDURE {WINAPI} ExcpFrmHandler( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD ;
 VAR m: Modules.Module;  eip, ebp, stack: ADDRESS;  pc, handler, fp, sp: ADDRESS;  handled: BOOLEAN;  t: Process;
 BEGIN
-	TRACE("TRAP"); 
 	handled := FALSE;
 
 	Kernel32.EnterCriticalSection( excplock );
@@ -614,7 +613,6 @@ BEGIN
 		END
 	ELSE exceptionhandler(exceptionPointers.context^, exceptionPointers.exception^,handled );
 	END;
-	TRACE(handled); 
 	IF ~handled THEN 
 		exceptionPointers.context.PC := (*TerminateProc*)  t.restartPC ; 
 		exceptionPointers.context.SP := t.restartSP;
@@ -738,7 +736,6 @@ END WriteType;
 PROCEDURE terminate( t: Process );
 VAR hdr {UNTRACED}: Heaps.ProtRecBlock; res: Kernel32.BOOL; shutdown: BOOLEAN;
 BEGIN
-	TRACE("terminate"); 
 	IF t = NIL THEN RETURN END;
 	(* see Objects.TerminateThis *)
 	Machine.Acquire( Machine.Objects );
@@ -854,7 +851,6 @@ END FinalizeProcess;
 
 PROCEDURE TerminateProc;
 BEGIN
-	TRACE("TerminateProc");
 	terminate(CurrentProcess());
 	Kernel32.ExitThread(0);
 	Kernel32.Sleep(999999);   (* wait until dependent threads terminated *)
@@ -891,7 +887,7 @@ BEGIN
 
 		(* t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);*) 
 	
-	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
+	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, Kernel32.SetToDW({}), t.id);
 
 	IF TraceVerbose OR TraceOpenClose THEN
 		Machine.Acquire(Machine.TraceOutput);
@@ -1187,7 +1183,7 @@ BEGIN
 	t.handle := Kernel32.GetCurrentThread();
 	t.id := Kernel32.GetCurrentThreadId();
 	proc := Kernel32.GetCurrentProcess();
-	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
+	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, Kernel32.SetToDW({}), 0, Kernel32.SetToDW({Kernel32.DuplicateSameAccess}));
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, t));
 	ASSERT(res # 0);

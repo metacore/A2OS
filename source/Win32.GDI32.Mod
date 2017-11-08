@@ -5,6 +5,7 @@ IMPORT SYSTEM, Kernel32, User32;
 
 	(** This module defines all the Win32 GDI32 APIs used by Oberon.
 	Note this module is part of the Oberon inner-core and must be linked with PELinker. *)
+TYPE DWORD = Kernel32.DWORD;
 
 CONST
 	(** SetBkMode iBkMode values *)
@@ -85,11 +86,11 @@ TYPE
 
 	(** The EnumFontFamProc function is an application definedßcallback function used with the EnumFontFamilies
 			function. *)
-	EnumFontFamProc* = PROCEDURE {WINAPI} (VAR lpelf: EnumLogFont;  VAR lpntm: TextMetric;  FontType: SET;  lParam: User32.LParam): LONGINT;
+	EnumFontFamProc* = PROCEDURE {WINAPI} (VAR lpelf: EnumLogFont;  VAR lpntm: TextMetric;  FontType: DWORD;  lParam: User32.LParam): LONGINT;
 
 	(** The EnumFontsProc function is an application definedßcallback function that processes font data from the EnumFonts
 			function. *)
-	EnumFontsProc* = PROCEDURE {WINAPI} (VAR lplf: LogFont;  VAR lptm: TextMetric;  dwType: SET;  lpData: User32.LParam): LONGINT;
+	EnumFontsProc* = PROCEDURE {WINAPI} (VAR lplf: LogFont;  VAR lptm: TextMetric;  dwType: DWORD;  lpData: User32.LParam): LONGINT;
 
 	(** The ABC structure contains the width of a character in a TrueType font. *)
 	ABC* = RECORD
@@ -305,7 +306,7 @@ dwOffset: LONGINT):HBitmap;
 	(** The SetROP2 function sets the current foreground mix mode. *)
 	SetROP2-: PROCEDURE {WINAPI} (hdc: User32.HDC;  fnDrawMode: LONGINT): LONGINT;
 	(** The SetTextAlign function sets the text-alignment flags for the specified device context. *)
-	SetTextAlign-: PROCEDURE {WINAPI} (hdc: User32.HDC;  fMode: SET): LONGINT;
+	SetTextAlign-: PROCEDURE {WINAPI} (hdc: User32.HDC;  fMode: DWORD): LONGINT;
 	(** The SetTextColor function sets the text color for the specified device context to the specified color. *)
 	SetTextColor-: PROCEDURE {WINAPI} (hdc: User32.HDC;  crColor: ColorRef): ColorRef;
 	(** The SetWindowExtEx function sets the horizontal and vertical extents of the window for a device context by using

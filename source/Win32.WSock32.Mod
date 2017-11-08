@@ -87,7 +87,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 
 		FDSet*=RECORD
 			fdcount*: LONGINT;
-			socket*: ARRAY 64 OF LONGINT;
+			socket*: ARRAY 64 OF Socket (*LONGINT*);
 		END;
 
 		(** The Windows Sockets WSAPROTOCOL_INFO structure is used to store or retrieve complete information for

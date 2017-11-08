@@ -411,6 +411,7 @@ PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: LONGINT );
 	VAR hostent: WSock32.PHostent; str: ARRAY 64 OF CHAR;
 		adr, adr2: Adr;
 		int0, int:Interface; i:LONGINT;
+		addr: ADDRESS;
 	BEGIN
 		hostent := WSock32.gethostbyname(hostname);
 		IF hostent = NIL THEN
@@ -418,10 +419,11 @@ PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: LONGINT );
 		ELSE
 			WHILE hostent.hLength>0 DO
 				adr.usedProtocol := IPv4;
-				adr.ipv4Adr := hostent.hName;
-				SYSTEM.GET(hostent.hAddrList+i*4, adr.ipv4Adr);
-				IF adr.ipv4Adr # 0 THEN 
-					SYSTEM.GET(adr.ipv4Adr, adr.ipv4Adr); 
+				(*adr := hostent.hName;
+				adr.ipv4Adr := hostent.hName;*)
+				SYSTEM.GET(hostent.hAddrList+i*SIZEOF(ADDRESS), addr (*adr.ipv4Adr*));
+				IF addr # NIL (*adr.ipv4Adr # 0*) THEN 
+					SYSTEM.GET(addr (*adr.ipv4Adr*), adr.ipv4Adr); 
 					NEW(int); int.localAdr:=adr;
 					IF int0=NIL THEN 
 						int0:=int; interfaces:=int0; default:=int0;

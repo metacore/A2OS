@@ -9,7 +9,7 @@ IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
 	BEGIN
 		result := -1;
 		start.cb := SIZEOF( Kernel32.StartupInfo );
-		start.dwFlags := {Kernel32.StartFUseShowWindow};
+		start.dwFlags := Kernel32.SetToDW({Kernel32.StartFUseShowWindow});
 		IF visible THEN start.wShowWindow := 1; ELSE start.wShowWindow := 0; END;
 
 		KernelLog.String( "Calling Windows Application: " );  KernelLog.String( par );  KernelLog.Ln;

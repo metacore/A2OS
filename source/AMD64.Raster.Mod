@@ -628,8 +628,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		IF (mode.src.pal # NIL) & ((mode.map = NIL) OR (LEN(mode.map^) # mode.src.pal.used)) THEN
 			NEW(mode.map, mode.src.pal.used)
 		END;
-		(*SetRGB(mode.col, 255, 255, 255);*)
-		mode.col := SYSTEM.VAL(Pixel, -1);
+		SetRGB(mode.col, 255, 255, 255);
+		(*mode.col := SYSTEM.VAL(Pixel, -1);*)
 		mode.src.pack := NIL; mode.dst.pack := NIL	(* force re-evaluation of transfer procedure *)
 	END InitMode;
 
@@ -1879,13 +1879,15 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END
 	END A8OverA8;
 
-
 	(* BGRA8888 *)
 	PROCEDURE BGRA8888OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 		VAR spix, dpix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
+			SYSTEM.MOVE(sadr, ADDRESSOF(spix),4);
+			(*
 			SYSTEM.GET (sadr, spix);
+			*)
 			IF spix[a] = 0FFX THEN
 				mode.dst.pack(mode.dst, dadr, dbit, spix)
 			ELSIF spix[a] # 0X THEN
@@ -1897,6 +1899,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 			dbit := dbit + mode.dst.bpp; INC(dadr, dbit DIV 8); dbit := dbit MOD 8
 		END
 	END BGRA8888OverAny;
+
 
 	PROCEDURE BGRA8888OverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 		VAR in, out: CHAR;
@@ -1917,7 +1920,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		VAR src, dst: Pixel; fd, t: LONGINT;
 	BEGIN
 		WHILE len > 0 DO
-			SYSTEM.GET (sadr, src);
+			SYSTEM.MOVE(sadr, ADDRESSOF(src),4);
 			IF src[a] = 0FFX THEN
 				mode.dst.pack(mode.dst, dadr, dbit, src)
 			ELSIF src[a] # 0X THEN
@@ -1937,12 +1940,14 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 			INC(dadr, 2); INC(sadr, SIZEOF (Pixel)); DEC(len)
 		END
 	END BGRA8888OverAny16;
-
 	PROCEDURE BGRA8888Over565* (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 		VAR src, dst: Pixel; fd, t: LONGINT;
 	BEGIN
 		WHILE len > 0 DO
+			SYSTEM.MOVE(sadr,ADDRESSOF(src),4);
+			(*
 			SYSTEM.GET (sadr, src);
+			*)
 			IF src[a] = 0FFX THEN
 				SYSTEM.PUT16(dadr, ASH(ORD(src[b]), -3) + ASH(ASH(ORD(src[g]), -2), 5) + ASH(ASH(ORD(src[r]), -3), 11));
 			ELSIF src[a] # 0X THEN
@@ -1966,6 +1971,9 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END BGRA8888Over565;
 
 
+
+
+
 	PROCEDURE MMXBGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE {SYSTEM.AMD64, SYSTEM.MMX}
 		PUSHFQ
@@ -1982,7 +1990,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		MOV		ECX, [RBP + len]
 	loop:
 		CMP		ECX, 0
-		JE 			WORD end
+		JE 			 end
 
 		MOV		EAX, [RSI]
 		XOR		EBX, EBX
@@ -1992,7 +2000,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		MOV		EDX, EAX
 		SHR		EDX, 24
 		CMP		EDX, 0
-		JE			WORD empty
+		JE			 empty
 		CMP		EDX, 255
 		JE			full
 
@@ -2085,7 +2093,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		ADD 		RSI, 4;
 		ADD 		RDI, 2;
 		DEC		ECX
-		JMP 		WORD loop
+		JMP 		loop
 	end:
 		EMMS ; declare FPU registers free
 		POPFQ
@@ -2137,18 +2145,18 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	loop:
 		CMP 		ECX,0
-		JE 			WORD end ; jump to end if ECX = 0
+		JE 			end ; jump to end if ECX = 0
 
 		; if len < 8 then do one pixel at the time
 		CMP		ECX, 8
-		JL 			WORD singlepixel
+		JL 			 singlepixel
 		; else
 		; take 8 at the time
 
 		MOV		EBX, ESI
 		AND 		EBX, 0FH
 		CMP		EBX, 0
-		JNE 		WORD singlepixel
+		JNE 		singlepixel
 
 	alleightpixels:
 		; dest blue -> MM6
@@ -2187,7 +2195,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PCMPEQD 	XMM0, XMM5
 		PMOVMSKB EAX, XMM0
 		CMP 		EAX, 0FFFFH ; all alphas = zero; TEST not possible, because only 8 bits compared
-		JE      		WORD endloop
+		JE      		 endloop
 
 		; mask out alpha = zero
 
@@ -2412,7 +2420,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		ADD 		RSI, 32 ; num of bytes
 		ADD 		RDI, 16
 		SUB 		ECX, 8
-		JMP 		WORD loop
+		JMP 		loop
 
 	singlepixel: ; original code from MMXBGRA8888Over565, adjusted to fit this procedure
 		MOV	 	EAX, 0FFFFFFFFH
@@ -2428,7 +2436,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		SHR		EDX, 24
 
 		CMP		EDX, 0
-		JE			WORD empty
+		JE			 empty
 		CMP		EDX, 255
 		JE			full
 
@@ -2497,7 +2505,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		ADD 		RSI, 4;
 		ADD 		RDI, 2;
 		DEC		ECX
-		JMP 		WORD loop
+		JMP 		loop
 
 	end:
 		EMMS ; declare FPU registers free

@@ -349,7 +349,8 @@ TYPE
 				RETURN FALSE
 			END ScopeNeedsInitialization;
 
-			PROCEDURE SingleInitialize(CONST op: IntermediateCode.Operand; offset: LONGINT);
+			PROCEDURE SingleInitialize(CONST op: IntermediateCode.Operand; offset:LONGINT);
+			VAR size: LONGINT;
 			BEGIN
 					size := offset - lastUpdated;
 					IF size > 0 THEN
@@ -360,8 +361,8 @@ TYPE
 			END SingleInitialize;
 			
 
-			PROCEDURE Initialize(type: SyntaxTree.Type; initializer: SyntaxTree.Expression; offset: LONGINT);
-			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable; i: LONGINT; size: SIZE;
+			PROCEDURE Initialize(type: SyntaxTree.Type; initializer: SyntaxTree.Expression; offset:LONGINT);
+			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable; i: LONGINT; size:LONGINT;
 			BEGIN
 				IF type = NIL THEN RETURN ELSE type := type.resolved END;
 				WITH type: SyntaxTree.RecordType DO
@@ -3975,7 +3976,7 @@ TYPE
 			IF leftType(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 				Dereference(array, leftType,FALSE);
 				IF ~tensorFound THEN
-					DimensionCheck(array.tag, IntermediateCode.Immediate(int32, prefixRanges + prefixIndices), BreqL)
+					DimensionCheck(array.tag, IntermediateCode.Immediate(sizeType, prefixRanges + prefixIndices), BreqL)
 				END
 			END;
 
@@ -4008,7 +4009,7 @@ TYPE
 						ReleaseIntermediateOperand(tmp);
 						AddInt(srcDim, srcDim, IntermediateCode.Immediate(addressType, i + srcDimOffset));
 					ELSE
-						srcDim := IntermediateCode.Immediate(int32, i);
+						srcDim := IntermediateCode.Immediate(sizeType, i);
 					END;
 
 					(* get length and increment of source array for current dimension *)
@@ -4576,10 +4577,10 @@ TYPE
 						END;
 					END;
 
-					Emit(Push(position,IntermediateCode.Immediate(int32,prefixIndices)));
-					Emit(Push(position,IntermediateCode.Immediate(int32,prefixRanges)));
-					Emit(Push(position,IntermediateCode.Immediate(int32,suffixIndices)));
-					Emit(Push(position,IntermediateCode.Immediate(int32,suffixRanges)));
+					Emit(Push(position,IntermediateCode.Immediate(sizeType,prefixIndices)));
+					Emit(Push(position,IntermediateCode.Immediate(sizeType,prefixRanges)));
+					Emit(Push(position,IntermediateCode.Immediate(sizeType,suffixIndices)));
+					Emit(Push(position,IntermediateCode.Immediate(sizeType,suffixRanges)));
 
 					StaticCallOperand(procOp,procedure);
 					Emit(Call(position,procOp.op,ProcedureParametersSize(system,procedure)));
@@ -4755,7 +4756,7 @@ TYPE
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
 						Emit(Copy(position,sp(*arrayDestinationTag*),operand.tag,IntermediateCode.Immediate(addressType,size)));
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
 
@@ -4877,7 +4878,7 @@ TYPE
 					ELSIF type.resolved(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 						Designate(expression,operand);
 						Dereference(operand,type.resolved,FALSE);
-						DimensionCheck(operand.tag, IntermediateCode.Immediate(int32,dim),BreqL);
+						DimensionCheck(operand.tag, IntermediateCode.Immediate(sizeType,dim),BreqL);
 						Pass((operand.tag));
 					(* case 2f 
 						 P(...,S,...) pre: allocate array descriptor on stack and memorize stack position
@@ -6695,10 +6696,10 @@ TYPE
 				BreqL(end,result.op,IntermediateCode.Immediate(addressType,0));
 				Emit(MovReplace(position,result.op,IntermediateCode.Memory(addressType,result.op,ToMemoryUnits(system,MathDimOffset*addressType.sizeInBits))));
 				SetLabel(end);
-				Convert(result.op,int32);
+				Convert(result.op,sizeType);
 			ELSE
 				InitOperand(result,ModeValue);
-				IntermediateCode.InitImmediate(result.op, int32, SemanticChecker.Dimension(type,{SyntaxTree.Open, SyntaxTree.Static}));
+				IntermediateCode.InitImmediate(result.op, sizeType, SemanticChecker.Dimension(type,{SyntaxTree.Open, SyntaxTree.Static}));
 			END
 		END MathArrayDim;
 
@@ -6771,14 +6772,14 @@ TYPE
 		PROCEDURE GetMathArrayLengthAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: LONGINT; check: BOOLEAN; VAR result: Operand);
 		VAR dimOp: IntermediateCode.Operand;
 		BEGIN
-			dimOp := IntermediateCode.Immediate(int32, dim);
+			dimOp := IntermediateCode.Immediate(sizeType, dim);
 			GetMathArrayLength(type, operand, dimOp, check, result);
 		END GetMathArrayLengthAt;
 
 		PROCEDURE GetMathArrayIncrementAt(type: SyntaxTree.MathArrayType; CONST operand: Operand; dim: LONGINT; check: BOOLEAN; VAR result: Operand);
 		VAR dimOp: IntermediateCode.Operand;
 		BEGIN
-			dimOp := IntermediateCode.Immediate(int32, dim);
+			dimOp := IntermediateCode.Immediate(sizeType, dim);
 			GetMathArrayIncrement(type, operand, dimOp, check, result);
 		END GetMathArrayIncrementAt;
 
@@ -6836,19 +6837,19 @@ TYPE
 
 				IntermediateCode.InitRegister(res,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,res,dim));
-				Convert(res,int32);
+				Convert(res,sizeType);
 
 				t := type; val := operand.dimOffset; hasDynamicPart := FALSE;
 				WHILE t IS SyntaxTree.MathArrayType DO
 					type := t(SyntaxTree.MathArrayType);
 					IF type.form = SyntaxTree.Static THEN
-						imm := IntermediateCode.Immediate(int32,val);
+						imm := IntermediateCode.Immediate(sizeType,val);
 						next := NewLabel();
 						BrneL(next,imm,res);
 						IF increment THEN
-							imm := IntermediateCode.Immediate(int32,ToMemoryUnits(system,type.staticIncrementInBits));
+							imm := IntermediateCode.Immediate(sizeType,ToMemoryUnits(system,type.staticIncrementInBits));
 						ELSE
-							imm := IntermediateCode.Immediate(int32,type.staticLength);
+							imm := IntermediateCode.Immediate(sizeType,type.staticLength);
 						END;
 						Emit(MovReplace(position,res,imm));
 						BrL(end);
@@ -6865,12 +6866,12 @@ TYPE
 					imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,offset*addressType.sizeInBits));
 					Emit(Add(position,res2,res2,imm));
 					Emit(Add(position,res2,res2,operand.tag));
-					IntermediateCode.MakeMemory(res2,int32);
+					IntermediateCode.MakeMemory(res2,sizeType);
 					Emit(MovReplace(position,res,res2));
 					ReleaseIntermediateOperand(res2);
 				END;
 				SetLabel(end);
-				Convert(res,int32);
+				Convert(res,sizeType);
 				InitOperand(result,ModeValue);
 				result.op := res;
 			END;
@@ -6908,17 +6909,17 @@ TYPE
 				(* ReuseCopy(dim,res); *)
 				IntermediateCode.InitRegister(res,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType, IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,res,dim));
-				Convert(res,int32);
+				Convert(res,sizeType);
 
-				Convert(res,int32);
+				Convert(res,sizeType);
 				t := type; val := operand.dimOffset; hasDynamicPart := FALSE;
 				WHILE t IS SyntaxTree.ArrayType DO
 					type := t(SyntaxTree.ArrayType);
 					IF type.form = SyntaxTree.Static THEN
-						imm := IntermediateCode.Immediate(int32,val);
+						imm := IntermediateCode.Immediate(sizeType,val);
 						next := NewLabel();
 						BrneL(next,imm,res);
-						imm := IntermediateCode.Immediate(int32,type.staticLength);
+						imm := IntermediateCode.Immediate(sizeType,type.staticLength);
 						Emit(MovReplace(position,res,imm));
 						BrL(end);
 					ELSE hasDynamicPart := TRUE;
@@ -6934,12 +6935,12 @@ TYPE
 					imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,offset*addressType.sizeInBits));
 					Emit(Sub(position,res2,imm,res2));
 					Emit(Add(position,res2,res2,operand.tag));
-					IntermediateCode.MakeMemory(res2,int32);
+					IntermediateCode.MakeMemory(res2,sizeType);
 					Emit(MovReplace(position,res,res2));
 					ReleaseIntermediateOperand(res2);
 				END;
 				SetLabel(end);
-				Convert(res,int32);
+				Convert(res,sizeType);
 				InitOperand(result,ModeValue);
 				result.op := res;
 			END;
@@ -7838,7 +7839,7 @@ TYPE
 				Designate(p0,operand);
 				IF p1 = NIL THEN
 					InitOperand(l,ModeValue);
-					l.op := IntermediateCode.Immediate(int32,0);
+					l.op := IntermediateCode.Immediate(sizeType,0);
 				ELSE
 					Evaluate(p1,l);
 				END;
@@ -9915,7 +9916,7 @@ TYPE
 					parameter.SetKind(rightKind);
 					PushParameter(right,parameter,SyntaxTree.OberonCallingConvention, FALSE, dummy,-1);
 					size := ToMemoryUnits(system,system.SizeOf(rightBase));
-					Emit(Push(position,IntermediateCode.Immediate(int32,size)));
+					Emit(Push(position,IntermediateCode.Immediate(sizeType,size)));
 					StaticCallOperand(result,procedure);
 					Emit(Call(position,result.op,ProcedureParametersSize(system,procedure)));
 					ReleaseOperand(result);
@@ -12090,7 +12091,7 @@ TYPE
 				indirectTypes: Basic.HashTable;
 
 
-				PROCEDURE CurrentIndex(): SIZE;
+				PROCEDURE CurrentIndex(): LONGINT;
 				VAR i: LONGINT;
 				BEGIN
 					FOR i := startPC TO section.pc -1 DO
@@ -12147,7 +12148,7 @@ TYPE
 				
 				PROCEDURE NType(type: SyntaxTree.Type);
 				VAR size: SIZE; td: SyntaxTree.TypeDeclaration; tir: Sections.Section; 
-					segmentedName: Basic.SegmentedName; offset: SIZE; parameter: SyntaxTree.Parameter;
+					segmentedName: Basic.SegmentedName; offset: LONGINT; parameter: SyntaxTree.Parameter;
 				BEGIN
 					IF type = NIL THEN
 						Char(section, sfTypeNone)
@@ -12755,7 +12756,7 @@ TYPE
 		
 		PROCEDURE ProcedureDescriptor(section: IntermediateCode.Section; procedureSection: IntermediateCode.Section);
 		VAR 
-			numberPointers: SIZE;
+			numberPointers: LONGINT;
 			procedure: SyntaxTree.Procedure;
 		BEGIN
 				Info(section,"pcFrom");
@@ -13123,7 +13124,7 @@ TYPE
 		
 
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
-		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter; parametersSize: SIZE;
+		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter; parametersSize: LONGINT;
 		BEGIN
 			ArrayBlock(source,pc,"",FALSE);
 			Info(source, "pointer offsets array data");
@@ -14276,12 +14277,12 @@ TYPE
 		(*END;*)
 	END ProcedureParametersSize;
 
-	PROCEDURE ToMemoryUnits*(system: Global.System; size: LONGINT): LONGINT;
+	PROCEDURE ToMemoryUnits*(system: Global.System; size: SIZE): LONGINT;
 	VAR dataUnit: LONGINT;
 	BEGIN dataUnit := system.dataUnit;
 
 		ASSERT(size MOD system.dataUnit = 0);
-		RETURN size DIV system.dataUnit
+		RETURN LONGINT(size DIV system.dataUnit)
 	END ToMemoryUnits;
 
 	PROCEDURE Get*(): Backend.Backend;
@@ -14669,7 +14670,7 @@ Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 
 #	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-FSTools.CloseFiles A2Z.exe ~
+FStols.CloseFiles A2Z.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 

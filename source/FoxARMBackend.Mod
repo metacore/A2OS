@@ -115,8 +115,8 @@ TYPE
 	Citation = OBJECT
 	VAR
 		pc: LONGINT; (* program counter of the ARM instruction *)
-		bits: SIZE;
-		shift: SIZE; (* fixup shift ! *)
+		bits: LONGINT;
+		shift: LONGINT; (* fixup shift ! *)
 		next: Citation;
 	END Citation;
 
@@ -125,9 +125,9 @@ TYPE
 	VAR
 		firstCitation, lastCitation: Citation; (* linked list of citations *)
 		next: Reference;
-		size: SIZE; (* storage size of this reference *) 
+		size: LONGINT; (* storage size of this reference *) 
 
-		PROCEDURE & Init(size: SIZE);
+		PROCEDURE & Init(size: LONGINT);
 		BEGIN
 			firstCitation := NIL; lastCitation := NIL; next := NIL; SELF.size := size;
 		END Init;
@@ -138,7 +138,7 @@ TYPE
 		END Emit;
 		
 
-		PROCEDURE AddCitation(pc: LONGINT; bits: SIZE; shift: SIZE);
+		PROCEDURE AddCitation(pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		VAR
 			citation: Citation;
 		BEGIN
@@ -225,18 +225,18 @@ TYPE
 	ListOfReferences = OBJECT
 	VAR
 		firstReference, lastReference: Reference; (* linked list of all symbol references *)
-		size: SIZE; (* length of the required fixup block *)
-		due: SIZE; (* the PC at which the reference block has to be written (the latest) *) 
+		size: LONGINT; (* length of the required fixup block *)
+		due: LONGINT; (* the PC at which the reference block has to be written (the latest) *) 
 
 		PROCEDURE & Init;
 		BEGIN
 			firstReference := NIL; lastReference := NIL;
 			size := 0;
-			due := MAX(SIZE);
+			due := MAX(LONGINT);
 		END Init;
 		
-		PROCEDURE UpdateDue(pc: SIZE; bits: SIZE; shift: SIZE);
-		VAR max: SIZE;
+		PROCEDURE UpdateDue(pc: LONGINT; bits: LONGINT; shift: LONGINT);
+		VAR max: LONGINT;
 		BEGIN
 			(* bits determine the address size in words *)
 			max := ASH(1, bits+shift) (* maximal fixup range *) + pc (* current pc *)  - size (* fixup block size as of now *) - 8 (* offset *) - 64 (* 16 instructions safety *);
@@ -245,7 +245,7 @@ TYPE
 			END;
 		END UpdateDue;
 		
-		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: SIZE; shift: SIZE);
+		PROCEDURE AddCitation(reference: Reference; pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		BEGIN
 			reference.AddCitation(pc, bits, shift);
 			UpdateDue(pc, bits, shift);
@@ -287,7 +287,7 @@ TYPE
 			AddCitation(reference, pc, bits, 0);
 		END AddSymbol;
 
-		PROCEDURE AddImmediate(value: LONGINT; pc: SIZE; bits: SIZE);
+		PROCEDURE AddImmediate(value: LONGINT; pc: LONGINT; bits: LONGINT);
 		VAR
 			reference, foundReference: Reference; immediateReference: ImmediateReference;
 		BEGIN
@@ -315,7 +315,7 @@ TYPE
 			AddCitation(reference, pc, bits, 0);
 		END AddImmediate;
 
-		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT; bits: SIZE);
+		PROCEDURE AddHImmediate(value: HUGEINT; pc: LONGINT; bits: LONGINT);
 		VAR
 			reference, foundReference: Reference;  immediateHReference: ImmediateHReference;
 		BEGIN

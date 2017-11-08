@@ -3886,7 +3886,7 @@ TYPE
 				indexDesignator.parameters.AddExpression(indexListItem);
 				indexDesignator.SetType(SyntaxTree.NewMathArrayType(position, NIL, SyntaxTree.Tensor))
 
-			ELSIF indexListItem.type.resolved IS SyntaxTree.IntegerType THEN
+			ELSIF IsIntegerType(indexListItem.type.resolved) THEN
 				IndexCheck(indexListItem, sourceArray.length);
 				indexListItem := NewConversion(Basic.invalidPosition, indexListItem, system.sizeType, NIL);
 				indexDesignator.parameters.AddExpression(indexListItem)

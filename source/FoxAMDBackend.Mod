@@ -3063,6 +3063,7 @@ TYPE
 				| IntermediateCode.Bits8: imm := Assembler.NewImm8 (7); source := opAL;
 				| IntermediateCode.Bits16: imm := Assembler.NewImm8 (15); source := opAX;
 				| IntermediateCode.Bits32: imm := Assembler.NewImm8 (31); source := opEAX;
+				| IntermediateCode.Bits64: imm := Assembler.NewImm8 (63); source := registerOperands[RAX];
 				END;
 				emitter.Emit2 (InstructionSet.opMOV, source,op2);
 				emitter.Emit2 (InstructionSet.opMOV, op1,source);

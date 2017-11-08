@@ -56,7 +56,7 @@ TYPE BitSet* = OBJECT
 		RETURN pos MOD Elements IN data[pos DIV Elements];
 	END GetBit;
 
-	PROCEDURE SetBits* (startPos: SIZE; bits, value: LONGINT);
+	PROCEDURE SetBits* (startPos: SIZE; bits: LONGINT; value: HUGEINT);
 	VAR adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+bits <= size);

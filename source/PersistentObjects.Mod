@@ -46,7 +46,7 @@ TYPE
 			RETURN FALSE
 		END Key;
 
-		PROCEDURE Name*(index: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN;
+		PROCEDURE Name*(index: SIZE; VAR name: ARRAY OF CHAR): BOOLEAN;
 		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO len-1 DO
@@ -72,7 +72,7 @@ TYPE
 
 		object*: Object;
 		char*: CHAR;
-		integer*: LONGINT;
+		integer*: HUGEINT;
 		float*: LONGREAL;
 		boolean*: BOOLEAN;
 		translation*: Translation;
@@ -107,15 +107,15 @@ TYPE
 		END SetString;
 
 		PROCEDURE SetAsString*(CONST s: ARRAY OF CHAR);
-		VAR split: Strings.StringArray; first, last, step: LONGINT;
+		VAR split: Strings.StringArray; first, last, step: LONGINT; int: LONGINT;
 		BEGIN
 			CASE class OF
 				Class.String: string := Strings.NewString(s)
 				|Class.Name: COPY(s, name);
 				|Class.Boolean: boolean := (s="true") OR (s="1") OR (s="yes") OR (s="TRUE");
-				|Class.Integer: Strings.StrToInt(s, integer);
+				|Class.Integer: Strings.StrToInt(s, int); integer := int;
 				|Class.Float: Strings.StrToFloat(s, float);
-				|Class.Enum:  Strings.StrToInt(s, integer);
+				|Class.Enum:  Strings.StrToInt(s, int); integer := int;
 				|Class.Range:
 					split := Strings.Split(s, ":");
 					Strings.StrToInt(split[0]^, first);
@@ -176,12 +176,12 @@ TYPE
 			SELF.class := Class.Name; COPY(name, SELF.name);success := TRUE; persistent := TRUE;
 		END SetName;
 
-		PROCEDURE GetInteger*(VAR integer: LONGINT);
+		PROCEDURE GetInteger*(VAR integer: HUGEINT);
 		BEGIN
 			IF SELF.class = Class.Integer THEN integer := SELF.integer; success := TRUE ELSE HALT(200) END;
 		END GetInteger;
 
-		PROCEDURE SetInteger*(integer: LONGINT);
+		PROCEDURE SetInteger*(integer: SIZE);
 		BEGIN
 			SELF.class := Class.Integer; SELF.integer := integer;success := TRUE; persistent := TRUE;
 		END SetInteger;
@@ -196,13 +196,13 @@ TYPE
 			SELF.class := Class.Set; SELF.set := set;success := TRUE; persistent := TRUE;
 		END SetSet;
 
-		PROCEDURE GetEnum*(translation: Translation; VAR integer: LONGINT);
+		PROCEDURE GetEnum*(translation: Translation; VAR integer: HUGEINT);
 		BEGIN
 			SELF.translation := translation;
 			IF SELF.class = Class.Enum THEN integer := SELF.integer; success := TRUE ELSE HALT(200) END;
 		END GetEnum;
 
-		PROCEDURE SetEnum*(translation: Translation; integer: LONGINT);
+		PROCEDURE SetEnum*(translation: Translation; integer: HUGEINT);
 		BEGIN
 			SELF.translation := translation;
 			SELF.class := Class.Enum; SELF.integer := integer;  success := TRUE; persistent := TRUE;
@@ -621,7 +621,7 @@ TYPE
 			IF NameAttribute(name, s) THEN value := (s="true") OR (s="1") OR (s="yes") OR (s="TRUE"); RETURN TRUE ELSE RETURN FALSE END;
 		END BooleanAttribute;
 
-		PROCEDURE IntegerAttribute*(CONST name: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN;
+		PROCEDURE IntegerAttribute*(CONST name: ARRAY OF CHAR; VAR value: HUGEINT): BOOLEAN;
 		VAR s: ARRAY 64 OF CHAR; v: LONGINT;
 		BEGIN
 			IF NameAttribute(name, s) THEN Strings.StrToInt(s, v); value := v; RETURN TRUE ELSE RETURN FALSE END;
@@ -638,10 +638,10 @@ TYPE
 			END
 		END FloatAttribute;
 
-		PROCEDURE EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value: LONGINT): BOOLEAN;
-		VAR str: ARRAY 32 OF CHAR;
+		PROCEDURE EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value:HUGEINT): BOOLEAN;
+		VAR str: ARRAY 32 OF CHAR; v: LONGINT; 
 		BEGIN
-			IF NameAttribute(name, str) & translation.Key(str, value) THEN RETURN TRUE ELSE RETURN FALSE END;
+			IF NameAttribute(name, str) & translation.Key(str, v) THEN value := v; RETURN TRUE ELSE RETURN FALSE END;
 		END EnumAttribute;
 
 		PROCEDURE RangeAttribute*(CONST name: ARRAY OF CHAR; VAR value: RANGE): BOOLEAN;
@@ -711,7 +711,7 @@ TYPE
 		PROCEDURE IntegerAttribute*(CONST name: ARRAY OF CHAR; value: HUGEINT);
 		VAR str: ARRAY 64 OF CHAR;
 		BEGIN
-			Strings.IntToStr(SHORT(value), str);
+			Strings.IntToStr(LONGINT(value), str);
 			NameAttribute(name, str);
 		END IntegerAttribute;
 
@@ -727,10 +727,10 @@ TYPE
 			IF value THEN NameAttribute(name,"true") ELSE NameAttribute(name,"false") END;
 		END BooleanAttribute;
 
-		PROCEDURE EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; value: LONGINT);
+		PROCEDURE EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; value: HUGEINT);
 		VAR str: ARRAY 32 OF CHAR;
 		BEGIN
-			IF translation.Name(value, str) THEN NameAttribute(name, str) ELSE NameAttribute(name, "unknown") END;
+			IF translation.Name(LONGINT(value), str) THEN NameAttribute(name, str) ELSE NameAttribute(name, "unknown") END;
 		END EnumAttribute;
 
 		PROCEDURE RangeAttribute*(CONST name: ARRAY OF CHAR; value: RANGE);
@@ -834,9 +834,9 @@ TYPE
 		BEGIN	 Add(o);
 		END Enter;
 
-		PROCEDURE GetObject(index: LONGINT): Object;
+		PROCEDURE GetObject(index: HUGEINT): Object;
 		BEGIN
-			RETURN Get(index)(Object)
+			RETURN Get(LONGINT(index))(Object)
 		END GetObject;
 
 	END ReadTable;
@@ -1103,7 +1103,7 @@ TYPE
 		END CheckUse;
 
 		PROCEDURE ReadObject(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN;
-		VAR type: ARRAY 32 OF CHAR; id: LONGINT;
+		VAR type: ARRAY 32 OF CHAR; id: HUGEINT;
 		BEGIN
 			(*IF err THEN RETURN FALSE END;*)
 

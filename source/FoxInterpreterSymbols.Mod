@@ -17,7 +17,7 @@ TYPE
 	Meta* = RECORD
 		module*: Modules.Module;
 		refs*: Modules.Bytes;
-		offset*: LONGINT;
+		offset*: SIZE;
 	END;
 
 	PROCEDURE FindSymbol*(CONST name: ARRAY OF CHAR; meta: Meta): Meta;
@@ -192,8 +192,8 @@ TYPE
 	Callstack = OBJECT
 	VAR 
 		data: ARRAY 1024 OF CHAR;
-		pos: LONGINT;
-		size: LONGINT;
+		pos: SIZE;
+		size: SIZE;
 		H: HUGEINT; (* result in register *)
 		
 		pPos: LONGINT;
@@ -941,9 +941,9 @@ TYPE
 		END Enumerate;
 
 		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
-		VAR int: LONGINT;
+		VAR int: HUGEINT;
 		BEGIN
-			IF name = StrValue THEN c.GetInteger(int); value := int;
+			IF name = StrValue THEN c.GetInteger(int); value := ADDRESS(int);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
@@ -984,7 +984,7 @@ TYPE
 		END Enumerate;
 
 		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
-		VAR val: LONGINT;
+		VAR val: HUGEINT;
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(val); value := val;
 			ELSE Set^(name, index, c);
@@ -1267,9 +1267,9 @@ TYPE
 	END CharValue;
 
 	EnumValue*=OBJECT(Value)
-	VAR value: LONGINT; translation: PersistentObjects.Translation;
+	VAR value: HUGEINT; translation: PersistentObjects.Translation;
 
-		PROCEDURE & InitEnumValue*(trans: PersistentObjects.Translation; v: LONGINT);
+		PROCEDURE & InitEnumValue*(trans: PersistentObjects.Translation; v: HUGEINT);
 		BEGIN InitValue; value := v;  translation := trans; type := "EnumValue";
 		END InitEnumValue;
 
@@ -1294,7 +1294,7 @@ TYPE
 		PROCEDURE WriteValue(w: Streams.Writer);
 		VAR str: ARRAY 32 OF CHAR;
 		BEGIN
-			IF translation.Name(value, str) THEN w.String(str) ELSE w.String("unknown") END;
+			IF translation.Name(SIZE(value), str) THEN w.String(str) ELSE w.String("unknown") END;
 		END WriteValue;
 
 		PROCEDURE Address(): ADDRESS;
@@ -1540,7 +1540,7 @@ TYPE
 	END ContentGetValue;
 
 
-	PROCEDURE NewIntegerValue(value: LONGINT): IntegerValue;
+	PROCEDURE NewIntegerValue(value: HUGEINT): IntegerValue;
 	VAR obj: IntegerValue;
 	BEGIN
 		NEW(obj, value); RETURN obj
@@ -1588,7 +1588,7 @@ TYPE
 		NEW(obj, value); RETURN obj
 	END NewSetValue;
 
-	PROCEDURE NewEnumValue(translation: PersistentObjects.Translation; value: LONGINT): EnumValue;
+	PROCEDURE NewEnumValue(translation: PersistentObjects.Translation; value: HUGEINT): EnumValue;
 	VAR obj: EnumValue;
 	BEGIN
 		NEW(obj, translation, value);

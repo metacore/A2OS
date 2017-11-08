@@ -1552,7 +1552,7 @@ TYPE
 		BEGIN Indent; w.String(x)
 		END String;
 
-		PROCEDURE Int*( x: HUGEINT; wd: LONGINT );
+		PROCEDURE Int*( x: HUGEINT; wd: SIZE );
 		BEGIN Indent; w.Int(x,wd)
 		END Int;
 
@@ -1560,7 +1560,7 @@ TYPE
 		BEGIN Indent; w.Set(s)
 		END Set;
 
-		PROCEDURE Hex*(x: HUGEINT; wd: LONGINT );
+		PROCEDURE Hex*(x: HUGEINT; wd: SIZE );
 		BEGIN Indent; w.Hex(x,wd)
 		END Hex;
 

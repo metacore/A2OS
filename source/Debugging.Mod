@@ -6,7 +6,7 @@ VAR
 	DefaultLog, Log-: Streams.Writer;  f: Files.File;  lock: Locks.RWLock;
 
 	PROCEDURE Memory*( from, tov: ADDRESS );
-	VAR i, val: LONGINT;
+	VAR i: ADDRESS; val: LONGINT;
 	BEGIN
 		Log.String( ">>>>>" );  Log.Ln;
 		IF from = 0 THEN Log.String( "NIL Region" );  Log.Ln;  ELSE
@@ -21,13 +21,13 @@ VAR
 		Log.Update;
 	END Memory;
 
-	PROCEDURE ViewStack( ebp, esp: LONGINT; CONST s: ARRAY OF CHAR);
-	VAR i, val, prevBP: LONGINT;
+	PROCEDURE ViewStack( ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR);
+	VAR i: ADDRESS; val: LONGINT; prevBP:ADDRESS;
 	CONST adrSize= SIZEOF(ADDRESS);
 	BEGIN
 		Log.String( ">>>>> " );  Log.String(s); Log.String (" >>>>>> "); Log.Ln;
 		SYSTEM.GET(ebp,prevBP);
-		IF ABS(prevBP-ebp) > 1024 THEN prevBP := ebp END;
+		IF prevBP-ebp > 1024 THEN prevBP := ebp END;
 		FOR i := prevBP TO esp BY -adrSize DO
 			Log.Address( i );  Log.String( "H (" );  Log.Int( i, 0 );  Log.String( "," );
 			Log.Int( i - ebp, 4 );  Log.String( ") " );  SYSTEM.GET( i, val );
@@ -44,14 +44,14 @@ VAR
 	END ViewStack;
 
 	PROCEDURE Stack*(CONST s: ARRAY OF CHAR);
-	VAR bp,oldbp: LONGINT;
+	VAR bp,oldbp: ADDRESS;
 	BEGIN
 		bp := Machine.CurrentBP();
 		SYSTEM.GET(bp,oldbp);
 		ViewStack(oldbp,bp+4*SIZEOF(ADDRESS),s);
 	END Stack;
 
-	PROCEDURE TraceBackThis( eip, ebp: ADDRESS; stacklow, stackhigh:LONGINT );   (* do a stack trace back w.r.t. given instruction and frame pointers *)
+	PROCEDURE TraceBackThis( eip, ebp: ADDRESS; stacklow, stackhigh:ADDRESS );   (* do a stack trace back w.r.t. given instruction and frame pointers *)
 	BEGIN
 		Log.Ln;  Log.String( "#######################" );
 		Log.Ln;  Log.String( "# Debugging.TraceBack #" );
@@ -100,7 +100,7 @@ VAR
 		Log.String(name);
 	END String;
 
-	PROCEDURE Address*(i: LONGINT);
+	PROCEDURE Address*(i: ADDRESS);
 	BEGIN
 		Log.Address(i);
 	END Address;

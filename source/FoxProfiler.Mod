@@ -85,7 +85,7 @@ TYPE
 	END Process;
 
 	HashEntryInt = RECORD
-		used: BOOLEAN; key, value: LONGINT;
+		used: BOOLEAN; key, value: SIZE;
 	END;
 	HashIntArray = ARRAY 2*MaxProcesses OF HashEntryInt;
 
@@ -103,8 +103,8 @@ VAR
 	(* timing *)
 	frequency: LONGREAL; n: LONGINT;
 
-	PROCEDURE Put*(key, value: LONGINT);
-	VAR hash: LONGINT;
+	PROCEDURE Put*(key, value: SIZE);
+	VAR hash: SIZE;
 	BEGIN
 		ASSERT(numberProcesses < LEN(table),5000);
 		hash := HashValue(key);
@@ -116,18 +116,18 @@ VAR
 		table[hash].used := TRUE;
 	END Put;
 
-	PROCEDURE Get*(key: LONGINT):LONGINT;
+	PROCEDURE Get*(key: SIZE):SIZE;
 	BEGIN
 		RETURN table[HashValue(key)].value;
 	END Get;
 
-	PROCEDURE Has*(key: LONGINT):BOOLEAN;
+	PROCEDURE Has*(key: SIZE):BOOLEAN;
 	BEGIN
 		RETURN table[HashValue(key)].used;
 	END Has;
 
-	PROCEDURE HashValue(key: LONGINT):LONGINT;
-	VAR value, h1, h2, i: LONGINT;
+	PROCEDURE HashValue(key: SIZE):SIZE;
+	VAR value, h1, h2, i: SIZE;
 	BEGIN
 		value :=key;
 		i := 0;
@@ -142,7 +142,7 @@ VAR
 	END HashValue;
 
 	PROCEDURE GetProcess(): Process;
-	VAR process: ANY; value: LONGINT; key: ADDRESS;
+	VAR process: ANY; value: SIZE; key: ADDRESS;
 	BEGIN
 		process := Objects.ActiveObject();
 		key := SYSTEM.VAL(ADDRESS,process) DIV SIZEOF(ADDRESS);

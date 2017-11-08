@@ -66,7 +66,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Swap(i,j: LONGINT);
-		VAR name: ExportName; adr: LONGINT;
+		VAR name: ExportName; adr: GenericLinker.Address;
 		BEGIN
 			name := exportNames[i]; exportNames[i] := exportNames[j]; exportNames[j] := name;
 			name := symbolNames[i]; symbolNames[i] := symbolNames[j]; symbolNames[j] := name;
@@ -124,7 +124,7 @@ TYPE
 	BEGIN
 		IF section.unit > maxUnitSize THEN maxUnitSize := section.unit END;
 		IF section.fixed THEN
-			address := (section.alignment - displacement) * section.unit;
+			address := ObjectFile.Bits((section.alignment - displacement) * section.unit);
 		ELSE
 			address := bits.GetSize (); alignment := section.alignment * section.unit;
 			IF alignment = 0 THEN alignment := section.unit; END;
@@ -161,7 +161,7 @@ TYPE
 	VAR i: LONGINT;
 	BEGIN
 		IF (pattern.mode = ObjectFile.Absolute) & (relocInfo # NIL) THEN
-			relocInfo.AddReloc(target+patch.offset);
+			relocInfo.AddReloc(LONGINT(target+patch.offset));
 		END;
 	END CheckReloc;
 
@@ -349,7 +349,7 @@ PROCEDURE WritePEFile (linker: GenericLinker.Linker; arrangement: Arrangement; w
 CONST DOSText = "This program cannot be run in DOS mode.$";
 CONST DOSHeaderSize = 64; DOSCodeSize = 14; DOSTextSize = 40; DOSStubSize = ((DOSHeaderSize + DOSCodeSize + DOSTextSize + 15) DIV 16) * 16;
 CONST FileAlignment = 200H; SectionAlignment = 1000H; HeaderSize = 24; SectionHeaderSize = 40; DirectoryEntries = 16;
-VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress, BaseAddress: LONGINT; exportInfo: ExportInfo; relocInfo: RelocationInfo;
+VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize: LONGINT;  BaseCodeAddress, BaseAddress: LONGINT; exportInfo: ExportInfo; relocInfo: RelocationInfo;
 	pos: LONGINT;
 
 	PROCEDURE Reserve (size: LONGINT);
@@ -368,8 +368,8 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress,
 	BEGIN WriteWORD (value MOD 10000H); WriteWORD (value DIV 10000H);
 	END WriteDWORD;
 
-	PROCEDURE WritePTR (value: LONGINT);
-	BEGIN WriteDWORD (value); IF bitmode = 64 THEN WriteDWORD (0) END;
+	PROCEDURE WritePTR (value: GenericLinker.Address);
+	BEGIN WriteDWORD (LONGINT(value)); IF bitmode = 64 THEN WriteDWORD (0) END;
 	END WritePTR;
 
 	PROCEDURE WriteString(s: ARRAY OF CHAR);
@@ -621,7 +621,7 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress,
 			(* export address table *)
 			FOR i := 0 TO exportInfo.exports-1 DO
 				ASSERT(exportInfo.exportAddresses[i] # 0);
-				WriteDWORD(exportInfo.exportAddresses[i]-BaseAddress+BaseCodeAddress); (* RVA ! *)
+				WriteDWORD(LONGINT(exportInfo.exportAddresses[i]-BaseAddress+BaseCodeAddress)); (* RVA ! *)
 			END;
 
 			(* export name pointer table *)
@@ -668,7 +668,7 @@ BEGIN
 	exportInfo := arrangement.exportInfo;
 	relocInfo := arrangement.relocInfo;
 	IF HasExports() THEN exportInfo.Sort END;
-	BaseAddress := arrangement.displacement; (* ASSERT (arrangement.displacement = BaseAddress); *)
+	BaseAddress := LONGINT(arrangement.displacement); (* ASSERT (arrangement.displacement = BaseAddress); *)
 	OptionalHeaderSize := 96 + DirectoryEntries * 8;
 	IF bitmode = 64 THEN INC (OptionalHeaderSize, 16); END;
 	CodeSize := arrangement.bits.GetSize () DIV 8;

@@ -38,14 +38,14 @@ VAR
 	rejectMatMul*: LONGINT;
 	matAllocTime*, matCompTime*: LONGINT;
 	cBlockSize*: LONGINT;  nrProcesses*: LONGINT;
-	lastUsedBlockSize*: LONGINT;
+	lastUsedBlockSize*: SIZE;
 
 	allocT-, copyT-, zeroT-, compT-: HUGEINT;
 
 TYPE
 	Cache = POINTER TO RECORD
 		p: ANY;
-		adr, size: LONGINT;
+		adr: ADDRESS; size: SIZE;
 		prev, next: Cache;
 	END;
 	CachePool = OBJECT
@@ -59,7 +59,7 @@ TYPE
 			first.next := last;  first.prev := NIL; last.prev := first;  last.next := NIL;
 		END Init;
 
-		PROCEDURE Acquire( size: LONGINT ): Cache;
+		PROCEDURE Acquire( size: SIZE ): Cache;
 		VAR c: Cache;  t: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			IF size = 0 THEN RETURN first END;
@@ -114,10 +114,10 @@ TYPE
 	END ComputationObj;
 
 	MatMulHObjR = OBJECT (ComputationObj)
-	VAR MatrixA, MatrixB, MatrixC, Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+	VAR MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 		add: BOOLEAN;
 
-		PROCEDURE & InitR*( MatrixA, MatrixB, MatrixC, Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+		PROCEDURE & InitR*( MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 										  add: BOOLEAN );
 		BEGIN
 			Init;  SELF.MatrixA := MatrixA;  SELF.MatrixB := MatrixB;
@@ -136,10 +136,10 @@ TYPE
 	END MatMulHObjR;
 
 	MatMulHObjX = OBJECT (ComputationObj)
-	VAR MatrixA, MatrixB, MatrixC, Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+	VAR MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 		add: BOOLEAN;
 
-		PROCEDURE & InitX*( MatrixA, MatrixB, MatrixC, Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+		PROCEDURE & InitX*( MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 										  add: BOOLEAN );
 		BEGIN
 			Init;  SELF.MatrixA := MatrixA;  SELF.MatrixB := MatrixB;
@@ -158,10 +158,10 @@ TYPE
 	END MatMulHObjX;
 
 	MultiplyObjectR = OBJECT (ComputationObj);
-	VAR adrA, adrB, C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: LONGINT;
+	VAR adrA, adrB: ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK:SIZE;
 		start, finished: BOOLEAN;
 
-		PROCEDURE & InitR*( adrA, adrB, C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: LONGINT );
+		PROCEDURE & InitR*( adrA, adrB: ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE );
 		BEGIN
 			Init;  start := FALSE;  finished := FALSE;
 			SELF.adrA := adrA;  SELF.adrB := adrB;  SELF.C := C;
@@ -181,10 +181,10 @@ TYPE
 	END MultiplyObjectR;
 
 	MultiplyObjectX = OBJECT (ComputationObj);
-	VAR adrA, adrB, C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: LONGINT;
+	VAR adrA, adrB:ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE;
 		start, finished: BOOLEAN;
 
-		PROCEDURE & InitX*( adrA, adrB, C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: LONGINT );
+		PROCEDURE & InitX*( adrA, adrB: ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE );
 		BEGIN
 			Init;  start := FALSE;  finished := FALSE;
 			SELF.adrA := adrA;  SELF.adrB := adrB;  SELF.C := C;
@@ -210,7 +210,7 @@ VAR
 
 
 
-	PROCEDURE -L1Block1XA( adrA, adrB, adrC, K: LONGINT );
+	PROCEDURE -L1Block1XA( adrA, adrB, adrC: ADDRESS; K: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [ESP+0]	;  K[EBP]	;  EAX IS counter
 		MOV	EDX, [ESP+4]	;  adrC[EBP]
@@ -287,7 +287,7 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1XA;
 
-	PROCEDURE -L1Block1XSSE( adrA (*12*) , adrB (*8*) , adrC (*4*) , K (*0*) : LONGINT );
+	PROCEDURE -L1Block1XSSE( adrA (*12*) , adrB (*8*) , adrC (*4*) : ADDRESS; K (*0*) : SIZE );
 	(*
 		matrixA, matrixB must be stored in special format
 		K>0 guaranteed
@@ -348,7 +348,7 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1XSSE;
 
-	PROCEDURE -L1Block5XSSE( adrA (*16*) , adrB (*12*) , adrC (*8*) , IncC (*4*) , K (*0*) : LONGINT );
+	PROCEDURE -L1Block5XSSE( adrA (*16*) , adrB (*12*) , adrC (*8*): ADDRESS; IncC (*4*) , K (*0*) : SIZE );
 	(*
 		matrixA and matrix B are stored in special format !
 		K > 0 is guaranteed
@@ -522,7 +522,7 @@ VAR
 		ADD	ESP, 20	;
 	END L1Block5XSSE;
 
-	PROCEDURE -L1Block1RA( adrA, adrB, adrC, K: LONGINT );
+	PROCEDURE -L1Block1RA( adrA, adrB, adrC: ADDRESS; K:SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [ESP+0]	;  K[EBP]	;  EAX IS counter
 		MOV	EDX, [ESP+4]	;  adrC[EBP]
@@ -647,7 +647,7 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1RA;
 
-	PROCEDURE -L1Block1RSSE( adrA (*12*) , adrB (*8*) , adrC (*4*) , K (*0*) : LONGINT );
+	PROCEDURE -L1Block1RSSE( adrA (*12*) , adrB (*8*) , adrC (*4*): ADDRESS; K (*0*) : SIZE );
 	(*
 		matrixA, matrixB must be stored in special format
 		K>0 guaranteed
@@ -710,7 +710,7 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1RSSE;
 
-	PROCEDURE -L1Block5RSSE( adrA (*16*) , adrB (*12*) , adrC (*8*) , IncC (*4*) , K (*0*) : LONGINT );
+	PROCEDURE -L1Block5RSSE( adrA (*16*) , adrB (*12*) , adrC (*8*): ADDRESS; IncC (*4*) , K (*0*) : SIZE );
 	(*
 		matrixA and matrix B are stored in special format !
 		K > 0 is guaranteed
@@ -893,7 +893,7 @@ VAR
 		ADD	ESP, 20	;
 	END L1Block5RSSE;
 
-	PROCEDURE -Align4( adr: LONGINT ): LONGINT;
+	PROCEDURE -Align4( adr: ADDRESS ): ADDRESS;
 	CODE {SYSTEM.i386}
 		MOV	EAX, [ESP]	;
 		NEG	EAX	;
@@ -902,7 +902,7 @@ VAR
 		ADD	ESP, 4
 	END Align4;
 
-	PROCEDURE -Align2( adr: LONGINT ): LONGINT;
+	PROCEDURE -Align2( adr: ADDRESS ): ADDRESS;
 	CODE {SYSTEM.i386}
 		MOV	EAX, [ESP]	;
 		NEG	EAX	;
@@ -911,7 +911,7 @@ VAR
 		ADD	ESP, 4
 	END Align2;
 
-	PROCEDURE -ZeroR( adr: LONGINT;  count: LONGINT );
+	PROCEDURE -ZeroR( adr: ADDRESS;  count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+4]	;  adr[EBP]	;  address OF dest index
@@ -923,7 +923,7 @@ VAR
 		ADD	ESP, 8	;
 	END ZeroR;
 
-	PROCEDURE -ZeroX( adr: LONGINT;  count: LONGINT );
+	PROCEDURE -ZeroX( adr: ADDRESS;  count: SIZE );
 	(** For 64 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+4]	;  adr[EBP]	;  address OF dest index
@@ -936,7 +936,7 @@ VAR
 		ADD	ESP, 8	;
 	END ZeroX;
 
-	PROCEDURE -ZeroRI( adr, inc: LONGINT;  count: LONGINT );
+	PROCEDURE -ZeroRI( adr: SIZE; inc, count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+8]	;  adr[EBP]	;  address OF dest index
@@ -961,7 +961,7 @@ VAR
 		ADD	ESP, 12	;
 	END ZeroRI;
 
-	PROCEDURE -ZeroXI( adr, inc: LONGINT;  count: LONGINT );
+	PROCEDURE -ZeroXI( adr: ADDRESS; inc, count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+8]	;  adr[EBP]	;  address OF dest index
@@ -987,7 +987,7 @@ VAR
 		ADD	ESP, 12	;
 	END ZeroXI;
 
-	PROCEDURE -MovR( from, to0, frominc, count: LONGINT );
+	PROCEDURE -MovR( from, to0, frominc, count: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+8]	;  TO
 		MOV	ESI, [ESP+12]	;  from
@@ -1012,7 +1012,7 @@ VAR
 		ADD	ESP, 16	;
 	END MovR;
 
-	PROCEDURE -MovX( from, to0, frominc, count: LONGINT );
+	PROCEDURE -MovX( from, to0: ADDRESS; frominc, count:SIZE );
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP+8]	;  TO
 		MOV	ESI, [ESP+12]	;  from
@@ -1040,7 +1040,7 @@ VAR
 		ADD	ESP, 16	;
 	END MovX;
 
-	PROCEDURE -MovR5( src, inc, stride, dest, count: LONGINT );
+	PROCEDURE -MovR5( src: ADDRESS; inc, stride: SIZE; dest: ADDRESS; count: SIZE);
 	CODE {SYSTEM.i386}
 		MOV	ESI, [ESP+16]	;  src
 		MOV	EBX, [ESP+12]	;  inc
@@ -2662,7 +2662,7 @@ VAR
 
 
 (* sse version of scalar product *)
-	PROCEDURE AlignedSPXSSE( ladr, radr, dadr, len: LONGINT;
+	PROCEDURE AlignedSPXSSE( ladr, radr, dadr: ADDRESS; len: SIZE;
 													 add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		;  register initialization
@@ -2911,7 +2911,7 @@ VAR
 	END AlignedSPRSSE5;
 *)
 
-	PROCEDURE AlignedSPRSSE( ladr, radr, dadr, len: LONGINT;
+	PROCEDURE AlignedSPRSSE( ladr, radr, dadr: ADDRESS; len: SIZE;
 													 add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		;  register initialization
@@ -3092,7 +3092,7 @@ VAR
 	END AlignedSPRSSE;
 *)
 
-	PROCEDURE Copy4( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy4( ladr, dadr: ADDRESS; linc, dinc, len: SIZE);
 	CODE {SYSTEM.i386}
 		MOV	ESI, [EBP+ladr]	;  ECX := ladr
 		MOV	EDI, [EBP+dadr]	;  EDX := dadr
@@ -3120,7 +3120,7 @@ VAR
 		endL:
 	END Copy4;
 
-	PROCEDURE Copy8( ladr, dadr, linc, dinc, len: LONGINT );
+	PROCEDURE Copy8( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	CODE {SYSTEM.i386}
 		MOV	ESI, [EBP+ladr]	;  ECX := ladr
 		MOV	EDI, [EBP+dadr]	;  EDX := dadr
@@ -3151,7 +3151,7 @@ VAR
 		endL:
 	END Copy8;
 
-	PROCEDURE Transpose4A( ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT );
+	PROCEDURE Transpose4A( ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE );
 	CODE {SYSTEM.i386}
 		startrows:
 		MOV	EAX, [EBP+rows]	;
@@ -3187,7 +3187,7 @@ VAR
 	END Transpose4A;
 
 	PROCEDURE Transpose4( ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE );
-	VAR l, d, c: LONGINT;  BlockSize: LONGINT;
+	VAR l, d, c: SIZE;  BlockSize: SIZE;
 	BEGIN
 		BlockSize :=
 			MIN( L2BlockSize DIV lstride, L2BlockSize DIV lstride );
@@ -3224,7 +3224,7 @@ VAR
 	END Transpose4;
 
 	PROCEDURE Transpose8( ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE );
-	VAR l, d, c: LONGINT;  BlockSize: LONGINT;
+	VAR l, d, c: SIZE;  BlockSize: SIZE;
 	BEGIN
 		BlockSize :=
 			MIN( L2BlockSize DIV lstride, L2BlockSize DIV lstride );
@@ -3261,7 +3261,7 @@ VAR
 		END;
 	END Transpose8;
 
-	PROCEDURE Transpose8A( ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT );
+	PROCEDURE Transpose8A( ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE );
 	CODE {SYSTEM.i386}
 		startrows:
 		MOV	EAX, [EBP+rows]	;
@@ -3298,8 +3298,8 @@ VAR
 		endL:
 	END Transpose8A;
 
-	PROCEDURE SSEMul24BlockR( VAR CbFirst: LONGINT;
-													  StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul24BlockR( VAR CbFirst: SIZE;
+													  StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													  add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		MatrixOfResultsSetup:
@@ -3391,8 +3391,8 @@ VAR
 
 (*! might be better to make a 10Block operation and utilize 2 registers for temporary calculations, see article abaout Emmerald*)
 
-	PROCEDURE SSEMul12BlockX( VAR CbFirst: LONGINT;
-													  StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul12BlockX( VAR CbFirst: SIZE;
+													  StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb: SIZE; matrixA, matrixB, matrixC :ADDRESS;
 													  add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MatrixOfResultsSetup:
@@ -3479,7 +3479,7 @@ VAR
 		MOV	[EAX], EBX	;
 	END SSEMul12BlockX;
 
-	PROCEDURE SSEMul16BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul16BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													  add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3545,7 +3545,7 @@ VAR
 		JL	DotProductSetup	;
 	END SSEMul16BlockR;
 
-	PROCEDURE SSEMul8BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul8BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3611,7 +3611,7 @@ VAR
 		JL	DotProductSetup	;
 	END SSEMul8BlockX;
 
-	PROCEDURE SSEMul8BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul8BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3665,7 +3665,7 @@ VAR
 		JL	DotProductSetup	;
 	END SSEMul8BlockR;
 
-	PROCEDURE SSEMul4BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul4BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3720,7 +3720,7 @@ VAR
 		JL	DotProductSetup	;
 	END SSEMul4BlockX;
 
-	PROCEDURE SSEMul4BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul4BlockR( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3769,7 +3769,7 @@ VAR
 		JL	DotProductSetup	;
 	END SSEMul4BlockR;
 
-	PROCEDURE SSEMul2BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom, matrixA, matrixB, matrixC: LONGINT;
+	PROCEDURE SSEMul2BlockX( StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS;
 													add: BOOLEAN );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		MOV	ECX, 0	;  counter FOR rows IN A-Ra
@@ -3822,8 +3822,8 @@ VAR
 
 (******  blocking matrix multiplication with copy of data ******)
 
-	PROCEDURE MagicBlockR( M, N, K: LONGINT;
-											    VAR L2BlockM, L2BlockN, L2BlockK: LONGINT );
+	PROCEDURE MagicBlockR( M, N, K: SIZE;
+											    VAR L2BlockM, L2BlockN, L2BlockK: SIZE );
 	BEGIN
 
 		K := (K DIV L0BlockKR) * L0BlockKR;
@@ -3855,8 +3855,8 @@ VAR
 
 	END MagicBlockR;
 
-	PROCEDURE MagicBlockX( M, N, K: LONGINT;
-											    VAR L2BlockM, L2BlockN, L2BlockK: LONGINT );
+	PROCEDURE MagicBlockX( M, N, K: SIZE;
+											    VAR L2BlockM, L2BlockN, L2BlockK:SIZE );
 	BEGIN
 		K := (K DIV L0BlockKX) * L0BlockKX;
 		N := (N DIV L1BlockN) * L1BlockN;
@@ -4129,9 +4129,9 @@ VAR
 *)
 
 
-	PROCEDURE DispCR( adrM: LONGINT;
-									   inc, stride, M, N: LONGINT );
-	VAR i, j, adr: LONGINT;  val: REAL;
+	PROCEDURE DispCR( adrM: ADDRESS;
+									   inc, stride, M, N: SIZE );
+	VAR i, j: SIZE; adr: ADDRESS;  val: REAL;
 	BEGIN
 		FOR i := 0 TO M - 1 DO
 			adr := adrM + i * stride;
@@ -4143,9 +4143,9 @@ VAR
 		END;
 	END DispCR;
 
-	PROCEDURE DispCX( adrM: LONGINT;
-									   inc, stride, M, N: LONGINT );
-	VAR i, j, adr: LONGINT;  val: LONGREAL;
+	PROCEDURE DispCX( adrM: ADDRESS;
+									   inc, stride, M, N: SIZE );
+	VAR i, j: SIZE; adr: ADDRESS;  val: LONGREAL;
 	BEGIN
 		FOR i := 0 TO M - 1 DO
 			adr := adrM + i * stride;
@@ -4157,8 +4157,8 @@ VAR
 		END;
 	END DispCX;
 
-	PROCEDURE L3BlockX( matrixA, matrixB, matrixC: LONGINT;
-										  M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: LONGINT );
+	PROCEDURE L3BlockX( matrixA, matrixB, matrixC: ADDRESS;
+										  M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: SIZE );
 	(*
 				  K										N
 			***			N					*****
@@ -4168,14 +4168,14 @@ VAR
 
 			A     *         B              ->       C
 	*)
-	VAR m, n, k, a1, b1, adrA, adrB, adrC: LONGINT;
-		KAligned: LONGINT;
+	VAR m, n, k, a1, b1: SIZE; adrA, adrB, adrC: ADDRESS;
+		KAligned: SIZE;
 	CONST Size = SIZEOF( LONGREAL );
 
-		PROCEDURE L2Block( matrixA, matrixB, matrixC, M, N, K: LONGINT );
+		PROCEDURE L2Block( matrixA, matrixB, matrixC: ADDRESS; M, N, K: SIZE );
 		(* M,N and K arbitrary ! *)
-		VAR adrA, adrB, adrC: LONGINT;  aadrA, aadrB: LONGINT;
-			m, k, KAligned: LONGINT;
+		VAR adrA, adrB, adrC: ADDRESS;  aadrA, aadrB: ADDRESS;
+			m, k, KAligned: SIZE;
 		BEGIN
 			KAligned := Align2( K ) * 8;
 
@@ -4317,8 +4317,8 @@ VAR
 		END;
 	END L3BlockX;
 
-	PROCEDURE L3BlockR( matrixA, matrixB, matrixC: LONGINT;
-										  M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: LONGINT );
+	PROCEDURE L3BlockR( matrixA, matrixB, matrixC: ADDRESS;
+										  M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: SIZE );
 	(*
 				  K										N
 			***			N					*****
@@ -4328,14 +4328,14 @@ VAR
 
 			A     *         B              ->       C
 	*)
-	VAR m, n, k, a1, b1, adrA, adrB, adrC: LONGINT;
-		KAligned: LONGINT;
+	VAR m, n, k, a1, b1: SIZE; adrA, adrB, adrC: ADDRESS;
+		KAligned: SIZE;
 	CONST Size = SIZEOF( REAL );
 
-		PROCEDURE L2Block( matrixA, matrixB, matrixC, M, N, K: LONGINT );
+		PROCEDURE L2Block( matrixA, matrixB, matrixC: ADDRESS; M, N, K: SIZE );
 		(* M,N and K arbitrary ! *)
-		VAR adrA, adrB, adrC: LONGINT;  aadrA, aadrB: LONGINT;
-			m, KAligned, k: LONGINT;
+		VAR adrA, adrB, adrC: ADDRESS;  aadrA, aadrB: ADDRESS;
+			m, KAligned, k: SIZE;
 		BEGIN
 			KAligned := Align4( K ) * 4;
 
@@ -4477,18 +4477,18 @@ VAR
 		END;
 	END L3BlockR;
 
-	PROCEDURE Align( adr: LONGINT;  align: LONGINT ): LONGINT;
+	PROCEDURE Align( adr: ADDRESS;  align: SIZE ): ADDRESS;
 	BEGIN
 		RETURN adr + (-adr) MOD align;   (* 128 bit = 16 byte alignment *)
 	END Align;
 
-	PROCEDURE CopyAX( matrixA, dest: LONGINT;
-									    IncA, StrideA: LONGINT;
-									    K, M, L2BlockK, L2BlockM: LONGINT );
-	VAR m, k, adrA: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyAX( matrixA, dest: ADDRESS;
+									    IncA, StrideA: SIZE;
+									    K, M, L2BlockK, L2BlockM: SIZE );
+	VAR m, k: SIZE; adrA: ADDRESS;  t: HUGEINT;
 
-		PROCEDURE CopyMK( matrixA, M, K: LONGINT );
-		VAR rest: LONGINT;
+		PROCEDURE CopyMK( matrixA: ADDRESS; M, K: SIZE );
+		VAR rest: SIZE;
 		BEGIN
 			IF debug THEN
 				KernelLog.String( "CopyMK:" );  KernelLog.Int( M, 10 );  KernelLog.Int( K, 10 );
@@ -4524,13 +4524,13 @@ VAR
 		Toc( t, copyT );
 	END CopyAX;
 
-	PROCEDURE CopyAR( matrixA, dest: LONGINT;
-									    IncA, StrideA: LONGINT;
-									    K, M, L2BlockK, L2BlockM: LONGINT );
-	VAR m, k, adrA: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyAR( matrixA, dest: ADDRESS;
+									    IncA, StrideA: SIZE;
+									    K, M, L2BlockK, L2BlockM: SIZE );
+	VAR m, k: SIZE; adrA: ADDRESS;  t: HUGEINT;
 
-		PROCEDURE CopyMK( matrixA, M, K: LONGINT );
-		VAR rest: LONGINT;
+		PROCEDURE CopyMK( matrixA: ADDRESS; M, K: SIZE );
+		VAR rest: SIZE;
 		BEGIN
 			rest := (-K) MOD 4;
 			WHILE (M > 0) DO
@@ -4562,13 +4562,13 @@ VAR
 		Toc( t, copyT );
 	END CopyAR;
 
-	PROCEDURE CopyBX( matrixB, dest: LONGINT;
-									    IncB, StrideB: LONGINT;
-									    N, K, L2BlockN, L2BlockK: LONGINT );
-	VAR n, k: LONGINT;  adrB: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyBX( matrixB, dest: ADDRESS;
+									    IncB, StrideB: SIZE;
+									    N, K, L2BlockN, L2BlockK: SIZE );
+	VAR n, k: SIZE;  adrB: ADDRESS;  t: HUGEINT;
 
-		PROCEDURE Copy5x2k( matrixB, k: LONGINT );
-		VAR i, adrB, rest: LONGINT;
+		PROCEDURE Copy5x2k( matrixB: ADDRESS; k: SIZE );
+		VAR i: SIZE; adrB: ADDRESS; rest: SIZE;
 		BEGIN
 			rest := (-k) MOD 2;
 			WHILE (k >= 2) DO  (* store 5x4 Block in line *)
@@ -4591,8 +4591,8 @@ VAR
 			END;
 		END Copy5x2k;
 
-		PROCEDURE Copy1( matrixB, K, N: LONGINT );
-		VAR n, rest: LONGINT;
+		PROCEDURE Copy1( matrixB: ADDRESS; K, N:SIZE );
+		VAR n, rest: SIZE;
 		BEGIN
 			rest := (-K) MOD 2;
 			IF debug THEN
@@ -4638,13 +4638,13 @@ VAR
 		Copy1( adrB, k, n );  Toc( t, copyT );
 	END CopyBX;
 
-	PROCEDURE CopyBR( matrixB, dest: LONGINT;
-									    IncB, StrideB: LONGINT;
-									    N, K, L2BlockN, L2BlockK: LONGINT );
-	VAR n, k: LONGINT;  adrB: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyBR( matrixB, dest: ADDRESS;
+									    IncB, StrideB: SIZE;
+									    N, K, L2BlockN, L2BlockK: SIZE );
+	VAR n, k: SIZE;  adrB: ADDRESS;  t: HUGEINT;
 
-		PROCEDURE Copy5x4k( matrixB, k: LONGINT );
-		VAR i, adrB, rest, k4: LONGINT;
+		PROCEDURE Copy5x4k( matrixB: ADDRESS; k: SIZE );
+		VAR i: SIZE;  adrB: ADDRESS;  rest, k4: SIZE;
 		BEGIN
 			k4 := k - k MOD 4;  rest := (-k) MOD 4;
 
@@ -4679,8 +4679,8 @@ VAR
 			END;
 		END Copy5x4k;
 
-		PROCEDURE Copy1( matrixB, K, N: LONGINT );
-		VAR n, rest: LONGINT;
+		PROCEDURE Copy1( matrixB: ADDRESS; K, N:SIZE );
+		VAR n, rest: SIZE;
 		BEGIN
 			rest := (-K) MOD 4;
 			IF debug THEN
@@ -4782,12 +4782,13 @@ VAR
 		INC( addto, GetTimer() - t );  t := GetTimer();
 	END Toc;
 
-	PROCEDURE MultiplyX( A, B, C, M, N, K, L2BlockM, L2BlockN, L2BlockK: LONGINT;
-										  IncA, StrideA, IncB, StrideB, IncC, StrideC: LONGINT;
+	PROCEDURE MultiplyX( A, B, C: ADDRESS;
+			 M, N, K, L2BlockM, L2BlockN, L2BlockK:SIZE;
+										  IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE;
 										  add: BOOLEAN );
-	VAR lenA, lenB, adrA, adrB, adrC, m: LONGINT;
-		M1, M2, i: LONGINT;  val: LONGREAL;  t: HUGEINT;
-		inc: LONGINT;
+	VAR lenA, lenB: SIZE; adrA, adrB, adrC: ADDRESS;  m: SIZE;
+		M1, M2, i: SIZE;  val: LONGREAL;  t: HUGEINT;
+		inc: SIZE;
 		obj: POINTER TO ARRAY OF MultiplyObjectX;
 		cache: Cache;
 	BEGIN
@@ -4840,11 +4841,12 @@ VAR
 		Toc( t, compT );  cachePool.Release( cache );
 	END MultiplyX;
 
-	PROCEDURE MultiplyR( A, B, C, M, N, K, L2BlockM, L2BlockN, L2BlockK: LONGINT;
-										  IncA, StrideA, IncB, StrideB, IncC, StrideC: LONGINT;
+	PROCEDURE MultiplyR( A, B, C: ADDRESS;
+				 M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE;
+										  IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE;
 										  add: BOOLEAN );
-	VAR lenA, lenB, adrA, adrB, adrC, m: LONGINT;
-		M1, M2, i: LONGINT;  val: REAL;  inc: LONGINT;
+	VAR lenA, lenB, len: SIZE; adrA, adrB, adrC: ADDRESS;  m: SIZE;
+		M1, M2, i: SIZE;  val: REAL;  inc: SIZE;
 		obj: POINTER TO ARRAY OF MultiplyObjectR;
 		t: HUGEINT;  cache: Cache;
 	BEGIN
@@ -5165,15 +5167,16 @@ VAR
 
 (****** matrix multiplication over rows with transposition of B *)
 
-	PROCEDURE MatMulHBlockR( MatrixA, MatrixB, MatrixC,  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+	PROCEDURE MatMulHBlockR( MatrixA, MatrixB, MatrixC: ADDRESS;
+	  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 												    add: BOOLEAN );
-	VAR fromA, toA, fromB, toB, BlockSize: LONGINT;
+	VAR fromA, toA, fromB, toB: ADDRESS; BlockSize: SIZE;
 		(*
 		computation of C[i,j] = Sum{k=0..Cols-1} A[i,k]*B[j,k], i.e. A*B`
 	*)
 
-		PROCEDURE Block( fromA, toA, fromB, toB: LONGINT );
-		VAR i, j: LONGINT;  adrA, adrB, adrC: LONGINT;
+		PROCEDURE Block( fromA, toA, fromB, toB: ADDRESS );
+		VAR i, j: ADDRESS;  adrA, adrB, adrC: ADDRESS;
 		BEGIN
 			FOR i := fromA TO toA - 1 DO
 				adrA := MatrixA + i * Stride;
@@ -5207,14 +5210,15 @@ VAR
 
 	END MatMulHBlockR;
 
-	PROCEDURE MatMulHBlockX( MatrixA, MatrixB, MatrixC,  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: LONGINT;
+	PROCEDURE MatMulHBlockX( MatrixA, MatrixB, MatrixC: ADDRESS;
+		  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 												    add: BOOLEAN );
-	VAR fromA, toA, fromB, toB, BlockSize: LONGINT;
+	VAR fromA, toA, fromB, toB: ADDRESS; BlockSize: SIZE;
 		(*
 		computation of C[i,j] = Sum{k=0..Cols-1} A[i,k]*B[j,k], i.e. A*B`
 	*)
-		PROCEDURE Block( fromA, toA, fromB, toB: LONGINT );
-		VAR adrA, adrB, adrC, i, j: LONGINT;
+		PROCEDURE Block( fromA, toA, fromB, toB: ADDRESS );
+		VAR adrA, adrB, adrC: ADDRESS; i, j: ADDRESS;
 		BEGIN
 			FOR i := fromA TO toA - 1 DO
 				adrA := MatrixA + i * Stride;
@@ -5248,8 +5252,8 @@ VAR
 
 	END MatMulHBlockX;
 
-	PROCEDURE CopyDataR( src, dest, incSrc, strideSrc, incDest, strideDest, rows, cols: LONGINT );   (*! optimize *)
-	VAR i: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyDataR( src, dest: ADDRESS; incSrc, strideSrc, incDest, strideDest, rows, cols:SIZE );   (*! optimize *)
+	VAR i: SIZE;  t: HUGEINT;
 	BEGIN
 		Tic( t );
 		FOR i := 0 TO rows - 1 DO
@@ -5259,8 +5263,8 @@ VAR
 		Toc( t, copyT );
 	END CopyDataR;
 
-	PROCEDURE CopyDataX( src, dest, incSrc, strideSrc, incDest, strideDest, rows, cols: LONGINT );   (*! optimize *)
-	VAR i: LONGINT;  t: HUGEINT;
+	PROCEDURE CopyDataX( src, dest: ADDRESS; incSrc, strideSrc, incDest, strideDest, rows, cols:SIZE );   (*! optimize *)
+	VAR i: SIZE;  t: HUGEINT;
 	BEGIN
 		Tic( t );
 		FOR i := 0 TO rows - 1 DO
@@ -5270,11 +5274,12 @@ VAR
 		Toc( t, copyT );
 	END CopyDataX;
 
-	PROCEDURE MatMulARARTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulARARTransposed( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 																  add: BOOLEAN ): BOOLEAN;
-	VAR stride, adrB, adrC: LONGINT;
+	VAR stride, adrB, adrC: ADDRESS;
 		proc: POINTER TO ARRAY OF MatMulHObjR;
-		from, to0, i: LONGINT;  cacheA, cacheB: Cache;
+		from, to0, i: SIZE;  cacheA, cacheB: Cache;
 		t: HUGEINT;
 
 	BEGIN
@@ -5326,11 +5331,12 @@ VAR
 		cachePool.Release( cacheB );  RETURN TRUE;
 	END MatMulARARTransposed;
 
-	PROCEDURE MatMulAXAXTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulAXAXTransposed( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 																  add: BOOLEAN ): BOOLEAN;
-	VAR stride, adrB, adrC: LONGINT;
+	VAR stride, adrB, adrC: ADDRESS;
 		proc: POINTER TO ARRAY OF MatMulHObjX;
-		from, to0, i: LONGINT;  cacheA, cacheB: Cache;
+		from, to0, i: SIZE;  cacheA, cacheB: Cache;
 		t: HUGEINT;
 	BEGIN
 		NEW(proc,nrProcesses);
@@ -5383,12 +5389,13 @@ VAR
 
 (******  strided matrix multiplication with restrictions to increments ******)
 
-	PROCEDURE MatMulARARSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulARARSSEStride( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 															    add: BOOLEAN ): BOOLEAN;
-	VAR sum: REAL;  CbFrom, i, j, k: LONGINT;  valA, valB: REAL;
-		adrA, adrB, adrC: LONGINT;
+	VAR sum: REAL;  CbFrom, i, j, k: SIZE;  valA, valB: REAL;
+		adrA, adrB, adrC: ADDRESS;
 		cacheA, cacheB, cacheC: Cache;
-		matrixCO, StrideCO, IncCO: LONGINT;  t: HUGEINT;
+		matrixCO, StrideCO, IncCO: SIZE;  t: HUGEINT;
 		(*VAR fromA, toA: LONGINT;  *)
 	BEGIN
 		IF (IncA # SIZEOF( REAL )) THEN
@@ -5480,12 +5487,13 @@ VAR
 		RETURN TRUE;
 	END MatMulARARSSEStride;
 
-	PROCEDURE MatMulAXAXSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulAXAXSSEStride( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 															    add: BOOLEAN ): BOOLEAN;
-	VAR sum: LONGREAL;  CbFrom, i, j, k: LONGINT;
-		valA, valB: LONGREAL;  adrA, adrB, adrC: LONGINT;
+	VAR sum: LONGREAL;  CbFrom, i, j, k: SIZE;
+		valA, valB: LONGREAL;  adrA, adrB, adrC: ADDRESS;
 		cacheA, cacheB, cacheC: Cache;
-		matrixCO, StrideCO, IncCO: LONGINT;  t: HUGEINT;
+		matrixCO, StrideCO, IncCO:SIZE;  t: HUGEINT;
 	BEGIN
 		IF (IncA # SIZEOF( LONGREAL )) THEN
 			cacheA :=
@@ -5582,14 +5590,15 @@ VAR
 
 (******  naiive Oberon matrix multiplication ******)
 
-	PROCEDURE MatMulARARNaiive( matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: LONGINT;
+	PROCEDURE MatMulARARNaiive( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE;
 														  add: BOOLEAN );
 	(*
 		A is M x K  matrix, M=rows (A); K=cols(A);
 		B is K x N matrix;  K=rows(B); N = cols(B);
 		C is M x N matrix; M=rows(C); N=cols(C);
 	*)
-	VAR adrA, adrB, innerB, adrC, i, j, k: LONGINT;
+	VAR adrA, adrB, innerB, adrC: ADDRESS;  i, j, k: SIZE;
 		val1, val2, sum: REAL;  t: HUGEINT;
 	BEGIN
 		Tic( t );
@@ -5612,14 +5621,15 @@ VAR
 		Toc( t, compT );
 	END MatMulARARNaiive;
 
-	PROCEDURE MatMulAXAXNaiive( matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: LONGINT;
+	PROCEDURE MatMulAXAXNaiive( matrixA, matrixB, matrixC: ADDRESS;
+		IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE;
 														  add: BOOLEAN );
 	(*
 		A is M x K  matrix, M=rows (A); K=cols(A);
 		B is K x N matrix;  K=rows(B); N = cols(B);
 		C is M x N matrix; M=rows(C); N=cols(C);
 	*)
-	VAR adrA, adrB, innerB, adrC, i, j, k: LONGINT;
+	VAR adrA, adrB, innerB, adrC:  ADDRESS; i, j, k: SIZE;
 		val1, val2, sum: LONGREAL;  t: HUGEINT;
 	BEGIN
 		Tic( t );
@@ -5664,7 +5674,7 @@ VAR
 	(*
 	*)
 
-	PROCEDURE BestMethod( M, N, K: LONGINT ): LONGINT;
+	PROCEDURE BestMethod( M, N, K: SIZE ): LONGINT;
 	BEGIN
 		IF M = 1 THEN
 			IF N < 32 THEN RETURN cMatMulScalarProduct
@@ -5727,11 +5737,12 @@ VAR
 		 CCCCCC           	AAAAA           	BBBBB
 	*)
 
-	PROCEDURE MatMulR( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulR( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	(*! heuristics for choice of different methods needs improvement *)
 	(*! transpose if superior*)
 	(*! provide special variant for small [up to 4x4] matrices *)
-	VAR M, N, K: LONGINT;
+	VAR M, N, K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );
 
@@ -5771,8 +5782,9 @@ VAR
 		END;
 	END MatMulR;
 
-	PROCEDURE MatMulX( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
-	VAR M, N, K: LONGINT;
+	PROCEDURE MatMulX( matrixA, matrixB, matrixC: ADDRESS; 
+		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	VAR M, N, K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );  M := RowsA;  N := ColsB;
 		K := ColsA;
@@ -5814,11 +5826,12 @@ VAR
 		END;
 	END MatMulX;
 
-	PROCEDURE MatMulIncR( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncR( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	(*! heuristics for choice of different methods needs improvement *)
 	(*! transpose if superior*)
 	(*! provide special variant for small [up to 4x4] matrices *)
-	VAR M, N, K: LONGINT;
+	VAR M, N, K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );  M := RowsA;  N := ColsB;
 		K := ColsA;
@@ -5857,8 +5870,9 @@ VAR
 		END;
 	END MatMulIncR;
 
-	PROCEDURE MatMulIncX( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
-	VAR M, N, K: LONGINT;
+	PROCEDURE MatMulIncX( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	VAR M, N, K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );  M := RowsA;  N := ColsB;
 		K := ColsA;
@@ -5895,9 +5909,10 @@ VAR
 		END;
 	END MatMulIncX;
 
-	PROCEDURE MatMulARARBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulARARBlocked( matrixA, matrixB, matrixC: ADDRESS; 
+		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 															 add: BOOLEAN ): BOOLEAN;
-	VAR M, N, K, L2M, L2N, L2K: LONGINT;
+	VAR M, N, K, L2M, L2N, L2K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );  M := RowsA;  N := ColsB;
 		K := ColsA;  MagicBlockR( M, N, K, L2M, L2N, L2K );
@@ -5912,9 +5927,10 @@ VAR
 		RETURN TRUE;
 	END MatMulARARBlocked;
 
-	PROCEDURE MatMulAXAXBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
+	PROCEDURE MatMulAXAXBlocked( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 															 add: BOOLEAN ): BOOLEAN;
-	VAR M, N, K, L2M, L2N, L2K: LONGINT;
+	VAR M, N, K, L2M, L2N, L2K: SIZE;
 	BEGIN
 		ASSERT( ColsA = RowsB );  M := RowsA;  N := ColsB;
 		K := ColsA;  MagicBlockX( M, N, K, L2M, L2N, L2K );
@@ -5931,7 +5947,8 @@ VAR
 		RETURN TRUE;
 	END MatMulAXAXBlocked;
 
-	PROCEDURE MatMulRNaive( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulRNaive( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		MatMulARARNaiive( matrixA, matrixB, matrixC, IncA, StrideA,
 									   IncB, StrideB, IncC, StrideC, RowsA,
@@ -5939,7 +5956,8 @@ VAR
 		RETURN TRUE;
 	END MatMulRNaive;
 
-	PROCEDURE MatMulXNaive( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulXNaive( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		MatMulAXAXNaiive( matrixA, matrixB, matrixC, IncA, StrideA,
 									  IncB, StrideB, IncC, StrideC, RowsA,
@@ -5947,7 +5965,8 @@ VAR
 		RETURN TRUE;
 	END MatMulXNaive;
 
-	PROCEDURE MatMulIncRNaive( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncRNaive( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		MatMulARARNaiive( matrixA, matrixB, matrixC, IncA, StrideA,
 									   IncB, StrideB, IncC, StrideC, RowsA,
@@ -5955,7 +5974,8 @@ VAR
 		RETURN TRUE;
 	END MatMulIncRNaive;
 
-	PROCEDURE MatMulIncXNaive( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncXNaive( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		MatMulAXAXNaiive( matrixA, matrixB, matrixC, IncA, StrideA,
 									  IncB, StrideB, IncC, StrideC, RowsA,
@@ -5963,7 +5983,8 @@ VAR
 		RETURN TRUE;
 	END MatMulIncXNaive;
 
-	PROCEDURE MatMulXTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulXTransposed( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXTransposed( matrixA, matrixB, matrixC,
 														    IncA, StrideA, IncB,
@@ -5972,7 +5993,8 @@ VAR
 														    ColsB, FALSE );
 	END MatMulXTransposed;
 
-	PROCEDURE MatMulIncXTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncXTransposed( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXTransposed( matrixA, matrixB, matrixC,
 														    IncA, StrideA, IncB,
@@ -5981,7 +6003,8 @@ VAR
 														    ColsB, TRUE )
 	END MatMulIncXTransposed;
 
-	PROCEDURE MatMulRTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulRTransposed( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARTransposed( matrixA, matrixB, matrixC,
 															 IncA, StrideA, IncB,
@@ -5990,7 +6013,8 @@ VAR
 															 ColsB, FALSE );
 	END MatMulRTransposed;
 
-	PROCEDURE MatMulIncRTransposed( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncRTransposed( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARTransposed( matrixA, matrixB, matrixC,
 															 IncA, StrideA, IncB,
@@ -5999,7 +6023,8 @@ VAR
 															 ColsB, TRUE )
 	END MatMulIncRTransposed;
 
-	PROCEDURE MatMulXSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulXSSEStride( matrixA, matrixB, matrixC: ADDRESS; 
+		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXSSEStride( matrixA, matrixB, matrixC,
 														  IncA, StrideA, IncB, StrideB,
@@ -6008,7 +6033,8 @@ VAR
 														  FALSE );
 	END MatMulXSSEStride;
 
-	PROCEDURE MatMulIncXSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncXSSEStride( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXSSEStride( matrixA, matrixB, matrixC,
 														  IncA, StrideA, IncB, StrideB,
@@ -6017,7 +6043,8 @@ VAR
 														  TRUE );
 	END MatMulIncXSSEStride;
 
-	PROCEDURE MatMulRSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulRSSEStride( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARSSEStride( matrixA, matrixB, matrixC,
 														   IncA, StrideA, IncB, StrideB,
@@ -6026,7 +6053,8 @@ VAR
 														   FALSE );
 	END MatMulRSSEStride;
 
-	PROCEDURE MatMulIncRSSEStride( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncRSSEStride( matrixA, matrixB, matrixC: ADDRESS;
+		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARSSEStride( matrixA, matrixB, matrixC,
 														   IncA, StrideA, IncB, StrideB,
@@ -6035,7 +6063,8 @@ VAR
 														   TRUE )
 	END MatMulIncRSSEStride;
 
-	PROCEDURE MatMulRBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulRBlocked( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARBlocked( matrixA, matrixB, matrixC,
 													    IncA, StrideA, IncB, StrideB,
@@ -6043,7 +6072,8 @@ VAR
 													    RowsB, ColsB, FALSE )
 	END MatMulRBlocked;
 
-	PROCEDURE MatMulIncRBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncRBlocked( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulARARBlocked( matrixA, matrixB, matrixC,
 													    IncA, StrideA, IncB, StrideB,
@@ -6051,7 +6081,8 @@ VAR
 													    RowsB, ColsB, TRUE )
 	END MatMulIncRBlocked;
 
-	PROCEDURE MatMulXBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulXBlocked( matrixA, matrixB, matrixC: ADDRESS;
+	 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXBlocked( matrixA, matrixB, matrixC,
 													   IncA, StrideA, IncB, StrideB,
@@ -6059,7 +6090,8 @@ VAR
 													   RowsB, ColsB, FALSE )
 	END MatMulXBlocked;
 
-	PROCEDURE MatMulIncXBlocked( matrixA, matrixB, matrixC: ADDRESS;  IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
+	PROCEDURE MatMulIncXBlocked( matrixA, matrixB, matrixC: ADDRESS;
+		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXBlocked( matrixA, matrixB, matrixC,
 													   IncA, StrideA, IncB, StrideB,

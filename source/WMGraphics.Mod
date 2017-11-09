@@ -24,8 +24,6 @@ CONST
 	Yellow* = LONGINT(0FFFF00FFH); 
 	Magenta* = LONGINT(0FF00FFFFH); 
 	Cyan* = 00FFFFFFH;
-	
-
 
 TYPE
 	Real* = REAL;
@@ -757,13 +755,23 @@ BEGIN
 END RGBAToColor;
 
 PROCEDURE Dark*(color:Color):Color;
+VAR c:Color;
 BEGIN
-	RETURN LONGINT((color MOD 100000000H+0FFH) DIV 2);
+	c := MAX(0, (color DIV 1000000H) MOD 100H-40H);
+	c := 100H * c + MAX(0, (color DIV 10000H) MOD 100H - 40H);
+	c := 100H * c +MAX(0, (color DIV 100H) MOD 100H-40H);
+	c := 100H * c + color MOD 100H;
+	RETURN LONGINT(c);
 END Dark;
 
 PROCEDURE Light*(color:Color):Color;
+VAR c:Color;
 BEGIN
-	RETURN LONGINT((color MOD 100000000H + 0FFFFFFFFH MOD 100000000H) DIV 2);
+	c := MIN(0FFH, (color DIV 1000000H) MOD 100H + 40H);
+	c := 100H * c + MIN(0FFH, (color DIV 10000H) MOD 100H + 40H);
+	c := 100H * c +MIN(0FFH, (color DIV 100H) MOD 100H + 40H);
+	c := 100H * c + color MOD 100H;
+	RETURN LONGINT(c);
 END Light;
 
 PROCEDURE CheckImage(obj: ANY; VAR cont: BOOLEAN);

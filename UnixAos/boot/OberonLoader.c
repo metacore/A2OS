@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <sys/uio.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -24,7 +25,7 @@
 #include <dlfcn.h>
 
 #define Offset 10*1024	/* startpos of oberon.bin if it is appended to the loader binary */
-#define Bufsize 2*1024*1024
+#define BlkSize 4*1024
 
 typedef void (*OberonProc)();
 typedef void *addr;
@@ -44,12 +45,20 @@ typedef struct {  /* cf. Generic.Unix.I386.Glue.Mod */
     int  *argc;
     addr *argv;
     addr *env;
+    addr *cout;
 } *Header;
 
 char *coreID = "Oberon32G.binary";
 
 addr buf;
 int fd;
+uint bufsize;
+
+void cout( char c ) {
+   char buf[8];
+   buf[0] = c;
+   write( 1, &buf, 1 );
+}
 
 uint ReadInteger( ) {
    union {
@@ -81,7 +90,6 @@ int main( int argc, char *argv[], char *env[] ) {
    addr a;
    uint binpos;
 
-   r = posix_memalign( &buf, 64*1024, Bufsize );
    a = realpath( argv[0], path );
    fd = open( path, O_RDONLY );
    r = fstat( fd, &sb );
@@ -93,31 +101,36 @@ int main( int argc, char *argv[], char *env[] ) {
       binpos = 0;
       fd = open( "oberon.bin", O_RDONLY );
    }
+   buf = malloc( 512 );
    n = read( fd, buf, 256 );
    header = (Header)buf;
    if (strcmp(header->id, coreID) != 0) {
       printf( "bad headerId: %s, expected: %s\n", header->id, coreID );
       exit( 2 );
    }
-   if ((header->base != 0) & (header->base != buf)) {
-      printf( "bad displacement: %x, expected: %x\n", header->base, buf );
-      exit( 3 );
-   }
    binsize = header->codesize;
    relocations = header->relocations;
 
+   bufsize = BlkSize;
+   while (bufsize < binsize) bufsize += BlkSize;
    r = lseek( fd, binpos, SEEK_SET );
-   n = read( fd, buf, binsize );
 
+   free( buf );
+   r = posix_memalign( &buf, BlkSize, bufsize );
+   if (mprotect( buf, bufsize, PROT_READ|PROT_WRITE|PROT_EXEC) != 0)
+      perror("mprotect");
+   n = read( fd, buf, binsize );
 
    Relocate( relocations );
 
+   header = (Header)buf;
    *(header->dlopenaddr) = dlopen;
    *(header->dlcloseaddr) = dlclose;
    *(header->dlsymaddr) = dlsym;
    *(header->argc) = argc;
    *(header->argv) = argv;
-   *(header->env) = env;
+   *(header->env)  = env;
+   *(header->cout) = cout;
 
    header->entry();
    return (0);

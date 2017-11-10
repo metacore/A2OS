@@ -2977,7 +2977,11 @@ TYPE
 			ELSE
 				sizeInBytes := vop.type.sizeInBits DIV 8;
 				length := vop.type.length;
-				AllocateStack(sizeInBytes*length);
+				IF sizeInBytes * length * 8 < cpuBits THEN 
+					AllocateStack(cpuBits DIV 8);
+				ELSE
+					AllocateStack(sizeInBytes*length);
+				END;
 				Assembler.InitMem(memop, SHORTINT(sizeInBytes*length),SP,0);
 				IF backend.forceFPU THEN
 					emitter.Emit1(InstructionSet.opFLD,op); INC(fpStackPointer);
@@ -3605,3 +3609,6 @@ BEGIN
 	Init;
 	usePool := Machine.NumberOfProcessors()>1;
 END FoxAMDBackend.
+
+
+SystemTools.FreeDownTo FoxAMDBackend ~

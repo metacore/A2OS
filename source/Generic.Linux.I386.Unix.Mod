@@ -149,12 +149,13 @@ TYPE
 	ConditionType = ARRAY 12 OF WORD;
 
 	Sigset_t= ARRAY 32 OF ADDRESS;
-	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp: ADDRESS );
+	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
 	pid_t*		= LONGINT;
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
+	off_t*	= SIZE;
 
 
 CONST
@@ -800,11 +801,11 @@ VAR
 	END CopyContext;
 
 
-	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: LONGINT );
+	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: LONGINT );
 	BEGIN
-		cont.mc.r_pc := pc;
-		cont.mc.r_bp := bp;
-		cont.mc.r_sp := sp;
+		cont.r_pc := pc;
+		cont.r_bp := bp;
+		cont.r_sp := sp;
 	END ModifyContext;
 
 	PROCEDURE Perror*( CONST msg: ARRAY OF CHAR );
@@ -910,21 +911,22 @@ VAR
 
 
 
-	VAR trap: SignalHandler;
+	VAR trap: SignalTrap;
 
-	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: ADDRESS); (* reversed arguments !! *)
+	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF trap # NIL THEN
-			trap( sig, scp, ucp );
+			Trace.Address( ucp ); Trace.Ln;
+			trap( sig, S.VAL( Mcontext, ADDRESSOF( ucp.mc ) ) )
 		ELSE
 			TRACE( sig, scp, ucp )
 		END;
 	END SigHandler;
 
-	PROCEDURE InstallSignalHandler* ( h: SignalHandler );
+	PROCEDURE InstallTrap* ( h: SignalTrap );
 	BEGIN
 		trap := h;
-	END InstallSignalHandler;
+	END InstallTrap;
 
 
 
@@ -938,13 +940,12 @@ VAR
 		IF sig = SIGSEGV THEN (* segmentation violation *)
 			act.sa_flags :=  SA_SIGINFO +  SA_ONSTACK +  SA_NODEFER;
 		ELSE
-			act.sa_flags :=  SA_SIGINFO + (* SA_ONSTACK + *) SA_NODEFER;
+			act.sa_flags :=  SA_SIGINFO + SA_NODEFER;
 		END;
 		act.sa_handler := ADDRESS OF SigHandler;
 		IF sigaction( sig, ADDRESS OF act, 0 ) # 0 THEN
 			Perror("sigaction");
-		END;
-
+		END
 	END InstallHandler;
 
 	PROCEDURE fstat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;

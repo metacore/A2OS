@@ -6,7 +6,7 @@ MODULE Traps;  (** AUTHOR "G.F."; PURPOSE "Exception Trap and symbolic debugging
 (* 2000.02.06	g.f.	UnixOberon release 2.3.6d	*)
 (* 2006.07.09	g.f.	UnixAos version	*)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Objects, Machine, Heaps, Streams, Modules, Reflection,
+IMPORT S := SYSTEM, Trace, Unix, Objects, Machine, Streams, Modules, Reflection,
 		TrapWriters, Commands, StdIO;
 
 CONST
@@ -87,19 +87,21 @@ VAR
 
 	END FinishTrap;
 
-	PROCEDURE Registers(CONST c:Unix.McontextDesc; w: Streams.Writer);
+	PROCEDURE Registers( CONST mc: Unix.Mcontext; w: Streams.Writer );
 	BEGIN
-		w.String("EAX= "); w.Address(c.r_ax);
-		w.String(" EBX= "); w.Address(c.r_bx);
-		w.String(" ECX= "); w.Address(c.r_cx);
-		w.String(" EDX= "); w.Address(c.r_dx);
-		w.String(" ESI= "); w.Address(c.r_si);
-		w.String(" EDI= "); w.Address(c.r_di);
-		w.Ln;
+		w.String( "SP  = " );  w.Address( mc.r_sp );  
+		w.String( " FP  = " );  w.Address( mc.r_bp );
+		w.String( " PC  = " );  w.Address( mc.r_pc );  w.Ln;
+		w.String( "EAX = "); w.Address( mc.r_ax );
+		w.String(" EBX = "); w.Address( mc.r_bx );
+		w.String(" ECX = "); w.Address( mc.r_cx );
+		w.String(" EDX = "); w.Address( mc.r_dx );
+		w.String(" ESI = "); w.Address( mc.r_si );
+		w.String(" EDI = "); w.Address( mc.r_di );  w.Ln;
 	END Registers;
 
 
-	PROCEDURE Trap( sig: LONGINT;  ucp: Unix.Ucontext);
+	PROCEDURE Trap( sig: LONGINT;  mc: Unix.Mcontext);
 	VAR
 		pc, sp, bp: ADDRESS;
 		trapno: LONGINT;
@@ -107,16 +109,11 @@ VAR
 		handler: ExceptionHandler;
 		w: Streams.Writer;
 	BEGIN
-		LockTrap;
-		IF trace THEN
-			Machine.Acquire( Machine.TraceOutput );
-			Trace.Ln;
-			Trace.String( "Aos Trap:  signal = " );  Trace.Int( sig, 0 );
-			Trace.String( ",  ucp = " );  Trace.Address( S.VAL( ADDRESS, ucp ) );
-			Trace.String( ", traphandling  level = " ); Trace.Int( trapHandlingLevel, 1 );
-			Trace.Ln;
-			Machine.Acquire( Machine.TraceOutput );
+		IF sig IN {1, 2, 14, 15} (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
+			(* ignore *) RETURN
 		END;
+		
+		LockTrap;
 		
 		INC( trapHandlingLevel );
 		IF trapHandlingLevel > MaxRecursion THEN  
@@ -124,7 +121,6 @@ VAR
 			Objects.Terminate
 		END;
 		
-
 		w := TrapWriters.GetWriter();
 		w.Char( 1X );   (* begin of trap text *)
 
@@ -133,17 +129,15 @@ VAR
 		IF trapHandlingLevel = 1 THEN
 			w.String( "Trap " );
 		ELSE
-			w.String( "[recursive Trap] " );
+			w.String( "[Recursive Trap] " );
 		END;
-				
-		sp := ucp.mc.r_sp;
 		CASE sig OF
 		| 1:		w.String( "1 (Hangup signal)" );
 		| 2:  	w.String( "2 (User interrupt)" );
 		| 3:		w.String( "3 (Quit signal)" );
 		| 4:  	w.String( "4 (Illegal instruction)" );
 		| 5:   	w.String( "5." );
-				S.GET( sp, trapno );  w.Int( trapno, 0 );
+				S.GET( mc.r_sp, trapno );  w.Int( trapno, 0 );
 				CASE trapno OF
 				| 1:		w.String( "  (WITH guard failed)" )
 				| 2:		w.String( "  (CASE invalid)" )
@@ -167,23 +161,20 @@ VAR
 		ELSE
 			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );
 		END;
+		w.Ln; w.Ln;
+		Registers( mc, w );	
 		w.Ln;
 		
 		process := Objects.CurrentProcess( );
-		pc := ucp.mc.r_pc;  bp := ucp.mc.r_bp;
+		sp := mc.r_sp;  pc := mc.r_pc;  bp := mc.r_bp;
 		IF pc = 0 THEN
 			(* assume call of procedure variable with value NIL *)
 			S.GET( sp, pc );   (* get return address on top of stack *)
 		END;
-		w.Ln;
-					
-		w.String( "    sp = " );  w.Address( sp );  w.String( ", fp = " );  w.Address( bp );
-		w.String( ", pc = " );  w.Address( pc );  w.Ln;
-		w.Ln;
-		Registers( ucp.mc, w );
+		
 		IF process # NIL THEN
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
-			SearchExceptionHandler( process, ucp, handler ); 
+			SearchExceptionHandler( process, mc, handler ); 
 		ELSE
 			(* avoid recusive trap in case of faulty module Objects *)
 			Reflection.StackTraceBack( w, pc, bp, sp, sp+512, TRUE, FALSE );
@@ -201,7 +192,7 @@ VAR
 				w.Ln;
 				w.String( "### program continues with exception handler ###" );   w.Ln;
 
-				Unix.ModifyContext( ucp, handler.pc, handler.fp, handler.sp );
+				Unix.ModifyContext( mc, handler.pc, handler.fp, handler.sp );
 				RETURN  (*! to exception handler !! *)
 			END
 		END;
@@ -227,7 +218,7 @@ VAR
 		END;
 	END UnlockOberon;
 
-	PROCEDURE CheckBP(fp: ADDRESS): ADDRESS;
+	PROCEDURE CheckBP( fp: ADDRESS ): ADDRESS;
 	VAR n: ADDRESS;
 	BEGIN
 		IF (fp # NIL) THEN
@@ -239,11 +230,11 @@ VAR
 	
 	
 
-	PROCEDURE SearchExceptionHandler( process: Objects.Process;  cont: Unix.Ucontext;  VAR handler: ExceptionHandler );
+	PROCEDURE SearchExceptionHandler( process: Objects.Process;  mc: Unix.Mcontext;  VAR handler: ExceptionHandler );
 	VAR entry, fp, sp, pc: ADDRESS;
 	BEGIN
 		handler.pc := 0;  (* no handler *)
-		pc := cont.mc.r_pc;  fp := cont.mc.r_bp;  sp := cont.mc.r_sp;
+		pc := mc.r_pc;  fp := mc.r_bp;  sp := mc.r_sp;
 		IF pc = 0 THEN
 			(* assume call of procedure variable with value NIL *)
 			S.GET( sp, pc );   (* get return address on top of stack *)
@@ -263,19 +254,9 @@ VAR
 	END SearchExceptionHandler;
 
 
-	PROCEDURE SignalHandler( signal: LONGINT;  scp, ucp: ADDRESS );
-		(* 'dummy' for 16 byte stack alignment, MacOS! *)
-	BEGIN
-		IF ~(signal IN  {1, 2, 14, 15}) (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
-			Trap( signal, S.VAL( Unix.Ucontext, ucp ))
-		END
-	END SignalHandler;
-
-
-
 BEGIN
 	trapMutex := Unix.NewRecursiveMtx( );
 	trace := FALSE;  
-	Unix.InstallSignalHandler( SignalHandler );
+	Unix.InstallTrap( Trap );
 	unix := StdIO.env
 END Traps.

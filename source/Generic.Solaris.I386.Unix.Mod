@@ -326,7 +326,7 @@ TYPE
 			END;
 
 	Sigset = ARRAY 4 OF SET;
-	SignalHandler = PROCEDURE ( sig: LONGINT; scp, ucp: ADDRESS ); 
+	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext ); 
 
 	Stack* = RECORD
 				sp*	: ADDRESS;
@@ -386,20 +386,20 @@ TYPE
 	END;
 			
 	pid_t*	= LONGINT;
+	off_t* = SIZE;
 	
 	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): LONGINT;
 	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): LONGINT;
 	
 	
 VAR
-	suspend_mutex: MutexDesc;
 	handler_done: BOOLEAN;
 	mainthread: Thread_t;
 	sasuspend: Sigaction;
 	
 	argc-: LONGINT;  argv-: ADDRESS;  environ: ADDRESS;
 	
-	trap: SignalHandler;
+	trap: SignalTrap;
 	
 	oberonXErrorHandler: OberonXErrorHandler; 
 	oberonXIOErrorHandler: OberonXIOErrorHandler;
@@ -537,12 +537,12 @@ VAR
 	libraryPaths: ARRAY 7 OF ARRAY 32 OF CHAR;
 	noPaths: LONGINT;
 	
-	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: LONGINT );
+	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: LONGINT );
 	BEGIN
-		cont.mc.r_pc := pc;
-		cont.mc.r_bp := bp;
-		cont.mc.r_nsp := sp;	
-		cont.mc.r_sp := sp;	
+		cont.r_pc := pc;
+		cont.r_bp := bp;
+		cont.r_nsp := sp;	
+		cont.r_sp := sp;	
 	END ModifyContext;
 	
 	PROCEDURE CopyContext*( CONST from: McontextDesc; VAR to: McontextDesc );
@@ -579,16 +579,16 @@ VAR
 			suspendHandler( ucp );
 			handler_done := TRUE;
 		ELSIF trap # NIL THEN 
-			trap( sig, scp, ucp );
+			trap( sig, S.VAL( Mcontext, ADDRESSOF( ucp.mc ) ) );
 		ELSE
 			Trace.String( "Unix.SigHandler: sig = " ); Trace.Int( sig, 0 ); Trace.Ln;  exit( -1 );
 		END;
 	END SigHandler;
 	
-	PROCEDURE InstallSignalHandler* ( h: SignalHandler );
+	PROCEDURE InstallTrap* ( h: SignalTrap );
 	BEGIN
 		trap := h;
-	END InstallSignalHandler;
+	END InstallTrap;
 
 	
 	PROCEDURE InstallHandler( sig: LONGINT );
@@ -624,7 +624,6 @@ VAR
 	
 	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
 	BEGIN	    
-		ASSERT( pthread_mutex_init( ADDRESSOF( suspend_mutex ), NIL ) = 0);
 		mainthread := pthread_self();
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );

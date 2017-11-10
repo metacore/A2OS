@@ -15,6 +15,7 @@ VAR
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS ): ADDRESS;
 	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
+	cout		: PROCEDURE {C} ( ch: CHAR );	(* console output *)
 
 	stackBottom-	: ADDRESS;	(* of main thread *)
 	
@@ -25,41 +26,26 @@ VAR
 
 	PROCEDURE {INITIAL, NOPAF} Header;		(* header needed by OberonLoader *)
 	CODE
-		DB 'Oberon32G.binary'
+		DB 'Oberon32G.binary'	; ID (24 byte)
 		DD 0
 		DD 0
 		DD 0				; size of statially linked binary	( filled in by static linker )
 		DD 0				; #relocations if base = 0	( filled in by static linker )
 		DD 08070000H 	; base 								( set 0 by static linker )
-		DD @Init0		; Loader <-- Oberon 
+		DD @Init0		; Loader <-- Oberon (entrypoint)
 		DD @dlopen		; Loader --> Oberon 
 		DD @dlclose		; Loader --> Oberon 
 		DD @dlsym		; Loader --> Oberon 
 		DD @argc			; Loader --> Oberon 
 		DD @argv			; Loader --> Oberon 
-		DD @environ		; Loader --> Oberon 
+		DD @environ		; Loader --> Oberon
+		DD @cout			; Loader --> Oberon
 	END Header;		
 	
-	PROCEDURE {NOPAF} putc*( file: ADDRESS; c: CHAR );
-	CODE
-		PUSH ECX
-		MOV EAX, 4
-		MOV EBX, [ESP + 12]
-		LEA ECX, [ESP+8]	
-		MOV EDX, 1
-		INT 80H
-		POP ECX
-		JNE fail
-		MOV EAX, [ESP + 4]
-		RET
-		fail:
-		MOV EAX, -1
-		RET
-	END putc;
 	
  	PROCEDURE Char ( c: CHAR );
 	BEGIN
-		putc( 1, c )
+		cout( c )
 	END Char;
 
 
@@ -73,6 +59,7 @@ VAR
 	
 	PROCEDURE {INITIAL, NOPAF} Init0;
 	VAR localvar: LONGINT;
+	CONST CR = 0DX; NL = 0AX;
 	BEGIN
 		baseAdr := ADDRESSOF( Header );
 		endAdr := ADDRESSOF( last );
@@ -98,7 +85,7 @@ END Glue.
 
 Compiler.Compile -p=Linux32G
 		Runtime.Mod Trace.Mod 
-		Generic.Solaris.I386.Glue.Mod  Generic.Solaris.I386.Unix.Mod  Generic.Unix.I386.Machine.Mod	
+		Generic.Unix.I386.Glue.Mod  Generic.Solaris.I386.Unix.Mod  Generic.Unix.I386.Machine.Mod	
 		Heaps.Mod  Generic.Modules.Mod  Generic.Solaris.Objects.Mod  Unix.Kernel.Mod
 		KernelLog.Mod  Streams.Mod  Pipes.Mod  Commands.Mod  TrapWriters.Mod  Generic.Reflection.Mod	
 		Unix.StdIO.Mod  Generic.Unix.Traps.Mod  UTF8Strings.Mod  Files.Mod  Unix.UnixFiles.Mod

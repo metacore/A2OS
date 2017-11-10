@@ -45,7 +45,7 @@ CONST
 	EndBlockOfs = 38H;	(* cf. Linker0 *)
 	MemoryBlockOfs = BlockHeaderSize + RecordDescSize + BlockHeaderSize; (* memory block (including header) starts at offset HeaderSize *)
 
-	MemBlockSize = 32*1024*1024; (* must be multiple of StaticBlockSize *)
+	MemBlockSize = 128*1024*1024; (* must be multiple of StaticBlockSize *)
 	MinMemBlockSize = 4*1024*1024;
 
 	NilVal = 0;

@@ -6,11 +6,11 @@ VAR
 	DefaultLog, Log-: Streams.Writer;  f: Files.File;  lock: Locks.RWLock;
 
 	PROCEDURE Memory*( from, tov: ADDRESS );
-	VAR i: ADDRESS; val: LONGINT;
+	VAR i: ADDRESS; val: SIZE;
 	BEGIN
 		Log.String( ">>>>>" );  Log.Ln;
 		IF from = 0 THEN Log.String( "NIL Region" );  Log.Ln;  ELSE
-			FOR i := from TO tov BY 4 DO
+			FOR i := from TO tov BY SIZEOF(ADDRESS) DO
 				Log.Address( i );  Log.String( "H (" );  Log.Int( i, 0 );
 				Log.String( "," );  Log.Int( i - from, 4 );  Log.String( ") " );
 				SYSTEM.GET( i, val );  Log.Address( val );  Log.String( "H = " );

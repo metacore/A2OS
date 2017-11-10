@@ -24,17 +24,17 @@ CONST
 TYPE
 	HENV = POINTER TO HENVDesc;
 	HENVDesc = RECORD
-			henv: LONGINT
+			henv: Kernel32.HANDLE;
 		END;
 
 	HDBC* = POINTER TO HDBCDesc;
 	HDBCDesc* = RECORD
-			hdbc: LONGINT
+			hdbc: Kernel32.HANDLE;
 		END;
 
 	HSTMT* = POINTER TO HSTMTDesc;
 	HSTMTDesc* = RECORD
-			hstmt: LONGINT
+			hstmt: Kernel32.HANDLE;
 		END;
 
 (*
@@ -44,7 +44,7 @@ TYPE
 *)
 
 VAR
-	lib: LONGINT;
+	lib: ADDRESS;
 	env: HENV;
 
 	res1*: INTEGER;
@@ -53,390 +53,390 @@ VAR
 (*	Core Functions Prototypes	*)
 
 	SQLAllocConnect: PROCEDURE {WINAPI} (
-		henv: LONGINT;
-		hdbc: LONGINT): INTEGER;
+		henv: Kernel32.HANDLE;
+		hdbc: ADDRESS): INTEGER;
 
 	SQLAllocEnv: PROCEDURE {WINAPI} (
-		henv: LONGINT): INTEGER;
+		henv: Kernel32.HANDLE): INTEGER;
 
 	SQLAllocStmt: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
-		hstmt: LONGINT): INTEGER;
+		hdbc: ADDRESS;
+		hstmt: Kernel32.HANDLE): INTEGER;
 
 	SQLBindCol: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		icol: INTEGER;
 		fcType: INTEGER;
-		rgbValue: LONGINT;
+		rgbValue: ADDRESS;
 		cbValueMax: LONGINT;
-		pcbValue: LONGINT): INTEGER;
+		pcbValue: ADDRESS): INTEGER;
 
 	SQLCancel: PROCEDURE {WINAPI} (
-		hstmt: LONGINT): INTEGER;
+		hstmt: ADDRESS): INTEGER;
 
 	SQLColAttributes: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		icol: INTEGER;
 		fDescType: INTEGER;
-		rgbDesc: LONGINT;
+		rgbDesc: ADDRESS;
 		cbDescMax: INTEGER;
-		pcbDesc: LONGINT;
-		pfDesc: LONGINT): INTEGER;
+		pcbDesc: ADDRESS;
+		pfDesc: ADDRESS): INTEGER;
 
 	SQLConnect: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
-		DSN: LONGINT;
+		hdbc: ADDRESS;
+		DSN: ADDRESS;
 		DSNMax: INTEGER;
-		UID: LONGINT;
+		UID: ADDRESS;
 		UIDMax: INTEGER;
-		AuthStr: LONGINT;
+		AuthStr: ADDRESS;
 		AuthStrMax: INTEGER): INTEGER;
 
 	SQLDescribeCol: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		icol: INTEGER;
-		szColName: LONGINT;
+		szColName: ADDRESS;
 		cbColNameMax: INTEGER;
-		pcbColName: LONGINT;
-		pfSqlType: LONGINT;
-		pcbColDef: LONGINT;
-		pibScale: LONGINT;
-		pfNullable: LONGINT): INTEGER;
+		pcbColName: ADDRESS;
+		pfSqlType: ADDRESS;
+		pcbColDef: ADDRESS;
+		pibScale: ADDRESS;
+		pfNullable: ADDRESS): INTEGER;
 
 	SQLDisconnect: PROCEDURE {WINAPI} (
-		hdbc: LONGINT): INTEGER;
+		hdbc: Kernel32.HANDLE): INTEGER;
 
 	SQLError: PROCEDURE {WINAPI} (
-		henv: LONGINT;
-		hdbc: LONGINT;
-		hstmt: LONGINT;
-		szSqlState: LONGINT;
-		pfNativeError: LONGINT;
-		szErrorMessage: LONGINT;
+		henv: ADDRESS;
+		hdbc: Kernel32.HANDLE;
+		hstmt: Kernel32.HANDLE;
+		szSqlState: ADDRESS;
+		pfNativeError: ADDRESS;
+		szErrorMessage: ADDRESS;
 		cbErrorMessage: INTEGER;
-		pcbErrorMessage: LONGINT): INTEGER;
+		pcbErrorMessage: ADDRESS): INTEGER;
 
 	SQLExecDirect: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		szSqlStr: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		szSqlStr: ADDRESS;
 		cbSqlStr: INTEGER): INTEGER;
 
 	SQLExecute: PROCEDURE {WINAPI} (
-		hstmt: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE): INTEGER;
 
 	SQLFetch: PROCEDURE {WINAPI} (
-		hstmt: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE): INTEGER;
 
 	SQLFreeConnect: PROCEDURE {WINAPI} (
-		hdbc: LONGINT): INTEGER;
+		hdbc: Kernel32.HANDLE): INTEGER;
 
 	SQLFreeEnv: PROCEDURE {WINAPI} (
-		henv: LONGINT): INTEGER;
+		henv: ADDRESS): INTEGER;
 
 	SQLFreeStmt: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		fOption: INTEGER): INTEGER;
 
 	SQLGetCursorName: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		szCursor: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		szCursor: ADDRESS;
 		cbCursorMax: INTEGER;
-		pcbCursor: LONGINT): INTEGER;
+		pcbCursor: ADDRESS): INTEGER;
 
 	SQLNumResultCols: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		pccol: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE;
+		pccol: ADDRESS): INTEGER;
 
 	SQLPrepare: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		szSqlStr: LONGINT;
-		cbSqlStr: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE;
+		szSqlStr: ADDRESS;
+		cbSqlStr: ADDRESS): INTEGER;
 
 	SQLRowCount: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		pcrow: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE;
+		pcrow: ADDRESS): INTEGER;
 
 	SQLSetCursorName: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		szCursor: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		szCursor: ADDRESS;
 		cbCursor: INTEGER): INTEGER;
 
 	SQLTransact: PROCEDURE {WINAPI} (
-		henv: LONGINT;
-		hdbc: LONGINT;
+		henv: ADDRESS;
+		hdbc: Kernel32.HANDLE;
 		fType: INTEGER): INTEGER;
 
 (*	Level 1 Functions	*)
 
 	SQLColumns: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		tableQualifier: ADDRESS;
 		qualLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		ownerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		nameLen: INTEGER;
-		columnName: LONGINT;
+		columnName: ADDRESS;
 		colNameLen: INTEGER): INTEGER;
 
 	SQLDriverConnect: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
-		hwnd: LONGINT;
-		connStrIn: LONGINT;
+		hdbc: Kernel32.HANDLE;
+		hwnd: ADDRESS;
+		connStrIn: ADDRESS;
 		connStrInLen: INTEGER;
-		connStrOut: LONGINT;
+		connStrOut: ADDRESS;
 		connStrOutMaxSize: INTEGER;
-		connStrOutActSize: LONGINT;	(* address of integer containig result len *)
+		connStrOutActSize: ADDRESS;	(* address of integer containig result len *)
 		driverCompletion: INTEGER): INTEGER;
 
 	SQLGetConnectOption: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
+		hdbc: Kernel32.HANDLE;
 		whatOption: INTEGER;
-		option: LONGINT): INTEGER;
+		option: ADDRESS): INTEGER;
 
 	SQLGetData: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		col: INTEGER;
 		resType: INTEGER;
-		resValue: LONGINT;
+		resValue: ADDRESS;
 		resMaxSize: LONGINT;
-		resActSize: LONGINT): INTEGER;	(* address of longint containing result len *)
+		resActSize: ADDRESS): INTEGER;	(* address of longint containing result len *)
 
 	SQLGetFunctions: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
+		hdbc: Kernel32.HANDLE;
 		whichFunction: INTEGER;
-		functExists: LONGINT): INTEGER;
+		functExists: ADDRESS): INTEGER;
 
 	SQLGetInfo: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
+		hdbc: Kernel32.HANDLE;
 		infoType: INTEGER;
-		resInfo: LONGINT;
+		resInfo: ADDRESS;
 		resInfoMaxSize: INTEGER;
-		resInfoActSize: LONGINT): INTEGER;	(* address of integer containing result len *)
+		resInfoActSize: ADDRESS): INTEGER;	(* address of integer containing result len *)
 
 	SQLGetStmtOption: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		whichOption: INTEGER;
-		option: LONGINT): INTEGER;
+		option: ADDRESS): INTEGER;
 
 	SQLGetTypeInfo: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		whichType: INTEGER): INTEGER;
 
 	SQLParamData: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		dataAdr: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE;
+		dataAdr: ADDRESS): INTEGER;
 
 	SQLPutData: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		dataAdr: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		dataAdr: ADDRESS;
 		dataSize: LONGINT): INTEGER;
 
 	SQLSetConnectOption: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
+		hdbc: Kernel32.HANDLE;
 		whichOption: INTEGER;
-		option: LONGINT): INTEGER;
+		option: ADDRESS): INTEGER;
 
 	SQLSetStmtOption: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		whichOption: INTEGER;
-		option: LONGINT): INTEGER;
+		option: ADDRESS): INTEGER;
 
 	SQLSpecialColumns: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		whichColType: INTEGER;
-		tableQualifier: LONGINT;
+		tableQualifier: ADDRESS;
 		tabelQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER;
 		scope: INTEGER;
 		nullableCols: INTEGER): INTEGER;
 
 	SQLStatistics: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		tableQualifier: ADDRESS;
 		tableQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER;
 		indexType: INTEGER;
 		accuracy: INTEGER): INTEGER;
 
 	SQLTables: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		tableQualifier: ADDRESS;
 		tableQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER;
-		tableType: LONGINT;
+		tableType: ADDRESS;
 		tableTypeLen: INTEGER): INTEGER;
 
 (*	Level 2 Functions	*)
 
 	SQLBrowseConnect: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
-		connStrIn: LONGINT;
+		hdbc: ADDRESS;
+		connStrIn: ADDRESS;
 		connStrInLen: INTEGER;
-		connStrOut: LONGINT;
+		connStrOut: ADDRESS;
 		connStrOutMaxLen: INTEGER;
-		connStrOutActLen: LONGINT): INTEGER;	(* address of integer *)
+		connStrOutActLen: ADDRESS): INTEGER;	(* address of integer *)
 
 	SQLColumnPrivileges: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: ADDRESS;
+		tableQualifier: ADDRESS;
 		tableQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER;
-		columnName: LONGINT;
+		columnName: ADDRESS;
 		columnNameLen: INTEGER): INTEGER;
 
 	SQLDataSources: PROCEDURE {WINAPI} (
-		henv: LONGINT;
+		henv: ADDRESS;
 		direction: INTEGER;
-		dataSourceName: LONGINT;
+		dataSourceName: ADDRESS;
 		dataSourceNameMaxLen: INTEGER;
-		dataSourceNameActLen: LONGINT;	(* address of integer *)
-		description: LONGINT;
+		dataSourceNameActLen: ADDRESS;	(* address of integer *)
+		description: ADDRESS;
 		descriptionMaxLen: INTEGER;
-		descriptionActLen: LONGINT): INTEGER;	(* address of integer *)
+		descriptionActLen: ADDRESS): INTEGER;	(* address of integer *)
 
 	SQLDescribeParam: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		par: INTEGER;
-		sqlType: LONGINT;	(* address of integer *)
-		colPrecision: LONGINT;	(* address of longint *)
-		colScale: LONGINT;	(* address of integer *)
-		colNullable: LONGINT): INTEGER;	(* address of integer *)
+		sqlType: ADDRESS;	(* address of integer *)
+		colPrecision: ADDRESS;	(* address of longint *)
+		colScale: ADDRESS;	(* address of integer *)
+		colNullable: ADDRESS): INTEGER;	(* address of integer *)
 
 	SQLExtendedFetch: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		fetchType: INTEGER;
 		rowToFetch: LONGINT;
-		numFetchedRows: LONGINT;	(* address of longint *)
-		rowStatus: LONGINT): INTEGER;	(* address of array of integer *)
+		numFetchedRows: ADDRESS;	(* address of longint *)
+		rowStatus: ADDRESS): INTEGER;	(* address of array of integer *)
 
 	SQLForeignKeys: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		primKeyTabQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		primKeyTabQualifier: ADDRESS;
 		primKeyTabQualifierLen: INTEGER;
-		primKeyTabOwner: LONGINT;
+		primKeyTabOwner: ADDRESS;
 		primKeyTabOwnerLen: INTEGER;
-		primKeyTabName: LONGINT;
+		primKeyTabName: ADDRESS;
 		primKeyTabNameLen: INTEGER;
-		forKeyTabQualifier: LONGINT;
+		forKeyTabQualifier: ADDRESS;
 		forKeyTabQualifierLen: INTEGER;
-		forKeyTabOwner: LONGINT;
+		forKeyTabOwner: ADDRESS;
 		forKeyTabOwnerLen: INTEGER;
-		forKeyTabName: LONGINT;
+		forKeyTabName: ADDRESS;
 		forKeyTabNameLen: INTEGER): INTEGER;
 
 	SQLMoreResults: PROCEDURE {WINAPI} (
-		hstmt: LONGINT): INTEGER;
+		hstmt: Kernel32.HANDLE): INTEGER;
 
 	SQLNativeSql: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
-		sqlStrIn: LONGINT;
+		hdbc: Kernel32.HANDLE;
+		sqlStrIn: ADDRESS;
 		sqlStrInLen: LONGINT;
-		sqlStrOut: LONGINT;
+		sqlStrOut: ADDRESS;
 		sqlStrOutMaxLen: LONGINT;
-		sqlStrOutActLen: LONGINT): INTEGER;	(* address of longint *)
+		sqlStrOutActLen: ADDRESS): INTEGER;	(* address of longint *)
 
 	SQLNumParams: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		numParams: LONGINT): INTEGER;	(* address of integer *)
+		hstmt: Kernel32.HANDLE;
+		numParams: ADDRESS): INTEGER;	(* address of integer *)
 
 	SQLParamOptions: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		numRows: LONGINT;
-		curRow: LONGINT): INTEGER;	(* address of longint *)
+		curRow: ADDRESS): INTEGER;	(* address of longint *)
 
 	SQLPrimaryKeys: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		tableQualifier: ADDRESS;
 		tableQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER): INTEGER;
 
 	SQLProcedureColumns: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		procQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		procQualifier: ADDRESS;
 		procQualifierLen: INTEGER;
-		procOwner: LONGINT;
+		procOwner: ADDRESS;
 		procOwnerLen: INTEGER;
-		procName: LONGINT;
+		procName: ADDRESS;
 		procNameLen: INTEGER;
-		columnName: LONGINT;
+		columnName: ADDRESS;
 		columnNameLen: INTEGER): INTEGER;
 
 	SQLProcedures: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		procQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		procQualifier: ADDRESS;
 		procQualifierLen: INTEGER;
-		procOwner: LONGINT;
+		procOwner: ADDRESS;
 		procOwnerLen: INTEGER;
-		procName: LONGINT;
+		procName: ADDRESS;
 		procNameLen: INTEGER): INTEGER;
 
 	SQLSetPos: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: Kernel32.HANDLE;
 		row: INTEGER;
 		op: INTEGER;
 		lock: INTEGER): INTEGER;
 
 	SQLTablePrivileges: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
-		tableQualifier: LONGINT;
+		hstmt: Kernel32.HANDLE;
+		tableQualifier: ADDRESS;
 		tableQualifierLen: INTEGER;
-		tableOwner: LONGINT;
+		tableOwner: ADDRESS;
 		tableOwnerLen: INTEGER;
-		tableName: LONGINT;
+		tableName: ADDRESS;
 		tableNameLen: INTEGER): INTEGER;
 
 	SQLDrivers: PROCEDURE {WINAPI} (
-		henv: LONGINT;
+		henv: ADDRESS;
 		direction: INTEGER;
-		driverDesc: LONGINT;
+		driverDesc: ADDRESS;
 		driverDescMaxLen: INTEGER;
-		driverDescActLen: LONGINT;	(* address of integer *)
-		driverAttributes: LONGINT;
+		driverDescActLen: ADDRESS;	(* address of integer *)
+		driverAttributes: ADDRESS;
 		driverAttributesMaxLen: INTEGER;
-		driverAttributesActLen: LONGINT): INTEGER;	(* address of integer *)
+		driverAttributesActLen: ADDRESS): INTEGER;	(* address of integer *)
 
 	SQLBindParameter: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		parNum: INTEGER;
 		paramType: INTEGER;
 		cType: INTEGER;
 		sqlType: INTEGER;
 		colPrec: LONGINT;
 		colScale: INTEGER;
-		inOutBuff: LONGINT;
+		inOutBuff: ADDRESS;
 		inOutBuffMaxLen: LONGINT;
-		inOutBuffActLen: LONGINT): INTEGER;	(* address of longint *)
+		inOutBuffActLen: ADDRESS): INTEGER;	(* address of longint *)
 
 	(* Level 3 functions *)
 	SQLFetchScroll: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		fetchorientation: INTEGER;
 		fetchoffset: LONGINT): INTEGER;
 
 	SQLSetStmtAttr: PROCEDURE {WINAPI} (
-		hstmt: LONGINT;
+		hstmt: ADDRESS;
 		attribute: LONGINT;
 		value: LONGINT;
 		stringlength: LONGINT): INTEGER;
 
 	SQLSetConnectAttr: PROCEDURE {WINAPI} (
-		hdbc: LONGINT;
+		hdbc: ADDRESS;
 		attribute: LONGINT;
 		valuePtr: LONGINT;
 		stringLength: LONGINT): INTEGER;
@@ -479,7 +479,7 @@ BEGIN
 	res:= SQLCancel(hstmt.hstmt);
 END Cancel;
 
-PROCEDURE ColAttributes*(hstmt: HSTMT; col, fDescType: INTEGER; VAR rgbDesc: ARRAY OF CHAR; VAR pfDesc: LONGINT;
+PROCEDURE ColAttributes*(hstmt: HSTMT; col, fDescType: INTEGER; VAR rgbDesc: ARRAY OF CHAR; VAR pfDesc: ADDRESS;
 VAR res: INTEGER);
 	VAR DescLen: INTEGER;
 BEGIN
@@ -599,7 +599,7 @@ END Rollback;
 (*	-------------------------- interface to level 1 functions --------------------------	*)
 
 PROCEDURE Columns*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER): INTEGER;
-	VAR qualAdr, ownAdr, nameAdr, colAdr: LONGINT; qualLen, ownLen, nameLen, colLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -678,7 +678,7 @@ END SetStmtOption;
 
 PROCEDURE SpecialColumns*(hstmt: HSTMT; colType: INTEGER; tabQualifier, tabOwner, tabName: ARRAY OF CHAR;
 scope: INTEGER; nullables: BOOLEAN; VAR res: INTEGER);
-	VAR nulls: INTEGER; qualAdr, ownAdr, nameAdr: LONGINT; qualLen, ownLen, nameLen: INTEGER;
+	VAR nulls: INTEGER; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
 BEGIN
 	IF nullables THEN nulls:= 1 ELSE nulls:= 0 END;
 	(* should be possible to pass NIL for the 3 arrays *)
@@ -694,7 +694,7 @@ END SpecialColumns;
 
 PROCEDURE  Statistics*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; uniqueIndexes,
 accurate: BOOLEAN; VAR res: INTEGER);
-	VAR indexType, accuracy: INTEGER; qualAdr, ownAdr, nameAdr: LONGINT; qualLen, ownLen, nameLen: INTEGER;
+	VAR indexType, accuracy: INTEGER; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
 BEGIN
 	IF uniqueIndexes THEN indexType:= 0 ELSE indexType:= 1 END;
 	IF accurate THEN accuracy:= 1 ELSE accuracy:= 0 END;
@@ -710,7 +710,7 @@ BEGIN
 END Statistics;
 
 PROCEDURE Tables*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, tabType: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, typeAdr: LONGINT; qualLen, ownLen, nameLen, typeLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr, typeAdr: ADDRESS; qualLen, ownLen, nameLen, typeLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 4 tab... arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -734,7 +734,7 @@ BEGIN
 END BrowseConnect;
 
 PROCEDURE ColumnPrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, colAdr: LONGINT; qualLen, ownLen, nameLen, colLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -779,8 +779,8 @@ END SetStmtAttr;
 
 PROCEDURE ForeignKeys*(hstmt: HSTMT; primKeyTabQualifier, primKeyTabOwner, primKeyTabName, forKeyTabQualifier,
 forKeyTabOwner, forKeyTabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR pQualAdr, pOwnAdr, pNameAdr: LONGINT; pQualLen, pOwnLen, pNameLen: INTEGER;
-		fQualAdr, fOwnAdr, fNameAdr: LONGINT; fQualLen, fOwnLen, fNameLen: INTEGER;
+	VAR pQualAdr, pOwnAdr, pNameAdr: ADDRESS; pQualLen, pOwnLen, pNameLen: INTEGER;
+		fQualAdr, fOwnAdr, fNameAdr: ADDRESS; fQualLen, fOwnLen, fNameLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 6 arrays *)
 	IF (LEN(primKeyTabQualifier) = 1) & (primKeyTabQualifier[0] = 1X) THEN pQualAdr:= 0; pQualLen:= 0
@@ -827,7 +827,7 @@ BEGIN
 END ParamOptions;
 
 PROCEDURE PrimaryKeys*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: LONGINT; qualLen, ownLen, nameLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -841,7 +841,7 @@ BEGIN
 END PrimaryKeys;
 
 PROCEDURE ProcedureColumns*(hstmt: HSTMT; procQualifier, procOwner, procName, colName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, colAdr: LONGINT; qualLen, ownLen, nameLen, colLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(procQualifier) = 1) & (procQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -857,7 +857,7 @@ BEGIN
 END ProcedureColumns;
 
 PROCEDURE Procedures*(hstmt: HSTMT; procQualifier, procOwner, procName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: LONGINT; qualLen, ownLen, nameLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(procQualifier) = 1) & (procQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -876,7 +876,7 @@ BEGIN
 END SetPos;
 
 PROCEDURE TablePrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: LONGINT; qualLen, ownLen, nameLen: INTEGER;
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0

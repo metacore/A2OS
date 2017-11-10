@@ -490,7 +490,7 @@ PROCEDURE ExtendedFunction0(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
 	eax := {};
-	CPUID(SHORT(80000000H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000000H), eax, ebx, ecx, edx);
 	(* The largest extended function as value from offset 8000000H. Since we don't have unsigned integers, ignore the MSB *)
 	cpuInfo.largestExtendedFunction := SYSTEM.VAL(LONGINT, eax - {31});
 	(* ebx, ecx & edx contain the same information as in standard function 0 *)
@@ -499,7 +499,7 @@ END ExtendedFunction0;
 PROCEDURE ExtendedFunction1(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000001H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000001H), eax, ebx, ecx, edx);
 	(* eax contains the same information as in standard function 1 *)
 	(* ebx: brandid, ignore so far*)
 	cpuInfo.extFeatures2 := ecx;
@@ -509,19 +509,19 @@ END ExtendedFunction1;
 PROCEDURE ExtendedFunction2to4(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000002H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000002H), eax, ebx, ecx, edx);
 	GetString(cpuInfo.processorName, 0, eax);
 	GetString(cpuInfo.processorName, 4, ebx);
 	GetString(cpuInfo.processorName, 8, ecx);
 	GetString(cpuInfo.processorName, 12, edx);
 	IF cpuInfo.largestExtendedFunction < 3 THEN RETURN END;
-	CPUID(SHORT(80000003H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000003H), eax, ebx, ecx, edx);
 	GetString(cpuInfo.processorName, 16, eax);
 	GetString(cpuInfo.processorName, 20, ebx);
 	GetString(cpuInfo.processorName, 24, ecx);
 	GetString(cpuInfo.processorName, 28, edx);
 	IF cpuInfo.largestExtendedFunction < 4 THEN RETURN END;
-	CPUID(SHORT(80000004H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000004H), eax, ebx, ecx, edx);
 	GetString(cpuInfo.processorName, 32, eax);
 	GetString(cpuInfo.processorName, 36, ebx);
 	GetString(cpuInfo.processorName, 40, ecx);
@@ -531,7 +531,7 @@ END ExtendedFunction2to4;
 PROCEDURE AmdExtendedFunction5(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000005H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000005H), eax, ebx, ecx, edx);
 	(* EAX *)
 	cpuInfo.l1DataTlbAssociativity2M4M := SYSTEM.VAL(LONGINT, LSH(eax * {24..31}, -24));
 	cpuInfo.l1DataTlbSize2M4M := SYSTEM.VAL(LONGINT, LSH(eax * {16..23}, -16));
@@ -558,7 +558,7 @@ END AmdExtendedFunction5;
 PROCEDURE AmdExtendedFunction6(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000006H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000006H), eax, ebx, ecx, edx);
 	cpuInfo.unifiedTlb := (eax * {16..31} = {}) & (ebx * {16..31} = {});
 
 	IF ~cpuInfo.unifiedTlb THEN
@@ -583,7 +583,7 @@ END AmdExtendedFunction6;
 PROCEDURE IntelExtendedFunction6(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000006H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000006H), eax, ebx, ecx, edx);
 	cpuInfo.l2CacheSize := SYSTEM.VAL(LONGINT, LSH(ecx * {16..31}, -16));
 	cpuInfo.l2Associativity := SYSTEM.VAL(LONGINT, LSH(ecx * {12..15}, -12));
 	cpuInfo.l2LineSize := SYSTEM.VAL(LONGINT, ecx * {0..7});
@@ -593,7 +593,7 @@ END IntelExtendedFunction6;
 PROCEDURE AmdExtendedFunction7(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000007H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000007H), eax, ebx, ecx, edx);
 	cpuInfo.powerManagement := edx;
 END AmdExtendedFunction7;
 
@@ -601,7 +601,7 @@ END AmdExtendedFunction7;
 PROCEDURE ExtendedFunction8(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(80000008H), eax, ebx, ecx, edx);
+	CPUID(LONGINT(80000008H), eax, ebx, ecx, edx);
 	cpuInfo.linAddrSize := SYSTEM.VAL(LONGINT, LSH(eax * {8..15}, -8));
 	cpuInfo.physAddrSize := SYSTEM.VAL(LONGINT, eax * {0..7});
 	IF cpuInfo.cputype = Amd THEN
@@ -614,7 +614,7 @@ END ExtendedFunction8;
 PROCEDURE AmdExtendedFunctionA(VAR cpuInfo : CpuInformation);
 VAR eax, ebx, ecx, edx : SET;
 BEGIN
-	CPUID(SHORT(8000000AH), eax, ebx, ecx, edx);
+	CPUID(LONGINT(8000000AH), eax, ebx, ecx, edx);
 	cpuInfo.svmRev := SYSTEM.VAL(LONGINT, eax * {0..7});
 	cpuInfo.nasid := SYSTEM.VAL(LONGINT, ebx);
 END AmdExtendedFunctionA;

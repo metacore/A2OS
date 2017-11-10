@@ -196,9 +196,17 @@ BUILDS
 	}
 	WinAosNewObjectFile
 	{
-		INCLUDE "WIN iWIN WINGEN UNCOOP"
+		INCLUDE "WIN iWIN WINGEN WINGEN32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win32G"
+		EXCLUDEPACKAGES ""
+		DISABLED "FALSE"
+	}
+	WinAosG64
+	{
+		INCLUDE "WIN iWIN WINGEN WINGEN64 UNCOOP UNCOOP64"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Win64G"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
@@ -349,7 +357,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 # Active Oberon run-time
 
 	 # Runtime support for HUGEINT and strings
-	UNCOOP { Runtime.Mod }
+	UNCOOP32 { Runtime.Mod }
+	UNCOOP64 { AMD64.Runtime.Mod }
 	I386COOP { I386.CPU.Mod }
 	RPICOOP { RPI.CPU.Mod }
 	ZYNQCOOP { Zynq.CPU.Mod }
@@ -379,12 +388,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	SOLARIS { Solaris.I386.Unix.Mod }
 	
 	WINORIG { Win32.Kernel32.Mod}
-	WINGEN {Generic.Win32.Kernel32.Mod}
+	WINGEN32 {Generic.Win32.Kernel32.Mod}
+	WINGEN64 {Generic.Win64.Kernel32.Mod}
 
 	I386ORIG { I386.Machine.Mod }
 	I386GEN { Generic.I386.Machine.Mod }
 	AMD64 { AMD64.Machine.Mod }
-	WINORIG, WINGEN {Win32.Machine.Mod }
+	WINORIG, WINGEN32 {Win32.Machine.Mod }
+	WINGEN64 {Win64.Machine.Mod}
 	COOP { Mutexes.Mod }
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
@@ -401,7 +412,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Coop.Modules.Mod GarbageCollector.Mod }
 
 	NATIVEORIG, NATIVEGEN { Objects.Mod Kernel.Mod }
-	WINORIG, WINGEN { Win32.Objects.Mod Win32.Kernel.Mod }
+	WINORIG, WINGEN32 { Win32.Objects.Mod }
+	WINGEN64 {WIn64.Objects.Mod}
+	WINGEN{Win32.Kernel.Mod}
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
 	UNIXG { Generic.Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
@@ -418,8 +431,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
-	I386, WIN, UNIX32, UNIXG32 { I386.Reals.Mod }
-	AMD64, UNIX64 { AMD64.Reals.Mod }
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Reals.Mod }
+	AMD64, UNIX64, WINGEN64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -430,7 +443,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	NATIVEORIG, NATIVEGEN { Traps.Mod }
 	AMD64 { AMD64.Traps.Mod }
 	ARM { ARM.Traps.Mod }
-	WINORIG, WINGEN {  Win32.Traps.Mod }
+	WINORIG, WINGEN32 {  Win32.Traps.Mod }
+	WINGEN64 {Win64.Traps.Mod}
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	UNIXG { Unix.StdIO.Mod Generic.Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
@@ -690,13 +704,13 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WIN, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64, UNIX64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
-	I386, WIN, UNIX32,UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -719,8 +733,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386, WIN, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	AMD64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	AMD64, UNIX64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
@@ -735,8 +749,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386, WIN, UNIX32,UNIXG32 { I386.Raster.Mod }
-	AMD64, UNIX64 { AMD64.Raster.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.Raster.Mod }
+	AMD64, UNIX64, WINGEN64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -768,8 +782,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	I386, WIN, UNIX32,UNIXG32 { I386.WMRasterScale.Mod }
-	AMD64, UNIX64 { AMD64.WMRasterScale.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.WMRasterScale.Mod }
+	AMD64, UNIX64, WINGEN64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -798,7 +812,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod 	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	I386,WIN { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
+	I386,WINORIG,WINGEN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend
@@ -866,8 +880,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386, WIN, UNIX32,UNIXG32 { I386.CPUID.Mod }
-	AMD64, UNIX64 { AMD64.CPUID.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.CPUID.Mod }
+	AMD64, UNIX64, WINGEN64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
 
@@ -1246,8 +1260,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WIN, UNIX32,UNIXG32 { I386.WMTransitions.Mod }
-	AMD64, UNIX64 { AMD64.WMTransitions.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.WMTransitions.Mod }
+	AMD64, UNIX64, WINGEN64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod

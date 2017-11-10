@@ -72,7 +72,7 @@ TYPE
 		VAR i, j : LONGINT; temp : Type;
 
 			PROCEDURE IsGreaterThan(CONST entry1, entry2 : Type; mode : LONGINT) : BOOLEAN;
-			VAR name1, name2: ARRAY 256 OF CHAR; count1,count2, size1, size2: LONGINT;
+			VAR name1, name2: ARRAY 256 OF CHAR; count1,count2, size1, size2: SIZE;
 			BEGIN
 				IF mode = SortByName THEN
 					GetName(entry1.ptag,name1);
@@ -219,7 +219,7 @@ TYPE
 						Reflection.GetProcedureName(types[i].pc, copy,startpc);
 						Strings.AppendX(string, copy);
 						Strings.Append(string,":");
-						Strings.IntToStr(types[i].pc - startpc, copy);
+						Strings.IntToStr(LONGINT(types[i].pc - startpc), copy);
 						Strings.Append(string,copy);
 					END;
 
@@ -259,9 +259,9 @@ TYPE
 		END ShowBlocks;
 
 		PROCEDURE Show(out : Streams.Writer; CONST mask : ARRAY OF CHAR; sortMode : LONGINT; byPC: BOOLEAN);
-		VAR nofUsedBlocks, sizeUsedBlocks : LONGINT;
+		VAR nofUsedBlocks, sizeUsedBlocks :SIZE;
 
-			PROCEDURE ShowBlock(CONST name : ARRAY OF CHAR; nofBlocks: LONGINT; size: SIZE; totalNofBlocks: LONGINT; totalSize : SIZE; out : Streams.Writer);
+			PROCEDURE ShowBlock(CONST name : ARRAY OF CHAR; nofBlocks: SIZE; size: SIZE; totalNofBlocks: SIZE; totalSize : SIZE; out : Streams.Writer);
 			BEGIN
 				out.Int(nofBlocks, 8); out.Char(" "); ShowPercent(nofBlocks, totalNofBlocks, out); out.Char(" ");
 				out.String(name);
@@ -777,7 +777,7 @@ BEGIN
 	END
 END WriteType;
 
-PROCEDURE GetName(adr: LONGINT; VAR name: ARRAY OF CHAR);
+PROCEDURE GetName(adr: ADDRESS; VAR name: ARRAY OF CHAR);
 VAR  m : Modules.Module;  t : Modules.TypeDesc;
 BEGIN
 	Modules.ThisTypeByAdr(adr, m, t);

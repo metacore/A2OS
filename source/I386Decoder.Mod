@@ -1245,14 +1245,14 @@ TYPE
 		VAR
 
 			PROCEDURE WriteHex;
-			VAR absImm : LONGINT;
+			VAR absImm : SIZE;
 			BEGIN
 				absImm := immArg.imm;
 				IF immArg.rep = RepRelJmp THEN
 					(* add opcode position and length of full opcode to immediate argument value *)
 					INC(absImm, offset + length)
 				END;
-				WriteHex32(absImm, w)
+				WriteHex32(LONGINT(absImm), w)
 			END WriteHex;
 
 		BEGIN

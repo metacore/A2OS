@@ -181,7 +181,7 @@ BEGIN
 END SetTextToClipBoard;
 
 PROCEDURE GetTextFromClipBoard(VAR s : Strings.String);
-VAR l, t, i, f : LONGINT;
+VAR l, t, i: LONGINT; f : ADDRESS;
 BEGIN
 	l := ReceiveLength();
 	IF (l > 0) & (l < 10000H) THEN

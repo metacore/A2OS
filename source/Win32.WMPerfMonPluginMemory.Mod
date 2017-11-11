@@ -11,7 +11,7 @@ TYPE
 	(* Heaps.GetHeapInfo is a slow operation. HeapHelper provides its results to multiple plugins *)
 	HeapHelper = OBJECT(WMPerfMonPlugins.Helper)
 	VAR
-		free, total, largest : LONGINT;
+		free, total, largest : SIZE;
 
 		PROCEDURE Update;
 		BEGIN

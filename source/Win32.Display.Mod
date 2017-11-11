@@ -412,7 +412,7 @@ VAR
 			lParam := SYSTEM.VAL( User32.LParam, create.win );
 			ret := User32.PostMessage( hwnd, WMSetup, wParam, lParam )
 		ELSIF uMsg = WMSetup THEN
-			win := SYSTEM.VAL( Window, lParam );  ret := User32.SetWindowLong( hwnd, GWLWindow, lParam );
+			win := SYSTEM.VAL( Window, lParam );  ret := User32.SetWindowLong( hwnd, GWLWindow, LONGINT(lParam) );
 			create := SYSTEM.VAL( CreateStruct, wParam );
 			IF ~(dummy IN win.state) THEN SetupWin( win ) ELSE Add( win, TRUE ) END;
 			IF ~(external IN win.state) THEN INC( nWindows ) END;
@@ -451,8 +451,8 @@ VAR
 	BEGIN
 		(* User32.SetCursor(hCurrentCursor);*)
 		oldx := win.track.X;  oldy := win.track.Y;  
-		win.track.X := SHORT( lParam MOD ASH( 1, 16 ) ) - win.dx;
-		win.track.Y := SHORT( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
+		win.track.X := LONGINT( lParam MOD ASH( 1, 16 ) ) - win.dx;
+		win.track.Y := LONGINT( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
 		m.x := win.track.X;  m.y := win.track.Y;  m.z := win.track.Z;
 
 		m.dx := 0;  m.dy := 0;  m.dz := 0;
@@ -490,7 +490,7 @@ VAR
 		| User32.WMXButtonUp:
 				EXCL( keys, MX )
 		| User32.WMMouseWheel:
-				IF SHORT( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
+				IF LONGINT( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
 				m.x := oldx;  m.y := oldy;  win.track.X := oldx;  win.track.Y := oldy;
 				(* strange: if wheel used, then coordinates are not realtive to windows -> use coordinates of last event, fof *)
 		ELSE
@@ -522,7 +522,7 @@ VAR
 	PROCEDURE HandleChar( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key: LONGINT;
 	BEGIN
-		GetChar( wParam, lParam, ch, key );
+		GetChar( LONGINT(wParam), LONGINT(lParam), ch, key );
 		GetKeyFlags(msg.flags);
 		msg.ch := ch;  msg.keysym := key;
 		(*
@@ -542,7 +542,7 @@ VAR
 	PROCEDURE HandleKey( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key : LONGINT; rect: User32.Rect;  ret: Kernel32.BOOL;
 	BEGIN
-		DecomposeKeyEvent( wParam, lParam, ch, key, FALSE );
+		DecomposeKeyEvent( LONGINT(wParam), LONGINT(lParam), ch, key, FALSE );
 
 		IF  (key = AosInputs.KsF8) & (maximized IN win.state) & ~fullscreen (*ALEX 2005.11.30*) THEN
 			IF win.frame THEN
@@ -573,7 +573,7 @@ VAR
 		GetKeyFlags(msg.flags);
 		IF (msg.flags * AosInputs.Ctrl # {}) & (msg.flags * AosInputs.Alt = {}) & (VK0 <= wParam) & (wParam <= VK9) THEN
 			(* Same behaviour as AOS *)
-			ch := CHR(wParam); key := wParam;
+			ch := CHR(wParam); key := LONGINT(wParam);
 		END;
 
 		IF (AosInputs.LeftAlt IN msg.flags) & (AosInputs.LeftShift IN msg.flags) THEN
@@ -612,7 +612,7 @@ VAR
 	PROCEDURE HandleKeyUp( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg; key : LONGINT;
 	BEGIN
-		DecomposeKeyEvent( wParam, lParam, ch, key, TRUE );
+		DecomposeKeyEvent( LONGINT(wParam), LONGINT(lParam), ch, key, TRUE );
 		GetKeyFlags(msg.flags);
 
 		IF ~((AosInputs.LeftAlt IN msg.flags) & (AosInputs.LeftShift IN msg.flags)) THEN
@@ -654,7 +654,7 @@ VAR
 	VAR x, y, w, h, dx, dy, bw, bh: LONGINT;  hOldBr: GDI32.HBrush;  ret: Kernel32.BOOL;
 	BEGIN
 		IF ~(minimized IN win.state) THEN
-			IF id = resize THEN win.width := lParam MOD ASH( 1, 16 );  win.height := lParam DIV ASH( 1, 16 );  SetDocRect( win, TRUE ) END;
+			IF id = resize THEN win.width := LONGINT(lParam) MOD ASH( 1, 16 );  win.height := LONGINT(lParam) DIV ASH( 1, 16 );  SetDocRect( win, TRUE ) END;
 			ret := User32.ValidateRect( win.hWnd, NIL );
 			IF win.hDC = 0 THEN GetDC( win );  END;
 
@@ -832,13 +832,13 @@ VAR
 				dbh := SYSTEM.VAL(DEV_BROADCAST_HDRP,lParam);
 				IF dbh.dbch_devicetype = DBT_DEVTYP_VOLUME THEN
 					dbv := SYSTEM.VAL(DEV_BROADCAST_VOLUMEP,lParam);
-					WinFS.DeviceNotification(wParam,dbv.dbcv_unitmask);
+					WinFS.DeviceNotification(LONGINT(wParam),dbv.dbcv_unitmask);
 				END;
 			ELSIF wParam = DBT_DEVICEREMOVECOMPLETE THEN
 				dbh := SYSTEM.VAL(DEV_BROADCAST_HDRP,lParam);
 				IF dbh.dbch_devicetype = DBT_DEVTYP_VOLUME THEN
 					dbv := SYSTEM.VAL(DEV_BROADCAST_VOLUMEP,lParam);
-					WinFS.DeviceNotification(wParam,dbv.dbcv_unitmask);
+					WinFS.DeviceNotification(LONGINT(wParam),dbv.dbcv_unitmask);
 				END;
 			END;
 		END;

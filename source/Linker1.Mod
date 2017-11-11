@@ -519,6 +519,7 @@ VAR
 	name: Modules.Name;  flags: SET;
 	startAddr, tdAdr: ADDRESS;
 	staticTypeBlock {UNTRACED}: Heaps.StaticTypeBlock;
+	o: LONGINT;
 BEGIN
 	r.Char( tag);
 	IF tag = 8BX THEN	(* type tag *)
@@ -559,7 +560,8 @@ BEGIN
 			staticTypeBlock := SYSTEM.VAL(Heaps.StaticTypeBlock, tdAdr);
 			ASSERT(LEN(staticTypeBlock.pointerOffsets) = pointers);
 			FOR j := 0 TO pointers - 1 DO
-				r.RawNum(ofs);
+				r.RawNum(o);
+				ofs := o;
 				ASSERT(ofs MOD AddressSize  =  0);	(* no deep copy flag *)
 				staticTypeBlock.pointerOffsets[j] := ofs;
 				ASSERT(ADDRESSOF(staticTypeBlock.pointerOffsets[j]) < startAddr + tdSize)

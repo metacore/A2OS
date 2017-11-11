@@ -126,7 +126,7 @@ VAR
 	mem: POINTER TO ARRAY OF CHAR;
 	img: WMGraphics.Image;
 	w,h: LONGINT;
-	adr: LONGINT;
+	adr: ADDRESS;
 CONST
 	MemoryOptimization = TRUE;
 BEGIN

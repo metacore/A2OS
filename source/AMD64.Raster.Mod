@@ -619,6 +619,29 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Create;
 
 
+	PROCEDURE CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: ADDRESS);
+	VAR size: LONGINT; a0, a1: ADDRESS;
+	BEGIN
+		ASSERT((width > 0) & (height > 0), 100);
+		img.width := width; img.height := height;
+		img.fmt := fmt;
+		img.bpr := (width * fmt.bpp + 7) DIV 8;
+		IF fmt.align > 1 THEN
+			img.bpr := (img.bpr + fmt.align - 1) DIV fmt.align * fmt.align
+		END;
+		size := height * img.bpr; INC(size, (-size) MOD 4);
+		a0 := adr; a1 := adr + size;
+		ASSERT(ADDRESSOF(mem[0]) <= a0);
+		ASSERT(a1 <= ADDRESSOF(mem[LEN(mem)-1]));
+		WHILE a0 # a1 DO
+			SYSTEM.PUT32(a0,0); INC(a0, SIZEOF(LONGINT))
+		END;
+		img.adr := adr;
+		img.mem := mem;
+		adr := LONGINT(a1);
+	END CreateWithBuffer;
+
+
 	(**--- Transfer Modes ---**)
 
 	(** initialize transfer mode **)

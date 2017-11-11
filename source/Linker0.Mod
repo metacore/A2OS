@@ -311,7 +311,7 @@ END Int;
 
 (** Hex - Write "x" as a hexadecimal number. *)
 
-PROCEDURE Hex*(x, w: LONGINT);
+PROCEDURE Hex*(x: SIZE; w: LONGINT);
 BEGIN
 	logWriter.Hex(x,w);
 END Hex;
@@ -325,8 +325,8 @@ END Address;
 
 (** Memory - Write a block of memory. *)
 
-PROCEDURE Memory*(adr, size: LONGINT);  (* ug: not yet rewritten using ADDRESS and SIZE *)
-VAR i, j, t: LONGINT;  buf: ARRAY 4 OF CHAR;  reset, missed: BOOLEAN;
+PROCEDURE Memory*(adr: ADDRESS; size: SIZE);  (* ug: not yet rewritten using ADDRESS and SIZE *)
+VAR i,j: SIZE; t: LONGINT;  buf: ARRAY 4 OF CHAR;  reset, missed: BOOLEAN;
 BEGIN
 	(*
 	Texts.SetFont(writer, Fonts.This("Courier10.Scn.Fnt"));

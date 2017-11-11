@@ -371,7 +371,7 @@ CODE {SYSTEM.AMD64, SYSTEM.MMX}
 	PUSH		ECX
 	MOV		ECX, [RBP + i]
 	CMP		ECX, 0
-	JZ			WORD skip565
+	JZ			skip565
 
 	;
 	; Load the frame buffer pointers into the registers
@@ -477,7 +477,7 @@ doblend565:
 	; Loop again or break
 	;
 	DEC		ECX
-	JNZ			WORD doblend565
+	JNZ			doblend565
 
 	;
 	; Clean up

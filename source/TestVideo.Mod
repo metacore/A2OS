@@ -774,7 +774,7 @@ VAR x, y, w, h, p, t : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
 	ch : CHAR;
-	adr : LONGINT;
+	adr : ADDRESS;
 	total : LONGINT;
 BEGIN
 	Raster.InitMode(mode, Raster.srcCopy);
@@ -821,7 +821,7 @@ VAR x, y, w, h, p, t : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
 	ch : CHAR;
-	adr : LONGINT;
+	adr : ADDRESS;
 	total : LONGINT;
 
 BEGIN

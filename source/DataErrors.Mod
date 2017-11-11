@@ -71,12 +71,12 @@ CONST
 			IF pc = 0 THEN W.String( "NIL" ) ELSE W.String( "Unknown PC=" );  W.Hex( pc, 8 );  W.Char( "H" ) END;
 			IF fp # -1 THEN W.String( " FP=" );  W.Hex( fp, 8 );  W.Char( "H" ) END
 		ELSE
-			W.String( mod.name );  DEC( pc, ADDRESSOF( mod.code[0] ) );  refs := mod.refs;
+			W.String( mod.name );  DEC( pc, LONGINT(ADDRESSOF( mod.code[0] )) );  refs := mod.refs;
 			IF (refs # NIL ) & (LEN( refs ) # 0) THEN
 				refpos := FindProc( refs, pc );
 				IF refpos # -1 THEN
 					W.Char( "." );  ch := refs[refpos];  INC( refpos );
-					IF ch = "$" THEN base := mod.sb ELSE base := fp END;   (* for variables *)
+					IF ch = "$" THEN base := LONGINT(mod.sb) ELSE base := fp END;   (* for variables *)
 					WHILE ch # 0X DO W.Char( ch );  ch := refs[refpos];  INC( refpos ) END
 				END
 			END;
@@ -256,7 +256,7 @@ CONST
 	BEGIN
 		refpos := -1;
 		IF mod # NIL THEN
-			refs := mod.refs;  base := mod.sb;
+			refs := mod.refs;  base := LONGINT(mod.sb);
 			IF (refs # NIL ) & (LEN( refs ) # 0) THEN
 				refpos := FindProc( refs, 0 );
 				IF refpos # -1 THEN
@@ -303,11 +303,11 @@ CONST
 	PROCEDURE ErrorCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR i, reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := Machine.CurrentBP ();
+		reg := LONGINT(Machine.CurrentBP ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );
-		IF m # NIL THEN pc := eip - ADDRESSOF( m.code[0] ) ELSE pc := MAX( LONGINT ) END;
+		IF m # NIL THEN pc := LONGINT(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( LONGINT ) END;
 		IF ~beepedError THEN
 			beepedError := TRUE;  NEW( timer );
 			FOR i := 1 TO 3 DO Beep.Beep( 125 );  timer.Sleep( 100 );  Beep.Beep( 0 );  timer.Sleep( 100 ) END;
@@ -319,11 +319,11 @@ CONST
 	PROCEDURE WarningCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := Machine.CurrentBP ();
+		reg := LONGINT(Machine.CurrentBP ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );
-		IF m # NIL THEN pc := eip - ADDRESSOF( m.code[0] ) ELSE pc := MAX( LONGINT ) END;
+		IF m # NIL THEN pc := LONGINT(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( LONGINT ) END;
 		IF ~beepedWarning THEN
 			beepedWarning := TRUE;  NEW( timer );  Beep.Beep( 125 );  timer.Sleep( 100 );  Beep.Beep( 0 );
 			timer.Sleep( 100 );  Beep.Beep( 100 );  timer.Sleep( 100 );  Beep.Beep( 0 );  timer.Sleep( 100 );
@@ -363,12 +363,12 @@ CONST
 	END Location;
 
 	PROCEDURE DetailedErrorReport( VAR m: Modules.Module;  pc: LONGINT;  eip, ebp: LONGINT );
-VAR refs: Modules.Bytes; refpos,adr: LONGINT;
+VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 		BEGIN
 		IF m # NIL THEN
 	 refs := m.refs;  refpos := FindProc( refs, pc );
 					GetNum( refs, refpos, adr );
-				INC( adr, m.sb);   (* convert to absolute address *)
+				INC( adr, LONGINT(m.sb));   (* convert to absolute address *)
 	W.Hex(adr,8);W.Ln;
 		W.String( "Detailed Error Report" );  W.Ln;
 		IF m# NIL THEN W.String( "Module State:" );  W.Ln;  ModuleState( m );  END;

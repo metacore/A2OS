@@ -396,7 +396,7 @@ TYPE
 				absImm := immArg.imm;
 				IF immArg.rep = RepRelJmp THEN
 					(* add opcode position and length of full opcode to immediate argument value *)
-					INC(absImm, offset + 4)
+					INC(absImm, LONGINT(offset + 4))
 				END;
 				Hex(absImm, w)
 			END WriteHex;

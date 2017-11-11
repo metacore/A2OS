@@ -194,7 +194,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		END;
 
 		(** A 32-bit value passed as a parameter to a window procedure or callback function. *)
-		WParam* = LONGINT; LParam* = LONGINT;
+		WParam* = SIZE; LParam* = SIZE;
 
 		(** A 32-bit value returned from a window procedure or callback function. *)
 		LResult* = LONGINT;
@@ -277,7 +277,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The CreateMenu function creates a menu. *)
 		CreateMenu-: PROCEDURE {WINAPI} (): HMenu;
 		(** The CreateWindow function creates an overlapped, pop-up, or child window. *)
-		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LONGINT): HWND;
+		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam): HWND;
 		(** The DefWindowProc function calls the default window procedure to provide default processing for any window
 			messages that an application does not process. *)
 		DefWindowProc-: WndProc;

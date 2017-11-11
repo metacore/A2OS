@@ -30,7 +30,7 @@ TYPE
 	Opcode* = OBJECT
 		VAR
 			instr* : LONGINT; (* instruction code *)
-			offset* : LONGINT;
+			offset* : ADDRESS;
 			code* : Modules.Bytes;
 			length- : LONGINT;
 			decoder* : Decoder;
@@ -331,14 +331,15 @@ TYPE
 
 	ProcedureInfo* = OBJECT (Info)
 		VAR
-			codeOffset, codeSize, retType, index : LONGINT;
+			codeOffset: ADDRESS; codeSize: LONGINT;
+			retType, index : LONGINT;
 			fields : FieldArray;
 			fieldCount : LONGINT;
 			method : BOOLEAN;
 
 			gcInfo: GCInfo;
 
-		PROCEDURE &New (CONST n : ARRAY OF CHAR; ofs, idx : LONGINT);
+		PROCEDURE &New (CONST n : ARRAY OF CHAR; ofs: ADDRESS; idx : LONGINT);
 		BEGIN
 			COPY (n, name);
 			codeOffset := ofs;
@@ -521,7 +522,7 @@ TYPE
 		END AddImport;
 
 
-		PROCEDURE IsExceptionHandled(pc: LONGINT): BOOLEAN;
+		PROCEDURE IsExceptionHandled(pc: ADDRESS): BOOLEAN;
 		VAR
 			i: LONGINT;
 			entry: Modules.ExceptionTableEntry;
@@ -540,7 +541,7 @@ TYPE
 		PROCEDURE GetOpcodes (proc : ProcedureInfo) : Opcode;
 		VAR
 			reader : MemoryReader.Reader;
-			ofs : LONGINT;
+			ofs : ADDRESS;
 			decoder : Decoder;
 		BEGIN
 			ofs := ADDRESSOF(module.code[proc.codeOffset]);
@@ -564,7 +565,7 @@ TYPE
 			INC(procedureCount)
 		END AddProcedure;
 
-		PROCEDURE FindEntryByOffset (ofs : LONGINT) : LONGINT;
+		PROCEDURE FindEntryByOffset (ofs : ADDRESS) : LONGINT;
 		VAR
 			i : LONGINT;
 		BEGIN
@@ -826,7 +827,8 @@ TYPE
 				s : Strings.String;
 				opcodes : Opcode;
 				w : Streams.Writer;
-				i, opStart, opEnd, pcPos : LONGINT;
+				i: LONGINT;
+				opStart, opEnd: ADDRESS; pcPos : LONGINT;
 				pcMarker : WMTextView.PositionMarker;
 (* ug *)			s2: Strings.String;
 		BEGIN
@@ -860,7 +862,7 @@ TYPE
 					opStart := opcodes.offset;
 					opEnd := opStart + opcodes.length - 1;
 					IF (markPC >= opStart) &	(markPC <= opEnd) THEN
-						pcPos := w.Pos() + (markPC-opStart)*3; (* text position within opcode bytes *)
+						pcPos := w.Pos() + LONGINT((markPC-opStart)*3); (* text position within opcode bytes *)
 					END
 				END;
 				opcodes.PrintOpcodeBytes(w); 	w.Char(9X);
@@ -1940,7 +1942,7 @@ VAR
 		RETURN result
 	END HexBytes2Code;
 
-	PROCEDURE IntToHex(h, width: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE IntToHex(h: SIZE; width: LONGINT; VAR s: ARRAY OF CHAR);
 	VAR c: CHAR;
 	BEGIN
 		IF (width <= 0) THEN width := 8 END;

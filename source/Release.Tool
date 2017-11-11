@@ -959,7 +959,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin  # MP3 Decoder
 
 	# Video codecs
-	I386, WIN, UNIX32,UNIXG32 {
+	I386, WINORIG,WINGEN32, UNIX32,UNIXG32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
@@ -1429,8 +1429,8 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WIN, UNIX32,UNIXG32 {I386.EFIMachine.Mod}
-	AMD64, UNIX64 { AMD64.EFIMachine.Mod }
+	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 {I386.EFIMachine.Mod}
+	AMD64, UNIX64, WINGEN64 { AMD64.EFIMachine.Mod }
 
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
@@ -1482,7 +1482,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod I386.NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	I386.NbrRe32.Mod I386.NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod
 
-	NATIVE,WIN {
+	NATIVE,WINORIG,WIN32G {
 		DataErrors.Mod DataIO.Mod Data.Mod DataStacks.Mod DataQueues.Mod
 		DataLists.Mod DataTrees.Mod
 
@@ -1645,7 +1645,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 
 	# Configuration
 	Configuration.Tool
-	WIN { Win32.Oberon.Registry.Mod }
+	WINORIG, WINGEN32 { Win32.Oberon.Registry.Mod }
 	eWIN { Win32.Oberon.Configuration.Mod }
 	NATIVE,iWIN { Oberon.Configuration.Mod  }
 
@@ -1778,7 +1778,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	PC.Tool Oberon.ErrorGadgets.Mod Oberon.PC.Mod 	# Oberon Interface for PACO
 
-	WIN { Win32.PELinker.Mod PELinker.Tool }
+	WINORIG,WINGEN32 { Win32.PELinker.Mod PELinker.Tool }
 
 	iWIN { Win32.Oberon.Clipboard.Mod }
 	eWIN { Win32.External.Oberon.Clipboard.Mod Win32.Oberon.RegistryTools.Mod }

@@ -742,7 +742,8 @@ TYPE
 						ELSE registerParameters := LEN(registerParameter) 
 						END;
 						
-						formalParameter := procedureType.lastParameter;
+						(* assumption: registers are passed left to right and left parameters are in registers *)
+						formalParameter := procedureType.firstParameter;
 						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
 							IF ~PassInRegister(formalParameter) THEN
 								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
@@ -759,7 +760,7 @@ TYPE
 								ir.Emit(Mov(Basic.invalidPosition,dest, src));
 								implementationVisitor.ReleaseIntermediateOperand(src);
 								INC(registerNumber);
-								formalParameter := formalParameter.prevParameter;
+								formalParameter := formalParameter.nextParameter;
 							END;
 						END;
 					END;

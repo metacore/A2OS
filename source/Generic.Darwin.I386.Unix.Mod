@@ -501,7 +501,7 @@ VAR
 	alarm-		: PROCEDURE {C} ( ms: LONGINT ): LONGINT;
 	setitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value, ovalue: Itimerval ): LONGINT;
 	getitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value: Itimerval ): LONGINT;
-	clock_gettime-	: PROCEDURE{C}	(clk_id: LONGINT; tp: tvPtr): LONGINT;
+(*	clock_gettime-	: PROCEDURE{C} (clk_id: LONGINT; tp: tvPtr): LONGINT;	*)
 
 	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): LONGINT;
 	mktime-			: PROCEDURE {C} ( VAR tm: Tm ): LONGINT;
@@ -798,7 +798,7 @@ VAR
 		IF val = 0 THEN
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
 			Trace.Ln;
-			exit( 999 )		
+		(*	exit( 999 )		*)
 		END
 	END Dlsym;
 
@@ -1085,7 +1085,7 @@ VAR
 		Dlsym( libc, "alarm",	ADDRESSOF( alarm ) );
 		Dlsym( libc, "setitimer",	ADDRESSOF( setitimer ) );
 		Dlsym( libc, "getitimer",	ADDRESSOF( getitimer ) );
-		Dlsym( libc, "clock_gettime", ADDRESSOF( clock_gettime ) );
+	(*	Dlsym( libc, "clock_gettime", ADDRESSOF( clock_gettime ) );	*)
 
 		Dlsym( libc, "gettimeofday", ADDRESSOF( gettimeofday ) );
 		Dlsym( libc, "mktime",		ADDRESSOF( mktime ) );

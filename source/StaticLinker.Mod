@@ -262,9 +262,6 @@ BEGIN
 	file := Files.New (fileName);
 	Files.OpenWriter (writer, file, 0);
 	fileFormat (linker, arrangement, writer);
-	IF (arrangement.displacement = 0) & (fileFormat = WriteBinaryFile) THEN
-		WriteRelocations( arrangement, writer )
-	END;
 	writer.Update; Files.Register (file);
 	msg := "written ";
 	Strings.IntToStr(arrangement.SizeInBits(), number);
@@ -284,7 +281,14 @@ BEGIN
 	END;
 END WriteBinaryFile;
 
-
+PROCEDURE WriteUnixBinaryFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
+VAR i: LONGINT;
+BEGIN
+	FOR i := 0 TO arrangement.bits.GetSize () - 1 BY 8 DO
+		writer.Char (CHR (arrangement.bits.GetBits (i, 8)));
+	END;
+	WriteRelocations( arrangement, writer )
+END WriteUnixBinaryFile;
 
 PROCEDURE WriteTRMFile (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines:LONGINT);
 VAR i,j,size,end,nonZeroInLeadingNibble,leadingzeros: LONGINT;
@@ -885,6 +889,7 @@ BEGIN
 	ELSIF format = "MACHO" THEN RETURN WriteMachOFile;
 	ELSIF format = "DLL32" THEN RETURN WriteDLL32File;
 	ELSIF format = "DLL64" THEN RETURN WriteDLL64File;
+	ELSIF format = "UnixRaw" THEN RETURN WriteUnixBinaryFile;
 	ELSE RETURN default; END;
 END GetFileFormat;
 

@@ -3800,6 +3800,19 @@ BEGIN
 	END;
 END Eject;
 
+PROCEDURE Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR);
+VAR msg: AosDisks.SyncMsg; res: LONGINT; temp: ARRAY 256 OF CHAR;
+BEGIN
+	ASSERT(dev # NIL);
+	COPY(dev.name, result);
+	dev.Handle(msg, res);
+	IF res = AosDisks.Ok THEN
+		Strings.Append(result, " synchronized");
+	ELSE
+		GetErrorMsg(" synchronization failed: ", res, temp); Strings.Append(result, temp);
+	END;
+END Sync;
+
 PROCEDURE ShowAosFSLimits*;
 CONST Unit = 1024*1024*1024;
 VAR string : ARRAY 32 OF CHAR;

@@ -19,6 +19,7 @@ MODULE Partitions; (** AUTHOR "staubesv"; PURPOSE "Commandline front-end for Par
  *
  *	Partitions.Check dev#part ~						Perform a read test on the specified partition
  *	Partitions.Eject dev ~								Eject medium of the specified device
+ *	Partitions.Sync dev ~								Synchronize device caches to medium
  *
  * 	Partitions.Safe~ 									Disallow extremely critical operations
  * 	Partitions.Unsafe~								Allow extermely critical operations
@@ -545,9 +546,30 @@ BEGIN
 			context.error.String("Device "); context.error.String(name); context.error.String(" not found"); context.error.Ln;
 		END;
 	ELSE
-		context.error.String("Exspected parameters: dev"); context.error.Ln;
+		context.error.String("Expected parameters: dev"); context.error.Ln;
 	END;
 END Eject;
+
+(** Sync device to medium *)
+PROCEDURE Sync*(context: Commands.Context); (** dev ~ *)
+VAR
+	plugin: Plugins.Plugin;
+	dev: Disks.Device;
+	name: ARRAY 32 OF CHAR;
+	temp: ARRAY 256 OF CHAR;
+BEGIN
+	IF context.arg.GetString(name) THEN
+		plugin := Disks.registry.Get(name);
+		IF plugin # NIL THEN
+			dev := plugin (Disks.Device);
+			Lib.Sync(dev, temp); context.out.String(temp); context.out.Ln;
+		ELSE
+			context.error.String("Device "); context.error.String(name); context.error.String(" not found"); context.error.Ln;
+		END;
+	ELSE
+		context.error.String("Expected parameters: dev"); context.error.Ln;
+	END;
+END Sync;
 
 PROCEDURE Unsafe*(context : Commands.Context); (** ~ *)
 BEGIN

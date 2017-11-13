@@ -114,6 +114,7 @@ TYPE
 	END Device;
 
 	EjectMsg* = RECORD (Message) END;	(** eject the media *)
+	SyncMsg* = RECORD (Message) END;	(** sync driver caches *)
 	LockMsg* = RECORD (Message) END;	(** disallow manual ejection *)
 	UnlockMsg* = RECORD (Message) END;	(** allow manual ejection *)
 	SavePowerMsg* = RECORD (Message) END;	(** spin down the device *)

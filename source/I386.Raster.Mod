@@ -616,7 +616,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		img.adr := ADDRESSOF(img.mem[0])
 	END Create;
 
-	PROCEDURE CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: LONGINT);
+	PROCEDURE CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: ADDRESS);
 	VAR size: LONGINT; a0, a1: ADDRESS;
 	BEGIN
 		ASSERT((width > 0) & (height > 0), 100);

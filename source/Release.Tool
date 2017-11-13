@@ -489,7 +489,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Win32.WinFS.Mod
 	}
 
-	NATIVE,WIN,UNIX { RelativeFileSystem.Mod } # file system relative to path
+	NATIVE,WIN,UNIX,UNIXG { RelativeFileSystem.Mod } # file system relative to path
 
 	NATIVEORIG,WINORIG,UNIX { Loader.Mod }
 	NATIVEGEN, WINGEN, COOP, UNIXG {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }

@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = FALSE;
+	TraceVerbose = TRUE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -135,7 +135,7 @@ TYPE
 		sseAdr: LONGINT;
 		*)
 		condition-: Condition;   (* awaited process' condition *)
-		condFP-: LONGINT;   (* awaited process' condition's context *)
+		condFP-: ADDRESS;   (* awaited process' condition's context *)
 		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)
 		procID-: LONGINT;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
 		waitingOn-: ProtectedObject;   (* obj this process is waiting on (for lock or condition) *)
@@ -163,13 +163,13 @@ TYPE
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
-			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
-			context: Kernel32.Wow64Context;
+			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; p {UNTRACED}: ANY; i: SIZE;
 			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
 			O: ANY; ID: LONGINT;
 			mod {UNTRACED}: Modules.Module;
 			proc {UNTRACED}: Modules.ProcedureDescPointer;
 			modName: ARRAY 128 OF CHAR;
+			mode0,mode1: LONGINT;
 		BEGIN
 			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
@@ -180,26 +180,11 @@ TYPE
 			IF CurrentProcess() = SELF THEN
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
-				IF mode # Suspended THEN
-					IF isWow64 THEN 
-						res := Kernel32.Wow64SuspendThread(handle);
-					ELSE
-						res := Kernel32.SuspendThread(handle);
-					END;
-					ASSERT(res # -1);
-				END;
-
+				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
 				state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, state );
-				
-				context.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl + Kernel32.ContextInteger);
-				IF isWow64 THEN 
-					res := Kernel32.Wow64GetThreadContext( handle, context );
-				ELSE
-					res := Kernel32.GetThreadContext( handle, context );
-				END;
-				ASSERT(res # 0);
-				sp :=  context.SP; bp := context.BP; pc := context.PC;
+
+				sp :=  state.SP; bp := state.BP; pc := state.PC;
 				
 				mod := Modules.ThisModuleByAdr0(pc);
 				IF mod # NIL THEN
@@ -220,9 +205,9 @@ TYPE
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
-				Heaps.Candidate( context.RDI );  Heaps.Candidate( context.RSI );
-				Heaps.Candidate( context.RBX ); Heaps.Candidate( context.RDX );
-				Heaps.Candidate( context.RCX ); Heaps.Candidate( context.RAX );
+				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
+				Heaps.Candidate( state.RBX ); Heaps.Candidate( state.RDX );
+				Heaps.Candidate( state.RCX ); Heaps.Candidate( state.RAX );
 				IF (stackBottom # 0) & (sp # 0) THEN
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
@@ -232,6 +217,7 @@ TYPE
 						SYSTEM.GET(bp, n);
 						IF ODD(n) THEN (* procedure descriptor at bp *)
 							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
+							WriteType(desc); Trace.Ln;
 							IF desc # NIL THEN
 								a0 := ADDRESSOF(desc.offsets);
 								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
@@ -254,7 +240,7 @@ TYPE
 				END; 
 			END;
 			
-			IF (CurrentProcess() # SELF) & (mode # Suspended) THEN
+			IF (CurrentProcess() # SELF) (* & (mode # Suspended) *) THEN
 				res := Kernel32.ResumeThread(handle);
 				ASSERT(res # -1);
 			END;
@@ -504,7 +490,7 @@ BEGIN (* {t # NIL & t.next = NIL & t.prev = NIL} *)
 END Put;
 
 (* starting address of user stack for current thread, called stack top in TIB.H *)
-PROCEDURE -StackBottom*( ): LONGINT;
+PROCEDURE -StackBottom*( ): ADDRESS;
 CODE {SYSTEM.i386}
 	DB	064H
 	DB	08BH
@@ -1371,7 +1357,6 @@ BEGIN
 	
 	
 	(* determine whether it is WOW64 environment *)
-	TRACE(Kernel32.Wow64GetThreadContext); 
 	(*
 	isWow64 := (Kernel32.Wow64GetThreadContext # NIL) & (Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0); 
 	TRACE("Objects 5"); 

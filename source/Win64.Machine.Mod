@@ -538,20 +538,16 @@ BEGIN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
 		(*Trace.Char := LogChar;*)
 		res := Kernel32.CloseHandle(hout);
-		TRACE(res); 
 		IF res = 0 THEN
 			res := Kernel32.GetLastError();
 			Trace.String("could not close "); Trace.String("; res = "); Trace.Int(res,1); Trace.Ln;
 		END;
 		res := Kernel32.DeleteFile(traceName);
-		TRACE(res); 
 		IF res = 0 THEN
 			res := Kernel32.GetLastError();
 			Trace.String("could not delete "); Trace.String(traceName); Trace.String("; res = "); Trace.Int(res,1); Trace.Ln;
 		END;
-		TRACE(res);
 	END;
-	TRACE(traceName);
 END RemoveTraceFile;
 
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);

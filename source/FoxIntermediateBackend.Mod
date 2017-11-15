@@ -13088,12 +13088,13 @@ TYPE
 			Address(moduleSection,0);
 			Info(moduleSection, "exTable*: ExceptionTable");
 			Symbol(moduleSection,exceptionSection,exceptionSectionOffset,0);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END; (* padding -> alignment *)
 			Info(moduleSection,"internal: POINTER TO ARRAY OF Pointer");
 			Symbol(moduleSection, modulePointerSection, modulePointerSectionOffset, 0);
 			Info(moduleSection, "crc*: LONGINT");
 			patchCRC:= moduleSection.pc;
 			Longint(moduleSection, 0); (*!  must be implemented *)
+
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END; (* padding *)
 			Info(moduleSection, "body*: ADDRESS");
 			Symbol(moduleSection, bodyProc, 0,0);
 			Info(moduleSection, "module flags");

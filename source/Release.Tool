@@ -432,7 +432,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	In.Mod Out.Mod
 
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Reals.Mod }
-	AMD64, UNIX64, WINGEN64 { AMD64.Reals.Mod }
+	AMD64,  WINGEN64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -518,8 +518,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BootShell.Mod
 
-	I386,UNIX32, UNIXG32 { I386.Network.Mod }
-	AMD64, UNIX64 { AMD64.Network.Mod }
+	I386, UNIX32, UNIXG32 { I386.Network.Mod }
+	AMD64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
@@ -704,13 +704,13 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64, UNIX64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
-	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -734,7 +734,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	}
 
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	AMD64, UNIX64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
@@ -750,7 +750,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# raster images (eos)
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.Raster.Mod }
-	AMD64, UNIX64, WINGEN64 { AMD64.Raster.Mod }
+	AMD64, WINGEN64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -783,7 +783,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Move to graphical package!!
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.WMRasterScale.Mod }
-	AMD64, UNIX64, WINGEN64 { AMD64.WMRasterScale.Mod }
+	AMD64, WINGEN64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -881,7 +881,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	Fido.Mod
 
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.CPUID.Mod }
-	AMD64, UNIX64, WINGEN64 { AMD64.CPUID.Mod }
+	AMD64, WINGEN64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
 
@@ -959,7 +959,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin  # MP3 Decoder
 
 	# Video codecs
-	I386, WINORIG,WINGEN32, UNIX32,UNIXG32 {
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
@@ -1260,8 +1260,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.WMTransitions.Mod }
-	AMD64, UNIX64, WINGEN64 { AMD64.WMTransitions.Mod }
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.WMTransitions.Mod }
+	AMD64, WINGEN64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod
@@ -1430,7 +1430,7 @@ END
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 {I386.EFIMachine.Mod}
-	AMD64, UNIX64, WINGEN64 { AMD64.EFIMachine.Mod }
+	AMD64,  WINGEN64 { AMD64.EFIMachine.Mod }
 
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
@@ -1482,7 +1482,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod I386.NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	I386.NbrRe32.Mod I386.NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod
 
-	NATIVE,WINORIG,WIN32G {
+	NATIVE,WINORIG {
 		DataErrors.Mod DataIO.Mod Data.Mod DataStacks.Mod DataQueues.Mod
 		DataLists.Mod DataTrees.Mod
 

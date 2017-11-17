@@ -115,7 +115,7 @@ VAR
 	PE*: ProcArray; 
 	nofPE*: LONGINT; 
 	memory, compilable, raw, suppressOut, suppressH, noOutput: BOOLEAN; 
-	ReadAdr: LONGINT; 
+	ReadAdr: ADDRESS; 
 	target: SET; 
 	objSuffix: ARRAY 8 OF CHAR; 
 	OpPos, RMPos: SHORTINT; 

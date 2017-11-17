@@ -18,7 +18,7 @@ TYPE
 	Opcode* = OBJECT 
 	VAR 
 		instr*: LONGINT; 
-		offset*: LONGINT; 
+		offset*: ADDRESS; 
 		code*: Modules.Bytes; 
 		length-: LONGINT; 
 		decoder*: Decoder; 
@@ -90,13 +90,15 @@ TYPE
 
 	ProcedureInfo* = OBJECT (Info)
 	VAR 
-		codeOffset, codeSize, retType, index: LONGINT; 
+		codeOffset: ADDRESS; 
+		codeSize: LONGINT; 
+		retType, index: LONGINT; 
 		fields: FieldArray; 
 		fieldCount: LONGINT; 
 		method: BOOLEAN; 
 		gcInfo: GCInfo; 
 
-		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR; ofs, idx: LONGINT); 
+		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR; ofs: ADDRESS; idx: LONGINT); 
 		PROCEDURE ^ AddField(fldInfo: FieldInfo); 
 		PROCEDURE ^ GetFieldAtOffset*(offset: LONGINT): FieldInfo; 
 	END ProcedureInfo; 
@@ -194,10 +196,10 @@ TYPE
 
 		PROCEDURE ^ AddExport(e: Export); 
 		PROCEDURE ^ AddImport(i: Import); 
-		PROCEDURE ^ IsExceptionHandled(pc: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsExceptionHandled(pc: ADDRESS): BOOLEAN; 
 		PROCEDURE ^ GetOpcodes(proc: ProcedureInfo): Opcode; 
 		PROCEDURE ^ AddProcedure(procInfo: ProcedureInfo); 
-		PROCEDURE ^ FindEntryByOffset(ofs: LONGINT): LONGINT; 
+		PROCEDURE ^ FindEntryByOffset(ofs: ADDRESS): LONGINT; 
 		PROCEDURE ^ GetProcedureByIndex(idx: LONGINT): ProcedureInfo; 
 		PROCEDURE ^ DecodeRefs(reader: Streams.Reader); 
 		PROCEDURE ^ DecodeTypes; 
@@ -299,7 +301,7 @@ VAR
 	PROCEDURE ^ MakeHeader(module: Modules.Module; VAR header: ObjHeader); 
 	PROCEDURE ^ RemoveTypeName(VAR procName: ARRAY OF CHAR; CONST typeName: ARRAY OF CHAR); 
 	PROCEDURE ^ HexBytes2Code(CONST bytes: ARRAY OF CHAR): Modules.Bytes; 
-	PROCEDURE ^ IntToHex(h, width: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToHex(h: SIZE; width: LONGINT; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 

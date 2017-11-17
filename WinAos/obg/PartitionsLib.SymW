@@ -471,6 +471,7 @@ VAR
 	PROCEDURE ^ CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: LONGINT); 
 	PROCEDURE ^ InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT); 
 	PROCEDURE ^ Eject*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ ShowAosFSLimits*; 
 	PROCEDURE ^ IsMBR(CONST mbr: Block): BOOLEAN; 
 	PROCEDURE ^ IsEPBR(CONST epbr: Block): BOOLEAN; 

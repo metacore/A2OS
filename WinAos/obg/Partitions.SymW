@@ -30,6 +30,7 @@ CONST
 	PROCEDURE ^ ShowBlockCallback(text: Texts.Text); 
 	PROCEDURE ^ ShowBlocks*(context: Commands.Context); 
 	PROCEDURE ^ Eject*(context: Commands.Context); 
+	PROCEDURE ^ Sync*(context: Commands.Context); 
 	PROCEDURE ^ Unsafe*(context: Commands.Context); 
 	PROCEDURE ^ Safe*(context: Commands.Context); 
 	PROCEDURE ^ Show*(context: Commands.Context); 

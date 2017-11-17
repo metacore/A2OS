@@ -25,7 +25,7 @@ VAR
 	finalizers: Kernel.FinalizedCollection; 
 	isEXE-: BOOLEAN; 
 	lock-: LONGINT; 
-	hInstance-: LONGINT; 
+	hInstance-: ADDRESS; 
 
 	PROCEDURE ^ WriteChar*(c: CHAR); 
 	PROCEDURE ^ WriteString*(s: ARRAY OF CHAR); 

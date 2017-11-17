@@ -51,6 +51,9 @@ TYPE
 	EjectMsg* = RECORD (Message)
 	END; 
 
+	SyncMsg* = RECORD (Message)
+	END; 
+
 	LockMsg* = RECORD (Message)
 	END; 
 

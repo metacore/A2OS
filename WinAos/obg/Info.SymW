@@ -62,7 +62,7 @@ VAR
 	PROCEDURE ^ FindProcessByID(id: LONGINT): Objects.Process; 
 	PROCEDURE ^ AnalyzeMarkedBlocks(analyzer: Analyzer); 
 	PROCEDURE ^ WriteType(adr: LONGINT; out: Streams.Writer); 
-	PROCEDURE ^ GetName(adr: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetName(adr: ADDRESS; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetCurrentMarkValue(): LONGINT; 
 	PROCEDURE ^ SetCurrentMarkValue(value: LONGINT); 
 	PROCEDURE ^ IncrementCurrentMarkValue; 

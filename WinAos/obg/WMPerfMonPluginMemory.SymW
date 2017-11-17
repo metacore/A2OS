@@ -5,7 +5,7 @@ CONST
 TYPE 
 	HeapHelper = OBJECT (WMPerfMonPlugins.Helper)
 	VAR 
-		free, total, largest: LONGINT; 
+		free, total, largest: SIZE; 
 
 		PROCEDURE ^ Update*; 
 	END HeapHelper; 

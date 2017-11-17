@@ -135,7 +135,7 @@ VAR
 	PROCEDURE ^ InitBuf*(img: Image; width, height: LONGINT; VAR fmt: Format; bpr, offset: LONGINT; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ InitRect*(img, base: Image; x, y, w, h: LONGINT); 
 	PROCEDURE ^ Create*(img: Image; width, height: LONGINT; fmt: Format); 
-	PROCEDURE ^ CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: LONGINT); 
+	PROCEDURE ^ CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ InitMode*(VAR mode: Mode; op: SHORTINT); 
 	PROCEDURE ^ InitModeColor*(VAR mode: Mode; op: SHORTINT; red, green, blue: LONGINT); 
 	PROCEDURE ^ SetModeColor*(VAR mode: Mode; red, green, blue: LONGINT); 

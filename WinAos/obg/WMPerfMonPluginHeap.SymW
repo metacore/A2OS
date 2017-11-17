@@ -2,7 +2,7 @@ MODULE WMPerfMonPluginHeap;
 	IMPORT SYSTEM, Machine, Heaps, Modules, WMGraphics, WMPerfMonPlugins;
 CONST 
 	ModuleName = \"WMPerfMonPluginHeap"\; 
-	BlockSize = 32; 
+	BlockSize = (8 * SIZEOF(ADDRESS)); 
 TYPE 
 	SizeArray = ARRAY 27 OF LONGINT; 
 

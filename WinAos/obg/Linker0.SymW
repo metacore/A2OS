@@ -257,9 +257,9 @@ VAR
 	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Int*(x, w: LONGINT); 
-	PROCEDURE ^ Hex*(x, w: LONGINT); 
+	PROCEDURE ^ Hex*(x: SIZE; w: LONGINT); 
 	PROCEDURE ^ Address*(x: ADDRESS); 
-	PROCEDURE ^ Memory*(adr, size: LONGINT); 
+	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ Bits*(x: SET; ofs, n: LONGINT); 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 

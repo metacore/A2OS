@@ -86,9 +86,9 @@ TYPE
 
 	BinaryASBLoop = PROCEDURE (ladr, radr: ADDRESS; linc, len: SIZE):BOOLEAN; 
 
-	FastMatMul* = PROCEDURE (matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: LONGINT):BOOLEAN; 
+	FastMatMul* = PROCEDURE (matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE):BOOLEAN; 
 
-	TransposeP* = PROCEDURE (ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT); 
+	TransposeP* = PROCEDURE (ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
 
 	LenInc* = RECORD 
 		len*: SIZE; 
@@ -162,7 +162,7 @@ TYPE
 
 	T8 = POINTER TO A8; 
 
-	SmallMatMul* = PROCEDURE (dadr, ladr, radr: LONGINT); 
+	SmallMatMul* = PROCEDURE (dadr, ladr, radr: ADDRESS); 
 
 	LongintPtr = POINTER {UNSAFE} TO RECORD 
 		val: LONGINT; 
@@ -199,7 +199,7 @@ VAR
 	PROCEDURE ^ Err(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ GetIncr(base: UnsafeArray; dim: SIZE): SIZE; 
 	PROCEDURE ^ PutInc(base: UnsafeArray; dim, val: SIZE); 
-	PROCEDURE ^ GetLen(base: UnsafeArray; dim: SIZE): LONGINT; 
+	PROCEDURE ^ GetLen(base: UnsafeArray; dim: SIZE): SIZE; 
 	PROCEDURE ^ PutLen(base: UnsafeArray; dim, val: SIZE); 
 	PROCEDURE ^ GetAdr(base: UnsafeArray): ADDRESS; 
 	PROCEDURE ^ PutAdr(base: UnsafeArray; value: ADDRESS); 
@@ -207,35 +207,35 @@ VAR
 	PROCEDURE ^ GetPtr(base: UnsafeArray): ANY; 
 	PROCEDURE ^ SafePut(VAR dest: ANY; src: ANY); 
 	PROCEDURE ^ PutPtr(base: UnsafeArray; value: ANY); 
-	PROCEDURE ^ GetSize(base: UnsafeArray): LONGINT; 
+	PROCEDURE ^ GetSize(base: UnsafeArray): SIZE; 
 	PROCEDURE ^ PutSize(base: UnsafeArray; val: SIZE); 
 	PROCEDURE ^ GetDim(base: UnsafeArray): SIZE; 
 	PROCEDURE ^ GetFlags(base: UnsafeArray): SET; 
 	PROCEDURE ^ PutDim(base: UnsafeArray; dim: SIZE); 
 	PROCEDURE ^ PutFlags(base: UnsafeArray; flags: SET); 
 	PROCEDURE ^ Report(CONST name: ARRAY OF CHAR; s: ADDRESS); 
-	PROCEDURE ^ GetArrayDesc(dim: LONGINT): Tensor; 
+	PROCEDURE ^ GetArrayDesc(dim: SIZE): Tensor; 
 	PROCEDURE ^ EnsureArrayDesc*(dim: SIZE; VAR d: Tensor); 
-	PROCEDURE ^ Halt(code: LONGINT; left, right, dest: LONGINT); 
-	PROCEDURE ^ FindPattern1(left, dim: ADDRESS; VAR d, len, linc: LONGINT); 
-	PROCEDURE ^ FindPattern2(left, right: ADDRESS; dim: LONGINT; VAR d, len, linc, ri: LONGINT); 
-	PROCEDURE ^ FindPattern3(left, right, dest: ADDRESS; dim: LONGINT; VAR d, len, linc, ri, di: LONGINT); 
-	PROCEDURE ^ Reverse(src: ADDRESS; dim: LONGINT); 
+	PROCEDURE ^ Halt(code: SIZE; left, right, dest: ADDRESS); 
+	PROCEDURE ^ FindPattern1(left, dim: ADDRESS; VAR d, len, linc: SIZE); 
+	PROCEDURE ^ FindPattern2(left, right: ADDRESS; dim: SIZE; VAR d, len, linc, ri: SIZE); 
+	PROCEDURE ^ FindPattern3(left, right, dest: ADDRESS; dim: SIZE; VAR d, len, linc, ri, di: SIZE); 
+	PROCEDURE ^ Reverse(src: ADDRESS; dim: SIZE); 
 	PROCEDURE ^ CopyUpCompatible(dest, src: ADDRESS; VAR modes: SET); 
-	PROCEDURE ^ AllocateTemp(VAR dest: ADDRESS; src: ADDRESS; Size: LONGINT): ANY; 
-	PROCEDURE ^ ApplyGenericUnaryAAOpS(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopS; op: PROCEDURE (x: SHORTINT):SHORTINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpI(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopI; op: PROCEDURE (x: INTEGER):INTEGER); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpL(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopL; op: PROCEDURE (x: LONGINT):LONGINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpH(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopH; op: PROCEDURE (x: HUGEINT):HUGEINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpR(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopR; op: PROCEDURE (x: REAL):REAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpX(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopX; op: PROCEDURE (x: LONGREAL):LONGREAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpZ(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopZ; op: PROCEDURE (x: COMPLEX):COMPLEX); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(d, l: ADDRESS; elementSize: LONGINT; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
-	PROCEDURE ^ ApplyUnaryAAOp(d, l: ADDRESS; elementSize: LONGINT; Loop: UnaryAALoop); 
+	PROCEDURE ^ AllocateTemp(VAR dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY; 
+	PROCEDURE ^ ApplyGenericUnaryAAOpS(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE (x: SHORTINT):SHORTINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpI(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE (x: INTEGER):INTEGER); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpL(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE (x: LONGINT):LONGINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpH(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE (x: HUGEINT):HUGEINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpR(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE (x: REAL):REAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpX(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE (x: LONGREAL):LONGREAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpZ(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE (x: COMPLEX):COMPLEX); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
+	PROCEDURE ^ ApplyUnaryAAOp(d, l: ADDRESS; elementSize: SIZE; Loop: UnaryAALoop); 
 	PROCEDURE ^ ApplyUnaryASOp(dest, l: ADDRESS; Loop: UnaryASLoop); 
 	PROCEDURE ^ ApplyUnarySAOp(d, right: ADDRESS; Loop: UnarySALoop); 
-	PROCEDURE ^ ApplyBinaryAAAOp(d, l, r: ADDRESS; elementSize: LONGINT; Loop: BinaryAAALoop); 
-	PROCEDURE ^ ApplyBinaryASAOp(d, l, right: ADDRESS; elementSize: LONGINT; Loop: BinaryASALoop); 
+	PROCEDURE ^ ApplyBinaryAAAOp(d, l, r: ADDRESS; elementSize: SIZE; Loop: BinaryAAALoop); 
+	PROCEDURE ^ ApplyBinaryASAOp(d, l, right: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
 	PROCEDURE ^ ApplyBinaryAASOp(dest, l, r: ADDRESS; Loop: BinaryAASLoop); 
 	PROCEDURE ^ ApplyBinaryAABOp(l, r: ADDRESS; Loop: BinaryAABLoop; geometryMismatchDefault: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ ApplyBinaryASBOp(l, right: ADDRESS; Loop: BinaryASBLoop): BOOLEAN; 
@@ -243,7 +243,7 @@ VAR
 	PROCEDURE ^ Copy2(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy1(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy8(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
-	PROCEDURE {FingerPrint(1857348743)}  - MoveB*(srcadr, destadr, len: LONGINT);
+	PROCEDURE {FingerPrint(1857348743)}  - MoveB*(srcadr, destadr, len: SIZE);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  len
 		MOV	EDI, [ESP+4]	;  destadr
@@ -277,9 +277,9 @@ VAR
 	
 	END MoveB; 
 	PROCEDURE ^ CopyContent(dest, src: ADDRESS; elementSize: SIZE); 
-	PROCEDURE ^ AllocateSame(VAR dest: ADDRESS; src: ADDRESS; elementsize: LONGINT): ANY; 
+	PROCEDURE ^ AllocateSame(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE): ANY; 
 	PROCEDURE ^ TempDescCopy(src: ADDRESS): ANY; 
-	PROCEDURE ^ CopyArraySelf*(dest, src: ADDRESS; elementsize: LONGINT); 
+	PROCEDURE ^ CopyArraySelf*(dest, src: ADDRESS; elementsize: SIZE); 
 	PROCEDURE ^ CopyArray*(dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
 	PROCEDURE ^ CopyTensorSelf*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
 	PROCEDURE ^ CopyTensor*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
@@ -961,7 +961,7 @@ VAR
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF REAL): REAL; 
 	PROCEDURE ^ MaxAXLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
-	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF LONGINT; 
+	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF SIZE; 
 	PROCEDURE ^ SumASLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
 	PROCEDURE ^ SumAILoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
@@ -1006,11 +1006,11 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF COMPLEX; right: COMPLEX); 
 	PROCEDURE ^ AssignSLZALZLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF LONGCOMPLEX; right: LONGCOMPLEX); 
-	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: LONGINT): ANY; 
-	PROCEDURE ^ AllocateVector(dest: ADDRESS; l0, elementsize: LONGINT): ANY; 
-	PROCEDURE ^ ApplyMatMulLoop(dest, left, right: ADDRESS; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
-	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: ADDRESS; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
-	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: ADDRESS; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: SIZE): ANY; 
+	PROCEDURE ^ AllocateVector(dest: ADDRESS; l0, elementsize: SIZE): ANY; 
+	PROCEDURE ^ ApplyMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
 	PROCEDURE ^ MatMulASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	OPERATOR ^ "*"-(CONST left, right: ARRAY [*, *] OF SHORTINT): ARRAY [*, *] OF SHORTINT; 
 	OPERATOR ^ "*"-(CONST left: ARRAY [*, *] OF SHORTINT; CONST right: ARRAY [*] OF SHORTINT): ARRAY [*] OF SHORTINT; 
@@ -1084,18 +1084,18 @@ VAR
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGINT): ARRAY [*, *] OF LONGINT; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF REAL): ARRAY [*, *] OF REAL; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGREAL): ARRAY [*, *] OF LONGREAL; 
-	PROCEDURE ^ CheckTensorGeometry(left, right, dest: ADDRESS; ldim, rdim: LONGINT): BOOLEAN; 
-	PROCEDURE ^ DoReshape*(VAR dest: ADDRESS; src: LONGINT; CONST shape: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ CheckTensorGeometry(left, right, dest: ADDRESS; ldim, rdim: SIZE): BOOLEAN; 
+	PROCEDURE ^ DoReshape*(VAR dest: ADDRESS; src: ADDRESS; CONST shape: ARRAY [*] OF LONGINT); 
 	PROCEDURE ^ AllocateTensorA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray); 
 	PROCEDURE ^ AllocateArrayA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray); 
-	PROCEDURE ^ AllocateTensorX*(VAR destA: ARRAY [?] ; CONST a: ARRAY [*] OF LONGINT; Size: SIZE; tag: ADDRESS); 
+	PROCEDURE ^ AllocateTensorX*(VAR destA: ARRAY [?] ; CONST a: ARRAY [*] OF SIZE; Size: SIZE; tag: ADDRESS); 
 	PROCEDURE ^ LenA*(VAR dest: ARRAY [*] OF SIZE; src: ADDRESS); 
 	PROCEDURE ^ IncrA*(VAR dest: ARRAY [*] OF SIZE; src: ADDRESS); 
 	PROCEDURE ^ Len*(src: ADDRESS; d: SIZE): SIZE; 
 	PROCEDURE ^ Incr*(src: ADDRESS; d: SIZE): SIZE; 
 	PROCEDURE ^ AllocateTensor(VAR dest: ADDRESS; left, right: ADDRESS; Size: SIZE): ANY; 
 	PROCEDURE ^ FindPatternTensor(left, right: ADDRESS; VAR rdim, len, linc, ri: SIZE); 
-	PROCEDURE ^ ApplyTensorAAAOp(d, l, r: ADDRESS; elementSize: LONGINT; Loop: BinaryASALoop); 
+	PROCEDURE ^ ApplyTensorAAAOp(d, l, r: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
@@ -1104,11 +1104,11 @@ VAR
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF COMPLEX): ARRAY [?] OF COMPLEX; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 	PROCEDURE ^ InitOptimization; 
-	PROCEDURE ^ CopyDescriptor*(VAR destPtr: ANY; src: LONGINT; prefixIndices, prefixRanges, suffixIndices, suffixRanges: LONGINT); 
+	PROCEDURE ^ CopyDescriptor*(VAR destPtr: ANY; src: ADDRESS; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE); 
 	PROCEDURE ^ Reshape*(CONST left: ARRAY [?] ; CONST right: ARRAY [*] OF LONGINT): ARRAY [?] ; 
-	PROCEDURE ^ RangeFromInteger*(CONST integer: LONGINT): RANGE; 
+	PROCEDURE ^ RangeFromInteger*(CONST integer: SIZE): RANGE; 
 	PROCEDURE ^ ExpandDimensions*(CONST sourceArray: ARRAY [?] ; CONST keptDimensions: ARRAY [*] OF BOOLEAN): ARRAY [?] ; 
-	OPERATOR ^ "LEN"-(CONST range: RANGE): LONGINT; 
+	OPERATOR ^ "LEN"-(CONST range: RANGE): SIZE; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SHORTINT; op: PROCEDURE (x: SHORTINT):SHORTINT): ARRAY [?] OF SHORTINT; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF INTEGER; op: PROCEDURE (x: INTEGER):INTEGER): ARRAY [?] OF INTEGER; 
 	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGINT; op: PROCEDURE (x: LONGINT):LONGINT): ARRAY [?] OF LONGINT; 

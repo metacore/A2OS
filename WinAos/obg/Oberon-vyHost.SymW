@@ -49,7 +49,7 @@ VAR
 	PROCEDURE ^ GetLReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: LONGREAL): BOOLEAN; 
 	PROCEDURE ^ GetReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: REAL): BOOLEAN; 
 	PROCEDURE ^ ShowId*; 
-	PROCEDURE ^ DisplayNewPattern*(x, y: INTEGER; VAR img: ARRAY OF SET): LONGINT; 
+	PROCEDURE ^ DisplayNewPattern*(x, y: INTEGER; VAR img: ARRAY OF SET): ADDRESS; 
 	PROCEDURE ^ StackFrame*(msg: ARRAY OF CHAR); 
 BEGIN
 END vyHost.

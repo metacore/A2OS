@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = TRUE;
+	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -217,7 +217,6 @@ TYPE
 						SYSTEM.GET(bp, n);
 						IF ODD(n) THEN (* procedure descriptor at bp *)
 							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-							WriteType(desc); Trace.Ln;
 							IF desc # NIL THEN
 								a0 := ADDRESSOF(desc.offsets);
 								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
@@ -276,11 +275,7 @@ TYPE
 				WHILE p # NIL DO
 					cur := p(Process);
 					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
-						IF isWow64 THEN 
-							res := Kernel32.Wow64SuspendThread(cur.handle);
-						ELSE
-							res := Kernel32.SuspendThread(cur.handle);
-						END;
+						res := Kernel32.SuspendThread(cur.handle);
 						ASSERT(res >= 0);
 						cur.mode := Suspended
 					ELSE INC(num);
@@ -382,8 +377,6 @@ VAR
 
 	excplock: Kernel32.CriticalSection;  exceptionhandler: ExceptionHandler;
 	
-	isWow64: BOOLEAN; (* TRUE for WOW64 environment *)
-
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
 VAR r: Process; prio: LONGINT; res: Kernel32.BOOL;
@@ -1089,11 +1082,7 @@ END Await;
 		IF CurrentProcess() # t THEN
 			Machine.Acquire( Machine.Objects );
 			LOOP
-				IF isWow64 THEN 
-					retBOOL := Kernel32.Wow64SuspendThread(t.handle);
-				ELSE
-					retBOOL := Kernel32.SuspendThread( t.handle );
-				END;
+				retBOOL := Kernel32.SuspendThread( t.handle );
 				t.state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl);
 				retBOOL := Kernel32.GetThreadContext( t.handle, t.state );
 				mod := Modules.ThisModuleByAdr( t.state.PC );  Trace.String( "Objects Break at adr: " );
@@ -1343,7 +1332,6 @@ BEGIN
 END ReenterA2;
 
 VAR
-	lpContext: Kernel32.Wow64Context;
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
 	
 BEGIN
@@ -1356,14 +1344,6 @@ BEGIN
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
 	
 	
-	(* determine whether it is WOW64 environment *)
-	(*
-	isWow64 := (Kernel32.Wow64GetThreadContext # NIL) & (Kernel32.Wow64GetThreadContext(Kernel32.GetCurrentThread(),lpContext) # 0); 
-	TRACE("Objects 5"); 
-	IF isWow64 THEN
-		Trace.String("Use Wow64"); Trace.Ln;
-	END;
-	*)
 	Init;
 END Objects.
 

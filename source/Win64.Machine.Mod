@@ -41,11 +41,9 @@ CONST
 
 	StrongChecks = FALSE;
 
-	HeaderSize = 40H; (* cf. Linker0 *)
-	EndBlockOfs = 38H;	(* cf. Linker0 *)
 	MemoryBlockOfs = BlockHeaderSize + RecordDescSize + BlockHeaderSize; (* memory block (including header) starts at offset HeaderSize *)
 
-	MemBlockSize = 128*1024*1024; (* must be multiple of StaticBlockSize *)
+	MemBlockSize = 32*1024*1024; (* must be multiple of StaticBlockSize *)
 	MinMemBlockSize = 4*1024*1024;
 
 	NilVal = 0;
@@ -1064,48 +1062,48 @@ CODE{SYSTEM.AMD64}
 	POP RDI
 END SetRDI;
 
-PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
+PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+CODE{SYSTEM.AMD64}
+	MOV EDX,[RBP+port]
 	IN AL, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], AL
+	MOV RCX, [RBP+val]
+	MOV [RCX], AL
 END Portin8;
 
-PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
+PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+CODE{SYSTEM.AMD64}
+	MOV EDX,[RBP+port]
 	IN AX, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], AX
+	MOV RCX, [RBP+val]
+	MOV [RCX], AX
 END Portin16;
 
-PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
+PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+CODE{SYSTEM.AMD64}
+	MOV EDX,[RBP+port]
 	IN EAX, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], EAX
+	MOV RCX, [RBP+val]
+	MOV [RCX], EAX
 END Portin32;
 
-PROCEDURE Portout8*(port: LONGINT; val: CHAR);
-CODE{SYSTEM.i386}
-	MOV AL,[EBP+val]
-	MOV EDX,[EBP+port]
+PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+CODE{SYSTEM.AMD64}
+	MOV AL,[RBP+val]
+	MOV EDX,[RBP+port]
 	OUT DX,AL
 END Portout8;
 
-PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV AX,[EBP+val]
-	MOV EDX,[EBP+port]
+PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+CODE{SYSTEM.AMD64}
+	MOV AX,[RBP+val]
+	MOV EDX,[RBP+port]
 	OUT DX,AX
 END Portout16;
 
-PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EAX,[EBP+val]
-	MOV EDX,[EBP+port]
+PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+CODE{SYSTEM.AMD64}
+	MOV EAX,[RBP+val]
+	MOV EDX,[RBP+port]
 	OUT DX,EAX
 END Portout32;
 

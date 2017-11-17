@@ -3364,10 +3364,11 @@ TYPE
 				 		IF out.os.type = Sections.VarSection THEN
 				 			IF out.pc = 1 THEN out.SetAlignment(FALSE,1)
 				 			ELSIF out.pc = 2 THEN out.SetAlignment(FALSE,2)
-				 			ELSIF out.pc > 2 THEN out.SetAlignment(FALSE,4)
+				 			ELSIF (out.pc > 4) & (bits > 32) THEN out.SetAlignment(FALSE,8)
+				 			ELSIF (out.pc > 2) THEN out.SetAlignment(FALSE,4)
 				 			END;
 				 		ELSIF out.os.type = Sections.ConstSection THEN
-				 			out.SetAlignment(FALSE,4);
+				 			out.SetAlignment(FALSE,bits DIV 8);
 				 		END;
 			 		END
 			 	END

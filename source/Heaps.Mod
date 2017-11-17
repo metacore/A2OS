@@ -26,7 +26,8 @@ CONST
 
 	MaxTries = 16;				(* max number of times to try and allocate memory, before trapping *)
 	Unmarked = 0;				(* mark value of free blocks *)
-	BlockSize* = 32;			(* power of two, <= 32 for RegisterCandidates *)
+	BlockSize* = 8*SIZEOF(ADDRESS);			(* power of two, <= 32 for RegisterCandidates. Must be large enough to accomodate any basic block *)
+	
 	ArrayAlignment = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
 	BlockHeaderSize* = 2 * AddressSize;
 	HeapBlockOffset* = - 2 * AddressSize;

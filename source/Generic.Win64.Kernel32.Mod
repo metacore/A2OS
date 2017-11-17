@@ -274,10 +274,6 @@ TYPE
 	*)
 	END; 
 				
-
-	Wow64Context*= RECORD (Context)
-		extension: ARRAY 512 (* MaxWOW64Extension *) OF CHAR;
-	END;
 	
 	ExceptionRecordPtr* = POINTER {UNSAFE} TO ExceptionRecord;
 	ExceptionRecord* = RECORD
@@ -635,9 +631,6 @@ VAR
 	GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;
 
-	(** The GetThreadContext function retrieves the context of the specified thread. *)
-	Wow64GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
-																			  VAR lpContext: Wow64Context ): BOOL;
 
 	(** The GetThreadPriority function returns the priority value for the specified thread. This value, together with
 			the priority class of the thread's process, determines the thread's base-priority level. *)
@@ -828,8 +821,6 @@ VAR
 	Sleep-: PROCEDURE {WINAPI} ( dwMilliseconds: LONGINT );
 	(** The SuspendThread function suspends the specified thread. *)
 	SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
-	(** The SuspendThread function suspends the specified thread. *)
-	Wow64SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
 	(** The SystemTimeToFileTime function converts a system time to a file time. *)
 	SystemTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime;
 																					   VAR lpFileTime: FileTime ): BOOL;
@@ -1029,7 +1020,6 @@ VAR
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
 		GetProcAddress(mod, "GetTempPathA",SYSTEM.VAL(ADDRESS,GetTempPath));
 		GetProcAddress(mod, "GetThreadContext",SYSTEM.VAL(ADDRESS,GetThreadContext));
-		GetProcAddress(mod, "Wow64GetThreadContext",SYSTEM.VAL(ADDRESS,Wow64GetThreadContext));
 		GetProcAddress(mod, "GetThreadPriority",SYSTEM.VAL(ADDRESS,GetThreadPriority));
 		GetProcAddress(mod, "GetThreadTimes",SYSTEM.VAL(ADDRESS,GetThreadTimes));
 		GetProcAddress(mod, "GetTickCount",SYSTEM.VAL(ADDRESS,GetTickCount));
@@ -1096,7 +1086,6 @@ VAR
 		GetProcAddress(mod, "SetupComm",SYSTEM.VAL(ADDRESS,SetupComm));
 		GetProcAddress(mod, "Sleep",SYSTEM.VAL(ADDRESS,Sleep));
 		GetProcAddress(mod, "SuspendThread",SYSTEM.VAL(ADDRESS,SuspendThread));
-		GetProcAddress(mod, "Wow64SuspendThread",SYSTEM.VAL(ADDRESS,Wow64SuspendThread));
 		GetProcAddress(mod, "SystemTimeToFileTime",SYSTEM.VAL(ADDRESS,SystemTimeToFileTime));
 		GetProcAddress(mod, "TerminateThread",SYSTEM.VAL(ADDRESS,TerminateThread));
 		GetProcAddress(mod, "TlsAlloc",SYSTEM.VAL(ADDRESS,TlsAlloc));

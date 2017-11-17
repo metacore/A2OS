@@ -6,7 +6,7 @@ IMPORT
 CONST
 	ModuleName = "WMPerfMonPluginHeap";
 
-	BlockSize = 32; (* {BlockSize = Heaps.BlockSize} *)
+	BlockSize = 8*SIZEOF(ADDRESS); (* {BlockSize = Heaps.BlockSize} *)
 
 TYPE
 	SizeArray = ARRAY 27 OF LONGINT;

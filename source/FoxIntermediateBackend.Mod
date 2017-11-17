@@ -11343,7 +11343,7 @@ TYPE
 		PROCEDURE AddPointer(section: IntermediateCode.Section; offset: LONGINT);
 		BEGIN
 			IF ~implementationVisitor.backend.cooperative THEN
-				NamedSymbol(modulePointerSection, section.name, NIL, 0, offset);
+				NamedSymbol(modulePointerSection, section.name, NIL, offset, 0);
 				INC(modulePointers);
 				(* optimization hint: this can be done once at the end but for consistency of the first tests we keep it like this *)
 				PatchSize(modulePointerSection, modulePointerSizePC, modulePointers); 
@@ -12438,6 +12438,7 @@ TYPE
 						INCL(flags, flagConstructor);
 					END;
 					Set(section, flags);
+					IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0); END;
 					
 					IF RefInfo THEN Info(section, "Parameters") END;
 					parameter := procedureType.firstParameter;
@@ -12996,6 +12997,7 @@ TYPE
 					Info(source, "type flags");
 					flags := {};
 					Set( source, flags);
+					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
 					
 					Info(source, "pointer to module");
 					moduleSection := ModuleSection();
@@ -13101,6 +13103,7 @@ TYPE
 			flags := {};
 			IF  implementationVisitor.backend.preciseGC THEN INCL(flags,0) END;
 			Set( moduleSection, flags);
+			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END;
 
 			IF implementationVisitor.backend.cooperative THEN
 				PatchSymbol(moduleSection,MonitorOffset,moduleSection.name,NIL,moduleSection.pc,0);

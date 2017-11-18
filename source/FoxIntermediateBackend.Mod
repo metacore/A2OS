@@ -12964,7 +12964,6 @@ TYPE
 			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
 				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
 				sectionName: Basic.SectionName;
-				
 			CONST MPO=-40000000H;
 			BEGIN
 					(*
@@ -12984,12 +12983,14 @@ TYPE
 					Basic.AppendToSegmentedName(name,".@Info");
 					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 					
-					Info(source, "HeapBlock");
-					Address(source,0); (* an empty heap block prevents GC marking *)
-					Info(source, "TypeDescriptor");
-					Address(source,0);
-					ASSERT(source.pc = EmptyBlockOffset); (* sanity check *)
-
+					IF ~implementationVisitor.backend.cooperative  THEN 
+						Info(source, "HeapBlock");
+						Address(source,0); (* an empty heap block prevents GC marking *)
+						Info(source, "TypeDescriptor");
+						Address(source,0);
+						ASSERT(source.pc = EmptyBlockOffset); (* sanity check *)
+					END;
+					
 					Info(source, "type info size");	Address(source, 6*ToMemoryUnits(module.system,module.system.addressSize)+32);
 					Address(source,MPO-4);
 					Info(source, "type tag pointer");

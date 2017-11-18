@@ -15,7 +15,7 @@ VAR
 PROCEDURE Args(): String;
 VAR size, pos: SIZE; i,j: LONGINT; str: String;
 	argc: LONGINT;
-	argv {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF POINTER {UNSAFE} TO ARRAY OF CHAR;
+	argv {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF POINTER {UNSAFE,UNTRACED} TO ARRAY OF CHAR;
 BEGIN
 	argc := Unix.argc;
 	argv := Unix.argv;

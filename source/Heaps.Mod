@@ -88,10 +88,10 @@ TYPE
 	END;
 
 	HeapBlock* = POINTER TO HeapBlockDesc;	(* base object of all heap blocks *)
-	HeapBlockU = POINTER {UNSAFE} TO HeapBlockDesc;	(* base object of all heap blocks *)
+	HeapBlockU = POINTER {UNSAFE,UNTRACED} TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockDesc* = RECORD
 		heapBlock {FICTIVE =HeapBlockOffset}: ADDRESS; 
-		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE} TO StaticTypeDesc; 
+		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc; 
 		(* when this is changed --> change constant in Machine too and provide changes in FoxIntermediateBackend where noted *)
 		mark: LONGINT;
 		dataAdr-: ADDRESS;
@@ -114,7 +114,7 @@ TYPE
 	*)
 
 	FreeBlock* = POINTER TO FreeBlockDesc;
-	FreeBlockU = POINTER {UNSAFE} TO FreeBlockDesc;
+	FreeBlockU = POINTER {UNSAFE,UNTRACED} TO FreeBlockDesc;
 	FreeBlockDesc* = RECORD (HeapBlockDesc)
 		next: FreeBlock;
 	END;
@@ -124,12 +124,12 @@ TYPE
 	END;
 
 	RecordBlock* = POINTER TO RecordBlockDesc;
-	RecordBlockU = POINTER {UNSAFE} TO RecordBlockDesc;
+	RecordBlockU = POINTER {UNSAFE,UNTRACED} TO RecordBlockDesc;
 	RecordBlockDesc = RECORD  (HeapBlockDesc)
 	END;
 
 	ProtRecBlock* = POINTER TO ProtRecBlockDesc;
-	ProtRecBlockU = POINTER {UNSAFE} TO ProtRecBlockDesc;
+	ProtRecBlockU = POINTER {UNSAFE,UNTRACED} TO ProtRecBlockDesc;
 	ProtRecBlockDesc* = RECORD  (RecordBlockDesc)
 		count*: LONGINT;
 		locked*: BOOLEAN;
@@ -140,11 +140,11 @@ TYPE
 	END;
 
 	ArrayBlock* = POINTER TO ArrayBlockDesc;
-	ArrayBlockU = POINTER {UNSAFE} TO ArrayBlockDesc;
+	ArrayBlockU = POINTER {UNSAFE,UNTRACED} TO ArrayBlockDesc;
 	ArrayBlockDesc = RECORD  (HeapBlockDesc)
 	END;
 
-	TypeInfo*= POINTER{UNSAFE} TO TypeInfoDesc;
+	TypeInfo*= POINTER{UNSAFE,UNTRACED} TO TypeInfoDesc;
 	TypeInfoDesc = RECORD
 		descSize: SIZE;
 		sentinel: ADDRESS;	(* = MPO-4 *)
@@ -155,7 +155,7 @@ TYPE
 	END;
 
 	StaticTypeBlock*= POINTER TO StaticTypeDesc;
-	StaticTypeBlockU= POINTER {UNSAFE} TO StaticTypeDesc;
+	StaticTypeBlockU= POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 	StaticTypeDesc = RECORD
 		info {FICTIVE =TypeDescOffset}: TypeInfo;
 		recSize: SIZE;
@@ -164,18 +164,18 @@ TYPE
 
 	PointerOffsets = POINTER TO ARRAY OF SIZE;
 	
-	Block*= POINTER	{UNSAFE} TO RECORD
+	Block*= POINTER	{UNSAFE,UNTRACED} TO RECORD
 		heapBlock {FICTIVE =HeapBlockOffset}: HeapBlock; 
 		typeBlock {FICTIVE =TypeDescOffset}: StaticTypeBlock;
 	END;
 
-	DataBlockU = POINTER {UNSAFE} TO DataBlockDesc;
+	DataBlockU = POINTER {UNSAFE,UNTRACED} TO DataBlockDesc;
 	DataBlockDesc*= RECORD
-		heapBlock {FICTIVE =HeapBlockOffset}: POINTER {UNSAFE} TO HeapBlockDesc; 
-		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE} TO StaticTypeDesc;
+		heapBlock {FICTIVE =HeapBlockOffset}: POINTER {UNSAFE,UNTRACED} TO HeapBlockDesc; 
+		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 	END;
 	
-	ArrayDataBlockU = POINTER {UNSAFE} TO ArrayDataBlockDesc;
+	ArrayDataBlockU = POINTER {UNSAFE,UNTRACED} TO ArrayDataBlockDesc;
 	ArrayDataBlockDesc*= RECORD (DataBlockDesc)
 		numElems: SIZE;
 		current: ADDRESS; (* unused *)
@@ -448,8 +448,8 @@ VAR orgBlock: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	orgHeapBlock {UNTRACED}: HeapBlock;
 	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
 	protected: ProtRecBlock;
-	b : POINTER {UNSAFE} TO RECORD p: ANY END;
-	meta: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
+	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
+	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
 BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;
 	Inspect(p,currentGeneration);
@@ -900,8 +900,8 @@ END CheckCandidates;
 PROCEDURE Candidate*(p: ADDRESS);
 VAR memBlock, memBlockX {UNTRACED}: Machine.MemoryBlock; 
 	tdAdr, heapBlockAdr: ADDRESS;
-	tdPtr: POINTER {UNSAFE} TO RECORD typeAdr: ADDRESS END;
-	hbPtr: POINTER {UNSAFE} TO RECORD heapBlock: HeapBlock END;
+	tdPtr{UNTRACED}: POINTER {UNSAFE} TO RECORD typeAdr: ADDRESS END;
+	hbPtr{UNTRACED}: POINTER {UNSAFE} TO RECORD heapBlock: HeapBlock END;
 	heapBlock {UNTRACED}: HeapBlock;
 BEGIN
 	IF p MOD SIZEOF(ADDRESS) # 0 THEN RETURN END; 
@@ -1542,7 +1542,7 @@ BEGIN
 END NewArr;
 
 TYPE
-UnsafeArray= POINTER {UNSAFE} TO UnsafeArrayDesc;
+UnsafeArray= POINTER {UNSAFE,UNTRACED} TO UnsafeArrayDesc;
 UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
 	len: ARRAY 8 OF SIZE;
 END;

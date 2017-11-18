@@ -159,7 +159,7 @@ TYPE
 				resourceid*, serial*: LONGINT;
 				errorCode*, requestCode*, minorCode*: CHAR
 			END;
-	ErrorEventPtr* = POINTER {UNSAFE} TO ErrorEvent;
+	ErrorEventPtr* = POINTER {UNSAFE,UNTRACED} TO ErrorEvent;
 	ErrorHandler* = PROCEDURE ( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;
 	IOErrorHandler = PROCEDURE ( d: DisplayPtr; p2, p3, p4: LONGINT ): LONGINT;
 
@@ -486,7 +486,7 @@ VAR
 		Unix.Dlsym( xlib, "XAllocColor", ADDRESSOF( AllocColor ) );
 	END LinkToX;
 
-	PROCEDURE MyErrorHandler( d: DisplayPtr;  err: ErrorEventPtr ): LONGINT;
+	PROCEDURE MyErrorHandler( d: DisplayPtr;  err {UNTRACED}: ErrorEventPtr ): LONGINT;
 	BEGIN
 		ErrorFlag := TRUE;
 		GetErrorText( d, ORD( err.errorCode ), ErrorText, BufferSize );

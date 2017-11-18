@@ -405,8 +405,8 @@ TYPE
 		dev: LinkDevice;
 		rdsBuf: ARRAY RxRingSize*SIZEOF(RxTxDescriptor)+255 OF CHAR;
 		tdsBuf: ARRAY TxRingSize*SIZEOF(RxTxDescriptor)+255 OF CHAR;
-		rds: ARRAY RxRingSize OF POINTER{UNSAFE} TO RxTxDescriptor;
-		tds: ARRAY TxRingSize OF POINTER{UNSAFE} TO RxTxDescriptor;
+		rds: ARRAY RxRingSize OF POINTER{UNSAFE, UNTRACED} TO RxTxDescriptor;
+		tds: ARRAY TxRingSize OF POINTER{UNSAFE, UNTRACED} TO RxTxDescriptor;
 		curRD, curTD: LONGINT;
 		firstRD, firstTD: LONGINT;
 		lastRD, lastTD: LONGINT;
@@ -3351,7 +3351,7 @@ VAR
 	PROCEDURE TestAlloc*;
 	VAR
 		addr, physAddr: ADDRESS;
-		dsc: ARRAY TxRingSize OF POINTER{UNSAFE} TO RxTxDescriptor; 
+		dsc: ARRAY TxRingSize OF POINTER{UNSAFE,UNTRACED} TO RxTxDescriptor; 
 		r: LONGINT;
 	BEGIN
 		addr := ADDRESSOF(buf[0]);

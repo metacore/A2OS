@@ -210,7 +210,7 @@ TYPE
 		Cr0NpxState*: LONGINT
 	END;
 
-	ContextPtr*= POINTER {UNSAFE} TO Context;
+	ContextPtr*= POINTER {UNSAFE,UNTRACED} TO Context;
 	(* 32 bit
 	Context* = RECORD
 		ContextFlags*: DWORD;
@@ -275,10 +275,10 @@ TYPE
 	END; 
 				
 	
-	ExceptionRecordPtr* = POINTER {UNSAFE} TO ExceptionRecord;
+	ExceptionRecordPtr* = POINTER {UNSAFE,UNTRACED} TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
-		nextExceptionRecord*: ExceptionRecordPtr;
+		nextExceptionRecord* {UNTRACED}: ExceptionRecordPtr;
 		ExceptionAddress*: ADDRESS;
 		NumberParameters*: LONGINT;
 		ExceptionInformation*: ARRAY ExceptionMaximumParameters OF LONGINT
@@ -291,7 +291,7 @@ TYPE
 																														   dispatch: LONGINT ): LONGINT;
 
 	ExceptionPointers* = RECORD
-		exception*: ExceptionRecordPtr;
+		exception* {UNTRACED}: ExceptionRecordPtr;
 		context*: ContextPtr;
 	END; 																														   
 

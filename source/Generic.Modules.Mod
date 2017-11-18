@@ -38,7 +38,7 @@ TYPE
 	(* the correponding name array is protected from being GCed via module's internal pointer arrray 
 		compiler generated!
 	*)
-	DynamicName* = POINTER {UNSAFE} TO ARRAY 256 OF CHAR;
+	DynamicName* = POINTER {UNSAFE,UNTRACED} TO ARRAY 256 OF CHAR;
 	
 	Command* = RECORD
 		(* Fields exported for initialization by loader/linker only! Consider read-only! *)
@@ -54,7 +54,7 @@ TYPE
 		exports*: LONGINT; (* number of exports referenced by ExportArray *)
 		dsc* {UNTRACED}: ExportArray; (* pointer to memory containing a raw array with "exports" entries *)
 	END;
-	ExportArray* = POINTER {UNSAFE} TO ARRAY OF ExportDesc;
+	ExportArray* = POINTER {UNSAFE,UNTRACED} TO ARRAY OF ExportDesc;
 
 	Bytes* = POINTER TO ARRAY OF CHAR;
 

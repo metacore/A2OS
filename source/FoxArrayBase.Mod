@@ -106,7 +106,7 @@ TYPE
 	
 	Tensor = POINTER TO ArrayDescriptor;
 	
-	UnsafeArray*= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
+	UnsafeArray*= POINTER {UNSAFE,UNTRACED} TO RECORD(ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc;
 	END;
 	
@@ -2136,7 +2136,7 @@ Sufficient (but not necessary) conditions:
 	
 (** COMPLEX *)
 	PROCEDURE GenericLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
-	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: COMPLEX END;	
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
 			lval := ladr;
@@ -2149,7 +2149,7 @@ Sufficient (but not necessary) conditions:
 
 (** LONGCOMPLEX *)
 	PROCEDURE GenericLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
-	VAR lval,dval: POINTER{UNSAFE} TO RECORD val: LONGCOMPLEX END;	
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: LONGCOMPLEX END;	
 	BEGIN
 		WHILE (len > 0) DO
 			lval := ladr;
@@ -7378,7 +7378,7 @@ Sufficient (but not necessary) conditions:
 	*)
 
 TYPE 
-	LongintPtr = POINTER {UNSAFE} TO RECORD val: LONGINT END;
+	LongintPtr = POINTER {UNSAFE,UNTRACED} TO RECORD val: LONGINT END;
 	
 	PROCEDURE MinALALLoop( ladr, radr, dadr: LongintPtr; linc, rinc, dinc, len: SIZE); 
 	BEGIN

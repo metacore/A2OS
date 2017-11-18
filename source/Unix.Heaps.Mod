@@ -860,7 +860,7 @@ TYPE
 				RETURN size*staticElements;
 			END GetSize;
 			
-			PROCEDURE SetSizes(dest: UnsafeArray);
+			PROCEDURE SetSizes(dest {UNTRACED}: UnsafeArray);
 			VAR i: SIZE;
 			BEGIN
 				FOR i := 0 TO dim-1 DO

@@ -352,8 +352,8 @@ CONST
 		s8: SIGNED8; s16: SIGNED16; s32: SIGNED32; s64: SIGNED64;
 		u8: UNSIGNED8; u16: UNSIGNED16; u32: UNSIGNED32; u64: UNSIGNED64;
 		r: REAL; x: LONGREAL;
-		cplx: POINTER {UNSAFE} TO RECORD re,im: REAL END;
-		lcplx: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
+		cplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: REAL END;
+		lcplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
 		set: SET;
 		byte: SYSTEM.BYTE;
 
@@ -510,7 +510,7 @@ CONST
 			lens: ARRAY 8 OF LenInc;
 		END;
 		
-		VAR t: UnsafeArray; i: SIZE;
+		VAR t {UNTRACED}: UnsafeArray; i: SIZE;
 	BEGIN
 		IF adr = NIL THEN w.String(" (NIL)"); 
 		ELSIF  OnHeapOrStack(adr, low, high) THEN

@@ -495,7 +495,7 @@ TYPE
 		(* static generator state variables, considered constant during generation *)
 		runtimeModuleName: SyntaxTree.IdentifierString;
 		cpuBits: LONGINT;
-		opBP, opSP, opRA, opRB, opRC, opRD, opRS, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; (* base pointer, stack pointer, register A, depends on cpuBits*)
+		opBP, opSP, opRA, opRB, opRC,  opRD, opRSI, opRDI, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; (* base pointer, stack pointer, register A, depends on cpuBits*)
 		BP, SP, RA, RD, RS, RC: LONGINT; (* base pointer and stack pointer register index, depends on cpuBits *)
 
 		emitter: Assembler.Emitter; (* assembler generating and containing the machine code *)
@@ -535,14 +535,16 @@ TYPE
 			NEW(emitter,diagnostics);
 			IF cpuBits=32 THEN
 				NEW(physicalRegisters32, backend.forceFPU, backend.cooperative); physicalRegisters := physicalRegisters32; error := ~emitter.SetBits(32);
-				opBP := opEBP; opSP := opESP; opRA := opEAX; opRB := opEBX; opRD := opEDI; opRS := opESI; opRC := opECX;
+				opBP := opEBP; opSP := opESP; opRA := opEAX; opRB := opEBX; opRD := opEDX; opRDI := opEDI; opRSI := opESI; opRC := opECX;
 				SP := ESP; BP := EBP; RA := EAX;
 				RD := EDI; RS := ESI; RC := ECX;
 				ASSERT(~error);
 			ELSIF cpuBits=64 THEN
 				NEW(physicalRegisters64, backend.forceFPU, backend.cooperative); physicalRegisters := physicalRegisters64; error := ~emitter.SetBits(64);
-				opBP := opRBP; opSP := opRSP; opRA := registerOperands[RAX]; opRB := registerOperands[RBX]; opRD := registerOperands[RDI];
-				opRS := registerOperands[RSI]; opRC := registerOperands[RCX];
+				opBP := opRBP; opSP := opRSP; 
+				opRA := registerOperands[RAX]; opRC := registerOperands[RCX];
+				opRB := registerOperands[RBX]; opRD := registerOperands[RDX];
+				opRDI := registerOperands[RDI]; opRSI := registerOperands[RSI];
 				opR8 := registerOperands[R8]; opR9 := registerOperands[R9];
 				opR10 := registerOperands[R10]; opR11 := registerOperands[R11];
 				opR12 := registerOperands[R12]; opR13 := registerOperands[R13];
@@ -1292,9 +1294,10 @@ TYPE
 					END;
 					IF numberMachineWords >4 THEN
 						Assembler.InitImm(imm, 0, numberMachineWords DIV 4);
-						emitter.Emit2(InstructionSet.opMOV, opRC, imm); (* is EB register is non-volatile in WINAPI, would ec be better? *)
+						(* do not use EBX because it is not volative in WINAPI, do not use ECX: special register in COOP *)
+						emitter.Emit2(InstructionSet.opMOV, opRD, imm);
 						destPC := out.pc;
-						emitter.Emit1(InstructionSet.opDEC, opRC);
+						emitter.Emit1(InstructionSet.opDEC, opRD);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
@@ -1327,8 +1330,8 @@ TYPE
 					emitter.Emit1(InstructionSet.opPUSH,opESI);
 				ELSE ASSERT(cpuBits =64);
 					emitter.Emit1(InstructionSet.opPUSH,opRB);
-					emitter.Emit1(InstructionSet.opPUSH,opRD);
-					emitter.Emit1(InstructionSet.opPUSH,opRS);
+					emitter.Emit1(InstructionSet.opPUSH,opRDI);
+					emitter.Emit1(InstructionSet.opPUSH,opRSI);
 					emitter.Emit1(InstructionSet.opPUSH,opR12);
 					emitter.Emit1(InstructionSet.opPUSH,opR13);
 					emitter.Emit1(InstructionSet.opPUSH,opR14);
@@ -1352,8 +1355,8 @@ TYPE
 					emitter.Emit1(InstructionSet.opPOP,opR14);
 					emitter.Emit1(InstructionSet.opPOP,opR13);
 					emitter.Emit1(InstructionSet.opPOP,opR12);
-					emitter.Emit1(InstructionSet.opPOP,opRS);
-					emitter.Emit1(InstructionSet.opPOP,opRD);
+					emitter.Emit1(InstructionSet.opPOP,opRSI);
+					emitter.Emit1(InstructionSet.opPOP,opRDI);
 					emitter.Emit1(InstructionSet.opPOP,opRB);
 				END;
 				

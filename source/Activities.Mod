@@ -75,9 +75,9 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		address := framePointer;
 		currentActivity := SYSTEM.GetActivity ()(Activity); SYSTEM.SetActivity (SELF);
 		WHILE address # NIL DO
-			IF ODD (address) THEN
-				DEC (address);
-				stackFrame := address;
+			stackFrame := address;
+			IF ODD (stackFrame.descriptor) THEN
+				DEC (stackFrame.descriptor);
 				stackFrame.Reset;
 			ELSE
 				stackFrame := address - SIZE OF ADDRESS;

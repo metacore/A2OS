@@ -1225,15 +1225,13 @@ VAR
 	VAR i,j, segment: LONGINT; n: SectionName;
 	BEGIN
 		i := 0; segment := 0;
-		WHILE (segment < LEN(segmentedName)) DO
-			IF segmentedName[segment] >= 0 THEN
-				IF segment > 0 THEN name[i] := "."; INC(i) END;
-				StringPool.GetString(segmentedName[segment],n);
-				j := 0;
-				WHILE n[j] # 0X DO
+		WHILE (segment < LEN(segmentedName)) & (segmentedName[segment] >= 0) DO
+			IF segment > 0 THEN name[i] := "."; INC(i) END;
+			StringPool.GetString(segmentedName[segment],n);
+			j := 0;
+			WHILE n[j] # 0X DO
 				name[i] := n[j]; INC(i); INC(j);
 			END;
-		END;
 			INC(segment);
 		END;
 		name[i] := 0X;

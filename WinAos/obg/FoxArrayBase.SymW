@@ -105,7 +105,7 @@ TYPE
 
 	Tensor = POINTER TO ArrayDescriptor; 
 
-	UnsafeArray* = POINTER {UNSAFE} TO RECORD (ArrayDescriptor)
+	UnsafeArray* = POINTER {UNSAFE, UNTRACED} TO RECORD (ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc; 
 	END; 
 
@@ -164,7 +164,7 @@ TYPE
 
 	SmallMatMul* = PROCEDURE (dadr, ladr, radr: ADDRESS); 
 
-	LongintPtr = POINTER {UNSAFE} TO RECORD 
+	LongintPtr = POINTER {UNSAFE, UNTRACED} TO RECORD 
 		val: LONGINT; 
 	END; 
 VAR 

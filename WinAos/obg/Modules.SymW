@@ -21,7 +21,7 @@ CONST
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
 
-	DynamicName* = POINTER {UNSAFE} TO ARRAY 256 OF CHAR; 
+	DynamicName* = POINTER {UNSAFE, UNTRACED} TO ARRAY 256 OF CHAR; 
 
 	Command* = RECORD 
 		name*: Name; 
@@ -37,7 +37,7 @@ TYPE
 		dsc*{UNTRACED} : ExportArray; 
 	END; 
 
-	ExportArray* = POINTER {UNSAFE} TO ARRAY OF ExportDesc; 
+	ExportArray* = POINTER {UNSAFE, UNTRACED} TO ARRAY OF ExportDesc; 
 
 	Bytes* = POINTER TO ARRAY OF CHAR; 
 

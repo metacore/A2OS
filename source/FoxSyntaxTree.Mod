@@ -1384,7 +1384,7 @@ TYPE
 		END IsPointer;
 		
 		PROCEDURE NeedsTrace*(): BOOLEAN;
-		BEGIN RETURN ~isUnsafe & ~isUntraced;
+		BEGIN RETURN  ~isUntraced;
 		END NeedsTrace;
 
 		PROCEDURE Accept*(v: Visitor);

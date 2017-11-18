@@ -79,10 +79,10 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 			IF ODD (stackFrame.descriptor) THEN
 				DEC (stackFrame.descriptor);
 				stackFrame.Reset;
+				address := stackFrame.previous;
 			ELSE
-				stackFrame := address - SIZE OF ADDRESS;
+				address := stackFrame.descriptor;
 			END;
-			address := stackFrame.previous;
 		END;
 		SYSTEM.SetActivity (currentActivity);
 		stack := firstStack;

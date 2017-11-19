@@ -6602,6 +6602,27 @@ TYPE
 						variable := variable.nextVariable
 					END;
 				END;
+			ELSIF type IS SyntaxTree.CellType THEN
+				WITH type: SyntaxTree.CellType DO
+					baseType := type.baseType;
+					IF baseType # NIL THEN
+						baseType := baseType.resolved;
+						IF baseType IS SyntaxTree.PointerType THEN baseType := baseType(SyntaxTree.PointerType).pointerBase END;
+						InitFields(baseType,adr,offset);
+					END;
+					variable := type.cellScope.firstVariable;
+					WHILE variable # NIL DO
+						IF variable.initializer # NIL THEN
+							Evaluate(variable.initializer,initializerOp);
+							MakeMemory(mem,adr,IntermediateCode.GetType(system,variable.type),offset+ ToMemoryUnits(system,variable.offsetInBits));
+							Emit(Mov(position,mem,initializerOp.op));
+							ReleaseOperand(initializerOp);
+							ReleaseIntermediateOperand(mem);
+						END;					
+						InitFields(variable.type, adr, offset+ ToMemoryUnits(system,variable.offsetInBits));
+						variable := variable.nextVariable
+					END;
+				END;
 			ELSIF (type IS SyntaxTree.ArrayType) THEN
 				WITH type: SyntaxTree.ArrayType DO
 					IF type.form = SyntaxTree.Static THEN
@@ -8595,6 +8616,13 @@ TYPE
 					PushConstBoolean(baseType(SyntaxTree.CellType).FindProperty(Global.NameEngine) # NIL);
 					(* allocate *)
 					CallThis(position,"ActiveCellsRuntime","Allocate",7);
+
+					
+					Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+					(* l.op contains address of pointer to record *)
+					ToMemory(l.op,addressType,0);
+					(* l.op contains value  of pointer to record *)
+					InitFields(baseType, l.op,0);
 					
 					
 					(* add capabilities *)
@@ -8623,6 +8651,7 @@ TYPE
 					Emit(Push(position,l.op)); (* address for use after syscall *)
 					ReleaseOperand(l);
 					CallThis(position,"ActiveCellsRuntime","FinishedProperties",1);
+
 					
 					prevScope := currentScope;
 					init := OpenInitializer(temporaryVariable, baseType(SyntaxTree.CellType).cellScope);

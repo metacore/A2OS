@@ -26,7 +26,7 @@ CONST
 	DefaultContext* = "A2";
 	NoLoader=3400;
 
-	TraceBoot=TRUE;
+	TraceBoot=FALSE;
 
 	(* flags *)
 	PreciseGC* = 0;

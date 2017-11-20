@@ -115,6 +115,8 @@ CONST
 		sfTypeProcedure=33H;
 		sfSysFlag=34H;
 		sfInvisible=35H;
+		sfHidden = 0ACH;
+
 		sfReadOnly=36H;
 		sfObjFlag = 37H; (* fof: very (!) bad idea to have same number for two type flags *)
 		sfConst=37H;
@@ -1152,14 +1154,14 @@ TYPE
 					END;
 					thisIndex := numberTypes; INC(numberTypes);
 
-					IF tag = sfInvisible THEN visibility := SyntaxTree.Hidden;  R.RawNum(tag)  END;
+					IF tag = sfInvisible THEN visibility := SyntaxTree.Internal;  R.RawNum(tag)  END;
+					IF tag = sfHidden THEN visibility := SyntaxTree.Hidden; R.RawNum(tag) END;
 					IF tag = sfSysFlag THEN R.RawNum(sysflag); R.RawNum(tag)  END;
+
 
 					(* UserType2 *)
 					typtag := tag;
 					R.RawNum(tag);
-
-
 
 					baseType := Type();
 					R.RawString(name);
@@ -1931,7 +1933,9 @@ TYPE
 
 						name:="";
 						IF  typeDeclaration#NIL THEN typeDeclaration.GetName(name);
-							IF typeDeclaration.access* SyntaxTree.Public={} THEN
+							IF typeDeclaration.access  = SyntaxTree.Hidden THEN
+								w.RawNum(sfHidden);
+							ELSIF typeDeclaration.access* SyntaxTree.Public={} THEN
 								w.RawNum(sfInvisible);
 							END;
 						END;
@@ -2470,7 +2474,7 @@ END Test;
 END FoxBinarySymbolFile.
 
 
-SystemTools.FreeDownTo FoxBinarySymbolFile ~
+SystemTools.Free FoxBinarySymbolFile ~
 FoxBinarySymbolFile.Test  Visualizer   ~
 
 Compiler.Compile -PCtp Visualizer.Sym ~

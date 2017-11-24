@@ -86,6 +86,7 @@ TYPE
 					clientAddress: ARRAY 64 OF CHAR;
 					clientPort: LONGINT;
 					chanNo: LONGINT;
+					ptype: CHAR;
 				BEGIN
 					NEW( chan, remConn );
 					
@@ -103,11 +104,14 @@ TYPE
 						p.AppString( clientAddress );
 						p.AppInteger( clientPort );
 
-					remConn.SendPacket( p );
-					IF remConn.ReceivePacket( buf, len ) # OpenConfirm THEN
-						ErrorResponse( "SSH.OpenTunnel", buf, len );
-						RETURN FALSE
+					ptype := remConn.ReceivePacket( buf, len );
+					IF ptype = GlobalRequest THEN  (* ignore protocol extensions *)
+						ptype := remConn.ReceivePacket( buf, len )
 					END;
+					IF ptype # OpenConfirm THEN
+						ErrorResponse( "SSH.OpenTunnel", buf, len );  RETURN FALSE
+					END;
+					
 					chan.rchan := U.GetInt( buf, 5 );
 					chan.wsize := U.GetInt( buf, 9 );
 					chan.pmax := U.GetInt( buf, 13 );
@@ -486,7 +490,11 @@ TYPE
 		IF interactive THEN  p.AppInteger( 512 )  ELSE  p.AppInteger( MaxPacketSize )  END;
 
 		conn.SendPacket( p );
-		IF conn.ReceivePacket( buf, len ) # OpenConfirm THEN
+		ptype := conn.ReceivePacket( buf, len );
+		IF ptype = GlobalRequest THEN  (* ignore protocol extensions *)
+			ptype := conn.ReceivePacket( buf, len )
+		END;
+		IF ptype # OpenConfirm THEN
 			ErrorResponse( "SSH.OpenSession", buf, len );  RETURN NIL
 		END;
 

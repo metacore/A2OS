@@ -1152,6 +1152,12 @@ BEGIN
 	END
 END TerminateThis;
 
+(* called by WMProcessInfo to obtain the current state of a running process *)
+PROCEDURE UpdateProcessState*( p: Process );	
+BEGIN
+	(*  update p.stat.{PC,BP,SP}  *)
+END UpdateProcessState;
+
 (* Finalize a process. *)
 PROCEDURE FinalizeProcess(t: ANY);
 BEGIN

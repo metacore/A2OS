@@ -27,7 +27,7 @@ CONST
 
 	(* Process modes (in UnixAos Running means Running or Ready!) *)
 	Unknown* = 0;  Ready* = 1;  Running* = 2;  AwaitingLock* = 3;
-	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6;  Locked = 7;
+	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6; 
 
 	Second* = 1000;	(* frequency of ticks increments in Hz *)
 
@@ -40,6 +40,8 @@ VAR
 	clock				: Clock;
 	timers				: Timer;  
 	timerListMutex	: Unix.Mutex_t;
+	
+	timerStopped: BOOLEAN;
 	
 	(* processes *)
 	root-	: Process;	(*!  Anchor of all instantiated threads in system *)
@@ -55,7 +57,7 @@ VAR
 	nextPID: LONGINT;
 	
 	finalizerCaller	: FinalizerCaller;
-		
+	mainthread: Unix.Thread_t;	
 	
 
 TYPE
@@ -123,7 +125,7 @@ TYPE
 	BEGIN {ACTIVE}
 		LOOP
 			Unix.ThrSleep( 10 ); 
-			timerActivity.UpdateTicks
+			IF ~timerStopped THEN  timerActivity.UpdateTicks  END
 		END;
 	END Clock;
 
@@ -188,9 +190,9 @@ TYPE
 		condFP-		: ADDRESS;			(* awaited process' condition's context *)
 		continue		: Unix.Condition_t;	(* gets signaled when condition yields true *)
 		waitingOn-	: ProtectedObject;
-		procID-		: LONGINT;				(* processor ID where running, not used in UnixAos *)
-		state-			: Machine.State;		(*! not used in UnixAos! *)
-		context		: Unix.McontextDesc;
+		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
+		state-			: Machine.State;		(*! only PC, SP and BP are updated in UnixAos *)
+		context-		: Unix.McontextDesc;
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
 					
 				
@@ -279,6 +281,13 @@ TYPE
 			Unix.ThrSetPriority( threadId, pr );	(* works only if SUID root *)
 			priority := GetPriority( )	
 		END SetPriority;
+		
+		PROCEDURE UpdateState;
+		BEGIN
+			state.PC := context.r_pc;
+			state.BP := context.r_bp;
+			state.SP := context.r_sp
+		END UpdateState;
 				
 				
 		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
@@ -323,7 +332,8 @@ TYPE
 				Machine.Acquire( Machine.Heaps );
 				cur.context.r_sp := Machine.CurrentSP();
 				cur.context.r_bp := Machine.CurrentBP();
-				cur.context.r_pc := ADDRESS OF GCLoop;
+				cur.context.r_pc := ADDRESSOF( GCLoop );
+				cur.UpdateState;
 					
 				SuspendActivities;
 				Heaps.CollectGarbage( Modules.root );
@@ -407,16 +417,17 @@ TYPE
 		p := CurrentProcess();
 		p.context.r_sp := Machine.CurrentSP( );
 		p.context.r_bp := Machine.CurrentBP( );
+		p.context.r_pc := Machine.CurrentPC( );
+		p.UpdateState;
 		p.mode := AwaitingLock;
 
 		(*! we might want to replace the lock mutex by a lock free construct *)
 		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;		
 		lock := S.VAL(LockT, hdr.lock);
-		p.mode := Locked;
+		p.mode := AwaitingLock;
 		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
 			(* wait until threads with complied AWAIT conditions have left the monitor *)
-			p.mode := AwaitingLock;
 			Unix.CondWait( lock.enter, lock.mtx );
 		END;
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -441,6 +452,8 @@ TYPE
 
 		p.context.r_sp := Machine.CurrentSP( );
 		p.context.r_bp := Machine.CurrentBP( );
+		p.context.r_pc := Machine.CurrentPC( );
+		p.UpdateState;
 		Unix.CondWait( p.continue, lock.mtx );   
 		
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -514,7 +527,7 @@ TYPE
 
 	PROCEDURE Sleep*( ms: LONGINT );
 	BEGIN
-		Unix.ThrSleep( ms )
+		Unix.ThrSleep( ms );
 	END Sleep;
 
 	PROCEDURE Yield*;	(* Relinquish control. *)
@@ -727,11 +740,27 @@ TYPE
 	PROCEDURE GetContext( ctxt: Unix.Ucontext );
 	VAR t: Process;
 	BEGIN
-		(*	use CurrentProcess0 here instead of CurrentProcess here in order to
-			avoid a apossible deadlock *)
+		(*	use CurrentProcess0 here instead of CurrentProcess in order to
+			avoid a possible deadlock *)
 		t := CurrentProcess0();
 		Unix.CopyContext( ctxt.mc, t.context );
+		t.UpdateState
 	END GetContext;
+	
+	(* called by WMProcessInfo to obtain the current state of a running process *)
+	PROCEDURE UpdateProcessState*( p: Process );	
+	BEGIN 
+		(*  update p.stat.{PC,BP,SP}  *)
+		IF p.threadId # Unix.ThrThis() THEN
+			timerStopped := TRUE;
+			Unix.ThrSleep( 2 );
+			IF p.mode = Running THEN	(* still  running *)
+				Unix.ThrSuspend( p.threadId, TRUE );
+				Unix.ThrResume( p.threadId );
+			END;
+			timerStopped := FALSE
+		END	
+	END UpdateProcessState;
 	
 	PROCEDURE SuspendActivities;
 	VAR t, me: Process;  
@@ -836,6 +865,7 @@ TYPE
 	VAR p: Process;
 	BEGIN
 		(* make current thread the first active object  *)
+		mainthread := Unix.ThrThis();
 		NEW( p, NIL, NIL, 0, {}, 0 );
 	END Convert;
 
@@ -849,7 +879,7 @@ TYPE
 											
 		GetStacksize;  
 		Convert;
-		NEW( clock );  StartTimerActivity;
+		NEW( clock );  StartTimerActivity;  timerStopped := FALSE;
 		
 		NEW( finalizerCaller );
 		

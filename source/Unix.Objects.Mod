@@ -642,6 +642,13 @@ TYPE
 
 	(*--------------------  Garbage Collection  ------------------------------------*)
 	
+	
+	(* called by WMProcessInfo to obtain the current state of a running process *)
+	PROCEDURE UpdateProcessState*( p: Process );	
+	BEGIN
+		(*  update p.stat.{PC,BP,SP}  *)
+	END UpdateProcessState;
+
 	PROCEDURE SuspendActivities;
 	VAR t: Process;  
 	BEGIN

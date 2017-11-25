@@ -242,6 +242,12 @@ END GetProcessID;
 PROCEDURE TerminateThis*( t: Process;  halt: BOOLEAN );
 END TerminateThis;
 
+(* called by WMProcessInfo to obtain the current state of a running process *)
+PROCEDURE UpdateProcessState*( p: Process );	
+BEGIN
+	(*  update p.stat.{PC,BP,SP}  *)
+END UpdateProcessState;
+
 PROCEDURE Terminate*;
 BEGIN
 	Activities.TerminateCurrentActivity;

@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = TRUE;
+	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -185,17 +185,14 @@ TYPE
 			
 			IF CurrentProcess() = SELF THEN
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
-				TRACE(sp,bp,pc);
 			ELSE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
 				c.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, c );
-				TRACE(res);
 				IF res = 0 THEN TRACE(Kernel32.GetLastError()) END;
 				state := c;
 				
 				sp :=  state.SP; bp := state.BP; pc := state.PC;
-				TRACE(sp,bp,pc);
 				
 				mod := Modules.ThisModuleByAdr0(pc);
 				IF mod # NIL THEN
@@ -211,7 +208,6 @@ TYPE
 				TraceProcessHook(SELF,pc,bp,sp,stackBottom);
 			END;
 
-			TRACE(id, sp, bp, stackBottom, SELF, CurrentProcess());
 			contextPos := gcContext.nextPos;
 			
 			(* stack garbage collection *)
@@ -225,17 +221,14 @@ TYPE
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 				LOOP
-					TRACE(bp, stackBottom, bp >=stackBottom, pc, Machine.ValidHeapAddress(pc)); 
 					IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
 					IF Machine.ValidHeapAddress(pc) THEN
 						(* ok, valid stack frame from A2, we can trace this *)
 					ELSE
 						(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
 						DEC(contextPos); 
-						(* TRACE(contextPos);*) 
 						IF (contextPos >= 0) THEN
 							bp := gcContext.last[contextPos];
-							TRACE(contextPos, bp);
 						ELSE
 							EXIT;
 						END;
@@ -245,8 +238,6 @@ TYPE
 					IF ODD(n) THEN (* procedure descriptor at bp *)
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
 						IF desc # NIL THEN
-							TRACE(pc, Machine.ValidHeapAddress(desc)); 
-							WriteType(desc);Trace.Ln;
 							a0 := ADDRESSOF(desc.offsets);
 							a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
 							ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
@@ -832,7 +823,6 @@ BEGIN
 	ASSERT(res # 0);
 
 	SetPriority(t.priority);
-	TRACE(t.gcContext.nextPos);
 	bp := Machine.CurrentBP();
 	sp := Machine.CurrentSP();
 	t.restartSP := sp;
@@ -1247,7 +1237,6 @@ BEGIN
 (*	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;*)
 
 	NEW(t);  NEW(fn);
-	TRACE(t); TRACE(fn);
 	Machine.Acquire(Machine.Objects);
 	t.gcContext.nextPos := 0;
 	nProcs := 1;
@@ -1271,7 +1260,6 @@ BEGIN
 	Machine.Release(Machine.Objects);
 	InitEventHandling; (* implicit call of NewProcess! *)
 	InitGCHandling; (* do. *)
-	TRACE(finalizerCaller);
 	Heaps.gcStatus := GCStatusFactory();
 END Init;
 
@@ -1331,9 +1319,7 @@ END CancelTimeout;
 PROCEDURE InitEventHandling;
 BEGIN
 	NEW(event); event.next := event; event.prev := event;  (* event: head of timer event queue, only a sentinel *)
-	TRACE(event);
 	NEW(clock);
-	TRACE(clock);
 END InitEventHandling;
 
 PROCEDURE InitGCHandling;
@@ -1468,13 +1454,11 @@ BEGIN
 	terminateProc := TerminateProc;
 	ready.head := NIL; ready.tail := NIL;
 	tlsIndex := Kernel32.TlsAlloc();
-	TRACE(tlsIndex);
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
 	
 	
 	Init;
-	TRACE("after init");
 END Objects.
 
 (*

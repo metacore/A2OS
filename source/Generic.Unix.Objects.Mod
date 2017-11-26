@@ -165,7 +165,6 @@ TYPE
 					n.finalizer(n.objStrong)	(* may acquire locks *)
 				END;
 			END;
-		(*	Machine.ReleaseGC( )	*)
 		END
 	END FinalizerCaller;
 	
@@ -191,7 +190,7 @@ TYPE
 		continue		: Unix.Condition_t;	(* gets signaled when condition yields true *)
 		waitingOn-	: ProtectedObject;
 		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
-		state-			: Machine.State;		(*! only PC, SP and BP are updated in UnixAos *)
+		state-			: Machine.State;	
 		context-		: Unix.McontextDesc;
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
 					
@@ -202,24 +201,19 @@ TYPE
 			IF mode # Terminated THEN
 				
 				IF SELF = CurrentProcess() THEN
-					context.r_sp := Machine.CurrentSP( );
-					context.r_bp := Machine.CurrentBP( );
+					state.SP := Machine.CurrentSP( );
+					state.BP := Machine.CurrentBP( );
 				END;
-				sp := context.r_sp; bp := context.r_bp; 
+				sp := state.SP; bp := state.BP; 
 			
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
-					Heaps.Candidate( context.r_di );  Heaps.Candidate( context.r_si );
-					Heaps.Candidate( context.r_bx ); Heaps.Candidate( context.r_dx );
-					Heaps.Candidate( context.r_cx ); Heaps.Candidate( context.r_ax);
 					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
 						Heaps.RegisterCandidates( sp, stackBottom - sp );
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					IF bp < stackBottom THEN
 						WHILE (bp # Heaps.NilVal) & (bp > 1024) & (bp < stackBottom) DO (* do not test for bp >= sp: could be wrong temporarily! *)
-							TRACE( bp );
 							S.GET( bp, n );
-							TRACE( n );
 							IF ODD( n ) THEN (* procedure descriptor at bp *)
 								IF n > 1024 THEN
 									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
@@ -240,7 +234,6 @@ TYPE
 							ELSE (* classical stack frame *)
 								bp := n; 
 							END;
-							TRACE( bp );
 						END;
 						ASSERT( (bp = stackBottom) OR (bp < 1024) , 12345 );
 					END; 
@@ -282,13 +275,6 @@ TYPE
 			priority := GetPriority( )	
 		END SetPriority;
 		
-		PROCEDURE UpdateState;
-		BEGIN
-			state.PC := context.r_pc;
-			state.BP := context.r_bp;
-			state.SP := context.r_sp
-		END UpdateState;
-				
 				
 		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
 		BEGIN
@@ -330,10 +316,9 @@ TYPE
 			IF value THEN
 				Machine.Acquire( Machine.Objects );	
 				Machine.Acquire( Machine.Heaps );
-				cur.context.r_sp := Machine.CurrentSP();
-				cur.context.r_bp := Machine.CurrentBP();
-				cur.context.r_pc := ADDRESSOF( GCLoop );
-				cur.UpdateState;
+				cur.state.SP := Machine.CurrentSP();
+				cur.state.BP := Machine.CurrentBP();
+				cur.state.PC := ADDRESSOF( GCLoop );
 					
 				SuspendActivities;
 				Heaps.CollectGarbage( Modules.root );
@@ -415,10 +400,9 @@ TYPE
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
-		p.context.r_sp := Machine.CurrentSP( );
-		p.context.r_bp := Machine.CurrentBP( );
-		p.context.r_pc := Machine.CurrentPC( );
-		p.UpdateState;
+		p.state.SP := Machine.CurrentSP( );
+		p.state.BP := Machine.CurrentBP( );
+		p.state.PC := Machine.CurrentPC( );
 		p.mode := AwaitingLock;
 
 		(*! we might want to replace the lock mutex by a lock free construct *)
@@ -450,10 +434,9 @@ TYPE
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
 
-		p.context.r_sp := Machine.CurrentSP( );
-		p.context.r_bp := Machine.CurrentBP( );
-		p.context.r_pc := Machine.CurrentPC( );
-		p.UpdateState;
+		p.state.SP := Machine.CurrentSP( );
+		p.state.BP := Machine.CurrentBP( );
+		p.state.PC := Machine.CurrentPC( );
 		Unix.CondWait( p.continue, lock.mtx );   
 		
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -742,23 +725,30 @@ TYPE
 	BEGIN
 		(*	use CurrentProcess0 here instead of CurrentProcess in order to
 			avoid a possible deadlock *)
-		t := CurrentProcess0();
+		t := CurrentProcess0( );
 		Unix.CopyContext( ctxt.mc, t.context );
-		t.UpdateState
+		t.state.PC := t.context.r_pc;
+		t.state.BP := t.context.r_bp;
+		t.state.SP := t.context.r_sp
 	END GetContext;
 	
 	(* called by WMProcessInfo to obtain the current state of a running process *)
 	PROCEDURE UpdateProcessState*( p: Process );	
 	BEGIN 
-		(*  update p.stat.{PC,BP,SP}  *)
-		IF p.threadId # Unix.ThrThis() THEN
-			timerStopped := TRUE;
-			Unix.ThrSleep( 2 );
-			IF p.mode = Running THEN	(* still  running *)
-				Unix.ThrSuspend( p.threadId, TRUE );
-				Unix.ThrResume( p.threadId );
-			END;
-			timerStopped := FALSE
+		IF p.threadId = Unix.ThrThis( ) THEN
+			p.state.PC := Machine.CurrentPC( );
+			p.state.BP := Machine.CurrentBP( );
+			p.state.SP := Machine.CurrentSP( )	
+		ELSE
+			IF p.mode = Running THEN
+				timerStopped := TRUE;
+				Unix.ThrSleep( 3 );
+				IF p.mode = Running THEN	(* still running *)
+					Unix.ThrSuspend( p.threadId, TRUE );
+					Unix.ThrResume( p.threadId );
+				END;
+				timerStopped := FALSE
+			END			
 		END	
 	END UpdateProcessState;
 	
@@ -821,7 +811,7 @@ TYPE
 			bp := Machine.CurrentBP();
 			S.GET( bp, n );
 			IF ODD( n ) THEN S.GET( bp + SIZEOF( ADDRESS ), bp )  ELSE  bp := n  END;
-			cur.context.r_bp := bp;
+			cur.state.BP := bp;
 		END;
 	END LeaveA2;
 
@@ -831,7 +821,7 @@ TYPE
 		IF clock = NIL THEN  RETURN  END;
 		cur := CurrentProcess();
 		IF cur # NIL THEN 
-			cur.context.r_bp := 0;
+			cur.state.BP := 0;
 		END;	
 	END ReenterA2;
 	

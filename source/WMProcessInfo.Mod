@@ -211,7 +211,9 @@ TYPE
 			mod : Modules.Module;
 			str : ARRAY 256 OF CHAR;
 			t0, t1 : HUGEINT;
-			pc : ADDRESS;
+			
+			pc, relpc : ADDRESS;
+			mode: LONGINT;
 
 			PROCEDURE SetText(line, cell : LONGINT; CONST str : ARRAY OF CHAR);
 			VAR s : Strings.String;
@@ -222,7 +224,25 @@ TYPE
 				grid.model.SetTextAlign(cell, line + 1, GetAlign(cell));
 				grid.model.SetCellText(cell, line + 1, s)
 			END SetText;
-
+			
+			PROCEDURE GetValues( p: Objects.Process );
+			VAR bp: ADDRESS; 
+			BEGIN
+				Objects.UpdateProcessState( p );	
+				mode := p.mode;
+				pc := p.state.PC;
+				bp := p.state.BP;
+				mod := Modules.ThisModuleByAdr( pc );
+				WHILE (mod = NIL) & (bp # 0) DO
+					bp := CheckBP( p, bp );
+					IF bp # 0 THEN
+						SYSTEM.GET( bp + SIZEOF(ADDRESS), pc );	(* return addr from stack *)
+						mod := Modules.ThisModuleByAdr( pc );
+						SYSTEM.GET( bp, bp );	(* follow dynamic link *)
+					END
+				END
+			END GetValues;
+			
 		BEGIN
 			t1 := Machine.GetTimer() - lastProcTime;
 			lastProcTime := Machine.GetTimer();
@@ -231,8 +251,9 @@ TYPE
 			grid.model.SetNofRows(nofProcesses + 1);
 
 			FOR i := 0 TO nofProcesses - 1 DO
-				ASSERT(processes[i] # NIL);
-
+				ASSERT(processes[i] # NIL);				
+				GetValues( processes[i] );
+				
 				(* PID Process ID - 0 *)
 				Strings.IntToStr(processes[i].id, str); SetText(i, 0, str);
 
@@ -249,26 +270,24 @@ TYPE
 				Strings.IntToStr(processes[i].priority, str); SetText(i, 3, str);
 
 				(* mode - 4 *)
-				sw.Reset; ProcessInfo.WriteMode(processes[i].mode, sw); sw.Get(str); SetText(i, 4, str);
+				sw.Reset; ProcessInfo.WriteMode( mode, sw ); sw.Get(str); SetText(i, 4, str);
 
 				(* PC - 5 *)
-				IF (mod # NIL) & (mod.code # NIL) THEN DEC(pc, ADDRESSOF(mod.code[0])) END;
-				Strings.IntToStr(SYSTEM.VAL (LONGINT, pc), str); SetText(i, 5, str);
+				relpc := pc;
+				IF (mod # NIL) & (mod.code # NIL) THEN DEC(relpc, ADDRESSOF(mod.code[0])) END;
+				Strings.IntToStr(SYSTEM.VAL (LONGINT, relpc), str); SetText(i, 5, str);
 
 				(* active object type - 6 *)
 				sw.Reset; ProcessInfo.WriteActiveObject(processes[i], sw); sw.Get(str);
 				SetText(i, 6, str);
 
 				(* Module - 7 *)
-				pc := processes[i].state.PC;
-				mod := Modules.ThisModuleByAdr(pc);
 				IF mod # NIL THEN SetText(i, 7, mod.name)
 				ELSE  str := "Unknown"; SetText(i, 7, str);
 				END;
 
 				(* Procedure - 8 - Module name (prefix) and "pc=xyz" (suffix) suppressed *)
-				sw.Reset; Reflection.WriteProc(sw, processes[i].state.PC);
-				sw.Get(str);
+				sw.Reset;  Reflection.WriteProc( sw, pc );  sw.Get(str);
 				IF (str # "NIL") & (mod#NIL) THEN
 					posP := 0;
 					REPEAT INC(posP) UNTIL  (posP=LEN(str)) OR (str[posP]=0X)  OR (str[posP] = ".");	(* Skip prefix *)
@@ -554,6 +573,18 @@ BEGIN
 	ELSE RETURN WMGraphics.AlignRight
 	END
 END GetAlign;
+
+PROCEDURE CheckBP( p: Objects.Process; bp: ADDRESS ): ADDRESS;
+VAR n: ADDRESS;
+BEGIN
+	IF (bp < p.stackBottom) & (bp > p.stackBottom - 256*1024) THEN
+		SYSTEM.GET(bp, n);
+		IF ODD(n) THEN INC(bp, SIZEOF(ADDRESS)) END;
+		RETURN bp
+	ELSE
+		RETURN 0
+	END;
+END CheckBP;
 
 PROCEDURE OpenCpuLoadWindow(pid : LONGINT);
 VAR commandString, msg : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; res : LONGINT;

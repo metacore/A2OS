@@ -52,14 +52,9 @@ TYPE
 		beginBlockAdr-, endBlockAdr-: ADDRESS
 	END;
 	
-	(** processor state, ordering of record fields is predefined! *)
-		(*!(not used in UnixAos, for interface compatibility only)*)
-	State* = RECORD					(* offsets used in FieldInterrupt, FieldIRQ and Objects.RestoreState *)
-		EDI*, ESI*, ERR*, ESP0*, EBX*, EDX*, ECX*, EAX*: LONGINT;	(** ESP0 = ADR(s.INT) *)
-		INT*, BP*, PC*, CS*: LONGINT;	(* BP and ERR are exchanged by glue code, for procedure link *)
-		FLAGS*: SET;
-		SP*, SS*: LONGINT;			(** only valid if (VMBit IN s.EFLAGS) OR (CS MOD 4 < s.CS MOD 4) *)
-		ES*, DS*, FS*, GS*: LONGINT;	(** only valid if (VMBit IN s.FLAGS) *)
+	(** processor state *)
+	State* = RECORD	
+		PC*, BP*, SP*: ADDRESS
 	END;
 	
 	
@@ -88,8 +83,6 @@ VAR
 	
 	standaloneAppl-: BOOLEAN;
 	
-	firstMemBlock: MemoryBlockDesc;		(* pseudo heap *)
-	
 	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
 	
@@ -101,16 +94,8 @@ VAR
 
 	timer0	: HUGEINT;
 
-
-	(** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
-	PROCEDURE -SpinHint*;
-	CODE {SYSTEM.i386}
-		XOR	ECX, ECX	;  just in case some processor interprets REP this way
-		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
-	END SpinHint;
-
 	(** Return current processor ID (0 to MaxNum-1). *)
-	PROCEDURE {REALTIME} ID* (): LONGINT;
+	PROCEDURE  ID* (): LONGINT;
 	BEGIN
 		RETURN 0
 	END ID;
@@ -262,24 +247,10 @@ VAR
 
 	(** Get first memory block and first free address, the first free address is identical to memBlockHead.endBlockAdr *)
 	PROCEDURE GetStaticHeap*(VAR beginBlockAdr, endBlockAdr, freeBlockAdr: ADDRESS);
-	VAR memBlockAdr: ADDRESS;
 	BEGIN
 		InitHeap(memBlockHead,beginBlockAdr, endBlockAdr);
 		memBlockTail := memBlockHead;
 
-		(*
-		SYSTEM.GET(bootHeapAdr + EndBlockOfs, freeBlockAdr);
-		ASSERT(freeBlockAdr MOD StaticBlockSize = 0);
-		memBlockAdr := bootHeapAdr + HeaderSize + MemoryBlockOfs;
-
-
-		memBlockHead := SYSTEM.VAL(MemoryBlock, memBlockAdr); (* this block will never be freed since there is a global reference (initBlock in Heaps.Mod) to it *)
-		memBlockHead.startAdr := bootHeapAdr;
-		memBlockHead.size := bootHeapSize;
-		ASSERT(memBlockHead.beginBlockAdr MOD StaticBlockSize = 0);
-		ASSERT((memBlockHead.endBlockAdr - memBlockHead.beginBlockAdr) MOD StaticBlockSize = 0);
-		memBlockTail := memBlockHead;
-		*)
 		beginBlockAdr := memBlockHead.beginBlockAdr;
 		endBlockAdr := memBlockHead.endBlockAdr;
 		freeBlockAdr := beginBlockAdr;
@@ -313,7 +284,7 @@ VAR
 	
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
-	PROCEDURE {REALTIME} Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV EDI, [EBP+destAdr]
 		MOV ECX, [EBP+size]
@@ -327,7 +298,6 @@ VAR
 		CLD
 		REP STOSD
 	END Fill32;
-
 
 PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
 END Portin8;
@@ -395,7 +365,7 @@ CODE {SYSTEM.i386}
 END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-PROCEDURE {REALTIME} -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+PROCEDURE  -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
 CODE {SYSTEM.i386}
 	POP EBX		; new
 	POP EAX		; old
@@ -405,81 +375,81 @@ END AtomicCAS;
 
 
 (* Return current instruction pointer *)
-PROCEDURE {REALTIME} CurrentPC* (): ADDRESS;
+PROCEDURE  CurrentPC* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, [EBP+4]
 END CurrentPC;
 
 (* Return current frame pointer *)
-PROCEDURE {REALTIME} -CurrentBP* (): ADDRESS;
+PROCEDURE  -CurrentBP* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, EBP
 END CurrentBP;
 
 (* Set current frame pointer *)
-PROCEDURE {REALTIME} -SetBP* (bp: ADDRESS);
+PROCEDURE  -SetBP* (bp: ADDRESS);
 CODE {SYSTEM.i386}
 	POP EBP
 END SetBP;
 
 (* Return current stack pointer *)
-PROCEDURE {REALTIME} -CurrentSP* (): ADDRESS;
+PROCEDURE  -CurrentSP* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, ESP
 END CurrentSP;
 
 (* Set current stack pointer *)
-PROCEDURE {REALTIME} -SetSP* (sp: ADDRESS);
+PROCEDURE  -SetSP* (sp: ADDRESS);
 CODE {SYSTEM.i386}
 	POP ESP
 END SetSP;
 
-PROCEDURE {REALTIME} -GetEAX*(): LONGINT;
+PROCEDURE  -GetEAX*(): LONGINT;
 CODE{SYSTEM.i386}
 END GetEAX;
 
-PROCEDURE {REALTIME} -GetECX*(): LONGINT;
+PROCEDURE  -GetECX*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,ECX	
 END GetECX;
 
-PROCEDURE {REALTIME} -GetESI*(): LONGINT;
+PROCEDURE  -GetESI*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,ESI	
 END GetESI;
 
-PROCEDURE {REALTIME} -GetEDI*(): LONGINT;
+PROCEDURE  -GetEDI*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,EDI	
 END GetEDI;
 
 
-PROCEDURE {REALTIME} -SetEAX*(n: LONGINT);
+PROCEDURE  -SetEAX*(n: LONGINT);
 CODE{SYSTEM.i386}	
 	POP EAX
 END SetEAX;
 
-PROCEDURE {REALTIME} -SetEBX*(n: LONGINT);
+PROCEDURE  -SetEBX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EBX
 END SetEBX;
 
-PROCEDURE {REALTIME} -SetECX*(n: LONGINT);
+PROCEDURE  -SetECX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP ECX
 END SetECX;
 
-PROCEDURE {REALTIME} -SetEDX*(n: LONGINT);
+PROCEDURE  -SetEDX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EDX
 END SetEDX;
 
-PROCEDURE {REALTIME} -SetESI*(n: LONGINT);
+PROCEDURE  -SetESI*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP ESI
 END SetESI;
 
-PROCEDURE {REALTIME} -SetEDI*(n: LONGINT);
+PROCEDURE  -SetEDI*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EDI
 END SetEDI;
@@ -557,9 +527,9 @@ END GetTimer;
 
 	(* function returning the number of processors that are available to Aos *)
 	PROCEDURE NumberOfProcessors*( ): LONGINT;
-		VAR res: LONGINT;
+	VAR res: LONGINT;
 	BEGIN
-		res:=Unix.getnprocs();
+		res := Unix.getnprocs();
 		RETURN res;
 	END NumberOfProcessors;
 
@@ -695,7 +665,7 @@ END GetTimer;
 
 	(* Initialize locks. *)
 	PROCEDURE InitLocks;  
-	VAR i: LONGINT;  a: ADDRESS;
+	VAR i: LONGINT; 
 	BEGIN 
 		i := 0;  
 		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  INC( i )  END;   
@@ -743,8 +713,8 @@ END GetTimer;
 		TypeDescOffset = -AddressSize; (* see Heaps.Mod *)
 		HeapBlockOffset = - 2 * AddressSize; (* see Heaps.Mod *)
 		DataAdrOffset = AddressSize; (* offset of dataAdr field in Heaps.HeapBlockDesc *)
-	VAR memDescSize, memBlkSize, alignOffset: SIZE; adr, memHeaderAdr, memBlockAdr, memBlockHeadAdr: ADDRESS;
-		memBlock {UNTRACED}: MemoryBlock; i: LONGINT; ch: CHAR; h: HUGEINT; size: LONGINT;
+	VAR memDescSize, memBlkSize, alignOffset: SIZE; adr, memHeaderAdr, memBlockAdr: ADDRESS;
+		memBlock {UNTRACED}: MemoryBlock; size: LONGINT;
 		initVal: LONGINT;
 	BEGIN
 
@@ -885,7 +855,7 @@ END GetTimer;
 	
 	
 	PROCEDURE InitLog;
-	VAR name, cmd: ARRAY 32 OF CHAR;  pid, i: LONGINT; 
+	VAR name: ARRAY 32 OF CHAR;  pid, i: LONGINT; 
 	BEGIN
 		name := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;

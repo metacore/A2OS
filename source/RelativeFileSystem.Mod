@@ -18,9 +18,10 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			END;
 			IF (ch = "/") & (i>1)  THEN relTo[i-1] := 0X END; (* remove ending "/" *)
 
-			IF ~(Files.NeedsPrefix IN fs.flags) THEN
+			IF fs.prefix # "" THEN
 				RemovePrefix(relTo);
 			END;
+
 			COPY(relTo,SELF.relTo);
 		END InitFileSystem;
 
@@ -62,7 +63,8 @@ TYPE PathName=ARRAY 272 OF CHAR;
 		PROCEDURE Enumerate0 (mask: ARRAY OF CHAR;     flags: SET;     enum: Files.Enumerator);
 		VAR new: PathName;
 		BEGIN
-			MakeRel(mask,new); fs.Enumerate0(new,flags,enum);
+			MakeRel(mask,new); 
+			fs.Enumerate0(new,flags,enum);
 		END Enumerate0;
 
 		PROCEDURE FileKey (name: ARRAY OF CHAR): LONGINT;

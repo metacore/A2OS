@@ -5932,7 +5932,7 @@ TYPE
 						
 			ReleaseParameterRegisters();
 			
-			IF backend.trackLeave & ~isUnchecked & (procedureType.callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
+			IF ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUnchecked & (procedureType.callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved2);
 				CallThis(position,"Objects","LeaveA2",0);
 				RestoreRegisters(saved2);
@@ -5953,7 +5953,7 @@ TYPE
 				Emit(Result(position,return));
 			END;
 
-			IF  backend.trackLeave & ~isUnchecked & (procedureType.callingConvention  IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
+			IF  ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUnchecked & (procedureType.callingConvention  IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				IF  (procedureType.returnType # NIL) & ~structuredReturnType  THEN 
 					Emit(Push(position, return));
 					CallThis(position,"Objects","ReenterA2",0);
@@ -12467,7 +12467,6 @@ TYPE
 						INCL(flags, flagConstructor);
 					END;
 					Set(section, flags);
-					IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0); END;
 					
 					IF RefInfo THEN Info(section, "Parameters") END;
 					parameter := procedureType.firstParameter;

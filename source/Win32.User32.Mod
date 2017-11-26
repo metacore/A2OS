@@ -186,9 +186,11 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		END;
 
 		(** The MSG structure contains message information from a thread's message queue. *)
-		Msg* = RECORD  			hwnd*: HWND;
+		Msg* = RECORD  			
+			hwnd*: HWND;
 			message*: LONGINT;
-			wParam*, lParam*: LONGINT;
+			wParam*: WParam;
+			lParam*: LParam;
 			time*: LONGINT;
 			point*: Point
 		END;

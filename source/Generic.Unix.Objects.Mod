@@ -192,9 +192,9 @@ TYPE
 		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
 		state-			: Machine.State;	
 		context-		: Unix.McontextDesc;
-		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
-					
-				
+		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)					
+		context: ANY; (* commands context *)
+
 		PROCEDURE FindRoots*;
 		VAR sp, bp, n, a0, a1, adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 		BEGIN
@@ -282,6 +282,7 @@ TYPE
 			flags := fl;
 			priority := prio;
 			nextProcess := NIL;
+			context := CurrentContext();
 			IF root # NIL THEN
 				newProcess := SELF;
 				ASSERT( bodyProc # NIL );
@@ -529,6 +530,22 @@ TYPE
 		Unix.MtxUnlock( processList );
 		RETURN p
 	END CurrentProcess;
+	
+	PROCEDURE CurrentContext*(): ANY;
+	VAR p: Process;
+	BEGIN
+		p := CurrentProcess();
+		IF p # NIL THEN RETURN p.context
+		ELSE RETURN NIL
+		END;
+	END CurrentContext;
+
+	PROCEDURE SetContext*(context: ANY);
+	VAR p: Process;
+	BEGIN
+		p := CurrentProcess();
+		IF p # NIL THEN p.context := context END;
+	END SetContext;
 	
 	PROCEDURE CurrentProcess0( ): Process;	
 	VAR me: Unix.Thread_t;  p: Process;

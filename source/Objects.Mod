@@ -91,6 +91,7 @@ TYPE
 		oldReturnPC: ADDRESS;
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
 		prioRequests : ARRAY NumPriorities OF LONGINT; (* priorities of processes that wait for resources locked by this process, only the highest priority per resource is stored *)
+		context: ANY;
 
 		(* set priority of process: Machine.Objects lock is taken *)
 		PROCEDURE SetPriority(p : LONGINT);
@@ -698,6 +699,22 @@ PROCEDURE CurrentProcess*( ): Process;
 BEGIN
 	RETURN SYSTEM.VAL(Process, Machine.GetProcessPtr());
 END CurrentProcess;
+	
+PROCEDURE CurrentContext*(): ANY;
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN RETURN p.context
+	ELSE RETURN NIL
+	END;
+END CurrentContext;
+
+PROCEDURE SetContext*(context: ANY);
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN p.context := context END;
+END SetContext;
 
 (* Return stack bottom of process. For compatibility WinAos/UnixAos/NativeAos  *)
 PROCEDURE GetStackBottom*(p: Process): ADDRESS;
@@ -1218,6 +1235,7 @@ BEGIN
 	NewProcess(body, flags, obj, t);
 	Machine.Acquire(Machine.Objects);
 	t.id := nextProcessID; INC(nextProcessID);
+	t.context := CurrentContext();
 	IF priority = 0 THEN	(* no priority specified *)
 		t.priority := running[Machine.ID ()].priority (* inherit priority of creator *)
 	ELSIF priority > 0 THEN (* positive priority specified *)

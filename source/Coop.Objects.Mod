@@ -90,7 +90,6 @@ TYPE
 		restartPC-: LONGINT;   (** entry point of body, for SAFE exception recovery *)
 		restartSP-: LONGINT;   (** stack level at start of body, for SAFE exception recovery *)
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
-
 	END Process;
 
 	FinalizedCollection* = OBJECT
@@ -218,6 +217,16 @@ BEGIN
 	RETURN NIL;
 END CurrentProcess;
 
+PROCEDURE CurrentContext*(): ANY;
+BEGIN
+	RETURN NIL; (* stub *)
+END CurrentContext;
+
+PROCEDURE SetContext*(context: ANY);
+BEGIN
+	(* stub *)
+END SetContext;
+
 (* Return stack bottom of process. For compatibility WinAos/UnixAos/NativeAos  *)
 PROCEDURE GetStackBottom*(p: Process): ADDRESS;
 BEGIN
@@ -231,6 +240,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	activity := Activities.GetCurrentActivity ();
 	IF activity.object # NIL THEN RETURN activity.object ELSE RETURN activity END;
 END ActiveObject;
+
 
 (** Return the ID of the active currently executing process. *)
 PROCEDURE GetProcessID* (): LONGINT;

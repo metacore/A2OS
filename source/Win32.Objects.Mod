@@ -160,6 +160,7 @@ TYPE
 		*)
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
 		gcContext: GCContext;
+		context: ANY; (* commands contect *)
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
@@ -239,7 +240,7 @@ TYPE
 								FOR i := 0 TO LEN(desc.offsets)-1 DO
 									adr := bp + desc.offsets[i]; (* pointer at offset *)
 									SYSTEM.GET(adr, p); (* load pointer *)
-									IF p # NIL THEN 
+									IF p # NIL THEN
 										Heaps.Mark(p);
 									END;
 								END;
@@ -441,6 +442,22 @@ PROCEDURE CurrentProcess*( ): Process;
 BEGIN{UNCHECKED} (* makes sure that Enter and Leave are not emitted *)
 	RETURN SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
 END CurrentProcess;
+
+PROCEDURE CurrentContext*(): ANY;
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN RETURN p.context
+	ELSE RETURN NIL
+	END;
+END CurrentContext;
+
+PROCEDURE SetContext*(context: ANY);
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN p.context := context END;
+END SetContext;
 
 (* Return stack bottom of process. For compatibility WinAos/UnixAos/NativeAos  *)
 PROCEDURE GetStackBottom*(p: Process): ADDRESS;
@@ -813,11 +830,13 @@ BEGIN
 	Kernel32.Sleep(999999);   (* wait until dependent threads terminated *)
 END TerminateProc;
 
+
 (* Allocate a new process associated with "obj". Must be outside lock region, because of potential GC. *)
 PROCEDURE NewProcess(body: Body; priority: LONGINT;  flags: SET; obj: ProtectedObject; VAR new: Process);
 VAR t,r: Process;  fn: Heaps.FinalizerNode;
 BEGIN
 	NEW(t);
+	t.context := CurrentContext(); (* inherit contet from parent process *)
 	t.handle := 0;
 	IF priority = 0 THEN  (* no priority specified *)
 		r := CurrentProcess();

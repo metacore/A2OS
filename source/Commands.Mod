@@ -134,8 +134,9 @@ TYPE
 			AWAIT(state >= this);
 			res := SELF.res; COPY(SELF.msg, msg);
 		END Join;
-
+		
 	BEGIN {ACTIVE, SAFE}
+		Objects.SetContext(context);
 		IF ~exception THEN
 			exception := TRUE; (* catch exceptions from now on *)
 			module := Modules.ThisModule(moduleName, res, msg);
@@ -183,7 +184,6 @@ VAR
 	silentWriter: Streams.Writer;
 	trace: BOOLEAN;
 	defaultContext: Context; (* Fallback. Note that this context would be shared by different users -- may be used for tracing though *)
-
 
 (* Create a ready on a empty string *)
 
@@ -233,10 +233,10 @@ END Split;
 (**	Can be called by a command to retrieve the context associated with its active object. *)
 
 PROCEDURE GetContext*() : Context;
-VAR object: ANY;
+VAR context: ANY;
 BEGIN
-	object := Objects.ActiveObject();
-	IF (object # NIL) & (object IS Runner) & (object(Runner).state = Loaded) THEN RETURN object(Runner).context;
+	context := Objects.CurrentContext();
+	IF (context # NIL) & (context IS Context) THEN RETURN context(Context)
 	ELSE RETURN defaultContext
 	END;
 END GetContext;

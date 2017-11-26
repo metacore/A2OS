@@ -6,7 +6,7 @@ IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
 
 CONST
 	HandleExcp = TRUE;   (* FALSE -> we asume that it is done correctly by Traps *)
-	TraceVerbose = FALSE;
+	TraceVerbose = TRUE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
 
@@ -122,7 +122,8 @@ TYPE
 	Win32Event = Kernel32.HANDLE;
 	
 	GCContext = RECORD
-		ebp: ADDRESS;
+		nextPos: LONGINT; (* 0 to start with *)
+		(*first,*)  last: ARRAY 256 OF ADDRESS; (* first might be not required *)
 	END;
 
 	Process* = OBJECT(Heaps.ProcessLink)
@@ -160,6 +161,7 @@ TYPE
 		*)
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
 		gcContext: GCContext;
+		context: ANY; (* commands contect *)
 
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
@@ -170,21 +172,30 @@ TYPE
 			proc {UNTRACED}: Modules.ProcedureDescPointer;
 			modName: ARRAY 128 OF CHAR;
 			mode0,mode1: LONGINT;
+			c: Kernel32.Context;
+			
+			contextPos: LONGINT;
 		BEGIN
 			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
 			END;
-						
+			
+			
 			IF CurrentProcess() = SELF THEN
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
+				TRACE(sp,bp,pc);
 			ELSE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
-				state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl + Kernel32.ContextInteger);
-				res := Kernel32.GetThreadContext( handle, state );
-
+				c.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
+				res := Kernel32.GetThreadContext( handle, c );
+				TRACE(res);
+				IF res = 0 THEN TRACE(Kernel32.GetLastError()) END;
+				state := c;
+				
 				sp :=  state.SP; bp := state.BP; pc := state.PC;
+				TRACE(sp,bp,pc);
 				
 				mod := Modules.ThisModuleByAdr0(pc);
 				IF mod # NIL THEN
@@ -195,12 +206,13 @@ TYPE
 				obp := bp; osb := stackBottom; opc := pc;
 				osbp := state.BP;
 			END;
-			gbp := gcContext.ebp;
-			IF gbp # NIL THEN bp := gbp END;
 			
 			IF TraceProcessHook # NIL THEN
 				TraceProcessHook(SELF,pc,bp,sp,stackBottom);
 			END;
+
+			TRACE(id, sp, bp, stackBottom, SELF, CurrentProcess());
+			contextPos := gcContext.nextPos;
 			
 			(* stack garbage collection *)
 
@@ -212,32 +224,49 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				IF bp < stackBottom THEN
-					WHILE (bp # Heaps.NilVal) & (bp < stackBottom)  DO (* do not test for bp >= sp: could be wrong temporarily! *)
-						SYSTEM.GET(bp, n);
-						IF ODD(n) THEN (* procedure descriptor at bp *)
-							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-							IF desc # NIL THEN
-								a0 := ADDRESSOF(desc.offsets);
-								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
-								ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
-								FOR i := 0 TO LEN(desc.offsets)-1 DO
-									adr := bp + desc.offsets[i]; (* pointer at offset *)
-									SYSTEM.GET(adr, p); (* load pointer *)
-									IF p # NIL THEN 
-										Heaps.Mark(p);
-									END;
-								END;
-							END;
-							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
-						ELSE (* classical stack frame *)
-							bp := n; 
+				LOOP
+					TRACE(bp, stackBottom, bp >=stackBottom, pc, Machine.ValidHeapAddress(pc)); 
+					IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
+					IF Machine.ValidHeapAddress(pc) THEN
+						(* ok, valid stack frame from A2, we can trace this *)
+					ELSE
+						(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
+						DEC(contextPos); 
+						(* TRACE(contextPos);*) 
+						IF (contextPos >= 0) THEN
+							bp := gcContext.last[contextPos];
+							TRACE(contextPos, bp);
+						ELSE
+							EXIT;
 						END;
 					END;
 					
-					ASSERT((bp = stackBottom) OR (bp=0) ,12345);
-				END; 
-			END;
+					SYSTEM.GET(bp, n);
+					IF ODD(n) THEN (* procedure descriptor at bp *)
+						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
+						IF desc # NIL THEN
+							TRACE(pc, Machine.ValidHeapAddress(desc)); 
+							WriteType(desc);Trace.Ln;
+							a0 := ADDRESSOF(desc.offsets);
+							a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
+							ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
+							FOR i := 0 TO LEN(desc.offsets)-1 DO
+								adr := bp + desc.offsets[i]; (* pointer at offset *)
+								SYSTEM.GET(adr, p); (* load pointer *)
+								IF p # NIL THEN 
+									Heaps.Mark(p);
+								END;
+							END;
+						END;
+						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc); 
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
+					ELSE (* classical stack frame without procedure descriptor *)
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc); 
+						bp := n; 
+					END;
+				END;
+				(* ASSERT((bp = stackBottom) OR (bp=0) ,12345); can be violated when coming from windows *)
+			END; 
 			
 			IF (CurrentProcess() # SELF) (* & (mode # Suspended) *) THEN
 				res := Kernel32.ResumeThread(handle);
@@ -376,7 +405,29 @@ VAR
 	nProcs: LONGINT;
 
 	excplock: Kernel32.CriticalSection;  exceptionhandler: ExceptionHandler;
-	
+
+PROCEDURE TraceGCContext*;
+VAR p: Process; i: LONGINT; desc {UNTRACED}: Modules.ProcedureDescPointer;
+n: ADDRESS;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN
+		TRACE(p.gcContext.nextPos);
+		FOR i := 0 TO p.gcContext.nextPos-1 DO
+			TRACE(p.gcContext.last[i]);
+			SYSTEM.GET(p.gcContext.last[i],n); 
+			IF ODD(n) THEN 
+						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
+						IF desc # NIL THEN
+							WriteType(desc);Trace.Ln;
+						END; 
+			END;
+		END;
+		(*ASSERT(p.gcContext.nextPos <4);*)
+		IF p.gcContext.nextPos >= 4 THEN Heaps.InvokeGC END;
+	END;
+END TraceGCContext;
+
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
 VAR r: Process; prio: LONGINT; res: Kernel32.BOOL;
@@ -422,6 +473,22 @@ PROCEDURE CurrentProcess*( ): Process;
 BEGIN{UNCHECKED} (* makes sure that Enter and Leave are not emitted *)
 	RETURN SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
 END CurrentProcess;
+
+PROCEDURE CurrentContext*(): ANY;
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN RETURN p.context
+	ELSE RETURN NIL
+	END;
+END CurrentContext;
+
+PROCEDURE SetContext*(context: ANY);
+VAR p: Process;
+BEGIN
+	p := CurrentProcess();
+	IF p # NIL THEN p.context := context END;
+END SetContext;
 
 (* Return stack bottom of process. For compatibility WinAos/UnixAos/NativeAos  *)
 PROCEDURE GetStackBottom*(p: Process): ADDRESS;
@@ -765,7 +832,7 @@ BEGIN
 	ASSERT(res # 0);
 
 	SetPriority(t.priority);
-
+	TRACE(t.gcContext.nextPos);
 	bp := Machine.CurrentBP();
 	sp := Machine.CurrentSP();
 	t.restartSP := sp;
@@ -840,6 +907,8 @@ PROCEDURE NewProcess(body: Body; priority: LONGINT;  flags: SET; obj: ProtectedO
 VAR t,r: Process;  fn: Heaps.FinalizerNode;
 BEGIN
 	NEW(t);
+	t.gcContext.nextPos := 0; 
+	t.context := CurrentContext(); (* inherit context from parent process *)
 	t.handle := 0;
 	IF priority = 0 THEN  (* no priority specified *)
 		r := CurrentProcess();
@@ -1129,6 +1198,36 @@ BEGIN
 	TerminateProc();
 END Terminate;
 
+TYPE KdHelp = RECORD
+	Thread: ADDRESS;
+	ThCallBackStack,ThCallBackStore,NextCallback,FramePointer: Kernel32.DWORD;
+	KiCallUserMode, KeUserCallbackDispatcher,SystemRangeStart,KiUserExceptionDispatcher,StackBase,StackLimit: ADDRESS;
+	Reserved: ARRAY 5 OF ADDRESS;
+END; 
+
+(*
+TYPE 
+ADDRESS64 = RECORD
+	offset: ADDRESS;
+	Segment: INTEGER;
+	AddressMode: INTEGER;
+END;
+
+TYPE StackFrame64 = RECORD
+	AddrPC, AddrReturn,AddrStack,AddrBSTore: ADDRESS64;
+	FuncTableEntry: ADDRESS;
+	Params: ARRAY 4 OF ADDRESS;
+	Far, Virtual: BOOLEAN; 
+	Reserved: ARRAY 3 OF ADDRESS;
+	kdHelp: KdHelp;
+END;
+	
+VAR StackWalk64:  PROCEDURE {WINAPI} (MachineType: Kernel32.DWORD; hProcess: Kernel32.HANDLE; 
+	hThread: Kernel32.HANDLE; VAR stackFrame: StackFrame64; VAR contextRecord: Kernel32.Context; 
+	CONST ReadMemoryRoutine, FunctionTableAccessRoutine, GetModuleBaseRoutine, 
+	TranslateAddress: ADDRESS): Kernel32.BOOL;
+*)
+
 PROCEDURE Init;   (* can not use NEW *)
 (*VAR lock: PROCEDURE(obj: ProtectedObject; exclusive: BOOLEAN);
 	unlock: PROCEDURE(obj: ProtectedObject; dummy: BOOLEAN);
@@ -1137,16 +1236,20 @@ PROCEDURE Init;   (* can not use NEW *)
 	*)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
+	lib: Kernel32.HMODULE;
 BEGIN
 	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
-
+(*	lib := Kernel32.LoadLibrary("DbgHelp.DLL");
+	Kernel32.GetProcAddress(lib, "StackWalk64",SYSTEM.VAL(ADDRESS,StackWalk64));
+	*)
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
 (*	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;*)
 
 	NEW(t);  NEW(fn);
-
+	TRACE(t); TRACE(fn);
 	Machine.Acquire(Machine.Objects);
+	t.gcContext.nextPos := 0;
 	nProcs := 1;
 	t.next := NIL;  t.prev := NIL;
 	t.waitingOn := NIL; t.flags := {}; t.obj := NIL;
@@ -1168,6 +1271,7 @@ BEGIN
 	Machine.Release(Machine.Objects);
 	InitEventHandling; (* implicit call of NewProcess! *)
 	InitGCHandling; (* do. *)
+	TRACE(finalizerCaller);
 	Heaps.gcStatus := GCStatusFactory();
 END Init;
 
@@ -1227,7 +1331,9 @@ END CancelTimeout;
 PROCEDURE InitEventHandling;
 BEGIN
 	NEW(event); event.next := event; event.prev := event;  (* event: head of timer event queue, only a sentinel *)
+	TRACE(event);
 	NEW(clock);
+	TRACE(clock);
 END InitEventHandling;
 
 PROCEDURE InitGCHandling;
@@ -1311,13 +1417,32 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 PROCEDURE LeaveA2;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
-	IF clock = NIL THEN RETURN END;
+	CODE
+		PUSH RCX
+		PUSH RDX
+		PUSH R8
+		PUSH R9
+	END;
+	IF clock = NIL THEN 
+		RETURN 
+	END;
+
 	cur := CurrentProcess();
 	IF cur # NIL THEN 
 		ebp := Machine.CurrentBP();
 		SYSTEM.GET(ebp, n);
 		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
-		cur.gcContext.ebp := ebp;
+		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
+		INC(cur.gcContext.nextPos);
+		ASSERT(cur.gcContext.nextPos < 255); 
+		IF cur.gcContext.nextPos > 255 THEN cur.gcContext.nextPos := 255 END;
+		(* IF (cur.gcContext.nextPos > 4) THEN cur.gcContext.nextPos := 2 END;*)
+	END;
+	CODE
+		POP R9
+		POP R8
+		POP RDX
+		POP RCX
 	END;
 END LeaveA2;
 
@@ -1326,8 +1451,11 @@ VAR cur: Process;
 BEGIN
 	IF clock = NIL THEN RETURN END;
 	cur := CurrentProcess();
-	IF cur # NIL THEN 
-		cur.gcContext.ebp := NIL;
+	IF cur # NIL THEN
+		(* cur.gcContext.first[cur.gcContext.next] := NIL;*)
+		DEC(cur.gcContext.nextPos);
+		IF (cur.gcContext.nextPos <0 ) THEN cur.gcContext.nextPos := 0 END;
+		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
 	END;	
 END ReenterA2;
 
@@ -1340,11 +1468,13 @@ BEGIN
 	terminateProc := TerminateProc;
 	ready.head := NIL; ready.tail := NIL;
 	tlsIndex := Kernel32.TlsAlloc();
+	TRACE(tlsIndex);
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
 	
 	
 	Init;
+	TRACE("after init");
 END Objects.
 
 (*

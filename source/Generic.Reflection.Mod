@@ -139,9 +139,9 @@ CONST
 		END;
 	END Wait;
 	
-	PROCEDURE Expect(b: BOOLEAN): BOOLEAN;
+	PROCEDURE Expect(pos: SIZE; b: BOOLEAN): BOOLEAN;
 	BEGIN
-		IF ~b THEN Trace.String("Format error in references section"); Trace.Ln END;
+		IF ~b THEN Trace.String("Format error in references section @"); Trace.Int(pos,1); Trace.Ln END;
 		RETURN b;
 	END Expect;
 
@@ -150,7 +150,7 @@ CONST
 	PROCEDURE GetChar*(refs: Modules.Bytes; VAR offset: SIZE): CHAR;
 	VAR c: CHAR; 
 	BEGIN
-		IF ~Expect(offset < LEN(refs)) THEN RETURN 0X END; 
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0X END; 
 		c := refs[offset];
 		INC(offset);
 		RETURN c;
@@ -166,7 +166,7 @@ CONST
 	PROCEDURE GetAddress*(refs: Modules.Bytes; VAR offset: SIZE): ADDRESS;
 	VAR adr: ADDRESS; i: SIZE;
 	BEGIN
-		IF ~Expect(offset < LEN(refs)) THEN RETURN 0 END; 
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0 END; 
 		FOR i := 0 TO SIZEOF(ADDRESS)-1 DO
 			SYSTEM.PUT8(ADDRESSOF(adr)+i, GetChar(refs, offset));
 		END;
@@ -183,7 +183,7 @@ CONST
 	PROCEDURE GetSize*(refs: Modules.Bytes; VAR offset: SIZE): SIZE;
 	VAR size: SIZE; i: SIZE;
 	BEGIN
-		IF ~Expect(offset < LEN(refs)) THEN RETURN 0 END; 
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0 END; 
 		FOR i := 0 TO SIZEOF(SIZE)-1 DO
 			SYSTEM.PUT8(ADDRESSOF(size)+i, refs[offset]);
 			INC(offset);
@@ -201,7 +201,7 @@ CONST
 	PROCEDURE GetSet*(refs: Modules.Bytes; VAR offset: SIZE): SET;
 	VAR set: SET; i: SIZE;
 	BEGIN
-		IF ~Expect(offset < LEN(refs)) THEN RETURN {} END; 
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN {} END; 
 		FOR i := 0 TO SIZEOF(LONGINT)-1 DO
 			SYSTEM.PUT8(ADDRESSOF(set)+i, refs[offset]);
 			INC(offset);
@@ -624,7 +624,7 @@ CONST
 	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE;  base: ADDRESS; low, high: ADDRESS);
 	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  prevScope: SIZE; c: CHAR;
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
 		prevScope := GetSize(refs, offset);
 		GetString(refs, offset, name); 
 		w.String(Sep); w.String(name); w.Char("=");
@@ -687,7 +687,7 @@ CONST
 	(* skip procedure metadata in stream *)
 	PROCEDURE SkipProcedure*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
 		SkipSize(offset);
 		SkipString(refs, offset);
 		SkipAddress(offset);
@@ -702,7 +702,7 @@ CONST
 	(* skip variable metadata in stream *)
 	PROCEDURE SkipVariable*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
 		SkipSize(offset);
 		SkipString(refs, offset); 
 		SkipChar(offset);
@@ -713,7 +713,7 @@ CONST
 	(* skip type declaration meta data in stream *)
 	PROCEDURE SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
 		SkipSize(offset);
 		SkipString(refs, offset); 
 		SkipAddress(offset);
@@ -723,7 +723,7 @@ CONST
 	(* skip type declaration meta data in stream *)
 	PROCEDURE SkipModule*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END;
 		SkipSize(offset);
 		SkipString(refs, offset); 
 		IF refs[offset] = sfScopeBegin THEN SkipScope(refs, offset) END;	
@@ -732,11 +732,11 @@ CONST
 	(* skip a scope in stream *)
 	PROCEDURE SkipScope*(refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN	
-		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
 		WHILE (refs[offset] = sfVariable)  DO SkipVariable(refs, offset) END;
 		WHILE (refs[offset] = sfProcedure) DO SkipProcedure(refs, offset) END;
 		WHILE (refs[offset] = sfTypeDeclaration)  DO SkipTypeDeclaration(refs, offset)	END;
-		IF ~Expect(GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
 	END SkipScope;
 
 	TYPE 
@@ -778,7 +778,7 @@ CONST
 	VAR name: ARRAY 128 OF CHAR;  start, end: ADDRESS; pos: SIZE; 
 	BEGIN
 		pos := offset; 
-		IF ~Expect(GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
 		SkipSize(offset);
 		FindString(refs, offset, level, find);
 		start := GetAddress(refs, offset);
@@ -806,7 +806,7 @@ CONST
 	VAR name: ARRAY 128 OF CHAR;  pos: SIZE; 
 	BEGIN
 		pos := offset; 
-		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;  	
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;  	
 		SkipSize(offset);
 		FindString(refs, offset, level, find); 
 		IF find.found THEN
@@ -823,7 +823,7 @@ CONST
 	VAR name: ARRAY 128 OF CHAR;  adr, pos: SIZE; 
 	BEGIN
 		pos := offset;
-		IF ~Expect(GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
 		SkipSize(offset);
 		FindString(refs, offset, level, find); 
 		IF find.found THEN 
@@ -838,7 +838,7 @@ CONST
 	VAR pos: SIZE;
 	BEGIN
 		pos := offset;
-		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END;
 		SkipSize(offset);
 		FindString(refs, offset, level, find); 
 		IF find.found THEN 
@@ -852,7 +852,7 @@ CONST
 	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
 	VAR no,i: SIZE;
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
 		WHILE ~find.found &(refs[offset] = sfVariable) &  (find.minLevel <= level) DO (* Variable *)
 			FindInVariable(refs, offset, level, find); 
 		END;
@@ -863,7 +863,7 @@ CONST
 			FindInTypeDeclaration(refs, offset,level, find); 
 		END;
 		IF find.found OR (find.minLevel > level) THEN RETURN END;
-		IF ~Expect(GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
 	END FindInScope;
 	
 	PROCEDURE InitSearch(VAR search: Search);
@@ -967,7 +967,7 @@ CONST
 						IF offset >= 0 THEN 
 							WriteVariables(w,refs,offset, base, low, high); 
 							SkipType(refs, offset);
-							IF Expect(GetChar(refs, offset) = sfScopeBegin) THEN
+							IF Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN
 								WriteVariables(w,refs,offset, base, low, high); 
 							END;
 						END;
@@ -1070,7 +1070,7 @@ TYPE
 	BEGIN
 		offset := FindByName(mod.refs, 0,name, TRUE);
 		IF offset < 0 THEN RETURN FALSE END;
-		IF ~Expect(GetChar(mod.refs, offset) = sfVariable) THEN RETURN FALSE END;
+		IF ~Expect(offset, GetChar(mod.refs, offset) = sfVariable) THEN RETURN FALSE END;
 		SkipSize(offset);
 		SkipString(mod.refs, offset); 
 		IF GetChar(mod.refs, offset) = sfRelative THEN
@@ -1153,7 +1153,7 @@ TYPE
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("PROCEDURE "); 
-		IF ~Expect(GetChar(refs, offset) = sfProcedure) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END;
 		SkipSize(offset);
 		GetString(refs, offset, name); 
 		w.String(name); 
@@ -1181,7 +1181,7 @@ TYPE
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("VAR "); 
-		IF ~Expect(GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
 		SkipSize(offset);
 		GetString(refs, offset, name); 
 		w.String(name); 
@@ -1202,7 +1202,7 @@ TYPE
 	BEGIN
 		w.Int(offset,1); w.String(":");
 		w.String("TYPE "); 
-		IF ~Expect(GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END; 	
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END; 	
 		SkipSize(offset);
 		GetString(refs, offset, name); 
 		w.String(name); 
@@ -1215,7 +1215,7 @@ TYPE
 
 	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
 	BEGIN
-		IF ~Expect(GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
 		w.Int(offset,1); w.String(": Scope"); w.Ln;
 		WHILE (refs[offset] = sfVariable) DO (* Variable *)
 			ReportVariable(w, refs, offset); 
@@ -1226,7 +1226,7 @@ TYPE
 		WHILE (refs[offset] = sfTypeDeclaration) DO (* TypeDeclaration *)
 			ReportTypeDeclaration(w, refs, offset); 
 		END;
-		IF ~Expect(GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
 		w.String("END"); w.Ln; 
 	END ReportScope;
 	
@@ -1234,7 +1234,7 @@ TYPE
 	VAR name: Name;
 	BEGIN
 		w.String("MODULE "); 
-		IF ~Expect(GetChar(refs, offset) = sfModule) THEN RETURN END; 
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END; 
 		SkipSize(offset);
 		GetString(refs, offset, name); 
 		w.String(name); 

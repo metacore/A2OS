@@ -130,7 +130,7 @@ TYPE
 	VAR
 		rootedNext : Process; (*  to prevent process to be GCed in WinAos *)
 		obj-: ProtectedObject;   (* associated active object *)
-		state-: Kernel32.Context;
+		state- {ALIGNED=16}: Kernel32.Context;
 		(*
 		sse: SSEState;	(* fpu and sse state of preempted process (only valid if Preempted IN flag) *)
 		sseAdr: LONGINT;
@@ -147,7 +147,7 @@ TYPE
 		currPri: LONGINT;
 		stack*: Machine.Stack; (** user-level stack of process *)
 		*)
-		stackBottom: ADDRESS;
+		stackBottom-: ADDRESS;
 		handle-: Kernel32.HANDLE; (* handle to corresponding Windows thread *)
 		body: Body;
 		event: Win32Event;
@@ -172,10 +172,9 @@ TYPE
 			proc {UNTRACED}: Modules.ProcedureDescPointer;
 			modName: ARRAY 128 OF CHAR;
 			mode0,mode1: LONGINT;
-			c: Kernel32.Context;
 			
 			contextPos: LONGINT;
-		BEGIN
+		BEGIN{UNCHECKED} (* avoid winapi call indirection *)
 			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
@@ -187,10 +186,9 @@ TYPE
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
-				c.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
-				res := Kernel32.GetThreadContext( handle, c );
+				state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
+				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN TRACE(Kernel32.GetLastError()) END;
-				state := c;
 				
 				sp :=  state.SP; bp := state.BP; pc := state.PC;
 				
@@ -220,6 +218,9 @@ TYPE
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
 			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+				IF TraceVerbose THEN
+					Trace.String("GC, process id = "); Trace.Int(id,1); Trace.Ln;
+				END;
 				LOOP
 					IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
 					IF Machine.ValidHeapAddress(pc) THEN
@@ -238,6 +239,9 @@ TYPE
 					IF ODD(n) THEN (* procedure descriptor at bp *)
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
 						IF desc # NIL THEN
+							IF TraceVerbose THEN
+								WriteType(desc); Trace.Ln;
+							END;
 							a0 := ADDRESSOF(desc.offsets);
 							a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
 							ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
@@ -1398,6 +1402,12 @@ END TimerFrequency;
 
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
+VAR maxNextPos: LONGINT;
+
+PROCEDURE ReportMaxNextPos*;
+BEGIN
+	TRACE(maxNextPos);
+END ReportMaxNextPos;
 
 
 PROCEDURE LeaveA2;
@@ -1420,6 +1430,7 @@ BEGIN
 		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
 		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
 		INC(cur.gcContext.nextPos);
+		IF cur.gcContext.nextPos > maxNextPos THEN maxNextPos := cur.gcContext.nextPos END;
 		ASSERT(cur.gcContext.nextPos < 255); 
 		IF cur.gcContext.nextPos > 255 THEN cur.gcContext.nextPos := 255 END;
 		(* IF (cur.gcContext.nextPos > 4) THEN cur.gcContext.nextPos := 2 END;*)

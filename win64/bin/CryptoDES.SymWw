@@ -1,0 +1,33 @@
+MODULE CryptoDES;
+	IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
+CONST 
+TYPE 
+	Sandbox = ARRAY 64 OF SET; 
+
+	BitSwap = ARRAY 16 OF SET; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ske, skd: ARRAY 32 OF SET; 
+		ki: LONGINT; 
+		ivx, ivy: SET; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RoundE*(VAR x, y: SET); 
+		PROCEDURE ^ RoundD*(VAR x, y: SET); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox; 
+	LHs, RHs: BitSwap; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ IP*(VAR x, y: SET); 
+	PROCEDURE ^ FP*(VAR x, y: SET); 
+	PROCEDURE ^ ComputeSubkeys*(x, y: SET; VAR sk: ARRAY OF SET; ofs: LONGINT); 
+	PROCEDURE ^ InitializeSandboxes; 
+BEGIN
+END CryptoDES.

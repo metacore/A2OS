@@ -1,0 +1,46 @@
+MODULE CalcGauss;
+	IMPORT NbrInt, NbrRe, NbrCplx, Data, DataLists, CalcFn;
+CONST 
+	Coarse* = 99; 
+	Medium* = 100; 
+	Fine* = 101; 
+	OKay* = 0; 
+	MaxSubDivReached* = 1; 
+	RoundoffError* = 2; 
+	RoughIntegrand* = 3; 
+TYPE 
+	Interval = OBJECT {EXCLUSIVE} (Data.Datum)
+	VAR 
+		a, b, error: NbrRe.Real; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: Data.Datum); 
+	END Interval; 
+
+	ReInterval = OBJECT {EXCLUSIVE} (Interval)
+	VAR 
+		soln: NbrRe.Real; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: Data.Datum); 
+	END ReInterval; 
+
+	CplxInterval = OBJECT {EXCLUSIVE} (Interval)
+	VAR 
+		soln: NbrCplx.Complex; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: Data.Datum); 
+	END CplxInterval; 
+VAR 
+	MaxIntervals-: NbrInt.Integer; 
+	node8, wgtGauss4, wgtKronrod8, node16, wgtGauss8, wgtKronrod16, node31, wgtGauss15, wgtKronrod31: POINTER TO ARRAY OF NbrRe.Real; 
+
+	PROCEDURE ^ GetKey(a, b, atX: NbrRe.Real): Data.Key; 
+	PROCEDURE ^ ReGaussKronrod(f: CalcFn.ReArg; fromX, toX: NbrRe.Real; integrator: NbrInt.Integer; VAR result, absError, absResult: NbrRe.Real); 
+	PROCEDURE ^ Solve*(f: CalcFn.ReArg; a, b: NbrRe.Real; integrator: NbrInt.Integer; VAR error: NbrRe.Real; VAR res: NbrInt.Integer): NbrRe.Real; 
+	PROCEDURE ^ CplxGaussKronrod(f: CalcFn.MixedArg; fromX, toX: NbrRe.Real; z: NbrCplx.Complex; integrator: NbrInt.Integer; VAR result: NbrCplx.Complex; VAR absError, absResult: NbrRe.Real); 
+	PROCEDURE ^ SolveCplx*(f: CalcFn.MixedArg; a, b: NbrRe.Real; z: NbrCplx.Complex; integrator: NbrInt.Integer; VAR error: NbrRe.Real; VAR res: NbrInt.Integer): NbrCplx.Complex; 
+	PROCEDURE ^ Quadrature; 
+BEGIN
+END CalcGauss.

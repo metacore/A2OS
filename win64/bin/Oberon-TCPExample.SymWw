@@ -1,0 +1,12 @@
+MODULE TCPExample IN Oberon;
+	IMPORT Input, NetSystem, Texts, Oberon;
+CONST 
+	TimeHost = \"129.132.134.2"\; 
+	TimePort = 13; 
+	TimeOut = 10; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Time*; 
+BEGIN
+END TCPExample.

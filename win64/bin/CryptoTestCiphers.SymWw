@@ -1,0 +1,23 @@
+MODULE CryptoTestCiphers;
+	IMPORT U := CryptoUtils, Ciphers := CryptoCiphers, Kernel, Commands, Out := KernelLog;
+CONST 
+
+	PROCEDURE ^ Ecb1*(context: Commands.Context); 
+	PROCEDURE ^ Cbc1*(context: Commands.Context); 
+	PROCEDURE ^ Ctr1*(context: Commands.Context); 
+	PROCEDURE ^ Ecb2*(CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: LONGINT); 
+	PROCEDURE ^ Cbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT); 
+	PROCEDURE ^ Ctr2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT); 
+	PROCEDURE ^ MeasureTime*(context: Commands.Context); 
+	PROCEDURE ^ DesEcb2*; 
+	PROCEDURE ^ Des3Ecb2*; 
+	PROCEDURE ^ IdeaEcb2*; 
+	PROCEDURE ^ AesEcb2*; 
+	PROCEDURE ^ Arc4Ecb2*; 
+	PROCEDURE ^ CastEcb2*; 
+	PROCEDURE ^ DesCbc2*; 
+	PROCEDURE ^ IdeaCbc2*; 
+	PROCEDURE ^ AesCbc2*; 
+	PROCEDURE ^ AesCtr2*; 
+BEGIN
+END CryptoTestCiphers.

@@ -1,0 +1,25 @@
+MODULE PETReleaseTree;
+	IMPORT Streams, Strings, Diagnostics, Build := Release, PETTrees, WMTrees;
+CONST 
+	Title = \" Packages"\; 
+	TitleError = \" Packages (Errors)"\; 
+TYPE 
+	String = ARRAY 128 OF CHAR; 
+
+	Tree* = OBJECT {EXCLUSIVE} (PETTrees.Tree)
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddNodes*(parent: PETTrees.TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
+		PROCEDURE ^ AddBuilds(parent: WMTrees.TreeNode; builds: Build.Builds); 
+		PROCEDURE ^ AddBuild(parent: WMTrees.TreeNode; build: Build.BuildObj); 
+		PROCEDURE ^ AddPackages(parent: WMTrees.TreeNode; packages: Build.PackageArray); 
+		PROCEDURE ^ AddPackage(parent: WMTrees.TreeNode; package: Build.Package); 
+		PROCEDURE ^ SetNodeInfo(node: PETTrees.TreeNode; position: LONGINT); 
+		PROCEDURE ^ NewNode(parent: WMTrees.TreeNode; CONST caption: ARRAY OF CHAR): PETTrees.TreeNode; 
+	END Tree; 
+
+	PROCEDURE ^ GetNumberCaption(CONST string: ARRAY OF CHAR; number: LONGINT): String; 
+	PROCEDURE ^ GetCaption(CONST string1, string2: ARRAY OF CHAR): String; 
+	PROCEDURE ^ GenBuildTree*(): PETTrees.Tree; 
+BEGIN
+END PETReleaseTree.

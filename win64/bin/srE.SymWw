@@ -1,0 +1,18 @@
+MODULE srE;
+	IMPORT SYSTEM, srBase;
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PROCEDURE ^ E*(VAR p: srBase.PT; VAR ijk: srBase.IPT); 
+	PROCEDURE ^ Eprime(VAR in: ARRAY OF SREAL; VAR out: ARRAY OF INTEGER); 
+	PROCEDURE ^ E2*(in: srBase.PT; VAR out: srBase.IPT); 
+	PROCEDURE {FingerPrint(-549528706)}  - ROUND*(x: SREAL; VAR y: LONGINT);
+	CODE {SYSTEM.i386, SYSTEM.FPU}
+       POP EAX
+       FLD DWORD [EBP]
+       ADD ESP, 4
+       FISTP DWORD [EAX]
+
+	END ROUND; 
+BEGIN
+END srE.

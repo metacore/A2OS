@@ -1,0 +1,227 @@
+MODULE UnicodeBidirectionality;
+	IMPORT Codecs, Files, Streams, KernelLog, Texts, Commands, UnicodeProperties, Strings;
+CONST 
+	DOSNeutral = 0; 
+	DOSRightToLeft = 1; 
+	DOSLeftToRight = 2; 
+	NeutralType = 0; 
+	EuropeanNumber = 1; 
+	ArabicNumber = 2; 
+	LeftStrongType = 3; 
+	CharacterDebugging = FALSE; 
+	CacheDebugging = FALSE; 
+	WeakTypes1* = 0; 
+	WeakTypes2* = 1; 
+	EuropeanNumberAdj* = 2; 
+	ArabicNumberAdj* = 3; 
+	NeutralTypes* = 4; 
+	SameDirection* = 5; 
+	initialCachePoolSize = 10000; 
+	initialCacheElementSize = 1000; 
+TYPE 
+	IntegerArray = POINTER TO ARRAY OF LONGINT; 
+
+	CharArray = POINTER TO ARRAY OF Texts.Char32; 
+
+	TextReaderArray = POINTER TO ARRAY OF Texts.TextReader; 
+
+	BoolArray = POINTER TO ARRAY OF BOOLEAN; 
+
+	PosArray = POINTER TO RECORD 
+		array: IntegerArray; 
+		size: LONGINT; 
+		next: PosArray; 
+	END; 
+
+	PosArrays = POINTER TO ARRAY OF PosArray; 
+
+	IntegerStack = OBJECT 
+	VAR 
+		top: INTEGER; 
+		internalStack: IntegerArray; 
+		internalStackSize: LONGINT; 
+
+		PROCEDURE ^  & Init*(size: LONGINT); 
+		PROCEDURE ^ Push(i: LONGINT); 
+		PROCEDURE ^ Pop(): LONGINT; 
+		PROCEDURE ^ Top(): LONGINT; 
+		PROCEDURE ^ Purge; 
+		PROCEDURE ^ Size(): INTEGER; 
+	END IntegerStack; 
+
+	PosArrayPool = RECORD 
+		first, last: PosArray; 
+	END; 
+
+	StringElement = RECORD 
+		element: Strings.String; 
+		used: BOOLEAN; 
+	END; 
+
+	IntegerStackElement = RECORD 
+		element: IntegerStack; 
+		used: BOOLEAN; 
+	END; 
+
+	UStringElement = RECORD 
+		element: Texts.PUCS32String; 
+		used: BOOLEAN; 
+	END; 
+
+	ArrayMemoryManager = OBJECT 
+	VAR 
+		posArrayPool: PosArrayPool; 
+		stringPool: ARRAY initialCachePoolSize OF StringElement; 
+		integerStackPool: ARRAY 10 OF IntegerStackElement; 
+		uStringPool: ARRAY 10 OF UStringElement; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ NewTextReaderArray(VAR trArray: TextReaderArray; size: LONGINT); 
+		PROCEDURE ^ NewIntegerStack(VAR stack: IntegerStack; size: LONGINT); 
+		PROCEDURE ^ FreeIntegerStack(stack: IntegerStack); 
+		PROCEDURE ^ NewBoolArray(VAR bArray: BoolArray; size: LONGINT); 
+		PROCEDURE ^ NewPosArrays(VAR pArrays: PosArrays; size: LONGINT); 
+		PROCEDURE ^ NewPosArray(VAR pArray: PosArray; size: LONGINT); 
+		PROCEDURE ^ NewIntegerArray(VAR iArray: IntegerArray; size: LONGINT); 
+		PROCEDURE ^ NewStringArray(VAR sArray: Strings.StringArray; size: LONGINT); 
+		PROCEDURE ^ NewCharArray(VAR cArray: CharArray; size: LONGINT); 
+		PROCEDURE ^ NewCharacterType(VAR charType: Strings.String); 
+		PROCEDURE ^ NewString(VAR string: Strings.String); 
+		PROCEDURE ^ FreeString(string: Strings.String); 
+		PROCEDURE ^ NewUString(VAR string: Texts.PUCS32String); 
+		PROCEDURE ^ FreeUString(string: Texts.PUCS32String); 
+	END ArrayMemoryManager; 
+
+	LineElement = OBJECT 
+	VAR 
+		next: LineElement; 
+		id: LONGINT; 
+		pos: LONGINT; 
+		lineLength: LONGINT; 
+		paragraphEmbeddingLevel: LONGINT; 
+		textReaders: TextReaderArray; 
+		dirty: BoolArray; 
+		posArrays, reversePosArrays: PosArrays; 
+		characterEmbeddingLevels: IntegerArray; 
+		originalCharacterTypes: Strings.StringArray; 
+		characterTypes: Strings.StringArray; 
+		characters: CharArray; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Clear; 
+	END LineElement; 
+
+	LineCache = OBJECT 
+	VAR 
+		first: LineElement; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ InsertLine(pos: LONGINT); 
+		PROCEDURE ^ GetNextPos(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ RemoveLine(pos: LONGINT); 
+		PROCEDURE ^ ChangePos(startPos, changeValue: LONGINT); 
+		PROCEDURE ^ FindElement(pos: LONGINT; VAR thisElement: LineElement); 
+		PROCEDURE ^ PrintCache; 
+	END LineCache; 
+
+	SegmentCache = OBJECT 
+	VAR 
+		first, last: LineElement; 
+		nextId: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ InsertSegment(start, end: LONGINT): LONGINT; 
+		PROCEDURE ^ RemoveSegment(id: LONGINT); 
+		PROCEDURE ^ ChangePos(id, changeValue: LONGINT); 
+		PROCEDURE ^ FindElement(id: LONGINT; VAR thisElement: LineElement); 
+		PROCEDURE ^ PrintCache; 
+	END SegmentCache; 
+
+	BidiFormatter* = OBJECT 
+	VAR 
+		amm: ArrayMemoryManager; 
+		textReader: Texts.TextReader; 
+		unicodePropertyReader: UnicodeProperties.UnicodeTxtReader; 
+		mirrorPropertyReader: UnicodeProperties.BidiMirroringTxtReader; 
+		reformatted: BOOLEAN; 
+		lineCache: LineCache; 
+		segmentCache: SegmentCache; 
+		trueTextLength: LONGINT; 
+		HL1*: HigherLevelProtocol1; 
+		HL2*: HigherLevelProtocol2; 
+		HL3*: HigherLevelProtocol3; 
+		HL4*: BOOLEAN; 
+		HL5*: HigherLevelProtocol5; 
+		HL6*: HigherLevelProtocol6; 
+
+		PROCEDURE ^  & Init*(text: Texts.Text); 
+		PROCEDURE ^ ReformatText*; 
+		PROCEDURE ^ ReformatTextFrom*(pos, changed: LONGINT); 
+		PROCEDURE ^ ReformatParagraph(pos: LONGINT); 
+		PROCEDURE ^ ReformatSegment*(start, end: LONGINT): LONGINT; 
+		PROCEDURE ^ RemoveSegment*(id: LONGINT); 
+		PROCEDURE ^ ChangeSegmentPos*(id, changeValue: LONGINT); 
+		PROCEDURE ^ ReformatClause(start, end: LONGINT; VAR cacheElement: LineElement); 
+		PROCEDURE ^ ApplyExplicitLevels(start, end: LONGINT; VAR cacheElement: LineElement); 
+		PROCEDURE ^ ResolveWeakTypes(VAR cacheElement: LineElement); 
+		PROCEDURE ^ ResolveNeutralTypes(VAR cacheElement: LineElement); 
+		PROCEDURE ^ ResolveImplicitLevels(VAR cacheElement: LineElement); 
+		PROCEDURE ^ ReorderLine*(start, length: LONGINT): Texts.TextReader; 
+		PROCEDURE ^ ReorderSegment*(id: LONGINT): Texts.TextReader; 
+		PROCEDURE ^ ReorderClause(VAR cacheElement: LineElement; start, length: LONGINT): Texts.TextReader; 
+		PROCEDURE ^ GetDisplayPosition*(pos, lineStart: LONGINT): LONGINT; 
+		PROCEDURE ^ GetInternalPosition*(pos, lineStart: LONGINT): LONGINT; 
+		PROCEDURE ^ GetImplicitLevel*(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ GetParagraphEmbeddingLevel*(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ ReadyTextReader*(start: LONGINT; VAR isFirst: BOOLEAN): Texts.TextReader; 
+		PROCEDURE ^ SetReadyTextReader*(start: LONGINT; textReader: Texts.TextReader); 
+		PROCEDURE ^ IsLastCharacterInLine*(pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^ FindEndOfParagraph(pos: LONGINT; VAR end: LONGINT); 
+		PROCEDURE ^ FindStartOfParagraph(pos: LONGINT; VAR start: LONGINT); 
+		PROCEDURE ^ MirrorCharacter(VAR originalChar: Texts.Char32; embeddingLevel: LONGINT); 
+		PROCEDURE ^ ReorderSubstrings(globalStart, fromLevel, toLevel: LONGINT; CONST levels: ARRAY OF LONGINT; VAR posArray: PosArray; lastCharType: Strings.String); 
+		PROCEDURE ^ SwapSubstring(start, end: LONGINT; VAR posArray: ARRAY OF LONGINT); 
+		PROCEDURE ^ SwapPositions(pos1, pos2: LONGINT; VAR posArray: ARRAY OF LONGINT); 
+		PROCEDURE ^ FillPositionArray(start: LONGINT; VAR posArray: ARRAY OF LONGINT); 
+		PROCEDURE ^ GetHighestLevel(start, length: LONGINT; CONST levels: ARRAY OF LONGINT): LONGINT; 
+		PROCEDURE ^ GetLowestOddLevel(start, length: LONGINT; CONST levels: ARRAY OF LONGINT): LONGINT; 
+		PROCEDURE ^ GetNextEvenEmbeddingLevel(thisLevel: LONGINT; VAR nextLevel: LONGINT); 
+		PROCEDURE ^ GetNextOddEmbeddingLevel(thisLevel: LONGINT; VAR nextLevel: LONGINT); 
+		PROCEDURE ^ GetBorderOfRunCharacterType(thisLevel, otherLevel: LONGINT; VAR result: Strings.String); 
+		PROCEDURE ^ IsEuropeanNumberAdjacent(pos: LONGINT; terminators: BOOLEAN; VAR cacheElement: LineElement; VAR max: LONGINT; VAR state: LONGINT; VAR ENstate: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsArabicNumberAdjacent(pos: LONGINT; VAR cacheElement: LineElement; VAR max: LONGINT; VAR state: LONGINT; VAR ENstate: LONGINT): BOOLEAN; 
+		PROCEDURE ^ FindFirstStrongCharacter(start, end: LONGINT; VAR charType: Strings.String); 
+		PROCEDURE ^ IsStrongCharacter(CONST char: Texts.Char32; VAR charType: Strings.String): BOOLEAN; 
+		PROCEDURE ^ IsStrongCharacterType(CONST charType: Strings.String): BOOLEAN; 
+		PROCEDURE ^ IsNeutralCharacterType(CONST charType: Strings.String): BOOLEAN; 
+		PROCEDURE ^ GetFinalDirectionalType(charType: Strings.String; thisLevel, otherLevel: LONGINT; VAR result: Strings.String); 
+		PROCEDURE ^ HasSameDirectionalType(charType: Strings.String; thisPos: LONGINT; cacheElement: LineElement): BOOLEAN; 
+		PROCEDURE ^ SweepCache; 
+		PROCEDURE ^ PrintOriginalTypedText*; 
+		PROCEDURE ^ PrintOriginalTypedParagraph(start, end: LONGINT); 
+		PROCEDURE ^ PrintCurrentTypedText*; 
+		PROCEDURE ^ PrintCurrentTypedParagraph(start, end: LONGINT); 
+		PROCEDURE ^ PrintCodedText*; 
+		PROCEDURE ^ PrintCodedParagraph(start, end: LONGINT); 
+		PROCEDURE ^ PrintCodedLine(textReader: Texts.TextReader; start, end: LONGINT); 
+		PROCEDURE ^ PrintLeveledText*; 
+		PROCEDURE ^ PrintLeveledParagraph(start, end: LONGINT); 
+		PROCEDURE ^ PrintLineEmbeddingLevels(CONST levels: IntegerArray); 
+	END BidiFormatter; 
+
+	HigherLevelProtocol1* = PROCEDURE (textReader: Texts.TextReader; start, end: LONGINT):LONGINT; 
+
+	HigherLevelProtocol2* = PROCEDURE (cacheLine: LineElement; pos, lastStrongType: LONGINT):Strings.String; 
+
+	HigherLevelProtocol3* = PROCEDURE (characters: CharArray; embeddingLevels: IntegerArray; originalTypes, types: Strings.StringArray; char: Texts.Char32; charType: Strings.String; VAR hlCharacterType: Strings.String; VAR hlEmbeddingLevel: LONGINT):BOOLEAN; 
+
+	HigherLevelProtocol5* = PROCEDURE (cacheElement: LineElement; pos: LONGINT; VAR thisCharacterType: Strings.String; VAR state, ENstate: LONGINT; placeOfVenue: LONGINT):BOOLEAN; 
+
+	HigherLevelProtocol6* = PROCEDURE (originalChar: Texts.Char32):Texts.Char32; 
+VAR 
+	showUnicodeControlCharacters*: BOOLEAN; 
+
+	PROCEDURE ^ GetDisplayCharacter*(VAR char: Texts.Char32); 
+	PROCEDURE ^ TestReformatting*(context: Commands.Context); 
+BEGIN
+END UnicodeBidirectionality.

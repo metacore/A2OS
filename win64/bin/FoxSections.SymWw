@@ -1,0 +1,133 @@
+MODULE FoxSections;
+	IMPORT SyntaxTree := FoxSyntaxTree, Streams, Global := FoxGlobal, Formats := FoxFormats, Basic := FoxBasic, Strings, ObjectFile;
+CONST 
+	InitCodeSection* = ObjectFile.InitCode; 
+	BodyCodeSection* = ObjectFile.BodyCode; 
+	CodeSection* = ObjectFile.Code; 
+	VarSection* = ObjectFile.Data; 
+	ConstSection* = ObjectFile.Const; 
+	InlineCodeSection* = 10; 
+	UnknownSectionType* = 11; 
+	LineCommentStart* = \"; "\; 
+	UnknownSize* =  -1; 
+	UndefinedFinalPosition* =  -1; 
+TYPE 
+	Identifier* = ObjectFile.Identifier; 
+
+	SectionName* = ObjectFile.SegmentedName; 
+
+	Section* = OBJECT 
+	VAR 
+		name-: SectionName; 
+		type-: SHORTINT; 
+		priority-: INTEGER; 
+		fixed-: BOOLEAN; 
+		positionOrAlignment-: LONGINT; 
+		fingerprint-: LONGINT; 
+		bitsPerUnit-: LONGINT; 
+		symbol-: SyntaxTree.Symbol; 
+		offset-: LONGINT; 
+		isCaseTable*: BOOLEAN; 
+		referenced-: BOOLEAN; 
+		isReachable-: BOOLEAN; 
+
+		PROCEDURE ^  & InitSection*(type: SHORTINT; priority: INTEGER; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^ IsCode*(): BOOLEAN; 
+		PROCEDURE ^ SetReferenced*(ref: BOOLEAN); 
+		PROCEDURE ^ SetOffset*(offset: LONGINT); 
+		PROCEDURE ^ SetReachability*(isReachable: BOOLEAN); 
+		PROCEDURE ^ SetBitsPerUnit*(bitsPerUnit: LONGINT); 
+		PROCEDURE ^ IsAligned*(): BOOLEAN; 
+		PROCEDURE ^ SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: LONGINT); 
+		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ SetFingerprint*(fingerprint: LONGINT); 
+		PROCEDURE ^ SetType*(type: SHORTINT); 
+		PROCEDURE ^ SetPriority*(priority: INTEGER); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
+		PROCEDURE ^ DumpName*(w: Streams.Writer); 
+	END Section; 
+
+	CommentStr* = POINTER TO ARRAY OF CHAR; 
+
+	Comment* = OBJECT 
+	VAR 
+		str-: CommentStr; 
+		strLen: LONGINT; 
+		pos-: LONGINT; 
+		nextComment-: Comment; 
+
+		PROCEDURE ^  & Init*(pos: LONGINT); 
+		PROCEDURE ^ Append(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Comment; 
+
+	GetPCProcedure = PROCEDURE {DELEGATE}():LONGINT; 
+
+	CommentWriter* = OBJECT (Streams.Writer)
+	VAR 
+		firstComment-, lastComment-: Comment; 
+		comments-: LONGINT; 
+		getPC: GetPCProcedure; 
+
+		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Ln*; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^  & InitCommentWriter*(getPC: GetPCProcedure); 
+	END CommentWriter; 
+
+	SectionLookup = OBJECT (Basic.HashTable)
+
+		PROCEDURE ^ GetSection(symbol: SyntaxTree.Symbol): Section; 
+		PROCEDURE ^ PutSection(symbol: SyntaxTree.Symbol; section: Section); 
+	END SectionLookup; 
+
+	SectionNameLookup = OBJECT (Basic.HashTableSegmentedName)
+
+		PROCEDURE ^ GetSection(CONST name: Basic.SegmentedName): Section; 
+		PROCEDURE ^ PutSection(CONST name: Basic.SegmentedName; section: Section); 
+	END SectionNameLookup; 
+
+	SectionList* = OBJECT (Basic.List)
+	VAR 
+		lookup: SectionLookup; 
+		lookupName: SectionNameLookup; 
+
+		PROCEDURE ^  & InitListOfSections*; 
+		PROCEDURE ^ GetSection*(index: LONGINT): Section; 
+		PROCEDURE ^ SetSection*(index: LONGINT; section: Section); 
+		PROCEDURE ^ AddSection*(section: Section); 
+		PROCEDURE ^ FindBySymbol*(CONST symbol: SyntaxTree.Symbol): Section; 
+		PROCEDURE ^ FindByName*(CONST name: Basic.SegmentedName): Section; 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
+	END SectionList; 
+
+	NameEntry = POINTER TO RECORD 
+		name: SyntaxTree.IdentifierString; 
+	END; 
+
+	NameList* = OBJECT (Basic.List)
+
+		PROCEDURE ^ AddName*(CONST moduleName: ARRAY OF CHAR); 
+		PROCEDURE ^ GetName*(index: LONGINT): SyntaxTree.IdentifierString; 
+		PROCEDURE ^ ContainsName*(name: SyntaxTree.IdentifierString): BOOLEAN; 
+	END NameList; 
+
+	Module* = OBJECT (Formats.GeneratedModule)
+	VAR 
+		allSections-: SectionList; 
+		importedSections-: SectionList; 
+		platformName-: SyntaxTree.IdentifierString; 
+		imports-: NameList; 
+
+		PROCEDURE ^  & Init*(module: SyntaxTree.Module; system: Global.System); 
+		PROCEDURE ^ SetImports*(imports: NameList); 
+		PROCEDURE ^ SetPlatformName*(CONST platformName: ARRAY OF CHAR); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Module; 
+
+	PROCEDURE ^ DumpFiltered*(w: Streams.Writer; module: Module; CONST filter: ARRAY OF CHAR); 
+	PROCEDURE ^ NewCommentWriter*(getPC: GetPCProcedure): CommentWriter; 
+BEGIN
+END FoxSections.

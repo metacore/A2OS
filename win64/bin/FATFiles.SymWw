@@ -1,0 +1,269 @@
+MODULE FATFiles;
+	IMPORT SYSTEM, Kernel, Modules, Strings, UTF8Strings, Files, FATVolumes, Clock, KernelLog;
+CONST 
+	moduleName = \"FATFiles: "\; 
+	Ok* = FATVolumes.Ok; 
+	NotAssigned = FATVolumes.EOC; 
+	PathDelimiter = Files.PathDelimiter; 
+	EOC = FATVolumes.EOC; 
+	FREE = FATVolumes.FREE; 
+	ErrReadOnly* = FATVolumes.ErrReadOnly; 
+	ErrInvalidParams* = FATVolumes.ErrInvalidParams; 
+	ErrIOError* = FATVolumes.ErrIOError; 
+	ErrFileReadOnly* = 2921; 
+	ErrParentNotFound* = 2922; 
+	ErrInvalidFilename* = 2923; 
+	ErrTooManySimilarFiles* = 2924; 
+	ErrRootDirFull* = 2925; 
+	ErrFileNotFound* = 2926; 
+	ErrFileExists* = 2927; 
+	ErrHasOpenFiles* = 2928; 
+	ErrNoRelativePaths* = 2929; 
+	ErrDirectoryProtection* = 2930; 
+	ErrDirectoryNotEmpty* = 2931; 
+	ErrNotADirectory* = 2932; 
+	ErrDirectoryOpen* = 2933; 
+	MaxFilenameLen* = ((3 * 255) + 1); 
+	faReadOnly* = 0; 
+	faHidden* = 1; 
+	faSystem* = 2; 
+	faVolumeID* = 3; 
+	faDirectory* = 4; 
+	faArchive* = 5; 
+	faLongName = 15; 
+	faValidMask = {faReadOnly, faHidden, faSystem, faArchive}; 
+	WriteProtected = {faReadOnly, faSystem}; 
+	deFree = 0E5X; 
+	deLast = 0X; 
+TYPE 
+	Address = Files.Address; 
+
+	Filename* = ARRAY MaxFilenameLen OF CHAR; 
+
+	Shortname = ARRAY 12 OF CHAR; 
+
+	Parameter* = POINTER TO RECORD 
+	END; 
+
+	EnumParam = POINTER TO RECORD (Parameter)
+		flags: SET; 
+		mask, path: Filename; 
+		enum: Files.Enumerator; 
+	END; 
+
+	CountFiles = POINTER TO RECORD (Parameter)
+		count: LONGINT; 
+	END; 
+
+	SearchByName = OBJECT 
+	VAR 
+		directory: Address; 
+		name: Filename; 
+		found: File; 
+
+		PROCEDURE ^  & Init*(Directory: Address; Name: Filename); 
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END SearchByName; 
+
+	SearchByCluster = OBJECT 
+	VAR 
+		cluster: Address; 
+		found: File; 
+
+		PROCEDURE ^  & Init*(Cluster: Address); 
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END SearchByCluster; 
+
+	FilePurger = OBJECT 
+	VAR 
+		count: LONGINT; 
+
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END FilePurger; 
+
+	FileUpdater = OBJECT 
+
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END FileUpdater; 
+
+	FileEnumerator = OBJECT 
+	VAR 
+		count: LONGINT; 
+		directory: Address; 
+
+		PROCEDURE ^  & Init*(dir: Address); 
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END FileEnumerator; 
+
+	FileSystem* = OBJECT {EXCLUSIVE} (Files.FileSystem)
+	VAR 
+		rootDir-: Directory; 
+		openFiles, anonymousFiles: Kernel.FinalizedCollection; 
+		fileKey: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ GetNextFileKey(): LONGINT; 
+		PROCEDURE ^ SetRootDirectory*(name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SetRootDirectoryX(name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ OldX(name: ARRAY OF CHAR): File; 
+		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Delete0X(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Enumerate(file: File; par: Parameter): BOOLEAN; 
+		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ RmDirCallback(f: File; par: Parameter): BOOLEAN; 
+		PROCEDURE ^ RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ FindDirectory(path: ARRAY OF CHAR): Directory; 
+		PROCEDURE ^ GetDirectory(cluster: Address): Directory; 
+		PROCEDURE ^ GetDirectoryX(cluster: Address): Directory; 
+	END FileSystem; 
+
+	DirEntry = RECORD 
+		ofs, len: LONGINT; 
+	END; 
+
+	Buffer = POINTER TO RECORD 
+		pos: LONGINT; 
+		eoc: BOOLEAN; 
+		cluster: Address; 
+		data: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	File* = OBJECT {EXCLUSIVE} (Files.File)
+	VAR 
+		short: Shortname; 
+		long-: Filename; 
+		attr: SET; 
+		NTres: CHAR; 
+		cluster, parent: Address; 
+		size: LONGINT; 
+		time, date, writeTime-, writeDate-, accessDate-: LONGINT; 
+		modH, modName: BOOLEAN; 
+		writeEOC: BOOLEAN; 
+		eocCluster: LONGINT; 
+		entry: DirEntry; 
+		registered-: BOOLEAN; 
+		clusterSize: LONGINT; 
+		buffer: Buffer; 
+
+		PROCEDURE ^  & Init*(fs: Files.FileSystem); 
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
+		PROCEDURE ^ SetX(VAR r: Files.Rider; pos: LONGINT); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): LONGINT; 
+		PROCEDURE ^ ReadBuffer(buffer: Buffer; pos: LONGINT); 
+		PROCEDURE ^ WriteBuffer(buffer: Buffer); 
+		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadX(VAR r: Files.Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReadBytesX(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
+		PROCEDURE ^ WriteX(VAR r: Files.Rider; x: CHAR); 
+		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ WriteBytesX(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
+		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetAttributes*(): SET; 
+		PROCEDURE ^ SetAttributes*(Attr: SET); 
+		PROCEDURE ^ InclAttribute*(Attr: LONGINT); 
+		PROCEDURE ^ ExclAttribute*(Attr: LONGINT); 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ UpdateX; 
+		PROCEDURE ^ DeleteClusterChain(VAR res: LONGINT); 
+		PROCEDURE ^ GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN); 
+	END File; 
+
+	NameParam = POINTER TO RECORD (Parameter)
+		name: Filename; 
+		file: File; 
+	END; 
+
+	ClusterParam = POINTER TO RECORD (Parameter)
+		cluster: Address; 
+		file: File; 
+	END; 
+
+	ResultParam = POINTER TO RECORD (Parameter)
+		res: LONGINT; 
+	END; 
+
+	TailGenParam = POINTER TO RECORD (Parameter)
+		short: Shortname; 
+		tailmask: SET; 
+		tails: POINTER TO ARRAY OF SET; 
+	END; 
+
+	EnumCallback* = PROCEDURE {DELEGATE}(f: File; par: Parameter):BOOLEAN; 
+
+	Directory* = OBJECT {EXCLUSIVE} (File)
+	VAR 
+		firstFreePos: LONGINT; 
+		extendable: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(fs: Files.FileSystem); 
+		PROCEDURE ^ Initialize; 
+		PROCEDURE ^ InitSize; 
+		PROCEDURE ^ SetX(VAR r: Files.Rider; pos: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Enumerate(enum: EnumCallback; par: Parameter); 
+		PROCEDURE ^ EnumerateX(enum: EnumCallback; parseLong: BOOLEAN; par: Parameter); 
+		PROCEDURE ^ TailGenHandler(f: File; p: Parameter): BOOLEAN; 
+		PROCEDURE ^ TailFinder(p: TailGenParam; VAR tail: LONGINT): BOOLEAN; 
+		PROCEDURE ^ TailGeneration(VAR shortname: Shortname; TailNeeded: BOOLEAN); 
+		PROCEDURE ^ GetShortName(VAR name: Filename; VAR shortname: Shortname; VAR checksum: CHAR); 
+		PROCEDURE ^ RemoveFileHeader(f: File); 
+		PROCEDURE ^ RemoveFileHeaderX(f: File); 
+		PROCEDURE ^ GetShortEntry(VAR entry: ARRAY OF CHAR; name: ARRAY OF CHAR; attr: SET; NTres: CHAR; cluster, size, time, date, wTime, wDate, aDate: LONGINT); 
+		PROCEDURE ^ WriteFileHeader(f: File); 
+		PROCEDURE ^ WriteFileHeaderX(f: File); 
+		PROCEDURE ^ NewSubdirectory(name: ARRAY OF CHAR; VAR res: LONGINT): Directory; 
+		PROCEDURE ^ DeleteCallback(f: File; par: Parameter): BOOLEAN; 
+		PROCEDURE ^ DeleteContents(VAR res: LONGINT); 
+		PROCEDURE ^ FindCallback(f: File; par: Parameter): BOOLEAN; 
+		PROCEDURE ^ Find(VAR filename: ARRAY OF CHAR): File; 
+		PROCEDURE ^ FindX(VAR filename: ARRAY OF CHAR): File; 
+		PROCEDURE ^ FindByClusterCallback(f: File; par: Parameter): BOOLEAN; 
+		PROCEDURE ^ FindByCluster(cluster: Address): File; 
+	END Directory; 
+
+	RootDirectory = OBJECT {EXCLUSIVE} (Directory)
+
+		PROCEDURE ^ GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN); 
+	END RootDirectory; 
+
+	RootDirectory1216 = OBJECT {EXCLUSIVE} (RootDirectory)
+
+		PROCEDURE ^  & Init*(fs: Files.FileSystem); 
+		PROCEDURE ^ InitSize; 
+		PROCEDURE ^ ReadBuffer*(buffer: Buffer; pos: LONGINT); 
+		PROCEDURE ^ WriteBuffer*(buffer: Buffer); 
+	END RootDirectory1216; 
+
+	RootDirectory32 = OBJECT {EXCLUSIVE} (RootDirectory)
+	END RootDirectory32; 
+
+	PROCEDURE ^ NewFS*(context: Files.Parameters); 
+	PROCEDURE ^ PurgeFile(f: ANY); 
+	PROCEDURE ^ ValidateName(VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ValidLongChar*(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ ValidShortChar*(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ IsShortName(CONST fn: Filename): BOOLEAN; 
+	PROCEDURE ^ CheckSum*(short: Shortname): CHAR; 
+	PROCEDURE ^ NameLength(CONST fn: Filename): LONGINT; 
+	PROCEDURE ^ UpperCh(ch: CHAR; VAR lossy: BOOLEAN): CHAR; 
+	PROCEDURE ^ DateFAT2Oberon*(d: LONGINT): LONGINT; 
+	PROCEDURE ^ DateOberon2FAT*(d: LONGINT): LONGINT; 
+	PROCEDURE ^ TimeFAT2Oberon*(time, tenth: LONGINT): LONGINT; 
+	PROCEDURE ^ TimeOberon2FAT*(t: LONGINT; VAR time, tenth: LONGINT); 
+	PROCEDURE ^ Finalization; 
+BEGIN
+END FATFiles.

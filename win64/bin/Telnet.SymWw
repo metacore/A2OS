@@ -1,0 +1,101 @@
+MODULE Telnet;
+	IMPORT Modules, Streams, TCP, TCPServices, ShellCommands, KernelLog;
+CONST 
+	NUL = CHR(0); 
+	BEL = CHR(7); 
+	BS = CHR(8); 
+	HT = CHR(9); 
+	LF = CHR(10); 
+	VT = CHR(11); 
+	FF = CHR(12); 
+	CR = CHR(13); 
+	CmdEOF = CHR(236); 
+	CmdSUSP = CHR(237); 
+	CmdABORT = CHR(238); 
+	CmdEOR = CHR(239); 
+	CmdSE* = CHR(240); 
+	CmdNOP = CHR(241); 
+	CmdDM = CHR(242); 
+	CmdBRK = CHR(243); 
+	CmdIP = CHR(244); 
+	CmdAO = CHR(245); 
+	CmdAYT = CHR(246); 
+	CmdEC = CHR(247); 
+	CmdEL = CHR(248); 
+	CmdGA = CHR(249); 
+	CmdSB* = CHR(250); 
+	CmdWILL* = CHR(251); 
+	CmdWONT = CHR(252); 
+	CmdDO* = CHR(253); 
+	CmdDONT = CHR(254); 
+	CmdIAC* = CHR(255); 
+	OptEcho* = CHR(1); 
+	OptSupGoAhead* = CHR(3); 
+	OptStatus = CHR(5); 
+	OptTimingMatk = CHR(6); 
+	OptTerminalType* = CHR(24); 
+	OptWindowSize* = CHR(31); 
+	OptTerminalSpeed = CHR(32); 
+	OptFlowControl = CHR(33); 
+	OptLineMode = CHR(34); 
+	OptEnvVars = CHR(36); 
+	OptNewEnv = CHR(39); 
+	MaxLine = 256; 
+	Telnet* = 0; 
+	VT100* = 1; 
+	Echo* = 2; 
+	Tcp* = 3; 
+	Closed* = 31; 
+TYPE 
+	Connection* = OBJECT {EXCLUSIVE} 
+	VAR 
+		C: Streams.Connection; 
+		R*: Streams.Reader; 
+		W*: Streams.Writer; 
+		flags*: SET; 
+
+		PROCEDURE ^ WILL*(option: CHAR); 
+		PROCEDURE ^ WONT*(option: CHAR); 
+		PROCEDURE ^ Do*(option: CHAR); 
+		PROCEDURE ^ DONT*(option: CHAR); 
+		PROCEDURE ^ SB*(option: CHAR); 
+		PROCEDURE ^ Consume*(ch: CHAR); 
+		PROCEDURE ^ Dispatch; 
+		PROCEDURE ^ Setup*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Wait; 
+		PROCEDURE ^  & Init*(C: Streams.Connection); 
+	BEGIN{ACTIVE} 
+	END Connection; 
+
+	ServerConnection = OBJECT {EXCLUSIVE} (Connection)
+	VAR 
+		ctx: ShellCommands.Context; 
+		line: ARRAY (MaxLine + 1) OF CHAR; 
+		pos, len: LONGINT; 
+		term: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ WILL*(option: CHAR); 
+		PROCEDURE ^ IsVT100(str: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SB*(option: CHAR); 
+		PROCEDURE ^ Command; 
+		PROCEDURE ^ Prompt; 
+		PROCEDURE ^ Consume*(ch: CHAR); 
+		PROCEDURE ^ Setup*; 
+		PROCEDURE ^  & Init*(C: Streams.Connection); 
+	END ServerConnection; 
+
+	Agent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
+	VAR 
+		C: ServerConnection; 
+
+	BEGIN{ACTIVE} 
+	END Agent; 
+VAR 
+	service: TCPServices.Service; 
+
+	PROCEDURE ^ NewAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
+	PROCEDURE ^ OpenService*; 
+	PROCEDURE ^ TermMod; 
+BEGIN
+END Telnet.

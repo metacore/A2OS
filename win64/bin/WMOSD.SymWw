@@ -1,0 +1,42 @@
+MODULE WMOSD;
+	IMPORT KernelLog, Modules, Kernel, Commands, Streams, Displays, Plugins, Random, Strings, WM := WMWindowManager, WMComponents, WMStandardComponents, WMGraphics;
+CONST 
+	DefaultFontName = \"Oberon"\; 
+	DefaultFontSize = 24; 
+	DefaultFontStyle = {}; 
+	DefaultHeight = 100; 
+	DefaultBgFillColor = 32896; 
+	DefaultDuration = 1500; 
+	TimerResolution = 100; 
+TYPE 
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		label: WMStandardComponents.Label; 
+		timer: Kernel.Timer; 
+		alive, dead: BOOLEAN; 
+
+		PROCEDURE ^ Show(CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+	BEGIN{ACTIVE} 
+	END Window; 
+VAR 
+	window: Window; 
+	width, height: LONGINT; 
+	timeleft: LONGINT; 
+	nofWindows: LONGINT; 
+	testsRunning: LONGINT; 
+	stopSelftest: BOOLEAN; 
+
+	PROCEDURE ^ DecNofWindows; 
+	PROCEDURE ^ TimeExpired(): BOOLEAN; 
+	PROCEDURE ^ Show*(CONST message: ARRAY OF CHAR; duration: LONGINT); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMOSD.

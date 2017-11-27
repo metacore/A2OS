@@ -1,0 +1,15 @@
+MODULE WMUkrainianIME;
+	IMPORT Strings, WMInputMethods, Texts, KernelLog;
+CONST 
+	imeName* = \"Ukrainian"\; 
+TYPE 
+	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
+
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+	END IME; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ SelectedCharToUCS*; 
+BEGIN
+END WMUkrainianIME.

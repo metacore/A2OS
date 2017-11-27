@@ -1,0 +1,496 @@
+MODULE PartitionsLib;
+	IMPORT KernelLog, Kernel, Modules, Commands, AosDisks := Disks, Files, Dates, Strings, Plugins, Streams, Objects, WMGraphics, WMEvents, DiskVolumes, OldDiskVolumes, FATVolumes, ISO9660Volumes, Texts, TextUtilities;
+CONST 
+	Ok* = 0; 
+	StatusRunning* = {1}; 
+	StatusAborted* = {2}; 
+	StatusWaiting* = {3}; 
+	StatusFinished* = {5}; 
+	StatusError* = {4}; 
+	WriterLock* = 0; 
+	ReaderLock* = 1; 
+	UnknownFS* = 0; 
+	NativeFS* = 1; 
+	OldAosFS32* = 2; 
+	AosFS32* = 3; 
+	FatFS* = 4; 
+	AosFS128* = 5; 
+	Trace = {}; 
+	TraceGeometry = {1}; 
+	TraceGetFS = {2}; 
+	TraceLocks = {3}; 
+	Debug = TRUE; 
+	ShowReserved = FALSE; 
+	DateTimeFormat = \"yyyy.mm.dd hh:nn:ss"\; 
+	BootFileName = \"IDE.Bin"\; 
+	MaxBootLoaderSize = 10; 
+	BS* = 512; 
+	MinPartSize = 64; 
+	N2KSS = 2048; 
+	N2KBPS = (N2KSS DIV BS); 
+	N2KDirMark = LONGINT(9B1EA38DH); 
+	AosSSLog2 = 12; 
+	AosSS = ASH(1, AosSSLog2); 
+	AosBPS = (AosSS DIV BS); 
+	AosSF = 29; 
+	AosSTS = 128; 
+	AosXS = (AosSS DIV 4); 
+	AosHS = 568; 
+	AosDirMark = LONGINT(9B1EA38DH); 
+	AosType = 76; 
+	NativeType1 = 79; 
+	NativeType2 = 80; 
+	FSID = 559107905; 
+	FSID0 = 1380270671; 
+	FSIDOBL = 1145652297; 
+	FSVer = 2; 
+	FSRes = ((640 * 1024) DIV BS); 
+	MaxConfig* = 2000; 
+	MaxConfigString* = 4096; 
+	WholeDisk = 256; 
+	FreeSpace =  -1; 
+	ReservedSpace =  -2; 
+	NoSpaceAvailable = 9001; 
+	CoreMismatch = 9002; 
+	CoreChecksumError = 9003; 
+	DisketteLimit = 2880; 
+	Slot1 = 446; 
+	Slot2 = 462; 
+	Slot3 = 478; 
+	Slot4 = 494; 
+	MaxStringLength = 1024; 
+	BlocksPerTransfer = 128; 
+TYPE 
+	Block* = ARRAY BS OF CHAR; 
+
+	Disk* = RECORD 
+		device*: AosDisks.Device; 
+		table*: AosDisks.PartitionTable; 
+		size*, res*: LONGINT; 
+		geo*: AosDisks.GetGeometryMsg; 
+		gres*: LONGINT; 
+		fs*: POINTER TO ARRAY OF Files.FileSystem; 
+		isDiskette*: BOOLEAN; 
+	END; 
+
+	Disks* = POINTER TO ARRAY OF Disk; 
+
+	Selection* = RECORD 
+		disk*: Disk; 
+		partition*: LONGINT; 
+	END; 
+
+	RegionLock = POINTER TO RECORD 
+		device: AosDisks.Device; 
+		partition: AosDisks.Partition; 
+		type: LONGINT; 
+		nbrOfReaders: LONGINT; 
+		next: RegionLock; 
+	END; 
+
+	DisksModel* = OBJECT {EXCLUSIVE} 
+	VAR 
+		lockedBy: ANY; 
+		lockLevel: LONGINT; 
+		onChanged*: WMEvents.EventSource; 
+		devTable: Plugins.Table; 
+		disks-: Disks; 
+		usedDisks: RegionLock; 
+
+		PROCEDURE ^ GetDisk*(CONST devpart: ARRAY OF CHAR; VAR selection: Selection; check: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ AcquirePartition*(disk: Disk; partition: LONGINT; locktype: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReleasePartition*(disk: Disk; partition: LONGINT); 
+		PROCEDURE ^ ShowLocks; 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ UpdateAllDisks; 
+		PROCEDURE ^ UpdateDisk*(disk: Disk); 
+		PROCEDURE ^ UpdateDiskInternal(i: LONGINT); 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ DiskEventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+		PROCEDURE ^ GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: LONGINT); 
+		PROCEDURE ^ NewFree(type: LONGINT; VAR table: AosDisks.PartitionTable; start, size, ptblock: LONGINT; flags: SET); 
+		PROCEDURE ^ FindFreePrimary(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT); 
+		PROCEDURE ^ FindFreeExtended(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT); 
+		PROCEDURE ^ FindReserved(VAR table: AosDisks.PartitionTable); 
+		PROCEDURE ^ CheckTable(w: Streams.Writer; dev: AosDisks.Device; table: AosDisks.PartitionTable): BOOLEAN; 
+		PROCEDURE ^ FindFreeSpace(w: Streams.Writer; dev: AosDisks.Device; VAR table: AosDisks.PartitionTable; spt, hds: LONGINT): BOOLEAN; 
+		PROCEDURE ^ AssignFileSystems(disk: LONGINT); 
+		PROCEDURE ^ Contains(table: AosDisks.PartitionTable; i, x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ PartitionsOverlap(table: AosDisks.PartitionTable; i, j: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Finalize; 
+	END DisksModel; 
+
+	String* = ARRAY 256 OF CHAR; 
+
+	OperationState* = RECORD 
+		status-: SET; 
+		statusString-: String; 
+		errorCount-: LONGINT; 
+		progressValid-: BOOLEAN; 
+		min-, cur-, max-: HUGEINT; 
+	END; 
+
+	Operation* = OBJECT {EXCLUSIVE} 
+	VAR 
+		state-: OperationState; 
+		resultText, infoText, errorsText: Texts.Text; 
+		result-, info-, errors: TextUtilities.TextWriter; 
+		invalidateSelection*: BOOLEAN; 
+		name*, desc*: String; 
+		uid-: LONGINT; 
+		disk-: Disk; 
+		partition-: LONGINT; 
+		diskpartString-: String; 
+		starttime-, endtime-: Dates.DateTime; 
+		alive*, dead, start: BOOLEAN; 
+		diskmodel: DisksModel; 
+		next: Operation; 
+		trapped: BOOLEAN; 
+		parent: Operation; 
+		locktype*: LONGINT; 
+		locked: BOOLEAN; 
+		out-: Streams.Writer; 
+		temp: Strings.String; 
+
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+		PROCEDURE ^ GetState*(): OperationState; 
+		PROCEDURE ^ SetStatus*(status: SET; CONST statusString: String; min, cur, max: HUGEINT; valid: BOOLEAN); 
+		PROCEDURE ^ SetCurrentProgress*(cur: HUGEINT); 
+		PROCEDURE ^ ReportError*(CONST error: ARRAY OF CHAR); 
+		PROCEDURE ^ GetResult*(): Strings.String; 
+		PROCEDURE ^ GetInfo*(): Strings.String; 
+		PROCEDURE ^ GetErrors*(): Strings.String; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ Abort*; 
+		PROCEDURE ^ Aborted*(): BOOLEAN; 
+		PROCEDURE ^ SetBlockingStart*; 
+		PROCEDURE ^ SetParent*(operation: Operation); 
+		PROCEDURE ^ Indent; 
+		PROCEDURE ^ SetDead; 
+		PROCEDURE ^ AwaitDead*; 
+		PROCEDURE ^ SetStart*; 
+		PROCEDURE ^ AwaitStart; 
+		PROCEDURE ^ GetReport*(details: BOOLEAN): Texts.Text; 
+		PROCEDURE ^ Show*(out: Streams.Writer; details: BOOLEAN); 
+		PROCEDURE ^ SafelyDoOperation(): BOOLEAN; 
+	BEGIN{ACTIVE} 
+	END Operation; 
+
+	AllOperations* = POINTER TO ARRAY OF Operation; 
+
+	OperationManager* = OBJECT {EXCLUSIVE} 
+	VAR 
+		onChanged-: WMEvents.EventSource; 
+		operations: Operation; 
+		uid: LONGINT; 
+
+		PROCEDURE ^ Add(operation: Operation); 
+		PROCEDURE ^ Remove*(operation: Operation): BOOLEAN; 
+		PROCEDURE ^ GetByUid*(uid: LONGINT): Operation; 
+		PROCEDURE ^ GetAll*(): AllOperations; 
+		PROCEDURE ^ GetAllInternal*(): AllOperations; 
+		PROCEDURE ^ RemoveByUid*(uid: LONGINT): BOOLEAN; 
+		PROCEDURE ^ RemoveAll*(finishedOnly: BOOLEAN): LONGINT; 
+		PROCEDURE ^ Terminate(operation: Operation); 
+		PROCEDURE ^ Show*(out: Streams.Writer; details: BOOLEAN); 
+		PROCEDURE ^ GetUid(): LONGINT; 
+		PROCEDURE ^ Finalize; 
+		PROCEDURE ^  & Init*; 
+	END OperationManager; 
+
+	ListenerProcedure = PROCEDURE {DELEGATE}(operation: Operation; CONST message: ARRAY OF CHAR); 
+
+	Listener = POINTER TO RECORD 
+		proc: ListenerProcedure; 
+		next: Listener; 
+	END; 
+
+	CompletionNotification* = OBJECT {EXCLUSIVE} 
+	VAR 
+		listeners: Listener; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ AddListener*(proc: ListenerProcedure); 
+		PROCEDURE ^ RemoveListener*(proc: ListenerProcedure); 
+		PROCEDURE ^ NotifyListeners(operation: Operation; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ ReportCompletion*(operation: Operation); 
+	END CompletionNotification; 
+
+	Image* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		block, numblocks, blocksize: LONGINT; 
+		filename: Files.FileName; 
+		buffer: POINTER TO ARRAY OF CHAR; 
+
+		PROCEDURE ^ SetParameters*(CONST name: ARRAY OF CHAR; block, numblocks: LONGINT); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+	END Image; 
+
+	PartitionToFile* = OBJECT {EXCLUSIVE} (Image)
+
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END PartitionToFile; 
+
+	FileToPartition* = OBJECT {EXCLUSIVE} (Image)
+
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END FileToPartition; 
+
+	Mount* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		prefix: Files.Prefix; 
+		alias: ARRAY 64 OF CHAR; 
+		volumePars, fsPars: ARRAY 64 OF CHAR; 
+
+		PROCEDURE ^ SetParameters*(CONST prefix, alias, volumePars, fsPars: ARRAY OF CHAR); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END Mount; 
+
+	CheckPartition* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		timer: Kernel.MilliTimer; 
+
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ Random(VAR seed: LONGINT; N: LONGINT): LONGINT; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END CheckPartition; 
+
+	FormatPartition* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		fsRes: LONGINT; 
+		fsName, bootName: ARRAY 256 OF CHAR; 
+		flag: LONGINT; 
+		dev: AosDisks.Device; 
+
+		PROCEDURE ^ SetParameters*(CONST fsname, bootname: ARRAY OF CHAR; fsRes: LONGINT; fl: LONGINT); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ InitAosFS(fsres, flag: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ InitNativeFS(fsres, flag: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ InitOBL(flag: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END FormatPartition; 
+
+	ShowBlockCallback* = PROCEDURE {DELEGATE}(text: Texts.Text); 
+
+	ShowBlocks* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		block, numblocks: LONGINT; 
+		callback: ShowBlockCallback; 
+
+		PROCEDURE ^ SetParameters*(block, numblocks: LONGINT); 
+		PROCEDURE ^ SetCallback*(callback: ShowBlockCallback); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ WriteHexDump(w: Streams.Writer; CONST buf: ARRAY OF CHAR; ofs, size, base: LONGINT); 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END ShowBlocks; 
+
+	UpdateBootLoader* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		bootloader: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ SetParameters*(CONST bootloader: ARRAY OF CHAR); 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ UpdateOBL(f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END UpdateBootLoader; 
+
+	UpdateBootFile* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		bootfilename: ARRAY 128 OF CHAR; 
+
+		PROCEDURE ^ SetParameters*(CONST bootfilename: ARRAY OF CHAR); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END UpdateBootFile; 
+
+	WriteMBR* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		filename: ARRAY 128 OF CHAR; 
+		preserveTable: BOOLEAN; 
+		preserveSignature: BOOLEAN; 
+
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ SetParameters*(CONST filename: ARRAY OF CHAR; preserveTable, preserveSignature: BOOLEAN); 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END WriteMBR; 
+
+	GetConfig* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		table: ConfigString; 
+
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ GetTable*(): ConfigString; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END GetConfig; 
+
+	SetConfig* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		configString: Strings.String; 
+		pos: LONGINT; 
+
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ SetParameters*(configString: Strings.String; pos: LONGINT); 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END SetConfig; 
+
+	ConfigEntry* = RECORD 
+		key*, value*: Strings.String; 
+	END; 
+
+	Table* = POINTER TO ARRAY OF ConfigEntry; 
+
+	ConfigTable* = OBJECT {EXCLUSIVE} 
+	VAR 
+		entries: Table; 
+		hex: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ GetEntries*(): Table; 
+		PROCEDURE ^ GetNofEntries*(): LONGINT; 
+		PROCEDURE ^ GetAsString*(): Strings.String; 
+		PROCEDURE ^ SetValueOf*(key, value: Strings.String); 
+		PROCEDURE ^ GetAsStringInternal(): Strings.String; 
+		PROCEDURE ^ LoadFromStream*(r: Streams.Reader; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ParseRawTable*(config: Configuration); 
+		PROCEDURE ^ ParseStream(r: Streams.Reader): BOOLEAN; 
+		PROCEDURE ^ ChangeEntry*(pos: LONGINT; key, value: Strings.String); 
+		PROCEDURE ^ AddEntry*(pos: LONGINT; entry: ConfigEntry); 
+		PROCEDURE ^ AddEntryInternal(pos: LONGINT; entry: ConfigEntry); 
+		PROCEDURE ^ RemoveEntry*(entry: LONGINT); 
+		PROCEDURE ^ RemoveEntryInternal(entry: LONGINT); 
+		PROCEDURE ^ SwapEntries*(i, j: LONGINT); 
+		PROCEDURE ^ Clone*(): ConfigTable; 
+	END ConfigTable; 
+
+	ConfigString* = POINTER TO ARRAY OF CHAR; 
+
+	Configuration* = OBJECT {EXCLUSIVE} 
+	VAR 
+		table*: ConfigString; 
+		hex: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ ParseConfig*(CONST table: ARRAY OF CHAR; pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetTableAsString*(): Streams.StringWriter; 
+		PROCEDURE ^ FindEntry*(i, type: LONGINT): LONGINT; 
+		PROCEDURE ^ AddEntry*(type, dsize: LONGINT; CONST data: ARRAY OF CHAR); 
+		PROCEDURE ^ DeleteEntry*(i: LONGINT); 
+		PROCEDURE ^ UnQuote(VAR config: ARRAY OF CHAR; VAR len: LONGINT); 
+		PROCEDURE ^ HexVal(ch: CHAR): LONGINT; 
+		PROCEDURE ^ IsHex(ch: CHAR): BOOLEAN; 
+		PROCEDURE ^  & Init*; 
+	END Configuration; 
+
+	ChangePartType* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		oldtype, newtype: LONGINT; 
+
+		PROCEDURE ^ SetParameters*(oldtype, newtype: LONGINT); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END ChangePartType; 
+
+	CreatePartition* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		size, type: LONGINT; 
+		override: BOOLEAN; 
+
+		PROCEDURE ^ SetParameters*(size, type: LONGINT; override: BOOLEAN); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ CreatePrimary(size, type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CreateLogical(size, type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetEPBR(VAR epbr: Block; ptblock: LONGINT): BOOLEAN; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END CreatePartition; 
+
+	DeletePartition* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		type: LONGINT; 
+
+		PROCEDURE ^ SetParameters*(type: LONGINT); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^ DeletePrimary(type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ DeleteLogical(type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetEPBR(VAR epbr: Block; ptblock: LONGINT): BOOLEAN; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END DeletePartition; 
+
+	SetFlags* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		on: BOOLEAN; 
+
+		PROCEDURE ^ SetParameters*(on: BOOLEAN); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END SetFlags; 
+
+	InstallBootManager* = OBJECT {EXCLUSIVE} (Operation)
+	VAR 
+		mbrFilename, restFilename: ARRAY 1024 OF CHAR; 
+
+		PROCEDURE ^ SetParameters*(CONST mbrFilename, restFilename: ARRAY OF CHAR); 
+		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
+		PROCEDURE ^ DoOperation*; 
+		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
+	END InstallBootManager; 
+VAR 
+	safe*: BOOLEAN; 
+	diskModel-: DisksModel; 
+	operations-: OperationManager; 
+	infobus-: CompletionNotification; 
+	BootLoaderName: ARRAY 64 OF CHAR; 
+	BootLoaderSize: LONGINT; 
+
+	PROCEDURE ^ WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: LONGINT); 
+	PROCEDURE ^ DetectFS*(dev: AosDisks.Device; part: LONGINT): LONGINT; 
+	PROCEDURE ^ DisketteInserted*(dev: AosDisks.Device): BOOLEAN; 
+	PROCEDURE ^ GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs, res: LONGINT); 
+	PROCEDURE ^ WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum, res: LONGINT); 
+	PROCEDURE ^ CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT); 
+	PROCEDURE ^ Eject*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ ShowAosFSLimits*; 
+	PROCEDURE ^ IsMBR(CONST mbr: Block): BOOLEAN; 
+	PROCEDURE ^ IsEPBR(CONST epbr: Block): BOOLEAN; 
+	PROCEDURE ^ SlotEmpty(CONST slot: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ FillinSlot(disk: Disk; partition: LONGINT; VAR bootrecord: Block; slot, type, start, size: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsExtendedPartition(type: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsNativeType*(type: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsFatType*(type: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsPartitioned(dev: AosDisks.Device): BOOLEAN; 
+	PROCEDURE ^ GetDriveNum*(dev: AosDisks.Device): CHAR; 
+	PROCEDURE ^ Put2*(VAR b: ARRAY OF CHAR; i, val: LONGINT); 
+	PROCEDURE ^ Put4*(VAR b: ARRAY OF CHAR; i, val: LONGINT); 
+	PROCEDURE ^ Get2*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
+	PROCEDURE ^ Get4*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
+	PROCEDURE ^ WriteType*(type: LONGINT; VAR s: ARRAY OF CHAR; VAR color: LONGINT); 
+	PROCEDURE ^ GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: LONGINT; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTransferError*(dev: AosDisks.Device; op, start, res: LONGINT; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteK*(w: Streams.Writer; k: LONGINT); 
+	PROCEDURE ^ SetBootLoaderFile*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END PartitionsLib.

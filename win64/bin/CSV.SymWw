@@ -1,0 +1,58 @@
+MODULE CSV;
+	IMPORT Streams, Files, Strings;
+CONST 
+	CR = 0DX; 
+	LF = 0AX; 
+	TAB = 9X; 
+	SP = 20X; 
+TYPE 
+	Field* = OBJECT 
+	VAR 
+		next-: Field; 
+		string*: Strings.String; 
+	END Field; 
+
+	Line* = OBJECT 
+	VAR 
+		next-: Line; 
+		fields-: Field; 
+	END Line; 
+
+	Scanner* = OBJECT 
+	VAR 
+		r: Streams.Reader; 
+		buf: Strings.Buffer; 
+		bufw: Streams.Writer; 
+		csvFile: CSV; 
+
+		PROCEDURE ^  & Init*(file: CSV; r: Streams.Reader); 
+		PROCEDURE ^ Scan*; 
+		PROCEDURE ^ ScanLine*; 
+		PROCEDURE ^ ScanField*; 
+	END Scanner; 
+
+	CSV* = OBJECT 
+	VAR 
+		separator-: CHAR; 
+		escaper-: CHAR; 
+		quoteChars-: Strings.String; 
+		lines-: Line; 
+		curLine: Line; 
+		curField: Field; 
+
+		PROCEDURE ^  & Init*(CONST separator, escaper: CHAR; CONST quotes: ARRAY OF CHAR); 
+		PROCEDURE ^ NewLine*; 
+		PROCEDURE ^ AddField*(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ NeedsQuotes*(CONST str: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetUnusedQuote*(CONST str: ARRAY OF CHAR): CHAR; 
+		PROCEDURE ^ Write*(out: Streams.Writer); 
+	END CSV; 
+
+	PROCEDURE ^ IsWhiteSpace*(CONST ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ ContainsWhitespace*(CONST str: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetDefaultCSV*(): CSV; 
+	PROCEDURE ^ ScanFromFileName*(CONST fn: ARRAY OF CHAR; VAR csv: CSV); 
+	PROCEDURE ^ AppendCSVToFileName*(CONST fn: ARRAY OF CHAR; CONST csv: CSV); 
+	PROCEDURE ^ CompareCSVs*(a, b: CSV): BOOLEAN; 
+BEGIN
+END CSV.

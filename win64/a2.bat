@@ -1,0 +1,1 @@
+oberon64 run a2.txt

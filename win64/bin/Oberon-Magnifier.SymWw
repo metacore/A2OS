@@ -1,0 +1,24 @@
+MODULE Magnifier IN Oberon;
+	IMPORT SYSTEM, Modules, Display, Oberon, Effects, In, Out;
+CONST 
+VAR 
+	W, H, W2, H2, Z: INTEGER; 
+	Marker, eArrow, oArrow: Oberon.Marker; 
+	buf, buf1, buf2: POINTER TO ARRAY OF CHAR; 
+	vX, vY, pix: LONGINT; 
+	installed: BOOLEAN; 
+
+	PROCEDURE ^ FlipArrow(X, Y: LONGINT); 
+	PROCEDURE ^ Rect(VAR X, Y: INTEGER); 
+	PROCEDURE ^ FadeView; 
+	PROCEDURE ^ ShowView; 
+	PROCEDURE ^ Draw(X, Y: INTEGER); 
+	PROCEDURE ^ Fade(X, Y: INTEGER); 
+	PROCEDURE ^ OK(): BOOLEAN; 
+	PROCEDURE ^ GetParams(): BOOLEAN; 
+	PROCEDURE ^ Zoom*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Magnifier.

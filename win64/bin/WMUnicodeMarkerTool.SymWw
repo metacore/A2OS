@@ -1,0 +1,47 @@
+MODULE WMUnicodeMarkerTool;
+	IMPORT Strings, WMComponents, WMRestorable, WMCharMap, WMMessages, WMStandardComponents, WMTextView, Modules, WM := WMWindowManager, XML, UnicodeBidirectionality;
+CONST 
+	AlignLeft = 0; 
+	AlignCenter = 1; 
+	AlignRight = 2; 
+	AlignJustified = 3; 
+	StyleRegular = 0; 
+	StyleBold = 1; 
+	StyleItalic = 2; 
+	StyleBoldItalic = 3; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	ContextMenuData = OBJECT 
+	VAR 
+		val: LONGINT; 
+
+		PROCEDURE ^  & New*(val: LONGINT); 
+	END ContextMenuData; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		leftRightMarkerButton, rightLeftMarkerButton, zeroWidthJoinerButton, zeroWidthNonJoinerButton, leftRightEmbeddingButton, rightLeftEmbeddingButton, leftRightOverrideButton, rightLeftOverrideButton, popDirectionalFormatButton, otherMarkerButton, displayMarkersButton, focusButton: WMStandardComponents.Button; 
+		winpanel: WMStandardComponents.Panel; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ OpenUnicodeMap(sender, data: ANY); 
+		PROCEDURE ^ ChangeVisibility(sender, data: ANY); 
+		PROCEDURE ^ InsertMarker(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
+	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMUnicodeMarkerTool.

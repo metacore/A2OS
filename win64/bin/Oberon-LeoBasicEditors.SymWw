@@ -1,0 +1,30 @@
+MODULE LeoBasicEditors IN Oberon;
+	IMPORT Objects, Input, Oberon, Attributes, Links, Display3, Effects, Gadgets, Gfx, Leonardo, LeoPens, LeoFrames, LeoTools, LeoPanels, LeoPenEditors, LeoBasic;
+CONST 
+
+	PROCEDURE ^ RevertLink(editor: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyLink(editor: LeoPanels.Editor); 
+	PROCEDURE ^ NewLink*; 
+	PROCEDURE ^ Unlink*; 
+	PROCEDURE ^ RevertRectTool(e: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyRectTool(e: LeoPanels.Editor); 
+	PROCEDURE ^ TrackRect(frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ RectTool(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ ActivateRect*; 
+	PROCEDURE ^ RevertRect(editor: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyRect(editor: LeoPanels.Editor); 
+	PROCEDURE ^ NewRect*; 
+	PROCEDURE ^ RevertEllipseTool(e: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyEllipseTool(e: LeoPanels.Editor); 
+	PROCEDURE ^ TrackEllipse(frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ EllipseTool(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ ActivateEllipse*; 
+	PROCEDURE ^ RevertEllipse(editor: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyEllipse(editor: LeoPanels.Editor); 
+	PROCEDURE ^ NewEllipse*; 
+	PROCEDURE ^ RevertGroup(editor: LeoPanels.Editor); 
+	PROCEDURE ^ NewGroup*; 
+	PROCEDURE ^ Group*; 
+	PROCEDURE ^ Ungroup*; 
+BEGIN
+END LeoBasicEditors.

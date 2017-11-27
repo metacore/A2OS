@@ -1,0 +1,79 @@
+MODULE SVG;
+	IMPORT SVGUtilities, SVGColors, SVGMatrix, XML, CSS2, Strings, Raster, GfxFonts;
+CONST 
+	PaintNone* = 0; 
+	PaintCurrentColor* = 1; 
+	PaintColor* = 2; 
+	PaintURI* = 3; 
+	UnitsUserSpaceOnUse* = 0; 
+	UnitsObjectBoundingBox* = 1; 
+	AllowPercentages* = TRUE; 
+	DisallowPercentages* = FALSE; 
+TYPE 
+	Document* = Raster.Image; 
+
+	String* = XML.String; 
+
+	Number* = SVGMatrix.Number; 
+
+	Length* = Number; 
+
+	Color* = SVGColors.Color; 
+
+	Box* = RECORD 
+		x*, y*, width*, height*: Length; 
+	END; 
+
+	Coordinate* = SVGMatrix.Point; 
+
+	Transform* = SVGMatrix.Matrix; 
+
+	Paint* = RECORD 
+		type*: SHORTINT; 
+		color*: Color; 
+		uri*: String; 
+	END; 
+
+	Style* = RECORD 
+		fill*: Paint; 
+		stroke*: Paint; 
+		strokeWidth*: Length; 
+	END; 
+
+	State* = OBJECT 
+	VAR 
+		style*: Style; 
+		target*: Document; 
+		transparencyUsed*: BOOLEAN; 
+		viewport*: Box; 
+		userToWorldSpace*: Transform; 
+		next: State; 
+
+		PROCEDURE ^ Push*; 
+		PROCEDURE ^ Pop*; 
+	END State; 
+
+	PROCEDURE ^ InitDefaultStyle*(VAR style: Style); 
+	PROCEDURE ^ ParseNumber2(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length; VAR i: LONGINT; VAR unitStr: String); 
+	PROCEDURE ^ ParseNumber*(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length); 
+	PROCEDURE ^ ParseLength2(value: String; ppi: LONGREAL; percent100: Length; VAR length: Length; VAR i: LONGINT); 
+	PROCEDURE ^ ParseLength*(value: String; ppi: LONGREAL; percent100: Length; VAR length: Length); 
+	PROCEDURE ^ ParseLengthOptional2*(value: String; ppi: LONGREAL; percent100: Length; VAR length, length2: Length); 
+	PROCEDURE ^ ParseCoordinate*(value: String; VAR i: LONGINT; VAR current: Coordinate; relative: BOOLEAN); 
+	PROCEDURE ^ ParseCoordinate1*(value: String; VAR i: LONGINT; VAR current: Length; relative: BOOLEAN); 
+	PROCEDURE ^ ParsePaint*(value: String; VAR paint: Paint); 
+	PROCEDURE ^ ParseURI*(value: String; VAR uri: String): BOOLEAN; 
+	PROCEDURE ^ ParseUnits*(value: String; VAR units: SHORTINT); 
+	PROCEDURE ^ ParseStyle*(style: String; CONST name: ARRAY OF CHAR): String; 
+	PROCEDURE ^ ParseTransformList*(value: String; VAR transform: Transform); 
+	PROCEDURE ^ ParseViewBox*(value: String; VAR minx, miny, width, height: Length); 
+	PROCEDURE ^ ParsePreserveAspect*(value: String; VAR xAlign, yAlign: LONGINT; VAR meet: BOOLEAN); 
+	PROCEDURE ^ NewDocument*(width, height: Length): Document; 
+	PROCEDURE ^ Log*(CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Warning*(CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error*(CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ GetPixels(term: CSS2.Term; ppi: LONGREAL; font: GfxFonts.Font): LONGREAL; 
+	PROCEDURE ^ ChangeToPixel(pixelVal: LONGREAL): CSS2.Term; 
+	PROCEDURE ^ GetTermUnit(CONST unitStr: ARRAY OF CHAR): SHORTINT; 
+BEGIN
+END SVG.

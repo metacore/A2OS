@@ -1,0 +1,312 @@
+MODULE Linker0;
+	IMPORT SYSTEM, Streams, Files, KernelLog;
+CONST 
+	DefaultExtension = \".Obx"\; 
+	HeapSize = (1024 * 1024); 
+	AddressSize = SIZEOF(ADDRESS); 
+	LenOfs = (3 * AddressSize); 
+	Unmarked = 0; 
+	MemBlockDescModule = \"Machine"\; 
+	MemBlockDescType = \"MemoryBlockDesc"\; 
+	ModDescModule = \"Modules"\; 
+	ModDescType = \"Module"\; 
+	TypeDescModule = \"Modules"\; 
+	TypeDescType = \"TypeDesc"\; 
+	HdPtrDescModule = \"Loader"\; 
+	HdPtrDescType = \"@HdPtrDesc"\; 
+	ExportDescModule = \"Modules"\; 
+	ExportDescType = \"ExportDesc"\; 
+	InitPtrModule = \"Modules"\; 
+	InitPtrName = \"initBlock"\; 
+	ModRootModule = \"Modules"\; 
+	ModRootName = \"root"\; 
+	ProcOffsetsName = \"procOffsets"\; 
+	NumProcsName = \"numProcs"\; 
+	PtrOffsetsName = \"ptrOffsets"\; 
+	NumPtrsName = \"numPtrs"\; 
+	HeapModule = \"Heaps"\; 
+	FreeBlockDescType = \"FreeBlockDesc"\; 
+	SystemBlockDescType = \"SystemBlockDesc"\; 
+	RecordBlockDescType = \"RecordBlockDesc"\; 
+	ProtRecBlockDescType = \"ProtRecBlockDesc"\; 
+	ArrayBlockDescType = \"ArrayBlockDesc"\; 
+	FreeBlockTagPtrName = \"freeBlockTagPtr"\; 
+	SystemBlockTagPtrName = \"systemBlockTagPtr"\; 
+	RecordBlockTagPtrName = \"recordBlockTagPtr"\; 
+	ProtRecBlockTagPtrName = \"protRecBlockTagPtr"\; 
+	ArrayBlockTagPtrName = \"arrayBlockTagPtr"\; 
+	CurrentMarkValueName = \"currentMarkValue"\; 
+	StartModule = \"Objects"\; 
+	StartCommand = \"Terminate"\; 
+	MainModule = \"BootConsole"\; 
+	FreeBlockId = 0; 
+	SystemBlockId = 1; 
+	RecordBlockId = 2; 
+	ProtRecBlockId = 3; 
+	ArrayBlockId = 4; 
+	ProtectedModule = TRUE; 
+	TraceDump = FALSE; 
+	TraceRefs = (TRUE & TraceDump); 
+	TraceDuplicates = (FALSE & TraceDump); 
+	LogName = \"Linker.Log"\; 
+	HeaderSize = 64; 
+	EndBlockOfs = 56; 
+	NumPriorities* = 6; 
+	MaxTags* = 16; 
+	Tag0Ofs* =  -(2 * AddressSize); 
+	Mth0Ofs* = (Tag0Ofs - (AddressSize * MaxTags)); 
+	Ptr0Ofs* = AddressSize; 
+	ProtTypeBit* = 31; 
+	BlockSize = 32; 
+	ArrayAlignment = 8; 
+	BlockHeaderSize = (2 * AddressSize); 
+	HeapBlockOffset =  -(2 * AddressSize); 
+	TypeDescOffset =  -AddressSize; 
+	MinPtrOfs =  -1073741824; 
+	MethodEndMarker* = MinPtrOfs; 
+	InitTableLen = (2048 + 256); 
+	InitPtrTableLen = 2048; 
+	TypeDescRecSize* = ((5 * AddressSize) + 32); 
+	NilVal* = 0; 
+TYPE 
+	AdrTable = POINTER TO ARRAY OF ADDRESS; 
+
+	RootObject* = OBJECT 
+	VAR 
+		nextRoot: RootObject; 
+
+		PROCEDURE ^ FindRoots*; 
+	END RootObject; 
+
+	ProcessLink* = OBJECT (RootObject)
+	VAR 
+		next*, prev*: ProcessLink; 
+	END ProcessLink; 
+
+	ProcessQueue* = RECORD 
+		head*, tail*: ProcessLink; 
+	END; 
+
+	MemoryBlock = POINTER TO MemoryBlockDesc; 
+
+	MemoryBlockDesc = RECORD 
+		next{UNTRACED} : MemoryBlock; 
+		startAdr: ADDRESS; 
+		size: SIZE; 
+		beginBlockAdr, endBlockAdr: ADDRESS; 
+	END; 
+
+	HeapBlock = POINTER TO HeapBlockDesc; 
+
+	HeapBlockDesc = RECORD 
+		mark: LONGINT; 
+		dataAdr: ADDRESS; 
+		size: SIZE; 
+		nextRealtime: HeapBlock; 
+	END; 
+
+	FreeBlock = POINTER TO FreeBlockDesc; 
+
+	FreeBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	SystemBlock = POINTER TO SystemBlockDesc; 
+
+	SystemBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	RecordBlock = POINTER TO RecordBlockDesc; 
+
+	RecordBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	ProtRecBlock* = POINTER TO ProtRecBlockDesc; 
+
+	ProtRecBlockDesc* = RECORD (RecordBlockDesc)
+		count*: LONGINT; 
+		locked*: BOOLEAN; 
+		awaitingLock*: ProcessQueue; 
+		awaitingCond*: ProcessQueue; 
+		lockedBy*: ANY; 
+		lock*: ANY; 
+		waitingPriorities*: ARRAY NumPriorities OF LONGINT; 
+	END; 
+
+	ArrayBlock = POINTER TO ArrayBlockDesc; 
+
+	ArrayBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	StaticTypeBlock* = POINTER TO StaticTypeDesc; 
+
+	StaticTypeDesc* = RECORD 
+		recSize: SIZE; 
+		pointerOffsets*{UNTRACED} : PointerOffsets; 
+	END; 
+
+	PointerOffsets = POINTER TO ARRAY OF SIZE; 
+
+	Name* = ARRAY 32 OF CHAR; 
+
+	CommandProc* = PROCEDURE ; 
+
+	CommandParProc* = PROCEDURE (par: ANY):ANY; 
+
+	Command* = RECORD 
+		name*: Name; 
+		argTdAdr*, retTdAdr*: ADDRESS; 
+		entryAdr*: ADDRESS; 
+	END; 
+
+	ExportDesc* = RECORD 
+		fp*: ADDRESS; 
+		adr*: ADDRESS; 
+		exports*: LONGINT; 
+		dsc*: ExportArray; 
+	END; 
+
+	ExportArray* = POINTER TO ARRAY OF ExportDesc; 
+
+	Bytes* = POINTER TO ARRAY OF CHAR; 
+
+	TerminationHandler* = PROCEDURE ; 
+
+	ExceptionTableEntry* = RECORD 
+		pcFrom*: ADDRESS; 
+		pcTo*: ADDRESS; 
+		pcHandler*: ADDRESS; 
+	END; 
+
+	ExceptionTable* = POINTER TO ARRAY OF ExceptionTableEntry; 
+
+	ProcTableEntry* = RECORD 
+		pcFrom*, pcLimit*, pcStatementBegin*, pcStatementEnd*: ADDRESS; 
+		noPtr*: LONGINT; 
+	END; 
+
+	ProcTable* = POINTER TO ARRAY OF ProcTableEntry; 
+
+	PtrTable* = POINTER TO ARRAY OF SIZE; 
+
+	ProcOffsetEntry* = RECORD 
+		data*: ProcTableEntry; 
+		startIndex: LONGINT; 
+	END; 
+
+	ProcOffsetTable* = POINTER TO ARRAY OF ProcOffsetEntry; 
+
+	Module* = OBJECT (RootObject)
+	VAR 
+		next*: Module; 
+		name*: Name; 
+		init, published: BOOLEAN; 
+		refcnt*: LONGINT; 
+		sb*: ADDRESS; 
+		entry*: POINTER TO ARRAY OF ADDRESS; 
+		command*: POINTER TO ARRAY OF Command; 
+		ptrAdr*: POINTER TO ARRAY OF ADDRESS; 
+		typeInfo*: POINTER TO ARRAY OF TypeDesc; 
+		module*: POINTER TO ARRAY OF Module; 
+		procTable*: ProcTable; 
+		ptrTable*: PtrTable; 
+		data*, code*, staticTypeDescs*, refs*: Bytes; 
+		export*: ExportDesc; 
+		term*: TerminationHandler; 
+		exTable*: ExceptionTable; 
+		noProcs*: LONGINT; 
+		firstProc*: ADDRESS; 
+		maxPtrs*: LONGINT; 
+		crc*: LONGINT; 
+	END Module; 
+
+	TypeDesc* = POINTER TO RECORD 
+		descSize: LONGINT; 
+		sentinel: LONGINT; 
+		tag*: ADDRESS; 
+		flags*: SET; 
+		mod*: Module; 
+		name*: Name; 
+	END; 
+VAR 
+	logWriter: Streams.Writer; 
+	logFile: Files.File; 
+	root-: ADDRESS; 
+	procOffsets{UNTRACED} : ProcOffsetTable; 
+	numProcs: LONGINT; 
+	ptrOffsets{UNTRACED} : PtrTable; 
+	numPtrs: LONGINT; 
+	heap-: ANY; 
+	memBlock{UNTRACED} : MemoryBlock; 
+	beginMemBlockAdr, endMemBlockAdr: ADDRESS; 
+	beginAdr, freeAdr, baseAdr: ADDRESS; 
+	heapOfs: SIZE; 
+	exportTags, relocates: LONGINT; 
+	exportTagAdr: AdrTable; 
+	relocateAdr: AdrTable; 
+	curRelocate: LONGINT; 
+	refsMissed: LONGINT; 
+	prefix, suffix: Files.FileName; 
+	loadObj*: PROCEDURE (name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR):Module; 
+	getProcs: ARRAY 9 OF BOOLEAN; 
+	freeBlockTag, systemBlockTag, recordBlockTag, protRecBlockTag, arrayBlockTag: ADDRESS; 
+	initBlock{UNTRACED} : ANY; 
+	currentMarkValue: LONGINT; 
+
+	PROCEDURE ^ Fill4(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
+	PROCEDURE ^ Char*(c: CHAR); 
+	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ Int*(x, w: LONGINT); 
+	PROCEDURE ^ Hex*(x: SIZE; w: LONGINT); 
+	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ Bits*(x: SET; ofs, n: LONGINT); 
+	PROCEDURE ^ Enter*; 
+	PROCEDURE ^ Exit*; 
+	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
+	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE); 
+	PROCEDURE ^ NewRealArr*(VAR p: ANY; numElems, elemSize: SIZE; numDims: LONGINT); 
+	PROCEDURE ^ NewTypeDesc*(VAR p: ANY; recSize: SIZE); 
+	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
+	PROCEDURE ^ Append*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ Publish(VAR m: Module; VAR new: BOOLEAN); 
+	PROCEDURE ^ ModuleByName(CONST name: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ GetFileName(CONST name: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
+	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ ThisType*(m: Module; CONST name: ARRAY OF CHAR): TypeDesc; 
+	PROCEDURE ^ WriteType(t: ADDRESS); 
+	PROCEDURE ^ FindInsertionPos(VAR entry: ProcTableEntry; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ NumTotalPtrs(procTable: ProcTable): LONGINT; 
+	PROCEDURE ^ InsertProcOffsets*(procTable: ProcTable; ptrTable: PtrTable; maxPtr: LONGINT); 
+	PROCEDURE ^ GrowTable(VAR table: AdrTable); 
+	PROCEDURE ^ Relocate*(adr: ADDRESS); 
+	PROCEDURE ^ Open*(CONST namePrefix, nameSuffix: ARRAY OF CHAR; base: ADDRESS; log: Streams.Writer); 
+	PROCEDURE ^ RelocateModules; 
+	PROCEDURE ^ RelocateArrayFields(tagAdr: ADDRESS); 
+	PROCEDURE ^ RelocateExports; 
+	PROCEDURE ^ RelocateProcOffsets; 
+	PROCEDURE ^ FixupTypeDescTags; 
+	PROCEDURE ^ FixupHeapBlockTags; 
+	PROCEDURE ^ SortRelocates; 
+	PROCEDURE ^ GetNum(refs: Bytes; VAR i, num: LONGINT); 
+	PROCEDURE ^ VarByName(refs: Bytes; i: LONGINT; CONST name: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ InitTable(diff: SIZE; baseAdr, loadAdr: ADDRESS); 
+	PROCEDURE ^ RootGlobals; 
+	PROCEDURE ^ ScopeInfo(diff: SIZE; baseAdr: ADDRESS; root: Module); 
+	PROCEDURE ^ CheckLinkerHeap; 
+	PROCEDURE ^ Close*(w: Files.Writer; loadAdr: ADDRESS; res: LONGINT; CONST msg: ARRAY OF CHAR; log: Streams.Writer); 
+	PROCEDURE ^ NewModule*(VAR m: Module); 
+	PROCEDURE ^ NewExportDesc*(VAR p: ExportArray; numElems: LONGINT); 
+	PROCEDURE ^ ArraySize*(numElems, elemSize: SIZE; numDims: LONGINT): SIZE; 
+	PROCEDURE ^ NewProcOffsets(VAR p: ProcOffsetTable; numElems: LONGINT); 
+	PROCEDURE ^ NewPtrOffsets(VAR p: PtrTable; numElems: LONGINT); 
+	PROCEDURE ^ FitMemoryBlock(startAdr: ADDRESS; size: SIZE; VAR memBlock: MemoryBlock); 
+	PROCEDURE ^ RelocateMemoryBlock; 
+	PROCEDURE ^ InitHeap; 
+	PROCEDURE ^ ProcByName(refs: Bytes; CONST name: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ GetProc(m: Module; i: LONGINT; CONST mod, proc: ARRAY OF CHAR): ADDRESS; 
+	PROCEDURE ^ GetKernelProc*(m: Module; num: LONGINT): ADDRESS; 
+	PROCEDURE ^ WriteLog*; 
+BEGIN
+END Linker0.

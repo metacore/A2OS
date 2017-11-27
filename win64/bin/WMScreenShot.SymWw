@@ -1,0 +1,24 @@
+MODULE WMScreenShot;
+	IMPORT Commands, Plugins, Raster, Strings, WMGraphics, WMRectangles, WM := WMWindowManager;
+CONST 
+TYPE 
+	View = OBJECT (WM.ViewPort)
+	VAR 
+		backbuffer: WMGraphics.Image; 
+		deviceRect: WMRectangles.Rectangle; 
+		c: WMGraphics.BufferCanvas; 
+		state: WMGraphics.CanvasState; 
+		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+
+		PROCEDURE ^  & New*(manager: WM.WindowManager; w, h: LONGINT); 
+		PROCEDURE ^ Update*(r: WMRectangles.Rectangle; top: WM.Window); 
+		PROCEDURE ^ Refresh*(top: WM.Window); 
+		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ Draw(r: WMRectangles.Rectangle; top: WM.Window); 
+		PROCEDURE ^ Close; 
+	END View; 
+
+	PROCEDURE ^ SnapShotView*(context: Commands.Context); 
+	PROCEDURE ^ SnapShotRange*(context: Commands.Context); 
+BEGIN
+END WMScreenShot.

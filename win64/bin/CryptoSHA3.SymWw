@@ -1,0 +1,19 @@
+MODULE CryptoSHA3;
+	IMPORT Hashes := CryptoHashes, Sponge := CryptoKeccakSponge;
+CONST 
+TYPE 
+	Hash* = OBJECT (Hashes.Hash)
+	VAR 
+		sponge: Sponge.Instance; 
+		capacity: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; bytesize: LONGINT); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+	END Hash; 
+
+	PROCEDURE ^ NewHash*(): Hashes.Hash; 
+BEGIN
+END CryptoSHA3.

@@ -1,0 +1,32 @@
+MODULE BooksHelp IN Oberon;
+	IMPORT Texts, Display, Objects, Effects, Gadgets, Oberon, Display3;
+CONST 
+	qmW = 8; 
+	qmH = 13; 
+	bookW = 32; 
+	bookH = 32; 
+TYPE 
+	Frame = POINTER TO FrameDesc; 
+
+	FrameDesc = RECORD (Gadgets.FrameDesc)
+	END; 
+VAR 
+	W: Texts.Writer; 
+	MagnifyHand*: Oberon.Marker; 
+	qm: ARRAY qmH OF SET; 
+	qmp: Display.Pattern; 
+	book: ARRAY 5 OF ARRAY bookH OF SET; 
+	bookp: ARRAY 5 OF Display.Pattern; 
+
+	PROCEDURE ^ InitQM; 
+	PROCEDURE ^ InitBook; 
+	PROCEDURE ^ SetTutorial*(obj: Objects.Object; val: ARRAY OF CHAR); 
+	PROCEDURE ^ DrawHand(x, y: INTEGER); 
+	PROCEDURE ^ Fade(x, y: INTEGER); 
+	PROCEDURE ^ ShowDoc(activator: ARRAY OF CHAR); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Track(VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewIcon*; 
+BEGIN
+END BooksHelp.

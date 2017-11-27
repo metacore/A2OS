@@ -1,0 +1,30 @@
+MODULE FATTools IN Oberon;
+	IMPORT Files IN A2, FATVolumes IN A2, FATFiles IN A2, Strings IN A2, Texts, Oberon, SYSTEM;
+CONST 
+	Ok = FATFiles.Ok; 
+TYPE 
+	Path = RECORD 
+		prefix: Files.Prefix; 
+		fullname: FATFiles.Filename; 
+		directories: DirList; 
+	END; 
+
+	DirList = POINTER TO RECORD 
+		name: FATFiles.Filename; 
+		next: DirList; 
+	END; 
+
+	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner); 
+	PROCEDURE ^ GetString(VAR S: Texts.Scanner; VAR p: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetInteger(VAR S: Texts.Scanner; VAR v: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetOption(VAR S: Texts.Scanner; VAR optionChar: CHAR): BOOLEAN; 
+	PROCEDURE ^ Split(p: ARRAY OF CHAR; VAR path: Path): BOOLEAN; 
+	PROCEDURE ^ GetErrorMsg(res: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ SetRootDirectory*; 
+	PROCEDURE ^ CreateDirectory*; 
+	PROCEDURE ^ RemoveDirectory*; 
+	PROCEDURE ^ SetCache*; 
+	PROCEDURE ^ Statistics*; 
+	PROCEDURE ^ QuickFormat*; 
+BEGIN
+END FATTools.

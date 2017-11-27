@@ -1,0 +1,43 @@
+MODULE CRX IN Oberon;
+	IMPORT Oberon, Texts, Sets, CRS, CRT, CRA, Files;
+CONST 
+	symSetSize = 100; 
+	maxTerm = 3; 
+	tErr = 0; 
+	altErr = 1; 
+	syncErr = 2; 
+	EOL = 0DX; 
+VAR 
+	maxSS: INTEGER; 
+	errorNr: INTEGER; 
+	curSy: INTEGER; 
+	err, w: Texts.Writer; 
+	fram: Texts.Reader; 
+	syn: Texts.Writer; 
+	scanner: ARRAY 32 OF CHAR; 
+	symSet: ARRAY symSetSize OF CRT.Set; 
+
+	PROCEDURE ^ Restriction(n: INTEGER); 
+	PROCEDURE ^ PutS(s: ARRAY OF CHAR); 
+	PROCEDURE ^ PutI(i: INTEGER); 
+	PROCEDURE ^ Indent(n: INTEGER); 
+	PROCEDURE ^ PutSet(s: SET); 
+	PROCEDURE ^ PutSet1(s: CRT.Set); 
+	PROCEDURE ^ Length*(s: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ Alternatives(gp: INTEGER): INTEGER; 
+	PROCEDURE ^ CopyFramePart(stopStr: ARRAY OF CHAR); 
+	PROCEDURE ^ CopySourcePart(pos: CRT.Position; indent: INTEGER); 
+	PROCEDURE ^ GenErrorMsg(errTyp, errSym: INTEGER; VAR errNr: INTEGER); 
+	PROCEDURE ^ NewCondSet(set: CRT.Set): INTEGER; 
+	PROCEDURE ^ GenCond(set: CRT.Set); 
+	PROCEDURE ^ GenCode(gp, indent: INTEGER; checked: CRT.Set); 
+	PROCEDURE ^ GenCodePragmas; 
+	PROCEDURE ^ GenProcedureHeading(sn: CRT.SymbolNode; forward: BOOLEAN); 
+	PROCEDURE ^ GenForwardRefs; 
+	PROCEDURE ^ GenProductions; 
+	PROCEDURE ^ InitSets; 
+	PROCEDURE ^ GenCompiler*; 
+	PROCEDURE ^ WriteStatistics*; 
+	PROCEDURE ^ Init*; 
+BEGIN
+END CRX.

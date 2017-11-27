@@ -1,0 +1,153 @@
+MODULE srBase;
+	IMPORT Raster, Math, Random, Out := KernelLog;
+CONST 
+	TILESIZE* = 15; 
+	LTILESIZE* = 30; 
+	TILEi* = 12; 
+	TILEj* = 9; 
+	TILES* = (TILEi * TILEj); 
+	W* = (TILESIZE * TILEi); 
+	H* = (TILESIZE * TILEj); 
+	LW* = (LTILESIZE * TILEi); 
+	LH* = (LTILESIZE * TILEj); 
+	LRAYX* = (W DIV 2); 
+	LRAYY* = (H DIV 2); 
+	LLRAYX* = (W DIV 2); 
+	LLRAYY* = (H DIV 2); 
+TYPE 
+	Name* = ARRAY 32 OF CHAR; 
+
+	SREAL* = REAL; 
+
+	PT* = RECORD 
+		x*, y*, z*: SREAL; 
+	END; 
+
+	IPT* = RECORD 
+		i*, j*, k*: INTEGER; 
+	END; 
+
+	BOX* = RECORD 
+		p*, q*: PT; 
+	END; 
+
+	Aperture* = RECORD 
+		width*, height*: REAL; 
+	END; 
+
+	COLOR* = RECORD 
+		red*, green*, blue*, alpha*: SREAL; 
+	END; 
+
+	Light = RECORD 
+		x*, y*, z*: SREAL; 
+		r*, g*, b*: SREAL; 
+	END; 
+
+	V* = OBJECT 
+
+		PROCEDURE ^ tick; 
+		PROCEDURE ^ register*; 
+	END V; 
+
+	Ray* = RECORD 
+		theta*, phi*: SREAL; 
+		xyz*, dxyz*, ddxyz*, lxyz*, origin*: PT; 
+		r*, g*, b*, ra*, ga*, ba*, a*: SREAL; 
+		i*, j*, k*, recursion*: INTEGER; 
+		scale*: SREAL; 
+		length*: SREAL; 
+		changed*, traced*: BOOLEAN; 
+		face*: INTEGER; 
+		normal*: PT; 
+	END; 
+
+	RAYS* = ARRAY W OF ARRAY H OF Ray; 
+
+	LRAYS* = ARRAY LW OF ARRAY LH OF Ray; 
+
+	IMAGE* = ARRAY W OF ARRAY H OF COLOR; 
+
+	LIMAGE* = ARRAY (LW + 2) OF ARRAY (LH + 2) OF COLOR; 
+
+	Voxel* = OBJECT (V)
+	VAR 
+		passable*: BOOLEAN; 
+		rlimit*: INTEGER; 
+		complex*: BOOLEAN; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ SetNormal*(n: PT); 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ move*(VAR dx, dy, dz: SREAL; VAR blocked: BOOLEAN); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
+		PROCEDURE ^ linevoxel*(a, b: PT; level: LONGINT; v: Voxel); 
+		PROCEDURE ^ setcamera*(x, y, z: SREAL); 
+		PROCEDURE ^ deathray*(VAR ray: Ray); 
+		PROCEDURE ^ mutateray*(ray: Ray); 
+		PROCEDURE ^ connectray*(ray: Ray; VAR connection: BOOLEAN; VAR vox: Voxel); 
+		PROCEDURE ^ start*; 
+		PROCEDURE ^ camshade*(VAR ray: Ray; camx, camy, camz: SREAL); 
+		PROCEDURE ^ connect*(VAR connection: BOOLEAN; VAR vox: Voxel); 
+		PROCEDURE ^ connectmessage*; 
+		PROCEDURE ^ talk*(c: CHAR; VAR connection: BOOLEAN); 
+		PROCEDURE ^ disconnect*(VAR connection: BOOLEAN); 
+	END Voxel; 
+VAR 
+	voxelist: ARRAY 100 OF V; 
+	fog*: REAL; 
+	rlimit*: INTEGER; 
+	iterlimit*: LONGINT; 
+	frame*: LONGINT; 
+	img*: Raster.Image; 
+	copy*: Raster.Mode; 
+	light*: Light; 
+	rand*: Random.Generator; 
+	worldalive*: BOOLEAN; 
+	gravity*, gravUp*, fuzzon*, STOP*: BOOLEAN; 
+	singleray*: Ray; 
+	blankray*: Ray; 
+	Face*: ARRAY 6 OF PT; 
+	EMPTY*: Voxel; 
+	deathflag*: BOOLEAN; 
+	rays*: RAYS; 
+	lrays*: LRAYS; 
+	LOOK*, LLOOK*: Ray; 
+	image*: IMAGE; 
+	limage*: LIMAGE; 
+	world*: Voxel; 
+
+	PROCEDURE ^ clearvoxelist*; 
+	PROCEDURE ^ clamp*(x: SREAL): SREAL; 
+	PROCEDURE ^ clamp3*(VAR r, g, b: SREAL); 
+	PROCEDURE ^ clamPT*(VAR a: PT); 
+	PROCEDURE ^ addPT*(p, q: PT; VAR r: PT); 
+	PROCEDURE ^ clampColor*(VAR a: COLOR); 
+	PROCEDURE ^ fuzz3*(VAR x, y, z: SREAL; fuzz: SREAL); 
+	PROCEDURE ^ fuzz3noclamp*(VAR x, y, z: SREAL; fuzz: SREAL); 
+	PROCEDURE ^ fuzznorm3*(VAR x, y, z: SREAL; fuzz: SREAL); 
+	PROCEDURE ^ fzz3*(VAR x, y, z: SREAL; fuzz: SREAL); 
+	PROCEDURE ^ tick*; 
+	PROCEDURE ^ RESET*; 
+	PROCEDURE ^ STOPGO*; 
+	PROCEDURE ^ normalize*(VAR x, y, z: SREAL); 
+	PROCEDURE ^ printPT*(p: PT); 
+	PROCEDURE ^ normalizePT*(VAR n: PT); 
+	PROCEDURE ^ distance*(a, b: PT): SREAL; 
+	PROCEDURE ^ string*(s: ARRAY OF CHAR); 
+	PROCEDURE ^ setPT*(VAR p: PT; x, y, z: SREAL); 
+	PROCEDURE ^ setCOLOR*(VAR p: COLOR; r, g, b: SREAL); 
+	PROCEDURE ^ randPT*(VAR p: PT); 
+	PROCEDURE ^ randnormPT*(VAR p: PT); 
+	PROCEDURE ^ dist*(a, b: PT): SREAL; 
+	PROCEDURE ^ distsquared*(a, b: PT): SREAL; 
+	PROCEDURE ^ midPT*(a, b: PT): PT; 
+	PROCEDURE ^ Exit*(ray: Ray): PT; 
+	PROCEDURE ^ filterlinear1*(VAR img: IMAGE); 
+	PROCEDURE ^ filterlinear2*(VAR img: IMAGE); 
+	PROCEDURE ^ flushworld*; 
+BEGIN
+END srBase.

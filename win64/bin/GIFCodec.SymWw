@@ -1,0 +1,81 @@
+MODULE GIFCodec;
+	IMPORT KernelLog, Streams, Codecs, Raster, WMGraphics;
+CONST 
+	Dummy =  -1; 
+	Unspecified* = 0; 
+	DoNotDispose* = 1; 
+	RestoreToBackground* = 2; 
+	RestoreToPrevious* = 3; 
+	BlockTerminator = 0X; 
+TYPE 
+	CodePages = RECORD 
+		code, ref: LONGINT; 
+	END; 
+
+	CodeBook = ARRAY 4096 OF CodePages; 
+
+	Header = RECORD 
+		signature, version: ARRAY 4 OF CHAR; 
+	END; 
+
+	GIFEncoder* = OBJECT (Codecs.ImageEncoder)
+	VAR 
+		w: Streams.Writer; 
+		cb: CodeBook; 
+		lastBlock: ARRAY 4096 OF LONGINT; 
+
+		PROCEDURE ^ Open*(out: Streams.Writer); 
+		PROCEDURE ^ SetQuality*(quality: LONGINT); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: LONGINT); 
+		PROCEDURE ^ WriteScrDesc(w: Streams.Writer; img: Raster.Image); 
+		PROCEDURE ^ WriteColMap(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
+		PROCEDURE ^ WriteGlobal(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
+		PROCEDURE ^ WriteImageDesc(w: Streams.Writer; img: Raster.Image); 
+		PROCEDURE ^ InitCodeBook(codeLen: LONGINT); 
+		PROCEDURE ^ WriteData(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
+	END GIFEncoder; 
+
+	GIFDecoder* = OBJECT (Codecs.ImageDecoder)
+	VAR 
+		r: Streams.Reader; 
+		errors: BOOLEAN; 
+		width, height: LONGINT; 
+		pal, localPal, globalPal: Raster.Palette; 
+		backGrndCol: Raster.Pixel; 
+		transparent, interlaced: BOOLEAN; 
+		lcdFlags, backGrndIdx: CHAR; 
+		img: Raster.Image; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END GIFDecoder; 
+
+	GIFAnimationDecoder* = OBJECT (Codecs.AnimationDecoder)
+	VAR 
+		r: Streams.Reader; 
+		errors: BOOLEAN; 
+		width, height: LONGINT; 
+		pal, localPal, globalPal: Raster.Palette; 
+		backGrndCol: Raster.Pixel; 
+		transparent, interlaced: BOOLEAN; 
+		lcdFlags, backGrndIdx: CHAR; 
+
+		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+	END GIFAnimationDecoder; 
+VAR 
+	red, green, blue: ARRAY 256 OF INTEGER; 
+
+	PROCEDURE ^ LoadData(r: Streams.Reader; pal: Raster.Palette; img: Raster.Image; interlaced: BOOLEAN; VAR error: BOOLEAN); 
+	PROCEDURE ^ GetColor(CONST pixel: Raster.Pixel): LONGINT; 
+	PROCEDURE ^ InitDefaultPalette; 
+	PROCEDURE ^ ImageEncoderFactory*(): Codecs.ImageEncoder; 
+	PROCEDURE ^ ImageDecoderFactory*(): Codecs.ImageDecoder; 
+	PROCEDURE ^ AnimationDecoderFactory*(): Codecs.AnimationDecoder; 
+BEGIN
+END GIFCodec.

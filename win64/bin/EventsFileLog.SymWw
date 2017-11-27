@@ -1,0 +1,29 @@
+MODULE EventsFileLog;
+	IMPORT Modules, Commands, Files, Events, EventsUtils;
+CONST 
+	DefaultLogFile = \"AosEventLog.log"\; 
+	MaxLogFileSize = (1024 * 1024); 
+	Verbose = TRUE; 
+	Class = 1; 
+	Subclass = 1; 
+	ModuleName = \"EventsFileLog"\; 
+TYPE 
+	EventLogger = OBJECT {EXCLUSIVE} (Events.Sink)
+	VAR 
+		file: Files.File; 
+		w: Files.Writer; 
+		currentFileSize, maxFileSize: LONGINT; 
+		warned: BOOLEAN; 
+
+		PROCEDURE ^ Handle*(event: Events.Event); 
+		PROCEDURE ^  & Init*(file: Files.File; append: BOOLEAN; maxFileSize: LONGINT); 
+	END EventLogger; 
+VAR 
+	eventLogger-: EventLogger; 
+
+	PROCEDURE ^ OpenFile(CONST filename: ARRAY OF CHAR; append: BOOLEAN): Files.File; 
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END EventsFileLog.

@@ -1,0 +1,88 @@
+MODULE Options;
+	IMPORT KernelLog, Streams, Strings, Commands;
+CONST 
+	Flag* = 0; 
+	String* = 1; 
+	Integer* = 2; 
+	Real* = 3; 
+	Unknown =  -1; 
+	MaxOptions = 64; 
+	OptionDelimiter = \"-"\; 
+	Assignment = \"="\; 
+	Invalid =  -1; 
+TYPE 
+	Name* = ARRAY 32 OF CHAR; 
+
+	Parameter* = ARRAY 256 OF CHAR; 
+
+	Option = RECORD 
+		isSet: BOOLEAN; 
+		timestamp: LONGINT; 
+		ch: CHAR; 
+		name: Name; 
+		type: LONGINT; 
+		value: LONGINT; 
+		rvalue: LONGREAL; 
+		string: Parameter; 
+	END; 
+
+	Options* = OBJECT {EXCLUSIVE} 
+	VAR 
+		options: ARRAY MaxOptions OF Option; 
+		nofOptions: LONGINT; 
+		arg: Streams.Reader; 
+		error: Streams.Writer; 
+		setError: BOOLEAN; 
+		timestamp: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Add*(ch: CHAR; CONST name: Name; type: LONGINT); 
+		PROCEDURE ^ GetFlag*(CONST name: Name): BOOLEAN; 
+		PROCEDURE ^ SetFlag*(ch: CHAR; CONST name: Name): BOOLEAN; 
+		PROCEDURE ^ GetInteger*(CONST name: Name; VAR integer: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SetInteger*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetString*(CONST name: Name; VAR string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SetString*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetReal*(CONST name: Name; VAR real: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ Parse*(arg: Streams.Reader; error: Streams.Writer): BOOLEAN; 
+		PROCEDURE ^ ParseString*(CONST string: ARRAY OF CHAR; error: Streams.Writer): BOOLEAN; 
+		PROCEDURE ^ ParseOptions(): BOOLEAN; 
+		PROCEDURE ^ ParseOption(): BOOLEAN; 
+		PROCEDURE ^ ParseNameOption(): BOOLEAN; 
+		PROCEDURE ^ ParseName(VAR name: ARRAY OF CHAR; firstChar: CHAR): BOOLEAN; 
+		PROCEDURE ^ ParseCharOption(): BOOLEAN; 
+		PROCEDURE ^ ParseAssignment(VAR parameter: Parameter): BOOLEAN; 
+		PROCEDURE ^ ParseChar(VAR ch: CHAR): BOOLEAN; 
+		PROCEDURE ^ SetFlagIntern(ch: CHAR; CONST name: Name; checkTimestamp: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ SetStringIntern(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR; checkTimestamp: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ FindOption(CONST name: Name): LONGINT; 
+		PROCEDURE ^ WrongUsage(option: Option); 
+		PROCEDURE ^ ShowPos(pos: LONGINT); 
+		PROCEDURE ^ ShowOption(ch: CHAR; CONST name: Name); 
+		PROCEDURE ^ Show*(out: Streams.Writer); 
+	END Options; 
+
+	Default = POINTER TO RECORD 
+		name: Name; 
+		defaults: Strings.String; 
+		next: Default; 
+	END; 
+
+	Defaults* = OBJECT 
+	VAR 
+		head, tail: Default; 
+
+		PROCEDURE ^  & InitDefaults*; 
+		PROCEDURE ^ Add*(CONST name, defaults: ARRAY OF CHAR); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR): Streams.Reader; 
+		PROCEDURE ^ Show*(out: Streams.Writer); 
+	END Defaults; 
+
+	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 
+	PROCEDURE ^ IsValidChar(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: LONGINT; hex: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+BEGIN
+END Options.

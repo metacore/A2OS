@@ -1,0 +1,127 @@
+MODULE BasicGadgets IN Oberon;
+	IMPORT Objects, Gadgets, Display, Display3, Effects, Oberon, Texts, Files, Printer, Printer3, Fonts, Strings, Colors;
+CONST 
+	VersionNo = 2; 
+	VersionNewButton = 4; 
+	VersionAbstract = 4; 
+	VersionNewCheckbox = 3; 
+	outofboundsmodify = 4; 
+	MaxLen = 256; 
+	DontCare = MAX(LONGINT); 
+	DontCareR = MAX(LONGREAL); 
+TYPE 
+	Boolean* = POINTER TO BooleanDesc; 
+
+	BooleanDesc* = RECORD (Gadgets.ObjDesc)
+		val*: BOOLEAN; 
+	END; 
+
+	String* = POINTER TO StringDesc; 
+
+	StringDesc* = RECORD (Gadgets.ObjDesc)
+		val*: ARRAY MaxLen OF CHAR; 
+	END; 
+
+	Integer* = POINTER TO IntegerDesc; 
+
+	IntegerDesc* = RECORD (Gadgets.ObjDesc)
+		val*: LONGINT; 
+	END; 
+
+	Real* = POINTER TO RealDesc; 
+
+	RealDesc* = RECORD (Gadgets.ObjDesc)
+		val*: LONGREAL; 
+	END; 
+
+	Button* = POINTER TO ButtonDesc; 
+
+	ButtonDesc* = RECORD (Gadgets.FrameDesc)
+		caption*: ARRAY 32 OF CHAR; 
+		val*: BOOLEAN; 
+		popout*: BOOLEAN; 
+		setval*: INTEGER; 
+		look*: Objects.Object; 
+		led*: BOOLEAN; 
+		ledcol*: INTEGER; 
+		inM, outM: Display3.Mask; 
+		topC, bottomC, upC, downC: INTEGER; 
+	END; 
+
+	CheckBox* = POINTER TO CheckBoxDesc; 
+
+	CheckBoxDesc* = RECORD (Gadgets.FrameDesc)
+		val*: BOOLEAN; 
+		setval*: INTEGER; 
+	END; 
+
+	Slider* = POINTER TO SliderDesc; 
+
+	SliderDesc* = RECORD (Gadgets.FrameDesc)
+		min*, max*, val*: LONGINT; 
+		B, BW: INTEGER; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Log; 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ KillMasks(F: Objects.Object); 
+	PROCEDURE ^ WriteVersion(VAR R: Files.Rider); 
+	PROCEDURE ^ ReadVersion(VAR R: Files.Rider); 
+	PROCEDURE ^ CopyBoolean*(VAR M: Objects.CopyMsg; from, to: Boolean); 
+	PROCEDURE ^ BooleanHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBoolean*(obj: Boolean); 
+	PROCEDURE ^ NewBoolean*; 
+	PROCEDURE ^ CopyString*(VAR M: Objects.CopyMsg; from, to: String); 
+	PROCEDURE ^ StringHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitString*(obj: String); 
+	PROCEDURE ^ NewString*; 
+	PROCEDURE ^ CopyInteger*(VAR M: Objects.CopyMsg; from, to: Integer); 
+	PROCEDURE ^ IntegerHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitInteger*(obj: Integer); 
+	PROCEDURE ^ NewInteger*; 
+	PROCEDURE ^ CopyReal*(VAR M: Objects.CopyMsg; from, to: Real); 
+	PROCEDURE ^ RealHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitReal*(obj: Real); 
+	PROCEDURE ^ NewReal*; 
+	PROCEDURE ^ Field(F: Gadgets.Frame; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ButtonUpdateModel(F: Button); 
+	PROCEDURE ^ ButtonSetModel(F: Button); 
+	PROCEDURE ^ ComputeLookPos(B: Button); 
+	PROCEDURE ^ ButtonSetLook(F: Button; f: Gadgets.Frame): BOOLEAN; 
+	PROCEDURE ^ SetValues*; 
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ ButtonAttr(F: Button; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreButton(R: Display3.Mask; F: Button; x, y, w, h, u, v, w1, h1: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ PrintButton(F: Button; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyButton*(VAR M: Objects.CopyMsg; from, to: Button); 
+	PROCEDURE ^ ParseConstraints(CONST s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT; VAR lrel, trel, rrel, brel: LONGREAL); 
+	PROCEDURE ^ Constraints(f: Display.Frame; VAR l, t, r, b: LONGINT; VAR lrel, trel, rrel, brel: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ Constrain(F: Button): BOOLEAN; 
+	PROCEDURE ^ ComputeColors(F: Button; col: LONGINT); 
+	PROCEDURE ^ ButtonHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitButton*(F: Button); 
+	PROCEDURE ^ NewButton*; 
+	PROCEDURE ^ CheckBoxUpdateModel(F: CheckBox); 
+	PROCEDURE ^ CheckBoxSetModel(F: CheckBox); 
+	PROCEDURE ^ CheckBoxAttr(B: CheckBox; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreCheckBox(R: Display3.Mask; F: CheckBox; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PrintCheckBox(F: CheckBox; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyCheckBox*(VAR M: Objects.CopyMsg; from, to: CheckBox); 
+	PROCEDURE ^ CheckBoxHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitCheckBox*(F: CheckBox); 
+	PROCEDURE ^ NewCheckBox*; 
+	PROCEDURE ^ SliderUpdateModel(F: Slider); 
+	PROCEDURE ^ SliderSetModel(F: Slider); 
+	PROCEDURE ^ SliderAttr(F: Slider; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreSlider(R: Display3.Mask; F: Slider; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CopySlider*(VAR M: Objects.CopyMsg; from, to: Slider); 
+	PROCEDURE ^ PrintSlider(F: Slider; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ SliderHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitSlider*(S: Slider); 
+	PROCEDURE ^ NewSlider*; 
+	PROCEDURE ^ SetValue*(obj: Objects.Object); 
+	PROCEDURE ^ Break*; 
+BEGIN
+END BasicGadgets.

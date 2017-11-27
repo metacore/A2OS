@@ -1,0 +1,36 @@
+MODULE OdCond;
+	IMPORT Strings;
+CONST 
+	Ok* = 0; 
+	ErrorMsg* = 1; 
+	MustBeCheckedIn* = 2; 
+	MustNotUpdateBaselineCollection* = 3; 
+	MustBeVcr* = 4; 
+	MustBeCheckedOutVcr* = 5; 
+	CannotAddToExistingHistory* = 6; 
+	MustBeVersion* = 7; 
+	BcmsMustBeCheckedIn* = 8; 
+	CannotModifyVcc* = 9; 
+	MustHaveRequestBody* = 10; 
+	VccMustNotExist* = 11; 
+	MustBeBaseline* = 12; 
+	MustHaveNoVcms* = 13; 
+	OneBccPerHistoryPerWorkspace* = 14; 
+	NotImplemented* = 15; 
+	CheckedOutVersionUnchanged* = 16; 
+	VersionHistoryIsTree* = 17; 
+	VccMustBeCheckedOut* = 18; 
+	MaxCond* = 18; 
+TYPE 
+	ShortMsg = ARRAY 128 OF CHAR; 
+
+	OdCond* = OBJECT 
+	VAR 
+		status*: LONGINT; 
+		short*: ARRAY (MaxCond + 1) OF ShortMsg; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetError*(statusCode: LONGINT; CONST source: ARRAY OF CHAR; rc: LONGINT); 
+	END OdCond; 
+BEGIN
+END OdCond.

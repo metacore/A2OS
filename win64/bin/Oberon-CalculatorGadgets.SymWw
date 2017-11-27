@@ -1,0 +1,73 @@
+MODULE CalculatorGadgets IN Oberon;
+	IMPORT SYSTEM, BasicGadgets, Calculator, Conversions, Files, Gadgets, MathL IN A2, Objects, Out, Strings;
+CONST 
+	Version = \"V 1.1"\; 
+	Date = \"Oct '97"\; 
+	CalcPrefix = \"Calculator"\; 
+	CalcWidth = 24; 
+	CalcMem = 1; 
+	CalcUndoKey = 16; 
+	CalcUndoOp = 4; 
+	DEG = 0; 
+	RAD = 1; 
+	GRAD = 2; 
+TYPE 
+	Operand = RECORD 
+		value: LONGREAL; 
+		factor, base, angle: INTEGER; 
+	END; 
+
+	Button* = POINTER TO ButtonDesc; 
+
+	ButtonDesc* = RECORD (BasicGadgets.ButtonDesc)
+		tag*: ARRAY 32 OF CHAR; 
+	END; 
+
+	Engine* = POINTER TO EngineDesc; 
+
+	EngineDesc* = RECORD (Gadgets.ObjDesc)
+		expr*: Calculator.Expression; 
+		state: INTEGER; 
+		op: ARRAY CalcUndoOp OF Operand; 
+		mem: ARRAY CalcMem OF LONGREAL; 
+		undo: ARRAY CalcUndoKey OF LONGREAL; 
+		tag: ARRAY 32 OF CHAR; 
+	END; 
+
+	PROCEDURE ^ and(x, y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ or(x, y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ nor(x, y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ xor(x, y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ xnor(x, y: LONGREAL): LONGREAL; 
+	PROCEDURE ^ not(x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Rad(value: LONGREAL; angle: INTEGER): LONGREAL; 
+	PROCEDURE ^ Deg(value: LONGREAL; angle: INTEGER): LONGREAL; 
+	PROCEDURE ^ RadOp(op: Operand): LONGREAL; 
+	PROCEDURE ^ arcsin(VAR op: Operand): BOOLEAN; 
+	PROCEDURE ^ arccos(VAR op: Operand): BOOLEAN; 
+	PROCEDURE ^ cot(VAR op: Operand): BOOLEAN; 
+	PROCEDURE ^ tan(VAR op: Operand): BOOLEAN; 
+	PROCEDURE ^ InitOperand(VAR O: Operand; base: INTEGER); 
+	PROCEDURE ^ OperandToDisplay(O: Operand; w: INTEGER; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ AddDigit(E: Engine; c: CHAR): BOOLEAN; 
+	PROCEDURE ^ RemDigit(E: Engine): BOOLEAN; 
+	PROCEDURE ^ ApplyFunction(E: Engine; s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AddSpecial(E: Engine; s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AddConstant(E: Engine; s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ AddOperator(E: Engine; s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetSuffix(VAR str, suf: ARRAY OF CHAR); 
+	PROCEDURE ^ EngineAttr(E: Engine; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ EngineCopy(E: Engine; VAR M: Objects.CopyMsg); 
+	PROCEDURE ^ EngineFile(E: Engine; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ EngineHandler*(E: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ CopyButton*(VAR M: Objects.CopyMsg; from, to: Button); 
+	PROCEDURE ^ ButtonAttr(B: Button; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ ButtonCopy(B: Button; VAR M: Objects.CopyMsg); 
+	PROCEDURE ^ ButtonFile(B: Button; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ ButtonHandler*(B: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitEngine*(E: Engine); 
+	PROCEDURE ^ NewEngine*; 
+	PROCEDURE ^ InitButton*(B: Button); 
+	PROCEDURE ^ NewButton*; 
+BEGIN
+END CalculatorGadgets.

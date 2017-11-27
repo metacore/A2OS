@@ -1,0 +1,17 @@
+MODULE PrinterInfo IN Oberon;
+	IMPORT Objects, Display, Fonts, Printer, Pictures, Strings, Texts, Oberon, Attributes, Gadgets;
+CONST 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Int(name: ARRAY OF CHAR; val: LONGINT); 
+	PROCEDURE ^ FixedStr(val: REAL; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Fixed(name: ARRAY OF CHAR; val: REAL); 
+	PROCEDURE ^ Str(name, val: ARRAY OF CHAR); 
+	PROCEDURE ^ unit(VAR cm: BOOLEAN); 
+	PROCEDURE ^ PrInfo; 
+	PROCEDURE ^ PgInfo; 
+	PROCEDURE ^ Update*; 
+	PROCEDURE ^ Print*; 
+BEGIN
+END PrinterInfo.

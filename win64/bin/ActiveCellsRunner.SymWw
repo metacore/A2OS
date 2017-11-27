@@ -1,0 +1,64 @@
+module ActiveCellsRunner;
+	import system, ActiveCellsRuntime, Commands, Modules, D := Diagnostics;
+const 
+	DefaultChanDepth* = 2048; 
+	EnableTrace* = false; 
+type 
+	Cell = object 
+	var 
+		isCellnet: boolean; 
+	end Cell; 
+
+	Fifo = object {EXCLUSIVE} 
+	var 
+		data: pointer to array of system.byte; 
+		length: longint; 
+		rdPos, numEle: longint; 
+		inPort: Port; 
+		outPort: Port; 
+
+		procedure ^  & Init(outP: Port; inP: Port; length: longint); 
+		procedure ^ Put(value: longint); 
+		procedure ^ Get(var value: longint); 
+		procedure ^ BulkPut(const value: array of system.byte); 
+		procedure ^ BulkGet(var value: array of system.byte); 
+		procedure ^ BulkGetNonBlocking(var value: array of system.byte): boolean; 
+	end Fifo; 
+
+	Port = object 
+	var 
+		fifo-: Fifo; 
+		delegatedTo-: Port; 
+		inout-: set; 
+		owner: Cell; 
+
+		procedure ^  & InitPort(inout: set; width: longint); 
+		procedure ^ Delegate(toPort: Port); 
+		procedure ^ SetFifo(f: Fifo); 
+		procedure ^ Send(value: longint); 
+		procedure ^ BulkSend(const value: array of system.byte); 
+		procedure ^ Receive(var value: longint); 
+		procedure ^ ReceiveNonBlocking(var value: longint): boolean; 
+		procedure ^ BulkReceive(var value: array of system.byte); 
+	end Port; 
+
+	Context* = object {EXCLUSIVE} (ActiveCellsRuntime.Context)
+
+		procedure ^ Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellnet, isEngine: boolean); 
+		procedure ^ AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint); 
+		procedure ^ AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint); 
+		procedure ^ AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: longint); 
+		procedure ^ Connect*(outPort, inPort: any; depth: longint); 
+		procedure ^ Delegate*(netPort: any; cellPort: any); 
+		procedure ^ Start*(c: any; proc: procedure {DELEGATE}); 
+		procedure ^ Send*(p: any; value: longint); 
+		procedure ^ BulkSend*(p: any; const value: array of system.byte); 
+		procedure ^ Receive*(p: any; var value: longint); 
+		procedure ^ ReceiveNonBlocking*(p: any; var value: longint): boolean; 
+		procedure ^ BulkReceive*(p: any; var value: array of system.byte); 
+	end Context; 
+
+	procedure ^ Execute*(context: Commands.Context); 
+	procedure ^ Stop*(context: Commands.Context); 
+begin
+end ActiveCellsRunner.

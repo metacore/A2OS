@@ -1,0 +1,239 @@
+MODULE Files;
+	IMPORT SYSTEM, Streams, KernelLog, Modules, Kernel, Commands;
+CONST 
+	ReadOnly* = 0; 
+	Removable* = 1; 
+	Boot* = 2; 
+	Directory* = 1; 
+	Hidden* = 2; 
+	System* = 3; 
+	Archive* = 4; 
+	Temporary* = 5; 
+	Ok* = 0; 
+	ReadOnlyError = 2901; 
+	VolumeFull = 2902; 
+	InvalidAdr = 2903; 
+	VolumeReadOnly* = 2905; 
+	FsNotFound* = 2906; 
+	FileAlreadyExists* = 2908; 
+	BadFileName* = 2909; 
+	FileNotFound* = 2910; 
+	EnumSize* = 0; 
+	EnumTime* = 1; 
+	PrefixLength* = 16; 
+	NameLength* = 256; 
+	Trace = FALSE; 
+	WriteError = 2907; 
+	DefaultWriterSize = 4096; 
+	DefaultReaderSize = 4096; 
+	PathDelimiter* = \"/"\; 
+	BufferSize = (32 * 1024); 
+	SetSize = (MAX(SET) + 1); 
+	NeedsPrefix* = 0; 
+TYPE 
+	FileName* = ARRAY (PrefixLength + NameLength) OF CHAR; 
+
+	Rider* = RECORD 
+		eof*: BOOLEAN; 
+		res*: LONGINT; 
+		apos*, bpos*: LONGINT; 
+		hint*: Hint; 
+		file*: File; 
+		fs*: FileSystem; 
+	END; 
+
+	Reader* = OBJECT (Streams.Reader)
+	VAR 
+		file: File; 
+		r: Rider; 
+
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^  & InitFileReader*(file: File; pos: LONGINT); 
+	END Reader; 
+
+	Writer* = OBJECT (Streams.Writer)
+	VAR 
+		file: File; 
+		r: Rider; 
+
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^  & InitFileWriter*(file: File; pos: LONGINT); 
+	END Writer; 
+
+	Prefix* = ARRAY PrefixLength OF CHAR; 
+
+	Address* = LONGINT; 
+
+	Hint* = POINTER TO RECORD 
+	END; 
+
+	Bytes2 = ARRAY 2 OF CHAR; 
+
+	Bytes4 = ARRAY 4 OF CHAR; 
+
+	Bytes8 = ARRAY 8 OF CHAR; 
+
+	Volume* = OBJECT {EXCLUSIVE} 
+	VAR 
+		size*: LONGINT; 
+		blockSize*: LONGINT; 
+		flags*: SET; 
+		name*: ARRAY 32 OF CHAR; 
+		map: POINTER TO ARRAY OF SET; 
+		used: LONGINT; 
+		reserved: LONGINT; 
+
+		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
+		PROCEDURE ^ FreeBlock*(adr: Address); 
+		PROCEDURE ^ MarkBlock*(adr: Address); 
+		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Init*(flags: SET; size, reserved: LONGINT); 
+	END Volume; 
+
+	FileSystem* = OBJECT 
+	VAR 
+		next: FileSystem; 
+		prefix*: Prefix; 
+		desc*: ARRAY 32 OF CHAR; 
+		vol*: Volume; 
+		flags*: SET; 
+
+		PROCEDURE ^ New0*(name: ARRAY OF CHAR): File; 
+		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): File; 
+		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: LONGINT); 
+		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
+		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
+	END FileSystem; 
+
+	FileSystemTable* = POINTER TO ARRAY OF FileSystem; 
+
+	File* = OBJECT 
+	VAR 
+		flags*: SET; 
+		key*: LONGINT; 
+		fs*: FileSystem; 
+
+		PROCEDURE ^ Set*(VAR r: Rider; pos: LONGINT); 
+		PROCEDURE ^ Pos*(VAR r: Rider): LONGINT; 
+		PROCEDURE ^ Read*(VAR r: Rider; VAR x: CHAR); 
+		PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Write*(VAR r: Rider; x: CHAR); 
+		PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
+		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetAttributes*(): SET; 
+		PROCEDURE ^ SetAttributes*(flags: SET); 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Close*; 
+	END File; 
+
+	Enumerator* = OBJECT 
+	VAR 
+		r: Rider; 
+		adding: BOOLEAN; 
+		size-: LONGINT; 
+
+		PROCEDURE ^ Open*(mask: ARRAY OF CHAR; flags: SET); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ HasMoreEntries*(): BOOLEAN; 
+		PROCEDURE ^ GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT); 
+	END Enumerator; 
+
+	FileSearcher = OBJECT 
+	VAR 
+		fs: FileSystem; 
+		key: LONGINT; 
+		found: File; 
+
+		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
+	END FileSearcher; 
+
+	Parameters* = OBJECT (Commands.Context)
+	VAR 
+		vol*: Volume; 
+		prefix*: Prefix; 
+	END Parameters; 
+
+	FileSystemFactory* = PROCEDURE (context: Parameters); 
+VAR 
+	fsroot: FileSystem; 
+	files: Kernel.FinalizedCollection; 
+	seacher: FileSearcher; 
+	fileClipboard: File; 
+
+	PROCEDURE ^ OpenReader*(VAR b: Reader; f: File; pos: LONGINT); 
+	PROCEDURE ^ OpenWriter*(VAR b: Writer; f: File; pos: LONGINT); 
+	PROCEDURE ^ SplitName*(fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR); 
+	PROCEDURE ^ JoinName*(prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR); 
+	PROCEDURE ^ SplitPath*(pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR); 
+	PROCEDURE ^ JoinPath*(path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR); 
+	PROCEDURE ^ SplitExtension*(filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR); 
+	PROCEDURE ^ JoinExtension*(name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR); 
+	PROCEDURE ^ ForceTrailingDelimiter*(VAR path: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteFS(fs: FileSystem); 
+	PROCEDURE ^ Add*(fs: FileSystem; prefix: ARRAY OF CHAR); 
+	PROCEDURE ^ DeleteFS(fs: FileSystem); 
+	PROCEDURE ^ Promote*(fs: FileSystem); 
+	PROCEDURE ^ Remove*(fs: FileSystem); 
+	PROCEDURE ^ FindFS(prefix: ARRAY OF CHAR): FileSystem; 
+	PROCEDURE ^ This*(prefix: ARRAY OF CHAR): FileSystem; 
+	PROCEDURE ^ GetList*(VAR list: FileSystemTable); 
+	PROCEDURE ^ OpenOld(enum: FileSearcher; fs: FileSystem; VAR fname: ARRAY OF CHAR): File; 
+	PROCEDURE ^ Old*(name: ARRAY OF CHAR): File; 
+	PROCEDURE ^ New*(name: ARRAY OF CHAR): File; 
+	PROCEDURE ^ Delete*(VAR name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Copy*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Paste*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ CopyFile*(source, destination: ARRAY OF CHAR; VAR overwrite: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Register*(f: File); 
+	PROCEDURE ^ CreateDirectory*(path: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
+	PROCEDURE ^ Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
+	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
+	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
+	PROCEDURE ^ FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File; 
+	PROCEDURE ^ ReadSInt*(VAR r: Rider; VAR x: SHORTINT); 
+	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 
+	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ ReadSet*(VAR r: Rider; VAR x: SET); 
+	PROCEDURE ^ ReadBool*(VAR r: Rider; VAR x: BOOLEAN); 
+	PROCEDURE ^ ReadReal*(VAR r: Rider; VAR x: REAL); 
+	PROCEDURE ^ ReadLReal*(VAR r: Rider; VAR x: LONGREAL); 
+	PROCEDURE ^ ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ WriteSInt*(VAR r: Rider; x: SHORTINT); 
+	PROCEDURE ^ WriteInt*(VAR r: Rider; x: INTEGER); 
+	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ WriteSet*(VAR r: Rider; x: SET); 
+	PROCEDURE ^ WriteBool*(VAR r: Rider; x: BOOLEAN); 
+	PROCEDURE ^ WriteReal*(VAR r: Rider; x: REAL); 
+	PROCEDURE ^ WriteLReal*(VAR r: Rider; x: LONGREAL); 
+	PROCEDURE ^ WriteString*(VAR r: Rider; x: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteNum*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ AppendStr*(from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ GetDevPart*(arg: Streams.Reader; VAR deviceName: ARRAY OF CHAR; VAR partition: LONGINT); 
+	PROCEDURE ^ FSCleanup; 
+BEGIN
+END Files.

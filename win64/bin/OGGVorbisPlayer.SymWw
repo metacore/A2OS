@@ -1,0 +1,426 @@
+MODULE OGGVorbisPlayer;
+	IMPORT SYSTEM, Strings, KernelLog, Streams, Files, Commands, SoundDevices, BIT, Math, OGGUtilities, Modules, Kernel, TCP, WebHTTP, WebHTTPClient;
+CONST 
+	Trace = 1; 
+	Error = 2; 
+	Codec = 3; 
+	Debug = {Error}; 
+	Vorbis = \"vorbis"\; 
+	CodebookSynchPattern = 5653314; 
+	Ok = 0; 
+	ErrorIdentification = 1; 
+	ErrorSetup = 2; 
+	ErrorDataPacket = 3; 
+	PacketTooBig = 4; 
+	InvalidSerialNumber = 5; 
+	UnexpectedEOS = 6; 
+	OggStreamNotFound = 7; 
+	NoDecoderFound = 8; 
+	LogicalOggStreamFinished = 8; 
+	ErrorCapturePattern = 9; 
+	TooManyLogicalOggStreams = 10; 
+	NoDataPacket = 11; 
+	InvalidCodebookNumber = 12; 
+	ChannelNotUsed = 13; 
+	PacketUndecodable = 14; 
+	ErrorWindowDecode = 15; 
+	MaxPageSize = 65307; 
+	BaseHeaderLength = 27; 
+	OggStreamTypeLength = 6; 
+	MaxChannels* = 6; 
+	DefaultSamplingResolution = 16; 
+	MaxNrOfSegments = 255; 
+	MaxLogicalStreams = 8; 
+	MaxVendorLength = 64; 
+	MaxCommentLength = 256; 
+	MaxNumberOfCodebooks = 256; 
+	MaxNumberOfMultiplicands = 65536; 
+	MaxNumberOfFloors = 64; 
+	MaxNumberOfResidues = 64; 
+	MaxNumberOfMappings = 64; 
+	MaxNumberOfModes = 64; 
+	Floor0BookListSize = 16; 
+	Floor1PartitionClassListSize = 32; 
+	Floor1ClassSize = 16; 
+	Floor1SubclassSize = 16; 
+	Floor1XListSize = 256; 
+	ResidueCascadeSize = 64; 
+	ResidueBookSize = 64; 
+	MappingMagnitudeSize = 256; 
+	MappingMuxSize = 256; 
+	MappingSubmapFloorSize = 16; 
+	Floor1Final = 288; 
+	PartwordSize = 8; 
+	NrOfBlocksizes = 8; 
+	InverseDBLookupSize = 256; 
+	ResidueBookUnused =  -1; 
+	UnusedCodebookEntry =  -2; 
+	SerialNumberUnset =  -4; 
+TYPE 
+	BitReader = OBJECT 
+	VAR 
+		r: Streams.Reader; 
+		bsBuff, bsLive: LONGINT; 
+		bytesRead: LONGINT; 
+
+		PROCEDURE ^  & Init*(r: Streams.Reader); 
+		PROCEDURE ^ IsOk(): BOOLEAN; 
+		PROCEDURE ^ GetBytesRead(): LONGINT; 
+		PROCEDURE ^ GetBits(n: LONGINT): LONGINT; 
+		PROCEDURE ^ GetBit(): LONGINT; 
+		PROCEDURE ^ GetHugeInt(): HUGEINT; 
+		PROCEDURE ^ GetChar(): CHAR; 
+		PROCEDURE ^ StreamEOF; 
+	END BitReader; 
+
+	BufferReader = OBJECT 
+	VAR 
+		bsBuff, bsLive, pos, len: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ SetLen(len: LONGINT); 
+		PROCEDURE ^ GetLen(): LONGINT; 
+		PROCEDURE ^ IsOk(VAR buf: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetPos(): LONGINT; 
+		PROCEDURE ^ GetBitCount(): LONGINT; 
+		PROCEDURE ^ GetCurByte(VAR buf: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetBit(VAR buf: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetBits(VAR buf: ARRAY OF CHAR; n: LONGINT): LONGINT; 
+		PROCEDURE ^ GetHugeInt(VAR buf: ARRAY OF CHAR): HUGEINT; 
+		PROCEDURE ^ Get32UnsignedBits(VAR buf: ARRAY OF CHAR): HUGEINT; 
+		PROCEDURE ^ GetChar(VAR buf: ARRAY OF CHAR): CHAR; 
+	END BufferReader; 
+
+	OggPageHeader = RECORD 
+		headerTypeFlag, pageSegments, pageSize, headerLength, streamSerialNo: LONGINT; 
+		pageNo, checksum, absGranulePos: HUGEINT; 
+		segTable: ARRAY MaxNrOfSegments OF LONGINT; 
+	END; 
+
+	OggPage = RECORD 
+		buf: ARRAY MaxPageSize OF CHAR; 
+		header: OggPageHeader; 
+	END; 
+
+	LogicalOggStream = OBJECT 
+	VAR 
+		serialNumber*: LONGINT; 
+		decoder*: Decoder; 
+		soundOutput: SoundOutput; 
+		type*: ARRAY OggStreamTypeLength OF CHAR; 
+		finished*: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(dec: Decoder; soundOutput: SoundOutput; type: ARRAY OF CHAR); 
+	END LogicalOggStream; 
+
+	OggStreamReader* = OBJECT 
+	VAR 
+		bitReader: BitReader; 
+		page: OggPage; 
+		streams: ARRAY MaxLogicalStreams OF LogicalOggStream; 
+		nrOfStreams*: LONGINT; 
+
+		PROCEDURE ^  & Init*(reader: Streams.Reader); 
+		PROCEDURE ^ RegisterDecoder*(dec: Decoder; soundOutput: SoundOutput; type: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ UnregisterLogicalOggStream*(stream: LogicalOggStream); 
+		PROCEDURE ^ Dispatch(VAR oggStream: LogicalOggStream); 
+		PROCEDURE ^ DecodePage(VAR oggStream: LogicalOggStream): LONGINT; 
+		PROCEDURE ^ GetLogicalOggStreamBySerialNr(serialNr: LONGINT): LogicalOggStream; 
+		PROCEDURE ^ GetLogicalOggStreamByType(type: ARRAY OF CHAR): LogicalOggStream; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Start*(): LONGINT; 
+		PROCEDURE ^ NextPage(): LONGINT; 
+	END OggStreamReader; 
+
+	DecoderState = OBJECT 
+	VAR 
+		bufferAllocated: BOOLEAN; 
+		resSize, n, residueType, cacheSize, lastWindowFlag, nrOfSamples: LONGINT; 
+		preCached: BOOLEAN; 
+		codec: CodecSetup; 
+		mode: Mode; 
+		mapping: Mapping; 
+		win: Window; 
+		info: Info; 
+		resInfo: ResidueInfo; 
+		floor, rightCache, residues: ARRAY MaxChannels OF OGGUtilities.PCMBuffer; 
+		residuePartitionProc: ARRAY 3 OF ResiduePartitionProc; 
+		doNotDecode, noResidue: ARRAY MaxChannels OF BOOLEAN; 
+		residueNumbers: ARRAY MaxChannels OF LONGINT; 
+		floor1Y: ARRAY Floor1Final OF LONGINT; 
+		floor1Step2Flag: ARRAY Floor1Final OF BOOLEAN; 
+
+		PROCEDURE ^  & Init*(channels: LONGINT); 
+		PROCEDURE ^ AllocateBuffers(channels: LONGINT); 
+	END DecoderState; 
+
+	Window = OBJECT 
+	VAR 
+		small, long: LONGINT; 
+		center*, leftStart*, leftEnd*, leftSize*, rightStart*, rightEnd*, rightSize*: LONGINT; 
+		lookupsLeft*, lookupsRight*: ARRAY 2 OF Slope; 
+
+		PROCEDURE ^  & Init*(small, long: LONGINT); 
+		PROCEDURE ^ GetLookupTable(n: LONGINT): LONGINT; 
+		PROCEDURE ^ ApplyWindow(VAR data: ARRAY OF HUGEINT; VAR decState: DecoderState); 
+		PROCEDURE ^ Print; 
+	END Window; 
+
+	Slope = OBJECT 
+	VAR 
+		data: ARRAY OGGUtilities.MaxBlocksize OF LONGINT; 
+		length: LONGINT; 
+
+		PROCEDURE ^  & Init*(length: LONGINT; slope: SlopeFunction); 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ PrintLen(len: LONGINT); 
+	END Slope; 
+
+	AbstractFloorType = OBJECT 
+
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR info: Info; VAR codec: CodecSetup): BOOLEAN; 
+		PROCEDURE ^ DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): LONGINT; 
+		PROCEDURE ^ ComputeCurve(VAR decState: DecoderState; ch: LONGINT); 
+		PROCEDURE ^ Print; 
+	END AbstractFloorType; 
+
+	FloorType1 = OBJECT (AbstractFloorType)
+	VAR 
+		partitions*, multiplier*, rangebits*, maxClass*, values*: LONGINT; 
+		partitionClassList*: ARRAY Floor1PartitionClassListSize OF LONGINT; 
+		classDimensions*, classSubclasses*, classMasterbooks*: ARRAY Floor1ClassSize OF LONGINT; 
+		subclassBooks*: ARRAY Floor1ClassSize OF ARRAY Floor1SubclassSize OF LONGINT; 
+		xList*, xListSortPtr: ARRAY Floor1XListSize OF LONGINT; 
+		xListSize*, confNr*: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ ComputeCurve(VAR decState: DecoderState; ch: LONGINT); 
+		PROCEDURE ^ DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): LONGINT; 
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR info: Info; VAR codec: CodecSetup): BOOLEAN; 
+	END FloorType1; 
+
+	ResidueInfo = OBJECT 
+	VAR 
+		partitionSize, outputVectorNr, offset, codebookNr, ch: LONGINT; 
+
+		PROCEDURE ^ Init(partitionSize, outputVectorNr, offset, codebookNr, ch: LONGINT); 
+	END ResidueInfo; 
+
+	Residue = OBJECT 
+	VAR 
+		begin, end, partitionSize, classifications, classbook: LONGINT; 
+		cascades: ARRAY ResidueCascadeSize OF LONGINT; 
+		books: ARRAY ResidueBookSize OF ARRAY 8 OF LONGINT; 
+		nr: LONGINT; 
+		decodemap, partword2: ARRAY 1024 OF ARRAY PartwordSize OF LONGINT; 
+		partword01: ARRAY MaxChannels OF ARRAY 1024 OF ARRAY PartwordSize OF LONGINT; 
+
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR info: Info; VAR codec: CodecSetup): BOOLEAN; 
+		PROCEDURE ^ DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState; ch: LONGINT); 
+	END Residue; 
+
+	Mapping = OBJECT 
+	VAR 
+		submaps*, couplingSteps*: LONGINT; 
+		magnitude*, angle*: ARRAY MappingMagnitudeSize OF LONGINT; 
+		mux*: ARRAY MappingMuxSize OF LONGINT; 
+		submapFloor*, submapResidue*: ARRAY MappingSubmapFloorSize OF LONGINT; 
+		nr*: LONGINT; 
+
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR info: Info; VAR codec: CodecSetup): BOOLEAN; 
+	END Mapping; 
+
+	Mode = OBJECT 
+	VAR 
+		blockflag*, windowType*, transformType*, mapping*: LONGINT; 
+
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR info: Info; VAR codec: CodecSetup): BOOLEAN; 
+	END Mode; 
+
+	Codebook = OBJECT 
+	VAR 
+		entries*, dimensions*, lookupType*, valueBits*, lookupValues*: LONGINT; 
+		sequenceP*: BOOLEAN; 
+		minimumValueFP*, deltaValueFP*: HUGEINT; 
+		codewordLengths*: OGGUtilities.IntList; 
+		multiplicandsFP, valuelistFP*: ARRAY MaxNumberOfMultiplicands OF HUGEINT; 
+		huffmanTree*: OGGUtilities.HuffmanTree; 
+		valid*: BOOLEAN; 
+		cbNumber-: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; nr: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetCodeword(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ MakeCodewords(VAR list: OGGUtilities.IntList; sparsecount: LONGINT; VAR res: OGGUtilities.IntList); 
+		PROCEDURE ^ CountValidCodewords(VAR list: OGGUtilities.IntList): LONGINT; 
+	END Codebook; 
+
+	CodecSetup = OBJECT 
+	VAR 
+		codebookCnt*, floorCnt*, residueCnt*, mappingCnt*, modeCnt*: LONGINT; 
+		codebooks*: ARRAY MaxNumberOfCodebooks OF Codebook; 
+		floorTypes*: ARRAY MaxNumberOfFloors OF LONGINT; 
+		floorConf*: ARRAY MaxNumberOfFloors OF AbstractFloorType; 
+		residueTypes*: ARRAY MaxNumberOfResidues OF LONGINT; 
+		residues*: ARRAY MaxNumberOfResidues OF Residue; 
+		mappings*: ARRAY MaxNumberOfMappings OF Mapping; 
+		modes*: ARRAY MaxNumberOfModes OF Mode; 
+
+		PROCEDURE ^ Print; 
+	END CodecSetup; 
+
+	CommentListElement = OBJECT (OGGUtilities.ListElement)
+	VAR 
+		length*: HUGEINT; 
+		text*: ARRAY MaxCommentLength OF CHAR; 
+
+		PROCEDURE ^ Print; 
+	END CommentListElement; 
+
+	CommentList = OBJECT (OGGUtilities.List)
+	VAR 
+		vendorLength*: HUGEINT; 
+		vendorString*: ARRAY MaxVendorLength OF CHAR; 
+
+		PROCEDURE ^ Print*; 
+	END CommentList; 
+
+	Info = OBJECT 
+	VAR 
+		version, sampleRate: HUGEINT; 
+		channels, bitrateMax, bitrateNom, bitrateMin: LONGINT; 
+		blocksizes: ARRAY 2 OF LONGINT; 
+		comment: CommentList; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+	END Info; 
+
+	MdctBufferT = ARRAY (OGGUtilities.MaxBlocksize DIV 2) OF HUGEINT; 
+
+	MdctBuffer = POINTER TO MdctBufferT; 
+
+	DumpDecoder* = OBJECT 
+	VAR 
+		packetNr-: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Decode*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT; continuedPacket: BOOLEAN; VAR soundOutput: SoundOutput): BOOLEAN; 
+	END DumpDecoder; 
+
+	MdctObject = OBJECT 
+	VAR 
+		n, log2n: LONGINT; 
+		bitrev: ARRAY (OGGUtilities.MaxBlocksize DIV 4) OF LONGINT; 
+		trig: ARRAY (OGGUtilities.MaxBlocksize + (OGGUtilities.MaxBlocksize DIV 4)) OF LONGINT; 
+		x, w: MdctBuffer; 
+
+		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^ Backward(VAR data: ARRAY OF HUGEINT); 
+		PROCEDURE ^ Kernel(n, n2, n4, n8: LONGINT); 
+		PROCEDURE ^ Swap(VAR a, b: MdctBuffer); 
+		PROCEDURE ^ KernelStep1(n2, n4: LONGINT); 
+		PROCEDURE ^ KernelStep2(n2: LONGINT); 
+		PROCEDURE ^ KernelStep3(n2, n8: LONGINT); 
+	END MdctObject; 
+
+	SoundOutput = OBJECT 
+	VAR 
+		output: OGGUtilities.BufferPool; 
+		nrOfBuffers, nrOfChannels, samplingRate, samplingResolution, volume: LONGINT; 
+		minAmplitude, maxAmplitude: LONGINT; 
+		initSoundChannelDone*: BOOLEAN; 
+		channel: SoundDevices.Channel; 
+		driver: SoundDevices.Driver; 
+
+		PROCEDURE ^  & Init*(nrOfBuffers, volume: LONGINT); 
+		PROCEDURE ^ CloseSoundChannel*; 
+		PROCEDURE ^ InitSoundChannel*(nrOfChannels, samplingRate, samplingResolution: LONGINT); 
+		PROCEDURE ^ Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: LONGINT); 
+		PROCEDURE ^ SetMinMaxAmplitudes; 
+		PROCEDURE ^ GetSample(sample: HUGEINT): LONGINT; 
+		PROCEDURE ^ BufferListener(buffer: SoundDevices.Buffer); 
+	END SoundOutput; 
+
+	FileOutput = OBJECT (SoundOutput)
+	VAR 
+		filename-: ARRAY 64 OF CHAR; 
+		filenameSet: BOOLEAN; 
+		file: Files.File; 
+		writer: Files.Writer; 
+		frameCnt: LONGINT; 
+
+		PROCEDURE ^  & Init*(nrOfBuffers, volume: LONGINT); 
+		PROCEDURE ^ SetFilename*(VAR filename: ARRAY OF CHAR); 
+		PROCEDURE ^ CloseSoundChannel*; 
+		PROCEDURE ^ InitSoundChannel*(localNrOfChannels, samplingRate, localSamplingResolution: LONGINT); 
+		PROCEDURE ^ Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: LONGINT); 
+	END FileOutput; 
+
+	VorbisDecoder* = OBJECT 
+	VAR 
+		buf: ARRAY MaxPageSize OF CHAR; 
+		pos, packetCnt: LONGINT; 
+		appendPacket, firstDataPacket: BOOLEAN; 
+		info: Info; 
+		soundOutput: SoundOutput; 
+		bufReader: BufferReader; 
+		decState: DecoderState; 
+		nrOfSamplesPlayed: LONGINT; 
+		mdct: ARRAY 2 OF MdctObject; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ ResetDecoder; 
+		PROCEDURE ^ Decode*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT; continuedPacket: BOOLEAN; VAR soundOutput: SoundOutput): LONGINT; 
+		PROCEDURE ^ StartDecode(VAR soundOutput: SoundOutput): LONGINT; 
+		PROCEDURE ^ DecodeIdentificationHeader(): LONGINT; 
+		PROCEDURE ^ DecodeCommentHeader(): LONGINT; 
+		PROCEDURE ^ DecodeSetupHeader(VAR codec: CodecSetup): LONGINT; 
+		PROCEDURE ^ DecodeDataPacket(res: LONGINT); 
+		PROCEDURE ^ CacheRightHandData; 
+		PROCEDURE ^ OverlapAdd; 
+		PROCEDURE ^ WindowData; 
+		PROCEDURE ^ Mdct; 
+		PROCEDURE ^ DotProduct; 
+		PROCEDURE ^ InverseCoupling; 
+		PROCEDURE ^ ResidueDecode; 
+		PROCEDURE ^ NonzeroVectorPropagate; 
+		PROCEDURE ^ FloorCurveDecode(): LONGINT; 
+		PROCEDURE ^ WindowDecode(VAR res: LONGINT): LONGINT; 
+	END VorbisDecoder; 
+
+	ResiduePartitionProc = PROCEDURE {DELEGATE}(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decSate: DecoderState); 
+
+	SlopeFunction = PROCEDURE {DELEGATE}(x, n: LONGINT):REAL; 
+
+	Decoder* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; pos, len: LONGINT; continuedPage: BOOLEAN; VAR soundOutput: SoundOutput):LONGINT; 
+VAR 
+	frameCnt: LONGINT; 
+	OggS: ARRAY 4 OF CHAR; 
+	nrOfPages: LONGINT; 
+	FloorRanges: ARRAY 4 OF LONGINT; 
+	InverseDBLookup: ARRAY InverseDBLookupSize OF LONGINT; 
+	stopped*, playing*: BOOLEAN; 
+
+	PROCEDURE ^ SlopeRight(x, n: LONGINT): REAL; 
+	PROCEDURE ^ SlopeLeft(x, n: LONGINT): REAL; 
+	PROCEDURE ^ ResiduePartitionProc0(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState); 
+	PROCEDURE ^ ResiduePartitionProc1(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState); 
+	PROCEDURE ^ ResiduePartitionProc2(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState); 
+	PROCEDURE ^ InitInverseDBLookup; 
+	PROCEDURE ^ PlayURL*(url: Strings.String): BOOLEAN; 
+	PROCEDURE ^ Play*(context: Commands.Context); 
+	PROCEDURE ^ StopURL*; 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ IsWebStream(VAR url: Strings.String): BOOLEAN; 
+	PROCEDURE ^ IsM3UPlaylist(VAR url: Strings.String): BOOLEAN; 
+	PROCEDURE ^ GetURLFromM3U(VAR url: Strings.String); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END OGGVorbisPlayer.

@@ -1,0 +1,246 @@
+MODULE FoxIntermediateCode;
+	IMPORT Sections := FoxSections, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Backend := FoxBackend, SYSTEM, Streams, Global := FoxGlobal, D := Debugging, ObjectFile;
+CONST 
+	Undefined* = 0; 
+	ModeRegister* = 1; 
+	ModeMemory* = 2; 
+	ModeImmediate* = 3; 
+	ModeNumber* = 4; 
+	ModeString* = 5; 
+	ModeRule* = 6; 
+	Undef* = {Undefined}; 
+	Imm* = {ModeImmediate}; 
+	Reg* = {ModeRegister}; 
+	RegMem* = {ModeRegister, ModeMemory}; 
+	RegMemImm* = {ModeRegister, ModeMemory, ModeImmediate}; 
+	UndefReg* = {Undefined, ModeRegister}; 
+	UndefRegMem* = {Undefined, ModeRegister, ModeMemory}; 
+	UndefRule* = {Undefined, ModeRule}; 
+	Num* = {ModeNumber}; 
+	Str* = {ModeString}; 
+	Any = {Undefined, ModeRegister, ModeMemory, ModeImmediate}; 
+	SignedInteger* = 1; 
+	UnsignedInteger* = 2; 
+	Integer* = {SignedInteger, UnsignedInteger}; 
+	Float* = 3; 
+	SameType12* = 0; 
+	SameType23* = 1; 
+	Op1IsDestination* = 2; 
+	Commute23* = 3; 
+	SameSize12* = 4; 
+	Bits8* = 8; 
+	Bits16* = 16; 
+	Bits32* = 32; 
+	Bits64* = 64; 
+	Bits128* = 128; 
+	GeneralPurpose* = 0; 
+	Parameter* = 1; 
+	None* =  -1; 
+	SP* =  -2; 
+	FP* =  -3; 
+	AP* =  -4; 
+	LR* =  -5; 
+	HwRegister* =  -32; 
+	nop* = 0; 
+	mov* = 1; 
+	conv* = 2; 
+	call* = 3; 
+	enter* = 4; 
+	exit* = 5; 
+	leave* = 6; 
+	return* = 7; 
+	result* = 8; 
+	trap* = 9; 
+	br* = 10; 
+	breq* = 11; 
+	brne* = 12; 
+	brge* = 13; 
+	brlt* = 14; 
+	pop* = 15; 
+	push* = 16; 
+	neg* = 17; 
+	not* = 18; 
+	abs* = 19; 
+	mul* = 20; 
+	div* = 21; 
+	mod* = 22; 
+	sub* = 23; 
+	add* = 24; 
+	and* = 25; 
+	or* = 26; 
+	xor* = 27; 
+	shl* = 28; 
+	shr* = 29; 
+	rol* = 30; 
+	ror* = 31; 
+	cas* = 32; 
+	copy* = 33; 
+	fill* = 34; 
+	asm* = 35; 
+	data* = 36; 
+	reserve* = 37; 
+	label* = 38; 
+	special* = 39; 
+	NofOpcodes* = 40; 
+	NotYetCalculatedSize =  -2; 
+TYPE 
+	Type* = RECORD 
+		form-: SHORTINT; 
+		sizeInBits-: INTEGER; 
+		length-: LONGINT; 
+	END; 
+
+	RegisterClass* = RECORD 
+		class-: SHORTINT; 
+		number-: INTEGER; 
+	END; 
+
+	Rules* = POINTER TO ARRAY OF Operand; 
+
+	RegisterMap* = RECORD 
+		register*: LONGINT; 
+		name*: SyntaxTree.SourceCode; 
+	END; 
+
+	BackendRules* = POINTER TO ARRAY OF RegisterMap; 
+
+	Operand* = RECORD 
+		mode-: SHORTINT; 
+		type-: Type; 
+		register-: LONGINT; 
+		registerClass-: RegisterClass; 
+		offset-: LONGINT; 
+		intValue-: HUGEINT; 
+		floatValue-: LONGREAL; 
+		symbol-: ObjectFile.Identifier; 
+		symbolOffset-: LONGINT; 
+		resolved*: Sections.Section; 
+		string-: SyntaxTree.SourceCode; 
+		rule-: Rules; 
+	END; 
+
+	Instruction* = POINTER TO RECORD 
+		opcode-: SHORTINT; 
+		subtype-: SHORTINT; 
+		textPosition-: Basic.Position; 
+		pc-: LONGINT; 
+		op1*, op2*, op3*: Operand; 
+	END; 
+
+	InstructionFormat* = RECORD 
+		name-: ARRAY 16 OF CHAR; 
+		op1-, op2-, op3-: SET; 
+		flags-: SET; 
+	END; 
+
+	Instructions* = POINTER TO ARRAY OF Instruction; 
+
+	Section* = OBJECT (Sections.Section)
+	VAR 
+		instructions-: Instructions; 
+		pc-: LONGINT; 
+		finally-: LONGINT; 
+		resolved-, alias-: BinaryCode.Section; 
+		aliasOffset-: LONGINT; 
+		comments-: Sections.CommentWriter; 
+		sizeInUnits: LONGINT; 
+		exported-: BOOLEAN; 
+
+		PROCEDURE ^ GetPC(): LONGINT; 
+		PROCEDURE ^  & InitIntermediateSection*(type: SHORTINT; priority: INTEGER; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
+		PROCEDURE ^ SetExported*(e: BOOLEAN); 
+		PROCEDURE ^ EnableComments*(enabled: BOOLEAN); 
+		PROCEDURE ^ DeleteComments*; 
+		PROCEDURE ^ SetResolved*(section: BinaryCode.Section); 
+		PROCEDURE ^ SetAlias*(section: BinaryCode.Section; offset: LONGINT); 
+		PROCEDURE ^ SetFinally*(atPc: LONGINT); 
+		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ InitArray; 
+		PROCEDURE ^ Emit*(instruction: Instruction); 
+		PROCEDURE ^ EmitAt*(at: LONGINT; instruction: Instruction); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ PatchOperands*(pc: LONGINT; op1, op2, op3: Operand); 
+		PROCEDURE ^ PatchAddress*(pc: LONGINT; symbolOffset: LONGINT); 
+		PROCEDURE ^ SetPC*(at: LONGINT; pc: LONGINT); 
+		PROCEDURE ^ DumpCode*(w: Streams.Writer; from, to: LONGINT); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
+	END Section; 
+
+	IntermediateBackend* = OBJECT (Backend.Backend)
+	VAR 
+		runtimeModuleName-: SyntaxTree.IdentifierString; 
+
+		PROCEDURE ^ SupportedInstruction*(CONST instr: Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SetRuntimeModuleName*(CONST name: ARRAY OF CHAR); 
+	END IntermediateBackend; 
+VAR 
+	instructionFormat-: ARRAY NofOpcodes OF InstructionFormat; 
+	int8-, int16-, int32-, int64-, uint8-, uint16-, uint32-, uint64-, float32-, float64-, undef-: Type; 
+	GeneralPurposeRegister-: RegisterClass; 
+	empty: Operand; 
+
+	PROCEDURE ^ Assert(condition: BOOLEAN; CONST reason: ARRAY OF CHAR); 
+	PROCEDURE ^ NewSection*(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): Section; 
+	PROCEDURE ^ SameOperand*(CONST left, right: Operand): BOOLEAN; 
+	PROCEDURE ^ CheckOperand*(operand: Operand; opCode, location: LONGINT; VAR message: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ CheckInstruction*(instruction: Instruction; VAR message: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DumpRegister*(w: Streams.Writer; registerNumber: LONGINT; CONST registerClass: RegisterClass); 
+	PROCEDURE ^ DumpType*(w: Streams.Writer; type: Type); 
+	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
+	PROCEDURE ^ WriteRawOperand*(w: Streams.Writer; CONST operand: Operand); 
+	PROCEDURE ^ TypeEquals*(CONST s1, s2: Type): BOOLEAN; 
+	PROCEDURE ^ OperandEquals*(CONST s1, s2: Operand): BOOLEAN; 
+	PROCEDURE ^ Equals*(CONST i1, i2: Instruction): BOOLEAN; 
+	PROCEDURE ^ WriteRawInstruction*(w: Streams.Writer; CONST instr: Instruction); 
+	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instr: Instruction); 
+	PROCEDURE ^ InitInstructions; 
+	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; CONST op1, op2, op3: Operand); 
+	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2: Operand); 
+	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1: Operand); 
+	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT); 
+	PROCEDURE ^ SetSubType*(VAR instr: Instruction; subType: SHORTINT); 
+	PROCEDURE ^ InitOperand*(VAR op: Operand); 
+	PROCEDURE ^ InitRegister*(VAR op: Operand; type: Type; registerClass: RegisterClass; register: LONGINT); 
+	PROCEDURE ^ Register*(type: Type; registerClass: RegisterClass; register: LONGINT): Operand; 
+	PROCEDURE ^ RegisterOffset*(type: Type; registerClass: RegisterClass; register, offset: LONGINT): Operand; 
+	PROCEDURE ^ AddOffset*(VAR op: Operand; offset: LONGINT); 
+	PROCEDURE ^ SetOffset*(VAR op: Operand; offset: LONGINT); 
+	PROCEDURE ^ SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: LONGINT); 
+	PROCEDURE ^ SetIntValue*(VAR op: Operand; intValue: HUGEINT); 
+	PROCEDURE ^ MakeMemory*(VAR op: Operand; type: Type); 
+	PROCEDURE ^ MakeAddress*(VAR op: Operand; CONST type: Type); 
+	PROCEDURE ^ InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT); 
+	PROCEDURE ^ Address*(type: Type; symbol: Sections.SectionName; fp: LONGINT; offset: LONGINT): Operand; 
+	PROCEDURE ^ InitMemory*(VAR op: Operand; type: Type; base: Operand; offset: LONGINT); 
+	PROCEDURE ^ Memory*(type: Type; base: Operand; offset: LONGINT): Operand; 
+	PROCEDURE ^ IsConstantInteger*(CONST op: Operand; VAR value: HUGEINT): BOOLEAN; 
+	PROCEDURE ^ InitImmediate*(VAR op: Operand; type: Type; value: HUGEINT); 
+	PROCEDURE ^ Immediate*(type: Type; value: LONGINT): Operand; 
+	PROCEDURE ^ InitFloatImmediate*(VAR op: Operand; type: Type; value: LONGREAL); 
+	PROCEDURE ^ FloatImmediate*(type: Type; value: LONGREAL): Operand; 
+	PROCEDURE ^ InitNumber*(VAR op: Operand; value: HUGEINT); 
+	PROCEDURE ^ Number*(value: HUGEINT): Operand; 
+	PROCEDURE ^ InitRule*(VAR op: Operand; rules: Rules); 
+	PROCEDURE ^ InitString*(VAR op: Operand; string: SyntaxTree.SourceCode); 
+	PROCEDURE ^ SetString*(VAR op: Operand; string: POINTER TO ARRAY OF CHAR); 
+	PROCEDURE ^ String*(string: SyntaxTree.SourceCode): Operand; 
+	PROCEDURE ^ InitType*(VAR type: Type; form: SHORTINT; sizeInBits: INTEGER); 
+	PROCEDURE ^ ToVectorType*(VAR type: Type; length: LONGINT); 
+	PROCEDURE ^ InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: LONGINT); 
+	PROCEDURE ^ NewType*(form: SHORTINT; sizeInBits: INTEGER): Type; 
+	PROCEDURE ^ SetType*(VAR op: Operand; CONST type: Type); 
+	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR): SHORTINT; 
+	PROCEDURE ^ SetRegister*(VAR op: Operand; reg: LONGINT); 
+	PROCEDURE ^ DecimalNumber(ch: CHAR; VAR nr: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Numbers(CONST name: ARRAY OF CHAR; VAR pos: LONGINT; VAR number: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Character(CONST name: ARRAY OF CHAR; VAR pos: LONGINT; char: CHAR): BOOLEAN; 
+	PROCEDURE ^ DenotesRegister*(CONST name: ARRAY OF CHAR; VAR registerClass: RegisterClass; VAR register: LONGINT): BOOLEAN; 
+	PROCEDURE ^ UnsignedIntegerType*(bits: LONGINT): Type; 
+	PROCEDURE ^ SignedIntegerType*(bits: LONGINT): Type; 
+	PROCEDURE ^ FloatType*(bits: LONGINT): Type; 
+	PROCEDURE ^ ToUnsigned*(operand: Operand): Operand; 
+	PROCEDURE ^ DenotesType*(CONST name: ARRAY OF CHAR; VAR type: Type): BOOLEAN; 
+	PROCEDURE ^ GetType*(system: Global.System; type: SyntaxTree.Type): Type; 
+BEGIN
+END FoxIntermediateCode.

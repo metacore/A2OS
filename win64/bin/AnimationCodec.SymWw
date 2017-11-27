@@ -1,0 +1,51 @@
+MODULE AnimationCodec;
+	IMPORT Streams, KernelLog, Strings, Files, Codecs, XML, XMLScanner, XMLParser, WMGraphics;
+CONST 
+	Version = \"ANI09a"\; 
+	HeaderMissing* = 20001; 
+	HeaderError* = 20002; 
+	WrongVersion* = 20003; 
+	FormatError* = 20004; 
+	ImageNotFound* = 20010; 
+	XmlHeader = \"Header"\; 
+	XmlVersion = \"version"\; 
+	XmlWidth = \"width"\; 
+	XmlHeight = \"height"\; 
+	XmlBackgroundColor = \"bgcolor"\; 
+	XmlFrames = \"Frames"\; 
+	XmlFrame = \"Frame"\; 
+	XmlImageName = \"image"\; 
+	XmlLeft = \"x"\; 
+	XmlTop = \"y"\; 
+	XmlDelayTime = \"time"\; 
+	XmlDisposeMode = \"mode"\; 
+	XmlFrom = \"from"\; 
+	XmlTo = \"to"\; 
+	Debug = TRUE; 
+TYPE 
+	Settings = RECORD 
+		x, y: LONGINT; 
+		time, mode: LONGINT; 
+	END; 
+
+	Decoder* = OBJECT (Codecs.AnimationDecoder)
+	VAR 
+		animation: XML.Element; 
+		width, height, bgcolor: LONGINT; 
+		default: Settings; 
+		error: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ RestoreDefaultSettings; 
+		PROCEDURE ^ ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ ProcessFrame(frame: XML.Element; VAR desc: Codecs.ImageDescriptor; VAR res: LONGINT); 
+		PROCEDURE ^ ProcessFrames(frames: XML.Element; VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+	END Decoder; 
+
+	PROCEDURE ^ GenerateFilename(CONST base: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR; suffix, minDigits: LONGINT); 
+	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GenDecoder*(): Codecs.AnimationDecoder; 
+BEGIN
+END AnimationCodec.

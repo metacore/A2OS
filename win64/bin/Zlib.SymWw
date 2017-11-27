@@ -1,0 +1,34 @@
+MODULE Zlib;
+	IMPORT SYSTEM;
+CONST 
+	Ok* = 0; 
+	StreamEnd* = 1; 
+	NeedDict* = 2; 
+	StreamError* =  -2; 
+	DataError* =  -3; 
+	MemError* =  -4; 
+	BufError* =  -5; 
+	NoFlush* = 0; 
+	PartialFlush* = 1; 
+	SyncFlush* = 2; 
+	FullFlush* = 3; 
+	Finish* = 4; 
+	DefaultCompression* =  -1; 
+	NoCompression* = 0; 
+	BestSpeed* = 1; 
+	BestCompression* = 9; 
+	DefaultStrategy* = 0; 
+	Filtered* = 1; 
+	HuffmanOnly* = 2; 
+	Binary* = 0; 
+	Ascii* = 1; 
+	Unknown* = 2; 
+	DeflateMethod* = 8; 
+VAR 
+	CRCTable: ARRAY 256 OF LONGINT; 
+
+	PROCEDURE ^ Adler32*(adler: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: LONGINT): LONGINT; 
+	PROCEDURE ^ InitCRCTable*; 
+	PROCEDURE ^ CRC32*(crc: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: LONGINT): LONGINT; 
+BEGIN
+END Zlib.

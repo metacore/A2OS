@@ -1,0 +1,70 @@
+MODULE ListDags IN Oberon;
+	IMPORT Files, Objects, Gadgets, Strings, ListRiders;
+CONST 
+	VersionNo = 1; 
+	NoKey = MIN(LONGINT); 
+	unique = 0; 
+TYPE 
+	Ref = POINTER TO RefDesc; 
+
+	Node = POINTER TO NodeDesc; 
+
+	RefDesc = RECORD 
+		prev, next: Ref; 
+		node: Node; 
+		key, pos: LONGINT; 
+	END; 
+
+	NodeDesc = RECORD 
+		dsc: Ref; 
+		stamp, state: LONGINT; 
+		nr: LONGINT; 
+		s: ARRAY 32 OF CHAR; 
+	END; 
+
+	Dag* = POINTER TO DagDesc; 
+
+	DagDesc* = RECORD (Gadgets.ObjDesc)
+		key: LONGINT; 
+		tail: Ref; 
+		state0: SET; 
+	END; 
+
+	Rider* = POINTER TO RiderDesc; 
+
+	RiderDesc* = RECORD (ListRiders.RiderDesc)
+		ref: Ref; 
+	END; 
+VAR 
+	method: ListRiders.Method; 
+
+	PROCEDURE ^ GetKey(obj: Dag): LONGINT; 
+	PROCEDURE ^ SetNode(R: Rider; ref: Ref); 
+	PROCEDURE ^ MakeNode(d: ListRiders.Data): Node; 
+	PROCEDURE ^ MakeTail(asc: Node): Ref; 
+	PROCEDURE ^ IsUnique(n: Ref; val: ARRAY OF CHAR; acceptSelf: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Key(R: ListRiders.Rider): LONGINT; 
+	PROCEDURE ^ Seek(R: ListRiders.Rider; key: LONGINT); 
+	PROCEDURE ^ Pos(R: ListRiders.Rider): LONGINT; 
+	PROCEDURE ^ Set(R: ListRiders.Rider; pos: LONGINT); 
+	PROCEDURE ^ Write(R: ListRiders.Rider; d: ListRiders.Data); 
+	PROCEDURE ^ WriteLink(R, linkR: ListRiders.Rider); 
+	PROCEDURE ^ DeleteLink(R, linkR: ListRiders.Rider); 
+	PROCEDURE ^ GetStamp(R: ListRiders.Rider): LONGINT; 
+	PROCEDURE ^ SetStamp(R: ListRiders.Rider; stamp: LONGINT); 
+	PROCEDURE ^ State(R: ListRiders.Rider): LONGINT; 
+	PROCEDURE ^ SetState(R: ListRiders.Rider; s: LONGINT); 
+	PROCEDURE ^ Desc(R, old: ListRiders.Rider): ListRiders.Rider; 
+	PROCEDURE ^ ConnectRider(R: Rider; base: Dag); 
+	PROCEDURE ^ Unify(tail: Ref); 
+	PROCEDURE ^ FindNode(nodes: Ref; nr: LONGINT): Node; 
+	PROCEDURE ^ InsertNode(nodes: Ref; node: Node); 
+	PROCEDURE ^ CopyDag*(VAR M: Objects.CopyMsg; from, to: Dag); 
+	PROCEDURE ^ WriteDag(obj: Dag; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ ReadDag(obj: Dag; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ DagAttr(obj: Dag; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ DagHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitDag*(obj: Dag); 
+	PROCEDURE ^ New*; 
+BEGIN
+END ListDags.

@@ -1,0 +1,36 @@
+MODULE WMCharMap;
+	IMPORT WMStandardComponents, WMComponents, WMMessages, WMGraphics, Strings, WMRectangles, Modules, WMEditors, WMGrids, Texts, UTF8Strings, WM := WMWindowManager;
+CONST 
+	NofCols = 16; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		mainPanel: WMStandardComponents.Panel; 
+		preview: WMStandardComponents.Label; 
+		characters: WMGrids.GenericGrid; 
+		decEd, hexEd: WMEditors.Editor; 
+		copyButton: WMStandardComponents.Button; 
+		prevFont, font: WMGraphics.Font; 
+		nofCharacters, curChar: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ SelectChar(sender, data: ANY); 
+		PROCEDURE ^ FindChar(sender, data: ANY); 
+		PROCEDURE ^ CopyChar(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMCharMap.

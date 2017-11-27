@@ -1,0 +1,28 @@
+MODULE ZlibReaders;
+	IMPORT Files, Zlib, ZlibBuffers, ZlibInflate;
+CONST 
+	Ok* = ZlibInflate.Ok; 
+	StreamEnd* = ZlibInflate.StreamEnd; 
+	FileError* =  -1; 
+	StreamError* = ZlibInflate.StreamError; 
+	DataError* = ZlibInflate.DataError; 
+	BufError* = ZlibInflate.BufError; 
+	BufSize = 16384; 
+TYPE 
+	Reader* = RECORD 
+		res-: LONGINT; 
+		crc32-: LONGINT; 
+		wrapper-: BOOLEAN; 
+		eof: BOOLEAN; 
+		r: Files.Rider; 
+		in: POINTER TO ARRAY BufSize OF CHAR; 
+		s: ZlibInflate.Stream; 
+	END; 
+
+	PROCEDURE ^ Open*(VAR r: Reader; wrapper: BOOLEAN; VAR fr: Files.Rider); 
+	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
+	PROCEDURE ^ Close*(VAR r: Reader); 
+	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: LONGINT); 
+BEGIN
+END ZlibReaders.

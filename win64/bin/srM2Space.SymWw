@@ -1,0 +1,60 @@
+MODULE srM2Space;
+	IMPORT srBase, srE, Out := KernelLog;
+CONST 
+	POS = TRUE; 
+	NEG = FALSE; 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PT = srBase.PT; 
+
+	COLOR = srBase.COLOR; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	NCUBE = RECORD 
+		filled: BOOLEAN; 
+		mirror: BOOLEAN; 
+		reflectivity: REAL; 
+		normal: PT; 
+		color: COLOR; 
+	END; 
+
+	cell* = OBJECT (Voxel)
+	VAR 
+		blox: AR2; 
+		nblox: NR2; 
+		twoblox: BR2; 
+		airred, airgreen, airblue, airblack: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ fill*(v: Voxel); 
+		PROCEDURE ^ erase*; 
+		PROCEDURE ^ fillwithprobability*(v: Voxel; p: SREAL); 
+		PROCEDURE ^ fillchequer*(v, w: Voxel); 
+		PROCEDURE ^ color(VAR ray: Ray; cube: NCUBE); 
+		PROCEDURE ^ ncolor(VAR ray: Ray; cube: NCUBE); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+		PROCEDURE ^ deathray*(VAR ray: Ray); 
+		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
+		PROCEDURE ^ line*(a, b: PT; level: LONGINT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ nline*(a, b: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ linevoxel*(a, b: PT; level: LONGINT; v: Voxel); 
+	END cell; 
+
+	AR2 = ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF Voxel; 
+
+	NR2 = ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF NCUBE; 
+
+	BR2 = ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF cell; 
+
+	PROCEDURE ^ pdiv(VAR p: PT; d: SREAL); 
+BEGIN
+END srM2Space.

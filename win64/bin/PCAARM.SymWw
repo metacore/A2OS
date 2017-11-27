@@ -1,0 +1,293 @@
+MODULE PCAARM;
+	IMPORT SYSTEM, StringPool, PCM, PCLIR, PCT, PCS, PCBT, PCP, PCOARM, KernelLog;
+CONST 
+	Trace = FALSE; 
+	TraceScan = FALSE; 
+	TraceSymbol = FALSE; 
+	TraceMnemonic = FALSE; 
+	TraceParse = FALSE; 
+	INTERNALERROR = 100; 
+	ARM = 0; 
+	THUMB = 1; 
+	SPACE = \" "\; 
+	TAB = 9X; 
+	LF = 0AX; 
+	CR = 0DX; 
+	stAll = 0; 
+	stCondition = 1; 
+	stRegister = 2; 
+	stShift = 3; 
+	stStateRegister = 4; 
+	stStateRegisterFlag = 5; 
+	stStateRegisterFlagSeparator = 6; 
+	stLoad = 7; 
+	stLoadSpecial = 8; 
+	stStore = 9; 
+	stStoreSpecial = 10; 
+	stMultipleMode = 11; 
+	stCoprocessor = 12; 
+	stCPRegister = 13; 
+	sLabel = 0; 
+	sIdent = 1; 
+	sEnd = 2; 
+	sCR = 3; 
+	sUndef = 4; 
+	sLBrak = 5; 
+	sRBrak = 6; 
+	sLBrace = 7; 
+	sRBrace = 8; 
+	sComma = 9; 
+	sNumber = 10; 
+	sExclamation = 11; 
+	sPlus = 12; 
+	sMinus = 13; 
+	sArrow = 14; 
+	sEquals = 15; 
+	sCharacter = 16; 
+	sString = 17; 
+	ltBranch = 0; 
+	ltAddress = 1; 
+	lmLoad = 0; 
+	lmLoadSpecial = 1; 
+	lmShifterOperand = 2; 
+	NumLabelTypes = 4; 
+	MaxBranchOffset = 33554428; 
+	MinBranchOffset =  -33554432; 
+	MinLoadOffset =  -4095; 
+	MaxLoadOffset = 4095; 
+	MinLoadSpecialOffset =  -255; 
+	MaxLoadSpecialOffset = 255; 
+	MaxShifterOperand = 2130706432; 
+	MinShifterOperand = LONGINT(80000000H); 
+TYPE 
+	AsmInline* = OBJECT (PCLIR.AsmInline)
+	VAR 
+		paf-: BOOLEAN; 
+	END AsmInline; 
+
+	Identifier = ARRAY 32 OF CHAR; 
+
+	Symbol = OBJECT 
+	VAR 
+		name: Identifier; 
+		type: LONGINT; 
+		value: SET; 
+		next: Symbol; 
+		local: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(name: Identifier; type: LONGINT; value: SET; local: BOOLEAN); 
+	END Symbol; 
+
+	SymbolTable = OBJECT {EXCLUSIVE} 
+	VAR 
+		symbols: ARRAY 27 OF Symbol; 
+		parent: SymbolTable; 
+
+		PROCEDURE ^  & Init*(parent: SymbolTable); 
+		PROCEDURE ^ Enter(symbol: Identifier; type: LONGINT; value: SET; local: BOOLEAN); 
+		PROCEDURE ^ Find(symbol: Identifier; type: LONGINT; VAR value: SET): BOOLEAN; 
+		PROCEDURE ^ GetSymbol(symbol: Identifier; type: LONGINT): Symbol; 
+		PROCEDURE ^ Prefix(VAR symbol: Identifier; type: LONGINT; VAR value: SET): BOOLEAN; 
+		PROCEDURE ^ ClearLocalSymbols; 
+	END SymbolTable; 
+
+	Mnemonic = OBJECT 
+	VAR 
+		name: ARRAY 7 OF CHAR; 
+		opcode: SET; 
+		cond, suffix: IdentHandler; 
+		handlers: ARRAY 6 OF Handler; 
+		next: Mnemonic; 
+
+		PROCEDURE ^  & Init*(name: ARRAY OF CHAR; opcode: SET; cond, suffix: IdentHandler; h0, h1, h2, h3, h4, h5: Handler); 
+		PROCEDURE ^ Print; 
+	END Mnemonic; 
+
+	Mnemonics = OBJECT 
+	VAR 
+		mnemonics: ARRAY 26 OF Mnemonic; 
+
+		PROCEDURE ^ Enter(mnemonic: ARRAY OF CHAR; opcode: SET; cond, suffix: IdentHandler; h0, h1, h2, h3, h4, h5: Handler); 
+		PROCEDURE ^ Find(VAR mnemonic: Identifier): Mnemonic; 
+		PROCEDURE ^ Branch(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ Condition(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ SFlag(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ BFlag(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ LFlag(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ Load(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ Store(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ Multiple(assembler: Assembler; VAR ident: Identifier): SET; 
+		PROCEDURE ^ R16(assembler: Assembler): SET; 
+		PROCEDURE ^ R12(assembler: Assembler): SET; 
+		PROCEDURE ^ R8(assembler: Assembler): SET; 
+		PROCEDURE ^ R0(assembler: Assembler): SET; 
+		PROCEDURE ^ Coprocessor(assembler: Assembler): SET; 
+		PROCEDURE ^ CR16(assembler: Assembler): SET; 
+		PROCEDURE ^ CR12(assembler: Assembler): SET; 
+		PROCEDURE ^ CR0(assembler: Assembler): SET; 
+		PROCEDURE ^ CPOpcode1cdp(assembler: Assembler): SET; 
+		PROCEDURE ^ CPOpcode1m(assembler: Assembler): SET; 
+		PROCEDURE ^ CPOpcode2(assembler: Assembler): SET; 
+		PROCEDURE ^ LoadStoreCoprocessor(assembler: Assembler): SET; 
+		PROCEDURE ^ MoveCoprocessor(assembler: Assembler): SET; 
+		PROCEDURE ^ PSR(assembler: Assembler): SET; 
+		PROCEDURE ^ Target(assembler: Assembler): SET; 
+		PROCEDURE ^ ShifterOperand(assembler: Assembler): SET; 
+		PROCEDURE ^ MSR(assembler: Assembler): SET; 
+		PROCEDURE ^ Swap(assembler: Assembler): SET; 
+		PROCEDURE ^ Immediate24(assembler: Assembler): SET; 
+		PROCEDURE ^ BkptImmediate(assembler: Assembler): SET; 
+		PROCEDURE ^ DCB(assembler: Assembler): SET; 
+		PROCEDURE ^ DCW(assembler: Assembler): SET; 
+		PROCEDURE ^ DCD(assembler: Assembler): SET; 
+		PROCEDURE ^ DCFS(assembler: Assembler): SET; 
+		PROCEDURE ^ DCFD(assembler: Assembler): SET; 
+		PROCEDURE ^ ADR(assembler: Assembler): SET; 
+		PROCEDURE ^ DEFINE(assembler: Assembler): SET; 
+	END Mnemonics; 
+
+	UseList = OBJECT 
+	VAR 
+		sourcepos, pc, mode: LONGINT; 
+		next: UseList; 
+
+		PROCEDURE ^  & Init*(sourcepos, pc, mode: LONGINT; next: UseList); 
+	END UseList; 
+
+	Label = OBJECT 
+	VAR 
+		pc: LONGINT; 
+		name: Identifier; 
+		type: LONGINT; 
+		uses: UseList; 
+		next: Label; 
+
+		PROCEDURE ^  & Init*(pc: LONGINT; name: Identifier; type: LONGINT; next: Label); 
+	END Label; 
+
+	LabelManager = OBJECT 
+	VAR 
+		labels: Label; 
+		assembler: Assembler; 
+
+		PROCEDURE ^  & Init*(assembler: Assembler); 
+		PROCEDURE ^ AddDefinition(sourcepos, pc: LONGINT; label: Identifier; type: LONGINT); 
+		PROCEDURE ^ Find(label: Identifier; type: LONGINT): Label; 
+		PROCEDURE ^ AddUse(sourcepos, pc: LONGINT; label: Identifier; type, mode: LONGINT): SET; 
+		PROCEDURE ^ Check; 
+	END LabelManager; 
+
+	Scanner = OBJECT 
+	VAR 
+		scanner: PCS.Scanner; 
+		position, symbol: LONGINT; 
+		eot: BOOLEAN; 
+		ident: Identifier; 
+		number: LONGINT; 
+		ch: CHAR; 
+		string: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^  & Init*(scanner: PCS.Scanner); 
+		PROCEDURE ^ SkipWhiteSpace; 
+		PROCEDURE ^ Character(ch: CHAR): BOOLEAN; 
+		PROCEDURE ^ Digit(ch: CHAR): LONGINT; 
+		PROCEDURE ^ Delimiter(ch: CHAR): BOOLEAN; 
+		PROCEDURE ^ GetIdent(VAR ident: Identifier); 
+		PROCEDURE ^ GetNumber(allowChars: BOOLEAN); 
+		PROCEDURE ^ WriteSymbol; 
+		PROCEDURE ^ Scan; 
+		PROCEDURE ^ Match(symbol: LONGINT): BOOLEAN; 
+	END Scanner; 
+
+	Assembler = OBJECT 
+	VAR 
+		scanner: Scanner; 
+		scope: PCT.Scope; 
+		symbols: SymbolTable; 
+		exported, inlined: BOOLEAN; 
+		labels: LabelManager; 
+		target: SET; 
+		asm: AsmInline; 
+		code: PCLIR.AsmBlock; 
+		ignore: BOOLEAN; 
+		pc: LONGINT; 
+		opcode: SET; 
+
+		PROCEDURE ^ Branch(VAR ident: Identifier): SET; 
+		PROCEDURE ^ Condition(VAR ident: Identifier): SET; 
+		PROCEDURE ^ SFlag(VAR ident: Identifier): SET; 
+		PROCEDURE ^ BFlag(VAR ident: Identifier): SET; 
+		PROCEDURE ^ LFlag(VAR ident: Identifier): SET; 
+		PROCEDURE ^ Register(type, shift: LONGINT): SET; 
+		PROCEDURE ^ Target(): SET; 
+		PROCEDURE ^ Variable(mode: LONGINT): SET; 
+		PROCEDURE ^ Shift(): SET; 
+		PROCEDURE ^ RotateImmediate(): SET; 
+		PROCEDURE ^ AddressingMode1(): SET; 
+		PROCEDURE ^ Offset12(): SET; 
+		PROCEDURE ^ ScaledRegister(): SET; 
+		PROCEDURE ^ OffsetRegister2(): SET; 
+		PROCEDURE ^ PreIndexed(): SET; 
+		PROCEDURE ^ AddressingMode2(): SET; 
+		PROCEDURE ^ A3Offset8(): SET; 
+		PROCEDURE ^ OffsetRegister3(): SET; 
+		PROCEDURE ^ AddressingMode3(): SET; 
+		PROCEDURE ^ Special(normalMode, specialMode: LONGINT; VAR ident: Identifier; VAR opcode: SET; opcode2: SET): LONGINT; 
+		PROCEDURE ^ LoadStore(VAR ident: Identifier; normalMode, specialMode: LONGINT): SET; 
+		PROCEDURE ^ RegisterList(mode: SET): SET; 
+		PROCEDURE ^ LoadStoreMultiple(VAR ident: Identifier): SET; 
+		PROCEDURE ^ PSR(extended: BOOLEAN): SET; 
+		PROCEDURE ^ MSR(): SET; 
+		PROCEDURE ^ Swap(): SET; 
+		PROCEDURE ^ Immediate24(): SET; 
+		PROCEDURE ^ BkptImmediate(): SET; 
+		PROCEDURE ^ CPOpcode(shift, max: LONGINT): SET; 
+		PROCEDURE ^ MoveCoprocessor(): SET; 
+		PROCEDURE ^ A5Offset8(): SET; 
+		PROCEDURE ^ LoadStoreCoprocessor(): SET; 
+		PROCEDURE ^ DCB(): SET; 
+		PROCEDURE ^ DCW(): SET; 
+		PROCEDURE ^ DCD(): SET; 
+		PROCEDURE ^ DCFS(): SET; 
+		PROCEDURE ^ DCFD(): SET; 
+		PROCEDURE ^ ADR(): SET; 
+		PROCEDURE ^ DEFINE(): SET; 
+		PROCEDURE ^ ParseLabel; 
+		PROCEDURE ^ ParseInstruction; 
+		PROCEDURE ^ Error(code: LONGINT); 
+		PROCEDURE ^ ErrorStr(msg: ARRAY OF CHAR); 
+		PROCEDURE ^ PutCode(opcode: SET); 
+		PROCEDURE ^ PutData(value, size: LONGINT); 
+		PROCEDURE ^ FixBranch(pc: LONGINT; offset: SET); 
+		PROCEDURE ^ FixLoad(pc: LONGINT; mode, offset: LONGINT); 
+		PROCEDURE ^ Assemble(s: PCS.Scanner; scope: PCT.Scope; exported, inlined: BOOLEAN): PCLIR.AsmInline; 
+	END Assembler; 
+
+	IdentHandler = PROCEDURE {DELEGATE}(assembler: Assembler; VAR ident: Identifier):SET; 
+
+	Handler = PROCEDURE {DELEGATE}(assembler: Assembler):SET; 
+
+	; 
+VAR 
+	MinMaxOffset: ARRAY NumLabelTypes OF RECORD 
+		min, max: LONGINT; 
+	END; 
+	mnemonics: Mnemonics; 
+	symbolTable: SymbolTable; 
+	NILIdentHandler: IdentHandler; 
+	NILHandler: Handler; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Assemble*(scanner: PCS.Scanner; scope: PCT.Scope; exported, inlined: BOOLEAN): PCM.Attribute; 
+	PROCEDURE ^ Initialize; 
+	PROCEDURE ^ UpperCase(VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Cap(ch: CHAR): CHAR; 
+	PROCEDURE ^ Length(s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Char(c: CHAR); 
+	PROCEDURE ^ Write(s: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteLn(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Int(i: LONGINT); 
+	PROCEDURE ^ Hex(i, n: LONGINT); 
+	PROCEDURE ^ Ln; 
+BEGIN
+END PCAARM.

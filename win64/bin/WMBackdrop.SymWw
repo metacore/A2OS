@@ -1,0 +1,49 @@
+MODULE WMBackdrop;
+	IMPORT Kernel, Files, KernelLog, Streams, Modules, Commands, Options, Strings, WMRectangles, Raster, WMMessages, WMWindowManager, WMGraphics, TFClasses, WMPopups, WMComponents, WMRestorable, WMDialogs, XML;
+CONST 
+	ImagesFile = \"Wallpapers.txt"\; 
+TYPE 
+	ImageInfo = RECORD 
+		filename: Files.FileName; 
+		img: WMGraphics.Image; 
+	END; 
+
+	Window = OBJECT {EXCLUSIVE} (WMWindowManager.Window)
+	VAR 
+		img: WMGraphics.Image; 
+		picname: ARRAY 256 OF CHAR; 
+		changeable, stop: BOOLEAN; 
+		interval: LONGINT; 
+		timer: Kernel.Timer; 
+		currentImg: LONGINT; 
+		fullscreen: BOOLEAN; 
+		fullscreenX, fullscreenY, fullscreenW, fullscreenH: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ SetChangeable(c: BOOLEAN); 
+		PROCEDURE ^ HandleChangeable(sender, data: ANY); 
+		PROCEDURE ^ HandleFullScreen(sender, par: ANY); 
+		PROCEDURE ^ HandleRemove(sender, par: ANY); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Change(sender, data: ANY); 
+		PROCEDURE ^ Stop; 
+	BEGIN{ACTIVE} 
+	END Window; 
+VAR 
+	windowList: TFClasses.List; 
+	imgList: POINTER TO ARRAY OF ImageInfo; 
+
+	PROCEDURE ^ GetImage(CONST name: ARRAY OF CHAR; w, h: LONGINT): WMGraphics.Image; 
+	PROCEDURE ^ GetResizedImage(image: WMGraphics.Image; width, height: LONGINT): WMGraphics.Image; 
+	PROCEDURE ^ FindIndex(CONST imageName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ DefaultPos(VAR x, y, w, h: LONGINT); 
+	PROCEDURE ^ Rearrange; 
+	PROCEDURE ^ AddBackdropImage*(context: Commands.Context); 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ RemoveAll*; 
+	PROCEDURE ^ ChangeList; 
+BEGIN
+END WMBackdrop.

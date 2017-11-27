@@ -1,0 +1,11 @@
+MODULE WhitespaceRemover;
+	IMPORT Commands, Options, Diagnostics, Files, Strings, Texts, TextUtilities;
+CONST 
+	LineFeed = 10; 
+
+	PROCEDURE ^ RemoveFromText*(text: Texts.Text; VAR nofRemoved: LONGINT); 
+	PROCEDURE ^ CheckWhitespace*(text: Texts.Text; diagnostics: Diagnostics.Diagnostics); 
+	PROCEDURE ^ RemoveFromFile*(VAR filename: Files.FileName; VAR nofRemoved, res: LONGINT); 
+	PROCEDURE ^ Remove*(context: Commands.Context); 
+BEGIN
+END WhitespaceRemover.

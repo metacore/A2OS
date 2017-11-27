@@ -1,0 +1,100 @@
+MODULE Solitaire IN Oberon;
+	IMPORT Files, Input, Display, Display3, Attributes, Effects, Objects, Gadgets, Oberon, Cards, Documents, Desktops, Out;
+CONST 
+	IconName = \"Icons2.Solitaire"\; 
+	MenuString = \"Cards.Undo[Undo] Solitaire.New[New] Desktops.StoreDoc[Store]"\; 
+	Version = \"V 1.4"\; 
+	CardW = Cards.CardW; 
+	CardH = Cards.CardH; 
+	DeltaH = 13; 
+	DeltaHH = 5; 
+	CARDS = 52; 
+TYPE 
+	TakeCardMsg = RECORD (Display.FrameMsg)
+		tail: Cards.Card; 
+	END; 
+
+	DistributeMsg = RECORD (Display.FrameMsg)
+		tail: Cards.Card; 
+	END; 
+
+	FitMsg = RECORD (Display.FrameMsg)
+		this: Cards.Card; 
+		on: Cards.Stack; 
+	END; 
+
+	SetDrawMsg = RECORD (Display.FrameMsg)
+		drawNum: INTEGER; 
+	END; 
+
+	FlipMove = POINTER TO FlipMoveDesc; 
+
+	FlipMoveDesc = RECORD (Cards.MoveDesc)
+	END; 
+
+	SwapMove = POINTER TO SwapMoveDesc; 
+
+	SwapMoveDesc = RECORD (Cards.MoveDesc)
+		nrVis: ARRAY CARDS OF SHORTINT; 
+		curSwap: INTEGER; 
+	END; 
+
+	Talon = POINTER TO TalonDesc; 
+
+	TalonDesc = RECORD (Cards.StackDesc)
+		visTail: Cards.Card; 
+		nrVis: ARRAY CARDS OF SHORTINT; 
+		curSwap: INTEGER; 
+		nrDraw: INTEGER; 
+	END; 
+
+	Depot = POINTER TO DepotDesc; 
+
+	DepotDesc = RECORD (Cards.StackDesc)
+	END; 
+
+	Column = POINTER TO ColumnDesc; 
+
+	ColumnDesc = RECORD (Cards.StackDesc)
+		topY: INTEGER; 
+		nrCards: INTEGER; 
+	END; 
+VAR 
+	talonMethods: Cards.Methods; 
+	depotMethods: Cards.Methods; 
+	columnMethods: Cards.Methods; 
+
+	PROCEDURE ^ StartGame(F: Display.Frame); 
+	PROCEDURE ^ DrawRect(x, y: INTEGER; card: Cards.Card); 
+	PROCEDURE ^ WaitMouseRelease(M: Oberon.InputMsg); 
+	PROCEDURE ^ DropOnFittingStack(M: Oberon.InputMsg; c: Cards.Card; self: Cards.Stack); 
+	PROCEDURE ^ TalonAttr(T: Talon; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyTalon(VAR M: Objects.CopyMsg; from, to: Talon); 
+	PROCEDURE ^ DrawTalon(T: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ TalonDrop(T: Cards.Stack; card: Cards.Card); 
+	PROCEDURE ^ TalonMove(self, to: Cards.Stack; card: Cards.Card; undo: BOOLEAN); 
+	PROCEDURE ^ TalonUndoMove(T: Cards.Stack; M: Cards.Move); 
+	PROCEDURE ^ TrackTalon(T: Cards.Stack; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TalonHandler(T: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewTalon*; 
+	PROCEDURE ^ DepotAttr(D: Depot; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyDepot(VAR M: Objects.CopyMsg; from, to: Depot); 
+	PROCEDURE ^ DepotCanDrop(D: Cards.Stack; card: Cards.Card): BOOLEAN; 
+	PROCEDURE ^ DepotHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDepot*; 
+	PROCEDURE ^ ColumnAttr(C: Column; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyColumn(VAR M: Objects.CopyMsg; from, to: Column); 
+	PROCEDURE ^ ColumnCanDrop(C: Cards.Stack; card: Cards.Card): BOOLEAN; 
+	PROCEDURE ^ ColumnUndoMove(C: Cards.Stack; M: Cards.Move); 
+	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewColumn*; 
+	PROCEDURE ^ LoadDocument(D: Documents.Document); 
+	PROCEDURE ^ StoreDocument(D: Documents.Document); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ SetDraw*; 
+BEGIN
+END Solitaire.

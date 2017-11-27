@@ -1,0 +1,294 @@
+MODULE Display;
+	IMPORT SYSTEM, Kernel32, User32, Modules, KernelLog, GDI32, Displays, Strings, AosInputs := Inputs, Commands, Objects, WinFS, Options;
+CONST 
+	dbgDisableReleaseMsg = TRUE; 
+	WMSetup = (User32.WMUser + 1); 
+	WMCreateWindow = (User32.WMUser + 2); 
+	IDFirstAccelCmd = 0; 
+	IDFirstMenuCmd* = 64; 
+	Insert = 0A0X; 
+	Delete = 0A1X; 
+	Backspace = 7FX; 
+	Home = 0A8X; 
+	End = 0A9X; 
+	PageUp = 0A2X; 
+	PageDown = 0A3X; 
+	Up = 0C1X; 
+	Down = 0C2X; 
+	Right = 0C3X; 
+	Left = 0C4X; 
+	Enter = 0DX; 
+	F1 = 0A4X; 
+	F2 = 0A5X; 
+	F3 = 0A6X; 
+	F4 = 0A7X; 
+	F5 = 0F5X; 
+	F6 = 0F6X; 
+	F7 = 0F7X; 
+	F8 = 0F8X; 
+	F9 = 0F9X; 
+	F10 = 0FAX; 
+	F11 = 0FBX; 
+	F12 = 0FCX; 
+	update = 0; 
+	dummy = 1; 
+	minimized = 2; 
+	external = 3; 
+	control = 4; 
+	maximized = 5; 
+	MaxAccel = 32; 
+	MaxCmd = 128; 
+	ML = 0; 
+	MM = 1; 
+	MR = 2; 
+	MX = 3; 
+	WHEEL = 31; 
+	GWLWindow* = 0; 
+	GWLControl* = 4; 
+	SHIFT* = 0; 
+	CTRL* = 1; 
+	ALT* = 2; 
+	create* = 0; 
+	remove* = 1; 
+	restore* = 2; 
+	suspend* = 3; 
+	redraw* = 4; 
+	resize* = 5; 
+	print* = 6; 
+	focus* = 7; 
+	defocus* = 8; 
+	consume* = 9; 
+	track* = 10; 
+	dupdate* = 11; 
+	execute* = 12; 
+	quit* = 13; 
+	ping* = 14; 
+	wheel* = 15; 
+	get* = 0; 
+	set* = 1; 
+	pressed = 15; 
+	toggled = 0; 
+	letWindowsHandleTheBuffer = FALSE; 
+	kPageUp = User32.VKPrior; 
+	kPageDown = User32.VKNext; 
+	kEnd = User32.VKEnd; 
+	kHome = User32.VKHome; 
+	kLeft = User32.VKLeft; 
+	kRight = User32.VKRight; 
+	kUp = User32.VKUp; 
+	kDown = User32.VKDown; 
+	kInsert = User32.VKInsert; 
+	kDelete = User32.VKDelete; 
+	kF1 = User32.VKF1; 
+	kF2 = User32.VKF2; 
+	kF3 = User32.VKF3; 
+	kF4 = User32.VKF4; 
+	kF5 = User32.VKF5; 
+	kF6 = User32.VKF6; 
+	kF7 = User32.VKF7; 
+	kF8 = User32.VKF8; 
+	kF9 = User32.VKF9; 
+	kF10 = User32.VKF10; 
+	kF11 = User32.VKF11; 
+	kF12 = User32.VKF12; 
+	kCtrl = 17; 
+	kAlt = 18; 
+	kWindows = 91; 
+	kShift = 16; 
+	kMenu = 93; 
+	kNumlock = 144; 
+	kEnter = 13; 
+	kPAdd = 107; 
+	kPMinus = 109; 
+	kPDiv = 111; 
+	kPMult = 106; 
+	kPause = 19; 
+	kCapsLock = 20; 
+	kEscape = 27; 
+	kTab = 9; 
+	kReturn = User32.VKReturn; 
+	VK0 = 48; 
+	VK9 = 57; 
+	VKMenu = 18; 
+	VKScroll = 145; 
+	VKLShift = 160; 
+	VKRShift = 161; 
+	VKLCtrl = 162; 
+	VKRCtrl = 163; 
+	VKLMenu = 164; 
+	VKRMenu = 165; 
+	VKLWin = 91; 
+	VKRWin = 92; 
+	SMCXFullscreen = 16; 
+	SMCYFullscreen = 17; 
+	SMCYScreen = 1; 
+	SMCXScreen = 0; 
+	MODWin = 8; 
+	WMHOTKEY = 786; 
+	Sizemaximized = 2; 
+	Sizeminimized = 1; 
+	Sizerestored = 0; 
+	WindowTitle = \"WinAOS"\; 
+	WM_DEVICECHANGE = 537; 
+	DBT_CONFIGCHANGECANCELED = 25; 
+	DBT_CONFIGCHANGED = 24; 
+	DBT_CUSTOMEVENT = 32774; 
+	DBT_DEVICEARRIVAL = 32768; 
+	DBT_DEVICEQUERYREMOVE = 32769; 
+	DBT_DEVICEQUERYREMOVEFAILED = 32770; 
+	DBT_DEVICEREMOVECOMPLETE = 32772; 
+	DBT_DEVICEREMOVEPENDING = 32771; 
+	DBT_DEVICETYPESPECIFIC = 32773; 
+	DBT_DEVNODES_CHANGED = 7; 
+	DBT_QUERYCHANGECONFIG = 23; 
+	DBT_USERDEFINED = 65535; 
+	DBT_DEVTYP_VOLUME = 2; 
+TYPE 
+	DEV_BROADCAST_HDR = RECORD 
+		dbch_size: LONGINT; 
+		dbch_devicetype: LONGINT; 
+		dbch_reserved: LONGINT; 
+	END; 
+
+	DEV_BROADCAST_HDRP = POINTER TO DEV_BROADCAST_HDR; 
+
+	DEV_BROADCAST_VOLUME = RECORD (DEV_BROADCAST_HDR)
+		dbcv_unitmask: SET; 
+		dbcv_flags: INTEGER; 
+		padding: INTEGER; 
+	END; 
+
+	DEV_BROADCAST_VOLUMEP = POINTER TO DEV_BROADCAST_VOLUME; 
+
+	Inputs = RECORD 
+		keys: SET; 
+		X, Y, Z, dx, dy: LONGINT; 
+		flags: SET; 
+	END; 
+
+	BitmapInfo* = RECORD 
+		bmiHeader*: GDI32.BitmapInfoHeader; 
+		colors: ARRAY 3 OF LONGINT; 
+	END; 
+
+	Window = POINTER TO RECORD 
+		hWnd: User32.HWND; 
+		hWndParent: User32.HWND; 
+		hDC: User32.HDC; 
+		width, height: LONGINT; 
+		defWindowProc: User32.WndProc; 
+		windowRect: User32.Rect; 
+		state: SET; 
+		link: Window; 
+		bmp: GDI32.HBitmap; 
+		bmadr: LONGINT; 
+		bmphdc: User32.HDC; 
+		track: Inputs; 
+		pal: POINTER TO ARRAY OF GDI32.PaletteEntry; 
+		dx, dy: LONGINT; 
+		hBrush: GDI32.HBrush; 
+		frame: BOOLEAN; 
+	END; 
+
+	DisplayProc* = PROCEDURE (disp: Window); 
+
+	PaintProc* = PROCEDURE (disp: Window; x, y, w, h: LONGINT); 
+
+	CreateStruct = POINTER TO RECORD 
+		win: Window; 
+		finished: BOOLEAN; 
+		className: ARRAY 32 OF CHAR; 
+		style: SET; 
+		x, y, w, h: LONGINT; 
+		hMenu: User32.HMenu; 
+	END; 
+
+	WindowHandlerProc* = PROCEDURE {WINAPI}(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam):User32.LResult; 
+
+	WinMain = OBJECT {EXCLUSIVE} 
+	VAR 
+		create: CreateStruct; 
+		process: Objects.Process; 
+
+		PROCEDURE ^  & Init*(c: CreateStruct); 
+		PROCEDURE ^ MsgLoop; 
+	BEGIN{ACTIVE} 
+	END WinMain; 
+
+	Display = OBJECT (Displays.Display)
+
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+	END Display; 
+
+	; 
+VAR 
+	dummyClass, windowClass: User32.WndClassEx; 
+	dummyClassName, windowClassName, controlClassName, windowTitle: ARRAY 32 OF CHAR; 
+	nWindows: LONGINT; 
+	aControlWinClass: LONGINT; 
+	fixedFrameX, fixedFrameY, frameX, frameY, captionY, menuY: LONGINT; 
+	hCurrentCursor, hAlternativeCursor: User32.HCursor; 
+	capture, hook, mouse: Window; 
+	kioskmode*: BOOLEAN; 
+	dummyWin*: Window; 
+	ISOToOberon: ARRAY 256 OF CHAR; 
+	moduleCS: Kernel32.CriticalSection; 
+	root: Window; 
+	bmi: RECORD 
+		info: BitmapInfo; 
+		pal: ARRAY 256 OF GDI32.ColorRef; 
+	END; 
+	disp: Display; 
+	format*: SHORTINT; 
+	KeyHandled: BOOLEAN; 
+	fullscreen: BOOLEAN; 
+	closeRequests: LONGINT; 
+	traceDisplay: BOOLEAN; 
+
+	PROCEDURE ^ CreateHWND(create: CreateStruct); 
+	PROCEDURE ^ DecomposeKeyEvent(wParam, lParam: LONGINT; VAR ch: CHAR; VAR key: LONGINT; char: BOOLEAN); 
+	PROCEDURE ^ GetChar(wParam, lParam: LONGINT; VAR ch: CHAR; VAR key: LONGINT); 
+	PROCEDURE ^ GetKeyState(key: LONGINT; what: INTEGER): BOOLEAN; 
+	PROCEDURE ^ DummyHandler(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ HandleFocus(win: Window; uMsg: LONGINT; wParam: User32.WParam); 
+	PROCEDURE ^ Add(disp: Window; noView: BOOLEAN); 
+	PROCEDURE ^ SetupWin(win: Window); 
+	PROCEDURE ^ {WINAPI} DummyProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ ChangeCursor; 
+	PROCEDURE ^ SetCursor(hCursor: User32.HCursor); 
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ HandleMouse(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam); 
+	PROCEDURE ^ GetKeyFlags(VAR flags: SET); 
+	PROCEDURE ^ HandleChar(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
+	PROCEDURE ^ HandleKey(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
+	PROCEDURE ^ HandleKeyUp(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
+	PROCEDURE ^ SetDocRect(win: Window; resize: BOOLEAN); 
+	PROCEDURE ^ UpdateDisplay(win: Window; id: LONGINT; lParam: User32.LParam; wParam: User32.WParam); 
+	PROCEDURE ^ FromMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: LONGINT); 
+	PROCEDURE ^ ToMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: LONGINT); 
+	PROCEDURE ^ ToWindow*(win: Window; x, y, w, h: LONGINT; dx, dy: LONGINT); 
+	PROCEDURE ^ GetMinMaxInfo(win: Window; lParam: User32.LParam): BOOLEAN; 
+	PROCEDURE ^ Minimize(win: Window); 
+	PROCEDURE ^ Maximize(win: Window); 
+	PROCEDURE ^ Restore(win: Window); 
+	PROCEDURE ^ PosChanging(win: Window; lParam: User32.LParam); 
+	PROCEDURE ^ WindowHandler(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} WindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ GetDC(win: Window); 
+	PROCEDURE ^ InstallW(win: Window; ctrl: BOOLEAN); 
+	PROCEDURE ^ Init(win: Window); 
+	PROCEDURE ^ RegisterClasses; 
+	PROCEDURE ^ UnregisterClasses; 
+	PROCEDURE ^ FirstWindow(): Window; 
+	PROCEDURE ^ CreateWin(create: CreateStruct); 
+	PROCEDURE ^ {WINAPI} ControlWindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} UnregisterControlWinClass; 
+	PROCEDURE ^ InitMod; 
+	PROCEDURE ^ DisableCursor*; 
+	PROCEDURE ^ InitBMI; 
+	PROCEDURE ^ Shutdown; 
+	PROCEDURE ^ DoInstall(w, h, left, top: LONGINT); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ TraceDisplay*; 
+BEGIN
+END Display.

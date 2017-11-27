@@ -1,0 +1,74 @@
+MODULE OberonDisplay;
+	IMPORT SYSTEM, Machine, Commands, Displays, Inputs, Modules, Plugins, Raster, WMRectangles, WMGraphics, WM := WMWindowManager;
+CONST 
+	DefaultDisplayName = \"Oberon"\; 
+	DefaultWidth = 1024; 
+	DefaultHeight = 768; 
+	AlphaCursor = 10; 
+	KeyBufSize = 64; 
+	Flip = FALSE; 
+	Cache = TRUE; 
+TYPE 
+	OberonWindow = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		input: OberonInput; 
+		curKeys: SET; 
+		curX, curY: LONGINT; 
+		keyhead, keytail: LONGINT; 
+		keybuf: ARRAY KeyBufSize OF CHAR; 
+		keys: SET; 
+		break: BOOLEAN; 
+		fixMM: BOOLEAN; 
+		lastCtrl: BOOLEAN; 
+
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Mouse(VAR x, y: INTEGER; VAR keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ InsertKey(ch: CHAR; keysym: LONGINT; flags: SET); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ Read(VAR ch: CHAR; VAR b: BOOLEAN); 
+		PROCEDURE ^ Available(VAR num: INTEGER; VAR b: BOOLEAN); 
+		PROCEDURE ^ KeyState(VAR k: SET); 
+	END OberonWindow; 
+
+	OberonInput = OBJECT (Inputs.OberonInput)
+	VAR 
+		window: OberonWindow; 
+
+		PROCEDURE ^ Mouse*(VAR x, y: INTEGER; VAR keys: SET); 
+		PROCEDURE ^ Read*(VAR ch: CHAR; VAR b: BOOLEAN); 
+		PROCEDURE ^ Available*(VAR num: INTEGER; VAR b: BOOLEAN); 
+		PROCEDURE ^ KeyState*(VAR k: SET); 
+	END OberonInput; 
+
+	Display* = OBJECT (Displays.Display)
+	VAR 
+		disp: OberonWindow; 
+		inp: OberonInput; 
+		bufimg: Raster.Image; 
+		mode, mode1: Raster.Mode; 
+		ml, mt, mr, mb: LONGINT; 
+
+		PROCEDURE ^ LocalAddDirty(l, t, r, b: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
+		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
+		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: LONGINT); 
+		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: LONGINT); 
+		PROCEDURE ^  & Init*(name: ARRAY OF CHAR; w, h, x, y: LONGINT); 
+		PROCEDURE ^ Finalize*; 
+	END Display; 
+VAR 
+	nilpix: Raster.Pixel; 
+	win: Display; 
+
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ SwitchToWM*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END OberonDisplay.

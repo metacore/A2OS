@@ -1,0 +1,40 @@
+MODULE WMGraphicsSmooth;
+	IMPORT SYSTEM, Raster, Strings, WMGraphics, WMRectangles, Reals;
+CONST 
+	CapButt* = 0; 
+	CapRound* = 1; 
+	CapSquare* = 2; 
+	CapNone* = 3; 
+TYPE 
+	Real* = WMGraphics.Real; 
+
+	Canvas* = OBJECT (WMGraphics.BufferCanvas)
+	VAR 
+		lineWidth-: Real; 
+		capType-: LONGINT; 
+		rasterMode: Raster.Mode; 
+		drawColor: WMGraphics.Color; 
+		drawColorMap: ARRAY 256 OF Raster.Pixel; 
+		halfLineWidth: Real; 
+		halfLineWidthBy255: Real; 
+		invLineWidthBy255: Real; 
+		halfLineWidthSqr: Real; 
+
+		PROCEDURE ^  & New*(img: Raster.Image); 
+		PROCEDURE ^ SetDrawColor(color: WMGraphics.Color); 
+		PROCEDURE ^ SetLineWidth*(w: Real); 
+		PROCEDURE ^ SetLineCap*(lineCap: LONGINT); 
+		PROCEDURE ^ LineReal*(x0, y0, x1, y1: Real; color: WMGraphics.Color; mode: LONGINT); 
+		PROCEDURE ^ Disk*(x0, y0: Real; radius: Real; color: WMGraphics.Color; mode: LONGINT); 
+		PROCEDURE ^ DrawDisk(x0, y0, radius: Real); 
+		PROCEDURE ^ PutPixel(x, y: LONGINT; drawColorMapIndex: LONGINT); 
+		PROCEDURE ^ PutPixelSwapped(x, y: LONGINT; drawColorMapIndex: LONGINT); 
+		PROCEDURE ^ DrawThinLine(x0, y0, x1, y1: Real); 
+		PROCEDURE ^ DrawThickLine(x0, y0, x1, y1: Real); 
+	END Canvas; 
+
+	PROCEDURE ^ GenCanvas*(img: Raster.Image): WMGraphics.BufferCanvas; 
+	PROCEDURE ^ InvSqrt(x: REAL): REAL; 
+	PROCEDURE ^ ClipLineReal(l, t, r, b: Real; VAR x0, y0, x1, y1: Real): BOOLEAN; 
+BEGIN
+END WMGraphicsSmooth.

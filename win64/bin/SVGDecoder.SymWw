@@ -1,0 +1,20 @@
+MODULE SVGDecoder;
+	IMPORT Codecs, Streams, WMGraphics, Raster, SVGLoader, SVG, XML, XMLScanner, XMLParser;
+CONST 
+TYPE 
+	SVGDecoder = OBJECT (Codecs.ImageDecoder)
+	VAR 
+		in: Streams.Reader; 
+		img: Raster.Image; 
+		width, height: LONGINT; 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END SVGDecoder; 
+
+	PROCEDURE ^ Factory*(): Codecs.ImageDecoder; 
+BEGIN
+END SVGDecoder.

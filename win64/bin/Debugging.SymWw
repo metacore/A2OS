@@ -1,0 +1,35 @@
+MODULE Debugging;
+	IMPORT SYSTEM, Streams, KernelLog, Files, StringPool, Modules, Objects, Reflection, Machine, Commands, Locks, Dates, Heaps;
+CONST 
+VAR 
+	DefaultLog, Log-: Streams.Writer; 
+	f: Files.File; 
+	lock: Locks.RWLock; 
+
+	PROCEDURE ^ Memory*(from, tov: ADDRESS); 
+	PROCEDURE ^ ViewStack(ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Stack*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stacklow, stackhigh: ADDRESS); 
+	PROCEDURE ^ TraceBack*; 
+	PROCEDURE ^ FileStart*(context: Commands.Context); 
+	PROCEDURE ^ FileEnd*; 
+	PROCEDURE ^ Str*(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ String*(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Address*(i: ADDRESS); 
+	PROCEDURE ^ Int*(i, j: LONGINT); 
+	PROCEDURE ^ Set*(set: SET); 
+	PROCEDURE ^ Float*(r: LONGREAL; len: LONGINT); 
+	PROCEDURE ^ Hex*(i, j: LONGINT); 
+	PROCEDURE ^ HIntHex*(x: HUGEINT); 
+	PROCEDURE ^ Char*(c: CHAR); 
+	PROCEDURE ^ Update*; 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ Type*(p: ANY); 
+	PROCEDURE ^ Str0*(idx: StringPool.Index); 
+	PROCEDURE ^ Enter*; 
+	PROCEDURE ^ Exit*; 
+	PROCEDURE ^ Nothing; 
+	PROCEDURE ^ DisableGC*; 
+	PROCEDURE ^ EnableGC*; 
+BEGIN
+END Debugging.

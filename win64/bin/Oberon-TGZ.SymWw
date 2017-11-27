@@ -1,0 +1,17 @@
+MODULE TGZ IN Oberon;
+	IMPORT GZReaders, Files, Texts, Oberon, In;
+CONST 
+	UnexpectedEOF =  -5; 
+	WriteError =  -6; 
+TYPE 
+	FileName = ARRAY 64 OF CHAR; 
+VAR 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ WriteInfo(flag: CHAR; size: LONGINT; VAR buf, fname: ARRAY OF CHAR; f: Files.File); 
+	PROCEDURE ^ GenName(VAR prefix, buf, fname: ARRAY OF CHAR); 
+	PROCEDURE ^ GetNum(VAR buf: ARRAY OF CHAR; ofs, max: LONGINT): LONGINT; 
+	PROCEDURE ^ UnpackTGZ(tgzname, prefix: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Extract*; 
+BEGIN
+END TGZ.

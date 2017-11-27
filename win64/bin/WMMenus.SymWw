@@ -1,0 +1,122 @@
+MODULE WMMenus;
+	IMPORT Inputs, Strings, Raster, WMRectangles, WMGraphics, WMGraphicUtilities, WMComponents, WMWindowManager, WMProperties, WMEvents, WMDropTarget, WMTrees;
+CONST 
+	OpenDefault* = OpenDownRight; 
+	OpenUpLeft* = 1; 
+	OpenUpRight* = 2; 
+	OpenDownLeft* = 3; 
+	OpenDownRight* = 4; 
+	Right = 0; 
+	Bottom = 1; 
+	ShadowWidth = 5; 
+	ShadowHeight = 5; 
+	ShadowOffsetVertical = 5; 
+	ShadowOffsetHorizontal = 5; 
+	LightGrey = LONGINT(0C0C0C0FFH); 
+	LightGreyDrag = LONGINT(0C0C0C0C0H); 
+	WhiteDrag = LONGINT(0FFFFFFC0H); 
+	TextImageDistance = 4; 
+	MinImageWidth = 4; 
+	HMenuDistance = 8; 
+	VMenuDistance = 4; 
+	SeparatorCaption = \"---"\; 
+	SeparatorWidth = 9; 
+	SeparatorHeight = 5; 
+	DragDist = 10; 
+TYPE 
+	Separator* = OBJECT (WMTrees.TreeNode)
+	END Separator; 
+
+	DragWrapper* = OBJECT 
+	END DragWrapper; 
+
+	MenuPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		horizontal-: WMProperties.BooleanProperty; 
+		horizontalI: BOOLEAN; 
+		openDirection-: WMProperties.Int32Property; 
+		openDirectionI: LONGINT; 
+		clSelected: WMProperties.ColorProperty; 
+		onSelect-: WMEvents.EventSource; 
+		menu: WMTrees.Tree; 
+		root, selection, hover: WMTrees.TreeNode; 
+		subMenuIndicatorImg: WMGraphics.Image; 
+		subMenu, parentWindow: MenuWindow; 
+		parentMenuPanel, focusPanel, rootMenuPanel: MenuPanel; 
+		greyBoxWidth: LONGINT; 
+		dragNode: WMTrees.TreeNode; 
+		dragObject: ANY; 
+		leftClick, dragPossible: BOOLEAN; 
+		downX, downY: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ SetParent(parentMenuPanel: MenuPanel); 
+		PROCEDURE ^ SetParentWindow(parentWindow: MenuWindow); 
+		PROCEDURE ^ SetMenu*(menu: WMTrees.Tree; root: WMTrees.TreeNode); 
+		PROCEDURE ^ Measure(VAR width, height: LONGINT); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ ItemWidth(item: WMTrees.TreeNode; isHorizontal: BOOLEAN): LONGINT; 
+		PROCEDURE ^ ItemHeight(item: WMTrees.TreeNode): LONGINT; 
+		PROCEDURE ^ MaxImageWidth(): LONGINT; 
+		PROCEDURE ^ IsSelectable(node: WMTrees.TreeNode): BOOLEAN; 
+		PROCEDURE ^ FindHorizontal(x: LONGINT): WMTrees.TreeNode; 
+		PROCEDURE ^ FindVertical(y: LONGINT): WMTrees.TreeNode; 
+		PROCEDURE ^ GetItemRect(i: WMTrees.TreeNode; VAR r: WMRectangles.Rectangle); 
+		PROCEDURE ^ LeafSelect(item: WMTrees.TreeNode); 
+		PROCEDURE ^ SetSelection(node: WMTrees.TreeNode); 
+		PROCEDURE ^ SelectNode(node: WMTrees.TreeNode; indicateLast: BOOLEAN); 
+		PROCEDURE ^ CloseSubMenu(indicateLast: BOOLEAN); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ MyStartDrag(node: WMTrees.TreeNode; object: ANY); 
+		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
+		PROCEDURE ^ CursorUp; 
+		PROCEDURE ^ CursorDown; 
+		PROCEDURE ^ CursorLeft; 
+		PROCEDURE ^ CursorRight; 
+		PROCEDURE ^ MoveToPrevious; 
+		PROCEDURE ^ MoveToNext; 
+		PROCEDURE ^ SelectCurrent; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Finalize*; 
+	END MenuPanel; 
+
+	ShadowWindow = OBJECT (WMWindowManager.Window)
+	VAR 
+		type, color: LONGINT; 
+
+		PROCEDURE ^  & New(type: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+	END ShadowWindow; 
+
+	MenuWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		menuPanel: MenuPanel; 
+		takesFocus: BOOLEAN; 
+
+		PROCEDURE ^  & Open*(x, y: LONGINT; openDirection: LONGINT; menu: WMTrees.Tree; root: WMTrees.TreeNode; parent: MenuPanel; takesFocus, indicate: BOOLEAN); 
+		PROCEDURE ^ CloseMenu(sender, data: ANY); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+	END MenuWindow; 
+VAR 
+	StrMenuPanel: Strings.String; 
+
+	PROCEDURE ^ AddWindow(window: WMWindowManager.Window; x, y: LONGINT; flags: SET); 
+	PROCEDURE ^ ShadowDecorator(window: WMWindowManager.Window); 
+	PROCEDURE ^ HasChildren(parent: WMTrees.TreeNode; tree: WMTrees.Tree): BOOLEAN; 
+	PROCEDURE ^ GetCaption*(data: ANY; menu: WMTrees.Tree): Strings.String; 
+	PROCEDURE ^ GetDragWrapper*(node: WMTrees.TreeNode; menu: WMTrees.Tree): DragWrapper; 
+	PROCEDURE ^ FindChild(CONST caption: ARRAY OF CHAR; parent: WMTrees.TreeNode; tree: WMTrees.Tree): WMTrees.TreeNode; 
+	PROCEDURE ^ AddChild*(CONST caption: ARRAY OF CHAR; parent: WMTrees.TreeNode; tree: WMTrees.Tree): WMTrees.TreeNode; 
+	PROCEDURE ^ Find*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree): WMTrees.TreeNode; 
+	PROCEDURE ^ AddItemNode*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree): WMTrees.TreeNode; 
+	PROCEDURE ^ AddItem*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree); 
+	PROCEDURE ^ Show*(menu: WMTrees.Tree; x, y: LONGINT; handler: WMEvents.EventListener); 
+BEGIN
+END WMMenus.

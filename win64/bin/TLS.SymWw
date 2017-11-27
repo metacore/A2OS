@@ -1,0 +1,266 @@
+MODULE TLS;
+	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, Clock, BIT, Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
+CONST 
+	Trace = TRUE; 
+	ServerHandshake* = 12; 
+	ClientHandshake* = 13; 
+	NotAValidHandshakeState = 100; 
+	HandshakeFinished = 101; 
+	GenerateChangeCipherSpec = 102; 
+	AwaitFinished = 103; 
+	AwaitClientHello = 201; 
+	GenerateServerHello = 202; 
+	GenerateServerHelloDone = 203; 
+	AwaitClientKeyExchange = 204; 
+	AwaitChangeSpec = 205; 
+	GenerateHelloWithResumption = 210; 
+	AwaitChangeSpecWithResumption = 211; 
+	AwaitFinishedWithResumption = 212; 
+	GenerateClientHello = 300; 
+	AwaitServerHello = 301; 
+	AwaitCertificate = 302; 
+	AwaitServerHelloDone = 303; 
+	GenerateClientKeyExchange = 304; 
+	TlsRsaWithNullMd5* = 1; 
+	TlsRsaWithNullSha* = 2; 
+	TlsRsaWithRc4128Md5* = 4; 
+	TlsRsaWithRc4128Sha* = 5; 
+	TlsRsaWithIdeaCbcSha* = 7; 
+	TlsRsaWithDesCbcSha* = 9; 
+	TlsRsaWith3DesEdeCbcSha* = 10; 
+	ChangeCipherSpec* = 20; 
+	Alert* = 21; 
+	Handshake* = 22; 
+	ApplicationData* = 23; 
+	SSLv2ClientHello* = 128; 
+	HelloRequest* = 0; 
+	ClientHello* = 1; 
+	ServerHello* = 2; 
+	Certificate* = 11; 
+	ServerKeyExchange* = 12; 
+	CertificateRequest* = 13; 
+	ServerHelloDone* = 14; 
+	CertificateVerify* = 15; 
+	ClientKeyExchange* = 16; 
+	Finished* = 20; 
+	V2ClientHello* = 30; 
+	Warning = 1; 
+	Fatal = 2; 
+	NoError =  -1; 
+	CloseNotify = 0; 
+	UnexpectedMessage = 10; 
+	BadRecordMac = 20; 
+	DecryptionFailed = 21; 
+	RecordOverflow = 22; 
+	DecompressionFailure = 30; 
+	HandshakeFailure = 40; 
+	NoCertificate = 41; 
+	BadCertificate = 42; 
+	UnsupportedCertificate = 43; 
+	CertificateRevoked = 44; 
+	CertificateExpired = 45; 
+	CertificateUnknown = 46; 
+	IllegalParameter = 47; 
+	UnknownCA = 48; 
+	AccessDenied = 49; 
+	DecodeError = 50; 
+	DecryptError = 51; 
+	ExportRestriction = 60; 
+	ProtocolVersion = 70; 
+	InsufficientSecurity = 71; 
+	InternalError = 80; 
+	UserCancelled = 90; 
+	NoRenegotiation = 100; 
+	UnsupportedExtension = 110; 
+	Ok* = 0; 
+	TLSHandshakeAborted* = 2; 
+	Suites* = 20; 
+	Buflen = 18500; 
+	MaxPHashKernelLogput = 1024; 
+	MaxKeyBlock = 120; 
+	MaxPHashSeed = 128; 
+	MaxPlaintextLength = 16384; 
+	MaxCompressedLength = 17408; 
+	MaxCiphertextLength = 18432; 
+	SessionIdLength = 16; 
+	SessionHashtableSize = 1023; 
+	SessionCleanUpInterval = 60; 
+	DefaultSessionLifetime = 3600; 
+	DefaultSuitesNbr = 4; 
+TYPE 
+	SecurityParameters = OBJECT 
+	VAR 
+		cipherSuite, cipherKeySize: LONGINT; 
+		clientRandom, serverRandom: ARRAY 32 OF CHAR; 
+	END SecurityParameters; 
+
+	ConnectionState = OBJECT 
+	VAR 
+		cipher: Ciphers.Cipher; 
+		mac: HMAC.HMac; 
+		recordSeq: DoubleLong; 
+		cipherKey: ARRAY 24 OF CHAR; 
+		iv: ARRAY 8 OF CHAR; 
+		macSecret: ARRAY 20 OF CHAR; 
+
+		PROCEDURE ^  & Init*; 
+	END ConnectionState; 
+
+	DoubleLong = OBJECT 
+	VAR 
+		numH, numL: LONGINT; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Inc; 
+		PROCEDURE ^ GetBytes(VAR buf: ARRAY OF CHAR; ofs: LONGINT); 
+	END DoubleLong; 
+
+	PHash = OBJECT 
+	VAR 
+		hMac: HMAC.HMac; 
+
+		PROCEDURE ^  & Init*(hashname: ARRAY OF CHAR); 
+		PROCEDURE ^ Expand(VAR secret, seed, outbuf: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
+	END PHash; 
+
+	PRF = OBJECT 
+	VAR 
+		pMD5, pSHA: PHash; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetBytes(VAR secret, seed, outbuf: ARRAY OF CHAR; label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
+	END PRF; 
+
+	Policy* = OBJECT 
+	VAR 
+		cipherSuites-: ARRAY Suites OF LONGINT; 
+		nofCipherSuites-: LONGINT; 
+		sessionResumptionEnabled-: BOOLEAN; 
+		sessionLifetime-: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetCipherSuites*(VAR s: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ IsSupported*(s: LONGINT): BOOLEAN; 
+		PROCEDURE ^ EnableSessionResumption*(enable: BOOLEAN); 
+		PROCEDURE ^ SetSessionLifetime*(t: LONGINT); 
+	END Policy; 
+
+	Session = OBJECT {EXCLUSIVE} 
+	VAR 
+		id: ARRAY 32 OF CHAR; 
+		idLength: LONGINT; 
+		resumable: BOOLEAN; 
+		cipherSuite: LONGINT; 
+		preMasterSecret, masterSecret-: ARRAY 48 OF CHAR; 
+		lifetime: LONGINT; 
+		timer: Kernel.Timer; 
+		next: Session; 
+
+		PROCEDURE ^  & Init*(caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len, lifetime: LONGINT); 
+		PROCEDURE ^ Invalidate; 
+		PROCEDURE ^ SetPreMasterSecret(data: ARRAY OF CHAR; ofs: LONGINT); 
+	BEGIN{ACTIVE} 
+	END Session; 
+
+	Context* = OBJECT {EXCLUSIVE} 
+	VAR 
+		policy-: Policy; 
+		rsaCertificate: ARRAY 10000 OF CHAR; 
+		rsaPrivateKey, rsaPublicKey: CryptoRSA.Key; 
+		lengthOfRsaCertificate: LONGINT; 
+		sessionCache: ARRAY SessionHashtableSize OF Session; 
+		timer: Kernel.Timer; 
+		active: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(p: Policy); 
+		PROCEDURE ^ Dispose*; 
+		PROCEDURE ^ LoadRsaCertificate*(filename: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ LoadRsaPrivateKey*(pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: INTEGER); 
+		PROCEDURE ^ GetRsaPublicKey*; 
+		PROCEDURE ^ PrintRsaCertificate*; 
+		PROCEDURE ^ GetNewServerSession*(): Session; 
+		PROCEDURE ^ FindSessionByID*(VAR data: ARRAY OF CHAR; ofs, idLen: LONGINT): Session; 
+		PROCEDURE ^ StoreSession(s: Session); 
+		PROCEDURE ^ EqualSessionID(VAR data1, data2: ARRAY OF CHAR; ofs1, ofs2, len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ DeleteUnresumableSessions(s: Session): Session; 
+		PROCEDURE ^ CleanUpSessionCache; 
+	BEGIN{ACTIVE} 
+	END Context; 
+
+	Connection* = OBJECT {EXCLUSIVE} (TCP.Connection)
+	VAR 
+		conn: TCP.Connection; 
+		in: Streams.Reader; 
+		out, appDataWriter: Streams.Writer; 
+		appDataReader: Streams.Reader; 
+		applicationDataPipe: Pipes.Pipe; 
+		context: Context; 
+		session: Session; 
+		tlsErrorCause-: LONGINT; 
+		handshakeState: LONGINT; 
+		outbuf, inbuf: ARRAY Buflen OF CHAR; 
+		hsMD5send, hsMD5verify: CryptoMD5.Hash; 
+		hsSHAsend, hsSHAverify: CryptoSHA1.Hash; 
+		pendingSecurityParameters: SecurityParameters; 
+		currentWriteState, pendingWriteState, currentReadState, pendingReadState: ConnectionState; 
+		client: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AwaitStateNotEqual*(s: LONGINT); 
+		PROCEDURE ^ AwaitStateEqual*(s: LONGINT); 
+		PROCEDURE ^ SetState*(s: SHORTINT); 
+		PROCEDURE ^ ChangeWriteState; 
+		PROCEDURE ^ ChangeReadState; 
+		PROCEDURE ^ SetContext*(cxt: Context); 
+		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetDefaultPolicy*; 
+		PROCEDURE ^ SetConnection*(c: TCP.Connection); 
+		PROCEDURE ^ Accept*(VAR client: TCP.Connection; VAR res: LONGINT); 
+		PROCEDURE ^ Connect*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ GenerateMasterSecret; 
+		PROCEDURE ^ GenerateKeys; 
+		PROCEDURE ^ InitializeConnectionState(state: ConnectionState; sp: SecurityParameters); 
+		PROCEDURE ^ PrepareConnectionState(state: ConnectionState; cipherSuite: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ PrepareSecurityParameters(sp: SecurityParameters; cipherSuite: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SendRecord(VAR data: ARRAY OF CHAR; contentType, ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveRecord; 
+		PROCEDURE ^ SendChangeCipherSpec; 
+		PROCEDURE ^ ReceiveChangeCipherSpec(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ SendHandshake(VAR data: ARRAY OF CHAR; hsType, ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveHandshake(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveV2Handshake(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ StartHandshake; 
+		PROCEDURE ^ ReceiveClientHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ SendClientHello(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ ReceiveV2ClientHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ SendServerHello(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+		PROCEDURE ^ ReceiveClientKeyExchange(CONST data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveCertificate(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ SendCertificate(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ SendServerHelloDone(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ SendFinished(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ ReceiveFinished(CONST data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveAlert(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveWarning(desc: LONGINT); 
+		PROCEDURE ^ ReceiveError(alertType: LONGINT); 
+		PROCEDURE ^ SendWarning(alertType: LONGINT); 
+		PROCEDURE ^ SendError(alertType: LONGINT); 
+		PROCEDURE ^ Transition(VAR data: ARRAY OF CHAR; action, subAction, ofs, len: LONGINT); 
+		PROCEDURE ^ Create32RandomBytes(VAR data: ARRAY OF CHAR); 
+		PROCEDURE ^ PrintDirection(send: BOOLEAN); 
+	BEGIN{ACTIVE} 
+	END Connection; 
+VAR 
+	version: ARRAY 2 OF CHAR; 
+	defaultCipherPolicy: Policy; 
+
+	PROCEDURE ^ GetConnection*(): Connection; 
+	PROCEDURE ^ InitDefaults; 
+BEGIN
+END TLS.

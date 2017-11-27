@@ -1,0 +1,277 @@
+MODULE OpenTypeInt;
+CONST 
+	X* = 1; 
+	Y* = 0; 
+TYPE 
+	F26D6* = LONGINT; 
+
+	F2D14* = INTEGER; 
+
+	FUnit* = INTEGER; 
+
+	Fixed* = LONGINT; 
+
+	INT64 = ARRAY 8 OF CHAR; 
+
+	Code* = POINTER TO ARRAY OF CHAR; 
+
+	Stack* = POINTER TO ARRAY OF LONGINT; 
+
+	Address* = RECORD 
+		code*: Code; 
+		len*: LONGINT; 
+		pc*: LONGINT; 
+	END; 
+
+	Functions* = POINTER TO ARRAY OF Address; 
+
+	Instruction* = RECORD 
+		beg*: Address; 
+		opcode*: CHAR; 
+	END; 
+
+	Instructions* = POINTER TO ARRAY OF Instruction; 
+
+	Frame* = RECORD 
+		ret*: Address; 
+		start*: LONGINT; 
+		count*: INTEGER; 
+	END; 
+
+	CallStack* = POINTER TO ARRAY OF Frame; 
+
+	Store* = POINTER TO ARRAY OF LONGINT; 
+
+	CVT* = POINTER TO ARRAY OF F26D6; 
+
+	Contours* = POINTER TO ARRAY OF INTEGER; 
+
+	Coord* = ARRAY 2 OF F26D6; 
+
+	Point* = RECORD 
+		org*, cur*: Coord; 
+		onCurve*: BOOLEAN; 
+		touched*: ARRAY 2 OF BOOLEAN; 
+	END; 
+
+	Points* = POINTER TO ARRAY OF Point; 
+
+	Zone* = POINTER TO ZoneDesc; 
+
+	ZoneDesc* = RECORD 
+		contours*: INTEGER; 
+		first*: Contours; 
+		pt*: Points; 
+	END; 
+
+	Vector* = RECORD 
+		x*, y*: F2D14; 
+	END; 
+
+	Context* = RECORD 
+		code*: Code; 
+		codeLen*: LONGINT; 
+		stack*: Stack; 
+		callStack*: CallStack; 
+		pc*: LONGINT; 
+		tos*: INTEGER; 
+		ctos*: INTEGER; 
+		func*: Functions; 
+		instr*: Instructions; 
+		store*: Store; 
+		cvt*: CVT; 
+		zone*: ARRAY 2 OF Zone; 
+		ptsize*: F26D6; 
+		xppm*, yppm*, ppm: F26D6; 
+		upm*: INTEGER; 
+		rotated*, stretched*: BOOLEAN; 
+		xratio, yratio, ratio*: Fixed; 
+		minDist*: F26D6; 
+		cvtCutIn*: F26D6; 
+		swVal*, swCutIn*: F26D6; 
+		deltaBase*, deltaShift*: INTEGER; 
+		autoFlip*: BOOLEAN; 
+		inhibitFit*, ignorePrep*: BOOLEAN; 
+		fixDropouts*: BOOLEAN; 
+		scanType*: INTEGER; 
+		rp0*, rp1*, rp2*: INTEGER; 
+		gep0*, gep1*, gep2*: INTEGER; 
+		zp0, zp1, zp2: Zone; 
+		free*, proj*, proj2*: Vector; 
+		period*, phase*, threshold*: F26D6; 
+		loop*: INTEGER; 
+	END; 
+
+	State* = RECORD 
+		minDist: F26D6; 
+		cvtCutIn: F26D6; 
+		swVal, swCutIn: F26D6; 
+		deltaBase, deltaShift: INTEGER; 
+		autoFlip: BOOLEAN; 
+		inhibitFit, ignorePrep: BOOLEAN; 
+		fixDropouts: BOOLEAN; 
+		scanType: INTEGER; 
+	END; 
+
+	NotifierData* = POINTER TO NotifierDesc; 
+
+	NotifierDesc* = RECORD 
+	END; 
+
+	Notifier* = PROCEDURE (VAR c: Context; data: NotifierData); 
+
+	Primitive = PROCEDURE (VAR c: Context); 
+VAR 
+	EmptyZone*: Zone; 
+	Builtin: ARRAY 256 OF Primitive; 
+	Zero64: INT64; 
+	Notify: Notifier; 
+	NotifyData: NotifierData; 
+
+	PROCEDURE ^ ToINT64(x: LONGINT; VAR y: INT64); 
+	PROCEDURE ^ FromINT64(x: INT64; VAR y: LONGINT); 
+	PROCEDURE ^ AddINT64(a, b: INT64; VAR c: INT64); 
+	PROCEDURE ^ SubINT64(a, b: INT64; VAR c: INT64); 
+	PROCEDURE ^ LeqINT64(a, b: INT64): BOOLEAN; 
+	PROCEDURE ^ ShiftINT64(VAR a: INT64; n: LONGINT); 
+	PROCEDURE ^ MulINT64(a, b: INT64; VAR c: INT64); 
+	PROCEDURE ^ DivINT64(a, b: INT64; VAR q: INT64); 
+	PROCEDURE ^ ShiftDiv*(a, n, d: LONGINT): LONGINT; 
+	PROCEDURE ^ MulShift*(a, b, n: LONGINT): LONGINT; 
+	PROCEDURE ^ MulDiv*(a, b, c: LONGINT): LONGINT; 
+	PROCEDURE ^ Norm*(x, y: F26D6): F26D6; 
+	PROCEDURE ^ Ratio(VAR c: Context): Fixed; 
+	PROCEDURE ^ PPEm(VAR c: Context): F26D6; 
+	PROCEDURE ^ FUnitToPixel(fu: FUnit; VAR c: Context): F26D6; 
+	PROCEDURE ^ CVTValue(n: LONGINT; VAR c: Context): F26D6; 
+	PROCEDURE ^ Round(x, period, phase, threshold: F26D6): F26D6; 
+	PROCEDURE ^ Project(crd: Coord; proj: Vector): F26D6; 
+	PROCEDURE ^ GetDistance(from, to: Coord; VAR dx, dy: F26D6); 
+	PROCEDURE ^ Move(VAR p: Point; free, proj: Vector; dist: F26D6); 
+	PROCEDURE ^ GetRefDist(VAR c: Context; flag: BOOLEAN; VAR zone: Zone; VAR ref: LONGINT; VAR dx, dy: F26D6); 
+	PROCEDURE ^ NPUSHB(VAR c: Context); 
+	PROCEDURE ^ NPUSHW(VAR c: Context); 
+	PROCEDURE ^ PUSHB(VAR c: Context); 
+	PROCEDURE ^ PUSHW(VAR c: Context); 
+	PROCEDURE ^ RS(VAR c: Context); 
+	PROCEDURE ^ WS(VAR c: Context); 
+	PROCEDURE ^ WCVT(VAR c: Context); 
+	PROCEDURE ^ RCVT(VAR c: Context); 
+	PROCEDURE ^ SVTCA(VAR c: Context); 
+	PROCEDURE ^ SPVTCA(VAR c: Context); 
+	PROCEDURE ^ SFVTCA(VAR c: Context); 
+	PROCEDURE ^ SPVTL(VAR c: Context); 
+	PROCEDURE ^ SFVTL(VAR c: Context); 
+	PROCEDURE ^ SFVTPV(VAR c: Context); 
+	PROCEDURE ^ SDPVTL(VAR c: Context); 
+	PROCEDURE ^ SPVFS(VAR c: Context); 
+	PROCEDURE ^ SFVFS(VAR c: Context); 
+	PROCEDURE ^ GPV(VAR c: Context); 
+	PROCEDURE ^ GFV(VAR c: Context); 
+	PROCEDURE ^ SRPi(VAR c: Context); 
+	PROCEDURE ^ SZPi(VAR c: Context); 
+	PROCEDURE ^ SZPS(VAR c: Context); 
+	PROCEDURE ^ RTHG(VAR c: Context); 
+	PROCEDURE ^ RTG(VAR c: Context); 
+	PROCEDURE ^ RTDG(VAR c: Context); 
+	PROCEDURE ^ RDTG(VAR c: Context); 
+	PROCEDURE ^ RUTG(VAR c: Context); 
+	PROCEDURE ^ ROFF(VAR c: Context); 
+	PROCEDURE ^ SROUND(VAR c: Context); 
+	PROCEDURE ^ SLOOP(VAR c: Context); 
+	PROCEDURE ^ SMD(VAR c: Context); 
+	PROCEDURE ^ INSTCTRL(VAR c: Context); 
+	PROCEDURE ^ SCANCTRL(VAR c: Context); 
+	PROCEDURE ^ SCANTYPE(VAR c: Context); 
+	PROCEDURE ^ SCVTCI(VAR c: Context); 
+	PROCEDURE ^ SSWCI(VAR c: Context); 
+	PROCEDURE ^ SSW(VAR c: Context); 
+	PROCEDURE ^ FLIPON(VAR c: Context); 
+	PROCEDURE ^ FLIPOFF(VAR c: Context); 
+	PROCEDURE ^ SANGW(VAR c: Context); 
+	PROCEDURE ^ SDB(VAR c: Context); 
+	PROCEDURE ^ SDS(VAR c: Context); 
+	PROCEDURE ^ GC(VAR c: Context); 
+	PROCEDURE ^ SCFS(VAR c: Context); 
+	PROCEDURE ^ MD(VAR c: Context); 
+	PROCEDURE ^ MPPEM(VAR c: Context); 
+	PROCEDURE ^ MPS(VAR c: Context); 
+	PROCEDURE ^ FLIPPT(VAR c: Context); 
+	PROCEDURE ^ FLIPRG(VAR c: Context); 
+	PROCEDURE ^ SHP(VAR c: Context); 
+	PROCEDURE ^ SHC(VAR c: Context); 
+	PROCEDURE ^ SHZ(VAR c: Context); 
+	PROCEDURE ^ SHPIX(VAR c: Context); 
+	PROCEDURE ^ MSIRP(VAR c: Context); 
+	PROCEDURE ^ MDAP(VAR c: Context); 
+	PROCEDURE ^ MIAP(VAR c: Context); 
+	PROCEDURE ^ MDRP(VAR c: Context); 
+	PROCEDURE ^ MIRP(VAR c: Context); 
+	PROCEDURE ^ ALIGNRP(VAR c: Context); 
+	PROCEDURE ^ ISECT(VAR c: Context); 
+	PROCEDURE ^ ALIGNPTS(VAR c: Context); 
+	PROCEDURE ^ IP(VAR c: Context); 
+	PROCEDURE ^ UTP(VAR c: Context); 
+	PROCEDURE ^ IUP(VAR c: Context); 
+	PROCEDURE ^ DELTAP(VAR c: Context); 
+	PROCEDURE ^ DELTAC(VAR c: Context); 
+	PROCEDURE ^ DUP(VAR c: Context); 
+	PROCEDURE ^ POP(VAR c: Context); 
+	PROCEDURE ^ CLEAR(VAR c: Context); 
+	PROCEDURE ^ SWAP(VAR c: Context); 
+	PROCEDURE ^ DEPTH(VAR c: Context); 
+	PROCEDURE ^ CINDEX(VAR c: Context); 
+	PROCEDURE ^ MINDEX(VAR c: Context); 
+	PROCEDURE ^ ROLL(VAR c: Context); 
+	PROCEDURE ^ Skip(VAR c: Context); 
+	PROCEDURE ^ iF(VAR c: Context); 
+	PROCEDURE ^ eLSE(VAR c: Context); 
+	PROCEDURE ^ EIF(VAR c: Context); 
+	PROCEDURE ^ JROT(VAR c: Context); 
+	PROCEDURE ^ JUMPR(VAR c: Context); 
+	PROCEDURE ^ JROF(VAR c: Context); 
+	PROCEDURE ^ COMPARE(VAR c: Context); 
+	PROCEDURE ^ oDD(VAR c: Context); 
+	PROCEDURE ^ EVEN(VAR c: Context); 
+	PROCEDURE ^ AND(VAR c: Context); 
+	PROCEDURE ^ oR(VAR c: Context); 
+	PROCEDURE ^ NOT(VAR c: Context); 
+	PROCEDURE ^ ADD(VAR c: Context); 
+	PROCEDURE ^ SUB(VAR c: Context); 
+	PROCEDURE ^ dIV(VAR c: Context); 
+	PROCEDURE ^ MUL(VAR c: Context); 
+	PROCEDURE ^ aBS(VAR c: Context); 
+	PROCEDURE ^ NEG(VAR c: Context); 
+	PROCEDURE ^ Floor(VAR c: Context); 
+	PROCEDURE ^ CEILING(VAR c: Context); 
+	PROCEDURE ^ mAX(VAR c: Context); 
+	PROCEDURE ^ mIN(VAR c: Context); 
+	PROCEDURE ^ ROUND(VAR c: Context); 
+	PROCEDURE ^ NROUND(VAR c: Context); 
+	PROCEDURE ^ FDEF(VAR c: Context); 
+	PROCEDURE ^ ENDF(VAR c: Context); 
+	PROCEDURE ^ CALL(VAR c: Context); 
+	PROCEDURE ^ LOOPCALL(VAR c: Context); 
+	PROCEDURE ^ IDEF(VAR c: Context); 
+	PROCEDURE ^ UNDEF(VAR c: Context); 
+	PROCEDURE ^ DEBUG(VAR c: Context); 
+	PROCEDURE ^ GETINFO(VAR c: Context); 
+	PROCEDURE ^ InitBuiltins; 
+	PROCEDURE ^ NewCode*(VAR code: Code; size: LONGINT); 
+	PROCEDURE ^ NewStack*(VAR stack: Stack; size: LONGINT); 
+	PROCEDURE ^ NewCallStack*(VAR stack: CallStack; size: LONGINT); 
+	PROCEDURE ^ NewFunctions*(VAR func: Functions; size: LONGINT); 
+	PROCEDURE ^ NewInstructions*(VAR instr: Instructions; size: LONGINT); 
+	PROCEDURE ^ NewStore*(VAR store: Store; size: LONGINT); 
+	PROCEDURE ^ NewCVT*(VAR cvt: CVT; size: LONGINT); 
+	PROCEDURE ^ NewZone*(VAR zone: Zone; contours, points: INTEGER); 
+	PROCEDURE ^ SetStacks*(VAR c: Context; stack: Stack; callStack: CallStack); 
+	PROCEDURE ^ SetStructures*(VAR c: Context; func: Functions; instr: Instructions; store: Store; cvt: CVT); 
+	PROCEDURE ^ SetResolution*(VAR c: Context; ptsize, xppm, yppm: F26D6; upm: INTEGER; rotated, stretched: BOOLEAN); 
+	PROCEDURE ^ InitState*(VAR c: Context); 
+	PROCEDURE ^ SaveState*(VAR c: Context; VAR s: State); 
+	PROCEDURE ^ RestoreState*(VAR c: Context; VAR s: State); 
+	PROCEDURE ^ Execute*(VAR c: Context; code: Code; len: LONGINT; z0, z1: Zone); 
+	PROCEDURE ^ InstallNotifier*(notify: Notifier; data: NotifierData); 
+BEGIN
+END OpenTypeInt.

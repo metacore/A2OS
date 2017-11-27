@@ -1,0 +1,45 @@
+MODULE CryptoSHA1;
+	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
+CONST 
+	BlockSize = 64; 
+TYPE 
+	State = ARRAY 5 OF LONGINT; 
+
+	Hash* = OBJECT (Hashes.Hash)
+	VAR 
+		hash: State; 
+		Nl, Nh: LONGINT; 
+		cdata: ARRAY BlockSize OF CHAR; 
+		cn: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ HashContextBlock; 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+	END Hash; 
+
+	PROCEDURE ^ NewHash*(): Hashes.Hash; 
+	PROCEDURE  - tr0019(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET);
+	BEGIN
+		f := ((((S.VAL(LONGINT, x) + e) + 1518500249) + ROT(a, 5)) + S.VAL(LONGINT, (((S.VAL(SET, c) / S.VAL(SET, d)) * S.VAL(SET, b)) / S.VAL(SET, d)))); 
+		b := ROT(b, 30)
+	END tr0019; 
+	PROCEDURE  - tr2039(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET);
+	BEGIN
+		f := ((((S.VAL(LONGINT, x) + e) + 1859775393) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET, b) / S.VAL(SET, c)) / S.VAL(SET, d)))); 
+		b := ROT(b, 30)
+	END tr2039; 
+	PROCEDURE  - tr4059(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET);
+	BEGIN
+		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(8F1BBCDCH)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET, b) * S.VAL(SET, c)) + ((S.VAL(SET, b) + S.VAL(SET, c)) * S.VAL(SET, d))))); 
+		b := ROT(b, 30)
+	END tr4059; 
+	PROCEDURE  - tr6079(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET);
+	BEGIN
+		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(0CA62C1D6H)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET, b) / S.VAL(SET, c)) / S.VAL(SET, d)))); 
+		b := ROT(b, 30)
+	END tr6079; 
+	PROCEDURE ^ HashBlock(VAR state: State; CONST buf: ARRAY OF CHAR; pos: LONGINT); 
+BEGIN
+END CryptoSHA1.

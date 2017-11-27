@@ -1,0 +1,10 @@
+MODULE PresentViewer;
+	IMPORT Modules, Commands, WMComponents, XML, WM := WMWindowManager;
+CONST 
+VAR 
+	w: WMComponents.FormWindow; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END PresentViewer.

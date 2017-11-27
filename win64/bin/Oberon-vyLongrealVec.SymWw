@@ -1,0 +1,134 @@
+MODULE vyLongrealVec IN Oberon;
+	IMPORT Files, Objects, vyBase, vyHostTexts, vyName, vyLongintVec, vyreal := vyLongreal;
+CONST 
+	idversion* = \"vyLongrealVec 0.0a4"\; 
+	cBadType* = 1; 
+	cBadLen* = 2; 
+	cOK* = {}; 
+TYPE 
+	real* = LONGREAL; 
+
+	index* = LONGINT; 
+
+	tVector* = POINTER TO tVectorDesc; 
+
+	tVectorDesc* = RECORD (vyBase.tVectorDesc)
+	END; 
+
+	tLONGREAL* = POINTER TO tLONGREALDesc; 
+
+	tLONGREALDesc* = RECORD (vyBase.tDataDesc)
+		x*: LONGREAL; 
+	END; 
+
+	tMinMaxCache = POINTER TO tMinMaxCacheDesc; 
+
+	tMinMaxCacheDesc = RECORD (vyBase.tCacheDesc)
+		min, max: real; 
+		minpos, maxpos, nans: LONGINT; 
+	END; 
+
+	tMeanCache = POINTER TO tMeanCacheDesc; 
+
+	tMeanCacheDesc = RECORD (vyBase.tCacheDesc)
+		mean, ssq: LONGREAL; 
+		nans: LONGINT; 
+	END; 
+
+	tBuf* = POINTER TO tBufDesc; 
+
+	tBufDesc* = RECORD (vyBase.tBufDesc)
+		data: POINTER TO ARRAY OF real; 
+	END; 
+
+	Op1Function* = PROCEDURE (x: real):real; 
+
+	ArrayOp1Function* = PROCEDURE (VAR arg: ARRAY OF real); 
+
+	ArrayOp2Function* = PROCEDURE (VAR arg1, arg2: ARRAY OF real); 
+
+	tMatrixChunk* = POINTER TO tMatrixChunkDesc; 
+
+	tMatrixChunkDesc* = RECORD 
+		row-, col-: index; 
+	END; 
+
+	tChunkedMatrix* = POINTER TO tChunkedMatrixDesc; 
+
+	tChunkedMatrixDesc* = RECORD (vyBase.ObjDesc)
+		buf*: tMatrixChunk; 
+	END; 
+VAR 
+	globallongreal: LONGREAL; 
+
+	PROCEDURE ^ DoOp1*(v: vyBase.tVector; function: Op1Function); 
+	PROCEDURE ^ NewBufs(size: index): tBuf; 
+	PROCEDURE ^ FlushVecCaches(vec: vyBase.tVector); 
+	PROCEDURE ^ BufMinMax(buf: vyBase.tBuf): tMinMaxCache; 
+	PROCEDURE ^ BufMean(buf: vyBase.tBuf): tMeanCache; 
+	PROCEDURE ^ SetNrData(vec: tVector; size: index); 
+	PROCEDURE ^ Store0(VAR R: Files.Rider; o: tVector); 
+	PROCEDURE ^ Store0LONGREAL(VAR R: Files.Rider; o: tLONGREAL); 
+	PROCEDURE ^ Load0(VAR R: Files.Rider; o: tVector); 
+	PROCEDURE ^ Load0LONGREAL(VAR R: Files.Rider; o: tLONGREAL); 
+	PROCEDURE ^ HandleAttributes(o: tVector; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleAttributesLONGREAL(o: tLONGREAL; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*(size: index): tVector; 
+	PROCEDURE ^ GenLongrealObject*; 
+	PROCEDURE ^ NewLongrealObject*(x: real): tLONGREAL; 
+	PROCEDURE ^ GC*(vec: vyBase.tVector); 
+	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
+	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
+	PROCEDURE ^ Len*(vec: vyBase.tVector): LONGINT; 
+	PROCEDURE ^ NewLongrealMatrix*(rows, columns: LONGINT): tVector; 
+	PROCEDURE ^ NewLongrealArray*(sizes: ARRAY OF LONGINT): tVector; 
+	PROCEDURE ^ NewAlikeVector*(model: vyBase.tVector): vyBase.tVector; 
+	PROCEDURE ^ Append*(x: real; v: vyBase.tVector); 
+	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: real; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: real; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ kSmallestX(VAR a: ARRAY OF LONGREAL; n, k: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetMedian*(v: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ Get*(v: vyBase.tVector; pos: index): real; 
+	PROCEDURE ^ Set*(val: LONGREAL; v: vyBase.tVector; pos: index); 
+	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): real; 
+	PROCEDURE ^ SetIndexed*(xval: LONGREAL; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
+	PROCEDURE ^ CopyData*(src, dest: vyBase.tVector); 
+	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF real; v: vyBase.tVector; len: index; srcoffs, destoffs: index); 
+	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF real); 
+	PROCEDURE ^ DoArrayOp1*(v: vyBase.tVector; op1: ArrayOp1Function); 
+	PROCEDURE ^ DoArrayOp2*(v1, v2: vyBase.tVector; op2: ArrayOp2Function); 
+	PROCEDURE ^ SortEachChunkLONGREAL*(c: tBuf); 
+	PROCEDURE ^ SortEachChunkLONGREALWId*(c: tBuf; cid: vyLongintVec.tBuf); 
+	PROCEDURE ^ tcX(c: vyBase.tBuf): tBuf; 
+	PROCEDURE ^ MergeSortedChunkLONGREAL(s1, s2: tBuf): BOOLEAN; 
+	PROCEDURE ^ MergeSortedChunkLONGREALWId(s1, s2: tBuf; s1id, s2id: vyLongintVec.tBuf): BOOLEAN; 
+	PROCEDURE ^ OrderedLongReal(left, right: vyBase.tBuf): BOOLEAN; 
+	PROCEDURE ^ SortBuf*(VAR chunk: tBuf); 
+	PROCEDURE ^ SortBufWId*(VAR chunk: tBuf; VAR chunkid: vyLongintVec.tBuf); 
+	PROCEDURE ^ Sort*(VAR v: tVector); 
+	PROCEDURE ^ SortWId*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
+	PROCEDURE ^ Fill*(v: vyBase.tVector; val: real; offs, count: index); 
+	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: real; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ WriteChunk(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
+	PROCEDURE ^ Write*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
+	PROCEDURE ^ EvaluateCaseWise*(new: vyBase.tData; regressor: vyBase.tData; Function: Op1Function); 
+	PROCEDURE ^ Scale*(new, x: vyBase.tData; offs, fact: real); 
+	PROCEDURE ^ Add*(new, x, y: vyBase.tData); 
+	PROCEDURE ^ Sub*(new, x, y: vyBase.tData); 
+	PROCEDURE ^ Mult*(new, x, y: vyBase.tData); 
+	PROCEDURE ^ Div*(new, x, y: vyBase.tData); 
+	PROCEDURE ^ Norm1*(v: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ Norm2Sq*(v: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ NormSup*(v: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ adddist1(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
+	PROCEDURE ^ Dist1*(v, w: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ adddist2(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
+	PROCEDURE ^ Dist2Sq*(v, w: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ adddistsup(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
+	PROCEDURE ^ DistSup*(v, w: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ ChunkSummary*(VAR w: vyBase.TextsWriter; buf: vyBase.tBuf); 
+BEGIN
+END vyLongrealVec.

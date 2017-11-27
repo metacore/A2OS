@@ -1,0 +1,206 @@
+MODULE Objects;
+	IMPORT SYSTEM, Trace, Kernel32, Machine, Modules, Heaps;
+CONST 
+	HandleExcp = TRUE; 
+	TraceVerbose = FALSE; 
+	StrongChecks = FALSE; 
+	defaultStackSize = 0; 
+	TraceOpenClose = FALSE; 
+	Restart* = 0; 
+	PleaseHalt* = 10; 
+	Unbreakable* = 11; 
+	SelfTermination* = 12; 
+	Preempted* = 27; 
+	Resistant* = 28; 
+	PleaseStop* = 31; 
+	InActive* = 26; 
+	Unknown* = 0; 
+	Ready* = 1; 
+	Running* = 2; 
+	AwaitingLock* = 3; 
+	AwaitingCond* = 4; 
+	AwaitingEvent* = 5; 
+	Suspended* = 6; 
+	Terminated* = 7; 
+	MinPriority = 0; 
+	Low* = 1; 
+	Normal* = 2; 
+	High* = 3; 
+	GCPriority* = 4; 
+	Realtime* = 5; 
+	halt* = 2222; 
+	haltUnbreakable* = 2223; 
+TYPE 
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT; 
+
+	ProtectedObject = POINTER TO RECORD 
+	END; 
+
+	ProcessQueue = Heaps.ProcessQueue; 
+
+	Body = PROCEDURE (self: ProtectedObject); 
+
+	Condition = PROCEDURE (slink: ADDRESS):BOOLEAN; 
+
+	EventHandler* = PROCEDURE {DELEGATE}; 
+
+	RealtimeEventHandler* = PROCEDURE {DELEGATE}; 
+
+	Timer* = POINTER TO RECORD 
+		next, prev: Timer; 
+		trigger: LONGINT; 
+		handler: EventHandler; 
+	END; 
+
+	RealtimeTimer* = POINTER TO RECORD 
+		next, prev: RealtimeTimer; 
+		trigger: LONGINT; 
+		handler: RealtimeEventHandler; 
+	END; 
+
+	Clock = OBJECT {EXCLUSIVE} 
+	VAR 
+		h: Timer; 
+		ticks: LONGINT; 
+		hevent: Kernel32.HANDLE; 
+		res: Kernel32.BOOL; 
+		mode: LONGINT; 
+		process: Process; 
+
+		PROCEDURE ^ Wakeup; 
+		PROCEDURE ^ Finalize(ptr: ANY); 
+		PROCEDURE ^  & Init*; 
+	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
+	END Clock; 
+
+	Win32Event = Kernel32.HANDLE; 
+
+	GCContext = RECORD 
+		nextPos: LONGINT; 
+		last: ARRAY 256 OF ADDRESS; 
+	END; 
+
+	Process* = OBJECT (Heaps.ProcessLink)
+	VAR 
+		rootedNext: Process; 
+		obj-: ProtectedObject; 
+		state-{ALIGNED(16)} : Kernel32.Context; 
+		condition-: Condition; 
+		condFP-: ADDRESS; 
+		mode-: LONGINT; 
+		procID-: LONGINT; 
+		waitingOn-: ProtectedObject; 
+		id-: LONGINT; 
+		flags*: SET; 
+		priority-: LONGINT; 
+		stackBottom: ADDRESS; 
+		handle-: Kernel32.HANDLE; 
+		body: Body; 
+		event: Win32Event; 
+		restartPC-: ADDRESS; 
+		restartSP-: ADDRESS; 
+		lastThreadTimes: HUGEINT; 
+		gcContext: GCContext; 
+		context: ANY; 
+
+		PROCEDURE ^ FindRoots*; 
+	END Process; 
+
+	ExceptionHandler* = PROCEDURE (VAR context: Kernel32.Context; VAR excpRec: Kernel32.ExceptionRecord; VAR handled: BOOLEAN); 
+
+	GCStatusExt = OBJECT (Heaps.GCStatus)
+
+		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
+	END GCStatusExt; 
+
+	FinalizedCollection* = OBJECT 
+
+		PROCEDURE ^ RemoveAll*(obj: ANY); 
+	END FinalizedCollection; 
+
+	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
+		c*: FinalizedCollection; 
+	END; 
+
+	FinalizerCaller = OBJECT {EXCLUSIVE} 
+	VAR 
+		n: Heaps.FinalizerNode; 
+		event: Kernel32.HANDLE; 
+		process: Process; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Wait; 
+		PROCEDURE ^ Activate; 
+	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
+	END FinalizerCaller; 
+
+	KdHelp = RECORD 
+		Thread: ADDRESS; 
+		ThCallBackStack, ThCallBackStore, NextCallback, FramePointer: Kernel32.DWORD; 
+		KiCallUserMode, KeUserCallbackDispatcher, SystemRangeStart, KiUserExceptionDispatcher, StackBase, StackLimit: ADDRESS; 
+		Reserved: ARRAY 5 OF ADDRESS; 
+	END; 
+VAR 
+	awc-, awl-: LONGINT; 
+	oberonLoop*: ANY; 
+	break: ARRAY 16 OF CHAR; 
+	terminateProc: PROCEDURE ; 
+	ready: ProcessQueue; 
+	numberOfProcessors: LONGINT; 
+	finalizerCaller: FinalizerCaller; 
+	event: Timer; 
+	clock: Clock; 
+	tlsIndex: LONGINT; 
+	nProcs: LONGINT; 
+	excplock: Kernel32.CriticalSection; 
+	exceptionhandler: ExceptionHandler; 
+	GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS); 
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
+
+	PROCEDURE ^ SetPriority*(priority: LONGINT); 
+	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 
+	PROCEDURE ^ Yield*; 
+	PROCEDURE ^ CurrentProcess*(): Process; 
+	PROCEDURE ^ CurrentContext*(): ANY; 
+	PROCEDURE ^ SetContext*(context: ANY); 
+	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
+	PROCEDURE ^ ActiveObject*(): ANY; 
+	PROCEDURE ^ GetProcessID*(): LONGINT; 
+	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
+	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
+	PROCEDURE ^ {WINAPI} ExcpFrmHandler(CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; 
+	PROCEDURE ^ RemoveExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
+	PROCEDURE ^ InstallExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
+	PROCEDURE ^ InQueue(queue: ProcessQueue; t: Process): BOOLEAN; 
+	PROCEDURE ^ Remove(VAR queue: ProcessQueue; t: Process); 
+	PROCEDURE ^ WriteType(obj: ANY); 
+	PROCEDURE ^ terminate(t: Process); 
+	PROCEDURE ^ {WINAPI} Wrapper(lpParameter: ANY): LONGINT; 
+	PROCEDURE ^ FinalizeProcess(t: ANY); 
+	PROCEDURE ^ TerminateProc; 
+	PROCEDURE ^ NewProcess(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject; VAR new: Process); 
+	PROCEDURE ^ CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); 
+	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
+	PROCEDURE ^ FindCondition(VAR q: ProcessQueue): Process; 
+	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
+	PROCEDURE ^ Await*(cond: Condition; slink: LONGINT; obj: ProtectedObject; flags: SET); 
+	PROCEDURE ^ Break*(t: Process); 
+	PROCEDURE ^ TerminateThis*(t: Process; halt: BOOLEAN); 
+	PROCEDURE ^ Terminate*; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ CancelTimeout*(t: Timer); 
+	PROCEDURE ^ InitEventHandling; 
+	PROCEDURE ^ InitGCHandling; 
+	PROCEDURE ^ GCStatusFactory(): Heaps.GCStatus; 
+	PROCEDURE ^ InstallExceptionHandler*(e: ExceptionHandler); 
+	PROCEDURE ^ UpdateProcessState*(p: Process); 
+	PROCEDURE ^ NumReady*(): LONGINT; 
+	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
+	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
+	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
+	PROCEDURE ^ LeaveA2; 
+	PROCEDURE ^ ReenterA2; 
+BEGIN
+END Objects.

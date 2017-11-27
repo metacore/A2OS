@@ -1,0 +1,115 @@
+MODULE FoxDocumentationTree;
+	IMPORT Basic := FoxBasic, Scanner := FoxDocumentationScanner, Strings;
+TYPE 
+	String* = Scanner.String; 
+
+	ElementType* = ENUM Whitespace* = 0, Default* = 1, Italic* = 2, Bold* = 3, Underline* = 4, Link* = 5, WeakLink* = 6, Label* = 7, Code* = 8, LineBreak* = 9, DataCell* = 10, HeaderCell* = 11, Row* = 12 END; 
+
+	TextElement* = OBJECT 
+	VAR 
+		type-: ElementType; 
+		string-: String; 
+		text-: Text; 
+
+		PROCEDURE ^  & InitTextElement*(type: ElementType); 
+		PROCEDURE ^ SetString*(string: String); 
+		PROCEDURE ^ SetType*(t: ElementType); 
+	END TextElement; 
+
+	Text* = OBJECT (Basic.List)
+
+		PROCEDURE ^ AppendNew*(type: ElementType): TextElement; 
+		PROCEDURE ^ AddElement*(x: TextElement); 
+		PROCEDURE ^ GetElement*(index: LONGINT): TextElement; 
+		PROCEDURE ^ FindByString*(CONST string: ARRAY OF CHAR): TextElement; 
+		PROCEDURE ^ WriteString*(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteWhitespace*; 
+		PROCEDURE ^ WriteLink*(CONST name, label: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteWeakLink*(CONST name, label: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteText*(t: Text); 
+		PROCEDURE ^ WriteLabel*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Last*(): TextElement; 
+		PROCEDURE ^ ForAllElementsDo*(this: PROCEDURE {DELEGATE}(x: TextElement)); 
+	END Text; 
+
+	Word* = ARRAY 32 OF CHAR; 
+
+	ParagraphType* = ENUM TextBlock* = 0, Heading* = 1, Bullet* = 2, Number* = 3, Description* = 4, Code* = 5, Line* = 6, Table* = 7 END; 
+
+	Paragraph* = OBJECT 
+	VAR 
+		type-: ParagraphType; 
+		level-: LONGINT; 
+		text*: Text; 
+		description-: Text; 
+		label*: Strings.String; 
+
+		PROCEDURE ^ SetLabel*(label: String); 
+		PROCEDURE ^  & InitParagraph*(type: ParagraphType); 
+		PROCEDURE ^ SetLevel*(level: LONGINT); 
+	END Paragraph; 
+
+	Paragraphs* = OBJECT (Basic.List)
+
+		PROCEDURE ^ AppendNew*(type: ParagraphType): Paragraph; 
+		PROCEDURE ^ AddParagraph*(x: Paragraph); 
+		PROCEDURE ^ GetParagraph*(index: LONGINT): Paragraph; 
+		PROCEDURE ^ Last*(): Paragraph; 
+		PROCEDURE ^ ForAllParagraphsDo*(this: PROCEDURE {DELEGATE}(x: Paragraph)); 
+	END Paragraphs; 
+
+	Section* = OBJECT 
+	VAR 
+		level-: LONGINT; 
+		title-: Text; 
+		contents-: Paragraphs; 
+		label-: String; 
+
+		PROCEDURE ^  & InitSection*(level: LONGINT); 
+		PROCEDURE ^ SetLabel*(label: String); 
+		PROCEDURE ^ SetContents*(paragraphs: Paragraphs); 
+		PROCEDURE ^ WriteLabel*(CONST l: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteHeading*(level: LONGINT; CONST string: ARRAY OF CHAR); 
+	END Section; 
+
+	Sections* = OBJECT (Basic.List)
+
+		PROCEDURE ^ AppendNew*(level: LONGINT): Section; 
+		PROCEDURE ^ AddSection*(x: Section); 
+		PROCEDURE ^ GetSection*(index: LONGINT): Section; 
+		PROCEDURE ^ Last*(): Section; 
+		PROCEDURE ^ ForAllSectionsDo*(this: PROCEDURE {DELEGATE}(x: Section)); 
+	END Sections; 
+
+	Document* = OBJECT 
+	VAR 
+		description-: Paragraphs; 
+		sections-: Sections; 
+
+		PROCEDURE ^  & InitDocument*; 
+	END Document; 
+
+	Documents* = OBJECT (Basic.List)
+
+		PROCEDURE ^ AddDocument*(x: Document); 
+		PROCEDURE ^ GetDocument*(index: LONGINT): Document; 
+		PROCEDURE ^ ForAllDocumentsDo*(this: PROCEDURE {DELEGATE}(x: Document)); 
+	END Documents; 
+
+	Documentation* = OBJECT 
+	VAR 
+		documents-: Documents; 
+
+		PROCEDURE ^  & InitDocumentation*; 
+	END Documentation; 
+
+	PROCEDURE ^ NewText*(): Text; 
+	PROCEDURE ^ NewTextElement*(type: ElementType): TextElement; 
+	PROCEDURE ^ NewParagraph*(type: ParagraphType): Paragraph; 
+	PROCEDURE ^ NewParagraphs*(): Paragraphs; 
+	PROCEDURE ^ NewSection*(level: LONGINT): Section; 
+	PROCEDURE ^ NewSections*(level: LONGINT): Sections; 
+	PROCEDURE ^ NewDocument*(): Document; 
+	PROCEDURE ^ Test; 
+BEGIN
+END FoxDocumentationTree.

@@ -1,0 +1,24 @@
+MODULE Diagrams IN Oberon;
+	IMPORT Files, Display, Display3, Objects, Gadgets;
+CONST 
+	margin = 1; 
+	black = 15; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		col*: INTEGER; 
+	END; 
+
+	UpdateMsg* = RECORD (Display.FrameMsg)
+		n*: INTEGER; 
+	END; 
+
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ UpdateDiagram(F: Frame; M: Display3.Mask; n, x, y, w, h: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*; 
+BEGIN
+END Diagrams.

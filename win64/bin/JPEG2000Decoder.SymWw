@@ -1,0 +1,474 @@
+MODULE JPEG2000Decoder;
+	IMPORT SYSTEM, KernelLog, Streams, J2KCS := JPEG2000DecoderCS, J2KU := JPEG2000DecoderUtil, Codecs, Raster, Machine;
+CONST 
+	CBLK_BUFSIZE = 5; 
+	ENTROPY_DECODER* = 2; 
+	ROI_DESCALER* = 3; 
+	DEQUANTIZER* = 4; 
+	INVERSE_DWT* = 5; 
+	INVERSE_MCT* = 6; 
+	DATA_LONGINT* = 0; 
+	DATA_REAL* = 1; 
+	JP2SIGN = 1783636000; 
+	JP2FTYP = 1718909296; 
+	JP2HEAD = 1785737832; 
+	JP2IHDR = 1768449138; 
+	JP2BPCC = 1651532643; 
+	JP2COLR = 1668246642; 
+	JP2PCLR = 1885564018; 
+	JP2CMAP = 1668112752; 
+	JP2CDEF = 1667523942; 
+	JP2RESL = 1919251232; 
+	JP2RESC = 1919251299; 
+	JP2RESD = 1919251300; 
+	JP2CCST = 1785737827; 
+	JP2INPR = 1785737833; 
+	JP2XMLD = 2020437024; 
+	JP2UUID = 1970628964; 
+	JP2UINF = 1969843814; 
+	JP2ULST = 1969451892; 
+	JP2URLS = 1970433056; 
+	JP2_FTBRAND = 1785737760; 
+	ENTROPY_SEG_MARKER = SYSTEM.VAL(LONGINT, 10); 
+	MQTABSIZ = 47; 
+	ENTROPY_ZERO_BITS = 8; 
+	ENTROPY_SIGN_BITS = 8; 
+	ENTROPY_SIGHL = LSH(SYSTEM.VAL(LONGINT, 1), (ENTROPY_ZERO_BITS - 1)); 
+	ENTROPY_SIGHR = LSH(SYSTEM.VAL(LONGINT, 1), (ENTROPY_ZERO_BITS - 2)); 
+	ENTROPY_SIGVU = LSH(SYSTEM.VAL(LONGINT, 1), (ENTROPY_ZERO_BITS - 3)); 
+	ENTROPY_SIGVD = LSH(SYSTEM.VAL(LONGINT, 1), (ENTROPY_ZERO_BITS - 4)); 
+	SIGN_LUT_MASK = SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 15)); 
+	STATE_SEP = 16; 
+	STATE_SIG_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 14)); 
+	STATE_VISITED_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 13)); 
+	STATE_MAGREF_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 12)); 
+	STATE_H_L_SIGN_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 11)); 
+	STATE_H_R_SIGN_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 10)); 
+	STATE_V_U_SIGN_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 9)); 
+	STATE_V_D_SIGN_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 8)); 
+	STATE_H_L_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 7)); 
+	STATE_H_R_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 6)); 
+	STATE_V_U_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 5)); 
+	STATE_V_D_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 4)); 
+	STATE_D_UL_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 3)); 
+	STATE_D_UR_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 2)); 
+	STATE_D_DL_R1 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), 1)); 
+	STATE_D_DR_R1 = SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 1)); 
+	STATE_VECT_MASK_R1 = SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 255)); 
+	SIGN_VECT_MASK_R1 = SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 4080)); 
+	SIGN_VECT_SHIFT_R1 = 4; 
+	STATE_SIG_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_SIG_R1), STATE_SEP)); 
+	STATE_VISITED_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_VISITED_R1), STATE_SEP)); 
+	STATE_MAGREF_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_MAGREF_R1), STATE_SEP)); 
+	STATE_H_L_SIGN_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_H_L_SIGN_R1), STATE_SEP)); 
+	STATE_H_R_SIGN_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_H_R_SIGN_R1), STATE_SEP)); 
+	STATE_V_U_SIGN_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_V_U_SIGN_R1), STATE_SEP)); 
+	STATE_V_D_SIGN_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_V_D_SIGN_R1), STATE_SEP)); 
+	STATE_H_L_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_H_L_R1), STATE_SEP)); 
+	STATE_H_R_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_H_R_R1), STATE_SEP)); 
+	STATE_V_U_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_V_U_R1), STATE_SEP)); 
+	STATE_V_D_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_V_D_R1), STATE_SEP)); 
+	STATE_D_UL_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_D_UL_R1), STATE_SEP)); 
+	STATE_D_UR_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_D_UR_R1), STATE_SEP)); 
+	STATE_D_DL_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_D_DL_R1), STATE_SEP)); 
+	STATE_D_DR_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_D_DR_R1), STATE_SEP)); 
+	STATE_VECT_MASK_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, STATE_VECT_MASK_R1), STATE_SEP)); 
+	SIGN_VECT_MASK_R2 = SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, SIGN_VECT_MASK_R1), STATE_SEP)); 
+	SIGN_VECT_SHIFT_R2 = (4 + STATE_SEP); 
+	ENTROPY_MR_CTX = 16; 
+	ENTROPY_MR_FIRSTNZ_CTX = 15; 
+	ENTROPY_MR_FIRSTZ_CTX = 14; 
+	ENTROPY_UNICTX = 17; 
+	ENTROPY_RUNCTX = 18; 
+	ENTROPY_ARRAYOFF = 1; 
+	ENTROPY_STRIPE_HEIGHT = 4; 
+	ENTROPY_NUM_PASSES = 3; 
+	ENTROPY_NUM_NON_BYPASS_BP = 4; 
+	ENTROPY_FIRST_BYPASS_IDX = ((3 * ENTROPY_NUM_PASSES) + 1); 
+	MCT_NONE = 0; 
+	MCT_RCT = 1; 
+	MCT_ICT = 2; 
+	FILTER_5X3_LIFTING* = 0; 
+	FILTER_9X7_LIFTING* = 1; 
+	ALPHA =  -  1.5861343E+000; 
+	BETA =  -  5.2980119E-002; 
+	GAMMA =   8.8291108E-001; 
+	DELTA =   4.4356852E-001; 
+	KL =   8.1289307E-001; 
+	KH =   1.2301741E+000; 
+	PROD_FAILED* =  -1; 
+	PROD_DONE* = 1; 
+TYPE 
+	DataBlk = OBJECT 
+	VAR 
+		offset: LONGINT; 
+		scanw: LONGINT; 
+	END DataBlk; 
+
+	DataBlkInt = OBJECT (DataBlk)
+	VAR 
+		data: J2KU.LongIntArrayPtr; 
+	END DataBlkInt; 
+
+	DataBlkReal = OBJECT (DataBlk)
+	VAR 
+		data: J2KU.RealArrayPtr; 
+	END DataBlkReal; 
+
+	MQDecoder = OBJECT 
+	VAR 
+		a: LONGINT; 
+		c: LONGINT; 
+		ct: LONGINT; 
+		b: LONGINT; 
+		index: J2KU.LongIntArrayPtr; 
+		initIdx: J2KU.LongIntArrayPtr; 
+		mps: J2KU.LongIntArrayPtr; 
+		initMps: J2KU.LongIntArrayPtr; 
+		br: J2KU.ByteArrayReader; 
+		markerFound: BOOLEAN; 
+
+		PROCEDURE ^  & InitNew*(initIdx, initMps: J2KU.LongIntArrayPtr); 
+		PROCEDURE ^ ReInit(initIdx, initMps: J2KU.LongIntArrayPtr); 
+		PROCEDURE ^ NextSegment(data: J2KU.ByteArrayPtr; offset, len: LONGINT); 
+		PROCEDURE ^ GetByteReader(): J2KU.ByteArrayReader; 
+		PROCEDURE ^ ResetContexts; 
+		PROCEDURE ^ Decode(cx: LONGINT): LONGINT; 
+		PROCEDURE ^ Renormd; 
+		PROCEDURE ^ LpsExchange(cx: LONGINT): LONGINT; 
+		PROCEDURE ^ MpsExchange(cx: LONGINT): LONGINT; 
+		PROCEDURE ^ ByteIn; 
+		PROCEDURE ^ InitDec; 
+		PROCEDURE ^ CheckPredTerm(): BOOLEAN; 
+	END MQDecoder; 
+
+	EntropyDecoder = OBJECT 
+	VAR 
+		cr: J2KCS.CodestreamReader; 
+		decSpec: J2KCS.DecoderSpecs; 
+		state: J2KU.SetArrayPtr; 
+		mq: MQDecoder; 
+		dbr: J2KU.DataBitReader; 
+		predTerm, resetCtx, vertCausal, segUsed: BOOLEAN; 
+		concealError: BOOLEAN; 
+
+		PROCEDURE ^  & InitNew*(edOpt: J2KU.EntropyDecoderOptions; cr: J2KCS.CodestreamReader; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ ReInit(edOpt: J2KU.EntropyDecoderOptions; cr: J2KCS.CodestreamReader; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ SetMaxLayerRange(maxStartLayer, maxEndLayer: LONGINT); 
+		PROCEDURE ^ SetLayerRange(startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ GetLayerRange(VAR startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl: LONGINT); 
+		PROCEDURE ^ SetDecLevelRange(startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetDecLevelRange(VAR startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ SetReBuildMode; 
+		PROCEDURE ^ GetCodeBlocks(VAR cblk: ARRAY OF DataBlk; VAR cblkInfo: ARRAY OF J2KU.CblkInfo; ncblks: LONGINT): LONGINT; 
+		PROCEDURE ^ DataAvailable(): BOOLEAN; 
+		PROCEDURE ^ TilePartAvailable(): BOOLEAN; 
+		PROCEDURE ^ AllTilePartsRead(): BOOLEAN; 
+		PROCEDURE ^ NextTilePart(): BOOLEAN; 
+		PROCEDURE ^ InitTile(): BOOLEAN; 
+		PROCEDURE ^ CurrentTile(): LONGINT; 
+		PROCEDURE ^ CurrentTilePart(): LONGINT; 
+		PROCEDURE ^ GetSubbandInfo(tile, component, reslevel, subband: LONGINT): J2KU.SubbandInfo; 
+		PROCEDURE ^ LogConcealMsg(cblkInfo: J2KU.CblkInfo; curBp: LONGINT); 
+		PROCEDURE ^ SigPropPass(cblk: DataBlk; cblkInfo: J2KU.CblkInfo; curBp: LONGINT; zeroLUT: J2KU.LongIntArrayPtr; term: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ RawSigPropPass(cblk: DataBlk; cblkInfo: J2KU.CblkInfo; curBp: LONGINT; term: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ MagRefPass(cblk: DataBlk; cblkInfo: J2KU.CblkInfo; curBp: LONGINT; term: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ RawMagRefPass(cblk: DataBlk; cblkInfo: J2KU.CblkInfo; curBp: LONGINT; term: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ CleanupPass(cblk: DataBlk; cblkInfo: J2KU.CblkInfo; curBp: LONGINT; zeroLUT: J2KU.LongIntArrayPtr; term: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Conceal(dataBlk: DataBlk; cblkInfo: J2KU.CblkInfo; bp: LONGINT); 
+		PROCEDURE ^ FreeNonRebuildResources; 
+		PROCEDURE ^ FreeResources; 
+	END EntropyDecoder; 
+
+	ROIDescaler = OBJECT 
+	VAR 
+		decSpec: J2KCS.DecoderSpecs; 
+		ed: EntropyDecoder; 
+		noROI: BOOLEAN; 
+
+		PROCEDURE ^  & InitNew*(roiOpt: J2KU.ROIDescalerOptions; ed: EntropyDecoder; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ ReInit(roiOpt: J2KU.ROIDescalerOptions; ed: EntropyDecoder; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ GetCodeBlocks(VAR cblk: ARRAY OF DataBlk; VAR cblkInfo: ARRAY OF J2KU.CblkInfo; ncblks: LONGINT): LONGINT; 
+		PROCEDURE ^ SetMaxLayerRange(maxStartLayer, maxEndLayer: LONGINT); 
+		PROCEDURE ^ SetLayerRange(startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ GetLayerRange(VAR startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl: LONGINT); 
+		PROCEDURE ^ SetDecLevelRange(startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetDecLevelRange(VAR startDec, endDec: LONGINT); 
+		PROCEDURE ^ SetReBuildMode; 
+		PROCEDURE ^ CurrentTile(): LONGINT; 
+		PROCEDURE ^ CurrentTilePart(): LONGINT; 
+		PROCEDURE ^ NextTilePart(): BOOLEAN; 
+		PROCEDURE ^ DataAvailable(): BOOLEAN; 
+		PROCEDURE ^ GetSubbandInfo(tile, component, reslevel, subband: LONGINT): J2KU.SubbandInfo; 
+		PROCEDURE ^ TilePartAvailable(): BOOLEAN; 
+		PROCEDURE ^ AllTilePartsRead(): BOOLEAN; 
+		PROCEDURE ^ FreeNonRebuildResources; 
+		PROCEDURE ^ FreeResources; 
+	END ROIDescaler; 
+
+	Dequantizer = OBJECT 
+	VAR 
+		roi: ROIDescaler; 
+		dataTypes: POINTER TO ARRAY OF ARRAY OF LONGINT; 
+		decSpec: J2KCS.DecoderSpecs; 
+		tBitDepth: J2KU.LongIntArrayPtr; 
+		preStep: POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF ARRAY 3 OF REAL; 
+		cblkBuf: ARRAY CBLK_BUFSIZE OF DataBlk; 
+		overallMinDecLvl: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(deqOpt: J2KU.DequantizerOptions; roi: ROIDescaler; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ ReInit(deqOpt: J2KU.DequantizerOptions; roi: ROIDescaler; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ SetDataType(tile, component, type: LONGINT); 
+		PROCEDURE ^ DataAvailable(): BOOLEAN; 
+		PROCEDURE ^ CurrentTile(): LONGINT; 
+		PROCEDURE ^ CurrentTilePart(): LONGINT; 
+		PROCEDURE ^ NextTilePart(): BOOLEAN; 
+		PROCEDURE ^ CalculateStepSizes(tile: LONGINT); 
+		PROCEDURE ^ GetSubbandInfo(tile, component, reslevel, subband: LONGINT): J2KU.SubbandInfo; 
+		PROCEDURE ^ TilePartAvailable(): BOOLEAN; 
+		PROCEDURE ^ AllTilePartsRead(): BOOLEAN; 
+		PROCEDURE ^ SetMaxLayerRange(maxStartLayer, maxEndLayer: LONGINT); 
+		PROCEDURE ^ SetLayerRange(startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ GetLayerRange(VAR startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl: LONGINT); 
+		PROCEDURE ^ SetDecLevelRange(startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetDecLevelRange(VAR startDec, endDec: LONGINT); 
+		PROCEDURE ^ SetReBuildMode; 
+		PROCEDURE ^ GetCodeBlocks(VAR cblk: ARRAY OF DataBlk; VAR cblkInfo: ARRAY OF J2KU.CblkInfo; ncblks: LONGINT): LONGINT; 
+		PROCEDURE ^ FreeNonRebuildResources; 
+		PROCEDURE ^ FreeResources; 
+	END Dequantizer; 
+
+	FilterSynInt = OBJECT 
+
+		PROCEDURE ^ SynthesizeLPF(lowCoeffs: J2KU.LongIntArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.LongIntArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.LongIntArrayPtr; outOffset, outStep, len: LONGINT); 
+		PROCEDURE ^ SynthesizeHPF(lowCoeffs: J2KU.LongIntArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.LongIntArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.LongIntArrayPtr; outOffset, outStep, len: LONGINT); 
+	END FilterSynInt; 
+
+	FilterSynReal = OBJECT 
+
+		PROCEDURE ^ SynthesizeLPF(lowCoeffs: J2KU.RealArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.RealArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.RealArrayPtr; outOffset, outStep, len: LONGINT); 
+		PROCEDURE ^ SynthesizeHPF(lowCoeffs: J2KU.RealArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.RealArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.RealArrayPtr; outOffset, outStep, len: LONGINT); 
+	END FilterSynReal; 
+
+	FilterSyn5x3Lifting = OBJECT (FilterSynInt)
+
+		PROCEDURE ^ SynthesizeLPF(lowCoeffs: J2KU.LongIntArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.LongIntArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.LongIntArrayPtr; outOffset, outStep, len: LONGINT); 
+		PROCEDURE ^ SynthesizeHPF(lowCoeffs: J2KU.LongIntArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.LongIntArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.LongIntArrayPtr; outOffset, outStep, len: LONGINT); 
+	END FilterSyn5x3Lifting; 
+
+	FilterSyn9x7Lifting = OBJECT (FilterSynReal)
+
+		PROCEDURE ^ SynthesizeLPF(lowCoeffs: J2KU.RealArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.RealArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.RealArrayPtr; outOffset, outStep, len: LONGINT); 
+		PROCEDURE ^ SynthesizeHPF(lowCoeffs: J2KU.RealArrayPtr; lowOffset, lowStep: LONGINT; highCoeffs: J2KU.RealArrayPtr; highOffset, highStep: LONGINT; outData: J2KU.RealArrayPtr; outOffset, outStep, len: LONGINT); 
+	END FilterSyn9x7Lifting; 
+
+	InverseDWT = OBJECT 
+	VAR 
+		deq: Dequantizer; 
+		curTile: LONGINT; 
+		ncomp: LONGINT; 
+		minDecLvl, maxDecLvl, minLayer, maxLayer: LONGINT; 
+		reconstructedComps: POINTER TO ARRAY OF ARRAY OF DataBlk; 
+		reconstructedCompsInfo: POINTER TO ARRAY OF ARRAY OF J2KU.BlkInfo; 
+		reconstructedRange: POINTER TO ARRAY OF ARRAY 4 OF LONGINT; 
+		filterIrrev: FilterSynReal; 
+		filterRev: FilterSynInt; 
+		decSpec: J2KCS.DecoderSpecs; 
+		gotoReBuild: BOOLEAN; 
+		overallMinDecLvl: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(invDWTOpt: J2KU.InverseDWTOptions; deq: Dequantizer; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ ReInit(invDWTOpt: J2KU.InverseDWTOptions; deq: Dequantizer; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ FullTransform(): BOOLEAN; 
+		PROCEDURE ^ InitReconstructedRange; 
+		PROCEDURE ^ GetData(): BOOLEAN; 
+		PROCEDURE ^ TransformStep(): BOOLEAN; 
+		PROCEDURE ^ SetMaxLayerRange(maxStartLayer, maxEndLayer: LONGINT); 
+		PROCEDURE ^ SetLayerRange(startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ GetLayerRange(VAR startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl: LONGINT); 
+		PROCEDURE ^ SetDecLevelRange(startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetDecLevelRange(VAR startDec, endDec: LONGINT); 
+		PROCEDURE ^ GetComponent(component: LONGINT; VAR comp: DataBlk; VAR compInfo: J2KU.BlkInfo); 
+		PROCEDURE ^ CurrentTile(): LONGINT; 
+		PROCEDURE ^ CurrentTilePart(): LONGINT; 
+		PROCEDURE ^ NextTilePart(): BOOLEAN; 
+		PROCEDURE ^ AllTilePartsRead(): BOOLEAN; 
+		PROCEDURE ^ TilePartAvailable(): BOOLEAN; 
+		PROCEDURE ^ DataAvailable(): BOOLEAN; 
+		PROCEDURE ^ InitTile(): BOOLEAN; 
+		PROCEDURE ^ Wavelet2DReconstruction(tile, component: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SetReBuildMode; 
+		PROCEDURE ^ FreeNonRebuildResources; 
+		PROCEDURE ^ FreeResources; 
+	END InverseDWT; 
+
+	InverseMCT = OBJECT 
+	VAR 
+		mct: LONGINT; 
+		invDWT: InverseDWT; 
+		curTile: LONGINT; 
+		comp012: POINTER TO ARRAY OF ARRAY OF DataBlkInt; 
+		comp012Info: POINTER TO ARRAY OF ARRAY OF J2KU.BlkInfo; 
+		decSpec: J2KCS.DecoderSpecs; 
+		nonRebuildBuffer: BOOLEAN; 
+		transformRequired: POINTER TO ARRAY OF BOOLEAN; 
+		startLayer, endLayer, startDecLvl, endDecLvl: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(invMCTOpt: J2KU.InverseMCTOptions; invDWT: InverseDWT; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ ReInit(invMCTOpt: J2KU.InverseMCTOptions; invDWT: InverseDWT; decSpec: J2KCS.DecoderSpecs); 
+		PROCEDURE ^ SetMaxLayerRange(maxStartLayer, maxEndLayer: LONGINT); 
+		PROCEDURE ^ SetLayerRange(startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ GetLayerRange(VAR startLayer, endLayer: LONGINT); 
+		PROCEDURE ^ SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl: LONGINT); 
+		PROCEDURE ^ SetDecLevelRange(startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetDecLevelRange(VAR startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ GetAdaptedComponent(component: LONGINT; VAR comp: DataBlk; VAR compInfo: J2KU.BlkInfo); 
+		PROCEDURE ^ GetComponent(component: LONGINT; VAR comp: DataBlk; VAR compInfo: J2KU.BlkInfo); 
+		PROCEDURE ^ FullTransform(): BOOLEAN; 
+		PROCEDURE ^ TransformStep(): BOOLEAN; 
+		PROCEDURE ^ InitTile(): BOOLEAN; 
+		PROCEDURE ^ CurrentTile(): LONGINT; 
+		PROCEDURE ^ CurrentTilePart(): LONGINT; 
+		PROCEDURE ^ NextTilePart(): BOOLEAN; 
+		PROCEDURE ^ AllTilePartsRead(): BOOLEAN; 
+		PROCEDURE ^ TilePartAvailable(): BOOLEAN; 
+		PROCEDURE ^ DataAvailable(): BOOLEAN; 
+		PROCEDURE ^ InverseRCT(): BOOLEAN; 
+		PROCEDURE ^ InverseICT(): BOOLEAN; 
+		PROCEDURE ^ SetReBuildMode; 
+		PROCEDURE ^ FreeNonRebuildResources; 
+		PROCEDURE ^ FreeResources; 
+	END InverseMCT; 
+
+	JP2Box = OBJECT 
+	VAR 
+		type: LONGINT; 
+	END JP2Box; 
+
+	CodestreamBox = OBJECT (JP2Box)
+	VAR 
+		s: Streams.Reader; 
+
+		PROCEDURE ^  & InitNew*; 
+	END CodestreamBox; 
+
+	JP2FileFormatReader = OBJECT 
+	VAR 
+		s: Streams.Reader; 
+		isJP2: BOOLEAN; 
+		initError: BOOLEAN; 
+		lastBoxFound, jp2HeaderBoxFound: BOOLEAN; 
+		curBoxType: LONGINT; 
+		curBoxLen, curBoxContLen: HUGEINT; 
+
+		PROCEDURE ^  & InitNew*(s: Streams.Reader); 
+		PROCEDURE ^ ReInit(s: Streams.Reader); 
+		PROCEDURE ^ InitError(): BOOLEAN; 
+		PROCEDURE ^ IsJP2File(): BOOLEAN; 
+		PROCEDURE ^ ReadBoxInfo; 
+		PROCEDURE ^ ReadFileTypeBox(): BOOLEAN; 
+		PROCEDURE ^ ReadJP2HeaderBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ ReadContiguousCodestreamBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ ReadIPRBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ ReadXMLBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ ReadUUIDBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ ReadUUIDInfoBox(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ HasNextBox(): BOOLEAN; 
+		PROCEDURE ^ NextBox(VAR boxtype: LONGINT; VAR length: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ GetBoxContent(VAR box: JP2Box): BOOLEAN; 
+		PROCEDURE ^ SkipBox(): BOOLEAN; 
+		PROCEDURE ^ GetCodestream(): Streams.Reader; 
+		PROCEDURE ^ FreeResources; 
+	END JP2FileFormatReader; 
+
+	ImageConsumer* = OBJECT 
+
+		PROCEDURE ^ SetPixels*(pixelData: J2KU.LongIntArrayPtr; xOffset, yOffset, width, height: LONGINT); 
+		PROCEDURE ^ SetProductionStatus*(status: LONGINT); 
+	END ImageConsumer; 
+
+	ImageProducer = OBJECT 
+	VAR 
+		imgFmt: LONGINT; 
+		src: InverseMCT; 
+		producedOnce: BOOLEAN; 
+		imgInfo: J2KCS.ImageInfo; 
+
+		PROCEDURE ^  & InitNew*; 
+		PROCEDURE ^ InitProduction(src: InverseMCT; imgInfo: J2KCS.ImageInfo): BOOLEAN; 
+		PROCEDURE ^ ProduceImage(VAR consumers: ARRAY OF ImageConsumer; offset, nconsumer: LONGINT); 
+		PROCEDURE ^ GetImgFormat(): LONGINT; 
+	END ImageProducer; 
+
+	InternalToRaster = PROCEDURE {DELEGATE}(pixelBuf: J2KU.LongIntArrayPtr; xOffset, yOffset, length: LONGINT); 
+
+	RasterImageAdapter* = OBJECT (ImageConsumer)
+	VAR 
+		img: Raster.Image; 
+		imgFmt: LONGINT; 
+		transform: InternalToRaster; 
+
+		PROCEDURE ^  & InitNew*(img: Raster.Image); 
+		PROCEDURE ^ SetFormat*(fmt: LONGINT); 
+		PROCEDURE ^ SetPixels*(pixelData: J2KU.LongIntArrayPtr; xOffset, yOffset, width, height: LONGINT); 
+		PROCEDURE ^ SetPixelsRGB565(pixelBuf: J2KU.LongIntArrayPtr; xOffset, yOffset, length: LONGINT); 
+		PROCEDURE ^ SetPixelsRGB888(pixelBuf: J2KU.LongIntArrayPtr; xOffset, yOffset, length: LONGINT); 
+		PROCEDURE ^ SetPixelsRGBA8888(pixelBuf: J2KU.LongIntArrayPtr; xOffset, yOffset, length: LONGINT); 
+		PROCEDURE ^ SetPixelsNIL(pixelBuf: J2KU.LongIntArrayPtr; xOffset, yOffset, length: LONGINT); 
+	END RasterImageAdapter; 
+
+	Decoder* = OBJECT (Codecs.ImageDecoder)
+	VAR 
+		decOpt: J2KU.DecoderOptions; 
+		decSpec: J2KCS.DecoderSpecs; 
+		fr: JP2FileFormatReader; 
+		cr: J2KCS.CodestreamReader; 
+		ed: EntropyDecoder; 
+		roi: ROIDescaler; 
+		deq: Dequantizer; 
+		invDWT: InverseDWT; 
+		invMCT: InverseMCT; 
+		imgProd: ImageProducer; 
+		ready: BOOLEAN; 
+		deliveredOnce: BOOLEAN; 
+		minResDec, minLayDec: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(decOpt: J2KU.DecoderOptions); 
+		PROCEDURE ^ Open*(s: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+		PROCEDURE ^ DeliverImage*(VAR consumers: ARRAY OF ImageConsumer; offset, nconsumer: LONGINT); 
+		PROCEDURE ^ CloseStream*; 
+		PROCEDURE ^ GetNumResolutionLevels*(): LONGINT; 
+		PROCEDURE ^ MinDecreaseResolutionLevel*(minResDec: LONGINT); 
+		PROCEDURE ^ DecreaseResolutionLevel*(resDec: LONGINT); 
+		PROCEDURE ^ GetCurrentDecompositionLevel*(): LONGINT; 
+		PROCEDURE ^ GetNumLayers*(): LONGINT; 
+		PROCEDURE ^ MinDecreaseNumLayers*(minLayers: LONGINT); 
+		PROCEDURE ^ DecreaseNumLayers*(layers: LONGINT); 
+		PROCEDURE ^ GetCurrentNumLayers*(): LONGINT; 
+		PROCEDURE ^ GetNumTiles*(): LONGINT; 
+		PROCEDURE ^ GetNumComponents*(): LONGINT; 
+		PROCEDURE ^ GetImageSize*(declevel: LONGINT; VAR width, height: LONGINT); 
+		PROCEDURE ^ GetImageFormat*(): LONGINT; 
+		PROCEDURE ^ GetTileSize*(tile, declevel: LONGINT; VAR toffx, toffy, twidth, theight: LONGINT); 
+	END Decoder; 
+VAR 
+	filter5x3Lift: FilterSyn5x3Lifting; 
+	filter9x7Lift: FilterSyn9x7Lifting; 
+	ENTROPY_ZEROLL_LUT, ENTROPY_ZEROHL_LUT, ENTROPY_ZEROHH_LUT: J2KU.LongIntArrayPtr; 
+	ENTROPY_SIGN_LUT: ARRAY LSH(SYSTEM.VAL(LONGINT, 1), ENTROPY_SIGN_BITS) OF LONGINT; 
+	MQ_INITSTATES, MQ_INITMPS: J2KU.LongIntArrayPtr; 
+	MQPROB, MQNMPS, MQNLPS, MQSWITCH: ARRAY MQTABSIZ OF LONGINT; 
+
+	PROCEDURE ^ InitEntropyTables; 
+	PROCEDURE ^ InitMQTables; 
+	PROCEDURE ^ GetDefaultDecoderOptions*(): J2KU.DecoderOptions; 
+	PROCEDURE ^ Factory*(): Codecs.ImageDecoder; 
+BEGIN
+END JPEG2000Decoder.

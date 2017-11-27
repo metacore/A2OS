@@ -1,0 +1,32 @@
+MODULE MD5;
+	IMPORT SYSTEM;
+TYPE 
+	Context* = POINTER TO ContextDesc; 
+
+	ContextDesc = RECORD 
+		buf: ARRAY 4 OF LONGINT; 
+		bits: LONGINT; 
+		in: ARRAY 64 OF CHAR; 
+	END; 
+
+	Digest* = ARRAY 16 OF CHAR; 
+
+	PROCEDURE ^ New*(): Context; 
+	PROCEDURE ^ Init*(cont: Context); 
+	PROCEDURE ^ ByteReverse(VAR in: ARRAY OF SYSTEM.BYTE; VAR out: ARRAY OF LONGINT; longs: LONGINT); 
+	PROCEDURE ^ F1(x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ F2(x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ F3(x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ F4(x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ STEP1(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT); 
+	PROCEDURE ^ STEP2(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT); 
+	PROCEDURE ^ STEP3(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT); 
+	PROCEDURE ^ STEP4(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT); 
+	PROCEDURE ^ Transform(VAR buf, in: ARRAY OF LONGINT); 
+	PROCEDURE ^ Write*(context: Context; ch: CHAR); 
+	PROCEDURE ^ WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ Close*(context: Context; VAR digest: Digest); 
+	PROCEDURE ^ HexDigit(i: LONGINT): CHAR; 
+	PROCEDURE ^ ToString*(digest: Digest; VAR str: ARRAY OF CHAR); 
+BEGIN
+END MD5.

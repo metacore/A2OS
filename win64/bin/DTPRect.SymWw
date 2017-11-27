@@ -1,0 +1,66 @@
+MODULE DTPRect;
+	IMPORT Modules, Files, XML, XMLObjects, WMStandardComponents, WMGraphics, WMGraphicUtilities, WMComponents, WMRectangles, WMEditors, Strings, WMWindowManager, WMPopups, DTPData, DTPEditor, DTPUtilities;
+CONST 
+	pluginVersion =   1.0000000E+000; 
+	pluginName = \"Rectangle"\; 
+	pluginDesc = \"Draws a Rectangle with a given Bordercolor and Fillcolor"\; 
+	fillModeSolid = 0; 
+	fillModeGradient = 1; 
+	fillModeGradientReflected = 2; 
+TYPE 
+	ContextMenuData = OBJECT 
+	VAR 
+		val: LONGINT; 
+
+		PROCEDURE ^  & New*(val: LONGINT); 
+	END ContextMenuData; 
+
+	RectObject* = OBJECT (DTPData.ContentObject)
+	VAR 
+		lineColor, rectColor, rectColor2: LONGINT; 
+		lineWidth: REAL; 
+		fillMode: LONGINT; 
+		gradientHorizontal: BOOLEAN; 
+		properties: RectPropWindow; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: LONGINT; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Redraw*; 
+		PROCEDURE ^ Clone*(): DTPData.ContentObject; 
+		PROCEDURE ^ Load*(elem: XML.Element); 
+		PROCEDURE ^ Store*(VAR w: Files.Writer); 
+		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ Close*; 
+	END RectObject; 
+
+	RectPropWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		theCaller: RectObject; 
+		shown: BOOLEAN; 
+		leftPanel, rightPanel: WMStandardComponents.Panel; 
+		lineButton, rectButton, rect2Button, modeButton: WMStandardComponents.Button; 
+		lineWidthEdit, lineColorEdit, rectColorEdit, rectColorEdit2, fillModeEdit, gradHorizEdit: WMEditors.Editor; 
+		popup: WMPopups.Popup; 
+
+		PROCEDURE ^  & New*(caller: RectObject); 
+		PROCEDURE ^ CreatePropertyForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ LineColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ RectColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ RectColor2Handler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FillModeHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FillModePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ RefreshValues; 
+		PROCEDURE ^ SetValueHandler(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+	END RectPropWindow; 
+VAR 
+	ctxFillModeSolid, ctxFillModeGradient, ctxFillModeGradientReflected: ContextMenuData; 
+
+	PROCEDURE ^ GenRect*(): DTPData.ContentObject; 
+	PROCEDURE ^ Register*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END DTPRect.

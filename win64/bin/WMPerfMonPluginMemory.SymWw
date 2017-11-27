@@ -1,0 +1,35 @@
+MODULE WMPerfMonPluginMemory;
+	IMPORT Kernel32, Modules, WMPerfMonPlugins, Heaps;
+CONST 
+	ModuleName = \"WMPerfMonPluginMemory"\; 
+TYPE 
+	HeapHelper = OBJECT (WMPerfMonPlugins.Helper)
+	VAR 
+		free, total, largest: SIZE; 
+
+		PROCEDURE ^ Update*; 
+	END HeapHelper; 
+
+	MemoryLoad* = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		h: HeapHelper; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END MemoryLoad; 
+
+	WindowsMemoryLoad = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		status: Kernel32.MemoryStatusEx; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END WindowsMemoryLoad; 
+VAR 
+	heapHelper: HeapHelper; 
+
+	PROCEDURE ^ InitPlugins; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginMemory.

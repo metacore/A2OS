@@ -1,0 +1,30 @@
+MODULE CryptoCiphers;
+CONST 
+	ECB* = 0; 
+	CBC* = 1; 
+	CTR* = 2; 
+	Ok* = 0; 
+TYPE 
+	Cipher* = OBJECT 
+	VAR 
+		name-: ARRAY 64 OF CHAR; 
+		blockSize-: LONGINT; 
+		isKeyInitialized*: BOOLEAN; 
+		mode-: SHORTINT; 
+		len1, len2: INTEGER; 
+
+		PROCEDURE ^ appsize(size: LONGINT); 
+		PROCEDURE ^ appmode(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ SetNameAndBlocksize*(CONST name: ARRAY OF CHAR; size: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	CipherFactory = PROCEDURE ():Cipher; 
+
+	PROCEDURE ^ NewCipher*(CONST modname: ARRAY OF CHAR): Cipher; 
+BEGIN
+END CryptoCiphers.

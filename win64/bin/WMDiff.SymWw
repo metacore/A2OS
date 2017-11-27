@@ -1,0 +1,118 @@
+MODULE WMDiff;
+	IMPORT Modules, WM := WMWindowManager, WMRestorable, WMStringGrids, WMGrids, WMGraphics, WMRectangles, WMComponents, WMStandardComponents, DiffLib, Streams, Commands, Strings, WMEvents, Raster, WMEditors, WMTextView, Texts, Files, UTF8Strings, WMMessages, WMScrollableComponents;
+CONST 
+	Width = 1024; 
+	Height = 768; 
+	ShowLineNumbers = TRUE; 
+	DiffStateEmpty = 0; 
+	DiffStateCommon = 1; 
+	DiffStateDifferent = 2; 
+	ScrollbarWidth = 15; 
+	OverviewWidth = 10; 
+	DarkGreen = 12583167; 
+	DarkRed = LONGINT(0C00000FFH); 
+	DiffColorLeft = LONGINT(0FF000030H); 
+	DiffColorRight = 65328; 
+	EmptyLineColor = WMGraphics.White; 
+	LineNbrBgColor = LONGINT(0E0E0FFFFH); 
+	BgColor = LONGINT(0CCCCCCFFH); 
+	MouseWheelMultiplier = 3; 
+	NonDefaultFont = FALSE; 
+	FontName = \"Oberon"\; 
+	FontSize = 10; 
+	FontStyle = {}; 
+TYPE 
+	NoWheelGrid* = OBJECT {EXCLUSIVE} (WMStringGrids.StringGrid)
+
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END NoWheelGrid; 
+
+	DiffState = OBJECT 
+	VAR 
+		state: LONGINT; 
+	END DiffState; 
+
+	DiffView = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		filenameEdit: WMEditors.Editor; 
+		lineNbr, grid: NoWheelGrid; 
+		colWidths: WMGrids.Spacings; 
+		commonLines, diffLines: LONGINT; 
+		diffColor, maxLineWidth, minLineWidth: LONGINT; 
+		curLine: LONGINT; 
+		font: WMGraphics.Font; 
+		onPropertyChange, onResized: WMEvents.EventSource; 
+
+		PROCEDURE ^ CreateFilenamePanel(): WMStandardComponents.Panel; 
+		PROCEDURE ^ CreateGrid(): NoWheelGrid; 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ ToggleLineNumbers; 
+		PROCEDURE ^ SetNofLines(nofLines: LONGINT); 
+		PROCEDURE ^ FileNameEditDragOver(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FileNameEditDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FillLines(nofRows, nofLines: LONGINT); 
+		PROCEDURE ^ InsertLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ InsertEmptyLine; 
+		PROCEDURE ^ InsertCommonLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ SetFileName(fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ GetFileName(): Strings.String; 
+		PROCEDURE ^ Setup; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ Resized*; 
+	END DiffView; 
+
+	Overview = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		view: DiffView; 
+		img: WMGraphics.Image; 
+		nofRows, pageStart, pageSize: LONGINT; 
+		showPage: BOOLEAN; 
+		diffColor: LONGINT; 
+
+		PROCEDURE ^  & New*(view: DiffView); 
+		PROCEDURE ^ SetPage(pageStart, pageSize: LONGINT); 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ Setup; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Overview; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		leftView, rightView: DiffView; 
+		lblcommonLines, lbldiffLinesLeft, lbldiffLinesRight: WMStandardComponents.Label; 
+		scrolly: WMStandardComponents.Scrollbar; 
+		leftOverview, rightOverview: Overview; 
+		pageSize: LONGINT; 
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Load*(leftFilename, rightFilename: ARRAY OF CHAR); 
+		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ OnViewResized(sender, par: ANY); 
+		PROCEDURE ^ Setup(nofLines: LONGINT); 
+		PROCEDURE ^ SetScrollbarProperties; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ DiffHandler(sender, par: ANY); 
+		PROCEDURE ^ OnViewPropertyChange(sender, par: ANY); 
+		PROCEDURE ^ Scrolled(sender, data: ANY); 
+		PROCEDURE ^ HandleKey(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+	StrDiffView, StrOverview, StrNoWheelGrid: Strings.String; 
+
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMDiff.

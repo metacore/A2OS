@@ -1,0 +1,14 @@
+MODULE MenuPages;
+	IMPORT Streams, Commands, Files, WMComponents, WMStandardComponents;
+CONST 
+	MinNofColumns = 4; 
+	ColumnWidth = 120; 
+
+	PROCEDURE ^ GetColumn(): WMStandardComponents.Panel; 
+	PROCEDURE ^ GetButton(CONST caption, command: ARRAY OF CHAR; color, colorHover: LONGINT): WMStandardComponents.Button; 
+	PROCEDURE ^ GetColor(in: Streams.Reader): LONGINT; 
+	PROCEDURE ^ GetEntry(in: Streams.Reader; VAR name, command: ARRAY OF CHAR; VAR color, colorHover: LONGINT); 
+	PROCEDURE ^ AddEntries(menuPage: WMStandardComponents.Panel; in: Streams.Reader); 
+	PROCEDURE ^ Generate*(context: Commands.Context); 
+BEGIN
+END MenuPages.

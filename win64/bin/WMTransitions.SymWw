@@ -1,0 +1,45 @@
+MODULE WMTransitions;
+	IMPORT SYSTEM, BIT, Raster, WMGraphics, WMGraphicUtilities, WMRectangles, WMWindowManager, Machine, KernelLog;
+CONST 
+	DEBUG = FALSE; 
+TYPE 
+	Transition* = OBJECT 
+
+		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
+	END Transition; 
+
+	TransitionMask* = OBJECT (Transition)
+	VAR 
+		mW, mH: LONGINT; 
+		mask: POINTER TO ARRAY OF CHAR; 
+
+		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ SetMask*(mi: Raster.Image); 
+		PROCEDURE ^ DumpMask; 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
+	END TransitionMask; 
+
+	TransitionFade* = OBJECT (Transition)
+	VAR 
+		mW, mH: LONGINT; 
+		mode: Raster.Mode; 
+
+		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
+	END TransitionFade; 
+VAR 
+	MMXenabled: BOOLEAN; 
+
+	PROCEDURE ^ Calc565Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
+	PROCEDURE ^ Calc565MMX(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
+	PROCEDURE ^ Calc565MMXLine(adra, adrb, adrr: ADDRESS; i, alpha: LONGINT; a64, mr64, mg64, mb64: HUGEINT); 
+	PROCEDURE ^ Calc888Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
+	PROCEDURE ^ Calc888MMX(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
+	PROCEDURE ^ Calc888MMXLine(adra, adrb, adrr: ADDRESS; i: LONGINT; a64, m64: HUGEINT); 
+	PROCEDURE ^ CalcGenUnknown(a, b: Raster.Image; VAR result: Raster.Image; perc: LONGINT); 
+	PROCEDURE ^ LoadImage(CONST fileName: ARRAY OF CHAR): Raster.Image; 
+	PROCEDURE ^ Test*; 
+	PROCEDURE ^ Test2*; 
+BEGIN
+END WMTransitions.

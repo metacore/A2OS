@@ -1,0 +1,7 @@
+MODULE EFITest;
+	IMPORT EFI, EFISimpleFS, EFIFileProtocol, EFILib, Trace, SYSTEM;
+CONST 
+
+	PROCEDURE ^ TestFS; 
+BEGIN
+END EFITest.

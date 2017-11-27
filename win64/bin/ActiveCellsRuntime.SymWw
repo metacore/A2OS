@@ -1,0 +1,108 @@
+module ActiveCellsRuntime;
+	import system, Heaps, Modules, Diagnostics, Strings, Objects, Reflection, Commands;
+const 
+	EnableTrace* = false; 
+type 
+	Cell* = object 
+	var 
+		c: any; 
+	end Cell; 
+
+	Context* = object {EXCLUSIVE} 
+	var 
+		topNet-: any; 
+		finishedAssembly-: boolean; 
+		res*: longint; 
+
+		procedure ^ Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellNet, isEngine: boolean); 
+		procedure ^ AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint); 
+		procedure ^ AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint); 
+		procedure ^ AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: longint); 
+		procedure ^ AddPortIntegerProperty*(p: any; const name: array of char; value: longint); 
+		procedure ^ AddFlagProperty*(c: any; const name: array of char); 
+		procedure ^ AddStringProperty*(c: any; const name: array of char; const value: array of char); 
+		procedure ^ AddIntegerProperty*(c: any; const name: array of char; value: longint); 
+		procedure ^ AddBooleanProperty*(c: any; const name: array of char; value: boolean); 
+		procedure ^ AddRealProperty*(c: any; const name: array of char; value: longreal); 
+		procedure ^ AddSetProperty*(c: any; const name: array of char; s: set); 
+		procedure ^ FinishedProperties*(var c: any); 
+		procedure ^ Connect*(outPort, inPort: any; depth: longint); 
+		procedure ^ Delegate*(netPort: any; cellPort: any); 
+		procedure ^ Start*(c: any; proc: procedure {DELEGATE}); 
+		procedure ^ Send*(p: any; value: longint); 
+		procedure ^ BulkSend*(p: any; const value: array of system.byte); 
+		procedure ^ SendNonBlocking*(p: any; value: longint): boolean; 
+		procedure ^ Receive*(p: any; var value: longint); 
+		procedure ^ BulkReceive*(p: any; var value: array of system.byte); 
+		procedure ^ ReceiveNonBlocking*(p: any; var value: longint): boolean; 
+		procedure ^ FinishedAssembly; 
+		procedure ^ WaitUntilFinishedAssembly; 
+	end Context; 
+
+	Launcher* = object {EXCLUSIVE} 
+	var 
+		proc: procedure {DELEGATE}; 
+		context: Context; 
+		finished, delayedStart: boolean; 
+		error-: boolean; 
+
+		procedure ^  & Init*(context: Context); 
+		procedure ^ Start*(p: procedure {DELEGATE}; doWait: boolean); 
+	begin{ACTIVE} 
+	end Launcher; 
+
+	Module = pointer to record 
+		next: Module; 
+		checked, imports: boolean; 
+		m: Modules.Module; 
+	end; 
+
+	bytearray = array of system.byte; 
+
+	longintSpecial = longint; 
+
+	realSpecial = real; 
+
+	Pin = port in; 
+
+	Pout = port out; 
+
+	procedure ^ GetContext(): Context; 
+	procedure ^ AllocateOnContext(context: Context; scope: Cell; var c: Cell; tag: address; const name: array of char; isCellnet, isEngine: boolean); 
+	procedure ^ Allocate*(scope: Cell; var c: Cell; tag: address; const name: array of char; isCellnet, isEngine: boolean); 
+	procedure ^ AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: longint); 
+	procedure ^ AddPortArray*(c: Cell; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint); 
+	procedure ^ AddStaticPortArray*(c: Cell; var ports: array of any; const name: array of char; inout: set; width: longint); 
+	procedure ^ AddPortIntegerProperty*(p: any; const name: array of char; value: longint); 
+	procedure ^ AddFlagProperty*(c: Cell; const name: array of char); 
+	procedure ^ AddStringProperty*(c: Cell; const name: array of char; var newValue: array of char; const value: array of char); 
+	procedure ^ AddIntegerProperty*(c: Cell; const name: array of char; var newValue: longint; value: longint); 
+	procedure ^ AddBooleanProperty*(c: Cell; const name: array of char; var newValue: boolean; value: boolean); 
+	procedure ^ AddRealProperty*(c: Cell; const name: array of char; var newValue: longreal; value: longreal); 
+	procedure ^ AddSetProperty*(c: Cell; const name: array of char; var newValue: set; value: set); 
+	procedure ^ FinishedProperties*(c: Cell); 
+	procedure ^ Connect*(outPort, inPort: any; depth: longint); 
+	procedure ^ Delegate*(netPort: any; cellPort: any); 
+	procedure ^ Start*(c: Cell; proc: procedure {DELEGATE}); 
+	procedure ^ Send*(p: any; value: longint); 
+	procedure ^ BulkSend*(p: any; const value: array of system.byte); 
+	procedure ^ SendNonBlocking*(p: any; value: longint): boolean; 
+	procedure ^ Receive*(p: any; var value: longint); 
+	procedure ^ BulkReceive*(p: any; var value: array of system.byte); 
+	procedure ^ ReceiveNonBlocking*(p: any; var value: longint): boolean; 
+	procedure ^ Find(root: Module; m: Modules.Module): Module; 
+	procedure ^ Imports(root, m: Module; const name: array of char): boolean; 
+	procedure ^ CopyModules(): Module; 
+	procedure ^ FreeDownTo(const modulename: array of char): longint; 
+	procedure ^ Execute*(const cellNet: array of char; context: Context; diagnostics: Diagnostics.Diagnostics); 
+	operator ^ "<<"-(p: port out; const a: bytearray); 
+	operator ^ "<<"-(var a: bytearray; p: port in); 
+	operator ^ "<<"-(p: port out; a: longintSpecial); 
+	operator ^ "<<"-(var a: longintSpecial; p: port in); 
+	operator ^ "<<"-(p: port out; a: realSpecial); 
+	operator ^ "<<"-(var a: realSpecial; p: port in); 
+	operator ^ ">>"-(pout: Pout; pin: Pin); 
+	operator ^ ">>"-(cellPort: Pout; netPort: Pout); 
+	operator ^ ">>"-(netPort: Pin; cellPort: Pin); 
+begin
+end ActiveCellsRuntime.

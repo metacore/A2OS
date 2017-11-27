@@ -1,0 +1,12 @@
+MODULE vyTextsCtl IN Oberon;
+	IMPORT vyHostTexts, Texts, Oberon, TextFrames, Display, TextGadgets, Gadgets, Objects, Links;
+CONST 
+	idversion* = \"vyTextsCtl v0.0a2"\; 
+
+	PROCEDURE ^ GetTextFrame(t: Objects.Object): Display.Frame; 
+	PROCEDURE ^ NewOutput*; 
+	PROCEDURE ^ DeleteOutput*; 
+	PROCEDURE ^ CaretHasPriority*; 
+	PROCEDURE ^ CaretHasNoPriority*; 
+BEGIN
+END vyTextsCtl.

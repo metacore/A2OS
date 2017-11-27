@@ -1,0 +1,8 @@
+MODULE RFC865Client;
+	IMPORT Commands, IP, DNS, TCP, Streams;
+CONST 
+	QuotePort = 17; 
+
+	PROCEDURE ^ GetQuote*(context: Commands.Context); 
+BEGIN
+END RFC865Client.

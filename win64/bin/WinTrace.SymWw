@@ -1,0 +1,21 @@
+MODULE WinTrace;
+	IMPORT Kernel32, Modules, Trace, Commands;
+CONST 
+	none = 0; 
+	console = 1; 
+	file = 2; 
+VAR 
+	hin-, hout-, herr-: Kernel32.HANDLE; 
+	mode: LONGINT; 
+
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ SendError*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ OpenConsole*; 
+	PROCEDURE ^ OpenFile*(context: Commands.Context); 
+	PROCEDURE ^ Terminate; 
+	PROCEDURE ^ Char(c: CHAR); 
+BEGIN
+END WinTrace.

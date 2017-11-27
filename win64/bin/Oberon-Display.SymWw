@@ -1,0 +1,139 @@
+MODULE Display IN Oberon;
+	IMPORT SYSTEM, Modules IN A2, Commands IN A2, Plugins IN A2, Displays IN A2, Objects, Kernel IN A2;
+CONST 
+	BG* = 0; 
+	FG* = 15; 
+	replace* = 0; 
+	paint* = 1; 
+	invert* = 2; 
+	remove* = 0; 
+	suspend* = 1; 
+	restore* = 2; 
+	newprinter* = 3; 
+	reduce* = 0; 
+	extend* = 1; 
+	move* = 2; 
+	display* = 0; 
+	state* = 1; 
+	screen* = 0; 
+	printer* = 1; 
+	full* = 0; 
+	area* = 1; 
+	contents* = 2; 
+	get* = 0; 
+	set* = 1; 
+	reset* = 2; 
+	drop* = 0; 
+	integrate* = 1; 
+	unknown* = 0; 
+	index8* = 8; 
+	color555* = 16; 
+	color565* = 17; 
+	color664* = 18; 
+	color888* = 24; 
+	color8888* = 32; 
+TYPE 
+	Color* = LONGINT; 
+
+	Pattern* = ADDRESS; 
+
+	PatternPtr = POINTER TO RECORD 
+		buf: ARRAY 8192 OF CHAR; 
+	END; 
+
+	List = POINTER TO ListDesc; 
+
+	ListDesc = RECORD 
+		next: List; 
+		pat: PatternPtr; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Objects.ObjDesc)
+		next*, dsc*: Frame; 
+		X*, Y*, W*, H*: INTEGER; 
+	END; 
+
+	FrameMsg* = RECORD (Objects.ObjMsg)
+		F*: Frame; 
+		x*, y*: INTEGER; 
+		res*: INTEGER; 
+	END; 
+
+	ControlMsg* = RECORD (FrameMsg)
+		id*: INTEGER; 
+	END; 
+
+	ModifyMsg* = RECORD (FrameMsg)
+		id*: INTEGER; 
+		mode*: INTEGER; 
+		dX*, dY*, dW*, dH*: INTEGER; 
+		X*, Y*, W*, H*: INTEGER; 
+	END; 
+
+	DisplayMsg* = RECORD (FrameMsg)
+		device*: INTEGER; 
+		id*: INTEGER; 
+		u*, v*, w*, h*: INTEGER; 
+	END; 
+
+	LocateMsg* = RECORD (FrameMsg)
+		loc*: Frame; 
+		X*, Y*: INTEGER; 
+		u*, v*: INTEGER; 
+	END; 
+
+	SelectMsg* = RECORD (FrameMsg)
+		id*: INTEGER; 
+		time*: LONGINT; 
+		sel*: Frame; 
+		obj*: Objects.Object; 
+	END; 
+
+	ConsumeMsg* = RECORD (FrameMsg)
+		id*: INTEGER; 
+		u*, v*: INTEGER; 
+		obj*: Objects.Object; 
+	END; 
+
+	MsgProc* = PROCEDURE (VAR M: FrameMsg); 
+VAR 
+	Unit*: LONGINT; 
+	Left*, ColLeft*, Bottom*, UBottom*, Width*, Height*: INTEGER; 
+	arrow*, star*, cross*, downArrow*, hook*, grey0*, grey1*, grey2*, ticks*, solid*: Pattern; 
+	Broadcast*: MsgProc; 
+	palette: ARRAY 256 OF LONGINT; 
+	clipX1, clipY1, clipX2, clipY2: LONGINT; 
+	pattern: List; 
+	buf: POINTER TO ARRAY OF CHAR; 
+	disp: Displays.Display; 
+	height: LONGINT; 
+
+	PROCEDURE ^ SetColor*(col: Color; red, green, blue: LONGINT); 
+	PROCEDURE ^ GetColor*(col: Color; VAR red, green, blue: INTEGER); 
+	PROCEDURE ^ RGB*(red, green, blue: LONGINT): Color; 
+	PROCEDURE ^ Depth*(x: LONGINT): INTEGER; 
+	PROCEDURE ^ TrueColor*(x: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetClip*(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ SetClip*(x, y, w, h: LONGINT); 
+	PROCEDURE ^ AdjustClip*(x, y, w, h: LONGINT); 
+	PROCEDURE ^ ResetClip*; 
+	PROCEDURE ^ CopyBlock*(sx, sy, w, h, dx, dy, mode: LONGINT); 
+	PROCEDURE ^ CopyPattern*(col: Color; pat: Pattern; x, y, mode: LONGINT); 
+	PROCEDURE ^ FillPattern*(col: Color; pat: Pattern; px, py, x, y, w, h, mode: LONGINT); 
+	PROCEDURE ^ ReplPattern*(col: Color; pat: Pattern; x, y, w, h, mode: LONGINT); 
+	PROCEDURE ^ ReplConst*(col: Color; x, y, w, h, mode: LONGINT); 
+	PROCEDURE ^ Dot*(col: Color; x, y, mode: LONGINT); 
+	PROCEDURE ^ GetDim*(pat: Pattern; VAR w, h: INTEGER); 
+	PROCEDURE ^ NewPattern*(w, h: LONGINT; VAR image: ARRAY OF SET): Pattern; 
+	PROCEDURE ^ CreatePatterns; 
+	PROCEDURE ^ TransferFormat*(x: LONGINT): LONGINT; 
+	PROCEDURE ^ TransferBlock*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, mode: LONGINT); 
+	PROCEDURE ^ SetMode*(x: LONGINT; s: SET); 
+	PROCEDURE ^ DisplayBlock*(adr: ADDRESS; dx, dy, w, h, sx, sy, mode: LONGINT; VAR palette: ARRAY OF LONGINT); 
+	PROCEDURE ^ Map*(x: LONGINT): LONGINT; 
+	PROCEDURE ^ Update*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Display.

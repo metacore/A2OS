@@ -1,0 +1,17 @@
+MODULE SVNWebDAV;
+	IMPORT WebHTTP, Files, Strings, Streams, Dates, XML, XMLObjects, KernelLog, SVNAdmin, SVNUtil, SVNOutput, OdSvn, OdXml;
+CONST 
+
+	PROCEDURE ^ Checkout*(svn: OdSvn.OdSvn; CONST pathName: ARRAY OF CHAR; CONST workName: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Update*(svn: OdSvn.OdSvn; CONST pathName: ARRAY OF CHAR; pathNameVersion: LONGINT; CONST workName: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Commit*(svn: OdSvn.OdSvn; CONST pathName, workName, message: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ ParseMergeContent(svn: OdSvn.OdSvn; CONST baseUrl, basePath: ARRAY OF CHAR); 
+	PROCEDURE ^ UpdateHandler*(CONST path: ARRAY OF CHAR; entry: SVNAdmin.EntryEntity; data: ANY): BOOLEAN; 
+	PROCEDURE ^ CommitHandler*(CONST path: ARRAY OF CHAR; entry: SVNAdmin.EntryEntity; data: ANY): BOOLEAN; 
+	PROCEDURE ^ ExpectedResult(status: LONGINT; svn: OdSvn.OdSvn; CONST wrk, lcl, message: ARRAY OF CHAR); 
+	PROCEDURE ^ Mkcol*(CONST url: ARRAY OF CHAR; svn: OdSvn.OdSvn; VAR res: LONGINT); 
+	PROCEDURE ^ Delete*(CONST url: ARRAY OF CHAR; svn: OdSvn.OdSvn; VAR res: LONGINT); 
+	PROCEDURE ^ Put*(CONST workUrl, workName: ARRAY OF CHAR; svn: OdSvn.OdSvn; VAR res: LONGINT); 
+	PROCEDURE ^ PrintError(svn: OdSvn.OdSvn; VAR res: LONGINT); 
+BEGIN
+END SVNWebDAV.

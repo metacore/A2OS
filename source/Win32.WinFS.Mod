@@ -1236,6 +1236,16 @@ VAR
 		END;
 	END AddSearchPath;
 	
+	PROCEDURE SetWorkPath*(context: Commands.Context);
+	VAR name: FileName; done: BOOLEAN;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			ChangeDirectory(name, done); 
+			IF ~done THEN 
+				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
+			END
+		END;
+	END SetWorkPath;
 
 	PROCEDURE Mount*(context : Commands.Context);
 	VAR diskname: ARRAY 256 OF CHAR;

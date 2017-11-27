@@ -522,17 +522,6 @@ BEGIN (* {t # NIL & t.next = NIL & t.prev = NIL} *)
 	queue.tail := t
 END Put;
 
-(* starting address of user stack for current thread, called stack top in TIB.H *)
-PROCEDURE -StackBottom*( ): ADDRESS;
-CODE {SYSTEM.i386}
-	DB	064H
-	DB	08BH
-	DB	005H
-	DB	004H
-	DB	000H
-	DB	000H
-	DB	000H
-END StackBottom;
 
 PROCEDURE {WINAPI} ExcpFrmHandler( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD ;
 VAR m: Modules.Module;  eip, ebp, stack: ADDRESS;  pc, handler, fp, sp: ADDRESS;  handled: BOOLEAN;  t: Process;
@@ -583,7 +572,7 @@ BEGIN
 			
 			eip := exceptionPointers.exception.ExceptionAddress;  ebp := exceptionPointers.context.BP;
 			IF eip = 0 THEN SYSTEM.GET( exceptionPointers.context.SP, eip ) END;
-			stack := StackBottom();
+			stack := t.stackBottom;
 			LOOP
 				Trace.String( "at ebp= " );  Trace.Address(ebp);  Trace.String( "H : " );
 				m := Modules.ThisModuleByAdr( eip );
@@ -1236,7 +1225,8 @@ BEGIN
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, t));
 	ASSERT(res # 0);
-	t.stackBottom := StackBottom(); t.mode := Running;
+	t.stackBottom := Machine.stackBottom;
+	t.mode := Running;
 	Put( ready, t );
 	ASSERT(t.handle # 0);
 	Machine.Release(Machine.Objects);

@@ -131,10 +131,6 @@ TYPE
 		rootedNext : Process; (*  to prevent process to be GCed in WinAos *)
 		obj-: ProtectedObject;   (* associated active object *)
 		state- {ALIGNED=16}: Kernel32.Context;
-		(*
-		sse: SSEState;	(* fpu and sse state of preempted process (only valid if Preempted IN flag) *)
-		sseAdr: LONGINT;
-		*)
 		condition-: Condition;   (* awaited process' condition *)
 		condFP-: ADDRESS;   (* awaited process' condition's context *)
 		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)
@@ -143,22 +139,14 @@ TYPE
 		id-: LONGINT;   (* unique process ID for tracing *)
 		flags*: SET;   (* process flags *)
 		priority-: LONGINT;   (* process priority *)
-		(*
-		currPri: LONGINT;
-		stack*: Machine.Stack; (** user-level stack of process *)
-		*)
+
 		stackBottom: ADDRESS;
 		handle-: Kernel32.HANDLE; (* handle to corresponding Windows thread *)
 		body: Body;
 		event: Win32Event;
 		restartPC-: ADDRESS;   (** entry point of body, for SAFE exception recovery *)
 		restartSP-: ADDRESS;   (** stack level at start of body, for SAFE exception recovery *)
-		(*
-		perfCyc*: ARRAY Machine.MaxCPU OF HUGEINT;
-		priInvCnt: LONGINT; (* counts the nummber of object locks hold that increased currPri of the process *)
-		exp*: Machine.ExceptionState;
-		oldReturnPC: LONGINT;
-		*)
+
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
 		gcContext: GCContext;
 		context: ANY; (* commands contect *)
@@ -180,8 +168,7 @@ TYPE
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
 			END;
-			
-			
+						
 			IF CurrentProcess() = SELF THEN
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
@@ -273,7 +260,6 @@ TYPE
 	END Process;
 
 TYPE
-(*	ExceptionHandler* = PROCEDURE( CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; *)
 	ExceptionHandler* = PROCEDURE(	VAR context: Kernel32.Context;
 										VAR excpRec: Kernel32.ExceptionRecord;
 										VAR handled: BOOLEAN);
@@ -319,7 +305,6 @@ TYPE
 					END;
 					p := p.next
 				END;
-
 
 				Machine.Release(Machine.Heaps);
 				Machine.Release(Machine.Objects);
@@ -589,9 +574,7 @@ BEGIN
 				END
 			END;
 			Trace.Ln();
-
-			(* finally and all that ...
-
+			
 			handled := FALSE;  fp := exceptionPointers.context.BP;  sp := exceptionPointers.context.SP;
 			pc := exceptionPointers.context.PC;  handler := Modules.GetExceptionHandler( pc );
 			IF handler # -1 THEN  (* Handler in the current PAF *)
@@ -607,22 +590,17 @@ BEGIN
 				END;
 				IF handler = -1 THEN handled := FALSE;
 				ELSE
-					TRACE("CHANGED HANDLER ADR "); 
 					exceptionPointers.context.PC := handler;  exceptionPointers.context.BP := fp;  exceptionPointers.context.SP := sp;
 					(* SetTrapVariable(pc, fp); SetLastExceptionState(exc);*)
 					handled := TRUE
 				END
 			END;
-			
-			*)
-			
-			
 		ELSE Trace.StringLn ( "Warning: FINALLY statement cannot be treated !" );
 		END
 	ELSE exceptionhandler(exceptionPointers.context^, exceptionPointers.exception^,handled );
 	END;
 	IF ~handled THEN 
-		exceptionPointers.context.PC := (*TerminateProc*)  t.restartPC ; 
+		exceptionPointers.context.PC := t.restartPC ; 
 		exceptionPointers.context.SP := t.restartSP;
 		exceptionPointers.context.BP := t.stackBottom;
 	ELSIF TraceVerbose THEN Trace.StringLn ( "trying to jump to FINALLY pc..." );
@@ -640,70 +618,15 @@ BEGIN
 	RETURN Kernel32.ExceptionContinueExecution; (* sets thread context and continues where specified in context *)
 END ExcpFrmHandler;
 
-(*
-(* get the currently installed execption frame *)
-(*	PROCEDURE -GetCur 64H, 8BH, 0DH, 0, 0, 0, 0;   (* MOV ECX, FS:[0] *) *)
-(* Better *)
-PROCEDURE -GetCur;
-CODE {SYSTEM.AMD64}
-	MOV RCX, [GS:0]
-	; DB	064H, 08BH, 00DH, 000H, 000H, 000H, 000H
-END GetCur;
-
-PROCEDURE GetCurrent( ): Kernel32.ExcpFrmPtr;
-VAR cur: Kernel32.ExcpFrmPtr;
-BEGIN
-	GetCur;
-	cur := SYSTEM.VAL(Kernel32.ExcpFrmPtr,Machine.GetRCX());
-	TRACE(cur);
-	(* RETURN ECX *)
-	RETURN cur
-END GetCurrent;
-*)
-(*
-(* install a new exception frame *)
-(*	PROCEDURE -SetCur 64H, 0A3H, 0, 0, 0, 0;   (* MOV FS:[0], EAX *)*)
-(* Better *)
-PROCEDURE -SetCur;
-CODE {SYSTEM.AMD64}
-	;  DB	064H, 0A3H, 000H, 000H, 000H, 000H
-	MOV [GS:0], RAX
-END SetCur;
-
-PROCEDURE SetCurrent( cur: Kernel32.ExcpFrmPtr );
-BEGIN
-	TRACE(cur);
-	Machine.SetRAX(cur);
-	 (* EAX := cur *)
-	CODE{SYSTEM.AMD64}
-		MOV [GS:0], RAX
-	END;
-	TRACE(GetCurrent());
-	(*SetCur*)
-END SetCurrent;
-*)
 PROCEDURE RemoveExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 VAR this: Kernel32.ExcpFrmPtr;
 BEGIN
-	(*
-	this := GetCurrent();
-	(* ASSERT ( this = ADDRESSOF( excpfrm ) );  *)
-	IF this # ADDRESSOF( excpfrm ) THEN Trace.StringLn ( "RemoveExcpFrm: Problem with excpfrm pointer" );
-	ELSE SetCurrent( excpfrm.link )
-	END;
-	*)
-	(*
-	Kernel32.RemoveVectoredExceptionHandler(ExcpFrmHandler);
-	*)
+	Kernel32.RemoveVectoredContinueHandler(ExcpFrmHandler);
 END RemoveExcpFrm;
 
 PROCEDURE InstallExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 BEGIN
 	Kernel32.AddVectoredContinueHandler(1, ExcpFrmHandler); 
-	(*
-	excpfrm.link := GetCurrent();  excpfrm.handler := ExcpFrmHandler;
-	SetCurrent( ADDRESSOF( excpfrm ) )
-	*)
 END InstallExcpFrm;
 
 PROCEDURE InQueue( queue: ProcessQueue;  t: Process ): BOOLEAN;
@@ -892,9 +815,6 @@ BEGIN
 	ELSE  (* terminate process *)
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
-	
-
-		(* t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);*) 
 	
 	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, Kernel32.SetToDW({}), t.id);
 
@@ -1166,46 +1086,14 @@ TYPE KdHelp = RECORD
 	Reserved: ARRAY 5 OF ADDRESS;
 END; 
 
-(*
-TYPE 
-ADDRESS64 = RECORD
-	offset: ADDRESS;
-	Segment: INTEGER;
-	AddressMode: INTEGER;
-END;
-
-TYPE StackFrame64 = RECORD
-	AddrPC, AddrReturn,AddrStack,AddrBSTore: ADDRESS64;
-	FuncTableEntry: ADDRESS;
-	Params: ARRAY 4 OF ADDRESS;
-	Far, Virtual: BOOLEAN; 
-	Reserved: ARRAY 3 OF ADDRESS;
-	kdHelp: KdHelp;
-END;
-	
-VAR StackWalk64:  PROCEDURE {WINAPI} (MachineType: Kernel32.DWORD; hProcess: Kernel32.HANDLE; 
-	hThread: Kernel32.HANDLE; VAR stackFrame: StackFrame64; VAR contextRecord: Kernel32.Context; 
-	CONST ReadMemoryRoutine, FunctionTableAccessRoutine, GetModuleBaseRoutine, 
-	TranslateAddress: ADDRESS): Kernel32.BOOL;
-*)
-
 PROCEDURE Init;   (* can not use NEW *)
-(*VAR lock: PROCEDURE(obj: ProtectedObject; exclusive: BOOLEAN);
-	unlock: PROCEDURE(obj: ProtectedObject; dummy: BOOLEAN);
-	await: PROCEDURE(cond: Condition; slink: LONGINT; obj: ProtectedObject; flags: SET);
-	create: PROCEDURE(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
-	*)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
 	lib: Kernel32.HMODULE;
 BEGIN
 	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
-(*	lib := Kernel32.LoadLibrary("DbgHelp.DLL");
-	Kernel32.GetProcAddress(lib, "StackWalk64",SYSTEM.VAL(ADDRESS,StackWalk64));
-	*)
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
-(*	lock := Lock; unlock := Unlock; await := Await; create := CreateProcess;*)
 
 	NEW(t);  NEW(fn);
 	Machine.Acquire(Machine.Objects);
@@ -1367,7 +1255,6 @@ PROCEDURE TimerFrequency*(): HUGEINT;
 BEGIN
 	RETURN 1000000000;
 END TimerFrequency;
-
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 

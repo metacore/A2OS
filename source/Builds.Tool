@@ -86,12 +86,12 @@ Win64G -- work in progress
 	
 	Release.Build WinAosG64 ~
 
-	StaticLinker.Link --fileFormat=PE64CUI --fileName=A264.exe --extension=GofWw --displacement=401000H  
+	StaticLinker.Link --fileFormat=PE64CUI --fileName=oberon64.exe --extension=GofWw --displacement=401000H  
 		Runtime Trace Kernel32 
 		Heaps Modules Objects Kernel
 		KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 
-		StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell Traps ~
+		StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell Traps SystemTools ~
 
-	FSTools.CloseFiles A264.exe  ~
+	FSTools.CloseFiles oberon64.exe  ~
 	~
 	

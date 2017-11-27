@@ -1219,18 +1219,21 @@ VAR
 	END Init;
 	
 	PROCEDURE AddSearchPath*(context: Commands.Context);
-	VAR name: FileName; i,j: LONGINT; ch : CHAR;
+	VAR name,fullName: FileName; i,j: LONGINT; ch : CHAR; ret: LONGINT; fileNamePart: Kernel32.LPSTR;
 	BEGIN
 		IF context.arg.GetString(name) THEN
 			i := 0; j := 0;
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );
+			ret := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fullName, fileNamePart );
+			
 			WHILE(searchPath[i] # 0X) DO
 				INC(i);
 			END;
+			
 			searchPath[i] := ";";INC(i);
 			REPEAT
-				ch := name[j];
-				searchPath[i] := name[j];
+				ch := fullName[j];
+				searchPath[i] := ch;
 				INC(j);INC(i);
 			UNTIL ch = 0X;
 		END;

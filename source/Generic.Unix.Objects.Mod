@@ -191,7 +191,6 @@ TYPE
 		waitingOn-	: ProtectedObject;
 		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
 		state-			: Machine.State;	
-		context-		: Unix.McontextDesc;
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)					
 		context: ANY; (* commands context *)
 
@@ -738,15 +737,15 @@ TYPE
 
 	
 	PROCEDURE GetContext( ctxt: Unix.Ucontext );
-	VAR t: Process;
+	VAR t: Process; context: Unix.McontextDesc;
 	BEGIN
 		(*	use CurrentProcess0 here instead of CurrentProcess in order to
 			avoid a possible deadlock *)
 		t := CurrentProcess0( );
-		Unix.CopyContext( ctxt.mc, t.context );
-		t.state.PC := t.context.r_pc;
-		t.state.BP := t.context.r_bp;
-		t.state.SP := t.context.r_sp
+		Unix.CopyContext( ctxt.mc, context );
+		t.state.PC := context.r_pc;
+		t.state.BP := context.r_bp;
+		t.state.SP := context.r_sp
 	END GetContext;
 	
 	(* called by WMProcessInfo to obtain the current state of a running process *)

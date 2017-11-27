@@ -147,7 +147,7 @@ TYPE
 		currPri: LONGINT;
 		stack*: Machine.Stack; (** user-level stack of process *)
 		*)
-		stackBottom-: ADDRESS;
+		stackBottom: ADDRESS;
 		handle-: Kernel32.HANDLE; (* handle to corresponding Windows thread *)
 		body: Body;
 		event: Win32Event;

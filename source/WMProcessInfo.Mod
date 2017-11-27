@@ -577,7 +577,7 @@ END GetAlign;
 PROCEDURE CheckBP( p: Objects.Process; bp: ADDRESS ): ADDRESS;
 VAR n: ADDRESS;
 BEGIN
-	IF (bp < p.stackBottom) & (bp > p.stackBottom - 256*1024) THEN
+	IF (bp < Objects.GetStackBottom(p)) & (bp > Objects.GetStackBottom(p) - 256*1024) THEN
 		SYSTEM.GET(bp, n);
 		IF ODD(n) THEN INC(bp, SIZEOF(ADDRESS)) END;
 		RETURN bp

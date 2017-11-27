@@ -188,7 +188,7 @@ TYPE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
 				state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, state );
-				IF res = 0 THEN TRACE(Kernel32.GetLastError()) END;
+				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
 				
 				sp :=  state.SP; bp := state.BP; pc := state.PC;
 				
@@ -400,28 +400,6 @@ VAR
 	nProcs: LONGINT;
 
 	excplock: Kernel32.CriticalSection;  exceptionhandler: ExceptionHandler;
-
-PROCEDURE TraceGCContext*;
-VAR p: Process; i: LONGINT; desc {UNTRACED}: Modules.ProcedureDescPointer;
-n: ADDRESS;
-BEGIN
-	p := CurrentProcess();
-	IF p # NIL THEN
-		TRACE(p.gcContext.nextPos);
-		FOR i := 0 TO p.gcContext.nextPos-1 DO
-			TRACE(p.gcContext.last[i]);
-			SYSTEM.GET(p.gcContext.last[i],n); 
-			IF ODD(n) THEN 
-						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-						IF desc # NIL THEN
-							WriteType(desc);Trace.Ln;
-						END; 
-			END;
-		END;
-		(*ASSERT(p.gcContext.nextPos <4);*)
-		IF p.gcContext.nextPos >= 4 THEN Heaps.InvokeGC END;
-	END;
-END TraceGCContext;
 
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
@@ -1402,13 +1380,6 @@ END TimerFrequency;
 
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
-VAR maxNextPos: LONGINT;
-
-PROCEDURE ReportMaxNextPos*;
-BEGIN
-	TRACE(maxNextPos);
-END ReportMaxNextPos;
-
 
 PROCEDURE LeaveA2;
 VAR cur: Process; ebp,n: ADDRESS;
@@ -1430,7 +1401,6 @@ BEGIN
 		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
 		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
 		INC(cur.gcContext.nextPos);
-		IF cur.gcContext.nextPos > maxNextPos THEN maxNextPos := cur.gcContext.nextPos END;
 		ASSERT(cur.gcContext.nextPos < 255); 
 		IF cur.gcContext.nextPos > 255 THEN cur.gcContext.nextPos := 255 END;
 		(* IF (cur.gcContext.nextPos > 4) THEN cur.gcContext.nextPos := 2 END;*)

@@ -461,15 +461,17 @@ BEGIN
 	b := Kernel32.WriteFile(hout,c,len,len,NIL);
 END TraceChar;
 
-PROCEDURE SetTraceFile(VAR filename: ARRAY OF CHAR);
+PROCEDURE SetTraceFile*;
 BEGIN
-	Trace.String("trace -> file "); Trace.String(filename); Trace.Ln;
-	hout := Kernel32.CreateFile(filename, SetToDW({Kernel32.GenericWrite}), SetToDW({Kernel32.FileShareRead}), NIL, Kernel32.CreateAlways, SetToDW({Kernel32.FileAttributeNormal}), Kernel32.NULL);
-	Kernel32.GetFullPathName(filename, LEN(filename), filename, NIL);
+	traceName := "SystemTrace.txt";
+	SetupTraceName(traceName);
+	Trace.String("trace -> file "); Trace.String(traceName); Trace.Ln;
+	hout := Kernel32.CreateFile(traceName, SetToDW({Kernel32.GenericWrite}), SetToDW({Kernel32.FileShareRead}), NIL, Kernel32.CreateAlways, SetToDW({Kernel32.FileAttributeNormal}), Kernel32.NULL);
+	Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
 END SetTraceFile;
 
-PROCEDURE SetTraceConsole;
+PROCEDURE SetTraceConsole*;
 VAR res: LONGINT;
 BEGIN
 	Trace.String("trace -> console"); Trace.Ln;
@@ -619,11 +621,7 @@ BEGIN
 	traceName[0] := 0X;
 	GetConfig("Trace",traceName);
 	Trace.String("traceName "); Trace.String(traceName); Trace.Ln;
-	IF traceName = "File" THEN
-		traceName := "SystemTrace.txt";
-		SetupTraceName(traceName);
-		Trace.String("trace file to "); Trace.String(traceName); Trace.Ln;
-		SetTraceFile(traceName);
+	IF traceName = "File" THEN SetTraceFile;
 	ELSIF traceName = "Console" THEN SetTraceConsole
 	(* else trace is on kernel log *)
 	END;

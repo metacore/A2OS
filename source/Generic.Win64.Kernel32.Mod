@@ -1110,9 +1110,6 @@ VAR
 		ELSE
 			OutputString := ConsoleString
 		END;
-		Trace.String("Test"); Trace.Ln; 
-		Trace.Address(InitializeCriticalSection);
-		Trace.String(" =="); Trace.Ln; 
 	END Init;
 	
 	VAR g: BOOLEAN;
@@ -1180,6 +1177,4 @@ VAR hout: HANDLE;
 (*BEGIN
 	Init;*)
 	
-BEGIN
-	Trace.String("Kernel32 (64bit)"); Trace.Ln;
 END Kernel32.

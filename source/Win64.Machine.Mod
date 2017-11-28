@@ -5,7 +5,7 @@ MODULE Machine;
 IMPORT SYSTEM, Trace, Kernel32;
 
 CONST
-	Version = "WinAos (32bit) ";
+	Version = "WinA2 (64bit) ";
 
 	DefaultConfigFile = "aos.ini";
 	DefaultGenericConfigFile = "aosg.ini";
@@ -21,6 +21,7 @@ CONST
 	debug* = FALSE;   (** display more debug output during booting *)
 
 CONST
+	TraceVerbose = FALSE; 
 	AddressSize = SIZEOF(ADDRESS);
 	StaticBlockSize = 32;		(* static heap block size *)
 	BlockHeaderSize = 2 * AddressSize;
@@ -470,6 +471,7 @@ BEGIN
 	hout := Kernel32.CreateFile(traceName, SetToDW({Kernel32.GenericWrite}), SetToDW({Kernel32.FileShareRead}), NIL, Kernel32.CreateAlways, SetToDW({Kernel32.FileAttributeNormal}), Kernel32.NULL);
 	Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
+	Trace.String(version); Trace.Ln; 
 END SetTraceFile;
 
 PROCEDURE SetTraceConsole*;
@@ -480,6 +482,7 @@ BEGIN
 	hin := Kernel32.GetStdHandle (Kernel32.STDInput);
 	hout := Kernel32.GetStdHandle (Kernel32.STDOutput);
 	Trace.Char := TraceChar;
+	Trace.String(version); Trace.Ln; 
 END SetTraceConsole;
 
 PROCEDURE SetupTraceName(VAR traceName: ARRAY OF CHAR);
@@ -584,8 +587,7 @@ PROCEDURE Init*;
 VAR vendor: Vendor; ver: LONGINT; hfile: Kernel32.HANDLE;
 BEGIN
 	Kernel32.Init;
-	Trace.String("Machine 1"); Trace.Ln;
-(*	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor; *)
+	(*	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor; *)
 	InitLocks();
 	boottime:=GetTimer();
 
@@ -609,15 +611,10 @@ BEGIN
 		Kernel32.CloseHandle(hfile)
 	END;
 
+	(*
 	(* ever used ? *)
 	ParseLine(commandLine, userConfigFile);
-
-
 	userConfigFile[Kernel32.GetFullPathName (userConfigFile, Kernel32.MaxPath, userConfigFile, 0)] := 0X;
-
-
-	Trace.String("config file = "); Trace.String(defaultConfigFile); Trace.Ln;
-	Trace.String("user config file = "); Trace.String(userConfigFile); Trace.Ln;
 
 	traceName[0] := 0X;
 	GetConfig("Trace",traceName);
@@ -627,6 +624,7 @@ BEGIN
 	(* else trace is on kernel log *)
 	END;
 	Trace.String("Machine init done"); Trace.Ln;
+	*)
 END Init;
 
 	PROCEDURE {INITIAL, NOPAF} Start;
@@ -743,9 +741,12 @@ BEGIN
 	IF adr = NilVal THEN (* allocation failed *)
 		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, SetToDW({Kernel32.MEMCommit}), SetToDW({Kernel32.PageExecuteReadWrite}));
 	END;
-	Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
-	Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
-	Trace.String("first heap block adr "); Trace.Int(adr,1); Trace.Ln;
+	
+	IF TraceVerbose THEN
+		Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
+		Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
+		Trace.String("first heap block adr "); Trace.Int(adr,1); Trace.Ln;
+	END;
 	ASSERT(adr # 0);
 
 	alignOffset := (-adr) MOD StaticBlockSize;
@@ -896,9 +897,11 @@ BEGIN
 		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, SetToDW({Kernel32.MEMCommit}), SetToDW({Kernel32.PageExecuteReadWrite}));
 	END;
 	continue := adr = initVal;
-	Trace.String("expand heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
-	Trace.String("expand heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
-	Trace.String("expand heap block adr "); Trace.Int(adr,1); Trace.Ln;
+	IF TraceVerbose THEN
+		Trace.String("expand heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
+		Trace.String("expand heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
+		Trace.String("expand heap block adr "); Trace.Int(adr,1); Trace.Ln;
+	END;
 	ASSERT(adr # 0);
 
 	IF adr # 0 THEN
@@ -1112,5 +1115,5 @@ BEGIN
 	IF ~Kernel32.Generic THEN
 		Init
 	END;
-	Trace.String("Machine (64 bit)"); Trace.Ln;
+	Trace.String(version); Trace.Ln;
 END Machine.

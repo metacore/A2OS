@@ -211,6 +211,7 @@ VAR
 	PROCEDURE ^ Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
 	PROCEDURE ^ Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
+	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
 	PROCEDURE ^ FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File; 
 	PROCEDURE ^ ReadSInt*(VAR r: Rider; VAR x: SHORTINT); 
 	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 

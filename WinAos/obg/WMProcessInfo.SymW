@@ -78,6 +78,7 @@ VAR
 
 	PROCEDURE ^ GetTitleStr(col: LONGINT; VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ GetAlign(col: LONGINT): LONGINT; 
+	PROCEDURE ^ CheckBP(p: Objects.Process; bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ OpenCpuLoadWindow(pid: LONGINT); 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 

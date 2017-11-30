@@ -270,7 +270,8 @@ TYPE
 	Msg* = RECORD 
 		hwnd*: HWND; 
 		message*: LONGINT; 
-		wParam*, lParam*: LONGINT; 
+		wParam*: WParam; 
+		lParam*: LParam; 
 		time*: LONGINT; 
 		point*: Point; 
 	END; 

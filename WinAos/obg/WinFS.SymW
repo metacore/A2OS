@@ -172,6 +172,7 @@ VAR
 	PROCEDURE ^ RegisterNotification*(p: NotificationProc); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
+	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
 	PROCEDURE ^ Mount*(context: Commands.Context); 
 	PROCEDURE ^ Unmount*(context: Commands.Context); 
 BEGIN

@@ -37,6 +37,7 @@ CONST
 	sfTypeProcedure = 51; 
 	sfSysFlag = 52; 
 	sfInvisible = 53; 
+	sfHidden = 172; 
 	sfReadOnly = 54; 
 	sfObjFlag = 55; 
 	sfConst = 55; 

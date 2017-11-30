@@ -96,7 +96,7 @@ VAR
 
 	PROCEDURE ^ CheckHeapAddress(address: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ Wait(w: Streams.Writer); 
-	PROCEDURE ^ Expect(b: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Expect(pos: SIZE; b: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetChar*(refs: Modules.Bytes; VAR offset: SIZE): CHAR; 
 	PROCEDURE ^ SkipChar*(VAR offset: SIZE); 
 	PROCEDURE ^ GetAddress*(refs: Modules.Bytes; VAR offset: SIZE): ADDRESS; 

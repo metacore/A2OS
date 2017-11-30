@@ -5927,6 +5927,40 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqALALLoop , FALSE);
 	END ">=";
 
+
+(** SIZE *)
+	PROCEDURE LssAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: LONGINT;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF rval <= lval THEN RETURN FALSE END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END LssAZAZLoop;
+
+	OPERATOR "<"*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAZAZLoop , FALSE);
+	END "<";
+
+	PROCEDURE GeqAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF rval > lval THEN RETURN FALSE END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END GeqAZAZLoop;
+
+	OPERATOR ">="*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqAZAZLoop , FALSE);
+	END ">=";
+
 (** REAL *)
 	PROCEDURE LssARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -5993,6 +6027,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqAXAXLoop , FALSE);
 	END ">=";
 
+	
 	(*** less than, greater or equal: array x array -> boolean  ********************************************************************)
 
 (** SHORTINT *)
@@ -6094,7 +6129,40 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqALALLoop , FALSE);
 	END "<=";
 
-(** REAL *)
+(** SIZE *)
+	PROCEDURE GtrAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF rval >= lval THEN RETURN FALSE END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END GtrAZAZLoop;
+
+	OPERATOR ">"*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAZAZLoop , FALSE);
+	END ">";
+
+	PROCEDURE LeqAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF rval < lval THEN RETURN FALSE END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END LeqAZAZLoop;
+
+	OPERATOR "<="*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqAZAZLoop , FALSE);
+	END "<=";
+
+(** SIZE *)
 	PROCEDURE GtrARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
 	BEGIN
@@ -6251,6 +6319,28 @@ Sufficient (but not necessary) conditions:
 		RETURN ~ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlALALLoop, FALSE );
 	END "#";
 
+(** SIZE *)
+	PROCEDURE EqlAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );
+			IF rval # lval THEN RETURN FALSE END;
+			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END EqlAZAZLoop;
+
+	OPERATOR "="*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAZAZLoop, FALSE );
+	END "=";
+
+	OPERATOR "#"*( CONST left, right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ~ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAZAZLoop, FALSE );
+	END "#";
+
 (** REAL *)
 	PROCEDURE EqlARARLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -6296,7 +6386,7 @@ Sufficient (but not necessary) conditions:
 	END "#";
 
 (** COMPLEX *)
-	PROCEDURE EqlAZAZLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
+	PROCEDURE EqlACACLoop( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: COMPLEX;
 	BEGIN
 		WHILE (len > 0) DO
@@ -6305,16 +6395,16 @@ Sufficient (but not necessary) conditions:
 			INC( ladr, linc );  INC( radr, rinc );  DEC( len );
 		END;
 		RETURN TRUE;
-	END EqlAZAZLoop;
+	END EqlACACLoop;
 
 	OPERATOR "="*( CONST left, right: ARRAY [ ? ] OF COMPLEX ): BOOLEAN;
 	BEGIN
-		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAZAZLoop, FALSE );
+		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlACACLoop, FALSE );
 	END "=";
 
 	OPERATOR "#"*( CONST left, right: ARRAY [ ? ] OF COMPLEX ): BOOLEAN;
 	BEGIN
-		RETURN ~ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAZAZLoop, FALSE );
+		RETURN ~ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlACACLoop, FALSE );
 	END "#";
 
 (** LONGCOMPLEX *)
@@ -6482,6 +6572,44 @@ Sufficient (but not necessary) conditions:
 		RETURN ~(left = right);
 	END "#";
 
+
+(** SIZE *)
+	PROCEDURE EqlAZSZLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval # rval THEN RETURN FALSE END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END EqlAZSZLoop;
+
+	OPERATOR "="*( CONST left: ARRAY [ ? ] OF SIZE;
+										   right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAZSZLoop );
+	END "=";
+
+	OPERATOR "="*( left: SIZE;
+										   CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), EqlALSLLoop );
+	END "=";
+
+	OPERATOR "#"*( CONST left: ARRAY [ ? ] OF SIZE;
+											right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ~(left = right);
+	END "#";
+
+	OPERATOR "#"*( left: SIZE;
+											CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ~(left = right);
+	END "#";
+
 (** REAL *)
 	PROCEDURE EqlARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -6628,6 +6756,30 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrALSLLoop );
 	END "<";
 
+(** SIZE *)
+	PROCEDURE GtrAZSZLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval <= rval THEN RETURN FALSE END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END GtrAZSZLoop;
+
+	OPERATOR ">"*( CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAZSZLoop );
+	END ">";
+
+	OPERATOR "<"*( left: SIZE; CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrAZSZLoop );
+	END "<";
+
+
 (** REAL *)
 	PROCEDURE GtrARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -6755,6 +6907,31 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqALSLLoop );
 	END "<=";
 
+(** SIZE *)
+	PROCEDURE GeqAZSZLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval < rval THEN RETURN FALSE END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END GeqAZSZLoop;
+
+	OPERATOR ">="*( CONST left: ARRAY [ ? ] OF SIZE;
+										    right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqAZSZLoop );
+	END ">=";
+
+	OPERATOR "<="*( left:SIZE;
+										   CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqAZSZLoop );
+	END "<=";
+
 (** REAL *)
 	PROCEDURE GeqARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -6873,6 +7050,31 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqALSLLoop );
 	END ">=";
+
+
+(** SIZE *)
+	PROCEDURE LeqAZSZLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval > rval THEN RETURN FALSE END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END LeqAZSZLoop;
+
+	OPERATOR "<="*( CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqAZSZLoop );
+	END "<=";
+
+	OPERATOR ">="*( left: SIZE; CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqAZSZLoop );
+	END ">=";
+
 
 (** REAL *)
 	PROCEDURE LeqARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
@@ -6994,6 +7196,30 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssALSLLoop );
 	END ">";
 
+
+(** SIZE *)
+	PROCEDURE LssAZSZLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval >= rval THEN RETURN FALSE END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		RETURN TRUE;
+	END LssAZSZLoop;
+
+	OPERATOR "<"*( CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAZSZLoop );
+	END "<";
+
+	OPERATOR ">"*( left: SIZE;CONST right: ARRAY [ ? ] OF SIZE ): BOOLEAN;
+	BEGIN
+		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssAZSZLoop );
+	END ">";
+
 (** REAL *)
 	PROCEDURE LssARSRLoop( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	VAR lval, rval: REAL;
@@ -7043,6 +7269,7 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssAXSXLoop );
 	END ">";
+	
 
 	(**** binary max/min operators array x scalar-> array ********************************************************************)
 	
@@ -7496,6 +7723,27 @@ TYPE
 	BEGIN
 		val := MAX( Type );
 		ApplyUnaryASOp( ADDRESSOF( val ), ADDRESSOF( left ), MinALLoop );  RETURN val;
+	END "MIN";
+
+(** SIZE *)
+	PROCEDURE MinAZLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
+	VAR lval, dval: SIZE;
+	BEGIN
+		SYSTEM.GET( dadr, dval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );
+			IF lval < dval THEN dval := lval END;
+			INC( ladr, linc );  DEC( len );
+		END;
+		SYSTEM.PUT( dadr, dval );
+	END MinAZLoop;
+
+	OPERATOR "MIN"*( CONST left: ARRAY [ ? ] OF SIZE ): SIZE;
+	TYPE Type = SIZE;
+	VAR val: Type;
+	BEGIN
+		val := MAX( Type );
+		ApplyUnaryASOp( ADDRESSOF( val ), ADDRESSOF( left ), MinAZLoop );  RETURN val;
 	END "MIN";
 
 (** REAL *)

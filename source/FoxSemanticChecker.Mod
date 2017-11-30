@@ -5356,9 +5356,9 @@ TYPE
 									END;
 
 									parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Open);
-									parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.longintType);
+									parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.sizeType);
 									IF ~CompatibleTo(system,type1,parameterType) THEN
-										Error(parameter1.position,"parameter incompatible to math array of longint");
+										Error(parameter1.position,"parameter incompatible to math array of size");
 										result := SyntaxTree.invalidExpression;
 									ELSE
 										parameter1 := NewConversion(Basic.invalidPosition,parameter1,parameterType,NIL); actualParameters.SetExpression(1,parameter1);

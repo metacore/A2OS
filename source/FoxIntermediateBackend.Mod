@@ -1321,7 +1321,7 @@ TYPE
 
 		(* useful operands and types *)
 		nil,one,fp,sp,ap,lr,true,false: IntermediateCode.Operand;
-		bool,addressType,setType, sizeType, byteType: IntermediateCode.Type;
+		bool,addressType,setType, sizeType, lenType, byteType: IntermediateCode.Type;
 
 		commentPrintout: Printout.Printer;
 		dump: Streams.Writer;
@@ -1379,6 +1379,7 @@ TYPE
 			addressType := IntermediateCode.GetType(system,system.addressType);
 			setType := IntermediateCode.GetType(system,system.setType);
 			sizeType := IntermediateCode.GetType(system, system.sizeType);
+			lenType := IntermediateCode.GetType(system, system.lenType);
 			byteType := IntermediateCode.GetType(system, system.byteType);
 			
 			fp := IntermediateCode.Register(addressType,IntermediateCode.GeneralPurposeRegister,IntermediateCode.FP);
@@ -1790,9 +1791,9 @@ TYPE
 			type := type.resolved;
 			IF operand.mode = ModeReference THEN
 				IF type IS SyntaxTree.RangeType THEN
-					MakeMemory(firstOp, operand.op, IntermediateCode.GetType(system, system.longintType), 0);
-					MakeMemory(lastOp, operand.op, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
-					MakeMemory(stepOp, operand.op, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+					MakeMemory(firstOp, operand.op, IntermediateCode.GetType(system, system.lenType), 0);
+					MakeMemory(lastOp, operand.op, IntermediateCode.GetType(system, system.lenType), ToMemoryUnits(system, system.SizeOf(system.lenType)));
+					MakeMemory(stepOp, operand.op, IntermediateCode.GetType(system, system.lenType), 2 * ToMemoryUnits(system, system.SizeOf(system.lenType)));
 					ReleaseOperand(operand);
 					operand.op := firstOp;
 					operand.tag := lastOp;
@@ -6718,10 +6719,10 @@ TYPE
 				BreqL(end,result.op,IntermediateCode.Immediate(addressType,0));
 				Emit(MovReplace(position,result.op,IntermediateCode.Memory(addressType,result.op,ToMemoryUnits(system,MathDimOffset*addressType.sizeInBits))));
 				SetLabel(end);
-				Convert(result.op,sizeType);
+				Convert(result.op,lenType);
 			ELSE
 				InitOperand(result,ModeValue);
-				IntermediateCode.InitImmediate(result.op, sizeType, SemanticChecker.Dimension(type,{SyntaxTree.Open, SyntaxTree.Static}));
+				IntermediateCode.InitImmediate(result.op, lenType, SemanticChecker.Dimension(type,{SyntaxTree.Open, SyntaxTree.Static}));
 			END
 		END MathArrayDim;
 
@@ -10162,17 +10163,17 @@ TYPE
 				Designate(left, leftO);(* The order is crucial. Do not reorder emission of left and right *)
 
 				(* first *)
-				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), 0);
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.lenType), 0);
 				Emit(Mov(position,mem, rightO.op));
 				ReleaseIntermediateOperand(mem);
 
 				(* last *)
-				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.lenType), ToMemoryUnits(system, system.SizeOf(system.lenType)));
 				Emit(Mov(position,mem, rightO.tag));
 				ReleaseIntermediateOperand(mem);
 
 				(* step *)
-				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+				MakeMemory(mem, leftO.op, IntermediateCode.GetType(system, system.lenType), 2 * ToMemoryUnits(system, system.SizeOf(system.lenType)));
 				Emit(Mov(position,mem, rightO.extra));
 				ReleaseIntermediateOperand(mem);
 
@@ -10699,15 +10700,15 @@ TYPE
 						(* array range type *)
 						Evaluate(expression, right);
 
-						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), 0);
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.lenType), 0);
 						Emit(Mov(position,mem, right.op)); (* first *)
 						ReleaseIntermediateOperand(mem);
 
-						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), ToMemoryUnits(system, system.SizeOf(system.longintType)));
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.lenType), ToMemoryUnits(system, system.SizeOf(system.lenType)));
 						Emit(Mov(position,mem, right.tag)); (* last *)
 						ReleaseIntermediateOperand(mem);
 
-						MakeMemory(mem, left, IntermediateCode.GetType(system, system.longintType), 2 * ToMemoryUnits(system, system.SizeOf(system.longintType)));
+						MakeMemory(mem, left, IntermediateCode.GetType(system, system.lenType), 2 * ToMemoryUnits(system, system.SizeOf(system.lenType)));
 						Emit(Mov(position,mem, right.extra)); (* step *)
 						ReleaseIntermediateOperand(mem);
 

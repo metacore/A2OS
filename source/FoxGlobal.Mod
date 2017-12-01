@@ -244,7 +244,8 @@ TYPE
 		*)
 
 		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
-		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
+		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type;
+
 
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
@@ -769,6 +770,9 @@ TYPE
 		system.addressType := SyntaxTree.NewAddressType(system.addressSize);
 		system.sizeType := SyntaxTree.NewSizeType(system.addressSize);
 		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.longintType));
+
+		system.lenType := system.longintType;
+		(* generally, the lenType should be sizeType but for historical (legacy) reasons, it is longint in the current implementation *)
 
 		system.complexType := Complex64;
 		system.longcomplexType := Complex128;

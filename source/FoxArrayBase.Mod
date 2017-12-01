@@ -24,6 +24,9 @@ TYPE
 	BinaryAASLoop = PROCEDURE ( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BinaryAABLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	BinaryASBLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
+	
+	LenType = LONGINT; (* should be SIZE but for legacy reasons we have to use this *)
+	
 CONST
 	debug = FALSE;   (* warning: debug=true -> a lot of output is generated -> traps are not displayed in Oberon (Kernel overflow) *)
 	statistics= FALSE;
@@ -7897,13 +7900,13 @@ TYPE
 
 	(*** LEN: array -> array **)
 
-	OPERATOR "LEN"*(CONST left: ARRAY [?]): ARRAY [*] OF SIZE;
+	OPERATOR "LEN"*(CONST left: ARRAY [?]): ARRAY [*] OF LenType;
 	VAR src: ADDRESS; dim,i: SIZE;
 	BEGIN
 		src := SYSTEM.VAL(ADDRESS,left);
 		dim := GetDim( src );
 		IF (DIM(RESULT)#1) OR (LEN(RESULT,0) # dim) THEN NEW(RESULT,dim) END;
-		FOR i := 0 TO dim-1 DO RESULT[i] := GetLen(src,i) END;
+		FOR i := 0 TO dim-1 DO RESULT[i] := LenType(GetLen(src,i)) END;
 		RETURN RESULT
 	END "LEN";
 

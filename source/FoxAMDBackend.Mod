@@ -413,13 +413,14 @@ TYPE
 		PROCEDURE NextFree(CONST type: IntermediateCode.Type): LONGINT;
 		VAR i: LONGINT;
 
-			PROCEDURE GetHint(offset: LONGINT): LONGINT;
+			PROCEDURE GetGPHint(offset: LONGINT): LONGINT;
 			VAR res: LONGINT;
 			BEGIN
-				IF (hint # none) & (toVirtual[hint MOD 32 + offset]=free) & ~Reserved(hint) THEN res := hint ELSE res := none END;
+				IF (hint # none) & (hint >= AL) & (hint <= R15) & (toVirtual[hint MOD 32 + offset]=free) & ~Reserved(hint) THEN res := hint MOD 32 + offset ELSE res := none END;
 				hint := none;
 				RETURN res
-			END GetHint;
+			END GetGPHint;
+
 
 			PROCEDURE Get(from,to: LONGINT): LONGINT;
 			VAR i: LONGINT;
@@ -438,28 +439,28 @@ TYPE
 			BEGIN
 			IF type.form IN IntermediateCode.Integer THEN
 				IF type.sizeInBits = IntermediateCode.Bits8 THEN
-					i := GetHint(AL);
+					i := GetGPHint(AL);
 					IF i = none THEN i := Get(BL, AL) END;
 					IF i = none THEN i := Get(BH, AH) END;
 					IF i = none THEN
 						i := Get(AL,R15B)
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits16 THEN
-					i := GetHint(AX);
+					i := GetGPHint(AX);
 					IF i = none THEN i := Get(DI, SI) END;
 					IF i = none THEN i := Get(BX, AX) END;
 					IF i = none THEN
 						i := Get(AX,R15W);
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits32 THEN
-					i := GetHint(EAX);
+					i := GetGPHint(EAX);
 					IF i = none THEN i := Get(EDI,ESI) END;
 					IF i = none THEN i := Get(EBX,EAX) END;
 					IF i = none THEN
 						i := Get(EAX,R15D);
 					END;
 				ELSIF type.sizeInBits = IntermediateCode.Bits64 THEN
-					i := GetHint(RAX);
+					i := GetGPHint(RAX);
 					IF i = none THEN i := Get(RDI,RSI) END;
 					IF i = none THEN i := Get(RBX,RAX) END;
 					IF i = none THEN

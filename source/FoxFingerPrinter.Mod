@@ -100,6 +100,8 @@ CONST
 	fpTypeComplex = 24;
 	fpTypeLongcomplex = 25;
 	fpTypeModule=26;
+	fpTypeSize=27;
+	fpTypeAddress=28;
 
 	fpTypeBasic=1;
 	fpTypeStaticArray=2;
@@ -201,17 +203,12 @@ TYPE
 
 		PROCEDURE VisitAddressType(x: SyntaxTree.AddressType);
 		BEGIN
-			SetTypeFingerprint(x,fpTypePointer)
+			SetTypeFingerprint(x,fpTypeAddress)
 		END VisitAddressType;
 
 		PROCEDURE VisitSizeType(x: SyntaxTree.SizeType);
 		BEGIN
-			IF x.sizeInBits=8 THEN SetTypeFingerprint(x,fpTypeShortint)
-			ELSIF x.sizeInBits = 16 THEN SetTypeFingerprint(x,fpTypeInteger)
-			ELSIF x.sizeInBits = 32 THEN SetTypeFingerprint(x,fpTypeLongint)
-			ELSIF x.sizeInBits = 64 THEN SetTypeFingerprint(x,fpTypeHugeint)
-			ELSE HALT(100)
-			END;
+			SetTypeFingerprint(x, fpTypeSize); 
 		END VisitSizeType;
 
 		PROCEDURE VisitObjectType(x: SyntaxTree.ObjectType);

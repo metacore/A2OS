@@ -86,6 +86,8 @@ TYPE
 
 	BinaryASBLoop = PROCEDURE (ladr, radr: ADDRESS; linc, len: SIZE):BOOLEAN; 
 
+	LenType = LONGINT; 
+
 	FastMatMul* = PROCEDURE (matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE):BOOLEAN; 
 
 	TransposeP* = PROCEDURE (ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
@@ -991,7 +993,7 @@ VAR
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF REAL): REAL; 
 	PROCEDURE ^ MaxAXLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
-	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF SIZE; 
+	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF LenType; 
 	PROCEDURE ^ SumASLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
 	PROCEDURE ^ SumAILoop(ladr, dadr: ADDRESS; linc, len: SIZE); 

@@ -104,22 +104,22 @@ VAR
 	
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {FingerPrint(-905203345)}  - CurrentBP*(): ADDRESS;
+	PROCEDURE {FingerPrint(-936660625)}  - CurrentBP*(): ADDRESS;
 	CODE {SYSTEM.i386}
 	MOV EAX, EBP
 
 	END CurrentBP; 
-	PROCEDURE {FingerPrint(-2112276049)}  - SetBP*(bp: ADDRESS);
+	PROCEDURE {FingerPrint(-2111997521)}  - SetBP*(bp: ADDRESS);
 	CODE {SYSTEM.i386}
 	POP EBP
 
 	END SetBP; 
-	PROCEDURE {FingerPrint(-903237273)}  - CurrentSP*(): ADDRESS;
+	PROCEDURE {FingerPrint(-938888857)}  - CurrentSP*(): ADDRESS;
 	CODE {SYSTEM.i386}
 	MOV EAX, ESP
 
 	END CurrentSP; 
-	PROCEDURE {FingerPrint(-1827063378)}  - SetSP*(sp: ADDRESS);
+	PROCEDURE {FingerPrint(-1826784850)}  - SetSP*(sp: ADDRESS);
 	CODE {SYSTEM.i386}
 	POP ESP
 

@@ -37,6 +37,8 @@ CONST
 	fpTypeComplex = 24; 
 	fpTypeLongcomplex = 25; 
 	fpTypeModule = 26; 
+	fpTypeSize = 27; 
+	fpTypeAddress = 28; 
 	fpTypeBasic = 1; 
 	fpTypeStaticArray = 2; 
 	fpTypeDynamicArray = 4; 

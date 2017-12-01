@@ -217,7 +217,7 @@ TYPE
 		offsetFirstParameter-: LONGINT; 
 		operatorDefined-: ARRAY end OF BOOLEAN; 
 		addressSize-: LONGINT; 
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type; 
+		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type; 
 		CanPassInRegister-: PassInRegisterProc; 
 		cellsAreObjects-: BOOLEAN; 
 

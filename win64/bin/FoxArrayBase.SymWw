@@ -243,7 +243,7 @@ VAR
 	PROCEDURE ^ Copy2(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy1(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy8(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
-	PROCEDURE {FingerPrint(1819602743)}  - MoveB*(srcadr, destadr, len: SIZE);
+	PROCEDURE {FingerPrint(1830087407)}  - MoveB*(srcadr, destadr, len: SIZE);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  len
 		MOV	EDI, [ESP+4]	;  destadr
@@ -759,6 +759,10 @@ VAR
 	OPERATOR ^ "<"-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
 	PROCEDURE ^ GeqALALLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">="-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "<"-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
+	PROCEDURE ^ GeqAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ ">="-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ LssARARLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<"-(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
 	PROCEDURE ^ GeqARARLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
@@ -779,6 +783,10 @@ VAR
 	OPERATOR ^ ">"-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
 	PROCEDURE ^ LeqALALLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<="-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ ">"-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
+	PROCEDURE ^ LeqAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "<="-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ GtrARARLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">"-(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
 	PROCEDURE ^ LeqARARLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
@@ -799,13 +807,16 @@ VAR
 	PROCEDURE ^ EqlALALLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "="-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "="-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST left, right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ EqlARARLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "="-(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
 	PROCEDURE ^ EqlAXAXLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "="-(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
-	PROCEDURE ^ EqlAZAZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
+	PROCEDURE ^ EqlACACLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "="-(CONST left, right: ARRAY [?] OF COMPLEX): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST left, right: ARRAY [?] OF COMPLEX): BOOLEAN; 
 	PROCEDURE ^ EqlALZALZLoop(ladr, radr: ADDRESS; linc, rinc, len: SIZE): BOOLEAN; 
@@ -831,6 +842,11 @@ VAR
 	OPERATOR ^ "="-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
 	OPERATOR ^ "#"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAZSZLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "="-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ "="-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
+	OPERATOR ^ "#"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ "#"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ EqlARSRLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "="-(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
 	OPERATOR ^ "="-(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
@@ -850,6 +866,9 @@ VAR
 	PROCEDURE ^ GtrALSLLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
 	OPERATOR ^ "<"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAZSZLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ ">"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ "<"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ GtrARSRLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">"-(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
 	OPERATOR ^ "<"-(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
@@ -865,6 +884,9 @@ VAR
 	PROCEDURE ^ GeqALSLLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">="-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
 	OPERATOR ^ "<="-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqAZSZLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ ">="-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ "<="-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ GeqARSRLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ ">="-(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
 	OPERATOR ^ "<="-(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
@@ -880,6 +902,9 @@ VAR
 	PROCEDURE ^ LeqALSLLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<="-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
 	OPERATOR ^ ">="-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqAZSZLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "<="-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ ">="-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ LeqARSRLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<="-(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
 	OPERATOR ^ ">="-(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
@@ -895,6 +920,9 @@ VAR
 	PROCEDURE ^ LssALSLLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
 	OPERATOR ^ ">"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAZSZLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
+	OPERATOR ^ "<"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): BOOLEAN; 
+	OPERATOR ^ ">"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): BOOLEAN; 
 	PROCEDURE ^ LssARSRLoop(ladr, radr: ADDRESS; linc, len: SIZE): BOOLEAN; 
 	OPERATOR ^ "<"-(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
 	OPERATOR ^ ">"-(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
@@ -947,6 +975,8 @@ VAR
 	OPERATOR ^ "MIN"-(CONST left: ARRAY [?] OF INTEGER): INTEGER; 
 	PROCEDURE ^ MinALLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "MIN"-(CONST left: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ MinAZLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
+	OPERATOR ^ "MIN"-(CONST left: ARRAY [?] OF SIZE): SIZE; 
 	PROCEDURE ^ MinARLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "MIN"-(CONST left: ARRAY [?] OF REAL): REAL; 
 	PROCEDURE ^ MinAXLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 

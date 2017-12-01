@@ -267,7 +267,7 @@ TYPE
 		registerUsageCount: RegisterUsageCount; 
 		usedRegisters: RegisterEntry; 
 		nil, one, fp, sp, ap, lr, true, false: IntermediateCode.Operand; 
-		bool, addressType, setType, sizeType, byteType: IntermediateCode.Type; 
+		bool, addressType, setType, sizeType, lenType, byteType: IntermediateCode.Type; 
 		commentPrintout: Printout.Printer; 
 		dump: Streams.Writer; 
 		tagsAvailable: BOOLEAN; 

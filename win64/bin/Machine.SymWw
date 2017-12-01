@@ -1,7 +1,7 @@
 MODULE Machine;
 	IMPORT SYSTEM, Trace, Kernel32;
 CONST 
-	Version = \"WinAos (32bit) "\; 
+	Version = \"WinA2 (64bit) "\; 
 	DefaultConfigFile = \"aos.ini"\; 
 	DefaultGenericConfigFile = \"aosg.ini"\; 
 	UserConfigFile = \"myaos.ini"\; 
@@ -10,6 +10,7 @@ CONST
 	MTTR* = 12; 
 	MMX* = 23; 
 	debug* = FALSE; 
+	TraceVerbose = FALSE; 
 	AddressSize = SIZEOF(ADDRESS); 
 	StaticBlockSize = 32; 
 	BlockHeaderSize = (2 * AddressSize); 
@@ -127,22 +128,22 @@ VAR
 	
 	END AtomicCAS; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {FingerPrint(100075378)}  - CurrentBP*(): ADDRESS;
+	PROCEDURE {FingerPrint(368510835)}  - CurrentBP*(): ADDRESS;
 	CODE {SYSTEM.AMD64}
 		MOV RAX, RBP
 	
 	END CurrentBP; 
-	PROCEDURE {FingerPrint(211557660)}  - SetBP*(bp: ADDRESS);
+	PROCEDURE {FingerPrint(247209244)}  - SetBP*(bp: ADDRESS);
 	CODE {SYSTEM.AMD64}
 		POP RBP
 	
 	END SetBP; 
-	PROCEDURE {FingerPrint(702752932)}  - CurrentSP*(): ADDRESS;
+	PROCEDURE {FingerPrint(702750756)}  - CurrentSP*(): ADDRESS;
 	CODE {SYSTEM.AMD64}
 		MOV RAX, RSP
 	
 	END CurrentSP; 
-	PROCEDURE {FingerPrint(-1935925995)}  - SetSP*(sp: ADDRESS);
+	PROCEDURE {FingerPrint(-1900274411)}  - SetSP*(sp: ADDRESS);
 	CODE {SYSTEM.AMD64}
 		POP RSP
 	

@@ -947,13 +947,13 @@ TYPE
 			cpuoptionReplacer.Add ("3DNOW", "3DNow");
 			cpuoptionReplacer.Add ("PRIV", "Privileged");
 			cpuoptionReplacer.Add ("PROT", "Protected");
-			cpuoptionReplacer.Add ("SW","");
+(*			cpuoptionReplacer.Add ("SW","");
 			cpuoptionReplacer.Add ("SB","");
 			cpuoptionReplacer.Add ("SMM","");
 			cpuoptionReplacer.Add ("AR1","");
 			cpuoptionReplacer.Add ("AR2","");
 			cpuoptionReplacer.Add ("ND","");
-
+*)
 			NEW(bitwidthReplacer);
 			bitwidthReplacer.Add("INV","I64");
 
@@ -980,16 +980,19 @@ TYPE
 				w.Char('"');
 				w.String(mnemonic.name);
 				w.Char('"');
-				w.String(", ");
+				(*w.String(", ");
 				w.Int(numberInstructions,1);
+				*)
 				w.String(");");
 				w.Ln;
 				INC(numberMnemonics);
 				instruction := mnemonic.firstInstruction;
 				WHILE(instruction # NIL) DO
+					(*
 					operandReplacer.Do(instruction.op1);
 					operandReplacer.Do(instruction.op2);
 					operandReplacer.Do(instruction.op3);
+					*)
 					bitwidthReplacer.Do(instruction.bitwidth);
 					cpuoptionReplacer.Do(instruction.target);
 					instruction := instruction.next;
@@ -999,7 +1002,33 @@ TYPE
 
 				instruction := mnemonic.firstInstruction;
 				WHILE(instruction # NIL) DO
-					w.Char(09X); w.Char(09X); w.String("AddInstruction(");
+					w.Char(09X); w.Char(09X); 
+					w.String("AddInstruction(");
+					w.String('"');
+					w.String(instruction.op1);
+					IF instruction.op2 # "" THEN
+						w.String(",");
+						w.String(instruction.op2);
+					END;
+					IF instruction.op3 # "" THEN
+						ASSERT(instruction.op2 # "");
+						w.String(",");
+						w.String(instruction.op3);
+					END;
+					w.String('", ');
+					
+					OpCode(instruction.opcode); w.String(", ");
+					
+					Options("opt",instruction.bitwidth); w.String(", ");
+					Options("cpu",instruction.target); w.String(");");
+					(*
+					w.String('", "');
+					w.String(instruction.bitwidth);
+					w.String('", "');
+					w.String(instruction.target);
+					w.String('"');*)
+					w.Ln;
+					(*
 					w.Int(numberInstructions,1); w.String(", ");
 					Operand(instruction.op1); w.String(", ");
 					Operand(instruction.op2); w.String(", ");
@@ -1009,17 +1038,17 @@ TYPE
 					Options("cpu",instruction.target); w.String(");");
 					w.Ln;
 					INC(numberInstructions);
+					*)
 					instruction := instruction.next;
 				END;
+				(*
 				w.Char(09X); w.Char(09X); w.String("EndMnemonic(");
 				w.String("op"); w.String(mnemonic.name);
 				w.String(", ");
 				w.Int(numberInstructions-1,1);
 				w.String(");");
+				*)
 				w.Ln;
-				w.Ln;
-
-
 				mnemonic := mnemonic.next;
 			END;
 
@@ -1032,8 +1061,8 @@ TYPE
 			mnemonic := firstMnemonic; numberMnemonics := 0;
 			WHILE(mnemonic # NIL) DO
 				w.Char(09X); w.String("op"); w.String(mnemonic.name);
-				w.String("* = ");
-				w.Int(numberMnemonics,1); w.String(";");
+				w.String("*,");
+(*				w.Int(numberMnemonics,1); w.String(";");*)
 				w.Ln;
 				INC(numberMnemonics);
 				mnemonic := mnemonic.next;

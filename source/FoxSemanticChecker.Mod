@@ -8352,6 +8352,7 @@ TYPE
 		VAR
 			constant: SyntaxTree.Constant;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
+			declaredType: SyntaxTree.Type;
 			variable: SyntaxTree.Variable;
 			procedure: SyntaxTree.Procedure;
 			procedureType : SyntaxTree.ProcedureType;
@@ -8500,8 +8501,16 @@ TYPE
 							ELSE
 								procedureType.selfParameter.type(SyntaxTree.QualifiedType).SetResolved(typeDeclaration.declaredType.resolved);
 								procedureType.selfParameter.SetState(SyntaxTree.Resolved);
-								typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
-								Register(procedure, typeDeclaration.declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+								declaredType := typeDeclaration.declaredType; 
+								IF declaredType IS SyntaxTree.PointerType THEN
+									declaredType := declaredType(SyntaxTree.PointerType).pointerBase.resolved
+								END;
+								IF declaredType IS SyntaxTree.RecordType THEN 
+									declaredType(SyntaxTree.RecordType).recordScope.AddProcedure(procedure);
+									Register(procedure, declaredType(SyntaxTree.RecordType).recordScope, procedure IS SyntaxTree.Operator);
+								ELSE
+									Error(procedureType.selfParameter.position,"type is no record or pointer to record");
+								END; 
 							END;
 						END;
 					END;

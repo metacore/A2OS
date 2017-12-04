@@ -118,7 +118,7 @@ TYPE
 	Result*= RECORD
 		type*: INTEGER; (* ConstantInteger, ConstantFloat, Fixup, Offset *)
 		sizeInBits*: INTEGER;
-		value*: LONGINT; (*! implementation restriction: operations between hugeints do not yet work *)
+		value*: HUGEINT; 
 		valueR*: LONGREAL;
 		fixup*: BinaryCode.Fixup;
 	END;
@@ -347,7 +347,7 @@ TYPE
 				result.valueR := result.value;
 				result.type := ConstantInteger;
 			ELSIF constant.type.resolved IS SyntaxTree.IntegerType THEN
-				result.value := constant.value.resolved(SyntaxTree.IntegerValue).value;
+				result.value := constant.value.resolved(SyntaxTree.IntegerValue).hvalue;
 				result.valueR := result.value;
 				result.type := ConstantInteger;
 			ELSIF constant.type.resolved IS SyntaxTree.FloatType THEN
@@ -492,10 +492,8 @@ TYPE
 				IF symbol.numberType = Scanner.Integer THEN
 					x.value := symbol.integer
 				ELSIF symbol.numberType = Scanner.Hugeint THEN
-					(* note that 64 bit integer constants are not (yet) supported in expressions by the assembler.
-					however, the scanner interprets large 32 bit integers as hugeints (because integers are always assumed to be signed). *)
-					x.value := SYSTEM.VAL(LONGINT, symbol.hugeint); (* TODO: how to do that? *)
-					ASSERT(x.value < 0); (* the resulting 32 bit integer must be negative when interpreted as a signed value *)
+					x.value := symbol.hugeint;
+					(* ASSERT(x.value < 0); (* the resulting 32 bit integer must be negative when interpreted as a signed value *)*)
 				END;
 				x.type := ConstantInteger;
 				RETURN TRUE;
@@ -709,7 +707,7 @@ TYPE
 		END Reserve;
 
 		(** if the assembler is at the last pass: put bits into the binary code section, otherwise only increment the PC **)
-		PROCEDURE PutBitsIfLastPass(data: LONGINT; size: BinaryCode.Bits);
+		PROCEDURE PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits);
 		VAR
 			oldPC: LONGINT;
 		BEGIN
@@ -828,7 +826,7 @@ TYPE
 							ELSIF Reserve(identifier) THEN
 							ELSIF identifier = "fixed" THEN
 								IF ExpectConstantInteger(result,TRUE) THEN
-									code.SetAlignment(TRUE,result.value)
+									code.SetAlignment(TRUE,LONGINT(result.value))
 								END;
 							ELSIF ~error THEN
 								errorPosition := pos;

@@ -149,7 +149,7 @@ TYPE
 			result: BOOLEAN;
 		BEGIN
 			IF Expression(assemblerResult, FALSE) & ((assemblerResult.type = FoxAssembler.ConstantInteger) OR (assemblerResult.type = FoxAssembler.Offset)) THEN
-				value := assemblerResult.value;
+				value := LONGINT(assemblerResult.value);
 				result := TRUE
 			ELSE
 				value := 0;
@@ -339,7 +339,7 @@ TYPE
 						InstructionSet.InitImmediate(operand, value)
 
 					ELSIF GetNonConstant(errorPosition,symbol.identifierString, result) THEN
-						InstructionSet.InitImmediate(operand,result.value);
+						InstructionSet.InitImmediate(operand,LONGINT(result.value));
 						IF result.fixup # NIL THEN
 							InstructionSet.AddFixup(operand,result.fixup);
 						END;

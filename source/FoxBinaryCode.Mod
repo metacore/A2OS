@@ -289,7 +289,7 @@ TYPE
 			INC(pc,len DIV os.unit);
 		END CopyBits;
 
-		PROCEDURE PutBits*(d: LONGINT; size: Bits);
+		PROCEDURE PutBits*(d: HUGEINT; size: Bits);
 		BEGIN
 			(*ASSERT(size MOD unit = 0);*)
 			CheckSize(size);
@@ -297,7 +297,7 @@ TYPE
 			INC(pc,size DIV os.unit);
 		END PutBits;
 
-		PROCEDURE PutBitsAt*(at: Unit; d: LONGINT; size: Bits);
+		PROCEDURE PutBitsAt*(at: Unit; d: HUGEINT; size: Bits);
 		VAR oldpc: LONGINT;
 		BEGIN
 			oldpc := pc;

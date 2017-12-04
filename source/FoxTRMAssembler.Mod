@@ -56,11 +56,11 @@ TYPE
 						END;
 					END;
 					IF memory & ExpectToken(Scanner.RightBracket) THEN
-						instructionSet.InitMemory(operand,register1,result.value);
+						instructionSet.InitMemory(operand,register1,LONGINT(result.value));
 					ELSIF register1 # -1 THEN
 						instructionSet.InitRegister(operand,register1);
 					ELSE
-						instructionSet.InitImmediate(operand,result.sizeInBits,result.value);
+						instructionSet.InitImmediate(operand,result.sizeInBits,LONGINT(result.value));
 					END;
 					IF result.fixup # NIL THEN
 						instructionSet.AddFixup(operand,result.fixup);

@@ -934,11 +934,17 @@ VAR
 	VAR i: LONGINT;
 	BEGIN
 		FOR i := 1 TO 15 DO
-			IF i # 9 THEN InstallHandler(i) END;
+			IF ~(i IN {SIGINT, SIGKILL}) THEN InstallHandler(i) END;
 			InstallHandler( SIGUSR1 );
 		END;
 	END InitSignalHandler;
-
+	
+	PROCEDURE HandleSignal*( sig: LONGINT );
+	BEGIN
+		InstallHandler( sig )
+	END HandleSignal;
+	
+	
 	PROCEDURE errno*(): LONGINT;
 	VAR loc: ADDRESS;
 	BEGIN

@@ -182,6 +182,7 @@ BEGIN
 	Glue.Initialize;
 	InitializeCoreModules;
 	StartSystem;
+	Unix.HandleSignal( 2 );	
 	Objects.GCLoop
 END BootConsole.
 

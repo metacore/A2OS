@@ -1190,7 +1190,11 @@ TYPE
 			Basic.GetString(name,s);
 			Strings.Append(n,"-");Strings.Append(n,s);
 		ELSE
-			Basic.GetString(name,n);
+			IF name # SyntaxTree.invalidIdentifier THEN 
+				Basic.GetString(name,n);
+			ELSE
+				n := ""
+			END
 		END;
 	END GetModuleSectionName;
 

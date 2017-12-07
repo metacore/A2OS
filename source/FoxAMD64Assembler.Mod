@@ -1918,10 +1918,10 @@ TYPE
 
 			PROCEDURE Reset;
 			BEGIN
-				position := orgPos;
 				reader.SetPos(orgReaderPos);
 				emitter.code.SetPC(orgCodePos);
 				NextChar;
+				position := orgPos;
 			END Reset;
 
 			PROCEDURE FindLabels;
@@ -1988,6 +1988,7 @@ TYPE
 			orgReaderPos := reader.Pos();
 			orgCodePos := emitter.code.pc;
 			NextChar;
+			position := orgPos;
 
 			(* first we have to find all labels as their names might collide with symbol names *)
 			FindLabels;

@@ -103,7 +103,7 @@ TYPE
 		RETURN options
 	END GetOptions;
 
-	PROCEDURE DriveTest (options: Options.Options; diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; error, writer: Streams.Writer);
+	PROCEDURE DriveTest (options: Options.Options; diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; error, writer: Streams.Writer): BOOLEAN;
 	VAR
 		tester: Tester; prolog, epilog, command: Command;
 		verbose, mayTrap: BOOLEAN; report: TestSuite.StreamReport; fileName, logFileName: Files.FileName; logFileWriter, log:Streams.Writer;
@@ -122,6 +122,8 @@ TYPE
 					baseOptions := GetOptions();
 					IF baseOptions.Parse(stringReader, error) THEN
 						Options.Merge(options, baseOptions);
+					ELSE
+						RETURN FALSE;
 					END;
 				ELSE
 					reader.SkipLn()
@@ -152,7 +154,7 @@ TYPE
 
 		NEW (report, writer);
 		reader.SetPos(0);
-		TestSuite.DriveByReader(reader, error, resultname, tester);
+		IF ~TestSuite.DriveByReader(reader, error, resultname, tester) THEN RETURN FALSE END;
 		tester.Print (report);
 		IF logFileWriter # NIL THEN
 			NEW(report, logFileWriter);
@@ -161,6 +163,7 @@ TYPE
 			writer.String("testing logged in "); writer.String(logFileName); writer.Ln;
 		END;
 		writer.Update;
+		RETURN report.failed = 0;
 	END DriveTest;
 
 	PROCEDURE Compile* (context: Commands.Context);
@@ -185,7 +188,11 @@ TYPE
 				context.result := Commands.CommandParseError;
 			END;
 			Files.OpenReader(reader, test, 0);
-			DriveTest (options, diagnostics, reader, context.error, writer);
+			IF ~DriveTest (options, diagnostics, reader, context.error, writer) THEN
+				context.result := Commands.CommandError;
+			END;
+		ELSE
+			context.result := Commands.CommandError;
 		END;
 	END Compile;
 
@@ -224,7 +231,9 @@ BEGIN
 	NEW(optionReader, LEN(opt));
 	optionReader.Set(opt);
 	IF options.Parse(optionReader, log) THEN
-		DriveTest (options, diagnostics, reader, log, log);
+		error := ~DriveTest (options, diagnostics, reader, log, log);
+	ELSE
+		error := TRUE;
 	END;
 END RunTests;
 

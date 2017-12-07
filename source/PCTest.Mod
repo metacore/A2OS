@@ -69,8 +69,9 @@ VAR
 BEGIN
 	NEW(tester, log, diagnostics, execute, "\s");
 	NEW(report, log);
-	TestSuite.DriveByReader(reader, log, regrfile, tester);
-	tester.Print(report);
+	IF TestSuite.DriveByReader(reader, log, regrfile, tester) THEN
+		tester.Print(report);
+	END;
 END DriveTextTests;
 
 PROCEDURE ParseTests(

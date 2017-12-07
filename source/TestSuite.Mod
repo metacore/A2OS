@@ -50,7 +50,7 @@ TYPE
 	BEGIN SELF.diagnostics := diagnostics;
 	END Init;
 
-	PROCEDURE Process* (r: Streams.Reader);
+	PROCEDURE Process* (r: Streams.Reader): BOOLEAN;
 	VAR type: TestType; name: TestName; line: ARRAY 200 OF CHAR;
 		code: Strings.Buffer; writer : Streams.Writer;
 		string : Strings.String; reader: Streams.StringReader;
@@ -59,10 +59,10 @@ TYPE
 		ClearList (tests);
 		WHILE SkipComment (r) DO
 			IF ~ReadType (r, type) OR ~SkipWhitespace (r) OR ~ReadText (r, name) THEN
-				diagnostics.Error (name, r.Pos(), Diagnostics.Invalid, "parse error"); RETURN;
+				diagnostics.Error (name, r.Pos(), Diagnostics.Invalid, "parse error"); RETURN FALSE;
 			END;
 			IF FindResult (tests, name) # NIL THEN
-				diagnostics.Error (name, Diagnostics.Invalid, Diagnostics.Invalid, "duplicated test"); RETURN;
+				diagnostics.Error (name, Diagnostics.Invalid, Diagnostics.Invalid, "duplicated test"); RETURN FALSE;
 			END;
 			code.Clear; writer.Reset;
 			WHILE SkipLn (r) & Tabulator (r) & ReadText (r, line) DO writer.Char (09X); writer.String (line); writer.Char (0AX); END;
@@ -71,6 +71,7 @@ TYPE
 			reader.Set (string^);
 			AddResult (tests, type, name, Handle (reader, r.Pos () - writer.Pos () - 1, name, type) = type);
 		END;
+		RETURN TRUE;
 	END Process;
 
 	PROCEDURE Handle* (r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestType): INTEGER;
@@ -227,11 +228,11 @@ END FindResult;
 
 
 (* public interface helper *)
-PROCEDURE DriveByReader* (reader: Streams.Reader; error: Streams.Writer; CONST resultname: ARRAY OF CHAR; tester: Tester);
+PROCEDURE DriveByReader* (reader: Streams.Reader; error: Streams.Writer; CONST resultname: ARRAY OF CHAR; tester: Tester): BOOLEAN;
 VAR resreader: Files.Reader;result: Files.File; writer: Files.Writer;
 BEGIN
 	IF reader = NIL THEN
-		RETURN;
+		RETURN TRUE;
 	END;
 	ClearList (tester.results);
 	IF resultname # "" THEN
@@ -240,16 +241,17 @@ BEGIN
 			NEW (resreader, result, 0); ReadResults (resreader, tester.results)
 		END
 	END;
-	tester.Process (reader);
+	IF ~tester.Process (reader) THEN RETURN FALSE END;
 	IF resultname # "" THEN
 		result := Files.New (resultname);
 		IF result = NIL THEN
 			error.String ("Failed to open result file "); error.String (resultname); error.Ln;
-			RETURN;
+			RETURN FALSE;
 		ELSE
 			NEW (writer, result, 0); WriteResults (writer, tester.tests); writer.Update; Files.Register (result);
 		END
 	END;
+	RETURN TRUE;
 END DriveByReader;
 
 (* public interface helper *)
@@ -260,6 +262,7 @@ BEGIN
 		test := Files.Old (testname);
 		IF test = NIL THEN
 			context.error.String ("Failed to open test file "); context.error.String (testname); context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN;
 		END;
 	ELSE
@@ -269,7 +272,9 @@ BEGIN
 	IF ~context.arg.GetString (resultname) THEN
 		resultname := "";
 	END;
-	DriveByReader(reader, context.error, resultname, tester);
+	IF DriveByReader(reader, context.error, resultname, tester) THEN
+		context.result := Commands.CommandError;
+	END;
 END Drive;
 
 

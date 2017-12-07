@@ -7,7 +7,7 @@ TYPE Tester = OBJECT (TestSuite.Tester)
 	VAR command: ARRAY 256 OF CHAR;
 	VAR tempname: Files.FileName;
 
-	PROCEDURE Handle (reader: Streams.Reader; position: LONGINT; CONST name: ARRAY OF CHAR): INTEGER;
+	PROCEDURE Handle (reader: Streams.Reader; position: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
 	VAR res: LONGINT; msg: ARRAY 128 OF CHAR; result: INTEGER; file: Files.File; writer: Files.Writer;
 	BEGIN
 		result := TestSuite.Failure;

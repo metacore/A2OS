@@ -15,12 +15,12 @@ BEGIN
 	RETURN TRUE;
 END Activate;
 
-PROCEDURE Execute(context: Commands.Context);
-VAR str: ARRAY 256 OF CHAR;  b: BOOLEAN;
+PROCEDURE Execute(context: Commands.Context): BOOLEAN;
+VAR str: ARRAY 256 OF CHAR;
 BEGIN
 	IF ~context.arg.GetString(str) THEN  
 		context.out.String("Critical error: no arg"); 
-		RETURN 
+		RETURN FALSE;
 	END;
 	IF ~context.arg.GetString(str) THEN 
 		str := "Shell.Start";
@@ -29,17 +29,17 @@ BEGIN
 	ELSIF (str="i") OR (str = "interpreter") THEN str := "InterpreterShell.Start"
 	ELSIF (str = "execute") OR (str="e") THEN str := "SystemTools.DoFile";
 	ELSIF (str = "run") OR (str="r") THEN 
-		IF ~Activate(context, "SystemTools.DoFile") THEN RETURN END;
+		IF ~Activate(context, "SystemTools.DoFile") THEN RETURN FALSE END;
 		str := "Shell.Start";
 	END;
-	
-	b := Activate(context, str);
+	RETURN Activate(context, str);
 END Execute;
 
 TYPE 
 	(* excute the shell and termination in separate thread with proper process data structure *)
 	Executor=OBJECT
-	VAR done: BOOLEAN;
+	VAR done := FALSE: BOOLEAN;
+	VAR code := Modules.PowerDown: LONGINT;
 
 		PROCEDURE Wait;
 		BEGIN{EXCLUSIVE}
@@ -47,12 +47,12 @@ TYPE
 		END Wait;
 		
 	BEGIN{ACTIVE}
-		Execute(StdIO.env);
+		IF Execute(StdIO.env) THEN code := Modules.Reboot END;
 	FINALLY
 		IF Verbose THEN
 			Trace.String("StdIOShell: Exit"); Trace.Ln;
 		END;
-		Modules.Shutdown(Modules.PowerDown);
+		Modules.Shutdown(code);
 		done := TRUE
 	END Executor;
 

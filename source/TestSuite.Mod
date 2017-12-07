@@ -254,7 +254,7 @@ END DriveByReader;
 
 (* public interface helper *)
 PROCEDURE Drive* (context: Commands.Context; tester: Tester);
-VAR testname, resultname: Files.FileName; test, result: Files.File; reader: Files.Reader; writer: Files.Writer;
+VAR testname, resultname: Files.FileName; test: Files.File; reader: Files.Reader;
 BEGIN
 	IF context.arg.GetString (testname) THEN
 		test := Files.Old (testname);

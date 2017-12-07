@@ -1704,6 +1704,7 @@ TYPE
 
 			PROCEDURE GetInstruction (): BOOLEAN;
 			VAR
+				position: Basic.Position;
 				mnem, opCount: LONGINT;
 				size: Size;
 				operands: ARRAY InstructionSet.maxNumberOperands OF Operand;
@@ -1713,6 +1714,7 @@ TYPE
 				i: LONGINT;
 				type: SHORTINT;
 			BEGIN
+				position := errPos;
 				mnem := InstructionSet.FindMnemonic (ident);
 				IF mnem = InstructionSet.none THEN
 					ErrorSS("unkown instruction",idents);
@@ -1900,6 +1902,7 @@ TYPE
 
 				AdaptOperandSizes(operands);
 
+				errPos := position;
 				IF ~emitter.EmitInstruction (mnem, operands, pass = maxPasses) THEN
 					RETURN FALSE;
 				END;

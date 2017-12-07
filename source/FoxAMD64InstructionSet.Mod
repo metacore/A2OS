@@ -1117,7 +1117,6 @@ VAR
 				ELSIF name = "segReg" THEN RETURN segReg
 				ELSIF name = "mmx" THEN RETURN mmx
 				ELSIF name = "xmm" THEN RETURN xmm
-				ELSIF name = "sti" THEN RETURN sti
 				ELSIF name = "mem" THEN RETURN mem
 				ELSIF name = "imm" THEN RETURN imm
 				ELSIF name = "ioffset" THEN RETURN ioffset
@@ -1139,7 +1138,7 @@ VAR
 				ELSIF name = "SS" THEN RETURN SS;
 				ELSIF name = "rAX" THEN RETURN rAX;
 				ELSIF name = "ST(0)" THEN RETURN st0;
-				ELSIF name = "ST(i)" THEN RETURN st0;
+				ELSIF name = "ST(i)" THEN RETURN sti;
 				ELSIF name = "imm16" THEN RETURN imm16
 				ELSIF name = "imm32" THEN RETURN imm32;
 				ELSIF name = "imm64" THEN RETURN imm64

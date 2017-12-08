@@ -490,7 +490,7 @@ VAR
 		| User32.WMXButtonUp:
 				EXCL( keys, MX )
 		| User32.WMMouseWheel:
-				IF LONGINT( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
+				IF LONGINT(wParam) DIV 10000H  > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
 				m.x := oldx;  m.y := oldy;  win.track.X := oldx;  win.track.Y := oldy;
 				(* strange: if wheel used, then coordinates are not realtive to windows -> use coordinates of last event, fof *)
 		ELSE

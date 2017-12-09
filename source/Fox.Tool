@@ -11,7 +11,7 @@ Compiler.Compile --noInterfaceCheck
 	SystemTools.DoCommands
 	SystemTools.Timer start ~
 
-	Compiler.Compile -p=Win32G --writeBarriers *)
+	Compiler.Compile -p=Win32G *)
 
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod

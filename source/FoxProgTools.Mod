@@ -947,13 +947,13 @@ TYPE
 			cpuoptionReplacer.Add ("3DNOW", "3DNow");
 			cpuoptionReplacer.Add ("PRIV", "Privileged");
 			cpuoptionReplacer.Add ("PROT", "Protected");
-(*			cpuoptionReplacer.Add ("SW","");
+			cpuoptionReplacer.Add ("SW","");
 			cpuoptionReplacer.Add ("SB","");
 			cpuoptionReplacer.Add ("SMM","");
 			cpuoptionReplacer.Add ("AR1","");
 			cpuoptionReplacer.Add ("AR2","");
 			cpuoptionReplacer.Add ("ND","");
-*)
+
 			NEW(bitwidthReplacer);
 			bitwidthReplacer.Add("INV","I64");
 
@@ -969,9 +969,30 @@ TYPE
 			numberMnemonics := 0;
 			numberInstructions := 0;
 			maxMnemonicNameLength := 0;
+			
+			mnemonic := firstMnemonic;
+			WHILE (mnemonic # NIL) DO
+				w.Char(09X); w.Char(09X); w.String("AddMnemonic(");
+				w.String("op");
+				w.String(mnemonic.name);
+				w.String(", ");
+				w.Char('"');
+				w.String(mnemonic.name);
+				w.Char('"');
+				(*w.String(", ");
+				w.Int(numberInstructions,1);
+				*)
+				w.String(");");
+				w.Ln;
+				mnemonic := mnemonic.next;
+			END; 
+
 			mnemonic := firstMnemonic;
 			maxOpcodeLength:= 0;
+			
+			
 			WHILE(mnemonic # NIL) DO
+				(*
 				IF Strings.Length(mnemonic.name)+1 > maxMnemonicNameLength THEN maxMnemonicNameLength := Strings.Length(mnemonic.name)+1 END;
 				w.Char(09X); w.Char(09X); w.String("StartMnemonic(");
 				w.String("op");
@@ -986,6 +1007,7 @@ TYPE
 				w.String(");");
 				w.Ln;
 				INC(numberMnemonics);
+				*)
 				instruction := mnemonic.firstInstruction;
 				WHILE(instruction # NIL) DO
 					(*
@@ -1004,6 +1026,10 @@ TYPE
 				WHILE(instruction # NIL) DO
 					w.Char(09X); w.Char(09X); 
 					w.String("AddInstruction(");
+					w.String("op");
+					w.String(mnemonic.name);
+					w.String(", ");
+					
 					w.String('"');
 					w.String(instruction.op1);
 					IF instruction.op2 # "" THEN
@@ -1048,7 +1074,9 @@ TYPE
 				w.Int(numberInstructions-1,1);
 				w.String(");");
 				*)
+				(*
 				w.Ln;
+				*)
 				mnemonic := mnemonic.next;
 			END;
 

@@ -4630,6 +4630,17 @@ TYPE
 			INC(numberVariables);
 			firstVariable := v;
 		END PushVariable;
+		
+		(* insert variable after variable in list -- can be important to keep variable offsets in order *)
+		(* pre: v # NIL, after # NIL *)
+		PROCEDURE InsertVariable*(v: Variable; after: Variable);
+		BEGIN
+			ASSERT(v # NIL);
+			ASSERT(after # NIL);
+			v.nextVariable := after.nextVariable;
+			after.nextVariable := v.nextVariable;
+			IF after = lastVariable THEN lastVariable := v END; 
+		END InsertVariable;
 
 		PROCEDURE FindVariable*(identifier: Identifier): Variable;
 		VAR p: Variable;

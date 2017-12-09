@@ -1181,7 +1181,6 @@ TYPE
 				RETURN SyntaxTree.NewIdentifier(string);
 		END GetUID;
 		
-
 		PROCEDURE GetUsage(VAR use: VariableUse);
 		BEGIN
 			use := inUse;
@@ -1198,11 +1197,22 @@ TYPE
 			any := Get(i);;
 			IF any = NIL THEN RETURN NIL ELSE RETURN any(SyntaxTree.Variable) END;
 		END GetVariable;
+		
+		PROCEDURE SetVariable(pos: LONGINT; v: SyntaxTree.Variable);
+		BEGIN
+			Set(pos, v);
+		END SetVariable;
+		
 
 		PROCEDURE Occupy(pos: LONGINT);
 		BEGIN
 			INCL(inUse[pos DIV 32], pos MOD 32);
 		END Occupy;
+
+		PROCEDURE Occupied(pos: LONGINT): BOOLEAN;
+		BEGIN
+			RETURN (pos MOD 32) IN inUse[pos DIV 32];
+		END Occupied;
 
 		PROCEDURE AddVariable(v: SyntaxTree.Variable);
 		BEGIN
@@ -1214,6 +1224,9 @@ TYPE
 		BEGIN
 			t1 := t1.resolved;
 			t2 := t2.resolved;
+			RETURN t1.SameType(t2); 
+			(*
+			the following needs testing
 			RETURN 
 				(t1.SameType(t2)) 
 				OR
@@ -1228,23 +1241,28 @@ TYPE
 					(t1(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & 
 					(DynamicDim(t1) = DynamicDim(t2))
 				);
+			*)
 		END CompatibleType;
 		
-
 		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable;
-		VAR var : SyntaxTree.Variable;
+		VAR var : SyntaxTree.Variable; i: LONGINT; 
 		BEGIN
-			FOR pos := 0 TO Length()-1 DO
-				IF ~((pos MOD 32) IN inUse[pos DIV 32]) THEN
-					var := GetVariable(pos);
-					IF CompatibleType(type, var.type) & (var.untraced = untraced) THEN
-						Occupy(pos); RETURN var
+			pos := Length(); 
+			FOR i := 0 TO pos-1 DO
+				IF ~(Occupied(i)) THEN
+					var := GetVariable(i);
+					IF CompatibleType(type, var.type) & (var.untraced = untraced) & ~(var.type.NeedsTrace()) THEN
+						pos := i;
+						Occupy(i); 
+						RETURN var;
 					END;
 				END;
 			END;
-			pos := Length();
 			RETURN NIL
 		END GetFreeVariable;
+		
+
+		
 
 	END Variables;
 
@@ -1418,6 +1436,7 @@ TYPE
 			section: IntermediateCode.Section;
 			registerUsageCount: RegisterUsageCount;
 			usedRegisters: RegisterEntry;
+			temporaries: Variables;
 			END;
 		
 		PROCEDURE SwitchContext(new: IntermediateCode.Section): Context;
@@ -1428,6 +1447,7 @@ TYPE
 			context.usedRegisters := usedRegisters;
 			section := new;
 			NEW(registerUsageCount);
+			NEW(temporaries); 
 			usedRegisters := NIL; 
 			RETURN context;
 		END SwitchContext;
@@ -1437,6 +1457,7 @@ TYPE
 			section := context.section;
 			registerUsageCount := context.registerUsageCount;
 			usedRegisters := context.usedRegisters;
+			temporaries := context.temporaries;
 		END ReturnToContext;
 
 		PROCEDURE NewSection(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): IntermediateCode.Section;
@@ -6973,26 +6994,29 @@ TYPE
 			create a temporary variable in current scope
 		**)
 		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
-		VAR name: SyntaxTree.Identifier;  variable: SyntaxTree.Variable;
+		VAR name: SyntaxTree.Identifier;  variable, v: SyntaxTree.Variable;
 		scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
 		BEGIN
 			IF ~register THEN
-				variable := temporaries.GetFreeVariable(type, untraced, index);
+				v := temporaries.GetFreeVariable(type, untraced, index);
 			ELSE
 				index := temporaries.registerIndex; INC(temporaries.registerIndex);
 			END;
 			scope := currentScope;
+			(*
 			variable := NIL; (* disable free variable managemenet for the time being -- does not work *)
+			*)
+			name := temporaries.GetUID(); 
+			
+			variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
+			variable.SetType(type);
+			variable.SetAccess(SyntaxTree.Hidden);
+			variable.SetUntraced(untraced);
 
-			IF variable = NIL THEN
-				name := temporaries.GetUID(); 
-				
-				variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
-				variable.SetType(type);
-				variable.SetAccess(SyntaxTree.Hidden);
-				variable.SetUntraced(untraced);
+			IF v = NIL THEN
+				temporaries.AddVariable(variable);
+
 				IF ~register THEN
-					temporaries.AddVariable(variable);
 
 					IF scope.lastVariable # NIL THEN
 						offset := scope.lastVariable.offsetInBits;
@@ -7002,8 +7026,8 @@ TYPE
 					DEC(offset,system.SizeOf(variable.type));
 					Basic.Align(offset,-system.AlignmentOf(system.variableAlignment,variable.type));
 					variable(SyntaxTree.Variable).SetOffset(offset);
-
 					scope.AddVariable(variable(SyntaxTree.Variable));
+
 					scope.EnterSymbol(variable, duplicate);
 					ASSERT(~duplicate);
 					InitVariable(variable(SyntaxTree.Variable),TRUE);
@@ -7011,26 +7035,18 @@ TYPE
 					variable.SetUseRegister(TRUE);
 					variable(SyntaxTree.Variable).SetOffset(0);
 				END;
-			ELSE
-				name := temporaries.GetUID(); 
-				offset := variable.offsetInBits;
+			ELSE (* v # NIL *) 
+				(* reuse slot for new variable, do not create new slot ! *)
+				temporaries.SetVariable(index, variable);
+				ASSERT(v.scope = scope); 
+				ASSERT(~register); 
 				
-				(* create new variable on existing slot *)
-				variable := SyntaxTree.NewVariable(Basic.invalidPosition,name);
-				variable.SetType(type);
-				variable.SetAccess(SyntaxTree.Hidden);
-				variable.SetUntraced(untraced);
+				variable(SyntaxTree.Variable).SetOffset(v.offsetInBits);
 				
-				variable(SyntaxTree.Variable).SetOffset(offset);
-				
-				scope.AddVariable(variable(SyntaxTree.Variable));
+				scope.InsertVariable(variable(SyntaxTree.Variable), v);
 				scope.EnterSymbol(variable, duplicate);
 				ASSERT(~duplicate);
 				InitVariable(variable(SyntaxTree.Variable),TRUE);
-				
-				(*
-				ASSERT(variable.type.resolved = type.resolved)
-				*)
 			END;
 			RETURN variable(SyntaxTree.Variable)
 		END GetTemporaryVariable;

@@ -3253,6 +3253,7 @@ BEGIN
 	options.Add("e", "extension", Options.String);
 	options.Add("f", "file", Options.String);
 	options.Add("l", "link", Options.Flag);
+	options.Add(0X, "list", Options.Flag);
 	options.Add("n", "nocheck", Options.Flag);
 	options.Add("o", "options", Options.String);
 	options.Add("p", "path", Options.String);
@@ -3294,45 +3295,48 @@ BEGIN
 					END;
 
 					IF CheckDiagnostics(diagnostics, options.GetFlag("warnings"), context.out) & ~error THEN
-
-						IF ~options.GetString("path", fullname) THEN fullname := ""; 	END;
-						Strings.Append(fullname, ToolFilename);
-						context.out.String("Writing release file to "); context.out.String(fullname);
-						context.out.String(" ... "); context.out.Update;
-						build.GenerateToolFile(fullname, res);
-						IF (res = 0) THEN
-							context.out.String("done."); context.out.Ln; context.out.Update;
-							IF options.GetFlag("build") THEN
-								IF options.GetFlag("link") THEN
-									context.error.String("Incompatible options: link cannot automatically build");
-									context.error.Ln; context.error.Update;
-									RETURN;
-								END;
-								build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
-							ELSIF ~options.GetFlag("zip") THEN
-								CallCommand("Notepad.Open", fullname, context);
-							END;
-							IF ~error & options.GetFlag("zip") & CheckDiagnostics(diagnostics, options.GetFlag("warnings"), context.out) THEN
-								build.GenerateZipFiles(context.out, context.error, diagnostics, error);
-							END;
-							IF ~error & options.GetFlag("xml") THEN
-								IF ~options.GetString("path", fullname) THEN fullname := ""; END;
-								Strings.Append(fullname, InstallerPackageFile);
-								context.out.String("Writing XML package description to "); context.out.String(fullname);
-								context.out.String(" ... "); context.out.Update;
-								build.GeneratePackageFile(InstallerPackageFile, res);
-								IF (res = Files.Ok) THEN
-									context.out.String("done.");
-								ELSE
-									context.out.String("error, res: "); context.out.Int(res, 0);
-								END;
-								context.out.Ln;
-							END;
+						IF options.GetFlag("list") THEN
+							build.ToStream(context.out, 0); context.out.Ln;
 						ELSE
-							IF ~options.GetFlag("build") THEN
-								CallCommand("Notepad.Open", fullname, context);
+							IF ~options.GetString("path", fullname) THEN fullname := ""; 	END;
+							Strings.Append(fullname, ToolFilename);
+							context.out.String("Writing release file to "); context.out.String(fullname);
+							context.out.String(" ... "); context.out.Update;
+							build.GenerateToolFile(fullname, res);
+							IF (res = 0) THEN
+								context.out.String("done."); context.out.Ln; context.out.Update;
+								IF options.GetFlag("build") THEN
+									IF options.GetFlag("link") THEN
+										context.error.String("Incompatible options: link cannot automatically build");
+										context.error.Ln; context.error.Update;
+										RETURN;
+									END;
+									build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
+								ELSIF ~options.GetFlag("zip") THEN
+									CallCommand("Notepad.Open", fullname, context);
+								END;
+								IF ~error & options.GetFlag("zip") & CheckDiagnostics(diagnostics, options.GetFlag("warnings"), context.out) THEN
+									build.GenerateZipFiles(context.out, context.error, diagnostics, error);
+								END;
+								IF ~error & options.GetFlag("xml") THEN
+									IF ~options.GetString("path", fullname) THEN fullname := ""; END;
+									Strings.Append(fullname, InstallerPackageFile);
+									context.out.String("Writing XML package description to "); context.out.String(fullname);
+									context.out.String(" ... "); context.out.Update;
+									build.GeneratePackageFile(InstallerPackageFile, res);
+									IF (res = Files.Ok) THEN
+										context.out.String("done.");
+									ELSE
+										context.out.String("error, res: "); context.out.Int(res, 0);
+									END;
+									context.out.Ln;
+								END;
+							ELSE
+								IF ~options.GetFlag("build") THEN
+									CallCommand("Notepad.Open", fullname, context);
+								END;
+								context.out.String("error, res: "); context.out.Int(res, 0); context.out.Ln;
 							END;
-							context.out.String("error, res: "); context.out.Int(res, 0); context.out.Ln;
 						END;
 					END;
 				ELSE

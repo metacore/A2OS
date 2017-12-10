@@ -665,7 +665,24 @@ TYPE
 			END;
 
 		END Show;
-		
+
+		PROCEDURE Find*(CONST option, value: ARRAY OF CHAR; VAR name: ARRAY OF CHAR);
+		VAR default: Default; pattern: Name; pos, i: LONGINT;
+		BEGIN
+			default := head; pattern := "--";
+			Strings.Concat(pattern, option, pattern);
+			Strings.Concat(pattern, "=", pattern);
+			WHILE (default # NIL) DO
+				pos := Strings.Pos(pattern, default.defaults^);
+				IF pos # -1 THEN
+					pos := Strings.Find(default.defaults^, pos, '=') + 1; i := 0;
+					WHILE (default.defaults[pos] # 0X) & (value[i] # 0X) & (default.defaults[pos] = value[i]) DO INC(pos); INC(i) END;
+					IF ((default.defaults[pos] = 0X) OR (default.defaults[pos] = ' ')) & (value[i] = 0X) THEN COPY(default.name, name); RETURN END;
+				END;
+				default := default.next;
+			END;
+			name := "";
+		END Find;
 
 	END Defaults; 
 

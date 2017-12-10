@@ -5,7 +5,7 @@ IMPORT
 	Basic := FoxBasic, Scanner := FoxScanner, Parser := FoxParser,
 	SemanticChecker := FoxSemanticChecker, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats,
 	Streams, Commands,Diagnostics, Options, Kernel, Printout := FoxPrintout, Backend := FoxBackend,Strings, Global := FoxGlobal,
-	Frontend := FoxFrontend,	Files;
+	Frontend := FoxFrontend, Files, Machine;
 
 CONST
 	(* flags *)
@@ -545,7 +545,7 @@ TYPE
 	
 BEGIN
 	NEW(platforms);
-	defaultPlatform := "";
+
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
 	DoAddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtension=.Obw --symbolFileExtension=.Obw");
 	DoAddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --writeBarriers");
@@ -560,4 +560,7 @@ BEGIN
 	DoAddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
 	DoAddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
 	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
+
+	(* infer platform from default object file extension *)
+	platforms.Find("objectFileExtension", Machine.DefaultObjectFileExtension, defaultPlatform);
 END Compiler.

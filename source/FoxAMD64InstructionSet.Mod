@@ -188,19 +188,19 @@ CONST
 	one*= 62;
 	three*= 63;
 
-	ymm *= 62;
-	ymmmem128*=63;
-	ymmmem256*=64;
-	vm32x*=65;
-	vm32y*=66;
-	vm64x*=67;
-	vm64y*=68;
-	mem256*= 69;
-	xmmmem256*=70;
-	reg3264*=71;
-	xmmmem8*=72;
-	xmmmem16*=72;
-	reg32mem16*=73;
+	ymm *= 64;
+	ymmmem128*=65;
+	ymmmem256*=66;
+	vm32x*=67;
+	vm32y*=68;
+	vm64x*=69;
+	vm64y*=70;
+	mem256*= 71;
+	xmmmem256*=72;
+	reg3264*=73;
+	xmmmem8*=74;
+	xmmmem16*=75;
+	reg32mem16*=76;
 
 	(** prefixes **)
 	prfOP* = 066H;
@@ -1601,8 +1601,9 @@ VAR
 
 		PROCEDURE HexOrd (ch: CHAR): INTEGER;
 		BEGIN
-			IF ch <= "9" THEN RETURN ORD (ch) - ORD ("0")
-			ELSE RETURN ORD (CAP (ch)) - ORD ("A") + 10
+			IF ("0" <= ch) & (ch <= "9") THEN RETURN ORD (ch) - ORD ("0")
+			ELSIF ("A" <= ch) & (ch <= "F") THEN RETURN ORD (CAP (ch)) - ORD ("A") + 10
+			ELSE HALT(100);
 			END
 		END HexOrd;
 
@@ -1691,15 +1692,151 @@ VAR
 				INC(k);
 			END;
 		END Encode;
+
+		PROCEDURE EncodeV(CONST charcode: ARRAY OF CHAR; VAR code: ARRAY OF Code);
+		(* simple encoding:
+			code =
+			{
+			opCode number
+			|modRMBoth
+			|modRMExtension number
+			|cb|cw|cd|cp
+			|ib|iw|id|iq
+			|m6|m1
+			|+i|+o
+			|rb|rw|rd|rq
+			}
+			none
+			{
+			none
+			}
+
+			all symbols 8 bit wide, numbers also 8 bits wide
+		*)
+		
+			PROCEDURE GetCode(CONST charcode: ARRAY OF CHAR; VAR at: LONGINT; VAR cd: ARRAY OF CHAR): BOOLEAN;
+			VAR i: LONGINT;
+			BEGIN
+				WHILE(charcode[at] = " ") DO INC(at) END;
+				IF charcode[at] = 0X THEN RETURN FALSE END;
+				i := 0; 
+				WHILE (charcode[at] # " ") & (charcode[at] # 0X) DO
+					cd[i] := charcode[at];
+					INC(i); INC(at);
+				END;
+				cd[i] := 0X;
+				RETURN TRUE;
+			END GetCode;
+		
+		VAR i,k,length: SHORTINT; ch1,ch2: CHAR; cdc: ARRAY 32 OF CHAR; at: LONGINT;
+		BEGIN
+			i := 0; k := 0; at := 0;
+			WHILE(GetCode(charcode,at,cdc)) DO
+				ch1 := cdc[0];
+				ch2 := cdc[1];
+				IF (ch2 = ".") & ((ch1="0") OR (ch1="1") OR (ch1="X")) THEN
+					
+				ELSIF (ch1="R") THEN
+					IF cdc = "RXB.00001" THEN
+					ELSIF cdc ="RXB.00011" THEN
+					ELSIF cdc ="RXB.00010" THEN
+					ELSIF cdc ="RXB.01000" THEN
+					ELSIF cdc ="RXB.01" THEN
+					ELSIF cdc ="RXB.02" THEN
+					ELSIF cdc ="RXB.2" THEN
+					ELSIF cdc ="RXB.03" THEN
+					ELSIF cdc ="RXB.08" THEN
+					ELSIF cdc ="RXB.09" THEN
+					ELSE HALT(100)
+					END;
+				ELSE
+				CASE ch1 OF
+					'0'..'9','A'..'F':
+						CASE ch2 OF '0'..'9','A'..'F':
+							code[k] := CHR(opCode);INC(k);
+							code[k] := CHR(HexOrd(ch1)*10H+HexOrd(ch2)); INC(k);
+						ELSE HALT(100)
+						END;
+					|'/':
+						CASE ch2 OF
+							'r': code[k] := CHR(modRMBoth); INC(k);
+							|'0'..'7': code[k] := CHR(modRMExtension); INC(k); code[k] := CHR(HexOrd(ch2)); INC(k);
+						ELSE 
+							IF cdc = "/imm8" THEN 
+								(*todo*)
+							ELSIF cdc = "/is4" THEN 
+								(*todo*)
+							ELSIF cdc = "/ib" THEN 
+								(*todo*)
+							ELSE
+								HALT(100)
+							END;
+						END;
+					|'c':
+						CASE ch2 OF
+							'b': code[k] := CHR(cb); INC(k);
+							|'w': code[k] := CHR(cw); INC(k);
+							|'d': code[k] := CHR(cd); INC(k);
+							|'p': code[k] := CHR(cp); INC(k);
+						ELSE HALT(100)
+						END;
+					|'i':
+						CASE ch2 OF
+							'b': code[k] := CHR(ib); INC(k);
+							|'w': code[k] := CHR(iw); INC(k);
+							|'d': code[k] := CHR(id); INC(k);
+							|'q': code[k] := CHR(iq); INC(k);
+						ELSE 
+							IF cdc = "is4" THEN
+								(*todo*)
+							ELSIF cdc = "is5" THEN
+								(*todo*)
+							ELSE
+							HALT(100)
+							END;
+						END;
+					|'m':
+						CASE ch2 OF
+							'6': code[k] := CHR(mem64Operand); INC(k);
+							|'1': code[k] := CHR(mem128Operand); INC(k);
+						ELSE HALT(100)
+						END;
+					|'+':
+						CASE ch2 OF
+							'i': code[k] := CHR(fpStackOperand); INC(k);
+							|'o': code[k] := CHR(directMemoryOffset); INC(k);
+						ELSE HALT(100)
+						END;
+					|'r':
+						CASE ch2 OF
+							'b': code[k] := CHR(rb); INC(k);
+							|'w': code[k] := CHR(rw); INC(k);
+							|'d': code[k] := CHR(rd); INC(k);
+							|'q': code[k] := CHR(rq); INC(k);
+						ELSE HALT(100)
+						END;
+					ELSE HALT(100)
+					END;
+				INC(i);
+			END;
+			END;
+			length := k;
+			WHILE(k < LEN(code)) DO
+				code[k] := CHR(none);
+				INC(k);
+			END;
+		END EncodeV;
 		
 		PROCEDURE AddInstructionV(mnemonic: LONGINT; CONST operands, code: ARRAY OF CHAR);
-		VAR i, at: LONGINT; name: ARRAY 32 OF CHAR;
+		VAR i, at: LONGINT; name,operand: ARRAY 32 OF CHAR;
 		BEGIN
 			i := 0; at := 0;
 			WHILE (i<maxNumberOperands) DO
 				instructions[numberInstructions].operands[i] := ParseOperand(operands,at);
 				INC(i);
 			END;
+			
+			EncodeV(code,instructions[numberInstructions].code);
 			
 			COPY(mnemonics[mnemonic].name,name);
 			IF mnemonics[mnemonic].firstInstruction = -1 THEN
@@ -4212,7 +4349,7 @@ VAR
 		AddInstructionV(opVCVTSI2SD,"xmm1,xmm2,reg32/mem32","C4 RXB.00001 0.src.X.11 2A /r");
 		AddInstructionV(opVCVTSI2SD,"xmm1,xmm2,reg64/mem64","C4 RXB.00001 1.src.X.11 2A /r");
 		AddInstructionV(opVCVTSI2SS,"xmm1,xmm2,reg32/mem32","C4 RXB.00001 0.src.X.10 2A /r");
-		AddInstructionV(opVCVTSI2SS,"xmm1,xmm2,reg64/mem64","C4 RXB.00001 1.src.X.10 2A /");
+		AddInstructionV(opVCVTSI2SS,"xmm1,xmm2,reg64/mem64","C4 RXB.00001 1.src.X.10 2A /r");
 		AddInstructionV(opVCVTSS2SD,"xmm1,xmm2,xmm3/mem64","C4 RXB.00001 X.src.X.10 5A /r");
 		AddInstructionV(opVCVTSS2SI,"reg32,xmm1/mem32","C4 RXB.00001 0.1111.X.10 2D /r");
 		AddInstructionV(opVCVTSS2SI,"reg64,xmm1/mem64","C4 RXB.00001 1.1111.X.10 2D /r");
@@ -4338,20 +4475,20 @@ VAR
 		AddInstructionV(opVFMSUBSS,"xmm1,xmm2,xmm3,xmm4/mem32","C4 RXB.03 1.src1.X.01 6E /r /is4");
 		AddInstructionV(opVFNMADD132PD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 1.src2.0.01 9C /r");
 		AddInstructionV(opVFNMADD132PD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 1.src2.1.01 9C /r");
-		AddInstructionV(opVFNMADD132PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 9C / r");
-		AddInstructionV(opVFNMADD132PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 9C / r");
+		AddInstructionV(opVFNMADD132PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 9C /r");
+		AddInstructionV(opVFNMADD132PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 9C /r");
 		AddInstructionV(opVFNMADD132SD,"xmm1,xmm2,xmm3/mem64","C4 RXB.02 1.src2.X.01 9D /r");
 		AddInstructionV(opVFNMADD132SS,"xmm1,xmm2,xmm3/mem32","C4 RXB.02 0.src2.X.01 9D /r");
 		AddInstructionV(opVFNMADD213PD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 1.src2.0.01 AC /r");
 		AddInstructionV(opVFNMADD213PD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 1.src2.1.01 AC /r");
-		AddInstructionV(opVFNMADD213PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 AC / r");
-		AddInstructionV(opVFNMADD213PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 AC / r");
+		AddInstructionV(opVFNMADD213PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 AC /r");
+		AddInstructionV(opVFNMADD213PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 AC /r");
 		AddInstructionV(opVFNMADD213SD,"xmm1,xmm2,xmm3/mem64","C4 RXB.02 1.src2.X.01 AD /r");
 		AddInstructionV(opVFNMADD213SS,"xmm1,xmm2,xmm3/mem32","C4 RXB.02 0.src2.X.01 AD /r");
 		AddInstructionV(opVFNMADD231PD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 1.src2.0.01 BC /r");
 		AddInstructionV(opVFNMADD231PD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 1.src2.1.01 BC /r");
-		AddInstructionV(opVFNMADD231PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 BC / r");
-		AddInstructionV(opVFNMADD231PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 BC / r");
+		AddInstructionV(opVFNMADD231PS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src2.0.01 BC /r");
+		AddInstructionV(opVFNMADD231PS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src2.1.01 BC /r");
 		AddInstructionV(opVFNMADD231SD,"xmm1,xmm2,xmm3/mem64","C4 RXB.02 1.src2.X.01 BD /r");
 		AddInstructionV(opVFNMADD231SS,"xmm1,xmm2,xmm3/mem32","C4 RXB.02 0.src2.X.01 BD /r");
 		AddInstructionV(opVFNMADDPD,"xmm1,xmm2,xmm3/mem128,xmm4","C4 RXB.03 0.src1.0.01 79 /r /is4");
@@ -4562,8 +4699,8 @@ VAR
 		AddInstructionV(opVPAVGB,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.01 E0 /r");
 		AddInstructionV(opVPAVGW,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.01 E3 /r");
 		AddInstructionV(opVPAVGW,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.01 E3 /r");
-		AddInstructionV(opVPBLENDD,"xmm1,xmm2,xmm3/mem128,imm8","C4 RXB.03 0.src1.0.01 2 /r /ib");
-		AddInstructionV(opVPBLENDD,"ymm1,ymm2,ymm3/mem256,imm8","C4 RXB.03 0.src1.1.01 2 /r /ib");
+		AddInstructionV(opVPBLENDD,"xmm1,xmm2,xmm3/mem128,imm8","C4 RXB.03 0.src1.0.01 02 /r /ib");
+		AddInstructionV(opVPBLENDD,"ymm1,ymm2,ymm3/mem256,imm8","C4 RXB.03 0.src1.1.01 02 /r /ib");
 		AddInstructionV(opVPBLENDVB,"xmm1,xmm2,xmm3/mem128,xmm4","C4 RXB.03 0.src1.0.01 4C /r is4");
 		AddInstructionV(opVPBLENDVB,"ymm1,ymm2,ymm3/mem256,ymm4","C4 RXB.03 0.src1.1.01 4C /r is4");
 		AddInstructionV(opVPBLENDW,"xmm1,xmm2,xmm3/mem128,imm8","C4 RXB.03 X.src1.0.01 0E /r /ib");
@@ -4609,7 +4746,7 @@ VAR
 		AddInstructionV(opVPCOMUQ,"xmm1,xmm2,xmm3/mem128,imm8","8F RXB.08 0.src1.0.00 EF /r ib");
 		AddInstructionV(opVPCOMUW,"xmm1,xmm2,xmm3/mem128,imm8","8F RXB.08 0.src1.0.00 ED /r ib");
 		AddInstructionV(opVPCOMW,"xmm1,xmm2,xmm3/mem128,imm8","8F RXB.08 0.src1.0.00 CD /r ib");
-		AddInstructionV(opVPERM2F128,"ymm1,ymm2,ymm3/mem256,imm8","C4 RXB.03 0.src1.1.01 6 /r ib");
+		AddInstructionV(opVPERM2F128,"ymm1,ymm2,ymm3/mem256,imm8","C4 RXB.03 0.src1.1.01 06 /r ib");
 		AddInstructionV(opVPERM2I128,"ymm1,ymm2,ymm3/mem256,imm8","C4 RXB.03 0.src1.1.01 46 /r ib");
 		AddInstructionV(opVPERMD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src1.1.01 36 /r");
 		AddInstructionV(opVPERMIL2PD,"xmm1,xmm2,xmm3/mem128,xmm4,m2z","C4 RXB.03 0.src1.0.01 49 /r is5");
@@ -4622,15 +4759,15 @@ VAR
 		AddInstructionV(opVPERMIL2PS,"ymm1,ymm2,ymm3,ymm4/mem256,m2z","C4 RXB.03 1.src1.1.01 48 /r is5");
 		AddInstructionV(opVPERMILPD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src1.0.01 0D /r");
 		AddInstructionV(opVPERMILPD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src1.1.01 0D /r");
-		AddInstructionV(opVPERMILPD,"xmm1,xmm2/mem128,imm8","C4 RXB.03 0.1111.0.01 5 /r ib");
-		AddInstructionV(opVPERMILPD,"ymm1,ymm2/mem256,imm8","C4 RXB.03 0.1111.1.01 5 /r ib");
+		AddInstructionV(opVPERMILPD,"xmm1,xmm2/mem128,imm8","C4 RXB.03 0.1111.0.01 05 /r ib");
+		AddInstructionV(opVPERMILPD,"ymm1,ymm2/mem256,imm8","C4 RXB.03 0.1111.1.01 05 /r ib");
 		AddInstructionV(opVPERMILPS,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 0.src1.0.01 0C /r");
 		AddInstructionV(opVPERMILPS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src1.1.01 0C /r");
-		AddInstructionV(opVPERMILPS,"xmm1,xmm2/mem128,imm8","C4 RXB.03 0.1111.0.01 4 /r ib");
-		AddInstructionV(opVPERMILPS,"ymm1,ymm2/mem256,imm8","C4 RXB.03 0.1111.1.01 4 /r ib");
-		AddInstructionV(opVPERMPD,"ymm1,ymm2/mem256,imm8","C4 RXB.03 1.1111.1.01 1 /r ib");
+		AddInstructionV(opVPERMILPS,"xmm1,xmm2/mem128,imm8","C4 RXB.03 0.1111.0.01 04 /r ib");
+		AddInstructionV(opVPERMILPS,"ymm1,ymm2/mem256,imm8","C4 RXB.03 0.1111.1.01 04 /r ib");
+		AddInstructionV(opVPERMPD,"ymm1,ymm2/mem256,imm8","C4 RXB.03 1.1111.1.01 01 /r ib");
 		AddInstructionV(opVPERMPS,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 0.src1.1.01 16 /r");
-		AddInstructionV(opVPERMQ,"ymm1,ymm2/mem256,imm8","C4 RXB.03 1.1111.1.01 0 /r ib");
+		AddInstructionV(opVPERMQ,"ymm1,ymm2/mem256,imm8","C4 RXB.03 1.1111.1.01 00 /r ib");
 		AddInstructionV(opVPEXTRB,"reg/mem8,xmm,imm8","C4 RXB.03 X.1111.0.01 14 /r ib");
 		AddInstructionV(opVPEXTRD,"reg32/mem32,xmm,imm8","C4 RXB.03 0.1111.0.01 16 /r ib");
 		AddInstructionV(opVPEXTRQ,"reg64/mem64,xmm,imm8","C4 RXB.03 1.1111.0.01 16 /r ib");
@@ -4647,30 +4784,30 @@ VAR
 		AddInstructionV(opVPHADDBD,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 C2 /r");
 		AddInstructionV(opVPHADDBQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 C3 /r");
 		AddInstructionV(opVPHADDBW,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 C1 /r");
-		AddInstructionV(opVPHADDD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 2 /r");
-		AddInstructionV(opVPHADDD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 2 /r");
+		AddInstructionV(opVPHADDD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 02 /r");
+		AddInstructionV(opVPHADDD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 02 /r");
 		AddInstructionV(opVPHADDDQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 CB /r");
-		AddInstructionV(opVPHADDSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 3 /r");
-		AddInstructionV(opVPHADDSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 3 /r");
+		AddInstructionV(opVPHADDSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 03 /r");
+		AddInstructionV(opVPHADDSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 03 /r");
 		AddInstructionV(opVPHADDUBD,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 D2 /r");
 		AddInstructionV(opVPHADDUBQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 D3 /r");
 		AddInstructionV(opVPHADDUBW,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 D1 /r");
 		AddInstructionV(opVPHADDUDQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 DB /r");
 		AddInstructionV(opVPHADDUWD,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 D6 /r");
 		AddInstructionV(opVPHADDUWQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 D7 /r");
-		AddInstructionV(opVPHADDW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 1 /r");
-		AddInstructionV(opVPHADDW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 1 /r");
+		AddInstructionV(opVPHADDW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 01 /r");
+		AddInstructionV(opVPHADDW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 01 /r");
 		AddInstructionV(opVPHADDWD,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 C6 /r");
 		AddInstructionV(opVPHADDWQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 C7 /r");
 		AddInstructionV(opVPHMINPOSUW,"xmm1,xmm2/mem128","C4 RXB.02 X.1111.0.01 41 /r");
 		AddInstructionV(opVPHSUBBW,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 E1 /r");
-		AddInstructionV(opVPHSUBD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 6 /r");
-		AddInstructionV(opVPHSUBD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 6 /r");
+		AddInstructionV(opVPHSUBD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 06 /r");
+		AddInstructionV(opVPHSUBD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 06 /r");
 		AddInstructionV(opVPHSUBDQ,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 E3 /r");
-		AddInstructionV(opVPHSUBSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 7 /r");
-		AddInstructionV(opVPHSUBSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 7 /r");
-		AddInstructionV(opVPHSUBW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 5 /r");
-		AddInstructionV(opVPHSUBW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 5 /r");
+		AddInstructionV(opVPHSUBSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 07 /r");
+		AddInstructionV(opVPHSUBSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 07 /r");
+		AddInstructionV(opVPHSUBW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 05 /r");
+		AddInstructionV(opVPHSUBW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 05 /r");
 		AddInstructionV(opVPHSUBWD,"xmm1,xmm2/mem128","8F RXB.09 0.1111.0.00 E2 /r");
 		AddInstructionV(opVPINSRB,"xmm,reg/mem8,xmm,imm8","C4 RXB.03 X.1111.0.01 20 /r ib");
 		AddInstructionV(opVPINSRD,"xmm,reg32/mem32,xmm,imm8","C4 RXB.03 0.1111.0.01 22 /r ib");
@@ -4687,8 +4824,8 @@ VAR
 		AddInstructionV(opVPMACSWD,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 96 /r ib");
 		AddInstructionV(opVPMACSWW,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 95 /r ib");
 		AddInstructionV(opVPMADCSSWD,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 A6 /r ib");
-		AddInstructionV(opVPMADDUBSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 4 /r");
-		AddInstructionV(opVPMADDUBSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 4 /r");
+		AddInstructionV(opVPMADDUBSW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 04 /r");
+		AddInstructionV(opVPMADDUBSW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 04 /r");
 		AddInstructionV(opVPMADDWD,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.01 F5 /r");
 		AddInstructionV(opVPMADDWD,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.01 F5 /r");
 		AddInstructionV(opVPMASKMOVD,"xmm1,xmm2,mem128","C4 RXB.02 0.src1.0.01 8C /r");
@@ -4708,7 +4845,7 @@ VAR
 		AddInstructionV(opVPMAXUB,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.01 DE /r");
 		AddInstructionV(opVPMAXUB,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.01 DE /r");
 		AddInstructionV(opVPMAXUD,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 3F /r");
-		AddInstructionV(opVPMAXUD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 3F /");
+		AddInstructionV(opVPMAXUD,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 3F /r");
 		AddInstructionV(opVPMAXUW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 3E /r");
 		AddInstructionV(opVPMAXUW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 3E /r");
 		AddInstructionV(opVPMINSB,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 38 /r");
@@ -4795,20 +4932,20 @@ VAR
 		AddInstructionV(opVPSHLQ,"xmm1,xmm2,xmm3/mem128","8F RXB.09 1.src.0.00 97 /r");
 		AddInstructionV(opVPSHLW,"xmm1,xmm3/mem128,xmm2","8F RXB.09 0.count.0.00 95 /r");
 		AddInstructionV(opVPSHLW,"xmm1,xmm2,xmm3/mem128","8F RXB.09 1.src.0.00 95 /r");
-		AddInstructionV(opVPSHUFB,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 0 /r");
-		AddInstructionV(opVPSHUFB,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 0 /r");
+		AddInstructionV(opVPSHUFB,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 00 /r");
+		AddInstructionV(opVPSHUFB,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 00 /r");
 		AddInstructionV(opVPSHUFD,"xmm1,xmm2/mem128,imm8","C4 RXB.01 X.1111.0.01 70 /r ib");
 		AddInstructionV(opVPSHUFD,"ymm1,ymm2/mem256,imm8","C4 RXB.01 X.1111.1.01 70 /r ib");
 		AddInstructionV(opVPSHUFHW,"xmm1,xmm2/mem128,imm8","C4 RXB.01 X.1111.0.10 70 /r ib");
 		AddInstructionV(opVPSHUFHW,"ymm1,ymm2/mem256,imm8","C4 RXB.01 X.1111.1.10 70 /r ib");
 		AddInstructionV(opVPSHUFLW,"xmm1,xmm2/mem128,imm8","C4 RXB.01 X.1111.0.11 70 /r ib");
 		AddInstructionV(opVPSHUFLW,"ymm1,ymm2/mem256,imm8","C4 RXB.01 X.1111.1.11 70 /r ib");
-		AddInstructionV(opVPSIGNB,"xmm1,xmm2,xmm2/mem128","C4 RXB.02 X.src1.0.01 8 /r");
-		AddInstructionV(opVPSIGNB,"ymm1,ymm2,ymm2/mem256","C4 RXB.02 X.src1.1.01 8 /r");
+		AddInstructionV(opVPSIGNB,"xmm1,xmm2,xmm2/mem128","C4 RXB.02 X.src1.0.01 08 /r");
+		AddInstructionV(opVPSIGNB,"ymm1,ymm2,ymm2/mem256","C4 RXB.02 X.src1.1.01 08 /r");
 		AddInstructionV(opVPSIGND,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 0A /r");
 		AddInstructionV(opVPSIGND,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 0A /r");
-		AddInstructionV(opVPSIGNW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 9 /r");
-		AddInstructionV(opVPSIGNW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 9 /r");
+		AddInstructionV(opVPSIGNW,"xmm1,xmm2,xmm3/mem128","C4 RXB.02 X.src1.0.01 09 /r");
+		AddInstructionV(opVPSIGNW,"ymm1,ymm2,ymm3/mem256","C4 RXB.02 X.src1.1.01 09 /r");
 		AddInstructionV(opVPSLLD,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.01 F2 /r");
 		AddInstructionV(opVPSLLD,"xmm1,xmm2,imm8","C4 RXB.01 X.dest.0.01 72 /6 ib");
 		AddInstructionV(opVPSLLD,"ymm1,ymm2,xmm3/mem128","C4 RXB.01 X.src1.1.01 F2 /r");
@@ -4894,10 +5031,10 @@ VAR
 		AddInstructionV(opVRCPPS,"xmm1,xmm2/mem128","C4 RXB.01 X.1111.0.00 53 /r");
 		AddInstructionV(opVRCPPS,"ymm1,ymm2/mem256","C4 RXB.01 X.1111.1.00 53 /r");
 		AddInstructionV(opVRCPSS,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.X.10 53 /r");
-		AddInstructionV(opVROUNDPD,"xmm1,xmm2/mem128,imm8","C4 RXB.03 X.1111.0.01 9 /r ib");
-		AddInstructionV(opVROUNDPD,"ymm1,xmm2/mem256,imm8","C4 RXB.03 X.1111.1.01 9 /r ib");
-		AddInstructionV(opVROUNDPS,"xmm1,xmm2/mem128,imm8","C4 RXB.03 X.1111.0.01 8 /r ib");
-		AddInstructionV(opVROUNDPS,"ymm1,xmm2/mem256,imm8","C4 RXB.03 X.1111.1.01 8 /r ib");
+		AddInstructionV(opVROUNDPD,"xmm1,xmm2/mem128,imm8","C4 RXB.03 X.1111.0.01 09 /r ib");
+		AddInstructionV(opVROUNDPD,"ymm1,xmm2/mem256,imm8","C4 RXB.03 X.1111.1.01 09 /r ib");
+		AddInstructionV(opVROUNDPS,"xmm1,xmm2/mem128,imm8","C4 RXB.03 X.1111.0.01 08 /r ib");
+		AddInstructionV(opVROUNDPS,"ymm1,xmm2/mem256,imm8","C4 RXB.03 X.1111.1.01 08 /r ib");
 		AddInstructionV(opVROUNDSD,"xmm1,xmm2,xmm3/mem64,imm8","C4 RXB.03 X.src1.X.01 0B /r ib");
 		AddInstructionV(opVROUNDSS,"xmm1,xmm2,xmm3/mem64,imm8","C4 RXB.03 X.src1.X.01 0A /r ib");
 		AddInstructionV(opVRSQRTPS,"xmm1,xmm2/mem128","C4 RXB.01 X.1111.0.00 52 /r");
@@ -5320,7 +5457,7 @@ END FoxAMD64InstructionSet.
 
 FoxAMD64InstructionSet.Trace
 
-SystemTools.Free FoxAMD64InstructionSetX ~
+SystemTools.Free FoxAMD64InstructionSet ~
 
 	(** Instruction Format, cf. [AMD:3], chapter 1
 		[LegacyPrefix] ; Operand-Size Override / modify opcode of media instructions

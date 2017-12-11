@@ -1,5 +1,5 @@
 # Oberon language test and validation suite
-# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="SystemTools.Free Test Dummy B A;SystemTools.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
+# options --mayTrap --prolog="Compiler.Compile -p=Win32G TesterInput.txt" --command="SystemTools.Free Test Dummy B A;SystemTools.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
 
 # test halt and assert statements and simple procedure call (basics for the test suite)
 
@@ -7639,7 +7639,7 @@ positive: testing calling convention, in particular return of complex types
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WM;
 
-		PROCEDURE WVM(a: StaticMathArray; x,y,z: INTEGER);
+		PROCEDURE WVM(CONST a: StaticMathArray; x,y,z: INTEGER);
 		BEGIN
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WVM;
@@ -7649,7 +7649,7 @@ positive: testing calling convention, in particular return of complex types
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WDM;
 
-		PROCEDURE WDVM(a: DynamicMathArray; x,y,z: INTEGER);
+		PROCEDURE WDVM(CONST a: DynamicMathArray; x,y,z: INTEGER);
 		BEGIN
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WDVM;
@@ -7659,7 +7659,7 @@ positive: testing calling convention, in particular return of complex types
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WTM;
 
-		PROCEDURE WTVM(a: TensorMathArray; x,y,z: INTEGER);
+		PROCEDURE WTVM(CONST a: TensorMathArray; x,y,z: INTEGER);
 		BEGIN
 			ASSERT(a[0]=x); ASSERT(a[1] = y); ASSERT(a[2] =z);
 		END WTVM;

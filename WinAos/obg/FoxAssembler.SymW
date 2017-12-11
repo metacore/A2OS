@@ -46,7 +46,7 @@ TYPE
 	Result* = RECORD 
 		type*: INTEGER; 
 		sizeInBits*: INTEGER; 
-		value*: LONGINT; 
+		value*: HUGEINT; 
 		valueR*: LONGREAL; 
 		fixup*: BinaryCode.Fixup; 
 	END; 
@@ -111,7 +111,7 @@ TYPE
 		PROCEDURE ^ Expression*(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ Data(CONST ident: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Reserve(CONST ident: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ PutBitsIfLastPass(data: LONGINT; size: BinaryCode.Bits); 
+		PROCEDURE ^ PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits); 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 		PROCEDURE ^ IgnoreNewLines; 
 		PROCEDURE ^ DoAssemble; 

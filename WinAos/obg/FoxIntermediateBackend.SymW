@@ -212,7 +212,9 @@ TYPE
 		PROCEDURE ^ GetUsage(VAR use: VariableUse); 
 		PROCEDURE ^ SetUsage(CONST use: VariableUse); 
 		PROCEDURE ^ GetVariable(i: LONGINT): SyntaxTree.Variable; 
+		PROCEDURE ^ SetVariable(pos: LONGINT; v: SyntaxTree.Variable); 
 		PROCEDURE ^ Occupy(pos: LONGINT); 
+		PROCEDURE ^ Occupied(pos: LONGINT): BOOLEAN; 
 		PROCEDURE ^ AddVariable(v: SyntaxTree.Variable); 
 		PROCEDURE ^ CompatibleType(t1, t2: SyntaxTree.Type): BOOLEAN; 
 		PROCEDURE ^ GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable; 
@@ -240,6 +242,7 @@ TYPE
 			section: IntermediateCode.Section; 
 			registerUsageCount: RegisterUsageCount; 
 			usedRegisters: RegisterEntry; 
+			temporaries: Variables; 
 		END; 
 	VAR 
 		system: Global.System; 
@@ -267,7 +270,7 @@ TYPE
 		registerUsageCount: RegisterUsageCount; 
 		usedRegisters: RegisterEntry; 
 		nil, one, fp, sp, ap, lr, true, false: IntermediateCode.Operand; 
-		bool, addressType, setType, sizeType, byteType: IntermediateCode.Type; 
+		bool, addressType, setType, sizeType, lenType, byteType: IntermediateCode.Type; 
 		commentPrintout: Printout.Printer; 
 		dump: Streams.Writer; 
 		tagsAvailable: BOOLEAN; 

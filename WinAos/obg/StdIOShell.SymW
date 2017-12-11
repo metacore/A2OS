@@ -6,6 +6,7 @@ TYPE
 	Executor = OBJECT {EXCLUSIVE} 
 	VAR 
 		done: BOOLEAN; 
+		code: LONGINT; 
 
 		PROCEDURE ^ Wait; 
 	BEGIN{ACTIVE} 
@@ -14,6 +15,6 @@ VAR
 	execute: Executor; 
 
 	PROCEDURE ^ Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Execute(context: Commands.Context); 
+	PROCEDURE ^ Execute(context: Commands.Context): BOOLEAN; 
 BEGIN
 END StdIOShell.

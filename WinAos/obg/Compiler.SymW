@@ -1,5 +1,5 @@
 MODULE Compiler;
-	IMPORT Basic := FoxBasic, Scanner := FoxScanner, Parser := FoxParser, SemanticChecker := FoxSemanticChecker, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Streams, Commands, Diagnostics, Options, Kernel, Printout := FoxPrintout, Backend := FoxBackend, Strings, Global := FoxGlobal, Frontend := FoxFrontend, Files;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, Parser := FoxParser, SemanticChecker := FoxSemanticChecker, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Streams, Commands, Diagnostics, Options, Kernel, Printout := FoxPrintout, Backend := FoxBackend, Strings, Global := FoxGlobal, Frontend := FoxFrontend, Files, Machine;
 CONST 
 	Print* = 0; 
 	Silent* = 1; 

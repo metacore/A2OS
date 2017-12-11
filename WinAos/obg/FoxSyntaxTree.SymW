@@ -1474,6 +1474,7 @@ TYPE
 		PROCEDURE ^ FindTypeDeclaration*(identifier: Identifier): TypeDeclaration; 
 		PROCEDURE ^ AddVariable*(v: Variable); 
 		PROCEDURE ^ PushVariable*(v: Variable); 
+		PROCEDURE ^ InsertVariable*(v: Variable; after: Variable); 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 
 		PROCEDURE ^ AddProcedure*(p: Procedure); 
 		PROCEDURE ^ AddProcedureDeclaration*(p: Procedure); 

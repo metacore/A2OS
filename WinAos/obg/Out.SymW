@@ -10,5 +10,6 @@ MODULE Out;
 	PROCEDURE ^ Hex*(i: HUGEINT; n=  -16: LONGINT); 
 	PROCEDURE ^ Address*(a: ADDRESS); 
 	PROCEDURE ^ Float*(x: LONGREAL; n= 4, f= 3, d= 0: LONGINT); 
+	PROCEDURE ^ Update*; 
 BEGIN
 END Out.

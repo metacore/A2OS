@@ -78,6 +78,7 @@ TYPE
 		PROCEDURE ^ Add*(CONST name, defaults: ARRAY OF CHAR); 
 		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR): Streams.Reader; 
 		PROCEDURE ^ Show*(out: Streams.Writer); 
+		PROCEDURE ^ Find*(CONST option, value: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
 	END Defaults; 
 
 	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 

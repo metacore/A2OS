@@ -10,7 +10,7 @@ CONST
 	VarSection*=ObjectFile.Data;
 	ConstSection*=ObjectFile.Const;
 	InlineCodeSection*=10;
-	UnknownSectionType *= 11;
+	UnknownSectionType*= 11;
 
 	LineCommentStart*="; ";
 

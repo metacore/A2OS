@@ -20,7 +20,7 @@ CONST
  
 TYPE
 	StringType* = Strings.String;
-	IdentifierType *= StringPool.Index;
+	IdentifierType* = StringPool.Index;
 	IdentifierString*= ARRAY MaxIdentifierLength+1 OF CHAR;
 
 CONST

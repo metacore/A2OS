@@ -81,8 +81,8 @@ CONST
 	xmm*= InstructionSet.xmm;
 	mem*=InstructionSet.mem;
 	sti*= InstructionSet.sti;
-	imm  *= InstructionSet.imm;
-	ioffset *=InstructionSet.ioffset;
+	imm*= InstructionSet.imm;
+	ioffset*=InstructionSet.ioffset;
 	pntr1616*= InstructionSet.pntr1616;
 	pntr1632*=InstructionSet.pntr1632;
 

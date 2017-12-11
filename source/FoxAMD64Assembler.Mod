@@ -308,7 +308,8 @@ TYPE
 					FOR i := 0 TO maxNumberOperands - 1 DO
 						IF (i>=LEN(operands)) OR (operands[i].type = none) THEN (* no operand -> check if instruction has no operand here *)
 							IF InstructionSet.instructions[instr].operands[i] # none THEN
-							RETURN FALSE END;
+								RETURN FALSE 
+							END;
 						ELSIF ~Matches(operands[i],InstructionSet.instructions[instr].operands[i]) THEN (* instruction operand type and this operand do not match *)
 							RETURN FALSE
 						ELSIF (cpuBits = bits64) & (InstructionSet.optNot64 IN InstructionSet.instructions[instr].bitwidthOptions) THEN (* instruction is invalid in 64 bit mode *)
@@ -319,8 +320,9 @@ TYPE
 				END MatchesInstruction;
 			BEGIN
 				instr := InstructionSet.mnemonics[mnem].firstInstruction;
-
-				WHILE (instr <= InstructionSet.mnemonics[mnem].lastInstruction) & (~MatchesInstruction ()) DO INC (instr); END;
+				WHILE (instr <= InstructionSet.mnemonics[mnem].lastInstruction) & (~MatchesInstruction ()) DO 
+					INC (instr); 
+				END;
 
 				IF instr > InstructionSet.mnemonics[mnem].lastInstruction THEN
 					ErrorSI("invalid combination of opcode and operands", mnem,operands); RETURN none;
@@ -965,11 +967,15 @@ TYPE
 		END EmitPrefix;
 
 		PROCEDURE Emit*(mnem: LONGINT; VAR op1,op2,op3: Operand);
-		VAR operands: ARRAY maxNumberOperands OF Operand; res: BOOLEAN;
+		VAR operands: ARRAY maxNumberOperands OF Operand; res: BOOLEAN; i: LONGINT; noOperand: Operand;
 		BEGIN
 			operands[0] := op1;
 			operands[1] := op2;
 			operands[2] := op3;
+			noOperand.type := none;
+			FOR i := 3 TO maxNumberOperands-1 DO
+				operands[i] := noOperand;
+			END;
 			res := EmitInstruction(mnem,operands,TRUE);
 			op1 := operands[0];
 			op2 := operands[1];

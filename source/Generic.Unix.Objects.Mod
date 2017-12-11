@@ -375,8 +375,8 @@ TYPE
 		NEW(lock);
 		Unix.MtxLock(lockMutex);
 		IF hdr.lock = NIL THEN
-			hdr.lock := lock;
 			lock.mtx := Unix.NewMtx( );  lock.enter := Unix.NewCond( );  hdr.lockedBy := NIL; 
+			hdr.lock := lock;
 		END;
 		Unix.MtxUnlock(lockMutex);
 	END InitProtHeader;

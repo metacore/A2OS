@@ -679,7 +679,7 @@ BEGIN
 END GetFreeBlock;
 
 (* Sweep phase *)
-PROCEDURE LazySweep(size: ADDRESS; VAR p: FreeBlock);
+PROCEDURE LazySweep(size: ADDRESS; VAR p {UNTRACED}: FreeBlock);
 VAR 
 	lastFreeBlockAdr: ADDRESS;
 	lastFreeBlockSize: ADDRESS;

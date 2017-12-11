@@ -7038,7 +7038,7 @@ TYPE
 			ELSE (* v # NIL *) 
 				(* reuse slot for new variable, do not create new slot ! *)
 				temporaries.SetVariable(index, variable);
-				ASSERT(v.scope = scope); 
+				(* ASSERT(v.scope = scope);  can be violated in inline calls *)
 				ASSERT(~register); 
 				
 				variable(SyntaxTree.Variable).SetOffset(v.offsetInBits);

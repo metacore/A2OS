@@ -1,5 +1,5 @@
 # Oberon language test and validation suite
-# options --mayTrap --prolog="Compiler.Compile -p=Win32G TesterInput.txt" --command="SystemTools.Free Test Dummy B A;SystemTools.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="SystemTools.Free Test Dummy B A;SystemTools.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
 
 # test halt and assert statements and simple procedure call (basics for the test suite)
 
@@ -5988,21 +5988,6 @@ positive: natural sum with several synchronous concurrent accumulators
 	VAR acc0, acc1, acc2: Accumulator; sum: INTEGER;
 	PROCEDURE Busy; VAR i: INTEGER; BEGIN FOR i := 1 TO 100 DO END; END Busy;
 	PROCEDURE Add; VAR temp: INTEGER; BEGIN {EXCLUSIVE} temp := sum; Busy; sum := temp + 1 END Add;
-	BEGIN sum := 0; NEW (acc0); NEW (acc1); NEW (acc2); acc0.Await; acc1.Await; acc2.Await; ASSERT (sum = 300);
-	END Test.
-
-negative: natural sum with several asynchronous concurrent accumulators
-
-	MODULE Test;
-	TYPE Accumulator = OBJECT
-		VAR i: INTEGER; done: BOOLEAN;
-		PROCEDURE &Init; BEGIN done := FALSE; END Init;
-		PROCEDURE Await; BEGIN {EXCLUSIVE} AWAIT (done); END Await;
-		BEGIN {ACTIVE, EXCLUSIVE} FOR i := 1 TO 100 DO Add END; done := TRUE;
-	END Accumulator;
-	VAR acc0, acc1, acc2: Accumulator; sum: INTEGER;
-	PROCEDURE Busy; VAR i: INTEGER; BEGIN FOR i := 1 TO 100 DO END; END Busy;
-	PROCEDURE Add; VAR temp: INTEGER; BEGIN temp := sum; Busy; sum := temp + 1 END Add;
 	BEGIN sum := 0; NEW (acc0); NEW (acc1); NEW (acc2); acc0.Await; acc1.Await; acc2.Await; ASSERT (sum = 300);
 	END Test.
 

@@ -1,5 +1,5 @@
 # Oberon language test and validation suite
-# options --command="Compiler.Compile -p=Win32G TesterInput.txt"  --result="Oberon.Compilation.Test.Diff"
+# options --command="Compiler.Compile TesterInput.txt" --result="Oberon.Compilation.Test.Diff"
 
 # Syntax tests
 # =====================================

@@ -427,7 +427,9 @@ TYPE
 		lock := S.VAL(LockT, hdr.lock);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
 		
-		p := CurrentProcess();  p.succ := NIL;  p.condition := cond;  p.condFP := slink;   
+		p := CurrentProcess();  
+		ASSERT( hdr.lockedBy = p, 2204 ); 
+		p.succ := NIL;  p.condition := cond;  p.condFP := slink;   
 		p.waitingOn := obj;  p.mode := AwaitingCond;
 		
 		Put( hdr.awaitingCond, p );

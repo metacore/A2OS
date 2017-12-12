@@ -647,14 +647,11 @@ BEGIN
 			m.next := freeRoot; freeRoot := m;
 			(* clear global pointers and code *)
 			IF m.ptrAdr # NIL THEN
-				Trace.String("ptradr del"); Trace.Ln;
 				FOR i := 0 TO LEN(m.ptrAdr)-1 DO SYSTEM.PUT (m.ptrAdr[i], NIL) END;
 			END;
 			IF ClearCode & (m.code # NIL) THEN
-				Trace.String("clear code"); Trace.Ln;
 				FOR i := 0 TO LEN(m.code)-1 DO m.code[i] := 0CCX END
 			END;
-			Trace.String("clear code f"); Trace.Ln;
 			(* remove references to module data *)
 			m.published := FALSE;
 			m.entry := NIL; m.command := NIL; m.ptrAdr := NIL;

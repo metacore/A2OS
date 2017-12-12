@@ -1723,13 +1723,13 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	Oberon.Panels.Mod
 
 
-	NATIVE,WIN { Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod }
-	UNIX, UNIXG { Unix.Oberon.TextGadgets0.Mod Unix.Oberon.TextGadgets.Mod }
+	NATIVE,WIN, UNIXG { Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod } 
+	UNIX { Unix.Oberon.TextGadgets0.Mod Unix.Oberon.TextGadgets.Mod }
 
 	Oberon.BasicFigures.Mod
 
-	NATIVE,WIN { Oberon.Scrollbars.Mod }
-	UNIX, UNIXG { Unix.Oberon.Scrollbars.Mod Unix.Oberon.TextSBControl.Mod }
+	NATIVE,WIN,UNIXG { Oberon.Scrollbars.Mod }
+	UNIX { Unix.Oberon.Scrollbars.Mod Unix.Oberon.TextSBControl.Mod }
 
 	NATIVE,UNIX, UNIXG { Oberon.Directories.Mod }
 	WIN { Win32.Oberon.Directories.Mod }
@@ -1742,8 +1742,8 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	NATIVE,iWIN,UNIX, UNIXG { Oberon.Desktops.Mod }
 	eWIN { Win32.Oberon.Desktops.Mod }
 
-	NATIVE,WIN { Oberon.TextDocs.Mod }
-	UNIX, UNIXG { Unix.Oberon.TextDocs.Mod }
+	NATIVE,WIN, UNIXG{ Oberon.TextDocs.Mod }
+	UNIX { Unix.Oberon.TextDocs.Mod }
 
 	TextDocs.Lib Oberon.PanelDocs.Mod 	# Document catalog
 	Oberon.Icons.Mod Oberon.ColorTools.Mod Oberon.NamePlates.Mod Oberon.Navigators.Mod Oberon.NoteBooks.Mod

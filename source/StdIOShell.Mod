@@ -24,11 +24,12 @@ BEGIN
 	END;
 	IF ~context.arg.GetString(str) THEN 
 		str := "Shell.Start";
-	ELSIF str = "compile" THEN str := "Compiler.Compile"
-	ELSIF str="link" THEN str := "StaticLinker.Link"
-	ELSIF (str="i") OR (str = "interpreter") THEN str := "InterpreterShell.Start"
-	ELSIF (str = "execute") OR (str="e") THEN str := "SystemTools.DoFile";
-	ELSIF (str = "run") OR (str="r") THEN 
+	ELSIF (str = "compile") THEN str := "Compiler.Compile";
+	ELSIF (str = "link") THEN str := "StaticLinker.Link";
+	ELSIF (str = "interpreter") OR (str = "i") THEN str := "InterpreterShell.Start";
+	ELSIF (str = "execute") OR (str = "e") THEN str := "SystemTools.DoFile";
+	ELSIF (str = "do") OR (str = "d") THEN str := "SystemTools.DoCommands";
+	ELSIF (str = "run") OR (str = "r") THEN 
 		IF ~Activate(context, "SystemTools.DoFile") THEN RETURN FALSE END;
 		str := "Shell.Start";
 	END;

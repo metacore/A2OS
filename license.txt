@@ -25,11 +25,11 @@ by Felix Friedrich.
 
 ----
 
-Voyager is - in this distribution - located in the directory "Winaos/vy.ants"
-Source code of Voyager is marked by preceding "vy" for all Module-Names
+Voyager is - in this distribution - located in the directories "source" and "WinAos/vy.ants"
+Source code of Voyager is marked by preceding "Oberon.vy" for all Module-Names
 
-AntsInFields is - in this distribution - located in the directory "Winaos/vy.ants"
-Source code of AntsInFields is marked by preceding letters "ants" for all Module Names.
+AntsInFields is - in this distribution - located in the directories "source" and "WinAos/vy.ants"
+Source code of AntsInFields is marked by preceding letters "Oberon.ants" for all Module Names.
 
 ----
 
@@ -82,5 +82,5 @@ AntsInFields
 
 <<
 
-the copy of the LGPL can be found in the vy.ants/documents directory as file "copying.txt"
+the copy of the LGPL can be found in the WinAos/vy.ants directory as file "copying.txt"
 

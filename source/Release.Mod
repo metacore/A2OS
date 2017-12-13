@@ -3377,6 +3377,8 @@ BEGIN
 			context.error.String('Usage: Release.Build [options] BuildName'); context.error.Ln;
 			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Build;
 

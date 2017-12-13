@@ -3098,17 +3098,23 @@ BEGIN
 							context.out.Ln; context.out.Update;
 						END;
 					ELSE
-						context.out.String("Build "); context.out.String(buildname); context.out.String(" not found");
-						context.out.Ln;
+						context.out.String("Build "); context.out.String(buildname); context.out.String(" not found"); context.out.Ln;
+						context.result := Commands.CommandError;
 					END;
 				END;
 			END;
 			IF (diagnostics.nofMessages > 0) THEN
 				diagnostics.ToStream(context.out, Diagnostics.All);
 			END;
+			IF (diagnostics.nofErrors > 0) THEN
+				context.result := Commands.CommandError;
+			END;
 		ELSE
 			context.out.String("Usage: Release.WhoImports [options] buildname modulename ~"); context.out.Ln;
+			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END ImportInformation;
 
@@ -3188,6 +3194,7 @@ BEGIN
 							ELSE
 								context.out.String("Error: File "); context.out.String(filename);
 								context.out.String(" does not exist."); context.out.Ln; context.out.Update;
+								context.result := Commands.CommandError;
 								error := TRUE;
 							END;
 						END;
@@ -3214,11 +3221,13 @@ BEGIN
 									CallCommand("Notepad.Open", fullname, context);
 								END;
 								context.out.String("error, res: "); context.out.Int(res, 0); context.out.Ln;
+								context.result := Commands.CommandError;
 							END;
 						END;
 					END;
 				ELSE
 					context.error.String("Build "); context.error.String(buildname); context.error.String(" not found."); context.error.Ln;
+					context.result := Commands.CommandError;
 				END;
 			END;
 
@@ -3226,10 +3235,15 @@ BEGIN
 				diagnostics.ToStream(context.out, Diagnostics.All);
 				context.out.Ln;
 			END;
+			IF (diagnostics.nofErrors > 0) THEN
+				context.result := Commands.CommandError;
+			END;
 		ELSE
-			context.error.String('Usage: Release.ReBuild [options] BuildName {filenames}');
-			context.error.Ln;
+			context.error.String('Usage: Release.ReBuild [options] BuildName {filenames}'); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Rebuild;
 
@@ -3291,6 +3305,7 @@ BEGIN
 					ELSIF (nofWorkers > 0) THEN
 						context.error.String("Incompatible options: nocheck cannot be combined with workers");
 						context.error.Ln; context.error.Update;
+						context.result := Commands.CommandError;
 						RETURN;
 					END;
 
@@ -3309,6 +3324,7 @@ BEGIN
 									IF options.GetFlag("link") THEN
 										context.error.String("Incompatible options: link cannot automatically build");
 										context.error.Ln; context.error.Update;
+										context.result := Commands.CommandError;
 										RETURN;
 									END;
 									build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
@@ -3328,6 +3344,7 @@ BEGIN
 										context.out.String("done.");
 									ELSE
 										context.out.String("error, res: "); context.out.Int(res, 0);
+										context.result := Commands.CommandError;
 									END;
 									context.out.Ln;
 								END;
@@ -3341,6 +3358,7 @@ BEGIN
 					END;
 				ELSE
 					context.error.String("Build "); context.error.String(buildname); context.error.String(" not found."); context.error.Ln;
+					context.result := Commands.CommandError;
 				END;
 			END;
 
@@ -3352,9 +3370,12 @@ BEGIN
 				END;
 				context.out.Ln;
 			END;
+			IF (diagnostics.nofErrors > 0) THEN
+				context.result := Commands.CommandError;
+			END;
 		ELSE
-			context.error.String('Usage: Release.Build [options] BuildName');
-			context.error.Ln;
+			context.error.String('Usage: Release.Build [options] BuildName'); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
 	END;
 END Build;

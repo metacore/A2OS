@@ -14716,10 +14716,7 @@ END FoxIntermediateBackend.
 
 Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
 
-#	Release.Build --path="/temp/obg/"  IinAosNewObjectFile ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2Z.exe --extension=GofW --displacement=401000H --path="/temp/obg/" Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-
-#	Release.Build --path="/temp/obg/" WinAosNewObjectFile ~
+#	Release.Build --path="/temp/obg/" Win32G ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 FStols.CloseFiles A2Z.exe ~
 

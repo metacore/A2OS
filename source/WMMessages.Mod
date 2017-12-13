@@ -590,4 +590,4 @@ BEGIN
 END WMMessages.
 
 
-Release.Rebuild  --path="" WinAosNewObjectFile WMMessages.Mod ~
+Release.Rebuild  --path="" Win32G WMMessages.Mod ~

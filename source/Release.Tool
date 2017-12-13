@@ -47,7 +47,7 @@
 #	PELinker.Link  --path=../ObjE/ Win32.Aos.Link ~
 #
 # WINAOS generic
-#	Release.Build WinAosNewObjectFile ~
+#	Release.Build Win32G ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
 #  Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
 # 	Command line shell:
@@ -194,7 +194,7 @@ BUILDS
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	WinAosNewObjectFile
+	Win32G
 	{
 		INCLUDE "WIN iWIN WINGEN WINGEN32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"

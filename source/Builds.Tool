@@ -7,7 +7,7 @@ WIN32G -- 32-bit windows a2 using generic object files
 =================================
 
 	## Compile all files ##
-		Release.Build WinAosNewObjectFile ~
+		Release.Build Win32G ~
 	
 	## Link A2.exe (bootconsole for graphical OS) ##
 		StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  

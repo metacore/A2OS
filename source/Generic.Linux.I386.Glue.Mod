@@ -268,7 +268,7 @@ BEGIN
 END Test.
 
 
-#	Release.Build --path="../obg/"  WinAosNewObjectFile ~
+#	Release.Build --path="../obg/"  Win32G ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H --path="../obg/" 
 
 Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog 

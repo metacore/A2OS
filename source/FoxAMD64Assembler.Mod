@@ -1,5 +1,5 @@
 MODULE FoxAMD64Assembler; (**  AUTHOR "fn & fof"; PURPOSE "Oberon Compiler:AMD 64 Assembler";  **)
-(* (c) fof ETH Zürich, 2008 *)
+(* (c) fof ETH Zürich, 2008-2017 *)
 (*
 	this module has in great portions been taken over  from Florian Negele's PCAAMD64.Mod
 *)
@@ -56,6 +56,7 @@ CONST
 	bits32* = 4;
 	bits64* = 8;
 	bits128* = 16;
+	bits256* = 32;
 
 	(** constants from InstructionSet **)
 	(* instruction encoding *)
@@ -66,6 +67,9 @@ CONST
 	rb= InstructionSet.rb; rw= InstructionSet.rw; rd= InstructionSet.rd; rq= InstructionSet.rq;
 	mem64Operand= InstructionSet.mem64Operand; mem128Operand= InstructionSet.mem128Operand;
 	fpStackOperand= InstructionSet.fpStackOperand; directMemoryOffset= InstructionSet.directMemoryOffset;
+	RXB = InstructionSet.RXB;
+	Src1Prefix = InstructionSet.Src1Prefix;
+	
 	(* limits *)
 	maxNumberOperands = InstructionSet.maxNumberOperands;
 
@@ -79,6 +83,7 @@ CONST
 	segReg*= InstructionSet.segReg;
 	mmx*= InstructionSet.mmx;
 	xmm*= InstructionSet.xmm;
+	ymm*= InstructionSet.ymm;
 	mem*=InstructionSet.mem;
 	sti*= InstructionSet.sti;
 	imm*= InstructionSet.imm;
@@ -338,7 +343,7 @@ TYPE
 			BEGIN
 				FOR i := 0 TO maxNumberOperands -1 DO
 					CASE InstructionSet.instructions[instr].operands[i] OF
-					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx: RETURN i;
+					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx, InstructionSet.ymm: RETURN i;
 					ELSE
 					END;
 				END;
@@ -354,6 +359,7 @@ TYPE
 					InstructionSet.mem8, InstructionSet.mem16, InstructionSet.mem32, InstructionSet.mem64, InstructionSet.mem128,
 					InstructionSet.regmem8, InstructionSet.regmem16, InstructionSet.regmem32, InstructionSet.regmem64,
 					InstructionSet.mmxmem32, InstructionSet.mmxmem64,
+					InstructionSet.ymmmem128, InstructionSet.ymmmem256,
 					InstructionSet.xmmmem32, InstructionSet.xmmmem64, InstructionSet.xmmmem128:
 						RETURN i;
 					ELSE
@@ -367,7 +373,7 @@ TYPE
 			BEGIN
 				FOR i := 0 TO maxNumberOperands -1 DO
 					CASE InstructionSet.instructions[instr].operands[i] OF
-					InstructionSet.segReg, InstructionSet.mmx, InstructionSet.xmm, InstructionSet.CRn, InstructionSet.DRn:
+					InstructionSet.segReg, InstructionSet.mmx, InstructionSet.xmm, InstructionSet.ymm, InstructionSet.CRn, InstructionSet.DRn:
 						RETURN i;
 					ELSE
 					END;
@@ -406,6 +412,9 @@ TYPE
 
 			instr := FindInstruction(mnem,operands);
 			IF instr = none THEN RETURN FALSE END;
+			IF Trace THEN
+				KernelLog.String("instr = "); KernelLog.Int(instr,1); KernelLog.Ln;
+			END;
 			bitwidthOptions := InstructionSet.instructions[instr].bitwidthOptions;
 			FOR i := 0 TO InstructionSet.maxCodeLength-1 DO opcode[i] := InstructionSet.instructions[instr].code[i] END;
 
@@ -950,6 +959,21 @@ TYPE
 						END;
 					| mem64Operand, mem128Operand: (* ignored *)
 						IF Trace THEN KernelLog.String(" mem64/mem128 "); END;
+					| RXB: 
+						IF val # -1 THEN code.PutByte (val); val := -1 END;
+						IF Trace THEN KernelLog.String(" RXB ");  TRACE(rexPrefix) END;
+						INC(oppos); 
+						byte := ORD(opcode[oppos]);
+						IF ~(rexB IN rexPrefix) THEN byte := byte + 80H END;
+						IF ~(rexX IN rexPrefix) THEN byte := byte + 40H END;
+						IF ~(rexR IN rexPrefix) THEN byte := byte + 20H END;
+						code.PutByte(byte); 
+					| Src1Prefix:
+						IF val # -1 THEN code.PutByte (val); val := -1 END;
+						IF Trace THEN KernelLog.String(" Src1Prefix "); END;
+						INC(oppos);
+						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm)); 
+						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
 					ELSE HALT(100) (* decoding error *)
 					END;
 				END;
@@ -2186,7 +2210,7 @@ TYPE
 
 	PROCEDURE IsRegisterOperand*(CONST op: Operand): BOOLEAN;
 	BEGIN
-		RETURN op.type IN {reg8, reg16, reg32, reg64, CRn, DRn, segReg, sti, mmx, xmm}
+		RETURN op.type IN {reg8, reg16, reg32, reg64, CRn, DRn, segReg, sti, mmx, xmm, ymm}
 	END IsRegisterOperand;
 
 	PROCEDURE IsMemoryOperand*(CONST op: Operand): BOOLEAN;
@@ -2209,6 +2233,7 @@ TYPE
 			|segReg: w.String("segReg");
 			|mmx: w.String("mmx");
 			|xmm: w.String("xmm");
+			|ymm: w.String("ymm");
 			|mem: w.String("mem");
 			|sti: w.String("sti");
 			|imm: w.String("imm");
@@ -2223,7 +2248,7 @@ TYPE
 	PROCEDURE DumpOperand*(w: Streams.Writer; CONST operand: Operand);
 	BEGIN
 		CASE operand.type OF
-		|reg8, reg16, reg32, reg64, CRn, DRn, segReg, sti, mmx, xmm:
+		|reg8, reg16, reg32, reg64, CRn, DRn, segReg, sti, mmx, xmm, ymm:
 			w.String(InstructionSet.registers[operand.register].name);
 		|mem:
 			IF operand.sizeInBytes = 1 THEN w.String("BYTE ")
@@ -2392,6 +2417,13 @@ TYPE
 			ELSE
 				RETURN FALSE;
 			END
+		|ymm:
+			CASE type OF
+			InstructionSet.ymm, InstructionSet.ymmmem128, InstructionSet.ymmmem256:
+				RETURN TRUE;
+			ELSE
+				RETURN FALSE;
+			END
 		|mem:
 			CASE type OF
 			| InstructionSet.mem:
@@ -2414,8 +2446,10 @@ TYPE
 				RETURN ((operand.sizeInBytes = bitsDefault) OR (operand.sizeInBytes = bits64)) & ((operand.register= none) OR (IsMemReg(operand.register)));
 			| InstructionSet.mem128:
 				RETURN (operand.sizeInBytes = bitsDefault) OR (operand.sizeInBytes = bits128);
-			| InstructionSet.xmmmem128:
+			| InstructionSet.xmmmem128, InstructionSet.ymmmem128:
 				RETURN ((operand.sizeInBytes = bitsDefault) OR (operand.sizeInBytes = bits128)) & ((operand.register= none) OR (IsMemReg(operand.register)));
+			| InstructionSet.ymmmem256:
+				RETURN ((operand.sizeInBytes = bitsDefault) OR (operand.sizeInBytes = bits256)) & ((operand.register= none) OR (IsMemReg(operand.register)));
 			| InstructionSet.moffset8:
 				RETURN ((operand.sizeInBytes = bitsDefault) OR (operand.sizeInBytes = bits8)) & (operand.register= none);
 			| InstructionSet.moffset16:
@@ -2504,7 +2538,7 @@ TYPE
 		operand.type := InstructionSet.RegisterType(register);
 		operand.register :=register;
 		CASE operand.type OF
-			reg8,reg16,reg32,reg64,segReg,CRn,DRn,sti,xmm,mmx: (* ok *)
+			reg8,reg16,reg32,reg64,segReg,CRn,DRn,sti,xmm,mmx,ymm: (* ok *)
 			|InstructionSet.st0: operand.type := InstructionSet.sti;
 		ELSE
 			HALT(100);

@@ -93,10 +93,10 @@ CONST
 
 
 	(*
-		OCProgTools.Enum -l=1 -e
+		FoxProgTools.Enum -l=1 -e
 		(** operand types, numbers assigned to the types do not have a special meaning **)
 		(* register classes first *)
-		 reg8 reg16 reg32 reg64 CRn DRn segReg mmx xmm sti
+		 reg8 reg16 reg32 reg64 CRn DRn segReg mmx xmm ymm sti
 		 (* other classes *)
 		 mem imm ioffset pntr1616 pntr1632
 		(* special registers *)
@@ -105,103 +105,113 @@ CONST
 		 imm16  imm32  imm64  imm8
 		 uimm16  uimm32  uimm8
 		 simm16  simm32  simm8
-		 mem128  mem16  mem32  mem64  mem8
+		mem256
+ 		mem128  mem16  mem32  mem64  mem8
 		 moffset16  moffset32  moffset64  moffset8
 		 rel16off  rel32off  rel8off
 		(* ambivalent operand types *)
-		 regmem16  regmem32  regmem64  regmem8
+		 reg3264
+		 regmem16  regmem32  regmem64  regmem8 reg32mem16
 		 mmxmem32  mmxmem64
-		 xmmmem128  xmmmem32  xmmmem64
+		 xmmmem256 xmmmem128  xmmmem32  xmmmem64
+		xmmmem8
+		xmmmem16
+		ymmmem128
+		ymmmem256
 		(* miscellaneous *)
 		 one three
+		vm32x
+		vm32y
+		vm64x
+		vm64y
+		m2z;
 		 ~
 	*)
 	(** operand types, numbers assigned to the types do not have a special meaning **)
 	(* register classes first *)
-	reg8*= 0; (* GPR 8 *)
-	reg16*= 1; (* GPR 16 *)
-	reg32*= 2; (* GPR 32 *)
-	reg64*= 3; (* GPR 64 *)
-	CRn*= 4; (* counter registers *)
-	DRn*= 5; (* debug registers *)
-	segReg*= 6; (* segment registers *)
-	mmx*= 7; (* 64bit mmx registers *)
-	xmm*= 8; (* 128bit sse registers *)
-	sti*= 9; (* floating point registers *)
+	reg8*= 0; 
+	reg16*= 1; 
+	reg32*= 2; 
+	reg64*= 3; 
+	CRn*= 4; 
+	DRn*= 5; 
+	segReg*= 6; 
+	mmx*= 7; 
+	xmm*= 8; 
+	ymm*= 9; 
+	sti*= 10; 
 	(* other classes *)
-	mem*= 10; (* memory operands *)
-	imm*= 11; (* immediate operands *)
-	ioffset*= 12; (* used for MOV AL/AX/EAX/RAX   *)
-	pntr1616*= 13;  (* used for far jumps and calls*)
-	pntr1632*= 14;  (* used for far jumps and calls *)
+	mem*= 11; 
+	imm*= 12; 
+	ioffset*= 13; 
+	pntr1616*= 14; 
+	pntr1632*= 15; 
 	(* special registers *)
-	AL*= 15;
-	AX*= 16;
-	CL*= 17;
-	CR8*= 18;
-	CS*= 19;
-	DS*= 20;
-	DX*= 21;
-	EAX*= 22;
-	ECX*= 23;
-	ES*= 24;
-	FS*= 25;
-	GS*= 26;
-	RAX*= 27;
-	SS*= 28;
-	rAX*= 29;
-	st0*= 30;
+	AL*= 16; 
+	AX*= 17; 
+	CL*= 18; 
+	CR8*= 19; 
+	CS*= 20; 
+	DS*= 21; 
+	DX*= 22; 
+	EAX*= 23; 
+	ECX*= 24; 
+	ES*= 25; 
+	FS*= 26; 
+	GS*= 27; 
+	RAX*= 28; 
+	SS*= 29; 
+	rAX*= 30; 
+	st0*= 31; 
 	(* immediates and memory locations *)
-	imm16*= 31;
-	imm32*= 32;
-	imm64*= 33;
-	imm8*= 34;
-	uimm16*= 35;
-	uimm32*= 36;
-	uimm8*= 37;
-	simm16*= 38;
-	simm32*= 39;
-	simm8*= 40;
-	mem128*= 41;
-	mem16*= 42;
-	mem32*= 43;
-	mem64*= 44;
-	mem8*= 45;
-	moffset16*= 46;
-	moffset32*= 47;
-	moffset64*= 48;
-	moffset8*= 49;
-	rel16off*= 50;
-	rel32off*= 51;
-	rel8off*= 52;
+	imm16*= 32; 
+	imm32*= 33; 
+	imm64*= 34; 
+	imm8*= 35; 
+	uimm16*= 36; 
+	uimm32*= 37; 
+	uimm8*= 38; 
+	simm16*= 39; 
+	simm32*= 40; 
+	simm8*= 41; 
+	mem256*= 42; 
+	mem128*= 43; 
+	mem16*= 44; 
+	mem32*= 45; 
+	mem64*= 46; 
+	mem8*= 47; 
+	moffset16*= 48; 
+	moffset32*= 49; 
+	moffset64*= 50; 
+	moffset8*= 51; 
+	rel16off*= 52; 
+	rel32off*= 53; 
+	rel8off*= 54; 
 	(* ambivalent operand types *)
-	regmem16*= 53;
-	regmem32*= 54;
-	regmem64*= 55;
-	regmem8*= 56;
-	mmxmem32*= 57;
-	mmxmem64*= 58;
-	xmmmem128*= 59;
-	xmmmem32*= 60;
-	xmmmem64*= 61;
+	reg3264*= 55; 
+	regmem16*= 56; 
+	regmem32*= 57; 
+	regmem64*= 58; 
+	regmem8*= 59; 
+	reg32mem16*= 60; 
+	mmxmem32*= 61; 
+	mmxmem64*= 62; 
+	xmmmem256*= 63; 
+	xmmmem128*= 64; 
+	xmmmem32*= 65; 
+	xmmmem64*= 66; 
+	xmmmem8*= 67; 
+	xmmmem16*= 68; 
+	ymmmem128*= 69; 
+	ymmmem256*= 70; 
 	(* miscellaneous *)
-	one*= 62;
-	three*= 63;
-
-	ymm *= 64;
-	ymmmem128*=65;
-	ymmmem256*=66;
-	vm32x*=67;
-	vm32y*=68;
-	vm64x*=69;
-	vm64y*=70;
-	mem256*= 71;
-	xmmmem256*=72;
-	reg3264*=73;
-	xmmmem8*=74;
-	xmmmem16*=75;
-	reg32mem16*=76;
-	m2z*=77;
+	one*= 71; 
+	three*= 72; 
+	vm32x*= 73; 
+	vm32y*= 74; 
+	vm64x*= 75; 
+	vm64y*= 76; 
+	m2z*= 77; 
 
 	(** prefixes **)
 	prfOP* = 066H;
@@ -306,15 +316,18 @@ CONST
 	regR8*= 104; regR9*= 105; regR10*= 106; regR11*= 107; regR12*= 108; regR13*= 109; regR14*= 110; regR15*= 111;
 	regRIP*= 112;
 	(** other registers **)
-	regES*= 128; regCS*= 129; regSS*= 130; regDS*= 131; regFS*= 132; regGS*= 133; regCR0*= 134; regCR1*= 135;
-	regCR2*= 136; regCR3*= 137; regCR4*= 138; regCR5*= 139; regCR6*= 140; regCR7*= 141; regCR8*= 142; regCR9*= 143;
-	regCR10*= 144; regCR11*= 145; regCR12*= 146; regCR13*= 147; regCR14*= 148; regCR15*= 149; regDR0*= 150; regDR1*= 151;
-	regDR2*= 152; regDR3*= 153; regDR4*= 154; regDR5*= 155; regDR6*= 156; regDR7*= 157; regDR8*= 158; regDR9*= 159;
-	regDR10*= 160; regDR11*= 161; regDR12*= 162; regDR13*= 163; regDR14*= 164; regDR15*= 165; regST0*= 166; regST1*= 167;
-	regST2*= 168; regST3*= 169; regST4*= 170; regST5*= 171; regST6*= 172; regST7*= 173; regXMM0*= 174; regXMM1*= 175;
-	regXMM2*= 176; regXMM3*= 177; regXMM4*= 178; regXMM5*= 179; regXMM6*= 180; regXMM7*= 181; regXMM8*= 182; regXMM9*= 183;
-	regXMM10*= 184; regXMM11*= 185; regXMM12*= 186; regXMM13*= 187; regXMM14*= 188; regXMM15*= 189; regMMX0*= 190; regMMX1*= 191;
-	regMMX2*= 192; regMMX3*= 193; regMMX4*= 194; regMMX5*= 195; regMMX6*= 196; regMMX7*= 197; numberRegisters*= 198;
+	regES*= 128; regCS*= 129; regSS*= 130; regDS*= 131; regFS*= 132; regGS*= 133; regCR0*= 134; regCR1*= 135; 
+	regCR2*= 136; regCR3*= 137; regCR4*= 138; regCR5*= 139; regCR6*= 140; regCR7*= 141; regCR8*= 142; regCR9*= 143; 
+	regCR10*= 144; regCR11*= 145; regCR12*= 146; regCR13*= 147; regCR14*= 148; regCR15*= 149; regDR0*= 150; regDR1*= 151; 
+	regDR2*= 152; regDR3*= 153; regDR4*= 154; regDR5*= 155; regDR6*= 156; regDR7*= 157; regDR8*= 158; regDR9*= 159; 
+	regDR10*= 160; regDR11*= 161; regDR12*= 162; regDR13*= 163; regDR14*= 164; regDR15*= 165; regST0*= 166; regST1*= 167; 
+	regST2*= 168; regST3*= 169; regST4*= 170; regST5*= 171; regST6*= 172; regST7*= 173; regXMM0*= 174; regXMM1*= 175; 
+	regXMM2*= 176; regXMM3*= 177; regXMM4*= 178; regXMM5*= 179; regXMM6*= 180; regXMM7*= 181; regXMM8*= 182; regXMM9*= 183; 
+	regXMM10*= 184; regXMM11*= 185; regXMM12*= 186; regXMM13*= 187; regXMM14*= 188; regXMM15*= 189; regMMX0*= 190; regMMX1*= 191; 
+	regMMX2*= 192; regMMX3*= 193; regMMX4*= 194; regMMX5*= 195; regMMX6*= 196; regMMX7*= 197; regYMM0*= 198; regYMM1*= 199; 
+	regYMM2*= 200; regYMM3*= 201; regYMM4*= 202; regYMM5*= 203; regYMM6*= 204; regYMM7*= 205; regYMM8*= 206; regYMM9*= 207; 
+	regYMM10*= 208; regYMM11*= 209; regYMM12*= 210; regYMM13*= 211; regYMM14*= 212; regYMM15*= 213; 
+	numberRegisters*= 214; 
 
 VAR 
 	opAAA*,
@@ -1760,11 +1773,13 @@ VAR
 							INC(i); ASSERT(cdc[i] ="n");
 							INC(i); ASSERT(cdc[i] ="t");
 							code[k] := CHR(CountPrefix);
+							mul := mul DIV 10H;
 						ELSIF cdc[i] = "d" THEN
 							INC(i); ASSERT(cdc[i] ="e"); 
 							INC(i); ASSERT(cdc[i] ="s");
 							INC(i); ASSERT(cdc[i] ="t");
 							code[k] := CHR(DestPrefix);
+							mul := mul DIV 10H;
 						ELSIF cdc[i] = "s" THEN
 							INC(i); ASSERT(cdc[i] ="r"); 
 							INC(i); ASSERT(cdc[i] ="c");
@@ -1776,6 +1791,7 @@ VAR
 								code[k] := CHR(Src2Prefix);
 								INC(i);
 							END;
+							mul := mul DIV 10H;
 						ELSE HALT(100);
 						END;
 						INC(i);
@@ -5427,6 +5443,23 @@ VAR
 		AddRegister (regXMM14,"XMM14", xmm, bits64, 14);
 		AddRegister (regXMM15,"XMM15", xmm, bits64, 15);
 
+		AddRegister (regYMM0,"YMM0", ymm, bits64, 0);
+		AddRegister (regYMM1,"YMM1", ymm, bits64, 1);
+		AddRegister (regYMM2,"YMM2", ymm, bits64, 2);
+		AddRegister (regYMM3,"YMM3", ymm, bits64, 3);
+		AddRegister (regYMM4,"YMM4", ymm, bits64, 4);
+		AddRegister (regYMM5,"YMM5", ymm, bits64, 5);
+		AddRegister (regYMM6,"YMM6", ymm, bits64, 6);
+		AddRegister (regYMM7,"YMM7", ymm, bits64, 7);
+		AddRegister (regYMM8,"YMM8", ymm, bits64, 8);
+		AddRegister (regYMM9,"YMM9", ymm, bits64, 9);
+		AddRegister (regYMM10,"YMM10", ymm, bits64, 10);
+		AddRegister (regYMM11,"YMM11", ymm, bits64, 11);
+		AddRegister (regYMM12,"YMM12", ymm, bits64, 12);
+		AddRegister (regYMM13,"YMM13", ymm, bits64, 13);
+		AddRegister (regYMM14,"YMM14", ymm, bits64, 14);
+		AddRegister (regYMM15,"YMM15", ymm, bits64, 15);
+
 		AddRegister (regMMX0,"MMX0", mmx, bits128, 0);
 		AddRegister (regMMX1,"MMX1", mmx, bits128, 1);
 		AddRegister (regMMX2,"MMX2", mmx, bits128, 2);
@@ -5480,20 +5513,21 @@ VAR
 	END InitCPUs;
 
 	PROCEDURE Trace*;
-	VAR instr: LONGINT; i: LONGINT;
+	VAR instr,mnem: LONGINT; i: LONGINT;
 	BEGIN
-		instr := 0;
-		WHILE instr < numberInstructions DO
-			KernelLog.Int(instr,5);
-			KernelLog.String(" ");
-			FOR i := 0 TO maxCodeLength-1 DO
-				KernelLog.Hex(ORD(instructions[instr].code[i]),-2); KernelLog.String(" ");
+		FOR mnem := 0 TO numberMnemonics-1 DO
+			KernelLog.String(mnemonics[mnem].name); KernelLog.Ln;
+			FOR instr := mnemonics[mnem].firstInstruction TO mnemonics[mnem].lastInstruction DO
+				KernelLog.Int(instr,5);
+				KernelLog.String(" ");
+				FOR i := 0 TO maxCodeLength-1 DO
+					KernelLog.Hex(ORD(instructions[instr].code[i]),-2); KernelLog.String(" ");
+				END;
+				FOR i := 0 TO maxNumberOperands-1 DO
+					KernelLog.Int(instructions[instr].operands[i],1); KernelLog.String(" ");
+				END;
+				KernelLog.Ln;
 			END;
-			FOR i := 0 TO maxNumberOperands-1 DO
-				KernelLog.Int(instructions[instr].operands[i],1); KernelLog.String(" ");
-			END;
-			KernelLog.Ln;
-			INC(instr);
 		END;
 	END Trace;
 

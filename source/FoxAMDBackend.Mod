@@ -32,6 +32,8 @@ CONST
 	ST0=InstructionSet.regST0;
 	XMM0 = InstructionSet.regXMM0;
 	XMM7 = InstructionSet.regXMM7;
+	YMM0 = InstructionSet.regYMM0;
+	YMM7 = InstructionSet.regYMM7;
 
 	Low=0; High=1;
 
@@ -142,6 +144,7 @@ TYPE
 				toVirtual[index MOD 4 + EAX] := split;
 				toVirtual[index MOD 4 + AX] := split;
 			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Allocate;
@@ -199,6 +202,7 @@ TYPE
 					toVirtual[index MOD 4 + AX] := free;
 				END;
 			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Free;
@@ -243,6 +247,8 @@ TYPE
 			IF (type.length > 1) THEN
 				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
 					i := Get(XMM7, XMM0);
+				ELSIF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =8) THEN
+					i := Get(YMM7, YMM0);
 				ELSE
 					HALT(100)
 				END
@@ -368,6 +374,7 @@ TYPE
 				toVirtual[index MOD 32 + EAX] := split;
 				toVirtual[index MOD 32 + AX] := split;
 			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Allocate;
@@ -406,6 +413,7 @@ TYPE
 				toVirtual[index MOD 32 + EAX] := free;
 				toVirtual[index MOD 32 + AX] := free;
 			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Free;
@@ -659,6 +667,15 @@ TYPE
 						SpecialMove(InstructionSet.opMOVQ, InstructionSet.opMOVQ, TRUE, dest, src, type);
 					ELSIF  (type.sizeInBits = 8) THEN
 						SpecialMove(InstructionSet.opMOVD, InstructionSet.opMOVD, TRUE, dest, src, type);
+					END;
+				ELSIF type.length = 8 THEN
+					(*ASSERT(type.form = IntermediateCode.Float);*)
+					IF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
+					SpecialMove(InstructionSet.opVMOVUPS, InstructionSet.opVMOVUPS, TRUE, dest, src, type);
+					ELSIF (type.sizeInBits = 16) THEN
+						SpecialMove(InstructionSet.opVMOVQ, InstructionSet.opVMOVQ, TRUE, dest, src, type);
+					ELSIF  (type.sizeInBits = 8) THEN
+						SpecialMove(InstructionSet.opVMOVD, InstructionSet.opVMOVD, TRUE, dest, src, type);
 					END;
 				ELSE
 					(*

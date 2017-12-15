@@ -2721,7 +2721,7 @@ TYPE
 	BEGIN
 		IF (left.type # right.type) OR (left.sizeInBytes # right.sizeInBytes) OR (left.symbol # right.symbol) THEN RETURN FALSE END;
 		CASE left.type OF
-			reg8,reg16,reg32,reg64,segReg,CRn,DRn,sti,xmm,mmx: RETURN left.register = right.register
+			reg8,reg16,reg32,reg64,segReg,CRn,DRn,sti,xmm,mmx,ymm: RETURN left.register = right.register
 			| imm,ioffset: RETURN (left.val = right.val) & ((left.symbol.name="") OR (left.displacement = right.displacement))
 			| mem:RETURN (left.register = right.register) & (left.displacement = right.displacement) & (left.index = right.index) & (left.scale = right.scale)
 			| pntr1616,pntr1632: RETURN (left.selector=right.selector) & (left.offset=right.offset)

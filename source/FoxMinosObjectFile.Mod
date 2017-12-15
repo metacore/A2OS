@@ -270,7 +270,7 @@ TYPE
 
 			PROCEDURE ConstantNeedsSection(constant: SyntaxTree.Constant): BOOLEAN;
 			BEGIN
-				RETURN constant.type.resolved IS SyntaxTree.StringType
+				RETURN (constant.type.resolved IS SyntaxTree.StringType) OR (constant.type.resolved IS SyntaxTree.MathArrayType)
 			END ConstantNeedsSection;
 
 			PROCEDURE TypeNeedsSection(type: SyntaxTree.TypeDeclaration): BOOLEAN;

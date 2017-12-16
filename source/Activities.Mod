@@ -42,7 +42,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	VAR priority: Priority;
 	VAR finalizer := NIL: SwitchFinalizer;
 	VAR previous: Activity; argument: ADDRESS;
-	VAR framePointer {UNTRACED}: BaseTypes.StackFrame;
+	VAR framePointer: ADDRESS;
 	VAR procedure: PROCEDURE;
 	VAR object-: BaseTypes.Object;
 	VAR bound := FALSE: BOOLEAN;
@@ -51,7 +51,8 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	VAR stack {UNTRACED}: Stack;
 
 	PROCEDURE &InitializeActivity (procedure: PROCEDURE; priority: Priority);
-	VAR stackRecord {UNTRACED}: StackRecord; StackFrameDescriptor {UNTRACED} EXTERN "BaseTypes.StackFrame": BaseTypes.Descriptor;
+	VAR stackRecord {UNTRACED}: StackRecord; stackFrame {UNTRACED}: BaseTypes.StackFrame;
+	VAR StackFrameDescriptor {UNTRACED} EXTERN "BaseTypes.StackFrame": BaseTypes.Descriptor;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT (priority < Priorities);
 		ASSERT (InitialStackSize > SafeStackSize);
@@ -62,10 +63,11 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		stackRecord.next := NIL;
 		stackRecord.prev := NIL;
 		stackLimit := ADDRESS OF stack[SafeStackSize+3* SIZE OF ADDRESS]; SELF.priority := priority;
-		framePointer := ADDRESS OF stack[InitialStackSize - 4 * SIZE OF ADDRESS - CPU.StackDisplacement];
-		framePointer.caller := Start;
-		framePointer.previous := NIL;
-		framePointer.descriptor := ADDRESS OF StackFrameDescriptor;
+		framePointer := ADDRESS OF stack[InitialStackSize - 4 * SIZE OF ADDRESS] - CPU.StackDisplacement;
+		stackFrame := framePointer + CPU.StackDisplacement;
+		stackFrame.caller := Start;
+		stackFrame.previous := NIL;
+		stackFrame.descriptor := ADDRESS OF StackFrameDescriptor;
 		SELF.procedure := procedure;
 	END InitializeActivity;
 
@@ -75,7 +77,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		address := framePointer;
 		currentActivity := SYSTEM.GetActivity ()(Activity); SYSTEM.SetActivity (SELF);
 		WHILE address # NIL DO
-			stackFrame := address;
+			stackFrame := address + CPU.StackDisplacement;
 			IF ODD (stackFrame.descriptor) THEN
 				DEC (stackFrame.descriptor);
 				stackFrame.Reset;

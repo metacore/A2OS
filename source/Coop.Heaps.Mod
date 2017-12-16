@@ -147,6 +147,9 @@ PROCEDURE Mark* EXTERN "GarbageCollector.Mark" (p: ANY);
 PROCEDURE CheckCandidates*;
 END CheckCandidates;
 
+PROCEDURE CheckAssignment*(dest, src: ADDRESS);
+END CheckAssignment;
+
 (** Return the next scheduled finalizer or NIL if none available. Called by finalizer object in Kernel. *)
 PROCEDURE GetFinalizer* (): FinalizerNode;
 VAR n: FinalizerNode;

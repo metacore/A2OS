@@ -1445,6 +1445,7 @@ TYPE
 			context.section := section;
 			context.registerUsageCount := registerUsageCount;
 			context.usedRegisters := usedRegisters;
+			context.temporaries := temporaries;
 			section := new;
 			NEW(registerUsageCount);
 			NEW(temporaries); 

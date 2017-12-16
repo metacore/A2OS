@@ -3904,7 +3904,7 @@ TYPE
 			IF Trace THEN TraceEnter("VisitSymbolDesignator") END;
 			IF x.left # NIL THEN Expression(x.left) END;
 			Symbol(x.symbol,result);
-			IF backend.cooperative & (x.symbol IS SyntaxTree.Variable) & (x.symbol.scope IS SyntaxTree.RecordScope) THEN
+			IF backend.cooperative & (x.symbol IS SyntaxTree.Variable) & (x.symbol.scope # NIL) & (x.symbol.scope IS SyntaxTree.RecordScope) THEN
 				ASSERT ((x.left # NIL) & (x.left.type.resolved IS SyntaxTree.RecordType));
 				ownerType := x.symbol.scope(SyntaxTree.RecordScope).ownerRecord;
 				designatorType := x.left.type.resolved(SyntaxTree.RecordType);

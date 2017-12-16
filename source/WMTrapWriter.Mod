@@ -9,11 +9,11 @@ PROCEDURE TrapWriterFactory*(): Streams.Writer;
 BEGIN
 	IF (w = NIL) OR (~w.IsVisible()) THEN
 		NEW(w, "TRAPS", 860, 480, FALSE);
-		w.SetWindowBgColor(WMGraphics.Red);
+		w.SetWindowBgColor(WMGraphics.DarkRed);
 		w.SetWindowIcon(WMGraphics.LoadImage("WMIcons.tar://WMTrapWriter.png", TRUE));
 		w.SetFontName("Courier");
 		w.SetFontSize(12);
-		w.SetFontColor(WMGraphics.Yellow);
+		w.SetFontColor(WMGraphics.Gold);
 		w.window.editor.SetWordWrap(TRUE);
 	END;
 	RETURN w;

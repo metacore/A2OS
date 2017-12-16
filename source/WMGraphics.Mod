@@ -20,10 +20,12 @@ CONST
 	Black* = 0FFH; White* = LONGINT(0FFFFFFFFH); Transparent*=0H;
 	Gray*=LONGINT(0777777FFH); 
 	Red* = LONGINT(0FF0000FFH); 
+	DarkRed* = LONGINT(08C0000FFH); 
 	Green* = 000FF00FFH; Blue* = 0FFFFH;
 	Yellow* = LONGINT(0FFFF00FFH); 
 	Magenta* = LONGINT(0FF00FFFFH); 
 	Cyan* = 00FFFFFFH;
+	Gold* = LONGINT(0FFD700FFH);
 
 TYPE
 	Real* = REAL;

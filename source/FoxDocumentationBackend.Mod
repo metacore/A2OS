@@ -1421,7 +1421,7 @@ TYPE
 					MergeDocument(template, NIL, document);
 					document := template;
 				ELSIF diagnostics # NIL THEN
-					Basic.Error(diagnostics, "",Basic.invalidPosition, "could not  open / parse documentation template");
+					Basic.Error(diagnostics, "",Basic.invalidPosition, "could not open / parse documentation template");
 				END;
 			END;
 

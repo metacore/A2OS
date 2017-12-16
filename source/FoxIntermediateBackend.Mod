@@ -10340,7 +10340,7 @@ TYPE
 				Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
 				*)
 				IF ~backend.cellsAreObjects THEN
-					IF size > ToMemoryUnits(system, system.addressSize) THEN Error(p1.position,"receive not implemented for  complex data types") END;
+					IF size > ToMemoryUnits(system, system.addressSize) THEN Error(p1.position,"receive not implemented for complex data types") END;
 				END;
 				ReleaseOperand(s0);
 				ReleaseOperand(s1);

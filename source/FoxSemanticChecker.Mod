@@ -3015,7 +3015,7 @@ TYPE
 				IF  ~(rightType = SyntaxTree.typeDeclarationType) THEN
 					Error(right.position,"is not a type ");
 				ELSIF ~IsTypeExtension(leftType, right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved) THEN
-					Error(binaryExpression.position,"is not a  type extension of ");
+					Error(binaryExpression.position,"is not a type extension of ");
 					IF VerboseErrorMessage THEN
 						Printout.Info("left",left);
 						Printout.Info("right",right);

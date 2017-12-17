@@ -258,5 +258,10 @@ BEGIN
 	trapMutex := Unix.NewRecursiveMtx( );
 	trace := FALSE;  
 	Unix.InstallTrap( Trap );
+	Unix.HandleSignal( 4 ); (* SIGILL: illegal instruction *)
+	Unix.HandleSignal( 5 ); (* SIGTRAP: exception *)
+	Unix.HandleSignal( 7 ); (* SIGBUS: bus error *)
+	Unix.HandleSignal( 8 ); (* SIGFPE: erroneous arithmetics *)
+	Unix.HandleSignal( 11 ); (* SIGSEGV: segmentation fault *)
 	unix := StdIO.env
 END Traps.

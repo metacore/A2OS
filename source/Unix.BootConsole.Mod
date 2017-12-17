@@ -1,6 +1,6 @@
 MODULE BootConsole;	(** AUTHOR "G.F."; PURPOSE "Boot console"; *)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands, Heaps;
+IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
 
 TYPE
 	Module = Modules.Module;
@@ -177,12 +177,19 @@ VAR
 		END
 	END StartSystem;
 
-
+	PROCEDURE InitSignalHandling;
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 1 TO 15 DO
+			IF i # 9 THEN Unix.HandleSignal( i ) END;
+		END;
+	END InitSignalHandling;
+	
 BEGIN
 	Glue.Initialize;
 	InitializeCoreModules;
+	InitSignalHandling;
 	StartSystem;
-	Unix.HandleSignal( 2 );	
 	Objects.GCLoop
 END BootConsole.
 

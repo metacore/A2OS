@@ -609,15 +609,6 @@ VAR
 		END
 	END InstallHandler;
 
-
-	PROCEDURE InitSignalHandler;
-	VAR i: LONGINT;
-	BEGIN
-		FOR i := 1 TO 15 DO
-			IF ~(i IN {SIGINT, SIGKILL}) THEN InstallHandler( i ) END;
-		END;
-		InstallHandler( SIGUSR1 );
-	END InitSignalHandler;
 	
 	PROCEDURE HandleSignal*( sig: LONGINT );
 	BEGIN
@@ -1108,7 +1099,7 @@ VAR
 
 		getSysinfo;
 		
-		InitSignalHandler;
+		InstallHandler( SIGUSR1 )
 	END Init;
 	
 	

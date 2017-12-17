@@ -929,15 +929,6 @@ VAR
 		END;
 	END InstallHandler;
 
-
-	PROCEDURE InitSignalHandler;
-	VAR i: LONGINT;
-	BEGIN
-		FOR i := 1 TO 15 DO
-			IF ~(i IN {SIGINT, SIGKILL}) THEN InstallHandler(i) END;
-			InstallHandler( SIGUSR1 );
-		END;
-	END InitSignalHandler;
 	
 	PROCEDURE HandleSignal*( sig: LONGINT );
 	BEGIN
@@ -1126,7 +1117,7 @@ VAR
 		getSysinfo;
 
 		CreateSignalStack;
-		InitSignalHandler;
+		InstallHandler( SIGUSR1 );
 	END Init;
 
 	(* load X11 related libaries only on demand *)

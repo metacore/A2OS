@@ -957,15 +957,6 @@ VAR
 		RETURN  xstat( 3, path, buf );
 	END stat;
 
-
-
-	PROCEDURE InitSignalHandler;
-	VAR i: LONGINT;
-	BEGIN
-		FOR i := 1 TO 15 DO
-			IF ~(i IN {SIGINT, SIGKILL}) THEN InstallHandler(i) END;
-		END;
-	END InitSignalHandler;
 	
 	PROCEDURE HandleSignal*( sig: LONGINT );
 	BEGIN
@@ -1151,7 +1142,6 @@ VAR
 		getSysinfo;
 
 		CreateSignalStack;
-		InitSignalHandler;
 	END Init;
 
 	(* load X11 related libaries only on demand *)

@@ -180,9 +180,19 @@ VAR
 	PROCEDURE InitSignalHandling;
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 1 TO 15 DO
-			IF i # 9 THEN Unix.HandleSignal( i ) END;
-		END;
+		Unix.HandleSignal( Unix.SIGHUP );
+		Unix.HandleSignal( Unix.SIGINT );
+		Unix.HandleSignal( Unix.SIGQUIT );
+		Unix.HandleSignal( Unix.SIGILL );
+		Unix.HandleSignal( Unix.SIGTRAP );
+		
+		Unix.HandleSignal( Unix.SIGABRT );
+		Unix.HandleSignal( Unix.SIGBUS );
+		Unix.HandleSignal( Unix.SIGFPE );
+		Unix.HandleSignal( Unix.SIGBUS );
+		Unix.HandleSignal( Unix.SIGPIPE );
+		Unix.HandleSignal( Unix.SIGALRM );
+		Unix.HandleSignal( Unix.SIGTERM );
 	END InitSignalHandling;
 	
 BEGIN

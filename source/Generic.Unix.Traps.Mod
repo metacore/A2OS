@@ -153,11 +153,11 @@ VAR
 					ELSE  w.String( "  (unknown exception)" )
 					END
 				END;
-		|  8:	w.String( "8 (Arithmetic exception)" );
-		|10: 	w.String( "10 (Bus Error)" )
-		|11:	w.String( "11 (Segmentation violation)" )
-		|13:	w.String( "13 (Broken pipe)" )
-		|14:	w.String( "14 (Alarm signal)" )
+		| Unix.SIGBUS:  w.Int( sig, 0 );  w.String( " (Bus Error)" )
+		| Unix.SIGFPE:  w.Int( sig, 0 );  w.String( " (Arithmetic exception)" );
+		| 11:	w.String( "11 (Segmentation violation)" )
+		| 13:	w.String( "13 (Broken pipe)" )
+		| 14:	w.String( "14 (Alarm signal)" )
 		ELSE
 			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );
 		END;
@@ -258,10 +258,10 @@ BEGIN
 	trapMutex := Unix.NewRecursiveMtx( );
 	trace := FALSE;  
 	Unix.InstallTrap( Trap );
-	Unix.HandleSignal( 4 ); (* SIGILL: illegal instruction *)
-	Unix.HandleSignal( 5 ); (* SIGTRAP: exception *)
-	Unix.HandleSignal( 7 ); (* SIGBUS: bus error *)
-	Unix.HandleSignal( 8 ); (* SIGFPE: erroneous arithmetics *)
-	Unix.HandleSignal( 11 ); (* SIGSEGV: segmentation fault *)
+	Unix.HandleSignal( Unix.SIGILL ); (* illegal instruction *)
+	Unix.HandleSignal( Unix.SIGTRAP ); (* exception *)
+	Unix.HandleSignal( Unix.SIGBUS ); (* bus error *)
+	Unix.HandleSignal( Unix.SIGFPE ); (* erroneous arithmetics *)
+	Unix.HandleSignal( Unix.SIGSEGV ); (* segmentation fault *)
 	unix := StdIO.env
 END Traps.

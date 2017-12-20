@@ -1089,6 +1089,7 @@ VAR
 	opVMOVDDUP*,
 	opVMOVDQA*,
 	opVMOVDQU*,
+	opVMOVHLPS*,
 	opVMOVHPD*,
 	opVMOVHPS*,
 	opVMOVLHPS*,
@@ -1111,6 +1112,7 @@ VAR
 	opVMPSADBW*,
 	opVMULPD*,
 	opVMULPS*,
+	opVMULSD*,
 	opVMULSS*,
 	opVORPD*,
 	opVORPS*,
@@ -2700,6 +2702,7 @@ VAR
 		AddMnemonic(opVMOVD, "VMOVD");
 		AddMnemonic(opVMOVDQA, "VMOVDQA");
 		AddMnemonic(opVMOVDQU, "VMOVDQU");
+		AddMnemonic(opVMOVHLPS, "VMOVHLPS");
 		AddMnemonic(opVMOVHPD, "VMOVHPD");
 		AddMnemonic(opVMOVHPS, "VMOVHPS");
 		AddMnemonic(opVMOVLHPS, "VMOVLHPS");
@@ -2723,6 +2726,7 @@ VAR
 		AddMnemonic(opVMSAVE, "VMSAVE");
 		AddMnemonic(opVMULPD, "VMULPD");
 		AddMnemonic(opVMULPS, "VMULPS");
+		AddMnemonic(opVMULSD, "VMULSD");
 		AddMnemonic(opVMULSS, "VMULSS");
 		AddMnemonic(opVORPD, "VORPD");
 		AddMnemonic(opVORPS, "VORPS");
@@ -4666,6 +4670,7 @@ VAR
 		AddInstructionV(opVMOVDQU,"xmm1/mem128,xmm2","C4 RXB.00001 X.1111.0.10 6F /r");
 		AddInstructionV(opVMOVDQU,"ymm1,xmm2/mem256","C4 RXB.00001 X.1111.1.10 7F /r");
 		AddInstructionV(opVMOVDQU,"ymm1/mem256,ymm2","C4 RXB.00001 X.1111.1.10 7F /r");
+		AddInstructionV(opVMOVHLPS,"xmm1,xmm2,xmm3","C4 RXB.00001 X.src.0.00 12 /r");
 		AddInstructionV(opVMOVHPD,"xmm1,xmm2,mem64","C4 RXB.00001 X.src.0.01 16 /r");
 		AddInstructionV(opVMOVHPD,"mem64,xmm1","C4 RXB.00001 X.1111.0.01 17 /r");
 		AddInstructionV(opVMOVHPS,"xmm1,xmm2,mem64","C4 RXB.00001 X.src.0.00 16 /r");
@@ -4720,6 +4725,7 @@ VAR
 		AddInstructionV(opVMULPD,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src.1.01 59 /r");
 		AddInstructionV(opVMULPS,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.00 59 /r");
 		AddInstructionV(opVMULPS,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.00 59 /r");
+		AddInstructionV(opVMULSD,"xmm1,xmm2,xmm3/mem64","C4 RXB.01 X.src1.X.11 59 /r");
 		AddInstructionV(opVMULSS,"xmm1,xmm2,xmm3/mem32","C4 RXB.01 X.src1.X.10 59 /r");
 		AddInstructionV(opVORPD,"xmm1,xmm2,xmm3/mem128","C4 RXB.01 X.src1.0.01 56 /r");
 		AddInstructionV(opVORPD,"ymm1,ymm2,ymm3/mem256","C4 RXB.01 X.src1.1.01 56 /r");

@@ -237,7 +237,7 @@ VAR
 	PROCEDURE ^ FindFreeBlock(size: SIZE): FreeBlock; 
 	PROCEDURE ^ GetFreeBlockAndSplit(size: SIZE): FreeBlock; 
 	PROCEDURE ^ GetFreeBlock(size: SIZE; VAR p: FreeBlock); 
-	PROCEDURE ^ LazySweep(size: ADDRESS; VAR p: FreeBlock); 
+	PROCEDURE ^ LazySweep(size: ADDRESS; VAR p{UNTRACED} : FreeBlock); 
 	PROCEDURE ^ CheckCandidates*; 
 	PROCEDURE ^ Candidate*(p: ADDRESS); 
 	PROCEDURE ^ RegisterCandidates*(adr: ADDRESS; size: SIZE); 

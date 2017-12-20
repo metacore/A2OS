@@ -73,6 +73,8 @@ CONST
 	ST0 = InstructionSet.regST0; 
 	XMM0 = InstructionSet.regXMM0; 
 	XMM7 = InstructionSet.regXMM7; 
+	YMM0 = InstructionSet.regYMM0; 
+	YMM7 = InstructionSet.regYMM7; 
 	Low = 0; 
 	High = 1; 
 	FrameSpillStack = TRUE; 

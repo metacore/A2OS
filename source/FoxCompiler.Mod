@@ -559,7 +559,7 @@ BEGIN
 	DoAddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	DoAddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
 	DoAddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
-	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
+	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
 
 	(* infer platform from default object file extension *)
 	platforms.Find("objectFileExtension", Machine.DefaultObjectFileExtension, defaultPlatform);

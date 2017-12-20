@@ -4696,8 +4696,7 @@ VAR
 		AddInstructionV(opVMOVNTPS,"mem256,ymm","C4 RXB.00001 X.1111.1.00 2B /r");
 		AddInstructionV(opVMOVQ,"xmm,reg64/mem64","C4 RXB.00001 1.1111.0.01 6E /r");
 		AddInstructionV(opVMOVQ,"reg64/mem64,xmm","C4 RXB.00001 1.1111.0.01 7E /r");
-		AddInstructionV(opVMOVQ,"xmm1,xmm2","C4 RXB.00001 X.1111.0.10 7E /r");
-		AddInstructionV(opVMOVQ,"xmm1,mem64","C4 RXB.00001 X.1111.0.10 7E /r");
+		AddInstructionV(opVMOVQ,"xmm1,xmm2/mem64","C4 RXB.00001 X.1111.0.10 7E /r");
 		AddInstructionV(opVMOVQ,"xmm1/mem64,xmm2","C4 RXB.00001 X.1111.0.01 D6 /r");
 		AddInstructionV(opVMOVSD,"xmm1,mem64","C4 RXB.00001 X.1111.X.11 10 /r");
 		AddInstructionV(opVMOVSD,"mem64,xmm1","C4 RXB.00001 X.1111.X.11 11 /r");

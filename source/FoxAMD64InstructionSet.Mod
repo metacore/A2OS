@@ -917,8 +917,8 @@ VAR
 	opXORPD*,
 	opXORPS*: LONGINT;
 (* AVX 2 Media instructions *)
-	opAESKEYGENASSIST*,
-	opPMADCSWD*,
+	opVAESKEYGENASSIST*,
+	opVPMADCSWD*,
 	opVADDPD*,
 	opVADDPS*,
 	opVADDSD*,
@@ -1086,6 +1086,7 @@ VAR
 	opVMOVAPD*,
 	opVMOVAPS*,
 	opVMOVD*,
+	opVMOVDDUP*,
 	opVMOVDQA*,
 	opVMOVDQU*,
 	opVMOVHPD*,
@@ -1093,7 +1094,7 @@ VAR
 	opVMOVLHPS*,
 	opVMOVLPD*,
 	opVMOVLPS*,
-	opVMOVMSKB*,
+	opVPMOVMSKB*,
 	opVMOVMSKPD*,
 	opVMOVMSKPS*,
 	opVMOVNTDQ*,
@@ -1966,7 +1967,6 @@ VAR
 		AddMnemonic(opADDSS, "ADDSS");
 		AddMnemonic(opADDSUBPD, "ADDSUBPD");
 		AddMnemonic(opADDSUBPS, "ADDSUBPS");
-		AddMnemonic(opAESKEYGENASSIST, "AESKEYGENASSIST");
 		AddMnemonic(opAND, "AND");
 		AddMnemonic(opANDNPD, "ANDNPD");
 		AddMnemonic(opANDNPS, "ANDNPS");
@@ -2363,7 +2363,6 @@ VAR
 		AddMnemonic(opPI2FD, "PI2FD");
 		AddMnemonic(opPI2FW, "PI2FW");
 		AddMnemonic(opPINSRW, "PINSRW");
-		AddMnemonic(opPMADCSWD, "PMADCSWD");
 		AddMnemonic(opPMADDWD, "PMADDWD");
 		AddMnemonic(opPMAXSW, "PMAXSW");
 		AddMnemonic(opPMAXUB, "PMAXUB");
@@ -2538,6 +2537,7 @@ VAR
 		AddMnemonic(opVAESENC, "VAESENC");
 		AddMnemonic(opVAESENCLAST, "VAESENCLAST");
 		AddMnemonic(opVAESIMC, "VAESIMC");
+		AddMnemonic(opVAESKEYGENASSIST, "VAESKEYGENASSIST");
 		AddMnemonic(opVANDNPD, "VANDNPD");
 		AddMnemonic(opVANDNPS, "VANDNPS");
 		AddMnemonic(opVANDPD, "VANDPD");
@@ -2705,7 +2705,6 @@ VAR
 		AddMnemonic(opVMOVLHPS, "VMOVLHPS");
 		AddMnemonic(opVMOVLPD, "VMOVLPD");
 		AddMnemonic(opVMOVLPS, "VMOVLPS");
-		AddMnemonic(opVMOVMSKB, "VMOVMSKB");
 		AddMnemonic(opVMOVMSKPD, "VMOVMSKPD");
 		AddMnemonic(opVMOVMSKPS, "VMOVMSKPS");
 		AddMnemonic(opVMOVNTDQ, "VMOVNTDQ");
@@ -2831,6 +2830,7 @@ VAR
 		AddMnemonic(opVPMACSWD, "VPMACSWD");
 		AddMnemonic(opVPMACSWW, "VPMACSWW");
 		AddMnemonic(opVPMADCSSWD, "VPMADCSSWD");
+		AddMnemonic(opVPMADCSWD, "VPMADCSWD");
 		AddMnemonic(opVPMADDUBSW, "VPMADDUBSW");
 		AddMnemonic(opVPMADDWD, "VPMADDWD");
 		AddMnemonic(opVPMASKMOVD, "VPMASKMOVD");
@@ -2847,6 +2847,7 @@ VAR
 		AddMnemonic(opVPMINUB, "VPMINUB");
 		AddMnemonic(opVPMINUD, "VPMINUD");
 		AddMnemonic(opVPMINUW, "VPMINUW");
+		AddMnemonic(opVPMOVMSKB, "VPMOVMSKB");
 		AddMnemonic(opVPMOVSXBD, "VPMOVSXBD");
 		AddMnemonic(opVPMOVSXBQ, "VPMOVSXBQ");
 		AddMnemonic(opVPMOVSXBW, "VPMOVSXBW");
@@ -3706,8 +3707,8 @@ VAR
 		AddInstruction(opMOVD, "reg/mem32,mmx", "0F7E/r", {}, {cpuMMX});
 		AddInstruction(opMOVD, "reg/mem64,mmx", "0F7E/r", {}, {cpuAMD64,cpuMMX});
 		AddInstruction(opMOVDDUP, "xmm1,xmm2/mem64", "F20F12/r", {}, {cpuSSE3});
-		AddInstructionV(opMOVDDUP,"xmm1,xmm2/mem64","C4 RXB.00001 X.1111.0.11 12 /r");
-		AddInstructionV(opMOVDDUP,"ymm1,ymm2/mem256","C4 RXB.00001 X.1111.1.11 12 /r");
+		AddInstructionV(opVMOVDDUP,"xmm1,xmm2/mem64","C4 RXB.00001 X.1111.0.11 12 /r");
+		AddInstructionV(opVMOVDDUP,"ymm1,ymm2/mem256","C4 RXB.00001 X.1111.1.11 12 /r");
 		AddInstruction(opMOVDQ2Q, "mmx,xmm", "F20FD6/r", {}, {cpuSSE2});
 		AddInstruction(opMOVDQ2Q, "mmx,xmm", "F20FD6/r", {}, {cpuSSE2});
 		AddInstruction(opMOVDQA, "xmm1,xmm2/mem128", "660F6F/r", {}, {cpuSSE2});
@@ -4347,8 +4348,8 @@ VAR
 		AddInstruction(opXORPS, "xmm1,xmm2/mem128", "0F57/r", {}, {cpuSSE});
 
 
-		AddInstructionV(opAESKEYGENASSIST,"xmm1,xmm2/mem128,imm8","C4 RXB.00011 X.src.0.01 DF /r ib");
-		AddInstructionV(opPMADCSWD,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 B6 /r ib");
+		AddInstructionV(opVAESKEYGENASSIST,"xmm1,xmm2/mem128,imm8","C4 RXB.00011 X.src.0.01 DF /r ib");
+		AddInstructionV(opVPMADCSWD,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 B6 /r ib");
 		AddInstructionV(opVADDPD,"xmm1,xmm2,xmm3/mem128","C4 RXB.00001 X.src.0.01 58 /r");
 		AddInstructionV(opVADDPD,"ymm1,ymm2,ymm3/mem256","C4 RXB.00001 X.src.1.01 58 /r");
 		AddInstructionV(opVADDPS,"xmm1,xmm2,xmm3/mem128","C4 RXB.00001 X.src.0.00 58 /r");
@@ -4674,8 +4675,8 @@ VAR
 		AddInstructionV(opVMOVLPD,"mem64,xmm1","C4 RXB.00001 X.1111.0.01 13 /r");
 		AddInstructionV(opVMOVLPS,"xmm1,xmm2,mem64","C4 RXB.00001 X.src.0.00 12 /r");
 		AddInstructionV(opVMOVLPS,"mem64,xmm1","C4 RXB.00001 X.1111.0.00 13 /r");
-		AddInstructionV(opVMOVMSKB,"reg64,xmm1","C4 RXB.01 X.1111.0.01 D7 /r");
-		AddInstructionV(opVMOVMSKB,"reg64,ymm1","C4 RXB.01 X.1111.1.01 D7 /r");
+		AddInstructionV(opVPMOVMSKB,"reg64,xmm1","C4 RXB.01 X.1111.0.01 D7 /r");
+		AddInstructionV(opVPMOVMSKB,"reg64,ymm1","C4 RXB.01 X.1111.1.01 D7 /r");
 		AddInstructionV(opVMOVMSKPD,"reg,xmm","C4 RXB.00001 X.1111.0.01 50 /r");
 		AddInstructionV(opVMOVMSKPD,"reg,ymm","C4 RXB.00001 X.1111.1.01 50 /r");
 		AddInstructionV(opVMOVMSKPS,"reg,xmm","C4 RXB.00001 X.1111.0.00 50 /r");

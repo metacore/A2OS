@@ -6,7 +6,7 @@ CONST
 	TraceAliases = FALSE; 
 	WarnDuplicateFingerprints = FALSE; 
 	PatchFixups = TRUE; 
-	AliasOnlyExported = FALSE; 
+	AliasOnlyExported = TRUE; 
 	DetailedStatistics = FALSE; 
 TYPE 
 	SectionStat = POINTER TO RECORD 

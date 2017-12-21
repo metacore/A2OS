@@ -981,6 +981,7 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ SetExternalName*(name: Scanner.StringType); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END Symbol; 
 
 	TypeDeclaration* = OBJECT (Symbol)
@@ -992,6 +993,7 @@ TYPE
 		PROCEDURE ^ SetDeclaredType*(type: Type); 
 		PROCEDURE ^ SetType*(type: Type); 
 		PROCEDURE ^ Accept*(v: Visitor); 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END TypeDeclaration; 
 
 	Constant* = OBJECT (Symbol)
@@ -1082,6 +1084,7 @@ TYPE
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetLevel*(level: LONGINT); 
 		PROCEDURE ^ SetMethodNumber*(methodNumber: LONGINT); 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END Procedure; 
 

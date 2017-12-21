@@ -3154,6 +3154,16 @@ TYPE
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN FALSE;
 		END NeedsTrace;
+		
+		(* If a symbol needs to be vieible in the object file
+			A symbol needs to be visible in an object file when it is require during linking
+			This is the case for exported symbols but also for methods in a method table, for instance.
+		*)
+		PROCEDURE NeedsSection*(): BOOLEAN;
+		BEGIN
+			RETURN access * Public # {};
+		END NeedsSection;
+
 
 	END Symbol;
 
@@ -3193,6 +3203,12 @@ TYPE
 		VAR position: LONGINT;
 		BEGIN position := SELF.position.start; v.VisitTypeDeclaration(SELF)
 		END Accept;
+		
+		(* type declarations should be generally included in object files *)
+		PROCEDURE NeedsSection*(): BOOLEAN;
+		BEGIN
+			RETURN TRUE;
+		END NeedsSection;
 
 	END TypeDeclaration;
 
@@ -3474,10 +3490,17 @@ TYPE
 		BEGIN SELF.methodNumber := methodNumber
 		END SetMethodNumber;
 
+		PROCEDURE NeedsSection(): BOOLEAN;
+		BEGIN
+			RETURN (access * Public # {}) OR (methodNumber >= 0);
+		END NeedsSection;
+
 		PROCEDURE Accept*(v: Visitor);
 		VAR position: LONGINT;
 		BEGIN position := SELF.position.start; v.VisitProcedure(SELF)
 		END Accept;
+		
+
 
 	END Procedure;
 

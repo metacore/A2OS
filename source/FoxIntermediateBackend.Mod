@@ -14704,7 +14704,7 @@ TYPE
 
 	PROCEDURE IsExported(symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN
-		RETURN (symbol # NIL) & (symbol.access * SyntaxTree.Public # {})
+		RETURN (symbol # NIL) & symbol.NeedsSection();
 	END IsExported;
 
 

@@ -1302,7 +1302,7 @@ END TimerFrequency;
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 
 
-PROCEDURE LeaveA2;
+PROCEDURE LeaveA2*;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
 	IF clock = NIL THEN RETURN END;
@@ -1315,7 +1315,7 @@ BEGIN
 	END;
 END LeaveA2;
 
-PROCEDURE ReenterA2;
+PROCEDURE ReenterA2*;
 VAR cur: Process;
 BEGIN
 	IF clock = NIL THEN RETURN END;

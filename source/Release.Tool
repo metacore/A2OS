@@ -1482,7 +1482,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod I386.NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	I386.NbrRe32.Mod I386.NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod
 
-	NATIVE,WINORIG,WINGEN32 {
+	NATIVE,WINORIG,WINGEN32,UNIXG32 {
 		DataErrors.Mod DataIO.Mod Data.Mod DataStacks.Mod DataQueues.Mod
 		DataLists.Mod DataTrees.Mod
 

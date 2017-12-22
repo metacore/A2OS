@@ -6,7 +6,7 @@ IMPORT
 	FingerPrinter := FoxFingerPrinter, Files, Options, ObjectFile, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
-	Version = 4;
+	Version = 5;
 	Trace = FALSE;
 	TraceAliases = FALSE;
 	WarnDuplicateFingerprints = FALSE;
@@ -84,7 +84,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					resolved := section(IntermediateCode.Section).resolved;
 					IF resolved = NIL THEN RETURN FALSE END;
 
-					IF (resolved # NIL)  & (resolved.pc # 0) & (~resolved.os.fixed) & (resolved.os.priority = 0) THEN
+					IF (resolved # NIL)  & (resolved.pc # 0) & (~resolved.os.fixed) THEN
 						IF section.type = ObjectFile.Code THEN
 							codeAlign := CommonAlignment(codeAlign, resolved.os.alignment);
 							ASSERT((codeUnit=0) OR (codeUnit = resolved.os.unit));
@@ -103,19 +103,19 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				IF codeUnit > 0 THEN
 					sname := module.moduleName;
 					Basic.AppendToSegmentedName(sname,".@CodeSections");
-					codeSection := BinaryCode.NewBinarySection(ObjectFile.Code, 0, codeUnit, sname, FALSE, FALSE);
+					codeSection := BinaryCode.NewBinarySection(ObjectFile.Code, codeUnit, sname, FALSE, FALSE);
 					codeSection.SetAlignment(FALSE,codeAlign);
 				END;
 				IF dataUnit > 0 THEN
 					sname := module.moduleName;
 					Basic.AppendToSegmentedName(sname,".@DataSections");
-					dataSection := BinaryCode.NewBinarySection(ObjectFile.Data, 0, dataUnit, sname, FALSE, FALSE);
+					dataSection := BinaryCode.NewBinarySection(ObjectFile.Data, dataUnit, sname, FALSE, FALSE);
 					dataSection.SetAlignment(FALSE,dataAlign);
 				END;
 				IF constUnit > 0 THEN
 					sname := module.moduleName;
 					Basic.AppendToSegmentedName(sname,".@ConstSections");
-					constSection := BinaryCode.NewBinarySection(ObjectFile.Const, 0, constUnit, sname, FALSE, FALSE);
+					constSection := BinaryCode.NewBinarySection(ObjectFile.Const, constUnit, sname, FALSE, FALSE);
 					constSection.SetAlignment(FALSE,constAlign);
 				END;
 				(*TRACE(codeAlign, dataAlign, constAlign);*)
@@ -124,7 +124,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					section := sections.GetSection(i);
 					resolved := section(IntermediateCode.Section).resolved;
 					exported := section(IntermediateCode.Section).exported;
-					IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed) & (resolved.os.priority = 0)  THEN
+					IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed)  THEN
 						IF section.type = ObjectFile.Code THEN
 							IF resolved.os.alignment # 0 THEN
 							codeSection.Align(resolved.os.alignment);
@@ -475,7 +475,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	BEGIN NEW(objectFileFormat); RETURN objectFileFormat
 	END Get;
 
-	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
+	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT;
 	VAR ch: CHAR; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
 	VAR version: LONGINT;
 	BEGIN
@@ -505,6 +505,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				ObjectFile.ReadNameList(reader, requires, binary, poolMap);
 			END
 		END;
+		RETURN version;
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerPrinter:FingerPrinter.FingerPrinter);
@@ -604,16 +605,17 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; writer: Streams.Writer;
 		section: ObjectFile.Section; binary: BOOLEAN; poolMap, poolMapDummy: ObjectFile.PoolMap;
 		offers, requires: ObjectFile.NameList;
+		version: LONGINT;
 	BEGIN
 		IF context.arg.GetString(fileName) THEN
 			file := Files.Old(fileName);
 			IF file # NIL THEN
 				NEW(reader,file,0);
 				writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));
-				ReadHeader(reader, binary, poolMap, offers, requires);
+				version := ReadHeader(reader, binary, poolMap, offers, requires);
 				WriteHeader(writer, FALSE, NIL, poolMapDummy, offers, requires, NIL);
 				WHILE reader.Peek () # 0X DO
-					ObjectFile.ReadSection (reader, section,binary, poolMap);
+					ObjectFile.ReadSection (reader, version, section,binary, poolMap);
 					ObjectFile.WriteSection(writer, section, FALSE, NIL); (* textual *)
 					reader.SkipWhitespace;
 				END;
@@ -648,13 +650,13 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				file := Files.Old(fileName);
 				IF file # NIL THEN
 					NEW(reader,file,0);
-					ReadHeader(reader, binary, poolMap,offers, requires);
+					version := ReadHeader(reader, binary, poolMap,offers, requires);
 					WHILE reader.Peek () # 0X DO
 						ObjectFile.InitSection(section);
-						ObjectFile.ReadSection (reader, section, binary, poolMap);
-						NEW(bs, SHORTINT(section.type) ,section.priority,section.unit,name, FALSE, FALSE);
+						ObjectFile.ReadSection (reader, version, section, binary, poolMap);
+						NEW(bs, SHORTINT(section.type) ,section.unit,name, FALSE, FALSE);
 						bs.os := section;
-						NEW(is, SHORTINT(bs.os.type), SHORTINT(bs.os.priority), bs.os.identifier.name,NIL, FALSE);
+						NEW(is, SHORTINT(bs.os.type),  bs.os.identifier.name,NIL, FALSE);
 						is.SetResolved(bs);
 						sectionList.AddSection(is);		
 						reader.SkipWhitespace;

@@ -3806,7 +3806,7 @@ VAR
 		result: BinaryCode.Section;
 	BEGIN
 		IF irSection.resolved = NIL THEN
-			NEW(result, irSection.type, irSection.priority, 8, irSection.name, irSection.comments # NIL, FALSE);
+			NEW(result, irSection.type, 8, irSection.name, irSection.comments # NIL, FALSE);
 
 			(* set fixed position or alignment
 			(also make sure that any section has an alignment of at least 4 bytes) *)

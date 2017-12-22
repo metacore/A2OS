@@ -9,9 +9,18 @@ CONST
 	InvalidAddress* = -1 (* MAX (Address) *);
 
 CONST
-	Fixed* = 0; InitCode*=1; BodyCode* = 2; Code* = 3; Data* = 4; Const* = 5; Empty* = 6;
+	Fixed* = 0; (* placed accroding to placement *)
+	EntryCode*= 1; (* must be placed before all other code *)
+	InitCode*=2; 
+	ExitCode*=3; (* must be placed after initcode but before code *)
+	BodyCode* = 4; 
+	Code* = 5; 
+	Data* = 6; 
+	Const* = 7; 
+	Empty* = 8; (* must be placed last *)
+	
 	UseAll *= {Fixed .. Empty};
-	UseInitCode*={Fixed, InitCode};
+	UseInitCode*={Fixed .. ExitCode};
 	UseAllButInitCode*={Fixed, BodyCode..Empty};
 
 TYPE
@@ -135,7 +144,7 @@ TYPE Block* = POINTER TO RECORD (ObjectFile.Section)
 	address*: Address;
 	aliasOf*: Block;
 	referenced, used: BOOLEAN;
-	prioType: LONGINT; (* priority cache *)
+	priority: LONGINT;
 END;
 
 TYPE Linker* = OBJECT
@@ -208,9 +217,9 @@ VAR
 	PROCEDURE Precedes* (this, that: Block): BOOLEAN;
 	VAR leftType, rightType: LONGINT;
 	BEGIN
-		leftType := this.prioType;
-		rightType := that.prioType;
-		RETURN (leftType < rightType) OR (leftType = rightType) & (this.priority < that.priority)
+		leftType := this.priority;
+		rightType := that.priority;
+		RETURN (leftType < rightType)
 	END Precedes;
 
 
@@ -220,7 +229,7 @@ VAR
 		IF FindBlock (section.identifier) # NIL THEN ObjectFile.SegmentedNameToString(section.identifier.name,name); Error (name, "duplicated section"); RETURN; END;
 		NEW (block); ObjectFile.CopySection (section, block^); block.address := InvalidAddress; block.referenced := FALSE; block.used := FALSE;
 		current := firstBlock; previous := NIL;
-		block.prioType := GetPriority(block);
+		block.priority := GetPriority(block);
 		WHILE (current # NIL) & ~Precedes(block,current) DO previous := current; current := current.next; END;
 		IF previous # NIL THEN previous.next := block; ELSE firstBlock := block; END; block.next := current;
 		hash.Put(block.identifier.name, block);
@@ -249,7 +258,7 @@ VAR
 		IF ~error THEN block := firstBlock;
 			WHILE (block # firstLinkedBlock) & ~error DO
 				ObjectFile.SegmentedNameToString(block.identifier.name, name);
-				used := (GetType (block) IN usedCategories) OR (linkRoot # "") & Strings.StartsWith(linkRoot,0,name) OR (block.aliases > 0);
+				used := (block.type IN usedCategories) OR (linkRoot # "") & Strings.StartsWith(linkRoot,0,name) OR (block.aliases > 0);
 				Reference (block, used); block := block.next;
 			END;
 		END;
@@ -450,23 +459,13 @@ VAR
 
 END Linker;
 
-PROCEDURE GetType*(block: Block): LONGINT;
-BEGIN
-	IF block.fixed THEN RETURN Fixed END;
-	IF block.type = ObjectFile.InitCode THEN RETURN InitCode END;
-	IF block.type = ObjectFile.BodyCode THEN RETURN BodyCode END;
-	IF block.bits.GetSize () = 0 THEN RETURN Empty END;
-	IF block.type = ObjectFile.Code THEN RETURN Code END;
-	IF block.type = ObjectFile.Data THEN RETURN Data END;
-	IF block.type = ObjectFile.Const THEN RETURN Const END;
-	HALT(100); (* undefined type *)
-END GetType;
-
 PROCEDURE GetPriority(block: Block): LONGINT;
 BEGIN
 	IF block.fixed THEN RETURN Fixed END;
 	IF block.type = ObjectFile.InitCode THEN RETURN InitCode END;
-	IF block.bits.GetSize () = 0 THEN RETURN Empty END;
+	IF block.type = ObjectFile.EntryCode THEN RETURN EntryCode END;
+	IF block.type = ObjectFile.ExitCode THEN RETURN ExitCode END;
+	IF (block.bits = NIL) OR (block.bits.GetSize () = 0) THEN RETURN Empty END;
 	IF block.type = ObjectFile.BodyCode THEN RETURN Code END;
 	IF block.type = ObjectFile.Code THEN RETURN Code END;
 	IF block.type = ObjectFile.Data THEN RETURN Code END;
@@ -474,7 +473,7 @@ BEGIN
 	HALT(100); (* undefined type *)
 END GetPriority;
 
-PROCEDURE Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
+PROCEDURE Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT;
 VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR;
 BEGIN
 	reader.String(string);
@@ -508,21 +507,21 @@ BEGIN
 			ObjectFile.ReadNameList(reader, requires, binary, poolMap);
 		END
 	END;
-
+	RETURN version;
 END Header;
 
 PROCEDURE OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList);
-VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; 
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap;  version: LONGINT;
 BEGIN
-	Header(reader, NIL, binary, poolMap, offers, requires);
+	version := Header(reader, NIL, binary, poolMap, offers, requires);
 END OffersRequires;
 
 PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
-VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList;
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; version: LONGINT;
 BEGIN
-	Header(reader, linker, binary, poolMap, offers, requires);
+	version := Header(reader, linker, binary, poolMap, offers, requires);
 	WHILE reader.Peek () # 0X DO
-		ObjectFile.ReadSection (reader, section,binary,poolMap);
+		ObjectFile.ReadSection (reader, version, section,binary,poolMap);
 		reader.SkipWhitespace;
 		IF reader.res = Streams.Ok THEN linker.AddSection (section); END;
 	END;

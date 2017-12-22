@@ -3566,7 +3566,7 @@ TYPE
 	VAR section: BinaryCode.Section;
 	BEGIN
 		IF in.resolved = NIL THEN
-			NEW(section,in.type, in.priority, 8, in.name,in.comments # NIL,FALSE);
+			NEW(section,in.type, 8, in.name,in.comments # NIL,FALSE);
 			section.SetAlignment(in.fixed, in.positionOrAlignment);
 			in.SetResolved(section);
 		ELSE

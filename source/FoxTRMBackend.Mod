@@ -2502,7 +2502,7 @@ TYPE
 			END;
 
 			IF in.resolved = NIL THEN
-				NEW(section, in.type, in.priority, unit, in.name, in.comments # NIL, FALSE);
+				NEW(section, in.type, unit, in.name, in.comments # NIL, FALSE);
 				section.SetAlignment(in.fixed, in.positionOrAlignment);
 				in.SetResolved(section);
 			ELSE

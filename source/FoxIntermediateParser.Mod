@@ -400,13 +400,6 @@ TYPE
 					END
 
 				(* position *)
-				ELSIF ThisIdentifier("priority") & ExpectToken(Scanner.Equal) THEN
-					IF ExpectIntegerWithSign(integer) THEN
-						section.SetPriority(SHORT(integer));
-					ELSE
-						Error(positionOfProperty," invalid priority")
-					END;
-				(* alignment *)
 				ELSIF ThisIdentifier("aligned") & ExpectToken(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						section.SetPositionOrAlignment(FALSE, integer)

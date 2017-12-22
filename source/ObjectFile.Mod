@@ -10,12 +10,14 @@ CONST
 
 	(* Section categories *)
 	(* code section categories, ordered by decreasing linking preference *)
-	InitCode*=0; (* initcode sections provide the entry point for static linking. A static linker includes this sections, a dynamic linker wants to omit them *)
-	BodyCode*=1; (* body code sections provide the entry point for dynamic linking. A dynamic linker needs to be able to distinguish them from normal code *)
-	Code*=2; (* normal executable code *)
+	EntryCode*= 0; (* entry code sections provide the entry point for static linking, enry code runs before module initializer callers *)
+	InitCode*=1; (* initcode sections provide the entry point for static linking. A static linker includes this sections, a dynamic linker wants to omit them *)
+	ExitCode*=2; (* exit code sections close a statically linked code, are executed after all init code callers *)
+	BodyCode*=3; (* body code sections provide the entry point for dynamic linking. A dynamic linker needs to be able to distinguish them from normal code *)
+	Code*=4; (* normal executable code *)
 	(* data section categories *)
-	Data* = 3; (* data sections provide space for (global) variables *)
-	Const* = 4; (* const sections are data sections that are immutable *)
+	Data* = 5; (* data sections provide space for (global) variables *)
+	Const* = 6; (* const sections are data sections that are immutable *)
 
 	(* alignment types *)
 	Aligned=0;
@@ -88,7 +90,6 @@ TYPE
 
 	Section* = RECORD
 		type*: SectionType;
-		priority*: LONGINT;
 		identifier*: Identifier;
 		unit*: Bits;
 		fixed*: BOOLEAN;
@@ -237,7 +238,7 @@ TYPE
 	NameList*= POINTER TO ARRAY OF SegmentedName;
 
 VAR
-	categories: ARRAY 6 OF ARRAY 10 OF CHAR;
+	categories: ARRAY 8 OF ARRAY 10 OF CHAR;
 	modes: ARRAY 2 OF ARRAY 4 OF CHAR;
 	relocatabilities: ARRAY 2 OF ARRAY 8 OF CHAR;
 
@@ -320,7 +321,7 @@ VAR
 		dest.unit := source.unit;
 		dest.fixed := source.fixed;
 		dest.alignment := source.alignment;
-		dest.priority := source.priority;
+
 		dest.fixups:= source.fixups;
 		dest.aliases := source.aliases;
 		NEW (dest.fixup, dest.fixups);
@@ -343,7 +344,7 @@ VAR
 		dest.unit := 0;
 		dest.fixed := FALSE;
 		dest.alignment := 0;
-		dest.priority := 0;
+
 		dest.fixups:= 0;
 		dest.aliases := 0;
 		dest.fixup := NIL;
@@ -496,8 +497,7 @@ VAR
 		writer.Char (Separator);
 		writer.Int (section.alignment, 0);
 		writer.Char (Separator);
-		writer.Int(section.priority, 0);
-		writer.Char (Separator);
+
 		writer.Int (section.aliases, 0);
 		writer.Char (Separator);
 		writer.Int (section.fixups, 0);
@@ -520,8 +520,8 @@ VAR
 		writer.Ln;
 	END WriteSectionTextual;
 
-	PROCEDURE ReadSectionTextual (reader: Streams.Reader; VAR section: Section);
-	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER;
+	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: LONGINT; VAR section: Section);
+	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; priority: LONGINT;
 
 		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
@@ -615,7 +615,14 @@ VAR
 		ReadValueIdentifier(relocatibility, relocatabilities);
 		section.fixed := relocatibility = Fixed;
 		reader.SkipWhitespace; reader.Int (section.alignment, FALSE);
-		reader.SkipWhitespace; reader.Int (section.priority, FALSE);
+		IF version < 5 THEN
+			reader.SkipWhitespace; reader.Int (priority, FALSE);
+			IF section.type = InitCode THEN
+				IF priority = -4 THEN section.type := EntryCode;
+				ELSIF priority = -1  THEN section.type := ExitCode;
+				END;
+			END;
+		END;
 		reader.SkipWhitespace; reader.Int (section.aliases, FALSE);
 		reader.SkipWhitespace; reader.Int (section.fixups, FALSE);
 		reader.SkipWhitespace; reader.Int (size, FALSE); size := size * section.unit;
@@ -843,7 +850,7 @@ VAR
 		writer.RawNum (section.unit);
 		IF section.fixed THEN WriteValueIdentifier(Fixed,relocatabilities) ELSE WriteValueIdentifier(Aligned,relocatabilities) END;
 		writer.RawNum (section.alignment);
-		writer.RawNum (section.priority);
+
 		writer.RawNum (section.aliases);
 		writer.RawNum (section.fixups);
 		size := section.bits.GetSize ();
@@ -885,8 +892,8 @@ VAR
 		END;
 	END WriteSectionBinary;
 
-	PROCEDURE ReadSectionBinary (reader: Streams.Reader; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; num: LONGINT; ch: CHAR;
+	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: LONGINT; VAR section: Section; poolMap: PoolMap);
+	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; num: LONGINT; ch: CHAR; priority: LONGINT;
 	CONST ByteSize=8;
 
 		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -1009,7 +1016,22 @@ VAR
 		ReadValueIdentifier(relocatibility, relocatabilities);
 		section.fixed := relocatibility = Fixed;
 		reader.RawNum (section.alignment);
-		reader.RawNum (section.priority);
+		IF version < 5 THEN
+			reader.RawNum (priority);
+			CASE section.type OF
+			0: section.type := InitCode;
+			|1:section.type := BodyCode;
+			|2:section.type := Code;
+			|3:section.type := Data;
+			|4:section.type := Const;
+			END;
+
+			IF section.type = InitCode THEN
+				IF priority = -4 THEN section.type := EntryCode;
+				ELSIF priority = -1  THEN section.type := ExitCode;
+				END;
+			END;
+		END;
 		reader.RawNum (section.aliases);
 		reader.RawNum (section.fixups);
 		reader.RawNum (size); size := size * section.unit;
@@ -1036,12 +1058,12 @@ VAR
 		END;
 	END ReadSectionBinary;
 
-	PROCEDURE ReadSection*(reader: Streams.Reader; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap);
+	PROCEDURE ReadSection*(reader: Streams.Reader; version: LONGINT; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap);
 	BEGIN
 		IF binary THEN
-			ReadSectionBinary(reader,section,poolMap)
+			ReadSectionBinary(reader,version, section,poolMap)
 		ELSE
-			ReadSectionTextual(reader,section);
+			ReadSectionTextual(reader,version,section);
 		END
 	END ReadSection;
 
@@ -1361,7 +1383,9 @@ VAR
 
 BEGIN
 	categories[Code] := "code";
+	categories[EntryCode] := "entrycode";
 	categories[InitCode] := "initcode";
+	categories[ExitCode] := "exitcode";
 	categories[BodyCode] := "bodycode";
 	categories[Data] := "data";
 	categories[Const] := "const";

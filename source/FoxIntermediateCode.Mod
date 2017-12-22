@@ -154,9 +154,9 @@ TYPE
 		BEGIN RETURN pc
 		END GetPC;
 
-		PROCEDURE & InitIntermediateSection*(type: SHORTINT; priority: INTEGER; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN);
+		PROCEDURE & InitIntermediateSection*(type: SHORTINT; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN);
 		BEGIN
-			InitSection(type,priority,n,symbol); (*InitArray;*) pc := 0; resolved := NIL;
+			InitSection(type,n,symbol); (*InitArray;*) pc := 0; resolved := NIL;
 			IF comment THEN NEW(comments,GetPC) ELSE comments := NIL END;
 			finally := -1;
 			sizeInUnits := NotYetCalculatedSize;
@@ -459,7 +459,7 @@ TYPE
 		ASSERT(name[0] > 0);
 
 		(* create a new section and enter it *)
-		NEW(section, type, 0 (* initial priority = 0 *), name, syntaxTreeSymbol, dump);
+		NEW(section, type, name, syntaxTreeSymbol, dump);
 		IF syntaxTreeSymbol # NIL THEN section.SetFingerprint(syntaxTreeSymbol.fingerprint.public) END;
 		list.AddSection(section);
 		RETURN section

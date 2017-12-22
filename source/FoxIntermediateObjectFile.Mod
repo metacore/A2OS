@@ -128,7 +128,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				SectionName(section.name);
 				w.RawBool(section.fixed);
 				w.RawNum(section.positionOrAlignment);
-				w.RawNum(section.priority);
 				w.RawNum(section.fingerprint);
 				w.RawNum(section.bitsPerUnit);
 
@@ -329,14 +328,13 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				comment: BOOLEAN;
 				type: LONGINT;
 				fixed: BOOLEAN;
-				positionOrAlignment, priority, fingerprint, bitsPerUnit: LONGINT;
+				positionOrAlignment, fingerprint, bitsPerUnit: LONGINT;
 				pc,i: LONGINT;
 			BEGIN
 				r.RawLInt(type);
 				SectionName(name);
 				r.RawBool(fixed);
 				r.RawNum(positionOrAlignment);
-				r.RawNum(priority);
 				r.RawNum(fingerprint);
 				r.RawNum(bitsPerUnit);
 
@@ -351,7 +349,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				END;
 				section.SetBitsPerUnit(bitsPerUnit);
 				section.SetFingerprint(fingerprint);
-				section.SetPriority(INTEGER(priority));
 				section.SetPositionOrAlignment(fixed, positionOrAlignment);
 
 				r.RawNum(pc);

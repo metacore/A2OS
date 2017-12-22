@@ -4,6 +4,8 @@ IMPORT SyntaxTree := FoxSyntaxTree,Streams,Global := FoxGlobal,Formats := FoxFor
 
 CONST
 	(* section categories *)
+	EntryCodeSection*=ObjectFile.EntryCode;
+	ExitCodeSection*=ObjectFile.ExitCode;
 	InitCodeSection*=ObjectFile.InitCode;
 	BodyCodeSection*=ObjectFile.BodyCode;
 	CodeSection*=ObjectFile.Code;
@@ -25,8 +27,7 @@ TYPE
 	Section*=OBJECT
 	VAR
 		name-: SectionName; (* name of this section (globally unique-name derived from symbol name) *)
-		type-: SHORTINT; (* CodeSection, InlineCodeSection, VarSection or ConstSection *)
-		priority-: INTEGER; (* priority of the section *)
+		type-: SHORTINT; (* CodeSection, InlineCodeSection, ...  *)
 
 		fixed-: BOOLEAN; (* whether the position of the section is fixed, as opposed to being restricted by an alignment *)
 		positionOrAlignment-: LONGINT; (* the alignment OR the position *)
@@ -42,12 +43,11 @@ TYPE
 		(* for linking *)
 		isReachable-: BOOLEAN;
 
-		PROCEDURE & InitSection*(type: SHORTINT; priority: INTEGER; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol);
+		PROCEDURE & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol);
 		BEGIN
 			name := n;
 			SELF.symbol := symbol;
 			SELF.type := type;
-			SELF.priority := priority;
 			offset := 0;
 			referenced := TRUE;
 			fixed := FALSE;
@@ -101,14 +101,12 @@ TYPE
 		BEGIN SELF.type := type
 		END SetType;
 
-		PROCEDURE SetPriority*(priority: INTEGER);
-		BEGIN SELF.priority := priority
-		END SetPriority;
-
 		PROCEDURE Dump*(w: Streams.Writer);
 		BEGIN
 			w.String(".");
 			CASE type OF
+			| EntryCodeSection: w.String("entrycode")
+			| ExitCodeSection: w.String("exitcode")
 			| CodeSection: w.String("code")
 			| BodyCodeSection: w.String("bodycode")
 			| InlineCodeSection: w.String("inlinecode")
@@ -128,8 +126,6 @@ TYPE
 				w.String(" aligned="); w.Int(positionOrAlignment, 0)
 			END;
 
-			IF priority # 0 THEN w.String(" priority="); w.Int(priority,0) END;
-
 			IF fingerprint # 0 THEN w.String(" fingerprint="); w.Hex(fingerprint, -8) END;
 
 			IF bitsPerUnit # UnknownSize THEN w.String(" unit="); w.Int(bitsPerUnit, 0) END;
@@ -146,7 +142,6 @@ TYPE
 			Basic.WriteSegmentedName(w,name);
 			w.RawBool(fixed);
 			w.RawLInt(positionOrAlignment); 
-			w.RawLInt(priority);
 			w.RawLInt(fingerprint);
 			w.RawLInt(bitsPerUnit);
 		END WriteRaw;

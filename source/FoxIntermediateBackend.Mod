@@ -698,9 +698,12 @@ TYPE
 			ELSE
 				inline := FALSE;
 				IF x.isEntry OR x.isExit THEN
-					ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,x,dump);
+					IF x.isEntry THEN
+						ir := implementationVisitor.NewSection(module.allSections, Sections.EntryCodeSection, name,x,dump);
+					ELSE
+						ir := implementationVisitor.NewSection(module.allSections, Sections.ExitCodeSection, name,x,dump);
+					END;
 					ir.SetExported(TRUE);
-					IF x.isEntry THEN ir.SetPriority(EntryPriority) ELSE ir.SetPriority(ExitPriority) END;
 				ELSE
 					ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
 					ir.SetExported(IsExported(x) OR SemanticChecker.InMethodTable(x));
@@ -920,7 +923,6 @@ TYPE
 			Global.GetSymbolSegmentedName (procedure,name);
 			ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,procedure,dump);
 			ir.SetExported(TRUE);
-			ir.SetPriority(InitPriority);
 			Global.GetSymbolSegmentedName (bodyProcedure,name);
 			IF (backend.newObjectFile OR backend.cooperative) & ~meta.simple THEN
 				implementationVisitor.currentScope := module.module.moduleScope;
@@ -945,9 +947,8 @@ TYPE
 			Global.GetSymbolSegmentedName (symbol,name);
 			Basic.RemoveSuffix(name);
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@StackAllocation"));
-			ir := implementationVisitor.NewSection(module.allSections,Sections.InitCodeSection,name,NIL,dump);
+			ir := implementationVisitor.NewSection(module.allSections,Sections.EntryCodeSection,name,NIL,dump);
 			ir.SetExported(TRUE);
-			ir.SetPriority(FirstPriority);
 			IntermediateCode.InitImmediate(op,addressType,initStack);
 			ir.Emit(Mov(Basic.invalidPosition,implementationVisitor.sp,op));
 		END AddStackAllocation;
@@ -9863,7 +9864,7 @@ TYPE
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.inlineCode # NIL) THEN
 					bits := x.procedureScope.body.code.inlineCode;
 					source := NewSection(module.allSections, sectionType, name, x, commentPrintout # NIL);
-					binary := BinaryCode.NewBinarySection(source.type, source.priority, system.codeUnit, name, FALSE, FALSE);
+					binary := BinaryCode.NewBinarySection(source.type, system.codeUnit, name, FALSE, FALSE);
 					binary.CopyBits(bits, 0, bits.GetSize());
 					source.SetResolved(binary);
 				ELSE

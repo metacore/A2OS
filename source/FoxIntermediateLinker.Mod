@@ -565,7 +565,7 @@ TYPE
 				IF GetPriority(leftSection) < GetPriority(rightSection) THEN
 					RETURN TRUE
 				ELSIF GetPriority(leftSection) = GetPriority(rightSection) THEN
-					RETURN (leftSection.priority < rightSection.priority) OR (leftSection.priority = rightSection.priority) & (leftSection.offset < rightSection.offset) (* must keep order as provided by loader *)
+					RETURN (leftSection.offset < rightSection.offset) (* must keep order as provided by loader *)
 				ELSE
 					RETURN FALSE
 				END
@@ -984,7 +984,6 @@ TYPE
 			copy.SetBitsPerUnit(section.bitsPerUnit);
 			copy.SetPositionOrAlignment(section.fixed, section.positionOrAlignment);
 			copy.SetFingerprint(section.fingerprint);
-			copy.SetPriority(section.priority);
 			FOR j := 0 TO section.pc-1 DO
 				instruction := section.instructions[j];
 				copy.Emit(instruction);

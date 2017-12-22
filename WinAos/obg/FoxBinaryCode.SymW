@@ -80,7 +80,7 @@ TYPE
 		pc-: Unit; 
 
 		PROCEDURE ^ GetPC(): LONGINT; 
-		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
+		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AddLabel*(position: Basic.Position); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
@@ -119,6 +119,6 @@ TYPE
 	PROCEDURE ^ ConvertToReal*(x: LONGINT): REAL; 
 	PROCEDURE ^ ConvertToLongreal*(x: HUGEINT): LONGREAL; 
 	PROCEDURE ^ NewFixup*(mode: INTEGER; fixupOffset: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT; scale: LONGINT; fixupPattern: ObjectFile.FixupPatterns): Fixup; 
-	PROCEDURE ^ NewBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
+	PROCEDURE ^ NewBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
 BEGIN
 END FoxBinaryCode.

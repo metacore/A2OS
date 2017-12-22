@@ -1,6 +1,8 @@
 MODULE FoxSections;
 	IMPORT SyntaxTree := FoxSyntaxTree, Streams, Global := FoxGlobal, Formats := FoxFormats, Basic := FoxBasic, Strings, ObjectFile;
 CONST 
+	EntryCodeSection* = ObjectFile.EntryCode; 
+	ExitCodeSection* = ObjectFile.ExitCode; 
 	InitCodeSection* = ObjectFile.InitCode; 
 	BodyCodeSection* = ObjectFile.BodyCode; 
 	CodeSection* = ObjectFile.Code; 
@@ -20,7 +22,6 @@ TYPE
 	VAR 
 		name-: SectionName; 
 		type-: SHORTINT; 
-		priority-: INTEGER; 
 		fixed-: BOOLEAN; 
 		positionOrAlignment-: LONGINT; 
 		fingerprint-: LONGINT; 
@@ -31,7 +32,7 @@ TYPE
 		referenced-: BOOLEAN; 
 		isReachable-: BOOLEAN; 
 
-		PROCEDURE ^  & InitSection*(type: SHORTINT; priority: INTEGER; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^  & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ IsCode*(): BOOLEAN; 
 		PROCEDURE ^ SetReferenced*(ref: BOOLEAN); 
 		PROCEDURE ^ SetOffset*(offset: LONGINT); 
@@ -42,7 +43,6 @@ TYPE
 		PROCEDURE ^ GetSize*(): LONGINT; 
 		PROCEDURE ^ SetFingerprint*(fingerprint: LONGINT); 
 		PROCEDURE ^ SetType*(type: SHORTINT); 
-		PROCEDURE ^ SetPriority*(priority: INTEGER); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
 		PROCEDURE ^ DumpName*(w: Streams.Writer); 

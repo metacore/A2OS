@@ -3,11 +3,13 @@ MODULE ObjectFile;
 CONST 
 	Absolute* = 0; 
 	Relative* = 1; 
-	InitCode* = 0; 
-	BodyCode* = 1; 
-	Code* = 2; 
-	Data* = 3; 
-	Const* = 4; 
+	EntryCode* = 0; 
+	InitCode* = 1; 
+	ExitCode* = 2; 
+	BodyCode* = 3; 
+	Code* = 4; 
+	Data* = 5; 
+	Const* = 6; 
 	Aligned = 0; 
 	Fixed = 1; 
 	DefaultExtension* = \".Gof"\; 
@@ -66,7 +68,6 @@ TYPE
 
 	Section* = RECORD 
 		type*: SectionType; 
-		priority*: LONGINT; 
 		identifier*: Identifier; 
 		unit*: Bits; 
 		fixed*: BOOLEAN; 
@@ -108,7 +109,7 @@ TYPE
 
 	NameList* = POINTER TO ARRAY OF SegmentedName; 
 VAR 
-	categories: ARRAY 6 OF ARRAY 10 OF CHAR; 
+	categories: ARRAY 8 OF ARRAY 10 OF CHAR; 
 	modes: ARRAY 2 OF ARRAY 4 OF CHAR; 
 	relocatabilities: ARRAY 2 OF ARRAY 8 OF CHAR; 
 	statHeaders, statHeadersSize: LONGINT; 
@@ -134,12 +135,12 @@ VAR
 	PROCEDURE ^ NibbleToCharacter*(value: LONGINT): CHAR; 
 	PROCEDURE ^ CharacterToNibble*(char: CHAR): LONGINT; 
 	PROCEDURE ^ WriteSectionTextual(writer: Streams.Writer; CONST section: Section); 
-	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; VAR section: Section); 
+	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; version: LONGINT; VAR section: Section); 
 	PROCEDURE ^ ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
 	PROCEDURE ^ WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
 	PROCEDURE ^ WriteSectionBinary(writer: Streams.Writer; CONST section: Section; poolMap: PoolMap); 
-	PROCEDURE ^ ReadSectionBinary(reader: Streams.Reader; VAR section: Section; poolMap: PoolMap); 
-	PROCEDURE ^ ReadSection*(reader: Streams.Reader; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap); 
+	PROCEDURE ^ ReadSectionBinary(reader: Streams.Reader; version: LONGINT; VAR section: Section; poolMap: PoolMap); 
+	PROCEDURE ^ ReadSection*(reader: Streams.Reader; version: LONGINT; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap); 
 	PROCEDURE ^ WriteSection*(writer: Streams.Writer; CONST section: Section; binary: BOOLEAN; poolMap: PoolMap); 
 	PROCEDURE ^ SetFixups*(VAR section: Section; fixups: LONGINT; fixup: Fixups); 
 	PROCEDURE ^ SetAliases*(VAR section: Section; aliases: LONGINT; alias: Aliases); 

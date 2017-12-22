@@ -147,7 +147,7 @@ TYPE
 		exported-: BOOLEAN; 
 
 		PROCEDURE ^ GetPC(): LONGINT; 
-		PROCEDURE ^  & InitIntermediateSection*(type: SHORTINT; priority: INTEGER; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
+		PROCEDURE ^  & InitIntermediateSection*(type: SHORTINT; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
 		PROCEDURE ^ SetExported*(e: BOOLEAN); 
 		PROCEDURE ^ EnableComments*(enabled: BOOLEAN); 
 		PROCEDURE ^ DeleteComments*; 

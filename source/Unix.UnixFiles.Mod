@@ -1155,6 +1155,7 @@ TYPE
 	VAR name: Files.FileName; i,j: LONGINT; ch : CHAR;
 	BEGIN
 		IF context.arg.GetString(name) THEN
+			CleanPath(name); 
 			i := 0; j := 0;
 			WHILE(searchPath[i] # 0X) DO
 				INC(i);
@@ -1167,7 +1168,18 @@ TYPE
 			UNTIL ch = 0X;
 		END;
 	END AddSearchPath;
-
+	
+	PROCEDURE SetWorkPath*(context: Commands.Context);
+	VAR name: Files.FileName; done: BOOLEAN;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			ChangeDirectory(name, done); 
+			IF ~done THEN 
+				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
+			END;
+		END;
+	END SetWorkPath;
+	
 	PROCEDURE Finalization;
 	VAR ft: Files.FileSystemTable;  i: LONGINT;
 	BEGIN

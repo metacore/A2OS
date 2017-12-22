@@ -1,0 +1,16 @@
+MODULE In IN Oberon;
+	IMPORT Texts, Oberon;
+VAR 
+	Done*: BOOLEAN; 
+	S: Texts.Scanner; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Char*(VAR ch: CHAR); 
+	PROCEDURE ^ Int*(VAR i: INTEGER); 
+	PROCEDURE ^ LongInt*(VAR i: LONGINT); 
+	PROCEDURE ^ Real*(VAR x: REAL); 
+	PROCEDURE ^ LongReal*(VAR y: LONGREAL); 
+	PROCEDURE ^ Name*(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ String*(VAR str: ARRAY OF CHAR); 
+BEGIN
+END In.

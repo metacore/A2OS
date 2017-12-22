@@ -1,0 +1,158 @@
+MODULE Streams;
+	IMPORT SYSTEM;
+CONST 
+	Ok* = 0; 
+	EOF* = 4201; 
+	EOT* = 1AX; 
+	StringFull = 4202; 
+	FormatError* = 4203; 
+	DefaultWriterSize* = 4096; 
+	DefaultReaderSize* = 4096; 
+	CR = 0DX; 
+	LF = 0AX; 
+	TAB = 9X; 
+	SP = 20X; 
+TYPE 
+	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+
+	Connection* = OBJECT 
+
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Close*; 
+	END Connection; 
+
+	Writer* = OBJECT 
+	VAR 
+		tail: LONGINT; 
+		buf: POINTER TO ARRAY OF CHAR; 
+		res*: LONGINT; 
+		send: Sender; 
+		sent*: LONGINT; 
+
+		PROCEDURE ^  & InitWriter*(send: Sender; size: LONGINT); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Char*(x: CHAR); 
+		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RawSInt*(x: SHORTINT); 
+		PROCEDURE ^ RawInt*(x: INTEGER); 
+		PROCEDURE ^ RawLInt*(x: LONGINT); 
+		PROCEDURE ^ RawHInt*(x: HUGEINT); 
+		PROCEDURE ^ Net64*(x: HUGEINT); 
+		PROCEDURE ^ Net32*(x: LONGINT); 
+		PROCEDURE ^ Net16*(x: LONGINT); 
+		PROCEDURE ^ Net8*(x: LONGINT); 
+		PROCEDURE ^ RawSet*(x: SET); 
+		PROCEDURE ^ RawBool*(x: BOOLEAN); 
+		PROCEDURE ^ RawReal*(x: REAL); 
+		PROCEDURE ^ RawLReal*(x: LONGREAL); 
+		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ RawNum*(x: LONGINT); 
+		PROCEDURE ^ Ln*; 
+		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Int*(x: HUGEINT; w: SIZE); 
+		PROCEDURE ^ Set*(s: SET); 
+		PROCEDURE ^ Hex*(x: HUGEINT; w: SIZE); 
+		PROCEDURE ^ Address*(x: ADDRESS); 
+		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
+		PROCEDURE ^ Date*(t, d: LONGINT); 
+		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
+		PROCEDURE ^ Float*(x: LONGREAL; n: LONGINT); 
+		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: LONGINT); 
+	END Writer; 
+
+	StringWriter* = OBJECT (Writer)
+
+		PROCEDURE ^  & InitStringWriter*(size: LONGINT); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Get*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ GetRaw*(VAR s: ARRAY OF CHAR; VAR len: LONGINT); 
+	END StringWriter; 
+
+	Reader* = OBJECT 
+	VAR 
+		head, tail: LONGINT; 
+		buf: POINTER TO ARRAY OF CHAR; 
+		res*: LONGINT; 
+		receive: Receiver; 
+		received*: LONGINT; 
+
+		PROCEDURE ^  & InitReader*(receive: Receiver; size: LONGINT); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Char*(VAR x: CHAR); 
+		PROCEDURE ^ Get*(): CHAR; 
+		PROCEDURE ^ Peek*(): CHAR; 
+		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT); 
+		PROCEDURE ^ SkipBytes*(n: LONGINT); 
+		PROCEDURE ^ RawSInt*(VAR x: SHORTINT); 
+		PROCEDURE ^ RawInt*(VAR x: INTEGER); 
+		PROCEDURE ^ RawLInt*(VAR x: LONGINT); 
+		PROCEDURE ^ RawHInt*(VAR x: HUGEINT); 
+		PROCEDURE ^ Net64*(): HUGEINT; 
+		PROCEDURE ^ Net32*(): LONGINT; 
+		PROCEDURE ^ Net16*(): LONGINT; 
+		PROCEDURE ^ Net8*(): LONGINT; 
+		PROCEDURE ^ RawSet*(VAR x: SET); 
+		PROCEDURE ^ RawBool*(VAR x: BOOLEAN); 
+		PROCEDURE ^ RawReal*(VAR x: REAL); 
+		PROCEDURE ^ RawLReal*(VAR x: LONGREAL); 
+		PROCEDURE ^ RawString*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ RawNum*(VAR x: LONGINT); 
+		PROCEDURE ^ Int*(VAR x: LONGINT; hex: BOOLEAN); 
+		PROCEDURE ^ Real*(VAR real: LONGREAL); 
+		PROCEDURE ^ EOLN*(): BOOLEAN; 
+		PROCEDURE ^ Ln*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ LnEOT*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ SkipLn*; 
+		PROCEDURE ^ SkipSpaces*; 
+		PROCEDURE ^ SkipWhitespace*; 
+		PROCEDURE ^ Token*(VAR token: ARRAY OF CHAR); 
+		PROCEDURE ^ String*(VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ GetString*(VAR string: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetInteger*(VAR integer: LONGINT; isHexadecimal: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR real: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetChar*(VAR ch: CHAR): BOOLEAN; 
+	END Reader; 
+
+	StringReader* = OBJECT (Reader)
+
+		PROCEDURE ^  & InitStringReader*(size: LONGINT); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Set*(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ SetRaw*(CONST s: ARRAY OF CHAR; ofs, len: LONGINT); 
+	END StringReader; 
+
+	Bytes2 = ARRAY 2 OF CHAR; 
+
+	Bytes4 = ARRAY 4 OF CHAR; 
+
+	Bytes8 = ARRAY 8 OF CHAR; 
+VAR 
+	H, L: INTEGER; 
+	months: ARRAY ((12 * 4) + 1) OF CHAR; 
+
+	PROCEDURE ^ OpenWriter*(VAR b: Writer; send: Sender); 
+	PROCEDURE ^ OpenReader*(VAR b: Reader; receive: Receiver); 
+	PROCEDURE ^ Copy*(r: Reader; w: Writer); 
+	PROCEDURE ^ NaNCodeL(x: LONGREAL; VAR h, l: LONGINT); 
+	PROCEDURE ^ ExpoL(x: LONGREAL): LONGINT; 
+	PROCEDURE ^ RealL(h, l: LONGINT): LONGREAL; 
+	PROCEDURE ^ Ten(e: LONGINT): LONGREAL; 
+	PROCEDURE ^ InitHL; 
+BEGIN
+END Streams.

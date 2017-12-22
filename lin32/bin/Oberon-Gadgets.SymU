@@ -1,0 +1,155 @@
+MODULE Gadgets IN Oberon;
+	IMPORT Objects, Display, Display3, Effects, Oberon, Texts, Input, Files, Modules, Printer, Printer3, Attributes, Links, Viewers, Strings;
+CONST 
+	top* = 0; 
+	bottom* = 1; 
+	visible* = 2; 
+	selected* = 0; 
+	lockedsize* = 2; 
+	transparent* = 4; 
+	lockedcontents* = 10; 
+	left = 2; 
+	middle = 1; 
+	right = 0; 
+	nameLen = 32; 
+	valueLen = 64; 
+TYPE 
+	UpdateMsg* = RECORD (Display.FrameMsg)
+		obj*: Objects.Object; 
+	END; 
+
+	PriorityMsg* = RECORD (Display.FrameMsg)
+		id*: INTEGER; 
+		passon*: BOOLEAN; 
+	END; 
+
+	CmdMsg* = RECORD (Objects.ObjMsg)
+		cmd*: ARRAY 128 OF CHAR; 
+		res*: INTEGER; 
+	END; 
+
+	Object* = POINTER TO ObjDesc; 
+
+	ObjDesc* = RECORD (Objects.ObjDesc)
+		attr*: Attributes.Attr; 
+		link*: Links.Link; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Display.FrameDesc)
+		attr*: Attributes.Attr; 
+		link*: Links.Link; 
+		state*: SET; 
+		mask*: Display3.Mask; 
+		obj*: Objects.Object; 
+	END; 
+
+	View* = POINTER TO ViewDesc; 
+
+	ViewDesc* = RECORD (FrameDesc)
+		absX*, absY*: INTEGER; 
+		border*: INTEGER; 
+		ClipMask*: PROCEDURE (v: View; M: Display3.Mask; ondisplay: BOOLEAN); 
+	END; 
+
+	MakeMaskHandler* = PROCEDURE (G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
+
+	RecursiveMsg = RECORD (Display.FrameMsg)
+	END; 
+
+	Stack = RECORD 
+		Mdlink, Fdlink: Objects.Object; 
+		absX, absY: INTEGER; 
+	END; 
+
+	Alias = POINTER TO AliasDesc; 
+
+	AliasDesc = RECORD 
+		name: ARRAY nameLen OF CHAR; 
+		value: ARRAY valueLen OF CHAR; 
+		next: Alias; 
+	END; 
+VAR 
+	framehandle*: Objects.Handler; 
+	objecthandle*: Objects.Handler; 
+	MakeMask*: MakeMaskHandler; 
+	MakePrinterMask*: MakeMaskHandler; 
+	context*: Objects.Object; 
+	executorObj*: Objects.Object; 
+	senderObj*: Objects.Object; 
+	receiverObj*: Objects.Object; 
+	aliases: Alias; 
+	par: Oberon.ParList; 
+	emptyText: Texts.Text; 
+	W, WW, mW: Texts.Writer; 
+	recurse, uparrowdone, verbose, enableMove: BOOLEAN; 
+	pMask: Display3.Mask; 
+	tmpX, tmpY: INTEGER; 
+
+	PROCEDURE ^ Log; 
+	PROCEDURE ^ Push(VAR S: Stack; F: View; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ Pop(VAR S: Stack; F: View; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ IsLocked*(F: Frame; dlink: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ InActiveArea*(F: Frame; VAR M: Oberon.InputMsg): BOOLEAN; 
+	PROCEDURE ^ GetObjName*(obj: Objects.Object; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ NameObj*(obj: Objects.Object; name: ARRAY OF CHAR); 
+	PROCEDURE ^ FindPublicObj*(name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ FindObj*(context: Objects.Object; name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ ModifySize*(F: Display.Frame; W, H: INTEGER); 
+	PROCEDURE ^ Consume*(F, f: Frame; u, v: INTEGER); 
+	PROCEDURE ^ Clone*(obj: Objects.Object; deep: BOOLEAN): Objects.Object; 
+	PROCEDURE ^ RecursiveHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Recursive*(parent, newchild: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ Update*(obj: Objects.Object); 
+	PROCEDURE ^ CopyPtr*(VAR M: Objects.CopyMsg; obj: Objects.Object): Objects.Object; 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; F, F0: Frame); 
+	PROCEDURE ^ CopyObject*(VAR M: Objects.CopyMsg; obj, obj0: Object); 
+	PROCEDURE ^ EmptyHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Adjust*(F: Display.Frame; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ ThisFrame*(X, Y: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER); 
+	PROCEDURE ^ SizeFrame*(F: Display.Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ MoveFrame*(F: Display.Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Integrate*(obj: Objects.Object); 
+	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ WriteRef*(VAR r: Files.Rider; lib: Objects.Library; obj: Objects.Object); 
+	PROCEDURE ^ ReadRef*(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object); 
+	PROCEDURE ^ MakeMaskFor(G: Frame); 
+	PROCEDURE ^ MakeMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
+	PROCEDURE ^ P(x: INTEGER): INTEGER; 
+	PROCEDURE ^ EnumMakePrinterMask(X, Y, W, H: INTEGER); 
+	PROCEDURE ^ MakePMask0(G: Frame; X, Y: INTEGER; VAR M: Display3.Mask); 
+	PROCEDURE ^ ScaleMask(px, py: INTEGER; in: Display3.Mask; VAR out: Display3.Mask); 
+	PROCEDURE ^ MakePrinterMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
+	PROCEDURE ^ Execute*(cmd: ARRAY OF CHAR; executor, dlink, sender, receiver: Objects.Object); 
+	PROCEDURE ^ ReadName(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Lookup0(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR; VAR context: Objects.Object); 
+	PROCEDURE ^ ObjAttr(name: ARRAY OF CHAR; context: Objects.Object; VAR W: Texts.Writer); 
+	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+	PROCEDURE ^ UpArrowMacro(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+	PROCEDURE ^ Send*(from: View; X, Y: INTEGER; to: Display.Frame; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ HandleFrameAttributes(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleObjectAttributes(obj: Object; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ BindObj*(obj: Objects.Object; lib: Objects.Library); 
+	PROCEDURE ^ findobj(obj: Objects.Object; link: Links.Link; VAR M: Objects.FindMsg); 
+	PROCEDURE ^ ObjectHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ HasCmdAttr(F: Frame; attr: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExecuteAttr*(F: Frame; attr: ARRAY OF CHAR; dlink, sender, receiver: Objects.Object); 
+	PROCEDURE ^ EnableMove*; 
+	PROCEDURE ^ TrackFrame*(F: Display.Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GetAlias*(name: ARRAY OF CHAR; VAR value: ARRAY OF CHAR); 
+	PROCEDURE ^ CreateObject*(objname: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ CreateViewModel*(viewnewproc, modelnewproc: ARRAY OF CHAR): Display.Frame; 
+	PROCEDURE ^ AddAlias*(name, value: ARRAY OF CHAR); 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ GetSelection*(VAR objs: Objects.Object; VAR time: LONGINT); 
+	PROCEDURE ^ CopyPublicObject*(name: ARRAY OF CHAR; deep: BOOLEAN): Objects.Object; 
+	PROCEDURE ^ Change*; 
+	PROCEDURE ^ Copy*; 
+	PROCEDURE ^ ChangeAttr*; 
+	PROCEDURE ^ Set*; 
+	PROCEDURE ^ Link*; 
+	PROCEDURE ^ LoadAliases; 
+BEGIN
+END Gadgets.

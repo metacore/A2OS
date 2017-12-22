@@ -1,0 +1,32 @@
+MODULE HotKeysCommands;
+	IMPORT SYSTEM, KernelLog, Modules, Commands, Streams, Strings, Inputs, KernelLogger, WMWindowManager, WMComponents, WMEditors, WMGraphics;
+CONST 
+	DefaultWidth = 400; 
+	DefaultHeight = 40; 
+	DefaultTextColor = WMGraphics.White; 
+	DefaultTextBgColor = 32896; 
+	MouseX = \"MouseX"\; 
+	MouseY = \"MouseY"\; 
+	MouseButtons = \"MouseButtons"\; 
+	MouseWheel = \"MouseWheel"\; 
+TYPE 
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		editor: WMEditors.Editor; 
+
+		PROCEDURE ^ HandleEnter(sender, data: ANY); 
+		PROCEDURE ^ HandleEscape(sender, data: ANY); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+	END Window; 
+VAR 
+	window: Window; 
+
+	PROCEDURE ^ SimulateMouse*(context: Commands.Context); 
+	PROCEDURE ^ EnterCommand*; 
+	PROCEDURE ^ ClearLog*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END HotKeysCommands.

@@ -1,0 +1,106 @@
+MODULE SambaServer;
+	IMPORT SYSTEM, Modules, Streams, KernelLog, Commands, Dates, Strings, Files, TCP, TCPServices;
+CONST 
+	PrimaryDomain = \"BLUEBOTTLE"\; 
+	Server = \"A2SAMBA"\; 
+	NativeOS = \"A2"\; 
+	LANManager = \"A2 LAN Manager"\; 
+	FileSystem = \"AosFS"\; 
+	Trace = FALSE; 
+	SMBPort* = 445; 
+TYPE 
+	Share = POINTER TO RECORD 
+		path, unc: Files.FileName; 
+		next: Share; 
+	END; 
+
+	Connection = POINTER TO RECORD 
+		error: BOOLEAN; 
+		errorcode: LONGINT; 
+		out: Streams.Writer; 
+		in: Streams.Reader; 
+		msgSize: LONGINT; 
+		cmd: LONGINT; 
+		flags: LONGINT; 
+		flags2: INTEGER; 
+		tid: INTEGER; 
+		pid: INTEGER; 
+		uid: INTEGER; 
+		mid: INTEGER; 
+		fid: INTEGER; 
+		sid: INTEGER; 
+		pattern: ARRAY 256 OF CHAR; 
+		netbios: INTEGER; 
+		filename: ARRAY 256 OF CHAR; 
+		sharename: ARRAY 256 OF CHAR; 
+		client: TCP.Connection; 
+		next: Connection; 
+	END; 
+
+	Agent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
+	VAR 
+		out: Streams.Writer; 
+		in: Streams.Reader; 
+		c: Connection; 
+
+	BEGIN{ACTIVE} 
+	END Agent; 
+VAR 
+	service: TCPServices.Service; 
+	lastUID, lastTID, lastFID, lastSID: INTEGER; 
+	firstConn: Connection; 
+	shares: Share; 
+
+	PROCEDURE ^ GetUID(): INTEGER; 
+	PROCEDURE ^ GetTID(): INTEGER; 
+	PROCEDURE ^ GetFID(): INTEGER; 
+	PROCEDURE ^ GetSID(): INTEGER; 
+	PROCEDURE ^ SetLastConnection(c: Connection); 
+	PROCEDURE ^ GetSharename(VAR c: Connection); 
+	PROCEDURE ^ GetLastConnection(): Connection; 
+	PROCEDURE ^ GetPattern(sid: INTEGER; VAR pattern: ARRAY OF CHAR); 
+	PROCEDURE ^ RemoveConnections(tid: INTEGER); 
+	PROCEDURE ^ GetFileName(fid: INTEGER; VAR filename: ARRAY OF CHAR); 
+	PROCEDURE ^ Dispatch(c: Connection); 
+	PROCEDURE ^ HandleCreateNew(c: Connection); 
+	PROCEDURE ^ HandleCreateDir(c: Connection); 
+	PROCEDURE ^ HandleDeleteDir(c: Connection); 
+	PROCEDURE ^ HandleEcho(c: Connection); 
+	PROCEDURE ^ HandleLMTrans(c: Connection); 
+	PROCEDURE ^ HandleTrans(c: Connection); 
+	PROCEDURE ^ HandleRead(c: Connection); 
+	PROCEDURE ^ HandleWrite(c: Connection); 
+	PROCEDURE ^ HandleWriteAndX(c: Connection); 
+	PROCEDURE ^ HandleQueryInformation(c: Connection); 
+	PROCEDURE ^ HandleOpenOld(c: Connection); 
+	PROCEDURE ^ HandleNegotiate(VAR c: Connection); 
+	PROCEDURE ^ HandleSessionSetup(c: Connection); 
+	PROCEDURE ^ HandleTreeConnect(c: Connection); 
+	PROCEDURE ^ HandleTreeDisconnect(c: Connection); 
+	PROCEDURE ^ HandleOpen(c: Connection); 
+	PROCEDURE ^ HandleClose(c: Connection); 
+	PROCEDURE ^ HandleFindClose2(c: Connection); 
+	PROCEDURE ^ HandleFlush(c: Connection); 
+	PROCEDURE ^ HandleRename(c: Connection); 
+	PROCEDURE ^ HandleDelete(c: Connection); 
+	PROCEDURE ^ HandleQueryInfo2(c: Connection); 
+	PROCEDURE ^ HandleSetInfo2(c: Connection); 
+	PROCEDURE ^ HandleTrans2(c: Connection); 
+	PROCEDURE ^ Trans2Logic(subcmd: INTEGER; c: Connection); 
+	PROCEDURE ^ WriteSMBHeader(c: Connection); 
+	PROCEDURE ^ CheckSMBHeader(VAR c: Connection): BOOLEAN; 
+	PROCEDURE ^ ReplaceSlash(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ RemoveQuotes(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ RemoveSlash(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ NewAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
+	PROCEDURE ^ StartServer*(context: Commands.Context); 
+	PROCEDURE ^ StopServer*(context: Commands.Context); 
+	PROCEDURE ^ FindShare(CONST unc: ARRAY OF CHAR): Share; 
+	PROCEDURE ^ AddShare*(context: Commands.Context); 
+	PROCEDURE ^ ListShares*(context: Commands.Context); 
+	PROCEDURE ^ GetSMBTimeStamp(dtNow: Dates.DateTime; VAR t: ARRAY OF LONGINT); 
+	PROCEDURE ^ GetUnixTimeStamp(dtNow: Dates.DateTime; VAR t: LONGINT); 
+	PROCEDURE ^ GetDOSTimeStamp(dtNow: Dates.DateTime; VAR t: LONGINT); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END SambaServer.

@@ -1,0 +1,67 @@
+MODULE CryptoAES;
+	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+CONST 
+	MaxRounds = 14; 
+	ECB = Ciphers.ECB; 
+	CBC = Ciphers.CBC; 
+	CTR = Ciphers.CTR; 
+	b0 = S.VAL(SET, 255); 
+	b1 = S.VAL(SET, 65280); 
+	b2 = S.VAL(SET, 16711680); 
+	b3 = S.VAL(SET, 0FF000000H); 
+TYPE 
+	RTable = ARRAY 256 OF SET; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	TYPE 
+		Key = ARRAY (4 * (MaxRounds + 1)) OF SET; 
+
+		Block = ARRAY 4 OF SET; 
+
+		Ind4 = RECORD 
+			a, b, c, d: LONGINT; 
+		END; 
+	VAR 
+		rounds: SHORTINT; 
+		key, dkey: Key; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ IncIV; 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RoundE(VAR b: Block); 
+		PROCEDURE ^ RoundD(VAR b: Block); 
+		PROCEDURE  - split(s: SET; VAR b: Ind4);
+		BEGIN
+			b.a := (S.VAL(LONGINT, s) MOD 256); 
+			b.b := ((S.VAL(LONGINT, s) DIV 256) MOD 256); 
+			b.c := ((S.VAL(LONGINT, s) DIV 65536) MOD 256); 
+			b.d := ((S.VAL(LONGINT, s) DIV 16777216) MOD 256)
+		END split; 
+		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SHORTINT; 
+		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SHORTINT; 
+		PROCEDURE ^ Init256(CONST src: ARRAY OF CHAR): SHORTINT; 
+		PROCEDURE ^ InvertKey; 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	ConstBuffer = OBJECT 
+	VAR 
+		buf: ARRAY 2048 OF CHAR; 
+		ib: LONGINT; 
+
+		PROCEDURE ^  & Initialize; 
+		PROCEDURE ^ Append(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ GetInt(): LONGINT; 
+	END ConstBuffer; 
+VAR 
+	e0, e1, e2, e3, e4: RTable; 
+	d0, d1, d2, d3, d4: RTable; 
+	rcon: ARRAY 10 OF SET; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ Initialize; 
+BEGIN
+END CryptoAES.

@@ -1,0 +1,63 @@
+MODULE Mail;
+	IMPORT Classes := TFClasses;
+TYPE 
+	MailAddress* = ARRAY 128 OF CHAR; 
+
+	Recipient* = OBJECT 
+	VAR 
+		name-, address-: MailAddress; 
+	END Recipient; 
+
+	Header* = OBJECT 
+	VAR 
+		id-: ARRAY 128 OF CHAR; 
+		content-: ARRAY 128 OF CHAR; 
+	END Header; 
+
+	Line* = OBJECT 
+	VAR 
+		data*: POINTER TO ARRAY OF CHAR; 
+	END Line; 
+
+	Message* = OBJECT {EXCLUSIVE} 
+	VAR 
+		subject: ARRAY 128 OF CHAR; 
+		date: ARRAY 64 OF CHAR; 
+		from, sender: Recipient; 
+		toList, ccList, bccList, lines, replyToList, headerList: Classes.List; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetFrom*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetFrom*(VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSender*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetSender*(VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSubject*(CONST subject: ARRAY OF CHAR); 
+		PROCEDURE ^ GetSubject*(VAR subject: ARRAY OF CHAR); 
+		PROCEDURE ^ SetDate*(CONST date: ARRAY OF CHAR); 
+		PROCEDURE ^ GetDate*(VAR date: ARRAY OF CHAR); 
+		PROCEDURE ^ AddTo*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofTo*(): LONGINT; 
+		PROCEDURE ^ GetTo*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ AddReplyTo*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofReplyTo*(): LONGINT; 
+		PROCEDURE ^ GetReplyTo*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ AddCc*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofCc*(): LONGINT; 
+		PROCEDURE ^ GetCc*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ AddBcc*(CONST name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofBcc*(): LONGINT; 
+		PROCEDURE ^ GetBcc*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ AddHeader*(CONST id, content: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofHeaders*(): LONGINT; 
+		PROCEDURE ^ GetHeader*(nr: LONGINT; VAR id, content: ARRAY OF CHAR); 
+		PROCEDURE ^ AddLine*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofLines*(): LONGINT; 
+		PROCEDURE ^ GetLine*(nr: LONGINT; VAR l: Line); 
+	END Message; 
+
+	Sender* = OBJECT 
+
+		PROCEDURE ^ Send*(m: Message; VAR result: LONGINT); 
+	END Sender; 
+BEGIN
+END Mail.

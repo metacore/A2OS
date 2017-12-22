@@ -1,0 +1,19 @@
+MODULE Finger IN Oberon;
+	IMPORT Files, Objects, NetSystem, Strings, HyperDocs, NetTools, Attributes, Texts, Oberon, AsciiCoder, Documents, TextDocs, Links;
+CONST 
+	DefPort* = 79; 
+	Temp = \"Finger.Tmp"\; 
+VAR 
+	W: Texts.Writer; 
+	line: ARRAY NetTools.MaxLine OF CHAR; 
+
+	PROCEDURE ^ Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: INTEGER): LONGINT; 
+	PROCEDURE ^ finger0(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR F: Files.File); 
+	PROCEDURE ^ finger*(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR T: Texts.Text); 
+	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewLinkScheme*; 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Finger*; 
+BEGIN
+END Finger.

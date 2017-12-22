@@ -1,0 +1,34 @@
+MODULE Dates IN Oberon;
+	IMPORT Oberon, Texts;
+CONST 
+	minute* = 60; 
+	hour* = (60 * minute); 
+	day* = (24 * hour); 
+	week* = (7 * day); 
+	zeroY = 1900; 
+	firstY* = 1901; 
+VAR 
+	TimeDiff*: LONGINT; 
+	A: ARRAY 13 OF INTEGER; 
+	T: ARRAY 365 OF SHORTINT; 
+
+	PROCEDURE ^ IsLeapYear*(year: INTEGER): BOOLEAN; 
+	PROCEDURE ^ LastDay(year, month: INTEGER): INTEGER; 
+	PROCEDURE ^ NumberOfDays*(date: LONGINT): LONGINT; 
+	PROCEDURE ^ NumberOfDaysToDate*(days: LONGINT): LONGINT; 
+	PROCEDURE ^ ToDate*(year, month, day: INTEGER): LONGINT; 
+	PROCEDURE ^ ToTime*(hour, min, sec: INTEGER): LONGINT; 
+	PROCEDURE ^ ToYMD*(date: LONGINT; VAR year, month, day: INTEGER); 
+	PROCEDURE ^ ToHMS*(time: LONGINT; VAR hour, min, sec: INTEGER); 
+	PROCEDURE ^ DayOfWeek*(date: LONGINT): INTEGER; 
+	PROCEDURE ^ DaysOfMonth*(date: LONGINT): INTEGER; 
+	PROCEDURE ^ AddYear*(date: LONGINT; years: INTEGER): LONGINT; 
+	PROCEDURE ^ AddMonth*(date: LONGINT; months: INTEGER): LONGINT; 
+	PROCEDURE ^ AddDay*(date: LONGINT; days: INTEGER): LONGINT; 
+	PROCEDURE ^ AddHour*(time: LONGINT; hour: INTEGER): LONGINT; 
+	PROCEDURE ^ AddMinute*(time: LONGINT; min: INTEGER): LONGINT; 
+	PROCEDURE ^ AddSecond*(time: LONGINT; sec: INTEGER): LONGINT; 
+	PROCEDURE ^ AddTime*(VAR time, date: LONGINT; sec: LONGINT); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Dates.

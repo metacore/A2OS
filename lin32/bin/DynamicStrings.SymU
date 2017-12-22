@@ -1,0 +1,76 @@
+MODULE DynamicStrings;
+	IMPORT SYSTEM, Streams, Strings;
+CONST 
+	CR* = 0DX; 
+	Tab* = 9X; 
+	LF* = 0AX; 
+	InitialSize = 256; 
+	HashTableSize = 256; 
+	InitialStringArraySize = 8; 
+	Statistics = TRUE; 
+TYPE 
+	String* = Strings.String; 
+
+	DynamicString* = OBJECT 
+	VAR 
+		buffer: String; 
+		bufferSize: LONGINT; 
+		length: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ AdjustBufferSize(minSize: LONGINT); 
+		PROCEDURE ^ Put*(ch: CHAR; at: LONGINT); 
+		PROCEDURE ^ Get*(at: LONGINT): CHAR; 
+		PROCEDURE ^ AppendCharacter*(ch: CHAR); 
+		PROCEDURE ^ Append*(CONST this: ARRAY OF CHAR); 
+		PROCEDURE ^ Extract*(offset, len: LONGINT): String; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ ToArrOfChar*(): String; 
+		PROCEDURE ^ FromArrOfChar*(s: String); 
+		PROCEDURE ^ CopyFrom*(ds: DynamicString; offset, len: LONGINT); 
+		PROCEDURE ^ EqualsTo*(CONST string: ARRAY OF CHAR; ignoreCase: BOOLEAN): BOOLEAN; 
+	END DynamicString; 
+
+	StringEntry = RECORD 
+		value: String; 
+		length: LONGINT; 
+	END; 
+
+	StringEntryArray = POINTER TO ARRAY OF StringEntry; 
+
+	HashTableEntry = RECORD 
+		strings: StringEntryArray; 
+		nofStrings: LONGINT; 
+	END; 
+
+	Pool* = OBJECT 
+	VAR 
+		hashtable: ARRAY HashTableSize OF HashTableEntry; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ Hash(ds: DynamicString): LONGINT; 
+		PROCEDURE ^ Find(ds: DynamicString): Strings.String; 
+		PROCEDURE ^ Grow(VAR strings: StringEntryArray); 
+		PROCEDURE ^ Add(ds: DynamicString; index: LONGINT; VAR string: String); 
+		PROCEDURE ^ Get*(ds: DynamicString): Strings.String; 
+		PROCEDURE ^ Dump*(out: Streams.Writer); 
+	END Pool; 
+VAR 
+	NnofRequests, NnofHits, NnofAdded: LONGINT; 
+
+	PROCEDURE ^ LessThan(ds: DynamicString; CONST entry: StringEntry): BOOLEAN; 
+	PROCEDURE ^ GreaterThan(ds: DynamicString; CONST entry: StringEntry): BOOLEAN; 
+	PROCEDURE ^ Equals(ds: DynamicString; CONST entry: StringEntry): BOOLEAN; 
+	PROCEDURE ^ StringLength*(CONST str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringAppend*(VAR to: ARRAY OF CHAR; CONST this: ARRAY OF CHAR); 
+	PROCEDURE ^ Lower*(CONST str: ARRAY OF CHAR; VAR lstr: ARRAY OF CHAR); 
+	PROCEDURE ^ LowerCh*(ch: CHAR): CHAR; 
+	PROCEDURE ^ IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToInt*(CONST str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ HexStrToInt*(CONST str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Search*(CONST pat, src: ARRAY OF CHAR; VAR pos: LONGINT); 
+	PROCEDURE ^ ClearStatistics*; 
+BEGIN
+END DynamicStrings.

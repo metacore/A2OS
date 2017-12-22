@@ -1,0 +1,23 @@
+MODULE Drand48;
+CONST 
+	m = 1000000000000H; 
+	X = 1234ABCD330EH; 
+	A = 5DEECE66DH; 
+	C = 11; 
+TYPE 
+	Generator* = OBJECT 
+	VAR 
+		x, a: HUGEINT; 
+		c: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Drand48*(): LONGREAL; 
+		PROCEDURE ^ Lrand48*(): LONGINT; 
+		PROCEDURE ^ Mrand48*(): LONGINT; 
+		PROCEDURE ^ Xrand48*(): HUGEINT; 
+		PROCEDURE ^ Srand48*(seed: LONGINT); 
+		PROCEDURE ^ Seed48*(seed: HUGEINT): HUGEINT; 
+		PROCEDURE ^ Lcong48*(par: ARRAY OF HUGEINT); 
+	END Generator; 
+BEGIN
+END Drand48.

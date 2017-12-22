@@ -1,0 +1,108 @@
+MODULE Terminals IN Oberon;
+	IMPORT Texts;
+CONST 
+	Height* = 58; 
+	MaxWidth* = 132; 
+	none* = 0; 
+	bold* = 1; 
+	underline* = 2; 
+	blinking* = 4; 
+	reverse* = 8; 
+	update* = 1; 
+	moveCursor* = 2; 
+	scroll* = 3; 
+	ENQ = 5X; 
+	BS = 8X; 
+	HT = 9X; 
+	LF = 0AX; 
+	VT = 0BX; 
+	FF = 0CX; 
+	CR = 0DX; 
+	CAN = 18X; 
+	SUB = 1AX; 
+	ESC = 1BX; 
+	DEL = 7FX; 
+	ansi* = 0; 
+	applic* = 1; 
+	lineFeed* = 2; 
+	insert* = 3; 
+	relative* = 4; 
+	cursorKeys* = 5; 
+	autowrap* = 6; 
+TYPE 
+	Char* = RECORD 
+		ch*: CHAR; 
+		attr*: SHORTINT; 
+	END; 
+
+	Line* = POINTER TO RECORD 
+		len*: INTEGER; 
+		ch*: ARRAY (MaxWidth + 1) OF Char; 
+	END; 
+
+	Location* = RECORD 
+		line*, col*: INTEGER; 
+	END; 
+
+	Terminal* = POINTER TO TerminalDesc; 
+
+	Sender* = PROCEDURE (T: Terminal; ch: CHAR); 
+
+	Breaker* = PROCEDURE (T: Terminal); 
+
+	Notifier* = PROCEDURE (T: Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCursor: Location); 
+
+	TerminalDesc* = RECORD 
+		attr*: SHORTINT; 
+		width*, height*: INTEGER; 
+		top, bottom: INTEGER; 
+		cursor*: Location; 
+		wrapBefore: BOOLEAN; 
+		notify*: Notifier; 
+		line*: ARRAY (Height + 1) OF Line; 
+		flags*: SET; 
+		send: Sender; 
+		break: Breaker; 
+		state, parPos, strPos: INTEGER; 
+		parBuf: ARRAY 32 OF CHAR; 
+		strBuf: ARRAY 256 OF CHAR; 
+		tabs: ARRAY (MaxWidth + 1) OF BOOLEAN; 
+		answerback*: ARRAY 32 OF CHAR; 
+		oldAttr: SHORTINT; 
+		oldCursor: Location; 
+		oldRelative: BOOLEAN; 
+		cache*: Texts.Writer; 
+		text*: Texts.Text; 
+		pin*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ MoveLines(t: Terminal; top, bot, dH: INTEGER); 
+	PROCEDURE ^ Erase(t: Terminal; fromLine, fromCol, toLine, toCol: INTEGER); 
+	PROCEDURE ^ DeleteChars(t: Terminal; n: INTEGER); 
+	PROCEDURE ^ DeleteLines(t: Terminal; n: INTEGER); 
+	PROCEDURE ^ InsertChars(t: Terminal; n: INTEGER); 
+	PROCEDURE ^ InsertLines(t: Terminal; n: INTEGER); 
+	PROCEDURE ^ Scroll(t: Terminal; up: BOOLEAN); 
+	PROCEDURE ^ SetCursor(t: Terminal; line, col: INTEGER; relative: BOOLEAN); 
+	PROCEDURE ^ SetMargins(t: Terminal; top, bottom: INTEGER); 
+	PROCEDURE ^ SetWidth(t: Terminal; width: INTEGER); 
+	PROCEDURE ^ SetAttribute(t: Terminal; attr: SHORTINT); 
+	PROCEDURE ^ PutChar(t: Terminal; VAR cursor: Location; VAR wrapBefore: BOOLEAN; ch: Char; VAR dH: INTEGER); 
+	PROCEDURE ^ WriteString(t: Terminal; CONST s: ARRAY OF CHAR; n: INTEGER); 
+	PROCEDURE ^ EFill(t: Terminal); 
+	PROCEDURE ^ DelLast(T: Terminal); 
+	PROCEDURE ^ Reset*(T: Terminal); 
+	PROCEDURE ^ SendStr(T: Terminal; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ SendInt(T: Terminal; x: INTEGER); 
+	PROCEDURE ^ Update(T: Terminal); 
+	PROCEDURE ^ Flush*(T: Terminal); 
+	PROCEDURE ^ Write(T: Terminal; ch: CHAR); 
+	PROCEDURE ^ ESCSequence(T: Terminal; last: CHAR); 
+	PROCEDURE ^ CSISequence(T: Terminal; last: CHAR); 
+	PROCEDURE ^ Receive*(T: Terminal; ch: CHAR); 
+	PROCEDURE ^ Send*(T: Terminal; ch: CHAR); 
+	PROCEDURE ^ SendString*(T: Terminal; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ SendText*(T: Terminal; text: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ Open*(T: Terminal; text: Texts.Text; send: Sender; break: Breaker; notify: Notifier; height: INTEGER); 
+BEGIN
+END Terminals.

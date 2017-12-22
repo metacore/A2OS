@@ -1,0 +1,73 @@
+MODULE Disks IN Oberon;
+	IMPORT Plugins IN A2, Disks IN A2;
+CONST 
+	Read* = Disks.Read; 
+	Write* = Disks.Write; 
+	Ok* = Disks.Ok; 
+	MediaChanged* = Disks.MediaChanged; 
+	WriteProtected* = Disks.WriteProtected; 
+	Unsupported* = Disks.Unsupported; 
+	DeviceInUse* = Disks.DeviceInUse; 
+	MediaMissing* = Disks.MediaMissing; 
+	ReadOnly* = Disks.ReadOnly; 
+	Removable* = Disks.Removable; 
+	Mounted* = Disks.Mounted; 
+	Primary* = Disks.Primary; 
+	Boot* = Disks.Boot; 
+	Valid* = Disks.Valid; 
+TYPE 
+	Name* = Plugins.Name; 
+
+	Description* = Plugins.Description; 
+
+	Message* = Disks.Message; 
+
+	Device* = POINTER TO DeviceDesc; 
+
+	Partition* = Disks.Partition; 
+
+	PartitionTable* = Disks.PartitionTable; 
+
+	TransferProc* = PROCEDURE (dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+
+	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: LONGINT); 
+
+	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: LONGINT); 
+
+	DeviceDesc* = RECORD 
+		name*: Name; 
+		desc*: Description; 
+		blockSize*: LONGINT; 
+		flags*: SET; 
+		transfer*: TransferProc; 
+		getSize*: GetSizeProc; 
+		handle*: HandleProc; 
+		table*: PartitionTable; 
+		openCount*: LONGINT; 
+		real: Disks.Device; 
+	END; 
+
+	EjectMsg* = Disks.EjectMsg; 
+
+	LockMsg* = Disks.LockMsg; 
+
+	UnlockMsg* = Disks.UnlockMsg; 
+
+	SavePowerMsg* = Disks.SavePowerMsg; 
+
+	GetGeometryMsg* = Disks.GetGeometryMsg; 
+
+	ShutdownMsg* = Disks.ShutdownMsg; 
+
+	DeviceTable* = POINTER TO ARRAY OF Device; 
+
+	PROCEDURE ^ Update(dev: Device); 
+	PROCEDURE ^ Transfer(dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ GetSize(dev: Device; VAR size, res: LONGINT); 
+	PROCEDURE ^ Handle(dev: Device; VAR msg: Message; VAR res: LONGINT); 
+	PROCEDURE ^ GetRegistered*(VAR table: DeviceTable); 
+	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: LONGINT); 
+	PROCEDURE ^ Open*(dev: Device; VAR res: LONGINT); 
+	PROCEDURE ^ Close*(dev: Device; VAR res: LONGINT); 
+BEGIN
+END Disks.

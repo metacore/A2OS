@@ -1,0 +1,46 @@
+MODULE FoxDocumentationScanner;
+	IMPORT Streams, Diagnostics, D := Debugging;
+CONST 
+	EOT* = 0X; 
+	LF* = 0AX; 
+	CR* = 0DX; 
+	Trace = FALSE; 
+TYPE 
+	Token* = ENUM EndOfText* = 0, NewLine* = 1, Header* = 2, Pipe* = 3, LeftItalic* = 4, RightItalic* = 5, LeftBold* = 6, RightBold* = 7, LeftUnderline* = 8, RightUnderline* = 9, LinkBegin* = 10, LinkEnd* = 11, Heading* = 12, Number* = 13, LeftDescription* = 14, RightDescription* = 15, Description* = 16, Bullet* = 17, Line* = 18, CodeBegin* = 19, CodeEnd* = 20, LabelBegin* = 21, LabelEnd* = 22, LineBreak* = 23, Section* = 24, String* = 25 END; 
+
+	String* = POINTER TO ARRAY OF CHAR; 
+
+	Symbol* = RECORD 
+		position*: LONGINT; 
+		token*: Token; 
+		level*: LONGINT; 
+		string*: String; 
+		stringLength*: LONGINT; 
+		hasWhitespace*: BOOLEAN; 
+	END; 
+
+	Scanner* = OBJECT 
+	VAR 
+		reader: Streams.Reader; 
+		diagnostics: Diagnostics.Diagnostics; 
+		ch: CHAR; 
+		position-: LONGINT; 
+		prevToken: Token; 
+
+		PROCEDURE ^  & InitializeScanner*(reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ GetNextCharacter; 
+		PROCEDURE ^ Peek(): CHAR; 
+		PROCEDURE ^ BreaksLiteral(): BOOLEAN; 
+		PROCEDURE ^ IdentifierStart(ch: CHAR): BOOLEAN; 
+		PROCEDURE ^ AppendCharacter(VAR symbol: Symbol; ch: CHAR); 
+		PROCEDURE ^ AppendCharacters(VAR symbol: Symbol; ch: CHAR; number: LONGINT); 
+		PROCEDURE ^ ReadLiteral(VAR symbol: Symbol; token: Token); 
+		PROCEDURE ^ ReadLiteralWS(VAR symbol: Symbol; token: Token); 
+		PROCEDURE ^ ReadCharacters(this: CHAR; min, max: LONGINT; VAR symbol: Symbol; token: Token); 
+		PROCEDURE ^ IsWhitespace(ch: CHAR; includeNewLine: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol); 
+	END Scanner; 
+
+	PROCEDURE ^ DumpSymbol(w: Streams.Writer; CONST symbol: Symbol); 
+BEGIN
+END FoxDocumentationScanner.

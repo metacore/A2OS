@@ -1,0 +1,171 @@
+MODULE FoxCodeGenerators;
+	IMPORT Diagnostics, Sections := FoxSections, Streams, BinaryCode := FoxBinaryCode, IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, StringPool, Strings, D := Debugging;
+CONST 
+	None = IntermediateCode.None; 
+	OptimizeRegisterTransfer* = 0; 
+	MaxSpilledRegisters = 64; 
+TYPE 
+	AllocationArray = POINTER TO ARRAY OF RECORD 
+		first, last: LONGINT; 
+	END; 
+
+	RegisterAllocation* = OBJECT 
+	VAR 
+		table: AllocationArray; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Use(register, pc: LONGINT); 
+	END RegisterAllocation; 
+
+	RegisterEntry* = POINTER TO RECORD 
+		prev, next: RegisterEntry; 
+		register: LONGINT; 
+		registerClass: IntermediateCode.RegisterClass; 
+		type: IntermediateCode.Type; 
+	END; 
+
+	LiveRegisters* = OBJECT 
+	VAR 
+		first, last, cache: RegisterEntry; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ AddRegisterEntry(register: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type); 
+		PROCEDURE ^ RemoveRegisterEntry(register: LONGINT); 
+	END LiveRegisters; 
+
+	GenericCodeGenerator* = OBJECT 
+	VAR 
+		diagnostics-: Diagnostics.Diagnostics; 
+		module-: Sections.Module; 
+		dump*: Streams.Writer; 
+		in-: IntermediateCode.Section; 
+		out-: BinaryCode.Section; 
+		inPC-, outPC-: LONGINT; 
+		error*: BOOLEAN; 
+		allocation: RegisterAllocation; 
+		liveRegisters: LiveRegisters; 
+		inEmulation-: BOOLEAN; 
+		optimize: SET; 
+
+		PROCEDURE ^  & InitGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN); 
+		PROCEDURE ^ SetModule*(module: Sections.Module); 
+		PROCEDURE ^ Error*(position: Basic.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
+		PROCEDURE ^ FirstUse*(virtualRegister: LONGINT): LONGINT; 
+		PROCEDURE ^ LastUse*(virtualRegister: LONGINT): LONGINT; 
+		PROCEDURE ^ Supported*(CONST instr: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Generate*(VAR instr: IntermediateCode.Instruction); 
+		PROCEDURE ^ PostGenerate*(CONST instr: IntermediateCode.Instruction); 
+		PROCEDURE ^ GetDataSection*(): IntermediateCode.Section; 
+		PROCEDURE ^ EmitData(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitReserve(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitLabel(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ Prepare*; 
+	END GenericCodeGenerator; 
+
+	Ticket* = POINTER TO RECORD 
+		next-: Ticket; 
+		type-: IntermediateCode.Type; 
+		class-: IntermediateCode.RegisterClass; 
+		lastuse-: LONGINT; 
+		spilled*, spillable*: BOOLEAN; 
+		register*, offset*: LONGINT; 
+		parts-: LONGINT; 
+	END; 
+
+	Tickets* = OBJECT 
+	VAR 
+		live-: Ticket; 
+		free: Ticket; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: LONGINT): Ticket; 
+		PROCEDURE ^ Remove*(ticket: Ticket); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END Tickets; 
+
+	VirtualRegisterMappings = POINTER TO ARRAY OF Ticket; 
+
+	VirtualRegisters* = OBJECT 
+	VAR 
+		tickets: VirtualRegisterMappings; 
+		parts: LONGINT; 
+		firstMapped-, lastMapped-: LONGINT; 
+
+		PROCEDURE ^  & Init*(parts: LONGINT); 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Mapped*(register: LONGINT; part: LONGINT): Ticket; 
+		PROCEDURE ^ SetMapped*(register: LONGINT; part: LONGINT; ticket: Ticket); 
+		PROCEDURE ^ Unmap*(register: LONGINT); 
+		PROCEDURE ^ Parts*(): LONGINT; 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END VirtualRegisters; 
+
+	PhysicalRegisters* = OBJECT 
+
+		PROCEDURE ^  & InitPhysicalRegisters; 
+		PROCEDURE ^ Allocate*(index: LONGINT; virtualRegister: Ticket); 
+		PROCEDURE ^ Mapped*(physical: LONGINT): Ticket; 
+		PROCEDURE ^ Free*(index: LONGINT); 
+		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): LONGINT; 
+		PROCEDURE ^ AllocationHint*(index: LONGINT); 
+		PROCEDURE ^ SetReserved*(index: LONGINT; res: BOOLEAN); 
+		PROCEDURE ^ Reserved*(index: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+		PROCEDURE ^ NumberRegisters*(): LONGINT; 
+	END PhysicalRegisters; 
+
+	SpillStack* = OBJECT 
+	VAR 
+		spillStack: ARRAY MaxSpilledRegisters OF Ticket; 
+		spillStackSize, maxSpillStackSize: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ NextFree*(): LONGINT; 
+		PROCEDURE ^ Allocate*(offset: LONGINT; ticket: Ticket); 
+		PROCEDURE ^ Free*(offset: LONGINT); 
+		PROCEDURE ^ Size*(): LONGINT; 
+		PROCEDURE ^ MaxSize*(): LONGINT; 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END SpillStack; 
+
+	GeneratorWithTickets* = OBJECT (GenericCodeGenerator)
+	VAR 
+		physicalRegisters-: PhysicalRegisters; 
+		virtualRegisters-: VirtualRegisters; 
+		tickets-: Tickets; 
+		spillStack-: SpillStack; 
+
+		PROCEDURE ^  & InitTicketGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN; numberRegisterParts: LONGINT; physicalRegisters: PhysicalRegisters); 
+		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
+		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR typePart: IntermediateCode.Type); 
+		PROCEDURE ^ ToSpillStack*(ticket: Ticket); 
+		PROCEDURE ^ AllocateSpillStack*(size: LONGINT); 
+		PROCEDURE ^ ToRegister*(ticket: Ticket); 
+		PROCEDURE ^ ExchangeTickets*(ticket1, ticket2: Ticket); 
+		PROCEDURE ^ ParameterRegister*(CONST type: IntermediateCode.Type; number: LONGINT): LONGINT; 
+		PROCEDURE ^ Spill*(ticket: Ticket); 
+		PROCEDURE ^ UnSpill*(ticket: Ticket); 
+		PROCEDURE ^ GetPreferredSpill*(CONST type: IntermediateCode.Type): Ticket; 
+		PROCEDURE ^ ForceFreeRegister*(CONST type: IntermediateCode.Type): LONGINT; 
+		PROCEDURE ^ ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: LONGINT): Ticket; 
+		PROCEDURE ^ TemporaryTicket*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type): Ticket; 
+		PROCEDURE ^ MapVirtualRegister*(virtualRegister: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT); 
+		PROCEDURE ^ ResetTicket(ticket: Ticket); 
+		PROCEDURE ^ FreeTicket(ticket: Ticket); 
+		PROCEDURE ^ RemapTicket(ticket: Ticket); 
+		PROCEDURE ^ UnmapTicket*(ticket: Ticket); 
+		PROCEDURE ^ TryAllocate*(CONST operand: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ TryUnmap*(CONST operand: IntermediateCode.Operand); 
+		PROCEDURE ^ ReleaseHint*(register: LONGINT); 
+		PROCEDURE ^ ReserveTicketRegister*(ticket: Ticket; reserved: BOOLEAN); 
+		PROCEDURE ^ ReserveOperandRegisters*(CONST operand: IntermediateCode.Operand; reserved: BOOLEAN); 
+	END GeneratorWithTickets; 
+
+	; 
+
+	PROCEDURE ^ Assert(cond: BOOLEAN; CONST reason: ARRAY OF CHAR); 
+	PROCEDURE ^ DumpTicket*(w: Streams.Writer; ticket: Ticket); 
+BEGIN
+END FoxCodeGenerators.

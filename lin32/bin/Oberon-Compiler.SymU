@@ -1,0 +1,23 @@
+MODULE Compiler IN Oberon;
+	IMPORT OPP, OPB, OPV, OPT, OPS, OPC, OPL, OPO, OPM, Modules, Display, Oberon, Texts;
+CONST 
+	NoBreakPC =  -1; 
+	module = OPS.module; 
+	ident = OPS.ident; 
+	period = OPS.period; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ SignOn; 
+	PROCEDURE ^ GetOptions(VAR S: Texts.Scanner; VAR opts: ARRAY OF CHAR); 
+	PROCEDURE ^ InOptions(VAR opt: ARRAY OF CHAR; ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ Locate(F: Display.Frame; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ GetBreakPC(): LONGINT; 
+	PROCEDURE ^ ParseOptions(VAR name, options, path, pref, extension: ARRAY OF CHAR; VAR codeOpt, parserOpt: SET); 
+	PROCEDURE ^ WriteMsg(source: Texts.Reader; log: Texts.Text); 
+	PROCEDURE ^ Module*(source: Texts.Reader; name, options: ARRAY OF CHAR; breakpc: LONGINT; log: Texts.Text; VAR error: BOOLEAN); 
+	PROCEDURE ^ CompileText(t: Texts.Text; pos: LONGINT; frame: Display.Frame; opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
+	PROCEDURE ^ CompileFile*(name, opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
+	PROCEDURE ^ Compile*; 
+BEGIN
+END Compiler.

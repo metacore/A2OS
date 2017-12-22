@@ -1,0 +1,33 @@
+MODULE Tar IN Oberon;
+	IMPORT Gadgets, Desktops, Display, Documents, Texts, TextDocs, TextGadgets, Objects, Files, Out;
+CONST 
+	Menu = \"Tar.Extract Tar.ExtractAll"\; 
+TYPE 
+	Entry = POINTER TO EntryDesc; 
+
+	EntryDesc = RECORD 
+		name: ARRAY 256 OF CHAR; 
+		pos, size: LONGINT; 
+		next: Entry; 
+	END; 
+
+	Frame = POINTER TO FrameDesc; 
+
+	FrameDesc = RECORD (TextGadgets.FrameDesc)
+		entries: Entry; 
+		file: Files.File; 
+	END; 
+
+	PROCEDURE ^ ExtractFileName(CONST buf: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractSize(CONST buf: ARRAY OF CHAR; VAR size: LONGINT); 
+	PROCEDURE ^ ReadEntries(CONST fileName: ARRAY OF CHAR; VAR F: Files.File; VAR entries: Entry); 
+	PROCEDURE ^ DisplayEntries(T: Texts.Text; e: Entry); 
+	PROCEDURE ^ GetFile(e: Entry; F: Files.File); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Load(D: Documents.Document); 
+	PROCEDURE ^ Store(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Extract*; 
+	PROCEDURE ^ ExtractAll*; 
+BEGIN
+END Tar.

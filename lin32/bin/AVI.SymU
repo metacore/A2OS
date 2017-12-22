@@ -1,0 +1,170 @@
+MODULE AVI;
+	IMPORT SYSTEM, Machine, Streams, KernelLog, AOC := Codecs;
+CONST 
+	Debug = FALSE; 
+	DefaultReaderSize = 4096; 
+	WriteError = 2907; 
+TYPE 
+	MainAVIHeaderDesc* = OBJECT 
+	VAR 
+		microSecsPerFrame*: LONGINT; 
+		maxBytesPerSec*: LONGINT; 
+		reserved1*: LONGINT; 
+		flags*: LONGINT; 
+		totalFrames*: LONGINT; 
+		initialFrames*: LONGINT; 
+		streams*: LONGINT; 
+		suggestedBufferSize*: LONGINT; 
+		width*: LONGINT; 
+		height*: LONGINT; 
+		reserved*: ARRAY 4 OF LONGINT; 
+	END MainAVIHeaderDesc; 
+
+	AVIStreamHeader* = OBJECT 
+	VAR 
+		fccType*: ARRAY 4 OF CHAR; 
+		fccHandler*: ARRAY 4 OF CHAR; 
+		flags*: LONGINT; 
+		priority*: LONGINT; 
+		initialFrames*: LONGINT; 
+		scale*: LONGINT; 
+		rate*: LONGINT; 
+		start*: LONGINT; 
+		length*: LONGINT; 
+		suggestedBufferSize*: LONGINT; 
+		quality*: LONGINT; 
+		sampleSize*: LONGINT; 
+		left*: LONGINT; 
+		top*: LONGINT; 
+		right*: LONGINT; 
+		bottom*: LONGINT; 
+		streamIdentifier*: ARRAY 4 OF CHAR; 
+		bitMapInfo*: BitMapInfo; 
+		waveFormatEx*: WAVEFormatEx; 
+	END AVIStreamHeader; 
+
+	BitMapInfo = OBJECT 
+	VAR 
+		size*: LONGINT; 
+		width*: LONGINT; 
+		height*: LONGINT; 
+		planes*: LONGINT; 
+		bitCount*: LONGINT; 
+		compression*: LONGINT; 
+		sizeImage*: LONGINT; 
+		xPelsPerMeter*: LONGINT; 
+		yPelsPerMeter*: LONGINT; 
+		clrUsed*: LONGINT; 
+		clrImportant*: LONGINT; 
+	END BitMapInfo; 
+
+	WAVEFormatEx* = OBJECT 
+	VAR 
+		formatTag*: LONGINT; 
+		channels*: LONGINT; 
+		samplesPerSec*: LONGINT; 
+		avgBytesPerSec*: LONGINT; 
+		blockAlign*: LONGINT; 
+		bitsPerSample*: LONGINT; 
+		cbSize*: LONGINT; 
+	END WAVEFormatEx; 
+
+	AVIIndexEntry* = RECORD 
+		ckid*: LONGINT; 
+		flags*: LONGINT; 
+		offset*: LONGINT; 
+		length*: LONGINT; 
+		tot*: LONGINT; 
+	END; 
+
+	IndexArrayPointer* = POINTER TO ARRAY OF AVIIndexEntry; 
+
+	AVIStream* = OBJECT (AOC.DemuxStream)
+	VAR 
+		bufAdr: LONGINT; 
+		r: Streams.Reader; 
+		chunkSize*: LONGINT; 
+		streamHeader: AVIStreamHeader; 
+		stuffByte*: LONGINT; 
+		eof*: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(r: Streams.Reader; streamHdr: AVIStreamHeader); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReadNextChunk(VAR buf: ARRAY OF CHAR); 
+		PROCEDURE ^ Resynch*(VAR buf: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ SetAVIPos*(pos: LONGINT; VAR retPos: LONGINT); 
+		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+	END AVIStream; 
+
+	AVIDemux* = OBJECT (AOC.AVDemultiplexer)
+	VAR 
+		r: Streams.Reader; 
+		filename*: ARRAY 256 OF CHAR; 
+		aviHeader: MainAVIHeaderDesc; 
+		audioStreamHeader: AVIStreamHeader; 
+		videoStreamHeader: AVIStreamHeader; 
+		riffLength: LONGINT; 
+		movieBeginPos: LONGINT; 
+		indexStart: LONGINT; 
+		videoFrames: LONGINT; 
+		audioChunks: LONGINT; 
+		videoIndex: IndexArrayPointer; 
+		audioIndex: IndexArrayPointer; 
+		audioBytes: LONGINT; 
+		videoBufferIndex: LONGINT; 
+		audioChunkSize: LONGINT; 
+		audioStream: AVIStream; 
+		videoStream: AVIStream; 
+		videoFramePos: LONGINT; 
+		audioFramePos: LONGINT; 
+
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GetAVIHeader*(): MainAVIHeaderDesc; 
+		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReadHeader*(): BOOLEAN; 
+		PROCEDURE ^ ReadIndex*; 
+		PROCEDURE ^ SkipHeader*; 
+		PROCEDURE ^ ReadMainAVIHeader(): MainAVIHeaderDesc; 
+		PROCEDURE ^ ReadAVIStreamHeader(): AVIStreamHeader; 
+		PROCEDURE ^ ReadBitMapInfo(): BitMapInfo; 
+		PROCEDURE ^ ReadWaveFormatEx(): WAVEFormatEx; 
+		PROCEDURE ^ DumpHeaders*; 
+		PROCEDURE ^ DumpVideoIndex*; 
+		PROCEDURE ^ DumpAudioIndex*; 
+		PROCEDURE ^ GetAudioStreamHeader*(): AVIStreamHeader; 
+		PROCEDURE ^ GetVideoStreamHeader*(): AVIStreamHeader; 
+		PROCEDURE ^ GetStream*(streamNr: LONGINT): AOC.DemuxStream; 
+		PROCEDURE ^ GetMilliSecondsPerFrame*(): LONGINT; 
+		PROCEDURE ^ GetNofChannels*(): LONGINT; 
+		PROCEDURE ^ GetSamplesPerSecond*(): LONGINT; 
+		PROCEDURE ^ GetBitsPerSample*(): LONGINT; 
+		PROCEDURE ^ GetVideoIndex*(): IndexArrayPointer; 
+		PROCEDURE ^ GetAudioIndex*(): IndexArrayPointer; 
+		PROCEDURE ^ GetAudioChunks*(): LONGINT; 
+		PROCEDURE ^ GetAudioBytes*(): LONGINT; 
+		PROCEDURE ^ GetVideoFrames*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AOC.AVStreamInfo; 
+		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: LONGINT); 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetVideoWidth*(): LONGINT; 
+		PROCEDURE ^ GetVideoHeight*(): LONGINT; 
+		PROCEDURE ^ GetNextFrameSize*(streamNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GetSampleSize*(): LONGINT; 
+	END AVIDemux; 
+
+	PROCEDURE ^ Align*(VAR index: LONGINT); 
+	PROCEDURE ^ IsAligned*(index: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ShowBitsSlow*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
+	PROCEDURE ^ ShowBits*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
+	PROCEDURE ^ ShowBitsByteAligned*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
+	PROCEDURE ^ GetBits*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
+	PROCEDURE ^ SkipBits*(n: LONGINT; VAR index: LONGINT); 
+	PROCEDURE ^ Factory*(): AOC.AVDemultiplexer; 
+BEGIN
+END AVI.

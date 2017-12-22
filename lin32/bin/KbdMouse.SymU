@@ -1,0 +1,33 @@
+MODULE KbdMouse;
+	IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Api := X11Api, Modules, Objects;
+CONST 
+	ML = 0; 
+	MM = 1; 
+	MR = 2; 
+	ModeSwitch = 13; 
+	MetaMask = {Api.Mod4Mask, ModeSwitch}; 
+TYPE 
+	Poll = OBJECT {EXCLUSIVE} 
+
+	BEGIN{ACTIVE, SAFE, PRIORITY((Objects.High - 1))} 
+	END Poll; 
+VAR 
+	event: Api.XEvent; 
+	xbuttons: SET; 
+	compstatus: Api.ComposeStatus; 
+	disp: XDisplay.Display; 
+	MMseen, MRseen: BOOLEAN; 
+	poll: Poll; 
+	keySymbol: ARRAY 256 OF LONGINT; 
+
+	PROCEDURE ^ CheckAlternateKeys(VAR mb: SET); 
+	PROCEDURE ^ SendMouseMsg(x, y, dz: LONGINT; xbuttons: SET); 
+	PROCEDURE ^ SendKeyboardMsg(km: Inputs.KeyboardMsg); 
+	PROCEDURE ^ PollXQueue; 
+	PROCEDURE ^ KeyState(): SET; 
+	PROCEDURE ^ Keysym(CONST str: ARRAY OF CHAR): X11.KeySym; 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ InitKeysym; 
+	PROCEDURE ^ GetXDisplay; 
+BEGIN
+END KbdMouse.

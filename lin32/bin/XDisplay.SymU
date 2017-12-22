@@ -1,0 +1,94 @@
+MODULE XDisplay;
+	IMPORT S := SYSTEM, Trace, Unix, Machine, Files, UnixFiles, X11, Api := X11Api, Displays, Strings;
+CONST 
+	BG = 0; 
+	FG = 15; 
+	unknown = 0; 
+	index8 = 8; 
+	color555 = 16; 
+	color565 = 17; 
+	color664 = 18; 
+	color888 = 24; 
+	color8888* = 32; 
+	replace = 0; 
+	paint = 1; 
+	invert = 2; 
+TYPE 
+	RGB = RECORD 
+		r, g, b: INTEGER; 
+	END; 
+
+	Clip* = OBJECT 
+	VAR 
+		d: Display; 
+		lx, ly, lw, lh: LONGINT; 
+
+		PROCEDURE ^  & Init(disp: Display); 
+		PROCEDURE ^ Set*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ Get*(VAR x, y, w, h: LONGINT); 
+		PROCEDURE ^ InClip*(x, y, w, h: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ Adjust*(x, y, w, h: LONGINT); 
+	END Clip; 
+
+	Display* = OBJECT (Displays.Display)
+	VAR 
+		xdisp-: X11.DisplayPtr; 
+		primary-: X11.Window; 
+		secondary-: X11.Window; 
+		currwin: X11.Window; 
+		wmDelete-: X11.Atom; 
+		screen: LONGINT; 
+		visual{UNTRACED} : X11.VisualPtr; 
+		depth: LONGINT; 
+		bigEndian: BOOLEAN; 
+		gc: X11.GC; 
+		clip: Clip; 
+		cmap: X11.Colormap; 
+		planesMask: LONGINT; 
+		foreground, background: LONGINT; 
+		rgb, defPal: ARRAY 256 OF RGB; 
+		pixel: ARRAY 256 OF LONGINT; 
+		xformat: LONGINT; 
+		currcol, currmode: LONGINT; 
+		xfunc: ARRAY 3 OF LONGINT; 
+
+		PROCEDURE ^ SetMode(col: LONGINT); 
+		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
+		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: LONGINT); 
+		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ ColorToIndex*(col: LONGINT): LONGINT; 
+		PROCEDURE ^ IndexToColor*(n: LONGINT): LONGINT; 
+		PROCEDURE ^ SetColor*(col, red, green, blue: INTEGER); 
+		PROCEDURE ^ GetColor*(col: INTEGER; VAR red, green, blue: INTEGER); 
+		PROCEDURE ^ ColorToPixel*(col: LONGINT): LONGINT; 
+		PROCEDURE ^  & Initialize(disp: X11.DisplayPtr; absWidth, absHeight, relWidth, relHeight: LONGINT); 
+		PROCEDURE ^ Finalize*; 
+	END Display; 
+VAR 
+	winName, iconName: ARRAY 128 OF CHAR; 
+	dispname: ARRAY 128 OF CHAR; 
+	imgBuffer: POINTER TO ARRAY OF CHAR; 
+
+	PROCEDURE ^ ColorToIndex0(disp: Display; col: LONGINT): INTEGER; 
+	PROCEDURE ^ PutLine(xformat, width: LONGINT; ip, bp: ADDRESS); 
+	PROCEDURE ^ GetLine(xformat, width: LONGINT; ip, bp: ADDRESS); 
+	PROCEDURE ^ PutLineBE(xformat, width: LONGINT; ip, bp: ADDRESS); 
+	PROCEDURE ^ GetLineBE(xformat, width: LONGINT; ip, bp: ADDRESS); 
+	PROCEDURE ^ NewPattern(d: Display; CONST image: ARRAY OF SET; width, height: INTEGER): X11.Pattern; 
+	PROCEDURE ^ InitNames; 
+	PROCEDURE ^ getDisplayName; 
+	PROCEDURE ^ OpenX11Display(): X11.DisplayPtr; 
+	PROCEDURE ^ CreateColors(d: Display); 
+	PROCEDURE ^ InitPalette(d: Display); 
+	PROCEDURE ^ SuppressX11Cursors(d: Display); 
+	PROCEDURE ^ InitFormat(d: Display); 
+	PROCEDURE ^ CreateGC(d: Display); 
+	PROCEDURE ^ InitFunctions(d: Display); 
+	PROCEDURE ^ GetDisplaySize(VAR width, height: LONGINT): LONGINT; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END XDisplay.

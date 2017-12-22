@@ -1,0 +1,13 @@
+MODULE BinHex IN Oberon;
+	IMPORT Files, Texts, Oberon;
+CONST 
+VAR 
+	encTable: ARRAY 64 OF CHAR; 
+	decTable: ARRAY 128 OF INTEGER; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN; 
+	PROCEDURE ^ Decode*; 
+	PROCEDURE ^ InitTables; 
+BEGIN
+END BinHex.

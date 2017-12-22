@@ -1,0 +1,29 @@
+MODULE BootConsole;
+	IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
+CONST 
+TYPE 
+	Module = Modules.Module; 
+
+	CommandProc = PROCEDURE ; 
+
+	CommandThread = OBJECT {EXCLUSIVE} 
+	VAR 
+		mod, cmd: Modules.Name; 
+
+		PROCEDURE ^  & Init(CONST modName, cmdName: Modules.Name); 
+	BEGIN{ACTIVE} 
+	END CommandThread; 
+VAR 
+	appl: CommandThread; 
+
+	PROCEDURE ^ LoadModule(CONST name: Modules.Name); 
+	PROCEDURE ^ Command(CONST cmd: Modules.Name); 
+	PROCEDURE ^ ThisCommand(m: Module; CONST name: Modules.Name): CommandProc; 
+	PROCEDURE ^ Execute(CONST modName, procName: Modules.Name); 
+	PROCEDURE ^ CommandError(CONST cmd, msg: ARRAY OF CHAR); 
+	PROCEDURE ^ TryCommand(): BOOLEAN; 
+	PROCEDURE ^ InitializeCoreModules; 
+	PROCEDURE ^ StartSystem; 
+	PROCEDURE ^ InitSignalHandling; 
+BEGIN
+END BootConsole.

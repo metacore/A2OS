@@ -1,0 +1,202 @@
+MODULE XMLComponents;
+	IMPORT Files, DynamicStrings, XMLObjects, XML, CSS2, CSS2Properties, CSS2Scanner, CSS2Parser, WMWindowManager, Gfx;
+CONST 
+TYPE 
+	String* = XML.String; 
+
+	StateMessage* = OBJECT 
+	VAR 
+		state-: BOOLEAN; 
+
+		PROCEDURE ^  & InitStateMessage*(state: BOOLEAN); 
+	END StateMessage; 
+
+	ValueMessage* = OBJECT 
+	VAR 
+		value*: LONGINT; 
+	END ValueMessage; 
+
+	MouseMessage* = OBJECT 
+	VAR 
+		x*, y*: LONGINT; 
+		keys*: SET; 
+	END MouseMessage; 
+
+	KeyMessage* = OBJECT 
+	VAR 
+		ch*: CHAR; 
+		keySym*: LONGINT; 
+		flags*: SET; 
+	END KeyMessage; 
+
+	Listener* = PROCEDURE {DELEGATE}(sender, data: ANY); 
+
+	ListenerEntry = OBJECT 
+	VAR 
+		listener: Listener; 
+	END ListenerEntry; 
+
+	EventDispatcher* = OBJECT 
+	VAR 
+		listeners: XMLObjects.Collection; 
+		sender: ANY; 
+
+		PROCEDURE ^  & Init*(sender: ANY); 
+		PROCEDURE ^ AddListener*(listener: Listener); 
+		PROCEDURE ^ Dispatch*(data: ANY); 
+	END EventDispatcher; 
+
+	PropChangerEntry = OBJECT 
+	VAR 
+		listenedComponent: CSS2Component; 
+		event: String; 
+		state: BOOLEAN; 
+	END PropChangerEntry; 
+
+	PropertyChanger* = OBJECT 
+	VAR 
+		entries: XMLObjects.Collection; 
+		changingComponent: CSS2Component; 
+		changingProperties: CSS2.RuleSet; 
+		oldState: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Copy*(): PropertyChanger; 
+		PROCEDURE ^ AddListenedComponent*(comp: CSS2Component; VAR event: ARRAY OF CHAR); 
+		PROCEDURE ^ SetChangingComponent*(comp: CSS2Component; ruleSet: CSS2.RuleSet); 
+		PROCEDURE ^ StatusChanged(sender, data: ANY); 
+		PROCEDURE ^ AllStatesSet(): BOOLEAN; 
+		PROCEDURE ^ ChangeProperties; 
+	END PropertyChanger; 
+
+	Component* = OBJECT {EXCLUSIVE} (XML.Element)
+	VAR 
+		locks: LONGINT; 
+
+		PROCEDURE ^ AddAttribute*(attribute: XML.Attribute); 
+		PROCEDURE ^ LockUpdate*; 
+		PROCEDURE ^ UnlockUpdate*; 
+		PROCEDURE ^ IsLocked*(): BOOLEAN; 
+		PROCEDURE ^ GetNumberOfEvents*(): LONGINT; 
+		PROCEDURE ^ GetEventName*(i: LONGINT): String; 
+		PROCEDURE ^ AddEventListener*(listener: Listener; event: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNumberOfListeners*(): LONGINT; 
+		PROCEDURE ^ GetListenerName*(i: LONGINT): String; 
+		PROCEDURE ^ GetListener*(name: ARRAY OF CHAR): Listener; 
+		PROCEDURE ^ Connect*; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ ConnectAttribute(attribute: XML.Attribute); 
+		PROCEDURE ^ RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: LONGINT); 
+	END Component; 
+
+	CSS2Component* = OBJECT {EXCLUSIVE} (Component)
+	VAR 
+		properties-: CSS2Properties.AllMediaProperties; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddContent*(c: XML.Content); 
+		PROCEDURE ^ GetProperties*(): CSS2Properties.AllMediaProperties; 
+		PROCEDURE ^ SetProperties*(p: CSS2Properties.AllMediaProperties); 
+		PROCEDURE ^ SetProperty*(name, value: ARRAY OF CHAR); 
+		PROCEDURE ^ SetPropertyOnEvent*(name, value, event: ARRAY OF CHAR); 
+		PROCEDURE ^ GenerateRuleSet(name, value: ARRAY OF CHAR): CSS2.RuleSet; 
+		PROCEDURE ^ PropertiesChanged*; 
+		PROCEDURE ^ Invalidate*; 
+	END CSS2Component; 
+
+	Box* = OBJECT 
+	VAR 
+		x*, y*, w*, h*: LONGINT; 
+
+		PROCEDURE ^ InBox*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
+		PROCEDURE ^ SetBox*(box: Box); 
+		PROCEDURE ^ SetRect*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ Intersect*(box: Box): BOOLEAN; 
+		PROCEDURE ^ IntersectRect*(x, y, w, h: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Clip*(box: Box); 
+		PROCEDURE ^ ClipRect*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ Extend*(box: Box); 
+		PROCEDURE ^ ExtendRect*(x, y, w, h: LONGINT); 
+	END Box; 
+
+	VisualComponent* = OBJECT {EXCLUSIVE} (CSS2Component)
+	VAR 
+		pointerMoveListeners, hoverListeners, activeListeners, focusListeners: EventDispatcher; 
+		bounds, borderBox, paddingBox, contentBox, invalidBox: Box; 
+		inlineBoxes, textBoxes: XMLObjects.Collection; 
+		pointerOwner, focusOwner: VisualComponent; 
+		isHovered*, hasFocus*, isActive*, isLink*, isVisited*, dragable*: BOOLEAN; 
+		lastMouseKeys-: SET; 
+		lastX-, lastY-: LONGINT; 
+		trueStateMsg, falseStateMsg: StateMessage; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddContent*(c: XML.Content); 
+		PROCEDURE ^ SetProperties*(p: CSS2Properties.AllMediaProperties); 
+		PROCEDURE ^ GetBounds*(): Box; 
+		PROCEDURE ^ SetBounds*(bounds: Box); 
+		PROCEDURE ^ GetWidth*(): LONGINT; 
+		PROCEDURE ^ SetWidth*(w: LONGINT); 
+		PROCEDURE ^ GetHeight*(): LONGINT; 
+		PROCEDURE ^ SetHeight*(h: LONGINT); 
+		PROCEDURE ^ GetX*(): LONGINT; 
+		PROCEDURE ^ SetX*(x: LONGINT); 
+		PROCEDURE ^ GetY*(): LONGINT; 
+		PROCEDURE ^ SetY*(y: LONGINT); 
+		PROCEDURE ^ GetContentBox*(): Box; 
+		PROCEDURE ^ SetContentBox*(contentBox: Box); 
+		PROCEDURE ^ GetContentWidth*(): LONGINT; 
+		PROCEDURE ^ SetContentWidth*(w: LONGINT); 
+		PROCEDURE ^ GetContentHeight*(): LONGINT; 
+		PROCEDURE ^ SetContentHeight*(h: LONGINT); 
+		PROCEDURE ^ GetContentX*(): LONGINT; 
+		PROCEDURE ^ GetContentY*(): LONGINT; 
+		PROCEDURE ^ GetBorderBox*(): Box; 
+		PROCEDURE ^ GetBorderWidth*(): LONGINT; 
+		PROCEDURE ^ GetBorderHeight*(): LONGINT; 
+		PROCEDURE ^ GetBorderX*(): LONGINT; 
+		PROCEDURE ^ GetBorderY*(): LONGINT; 
+		PROCEDURE ^ GetPaddingBox*(): Box; 
+		PROCEDURE ^ GetPaddingWidth*(): LONGINT; 
+		PROCEDURE ^ GetPaddingHeight*(): LONGINT; 
+		PROCEDURE ^ GetPaddingX*(): LONGINT; 
+		PROCEDURE ^ GetPaddingY*(): LONGINT; 
+		PROCEDURE ^ ComputeWidths*; 
+		PROCEDURE ^ ComputeHeights*; 
+		PROCEDURE ^ GetNumberOfEvents*(): LONGINT; 
+		PROCEDURE ^ GetEventName*(i: LONGINT): String; 
+		PROCEDURE ^ AddEventListener*(listener: Listener; event: ARRAY OF CHAR); 
+		PROCEDURE ^ UnlockUpdate*; 
+		PROCEDURE ^ SetActive*(isActive: BOOLEAN); 
+		PROCEDURE ^ IsActive(): BOOLEAN; 
+		PROCEDURE ^ SetPointer*(pointerInfo: WMWindowManager.PointerInfo); 
+		PROCEDURE ^ GetPointerOwner*(): VisualComponent; 
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ PositionOwner*(x, y: LONGINT): VisualComponent; 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ KeyPressed*(ch: CHAR; flags: SET; VAR keySym: LONGINT); 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ ProcessMessage*(m: ANY); 
+		PROCEDURE ^ ComputeDimensions*; 
+		PROCEDURE ^ Format*; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ PropertiesChanged*; 
+		PROCEDURE ^ InvalidateRange*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ Invalidate*; 
+		PROCEDURE ^ Draw*(ctxt: Gfx.Context); 
+	END VisualComponent; 
+VAR 
+	Unassigned: Listener; 
+
+	PROCEDURE ^ NoReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ NewString*(value: ARRAY OF CHAR): String; 
+	PROCEDURE ^ Min*(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Max*(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ ExtractEvent(VAR string: ARRAY OF CHAR): String; 
+BEGIN
+END XMLComponents.

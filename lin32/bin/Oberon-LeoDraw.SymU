@@ -1,0 +1,57 @@
+MODULE LeoDraw IN Oberon;
+	IMPORT Files, Objects, Oberon, Strings, Attributes, Documents, Desktops, Colors, Images, PictImages, GfxMatrix, GfxFonts, Gfx, Leonardo, LeoFrames, LeoTools, LeoDocs, LeoCaptions, LeoPens, LeoPaths, LeoBasic, LeoSplines;
+CONST 
+	GraphFileId = 0F9X; 
+	LibFileId = 0FDX; 
+	NameLen = 16; 
+TYPE 
+	Name = ARRAY NameLen OF CHAR; 
+
+	MacroHead = POINTER TO MacroHeadDesc; 
+
+	Library = POINTER TO LibraryDesc; 
+
+	MacroHeadDesc = RECORD 
+		name: Name; 
+		shape: Leonardo.Shape; 
+		next: MacroHead; 
+	END; 
+
+	LibraryDesc = RECORD 
+		name: Name; 
+		first: MacroHead; 
+	END; 
+
+	Context = RECORD 
+		font: ARRAY 10 OF GfxFonts.Font; 
+		lib: ARRAY 4 OF Library; 
+		class: ARRAY 10 OF ARRAY 64 OF CHAR; 
+	END; 
+VAR 
+	Stroker: ARRAY 16 OF ARRAY 6 OF LeoPens.Stroker; 
+	Filler: ARRAY 16 OF ARRAY 9 OF LeoPens.Filler; 
+	Pattern: ARRAY 9 OF Images.Image; 
+	MacroFig: Leonardo.Figure; 
+
+	PROCEDURE ^ InitContext(VAR ctxt: Context); 
+	PROCEDURE ^ GetColor(col: INTEGER; VAR color: Gfx.Color); 
+	PROCEDURE ^ ThisLibrary(CONST name: ARRAY OF CHAR): Library; 
+	PROCEDURE ^ ThisStroker(col, width: INTEGER): LeoPens.Stroker; 
+	PROCEDURE ^ ThisPattern(pat: INTEGER): Images.Image; 
+	PROCEDURE ^ ThisFiller(col, pat: INTEGER): LeoPens.Filler; 
+	PROCEDURE ^ CreateLine(x0, y0, x1, y1: REAL; col, width: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ CreateEllipse(xc, yc, xr, yr: REAL; col, width: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ CreateRectangle(x0, y0, x1, y1: REAL; col, width: INTEGER; fill: LeoPens.Pen): Leonardo.Shape; 
+	PROCEDURE ^ CreateSpline(closed: BOOLEAN; CONST u, v: ARRAY OF INTEGER; n, col, width: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadCaption(VAR ctxt: Context; VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadMacro(VAR ctxt: Context; VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadCurve(VAR r: Files.Rider; x, y, w, h, col: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadRectangle(VAR r: Files.Rider; x, y, w, h, col: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadSpline(VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape; 
+	PROCEDURE ^ LoadShape(VAR ctxt: Context; VAR r: Files.Rider; CONST gen: ARRAY OF CHAR): Leonardo.Shape; 
+	PROCEDURE ^ LoadElems(VAR r: Files.Rider; VAR ctxt: Context): Leonardo.Shape; 
+	PROCEDURE ^ LoadDoc(doc: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Open*; 
+BEGIN
+END LeoDraw.

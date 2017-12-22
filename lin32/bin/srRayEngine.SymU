@@ -1,0 +1,38 @@
+MODULE srRayEngine;
+	IMPORT srBase, Raster, Objects;
+CONST 
+	X = srBase.TILESIZE; 
+	LX = srBase.LTILESIZE; 
+TYPE 
+	Tile = OBJECT {EXCLUSIVE} 
+	VAR 
+		G, H, I, J, i, j: INTEGER; 
+		GO: BOOLEAN; 
+		large: BOOLEAN; 
+
+		PROCEDURE ^  & init*(i, j, g, h: INTEGER; l: BOOLEAN); 
+		PROCEDURE ^ go; 
+		PROCEDURE ^ slow; 
+		PROCEDURE ^ lslow; 
+		PROCEDURE ^ lfast; 
+	BEGIN{ACTIVE, PRIORITY(Objects.Normal)} 
+	END Tile; 
+VAR 
+	block: srBase.Voxel; 
+	image: Raster.Image; 
+	tiles, ltiles: ARRAY srBase.TILEi OF ARRAY srBase.TILEj OF Tile; 
+	i, j, G, H, LG, LH: INTEGER; 
+	tilesdone: INTEGER; 
+	mode: Raster.Mode; 
+	fast*: BOOLEAN; 
+
+	PROCEDURE ^ incTD; 
+	PROCEDURE ^ zeroTD; 
+	PROCEDURE ^ goyethreads; 
+	PROCEDURE ^ lgoyethreads; 
+	PROCEDURE ^ setBlock*(b: srBase.Voxel); 
+	PROCEDURE ^ setImage*(img: Raster.Image); 
+	PROCEDURE ^ go*; 
+	PROCEDURE ^ lgo*; 
+BEGIN
+END srRayEngine.

@@ -1,0 +1,36 @@
+MODULE Errors;
+	IMPORT Modules, Streams, Commands, Strings, Files;
+CONST 
+	DefaultErrorMessageFile = \"errors.txt"\; 
+	MaxLineLength = 256; 
+	InitialCacheSize = 128; 
+	Ok = 0; 
+	NotFound = 1; 
+	Error = 2; 
+	FileNotFound = 3; 
+	UnknownModule = \"Unknown"\; 
+TYPE 
+	ErrorMessage* = RECORD 
+		code: LONGINT; 
+		moduleName-: Modules.Name; 
+		text-: Strings.String; 
+	END; 
+
+	ErrorMessages = POINTER TO ARRAY OF ErrorMessage; 
+VAR 
+	cache: ErrorMessages; 
+	index: LONGINT; 
+	lastModuleName: Modules.Name; 
+
+	PROCEDURE ^ GetErrorString(errorCode: LONGINT): Strings.String; 
+	PROCEDURE ^ GetErrorMessage*(errorCode: LONGINT): ErrorMessage; 
+	PROCEDURE ^ ToStream*(errorCode: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ ResizeCache; 
+	PROCEDURE ^ Add(CONST errorMessage: ErrorMessage); 
+	PROCEDURE ^ Get(number: LONGINT; VAR errorMessage: ErrorMessage; VAR res: LONGINT); 
+	PROCEDURE ^ ParseLine(reader: Streams.Reader; VAR errorMessage: ErrorMessage; VAR res: LONGINT); 
+	PROCEDURE ^ ParseFile(CONST filename: Files.FileName; VAR res: LONGINT); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+BEGIN
+END Errors.

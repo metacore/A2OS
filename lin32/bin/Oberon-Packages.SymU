@@ -1,0 +1,61 @@
+MODULE Packages IN Oberon;
+	IMPORT FileDir, Files, BTrees, Objects, Dates, Strings, Display, Texts, Oberon, Compress, Compiler, Gadgets, Documents, Watson, Attributes, Links;
+CONST 
+	HeadTag = 0; 
+	DataTag = 1; 
+	URLTag = 2; 
+	CmdTag = 3; 
+	VerNewResource = 0; 
+	VerSameVersion = 1; 
+	VerNewBuild = 2; 
+	VerOldBuild = 3; 
+	VerNewMajorVersion = 4; 
+	VerOldMajorVersion = 5; 
+	VerNewMinorVersion = 6; 
+	VerOldMinorVersion = 7; 
+	VerError = 8; 
+TYPE 
+	ResourcePtr = POINTER TO Resource; 
+
+	Resource = RECORD 
+		name: FileDir.FileName; 
+		time, date, pos: LONGINT; 
+		minor, major: INTEGER; 
+		next: ResourcePtr; 
+	END; 
+
+	Package = RECORD (Resource)
+		R: Files.Rider; 
+		gen, options: FileDir.FileName; 
+	END; 
+
+	GetURLProc* = PROCEDURE (context: Objects.Object; CONST url: ARRAY OF CHAR):LONGINT; 
+VAR 
+	W: Texts.Writer; 
+	index: BTrees.Tree; 
+	useCrypt: BOOLEAN; 
+
+	PROCEDURE ^ OpenScanner(VAR T: Texts.Text; VAR S: Texts.Scanner); 
+	PROCEDURE ^ WriteResource(VAR R: Files.Rider; VAR res: Resource; tag: INTEGER; dLen: LONGINT); 
+	PROCEDURE ^ ClosePackage(VAR pack: Package); 
+	PROCEDURE ^ Build*; 
+	PROCEDURE ^ ReadResource(VAR R: Files.Rider; VAR res: Resource; VAR tag: INTEGER; VAR dLen: LONGINT); 
+	PROCEDURE ^ FindResource(CONST name: ARRAY OF CHAR; VAR res: Resource); 
+	PROCEDURE ^ RegisterResource(VAR res: Resource; package: ARRAY OF CHAR); 
+	PROCEDURE ^ CompareVersion(VAR old, new: Resource): LONGINT; 
+	PROCEDURE ^ CheckVersion(VAR res: Resource; CONST options: ARRAY OF CHAR; file: BOOLEAN): LONGINT; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ SystemName(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadDocHeader(VAR R: Files.Rider; VAR ch: CHAR); 
+	PROCEDURE ^ OpenPackage(VAR pack: Package; F: Files.File): BOOLEAN; 
+	PROCEDURE ^ install*(F: Files.File; VAR gen: ARRAY OF CHAR; context: Objects.Object; getURL: GetURLProc): LONGINT; 
+	PROCEDURE ^ CreateObject*(gen: ARRAY OF CHAR; VAR err: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ GetURL(context: Objects.Object; CONST purl: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Load(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ WriteRes(VAR W: Texts.Writer; VAR res: Resource); 
+	PROCEDURE ^ Directory*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Packages.

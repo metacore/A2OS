@@ -1,0 +1,28 @@
+MODULE GZReaders IN Oberon;
+	IMPORT Files, ZlibReaders;
+CONST 
+	Ok* = ZlibReaders.Ok; 
+	StreamEnd* = ZlibReaders.StreamEnd; 
+	StreamError* = ZlibReaders.StreamError; 
+	DataError* = ZlibReaders.DataError; 
+	BufError* = ZlibReaders.BufError; 
+	FileError* = ZlibReaders.FileError; 
+	BufSize = 16384; 
+	DeflateMethod = 8; 
+TYPE 
+	Reader* = RECORD 
+		file-: Files.File; 
+		res-: LONGINT; 
+		transparent: BOOLEAN; 
+		pos: LONGINT; 
+		zr: ZlibReaders.Reader; 
+	END; 
+
+	PROCEDURE ^ CheckHeader(VAR r: Reader; VAR fr: Files.Rider); 
+	PROCEDURE ^ Open*(VAR r: Reader; file: Files.File); 
+	PROCEDURE ^ Close*(VAR r: Reader); 
+	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
+	PROCEDURE ^ Pos*(VAR r: Reader): LONGINT; 
+BEGIN
+END GZReaders.

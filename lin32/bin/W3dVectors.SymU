@@ -1,0 +1,54 @@
+MODULE W3dVectors;
+	IMPORT Math := MathL;
+CONST 
+	TooSmall* =   1.0000000E-011; 
+TYPE 
+	TVector2d* = RECORD 
+		x*, y*: LONGREAL; 
+	END; 
+
+	TVector3d* = RECORD 
+		x*, y*, z*: LONGREAL; 
+	END; 
+
+	TLineSegment2d* = RECORD 
+		A*, B*: TVector2d; 
+	END; 
+
+	TRectangle* = RECORD 
+		A*, B*: TVector2d; 
+	END; 
+
+	TBoundingSphere* = RECORD 
+		P*: TVector3d; 
+		r*: LONGREAL; 
+	END; 
+
+	PROCEDURE ^ Sqr(x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Vector2d*(x: LONGREAL; y: LONGREAL): TVector2d; 
+	PROCEDURE ^ Vector3d*(x: LONGREAL; y: LONGREAL; z: LONGREAL): TVector3d; 
+	PROCEDURE ^ VAdd2*(a, b: TVector2d): TVector2d; 
+	PROCEDURE ^ VAdd3*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ VSub2*(a, b: TVector2d): TVector2d; 
+	PROCEDURE ^ VSub3*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ VNeg2*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNeg3*(a: TVector3d): TVector3d; 
+	PROCEDURE ^ VLength2*(a: TVector2d): LONGREAL; 
+	PROCEDURE ^ VLength2VV*(a, b: TVector2d): LONGREAL; 
+	PROCEDURE ^ VLength3VV*(a, b: TVector3d): LONGREAL; 
+	PROCEDURE ^ VLength3*(a: TVector3d): LONGREAL; 
+	PROCEDURE ^ VLength2Sq*(a: TVector2d): LONGREAL; 
+	PROCEDURE ^ VLength2VVSq*(a, b: TVector2d): LONGREAL; 
+	PROCEDURE ^ VLength3VVSq*(a, b: TVector3d): LONGREAL; 
+	PROCEDURE ^ VLength3Sq*(a: TVector3d): LONGREAL; 
+	PROCEDURE ^ VScaled2*(a: TVector2d; factor: LONGREAL): TVector2d; 
+	PROCEDURE ^ VScaled3*(a: TVector3d; factor: LONGREAL): TVector3d; 
+	PROCEDURE ^ VRot90*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNormed2*(a: TVector2d): TVector2d; 
+	PROCEDURE ^ VNormed3*(a: TVector3d): TVector3d; 
+	PROCEDURE ^ Scalar2*(a, b: TVector2d): LONGREAL; 
+	PROCEDURE ^ Scalar3*(a, b: TVector3d): LONGREAL; 
+	PROCEDURE ^ Cross*(a, b: TVector3d): TVector3d; 
+	PROCEDURE ^ CCW*(a, b, c: TVector2d): BOOLEAN; 
+BEGIN
+END W3dVectors.

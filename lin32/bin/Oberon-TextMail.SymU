@@ -1,0 +1,63 @@
+MODULE TextMail IN Oberon;
+	IMPORT Files, Texts, TextFrames, Oberon, Viewers, MenuViewers, NS := NetSystem, Display, Fonts, Strings;
+CONST 
+	POP = 110; 
+	SMTP = 25; 
+	TAB = 9X; 
+	CR = 0DX; 
+	LF = 0AX; 
+	maxlen = 32; 
+	StandardMenu = \"System.Close System.Copy System.Grow Edit.Search Edit.Store"\; 
+	CopySelf = TRUE; 
+VAR 
+	res*: INTEGER; 
+	M: INTEGER; 
+	W: Texts.Writer; 
+	iso, quoted: BOOLEAN; 
+	host: ARRAY 32 OF CHAR; 
+	spat: ARRAY maxlen OF CHAR; 
+	d: ARRAY 256 OF INTEGER; 
+
+	PROCEDURE ^ MarkedText(): Texts.Text; 
+	PROCEDURE ^ String(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ Response(S: NS.Connection; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenViewer(name: ARRAY OF CHAR; T: Texts.Text; user: BOOLEAN); 
+	PROCEDURE ^ Connect(VAR S: NS.Connection; host: ARRAY OF CHAR; port: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ SendCmd(S: NS.Connection; cmd, arg: ARRAY OF CHAR); 
+	PROCEDURE ^ Prefix(t: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Copy(i: LONGINT; VAR s, t: ARRAY OF CHAR); 
+	PROCEDURE ^ IsHexDigit(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ HexVal(ch: CHAR): INTEGER; 
+	PROCEDURE ^ WriteStringI2O(VAR W: Texts.Writer; VAR str: ARRAY OF CHAR; quoted: BOOLEAN); 
+	PROCEDURE ^ ReceiveHead(S: NS.Connection; dir, full: BOOLEAN); 
+	PROCEDURE ^ Body(S: NS.Connection); 
+	PROCEDURE ^ Close(S: NS.Connection); 
+	PROCEDURE ^ OpenPop(VAR S: NS.Connection; host: ARRAY OF CHAR; VAR mails: INTEGER): BOOLEAN; 
+	PROCEDURE ^ OpenScanner(pop: BOOLEAN; VAR S: Texts.Scanner); 
+	PROCEDURE ^ directory; 
+	PROCEDURE ^ Directory*; 
+	PROCEDURE ^ LocateMail(VAR text: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ MailNo(text: Texts.Text; pos: LONGINT; VAR mail: INTEGER; VAR beg, end: LONGINT); 
+	PROCEDURE ^ DeleteMail(S: NS.Connection; mailno: INTEGER; VAR done: BOOLEAN); 
+	PROCEDURE ^ delete; 
+	PROCEDURE ^ Delete*; 
+	PROCEDURE ^ deleteAll; 
+	PROCEDURE ^ DeleteAll*; 
+	PROCEDURE ^ ReceiveMail(S: NS.Connection; mailno: INTEGER; VAR text: Texts.Text); 
+	PROCEDURE ^ show; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ getAll; 
+	PROCEDURE ^ GetAll*; 
+	PROCEDURE ^ Store*; 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ HexDigit(i: INTEGER): CHAR; 
+	PROCEDURE ^ ReadStringO2I(VAR R: Texts.Reader; VAR s: ARRAY OF CHAR; quoted: BOOLEAN); 
+	PROCEDURE ^ Recipient(VAR i: INTEGER; VAR s, rcpt: ARRAY OF CHAR); 
+	PROCEDURE ^ SendText(S: NS.Connection; VAR R: Texts.Reader; user: ARRAY OF CHAR); 
+	PROCEDURE ^ send; 
+	PROCEDURE ^ Send*; 
+	PROCEDURE ^ Cite*; 
+BEGIN
+END TextMail.

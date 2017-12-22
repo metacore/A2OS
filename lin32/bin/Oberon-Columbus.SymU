@@ -1,0 +1,204 @@
+MODULE Columbus IN Oberon;
+	IMPORT Files, Objects, Fonts, Texts, Strings, Attributes, Links, Display, Oberon, Gadgets, Panels, TextFields, BasicGadgets, BasicFigures, RefGadgets, ScrollViews, TextGadgets, ListRiders, Documents, Desktops, PanelDocs;
+CONST 
+	Version = \"1.2"\; 
+	DocName = \"Objects.Panel"\; 
+	ObjList = \"objlist"\; 
+	ObjNameObj = \"theobj"\; 
+	LibNameObj = \"thelib"\; 
+	RNameObj = \"rname"\; 
+	NNameObj = \"nname"\; 
+	CopyStyleObj = \"copystyle"\; 
+	RefObj = \"value"\; 
+	ViewModeObjName = \"ViewMode"\; 
+	Border = 7; 
+	PanelW = 370; 
+	LargeW = 300; 
+	MediumW = 100; 
+	SmallW = 20; 
+	Height = 20; 
+	Tabs = 6; 
+	Attribute = 0; 
+	Link = 1; 
+	Coord = 2; 
+	Control = 3; 
+	Title = 4; 
+	ObjAttrView = 0; 
+	ObjLinkView = 1; 
+	ObjCoordView = 2; 
+	ObjDscView = 3; 
+	ObjDefView = 4; 
+	LibOverView = 5; 
+	LibEditView = 6; 
+	NoView = 7; 
+	ObjViews = {ObjAttrView, ObjLinkView, ObjCoordView, ObjDscView, ObjDefView}; 
+	top = 0; 
+	middle = 1; 
+	bottom = 2; 
+TYPE 
+	Item = POINTER TO ItemDesc; 
+
+	ItemDesc = RECORD 
+		next: Item; 
+		class: INTEGER; 
+		name: ARRAY 32 OF CHAR; 
+		val: Objects.Object; 
+	END; 
+
+	HistoryItem = POINTER TO HistoryItemDesc; 
+
+	HistoryItemDesc = RECORD 
+		next: HistoryItem; 
+		obj: Objects.Object; 
+		lib: Objects.Library; 
+		view: INTEGER; 
+	END; 
+
+	Panel = POINTER TO PanelDesc; 
+
+	PanelDesc = RECORD (Panels.PanelDesc)
+		items: Item; 
+		history: HistoryItem; 
+	END; 
+
+	LayoutFrame = POINTER TO LayoutFrameDesc; 
+
+	LayoutFrameDesc = RECORD (Display.FrameDesc)
+	END; 
+
+	Layout = RECORD 
+		align: INTEGER; 
+		X, Y, maxH: INTEGER; 
+		frames: Display.Frame; 
+		items: Item; 
+		tabs: ARRAY Tabs OF INTEGER; 
+	END; 
+
+	CanProc = PROCEDURE (obj: Objects.Object; lib: Objects.Library):BOOLEAN; 
+
+	MakeProc = PROCEDURE (obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+
+	ButtonProc = PROCEDURE (model, obj: Objects.Object; lib: Objects.Library):Display.Frame; 
+
+	ViewGenDesc = RECORD 
+		canView: CanProc; 
+		makeView: MakeProc; 
+		getButton: ButtonProc; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	enumObj: Objects.Object; 
+	oldValues: Item; 
+	layout: Layout; 
+	msgPrinted: BOOLEAN; 
+	viewGens: ARRAY NoView OF ViewGenDesc; 
+
+	PROCEDURE ^ RefToStr(i: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Append(CONST this: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendCh(this: CHAR; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ Char(ch: CHAR); 
+	PROCEDURE ^ String(CONST str: ARRAY OF CHAR); 
+	PROCEDURE ^ Int(i: LONGINT); 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ ToLog; 
+	PROCEDURE ^ PrintMsg; 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ StoreDoc(D: Documents.Document); 
+	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ PanelHandler(P: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitPanel(P: Panel); 
+	PROCEDURE ^ NewPanel*; 
+	PROCEDURE ^ Max(x, x0: INTEGER): INTEGER; 
+	PROCEDURE ^ MakeCaption(CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ MakeCmd(CONST caption, cmd: ARRAY OF CHAR; isPict: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ MakeBool(val: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ MakeString(CONST val: ARRAY OF CHAR): Display.Frame; 
+	PROCEDURE ^ MakeInt(val: LONGINT): Display.Frame; 
+	PROCEDURE ^ MakeReal(val: LONGREAL): Display.Frame; 
+	PROCEDURE ^ MakeLink(val: Objects.Object; locked: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ ClearTabs(VAR L: Layout); 
+	PROCEDURE ^ OpenLayout(VAR L: Layout); 
+	PROCEDURE ^ SetTab(VAR L: Layout); 
+	PROCEDURE ^ WriteLn(VAR L: Layout); 
+	PROCEDURE ^ WriteHSpace(VAR L: Layout; w: INTEGER); 
+	PROCEDURE ^ WriteTab(VAR L: Layout); 
+	PROCEDURE ^ WriteVSpace(VAR L: Layout; h: INTEGER); 
+	PROCEDURE ^ WriteFrame(VAR L: Layout; F: Display.Frame); 
+	PROCEDURE ^ WriteLine(VAR L: Layout); 
+	PROCEDURE ^ WriteCaption(VAR L: Layout; CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN); 
+	PROCEDURE ^ WriteCmd(VAR L: Layout; CONST caption, cmd: ARRAY OF CHAR; isPict: BOOLEAN); 
+	PROCEDURE ^ WriteLayout(VAR L, l: Layout); 
+	PROCEDURE ^ WriteLogo(VAR L: Layout; W: INTEGER); 
+	PROCEDURE ^ WriteItems(VAR L: Layout; classes: SET); 
+	PROCEDURE ^ AddItem(VAR L: Layout; CONST name: ARRAY OF CHAR; class: INTEGER; val: Display.Frame); 
+	PROCEDURE ^ AddTitleItem(VAR L: Layout; CONST str: ARRAY OF CHAR; cmds: Display.Frame); 
+	PROCEDURE ^ AddControlItem(VAR L: Layout; CONST name, caption: ARRAY OF CHAR; val: Display.Frame); 
+	PROCEDURE ^ EnumAttr(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ EnumLink(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ MakePanel(P: Panels.Panel; frames: Display.Frame; border: INTEGER; new: BOOLEAN); 
+	PROCEDURE ^ WriteGeneralObjInfo(obj: Objects.Object; VAR L: Layout); 
+	PROCEDURE ^ WriteGeneralLibInfo(lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ InspectThis(VAR P: Panel; obj: Objects.Object; lib: Objects.Library; view: INTEGER); 
+	PROCEDURE ^ CanViewAttr(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ AttrViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeAttrView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ CanViewLink(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ LinkViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeLinkView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ CanViewCoord(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ CoordViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeCoordView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ CanViewDef(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ DefViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ CanViewDsc(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ DscViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeDscView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ CanViewEditor(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ LibEditorButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeLibContentsPanel(lib: Objects.Library): Panels.Panel; 
+	PROCEDURE ^ WriteCopyStyles(VAR L: Layout); 
+	PROCEDURE ^ MakeLibEditor(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ CanViewLib(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ LibViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
+	PROCEDURE ^ MakeLibView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
+	PROCEDURE ^ EnumOldAttrValues(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ EnumOldLinkValues(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ SetObject(obj: Objects.Object; P: Panel): BOOLEAN; 
+	PROCEDURE ^ SetNewAttrLink(obj: Objects.Object; P: Panel); 
+	PROCEDURE ^ RemoveAttrLink(obj: Objects.Object; P: Panel); 
+	PROCEDURE ^ GetObjLib(VAR obj: Objects.Object; VAR lib: Objects.Library); 
+	PROCEDURE ^ FindPanel(): Panel; 
+	PROCEDURE ^ GetViewMode(P: Panel): INTEGER; 
+	PROCEDURE ^ InspectObj*(obj: Objects.Object); 
+	PROCEDURE ^ Inspect*; 
+	PROCEDURE ^ InspectLink*; 
+	PROCEDURE ^ InspectCurrent*; 
+	PROCEDURE ^ Apply*; 
+	PROCEDURE ^ ApplyTo*; 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ AddTo*; 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ RemoveFrom*; 
+	PROCEDURE ^ Back*; 
+	PROCEDURE ^ Backup(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR libname, objname: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenText(CONST name: ARRAY OF CHAR; T: Texts.Text); 
+	PROCEDURE ^ SetTextToList(list: Objects.Object; T: Texts.Text); 
+	PROCEDURE ^ GetCopyStyle(): INTEGER; 
+	PROCEDURE ^ GetObject(): Objects.Object; 
+	PROCEDURE ^ UpdateObjList(lib: Objects.Library; openDoc: BOOLEAN); 
+	PROCEDURE ^ EnumLib(L: Objects.Library); 
+	PROCEDURE ^ SetCurrent*; 
+	PROCEDURE ^ ShowObjs*; 
+	PROCEDURE ^ GetObj*; 
+	PROCEDURE ^ FreeObj*; 
+	PROCEDURE ^ AddObj*; 
+	PROCEDURE ^ RenameObj*; 
+	PROCEDURE ^ ShowLibs*; 
+	PROCEDURE ^ StoreLib*; 
+	PROCEDURE ^ UnloadLib*; 
+	PROCEDURE ^ CleanupLib*; 
+	PROCEDURE ^ InitViewDesc(nr: INTEGER; canProc: CanProc; makeProc: MakeProc; btnProc: ButtonProc); 
+BEGIN
+END Columbus.

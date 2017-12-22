@@ -1,0 +1,88 @@
+MODULE WMProcessInfo;
+	IMPORT SYSTEM, KernelLog, Streams, Machine, Modules, Objects, Kernel, Reflection, Strings, ProcessInfo, XML, Commands, WMGraphics, WMProperties, WMComponents, WMStandardComponents, WMGrids, WMStringGrids, WMPopups, WMDialogs;
+CONST 
+	None* = 0; 
+	ID* = 1; 
+	Priority* = 2; 
+	Mode* = 3; 
+	Paused = 0; 
+	Running = 3; 
+	RunningRefresh = 4; 
+	Terminating = 99; 
+	Terminated = 100; 
+	DefaultRefreshInterval = 500; 
+	DefaultInterleave = 2; 
+	MaxNofProcesses = 1000; 
+TYPE 
+	Selection* = POINTER TO ARRAY OF Objects.Process; 
+
+	ProcessSelector* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		sort-: WMProperties.Int32Property; 
+		sortI: LONGINT; 
+		processes: ARRAY MaxNofProcesses OF Objects.Process; 
+		nofProcesses: LONGINT; 
+		colWidth: WMGrids.Spacings; 
+		grid: WMStringGrids.StringGrid; 
+		lastProcTime: HUGEINT; 
+		sw: Streams.StringWriter; 
+		nofUpdates, interval, interleave: LONGINT; 
+		timer: Kernel.Timer; 
+		state, currentState: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetSelection*(): Selection; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ CheckVisibility; 
+		PROCEDURE ^ CheckSort; 
+		PROCEDURE ^ CreateGrid(): WMStringGrids.StringGrid; 
+		PROCEDURE ^ Start; 
+		PROCEDURE ^ Pause; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ Refresh; 
+		PROCEDURE ^ Finalize*; 
+	BEGIN{ACTIVE} 
+	END ProcessSelector; 
+
+	SortInfo = OBJECT 
+	VAR 
+		mode: LONGINT; 
+		name: ARRAY 64 OF CHAR; 
+
+		PROCEDURE ^  & New*(mode: LONGINT; CONST name: ARRAY OF CHAR); 
+	END SortInfo; 
+
+	ProcessManager* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		processSelector: ProcessSelector; 
+		haltBtn, unbreakHaltBtn, sortBtn, showBtn, cpuLoadBtn: WMStandardComponents.Button; 
+		sortPopup: WMPopups.Popup; 
+		nbrOfProcessesLabel: WMStandardComponents.Label; 
+		toolbar-: WMStandardComponents.Panel; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Decision(CONST message: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ HaltThread(unbreakable: BOOLEAN); 
+		PROCEDURE ^ HandleHalt(sender, data: ANY); 
+		PROCEDURE ^ HandleUnbreakableHalt(sender, data: ANY); 
+		PROCEDURE ^ HandleSort(sender, data: ANY); 
+		PROCEDURE ^ HandleSortPopup(sender, data: ANY); 
+		PROCEDURE ^ HandleShowStack(sender, data: ANY); 
+		PROCEDURE ^ HandleCpuLoad(sender, data: ANY); 
+	END ProcessManager; 
+VAR 
+	StrProcessSelector, StrProcessManager: Strings.String; 
+	PrototypeSort: WMProperties.Int32Property; 
+
+	PROCEDURE ^ GetTitleStr(col: LONGINT; VAR x: ARRAY OF CHAR); 
+	PROCEDURE ^ GetAlign(col: LONGINT): LONGINT; 
+	PROCEDURE ^ CheckBP(p: Objects.Process; bp: ADDRESS): ADDRESS; 
+	PROCEDURE ^ OpenCpuLoadWindow(pid: LONGINT); 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ GenProcessSelector*(): XML.Element; 
+	PROCEDURE ^ GenProcessManager*(): XML.Element; 
+BEGIN
+END WMProcessInfo.

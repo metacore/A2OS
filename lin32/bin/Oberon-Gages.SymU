@@ -1,0 +1,35 @@
+MODULE Gages IN Oberon;
+	IMPORT Modules, Input, Display, Objects, Gadgets, Oberon, BasicGadgets, Fonts, Kernel, Display3, Printer, Printer3, Strings;
+CONST 
+	Max = 128; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		points*: ARRAY Max OF LONGINT; 
+		min, max: LONGINT; 
+		maxPoints: INTEGER; 
+		beg, end: INTEGER; 
+	END; 
+VAR 
+	Mem, Load, Lap: BasicGadgets.Integer; 
+	task: Oberon.Task; 
+	time, lastmem: LONGINT; 
+	maxLoad, loadtime, load, laptime: LONGINT; 
+
+	PROCEDURE ^ NewMem*; 
+	PROCEDURE ^ NewLoad*; 
+	PROCEDURE ^ NewLap*; 
+	PROCEDURE ^ HandleMem(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ HandleLoad(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ HandleLap(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ TaskHandle(me: Oberon.Task); 
+	PROCEDURE ^ Deinstall; 
+	PROCEDURE ^ AddPoint(F: Frame; x: LONGINT); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*; 
+BEGIN
+END Gages.

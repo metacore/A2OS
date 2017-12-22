@@ -1,0 +1,22 @@
+MODULE WebHTTPClient;
+	IMPORT TFLog, Streams, Strings, IP, DNS, TCP, TLS, WebHTTP, Modules;
+CONST 
+	Ok* = 0; 
+TYPE 
+	ContentReader* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		encoding: ARRAY 64 OF CHAR; 
+		length: LONGINT; 
+
+		PROCEDURE ^  & InitContentReader*(in: Streams.Reader; CONST h: WebHTTP.ResponseHeader); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+	END ContentReader; 
+VAR 
+	log: TFLog.Log; 
+
+	PROCEDURE ^ Head*(CONST url: ARRAY OF CHAR; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res: LONGINT); 
+	PROCEDURE ^ Get*(CONST url: ARRAY OF CHAR; VAR rHeader: WebHTTP.RequestHeader; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR out: Streams.Reader; VAR res: LONGINT); 
+	PROCEDURE ^ CleanUp; 
+BEGIN
+END WebHTTPClient.

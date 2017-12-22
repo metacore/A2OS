@@ -1,0 +1,25 @@
+MODULE WMKeyCode;
+	IMPORT Commands, WMRestorable, WMMessages, WMGraphics, Inputs, KernelLog, Modules, WMRectangles, Strings, WM := WMWindowManager;
+CONST 
+TYPE 
+	Window = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+VAR 
+	winstance: Window; 
+	manager: WM.WindowManager; 
+
+	PROCEDURE ^ GetKeysymString(keysym: LONGINT; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetFlagsString(flags: SET; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ Handle(VAR msg: WMMessages.Message; VAR discard: BOOLEAN); 
+	PROCEDURE ^ StartLog*(context: Commands.Context); 
+	PROCEDURE ^ StopLog*(context: Commands.Context); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMKeyCode.

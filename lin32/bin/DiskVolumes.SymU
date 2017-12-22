@@ -1,0 +1,39 @@
+MODULE DiskVolumes;
+	IMPORT SYSTEM, Machine, Plugins, Disks, Caches, Files;
+CONST 
+	BS = 512; 
+	CDBS = 2048; 
+	SystemReserved = 32; 
+	CacheSS = 4096; 
+	CacheHash1 = 97; 
+	CacheHash2 = 997; 
+	CacheHash3 = 3331; 
+	CacheHash4 = 9973; 
+	CacheMin = CacheHash1; 
+	Header = \"DiskVolumes: "\; 
+TYPE 
+	Volume* = OBJECT {EXCLUSIVE} (Files.Volume)
+	VAR 
+		dev-: Disks.Device; 
+		cache: Caches.Cache; 
+		blocks: LONGINT; 
+		startfs-: LONGINT; 
+
+		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ Finalize*; 
+	END Volume; 
+VAR 
+	cache: Caches.Cache; 
+	cacheSize, cacheHash: LONGINT; 
+	writeback: BOOLEAN; 
+	cdid: ARRAY 32 OF CHAR; 
+
+	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
+	PROCEDURE ^ GetOberonFS(dev: Disks.Device; pstart, psize: LONGINT; VAR startfs, size, vbs, res: LONGINT); 
+	PROCEDURE ^ InitCache; 
+	PROCEDURE ^ InitVol(vol: Volume; startfs, size, vbs, part: LONGINT; ptable: Disks.PartitionTable; readonly: BOOLEAN); 
+	PROCEDURE ^ TryOpen(context: Files.Parameters; dev: Disks.Device; part, dbs: LONGINT; readonly: BOOLEAN); 
+	PROCEDURE ^ New*(context: Files.Parameters); 
+BEGIN
+END DiskVolumes.

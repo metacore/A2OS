@@ -1,0 +1,81 @@
+MODULE DynamicWebpagePlugin;
+	IMPORT DynamicWebpage, HTTPSupport, HTTPSession, WebHTTP, WebHTTPServer, Files, Dates, Strings, Streams, Commands, KernelLog, XML, XMLScanner, XMLParser, XMLObjects, DynamicStrings, TFClasses, Configuration, Modules;
+CONST 
+	DEBUG = FALSE; 
+	ShowRegisteredElements = FALSE; 
+	PluginName = \"Dynamic Webpage Plugin"\; 
+	PreTransformation = TRUE; 
+	PostTransformation = FALSE; 
+	MaxTransformationDepth = 40; 
+	DocType = \"<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">"\; 
+TYPE 
+	DynamicWebpagePlugin = OBJECT (WebHTTPServer.HTTPPlugin)
+
+		PROCEDURE ^  & Init*(CONST name: WebHTTPServer.Name); 
+		PROCEDURE ^ CanHandle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Handle*(host: WebHTTPServer.Host; VAR requestHeader: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	END DynamicWebpagePlugin; 
+
+	ParserError = POINTER TO RECORD 
+		pos, line, row: LONGINT; 
+		msg: ARRAY 1024 OF CHAR; 
+	END; 
+
+	SessionStateFullElement = OBJECT 
+	VAR 
+		objectId: Strings.String; 
+		session: HTTPSession.Session; 
+		activeElem: DynamicWebpage.StateFullActiveElement; 
+		eventHandlers: DynamicWebpage.EventHandlerList; 
+
+		PROCEDURE ^  & Init*(id: Strings.String; sess: HTTPSession.Session; elem: DynamicWebpage.StateFullActiveElement; handlerList: DynamicWebpage.EventHandlerList); 
+	END SessionStateFullElement; 
+
+	ActiveElementFactory = OBJECT {EXCLUSIVE} 
+	VAR 
+		moduleName: ARRAY 128 OF CHAR; 
+		activeElemDesc: DynamicWebpage.ActiveElementDescriptor; 
+		stateLessActiveElem: DynamicWebpage.StateLessActiveElement; 
+		stateLessEventHandlers: DynamicWebpage.EventHandlerList; 
+		stateFullActiveElems: TFClasses.List; 
+
+		PROCEDURE ^  & Init*(module: Strings.String; desc: DynamicWebpage.ActiveElementDescriptor); 
+		PROCEDURE ^ SessionExpired(session: HTTPSession.Session); 
+		PROCEDURE ^ PrepareDisposal; 
+		PROCEDURE ^ GetElementInstance(session: HTTPSession.Session; objectId: Strings.String): DynamicWebpage.ActiveElement; 
+		PROCEDURE ^ FindEventHandler(session: HTTPSession.Session; objectId: Strings.String; CONST handlerName: ARRAY OF CHAR): DynamicWebpage.EventHandler; 
+	END ActiveElementFactory; 
+VAR 
+	dynamicPagePlugin: DynamicWebpagePlugin; 
+	lockServingHosts: BOOLEAN; 
+	servingHosts: TFClasses.List; 
+	registeredActiveElemFact: TFClasses.List; 
+	parserError: ParserError; 
+
+	PROCEDURE ^ BackRefreshButtonWasPressed(request: HTTPSupport.HTTPRequest; session: HTTPSession.Session): BOOLEAN; 
+	PROCEDURE ^ HandleBackRefreshButtonError(request: HTTPSupport.HTTPRequest; w: Streams.Writer); 
+	PROCEDURE ^ GenerateDynamicWebpage(f: Files.File; request: HTTPSupport.HTTPRequest; w: Streams.Writer); 
+	PROCEDURE ^ TransformXMLTree(file: Files.File; VAR n: XML.Content; VAR request: HTTPSupport.HTTPRequest; transformationDepth: INTEGER; w: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ Log(elem: XML.Element); 
+	PROCEDURE ^ ExtractContentsOfContainer(input: XML.Container; VAR output: XML.Container); 
+	PROCEDURE ^ IsActive(n: XML.Element): BOOLEAN; 
+	PROCEDURE ^ GetObjectId(CONST id: ARRAY OF CHAR; request: HTTPSupport.HTTPRequest): Strings.String; 
+	PROCEDURE ^ TransformActiveElement(file: Files.File; VAR n: XML.Content; isPreTransformation: BOOLEAN; request: HTTPSupport.HTTPRequest; w: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ IsModuleRegistered(CONST moduleName: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ FindActiveElemFactory(CONST moduleName, objName: ARRAY OF CHAR): ActiveElementFactory; 
+	PROCEDURE ^ ExtractModuleObjectName(n: XML.Element; VAR moduleName: Strings.String; VAR objName: Strings.String); 
+	PROCEDURE ^ ReportGeneratorError(f: Files.File; w: Streams.Writer; pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ReportXMLParserScannerError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ HandleClientAction(request: HTTPSupport.HTTPRequest); 
+	PROCEDURE ^ ClearFactoryList; 
+	PROCEDURE ^ ReadRegisteredModules; 
+	PROCEDURE ^ RegisterModuleByName(moduleName: Strings.String); 
+	PROCEDURE ^ RegisterActiveElement(moduleName: Strings.String; desc: DynamicWebpage.ActiveElementDescriptor); 
+	PROCEDURE ^ LockServingHosts; 
+	PROCEDURE ^ UnlockServingHosts; 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ ModuleTerminator; 
+	PROCEDURE ^ UnInstallHost(host: WebHTTPServer.Host); 
+	PROCEDURE ^ Uninstall*(context: Commands.Context); 
+BEGIN
+END DynamicWebpagePlugin.

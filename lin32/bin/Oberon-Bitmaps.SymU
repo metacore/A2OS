@@ -1,0 +1,44 @@
+MODULE Bitmaps IN Oberon;
+	IMPORT SYSTEM, Display;
+CONST 
+	BufSize = 65536; 
+	Assembler = TRUE; 
+TYPE 
+	Bitmap* = POINTER TO BitmapDesc; 
+
+	BitmapDesc* = RECORD 
+		width*, height*, depth*: INTEGER; 
+		wth*: LONGINT; 
+		address*: ADDRESS; 
+		size: LONGINT; 
+	END; 
+
+	Buffer = RECORD 
+		bytes: ARRAY BufSize OF CHAR; 
+	END; 
+VAR 
+	buffer: POINTER TO Buffer; 
+
+	PROCEDURE ^ Define*(B: Bitmap; width, height, depth: INTEGER; address: ADDRESS); 
+	PROCEDURE ^ Get*(B: Bitmap; X, Y: INTEGER): INTEGER; 
+	PROCEDURE ^ Clear*(B: Bitmap); 
+	PROCEDURE ^ Dot*(B: Bitmap; col, X, Y, mode: INTEGER); 
+	PROCEDURE ^ CopyBlock0(n, w: LONGINT; adr: ADDRESS; buf: ADDRESS; width: LONGINT; from: BOOLEAN); 
+	PROCEDURE ^ CopyBlock*(sB, dB: Bitmap; SX, SY, W, H, DX, DY, mode: INTEGER); 
+	PROCEDURE ^ CopyPattern0(ofs: LONGINT; src, dst: ADDRESS; w, col, mode: LONGINT); 
+	PROCEDURE ^ CopyPattern1(B: Bitmap; src: ADDRESS; x, y, w, col, mode: LONGINT); 
+	PROCEDURE ^ CopyPattern*(B: Bitmap; col: INTEGER; pat: Display.Pattern; X, Y, mode: INTEGER); 
+	PROCEDURE ^ ReplConst*(B: Bitmap; col, X, Y, W, H, mode: INTEGER); 
+	PROCEDURE ^ FillPattern0(ofs: LONGINT; src, dst: ADDRESS; w, pw, col, mode: LONGINT); 
+	PROCEDURE ^ ReplPattern*(B: Bitmap; col: INTEGER; pat: LONGINT; X, Y, W, H, mode: INTEGER); 
+	PROCEDURE ^ DisplayBlock*(B: Bitmap; SX, SY, W, H, DX, DY, mode: INTEGER; VAR colortable: ARRAY OF LONGINT); 
+	PROCEDURE ^ GetPix*(VAR addr: ADDRESS; VAR buf: SYSTEM.BYTE; depth: INTEGER); 
+	PROCEDURE ^ PutPix*(VAR addr: ADDRESS; border: ADDRESS; buf: SYSTEM.BYTE; depth: INTEGER); 
+	PROCEDURE {FingerPrint(-435604338)}  - Copy0(src, dst: ADDRESS; hx, sw2, dw2: LONGINT);
+	CODE
+	END Copy0; 
+	PROCEDURE ^ Copy*(sB, dB: Bitmap; SX, SY, SW, SH, DX, DY, DW, DH, mode: INTEGER); 
+	PROCEDURE ^ PutLine*(B: Bitmap; VAR data: ARRAY OF INTEGER; X, Y, W: INTEGER); 
+	PROCEDURE ^ GetLine*(B: Bitmap; VAR data: ARRAY OF INTEGER; X, Y, W: INTEGER); 
+BEGIN
+END Bitmaps.

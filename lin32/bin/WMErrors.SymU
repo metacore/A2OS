@@ -1,0 +1,13 @@
+MODULE WMErrors;
+	IMPORT Commands, Strings, Errors, WMDialogs;
+CONST 
+	ErrorDialogTitle = \"Error"\; 
+	ShowModuleName = TRUE; 
+	ShowErrorCode = TRUE; 
+	MaxErrorTextLength = 512; 
+
+	PROCEDURE ^ Show*(errorCode: LONGINT); 
+	PROCEDURE ^ ShowMessage*(CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+BEGIN
+END WMErrors.

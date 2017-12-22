@@ -1,0 +1,33 @@
+MODULE FoxDocumentationHtml;
+	IMPORT Tree := FoxDocumentationTree, Scanner := FoxDocumentationScanner, Streams, Strings, SYSTEM;
+CONST 
+	MaxLevel = 256; 
+TYPE 
+	ParagraphType = Tree.ParagraphType; 
+
+	ElementType = Tree.ElementType; 
+
+	Printer* = OBJECT 
+	VAR 
+		writer: Streams.Writer; 
+		chars: ARRAY MaxLevel OF CHAR; 
+		listLevel: LONGINT; 
+		currentLevel: LONGINT; 
+		printLabels: BOOLEAN; 
+
+		PROCEDURE ^  & InitPrinter*(writer: Streams.Writer); 
+		PROCEDURE ^ PrintLabel(section: Tree.Section); 
+		PROCEDURE ^ Section*(section: Tree.Section); 
+		PROCEDURE ^ SectionList*(sections: Tree.Sections); 
+		PROCEDURE ^ EndItem*(level: LONGINT); 
+		PROCEDURE ^ BeginItem*(level: LONGINT; c: CHAR); 
+		PROCEDURE ^ Paragraph*(paragraph: Tree.Paragraph); 
+		PROCEDURE ^ ParagraphList*(paragraphs: Tree.Paragraphs); 
+		PROCEDURE ^ WriteString(writer: Streams.Writer; string: Strings.String); 
+		PROCEDURE ^ PrintText*(textElement: Tree.TextElement); 
+		PROCEDURE ^ TextElement*(textElement: Tree.TextElement); 
+		PROCEDURE ^ Text*(text: Tree.Text); 
+		PROCEDURE ^ Document*(document: Tree.Document); 
+	END Printer; 
+BEGIN
+END FoxDocumentationHtml.

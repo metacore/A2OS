@@ -1,0 +1,7 @@
+MODULE XMLGeneratorSchema;
+	IMPORT Modules, KernelLog, XMLObjects, XML, XMLScanner, XMLParser, Files;
+CONST 
+
+	PROCEDURE ^ OpenGeneratorSchema*(CONST xgsName: ARRAY OF CHAR): XML.ElementRegistry; 
+BEGIN
+END XMLGeneratorSchema.

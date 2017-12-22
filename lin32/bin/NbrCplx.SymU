@@ -1,0 +1,74 @@
+MODULE NbrCplx;
+	IMPORT Streams, NbrInt, NbrRat, NbrRe;
+TYPE 
+	Complex* = RECORD 
+		re, im: NbrRe.Real; 
+	END; 
+VAR 
+	zero, one: NbrRe.Real; 
+	I-: Complex; 
+
+	PROCEDURE ^ Reciprocal(x: Complex): Complex; 
+	OPERATOR ^ "-"-(x: Complex): Complex; 
+	OPERATOR ^ "~"-(x: Complex): Complex; 
+	OPERATOR ^ ":="-(VAR l: Complex; r: NbrInt.Integer); 
+	OPERATOR ^ ":="-(VAR l: Complex; r: NbrRat.Rational); 
+	OPERATOR ^ ":="-(VAR l: Complex; r: NbrRe.Real); 
+	OPERATOR ^ "="-(l, r: Complex): BOOLEAN; 
+	OPERATOR ^ "="-(l: Complex; r: NbrRe.Real): BOOLEAN; 
+	OPERATOR ^ "="-(l: Complex; r: NbrRat.Rational): BOOLEAN; 
+	OPERATOR ^ "="-(l: Complex; r: NbrInt.Integer): BOOLEAN; 
+	OPERATOR ^ "="-(l: NbrRe.Real; r: Complex): BOOLEAN; 
+	OPERATOR ^ "="-(l: NbrRat.Rational; r: Complex): BOOLEAN; 
+	OPERATOR ^ "="-(l: NbrInt.Integer; r: Complex): BOOLEAN; 
+	OPERATOR ^ "#"-(l, r: Complex): BOOLEAN; 
+	OPERATOR ^ "#"-(l: Complex; r: NbrRe.Real): BOOLEAN; 
+	OPERATOR ^ "#"-(l: Complex; r: NbrRat.Rational): BOOLEAN; 
+	OPERATOR ^ "#"-(l: Complex; r: NbrInt.Integer): BOOLEAN; 
+	OPERATOR ^ "#"-(l: NbrRe.Real; r: Complex): BOOLEAN; 
+	OPERATOR ^ "#"-(l: NbrRat.Rational; r: Complex): BOOLEAN; 
+	OPERATOR ^ "#"-(l: NbrInt.Integer; r: Complex): BOOLEAN; 
+	OPERATOR ^ "+"-(l, r: Complex): Complex; 
+	OPERATOR ^ "+"-(l: Complex; r: NbrRe.Real): Complex; 
+	OPERATOR ^ "+"-(l: Complex; r: NbrRat.Rational): Complex; 
+	OPERATOR ^ "+"-(l: Complex; r: NbrInt.Integer): Complex; 
+	OPERATOR ^ "+"-(l: NbrRe.Real; r: Complex): Complex; 
+	OPERATOR ^ "+"-(l: NbrRat.Rational; r: Complex): Complex; 
+	OPERATOR ^ "+"-(l: NbrInt.Integer; r: Complex): Complex; 
+	OPERATOR ^ "-"-(l, r: Complex): Complex; 
+	OPERATOR ^ "-"-(l: Complex; r: NbrRe.Real): Complex; 
+	OPERATOR ^ "-"-(l: Complex; r: NbrRat.Rational): Complex; 
+	OPERATOR ^ "-"-(l: Complex; r: NbrInt.Integer): Complex; 
+	OPERATOR ^ "-"-(l: NbrRe.Real; r: Complex): Complex; 
+	OPERATOR ^ "-"-(l: NbrRat.Rational; r: Complex): Complex; 
+	OPERATOR ^ "-"-(l: NbrInt.Integer; r: Complex): Complex; 
+	OPERATOR ^ "*"-(l, r: Complex): Complex; 
+	OPERATOR ^ "*"-(l: Complex; r: NbrRe.Real): Complex; 
+	OPERATOR ^ "*"-(l: Complex; r: NbrRat.Rational): Complex; 
+	OPERATOR ^ "*"-(l: Complex; r: NbrInt.Integer): Complex; 
+	OPERATOR ^ "*"-(l: NbrRe.Real; r: Complex): Complex; 
+	OPERATOR ^ "*"-(l: NbrRat.Rational; r: Complex): Complex; 
+	OPERATOR ^ "*"-(l: NbrInt.Integer; r: Complex): Complex; 
+	OPERATOR ^ "/"-(l, r: Complex): Complex; 
+	OPERATOR ^ "/"-(l: Complex; r: NbrRe.Real): Complex; 
+	OPERATOR ^ "/"-(l: Complex; r: NbrRat.Rational): Complex; 
+	OPERATOR ^ "/"-(l: Complex; r: NbrInt.Integer): Complex; 
+	OPERATOR ^ "/"-(l: NbrRe.Real; r: Complex): Complex; 
+	OPERATOR ^ "/"-(l: NbrRat.Rational; r: Complex): Complex; 
+	OPERATOR ^ "/"-(l: NbrInt.Integer; r: Complex): Complex; 
+	PROCEDURE ^ Re*(x: Complex): NbrRe.Real; 
+	PROCEDURE ^ Im*(x: Complex): NbrRe.Real; 
+	PROCEDURE ^ Abs*(x: Complex): NbrRe.Real; 
+	PROCEDURE ^ Arg*(x: Complex): NbrRe.Real; 
+	PROCEDURE ^ Get*(x: Complex; VAR re, im: NbrRe.Real); 
+	PROCEDURE ^ Set*(re, im: NbrRe.Real; VAR x: Complex); 
+	PROCEDURE ^ GetPolar*(x: Complex; VAR abs, arg: NbrRe.Real); 
+	PROCEDURE ^ SetPolar*(abs, arg: NbrRe.Real; VAR x: Complex); 
+	PROCEDURE ^ StringToCplx*(string: ARRAY OF CHAR; VAR x: Complex); 
+	PROCEDURE ^ CplxToString*(x: Complex; significantFigures: NbrInt.Integer; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ PolarStringToCplx*(string: ARRAY OF CHAR; VAR x: Complex); 
+	PROCEDURE ^ CplxToPolarString*(x: Complex; significantFigures: NbrInt.Integer; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ Load*(R: Streams.Reader; VAR x: Complex); 
+	PROCEDURE ^ Store*(W: Streams.Writer; x: Complex); 
+BEGIN
+END NbrCplx.

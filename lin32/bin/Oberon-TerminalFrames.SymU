@@ -1,0 +1,60 @@
+MODULE TerminalFrames IN Oberon;
+	IMPORT Objects, Terminals, Oberon, Texts, Display, Fonts, Input;
+CONST 
+	NoCursor* = 0; 
+	FadedCursor* = 1; 
+	FullCursor* = 2; 
+	Left = 2; 
+	Middle = 1; 
+	Right = 0; 
+	Gap = 2; 
+	VSpace = (2 * Gap); 
+	HSpace = (3 * VSpace); 
+	black = Display.BG; 
+	white = Display.FG; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Display.FrameDesc)
+		text*: Terminals.Terminal; 
+		fnt*: Fonts.Font; 
+		cursorState*, charW*, lineH*: INTEGER; 
+		hasSel*: BOOLEAN; 
+		selTime*: LONGINT; 
+		selFrom*, selTo*: Terminals.Location; 
+	END; 
+
+	UpdateMsg* = RECORD (Display.FrameMsg)
+		text: Terminals.Terminal; 
+		op, fromLine, fromCol, toLine, toCol: INTEGER; 
+		oldCur: Terminals.Location; 
+	END; 
+VAR 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ NotifyDisplay*(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location); 
+	PROCEDURE ^ Open*(f: Frame; h: Objects.Handler; t: Terminals.Terminal; fnt: Fonts.Font); 
+	PROCEDURE ^ Copy*(from, to: Frame); 
+	PROCEDURE ^ DrawCursor(f: Frame; line, col: INTEGER; mode: INTEGER); 
+	PROCEDURE ^ SetCursor*(f: Frame; state: INTEGER); 
+	PROCEDURE ^ DrawSelection(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER); 
+	PROCEDURE ^ RemoveSelection*(f: Frame); 
+	PROCEDURE ^ SetSelection*(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER); 
+	PROCEDURE ^ TextOf(f: Frame): Texts.Text; 
+	PROCEDURE ^ TextPos(f: Frame; line, col: INTEGER): INTEGER; 
+	PROCEDURE ^ GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ Neutralize*(f: Frame); 
+	PROCEDURE ^ DrawChar(f: Frame; x, y: INTEGER; char: Terminals.Char); 
+	PROCEDURE ^ UpdateLine(f: Frame; line, fromCol, toCol: INTEGER); 
+	PROCEDURE ^ UpdateScrolling(f: Frame; top, bot, dH: INTEGER); 
+	PROCEDURE ^ Update*(f: Frame; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location); 
+	PROCEDURE ^ TrackSelection*(f: Frame; VAR keySum: SET; x, y: INTEGER); 
+	PROCEDURE ^ Call*(f: Frame; cmdLine, cmdCol: INTEGER; new: BOOLEAN); 
+	PROCEDURE ^ DrawLine(f: Frame; from: Terminals.Location); 
+	PROCEDURE ^ TrackWord*(f: Frame; x, y: INTEGER; VAR cmdLine, cmdCol: INTEGER; VAR keySum: SET); 
+	PROCEDURE ^ Edit*(f: Frame; keys: SET; x, y: INTEGER); 
+	PROCEDURE ^ Modify*(f: Frame; id, Y, H, dY: INTEGER); 
+	PROCEDURE ^ Handle*(f: Objects.Object; VAR m: Objects.ObjMsg); 
+	PROCEDURE ^ New*(t: Terminals.Terminal): Frame; 
+BEGIN
+END TerminalFrames.

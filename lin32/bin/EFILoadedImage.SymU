@@ -1,0 +1,31 @@
+MODULE EFILoadedImage;
+	IMPORT EFI, SYSTEM;
+CONST 
+	Revision* = 65536; 
+TYPE 
+	Protocol* = POINTER TO ProtocolDescription; 
+
+	PtrToArrayOfByte* = POINTER TO ARRAY 2048 OF SYSTEM.BYTE; 
+
+	LIUnload* = PROCEDURE {WINAPI}(ImageHandle: EFI.Handle):EFI.Status; 
+
+	ProtocolDescription* = RECORD (EFI.ProtocolDescription)
+		Revision-: EFI.Int32; 
+		ParentHandle-: EFI.Handle; 
+		SystemTable-{UNTRACED} : POINTER TO EFI.SystemTable; 
+		DeviceHandle-: EFI.Handle; 
+		FilePath: ADDRESS; 
+		Reserved: ADDRESS; 
+		LoadOptionsSize-: EFI.Int32; 
+		LoadOptions-{UNTRACED} : PtrToArrayOfByte; 
+		ImageBase-: ADDRESS; 
+		ImageSize-: EFI.Int64; 
+		ImageCodeType-: EFI.Int; 
+		ImageDataType-: EFI.Int; 
+		Unload-: LIUnload; 
+	END; 
+VAR 
+	GUID-: EFI.GUID; 
+
+BEGIN
+END EFILoadedImage.

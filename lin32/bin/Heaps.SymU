@@ -1,0 +1,277 @@
+MODULE Heaps;
+	IMPORT Runtime, SYSTEM, Trace, Machine;
+CONST 
+	Paranoid = TRUE; 
+	DebugValue = LONGINT(0DEADDEADH); 
+	Stats* = TRUE; 
+	AddressSize = SIZEOF(ADDRESS); 
+	MaxTries = 16; 
+	Unmarked = 0; 
+	BlockSize* = (8 * SIZEOF(ADDRESS)); 
+	ArrayAlignment = 8; 
+	BlockHeaderSize* = (2 * AddressSize); 
+	HeapBlockOffset* =  -(2 * AddressSize); 
+	TypeDescOffset* =  -AddressSize; 
+	MaxCandidates = 1024; 
+	ProtTypeBit* = 31; 
+	FlagsOfs = (AddressSize * 3); 
+	ModOfs* = (AddressSize * 4); 
+	TypeNameOfs = (AddressSize * 5); 
+	ModNameOfs = (AddressSize * 2); 
+	MinPtrOfs =  -1073741824; 
+	MethodEndMarker* = MinPtrOfs; 
+	NilVal* = 0; 
+	NumPriorities* = 6; 
+	HeuristicStackInspectionGC* = 0; 
+	MetaDataForStackGC* = 1; 
+	Old = 1; 
+	Young = 0; 
+	GenerationMask = 2; 
+	CardSize = 4096; 
+	SetSize = (SIZEOF(SET) * 8); 
+	MaxFreeLists = 20; 
+	FreeListBarrier = 7; 
+TYPE 
+	RootObject* = OBJECT 
+	VAR 
+		nextRoot: RootObject; 
+
+		PROCEDURE ^ FindRoots*; 
+	END RootObject; 
+
+	ProcessLink* = OBJECT (RootObject)
+	VAR 
+		next*, prev*: ProcessLink; 
+	END ProcessLink; 
+
+	ProcessQueue* = RECORD 
+		head*, tail*: ProcessLink; 
+	END; 
+
+	Finalizer* = PROCEDURE {DELEGATE}(obj: ANY); 
+
+	FinalizerNode* = POINTER TO RECORD 
+		objWeak*{UNTRACED} : ANY; 
+		nextFin: FinalizerNode; 
+		objStrong*: ANY; 
+		finalizer*{UNTRACED} : Finalizer; 
+		finalizerStrong: Finalizer; 
+	END; 
+
+	HeapBlock* = POINTER TO HeapBlockDesc; 
+
+	HeapBlockU = POINTER {UNSAFE, UNTRACED} TO HeapBlockDesc; 
+
+	HeapBlockDesc* = RECORD 
+		heapBlock{FICTIVE(-8)} : ADDRESS; 
+		typeDesc{FICTIVE(-4), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
+		mark: LONGINT; 
+		dataAdr-: ADDRESS; 
+		size-: SIZE; 
+		nextMark{UNTRACED} : HeapBlock; 
+	END; 
+
+	FreeBlock* = POINTER TO FreeBlockDesc; 
+
+	FreeBlockU = POINTER {UNSAFE, UNTRACED} TO FreeBlockDesc; 
+
+	FreeBlockDesc* = RECORD (HeapBlockDesc)
+		next: FreeBlock; 
+	END; 
+
+	SystemBlock* = POINTER TO SystemBlockDesc; 
+
+	SystemBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	RecordBlock* = POINTER TO RecordBlockDesc; 
+
+	RecordBlockU = POINTER {UNSAFE, UNTRACED} TO RecordBlockDesc; 
+
+	RecordBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	ProtRecBlock* = POINTER TO ProtRecBlockDesc; 
+
+	ProtRecBlockU = POINTER {UNSAFE, UNTRACED} TO ProtRecBlockDesc; 
+
+	ProtRecBlockDesc* = RECORD (RecordBlockDesc)
+		count*: LONGINT; 
+		locked*: BOOLEAN; 
+		awaitingLock*, awaitingCond*: ProcessQueue; 
+		lockedBy*: ANY; 
+		waitingPriorities*: ARRAY NumPriorities OF LONGINT; 
+		lock*: ANY; 
+	END; 
+
+	ArrayBlock* = POINTER TO ArrayBlockDesc; 
+
+	ArrayBlockU = POINTER {UNSAFE, UNTRACED} TO ArrayBlockDesc; 
+
+	ArrayBlockDesc = RECORD (HeapBlockDesc)
+	END; 
+
+	TypeInfo* = POINTER {UNSAFE, UNTRACED} TO TypeInfoDesc; 
+
+	TypeInfoDesc = RECORD 
+		descSize: SIZE; 
+		sentinel: ADDRESS; 
+		tag: ADDRESS; 
+		flags: SET; 
+		mod: ADDRESS; 
+		name*: ARRAY 32 OF CHAR; 
+	END; 
+
+	StaticTypeBlock* = POINTER TO StaticTypeDesc; 
+
+	StaticTypeBlockU = POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
+
+	StaticTypeDesc = RECORD 
+		info{FICTIVE(-4), UNTRACED} : TypeInfo; 
+		recSize: SIZE; 
+		pointerOffsets*{UNTRACED} : PointerOffsets; 
+	END; 
+
+	PointerOffsets = POINTER TO ARRAY OF SIZE; 
+
+	Block* = POINTER {UNSAFE, UNTRACED} TO RECORD 
+		heapBlock{FICTIVE(-8), UNTRACED} : HeapBlock; 
+		typeBlock{FICTIVE(-4), UNTRACED} : StaticTypeBlock; 
+	END; 
+
+	DataBlockU = POINTER {UNSAFE, UNTRACED} TO DataBlockDesc; 
+
+	DataBlockDesc* = RECORD 
+		heapBlock{FICTIVE(-8), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO HeapBlockDesc; 
+		typeDesc{FICTIVE(-4), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
+	END; 
+
+	ArrayDataBlockU = POINTER {UNSAFE, UNTRACED} TO ArrayDataBlockDesc; 
+
+	ArrayDataBlockDesc* = RECORD (DataBlockDesc)
+		numElems: SIZE; 
+		current: ADDRESS; 
+		first: ADDRESS; 
+	END; 
+
+	AnyPtr = RECORD 
+		a: ANY; 
+	END; 
+
+	GCStatus* = OBJECT 
+
+		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
+		PROCEDURE ^ GetgcOngoing*(): BOOLEAN; 
+		PROCEDURE ^ WaitForGCEnd*; 
+	END GCStatus; 
+
+	FreeList = RECORD 
+		minSize: SIZE; 
+		first{UNTRACED} , last{UNTRACED} : FreeBlock; 
+	END; 
+
+	FreeLists = ARRAY (MaxFreeLists + 1) OF FreeList; 
+
+	MarkList = RECORD 
+		first{UNTRACED} , last{UNTRACED} : HeapBlock; 
+	END; 
+
+	UnsafeArray = POINTER {UNSAFE, UNTRACED} TO UnsafeArrayDesc; 
+
+	UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
+		len: ARRAY 8 OF SIZE; 
+	END; 
+VAR 
+	markList: MarkList; 
+	freeLists: FreeLists; 
+	GC*: PROCEDURE ; 
+	initBlock{UNTRACED} : ANY; 
+	currentMarkValue: LONGINT; 
+	generationMarkValues: ARRAY 2 OF LONGINT; 
+	currentGeneration: LONGINT; 
+	sweepMarkValue: LONGINT; 
+	sweepBlockAdr: ADDRESS; 
+	sweepMemBlock{UNTRACED} : Machine.MemoryBlock; 
+	candidates: ARRAY MaxCandidates OF ADDRESS; 
+	numCandidates: LONGINT; 
+	rootList{UNTRACED} : RootObject; 
+	realtimeList{UNTRACED} : HeapBlock; 
+	newSum: SIZE; 
+	checkRoot: FinalizerNode; 
+	finalizeRoot: FinalizerNode; 
+	freeBlockTag, systemBlockTag, recordBlockTag, protRecBlockTag, arrayBlockTag: ADDRESS; 
+	Nnew-: LONGINT; 
+	NnewBytes-: HUGEINT; 
+	Ngc-: LONGINT; 
+	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT; 
+	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns-: HUGEINT; 
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT; 
+	gcStatus*: GCStatus; 
+	GCType*: LONGINT; 
+	freeBlockFound-, freeBlockNotFound-: LONGINT; 
+	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
+	allocationLogger-: PROCEDURE (p: ANY); 
+	cardSet: ARRAY ((100000000H DIV SetSize) DIV CardSize) OF SET; 
+	youngCounts: LONGINT; 
+	throughput: SIZE; 
+	assigns*: LONGINT; 
+
+	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
+	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
+	PROCEDURE ^ AppendToMarkList(heapBlock: HeapBlock); 
+	PROCEDURE ^ ExtractFromMarkList(): HeapBlock; 
+	PROCEDURE ^ ShowCards*; 
+	PROCEDURE ^ ClearCardSet; 
+	PROCEDURE ^ EnterInCardSet(adr: ADDRESS); 
+	PROCEDURE ^ CheckAssignment*(dest, src: DataBlockU); 
+	PROCEDURE ^ SweepCardSet; 
+	PROCEDURE ^ Inspect(block{UNTRACED} : ANY; generation: LONGINT); 
+	PROCEDURE ^ Mark*(p{UNTRACED} : ANY); 
+	PROCEDURE ^ MarkRealtimeObjects; 
+	PROCEDURE ^ WriteType*(t: ADDRESS); 
+	PROCEDURE ^ ClearFreeLists; 
+	PROCEDURE ^ AppendFree(VAR freeList: FreeList; block: FreeBlock); 
+	PROCEDURE ^ GetFree(VAR freeList: FreeList): FreeBlock; 
+	PROCEDURE ^ InsertSorted(VAR freeList: FreeList; block: FreeBlock); 
+	PROCEDURE ^ AppendFreeBlock(block: FreeBlock); 
+	PROCEDURE ^ FindFreeBlock(size: SIZE): FreeBlock; 
+	PROCEDURE ^ GetFreeBlockAndSplit(size: SIZE): FreeBlock; 
+	PROCEDURE ^ GetFreeBlock(size: SIZE; VAR p: FreeBlock); 
+	PROCEDURE ^ LazySweep(size: ADDRESS; VAR p{UNTRACED} : FreeBlock); 
+	PROCEDURE ^ CheckCandidates*; 
+	PROCEDURE ^ Candidate*(p: ADDRESS); 
+	PROCEDURE ^ RegisterCandidates*(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ CheckFinalizedObjects; 
+	PROCEDURE ^ GetFinalizer*(): FinalizerNode; 
+	PROCEDURE ^ CleanupModuleFinalizers*(codeAdr: ADDRESS; codeLen: SIZE; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ AddRootObject*(rootObject: RootObject); 
+	PROCEDURE ^ CollectGarbage*(root: RootObject); 
+	PROCEDURE ^ InvokeGC*; 
+	PROCEDURE ^ ReturnBlocks; 
+	PROCEDURE ^ FullSweep*; 
+	PROCEDURE ^ LazySweepGC*; 
+	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
+	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
+	PROCEDURE ^ SetPC*(p: DataBlockU); 
+	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
+	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY); 
+	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
+	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
+	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
+	PROCEDURE ^ HeapSize*(): SIZE; 
+	PROCEDURE ^ Used*(): SIZE; 
+	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
+	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
+	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
+	PROCEDURE ^ NilGC; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ SetYoung*; 
+	PROCEDURE ^ SetOld*; 
+	PROCEDURE ^ SetHeuristic*; 
+	PROCEDURE ^ SetMetaData*; 
+BEGIN
+END Heaps.

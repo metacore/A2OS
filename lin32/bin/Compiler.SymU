@@ -1,0 +1,50 @@
+MODULE Compiler;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, Parser := FoxParser, SemanticChecker := FoxSemanticChecker, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Streams, Commands, Diagnostics, Options, Kernel, Printout := FoxPrintout, Backend := FoxBackend, Strings, Global := FoxGlobal, Frontend := FoxFrontend, Files, Machine;
+CONST 
+	Print* = 0; 
+	Silent* = 1; 
+	Check* = 2; 
+	TraceError* = 3; 
+	Info* = 4; 
+	FindPC* = 5; 
+	Warnings* = 7; 
+	ForceModuleBodies* = 8; 
+	UseDarwinCCalls* = 9; 
+	SingleModule* = 10; 
+	Oberon07* = 11; 
+	ChangeCase* = 12; 
+	Cooperative* = 13; 
+	CellsAreObjects* = 14; 
+	UseLineNumbers* = 15; 
+	DefaultBackend = \"AMD"\; 
+	DefaultFrontend = \"Oberon"\; 
+TYPE 
+	SectionName = ARRAY 256 OF CHAR; 
+
+	CompilerOptions* = RECORD 
+		flags*: SET; 
+		frontend*: Frontend.Frontend; 
+		backend*: Backend.Backend; 
+		symbolFile*: Formats.SymbolFileFormat; 
+		objectFile*: Formats.ObjectFileFormat; 
+		findPC*: SectionName; 
+		documentation*: Backend.Backend; 
+		srcPath, destPath: Files.FileName; 
+		replacements: SemanticChecker.Replacement; 
+	END; 
+VAR 
+	platforms: Options.Defaults; 
+	defaultPlatform: ARRAY 32 OF CHAR; 
+
+	PROCEDURE ^ ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
+	PROCEDURE ^ Modules*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; CONST options: CompilerOptions; VAR importCache: SyntaxTree.ModuleScope): BOOLEAN; 
+	PROCEDURE ^ GetOptions*(input: Streams.Reader; error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR compilerOptions: CompilerOptions): BOOLEAN; 
+	PROCEDURE ^ Compile*(context: Commands.Context); 
+	PROCEDURE ^ CompileReader*(context: Commands.Context; reader: Streams.Reader); 
+	PROCEDURE ^ DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR); 
+	PROCEDURE ^ ShowDefaults*(context: Commands.Context); 
+	PROCEDURE ^ AddPlatform*(context: Commands.Context); 
+	PROCEDURE ^ SetDefaultPlatform*(context: Commands.Context); 
+	PROCEDURE ^ GetDefaultPlatform(VAR name: ARRAY OF CHAR): BOOLEAN; 
+BEGIN
+END Compiler.

@@ -1,0 +1,147 @@
+MODULE srVoxel4;
+	IMPORT Random, srBase, srVolShader, srVoxel, srVoxel2, srMath, Math;
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PT = srBase.PT; 
+
+	BOX = srBase.BOX; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	FuzzVox* = OBJECT (Voxel)
+	VAR 
+		fuzzdivisor, fuzzsubtract: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ setFuzz*(f: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END FuzzVox; 
+
+	LifeVox* = OBJECT (srVoxel2.Bloc10)
+	VAR 
+		alive, dead: srVoxel.ColoredVox; 
+
+		PROCEDURE ^  & init*; 
+	END LifeVox; 
+
+	Sphere* = OBJECT (srBase.Voxel)
+	VAR 
+		c: PT; 
+		d, d2: SREAL; 
+		box: BOX; 
+		outshader, inshader: Voxel; 
+
+		PROCEDURE ^ rebox; 
+		PROCEDURE ^ mov(p: PT); 
+		PROCEDURE ^ resize*(s: SREAL); 
+		PROCEDURE ^ size*(s: SREAL); 
+	END Sphere; 
+
+	ImpliciVox = OBJECT (srBase.Voxel)
+	VAR 
+		c: PT; 
+		cx*, cy*, cz*: SREAL; 
+		enclosingvoxel: Voxel; 
+		volshader: srVolShader.Shader; 
+
+		PROCEDURE ^ SetEnclosingVoxel*(v: Voxel); 
+		PROCEDURE ^ d2(x, y, z: SREAL): SREAL; 
+		PROCEDURE ^ dee2(p: PT): SREAL; 
+		PROCEDURE ^ in(x, y, z: SREAL): BOOLEAN; 
+		PROCEDURE ^ ctop(p: PT; VAR th, ph, d: SREAL); 
+		PROCEDURE ^ ctop1(p: PT; VAR th, ph, d: SREAL); 
+		PROCEDURE ^ setCenter*(x, y, z: SREAL); 
+	END ImpliciVox; 
+
+	Stripey* = OBJECT (srBase.Voxel)
+
+		PROCEDURE ^ ctop(x, y, z: SREAL; VAR th, ph: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END Stripey; 
+
+	Ellipsoid* = OBJECT (ImpliciVox)
+	VAR 
+		A2, B2, C2, D*: SREAL; 
+		shader, inshader: Voxel; 
+
+		PROCEDURE ^ dee2(p: PT): SREAL; 
+		PROCEDURE ^ test(p: PT): BOOLEAN; 
+		PROCEDURE ^  & init*(v, u: Voxel); 
+		PROCEDURE ^ size*(x: SREAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END Ellipsoid; 
+
+	Hyperboloid* = OBJECT (ImpliciVox)
+	VAR 
+		A2, B2, C2, D*: SREAL; 
+		V: Voxel; 
+
+		PROCEDURE ^ d2(x, y, z: SREAL): SREAL; 
+		PROCEDURE ^  & init*(v: Voxel); 
+		PROCEDURE ^ set*(v: Voxel); 
+		PROCEDURE ^ size*(x: SREAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END Hyperboloid; 
+
+	SphereInVox* = OBJECT (ImpliciVox)
+	VAR 
+		D2*: SREAL; 
+		V, V2: Voxel; 
+		Normal: srBase.PT; 
+		volshader: srVolShader.checkerboard3d; 
+		red, green: srBase.COLOR; 
+
+		PROCEDURE ^  & init*(v: Voxel); 
+		PROCEDURE ^ set*(v: Voxel); 
+		PROCEDURE ^ set2*(v: Voxel); 
+		PROCEDURE ^ setSize*(x: SREAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END SphereInVox; 
+
+	MirrorSphereInVox* = OBJECT (ImpliciVox)
+	VAR 
+		D2*: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ tick*; 
+	END MirrorSphereInVox; 
+
+	CylInVox* = OBJECT (ImpliciVox)
+	VAR 
+		D2*: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END CylInVox; 
+
+	cube = RECORD 
+		r, g, b, a: SREAL; 
+	END; 
+
+	ArVox* = OBJECT (Voxel)
+	VAR 
+		ar: ARRAY 20 OF ARRAY 20 OF ARRAY 20 OF cube; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ bounds*(i, j, k: INTEGER; VAR out: BOOLEAN); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END ArVox; 
+
+	checkboard* = OBJECT (srVoxel2.Bloc10)
+
+		PROCEDURE ^  & init*; 
+	END checkboard; 
+VAR 
+	rand: Random.Generator; 
+
+	PROCEDURE ^ normalize(VAR x, y, z: SREAL); 
+	PROCEDURE ^ reflect(VAR x, y, z: SREAL; nx, ny, nz: SREAL); 
+BEGIN
+END srVoxel4.

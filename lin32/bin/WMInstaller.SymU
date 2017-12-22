@@ -1,0 +1,190 @@
+MODULE WMInstaller;
+	IMPORT KernelLog, Modules, Kernel, Streams, Strings, Texts, TextUtilities, Codecs, Disks, PartitionsLib, Installer, WMRectangles, WMWindowManager, WMGraphics, WMGraphicUtilities, WMComponents, WMStandardComponents, WMTextView, WMEditors, WMProgressComponents, WMPartitionsComponents, WMDialogs;
+CONST 
+	DefaultPackageFile = \"InstallerPackages.XML"\; 
+	ImageLogo = \"WMInstaller.tar://OberonLogoSmall.png"\; 
+	TitleText = \"WMInstaller.tar://Title.Text"\; 
+	HelpText = \"WMInstaller.tar://Help.Text"\; 
+	TextSelectPartition = \"WMInstaller.tar://SelectPartition.Text"\; 
+	TextSelectPackages = \"WMInstaller.tar://SelectPackages.Text"\; 
+	TextInstallSteps = \"WMInstaller.tar://InstallSteps.Text"\; 
+	TextInstallLog = \"WMInstaller.tar://InstallLog.Text"\; 
+	TextAdvancedOptions = \"WMInstaller.tar://AdvancedOptions.Text"\; 
+	DefaultConfigFile = \"WMInstaller.tar://DefaultConfig.Text"\; 
+	WindowTitle = \"Installer"\; 
+	WindowWidth = 640; 
+	WindowHeight = 400; 
+	WindowMinWidth = 600; 
+	WindowMinHeight = 300; 
+	OberonColor = LONGINT(0D1616CAFH); 
+	UpperPanelHeight = 60; 
+	LowerPanelHeight = 60; 
+	ButtonPanelHeight = 20; 
+	ImageWidth = 150; 
+	PageSelectPartition = 0; 
+	PageSelectPackages = 1; 
+	PageShowSteps = 2; 
+	PageShowLog = 3; 
+	PageAdvancedOptions = 4; 
+	NofPages = 5; 
+	LineHeight = 20; 
+	MouseWheelMultiplier = LineHeight; 
+TYPE 
+	ScrollPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		content: WMComponents.VisualComponent; 
+		scrollbar: WMStandardComponents.Scrollbar; 
+		scrollPanel: WMStandardComponents.Panel; 
+
+		PROCEDURE ^ SetContent(content: WMComponents.VisualComponent); 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ CheckScrollbars; 
+		PROCEDURE ^ ScrollbarChanged(sender, data: ANY); 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END ScrollPanel; 
+
+	PackageSelector = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		packageList: Installer.PackageArray; 
+		scrollPanel: ScrollPanel; 
+		label: WMStandardComponents.Label; 
+		allBtn, noneBtn: WMStandardComponents.Button; 
+
+		PROCEDURE ^ ClickHandler(sender, data: ANY); 
+		PROCEDURE ^ GetTotalSize(VAR size, sizeOnDisk: LONGINT); 
+		PROCEDURE ^ UpdateLabel; 
+		PROCEDURE ^ GetSizeString(package: Installer.Package; VAR caption: ARRAY OF CHAR); 
+		PROCEDURE ^ CreatePackagePanel(package: Installer.Package): WMStandardComponents.Panel; 
+		PROCEDURE ^ SetPackages(packages: Installer.Packages); 
+		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^  & New*; 
+	END PackageSelector; 
+
+	ConfigurationSettings = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		steps: ARRAY Installer.NofSteps OF WMStandardComponents.Checkbox; 
+		mbrFileEdit, bootLoaderEdit, bootFileEdit, bootFile2Edit, bootManMbrEdit, bootManRestEdit, prefixEdit: WMEditors.Editor; 
+		config: Installer.Configuration; 
+		scrollPanel: ScrollPanel; 
+		panel: WMStandardComponents.Panel; 
+
+		PROCEDURE ^ CreateConfigPanel(): WMStandardComponents.Panel; 
+		PROCEDURE ^ SetConfiguration(config: Installer.Configuration); 
+		PROCEDURE ^ GetConfiguration(): Installer.Configuration; 
+		PROCEDURE ^ IsValidConfiguration(w: Streams.Writer): BOOLEAN; 
+		PROCEDURE ^ CreateLine(lineNbr: LONGINT): WMStandardComponents.Panel; 
+		PROCEDURE ^ ClickHandler(sender, data: ANY); 
+		PROCEDURE ^ ApplyConfiguration; 
+		PROCEDURE ^ NewLabel(CONST caption: ARRAY OF CHAR; width: LONGINT): WMStandardComponents.Label; 
+		PROCEDURE ^ NewEditor(VAR editor: WMEditors.Editor; CONST caption: ARRAY OF CHAR; width: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END ConfigurationSettings; 
+
+	InstallerBgPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^  & Init*; 
+	END InstallerBgPanel; 
+
+	BorderPanel = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+
+		PROCEDURE ^ DrawForeground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^  & Init*; 
+	END BorderPanel; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		main: WMComponents.VisualComponent; 
+		buttonPanel: WMStandardComponents.Panel; 
+		upperText, lowerText: Texts.Text; 
+		logText, stepsText: Texts.Text; 
+		imagePanel: WMStandardComponents.ImagePanel; 
+		showDetailsBtn: WMStandardComponents.Button; 
+		showDetails: BOOLEAN; 
+		titleLabel: WMStandardComponents.Label; 
+		helpBtn, quickInstallBtn, backBtn, nextBtn: WMStandardComponents.Button; 
+		w, stepsW: TextUtilities.TextWriter; 
+		selectionLabel: WMStandardComponents.Label; 
+		progressBar: WMProgressComponents.ProgressBar; 
+		progressPoller: PollProgress; 
+		partitionSelector: WMPartitionsComponents.PartitionSelector; 
+		packageSelector: PackageSelector; 
+		configurationSettings: ConfigurationSettings; 
+		pages: ARRAY NofPages OF WMComponents.VisualComponent; 
+		currentPage: LONGINT; 
+		packages: Installer.Packages; 
+		installer: Installer.Installer; 
+		configuration: Installer.Configuration; 
+		selection, lockedSelection: WMPartitionsComponents.Selection; 
+		opened: BOOLEAN; 
+
+		PROCEDURE ^ Resizing*(VAR width, height: LONGINT); 
+		PROCEDURE ^ ShowHelpText; 
+		PROCEDURE ^ GetDiskPartString(selection: WMPartitionsComponents.Selection): Strings.String; 
+		PROCEDURE ^ ReallyDoInstallation(selection: WMPartitionsComponents.Selection): BOOLEAN; 
+		PROCEDURE ^ HandleButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleSelection(sender, data: ANY); 
+		PROCEDURE ^ HandleProgressNotification(aborted: BOOLEAN); 
+		PROCEDURE ^ LockPartition(selection: WMPartitionsComponents.Selection): BOOLEAN; 
+		PROCEDURE ^ UnlockPartition(selection: WMPartitionsComponents.Selection); 
+		PROCEDURE ^ OpenDevice(device: Disks.Device): BOOLEAN; 
+		PROCEDURE ^ CloseDevice(device: Disks.Device); 
+		PROCEDURE ^ GetConfiguration(selection: WMPartitionsComponents.Selection; packages: Installer.Packages; VAR configuration: Installer.Configuration): BOOLEAN; 
+		PROCEDURE ^ CheckConfiguration(configuration: Installer.Configuration): BOOLEAN; 
+		PROCEDURE ^ GetSelection(VAR selection: WMPartitionsComponents.Selection): BOOLEAN; 
+		PROCEDURE ^ LoadPackages(CONST filename: ARRAY OF CHAR; VAR packages: Installer.Packages): BOOLEAN; 
+		PROCEDURE ^ IsValidSelection(selection: WMPartitionsComponents.Selection): BOOLEAN; 
+		PROCEDURE ^ StartInstaller(selection: WMPartitionsComponents.Selection; configuration: Installer.Configuration); 
+		PROCEDURE ^ StopInstaller; 
+		PROCEDURE ^ QuickInstall(): BOOLEAN; 
+		PROCEDURE ^ SelectPage(pageNr: LONGINT); 
+		PROCEDURE ^ ClearText(text: Texts.Text); 
+		PROCEDURE ^ LoadText(text: Texts.Text; CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ CreatePageSelectPackages(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreatePageAdvancedOptions(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreatePageShowSteps(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreatePageShowLog(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreatePageSelectPartition(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ NewButton(): WMStandardComponents.Button; 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^  & New*; 
+	END Window; 
+
+	HelpWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^  & New*(text: Texts.Text); 
+	END HelpWindow; 
+
+	NotifyProc = PROCEDURE {DELEGATE}(aborted: BOOLEAN); 
+
+	PollProgress = OBJECT {EXCLUSIVE} 
+	VAR 
+		progressBar: WMProgressComponents.ProgressBar; 
+		installer: Installer.Installer; 
+		notifyProc: NotifyProc; 
+		last: HUGEINT; 
+		timer: Kernel.Timer; 
+		alive, dead: BOOLEAN; 
+
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ SetNotifyProc(notifyProc: NotifyProc); 
+		PROCEDURE ^  & Init*(installer: Installer.Installer; progressBar: WMProgressComponents.ProgressBar); 
+		PROCEDURE ^ Close; 
+	BEGIN{ACTIVE} 
+	END PollProgress; 
+VAR 
+	window: Window; 
+	helpWindow: HelpWindow; 
+	StrScrollPanel, StrPackageSelector, StrConfigurationSettings, StrInstallerBgPanel, StrBorderPanel: Strings.String; 
+
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ LoadOberonText(CONST filename: ARRAY OF CHAR; VAR text: Texts.Text); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ WindowClosed; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMInstaller.

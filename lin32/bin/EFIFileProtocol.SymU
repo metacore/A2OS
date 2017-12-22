@@ -1,0 +1,82 @@
+MODULE EFIFileProtocol;
+	IMPORT EFI, SYSTEM;
+CONST 
+	Revision* = 65536; 
+	ModeRead* = 1; 
+	ModeWrite* = 2; 
+	ModeCreate* = LONG(08000000000000000H); 
+	ReadOnly* = 1; 
+	Hidden* = 2; 
+	System* = 4; 
+	Reserved* = 8; 
+	Directory* = 16; 
+	FileArchive* = 32; 
+	ValidAttr* = 55; 
+	MaxFileNameLength = 128; 
+TYPE 
+	Protocol* = POINTER TO ProtocolDescription; 
+
+	FileOpen* = PROCEDURE {WINAPI}(This: Protocol; VAR NewHandle: Protocol; CONST FileName: ARRAY OF EFI.Char16; OpenMode: EFI.Int64; Attributes: EFI.Int64):EFI.Status; 
+
+	FileClose* = PROCEDURE {WINAPI}(This: Protocol):EFI.Status; 
+
+	FileDelete* = PROCEDURE {WINAPI}(This: Protocol):EFI.Status; 
+
+	FileRead* = PROCEDURE {WINAPI}(This: Protocol; VAR BufferSize: EFI.Int; Buffer: ADDRESS):EFI.Status; 
+
+	FileWrite* = PROCEDURE {WINAPI}(This: Protocol; VAR BufferSize: EFI.Int; CONST Buffer: ARRAY OF SYSTEM.BYTE):EFI.Status; 
+
+	FileGetPosition* = PROCEDURE {WINAPI}(This: Protocol; VAR Position: EFI.Int64):EFI.Status; 
+
+	FileSetPosition* = PROCEDURE {WINAPI}(This: Protocol; Position: EFI.Int64):EFI.Status; 
+
+	FileGetInfo* = PROCEDURE {WINAPI}(This: Protocol; CONST InformationType: EFI.GUID; VAR BufferSize: EFI.Int; VAR Buffer: ARRAY OF SYSTEM.BYTE):EFI.Status; 
+
+	FileSetInfo* = PROCEDURE {WINAPI}(This: Protocol; CONST InformationType: EFI.GUID; BufferSize: EFI.Int; CONST Buffer: ARRAY OF SYSTEM.BYTE):EFI.Status; 
+
+	FileFlush* = PROCEDURE {WINAPI}(This: Protocol):EFI.Status; 
+
+	ProtocolDescription* = RECORD (EFI.ProtocolDescription)
+		Revision-: EFI.Int64; 
+		Open-: FileOpen; 
+		Close-: FileClose; 
+		Delete-: FileDelete; 
+		Read-: FileRead; 
+		Write-: FileWrite; 
+		GetPosition-: FileGetPosition; 
+		SetPosition-: FileSetPosition; 
+		GetInfo-: FileGetInfo; 
+		SetInfo-: FileSetInfo; 
+		Flush-: FileFlush; 
+	END; 
+
+	FileInfo* = RECORD 
+		Size-: EFI.Int64; 
+		FileSize-: EFI.Int64; 
+		PhysicalSize-: EFI.Int64; 
+		CreateTime-: EFI.Time; 
+		LastAccessTime-: EFI.Time; 
+		ModificationTime-: EFI.Time; 
+		Attribute-: EFI.Int64; 
+		FileName-: ARRAY MaxFileNameLength OF EFI.Char16; 
+	END; 
+
+	FileSystemInfo* = RECORD 
+		Size-: EFI.Int64; 
+		ReadOnly-: EFI.Boolean; 
+		VolumeSize-: EFI.Int64; 
+		FreeSpace-: EFI.Int64; 
+		BlockSize-: EFI.Int32; 
+		VolumeLabel-: ARRAY MaxFileNameLength OF EFI.Char16; 
+	END; 
+
+	FileSystemVolumeInfo* = RECORD 
+		VolumeLabel-: ARRAY MaxFileNameLength OF EFI.Char16; 
+	END; 
+VAR 
+	FileInfoGUID-: EFI.GUID; 
+	FileSystemInfoGUID-: EFI.GUID; 
+	FileSystemVolumeInfoGUID-: EFI.GUID; 
+
+BEGIN
+END EFIFileProtocol.

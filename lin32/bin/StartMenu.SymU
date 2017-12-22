@@ -1,0 +1,118 @@
+MODULE StartMenu;
+	IMPORT Strings, XML, KernelLog, Modules, Inputs, UTF8Strings, XMLObjects, MainMenu, WM := WMWindowManager, WMComponents, WMStandardComponents, WMProperties, WMMessages, WMEvents, WMRectangles;
+CONST 
+	DefaultPlugin = \"BlockStartMenu"\; 
+	FancyMenuDesc = \"Dummy.XML"\; 
+	MaxMenus = 16; 
+	MaxMenuButtons = 10; 
+TYPE 
+	String = Strings.String; 
+
+	EventListenerInfo = WMEvents.EventListenerInfo; 
+
+	Message = WMMessages.Message; 
+
+	Popup = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ FocusGot*; 
+		PROCEDURE ^ Handle*(VAR msg: Message); 
+	END Popup; 
+
+	ClosePopupMsg = OBJECT 
+	END ClosePopupMsg; 
+
+	PluginManager = OBJECT {EXCLUSIVE} 
+	VAR 
+		plugin: Plugin; 
+		currentPluginName: Strings.String; 
+		factory: PluginFactory; 
+		startIndex: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Refresh; 
+		PROCEDURE ^ SetPlugin(name: String); 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ ShiftMenuItems(upwards: BOOLEAN); 
+	END PluginManager; 
+
+	PluginFactory = OBJECT 
+
+		PROCEDURE ^ Get(type: String): Plugin; 
+	END PluginFactory; 
+
+	Plugin = OBJECT 
+
+		PROCEDURE ^ Open; 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ ReopenMenuItemsShifted(upwards: BOOLEAN); 
+	END Plugin; 
+
+	SubMenuOpener* = OBJECT {EXCLUSIVE} (WMComponents.Component)
+	VAR 
+		filename: WMProperties.StringProperty; 
+		eRun*: EventListenerInfo; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Run*(sender, par: ANY); 
+	END SubMenuOpener; 
+
+	MenuButtons = ARRAY MaxMenuButtons OF WMStandardComponents.Button; 
+
+	SMOArr = ARRAY MaxMenuButtons OF SubMenuOpener; 
+
+	FancyStartMenu = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		startMenu: WMComponents.FormWindow; 
+		nofLayouts, nofButtons, nofSMOs: LONGINT; 
+		menuButtons: MenuButtons; 
+		smos: SMOArr; 
+
+		PROCEDURE ^ CountLayouts(): LONGINT; 
+		PROCEDURE ^ FindSMO(c: XML.Content; VAR smo: SubMenuOpener); 
+		PROCEDURE ^ FindMenuButtonsSMO(c: XML.Content; VAR menuButtons: MenuButtons; VAR smos: SMOArr; VAR n, m: LONGINT); 
+		PROCEDURE ^ Open; 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ ReplaceMenuButtonsSMO(CONST mb, newmb: MenuButtons; CONST smos, newsmos: SMOArr); 
+		PROCEDURE ^ ReopenMenuItemsShifted(upwards: BOOLEAN); 
+	END FancyStartMenu; 
+
+	BlockStartMenu = OBJECT (Plugin)
+	VAR 
+		startMenu: MainMenu.Window; 
+
+		PROCEDURE ^ Open; 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ ReopenMenuItemsShifted(upwards: BOOLEAN); 
+	END BlockStartMenu; 
+
+	Starter = OBJECT {EXCLUSIVE} 
+	VAR 
+		originator: ANY; 
+
+		PROCEDURE ^  & Init*(o: ANY); 
+	BEGIN{ACTIVE} 
+	END Starter; 
+VAR 
+	stringPrototype, pluginName: WMProperties.StringProperty; 
+	layoutNames: ARRAY MaxMenus OF WMProperties.StringProperty; 
+	manager: WM.WindowManager; 
+	pm: PluginManager; 
+	p: Popup; 
+	closePopupMsg: ClosePopupMsg; 
+
+	PROCEDURE ^ OpenPopup*(x, y: LONGINT; CONST filename: ARRAY OF CHAR); 
+	PROCEDURE ^ ClosePopup*; 
+	PROCEDURE ^ GenSubMenuOpener*(): XML.Element; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ ShiftMenuItemsRight*; 
+	PROCEDURE ^ ShiftMenuItemsLeft*; 
+	PROCEDURE ^ MessagePreview(VAR m: WMMessages.Message; VAR discard: BOOLEAN); 
+	PROCEDURE ^ GenFancyStartMenu(): Plugin; 
+	PROCEDURE ^ GenBlockStartMenu(): Plugin; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Fancy*; 
+	PROCEDURE ^ Block*; 
+BEGIN
+END StartMenu.

@@ -1,0 +1,143 @@
+MODULE AlmSmtpReceiver;
+	IMPORT DNS, Files, Streams, IP, Modules, KernelLog, TCP, TCPServices, Dates, Strings;
+CONST 
+	AlmSmtpReceiverPort = 25; 
+	MaxActive = (3 + 1); 
+	ID = \"BlueBottle Receiver "\; 
+	Version = \"MailBottle (0.2.00.16)"\; 
+	Rcp = \".Rcp"\; 
+	Msg = \".Msg"\; 
+	Log = \".Log"\; 
+	ConfigFileName = \"mail.config"\; 
+	ToDisk = TRUE; 
+	DebugMsg = FALSE; 
+	RcptInFileName = TRUE; 
+	MaxUserName = 11; 
+	Prefix = \"In."\; 
+	AlwaysAccept = \"129.132.178.196"\; 
+	EOF = 0X; 
+	maxLexLen = 127; 
+	noSym = 13; 
+	maxP = 13; 
+	maxT = 13; 
+	nrSets = 3; 
+	setSize = 32; 
+	nSets = ((maxT DIV setSize) + 1); 
+	SyEol = 1; 
+	SyCopy = 2; 
+	SyHelo = 3; 
+	SyQuit = 4; 
+	SyNoop = 5; 
+	SyRset = 6; 
+	SyData = 7; 
+	SyDot = 8; 
+	SyRcpt = 9; 
+	SyTo = 10; 
+	SyMail = 11; 
+	SyFrom = 12; 
+	SyTimeout = 14; 
+	Tab = 9X; 
+	LF = 0AX; 
+	CR = 0DX; 
+TYPE 
+	ErrorProc* = PROCEDURE (n: INTEGER); 
+
+	StartTable = ARRAY 128 OF INTEGER; 
+
+	SymbolSet = ARRAY nSets OF SET; 
+
+	String = ARRAY 128 OF CHAR; 
+
+	TokenPtr = POINTER TO Token; 
+
+	Token = RECORD 
+		s: String; 
+		next: TokenPtr; 
+	END; 
+
+	EnvelopePtr = POINTER TO Envelope; 
+
+	Envelope = RECORD 
+		mta, revMta, from: String; 
+		to: TokenPtr; 
+	END; 
+
+	Message* = RECORD 
+		env*: EnvelopePtr; 
+		file*: Files.File; 
+	END; 
+
+	SmtpAgent* = OBJECT {EXCLUSIVE} (TCPServices.Agent)
+	VAR 
+		ch: CHAR; 
+		res: LONGINT; 
+		out: Streams.Writer; 
+		in: Streams.Reader; 
+		log: Files.Writer; 
+		env: Envelope; 
+		thisName, verbSy: String; 
+		finished: BOOLEAN; 
+		sym: INTEGER; 
+		state: INTEGER; 
+		badTokens: LONGINT; 
+		auxString: String; 
+
+		PROCEDURE ^ GetCh(): CHAR; 
+		PROCEDURE ^ ConsumeName; 
+		PROCEDURE ^ AvailableName; 
+		PROCEDURE ^ OpenLog; 
+		PROCEDURE ^ ToMemory*(VAR token: ARRAY OF CHAR); 
+		PROCEDURE ^ DebugMsg1*(msg: ARRAY OF CHAR); 
+		PROCEDURE ^ PutStatus1*(msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ChangeStatus1*(newsym: INTEGER; msg: ARRAY OF CHAR); 
+		PROCEDURE ^ PutStatus2*(msg0, msg1: ARRAY OF CHAR); 
+		PROCEDURE ^ ChangeStatus2*(newsym: INTEGER; msg0, msg1: ARRAY OF CHAR); 
+		PROCEDURE ^ AddExt*(VAR name: String; ext: ARRAY OF CHAR); 
+		PROCEDURE ^ PutBareName(name: String; VAR wr: Files.Writer); 
+		PROCEDURE ^ PutEnvelope(name: String); 
+		PROCEDURE ^ UpdateName(VAR s: String); 
+		PROCEDURE ^ HELO*; 
+		PROCEDURE ^ RSET*; 
+		PROCEDURE ^ NOOP*; 
+		PROCEDURE ^ QUIT*; 
+		PROCEDURE ^ RCPT*; 
+		PROCEDURE ^ Test; 
+		PROCEDURE ^ ToFile(name: String); 
+		PROCEDURE ^ DATA*(name: String); 
+		PROCEDURE ^ AddUserToName(VAR thisName: String); 
+		PROCEDURE ^ MAIL*; 
+		PROCEDURE ^ reset; 
+		PROCEDURE ^ Get; 
+		PROCEDURE ^ ErrMsg(msg: String); 
+		PROCEDURE ^ Error1(n: INTEGER); 
+		PROCEDURE ^ Error2(n, sym: INTEGER); 
+		PROCEDURE ^ Confirm(n: INTEGER); 
+		PROCEDURE ^ Expect(n: INTEGER); 
+		PROCEDURE ^ StartOf(s: INTEGER): BOOLEAN; 
+		PROCEDURE ^ Who; 
+		PROCEDURE ^ BackStagePass(pass: String): BOOLEAN; 
+	BEGIN{ACTIVE} 
+	END SmtpAgent; 
+VAR 
+	errors*: INTEGER; 
+	lasterror*: INTEGER; 
+	charcount: LONGINT; 
+	getCalls: LONGINT; 
+	start: StartTable; 
+	Pattern, Ack: ARRAY 6 OF CHAR; 
+	active: LONGINT; 
+	symSet: ARRAY nrSets OF SymbolSet; 
+	smtp: TCPServices.Service; 
+	nextName: String; 
+
+	PROCEDURE ^ ToLog0(msg: String); 
+	PROCEDURE ^ InitSmtpSTable; 
+	PROCEDURE ^ NewSmtpAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
+	PROCEDURE ^ GetRegistry(VAR filename: String); 
+	PROCEDURE ^ PutRegistry(VAR filename: String); 
+	PROCEDURE ^ Announce(VAR out: Streams.Writer); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END AlmSmtpReceiver.

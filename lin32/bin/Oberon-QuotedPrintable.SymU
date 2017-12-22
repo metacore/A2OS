@@ -1,0 +1,13 @@
+MODULE QuotedPrintable IN Oberon;
+	IMPORT Files, Fonts, Strings, Texts, Oberon;
+CONST 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ HexVal(ch: CHAR): LONGINT; 
+	PROCEDURE ^ decodeText*(T: Texts.Text; beg: LONGINT; F: Files.File; binary: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Decode(binary: BOOLEAN); 
+	PROCEDURE ^ DecodeText*; 
+	PROCEDURE ^ DecodeFile*; 
+BEGIN
+END QuotedPrintable.

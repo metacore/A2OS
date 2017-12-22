@@ -1,0 +1,96 @@
+MODULE CRA IN Oberon;
+	IMPORT Oberon, Texts, Sets, CRS, CRT, Files;
+CONST 
+	maxStates = 300; 
+TYPE 
+	State = POINTER TO StateNode; 
+
+	Action = POINTER TO ActionNode; 
+
+	Target = POINTER TO TargetNode; 
+
+	StateNode = RECORD 
+		nr: INTEGER; 
+		firstAction: Action; 
+		endOf: INTEGER; 
+		ctx: BOOLEAN; 
+		next: State; 
+	END; 
+
+	ActionNode = RECORD 
+		typ: INTEGER; 
+		sym: INTEGER; 
+		tc: INTEGER; 
+		target: Target; 
+		next: Action; 
+	END; 
+
+	TargetNode = RECORD 
+		state: State; 
+		next: Target; 
+	END; 
+
+	Comment = POINTER TO CommentNode; 
+
+	CommentNode = RECORD 
+		start, stop: ARRAY 2 OF CHAR; 
+		nested: BOOLEAN; 
+		next: Comment; 
+	END; 
+
+	Melted = POINTER TO MeltedNode; 
+
+	MeltedNode = RECORD 
+		set: CRT.Set; 
+		state: State; 
+		next: Melted; 
+	END; 
+VAR 
+	firstState: State; 
+	lastState: State; 
+	rootState: State; 
+	lastSimState: INTEGER; 
+	stateNr: INTEGER; 
+	firstMelted: Melted; 
+	firstComment: Comment; 
+	out: Texts.Writer; 
+	fram: Texts.Reader; 
+
+	PROCEDURE ^ SemErr(nr: INTEGER); 
+	PROCEDURE ^ Put(ch: CHAR); 
+	PROCEDURE ^ PutS(s: ARRAY OF CHAR); 
+	PROCEDURE ^ PutI(i: INTEGER); 
+	PROCEDURE ^ PutI2(i, n: INTEGER); 
+	PROCEDURE ^ PutC(ch: CHAR); 
+	PROCEDURE ^ PutRange(s: CRT.Set); 
+	PROCEDURE ^ PutChCond(ch: CHAR); 
+	PROCEDURE ^ Length*(s: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ AddAction(act: Action; VAR head: Action); 
+	PROCEDURE ^ DetachAction(a: Action; VAR L: Action); 
+	PROCEDURE ^ TheAction(state: State; ch: CHAR): Action; 
+	PROCEDURE ^ AddTargetList(VAR lista, listb: Target); 
+	PROCEDURE ^ NewMelted(set: CRT.Set; state: State): Melted; 
+	PROCEDURE ^ NewState(): State; 
+	PROCEDURE ^ NewTransition(from, to: State; typ, sym, tc: INTEGER); 
+	PROCEDURE ^ NewComment*(from, to: INTEGER; nested: BOOLEAN); 
+	PROCEDURE ^ MakeSet(p: Action; VAR set: CRT.Set); 
+	PROCEDURE ^ ChangeAction(a: Action; set: CRT.Set); 
+	PROCEDURE ^ CombineShifts; 
+	PROCEDURE ^ DeleteRedundantStates; 
+	PROCEDURE ^ ConvertToStates*(gp0, sp: INTEGER); 
+	PROCEDURE ^ MatchDFA*(s: ARRAY OF CHAR; sp: INTEGER; VAR matchedSp: INTEGER); 
+	PROCEDURE ^ SplitActions(a, b: Action); 
+	PROCEDURE ^ MakeUnique(state: State; VAR changed: BOOLEAN); 
+	PROCEDURE ^ MeltStates(state: State; VAR correct: BOOLEAN); 
+	PROCEDURE ^ MakeDeterministic*(VAR correct: BOOLEAN); 
+	PROCEDURE ^ PrintSymbol(typ, val, width: INTEGER); 
+	PROCEDURE ^ PrintStates*; 
+	PROCEDURE ^ GenComment(com: Comment); 
+	PROCEDURE ^ CopyFramePart(stopStr: ARRAY OF CHAR); 
+	PROCEDURE ^ GenLiterals; 
+	PROCEDURE ^ WriteState(state: State); 
+	PROCEDURE ^ Backup*(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteScanner*; 
+	PROCEDURE ^ Init*; 
+BEGIN
+END CRA.

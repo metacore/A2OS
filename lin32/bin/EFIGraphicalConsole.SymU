@@ -1,0 +1,51 @@
+MODULE EFIGraphicalConsole;
+	IMPORT SYSTEM, Trace;
+CONST 
+	PFRGBX8Bit = 0; 
+	PFBGRX8Bit = 1; 
+	PFBitMask = 2; 
+	PFBltOnly = 3; 
+	PFMax = 4; 
+TYPE 
+	Buffer = ADDRESS; 
+
+	Char = RECORD 
+		dx*, x*, y*, w*, h*: INTEGER; 
+		buffer*: Buffer; 
+	END; 
+
+	Font = RECORD 
+		height*, minX*, maxX*, minY*, maxY*: INTEGER; 
+		char: ARRAY 256 OF Char; 
+	END; 
+
+	GraphicsModeInfo = POINTER TO GraphicsModeInfoDescription; 
+
+	GraphicsModeInfoDescription = RECORD 
+		Version-: LONGINT; 
+		HorizontalResolution-: LONGINT; 
+		VerticalResolution-: LONGINT; 
+		PixelFormat-: LONGINT; 
+		PixelBitmask-: RECORD 
+			RedMask-, GreenMask-, BlueMask-, ReservedMask-: LONGINT; 
+		END; 
+		PixelsPerScanline-: LONGINT; 
+	END; 
+VAR 
+	font: Font; 
+	buffer: ARRAY 1342 OF CHAR; 
+	adr: ADDRESS; 
+	x, y: SIZE; 
+	w, h, depth: SIZE; 
+	info: GraphicsModeInfo; 
+	traceChar: PROCEDURE {DELEGATE}(c: CHAR); 
+
+	PROCEDURE ^ MakeFont*(VAR font: Font); 
+	PROCEDURE ^ Mask(buf: ADDRESS; bitof, stride, x, y, w, h, adr, dstride, depth: SIZE); 
+	PROCEDURE ^ RenderChar0(c: CHAR; adr: ADDRESS; VAR x, y: SIZE; w, h, depth: SIZE); 
+	PROCEDURE ^ RenderChar(c: CHAR); 
+	PROCEDURE ^ GetDepth(info: GraphicsModeInfo): LONGINT; 
+	PROCEDURE ^ SetupConsole*(graphicsModeInfo: ADDRESS; frameBufferAdr: ADDRESS); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END EFIGraphicalConsole.

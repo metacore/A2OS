@@ -1,0 +1,513 @@
+MODULE FoxBasic;
+	IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, Modules, D := Debugging;
+CONST 
+	UndeclaredIdentifier* = 256; 
+	MultiplyDefinedIdentifier* = 257; 
+	NumberIllegalCharacter* = 258; 
+	StringIllegalCharacter* = 259; 
+	NoMatchProcedureName* = 260; 
+	CommentNotClosed* = 261; 
+	IllegalCharacterValue* = 262; 
+	ValueStartIncorrectSymbol* = 263; 
+	IllegalyMarkedIdentifier* = 264; 
+	IdentifierNoType* = 265; 
+	IdentifierNoRecordType* = 266; 
+	IdentifierNoObjectType* = 267; 
+	ImportNotAvailable* = 268; 
+	RecursiveTypeDeclaration* = 269; 
+	NumberTooLarge* = 270; 
+	IdentifierTooLong* = 271; 
+	StringTooLong* = 272; 
+	InitListSize = 4; 
+	InitErrMsgSize = 300; 
+	nilval* = 0; 
+	ExportedUnicodeSupport* = FALSE; 
+	MinSInt* =  -128; 
+	MinInt* =  -32768; 
+	MinLInt* =  -80000000H; 
+	MaxSInt* = 127; 
+	MaxInt* = 32767; 
+	MaxLInt* = 2147483647; 
+	MaxSet* = 31; 
+	invalidString* =  -1; 
+	InvalidCode* = Diagnostics.Invalid; 
+TYPE 
+	String* = StringPool.Index; 
+
+	SegmentedName* = ObjectFile.SegmentedName; 
+
+	FileName* = Files.FileName; 
+
+	SectionName* = ARRAY 256 OF CHAR; 
+
+	MessageString* = ARRAY 256 OF CHAR; 
+
+	ObjectArray = POINTER TO ARRAY OF ANY; 
+
+	IntegerArray = POINTER TO ARRAY OF LONGINT; 
+
+	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index; 
+
+	ComparisonFunction = PROCEDURE {DELEGATE}(object1, object2: ANY):BOOLEAN; 
+
+	Position* = RECORD 
+		start*, end*, line*, linepos*: LONGINT; 
+		reader*: Streams.Reader; 
+	END; 
+
+	ErrorCode* = LONGINT; 
+
+	List* = OBJECT 
+	VAR 
+		list: ObjectArray; 
+		count-: LONGINT; 
+		multipleAllowed*: BOOLEAN; 
+		nilAllowed*: BOOLEAN; 
+
+		PROCEDURE ^  & InitList*(initialSize: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Get*(i: LONGINT): ANY; 
+		PROCEDURE ^ Set*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ Add*(x: ANY); 
+		PROCEDURE ^ Prepend*(x: ANY); 
+		PROCEDURE ^ Append*(x: List); 
+		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ RemoveByIndex*(i: LONGINT); 
+		PROCEDURE ^ Insert*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ Replace*(x, y: ANY); 
+		PROCEDURE ^ ReplaceByIndex*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
+		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ GrowAndSet*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ Sort*(comparisonFunction: ComparisonFunction); 
+		PROCEDURE ^ QuickSort(comparisonFunction: ComparisonFunction; lo, hi: LONGINT); 
+	END List; 
+
+	IntegerList* = OBJECT 
+	VAR 
+		list: IntegerArray; 
+		count-: LONGINT; 
+
+		PROCEDURE ^  & InitList*(initialSize: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Get*(i: LONGINT): LONGINT; 
+		PROCEDURE ^ Set*(i: LONGINT; x: LONGINT); 
+		PROCEDURE ^ Add*(x: LONGINT); 
+		PROCEDURE ^ Prepend*(x: LONGINT); 
+		PROCEDURE ^ Append*(x: IntegerList); 
+		PROCEDURE ^ Remove*(x: LONGINT); 
+		PROCEDURE ^ RemoveByIndex*(i: LONGINT); 
+		PROCEDURE ^ Insert*(i, x: LONGINT); 
+		PROCEDURE ^ Replace*(x, y: LONGINT); 
+		PROCEDURE ^ IndexOf*(x: LONGINT): LONGINT; 
+		PROCEDURE ^ Contains*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+	END IntegerList; 
+
+	Bag* = OBJECT 
+	VAR 
+		count-: LONGINT; 
+		list: List; 
+
+		PROCEDURE ^  & InitBag*; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Get*(i: LONGINT): ANY; 
+		PROCEDURE ^ Add*(x: ANY); 
+		PROCEDURE ^ Append*(x: Bag); 
+		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+	END Bag; 
+
+	IntegerBag* = OBJECT 
+	VAR 
+		count-: LONGINT; 
+		list: IntegerList; 
+
+		PROCEDURE ^  & InitBag*; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Get*(i: LONGINT): LONGINT; 
+		PROCEDURE ^ Add*(x: LONGINT); 
+		PROCEDURE ^ Append*(x: IntegerBag); 
+		PROCEDURE ^ Remove*(x: LONGINT); 
+		PROCEDURE ^ Contains*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Clear*; 
+	END IntegerBag; 
+
+	HashEntryAny = RECORD 
+		key, value: ANY; 
+		valueInt: LONGINT; 
+	END; 
+
+	HashEntryInt = RECORD 
+		key, valueInt: LONGINT; 
+		value: ANY; 
+	END; 
+
+	HashAnyArray = POINTER TO ARRAY OF HashEntryAny; 
+
+	HashIntArray = POINTER TO ARRAY OF HashEntryInt; 
+
+	HashTable* = OBJECT 
+	VAR 
+		table: HashAnyArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key, value: ANY); 
+		PROCEDURE ^ Get*(key: ANY): ANY; 
+		PROCEDURE ^ Has*(key: ANY): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ PutInt*(key: ANY; value: LONGINT); 
+		PROCEDURE ^ GetInt*(key: ANY): LONGINT; 
+		PROCEDURE ^ HashValue(key: ANY): LONGINT; 
+		PROCEDURE ^ Grow; 
+	END HashTable; 
+
+	IntIterator* = OBJECT 
+	VAR 
+		table: HashIntArray; 
+		count: LONGINT; 
+
+		PROCEDURE ^  & Init(t: HashIntArray); 
+		PROCEDURE ^ GetNext*(VAR key: LONGINT; VAR value: ANY): BOOLEAN; 
+	END IntIterator; 
+
+	HashTableInt* = OBJECT 
+	VAR 
+		table: HashIntArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: LONGINT; value: ANY); 
+		PROCEDURE ^ Get*(key: LONGINT): ANY; 
+		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ PutInt*(key, value: LONGINT); 
+		PROCEDURE ^ GetInt*(key: LONGINT): LONGINT; 
+		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ GetIterator*(): IntIterator; 
+	END HashTableInt; 
+
+	HashEntrySegmentedName = RECORD 
+		key: ObjectFile.SegmentedName; 
+		value: ANY; 
+	END; 
+
+	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName; 
+
+	HashTableSegmentedName* = OBJECT 
+	VAR 
+		table: HashSegmentedNameArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(CONST key: SegmentedName; value: ANY); 
+		PROCEDURE ^ Get*(CONST key: SegmentedName): ANY; 
+		PROCEDURE ^ Has*(CONST key: SegmentedName): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ Hash*(CONST name: SegmentedName): LONGINT; 
+		PROCEDURE ^ HashValue(CONST key: SegmentedName): LONGINT; 
+		PROCEDURE ^ Grow; 
+	END HashTableSegmentedName; 
+
+	HashTable2D* = OBJECT (HashTable)
+	VAR 
+		initialSize: LONGINT; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Get2D*(key1, key2: ANY): ANY; 
+		PROCEDURE ^ Put2D*(key1, key2, value: ANY); 
+		PROCEDURE ^ Has2D*(key1, key2: ANY): BOOLEAN; 
+	END HashTable2D; 
+
+	Stack* = OBJECT 
+	VAR 
+		list: List; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Push*(x: ANY); 
+		PROCEDURE ^ Peek*(): ANY; 
+		PROCEDURE ^ Pop*(): ANY; 
+		PROCEDURE ^ RemoveTop*; 
+		PROCEDURE ^ Empty*(): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+	END Stack; 
+
+	IntegerStack* = OBJECT 
+	VAR 
+		list: IntegerList; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Push*(x: LONGINT); 
+		PROCEDURE ^ Peek*(): LONGINT; 
+		PROCEDURE ^ Pop*(): LONGINT; 
+		PROCEDURE ^ RemoveTop*; 
+		PROCEDURE ^ Empty*(): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+	END IntegerStack; 
+
+	QueueEntry = POINTER TO RECORD 
+		value: ANY; 
+		next: QueueEntry; 
+	END; 
+
+	Queue* = OBJECT 
+	VAR 
+		top, last: QueueEntry; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Append*(x: ANY); 
+		PROCEDURE ^ Peek*(): ANY; 
+		PROCEDURE ^ Pop*(): ANY; 
+		PROCEDURE ^ Empty*(): BOOLEAN; 
+	END Queue; 
+
+	PQItem = RECORD 
+		key: LONGINT; 
+		value: ANY; 
+	END; 
+
+	PQItemList = POINTER TO ARRAY OF PQItem; 
+
+	PriorityQueue* = OBJECT 
+	VAR 
+		heap: PQItemList; 
+		count-: LONGINT; 
+
+		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^ Min*(): ANY; 
+		PROCEDURE ^ RemoveMin*(): ANY; 
+		PROCEDURE ^ Insert*(key: LONGINT; value: ANY); 
+		PROCEDURE ^ Empty*(): BOOLEAN; 
+		PROCEDURE ^ BubbleUp(VAR index: LONGINT); 
+		PROCEDURE ^ BubbleDown(index: LONGINT); 
+	END PriorityQueue; 
+
+	IndexList = POINTER TO ARRAY OF LONGINT; 
+
+	Edge* = OBJECT 
+	VAR 
+		from-, to-: Block; 
+
+		PROCEDURE ^ Accept(v: GraphVisitor); 
+	END Edge; 
+
+	Graph* = OBJECT 
+	VAR 
+		firstBlock*, lastBlock-: Block; 
+		blocks*: BlockList; 
+		edges-: EdgeList; 
+		edgesLookup: HashTable2D; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddBlock*(block: Block); 
+		PROCEDURE ^ Connect*(from, to: Block); 
+		PROCEDURE ^ Split*(from, to: Block); 
+		PROCEDURE ^ ReIndex*; 
+		PROCEDURE ^ CalculateDominance*; 
+	END Graph; 
+
+	BlockList* = OBJECT (List)
+
+		PROCEDURE ^ GetBlock*(i: LONGINT): Block; 
+		PROCEDURE ^ GetIndex*(i: LONGINT): LONGINT; 
+	END BlockList; 
+
+	EdgeList* = OBJECT (List)
+
+		PROCEDURE ^ GetEdge*(i: LONGINT): Edge; 
+	END EdgeList; 
+
+	Block* = OBJECT 
+	VAR 
+		predecessors-, successors-, dominanceFrontier-: BlockList; 
+		index*, immediateDominator*: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Accept(v: GraphVisitor); 
+		PROCEDURE ^ PredecessorIndex*(block: Block): LONGINT; 
+	END Block; 
+
+	ContentFunction = PROCEDURE {DELEGATE}(block: Block); 
+
+	GraphVisitor* = OBJECT 
+	VAR 
+		block-: Block; 
+		edge-: Edge; 
+		graph-: Graph; 
+
+		PROCEDURE ^ VisitEdge*(edge: Edge); 
+		PROCEDURE ^ VisitBlock*(block: Block); 
+		PROCEDURE ^ VisitGraph*(graph: Graph); 
+	END GraphVisitor; 
+
+	GraphPrinter* = OBJECT (GraphVisitor)
+	VAR 
+		active-: Block; 
+		writer-: Streams.Writer; 
+		content: ContentFunction; 
+
+		PROCEDURE ^ VisitEdge*(edge: Edge); 
+		PROCEDURE ^ VisitBlock*(block: Block); 
+		PROCEDURE ^ VisitGraph*(graph: Graph); 
+		PROCEDURE ^ SetWriter*(w: Streams.Writer); 
+		PROCEDURE ^  & Init*(c: ContentFunction); 
+	END GraphPrinter; 
+
+	IntegerObject = OBJECT 
+	END IntegerObject; 
+
+	Writer* = OBJECT (Streams.Writer)
+	VAR 
+		indent-: LONGINT; 
+		doindent: BOOLEAN; 
+		w-: Streams.Writer; 
+
+		PROCEDURE ^ InitBasicWriter*(w: Streams.Writer); 
+		PROCEDURE ^  & InitW(w: Streams.Writer); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Indent; 
+		PROCEDURE ^ Char*(x: CHAR); 
+		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RawSInt*(x: SHORTINT); 
+		PROCEDURE ^ RawInt*(x: INTEGER); 
+		PROCEDURE ^ RawLInt*(x: LONGINT); 
+		PROCEDURE ^ RawHInt*(x: HUGEINT); 
+		PROCEDURE ^ Net32*(x: LONGINT); 
+		PROCEDURE ^ Net16*(x: LONGINT); 
+		PROCEDURE ^ Net8*(x: LONGINT); 
+		PROCEDURE ^ RawSet*(x: SET); 
+		PROCEDURE ^ RawBool*(x: BOOLEAN); 
+		PROCEDURE ^ RawReal*(x: REAL); 
+		PROCEDURE ^ RawLReal*(x: LONGREAL); 
+		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ RawNum*(x: LONGINT); 
+		PROCEDURE ^ Ln*; 
+		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ Int*(x: HUGEINT; wd: SIZE); 
+		PROCEDURE ^ Set*(s: SET); 
+		PROCEDURE ^ Hex*(x: HUGEINT; wd: SIZE); 
+		PROCEDURE ^ Address*(x: ADDRESS); 
+		PROCEDURE ^ Date*(t, d: LONGINT); 
+		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
+		PROCEDURE ^ Float*(x: LONGREAL; n: LONGINT); 
+		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: LONGINT); 
+		PROCEDURE ^ SetIndent*(i: LONGINT); 
+		PROCEDURE ^ IncIndent*; 
+		PROCEDURE ^ DecIndent*; 
+		PROCEDURE ^ BeginAlert*; 
+		PROCEDURE ^ EndAlert*; 
+		PROCEDURE ^ BeginKeyword*; 
+		PROCEDURE ^ EndKeyword*; 
+		PROCEDURE ^ BeginComment*; 
+		PROCEDURE ^ EndComment*; 
+		PROCEDURE ^ AlertString*(CONST s: ARRAY OF CHAR); 
+	END Writer; 
+
+	CRC32Stream* = OBJECT (Streams.Writer)
+	VAR 
+		crc: LONGINT; 
+
+		PROCEDURE ^  & InitStream*; 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ GetCRC*(): LONGINT; 
+	END CRC32Stream; 
+
+	TracingDiagnostics = OBJECT (Diagnostics.Diagnostics)
+	VAR 
+		diagnostics: Diagnostics.Diagnostics; 
+
+		PROCEDURE ^  & InitDiagnostics(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+	END TracingDiagnostics; 
+
+	DebugWriterFactory* = PROCEDURE {DELEGATE}(CONST title: ARRAY OF CHAR):Streams.Writer; 
+
+	WriterFactory* = PROCEDURE {DELEGATE}(w: Streams.Writer):Writer; 
+
+	DiagnosticsFactory* = PROCEDURE {DELEGATE}(w: Streams.Writer):Diagnostics.Diagnostics; 
+VAR 
+	lists-: LONGINT; 
+	enlarged-: LONGINT; 
+	strings-: LONGINT; 
+	integerObjects: HashTableInt; 
+	errMsg: ErrorMsgs; 
+	emptyString-: String; 
+	debug: BOOLEAN; 
+	getDebugWriter: DebugWriterFactory; 
+	getWriter: WriterFactory; 
+	getDiagnostics: DiagnosticsFactory; 
+	CRC32Table: ARRAY 256 OF SET; 
+	invalidPosition-: Position; 
+
+	PROCEDURE ^ MakeString*(CONST s: ARRAY OF CHAR): String; 
+	PROCEDURE ^ GetString*(s: String; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ StringEqual*(s, t: String): BOOLEAN; 
+	PROCEDURE ^ GetErrorMessage*(err: LONGINT; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendDetailedErrorMessage*(VAR message: ARRAY OF CHAR; pos: Position; reader: Streams.Reader); 
+	PROCEDURE ^ AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position); 
+	PROCEDURE ^ MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeDetailedMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; reader: Streams.Reader; VAR message: ARRAY OF CHAR); 
+	PROCEDURE ^ ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Information*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ SetErrorMessage*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ SetErrorExpected*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: LONGINT); 
+	PROCEDURE ^ InitSegmentedName*(VAR name: SegmentedName); 
+	PROCEDURE ^ ToSegmentedName*(CONST name: ARRAY OF CHAR; VAR pooledName: SegmentedName); 
+	PROCEDURE ^ SegmentedNameToString*(CONST pooledName: SegmentedName; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteSegmentedName*(w: Streams.Writer; name: SegmentedName); 
+	PROCEDURE ^ AppendToSegmentedName*(VAR name: SegmentedName; CONST this: ARRAY OF CHAR); 
+	PROCEDURE ^ SuffixSegmentedName*(VAR name: SegmentedName; this: StringPool.Index); 
+	PROCEDURE ^ SegmentedNameEndsWith*(CONST name: SegmentedName; CONST this: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RemoveSuffix*(VAR name: SegmentedName); 
+	PROCEDURE ^ GetSuffix*(CONST name: SegmentedName; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN; 
+	PROCEDURE ^ Expand(VAR oldAry: ErrorMsgs); 
+	PROCEDURE ^ Concat*(VAR result: ARRAY OF CHAR; CONST prefix, name, suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Lowercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ Uppercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ GetIntegerObj*(value: LONGINT): ANY; 
+	PROCEDURE ^ Align*(VAR offset: LONGINT; alignment: LONGINT); 
+	PROCEDURE ^ InitErrorMessages; 
+	PROCEDURE ^ ActivateDebug*; 
+	PROCEDURE ^ Test*; 
+	PROCEDURE ^ GetFileReader*(CONST filename: ARRAY OF CHAR): Streams.Reader; 
+	PROCEDURE ^ GetWriter*(w: Streams.Writer): Writer; 
+	PROCEDURE ^ GetDebugWriter*(CONST title: ARRAY OF CHAR): Streams.Writer; 
+	PROCEDURE ^ GetDiagnostics*(w: Streams.Writer): Diagnostics.Diagnostics; 
+	PROCEDURE ^ GetDefaultDiagnostics*(): Diagnostics.Diagnostics; 
+	PROCEDURE ^ InitWindowWriter; 
+	PROCEDURE ^ InstallWriterFactory*(writer: WriterFactory; debug: DebugWriterFactory; diagnostics: DiagnosticsFactory); 
+	PROCEDURE ^ Replace(VAR in: ARRAY OF CHAR; CONST this, by: ARRAY OF CHAR); 
+	PROCEDURE ^ MessageS*(CONST format, s0: ARRAY OF CHAR): MessageString; 
+	PROCEDURE ^ MessageSS*(CONST format, s0, s1: ARRAY OF CHAR): MessageString; 
+	PROCEDURE ^ MessageI*(CONST format: ARRAY OF CHAR; i0: LONGINT): MessageString; 
+	PROCEDURE ^ MessageSI*(CONST format: ARRAY OF CHAR; CONST s0: ARRAY OF CHAR; i1: LONGINT): MessageString; 
+	PROCEDURE ^ GetStringParameter*(r: Streams.Reader; VAR string: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetTracingDiagnostics*(diagnostics: Diagnostics.Diagnostics): Diagnostics.Diagnostics; 
+	PROCEDURE ^ InitTable32; 
+BEGIN
+END FoxBasic.

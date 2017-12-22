@@ -1,0 +1,128 @@
+MODULE BookDocs IN Oberon;
+	IMPORT BooksHelp, Books, Books0, Oberon, Files, Texts, Fonts, Display, Display3, Objects, BasicGadgets, TextFields, Gadgets, TextGadgets, TextGadgets0, TextDocs, Panels, Strings, Desktops, Documents, Printer, Effects;
+CONST 
+	W* = ((8 * Books.buttonW) - 2); 
+	H* = 400; 
+	Menu = \"BookDocs.Search[Search] Desktops.StoreDoc[Store]"\; 
+	defaultIcon = \"Icons.Note"\; 
+	all = 0; 
+	cont = 1; 
+	text = 0; 
+	color = 1; 
+	object = 2; 
+	MaxPatLen = 128; 
+	prepare = (Display.contents + 1); 
+TYPE 
+	FrameList = POINTER TO FrameListDesc; 
+
+	DocList = POINTER TO DocListDesc; 
+
+	FrameListDesc = RECORD 
+		frame: Books0.Frame; 
+		page, pos: LONGINT; 
+		next: FrameList; 
+	END; 
+
+	DocListDesc = RECORD 
+		doc: Documents.Document; 
+		cur: Books0.TextList; 
+		pos: LONGINT; 
+		next: DocList; 
+	END; 
+
+	VisibleMsg = RECORD (Display.FrameMsg)
+		visible: BOOLEAN; 
+	END; 
+
+	ExistMsg = RECORD (Display.FrameMsg)
+		name: ARRAY 64 OF CHAR; 
+	END; 
+
+	ExistImpMsg = RECORD (Display.FrameMsg)
+		name: ARRAY 64 OF CHAR; 
+		il: Books0.ImpList; 
+	END; 
+
+	InValMsg* = RECORD (Display.FrameMsg)
+		name*: ARRAY 64 OF CHAR; 
+	END; 
+VAR 
+	Wr: Texts.Writer; 
+	B: Texts.Buffer; 
+	tmpT: Texts.Text; 
+	printerTop, printerRight, printerWMiddle, printerPageW, printerTab: INTEGER; 
+	titleFont*, textFont*, noteFont*, linkFont*, callFont*: Fonts.Font; 
+	sectionFonts*: ARRAY Books.maxSect OF Fonts.Font; 
+	printFrames, index: FrameList; 
+	Tcont, T, Tindex, Tnotes: TextGadgets.Frame; 
+	pageNr, maxWi, maxWc: LONGINT; 
+	oldW: INTEGER; 
+	prMode: SET; 
+	sPat: ARRAY MaxPatLen OF CHAR; 
+	sDv: ARRAY (MaxPatLen + 1) OF INTEGER; 
+	sPatLen: INTEGER; 
+	lTime: LONGINT; 
+	lastDoc: Documents.Document; 
+	lastDeep, docList: DocList; 
+
+	PROCEDURE ^ GetFonts; 
+	PROCEDURE ^ Button(X, Y: INTEGER; cmdStr, caption, name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ MakeButtonBar(twoRow: BOOLEAN): Objects.Object; 
+	PROCEDURE ^ MakeText(P: Books.Panel; h: INTEGER): Objects.Object; 
+	PROCEDURE ^ MakeNote(P: Books.Panel; h: INTEGER): Objects.Object; 
+	PROCEDURE ^ TrackBarMouse(F: Books0.Bar; M: Oberon.InputMsg); 
+	PROCEDURE ^ BarHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Bar(P: Books.Panel; Y, H: INTEGER; name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ MakeBars(P: Books.Panel; hT: INTEGER): Objects.Object; 
+	PROCEDURE ^ BuildInterface(P: Books.Panel); 
+	PROCEDURE ^ WriteHeader*(VAR R: Files.Rider; x, y, w, h: INTEGER; ind, pos: LONGINT; options: SET; iconStr: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteHeaderP(VAR R: Files.Rider; P: Books.Panel); 
+	PROCEDURE ^ SkipHeader*(VAR R: Files.Rider): BOOLEAN; 
+	PROCEDURE ^ Import*(il: Books0.ImpList; new: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ GetOpenLabel(VAR open: ARRAY OF CHAR); 
+	PROCEDURE ^ GetLInts(D: Documents.Document; open: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadDoc(D: Documents.Document): BOOLEAN; 
+	PROCEDURE ^ Load(D: Documents.Document); 
+	PROCEDURE ^ Store(D: Documents.Document); 
+	PROCEDURE ^ SearchFrame(f: Books0.Frame): FrameList; 
+	PROCEDURE ^ PrintInt(nr: LONGINT; X, Y: INTEGER); 
+	PROCEDURE ^ PrintLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: TextGadgets0.Line; dlink: Objects.Object); 
+	PROCEDURE ^ AbsPos(P: Books.Panel; ind, pos: LONGINT): LONGINT; 
+	PROCEDURE ^ Fixup(beg, pageNr: LONGINT); 
+	PROCEDURE ^ PrintText(T: TextGadgets.Frame; print, fix: BOOLEAN; VAR pageNr, maxW: LONGINT); 
+	PROCEDURE ^ BuildNotesPrintList(t: Texts.Text); 
+	PROCEDURE ^ CopyNotes(t, popups: Texts.Text); 
+	PROCEDURE ^ CountTabs(t: Texts.Text; beg: LONGINT): INTEGER; 
+	PROCEDURE ^ AddTabs(t: Texts.Text; beg, end: LONGINT; nTabs: INTEGER); 
+	PROCEDURE ^ CheckBox(name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetPrintMode(D: Documents.Document); 
+	PROCEDURE ^ PreparePrintDoc(D: Documents.Document); 
+	PROCEDURE ^ DoPrintDoc(D: Documents.Document); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Pop*; 
+	PROCEDURE ^ Next*; 
+	PROCEDURE ^ Prev*; 
+	PROCEDURE ^ Contents*; 
+	PROCEDURE ^ Index*; 
+	PROCEDURE ^ RemoveStyles(t: Texts.Text); 
+	PROCEDURE ^ History*; 
+	PROCEDURE ^ GetItem(VAR P: Books.Panel): Books0.ExtLabel; 
+	PROCEDURE ^ DoLink*; 
+	PROCEDURE ^ DoNote*; 
+	PROCEDURE ^ ShowDoc(doc: Documents.Document); 
+	PROCEDURE ^ MarkPatPos(P: Books.Panel; tF: TextGadgets.Frame; pos: LONGINT); 
+	PROCEDURE ^ MarkColPos(P: Books.Panel; tF: TextGadgets.Frame; VAR pos: LONGINT; col: INTEGER); 
+	PROCEDURE ^ MarkObj(P: Books.Panel; tF: TextGadgets.Frame; pos: LONGINT; obj: Objects.Object); 
+	PROCEDURE ^ CalcDispVec(time: LONGINT); 
+	PROCEDURE ^ StrLen(VAR str: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ SearchColor(text: Texts.Text; VAR pos: LONGINT; col: INTEGER): BOOLEAN; 
+	PROCEDURE ^ SPatFound(text: Texts.Text; VAR pos: LONGINT; mode: SET; col: INTEGER): BOOLEAN; 
+	PROCEDURE ^ SearchObj(T: Texts.Text; VAR pos: LONGINT; mode: SET; VAR newProc, name: ARRAY OF CHAR; col: INTEGER; VAR obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ ShallowSearch(P: Books.Panel; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ DeepSearch(P: Books.Panel); 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ CopyToFile*; 
+	PROCEDURE ^ PrintDoc*; 
+BEGIN
+END BookDocs.

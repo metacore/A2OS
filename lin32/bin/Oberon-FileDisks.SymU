@@ -1,0 +1,23 @@
+MODULE FileDisks IN Oberon;
+	IMPORT Disks IN A2, Plugins IN A2, Files, Modules, In, Out;
+CONST 
+	BS = 512; 
+TYPE 
+	Device = OBJECT (Disks.Device)
+	VAR 
+		f: Files.File; 
+		size, cyls, hds, spt: LONGINT; 
+		new: BOOLEAN; 
+
+		PROCEDURE ^ Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: LONGINT); 
+	END Device; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Unregister(dev: Device); 
+	PROCEDURE ^ Mounted(dev: Disks.Device): BOOLEAN; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END FileDisks.

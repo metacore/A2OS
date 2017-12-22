@@ -1,0 +1,10 @@
+MODULE Beep;
+	IMPORT X11, Displays, XDisplay, Plugins;
+CONST 
+VAR 
+	disp: XDisplay.Display; 
+
+	PROCEDURE ^ Beep*(hz: LONGINT); 
+	PROCEDURE ^ GetDisplay; 
+BEGIN
+END Beep.

@@ -1,0 +1,244 @@
+MODULE FoxAMDBackend;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode, InstructionSet := FoxAMD64InstructionSet, Assembler := FoxAMD64Assembler, SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Diagnostics, Streams, Options, Strings, ObjectFileFormat := FoxBinaryObjectFile, Compiler, Machine, D := Debugging, CodeGenerators := FoxCodeGenerators, ObjectFile;
+CONST 
+	none =  -1; 
+	RAX = InstructionSet.regRAX; 
+	RCX = InstructionSet.regRCX; 
+	RDX = InstructionSet.regRDX; 
+	RBX = InstructionSet.regRBX; 
+	RSP = InstructionSet.regRSP; 
+	RBP = InstructionSet.regRBP; 
+	RSI = InstructionSet.regRSI; 
+	RDI = InstructionSet.regRDI; 
+	R8 = InstructionSet.regR8; 
+	R9 = InstructionSet.regR9; 
+	R10 = InstructionSet.regR10; 
+	R11 = InstructionSet.regR11; 
+	R12 = InstructionSet.regR12; 
+	R13 = InstructionSet.regR13; 
+	R14 = InstructionSet.regR14; 
+	R15 = InstructionSet.regR15; 
+	EAX = InstructionSet.regEAX; 
+	ECX = InstructionSet.regECX; 
+	EDX = InstructionSet.regEDX; 
+	EBX = InstructionSet.regEBX; 
+	ESP = InstructionSet.regESP; 
+	EBP = InstructionSet.regEBP; 
+	ESI = InstructionSet.regESI; 
+	EDI = InstructionSet.regEDI; 
+	R8D = InstructionSet.regR8D; 
+	R9D = InstructionSet.regR9D; 
+	R10D = InstructionSet.regR10D; 
+	R11D = InstructionSet.regR11D; 
+	R12D = InstructionSet.regR12D; 
+	R13D = InstructionSet.regR13D; 
+	R14D = InstructionSet.regR14D; 
+	R15D = InstructionSet.regR15D; 
+	AX = InstructionSet.regAX; 
+	CX = InstructionSet.regCX; 
+	DX = InstructionSet.regDX; 
+	BX = InstructionSet.regBX; 
+	SI = InstructionSet.regSI; 
+	DI = InstructionSet.regDI; 
+	BP = InstructionSet.regBP; 
+	SP = InstructionSet.regSP; 
+	R8W = InstructionSet.regR8W; 
+	R9W = InstructionSet.regR9W; 
+	R10W = InstructionSet.regR10W; 
+	R11W = InstructionSet.regR11W; 
+	R12W = InstructionSet.regR12W; 
+	R13W = InstructionSet.regR13W; 
+	R14W = InstructionSet.regR14W; 
+	R15W = InstructionSet.regR15W; 
+	AL = InstructionSet.regAL; 
+	CL = InstructionSet.regCL; 
+	DL = InstructionSet.regDL; 
+	BL = InstructionSet.regBL; 
+	SIL = InstructionSet.regSIL; 
+	DIL = InstructionSet.regDIL; 
+	BPL = InstructionSet.regBPL; 
+	SPL = InstructionSet.regSPL; 
+	R8B = InstructionSet.regR8B; 
+	R9B = InstructionSet.regR9B; 
+	R10B = InstructionSet.regR10B; 
+	R11B = InstructionSet.regR11B; 
+	R12B = InstructionSet.regR12B; 
+	R13B = InstructionSet.regR13B; 
+	R14B = InstructionSet.regR14B; 
+	R15B = InstructionSet.regR15B; 
+	AH = InstructionSet.regAH; 
+	CH = InstructionSet.regCH; 
+	DH = InstructionSet.regDH; 
+	BH = InstructionSet.regBH; 
+	ST0 = InstructionSet.regST0; 
+	XMM0 = InstructionSet.regXMM0; 
+	XMM7 = InstructionSet.regXMM7; 
+	YMM0 = InstructionSet.regYMM0; 
+	YMM7 = InstructionSet.regYMM7; 
+	Low = 0; 
+	High = 1; 
+	FrameSpillStack = TRUE; 
+TYPE 
+	Ticket = CodeGenerators.Ticket; 
+
+	PhysicalRegisters* = OBJECT (CodeGenerators.PhysicalRegisters)
+	VAR 
+		toVirtual: ARRAY InstructionSet.numberRegisters OF Ticket; 
+		reserved: ARRAY InstructionSet.numberRegisters OF BOOLEAN; 
+		hint: LONGINT; 
+		useFPU: BOOLEAN; 
+
+		PROCEDURE ^  & InitPhysicalRegisters(fpu, cooperative: BOOLEAN); 
+		PROCEDURE ^ AllocationHint*(index: LONGINT); 
+		PROCEDURE ^ NumberRegisters*(): LONGINT; 
+	END PhysicalRegisters; 
+
+	PhysicalRegisters32 = OBJECT (PhysicalRegisters)
+
+		PROCEDURE ^  & InitPhysicalRegisters32(fpu, cooperative: BOOLEAN); 
+		PROCEDURE ^ Allocate*(index: LONGINT; virtualRegister: Ticket); 
+		PROCEDURE ^ SetReserved*(index: LONGINT; res: BOOLEAN); 
+		PROCEDURE ^ Reserved*(index: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Free*(index: LONGINT); 
+		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): LONGINT; 
+		PROCEDURE ^ Mapped*(physical: LONGINT): Ticket; 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END PhysicalRegisters32; 
+
+	PhysicalRegisters64 = OBJECT (PhysicalRegisters)
+
+		PROCEDURE ^  & InitPhysicalRegisters64(fpu, cooperative: BOOLEAN); 
+		PROCEDURE ^ SetReserved*(index: LONGINT; res: BOOLEAN); 
+		PROCEDURE ^ Reserved*(index: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Allocate*(index: LONGINT; virtualRegister: Ticket); 
+		PROCEDURE ^ Free*(index: LONGINT); 
+		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): LONGINT; 
+		PROCEDURE ^ Mapped*(physical: LONGINT): Ticket; 
+	END PhysicalRegisters64; 
+
+	CodeGeneratorAMD64 = OBJECT (CodeGenerators.GeneratorWithTickets)
+	VAR 
+		runtimeModuleName: SyntaxTree.IdentifierString; 
+		cpuBits: LONGINT; 
+		opBP, opSP, opRA, opRB, opRC, opRD, opRSI, opRDI, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; 
+		BP, SP, RA, RD, RS, RC: LONGINT; 
+		emitter: Assembler.Emitter; 
+		backend: BackendAMD64; 
+		stackSize: LONGINT; 
+		spillStackStart: LONGINT; 
+		fpStackPointer: LONGINT; 
+		ap: Ticket; 
+
+		PROCEDURE ^  & InitGeneratorAMD64(CONST runtime: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendAMD64); 
+		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
+		PROCEDURE ^ Supported*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR typePart: IntermediateCode.Type); 
+		PROCEDURE ^ Move(VAR dest, src: Assembler.Operand; CONST type: IntermediateCode.Type); 
+		PROCEDURE ^ ToSpillStack*(ticket: Ticket); 
+		PROCEDURE ^ AllocateSpillStack*(size: LONGINT); 
+		PROCEDURE ^ ToRegister*(ticket: Ticket); 
+		PROCEDURE ^ ExchangeTickets*(ticket1, ticket2: Ticket); 
+		PROCEDURE ^ MappedTo(CONST virtualRegister: LONGINT; part: LONGINT; physicalRegister: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ResultRegister(CONST type: IntermediateCode.Type; part: LONGINT): LONGINT; 
+		PROCEDURE ^ IsMemoryOperand(vop: IntermediateCode.Operand; part: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsRegister(CONST vop: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ PhysicalOperandType(CONST op: Assembler.Operand): IntermediateCode.Type; 
+		PROCEDURE ^ GetSpillOperand(ticket: Ticket; VAR op: Assembler.Operand); 
+		PROCEDURE ^ TicketToOperand(ticket: Ticket; VAR op: Assembler.Operand); 
+		PROCEDURE ^ GetTemporaryRegister(type: IntermediateCode.Type; VAR op: Assembler.Operand); 
+		PROCEDURE ^ GetImmediateMem(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR imm: Assembler.Operand); 
+		PROCEDURE ^ GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit: BOOLEAN); 
+		PROCEDURE ^ GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand); 
+		PROCEDURE ^ HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
+		PROCEDURE ^ HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
+		PROCEDURE ^ GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT; 
+		PROCEDURE ^ ParameterRegister*(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT; 
+		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket); 
+		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket); 
+		PROCEDURE ^ MakeRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand); 
+		PROCEDURE ^ SpecialMove(op, back: LONGINT; canStoreToMemory: BOOLEAN; VAR dest, src: Assembler.Operand; type: IntermediateCode.Type); 
+		PROCEDURE ^ AllocateStack(sizeInBytes: LONGINT); 
+		PROCEDURE ^ IsFloat(CONST operand: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ IsComplex(CONST operand: IntermediateCode.Operand): BOOLEAN; 
+		PROCEDURE ^ Generate*(VAR instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ PostGenerate*(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitEnter(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitLeave(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitExit(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitReturnFPU(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitReturn(CONST instruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitMovFloat(CONST vdest, vsrc: IntermediateCode.Operand); 
+		PROCEDURE ^ EmitMov(CONST vdest, vsrc: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ EmitConvertFloat(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitConvert(CONST vdest, vsrc: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ EmitResult(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitResultFPU(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitCall(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ PrepareOp3(CONST instruction: IntermediateCode.Instruction; part: LONGINT; VAR left, right: Assembler.Operand; VAR ticket: Ticket); 
+		PROCEDURE ^ PrepareOp2(CONST instruction: IntermediateCode.Instruction; part: LONGINT; VAR left: Assembler.Operand; VAR ticket: Ticket); 
+		PROCEDURE ^ FinishOp(CONST vop: IntermediateCode.Operand; part: LONGINT; left: Assembler.Operand; ticket: Ticket); 
+		PROCEDURE ^ EmitArithmetic3Part(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT); 
+		PROCEDURE ^ EmitArithmetic3(CONST instruction: IntermediateCode.Instruction; opcode: LONGINT); 
+		PROCEDURE ^ EmitArithmetic3XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT); 
+		PROCEDURE ^ EmitArithmetic2(CONST instruction: IntermediateCode.Instruction; part: LONGINT; opcode: LONGINT); 
+		PROCEDURE ^ EmitArithmetic2XMM(CONST instruction: IntermediateCode.Instruction; op32, op64: LONGINT); 
+		PROCEDURE ^ EmitArithmetic3FPU(CONST instruction: IntermediateCode.Instruction; op: LONGINT); 
+		PROCEDURE ^ EmitArithmetic2FPU(CONST instruction: IntermediateCode.Instruction; opcode: LONGINT); 
+		PROCEDURE ^ EmitMul(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitDivMod(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitShift(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitCas(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitCopy(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitFill(CONST instruction: IntermediateCode.Instruction; down: BOOLEAN); 
+		PROCEDURE ^ EmitBr(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitPush(CONST vop: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ EmitPop(CONST vop: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ EmitPushFloat(CONST vop: IntermediateCode.Operand); 
+		PROCEDURE ^ EmitPopFloat(CONST vop: IntermediateCode.Operand); 
+		PROCEDURE ^ EmitNeg(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitNegXMM(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitAbs(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitAbsXMM(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitTrap(CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ EmitAsm(CONST instruction: IntermediateCode.Instruction); 
+	END CodeGeneratorAMD64; 
+
+	BackendAMD64 = OBJECT (IntermediateBackend.IntermediateBackend)
+	VAR 
+		cg: CodeGeneratorAMD64; 
+		bits: LONGINT; 
+		traceable: BOOLEAN; 
+		forceFPU: BOOLEAN; 
+		winAPIRegisters, cRegisters: Backend.Registers; 
+
+		PROCEDURE ^  & InitBackendAMD64; 
+		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
+		PROCEDURE ^ GetSystem*(): Global.System; 
+		PROCEDURE ^ GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Backend.Registers; 
+		PROCEDURE ^ SupportedInstruction*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GenerateBinary(module: Sections.Module; dump: Streams.Writer); 
+		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 
+		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT); 
+		PROCEDURE ^ CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN; 
+		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultObjectFileFormat*(): Formats.ObjectFileFormat; 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+	END BackendAMD64; 
+VAR 
+	registerOperands: ARRAY InstructionSet.numberRegisters OF Assembler.Operand; 
+	usePool: BOOLEAN; 
+	opEAX, opECX, opEDX, opEBX, opESP, opEBP, opESI, opEDI, opAX, opCX, opDX, opBX, opSI, opDI, opAL, opCL, opDL, opBL, opAH, opCH, opDH, opBH, opST0, opRSP, opRBP: Assembler.Operand; 
+	unusable, split, blocked, free: CodeGenerators.Ticket; 
+	traceStackSize: LONGINT; 
+
+	PROCEDURE ^ RegularSectionCount(sectionList: Sections.SectionList): LONGINT; 
+	PROCEDURE ^ Assert(b: BOOLEAN; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Halt(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Get*(): Backend.Backend; 
+	PROCEDURE ^ Trace*; 
+BEGIN
+END FoxAMDBackend.

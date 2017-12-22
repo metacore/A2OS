@@ -1,0 +1,24 @@
+MODULE MathErf;
+	IMPORT NbrInt, NbrRe, DataErrors, MathRe, MathReSeries;
+CONST 
+TYPE 
+	ErfP = OBJECT (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ErfP; 
+
+	ErfQ = OBJECT (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ErfQ; 
+VAR 
+	maxIterations: NbrInt.Integer; 
+	twoBySqrtPi: NbrRe.Real; 
+	erfcP1: ARRAY 3 OF NbrRe.Real; 
+	erfcP, erfcQ1: ARRAY 4 OF NbrRe.Real; 
+	erfcQ: ARRAY 5 OF NbrRe.Real; 
+
+	PROCEDURE ^ Erfc(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Fn*(x: NbrRe.Real): NbrRe.Real; 
+BEGIN
+END MathErf.

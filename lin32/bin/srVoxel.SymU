@@ -1,0 +1,239 @@
+MODULE srVoxel;
+	IMPORT srBase, Math, srMath, srE, srHex, Out := KernelLog;
+CONST 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PT = srBase.PT; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	ColoredVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END ColoredVox; 
+
+	GoorowVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b: SREAL; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GoorowVox; 
+
+	LitVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, nx, ny, nz: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END LitVox; 
+
+	ColoredMVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, mf, a: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, mfraction: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END ColoredMVox; 
+
+	DiffuseMVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, mf, a: SREAL; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END DiffuseMVox; 
+
+	DiffuseSphMVox* = OBJECT (ColoredVox)
+	VAR 
+		mf, a: SREAL; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END DiffuseSphMVox; 
+
+	DiffuseSphVox* = OBJECT (ColoredVox)
+	VAR 
+		mf, a: SREAL; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END DiffuseSphVox; 
+
+	AlphaVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, ra, ga, ba: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END AlphaVox; 
+
+	TransparaVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, black: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, bl: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END TransparaVox; 
+
+	RainbowVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, black: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, bl: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END RainbowVox; 
+
+	JelloVox* = OBJECT (AlphaVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END JelloVox; 
+
+	AirVox* = OBJECT (ColoredVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END AirVox; 
+
+	InkVox* = OBJECT (ColoredVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END InkVox; 
+
+	OutlineVox* = OBJECT (ColoredVox)
+	VAR 
+		or, og, ob: SREAL; 
+
+		PROCEDURE ^ SetOutline*(red, green, blue: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END OutlineVox; 
+
+	GoutlineVox* = OBJECT (ColoredVox)
+	VAR 
+		tx, ty, tz: SREAL; 
+		or, og, ob: SREAL; 
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GoutlineVox; 
+
+	GouraudVox* = OBJECT (ColoredVox)
+	VAR 
+		brightness: INTEGER; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GouraudVox; 
+
+	VGouraudVox* = OBJECT (GouraudVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END VGouraudVox; 
+
+	HGouraudVox* = OBJECT (GouraudVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END HGouraudVox; 
+
+	NouraudVox* = OBJECT (ColoredVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END NouraudVox; 
+
+	DiffuseVox* = OBJECT (ColoredVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END DiffuseVox; 
+
+	DiffuseNouraudVox* = OBJECT (ColoredVox)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END DiffuseNouraudVox; 
+
+	GridVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, a, gr, gg, gb, ga, Z: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ SetGridColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ SetGrid*(z: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GridVox; 
+
+	GridChirkleVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, a, Z: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GridChirkleVox; 
+
+	CheckerVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, a, Z: SREAL; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ tick*; 
+	END CheckerVox; 
+
+	HexaVox* = OBJECT (Voxel)
+	VAR 
+		V: Voxel; 
+		hhx: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ setVox*(v: Voxel); 
+		PROCEDURE ^ connectmessage*; 
+		PROCEDURE ^ talk*(c: CHAR; VAR connection: BOOLEAN); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END HexaVox; 
+
+	SPHexaVox* = OBJECT (HexaVox)
+
+		PROCEDURE ^ ctop(x, y, z: SREAL; VAR th, ph: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END SPHexaVox; 
+
+	PolkaVox* = OBJECT (Voxel)
+	VAR 
+		brightness: INTEGER; 
+		r, g, b, rr, gg, bb: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetColor*(red, green, blue, r2, g2, b2: SREAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END PolkaVox; 
+
+	GeckoVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, a: SREAL; 
+		ecount: INTEGER; 
+
+		PROCEDURE ^ SetColor*(red, green, blue, alpha: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END GeckoVox; 
+
+	BiVox* = OBJECT (Voxel)
+	VAR 
+		v1, v2: Voxel; 
+
+		PROCEDURE ^ set*(x, y: Voxel); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END BiVox; 
+
+	FuzzyTVox* = OBJECT (AlphaVox)
+	VAR 
+		fuzzdivisor, fuzzsubtract: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ setFuzz*(f: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END FuzzyTVox; 
+
+	PROCEDURE ^ mirror(VAR ray: Ray); 
+BEGIN
+END srVoxel.

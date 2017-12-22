@@ -1,0 +1,54 @@
+MODULE V24 IN Oberon;
+	IMPORT SYSTEM, Serials IN A2;
+CONST 
+	COM1* = 1; 
+	COM2* = 2; 
+	COM3* = 3; 
+	COM4* = 4; 
+	COM5* = 5; 
+	COM6* = 6; 
+	COM7* = 7; 
+	COM8* = 8; 
+	ParNo* = Serials.ParNo; 
+	ParOdd* = Serials.ParOdd; 
+	ParEven* = Serials.ParEven; 
+	ParMark* = Serials.ParMark; 
+	ParSpace* = Serials.ParSpace; 
+	Stop1* = Serials.Stop1; 
+	Stop2* = Serials.Stop2; 
+	Stop1dot5* = Serials.Stop1dot5; 
+	DTR* = Serials.DTR; 
+	RTS* = Serials.RTS; 
+	Break* = Serials.Break; 
+	DSR* = Serials.DSR; 
+	CTS* = Serials.CTS; 
+	RI* = Serials.RI; 
+	DCD* = Serials.DCD; 
+	OE* = Serials.OverrunError; 
+	PE* = Serials.ParityError; 
+	FE* = Serials.FramingError; 
+	BI* = Serials.BreakInterrupt; 
+	termination* = Serials.Closed; 
+	Ok* = Serials.Ok; 
+	PortInUse* = Serials.PortInUse; 
+	NoSuchPort* = Serials.NoSuchPort; 
+	WrongBPS* = Serials.WrongBPS; 
+	WrongData* = Serials.WrongData; 
+	WrongParity* = Serials.WrongParity; 
+	WrongStop* = Serials.WrongStop; 
+VAR 
+	ports: ARRAY (Serials.MaxPorts + 1) OF Serials.Port; 
+
+	PROCEDURE ^ NumberOfPorts*(): LONGINT; 
+	PROCEDURE ^ Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Stop*(portNo: LONGINT); 
+	PROCEDURE ^ Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: LONGINT); 
+	PROCEDURE ^ SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: LONGINT); 
+	PROCEDURE ^ ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ ClearMC*(portNo: LONGINT; s: SET); 
+	PROCEDURE ^ SetMC*(portNo: LONGINT; s: SET); 
+	PROCEDURE ^ GetMC*(portNo: LONGINT; VAR s: SET); 
+	PROCEDURE ^ Available*(portNo: LONGINT): LONGINT; 
+BEGIN
+END V24.

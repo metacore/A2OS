@@ -1,0 +1,38 @@
+MODULE TFLog;
+	IMPORT KernelLog, Clock, Files;
+CONST 
+	Unknown* = 0; 
+	Information* = 1; 
+	Warning* = 2; 
+	Error* = 3; 
+TYPE 
+	Log* = OBJECT {EXCLUSIVE} 
+	VAR 
+		appName: ARRAY 64 OF CHAR; 
+		logPos: LONGINT; 
+		logLine: ARRAY 1024 OF CHAR; 
+		kind: LONGINT; 
+		locked: BOOLEAN; 
+		disableLogToOut: BOOLEAN; 
+		f: Files.File; 
+		w: Files.Writer; 
+
+		PROCEDURE ^  & Init*(logName: ARRAY OF CHAR); 
+		PROCEDURE ^ SetLogFile*(fn: ARRAY OF CHAR); 
+		PROCEDURE ^ SetLogToOut*(enabled: BOOLEAN); 
+		PROCEDURE ^ SetKind(kind: LONGINT); 
+		PROCEDURE ^ InternalLn; 
+		PROCEDURE ^ Ln*; 
+		PROCEDURE ^ Enter*; 
+		PROCEDURE ^ Exit*; 
+		PROCEDURE ^ InternalChar(x: CHAR); 
+		PROCEDURE ^ Char*(x: CHAR); 
+		PROCEDURE ^ InternalString*(VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ String*(x: ARRAY OF CHAR); 
+		PROCEDURE ^ Hex*(x, w: LONGINT); 
+		PROCEDURE ^ Int*(x, w: LONGINT); 
+		PROCEDURE ^ TimeStamp*; 
+		PROCEDURE ^ Close*; 
+	END Log; 
+BEGIN
+END TFLog.

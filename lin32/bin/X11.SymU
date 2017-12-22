@@ -1,0 +1,381 @@
+MODULE X11;
+	IMPORT Trace, Unix, Modules;
+CONST 
+	BufferSize* = 512; 
+	False* = 0; 
+	True* = 1; 
+	None* = 0; 
+	LineSolid* = 0; 
+	LineOnOffDash* = 1; 
+	LineDoubleDash* = 2; 
+	CapNotLast* = 0; 
+	CapButt* = 1; 
+	CapRound* = 2; 
+	CapProjecting* = 3; 
+	JoinMiter* = 0; 
+	JoinRound* = 1; 
+	JoinBevel* = 2; 
+	FillSolid* = 0; 
+	FillTiled* = 1; 
+	FillStippled* = 2; 
+	FillOpaqueStippled* = 3; 
+	GXand* = 1; 
+	GXcopy* = 3; 
+	GXxor* = 6; 
+	GXor* = 7; 
+	GXequiv* = 9; 
+	DoRed* = 1; 
+	DoGreen* = 2; 
+	DoBlue* = 4; 
+	DoAll* = ((DoRed + DoGreen) + DoBlue); 
+	AllocNone* = 0; 
+	AllocAll* = 1; 
+	CursorShape* = 0; 
+	TileShape* = 1; 
+	StippleShape* = 2; 
+	StaticGray* = 0; 
+	GrayScale* = 1; 
+	StaticColor* = 2; 
+	PseudoColor* = 3; 
+	TrueColor* = 4; 
+	DirectColor* = 5; 
+	ArcChord* = 0; 
+	ArcPieSlice* = 1; 
+	Complex* = 0; 
+	Nonconvex* = 1; 
+	Convex* = 2; 
+	CoordModeOrigin* = 0; 
+	CoordModePrevious* = 1; 
+	Unsorted* = 0; 
+	YSorted* = 1; 
+	YXSorted* = 2; 
+	YXBanded* = 3; 
+	PropModeReplace* = 0; 
+	KeyPress* = 2; 
+	KeyRelease* = 3; 
+	ButtonPress* = 4; 
+	ButtonRelease* = 5; 
+	MotionNotify* = 6; 
+	FocusIn* = 9; 
+	FocusOut* = 10; 
+	Expose* = 12; 
+	GraphicsExpose* = 13; 
+	NoExpose* = 14; 
+	UnmapNotify* = 18; 
+	MapNotify* = 19; 
+	PropertyNotify* = 28; 
+	SelectionClear* = 29; 
+	SelectionRequest* = 30; 
+	SelectionNotify* = 31; 
+	ClientMessage* = 33; 
+	MappingNotify* = 34; 
+	KeyPressMask* = 1; 
+	KeyReleaseMask* = 2; 
+	ButtonPressMask* = 4; 
+	ButtonReleaseMask* = 8; 
+	PointerMotionMask* = 64; 
+	PointerMotionHintMask* = 128; 
+	ButtonMotionMask* = 8192; 
+	ExposureMask* = 32768; 
+	StructureNotifyMask* = 131072; 
+	FocusChangeMask* = 2097152; 
+	PropertyChangeMask* = 4194304; 
+	OwnerGrabButtonMask* = 16777216; 
+	QueuedAlready* = 0; 
+	QueuedAfterReading* = 1; 
+	QueuedAfterFlush* = 2; 
+	RevertToParent* = 2; 
+	Button1* = 1; 
+	Button2* = 2; 
+	Button3* = 3; 
+	Button1Mask* = 256; 
+	Button2Mask* = 512; 
+	Button3Mask* = 1024; 
+	XYBitmap* = 0; 
+	XYPixmap* = 1; 
+	ZPixmap* = 2; 
+	XCleftptr* = 132; 
+	XAPRIMARY* = 1; 
+	XASTRING* = 31; 
+TYPE 
+	Pixmap* = ADDRESS; 
+
+	Pattern* = ADDRESS; 
+
+	PatternPtr* = POINTER TO PatternDesc; 
+
+	PatternDesc* = RECORD 
+		x*, y*: LONGINT; 
+		w*, h*: INTEGER; 
+		pixmap*: Pixmap; 
+	END; 
+
+	MetricDesc* = RECORD 
+		dx*, x*, y*, filler: INTEGER; 
+		p*: PatternDesc; 
+	END; 
+
+	Font* = POINTER TO Bytes; 
+
+	Bytes* = RECORD 
+		metrics*: ARRAY 256 OF MetricDesc; 
+		xid*: LONGINT; 
+	END; 
+
+	Buffer* = ARRAY BufferSize OF CHAR; 
+
+	ComposeStatus* = RECORD 
+		opaque: ARRAY 6 OF LONGINT; 
+	END; 
+
+	Modifiers* = ARRAY 8 OF KeySym; 
+
+	DisplayPtr* = ADDRESS; 
+
+	Window* = ADDRESS; 
+
+	Drawable* = ADDRESS; 
+
+	GC* = ADDRESS; 
+
+	Bool* = LONGINT; 
+
+	Colormap* = ADDRESS; 
+
+	Time* = ADDRESS; 
+
+	Atom* = ADDRESS; 
+
+	VisualID* = ADDRESS; 
+
+	Visual* = RECORD 
+		extData*: ADDRESS; 
+		visualid*: VisualID; 
+		class*: LONGINT; 
+		redMask*, greenMask*, blueMask*: LONGINT; 
+		bitsPerRgb*, mapEntries*: LONGINT; 
+	END; 
+
+	VisualPtr* = POINTER TO Visual; 
+
+	VisualInfo* = RECORD 
+		visual*{UNTRACED} : VisualPtr; 
+		visualID*: VisualID; 
+		screen*, depth*, class*: LONGINT; 
+		redmask*, greenmask*, bluemask*: LONGINT; 
+		colomapsize*, bitsperrgb*: LONGINT; 
+	END; 
+
+	Color* = RECORD 
+		pixel*: LONGINT; 
+		red*, green*, blue*: INTEGER; 
+		flags*, pad*: CHAR; 
+	END; 
+
+	Point* = RECORD 
+		x*, y*: INTEGER; 
+	END; 
+
+	Rectangle* = RECORD 
+		x*, y*, w*, h*: INTEGER; 
+	END; 
+
+	Cursor* = ADDRESS; 
+
+	KeySym* = ADDRESS; 
+
+	KeyCode* = CHAR; 
+
+	Event* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*, x*, y*, xRoot*, yRoot*, state*, button*: LONGINT; 
+		sameScreen*, focus*: Bool; 
+		state2*: LONGINT; 
+		pad*: ARRAY 32 OF LONGINT; 
+	END; 
+
+	SelectionEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		requestor*: Window; 
+		selection*, target*, property*: Atom; 
+		time*: Time; 
+	END; 
+
+	SelectionRequestEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		owner*, requestor*: Window; 
+		selection*, target*, property*: Atom; 
+		time*: Time; 
+	END; 
+
+	ExposeEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*: Window; 
+		x*, y*, width*, height*, count*: LONGINT; 
+	END; 
+
+	GraphicsExposeEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		drawable*: Drawable; 
+		x*, y*, width*, height*, count*, majorCode*, minorCode*: LONGINT; 
+	END; 
+
+	ButtonEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*, state*, button: LONGINT; 
+		sameScreen: Bool; 
+	END; 
+
+	KeyEvent* = RECORD 
+		typ*, serial*: LONGINT; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*, state*, keycode*: LONGINT; 
+		sameScreen: Bool; 
+	END; 
+
+	Image* = ADDRESS; 
+
+	ImagePtr* = POINTER TO ImageDesc; 
+
+	ImageDesc* = RECORD 
+		width*, height*: LONGINT; 
+		xoffset*, format*: LONGINT; 
+		data*: ADDRESS; 
+		byteOrder*, bitmapUnit*, bitmapBitOrder*: LONGINT; 
+		bitmapPad*, depth*, bytesPerLine*, bitsPerPixel*: LONGINT; 
+		redmask*, greenmask*, bluemask*: LONGINT; 
+		obdata*, createImage*, destroyImage*, getPixel*, putPixel*, subImage*, addPixel*: LONGINT; 
+	END; 
+
+	ErrorEvent* = RECORD 
+		typ*: LONGINT; 
+		display*: DisplayPtr; 
+		resourceid*, serial*: LONGINT; 
+		errorCode*, requestCode*, minorCode*: CHAR; 
+	END; 
+
+	ErrorEventPtr* = POINTER {UNSAFE, UNTRACED} TO ErrorEvent; 
+
+	ErrorHandler* = PROCEDURE (d: DisplayPtr; err: ErrorEventPtr; p3, p4: LONGINT):LONGINT; 
+
+	IOErrorHandler = PROCEDURE (d: DisplayPtr; p2, p3, p4: LONGINT):LONGINT; 
+VAR 
+	ErrorText*: Buffer; 
+	ErrorFlag*: BOOLEAN; 
+	lastEventTime*: Time; 
+	ioErrors: INTEGER; 
+	SendSelection*: PROCEDURE (VAR event: SelectionRequestEvent); 
+	ReceiveSelection*: PROCEDURE (VAR event: SelectionEvent); 
+	ClearSelection*: PROCEDURE ; 
+	OpenDisplay-: PROCEDURE {C}(name: ADDRESS):DisplayPtr; 
+	DefaultScreen-: PROCEDURE {C}(d: DisplayPtr):LONGINT; 
+	DisplayWidth-, DisplayHeight-, DisplayHeightMM-, DefaultDepth-, DisplayCells-, DisplayPlanes-, BlackPixel-, WhitePixel-: PROCEDURE {C}(d: DisplayPtr; screen: LONGINT):LONGINT; 
+	DefaultVisual-: PROCEDURE {C}(d: DisplayPtr; screen: LONGINT):LONGINT; 
+	DefaultColormap-: PROCEDURE {C}(d: DisplayPtr; screen: LONGINT):Colormap; 
+	DefaultRootWindow-: PROCEDURE {C}(d: DisplayPtr):Window; 
+	CreateSimpleWindow-: PROCEDURE {C}(d: DisplayPtr; parent: Window; x, y, width, height, borderWidth, border, background: LONGINT):Window; 
+	TranslateCoordinates-: PROCEDURE {C}(d: DisplayPtr; sw, dw: Window; srcx, srcy: LONGINT; VAR dstx, dsty: LONGINT; VAR child: Window); 
+	MoveResizeWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window; x, y, width, height: LONGINT); 
+	StoreName-, SetIconName-: PROCEDURE {C}(d: DisplayPtr; w: Window; name: ADDRESS); 
+	SetCommand-: PROCEDURE {C}(d: DisplayPtr; w: Window; argv: ADDRESS; argc: LONGINT); 
+	MapRaised-, LowerWindow-, ClearWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window); 
+	Sync-: PROCEDURE {C}(d: DisplayPtr; discard: LONGINT); 
+	Flush-: PROCEDURE {C}(d: DisplayPtr); 
+	StoreColor-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; color: ADDRESS); 
+	CreateBitmapFromData-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; data: ADDRESS; width, height: LONGINT):Pixmap; 
+	CopyArea-: PROCEDURE {C}(d: DisplayPtr; src, dest: Drawable; gc: GC; srcX, srcY, width, height, destX, destY: LONGINT); 
+	CopyPlane-: PROCEDURE {C}(d: DisplayPtr; src, dest: Drawable; gc: GC; srcX, srcY, width, height, destX, destY, plane: LONGINT); 
+	SetStipple-: PROCEDURE {C}(d: DisplayPtr; gc: GC; stipple: Pixmap); 
+	SetTSOrigin-: PROCEDURE {C}(d: DisplayPtr; gc: GC; tsxorigin, tsyorigin: LONGINT); 
+	DrawPoint-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y: LONGINT); 
+	FillRectangle-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y, width, height: LONGINT); 
+	DrawString-: PROCEDURE {C}(d: DisplayPtr; w: Drawable; gc: GC; x, y, string, length: LONGINT); 
+	CreateGC-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; valueMask, values: LONGINT):GC; 
+	SetForeground-, SetBackground-, SetFunction-, SetFont-, SetFillStyle-: PROCEDURE {C}(d: DisplayPtr; gc: GC; arg: LONGINT); 
+	SetPlaneMask-: PROCEDURE {C}(d: DisplayPtr; gc: GC; mask: LONGINT); 
+	SetGraphicsExposures-: PROCEDURE {C}(d: DisplayPtr; gc: GC; graphicsExposures: Bool); 
+	SetLineAttributes-: PROCEDURE {C}(d: DisplayPtr; gc: GC; lineWidth, lineStyle, capStyle, joinStyle: LONGINT); 
+	AllocColorCells-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; contig: Bool; planeMasks: LONGINT; nplanes: LONGINT; pixels: LONGINT; ncolors: LONGINT):LONGINT; 
+	SetWindowBackground-: PROCEDURE {C}(d: DisplayPtr; w: Window; pixel: LONGINT); 
+	CreateFontCursor-: PROCEDURE {C}(d: DisplayPtr; shape: LONGINT):Cursor; 
+	CreatePixmapCursor-: PROCEDURE {C}(d: DisplayPtr; csource, cmask: Pixmap; VAR cfore, cback: Color; xhot, yhot: LONGINT):Cursor; 
+	RecolorCursor-: PROCEDURE {C}(d: DisplayPtr; curs: Cursor; cfore, cback: LONGINT); 
+	DefineCursor-: PROCEDURE {C}(d: DisplayPtr; w: Window; curs: Cursor); 
+	DrawLine-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; x1, y1, x2, y2: LONGINT); 
+	SetArcMode-: PROCEDURE {C}(d: DisplayPtr; gc: GC; arcmode: LONGINT); 
+	DrawArc-, FillArc-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; x, y, width, height, angle1, angle2: LONGINT); 
+	FillPolygon-: PROCEDURE {C}(d: DisplayPtr; w: Window; gc: GC; points, npoints, shape, mode: LONGINT); 
+	SetClipMask-: PROCEDURE {C}(d: DisplayPtr; gc: GC; clipMask: Pixmap); 
+	SetClipRectangles-: PROCEDURE {C}(d: DisplayPtr; gc: GC; clipxorigin, clipyorigin: LONGINT; rectangles: ADDRESS; n, ordering: LONGINT); 
+	ListFonts-: PROCEDURE {C}(d: DisplayPtr; pattern, maxnames: LONGINT; VAR count: LONGINT):LONGINT; 
+	FreeFontNames-: PROCEDURE {C}(list: LONGINT); 
+	LoadFont-: PROCEDURE {C}(d: DisplayPtr; name: ADDRESS):LONGINT; 
+	SelectInput-: PROCEDURE {C}(d: DisplayPtr; w: Window; eventMask: LONGINT); 
+	NextEvent-: PROCEDURE {C}(d: DisplayPtr; VAR event: Event); 
+	EventsQueued-: PROCEDURE {C}(d: DisplayPtr; mode: LONGINT):LONGINT; 
+	SetInputFocus-: PROCEDURE {C}(d: DisplayPtr; focus: Window; revertTo: LONGINT; time: LONGINT); 
+	LookupString-: PROCEDURE {C}(VAR event: Event; VAR buf: Buffer; bufsize: LONGINT; VAR keysym: KeySym; VAR cstat: ComposeStatus):LONGINT; 
+	QueryPointer-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR rw, cw: Window; VAR xr, yr, xw, yw: LONGINT; VAR keysButtons: SET); 
+	RefreshKeyboardMapping-: PROCEDURE {C}(event: ADDRESS); 
+	Bell-: PROCEDURE {C}(d: DisplayPtr; percent: LONGINT); 
+	RebindKeysym-: PROCEDURE {C}(d: DisplayPtr; reboundsym: KeySym; VAR modlist: Modifiers; modlength: LONGINT; newstring: ADDRESS; newlength: LONGINT); 
+	StringToKeysym-: PROCEDURE {C}(string: ADDRESS):KeySym; 
+	CopyColormapAndFree-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap):Colormap; 
+	CreateColormap-: PROCEDURE {C}(d: DisplayPtr; w: Window; vis: VisualPtr; alloc: LONGINT):Colormap; 
+	MatchVisualInfo-: PROCEDURE {C}(d: DisplayPtr; screen, depth, class: LONGINT; VAR vinfo: VisualInfo):LONGINT; 
+	SetWindowColormap-: PROCEDURE {C}(d: DisplayPtr; w: Window; cmap: Colormap); 
+	QueryBestSize-: PROCEDURE {C}(d: DisplayPtr; class: LONGINT; screen: Drawable; width, height: LONGINT; VAR w, h: LONGINT); 
+	CreatePixmap-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; width, height, depth: LONGINT):Pixmap; 
+	FreePixmap-: PROCEDURE {C}(d: DisplayPtr; pixmap: Pixmap); 
+	CreateImage-: PROCEDURE {C}(d: DisplayPtr; visual: VisualPtr; depth, format, offset: LONGINT; data: ADDRESS; width, height, bitmapPad, bytesPerLine: LONGINT):Image; 
+	DestroyImage-: PROCEDURE {C}(image: Image); 
+	SubImage-: PROCEDURE {C}(image: Image; x, y, width, height: LONGINT):Image; 
+	GetImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; x, y, width, height, planeMask, format: LONGINT):Image; 
+	GetSubImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; x, y, width, height, planeMask, format: LONGINT; dstImage: Image; dstX, dstY: LONGINT):Image; 
+	PutImage-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; gc: GC; image: Image; srcX, srcY, dstX, dstY, width, height: LONGINT); 
+	PutPixel-: PROCEDURE {C}(image: Image; x, y, pixel: LONGINT):LONGINT; 
+	GetPixel-: PROCEDURE {C}(image: Image; x, y: LONGINT):LONGINT; 
+	AddPixel-: PROCEDURE {C}(image: Image; value: LONGINT); 
+	Free-: PROCEDURE {C}(data: ADDRESS); 
+	GetErrorText-: PROCEDURE {C}(d: DisplayPtr; errcode: LONGINT; VAR buf: Buffer; length: LONGINT); 
+	StoreBytes-: PROCEDURE {C}(d: DisplayPtr; bytes, nbytes: LONGINT); 
+	FetchBytes-: PROCEDURE {C}(d: DisplayPtr; VAR nbytes: LONGINT):LONGINT; 
+	SetSelectionOwner-: PROCEDURE {C}(d: DisplayPtr; selection: Atom; owner: Window; time: Time); 
+	GetSelectionOwner-: PROCEDURE {C}(d: DisplayPtr; selection: Atom):Window; 
+	InternAtom-: PROCEDURE {C}(d: DisplayPtr; name: LONGINT; onlyifexists: Bool):Atom; 
+	SendEvent-: PROCEDURE {C}(d: DisplayPtr; w: Window; propagate: Bool; eventmask, event: LONGINT); 
+	ConvertSelection-: PROCEDURE {C}(d: DisplayPtr; selection, target, property: Atom; requestor: Window; timestamp: Time); 
+	ChangeProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property, typ: Atom; format, mode: LONGINT; data: ADDRESS; nelements: LONGINT); 
+	GetWindowProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom; offset, length: LONGINT; delete: Bool; reqtype: Atom; VAR typ: Atom; VAR format, nitems, bytesafter: LONGINT; VAR prop: ADDRESS); 
+	DeleteProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom); 
+	WarpPointer-: PROCEDURE {C}(d: DisplayPtr; srcwin, dstwin: Window; srcx, srcy, srcw, srch, dstx, dsty: LONGINT); 
+	InstallColormap-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap); 
+	GetGeometry-: PROCEDURE {C}(d: DisplayPtr; drawable: Drawable; VAR root, x, y, width, height, orderWidth, Depth: LONGINT); 
+	ResizeWindow-: PROCEDURE {C}(d: DisplayPtr; w: Window; x, y: LONGINT); 
+	Synchronize-: PROCEDURE {C}(d: DisplayPtr; onoff: LONGINT); 
+	AllocColor-: PROCEDURE {C}(d: DisplayPtr; cmap: Colormap; color: ADDRESS):LONGINT; 
+	InitXErrorHandlers-: PROCEDURE {C}(eh: ErrorHandler; ioeh: IOErrorHandler); 
+
+	PROCEDURE ^ LinkToX; 
+	PROCEDURE ^ MyErrorHandler(d: DisplayPtr; err{UNTRACED} : ErrorEventPtr): LONGINT; 
+	PROCEDURE ^ MyIOErrorHandler(d: DisplayPtr): LONGINT; 
+BEGIN
+END X11.

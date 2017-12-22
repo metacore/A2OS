@@ -1,0 +1,17 @@
+MODULE Reminders IN Oberon;
+	IMPORT Attributes, Documents, Files, Gadgets, Oberon, Objects, Out;
+CONST 
+TYPE 
+	Reminder* = POINTER TO ReminderDesc; 
+
+	ReminderDesc* = RECORD (Gadgets.ObjDesc)
+		msg*: ARRAY 128 OF CHAR; 
+	END; 
+
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Reminder); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(obj: Reminder; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Attach*; 
+BEGIN
+END Reminders.

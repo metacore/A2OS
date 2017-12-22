@@ -1,0 +1,59 @@
+MODULE ShellCommands;
+	IMPORT Machine, Streams, Pipes, AosModules := Modules, Files, Dates, Strings, Commands;
+CONST 
+	MaxString = 256; 
+TYPE 
+	String = ARRAY MaxString OF CHAR; 
+
+	CmdAlias = POINTER TO RECORD 
+		alias, cmd, help: String; 
+		next: CmdAlias; 
+	END; 
+
+	CmdParameters = POINTER TO ARRAY OF CHAR; 
+
+	AliasList = OBJECT {EXCLUSIVE} 
+	VAR 
+		alias: CmdAlias; 
+
+		PROCEDURE ^ Alias(alias, cmd, help: ARRAY OF CHAR); 
+		PROCEDURE ^ Find(alias: ARRAY OF CHAR): CmdAlias; 
+		PROCEDURE ^ List(out: Streams.Writer); 
+		PROCEDURE ^  & Init*; 
+	END AliasList; 
+
+	Context* = OBJECT (Commands.Context)
+	VAR 
+		alias: AliasList; 
+		C: ANY; 
+
+		PROCEDURE ^  & New*(C: ANY; in: Streams.Reader; out, err: Streams.Writer); 
+	END Context; 
+
+	Command = OBJECT 
+	VAR 
+		ctx: Context; 
+		cmd: String; 
+		next: Command; 
+
+		PROCEDURE ^ SetContext(C: ANY; in: Streams.Reader; out, err: Streams.Writer); 
+		PROCEDURE ^  & Init*(ctx: Context); 
+	END Command; 
+
+	PROCEDURE ^ GetPar(par: ANY; VAR p: CmdParameters; VAR w: Streams.Writer); 
+	PROCEDURE ^ GetAliasList(p: Commands.Context): AliasList; 
+	PROCEDURE ^ Close(p: Commands.Context); 
+	PROCEDURE ^ Alias*(context: Commands.Context); 
+	PROCEDURE ^ Delete*(context: Commands.Context); 
+	PROCEDURE ^ Directory*(context: Commands.Context); 
+	PROCEDURE ^ Echo*(context: Commands.Context); 
+	PROCEDURE ^ Exit*(context: Commands.Context); 
+	PROCEDURE ^ Free*(context: Commands.Context); 
+	PROCEDURE ^ Help*(context: Commands.Context); 
+	PROCEDURE ^ Modules*(context: Commands.Context); 
+	PROCEDURE ^ execute(context: Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ Version*(context: Commands.Context); 
+	PROCEDURE ^ Execute*(par: Commands.Context; VAR cmdline: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+BEGIN
+END ShellCommands.

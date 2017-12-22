@@ -1,0 +1,62 @@
+MODULE TFClasses;
+	IMPORT Strings, SYSTEM;
+TYPE 
+	ObjectArray* = POINTER TO ARRAY OF ANY; 
+
+	List* = OBJECT {EXCLUSIVE} 
+	VAR 
+		list: ObjectArray; 
+		count: LONGINT; 
+		readLock: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Add*(x: ANY); 
+		PROCEDURE ^ Replace*(x, y: ANY); 
+		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
+		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ GetItem*(i: LONGINT): ANY; 
+		PROCEDURE ^ Lock*; 
+		PROCEDURE ^ Unlock*; 
+	END List; 
+
+	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):LONGINT; 
+
+	SortedList* = OBJECT {EXCLUSIVE} (List)
+	VAR 
+		compare: CompareMethod; 
+
+		PROCEDURE ^  & Init*(m: CompareMethod); 
+		PROCEDURE ^ SetCompareMethod*(m: CompareMethod); 
+		PROCEDURE ^ Add*(x: ANY); 
+		PROCEDURE ^ AddUnlocked(x: ANY); 
+		PROCEDURE ^ FindPosition(x: ANY): LONGINT; 
+		PROCEDURE ^ Remove*(x: ANY); 
+		PROCEDURE ^ RemoveUnlocked(x: ANY); 
+		PROCEDURE ^ Replace*(x, y: ANY); 
+		PROCEDURE ^ SearchByKey*(x: ANY): ANY; 
+	END SortedList; 
+
+	StringMapEntry = POINTER TO RECORD 
+		key: Strings.String; 
+		value: ANY; 
+		next: StringMapEntry; 
+		hash: LONGINT; 
+	END; 
+
+	StringMapEntryArray = POINTER TO ARRAY OF StringMapEntry; 
+
+	StringHashMap* = OBJECT 
+	VAR 
+		hashtable: StringMapEntryArray; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ CalcHash(CONST buffer: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Find*(CONST key: ARRAY OF CHAR): ANY; 
+		PROCEDURE ^ Add*(CONST key: ARRAY OF CHAR; value: ANY); 
+		PROCEDURE ^ GetKeys; 
+	END StringHashMap; 
+BEGIN
+END TFClasses.

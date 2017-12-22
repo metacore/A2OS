@@ -1,0 +1,101 @@
+MODULE FoxParser;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Diagnostics;
+CONST 
+	Trace = FALSE; 
+	CascadedWithSupport = TRUE; 
+TYPE 
+	Position* = Scanner.Position; 
+
+	Parser* = OBJECT 
+	VAR 
+		scanner-: Scanner.Scanner; 
+		symbol-: Scanner.Symbol; 
+		diagnostics: Diagnostics.Diagnostics; 
+		currentScope: SyntaxTree.Scope; 
+		recentCommentItem: ANY; 
+		recentLine: LONGINT; 
+		recentComment: SyntaxTree.Comment; 
+		moduleScope: SyntaxTree.ModuleScope; 
+		error-: BOOLEAN; 
+		Lax-: BOOLEAN; 
+		indent: LONGINT; 
+		hasSymbol: BOOLEAN; 
+
+		PROCEDURE ^ S(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ EE(CONST s, t: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ SetLax*; 
+		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ SkipComments(b: BOOLEAN); 
+		PROCEDURE ^ NextSymbol*; 
+		PROCEDURE ^ Token*(): LONGINT; 
+		PROCEDURE ^ TokenB*(): LONGINT; 
+		PROCEDURE ^ PeekB*(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Peek*(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Mandatory*(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Check(token: Scanner.Token); 
+		PROCEDURE ^ MandatoryIdentifier(VAR name: SyntaxTree.Identifier): BOOLEAN; 
+		PROCEDURE ^ Identifier(VAR position: Position): SyntaxTree.Identifier; 
+		PROCEDURE ^ MandatoryString*(VAR name: Scanner.StringType): BOOLEAN; 
+		PROCEDURE ^ ExpectThisIdentifier(name: SyntaxTree.Identifier): BOOLEAN; 
+		PROCEDURE ^ ExpectThisString(CONST name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Optional*(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ OptionalB*(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Ignore(token: Scanner.Token); 
+		PROCEDURE ^ QualifiedIdentifier*(): SyntaxTree.QualifiedIdentifier; 
+		PROCEDURE ^ IdentifierDefinition(VAR name: SyntaxTree.Identifier; VAR access: SET; allowedReadOnly: BOOLEAN); 
+		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ IndexList(expressionList: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ RangeExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ Designator(): SyntaxTree.Designator; 
+		PROCEDURE ^ Set(): SyntaxTree.Expression; 
+		PROCEDURE ^ MathArray(): SyntaxTree.Expression; 
+		PROCEDURE ^ Factor(): SyntaxTree.Expression; 
+		PROCEDURE ^ Term(): SyntaxTree.Expression; 
+		PROCEDURE ^ SimpleExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ Expression*(): SyntaxTree.Expression; 
+		PROCEDURE ^ Case(caseStatement: SyntaxTree.CaseStatement); 
+		PROCEDURE ^ Statement*(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN; 
+		PROCEDURE ^ StatementSequence*(outer: SyntaxTree.Statement): SyntaxTree.StatementSequence; 
+		PROCEDURE ^ StatementBlock(outer: SyntaxTree.Statement): SyntaxTree.StatementBlock; 
+		PROCEDURE ^ Code(outer: SyntaxTree.Statement): SyntaxTree.Code; 
+		PROCEDURE ^ Body(scope: SyntaxTree.ProcedureScope): SyntaxTree.Body; 
+		PROCEDURE ^ BodyProcedure(parentScope: SyntaxTree.Scope): SyntaxTree.Procedure; 
+		PROCEDURE ^ ProcedureType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.ProcedureType; 
+		PROCEDURE ^ ObjectType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ CellType(position: Position; name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type; 
+		PROCEDURE ^ PointerType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.PointerType; 
+		PROCEDURE ^ RecordType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.RecordType; 
+		PROCEDURE ^ ArrayType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ EnumerationType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ PortType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ Type(name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope): SyntaxTree.Type; 
+		PROCEDURE ^ PortDeclaration(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ PortList(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ ParameterDeclaration(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ FormalParameters(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ Flags(): SyntaxTree.Modifier; 
+		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
+		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^ CommentStatement(symbol: SyntaxTree.Statement); 
+		PROCEDURE ^ CommentCasePart(symbol: SyntaxTree.CasePart); 
+		PROCEDURE ^ CommentIfPart(symbol: SyntaxTree.IfPart); 
+		PROCEDURE ^ CommentWithPart(symbol: SyntaxTree.WithPart); 
+		PROCEDURE ^ ProcedureDeclaration(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ OperatorDeclaration(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ VariableNameList(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ VariableDeclaration(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ TypeDeclaration(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ ConstDeclaration(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ DeclarationSequence(parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ ImportList(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ Module*(): SyntaxTree.Module; 
+		PROCEDURE ^ NextModule*(): BOOLEAN; 
+	END Parser; 
+
+	PROCEDURE ^ AppendModifier(VAR list: SyntaxTree.Modifier; modifier: SyntaxTree.Modifier); 
+	PROCEDURE ^ NewParser*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics): Parser; 
+BEGIN
+END FoxParser.

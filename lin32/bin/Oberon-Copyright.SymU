@@ -1,0 +1,17 @@
+MODULE Copyright IN Oberon;
+	IMPORT Files, Fonts, Texts, Oberon;
+CONST 
+	Len = 6; 
+	Tag = \"(* Aos"\; 
+	CopyText = \"Copyright.Text"\; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Check(T: Texts.Text); 
+	PROCEDURE ^ GetName(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Scan(VAR S: Texts.Scanner); 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ Replace*; 
+BEGIN
+END Copyright.

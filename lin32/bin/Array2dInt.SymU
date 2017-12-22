@@ -1,0 +1,41 @@
+MODULE Array2dInt;
+	IMPORT SYSTEM, Array1dBytes, NbrInt, NbrRe, ArrayXd := ArrayXdInt, Array1d := Array1dInt, DataErrors;
+CONST 
+TYPE 
+	Value* = ArrayXd.Value; 
+
+	RealValue* = NbrRe.Real; 
+
+	Array* = POINTER TO ARRAY OF ARRAY OF Value; 
+
+	Index* = NbrInt.Integer; 
+
+	PROCEDURE ^ Copy*(VAR src: ARRAY OF ARRAY OF Value; VAR dest: ARRAY OF ARRAY OF Value; srcx, srcy, destx, desty, w, h: Index); 
+	PROCEDURE ^ Fill*(val: Value; VAR res: ARRAY OF ARRAY OF Value; x, y, w, h: Index); 
+	PROCEDURE ^ MinMax*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index; VAR min, max: Value; VAR minx, miny, maxx, maxy: Index); 
+	PROCEDURE ^ kSmallest*(k: Index; VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index): Value; 
+	PROCEDURE ^ Median*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index): Value; 
+	PROCEDURE ^ MeanSsq*(VAR s: ARRAY OF ARRAY OF Value; x, y, w, h: Index; VAR mean, ssq: RealValue); 
+	PROCEDURE ^ CopyRow*(y: Index; VAR s: ARRAY OF ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyCol*(x: Index; VAR s: ARRAY OF ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyToRow*(VAR s: ARRAY OF Value; y: Index; VAR res: ARRAY OF ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CopyToCol*(VAR s: ARRAY OF Value; x: Index; VAR res: ARRAY OF ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ Row*(y: Index; VAR s: ARRAY OF ARRAY OF Value): ArrayXd.Array1; 
+	PROCEDURE ^ Col*(x: Index; VAR s: ARRAY OF ARRAY OF Value): ArrayXd.Array1; 
+	PROCEDURE ^ Transposed*(VAR s: ARRAY OF ARRAY OF Value): Array; 
+	PROCEDURE ^ SwapRows*(VAR s: ARRAY OF ARRAY OF Value; y1, y2: Index); 
+	PROCEDURE ^ SwapCols*(VAR s: ARRAY OF ARRAY OF Value; x1, x2: Index); 
+	OPERATOR ^ "-"-(x: Array): Array; 
+	OPERATOR ^ ":="-(VAR l: Array; r: Value); 
+	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF Value); 
+	OPERATOR ^ "+"-(l, r: Array): Array; 
+	OPERATOR ^ "-"-(l, r: Array): Array; 
+	OPERATOR ^ "*"-(l, r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: ArrayXd.Array1): ArrayXd.Array1; 
+	OPERATOR ^ "*"-(l: ArrayXd.Array1; r: Array): ArrayXd.Array1; 
+	OPERATOR ^ "*"-(l: Value; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "DIV"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "MOD"-(l: Array; r: Value): Array; 
+BEGIN
+END Array2dInt.

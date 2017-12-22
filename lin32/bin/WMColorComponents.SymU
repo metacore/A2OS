@@ -1,0 +1,102 @@
+MODULE WMColorComponents;
+	IMPORT Strings, KernelLog, Raster, Texts, TextUtilities, XML, WMStandardComponents, WMGraphics, WMGraphicUtilities, WMComponents, WMRectangles, WMEditors, WMWindowManager, WMProperties, WMDropTarget, WMPopups, WMEvents;
+CONST 
+TYPE 
+	ChangeHandler = PROCEDURE {DELEGATE}; 
+
+	ColorChangeHandler = PROCEDURE {DELEGATE}(sender, color: ANY); 
+
+	Color* = OBJECT 
+	VAR 
+		value*: LONGINT; 
+	END Color; 
+
+	ColorDropTarget = OBJECT (WMDropTarget.DropTarget)
+	VAR 
+		setColor: ColorChangeHandler; 
+
+		PROCEDURE ^  & Init*(cch: ColorChangeHandler); 
+		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+	END ColorDropTarget; 
+
+	ColorDropInterface = OBJECT (WMDropTarget.DropInt32)
+	VAR 
+		setColor: ColorChangeHandler; 
+
+		PROCEDURE ^  & Init*(cch: ColorChangeHandler); 
+		PROCEDURE ^ Set*(i: LONGINT); 
+	END ColorDropInterface; 
+
+	NumberInput* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		input: WMEditors.Editor; 
+		buttons: WMStandardComponents.Panel; 
+		caption-: WMStandardComponents.Label; 
+		min-, max-, value-: WMProperties.Int32Property; 
+		changeHandler: ChangeHandler; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ PropertyChanged*(sender, prop: ANY); 
+		PROCEDURE ^ Increment(sender, data: ANY); 
+		PROCEDURE ^ Decrement(sender, data: ANY); 
+		PROCEDURE ^ ValueChanged(sender, data: ANY); 
+	END NumberInput; 
+
+	NumericColorChooser* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		r, g, b, t: NumberInput; 
+		colorChangeHandler: ColorChangeHandler; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetColor*(sender, color: ANY); 
+		PROCEDURE ^ SetExternalColorChangeHandler*(cch: ColorChangeHandler); 
+		PROCEDURE ^ NumberInputChanged; 
+		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY); 
+	END NumericColorChooser; 
+
+	ColorPot* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		dragPossible: BOOLEAN; 
+		colorChangeHandler: ColorChangeHandler; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawBackground*(c: WMGraphics.Canvas); 
+		PROCEDURE ^ GetHexValue(VAR hex: ARRAY OF CHAR); 
+		PROCEDURE ^ SetColor*(sender, color: ANY); 
+		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY); 
+		PROCEDURE ^ SetExternalColorChangeHandler*(cch: ColorChangeHandler); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
+		PROCEDURE ^ DragArrived(sender, data: ANY); 
+		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+	END ColorPot; 
+
+	ColorChooser* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		title-: WMStandardComponents.Label; 
+		customPots: WMStandardComponents.Panel; 
+		numericInputs: NumericColorChooser; 
+		palette: WMPopups.ColorSwatchPanel; 
+		showColor: ColorPot; 
+		onColorChosen: WMEvents.EventSource; 
+		color: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetColor(color: LONGINT); 
+		PROCEDURE ^ SetColor2(sender, color: ANY); 
+		PROCEDURE ^ ShowColorChangeHandler(sender, color: ANY); 
+	END ColorChooser; 
+VAR 
+	StrNumberInput, StrNumericColorChooser, StrColorPot, StrColorChooser: Strings.String; 
+
+	PROCEDURE ^ IsNumber(CONST str: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ GenNumberInput*(): XML.Element; 
+	PROCEDURE ^ GenNumericColorChooser*(): XML.Element; 
+	PROCEDURE ^ GenColorPot*(): XML.Element; 
+	PROCEDURE ^ GenColorChooser*(): XML.Element; 
+BEGIN
+END WMColorComponents.

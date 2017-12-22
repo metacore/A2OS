@@ -1,0 +1,503 @@
+MODULE Unix;
+	IMPORT S := SYSTEM, Glue, Trace;
+CONST 
+	Version* = \"Linux"\; 
+	libcname* = \"libc.so.6"\; 
+	libX11name* = \"libX11.so.6"\; 
+	libpthreadname = \"libpthread.so.0"\; 
+	LittleEndian* = TRUE; 
+	LsbIs0* = TRUE; 
+	PageSize* = 4096; 
+	stdin* = 0; 
+	stdout* = 1; 
+	stderr* = 2; 
+	EPERM* = 1; 
+	ENOENT* = 2; 
+	ESRCH* = 3; 
+	EINTR* = 4; 
+	EIO* = 5; 
+	ENXIO* = 6; 
+	E2BIG* = 7; 
+	ENOEXEC* = 8; 
+	EBADF* = 9; 
+	ECHILD* = 10; 
+	EAGAIN* = 11; 
+	ENOMEM* = 12; 
+	EACCES* = 13; 
+	EFAULT* = 14; 
+	ENOTBLK* = 15; 
+	EBUSY* = 16; 
+	EEXIST* = 17; 
+	EXDEV* = 18; 
+	ENODEV* = 19; 
+	ENOTDIR* = 20; 
+	EISDIR* = 21; 
+	EINVAL* = 22; 
+	ENFILE* = 23; 
+	EMFILE* = 24; 
+	ENOTTY* = 25; 
+	ETXTBSY* = 26; 
+	EFBIG* = 27; 
+	ENOSPC* = 28; 
+	ESPIPE* = 29; 
+	EROFS* = 30; 
+	EMLINK* = 31; 
+	EPIPE* = 32; 
+	EDOM* = 33; 
+	ERANGE* = 34; 
+	ENOMSG* = 42; 
+	EIDRM* = 43; 
+	ECHRNG* = 44; 
+	EL2NSYNC* = 45; 
+	EL3HLT* = 46; 
+	EL3RST* = 47; 
+	ELNRNG* = 48; 
+	EUNATCH* = 49; 
+	ENOCSI* = 50; 
+	EL2HLT* = 51; 
+	EDEADLK* = 35; 
+	ENOLCK* = 37; 
+	rdonly* = {}; 
+	rdwr* = {1}; 
+	creat* = {6}; 
+	trunc* = {9}; 
+	rwrwr* = {2, 4, 5, 7, 8}; 
+	rwxrwxrwx* = {0 .. 8}; 
+	F_OK* = {}; 
+	X_Ok* = {0}; 
+	W_OK* = {1}; 
+	R_OK* = {2}; 
+	SCHED_OTHER = 0; 
+	T_SIGRESUME = SIGUSR1; 
+	T_SIGSUSPEND = SIGUSR2; 
+	SIGHUP* = 1; 
+	SIGINT* = 2; 
+	SIGQUIT* = 3; 
+	SIGILL* = 4; 
+	SIGTRAP* = 5; 
+	SIGABRT* = 6; 
+	SIGIOT* = 6; 
+	SIGBUS* = 7; 
+	SIGFPE* = 8; 
+	SIGKILL* = 9; 
+	SIGUSR1* = 10; 
+	SIGSEGV* = 11; 
+	SIGUSR2* = 12; 
+	SIGPIPE* = 13; 
+	SIGALRM* = 14; 
+	SIGTERM* = 15; 
+	SIGSTKFLT* = 16; 
+	SIGCHLD* = 17; 
+	SIGCONT* = 18; 
+	SIGSTOP* = 19; 
+	SIGTSTP* = 20; 
+	SIGTTIN* = 21; 
+	SIGTTOU* = 22; 
+	SIGURG* = 23; 
+	SIGXCPU* = 24; 
+	SIGXFSZ* = 25; 
+	SIGVTALRM* = 26; 
+	SIGPROF* = 27; 
+	SIGWINCH* = 28; 
+	SIGIO* = 29; 
+	SIGPOLL* = SIGIO; 
+	SIGPWR* = 30; 
+	SIGSYS* = 31; 
+	SIGUNUSED = 31; 
+	SIG_BLOCK = 0; 
+	SIG_UNBLOCK = 1; 
+	SIG_SETMASK = 2; 
+	SA_NOCLDSTOP = 1; 
+	SA_SIGINFO = 4; 
+	SA_ONSTACK = 134217728; 
+	SA_RESTART = 268435456; 
+	SA_NODEFER = 1073741824; 
+	SA_RESETHAND = 80000000H; 
+	PTHREAD_CANCEL_ENABLE = 0; 
+	PTHREAD_CANCEL_DISABLE = 1; 
+	PTHREAD_CANCEL_ASYNCHRONOUS = 0; 
+	PTHREAD_CANCEL_DEFERRED = 1; 
+	ThreadLow* = 1; 
+	ThreadNormal* = 20; 
+	ThreadHigh* = 99; 
+	NumPriorities* = 99; 
+	AFINET* = 2; 
+	AFINET6* = 26; 
+	PFINET* = AFINET; 
+	PFINET6* = AFINET6; 
+	SockStream* = 1; 
+	SockDGram* = 2; 
+	IpProtoUDP* = 17; 
+	IpProtoTCP* = 6; 
+	SoLSocket* = 1; 
+	SoLinger* = 13; 
+	SoKeepAlive* = 9; 
+	SoNoDelay* = 1; 
+	FioNRead* = 21531; 
+	MsgPeek* = 2; 
+	MsgDontWait* = 64; 
+	ShutRDWR* = 2; 
+	SockAddrSizeV4* = 16; 
+	SockAddrSizeV6* = 28; 
+	FIONREAD* = 21531; 
+	TIOCMGET* = 21525; 
+	TIOCMBIS* = 21526; 
+	TIOCMBIC* = 21527; 
+	TIOCMSET* = 21528; 
+	B0* = 0; 
+	B50* = 1; 
+	B75* = 2; 
+	B110* = 3; 
+	B134* = 4; 
+	B150* = 5; 
+	B200* = 6; 
+	B300* = 7; 
+	B600* = 8; 
+	B1200* = 9; 
+	B1800* = 10; 
+	B2400* = 11; 
+	B4800* = 12; 
+	B9600* = 13; 
+	B19200* = 14; 
+	B38400* = 15; 
+	B57600* = 4097; 
+	B115200* = 4098; 
+	B230400* = 4099; 
+	CSIZE* = {4, 5}; 
+	CS5* = {}; 
+	CS6* = {4}; 
+	CS7* = {5}; 
+	CS8* = {4, 5}; 
+	CSTOPB* = {6}; 
+	CREAD* = {7}; 
+	PARENB* = {8}; 
+	PARODD* = {9}; 
+	HUPCL* = {10}; 
+	CLOCAL* = {11}; 
+	FdSetLen* = 32; 
+TYPE 
+	Thread_t* = ADDRESS; 
+
+	Mutex_t* = ADDRESS; 
+
+	MutexType = ARRAY 8 OF ADDRESS; 
+
+	MutexAttributeType = ARRAY 1 OF WORD; 
+
+	Condition_t* = ADDRESS; 
+
+	ConditionType = ARRAY 12 OF WORD; 
+
+	Sigset_t = ARRAY 32 OF ADDRESS; 
+
+	SignalTrap = PROCEDURE (sig: LONGINT; mc: Mcontext); 
+
+	pid_t* = LONGINT; 
+
+	path_t* = ARRAY OF CHAR; 
+
+	arg_t* = ARRAY OF CHAR; 
+
+	argv_t* = ARRAY OF arg_t; 
+
+	off_t* = SIZE; 
+
+	Termios* = RECORD 
+		iflags*, oflags*, cflags*, lflags*: SET; 
+		line*: CHAR; 
+		cc*: ARRAY 32 OF CHAR; 
+		ispeed-, ospeed-: LONGINT; 
+	END; 
+
+	DevT* = HUGEINT; 
+
+	Status* = RECORD 
+		dev-: DevT; 
+		unused1-: LONGINT; 
+		ino-: LONGINT; 
+		mode-: LONGINT; 
+		nlink-: LONGINT; 
+		uid-: LONGINT; 
+		gid-: LONGINT; 
+		rdev-: DevT; 
+		unused2-: LONGINT; 
+		size-: LONGINT; 
+		blksize-: LONGINT; 
+		blocks-: LONGINT; 
+		atime-: Timeval; 
+		mtime-: Timeval; 
+		ctime-: Timeval; 
+		unused-: ARRAY 2 OF LONGINT; 
+	END; 
+
+	tvPtr* = POINTER TO Timeval; 
+
+	Timeval* = RECORD 
+		sec*: LONGINT; 
+		usec*: LONGINT; 
+	END; 
+
+	TmPtr* = POINTER TO Tm; 
+
+	Tm* = RECORD 
+		sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: LONGINT; 
+		gmtoff*, tmzone*: LONGINT; 
+	END; 
+
+	Tms* = POINTER TO RECORD 
+		utime*, stime*, cutime*, cstime*: LONGINT; 
+	END; 
+
+	Timezone* = RECORD 
+		minuteswest*, dsttime*: LONGINT; 
+	END; 
+
+	Itimerval* = RECORD 
+		interval*, value*: Timeval; 
+	END; 
+
+	FdSet* = ARRAY FdSetLen OF SET; 
+
+	Dirent* = POINTER TO RECORD 
+		ino-, off-: LONGINT; 
+		reclen-: INTEGER; 
+		typ-: CHAR; 
+		name-: CHAR; 
+	END; 
+
+	Stack* = RECORD 
+		sp*: ADDRESS; 
+		flags*: SET; 
+		size*: SIZE; 
+	END; 
+
+	Ucontext* = POINTER TO UcontextDesc; 
+
+	UcontextDesc* = RECORD 
+		flags-: SET; 
+		link-: ADDRESS; 
+		stack-: Stack; 
+		mc-: McontextDesc; 
+	END; 
+
+	Mcontext* = POINTER TO McontextDesc; 
+
+	McontextDesc* = RECORD 
+		r_gs-: ADDRESS; 
+		r_fs-: ADDRESS; 
+		r_es-: ADDRESS; 
+		r_ds-: ADDRESS; 
+		r_di-: ADDRESS; 
+		r_si-: ADDRESS; 
+		r_bp*: ADDRESS; 
+		r_sp_x-: ADDRESS; 
+		r_bx-: ADDRESS; 
+		r_dx-: ADDRESS; 
+		r_cx-: ADDRESS; 
+		r_ax-: ADDRESS; 
+		r_trapno-: LONGINT; 
+		r_err-: LONGINT; 
+		r_pc*: ADDRESS; 
+		r_cs-: ADDRESS; 
+		r_flags-: LONGINT; 
+		r_sp*: ADDRESS; 
+		r_ss-: LONGINT; 
+		fpc-: ADDRESS; 
+		oldmask-: LONGINT; 
+		cr2-: LONGINT; 
+	END; 
+
+	FPcontext* = POINTER TO FPcontextDesc; 
+
+	FPcontextDesc* = RECORD 
+	END; 
+
+	PThreadAttr = RECORD 
+		reserved1-: ARRAY 5 OF ADDRESS; 
+		reserved2-: ARRAY 4 OF WORD; 
+	END; 
+
+	Sigaction = RECORD 
+		sa_handler: ADDRESS; 
+		sa_mask: Sigset_t; 
+		sa_flags: ADDRESS; 
+		filler: ADDRESS; 
+	END; 
+
+	Sched_param = RECORD 
+		sched_priority: LONGINT; 
+		safety: ARRAY 8 OF ADDRESS; 
+	END; 
+
+	OberonXErrorHandler* = PROCEDURE (disp, err: ADDRESS):LONGINT; 
+
+	OberonXIOErrorHandler* = PROCEDURE (disp: ADDRESS):LONGINT; 
+
+	; 
+VAR 
+	suspend_mutex: MutexType; 
+	mainthread: Thread_t; 
+	suspend_done: LONGINT; 
+	resume_done: LONGINT; 
+	sasuspend, saresume: Sigaction; 
+	argc-: LONGINT; 
+	argv-: ADDRESS; 
+	environ-: ADDRESS; 
+	sysinfo-: RECORD 
+		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR; 
+	END; 
+	sigstack-: ARRAY (32 * 4096) OF CHAR; 
+	sysconf: PROCEDURE {C}(name: LONGINT):WORD; 
+	pthread_mutex_init: PROCEDURE {C}(mutex: ADDRESS; mutexattr: ADDRESS):WORD; 
+	pthread_mutex_destroy: PROCEDURE {C}(mutex: ADDRESS):WORD; 
+	pthread_mutex_lock: PROCEDURE {C}(mutex: ADDRESS):WORD; 
+	pthread_mutex_unlock: PROCEDURE {C}(mutex: ADDRESS):WORD; 
+	pthread_mutexattr_init: PROCEDURE {C}(mutexattr: ADDRESS):WORD; 
+	pthread_mutexattr_settype: PROCEDURE {C}(mutexattr: ADDRESS; type: WORD):WORD; 
+	pthread_cond_init: PROCEDURE {C}(cond: ADDRESS; condAttr: ADDRESS):WORD; 
+	pthread_cond_destroy: PROCEDURE {C}(cond: ADDRESS):WORD; 
+	pthread_cond_wait: PROCEDURE {C}(cond: ADDRESS; mutex: ADDRESS):WORD; 
+	pthread_cond_signal: PROCEDURE {C}(cond: ADDRESS):WORD; 
+	pthread_create: PROCEDURE {C}(newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C}(arg: PROCEDURE ):ADDRESS; arg: PROCEDURE ):WORD; 
+	pthread_exit: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_detach: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_kill: PROCEDURE {C}(thr: ADDRESS; sigid: LONGINT):LONGINT; 
+	pthread_cancel: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_attr_init: PROCEDURE {C}(attr: ADDRESS); 
+	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
+	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
+	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE); 
+	pthread_self: PROCEDURE {C}():Thread_t; 
+	sched_get_priority_max: PROCEDURE {C}(policy: LONGINT):LONGINT; 
+	sched_get_priority_min: PROCEDURE {C}(policy: LONGINT):LONGINT; 
+	pthread_setschedparam: PROCEDURE {C}(thread: Thread_t; policy: LONGINT; param: ADDRESS):WORD; 
+	pthread_getschedparam: PROCEDURE {C}(thread: Thread_t; policy: LONGINT; param: ADDRESS):WORD; 
+	pthread_setcancelstate: PROCEDURE {C}(state: LONGINT; oldstate: ADDRESS):LONGINT; 
+	pthread_setcanceltype: PROCEDURE {C}(type: LONGINT; oldtype: ADDRESS):LONGINT; 
+	sigaction: PROCEDURE {C}(signum: LONGINT; CONST act, oldact: ADDRESS):LONGINT; 
+	sigemptyset: PROCEDURE {C}(set: ADDRESS); 
+	sigfillset: PROCEDURE {C}(set: ADDRESS):LONGINT; 
+	sigsuspend: PROCEDURE {C}(set: ADDRESS):LONGINT; 
+	sigaddset: PROCEDURE {C}(set: ADDRESS; signo: LONGINT); 
+	sigdelset: PROCEDURE {C}(set: ADDRESS; signo: LONGINT); 
+	nanosleep: PROCEDURE {C}(req, rem: ADDRESS):LONGINT; 
+	sigaltstack: PROCEDURE {C}(ss, oss: ADDRESS):LONGINT; 
+	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS):LONGINT; 
+	posix_spawnp-: PROCEDURE {C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS; envp: ADDRESS):LONGINT; 
+	posix_spawn-: PROCEDURE {C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS; envp: ADDRESS):LONGINT; 
+	waitpid-: PROCEDURE {C}(pid: pid_t; status: ADDRESS; options: LONGINT):pid_t; 
+	pipe-: PROCEDURE {C}(pipefd: ADDRESS):LONGINT; 
+	dup2-: PROCEDURE {C}(oldfd, newfd: LONGINT):LONGINT; 
+	dup-: PROCEDURE {C}(oldfd: LONGINT):LONGINT; 
+	read-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):LONGINT; 
+	write-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):LONGINT; 
+	open-: PROCEDURE {C}(name: ADDRESS; flags, mode: SET):LONGINT; 
+	close-: PROCEDURE {C}(fd: LONGINT):LONGINT; 
+	lseek-: PROCEDURE {C}(fd: LONGINT; offset, origin: SIZE):LONGINT; 
+	fsync-: PROCEDURE {C}(fd: LONGINT):LONGINT; 
+	ioctl-: PROCEDURE {C}(fd: LONGINT; request: LONGINT; arg: ADDRESS):LONGINT; 
+	unlink-: PROCEDURE {C}(name: ADDRESS):LONGINT; 
+	rename-: PROCEDURE {C}(oldname, newname: ADDRESS):LONGINT; 
+	ftruncate-: PROCEDURE {C}(fd: LONGINT; length: SIZE):LONGINT; 
+	chmod-: PROCEDURE {C}(name: ADDRESS; mode: SET):LONGINT; 
+	utime-: PROCEDURE {C}(name: ADDRESS; tb: ADDRESS):LONGINT; 
+	access-: PROCEDURE {C}(name: ADDRESS; mode: SET):LONGINT; 
+	select-: PROCEDURE {C}(width: LONGINT; rd, wr, ex: ADDRESS; VAR timeout: Timeval):LONGINT; 
+	realpath-: PROCEDURE {C}(file_name: ADDRESS; resolved_name: ADDRESS):ADDRESS; 
+	chdir-: PROCEDURE {C}(name: ADDRESS):LONGINT; 
+	mkdir-: PROCEDURE {C}(name: ADDRESS; mode: SET):LONGINT; 
+	rmdir-: PROCEDURE {C}(path: ADDRESS):LONGINT; 
+	xstat-: PROCEDURE {C}(ver: LONGINT; name: ADDRESS; VAR buf: Status):LONGINT; 
+	lxstat-: PROCEDURE {C}(ver: LONGINT; name: ADDRESS; VAR buf: Status):LONGINT; 
+	fxstat-: PROCEDURE {C}(ver: LONGINT; fd: LONGINT; VAR buf: Status):LONGINT; 
+	getpid-: PROCEDURE {C}():LONGINT; 
+	getuid-: PROCEDURE {C}():LONGINT; 
+	malloc-: PROCEDURE {C}(size: SIZE):ADDRESS; 
+	posix_memalign-: PROCEDURE {C}(VAR p: ADDRESS; alignment, size: SIZE):LONGINT; 
+	free-: PROCEDURE {C}(p: ADDRESS); 
+	mprotect-: PROCEDURE {C}(p: ADDRESS; len: SIZE; prot: LONGINT):LONGINT; 
+	alarm-: PROCEDURE {C}(ms: LONGINT):LONGINT; 
+	setitimer-: PROCEDURE {C}(which: LONGINT; VAR value, ovalue: Itimerval):LONGINT; 
+	getitimer-: PROCEDURE {C}(which: LONGINT; VAR value: Itimerval):LONGINT; 
+	clock_gettime-: PROCEDURE {C}(clk_id: LONGINT; tp: tvPtr):LONGINT; 
+	gettimeofday-: PROCEDURE {C}(VAR tv: Timeval; VAR tz: Timezone):LONGINT; 
+	mktime-: PROCEDURE {C}(VAR tm: Tm):LONGINT; 
+	localtime-: PROCEDURE {C}(CONST tv: Timeval):TmPtr; 
+	time-: PROCEDURE {C}(VAR tv: Timeval):LONGINT; 
+	times-: PROCEDURE {C}(VAR tms: Tms):LONGINT; 
+	system-: PROCEDURE {C}(cmd: ADDRESS); 
+	uname-: PROCEDURE {C}(utsname: ADDRESS):LONGINT; 
+	getcwd-: PROCEDURE {C}(buf: ADDRESS; len: SIZE):ADDRESS; 
+	getenv-: PROCEDURE {C}(name: ADDRESS):ADDRESS; 
+	opendir-: PROCEDURE {C}(name: ADDRESS):ADDRESS; 
+	readdir-: PROCEDURE {C}(dir: ADDRESS):Dirent; 
+	closedir-: PROCEDURE {C}(dir: ADDRESS); 
+	sigsetjmp-: PROCEDURE {C}(env: ADDRESS; savemask: LONGINT):LONGINT; 
+	siglongjmp-: PROCEDURE {C}(env: ADDRESS; val: LONGINT); 
+	kill-: PROCEDURE {C}(pid, sig: LONGINT):LONGINT; 
+	exit-: PROCEDURE {C}(status: LONGINT); 
+	perror-: PROCEDURE {C}(msg: ADDRESS); 
+	errno_location: PROCEDURE {C}():ADDRESS; 
+	xSetErrorHandler: PROCEDURE {C}(h: ADDRESS):WORD; 
+	xSetIOErrorHandler: PROCEDURE {C}(h: ADDRESS):WORD; 
+	libc-: LONGINT; 
+	libp-: LONGINT; 
+	libx-: LONGINT; 
+	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR; 
+	noPaths: LONGINT; 
+	sigstk: Stack; 
+	suspendHandler*: PROCEDURE (c: Ucontext); 
+	trap: SignalTrap; 
+	oberonXErrorHandler: OberonXErrorHandler; 
+	oberonXIOErrorHandler: OberonXIOErrorHandler; 
+
+	PROCEDURE ^ getnprocs*(): LONGINT; 
+	PROCEDURE ^ NewMtx*(): Mutex_t; 
+	PROCEDURE ^ NewRecursiveMtx*(): Mutex_t; 
+	PROCEDURE ^ MtxDestroy*(mtx: Mutex_t); 
+	PROCEDURE ^ MtxLock*(mtx: Mutex_t); 
+	PROCEDURE ^ MtxUnlock*(mtx: Mutex_t); 
+	PROCEDURE ^ NewCond*(): Condition_t; 
+	PROCEDURE ^ CondDestroy*(con: Condition_t); 
+	PROCEDURE ^ CondWait*(con: Condition_t; mtx: Mutex_t); 
+	PROCEDURE ^ CondSignal*(cond: Condition_t); 
+	PROCEDURE ^ ThrThis*(): Thread_t; 
+	PROCEDURE ^ ThrYield*; 
+	PROCEDURE ^ ThrExit*; 
+	PROCEDURE ^ ThrSetPriority*(thr: Thread_t; prio: LONGINT); 
+	PROCEDURE ^ ThrGetPriority*(thr: Thread_t): LONGINT; 
+	PROCEDURE ^ SetSigaltstack; 
+	PROCEDURE ^ {C} Starter(proc: PROCEDURE ): ADDRESS; 
+	PROCEDURE ^ ThrStart*(p: PROCEDURE ; stackSize: SIZE): Thread_t; 
+	PROCEDURE ^ ThrSleep*(ms: LONGINT); 
+	PROCEDURE ^ ThrKill*(thr: Thread_t); 
+	PROCEDURE ^ {C} resume_handler(sig: LONGINT); 
+	PROCEDURE ^ ThrResume*(thr: Thread_t); 
+	PROCEDURE ^ {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS); 
+	PROCEDURE ^ ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN); 
+	PROCEDURE ^ ThrInitialize*(VAR low, high: LONGINT): BOOLEAN; 
+	PROCEDURE ^ CopyContext*(CONST from: McontextDesc; VAR to: McontextDesc); 
+	PROCEDURE ^ ModifyContext*(cont: Mcontext; pc, bp, sp: LONGINT); 
+	PROCEDURE ^ Perror*(CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Dlsym*(lib: ADDRESS; CONST sym: ARRAY OF CHAR; objAddr: ADDRESS); 
+	PROCEDURE ^ Dlopen*(CONST libname: ARRAY OF CHAR; mode: LONGINT): ADDRESS; 
+	PROCEDURE ^ Dlclose*(lib: ADDRESS); 
+	PROCEDURE ^ GetArg*(no: LONGINT; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ GetArgval*(CONST argName: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ getSysinfo; 
+	PROCEDURE ^ CreateSignalStack; 
+	PROCEDURE ^ {C} SigHandler(sig: LONGINT; scp: ADDRESS; ucp: Ucontext); 
+	PROCEDURE ^ InstallTrap*(h: SignalTrap); 
+	PROCEDURE ^ InstallHandler(sig: LONGINT); 
+	PROCEDURE ^ fstat*(fd: LONGINT; VAR buf: Status): LONGINT; 
+	PROCEDURE ^ stat*(path: ADDRESS; VAR buf: Status): LONGINT; 
+	PROCEDURE ^ HandleSignal*(sig: LONGINT); 
+	PROCEDURE ^ errno*(): LONGINT; 
+	PROCEDURE ^ {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD; 
+	PROCEDURE ^ X11IOErrorHandler(d: ADDRESS): WORD; 
+	PROCEDURE ^ InitXErrorHandlers*(xErrorHandler: OberonXErrorHandler; xIOErrorHandler: OberonXIOErrorHandler); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ LinkToX*; 
+	PROCEDURE ^ Init0; 
+BEGIN
+END Unix.

@@ -1,0 +1,16 @@
+MODULE FoxCSharpFrontend;
+	IMPORT Streams, Diagnostics, SyntaxTree := FoxSyntaxTree, Parser := FoxCSharpParser, Scanner := FoxCSharpScanner, FoxFrontend;
+TYPE 
+	Frontend* = OBJECT (FoxFrontend.Frontend)
+	VAR 
+		scanner: Scanner.Scanner; 
+		parser: Parser.Parser; 
+
+		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ Parse*(): SyntaxTree.Module; 
+		PROCEDURE ^ Error*(): BOOLEAN; 
+	END Frontend; 
+
+	PROCEDURE ^ Get*(): FoxFrontend.Frontend; 
+BEGIN
+END FoxCSharpFrontend.

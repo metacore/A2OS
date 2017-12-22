@@ -1,0 +1,148 @@
+MODULE FATVolumes;
+	IMPORT SYSTEM, Kernel, Plugins, Streams, Disks, Files, Strings, KernelLog;
+CONST 
+	Ok* = Disks.Ok; 
+	BS* = 512; 
+	ErrReadOnly* = 2901; 
+	ErrDiskFull* = 2902; 
+	ErrInvalidParams* = 2903; 
+	ErrIOError* = 2904; 
+	Override = 3; 
+	FREE* = 0; 
+	EOC* =  -1; 
+	BAD* =  -2; 
+	IOERROR* =  -3; 
+	FAT* = 0; 
+	Data* = 0; 
+	FATCacheEnabled = TRUE; 
+	FATCacheSize = 127; 
+	FATWriteBehind = TRUE; 
+	DfltDataCacheSize = 256; 
+	CacheUpdateTime = (5 * 1000); 
+	fat12EOC = 4088; 
+	fat12BAD = 4087; 
+	fat12FREE = 0; 
+	fat16EOC = 65528; 
+	fat16BAD = 65527; 
+	fat16FREE = 0; 
+	fat16CleanShutdown = {15}; 
+	fat16IOError = {14}; 
+	fat16VCF = (fat16CleanShutdown + fat16IOError); 
+	fat32EOC = 268435448; 
+	fat32BAD = 268435447; 
+	fat32FREE = 0; 
+	fat32CleanShutdown = {27}; 
+	fat32IOError = {26}; 
+	fat32VCF = (fat32CleanShutdown + fat32IOError); 
+TYPE 
+	Address = Files.Address; 
+
+	BPB = ARRAY BS OF CHAR; 
+
+	CacheElement = RECORD 
+		adr: Address; 
+		valid, dirty: BOOLEAN; 
+	END; 
+
+	Cache = POINTER TO RECORD 
+		data: POINTER TO ARRAY OF CHAR; 
+		index: POINTER TO ARRAY OF CacheElement; 
+		startAdr: LONGINT; 
+		dataAdr: ADDRESS; 
+		blockSize, numBlocks: LONGINT; 
+		writeBehind, dirty: BOOLEAN; 
+	END; 
+
+	Volume* = OBJECT {EXCLUSIVE} (Files.Volume)
+	VAR 
+		dev-: Disks.Device; 
+		start-, startFAT-, endFAT-, startData-, maxClusters-, freeCluster: Address; 
+		freeCount, sectorsPC-, clusterSize-, fatSize-, numFATs-: LONGINT; 
+		ioError: BOOLEAN; 
+		label: ARRAY 12 OF CHAR; 
+		unsafe*, quit, syncNow, dead: BOOLEAN; 
+		fatCache, dataCache: Cache; 
+		timer: Kernel.Timer; 
+		NreadSector*, NwriteSector*, NreadCluster*, NwriteCluster*, NreadFAT*, NwriteFAT*, NallocCluster*: LONGINT; 
+
+		PROCEDURE ^ Init*(flags: SET; size, reserved: LONGINT); 
+		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
+		PROCEDURE ^ FreeBlock*(adr: Address); 
+		PROCEDURE ^ MarkBlock*(adr: Address); 
+		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
+		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
+		PROCEDURE ^ InitLowLevel*(bpbin: ARRAY OF CHAR; numClusters: LONGINT; dev: Disks.Device; start, size, blockSize: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ SetCache*(CacheType, NumBlocks: LONGINT; WriteBehind: BOOLEAN); 
+		PROCEDURE ^ InitCache(VAR cache: Cache; StartAdr, BlockSize, NumBlocks: LONGINT; WriteBehind: BOOLEAN); 
+		PROCEDURE ^ FlushCache(cache: Cache); 
+		PROCEDURE ^ ReadSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ReadSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ WriteSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ WriteSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ ReadFATEntry*(adr: Address): Address; 
+		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
+		PROCEDURE ^ WriteFATEntry*(adr, link: Address; VAR res: LONGINT); 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+		PROCEDURE ^ ReadCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ReadClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ WriteCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ WriteClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ AllocCluster*(link: Address; VAR res: LONGINT): Address; 
+		PROCEDURE ^ FreeClusterChain*(cluster: Address; VAR res: LONGINT); 
+		PROCEDURE ^ QuickFormat*; 
+		PROCEDURE ^ InitRoot; 
+		PROCEDURE ^ Synchronize; 
+		PROCEDURE ^ AwaitDeath*; 
+	BEGIN{ACTIVE, SAFE} 
+	END Volume; 
+
+	FAT1216Volume* = OBJECT {EXCLUSIVE} (Volume)
+	VAR 
+		firstRootSector-: Address; 
+		numRootSectors-: LONGINT; 
+
+		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
+		PROCEDURE ^ InitRoot; 
+	END FAT1216Volume; 
+
+	FAT12Volume* = OBJECT {EXCLUSIVE} (FAT1216Volume)
+
+		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+	END FAT12Volume; 
+
+	FAT16Volume* = OBJECT {EXCLUSIVE} (FAT1216Volume)
+
+		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+	END FAT16Volume; 
+
+	FAT32Volume* = OBJECT {EXCLUSIVE} (Volume)
+	VAR 
+		rootCluster-, fsInfo-: Address; 
+
+		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ InitRoot; 
+		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+	END FAT32Volume; 
+
+	PROCEDURE ^ New*(context: Files.Parameters); 
+	PROCEDURE ^ WritePartitionType(type: LONGINT); 
+	PROCEDURE ^ InitVol(dev: Disks.Device; partIdx, type: LONGINT; VAR vol: Files.Volume; flags: SET; cacheSize: LONGINT); 
+	PROCEDURE ^ AND*(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Or*(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ GetUnsignedInteger*(VAR b: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ PutUnsignedInteger*(VAR b: ARRAY OF CHAR; ofs, value: LONGINT); 
+	PROCEDURE ^ GetLongint*(VAR b: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ PutLongint*(VAR b: ARRAY OF CHAR; ofs, value: LONGINT); 
+	PROCEDURE ^ IsPartitioned(dev: Disks.Device): BOOLEAN; 
+BEGIN
+END FATVolumes.

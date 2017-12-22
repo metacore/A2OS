@@ -1,0 +1,198 @@
+MODULE Objects;
+	IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
+CONST 
+	PleaseHalt* = 10; 
+	Unbreakable* = 11; 
+	SelfTermination* = 12; 
+	Preempted* = 27; 
+	Resistant* = 28; 
+	MinPriority* = Unix.ThreadLow; 
+	Low* = (Unix.ThreadLow + 1); 
+	Normal* = Unix.ThreadNormal; 
+	High* = (Unix.ThreadHigh - 2); 
+	GCPriority* = (Unix.ThreadHigh - 1); 
+	Realtime* = Unix.ThreadHigh; 
+	Restart* = 0; 
+	Unknown* = 0; 
+	Ready* = 1; 
+	Running* = 2; 
+	AwaitingLock* = 3; 
+	AwaitingCond* = 4; 
+	AwaitingEvent* = 5; 
+	Terminated* = 6; 
+	Second* = 1000; 
+	DefaultStacksize = (128 * 1024); 
+TYPE 
+	LockT = POINTER TO RECORD 
+		mtx, enter: ADDRESS; 
+	END; 
+
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT; 
+
+	ProtectedObject = POINTER TO RECORD 
+	END; 
+
+	ObjectHeader = Heaps.ProtRecBlock; 
+
+	ProcessQueue = Heaps.ProcessQueue; 
+
+	EventHandler* = PROCEDURE {DELEGATE}; 
+
+	Timer* = OBJECT 
+	VAR 
+		next: Timer; 
+		trigger: LONGINT; 
+		handler: EventHandler; 
+	END Timer; 
+
+	TimerActivity = OBJECT {EXCLUSIVE} 
+	VAR 
+		t, r: Timer; 
+		h: EventHandler; 
+		restart: BOOLEAN; 
+
+		PROCEDURE ^ UpdateTicks; 
+		PROCEDURE ^ Restart; 
+	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
+	END TimerActivity; 
+
+	Clock* = OBJECT {EXCLUSIVE} 
+
+	BEGIN{ACTIVE} 
+	END Clock; 
+
+	FinalizedCollection* = OBJECT 
+
+		PROCEDURE ^ RemoveAll*(obj: ANY); 
+	END FinalizedCollection; 
+
+	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
+		c*: FinalizedCollection; 
+	END; 
+
+	FinalizerCaller = OBJECT {EXCLUSIVE} 
+	VAR 
+		n: Heaps.FinalizerNode; 
+		start: BOOLEAN; 
+
+		PROCEDURE ^ Activate; 
+	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
+	END FinalizerCaller; 
+
+	Body = PROCEDURE (self: ProtectedObject); 
+
+	Condition = PROCEDURE (slink: ADDRESS):BOOLEAN; 
+
+	Process* = OBJECT (Heaps.ProcessLink)
+	VAR 
+		threadId-: Unix.Thread_t; 
+		nextProcess-: Process; 
+		stackBottom-: ADDRESS; 
+		id-: LONGINT; 
+		body: Body; 
+		mode-: LONGINT; 
+		flags-: SET; 
+		priority-: LONGINT; 
+		succ: Process; 
+		obj-: ProtectedObject; 
+		condition-: Condition; 
+		condFP-: ADDRESS; 
+		continue: Unix.Condition_t; 
+		waitingOn-: ProtectedObject; 
+		procID-: LONGINT; 
+		state-: Machine.State; 
+		state0: ARRAY 2048 OF CHAR; 
+		context: ANY; 
+
+		PROCEDURE ^ FindRoots*; 
+		PROCEDURE ^ Cancel; 
+		PROCEDURE ^ GetPriority(): LONGINT; 
+		PROCEDURE ^ SetPriority(prio: LONGINT); 
+		PROCEDURE ^  & Initialize(obj: ProtectedObject; bodyProc: Body; prio: LONGINT; fl: SET; stacksize: LONGINT); 
+	END Process; 
+
+	GCStatusExt = OBJECT (Heaps.GCStatus)
+
+		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
+	END GCStatusExt; 
+
+	MainThread = OBJECT {EXCLUSIVE} 
+	VAR 
+		exit: BOOLEAN; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Await; 
+	END MainThread; 
+VAR 
+	timerActivity: TimerActivity; 
+	clock: Clock; 
+	timers: Timer; 
+	timerListMutex: Unix.Mutex_t; 
+	timerStopped: BOOLEAN; 
+	root-: Process; 
+	stacksize: LONGINT; 
+	processList: Unix.Mutex_t; 
+	createProcess: Unix.Mutex_t; 
+	startProcess: Unix.Mutex_t; 
+	lockMutex: Unix.Mutex_t; 
+	childrunning: Unix.Condition_t; 
+	newProcess: Process; 
+	nextPID: LONGINT; 
+	finalizerCaller: FinalizerCaller; 
+	mainthread: Unix.Thread_t; 
+	main: MainThread; 
+	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
+
+	PROCEDURE ^ BodyStarter; 
+	PROCEDURE ^ InitProtHeader(hdr: ObjectHeader); 
+	PROCEDURE ^ CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); 
+	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
+	PROCEDURE ^ Await*(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET); 
+	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
+	PROCEDURE ^ FindCondition(VAR q: ProcessQueue): Process; 
+	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
+	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
+	PROCEDURE ^ Terminate*; 
+	PROCEDURE ^ TerminateThis*(p: Process; unbreakable: BOOLEAN); 
+	PROCEDURE ^ SetPriority*(pri: LONGINT); 
+	PROCEDURE ^ Sleep*(ms: LONGINT); 
+	PROCEDURE ^ Yield*; 
+	PROCEDURE ^ CurrentProcess*(): Process; 
+	PROCEDURE ^ CurrentContext*(): ANY; 
+	PROCEDURE ^ SetContext*(context: ANY); 
+	PROCEDURE ^ CurrentProcess0(): Process; 
+	PROCEDURE ^ ActiveObject*(): ANY; 
+	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
+	PROCEDURE ^ GetProcessID*(): LONGINT; 
+	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
+	PROCEDURE ^ min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 
+	PROCEDURE ^ FinalizeActiveObj(obj: ANY); 
+	PROCEDURE ^ FinalizeProtObject(obj: ANY); 
+	PROCEDURE ^ FinalizeProcess(obj: ANY); 
+	PROCEDURE ^ Exit; 
+	PROCEDURE ^ ExitTrap*; 
+	PROCEDURE ^ Remove(t: Timer); 
+	PROCEDURE ^ Insert(t: Timer); 
+	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ CancelTimeout*(t: Timer); 
+	PROCEDURE ^ GetContext(ctxt: Unix.Ucontext); 
+	PROCEDURE ^ UpdateProcessState*(p: Process); 
+	PROCEDURE ^ SuspendActivities; 
+	PROCEDURE ^ ResumeActivities; 
+	PROCEDURE ^ GCLoop*; 
+	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
+	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
+	PROCEDURE ^ LeaveA2; 
+	PROCEDURE ^ ReenterA2; 
+	PROCEDURE ^ StartTimerActivity; 
+	PROCEDURE ^ GetStacksize; 
+	PROCEDURE ^ Convert; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ MainThreadSleep; 
+	PROCEDURE ^ Final; 
+	PROCEDURE ^ GCStatusFactory(): Heaps.GCStatus; 
+BEGIN
+END Objects.

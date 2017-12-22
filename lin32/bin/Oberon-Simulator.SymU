@@ -1,0 +1,10 @@
+MODULE Simulator IN Oberon;
+	IMPORT Display, Gadgets, Attributes, Diagrams;
+CONST 
+VAR 
+	seed: LONGINT; 
+
+	PROCEDURE ^ Random(): REAL; 
+	PROCEDURE ^ Start*; 
+BEGIN
+END Simulator.

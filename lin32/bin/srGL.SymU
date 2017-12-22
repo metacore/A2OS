@@ -1,0 +1,36 @@
+MODULE srGL;
+	IMPORT srBase, srMath, Math;
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PT = srBase.PT; 
+
+	Matrix = ARRAY 3 OF ARRAY 4 OF SREAL; 
+
+	Context* = OBJECT 
+	VAR 
+		Stack: ARRAY 20 OF Matrix; 
+		spointer: INTEGER; 
+
+		PROCEDURE ^  & new*; 
+		PROCEDURE ^ push*; 
+		PROCEDURE ^ pop*; 
+		PROCEDURE ^ transform*(VAR p: PT); 
+		PROCEDURE ^ translatep*(VAR p: PT); 
+		PROCEDURE ^ rotatep*(VAR angle: SREAL; p: PT); 
+		PROCEDURE ^ scalep*(VAR p: PT); 
+		PROCEDURE ^ translate*(x, y, z: SREAL); 
+		PROCEDURE ^ rotate*(angle, x, y, z: SREAL); 
+		PROCEDURE ^ scale*(x, y, z: SREAL); 
+	END Context; 
+VAR 
+	identity: Matrix; 
+
+	PROCEDURE ^ ConcatMatrix(VAR A, B, C: Matrix); 
+	PROCEDURE ^ Transform(VAR M: Matrix; VAR x: PT); 
+	PROCEDURE ^ GetRotation(VAR M: Matrix; angle, x, y, z: SREAL); 
+	PROCEDURE ^ Translate(VAR M: Matrix; dx, dy, dz: SREAL); 
+	PROCEDURE ^ Rotate(VAR M: Matrix; angle, x, y, z: SREAL); 
+	PROCEDURE ^ Scale(VAR M: Matrix; sx, sy, sz: SREAL); 
+BEGIN
+END srGL.

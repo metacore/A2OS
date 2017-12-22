@@ -1552,6 +1552,7 @@ VAR
 					ELSIF name = "xmm2/mem64" THEN RETURN xmmmem64;
 					ELSIF name = "xmm2/mem128" THEN RETURN xmmmem128;
 					ELSIF name = "xmm2/mem256" THEN RETURN xmmmem256;
+					ELSIF name = "xmm2/m64" THEN RETURN xmmmem64;
 					ELSIF name = "xmm2/m128" THEN RETURN xmmmem128;
 					ELSIF name = "xmm3/mem32" THEN RETURN xmmmem32;
 					ELSIF name = "xmm3/mem64" THEN RETURN xmmmem64;

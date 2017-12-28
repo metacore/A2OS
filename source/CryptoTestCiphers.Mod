@@ -87,6 +87,7 @@ IMPORT
 		cipher.Encrypt( bindata, 0, 16 );
 		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, 16 );
 		(* decryption *)
+		cipher.InitKey( binkey, keybits );
 		cipher.SetIV( iv, Ciphers.CTR );
 		cipher.Decrypt( bindata, 0, 16 );
 		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, 16 );

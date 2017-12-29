@@ -8,4 +8,5 @@ Machine.SetTraceFile~
 FSTools.Mount WORK RelativeFileSystem Work~
 Display.Install ~
 WindowManager.Install ~
+Clipboard.Install ~
 Autostart.Run~

@@ -30597,7 +30597,7 @@ positive: return statement with value in procedure with return type
 negative: return statement without value in procedure with return type
 
 	MODULE Test;
-	PROCEDURE Procedure (): INTEGER;;
+	PROCEDURE Procedure (): INTEGER;
 	BEGIN RETURN
 	END Procedure;
 	END Test.

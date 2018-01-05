@@ -78,7 +78,7 @@ VAR
 		out.String( "UnixAos BootLinker creating " );  out.String( fullPath );  out.Ln;
 		
 		Heaps.Initialize( context.error );
-		Modules.Initialize( context.error );;
+		Modules.Initialize( context.error );
 		Loader.Initialize( context.error );
 						
 		res := Ok;

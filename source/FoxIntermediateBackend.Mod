@@ -1195,7 +1195,7 @@ TYPE
 		PROCEDURE GetVariable(i: LONGINT): SyntaxTree.Variable;
 		VAR any: ANY;
 		BEGIN
-			any := Get(i);;
+			any := Get(i);
 			IF any = NIL THEN RETURN NIL ELSE RETURN any(SyntaxTree.Variable) END;
 		END GetVariable;
 		

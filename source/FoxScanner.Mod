@@ -891,7 +891,7 @@ TYPE
 			stringMaker.Clear;
 			CASE ch OF  (* ch > " " *)
 			EOT: s := EndOfText
-			|ESC: s := Escape;; GetNextCharacter
+			|ESC: s := Escape; GetNextCharacter
 			| DoubleQuote:
 					s := String; GetString(symbol,TRUE, TRUE, FALSE);
 			| SingleQuote:

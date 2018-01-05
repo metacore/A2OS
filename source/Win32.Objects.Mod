@@ -193,7 +193,7 @@ TYPE
 				state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
 				res := Kernel32.GetThreadContext( handle, state );
 				
-				context.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);;
+				context.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
 				IF isWow64 THEN 
 					res := Kernel32.Wow64GetThreadContext( handle, context );
 				ELSE

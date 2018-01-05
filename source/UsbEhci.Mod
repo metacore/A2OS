@@ -513,7 +513,7 @@ TYPE
 
 			(*
 			pipe.qh := Align(pipe.qh, alignQh);
-			pipe.tdBase := pipe.qh + alignQh;;
+			pipe.tdBase := pipe.qh + alignQh;
 			*)
 			(*
 			IF ~CheckBoundary(pipe.qh, sizeQh) THEN

@@ -540,7 +540,7 @@ BEGIN
 			startAddr := startAddr + tdSize;
 			totTdSize := totTdSize + tdSize;
 		END;
-		ASSERT(totTdSize  = LEN(m.staticTypeDescs));;
+		ASSERT(totTdSize  = LEN(m.staticTypeDescs));
 		RETURN TRUE
 	ELSE
 		RETURN FALSE

@@ -120,7 +120,7 @@ VAR
 	BEGIN
 		e := pos + 4;  unicode := 0;
 		REPEAT
-			c := buf[pos];  INC( pos );;
+			c := buf[pos];  INC( pos );
 			IF (c >= '0') & (c <= '9' ) THEN unicode := unicode*10H + ORD( c ) - ORD( '0' )
 			ELSIF (c >= 'a') & (c <= 'f') THEN unicode := unicode*10H + ORD( c ) - ORD( 'a' ) + 10
 			ELSIF (c >= 'A') & (c <= 'F') THEN unicode := unicode*10H + ORD( c ) - ORD( 'A' ) + 10

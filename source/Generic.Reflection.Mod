@@ -401,7 +401,7 @@ CONST
 			SYSTEM.GET(adr, word); Signed(word);
 		| sfTypeLONGWORD: 
 			size := SIZEOF(LONGWORD);
-			SYSTEM.GET(adr, lword); Signed(lword);;
+			SYSTEM.GET(adr, lword); Signed(lword);
 		| sfTypeSIGNED8:
 			size := SIZEOF(SIGNED8);
 			SYSTEM.GET(adr, s8); Signed(s8);

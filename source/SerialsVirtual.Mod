@@ -442,7 +442,7 @@ VAR rate, divisor: LONGINT;
 BEGIN
 	IF context.arg.GetInteger(rate,FALSE) & context.arg.GetInteger(divisor,FALSE) THEN
 		errorRate := rate  / divisor;
-	END;;
+	END;
 END SetErrorRate;
 
 

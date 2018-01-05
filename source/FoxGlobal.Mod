@@ -751,10 +751,10 @@ TYPE
 			system.integerType := SyntaxTree.NewIntegerType(16, TRUE);
 			system.booleanType := SyntaxTree.NewBooleanType(8);
 			system.byteType := SyntaxTree.NewByteType(8);
-			system.characterType := SyntaxTree.NewCharacterType(8);;
-			system.characterType8 := SyntaxTree.NewCharacterType(8);;
-			system.characterType16 := SyntaxTree.NewCharacterType(16);;
-			system.characterType32 := SyntaxTree.NewCharacterType(32);;
+			system.characterType := SyntaxTree.NewCharacterType(8);
+			system.characterType8 := SyntaxTree.NewCharacterType(8);
+			system.characterType16 := SyntaxTree.NewCharacterType(16);
+			system.characterType32 := SyntaxTree.NewCharacterType(32);
 			(*
 			system.shortintType := Integer8;
 			system.integerType := Integer16;

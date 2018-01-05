@@ -7283,7 +7283,7 @@ Sufficient (but not necessary) conditions:
 		WHILE (len > 0) DO
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
-			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;;
+			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
 			INC(dadr,dinc); 
 		END;
 	END MaxAXSXLoop;
@@ -7302,7 +7302,7 @@ Sufficient (but not necessary) conditions:
 		WHILE (len > 0) DO
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
-			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;;
+			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
 			INC(dadr,dinc); 
 		END;
 	END MaxARSRLoop;
@@ -7381,7 +7381,7 @@ Sufficient (but not necessary) conditions:
 		WHILE (len > 0) DO
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
-			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;;
+			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
 			INC(dadr,dinc); 
 		END;
 	END MinAXSXLoop;
@@ -7401,7 +7401,7 @@ Sufficient (but not necessary) conditions:
 		WHILE (len > 0) DO
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
-			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;;
+			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
 			INC(dadr,dinc); 
 		END;
 	END MinARSRLoop;

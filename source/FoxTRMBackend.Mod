@@ -283,7 +283,7 @@ TYPE
 		BEGIN
 			CheckStackPointer(op1);
 			instructionSet.InitImmediate(op2,0,n);
-			Emit(op, op1, op2);;
+			Emit(op, op1, op2);
 		END Emit2N;
 
 		PROCEDURE Emit1(op: LONGINT; CONST op1: InstructionSet.Operand);

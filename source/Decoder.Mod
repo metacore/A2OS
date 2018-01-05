@@ -1063,7 +1063,7 @@ TYPE
 			w.String("Pointers in Procs"); w.Ln;
 			FOR i := 0 TO LEN(gcInfo)-1 DO
 				w.String("code offset "); w.Hex(gcInfo[i].codeOffset,-8); w.Ln;
-				w.String("begin offset "); w.Hex(gcInfo[i].beginOffset,-8); w.Ln;;
+				w.String("begin offset "); w.Hex(gcInfo[i].beginOffset,-8); w.Ln;
 				w.String("end offset "); w.Hex(gcInfo[i].endOffset,-8); w.Ln;
 				w.String("pointers: "); w.Ln;
 				FOR j := 0 TO LEN(gcInfo[i].pointers) - 1 DO

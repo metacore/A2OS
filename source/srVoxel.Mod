@@ -995,7 +995,7 @@ BEGIN
 			bx := ray.lx + ray.dx; by := ray.ly+ ray.dy; bz := ray.lz+ ray.dz;
 			x := (ax+bx)/2; y := (ay+by)/2; z := (az + bz)/2;
 			FOR i := 0 TO 12 DO
-				r2 := (cx-x)*(cx-x) + (cy-y)*(cy-y) + (cz-z)*(cz-z);;
+				r2 := (cx-x)*(cx-x) + (cy-y)*(cy-y) + (cz-z)*(cz-z);
 				IF r2 > R2 THEN
 					bx := x; by := y; bz := z
 				ELSE

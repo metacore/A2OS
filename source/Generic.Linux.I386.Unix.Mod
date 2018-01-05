@@ -783,7 +783,7 @@ VAR
 
 		sigemptyset( ADDRESS OF sasuspend.sa_mask );
 		sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
-		sasuspend.sa_flags := SA_SIGINFO + (*SA_ONSTACK +*) SA_NODEFER;;
+		sasuspend.sa_flags := SA_SIGINFO + (*SA_ONSTACK +*) SA_NODEFER;
 		sasuspend.sa_handler := suspend_handler;
 		ASSERT(sigaction( T_SIGSUSPEND, ADDRESS OF sasuspend, NIL ) = 0);
 

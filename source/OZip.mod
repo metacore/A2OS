@@ -382,7 +382,7 @@ type
 	(* Borrows Wheeler Transformation, Decode*)	
 	procedure BWDecode( var buf: array of char; length, index: longint );
 	var 
-		l, f: pointer to array of char;; 
+		l, f: pointer to array of char;
 		lc, fc: pointer to array of longint;
 		xn: array 256 of longint;  i, j, n: longint;
 		ch: char;

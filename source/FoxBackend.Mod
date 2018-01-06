@@ -6,7 +6,6 @@ IMPORT
 
 TYPE
 	SectionName = ARRAY 256 OF CHAR;
-	Registers*= POINTER TO ARRAY OF LONGINT;
 
 	Backend* = OBJECT
 	VAR
@@ -90,10 +89,7 @@ TYPE
 			RETURN Global.DefaultSystem();
 		END GetSystem;
 		
-		PROCEDURE GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Registers;
-		BEGIN
-			RETURN NIL; (* default case: no parameter registers *)
-		END GetParameterRegisters;
+
 
 		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR);
 		BEGIN

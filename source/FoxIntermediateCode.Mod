@@ -71,7 +71,7 @@ CONST
 	NofOpcodes*= 40;
 
 	NotYetCalculatedSize = -2;
-
+	
 TYPE
 	Type*=RECORD
 		form-: SHORTINT; (* SignedInteger, UnsignedInteger or Float *)
@@ -1092,6 +1092,10 @@ TYPE
 	BEGIN registerClass.class := class; registerClass.number := INTEGER(number)
 	END InitRegisterClass;
 
+	PROCEDURE InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: LONGINT);
+	BEGIN registerClass.class := Parameter; registerClass.number := INTEGER(number)
+	END InitParameterRegisterClass;
+	
 	PROCEDURE NewType*(form: SHORTINT; sizeInBits: INTEGER): Type;
 	VAR type: Type;
 	BEGIN InitType(type, form, sizeInBits); RETURN type

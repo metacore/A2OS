@@ -589,8 +589,7 @@ TYPE
 			cc: LONGINT;
 			cellType: SyntaxTree.CellType;
 			registerNumber: LONGINT;
-			registerParameter: Backend.Registers;
-			registerParameters: LONGINT;
+			registerParameters: SIZE;
 			registerClass: IntermediateCode.RegisterClass;
 			type: IntermediateCode.Type;
 			formalParameter: SyntaxTree.Parameter;
@@ -739,11 +738,8 @@ TYPE
 					*)
 
 					IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
-						registerParameter := backend.GetParameterRegisters(procedureType.callingConvention);
+						registerParameters := backend.NumberParameterRegisters(procedureType.callingConvention);
 						
-						IF registerParameter = NIL THEN registerParameters := 0 
-						ELSE registerParameters := LEN(registerParameter) 
-						END;
 						
 						(* assumption: registers are passed left to right and left parameters are in registers *)
 						formalParameter := procedureType.firstParameter;
@@ -751,13 +747,13 @@ TYPE
 							IF ~PassInRegister(formalParameter) THEN
 								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
 							ELSE
-								IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, registerParameter[registerNumber]);
 								IF formalParameter.type.IsRecordType() THEN
 									ASSERT (formalParameter.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter});
 									type := addressType;
 								ELSE
 									type := GetType(system, formalParameter.type);
 								END;
+								IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(procedureType.callingConvention, type, registerNumber));
 								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
 								IntermediateCode.InitMemory(dest,type,implementationVisitor.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
 								ir.Emit(Mov(Basic.invalidPosition,dest, src));
@@ -4638,14 +4634,13 @@ TYPE
 			VAR registerClass: IntermediateCode.RegisterClass; parameterRegister: IntermediateCode.Operand;
 			BEGIN
 				IF numberRegister >= 0 THEN
-					IntermediateCode.InitRegisterClass(registerClass, IntermediateCode.Parameter, SHORT(numberRegister));
+					IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(callingConvention,op.type,numberRegister));
 					IntermediateCode.InitRegister(parameterRegister, op.type, registerClass, AcquireRegister(op.type, registerClass));
 					Emit(Mov(position,parameterRegister, op));
 				ELSE
 					Emit(Push(position,op))
 				END
 			END Pass;
-
 
 			PROCEDURE PushArrayLens(formalType,actualType: SyntaxTree.Type; dim: LONGINT);
 			VAR tmp: IntermediateCode.Operand; actualArrayBase: SyntaxTree.Type;
@@ -4774,7 +4769,7 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,nil,MathFlagsOffset);
 
 					(* case 1d 
-						P(...,T,...) push: process left arguments, create array descriptor with given number of dimensions from T on stack						
+						P(...,T,...) push: process left arguments, create array descriptor with given s of dimensions from T on stack						
 						+ case 1e
 						P(.. PT() ... ); 
 					*)
@@ -5557,8 +5552,7 @@ TYPE
 			isCallOfDynamicOperator, hasDynamicOperands: BOOLEAN;
 			identifierNumber: LONGINT;
 
-			parameterRegister: Backend.Registers;
-			parameterRegisters: LONGINT;
+			parameterRegisters: SIZE;
 			passByRegister: BOOLEAN; registerNumber,stackSize: LONGINT;
 			procedure: SyntaxTree.Procedure;
 
@@ -5801,10 +5795,7 @@ TYPE
 			firstWriteBackCall := NIL; (* reset write-back call list *)
 
 			IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
-				parameterRegister := backend.GetParameterRegisters(procedureType.callingConvention);
-				IF parameterRegister = NIL THEN parameterRegisters := 0 
-				ELSE parameterRegisters := LEN(parameterRegister) 
-				END; 
+				parameterRegisters := backend.NumberParameterRegisters(procedureType.callingConvention);
 				
 				passByRegister := parameterRegisters > 0;
 				registerNumber := 0;
@@ -5816,7 +5807,7 @@ TYPE
 						IF ~PassInRegister(formalParameter) THEN
 							Error(actualParameter.position,"cannot be passed by register")
 						ELSE
-							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,parameterRegister[i]);
+							PushParameter(actualParameter, formalParameter, procedureType.callingConvention, FALSE, dummy,i);
 						END;
 						INC(registerNumber);
 					ELSE
@@ -13670,6 +13661,18 @@ TYPE
 			SetRuntimeModuleName(DefaultRuntimeModuleName);
 			SetTraceModuleName(DefaultTraceModuleName);
 		END InitIntermediateBackend;
+		
+		(* must be overwritten by actual backend, if parameter registers should be used *)
+		PROCEDURE NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE;
+		BEGIN
+			RETURN 0; (* default case: no parameter registers *)
+		END NumberParameterRegisters;
+
+		(* must be overwritten by actual backend, if parameter registers should be used *)
+		PROCEDURE ParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; index: LONGINT): LONGINT;
+		BEGIN
+			HALT(100); (* abstract *)
+		END ParameterRegister;
 
 		PROCEDURE GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module;
 		VAR

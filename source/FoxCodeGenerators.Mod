@@ -196,6 +196,7 @@ TYPE
 			PROCEDURE GetRegisterAllocation;
 			CONST MaxParameterRegisters=16;
 			VAR pc,i: LONGINT; parameterRegisters: ARRAY MaxParameterRegisters OF IntermediateCode.Operand;
+				parameterRegister: LONGINT;
 
 				PROCEDURE RegisterUsage(CONST instruction: IntermediateCode.Instruction);
 				VAR i: LONGINT;
@@ -206,7 +207,8 @@ TYPE
 						IF operand.register > 0 THEN
 							allocation.Use(operand.register,inPC);
 							IF operand.registerClass.class = IntermediateCode.Parameter THEN (* store recent parameter registers *)
-								parameterRegisters[operand.registerClass.number] := operand;
+								parameterRegisters[parameterRegister] := operand;
+								INC(parameterRegister);
 							END;
 						END;
 						IF operand.rule # NIL THEN
@@ -220,10 +222,11 @@ TYPE
 					Use(instruction.op2);
 					Use(instruction.op3);
 					IF instruction.opcode = IntermediateCode.call THEN (* mark all currently used parameter registers used in this instruction *)
-						FOR i := 0 TO MaxParameterRegisters-1 DO
+						FOR i := 0 TO parameterRegister-1 DO
 							Use(parameterRegisters[i]);
 							IntermediateCode.InitOperand(parameterRegisters[i]);
 						END;
+						parameterRegister := 0;
 					END;
 				END RegisterUsage;
 			BEGIN
@@ -231,6 +234,7 @@ TYPE
 				FOR i := 0 TO MaxParameterRegisters-1 DO
 					IntermediateCode.InitOperand(parameterRegisters[i]);
 				END;
+				parameterRegister := 0;
 				FOR pc := 0 TO in.pc-1 DO
 					inPC := pc;
 					RegisterUsage(in.instructions[pc]);
@@ -902,12 +906,6 @@ TYPE
 		BEGIN HALT(100) (* abstract *)
 		END ExchangeTickets;
 
-		PROCEDURE ParameterRegister*(CONST type: IntermediateCode.Type; number: LONGINT): LONGINT;
-		BEGIN HALT(100) (* abstract *)
-		END ParameterRegister;
-
-
-
 		(*---------------------------- ticket handling and register allocation ----------------------------*)
 
 		(* Spill register of a ticket, if any *)
@@ -1123,7 +1121,7 @@ TYPE
 				GetPartType(type,part,partType);
 				IF partType.form # IntermediateCode.Undefined THEN
 					IF class.class = IntermediateCode.Parameter THEN
-						AllocateThis(ParameterRegister(partType, class.number));
+						AllocateThis(class.number);
 					ELSE
 						MapTicket(partType,lastuse)
 					END;

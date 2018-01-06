@@ -944,55 +944,7 @@ TYPE
 				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+4*part);
 			END;
 		END GetMemory;
-
-		PROCEDURE HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
-		BEGIN
-			index := index MOD 32;
-			sizeInBits := sizeInBits DIV 8;
-			WHILE sizeInBits > 1 DO (* jump to register section that corresponds to the number of bits *)
-				INC(index,32);
-				sizeInBits := sizeInBits DIV 2;
-			END;
-			RETURN index
-		END HardwareIntegerRegister;
-
-		PROCEDURE HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
-		BEGIN HALT(200); (* not yet implemented *)
-		END HardwareFloatRegister;
-
-		PROCEDURE GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT;
-		VAR size: LONGINT;
-		BEGIN
-			IF type.form IN IntermediateCode.Integer THEN
-				RETURN HardwareIntegerRegister(index, type.sizeInBits)
-			ELSIF type.form = IntermediateCode.Float THEN
-				RETURN HardwareFloatRegister(index, type.sizeInBits)
-			ELSE
-				HALT(100);
-			END;
-		END GetTypedHardwareRegister;
-
-		(* returns the following register (or part thereof)
-			0: regRAX; 
-			1: regRCX; 
-			2: regRDX; 
-			3: regRBX;
-			4: regRSP; 
-			5: regRBP; 
-			6: regRSI; 
-			7: regRDI;
-			8 .. 15: regRx;
-		*)
-
-		PROCEDURE ParameterRegister(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT;
-		VAR physical: LONGINT;
-		BEGIN
-			RETURN GetTypedHardwareRegister(RAX + index, type);
-			ASSERT(0 <= index); 
-			ASSERT(index <= 15);
-			RETURN physical;
-		END ParameterRegister;
-
+		
 		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket);
 		VAR type: IntermediateCode.Type; virtualRegister, tempReg: LONGINT;
 			tmp,imm: Assembler.Operand; index: LONGINT;
@@ -3204,7 +3156,8 @@ TYPE
 		bits: LONGINT;
 		traceable: BOOLEAN;
 		forceFPU: BOOLEAN;
-		winAPIRegisters, cRegisters: Backend.Registers;
+		winAPIRegisters: ARRAY 4 OF LONGINT;
+		cRegisters: ARRAY 6 OF LONGINT;
 
 		PROCEDURE &InitBackendAMD64;
 		BEGIN
@@ -3212,13 +3165,11 @@ TYPE
 			bits := 32;
 			forceFPU := FALSE;
 						
-			NEW(winAPIRegisters, 4); 
 			winAPIRegisters[0] := RCX - RAX;
 			winAPIRegisters[1] := RDX - RAX;
 			winAPIRegisters[2] := R8 - RAX;
 			winAPIRegisters[3] := R9 - RAX; 
 			
-			NEW(cRegisters, 6);
 			cRegisters[0] := RDI - RAX;
 			cRegisters[1] := RSI - RAX;
 			cRegisters[2] := RDX - RAX;
@@ -3300,21 +3251,67 @@ TYPE
 			RETURN system
 		END GetSystem;
 
-		(* return index of general purpose register used as parameter register in calling convention *)
-		PROCEDURE GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Backend.Registers;
+		(* return number of general purpose registery used as parameter register in calling convention *)
+		PROCEDURE NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE;
 		BEGIN
 			IF bits = 32 THEN
-				RETURN NIL;
+				RETURN 0;
 			ELSE
 				CASE callingConvention OF
-					SyntaxTree.CCallingConvention: RETURN cRegisters;
-					|SyntaxTree.WinAPICallingConvention:  RETURN winAPIRegisters;
-					|SyntaxTree.DarwinCCallingConvention: RETURN cRegisters; 
+					|SyntaxTree.WinAPICallingConvention:  RETURN 4;
+					|SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention: RETURN 6; 
 				ELSE
-					RETURN NIL;
+					RETURN 0;
 				END;
 			END
-		END GetParameterRegisters;
+		END NumberParameterRegisters;
+		
+		
+
+		(* returns the following register (or part thereof)
+			0: regRAX; 
+			1: regRCX; 
+			2: regRDX; 
+			3: regRBX;
+			4: regRSP; 
+			5: regRBP; 
+			6: regRSI; 
+			7: regRDI;
+			8 .. 15: regRx;
+		*)
+		PROCEDURE HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
+		BEGIN
+			index := index MOD 32;
+			sizeInBits := sizeInBits DIV 8;
+			WHILE sizeInBits > 1 DO (* jump to register section that corresponds to the number of bits *)
+				INC(index,32);
+				sizeInBits := sizeInBits DIV 2;
+			END;
+			RETURN index
+		END HardwareIntegerRegister;
+
+		PROCEDURE HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
+		BEGIN 
+			ASSERT((sizeInBits = 32) OR (sizeInBits = 64));
+			RETURN XMM0 + index;
+		END HardwareFloatRegister;
+		
+		PROCEDURE ParameterRegister(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; index: LONGINT): LONGINT;
+		VAR size: LONGINT; 
+		BEGIN
+			IF type.form IN IntermediateCode.Integer THEN
+				CASE callingConvention OF
+					|SyntaxTree.WinAPICallingConvention:  index := winAPIRegisters[index];
+					|SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention: index := cRegisters[index]
+				END;
+				RETURN HardwareIntegerRegister(RAX + index, type.sizeInBits)
+			ELSIF type.form = IntermediateCode.Float THEN
+				index := index + 1; (* start with XMM1 *)
+				RETURN HardwareFloatRegister(index, type.sizeInBits)
+			ELSE
+				HALT(100);
+			END;
+		END ParameterRegister;
 
 		PROCEDURE SupportedInstruction(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		BEGIN

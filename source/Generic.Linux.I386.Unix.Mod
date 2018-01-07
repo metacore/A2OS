@@ -821,7 +821,7 @@ VAR
 		IF val = 0 THEN
 			Trace.String( "Unix.Dlsym:  entry '" );  Trace.String( sym );  Trace.String( "' not found" );
 			Trace.Ln;
-			exit(0);
+		(*	exit(0);	*)
 		END
 	END Dlsym;
 

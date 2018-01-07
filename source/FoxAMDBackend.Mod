@@ -3306,7 +3306,6 @@ TYPE
 				END;
 				RETURN HardwareIntegerRegister(RAX + index, type.sizeInBits)
 			ELSIF type.form = IntermediateCode.Float THEN
-				index := index + 1; (* start with XMM1 *)
 				RETURN HardwareFloatRegister(index, type.sizeInBits)
 			ELSE
 				HALT(100);

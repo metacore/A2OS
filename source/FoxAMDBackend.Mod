@@ -2986,7 +2986,11 @@ TYPE
 					MakeOperand(vop,Low,op,NIL);
 					Move(op, memop, vop.type)
 				END;
-				AllocateStack(-sizeInBytes*length);
+				IF sizeInBytes * length * 8 < cpuBits THEN 
+					AllocateStack(-cpuBits DIV 8);
+				ELSE
+					AllocateStack(-sizeInBytes*length);
+				END;
 			END;
 		END EmitPopFloat;
 

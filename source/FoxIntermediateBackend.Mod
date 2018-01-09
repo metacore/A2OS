@@ -659,7 +659,7 @@ TYPE
 			currentScope := scope;
 			procedureType := x.type(SyntaxTree.ProcedureType);
 			isModuleBody := x = module.module.moduleScope.bodyProcedure;
-			implementationVisitor.temporaries.Init;
+			implementationVisitor.temporaries.Clear;
 			implementationVisitor.usedRegisters := NIL;
 			implementationVisitor.registerUsageCount.Init;
 
@@ -1170,6 +1170,16 @@ TYPE
 			nameIndex := 0; 
 		END Init;
 		
+		PROCEDURE Clear;
+		VAR i: LONGINT;
+		BEGIN
+			Clear^;
+			FOR i := 0 TO LEN(inUse)-1 DO inUse[i] := {} END;
+			registerIndex := 1024;
+			nameIndex := 0; 
+		END Clear;
+		
+		
 		PROCEDURE GetUID(): SyntaxTree.Identifier;
 		VAR string: SyntaxTree.IdentifierString ;
 		BEGIN
@@ -1199,7 +1209,6 @@ TYPE
 		BEGIN
 			Set(pos, v);
 		END SetVariable;
-		
 
 		PROCEDURE Occupy(pos: LONGINT);
 		BEGIN
@@ -1221,9 +1230,7 @@ TYPE
 		BEGIN
 			t1 := t1.resolved;
 			t2 := t2.resolved;
-			RETURN t1.SameType(t2); 
-			(*
-			the following needs testing
+			(*RETURN t1.SameType(t2); *)
 			RETURN 
 				(t1.SameType(t2)) 
 				OR
@@ -1238,7 +1245,6 @@ TYPE
 					(t1(SyntaxTree.MathArrayType).form = SyntaxTree.Open) & 
 					(DynamicDim(t1) = DynamicDim(t2))
 				);
-			*)
 		END CompatibleType;
 		
 		PROCEDURE GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable;
@@ -1248,7 +1254,7 @@ TYPE
 			FOR i := 0 TO pos-1 DO
 				IF ~(Occupied(i)) THEN
 					var := GetVariable(i);
-					IF CompatibleType(type, var.type) & (var.untraced = untraced) & ~(var.type.NeedsTrace()) THEN
+					IF CompatibleType(type, var.type) & (var.untraced = untraced) (*& ~(var.type.NeedsTrace())*) THEN
 						pos := i;
 						Occupy(i); 
 						RETURN var;
@@ -7937,7 +7943,6 @@ TYPE
 				ELSE
 					Evaluate(p0, result)
 				END
-
 			(* ---- IM ---- *)
 			|Global.Im:
 				ASSERT(p0.type.resolved IS SyntaxTree.ComplexType);

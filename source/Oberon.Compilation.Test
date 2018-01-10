@@ -39470,3 +39470,12 @@ positive: tests of MIN and MAX
 
 	BEGIN
 	END Test.
+
+negative: conversion float to unsigned data type
+	MODULE Test;
+	VAR real: REAL;
+	VAR unsigned8: UNSIGNED8;
+	BEGIN
+	    unsigned8 := UNSIGNED8(real);
+	END Test.
+

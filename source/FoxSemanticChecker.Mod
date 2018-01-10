@@ -5655,10 +5655,11 @@ TYPE
 							(*!! ELSIF type = Global.Char16 THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0FFFFH));
 							ELSIF type = Global.Char32 THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0FFFFFFFFH));
 							*)
-							ELSIF type IS SyntaxTree.IntegerType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.IntegerType))));
+							ELSIF type IS SyntaxTree.IntegerType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.IntegerType),type(SyntaxTree.IntegerType).signed)));
 							ELSIF type IS SyntaxTree.FloatType THEN result.SetResolved(SyntaxTree.NewRealValue(position,Global.MaxFloat(system,type(SyntaxTree.FloatType))));
 							ELSIF type IS SyntaxTree.SetType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,system.SizeOf(type)-1)); type := system.shortintType;
-							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.BasicType))));
+							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.BasicType),TRUE)));
+							ELSIF type IS SyntaxTree.AddressType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MaxInteger(system,type(SyntaxTree.BasicType),FALSE)));
 							ELSE Error(parameter0.position, "builtin function not applicable to this type");
 							END;
 						ELSE
@@ -5686,10 +5687,11 @@ TYPE
 						IF parameter0.type = SyntaxTree.typeDeclarationType THEN
 							type := parameter0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved;
 							IF type IS SyntaxTree.CharacterType THEN result.SetResolved(SyntaxTree.NewCharacterValue(position,MIN(CHAR)));
-							ELSIF type IS SyntaxTree.IntegerType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MinInteger(system,type(SyntaxTree.IntegerType))));
+							ELSIF type IS SyntaxTree.IntegerType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,Global.MinInteger(system,type(SyntaxTree.IntegerType),type(SyntaxTree.IntegerType).signed)));
 							ELSIF type IS SyntaxTree.FloatType THEN result.SetResolved(SyntaxTree.NewRealValue(position,Global.MinFloat(system,type(SyntaxTree.FloatType))));
 							ELSIF type IS SyntaxTree.SetType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position,0)); type := system.shortintType;
-							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position, Global.MinInteger(system,type(SyntaxTree.BasicType))));
+							ELSIF type IS SyntaxTree.SizeType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position, Global.MinInteger(system,type(SyntaxTree.BasicType),TRUE)));
+							ELSIF type IS SyntaxTree.AddressType THEN result.SetResolved(SyntaxTree.NewIntegerValue(position, Global.MinInteger(system,type(SyntaxTree.BasicType),FALSE)));
 							ELSE Error(parameter0.position,"builtin function not applicable to this type");
 							END;
 						ELSE

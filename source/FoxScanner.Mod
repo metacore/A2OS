@@ -752,7 +752,7 @@ TYPE
 							symbol.numberType := Hugeint;
 							WHILE i < n DO
 								d := Decimal( dig[i] );  INC( i );
-								IF hugeint >= MAX(HUGEINT) DIV 10 THEN Error( Basic.NumberTooLarge) END;
+								IF hugeint > MAX(HUGEINT) DIV 10 THEN Error( Basic.NumberTooLarge) END;
 								hugeint := hugeint * tenh + d;
 								IF hugeint < 0 THEN Error( Basic.NumberTooLarge ) END
 							END;

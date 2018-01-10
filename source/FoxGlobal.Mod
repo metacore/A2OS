@@ -1419,14 +1419,22 @@ TYPE
 		RETURN LSH (LSH (this, bits), -bits);
 	END ConvertUnsigned;
 
-	PROCEDURE MaxInteger*(system: System; type: SyntaxTree.BasicType): HUGEINT;
+	PROCEDURE MaxInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT;
 	BEGIN
-		RETURN ASH (HUGEINT(1), system.SizeOf (type) - 1) - 1;
+		IF signed THEN
+			RETURN ASH (HUGEINT(1), system.SizeOf (type) - 1) - 1;
+		ELSE
+			RETURN ASH (HUGEINT(1), system.SizeOf (type)) -1;
+		END;
 	END MaxInteger;
 
-	PROCEDURE MinInteger*(system: System; type: SyntaxTree.BasicType): HUGEINT;
+	PROCEDURE MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT;
 	BEGIN
-		RETURN -ASH (HUGEINT(1), system.SizeOf (type) - 1);
+		IF signed THEN
+			RETURN -ASH (HUGEINT(1), system.SizeOf (type) - 1);
+		ELSE
+			RETURN 0
+		END;
 	END MinInteger;
 
 	(*! make architecture  independent ! *)

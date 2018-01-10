@@ -8984,6 +8984,23 @@ negative: passing enumeration extension on extended type as var parameter
 		P1(fineColor);
 	END Test.
 
+positive: returning enumeration type
+
+	MODULE Test;
+
+	TYPE
+	Enumeration = ENUM 
+		red, green, blue
+	END;
+
+	PROCEDURE Test(): Enumeration;
+	BEGIN
+		RETURN Enumeration.green;
+	END Test;
+
+	BEGIN
+		ASSERT(Test() = Enumeration.green);
+	END Test.
 
 # variables
 

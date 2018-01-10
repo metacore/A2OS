@@ -10673,7 +10673,7 @@ TYPE
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
-				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention) THEN
+				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (type IS SyntaxTree.EnumerationType) OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention) THEN
 					(* return without structured return parameter *)
 					Evaluate(expression,res);
 					delegate := (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate);

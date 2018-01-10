@@ -156,6 +156,8 @@ TYPE
 	MutexAttributeType	= ARRAY 12 OF CHAR;	(* 64bit: 16 *)
 	ConditionType		= ARRAY 28 OF CHAR;	(* 64bit: 48 *)
 
+	Key_t* = ADDRESS;
+	
 	Sigset = ARRAY 4 OF CHAR;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
@@ -426,6 +428,10 @@ VAR
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
 	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
+	
+	pthread_key_create	: PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
+	pthread_setspecific	: PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
+	pthread_getspecific	: PROCEDURE {C} ( key: Key_t ): ADDRESS;
 
 	pthread_attr_init: PROCEDURE {C} (attr: ADDRESS);
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD);
@@ -545,6 +551,25 @@ VAR
 	END getnprocs;
 
 
+	PROCEDURE NewKey*( ): Key_t;
+	VAR
+		key: Key_t;
+	BEGIN
+		ASSERT(pthread_key_create(ADDRESSOF(key), NIL) = 0);
+		RETURN key;
+	END NewKey;
+ 
+	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
+	BEGIN
+		RETURN pthread_getspecific(key);
+	END ReadKey;
+
+	PROCEDURE WriteKey* (key: Key_t; value: ADDRESS);
+	BEGIN
+		ASSERT(pthread_setspecific(key, value) = 0);
+	END WriteKey;
+	
+	
 	PROCEDURE NewMtx*( ): Mutex_t;
 	VAR
 		mtx: Mutex_t;
@@ -1015,6 +1040,10 @@ VAR
 		Dlsym( libp, "pthread_detach", ADDRESSOF(pthread_detach) );
 		Dlsym( libp, "pthread_cancel", ADDRESSOF(pthread_cancel) );
 		Dlsym( libp, "pthread_kill", ADDRESSOF(pthread_kill) );
+		
+		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
+		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
+		Dlsym( libp, "pthread_setspecific", ADDRESSOF( pthread_setspecific ) );
 
 		Dlsym( libp, "pthread_sigmask", ADDRESSOF(pthread_sigmask) );
 		Dlsym( libp, "pthread_setcancelstate", ADDRESSOF(pthread_setcancelstate) );

@@ -52,7 +52,9 @@ VAR
 	startProcess		: Unix.Mutex_t;
 	lockMutex		: Unix.Mutex_t;
 	childrunning		: Unix.Condition_t;
-		
+	
+	processPointer	: Unix.Key_t;
+	
 	newProcess: Process;
 	nextPID: LONGINT;
 	
@@ -298,6 +300,7 @@ TYPE
 				id := 0;  nextPID := 1;
 				root := SELF;
 				mode := Running;
+				Unix.WriteKey( processPointer, SELF );
 			END;
 		END Initialize;
 				
@@ -339,6 +342,7 @@ TYPE
 	BEGIN
 		Unix.MtxLock( startProcess );
 			p := newProcess;  newProcess := NIL;
+			Unix.WriteKey( processPointer, p );
 			p.id := nextPID;  INC( nextPID );
 			p.stackBottom := Machine.CurrentBP( );
 			S.GET( p.stackBottom, prevBP );
@@ -522,14 +526,8 @@ TYPE
 	
 	(* Return current process. (DEPRECATED, use ActiveObject) *)
 	PROCEDURE CurrentProcess*( ): Process;	
-	VAR me: Unix.Thread_t;  p: Process;
 	BEGIN
-		me := Unix.ThrThis( );
-		Unix.MtxLock( processList );
-		p := root;
-		WHILE (p # NIL) & (p.threadId # me) DO  p := p.nextProcess  END;
-		Unix.MtxUnlock( processList );
-		RETURN p
+		RETURN S.VAL( Process, Unix.ReadKey( processPointer ) )
 	END CurrentProcess;
 	
 	PROCEDURE CurrentContext*(): ANY;
@@ -548,15 +546,6 @@ TYPE
 		IF p # NIL THEN p.context := context END;
 	END SetContext;
 	
-	PROCEDURE CurrentProcess0( ): Process;	
-	VAR me: Unix.Thread_t;  p: Process;
-	BEGIN
-		me := Unix.ThrThis( );
-		p := root;
-		WHILE (p # NIL) & (p.threadId # me) DO  p := p.nextProcess  END;
-		RETURN p
-	END CurrentProcess0;
-
 	
 	(* Return the active object currently executing. *)
 	PROCEDURE ActiveObject*( ): ANY;		
@@ -741,9 +730,7 @@ TYPE
 	PROCEDURE GetContext( ctxt: Unix.Ucontext );
 	VAR t: Process; context: Unix.McontextDesc;
 	BEGIN
-		(*	use CurrentProcess0 here instead of CurrentProcess in order to
-			avoid a possible deadlock *)
-		t := CurrentProcess0( );
+		t := CurrentProcess( );
 		Unix.CopyContext( ctxt.mc, context );
 		t.state.PC := context.r_pc;
 		t.state.BP := context.r_bp;
@@ -884,6 +871,8 @@ TYPE
 		createProcess := Unix.NewMtx( );  processList := Unix.NewMtx( );
 		startProcess := Unix.NewMtx( );  childrunning := Unix.NewCond( ); 
 		lockMutex := Unix.NewMtx( );
+		
+		processPointer := Unix.NewKey( );
 											
 		GetStacksize;  
 		Convert;

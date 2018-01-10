@@ -163,6 +163,8 @@ TYPE
 	Thread_t* = LONGINT;
 	PthreadAttributeDesc = RECORD attr: ADDRESS END;
 	
+	Key_t* = ADDRESS;
+	
 	Mutex_t* = ADDRESS;
 	MutexDesc = ARRAY 24 OF CHAR;
 	MutexAttributeDesc = RECORD attr: ADDRESS END;
@@ -432,6 +434,10 @@ VAR
 	pthread_cancel	: PROCEDURE {C} ( thr: Thread_t );
 	pthread_self		: PROCEDURE {C} ( ): Thread_t;
 	
+	pthread_key_create:		PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
+	pthread_setspecific:		PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
+	pthread_getspecific:		PROCEDURE {C} ( key: Key_t ): ADDRESS;
+	
 	pthread_attr_init: PROCEDURE {C} ( attr: ADDRESS );
 	pthread_attr_setscope: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
 	pthread_attr_setdetachstate: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
@@ -567,7 +573,25 @@ VAR
 	BEGIN
 		RETURN sysconf( 15 ); (* 14 for number of processors configured, 15 for number of processors online *)
 	END getnprocs;
+	
+ 
+	PROCEDURE NewKey*( ): Key_t;
+	VAR
+		key: Key_t;
+	BEGIN
+		ASSERT(pthread_key_create(ADDRESSOF(key), NIL) = 0);
+		RETURN key;
+	END NewKey;
+ 
+	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
+	BEGIN
+		RETURN pthread_getspecific(key);
+	END ReadKey;
 
+	PROCEDURE WriteKey* (key: Key_t; value: ADDRESS);
+	BEGIN
+		ASSERT(pthread_setspecific(key, value) = 0);
+	END WriteKey;
 
 	(*------------------------------------------------------------------------------------------------------*)
 	
@@ -1001,6 +1025,10 @@ VAR
 		Dlsym( libp, "pthread_detach", ADDRESSOF( pthread_detach ) );
 		Dlsym( libp, "pthread_cancel", ADDRESSOF( pthread_cancel ) );
 		Dlsym( libp, "pthread_kill", ADDRESSOF( pthread_kill ) );
+		
+		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
+		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
+		Dlsym( libp, "pthread_setspecific", ADDRESSOF( pthread_setspecific ) );
 
 		Dlsym( libp, "pthread_sigmask", ADDRESSOF( pthread_sigmask ) );
 		Dlsym( libp, "pthread_setcancelstate", ADDRESSOF( pthread_setcancelstate ) );

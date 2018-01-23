@@ -2231,8 +2231,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		PADDUSW 	MMX1, MMX2
 
-		;	PSRLW	MMX1, 8 ; normalize
-		DB 			0FH, 71H, 0D1H, 08H
+		PSRLW	MMX1, 8 ; normalize
 		PACKUSWB MMX1, MMX0
 
 		; HUGA BIMBO Muell
@@ -2666,8 +2665,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PMULLW 	MMX2, MMX6
 		PADDUSW 	MMX1, MMX2
 
-	;	PSRLW	MMX1, 8 ; normalize
-		DB 			0FH, 71H, 0D1H, 08H
+		PSRLW	MMX1, 8 ; normalize
 		PACKUSWB 	MMX1, MMX0
 
 		; HUGA BIMBO Muell

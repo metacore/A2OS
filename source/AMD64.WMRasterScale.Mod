@@ -2559,8 +2559,7 @@ alpha:
 	PMULLW 	MM2, MM6
 	PADDUSW 	MM1, MM2
 
-	;	PSRLW	MM1, 8 ; normalize
-	DB 			0FH, 71H, 0D1H, 08H
+	PSRLW	MMX1, 8 ; normalize
 	PACKUSWB 	MM1, MM0
 
 	; HUGA BIMBO Muell

@@ -5,7 +5,7 @@ IMPORT
 
 	PROCEDURE  Ecb1*(context : Commands.Context);
 		VAR
-			hex, bindata, binkey, modname, orig: ARRAY 64 OF CHAR; cipher: Ciphers.Cipher;
+			hex, bindata, binkey, modname, orig: ARRAY 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
 			keybits: LONGINT;
 	BEGIN
 		(* read in the parameter *)
@@ -13,20 +13,20 @@ IMPORT
 		context.arg.SkipWhitespace; context.arg.Int(keybits, FALSE);
 		(* encryption *)
 		cipher := Ciphers.NewCipher( modname );
-		hex := "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
-		U.Hex2Bin( hex, 0, binkey, 0, 24 );	U.Hex2Bin( hex, 0, bindata, 0, 8 );
-		orig := bindata; orig[8] := 0X;
+		hex := "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
+		U.Hex2Bin( hex, 0, binkey, 0, keybits DIV 8 );	U.Hex2Bin( hex, 0, bindata, 0, cipher.blockSize );
+		orig := bindata; orig[cipher.blockSize] := 0X;
 		cipher.InitKey( binkey, keybits );
 		Out.Ln; Out.String( "*********************************" );
 		Out.Ln; Out.String( "Encrypt-Decrypt-Test in ECB-mode: " ); Out.String( cipher.name );
 		Out.Ln; Out.String( "Key: " ); U.PrintHex( binkey, 0, keybits DIV 8 );
-		Out.Ln; Out.String( "Original: " ); U.PrintHex( bindata, 0, 8 );
-		cipher.Encrypt( bindata, 0, 8 );
-		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, 8 );
+		Out.Ln; Out.String( "Original: " ); U.PrintHex( bindata, 0, cipher.blockSize );
+		cipher.Encrypt( bindata, 0, cipher.blockSize );
+		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, cipher.blockSize );
 		(* decryption *)
-		cipher.Decrypt( bindata, 0, 8 );
-		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, 8 );
-		bindata[8] := 0X; 
+		cipher.Decrypt( bindata, 0, cipher.blockSize );
+		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, cipher.blockSize );
+		bindata[cipher.blockSize] := 0X; 
 		Out.Ln;
 		IF bindata = orig THEN  Out.String( "OK" )  ELSE  Out.String( "FAIL" )  END;
 		Out.Ln
@@ -34,7 +34,7 @@ IMPORT
 
 	PROCEDURE  Cbc1*(context : Commands.Context);
 		VAR
-			hex, bindata, binkey, modname, iv, orig: ARRAY 64 OF CHAR; cipher: Ciphers.Cipher;
+			hex, bindata, binkey, modname, iv, orig: ARRAY 2 * 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
 			keybits: LONGINT;
 	BEGIN
 		(* read in the parameter *)
@@ -42,23 +42,25 @@ IMPORT
 		context.arg.SkipWhitespace; context.arg.Int(keybits, FALSE);
 				(* encryption *)
 		cipher := Ciphers.NewCipher( modname );
-		hex := "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
-		U.Hex2Bin( hex, 0, binkey, 0, 24 );	U.Hex2Bin( hex, 0, bindata, 0, 8 );
+		hex := "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
+		U.Hex2Bin( hex, 0, binkey, 0, keybits DIV 8 );	U.Hex2Bin( hex, 0, bindata, 0, 2 * cipher.blockSize );
 		cipher.InitKey( binkey, keybits );
 		U.RandomBytes( iv, 0, cipher.blockSize );
+		(*U.RandomBytes( bindata, 0, cipher.blockSize);*)
 		cipher.SetIV( iv, Ciphers.CBC );
 		Out.Ln; Out.String( "*********************************" );
 		Out.Ln; Out.String( "Encrypt-Decrypt-Test in CBC-mode: " ); Out.String( cipher.name );
 		Out.Ln; Out.String( "Key: " ); U.PrintHex( binkey, 0, keybits DIV 8 );
-		Out.Ln; Out.String( "Original: " ); U.PrintHex( bindata, 0, 8 );
-		orig := bindata;  orig[8] := 0X;
-		cipher.Encrypt( bindata, 0, 8 );
-		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, 8 );
+		Out.Ln; Out.String( "IV: "); U.PrintHex( iv, 0, cipher.blockSize );
+		Out.Ln; Out.String( "Original: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
+		orig := bindata;  orig[2 * cipher.blockSize] := 0X;
+		cipher.Encrypt( bindata, 0, 2 * cipher.blockSize );
+		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
 		(* decryption *)
 		cipher.SetIV( iv, Ciphers.CBC );
-		cipher.Decrypt( bindata, 0, 8 );
-		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, 8 );
-		bindata[8] := 0X; 
+		cipher.Decrypt( bindata, 0, 2 * cipher.blockSize );
+		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
+		bindata[2 * cipher.blockSize] := 0X; 
 		Out.Ln;
 		IF bindata = orig THEN  Out.String( "OK" )  ELSE  Out.String( "FAIL" )  END;
 		Out.Ln
@@ -75,9 +77,10 @@ IMPORT
 				(* encryption *)
 		cipher := Ciphers.NewCipher( modname );
 		hex := "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
-		U.Hex2Bin( hex, 0, binkey, 0, 24 );	U.Hex2Bin( hex, 0, bindata, 0, 16 );
+		U.Hex2Bin( hex, 0, binkey, 0, 24 );	(*U.Hex2Bin( hex, 0, bindata, 0, 16 );*)
 		cipher.InitKey( binkey, keybits );
 		U.RandomBytes( iv, 0, cipher.blockSize );
+		U.RandomBytes( bindata, 0, cipher.blockSize);
 		cipher.SetIV( iv, Ciphers.CTR );
 		Out.Ln; Out.String( "*********************************" );
 		Out.Ln; Out.String( "Encrypt-Decrypt-Test in CTR-mode: " ); Out.String( cipher.name );
@@ -147,6 +150,32 @@ IMPORT
 		IF temp1 = temp2 THEN  Out.String( "OK" )  ELSE  Out.String( "FAIL" )  END;
 		Out.Ln
 	END Cbc2;
+	
+	(** decrypt input with key (cbc-mode). output is a testvector *)
+	PROCEDURE DecryptCbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT);
+		VAR
+			cipher: Ciphers.Cipher;
+			temp1, temp2: ARRAY 64 OF CHAR;
+	BEGIN
+		cipher := Ciphers.NewCipher( modname );
+		U.Hex2Bin( key, 0, temp1, 0, keybits DIV 8 );
+		cipher.InitKey( temp1, keybits );
+		U.Hex2Bin( iv, 0, temp2, 0, cipher.blockSize );
+		cipher.SetIV( temp2, Ciphers.CBC );
+		Out.Ln; Out.String( "*********************************" );
+		Out.Ln; Out.String( "Decryption-Test: " ); Out.String( cipher.name );
+		Out.Ln; Out.String( "Key: " ); U.PrintHex( temp1, 0, keybits DIV 8 );
+		U.Hex2Bin( input, 0, temp1, 0, datalen );
+		Out.Ln; Out.String( "ciphertext: " ); U.PrintHex( temp1, 0, datalen );
+		cipher.Encrypt( temp1, 0, datalen ); 
+		Out.Ln; Out.String( "decryption: " ); U.PrintHex( temp1, 0, datalen );
+		U.Hex2Bin( output, 0, temp2, 0, datalen );
+		Out.Ln; Out.String( "correct decryption: " ); U.PrintHex( temp2, 0, datalen );
+		Out.Ln;
+		temp1[datalen] := 0X;  temp2[datalen] := 0X;
+		IF temp1 = temp2 THEN  Out.String( "OK" )  ELSE  Out.String( "FAIL" )  END;
+		Out.Ln
+	END DecryptCbc2;
 	
 	(** encrypt input with key (counter-mode). output is a testvector *)
 	PROCEDURE  Ctr2*( CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT );
@@ -302,6 +331,18 @@ IMPORT
 		input := "6bc1bee22e409f96e93d7e117393172a";
 		output := "f58c4c04d6e5f1ba779eabfb5f7bfbd6";
 		Cbc2( "CryptoAES", input, output, key, iv, 16, 256 );
+
+		key := "2b7e151628aed2a6abf7158809cf4f3c";		
+		iv := "000102030405060708090A0B0C0D0E0F";
+		output := "6bc1bee22e409f96e93d7e117393172a";		
+		input := "7649abac8119b246cee98e9b12e9197d";
+		DecryptCbc2( "CryptoAES", input, output, key, iv, 16, 128 );
+
+		key := "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+		iv := "000102030405060708090A0B0C0D0E0F";
+		output := "6bc1bee22e409f96e93d7e117393172a";
+		input := "f58c4c04d6e5f1ba779eabfb5f7bfbd6";
+		DecryptCbc2( "CryptoAES", input, output, key, iv, 16, 256 );
 	END AesCbc2;
 	
 	PROCEDURE  AesCtr2*;
@@ -320,6 +361,39 @@ IMPORT
 		Ctr2( "CryptoAES", input, output, key, iv, 16, 256 );
 	END AesCtr2;
 
+	PROCEDURE  CbcRandom*(context : Commands.Context);
+		VAR
+			bindata, binkey, modname, iv, orig: ARRAY 2 * 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
+			keybits: LONGINT;
+	BEGIN
+		(* read in the parameter *)
+		context.arg.SkipWhitespace; context.arg.String(modname);
+		context.arg.SkipWhitespace; context.arg.Int(keybits, FALSE);
+				(* encryption *)
+		cipher := Ciphers.NewCipher( modname );
+		U.RandomBytes(binkey, 0, keybits DIV 8);
+		U.RandomBytes(bindata, 0, 2 * cipher.blockSize); (* test data at least 2 blocks to test CBC *)
+		cipher.InitKey( binkey, keybits );
+		U.RandomBytes( iv, 0, cipher.blockSize );
+		(*U.RandomBytes( bindata, 0, cipher.blockSize);*)
+		cipher.SetIV( iv, Ciphers.CBC );
+		Out.Ln; Out.String( "*********************************" );
+		Out.Ln; Out.String( "Encrypt-Decrypt-Test in CBC-mode: " ); Out.String( cipher.name );
+		Out.Ln; Out.String( "Key: " ); U.PrintHex( binkey, 0, keybits DIV 8 );
+		Out.Ln; Out.String( "IV: "); U.PrintHex( iv, 0, cipher.blockSize );
+		Out.Ln; Out.String( "Original: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
+		orig := bindata;  orig[2 * cipher.blockSize] := 0X;
+		cipher.Encrypt( bindata, 0, 2 * cipher.blockSize );
+		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
+		(* decryption *)
+		cipher.SetIV( iv, Ciphers.CBC );
+		cipher.Decrypt( bindata, 0, 2 * cipher.blockSize );
+		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, 2 * cipher.blockSize );
+		bindata[2 * cipher.blockSize] := 0X; 
+		Out.Ln;
+		IF bindata = orig THEN  Out.String( "OK" )  ELSE  Out.String( "FAIL" )  END;
+		Out.Ln
+	END CbcRandom;
 END CryptoTestCiphers.
 
 
@@ -349,11 +423,24 @@ END CryptoTestCiphers.
      CryptoTestCiphers.Ecb1	CryptoIDEA	128 ~
      CryptoTestCiphers.Ecb1	CryptoARC4	128 ~
      CryptoTestCiphers.Ecb1	CryptoCAST	128 ~
+     CryptoTestCiphers.Ecb1	CryptoAES	128 ~
+     CryptoTestCiphers.Ecb1	CryptoAES	256 ~
+     CryptoTestCiphers.Ecb1	CryptoBlowfish 256 ~
 
      CryptoTestCiphers.Cbc1	CryptoDES	64 ~
      CryptoTestCiphers.Cbc1	CryptoDES3	192 ~
      CryptoTestCiphers.Cbc1	CryptoIDEA	128 ~
+     CryptoTestCiphers.Cbc1	CryptoAES 128 ~
+     CryptoTestCiphers.Cbc1	CryptoAES 256 ~
+     CryptoTestCiphers.Cbc1	CryptoBlowfish 256 ~
      
+     CryptoTestCiphers.CbcRandom CryptoDES	64 ~
+     CryptoTestCiphers.CbcRandom CryptoDES3	192 ~
+     CryptoTestCiphers.CbcRandom CryptoIDEA	128 ~
+     CryptoTestCiphers.CbcRandom CryptoAES 128 ~
+     CryptoTestCiphers.CbcRandom CryptoAES 256 ~
+     CryptoTestCiphers.CbcRandom CryptoBlowfish 256 ~
+
      CryptoTestCiphers.Ctr1		CryptoAES	128 ~
      CryptoTestCiphers.Ctr1		CryptoAES	256 ~
 

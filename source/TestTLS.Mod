@@ -12,26 +12,11 @@ VAR
 	server, client: TLS.Connection;
 	log:TFLog.Log;
 
-	PROCEDURE SetupCipherPolicy(VAR pol: TLS.Policy);
-	CONST
-		SuitesNbr = 1;
-	VAR
-		suites: ARRAY SuitesNbr OF LONGINT;
-	BEGIN
-		suites[0] := TLS.TlsRsaWithRc4128Sha;
-		pol.SetCipherSuites(suites, SuitesNbr)
-	END SetupCipherPolicy;
-
 	PROCEDURE StartServer*(context: Commands.Context);
 	VAR
 		res: LONGINT;
-		ctx: TLS.Context;
-		pol: TLS.Policy;
 	BEGIN
-		NEW(pol);
-		NEW(ctx, pol);
-		NEW(server);
-		server.SetContext(ctx);
+		server := TLS.GetConnection();
 		server.Open(123, IP.NilAdr, TCP.NilPort, res)
 	END StartServer;
 
@@ -41,27 +26,14 @@ VAR
 	END StopServer;
 	
 	PROCEDURE OpenClient*(lport:LONGINT; fadr:IP.Adr; fport:LONGINT; VAR res:LONGINT);
-	VAR
-		ctx: TLS.Context;
-		pol: TLS.Policy;
-		i: LONGINT;
 	BEGIN
-		NEW(pol);
-		SetupCipherPolicy(pol);
-
-		NEW(ctx, pol);
-		NEW(client);
-		client.SetContext(ctx);
+		client := TLS.GetConnection();
 		client.Open(lport, fadr, fport, res);
-		REPEAT UNTIL client.State() = TCP.Established;
+		client.AwaitStateNotEqual(TLS.ClientHandshake);
 
-		KernelLog.String("TLS Client Connection Opened"); KernelLog.Ln;
-		KernelLog.String("Policy: "); KernelLog.Ln;
-		KernelLog.String("  Cipher suites: "); FOR i := 0 TO TLS.Suites - 1 DO KernelLog.Hex(pol.cipherSuites[i], 0) END;
-		KernelLog.Ln;
-		KernelLog.String("  # of cipher suites: "); KernelLog.Int(pol.nofCipherSuites, 0); KernelLog.Ln;
-		KernelLog.String("  Session resumption enabled: "); KernelLog.Boolean(pol.sessionResumptionEnabled); KernelLog.Ln;
-		KernelLog.String("  Session lifetime: "); KernelLog.Int(pol.sessionLifetime, 0); KernelLog.String("s"); KernelLog.Ln
+		IF client.State() = TCP.Established THEN
+			KernelLog.String("TLS Client Connection Opened"); KernelLog.Ln;
+		END
 	END OpenClient;
 
 
@@ -177,7 +149,7 @@ WebHTTPServerTools.Start \r:httproot \l:HTTP.Log \s:on ~ (* start HTTPS server*)
 WebHTTPServerTools.Stop ~
 
 TestTLS.Get https://127.0.0.1/index.html ~ (* access the local server via loopback*)
-TestTLS.Get http://127.0.0.1/index.html ~ (* access the local server via loopback*)
+TestTLS.Get http://127.0.0.1:80/index.html ~ (* access the local server via loopback*)
 TestTLS.Get https://www.google.com/ ~
 TestTLS.Get https://discognosis.highdim.com/index.html ~
 TestTLS.Get https://discognosis.highdim.com/ ~
@@ -185,11 +157,12 @@ TestTLS.Get http://discognosis.highdim.com/ ~
 TestTLS.Get https://startpage.com ~
 TestTLS.Get https://www.archlinux.org ~
 TestTLS.Get https://www.ethz.ch/de.html ~
+TestTLS.Get https://www.duckduckgo.com ~
+TestTLS.Get https://127.0.0.1:4433/
 
 TestTLS.StartClient ~
 TestTLS.StopClient ~
 
-SystemTools.Free TestTLS ~
-SystemTools.FreeDownTo  TLS ~
+SystemTools.FreeDownTo TCP ~
 
 WebHTTPServerTools.ListHosts ~

@@ -8,8 +8,11 @@ IMPORT Streams, Dates, CryptoBigNumbers, CryptoRSA, ASN1 (*, ASN1Printer*), Kern
 CONST
 	Trace = FALSE;
 
-	(** Certificate verification status *)
-	Correct * = 0; Expired * = 1; SelfSigned * = 2; Incorrect * = 3;
+	(** Verification flags *)
+	AllowNotTrusted * = 0; (** Allow valid certificates that are not linked to the trusted root certificates *)
+	AllowOutdated * = 1; (** Allow certificates that are not valid anymore *)
+	Bypass * = 31; (** Bypass all checks *)
+
 TYPE
 	(** Represent an issuer or a subject. Only mandatory fields are kept. Fields are NIL if not present. *)
 	Entity * = RECORD
@@ -18,116 +21,148 @@ TYPE
 	END;
 
 	(** Base certificate type. Certificates are specialized according to the encryption algorithm they provide. *)
-	Certificate * = OBJECT
-		VAR
-			(* tbsCertificate field of X.509 *)
-			version-, serial-: LONGINT;
-			algorithm-: POINTER TO ARRAY OF CHAR;
-			validity-: RECORD notBefore-, notAfter-: Dates.DateTime END;
-			identifier-: POINTER TO ARRAY OF CHAR;
-			publicKey-: CryptoRSA.Key;
-			issuer-, subject-: Entity;
+	Certificate * = POINTER TO RECORD
+		(* tbsCertificate field of X.509 *)
+		version-, serial-: LONGINT;
+		algorithm-: POINTER TO ARRAY OF CHAR;
+		validity-: RECORD notBefore-, notAfter-: Dates.DateTime END;
+		identifier-: POINTER TO ARRAY OF CHAR;
+		publicKey-: CryptoRSA.Key;
+		issuer-, subject-: Entity;
 
-			(* signatureAlgorithm field of X.509 *)
-			(* signatureValue of X.509 *)
+		(* signatureAlgorithm field of X.509 *)
+		(* signatureValue of X.509 *)
 
-		(** Verifies validity of certificate. Returns a value between Correct and 
-		*)
-		PROCEDURE Verify * (): LONGINT;
+		(* Verification chain *)
+		parent -, next: Certificate;
+	END;
+
+VAR
+	roots: Certificate; (** Trusted certificates *)
+
+	(** Verifies validity of certificate in the given mode. *)
+	PROCEDURE Verify * (chain: Certificate; flags: SET): BOOLEAN;
+	VAR
+		valid: BOOLEAN;
+
+		PROCEDURE CheckDate (c: Certificate): BOOLEAN;
+		VAR now: Dates.DateTime;
 		BEGIN
-			RETURN Correct
-		END Verify;
+			IF AllowOutdated IN flags THEN RETURN TRUE END;
+			now := Dates.Now();
+			RETURN (Dates.CompareDateTime(c.validity.notBefore, now) <= 0) & (Dates.CompareDateTime(now, c.validity.notAfter) <= 0)
+		END CheckDate;
 
-		(** Reads a certificate from a stream *)
-		PROCEDURE Read * (reader: Streams.Reader);
-		CONST
-			TimeLength = 15;
-		VAR
-			res: BOOLEAN;
-			root, segment, data: ASN1.Triplet;
-			length: LONGINT;
-			r: Streams.StringReader;
-			writer: Streams.Writer;
-		BEGIN
-			root := ASN1.Decode(reader, 0, length);
+		PROCEDURE CheckSignature (c: Certificate): BOOLEAN;
+		END CheckSignature;
 
-			(* tbsCertificate *)
-			segment := root.child;
+	BEGIN
+		IF Bypass IN flags THEN RETURN TRUE END;
 
-			(* version *)
-			data := segment.child;
-			(*Check(data.tag = ASN1.Integer);*)
-			IF (data.next.tag = ASN1.Integer) THEN
-				(* Explicit version specified *)
-				IF data.tag = ASN1.Integer THEN
-					version := data.ivalue + 1
-				ELSE
-					version := ORD(data.svalue[0])
-				END;
-				data := data.next;
+		(* For now check a single certificate *)
+		valid := CheckDate(chain) & CheckSignature(chain);
+		RETURN valid
+	END Verify;
+
+	(** Reads a certificate from a stream *)
+	PROCEDURE Read * (reader: Streams.Reader): Certificate;
+	CONST
+		TimeLength = 15;
+	VAR
+		c: Certificate;
+		res: BOOLEAN;
+		root, segment, data: ASN1.Triplet;
+		length: LONGINT;
+		r: Streams.StringReader;
+		writer: Streams.Writer;
+	BEGIN
+		NEW(c);
+		root := ASN1.Decode(reader, 0, length);
+
+		(* tbsCertificate *)
+		segment := root.child;
+
+		(* version *)
+		data := segment.child;
+		(*Check(data.tag = ASN1.Integer);*)
+		IF (data.next.tag = ASN1.Integer) THEN
+			(* Explicit version specified *)
+			IF data.tag = ASN1.Integer THEN
+				c.version := data.ivalue + 1
 			ELSE
-				version := 1
+				c.version := ORD(data.svalue[0])
 			END;
-
-			(* serial. *)
-			(*Check(data.tag = ASN1.Integer);*)
-			serial := data.ivalue;
-
-			(* algorithm OID *)
 			data := data.next;
-			(*Check(data.child.tag = ASN1.Oid);*)
-			algorithm := data.child.svalue;
-			(* Algorithm parameters are ignored *)
+		ELSE
+			c.version := 1
+		END;
 
-			(* issuer = CA *)
-			data := data.next;
-			FormatEntity(data, issuer);
+		(* serial. *)
+		(*Check(data.tag = ASN1.Integer);*)
+		c.serial := data.ivalue;
 
-			(* validity *)
-			data := data.next;
-			NEW(r, TimeLength);
-			r.SetRaw(data.child.svalue^, 0, LEN(data.child.svalue^));
-			res := ReadTime(r, validity.notBefore);
-			(*Check(res);*)
-			r.SetRaw(data.child.next.svalue^, 0, LEN(data.child.next.svalue^));
-			r.SetPos(0);			
-			res := ReadTime(r, validity.notAfter);
-			(*Check(res);*)
+		(* algorithm OID *)
+		data := data.next;
+		(*Check(data.child.tag = ASN1.Oid);*)
+		c.algorithm := data.child.svalue;
+		(* Algorithm parameters are ignored *)
 
-			(* subject *)
-			data := data.next;
-			FormatEntity(data, subject);
+		(* issuer = CA *)
+		data := data.next;
+		FormatEntity(data, c.issuer);
 
-			(* subject public key algorithm *)
-			(*data := data.next;*)
+		(* validity *)
+		data := data.next;
+		NEW(r, TimeLength);
+		r.SetRaw(data.child.svalue^, 0, LEN(data.child.svalue^));
+		res := ReadTime(r, c.validity.notBefore);
+		(*Check(res);*)
+		r.SetRaw(data.child.next.svalue^, 0, LEN(data.child.next.svalue^));
+		r.SetPos(0);			
+		res := ReadTime(r, c.validity.notAfter);
+		(*Check(res);*)
 
-			(* subject public key *)
-			data := data.next;
-			FormatRsaPublicKey(data, publicKey);
+		(* subject *)
+		data := data.next;
+		FormatEntity(data, c.subject);
 
-			IF version > 2 THEN
-				(* extensions *)
-				data := data.next
-			END;
+		(* subject public key algorithm *)
+		(*data := data.next;*)
 
-			(* Signature algorithm -- from top level again *)
-			segment := segment.next;
+		(* subject public key *)
+		data := data.next;
+		FormatRsaPublicKey(data, c.publicKey);
 
-			(* Signature value *)
-			segment := segment.next;
+		IF c.version > 2 THEN
+			(* extensions *)
+			data := data.next
+		END;
 
-			IF Trace THEN
-				KernelLog.String("========== Read X509 Certificate ========="); KernelLog.Ln;
-				Streams.OpenWriter(writer, KernelLog.Send);
-				PrintCertificate(SELF, writer);
-				KernelLog.String("========== End X509 Certificate ========="); KernelLog.Ln
-			END
-		END Read;
+		(* Signature algorithm -- from top level again *)
+		segment := segment.next;
 
-		(** Writes a certificate to a stream *)
-		PROCEDURE Write * (writer: Streams.Writer);
-		END Write;
-	END Certificate;
+		(* Signature value *)
+		segment := segment.next;
+
+		IF Trace THEN
+			KernelLog.String("========== Read X509 Certificate ========="); KernelLog.Ln;
+			Streams.OpenWriter(writer, KernelLog.Send);
+			PrintCertificate(c, writer);
+			KernelLog.String("========== End X509 Certificate ========="); KernelLog.Ln
+		END;
+		RETURN c
+	END Read;
+
+	(** Writes a certificate to a stream *)
+	PROCEDURE Write * (writer: Streams.Writer; cert: Certificate);
+	END Write;
+
+	(** Add certificate to trusted roots *)
+	PROCEDURE AddToTrusted * (certificate: Certificate);
+	BEGIN {EXCLUSIVE}
+		certificate.next := roots;
+		roots := certificate
+	END AddToTrusted;
 
 	(* ========== Helper procedures ========== *)
 	PROCEDURE IsDigit(char: CHAR): BOOLEAN;

@@ -20,6 +20,7 @@ MODULE PKCS1;
 			counter, ofs: LONGINT;
 			encryptionBlock: POINTER TO ARRAY OF CHAR;
 			clear, cipher: CryptoBigNumbers.BigNumber;
+			nonzero: BOOLEAN;
 	BEGIN
 		(* Argument checks *)
 		ASSERT(key # NIL);
@@ -52,12 +53,13 @@ MODULE PKCS1;
 				END
 			|2:
 				(* Random # 0X *)
-				CryptoUtils.RandomBytes(encryptionBlock^, ofs, padd);
-				FOR counter := ofs TO ofs + padd - 1 DO
-					WHILE encryptionBlock[counter] = 0X DO
-						CryptoUtils.RandomBytes(encryptionBlock^, counter, 1)
+				REPEAT
+					CryptoUtils.RandomBytes(encryptionBlock^, ofs, padd);
+					nonzero := TRUE;
+					FOR counter := ofs TO ofs + padd - 1 DO
+						nonzero := nonzero & (encryptionBlock[counter] # 0X)
 					END
-				END
+				UNTIL nonzero
 		END;
 		INC(ofs, padd);
 
@@ -65,7 +67,7 @@ MODULE PKCS1;
 		encryptionBlock[ofs] := 0X; INC(ofs);
 		FOR counter := 0 TO srcLen - 1 DO
 			encryptionBlock[ofs + counter] := src[srcOfs + counter];
-			IF Trace THEN KernelLog.Int(ORD(src[srcOfs + counter]), 0); KernelLog.String(' ') END
+			IF Trace THEN KernelLog.Hex(ORD(src[srcOfs + counter]), -2); KernelLog.String(' ') END
 		END;
 		IF Trace THEN
 			KernelLog.Ln;

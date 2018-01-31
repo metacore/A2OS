@@ -3,8 +3,8 @@ MODULE TLS;	(** AUTHOR "F.N."; PURPOSE "RFC 2246: Transport Layer Security v1.0"
 	05.2014 -- Timothée Martiel -- Implemented TLS client connection.
 *)
 IMPORT
-	TCP, Streams, Files, IP, KernelLog , Pipes, Kernel, Clock, BIT,
-	Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC,
+	TCP, Streams, Files, IP, KernelLog , Pipes, Kernel, Clock, BIT, Dates,
+	Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG,
 	CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
 
 CONST
@@ -36,7 +36,7 @@ CONST
 	TlsDhAnonWithRc4128Md5* = 0018H; TlsDhAnonWithDesCbcSha* = 001AH; TlsDhAnonWith3DesEdeCbcSha* = 001BH;
 	*)
 	(* TLS 1.2 cipher suites, not implemented yet *)
-	(*TlsRsaWithAes128CbcSha* = 002FH;
+	TlsRsaWithAes128CbcSha* = 002FH;
 	(* not supported
 	TlsDhDssWithAes128CbcSha* = 0030H; TlsDhRsaWithAes128CbcSha* = 0031H;
 	TlsDheDssWithAes128CbcSha* = 0032H; TlsDheRsaWithAes128CbcSha* = 0033H;
@@ -47,7 +47,7 @@ CONST
 	TlsDhDssWithAes256CbcSha* = 0036H; TlsDhRsaWithAes256CbcSha* = 0037H;
 	TlsDheDssWithAes256CbcSha* = 0038H; TlsDheRsaWithAes256CbcSha* = 0039H;
 	TlsDhAnonWithAes256CbcSha* = 003AH;
-	*)*)
+	*)
 
 	(** record layer content type *)
 	ChangeCipherSpec* = 20; Alert* = 21; Handshake* = 22; ApplicationData* = 23; SSLv2ClientHello* = 128;
@@ -76,7 +76,7 @@ CONST
 	Suites* = 20;
 	Buflen = 18500;
 	MaxPHashKernelLogput = 1024;
-	MaxKeyBlock = 120;
+	MaxKeyBlock = 144;
 	MaxPHashSeed = 128;
 	MaxPlaintextLength = 16384; 	(* 2^14 *)
 	MaxCompressedLength = 17408;	(* 2^14 + 2^10 *)
@@ -86,13 +86,14 @@ CONST
 	SessionCleanUpInterval = 60;	(* seconds *)
 	DefaultSessionLifetime = 3600; (* seconds *)
 
-	DefaultSuitesNbr = 4;
+	DefaultSuitesNbr = 3;
 
 TYPE
 	SecurityParameters = OBJECT
 		VAR
 			cipherSuite, cipherKeySize: LONGINT;	(* size in bytes *)
 			clientRandom, serverRandom: ARRAY 32 OF CHAR;
+			PRFAlgorithm: ARRAY 32 OF CHAR;
 	END SecurityParameters;
 
 	ConnectionState = OBJECT
@@ -100,8 +101,8 @@ TYPE
 			cipher: Ciphers.Cipher;
 			mac: HMAC.HMac;
 			recordSeq: DoubleLong;
-			cipherKey: ARRAY 24 OF CHAR;
-			iv: ARRAY 8 OF CHAR;
+			cipherKey: ARRAY 32 OF CHAR;
+			iv: ARRAY 16 OF CHAR;
 			macSecret: ARRAY 20 OF CHAR;
 
 		PROCEDURE & Init*;
@@ -217,32 +218,44 @@ TYPE
 
 	(* pseudorandom stream as defined in rfc2246, section 5 *)
 	PRF = OBJECT
-		VAR pMD5, pSHA: PHash;
+		VAR
+			pMD5, pSHA: PHash; (* Used for "SHA1 XOR MD5", i.e. <= v1.1 *)
+			pHash: PHash; (* Used in > v1.1 *)
 
-		PROCEDURE & Init*;
+		PROCEDURE & Init* (CONST algorithm: ARRAY OF CHAR);
 		BEGIN
-			NEW( pMD5, "CryptoMD5" );	NEW( pSHA, "CryptoSHA1" )
+			IF algorithm = "SHA1 XOR MD5" THEN
+				NEW( pMD5, "CryptoMD5" );	NEW( pSHA, "CryptoSHA1" )
+			ELSE
+				NEW( pHash, algorithm)
+			END;
 		END Init;
 
-		PROCEDURE GetBytes( VAR secret, seed, outbuf: ARRAY OF CHAR; label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT );
+		PROCEDURE GetBytes( VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT );
 			VAR
 				md5Result, shaResult: ARRAY MaxKeyBlock OF CHAR;
-				pSeed, s1, s2: ARRAY 128 OF CHAR;
+				pSeed, s1, s2: ARRAY 140 OF CHAR;
 				i, j, l: LONGINT;
 		BEGIN
-			(* pseed := label::seed *)
-			l :=  LEN( label ) - 1;
-			FOR i := 0 TO l-1 DO	pSeed[ i ] := label[ i ]	END;
-			FOR i := 0 TO seedLen-1 DO	pSeed[ l + i ] := seed[ i ]	END;
+			IF pHash = NIL THEN (* Use SHA1 XOR MD5 algo *)
+				(* pseed := label::seed *)
+				l :=  LEN( label ) - 1;
+				FOR i := 0 TO l-1 DO	pSeed[ i ] := label[ i ]	END;
+				FOR i := 0 TO seedLen-1 DO	pSeed[ l + i ] := seed[ i ]	END;
 
-			j := secretLen DIV 2 + secretLen MOD 2;	(* j := ceil( secretLen / 2 ) *)
-			FOR i := 0 TO j-1 DO			s1[ i ] := secret[ i ]			END;
-			FOR i := secretLen-j TO secretLen-1 DO		s2[ i+j-secretLen ] := secret[ i ]		END;
+				j := secretLen DIV 2 + secretLen MOD 2;	(* j := ceil( secretLen / 2 ) *)
+				FOR i := 0 TO j-1 DO			s1[ i ] := secret[ i ]			END;
+				FOR i := secretLen-j TO secretLen-1 DO		s2[ i+j-secretLen ] := secret[ i ]		END;
 
-			pMD5.Expand( s1, pSeed, md5Result, j, seedLen+l, outLen );
-			pSHA.Expand( s2, pSeed, shaResult, j, seedLen+l, outLen );
+				pMD5.Expand( s1, pSeed, md5Result, j, seedLen+l, outLen );
+				pSHA.Expand( s2, pSeed, shaResult, j, seedLen+l, outLen );
 
-			FOR i := 0 TO outLen-1 DO	outbuf[ i ] := BIT.CXOR( md5Result[ i ], shaResult[ i ] )	END
+				FOR i := 0 TO outLen-1 DO	outbuf[ i ] := BIT.CXOR( md5Result[ i ], shaResult[ i ] )	END
+			ELSE (* Use direct algo *)
+				pHash.Expand( secret, seed, shaResult, secretLen, seedLen, outLen );
+				(* Copy to truncate *)
+				FOR i := 0 TO outLen - 1 DO outbuf[i] := shaResult[i] END
+			END
 		END  GetBytes;
 	END PRF;
 
@@ -252,12 +265,13 @@ TYPE
 			nofCipherSuites -: LONGINT;	(** number of enabled cipher-suites *)
 			sessionResumptionEnabled -: BOOLEAN;
 			sessionLifetime -: LONGINT; (** seconds *)
+			version-: ARRAY 2 OF CHAR;
 
 		PROCEDURE &Init*;
 		BEGIN
 			(* set default values *)
 			sessionResumptionEnabled := TRUE;
-			sessionLifetime := DefaultSessionLifetime
+			sessionLifetime := DefaultSessionLifetime;
 		END Init;
 
 		(** set n negotiable cipher suites in order of preference*)
@@ -291,6 +305,16 @@ TYPE
 			sessionLifetime := t
 		END SetSessionLifetime;
 
+		(** set TLS version to use *)
+		PROCEDURE SetVersion*(major, minor: LONGINT);
+		BEGIN
+			ASSERT(major = 1);
+			ASSERT(minor >= 0);
+			ASSERT(minor <= 2);
+			version[0] := CHR(3);
+			version[1] := CHR(1 + minor)
+		END SetVersion;
+
 	END Policy;
 
 	Session = OBJECT
@@ -316,7 +340,8 @@ TYPE
 			IF caching THEN
 				IF len = 0 THEN	(* server-side: session-id has to be generated *)
 					idLength := SessionIdLength;
-					Utils.RandomBytes( id, 0, SessionIdLength )
+					(*Utils.RandomBytes( id, 0, SessionIdLength )*)
+					CSPRNG.CSRand(id, SessionIdLength * 8);
 				ELSE	(* client-side: session-id has been generated by server *)
 					idLength := len;
 				FOR i := 0 TO len - 1 DO		id[ i ] := data[ ofs + i ]		END
@@ -365,7 +390,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Dispose*;
-			BEGIN
+		BEGIN
 			active := FALSE
 		END Dispose;
 
@@ -434,10 +459,6 @@ TYPE
 		VAR
 			certificate: X509.Certificate;
 			reader: Streams.StringReader;
-			algorithm: POINTER TO ARRAY OF CHAR;
-			e, m: CryptoBigNumbers.BigNumber;
-			writer: Streams.StringWriter;
-			print: ARRAY 10 * 1024 OF CHAR;
 		BEGIN
 			IF rsaPublicKey = NIL THEN
 				(* Read X509 Certificate *)
@@ -445,7 +466,7 @@ TYPE
 				NEW(reader, lengthOfRsaCertificate);
 				(* Skip 6 bytes: they represent the length of the certificate, but are not part of it. *)
 				reader.SetRaw(rsaCertificate, 6, lengthOfRsaCertificate);
-				certificate.Read(reader);
+				certificate := X509.Read(reader);
 
 				(* Get modulus and exponent of public key *)
 				rsaPublicKey := certificate.publicKey;
@@ -567,7 +588,8 @@ TYPE
 			hsSHAsend, hsSHAverify: CryptoSHA1.Hash;	(* handshake hash functions; to be used in the Finished messages *)
 			pendingSecurityParameters: SecurityParameters;
 			currentWriteState, pendingWriteState, currentReadState, pendingReadState: ConnectionState;
-			client: BOOLEAN;
+			version -: ARRAY 2 OF CHAR;
+			client, trapped: BOOLEAN;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -621,7 +643,9 @@ TYPE
 		PROCEDURE SetContext*( cxt: Context  );
 		BEGIN
 			ASSERT( conn = NIL );
-			context := cxt
+			context := cxt;
+			version[0] := cxt.policy.version[0];
+			version[1] := cxt.policy.version[1]
 		END SetContext;
 
 		(** open a TLS connection (only use once per Connection instance). Use IP.NilPort for lport to automatically assign
@@ -642,6 +666,7 @@ TYPE
 			NEW( SELF.conn );
 			SELF.conn.Open( lport, fip, fport, res );
 			IF res # TCP.Ok THEN RETURN END;
+
 			SetState(conn.state);
 			res := Ok;
 			IF client THEN Connect END;
@@ -658,7 +683,8 @@ TYPE
 		(* set a TCP Connection for communication; this method should only be invoked by the Accept-method *)
 		PROCEDURE SetConnection*( c: TCP.Connection );
 		BEGIN
-			ASSERT( conn = NIL );	ASSERT( State()= TCP.Unused );
+			ASSERT( conn = NIL );
+			ASSERT( State()= TCP.Unused );
 			conn := c;
 			Streams.OpenReader( in, SELF.conn.Receive );	Streams.OpenWriter( out, SELF.conn.Send );
 			SetState(ServerHandshake);
@@ -744,7 +770,7 @@ TYPE
 				seed[ i ] := SELF.pendingSecurityParameters.clientRandom[ i ];
 				seed[ i + 32 ] := SELF.pendingSecurityParameters.serverRandom[ i ]
 			END;
-			NEW( prf );
+			NEW( prf, pendingSecurityParameters.PRFAlgorithm );
 			prf.GetBytes( SELF.session.preMasterSecret, seed, SELF.session.masterSecret, "master secret", 48, 64, 48 );
 			(* discard preMasterSecret *)
 			FOR i := 0 TO 47 DO	SELF.session.preMasterSecret[ i ] := CHR( 0 )	END
@@ -754,7 +780,7 @@ TYPE
 		PROCEDURE GenerateKeys;
 			VAR
 				prf: PRF;
-				keyBlock: ARRAY 104 OF CHAR;
+				keyBlock: ARRAY 136 OF CHAR;
 				seed: ARRAY 64 OF CHAR;
 				i, keyBlockLen, ofs, macSecretSize, cipherKeySize, cipherBlockSize: LONGINT;
 		BEGIN
@@ -768,14 +794,14 @@ TYPE
 			END;
 			keyBlockLen := 2 * macSecretSize + 2 * cipherKeySize;
 			IF cipherBlockSize > 1 THEN	(* if a blockcipher is used, initialization vectors are needed *)
-			INC( keyBlockLen, 2 * cipherBlockSize )
+				INC( keyBlockLen, 2 * cipherBlockSize )
 			END;
-			ASSERT( keyBlockLen <= 104 );	(* 3DES-EDE-CBC-SHA needs 104 bytes of keymaterial. all others need less *)
+			ASSERT( keyBlockLen <= 136 );	(* AES-256-CBC-SHA needs 136 bytes of keymaterial. all others need less *)
 			FOR i := 0 TO 31 DO
 				seed[ i ] := SELF.pendingSecurityParameters.serverRandom[ i ];
 				seed[ i + 32 ] := SELF.pendingSecurityParameters.clientRandom[ i ]
 			END;
-			NEW( prf );
+			NEW( prf, pendingSecurityParameters.PRFAlgorithm );
 			prf.GetBytes( SELF.session.masterSecret, seed, keyBlock, "key expansion", 48, 64, keyBlockLen );
 			(* mac secret *)
 			FOR i := 0 TO macSecretSize - 1 DO
@@ -851,6 +877,9 @@ TYPE
 				| TlsRsaWith3DesEdeCbcSha:
 					NEW( state.mac, "CryptoSHA1" );
 					state.cipher := Ciphers.NewCipher( "CryptoDES3" );
+				| TlsRsaWithAes128CbcSha, TlsRsaWithAes256CbcSha:
+					NEW( state.mac, "CryptoSHA1" );
+					state.cipher := Ciphers.NewCipher( "CryptoAES" );
 				ELSE
 					res := -1;
 			END;
@@ -876,9 +905,18 @@ TYPE
 					sp.cipherKeySize := 8;
 				| TlsRsaWith3DesEdeCbcSha:
 					sp.cipherKeySize := 24;
+				| TlsRsaWithAes128CbcSha:
+					sp.cipherKeySize := 16;
+				| TlsRsaWithAes256CbcSha:
+					sp.cipherKeySize := 32
 			ELSE
 				res := -1
 			END;
+			IF version[1] < 3X THEN
+				sp.PRFAlgorithm := "SHA1 XOR MD5"
+			ELSE
+				sp.PRFAlgorithm := "CryptoSHA256"
+			END
 		END PrepareSecurityParameters;
 
 	(* **********************************************************************************
@@ -888,8 +926,9 @@ TYPE
 		PROCEDURE SendRecord( VAR data: ARRAY OF CHAR; contentType, ofs, len: LONGINT );
 			VAR
 				macInput: ARRAY 13 OF CHAR;
+				iv: ARRAY 16 OF CHAR; (* used in TLSv1.1 *)
 				i, length, padLen, blocksize: LONGINT;
-				t: LONGINT;
+				sendIV: BOOLEAN; (* Send an IV before data *)
 		BEGIN
 			ASSERT( len <= MaxPlaintextLength );
 			(* increment the number of sent records *)
@@ -914,21 +953,30 @@ TYPE
 			IF currentWriteState.cipher # NIL THEN	(* encryption has to be done *)
 				blocksize := currentWriteState.cipher.blockSize;
 				IF blocksize > 1 THEN	(* padding for encryption has to be added *)
+					sendIV := ORD(version[1]) >= 2;
+					IF sendIV THEN (* TLSv1.1 and greater has an additional IV field *)
+						CSPRNG.CSRand(iv, blocksize * 8);
+						currentWriteState.cipher.Encrypt(iv, 0, blocksize);
+					END;
 					padLen := ( blocksize - ( ( length + 1 ) MOD blocksize ) ) MOD blocksize;	(* padLen = [ 0, blocksize-1 ] *)
 					IF padLen > 0 THEN
-						FOR i := 0 TO padLen - 1 DO		data[ ofs + length + i ] := CHR( padLen )		END
+						ASSERT(padLen < 255);
+						FOR i := 0 TO padLen - 1 DO		data[ ofs + length + i ] := CHR( padLen MOD 100H)		END
 					END;
-					data[ ofs + length + padLen ] := CHR( padLen );
+					data[ ofs + length + padLen ] := CHR( padLen MOD 100H );
 					length := length + padLen + 1
 				END;
+				ASSERT(length MOD blocksize = 0);
 				currentWriteState.cipher.Encrypt( data, ofs, length );
 			END;
+			IF sendIV THEN INC(length, blocksize) END;
 			(* record header *)
 			out.Char( CHR( contentType ) );
-			out.Char( CHR( 3 ) );
-			out.Char( CHR( 1 ) );
+			out.Char( version[0] );
+			out.Char( version[1] );
 			out.Char( CHR( length DIV 256 ) );
 			out.Char( CHR( length ) );
+			IF sendIV THEN out.Bytes(iv, 0, blocksize); DEC(length, blocksize) END;
 			out.Bytes( data, ofs, length );
 			out.Update;
 		END SendRecord;
@@ -938,8 +986,8 @@ TYPE
 			VAR
 				macInput: ARRAY 13 OF CHAR;
 				verify: ARRAY 20 OF CHAR;
-				i, length, len, type, macSize, res, major, minor: LONGINT;
-				tt: LONGINT;
+				i, padd, length, len, type, macSize, res, major, minor, ofs: LONGINT;
+				badRecordMac: BOOLEAN; (* Send a bad_record_mac error *)
 		BEGIN
 			(* increment the number of received records *)
 			currentReadState.recordSeq.Inc( );
@@ -957,7 +1005,11 @@ TYPE
 				END
 			END;
 			major := ORD( in.Get() );	minor := ORD( in.Get() );
-			IF ( major # 3 ) OR ( minor # 1) THEN  END;	(* version control *)
+			(*IF ( major # 3 ) OR ( minor # 1) THEN  END;	(* version control *)*)
+			IF (major # ORD(version[0])) OR (minor # ORD(version[1])) THEN
+				SendError( ProtocolVersion );
+				RETURN
+			END;
 			len := 256 * ORD( in.Get() ) + ORD( in.Get() );	(* length of payload *)
 			IF len > MaxCiphertextLength THEN
 				SendError( RecordOverflow );
@@ -977,14 +1029,30 @@ TYPE
 			END;
 			(* decryption *)
 			IF currentReadState.cipher # NIL THEN
+				IF (currentReadState.cipher.blockSize > 1) & (len MOD currentReadState.cipher.blockSize # 0) THEN
+					badRecordMac := TRUE;
+					DEC(len, len MOD currentReadState.cipher.blockSize)
+				END;
 				currentReadState.cipher.Decrypt( inbuf, 0, len  );
+				IF (minor >= 2) & (currentReadState.cipher.blockSize > 1) THEN INC(ofs, currentReadState.cipher.blockSize); DEC(len, ofs) END;
 				IF res # Ciphers.Ok THEN
 					IF Trace THEN KernelLog.String("There was a Problem while decrypting record.");KernelLog.Ln END;
-					SendError( InternalError );
-					RETURN
+					(*SendError( InternalError );
+					RETURN*)
+					badRecordMac := TRUE
 				END;
 				IF currentReadState.cipher.blockSize > 1 THEN	(* padding has to be removed *)
-					len := len - ORD( inbuf[ len ] ) - 1;
+					padd := ORD(inbuf[ofs + len - 1]);
+					KernelLog.Enter; KernelLog.Buffer(inbuf, ofs, len); KernelLog.Exit;
+					FOR i := 0 TO padd DO (* check padding *)
+						IF ofs + len - i - 1 < 0 THEN badRecordMac := TRUE
+						ELSIF ORD(inbuf[ofs + len - i - 1]) # padd THEN badRecordMac := TRUE END
+					END;
+					IF len - padd - 1 < currentReadState.mac.size THEN
+						badRecordMac := TRUE
+					ELSE
+						len := len - padd - 1
+					END
 				END
 			END;
 			(* mac verification *)
@@ -999,29 +1067,40 @@ TYPE
 				macInput[ 12 ] := CHR( len );
 				currentReadState.mac.Initialize( currentReadState.macSecret, macSize );
 				currentReadState.mac.Update( macInput, 0, 13 );
-				currentReadState.mac.Update( inbuf, 0, len );
+				currentReadState.mac.Update( inbuf, ofs, len );
 				currentReadState.mac.GetMac( verify, 0 );
-				FOR i := 0 TO macSize - 1 DO
-					IF inbuf[ len + i ] # verify[ i ] THEN
-						 SendError( BadRecordMac );
-						 RETURN
+				IF ~badRecordMac THEN
+					FOR i := 0 TO macSize - 1 DO
+						IF inbuf[ ofs + len + i ] # verify[ i ] THEN
+							badRecordMac := TRUE
+						END
+						(*SendError( BadRecordMac );
+						RETURN*)
 					END
-				END
+				END;
+			END;
+			IF badRecordMac THEN
+				SendError( BadRecordMac );
+				RETURN
 			END;
 			(* data compression: no other algo than NULL is implemented *)
 			(* dispatching *)
 			CASE type OF
 				| Handshake:
-					ReceiveHandshake( inbuf, 0, len )
+					ReceiveHandshake( inbuf, ofs, len )
 				| ApplicationData:
-					appDataWriter.Bytes( inbuf, 0, len );
+					appDataWriter.Bytes( inbuf, ofs, len );
 					appDataWriter.Update;
 				| Alert:
 					ASSERT( len = 2 );
-					ReceiveAlert( inbuf, 0, len )
+					ReceiveAlert( inbuf, ofs, len )
 				| ChangeCipherSpec:
 					ASSERT( len = 1 );
-					Transition( inbuf, ChangeCipherSpec, 0, 0, len )
+					Transition( inbuf, ChangeCipherSpec, 0, ofs, len )
+			ELSE
+				(* Unknown record type, send unexpected_message *)
+				SendError( UnexpectedMessage );
+				RETURN
 			END;
 		END ReceiveRecord;
 
@@ -1031,7 +1110,7 @@ TYPE
 
 		PROCEDURE SendChangeCipherSpec;
 		BEGIN
-			IF Trace THEN PrintDirection(TRUE); KernelLog.String("ChangeCipherSpec: ");KernelLog.Ln END;
+			IF Trace THEN PrintDirection(TRUE); KernelLog.String("ChangeCipherSpec");KernelLog.Ln END;
 			outbuf[ 0 ] := CHR( 1 );
 			SendRecord( outbuf, ChangeCipherSpec, 0, 1 );
 			ChangeWriteState( )
@@ -1074,7 +1153,7 @@ TYPE
 
 		(* receives one or more handshake messages *)
 		PROCEDURE ReceiveHandshake( VAR data: ARRAY OF CHAR; ofs, len: LONGINT );
-			VAR msgLen, hsType, ptr, (*debug*) i: LONGINT;
+			VAR msgLen, hsType, ptr: LONGINT;
 		BEGIN
 			ASSERT( LEN( data ) >= ofs + len );
 			ptr := ofs;
@@ -1396,9 +1475,10 @@ TYPE
 			context.GetRsaPublicKey;
 
 			(* Premaster secret *)
+			(*Utils.RandomBytes(session.preMasterSecret, 2, 46);*)
+			CSPRNG.CSRand(session.preMasterSecret, 48 * 8);
 			session.preMasterSecret[0] := version[0];
 			session.preMasterSecret[1] := version[1];
-			Utils.RandomBytes(session.preMasterSecret, 2, 46);
 
 			PKCS1.Encrypt(session.preMasterSecret, 0, 48, context.rsaPublicKey, 2, data, ofs + 2, length);
 			ASSERT(length # 0);
@@ -1406,7 +1486,7 @@ TYPE
 			data[ofs + 1] := CHR(length MOD 256);
 			SendHandshake(data, ClientKeyExchange, ofs - 4, length + 2);
 
-			(* Generate master secret. Done in the end, because premaster secret is eraased. *)
+			(* Generate master secret. Done in the end, because premaster secret is erased. *)
 			GenerateMasterSecret;
 			GenerateKeys;
 			InitializeConnectionState( SELF.pendingWriteState, SELF.pendingSecurityParameters );
@@ -1419,28 +1499,37 @@ TYPE
 			VAR
 				encryptedPremasterSecret, premasterSecret: CryptoBigNumbers.BigNumber;
 				tmp: ARRAY 512 OF CHAR;
+				rnd: ARRAY 48 OF CHAR;
 				i: LONGINT;
+				error: BOOLEAN;
 		BEGIN
 			INC( ofs, 2 ); DEC( len, 2 );	(* the two first bytes have to be ignored *)
 			IF Trace THEN
 				PrintDirection(FALSE);
 				KernelLog.String("ClientKeyExchange");KernelLog.Ln;
 			END;
+			(* Get random premaster secret in case of decryption error *)
+			CSPRNG.CSRand(rnd, 48 * 8);
 			(* decryption of the PreMasterSecret *)
 			CryptoBigNumbers.AssignBin( encryptedPremasterSecret, data, ofs, len );
 			premasterSecret := SELF.context.rsaPrivateKey.Decrypt( encryptedPremasterSecret  );
 			IF  premasterSecret = NIL THEN
 				IF Trace THEN KernelLog.String("Decryption of PreMasterSecret was NOT successful!");KernelLog.Ln END;
-				SendError( IllegalParameter )
+				error := TRUE
+			ELSE
+				CryptoBigNumbers.GetBinaryValue( premasterSecret, tmp, 0 );
 			END;
-			CryptoBigNumbers.GetBinaryValue( premasterSecret, tmp, 0 );
 
 			(* pkcs#1 block type 2 has to be used *)
-			IF ( tmp[ 0 ] # CHR( 0 ) ) OR ( tmp[ 1 ] # CHR( 2 ) )THEN	SendError( IllegalParameter ) END;
-			i := 10;	(* there are at least 8 padding bytes *)
-			WHILE tmp[ i ] # CHR( 0 ) DO	INC( i )	END;	(* padding ends with a zero-byte *)
-			INC( i );
-			SELF.session.SetPreMasterSecret( tmp, i );
+			error := ( tmp[ 0 ] # CHR( 0 ) ) OR ( tmp[ 1 ] # CHR( 2 ) ) OR error;
+			IF ~error THEN
+				i := 10;	(* there are at least 8 padding bytes *)
+				WHILE tmp[ i ] # CHR( 0 ) DO	INC( i )	END;	(* padding ends with a zero-byte *)
+				INC( i );
+				SELF.session.SetPreMasterSecret( tmp, i );
+			ELSE
+				SELF.session.SetPreMasterSecret( rnd, 0);
+			END;
 
 			GenerateMasterSecret( );
 			GenerateKeys( );
@@ -1506,7 +1595,7 @@ TYPE
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("Finished");KernelLog.Ln END;
 			ASSERT( ofs > 3 );
 			hsMD5send.GetHash( seed, 0 );	hsSHAsend.GetHash( seed, 16 );	(* concatenate md5 and sha output *)
-			NEW( prf );
+			NEW( prf, pendingSecurityParameters.PRFAlgorithm );
 			IF client THEN
 				prf.GetBytes( SELF.session.masterSecret, seed, verifyData, "client finished", 48, 36, 12 )
 			ELSE
@@ -1529,7 +1618,7 @@ TYPE
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("Finished"); KernelLog.Ln END;
 			ASSERT( len = 12 );
 			hsMD5verify.GetHash( seed, 0 );	hsSHAverify.GetHash( seed, 16 );	(* concatenate md5 and sha output *)
-			NEW( prf );
+			NEW( prf, pendingSecurityParameters.PRFAlgorithm );
 			IF client THEN
 				prf.GetBytes( SELF.session.masterSecret, seed, verifyData, "server finished", 48, 36, 12 )
 			ELSE
@@ -1748,18 +1837,26 @@ TYPE
 		********************************************************************************** *)
 
 		PROCEDURE Create32RandomBytes( VAR data: ARRAY OF CHAR );
-			VAR i, time, date, timestamp: LONGINT;
+			VAR i, time, date, timestamp, d, h, m, s: LONGINT; unixEpoch: Dates.DateTime;
 		BEGIN
 			ASSERT( LEN( data ) >  31 );
+			(* 28 random bytes *)
+			CSPRNG.CSRand(data, 32 * 8);
 			(* 4 bytes timestamp *)
-			Clock.Get( date, time );
-			timestamp := BIT.LXOR( date, time );
+			(*Clock.Get( date, time );*)
+			(*timestamp := BIT.LXOR( date, time );*)
+			unixEpoch.year := 1970; unixEpoch.month := 1; unixEpoch.day := 1;
+			ASSERT(Dates.ValidDateTime(unixEpoch));
+			Dates.TimeDifference(Dates.Now(), unixEpoch, d, h, m, s);
+			INC(s, m * 60);
+			INC(s, h * 3600);
+			INC(s, d * 86400);
+			timestamp := s;
 			FOR i := 3 TO 0 BY -1 DO
 				data[ i ] := CHR( timestamp );
 				timestamp := timestamp DIV 256
 			END;
-			(* 28 random bytes *)
-			Utils.RandomBytes( data, 4, 28 )
+			(*Utils.RandomBytes( data, 4, 28 )*)
 		END Create32RandomBytes;
 
 		(** Prints the correct S > C or C > S depending on current action and state *)
@@ -1777,6 +1874,9 @@ TYPE
 		END PrintDirection;
 
 	BEGIN { ACTIVE }
+		IF trapped THEN SetState(TCP.Closed); RETURN END;
+		trapped := TRUE;
+
 		AwaitStateNotEqual(TCP.Unused);
 		IF client THEN
 			StartHandshake;
@@ -1800,7 +1900,7 @@ TYPE
 		END
 	END Connection;
 VAR
-	version: ARRAY 2 OF CHAR;
+	(*version: ARRAY 2 OF CHAR;*)
 	defaultCipherPolicy: Policy;
 
 	(** Returns a new connection with a reasonnable default policy *)
@@ -1812,28 +1912,33 @@ VAR
 		RETURN con
 	END GetConnection;
 
-	(** Prepares default ciphers for TLS v1.1 *)
+	PROCEDURE GetServerConnection * (CONST certificate, pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: LONGINT): Connection;
+	VAR
+		con: Connection;
+		ctx: Context;
+	BEGIN
+		NEW(ctx, defaultCipherPolicy);
+		IF ctx.LoadRsaCertificate(certificate) # Ok THEN RETURN NIL END;
+		ctx.LoadRsaPrivateKey(pHex, qHex, eHex, INTEGER(pLen), INTEGER(qLen), INTEGER(eLen));
+		NEW(con);
+		con.SetContext(ctx);
+		RETURN con
+	END GetServerConnection;
+
+	(** Prepares default ciphers for TLS v1.2 *)
 	PROCEDURE InitDefaults;
 	VAR
 		defaultSuites:ARRAY DefaultSuitesNbr OF LONGINT;
 	BEGIN
-		(*! THESE CIPHERS ARE NOT SECURE, IMPLEMENT AND USE TLS v1.2 *)
-		defaultSuites[0] := TlsRsaWithIdeaCbcSha;
-		defaultSuites[1] := TlsRsaWith3DesEdeCbcSha;
-		defaultSuites[2] := TlsRsaWithRc4128Sha;
-		defaultSuites[3] := TlsRsaWithDesCbcSha;
+		defaultSuites[0] := TlsRsaWithAes256CbcSha;
+		defaultSuites[1] := TlsRsaWithAes128CbcSha;
+		defaultSuites[2] := TlsRsaWith3DesEdeCbcSha;
 		NEW(defaultCipherPolicy);
-		defaultCipherPolicy.SetCipherSuites(defaultSuites, DefaultSuitesNbr)
+		defaultCipherPolicy.SetCipherSuites(defaultSuites, DefaultSuitesNbr);
+		defaultCipherPolicy.SetVersion(1, 2)
 	END InitDefaults;
 	
 
 BEGIN
-	version[ 0 ] := CHR( 3 ); (* this implementation supports only TLS 1.0 = SSL 3.1 *)
-	version[ 1 ] := CHR( 1 );
-
 	InitDefaults
 END TLS.
-
-
-System.Free WebHTTPServerTools WebHTTPServer TLSServices TLS ~
-Aos.Call WebHTTPServerTools.Start~

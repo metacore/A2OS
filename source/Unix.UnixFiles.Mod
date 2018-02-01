@@ -4,7 +4,7 @@ MODULE UnixFiles;   (** AUTHOR "gf"; PURPOSE "Unix file systems" *)
 
 (*  derived fron (SPARCOberon) Files.Mod by J. Templ 1.12. 89/14.05.93 *)
 
-IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files, Commands, Tr := Trace;
+IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files, Commands;
 
 
 CONST
@@ -596,7 +596,7 @@ TYPE
 				END Set;
 						
 				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
-				VAR  org, offset, i, n, res: LONGINT;  buf: Buffer;
+				VAR  org, offset, i, n: LONGINT;  buf: Buffer;
 				BEGIN 
 					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
@@ -1094,7 +1094,7 @@ TYPE
 		(* get search pathes *)
 		a := Unix.getenv( ADDRESSOF( "AOSPATH" ) );  i := 0;
 		IF a = 0 THEN
-			Log.String( "UnixFiles.Initialize: environment variable AOSPATH not defined" );  Log.Ln;
+		(*	Log.String( "UnixFiles.Initialize: environment variable AOSPATH not defined" );  Log.Ln; *)
 		ELSE
 			REPEAT
 				S.GET( a, ch );  INC( a );

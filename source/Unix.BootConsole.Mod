@@ -1,6 +1,6 @@
 MODULE BootConsole;	(** AUTHOR "G.F."; PURPOSE "Boot console"; *)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
+IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Modules, Objects, Commands, KernelLog;
 
 TYPE
 	Module = Modules.Module;
@@ -165,6 +165,7 @@ VAR
 	PROCEDURE StartSystem;
 	BEGIN
 		IF ~TryCommand()  THEN
+			KernelLog.String( Machine.version );  KernelLog.Ln;
 			(* normal system start *)
 			LoadModule( "Clock" );
 			Execute( "XDisplay",  "Install" );
@@ -178,7 +179,6 @@ VAR
 	END StartSystem;
 
 	PROCEDURE InitSignalHandling;
-	VAR i: LONGINT;
 	BEGIN
 		Unix.HandleSignal( Unix.SIGHUP );
 		Unix.HandleSignal( Unix.SIGINT );

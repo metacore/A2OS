@@ -4,11 +4,10 @@
    Loader for statically linked oberon binaries.
 
    Compile command:
-      gcc -m32 OberonLoader.c -ldl -o OberonLoader
+      gcc -m32 -s -O OberonLoader.c -ldl -o OberonLoader
 
-   The filename of the statically linked oberon binary is 'oberon.bin'.
-   The oberon binary may be joined with the loader to create a Unix program:
-   This is done in A2 by the following command:
+   The statically linked oberon binary 'oberon.bin' has to be
+   appended to this loader by the following A2-command:
 
       UnixBinary.Build oberon.bin ->  <program name> ~
 
@@ -81,31 +80,54 @@ void Relocate( uint relocations ) {
 }
 
 
+char *which_path(const char *name) {
+
+   char *tname, *tok, *path;
+
+   path = strdup(getenv("PATH"));
+   if (NULL == path) return NULL;
+
+   tok = strtok(path, ":");
+   while (tok) {
+      tname = malloc(strlen(tok) + 2 + strlen(name));
+      sprintf(tname, "%s/%s", tok, name);
+
+      if (0 == access(tname, X_OK)) { free(path);  return tname; }
+
+      free(tname);
+      tok = strtok(NULL, ":");
+   }
+   free(path);
+   return NULL;
+}
+
+
+
 int main( int argc, char *argv[], char *env[] ) {
    int r, n, binsize, relocations;
    size_t fsize;
    struct stat sb;
    Header header;
-   char path[64];
+   char *path;
    addr a;
-   uint binpos;
 
-   a = realpath( argv[0], path );
-   fd = open( path, O_RDONLY );
-   r = fstat( fd, &sb );
-   fsize = sb.st_size;
-   if (fsize > Offset) {
-      binpos = Offset;
-      r = lseek( fd, binpos, SEEK_SET );
-   } else {
-      binpos = 0;
-      fd = open( "oberon.bin", O_RDONLY );
+   fd = open( *argv, O_RDONLY );
+   if (fd < 0) {
+      /* find myself in PATH */
+      path = which_path(*argv);
+      fd = open(path, O_RDONLY);
    }
+   r = fstat( fd, &sb );
+   if ( sb.st_size < Offset+2048 ) {
+      fprintf( stderr, "%s: missing appended Oberon binary\n", *argv );
+      exit( 2 );
+   }
+   r = lseek( fd, Offset, SEEK_SET );
    buf = malloc( 512 );
    n = read( fd, buf, 256 );
    header = (Header)buf;
    if (strcmp(header->id, coreID) != 0) {
-      printf( "bad headerId: %s, expected: %s\n", header->id, coreID );
+      fprintf( stderr, "wrong Oberon headerId: got '%s', expected '%s'\n", header->id, coreID );
       exit( 2 );
    }
    binsize = header->codesize;
@@ -113,7 +135,7 @@ int main( int argc, char *argv[], char *env[] ) {
 
    bufsize = BlkSize;
    while (bufsize < binsize) bufsize += BlkSize;
-   r = lseek( fd, binpos, SEEK_SET );
+   r = lseek( fd, Offset, SEEK_SET );
 
    free( buf );
    r = posix_memalign( &buf, BlkSize, bufsize );

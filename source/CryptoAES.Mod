@@ -8,12 +8,13 @@ CONST
 	MaxRounds = 14;  
 	ECB = Ciphers.ECB;  CBC = Ciphers.CBC;  CTR = Ciphers.CTR;
 	
-	b0 = S.VAL( SET, 0FFH );  b1 = S.VAL( SET, 0FF00H );  
-	b2 = S.VAL( SET, 0FF0000H );  b3 = S.VAL( SET, 0FF000000H );
+	b0 = S.VAL( SET, 0000000FFH );  b1 = S.VAL( SET, 00000FF00H );  
+	b2 = S.VAL( SET, 000FF0000H );  b3 = S.VAL( SET, 0FF000000H );
 
 TYPE
 	RTable = ARRAY 256 OF SET;
-
+	RKeys = ARRAY 4*(MaxRounds + 1) OF SET;
+	
 VAR
 	e0, e1, e2, e3, e4: RTable;
 	d0, d1, d2, d3, d4: RTable;
@@ -22,12 +23,11 @@ VAR
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			TYPE
-				Key = ARRAY 4*(MaxRounds + 1) OF SET;
 				Block = ARRAY 4 OF SET;
 				Ind4 = RECORD a, b, c, d: LONGINT END;
 			VAR
 				rounds: SHORTINT;
-				key, dkey: Key;
+				key, dkey: RKeys;
 				iv: Block;
 
 				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
@@ -37,7 +37,7 @@ TYPE
 					ELSIF keybits = 192 THEN  rounds := Init192( src )
 					ELSE  rounds := Init256( src )
 					END;
-					InvertKey
+					InvertKeys
 				END InitKey;
 
 				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
@@ -212,8 +212,8 @@ TYPE
 					p := 0;  i := 0;
 					LOOP
 						split( key[p + 7], ib );
-						key[p +   8] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
-						key[p +   9] := key[p + 1] / key[p +  8];
+						key[p + 8] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
+						key[p + 9] := key[p + 1] / key[p +  8];
 						key[p + 10] := key[p + 2] / key[p +  9];
 						key[p + 11] := key[p + 3] / key[p + 10];
 						INC( i );
@@ -227,9 +227,10 @@ TYPE
 					END;
 					RETURN 14
 				END Init256;
-	
-				PROCEDURE InvertKey;
-				VAR i, j, k: LONGINT;  ib: Ind4;
+				
+				
+				PROCEDURE InvertKeys;
+				VAR i, j, k, p: LONGINT;  t: SET;  ib: Ind4;
 				
 					PROCEDURE ind( s: SET ): LONGINT;   (* extract index byte 0 *)
 					BEGIN
@@ -237,21 +238,26 @@ TYPE
 					END ind;
 					
 				BEGIN
+					dkey := key;
 					(* invert the order of the round keys: *)
 					i := 0;  j := 4*rounds;
 					WHILE i < j DO
-						FOR k := 0 TO 3 DO dkey[i + k] := key[j + k];  dkey[j + k] := key[i + k]  END;
+						FOR k := 0 TO 3 DO  t := dkey[i + k];  dkey[i + k] := dkey[j + k];  dkey[j + k] := t  END;
 						INC( i, 4 );  DEC( j, 4 );
 					END;
 					(* apply the inverse MixColumn transform to all round keys but the first and the last: *)
 					FOR i := 1 TO rounds - 1 DO
-						FOR j := 0 TO 3 DO
-							k := 4*i + j;  
-							split( dkey[k], ib );
-							dkey[k] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
-						END
+						p := 4*i;  
+						split( dkey[p + 0], ib );
+						dkey[p + 0] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
+						split( dkey[p + 1], ib );
+						dkey[p + 1] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
+						split( dkey[p + 2], ib );
+						dkey[p + 2] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
+						split( dkey[p + 3], ib );
+						dkey[p + 3] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
 					END;
-				END InvertKey;
+				END InvertKeys;
 	
 	
 				PROCEDURE & Init*;
@@ -298,6 +304,7 @@ TYPE
 			END GetInt;
 			
 		END ConstBuffer;
+
 
 
 	PROCEDURE Initialize;
@@ -359,7 +366,7 @@ TYPE
 			t := f1( t );
 		END;
 	END Initialize;
-
+	
 
 BEGIN
 	Initialize;

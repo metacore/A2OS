@@ -88,7 +88,7 @@ VAR
 	
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	
-
+	logname: ARRAY 32 OF CHAR;
 	logfile: LONGINT;
 	traceHeap: BOOLEAN;
 
@@ -692,9 +692,11 @@ END GetTimer;
 	
 	
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
-	VAR ignore: LONGINT;
+	VAR r: LONGINT;  logstat: Unix.Status;
 	BEGIN
-		ignore := Unix.close( logfile );
+		r := Unix.fstat( logfile, logstat );
+		r := Unix.close( logfile );
+		IF logstat.size = 0 THEN  r := Unix.unlink( ADDRESSOF( logname) )  END;
 		IF reboot THEN  Unix.exit( 0 )  ELSE  Unix.exit( 1 )  END;
 	END Shutdown;
 		
@@ -855,15 +857,15 @@ END GetTimer;
 	
 	
 	PROCEDURE InitLog;
-	VAR name: ARRAY 32 OF CHAR;  pid, i: LONGINT; 
+	VAR pid, i: LONGINT; 
 	BEGIN
-		name := "AOS.xxxxx.Log";
+		logname := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;
 		REPEAT
-			name[i] := CHR( pid MOD 10 + ORD( '0' ) );  DEC( i );
+			logname[i] := CHR( pid MOD 10 + ORD( '0' ) );  DEC( i );
 			pid := pid DIV 10;		
 		UNTIL i = 3;
-		logfile := Unix.open( ADDRESSOF( name ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
+		logfile := Unix.open( ADDRESSOF( logname ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 		SilentLog;
 		VerboseLog;
 	END InitLog;

@@ -24,6 +24,7 @@ IMPORT
 		cipher.Encrypt( bindata, 0, cipher.blockSize );
 		Out.Ln; Out.String( "Encrypted: " ); U.PrintHex( bindata, 0, cipher.blockSize );
 		(* decryption *)
+		cipher.InitKey( binkey, keybits );
 		cipher.Decrypt( bindata, 0, cipher.blockSize );
 		Out.Ln; Out.String( "Decrypted: " ); U.PrintHex( bindata, 0, cipher.blockSize );
 		bindata[cipher.blockSize] := 0X; 

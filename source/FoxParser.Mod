@@ -180,6 +180,7 @@ TYPE
 
 		indent: LONGINT;   (* for debugging purposes only *)
 		hasSymbol: BOOLEAN;
+		prevPosition-: Position;
 
 		PROCEDURE S( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
 		VAR i: LONGINT;
@@ -301,6 +302,7 @@ TYPE
 		PROCEDURE Token*(): LONGINT;
 		BEGIN
 			IF ~hasSymbol OR (symbol.token = Scanner.Escape) THEN
+				prevPosition := symbol.position;
 				error := ~scanner.GetNextSymbol(symbol) OR error;
 				IF symbol.token = Scanner.Escape THEN 
 					error := ~scanner.GetNextSymbol(symbol) OR error;
@@ -315,6 +317,7 @@ TYPE
 		PROCEDURE TokenB*(): LONGINT;
 		BEGIN
 			IF ~hasSymbol THEN
+				prevPosition := symbol.position;
 				error := ~scanner.GetNextSymbol(symbol) OR error;
 				hasSymbol := TRUE;
 				SkipComments(TRUE);
@@ -1001,6 +1004,7 @@ TYPE
 						statement := caller;
 						CommentStatement(statement);
 					END;
+					statement.SetEndPosition(prevPosition.end);
 					statements.AddStatement( statement );
 					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
@@ -1027,6 +1031,7 @@ TYPE
 						statementSequence := StatementSequence(ifStatement);
 						ifStatement.SetElsePart( statementSequence );
 					END;
+					ifStatement.SetEndPosition(symbol.position.end);
 					Check( Scanner.End );  statements.AddStatement( ifStatement );
 					result := TRUE
 			| Scanner.With:
@@ -1056,6 +1061,7 @@ TYPE
 						withStatement.SetElsePart(statementSequence);
 					END;
 					Check( Scanner.End );
+					withStatement.SetEndPosition(symbol.position.end);
 					statements.AddStatement( withStatement );
 					result := TRUE
 			| Scanner.Case:
@@ -1074,6 +1080,7 @@ TYPE
 						caseStatement.SetElsePart( statementSequence );
 					END;
 					Check( Scanner.End );
+					caseStatement.SetEndPosition(symbol.position.end);
 					statements.AddStatement( caseStatement );
 					result := TRUE
 			| Scanner.While:
@@ -1086,6 +1093,7 @@ TYPE
 					statementSequence := StatementSequence(whileStatement);
 					whileStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
+					whileStatement.SetEndPosition(symbol.position.end);					
 					statements.AddStatement( whileStatement );
 					result := TRUE
 			| Scanner.Repeat:
@@ -1096,6 +1104,7 @@ TYPE
 					repeatStatement.SetStatements( statementSequence );
 					Check( Scanner.Until );
 					expression := Expression();
+					repeatStatement.SetEndPosition(prevPosition.end);
 					repeatStatement.SetCondition( expression );
 					statements.AddStatement( repeatStatement );
 					result := TRUE
@@ -1123,6 +1132,7 @@ TYPE
 					statementSequence := StatementSequence(forStatement);
 					forStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
+					forStatement.SetEndPosition(symbol.position.end);
 					statements.AddStatement( forStatement );
 					result := TRUE
 			| Scanner.Loop:
@@ -1132,6 +1142,7 @@ TYPE
 					statementSequence := StatementSequence(loopStatement);
 					loopStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
+					loopStatement.SetEndPosition(symbol.position.end);
 					statements.AddStatement( loopStatement );
 					result := TRUE;
 			| Scanner.Exit:
@@ -1148,10 +1159,12 @@ TYPE
 						expression := Expression();
 						returnStatement.SetReturnValue( expression );
 					END;
+					returnStatement.SetEndPosition(symbol.position.end);
 					statements.AddStatement( returnStatement );
 					result := TRUE;
 			| Scanner.Begin:
 					NextSymbol;  statement := StatementBlock(outer);  statements.AddStatement( statement );  Check( Scanner.End );
+					statement.SetEndPosition(symbol.position.end);
 					result := TRUE;
 			| Scanner.Await:
 					awaitStatement := SyntaxTree.NewAwaitStatement( symbol.position, outer );
@@ -1160,11 +1173,13 @@ TYPE
 					expression := Expression();
 					awaitStatement.SetCondition( expression );
 					statements.AddStatement( awaitStatement );
+					awaitStatement.SetEndPosition(symbol.position.end);
 					result := TRUE
 			| Scanner.Code:
 				(* assemble *)
 				code := Code(outer);
 				Check(Scanner.End);
+				code.SetEndPosition(symbol.position.end);
 				statements.AddStatement( code );
 				result := TRUE
 			| Scanner.End:  result := FALSE (* end of if, with, case, while, for, loop, or statement sequence *)
@@ -1281,6 +1296,7 @@ TYPE
 					body.SetFinally(StatementSequence(body));
 				END;
 			END;
+			body.SetEndPosition(symbol.position.start);  (* beginning of "end" is end of body *)
 			IF Trace THEN E( "Body" ) END;
 			currentScope := previousScope;
 			RETURN body

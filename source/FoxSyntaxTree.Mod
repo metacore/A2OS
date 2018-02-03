@@ -3707,6 +3707,11 @@ TYPE
 			HALT(200) (* abstract *)
 		END Clone;
 
+		PROCEDURE SetEndPosition*(pos: LONGINT);
+		BEGIN
+			position.end := pos;
+		END SetEndPosition;
+		
 
 	END Statement;
 

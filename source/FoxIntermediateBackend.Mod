@@ -13082,6 +13082,7 @@ TYPE
 			AddPointer(typeInfoSection, typeInfoSectionOffset);
 			TypeInfoSection(typeInfoSection);
 			referenceSection := Block("Heaps","SystemBlockDesc",".@References",referenceSectionOffset);
+			referenceSection.SetExported(TRUE);
 			References(referenceSection);
 			procTableSection := Block("Heaps","SystemBlockDesc",".@ProcTable",procTableSectionOffset);
 			ProcedureDescriptorArray(procTableSection, numberProcs);

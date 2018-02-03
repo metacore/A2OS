@@ -426,6 +426,7 @@ TYPE
 			prevScope := currentScope;
 			currentScope := x;
 			e := x.firstConstant;
+			nextHighest := highest;
 			WHILE (e # NIL) DO
 				Register(e,x,FALSE);
 				IF SymbolNeedsResolution(e) THEN
@@ -433,7 +434,7 @@ TYPE
 						value := ConstantExpression(e.value);
 						value := NewConversion(e.position,value,x.ownerEnumeration,NIL);
 					ELSE
-						value := SyntaxTree.NewEnumerationValue(e.position,highest+1);
+						value := SyntaxTree.NewEnumerationValue(e.position,nextHighest+1);
 						value.SetType(x.ownerEnumeration);
 					END;
 					IF (value.resolved # NIL) & (value.resolved IS SyntaxTree.EnumerationValue) THEN

@@ -295,11 +295,14 @@ TYPE
 		BEGIN
 			IF FlagNoResizing IN flags THEN
 				width := GetWidth(); height := GetHeight();
-			ELSIF width < SizeMinWidth THEN
-				width := GetWidth();
-			ELSIF height < SizeMinHeight THEN
-				height := GetHeight();
-			END
+			ELSE
+				IF width < SizeMinWidth THEN
+					width := GetWidth();
+				END;
+				IF height < SizeMinHeight THEN
+					height := GetHeight();
+				END;
+			END;
 		END Resizing;
 
 		(** May replace the back-image, if needed. MUST check if requested size is reasonable (0 < x * y < memory) *)

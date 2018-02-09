@@ -1562,6 +1562,8 @@ TYPE
 
 VAR
 	unicodePropertyReader : UnicodeProperties.UnicodeTxtReader;
+	
+	oberonFontAllocatable*: PROCEDURE( CONST name: ARRAY OF CHAR ): BOOLEAN;
 
 (* ----------------------------------------------------------------------------------- *)
 (* Return true if the unicode character x should be regarded as a white-space *)
@@ -2030,14 +2032,21 @@ BEGIN
 END DecodeOberonFontName;
 
 PROCEDURE ToOberonFont(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET; VAR oname : ARRAY OF CHAR) : BOOLEAN;
-VAR str : ARRAY 32 OF CHAR;
+VAR str : ARRAY 32 OF CHAR; f: Files.File;
 BEGIN
 	COPY(name, oname);
 	Strings.IntToStr(size, str); Strings.Append(oname, str);
 	IF WMGraphics.FontBold IN style THEN Strings.Append(oname, "b") END;
 	IF WMGraphics.FontItalic IN style THEN Strings.Append(oname, "i") END;
 	Strings.Append(oname, ".Scn.Fnt");
-	RETURN Files.Old(oname) # NIL
+	f := Files.Old(oname);
+	IF f # NIL THEN  RETURN TRUE
+	ELSE
+		IF oberonFontAllocatable # NIL THEN
+			RETURN oberonFontAllocatable(oname)
+		END;
+		RETURN FALSE
+	END
 END ToOberonFont;
 
 PROCEDURE GetUTF8Char*(r : Streams.Reader; VAR u : Texts.Char32) : BOOLEAN;
@@ -2567,6 +2576,7 @@ BEGIN
 END GetDefaultAttributes;
 
 BEGIN
+	oberonFontAllocatable := NIL;
 	GetConfig;
 END TextUtilities.
 

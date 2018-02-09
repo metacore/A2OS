@@ -992,6 +992,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	WMDefaultFont.Mod WMFontManager.Mod WMOberonFonts.Mod WMCCGFonts.Mod WMBitmapFont.Mod	# Font support
 	OpenTypeInt.Mod OpenTypeScan.Mod OpenType.Mod OpenTypeFonts.Mod  WMOTFonts.Mod	# OpenType Fonts
+	OberonFonts.Mod # OpenType Fonts to Oberon Fonts
 
 	cjkfont.bfnt # since used as fallback
 

@@ -22,8 +22,6 @@ CONST
 VAR
 	H, L: INTEGER;
 TYPE
-	BESTSIZE* = HUGEINT;
-
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
 
@@ -51,7 +49,7 @@ TYPE
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT; (** result of last output operation. *)
 		send: Sender;
-		sent*: BESTSIZE;  (** count of sent bytes *)
+		sent*: HUGEINT;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
 		PROCEDURE & InitWriter*( send: Sender;  size: LONGINT );
@@ -70,7 +68,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: BESTSIZE );
+		PROCEDURE SetPos*( pos: HUGEINT );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;
@@ -84,7 +82,7 @@ TYPE
 		END Update;
 
 	(** Current write position. *)
-		PROCEDURE Pos*( ): BESTSIZE;
+		PROCEDURE Pos*( ): HUGEINT;
 		BEGIN
 			RETURN sent + tail;
 		END Pos;
@@ -232,7 +230,7 @@ TYPE
 		END String;
 
 	(** Write an integer in decimal right-justified in a field of at least w characters. *)
-		PROCEDURE Int*( x: HUGEINT; w: LONGINT );
+		PROCEDURE Int*( x: HUGEINT; w: SIZE );
 		VAR i: SIZE; x0: HUGEINT;
 			a: ARRAY 21 OF CHAR;
 		BEGIN
@@ -271,7 +269,7 @@ TYPE
 			END;
 			Char( "}" )
 		END Set;	*)
-		
+
 		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
 		VAR i, last: LONGINT;  dots: BOOLEAN;
 		BEGIN
@@ -295,8 +293,8 @@ TYPE
 			Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 			If w < 0 THEN w least significant hex digits of x are written (potentially including leading zeros)
 		*)
-		PROCEDURE Hex*(x: HUGEINT; w: LONGINT);
-		VAR filler: CHAR; i,maxw: LONGINT; a: ARRAY 20 OF CHAR; y: HUGEINT;
+		PROCEDURE Hex*(x: HUGEINT; w: SIZE);
+		VAR filler: CHAR; i,maxw: SIZE; a: ARRAY 20 OF CHAR; y: HUGEINT;
 		BEGIN
 			IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 16 END;
 			i := 0;
@@ -504,7 +502,7 @@ TYPE
 		END CanSetPos;
 
 	(* Set the position for the writer *)
-		PROCEDURE SetPos*( pos: BESTSIZE );
+		PROCEDURE SetPos*( pos: HUGEINT );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			tail := LONGINT( pos );  sent := 0;  res := Ok;
@@ -542,7 +540,7 @@ TYPE
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT;   (** result of last input operation. *)
 		receive: Receiver;
-		received*: BESTSIZE;   (** count of received bytes *)
+		received*: HUGEINT;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
 		PROCEDURE & InitReader*( receive: Receiver;  size: LONGINT );
@@ -566,7 +564,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: BESTSIZE );
+		PROCEDURE SetPos*( pos: HUGEINT );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;
@@ -587,9 +585,9 @@ TYPE
 		END Available;
 
 	(** Current read position. *)
-		PROCEDURE Pos*( ): BESTSIZE;
+		PROCEDURE Pos*( ): HUGEINT;
 		BEGIN
-			RETURN received - BESTSIZE(tail) - BESTSIZE(head)
+			RETURN received - HUGEINT(tail) - HUGEINT(head)
 		END Pos;
 
 		(** -- Read raw binary data -- *)
@@ -752,8 +750,8 @@ TYPE
 		VAR ch: CHAR;  n, y: LONGINT;
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
-			WHILE ch >= 80X DO INC( y, LSH( LONG( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( LONG( ORD( ch ) ), 25 ), n - 25 ) + y
+			WHILE ch >= 80X DO INC( y, LSH( LONGINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
 
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)
@@ -781,6 +779,46 @@ TYPE
 			x := sgn * vd;
 			IF (res = 0) & ~ok THEN res := FormatError END
 		END Int;
+
+	(** Read a floating-point number. EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
+		PROCEDURE Real* (VAR real: LONGREAL);
+		VAR e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN; ch: CHAR;
+		BEGIN
+			ch := Get();
+			WHILE (ch = "0") DO ch := Get() END;
+			IF ch = "-" THEN neg := TRUE; ch := Get(); ELSE neg := FALSE END;
+			WHILE (ch = " ") OR (ch = "0") DO ch := Get(); END;
+			y := 0;
+			WHILE ("0" <= ch) & (ch <= "9") DO
+				y := y * 10 + (ORD(ch) - ORD("0"));
+				ch := Get();
+			END;
+			IF ch = "." THEN
+				ch := Get();
+				g := 1;
+				WHILE ("0" <= ch) & (ch <= "9") DO
+					g := g / 10; y := y + g * (ORD(ch) - ORD("0"));
+					ch := Get();
+				END;
+			END;
+			IF (ch = "d") OR (ch = "D") OR (ch = "e") OR (ch = "E") THEN
+				ch := Get(); e := 0;
+				IF ch = "-" THEN negE := TRUE; ch := Get()
+				ELSIF ch = "+" THEN negE := FALSE; ch := Get()
+				ELSE negE := FALSE
+				END;
+				WHILE (ch = "0") DO ch := Get() END;
+				WHILE ("0" <= ch) & (ch <= "9") DO
+					e := e * 10 + (ORD(ch) - ORD("0"));
+					ch := Get();
+				END;
+				IF negE THEN y := y / Ten(e)
+				ELSE y := y * Ten(e) 
+				END;
+			END;
+			IF neg THEN y := -y END;
+			real := y
+		END Real;
 
 	(** Return TRUE iff at the end of a line (or file). *)
 		PROCEDURE EOLN*( ): BOOLEAN;
@@ -906,6 +944,14 @@ TYPE
 			RETURN res = Ok;
 		END GetInteger;
 
+		(** First skip whitespace, then read a real *)
+		PROCEDURE GetReal*(VAR real: LONGREAL): BOOLEAN;
+		BEGIN
+			SkipWhitespace;
+			Real(real);
+			RETURN res = Ok
+		END GetReal;
+
 		(** First skip whitespace, then read 1 byte character *)
 		PROCEDURE GetChar*(VAR ch : CHAR): BOOLEAN;
 		BEGIN
@@ -931,7 +977,7 @@ TYPE
 		END CanSetPos;
 
 	(** Set the reader position *)
-		PROCEDURE SetPos*( pos: BESTSIZE );
+		PROCEDURE SetPos*( pos: HUGEINT );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			head := LONGINT( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;

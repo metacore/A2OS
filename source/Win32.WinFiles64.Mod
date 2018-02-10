@@ -1,7 +1,6 @@
 MODULE WinFiles64;   (*AUTHOR "fof,ejz"; PURPOSE "Windows file system  for WinAos"; *)
 
 IMPORT SYSTEM, Machine, Kernel32, KernelLog, Modules, Kernel, Files := Files64, Commands;
-(* orange marked lines denote overloaded methods *)
 
 CONST
 	PathDelimiter = "\";  BufferSize = 4096;
@@ -20,8 +19,6 @@ CONST
 
 
 TYPE
-	BESTSIZE = Files.BESTSIZE;
-	
 	FileName = ARRAY Kernel32.MaxPath OF CHAR;
 	PFileName = POINTER TO FileName;
 	NotificationProc* = PROCEDURE ( type: LONGINT;  drives: SET );
@@ -199,13 +196,13 @@ TYPE
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
 		END RemoveDirectory0;
-		
+
 		PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 		VAR fname: FileName;
 		BEGIN
 			Prefix(name, fname );  RETURN fs.Has(fname, fullName, flags);
 		END Has;
-		
+
 
 	END AliasFileSystem;
 
@@ -239,7 +236,7 @@ TYPE
 			IF TraceFileSystem IN Trace THEN KernelLog.String( "Old0 " );  KernelLog.String( name );  KernelLog.Ln;  END;
 
 			IF (name # "") & FindFile( name, fname ) THEN
-				hfile := Kernel32.CreateFile( fname, {Kernel32.GenericRead}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
+				hfile := Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 );
 				IF hfile # Kernel32.InvalidHandleValue THEN NEW( F, fname, hfile, collection.GetNextFileKey() , SELF);    collection.AddOld( F );  RETURN F END
 			END;
 			IF TraceFileSystem IN Trace THEN KernelLog.String( "failed" );  KernelLog.Ln;  END;
@@ -276,7 +273,7 @@ TYPE
 					Fo := fold( File );
 					IF ~Fo.ToTemp() THEN RETURN END;
 					ret := Kernel32.CopyFile( Fo.tfname^, fnnew, 0 )
-				ELSE ret := Kernel32.MoveFileEx( fnold, fnnew, {Kernel32.MoveFileReplaceExisting, Kernel32.MoveFileCopyAllowed} )
+				ELSE ret := Kernel32.MoveFileEx( fnold, fnnew, Kernel32.SetToDW({Kernel32.MoveFileReplaceExisting, Kernel32.MoveFileCopyAllowed}) )
 				END;
 				IF ret # 0 THEN res := 0 END
 			ELSIF TraceFileSystem IN Trace THEN KernelLog.String( "Rename failed :" );  KernelLog.String( fnold );  KernelLog.String( " => " );  KernelLog.String( fnnew );  KernelLog.Ln;
@@ -308,10 +305,10 @@ TYPE
 							d := LONG( st.wYear - 1900 ) * 200H + LONG( st.wMonth ) * 20H + LONG( st.wDay );  t := LONG( st.wHour ) * 1000H + LONG( st.wMinute ) * 40H + LONG( st.wSecond );
 						END;
 						Join( curPath, "/", FD.cFileName, longname );
-						IF ~(Kernel32.FileAttributeDirectory IN FD.dwFileAttributes) THEN
-							enum.PutEntry( longname, {}, t, d, BESTSIZE(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
+						IF ~(Kernel32.FileAttributeDirectory IN Kernel32.DWToSet(FD.dwFileAttributes)) THEN
+							enum.PutEntry( longname, {}, t, d, HUGEINT(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
 						ELSIF (FD.cFileName # ".") & (FD.cFileName # "..") THEN
-							enum.PutEntry( longname, {Files.Directory}, t, d, BESTSIZE(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
+							enum.PutEntry( longname, {Files.Directory}, t, d, HUGEINT(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
 						END;
 					UNTIL Kernel32.FindNextFile( h, FD ) = Kernel32.False;
 					Kernel32.FindClose( h )
@@ -319,7 +316,7 @@ TYPE
 			END EnumeratePath;
 
 		BEGIN {EXCLUSIVE}
-			COPY( mask, path );  ConvertChar( path, Files.PathDelimiter, PathDelimiter );  attr := Kernel32.GetFileAttributes( path );  path := "";
+			COPY( mask, path );  ConvertChar( path, Files.PathDelimiter, PathDelimiter );  attr := ToSet(Kernel32.GetFileAttributes( path ));  path := "";
 			IF (Kernel32.FileAttributeDirectory IN attr) & (~(Kernel32.FileAttributeTemporary IN attr)) THEN COPY( mask, path );  COPY( "*", pattern );  ELSE Files.SplitPath( mask, path, pattern );  END;
 			IF TraceFileSystem IN Trace THEN
 				KernelLog.String( "Enumerate0: " );   KernelLog.String( mask );  KernelLog.String( " :: " );  KernelLog.String( path );  KernelLog.String( " :: " );  KernelLog.String( pattern );  KernelLog.Ln;
@@ -393,9 +390,9 @@ TYPE
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.CreateDirectory( name, NIL );
-			IF ret # 0 THEN 
+			IF ret # 0 THEN
 				res := 0;
-			ELSIF Kernel32.GetLastError() = 183 (*ERROR_ALREADY_EXISTS*) THEN 
+			ELSIF Kernel32.GetLastError() = 183 (*ERROR_ALREADY_EXISTS*) THEN
 				res := Files.FileAlreadyExists;
 			ELSE
 				res := 1
@@ -422,10 +419,10 @@ TYPE
 		VAR name: FileName;
 		BEGIN
 			COPY(fileName, name);
-			ConvertChar(name, Files.PathDelimiter, PathDelimiter );  
-			IF FindFile(fileName, fullName) THEN 
-				flags := FileFlags(Kernel32.GetFileAttributes(fullName));
-				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);  
+			ConvertChar(name, Files.PathDelimiter, PathDelimiter );
+			IF FindFile(fileName, fullName) THEN
+				flags := FileFlags(ToSet(Kernel32.GetFileAttributes(fullName)));
+				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -455,9 +452,9 @@ TYPE
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
 			IF hfile # Kernel32.InvalidHandleValue THEN
-				ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False);
-				s := Kernel32.GetFileAttributes( name );
-				IF Kernel32.FileAttributeTemporary IN s THEN EXCL( s, Kernel32.FileAttributeTemporary );  res := Kernel32.SetFileAttributes( name, s );  ASSERT( res # 0 );  s := Kernel32.GetFileAttributes( name ) END;
+				ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False); 
+				s := ToSet(Kernel32.GetFileAttributes( name ));
+				IF Kernel32.FileAttributeTemporary IN s THEN EXCL( s, Kernel32.FileAttributeTemporary );  res := Kernel32.SetFileAttributes( name, Kernel32.SetToDW(s) );  ASSERT( res # 0 );  s := ToSet(Kernel32.GetFileAttributes( name )) END;
 				flags := FileFlags( s )
 			ELSE flags := {Temporary};  fsize := 0
 			END;
@@ -466,7 +463,7 @@ TYPE
 			fileSystem := fs
 		END Init;
 
-		PROCEDURE Set( VAR r: Files.Rider;  pos: BESTSIZE );
+		PROCEDURE Set( VAR r: Files.Rider;  pos: HUGEINT );
 		VAR size: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			IF hfile # Kernel32.InvalidHandleValue THEN
@@ -480,7 +477,7 @@ TYPE
 			r.apos := pos DIV BufferSize;  r.bpos := LONGINT( pos MOD BufferSize )
 		END Set;
 
-		PROCEDURE Pos( VAR r: Files.Rider ): BESTSIZE;
+		PROCEDURE Pos( VAR r: Files.Rider ): HUGEINT;
 		BEGIN
 			RETURN r.apos * BufferSize + r.bpos
 		END Pos;
@@ -488,11 +485,11 @@ TYPE
 		PROCEDURE WriteBuffer;
 		VAR pos: HUGEINT; n: LONGINT; res, b: Kernel32.BOOL;
 		BEGIN
-			ASSERT( buffer.dirty );  ASSERT( buffer.len > 0 );  
+			ASSERT( buffer.dirty );  ASSERT( buffer.len > 0 );
 			pos := buffer.apos * BufferSize;
 			IF hfile = Kernel32.InvalidHandleValue THEN
 				ASSERT( Temporary IN flags );  NEW( tfname );  TempName( tfname^ );
-				hfile := Kernel32.CreateFile( tfname^, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL , Kernel32.CreateAlways, {Kernel32.FileAttributeTemporary}, 0 );
+				hfile := Kernel32.CreateFile( tfname^, Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead}), NIL , Kernel32.CreateAlways, Kernel32.SetToDW({Kernel32.FileAttributeTemporary}), 0 );
 				ASSERT( hfile # Kernel32.InvalidHandleValue );  fpos := 0
 			END;
 			IF fpos # pos THEN ASSERT( Kernel32.SetFilePointerEx( hfile, pos, fpos , Kernel32.FileBegin ) # Kernel32.False ); END;
@@ -501,16 +498,16 @@ TYPE
 				res := Kernel32.CloseHandle( hfile );
 				IF TraceFile IN Trace THEN KernelLog.String( "closed handle of " );  KernelLog.String( fname );  KernelLog.Ln;  END;
 				hfile :=
-					Kernel32.CreateFile( fname, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
+					Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 );
 				ASSERT( hfile # Kernel32.InvalidHandleValue );
 				ASSERT( Kernel32.SetFilePointerEx( hfile, pos, fpos , Kernel32.FileBegin ) # Kernel32.False );
 				res := Kernel32.WriteFile( hfile, buffer.data, buffer.len, n, NIL )
 			END;
-			ASSERT( (res # Kernel32.False) & (n = buffer.len) );  
+			ASSERT( (res # Kernel32.False) & (n = buffer.len) );
 			INC( fpos, n );  buffer.dirty := FALSE
 		END WriteBuffer;
 
-		PROCEDURE ReadBuffer( apos: BESTSIZE );
+		PROCEDURE ReadBuffer( apos: HUGEINT );
 		VAR pos: HUGEINT; n: LONGINT;  res, b: Kernel32.BOOL;
 		BEGIN
 			IF buffer.dirty THEN WriteBuffer() END;
@@ -527,7 +524,7 @@ TYPE
 		END ReadBuffer;
 
 		PROCEDURE Read( VAR r: Files.Rider;  VAR x: CHAR );
-		VAR pos: BESTSIZE;
+		VAR pos: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
 			IF pos < fsize THEN
@@ -539,7 +536,7 @@ TYPE
 		END Read;
 
 		PROCEDURE ReadBytes( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR pos: BESTSIZE; n: LONGINT;
+		VAR pos: HUGEINT; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT( (ofs + len) <= LEN( x ) );
 			pos := r.apos * BufferSize + r.bpos;
@@ -559,7 +556,7 @@ TYPE
 		END ReadBytes;
 
 		PROCEDURE Write( VAR r: Files.Rider;  x: CHAR );
-		VAR pos: BESTSIZE;
+		VAR pos: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
 			IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
@@ -571,7 +568,7 @@ TYPE
 		END Write;
 
 		PROCEDURE WriteBytes( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR pos: BESTSIZE; n: LONGINT;
+		VAR pos: HUGEINT; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
 			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := r.apos * BufferSize + r.bpos;
@@ -587,7 +584,7 @@ TYPE
 			END
 		END WriteBytes;
 
-		PROCEDURE Length( ): BESTSIZE;
+		PROCEDURE Length( ): HUGEINT;
 		BEGIN {EXCLUSIVE}
 			RETURN fsize
 		END Length;
@@ -616,7 +613,7 @@ TYPE
 		PROCEDURE GetAttributes(): SET;
 		VAR s: SET;
 		BEGIN
-			s := Kernel32.GetFileAttributes( fname );
+			s := ToSet(Kernel32.GetFileAttributes( fname ));
 			RETURN FileFlags(s);
 		END GetAttributes;
 
@@ -644,10 +641,10 @@ TYPE
 			ASSERT( ~(Temporary IN flags) );
 			(*ALEX 2005.12.08*)
 			IF hfile = Kernel32.InvalidHandleValue THEN
-				hfile := Kernel32.CreateFile( fname, {Kernel32.GenericRead}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, 0 );
+				hfile := Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.CreateAlways, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 );
 			END;
 			IF hfile = Kernel32.InvalidHandleValue THEN
-				hfile := Kernel32.CreateFile( fname, {Kernel32.GenericRead}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
+				hfile := Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 );
 			END;
 			IF buffer.dirty THEN WriteBuffer() END;
 			(*
@@ -655,7 +652,7 @@ TYPE
 			*)
 			ASSERT(hfile # Kernel32.InvalidHandleValue);
 			ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False);
-			res := Kernel32.CloseHandle( hfile ); 
+			res := Kernel32.CloseHandle( hfile );
 			 hfile := Kernel32.InvalidHandleValue;
 			(*
 			END;
@@ -664,9 +661,9 @@ TYPE
 			IF TraceFile IN Trace THEN KernelLog.String( "toTemp: " );  KernelLog.String( fname );  KernelLog.String( " => " );  KernelLog.String( tfname^ );  KernelLog.Ln;  END;
 			IF ~MoveFile( fname, tfname^ ) THEN HALT( 1241 ) (* RETURN FALSE *) END;
 			winFS.collection.Unregister( SELF );
-			hfile := Kernel32.CreateFile( tfname^, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeTemporary}, 0 );
+			hfile := Kernel32.CreateFile( tfname^, Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({Kernel32.FileAttributeTemporary}), 0 );
 			(* IF hfile = Kernel32.InvalidHandleValue THEN RETURN FALSE END; *)
-			ASSERT( hfile # Kernel32.InvalidHandleValue );  
+			ASSERT( hfile # Kernel32.InvalidHandleValue );
 			ASSERT( Kernel32.GetFileSizeEx( hfile, fsize ) # Kernel32.False );
 			SELF.tfname := tfname;
 			COPY( tfname^, fname );
@@ -694,8 +691,8 @@ TYPE
 					res := 1;  RETURN;
 					(* HALT( 1242 )*)
 				END;
-				hfile := Kernel32.CreateFile( fname, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 )
-			ELSE hfile := Kernel32.CreateFile( fname, {Kernel32.GenericRead, Kernel32.GenericWrite}, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL , Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, 0 )
+				hfile := Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 )
+			ELSE hfile := Kernel32.CreateFile( fname, Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.CreateAlways, Kernel32.SetToDW({Kernel32.FileAttributeNormal}), 0 )
 			END;
 			IF hfile = Kernel32.InvalidHandleValue THEN res := 1;  RETURN END;
 			ASSERT( hfile # Kernel32.InvalidHandleValue );  winFS.collection.Register( SELF );  res := 0
@@ -739,6 +736,12 @@ VAR
 	winFS: WinFileSystem;   (* must be unique *)
 
 
+	PROCEDURE ToSet(d: UNSIGNED32): SET;
+	BEGIN
+		RETURN SYSTEM.VAL(SET, ADDRESS(d)); 
+	END ToSet;
+	
+
 	PROCEDURE DebugFile(f: File);
 	BEGIN
 		KernelLog.String("fname = "); KernelLog.String(f.fname); KernelLog.Ln;
@@ -767,7 +770,7 @@ VAR
 
 	PROCEDURE MoveFile( VAR from, to: ARRAY OF CHAR ): BOOLEAN;
 	BEGIN
-		IF Kernel32.MoveFileEx( from, to, {Kernel32.MoveFileReplaceExisting, Kernel32.MoveFileCopyAllowed} ) = Kernel32.False THEN
+		IF Kernel32.MoveFileEx( from, to, Kernel32.SetToDW({Kernel32.MoveFileReplaceExisting, Kernel32.MoveFileCopyAllowed}) ) = Kernel32.False THEN
 			IF Kernel32.CopyFile( from, to, Kernel32.False ) = Kernel32.False THEN
 				IF TraceFile IN Trace THEN KernelLog.String( "could not copy" );  KernelLog.Ln;  END;
 				RETURN FALSE
@@ -987,10 +990,10 @@ VAR
 				i := 2;
 				REPEAT ch := dir[i]; dir[i-2] := ch; INC(i) UNTIL ch = 0X;
 			ELSE
-				Kernel32.SetCurrentDirectory(workPath) 
+				Kernel32.SetCurrentDirectory(workPath)
 			END;
 		END SetSysPath;
-		
+
 
 		PROCEDURE AddDir;
 		BEGIN
@@ -1041,7 +1044,7 @@ VAR
 
 		COPY( temp, tempPath );
 		IF tempPath # "" THEN
-			ConvertChar( tempPath, Files.PathDelimiter, PathDelimiter );  
+			ConvertChar( tempPath, Files.PathDelimiter, PathDelimiter );
 			SetSysPath(tempPath);
 			IF Kernel32.SetCurrentDirectory( tempPath ) # Kernel32.False THEN ret := Kernel32.GetCurrentDirectory( LEN( tempPath ), tempPath ) END
 		END;
@@ -1049,7 +1052,7 @@ VAR
 
 		COPY( work, dir );
 		IF dir # "" THEN
-			ConvertChar( dir, Files.PathDelimiter, PathDelimiter );  
+			ConvertChar( dir, Files.PathDelimiter, PathDelimiter );
 			SetSysPath(dir);
 			IF Kernel32.SetCurrentDirectory( dir ) # Kernel32.False THEN Kernel32.GetCurrentDirectory( LEN( workPath ), workPath ) END
 		END;
@@ -1080,7 +1083,7 @@ VAR
 	END CheckPath;
 
 	PROCEDURE CheckName*( name: ARRAY OF CHAR ): BOOLEAN;
-	VAR fullName: FileName;  fileNamePart: Kernel32.LPSTR;  ret, i: LONGINT;  ch: CHAR;  stream, ok: BOOLEAN;
+	VAR fullName: FileName;  fileNamePart: Kernel32.LPSTR;  ret, i: SIZE;  ch: CHAR;  stream, ok: BOOLEAN;
 	BEGIN
 		ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fullName, fileNamePart );
 		IF (ret > 0) & CheckPath( fullName ) & (fileNamePart # Kernel32.NULL) THEN
@@ -1102,18 +1105,18 @@ VAR
 	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): SET;   (** non-portable *)
 	VAR attrs: SET;
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := Kernel32.GetFileAttributes( file );
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := ToSet(Kernel32.GetFileAttributes( file ));
 		IF attrs = {0..31} THEN RETURN {} ELSE RETURN attrs END
 	END GetAttributes;
 
 	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: SET );   (** non-portable *)
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, Kernel32.SetToDW(attrs) )
 	END SetAttributes;
 
 	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: SET );   (** non-portable *)
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, Kernel32.SetToDW(attrs) )
 	END SetFileAttributes;
 
 
@@ -1213,7 +1216,7 @@ VAR
 
 		(* now the file system is installed *)
 
-		drives := Kernel32.GetLogicalDrives();
+		drives := ToSet(Kernel32.GetLogicalDrives());
 		drives := drives - {0,1}; (* do not scan for diskettes *)
 		AutoMountWindowsLogicalDrives( drives );
 
@@ -1228,25 +1231,38 @@ VAR
 
 		notifications := NIL;
 	END Init;
-	
+
 	PROCEDURE AddSearchPath*(context: Commands.Context);
-	VAR name: FileName; i,j: LONGINT; ch : CHAR;
+	VAR name,fullName: FileName; i,j: LONGINT; ch : CHAR; ret: LONGINT; fileNamePart: Kernel32.LPSTR;
 	BEGIN
 		IF context.arg.GetString(name) THEN
 			i := 0; j := 0;
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );
+			ret := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fullName, fileNamePart );
+
 			WHILE(searchPath[i] # 0X) DO
 				INC(i);
 			END;
+
 			searchPath[i] := ";";INC(i);
 			REPEAT
-				ch := name[j];
-				searchPath[i] := name[j];
+				ch := fullName[j];
+				searchPath[i] := ch;
 				INC(j);INC(i);
 			UNTIL ch = 0X;
 		END;
 	END AddSearchPath;
-	
+
+	PROCEDURE SetWorkPath*(context: Commands.Context);
+	VAR name: FileName; done: BOOLEAN;
+	BEGIN
+		IF context.arg.GetString(name) THEN
+			ChangeDirectory(name, done); 
+			IF ~done THEN 
+				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
+			END
+		END;
+	END SetWorkPath;
 
 	PROCEDURE Mount*(context : Commands.Context);
 	VAR diskname: ARRAY 256 OF CHAR;

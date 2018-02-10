@@ -1125,7 +1125,8 @@ END FSTools64.
 
 SystemTools.Free FSTools64 ~
 
-FSTools64.DeleteFiles X:*.Bak ~
+FSTools64.DeleteFiles ./*.Bak ~
+FSTools64.DeleteFiles ../../source/*.Bak ~
 
 FSTools64.SplitFile BootManager.Bin 0200H BootManagerMBR.Bin BootManagerTail.Bin ~
 

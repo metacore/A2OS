@@ -4,64 +4,64 @@ MODULE Files64;	(* pjm *)
 
 (** Aos file system base. *)
 
-IMPORT SYSTEM, Streams := Streams64, KernelLog, Modules, Kernel, Commands;
+IMPORT SYSTEM, Files, Streams := Streams64, KernelLog, Modules, Kernel, Commands;
 
 CONST
 	(** Volume & file flags *)
-	ReadOnly* = 0;
+	ReadOnly*			= Files.ReadOnly;
 
 	(** Volume flags *)
-	Removable* = 1;
-	Boot* = 2;
+	Removable*			= Files.Removable;
+	Boot*				= Files.Boot;
 
 	(** File flags *)
-	Directory* = 1;
-	Hidden* = 2;
-	System* = 3;
-	Archive* = 4;
-	Temporary* = 5;
+	Directory*			= Files.Directory;
+	Hidden*				= Files.Hidden;
+	System*				= Files.System;
+	Archive*			= Files.Archive;
+	Temporary*			= Files.Temporary;
 
-	Ok* = 0;
-
-	(* Volume level errors *)
-	ReadOnlyError = 2901;		(* Tried to modify read-only volume. Causes HALT *)
-	VolumeFull = 2902;			(* Tried to allocate block on full volume. Causes HALT *)
-	InvalidAdr= 2903;			(* Block address outside of volume. Causes HALT *)
-
+	Ok*					= Files.Ok;
+(*
+	(* Volume level errors *)(* as Files.Mod *)
+	ReadOnlyError		= 2901;		(* Tried to modify read-only volume. Causes HALT *)
+	VolumeFull			= 2902;			(* Tried to allocate block on full volume. Causes HALT *)
+	InvalidAdr			= 2903;			(* Block address outside of volume. Causes HALT *)
+*)
 	(* File level errors *)
-	VolumeReadOnly* = 2905; 	(** Cannot modify read-only volume *)
-	FsNotFound* = 2906; 		(** File system not found *)
-	FileAlreadyExists* = 2908;	(** File already exists *)
-	BadFileName* = 2909;		(** Bad file name *)
-	FileNotFound* = 2910;		(** File not found *)
+	VolumeReadOnly*		= Files.VolumeReadOnly; 	(** Cannot modify read-only volume *)
+	FsNotFound*			= Files.FsNotFound; 		(** File system not found *)
+	FileAlreadyExists*	= Files.FileAlreadyExists;	(** File already exists *)
+	BadFileName*		= Files.BadFileName;		(** Bad file name *)
+	FileNotFound*		= Files.FileNotFound;		(** File not found *)
 
-	EnumSize* = 0; EnumTime* = 1;	(** Enumerate flags. *)
+	(* Enumerate flags. *)
+	EnumSize*			= Files.EnumSize;
+	EnumTime*			= Files.EnumTime;
 
-	PrefixLength* = 16;	(** maximum length of a file system prefix. *)
-	NameLength* = 256;	(** maximum length of a file name. *)
+	PrefixLength*		= Files.PrefixLength;	(** maximum length of a file system prefix. *)
+	NameLength*			= Files.NameLength;	(** maximum length of a file name. *)
 
-	Trace = FALSE;
+	Trace				= FALSE;
 
-	WriteError = 2907;
+	WriteError			= 2907;
 
-	DefaultWriterSize = 4096;
-	DefaultReaderSize = 4096;
+	DefaultWriterSize	= 4096;
+	DefaultReaderSize	= 4096;
 
-	PathDelimiter* = "/";	(** Path delimiter *)
+	PathDelimiter*		= "/";	(** Path delimiter *)
 
-	BufferSize = 32*1024; 	(* Buffersize for file copy operation *)
+	BufferSize			= 32 * 1024; 	(* Buffersize for file copy operation *)
 
-	SetSize = MAX (SET) + 1;
+	SetSize				= MAX(SET) + 1;
 
 	(* file system behaviour flags *)
-	NeedsPrefix* = 0; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
+	NeedsPrefix*		= Files.NeedsPrefix; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
 
 TYPE
-	BESTSIZE* = Streams.BESTSIZE;
-
 (** All record fields are read-only for users, and read-write for extenders. *)
 
-	FileName* = ARRAY PrefixLength+NameLength OF CHAR;
+	FileName* = Files.FileName;
 
 		(** A rider points to some location in a file, where reading and writing will be done. *)
 	Rider* = RECORD	(** not shareable between multiple processes *)
@@ -69,7 +69,7 @@ TYPE
 		eof*: BOOLEAN;	(** has end of file been passed *)
 		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*: BESTSIZE;
+		apos*: HUGEINT;
 		bpos*: LONGINT;
 		hint*: Hint;
 		file*: File;
@@ -96,14 +96,14 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : BESTSIZE);
+		PROCEDURE SetPos*(pos : HUGEINT);
 		BEGIN
 			file.Set(r, pos);
 			Reset;
 			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 		END SetPos;
 
-		PROCEDURE &InitFileReader*(file : File; pos: BESTSIZE);
+		PROCEDURE &InitFileReader*(file : File; pos: HUGEINT);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -116,7 +116,7 @@ TYPE
 
 TYPE
 
-		(** Writer for buffered writing of a file via Streams.Write* procedures.  See OpenWriter. *)
+	(** Writer for buffered writing of a file via Streams.Write* procedures.  See OpenWriter. *)
 	Writer* = OBJECT (Streams.Writer)	(** not sharable between multiple processes *)
 	VAR
 		file : File;
@@ -134,20 +134,20 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : BESTSIZE);
+		PROCEDURE SetPos*(pos : HUGEINT);
 			BEGIN
 			Update;
 			file.Set(r, pos);
 			Reset;
 		END SetPos;
 
-		PROCEDURE Pos*(): BESTSIZE;
+		PROCEDURE Pos*(): HUGEINT;
 		BEGIN
 			Update;
 			RETURN file.Pos(r)
 		END Pos;
 
-		PROCEDURE &InitFileWriter*(file: File; pos: BESTSIZE);
+		PROCEDURE &InitFileWriter*(file: File; pos: HUGEINT);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -157,11 +157,8 @@ TYPE
 
 	END Writer;
 
-	Prefix* = ARRAY PrefixLength OF CHAR;
-
-	Address* = LONGINT;	(** Volume block address [1..size] *)
-
-	Hint* = POINTER TO RECORD END;	(** for use by file system implementors. *)
+	Prefix* = Files.Prefix;
+	Hint* = Files.Hint;	(** for use by file system implementors. *)
 
 	Bytes2 = ARRAY 2 OF CHAR;
 	Bytes4 = ARRAY 4 OF CHAR;
@@ -170,95 +167,7 @@ TYPE
 TYPE
 (** Volume is the base type of all volumes.  It provides operations on an abstract array of file system data blocks of blockSize bytes, numbered from 1 to size.  It is mainly used by file system implementations. *)
 
-	Volume* = OBJECT	(** shareable *)
-		VAR
-			size*: LONGINT;	(** size in blocks *)
-			blockSize*: LONGINT;	(** block size in bytes *)
-			flags*: SET;	(** ReadOnly, Removable, Boot *)
-			name*: ARRAY 32 OF CHAR;	(** descriptive name - e.g. for matching with Partitions.Show *)
-
-			map: POINTER TO ARRAY OF SET;	(* Block allocation table *)
-			used: LONGINT;	(* used blocks *)
-			reserved: LONGINT;	(* blocks reserved for system *)
-
-		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
-		BEGIN {EXCLUSIVE}
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			IF size - used <= reserved THEN HALT(VolumeFull) END;
-			ASSERT(hint >= 0);
-			IF hint > size THEN hint := 0 END;
-			adr := hint+1;
-			LOOP
-				IF adr > size THEN adr := 0 END;
-				IF (adr MOD SetSize) IN map[adr DIV SetSize] THEN
-					INC(adr) (* Block in use *)
-				ELSE
-					INCL(map[adr DIV SetSize], adr MOD SetSize);
-					EXIT
-				END;
-				IF adr = hint THEN HALT(VolumeFull) END
-			END;
-			INC(used)
-		END AllocBlock;
-
-		PROCEDURE FreeBlock*(adr: Address);
-		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			EXCL(map[adr DIV SetSize], adr MOD SetSize);
-			DEC(used)
-		END FreeBlock;
-
-		PROCEDURE MarkBlock*(adr: Address);
-		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			INCL(map[adr DIV SetSize], adr MOD SetSize);
-			INC(used)
-		END MarkBlock;
-
-		PROCEDURE Marked*(adr: Address): BOOLEAN;
-		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			RETURN (adr MOD SetSize) IN map[adr DIV SetSize]
-		END Marked;
-
-		PROCEDURE Available*(): LONGINT;
-		BEGIN {EXCLUSIVE}
-			RETURN size - used
-		END Available;
-
-		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		BEGIN HALT(301) END GetBlock;	(* abstract *)
-
-		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		BEGIN HALT(301) END PutBlock;	(* abstract *)
-
-		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem (although it is ugly). *)
-		PROCEDURE Finalize*;
-		BEGIN
-			map := NIL; size := 0; blockSize := 0
-		END Finalize;
-
-		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system (out of disk space trap occurs when less than this amount of blocks are present). *)
-
-		PROCEDURE Init*(flags: SET; size, reserved: LONGINT);
-		VAR maplen: LONGINT;
-		BEGIN
-			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
-			IF ~(ReadOnly IN flags) THEN
-				maplen := (size + SetSize) DIV SetSize;
-				NEW(map, maplen);
-				WHILE maplen > 0 DO DEC(maplen); map[maplen] := {} END;
-				INCL(map[0], 0);	(* reserve sector 0 (illegal to use) *)
-				used := 0
-			ELSE
-				used := size
-			END
-		END Init;
-
-	END Volume;
+	Volume* = Files.Volume;	(** shareable *)
 
 TYPE
 	FileSystem* = OBJECT	(** shareable *)
@@ -319,17 +228,17 @@ TYPE
 		BEGIN	(* see note in Volume.Finalize *)
 			vol := NIL
 		END Finalize;
-		
+
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-		VAR enum: Enumerator; time, date: LONGINT; size: BESTSIZE;
+		VAR enum: Enumerator; time, date: LONGINT; size: HUGEINT;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
-			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN 
-				RETURN TRUE 
-			ELSE 
-				RETURN FALSE 
+			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN
+				RETURN TRUE
+			ELSE
+				RETURN FALSE
 			END;
 		END Has;
 
@@ -352,12 +261,12 @@ TYPE
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
-		PROCEDURE Set*(VAR r: Rider; pos: BESTSIZE);
+		PROCEDURE Set*(VAR r: Rider; pos: HUGEINT);
 		BEGIN HALT(301) END Set;	(* abstract *)
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r: Rider): BESTSIZE;
+		PROCEDURE Pos*(VAR r: Rider): HUGEINT;
 		BEGIN HALT(301) END Pos;	(* abstract *)
 
 		(** Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
@@ -382,7 +291,7 @@ TYPE
 
 		(** Return the current length of a file. *)
 
-		PROCEDURE Length*(): BESTSIZE;
+		PROCEDURE Length*(): HUGEINT;
 		BEGIN HALT(301) END Length;	(* abstract *)
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
@@ -465,15 +374,14 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; size: BESTSIZE): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; size: HUGEINT): BOOLEAN;
 		VAR len, temp: LONGINT;
 		BEGIN
 			ReadNum(r, len);
 			IF ~r.eof THEN
 				name[len] := 0X;	(* index check *)
 				r.file.ReadBytes(r, name, 0, len);
-				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date);
-				ReadBESTSIZE(r, size);
+				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadHInt(r, size);
 				ASSERT(~r.eof)
 			END;
 			RETURN ~r.eof
@@ -489,14 +397,14 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:BESTSIZE);
+		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:HUGEINT);
 		VAR len: LONGINT;
 		BEGIN
 			ASSERT(adding);
 			INC(SELF.size);
 			len := 0; WHILE name[len] # 0X DO INC(len) END;
 			WriteNum(r, len); r.file.WriteBytes(r, name, 0, len);
-			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteBESTSIZE(r, size)
+			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteHInt(r, size)
 		END PutEntry;
 
 	END Enumerator;
@@ -518,12 +426,8 @@ TYPE
 	END FileSearcher;
 
 TYPE
-		(** Parameters passed to volume and file system generator commands.  The str field contains a generic parameter string from the mount command.  The vol field returns the new volume from volume generators and passes the volume parameter to file system generators.  The prefix field contains the mount prefix, mainly for file system generators to add themselves with Files.Add. *)
-	Parameters* = OBJECT(Commands.Context)
-	VAR
-		vol*: Volume;	(** out parameter of volume generators and in parameter of file system generators. *)
-		prefix*: Prefix;
-	END Parameters;
+	(** Parameters passed to volume and file system generator commands.  The str field contains a generic parameter string from the mount command.  The vol field returns the new volume from volume generators and passes the volume parameter to file system generators.  The prefix field contains the mount prefix, mainly for file system generators to add themselves with Files.Add. *)
+	Parameters* = Files.Parameters;
 
 	FileSystemFactory* = PROCEDURE(context : Parameters);
 
@@ -537,7 +441,7 @@ VAR
 
 (** Open a reader on a file at the specified position. *)
 
-PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: BESTSIZE);
+PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: HUGEINT);
 BEGIN
 	IF b = NIL THEN
 		NEW(b, f, pos)
@@ -548,7 +452,7 @@ END OpenReader;
 
 (** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 
-PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: BESTSIZE);
+PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: HUGEINT);
 BEGIN
 	NEW(b, f, pos)
 END OpenWriter;
@@ -938,7 +842,7 @@ VAR
 	sfs, dfs : FileSystem;
 	sfile, dfile : File;
 	buffer : ARRAY BufferSize OF CHAR;
-	i : BESTSIZE;
+	i : HUGEINT;
 BEGIN
 	SplitName(source, sprefix, sname);
 	SplitName(destination, dprefix, dname);
@@ -1119,14 +1023,33 @@ PROCEDURE AddSearchPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFiles64") # NIL THEN 
+	IF Modules.ModuleByName("WinFiles64") # NIL THEN
 		cmd := "WinFiles64.AddSearchPath";
+	ELSIF Modules.ModuleByName("UnixFiles64") # NIL THEN
+		cmd := "UnixFiles64.AddSearchPath";
 	END;
-	IF cmd # "" THEN 
+	IF cmd # "" THEN
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
 		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
 	END
 END AddSearchPath;
+
+(* add a search path to the system *)
+PROCEDURE SetWorkPath*(context: Commands.Context);
+VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
+BEGIN
+	(* preliminary implementation until we know how to solve this generically *)
+	IF Modules.ModuleByName("WinFiles64") # NIL THEN
+		cmd := "WinFiles64.SetWorkPath";
+	ELSIF Modules.ModuleByName("UnixFiles64") # NIL THEN
+		cmd := "UnixFiles64.SetWorkPath";
+	END;
+	IF cmd # "" THEN
+		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
+		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
+	END
+END SetWorkPath;
+
 (* Find an open file. *)
 
 PROCEDURE FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File;
@@ -1153,10 +1076,10 @@ BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END ReadLInt;
 
-PROCEDURE ReadBESTSIZE*(VAR r: Rider; VAR x: BESTSIZE);
+PROCEDURE ReadHInt*(VAR r: Rider; VAR x: HUGEINT);
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(BESTSIZE))
-END ReadBESTSIZE;
+	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(HUGEINT))
+END ReadHInt;
 
 PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
 CONST Size = SIZEOF (SET);
@@ -1227,10 +1150,10 @@ BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END WriteLInt;
 
-PROCEDURE WriteBESTSIZE*(VAR r: Rider; x: BESTSIZE);(*TODO BESTSIZE *)
+PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);(*TODO HUGEINT *)
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(BESTSIZE))
-END WriteBESTSIZE;
+	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(HUGEINT))
+END WriteHInt;
 
 PROCEDURE WriteSet*(VAR r: Rider; x: SET);
 CONST Size = SIZEOF (SET);

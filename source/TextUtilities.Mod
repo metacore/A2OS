@@ -486,7 +486,7 @@ TYPE
 					reader.RawSInt(lib);
 					IF lib = n THEN
 						reader.RawString(lName);
-
+						
 						NEW(fonts[n]);
 						COPY(lName, fonts[n].name);
 						DecodeOberonFontName(lName, fonts[n].name, fonts[n].size, fonts[n].style);
@@ -1233,7 +1233,7 @@ TYPE
 			IF (ch = Texts.LabelChar) THEN WriteLabel(r.object(Texts.LabelPiece).label^) END;
 
 			RetrieveAttributes;
-			(* PrintAttributes; *)
+			PrintAttributes;
 
 			IF (pStyle # NIL) & (pstylename # "Left") THEN WriteParagraph(pstylename) END;
 			WriteSpan(stylename);
@@ -2014,14 +2014,19 @@ BEGIN
 	text.ReleaseWrite
 END StrToText;
 
+PROCEDURE IsDigit( ch: CHAR ): BOOLEAN;
+BEGIN
+	RETURN (ch >= '0') & (ch <= '9')
+END IsDigit;
+
 PROCEDURE DecodeOberonFontName(CONST name : ARRAY OF CHAR; VAR fn : ARRAY OF CHAR; VAR size : LONGINT; VAR style : SET);
 VAR i, j: LONGINT; sizeStr : ARRAY 8 OF CHAR;
 BEGIN
 	(* first name in oberon font names is capital, all following are non-capital *)
 	fn[0] := name[0];
-	i := 1; WHILE (name[i] >= "a") & (name[i] <= "z") DO fn[i] := name[i]; INC(i) END; fn[i] := 0X;
+	i := 1; WHILE ~IsDigit(name[i]) DO  fn[i] := name[i];  INC(i)  END;  fn[i] := 0X;
 	(* read the size *)
-	j := 0; WHILE (name[i] >= "0") & (name[i] <= "9") DO sizeStr[j] := name[i]; INC(j); INC(i) END; sizeStr[j] := 0X;
+	j := 0; WHILE IsDigit(name[i]) DO  sizeStr[j] := name[i];  INC(j); INC(i)  END;  sizeStr[j] := 0X;
 	Strings.StrToInt(sizeStr, size);
 	style := {};
 	CASE CAP(name[i]) OF

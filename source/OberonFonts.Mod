@@ -217,14 +217,11 @@ TYPE
 	VAR f: Files.File;  ttfname: Name;  size, res: INTEGER;
 	BEGIN
 		f := Files.Old( oname );
-		IF f # NIL THEN
-			f.Close;  RETURN TRUE
+		IF f # NIL THEN  RETURN TRUE
 		ELSE
 			MakeTtfName( oname, ttfname, size, res );
 			f := Files.Old( ttfname );
-			IF f # NIL THEN
-				f.Close;  RETURN TRUE
-			END;
+			IF f # NIL THEN  RETURN TRUE  END;
 			RETURN FALSE
 		END
 	END Allocatable;

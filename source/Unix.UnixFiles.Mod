@@ -242,6 +242,7 @@ TYPE
 						f.fd := NoDesc;  f.state := Create;  f.fsize := 0;  f.fpos := 0;
 						f.swapper := -1;   (*all f.buf[i] = NIL*)
 						f.key := NoKey;  f.fs := SELF;
+						f.tempFile := name = "";
 						RETURN f;
 					ELSE				
 						Log.String( "UnixFileSystem.New0: file allocation failed. Probably a nonexistent path." );  Log.Ln;
@@ -295,7 +296,7 @@ TYPE
 									ELSIF oflags = Unix.rdonly THEN
 										f.flags := {Files.ReadOnly}
 									END;
-									f.key := NoKey;  f.fs := SELF;
+									f.key := NoKey;  f.fs := SELF; 
 									IncOpenFiles();
 									collection.AddOld(f);
 									EXIT
@@ -309,6 +310,7 @@ TYPE
 							f := NIL;  EXIT
 						END;
 					END; (* loop *)
+					ASSERT( (f = NIL) OR (f.fd >= 0) );
 					RETURN f
 				END Old0;
 
@@ -543,40 +545,40 @@ TYPE
 					SELF.fs := fs;  flags := {};
 				END Init;
 
-				PROCEDURE CreateUnixFile;
+				PROCEDURE OpenUnixFile;
 				VAR 
-					stat: Unix.Status;  errno: LONGINT;
+					stat: Unix.Status;  r: LONGINT;
 				BEGIN				
 					IF state = Create THEN  
-						GetTempName( registerName, workName );  tempFile := TRUE
+						GetTempName( registerName, workName )
 					ELSIF state = Closed THEN
 						IF registerName # "" THEN
-							workName := registerName;  registerName := "";  tempFile := FALSE;
-						ELSE
-							RETURN;
-						END;
+							workName := registerName;  registerName := ""
+						ELSIF tempFile THEN
+							Halt( SELF, FALSE, "UnixFiles.File.OpenUnixFile: cannot reopen closed tempfile" )
+						END
 					END;
-					errno := Unix.unlink( ADDRESSOF( workName ) );
+					r := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
 											
 					fd := UnixOpen( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
 					IF fd >= 0 THEN
-						errno := Unix.fstat( fd, stat );  
+						r := Unix.fstat( fd, stat );  
 						dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
 						state := Open;  fpos := 0;
 						IncOpenFiles();
 						collection.AddNew(SELF);
 					ELSE  
-						Halt( SELF, TRUE, "UnixFiles.File.Create: open failed" );
+						Halt( SELF, TRUE, "UnixFiles.File.OpenUnixFile: open failed" );
 					END
-				END CreateUnixFile;
+				END OpenUnixFile;
 				
 						
 				PROCEDURE Flush( buf: Buffer );
 				VAR res: LONGINT;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
-						IF fd = NoDesc THEN  CreateUnixFile  END;
+						IF fd = NoDesc THEN  OpenUnixFile  END;
 						IF buf.org # fpos THEN  
 							IF Unix.lseek( fd, buf.org, 0 ) = -1 THEN
 								Halt( SELF, TRUE, "UnixFiles.File.Flush: lseek failed" ) 
@@ -598,6 +600,7 @@ TYPE
 				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
 				VAR  org, offset, i, n: LONGINT;  buf: Buffer;
 				BEGIN 
+					r.file := SELF;  r.fs := fs;
 					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
 					END;
@@ -620,7 +623,7 @@ TYPE
 						IF org = fsize THEN  
 							buf.size := 0
 						ELSE
-							IF fd = NoDesc THEN  CreateUnixFile  END;
+							IF fd = NoDesc THEN  OpenUnixFile  END;
 							IF fpos # org THEN  
 								IF Unix.lseek( fd, org, 0 ) = -1 THEN
 									Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" ) 
@@ -641,7 +644,6 @@ TYPE
 
 					r.hint := buf;  r.apos := org;  r.bpos := offset;  
 					r.res := 0;  r.eof := FALSE;
-					r.file := SELF;  r.fs := fs  
 				END SetX;
 				
 
@@ -736,7 +738,7 @@ TYPE
 				PROCEDURE GetDate*( VAR t, d: LONGINT );
 				VAR stat: Unix.Status;   r: LONGINT;  time: Unix.TmPtr;				
 				BEGIN {EXCLUSIVE}
-					IF fd = NoDesc THEN  CreateUnixFile  END;  
+					IF fd = NoDesc THEN  OpenUnixFile  END;  
 					r := Unix.fstat( fd, stat );
 					time := Unix.localtime( stat.mtime );
 					t := time.sec + ASH( time.min, 6 ) + ASH( time.hour, 12 );
@@ -796,21 +798,21 @@ TYPE
 							fd := UnixOpen( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
 						END;
 
-						workName := registerName;  registerName := "";  tempFile := FALSE;
+						workName := registerName;  registerName := ""
 					END;
 				END Register0;
 				
 
 				PROCEDURE Update*;
 				BEGIN {EXCLUSIVE}
-					FlushBuffers
+					IF ~(Files.ReadOnly IN flags) THEN  FlushBuffers	 END
 				END Update;
 				
 				
 				PROCEDURE FlushBuffers;
 				VAR i: LONGINT; 
 				BEGIN 
-					IF fd = NoDesc THEN  CreateUnixFile  END;  
+					IF fd = NoDesc THEN  OpenUnixFile  END;  
 					FOR i := 0 TO NBufs - 1 DO
 						IF bufs[i] # NIL THEN  Flush( bufs[i] )  END
 					END;
@@ -825,7 +827,7 @@ TYPE
 						r := Unix.unlink( ADDRESSOF( workName ) );
 						fd := NoDesc;
 					ELSE  
-						FlushBuffers;
+						IF ~(Files.ReadOnly IN flags)  THEN  FlushBuffers  END;
 						IF fd # NoDesc THEN
 							r := Unix.close( fd );
 							fd := NoDesc;
@@ -997,13 +999,14 @@ TYPE
 	END IsFullName;
 
 	PROCEDURE Halt( f: File;  unixError: BOOLEAN;  CONST msg: ARRAY OF CHAR );
-	VAR fd, errno: LONGINT;
+	VAR fd, errno, state: LONGINT;
 		workName, registerName: Filename;
 	BEGIN
 		IF f = NIL THEN  
 			workName := "???";  registerName := "???"
 		ELSE  
-			workName := f.workName;  registerName := f.registerName;  fd := f.fd
+			workName := f.workName;  registerName := f.registerName;  
+			fd := f.fd; state := f.state
 		END;
 		IF unixError THEN  errno := Unix.errno( );  Unix.Perror( msg )  END;
 		HALT( 99 )

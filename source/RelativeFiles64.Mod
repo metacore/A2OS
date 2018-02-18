@@ -63,7 +63,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 		PROCEDURE Enumerate0 (mask: ARRAY OF CHAR;     flags: SET;     enum: Files.Enumerator);
 		VAR new: PathName;
 		BEGIN
-			MakeRel(mask,new);
+			MakeRel(mask,new); 
 			fs.Enumerate0(new,flags,enum);
 		END Enumerate0;
 
@@ -131,8 +131,8 @@ END RelativeFiles64.
 
 SystemTools.Free RelativeFiles64 ~
 
-FSTools.Mount Work RelativeFiles64  ./ ~
-FSTools.Unmount Test ~
+FSTools64.Mount Work RelativeFiles64  ./ ~
+FSTools64.Unmount Test ~
 
 
 

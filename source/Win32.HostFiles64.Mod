@@ -1,4 +1,4 @@
-MODULE WinFiles64;   (*AUTHOR "fof,ejz"; PURPOSE "Windows file system  for WinAos"; *)
+MODULE HostFiles64;   (*AUTHOR "fof,ejz"; PURPOSE "Windows file system  for WinAos"; *)
 
 IMPORT SYSTEM, Machine, Kernel32, KernelLog, Modules, Kernel, Files := Files64, Commands;
 
@@ -845,7 +845,7 @@ VAR
 		IF (Files.This(context.prefix ) = NIL) THEN
 			NEW( fs );  fs.vol := context.vol;  Files.Add( fs, context.prefix );
 		ELSE
-			context.error.String( "WinFiles64: " );  context.error.String( context.prefix );  context.error.String( " already in use" );
+			context.error.String( "HostFiles64: " );  context.error.String( context.prefix );  context.error.String( " already in use" );
 			context.error.Ln;
 		 END;
 	END NewFS;
@@ -1282,6 +1282,4 @@ VAR
 
 BEGIN
 	Init();  Modules.InstallTermHandler( Finalization ); SetPaths;
-END WinFiles64.
-
-Compiler.Compile -p=Win32G Streams64.Mod Files64.Mod Win32.WinFiles64.Mod FSTools64.Mod ~
+END HostFiles64.

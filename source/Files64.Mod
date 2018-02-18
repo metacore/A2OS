@@ -1023,10 +1023,8 @@ PROCEDURE AddSearchPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFiles64") # NIL THEN
-		cmd := "WinFiles64.AddSearchPath";
-	ELSIF Modules.ModuleByName("UnixFiles64") # NIL THEN
-		cmd := "UnixFiles64.AddSearchPath";
+	IF Modules.ModuleByName("HostFiles64") # NIL THEN
+		cmd := "HostFiles64.AddSearchPath";
 	END;
 	IF cmd # "" THEN
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
@@ -1039,10 +1037,8 @@ PROCEDURE SetWorkPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFiles64") # NIL THEN
-		cmd := "WinFiles64.SetWorkPath";
-	ELSIF Modules.ModuleByName("UnixFiles64") # NIL THEN
-		cmd := "UnixFiles64.SetWorkPath";
+	IF Modules.ModuleByName("HostFiles64") # NIL THEN
+		cmd := "HostFiles64.SetWorkPath";
 	END;
 	IF cmd # "" THEN
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);

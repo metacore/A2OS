@@ -249,7 +249,7 @@ TYPE
 		END MyDragDropped;
 
 		(* called by MyDraggedDropped *)
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WM.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WM.DragInfo);
 		VAR dropTarget : ArchiveDropTarget;
 			parent : WMTrees.TreeNode;
 			accept : BOOLEAN;
@@ -625,7 +625,7 @@ TYPE
 			list.model.Release
 		END InitList;
 
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			Resized^(width, height);
 			AdjustTabSize;
@@ -752,7 +752,7 @@ TYPE
 			IF curArc # NIL THEN filenameEdit.SetAsString(curArc.name); archiveTree.SetArchive(curArc) END
 		END Load;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR data : XML.Element; a : XML.Attribute; n : ARRAY 16 OF CHAR;
 			filename : ARRAY 256 OF CHAR;
 		BEGIN
@@ -1041,7 +1041,7 @@ TYPE
 			END;
 		END ListDragArrived;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;

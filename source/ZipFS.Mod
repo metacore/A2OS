@@ -10,7 +10,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				SELF.zip := zip
 			END Init;
 
-			PROCEDURE Old0(name: ARRAY OF CHAR): Files.File;
+			PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
 				VAR E: Unzip.Entry; key, res: LONGINT; F: File; F0: Files.File; W: Files.Writer;
 			BEGIN {EXCLUSIVE}
 				key := 0;
@@ -31,7 +31,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				RETURN NIL
 			END Old0;
 
-			PROCEDURE Enumerate0(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+			PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 				VAR E: Unzip.Entry; name: Files.FileName; d, t: LONGINT;
 			BEGIN {EXCLUSIVE}
 				E := zip.GetFirst();
@@ -47,7 +47,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				END
 			END Enumerate0;
 
-			PROCEDURE FileKey(name: ARRAY OF CHAR): LONGINT;
+			PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
 				VAR E: Unzip.Entry; key: LONGINT;
 			BEGIN {EXCLUSIVE}
 				key := 0;
@@ -60,7 +60,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				RETURN 0
 			END FileKey;
 
-			PROCEDURE Finalize;
+			PROCEDURE Finalize*;
 			BEGIN {EXCLUSIVE}
 				Finalize^()
 			END Finalize;
@@ -70,42 +70,42 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 		File = OBJECT (Files.File)
 			VAR F: Files.File; E: Unzip.Entry;
 
-			PROCEDURE Set(VAR r: Files.Rider; pos: LONGINT);
+			PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
 			BEGIN
 				F.Set(r, pos); r.file := SELF
 			END Set;
 
-			PROCEDURE Pos(VAR r: Files.Rider): LONGINT;
+			PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
 			BEGIN
 				RETURN F.Pos(r)
 			END Pos;
 
-			PROCEDURE Read(VAR r: Files.Rider; VAR x: CHAR);
+			PROCEDURE Read*(VAR r: Files.Rider; VAR x: CHAR);
 			BEGIN
 				F.Read(r, x)
 			END Read;
 
-			PROCEDURE ReadBytes(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+			PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 			BEGIN
 				F.ReadBytes(r, x, ofs, len)
 			END ReadBytes;
 
-			PROCEDURE Length(): LONGINT;
+			PROCEDURE Length*(): LONGINT;
 			BEGIN
 				RETURN F.Length()
 			END Length;
 
-			PROCEDURE GetDate(VAR t, d: LONGINT);
+			PROCEDURE GetDate*(VAR t, d: LONGINT);
 			BEGIN
 				Dates.DateTimeToOberon(E.td, d, t)
 			END GetDate;
 
-			PROCEDURE GetName(VAR name: ARRAY OF CHAR);
+			PROCEDURE GetName*(VAR name: ARRAY OF CHAR);
 			BEGIN
 				Files.JoinName(fs.prefix, E.name^, name)
 			END GetName;
 
-			PROCEDURE Update;
+			PROCEDURE Update*;
 			BEGIN
 				F.Update END
 			Update;

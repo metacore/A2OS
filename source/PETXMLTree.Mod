@@ -94,7 +94,7 @@ TYPE
 			hasErrors := TRUE;
 		END Error;
 
-		PROCEDURE AddNodes(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
+		PROCEDURE AddNodes*(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
 		VAR r : Streams.StringReader;
 			scanner : XMLScanner.Scanner;
 			parser : XMLParser.Parser;

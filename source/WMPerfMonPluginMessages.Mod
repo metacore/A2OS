@@ -11,7 +11,7 @@ TYPE
 
 	MessagesPlugin = OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "Messages"; p.description := "WMMessages statistics";
@@ -33,7 +33,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := WMMessages.messagesAdded;
 			dataset[1] := WMMessages.messagesDiscarded;

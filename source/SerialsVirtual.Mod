@@ -79,7 +79,7 @@ TYPE
 
 		(** Serial Port Interface *)
 
-		PROCEDURE Open (bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN ShowModule; KernelLog.String(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -94,14 +94,14 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN {EXCLUSIVE}
 			open := FALSE;
 			tail := -1;
 			IF Verbose THEN ShowModule; KernelLog.String(name); KernelLog.String(" closed"); KernelLog.Ln; END;
 		END Close;
 
-		PROCEDURE SendChar (ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
 		VAR wait: BOOLEAN;
 		BEGIN
 			BEGIN{EXCLUSIVE}
@@ -121,7 +121,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN END;
 			AWAIT((tail # head) OR ~open);
@@ -134,7 +134,7 @@ TYPE
 			END
 		END ReceiveChar;
 
-		PROCEDURE Available(): LONGINT;
+		PROCEDURE Available*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN (tail - head) MOD BufferSize
 		END Available;
@@ -150,27 +150,27 @@ TYPE
 		END SetPortState;
 
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE GetPortState(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
 		BEGIN {EXCLUSIVE}
 			openstat := open;
 			bps := SELF.bps; data := SELF.data; parity := SELF.parity; stop := SELF.stop;
 		END GetPortState;
 
 		(** Clear the specified modem control lines.  s may contain DTR, RTS & Break. *)
-		PROCEDURE ClearMC(s: SET);
+		PROCEDURE ClearMC*(s: SET);
 		BEGIN {EXCLUSIVE}
 			mc := mc - s;
 		END ClearMC;
 
 		(** Set the specified modem control lines.  s may contain DTR, RTS & Break. *)
-		PROCEDURE SetMC(s: SET);
+		PROCEDURE SetMC*(s: SET);
 		BEGIN {EXCLUSIVE}
 			mc := mc + s;
 		END SetMC;
 
 		(** Return the state of the specified modem control lines.  s contains
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
-		PROCEDURE GetMC(VAR s: SET);
+		PROCEDURE GetMC*(VAR s: SET);
 		BEGIN {EXCLUSIVE}
 			s := mc;
 		END GetMC;
@@ -190,7 +190,7 @@ TYPE
 		port : Serials.Port;
 		in, out : Streams.Writer;
 
-		PROCEDURE Open (bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			port.Open(bps, data, parity, stop, res);
 			IF res = Serials.Ok THEN
@@ -198,12 +198,12 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN {EXCLUSIVE}
 			port.Close;
 		END Close;
 
-		PROCEDURE SendChar (ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
 		BEGIN {EXCLUSIVE}
 			port.SendChar(ch, res);
 			IF res = Serials.Ok THEN
@@ -222,7 +222,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			port.ReceiveChar(ch, res);
 			IF res = Serials.Ok THEN
@@ -237,31 +237,31 @@ TYPE
 			END;
 		END ReceiveChar;
 
-		PROCEDURE Available(): LONGINT;
+		PROCEDURE Available*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN port.Available();
 		END Available;
 
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE GetPortState(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
 		BEGIN {EXCLUSIVE}
 			port.GetPortState(openstat, bps, data, parity, stop);
 		END GetPortState;
 
 		(** Clear the specified modem control lines. s may contain DTR, RTS & Break. *)
-		PROCEDURE ClearMC(s: SET);
+		PROCEDURE ClearMC*(s: SET);
 		BEGIN {EXCLUSIVE}
 			port.ClearMC(s);
 		END ClearMC;
 
 		(** Set the specified modem control lines. s may contain DTR, RTS & Break. *)
-		PROCEDURE SetMC(s: SET);
+		PROCEDURE SetMC*(s: SET);
 		BEGIN {EXCLUSIVE}
 			port.SetMC(s);
 		END SetMC;
 
 		(** Return the state of the specified modem control lines. s contains the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
-		PROCEDURE GetMC(VAR s: SET);
+		PROCEDURE GetMC*(VAR s: SET);
 		BEGIN {EXCLUSIVE}
 			port.GetMC(s);
 		END GetMC;

@@ -1292,7 +1292,7 @@ TYPE
 			IF isRecord THEN writer.Char (')') END;
 		END VisitTypeGuardDesignator;
 
-		PROCEDURE VisitSupercallDesignator(expression: SyntaxTree.SupercallDesignator);
+		PROCEDURE VisitSupercallDesignator*(expression: SyntaxTree.SupercallDesignator);
 		VAR name: Identifier; procedure: SyntaxTree.Procedure;
 		BEGIN
 			procedure := expression.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);

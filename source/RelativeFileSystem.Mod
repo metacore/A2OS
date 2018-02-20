@@ -33,13 +33,13 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			UTF8Strings.Append(name,new);
 		END MakeRel;
 
-		PROCEDURE New0 (name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0* (name: ARRAY OF CHAR): Files.File;
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new); RETURN fs.New0(new);
 		END New0;
 
-		PROCEDURE Old0 (name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0* (name: ARRAY OF CHAR): Files.File;
 		VAR new: PathName;
 		BEGIN
 			(* Out.String("Old0, called with:"); Out.String(name); Out.Ln; *)
@@ -48,26 +48,26 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			RETURN fs.Old0(new);
 		END Old0;
 
-		PROCEDURE CreateDirectory0 (name: ARRAY OF CHAR;     VAR res: LONGINT);
+		PROCEDURE CreateDirectory0* (name: ARRAY OF CHAR;     VAR res: LONGINT);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new); fs.CreateDirectory0(new,res);
 		END CreateDirectory0;
 
-		PROCEDURE Delete0 (name: ARRAY OF CHAR;     VAR key, res: LONGINT);
+		PROCEDURE Delete0* (name: ARRAY OF CHAR;     VAR key, res: LONGINT);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new); fs.Delete0(new,key,res);
 		END Delete0;
 
-		PROCEDURE Enumerate0 (mask: ARRAY OF CHAR;     flags: SET;     enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR;     flags: SET;     enum: Files.Enumerator);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(mask,new); 
 			fs.Enumerate0(new,flags,enum);
 		END Enumerate0;
 
-		PROCEDURE FileKey (name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey* (name: ARRAY OF CHAR): LONGINT;
 		VAR new: PathName;
 		BEGIN
 			(*Out.String("FileKey, called with:"); Out.String(name); Out.Ln; *)
@@ -76,13 +76,13 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			RETURN fs.FileKey(new);
 		END FileKey;
 
-		PROCEDURE RemoveDirectory0 (name: ARRAY OF CHAR;     force: BOOLEAN;     VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0* (name: ARRAY OF CHAR;     force: BOOLEAN;     VAR key, res: LONGINT);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new);  fs.RemoveDirectory0(new,force,key,res);
 		END RemoveDirectory0;
 
-		PROCEDURE Rename0 (old, new: ARRAY OF CHAR;     f: Files.File;      VAR res: LONGINT);
+		PROCEDURE Rename0* (old, new: ARRAY OF CHAR;     f: Files.File;      VAR res: LONGINT);
 		VAR old1,new1: PathName;
 		BEGIN
 			MakeRel(old,old1); MakeRel(new,new1);fs.Rename0(old1,new1,f,res);

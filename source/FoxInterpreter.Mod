@@ -57,7 +57,7 @@ TYPE
 
 	Parser*= OBJECT(FoxParser.Parser)
 
-		PROCEDURE Statement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
+		PROCEDURE Statement*(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
 		VAR statement: SyntaxTree.Statement;
 		BEGIN
 			IF (Token() = Scanner.ExclamationMark) THEN
@@ -651,7 +651,7 @@ TYPE
 		END FindType;
 		
 		
-		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
+		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		VAR p,p0,p1,p2: SyntaxTree.Expression;
 			type,t0,t1,t2: SyntaxTree.Type;
 			len: LONGINT;

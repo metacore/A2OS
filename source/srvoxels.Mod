@@ -402,7 +402,7 @@ BEGIN
 	IF v#NIL THEN v.linevoxel(a,b,12,DAISY) END
 END cameratrail;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 (*	FOR i:=0 TO 10 DO
 		srBase.randPT(p);

@@ -255,7 +255,7 @@ type
 	(* generic context object that can be used by implementers of the active cells runtime *)
 	Context*= object (ActiveCellsRuntime.Context)
 
-		procedure Allocate(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellnet, isEngine: boolean);
+		procedure Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellnet, isEngine: boolean);
 		var cel: Cell;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)

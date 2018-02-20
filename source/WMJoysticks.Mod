@@ -372,7 +372,7 @@ TYPE
 			panel.AddContent(calibrationLabel);
 		END InitToolbar;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			joystick.Unregister(HandleJoystickMessage);
@@ -421,13 +421,13 @@ TYPE
 			WMWindowManager.DefaultAddWindow(SELF);
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS KillerMsg) THEN Close

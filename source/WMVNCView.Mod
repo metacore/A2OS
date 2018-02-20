@@ -57,7 +57,7 @@ TYPE
 			END
 		END CheckActive;
 
-		PROCEDURE Update(r : Rectangle; top : WMWindowManager.Window);
+		PROCEDURE Update*(r : Rectangle; top : WMWindowManager.Window);
 		BEGIN
 			IF ~active THEN RETURN END;
 			Draw(Rect.ResizeRect(r, 1), top.prev)

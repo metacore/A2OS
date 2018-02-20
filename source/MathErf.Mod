@@ -24,7 +24,7 @@ VAR
 TYPE
 	ErfP = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR m: NbrInt.Integer;
 		BEGIN
 			IF n = 0 THEN coef := 0
@@ -40,7 +40,7 @@ TYPE
 
 	ErfQ = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		BEGIN
 			IF n = 0 THEN coef := 0
 			ELSIF n = 1 THEN coef := 1

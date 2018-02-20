@@ -691,7 +691,7 @@ TYPE
 		g : Graphic;
 		dx, dy : LONGREAL;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			NEW(g);
@@ -703,7 +703,7 @@ TYPE
 			Invalidate;
 		END XSetPos;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		BEGIN
 			g.Draw(canvas, -dx, -dy, 0.5, 0.5);
 		END Draw;
@@ -1153,13 +1153,13 @@ TYPE
 			viewer.Invalidate
 		END Populate;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			DecCount;
 			Close^;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^(x)

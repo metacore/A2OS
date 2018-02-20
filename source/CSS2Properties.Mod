@@ -327,12 +327,12 @@ TYPE
 			ppi := 91.44
 		END Init;
 
-		PROCEDURE SetParent(parent: AllMediaProperties);
+		PROCEDURE SetParent*(parent: AllMediaProperties);
 		BEGIN
 			IF parent IS VisualProperties THEN SetParent^(parent) END
 		END SetParent;
 
-		PROCEDURE GetValue(name: ARRAY OF CHAR): CSS2.Declaration;
+		PROCEDURE GetValue*(name: ARRAY OF CHAR): CSS2.Declaration;
 		VAR declaration: CSS2.Declaration; term1: CSS2.Term;
 		BEGIN
 			NEW(declaration); declaration.SetProperty(name);
@@ -578,7 +578,7 @@ TYPE
 			RETURN declaration
 		END GetValue;
 
-		PROCEDURE SetValue(declaration: CSS2.Declaration);
+		PROCEDURE SetValue*(declaration: CSS2.Declaration);
 		VAR s: String; terms: XMLObjects.Enumerator; c: ANY;
 			term1, term2, term3, term4, term5, term6: CSS2.Term; i: LONGINT; imgTerm: ImgTerm;
 		BEGIN
@@ -1367,7 +1367,7 @@ TYPE
 			END
 		END SetValue;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^();
 			backgroundAttachment.computed := TRUE;
@@ -1481,7 +1481,7 @@ TYPE
 			zIndex.computed := -1; zIndex.specified := NIL
 		END Initialize;
 
-		PROCEDURE ComputeValues;
+		PROCEDURE ComputeValues*;
 		VAR terms: XMLObjects.Enumerator; term: ANY;
 		BEGIN
 			ComputeValues^();

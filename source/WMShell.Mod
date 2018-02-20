@@ -140,7 +140,7 @@ TYPE
 			out.String(string^); out.Update;
 		END CopyFromClipboard;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 (*			pipeIn.Close; pipeOut.Close; *)
 			shell.Exit;
@@ -252,13 +252,13 @@ TYPE
 			shell.editor.editor.SetFocus();
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS KillerMsg) THEN

@@ -266,7 +266,7 @@ TYPE
 
 		mouseOverIdx, lastMouseOverIdx : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrBase);
@@ -297,7 +297,7 @@ TYPE
 			mouseOverIdx := -1; lastMouseOverIdx := -1;
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			IF (data = clDefault) OR (data = clSelected) OR (data = clMouseOver) OR (data = clSelectedMouseOver) OR
 				(data = clTextDefault) OR (data = clTextSelected) OR (data = clTextMouseOver) OR (data = clTextSelectedMouseOver) OR
@@ -312,7 +312,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				lock.Acquire;
@@ -330,14 +330,14 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			mouseOverIdx := -1; lastMouseOverIdx := -1;
 			Invalidate
 		END PointerLeave;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		VAR index : LONGINT; window : WMWindowManager.Window;
 		BEGIN
 			IF (keys = {}) OR ~enabled.Get()  THEN RETURN; END;
@@ -381,7 +381,7 @@ TYPE
 			WMGraphicUtilities.RectGlassShade(canvas, rect, borderWidth.Get(), hasFocus);
 		END DrawInternal;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			row, column, x, y : LONGINT;
 			width, height : LONGINT;
@@ -445,7 +445,7 @@ TYPE
 			RETURN canvas;
 		END CreateAuxCanvas;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			PropertyChanged^(sender, data);
 			IF (data = bounds) THEN
@@ -469,7 +469,7 @@ TYPE
 			END;
 		END UpdateLayout;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrWindowOverview);
@@ -545,7 +545,7 @@ TYPE
 			canvas.DrawString(x + (width - sizeX) DIV 2, y + 15, title^);
 		END DrawInternal;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			state := Terminating;  timer.Wakeup;
@@ -598,7 +598,7 @@ TYPE
 		
 		msg: WMMessages.Message; 
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrTaskList);
@@ -626,7 +626,7 @@ TYPE
 			lastWindow := NIL;
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			PropertyChanged^(sender, data);
 			IF (data = menuLocation) THEN
@@ -684,13 +684,13 @@ TYPE
 			manager.lock.ReleaseWrite;
 		END GoToWindow;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			lastKeys := {};
 		END FocusLost;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		VAR
 			index : LONGINT; window : WMWindowManager.Window; 
 			info2 : WMWindowManager.WindowInfo;
@@ -770,7 +770,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR window : WMWindowManager.Window; windowCloser : DoCloseWindow; index : LONGINT;
 		BEGIN
 			PointerUp^(x, y, keys);
@@ -880,7 +880,7 @@ TYPE
 			END;
 		END DrawInternal;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			state := Terminating;
@@ -1045,7 +1045,7 @@ TYPE
 			Invalidate;
 		END SetInfo;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				xt := x; yt := y;
@@ -1056,14 +1056,14 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			xt := -1; yt := -1;
 			Invalidate
 		END PointerLeave;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		BEGIN
 			IF enabled.Get() THEN
 				SELF.keys := keys;
@@ -1095,7 +1095,7 @@ TYPE
 			owner.Close;
 		END PointerDown;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR y : LONGINT;
 
 			PROCEDURE IsHighlighted(y : LONGINT) : BOOLEAN;
@@ -1285,7 +1285,7 @@ TYPE
 			manager.SetFocus(SELF);
 		END New;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			canvas.Fill(shadowRectB, 04FH, WMGraphics.ModeSrcOverDst);
@@ -1298,13 +1298,13 @@ TYPE
 			BEGIN {EXCLUSIVE} close := TRUE; END;
 		END SetClosed;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			SetClosed;
 			Close^;
 		END Close;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
 		BEGIN
 			IF ~(Inputs.Release IN flags) THEN
 				IF keysym = 0FF54H THEN (* Cursor Down *)
@@ -1318,7 +1318,7 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			Close;
@@ -1353,7 +1353,7 @@ TYPE
 			pointerThreshold := 1;
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			windows[myId] := NIL;

@@ -253,57 +253,57 @@ TYPE
 
 		(* types that do not refer to other types *)
 
-		PROCEDURE VisitType(x: SyntaxTree.Type);
+		PROCEDURE VisitType*(x: SyntaxTree.Type);
 		BEGIN END VisitType;
 
-		PROCEDURE VisitBasicType(x: SyntaxTree.BasicType);
+		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
 		BEGIN END VisitBasicType;
 
-		PROCEDURE VisitByteType(x: SyntaxTree.ByteType);
+		PROCEDURE VisitByteType*(x: SyntaxTree.ByteType);
 		BEGIN END VisitByteType;
 
-		PROCEDURE VisitBooleanType(x: SyntaxTree.BooleanType);
+		PROCEDURE VisitBooleanType*(x: SyntaxTree.BooleanType);
 		BEGIN END VisitBooleanType;
 
-		PROCEDURE VisitSetType(x: SyntaxTree.SetType);
+		PROCEDURE VisitSetType*(x: SyntaxTree.SetType);
 		BEGIN END VisitSetType;
 
-		PROCEDURE VisitAddressType(x: SyntaxTree.AddressType);
+		PROCEDURE VisitAddressType*(x: SyntaxTree.AddressType);
 		BEGIN END VisitAddressType;
 
-		PROCEDURE VisitSizeType(x: SyntaxTree.SizeType);
+		PROCEDURE VisitSizeType*(x: SyntaxTree.SizeType);
 		BEGIN END VisitSizeType;
 
-		PROCEDURE VisitAnyType(x: SyntaxTree.AnyType);
+		PROCEDURE VisitAnyType*(x: SyntaxTree.AnyType);
 		BEGIN END VisitAnyType;
 
-		PROCEDURE VisitObjectType(x: SyntaxTree.ObjectType);
+		PROCEDURE VisitObjectType*(x: SyntaxTree.ObjectType);
 		BEGIN END VisitObjectType;
 
-		PROCEDURE VisitNilType(x: SyntaxTree.NilType);
+		PROCEDURE VisitNilType*(x: SyntaxTree.NilType);
 		BEGIN END VisitNilType;
 
-		PROCEDURE VisitCharacterType(x: SyntaxTree.CharacterType);
+		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
 		BEGIN END VisitCharacterType;
 
-		PROCEDURE VisitIntegerType(x: SyntaxTree.IntegerType);
+		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
 		BEGIN END VisitIntegerType;
 
-		PROCEDURE VisitFloatType(x: SyntaxTree.FloatType);
+		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
 		BEGIN END VisitFloatType;
 
-		PROCEDURE VisitComplexType(x: SyntaxTree.ComplexType);
+		PROCEDURE VisitComplexType*(x: SyntaxTree.ComplexType);
 		BEGIN END VisitComplexType;
 
-		PROCEDURE VisitQualifiedType(x: SyntaxTree.QualifiedType);
+		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		BEGIN
 			x.SetResolved(ResolveType(x.resolved))
 		END VisitQualifiedType;
 
-		PROCEDURE VisitStringType(x: SyntaxTree.StringType);
+		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
 		BEGIN END VisitStringType;
 
-		PROCEDURE VisitRangeType(x: SyntaxTree.RangeType);
+		PROCEDURE VisitRangeType*(x: SyntaxTree.RangeType);
 		BEGIN END VisitRangeType;
 
 		(* types containing links to other types *)
@@ -330,7 +330,7 @@ TYPE
 		(**
 			resolve enumeration type: check enumeration scope
 		**)
-		PROCEDURE VisitEnumerationType(x: SyntaxTree.EnumerationType);
+		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
 		VAR baseScope: SyntaxTree.EnumerationScope; resolved: SyntaxTree.Type; enumerationBase: SyntaxTree.EnumerationType;
 		BEGIN
 			x.SetEnumerationBase(ResolveType(x.enumerationBase));
@@ -343,7 +343,7 @@ TYPE
 			x.SetState(SyntaxTree.Resolved);
 		END VisitEnumerationType;
 
-		PROCEDURE VisitArrayType(arrayType: SyntaxTree.ArrayType);
+		PROCEDURE VisitArrayType*(arrayType: SyntaxTree.ArrayType);
 		BEGIN
 			ASSERT(arrayType.arrayBase # NIL);
 			arrayType.SetArrayBase(ResolveType(arrayType.arrayBase));
@@ -351,7 +351,7 @@ TYPE
 			arrayType.SetState(SyntaxTree.Resolved);
 		END VisitArrayType;
 
-		PROCEDURE VisitMathArrayType(arrayType: SyntaxTree.MathArrayType);
+		PROCEDURE VisitMathArrayType*(arrayType: SyntaxTree.MathArrayType);
 		BEGIN
 			arrayType.SetArrayBase(ResolveType(arrayType.arrayBase));
 			IF arrayType.form = SyntaxTree.Static THEN
@@ -363,7 +363,7 @@ TYPE
 			arrayType.SetState(SyntaxTree.Resolved);
 		END VisitMathArrayType;
 
-		PROCEDURE VisitPointerType(pointerType: SyntaxTree.PointerType);
+		PROCEDURE VisitPointerType*(pointerType: SyntaxTree.PointerType);
 		VAR recordType: SyntaxTree.RecordType;
 		BEGIN
 			IF ~(SyntaxTree.Resolved IN pointerType.state) THEN
@@ -402,7 +402,7 @@ TYPE
 
 
 
-		PROCEDURE VisitRecordType(recordType: SyntaxTree.RecordType);
+		PROCEDURE VisitRecordType*(recordType: SyntaxTree.RecordType);
 		VAR recordBase: SyntaxTree.RecordType; numberMethods: LONGINT; procedure,super,testsuper: SyntaxTree.Procedure; recordScope: SyntaxTree.RecordScope;
 			pointerType: SyntaxTree.Type; typeDeclaration: SyntaxTree.TypeDeclaration; symbol: SyntaxTree.Symbol; size: HUGEINT; hasPointer: BOOLEAN;
 			var: SyntaxTree.Variable;
@@ -467,7 +467,7 @@ TYPE
 		END VisitRecordType;
 
 
-		PROCEDURE VisitProcedureType(procedureType: SyntaxTree.ProcedureType);
+		PROCEDURE VisitProcedureType*(procedureType: SyntaxTree.ProcedureType);
 		VAR parameter: SyntaxTree.Parameter;
 		BEGIN
 			IF ~(SyntaxTree.Resolved IN procedureType.state) THEN
@@ -642,7 +642,7 @@ TYPE
 			version: CHAR;
 
 		(** Import - Symbol Table Loader Plugin *)
-		PROCEDURE Import(CONST moduleName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module;
+		PROCEDURE Import*(CONST moduleName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module;
 		VAR
 			module: SyntaxTree.Module;
 			moduleIdentifier,contextIdentifier: SyntaxTree.Identifier;
@@ -1609,7 +1609,7 @@ TYPE
 			RETURN module
 		END Import;
 
-		PROCEDURE Export(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN;
+		PROCEDURE Export*(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN;
 		VAR w: Files.Writer; lookup: TypeToIndex; indexToAttribute: IndexToAttribute; numberType: LONGINT; flags: SET;
 
 

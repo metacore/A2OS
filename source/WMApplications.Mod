@@ -103,13 +103,13 @@ TYPE
 			IncCount;
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		VAR data : XML.Element;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -207,7 +207,7 @@ TYPE
 			RETURN (Inputs.LeftCtrl IN state);
 		END MoveOrResize;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			lastX := bounds.l + x; lastY:=bounds.t + y;
@@ -217,7 +217,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR dx, dy, width, height, newWidth, newHeight, moveX, moveY, tempMode : LONGINT;
 		BEGIN
 			PointerMove^(x, y, keys);
@@ -287,7 +287,7 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE PointerUp(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			IF (mode # Mode_Standard) & ~(0 IN keys) THEN
@@ -299,7 +299,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 		END PointerLeave;

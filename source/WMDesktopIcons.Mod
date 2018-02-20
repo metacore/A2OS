@@ -65,7 +65,7 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		BEGIN
 			lastX := bounds.l+x; lastY:=bounds.t+y;
 			IF keys = {0} THEN
@@ -85,7 +85,7 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE PointerMove(x,y:LONGINT; keys:SET);
+		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
 		VAR dx, dy : LONGINT; width, height : LONGINT;
 		BEGIN
 			IF dragging OR resizing THEN
@@ -105,7 +105,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
 		BEGIN
 			dragging := FALSE;
 			IF (keys # {0,2}) THEN
@@ -154,14 +154,14 @@ TYPE
 			Close;
 		END HandleContextMenuClose;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			IF (contextMenu # NIL) THEN contextMenu.Close; END;
 			Close^;
 			DecCount;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR configuration : WMRestorable.XmlElement;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -210,7 +210,7 @@ TYPE
 			borderI := 0;
 		END Init;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR captionStr : Strings.String; rect : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas);
@@ -231,13 +231,13 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerMove^(x, y, keys);
 			IF ~hover THEN hover := TRUE; Invalidate; END;
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			IF hover THEN hover := FALSE; Invalidate; END;
@@ -257,7 +257,7 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR
 			string : Strings.String; resizedImage : WMGraphics.Image;
 			imageWidth, imageHeight : LONGINT;

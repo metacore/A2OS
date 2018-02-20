@@ -41,7 +41,7 @@ CONST
 			type: Strings.String; (* type information like "Bug", "Feature", "Question" *)
 			status: Strings.String; (* status information like "unconfirmed", "confirmed" *)
 
-		PROCEDURE Internalize(input: XML.Content);
+		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container;
 		BEGIN
 			container := input(XML.Container);
@@ -57,7 +57,7 @@ CONST
 			status := WebStd.InternalizeString(container, "Status")
 		END Internalize;
 
-		PROCEDURE Externalize() : XML.Content;
+		PROCEDURE Externalize*() : XML.Content;
 		VAR container: XML.Container;
 		BEGIN
 			NEW(container);
@@ -88,7 +88,7 @@ CONST
 			END
 		END MakeNewEntryBold;
 
-		PROCEDURE TableView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
+		PROCEDURE TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
 		VAR row: WebComplex.TableRow; cell: WebComplex.TableCell; xmlText: XML.Container; tracker: FeatureTracker;
 			lastLoginTime: WebStd.PtrDateTime; modifDateStr: Strings.String; prioStr: ARRAY 14 OF CHAR;
 		BEGIN
@@ -163,7 +163,7 @@ CONST
 			RETURN row
 		END TableView;
 
-		PROCEDURE DetailView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR container: XML.Container; pTag: XML.Element; modifDateStr: Strings.String; prioStr: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(container);
@@ -190,7 +190,7 @@ CONST
 			RETURN container
 		END DetailView;
 
-		PROCEDURE EditView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table, tr, td, select, option: XML.Element;
 			tracker: FeatureTracker; i: LONGINT; iStr: ARRAY 14 OF CHAR;
 		BEGIN
@@ -284,7 +284,7 @@ CONST
 		BEGIN Init(); lastLoginTime := NIL; maxPrio := DefaultMaxPriority; types := NIL; status := NIL
 		END Initialize;
 
-		PROCEDURE Transform(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR elem: XML.Element; session: HTTPSession.Session; webAccount: WebAccounts.WebAccount;
 			str: Strings.String;
 		BEGIN
@@ -354,7 +354,7 @@ CONST
 			END
 		END GetStringListFromXML;
 
-		PROCEDURE GetAdditionalEventHandlers() : DynamicWebpage.EventHandlerList;
+		PROCEDURE GetAdditionalEventHandlers*() : DynamicWebpage.EventHandlerList;
 		VAR list: DynamicWebpage.EventHandlerList;
 		BEGIN
 			NEW(list, 1);
@@ -376,7 +376,7 @@ CONST
 			END
 		END SetInterested;
 
-		PROCEDURE GetDefaultSearchFilter() : WebStd.PersistentDataFilter;
+		PROCEDURE GetDefaultSearchFilter*() : WebStd.PersistentDataFilter;
 		BEGIN RETURN DefaultFilter
 		END GetDefaultSearchFilter;
 
@@ -414,7 +414,7 @@ CONST
 			END
 		END DefaultFilter;
 
-		PROCEDURE GetHeaderXMLContent(persContainer: WebStd.PersistentDataContainer;
+		PROCEDURE GetHeaderXMLContent*(persContainer: WebStd.PersistentDataContainer;
 			input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR pTag, eventLink, label: XML.Element; objectId: Strings.String; container: XML.Container;
 			session: HTTPSession.Session; webAccount: WebAccounts.WebAccount;
@@ -452,7 +452,7 @@ CONST
 			END
 		END GetHeaderXMLContent;
 
-		PROCEDURE InsertObject(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
+		PROCEDURE InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
 			request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList;
 			VAR statusMsg: XML.Content) : BOOLEAN;
 			(* parameters "author", "titletext", "detailtext", "priority", "type" but not "status" *)
@@ -504,7 +504,7 @@ CONST
 			END
 		END InsertObject;
 
-		PROCEDURE UpdateObject(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
+		PROCEDURE UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
 			params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content) : BOOLEAN;
 			(* parameters "author", "titletext", "detailtext", "priority", "type", "status" *)
 		VAR author, titleText, detailText, priorityStr, status, type: Strings.String; feature: FeatureEntry;
@@ -541,18 +541,18 @@ CONST
 			END
 		END UpdateObject;
 
-		PROCEDURE ThisObjectName() : Strings.String;
+		PROCEDURE ThisObjectName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(FeatureTrackerObjName)
 		END ThisObjectName;
 
-		PROCEDURE ThisModuleName() : Strings.String;
+		PROCEDURE ThisModuleName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(ThisModuleNameStr)
 		END ThisModuleName;
 
 		(** abstract, returns the insert view for the initialization of a new web forum entry, without submit/back-input fields
 		 * and without hidden parameter for super entry in hierarchy.
 		 * superEntry is the parent web forum entry in a hierachical web forum, superEntry is NIL iff it is a root entry *)
-		PROCEDURE GetInsertView(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
+		PROCEDURE GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
 		VAR table, tr, td, select, option: XML.Element; session: HTTPSession.Session;
 			webAccount: WebAccounts.WebAccount; str: Strings.String; i: LONGINT; iStr: ARRAY 14 OF CHAR;
 		BEGIN
@@ -596,7 +596,7 @@ CONST
 			RETURN table
 		END GetInsertView;
 
-		PROCEDURE GetTableHeader(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
+		PROCEDURE GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
 		VAR row: WebComplex.HeaderRow;
 		BEGIN
 			NEW(row, 9);
@@ -612,7 +612,7 @@ CONST
 			RETURN row
 		END GetTableHeader;
 
-		PROCEDURE GetSearchFilter(text: Strings.String) : WebStd.PersistentDataFilter;
+		PROCEDURE GetSearchFilter*(text: Strings.String) : WebStd.PersistentDataFilter;
 		BEGIN
 			IF (text # NIL) THEN
 				NEW(searchText, Strings.Length(text^)+3);

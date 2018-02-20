@@ -57,7 +57,7 @@ TYPE
 			Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
 		END Finish;
 
-		PROCEDURE Transfer( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT );
+		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT );
 		VAR bool, n,err: LONGINT;  pos: HUGEINT;  poslow, poshigh: LONGINT;  large: Kernel32.LargeInteger;
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid;  RETURN;  END;
@@ -116,12 +116,12 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE GetSize( VAR size, res: LONGINT );
+		PROCEDURE GetSize*( VAR size, res: LONGINT );
 		BEGIN
 			size := SELF.size;  res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle( VAR msg: Disks.Message;  VAR res: LONGINT );
+		PROCEDURE Handle*( VAR msg: Disks.Message;  VAR res: LONGINT );
 		BEGIN
 			res := Disks.Unsupported;
 		END Handle;

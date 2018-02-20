@@ -113,7 +113,7 @@ TYPE
 			body*: PROCEDURE;
 			flags*: SET;	 (* e.g. compilation flags *)
 			
-		PROCEDURE FindRoots;	(* override *)
+		PROCEDURE FindRoots*;	(* override *)
 		VAR i: LONGINT; ptr: ANY; false: BOOLEAN;
 		VAR name: Name;
 		BEGIN

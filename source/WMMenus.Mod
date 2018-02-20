@@ -106,7 +106,7 @@ TYPE
 			takesFocus.Set(TRUE);
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = clSelected) THEN
 				Invalidate;
@@ -123,7 +123,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			horizontalI := horizontal.Get();
@@ -181,7 +181,7 @@ TYPE
 			END;
 		END Measure;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			child : WMTrees.TreeNode;
 			x, y, dx, dy, t, textY : LONGINT;
@@ -495,7 +495,7 @@ TYPE
 			END;
 		END CloseSubMenu;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF horizontal.Get() THEN
@@ -515,7 +515,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF leftClick THEN
@@ -535,7 +535,7 @@ TYPE
 			dragPossible := FALSE;
 		END PointerUp;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF dragPossible THEN
@@ -557,7 +557,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			IF hover # NIL THEN hover := NIL; Invalidate; END;
 		END PointerLeave;
@@ -741,7 +741,7 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			CloseSubMenu(FALSE);
@@ -751,7 +751,7 @@ TYPE
 			END;
 		END FocusLost;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			CloseSubMenu(FALSE);
@@ -833,7 +833,7 @@ TYPE
 			END
 		END CloseMenu;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			IF takesFocus THEN
@@ -841,7 +841,7 @@ TYPE
 			END;
 		END FocusLost;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			WMGraphicUtilities.DrawRect(canvas, WMRectangles.MakeRect(0, 0, w, h), WMGraphics.Black, WMGraphics.ModeCopy);

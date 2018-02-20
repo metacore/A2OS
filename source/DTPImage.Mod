@@ -112,7 +112,7 @@ TYPE
 			END;
 		END OnCreate;
 
-		PROCEDURE Redraw;
+		PROCEDURE Redraw*;
 		BEGIN
 			Redraw^;
 		END Redraw;
@@ -227,7 +227,7 @@ TYPE
 
 		END SetValueHandler;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			shown := FALSE;
 			Hide;

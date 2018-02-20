@@ -34,14 +34,14 @@ TYPE
 			WMWindowManager.DefaultAddWindow(SELF);
 		END New;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^(x)
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			visible := FALSE;
 			Close^;

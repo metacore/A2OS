@@ -15,7 +15,7 @@ TYPE
 
 	HTTPStats= OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "WebHTTPServer";
@@ -30,7 +30,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := WebHTTPServer.nofRequests;
 			dataset[1] := WebHTTPServer.requestsPerMinute;

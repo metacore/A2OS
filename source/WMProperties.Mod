@@ -386,7 +386,7 @@ TYPE
 			END;
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars; s: String;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -530,7 +530,7 @@ TYPE
 			END
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars;s: ARRAY 10 OF CHAR;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -713,7 +713,7 @@ TYPE
 			ReleaseWrite
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars;s: ARRAY 20 OF CHAR;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -896,7 +896,7 @@ TYPE
 			ReleaseWrite
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars;s: ARRAY 20 OF CHAR; w: Streams.StringWriter;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1092,7 +1092,7 @@ TYPE
 			END
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res,len: LONGINT;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1235,7 +1235,7 @@ TYPE
 			ReleaseWrite
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res: LONGINT;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1435,7 +1435,7 @@ TYPE
 			SetFont(name, size, style);
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR s: ARRAY 32 OF CHAR;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1585,7 +1585,7 @@ TYPE
 			ReleaseWrite
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR cs: ARRAY 10 OF CHAR; sub: XML.Element; t: WMGraphics.Point2d;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1797,7 +1797,7 @@ TYPE
 		END FromXML;
 
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR cs: ARRAY 10 OF CHAR; sub: XML.Element; t: WMRectangles.Rectangle;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
@@ -1953,7 +1953,7 @@ TYPE
 			GetLinkAsString(string)
 		END GetAsString;
 
-		PROCEDURE Reset;
+		PROCEDURE Reset*;
 		BEGIN
 			AcquireWrite;
 			ReplaceLink(NIL);
@@ -1987,7 +1987,7 @@ TYPE
 			END
 		END FromXML;
 
-		PROCEDURE ToXML(VAR element: XML.Element);
+		PROCEDURE ToXML*(VAR element: XML.Element);
 		VAR cs: ARRAY 10 OF CHAR; sub: XML.Element; t: WMRectangles.Rectangle;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN

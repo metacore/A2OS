@@ -190,7 +190,7 @@ TYPE
 		VAR
 			locks: LONGINT;
 
-		PROCEDURE AddAttribute(attribute: XML.Attribute);
+		PROCEDURE AddAttribute*(attribute: XML.Attribute);
 		BEGIN
 			ConnectAttribute(attribute);
 			AddAttribute^(attribute)
@@ -373,7 +373,7 @@ TYPE
 			NEW(properties);
 		END Init;
 
-		PROCEDURE AddContent(c: XML.Content);
+		PROCEDURE AddContent*(c: XML.Content);
 		BEGIN
 			IF c IS CSS2Component THEN c(CSS2Component).properties.SetParent(properties) END;
 			AddContent^(c)
@@ -537,7 +537,7 @@ TYPE
 			NEW(pointerMoveListeners, SELF); NEW(hoverListeners, SELF); NEW(activeListeners, SELF); NEW(focusListeners, SELF)
 		END Init;
 
-		PROCEDURE AddContent(c: XML.Content);
+		PROCEDURE AddContent*(c: XML.Content);
 		BEGIN
 			IF c IS CSS2Component THEN
 				c(VisualComponent).properties.SetParent(properties);
@@ -545,7 +545,7 @@ TYPE
 			AddContent^(c)
 		END AddContent;
 
-		PROCEDURE SetProperties(p: CSS2Properties.AllMediaProperties);
+		PROCEDURE SetProperties*(p: CSS2Properties.AllMediaProperties);
 		BEGIN
 			IF (p # NIL) & (p IS CSS2Properties.VisualProperties) THEN
 				SetProperties^(p)
@@ -752,12 +752,12 @@ TYPE
 			IF ~IsHit(lastX, lastY) THEN PointerUp(lastX, lastY, lastMouseKeys) END
 		END ComputeHeights;
 
-		PROCEDURE GetNumberOfEvents(): LONGINT;
+		PROCEDURE GetNumberOfEvents*(): LONGINT;
 		BEGIN
 			RETURN GetNumberOfEvents^() + 4
 		END GetNumberOfEvents;
 
-		PROCEDURE GetEventName(i: LONGINT): String;
+		PROCEDURE GetEventName*(i: LONGINT): String;
 		VAR s: String;
 		BEGIN
 			CASE i - GetNumberOfEvents^() OF
@@ -770,7 +770,7 @@ TYPE
 			RETURN s
 		END GetEventName;
 
-		PROCEDURE AddEventListener(listener: Listener; event: ARRAY OF CHAR);
+		PROCEDURE AddEventListener*(listener: Listener; event: ARRAY OF CHAR);
 		BEGIN
 			IF event = "hover" THEN hoverListeners.AddListener(listener)
 			ELSIF event = "active" THEN activeListeners.AddListener(listener)
@@ -780,7 +780,7 @@ TYPE
 			END
 		END AddEventListener;
 
-		PROCEDURE UnlockUpdate;
+		PROCEDURE UnlockUpdate*;
 		BEGIN
 			UnlockUpdate^();
 			IF ~IsLocked() & ~invalidBox.IsEmpty() THEN
@@ -1027,7 +1027,7 @@ TYPE
 			IF (parent # NIL) & (parent IS VisualComponent) THEN parent(VisualComponent).Resized() END;
 		END Resized;
 
-		PROCEDURE PropertiesChanged;
+		PROCEDURE PropertiesChanged*;
 		BEGIN
 			PropertiesChanged^();
 			IF properties(CSS2Properties.VisualProperties).dimensionChanged THEN Resized() END
@@ -1048,7 +1048,7 @@ TYPE
 			END
 		END InvalidateRange;
 
-		PROCEDURE Invalidate;
+		PROCEDURE Invalidate*;
 		BEGIN
 			Invalidate^();
 			InvalidateRange(0, 0, bounds.w, bounds.h)

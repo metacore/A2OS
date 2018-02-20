@@ -344,7 +344,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			mergeSections := options.GetFlag("mergeSections");
 		END GetOptions;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 

@@ -635,7 +635,7 @@ TYPE
 			highlightAll := SELF.highlightAll;
 		END GetSettings;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF searchEdit # NIL THEN searchEdit.text.onTextChanged.Remove(TextChanged); END;
@@ -673,7 +673,7 @@ TYPE
 			WMWindowManager.DefaultAddWindow(SELF);
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			IF searchPanel.highlights # NIL THEN
@@ -715,7 +715,7 @@ TYPE
 			RETURN TRUE;
 		END HandleShortcut;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		BEGIN
 			IF m.msgType = WMMessages.MsgKey THEN
 				IF ~HandleShortcut(m.x, m.flags, m.y) THEN

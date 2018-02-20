@@ -104,7 +104,7 @@ TYPE
 		BEGIN SELF.w := w; IF w IS TextUtilities.TextWriter THEN tw := w(TextUtilities.TextWriter) ELSE tw := NIL END;
 		END InitStreamReport;
 
-		PROCEDURE Open;
+		PROCEDURE Open*;
 		BEGIN w.Ln; Bold; w.String ("Test results:"); Default; w.Ln
 		END Open;
 
@@ -128,7 +128,7 @@ TYPE
 		BEGIN IF tw # NIL THEN tw.SetFontStyle ({0}) END;
 		END Bold;
 
-		PROCEDURE Handle (test: TestResult);
+		PROCEDURE Handle* (test: TestResult);
 		BEGIN
 			IF test.type = PositiveTest THEN w.String ("positive: ");
 			ELSIF test.type = NegativeTest THEN w.String ("negative: ") END;
@@ -143,7 +143,7 @@ TYPE
 			Default; w.Ln
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN w.Ln; Bold; w.String ("Summary:"); Default; w.Ln;
 			w.String ("number of tests:"); w.Char (9X); w.Int (tests, 0); w.Ln;
 			w.String ("successful tests:"); w.Char (9X); IF succeeded = tests THEN Green ELSE Red END; w.Int (succeeded, 0); Default;

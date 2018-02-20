@@ -64,7 +64,7 @@ TYPE
 			SELF.content := content;
 		END SetContent;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			Resized^;
 			IF (content # NIL) THEN
@@ -94,7 +94,7 @@ TYPE
 			IF (content # NIL) THEN content.bounds.SetTop(-scrollbar.pos.Get()); END;
 		END ScrollbarChanged;
 
-		PROCEDURE WheelMove(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : LONGINT);
 		BEGIN
 			IF (scrollbar.visible.Get()) THEN
 				scrollbar.pos.Set(scrollbar.pos.Get() + dz * MouseWheelMultiplier);
@@ -497,7 +497,7 @@ TYPE
 
 	InstallerBgPanel = OBJECT(WMComponents.VisualComponent)
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR color : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas); (* fills background with fillColor *)
@@ -520,7 +520,7 @@ TYPE
 
 	BorderPanel = OBJECT(WMStandardComponents.Panel)
 
-		PROCEDURE DrawForeground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawForeground^(canvas);
 			WMGraphicUtilities.DrawBevel(canvas, GetClientRect(), 1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy);
@@ -570,7 +570,7 @@ TYPE
 		selection, lockedSelection : WMPartitionsComponents.Selection;
 		opened : BOOLEAN;
 
-		PROCEDURE Resizing(VAR width, height : LONGINT);
+		PROCEDURE Resizing*(VAR width, height : LONGINT);
 		BEGIN
 			IF width < WindowMinWidth THEN width := WindowMinWidth; END;
 			IF height < WindowMinHeight THEN height := WindowMinHeight; END;
@@ -1119,7 +1119,7 @@ TYPE
 			RETURN button;
 		END NewButton;
 
-		PROCEDURE WheelMove(dz: LONGINT);
+		PROCEDURE WheelMove*(dz: LONGINT);
 		BEGIN
 			CASE currentPage OF
 				|PageSelectPartition:
@@ -1134,7 +1134,7 @@ TYPE
 			END;
 		END WheelMove;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			WindowClosed;
@@ -1170,7 +1170,7 @@ TYPE
 
 	HelpWindow = OBJECT(WMComponents.FormWindow)
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			helpWindow := NIL;

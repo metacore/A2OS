@@ -429,7 +429,7 @@ TYPE
 			bgColB.clDefault.Set(color);
 		END UpdateColors;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			colorEdit.onChanged.Remove(UpdateColors);
@@ -480,7 +480,7 @@ TYPE
 		END StoreData;
 		
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR data: XML.Element;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN

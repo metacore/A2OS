@@ -62,7 +62,7 @@ TYPE
 			dragging := FALSE
 		END PointerUp;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			Handle^(x)
 		END Handle;
@@ -89,7 +89,7 @@ TYPE
 		viewMode*, color* : WMProperties.Int32Property;
 
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawBackground^(canvas);
 			canvas.SetColor(color.Get());
@@ -113,7 +113,7 @@ TYPE
 			SetNameAsString(StrDebugComponent);
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 		END Initialize;

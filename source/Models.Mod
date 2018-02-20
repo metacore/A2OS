@@ -648,7 +648,7 @@ TYPE
 	VAR
 		value : Texts.Text; (* {value # NIL} *)
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrText);
@@ -671,12 +671,12 @@ TYPE
 			RETURN value.HasReadLock();
 		END HasReadLock;
 
-		PROCEDURE AcquireWrite;
+		PROCEDURE AcquireWrite*;
 		BEGIN
 			value.AcquireWrite;
 		END AcquireWrite;
 
-		PROCEDURE ReleaseWrite;
+		PROCEDURE ReleaseWrite*;
 		BEGIN
 			value.ReleaseWrite;
 			onChanged.Call(SELF); (*? TBD only call when text has changed *)
@@ -764,7 +764,7 @@ TYPE
 
 	Container* = OBJECT(Model)
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrContainer);

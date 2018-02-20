@@ -38,7 +38,7 @@ TYPE
 			overwriteAll := FALSE; overwriteNever := FALSE; abort := FALSE;
 		END New;
 
-		PROCEDURE OpenPut(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
 		VAR oldFile : Files.File; name : ARRAY 1024 OF CHAR;
 		BEGIN
 			res := -1;
@@ -80,7 +80,7 @@ TYPE
 			IF TraceCopy IN Trace THEN KernelLog.Ln; END;
 		END OpenPut;
 
-		PROCEDURE ClosePut(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : LONGINT);
 		BEGIN
 			IF (f # NIL) & (w # NIL)  THEN
 				w.Update;
@@ -102,7 +102,7 @@ TYPE
 			eh := e
 		END New;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR di : FilesDropInterface;
 		BEGIN
 			IF type = WMDropTarget.TypeFiles THEN
@@ -188,7 +188,7 @@ TYPE
 			tree.Release
 		END NodeSelected;
 
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WM.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WM.DragInfo);
 		VAR node : WMTrees.TreeNode;
 			dropTarget : FilesDropTarget;
 			p : ANY;
@@ -759,7 +759,7 @@ END Open;
 			DragDropped(x, y, dragInfo)
 		END MyDragDropped;
 
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WM.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WM.DragInfo);
 		VAR dropTarget : FilesDropTarget;
 		BEGIN
 			NEW(dropTarget, path, Refresh);
@@ -824,7 +824,7 @@ END Open;
 			END
 		END Refresh;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			grid.model.Acquire;
 			IF fullView THEN

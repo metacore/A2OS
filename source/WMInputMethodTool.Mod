@@ -331,14 +331,14 @@ TYPE
 		END ChangeAppearance;
 
 		(* Closes this instance of the Input Method Tool. *)
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
 		(* Handles messages/events *)
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR
 			data : XML.Element;
 			a : XML.Attribute;

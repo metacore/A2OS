@@ -151,7 +151,7 @@ TYPE
 			NEW(onClickSelected, SELF, GSonClickSelected, GSonClickSelectedInfo, SELF.StringToCompCommand); events.Add(onClickSelected);
 		END Init;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			
@@ -420,7 +420,7 @@ TYPE
 			RETURN rect
 		END GetVisibleCellRect;
 
-		PROCEDURE DrawBackground(canvas : Graphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : Graphics.Canvas);
 		VAR i, j, x, y, w, h, cw, ch, ti, tj, tx, ty, fx, fy : LONGINT;
 				skip : BOOLEAN;
 				r, clip : WMRectangles.Rectangle;
@@ -573,7 +573,7 @@ TYPE
 			ScrollCellVisible(focusCell.col, focusCell.row)
 		END SetFocusPos;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags: SET; VAR keysym: LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; VAR keysym: LONGINT);
 			PROCEDURE AdjustSelection;
 			BEGIN
 				IF shiftDown THEN SetSelection(selA.col, selA.row, focus.col, focus.row)
@@ -728,7 +728,7 @@ TYPE
 			END
 		END OnFixedYGridLine;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		VAR col, row : LONGINT; state : SET;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -757,12 +757,12 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			SetHighlight(-1, -1); pointerInside := FALSE
 		END PointerLeave;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		VAR col, row : LONGINT; manager : WM.WindowManager; cell, pos : LONGINT;
 		BEGIN
 			IF dragCellSpacingWidth THEN
@@ -831,7 +831,7 @@ TYPE
 			END
 		END CellClicked;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		VAR col, row : LONGINT; d : BOOLEAN;
 		BEGIN
 			IF 2 IN lastkeys THEN lastkeys := keys; RETURN END;

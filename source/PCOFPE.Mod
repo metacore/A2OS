@@ -135,12 +135,12 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 				END
 			END Receive;
 
-			PROCEDURE Pos(): LONGINT;
+			PROCEDURE Pos*(): LONGINT;
 			BEGIN
 				RETURN org + Pos^()
 			END Pos;
 
-			PROCEDURE SetPos(ofs: LONGINT);
+			PROCEDURE SetPos*(ofs: LONGINT);
 			BEGIN
 				Reset();
 				SELF.org := ofs; SELF.ofs := ofs
@@ -165,12 +165,12 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 				IF SELF.ofs > sect.used THEN sect.used := SELF.ofs END
 			END Send;
 
-			PROCEDURE Pos(): LONGINT;
+			PROCEDURE Pos*(): LONGINT;
 			BEGIN
 				RETURN org + Pos^()
 			END Pos;
 
-			PROCEDURE SetPos(ofs: LONGINT);
+			PROCEDURE SetPos*(ofs: LONGINT);
 			BEGIN
 				Update(); Reset();
 				SELF.org := ofs; SELF.ofs := ofs

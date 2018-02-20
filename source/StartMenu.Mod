@@ -18,13 +18,13 @@ TYPE
 
 	Popup = OBJECT (WMComponents.FormWindow)
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN manager.Remove(SELF) END FocusLost;
 
-		PROCEDURE FocusGot;
+		PROCEDURE FocusGot*;
 		BEGIN manager.SetFocus(SELF) END FocusGot;
 
-		PROCEDURE Handle(VAR msg : Message);
+		PROCEDURE Handle*(VAR msg : Message);
 		BEGIN
 			Handle^(msg);
 			IF (msg.msgType = WMMessages.MsgExt) & (msg.ext = closePopupMsg) THEN FocusLost END;

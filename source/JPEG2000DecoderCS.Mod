@@ -2151,7 +2151,7 @@ TYPE
 				Reads the next bit in the stream (i.e. the next bit in the buffer which contains the
 				most recently read "stream byte". Bit unstuffing is performed, where necessary.
 			*)
-			PROCEDURE NextBit() : LONGINT;
+			PROCEDURE NextBit*() : LONGINT;
 				BEGIN
 					IF curBytePos =  0 THEN
 

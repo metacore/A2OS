@@ -91,7 +91,7 @@ TYPE
 		END Init;
 
 		(* update input editor *)
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR buf : ARRAY 128 OF CHAR;
 		BEGIN
 			Strings.IntToStr(value.Get(), buf); input.SetAsString(buf)
@@ -211,7 +211,7 @@ TYPE
 		END Init;
 
 		(* draw a line around the panel *)
-		PROCEDURE DrawBackground(c : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(c : WMGraphics.Canvas);
 		VAR rect : WMRectangles.Rectangle; h, w : LONGINT;
 		BEGIN
 			rect := GetClientRect(); w := rect.r DIV 2; h := rect.b DIV 2;
@@ -256,18 +256,18 @@ TYPE
 
 		(* ----- mouse handlers ----------------------------------------- *)
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			dragPossible := TRUE
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		BEGIN
 			dragPossible := FALSE
 		END PointerUp;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF dragPossible THEN dragPossible := FALSE; AutoStartDrag() END
 		END PointerMove;
@@ -328,7 +328,7 @@ TYPE
 		END DragArrived;
 
 		(* called by MyDraggedDropped *)
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR dt : ColorDropTarget;
 		BEGIN
 			NEW(dt, colorChangeHandler); dragInfo.data := dt; ConfirmDrag(TRUE, dragInfo)

@@ -52,7 +52,7 @@ TYPE
 		flags : SET;
 		position : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			commandName := NIL;
@@ -98,7 +98,7 @@ TYPE
 			toolbar.AddContent(publicBtn);
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			IF (data = showTypeHierarchy) OR (data = showImportedModules) THEN
 				RefreshHandler(NIL, NIL);
@@ -175,13 +175,13 @@ TYPE
 			SetNodeVisibilities(node, showPublicOnly);
 		END AddModule;
 
-		PROCEDURE GetNewNode() : PETTrees.TreeNode; (* overwrite *)
+		PROCEDURE GetNewNode*() : PETTrees.TreeNode; (* overwrite *)
 		VAR node : TreeNode;
 		BEGIN
 			NEW(node); RETURN node;
 		END GetNewNode;
 
-		PROCEDURE AddNodes(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
+		PROCEDURE AddNodes*(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
 		VAR module : ModuleParser.Module; scanner : FoxScanner.Scanner; reader : TextUtilities.TextReader;
 		BEGIN
 			ASSERT(diagnostics # NIL);

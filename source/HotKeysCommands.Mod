@@ -58,12 +58,12 @@ TYPE
 			Close;
 		END HandleEscape;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			Close;
 		END FocusLost;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^; window := NIL;
 		END Close;

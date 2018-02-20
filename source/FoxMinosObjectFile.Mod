@@ -68,15 +68,15 @@ TYPE
 			IF ~options.GetString("objectFilePrefix",prefix) THEN prefix := "" END
 		END GetOptions;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 
-		PROCEDURE ForceModuleBodies(): BOOLEAN; (* necessary in binary object file format as bodies not recognizable later on *)
+		PROCEDURE ForceModuleBodies*(): BOOLEAN; (* necessary in binary object file format as bodies not recognizable later on *)
 		BEGIN RETURN TRUE
 		END ForceModuleBodies;
 
-		PROCEDURE GetExtension(VAR ext: ARRAY OF CHAR);
+		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);
 		BEGIN COPY(extension, ext)
 		END GetExtension;
 

@@ -13,7 +13,7 @@ TYPE
 	VAR
 		free, total, largest : SIZE;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		BEGIN
 			Heaps.GetHeapInfo(total, free, largest);
 		END Update;
@@ -55,7 +55,7 @@ TYPE
 	VAR
 		status : Kernel32.MemoryStatusEx;
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "Memory"; p.description := "Windows Memory Statistics"; p.modulename := ModuleName;
@@ -72,7 +72,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			status.dwLength := 64;
 			IF (Kernel32.GlobalMemoryStatusEx(status) = Kernel32.True) THEN

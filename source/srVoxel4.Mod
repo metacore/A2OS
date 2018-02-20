@@ -200,7 +200,7 @@ BEGIN
  	D:= x*x;
 END size;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	IF rand.Dice(100) = 0 THEN
 		cx := rand.Uniform();
@@ -259,7 +259,7 @@ BEGIN
  	D:= x*x;
 END size;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	D:= 1/4 + rand.Uniform()/200 ;
 END tick;
@@ -356,7 +356,7 @@ BEGIN
  	D2 := x*x;
 END setSize;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	D2:= 1/4 + rand.Uniform()/200 ;
 END tick;
@@ -481,7 +481,7 @@ BEGIN
 	END;
 END Shade;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	D2:= 1/3 + rand.Uniform()/50 ;
 END tick;
@@ -571,7 +571,7 @@ BEGIN
 	END
 END bounds;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x, y, z, dx, dy, dz: SREAL;
 	i, j, k: INTEGER;

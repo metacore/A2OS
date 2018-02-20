@@ -585,13 +585,13 @@ TYPE
 			RETURN skin
 		END CheckSkin;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		VAR data : XML.Element; a : XML.Attribute; n, str : ARRAY 16 OF CHAR;
 			filename : ARRAY 256 OF CHAR;
 		BEGIN

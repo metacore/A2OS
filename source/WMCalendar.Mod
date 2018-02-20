@@ -107,19 +107,19 @@ TYPE
 		 	NEW(timer);
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			BEGIN {EXCLUSIVE} state := Running; END;
 		END Initialize;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			RecacheProperties;
 			PropertyChanged^(sender, property);
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR dt : Dates.DateTime; ignore, weekDay : LONGINT; string : Strings.String;
 
 			PROCEDURE GetResizedImage(name : WMProperties.StringProperty; width, height : LONGINT) : WMGraphics.Image;
@@ -197,13 +197,13 @@ TYPE
 			month.Set(dt.month);
 		END ChangeMonth;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			IF (0 IN keys) THEN selected := TRUE; END;
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR
 			selection : SelectionWrapper; dt : Dates.DateTime;
 			year, week, weekDay : LONGINT;
@@ -219,7 +219,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR column, row : LONGINT;
 		BEGIN
 			PointerMove^(x, y, keys);
@@ -230,7 +230,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			mouseOverColumn := -1; mouseOverRow := -1;
@@ -259,7 +259,7 @@ TYPE
 	 		END;
 	 	END GetCell;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			rect : WMRectangles.Rectangle;
 			dt : Dates.DateTime;
@@ -312,7 +312,7 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} state := Terminating END;
@@ -502,13 +502,13 @@ TYPE
 			END;
 		END SetColorScheme;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;
 		END Close;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
 			IF keys = {0} THEN
@@ -548,7 +548,7 @@ TYPE
 			SetColorScheme(colorScheme);
 		END HandleToggleColor;
 
-		PROCEDURE PointerMove(x,y:LONGINT; keys:SET);
+		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
 		VAR dx, dy, width, height : LONGINT;
 		BEGIN
 			IF dragging OR resizing THEN
@@ -568,7 +568,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			dragging := FALSE;
@@ -580,7 +580,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR configuration : WMRestorable.XmlElement;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN

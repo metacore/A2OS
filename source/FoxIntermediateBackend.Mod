@@ -204,22 +204,22 @@ TYPE
 
 		(** types **)
 
-		PROCEDURE VisitBasicType(x: SyntaxTree.BasicType);
+		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
 		BEGIN (* no code emission *) END VisitBasicType;
 
-		PROCEDURE VisitCharacterType(x: SyntaxTree.CharacterType);
+		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
 		BEGIN (* no code emission *)  END VisitCharacterType;
 
-		PROCEDURE VisitIntegerType(x: SyntaxTree.IntegerType);
+		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
 		BEGIN (* no code emission *)  END VisitIntegerType;
 
-		PROCEDURE VisitFloatType(x: SyntaxTree.FloatType);
+		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
 		BEGIN (* no code emission *)  END VisitFloatType;
 
-		PROCEDURE VisitComplexType(x: SyntaxTree.ComplexType);
+		PROCEDURE VisitComplexType*(x: SyntaxTree.ComplexType);
 		BEGIN (* no code emission *)  END VisitComplexType;
 
-		PROCEDURE VisitQualifiedType(x: SyntaxTree.QualifiedType);
+		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		VAR type: SyntaxTree.Type;
 		BEGIN (* no further traversal to x.resolved necessary since type descriptor and code will be inserted at "original" position ? *)
 			type := x.resolved;
@@ -228,31 +228,31 @@ TYPE
 			END;
 		END VisitQualifiedType;
 
-		PROCEDURE VisitStringType(x: SyntaxTree.StringType);
+		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
 		BEGIN (* no code emission *)   END VisitStringType;
 
 		PROCEDURE VisitArrayRangeType(x: SyntaxTree.RangeType);
 		BEGIN (* no code emission *)
 		END VisitArrayRangeType;
 
-		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
+		PROCEDURE VisitArrayType*(x: SyntaxTree.ArrayType);
 		BEGIN (* no code emission *)   END VisitArrayType;
 
-		PROCEDURE VisitPortType(x: SyntaxTree.PortType);
+		PROCEDURE VisitPortType*(x: SyntaxTree.PortType);
 		BEGIN (* no code emission *)   END VisitPortType;
 
-		PROCEDURE VisitMathArrayType(x: SyntaxTree.MathArrayType);
+		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
 		BEGIN
 			meta.CheckTypeDeclaration(x);
 		END VisitMathArrayType;
 
-		PROCEDURE VisitPointerType(x: SyntaxTree.PointerType);
+		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
 		BEGIN
 			meta.CheckTypeDeclaration(x);
 			(* base type must not be visited => will be done via record type declaration, otherwise is done twice ! *)
 		END VisitPointerType;
 
-		PROCEDURE VisitRecordType(x: SyntaxTree.RecordType);
+		PROCEDURE VisitRecordType*(x: SyntaxTree.RecordType);
 		VAR name: ARRAY 256 OF CHAR; td: SyntaxTree.TypeDeclaration;
 		BEGIN (* no code emission *)
 			meta.CheckTypeDeclaration(x);
@@ -279,7 +279,7 @@ TYPE
 			RETURN this # NIL
 		END HasFlag;
 
-		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
+		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
 		VAR port,adr: LONGINT; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
@@ -293,26 +293,26 @@ TYPE
 			END;
 		END VisitCellType;
 
-		PROCEDURE VisitProcedureType(x: SyntaxTree.ProcedureType);
+		PROCEDURE VisitProcedureType*(x: SyntaxTree.ProcedureType);
 		BEGIN (* no code emission *)   END VisitProcedureType;
 
-		PROCEDURE VisitEnumerationType(x: SyntaxTree.EnumerationType);
+		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
 		BEGIN (* no code emission, exported enumeration type values should be included in symbol file *)
 		END VisitEnumerationType;
 
 		(* symbols *)
 
-		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
+		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		BEGIN
 			Procedure(x);
 		END VisitProcedure;
 
-		PROCEDURE VisitOperator(x: SyntaxTree.Operator);
+		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
 		BEGIN
 			Procedure(x);
 		END VisitOperator;
 
-		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
+		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align,  dim, i: LONGINT;
 			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 
@@ -456,12 +456,12 @@ TYPE
 			(* do not call Type(x.type) here as this must already performed in the type declaration section ! *)
 		END VisitVariable;
 
-		PROCEDURE VisitProperty(x: SyntaxTree.Property);
+		PROCEDURE VisitProperty*(x: SyntaxTree.Property);
 		BEGIN
 			VisitVariable(x)
 		END VisitProperty; 
 
-		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
 			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 		BEGIN
@@ -495,7 +495,7 @@ TYPE
 		
 
 
-		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
+		PROCEDURE VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration);
 		BEGIN
 			Type(x.declaredType); (* => code in objects *)
 			IF ~(x.declaredType IS SyntaxTree.QualifiedType) & (x.declaredType.resolved IS SyntaxTree.PointerType) THEN
@@ -503,7 +503,7 @@ TYPE
 			END;
 		END VisitTypeDeclaration;
 
-		PROCEDURE VisitConstant(x: SyntaxTree.Constant);
+		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
 		BEGIN
 			IF (SyntaxTree.Public * x.access # {}) THEN
 				implementationVisitor.VisitConstant(x);
@@ -1170,7 +1170,7 @@ TYPE
 			nameIndex := 0; 
 		END Init;
 		
-		PROCEDURE Clear;
+		PROCEDURE Clear*;
 		VAR i: LONGINT;
 		BEGIN
 			Clear^;
@@ -2276,7 +2276,7 @@ TYPE
 			RETURN resultingSet
 		END SetFromRange;
 
-		PROCEDURE VisitSet(x: SyntaxTree.Set);
+		PROCEDURE VisitSet*(x: SyntaxTree.Set);
 		VAR
 			res, operand: Operand;
 			temp, one, noBits, dest: IntermediateCode.Operand;
@@ -2331,7 +2331,7 @@ TYPE
 		(* math arrays of the form [a,b,c] 
 			x is a static array and thus does not provide any pointers
 		*)
-		PROCEDURE VisitMathArrayExpression(x: SyntaxTree.MathArrayExpression);
+		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
 		VAR variable: SyntaxTree.Variable; index: SyntaxTree.IndexDesignator; dim: LONGINT;
 			designator: SyntaxTree.Designator; i: LONGINT; element: SyntaxTree.IntegerValue;
 
@@ -2370,7 +2370,7 @@ TYPE
 			Expression(designator);
 		END VisitMathArrayExpression;
 
-		PROCEDURE VisitUnaryExpression(x: SyntaxTree.UnaryExpression);
+		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
 		VAR type,t0: SyntaxTree.Type; operand: Operand; dest: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitUnaryExpression") END;
@@ -3383,7 +3383,7 @@ TYPE
 			RestoreRegisters(saved);
 		END CopyString;
 
-		PROCEDURE VisitBinaryExpression(x: SyntaxTree.BinaryExpression);
+		PROCEDURE VisitBinaryExpression*(x: SyntaxTree.BinaryExpression);
 		VAR left,right: Operand; temp: Operand;  zero, one, tempReg, tempReg2: IntermediateCode.Operand;
 			leftType,rightType: SyntaxTree.Type;
 			leftExpression,rightExpression : SyntaxTree.Expression;
@@ -3816,7 +3816,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitBinaryExpression") END;
 		END VisitBinaryExpression;
 
-		PROCEDURE VisitRangeExpression(x: SyntaxTree.RangeExpression);
+		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
 		VAR localResult, operand: Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitRangeExpression") END;
@@ -3852,7 +3852,7 @@ TYPE
 			HALT(100); (* should never be evaluated *)
 		END VisitTensorRangeExpression;
 
-		PROCEDURE VisitConversion(x: SyntaxTree.Conversion);
+		PROCEDURE VisitConversion*(x: SyntaxTree.Conversion);
 		VAR old: Operand; dest: IntermediateCode.Operand; componentType: SyntaxTree.Type;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitConversion") END;
@@ -3891,7 +3891,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitConversion") END;
 		END VisitConversion;
 
-		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
+		PROCEDURE VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitTypeDeclaration") END;
 			ASSERT((x.declaredType.resolved IS SyntaxTree.EnumerationType) OR (x.declaredType.resolved IS SyntaxTree.RecordType)
@@ -3901,7 +3901,7 @@ TYPE
 
 		(** designators (expressions) *)
 
-		PROCEDURE VisitSymbolDesignator(x: SyntaxTree.SymbolDesignator);
+		PROCEDURE VisitSymbolDesignator*(x: SyntaxTree.SymbolDesignator);
 		VAR ownerType, designatorType: SyntaxTree.RecordType;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSymbolDesignator") END;
@@ -4540,7 +4540,7 @@ TYPE
 			END;
 		END IndexDesignator;
 
-		PROCEDURE VisitIndexDesignator(x: SyntaxTree.IndexDesignator);
+		PROCEDURE VisitIndexDesignator*(x: SyntaxTree.IndexDesignator);
 		VAR type: SyntaxTree.Type; dest: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitIndexDesignator") END;
@@ -5336,7 +5336,7 @@ TYPE
 			IF Trace THEN TraceExit("PushParameter") END;
 		END PushParameter;
 
-		PROCEDURE VisitStatementDesignator(x: SyntaxTree.StatementDesignator);
+		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
 		VAR prevConditional: BOOLEAN;
 		BEGIN
 			prevConditional := conditional;
@@ -5515,7 +5515,7 @@ TYPE
 			RETURN ~tooComplex
 		END InlineProcedureCall;
 
-		PROCEDURE VisitProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator);
+		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
 		VAR
 			parameters: SyntaxTree.ExpressionList;
 			d, resultDesignator, actualParameter: SyntaxTree.Expression;
@@ -7542,7 +7542,7 @@ TYPE
 			 *)
 		END OnHeap;
 
-		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
+		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		VAR
 			p0,p1,p2,parameter: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
 			constructor: SyntaxTree.Procedure; s0,s1,s2: Operand; hint: HUGEINT;
@@ -9143,7 +9143,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitBuiltinCallDesignator") END;
 		END VisitBuiltinCallDesignator;
 
-		PROCEDURE VisitTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator);
+		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
 		VAR trueL,falseL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitTypeGuardDesignator") END;
@@ -9248,7 +9248,7 @@ TYPE
 			END;
 		END Dereference;
 
-		PROCEDURE VisitDereferenceDesignator(x: SyntaxTree.DereferenceDesignator);
+		PROCEDURE VisitDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator);
 		VAR  type: SyntaxTree.Type; d: Operand; dest: IntermediateCode.Operand;prevIsUnchecked: BOOLEAN;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitDereferenceDesignator") END;
@@ -9271,7 +9271,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitDereferenceDesignator") END;
 		END VisitDereferenceDesignator;
 
-		PROCEDURE VisitSupercallDesignator(x: SyntaxTree.SupercallDesignator);
+		PROCEDURE VisitSupercallDesignator*(x: SyntaxTree.SupercallDesignator);
 		VAR procedure: SyntaxTree.Procedure; tag: IntermediateCode.Operand; dest: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSupercallDesignator") END;
@@ -9290,7 +9290,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitSupercallDesignator") END;
 		END VisitSupercallDesignator;
 
-		PROCEDURE VisitSelfDesignator(x: SyntaxTree.SelfDesignator);
+		PROCEDURE VisitSelfDesignator*(x: SyntaxTree.SelfDesignator);
 		VAR basereg: IntermediateCode.Operand; scope: SyntaxTree.Scope; dest: IntermediateCode.Operand;
 			moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
 			name: Basic.SegmentedName;
@@ -9341,7 +9341,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitSelfDesignator") END;
 		END VisitSelfDesignator;
 
-		PROCEDURE VisitResultDesignator(x: SyntaxTree.ResultDesignator);
+		PROCEDURE VisitResultDesignator*(x: SyntaxTree.ResultDesignator);
 		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; map: SymbolMap;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitResultDesignator") END;
@@ -9364,7 +9364,7 @@ TYPE
 		END VisitResultDesignator;
 
 		(** values *)
-		PROCEDURE VisitBooleanValue(x: SyntaxTree.BooleanValue);
+		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitBooleanValue") END;
 			IF conditional THEN
@@ -9396,7 +9396,7 @@ TYPE
 			IntermediateCode.MakeMemory(vop, type);
 		END GetImmediateMem;
 
-		PROCEDURE VisitIntegerValue(x: SyntaxTree.IntegerValue);
+		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitIntegerValue") END;
 			InitOperand(result,ModeValue);
@@ -9406,21 +9406,21 @@ TYPE
 			END;
 		END VisitIntegerValue;
 
-		PROCEDURE VisitCharacterValue(x: SyntaxTree.CharacterValue);
+		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitCharacterValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
 		END VisitCharacterValue;
 
-		PROCEDURE VisitSetValue(x: SyntaxTree.SetValue);
+		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSetValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(LONGINT,x.value));
 		END VisitSetValue;
 
-		PROCEDURE VisitMathArrayValue(x: SyntaxTree.MathArrayValue);
+		PROCEDURE VisitMathArrayValue*(x: SyntaxTree.MathArrayValue);
 		VAR  irv: IntermediateCode.Section; name:Basic.SegmentedName;
 
 			PROCEDURE RecursiveData(x: SyntaxTree.MathArrayExpression);
@@ -9474,20 +9474,20 @@ TYPE
 			RETURN FALSE
 		END TryConstantDeclaration;
 
-		PROCEDURE VisitConstant(x: SyntaxTree.Constant);
+		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
 		BEGIN
 			constantDeclaration := x;
 			x.value.resolved.Accept(SELF);
 		END VisitConstant;
 
-		PROCEDURE VisitRealValue(x: SyntaxTree.RealValue);
+		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitRealValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
 		END VisitRealValue;
 
-		PROCEDURE VisitComplexValue(x: SyntaxTree.ComplexValue);
+		PROCEDURE VisitComplexValue*(x: SyntaxTree.ComplexValue);
 		VAR
 			componentType: SyntaxTree.Type;
 		BEGIN
@@ -9499,7 +9499,7 @@ TYPE
 			IntermediateCode.InitFloatImmediate(result.tag,IntermediateCode.GetType(system,componentType),x.imagValue); (* imaginary part *)
 		END VisitComplexValue;
 
-		PROCEDURE VisitStringValue(x: SyntaxTree.StringValue);
+		PROCEDURE VisitStringValue*(x: SyntaxTree.StringValue);
 		VAR  i: LONGINT; name: Basic.SegmentedName;
 			irv: IntermediateCode.Section; op: IntermediateCode.Operand;
 		BEGIN
@@ -9522,7 +9522,7 @@ TYPE
 			END
 		END VisitStringValue;
 
-		PROCEDURE VisitNilValue(x: SyntaxTree.NilValue);
+		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitNilValue") END;
 			InitOperand(result,ModeValue);
@@ -9530,7 +9530,7 @@ TYPE
 			result.tag := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
 		END VisitNilValue;
 
-		PROCEDURE VisitEnumerationValue(x: SyntaxTree.EnumerationValue);
+		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitEnumerationValue") END;
 			InitOperand(result,ModeValue);
@@ -9539,7 +9539,7 @@ TYPE
 
 		(** symbols *)
 
-		PROCEDURE VisitImport(x: SyntaxTree.Import);
+		PROCEDURE VisitImport*(x: SyntaxTree.Import);
 		BEGIN (* nothing to be done, might however be called via some designator module.procedure *)
 		END VisitImport;
 
@@ -9567,7 +9567,7 @@ TYPE
 			END;
 		END GetBaseRegister;
 
-		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
+		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
 		VAR symbol: Sections.Section;  type: SyntaxTree.Type; recordType: SyntaxTree.RecordType; name: Basic.SegmentedName; temp: IntermediateCode.Operand; reg: LONGINT;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitVariable");  END;
@@ -9661,12 +9661,12 @@ TYPE
 			IF Trace THEN TraceExit("VisitVariable") END;
 		END VisitVariable;
 
-		PROCEDURE VisitProperty(property: SyntaxTree.Property);
+		PROCEDURE VisitProperty*(property: SyntaxTree.Property);
 		BEGIN 
 			VisitVariable(property);
 		END VisitProperty;
 
-		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; parameter: SyntaxTree.Parameter;adr: LONGINT; symbol: Sections.Section;
 			name: Basic.SegmentedName; parameterType, ptype: SyntaxTree.Type; len,inc: LONGINT; temp: IntermediateCode.Operand;
 		BEGIN
@@ -9874,7 +9874,7 @@ TYPE
 			IF Trace THEN TraceExit("StaticCallOperand") END;
 		END StaticCallOperand;
 
-		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
+		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		(* handle expressions of the form designator.procedure or procedure *)
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedure") END;
@@ -9888,14 +9888,14 @@ TYPE
 			IF Trace THEN TraceExit("VisitProcedure") END;
 		END VisitProcedure;
 
-		PROCEDURE VisitOperator(x: SyntaxTree.Operator);
+		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
 		BEGIN
 			VisitProcedure(x);
 		END VisitOperator;
 
 		(** statements *)
 
-		PROCEDURE VisitProcedureCallStatement(x: SyntaxTree.ProcedureCallStatement);
+		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedureCallStatement") END;
 			Expression(x.call);
@@ -10281,7 +10281,7 @@ TYPE
 			END;
 		END Assign;
 
-		PROCEDURE VisitAssignment(x: SyntaxTree.Assignment);
+		PROCEDURE VisitAssignment*(x: SyntaxTree.Assignment);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitAssignment") END;
 			Assign(x.left,x.right);
@@ -10301,7 +10301,7 @@ TYPE
 			INC(statCoopSwitch, section.pc - pc);
 		END EmitCooperativeSwitch;
 
-		PROCEDURE VisitCommunicationStatement(communication: SyntaxTree.CommunicationStatement);
+		PROCEDURE VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement);
 		VAR p0,p1,tmp: SyntaxTree.Expression; s0,s1: Operand; size: LONGINT;
 		BEGIN
 			p0 := communication.left; p1 := communication.right;
@@ -10351,7 +10351,7 @@ TYPE
 		END VisitCommunicationStatement;
 
 
-		PROCEDURE VisitIfStatement(x: SyntaxTree.IfStatement);
+		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
 		VAR end: Label; i,elsifs: LONGINT; elsif: SyntaxTree.IfPart; escape: BOOLEAN;
 
 			PROCEDURE IfPart(if: SyntaxTree.IfPart);
@@ -10411,7 +10411,7 @@ TYPE
 			BrL(endL);
 		END WithPart;
 
-		PROCEDURE VisitWithStatement(x: SyntaxTree.WithStatement);
+		PROCEDURE VisitWithStatement*(x: SyntaxTree.WithStatement);
 		VAR endL,falseL: Label;i: LONGINT;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitWithStatement") END;
@@ -10433,7 +10433,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitWithStatement") END;
 		END VisitWithStatement;
 
-		PROCEDURE VisitCaseStatement(x: SyntaxTree.CaseStatement);
+		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
 		VAR var: Operand; jmp,res,op,tmp: IntermediateCode.Operand; j,i,size: LONGINT; part: SyntaxTree.CasePart; constant: SyntaxTree.CaseConstant;
 			out,else: Label; label: Label;
 			fixups: POINTER TO ARRAY OF Label; section: IntermediateCode.Section; name: Basic.SegmentedName; string: ARRAY 32 OF CHAR;
@@ -10507,7 +10507,7 @@ TYPE
 		END VisitCaseStatement;
 
 
-		PROCEDURE VisitWhileStatement(x: SyntaxTree.WhileStatement);
+		PROCEDURE VisitWhileStatement*(x: SyntaxTree.WhileStatement);
 		VAR start: Label; true,false: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitWhileStatement") END;
@@ -10525,7 +10525,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitWhileStatement") END;
 		END VisitWhileStatement;
 
-		PROCEDURE VisitRepeatStatement(x: SyntaxTree.RepeatStatement);
+		PROCEDURE VisitRepeatStatement*(x: SyntaxTree.RepeatStatement);
 		VAR false,true: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitRepeatStatement") END;
@@ -10540,7 +10540,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitRepeatStatement") END;
 		END VisitRepeatStatement;
 
-		PROCEDURE VisitForStatement(x: SyntaxTree.ForStatement);
+		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
 		VAR
 			binary: SyntaxTree.BinaryExpression; start,true,false : Label; cmp: LONGINT; by: HUGEINT;
 			temporaryVariable: SyntaxTree.Variable;
@@ -10587,7 +10587,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitForStatement") END;
 		END VisitForStatement;
 
-		PROCEDURE VisitExitableBlock(x: SyntaxTree.ExitableBlock);
+		PROCEDURE VisitExitableBlock*(x: SyntaxTree.ExitableBlock);
 		VAR prevLoop: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitExitableBlock") END;
@@ -10599,7 +10599,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitExitableBlock") END;
 		END VisitExitableBlock;
 
-		PROCEDURE VisitLoopStatement(x: SyntaxTree.LoopStatement);
+		PROCEDURE VisitLoopStatement*(x: SyntaxTree.LoopStatement);
 		VAR prevLoop,start: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitLoopStatement") END;
@@ -10616,7 +10616,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitLoopStatement") END;
 		END VisitLoopStatement;
 
-		PROCEDURE VisitExitStatement(x: SyntaxTree.ExitStatement);
+		PROCEDURE VisitExitStatement*(x: SyntaxTree.ExitStatement);
 		VAR outer: SyntaxTree.Statement;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitExitStatement") END;
@@ -10633,7 +10633,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitExitStatement") END;
 		END VisitExitStatement;
 
-		PROCEDURE VisitReturnStatement(x: SyntaxTree.ReturnStatement);
+		PROCEDURE VisitReturnStatement*(x: SyntaxTree.ReturnStatement);
 		VAR
 			expression, parameterDesignator: SyntaxTree.Expression;
 			type, componentType: SyntaxTree.Type;
@@ -10816,7 +10816,7 @@ TYPE
 			RETURN procedure
 		END MakeAwaitProcedure;
 
-		PROCEDURE VisitAwaitStatement(x: SyntaxTree.AwaitStatement);
+		PROCEDURE VisitAwaitStatement*(x: SyntaxTree.AwaitStatement);
 		VAR proc: SyntaxTree.Procedure; res: IntermediateCode.Operand; symbol: Sections.Section;
 			call: IntermediateCode.Operand; label, start, true, false: Label; name: Basic.SegmentedName;
 		BEGIN
@@ -10941,7 +10941,7 @@ TYPE
 			IF Trace THEN TraceExit("Lock") END;
 		END Lock;
 
-		PROCEDURE VisitStatementBlock(x: SyntaxTree.StatementBlock);
+		PROCEDURE VisitStatementBlock*(x: SyntaxTree.StatementBlock);
 		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitStatementBlock") END;
@@ -10963,7 +10963,7 @@ TYPE
 			IF Trace THEN TraceExit("VisitStatementBlock") END;
 		END VisitStatementBlock;
 
-		PROCEDURE VisitCode(x: SyntaxTree.Code);
+		PROCEDURE VisitCode*(x: SyntaxTree.Code);
 		VAR (*  inline: Sections.CellNet; symbol: SyntaxTree.Symbol; *)
 			in, out: IntermediateCode.Rules; statement: SyntaxTree.Statement; i: LONGINT; operand,par: Operand; str: POINTER TO ARRAY OF CHAR;
 				result, mem: IntermediateCode.Operand; scope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType; return: IntermediateCode.Operand;
@@ -13724,11 +13724,11 @@ TYPE
 		BEGIN RETURN TRUE
 		END SupportedImmediate;
 
-		PROCEDURE ProcessSyntaxTreeModule(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule;
+		PROCEDURE ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule;
 		BEGIN RETURN ProcessIntermediateCodeModule(GenerateIntermediate(syntaxTreeModule, SupportedInstruction, SupportedImmediate))
 		END ProcessSyntaxTreeModule;
 
-		PROCEDURE ProcessIntermediateCodeModule(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule;
+		PROCEDURE ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule;
 		VAR
 			result: Sections.Module;
 			traceName: Basic.MessageString;
@@ -13764,7 +13764,7 @@ TYPE
 		BEGIN COPY(name, traceModuleName)
 		END SetTraceModuleName;
 
-		PROCEDURE DefineOptions(options: Options.Options);
+		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN
 			DefineOptions^(options);
 			options.Add(0X,"trace",Options.String);
@@ -13784,7 +13784,7 @@ TYPE
 			options.Add(0X,"experiment", Options.Flag);
 		END DefineOptions;
 
-		PROCEDURE GetOptions(options: Options.Options);
+		PROCEDURE GetOptions*(options: Options.Options);
 		VAR name,string: SyntaxTree.IdentifierString;
 		BEGIN
 			GetOptions^(options);
@@ -13816,7 +13816,7 @@ TYPE
 			experiment := options.GetFlag("experiment");
 		END GetOptions;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN SymbolFileFormat.Get()
 		END DefaultSymbolFileFormat;
 

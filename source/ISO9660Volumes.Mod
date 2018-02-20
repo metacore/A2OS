@@ -34,7 +34,7 @@ MODULE ISO9660Volumes;	(* AUTHOR "?/be"; PURPOSE "ISO 9660 volume (ported from N
 				RETURN 0
 			END Available;
 
-			PROCEDURE GetBlock(adr: LONGINT; VAR blk: ARRAY OF CHAR);
+			PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
 			VAR res, i: LONGINT;
 			BEGIN {EXCLUSIVE}
 				ASSERT(dev # NIL, 101);
@@ -47,19 +47,19 @@ MODULE ISO9660Volumes;	(* AUTHOR "?/be"; PURPOSE "ISO 9660 volume (ported from N
 				ASSERT(res = 0, 102)
 			END GetBlock;
 
-			PROCEDURE AllocBlock(hint: Files.Address; VAR adr: Files.Address);
+			PROCEDURE AllocBlock*(hint: Files.Address; VAR adr: Files.Address);
 			BEGIN HALT(301)
 			END AllocBlock;
 
-			PROCEDURE FreeBlock(adr: Files.Address);
+			PROCEDURE FreeBlock*(adr: Files.Address);
 			BEGIN HALT(301)
 			END FreeBlock;
 
-			PROCEDURE MarkBlock(adr: Files.Address);
+			PROCEDURE MarkBlock*(adr: Files.Address);
 			BEGIN HALT(301)
 			END MarkBlock;
 
-			PROCEDURE Marked(adr: Files.Address): BOOLEAN;
+			PROCEDURE Marked*(adr: Files.Address): BOOLEAN;
 			BEGIN HALT(301)
 			END Marked;
 		END Volume;

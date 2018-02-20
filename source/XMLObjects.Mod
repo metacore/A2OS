@@ -50,19 +50,19 @@ TYPE
 			nofElems := 0
 		END Init;
 
-		PROCEDURE GetNumberOfElements(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): LONGINT;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
 
-		PROCEDURE GetEnumerator(): Enumerator;
+		PROCEDURE GetEnumerator*(): Enumerator;
 		VAR le: ListEnumerator;
 		BEGIN
 			NEW(le, SELF);
 			RETURN le
 		END GetEnumerator;
 
-		PROCEDURE Add(p: ANY);
+		PROCEDURE Add*(p: ANY);
 		VAR newListElem: ListElem;
 		BEGIN {EXCLUSIVE}
 			IF p # NIL THEN
@@ -78,7 +78,7 @@ TYPE
 			END
 		END Add;
 
-		PROCEDURE Remove(p: ANY);
+		PROCEDURE Remove*(p: ANY);
 		VAR le: ListElem;
 		BEGIN {EXCLUSIVE}
 			IF (p # NIL) & (first # NIL) THEN
@@ -111,12 +111,12 @@ TYPE
 			NEW(elems, 1)
 		END Init;
 
-		PROCEDURE GetNumberOfElements(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): LONGINT;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
 
-		PROCEDURE GetEnumerator(): Enumerator;
+		PROCEDURE GetEnumerator*(): Enumerator;
 		VAR ace: ArrayEnumerator;
 		BEGIN
 			NEW(ace, elems);
@@ -133,7 +133,7 @@ TYPE
 			END
 		END Grow;
 
-		PROCEDURE Add(p: ANY);
+		PROCEDURE Add*(p: ANY);
 		BEGIN {EXCLUSIVE}
 			IF p # NIL THEN
 				IF nofElems = LEN(elems) THEN Grow() END;
@@ -142,7 +142,7 @@ TYPE
 			END
 		END Add;
 
-		PROCEDURE Remove(p: ANY);
+		PROCEDURE Remove*(p: ANY);
 		VAR i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			i := 0;
@@ -242,19 +242,19 @@ TYPE
 			current := list.first
 		END Init;
 
-		PROCEDURE HasMoreElements(): BOOLEAN;
+		PROCEDURE HasMoreElements*(): BOOLEAN;
 		BEGIN
 			RETURN current # NIL
 		END HasMoreElements;
 
-		PROCEDURE GetNext(): ANY;
+		PROCEDURE GetNext*(): ANY;
 		VAR p: ANY;
 		BEGIN
 			IF HasMoreElements() THEN p := current.elem; current := current.next; ELSE p := NIL; END;
 			RETURN p
 		END GetNext;
 
-		PROCEDURE Reset;
+		PROCEDURE Reset*;
 		BEGIN
 			Init(coll)
 		END Reset;
@@ -272,12 +272,12 @@ TYPE
 			current := 0
 		END Init;
 
-		PROCEDURE HasMoreElements(): BOOLEAN;
+		PROCEDURE HasMoreElements*(): BOOLEAN;
 		BEGIN
 			RETURN (current < LEN(array)) & (array[current] # NIL)
 		END HasMoreElements;
 
-		PROCEDURE GetNext(): ANY;
+		PROCEDURE GetNext*(): ANY;
 		VAR p: ANY;
 		BEGIN
 			IF HasMoreElements() THEN
@@ -288,7 +288,7 @@ TYPE
 			RETURN p
 		END GetNext;
 
-		PROCEDURE Reset;
+		PROCEDURE Reset*;
 		BEGIN
 			Init(array)
 		END Reset;
@@ -333,12 +333,12 @@ TYPE
 			NEW(elems, 16)
 		END Init;
 
-		PROCEDURE GetNumberOfElements(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): LONGINT;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
 
-		PROCEDURE Get(key: ARRAY OF CHAR): ANY;
+		PROCEDURE Get*(key: ARRAY OF CHAR): ANY;
 		VAR i: LONGINT;
 		BEGIN
 			i := 0;
@@ -350,7 +350,7 @@ TYPE
 			END
 		END Get;
 
-		PROCEDURE GetEnumerator(): Enumerator;
+		PROCEDURE GetEnumerator*(): Enumerator;
 		VAR ace: ArrayEnumerator;
 		BEGIN
 			NEW(ace, elems);
@@ -367,7 +367,7 @@ TYPE
 			END
 		END Grow;
 
-		PROCEDURE Add(key: ARRAY OF CHAR; p: ANY);
+		PROCEDURE Add*(key: ARRAY OF CHAR; p: ANY);
 		BEGIN {EXCLUSIVE}
 			IF Get(key) = NIL THEN
 				IF nofElems = LEN(elems) THEN Grow() END;
@@ -377,7 +377,7 @@ TYPE
 			END
 		END Add;
 
-		PROCEDURE Remove(key: ARRAY OF CHAR);
+		PROCEDURE Remove*(key: ARRAY OF CHAR);
 		VAR i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			i := 0;

@@ -29,7 +29,7 @@ BEGIN
 		randvel(state[i].velocity);
 	END
 END bang;
-PROCEDURE tick;
+PROCEDURE tick*;
 VAR i: LONGINT;
 BEGIN
 	NEW(space);
@@ -80,7 +80,7 @@ BEGIN
 	passable:=TRUE
 END init;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 VAR
      p: srBase.PT;
 BEGIN

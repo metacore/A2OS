@@ -317,7 +317,7 @@ TYPE
 		END Draw;
 *)
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			blinker.events.Remove(SetBlinker);
@@ -424,7 +424,7 @@ TYPE
 			caption.SetAOC(x)
 		END SetCaption;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		VAR string : Types.String256; res : LONGINT; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
@@ -704,7 +704,7 @@ TYPE
 			CheckClickHandler;
 		END RecacheProperties;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		VAR boolean : Types.Boolean; res : LONGINT; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
@@ -830,13 +830,13 @@ TYPE
 			ChangeModel(pressed);
 		END Up;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN Down END;
 			PointerDown^(x, y, keys)
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				IF IsHit(x, y) THEN
@@ -849,7 +849,7 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			Up;
 			PointerUp^(x, y, keys)
@@ -865,7 +865,7 @@ TYPE
 			caption.Set(WMComponents.NewString(x))
 		END SetCaption;
 
-		PROCEDURE IsHit(x, y: LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y: LONGINT) : BOOLEAN;
 		VAR t : BOOLEAN;
 		BEGIN
 			IF ~visible.Get() THEN RETURN FALSE END;
@@ -1033,7 +1033,7 @@ TYPE
 			END
  		END GetThisDecoration;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR mode, mid, borderWidth : LONGINT;
 			 tc : WMGraphics.Color; r, rect : WMGraphics.Rectangle; down : BOOLEAN;
 			 str : String;
@@ -1246,7 +1246,7 @@ TYPE
 			END
 		END DrawVerticalBackground;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; VAR keyCode : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; VAR keyCode : LONGINT);
 		BEGIN
 			IF ~ (Inputs.Release IN flags) THEN
 				IF keyCode = 20H THEN keyboardPressed := TRUE; Down
@@ -1454,14 +1454,14 @@ TYPE
 			RecacheImages;
 		END Init;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			Resized^;
 			UpdateLayout;
 			Invalidate;
 		END Resized;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		VAR integer : Types.Integer; res : LONGINT; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
@@ -1510,7 +1510,7 @@ TYPE
 			END;
 		END Down;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			IF (0 IN keys) THEN
@@ -1530,7 +1530,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR oldHover, oldPressed, area : SHORTINT;
 		BEGIN
 			PointerMove^(x, y, keys);
@@ -1556,7 +1556,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR oldPressed : SHORTINT;
 		BEGIN
 			PointerUp^(x, y, keys);
@@ -1571,7 +1571,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		VAR oldHover : SHORTINT;
 		BEGIN
 			PointerLeave^;
@@ -1958,7 +1958,7 @@ TYPE
 			END;
 		END DrawImage;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR image, a, b, c : WMGraphics.Image; vertical : BOOLEAN;
 		BEGIN
 			IF ~visible.Get() THEN RETURN END;
@@ -2095,7 +2095,7 @@ TYPE
 			takesFocus.Set(FALSE)
 		END Init;
 
-		PROCEDURE LinkChanged(sender, link: ANY);
+		PROCEDURE LinkChanged*(sender, link: ANY);
 		VAR m: Models.Model; integer: LONGINT;
 		BEGIN
 			IF sender = model THEN
@@ -2110,7 +2110,7 @@ TYPE
 		END LinkChanged;
 
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		CONST BarWidth = 8;
 		VAR rect : WMRectangles.Rectangle; width, height : LONGINT;
 		BEGIN
@@ -2472,7 +2472,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE DrawBackground(canvas: WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
 			highlight, shadow, w, h : LONGINT;
 			tempString : Strings.String;
@@ -2655,7 +2655,7 @@ TYPE
 			Invalidate
 		END FocusLost;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
 		VAR value : LONGINT;
 		BEGIN
 			IF enabled.Get() THEN
@@ -2675,7 +2675,7 @@ TYPE
 			PointerDown^(x, y, keys)
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF IsHit(x, y) THEN
 				IF ~mouseOver THEN mouseOver := TRUE; Invalidate END
@@ -2700,7 +2700,7 @@ TYPE
 			END
 		END Click;
 
-		PROCEDURE DrawBackground(canvas: WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR
 			rect: WMRectangles.Rectangle;
 			string : Strings.String;
@@ -2788,7 +2788,7 @@ TYPE
 		scaleImage- : WMProperties.BooleanProperty;
 		scaleImageI : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetGenerator("WMStandardComponents.GenImage");
@@ -2824,7 +2824,7 @@ TYPE
 			END;
 		END RecacheProperties;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR width, height : LONGINT;
 		BEGIN
 			DrawBackground^(canvas);
@@ -2952,7 +2952,7 @@ TYPE
 			END
 		END SetImage;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR x, y : LONGINT;
 		BEGIN
 			IF show THEN

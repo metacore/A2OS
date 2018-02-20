@@ -35,7 +35,7 @@ TYPE
 			END
 		END New;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			w, h : LONGINT;
 		BEGIN
@@ -71,7 +71,7 @@ TYPE
 			SetPointerInfo(manager.pointerLink);
 		END Create;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET);
 		BEGIN
 			onClick.Call(msg);
 			PointerDown^(x, y, keys);
@@ -113,7 +113,7 @@ TYPE
 			IF rc # NIL THEN rc.Release() END;
 		END New;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			w, h : LONGINT;
 		BEGIN
@@ -149,7 +149,7 @@ TYPE
 			SetPointerInfo(manager.pointerLink);
 		END Create;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET);
 		BEGIN
 			onClick.Call(msg);
 			PointerDown^(x, y, keys);
@@ -177,7 +177,7 @@ TYPE
 			IF rc # NIL THEN rc.Release() END;
 		END New;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			w, h, i, j, wCnt, hCnt : LONGINT;
 		BEGIN
@@ -217,7 +217,7 @@ TYPE
 			bounds.SetExtents(x, 2);
 		END ParentTvWidthChanged;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawBackground^(canvas);
 			canvas.Line(0, 0, x-1, 0, LONGINT(0808080FFH), WMGraphics.ModeSrcOverDst);

@@ -138,7 +138,7 @@ TYPE
 			toolbar.AddContent(publicBtn);
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			IF (data = showTypeHierarchy) THEN
 				RefreshHandler(NIL, NIL);

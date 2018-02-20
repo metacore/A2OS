@@ -78,7 +78,7 @@ TYPE
 
 		END Draw;
 
-		PROCEDURE Redraw;
+		PROCEDURE Redraw*;
 		BEGIN
 			Redraw^;
 		END Redraw;
@@ -486,7 +486,7 @@ TYPE
 			RefreshValues;
 		END SetValueHandler;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			shown := FALSE;
 			Hide;

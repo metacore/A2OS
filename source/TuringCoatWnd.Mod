@@ -50,7 +50,7 @@ TYPE
 			IncCount;
 		END New;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		BEGIN
 			IF (m.msgType = WMMessages.MsgExt) & (m.ext # NIL) & (m.ext IS KillerMsg) THEN
 				Close;
@@ -63,7 +63,7 @@ TYPE
 			Draw^(canvas, w, h, 0)
 		END Draw;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			alive := FALSE;
 			BEGIN {EXCLUSIVE} AWAIT(dead); END;

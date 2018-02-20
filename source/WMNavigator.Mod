@@ -284,7 +284,7 @@ TYPE
 		offsetX, offsetY : LONGINT;
 		lastX, lastY : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		VAR style : WMWindowManager.WindowStyle;
 		BEGIN
 			Init^;
@@ -298,7 +298,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} alive := FALSE; END;
@@ -306,7 +306,7 @@ TYPE
 			manager.RemoveView(viewPort);
 		END Finalize;
 
-		PROCEDURE PropertyChanged(sender, data : ANY);
+		PROCEDURE PropertyChanged*(sender, data : ANY);
 		BEGIN
 			PropertyChanged^(sender, data);
 			IF (data = bounds) THEN
@@ -314,7 +314,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			viewPort.ReInit(bounds.GetWidth(), bounds.GetHeight(), Displays.color8888, Refresh);
@@ -322,12 +322,12 @@ TYPE
 			Invalidate;
 		END RecacheProperties;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 		END PointerLeave;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
 		VAR xg, yg : LONGINT; rect : WMRectangles.Rectangle; title : Strings.String;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -352,7 +352,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
 		VAR xg, yg : LONGINT;
 		BEGIN
 			lastX := x; lastY := y;
@@ -365,7 +365,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE WheelMove(dz: LONGINT);
+		PROCEDURE WheelMove*(dz: LONGINT);
 		VAR xg, yg : LONGINT;
 		BEGIN
 			WheelMove^(dz);
@@ -373,7 +373,7 @@ TYPE
 			viewPort.ChangeZoom(dz, xg, yg);
 		END WheelMove;
 
-		PROCEDURE PointerUp(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			selectedWindow := NIL;
@@ -384,7 +384,7 @@ TYPE
 			refresh := TRUE;
 		END Refresh;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR r0, r1, res : WMWindowManager.RealRect; rect : WMRectangles.Rectangle;
 		BEGIN
 			IF (viewPort.backbuffer.width = bounds.GetWidth()) & (viewPort.backbuffer.height = bounds.GetHeight()) THEN
@@ -430,7 +430,7 @@ TYPE
 
 	Window = OBJECT(WMComponents.FormWindow)
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			window := NIL;

@@ -17,7 +17,7 @@ MODULE WMVT100; (* ejz,  ph *)
 		Connection = OBJECT (Telnet.Connection)
 			VAR frame: Frame; mode: SET;
 
-			PROCEDURE Do(option: CHAR);
+			PROCEDURE Do*(option: CHAR);
 			BEGIN
 				IF option = Telnet.OptTerminalType THEN
 					W.Char(Telnet.CmdIAC); W.Char(Telnet.CmdWILL); W.Char(Telnet.OptTerminalType)
@@ -36,7 +36,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END Do;
 
-			PROCEDURE SB(option: CHAR); 
+			PROCEDURE SB*(option: CHAR); 
 				VAR ch: CHAR;
 			BEGIN
 				IF (option = Telnet.OptTerminalType) & (R.Peek() = 01X) THEN (* SEND *)
@@ -142,7 +142,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END ESC;
 
-			PROCEDURE Consume(ch: CHAR);
+			PROCEDURE Consume*(ch: CHAR);
 				VAR buf: ARRAY 128 OF LONGINT; i, n: LONGINT;
 			BEGIN
 				CASE ch OF
@@ -184,7 +184,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				SELF.frame := frame
 			END SetFrame;
 
-			PROCEDURE Setup;
+			PROCEDURE Setup*;
 			BEGIN {EXCLUSIVE}
 				AWAIT(frame # NIL);
 				IF Telnet.Telnet IN flags THEN
@@ -485,7 +485,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END SetAttributes;
 
-			PROCEDURE Draw(canvas: WMGraphics.Canvas);
+			PROCEDURE Draw*(canvas: WMGraphics.Canvas);
 				VAR l: Line; i, j, dy, bottom: LONGINT; attr: Attribute; char: Char; box: WMGraphics.Rectangle;
 			BEGIN {EXCLUSIVE}
 				canvas.Fill(canvas.clipRect, bg, WMGraphics.ModeCopy);
@@ -555,13 +555,13 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END Draw;
 
-			PROCEDURE FocusReceived;
+			PROCEDURE FocusReceived*;
 			BEGIN
 				FocusReceived^();
 				UpdateBox(cursor.line, cursor.ofs)
 			END FocusReceived;
 
-			PROCEDURE FocusLost;
+			PROCEDURE FocusLost*;
 			BEGIN
 				FocusLost^();
 				UpdateBox(cursor.line, cursor.ofs)
@@ -672,7 +672,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END ClickHandler;
 
-			PROCEDURE PointerDown(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
 			BEGIN
 				IF (Left IN keys) & hasFocus THEN
 					LocateBox(x, y, sel.beg); sel.end := sel.beg
@@ -686,7 +686,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				UpdateAll()
 			END PointerDown;
 
-			PROCEDURE PointerMove(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
 				VAR pos: Position;
 			BEGIN
 				IF (Left IN keys) & (sel.beg.line # NIL) THEN
@@ -702,7 +702,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END PointerMove;
 
-			PROCEDURE WheelMove(dz: LONGINT);
+			PROCEDURE WheelMove*(dz: LONGINT);
 				VAR l: Line;
 			BEGIN
 				IF (dz > 0) & (top.next # NIL) THEN
@@ -716,7 +716,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END WheelMove;
 
-			PROCEDURE PointerUp(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
 			END PointerUp;
 
 			PROCEDURE CursorKey(keySym: LONGINT);
@@ -736,7 +736,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				C.W.Update()
 			END CursorKey;
 
-			PROCEDURE KeyEvent(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
+			PROCEDURE KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
 			VAR echo: ARRAY 1 OF LONGINT; col:LONGINT;
 			BEGIN
 				IF ~(Inputs.Release IN flags) & hasFocus THEN
@@ -822,13 +822,13 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END resized;
 
-			PROCEDURE Resized;
+			PROCEDURE Resized*;
 			BEGIN
 				Resized^();
 				resized()
 			END Resized;
 
-			PROCEDURE Initialize;
+			PROCEDURE Initialize*;
 			BEGIN
 				Initialize^();
 				takesFocus.Set(TRUE);
@@ -881,14 +881,14 @@ MODULE WMVT100; (* ejz,  ph *)
 				manager.Add(100, 100, SELF, {WMWindowManager.FlagFrame, WMWindowManager.FlagClose})
 			END New;
 			
-			PROCEDURE Handle(VAR x: WMMessages.Message);
+			PROCEDURE Handle*(VAR x: WMMessages.Message);
 			BEGIN
 				IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 				ELSE Handle^(x)
 				END;
 			END Handle;
 
-			PROCEDURE Close;
+			PROCEDURE Close*;
 			BEGIN
 				frame.C.Close();
 				Close^();

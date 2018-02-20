@@ -444,7 +444,7 @@ Out.String("attr "); Out.Int(attrs[i], 0); Out.Ln()
 				END
 			END SetAttributes;
 
-			PROCEDURE Draw( canvas: WMG.Canvas );
+			PROCEDURE Draw*( canvas: WMG.Canvas );
 			VAR
 				l: Line; i, j, dy, bottom: LONGINT; attr: Attribute; char: Char;
 				box: WMG.Rectangle;
@@ -664,13 +664,13 @@ Out.Ln;
 			END Consume;
 
 
-			PROCEDURE FocusReceived;
+			PROCEDURE FocusReceived*;
 			BEGIN
 				FocusReceived^();
 				UpdateBox( cursor.line, cursor.ofs )
 			END FocusReceived;
 
-			PROCEDURE FocusLost;
+			PROCEDURE FocusLost*;
 			BEGIN
 				FocusLost^();
 				UpdateBox( cursor.line, cursor.ofs )
@@ -775,7 +775,7 @@ Out.Ln;
 				END
 			END ClickHandler;
 
-			PROCEDURE PointerDown( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerDown*( x, y: LONGINT; keys: SET );
 			BEGIN
 				IF (Left IN keys) & hasFocus THEN
 					LocateBox( x, y, sel.beg );  sel.end := sel.beg
@@ -789,7 +789,7 @@ Out.Ln;
 				UpdateAll()
 			END PointerDown;
 
-			PROCEDURE PointerMove( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerMove*( x, y: LONGINT; keys: SET );
 			VAR pos: Position;
 			BEGIN
 				IF (Left IN keys) & (sel.beg.line # NIL) THEN
@@ -806,7 +806,7 @@ Out.Ln;
 			END PointerMove;
 
 
-			PROCEDURE PointerUp( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerUp*( x, y: LONGINT; keys: SET );
 			END PointerUp;
 
 			PROCEDURE CursorKey( keySym: LONGINT );
@@ -825,7 +825,7 @@ Out.Ln;
 				w.Update()
 			END CursorKey;
 
-			PROCEDURE KeyEvent( ucs: LONGINT; flags: SET; VAR keySym: LONGINT );
+			PROCEDURE KeyEvent*( ucs: LONGINT; flags: SET; VAR keySym: LONGINT );
 			BEGIN
 				IF chan = NIL THEN  RETURN  END;
 
@@ -863,7 +863,7 @@ Out.Ln;
 				END
 			END KeyEvent;
 
-			PROCEDURE Handle( VAR m : WMMessages.Message );
+			PROCEDURE Handle*( VAR m : WMMessages.Message );
 			BEGIN
 				IF m.msgType = WMMessages.MsgKey THEN
 					IF m.y MOD 256 = 9 THEN  KeyEvent( m.x, m.flags, m.y )
@@ -910,14 +910,14 @@ Out.Ln;
 				END;
 			END resized;
 
-			PROCEDURE Resized;
+			PROCEDURE Resized*;
 			BEGIN
 				Resized^();
 				resized();
 				IF chan # NIL THEN  chan.WindowChange( cols, rows )  END
 			END Resized;		
 
-			PROCEDURE Initialize;
+			PROCEDURE Initialize*;
 			BEGIN
 				Initialize^();
 				Resized;
@@ -1119,7 +1119,7 @@ Out.Ln;
 			END HelpHandler;
 
 
-			PROCEDURE Close;
+			PROCEDURE Close*;
 			BEGIN
 				IF Connected( ) THEN
 					sshConn.Disconnect( 11, "" );

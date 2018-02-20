@@ -231,12 +231,12 @@ TYPE
 			argStructure := none
 		END New;
 
-		PROCEDURE PrintOpcodeBytes (w : Streams.Writer);
+		PROCEDURE PrintOpcodeBytes*(w : Streams.Writer);
 		BEGIN
 			w.Hex(op, 0)
 		END PrintOpcodeBytes;
 
-		PROCEDURE PrintInstruction (w : Streams.Writer);
+		PROCEDURE PrintInstruction*(w : Streams.Writer);
 		VAR str : ARRAY 20 OF CHAR; writeCondition, writeLSMAddrMode : BOOLEAN;
 		BEGIN
 			writeCondition := TRUE; writeLSMAddrMode := FALSE;
@@ -362,7 +362,7 @@ TYPE
 			w.String(str)
 		END PrintLSMAddrMode;
 
-		PROCEDURE PrintArguments (w : Streams.Writer);
+		PROCEDURE PrintArguments*(w : Streams.Writer);
 		BEGIN
 			(* KernelLog.String("*argStructure = "); KernelLog.Int(argStructure, 0); KernelLog.String(", instr = "); KernelLog.Int(instr, 0); KernelLog.Ln; *)
 			CASE argStructure OF
@@ -536,7 +536,7 @@ TYPE
 	VAR
 		bit24To27, bit20To23, bit16To19, bit12To15, bit8To11, bit4To7, bit0To3 : LONGINT;
 
-		PROCEDURE NewOpcode() : Decoder.Opcode;
+		PROCEDURE NewOpcode*() : Decoder.Opcode;
 		VAR
 			opcode : ARMOpcode;
 		BEGIN
@@ -544,7 +544,7 @@ TYPE
 			RETURN opcode
 		END NewOpcode;
 
-		PROCEDURE DecodeThis(opcode : Decoder.Opcode);
+		PROCEDURE DecodeThis*(opcode : Decoder.Opcode);
 		VAR
 			armOpcode : ARMOpcode;
 			opSet : SET;

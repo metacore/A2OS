@@ -1855,7 +1855,7 @@ TYPE
 			vendorString*: ARRAY MaxVendorLength OF CHAR;
 			(* other comment fields are already defined in OGGUtilities.List *)
 
-		PROCEDURE Print;
+		PROCEDURE Print*;
 		VAR cur: CommentListElement;
 		BEGIN
 			IF cur = NIL THEN

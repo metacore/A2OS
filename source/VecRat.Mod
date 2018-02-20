@@ -19,19 +19,19 @@ TYPE
 		Get-: PROCEDURE {DELEGATE} ( x: Index ): Value;
 
 		(** overrride *)
-		PROCEDURE AlikeX( ): ArrayXdBytes.Array;
+		PROCEDURE AlikeX*( ): ArrayXdBytes.Array;
 		VAR copy: Vector;
 		BEGIN
 			NEW( copy, origin[0], len[0] );  RETURN copy;
 		END AlikeX;
 
-		PROCEDURE NewRangeX( neworigin, newlen: ArrayXdBytes.IndexArray;  copydata: BOOLEAN );
+		PROCEDURE NewRangeX*( neworigin, newlen: ArrayXdBytes.IndexArray;  copydata: BOOLEAN );
 		BEGIN
 			IF LEN( newlen ) # 1 THEN HALT( 1001 ) END;
 			NewRangeX^( neworigin, newlen, copydata );
 		END NewRangeX;
 
-		PROCEDURE ValidateCache;
+		PROCEDURE ValidateCache*;
 		BEGIN
 			ValidateCache^;
 			IF dim # 1 THEN HALT( 100 ) END;

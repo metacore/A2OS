@@ -126,12 +126,12 @@ TYPE
 			RETURN result;
 		END GetItemIndex;
 
-		PROCEDURE IsHit(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
 		BEGIN
 			RETURN (mode = Mode_Drawing) OR (GetItemIndex(x, y) >= 0);
 		END IsHit;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; width, height, quality : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; width, height, quality : LONGINT);
 		CONST IconBorder = 8;
 		VAR image : WMGraphics.Image; nbr : ARRAY 8 OF CHAR; color, i : LONGINT;
 		BEGIN
@@ -161,7 +161,7 @@ TYPE
 			END;
 		END Draw;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR icon, oldMouseOver : LONGINT;
 
 			PROCEDURE InvalidateIcon(idx  : LONGINT);
@@ -205,7 +205,7 @@ TYPE
 			lx := x; ly := y
 		END PointerMove;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR rect : WMRectangles.Rectangle; index : LONGINT;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -239,7 +239,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerUp^(x, y, keys);
@@ -253,7 +253,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			IF (mouseOver >= 0) THEN mouseOver := -1; Invalidate(bounds); END;
@@ -283,7 +283,7 @@ TYPE
 			END;
 		END ProcessCommand;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			modifierFlags := {};
@@ -295,7 +295,7 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()))
 		END Fill;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keySym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keySym : LONGINT);
 		VAR
 			filename : Files.FileName; newImg : WMGraphics.Image; oldMode, res: LONGINT;
 			string : ARRAY 2 OF CHAR; dx, dy : LONGINT;

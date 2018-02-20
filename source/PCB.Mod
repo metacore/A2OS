@@ -1702,7 +1702,7 @@ g) Static array as return type of a function
 			self: Designator;
 			resolved: BOOLEAN;
 
-		PROCEDURE Emit(code: PCC.Code;  VAR i: PCC.Item);
+		PROCEDURE Emit*(code: PCC.Code;  VAR i: PCC.Item);
 		BEGIN
 			ASSERT(resolved);
 			IF self # NIL THEN

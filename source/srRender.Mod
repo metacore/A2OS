@@ -62,7 +62,7 @@ BEGIN
 	focus := FALSE;
 END FocusLost;
 
-PROCEDURE Close;
+PROCEDURE Close*;
 BEGIN
 	srBase.worldalive := FALSE;
 	Close^;
@@ -78,7 +78,7 @@ BEGIN
 	speed := speed * 2 / 3;
 END slowdown;
 
-PROCEDURE KeyEvent (ucs : LONGINT; flags : SET; keysym : LONGINT);
+PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 BEGIN
 	Key := CHR(ucs);
 	CASE CHR(ucs) OF
@@ -125,7 +125,7 @@ BEGIN
 	END;
 END KeyEvent;
 
-PROCEDURE PointerDown (x, y : LONGINT; keys : SET);
+PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 BEGIN
 	pointerlastx := x ; pointerlasty := y;
 	pkeys := keys;
@@ -137,20 +137,20 @@ BEGIN
 	camera.deathray(pointerlastx,pointerlasty)
 END deathray;
 
-PROCEDURE PointerUp (x, y : LONGINT; keys : SET);
+PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 BEGIN
 	pkeys := keys;
 	DEATH:=FALSE;
 	srRayEngine.fast:=FALSE;
 END PointerUp;
 
-PROCEDURE PointerMove (x, y : LONGINT; keys : SET);
+PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 BEGIN
 	pdx := px - x; pdy := py - y;
 	px := ABS(x); py := ABS(y); pkeys := keys;
 END PointerMove;
 
-PROCEDURE PointerLeave;
+PROCEDURE PointerLeave*;
 BEGIN
 	focus := FALSE;
 END PointerLeave;

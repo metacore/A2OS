@@ -144,7 +144,7 @@ TYPE
 			manager.Remove(SELF); shown := FALSE;
 		END Hide;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			SetResult(1);
 		END FocusLost;
@@ -187,7 +187,7 @@ TYPE
 			theCaller := caller;
 		END SetCaller;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR r, g, b, a, i, j, cColor: LONGINT;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
@@ -1665,7 +1665,7 @@ TYPE
 			checked := FALSE; hasThreeStates := FALSE; inactive := FALSE;
 		END Init;
 
-		PROCEDURE PointerDown(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
 		BEGIN
 			IF ~inactive THEN
 				IF hasThreeStates THEN
@@ -1682,7 +1682,7 @@ TYPE
 			Invalidate;
 		END PointerDown;
 
-		PROCEDURE Draw(canvas: WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
 		BEGIN
 			Draw^(canvas);
@@ -1763,7 +1763,7 @@ TYPE
 			isHorizontal := TRUE;
 		END Init;
 
-		PROCEDURE DrawBackground(canvas: WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
 			highlight, shadow, w, h, dist : LONGINT;
 		BEGIN
@@ -1820,7 +1820,7 @@ TYPE
 
 		END CreateComponent;
 
-		PROCEDURE DrawBackground(canvas: WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
 			highlight, shadow, w, h : LONGINT;
 
@@ -1917,7 +1917,7 @@ TYPE
 			RETURN border;
 		END GetBorder;
 
-		PROCEDURE AddContent(content: XML.Content);
+		PROCEDURE AddContent*(content: XML.Content);
 		BEGIN
 			centerContent.AddContent(content);
 		END AddContent;
@@ -2010,12 +2010,12 @@ TYPE
 			RETURN border;
 		END GetBorder;
 
-		PROCEDURE AddContent(content: XML.Content);
+		PROCEDURE AddContent*(content: XML.Content);
 		BEGIN
 			centerContent.AddContent(content);
 		END AddContent;
 
-		PROCEDURE Draw(canvas: WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
 		VAR rect, rect1, rect2: WMRectangles.Rectangle;
 			color, mode: LONGINT;
 		BEGIN

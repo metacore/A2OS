@@ -34,7 +34,7 @@ TYPE
 		currentFileSize, maxFileSize : LONGINT;
 		warned : BOOLEAN;
 
-		PROCEDURE Handle(event : Events.Event);
+		PROCEDURE Handle*(event : Events.Event);
 		BEGIN
 			IF currentFileSize < maxFileSize - 1024 THEN
 				EventsUtils.ToStream(w, event);

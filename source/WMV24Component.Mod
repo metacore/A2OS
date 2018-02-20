@@ -305,14 +305,14 @@ TYPE
 
 		text : Texts.Text;
 
-		PROCEDURE SetText(text : Texts.Text);
+		PROCEDURE SetText*(text : Texts.Text);
 		BEGIN
 			SetText^(text);
 			SELF.text := text;
 			NEW(utilreader, text);
 		END SetText;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR pos : LONGINT;
 		BEGIN
 			IF keys * {0, 1, 2} = {2} THEN
@@ -342,7 +342,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		CONST DragDist = 5;
 		VAR pos : LONGINT;
 		BEGIN
@@ -368,7 +368,7 @@ TYPE
 			END
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		BEGIN
 			selecting := FALSE;
 			IF dragPossible THEN selection.SetFromTo(0, 0); Texts.ClearLastSelection (* reset selection *) END;
@@ -433,7 +433,7 @@ TYPE
 		running : BOOLEAN;
 		timer : Kernel.Timer;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		BEGIN
 			IF m.msgType = WMMessages.MsgKey THEN
 				IF ~settings.shortcutsEnabled OR ~HandleShortcut(m.x, m.flags, m.y) THEN
@@ -1092,7 +1092,7 @@ TYPE
 			END;
 		END ToggleOpen;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF settings.showStatusBar THEN statusUpdater.Terminate; END;
@@ -1262,13 +1262,13 @@ TYPE
 
 	ProgressWindow = OBJECT(WMComponents.FormWindow);
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^(x)
@@ -1358,14 +1358,14 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			T.String("closing window"); T.Ln;
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		VAR configuration : WMRestorable.XmlElement; string : ARRAY 64 OF CHAR;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN

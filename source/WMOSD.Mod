@@ -51,7 +51,7 @@ TYPE
 			alive := FALSE; timer.Wakeup;
 		END Stop;
 
-		PROCEDURE IsHit(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END IsHit;

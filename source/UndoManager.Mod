@@ -132,7 +132,7 @@ TYPE
 			objUpdate.Append(pos, len, obj, type)
 		END ObjectChanged;
 
-		PROCEDURE EndObjectChange(len, type: LONGINT; to: ANY);
+		PROCEDURE EndObjectChange*(len, type: LONGINT; to: ANY);
 		BEGIN
 			ResetRedo;
 			objUpdate.len := len;
@@ -186,7 +186,7 @@ TYPE
 			END
 		END Redo;
 
-		PROCEDURE InformListeners;
+		PROCEDURE InformListeners*;
 		VAR l : ListenerProc;
 		BEGIN
 			l := nrUpdatesListener;

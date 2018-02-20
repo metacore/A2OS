@@ -30,13 +30,13 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE Close; (* override *)
+		PROCEDURE Close*; (* override *)
 		BEGIN
 			Close^;
 			window := NIL
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS WMRestorable.Storage) THEN

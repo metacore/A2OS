@@ -84,7 +84,7 @@ TYPE
 			END
 		END LoadSkin;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			FreeWindow(SELF)

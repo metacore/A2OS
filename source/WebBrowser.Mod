@@ -286,7 +286,7 @@ TYPE
 			END;
 		END AddBookmark;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			webPanel.notify := NIL;
 			webPanel.openNewWindow := NIL;
@@ -295,7 +295,7 @@ TYPE
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR
 			data : XML.Element;
 			a : XML.Attribute;

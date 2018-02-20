@@ -43,7 +43,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR sdi : DropString;
 		BEGIN
 			IF (type = WMDropTarget.TypeString) THEN
@@ -69,7 +69,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE Set(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
 		BEGIN
 			setString(string, position, res);
 		END Set;
@@ -178,7 +178,7 @@ TYPE
 			changeDue := FALSE;
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			(*Resized;
@@ -193,7 +193,7 @@ TYPE
 			END;
 		END SetCurrentCursorVisibility;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		VAR f: WMGraphics.Font;
 
 			PROCEDURE TextHeight(): LONGINT;
@@ -221,7 +221,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			typeI := type.Get();
@@ -302,7 +302,7 @@ TYPE
 			END;
 		END SetAsString;
 
-		PROCEDURE LinkChanged(sender, object : ANY);
+		PROCEDURE LinkChanged*(sender, object : ANY);
 		VAR string : Types.String256; res : LONGINT; real: Types.Longreal; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
@@ -383,7 +383,7 @@ TYPE
 			RETURN ENTIER(x + 0.5);
 		END GetCursorCoordinateX;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		CONST CursorWidth = 2; BorderWidth = 1;
 		VAR
 			font : WMGraphics.Font; g : WMGraphics.GlyphSpacings;
@@ -847,7 +847,7 @@ TYPE
 			END;
 		END Paste;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; VAR keySym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; VAR keySym : LONGINT);
 		BEGIN
 			currentFlags := flags;
 			IF readOnlyI THEN RETURN END;
@@ -906,7 +906,7 @@ TYPE
 			WMTextView.cursorBlinker.Show(SELF);
 		END KeyEvent;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR newCursorPosition, oldInterclick : LONGINT;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -952,7 +952,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			selecting := FALSE;
@@ -967,7 +967,7 @@ TYPE
 			IF dragPossible THEN ResetSelection; dragPossible := FALSE; END;
 		END PointerUp;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR posX : LONGINT; valid : BOOLEAN; start, end : LONGINT;
 		BEGIN
 			IF dragPossible THEN
@@ -991,7 +991,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			IF changeDue THEN Changed END;
@@ -999,7 +999,7 @@ TYPE
 		END PointerLeave;
 
 		(* Drag away operations *)
-		PROCEDURE AutoStartDrag;
+		PROCEDURE AutoStartDrag*;
 		VAR
 			image : WMGraphics.Image; canvas : WMGraphics.BufferCanvas;
 			font : WMGraphics.Font;
@@ -1079,7 +1079,7 @@ TYPE
 			END;
 		END DragWasAccepted;
 
-		PROCEDURE DragOver(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR pos : LONGINT; doInvalidate : BOOLEAN;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -1098,7 +1098,7 @@ TYPE
 			END;
 		END DragOver;
 
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR dt : DropTarget; pos : LONGINT;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -1153,7 +1153,7 @@ TYPE
 			ime.SetInterface(i);
 		END SetIMEInterface;
 
-		PROCEDURE FocusReceived;
+		PROCEDURE FocusReceived*;
 		BEGIN
 			FocusReceived^;
 			cursorIsVisible := TRUE;
@@ -1161,7 +1161,7 @@ TYPE
 			Invalidate;
 		END FocusReceived;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			currentFlags := {};
@@ -1201,14 +1201,14 @@ TYPE
 			RETURN FALSE
 		END GetUnit;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			IF unitModel.Get()# NIL THEN LinkChanged(unitModel, unitModel.Get()) END;
 			IF model.Get()# NIL THEN LinkChanged(model, model.Get()) END;
 		END RecacheProperties;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		VAR string : Types.String256; res : LONGINT; real: Types.Longreal; unit: LONGREAL; m: Models.Model;
 		BEGIN
 			IF (sender = model) OR (sender = unitModel) THEN
@@ -1367,7 +1367,7 @@ TYPE
 			END
 		END CheckScrollbars;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			tv.isMultiLine.Set(multiLine.Get());
@@ -1397,7 +1397,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		VAR string : Types.String256; res : LONGINT; real: Types.Longreal; unit: LONGREAL; m: Models.Model;
 		BEGIN
 			LinkChanged^(sender, data);
@@ -1460,13 +1460,13 @@ TYPE
 			ime.SetInterface(i);
 		END SetIMEInterface;
 
-		PROCEDURE FocusReceived;
+		PROCEDURE FocusReceived*;
 		BEGIN
 			FocusReceived^;
 			tv.SetFocus
 		END FocusReceived;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			tv.FocusLost;
 			IF ime # NIL THEN ime.Hide END;
@@ -1832,7 +1832,7 @@ TYPE
 			text.ReleaseWrite
 		END SetAsString;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF ime # NIL THEN ime.Hide END;

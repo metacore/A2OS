@@ -20,19 +20,19 @@ TYPE
 		Get-: PROCEDURE {DELEGATE} ( x, y, z: Index ): Value;
 
 		(* override *)
-		PROCEDURE AlikeX( ): ArrayXdBytes.Array;
+		PROCEDURE AlikeX*( ): ArrayXdBytes.Array;
 		VAR copy: Cube;
 		BEGIN
 			NEW( copy, origin[0], len[0], origin[1], len[1], origin[2], len[2] );  RETURN copy;
 		END AlikeX;
 
-		PROCEDURE NewRangeX( neworigin, newlen: ArrayXdBytes.IndexArray;  copydata: BOOLEAN );
+		PROCEDURE NewRangeX*( neworigin, newlen: ArrayXdBytes.IndexArray;  copydata: BOOLEAN );
 		BEGIN
 			IF LEN( newlen ) # 3 THEN HALT( 1001 ) END;
 			NewRangeX^( neworigin, newlen, copydata );
 		END NewRangeX;
 
-		PROCEDURE ValidateCache;
+		PROCEDURE ValidateCache*;
 		BEGIN
 			ValidateCache^;
 			IF dim # 3 THEN HALT( 100 ) END;

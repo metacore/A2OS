@@ -14,22 +14,22 @@ TYPE
 			keyboard: KeyboardObj;
 			mouse: MouseObj;
 
-		PROCEDURE Mouse(VAR x, y: INTEGER; VAR keys:SET);
+		PROCEDURE Mouse*(VAR x, y: INTEGER; VAR keys:SET);
 		BEGIN
 			mouse.Mouse(x, y, keys)
 		END Mouse;
 
-		PROCEDURE Read(VAR ch: CHAR; VAR break: BOOLEAN);
+		PROCEDURE Read*(VAR ch: CHAR; VAR break: BOOLEAN);
 		BEGIN
 			keyboard.Read(ch, break)
 		END Read;
 
-		PROCEDURE Available(VAR num: INTEGER; VAR break: BOOLEAN);
+		PROCEDURE Available*(VAR num: INTEGER; VAR break: BOOLEAN);
 		BEGIN
 			keyboard.Available(num, break)
 		END Available;
 
-		PROCEDURE KeyState(VAR k: SET);
+		PROCEDURE KeyState*(VAR k: SET);
 		BEGIN
 			keyboard.KeyState(k)
 		END KeyState;
@@ -46,7 +46,7 @@ TYPE
 			break: BOOLEAN;
 			buf: ARRAY BufSize OF CHAR;
 
-		PROCEDURE Handle(VAR msg: Inputs.Message);
+		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN {EXCLUSIVE}
 			WITH msg: Inputs.KeyboardMsg DO
 				keys := {};
@@ -101,7 +101,7 @@ TYPE
 			curKeys: SET;
 			curX, curY: INTEGER;
 
-		PROCEDURE Handle(VAR msg: Inputs.Message);
+		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN {EXCLUSIVE}
 			WITH msg: Inputs.PointerMsg DO
 				curKeys := {};

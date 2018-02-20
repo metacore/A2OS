@@ -23,7 +23,7 @@ BEGIN
 	register;
 END new;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 (*
 BEGIN
 	cell.erase;

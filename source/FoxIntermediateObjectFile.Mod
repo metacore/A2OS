@@ -422,15 +422,15 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			textual := options.GetFlag("textualObjectFile");
 		END GetOptions;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN TextualSymbolFile.Get();
 		END DefaultSymbolFileFormat;
 
-		PROCEDURE GetExtension(VAR ext: ARRAY OF CHAR);
+		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);
 		BEGIN COPY(extension, ext)
 		END GetExtension;
 
-		PROCEDURE SetExtension(CONST ext: ARRAY OF CHAR);
+		PROCEDURE SetExtension*(CONST ext: ARRAY OF CHAR);
 		BEGIN COPY(ext, extension)
 		END SetExtension;
 		

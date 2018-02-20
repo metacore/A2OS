@@ -127,7 +127,7 @@ TYPE
 		delegate-: PortInstance;
 		index-: LONGINT;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Port",name) END;
 			IF (as = NIL) OR ~(as IS Port) THEN RETURN FALSE END;
@@ -250,7 +250,7 @@ TYPE
 		adr-: LONGINT;
 		index-: LONGINT;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Device",name) END;
 			IF (as = NIL) OR ~(as IS Device) THEN RETURN FALSE END;
@@ -335,7 +335,7 @@ TYPE
 		fileName*: Files.FileName; (* preparation for separate compilation (optimization) *)
 		index-: LONGINT;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Module",name) END;
 			IF (as = NIL) OR  ~(as IS Module) THEN RETURN FALSE END;
@@ -422,7 +422,7 @@ TYPE
 		boolean-: BOOLEAN;
 		string-: Strings.String;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Parameter",name) END;
 			IF (as = NIL) OR ~(as IS Parameter) THEN RETURN FALSE END;
@@ -553,7 +553,7 @@ TYPE
 		instructionMemorySize-, dataMemorySize-: LONGINT;
 		capabilities-: SET;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Instance",name) END;
 			IF (as = NIL) OR ~(as IS Instance) THEN RETURN FALSE END;
@@ -674,7 +674,7 @@ TYPE
 			END;
 		END Read;
 
-		PROCEDURE AppendToMsg(VAR msg: ARRAY OF CHAR);
+		PROCEDURE AppendToMsg*(VAR msg: ARRAY OF CHAR);
 		VAR name:Name;
 		BEGIN
 			AppendToMsg^(msg);
@@ -744,7 +744,7 @@ TYPE
 			index := -1;
 		END InitScope;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Scope",name) END;
 			IF (as = NIL) OR ~(as IS Scope) THEN RETURN FALSE END;
@@ -866,7 +866,7 @@ TYPE
 		instructionMemorySize-, dataMemorySize-: LONGINT; (* sizes in units *)
 		capabilities-: SET;
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Type",name) END;
 			IF (as = NIL) OR ~(as IS Type) THEN RETURN FALSE END;
@@ -1138,7 +1138,7 @@ TYPE
 		index-: LONGINT; (* useful for implementations that emulate channels (simulator) *)
 
 
-		PROCEDURE Same(as: Symbol; flags: SET): BOOLEAN;
+		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Channel",name) END;
 			IF (as = NIL) OR ~(as IS Channel) THEN RETURN FALSE END;

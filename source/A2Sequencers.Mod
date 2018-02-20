@@ -259,7 +259,7 @@ TYPE
 		BEGIN InitMessage; SELF.procedure := procedure;
 		END InitProcedureMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure;
 		END Handle;
 
@@ -274,7 +274,7 @@ TYPE
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitBooleanMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value);
 		END Handle;
 
@@ -289,7 +289,7 @@ TYPE
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value);
 		END Handle;
 
@@ -304,7 +304,7 @@ TYPE
 		BEGIN InitMessage; SELF.value0 := value0; SELF.value1 := value1; SELF.procedure := procedure;
 		END InitIntegerIntegerMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value0, value1);
 		END Handle;
 
@@ -319,7 +319,7 @@ TYPE
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitRealMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value);
 		END Handle;
 
@@ -334,7 +334,7 @@ TYPE
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitSetMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value);
 		END Handle;
 
@@ -353,7 +353,7 @@ TYPE
 			NEW (SELF.value, length); COPY (value, SELF.value^); SELF.procedure := procedure;
 		END InitStringMessage;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value^);
 		END Handle;
 
@@ -369,7 +369,7 @@ TYPE
 		END InitRequest;
 
 		(* IMPORTANT: to be called at the end of overriding procedures *)
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN {EXCLUSIVE} handled := TRUE
 		END Handle;
 
@@ -389,7 +389,7 @@ TYPE
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerRequest;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN procedure (value); Handle^;
 		END Handle;
 
@@ -404,7 +404,7 @@ TYPE
 		BEGIN InitRequest; SELF.procedure := procedure;
 		END InitRequestBoolean;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN result := procedure (); Handle^;
 		END Handle;
 
@@ -419,7 +419,7 @@ TYPE
 		BEGIN InitRequest; SELF.procedure := procedure;
 		END InitRequestInteger;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN result := procedure (); Handle^;
 		END Handle;
 
@@ -434,7 +434,7 @@ TYPE
 		BEGIN InitRequest; SELF.procedure := procedure;
 		END InitRequestReal;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN result := procedure (); Handle^;
 		END Handle;
 
@@ -450,7 +450,7 @@ TYPE
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerRequestBoolean;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN result := procedure (value); Handle^;
 		END Handle;
 
@@ -466,7 +466,7 @@ TYPE
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitRealRequestInteger;
 
-		PROCEDURE Handle;
+		PROCEDURE Handle*;
 		BEGIN result := procedure (value); Handle^;
 		END Handle;
 

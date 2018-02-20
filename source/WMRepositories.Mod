@@ -31,7 +31,7 @@ TYPE
 			SELF.addComponent := addComponent;
 		END Init;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR dc : DropComponent;
 		BEGIN
 			IF (type = WMDropTarget.TypeUser) THEN
@@ -84,7 +84,7 @@ TYPE
 			state := State_NotInitialized;
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			BEGIN {EXCLUSIVE} state := State_Running; END;
@@ -156,7 +156,7 @@ TYPE
 			grid.Release;
 		END UpdateGrid;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR ignore : LONGINT;
 		BEGIN
 			Finalize^;
@@ -220,7 +220,7 @@ TYPE
 			state := State_NotInitialized;
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = showDetails) THEN
 				showDetailsI := showDetails.Get();
@@ -231,7 +231,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			BEGIN {EXCLUSIVE} state := State_Running; END;
@@ -387,7 +387,7 @@ TYPE
 			grid.Release;
 		END SetDetails;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			UpdateGridSpacings;
 			Resized^;
@@ -522,7 +522,7 @@ TYPE
 			END;
 		END UpdateGrid;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR ignore : LONGINT;
 		BEGIN
 			Finalize^;
@@ -701,7 +701,7 @@ TYPE
 			END;
 		END OnComponentClicked;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS KillerMsg) THEN Close
@@ -713,7 +713,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;

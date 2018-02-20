@@ -24,7 +24,7 @@ TYPE
 		selected: WMTrees.TreeNode;
 		dragged: WMTrees.TreeNode;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("InspectionTree"));
@@ -209,7 +209,7 @@ TYPE
 		refreshBtn, splitBtn : WMStandardComponents.Button;
 		dragger: DragCommand;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		VAR panel: WMStandardComponents.Panel;
 		BEGIN
 			Init^;
@@ -321,7 +321,7 @@ TYPE
 
 	TextComponentsTree = OBJECT(InspectionTree)
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("TextComponentsTree"));
@@ -363,7 +363,7 @@ TYPE
 			END;
 		END Refresh;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			Texts.onLastTextChanged.Remove(Refresh);
@@ -375,7 +375,7 @@ TYPE
 
 	SelectedTextTree = OBJECT(InspectionTree)
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("SelectedTextTree"));
@@ -416,7 +416,7 @@ TYPE
 			END;
 		END Refresh;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			Texts.onLastSelectionChanged.Remove(Refresh);
@@ -427,7 +427,7 @@ TYPE
 
 	SelectedComponentsTree = OBJECT(InspectionTree)
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("SelectedComponentsTree"));
@@ -464,7 +464,7 @@ TYPE
 			END;
 		END Refresh;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			WMComponents.selection.onChanged.Remove(Refresh)
@@ -885,7 +885,7 @@ TYPE
 		*)
 
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS KillerMsg) THEN Close
@@ -897,7 +897,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;
@@ -916,7 +916,7 @@ TYPE
 			SetGenerator("WMInspector.NewCommandDragger");
 		END Init;
 
-		PROCEDURE DrawBackground(canvas: WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR r: WMRectangles.Rectangle; name: XML.String;
 		BEGIN
 			r := GetClientRect();
@@ -982,7 +982,7 @@ TYPE
 			END;
 		END Accept;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR
 			img,icon: WMGraphics.Image; canvas, iconCanvas: WMGraphics.BufferCanvas; color: LONGINT;
 			r: WMRectangles.Rectangle; data: WMComponents.FindComponentMode;

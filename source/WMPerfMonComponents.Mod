@@ -50,13 +50,13 @@ TYPE
 			END;
 		END SetPluginHeights;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			SetPluginHeights;
 			Resized^;
 		END Resized;
 
-		PROCEDURE AlignSubComponents;
+		PROCEDURE AlignSubComponents*;
 		BEGIN
 			SetPluginHeights;
 			AlignSubComponents^;
@@ -123,7 +123,7 @@ TYPE
 		w : Streams.StringWriter;
 		alive, dead, update : BOOLEAN;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l;
@@ -337,7 +337,7 @@ TYPE
 			update := TRUE;
 		END EventHandler;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Plugins.updater.RemoveListener(EventHandler);
 			BEGIN {EXCLUSIVE} alive := FALSE; END;
@@ -665,7 +665,7 @@ TYPE
 			grid.Release;
 		END InitGrid;
 
-		PROCEDURE InitView;
+		PROCEDURE InitView*;
 		BEGIN
 			ds := plugin.p.datasetDescriptor;
 			IF ds # NIL THEN
@@ -680,7 +680,7 @@ TYPE
 			SetNameAsString(StrPluginGridView);
 		END InitView;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l - 20 (*scrollbar width*);
@@ -711,7 +711,7 @@ TYPE
 			Resized^;
 		END Resized;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			plugin.datamodel.onChanged.Remove(UpdateGrid);
@@ -727,7 +727,7 @@ TYPE
 		ds : Plugins.DatasetDescriptor;
 		heights : POINTER TO ARRAY OF LONGREAL;
 
-		PROCEDURE InitView;
+		PROCEDURE InitView*;
 		VAR
 			labels : POINTER TO ARRAY OF Strings.String;
 			colors : POINTER TO ARRAY OF LONGINT;
@@ -783,7 +783,7 @@ TYPE
 			END;
 		END UpdateChart;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			plugin.datamodel.onChanged.Remove(UpdateChart);
@@ -909,7 +909,7 @@ TYPE
 			HALT(301); RETURN NIL; (* abstract *)
 		END CreateForm;
 
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			IF (width >= MinPwWidth) & (height >= MinPwHeight) THEN
 				scaling := FALSE;
@@ -971,7 +971,7 @@ TYPE
 		END New;
 
 		(** Load plugin state from XML element *)
-		PROCEDURE LoadFromXml(configuration : XML.Element);
+		PROCEDURE LoadFromXml*(configuration : XML.Element);
 		VAR active : BOOLEAN;
 		BEGIN
 			IF configuration # NIL THEN
@@ -1005,7 +1005,7 @@ TYPE
 			RETURN data;
 		END StoreToXml;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR data : XML.Element;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -1019,7 +1019,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^; DecCount;
 		END Close;

@@ -28,7 +28,7 @@ TYPE
 			IF log = NIL THEN INCL(commandFlags, Commands.Silent) END;
 		END InitTester;
 
-		PROCEDURE Handle (r: Streams.Reader; position: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
+		PROCEDURE Handle* (r: Streams.Reader; position: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
 		VAR result: INTEGER; msg: ARRAY 128 OF CHAR; res: LONGINT; f: Files.File; w: Files.Writer; ch: CHAR;
 		BEGIN
 			result := TestSuite.Failure;

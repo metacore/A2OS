@@ -25,7 +25,7 @@ TYPE
 		cpu : POINTER TO ARRAY OF WMPerfMonPluginCpu.CpuLoad;
 		ml : WMPerfMonPluginMemory.MemoryLoad;
 
-		PROCEDURE LocatePlugins() : BOOLEAN;
+		PROCEDURE LocatePlugins*() : BOOLEAN;
 		VAR
 			par : WMPerfMonPlugins.Parameter;
 			cpar : WMPerfMonPluginCpu.CpuParameter;
@@ -40,7 +40,7 @@ TYPE
 			RETURN TRUE;
 		END LocatePlugins;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR i : LONGINT;
 		BEGIN
 			Finalize^;
@@ -55,7 +55,7 @@ TYPE
 	VAR
 		netspeed : POINTER TO ARRAY OF WMPerfMonPluginNetwork.NetworkSpeed;
 
-		PROCEDURE LocatePlugins() : BOOLEAN;
+		PROCEDURE LocatePlugins*() : BOOLEAN;
 		VAR
 			npar : WMPerfMonPluginNetwork.NetParameter;
 			table : Plugins.Table; dev : Network.LinkDevice;
@@ -75,7 +75,7 @@ TYPE
 			END;
 		END LocatePlugins;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR i : LONGINT;
 		BEGIN
 			Finalize^;
@@ -109,7 +109,7 @@ TYPE
 
 		width, height : LONGINT;
 
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			IF (width >= MinWidth) & (height >= MinHeight) THEN
 				scaling := FALSE;
@@ -206,7 +206,7 @@ TYPE
 			IF i < LEN(tabList) THEN tabs.Select(tabList[i]); TabSelected(SELF, tabList[i]); END;
 		END SelectTabByName;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR elem, data : WMRestorable.XmlElement;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -229,7 +229,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;

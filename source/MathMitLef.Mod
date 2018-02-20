@@ -17,7 +17,7 @@ TYPE
 	MitLef = OBJECT (MathCplxSeries.Coefficient)
 		(* Series solution for the Mittag-Leffler function.  Only apply this as a solution around 0. *)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR x: NbrRe.Real;
 		BEGIN
 			x := storeBeta + n * storeAlpha;
@@ -30,7 +30,7 @@ TYPE
 	AsympMitLef = OBJECT (MathCplxSeries.Coefficient)
 		(* Series solution for the Mittag-Leffler function.  Only apply this as a solution for large x. *)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR x: NbrRe.Real;
 		BEGIN
 			x := storeBeta - n * storeAlpha;
@@ -43,7 +43,7 @@ TYPE
 	DMitLef = OBJECT (MathCplxSeries.Coefficient)
 		(* Series solution for the derivative of the Mittag-Leffler function.  Only apply this as a solution around 0. *)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR x: NbrRe.Real;
 		BEGIN
 			x := (1 + n) * storeAlpha + storeBeta;

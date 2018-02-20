@@ -46,7 +46,7 @@ TYPE Light=RECORD
 END;
 
 TYPE V*= OBJECT
-PROCEDURE tick;
+PROCEDURE tick*;
 END tick;
 PROCEDURE register*;
 VAR i: INTEGER;

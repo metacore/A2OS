@@ -21,7 +21,7 @@ TYPE
 		BEGIN trapped := TRUE;
 		END Trapped;
 		
-		PROCEDURE Char(ch: CHAR);
+		PROCEDURE Char*(ch: CHAR);
 		BEGIN
 			Trace.Char(ch);
 			Char^(ch);

@@ -126,7 +126,7 @@ TYPE
 			SELF.y := y;
 		END Init;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR sdi : DropString;
 		BEGIN
 			IF (type = WMDropTarget.TypeString) THEN
@@ -152,7 +152,7 @@ TYPE
 			SELF.x := x; SELF.y := y;
 		END Init;
 
-		PROCEDURE Set(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
 		BEGIN
 			setString(string, x,y, res);
 		END Set;
@@ -932,7 +932,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			IF scaleFont.Get() # 0 THEN ScaleFont(bounds.GetHeight(), scaleFont.Get()) END;
@@ -1120,7 +1120,7 @@ TYPE
 		END EditDragOver;
 		*)
 
-		PROCEDURE FromXML(xml: XML.Element);
+		PROCEDURE FromXML*(xml: XML.Element);
 		BEGIN
 			FromXML^(xml);
 		END FromXML;
@@ -2244,7 +2244,7 @@ TYPE
 			ASSERT(disableUpdate # -1);	(* underflow *)
 		END EnableUpdate;
 
-		PROCEDURE Resized( width, height: LONGINT);
+		PROCEDURE Resized*( width, height: LONGINT);
 		BEGIN
 			IF ~scaling THEN
 				DisableUpdate;

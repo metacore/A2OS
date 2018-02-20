@@ -295,7 +295,7 @@ TYPE
 
 		summary : ARRAY 256 OF CHAR;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrDiagnosticsView);
@@ -314,7 +314,7 @@ TYPE
 			onClick.Add(OnClickHandler);
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = showMarkers) THEN
 				ShowMarkers(showMarkers.Get());
@@ -325,7 +325,7 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			ShowMarkers(showMarkers.Get());
@@ -431,7 +431,7 @@ TYPE
 			Release;
 		END SortBy;
 
-		PROCEDURE GetCellData(column, row : LONGINT) : ANY; (* override *)
+		PROCEDURE GetCellData*(column, row : LONGINT) : ANY; (* override *)
 		VAR info : CellInfo; entryValid : BOOLEAN; entry : ViewEntry;
 		BEGIN
 			Acquire;

@@ -331,7 +331,7 @@ TYPE
 			AWAIT(state = Closed)
 		END Join;
 
-		PROCEDURE Close;	(* override *)
+		PROCEDURE Close*;	(* override *)
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				IF state = Running THEN state := Closing END;	(* multiple calls possible *)
@@ -341,7 +341,7 @@ TYPE
 			Close^
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS WMRestorable.Storage) THEN

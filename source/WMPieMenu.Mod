@@ -81,7 +81,7 @@ TYPE
 			SetNameAsString(StrPieMenu);
 		END Init;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : String;
 		BEGIN
 			IF useBgBitmap.Get() THEN
@@ -89,7 +89,7 @@ TYPE
 			END;
 		END RecacheProperties;
 
-		PROCEDURE PropertyChanged(sender, prop : ANY);
+		PROCEDURE PropertyChanged*(sender, prop : ANY);
 		BEGIN
 			IF prop = bgBitmapName THEN
 				RecacheProperties
@@ -156,7 +156,7 @@ TYPE
 			Invalidate
 		END SetHover;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR tdist, tx, ty : LONGINT;
 		BEGIN
 			dx := x - bounds.GetWidth() DIV 2 + 4;
@@ -176,7 +176,7 @@ TYPE
 			ELSE SetHover({}) END
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR tdist, tx, ty : LONGINT;
 		BEGIN
 			IF sent THEN RETURN END;
@@ -216,7 +216,7 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR sector, shadow : ARRAY 2 * MenuPoints + 2 OF WMGraphics.Point2d;
 			i, j, shadowEffect : LONGINT;
 			x, y, dx, dy : LONGINT;
@@ -309,7 +309,7 @@ TYPE
 			RETURN piemenu;
 		END CreateForm;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			Close;
@@ -371,7 +371,7 @@ TYPE
 			END;
 		END Show;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			shown := FALSE;

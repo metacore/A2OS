@@ -158,7 +158,7 @@ TYPE
 			render := state;
 		END Render;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			Invalidate;
@@ -459,7 +459,7 @@ TYPE
 			gridDivision := gDiv;
 		END SetGrid;
 
-		PROCEDURE WheelMove(dz: LONGINT);
+		PROCEDURE WheelMove*(dz: LONGINT);
 		BEGIN
 			IF ~previewMode THEN
 				IF wheelMode = 0 THEN								(* wheel zoom *)
@@ -477,7 +477,7 @@ TYPE
 			END;
 		END WheelMove;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -581,7 +581,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -790,7 +790,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR string, tempString, tempString2: ARRAY 32 OF CHAR;
 			content, activeContent: DTPData.ContentObject;
 			resguide: DTPData.GuideObject;
@@ -966,7 +966,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE KeyEvent(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
+		PROCEDURE KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -2300,7 +2300,7 @@ TYPE
 			theCaller.Invalidate;
 		END SetValueHandler;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			theCaller.propertyOpen := FALSE;
 			Hide;

@@ -24,7 +24,7 @@ TYPE
 	EventLogger = OBJECT(Events.Sink);
 	VAR w : Streams.Writer;
 
-		PROCEDURE Handle(event : Events.Event);
+		PROCEDURE Handle*(event : Events.Event);
 		BEGIN
 			EventsUtils.ToStream(w, event);
 		END Handle;

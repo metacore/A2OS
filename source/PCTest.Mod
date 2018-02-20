@@ -15,7 +15,7 @@ TYPE
 	BEGIN Init (diagnostics); SELF.log := log; SELF.execute := execute; COPY (options, SELF.options);
 	END InitTester;
 
-	PROCEDURE Handle (r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
+	PROCEDURE Handle* (r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
 	CONST ModuleName = "Test";
 	VAR result: INTEGER; error: BOOLEAN; msg: ARRAY 128 OF CHAR; res: LONGINT;
 	BEGIN

@@ -41,12 +41,12 @@ CONST
 TYPE
 
 	NoWheelGrid* = OBJECT(WMStringGrids.StringGrid);
-		PROCEDURE WheelMove(dz : LONGINT); (* do nothing *) END WheelMove;
+		PROCEDURE WheelMove*(dz : LONGINT); (* do nothing *) END WheelMove;
 	END NoWheelGrid;
 
 	BevelPanel* = OBJECT(WMStandardComponents.Panel);
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			IF ~visible.Get() THEN RETURN END;
 			Acquire;
@@ -212,7 +212,7 @@ TYPE
 			DiskEventHandler(NIL, NIL);
 		END Synchronize;
 
-		PROCEDURE AlignSubComponents;
+		PROCEDURE AlignSubComponents*;
 		BEGIN
 			AlignSubComponents^;
 			IF firstAlign THEN
@@ -226,7 +226,7 @@ TYPE
 			END;
 		END AlignSubComponents;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			model.Acquire;
 			UpdateLayout(bounds.GetWidth(), bounds.GetHeight(), FALSE);
@@ -294,13 +294,13 @@ TYPE
 			diskOverviewPanel.bounds.SetLeft(-scrollX);
 		END ScrollX;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			PartitionsLib.diskModel.onChanged.Remove(DiskEventHandler);
 		END Finalize;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = showDetails) OR (property = showDiskGeometry) OR
 				(property = clSelected) OR (property = clBackground) THEN
@@ -1453,7 +1453,7 @@ TYPE
 			UpdateGrid(TRUE);
 		END OperationEventHandler;
 
-		PROCEDURE WheelMove(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : LONGINT);
 		VAR pos : LONGINT;
 		BEGIN
 			IF scrollbarY.visible.Get() THEN

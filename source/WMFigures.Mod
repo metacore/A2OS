@@ -321,7 +321,7 @@ TYPE
 			RETURN rect;
 		END GetBoundingBox;
 		
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN (* called by sequencer -> hierarchy is locked, see WMVisualComponentSkeleton.Mod *)
 			IF closed.Get() THEN INCL(state,Closed) ELSE EXCL(state,Closed) END; 
 			IF filled.Get() THEN INCL(state,Filled); ELSE EXCL(state, Filled) END;
@@ -675,7 +675,7 @@ TYPE
 		END Initialize;
 		
 			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
-		PROCEDURE Inside(X, Y: LONGINT): BOOLEAN;
+		PROCEDURE Inside*(X, Y: LONGINT): BOOLEAN;
 		VAR c: LONGINT; p,q: Point;
 		BEGIN
 			c := 0;

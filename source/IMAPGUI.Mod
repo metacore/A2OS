@@ -86,13 +86,13 @@ TYPE
 			RETURN ret;
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^();
 			DecCount();
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 					Close();
@@ -185,13 +185,13 @@ TYPE
 			RETURN ret;
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^();
 			DecCount();
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 					Close();
@@ -419,13 +419,13 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^();
 			DecCount();
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 					Close();
@@ -1042,13 +1042,13 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^();
 			DecCount();
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 					Close();
@@ -1464,13 +1464,13 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^();
 			DecCount();
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 					Close();
@@ -1570,7 +1570,7 @@ TYPE
 		END New;
 
 		(* Wird aufgerufen, wenn das Fenster seine Groesse aendert *)
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			Resized^(width, height);
 			ResizeGrid;
@@ -2407,7 +2407,7 @@ TYPE
 			NEW(pw, SELF);
 		END SetPreferences;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF(x.ext IS KillerMsg) THEN
@@ -2422,7 +2422,7 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			client.abort := TRUE;
 			client.Close();

@@ -134,7 +134,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 				line: ARRAY MaxLine+1 OF CHAR; pos, len: LONGINT;
 				term: ARRAY 32 OF CHAR;
 
-			PROCEDURE WILL(option: CHAR);
+			PROCEDURE WILL*(option: CHAR);
 			BEGIN
 				IF option = OptTerminalType THEN
 					W.Char(CmdIAC); W.Char(CmdSB);
@@ -156,7 +156,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 				RETURN (old = "V") & (ch = "T")
 			END IsVT100;
 
-			PROCEDURE SB(option: CHAR);
+			PROCEDURE SB*(option: CHAR);
 				VAR term: ARRAY 32 OF CHAR; i: LONGINT; ch: CHAR;
 			BEGIN
 				IF option = OptTerminalType THEN
@@ -197,7 +197,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 				W.String("> ")
 			END Prompt;
 
-			PROCEDURE Consume(ch: CHAR);
+			PROCEDURE Consume*(ch: CHAR);
 				VAR i: LONGINT; update, echo: BOOLEAN;
 			BEGIN
 				echo := Echo IN flags; update := echo;
@@ -247,7 +247,7 @@ KernelLog.String("ESC ["); KernelLog.Char(ch); KernelLog.Ln()
 				IF update THEN W.Update() END
 			END Consume;
 
-			PROCEDURE Setup;
+			PROCEDURE Setup*;
 			BEGIN
 				IF Telnet IN flags THEN
 					IF ~(Echo IN flags) THEN

@@ -732,7 +732,7 @@ TYPE
 			END
 		END SetColRG;
 
-		PROCEDURE Fill(r : WMRectangles.Rectangle; col : LONGINT; mode : LONGINT);
+		PROCEDURE Fill*(r : WMRectangles.Rectangle; col : LONGINT; mode : LONGINT);
 		VAR ax, ay, bx ,by : REAL;
 		BEGIN
 			SetColrg(col);

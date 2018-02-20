@@ -118,7 +118,7 @@ TYPE
 			CheckLeftRightButtons;
 		END Initialize;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF 	(property = useBgBitmaps) OR
 				(property = bgLeftDefault) OR (property = bgMiddleDefault) OR (property = bgRightDefault) OR
@@ -140,7 +140,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : Strings.String;
 		BEGIN
 			RecacheProperties^;
@@ -236,7 +236,7 @@ TYPE
 			END
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			hover := NIL;
 			Invalidate
@@ -347,7 +347,7 @@ TYPE
 			END
 		END CheckLeftRightButtons;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			Resized^;
 			CheckLeftRightButtons
@@ -559,7 +559,7 @@ TYPE
 
 		next : TabEntry;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = caption) THEN
 				IF (tabs # NIL) & (tab # NIL) THEN
@@ -617,7 +617,7 @@ TYPE
 			entries := NIL;
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		VAR string : Strings.String;
 		BEGIN
 			IF (property = selection) THEN

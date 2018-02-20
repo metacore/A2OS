@@ -628,7 +628,7 @@ TYPE
 		END Format;
 
 		(* finalizer: called when the filesystem goes down, could be used to close all open files and flush cashes. We do not use any caches in this silly file system  *)
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			volume.Finalize;

@@ -190,7 +190,7 @@ TYPE
 
 	Display = OBJECT (Displays.Display) (* only one instance of this object allowed ! *)
 
-		PROCEDURE Transfer( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
+		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
 		BEGIN
 
 			IF letWindowsHandleTheBuffer THEN

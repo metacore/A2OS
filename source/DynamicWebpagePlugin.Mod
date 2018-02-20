@@ -23,7 +23,7 @@ TYPE
 			Init^(PluginName)
 		END Init;
 
-		PROCEDURE CanHandle(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure : BOOLEAN) : BOOLEAN;
+		PROCEDURE CanHandle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure : BOOLEAN) : BOOLEAN;
 		VAR name, ext: Files.FileName; f: Files.File; newuri : ARRAY 4096 OF CHAR;
 		BEGIN
 			HTTPSupport.RemoveVariablesFromURI(request.uri, newuri);

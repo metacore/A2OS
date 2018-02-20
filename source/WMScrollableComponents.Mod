@@ -24,7 +24,7 @@ TYPE
 		END New;
 
 		(* store total width and height of subcomponents, check it *)
-		PROCEDURE AlignSubComponents;
+		PROCEDURE AlignSubComponents*;
 		VAR c: XML.Content; vc : WMComponents.VisualComponent;
 			r, rCopy, rEnclosing, vcBounds, b : WMRectangles.Rectangle;
 		BEGIN
@@ -72,7 +72,7 @@ TYPE
 		END SetLeftTop;
 
 		(** Special methods *)
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			IF sequencer # NIL THEN ASSERT(sequencer.lock.HasWriteLock()) END;
 			resizing := TRUE;
@@ -91,7 +91,7 @@ TYPE
 		END Resized;
 
 		(** declare a rectangle area as dirty *)
-		PROCEDURE InvalidateRect(r: WMRectangles.Rectangle);
+		PROCEDURE InvalidateRect*(r: WMRectangles.Rectangle);
 		VAR parent : XML.Element;
 			m : WMMessages.Message; b, cr : WMRectangles.Rectangle;
 		BEGIN
@@ -116,7 +116,7 @@ TYPE
 			END
 		END InvalidateRect;
 
-		PROCEDURE InvalidateCommand(sender, par : ANY);
+		PROCEDURE InvalidateCommand*(sender, par : ANY);
 		VAR cr: WMRectangles.Rectangle;
 		BEGIN
 			IF ~initialized THEN RETURN END;
@@ -127,7 +127,7 @@ TYPE
 			END
 		END InvalidateCommand;
 
-		PROCEDURE HandleInternal(VAR msg : WMMessages.Message); (** PROTECTED *)
+		PROCEDURE HandleInternal*(VAR msg : WMMessages.Message); (** PROTECTED *)
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			IF (msg.msgType = WMMessages.MsgPointer) OR (msg.msgType = WMMessages.MsgDrag) THEN
@@ -136,7 +136,7 @@ TYPE
 			HandleInternal^(msg);
 		END HandleInternal;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR canvasState: WMGraphics.CanvasState;
 		BEGIN
 				canvas.SaveState(canvasState);
@@ -176,7 +176,7 @@ TYPE
 			NEW(wheelScrolling, PrototypeSCWheelScrolling, NIL, NIL); properties.Add(wheelScrolling);
 		END Init;
 
-		PROCEDURE AlignSubComponents;
+		PROCEDURE AlignSubComponents*;
 		BEGIN
 			(* align scrollbars and scrollPanel first *)
 			Acquire;
@@ -189,7 +189,7 @@ TYPE
 			Release;
 		END AlignSubComponents;
 
-		PROCEDURE HandleInternal(VAR msg : WMMessages.Message);
+		PROCEDURE HandleInternal*(VAR msg : WMMessages.Message);
 		BEGIN
 			IF wheelScrolling.Get() & (msg.msgType = WMMessages.MsgPointer) & (msg.msgSubType = WMMessages.MsgSubPointerMove) & (msg.dz # 0) THEN
 				WheelMove(msg.dz);
@@ -259,7 +259,7 @@ TYPE
 			Invalidate
 		END ScrollbarsChanged;
 
-		PROCEDURE WheelMove(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : LONGINT);
 		CONST Multiplier  = 3;
 		VAR pos : LONGINT;
 		BEGIN
@@ -280,7 +280,7 @@ TYPE
 
 		(** Iff data IS WMGraphics.Image, it is set as background. Else the background is set to white *)
 		(* Note: Only use for anonymous Images without a specific Name *)
-		PROCEDURE AddContent(content : XML.Content);
+		PROCEDURE AddContent*(content : XML.Content);
 		BEGIN
 			IF (content IS WMProperties.Properties) OR (content = vScrollbar) OR (content = hScrollbar) OR (content = scrollPanel) THEN
 				AddContent^(content);

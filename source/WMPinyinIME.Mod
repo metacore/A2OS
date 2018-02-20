@@ -397,7 +397,7 @@ TYPE
 			edit.text.onTextChanged.Add(TextChanged)
 		END TextChanged;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			ScheduleHide
@@ -411,7 +411,7 @@ TYPE
 			lastMatch := NIL
 		END Hide;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) THEN
 				IF (x.ext = SELF) THEN Hide
@@ -454,7 +454,7 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		END Finalize;
 
 	END IME;

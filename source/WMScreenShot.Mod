@@ -30,17 +30,17 @@ TYPE
 			manager.AddView(SELF); manager.RefreshView(SELF);
 		END New;
 		(** r in wm coordinates *)
-		PROCEDURE Update(r : WMRectangles.Rectangle; top : WM.Window);
+		PROCEDURE Update*(r : WMRectangles.Rectangle; top : WM.Window);
 		BEGIN
 			Draw(WMRectangles.ResizeRect(r, 1), top.prev) (* assuming the src-domain is only 1 *)
 		END Update;
 
-		PROCEDURE Refresh(top : WM.Window);
+		PROCEDURE Refresh*(top : WM.Window);
 		BEGIN
 			Update(WMRectangles.MakeRect(ENTIER(range.l)-1, ENTIER(range.t)-1, ENTIER(range.r) + 1, ENTIER(range.b) + 1), top)
 		END Refresh;
 
-		PROCEDURE SetRange(x, y, w, h : REAL; showTransition : BOOLEAN);
+		PROCEDURE SetRange*(x, y, w, h : REAL; showTransition : BOOLEAN);
 
 			PROCEDURE Set(x, y, w, h : REAL);
 			VAR tf : REAL;

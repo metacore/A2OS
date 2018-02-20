@@ -174,11 +174,11 @@ TYPE
 			END;
 		END GetOptions;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 
-		PROCEDURE ForceModuleBodies(): BOOLEAN; (* necessary in binary object file format as bodies not recognizable later on *)
+		PROCEDURE ForceModuleBodies*(): BOOLEAN; (* necessary in binary object file format as bodies not recognizable later on *)
 		BEGIN RETURN TRUE
 		END ForceModuleBodies;
 

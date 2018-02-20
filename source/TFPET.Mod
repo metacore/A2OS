@@ -436,7 +436,7 @@ TYPE
 			label.caption.SetAOC(" Project Text");
 		END SetText;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			StoreScratchText;
@@ -452,7 +452,7 @@ TYPE
 			SELF.win := win
 		END New;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR di : DropURL;
 		BEGIN
 			IF type = WMDropTarget.TypeURL THEN
@@ -471,7 +471,7 @@ TYPE
 			SELF.win := win;
 		END New;
 
-		PROCEDURE URL(CONST url : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : LONGINT);
 		BEGIN
 			win.Load(url, "AUTO");
 			res := 0
@@ -998,7 +998,7 @@ TYPE
 			RETURN TRUE;
 		END HandleShortcut;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF (editor # NIL) & (editor.text # NIL) THEN
@@ -1788,7 +1788,7 @@ TYPE
 			END
 		END SetModified;
 
-		PROCEDURE SetIcon(icon : WMGraphics.Image);
+		PROCEDURE SetIcon*(icon : WMGraphics.Image);
 		BEGIN
 			IF (icon # NIL) & (icon # currentIcon) THEN
 				currentIcon := icon;
@@ -2303,7 +2303,7 @@ TYPE
 			IF currentPage.logEdit.visible.Get() = FALSE THEN currentPage.logEdit.visible.Set(TRUE); END;
 		END UnloadModule;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		VAR page : LONGINT;
 		BEGIN
 			Close^;
@@ -2605,7 +2605,7 @@ TYPE
 			RETURN TRUE;
 		END HandleShortcut;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		VAR data : WMRestorable.XmlElement;
 		BEGIN
 			IF m.msgType = WMMessages.MsgKey THEN

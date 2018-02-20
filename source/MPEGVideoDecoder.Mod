@@ -87,7 +87,7 @@ TYPE
 			Draw^(canvas, w, h, 0)
 		END Draw;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 		END Close;

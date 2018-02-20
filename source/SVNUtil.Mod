@@ -33,7 +33,7 @@ TYPE
 			RETURN found & (Files.Old ( mask^ ) # NIL);
 		END FileExists;
 
-		PROCEDURE Open(m: ARRAY OF CHAR; flags: SET);
+		PROCEDURE Open*(m: ARRAY OF CHAR; flags: SET);
 		BEGIN
 			(* remove path delimiter at the end *)
 			IF Strings.EndsWith ( Files.PathDelimiter, m ) THEN
@@ -50,7 +50,7 @@ TYPE
 			adding := FALSE;
 		END Open;
 
-		PROCEDURE GetEntry(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN;
 		BEGIN
 			IF found THEN
 				COPY ( name0, name );
@@ -65,7 +65,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
+		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
 		BEGIN
 			ASSERT(adding);
 

@@ -265,7 +265,7 @@ TYPE
 			corner := NoCorner;
 		END PointerUp;
 
-		PROCEDURE Handle(VAR m : Messages.Message);
+		PROCEDURE Handle*(VAR m : Messages.Message);
 		BEGIN
 			IF m.msgType = Messages.MsgFocus THEN
 				IF m.msgSubType = Messages.MsgSubMasterFocusGot THEN hasFocus := TRUE
@@ -323,7 +323,7 @@ TYPE
 			END;
 		END CheckButtons;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR oldHover : LONGINT;
 		BEGIN
 			IF ~dragging THEN
@@ -346,7 +346,7 @@ TYPE
 			PointerMove^(x, y, keys);
 		END PointerMove;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			CheckButtons(x, y, down);
 			PointerDown^(x, y, keys);
@@ -476,7 +476,7 @@ TYPE
 			END;
 		END CloseDispatch;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
 		BEGIN
 			s := manager.GetStyle();
@@ -517,7 +517,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (y < distXY) THEN SetPointerInfo(manager.pointerULDR);
@@ -528,7 +528,7 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
 		BEGIN
 			s := manager.GetStyle();
@@ -562,7 +562,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (y < distXY) THEN SetPointerInfo(manager.pointerURDL);
@@ -573,7 +573,7 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
 		BEGIN
 			s := manager.GetStyle();
@@ -606,7 +606,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (x < distXY) THEN SetPointerInfo(manager.pointerURDL);
@@ -617,7 +617,7 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
 		BEGIN
 			s := manager.GetStyle();
@@ -645,7 +645,7 @@ TYPE
 			isVisible := TRUE;
 		END New;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		VAR s : WM.WindowStyle; r : WMRectangles.Rectangle;
 		BEGIN
 			s := manager.GetStyle();

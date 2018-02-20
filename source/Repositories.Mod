@@ -179,7 +179,7 @@ TYPE
 		instance : ANY;
 		next : ComponentInfo;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrComponent);
@@ -190,7 +190,7 @@ TYPE
 			next := NIL;
 		END Init;
 
-		PROCEDURE AddAttribute(attribute : XML.Attribute);
+		PROCEDURE AddAttribute*(attribute : XML.Attribute);
 		VAR name, temp : Strings.String;
 		BEGIN
 			name := attribute.GetName();
@@ -551,7 +551,7 @@ TYPE
 
 		next : Dictionary;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			fullname := StrNoName;
@@ -675,7 +675,7 @@ TYPE
 			RETURN translator;
 		END FindBestMatch;
 
-		PROCEDURE AddAttribute(attribute : XML.Attribute);
+		PROCEDURE AddAttribute*(attribute : XML.Attribute);
 		VAR name : Strings.String;
 		BEGIN
 			name := attribute.GetName();
@@ -778,7 +778,7 @@ TYPE
 
 		next : Repository;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrRepository);

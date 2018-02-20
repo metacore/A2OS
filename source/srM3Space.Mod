@@ -112,7 +112,7 @@ BEGIN
 	END
 END ncolor;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
@@ -246,7 +246,7 @@ BEGIN
 	END
 END Shade;
 
-PROCEDURE probe(x,y,z: SREAL):Voxel;
+PROCEDURE probe*(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
 	i,j,k: LONGINT;
@@ -262,7 +262,7 @@ BEGIN
 	RETURN(NIL);
 END probe;
 
-PROCEDURE probeShade (VAR ray: Ray; VAR dx,dy,dz: SREAL);
+PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 VAR
 	ijk: srBase.IPT;
 	out: BOOLEAN;
@@ -284,7 +284,7 @@ BEGIN
 	END
 END probeShade;
 
-PROCEDURE deathray(VAR ray: Ray);
+PROCEDURE deathray*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;

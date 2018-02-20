@@ -123,7 +123,7 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 
 	END New;
 
-	PROCEDURE Close;
+	PROCEDURE Close*;
 	BEGIN
 		open := FALSE;
 		BEGIN{EXCLUSIVE}

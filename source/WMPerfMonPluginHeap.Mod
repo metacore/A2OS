@@ -18,7 +18,7 @@ TYPE
 		heapsize : SIZE;
 		blockSizes, recblkSizes, sysblkSizes, arrblkSizes, protrecblkSizes, freeblkSizes : SizeArray;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		VAR p : ADDRESS; memBlock {UNTRACED}: Machine.MemoryBlock; heapBlock: Heaps.HeapBlock;
 		BEGIN
 			blocks := 0; recblks := 0; sysblks := 0; arrblks := 0;
@@ -109,7 +109,7 @@ TYPE
 	VAR
 		h : BlocksHelper;
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "Blocks"; p.description := "Number and types of blocks on the heap"; p.modulename := ModuleName;
@@ -128,7 +128,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := h.blocks;
 			dataset[1] := h.recblks;
@@ -147,7 +147,7 @@ TYPE
 	VAR
 		h : BlocksHelper;
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "TotalBlockSizes"; p.description := "Total sizes of blocks on the heap"; p.modulename := ModuleName;
@@ -166,7 +166,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := h.blockssize;
 			dataset[1] := h.recblksize;
@@ -185,7 +185,7 @@ TYPE
 	VAR
 		h : BlocksHelper;
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.modulename := ModuleName;
@@ -230,13 +230,13 @@ TYPE
 
 	BlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "BlockSizes"; p.description := "Sizes of non-free blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.blockSizes)-1 DO
@@ -248,13 +248,13 @@ TYPE
 
 	SysBlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "SysBlockSizes"; p.description := "Sizes of system blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.sysblkSizes)-1 DO
@@ -266,13 +266,13 @@ TYPE
 
 	RecBlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "RecBlockSizes"; p.description := "Sizes of record blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.recblkSizes)-1 DO
@@ -284,13 +284,13 @@ TYPE
 
 	ProtRecBlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "ProtRecBlockSizes"; p.description := "Sizes of protected record  blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.protrecblkSizes)-1 DO
@@ -302,13 +302,13 @@ TYPE
 
 	ArrBlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "ArrayBlockSizes"; p.description := "Sizes of array blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.arrblkSizes)-1 DO
@@ -320,13 +320,13 @@ TYPE
 
 	FreeBlockSizes = OBJECT(BlockSizesBase)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			Init^(p);
 			p.name := "FreeBlockSizes"; p.description := "Sizes of free blocks on the heap";
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(h.freeblkSizes)-1 DO
@@ -340,14 +340,14 @@ TYPE
 
 	GcRuns = OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			p.name := "GcRuns"; p.description := "Number of times the GC has been run since system start"; p.modulename := ModuleName;
 			p.noSuperSampling := TRUE;
 			p.autoMax := TRUE; p.minDigits := 5;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := Heaps.Ngc;
 		END UpdateDataset;
@@ -358,7 +358,7 @@ TYPE
 
 	NewBlockCalls = OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			p.name := "NewBlocks"; p.description := "Number of times Heaps.NewBlock has been called since system startup";
 			p.modulename := ModuleName;
@@ -366,7 +366,7 @@ TYPE
 			p.autoMax := TRUE; p.minDigits := 5;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := Heaps.Nnew;
 		END UpdateDataset;
@@ -377,14 +377,14 @@ TYPE
 
 	BytesAllocated = OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		BEGIN
 			p.name := "KBAllocated"; p.description := "KBytes allocated since system start"; p.modulename := ModuleName;
 			p.noSuperSampling := TRUE; p.unit := "KB";
 			p.autoMax := TRUE; p.minDigits := 5;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := Heaps.NnewBytes DIV 1024;
 		END UpdateDataset;

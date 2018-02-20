@@ -374,7 +374,7 @@ TYPE
 		BEGIN InitBackend;
 		END InitInterpreterBackend;
 
-		PROCEDURE GetSystem(): Global.System;
+		PROCEDURE GetSystem*(): Global.System;
 		VAR system: Global.System;
 		BEGIN
 			NEW (system, 8, 8, 32, 1, 1, 1, 1, addressSize * 2,cooperative);
@@ -383,7 +383,7 @@ TYPE
 			RETURN system;
 		END GetSystem;
 
-		PROCEDURE ProcessSyntaxTreeModule (x: SyntaxTree.Module): Formats.GeneratedModule;
+		PROCEDURE ProcessSyntaxTreeModule *(x: SyntaxTree.Module): Formats.GeneratedModule;
 		VAR module: Sections.Module; section: Sections.Section; interpreter: Interpreter;
  		BEGIN
 			module := GenerateIntermediate (x, SupportedInstruction, SupportedImmediate);
@@ -398,13 +398,13 @@ TYPE
 			RETURN NIL
 		END ProcessSyntaxTreeModule;
 		
-		PROCEDURE DefineOptions(options: Options.Options);
+		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN DefineOptions^(options);
 			options.Add("a","addressSize", Options.Integer);
 			options.Add("s","setSize", Options.Integer);
 		END DefineOptions;
 
-		PROCEDURE GetOptions(options: Options.Options);
+		PROCEDURE GetOptions*(options: Options.Options);
 		BEGIN GetOptions^(options);
 			IF ~options.GetInteger("addressSize", addressSize) THEN addressSize := 2 END;
 			IF ~options.GetInteger("setSize", setSize) THEN setSize := 2 END;

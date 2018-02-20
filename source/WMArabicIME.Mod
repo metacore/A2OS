@@ -9,7 +9,7 @@ CONST
 TYPE
 	IME* = OBJECT(WMInputMethods.IME)
 
-		PROCEDURE GetName() : Strings.String;
+		PROCEDURE GetName*() : Strings.String;
 		BEGIN
 			RETURN Strings.NewString(imeName);
 		END GetName;

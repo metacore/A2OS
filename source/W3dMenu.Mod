@@ -262,7 +262,7 @@ TYPE
 			Render
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			IF blurp # NIL THEN blurp.Kill; blurp.AwaitDead END;
 			Close^;
@@ -289,13 +289,13 @@ TYPE
 			Invalidate(Rect.MakeRect(0, 0, img.width, img.height))
 		END Render;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys :SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys :SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2});
 			oldX := x; oldY := y
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
 		VAR idx : LONGINT;
 			info : Symbol; dummy : ANY;
 		BEGIN
@@ -336,7 +336,7 @@ TYPE
 			oldX := x; oldY := y
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
 		BEGIN
 			IF mouseKeys = {0} THEN
 				IF selectedSymbol # NIL THEN

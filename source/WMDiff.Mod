@@ -676,7 +676,7 @@ TYPE
 			RETURN handled;
 		END HandleKey;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		BEGIN
 			IF (m.msgType = WMMessages.MsgKey) THEN
 				IF ~HandleKey(m.x, m.flags, m.y) THEN

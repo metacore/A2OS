@@ -577,7 +577,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 		app.Last();
 	END ButtonHandlerLast;
 
-	PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+	PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 	BEGIN
 		IF Inputs.Release IN flags THEN RETURN; END;
 		IF ucs = ORD("f") THEN
@@ -691,7 +691,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	END New;
 
 
-	PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+	PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 	BEGIN
 		IF (0 IN keys) THEN
 			(* Go to next Slide  *)
@@ -699,7 +699,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 		END;
 	END PointerDown;
 
-	PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+	PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 	BEGIN
 		IF Inputs.Release IN flags THEN RETURN; END;
 		IF ucs = ORD("f") THEN

@@ -52,7 +52,7 @@ TYPE
 			open := TRUE
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			open := FALSE;
 			Close^

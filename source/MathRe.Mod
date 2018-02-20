@@ -12,7 +12,7 @@ VAR
 TYPE
 	ArcSinA = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR i, k, index: NbrInt.Integer;  den, num: NbrRe.Real;
 		BEGIN {EXCLUSIVE}
 			IF NbrInt.Odd( n ) THEN
@@ -28,7 +28,7 @@ TYPE
 
 	ArcSinhA = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR index: NbrInt.Integer;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0
@@ -44,7 +44,7 @@ TYPE
 
 	ArcSinhB = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0 ELSE coef := (2 * n - 1) END
 		END Evaluate;
@@ -53,7 +53,7 @@ TYPE
 
 	ArcTanhA = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		VAR index: NbrInt.Integer;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0
@@ -67,7 +67,7 @@ TYPE
 
 	ArcTanhB = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0 ELSE coef := (2 * n - 1) END
 		END Evaluate;
@@ -76,7 +76,7 @@ TYPE
 
 	TanA = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0
 			ELSIF n = 1 THEN coef := 1
@@ -89,7 +89,7 @@ TYPE
 
 	TanB = OBJECT (MathReSeries.Coefficient)
 
-		PROCEDURE Evaluate;
+		PROCEDURE Evaluate*;
 		BEGIN {EXCLUSIVE}
 			IF n = 0 THEN coef := 0 ELSE coef := (2 * n - 1) END
 		END Evaluate;

@@ -131,7 +131,7 @@ TYPE
 		clBorder- : WMProperties.ColorProperty;
 		clBorderI : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetGenerator("WMShapes.GenRectangle");
@@ -140,7 +140,7 @@ TYPE
 			clBorder.Set(WMGraphics.Black); clBorderI := clBorder.Get();
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = clBorder) THEN
 				clBorderI := clBorder.Get();
@@ -150,7 +150,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas);
@@ -169,7 +169,7 @@ TYPE
 		color : WMProperties.ColorProperty;
 		colorI : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetGenerator("WMShapes.GenCircle");
@@ -178,7 +178,7 @@ TYPE
 			color.Set(WMGraphics.Black); colorI := color.Get();
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = color) THEN
 				colorI := color.Get();
@@ -188,7 +188,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR rect : WMRectangles.Rectangle; radius : LONGINT;
 		BEGIN
 			DrawBackground^(canvas);
@@ -209,7 +209,7 @@ TYPE
 		color : WMProperties.ColorProperty;
 		colorI : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetGenerator("WMShapes.GenEllipse");
@@ -218,7 +218,7 @@ TYPE
 			color.Set(WMGraphics.Black); colorI := color.Get();
 		END Init;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = color) THEN
 				colorI := color.Get();
@@ -228,7 +228,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas);

@@ -1378,7 +1378,7 @@ TYPE
 			writer.String(";"); writer.Ln;
 		END VisitEdge;
 
-		PROCEDURE VisitBlock(block: Block);
+		PROCEDURE VisitBlock*(block: Block);
 		VAR
 			i: LONGINT;
 			dom: Block;
@@ -1661,7 +1661,7 @@ TYPE
 			SELF.diagnostics := diagnostics
 		END InitDiagnostics;
 
-		PROCEDURE Error(CONST source: ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
 				diagnostics.Error(source,position,errorCode,message);

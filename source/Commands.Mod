@@ -76,15 +76,15 @@ TYPE
 			res:=in.res
 		END Receiver;
 
-		PROCEDURE CanSetPos(): BOOLEAN;
+		PROCEDURE CanSetPos*(): BOOLEAN;
 		BEGIN RETURN in.CanSetPos()
 		END CanSetPos;
 
-		PROCEDURE SetPos(pos: LONGINT);
+		PROCEDURE SetPos*(pos: LONGINT);
 		BEGIN Reset; pos0 := pos; in.SetPos(pos)
 		END SetPos;
 
-		PROCEDURE Pos(): LONGINT;
+		PROCEDURE Pos*(): LONGINT;
 		BEGIN RETURN Pos^()+pos0;
 		END Pos;
 

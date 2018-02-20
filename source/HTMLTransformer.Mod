@@ -1533,7 +1533,7 @@ TYPE
 			IF ~isSubtable THEN AlignCells(); END;
 		END New;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			h, w, color, i : LONGINT;
 		BEGIN

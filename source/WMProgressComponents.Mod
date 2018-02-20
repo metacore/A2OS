@@ -79,7 +79,7 @@ TYPE
 			Invalidate;
 		END IncPos;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR any : ANY;
 		BEGIN
 			RecacheProperties^;

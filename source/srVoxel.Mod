@@ -15,7 +15,7 @@ BEGIN
 	g := srBase.clamp(green );
 	b := srBase.clamp(blue );
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 BEGIN
 	ray.r := ray.r + r*ray.ra;
 	ray.g := ray.g + g*ray.ga;
@@ -29,7 +29,7 @@ END ColoredVox;
 TYPE GoorowVox* = OBJECT(Voxel);
 VAR
 	r, g, b: SREAL;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 BEGIN
 	ray.r := ray.r + ray.lxyz.x*ray.ra;
 	ray.g := ray.g + ray.lxyz.y*ray.ga;
@@ -50,7 +50,7 @@ BEGIN
 	g := srBase.clamp(green);
 	b := srBase.clamp(blue);
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z,dotrl: SREAL;
 BEGIN
@@ -80,7 +80,7 @@ BEGIN
 	g := srBase.clamp(green)*a;
 	b := srBase.clamp(blue)*a;
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	dr, dg, db: SREAL;
 BEGIN
@@ -101,7 +101,7 @@ END ColoredMVox;
 TYPE DiffuseMVox* = OBJECT(Voxel);
 VAR
 	r, g, b, mf, a: SREAL;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	nx, ny, nz: INTEGER;
 	dot: SREAL;
@@ -129,7 +129,7 @@ END DiffuseMVox;
 TYPE DiffuseSphMVox* = OBJECT(ColoredVox);
 VAR
 	 mf, a: SREAL;
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	nx, ny, nz: SREAL;
 	dot: SREAL;
@@ -149,7 +149,7 @@ END DiffuseSphMVox;
 TYPE DiffuseSphVox* = OBJECT(ColoredVox);
 VAR
 	 mf, a: SREAL;
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	dot: SREAL;
 	p: srBase.PT;
@@ -176,7 +176,7 @@ BEGIN
 	g := srBase.clamp(green * alpha);
 	b := srBase.clamp(blue * alpha);
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	dr, dg, db: SREAL;
 BEGIN
@@ -221,7 +221,7 @@ BEGIN
 	passable := TRUE;
 END SetColor;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	depth: SREAL;
 	exit:PT;
@@ -256,7 +256,7 @@ BEGIN
 	passable := TRUE;
 END SetColor;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	depth: SREAL;
 	exit:PT;
@@ -282,7 +282,7 @@ END RainbowVox;
 
 TYPE JelloVox*=OBJECT(AlphaVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z: SREAL;
 	depth: SREAL;
@@ -305,7 +305,7 @@ END JelloVox;
 
 TYPE AirVox*=OBJECT(ColoredVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z: SREAL;
 	depth: SREAL;
@@ -329,7 +329,7 @@ END AirVox;
 
 TYPE InkVox*=OBJECT(ColoredVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	ink: SREAL;
 BEGIN
@@ -351,7 +351,7 @@ BEGIN
 	og := green ;
 	ob := blue;
 END SetOutline;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	ecount: INTEGER;
 BEGIN
@@ -382,7 +382,7 @@ TYPE GoutlineVox*=OBJECT(ColoredVox)
 VAR
 	tx, ty, tz: SREAL;		(* thickness of outline *)
 	or, og, ob: SREAL; 	(* outline color *)
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	ecount: INTEGER;
 	l, le, xe, ye, ze: SREAL;
@@ -425,7 +425,7 @@ BEGIN
 	brightness := 16;
 END init;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	IF srBase.rand.Uniform()>1/2 THEN
 		brightness := (brightness + 1) MOD 20;
@@ -433,7 +433,7 @@ BEGIN
 		brightness := (brightness - 1) MOD 20;
 	END
 END tick;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l: SREAL;
 BEGIN
@@ -447,7 +447,7 @@ END GouraudVox;
 
 TYPE VGouraudVox* = OBJECT(GouraudVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l: SREAL;
 BEGIN
@@ -461,7 +461,7 @@ END VGouraudVox;
 
 TYPE HGouraudVox* = OBJECT(GouraudVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l: SREAL;
 BEGIN
@@ -478,7 +478,7 @@ END HGouraudVox;
 
 TYPE NouraudVox* = OBJECT(ColoredVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l: SREAL;
 BEGIN
@@ -495,7 +495,7 @@ END NouraudVox;
 
 TYPE DiffuseVox* = OBJECT(ColoredVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	nx, ny, nz: INTEGER;
 	dot: SREAL;
@@ -526,7 +526,7 @@ END DiffuseVox;
 
 TYPE DiffuseNouraudVox* = OBJECT(ColoredVox);
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	nx, ny, nz: INTEGER;
 	dot: SREAL;
@@ -581,7 +581,7 @@ BEGIN
 	Z := z;
 END SetGrid;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	lx, ly, x, y: SREAL;
 	i, j: LONGINT;
@@ -630,7 +630,7 @@ BEGIN
 	register;
 END SetColor;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	dx, dy, dz, d2: SREAL;
 BEGIN
@@ -662,7 +662,7 @@ BEGIN
 	a := alpha;
 	register;
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	d, x,y,z, dr, dg, db: SREAL;
 	ijk: srBase.IPT;
@@ -721,7 +721,7 @@ BEGIN
 	END;
 END talk;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	lx,ly: SREAL;
 	Q, gray: SREAL;
@@ -759,7 +759,7 @@ BEGIN
 	ph :=  6.28*srMath.cos(y);
 END ctop;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	Q, gray: SREAL;
 	th,ph: SREAL;
@@ -798,7 +798,7 @@ BEGIN
 	bb := srBase.clamp(b2);
 END SetColor;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 BEGIN
 	IF srBase.rand.Uniform()>1/2 THEN
 		brightness := (brightness + 1) MOD 20;
@@ -807,7 +807,7 @@ BEGIN
 	END
 END tick;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l, x, y, z: SREAL;
 	nx, ny, nz: INTEGER;
@@ -850,7 +850,7 @@ BEGIN
 	b := blue * alpha;
 	a := alpha
 END SetColor;
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	d, dr, dg, db: SREAL;
 BEGIN
@@ -957,7 +957,7 @@ BEGIN
 	RETURN(SELF);
 END probe;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 BEGIN
  v1.Shade(ray);
  v2.Shade(ray);

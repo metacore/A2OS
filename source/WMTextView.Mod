@@ -843,7 +843,7 @@ TYPE
 			cursor.SetVisible(FALSE);
 		END Initialize;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF text # NIL THEN text.onTextChanged.Remove(TextChanged); END;
@@ -892,7 +892,7 @@ TYPE
 			END;
 		END InsertChar;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR
 			highlighter : SyntaxHighlighter.Highlighter;
 			oldBorders : WMRectangles.Rectangle;
@@ -1058,7 +1058,7 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		VAR prevWidth: LONGINT;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
@@ -3211,7 +3211,7 @@ TYPE
 		END DragWasAccepted;
 
 		(* Drag onto operations *)
-		PROCEDURE DragOver(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR pos : LONGINT;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -3224,7 +3224,7 @@ TYPE
 			END;
 		END DragOver;
 		
-		PROCEDURE ConfirmDrag(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo);
+		PROCEDURE ConfirmDrag*(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo);
 		BEGIN
 			IF dragInfo.onAccept # NIL THEN 
 				dragInfo.onAccept(SELF, dragInfo) 
@@ -3915,7 +3915,7 @@ TYPE
 			Paste;
 		END PieMenuPaste;
 
-		PROCEDURE ShowContextMenu(x, y: LONGINT);
+		PROCEDURE ShowContextMenu*(x, y: LONGINT);
 		VAR
 			popup : WMPopups.Popup;
 			start, end, bufSize : LONGINT;
@@ -3972,7 +3972,7 @@ TYPE
 			END
 		END ShowContextMenu;
 
-		PROCEDURE HandleInternal(VAR x: WMMessages.Message);
+		PROCEDURE HandleInternal*(VAR x: WMMessages.Message);
 		VAR pos : LONGINT; obj : ANY; link : Texts.Link;
 		BEGIN
 			ASSERT(IsCallFromSequencer());

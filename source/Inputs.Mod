@@ -214,13 +214,13 @@ TYPE
 	Broadcaster = OBJECT (Group)
 		VAR sentinel: List;
 
-		PROCEDURE Register(s: Sink);
+		PROCEDURE Register*(s: Sink);
 		VAR n: List;
 		BEGIN {EXCLUSIVE}
 			NEW(n); n.s := s; n.next := sentinel.next; sentinel.next := n
 		END Register;
 
-		PROCEDURE Unregister(s: Sink);
+		PROCEDURE Unregister*(s: Sink);
 		VAR n: List;
 		BEGIN {EXCLUSIVE}
 			n := sentinel;
@@ -228,7 +228,7 @@ TYPE
 			IF n.next # NIL THEN n.next := n.next.next END
 		END Unregister;
 
-		PROCEDURE Handle(VAR msg: Message);
+		PROCEDURE Handle*(VAR msg: Message);
 		VAR n: List;
 		BEGIN {EXCLUSIVE}
 			n := sentinel.next;
@@ -273,7 +273,7 @@ TYPE
 	MouseFixer = OBJECT (Sink)
 		VAR ctrl: BOOLEAN;
 
-		PROCEDURE Handle(VAR m: Message);
+		PROCEDURE Handle*(VAR m: Message);
 		VAR new: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			WITH m: KeyboardMsg DO

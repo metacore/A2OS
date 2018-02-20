@@ -64,7 +64,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE GetInterface(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
 		VAR sdi : DropString;
 		BEGIN
 			IF (type = WMDropTarget.TypeString) THEN
@@ -90,7 +90,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE Set(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
 		BEGIN
 			setString(string, position, res);
 		END Set;
@@ -271,7 +271,7 @@ TYPE
 		PROCEDURE Disable;
 		END Disable;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		BEGIN
 			Draw^(canvas);
 			(*
@@ -400,7 +400,7 @@ TYPE
 		boolean : WMProperties.BooleanProperty;
 		checkbox : WMStandardComponents.Checkbox;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrBooleanPropertyView);
@@ -488,7 +488,7 @@ TYPE
 		editor : WMEditors.TextField;
 		outOfDate : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrInt32PropertyView);
@@ -590,7 +590,7 @@ TYPE
 		editor : WMEditors.TextField;
 		outOfDate : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrRealPropertyView);
@@ -1028,7 +1028,7 @@ TYPE
 		editor : WMEditors.TextField;
 		outOfDate : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrStringPropertyView);
@@ -1129,7 +1129,7 @@ TYPE
 		res : LONGINT;
 		outOfDate : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrColorPropertyView);
@@ -1399,7 +1399,7 @@ TYPE
 		button : WMStandardComponents.Button;
 		outOfDate : BOOLEAN;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrReferencePropertyView);
@@ -1600,7 +1600,7 @@ TYPE
 		int32 : WMProperties.Int32Property;
 		alignment_chooser : WMDropDownLists.DropDownList;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		VAR res : LONGINT;
 		BEGIN
 			Init^;
@@ -1700,7 +1700,7 @@ TYPE
 			RETURN (property # NIL);
 		END IsCompatible;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		VAR label : WMStandardComponents.Label;
 		BEGIN
 			Init^;
@@ -1722,7 +1722,7 @@ TYPE
 	VAR
 		event : WMEvents.EventSource;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrEventSourceView);
@@ -1767,7 +1767,7 @@ TYPE
 	VAR
 		event : WMEvents.EventListenerInfo;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrEventListenerView);
@@ -1813,7 +1813,7 @@ TYPE
 		idView, uidView : StringPropertyView;
 		enabledView : BooleanPropertyView;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("ComponentView"));
@@ -1902,7 +1902,7 @@ TYPE
 
 		focusNextView, focusPrevView : StringPropertyView;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("VisualComponentView"));
@@ -2297,7 +2297,7 @@ TYPE
 		cache : PropertySheetCache;
 		current : ExtendedProperties;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrExtendedPropertiesView);
@@ -2310,7 +2310,7 @@ TYPE
 			nofElements := CountExtendedProperties(component);
 		END CountNofElements;
 
-		PROCEDURE SetComponent(component : WMComponents.Component);
+		PROCEDURE SetComponent*(component : WMComponents.Component);
 		VAR ps : ExtendedProperties; generateNew : BOOLEAN;
 		BEGIN
 			DisableUpdate;
@@ -2354,12 +2354,12 @@ TYPE
 			Invalidate;
 		END SetComponent;
 
-		PROCEDURE Apply;
+		PROCEDURE Apply*;
 		BEGIN
 			IF (current # NIL) THEN current.Apply; END;
 		END Apply;
 
-		PROCEDURE Synchronize(force : BOOLEAN);
+		PROCEDURE Synchronize*(force : BOOLEAN);
 		BEGIN
 			IF (current # NIL) THEN current.Synchronize(force); END;
 		END Synchronize;
@@ -2766,7 +2766,7 @@ TYPE
 		editor : WMEditors.TextField;
 		next : AttributeView;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("AttributeView"));
@@ -2842,7 +2842,7 @@ TYPE
 			SetOutOfDate(TRUE);
 		END EditorContentChanged;
 
-		PROCEDURE DrawForeground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
 		VAR attribute : XML.Attribute; name : Strings.String;
 		BEGIN
 			DrawForeground^(canvas);
@@ -3180,7 +3180,7 @@ TYPE
 			SetState(State_Synchronize);
 		END PropertyListChanged;
 
-		PROCEDURE LinkChanged(sender, data : ANY);
+		PROCEDURE LinkChanged*(sender, data : ANY);
 		BEGIN
 			SetState(State_SynchronizeForce);
 		END LinkChanged;
@@ -3297,7 +3297,7 @@ TYPE
 			END;
 		END ButtonHandler;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF (component # NIL) THEN
@@ -3493,7 +3493,7 @@ TYPE
 			timer.Wakeup; (* force update *)
 		END SetComponent;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} state := State_Terminating; END;
@@ -3710,7 +3710,7 @@ TYPE
 			END;
 		END ModelChanged;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF (model # NIL) THEN model.onChanged.Remove(ModelChanged); END;
@@ -3735,13 +3735,13 @@ TYPE
 			WMWindowManager.DefaultAddWindow(SELF);
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close;
 			ELSE Handle^(x)

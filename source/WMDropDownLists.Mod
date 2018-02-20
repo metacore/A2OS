@@ -63,7 +63,7 @@ TYPE
 			CSChanged;
 		END New;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
 		BEGIN
 			canvas.Fill(shadowRect, 04FH, WMGraphics.ModeSrcOverDst);
 			Draw^(canvas, w, h, q);
@@ -92,7 +92,7 @@ TYPE
 			 END;
 		END PropagateSelection;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			isClosed := TRUE;
@@ -119,7 +119,7 @@ TYPE
 			IF (srow # selectRow) THEN grid.SetSelection(0, selectRow, 0, selectRow); END;
 		END SelectEntry;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
 		VAR handled : BOOLEAN;
 		BEGIN
 			IF ~(Inputs.Release IN flags) THEN
@@ -139,7 +139,7 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			Close;
@@ -387,13 +387,13 @@ TYPE
 			SetGenerator("WMDropDownLists.GenDropDownList");
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			SetMode(mode.Get());
 		END Initialize;
 
-		PROCEDURE Finalize; (* override *)
+		PROCEDURE Finalize*; (* override *)
 		BEGIN
 			Finalize^;
 			model.onChanged.Remove(ModelChanged);
@@ -545,7 +545,7 @@ TYPE
 			grid.Release;
 		END UpdateGrid;
 
-		PROCEDURE PropertyChanged(sender, property : ANY); (* override *)
+		PROCEDURE PropertyChanged*(sender, property : ANY); (* override *)
 		BEGIN
 			IF (property = textColor) THEN
 				Invalidate;

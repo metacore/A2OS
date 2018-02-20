@@ -509,7 +509,7 @@ TYPE
 			IF list.Length() = i THEN list.Add(o) ELSE list.Set(i,o) END;
 		END SetElement;
 
-		PROCEDURE Enumerate(enum: Enumerator);
+		PROCEDURE Enumerate*(enum: Enumerator);
 		BEGIN
 			Enumerate^(enum);
 			enum("element", TRUE);
@@ -785,14 +785,14 @@ TYPE
 			w := writer; NEW(document); NEW(written,16); current := document; NEW(scope,current);
 		END InitXMLWriter;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			IF w # NIL THEN
 				document.Write(w,NIL,-1); w.Update;
 			END
 		END Close;
 
-		PROCEDURE NameAttribute(CONST name, str: ARRAY OF CHAR);
+		PROCEDURE NameAttribute*(CONST name, str: ARRAY OF CHAR);
 		BEGIN
 			element.SetAttributeValue(name, str);
 		END NameAttribute;
@@ -811,7 +811,7 @@ TYPE
 			IF (current IS XML.Element) THEN element := current(XML.Element) ELSE element := NIL END;
 		END Exit;
 
-		PROCEDURE WriteObject(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object);
+		PROCEDURE WriteObject*(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object);
 		VAR guid: LONGINT;
 		BEGIN
 			IF o # NIL THEN
@@ -1036,7 +1036,7 @@ TYPE
 			error.Update;
 		END Error;
 
-		PROCEDURE StringAttribute(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN;
+		PROCEDURE StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN;
 		BEGIN
 			IF element # NIL THEN
 				str := element.GetAttributeValue(name);
@@ -1102,7 +1102,7 @@ TYPE
 			END;
 		END CheckUse;
 
-		PROCEDURE ReadObject(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN;
+		PROCEDURE ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN;
 		VAR type: ARRAY 32 OF CHAR; id: HUGEINT;
 		BEGIN
 			(*IF err THEN RETURN FALSE END;*)

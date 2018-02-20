@@ -706,7 +706,7 @@ TYPE
 			RETURN res = Disks.Ok;
 		END SetSelection;
 
-		PROCEDURE WheelMove(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : LONGINT);
 		CONST	Multiplier = 30;
 		VAR pos : LONGINT;
 		BEGIN
@@ -883,12 +883,12 @@ TYPE
 			CSChanged;
 		END UpdateLayout;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^; IF popup # NIL THEN popup.Close; END;
 		END Close;
 
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			Resized^(width, height);
 			UpdateLayout(width, height);
@@ -1742,7 +1742,7 @@ TYPE
 			END;
 		END Install;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF popup # NIL THEN popup.Close; popup := NIL END;
@@ -2494,7 +2494,7 @@ TYPE
 			Close^; BEGIN {EXCLUSIVE} result := ResCancel; END;
 		END Cancel;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^; BEGIN {EXCLUSIVE} result := ResCancel; END;
 		END Close;
@@ -2684,7 +2684,7 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Resized(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : LONGINT);
 		BEGIN
 			IF (width >= WindowMinWidth) & (height >= WindowMinHeight) THEN
 				scaling := FALSE;
@@ -2742,7 +2742,7 @@ TYPE
 			PartitionsLib.diskModel.Update;
 		END Refresh;
 
-		PROCEDURE WheelMove(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : LONGINT);
 		BEGIN
 			partitionSelector.WheelMove(dz);
 		END WheelMove;
@@ -2778,14 +2778,14 @@ TYPE
 			END;
 		END UpdateSelection;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			PartitionsLib.infobus.RemoveListener(CompletionHandler);
 			window := NIL;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR configuration : WMRestorable.XmlElement;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -2949,7 +2949,7 @@ TYPE
 			END;
 		END CheckBoxes;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		BEGIN
 			Resized^;
 			info.bounds.SetExtents(bounds.GetWidth(), ButtonHeight);
@@ -3043,7 +3043,7 @@ TYPE
 			owner.UpdateStatusLabel(Strings.NewString(result));
 		END Showerrors;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			Acquire;

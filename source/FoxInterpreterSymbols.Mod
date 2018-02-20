@@ -142,7 +142,7 @@ TYPE
 			address := SymbolAddress(type, 0);
 		END InitType;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN address;
 		END Address;
@@ -164,7 +164,7 @@ TYPE
 			self := m; 
 		END InitModule;
 		
-		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		VAR num: LONGINT;
 				proc: ProcedureResult;
 				field: FieldResult;
@@ -397,7 +397,7 @@ TYPE
 			END;
 		END ReturnsPointer;
 		
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN address;
 		END Address;
@@ -551,7 +551,7 @@ TYPE
 			RETURN Reflection.GetChar(parameters.refs, parameters.offset) # Reflection.sfVariable;
 		END Check;
 
-		PROCEDURE Evaluate(): Value;
+		PROCEDURE Evaluate*(): Value;
 		VAR 
 			int: IntegerValue;
 			real: RealValue;
@@ -610,12 +610,12 @@ TYPE
 			SELF.address := SymbolAddress(meta, base);
 		END InitField;
 		
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN address;
 		END Address;
 
-		PROCEDURE Evaluate(): Value;
+		PROCEDURE Evaluate*(): Value;
 		VAR 
 			s: SHORTINT;
 			i: INTEGER;
@@ -655,7 +655,7 @@ TYPE
 			END;
 		END Evaluate;
 		
-		PROCEDURE SetV(v: Value): BOOLEAN;
+		PROCEDURE SetV*(v: Value): BOOLEAN;
 		VAR 
 			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
 			r: REAL; x: LONGREAL;
@@ -710,7 +710,7 @@ TYPE
 			END;
 		END SetV;
 
-		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		VAR value, typeDesc: ADDRESS;
 		VAR typeInfo: Modules.TypeDesc; num: LONGINT;
 		proc: ProcedureResult; f: FieldResult;
@@ -817,7 +817,7 @@ TYPE
 		BEGIN InitObject
 		END InitValue;
 
-		PROCEDURE Evaluate(): Value;
+		PROCEDURE Evaluate*(): Value;
 		BEGIN
 			RETURN SELF;
 		END Evaluate;
@@ -882,25 +882,25 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "AnyValue";
 		END InitAny;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE GetAddress(VAR a: ADDRESS): BOOLEAN;
+		PROCEDURE GetAddress*(VAR a: ADDRESS): BOOLEAN;
 		BEGIN
 			a := value; RETURN TRUE;
 		END GetAddress;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Address(value);
 		END WriteValue;
 		
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
 		
-		PROCEDURE Find(CONST name: ARRAY OF CHAR): Result;
+		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		VAR type, v, address: ADDRESS;
 		VAR typeInfo: Modules.TypeDesc; num: LONGINT;
 		proc: ProcedureResult; f: FieldResult;
@@ -936,11 +936,11 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "AnyValue";
 		END InitAny;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR int: HUGEINT;
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(int); value := ADDRESS(int);
@@ -948,23 +948,23 @@ TYPE
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetInteger(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 
-		PROCEDURE GetAddress(VAR a: ADDRESS): BOOLEAN;
+		PROCEDURE GetAddress*(VAR a: ADDRESS): BOOLEAN;
 		BEGIN
 			a := value; RETURN TRUE;
 		END GetAddress;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Address(value);
 		END WriteValue;
 		
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -979,11 +979,11 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "IntegerValue";
 		END InitInteger;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR val: HUGEINT;
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(val); value := val;
@@ -991,28 +991,28 @@ TYPE
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetInteger(LONGINT(value));
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 		
-		PROCEDURE GetInt(VAR v: HUGEINT): BOOLEAN;
+		PROCEDURE GetInt*(VAR v: HUGEINT): BOOLEAN;
 		BEGIN
 			v := value; RETURN TRUE;
 		END GetInt;
 
-		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		PROCEDURE GetReal*(VAR x: LONGREAL): BOOLEAN;
 		BEGIN
 			x := value; RETURN TRUE;
 		END GetReal;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Int(value,0);
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1026,34 +1026,34 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "RealValue";
 		END InitReal;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetFloat(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetFloat(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 		
-		PROCEDURE GetReal(VAR x: LONGREAL): BOOLEAN;
+		PROCEDURE GetReal*(VAR x: LONGREAL): BOOLEAN;
 		BEGIN
 			x := value; RETURN TRUE; 
 		END GetReal;
 		
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Float(value,40);
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1067,35 +1067,35 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "BooleanValue";
 		END InitBoolean;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetBoolean(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetBoolean(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 
-		PROCEDURE GetBoolean(VAR x: BOOLEAN): BOOLEAN;
+		PROCEDURE GetBoolean*(VAR x: BOOLEAN): BOOLEAN;
 		BEGIN
 			x := value; RETURN TRUE;
 		END GetBoolean;
 
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN IF value THEN w.String("TRUE") ELSE w.String("FALSE") END
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1109,29 +1109,29 @@ TYPE
 		BEGIN InitValue; SELF.value := Strings.NewString(value); type := "StringValue";
 		END InitString;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetString(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetString(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN (*w.String('"');*) w.String(value^); (*w.String('"');*)
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN value;
 		END Address;
@@ -1146,35 +1146,35 @@ TYPE
 		BEGIN InitValue; SELF.value := value; type := "SetValue"
 		END InitSet;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetSet(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetSet(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 		
-		PROCEDURE GetSet(VAR x: SET): BOOLEAN;
+		PROCEDURE GetSet*(VAR x: SET): BOOLEAN;
 		BEGIN
 			x:= value; RETURN TRUE;
 		END GetSet;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
 			w.Set(value)
 		END WriteValue;
 		
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1188,36 +1188,36 @@ TYPE
 		BEGIN InitValue; value := r; type := "RangeValue"
 		END InitRange;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetRange(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetRange(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;		
 
-		PROCEDURE GetRange(VAR x: RANGE): BOOLEAN;
+		PROCEDURE GetRange*(VAR x: RANGE): BOOLEAN;
 		BEGIN
 			x := value; RETURN TRUE; 
 		END GetRange;
 
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
 			w.Int(FIRST(value),0); w.String(" .. "); w.Int(LAST(value),0); IF STEP(value) # 1 THEN w.String(" BY "); w.Int(STEP(value),0) END;
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1231,35 +1231,35 @@ TYPE
 		BEGIN InitValue; value := c; type := "CharValue";
 		END InitChar;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetChar(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetChar(value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 		
-		PROCEDURE GetChar(VAR c: CHAR): BOOLEAN;
+		PROCEDURE GetChar*(VAR c: CHAR): BOOLEAN;
 		BEGIN
 			c := value; RETURN TRUE; 
 		END GetChar;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
 			w.Hex(ORD(value),2); w.String("X");
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1273,31 +1273,31 @@ TYPE
 		BEGIN InitValue; value := v;  translation := trans; type := "EnumValue";
 		END InitEnumValue;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetEnum(translation, value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetEnum(translation, value);
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 
-		PROCEDURE WriteValue(w: Streams.Writer);
+		PROCEDURE WriteValue*(w: Streams.Writer);
 		VAR str: ARRAY 32 OF CHAR;
 		BEGIN
 			IF translation.Name(SIZE(value), str) THEN w.String(str) ELSE w.String("unknown") END;
 		END WriteValue;
 
-		PROCEDURE Address(): ADDRESS;
+		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
@@ -1314,18 +1314,18 @@ TYPE
 			type := "MathArrayValue";
 		END InitMathArrayValue;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN values[index] := ContentGetValue(c)
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetObject(values[index],"Value");
 			ELSE Get^(name, index, c);
@@ -1390,7 +1390,7 @@ TYPE
 			type := "Container";
 		END InitContainer;
 
-		PROCEDURE Enumerate(enum: PersistentObjects.Enumerator);
+		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
 		VAR i: LONGINT; symbol: Symbol; o: ANY; name: ARRAY 256 OF CHAR;
 		BEGIN Enumerate^(enum);
 			FOR i := 0 TO symbols.Length()-1 DO
@@ -1401,14 +1401,14 @@ TYPE
 			END;
 		END Enumerate;
 
-		PROCEDURE Set(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF FALSE THEN
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR item: Item;
 		BEGIN
 			item := Find(name);

@@ -441,7 +441,7 @@ TYPE
 			SetWordWrap(wordWrap);
 		END FromXml;
 
-		PROCEDURE Handle(VAR m: WMMessages.Message);
+		PROCEDURE Handle*(VAR m: WMMessages.Message);
 		BEGIN
 			IF m.msgType = WMMessages.MsgKey THEN
 				IF ~HandleShortcut(m.x, m.flags, m.y) THEN
@@ -518,7 +518,7 @@ TYPE
 			END;
 		END EnsureSearchPanel;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF (editor.text # NIL) THEN

@@ -416,7 +416,7 @@ TYPE
 			RETURN tree
 		END GetTree;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			Invalidate;
@@ -747,7 +747,7 @@ TYPE
 			END
 		END KeyEvent;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			selecting := 0 IN keys;
@@ -758,7 +758,7 @@ TYPE
 			downY := y
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR new : TreeNode;
 		BEGIN
 			new := GetNodeAtPos(downX, downY);
@@ -786,7 +786,7 @@ TYPE
 			onMiddleClickNode.Call(node);
 		END MiddleClickNode;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR new : TreeNode; tn : TreeNode; w : LONGINT;
 		BEGIN
 			tree.Acquire;
@@ -828,7 +828,7 @@ TYPE
 			draggedNode := NIL;
 		END PointerUp;
 
-		PROCEDURE DragOver(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR node : TreeNode;
 		BEGIN
 			tree.Acquire;
@@ -861,7 +861,7 @@ TYPE
 			END
 		END SelectNode;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			IF hoverNode # NIL THEN hoverNode := NIL; Invalidate END
 		END PointerLeave;

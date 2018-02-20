@@ -229,7 +229,7 @@ TYPE
 			lastComment.Append(buf,ofs,len)
 		END AppendToLine;
 
-		PROCEDURE Ln;
+		PROCEDURE Ln*;
 		BEGIN
 			Ln^;
 			(*Update;*)

@@ -146,7 +146,7 @@ TYPE
 		END Initialize;
 
 		(* Finalize the file system. *)
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR purge: FilePurger; update: FileUpdater;
 		BEGIN {EXCLUSIVE}
 			NEW(purge); purge.count := 0;
@@ -639,7 +639,7 @@ TYPE
 
 		(* Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file.
 			A Rider cannot be positioned beyond the end of a file. *)
-		PROCEDURE Set(VAR r: Files.Rider; pos: LONGINT);
+		PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
 		BEGIN {EXCLUSIVE} SetX(r, pos)
 		END Set;
 
@@ -659,7 +659,7 @@ TYPE
 		END SetX;
 
 		(* Return the offset of a Rider positioned on a file. *)
-		PROCEDURE Pos(VAR r: Files.Rider): LONGINT;
+		PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
 		BEGIN RETURN r.apos*clusterSize + r.bpos
 		END Pos;
 
@@ -782,7 +782,7 @@ TYPE
 
 		(* Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when
 			reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
-		PROCEDURE ReadBytes(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN {EXCLUSIVE} ReadBytesX(r, x, ofs, len)
 		END ReadBytes;
 
@@ -826,7 +826,7 @@ TYPE
 		END WriteX;
 
 		(* Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
-		PROCEDURE WriteBytes(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN {EXCLUSIVE} WriteBytesX(r, x, ofs, len)
 		END WriteBytes;
 
@@ -854,7 +854,7 @@ TYPE
 		END WriteBytesX;
 
 		(* Return the current length of a file. *)
-		PROCEDURE Length(): LONGINT;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN
 			(* Length() should in principle be exlusive, however it won't do any harm if it is not, it just reflects the
 				current size if called from outside. Internal methods that call Length() are exclusive whenever needed *)
@@ -913,7 +913,7 @@ TYPE
 
 		(* Register a file created with New in the directory, replacing the previous file in the directory with the same name.
 			The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: LONGINT);
 		VAR dir: Directory; old: File; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF ~registered THEN
@@ -949,7 +949,7 @@ TYPE
 		END Register0;
 
 		(* Flush the changes made to a file from its buffers. Register0 will automatically update a file. *)
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		BEGIN {EXCLUSIVE} UpdateX
 		END Update;
 
@@ -1110,7 +1110,7 @@ TYPE
 		END SetX;
 
 		(* Return the current length of a file. *)
-		PROCEDURE Length(): LONGINT;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (size = 0) THEN InitSize END;
 			RETURN Length^()
@@ -1641,7 +1641,7 @@ TYPE
 	END Directory;
 
 	RootDirectory = OBJECT(Directory)
-		PROCEDURE GetFullName(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN);
+		PROCEDURE GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN);
 		VAR pos, i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			pos := 0; i := 0;
@@ -1672,7 +1672,7 @@ TYPE
 			size := fs.vol(FATVolumes.FAT1216Volume).numRootSectors*FATVolumes.BS
 		END InitSize;
 
-		PROCEDURE ReadBuffer*(buffer: Buffer; pos: LONGINT);
+		PROCEDURE ReadBuffer(buffer: Buffer; pos: LONGINT);
 		VAR vol: FATVolumes.FAT1216Volume; res: LONGINT;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);
@@ -1682,7 +1682,7 @@ TYPE
 			IF (res # Ok) THEN HALT(ErrIOError) END
 		END ReadBuffer;
 
-		PROCEDURE WriteBuffer*(buffer: Buffer);
+		PROCEDURE WriteBuffer(buffer: Buffer);
 		VAR vol: FATVolumes.FAT1216Volume; res: LONGINT;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);

@@ -405,7 +405,7 @@ TYPE
 	END DirtyQ;
 
 	UnhitableWindow = OBJECT(WM.BufferWindow);
-		PROCEDURE IsHit(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
 		BEGIN
 			RETURN FALSE
 		END IsHit;
@@ -986,7 +986,7 @@ TYPE
 
 		(** Adjust pointer to new position / check picture *)
 		(** MUST hold wm lock *)
-		PROCEDURE CheckPointerImage;
+		PROCEDURE CheckPointerImage*;
 		VAR rect : Rectangle; pi : WM.PointerInfo;
 		BEGIN
 			lock.AcquireWrite;
@@ -1405,7 +1405,7 @@ TYPE
 			inDoubleClick := FALSE;
 		END Init;
 
-		PROCEDURE Handle(VAR msg: Inputs.Message);
+		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		VAR dx, dy, dz, nx, ny, nz: LONGINT; modifierFlags : SET; time: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (msg IS Inputs.MouseMsg) THEN
@@ -1486,7 +1486,7 @@ TYPE
 	VAR
 		view : ViewPort; ch : LONGINT;
 
-		PROCEDURE Handle(VAR msg: Inputs.Message);
+		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN {EXCLUSIVE}
 			IF view = NIL THEN RETURN END;
 			ch := ORD(msg(Inputs.KeyboardMsg).ch);

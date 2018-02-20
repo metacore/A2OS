@@ -833,7 +833,7 @@ TYPE
 			hidePrefixes := FALSE;
 		END New;
 
-		PROCEDURE PrintOpcodeBytes (w : Streams.Writer);
+		PROCEDURE PrintOpcodeBytes*(w : Streams.Writer);
 		VAR
 			i : LONGINT;
 		BEGIN
@@ -847,7 +847,7 @@ TYPE
 			END
 		END PrintOpcodeBytes;
 
-		PROCEDURE PrintInstruction (w : Streams.Writer);
+		PROCEDURE PrintInstruction*(w : Streams.Writer);
 		BEGIN
 			IF ~hidePrefixes THEN
 				IF prREP IN prefixes THEN w.String ("REP ") END;
@@ -1364,7 +1364,7 @@ TYPE
 			END;
 		END PrintInstruction;
 
-		PROCEDURE PrintArguments (w : Streams.Writer);
+		PROCEDURE PrintArguments*(w : Streams.Writer);
 		VAR
 			i: LONGINT;
 		BEGIN
@@ -1376,7 +1376,7 @@ TYPE
 			END
 		END PrintArguments;
 
-		PROCEDURE PrintVariables (w : Streams.Writer);
+		PROCEDURE PrintVariables*(w : Streams.Writer);
 		VAR
 			i, count: LONGINT;
 			argMem: ArgMem;
@@ -1410,7 +1410,7 @@ TYPE
 	(* AMD dissassembler*)
 	AMD64Decoder = OBJECT (Decoder.Decoder)
 
-		PROCEDURE NewOpcode() : Decoder.Opcode;
+		PROCEDURE NewOpcode*() : Decoder.Opcode;
 		VAR
 			opcode : AMD64Opcode;
 		BEGIN
@@ -1418,7 +1418,7 @@ TYPE
 			RETURN opcode
 		END NewOpcode;
 
-		PROCEDURE DecodeThis(opcode : Decoder.Opcode);
+		PROCEDURE DecodeThis*(opcode : Decoder.Opcode);
 		VAR
 			opc : AMD64Opcode;
 			byte, code, arg, mod, segment, reg, rm, scale, index, base, disp: LONGINT;

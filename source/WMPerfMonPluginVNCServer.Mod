@@ -15,7 +15,7 @@ TYPE
 
 	VncStats= OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "VNCServer"; p.description := "Performance Monitor plugin for VNC server";
@@ -33,7 +33,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := VNCServer.NnofAuthenticate;
 			dataset[1] := VNCServer.NnofAuthNone;

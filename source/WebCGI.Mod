@@ -15,14 +15,14 @@ TYPE
 
 	CGIPlugin = OBJECT(WebHTTPServer.HTTPPlugin)
 
-		PROCEDURE CanHandle(host : WebHTTPServer.Host; VAR request : WebHTTP.RequestHeader; secure : BOOLEAN) : BOOLEAN;
+		PROCEDURE CanHandle*(host : WebHTTPServer.Host; VAR request : WebHTTP.RequestHeader; secure : BOOLEAN) : BOOLEAN;
 		VAR path : ARRAY 1024 OF CHAR;
 		BEGIN
 			WebHTTP.GetPath(request.uri, path);
 			RETURN MyMatch(path, "/CGI/")
 		END CanHandle;
 
-		PROCEDURE Handle(host : WebHTTPServer.Host; VAR request : WebHTTP.RequestHeader; VAR reply : WebHTTP.ResponseHeader;
+		PROCEDURE Handle*(host : WebHTTPServer.Host; VAR request : WebHTTP.RequestHeader; VAR reply : WebHTTP.ResponseHeader;
 			VAR in : Streams.Reader; VAR out : Streams.Writer);
 		VAR r : HTTPSupport.HTTPRequest;
 			cgiContextProc : CGIContextProc;

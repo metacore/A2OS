@@ -328,14 +328,14 @@ TYPE
 			END
 		END AddLabel;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			IF styleEditor # NIL THEN styleEditor.Close END;
 			Close^;
 			DecCount
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR data : XML.Element; a : XML.Attribute; n, str: ARRAY 32 OF CHAR;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -633,7 +633,7 @@ TYPE
 			bgColEdit.SetAsString(colorString);
 		END BGColorPopupHandler;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 		END Close;

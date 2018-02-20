@@ -1082,7 +1082,7 @@ TYPE
 			RETURN FALSE
 		END FilterContainerByName;
 
-		PROCEDURE Externalize() : XML.Content;
+		PROCEDURE Externalize*() : XML.Content;
 		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: PersistentDataObject; container: XML.Container;
 			oidString: ARRAY 14 OF CHAR;
 		BEGIN
@@ -1105,7 +1105,7 @@ TYPE
 			RETURN container
 		END Externalize;
 
-		PROCEDURE Internalize(xml: XML.Content);
+		PROCEDURE Internalize*(xml: XML.Content);
 		VAR container: XML.Container; elem: XML.Element; enumContainer: XMLObjects.Enumerator; p: ANY;
 		BEGIN
 			dataObjList.Clear; (* ! *)
@@ -1152,7 +1152,7 @@ TYPE
 			END
 		END InternalizeElem;
 
-		PROCEDURE GetReferrencedObjects() : PrevalenceSystem.PersistentObjectList;
+		PROCEDURE GetReferrencedObjects*() : PrevalenceSystem.PersistentObjectList;
 		VAR list: PrevalenceSystem.PersistentObjectList; i: LONGINT; pers: PrevalenceSystem.PersistentObject; p: ANY;
 		BEGIN
 			IF (dataObjList.GetCount() > 0) THEN
@@ -1169,7 +1169,7 @@ TYPE
 			END
 		END GetReferrencedObjects;
 
-		PROCEDURE ToXML(request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE ToXML*(request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: PersistentDataObject; container: XML.Container;
 			nameText: XML.ArrayChars; oidString, posString: ARRAY 14 OF CHAR; objSer: XML.Content;
 			persList: PersistentDataObjectList;
@@ -1392,7 +1392,7 @@ TYPE
 			END
 		END RemoveSessionDataObject;
 
-		PROCEDURE ToXML(request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE ToXML*(request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: SessionDataObject; container: XML.Container;
 			nameText: XML.ArrayChars; objSer: XML.Content; posString, oidString: ARRAY 14 OF CHAR;
 		BEGIN
@@ -1794,7 +1794,7 @@ TYPE
 			EndModification
 		END IncreaseCounter;
 
-		PROCEDURE Internalize(xml: XML.Content);
+		PROCEDURE Internalize*(xml: XML.Content);
 		VAR container: XML.Container;
 		BEGIN
 			container := xml(XML.Container);
@@ -1802,7 +1802,7 @@ TYPE
 			counter := InternalizeInteger(container, "Counter")
 		END Internalize;
 
-		PROCEDURE Externalize() : XML.Content;
+		PROCEDURE Externalize*() : XML.Content;
 		VAR container: XML.Container;
 		BEGIN
 			NEW(container);

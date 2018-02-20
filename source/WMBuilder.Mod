@@ -89,7 +89,7 @@ TYPE
 
 		opNum : LONGINT;
 
-		PROCEDURE &Init(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
 		VAR slib : Repositories.Repository;
 		BEGIN
 			Init^(width, height, FALSE);
@@ -282,7 +282,7 @@ TYPE
 	VAR
 		color, bgColor : LONGINT;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			color := 0FFH; bgColor := 0;
@@ -306,7 +306,7 @@ TYPE
 
 		insertAtObj : ANY;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			NEW(refreshBtn); refreshBtn.alignment.Set(WMComponents.AlignTop);
@@ -515,7 +515,7 @@ TYPE
 			Invalidate;
 		END SetCaption;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawBackground^(canvas);
 			canvas.SetColor(textColor);
@@ -532,7 +532,7 @@ TYPE
 	VAR
 		propertyPanel : WMInspectionComponents.PropertyPanel;
 
-		PROCEDURE &Init(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
 		BEGIN
 			Init^(width, height, alpha);
 
@@ -1346,7 +1346,7 @@ TYPE
 		state : LONGINT;
 		timer : Kernel.Timer;
 
-		PROCEDURE &Init;
+		PROCEDURE &Init*;
 		BEGIN
 			Init^;
 			SetNameAsString(StrComponentEditor);
@@ -1419,7 +1419,7 @@ TYPE
 			Invalidate;
 		END SetPanel;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = showSnapGrid) OR (property = enableSnap) OR (property = showHelperLines) OR (property = showFrames) THEN
 				RecacheProperties;
@@ -1428,7 +1428,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			showSnapGridI := showSnapGrid.Get();
@@ -1754,7 +1754,7 @@ TYPE
 			END;
 		END CheckSelection;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		VAR
 			down : BOOLEAN; oldFrame : WMRectangles.Rectangle;
 			snapX, snapY, snapDownX, snapDownY, dx, dy : LONGINT; f : WMRectangles.Rectangle;
@@ -1856,14 +1856,14 @@ TYPE
 			IF (owner # NIL) THEN owner.UpdateCursorPosition(x, y); END;
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			lastX := Invalid; lastY := Invalid;
 			IF (owner # NIL) THEN owner.UpdateCursorPosition(Invalid, Invalid); END;
 		END PointerLeave;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR down : BOOLEAN; res : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -1916,7 +1916,7 @@ TYPE
 			END;
 		END TakeOverSize;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		VAR
 			vc : WMComponents.VisualComponent; down : BOOLEAN; oldParent : XML.Element;
 			component : Repositories.Component;
@@ -1988,7 +1988,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags: SET; VAR keySym: LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; VAR keySym: LONGINT);
 
 			PROCEDURE ControlKey(flags : SET) : BOOLEAN;
 			BEGIN
@@ -2080,14 +2080,14 @@ TYPE
 			END;
 		END KeyEvent;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			modifierFlags := {};
 			downX := Invalid; downY := Invalid; lastX := Invalid; lastY := Invalid;
 		END FocusLost;
 
-		PROCEDURE DragOver(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		BEGIN
 			IF takesFocus.Get() THEN
 				dragX := x; dragY := y;
@@ -2124,7 +2124,7 @@ TYPE
 			END;
 		END DragAddComponent;
 
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR dc : WMRepositories.DropTarget;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -2260,7 +2260,7 @@ TYPE
 			END;
 		END DrawHelperLines;
 
-		PROCEDURE DrawForeground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
 		VAR rect : WMRectangles.Rectangle; e : XML.Element; x0, y0 : LONGINT;
 		BEGIN
 			DrawForeground^(canvas);
@@ -2322,7 +2322,7 @@ TYPE
 			END;
 		END DrawSnapGrid;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawBackground^(canvas);
 			IF (mode = EditMode) THEN
@@ -2333,7 +2333,7 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			state := State_Terminating;
@@ -2380,14 +2380,14 @@ TYPE
 		id : LONGINT;
 		next : EditWindow;
 
-		PROCEDURE FocusGot;
+		PROCEDURE FocusGot*;
 		BEGIN
 			FocusGot^;
 			owner.SetActiveEditor(SELF);
 			editor.CheckSelection;
 		END FocusGot;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			owner.RemoveEditor(SELF);
@@ -3169,7 +3169,7 @@ TYPE
 			RETURN data;
 		END StoreWindows;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		VAR data : WMRestorable.XmlElement;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
@@ -3183,7 +3183,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		VAR windows : WindowArray; i : LONGINT;
 		BEGIN
 			windows := windowList.GetAll();

@@ -34,7 +34,7 @@ TYPE
 		invLineWidthBy255: Real;
 		halfLineWidthSqr: Real;
 
-		PROCEDURE &New(img : Raster.Image);
+		PROCEDURE &New*(img : Raster.Image);
 		VAR firstTime: BOOLEAN;
 		BEGIN
 			firstTime := generator = NIL;

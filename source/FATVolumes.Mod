@@ -74,19 +74,19 @@ TYPE
 		BEGIN HALT(301)	(* abstract *)
 		END Init;
 
-		PROCEDURE AllocBlock(hint: Address; VAR adr: Address);
+		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
 		BEGIN HALT(301) (* not available on FAT volumes *)
 		END AllocBlock;
 
-		PROCEDURE FreeBlock(adr: Address);
+		PROCEDURE FreeBlock*(adr: Address);
 		BEGIN HALT(301) (* not available on FAT volumes *)
 		END FreeBlock;
 
-		PROCEDURE MarkBlock(adr: Address);
+		PROCEDURE MarkBlock*(adr: Address);
 		BEGIN HALT(301) (* not available on FAT volumes *)
 		END MarkBlock;
 
-		PROCEDURE Marked(adr: Address): BOOLEAN;
+		PROCEDURE Marked*(adr: Address): BOOLEAN;
 		BEGIN HALT(301) (* not available on FAT volumes *)
 		END Marked;
 
@@ -124,7 +124,7 @@ TYPE
 			END;
 		END InitLowLevel;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR i, j, res: LONGINT; ptable: Disks.PartitionTable;
 		BEGIN (* must be exclusive in overridden methods *)
 			quit := TRUE;
@@ -145,7 +145,7 @@ TYPE
 			Finalize^	(* see note in Files *)
 		END Finalize;
 
-		PROCEDURE Available(): LONGINT;
+		PROCEDURE Available*(): LONGINT;
 		VAR i: Address;
 		BEGIN {EXCLUSIVE}
 			IF (freeCount = -1) THEN
@@ -470,7 +470,7 @@ TYPE
 			RETURN Initialize^(bpb, MaxClusters)	(* see note in Volumes.Initialize *)
 		END Initialize;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN {EXCLUSIVE}
 			Finalize^	(* see note in Volumes.Finalize *)
 		END Finalize;
@@ -586,7 +586,7 @@ TYPE
 			END
 		END Initialize;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR vcf: SET; res: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF ~(Files.ReadOnly IN flags) THEN
@@ -730,7 +730,7 @@ TYPE
 			RETURN result
 		END Initialize;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		VAR vcf: SET; res: LONGINT; info: ARRAY BS OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF ~(Files.ReadOnly IN flags) THEN

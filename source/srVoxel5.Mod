@@ -47,7 +47,7 @@ BEGIN
 	bb := srBase.clamp(blue );
 END SetBackColor;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	lx, ly, dot: SREAL;
 	i,j,nx,ny,nz: LONGINT;
@@ -122,7 +122,7 @@ BEGIN
 	register;
 END init;
 
-PROCEDURE Shade(VAR ray: srBase.Ray);
+PROCEDURE Shade*(VAR ray: srBase.Ray);
 BEGIN
 	varray[srBase.frame MOD 10].Shade(ray);
 END Shade;
@@ -164,7 +164,7 @@ BEGIN
 END init;
 
 
-PROCEDURE Shade(VAR ray: srBase.Ray);
+PROCEDURE Shade*(VAR ray: srBase.Ray);
 BEGIN
 	varray[srBase.frame MOD 13].Shade(ray);
 END Shade;

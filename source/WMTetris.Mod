@@ -171,7 +171,7 @@ TYPE
 				InfoOffsetX - BevelBorder, InfoOffsetY - BevelBorder, FieldOffsetX - Border + BevelBorder, InfoOffsetY + InfoHeight + BevelBorder));
 		END DrawInfo;
 
-		PROCEDURE StyleChanged;
+		PROCEDURE StyleChanged*;
 		BEGIN
 			DrawInfo
 		END StyleChanged;
@@ -288,7 +288,7 @@ TYPE
 			RETURN result
 		END Move;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags: SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; keysym : LONGINT);
 		VAR ignore : BOOLEAN;
 			rotBlock : Block;
 		BEGIN {EXCLUSIVE}
@@ -448,7 +448,7 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(FieldOffsetX, FieldOffsetY, FieldOffsetX + Width*BoxSize, FieldOffsetY + Height*BoxSize));
 		END Reset;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			SetState(Terminating);
 			timer.Wakeup;
@@ -457,7 +457,7 @@ TYPE
 			DecCount;
 		END Close;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN
 				Close;

@@ -37,7 +37,7 @@ TYPE
 			a := 0;  b := 0;  error := 0
 		END Initialize;
 
-		PROCEDURE Copy( VAR copy: Data.Datum );
+		PROCEDURE Copy*( VAR copy: Data.Datum );
 		VAR new, obj: Interval;
 		BEGIN
 			(* Create object copy. *)
@@ -64,7 +64,7 @@ TYPE
 			soln := 0
 		END Initialize;
 
-		PROCEDURE Copy( VAR copy: Data.Datum );
+		PROCEDURE Copy*( VAR copy: Data.Datum );
 		VAR new, obj: ReInterval;
 		BEGIN
 			(* Create object copy. *)
@@ -91,7 +91,7 @@ TYPE
 			soln := 0
 		END Initialize;
 
-		PROCEDURE Copy( VAR copy: Data.Datum );
+		PROCEDURE Copy*( VAR copy: Data.Datum );
 		VAR new, obj: CplxInterval;
 		BEGIN
 			(* Create object copy. *)

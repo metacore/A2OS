@@ -198,7 +198,7 @@ TYPE
 		bevelWidth* : LONGINT;
 		bevelColor* : LONGINT;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			IF ~visible.Get() THEN RETURN END;
 			Acquire;

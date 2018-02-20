@@ -33,7 +33,7 @@ TYPE
 		(* virtual disk geometry CHS *)
 		cyls, hds, spt : LONGINT;
 
-		PROCEDURE Transfer(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid; RETURN; END;
 			ASSERT((ofs >= 0) & (ofs + num * blockSize <= LEN(data)));
@@ -63,12 +63,12 @@ TYPE
 			HALT(301); (* abstract *)
 		END TransferOperation;
 
-		PROCEDURE GetSize(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size, res: LONGINT);
 		BEGIN
 			size := SELF.size;	res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle(VAR msg : Disks.Message; VAR res : LONGINT);
+		PROCEDURE Handle*(VAR msg : Disks.Message; VAR res : LONGINT);
 		BEGIN
 			IF (msg IS Disks.GetGeometryMsg) & (cyls > 0) THEN
 				WITH msg: Disks.GetGeometryMsg DO

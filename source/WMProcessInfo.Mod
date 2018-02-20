@@ -100,7 +100,7 @@ TYPE
 			RETURN selection;
 		END GetSelection;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = sort) THEN
 				CheckSort;
@@ -112,7 +112,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			CheckVisibility;
@@ -184,7 +184,7 @@ TYPE
 			END;
 		END Pause;
 
-		PROCEDURE Resized;
+		PROCEDURE Resized*;
 		VAR width, height, w, add, i : LONGINT; newColWidth : WMGrids.Spacings;
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
@@ -331,7 +331,7 @@ TYPE
 			Release;
 		END Refresh;
 
-		PROCEDURE Finalize; (* override *)
+		PROCEDURE Finalize*; (* override *)
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE}

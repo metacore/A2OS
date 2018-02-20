@@ -44,7 +44,7 @@ TYPE
 	(** Fills partition with test data *)
 	TestDataWriter* = OBJECT(TestDataBase);
 
-		PROCEDURE FillWithTestData(VAR buffer : ARRAY OF CHAR);
+		PROCEDURE FillWithTestData*(VAR buffer : ARRAY OF CHAR);
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(buffer) - 1 DO buffer[i] := CHR(i MOD 256); END;

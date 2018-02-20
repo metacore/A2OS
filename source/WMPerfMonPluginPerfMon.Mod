@@ -15,7 +15,7 @@ TYPE
 
 	PerfMonStats= OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "WMPerfMonPlugins"; p.description := "Performance Monitor monitoring";
@@ -28,7 +28,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := WMPerfMonPlugins.NnofPlugins;
 			dataset[1] := WMPerfMonPlugins.NnofValues;

@@ -465,7 +465,7 @@ TYPE
 			Inputs.keyboard.Register(SELF);
 		END Init;
 
-		PROCEDURE Handle(VAR msg: Inputs.Message);
+		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN
 			IF (msg IS Inputs.KeyboardMsg) & (msg(Inputs.KeyboardMsg).flags * {Inputs.Release} = {}) THEN
 				WITH msg:Inputs.KeyboardMsg DO

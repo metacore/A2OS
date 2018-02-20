@@ -13,7 +13,7 @@ TYPE AR5* = ARRAY 5,5,5 OF Voxel;
 TYPE AR10* = ARRAY 10,10,10 OF Voxel;
 
 TYPE NilVox*=OBJECT(Voxel);
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR drx, dry, drz: SREAL;
 	di, dj, dk: BOOLEAN;
 	dx, dy, dz: SREAL;
@@ -108,7 +108,7 @@ BEGIN
 	blox := b;
 END turn;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	drx, dry, drz, dr: SREAL;
@@ -277,7 +277,7 @@ BEGIN
 	blox[2,1,1]:=w;
 END fillSerp;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 VAR
 	i, j, k, ii, jj, kk, n: LONGINT;
 	v: Voxel;
@@ -296,7 +296,7 @@ BEGIN
 	END;
 END tick;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	drx, dry, drz: SREAL;
@@ -384,7 +384,7 @@ BEGIN
 	END
 END Shade;
 
-PROCEDURE probeShade (VAR ray: Ray; VAR dx,dy,dz: SREAL);
+PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 VAR
 	ijk: srBase.IPT;
 	drx, dry, drz: SREAL;
@@ -524,7 +524,7 @@ BEGIN
 	END END END;
 END flipz;*)
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
@@ -641,7 +641,7 @@ BEGIN
 	END
 END Shade;
 
-PROCEDURE probe(x,y,z: SREAL):Voxel;
+PROCEDURE probe*(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
 	i,j,k: LONGINT;
@@ -658,7 +658,7 @@ BEGIN
 	END
 END probe;
 
-PROCEDURE deathray(VAR ray: Ray);
+PROCEDURE deathray*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
@@ -839,7 +839,7 @@ BEGIN
 	END
 END bounds;
 
-PROCEDURE probe(x,y,z: SREAL):Voxel;
+PROCEDURE probe*(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
 	i,j,k: LONGINT;
@@ -856,7 +856,7 @@ BEGIN
 	END
 END probe;
 
-PROCEDURE Shade (VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
@@ -974,7 +974,7 @@ BEGIN
 END Shade;
 
 
-PROCEDURE deathray(VAR ray: Ray);
+PROCEDURE deathray*(VAR ray: Ray);
 VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
@@ -1089,7 +1089,7 @@ BEGIN
 	Out.Ln;
 END deathray;
 
-PROCEDURE probeShade (VAR ray: Ray; VAR dx,dy,dz: SREAL);
+PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 VAR
 	ijk: srBase.IPT;
 	drx, dry, drz: SREAL;

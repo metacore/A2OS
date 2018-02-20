@@ -196,7 +196,7 @@ TYPE
 			EndModification
 		END SetActivated;
 
-		PROCEDURE Internalize(input: XML.Content);
+		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container; elem, subElem: XML.Element; enum: XMLObjects.Enumerator; p: ANY;
 			str: Strings.String; dynStr: DynamicStrings.DynamicString;
 		BEGIN
@@ -228,7 +228,7 @@ TYPE
 			END
 		END Internalize;
 
-		PROCEDURE Externalize() : XML.Content;
+		PROCEDURE Externalize*() : XML.Content;
 		VAR container: XML.Container; elem, subElem: XML.Element; i: LONGINT; p: ANY;
 			dynStr: DynamicStrings.DynamicString; str: Strings.String;
 		BEGIN
@@ -254,7 +254,7 @@ TYPE
 			RETURN container
 		END Externalize;
 
-		PROCEDURE TableView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
+		PROCEDURE TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
 		VAR row: WebComplex.TableRow;
 		BEGIN
 			NEW(row, 5);
@@ -270,7 +270,7 @@ TYPE
 			RETURN row
 		END TableView;
 
-		PROCEDURE DetailView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR container: XML.Container; pTag: XML.Element; ul, li: XML.Element; i: LONGINT; p: ANY;
 			dynStr: DynamicStrings.DynamicString; str, lastLoginTimeStr: Strings.String;
 		BEGIN
@@ -325,7 +325,7 @@ TYPE
 			RETURN container
 		END DetailView;
 
-		PROCEDURE EditView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table: XML.Element;
 		BEGIN
 			NEW(table); table.SetName("table");
@@ -499,7 +499,7 @@ TYPE
 			searchText: Strings.String;
 			accountContainerName: Strings.String;
 
-		PROCEDURE PreTransform(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE PreTransform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR session: HTTPSession.Session;
 		BEGIN
 			(* must check whether the session is an authorized administrator *)
@@ -514,7 +514,7 @@ TYPE
 			END
 		END PreTransform;
 
-		PROCEDURE InsertObject(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
+		PROCEDURE InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
 			request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content) : BOOLEAN;
 			(* parameters "username", "password", "confpassword", "email", "defaultmsgname", "activated" or "accountoid"*)
 		VAR activated: BOOLEAN; activatedStr: Strings.String;
@@ -524,14 +524,14 @@ TYPE
 			RETURN InsertWebAccountObject(accountContainerName, container, superEntry, activated, request, params, statusMsg)
 		END InsertObject;
 
-		PROCEDURE UpdateObject(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
+		PROCEDURE UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
 			params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content) : BOOLEAN;
 		BEGIN
 			RETURN UpdateWebAccountObject(obj, TRUE, TRUE, request, params, statusMsg)
 		END UpdateObject;
 
 		(** supplemental tasks before an object 'obj' and its subentries will be deleted *)
-		PROCEDURE OnDelete(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnDelete*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest);
 		VAR account: WebAccount;
 		BEGIN
 			IF (obj IS WebAccount) THEN
@@ -540,19 +540,19 @@ TYPE
 			END
 		END OnDelete;
 
-		PROCEDURE ThisObjectName() : Strings.String;
+		PROCEDURE ThisObjectName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(WebAccountDatagridName)
 		END ThisObjectName;
 
-		PROCEDURE ThisModuleName() : Strings.String;
+		PROCEDURE ThisModuleName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(ThisModuleNameStr)
 		END ThisModuleName;
 
-		PROCEDURE GetInsertView(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
+		PROCEDURE GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
 		BEGIN RETURN GetWebAccountInsertView(accountContainerName, superEntry, TRUE, request)
 		END GetInsertView;
 
-		PROCEDURE GetTableHeader(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
+		PROCEDURE GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
 		VAR row: WebComplex.HeaderRow;
 		BEGIN
 			NEW(row, 5);
@@ -564,7 +564,7 @@ TYPE
 			RETURN row
 		END GetTableHeader;
 
-		PROCEDURE GetSearchFilter(text: Strings.String) : WebStd.PersistentDataFilter;
+		PROCEDURE GetSearchFilter*(text: Strings.String) : WebStd.PersistentDataFilter;
 		BEGIN
 			IF (text # NIL) THEN
 				NEW(searchText, Strings.Length(text^)+3);
@@ -600,7 +600,7 @@ TYPE
 			RETURN FALSE
 		END SearchFilter;
 
-		PROCEDURE GetDefaultOrdering() : WebStd.PersistentDataCompare;
+		PROCEDURE GetDefaultOrdering*() : WebStd.PersistentDataCompare;
 		BEGIN RETURN CompareUsername
 		END GetDefaultOrdering;
 
@@ -661,7 +661,7 @@ TYPE
 			membersDgId := DynamicWebpage.CreateNewObjectId(); (* membersDgId # NIL *)
 		END Initialize;
 
-		PROCEDURE GetReferrencedObjects() : PrevalenceSystem.PersistentObjectList;
+		PROCEDURE GetReferrencedObjects*() : PrevalenceSystem.PersistentObjectList;
 		VAR list: PrevalenceSystem.PersistentObjectList;
 		BEGIN
 			NEW(list, 1);
@@ -678,7 +678,7 @@ TYPE
 		BEGIN RETURN ((members # NIL) & (members.Contains(account)))
 		END IsMember;
 
-		PROCEDURE Internalize(input: XML.Content);
+		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container; elem: XML.Element; oidStr: Strings.String;
 			persObj: PrevalenceSystem.PersistentObject; oidNr: LONGINT;
 		BEGIN
@@ -706,7 +706,7 @@ TYPE
 			name := WebStd.InternalizeString(container, "Name")
 		END Internalize;
 
-		PROCEDURE Externalize() : XML.Content;
+		PROCEDURE Externalize*() : XML.Content;
 		VAR container: XML.Container; elem: XML.Element; oidStr: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(container);
@@ -720,7 +720,7 @@ TYPE
 			RETURN container
 		END Externalize;
 
-		PROCEDURE TableView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
+		PROCEDURE TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : WebComplex.TableRow;
 		VAR row: WebComplex.TableRow;
 		BEGIN
 			NEW(row, 3);
@@ -730,7 +730,7 @@ TYPE
 			RETURN row
 		END TableView;
 
-		PROCEDURE DetailView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR container: XML.Container; table, tr, td, accountDg, paging, searching: XML.Element;
 			membersName: Strings.String; authDomDg: AuthorizationDomainDatagrid;
 		BEGIN
@@ -779,7 +779,7 @@ TYPE
 			RETURN container
 		END DetailView;
 
-		PROCEDURE EditView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table: XML.Element;
 		BEGIN
 			NEW(table); table.SetName("table");
@@ -795,7 +795,7 @@ TYPE
 			reInitializeSubContainer: BOOLEAN; (* true if the sub container of the detail view has to be reinitialized *)
 			(* user could have used the back button in the browser's navigation bar *)
 
-		PROCEDURE PreTransform(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
+		PROCEDURE PreTransform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR session: HTTPSession.Session;
 		BEGIN (* make sure that the prevalence system is already loaded *)
 			(* must check whether the session is an authorized administrator *)
@@ -809,7 +809,7 @@ TYPE
 			END
 		END PreTransform;
 
-		PROCEDURE InsertObject(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
+		PROCEDURE InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry;
 			request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList;
 			VAR statusMsg: XML.Content) : BOOLEAN;
 			(* parameters "name" *)
@@ -843,7 +843,7 @@ TYPE
 			END
 		END InsertObject;
 
-		PROCEDURE UpdateObject(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
+		PROCEDURE UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest;
 			params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content) : BOOLEAN;
 		VAR name: Strings.String; domain: AuthorizationDomain;
 		BEGIN (* obj # NIL *)
@@ -866,18 +866,18 @@ TYPE
 			END
 		END UpdateObject;
 
-		PROCEDURE ThisObjectName() : Strings.String;
+		PROCEDURE ThisObjectName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(AuthDomainDatagridName)
 		END ThisObjectName;
 
-		PROCEDURE ThisModuleName() : Strings.String;
+		PROCEDURE ThisModuleName*() : Strings.String;
 		BEGIN RETURN WebStd.GetString(ThisModuleNameStr)
 		END ThisModuleName;
 
 		(** abstract, returns the insert view for the initialization of a new web forum entry, without submit/back-input fields
 		 * and without hidden parameter for super entry in hierarchy.
 		 * superEntry is the parent web forum entry in a hierachical web forum, superEntry is NIL iff it is a root entry *)
-		PROCEDURE GetInsertView(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
+		PROCEDURE GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
 		VAR table: XML.Element;
 		BEGIN
 			NEW(table); table.SetName("table");
@@ -885,7 +885,7 @@ TYPE
 			RETURN table
 		END GetInsertView;
 
-		PROCEDURE GetTableHeader(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
+		PROCEDURE GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow;
 		VAR row: WebComplex.HeaderRow;
 		BEGIN
 			NEW(row, 3);
@@ -895,11 +895,11 @@ TYPE
 			RETURN row
 		END GetTableHeader;
 
-		PROCEDURE OnDetailViewActivated(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
 		BEGIN reInitializeSubContainer := TRUE (* the sub container has to showed in the default mode *)
 		END OnDetailViewActivated;
 
-		PROCEDURE GetSearchFilter(text: Strings.String) : WebStd.PersistentDataFilter;
+		PROCEDURE GetSearchFilter*(text: Strings.String) : WebStd.PersistentDataFilter;
 		BEGIN
 			IF (text # NIL) THEN
 				NEW(searchText, Strings.Length(text^)+3);

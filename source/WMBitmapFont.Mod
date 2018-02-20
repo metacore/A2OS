@@ -55,7 +55,7 @@ TYPE
 			END
 		END GetGlyphMap;
 
-		PROCEDURE HasChar(char : LONGINT) : BOOLEAN;
+		PROCEDURE HasChar*(char : LONGINT) : BOOLEAN;
 		VAR dummy : LONGINT;
 		BEGIN
 			RETURN FindGlyphRange(char, dummy)

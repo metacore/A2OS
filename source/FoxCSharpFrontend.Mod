@@ -22,7 +22,7 @@ TYPE
 			RETURN parser.Module();
 		END Parse;
 		
-		PROCEDURE Error(): BOOLEAN;
+		PROCEDURE Error*(): BOOLEAN;
 		BEGIN
 			RETURN parser.error;
 		END Error;

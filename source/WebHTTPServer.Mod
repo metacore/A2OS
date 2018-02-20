@@ -120,11 +120,11 @@ TYPE
 	(* default plugin for all hosts. Each host has this default plugin *)
 	DefaultPlugin = OBJECT(HTTPPlugin)
 
-		PROCEDURE CanHandle(host : Host; VAR header: WebHTTP.RequestHeader; secure : BOOLEAN): BOOLEAN;
+		PROCEDURE CanHandle*(host : Host; VAR header: WebHTTP.RequestHeader; secure : BOOLEAN): BOOLEAN;
 		BEGIN RETURN TRUE
 		END CanHandle;
 
-		PROCEDURE Handle (host: Host; VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader;
+		PROCEDURE Handle*(host: Host; VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR out: Streams.Writer);
 		VAR f: Files.File; fr: Files.Reader; c: WebHTTP.ChunkedOutStream; w: Streams.Writer;
 		BEGIN

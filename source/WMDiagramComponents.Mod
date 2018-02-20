@@ -327,7 +327,7 @@ TYPE
 			styleI := style.Get();
 		END CacheProperties;
 
-		PROCEDURE PropertyChanged(property, data : ANY);
+		PROCEDURE PropertyChanged*(property, data : ANY);
 		BEGIN
 			IF (property = min) THEN minI := min.Get(); Invalidate;
 			ELSIF (property = max) THEN maxI := max.Get(); Invalidate;
@@ -345,13 +345,13 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			CacheProperties;
 		END Initialize;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			CacheProperties;
@@ -551,7 +551,7 @@ TYPE
 			model.Release;
 		END DrawAreas;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			w, h, yborder, color, t, virtp   : LONGINT;
 			mode : LONGINT;
@@ -616,7 +616,7 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			IF model # NIL THEN model.onChanged.Remove(Update); END;
 			Finalize^;

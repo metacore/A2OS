@@ -402,12 +402,12 @@ TYPE
 		END InitPhysicalRegisters;
 
 		(** the number of physical registers **)
-		PROCEDURE NumberRegisters(): LONGINT;
+		PROCEDURE NumberRegisters*(): LONGINT;
 		BEGIN RETURN InstructionSet.NumberRegisters
 		END NumberRegisters;
 
 		(** allocate, i.e., map, a physical register to a ticket **)
-		PROCEDURE Allocate(physicalRegisterNumber: LONGINT; ticket: Ticket);
+		PROCEDURE Allocate*(physicalRegisterNumber: LONGINT; ticket: Ticket);
 		VAR index: LONGINT;
 		BEGIN
 			ASSERT(~ticket.spilled);
@@ -427,17 +427,17 @@ TYPE
 		END Allocate;
 
 		(** set whether a certain physical register is reserved or not **)
-		PROCEDURE SetReserved(physicalRegisterNumber: LONGINT; isReserved: BOOLEAN);
+		PROCEDURE SetReserved*(physicalRegisterNumber: LONGINT; isReserved: BOOLEAN);
 		BEGIN reserved[physicalRegisterNumber] := isReserved
 		END SetReserved;
 
 		(** whether a certain physical register is reserved **)
-		PROCEDURE Reserved(physicalRegisterNumber: LONGINT): BOOLEAN;
+		PROCEDURE Reserved*(physicalRegisterNumber: LONGINT): BOOLEAN;
 		BEGIN RETURN (physicalRegisterNumber > 0) & reserved[physicalRegisterNumber]
 		END Reserved;
 
 		(** free a certain physical register **)
-		PROCEDURE Free(physicalRegisterNumber: LONGINT);
+		PROCEDURE Free*(physicalRegisterNumber: LONGINT);
 		VAR index: LONGINT;
 		BEGIN
 			Assert((toVirtual[physicalRegisterNumber] # NIL), "register not reserved");
@@ -464,7 +464,7 @@ TYPE
 		(** get the number of the next free physical register for a certain data type
 		- if a register hint has been set, it is respected if possible
 		**)
-		PROCEDURE NextFree(CONST type: IntermediateCode.Type): LONGINT;
+		PROCEDURE NextFree*(CONST type: IntermediateCode.Type): LONGINT;
 		VAR
 			result, i: LONGINT;
 		BEGIN
@@ -504,17 +504,17 @@ TYPE
 		END NextFree;
 
 		(** give the register allocator a hint on what physical register to use next **)
-		PROCEDURE AllocationHint(physicalRegisterNumber: LONGINT);
+		PROCEDURE AllocationHint*(physicalRegisterNumber: LONGINT);
 		BEGIN hint := physicalRegisterNumber
 		END AllocationHint;
 
 		(** get the ticket that is currently mapped to a certain physical register **)
-		PROCEDURE Mapped(physicalRegisterNumber: LONGINT): Ticket;
+		PROCEDURE Mapped*(physicalRegisterNumber: LONGINT): Ticket;
 		BEGIN RETURN toVirtual[physicalRegisterNumber]
 		END Mapped;
 
 		(** dump the current register mapping to a stream **)
-		PROCEDURE Dump(w: Streams.Writer);
+		PROCEDURE Dump*(w: Streams.Writer);
 		VAR i: LONGINT; virtual: Ticket;
 		BEGIN
 			w.String("---- registers ----"); w.Ln;
@@ -587,7 +587,7 @@ TYPE
 		(*------------------- overwritten methods ----------------------*)
 
 		(* TODO: revise this *)
-		PROCEDURE Section(in: IntermediateCode.Section; out: BinaryCode.Section);
+		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
 		VAR
 			oldSpillStackSize: LONGINT;
 
@@ -635,7 +635,7 @@ TYPE
 		(* TODO: complete this *)
 		(** whether the code generator can generate code for a certain intermediate code intstruction
 		if not, the location of a runtime is returned **)
-		PROCEDURE Supported(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
+		PROCEDURE Supported*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			result: BOOLEAN; value: HUGEINT; exp: LONGINT;
 		BEGIN
@@ -1430,7 +1430,7 @@ TYPE
 
 		(* the intermediate code type of a part
 		- a part type is by definition directly representable in a register *)
-		PROCEDURE GetPartType(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type);
+		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type);
 		BEGIN
 			ASSERT((part = Low) OR (part = High));
 			IF (type.sizeInBits <= 32) OR (type.form = IntermediateCode.Float) & backend.useFPU64 THEN
@@ -1499,7 +1499,7 @@ TYPE
 		END NegatedIrOperandIsDirectlyEncodable;
 
 		(** generate code for a certain IR instruction **)
-		PROCEDURE Generate(VAR irInstruction: IntermediateCode.Instruction);
+		PROCEDURE Generate*(VAR irInstruction: IntermediateCode.Instruction);
 		BEGIN
 			(* CheckFixups; *)
 			EmitFixupBlockIfNeeded;
@@ -1562,7 +1562,7 @@ TYPE
 
 		END Generate;
 
-		PROCEDURE PostGenerate(CONST instruction: IntermediateCode.Instruction);
+		PROCEDURE PostGenerate*(CONST instruction: IntermediateCode.Instruction);
 		VAR ticket: Ticket;
 		BEGIN
 			TryUnmap(instruction.op3); TryUnmap(instruction.op2); TryUnmap(instruction.op1);
@@ -3415,7 +3415,7 @@ TYPE
 			SetName("ARM");
 		END InitBackendARM;
 
-		PROCEDURE Initialize(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
 			Initialize^(diagnostics, log, flags, checker, system);
 			NEW(cg, runtimeModuleName, diagnostics, SELF)
@@ -3488,7 +3488,7 @@ TYPE
 			New; RealVarPar; IntVarPar; Finish("UNPK", UNPK);
 		END EnterCustomBuiltins;
 
-		PROCEDURE GetSystem(): Global.System;
+		PROCEDURE GetSystem*(): Global.System;
 		BEGIN
 			(* create system object if not yet existing *)
 			IF system = NIL THEN
@@ -3538,7 +3538,7 @@ TYPE
 
 		(** whether the code generator can generate code for a certain IR instruction
 		if not, where to find the runtime procedure that is to be called instead **)
-		PROCEDURE SupportedInstruction(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
+		PROCEDURE SupportedInstruction*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
 			(* only necessary for binary object file format for symbol / module entry in IntermediateBackend *)
 			RETURN cg.Supported(irInstruction, moduleName, procedureName);
@@ -3546,7 +3546,7 @@ TYPE
 
 		(** whether a certain intermediate code immediate value can be directly appear in code
 		if not, the value is stored in a const section and loaded from there **)
-		PROCEDURE SupportedImmediate(CONST irImmediateOperand: IntermediateCode.Operand): BOOLEAN;
+		PROCEDURE SupportedImmediate*(CONST irImmediateOperand: IntermediateCode.Operand): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
@@ -3728,7 +3728,7 @@ TYPE
 			RETURN result
 		END ProcessIntermediateCodeModule;
 
-		PROCEDURE DefineOptions(options: Options.Options);
+		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN
 			options.Add(0X, UseFPU32Flag, Options.Flag);
 			options.Add(0X, UseFPU64Flag, Options.Flag);
@@ -3736,7 +3736,7 @@ TYPE
 			DefineOptions^(options);
 		END DefineOptions;
 
-		PROCEDURE GetOptions(options: Options.Options);
+		PROCEDURE GetOptions*(options: Options.Options);
 		BEGIN
 			IF options.GetFlag(UseFPU32Flag) THEN useFPU32 := TRUE END;
 			IF options.GetFlag(UseFPU64Flag) THEN useFPU64 := TRUE; useFPU32 := TRUE END;
@@ -3744,20 +3744,20 @@ TYPE
 			GetOptions^(options);
 		END GetOptions;
 
-		PROCEDURE DefaultObjectFileFormat(): Formats.ObjectFileFormat;
+		PROCEDURE DefaultObjectFileFormat*(): Formats.ObjectFileFormat;
 		BEGIN RETURN ObjectFileFormat.Get();
 		END DefaultObjectFileFormat;
 
-		PROCEDURE DefaultSymbolFileFormat(): Formats.SymbolFileFormat;
+		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN NIL
 		END DefaultSymbolFileFormat;
 
 		(** get the name of the backend **)
-		PROCEDURE GetDescription(VAR instructionSet: ARRAY OF CHAR);
+		PROCEDURE GetDescription*(VAR instructionSet: ARRAY OF CHAR);
 		BEGIN instructionSet := "ARM"
 		END GetDescription;
 
-		PROCEDURE FindPC(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT);
+		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT);
 		VAR
 			section: Sections.Section; binarySection: BinaryCode.Section; label: BinaryCode.LabelList; module: Formats.GeneratedModule;
 			i: LONGINT; pooledName: Basic.SegmentedName;

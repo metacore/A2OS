@@ -56,14 +56,14 @@ TYPE
 			manager.Add(0, view.height0 - GetHeight(), SELF, {WM.FlagNavigation, WM.FlagHidden});
 		END New;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			PointerMove^(x, y, keys);
 			moveToFront := FALSE;
 			manager.ToFront(SELF);
 		END PointerMove;
 
-		PROCEDURE PointerLeave;
+		PROCEDURE PointerLeave*;
 		BEGIN
 			PointerLeave^;
 			moveToFront := TRUE;
@@ -202,7 +202,7 @@ TYPE
 			END
 		END TabSelected;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			window := NIL

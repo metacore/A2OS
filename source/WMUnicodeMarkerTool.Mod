@@ -192,14 +192,14 @@ TYPE
 		END InsertMarker;
 
 		(* Closes the current instance of the Unicode Marker Tool *)
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount
 		END Close;
 
 		(* Handles messages/events *)
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR
 			data : XML.Element;
 			name : ARRAY 32 OF CHAR;

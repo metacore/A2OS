@@ -517,7 +517,7 @@ TYPE
 	FileSystem = OBJECT (Files.FileSystem)	(* our file system type *)
 		VAR dir: Directory;
 
-		PROCEDURE New0(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
 		VAR i, res: LONGINT; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
 		BEGIN {EXCLUSIVE}
 			f := NIL; Check(name, namebuf, res);
@@ -537,7 +537,7 @@ TYPE
 			RETURN f
 		END New0;
 
-		PROCEDURE Old0(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
 		VAR
 			i, k, res: LONGINT; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
 			namebuf: FileName; inxpg: Index;
@@ -570,7 +570,7 @@ TYPE
 			RETURN f
 		END Old0;
 
-		PROCEDURE Delete0(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
 		VAR adr: DiskAdr; namebuf: FileName; head: FileHeader;
 		BEGIN {EXCLUSIVE}
 			Check(name, namebuf, res);
@@ -589,7 +589,7 @@ TYPE
 			END
 		END Delete0;
 
-		PROCEDURE Rename0(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
 		VAR adr: DiskAdr; oldbuf, newbuf: FileName;  head: FileHeader;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
@@ -612,13 +612,13 @@ TYPE
 			END
 		END Rename0;
 
-		PROCEDURE Enumerate0(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR b: BOOLEAN; fh: FileHeader; fn: ARRAY Files.PrefixLength+FnLength OF CHAR;
 		BEGIN {EXCLUSIVE}
 			b := TRUE; enumerate(SELF, mask, DirRootAdr, flags, enum, b, fh, fn)
 		END Enumerate0;
 
-		PROCEDURE FileKey(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
 			VAR res: LONGINT; namebuf: FileName; header: DiskAdr;
 		BEGIN {EXCLUSIVE}
 			header := 0;
@@ -629,7 +629,7 @@ TYPE
 			RETURN header
 		END FileKey;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN {EXCLUSIVE}
 			dir.Cleanup();
 			vol.Finalize;
@@ -651,7 +651,7 @@ TYPE
 			ext: ARRAY ETS OF Index;
 			sec: SectorTable;
 
-		PROCEDURE Set(VAR r: Files.Rider; pos: LONGINT);
+		PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
 		VAR a, b: LONGINT;
 		BEGIN {EXCLUSIVE}
 			r.eof := FALSE; r.res := 0; r.file := SELF; r.fs := fs;
@@ -665,12 +665,12 @@ TYPE
 			r.apos := a; r.bpos := b; r.hint := firstbuf
 		END Set;
 
-		PROCEDURE Pos(VAR r: Files.Rider): LONGINT;
+		PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
 		BEGIN
 			RETURN r.apos*SS + r.bpos - HS
 		END Pos;
 
-		PROCEDURE Read(VAR r: Files.Rider; VAR x: CHAR);
+		PROCEDURE Read*(VAR r: Files.Rider; VAR x: CHAR);
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -695,7 +695,7 @@ TYPE
 			END
 		END Read;
 
-		PROCEDURE ReadBytes(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 		VAR src: ADDRESS; m: LONGINT; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -730,7 +730,7 @@ TYPE
 			END;
 		END ReadBytes;
 
-		PROCEDURE Write(VAR r: Files.Rider; x: CHAR);
+		PROCEDURE Write*(VAR r: Files.Rider; x: CHAR);
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -758,7 +758,7 @@ TYPE
 			buf.data.B[r.bpos] := x; INC(r.bpos); buf.mod := TRUE
 		END Write;
 
-		PROCEDURE WriteBytes(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
 		VAR dst: ADDRESS; m: LONGINT; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -791,27 +791,27 @@ TYPE
 			END
 		END WriteBytes;
 
-		PROCEDURE Length(): LONGINT;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN aleng*SS + bleng - HS
 		END Length;
 
-		PROCEDURE GetDate(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: LONGINT);
 		BEGIN {EXCLUSIVE}
 			t := time; d := date
 		END GetDate;
 
-		PROCEDURE SetDate(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: LONGINT);
 		BEGIN {EXCLUSIVE}
 			modH := TRUE; time := t; date := d
 		END SetDate;
 
-		PROCEDURE GetName(VAR name: ARRAY OF CHAR);
+		PROCEDURE GetName*(VAR name: ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
 			Files.JoinName(fs.prefix, SELF.name, name)
 		END GetName;
 
-		PROCEDURE Register0(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			Unbuffer(SELF);
 			IF ~registered & (name # "") THEN
@@ -823,7 +823,7 @@ TYPE
 			END
 		END Register0;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		BEGIN {EXCLUSIVE}
 			Unbuffer(SELF)
 		END Update;

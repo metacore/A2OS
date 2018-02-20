@@ -52,7 +52,7 @@ TYPE
 			END
 		END MuteChanged;
 
-		PROCEDURE RecacheProperties;
+		PROCEDURE RecacheProperties*;
 		VAR s : String; dn, cn : ARRAY 128 OF CHAR;
 		BEGIN
 			RecacheProperties^;
@@ -107,7 +107,7 @@ TYPE
 			END
 		END FindChannel;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF device # NIL THEN device.UnregisterMixerChangeListener(MixerChangeListener) END;
@@ -160,13 +160,13 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			DecCount;
 			Close^;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^(x)

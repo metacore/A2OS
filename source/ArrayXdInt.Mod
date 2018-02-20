@@ -36,17 +36,17 @@ TYPE
 	VAR data-: Array1;   (*! will probably be removed, do not use ! *)
 
 		(** override *)
-		PROCEDURE Allocate( size: LONGINT;  VAR adr: Index;  VAR ptr: ANY );
+		PROCEDURE Allocate*( size: LONGINT;  VAR adr: Index;  VAR ptr: ANY );
 		BEGIN
 			NEW( data, size );  adr := ADDRESSOF( data[0] );  ptr := data;
 		END Allocate;
 
-		PROCEDURE GetInfo( VAR elementsize: Index );
+		PROCEDURE GetInfo*( VAR elementsize: Index );
 		BEGIN
 			elementsize := SIZEOF( Value );
 		END GetInfo;
 
-		PROCEDURE AlikeX( ): ArrayXdBytes.Array;
+		PROCEDURE AlikeX*( ): ArrayXdBytes.Array;
 		VAR copy: Array;
 		BEGIN
 			NEW( copy, origin, len );  RETURN copy;

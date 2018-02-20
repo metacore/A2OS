@@ -118,13 +118,13 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0,0,img.width, img.height))
 		END Render;
 
-		PROCEDURE PointerDown(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2});
 			oldX := x; oldY := y;
 		END PointerDown;
 
-		PROCEDURE PointerMove(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y: LONGINT; keys : SET);
 		BEGIN
 			IF mouseKeys * {0} # {} THEN
 				IF mouseKeys * {2} # {} THEN
@@ -138,12 +138,12 @@ TYPE
 			oldX := x; oldY := y
 		END PointerMove;
 
-		PROCEDURE PointerUp(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2})
 		END PointerUp;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 		BEGIN
 			IF ucs = ORD("0") THEN world.quality := 0; Render END;
 			IF ucs = ORD("1") THEN world.quality := 1; Render END;
@@ -152,7 +152,7 @@ TYPE
 			IF ucs = ORD("s") THEN SpeedCheck END
 		END KeyEvent;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			manager.Remove(SELF)
 		END Close;

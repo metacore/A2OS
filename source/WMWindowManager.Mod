@@ -518,7 +518,7 @@ TYPE
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
 		
-		PROCEDURE IsHit(x, y  : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
 		VAR w, h : LONGINT; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();

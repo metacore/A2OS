@@ -11,7 +11,7 @@ TYPE
 	TextualSymbolFile = OBJECT (Formats.SymbolFileFormat)
 	VAR extension: Basic.FileName; noRedefinition, noModification: BOOLEAN;
 
-		PROCEDURE Import(CONST moduleFileName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module;
+		PROCEDURE Import*(CONST moduleFileName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module;
 		VAR fileName: Files.FileName; module: SyntaxTree.Module; reader: Streams.Reader; scanner: Scanner.Scanner; parser: Parser.Parser;
 			checker: SemanticChecker.Checker;
 		BEGIN
@@ -35,7 +35,7 @@ TYPE
 			RETURN module
 		END Import;
 
-		PROCEDURE Export(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN;
+		PROCEDURE Export*(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN;
 		VAR moduleName,fileName: Basic.FileName; writer: Files.Writer; file: Files.File; printer: Printout.Printer; result: BOOLEAN;flags: SET;
 		BEGIN
 			Global.ModuleFileName(module.name,module.context,moduleName);
@@ -75,14 +75,14 @@ TYPE
 			RETURN result
 		END Export;
 
-		PROCEDURE DefineOptions(options: Options.Options);
+		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN
 			options.Add(0X,"symbolFileExtension",Options.String);
 			options.Add(0X,"noRedefinition",Options.Flag);
 			options.Add(0X,"noModification",Options.Flag);
 		END DefineOptions;
 
-		PROCEDURE GetOptions(options: Options.Options);
+		PROCEDURE GetOptions*(options: Options.Options);
 		BEGIN
 			IF ~options.GetString("symbolFileExtension",extension) THEN extension := ".Sym" END;
 			noRedefinition := options.GetFlag("noRedefinition");

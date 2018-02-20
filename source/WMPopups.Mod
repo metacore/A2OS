@@ -89,12 +89,12 @@ TYPE
 			Close;
 		END Clicked;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			Close;
 		END FocusLost;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				IF isClosed THEN RETURN; END;
@@ -104,7 +104,7 @@ TYPE
 			Close^;
 		END Close;
 
-		PROCEDURE FocusGot;
+		PROCEDURE FocusGot*;
 		BEGIN
 			manager.SetFocus(SELF)
 		END FocusGot;
@@ -195,12 +195,12 @@ TYPE
 			manager.Remove(SELF)
 		END Clicked;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			manager.Remove(SELF)
 		END FocusLost;
 
-		PROCEDURE FocusGot;
+		PROCEDURE FocusGot*;
 		BEGIN
 			manager.SetFocus(SELF)
 		END FocusGot;
@@ -227,7 +227,7 @@ TYPE
 			BuildPalette;
 		END Init;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR r, g, b, a, i, j, cColor: LONGINT;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;

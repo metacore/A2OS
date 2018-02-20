@@ -202,7 +202,7 @@ TYPE
 			calculating := FALSE
 		END Recalc;
 
-		PROCEDURE PointerDown(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x,y : LONGINT; keys : SET);
 		BEGIN
 			IF calculating THEN RETURN END;
 			IF (keys*{0}#{}) THEN
@@ -215,7 +215,7 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE PointerMove(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x,y : LONGINT; keys : SET);
 		BEGIN
 			IF calculating THEN RETURN END;
 			x1 := x; y1 := y;
@@ -223,7 +223,7 @@ TYPE
 		END PointerMove;
 
 
-		PROCEDURE PointerUp(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x,y : LONGINT; keys : SET);
 		VAR t: LONGREAL;
 		BEGIN
 			IF calculating THEN RETURN END;
@@ -262,7 +262,7 @@ TYPE
 			PrepareBuffer;
 		END Resized;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR str, t : ARRAY 32 OF CHAR;
 		BEGIN
 			canvas.DrawImage(0, 0, backBmp, WMGraphics.ModeCopy);
@@ -283,7 +283,7 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} alive := FALSE END

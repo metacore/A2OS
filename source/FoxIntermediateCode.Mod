@@ -361,7 +361,7 @@ TYPE
 		END DumpCode;
 
 		(* inherited method *)
-		PROCEDURE Dump(w: Streams.Writer);
+		PROCEDURE Dump*(w: Streams.Writer);
 		VAR ww: Basic.Writer;
 		BEGIN
 			IF resolved # NIL THEN
@@ -377,7 +377,7 @@ TYPE
 			END;
 		END Dump;
 		
-		PROCEDURE WriteRaw(w: Streams.Writer);
+		PROCEDURE WriteRaw*(w: Streams.Writer);
 		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO pc-1 DO

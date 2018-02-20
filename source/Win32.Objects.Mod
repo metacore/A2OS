@@ -162,7 +162,7 @@ TYPE
 		gcContext: GCContext;
 		context: ANY; (* commands contect *)
 
-		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
+		PROCEDURE FindRoots*;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
 			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 			context: Kernel32.Wow64Context;
@@ -275,7 +275,7 @@ TYPE
 	(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing
 		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
 		    if the lock is not taken. *)
-		PROCEDURE SetgcOngoing(value: BOOLEAN);
+		PROCEDURE SetgcOngoing*(value: BOOLEAN);
 		VAR p: Heaps.ProcessLink; cur, r: Process; res: Kernel32.BOOL; num: LONGINT; time: LONGINT;
 		BEGIN (* serialize writers *)
 			IF value THEN

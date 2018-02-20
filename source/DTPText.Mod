@@ -620,7 +620,7 @@ TYPE
 			layout.FullLayout(firstPos, firstLineI); CheckNumberOfLines;
 		END BordersChanged;
 
-		PROCEDURE SetSize(w, h: LONGINT);
+		PROCEDURE SetSize*(w, h: LONGINT);
 		VAR obj: TextObject;
 		BEGIN
 			SetSize^(w, h);
@@ -637,7 +637,7 @@ TYPE
 			END;
 		END SetSize;
 
-		PROCEDURE Resize(zoom : REAL);
+		PROCEDURE Resize*(zoom : REAL);
 		BEGIN
 			Resize^(zoom);
 			(* layout.FullLayout; CheckNumberOfLines; *)
@@ -2368,7 +2368,7 @@ TYPE
 			canvas.RestoreState(canvasState);
 *)		END Draw;
 
-		PROCEDURE Redraw;
+		PROCEDURE Redraw*;
 		BEGIN
 			Redraw^;
 		END Redraw;
@@ -3096,7 +3096,7 @@ TYPE
 			END;
 		END InsertImg;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			shown := FALSE;
 			Hide;

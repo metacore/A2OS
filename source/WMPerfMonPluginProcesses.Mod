@@ -27,7 +27,7 @@ TYPE
 		lastTimer : HUGEINT;
 		lastSamplesValid : BOOLEAN;
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR
 			ds : WMPerfMonPlugins.DatasetDescriptor;
 			name, temp : WMPerfMonPlugins.Description;
@@ -74,7 +74,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		VAR
 			i : LONGINT; timer : HUGEINT;
 			pAll, timeDiff, cyclesDiff : LONGREAL;

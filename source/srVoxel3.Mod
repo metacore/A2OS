@@ -20,23 +20,23 @@ BEGIN
 	core.passable := TRUE;
 END init;
 
-PROCEDURE probe(x,y,z: SREAL):Voxel;
+PROCEDURE probe*(x,y,z: SREAL):Voxel;
 BEGIN
 	core.containscamera := TRUE; (*never used*)
 	RETURN core.probe(x,y,z);
 END probe;
 
-PROCEDURE probeShade(VAR ray: Ray; VAR dx,dy,dz: SREAL);
+PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 BEGIN
 	core.probeShade(ray,dx,dy,dz);
 END probeShade;
 
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 BEGIN
 	core.Shade(ray);
 END Shade;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 (*BEGIN IF GO THEN core.tick END*)
 END tick;
 
@@ -51,12 +51,12 @@ BEGIN
 	passable := TRUE;
 END init;
 
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 BEGIN
 	core.Shade(ray);
 END Shade;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 END tick;
 
 END Tower;
@@ -94,7 +94,7 @@ BEGIN
 	END END END;
 END Fill;
 
-PROCEDURE tick;
+PROCEDURE tick*;
 (*
 VAR
 	v: Voxel;
@@ -128,7 +128,7 @@ BEGIN
 	END
 END limit;
 
-PROCEDURE Shade(VAR ray: Ray);
+PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;
@@ -226,13 +226,13 @@ BEGIN
 END Shade;
 
 
-PROCEDURE probe(x,y,z: SREAL):Voxel;
+PROCEDURE probe*(x,y,z: SREAL):Voxel;
 BEGIN
 (* RETURN(core); *)
 	RETURN(NIL);
 END probe;
 
-PROCEDURE probeShade(VAR ray: Ray; VAR dx,dy,dz: SREAL);
+PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;

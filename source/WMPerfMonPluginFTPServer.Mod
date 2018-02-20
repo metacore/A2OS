@@ -15,7 +15,7 @@ TYPE
 
 	FTPStats= OBJECT(WMPerfMonPlugins.Plugin)
 
-		PROCEDURE Init(p : WMPerfMonPlugins.Parameter);
+		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);
 		VAR ds : WMPerfMonPlugins.DatasetDescriptor;
 		BEGIN
 			p.name := "WebFTPServer"; p.description := "FTP server statistics";
@@ -32,7 +32,7 @@ TYPE
 			p.datasetDescriptor := ds;
 		END Init;
 
-		PROCEDURE UpdateDataset;
+		PROCEDURE UpdateDataset*;
 		BEGIN
 			dataset[0] := WebFTPServer.NclientsTotal;
 			dataset[1] := WebFTPServer.NclientsActive;

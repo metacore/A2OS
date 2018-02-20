@@ -324,7 +324,7 @@ TYPE
 		END InitLinkerX;
 
 		(* oerwritten functionality of generic linker *)
-		PROCEDURE FindBlock(CONST identifier: ObjectFile.Identifier): GenericLinker.Block;
+		PROCEDURE FindBlock*(CONST identifier: ObjectFile.Identifier): GenericLinker.Block;
 		VAR block: GenericLinker.Block; any: ANY;
 		BEGIN
 			block := NIL;
@@ -342,7 +342,7 @@ TYPE
 			RETURN block;
 		END FindBlock;
 
-		PROCEDURE ExportBlock(block: GenericLinker.Block);
+		PROCEDURE ExportBlock*(block: GenericLinker.Block);
 		BEGIN
 			IF block.identifier.fingerprint # 0 THEN
 				hash.Put(block.identifier.fingerprint, block)
@@ -354,7 +354,7 @@ TYPE
 			END;
 		END ExportBlock;
 
-		PROCEDURE ImportBlock(CONST fixup: ObjectFile.Fixup): GenericLinker.Block;
+		PROCEDURE ImportBlock*(CONST fixup: ObjectFile.Fixup): GenericLinker.Block;
 		VAR name: Modules.Name; res: LONGINT;
 			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: ADDRESS; m: HashTableInt;
 			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;

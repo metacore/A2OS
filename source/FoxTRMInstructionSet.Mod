@@ -1070,7 +1070,7 @@ TYPE
 	TYPE
 		Disasm = OBJECT (Disassembler.Disassembler)
 
-			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: LONGINT; maxInstructionSize: LONGINT; w:Streams.Writer);
+			PROCEDURE DisassembleInstruction*(bitSet: BitSets.BitSet; VAR adr: LONGINT; maxInstructionSize: LONGINT; w:Streams.Writer);
 			VAR instruction: Instruction; value: LONGINT; mnemonic: LONGINT;
 			BEGIN
 				(* maxInstructionSize can be ignored here *)

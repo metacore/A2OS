@@ -38,7 +38,7 @@ TYPE
 			bsValid := FALSE
 		END Init;
 
-		PROCEDURE SetIndex(idx : LONGINT);
+		PROCEDURE SetIndex*(idx : LONGINT);
 		BEGIN
 			index := idx
 		END SetIndex;

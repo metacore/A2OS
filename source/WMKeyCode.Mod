@@ -20,7 +20,7 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 		VAR t : ARRAY 128 OF CHAR;
 			font : WMGraphics.Font;
 			x, y : LONGINT;
@@ -51,7 +51,7 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0,0, img.width, img.height))
 		END KeyEvent;
 
-		PROCEDURE Handle(VAR x : WMMessages.Message);
+		PROCEDURE Handle*(VAR x : WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS WMRestorable.Storage) THEN
@@ -62,7 +62,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			winstance := NIL

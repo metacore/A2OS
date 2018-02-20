@@ -206,7 +206,7 @@ TYPE
 			Draw^(canvas, w, h, 0);
 		END Draw;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			player.Close;
 			alive := FALSE; IF timer # NIL THEN timer.Wakeup; END;
@@ -215,7 +215,7 @@ TYPE
 		END Close;
 
 		(* Key Handler *)
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 		BEGIN
 			IF extKeyEventHandler # NIL THEN extKeyEventHandler(ucs, flags, keysym); END;
 			IF keysym = 0FF50H THEN (* Cursor Home *)
@@ -255,7 +255,7 @@ TYPE
 		END ShowFrame;
 
 		(* Make pointer visible when it is moved *)
-		PROCEDURE PointerMove(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
@@ -263,7 +263,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerDown(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		BEGIN
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();

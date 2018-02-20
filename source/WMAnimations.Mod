@@ -46,13 +46,13 @@ TYPE
 			NEW(timer);
 		END Init;
 
-		PROCEDURE Initialize;
+		PROCEDURE Initialize*;
 		BEGIN
 			Initialize^;
 			Acquire; LoadImages; Release; Invalidate;
 		END Initialize;
 
-		PROCEDURE PropertyChanged(sender, property : ANY);
+		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF (property = imageName) THEN
 				LoadImages; Invalidate;
@@ -92,7 +92,7 @@ TYPE
 			timer.Wakeup;
 		END LoadImages;
 
-		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
+		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR  name : Strings.String;
 		BEGIN
 			DrawBackground^(canvas);
@@ -118,7 +118,7 @@ TYPE
 			END;
 		END SetState;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			SetState(State_Terminated);

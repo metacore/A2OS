@@ -354,7 +354,7 @@ TYPE
 			RETURN panel;
 		END CreateStatusPanel;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			state := Terminating; timer.Wakeup;
 			BEGIN {EXCLUSIVE} AWAIT(state = Terminated); END;
@@ -495,7 +495,7 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS KillerMsg) THEN Close
@@ -525,7 +525,7 @@ TYPE
 			IncCount;
 		END New;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			DecCount;

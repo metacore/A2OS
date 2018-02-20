@@ -141,7 +141,7 @@ TYPE
 			KernelLog.String("WMDialogs - Wiring error : "); KernelLog.String(detectedBy); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln
 		END WireError;
 
-		PROCEDURE Handle(VAR msg : WMMessages.Message);
+		PROCEDURE Handle*(VAR msg : WMMessages.Message);
 		BEGIN
 			IF (msg.msgType = WMMessages.MsgKey) & (msg.y = Inputs.KsEscape) & (msg.flags = {}) THEN
 				Close;
@@ -677,7 +677,7 @@ TYPE
 			RETURN result
 		END Show;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN {EXCLUSIVE}
 			result := ResAbort
 		END FocusLost;
@@ -758,13 +758,13 @@ TYPE
 			Close;
 		END HandleEvents;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			IF (CdCloseWhenFocusLost IN xflags) THEN Close; END;
 		END FocusLost;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Close^;
 			BEGIN {EXCLUSIVE} closed := TRUE; END;

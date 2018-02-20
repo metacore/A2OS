@@ -311,7 +311,7 @@ TYPE
 			END;
 		END ButtonHandler;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			player.Close;
 			(* Close all open InfoWindow if any *)
@@ -320,7 +320,7 @@ TYPE
 			DecCount;
 		END Close;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
 			ELSE Handle^(x)

@@ -234,7 +234,7 @@ TYPE
 			edit.text.onTextChanged.Add(TextChanged)
 		END TextChanged;
 
-		PROCEDURE FocusLost;
+		PROCEDURE FocusLost*;
 		BEGIN
 			FocusLost^;
 			ScheduleHide
@@ -246,7 +246,7 @@ TYPE
 			manager.Remove(SELF);
 		END Hide;
 
-		PROCEDURE Handle(VAR x: WMMessages.Message);
+		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) THEN
 				IF (x.ext = SELF) THEN Hide
@@ -543,7 +543,7 @@ TYPE
 			END
 		END Refresh;
 
-		PROCEDURE AddNodes(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
+		PROCEDURE AddNodes*(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
 		BEGIN
 			AddNodes^(parent, diagnostics, log);
 			Refresh(parent)
@@ -617,7 +617,7 @@ TYPE
 			RETURN FALSE
 		END HasActualParameters;
 
-		PROCEDURE ClickNode(sender, data : ANY);
+		PROCEDURE ClickNode*(sender, data : ANY);
 		VAR
 			d: ANY;
 			text : Texts.Text;
@@ -1667,7 +1667,7 @@ TYPE
 			END
 		END TextChanged;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			Finalize^;
 			IF (editor # NIL) & (editor.text # NIL) THEN

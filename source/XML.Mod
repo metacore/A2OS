@@ -258,7 +258,7 @@ TYPE
 			RETURN root
 		END GetRoot;
 
-		PROCEDURE AddContent(c: Content);
+		PROCEDURE AddContent*(c: Content);
 		BEGIN
 			IF (c IS XMLDecl) & (xmldecl = NIL) THEN xmldecl := c(XMLDecl)
 			ELSIF (c IS DocTypeDecl) THEN dtd := c(DocTypeDecl)
@@ -1076,12 +1076,12 @@ TYPE
 			len := 0;
 		END Init;
 
-		PROCEDURE GetStr(): String;
+		PROCEDURE GetStr*(): String;
 		BEGIN
 			RETURN str
 		END GetStr;
 
-		PROCEDURE GetLength(): LONGINT;
+		PROCEDURE GetLength*(): LONGINT;
 		BEGIN
 			RETURN len
 		END GetLength;

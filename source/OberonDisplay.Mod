@@ -39,7 +39,7 @@ TYPE
 		fixMM : BOOLEAN;	(* Value TRUE denotes the presence of a 2-button mouse, Ctrl-key acts then as middle button. *)
 		lastCtrl : BOOLEAN;	(* Value TRUE denotes Ctrl-key pressed. *)
 
-		PROCEDURE IsHit(x, y  : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
 		BEGIN RETURN TRUE;
 		END IsHit;
 
@@ -55,14 +55,14 @@ TYPE
 			y := SHORT(curY)
 		END Mouse;
 
-		PROCEDURE PointerMove(x, y : LONGINT; keys :SET);
+		PROCEDURE PointerMove*(x, y : LONGINT; keys :SET);
 		BEGIN {EXCLUSIVE}
 			curX := x; curY := y; curKeys := curKeys * {30, 31} + keys;
 			IF fixMM &lastCtrl THEN INCL(curKeys, 1) END;
 			IF input # NIL THEN input.timer.Wakeup END	(* have to check, because upcalls to us can start immediately *)
 		END PointerMove;
 
-		PROCEDURE WheelMove(dz : LONGINT); (*fof*)
+		PROCEDURE WheelMove*(dz : LONGINT); (*fof*)
 		BEGIN
 			IF dz > 0 THEN
 				INCL(curKeys, 30);
@@ -72,7 +72,7 @@ TYPE
 			IF input # NIL THEN input.timer.Wakeup END	(* have to check, because upcalls to us can start immediately *)
 		END WheelMove;
 
-		PROCEDURE PointerUp(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
 		BEGIN {EXCLUSIVE}
 			curX := x; curY := y; curKeys := keys;
 			IF input # NIL THEN input.timer.Wakeup END
@@ -98,12 +98,12 @@ TYPE
 			END
 		END InsertKey;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN {EXCLUSIVE}
 			InsertKey(0FFX, 0, {})
 		END Close;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
 		BEGIN {EXCLUSIVE}
 			IF fixMM & ((flags * Inputs.Ctrl # {}) # lastCtrl)  THEN
 				lastCtrl := flags * Inputs.Ctrl # {};
@@ -139,22 +139,22 @@ TYPE
 	OberonInput = OBJECT (Inputs.OberonInput)
 		VAR window : OberonWindow;
 
-		PROCEDURE Mouse(VAR x, y : INTEGER; VAR keys : SET);
+		PROCEDURE Mouse*(VAR x, y : INTEGER; VAR keys : SET);
 		BEGIN
 			window.Mouse(x, y, keys)
 		END Mouse;
 
-		PROCEDURE Read(VAR ch : CHAR; VAR b : BOOLEAN);
+		PROCEDURE Read*(VAR ch : CHAR; VAR b : BOOLEAN);
 		BEGIN
 			window.Read(ch, b)
 		END Read;
 
-		PROCEDURE Available(VAR num : INTEGER; VAR b : BOOLEAN);
+		PROCEDURE Available*(VAR num : INTEGER; VAR b : BOOLEAN);
 		BEGIN
 			window.Available(num, b)
 		END Available;
 
-		PROCEDURE KeyState(VAR k : SET);
+		PROCEDURE KeyState*(VAR k : SET);
 		BEGIN
 			window.KeyState(k)
 		END KeyState;
@@ -187,7 +187,7 @@ TYPE
 			END
 		END LocalAddDirty;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		BEGIN
 			IF Cache & (ml # MAX(LONGINT)) THEN
 				disp.Invalidate(WMRectangles.MakeRect(ml, mt, mr, mb));	(* updated dirty rectangle *)
@@ -363,7 +363,7 @@ TYPE
 			ASSERT(res = 0)
 		END Init;
 
-		PROCEDURE Finalize;
+		PROCEDURE Finalize*;
 		BEGIN
 			IF disp = NIL THEN RETURN END;
 			Inputs.oberonInput.Remove(inp);	(* Unregister virtual input driver *)

@@ -374,7 +374,7 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; size: HUGEINT): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: HUGEINT): BOOLEAN;
 		VAR len, temp: LONGINT;
 		BEGIN
 			ReadNum(r, len);

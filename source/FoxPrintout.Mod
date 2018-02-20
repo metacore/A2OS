@@ -89,7 +89,7 @@ TYPE
 			END;
 		END Type;
 
-		PROCEDURE VisitType(x: SyntaxTree.Type);
+		PROCEDURE VisitType*(x: SyntaxTree.Type);
 		BEGIN
 			IF x = SyntaxTree.importType THEN w.String("importType")
 			ELSIF x = SyntaxTree.typeDeclarationType THEN w.String("typeDeclarationType");
@@ -98,7 +98,7 @@ TYPE
 			END;
 		END VisitType;
 
-		PROCEDURE VisitBasicType(x: SyntaxTree.BasicType);
+		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
 		BEGIN
 			IF x.typeDeclaration # NIL THEN
 				Identifier(x.typeDeclaration.name);
@@ -107,47 +107,47 @@ TYPE
 			END
 		END VisitBasicType;
 
-		PROCEDURE VisitBooleanType(x: SyntaxTree.BooleanType);
+		PROCEDURE VisitBooleanType*(x: SyntaxTree.BooleanType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitBooleanType;
 
-		PROCEDURE VisitSetType(x: SyntaxTree.SetType);
+		PROCEDURE VisitSetType*(x: SyntaxTree.SetType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitSetType;
 
-		PROCEDURE VisitSizeType(x: SyntaxTree.SizeType);
+		PROCEDURE VisitSizeType*(x: SyntaxTree.SizeType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitSizeType;
 
-		PROCEDURE VisitCharacterType(x: SyntaxTree.CharacterType);
+		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitCharacterType;
 
-		PROCEDURE VisitIntegerType(x: SyntaxTree.IntegerType);
+		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitIntegerType;
 
-		PROCEDURE VisitFloatType(x: SyntaxTree.FloatType);
+		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitFloatType;
 
-		PROCEDURE VisitComplexType(x: SyntaxTree.ComplexType);
+		PROCEDURE VisitComplexType*(x: SyntaxTree.ComplexType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitComplexType;
 
-		PROCEDURE VisitByteType(x: SyntaxTree.ByteType);
+		PROCEDURE VisitByteType*(x: SyntaxTree.ByteType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitByteType;
 
-		PROCEDURE VisitQualifiedType(x: SyntaxTree.QualifiedType);
+		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		BEGIN
 			IF x.resolved = SyntaxTree.invalidType THEN
 				AlertString("(*unresolved*)");
@@ -165,12 +165,12 @@ TYPE
 			END;
 		END VisitQualifiedType;
 
-		PROCEDURE VisitStringType(x: SyntaxTree.StringType);
+		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
 		BEGIN
 			w.String("STRING"); w.String("(* len = "); w.Int(x.length,1); w.String(" *)");
 		END VisitStringType;
 
-		PROCEDURE VisitEnumerationType(x: SyntaxTree.EnumerationType);
+		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
 		VAR e: SyntaxTree.Constant; first: BOOLEAN;
 		BEGIN
 			Keyword("ENUM ");
@@ -191,11 +191,11 @@ TYPE
 			Keyword(" END");
 		END VisitEnumerationType;
 
-		PROCEDURE VisitRangeType(x: SyntaxTree.RangeType);
+		PROCEDURE VisitRangeType*(x: SyntaxTree.RangeType);
 		BEGIN VisitBasicType(x);
 		END VisitRangeType;
 
-		PROCEDURE VisitArrayType(x: SyntaxTree.ArrayType);
+		PROCEDURE VisitArrayType*(x: SyntaxTree.ArrayType);
 		BEGIN
 			Keyword("ARRAY " );
 			IF x.length # NIL THEN Expression(x.length);
@@ -204,28 +204,28 @@ TYPE
 			Type(x.arrayBase);
 		END VisitArrayType;
 
-		PROCEDURE VisitNilType(x: SyntaxTree.NilType);
+		PROCEDURE VisitNilType*(x: SyntaxTree.NilType);
 		BEGIN
 			w.String("NILTYPE");
 		END VisitNilType;
 
-		PROCEDURE VisitAddressType(x: SyntaxTree.AddressType);
+		PROCEDURE VisitAddressType*(x: SyntaxTree.AddressType);
 		BEGIN
 			w.String("ADDRESSTYPE");
 		END VisitAddressType;
 
-		PROCEDURE VisitObjectType(x: SyntaxTree.ObjectType);
+		PROCEDURE VisitObjectType*(x: SyntaxTree.ObjectType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitObjectType;
 
-		PROCEDURE VisitAnyType(x: SyntaxTree.AnyType);
+		PROCEDURE VisitAnyType*(x: SyntaxTree.AnyType);
 		BEGIN
 			VisitBasicType(x);
 		END VisitAnyType;
 
 
-		PROCEDURE VisitMathArrayType(x: SyntaxTree.MathArrayType);
+		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
 		BEGIN
 			Keyword("ARRAY " );
 			IF x.form = SyntaxTree.Tensor THEN w.String("[?] ");
@@ -273,12 +273,13 @@ TYPE
 			IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
 			IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
 			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
+			IF rec.isAbstract THEN Flag(Global.NameAbstract, first) END;
 			IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
 			FlagEnd(first);
 		END ObjectFlags;
 		
 
-		PROCEDURE VisitPointerType(x: SyntaxTree.PointerType);
+		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
 		VAR pointerBase: SyntaxTree.Type;
 		BEGIN
 			IF x.pointerBase = NIL THEN
@@ -295,7 +296,7 @@ TYPE
 			END;
 		END VisitPointerType;
 
-		PROCEDURE VisitPortType(x: SyntaxTree.PortType);
+		PROCEDURE VisitPortType*(x: SyntaxTree.PortType);
 		BEGIN
 			Keyword("PORT");
 			IF x.direction = SyntaxTree.OutPort THEN
@@ -309,7 +310,7 @@ TYPE
 			END;
 		END VisitPortType;
 
-		PROCEDURE VisitCellType(x: SyntaxTree.CellType);
+		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
 		BEGIN
 			IF x.isCellNet THEN
 				Keyword("CELLNET ")
@@ -330,12 +331,13 @@ TYPE
 			END;
 		END VisitCellType;
 
-		PROCEDURE VisitRecordType(x: SyntaxTree.RecordType);
+		PROCEDURE VisitRecordType*(x: SyntaxTree.RecordType);
 		VAR prevScope: SyntaxTree.Scope;
 		BEGIN
 			IF x.isObject THEN
 				Keyword("OBJECT ");
-				IF x.pointerType # NIL THEN ObjectFlags(x, x.pointerType) END;
+				IF x.pointerType # NIL THEN ObjectFlags(x, x.pointerType) 
+				END;
 				IF info THEN
 					BeginComment; w.String("ObjectType");
 
@@ -407,7 +409,7 @@ TYPE
 		END Value;
 
 
-		PROCEDURE VisitProcedureType(x: SyntaxTree.ProcedureType);
+		PROCEDURE VisitProcedureType*(x: SyntaxTree.ProcedureType);
 		VAR first: BOOLEAN;
 		BEGIN
 			Keyword("PROCEDURE " );
@@ -477,22 +479,22 @@ TYPE
 			w.Update;
 		END Expression;
 
-		PROCEDURE VisitExpression(x: SyntaxTree.Expression);
+		PROCEDURE VisitExpression*(x: SyntaxTree.Expression);
 		BEGIN
 			AlertString("InvalidExpression");
 		END VisitExpression;
 
-		PROCEDURE VisitSet(x: SyntaxTree.Set);
+		PROCEDURE VisitSet*(x: SyntaxTree.Set);
 		BEGIN
 			w.String( "{" );  ExpressionList(x.elements); w.String( "}" );
 		END VisitSet;
 
-		PROCEDURE VisitMathArrayExpression(x: SyntaxTree.MathArrayExpression);
+		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
 		BEGIN
 			w.String( "[" );  ExpressionList(x.elements); w.String( "]" );
 		END VisitMathArrayExpression;
 
-		PROCEDURE VisitUnaryExpression(x: SyntaxTree.UnaryExpression);
+		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
 		VAR identifier: SyntaxTree.Identifier;
 		BEGIN
 			w.String(" ");
@@ -512,7 +514,7 @@ TYPE
 			END;
 		END VisitUnaryExpression;
 
-		PROCEDURE VisitBinaryExpression(x: SyntaxTree.BinaryExpression);
+		PROCEDURE VisitBinaryExpression*(x: SyntaxTree.BinaryExpression);
 		VAR identifier: SyntaxTree.Identifier;
 		BEGIN
 			w.String( "(" );
@@ -523,7 +525,7 @@ TYPE
 			w.String(")");
 		END VisitBinaryExpression;
 
-		PROCEDURE VisitRangeExpression(x: SyntaxTree.RangeExpression);
+		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
 		BEGIN
 			IF x.missingFirst & x.missingLast & x.missingStep THEN
 				(* open range expression *)
@@ -550,12 +552,12 @@ TYPE
 			END
 		END VisitRangeExpression;
 
-		PROCEDURE VisitTensorRangeExpression(x: SyntaxTree.TensorRangeExpression);
+		PROCEDURE VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression);
 		BEGIN
 			w.String(" ? ");
 		END VisitTensorRangeExpression;
 
-		PROCEDURE VisitConversion(x: SyntaxTree.Conversion);
+		PROCEDURE VisitConversion*(x: SyntaxTree.Conversion);
 		BEGIN
 			IF x.typeExpression # NIL THEN Expression(x.typeExpression); w.String("(");
 			ELSIF info THEN BeginComment; ShortType(x.type); w.String("<-"); EndComment;
@@ -564,18 +566,18 @@ TYPE
 			IF x.typeExpression # NIL THEN w.String(")") END;
 		END VisitConversion;
 
-		PROCEDURE VisitDesignator(x: SyntaxTree.Designator);
+		PROCEDURE VisitDesignator*(x: SyntaxTree.Designator);
 		BEGIN
 			AlertString("InvalidDesignator");
 		END VisitDesignator;
 
-		PROCEDURE VisitIdentifierDesignator(x: SyntaxTree.IdentifierDesignator);
+		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
 		BEGIN
 			IF info THEN AlertString("(*<IdentifierDesignator>*)") END;
 			Identifier(x.identifier)
 		END VisitIdentifierDesignator;
 
-		PROCEDURE VisitSelectorDesignator(x: SyntaxTree.SelectorDesignator);
+		PROCEDURE VisitSelectorDesignator*(x: SyntaxTree.SelectorDesignator);
 		BEGIN
 			Expression(x.left);
 			w.String(".");
@@ -583,21 +585,21 @@ TYPE
 			Identifier(x.identifier);
 		END VisitSelectorDesignator;
 
-		PROCEDURE VisitBracketDesignator(x: SyntaxTree.BracketDesignator);
+		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
 		BEGIN
 			Expression(x.left);
 		 	IF info THEN AlertString("(*<BracketDesignator>*)") END;
 		 	w.String("["); ExpressionList(x.parameters); w.String("]");
 		END VisitBracketDesignator;
 
-		PROCEDURE VisitParameterDesignator(x: SyntaxTree.ParameterDesignator);
+		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
 		BEGIN
 			Expression(x.left);
 			IF info THEN AlertString("(*<ParameterDesignator>*)") END;
 			w.String("("); ExpressionList(x.parameters); w.String(")");
 		END VisitParameterDesignator;
 
-		PROCEDURE VisitIndexDesignator(x: SyntaxTree.IndexDesignator);
+		PROCEDURE VisitIndexDesignator*(x: SyntaxTree.IndexDesignator);
 		BEGIN
 			Expression(x.left);
 			w.String("["); ExpressionList(x.parameters); w.String("]");
@@ -610,7 +612,7 @@ TYPE
 			END;
 		END VisitIndexDesignator;
 
-		PROCEDURE VisitArrowDesignator(x: SyntaxTree.ArrowDesignator);
+		PROCEDURE VisitArrowDesignator*(x: SyntaxTree.ArrowDesignator);
 		BEGIN
 			Expression(x.left);
 			IF info THEN AlertString("(*<ArrowDesignator>*)") END;
@@ -626,7 +628,7 @@ TYPE
 			ELSE w.String("(other)") END;
 		END ShortType;
 
-		PROCEDURE VisitSymbolDesignator(x: SyntaxTree.SymbolDesignator);
+		PROCEDURE VisitSymbolDesignator*(x: SyntaxTree.SymbolDesignator);
 		BEGIN
 			IF (x.left # NIL) & ~x.left.isHidden THEN
 			Expression(x.left); w.String(".");
@@ -650,7 +652,7 @@ TYPE
 			END;
 		END VisitSymbolDesignator;
 
-		PROCEDURE VisitSupercallDesignator(x: SyntaxTree.SupercallDesignator);
+		PROCEDURE VisitSupercallDesignator*(x: SyntaxTree.SupercallDesignator);
 		BEGIN
 			Expression(x.left);
 			w.String( "^" );
@@ -663,7 +665,7 @@ TYPE
 			END;
 		END VisitSupercallDesignator;
 
-		PROCEDURE VisitSelfDesignator(x: SyntaxTree.SelfDesignator);
+		PROCEDURE VisitSelfDesignator*(x: SyntaxTree.SelfDesignator);
 		BEGIN
 			ASSERT(x.left = NIL);
 			IF case = Scanner.Lowercase THEN w.String("self"); ELSE w.String("SELF"); END;
@@ -677,7 +679,7 @@ TYPE
 
 		END VisitSelfDesignator;
 
-		PROCEDURE VisitResultDesignator(x: SyntaxTree.ResultDesignator);
+		PROCEDURE VisitResultDesignator*(x: SyntaxTree.ResultDesignator);
 		BEGIN
 			ASSERT(x.left = NIL);
 			w.String("RESULT");
@@ -690,7 +692,7 @@ TYPE
 			END;
 		END VisitResultDesignator;
 
-		PROCEDURE VisitDereferenceDesignator(x: SyntaxTree.DereferenceDesignator);
+		PROCEDURE VisitDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator);
 		BEGIN
 			Expression(x.left);
 			w.String( "^" );
@@ -703,7 +705,7 @@ TYPE
 			END;
 		END VisitDereferenceDesignator;
 
-		PROCEDURE VisitTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator);
+		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
 		BEGIN
 			Expression(x.left);
 			IF info THEN
@@ -718,7 +720,7 @@ TYPE
 			w.String(")");
 		END VisitTypeGuardDesignator;
 
-		PROCEDURE VisitProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator);
+		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
 		BEGIN
 			Expression(x.left);
 			IF info THEN
@@ -731,7 +733,7 @@ TYPE
 			w.String("("); ExpressionList(x.parameters); w.String(")");
 		END VisitProcedureCallDesignator;
 
-		PROCEDURE VisitStatementDesignator(x: SyntaxTree.StatementDesignator);
+		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
 		BEGIN
 			Indent; Keyword("STATEMENT-DESIGNATOR ");
 			IF x.result # NIL THEN
@@ -742,7 +744,7 @@ TYPE
 		END VisitStatementDesignator;
 
 
-		PROCEDURE VisitBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator);
+		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		BEGIN
 			IF x.left # NIL THEN
 				Expression(x.left);
@@ -761,12 +763,12 @@ TYPE
 			w.String("("); ExpressionList(x.parameters); w.String(")");
 		END VisitBuiltinCallDesignator;
 
-		PROCEDURE VisitValue(x: SyntaxTree.Value);
+		PROCEDURE VisitValue*(x: SyntaxTree.Value);
 		BEGIN
 			AlertString("InvalidValue");
 		END VisitValue;
 
-		PROCEDURE VisitBooleanValue(x: SyntaxTree.BooleanValue);
+		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
 			IF Scanner.Uppercase = case THEN
 				IF x.value THEN w.String("TRUE" ) ELSE w.String( "FALSE" ) END
@@ -791,7 +793,7 @@ TYPE
 			REPEAT DEC( i ); w.Char( a[i] ) UNTIL i = 0
 		END Hex;
 
-		PROCEDURE VisitIntegerValue(x: SyntaxTree.IntegerValue);
+		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 
 			PROCEDURE InBounds(val: HUGEINT; bits: LONGINT): BOOLEAN;
 			VAR m: HUGEINT;
@@ -813,12 +815,12 @@ TYPE
 			END;
 		END VisitIntegerValue;
 
-		PROCEDURE VisitCharacterValue(x: SyntaxTree.CharacterValue);
+		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN
 			Hex( ORD(x.value));  w.String( "X" );
 		END VisitCharacterValue;
 
-		PROCEDURE VisitSetValue(x: SyntaxTree.SetValue);
+		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
 		VAR i: LONGINT;
 		BEGIN
 			w.String("{");
@@ -837,7 +839,7 @@ TYPE
 			w.String("}");
 		END VisitSetValue;
 
-		PROCEDURE VisitMathArrayValue(x: SyntaxTree.MathArrayValue);
+		PROCEDURE VisitMathArrayValue*(x: SyntaxTree.MathArrayValue);
 		BEGIN
 			VisitMathArrayExpression(x.array);
 		END VisitMathArrayValue;
@@ -866,11 +868,11 @@ TYPE
 			END;
 		END FormatedFloat;
 
-		PROCEDURE VisitRealValue(x: SyntaxTree.RealValue);
+		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
 		BEGIN FormatedFloat(x.value, x.subtype)
 		END VisitRealValue;
 
-		PROCEDURE VisitComplexValue(x: SyntaxTree.ComplexValue);
+		PROCEDURE VisitComplexValue*(x: SyntaxTree.ComplexValue);
 		BEGIN
 			IF (x.realValue = 0) & (x.imagValue = 1) THEN
 				w.String("IMAG")
@@ -884,7 +886,7 @@ TYPE
 			END
 		END VisitComplexValue;
 
-		PROCEDURE VisitStringValue(x: SyntaxTree.StringValue);
+		PROCEDURE VisitStringValue*(x: SyntaxTree.StringValue);
 		VAR i: LONGINT; ch: CHAR;
 		BEGIN
 			i := 0;
@@ -905,11 +907,11 @@ TYPE
 			w.Char('\');
 		END VisitStringValue;
 
-		PROCEDURE VisitNilValue(x: SyntaxTree.NilValue);
+		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN IF case = Scanner.Lowercase THEN w.String( "nil" ); ELSE w.String( "NIL" ); END; IF info THEN BeginComment; Type(x.type); EndComment; END;
 		END VisitNilValue;
 
-		PROCEDURE VisitEnumerationValue(x: SyntaxTree.EnumerationValue);
+		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN w.Int(x.value,1);
 		END VisitEnumerationValue;
 
@@ -924,7 +926,7 @@ TYPE
 			END
 		END Symbol;
 
-		PROCEDURE VisitSymbol(x: SyntaxTree.Symbol);
+		PROCEDURE VisitSymbol*(x: SyntaxTree.Symbol);
 		BEGIN
 			AlertString("InvalidSymbol");
 		END VisitSymbol;
@@ -971,7 +973,7 @@ TYPE
 			END;
 		END PrintSymbol;
 
-		PROCEDURE VisitTypeDeclaration(x: SyntaxTree.TypeDeclaration);
+		PROCEDURE VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration);
 		BEGIN
 			IF Visible(x) THEN
 				IF (x.access # SyntaxTree.Hidden) OR (mode > SourceCode) THEN
@@ -1002,7 +1004,7 @@ TYPE
 			w.DecIndent;
 		END TypeDeclarationList;
 
-		PROCEDURE VisitConstant(x: SyntaxTree.Constant);
+		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
 		BEGIN
 			IF Visible(x) THEN
 				IF (mode > SourceCode) OR (x.access # SyntaxTree.Hidden) THEN
@@ -1033,7 +1035,7 @@ TYPE
 			w.DecIndent;
 		END ConstantList;
 
-		PROCEDURE VisitVariable(x: SyntaxTree.Variable);
+		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
 		BEGIN
 			IF Visible(x) THEN
 				IF (x.access # SyntaxTree.Hidden) THEN
@@ -1106,7 +1108,7 @@ TYPE
 			w.DecIndent
 		END VariableList;
 
-		PROCEDURE VisitParameter(x: SyntaxTree.Parameter);
+		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		BEGIN
 			IF (x.access # SyntaxTree.Hidden) THEN
 				Comments(x.comment,x,TRUE);
@@ -1195,7 +1197,7 @@ TYPE
 			IF SyntaxTree.InternalRead IN access THEN w.String(" InternalRead") END;
 		END Access;
 
-		PROCEDURE VisitProcedure(x: SyntaxTree.Procedure);
+		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.FingerPrint;
 		BEGIN
 			IF Visible(x) THEN
@@ -1218,6 +1220,8 @@ TYPE
 				IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;
 				IF (type.isRealtime) THEN Flag(Global.NameRealtime,first) END;
 				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
+				IF (x.isAbstract) THEN Flag(Global.NameAbstract,first) END;
+				IF (x.isFinal) THEN Flag(Global.NameFinal,first) END;
 				IF (x.fixed) THEN Value(Global.NameFixed, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;
@@ -1280,7 +1284,7 @@ TYPE
 			END;
 		END VisitProcedure;
 
-		PROCEDURE VisitOperator(x: SyntaxTree.Operator);
+		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
 		VAR type: SyntaxTree.ProcedureType;
 			recordType: SyntaxTree.RecordType;
 			i: LONGINT;
@@ -1373,7 +1377,7 @@ TYPE
 			w.DecIndent;
 		END ProcedureList;
 
-		PROCEDURE VisitImport(x: SyntaxTree.Import);
+		PROCEDURE VisitImport*(x: SyntaxTree.Import);
 		VAR context: SyntaxTree.Identifier;
 		BEGIN
 			IF x.moduleName # x.name THEN Identifier(x.name);  w.String( " := " );  END;
@@ -1399,7 +1403,7 @@ TYPE
 			IF ~first THEN w.String( ";" ); END;
 		END ImportList;
 
-		PROCEDURE VisitBuiltin(x: SyntaxTree.Builtin);
+		PROCEDURE VisitBuiltin*(x: SyntaxTree.Builtin);
 		BEGIN
 			Indent; Keyword("BUILTIN ");
 			Identifier(x.name);
@@ -1523,20 +1527,20 @@ TYPE
 			END;
 		END StatementSequence;
 
-		PROCEDURE VisitStatement(x: SyntaxTree.Statement);
+		PROCEDURE VisitStatement*(x: SyntaxTree.Statement);
 		BEGIN
 			AlertString("InvalidStatement");
 		END VisitStatement;
 
-		PROCEDURE VisitProcedureCallStatement(x: SyntaxTree.ProcedureCallStatement);
+		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
 		BEGIN Expression(x.call) END VisitProcedureCallStatement;
 
-		PROCEDURE VisitAssignment(x: SyntaxTree.Assignment);
+		PROCEDURE VisitAssignment*(x: SyntaxTree.Assignment);
 		BEGIN
 			Expression(x.left); w.String( " := " );  Expression(x.right);
 		END VisitAssignment;
 
-		PROCEDURE VisitCommunicationStatement(x: SyntaxTree.CommunicationStatement);
+		PROCEDURE VisitCommunicationStatement*(x: SyntaxTree.CommunicationStatement);
 		VAR identifier: SyntaxTree.Identifier;
 		BEGIN
 			Expression(x.left);
@@ -1557,7 +1561,7 @@ TYPE
 			w.DecIndent;
 		END IfPart;
 
-		PROCEDURE VisitIfStatement(x: SyntaxTree.IfStatement);
+		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
 		VAR i: LONGINT;  elsif: SyntaxTree.IfPart;
 		BEGIN
 			IfPart(x.ifPart);
@@ -1586,7 +1590,7 @@ TYPE
 			w.IncIndent;  StatementSequence(x.statements);  w.DecIndent;
 		END WithPart;
 
-		PROCEDURE VisitWithStatement(x: SyntaxTree.WithStatement);
+		PROCEDURE VisitWithStatement*(x: SyntaxTree.WithStatement);
 		VAR i: LONGINT;
 		BEGIN
 			Indent; Keyword("WITH " );
@@ -1622,7 +1626,7 @@ TYPE
 			w.IncIndent; StatementSequence(x.statements);  w.DecIndent;
 		END CasePart;
 
-		PROCEDURE VisitCaseStatement(x: SyntaxTree.CaseStatement);
+		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
 		VAR i: LONGINT;  case: SyntaxTree.CasePart;
 		BEGIN
 			Keyword("CASE " );
@@ -1645,7 +1649,7 @@ TYPE
 			Keyword("END" );
 		END VisitCaseStatement;
 
-		PROCEDURE VisitWhileStatement(x: SyntaxTree.WhileStatement);
+		PROCEDURE VisitWhileStatement*(x: SyntaxTree.WhileStatement);
 		BEGIN
 			Keyword("WHILE " );
 			Expression(x.condition);
@@ -1657,7 +1661,7 @@ TYPE
 			Keyword("END" );
 		END VisitWhileStatement;
 
-		PROCEDURE VisitRepeatStatement(x: SyntaxTree.RepeatStatement);
+		PROCEDURE VisitRepeatStatement*(x: SyntaxTree.RepeatStatement);
 		BEGIN
 			Keyword("REPEAT " );
 			w.IncIndent;
@@ -1667,7 +1671,7 @@ TYPE
 			Expression(x.condition);
 		END VisitRepeatStatement;
 
-		PROCEDURE VisitForStatement(x: SyntaxTree.ForStatement);
+		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
 		BEGIN
 			Keyword("FOR " );
 			Expression(x.variable);
@@ -1687,30 +1691,30 @@ TYPE
 			Keyword("END" );
 		END VisitForStatement;
 
-		PROCEDURE VisitLoopStatement(x: SyntaxTree.LoopStatement);
+		PROCEDURE VisitLoopStatement*(x: SyntaxTree.LoopStatement);
 		BEGIN
 			Keyword("LOOP " );
 			w.IncIndent;  StatementSequence(x.statements);  w.DecIndent;
 			Indent;  Keyword("END" );
 		END VisitLoopStatement;
 
-		PROCEDURE VisitExitableBlock(x: SyntaxTree.ExitableBlock);
+		PROCEDURE VisitExitableBlock*(x: SyntaxTree.ExitableBlock);
 		BEGIN
 			Keyword("EXITABLE " );
 			w.IncIndent;  StatementSequence(x.statements);  w.DecIndent;
 			Indent;  Keyword("END " );
 		END VisitExitableBlock;
 
-		PROCEDURE VisitExitStatement(x: SyntaxTree.ExitStatement);
+		PROCEDURE VisitExitStatement*(x: SyntaxTree.ExitStatement);
 		BEGIN 	Keyword("EXIT" ) END VisitExitStatement;
 
-		PROCEDURE VisitReturnStatement(x: SyntaxTree.ReturnStatement);
+		PROCEDURE VisitReturnStatement*(x: SyntaxTree.ReturnStatement);
 		BEGIN
 			Keyword("RETURN " );
 			IF x.returnValue # NIL THEN Expression(x.returnValue) END
 		END VisitReturnStatement;
 
-		PROCEDURE VisitAwaitStatement(x: SyntaxTree.AwaitStatement);
+		PROCEDURE VisitAwaitStatement*(x: SyntaxTree.AwaitStatement);
 		BEGIN
 			Keyword("AWAIT (" );  Expression(x.condition);  w.String( ")" );
 		END VisitAwaitStatement;
@@ -1753,7 +1757,7 @@ TYPE
 		END BlockModifier;
 		*)
 
-		PROCEDURE VisitStatementBlock(x: SyntaxTree.StatementBlock);
+		PROCEDURE VisitStatementBlock*(x: SyntaxTree.StatementBlock);
 		BEGIN
 			Keyword("BEGIN"); Modifiers(x.blockModifiers);
 			w.IncIndent;
@@ -1808,7 +1812,7 @@ TYPE
 			END;
 		END Code;
 
-		PROCEDURE VisitCode(x: SyntaxTree.Code);
+		PROCEDURE VisitCode*(x: SyntaxTree.Code);
 		VAR in, out: BOOLEAN;
 		BEGIN
 			Indent; Keyword("CODE");

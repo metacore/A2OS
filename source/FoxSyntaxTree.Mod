@@ -575,7 +575,7 @@ TYPE
 		BEGIN position := SELF.position.start; v.VisitObjectType(SELF)
 		END Accept;
 
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
 
@@ -601,7 +601,7 @@ TYPE
 		BEGIN RETURN (to IS NilType) OR (to IS ObjectType) OR (to IS AnyType) OR (to IS PointerType) OR (to IS ProcedureType) OR (to IS AddressType)
 		END CompatibleTo;
 
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
 
@@ -630,7 +630,7 @@ TYPE
 		BEGIN RETURN (to IS AnyType)
 		END CompatibleTo;
 
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
 
@@ -813,7 +813,7 @@ TYPE
 		BEGIN RETURN SameType(to)
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -915,7 +915,7 @@ TYPE
 		BEGIN RETURN (to IS ComplexType) & (componentType.CompatibleTo(to(ComplexType).componentType))
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -954,11 +954,11 @@ TYPE
 		BEGIN RETURN (resolved # NIL) & resolved.CompatibleTo(to)
 		END CompatibleTo;
 
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN (resolved # NIL) & resolved.IsPointer()
 		END IsPointer;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN (resolved # NIL) & resolved.IsComposite()
 		END IsComposite;
 
@@ -971,7 +971,7 @@ TYPE
 		BEGIN RETURN (resolved # NIL) & (resolved.NeedsTrace());
 		END NeedsTrace;
 		
-		PROCEDURE IsRecordType(): BOOLEAN;
+		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
 			RETURN (resolved # NIL) & (resolved.IsRecordType());
 		END IsRecordType;
@@ -1013,7 +1013,7 @@ TYPE
 			END;
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -1136,7 +1136,7 @@ TYPE
 			RETURN (form = Static) & SameType(to)
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -1280,7 +1280,7 @@ TYPE
 		BEGIN RETURN hasPointers OR (arrayBase # NIL) & (arrayBase.resolved.NeedsTrace());
 		END NeedsTrace;
 		
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -1378,7 +1378,7 @@ TYPE
 		BEGIN	RETURN SameType(to) OR ~(to IS RecordType) & SELF.Extends(to)
 		END CompatibleTo;
 
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
 		
@@ -1432,7 +1432,7 @@ TYPE
 		BEGIN	RETURN SameType(to)
 		END CompatibleTo;
 		
-		PROCEDURE IsPointer(): BOOLEAN;
+		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN cellsAreObjects;
 		END IsPointer;
 
@@ -1454,6 +1454,7 @@ TYPE
 			pointerType-: PointerType; (* for support of A = POINTER TO RECORD ... END and B = POINTER TO RECORD (A) END; *)
 			modifiers-: Modifier;
 			isObject-,isProtected: BOOLEAN;
+			isAbstract-: BOOLEAN;
 
 			(* a math array type describing an object's array structure; NIL if the type does not exhibit an array structure *)
 			arrayStructure-: MathArrayType;
@@ -1473,7 +1474,13 @@ TYPE
 			isObject := FALSE; isProtected := FALSE;
 			arrayStructure := NIL;
 			modifiers := NIL;
+			isAbstract := FALSE;
 		END InitRecordType;
+		
+		PROCEDURE SetAbstract*(abstract: BOOLEAN);
+		BEGIN
+			isAbstract := abstract;
+		END SetAbstract;
 
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
@@ -1577,7 +1584,7 @@ TYPE
 		BEGIN RETURN (arrayStructure # NIL)
 		END HasArrayStructure
 		;
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -1590,7 +1597,7 @@ TYPE
 		BEGIN position := SELF.position.start; v.VisitRecordType(SELF)
 		END Accept;
 		
-		PROCEDURE IsRecordType(): BOOLEAN;
+		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
 			RETURN TRUE;
 		END IsRecordType;
@@ -1707,7 +1714,7 @@ TYPE
 		BEGIN RETURN SameType(to)
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
 
@@ -1880,7 +1887,7 @@ TYPE
 			RETURN SameType(to) & (~isDelegate OR to(ProcedureType).isDelegate) & (~to.isRealtime OR isRealtime);
 		END CompatibleTo;
 
-		PROCEDURE IsComposite(): BOOLEAN;
+		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN isDelegate
 		END IsComposite;
 
@@ -3490,7 +3497,7 @@ TYPE
 		BEGIN SELF.methodNumber := methodNumber
 		END SetMethodNumber;
 
-		PROCEDURE NeedsSection(): BOOLEAN;
+		PROCEDURE NeedsSection*(): BOOLEAN;
 		BEGIN
 			RETURN (access * Public # {}) OR (methodNumber >= 0);
 		END NeedsSection;
@@ -4506,7 +4513,7 @@ TYPE
 		END SetCode;
 
 	END Body;
-
+		
 	(** (* comment *)  *)
 	Comment*=OBJECT
 	VAR position-: Position;
@@ -4541,6 +4548,7 @@ TYPE
 	Scope*=OBJECT
 		VAR
 		firstSymbol-: Symbol; numberSymbols-: LONGINT; (* all symbols in scope (sorted) *)
+		symbolTable: Basic.HashTableInt;
 
 		firstConstant-,lastConstant-: Constant;  numberConstants-: LONGINT; (* constants *)
 		firstTypeDeclaration-,lastTypeDeclaration-: TypeDeclaration; numberTypeDeclarations-: LONGINT; (* type declarations *)
@@ -4568,6 +4576,7 @@ TYPE
 				ownerModule := NIL;
 			END;
 			nextScope := NIL;
+			NEW(symbolTable,11);
 		END InitScope;
 		
 		PROCEDURE Clear*;
@@ -4596,17 +4605,24 @@ TYPE
 			symbol.nextSymbol := p;
 			IF q = NIL THEN firstSymbol := symbol ELSE q.nextSymbol := symbol END;
 			symbol.SetScope(SELF);
+			symbolTable.Put(symbol.name,symbol);
 
 			INC(numberSymbols);
 		END EnterSymbol;
 
 		(** Find symbol by name *)
 		PROCEDURE FindSymbol*(identifier: Identifier): Symbol;
-		VAR p: Symbol;
+		VAR p: Symbol; a: ANY;
 		BEGIN
 			IF identifier # invalidIdentifier THEN
+				a := symbolTable.Get(identifier);
+				IF (a # NIL) & ~(a IS Operator) THEN
+					p := a(Symbol);
+				END;
+				(*
 				p := firstSymbol;
 				WHILE(p#NIL) & ((p.name # identifier) OR (p IS Operator)) DO p := p.nextSymbol END;
+				*)
 			END;
 			RETURN p;
 		END FindSymbol;
@@ -4692,7 +4708,6 @@ TYPE
 			procedures.AddProcedure(p);
 		END AddProcedureDeclaration;
 		
-
 		PROCEDURE FindProcedure*(identifier: Identifier): Procedure;
 		VAR p: Procedure;
 		BEGIN
@@ -4700,7 +4715,7 @@ TYPE
 			WHILE (p#NIL) & ((p.name # identifier) OR (p IS Operator)) DO p := p.nextProcedure END;
 			RETURN p;
 		END FindProcedure;
-
+		
 		PROCEDURE FindMethod*(number: LONGINT): Procedure;
 		VAR p: Procedure;
 		BEGIN
@@ -4710,7 +4725,6 @@ TYPE
 			END;
 			RETURN p;
 		END FindMethod;
-
 
 		PROCEDURE Level*(): LONGINT;
 		VAR scope: Scope; level: LONGINT;
@@ -4803,7 +4817,7 @@ TYPE
 			numberMethods-: LONGINT;
 			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters for Active Cells programming*)
 			firstOperator-, lastOperator-: Operator; numberOperators: LONGINT; (* defined operators *)
-
+			
 		PROCEDURE & InitRecordScope(outer: Scope);
 		BEGIN
 			InitScope(outer);
@@ -4852,6 +4866,34 @@ TYPE
 			END;
 			RETURN p;
 		END FindSymbol;
+
+		(* if there is an abstract procedure in the scope, return it. Otherwise return nil *)		
+		PROCEDURE AbstractProcedure*(inScope: Scope): Procedure;
+		VAR p: Procedure; s: Symbol; base: RecordType;
+		BEGIN
+			p := firstProcedure;
+			WHILE p # NIL DO
+				IF p.isAbstract THEN
+					IF inScope # SELF THEN  (* elevate to mother scope, if necesary *)
+						s := inScope.FindSymbol(p.name); 
+						IF s = p THEN (* procedure is not overwritten *)
+							RETURN p
+						ELSE
+							ASSERT(s # NIL);
+							ASSERT(s IS Procedure);							
+						END;
+					ELSE
+						RETURN p
+					END;
+				END;
+				p := p.nextProcedure;
+			END;
+			base := ownerRecord.GetBaseRecord();
+			IF (base # NIL) THEN
+				RETURN base.recordScope.AbstractProcedure(inScope);
+			END;
+			RETURN NIL;
+		END AbstractProcedure;
 
 		PROCEDURE FindConstant*(identifier: Identifier): Constant;
 		VAR p: Constant; base: RecordType;
@@ -5297,11 +5339,17 @@ TYPE
 		PROCEDURE GetProcedure*( index: LONGINT ): Procedure;
 		VAR p: ANY;
 		BEGIN
-			p := list.Get(index); RETURN p(Procedure);
+			IF index >= list.Length() THEN RETURN NIL END;
+			p := list.Get(index); 
+			IF p = NIL THEN 
+				RETURN NIL 
+			ELSE 
+				RETURN p(Procedure);
+			END;
 		END GetProcedure;
 
 		PROCEDURE SetProcedure*(index: LONGINT; expression: Procedure);
-		BEGIN list.Set(index,expression)
+		BEGIN list.GrowAndSet(index,expression)
 		END SetProcedure;
 
 		PROCEDURE RemoveProcedure*(i: LONGINT);

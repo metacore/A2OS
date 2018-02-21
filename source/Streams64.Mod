@@ -508,7 +508,7 @@ TYPE
 			tail := LONGINT( pos );  sent := 0;  res := Ok;
 		END SetPos;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		(* nothing to do *)
 		END Update;
 

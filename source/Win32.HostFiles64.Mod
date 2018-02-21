@@ -149,55 +149,55 @@ TYPE
 			SELF.fs := winFS;  useprefix := TRUE;  INCL( flags, Files.NeedsPrefix );
 		END Init;
 
-		PROCEDURE New0( name: ARRAY OF CHAR ): Files.File;
+		PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
 		VAR fname: FileName;  f: Files.File;
 		BEGIN
 			Prefix( name, fname ); f := fs.New0( fname ); IF f # NIL THEN  f.fs := SELF; END;  RETURN f;
 		END New0;
 
-		PROCEDURE Old0( name: ARRAY OF CHAR ): Files.File;
+		PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
 		VAR fname: FileName;   f: Files.File;
 		BEGIN
 			Prefix( name, fname );  f :=  fs.Old0( fname ); IF f # NIL THEN  f.fs := SELF; END; RETURN f;
 		END Old0;
 
-		PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
+		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.Delete0( fname, key, res );
 		END Delete0;
 
-		PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: LONGINT );
+		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: LONGINT );
 		VAR old0, new0: FileName;
 		BEGIN
 			Prefix( old, old0 );  Prefix( new, new0 );  fs.Rename0( old0, new0, fold, res );
 		END Rename0;
 
-		PROCEDURE Enumerate0( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
+		PROCEDURE Enumerate0*( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 		VAR fmask: FileName;
 		BEGIN
 			Prefix( mask, fmask );  fs.Enumerate1( fmask, flags, enum, useprefix );
 		END Enumerate0;
 
-		PROCEDURE FileKey( name: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE FileKey*( name: ARRAY OF CHAR ): LONGINT;
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  RETURN fs.FileKey( fname );
 		END FileKey;
 
-		PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: LONGINT );
+		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: LONGINT );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.CreateDirectory0( fname, res );
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
+		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
 		END RemoveDirectory0;
 
-		PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 		VAR fname: FileName;
 		BEGIN
 			Prefix(name, fname );  RETURN fs.Has(fname, fullName, flags);
@@ -463,7 +463,7 @@ TYPE
 			fileSystem := fs
 		END Init;
 
-		PROCEDURE Set( VAR r: Files.Rider;  pos: HUGEINT );
+		PROCEDURE Set*( VAR r: Files.Rider;  pos: HUGEINT );
 		VAR size: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			IF hfile # Kernel32.InvalidHandleValue THEN
@@ -477,7 +477,7 @@ TYPE
 			r.apos := pos DIV BufferSize;  r.bpos := LONGINT( pos MOD BufferSize )
 		END Set;
 
-		PROCEDURE Pos( VAR r: Files.Rider ): HUGEINT;
+		PROCEDURE Pos*( VAR r: Files.Rider ): HUGEINT;
 		BEGIN
 			RETURN r.apos * BufferSize + r.bpos
 		END Pos;
@@ -523,7 +523,7 @@ TYPE
 			ASSERT( res # 0 );  INC( fpos, n );  buffer.apos := apos;  buffer.len := n
 		END ReadBuffer;
 
-		PROCEDURE Read( VAR r: Files.Rider;  VAR x: CHAR );
+		PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
 		VAR pos: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
@@ -535,7 +535,7 @@ TYPE
 			END
 		END Read;
 
-		PROCEDURE ReadBytes( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
+		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
 		VAR pos: HUGEINT; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT( (ofs + len) <= LEN( x ) );
@@ -555,7 +555,7 @@ TYPE
 			r.res := len; r.eof := (pos > fsize) OR ((pos = fsize) & (len > 0));
 		END ReadBytes;
 
-		PROCEDURE Write( VAR r: Files.Rider;  x: CHAR );
+		PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
 		VAR pos: HUGEINT;
 		BEGIN {EXCLUSIVE}
 			pos := r.apos * BufferSize + r.bpos;
@@ -567,7 +567,7 @@ TYPE
 			buffer.dirty := TRUE;
 		END Write;
 
-		PROCEDURE WriteBytes( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
+		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
 		VAR pos: HUGEINT; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
@@ -584,12 +584,12 @@ TYPE
 			END
 		END WriteBytes;
 
-		PROCEDURE Length( ): HUGEINT;
+		PROCEDURE Length*( ): HUGEINT;
 		BEGIN {EXCLUSIVE}
 			RETURN fsize
 		END Length;
 
-		PROCEDURE GetDate( VAR t, d: LONGINT );
+		PROCEDURE GetDate*( VAR t, d: LONGINT );
 		VAR ft, lft: Kernel32.FileTime;  st: Kernel32.SystemTime;  res: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			res := Kernel32.GetFileTime( hfile, NIL , NIL , ft );
@@ -600,7 +600,7 @@ TYPE
 			t := LONG( st.wHour ) * 1000H + LONG( st.wMinute ) * 40H + LONG( st.wSecond )
 		END GetDate;
 
-		PROCEDURE SetDate( t, d: LONGINT );
+		PROCEDURE SetDate*( t, d: LONGINT );
 		VAR ft, lft: Kernel32.FileTime;  st: Kernel32.SystemTime;  res: Kernel32.BOOL; err: LONGINT;
 		BEGIN {EXCLUSIVE}
 			st.wDay := SHORT( d MOD 20H );  d := ASH( d, -5 );  st.wMonth := SHORT( d MOD 10H );  d := ASH( d, -4 );  st.wYear := SHORT( d MOD 80H ) + 1900;  st.wMilliseconds := 0;
@@ -610,21 +610,21 @@ TYPE
 			ASSERT( res # 0 )
 		END SetDate;
 
-		PROCEDURE GetAttributes(): SET;
+		PROCEDURE GetAttributes*(): SET;
 		VAR s: SET;
 		BEGIN
 			s := ToSet(Kernel32.GetFileAttributes( fname ));
 			RETURN FileFlags(s);
 		END GetAttributes;
 
-		PROCEDURE SetAttributes(a: SET);
+		PROCEDURE SetAttributes*(a: SET);
 		VAR s: SET;
 		BEGIN
 			s:= WindowsFlags(a);
 			SetFileAttributes(fname,s);
 		END SetAttributes;
 
-		PROCEDURE GetName( VAR name: ARRAY OF CHAR );
+		PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
 		VAR i: LONGINT;  ch: CHAR;
 		BEGIN {EXCLUSIVE}
 			COPY( fname, name );  i := 0;  ch := name[0];
@@ -670,7 +670,7 @@ TYPE
 			RETURN TRUE;
 		END ToTemp;
 
-		PROCEDURE Register0( VAR res: LONGINT );
+		PROCEDURE Register0*( VAR res: LONGINT );
 		VAR F: File;  ret: Kernel32.BOOL;
 			from, to: ARRAY 256 OF CHAR;
 		BEGIN {EXCLUSIVE}
@@ -698,7 +698,7 @@ TYPE
 			ASSERT( hfile # Kernel32.InvalidHandleValue );  winFS.collection.Register( SELF );  res := 0
 		END Register0;
 
-		PROCEDURE Update;
+		PROCEDURE Update*;
 		BEGIN {EXCLUSIVE}
 			IF buffer.dirty THEN WriteBuffer() END
 		END Update;
@@ -724,7 +724,7 @@ TYPE
 			END
 		END Finalize;
 
-		PROCEDURE Close;
+		PROCEDURE Close*;
 		BEGIN
 			Finalize;
 			fileSystem.collection.oldFiles.Remove(SELF);

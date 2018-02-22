@@ -213,8 +213,8 @@ TYPE
 					LOOP
 						split( key[p + 7], ib );
 						key[p + 8] := key[p] / (e4[ib.c]*b3) / (e4[ib.b]*b2) / (e4[ib.a]*b1) / (e4[ib.d]*b0) / rcon[i];
-						key[p + 9] := key[p + 1] / key[p +  8];
-						key[p + 10] := key[p + 2] / key[p +  9];
+						key[p + 9] := key[p + 1] / key[p + 8];
+						key[p + 10] := key[p + 2] / key[p + 9];
 						key[p + 11] := key[p + 3] / key[p + 10];
 						INC( i );
 						IF i = 7 THEN  EXIT   END;
@@ -274,42 +274,11 @@ TYPE
 	END NewCipher;
 
 (*-------------------------------------------------------------------------------*)
-	
-	
-TYPE
-	ConstBuffer = OBJECT
-		VAR 
-			buf: ARRAY 2048 OF CHAR;  ib: LONGINT;
-		
-			PROCEDURE & Initialize;
-			BEGIN
-				ib := 0;
-			END Initialize;
-			
-			PROCEDURE Append( CONST str: ARRAY OF CHAR );
-			VAR i: LONGINT;  c: CHAR;
-			BEGIN
-				i := 0;
-				REPEAT  c := str[i];  buf[ib] := c;  INC( i );  INC( ib )  UNTIL c = 0X;
-				buf[ib - 1] := ' '
-			END Append;
-		
-			PROCEDURE GetInt( ): LONGINT;
-			VAR x: LONGINT;  c: CHAR;
-			BEGIN
-				WHILE buf[ib] <= ' ' DO  INC( ib )  END;
-				x := 0;  c := buf[ib];  INC( ib );
-				WHILE c > ' ' DO  x := 10*x + (ORD( c ) - 48);  c := buf[ib];  INC( ib )  END;
-				RETURN x
-			END GetInt;
-			
-		END ConstBuffer;
-
-
 
 	PROCEDURE Initialize;
-	VAR i, v1, i2, i4, i8, i9, ib, id, ie, v2, v3, t: LONGINT;
-		buffer: ConstBuffer;
+	VAR 
+		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: LONGINT;
+		buf: U.InitBuffer;
 
 		PROCEDURE xor( a, b: LONGINT ): LONGINT;
 		BEGIN
@@ -324,45 +293,44 @@ TYPE
 		END f1;
 
 	BEGIN
-		NEW( buffer );
-		buffer.Append( " 99 124 119 123 242 107 111 197  48   1 103  43 254 215 171 118 " );
-		buffer.Append( "202 130 201 125 250  89  71 240 173 212 162 175 156 164 114 192 " );
-		buffer.Append( "183 253 147  38  54  63 247 204  52 165 229 241 113 216  49  21 " );
-		buffer.Append( "  4 199  35 195  24 150   5 154   7  18 128 226 235  39 178 117 " );
-		buffer.Append( "  9 131  44  26  27 110  90 160  82  59 214 179  41 227  47 132 " );
-		buffer.Append( " 83 209   0 237  32 252 177  91 106 203 190  57  74  76  88 207 " );
-		buffer.Append( "208 239 170 251  67  77  51 133  69 249   2 127  80  60 159 168 " );
-		buffer.Append( " 81 163  64 143 146 157  56 245 188 182 218  33  16 255 243 210 " );
-		buffer.Append( "205  12  19 236  95 151  68  23 196 167 126  61 100  93  25 115 " );
-		buffer.Append( " 96 129  79 220  34  42 144 136  70 238 184  20 222  94  11 219 " );
-		buffer.Append( "224  50  58  10  73   6  36  92 194 211 172  98 145 149 228 121 " );
-		buffer.Append( "231 200  55 109 141 213  78 169 108  86 244 234 101 122 174   8 " );
-		buffer.Append( "186 120  37  46  28 166 180 198 232 221 116  31  75 189 139 138 " );
-		buffer.Append( "112  62 181 102  72   3 246  14  97  53  87 185 134 193  29 158 " );
-		buffer.Append( "225 248 152  17 105 217 142 148 155  30 135 233 206  85  40 223 " );
-		buffer.Append( "140 161 137  13 191 230  66 104  65 153  45  15 176  84 187  22 " );
+		NEW( buf, 2048 );
+		buf.Add( " 63 7C 77 7B F2 6B 6F C5 30 01 67 2B FE D7 AB 76 " );
+		buf.Add( " CA 82 C9 7D FA 59 47 F0 AD D4 A2 AF 9C A4 72 C0 " );
+		buf.Add( " B7 FD 93 26 36 3F F7 CC 34 A5 E5 F1 71 D8 31 15 " );
+		buf.Add( " 04 C7 23 C3 18 96 05 9A 07 12 80 E2 EB 27 B2 75 " );
+		buf.Add( " 09 83 2C 1A 1B 6E 5A A0 52 3B D6 B3 29 E3 2F 84 " );
+		buf.Add( " 53 D1 00 ED 20 FC B1 5B 6A CB BE 39 4A 4C 58 CF " );
+		buf.Add( " D0 EF AA FB 43 4D 33 85 45 F9 02 7F 50 3C 9F A8 " );
+		buf.Add( " 51 A3 40 8F 92 9D 38 F5 BC B6 DA 21 10 FF F3 D2 " );
+		buf.Add( " CD 0C 13 EC 5F 97 44 17 C4 A7 7E 3D 64 5D 19 73 " );
+		buf.Add( " 60 81 4F DC 22 2A 90 88 46 EE B8 14 DE 5E 0B DB " );
+		buf.Add( " E0 32 3A 0A 49 06 24 5C C2 D3 AC 62 91 95 E4 79 " );
+		buf.Add( " E7 C8 37 6D 8D D5 4E A9 6C 56 F4 EA 65 7A AE 08 " );
+		buf.Add( " BA 78 25 2E 1C A6 B4 C6 E8 DD 74 1F 4B BD 8B 8A " );
+		buf.Add( " 70 3E B5 66 48 03 F6 0E 61 35 57 B9 86 C1 1D 9E " );
+		buf.Add( " E1 F8 98 11 69 D9 8E 94 9B 1E 87 E9 CE 55 28 DF " );
+		buf.Add( " 8C A1 89 0D BF E6 42 68 41 99 2D 0F B0 54 BB 16 " );
 		
-		buffer.Initialize;
-		FOR i := 0 TO 255 DO
-			v1 := buffer.GetInt();  v2 := f1( v1 );  v3 := xor( v2, v1);
-			i2 := f1( i );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i);  
+		FOR i1 := 0 TO 255 DO
+			v1 := buf.GetInt();  v2 := f1( v1 );  v3 := xor( v2, v1 );
+			i2 := f1( i1 );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i1 );  
 			ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
 
-			e0[i] := S.VAL( SET, ASH( v2, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v3 );
-			e1[i] := S.VAL( SET, ASH( v3, 24 ) + ASH( v2, 16 ) + ASH( v1, 8 ) + v1 );
-			e2[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v3, 16 ) + ASH( v2, 8 ) + v1 );
-			e3[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v3, 8 ) + v2 );
-			e4[i] := S.VAL( SET, ASH( v1, 24 ) + ASH( v1, 16 ) + ASH( v1, 8 ) + v1 );
+			e0[i1] := S.VAL( SET, ((v2*100H + v1)*100H + v1)*100H + v3 );
+			e1[i1] := S.VAL( SET, ((v3*100H + v2)*100H + v1)*100H + v1 );
+			e2[i1] := S.VAL( SET, ((v1*100H + v3)*100H + v2)*100H + v1 );
+			e3[i1] := S.VAL( SET, ((v1*100H + v1)*100H + v3)*100H + v2 );
+			e4[i1] := S.VAL( SET, ((v1*100H + v1)*100H + v1)*100H + v1 );
 
-			d0[v1] := S.VAL( SET, ASH( ie, 24 ) + ASH( i9, 16 ) + ASH( id, 8 ) + ib );
-			d1[v1] := S.VAL( SET, ASH( ib, 24 ) + ASH( ie, 16 ) + ASH( i9, 8 ) + id );
-			d2[v1] := S.VAL( SET, ASH( id, 24 ) + ASH( ib, 16 ) + ASH( ie, 8 ) + i9 );
-			d3[v1] := S.VAL( SET, ASH( i9, 24 ) + ASH( id, 16 ) + ASH( ib, 8 ) + ie );
-			d4[v1] := S.VAL( SET, ASH(  i,  24 ) + ASH(  i, 16 ) + ASH(  i, 8 ) + i );
+			d0[v1] := S.VAL( SET, ((ie*100H + i9)*100H + id)*100H + ib );
+			d1[v1] := S.VAL( SET, ((ib*100H + ie)*100H + i9)*100H + id );
+			d2[v1] := S.VAL( SET, ((id*100H + ib)*100H + ie)*100H + i9 );
+			d3[v1] := S.VAL( SET, ((i9*100H + id)*100H + ib)*100H + ie );
+			d4[v1] := S.VAL( SET, ((i1*100H + i1)*100H + i1)*100H + i1 );
 		END;
 		t := 1;
-		FOR i := 0 TO 9 DO
-			rcon[i] := S.VAL( SET, ASH( t, 24 ) );
+		FOR i1 := 0 TO 9 DO
+			rcon[i1] := S.VAL( SET, ASH( t, 24 ) );
 			t := f1( t );
 		END;
 	END Initialize;

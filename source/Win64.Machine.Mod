@@ -13,7 +13,7 @@ CONST
 
 	MaxCPU* = 8;	(* dummy definition to make GC for both Win32 and I386 work *)
 
-	DefaultObjectFileExtension* = ".Obw";
+	DefaultObjectFileExtension* = ".GofWw";
 
 	(** bits in features variable *)
 	MTTR* = 12;  MMX* = 23;

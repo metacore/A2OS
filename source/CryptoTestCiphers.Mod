@@ -168,7 +168,7 @@ IMPORT
 		Out.Ln; Out.String( "Key: " ); U.PrintHex( temp1, 0, keybits DIV 8 );
 		U.Hex2Bin( input, 0, temp1, 0, datalen );
 		Out.Ln; Out.String( "ciphertext: " ); U.PrintHex( temp1, 0, datalen );
-		cipher.Encrypt( temp1, 0, datalen ); 
+		cipher.Decrypt( temp1, 0, datalen ); 
 		Out.Ln; Out.String( "decryption: " ); U.PrintHex( temp1, 0, datalen );
 		U.Hex2Bin( output, 0, temp2, 0, datalen );
 		Out.Ln; Out.String( "correct decryption: " ); U.PrintHex( temp2, 0, datalen );

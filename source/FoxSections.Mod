@@ -59,7 +59,7 @@ TYPE
 
 		PROCEDURE IsCode*(): BOOLEAN;
 		BEGIN
-			RETURN type IN {CodeSection, InitCodeSection, BodyCodeSection};
+			RETURN type IN {EntryCodeSection .. CodeSection};
 		END IsCode;
 
 		PROCEDURE SetReferenced*(ref: BOOLEAN);

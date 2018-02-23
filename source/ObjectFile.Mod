@@ -259,7 +259,7 @@ VAR
 
 
 	PROCEDURE IsCode* (type: SectionType): BOOLEAN;
-	BEGIN RETURN (type IN {InitCode, BodyCode, Code})
+	BEGIN RETURN (type IN {EntryCode .. Code})
 	END IsCode;
 
 	PROCEDURE Matches*(CONST this, that: Identifier): BOOLEAN;

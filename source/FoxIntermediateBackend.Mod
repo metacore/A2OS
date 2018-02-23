@@ -11882,7 +11882,8 @@ TYPE
 				& (symbol.type # Sections.InlineCodeSection)
 			THEN
 			*)
-			IF (symbol = NIL) OR ( (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
+			IF (symbol = NIL) OR ( (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection)
+				& (symbol.type # Sections.ExitCodeSection)
 				& (symbol.type # Sections.InlineCodeSection))
 			THEN
 
@@ -11934,7 +11935,7 @@ TYPE
 
 				FOR s := 0 TO LEN(sections)-1 DO
 					symbol := sections[s];
-					IF (symbol # NIL) & (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.InlineCodeSection) THEN
+					IF (symbol # NIL) & (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection) & (symbol.type # Sections.ExitCodeSection) & (symbol.type # Sections.InlineCodeSection) THEN
 						this := sections[s].name;
 						level := 0;
 						WHILE  (this[level] > 0) DO

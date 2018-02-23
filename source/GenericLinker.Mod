@@ -9,6 +9,7 @@ CONST
 	InvalidAddress* = -1 (* MAX (Address) *);
 
 CONST
+	(* priorities -- do not coincide with ObjecFile section types *)
 	Fixed* = 0; (* placed accroding to placement *)
 	EntryCode*= 1; (* must be placed before all other code *)
 	InitCode*=2; 
@@ -19,6 +20,7 @@ CONST
 	Const* = 7; 
 	Empty* = 8; (* must be placed last *)
 	
+	(* refers to priority classes, not to ObjectFile section types *)
 	UseAll *= {Fixed .. Empty};
 	UseInitCode*={Fixed .. ExitCode};
 	UseAllButInitCode*={Fixed, BodyCode..Empty};
@@ -258,7 +260,7 @@ VAR
 		IF ~error THEN block := firstBlock;
 			WHILE (block # firstLinkedBlock) & ~error DO
 				ObjectFile.SegmentedNameToString(block.identifier.name, name);
-				used := (block.type IN usedCategories) OR (linkRoot # "") & Strings.StartsWith(linkRoot,0,name) OR (block.aliases > 0);
+				used := (block.priority IN usedCategories) OR (linkRoot # "") & Strings.StartsWith(linkRoot,0,name) OR (block.aliases > 0);
 				Reference (block, used); block := block.next;
 			END;
 		END;

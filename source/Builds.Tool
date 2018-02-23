@@ -43,7 +43,7 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 LINUX32G -- 32 bit linux a2 using generic object files
 ================================
 
-	Release.Build -b Linux32G ~
+	Release.Build --path=NewAos/ Linux32G ~
 	
 	## X11 bootconsole ##
 		StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel 

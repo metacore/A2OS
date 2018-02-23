@@ -202,7 +202,7 @@ TYPE
 			MarkReachabilityOfAll(FALSE);
 			IF LoadModule(filename, TRUE) THEN
 				segmentedName := sectionPrefix; 
-				MarkAsReachableStartingWith(segmentedName, {Sections.InitCodeSection, Sections.BodyCodeSection});
+				MarkAsReachableStartingWith(segmentedName, {Sections.InitCodeSection, Sections.EntryCodeSection, Sections.ExitCodeSection, Sections.BodyCodeSection});
 				
 				RETURN TRUE;
 			ELSE
@@ -962,10 +962,12 @@ TYPE
 	END SectionNameToFileName;
 
 	PROCEDURE GetPriority*(block: Sections.Section): LONGINT;
-	CONST Fixed=0; InitCode=1; BodyCode=2;Code=3; Data=4; Const=5; Empty =6;
+	CONST Fixed=0; EntryCode=1;InitCode=2; ExitCode=3; BodyCode=4;Code=5; Data=6; Const=7; Empty =8;
 	BEGIN
 		IF block.fixed THEN RETURN Fixed END;
+		IF block.type = ObjectFile.EntryCode THEN RETURN EntryCode END;
 		IF block.type = ObjectFile.InitCode THEN RETURN InitCode END;
+		IF block.type = ObjectFile.ExitCode THEN RETURN ExitCode END;
 		IF block.type = ObjectFile.BodyCode THEN RETURN Code END; (* BodyCode does not necessarily have to be in front of code *)
 		IF block.GetSize () = 0 THEN RETURN Empty END;
 		IF block.type = ObjectFile.Code THEN RETURN Code END;

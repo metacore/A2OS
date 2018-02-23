@@ -6601,7 +6601,7 @@ TYPE
 				scope := scope.outerScope;
 			END;
 			IF (scope # NIL) THEN (* symbol (directly or indirectly) in procedure scope *)
-				IF (symbol.access * SyntaxTree.Public # {}) & (~(symbol IS SyntaxTree.Procedure) OR  ~symbol(SyntaxTree.Procedure).isBodyProcedure & ~symbol(SyntaxTree.Procedure).isConstructor & ~symbol(SyntaxTree.Procedure).isFinalizer) & ~((symbol(SyntaxTree.Procedure).super # NIL) & (symbol(SyntaxTree.Procedure).super.access * SyntaxTree.Public # {})) THEN
+				IF (symbol.access * SyntaxTree.Public # {}) & (~(symbol IS SyntaxTree.Procedure) OR  ~symbol(SyntaxTree.Procedure).isBodyProcedure & ~symbol(SyntaxTree.Procedure).isConstructor & ~symbol(SyntaxTree.Procedure).isFinalizer)  THEN
 					Error(symbol.position,"cannot be exported");
 					IF VerboseErrorMessage THEN
 						Printout.Info("symbol",symbol);
@@ -6891,6 +6891,7 @@ TYPE
 			IF SymbolNeedsResolution(procedure) THEN
 				recentIsRealtime := currentIsRealtime;
 				recentIsBodyProcedure := currentIsBodyProcedure;
+				CheckSymbolVisibility(procedure);
 
 				IF Trace THEN D.Str("undefined"); D.Ln; END;
 				procedureType := procedure.type(SyntaxTree.ProcedureType);
@@ -7028,9 +7029,11 @@ TYPE
 						IF super.isFinal THEN
 							Error(procedure.position,"forbidden method extending final method");
 						END;
+						(*
 						IF super.access # procedure.access THEN
 							Warning(procedure.position, "forbiden visibility mismatch of method and super method");
 						END;
+						*)
 						procedure.SetSuper(super);
 						super.SetOverwritten(TRUE);
 						procedure.SetAccess(procedure.access+super.access);
@@ -7050,7 +7053,6 @@ TYPE
 				ELSIF procedure.isConstructor THEN
 					Error(procedure.position,"procedure illegaly marked as initializer - not in object scope");
 				END;
-				CheckSymbolVisibility(procedure);
 				Declarations(procedure.procedureScope, FALSE, {0,1});
 				(* body resolution part done as late fix of the procedure type *)
 				procedure.SetState(SyntaxTree.Resolved);

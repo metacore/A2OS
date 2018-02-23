@@ -200,7 +200,6 @@ VAR
 		TRACE(Heaps.GC, "enabled"); 
 	END EnableGC;
 
-(* rarely required now -- procedure descriptors are now in references and visible via trap
 	(* useful for debugging the GC / metadata *)
 	PROCEDURE ReportProcedureDescriptors*;
 	VAR m: Modules.Module; i,j: LONGINT;
@@ -225,7 +224,6 @@ VAR
 			m := m.next;
 		END;
 	END ReportProcedureDescriptors;
-*)
 
 BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );

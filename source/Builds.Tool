@@ -7,20 +7,20 @@ WIN32G -- 32-bit windows a2 using generic object files
 =================================
 
 	## Compile all files ##
-		Release.Build Win32G ~
+		Release.Build  --path=NewAos/ Win32G~
 	
 	## Link A2.exe (bootconsole for graphical OS) ##
-		StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  
+		StaticLinker.Link --path=NewAos/ --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  
 			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~		
 
 	## command line shell 
-	StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H 
+	StaticLinker.Link  --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H 
 		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings 
 		Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace StdIO  
 		Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 
 	## Command line shell including compiler (and linker) ##
-		StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H 
+		StaticLinker.Link --path=NewAos/  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H 
 			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace 
 			StdIO  Traps RelativeFileSystem SystemTools FSTools StdIOShell Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 

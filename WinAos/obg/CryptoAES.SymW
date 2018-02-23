@@ -12,10 +12,10 @@ CONST
 TYPE 
 	RTable = ARRAY 256 OF SET; 
 
+	RKeys = ARRAY (4 * (MaxRounds + 1)) OF SET; 
+
 	Cipher* = OBJECT (Ciphers.Cipher)
 	TYPE 
-		Key = ARRAY (4 * (MaxRounds + 1)) OF SET; 
-
 		Block = ARRAY 4 OF SET; 
 
 		Ind4 = RECORD 
@@ -23,7 +23,7 @@ TYPE
 		END; 
 	VAR 
 		rounds: SHORTINT; 
-		key, dkey: Key; 
+		key, dkey: RKeys; 
 		iv: Block; 
 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
@@ -43,19 +43,9 @@ TYPE
 		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SHORTINT; 
 		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SHORTINT; 
 		PROCEDURE ^ Init256(CONST src: ARRAY OF CHAR): SHORTINT; 
-		PROCEDURE ^ InvertKey; 
+		PROCEDURE ^ InvertKeys; 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
-
-	ConstBuffer = OBJECT 
-	VAR 
-		buf: ARRAY 2048 OF CHAR; 
-		ib: LONGINT; 
-
-		PROCEDURE ^  & Initialize; 
-		PROCEDURE ^ Append(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ GetInt(): LONGINT; 
-	END ConstBuffer; 
 VAR 
 	e0, e1, e2, e3, e4: RTable; 
 	d0, d1, d2, d3, d4: RTable; 

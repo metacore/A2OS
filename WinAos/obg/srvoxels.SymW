@@ -83,7 +83,7 @@ TYPE
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ cylinder(target: MSpace.cell; start, end: PT; radius: REAL; t: INTEGER; color: COLOR); 
 		PROCEDURE ^ cameratrail(v: Voxel; a, b: PT); 
-		PROCEDURE ^ tick; 
+		PROCEDURE ^ tick*; 
 		PROCEDURE ^ fill5cosm; 
 		PROCEDURE ^ fillcell; 
 		PROCEDURE ^ fillX; 

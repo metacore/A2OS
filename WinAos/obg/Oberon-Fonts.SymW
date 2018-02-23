@@ -1,5 +1,5 @@
 MODULE Fonts IN Oberon;
-	IMPORT SYSTEM, Kernel, Files, Objects, Display;
+	IMPORT SYSTEM, Kernel, Files, Objects, Display, OberonFonts IN A2;
 CONST 
 	MaxRuns = 32; 
 	IndexSize = (256 * 4); 

@@ -46,7 +46,7 @@ TYPE
 
 	V* = OBJECT 
 
-		PROCEDURE ^ tick; 
+		PROCEDURE ^ tick*; 
 		PROCEDURE ^ register*; 
 	END V; 
 

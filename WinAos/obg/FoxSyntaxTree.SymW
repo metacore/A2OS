@@ -462,10 +462,12 @@ TYPE
 		pointerType-: PointerType; 
 		modifiers-: Modifier; 
 		isObject-, isProtected: BOOLEAN; 
+		isAbstract-: BOOLEAN; 
 		arrayStructure-: MathArrayType; 
 		arrayAccessOperators-: ArrayAccessOperators; 
 
 		PROCEDURE ^  & InitRecordType(position: Position; scope: Scope; recordScope: RecordScope); 
+		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetBaseType*(type: Type); 
 		PROCEDURE ^ SetPointerType*(pointerType: PointerType); 
@@ -1161,6 +1163,7 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ SetComment*(comment: Comment); 
 		PROCEDURE ^ Clone(): Statement; 
+		PROCEDURE ^ SetEndPosition*(pos: LONGINT); 
 	END Statement; 
 
 	ProcedureCallStatement* = OBJECT (Statement)
@@ -1454,6 +1457,7 @@ TYPE
 	VAR 
 		firstSymbol-: Symbol; 
 		numberSymbols-: LONGINT; 
+		symbolTable: Basic.HashTableInt; 
 		firstConstant-, lastConstant-: Constant; 
 		numberConstants-: LONGINT; 
 		firstTypeDeclaration-, lastTypeDeclaration-: TypeDeclaration; 
@@ -1524,6 +1528,7 @@ TYPE
 		PROCEDURE ^ SetNumberMethods*(numberMethods: LONGINT); 
 		PROCEDURE ^ AddOperator*(p: Operator); 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
+		PROCEDURE ^ AbstractProcedure*(inScope: Scope): Procedure; 
 		PROCEDURE ^ FindConstant*(identifier: Identifier): Constant; 
 		PROCEDURE ^ FindTypeDeclaration*(identifier: Identifier): TypeDeclaration; 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 

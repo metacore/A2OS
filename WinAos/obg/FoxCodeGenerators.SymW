@@ -144,7 +144,6 @@ TYPE
 		PROCEDURE ^ AllocateSpillStack*(size: LONGINT); 
 		PROCEDURE ^ ToRegister*(ticket: Ticket); 
 		PROCEDURE ^ ExchangeTickets*(ticket1, ticket2: Ticket); 
-		PROCEDURE ^ ParameterRegister*(CONST type: IntermediateCode.Type; number: LONGINT): LONGINT; 
 		PROCEDURE ^ Spill*(ticket: Ticket); 
 		PROCEDURE ^ UnSpill*(ticket: Ticket); 
 		PROCEDURE ^ GetPreferredSpill*(CONST type: IntermediateCode.Type): Ticket; 

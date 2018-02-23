@@ -46,5 +46,6 @@ VAR
 	PROCEDURE ^ AddPlatform*(context: Commands.Context); 
 	PROCEDURE ^ SetDefaultPlatform*(context: Commands.Context); 
 	PROCEDURE ^ GetDefaultPlatform(VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ SetupDefaults; 
 BEGIN
 END Compiler.

@@ -4,7 +4,7 @@ CONST
 TYPE 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
-		s: ARRAY 256 OF CHAR; 
+		s: ARRAY 256 OF LONGINT; 
 		i, j: LONGINT; 
 
 		PROCEDURE ^  & Init*; 

@@ -5,17 +5,24 @@ MODULE CryptoDES;	(** AUTHOR "G.F."; PUROSE "DES Cipher";	 *)
 
 
 IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
+CONST 
+	Mask01 = S.VAL( SET, 0AAAAAAAAH );
+	Mask02 = S.VAL( SET, 33333333H );
+	Mask04 = S.VAL( SET, 0F0F0F0FH );
+	Mask08 = S.VAL( SET, 00FF00FFH );
+	Mask16 = S.VAL( SET, 0000FFFFH );
 
 TYPE
 	Sandbox = ARRAY 64 OF SET;
 	BitSwap = ARRAY 16 OF SET;
+	Ind4* = RECORD a-, b-, c-, d-: LONGINT END;
+	
 VAR
 	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox;
-	
 	LHs, RHs: BitSwap;
 	
 TYPE 
-	Cipher* = OBJECT (Ciphers.Cipher)
+	Cipher* = OBJECT (Ciphers.Cipher)		
 	VAR
 		ske, skd: ARRAY 32 OF SET;  ki: LONGINT;
 		ivx, ivy: SET;
@@ -56,8 +63,7 @@ TYPE
 				IP( X, Y );  
 				ki := 0;
 				FOR r := 0 TO 7 DO  
-					RoundE( Y, X );
-					RoundE( X, Y );
+					RoundE( Y, X );  RoundE( X, Y );
 				END;
 				FP( Y, X );
 				U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4); 
@@ -79,8 +85,7 @@ TYPE
 				IP( X, Y );  
 				ki := 0;
 				FOR r := 0 TO 7 DO  
-					RoundD( Y, X );
-					RoundD( X, Y );
+					RoundD( Y, X );  RoundD( X, Y );
 				END;
 				FP( Y, X );
 				IF mode = Ciphers.CBC THEN  
@@ -92,24 +97,23 @@ TYPE
 			END
 		END Decrypt;
 		
-		
-		
+				
 		PROCEDURE RoundE*( VAR x, y: SET );
-		VAR t: LONGINT;
+		VAR i: Ind4;
 		BEGIN
-			t := S.VAL( LONGINT,  ske[ki] / x );  INC( ki );
-			y := y / sb8[t MOD 40H] / sb6[t DIV 100H MOD 40H] / sb4[t DIV 10000H MOD 40H] / sb2[t DIV 1000000H MOD 40H];
-			t := S.VAL( LONGINT,  ske[ki] / ROT( x, -4 ) );  INC( ki );
-			y := y / sb7[t MOD 40H] / sb5[t DIV 100H MOD 40H] / sb3[t DIV 10000H MOD 40H] / sb1[t DIV 1000000H MOD 40H]
+			Split( ske[ki] / x, i );  INC( ki );
+			y := y / sb8[i.a] / sb6[i.b] / sb4[i.c] / sb2[i.d];
+			Split( ske[ki] / ROT( x, -4 ), i );  INC( ki );
+			y := y / sb7[i.a] / sb5[i.b] / sb3[i.c] / sb1[i.d]
 		END RoundE;
 		
 		PROCEDURE RoundD*( VAR x, y: SET );
-		VAR t: LONGINT;
+		VAR i: Ind4;
 		BEGIN
-			t := S.VAL( LONGINT,  skd[ki] / x );  INC( ki );
-			y := y / sb8[t MOD 40H] / sb6[t DIV 100H MOD 40H] / sb4[t DIV 10000H MOD 40H] / sb2[t DIV 1000000H MOD 40H];
-			t := S.VAL( LONGINT,  skd[ki] / ROT( x, -4 ) );  INC( ki );
-			y := y / sb7[t MOD 40H] / sb5[t DIV 100H MOD 40H] / sb3[t DIV 10000H MOD 40H] / sb1[t DIV 1000000H MOD 40H]
+			Split( skd[ki] / x, i );  INC( ki );
+			y := y / sb8[i.a] / sb6[i.b] / sb4[i.c] / sb2[i.d];
+			Split( skd[ki] / ROT( x, -4 ), i );  INC( ki );
+			y := y / sb7[i.a] / sb5[i.b] / sb3[i.c] / sb1[i.d]
 		END RoundD;
 		
 		
@@ -120,7 +124,13 @@ TYPE
 	
 	END Cipher;
 	
-	
+	PROCEDURE -Split*( x: SET; VAR i4: Ind4 );
+	BEGIN
+		i4.a := S.VAL( LONGINT, x ) MOD 40H;
+		i4.b := S.VAL( LONGINT, x ) DIV 100H MOD 40H;
+		i4.c := S.VAL( LONGINT, x ) DIV 10000H MOD 40H;
+		i4.d := S.VAL( LONGINT, x ) DIV 1000000H MOD 40H
+	END Split; 
 	
 	
 	PROCEDURE NewCipher*( ): Ciphers.Cipher;
@@ -134,12 +144,12 @@ TYPE
 	PROCEDURE IP*( VAR x, y: SET );	(* initial permutation *)
 	VAR t: SET;
 	BEGIN
-		t := (LSH( x,   -4 ) / y) * S.VAL( SET, 0F0F0F0FH );	y := y / t;  x := x / LSH( t, 4 );
-		t := (LSH( x, -16 ) / y) * S.VAL( SET, 0000FFFFH );	y := y / t;  x := x / LSH( t, 16 );
-		t := (LSH( y,   -2 ) / x) * S.VAL( SET, 33333333H );	x := x / t;  y := y / LSH( t, 2 );
-		t := (LSH( y,   -8 ) / x) * S.VAL( SET, 00FF00FFH );	x := x / t;  y := y / LSH( t, 8 );
+		t := (LSH( x,   -4 ) / y) * Mask04;	 y := y / t;  x := x / LSH( t, 4 );
+		t := (LSH( x, -16 ) / y) * Mask16;	 y := y / t;  x := x / LSH( t, 16 );
+		t := (LSH( y,   -2 ) / x) * Mask02;	 x := x / t;  y := y / LSH( t, 2 );
+		t := (LSH( y,   -8 ) / x) * Mask08;	 x := x / t;  y := y / LSH( t, 8 );
 		y := ROT( y, 1 );
-		t := (x / y) * S.VAL( SET, 0AAAAAAAAH );  y := y / t;  x := x / t; 
+		t := (x / y) * Mask01;  y := y / t;  x := x / t; 
 		x := ROT( x, 1 );			
 	END IP;
 		
@@ -147,12 +157,12 @@ TYPE
 	VAR t: SET;
 	BEGIN
 		x := ROT( x, -1 );
-		t := (x / y) * S.VAL( SET, 0AAAAAAAAH );  x := x / t;  y := y / t;
+		t := (x / y) * Mask01;  x := x / t;  y := y / t;
 		y := ROT( y, -1 );
-		t := (LSH( y,   -8 ) / x) * S.VAL( SET, 00FF00FFH );	x := x / t;  y := y / LSH( t, 8 );
-		t := (LSH( y,   -2 ) / x) * S.VAL( SET, 33333333H );	x := x / t;  y := y / LSH( t, 2 );
-		t := (LSH( x, -16 ) / y) * S.VAL( SET, 0000FFFFH );	y := y / t;  x := x / LSH( t, 16 );
-		t := (LSH( x,   -4 ) / y) * S.VAL( SET, 0F0F0F0FH );	y := y / t;  x := x / LSH( t, 4 );
+		t := (LSH( y,   -8 ) / x) * Mask08;	 x := x / t;  y := y / LSH( t, 8 );
+		t := (LSH( y,   -2 ) / x) * Mask02;	 x := x / t;  y := y / LSH( t, 2 );
+		t := (LSH( x, -16 ) / y) * Mask16;	 y := y / t;  x := x / LSH( t, 16 );
+		t := (LSH( x,   -4 ) / y) * Mask04;	 y := y / t;  x := x / LSH( t, 4 );
 	END FP;
 	
 	

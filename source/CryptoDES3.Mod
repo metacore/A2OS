@@ -3,13 +3,14 @@ MODULE CryptoDES3;   (** AUTHOR "G.F."; PUROSE "Triple DES Cipher";	 *)
 
 (*  based on  POLARSSL des.c *)
 
-IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, DES := CryptoDES, S := SYSTEM;
+IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
 
 	
 	
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
-			VAR ske, skd: ARRAY 96 OF SET; ski: LONGINT;
+			VAR 
+				ske, skd: ARRAY 96 OF SET; ski: LONGINT;
 				ivx, ivy: SET;
 
 				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
@@ -19,13 +20,13 @@ TYPE
 					InitKey^( src, 64 );
 					
 					X := U.SetFromBufferBE( src, 0 );  Y := U.SetFromBufferBE( src, 4 );
-					DES.ComputeSubkeys( X, Y, ske, 0 );
+					D.ComputeSubkeys( X, Y, ske, 0 );
 					
 					X := U.SetFromBufferBE( src, 8 );  Y := U.SetFromBufferBE( src, 12 );
-					DES.ComputeSubkeys( X, Y, skd, 32 );
+					D.ComputeSubkeys( X, Y, skd, 32 );
 					
 					X := U.SetFromBufferBE( src, 16);  Y := U.SetFromBufferBE( src, 20 );
-					DES.ComputeSubkeys( X, Y, ske, 64 );
+					D.ComputeSubkeys( X, Y, ske, 64 );
 					
 					FOR i := 0 TO 30 BY 2 DO
 						skd[i + 0] := ske[94 - i];
@@ -55,21 +56,18 @@ TYPE
 						X := U.SetFromBufferBE( buf, ofs + i );  Y := U.SetFromBufferBE( buf, ofs + i + 4 );
 						IF mode = Ciphers.CBC THEN  X := X / ivx;  Y := Y / ivy   END;
 
-						DES.IP( X, Y );
+						D.IP( X, Y );
 						ski := 0;
 						FOR r := 0 TO 7 DO  
-							RoundE( Y, X );
-							RoundE( X, Y );
+							RoundE( Y, X );  RoundE( X, Y );
 						END;
 						FOR r := 0 TO 7 DO  
-							RoundE( X, Y );
-							RoundE( Y, X );
+							RoundE( X, Y );  RoundE( Y, X );
 						END;
 						FOR r := 0 TO 7 DO  
-							RoundE( Y, X );
-							RoundE( X, Y );
+							RoundE( Y, X );  RoundE( X, Y );
 						END;
-						DES.FP( Y, X );
+						D.FP( Y, X );
 						
 						U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4); 
 						IF mode = Ciphers.CBC THEN  ivx := Y;  ivy := X  END;
@@ -87,21 +85,18 @@ TYPE
 						X := U.SetFromBufferBE( buf, ofs + i );  Y := U.SetFromBufferBE( buf, ofs + i + 4 );
 						IF mode = Ciphers.CBC THEN  X0 := X;  Y0 := Y  END;
 						
-						DES.IP( X, Y );
+						D.IP( X, Y );
 						ski := 0;
 						FOR r := 0 TO 7 DO  
-							RoundD( Y, X );
-							RoundD( X, Y );
+							RoundD( Y, X );  RoundD( X, Y );
 						END;
 						FOR r := 0 TO 7 DO  
-							RoundD( X, Y );
-							RoundD( Y, X );
+							RoundD( X, Y );  RoundD( Y, X );
 						END;
 						FOR r := 0 TO 7 DO  
-							RoundD( Y, X );
-							RoundD( X, Y );
+							RoundD( Y, X );  RoundD( X, Y );
 						END;
-						DES.FP( Y, X );
+						D.FP( Y, X );
 						
 						IF mode = Ciphers.CBC THEN  
 							Y := Y / ivx;  X := X / ivy  ; 
@@ -112,39 +107,23 @@ TYPE
 					END
 				END Decrypt;
 
-
+				
 				PROCEDURE RoundE*( VAR x, y: SET );
-				VAR t: LONGINT;
+				VAR i: D.Ind4;
 				BEGIN
-					t := S.VAL( LONGINT, ske[ski] / x );  INC(ski );
-					y := y / 
-						DES.sb8[t MOD 40H] / 
-						DES.sb6[t DIV 100H MOD 40H] /
-						DES.sb4[t DIV 10000H MOD 40H] / 
-						DES.sb2[t DIV 1000000H MOD 40H];
-					t := S.VAL( LONGINT, ske[ski] / ROT( x, -4 ) );  INC( ski );
-					y := y / 
-						DES.sb7[t MOD 40H] / 
-						DES.sb5[t DIV 100H MOD 40H] /
-						DES.sb3[t DIV 10000H MOD 40H] / 
-						DES.sb1[t DIV 1000000H MOD 40H]
+					D.Split( ske[ski] / x, i );  INC( ski );
+					y := y / D.sb8[i.a] / D.sb6[i.b] / D.sb4[i.c] / D.sb2[i.d];
+					D.Split( ske[ski] / ROT( x, -4 ), i );  INC( ski );
+					y := y / D.sb7[i.a] / D.sb5[i.b] / D.sb3[i.c] / D.sb1[i.d]
 				END RoundE;
 				
 				PROCEDURE RoundD*( VAR x, y: SET );
-				VAR t: LONGINT;
+				VAR i: D.Ind4;
 				BEGIN
-					t := S.VAL( LONGINT, skd[ski] / x );  INC( ski );
-					y := y / 
-						DES.sb8[t MOD 40H] / 
-						DES.sb6[t DIV 100H MOD 40H] /
-						DES.sb4[t DIV 10000H MOD 40H] / 
-						DES.sb2[t DIV 1000000H MOD 40H];
-					t := S.VAL( LONGINT, skd[ski] / ROT( x, -4 ) );  INC(ski );
-					y := y / 
-						DES.sb7[t MOD 40H] / 
-						DES.sb5[t DIV 100H MOD 40H] /
-						DES.sb3[t DIV 10000H MOD 40H] / 
-						DES.sb1[t DIV 1000000H MOD 40H]
+					D.Split( skd[ski] / x, i );  INC( ski );
+					y := y / D.sb8[i.a] / D.sb6[i.b] / D.sb4[i.c] / D.sb2[i.d];
+					D.Split( skd[ski] / ROT( x, -4 ), i );  INC( ski );
+					y := y / D.sb7[i.a] / D.sb5[i.b] / D.sb3[i.c] / D.sb1[i.d]
 				END RoundD;
 
 				PROCEDURE & Init*;

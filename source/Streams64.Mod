@@ -587,7 +587,7 @@ TYPE
 	(** Current read position. *)
 		PROCEDURE Pos*( ): HUGEINT;
 		BEGIN
-			RETURN received - HUGEINT(tail) - HUGEINT(head)
+			RETURN received - (tail - head)
 		END Pos;
 
 		(** -- Read raw binary data -- *)

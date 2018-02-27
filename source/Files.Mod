@@ -57,6 +57,9 @@ CONST
 	NeedsPrefix* = 0; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
 
 TYPE
+	TSize* = Streams.TSize;
+
+TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)
 
 	FileName* = ARRAY PrefixLength+NameLength OF CHAR;
@@ -316,17 +319,17 @@ TYPE
 		BEGIN	(* see note in Volume.Finalize *)
 			vol := NIL
 		END Finalize;
-		
+
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 		VAR enum: Enumerator; time, date, size: LONGINT;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
-			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN 
-				RETURN TRUE 
-			ELSE 
-				RETURN FALSE 
+			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN
+				RETURN TRUE
+			ELSE
+				RETURN FALSE
 			END;
 		END Has;
 
@@ -1115,12 +1118,12 @@ PROCEDURE AddSearchPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFS") # NIL THEN 
+	IF Modules.ModuleByName("WinFS") # NIL THEN
 		cmd := "WinFS.AddSearchPath";
-	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN 
+	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN
 		cmd := "UnixFiles.AddSearchPath";
 	END;
-	IF cmd # "" THEN 
+	IF cmd # "" THEN
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
 		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
 	END
@@ -1131,12 +1134,12 @@ PROCEDURE SetWorkPath*(context: Commands.Context);
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: LONGINT;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("WinFS") # NIL THEN 
+	IF Modules.ModuleByName("WinFS") # NIL THEN
 		cmd := "WinFS.SetWorkPath";
-	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN 
+	ELSIF Modules.ModuleByName("UnixFiles") # NIL THEN
 		cmd := "UnixFiles.SetWorkPath";
 	END;
-	IF cmd # "" THEN 
+	IF cmd # "" THEN
 		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
 		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
 	END

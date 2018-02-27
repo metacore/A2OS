@@ -59,6 +59,9 @@ CONST
 	NeedsPrefix*		= Files.NeedsPrefix; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
 
 TYPE
+	TSize* = Streams.TSize;
+
+TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)
 
 	FileName* = Files.FileName;

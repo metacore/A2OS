@@ -21,6 +21,10 @@ CONST
 
 VAR
 	H, L: INTEGER;
+
+TYPE
+	TSize* = LONGINT;
+
 TYPE
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
@@ -269,7 +273,7 @@ TYPE
 			END;
 			Char( "}" )
 		END Set;	*)
-		
+
 		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
 		VAR i, last: LONGINT;  dots: BOOLEAN;
 		BEGIN
@@ -813,7 +817,7 @@ TYPE
 					ch := Get();
 				END;
 				IF negE THEN y := y / Ten(e)
-				ELSE y := y * Ten(e) 
+				ELSE y := y * Ten(e)
 				END;
 			END;
 			IF neg THEN y := -y END;

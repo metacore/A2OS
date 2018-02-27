@@ -537,28 +537,24 @@ BEGIN b := CAP(s[0]) = "T"
 END StrToBool;
 
 (** converts an integer value to a string *)
-PROCEDURE IntToStr*(i: LONGINT; VAR s: ARRAY OF CHAR);
-VAR j,k: LONGINT; digits: ARRAY 10 OF LONGINT;
+PROCEDURE IntToStr*(x: HUGEINT; VAR s: ARRAY OF CHAR);
+VAR i, j: LONGINT; x0: HUGEINT; digits: ARRAY 21 OF CHAR;
 BEGIN
-	IF (i = MIN(LONGINT)) THEN COPY("-2147483648", s)
+	IF x < 0 THEN
+		IF x = MIN( HUGEINT ) THEN
+			COPY("-9223372036854775808", s) ;
+			RETURN;
+		ELSE
+			x0 := -x; s[0] := "-"; j := 1;
+		END;
 	ELSE
-		IF (i < 0) THEN i := -i; s[0] := "-"; j := 1
-		ELSE j := 0
-		END;
+		x0 := x; j := 0;
+	END;
 
-		k := 0; digits[k] := 0;
-		WHILE (i > 0) DO
-			digits[k] := i MOD 10; i := i DIV 10;
-			INC(k)
-		END;
-		IF (k > 0) THEN DEC(k) END; (* no leading "0" *)
-
-		WHILE (k >= 0) DO
-			s[j] := CHR(digits[k] + ORD("0"));
-			INC(j); DEC(k)
-		END;
-		s[j] := 0X
-	END
+	i := 0;
+	REPEAT digits[i] := CHR( x0 MOD 10 + 30H );  x0 := x0 DIV 10;  INC( i ) UNTIL x0 = 0;
+	REPEAT DEC( i );  s[j] := digits[i]; INC(j) UNTIL i = 0;
+	s[j] := 0X;
 END IntToStr;
 
 (** converts a string to an integer. Leading whitespace is ignored *)

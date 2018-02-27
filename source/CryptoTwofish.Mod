@@ -11,12 +11,11 @@ CONST
 
 TYPE
 	Block = ARRAY 4 OF SET;
-	LI = LONGINT;
-
 	SKey = ARRAY 4 OF SET;
 
 VAR
-	tab: ARRAY 2, 256 OF SET;
+	tab0: ARRAY 256 OF SET;
+	tab1: ARRAY 256 OF SET;
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
@@ -45,9 +44,8 @@ TYPE
 					nsub := 8 + N*2;
 					FOR i := 0 TO nsub DIV 2 - 1 DO
 						(* compute round subkeys for PHT *)
-						A := f32( i*step, k32e, keybits );  			 (* A uses even key dwords *)
-						B := f32( i*step + bump, k32o, keybits );   (* B uses odd  key dwords *)
-						B := ROT( B, 8 );
+						A := F32( S.VAL( SET, i*step ), k32e, keybits );  			 (* A uses even key dwords *)
+						B := ROT( F32( S.VAL( SET, i*step + bump ), k32o, keybits ), 8 );   (* B uses odd  key dwords *)
 						subkeys[i*2] := A + B;   							(* combine with a PHT *)
 						subkeys[i*2 + 1] := ROT( A + 2*B, 9 );
 					END
@@ -83,24 +81,22 @@ TYPE
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := U.SetFromBufferLE( buf, pos + i*4 )/S.VAL( SET, subkeys[i] );
-						IF mode = Ciphers.CBC THEN  x[i] := x[i]/iv[i]  END
+						x[i] := U.SetFromBufferLE( buf, pos + i*4 ) / S.VAL( SET, subkeys[i] );
+						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i]  END
 					END;
 					(* main Twofish encryption loop *)
 					FOR r := 0 TO N - 1 DO
-						t0 := f32( S.VAL( LI, x[0] ), sbox, keybits );
-						t1 := f32( ROT( S.VAL( LI, x[1] ), 8 ), sbox, keybits );
-						x[3] := ROT( x[3], 1 );
-						x[2] := x[2]/S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] );
-						x[3] := x[3]/S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] );
-						x[2] := ROT( x[2], -1 );
+						t0 := F32( x[0], sbox, keybits );
+						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
+						x[2] := ROT( x[2] / S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] ), -1 );
+						x[3] := ROT( x[3], 1 ) / S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] );
 						IF r < N - 1 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;  s1 := x[1];  x[1] := x[3];  x[3] := s1;
 						END
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i]/S.VAL( SET, subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
+						x[i] := x[i] / S.VAL( SET, subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
 						IF mode = Ciphers.CBC THEN  iv[i] := x[i]  END
 					END;
 				END EncryptBlock;
@@ -109,13 +105,16 @@ TYPE
 				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET;
 				BEGIN
 					(* copy in the block, add whitening *)
-					FOR i := 0 TO 3 DO  x0[i] := U.SetFromBufferLE( buf, pos + i*4 );  x[i] := x0[i]/S.VAL( SET, subkeys[4 + i] );   END;
+					FOR i := 0 TO 3 DO  
+						x0[i] := U.SetFromBufferLE( buf, pos + i*4 );  
+						x[i] := x0[i] / S.VAL( SET, subkeys[4 + i] );   
+					END;
 					(* main Twofish decryption loop *)
 					FOR r := N - 1 TO 0 BY -1 DO
-						t0 := f32( S.VAL( LI, x[0] ), sbox, keybits );
-						t1 := f32( ROT( S.VAL( LI, x[1] ), 8 ), sbox, keybits );
-						x[2] := ROT( x[2], 1 );  x[2] := x[2]/S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] );
-						x[3] := x[3]/S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] );  x[3] := ROT( x[3], -1 );
+						t0 := F32( x[0], sbox, keybits );
+						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
+						x[2] := ROT( x[2], 1 );  x[2] := x[2] / S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] );
+						x[3] := ROT( x[3] / S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] ), -1 );
 						IF r > 0 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;
 							s1 := x[1];  x[1] := x[3];  x[3] := s1;
@@ -123,8 +122,8 @@ TYPE
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i]/S.VAL( SET, subkeys[i] );
-						IF mode = Ciphers.CBC THEN  x[i] := x[i]/iv[i];  iv[i] := x0[i]  END;
+						x[i] := x[i] / S.VAL( SET, subkeys[i] );
+						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i];  iv[i] := x0[i]  END;
 						U.SetToBufferLE( x[i], buf, pos + i*4 );
 					END;
 				END DecryptBlock;
@@ -144,99 +143,114 @@ TYPE
 
 (*-------------------------------------------------------------------------------*)
 
+CONST
+	FDBK = 169H;
+	Fdbk2 = S.VAL( SET, FDBK DIV 2 );
+	Fdbk4 = S.VAL( SET, FDBK DIV 4 );
+	Byte0 = S.VAL( SET, 0FFH );
+	S14d = S.VAL( SET, 14DH );
+	S0a6 = S.VAL( SET, 0A6H );
+	
+	
 	PROCEDURE m1( x: LONGINT ): SET;
 	BEGIN
 		RETURN S.VAL( SET, x )
 	END m1;
 
 	PROCEDURE mx( x: LONGINT ): SET;
-	CONST FDBK = 169H;
 	VAR t: SET;
 	BEGIN
 		t := S.VAL( SET, x DIV 4 );
-		IF ODD( x DIV 2 ) THEN  t := t/S.VAL( SET, FDBK DIV 2 )  END;
-		IF ODD( x ) THEN  t := t/S.VAL( SET, FDBK DIV 4 )  END;
-		RETURN S.VAL( SET, x )/t
+		IF ODD( x DIV 2 ) THEN  t := t / Fdbk2  END;
+		IF ODD( x ) THEN  t := t / Fdbk4  END;
+		RETURN S.VAL( SET, x ) / t
 	END mx;
 
 	PROCEDURE my( x: LONGINT ): SET;
-	CONST FDBK = 169H;
 	VAR t1, t2: SET;
 	BEGIN
 		t1 := S.VAL( SET, x DIV 2 );  t2 := S.VAL( SET, x DIV 4 );
-		IF ODD( x DIV 2 ) THEN  t2 := t2/S.VAL( SET, FDBK DIV 2 )  END;
-		IF ODD( x ) THEN  t1 := t1/S.VAL( SET, FDBK DIV 2 );  t2 := t2/S.VAL( SET, FDBK DIV 4 )  END;
-		RETURN S.VAL( SET, x )/t1/t2
+		IF ODD( x DIV 2 ) THEN  t2 := t2 / Fdbk2  END;
+		IF ODD( x ) THEN  t1 := t1 / Fdbk2;  t2 := t2 / Fdbk4  END;
+		RETURN S.VAL( SET, x ) / t1 / t2
 	END my;
 
 	PROCEDURE split( x: LONGINT;  VAR v: SKey );
 	BEGIN
-		v[0] := S.VAL( SET, x MOD 256 );  x := x DIV 256;
-		v[1] := S.VAL( SET, x MOD 256 );  x := x DIV 256;
-		v[2] := S.VAL( SET, x MOD 256 );  x := x DIV 256;
-		v[3] := S.VAL( SET, x MOD 256 );
+		v[3] := S.VAL( SET, x DIV 1000000H MOD 100H );
+		v[2] := S.VAL( SET, x DIV 10000H MOD 100H );
+		v[1] := S.VAL( SET, x DIV 100H MOD 100H );
+		v[0] := S.VAL( SET, x MOD 100H );
 	END split;
+	
+	PROCEDURE -Int( x: SET ): LONGINT;
+	BEGIN
+		RETURN S.VAL( LONGINT, x )
+	END Int;
+	
 
-
-	PROCEDURE f32( x: LONGINT;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
+	PROCEDURE F32( x: SET;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
 	VAR a, b, c, d, l: LONGINT;  k, k1: SKey;
 	BEGIN
 		(* Run each byte thru 8x8 S-boxes, xoring with key byte at each stage. *)
 		(* Note that each byte goes through a different combination of S-boxes.*)
-		a := x MOD 256;  x := x DIV 256;
-		b := x MOD 256;  x := x DIV 256;
-		c := x MOD 256;  x := x DIV 256;
-		d := x MOD 256;
+		d := Int( x ) DIV 1000000H MOD 100H;
+		c := Int( x ) DIV 10000H MOD 100H;
+		b := Int( x ) DIV 100H MOD 100H;
+		a := Int( x ) MOD 100H;
 
 		l := ((keybits + 63) DIV 64) MOD 4;
 		IF l = 0 THEN  (* 256 bits of key *)
-			split( k32[3], k );  a := S.VAL( LI, tab[1, a]/k[0] );  b := S.VAL( LI, tab[0, b]/k[1] );  c := S.VAL( LI, tab[0, c]/k[2] );
-			d := S.VAL( LI, tab[1, d]/k[3] );
+			split( k32[3], k );  
+			a := Int( tab1[a] / k[0] );  
+			b := Int( tab0[b] / k[1] );  
+			c := Int( tab0[c] / k[2] );
+			d := Int( tab1[d] / k[3] );
 		END;
 		IF l IN {0, 3} THEN  (* 192 <= bits of key *)
-			split( k32[2], k );  a := S.VAL( LI, tab[1, a]/k[0] );
-			b := S.VAL( LI, tab[1, b]/k[1] );
-			c := S.VAL( LI, tab[0, c]/k[2] );
-			d := S.VAL( LI, tab[0, d]/k[3] )
+			split( k32[2], k );  
+			a := Int( tab1[a] / k[0] );
+			b := Int( tab1[b] / k[1] );
+			c := Int( tab0[c] / k[2] );
+			d := Int( tab0[d] / k[3] )
 		END;
 		(* 128 <= bits of key *)
-		split( k32[1], k1 );  split( k32[0], k );  a := S.VAL( LI, tab[1, S.VAL( LI, tab[0, S.VAL( LI, tab[0, a]/k1[0] )]/k[0] )] );
-		b := S.VAL( LI, tab[0, S.VAL( LI, tab[0, S.VAL( LI, tab[1, b]/k1[1] )]/k[1] )] );
-		c := S.VAL( LI, tab[1, S.VAL( LI, tab[1, S.VAL( LI, tab[0, c]/k1[2] )]/k[2] )] );
-		d := S.VAL( LI, tab[0, S.VAL( LI, tab[1, S.VAL( LI, tab[1, d]/k1[3] )]/k[3] )] );
+		split( k32[1], k1 );  split( k32[0], k );  
+		a := Int( tab1[Int( tab0[Int( tab0[a] / k1[0] )] / k[0] )] );
+		b := Int( tab0[Int( tab0[Int( tab1[b] / k1[1] )] / k[1] )] );
+		c := Int( tab1[Int( tab1[Int( tab0[c] / k1[2] )] / k[2] )] );
+		d := Int( tab0[Int( tab1[Int( tab1[d] / k1[3] )] / k[3] )] );
 
 		(* Now perform the MDS matrix multiply  *)
-		RETURN S.VAL( LI, m1( a )/my( b )/mx( c )/mx( d ) ) +
-						ASH( S.VAL( LI, mx( a )/my( b )/my( c )/m1( d ) ), 8 ) +
-						ASH( S.VAL( LI, my( a )/mx( b )/m1( c )/my( d ) ), 16 ) +
-						ASH( S.VAL( LI, my( a )/m1( b )/my( c )/mx( d ) ), 24 );
-	END f32;
+		RETURN Int( m1( a ) / my( b ) / mx( c ) / mx( d ) ) +
+				ASH( Int( mx( a ) / my( b ) / my( c ) / m1( d ) ), 8 ) +
+				ASH( Int( my( a ) / mx( b ) / m1( c ) / my( d ) ), 16 ) +
+				ASH( Int( my( a ) / m1( b ) / my( c ) / mx( d ) ), 24 )
+	END F32;
 
 	(* RS_MDS_Encode *)
 	PROCEDURE Encode( k0, k1: LONGINT ): LONGINT;
-	TYPE LI = LONGINT;
-	VAR i, j: INTEGER;  g2, g3: SET;  r, b: LONGINT;  g216, g324, g38: SET;
+	VAR i, j, b: LONGINT;  r, g2, g2s16, g3, g3s8, g3s24: SET;
 	BEGIN
-		r := k1;
+		r := S.VAL( SET, k1 );
 		FOR i := 0 TO 1 DO
-			IF i # 0 THEN  r := S.VAL( LI, S.VAL( SET, r )/S.VAL( SET, k0 ) )  END;
+			IF i # 0 THEN  r := r / S.VAL( SET, k0 )  END;
 			FOR j := 0 TO 3 DO
-				(* r := g( r ) *)
-				 b := ASH( r, -24 ) MOD 256;
+				b := S.VAL( LONGINT, LSH( r, -24 ) );
 
 				g2 := S.VAL( SET, b*2 );
-				IF b > 7FH THEN  g2 := (g2/S.VAL( SET, 14DH ))*S.VAL( SET, 0FFH )  END;
-				g216 := S.VAL( SET, ASH( S.VAL( LI, g2 ), 16 ) );
+				IF b > 7FH THEN  g2 := (g2 / S14d) * Byte0  END;
+				g2s16 := LSH( g2, 16 );
 
-				g3 := S.VAL( SET, b DIV 2 )/g2;
-				IF ODD( b ) THEN  g3 := g3/S.VAL( SET, 0A6H )  END;
-				g38 := S.VAL( SET, ASH( S.VAL( LI, g3 ), 8 ) );
-				g324 := S.VAL( SET, ASH( S.VAL( LI, g38 ), 16 ) );
+				g3 := S.VAL( SET, b DIV 2 ) / g2;
+				IF ODD( b ) THEN  g3 := g3 / S0a6  END;
+				g3s8 := LSH( g3, 8 );
+				g3s24 := LSH( g3s8, 16 );
 
-				r := S.VAL( LI, S.VAL( SET, r*256 )/g324/g216/g38/S.VAL( SET, b ) )
+				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET, b ) 
 			END
 		END;
-		RETURN r
+		RETURN S.VAL( LONGINT, r )
 	END Encode;
 
 
@@ -262,7 +276,7 @@ TYPE
 		buf.Add( "057 0C7 08D 074 0B7 0C4 09F 072 07E 015 022 012 058 007 099 034 " );
 		buf.Add( "06E 050 0DE 068 065 0BC 0DB 0F8 0C8 0A8 02B 040 0DC 0FE 032 0A4 " );
 		buf.Add( "0CA 010 021 0F0 0D3 05D 00F 000 06F 09D 036 042 04A 05E 0C1 0E0 " );
-		FOR i := 0 TO 255 DO  tab[0, i] :=  S.VAL( SET, buf.GetInt() )  END;
+		FOR i := 0 TO 255 DO  tab0[i] :=  buf.GetSet()  END;
 
 		buf.Init( 2048 );
 		buf.Add( "075 0F3 0C6 0F4 0DB 07B 0FB 0C8 04A 0D3 0E6 06B 045 07D 0E8 04B " );
@@ -281,7 +295,7 @@ TYPE
 		buf.Add( "029 02E 0AC 015 059 0A8 00A 09E 06E 047 0DF 034 035 06A 0CF 0DC " );
 		buf.Add( "022 0C9 0C0 09B 089 0D4 0ED 0AB 012 0A2 00D 052 0BB 002 02F 0A9 " );
 		buf.Add( "0D7 061 01E 0B4 050 004 0F6 0C2 016 025 086 056 055 009 0BE 091 " );
-		FOR i := 0 TO 255 DO  tab[1, i] :=  S.VAL( SET, buf.GetInt() )  END;
+		FOR i := 0 TO 255 DO  tab1[i] :=  buf.GetSet()  END;
 	END Init0;	
 		
 BEGIN

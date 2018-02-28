@@ -299,8 +299,8 @@ BEGIN
 	options.Add("t", "time", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		flags := {};
-		IF options.GetFlag("time") THEN INCL(flags, Files.EnumSize); END;
-		IF options.GetFlag("size") THEN INCL(flags, Files.EnumTime); END;
+		IF options.GetFlag("size") THEN INCL(flags, Files.EnumSize); END;
+		IF options.GetFlag("time") THEN INCL(flags, Files.EnumTime); END;
 
 		IF ~context.arg.GetString(pattern) THEN
 			pattern := "";

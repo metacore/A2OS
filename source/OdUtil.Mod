@@ -153,14 +153,14 @@ ELSE (*
 			InternalString(buf)
 		END Hex;
 
-		PROCEDURE Int*(x, w: LONGINT);
-		VAR i, x0: LONGINT; a: ARRAY 12 OF CHAR;
+		PROCEDURE Int*(x: HUGEINT; w: LONGINT);
+		VAR i: LONGINT; x0: HUGEINT; a: ARRAY 21 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF x < 0 THEN
-				IF x = MIN(LONGINT) THEN
-					DEC(w, 11);
+				IF x = MIN( HUGEINT ) THEN
+					DEC(w, 20);
 					WHILE w > 0 DO Char(" "); DEC(w) END;
-					a := "-2147483648"; InternalString(a);
+					 a := "-9223372036854775808"; InternalString(a);
 					RETURN
 				ELSE
 					DEC(w); x0 := -x

@@ -299,8 +299,8 @@ BEGIN
 	options.Add("t", "time", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		flags := {};
-		IF options.GetFlag("time") THEN INCL(flags, Files.EnumSize); END;
-		IF options.GetFlag("size") THEN INCL(flags, Files.EnumTime); END;
+		IF options.GetFlag("size") THEN INCL(flags, Files.EnumSize); END;
+		IF options.GetFlag("time") THEN INCL(flags, Files.EnumTime); END;
 
 		IF ~context.arg.GetString(pattern) THEN
 			pattern := "";
@@ -1126,8 +1126,8 @@ END FSTools64.
 SystemTools.Free FSTools64 ~
 
 FSTools64.DeleteFiles ./*.Bak ~
-FSTools64.DeleteFiles ../../source/*.Bak ~
+FSTools64.DeleteFiles ./../../source/*.Bak ~
 
 FSTools64.SplitFile BootManager.Bin 0200H BootManagerMBR.Bin BootManagerTail.Bin ~
 
-FSTools64.Directory Test.Mod ~
+FSTools64.Directory --size --time ./../../source/*.XML ~

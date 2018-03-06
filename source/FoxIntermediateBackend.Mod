@@ -45,7 +45,7 @@ CONST
 		NegativeDivisorTrap*=12;
 		NoReturnTrap*=16; (* indicates that a procedure marked no return did return *)
 		NilPointerTrap*=17; (* indicates that a nil pointer was being dereferenced *)
-
+		RethrowTrap* = 18; (* rethrow exception after unlock *)
 		Trace = FALSE;
 		TraceRegisterUsageCount=TRUE;
 
@@ -10942,7 +10942,7 @@ TYPE
 		END Lock;
 
 		PROCEDURE VisitStatementBlock*(x: SyntaxTree.StatementBlock);
-		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN;
+		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN; end: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitStatementBlock") END;
 			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
@@ -10961,6 +10961,13 @@ TYPE
 				IF (x(SyntaxTree.Body).finally # NIL) THEN
 					section.SetFinally(section.pc);
 					StatementSequence(x(SyntaxTree.Body).finally)
+				ELSIF x.isExclusive THEN
+					end := NewLabel();
+					BrL(end);
+					section.SetFinally(section.pc);
+					Lock(FALSE);
+					EmitTrap(position,RethrowTrap);
+					SetLabel(end);
 				END;
 			END;			
 			

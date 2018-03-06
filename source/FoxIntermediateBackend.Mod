@@ -10956,6 +10956,14 @@ TYPE
 			IF x.statements # NIL THEN
 				StatementSequence(x.statements);
 			END;
+			
+			IF (x IS SyntaxTree.Body) THEN 
+				IF (x(SyntaxTree.Body).finally # NIL) THEN
+					section.SetFinally(section.pc);
+					StatementSequence(x(SyntaxTree.Body).finally)
+				END;
+			END;			
+			
 			IF x.isExclusive THEN Lock(FALSE); ASSERT(locked); locked := FALSE; END;
 			isUnchecked := previouslyUnchecked;
 			cooperativeSwitches := previouslyCooperativeSwitches;
@@ -11277,10 +11285,6 @@ TYPE
 					VisitStatementBlock(x);
 				ELSE
 					VisitCode(x.code)
-				END;
-				IF x.finally # NIL THEN (*! mark finally block for object file *)
-					ir.SetFinally(ir.pc);
-					StatementSequence(x.finally)
 				END;
 				IF profile & (x.code = NIL) & ~moduleBody THEN (* do not profile assembler code sections *)
 					IF ~backend.cooperative THEN 

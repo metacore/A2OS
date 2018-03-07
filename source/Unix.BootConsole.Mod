@@ -165,6 +165,7 @@ VAR
 	PROCEDURE StartSystem;
 	BEGIN
 		IF ~TryCommand()  THEN
+			Machine.VerboseLog( );
 			KernelLog.String( Machine.version );  KernelLog.Ln;
 			(* normal system start *)
 			LoadModule( "Clock" );

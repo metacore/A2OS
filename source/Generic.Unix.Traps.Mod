@@ -6,7 +6,7 @@ MODULE Traps;  (** AUTHOR "G.F."; PURPOSE "Exception Trap and symbolic debugging
 (* 2000.02.06	g.f.	UnixOberon release 2.3.6d	*)
 (* 2006.07.09	g.f.	UnixAos version	*)
 
-IMPORT S := SYSTEM, Trace, Unix, Objects, Machine, Streams, Modules, Reflection,
+IMPORT S := SYSTEM, Unix, Objects, Machine, Streams, Modules, Reflection,
 		TrapWriters, Commands, StdIO;
 
 CONST
@@ -113,6 +113,8 @@ VAR
 			(* ignore *) RETURN
 		END;
 		
+		IF ~Objects.SystemA2Up THEN  Machine.VerboseLog( )  END;
+		
 		LockTrap;
 		
 		INC( trapHandlingLevel );
@@ -187,23 +189,15 @@ VAR
 		UnlockTrap;
 
 		IF handler.pc # 0 THEN
-			IF Unix.Version # "Darwin" THEN
-				(* in the Darwin port Unix.ModifyContext fails with bus error. Stack alignment problem? *)
-				w.Ln;
-				w.String( "### program continues with exception handler ###" );   w.Ln;
+			w.Ln;
+			w.String( "### program continues with exception handler ###" );   w.Ln;
 
-				Unix.ModifyContext( mc, handler.pc, handler.fp, handler.sp );
-				RETURN  (*! to exception handler !! *)
-			END
+			Unix.ModifyContext( mc, handler.pc, handler.fp, handler.sp );
+			RETURN  (*! to exception handler !! *)
 		END;
 
-		IF Machine.standaloneAppl THEN
-			unix.error.Ln;  unix.error.Ln;
-			unix.error.String( "### Program aborted. Stack traceback in logfile" );  unix.error.Ln;
-			unix.error.Update;
-			Machine.Shutdown( FALSE )
-		ELSE
-			Objects.ExitTrap()
+		IF Objects.SystemA2Up THEN  Objects.ExitTrap( )
+		ELSE  Machine.Shutdown( FALSE )
 		END
 	END Trap;
 

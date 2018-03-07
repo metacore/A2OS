@@ -81,8 +81,6 @@ VAR
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
 	mhz-: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
 	
-	standaloneAppl-: BOOLEAN;
-	
 	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
 	
@@ -866,8 +864,7 @@ END GetTimer;
 			pid := pid DIV 10;		
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( logname ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-		SilentLog;
-		VerboseLog;
+		VerboseLog;	
 	END InitLog;
 	
 	PROCEDURE SilentLog*;
@@ -893,10 +890,9 @@ END GetTimer;
 
 	PROCEDURE Init;
 	VAR vendor: Vendor; ver: LONGINT;
-	BEGIN
-		standaloneAppl := FALSE;
-		
+	BEGIN		
 		COPY( Unix.Version, version );  Append( version, Version ); Append(version, S.Date);
+		
 		timer0 := GetTimer( );  ticks := 0;
 		InitThreads;
 		InitLocks;

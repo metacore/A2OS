@@ -353,23 +353,23 @@ TYPE
 	McontextDesc* = RECORD
 				r_trapno-		: LONGINT;
 				r_err-			: LONGINT;
-				r_faultvaddr-	: LONGINT;
-				r_ax-			: LONGINT;
-				r_bx-			: LONGINT;
-				r_cx-			: LONGINT;
-				r_dx-			: LONGINT;
-				r_di-			: LONGINT;
-				r_si-			: LONGINT;
-				r_bp*			: LONGINT;
-				r_sp*			: LONGINT;
-				r_ss-			: LONGINT;
-				r_flags-		: LONGINT;
-				r_pc*			: LONGINT;
-				r_cs-			: LONGINT;
-				r_ds-			: LONGINT;
-				r_es-			: LONGINT;
-				r_fs-			: LONGINT;
-				r_gs-			: LONGINT;
+				r_faultvaddr-	: ADDRESS;
+				r_ax-			: ADDRESS;
+				r_bx-			: ADDRESS;
+				r_cx-			: ADDRESS;
+				r_dx-			: ADDRESS;
+				r_di-			: ADDRESS;
+				r_si-			: ADDRESS;
+				r_bp*			: ADDRESS;
+				r_sp*			: ADDRESS;
+				r_ss-			: ADDRESS;
+				r_flags-		: ADDRESS;
+				r_pc*			: ADDRESS;
+				r_cs-			: ADDRESS;
+				r_ds-			: ADDRESS;
+				r_es-			: ADDRESS;
+				r_fs-			: ADDRESS;
+				r_gs-			: ADDRESS;
 				
 				flavor-			: LONGINT;
 				count-		: LONGINT;
@@ -803,7 +803,7 @@ VAR
 	END CopyContext;
 
 
-	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: LONGINT );
+	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: ADDRESS );
 	BEGIN
 		cont.r_pc := pc;
 		cont.r_bp := bp;

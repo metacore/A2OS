@@ -31,6 +31,7 @@ CONST
 	NegativeDivisorTrap* = 12; 
 	NoReturnTrap* = 16; 
 	NilPointerTrap* = 17; 
+	RethrowTrap* = 18; 
 	Trace = FALSE; 
 	TraceRegisterUsageCount = TRUE; 
 	ArrayAlignment = (8 * 8); 

@@ -1,10 +1,19 @@
 MODULE CryptoDES;
 	IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
 CONST 
+	Mask01 = S.VAL(SET, 0AAAAAAAAH); 
+	Mask02 = S.VAL(SET, 858993459); 
+	Mask04 = S.VAL(SET, 252645135); 
+	Mask08 = S.VAL(SET, 16711935); 
+	Mask16 = S.VAL(SET, 65535); 
 TYPE 
 	Sandbox = ARRAY 64 OF SET; 
 
 	BitSwap = ARRAY 16 OF SET; 
+
+	Ind4* = RECORD 
+		a-, b-, c-, d-: LONGINT; 
+	END; 
 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
@@ -24,6 +33,13 @@ VAR
 	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox; 
 	LHs, RHs: BitSwap; 
 
+	PROCEDURE  - Split*(x: SET; VAR i4: Ind4);
+	BEGIN
+		i4.a := (S.VAL(LONGINT, x) MOD 64); 
+		i4.b := ((S.VAL(LONGINT, x) DIV 256) MOD 64); 
+		i4.c := ((S.VAL(LONGINT, x) DIV 65536) MOD 64); 
+		i4.d := ((S.VAL(LONGINT, x) DIV 16777216) MOD 64)
+	END Split; 
 	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
 	PROCEDURE ^ IP*(VAR x, y: SET); 
 	PROCEDURE ^ FP*(VAR x, y: SET); 

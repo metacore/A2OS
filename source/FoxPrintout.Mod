@@ -8,6 +8,7 @@ CONST
 	(* print modes *)
 	Exported*=0; SymbolFile*=1; SourceCode*=2;  All*=3;
 
+	DebugPosition=FALSE;
 TYPE
 
 	Printer*= OBJECT (SyntaxTree.Visitor)
@@ -468,6 +469,7 @@ TYPE
 
 		PROCEDURE Expression*(x: SyntaxTree.Expression);
 		BEGIN
+			IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
 			IF x = NIL THEN
 				AlertString("nil expression");
 			ELSE
@@ -1508,6 +1510,7 @@ TYPE
 				AlertString("nil statement")
 			ELSE
 				Comments(x.comment, x, FALSE);
+				IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
 				x.Accept(SELF);
 				Comments(x.comment,x,TRUE);
 			END
@@ -1551,6 +1554,7 @@ TYPE
 
 		PROCEDURE IfPart(x: SyntaxTree.IfPart);
 		BEGIN
+			IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
 			Comments(x.comment, x, FALSE);
 	 		Keyword("IF " );
 			Expression(x.condition);
@@ -1834,6 +1838,7 @@ TYPE
 		PROCEDURE Body(x: SyntaxTree.Body; implementation: BOOLEAN);
 		VAR
 		BEGIN
+			IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
 			IF x.code # NIL THEN
 				Indent; Keyword("CODE");
 				IF implementation THEN

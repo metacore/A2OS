@@ -381,6 +381,7 @@ TYPE
 		BEGIN
 			position := symbol.position;
 			IF MandatoryIdentifier(name) THEN
+				position := symbol.position;
 				identifier := name;
 			ELSE
 				identifier := SyntaxTree.invalidIdentifier;
@@ -678,7 +679,7 @@ TYPE
 				identifier := Identifier(position);
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 			END;
-
+			designator.End(symbol.position); 
 			LOOP
 				position := symbol.position;
 				IF OptionalB( Scanner.LeftParenthesis ) THEN
@@ -709,11 +710,13 @@ TYPE
 					designator:= SyntaxTree.NewArrowDesignator( position,designator );
 				ELSE EXIT
 				END;
+				designator.End(symbol.position); 
 			END;
 
 			IF OptionalB(Scanner.LeftBrace) THEN
 				designator.SetModifiers(Flags());
 			END;
+			designator.End(symbol.position); 
 			
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking signal *)*)
 
@@ -736,7 +739,7 @@ TYPE
 				UNTIL ~Optional(Scanner.Comma);
 				Check(Scanner.RightBrace);
 			END;
-			set.End(symbol.position.end);
+			set.End(symbol.position);
 
 			IF Trace THEN E( "Set" ) END;
 			RETURN set
@@ -754,6 +757,7 @@ TYPE
 				UNTIL ~Optional(Scanner.Comma);
 				Check(Scanner.RightBracket);
 			END;
+			array.End(symbol.position);
 			RETURN array
 		END MathArray;
 
@@ -790,7 +794,7 @@ TYPE
 						ELSE
 							factor(SyntaxTree.StringValue).Append(symbol.string);
 						END;
-						factor.End(symbol.position.end);
+						factor.End(symbol.position);
 						NextSymbol;
 					END;
 			| Scanner.Nil:
@@ -812,12 +816,12 @@ TYPE
 					NextSymbol;
 					factor := Expression();
 					Check( Scanner.RightParenthesis );
-					factor.End( symbol.position.end );
+					factor.End( symbol.position);
 			| Scanner.Not:
 					NextSymbol;
 					factor := Factor();
 					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Not );
-					factor.End( symbol.position.end );
+					factor.End( symbol.position);
 			| Scanner.Address, Scanner.Size:
 					operator := Token();
 					factor := Designator(); (* ADDRESS AND SIZE can be type identifiers used for type conversion *)
@@ -825,7 +829,7 @@ TYPE
 						factor := Designator();
 						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
 					END;
-					factor.End (symbol.position.end)
+					factor.End (symbol.position)
 			| Scanner.Alias:
 					operator := Token();
 					NextSymbol();
@@ -833,14 +837,14 @@ TYPE
 						factor := Factor();
 						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
 					END;
-					factor.End (symbol.position.end)
+					factor.End (symbol.position)
 			| Scanner.Self, Scanner.Result, Scanner.Identifier, Scanner.New:
 					factor := Designator();
-					factor.End( symbol.position.end );
+					factor.End( symbol.position);
 			| Scanner.LeftBracket:
 					NextSymbol;
 					factor := MathArray();
-					factor.End(symbol.position.end);
+					factor.End(symbol.position);
 			ELSE
 				Error( position, Basic.ValueStartIncorrectSymbol, "" );
 				NextSymbol;  factor := SyntaxTree.invalidExpression;
@@ -875,7 +879,7 @@ TYPE
 				factor := Factor();
 				term := SyntaxTree.NewBinaryExpression( position, term, factor, operator );
 			END;
-			term.End( symbol.position.end );
+			term.End( symbol.position);
 			IF Trace THEN E( "Term" ) END;
 			RETURN term
 		END Term;
@@ -916,13 +920,14 @@ TYPE
 		VAR expression, rightExpression: SyntaxTree.Expression;  operator: LONGINT;  position: Position;
 		BEGIN
 			IF Trace THEN S( "Expression" ) END;
-			position := symbol.position;
 			expression := RangeExpression();
+			position := expression.position;
 			IF (TokenB() >= Scanner.Equal) & (TokenB() <= Scanner.Is) THEN
 				operator := Token();
 				NextSymbol;
 				rightExpression := RangeExpression();
 				expression := SyntaxTree.NewBinaryExpression(position, expression, rightExpression, operator );
+				expression.End(symbol.position); 
 			END;
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking escape *)*)
 			IF Trace THEN E( "Expression" ) END;
@@ -938,6 +943,7 @@ TYPE
 		BEGIN
 			IF Trace THEN S( "Case" ) END;
 			casePart := SyntaxTree.NewCasePart();
+			casePart.SetPosition(symbol.position);
 			CommentCasePart(casePart);
 			REPEAT
 				element := RangeExpression();
@@ -947,6 +953,7 @@ TYPE
 			statements := StatementSequence(caseStatement);
 			casePart.SetStatements( statements );
 			caseStatement.AddCasePart( casePart );
+			casePart.SetEnd(symbol.position);
 			IF Trace THEN E( "Case" ) END;
 		END Case;
 
@@ -1004,7 +1011,7 @@ TYPE
 						statement := caller;
 						CommentStatement(statement);
 					END;
-					statement.SetEndPosition(prevPosition.end);
+					statement.End(prevPosition);
 					statements.AddStatement( statement );
 					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
@@ -1017,8 +1024,10 @@ TYPE
 					Check( Scanner.Then );
 					statementSequence := StatementSequence(ifStatement);
 					ifStatement.ifPart.SetStatements( statementSequence );
+					ifStatement.ifPart.SetEnd(symbol.position); 
 					WHILE Optional( Scanner.Elsif ) DO
 						elsifPart := SyntaxTree.NewIfPart();
+						elsifPart.SetPosition(symbol.position);
 						CommentIfPart(elsifPart);
 						ifStatement.AddElsifPart( elsifPart);
 						expression := Expression();
@@ -1026,12 +1035,13 @@ TYPE
 						Check( Scanner.Then );
 						statementSequence := StatementSequence(ifStatement);
 						elsifPart.SetStatements( statementSequence );
+						elsifPart.SetEnd(symbol.position);
 					END;
 					IF Optional( Scanner.Else ) THEN
 						statementSequence := StatementSequence(ifStatement);
 						ifStatement.SetElsePart( statementSequence );
 					END;
-					ifStatement.SetEndPosition(symbol.position.end);
+					ifStatement.End(symbol.position);
 					Check( Scanner.End );  statements.AddStatement( ifStatement );
 					result := TRUE
 			| Scanner.With:
@@ -1044,6 +1054,7 @@ TYPE
 							Error(position,Diagnostics.Invalid,"forbidden qualified identifier in with statement");
 						END;
 						withPart := SyntaxTree.NewWithPart();
+						withPart.SetPosition(symbol.position);
 						CommentWithPart(withPart);
 						withStatement.AddWithPart(withPart);
 						designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
@@ -1055,13 +1066,14 @@ TYPE
 						Check( Scanner.Do );
 						statementSequence := StatementSequence(withStatement);
 						withPart.SetStatements( statementSequence );
+						withPart.SetEnd(symbol.position);
 					UNTIL ~Optional(Scanner.Bar) OR ~CascadedWithSupport;
 					IF CascadedWithSupport & Optional(Scanner.Else) THEN
 						statementSequence := StatementSequence(withStatement);
 						withStatement.SetElsePart(statementSequence);
 					END;
 					Check( Scanner.End );
-					withStatement.SetEndPosition(symbol.position.end);
+					withStatement.End(symbol.position);
 					statements.AddStatement( withStatement );
 					result := TRUE
 			| Scanner.Case:
@@ -1080,7 +1092,7 @@ TYPE
 						caseStatement.SetElsePart( statementSequence );
 					END;
 					Check( Scanner.End );
-					caseStatement.SetEndPosition(symbol.position.end);
+					caseStatement.End(symbol.position);
 					statements.AddStatement( caseStatement );
 					result := TRUE
 			| Scanner.While:
@@ -1093,7 +1105,7 @@ TYPE
 					statementSequence := StatementSequence(whileStatement);
 					whileStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
-					whileStatement.SetEndPosition(symbol.position.end);					
+					whileStatement.End(symbol.position);					
 					statements.AddStatement( whileStatement );
 					result := TRUE
 			| Scanner.Repeat:
@@ -1104,7 +1116,7 @@ TYPE
 					repeatStatement.SetStatements( statementSequence );
 					Check( Scanner.Until );
 					expression := Expression();
-					repeatStatement.SetEndPosition(prevPosition.end);
+					repeatStatement.End(prevPosition);
 					repeatStatement.SetCondition( expression );
 					statements.AddStatement( repeatStatement );
 					result := TRUE
@@ -1132,7 +1144,7 @@ TYPE
 					statementSequence := StatementSequence(forStatement);
 					forStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
-					forStatement.SetEndPosition(symbol.position.end);
+					forStatement.End(symbol.position);
 					statements.AddStatement( forStatement );
 					result := TRUE
 			| Scanner.Loop:
@@ -1142,7 +1154,7 @@ TYPE
 					statementSequence := StatementSequence(loopStatement);
 					loopStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
-					loopStatement.SetEndPosition(symbol.position.end);
+					loopStatement.End(symbol.position);
 					statements.AddStatement( loopStatement );
 					result := TRUE;
 			| Scanner.Exit:
@@ -1159,12 +1171,12 @@ TYPE
 						expression := Expression();
 						returnStatement.SetReturnValue( expression );
 					END;
-					returnStatement.SetEndPosition(symbol.position.end);
+					returnStatement.End(symbol.position);
 					statements.AddStatement( returnStatement );
 					result := TRUE;
 			| Scanner.Begin:
 					NextSymbol;  statement := StatementBlock(outer);  statements.AddStatement( statement );  Check( Scanner.End );
-					statement.SetEndPosition(symbol.position.end);
+					statement.End(symbol.position);
 					result := TRUE;
 			| Scanner.Await:
 					awaitStatement := SyntaxTree.NewAwaitStatement( symbol.position, outer );
@@ -1173,13 +1185,13 @@ TYPE
 					expression := Expression();
 					awaitStatement.SetCondition( expression );
 					statements.AddStatement( awaitStatement );
-					awaitStatement.SetEndPosition(symbol.position.end);
+					awaitStatement.End(symbol.position);
 					result := TRUE
 			| Scanner.Code:
 				(* assemble *)
 				code := Code(outer);
 				Check(Scanner.End);
-				code.SetEndPosition(symbol.position.end);
+				code.End(symbol.position);
 				statements.AddStatement( code );
 				result := TRUE
 			| Scanner.End:  result := FALSE (* end of if, with, case, while, for, loop, or statement sequence *)
@@ -1296,7 +1308,7 @@ TYPE
 					body.SetFinally(StatementSequence(body));
 				END;
 			END;
-			body.SetEndPosition(symbol.position.start);  (* beginning of "end" is end of body *)
+			body.End(symbol.position);  (* beginning of "end" is end of body *)
 			IF Trace THEN E( "Body" ) END;
 			currentScope := previousScope;
 			RETURN body

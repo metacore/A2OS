@@ -418,7 +418,7 @@ TYPE
 			typeDeclaration-: TypeDeclaration; (* link to declaration (if any), needed for printing, debugging and symbol lookup *)
 			scope-: Scope; (* scope where the type has been declared *)
 			resolved-: Type; (* indirection to resolved type to preserve qualified types *)
-			position-: Position;
+			position-,end-: Position;
 			state-: SET;
 			hasPointers-: BOOLEAN;
 
@@ -433,6 +433,7 @@ TYPE
 		PROCEDURE & InitType*( position: Position);
 		BEGIN
 			SELF.position := position; state := Undefined;
+			end := invalidPosition;
 			typeDeclaration := NIL;
 			scope := NIL;
 			resolved := SELF;
@@ -443,6 +444,8 @@ TYPE
 			hasPointers := FALSE;
 			InitFingerPrint(fingerprint);
 		END InitType;
+
+		
 
 		PROCEDURE SetSize*(sizeInBits: LONGINT);
 		BEGIN SELF.sizeInBits := sizeInBits
@@ -1909,14 +1912,14 @@ TYPE
 		VAR
 			type-: Type; (* the expression's type. Resolved by checker *)
 			assignable-: BOOLEAN;  (* expression can be assigned to (or used as var-parameter): expression := ... *)
-			position-: Position;
+			position-, end-: Position;
 			state-: SET;
 			resolved-: Value;
 			isHidden-: BOOLEAN;
 
 
-		PROCEDURE End*( position: LONGINT );
-		BEGIN SELF.position.end := position;
+		PROCEDURE End*( position: Position);
+		BEGIN SELF.end := position;
 		END End;
 
 		PROCEDURE SetState*(state: LONGINT);
@@ -1924,7 +1927,7 @@ TYPE
 		END SetState;
 
 		PROCEDURE &InitExpression(position: Position);
-		BEGIN	SELF.position := position; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
+		BEGIN	SELF.position := position; end :=  invalidPosition; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
 		END InitExpression;
 
 		PROCEDURE SetHidden*(hidden: BOOLEAN);
@@ -3070,7 +3073,7 @@ TYPE
 		fixed-: BOOLEAN;
 		alignment-: LONGINT;
 
-		position-: Position; state-: SET;
+		position-, end-: Position; state-: SET;
 		fingerprint-: FingerPrint;
 
 		comment-: Comment;
@@ -3079,6 +3082,7 @@ TYPE
 		PROCEDURE & InitSymbol(position: Position; name:Identifier);
 		BEGIN
 			SELF.position := position; state := Undefined;
+			SELF.end := invalidPosition;
 			nextSymbol := NIL;
 			SELF.name := name;
 			externalName := NIL;
@@ -3679,7 +3683,7 @@ TYPE
 
 	Statement*= OBJECT
 	VAR outer-: Statement;
-		position-: Position;
+		position-,end-: Position;
 		isUnreachable-: BOOLEAN;
 
 		comment-: Comment;
@@ -3687,6 +3691,7 @@ TYPE
 		PROCEDURE & InitStatement*(position: Position; outer: Statement);
 		BEGIN
 			SELF.position := position;
+			end := invalidPosition;
 			SELF.outer := outer;
 			isUnreachable := FALSE;
 			comment := NIL;
@@ -3714,10 +3719,10 @@ TYPE
 			HALT(200) (* abstract *)
 		END Clone;
 
-		PROCEDURE SetEndPosition*(pos: LONGINT);
+		PROCEDURE End*(pos: Position);
 		BEGIN
-			position.end := pos;
-		END SetEndPosition;
+			end := pos;
+		END End;
 		
 
 	END Statement;
@@ -3804,9 +3809,30 @@ TYPE
 
 	END CommunicationStatement;
 
+	Part*= OBJECT
+	VAR
+		position-, end-: Position;
+
+		PROCEDURE InitPart;
+		BEGIN
+			position := invalidPosition; end := invalidPosition;
+		END InitPart;
+		
+		PROCEDURE SetPosition*(pos: Position);
+		BEGIN
+			position := pos;
+		END SetPosition;
+
+		PROCEDURE SetEnd*(pos: Position);
+		BEGIN
+			end := pos;
+		END SetEnd;
+		
+	END Part;
+	
 
 	(** << ... condition THEN statements ... >> **)
-	IfPart*= OBJECT
+	IfPart*= OBJECT (Part)
 	VAR
 		condition-: Expression;
 	 	statements-: StatementSequence;
@@ -3815,6 +3841,7 @@ TYPE
 
 	 	PROCEDURE & InitIfPart;
 	 	BEGIN
+	 		InitPart;
 	 		statements := NIL; condition := NIL; comment := NIL;
 	 	END InitIfPart;
 
@@ -3849,7 +3876,9 @@ TYPE
 
 		PROCEDURE & InitIfStatement( position: Position ; outer: Statement);
 		BEGIN
-			InitStatement( position,outer ); ifPart := NewIfPart(); elsePart := NIL;  elsifParts := NIL;
+			InitStatement( position,outer ); ifPart := NewIfPart(); 
+			ifPart.SetPosition(position);
+			elsePart := NIL;  elsifParts := NIL;
 		END InitIfStatement;
 
 		PROCEDURE SetElsePart*( elsePart: StatementSequence );
@@ -3892,7 +3921,7 @@ TYPE
 
 	END IfStatement;
 
-	WithPart*= OBJECT
+	WithPart*= OBJECT (Part)
 	VAR
 		variable-: Designator;
 		type-: Type; (* initially is qualified type *)
@@ -3902,6 +3931,7 @@ TYPE
 
 		PROCEDURE &InitWithPart();
 		BEGIN
+			InitPart();
 			type := NIL; variable := NIL; statements := NIL; comment := NIL;
 		END InitWithPart;
 
@@ -3988,7 +4018,7 @@ TYPE
 	CaseConstant*= POINTER TO RECORD min*,max*: LONGINT; next*: CaseConstant END;
 
 	(** << elements : statements >> **)
-	CasePart* = OBJECT
+	CasePart* = OBJECT (Part)
 		VAR
 			elements-: ExpressionList; (* expression list inserted by the parser *)
 			firstConstant-: CaseConstant; (* expression list resolved to int32s, inserted by checker *)
@@ -3998,6 +4028,7 @@ TYPE
 
 		PROCEDURE & InitCasePart;
 		BEGIN
+			InitPart;
 			elements := NewExpressionList(); firstConstant := NIL;
 		END InitCasePart;
 

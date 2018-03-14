@@ -227,13 +227,11 @@ TYPE
 
 				PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
 				VAR f: File; stat: Unix.Status;		
-					  res,err: LONGINT;
-					  path,nameonly: ARRAY 512 OF CHAR;
-				BEGIN {EXCLUSIVE}
-					(*AwaitFinalizingDone;*)
-					
+					  res, err: LONGINT;
+					  path, nameonly: ARRAY 512 OF CHAR;
+				BEGIN {EXCLUSIVE}					
 					(*first check if the path actually exits first using fstat. fstat returns -1 and sets erno to ENOENT when a component of the path doesn't exist or the entire path is empty*)
-					Files.SplitPath(name,path, nameonly);
+					Files.SplitPath( name, path, nameonly );
 					res:=Unix.stat( ADDRESSOF( path ), stat ) ;
 					err:=Unix.errno();
 					IF (name="") OR (path="") OR (res>=0) OR (err#Unix.ENOENT) THEN
@@ -545,7 +543,7 @@ TYPE
 					SELF.fs := fs;  flags := {};
 				END Init;
 
-				PROCEDURE OpenUnixFile;
+				PROCEDURE CreateUnixFile;
 				VAR 
 					stat: Unix.Status;  r: LONGINT;
 				BEGIN				
@@ -553,9 +551,10 @@ TYPE
 						GetTempName( registerName, workName )
 					ELSIF state = Closed THEN
 						IF registerName # "" THEN
+							(* shortcut renaming in Register0 *)
 							workName := registerName;  registerName := ""
-						ELSIF tempFile THEN
-							Halt( SELF, FALSE, "UnixFiles.File.OpenUnixFile: cannot reopen closed tempfile" )
+						ELSE
+							(* file has been finally closed *)  RETURN
 						END
 					END;
 					r := Unix.unlink( ADDRESSOF( workName ) );
@@ -566,19 +565,19 @@ TYPE
 						r := Unix.fstat( fd, stat );  
 						dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
 						state := Open;  fpos := 0;
-						IncOpenFiles();
-						collection.AddNew(SELF);
+						IncOpenFiles( );
+						collection.AddNew( SELF );
 					ELSE  
-						Halt( SELF, TRUE, "UnixFiles.File.OpenUnixFile: open failed" );
+						Halt( SELF, TRUE, "UnixFiles.File.CreateUnixFile: open failed" );
 					END
-				END OpenUnixFile;
+				END CreateUnixFile;
 				
 						
 				PROCEDURE Flush( buf: Buffer );
 				VAR res: LONGINT;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
-						IF fd = NoDesc THEN  OpenUnixFile  END;
+						IF fd = NoDesc THEN  CreateUnixFile  END;
 						IF buf.org # fpos THEN  
 							IF Unix.lseek( fd, buf.org, 0 ) = -1 THEN
 								Halt( SELF, TRUE, "UnixFiles.File.Flush: lseek failed" ) 
@@ -623,7 +622,7 @@ TYPE
 						IF org = fsize THEN  
 							buf.size := 0
 						ELSE
-							IF fd = NoDesc THEN  OpenUnixFile  END;
+							IF fd = NoDesc THEN  CreateUnixFile  END;
 							IF fpos # org THEN  
 								IF Unix.lseek( fd, org, 0 ) = -1 THEN
 									Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" ) 
@@ -738,7 +737,7 @@ TYPE
 				PROCEDURE GetDate*( VAR t, d: LONGINT );
 				VAR stat: Unix.Status;   r: LONGINT;  time: Unix.TmPtr;				
 				BEGIN {EXCLUSIVE}
-					IF fd = NoDesc THEN  OpenUnixFile  END;  
+					IF fd = NoDesc THEN  CreateUnixFile  END;  
 					r := Unix.fstat( fd, stat );
 					time := Unix.localtime( stat.mtime );
 					t := time.sec + ASH( time.min, 6 ) + ASH( time.hour, 12 );
@@ -805,14 +804,14 @@ TYPE
 
 				PROCEDURE Update*;
 				BEGIN {EXCLUSIVE}
-					IF ~(Files.ReadOnly IN flags) THEN  FlushBuffers	 END
+					FlushBuffers
 				END Update;
 				
 				
 				PROCEDURE FlushBuffers;
 				VAR i: LONGINT; 
 				BEGIN 
-					IF fd = NoDesc THEN  OpenUnixFile  END;  
+					IF fd = NoDesc THEN  CreateUnixFile  END;  
 					FOR i := 0 TO NBufs - 1 DO
 						IF bufs[i] # NIL THEN  Flush( bufs[i] )  END
 					END;
@@ -823,25 +822,27 @@ TYPE
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF tempFile THEN  
-						IF fd # NoDesc THEN  r := Unix.close( fd )  END;
+						IF fd # NoDesc THEN  
+							r := Unix.close( fd );
+							fd := NoDesc
+						END;
 						r := Unix.unlink( ADDRESSOF( workName ) );
-						fd := NoDesc;
 					ELSE  
-						IF ~(Files.ReadOnly IN flags)  THEN  FlushBuffers  END;
+						FlushBuffers;
 						IF fd # NoDesc THEN
 							r := Unix.close( fd );
 							fd := NoDesc;
 						END;
 					END;
-					DecOpenFiles();
 					state := Closed;
+					DecOpenFiles()
 				END Finalize;
 				
 				PROCEDURE Close;
 				BEGIN
 					Finalize;
-					collection.newFiles.Remove(SELF);
-					collection.oldFiles.Remove(SELF);
+					collection.newFiles.Remove( SELF );
+					collection.oldFiles.Remove( SELF );
 				END Close;
 				
 				PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
@@ -1154,33 +1155,30 @@ TYPE
 	END UnixWrite;	
 	
 	
-	PROCEDURE AddSearchPath*(context: Commands.Context);
-	VAR name: Files.FileName; i,j: LONGINT; ch : CHAR;
+	PROCEDURE AddSearchPath*( context: Commands.Context );
+	VAR name: Files.FileName;  i, j: LONGINT;  ch : CHAR;
 	BEGIN
-		IF context.arg.GetString(name) THEN
-			CleanPath(name); 
-			i := 0; j := 0;
-			WHILE(searchPath[i] # 0X) DO
-				INC(i);
-			END;
-			searchPath[i] := " ";INC(i);
+		IF context.arg.GetString( name ) THEN
+			CleanPath( name ); 
+			i := 0;  j := 0;
+			WHILE searchPath[i] # 0X DO  INC( i )  END;
+			searchPath[i] := " ";  INC( i );
 			REPEAT
-				ch := name[j];
-				searchPath[i] := name[j];
-				INC(j);INC(i);
+				ch := name[j];  searchPath[i] := ch;
+				INC( j );  INC( i );
 			UNTIL ch = 0X;
 		END;
 	END AddSearchPath;
 	
-	PROCEDURE SetWorkPath*(context: Commands.Context);
+	PROCEDURE SetWorkPath*( context: Commands.Context );
 	VAR name: Files.FileName; done: BOOLEAN;
 	BEGIN
-		IF context.arg.GetString(name) THEN
-			ChangeDirectory(name, done); 
+		IF context.arg.GetString( name ) THEN
+			ChangeDirectory( name, done ); 
 			IF ~done THEN 
-				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
-			END;
-		END;
+				context.error.String( "could not change directory to " );  context.error.String( name );  context.error.Ln
+			END
+		END
 	END SetWorkPath;
 	
 	PROCEDURE Finalization;
@@ -1189,7 +1187,7 @@ TYPE
 		Files.GetList( ft );
 		IF ft # NIL THEN
 			FOR i := 0 TO LEN( ft^ ) - 1 DO
-				IF ft[i] IS AliasFileSystem THEN Files.Remove( ft[i] ) END
+				IF ft[i] IS AliasFileSystem THEN  Files.Remove( ft[i] )  END
 			END
 		END;
 		collection.Finalize;

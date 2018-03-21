@@ -1470,7 +1470,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	MenuPages.Mod # generate MenuPageXX.XML files
 
 	# Video for Windows
-	WIN { Win32.VfW.Mod RasterPixelFormats.Mod VideoExample.Mod TestVideo.Mod}
+	RasterPixelFormats.Mod 
+	WIN { Win32.VfW.Mod VideoExample.Mod TestVideo.Mod}
 
 	WMOverlay.Mod WMOverlay.tar
 	

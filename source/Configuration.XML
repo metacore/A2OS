@@ -483,7 +483,7 @@ To update: Configuration.Init ~
 				</Section>
 				<Section name="Fox">
 					<Setting name="caption" value="Compile"/>
-					<Setting name="options" value="-p=Win32G -w"/>
+					<Setting name="options" value="-w"/>
 					<Setting name="fileExtension" value="MOD"/>
 					<Setting name="loadmodule" value="TextCompiler"/>
 					<Setting name="genTree" value="PETModuleTree.GenModuleTree"/>
@@ -491,7 +491,7 @@ To update: Configuration.Init ~
 				</Section>
 				<Section name="Fox">
 					<Setting name="caption" value="Compile"/>
-						<Setting name="options" value="-p=Win32G --cellsAreObjects"/>
+						<Setting name="options" value="--cellsAreObjects"/>
 					<Setting name="fileExtension" value="MDF"/>
 					<Setting name="loadmodule" value="TextCompiler"/>
 					<Setting name="genTree" value="PETModuleTree.GenModuleTree"/>

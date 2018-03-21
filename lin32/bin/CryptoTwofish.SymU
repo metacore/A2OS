@@ -2,10 +2,14 @@ MODULE CryptoTwofish;
 	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 	N = 16; 
+	FDBK = 361; 
+	Fdbk2 = S.VAL(SET, (FDBK DIV 2)); 
+	Fdbk4 = S.VAL(SET, (FDBK DIV 4)); 
+	Byte0 = S.VAL(SET, 255); 
+	S14d = S.VAL(SET, 333); 
+	S0a6 = S.VAL(SET, 166); 
 TYPE 
 	Block = ARRAY 4 OF SET; 
-
-	LI = LONGINT; 
 
 	SKey = ARRAY 4 OF SET; 
 
@@ -25,14 +29,19 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 VAR 
-	tab: ARRAY 2 OF ARRAY 256 OF SET; 
+	tab0: ARRAY 256 OF SET; 
+	tab1: ARRAY 256 OF SET; 
 
 	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
 	PROCEDURE ^ m1(x: LONGINT): SET; 
 	PROCEDURE ^ mx(x: LONGINT): SET; 
 	PROCEDURE ^ my(x: LONGINT): SET; 
 	PROCEDURE ^ split(x: LONGINT; VAR v: SKey); 
-	PROCEDURE ^ f32(x: LONGINT; CONST k32: ARRAY OF LONGINT; keybits: LONGINT): LONGINT; 
+	PROCEDURE  - Int(x: SET): LONGINT;
+	BEGIN
+		RETURN S.VAL(LONGINT, x)
+	END Int; 
+	PROCEDURE ^ F32(x: SET; CONST k32: ARRAY OF LONGINT; keybits: LONGINT): LONGINT; 
 	PROCEDURE ^ Encode(k0, k1: LONGINT): LONGINT; 
 	PROCEDURE ^ Init0; 
 BEGIN

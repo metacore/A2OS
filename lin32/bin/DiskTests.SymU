@@ -13,7 +13,7 @@ TYPE
 
 	TestDataWriter* = OBJECT {EXCLUSIVE} (TestDataBase)
 
-		PROCEDURE ^ FillWithTestData(VAR buffer: ARRAY OF CHAR); 
+		PROCEDURE ^ FillWithTestData*(VAR buffer: ARRAY OF CHAR); 
 		PROCEDURE ^ DoOperation*; 
 		PROCEDURE ^  & Init*(disk: Lib.Disk; partition: LONGINT; out: Streams.Writer); 
 	END TestDataWriter; 

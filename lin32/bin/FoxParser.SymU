@@ -20,6 +20,7 @@ TYPE
 		Lax-: BOOLEAN; 
 		indent: LONGINT; 
 		hasSymbol: BOOLEAN; 
+		prevPosition-: Position; 
 
 		PROCEDURE ^ S(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 

@@ -257,6 +257,7 @@ TYPE
 	END HEXEncoder; 
 VAR 
 	unicodePropertyReader: UnicodeProperties.UnicodeTxtReader; 
+	oberonFontAllocatable*: PROCEDURE (CONST name: ARRAY OF CHAR):BOOLEAN; 
 
 	PROCEDURE ^ IsWhiteSpace*(x: Char32; utf: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ IsAlphaNum*(x: Char32): BOOLEAN; 
@@ -283,6 +284,7 @@ VAR
 	PROCEDURE ^ SubTextToStrAt*(text: Text; startPos, len: LONGINT; VAR index: LONGINT; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ SubTextToStr*(text: Text; startPos, len: LONGINT; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToText*(text: Text; pos: LONGINT; CONST string: ARRAY OF CHAR); 
+	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ DecodeOberonFontName(CONST name: ARRAY OF CHAR; VAR fn: ARRAY OF CHAR; VAR size: LONGINT; VAR style: SET); 
 	PROCEDURE ^ ToOberonFont(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET; VAR oname: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetUTF8Char*(r: Streams.Reader; VAR u: Texts.Char32): BOOLEAN; 

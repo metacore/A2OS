@@ -1,5 +1,5 @@
 MODULE UnixFiles;
-	IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files, Commands, Tr := Trace;
+	IMPORT S := SYSTEM, Unix, Kernel, Modules, Log := KernelLog, Files, Commands;
 CONST 
 	NBufs = 4; 
 	Bufsize = 4096; 
@@ -101,7 +101,7 @@ TYPE
 		swapper, state: LONGINT; 
 
 		PROCEDURE ^  & Init(fs: Files.FileSystem); 
-		PROCEDURE ^ CreateUnixFile; 
+		PROCEDURE ^ OpenUnixFile; 
 		PROCEDURE ^ Flush(buf: Buffer); 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
 		PROCEDURE ^ SetX(VAR r: Files.Rider; p: LONGINT); 

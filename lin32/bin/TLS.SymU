@@ -1,5 +1,5 @@
 MODULE TLS;
-	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, Clock, BIT, Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
+	IMPORT TCP, Streams, Files, IP, KernelLog, Pipes, Kernel, Clock, BIT, Dates, Ciphers := CryptoCiphers, Utils := CryptoUtils, HMAC := CryptoHMAC, CSPRNG := CryptoCSPRNG, CryptoMD5, CryptoSHA1, CryptoRSA, CryptoBigNumbers, PKCS1, X509;
 CONST 
 	Trace = TRUE; 
 	ServerHandshake* = 12; 
@@ -28,6 +28,8 @@ CONST
 	TlsRsaWithIdeaCbcSha* = 7; 
 	TlsRsaWithDesCbcSha* = 9; 
 	TlsRsaWith3DesEdeCbcSha* = 10; 
+	TlsRsaWithAes128CbcSha* = 47; 
+	TlsRsaWithAes256CbcSha* = 53; 
 	ChangeCipherSpec* = 20; 
 	Alert* = 21; 
 	Handshake* = 22; 
@@ -77,7 +79,7 @@ CONST
 	Suites* = 20; 
 	Buflen = 18500; 
 	MaxPHashKernelLogput = 1024; 
-	MaxKeyBlock = 120; 
+	MaxKeyBlock = 144; 
 	MaxPHashSeed = 128; 
 	MaxPlaintextLength = 16384; 
 	MaxCompressedLength = 17408; 
@@ -86,12 +88,13 @@ CONST
 	SessionHashtableSize = 1023; 
 	SessionCleanUpInterval = 60; 
 	DefaultSessionLifetime = 3600; 
-	DefaultSuitesNbr = 4; 
+	DefaultSuitesNbr = 3; 
 TYPE 
 	SecurityParameters = OBJECT 
 	VAR 
 		cipherSuite, cipherKeySize: LONGINT; 
 		clientRandom, serverRandom: ARRAY 32 OF CHAR; 
+		PRFAlgorithm: ARRAY 32 OF CHAR; 
 	END SecurityParameters; 
 
 	ConnectionState = OBJECT 
@@ -99,8 +102,8 @@ TYPE
 		cipher: Ciphers.Cipher; 
 		mac: HMAC.HMac; 
 		recordSeq: DoubleLong; 
-		cipherKey: ARRAY 24 OF CHAR; 
-		iv: ARRAY 8 OF CHAR; 
+		cipherKey: ARRAY 32 OF CHAR; 
+		iv: ARRAY 16 OF CHAR; 
 		macSecret: ARRAY 20 OF CHAR; 
 
 		PROCEDURE ^  & Init*; 
@@ -126,9 +129,10 @@ TYPE
 	PRF = OBJECT 
 	VAR 
 		pMD5, pSHA: PHash; 
+		pHash: PHash; 
 
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetBytes(VAR secret, seed, outbuf: ARRAY OF CHAR; label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
+		PROCEDURE ^  & Init*(CONST algorithm: ARRAY OF CHAR); 
+		PROCEDURE ^ GetBytes(VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
 	END PRF; 
 
 	Policy* = OBJECT 
@@ -137,12 +141,14 @@ TYPE
 		nofCipherSuites-: LONGINT; 
 		sessionResumptionEnabled-: BOOLEAN; 
 		sessionLifetime-: LONGINT; 
+		version-: ARRAY 2 OF CHAR; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetCipherSuites*(VAR s: ARRAY OF LONGINT; n: LONGINT); 
 		PROCEDURE ^ IsSupported*(s: LONGINT): BOOLEAN; 
 		PROCEDURE ^ EnableSessionResumption*(enable: BOOLEAN); 
 		PROCEDURE ^ SetSessionLifetime*(t: LONGINT); 
+		PROCEDURE ^ SetVersion*(major, minor: LONGINT); 
 	END Policy; 
 
 	Session = OBJECT {EXCLUSIVE} 
@@ -203,7 +209,8 @@ TYPE
 		hsSHAsend, hsSHAverify: CryptoSHA1.Hash; 
 		pendingSecurityParameters: SecurityParameters; 
 		currentWriteState, pendingWriteState, currentReadState, pendingReadState: ConnectionState; 
-		client: BOOLEAN; 
+		version-: ARRAY 2 OF CHAR; 
+		client, trapped: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ AwaitStateNotEqual*(s: LONGINT); 
@@ -257,10 +264,10 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Connection; 
 VAR 
-	version: ARRAY 2 OF CHAR; 
 	defaultCipherPolicy: Policy; 
 
 	PROCEDURE ^ GetConnection*(): Connection; 
+	PROCEDURE ^ GetServerConnection*(CONST certificate, pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: LONGINT): Connection; 
 	PROCEDURE ^ InitDefaults; 
 BEGIN
 END TLS.

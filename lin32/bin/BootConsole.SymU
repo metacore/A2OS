@@ -1,5 +1,5 @@
 MODULE BootConsole;
-	IMPORT S := SYSTEM, Trace, Glue, Unix, Modules, Objects, Commands;
+	IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Modules, Objects, Commands, KernelLog;
 CONST 
 TYPE 
 	Module = Modules.Module; 

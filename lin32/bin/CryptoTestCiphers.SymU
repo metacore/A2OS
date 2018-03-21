@@ -7,6 +7,7 @@ CONST
 	PROCEDURE ^ Ctr1*(context: Commands.Context); 
 	PROCEDURE ^ Ecb2*(CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: LONGINT); 
 	PROCEDURE ^ Cbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT); 
+	PROCEDURE ^ DecryptCbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT); 
 	PROCEDURE ^ Ctr2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT); 
 	PROCEDURE ^ MeasureTime*(context: Commands.Context); 
 	PROCEDURE ^ DesEcb2*; 
@@ -19,5 +20,6 @@ CONST
 	PROCEDURE ^ IdeaCbc2*; 
 	PROCEDURE ^ AesCbc2*; 
 	PROCEDURE ^ AesCtr2*; 
+	PROCEDURE ^ CbcRandom*(context: Commands.Context); 
 BEGIN
 END CryptoTestCiphers.

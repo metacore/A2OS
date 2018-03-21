@@ -228,6 +228,7 @@ VAR
 	PROCEDURE ^ InitType*(VAR type: Type; form: SHORTINT; sizeInBits: INTEGER); 
 	PROCEDURE ^ ToVectorType*(VAR type: Type; length: LONGINT); 
 	PROCEDURE ^ InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: LONGINT); 
+	PROCEDURE ^ InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: LONGINT); 
 	PROCEDURE ^ NewType*(form: SHORTINT; sizeInBits: INTEGER): Type; 
 	PROCEDURE ^ SetType*(VAR op: Operand; CONST type: Type); 
 	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR): SHORTINT; 

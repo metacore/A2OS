@@ -11,7 +11,7 @@ TYPE
 		angle: REAL; 
 
 		PROCEDURE ^  & new*; 
-		PROCEDURE ^ tick; 
+		PROCEDURE ^ tick*; 
 		PROCEDURE ^ trunk; 
 		PROCEDURE ^ branch(level, limit, rep: INTEGER); 
 		PROCEDURE ^ twig; 

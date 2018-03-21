@@ -36,7 +36,7 @@ TYPE
 		PROCEDURE ^ InternalString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ String*(x: ARRAY OF CHAR); 
 		PROCEDURE ^ Hex*(x, w: LONGINT); 
-		PROCEDURE ^ Int*(x, w: LONGINT); 
+		PROCEDURE ^ Int*(x: HUGEINT; w: LONGINT); 
 		PROCEDURE ^ TimeStamp*; 
 		PROCEDURE ^ Close*; 
 	END Log; 

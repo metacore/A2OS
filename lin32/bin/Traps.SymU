@@ -1,5 +1,5 @@
 MODULE Traps;
-	IMPORT S := SYSTEM, Trace, Unix, Objects, Machine, Streams, Modules, Reflection, TrapWriters, Commands, StdIO;
+	IMPORT S := SYSTEM, Unix, Objects, Machine, Streams, Modules, Reflection, TrapWriters, Commands, StdIO;
 CONST 
 	AddrSize = SIZEOF(ADDRESS); 
 	MaxRecursion = 2; 

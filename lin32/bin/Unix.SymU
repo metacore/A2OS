@@ -188,6 +188,8 @@ TYPE
 
 	ConditionType = ARRAY 12 OF WORD; 
 
+	Key_t* = ADDRESS; 
+
 	Sigset_t = ARRAY 32 OF ADDRESS; 
 
 	SignalTrap = PROCEDURE (sig: LONGINT; mc: Mcontext); 
@@ -363,6 +365,9 @@ VAR
 	pthread_detach: PROCEDURE {C}(thr: ADDRESS); 
 	pthread_kill: PROCEDURE {C}(thr: ADDRESS; sigid: LONGINT):LONGINT; 
 	pthread_cancel: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_key_create: PROCEDURE {C}(key: ADDRESS; destructor: PROCEDURE {C}(param: ADDRESS)):WORD; 
+	pthread_setspecific: PROCEDURE {C}(key: Key_t; value: ADDRESS):WORD; 
+	pthread_getspecific: PROCEDURE {C}(key: Key_t):ADDRESS; 
 	pthread_attr_init: PROCEDURE {C}(attr: ADDRESS); 
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
 	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
@@ -452,6 +457,9 @@ VAR
 	oberonXIOErrorHandler: OberonXIOErrorHandler; 
 
 	PROCEDURE ^ getnprocs*(): LONGINT; 
+	PROCEDURE ^ NewKey*(): Key_t; 
+	PROCEDURE ^ ReadKey*(key: Key_t): ADDRESS; 
+	PROCEDURE ^ WriteKey*(key: Key_t; value: ADDRESS); 
 	PROCEDURE ^ NewMtx*(): Mutex_t; 
 	PROCEDURE ^ NewRecursiveMtx*(): Mutex_t; 
 	PROCEDURE ^ MtxDestroy*(mtx: Mutex_t); 

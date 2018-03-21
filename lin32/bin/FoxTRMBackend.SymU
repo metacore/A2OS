@@ -150,7 +150,7 @@ TYPE
 		PROCEDURE ^ HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
 		PROCEDURE ^ HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
 		PROCEDURE ^ GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ ParameterRegister*(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT; 
+		PROCEDURE ^ ParameterRegister(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT; 
 		PROCEDURE ^ PhysicalRegister(virtualReg: LONGINT; part: LONGINT; VAR offset: LONGINT): LONGINT; 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Operand); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: InstructionSet.Operand): BOOLEAN; 

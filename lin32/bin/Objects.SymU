@@ -129,6 +129,7 @@ VAR
 	timers: Timer; 
 	timerListMutex: Unix.Mutex_t; 
 	timerStopped: BOOLEAN; 
+	SystemA2Up-: BOOLEAN; 
 	root-: Process; 
 	stacksize: LONGINT; 
 	processList: Unix.Mutex_t; 
@@ -136,6 +137,7 @@ VAR
 	startProcess: Unix.Mutex_t; 
 	lockMutex: Unix.Mutex_t; 
 	childrunning: Unix.Condition_t; 
+	processPointer: Unix.Key_t; 
 	newProcess: Process; 
 	nextPID: LONGINT; 
 	finalizerCaller: FinalizerCaller; 
@@ -160,7 +162,6 @@ VAR
 	PROCEDURE ^ CurrentProcess*(): Process; 
 	PROCEDURE ^ CurrentContext*(): ANY; 
 	PROCEDURE ^ SetContext*(context: ANY); 
-	PROCEDURE ^ CurrentProcess0(): Process; 
 	PROCEDURE ^ ActiveObject*(): ANY; 
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
 	PROCEDURE ^ GetProcessID*(): LONGINT; 

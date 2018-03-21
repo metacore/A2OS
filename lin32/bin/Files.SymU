@@ -31,6 +31,8 @@ CONST
 	SetSize = (MAX(SET) + 1); 
 	NeedsPrefix* = 0; 
 TYPE 
+	TSize* = Streams.TSize; 
+
 	FileName* = ARRAY (PrefixLength + NameLength) OF CHAR; 
 
 	Rider* = RECORD 

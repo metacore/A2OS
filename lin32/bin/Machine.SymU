@@ -62,10 +62,10 @@ VAR
 	prioLow-, prioHigh-: LONGINT; 
 	fcr-: SET; 
 	mhz-: HUGEINT; 
-	standaloneAppl-: BOOLEAN; 
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 	config: ARRAY 2048 OF CHAR; 
+	logname: ARRAY 32 OF CHAR; 
 	logfile: LONGINT; 
 	traceHeap: BOOLEAN; 
 	timer0: HUGEINT; 

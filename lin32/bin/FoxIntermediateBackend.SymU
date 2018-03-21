@@ -31,6 +31,7 @@ CONST
 	NegativeDivisorTrap* = 12; 
 	NoReturnTrap* = 16; 
 	NilPointerTrap* = 17; 
+	RethrowTrap* = 18; 
 	Trace = FALSE; 
 	TraceRegisterUsageCount = TRUE; 
 	ArrayAlignment = (8 * 8); 
@@ -208,6 +209,7 @@ TYPE
 		nameIndex: LONGINT; 
 
 		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetUID(): SyntaxTree.Identifier; 
 		PROCEDURE ^ GetUsage(VAR use: VariableUse); 
 		PROCEDURE ^ SetUsage(CONST use: VariableUse); 
@@ -608,6 +610,8 @@ TYPE
 		experiment: BOOLEAN; 
 
 		PROCEDURE ^  & InitIntermediateBackend*; 
+		PROCEDURE ^ NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE; 
+		PROCEDURE ^ ParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; index: LONGINT): LONGINT; 
 		PROCEDURE ^ GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module; 
 		PROCEDURE ^ SupportedImmediate*(CONST op: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 

@@ -156,7 +156,7 @@ type
 
 		(* allocation of cells must use the tag provided, it contains all internally stored metadata *)
 		Heaps.NewRec(a, tag, false);
-		system.get(tag-4,typeInfo);
+		system.get(tag-sizeof(address),typeInfo);
 
 		if EnableTrace then trace(scope, c, typeInfo, name, isCellnet, isEngine); end;
 		

@@ -399,6 +399,11 @@ TYPE
 				RETURN {InstructionSet.cpuFPU, InstructionSet.cpuSSE, InstructionSet.cpuSSE2, InstructionSet.cpuSSE3} * InstructionSet.instructions[instr].cpuOptions # {}
 			END FPOrSSEOperation;
 
+			PROCEDURE FPOperation(instr: LONGINT): BOOLEAN;
+			BEGIN
+				RETURN {InstructionSet.cpuFPU} * InstructionSet.instructions[instr].cpuOptions # {}
+			END FPOperation;
+
 		BEGIN
 			IF (dump # NIL) & (lastPass) THEN
 				pc0 := code.pc;
@@ -495,9 +500,39 @@ TYPE
 								INCL (rexPrefix, rexX)
 							END
 						END;
-						IF (operands[i].sizeInBytes = bits64) & ~(InstructionSet.optD64 IN bitwidthOptions) & ~FPOrSSEOperation(instr) THEN
+						IF (operands[i].sizeInBytes = bits64) & ~(InstructionSet.optD64 IN bitwidthOptions) & ~FPOperation(instr) THEN
 							IF Trace THEN KernelLog.String(" bits64 "); KernelLog.Ln; END;
-							INCL (rexPrefix, rexW)
+							IF FPOrSSEOperation(instr) THEN
+								IF (InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64) THEN 
+									kernelWriter.String("something wrong with this? "); 
+									DumpInstruction(kernelWriter,mnem,operands);
+									kernelWriter.Ln;
+									kernelWriter.Update;
+									INCL(rexPrefix, rexW) 
+								ELSE
+								END;
+							ELSE
+								IF ~(
+									(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
+									OR
+									(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
+								)
+								 THEN 
+									kernelWriter.String("something wrong with this? "); 
+									DumpInstruction(kernelWriter,mnem,operands);
+									kernelWriter.Ln;
+									kernelWriter.Int(InstructionSet.instructions[instr].operands[i],1); 
+									kernelWriter.Ln;
+									kernelWriter.Update;
+								END;
+								
+								ASSERT(
+									(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
+									OR
+									(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
+								); 
+								INCL(rexPrefix,rexW); 
+							END;
 						END;
 						IF InstructionSet.instructions[instr].operands[i] = InstructionSet.moffset64 THEN
 							IF Trace THEN KernelLog.String(" moffset64 "); KernelLog.Ln; END;
@@ -2757,7 +2792,7 @@ TYPE
 	END Test;
 
 	BEGIN
-		IF Trace THEN
+		IF Trace OR TRUE THEN
 			NEW(kernelWriter,KernelLog.Send,1000);
 		END;
 	END FoxAMD64Assembler.

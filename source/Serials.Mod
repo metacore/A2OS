@@ -183,6 +183,7 @@ BEGIN {EXCLUSIVE}
 		ports[portNumber-1] := port;
 		COPY(name, port.name);
 		COPY(description, port.description);
+		IF Verbose THEN KernelLog.String("Serials: "); port.Show; KernelLog.String(" is now available."); KernelLog.Ln; END;
 	ELSE
 		KernelLog.String("Serials: Warning; Could not register onboard port."); KernelLog.Ln;
 	END;

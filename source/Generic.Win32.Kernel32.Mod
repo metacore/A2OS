@@ -367,6 +367,8 @@ VAR
 	AttachConsole-: PROCEDURE {WINAPI} (in: LONGINT): BOOL;
 	(**The Beep function generates simple tones on the speaker. The function is synchronous; it does not return control to its caller until the sound finishes.*)
 	Beep-: PROCEDURE {WINAPI} ( dwFreq, dwDuration: LONGINT ): BOOL;
+	(** Marks any outstanding I/O operations for the specified file handle. The function only cancels I/O operations in the current process, regardless of which thread created the I/O operation. *)
+	CancelIoEx-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped): BOOL;
 	(** The ClearCommBreak function restores character transmission for a specified communications device and places the transmission line in a nonbreak state. *)
 	ClearCommBreak-: PROCEDURE {WINAPI} ( hFile: HANDLE ): BOOL;
 	(** The ClearCommError function retrieves information about a communications error and reports the current status of a communications device. *)
@@ -670,7 +672,7 @@ VAR
 															  VAR lpBuffer: ARRAY OF SYSTEM.BYTE;
 															  nNumberOfBytesToRead: LONGINT;
 															  VAR lpNumberOfBytesRead: LONGINT;
-															  lpOverlapped: ADDRESS ): BOOL;
+															  VAR lpOverlapped: Overlapped ): BOOL;
 
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
@@ -784,7 +786,7 @@ VAR
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
 															   nNumberOfBytesToWrite: LONGINT;
 															   VAR lpNumberOfBytesWritten: LONGINT;
-															   lpOverlapped: ADDRESS ): BOOL;
+															   VAR lpOverlapped: Overlapped ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
 	
@@ -863,6 +865,7 @@ VAR
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));
 		GetProcAddress(mod, "AttachConsole",SYSTEM.VAL(ADDRESS,AttachConsole));
 		GetProcAddress(mod, "Beep",SYSTEM.VAL(ADDRESS,Beep));
+		GetProcAddress(mod, "CancelIoEx",SYSTEM.VAL(ADDRESS,CancelIoEx));
 		GetProcAddress(mod, "ClearCommBreak",SYSTEM.VAL(ADDRESS,ClearCommBreak));
 		GetProcAddress(mod, "ClearCommError",SYSTEM.VAL(ADDRESS,ClearCommError));
 		GetProcAddress(mod, "CloseHandle",SYSTEM.VAL(ADDRESS,CloseHandle));

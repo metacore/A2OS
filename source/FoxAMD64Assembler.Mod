@@ -501,38 +501,14 @@ TYPE
 							END
 						END;
 						IF (operands[i].sizeInBytes = bits64) & ~(InstructionSet.optD64 IN bitwidthOptions) & ~FPOperation(instr) THEN
-							IF Trace THEN KernelLog.String(" bits64 "); KernelLog.Ln; END;
-							IF FPOrSSEOperation(instr) THEN
-								IF (InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64) THEN 
-									kernelWriter.String("something wrong with this? "); 
-									DumpInstruction(kernelWriter,mnem,operands);
-									kernelWriter.Ln;
-									kernelWriter.Update;
-									INCL(rexPrefix, rexW) 
-								ELSE
-								END;
-							ELSE
-								IF ~(
-									(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
-									OR
-									(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
-								)
-								 THEN 
-									kernelWriter.String("something wrong with this? "); 
-									DumpInstruction(kernelWriter,mnem,operands);
-									kernelWriter.Ln;
-									kernelWriter.Int(InstructionSet.instructions[instr].operands[i],1); 
-									kernelWriter.Ln;
-									kernelWriter.Update;
-								END;
-								
-								ASSERT(
-									(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
-									OR
-									(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
-								); 
-								INCL(rexPrefix,rexW); 
-							END;
+							IF 
+								(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
+								OR
+								(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
+							 THEN 
+								IF Trace THEN KernelLog.String(" rex prefix bits64 "); KernelLog.Ln; END;
+								INCL(rexPrefix,rexW);
+							END; 
 						END;
 						IF InstructionSet.instructions[instr].operands[i] = InstructionSet.moffset64 THEN
 							IF Trace THEN KernelLog.String(" moffset64 "); KernelLog.Ln; END;
@@ -2792,7 +2768,7 @@ TYPE
 	END Test;
 
 	BEGIN
-		IF Trace OR TRUE THEN
+		IF Trace THEN
 			NEW(kernelWriter,KernelLog.Send,1000);
 		END;
 	END FoxAMD64Assembler.

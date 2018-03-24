@@ -261,6 +261,9 @@ TYPE
 
 				ELSE
 					(* ignore non-ascii characters *)
+					IF close OR (context.in.res # Streams.Ok) THEN
+						EXIT;
+					END;
 				END;
 			END;
 			command[currentIndex+1] := 0X;

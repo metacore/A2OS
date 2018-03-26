@@ -223,30 +223,36 @@ VAR
 	isOpen0: BOOLEAN;
 	bps0, data0, parity0, stop0 : LONGINT;
 	res1: LONGINT;
+	port: Port;
 BEGIN{EXCLUSIVE}
 	IF (portNumber >= 1) & (portNumber <= LEN(ports)) & (ports[portNumber-1] # NIL) THEN
 
-		tracePort := ports[portNumber-1];
+		port := ports[portNumber-1];
 
-		tracePort.GetPortState(isOpen0, bps0, data0, parity0, stop0);
+		port.GetPortState(isOpen0, bps0, data0, parity0, stop0);
 
+		(* do not close the port if the current port settings match *)
 		IF ~isOpen0 OR (bps0 # bps) OR (data0 # data) OR (parity0 # parity) OR (stop0 # stop) THEN
-			tracePort.Close;
-		END;
-
-		tracePort.Open(bps, data, parity, stop, res);
-		IF res # 0 THEN
-			IF isOpen0 THEN tracePort.Open(bps0, data0, parity0, stop0, res1); END;
-			RETURN;
+			port.Close;
+			port.Open(bps, data, parity, stop, res);
+			IF res # 0 THEN
+				IF isOpen0 THEN port.Open(bps0, data0, parity0, stop0, res1); END;
+				RETURN;
+			END;
 		END;
 
 		IF traceChar0 # TraceChar THEN
 			traceChar0 := Trace.Char;
 		END;
 
+		TRACE(traceChar0);
+
 		Machine.Acquire(Machine.TraceOutput);
+		tracePort := port;
 		Trace.Char := TraceChar;
 		Machine.Release(Machine.TraceOutput);
+
+		TRACE(Trace.Char);
 	ELSIF portNumber < 0 THEN
 		IF tracePort # NIL THEN
 

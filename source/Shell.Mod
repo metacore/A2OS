@@ -144,7 +144,7 @@ TYPE
 		aliases: Alias;
 		prompt: ARRAY 32 OF CHAR;
 
-		(* Connection to the entiry hosting this shell instance *)
+		(* Connection to the entry hosting this shell instance *)
 		upcall : NotifyProcedure;
 
 		commandHistory : CommandHistory;

@@ -18,7 +18,7 @@ MODULE Serials; (** AUTHOR "afi"; PURPOSE "Generic serial communication ports dr
  *	04.08.2006	Removed SetPortState from Port interface (staubesv)
  *)
 
-IMPORT Streams, Modules, KernelLog, Commands;
+IMPORT Streams, Modules, KernelLog, Commands, Machine, Trace;
 
 CONST
 	Verbose = TRUE;
@@ -30,6 +30,9 @@ CONST
 
 	(** Stop bits *)
 	Stop1* = 1;  Stop2* = 2;  Stop1dot5* = 3;
+
+	(* Serial port default settings *)
+	DefaultBPS = 115200; DefaultDataBits = 8; DefaultParity = ParNo; DefaultStop = Stop1;
 
 	(** Modem control lines *)
 	DTR* = 0;  RTS* = 1;	(** output *)
@@ -137,6 +140,9 @@ VAR
 		USB ports equipped with a USB to serial adapter are registered in the next 8 array elements. *)
 	ports : ARRAY MaxPorts OF Port;
 
+	tracePort: Port;
+	traceChar0: Trace.CharProc;
+
 (** At the disposal of the USB driver modules for hot plug-in of a device. *)
 PROCEDURE RegisterPort* (port : Port; CONST description : ARRAY OF CHAR);
 VAR name : ARRAY 6 OF CHAR; portNumber : LONGINT;
@@ -197,6 +203,153 @@ BEGIN {EXCLUSIVE}
 	END;
 	RETURN port;
 END GetPort;
+
+PROCEDURE TraceChar(ch: CHAR);
+VAR res: LONGINT;
+BEGIN
+	IF tracePort # NIL THEN
+		tracePort.SendChar(ch, res);
+	END;
+END TraceChar;
+
+(**
+	Setup serial port for kernel trace output
+
+	portNumber: serial port number; a value < 0 for disabling trace output over an already set up serial port
+	bps, data, parity, stop: serial port settings
+*)
+PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: LONGINT);
+VAR
+	isOpen0: BOOLEAN;
+	bps0, data0, parity0, stop0 : LONGINT;
+	res1: LONGINT;
+BEGIN{EXCLUSIVE}
+	IF (portNumber >= 1) & (portNumber <= LEN(ports)) & (ports[portNumber-1] # NIL) THEN
+
+		tracePort := ports[portNumber-1];
+
+		tracePort.GetPortState(isOpen0, bps0, data0, parity0, stop0);
+
+		IF ~isOpen0 OR (bps0 # bps) OR (data0 # data) OR (parity0 # parity) OR (stop0 # stop) THEN
+			tracePort.Close;
+		END;
+
+		tracePort.Open(bps, data, parity, stop, res);
+		IF res # 0 THEN
+			IF isOpen0 THEN tracePort.Open(bps0, data0, parity0, stop0, res1); END;
+			RETURN;
+		END;
+
+		IF traceChar0 # TraceChar THEN
+			traceChar0 := Trace.Char;
+		END;
+
+		Machine.Acquire(Machine.TraceOutput);
+		Trace.Char := TraceChar;
+		Machine.Release(Machine.TraceOutput);
+	ELSIF portNumber < 0 THEN
+		IF tracePort # NIL THEN
+
+			Machine.Acquire(Machine.TraceOutput);
+			Trace.Char := traceChar0;
+			Machine.Release(Machine.TraceOutput);
+
+			tracePort := NIL;
+			traceChar0 := NIL;
+		END;
+	ELSE
+		res := NoSuchPort;
+	END;
+END SetTracePort;
+
+(** Returns TRUE if a given port is currently used for kernel trace output *)
+PROCEDURE IsTracePort*(port: Port): BOOLEAN;
+BEGIN
+	RETURN (tracePort # NIL) & (port = tracePort);
+END IsTracePort;
+
+(**
+	Get serial port parameter from an input stream
+
+	The format of the stream is expected to be as [portNumber bps data parity stop]
+
+	where
+		parity = "odd"|"even"|"mark"|"space"|"no"
+		stop = "1"|"1.5"|"2"
+*)
+PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR res: LONGINT);
+VAR str : ARRAY 32 OF CHAR;
+BEGIN
+	res := 0;
+
+	IF ~r.GetInteger(portNumber,FALSE) OR (GetPort(portNumber) = NIL) THEN
+		res := NoSuchPort; RETURN;
+	END;
+
+	data := DefaultDataBits; parity := DefaultParity; stop := DefaultStop;
+
+	IF ~r.GetInteger(bps, FALSE) THEN
+		bps := DefaultBPS; RETURN;
+	END;
+
+	IF ~r.GetInteger(data, FALSE) THEN
+		data := DefaultDataBits; RETURN;
+	END;
+
+	IF ~r.GetString(str) THEN
+		parity := DefaultParity; RETURN;
+	END;
+
+	IF str = "odd" THEN
+		parity := ParOdd
+	ELSIF str = "even" THEN
+		parity := ParEven
+	ELSIF str = "mark" THEN
+		parity := ParMark
+	ELSIF str = "space" THEN
+		parity := ParSpace
+	ELSIF str # "no" THEN
+		res := WrongParity;
+		RETURN
+	END;
+
+	IF ~r.GetString(str) THEN
+		stop := DefaultStop; RETURN;
+	END;
+
+	IF str = "1.5" THEN
+		stop := Stop1dot5
+	ELSIF str = "2" THEN
+		stop := Stop2
+	ELSIF str # "1" THEN
+		res := WrongStop;
+	END;
+END GetPortParameters;
+
+(**
+	Setup trace over a given serial port
+
+	SetTrace portNumber bps data parity stop~
+
+	Set portNumber to a value < 0 for disabling trace output over an already set up serial port
+*)
+PROCEDURE SetTrace*(context: Commands.Context);
+VAR
+	portNumber, bps, data, parity, stop, res: LONGINT;
+BEGIN
+	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, res);
+	IF (portNumber >= 0) & (res # 0) THEN
+		context.result := 1;
+		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
+		RETURN;
+	END;
+
+	SetTracePort(portNumber, bps, data, parity, stop, res);
+	IF res # 0 THEN
+		context.result := 2;
+		context.error.String("Failed to setup trace port, res="); context.error.Int(res,0); context.error.Ln;
+	END;
+END SetTrace;
 
 PROCEDURE Show*(context : Commands.Context);
 VAR port : Port; noPortsAvailable : BOOLEAN; i : LONGINT;

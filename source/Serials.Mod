@@ -215,7 +215,7 @@ END TraceChar;
 (**
 	Setup serial port for kernel trace output
 
-	portNumber: serial port number; a value < 0 for disabling trace output over an already set up serial port
+	portNumber: serial port number, or 0 to disable trace output, or a negative value for rolling back to the initial trace output configuration
 	bps, data, parity, stop: serial port settings
 *)
 PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: LONGINT);
@@ -241,7 +241,7 @@ BEGIN{EXCLUSIVE}
 			END;
 		END;
 
-		IF traceChar0 # TraceChar THEN
+		IF Trace.Char # TraceChar THEN
 			traceChar0 := Trace.Char;
 		END;
 
@@ -253,8 +253,14 @@ BEGIN{EXCLUSIVE}
 		Machine.Release(Machine.TraceOutput);
 
 		TRACE(Trace.Char);
+	ELSIF portNumber = 0 THEN
+		tracePort := NIL;
+		IF Trace.Char # TraceChar THEN
+			traceChar0 := Trace.Char;
+		END;
+		Trace.Char := TraceChar;
 	ELSIF portNumber < 0 THEN
-		IF tracePort # NIL THEN
+		IF traceChar0 # NIL THEN
 
 			Machine.Acquire(Machine.TraceOutput);
 			Trace.Char := traceChar0;

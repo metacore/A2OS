@@ -85,9 +85,9 @@ SOLARIS32G -- 32 bit solaris a2 using generic object files
 Win64G -- work in progress
 ================
 	
-	Release.Build WinAosG64 ~
+	Release.Build --path=NewAos/ WinAosG64 ~
 
-	StaticLinker.Link --fileFormat=PE64CUI --fileName=oberon64.exe --extension=GofWw --displacement=401000H  
+	StaticLinker.Link --path=./NewAos/ --fileFormat=PE64CUI --fileName=oberon64.exe --extension=GofWw --displacement=401000H  
 		Runtime Trace Kernel32 
 		Heaps Modules Objects Kernel
 		KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 

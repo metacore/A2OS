@@ -19,7 +19,7 @@ TYPE
 	END Tester; 
 
 	PROCEDURE ^ GetOptions(): Options.Options; 
-	PROCEDURE ^ DriveTest(options: Options.Options; diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; error, writer: Streams.Writer); 
+	PROCEDURE ^ DriveTest(options: Options.Options; diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; error, writer: Streams.Writer): BOOLEAN; 
 	PROCEDURE ^ Compile*(context: Commands.Context); 
 	PROCEDURE ^ GetTextReader(text: Texts.Text): Streams.Reader; 
 	PROCEDURE ^ RunTests(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 

@@ -13,6 +13,8 @@ CONST
 	TAB = 9X; 
 	SP = 20X; 
 TYPE 
+	TSize* = LONGINT; 
+
 	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
 
 	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 

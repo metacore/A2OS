@@ -3,14 +3,16 @@ MODULE GenericLinker;
 CONST 
 	InvalidAddress* =  -1; 
 	Fixed* = 0; 
-	InitCode* = 1; 
-	BodyCode* = 2; 
-	Code* = 3; 
-	Data* = 4; 
-	Const* = 5; 
-	Empty* = 6; 
+	EntryCode* = 1; 
+	InitCode* = 2; 
+	ExitCode* = 3; 
+	BodyCode* = 4; 
+	Code* = 5; 
+	Data* = 6; 
+	Const* = 7; 
+	Empty* = 8; 
 	UseAll* = {Fixed .. Empty}; 
-	UseInitCode* = {Fixed, InitCode}; 
+	UseInitCode* = {Fixed .. ExitCode}; 
 	UseAllButInitCode* = {Fixed, BodyCode .. Empty}; 
 TYPE 
 	Address* = ADDRESS; 
@@ -51,7 +53,7 @@ TYPE
 		address*: Address; 
 		aliasOf*: Block; 
 		referenced, used: BOOLEAN; 
-		prioType: LONGINT; 
+		priority: LONGINT; 
 	END; 
 
 	Linker* = OBJECT 
@@ -88,9 +90,8 @@ TYPE
 		PROCEDURE ^ Diagnose(block: Block); 
 	END Linker; 
 
-	PROCEDURE ^ GetType*(block: Block): LONGINT; 
 	PROCEDURE ^ GetPriority(block: Block): LONGINT; 
-	PROCEDURE ^ Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList); 
+	PROCEDURE ^ Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT; 
 	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ Process*(reader: Streams.Reader; linker: Linker); 
 BEGIN

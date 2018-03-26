@@ -350,6 +350,7 @@ VAR
 	AllocConsole-: PROCEDURE {WINAPI}():BOOL; 
 	AttachConsole-: PROCEDURE {WINAPI}(in: LONGINT):BOOL; 
 	Beep-: PROCEDURE {WINAPI}(dwFreq, dwDuration: LONGINT):BOOL; 
+	CancelIoEx-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped):BOOL; 
 	ClearCommBreak-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
 	ClearCommError-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpErrors: DWORD; VAR lpStat: ComStat):BOOL; 
 	CloseHandle-: PROCEDURE {WINAPI}(hObject: HANDLE):BOOL; 
@@ -442,7 +443,7 @@ VAR
 	QueryPerformanceCounter-: PROCEDURE {WINAPI}(VAR lpPerformaceCount: LargeInteger):BOOL; 
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI}(VAR lpFrequency: LargeInteger):BOOL; 
 	QueryThreadCycleTime-: PROCEDURE {WINAPI}(hThread: HANDLE; VAR cycleTime: HUGEINT):BOOL; 
-	ReadFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; lpOverlapped: ADDRESS):BOOL; 
+	ReadFile-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToRead: LONGINT; VAR lpNumberOfBytesRead: LONGINT; VAR lpOverlapped: Overlapped):BOOL; 
 	ReadProcessMemory-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpBaseAddress: ADDRESS; VAR lpBuffer: ARRAY OF SYSTEM.BYTE; nSize: LONGINT; VAR lpNumberOfBytesRead: LONGINT):BOOL; 
 	ReleaseSemaphore-: PROCEDURE {WINAPI}(hSemaphore: HANDLE; lReleaseCount: LONGINT; lpPreviousCount: ADDRESS):BOOL; 
 	RemoveDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR):BOOL; 
@@ -485,7 +486,7 @@ VAR
 	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; flAllocationType, flProtect: DWORD):ADDRESS; 
 	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; dwFreeType: DWORD):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
-	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; lpOverlapped: ADDRESS):BOOL; 
+	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; VAR lpOverlapped: Overlapped):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 	g: BOOLEAN; 

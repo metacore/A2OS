@@ -200,7 +200,7 @@ VAR
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
-	PROCEDURE ^ LeaveA2; 
-	PROCEDURE ^ ReenterA2; 
+	PROCEDURE ^ LeaveA2*; 
+	PROCEDURE ^ ReenterA2*; 
 BEGIN
 END Objects.

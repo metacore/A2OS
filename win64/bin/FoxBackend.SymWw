@@ -4,8 +4,6 @@ CONST
 TYPE 
 	SectionName = ARRAY 256 OF CHAR; 
 
-	Registers* = POINTER TO ARRAY OF LONGINT; 
-
 	Backend* = OBJECT 
 	VAR 
 		diagnostics-: Diagnostics.Diagnostics; 
@@ -32,7 +30,6 @@ TYPE
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
 		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetSystem*(): Global.System; 
-		PROCEDURE ^ GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Registers; 
 		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 

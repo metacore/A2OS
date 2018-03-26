@@ -80,7 +80,7 @@ TYPE
 		pc-: Unit; 
 
 		PROCEDURE ^ GetPC(): LONGINT; 
-		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
+		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AddLabel*(position: Basic.Position); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
@@ -89,8 +89,8 @@ TYPE
 		PROCEDURE ^ SetAlignment*(fixed: BOOLEAN; alignat: LONGINT); 
 		PROCEDURE ^ CheckSize(size: LONGINT); 
 		PROCEDURE ^ CopyBits*(src: BitSets.BitSet; srcPos, len: Bits); 
-		PROCEDURE ^ PutBits*(d: LONGINT; size: Bits); 
-		PROCEDURE ^ PutBitsAt*(at: Unit; d: LONGINT; size: Bits); 
+		PROCEDURE ^ PutBits*(d: HUGEINT; size: Bits); 
+		PROCEDURE ^ PutBitsAt*(at: Unit; d: HUGEINT; size: Bits); 
 		PROCEDURE ^ PutByte*(b: LONGINT); 
 		PROCEDURE ^ PutWord*(w: LONGINT); 
 		PROCEDURE ^ PutDWord*(d: LONGINT); 
@@ -119,6 +119,6 @@ TYPE
 	PROCEDURE ^ ConvertToReal*(x: LONGINT): REAL; 
 	PROCEDURE ^ ConvertToLongreal*(x: HUGEINT): LONGREAL; 
 	PROCEDURE ^ NewFixup*(mode: INTEGER; fixupOffset: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT; scale: LONGINT; fixupPattern: ObjectFile.FixupPatterns): Fixup; 
-	PROCEDURE ^ NewBinarySection*(type: SHORTINT; priority: LONGINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
+	PROCEDURE ^ NewBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
 BEGIN
 END FoxBinaryCode.

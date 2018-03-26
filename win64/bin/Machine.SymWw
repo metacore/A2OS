@@ -6,7 +6,7 @@ CONST
 	DefaultGenericConfigFile = \"aosg.ini"\; 
 	UserConfigFile = \"myaos.ini"\; 
 	MaxCPU* = 8; 
-	DefaultObjectFileExtension* = \".Obw"\; 
+	DefaultObjectFileExtension* = \".GofWw"\; 
 	MTTR* = 12; 
 	MMX* = 23; 
 	debug* = FALSE; 

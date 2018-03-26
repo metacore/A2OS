@@ -1,6 +1,6 @@
 Fox - Flexible Oberon Cross Compiler
 Build and Test Tool
-(c) Felix Friedrich (fof), ETH Zürich, 2008-2016
+(c) Felix Friedrich (fof), ETH Zürich, 2008-2018
 Conceptual design of the compiler has been worked out together with Florian Negele.
 
 Heaps.SetYoung 
@@ -11,7 +11,7 @@ Compiler.Compile --noInterfaceCheck
 	SystemTools.DoCommands
 	SystemTools.Timer start ~
 
-	Compiler.Compile -p=Win32G *)
+	Compiler.Compile *)
 
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod

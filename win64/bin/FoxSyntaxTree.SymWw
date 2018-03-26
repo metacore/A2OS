@@ -170,7 +170,7 @@ TYPE
 		typeDeclaration-: TypeDeclaration; 
 		scope-: Scope; 
 		resolved-: Type; 
-		position-: Position; 
+		position-, end-: Position; 
 		state-: SET; 
 		hasPointers-: BOOLEAN; 
 		fingerprint-: FingerPrint; 
@@ -462,10 +462,12 @@ TYPE
 		pointerType-: PointerType; 
 		modifiers-: Modifier; 
 		isObject-, isProtected: BOOLEAN; 
+		isAbstract-: BOOLEAN; 
 		arrayStructure-: MathArrayType; 
 		arrayAccessOperators-: ArrayAccessOperators; 
 
 		PROCEDURE ^  & InitRecordType(position: Position; scope: Scope; recordScope: RecordScope); 
+		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetBaseType*(type: Type); 
 		PROCEDURE ^ SetPointerType*(pointerType: PointerType); 
@@ -558,12 +560,12 @@ TYPE
 	VAR 
 		type-: Type; 
 		assignable-: BOOLEAN; 
-		position-: Position; 
+		position-, end-: Position; 
 		state-: SET; 
 		resolved-: Value; 
 		isHidden-: BOOLEAN; 
 
-		PROCEDURE ^ End*(position: LONGINT); 
+		PROCEDURE ^ End*(position: Position); 
 		PROCEDURE ^ SetState*(state: LONGINT); 
 		PROCEDURE ^  & InitExpression(position: Position); 
 		PROCEDURE ^ SetHidden*(hidden: BOOLEAN); 
@@ -960,7 +962,7 @@ TYPE
 		used-, written-: BOOLEAN; 
 		fixed-: BOOLEAN; 
 		alignment-: LONGINT; 
-		position-: Position; 
+		position-, end-: Position; 
 		state-: SET; 
 		fingerprint-: FingerPrint; 
 		comment-: Comment; 
@@ -981,6 +983,7 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ SetExternalName*(name: Scanner.StringType); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END Symbol; 
 
 	TypeDeclaration* = OBJECT (Symbol)
@@ -992,6 +995,7 @@ TYPE
 		PROCEDURE ^ SetDeclaredType*(type: Type); 
 		PROCEDURE ^ SetType*(type: Type); 
 		PROCEDURE ^ Accept*(v: Visitor); 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END TypeDeclaration; 
 
 	Constant* = OBJECT (Symbol)
@@ -1082,6 +1086,7 @@ TYPE
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetLevel*(level: LONGINT); 
 		PROCEDURE ^ SetMethodNumber*(methodNumber: LONGINT); 
+		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END Procedure; 
 
@@ -1148,7 +1153,7 @@ TYPE
 	Statement* = OBJECT 
 	VAR 
 		outer-: Statement; 
-		position-: Position; 
+		position-, end-: Position; 
 		isUnreachable-: BOOLEAN; 
 		comment-: Comment; 
 
@@ -1158,6 +1163,7 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ SetComment*(comment: Comment); 
 		PROCEDURE ^ Clone(): Statement; 
+		PROCEDURE ^ End*(pos: Position); 
 	END Statement; 
 
 	ProcedureCallStatement* = OBJECT (Statement)
@@ -1194,7 +1200,16 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END CommunicationStatement; 
 
-	IfPart* = OBJECT 
+	Part* = OBJECT 
+	VAR 
+		position-, end-: Position; 
+
+		PROCEDURE ^ InitPart; 
+		PROCEDURE ^ SetPosition*(pos: Position); 
+		PROCEDURE ^ SetEnd*(pos: Position); 
+	END Part; 
+
+	IfPart* = OBJECT (Part)
 	VAR 
 		condition-: Expression; 
 		statements-: StatementSequence; 
@@ -1222,7 +1237,7 @@ TYPE
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END IfStatement; 
 
-	WithPart* = OBJECT 
+	WithPart* = OBJECT (Part)
 	VAR 
 		variable-: Designator; 
 		type-: Type; 
@@ -1256,7 +1271,7 @@ TYPE
 		next*: CaseConstant; 
 	END; 
 
-	CasePart* = OBJECT 
+	CasePart* = OBJECT (Part)
 	VAR 
 		elements-: ExpressionList; 
 		firstConstant-: CaseConstant; 
@@ -1451,6 +1466,7 @@ TYPE
 	VAR 
 		firstSymbol-: Symbol; 
 		numberSymbols-: LONGINT; 
+		symbolTable: Basic.HashTableInt; 
 		firstConstant-, lastConstant-: Constant; 
 		numberConstants-: LONGINT; 
 		firstTypeDeclaration-, lastTypeDeclaration-: TypeDeclaration; 
@@ -1474,6 +1490,7 @@ TYPE
 		PROCEDURE ^ FindTypeDeclaration*(identifier: Identifier): TypeDeclaration; 
 		PROCEDURE ^ AddVariable*(v: Variable); 
 		PROCEDURE ^ PushVariable*(v: Variable); 
+		PROCEDURE ^ InsertVariable*(v: Variable; after: Variable); 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 
 		PROCEDURE ^ AddProcedure*(p: Procedure); 
 		PROCEDURE ^ AddProcedureDeclaration*(p: Procedure); 
@@ -1520,6 +1537,7 @@ TYPE
 		PROCEDURE ^ SetNumberMethods*(numberMethods: LONGINT); 
 		PROCEDURE ^ AddOperator*(p: Operator); 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
+		PROCEDURE ^ AbstractProcedure*(inScope: Scope): Procedure; 
 		PROCEDURE ^ FindConstant*(identifier: Identifier): Constant; 
 		PROCEDURE ^ FindTypeDeclaration*(identifier: Identifier): TypeDeclaration; 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 

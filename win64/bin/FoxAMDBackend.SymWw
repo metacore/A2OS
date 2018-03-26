@@ -73,6 +73,8 @@ CONST
 	ST0 = InstructionSet.regST0; 
 	XMM0 = InstructionSet.regXMM0; 
 	XMM7 = InstructionSet.regXMM7; 
+	YMM0 = InstructionSet.regYMM0; 
+	YMM7 = InstructionSet.regYMM7; 
 	Low = 0; 
 	High = 1; 
 	FrameSpillStack = TRUE; 
@@ -147,10 +149,6 @@ TYPE
 		PROCEDURE ^ GetImmediateMem(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR imm: Assembler.Operand); 
 		PROCEDURE ^ GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit: BOOLEAN); 
 		PROCEDURE ^ GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand); 
-		PROCEDURE ^ HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
-		PROCEDURE ^ HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
-		PROCEDURE ^ GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ ParameterRegister*(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT; 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket); 
 		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket); 
 		PROCEDURE ^ MakeRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand); 
@@ -207,12 +205,16 @@ TYPE
 		bits: LONGINT; 
 		traceable: BOOLEAN; 
 		forceFPU: BOOLEAN; 
-		winAPIRegisters, cRegisters: Backend.Registers; 
+		winAPIRegisters: ARRAY 4 OF LONGINT; 
+		cRegisters: ARRAY 6 OF LONGINT; 
 
 		PROCEDURE ^  & InitBackendAMD64; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
 		PROCEDURE ^ GetSystem*(): Global.System; 
-		PROCEDURE ^ GetParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): Backend.Registers; 
+		PROCEDURE ^ NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE; 
+		PROCEDURE ^ HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
+		PROCEDURE ^ HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
+		PROCEDURE ^ ParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; index: LONGINT): LONGINT; 
 		PROCEDURE ^ SupportedInstruction*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GenerateBinary(module: Sections.Module; dump: Streams.Writer); 
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 

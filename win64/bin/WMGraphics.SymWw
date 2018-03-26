@@ -14,11 +14,13 @@ CONST
 	Transparent* = 0; 
 	Gray* = 2004318207; 
 	Red* = LONGINT(0FF0000FFH); 
+	DarkRed* = LONGINT(8C0000FFH); 
 	Green* = 16711935; 
 	Blue* = 65535; 
 	Yellow* = LONGINT(0FFFF00FFH); 
 	Magenta* = LONGINT(0FF00FFFFH); 
 	Cyan* = 16777215; 
+	Gold* = LONGINT(0FFD700FFH); 
 	AlignLeft* = 0; 
 	AlignCenter* = 1; 
 	AlignRight* = 2; 

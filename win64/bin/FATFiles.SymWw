@@ -244,8 +244,8 @@ TYPE
 
 		PROCEDURE ^  & Init*(fs: Files.FileSystem); 
 		PROCEDURE ^ InitSize; 
-		PROCEDURE ^ ReadBuffer*(buffer: Buffer; pos: LONGINT); 
-		PROCEDURE ^ WriteBuffer*(buffer: Buffer); 
+		PROCEDURE ^ ReadBuffer(buffer: Buffer; pos: LONGINT); 
+		PROCEDURE ^ WriteBuffer(buffer: Buffer); 
 	END RootDirectory1216; 
 
 	RootDirectory32 = OBJECT {EXCLUSIVE} (RootDirectory)

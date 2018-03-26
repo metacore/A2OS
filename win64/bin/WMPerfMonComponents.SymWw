@@ -154,7 +154,7 @@ TYPE
 		PROCEDURE ^ Resized*(width, height: LONGINT); 
 		PROCEDURE ^ SetActive*(active: BOOLEAN); 
 		PROCEDURE ^  & New*(plugin: Plugins.Plugin; c: WMRestorable.Context); 
-		PROCEDURE ^ LoadFromXml(configuration: XML.Element); 
+		PROCEDURE ^ LoadFromXml*(configuration: XML.Element); 
 		PROCEDURE ^ StoreToXml(): XML.Element; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 

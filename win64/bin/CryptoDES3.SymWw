@@ -1,5 +1,5 @@
 MODULE CryptoDES3;
-	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, DES := CryptoDES, S := SYSTEM;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
 CONST 
 TYPE 
 	Cipher* = OBJECT (Ciphers.Cipher)

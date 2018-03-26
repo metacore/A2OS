@@ -89,6 +89,7 @@ CONST
 	bits32* = 4; 
 	bits64* = 8; 
 	bits128* = 16; 
+	bits256* = 32; 
 	opCode = InstructionSet.opCode; 
 	modRMExtension = InstructionSet.modRMExtension; 
 	modRMBoth = InstructionSet.modRMBoth; 
@@ -108,6 +109,8 @@ CONST
 	mem128Operand = InstructionSet.mem128Operand; 
 	fpStackOperand = InstructionSet.fpStackOperand; 
 	directMemoryOffset = InstructionSet.directMemoryOffset; 
+	RXB = InstructionSet.RXB; 
+	Src1Prefix = InstructionSet.Src1Prefix; 
 	maxNumberOperands = InstructionSet.maxNumberOperands; 
 	reg8* = InstructionSet.reg8; 
 	reg16* = InstructionSet.reg16; 
@@ -118,6 +121,7 @@ CONST
 	segReg* = InstructionSet.segReg; 
 	mmx* = InstructionSet.mmx; 
 	xmm* = InstructionSet.xmm; 
+	ymm* = InstructionSet.ymm; 
 	mem* = InstructionSet.mem; 
 	sti* = InstructionSet.sti; 
 	imm* = InstructionSet.imm; 

@@ -403,6 +403,12 @@ TYPE
 			BEGIN
 				RETURN {InstructionSet.cpuFPU} * InstructionSet.instructions[instr].cpuOptions # {}
 			END FPOperation;
+			
+			PROCEDURE IsPreREXPrefix(c1,c2: CHAR): BOOLEAN;
+			BEGIN
+				RETURN (c1 = CHR(opCode)) & ((c2 = 0F2X) OR (c2 = 0F3X) ) ;
+			END IsPreREXPrefix;
+			
 
 		BEGIN
 			IF (dump # NIL) & (lastPass) THEN
@@ -551,9 +557,19 @@ TYPE
 			IF InstructionSet.optPREP IN bitwidthOptions THEN code.PutByte (InstructionSet.prfREP) END;
 			IF InstructionSet.optPREPN IN bitwidthOptions THEN code.PutByte (InstructionSet.prfREPNE) END;
 
+
+			op := 0;
+
+			oppos := 0;
+			val := -1;
+
 			IF rexPrefix # {} THEN
 				ASSERT(cpuBits = bits64);
 				byte := 40H;
+				WHILE (oppos < LEN(opcode)-1) & IsPreREXPrefix(opcode[oppos], opcode[oppos+1]) DO
+					code.PutByte(ORD(opcode[oppos+1])); 
+					INC(oppos,2); 
+				END;
 				IF rexB IN rexPrefix THEN byte := byte + 1H END;
 				IF rexX IN rexPrefix THEN byte := byte + 2H END;
 				IF rexR IN rexPrefix THEN byte := byte + 4H END;
@@ -561,12 +577,9 @@ TYPE
 				code.PutByte (byte);
 			END;
 
-			op := 0;
-
-			oppos := 0;
-			val := -1;
 
 			WHILE (oppos < LEN(opcode)) & (opcode[oppos] # CHR(none)) DO
+
 				IF opcode[oppos] = CHR(opCode) THEN
 					IF Trace THEN KernelLog.String("opcode "); KernelLog.Hex(ORD(opcode[oppos+1]),-2);  END;
 					IF val # -1 THEN code.PutByte (val) END;

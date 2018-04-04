@@ -225,6 +225,7 @@ VAR
 	res1: LONGINT;
 	port: Port;
 BEGIN{EXCLUSIVE}
+	res := 0;
 	IF (portNumber >= 1) & (portNumber <= LEN(ports)) & (ports[portNumber-1] # NIL) THEN
 
 		port := ports[portNumber-1];
@@ -281,35 +282,48 @@ BEGIN
 END IsTracePort;
 
 (**
-	Get serial port parameter from an input stream
+	Get serial port parameters from an input stream
 
-	The format of the stream is expected to be as [portNumber bps data parity stop]
+	The format of the stream is expected to be as [portNumber bps data parity stop] exactly in this predefined order;
 
-	where
+	portNumber is obligatory parameter, the othe parameters are optional; if not specified they will be assigned to
+	default values (DefaultBPS, DefaultDataBits, DefaultParity, DefaultStop)
+
+	The format of parity and stop parameters is as follows:
+
 		parity = "odd"|"even"|"mark"|"space"|"no"
 		stop = "1"|"1.5"|"2"
+
+	params: set of parameters specified by the user (0-bps, 1-data, 2-parity, 3-stop)
+	res: error code, 0 in case of success
 *)
-PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR res: LONGINT);
-VAR str : ARRAY 32 OF CHAR;
+PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR params: SET; VAR res: LONGINT);
+VAR
+	str : ARRAY 32 OF CHAR;
+	d: LONGINT;
 BEGIN
 	res := 0;
 
 	IF ~r.GetInteger(portNumber,FALSE) OR (GetPort(portNumber) = NIL) THEN
-		res := NoSuchPort; RETURN;
+		res := NoSuchPort;
+		RETURN;
 	END;
 
-	data := DefaultDataBits; parity := DefaultParity; stop := DefaultStop;
+	params := {};
+	bps := DefaultBPS; data := DefaultDataBits; parity := DefaultParity; stop := DefaultStop;
 
-	IF ~r.GetInteger(bps, FALSE) THEN
-		bps := DefaultBPS; RETURN;
+	IF r.GetInteger(d, FALSE) THEN
+		bps := d; INCL(params,0);
+	ELSE RETURN;
 	END;
 
-	IF ~r.GetInteger(data, FALSE) THEN
-		data := DefaultDataBits; RETURN;
+	IF r.GetInteger(d, FALSE) THEN
+		data := d; INCL(params,1);
+	ELSE RETURN;
 	END;
 
 	IF ~r.GetString(str) THEN
-		parity := DefaultParity; RETURN;
+		RETURN;
 	END;
 
 	IF str = "odd" THEN
@@ -322,11 +336,13 @@ BEGIN
 		parity := ParSpace
 	ELSIF str # "no" THEN
 		res := WrongParity;
-		RETURN
+		RETURN;
 	END;
 
+	INCL(params,2);
+
 	IF ~r.GetString(str) THEN
-		stop := DefaultStop; RETURN;
+		RETURN;
 	END;
 
 	IF str = "1.5" THEN
@@ -335,7 +351,10 @@ BEGIN
 		stop := Stop2
 	ELSIF str # "1" THEN
 		res := WrongStop;
+		RETURN;
 	END;
+
+	INCL(params,3);
 END GetPortParameters;
 
 (**
@@ -343,14 +362,14 @@ END GetPortParameters;
 
 	SetTrace portNumber bps data parity stop~
 
-	Set portNumber to a value < 0 for disabling trace output over an already set up serial port
+	portNumber: serial port number, or 0 to disable trace output, or a negative value for rolling back to the initial trace output configuration
 *)
 PROCEDURE SetTrace*(context: Commands.Context);
 VAR
-	portNumber, bps, data, parity, stop, res: LONGINT;
+	portNumber, bps, data, parity, stop, res: LONGINT; params: SET;
 BEGIN
-	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, res);
-	IF (portNumber >= 0) & (res # 0) THEN
+	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, params, res);
+	IF (portNumber > 0) & (res # 0) THEN
 		context.result := 1;
 		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
 		RETURN;

@@ -149,6 +149,8 @@ TYPE
 
 		commandHistory : CommandHistory;
 		firstCR : CHAR;
+		
+		currentCommand: Command;
 
 		PROCEDURE &Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR);
 		BEGIN
@@ -557,7 +559,9 @@ TYPE
 					IF (res # Commands.Ok) THEN
 						context.error.String(errormsg); context.error.Ln;
 					ELSE
+						currentCommand := c;
 						Commands.Activate(c.command, c.context, flags, res, msg);
+						currentCommand := NIL;
 				(*		IF wait & (cmd.pipe # NIL) THEN
 							KernelLog.String("Pipe closed"); KernelLog.Ln;
 							cmd.pipe.Close;
@@ -602,6 +606,14 @@ TYPE
 			END;
 			context.out.Update; context.error.Update
 		END Run;
+		
+		(**
+			Returns TRUE if the given context is the context of currently executed command
+		*)
+		PROCEDURE IsCurrentCmdContext*(context: Commands.Context): BOOLEAN;
+		BEGIN
+			RETURN context = currentCommand.context;
+		END IsCurrentCmdContext;
 
 		PROCEDURE AwaitDeath*;
 		BEGIN {EXCLUSIVE}

@@ -58,4 +58,4 @@ oberon: build
 
 clean:
 	@rm -f modules dependencies build *.SymU *.GofU *.Log *.log
-	@rm -rf Linux32G Win32G
+	@rm -rf Linux32G Win32G Win64G

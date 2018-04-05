@@ -37,7 +37,7 @@ TYPE
 		type*: LONGINT;
 		source*: ARRAY 128 OF CHAR;
 		position*, errorCode*: LONGINT;
-		message*: ARRAY 128 OF CHAR;
+		message*: ARRAY 256 OF CHAR;
 		next*: Entry;
 	END;
 

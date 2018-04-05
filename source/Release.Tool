@@ -413,8 +413,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	NATIVEORIG, NATIVEGEN { Objects.Mod Kernel.Mod }
 	WINORIG, WINGEN32 { Win32.Objects.Mod }
-	WINGEN64 {WIn64.Objects.Mod}
-	WINGEN{Win32.Kernel.Mod}
+	WINGEN64 { Win64.Objects.Mod }
+	WINGEN { Win32.Kernel.Mod }
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
 	UNIXG { Generic.Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }

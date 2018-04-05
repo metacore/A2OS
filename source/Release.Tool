@@ -2,7 +2,7 @@
 #
 # A2
 #
-# 	Release.Build A2 ~
+#	Release.Build A2 ~
 #
 #	Bootimage (IDE)
 #	Linker.Link \PAOS: \.Obx AOS:IDE.Bin 0100000H 1000H Kernel Traps
@@ -32,57 +32,57 @@
 #
 # There are two different variants of WinAOS:
 #
-# 	Internal version: Oberon Application runs in a WinAos  Window
+#	Internal version: Oberon Application runs in a WinAos Window
 #
-# 	Release.Build --build WinAos ~
-#
-#	Bootimage
-#	PELinker.Link --path=../obj/  Win32.Aos.Link ~
-#
-# 	External version: Oberon Applications runs in a separate MS Windows Window
-#
-# 	Release.Build eWinAos ~
+#	Release.Build --build WinAos ~
 #
 #	Bootimage
-#	PELinker.Link  --path=../ObjE/ Win32.Aos.Link ~
+#	PELinker.Link --path=../obj/ Win32.Aos.Link ~
+#
+#	External version: Oberon Applications runs in a separate MS Windows Window
+#
+#	Release.Build eWinAos ~
+#
+#	Bootimage
+#	PELinker.Link --path=../ObjE/ Win32.Aos.Link ~
 #
 # WINAOS generic
 #	Release.Build Win32G ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
-#  Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
-# 	Command line shell:
-# StaticLinker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace StdIO  Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
+#	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader BootConsole ~
+#	Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
+# Command line shell:
+# StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 #
 # LinuxAOS Generic
 #	Release.Build Linux32G ~
 # Command line version:
-# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  Shell SystemTools StdIOShell ~
+#	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader Shell SystemTools StdIOShell ~
 # X11 Bootconsole:
-# 	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
+#	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader BootConsole ~
 #
 # SolarisAOS Generic
 #    Release.Build Solaris32G ~
 # X11 Bootconsole:
-#    StaticLinker.Link -p=Solaris32G 	--path=NewAos/
-#		Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  
-#		Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics 
-#		BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
-#    UnixBinary.Build  oberon.bin  ->  A2Core ~
+#    StaticLinker.Link -p=Solaris32G --path=NewAos/
+#		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
+#		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
+#		BitSets StringPool GenericLinker Reflection GenericLoader BootConsole ~
+#    UnixBinary.Build oberon.bin -> A2Core ~
 #
 # DarwinAOS Generic
 #    Release.Build Darwin32G ~
 # X11 Bootconsole:
-#    StaticLinker.Link -p=Darwin32G 	--path=NewAos/
-#		Runtime Trace Glue Unix  Machine  Heaps Modules  Objects  Kernel  KernelLog Streams  Pipes  
-#		Commands  StdIO  TrapWriters  Traps Files  UnixFiles  Clock  Dates  Reals  Strings  Diagnostics 
-#		BitSets  StringPool  GenericLinker  Reflection  GenericLoader BootConsole ~
-#    UnixBinary.Build  oberon.bin  ->  A2Core ~
+#    StaticLinker.Link -p=Darwin32G --path=NewAos/
+#		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
+#		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
+#		BitSets StringPool GenericLinker Reflection GenericLoader BootConsole ~
+#    UnixBinary.Build oberon.bin -> A2Core ~
 #
 # WINAOS Cooperative
-#	Release.Build  --path="./" WinAosCooperative ~
+#	Release.Build --path="./" WinAosCooperative ~
 #	StaticLinker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader BootConsole ~
 #	FSTools.CloseFiles A2.exe ~
-# 
+#
 # Notes:
 #	-	The command PELinker.Link creates the Aos.exe executable file. Per default, it will be created in the Work folder.
 #	-	The configuration file aos.ini specifies from which directory the object files are loaded. If you want to switch between the
@@ -111,7 +111,7 @@
 #	the Release.Build command.
 #
 #	COMPILEOPTIONS, TARGET, EXTENSION & PATH
-# 	Command line options for the compiler. These options can be overriden by using the --target, --extension and --path  option of the
+#	Command line options for the compiler. These options can be overriden by using the --target, --extension and --path option of the
 #	Release.Build command.
 #	The release tool be generate the compiler option string like : COMPILEOPTIONS + " \d" + TARGET + " \." + EXTENSION + " \P" + PATH
 #
@@ -298,7 +298,7 @@ BUILDS
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
-	}		
+	}
 	DarwinAos {
 		INCLUDE "UNIX UNIX32 DARWIN UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
@@ -320,7 +320,7 @@ BUILDS
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
-	}		
+	}
 	SolarisAos {
 		INCLUDE "UNIX UNIX32 SOLARIS UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
@@ -342,21 +342,21 @@ BUILDS
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
-	}		
+	}
 END
 
 PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kernel"
 
 	License.Text
-	OBEMBR.BIN 												# MBR
-	BootManagerMBR.Bin BootManagerTail.Bin 					# Boot manager
+	OBEMBR.BIN												# MBR
+	BootManagerMBR.Bin BootManagerTail.Bin					# Boot manager
 	BootManager.Bin BootManager.Text
-	OBL.Bin OBL.Text 											# Boot loader
+	OBL.Bin OBL.Text											# Boot loader
 	Setup.Text													# Documentation
 
 # Active Oberon run-time
 
-	 # Runtime support for HUGEINT and strings
+	# Runtime support for HUGEINT and strings
 	UNCOOP32 { Runtime.Mod }
 	UNCOOP64 { AMD64.Runtime.Mod }
 	I386COOP { I386.CPU.Mod }
@@ -369,7 +369,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod}
-	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod  Win32.Timer.Mod}
+	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod}
 	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
@@ -381,12 +381,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	LINUXG { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
 	DARWING { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
 	SOLARISG { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
-	
+
 	UNIX { Unix.Glue.Mod }
 	LINUX { Linux.I386.Unix.Mod }
-	DARWIN { Darwin.I386.Unix.Mod }  
+	DARWIN { Darwin.I386.Unix.Mod }
 	SOLARIS { Solaris.I386.Unix.Mod }
-	
+
 	WINORIG { Win32.Kernel32.Mod}
 	WINGEN32 {Generic.Win32.Kernel32.Mod}
 	WINGEN64 {Generic.Win64.Kernel32.Mod}
@@ -402,7 +402,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	UNIX32 { Unix.I386.Machine.Mod }
 	UNIXG32 { Generic.Unix.I386.Machine.Mod }
-	
+
 	NATIVEORIG, NATIVEGEN, WINORIG, WINGEN, UNIXG { Heaps.Mod }
 	UNIX { Unix.Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
@@ -432,7 +432,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	In.Mod Out.Mod
 
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Reals.Mod }
-	AMD64,  WINGEN64 { AMD64.Reals.Mod }
+	AMD64, WINGEN64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -443,12 +443,12 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	NATIVEORIG, NATIVEGEN { Traps.Mod }
 	AMD64 { AMD64.Traps.Mod }
 	ARM { ARM.Traps.Mod }
-	WINORIG, WINGEN32 {  Win32.Traps.Mod }
+	WINORIG, WINGEN32 { Win32.Traps.Mod }
 	WINGEN64 {Win64.Traps.Mod}
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	UNIXG { Unix.StdIO.Mod Generic.Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
-	WINGEN {Win32.WinTrace.Mod Win32.StdIO.Mod } 
+	WINGEN {Win32.WinTrace.Mod Win32.StdIO.Mod }
 
 	# Recursive and R/W locks
 	Locks.Mod
@@ -478,7 +478,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	FileTrapWriter.Mod
 
-	Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod 	# file systems
+	Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod	# file systems
 	FATVolumes.Mod FATFiles.Mod
 	ISO9660Volumes.Mod ISO9660Files.Mod
 
@@ -502,8 +502,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	Displays.Mod
 
-	 # input drivers
- 	Inputs.Mod
+	# input drivers
+	Inputs.Mod
 
 	# Command line option parser
 	Options.Mod
@@ -513,7 +513,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	EventsUtils.Mod
 	EventsKernelLog.Mod EventsFileLog.Mod EventsMemoryLog.Mod
 
-	DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod XMLParser.Mod 	# XML parser (swalther)
+	DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod XMLParser.Mod	# XML parser (swalther)
 	Configuration.Mod Configuration.XML Save.Configuration.XML FileHandlers.Mod		# XML-based configuration file
 
 	BootShell.Mod
@@ -528,7 +528,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	WIN { Win32.GDI32.Mod }
 	WINORIG, WINGEN { Win32.Display.Mod }
 	WINCOOP { Coop.Win32.Display.Mod }
-	
+
 	WIN {
 		Win32.WSock32.Mod
 		Win32.Network.Mod
@@ -543,10 +543,10 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	ARM { ARM.IP.Mod ARM.IPv4.Mod }
 
 	NATIVE {
-		IPv6.Mod ICMP.Mod UDP.Mod DNS.Mod 	# IP, UDP, TCP
+		IPv6.Mod ICMP.Mod UDP.Mod DNS.Mod	# IP, UDP, TCP
 		TCP.Mod DHCP.Mod
 		InitNetwork.Mod MinInitNetwork.Mod						# network initialisation
-		Ping.Mod TraceRoute.Mod TCPPortLog.Mod	 	# network tools
+		Ping.Mod TraceRoute.Mod TCPPortLog.Mod		# network tools
 	}
 
 	UNIX, UNIXG {
@@ -554,7 +554,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Unix.Sockets.Mod
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}
-	
+
 	UNIX, UNIXG { UnixBinary.Mod }
 
 	# Serial port interface
@@ -587,7 +587,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	WIN { Win32.Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
-	UNIX, UNIXG { Unix.OpenAL.Mod  OpenALSound.Mod }
+	UNIX, UNIXG { Unix.OpenAL.Mod OpenALSound.Mod }
 
 	WIN { Win32.WinDisks.Mod } # direct windows disk access, implements Disks interface
 
@@ -643,7 +643,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		# USB HID class driver
 		UsbHid.Mod
 		UsbMouse.Mod
-		
+
 		#USB <-> RS232 FTDI driver
 		UsbFTDI.Mod
 	}
@@ -669,7 +669,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		Bluetooth.Mod BluetoothUART.Mod UsbBluetooth.Mod BluetoothUSB.Mod
 		BluetoothHCI.Mod BluetoothL2CAP.Mod BluetoothRFCOMM.Mod
 	}
-	
+
 	NATIVEORIG {
 		# Floppy disk driver
 		Diskettes.Mod
@@ -681,24 +681,24 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 
 	StringPool.Mod Diagnostics.Mod Debugging.Mod
 
-	Fox.Tool	
+	Fox.Tool
 	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
-	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
-	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerPrinter.Mod  FoxPrintout.Mod
-	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
+	FoxBasic.Mod FoxProgTools.Mod FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
+	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerPrinter.Mod FoxPrintout.Mod
+	FoxParser.Mod FoxCSharpParser.Mod FoxSemanticChecker.Mod
 	FoxBackend.Mod FoxSections.Mod FoxFrontend.Mod
-	FoxCompiler.Mod  FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+	FoxCompiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
 	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
 	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
 	FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
-	FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod 
-	FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod 
+	FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod
+	FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod
 
 	FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
-	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod 
+	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod
 	FoxDocumentationParser.Mod FoxDocumentationBackend.Mod
 
 	FoxProfiler.Mod
@@ -738,7 +738,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
-	Random.Mod  Drand48.Mod
+	Random.Mod Drand48.Mod
 
 	SerialsVirtual.Mod # Virtual serial port (implements Serials interface)
 
@@ -767,7 +767,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	CRC.Mod
 	Inflate.Mod # decompression on streams
-	Unzip.Mod 	# zip file support
+	Unzip.Mod	# zip file support
 	ZipFS.Mod
 
 	Codecs.Mod	# Codec Defintions
@@ -809,7 +809,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CompilerInterface.Mod FoxTextCompiler.Mod
 
 	# PC - Parallel Compiler (self-compile only)
-	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod 	# prk
+	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
 	I386,WINORIG,WINGEN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
@@ -827,7 +827,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	Tar.Mod
 
-	Zlib.Mod ZlibBuffers.Mod ZlibDeflate.Mod ZlibInflate.Mod 	# Zlib
+	Zlib.Mod ZlibBuffers.Mod ZlibDeflate.Mod ZlibInflate.Mod	# Zlib
 	ZlibWriters.Mod ZlibReaders.Mod Zip.Mod ZipTool.Mod	# Zip FS prk
 
 	BIT.Mod
@@ -862,17 +862,17 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	Installer.Mod InstallerPackages.XML
 
 	CryptoBigNumbers.Mod CryptoBase64.Mod CryptoUtils.Mod CryptoCiphers.Mod CryptoARC4.Mod
-	CryptoDES.Mod CryptoDES3.Mod 
+	CryptoDES.Mod CryptoDES3.Mod
 	CryptoHashes.Mod CryptoMD5.Mod CryptoSHA1.Mod CryptoSHA256.Mod
 	CryptoKeccakF1600.Mod CryptoKeccakSponge.Mod CryptoSHA3.Mod CryptoCSPRNG.Mod
 	CryptoPrimes.Mod CryptoDSA.Mod CryptoDiffieHellman.Mod
 	CryptoAES.Mod
 	CryptoBlowfish.Mod
 	CryptoTwofish.Mod
-	CryptoCAST.Mod 
+	CryptoCAST.Mod
 	CryptoHMAC.Mod CryptoIDEA.Mod
 	CryptoRSA.Mod
-	
+
 	Checksum.Mod	# MD5, SHA1 and SHA3 checksum generator
 END
 
@@ -889,14 +889,14 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	V24Tracer.Mod	# Trace serialport
 
-	XMLGeneratorSchema.Mod CSS2.Mod CSS2Scanner.Mod CSS2Parser.Mod 	# XML & CSS (swalther)
+	XMLGeneratorSchema.Mod CSS2.Mod CSS2Scanner.Mod CSS2Parser.Mod	# XML & CSS (swalther)
 
 	RAWPrinter.Mod LPR.Mod	# Sending ps files to Printers
 
-	ASN1.Mod  PKCS1.Mod  X509.Mod  TLS.Mod
+	ASN1.Mod PKCS1.Mod X509.Mod TLS.Mod
 	bluebottleselfsigned.der
 
-	TCPServices.Mod  TestServer.Mod 	# TCP services
+	TCPServices.Mod TestServer.Mod	# TCP services
 	TCPTools.Mod						# Some useful TCP-related commands
 
 	NATIVEORIG { Performance.Mod }
@@ -910,14 +910,14 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	GZip.Mod
 
-	ShellCommands.Mod Telnet.Mod 	# Telnet Shell (currently broken)
+	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
 	I386ORIG { I386.MemInfo.Mod }	# basic tools module
 	AMD64ORIG { AMD64.MemInfo.Mod }
 	I386,WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod
-	TFLog.Mod WebHTTP.Mod 							# extended HTTP Server (tf/be)
+	TFLog.Mod WebHTTP.Mod							# extended HTTP Server (tf/be)
 	WebHTTPClient.Mod WebHTTPTools.Mod WebHTTPServer.Mod
 	WebHTTPServerTools.Mod WebSSMPPlugin.Mod
 	NATIVE,WIN { WebDefaultSSMP.Mod }
@@ -928,11 +928,11 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	POP3Client.Mod
 
 	RFC865Client.Mod
-	QuoteServer.Mod Quotes.txt 	# quote server (be)
+	QuoteServer.Mod Quotes.txt	# quote server (be)
 
 	NATIVE {
-		RfsConnection.Mod RfsClientProxy.Mod RfsFS.Mod 	# Rfs (pstuedi)
-		TFTP.Mod TFTPServer.Mod TFTPFS.Mod 			 	# TFTP (be)
+		RfsConnection.Mod RfsClientProxy.Mod RfsFS.Mod	# Rfs (pstuedi)
+		TFTP.Mod TFTPServer.Mod TFTPFS.Mod				# TFTP (be)
 	}
 
 	FTPFS.Mod
@@ -955,29 +955,29 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	DES.Mod VNCServer.Mod
 
 	# Audio codecs
-	WAVCodec.Mod 	# WAV support
-	MP3Decoder.Mod MP3Huffman.Bin  # MP3 Decoder
+	WAVCodec.Mod	# WAV support
+	MP3Decoder.Mod MP3Huffman.Bin # MP3 Decoder
 
 	# Video codecs
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
-		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod 	# MPEG1/2 Support
+		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod	# MPEG1/2 Support
 	}
 
 	# Image codecs
 	JPEG2000DecoderUtil.Mod JPEG2000DecoderCS.Mod JPEG2000Decoder.Mod
 
 	MD5.Mod	# Temporarily moved here from gadgets
-	HTTPSupport.Mod HTTPSession.Mod DynamicWebpage.Mod 	# Dynamic Webpages support
+	HTTPSupport.Mod HTTPSession.Mod DynamicWebpage.Mod	# Dynamic Webpages support
 	DynamicWebpagePlugin.Mod PrevalenceSystem.Mod
 	WMDropTarget.Mod
 	GenericSort.Mod WebStd.Mod WebComplex.Mod
 
-	WMCharCodes.Mod HTMLScanner.Mod HTMLParser.Mod gb2312.txt 	# Webbrowser
+	WMCharCodes.Mod HTMLScanner.Mod HTMLParser.Mod gb2312.txt	# Webbrowser
 	NewHTTPClient.Mod
 
-	UnihanParser.Mod  Radicals.txt	# Unicode tool
+	UnihanParser.Mod Radicals.txt	# Unicode tool
 
 	CSV.Mod # support for comma separated value files
 END
@@ -991,7 +991,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMDefaultWindows.Mod
 
 	WMDefaultFont.Mod WMFontManager.Mod WMOberonFonts.Mod WMCCGFonts.Mod WMBitmapFont.Mod	# Font support
-	OpenTypeInt.Mod OpenTypeScan.Mod OpenType.Mod OpenTypeFonts.Mod  WMOTFonts.Mod	# OpenType Fonts
+	OpenTypeInt.Mod OpenTypeScan.Mod OpenType.Mod OpenTypeFonts.Mod WMOTFonts.Mod	# OpenType Fonts
 	OberonFonts.Mod # OpenType Fonts to Oberon Fonts
 
 	cjkfont.bfnt # since used as fallback
@@ -1019,10 +1019,10 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	PositionDebugging.Mod
 	SyntaxHighlighter.Mod SyntaxHighlighter.XML
 	WMTextView.Mod WMInputMethods.Mod
-	WMEditors.Mod 												# Editor
+	WMEditors.Mod												# Editor
 	WMSearchComponents.Mod
 	WMMacros.Mod Macros.XML									# Editor extension
-	WMGrids.Mod WMStringGrids.Mod 							# Grid components
+	WMGrids.Mod WMStringGrids.Mod							# Grid components
 	WMTrees.Mod WMMixer.Mod WMTabComponents.Mod
 	WMColorComponents.Mod
 	WMAnimations.Mod
@@ -1046,7 +1046,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 # Programmer's Editing Tool
 	ModuleParser.Mod
- 	ModuleTrees.Mod ModuleTreesIcons.tar
+	ModuleTrees.Mod ModuleTreesIcons.tar
 	WMXMLTree.Mod
 
 	WMDiagnostics.Mod
@@ -1068,7 +1068,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMUtilities.Mod WMTrapWriter.Mod							# Window Manager Utilities
 	FoxA2Interface.Mod												# Compiler Debug Windows
 
-	WMMenus.Mod 												# menu support
+	WMMenus.Mod												# menu support
 	WMDiagramComponents.Mod
 
 	MainMenu.Mod	# menu system
@@ -1103,7 +1103,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	NATIVE { WMTCPTracker.Mod }
 	WIN { Win32.WMTCPTracker.Mod }
 
-	WMKernelLog.Mod  # GUI for KernelLogger.Mod
+	WMKernelLog.Mod # GUI for KernelLogger.Mod
 	WMEventLog.Mod	# GUI for Events.Mod
 
 # Partitions Framework GUIs
@@ -1144,7 +1144,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonPluginProcesses.Mod
 	WMPerfMonPluginSerials.Mod	# perfmon device plugins
 	WMPerfMonPluginNetwork.Mod WMPerfMonPluginDisks.Mod
-	WMPerfMonPluginPerfMon.Mod 	# perfmon misc plugins
+	WMPerfMonPluginPerfMon.Mod	# perfmon misc plugins
 	WMPerfMonPluginEvents.Mod WMPerfMonPluginMessages.Mod
 
 	WMPerfMonComponents.Mod	# GUI
@@ -1236,7 +1236,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	ComponentViewer.Mod
 
 	WMScreenShot.Mod
-	WMBackdrop.Mod mars.png BluebottlePic0.png 	# Backdrop
+	WMBackdrop.Mod mars.png BluebottlePic0.png	# Backdrop
 
 	# Installer
 	WMInstaller.Mod WMInstaller.tar
@@ -1252,7 +1252,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	SynergyClient.Mod			# Synergy
 
 	NATIVE {
- 		TVChannels.Mod  	# TV
+		TVChannels.Mod	# TV
 		TVChannels.XML
 		TeletextDecoder.Mod
 		TV.Mod
@@ -1273,7 +1273,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	DTPRect.Mod
 	DTPImage.Mod
 
-	GfxMatrix.Mod GfxImages.Mod GfxPaths.Mod GfxRegions.Mod 	# Gfx (eos)
+	GfxMatrix.Mod GfxImages.Mod GfxPaths.Mod GfxRegions.Mod	# Gfx (eos)
 	GfxFonts.Mod Gfx.Mod GfxRaster.Mod GfxBuffer.Mod
 	WMGraphicsGfx.Mod
 
@@ -1283,7 +1283,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	SVGFilters.Mod SVGRenderer.Mod SVGLoader.Mod SVGDecoder.Mod	# SVG support
 
 	WebBrowserComponents.Mod
-	XMLTransformer.Mod HTMLTransformer.Mod  WebBrowserPanel.Mod WebBrowser.Mod
+	XMLTransformer.Mod HTMLTransformer.Mod WebBrowserPanel.Mod WebBrowser.Mod
 
 	MailStorage.Mod BimboMail.Mod
 
@@ -1300,8 +1300,8 @@ PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and 
 	Bimso.Mod
 
 	# Demos
-	WMScribble.Mod 
-	#WMGraphicsDemo.Mod 
+	WMScribble.Mod
+	#WMGraphicsDemo.Mod
 	SortDemo.Mod
 	Demos.rep
 	FractalDemo.Mod
@@ -1314,7 +1314,7 @@ PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and 
 	W3dMenu.Mod W3dMenu.XML
 	W3dMenuIcons.tar
 	CATServer.Mod
-	W3dClusterWatch.Mod W3dClusterWatchIcons.tar Cluster.XML  # 3D Cluster monitor tool
+	W3dClusterWatch.Mod W3dClusterWatchIcons.tar Cluster.XML # 3D Cluster monitor tool
 
 	# Slide show
 	WMSlideshow.Mod RetoWMSlideshow.XML SlideShowData.tar
@@ -1337,7 +1337,7 @@ END
 PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests and benchmarks"
 
 	# Compiler Testsuite
-	TestSuite.Mod  PCTest.Mod Versioning.Mod FoxTest.Mod
+	TestSuite.Mod PCTest.Mod Versioning.Mod FoxTest.Mod
 
 	Oberon.Compilation.Test Oberon.Execution.Test
 	MathArrays.Compilation.Test MathArrays.Execution.Test
@@ -1366,7 +1366,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 	BenchXML.Mod
 	BenchSyntaxHighlighter.Mod
 
-	testutf8.txt 	# utf8 sample file
+	testutf8.txt	# utf8 sample file
 
 	# Crypto framework tests
 	CryptoTestBigNumbers.Mod CryptoTestCiphers.Mod
@@ -1402,36 +1402,36 @@ PACKAGE Education ARCHIVE "Education.zip" SOURCE "EducationSrc.zip" DESCRIPTION 
 
 	# Dynamic Webpage examples
 	WebAccounts.Mod WebForum.Mod ExerciseGroups.Mod	# Active Elements Examples
-	DynamicWebpagePlugin.Text accounts.dxp rotator.dxp test0.dxp 	# Dynamic Pages Examples
+	DynamicWebpagePlugin.Text accounts.dxp rotator.dxp test0.dxp	# Dynamic Pages Examples
 	test1.dxp test2.dxp test3.dxp
 	test4.dxp tutorial1.dxp
 	tutorial2.dxp tutorial3.dxp tutorial4.dxp tutorial5.dxp tutorial6.dxp
 
-	public.form.html public.info.ssmp public.System.ssmp public.ActiveObjects.ssmp 	# sample extended website
+	public.form.html public.info.ssmp public.System.ssmp public.ActiveObjects.ssmp	# sample extended website
 	public.Memory.ssmp public.WebServer.ssmp
 END
 
-PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip"  DESCRIPTION "Build Tools"
+PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip" DESCRIPTION "Build Tools"
 	Build.Tool Build.VMWare.Tool
 	WIN { Win32.Build.Tool Win32.BuildMini.Tool }
 	AosInst.Tool Aos.Par			# Install tool
 	IsoImages.Mod
-	ReleaseThreadPool.Mod Release.Mod Release.Tool 	# Build release tool
+	ReleaseThreadPool.Mod Release.Mod Release.Tool	# Build release tool
 	PETReleaseTree.Mod
 	Linker0.Mod Linker1.Mod Linker.Mod
 	WIN { Win32.Aos.Link }
-	UNIX { 
-		Unix.BootLinkerHeaps.Mod Unix.BootLinkerModules.Mod Unix.BootLinkerLoader.Mod  
+	UNIX {
+		Unix.BootLinkerHeaps.Mod Unix.BootLinkerModules.Mod Unix.BootLinkerLoader.Mod
 		Unix.BootLinker.Mod UnixAos.Tool
 	}
-	OBEMBR4.ASM BootManager.Asm OBL.Asm  # Asm
+	OBEMBR4.ASM BootManager.Asm OBL.Asm # Asm
 	BootManager.Mod BootManager.Tool # Splits up BootManager.Bin into BootManagerMBR.Bin and BootManagerTail.Bin
 END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
 	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 {I386.EFIMachine.Mod}
-	AMD64,  WINGEN64 { AMD64.EFIMachine.Mod }
+	AMD64, WINGEN64 { AMD64.EFIMachine.Mod }
 
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
@@ -1443,13 +1443,13 @@ PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader a
 	EFITest.Mod EFIGraphicalConsole.Mod EFIA2Loader.Mod
 END
 
-PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip"  DESCRIPTION "Contributions"
+PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" DESCRIPTION "Contributions"
 	# Alan D. Freed (AlFreed@ohio.net) and Felix Friedrich (friedrich@gsf.de)
 	# CAPO - Computational Analysis Platform for Oberon
 	# BSD - License ok to use in release files
 	Capo.Text Capo.Tool Capo.Ascii.Text
 
-	Sage.UDPChat.Text Sage.UDPChatBase.Mod Sage.UDPChatServer.Mod 	# UDP chat tool (Yaroslav Romanchenko)
+	Sage.UDPChat.Text Sage.UDPChatBase.Mod Sage.UDPChatServer.Mod	# UDP chat tool (Yaroslav Romanchenko)
 	Sage.UDPChatClient.Mod
 
 	CyrillicUtilities.Mod # by sage
@@ -1459,7 +1459,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	# SMB client & server
 	SambaClient.Mod SambaServer.Mod
 
-	srRenderTools.Text  srReadMe.Text 	# Realtime Fractal-Voxel Raytracer (Soren Renner)
+	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
 	srBase.Mod srRayEngine.Mod srMath.Mod I386.srE.Mod srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
 	srM2Space.Mod srM3Space.Mod srM5Space.Mod srM6Space.Mod srRastermovie.Mod
@@ -1470,14 +1470,14 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	MenuPages.Mod # generate MenuPageXX.XML files
 
 	# Video for Windows
-	RasterPixelFormats.Mod 
+	RasterPixelFormats.Mod
 	WIN { Win32.VfW.Mod VideoExample.Mod TestVideo.Mod}
 
 	WMOverlay.Mod WMOverlay.tar
-	
+
 	# Oberon pretty printing
-	PrettyPrint.Mod  PrettyPrintHighlighter.XML
-	
+	PrettyPrint.Mod PrettyPrintHighlighter.XML
+
 	# streams and files compression
 	OZip.mod
 
@@ -1517,8 +1517,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	# Aubrey McIntosh (aubrey.macintosh@alumni.utexas.net)
 	# BSD - License ok to use in release files
-	 AlmSmtpReceiver.Atg AlmSmtpReceiver.Tool AlmSmtpReceiver.Mod 	# SMTP receiver
-	 AlmSmtpReceiver.Guide.Text
+	AlmSmtpReceiver.Atg AlmSmtpReceiver.Tool AlmSmtpReceiver.Mod	# SMTP receiver
+	AlmSmtpReceiver.Guide.Text
 
 	# Thomas Frey (tfrey@enigon.net)
 	# BSD - License ok to use in release files
@@ -1561,7 +1561,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	TeletextServer.zip	# Teletext Server for TV
 END
 
-PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon for A2"
+PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon for A2"
 	# emulation modules
 	NATIVE,UNIX, UNIXG { Oberon.Kernel.Mod }
 	NATIVE,WIN { Oberon.Types.Mod }
@@ -1573,16 +1573,16 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 	Oberon.Disks.Mod
 
 	Oberon.Objects.Mod
-	OberonInput.Mod 	# WM-less Oberon I/O
+	OberonInput.Mod	# WM-less Oberon I/O
 
-	NATIVE,iWIN, UNIX, UNIXG { 
+	NATIVE,iWIN, UNIX, UNIXG {
 		OberonDisplay.Mod Oberon.Display.Mod Oberon.Display.Mod
-		Oberon.Input.Mod 	# WM-based Display & Input
+		Oberon.Input.Mod	# WM-based Display & Input
 		Oberon.Viewers.Mod Oberon.Fonts.Mod
 	}
-	
+
 	NATIVE, iWIN, UNIX, UNIXG {Oberon.Mod}
-	
+
 	eWIN {
 	Win32.Oberon.Mod
 	Win32.Threads.Mod
@@ -1594,14 +1594,14 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 
 	WIN { Win32.OberonConfiguration.Mod }
 
-	NATIVE,iWIN,UNIX, UNIXG  { Oberon.Oberon.Mod }
+	NATIVE,iWIN,UNIX, UNIXG { Oberon.Oberon.Mod }
 	eWIN { Win32.Oberon.WinFonts.Mod Win32.Oberon.Oberon.Mod }
 
 	Oberon.MenuViewers.Mod Oberon.TextFrames.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG  { Oberon.System.Mod }
+	NATIVE,iWIN,UNIX, UNIXG { Oberon.System.Mod }
 
-	Oberon.In.Mod Oberon.Out.Mod Oberon.Dates.Mod Oberon.Strings.Mod 	# Utility modules
+	Oberon.In.Mod Oberon.Out.Mod Oberon.Dates.Mod Oberon.Strings.Mod	# Utility modules
 
 	NATIVE, iWIN { Oberon.Centronics.Mod }
 
@@ -1612,28 +1612,28 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 	Oberon.V24.Mod
 	NATIVE { Oberon.Printer.Mod }
 	UNIX, UNIXG{ Unix.Oberon.Printer.Mod }
-	eWIN  { Win32.Oberon.Bitmaps.Mod Win32.Oberon.Pictures.Mod }
+	eWIN { Win32.Oberon.Bitmaps.Mod Win32.Oberon.Pictures.Mod }
 	WIN { Win32.Oberon.Printer.Mod Win32.ADVAPI32.Mod }
 	eWIN { Win32.Oberon.System.Mod Win32.OberonDisplay.Mod }
 
-	Compiler.Tool Oberon.OPM.Mod Oberon.OPS.Mod Oberon.OPT.Mod Oberon.OPB.Mod Oberon.OPA.Mod Oberon.OPP.Mod 	# Compiler (prk)
+	Compiler.Tool Oberon.OPM.Mod Oberon.OPS.Mod Oberon.OPT.Mod Oberon.OPB.Mod Oberon.OPA.Mod Oberon.OPP.Mod	# Compiler (prk)
 	Oberon.OPO.Mod Oberon.OPL.Mod Oberon.OPC.Mod Oberon.OPV.Mod Oberon.Compiler.Mod Oberon.OPAData.Mod OPA.Data
 
-	Edit.Tool Oberon.Edit.Mod 	# Edit
-	Script.Tool Oberon.Styles.Mod Oberon.ScriptFrames.Mod Oberon.Script.Mod 	# Script
+	Edit.Tool Oberon.Edit.Mod	# Edit
+	Script.Tool Oberon.Styles.Mod Oberon.ScriptFrames.Mod Oberon.Script.Mod	# Script
 
 	NATIVEORIG, NATIVEGEN {
-	Oberon.Diskettes.Mod 	# Diskette driver
-	Backup.Tool Oberon.Diskette.Mod Oberon.Backup.Mod 	# Backup
+	Oberon.Diskettes.Mod	# Diskette driver
+	Backup.Tool Oberon.Diskette.Mod Oberon.Backup.Mod	# Backup
 	}
 
-	Partitions.Tool  Oberon.Partitions.Mod 	# Partition
+	Partitions.Tool Oberon.Partitions.Mod	# Partition
 
-	NATIVE, iWIN { Oberon.Miscellaneous.Mod } 	# Miscellaneous
+	NATIVE, iWIN { Oberon.Miscellaneous.Mod }	# Miscellaneous
 	Miscellaneous.Tool
 
-	Oberon.Browser.Mod 	# Browser (Compiler.Tool)
- 	DOS.Tool Oberon.FATFiles.Mod Oberon.DOS.Mod	# DOS
+	Oberon.Browser.Mod	# Browser (Compiler.Tool)
+	DOS.Tool Oberon.FATFiles.Mod Oberon.DOS.Mod	# DOS
 	Oberon.Hello.Mod	# Demo program (UserGuide.Text)
 
 	NATIVE,UNIX, UNIXG { Oberon.PSPrinter.Mod PSHeader.Text Oberon.HPLaserPrinter.Mod Oberon.HPPCL.Mod }	# Printer drivers
@@ -1642,16 +1642,16 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 
 	Default.Pal Light.Pal Dark.Pal White.Pal Black.Pal	# Palettes
 
-	System.Text UserGuide.Text Feedback.Text Release.Oberon.Text 	# Texts
-	System.Tool LoadGadgets.Text 	# Tools
+	System.Text UserGuide.Text Feedback.Text Release.Oberon.Text	# Texts
+	System.Tool LoadGadgets.Text	# Tools
 
 	# Configuration
 	Configuration.Tool
 	WINORIG, WINGEN32 { Win32.Oberon.Registry.Mod }
 	eWIN { Win32.Oberon.Configuration.Mod }
-	NATIVE,iWIN { Oberon.Configuration.Mod  }
+	NATIVE,iWIN { Oberon.Configuration.Mod }
 
-# Basic Tools.  NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
+# Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
 	Tools.Tool
 
 	# NetSystem TCP/IP
@@ -1663,31 +1663,31 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 
 	Oberon.HelloServer.Mod
 
-	Oberon.Terminals.Mod Oberon.TerminalFrames.Mod Oberon.Telnet.Mod 	# Telnet
-	Oberon.TextMail.Mod 	# TextMail
-	Oberon.FTP.Mod 	# FTP
+	Oberon.Terminals.Mod Oberon.TerminalFrames.Mod Oberon.Telnet.Mod	# Telnet
+	Oberon.TextMail.Mod	# TextMail
+	Oberon.FTP.Mod	# FTP
 
-	IFS.Tool Oberon.XYplane.Mod Oberon.IFS.Mod 	# IFS
+	IFS.Tool Oberon.XYplane.Mod Oberon.IFS.Mod	# IFS
 
-	Greek.Tool Math.Tool 	# Greek & Math fonts
+	Greek.Tool Math.Tool	# Greek & Math fonts
 
 		# Developer tools
-	ET.Tool Oberon.ET.Mod Oberon.Menu.Mod ET.Popup.Menu 	# ET and Menu
+	ET.Tool Oberon.ET.Mod Oberon.Menu.Mod ET.Popup.Menu	# ET and Menu
 
-	Oberon.Decoder.Mod 	# Decode .Obj & .Sym files
-	Oberon.V24Log.Mod Oberon.SysLog.Mod 	# V24 log and SysLog
-	OFS.Tool 	# OFS tool module
+	Oberon.Decoder.Mod	# Decode .Obj & .Sym files
+	Oberon.V24Log.Mod Oberon.SysLog.Mod	# V24 log and SysLog
+	OFS.Tool	# OFS tool module
 
-	Oberon.ZlibWriters.Mod Oberon.ZlibReaders.Mod 	# Zip tool
+	Oberon.ZlibWriters.Mod Oberon.ZlibReaders.Mod	# Zip tool
 	Oberon.Zip.Mod Zip.Tool Oberon.ZipTool.Mod
-	GZip.Tool Oberon.GZWriters.Mod Oberon.GZReaders.Mod Oberon.GZip.Mod 	# GZip tool
-	Oberon.TGZ.Mod 	# .tgz unpacker
-	NATIVE { Oberon.PCITools.Mod } 	# PCI scanner
+	GZip.Tool Oberon.GZWriters.Mod Oberon.GZReaders.Mod Oberon.GZip.Mod	# GZip tool
+	Oberon.TGZ.Mod	# .tgz unpacker
+	NATIVE { Oberon.PCITools.Mod }	# PCI scanner
 
 # ARM decoder
 	Oberon.PCARMDecoder.Mod
 # Additional things
-	Oberon.Aos.Mod Oberon.OFSTools.Mod Oberon.CleanupFiles.Mod 	# Aos-specific tools
+	Oberon.Aos.Mod Oberon.OFSTools.Mod Oberon.CleanupFiles.Mod	# Aos-specific tools
 	NATIVE { Oberon.TestNet.Mod }
 	AosTools.Tool
 
@@ -1697,12 +1697,12 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip"  DESCRIPTION "Oberon 
 	Oberon.FATTools.Mod FAT.Tool
 END
 
-PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip"  DESCRIPTION "Oberon Gadgets Framework"
+PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" DESCRIPTION "Oberon Gadgets Framework"
 
 	Colors.Tool
 
 	NATIVE,iWIN,UNIX, UNIXG {
-		Oberon.Colors.Mod 	# Color models
+		Oberon.Colors.Mod	# Color models
 		Oberon.Display3.Mod Oberon.Effects.Mod
 	}
 
@@ -1718,14 +1718,14 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	WIN { Win32.Oberon.PrinterInfo.Mod }
 
-	Oberon.BasicGadgets.Mod Oberon.TextFields.Mod Oberon.ListRiders.Mod Oberon.ListModels.Mod Oberon.ListDags.Mod 	# Gadget catalog in Gadgets.Panel
+	Oberon.BasicGadgets.Mod Oberon.TextFields.Mod Oberon.ListRiders.Mod Oberon.ListModels.Mod Oberon.ListDags.Mod	# Gadget catalog in Gadgets.Panel
 	Oberon.ListGadgets.Mod
 
 	Oberon.Lists.Mod
 	Oberon.Panels.Mod
 
 
-	NATIVE,WIN, UNIXG { Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod } 
+	NATIVE,WIN, UNIXG { Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod }
 	UNIX { Unix.Oberon.TextGadgets0.Mod Unix.Oberon.TextGadgets.Mod }
 
 	Oberon.BasicFigures.Mod
@@ -1747,7 +1747,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	NATIVE,WIN, UNIXG{ Oberon.TextDocs.Mod }
 	UNIX { Unix.Oberon.TextDocs.Mod }
 
-	TextDocs.Lib Oberon.PanelDocs.Mod 	# Document catalog
+	TextDocs.Lib Oberon.PanelDocs.Mod	# Document catalog
 	Oberon.Icons.Mod Oberon.ColorTools.Mod Oberon.NamePlates.Mod Oberon.Navigators.Mod Oberon.NoteBooks.Mod
 
 	NATIVE,iWIN,UNIX, UNIXG { Oberon.Finder.Mod }
@@ -1757,16 +1757,16 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	eWIN { Win32.Oberon.Miscellaneous.Mod Win32.COMDLG32.Mod Win32.Oberon.WinMenus.Mod Win32.Oberon.WinPrinter.Mod }
 
-	Libraries.Panel Oberon.ScrollViews.Mod Oberon.RefGadgets.Mod Oberon.Columbus.Mod Columbus.Lib 	# Columbus in Popups.Tool
-	ObjExplorer.Panel Oberon.ObjExplorer.Mod 	# ObjExplorer in Popups.Tool
-	Compress.Tool Oberon.Compress.Mod Oberon.CompressCrypt.Mod 	# Compress in Popups.Tool
-	AsciiCoder.Tool Oberon.AsciiCoder.Mod 	# AsciiCoder in Popups.Tool
-	Decoders.Tool Oberon.Base64.Mod Oberon.UUDecoder.Mod Oberon.BinHex.Mod Oberon.Rot13.Mod 	# Decoders in Popups.Tool
+	Libraries.Panel Oberon.ScrollViews.Mod Oberon.RefGadgets.Mod Oberon.Columbus.Mod Columbus.Lib	# Columbus in Popups.Tool
+	ObjExplorer.Panel Oberon.ObjExplorer.Mod	# ObjExplorer in Popups.Tool
+	Compress.Tool Oberon.Compress.Mod Oberon.CompressCrypt.Mod	# Compress in Popups.Tool
+	AsciiCoder.Tool Oberon.AsciiCoder.Mod	# AsciiCoder in Popups.Tool
+	Decoders.Tool Oberon.Base64.Mod Oberon.UUDecoder.Mod Oberon.BinHex.Mod Oberon.Rot13.Mod	# Decoders in Popups.Tool
 	Oberon.Tar.Mod Oberon.QuotedPrintable.Mod
-	Builder.Tool Oberon.Builder.Mod 	# Builder in Popups.Tool
-	Watson.Panel Definitions.Tool Oberon.Watson0.Mod Oberon.Watson.Mod Watson.Lib 	# Watson in Popups.Tool
-	EditTools.Tool Oberon.EditTools.Mod 	# EditTools in Popups.Tool
-	Outlines.Tool Oberon.Outlines.Mod 	# Outlines in Popups.Tool
+	Builder.Tool Oberon.Builder.Mod	# Builder in Popups.Tool
+	Watson.Panel Definitions.Tool Oberon.Watson0.Mod Oberon.Watson.Mod Watson.Lib	# Watson in Popups.Tool
+	EditTools.Tool Oberon.EditTools.Mod	# EditTools in Popups.Tool
+	Outlines.Tool Oberon.Outlines.Mod	# Outlines in Popups.Tool
 	Oberon.OFormatterIO.Mod Oberon.OFormatter.Mod
 	Oberon.StyleGadgets.Mod Oberon.ScriptGadgets.Mod
 	Rembrandt.Panel Oberon.Rembrandt0.Mod
@@ -1774,11 +1774,11 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	NATIVE,iWIN,UNIX, UNIXG { Oberon.Rembrandt.Mod }
 	eWIN { Win32.Oberon.Rembrandt.Mod }
 
-	Oberon.RembrandtDocs.Mod 	# Rembrandt in Popups.Tool
+	Oberon.RembrandtDocs.Mod	# Rembrandt in Popups.Tool
 	Oberon.RembrandtTools.Mod Rembrandt.Lib Clown.Pict Grapes.Pict
-	Gadgets.Pict Default.Pict 	# Default.Pict used in Scramble
+	Gadgets.Pict Default.Pict	# Default.Pict used in Scramble
 
-	PC.Tool Oberon.ErrorGadgets.Mod Oberon.PC.Mod 	# Oberon Interface for PACO
+	PC.Tool Oberon.ErrorGadgets.Mod Oberon.PC.Mod	# Oberon Interface for PACO
 
 	WINORIG,WINGEN32 { Win32.PELinker.Mod PELinker.Tool }
 
@@ -1788,7 +1788,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	UNIX, UNIXG{ Unix.Oberon.Clipboard.Mod }
 	WIN,UNIX, UNIXG { Clipboard.Tool }
 
-	Oberon.JPEG.Mod Oberon.GIF.Mod Oberon.XBM.Mod Oberon.BMP.Mod Oberon.ICO.Mod Oberon.PCX.Mod Oberon.TGA.Mod Oberon.IFF.Mod 	# Picture converters
+	Oberon.JPEG.Mod Oberon.GIF.Mod Oberon.XBM.Mod Oberon.BMP.Mod Oberon.ICO.Mod Oberon.PCX.Mod Oberon.TGA.Mod Oberon.IFF.Mod	# Picture converters
 	Oberon.ColorModels.Mod Oberon.XPM.Mod Oberon.PPM.Mod Oberon.PSD.Mod
 
 	Images.Tool Oberon.Images.Mod
@@ -1796,7 +1796,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	NATIVE,iWIN,UNIX, UNIXG { Oberon.ImageGadgets.Mod }
 	eWIN { Win32.Oberon.WinImages.Mod Win32.Oberon.ImageGadgets.Mod }
 
-	Oberon.ImageDocs.Mod 	# Images
+	Oberon.ImageDocs.Mod	# Images
 
 	Oberon.PictImages.Mod Oberon.BMPImages.Mod Oberon.JPEGImages.Mod Oberon.GIFImages.Mod Oberon.PSDImages.Mod
 	Colors.Panel
@@ -1805,114 +1805,114 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	eWIN { Win32.Oberon.ColorGadgets.Mod }
 
 	Oberon.PCXImages.Mod	# Color views
-	Oberon.ColorWells.Mod 	# Leonardo legacy
+	Oberon.ColorWells.Mod	# Leonardo legacy
 
 	System3.Tool Applications.Tool Documentation.Tool Release.Popups.Tool Programming.Tool Editing.Tool	# Hypertools in Popups.Tool
-	Desktops.Tool Gadgets.Tool 	# in Popups.Tool
+	Desktops.Tool Gadgets.Tool	# in Popups.Tool
 	Printers.Tool
 
-	Gadgets.Panel Documents.Panel TextDocs.Panel 	# Panels in Popups.Tool
+	Gadgets.Panel Documents.Panel TextDocs.Panel	# Panels in Popups.Tool
 
-	Oberon.Desk  	# in Popups.Tool
-	Backdrop.Pict 	# in Popups.Tool
-	TextDocs.Tool 	# in Popups.Tool
-	Icons.Lib Symbols.Lib 	# Symbols.Lib used in DirectoryView
+	Oberon.Desk	# in Popups.Tool
+	Backdrop.Pict	# in Popups.Tool
+	TextDocs.Tool	# in Popups.Tool
+	Icons.Lib Symbols.Lib	# Symbols.Lib used in DirectoryView
 
 # Gadgets Networking
 	Network.Tool NetDocs.Lib
 
-	Oberon.Streams.Mod Oberon.TextStreams.Mod Oberon.BTrees.Mod Oberon.MIME.Mod Oberon.HyperDocs.Mod 	# Utility modules
+	Oberon.Streams.Mod Oberon.TextStreams.Mod Oberon.BTrees.Mod Oberon.MIME.Mod Oberon.HyperDocs.Mod	# Utility modules
 	Oberon.NetTools.Mod Oberon.PasswordFields.Mod
 
-	HyperDocs.Tool HyperDocs.Panel HyperLinks.Panel Oberon.HyperDocTools.Mod 	# HyperDocs
+	HyperDocs.Tool HyperDocs.Panel HyperLinks.Panel Oberon.HyperDocTools.Mod	# HyperDocs
 	Mail.Tool Mail.Panel # MD5.Mod
-	Oberon.Mail.Mod 	# Mail
-	FTP.Tool Oberon.FTPDocs.Mod 	# FTP
-	Finger.Tool Oberon.Finger.Mod 	# Finger
-	News.Tool Oberon.News.Mod 	# News
-	Gopher.Tool Oberon.Gopher.Mod 	# Gopher
+	Oberon.Mail.Mod	# Mail
+	FTP.Tool Oberon.FTPDocs.Mod	# FTP
+	Finger.Tool Oberon.Finger.Mod	# Finger
+	News.Tool Oberon.News.Mod	# News
+	Gopher.Tool Oberon.Gopher.Mod	# Gopher
 	Telnet.Panel Oberon.TerminalGadgets.Mod Oberon.TelnetGadgets.Mod Telnet.Tool	# Telnet
 
-	HTTP.Tool Oberon.HTTPDocs0.Mod Oberon.HTMLDocs.Mod Oberon.HTTPDocs.Mod Authorization.html 	# HTTP/HTML
+	HTTP.Tool Oberon.HTTPDocs0.Mod Oberon.HTMLDocs.Mod Oberon.HTTPDocs.Mod Authorization.html	# HTTP/HTML
 	Oberon.HTMLForms.Mod Oberon.HTMLImages.Mod Oberon.HTMLTables.Mod
 
-	Oberon.ZipDocs.Mod 	# .zip reader
+	Oberon.ZipDocs.Mod	# .zip reader
 
-	Oberon.Packages.Mod Oberon.PlugIns.Mod Oberon.HTMLPlugIns.Mod 	# Packages
+	Oberon.Packages.Mod Oberon.PlugIns.Mod Oberon.HTMLPlugIns.Mod	# Packages
 
 	WIN { Win32.Oberon.PlugInDocs.Mod }
 
 	NATIVEORIG, NATIVEGEN {
-	Oberon.Profiler.Mod 	# alternative profiler (prk)
-	Oberon.FATDocs.Mod 	# FAT browser (be)
+	Oberon.Profiler.Mod	# alternative profiler (prk)
+	Oberon.FATDocs.Mod	# FAT browser (be)
 	}
 END
 
 # Additional/contributed Gadgets applications.
 PACKAGE OberonApplications ARCHIVE "OberonApplications.zip" SOURCE "OberonApplicationsSrc.zip" DESCRIPTION "Oberon Applications"
 
-	Oberon.Copyright.Mod Copyright.Text 	# Add/remove copyright
+	Oberon.Copyright.Mod Copyright.Text	# Add/remove copyright
 	Oberon.FileDisks.Mod
 
 # Gadgets Applications
 
-	Oberon.OTInt.Mod Oberon.OTScan.Mod Oberon.OType.Mod Oberon.OTFonts.Mod OType.Text 	# OpenType
+	Oberon.OTInt.Mod Oberon.OTScan.Mod Oberon.OType.Mod Oberon.OTFonts.Mod OType.Text	# OpenType
 
-	Gfx.Tool Oberon.GfxMatrix.Mod Oberon.GfxImages.Mod Oberon.GfxPaths.Mod Oberon.GfxRegions.Mod 	# Gfx library
+	Gfx.Tool Oberon.GfxMatrix.Mod Oberon.GfxImages.Mod Oberon.GfxPaths.Mod Oberon.GfxRegions.Mod	# Gfx library
 	Oberon.GfxFonts0.Mod
 	Oberon.GfxFonts.Mod Oberon.Gfx.Mod Oberon.GfxRaster.Mod Oberon.GfxPrinter.Mod
 	Oberon.GfxBuffer.Mod Oberon.GfxDisplay.Mod Oberon.GfxPS.Mod Oberon.GfxOType.Mod
 	Oberon.GfxPKFonts.Mod
 	GfxProlog.ps
-	GfxHowto.html GfxOverview.html Oberon.GfxTest.Mod Oberon.GfxDemo.Mod 	# Gfx documentation
+	GfxHowto.html GfxOverview.html Oberon.GfxTest.Mod Oberon.GfxDemo.Mod	# Gfx documentation
 
-	Leonardo.Panel Leonardo.Lib LeoConfig.Text Leonardo.Fig 	# Leonardo in Popups.Tool
+	Leonardo.Panel Leonardo.Lib LeoConfig.Text Leonardo.Fig	# Leonardo in Popups.Tool
 	Oberon.Leonardo.Mod Oberon.LeoFrames.Mod Oberon.LeoTools.Mod Oberon.LeoDocs.Mod
 	Oberon.LeoPanels.Mod Oberon.LeoLists.Mod Oberon.LeoPens.Mod Oberon.LeoOutliners.Mod
 	Oberon.LeoPenEditors.Mod Oberon.LeoPaths.Mod Oberon.LeoPathEditors.Mod
 	Oberon.LeoSplines.Mod Oberon.LeoSplineEditors.Mod Oberon.LeoCaptions.Mod
 	Oberon.LeoCaptionEditors.Mod Oberon.LeoBasic.Mod Oberon.LeoBasicEditors.Mod
 	Oberon.LeoImages.Mod Oberon.LeoImageEditors.Mod Oberon.LeoDraw.Mod
-	Leonardo.Text 	# Leonardo documentation
+	Leonardo.Text	# Leonardo documentation
 
-	Oberon.Scheme.Mod Oberon.SchemeOps.Mod Oberon.Vinci.Mod Oberon.VinciGadgets.Mod 	# Vinci
+	Oberon.Scheme.Mod Oberon.SchemeOps.Mod Oberon.Vinci.Mod Oberon.VinciGadgets.Mod	# Vinci
 	Oberon.VinciDocs.Mod Oberon.VinciShapes.Mod Oberon.VinciPens.Mod Oberon.VinciEditors.Mod
 	Scheme.Init Vinci.Init
 	Clip.Vinci Labels.Vinci Smiley.Vinci Stars.Vinci Test.Vinci Test1.Vinci Test2.Vinci
 	Rect2.Shape NGon.Shape Distance.Shape CoordSys.Shape YinYang.Shape
-	Vinci.Text 	# Vinci documentation
+	Vinci.Text	# Vinci documentation
 
-	TextPopups.Tool Oberon.TextPopups.Mod TextPopups.Text 	# TextPopups in Applications.Tool
+	TextPopups.Tool Oberon.TextPopups.Mod TextPopups.Text	# TextPopups in Applications.Tool
 	V24.Panel Oberon.V24Gadgets.Mod	# V24Gadgets in Applications.Tool
-	Hex.Tool Oberon.Hex.Mod 	# Binary file editor in Applications.Tool
-	HPCalc.Panel Oberon.Conversions.Mod Oberon.HPCalc.Mod 	# HPCalc in Applications.Tool
+	Hex.Tool Oberon.Hex.Mod	# Binary file editor in Applications.Tool
+	HPCalc.Panel Oberon.Conversions.Mod Oberon.HPCalc.Mod	# HPCalc in Applications.Tool
 	NATIVE { Snapshot.Tool Oberon.Snapshot.Mod }	# SnapShot in Applications.Tool
-	EditKeys.Tool Oberon.EditKeys.Mod EditKeys.Text 	# EditKeys in Applications.Tool
+	EditKeys.Tool Oberon.EditKeys.Mod EditKeys.Text	# EditKeys in Applications.Tool
 	Find.Tool Find.Panel # Find in Applications.Tool
 	Oberon.Find.Mod
-	Oberon.TeXTools.Mod 	# TeXTools in TextPopups.Text
-	SaveScreen.Tool Oberon.SaveScreen.Mod Oberon.SaveTiles.Mod Oberon.SaveParticles.Mod 	# SaveScreen in Applications.Tool
+	Oberon.TeXTools.Mod	# TeXTools in TextPopups.Text
+	SaveScreen.Tool Oberon.SaveScreen.Mod Oberon.SaveTiles.Mod Oberon.SaveParticles.Mod	# SaveScreen in Applications.Tool
 	Oberon.SaveDecay.Mod Oberon.SaveSisyphus.Mod Oberon.SaveSwarm.Mod SaveScreen.Text
 	SavePoints.Text Oberon.SavePoints.Mod SavePoints.Data Oberon.MakePoints.Mod
 	SaveLife.html SaveLife.gif Oberon.SaveLife.Mod Oberon.SaveArt.Mod
 
-	NATIVE { LPRPrinter.Tool Oberon.LPRPrinter.Mod } 	# LPRPrinter
-	Oberon.DayTime.Mod 	# DayTime client
+	NATIVE { LPRPrinter.Tool Oberon.LPRPrinter.Mod }	# LPRPrinter
+	Oberon.DayTime.Mod	# DayTime client
 
-	Backdrops.Panel Oberon.Backdrops.Mod Backdrops.Book Bows.Pict Bricks.Pict Cells.Pict 	# Backdrops in Applications.Tool
-	Clouds.Pict Coins.Pict Fractal.Pict Molecules.Pict Plasma.Pict Spirals.Pict Surface.Pict 	# (used by Tetris)
+	Backdrops.Panel Oberon.Backdrops.Mod Backdrops.Book Bows.Pict Bricks.Pict Cells.Pict	# Backdrops in Applications.Tool
+	Clouds.Pict Coins.Pict Fractal.Pict Molecules.Pict Plasma.Pict Spirals.Pict Surface.Pict	# (used by Tetris)
 	Textils.Pict Threads.Pict Trees.Pict Marble.Pict Crochet.Pict Flock.Pict Pebbles.Pict
 
-	Layout.Tool LayoutEdit.Panel Oberon.LayoutPanels0.Mod Oberon.LayoutPanels.Mod 	# LayoutEditor in Applications.Tool
+	Layout.Tool LayoutEdit.Panel Oberon.LayoutPanels0.Mod Oberon.LayoutPanels.Mod	# LayoutEditor in Applications.Tool
 	LayoutSamples.Arc
 
-	LayLa.Tool Oberon.Layouts.Mod Oberon.LayLaS.Mod Oberon.LayLa.Mod Oberon.LayLa2S.Mod Oberon.LayLa2.Mod 	# LayLa in Applications.Tool
+	LayLa.Tool Oberon.Layouts.Mod Oberon.LayLaS.Mod Oberon.LayLa.Mod Oberon.LayLa2S.Mod Oberon.LayLa2.Mod	# LayLa in Applications.Tool
 	Oberon.LayLaDemo.Mod LayLa.QuickGuide.Text LayLa.Guide.Eng.Text # LayLa.Guide.De.Text
 	LayLa.Demo.Config LayLa.Include.Config LayLa2.Demo.Config LayLa2.Include.Config
 	LayLaTest.Lib
 
 	NATIVE {
-	Dim3.Panel Oberon.Dim3Base.Mod Oberon.Dim3Paint.Mod Oberon.Dim3Engine.Mod Oberon.Dim3Read.Mod 	# Dim3 in Applications.Tool
+	Dim3.Panel Oberon.Dim3Base.Mod Oberon.Dim3Paint.Mod Oberon.Dim3Engine.Mod Oberon.Dim3Read.Mod	# Dim3 in Applications.Tool
 	Oberon.Dim3Frames.Mod City.poly Cube.poly Example.poly Gadgets.poly Room.poly
 	Sphere.poly Tetra.poly Tree.poly XMas.poly Tree1.Pict X29Plane.poly Dim3Guide.Text
 	}
@@ -1920,75 +1920,75 @@ PACKAGE OberonApplications ARCHIVE "OberonApplications.zip" SOURCE "OberonApplic
 	BooksDev.Panel BooksUser.Panel Tutorials.Book Tutorials.Tool	# Book tutorials (not linked)
 	Oberon.Books0.Mod Oberon.Books.Mod Oberon.BooksHelp.Mod Oberon.BookDocs.Mod Oberon.BookCompiler.Mod
 
-	Coco.Tool Oberon.Sets.Mod Oberon.CRS.Mod Oberon.CRT.Mod Oberon.CRA.Mod Oberon.CRX.Mod Oberon.CRP.Mod 	# Coco in Applications.Tool
+	Coco.Tool Oberon.Sets.Mod Oberon.CRS.Mod Oberon.CRT.Mod Oberon.CRA.Mod Oberon.CRX.Mod Oberon.CRP.Mod	# Coco in Applications.Tool
 	Oberon.Coco.Mod CR.ATG Scanner.FRM Parser.FRM Coco.Report.ps
 
-	FontEditor.Panel Oberon.FontEditor.Mod 	# FontEditor in Applications.Tool
-	ASCIITab.Tool Oberon.ASCIITab.Mod 	# ASCIITab in Applications.Tool
-	Oberon.Magnifier.Mod 	# Magnifier in Applications.Tool
+	FontEditor.Panel Oberon.FontEditor.Mod	# FontEditor in Applications.Tool
+	ASCIITab.Tool Oberon.ASCIITab.Mod	# ASCIITab in Applications.Tool
+	Oberon.Magnifier.Mod	# Magnifier in Applications.Tool
 
 	Games.Tool Icons2.Lib Icons3.Lib
-	CardGames.Panel Oberon.Cards.Mod Oberon.Solitaire.Mod Oberon.Spider.Mod Oberon.Freecell.Mod Cards.Pict 	# CardGames in Games.Tool
+	CardGames.Panel Oberon.Cards.Mod Oberon.Solitaire.Mod Oberon.Spider.Mod Oberon.Freecell.Mod Cards.Pict	# CardGames in Games.Tool
 	CardGames.Book
-	Oberon.MineSweeper.Mod MineSweeperBD.Pict 	# MineSweeper in Games.Tool
+	Oberon.MineSweeper.Mod MineSweeperBD.Pict	# MineSweeper in Games.Tool
 	Oberon.Sokoban.Mod Sokoban.Data	# Sokoban in Games.Tool
-	Oberon.Scramble.Mod 	# Scramble (uses Default.Pict) in Games.Tool
-	Oberon.Shanghai.Mod Shanghai.Scn.Fnt 	# Shanghai in Games.Tool
-	Tetris.Panel Oberon.Tetris.Mod 	# Tetris (uses Backdrops) in Games.Tool
-	Oberon.Asteroids.Mod 	# Asteroids in Games.Tool
+	Oberon.Scramble.Mod	# Scramble (uses Default.Pict) in Games.Tool
+	Oberon.Shanghai.Mod Shanghai.Scn.Fnt	# Shanghai in Games.Tool
+	Tetris.Panel Oberon.Tetris.Mod	# Tetris (uses Backdrops) in Games.Tool
+	Oberon.Asteroids.Mod	# Asteroids in Games.Tool
 
 	HTML.Tool Oberon.HTML.Mod TestHTML.Text	# HTML in Applications.Tool
-	WTS.Tool Oberon.WTS.Mod Oberon.WTSFold.Mod Oberon.WTSPict.Mod Oberon.WTSStamp.Mod Oberon.WTSDraw.Mod 	# WTS in Applications.Tool
-	CUSeeMe.Panel Oberon.CUSM.Mod 	# CuSeeMe in Applications.Tool
-	Diff.Tool Oberon.DiffGadgets.Mod Oberon.Diff.Mod 	# Diff in Applications.Tool
-	Sort.Tool Oberon.Sort.Mod 	# Sort in Applications.Tool
-	RX.Tool Oberon.RXA.Mod Oberon.RX.Mod 	# RX in Applications.Tool
-	PictConverters.Tool Oberon.PictConverters.Mod Oberon.PS.Mod PS.HeaderR.Text 	# PictConverters in Applications.Tool
-	Histogram.Panel Oberon.Histogram.Mod 	# Histogram in Applications.Tool
-	MultiMail.Panel Oberon.MultiMail.Mod 	# MultiMail in Applications.Tool
+	WTS.Tool Oberon.WTS.Mod Oberon.WTSFold.Mod Oberon.WTSPict.Mod Oberon.WTSStamp.Mod Oberon.WTSDraw.Mod	# WTS in Applications.Tool
+	CUSeeMe.Panel Oberon.CUSM.Mod	# CuSeeMe in Applications.Tool
+	Diff.Tool Oberon.DiffGadgets.Mod Oberon.Diff.Mod	# Diff in Applications.Tool
+	Sort.Tool Oberon.Sort.Mod	# Sort in Applications.Tool
+	RX.Tool Oberon.RXA.Mod Oberon.RX.Mod	# RX in Applications.Tool
+	PictConverters.Tool Oberon.PictConverters.Mod Oberon.PS.Mod PS.HeaderR.Text	# PictConverters in Applications.Tool
+	Histogram.Panel Oberon.Histogram.Mod	# Histogram in Applications.Tool
+	MultiMail.Panel Oberon.MultiMail.Mod	# MultiMail in Applications.Tool
 	Calc.Tool Oberon.Calc.Mod	# Calc in Applications.Tool
 	Calculator.Panel Oberon.Calculator.Mod Oberon.CalculatorGadgets.Mod Calculator.LayLa	# Calculator in Applications.Tool
-	Oberon.DBF.Mod Oberon.DBFDump.Mod 	# DBFDump in Applications.Tool
+	Oberon.DBF.Mod Oberon.DBFDump.Mod	# DBFDump in Applications.Tool
 	Swarm.Panel Oberon.Swarm.Mod Swarm.Book Swarm.Lib	# Swarm in Applications.Tool
 
-	Oberon.DVIFiles.Mod Oberon.DVIViewers.Mod Oberon.DVIDocs.Mod DVI.Lib 	# DVI viewer
+	Oberon.DVIFiles.Mod Oberon.DVIViewers.Mod Oberon.DVIDocs.Mod DVI.Lib	# DVI viewer
 	Packages.Tool # install Oberon packages
 END
 
-# Gadgets examples & documentation.  All internal links valid.
+# Gadgets examples & documentation. All internal links valid.
 PACKAGE OberonDocumentation ARCHIVE "OberonDocumentation.zip" SOURCE "" DESCRIPTION "Oberon Documentation"
 	SamplePrograms.Tool
-	ColorSystem.Panel Oberon.ColorSystem.Mod 	# ColorSystem in Documentation.Tool
-	PhonePad.Panel Oberon.PhonePad.Mod 	# PhonePad
-	Plotter.Panel Oberon.Plotter.Mod Oberon.Plot.Mod 	# Plotter
-	Lissajous.Panel Oberon.Lissajous.Mod Oberon.Graphs.Mod 	# Lissajous
-	Simulator.Panel Oberon.Diagrams.Mod Oberon.Simulator.Mod 	# Simulator
-	Oberon.Popups.Mod 	# Popups
+	ColorSystem.Panel Oberon.ColorSystem.Mod	# ColorSystem in Documentation.Tool
+	PhonePad.Panel Oberon.PhonePad.Mod	# PhonePad
+	Plotter.Panel Oberon.Plotter.Mod Oberon.Plot.Mod	# Plotter
+	Lissajous.Panel Oberon.Lissajous.Mod Oberon.Graphs.Mod	# Lissajous
+	Simulator.Panel Oberon.Diagrams.Mod Oberon.Simulator.Mod	# Simulator
+	Oberon.Popups.Mod	# Popups
 	Oberon.BartSimpson.Mod Bart.Pict	# BartSimpson
-	Oberon.Cups.Mod 	# Cups
-	Oberon.Examples.Mod Oberon.Examples1.Mod Oberon.OpenDemo.Mod Oberon.OpenDemo2.Mod 	# Examples
-	Oberon.ExampleOberon.Mod # how  to use Oberon within A2
-	Oberon.Suitcases.Mod 	# Suitcases
+	Oberon.Cups.Mod	# Cups
+	Oberon.Examples.Mod Oberon.Examples1.Mod Oberon.OpenDemo.Mod Oberon.OpenDemo2.Mod	# Examples
+	Oberon.ExampleOberon.Mod # how to use Oberon within A2
+	Oberon.Suitcases.Mod	# Suitcases
 	Oberon.Skeleton.Mod Oberon.ViewSkeleton.Mod Oberon.ColorDriver.Mod Oberon.DocumentSkeleton.Mod	# Skeletons
-	Oberon.Portraits.Mod 	# Portraits
+	Oberon.Portraits.Mod	# Portraits
 	Oberon.Reminders.Mod	# in SamplePrograms.Tool
 	# use Compiler.Compile
 	TestOrganizer.Panel	# in SamplePrograms.Tool
 	Oberon.TaskExample.Mod	# in SamplePrograms.Tool
 	NATIVE { Oberon.UDPExample.Mod }
-	Oberon.TCPExample.Mod 	# NetSystem examples
+	Oberon.TCPExample.Mod	# NetSystem examples
 
 	System3F1.Graphic System3F2.Graphic System3F3.Graphic System3F4.Graphic	# Some example Gadgets diagrams
 	System3F5.Graphic System3F6.Graphic System3F7.Graphic
 
-	IntroToGadgets.Text OberonReport.html Oberon.Report.Text References.Text GadgetsChanges.Text 	# Introductory documentation
+	IntroToGadgets.Text OberonReport.html Oberon.Report.Text References.Text GadgetsChanges.Text	# Introductory documentation
 
-	Book.Tool Chapter0.Text Chapter1.Text Chapter2.Text Chapter3.Text Chapter4.Text 	# The Oberon Companion
+	Book.Tool Chapter0.Text Chapter1.Text Chapter2.Text Chapter3.Text Chapter4.Text	# The Oberon Companion
 	Chapter5.Text Chapter6.Text Chapter7.Text AppendA.Text AppendB.Text
 	AppendC.Text Biblio.Text
 
-	Images.Text 	# Images documentation
-	ScriptGuide.Text ETGuide.Text 	# Script and ET documentation
+	Images.Text	# Images documentation
+	ScriptGuide.Text ETGuide.Text	# Script and ET documentation
 END
 
 PACKAGE OberonVoyager ARCHIVE "OberonVoyager.zip" SOURCE "OberonVoyagerSrc.zip" DESCRIPTION "Oberon Voyager"
@@ -1996,26 +1996,26 @@ PACKAGE OberonVoyager ARCHIVE "OberonVoyager.zip" SOURCE "OberonVoyagerSrc.zip" 
 	# Portability Module
 	eWIN { Win32.Oberon.vyPortability.Mod }
 	NATIVE, iWIN,UNIX, UNIXG { Oberon.vyPortability.Mod }
-	Oberon.vyHost.Mod Oberon.vyHostFonts.Mod 	# Host modules
-	Oberon.vyLinks.Mod Oberon.vyHostStrings.Mod Oberon.vyHostTexts.Mod Oberon.vyBase.Mod Oberon.vyName.Mod 	# Base and Name
-	Oberon.vyScanners.Mod Oberon.vyParser.Mod Oberon.vyPars.Mod Oberon.vyIn.Mod Oberon.vyOut.Mod Oberon.vyFiles.Mod Oberon.vyTextsCtl.Mod 	# In and Output
+	Oberon.vyHost.Mod Oberon.vyHostFonts.Mod	# Host modules
+	Oberon.vyLinks.Mod Oberon.vyHostStrings.Mod Oberon.vyHostTexts.Mod Oberon.vyBase.Mod Oberon.vyName.Mod	# Base and Name
+	Oberon.vyScanners.Mod Oberon.vyParser.Mod Oberon.vyPars.Mod Oberon.vyIn.Mod Oberon.vyOut.Mod Oberon.vyFiles.Mod Oberon.vyTextsCtl.Mod	# In and Output
 	Oberon.vyBoolean.Mod Oberon.vyBit.Mod Oberon.vySet.Mod Oberon.vyReal.Mod Oberon.vyLongreal.Mod
-	Oberon.vyChiSquare.Mod Oberon.vyInteger.Mod Oberon.vyLongint.Mod 	# 1d Arrays
+	Oberon.vyChiSquare.Mod Oberon.vyInteger.Mod Oberon.vyLongint.Mod	# 1d Arrays
 	Oberon.vyLongintVec.Mod Oberon.vyRealVec.Mod Oberon.vyStringVec.Mod Oberon.vyReadMatrix.Mod Oberon.vyConsume.Mod
-	Oberon.vyBooleanVec.Mod Oberon.vyIntVec.Mod Oberon.vyLongrealVec.Mod Oberon.vyTypes.Mod Oberon.vyPointerVec.Mod 	# 1d Vectors
+	Oberon.vyBooleanVec.Mod Oberon.vyIntVec.Mod Oberon.vyLongrealVec.Mod Oberon.vyTypes.Mod Oberon.vyPointerVec.Mod	# 1d Vectors
 	Oberon.vyRanBase.Mod Oberon.vyRanSkeleton.Mod Oberon.vyRanParksMiller.Mod Oberon.vyRandom.Mod Oberon.vyRandu.Mod
 	Oberon.vyRan1.Mod Oberon.vyRanCombo.Mod Oberon.vyRanKiss.Mod Oberon.vyRanMWC.Mod Oberon.vyRanMWC1616.Mod
-	Oberon.vyRanSupr.Mod Oberon.vy.jbrtStdNormal.Mod 	# Random number generation
+	Oberon.vyRanSupr.Mod Oberon.vy.jbrtStdNormal.Mod	# Random number generation
 	Oberon.vyKolSmirL.Mod Oberon.vyXPValues.Mod Oberon.vyQFisher.Mod Oberon.vyMatrixTypes.Mod
 	Oberon.vyGraphBase0.Mod Oberon.vyGraphBase.Mod Oberon.vyEvents.Mod Oberon.vyRectangles.Mod Oberon.vyPatterns.Mod
 	Oberon.vyTracking.Mod Oberon.vyCommandMenus.Mod Oberon.vyDisplay2d.Mod Oberon.vyPHIGS3D.Mod
-	Oberon.vyPaint3d.Mod Oberon.vyAxis.Mod Oberon.vyColorPalettes.Mod Oberon.vyPort.Mod Oberon.vyHostPrint.Mod Oberon.vyGraphicCtl.Mod 	# Graphics
+	Oberon.vyPaint3d.Mod Oberon.vyAxis.Mod Oberon.vyColorPalettes.Mod Oberon.vyPort.Mod Oberon.vyHostPrint.Mod Oberon.vyGraphicCtl.Mod	# Graphics
 	Oberon.vyLine.Mod Oberon.vyLinePlot.Mod Oberon.vyHighlight.Mod Oberon.vyScatter2.Mod Oberon.vyRegress.Mod Oberon.vyPolyWorld.Mod
 	Oberon.vyBitmaps.Mod Oberon.vyLayers3d.Mod Oberon.vyGraph.Mod Oberon.vyRectPlot.Mod Oberon.vyScatter1.Mod Oberon.vyScatter3.Mod
 	Oberon.vyScatter.Mod Oberon.vyHistogram.Mod Oberon.vyCharts.Mod Oberon.vySketch.Mod Oberon.vyDistribution.Mod
 	Oberon.vySurface.Mod Oberon.vyMaxMass.Mod Oberon.vyShorth.Mod Oberon.vyScale.Mod Oberon.vyGrid.Mod
 	Oberon.vySlider.Mod Oberon.vySlider2d.Mod Oberon.vyLabel.Mod Oberon.vyBoxWhisker.Mod Oberon.vyCaption.Mod Oberon.vyFctEdit.Mod
-	Oberon.vyMouseData.Mod 	# Layers
+	Oberon.vyMouseData.Mod	# Layers
 	Oberon.vy.Voyager.Mod Oberon.vyFctRandom.Mod Oberon.vyComplex.Mod Oberon.vyLCpx.Mod Oberon.vyLongComplex.Mod
 	Oberon.vyPComplex.Mod Oberon.vyPLongComplex.Mod Oberon.vyDialogElems.Mod Oberon.vyStd2dLayer.Mod Oberon.vyXYPlane.Mod
 	Oberon.vyxPlots.Mod
@@ -2030,7 +2030,7 @@ PACKAGE OberonAnts ARCHIVE "OberonAnts.zip" SOURCE "OberonAntsSrc.zip" DESCRIPTI
 	NATIVE,iWIN,UNIX,UNIXG { Oberon.antsPortability.Mod }	# Portability
 
 	NATIVE,WIN {
-		Oberon.antsExpressionsObjects.Mod Oberon.antsExpressions.Mod Oberon.antsExpressionsDefaults.Mod 	# command prompt interpreter
+		Oberon.antsExpressionsObjects.Mod Oberon.antsExpressions.Mod Oberon.antsExpressionsDefaults.Mod	# command prompt interpreter
 		Oberon.antsSecurity.Mod Oberon.antsOrganizers.Mod Oberon.antsMessages.Mod Oberon.antsScriptObjects.Mod
 	}
 	eWIN { Win32.Oberon.antsTracking.Mod }
@@ -2134,4 +2134,4 @@ PACKAGE Pr6Fonts ARCHIVE "Pr6Fonts.zip" SOURCE "" DESCRIPTION "Printer Fonts (60
 	Oberon16.Pr6.Fnt Oberon16b.Pr6.Fnt Oberon16i.Pr6.Fnt
 	Oberon20.Pr6.Fnt Oberon20b.Pr6.Fnt Oberon20i.Pr6.Fnt
 	Oberon24.Pr6.Fnt Oberon24b.Pr6.Fnt Oberon24i.Pr6.Fnt
-END 
+END

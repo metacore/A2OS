@@ -38,7 +38,7 @@ VAR
 PROCEDURE ModemReceive(context : Commands.Context; modemMode: LONGINT); (** [[filename] portNbr BitsPerSecond DataBits Parity StopBits] ~ *)
 VAR
 	name : Files.FileName; file : Files.File;
-	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT;
+	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT; params: SET;
 	isOpen0 : BOOLEAN;
 	bps0, data0, parity0, stop0 : LONGINT;
 	recv : XYModem.Receiver; awaitF : BOOLEAN;
@@ -52,7 +52,7 @@ BEGIN
 		RETURN;
 	END;
 	
-	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, res);
+	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 	IF res # 0 THEN
 		context.result := 2;
 		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
@@ -235,11 +235,11 @@ END GetSerialPortParameters;*)
 (** Open a shell listening on the specified <portNbr> *)
 PROCEDURE Open*(context : Commands.Context); (** [portNbr BitsPerSecond DataBits Parity StopBits Prompt] ~ *)
 VAR
-	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT;
+	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT; params: SET;
 	prompt: ARRAY 32 OF CHAR;
 	w : Streams.Writer; r : Streams.Reader;
 BEGIN {EXCLUSIVE}
-	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, res);
+	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 	IF res # 0 THEN
 		context.result := 1;
 		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;

@@ -1,0 +1,54 @@
+body { color: #505050; background-color: whitesmoke; font-family: ubuntu, arial, sans-serif; margin: 0; text-align: center; }
+a { color: dodgerblue; text-decoration: none; }
+em { font-style: normal; font-weight: bold; }
+a:hover { text-decoration: underline; }
+
+#header { background-color: #303030; padding: 1em; }
+h1 { font-weight: normal; color: whitesmoke; font-size: 2.5em; margin: 0; }
+h2 { font-weight: bold; font-size: 2em; margin: 1em; }
+h3 { font-weight: bold; font-size: 1.5em; margin: 0.5em; }
+
+#summary { font-size: 1.5em; margin: 0 auto; max-width: 30em; }
+#summary table { font-size: 0.75em; }
+
+.step { display: block; text-align: left; border-top: thin solid lightgray; box-sizing: border-box; width: 5000%; }
+.bar { display: inline-block; background-color: lightgray; }
+.bin { display: block; width: 3em; margin: 0 auto; }
+.bar:hover, .bin:hover { opacity: 0.5; }
+.histogram { vertical-align: bottom; }
+
+.status { padding: 0 0.2em; }
+.status a { color: inherit; }
+label .status { padding: 0.1em 0.2em; }
+.Aborted { background-color: red; color: white; }
+.Building { background-color: gold; color: black; }
+.Conflicted { background-color: orange; color: black; }
+.Failed { background-color: darkred; color: white; }
+.Succeeded { background-color: forestgreen; color: white; }
+.Timeout { background-color: orangered; color: black; }
+.Unresolved { background-color: darkgray; color: whitesmoke; }
+
+.log { width: 100%; max-width: 60em; }
+table { margin: 1em auto; overflow: hidden; }
+label { display: inline-block; margin: 0.5em; }
+.detail { margin: 1em; display: inline-block; }
+.pagination { font-size: initial; padding-top: 0.5em; }
+textarea { width: 90%; margin: 1em auto; max-width: 70em; height: 35em; resize: none; white-space: pre-wrap; font-family: monospace; background-color: white; border: thin solid lightgray; }
+.busy { margin: 10em auto; width: 5em; height: 5em; border: 1em solid lightgray; border-top-color: darkgray; border-radius: 50%; animation: spin 2s linear infinite; }
+td .busy { margin: auto; width: 0.6em; height: 0.6em; border-width: 0.3em; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+textarea:disabled { background-color: inherit; }
+
+.statistics th { text-align: left; }
+.statistics td { text-align: right; }
+
+#footer { color: darkgray; margin: 1em auto; max-width: 60em; border-top: 0.2em solid lightgray; }
+#footer a { color: darkgray; }
+#footer a:hover { color: dodgerblue; }
+
+@media screen and (max-width: 50em) {
+	#header { padding: 0.5em; }
+	h1, h2 { font-size: 1.5em; }
+	#summary { max-width: initial; }
+	#summary, #summary table { font-size: initial; }
+}

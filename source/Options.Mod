@@ -771,6 +771,8 @@ BEGIN
 		IF options.ParseString("--flag -s=Hello -i=99  ", context.error) THEN
 			options.Show(context.out);
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Test;
 

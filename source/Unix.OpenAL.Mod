@@ -395,7 +395,7 @@ CONST
 
 VAR
 
-  oallib: LONGINT;
+  oallib: ADDRESS;
 
 (* Renderer State management *)
 alEnable-: PROCEDURE { C } (capability : ALenum);

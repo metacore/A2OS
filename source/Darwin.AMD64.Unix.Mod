@@ -389,7 +389,7 @@ VAR
 	errno-			: PROCEDURE {C} ( ): LONGINT;
 
 
-	libc-: LONGINT;
+	libc-: ADDRESS;
 
 	libraryPaths: ARRAY 7 OF ARRAY 32 OF CHAR;
 	noPaths: LONGINT;

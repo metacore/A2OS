@@ -536,9 +536,9 @@ VAR
 	xSetErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
 	xSetIOErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
 
-	libc-: LONGINT;
-	libp-: LONGINT;
-	libx-: LONGINT;
+	libc-: ADDRESS;
+	libp-: ADDRESS;
+	libx-: ADDRESS;
 
 	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR;
 	noPaths: LONGINT;

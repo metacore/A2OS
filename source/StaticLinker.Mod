@@ -992,13 +992,13 @@ BEGIN
 	options.Add(0X,"exports", Options.String);
 
 	position := context.arg.Pos();
-	parsed := options.Parse(context.arg,NIL);
+	parsed := options.Parse(context.arg, context.error);
 	IF options.GetString("platform", name) THEN
 		reader := defaults.Get(name);
 		IF reader = NIL THEN 
 			context.error.String("Unknown platform"); context.error.Ln 
 		ELSE
-			parsed := options.Parse(reader, NIL) & parsed;
+			parsed := options.Parse(reader, context.error) & parsed;
 			context.arg.SetPos(position);
 			context.arg.SetPos(position);
 			parsed := options.Parse(context.arg, context.error) & parsed; (* reparse overwrites *)

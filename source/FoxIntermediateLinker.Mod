@@ -1201,7 +1201,7 @@ TYPE
 		options.Add(0X, "targetFile", Options.String);
 
 		position := input.Pos();
-		parsed := options.Parse(input,NIL);
+		parsed := options.Parse(input, context.error);
 
 		IF options.GetString("b", name) THEN
 			IF name = "" THEN defaultBackend := NIL
@@ -1387,7 +1387,7 @@ TYPE
 		options.Add(0X, "extension", Options.String);
 
 		position := input.Pos();
-		parsed := options.Parse(input,NIL);
+		parsed := options.Parse(input, context.error);
 
 		IF options.GetString("b", name) THEN
 			IF name = "" THEN defaultBackend := NIL

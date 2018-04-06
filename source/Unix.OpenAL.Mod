@@ -286,6 +286,7 @@ TYPE
   PALCboolean * =  ADDRESS; (*   TO ALCBoolean; *)
   PALCfloat   * =  ADDRESS; (*   TO ALCfloat; *)
   PALCdouble  * =  ADDRESS; (*   TO ALCDouble; *)
+  PALCchar    * =  ADDRESS; (*   TO ALCChar; *)
   PALCbyte    * =  ADDRESS; (*   TO ALCbyte; *)
   PALCshort   * =  ADDRESS; (*   TO ALCshort; *)
   PALCint     * =  ADDRESS; (*   TO ALCint; *)
@@ -627,7 +628,7 @@ alcGetEnumValue-: PROCEDURE { C } (device : ALCdevice; VAR enumName : ALCubyte) 
 
 
 (* Query functions *)
-alcGetString-: PROCEDURE { C } (device : ALCdevice; param : ALCenum) : LONGINT;
+alcGetString-: PROCEDURE { C } (device : ALCdevice; param : ALCenum) : PALCchar;
 alcGetIntegerv -: PROCEDURE { C } ( device : ALCdevice; param : ALCenum; size : ALCsizei;  data : PALCint);
 
 (* Capture functions *)
@@ -848,22 +849,22 @@ END GetStringFromAddr;
 
 
 PROCEDURE ALGetString*( name: ALCenum): Strings.String;
-VAR  sadr: LONGINT;
+VAR  sadr: ADDRESS;
 BEGIN
 	sadr := alGetString( name);
 	RETURN GetStringFromAddr(sadr);
 END ALGetString;
 
 PROCEDURE ALCGetString*(device: ALCdevice; name: ALCenum): Strings.String;
-VAR  sadr: LONGINT;
+VAR  sadr: ADDRESS;
 BEGIN
 	sadr := alcGetString(device, name);
 	RETURN GetStringFromAddr(sadr);
 END ALCGetString;
 
 
-PROCEDURE GetDevStringFromAddr(adr: LONGINT): Strings.String;
-VAR  sadr, sadr1: LONGINT;
+PROCEDURE GetDevStringFromAddr(adr: ADDRESS): Strings.String;
+VAR  sadr, sadr1: ADDRESS;
 		i, cnt: LONGINT;
 		ch: CHAR;
 		s: Strings.String;
@@ -897,7 +898,7 @@ END GetDevStringFromAddr;
 
 (** go through device list,  (each device terminated with a single NULL, list terminated with double NULL *)
 PROCEDURE ALCGetDeviceList*(device: ALCdevice; name: ALCenum): PString256;
-VAR  sadr, sadr0: LONGINT;
+VAR  sadr, sadr0: ADDRESS;
 	slen, index: LONGINT;
 	str: Strings.String;
 	dynstr: PString256;

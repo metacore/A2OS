@@ -346,8 +346,8 @@ VAR
 	FetchBytes-:			PROCEDURE {C} ( d: DisplayPtr;  VAR nbytes: LONGINT ): LONGINT;
 	SetSelectionOwner-:	PROCEDURE {C} ( d: DisplayPtr;  selection: Atom;  owner: Window;  time: Time );
 	GetSelectionOwner-:	PROCEDURE {C} ( d: DisplayPtr;  selection: Atom ): Window;
-	InternAtom-:				PROCEDURE {C} ( d: DisplayPtr;  name: LONGINT;  onlyifexists: Bool ): Atom;
-	SendEvent-:				PROCEDURE {C} ( d: DisplayPtr;  w: Window;  propagate: Bool;  eventmask, event: LONGINT );
+	InternAtom-:				PROCEDURE {C} ( d: DisplayPtr;  name: ADDRESS;  onlyifexists: Bool ): Atom;
+	SendEvent-:				PROCEDURE {C} ( d: DisplayPtr;  w: Window;  propagate: Bool;  eventmask: LONGINT;  event: ADDRESS );
 	ConvertSelection-:		PROCEDURE {C} ( d: DisplayPtr;  selection, target, property: Atom;
 													requestor: Window;  timestamp: Time );
 	ChangeProperty-:		PROCEDURE {C} ( d: DisplayPtr;  w: Window;  property, typ: Atom;

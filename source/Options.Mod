@@ -85,6 +85,7 @@ TYPE
 		arg : Streams.Reader;
 		error : Streams.Writer;
 		setError : BOOLEAN;
+		flagUnknownOptions : BOOLEAN;
 
 		timestamp : LONGINT;
 
@@ -254,23 +255,34 @@ TYPE
 			The actual options will be set as side effect when parsing.
 		*)
 		PROCEDURE Parse*(arg : Streams.Reader; error : Streams.Writer) : BOOLEAN;
+		BEGIN
+			RETURN ParseWithOptions(arg, error, TRUE);
+		END Parse;
+
+		PROCEDURE ParseStaged*(arg : Streams.Reader; error : Streams.Writer) : BOOLEAN;
+		BEGIN
+			RETURN ParseWithOptions(arg, error, FALSE);
+		END ParseStaged;
+
+		PROCEDURE ParseWithOptions(arg : Streams.Reader; error : Streams.Writer; flagUnknownOptions : BOOLEAN) : BOOLEAN;
 		VAR succeeded : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(arg # NIL);
 			SELF.arg := arg; SELF.error := error;
+			SELF.flagUnknownOptions := flagUnknownOptions;
 			INC(timestamp);
 			arg.SkipWhitespace;
 			setError := FALSE;
 			succeeded := ParseOptions() & ~setError;
 			IF ~succeeded & (error # NIL) THEN error.Update; END;
 			RETURN succeeded;
-		END Parse;
+		END ParseWithOptions;
 
 		PROCEDURE ParseString*(CONST string : ARRAY OF CHAR; error : Streams.Writer) : BOOLEAN;
 		VAR reader : Streams.StringReader;
 		BEGIN
 			NEW(reader, LEN(string)); reader.SetRaw(string, 0, LEN(string));
-			RETURN Parse(reader, error);
+			RETURN ParseWithOptions(reader, error, TRUE);
 		END ParseString;
 
 		(* Options = [ "-" Option [ WhiteSpace { "-" Option} ] ] *)
@@ -481,7 +493,7 @@ TYPE
 					error.String("Option "); ShowOption(ch, name);
 					error.String(" set multiple times"); error.Ln;
 				END;
-			ELSIF (error # NIL) THEN
+			ELSIF (error # NIL) & flagUnknownOptions THEN
 				error.String("Unknown option "); ShowOption(ch, name); error.Ln;
 			END;
 			setError := TRUE;
@@ -522,7 +534,7 @@ TYPE
 					error.String("Option "); ShowOption(ch, name);
 					error.String(" set multiple times"); error.Ln;
 				END;
-			ELSIF (error # NIL) THEN
+			ELSIF (error # NIL) & flagUnknownOptions THEN
 				error.String("Unknown option "); ShowOption(ch, name); error.Ln;
 			END;
 			setError := TRUE;

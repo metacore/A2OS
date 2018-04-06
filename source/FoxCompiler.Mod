@@ -306,15 +306,15 @@ TYPE
 		options.Add(0X,"cooperative", Options.Flag);
 
 		position := input.Pos();
-		parsed := options.Parse(input, error);
+		parsed := options.ParseStaged(input, error);
 		IF options.GetString("platform", name) OR GetDefaultPlatform(name) THEN
 			defaults := platforms.Get(name);
 			IF defaults = NIL THEN 	
 				error.String("Unknown platform"); error.Ln 
 			ELSE
-				parsed := options.Parse(defaults, error) & parsed;
+				parsed := options.ParseStaged(defaults, error) & parsed;
 				input.SetPos(position);
-				parsed := options.Parse(input, error) & parsed; (* reparse overwrites *)
+				parsed := options.ParseStaged(input, error) & parsed; (* reparse overwrites *)
 			END;
 		ELSE 
 			defaults := NIL;

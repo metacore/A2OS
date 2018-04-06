@@ -163,7 +163,7 @@ VAR
 	VAR val: ADDRESS;
 	BEGIN
 		val := dlsym(handle, ADDRESS OF name[0]);
-		SYSTEM.PUT32(adr, val);
+		SYSTEM.PUT(adr, val);
 	END Dlsym;
 
 	PROCEDURE Char(c: CHAR);

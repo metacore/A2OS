@@ -446,7 +446,7 @@ VAR
 	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): WORD;
-	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): WORD;
+	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: ADDRESS; param: ADDRESS ): WORD;
 	pthread_setcancelstate		: PROCEDURE {C} ( state: LONGINT; oldstate: ADDRESS ): LONGINT;
 	pthread_setcanceltype		: PROCEDURE {C} ( type: LONGINT; oldtype: ADDRESS ): LONGINT;
 	

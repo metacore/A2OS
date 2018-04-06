@@ -144,18 +144,11 @@ VAR
 
 	PROCEDURE {NOPAF} putc*(file: ADDRESS; c: CHAR);
 	CODE
-		PUSH ECX
-		MOV EAX, 4
-		MOV EBX, [ESP + 12]
-		LEA ECX, [ESP+8]	
-		MOV EDX, 1
-		INT 80H
-		POP ECX
-		JNE fail
-		MOV EAX, [ESP + 4]
-		RET
-		fail:
-		MOV EAX, -1
+		MOV EAX, 1
+		MOV RDI, [RSP + 16]
+		LEA RSI, [RSP + 8]
+		MOV RDX, 1
+		SYSCALL
 		RET
 	END putc;
 
@@ -193,20 +186,20 @@ VAR
 	PROCEDURE {INITIAL,NOPAF} Init0;
 	BEGIN
 		(*initial stack layout:
-			argc at esp
-			argv at esp+4
-			0 at esp+4+argc*4
-			env at esp+4+argc*4+4      =   (2+argc)<<2 + esp*)
-		CODE{SYSTEM.i386}
-			MOV EAX, [ESP]
-			MOV argc, EAX
-			LEA EAX, [ESP+4]
-			MOV argv, EAX
-			MOV EAX, [ESP]
-			ADD EAX, 2
-			SHL EAX, 2
-			ADD EAX, ESP
-			MOV environ, EAX
+			argc at rsp
+			argv at rsp+8
+			0 at rsp+8+argc*8
+			env at rsp+8+argc*8+8      =   (2+argc)<<3 + rsp*)
+		CODE{SYSTEM.AMD64}
+			MOV RAX, [RSP]
+			MOV argc, RAX
+			LEA RAX, [RSP+8]
+			MOV argv, RAX
+			MOV RAX, [RSP]
+			ADD RAX, 2
+			SHL RAX, 3
+			ADD RAX, RSP
+			MOV environ, RAX
 		END;
 		Init;
 	END Init0;

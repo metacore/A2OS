@@ -144,18 +144,11 @@ VAR
 
 	PROCEDURE {NOPAF} putc*(file: ADDRESS; c: CHAR);
 	CODE
-		PUSH ECX
 		MOV EAX, 4
-		MOV EBX, [ESP + 12]
-		LEA ECX, [ESP+8]	
+		MOV EBX, [ESP + 8]
+		LEA ECX, [ESP + 4]
 		MOV EDX, 1
 		INT 80H
-		POP ECX
-		JNE fail
-		MOV EAX, [ESP + 4]
-		RET
-		fail:
-		MOV EAX, -1
 		RET
 	END putc;
 

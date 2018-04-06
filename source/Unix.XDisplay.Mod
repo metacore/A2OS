@@ -647,7 +647,7 @@ VAR
 	END InitNames;
 
 	PROCEDURE getDisplayName;
-	VAR adr: LONGINT;  i: INTEGER;  ch: CHAR;
+	VAR adr: ADDRESS;  i: INTEGER;  ch: CHAR;
 	BEGIN
 		Unix.GetArgval( "-display", dispname );
 		IF dispname = "" THEN

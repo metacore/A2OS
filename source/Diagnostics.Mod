@@ -178,7 +178,7 @@ BEGIN
 	w.Char(Tab);
 	IF (source # "") THEN w.String (source); END;
 	IF (position # Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
-	w.Char(Tab);
+	w.String(": ");
 	IF (type = TypeWarning) THEN
 		w.String("warning");
 	ELSIF (type = TypeError) THEN

@@ -434,7 +434,7 @@ TYPE
 					VAR
 						dir: ADDRESS;   
 						tm: Unix.TmPtr;  date, time: LONGINT;  
-						stat: Unix.Status; r: LONGINT;
+						stat: Unix.Status; r: LONGINT; p: ADDRESS;
 					BEGIN
 						dir := Unix.opendir( ADDRESSOF( dirName ) );
 						IF dir # 0 THEN
@@ -456,8 +456,8 @@ TYPE
 											r := Unix.access( ADDRESSOF( fullName ), Unix.W_OK ); 
 											IF r < 0 THEN  flags := {Files.ReadOnly}  END
 										END;
-										r := Unix.realpath(ADDRESSOF(fullName), ADDRESSOF(xName));
-										IF (r # 0) THEN COPY(xName, fullName) END;
+										p := Unix.realpath(ADDRESSOF(fullName), ADDRESSOF(xName));
+										IF (p # 0) THEN COPY(xName, fullName) END;
 										enum.PutEntry( fullName, flags, time, date, stat.size );
 									END
 								END;
@@ -500,7 +500,7 @@ TYPE
 				END Enumerate0;
 				
 				PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-				VAR r: LONGINT;stat: Unix.Status;
+				VAR r: LONGINT; p: ADDRESS; stat: Unix.Status;
 				BEGIN
 					r := Unix.stat( ADDRESSOF( name ), stat );
 					IF r  # 0 THEN RETURN FALSE END;
@@ -511,8 +511,8 @@ TYPE
 						r := Unix.access( ADDRESSOF( name ), Unix.W_OK ); 
 						IF r < 0 THEN  flags := {Files.ReadOnly}  END
 					END;
-					r := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
-					IF (r = 0) THEN COPY(name, fullName) END; (* no success *)
+					p := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
+					IF (p = 0) THEN COPY(name, fullName) END; (* no success *)
 					RETURN TRUE;
 				END Has;
 

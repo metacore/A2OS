@@ -825,7 +825,7 @@ VAR
 	END CopyContext;
 
 
-	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: LONGINT );
+	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: ADDRESS );
 	BEGIN
 		cont.r_pc := pc;
 		cont.r_bp := bp;

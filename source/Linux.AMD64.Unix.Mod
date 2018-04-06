@@ -388,7 +388,7 @@ VAR
 	noPaths: LONGINT;
 
 
-	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: HUGEINT );
+	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: ADDRESS );
 	BEGIN
 		cont.mc.r_pc := pc;
 		cont.mc.r_bp := bp;

@@ -376,7 +376,7 @@ VAR
 	libraryPaths: ARRAY 7 OF ARRAY 32 OF CHAR;
 	noPaths: LONGINT;
 	
-	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: HUGEINT );
+	PROCEDURE ModifyContext*( cont: Ucontext;  pc, bp, sp: ADDRESS );
 	BEGIN
 		cont.mc.r_pc := pc;
 		cont.mc.r_bp := bp;

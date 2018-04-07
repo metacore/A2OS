@@ -721,8 +721,8 @@ VAR
 	PROCEDURE ThrSleep*(ms: LONGINT);
 	VAR
 		sltime,rem: RECORD
-			tv_sec: WORD;        (* seconds *)
-			tv_nsec: WORD;       (* nanoseconds *)
+			tv_sec: LONGWORD;        (* seconds *)
+			tv_nsec: LONGWORD;       (* nanoseconds *)
      	END;
 	BEGIN
 		sltime.tv_sec := ms DIV 1000;

@@ -29,16 +29,16 @@ VAR
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
 	CODE
 		; ELF header
-		DB 07FH, 'ELF', 1, 1, 1, 0
+		DB 07FH, 'ELF', 2, 1, 1, 0
 		DD 0, 0
-		DW 02, 03
+		DW 02, 62
 		DD 01
-		DD entry + base; program entry point
-		DD elfheadersize
-		DD 0
+		DQ entry + base; program entry point
+		DQ elfheadersize
+		DQ 0
 		DD 0
 		DW elfheadersize
-		DW 20H
+		DW 38H
 		DW 3 ; #program header table entries
 		DW 0
 		DW 0
@@ -48,52 +48,52 @@ VAR
 
 		; program header
 		DD 1
-		DD 0
-		DD base; 
-		DD base; 
-		DD @last - base; segment size (file)
-		DD @last - base; segment size (memory)
 		DD 07
-		DD 1000H; alignment
+		DQ 0
+		DQ base; 
+		DQ base; 
+		DQ @last - base; segment size (file)
+		DQ @last - base; segment size (memory)
+		DQ 1000H; alignment
 		
 		; interpreter header
 		DD 3
-		DD interpretername; interpreter name offset
-		DD interpretername + base; interpreter name 
-		DD interpretername + base; interpreter name
-		DD interpretername_end - interpretername ; interpreter name length
-		DD interpretername_end - interpretername ; interpreter name length
 		DD 4H
-		DD 1H
+		DQ interpretername; interpreter name offset
+		DQ interpretername + base; interpreter name 
+		DQ interpretername + base; interpreter name
+		DQ interpretername_end - interpretername ; interpreter name length
+		DQ interpretername_end - interpretername ; interpreter name length
+		DQ 1H
 
 		; dynamic header
 		DD 02H
-		DD dynamicsection 
-		DD dynamicsection + base
-		DD dynamicsection + base
-		DD dynamicsection_end - dynamicsection ; size of dynamic section
-		DD dynamicsection_end - dynamicsection ; size of dynamic section
 		DD 06H
-		DD 04H
+		DQ dynamicsection 
+		DQ dynamicsection + base
+		DQ dynamicsection + base
+		DQ dynamicsection_end - dynamicsection ; size of dynamic section
+		DQ dynamicsection_end - dynamicsection ; size of dynamic section
+		DQ 08H
 
 		dynamicsection:
-		DD 05H, base + stringtable
-		DD 06H, symboltablebegin + base
-		DD 07H, dlsymrelocation + base
-		DD 08H, dlsymrelocation_end-dlsymrelocation ; size (relocationtable)
-		DD 09H, 0CH
-		DD 0AH, stringtable_end - stringtable; size (stringtable)
-		DD 0BH, 10H
+		DQ 05H, base + stringtable
+		DQ 06H, symboltablebegin + base
+		DQ 07H, dlsymrelocation + base
+		DQ 08H, dlsymrelocation_end-dlsymrelocation ; size (relocationtable)
+		DQ 09H, 18H
+		DQ 0AH, stringtable_end - stringtable; size (stringtable)
+		DQ 0BH, 18H
 		
-		DD 01H, libname - stringtable; position of libname
-		DD 0H, 0H ; sentinel
+		DQ 01H, libname - stringtable; position of libname
+		DQ 0H, 0H ; sentinel
 		dynamicsection_end:		
 		
 	 	dlsymrelocation:
-		DD @dlsym
-		DB 01H
-		DB 01H, 00H, 00H; index of the symbol
-		DD 0H
+		DQ @dlsym
+		DD 01H
+		DD 01H ; index of the symbol
+		DQ 0H
 		dlsymrelocation_end:
 
 		stringtable:
@@ -108,28 +108,28 @@ VAR
 		
 		stringtable_end:
 		
-		ALIGN 4
+		ALIGN 8
 		symboltablebegin:
 		DD	0;
-		DD	0
-		DD	0
 		DB	0
 		DB	0
 		DW 0
+		DQ	0
+		DQ	0
 		
 		; dlsym symbol
 		DD dlsymname - stringtable; position of dlsymname
-		DD	0
-		DD	0
 		DB	12H ; info: global + function
 		DB 0
 		DW	0
+		DQ	0
+		DQ	0
 
 		interpretername:
-		DB '/lib/ld-linux.so.2', 0
+		DB '/lib64/ld-linux-x86-64.so.2', 0
 		interpretername_end:
 
-		ALIGN 4
+		ALIGN 8
 
 		entry:
 	END EntryPoint;

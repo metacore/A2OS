@@ -283,8 +283,8 @@ TYPE
 			END;
 	tvPtr* = POINTER TO Timeval;
 	Timeval* = RECORD
-				sec*	: LONGINT;
-				usec*	: LONGINT
+				sec*	: HUGEINT;
+				usec*	: HUGEINT
 			END;
 
 	TmPtr* = POINTER TO Tm;
@@ -307,7 +307,7 @@ TYPE
 
 
 CONST
-	FdSetLen* = 32;
+	FdSetLen* = 16;
 
 TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
@@ -336,28 +336,29 @@ TYPE
 
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
-				r_gs-		: ADDRESS;
-				r_fs-		: ADDRESS;
-				r_es-		: ADDRESS;
-				r_ds-		: ADDRESS;
-				r_di-		: ADDRESS;
-				r_si-		: ADDRESS;
-				r_bp *		: ADDRESS;
-				r_sp_x-	: ADDRESS;
-				r_bx-		: ADDRESS;
-				r_dx-		: ADDRESS;
-				r_cx-		: ADDRESS;
-				r_ax-		: ADDRESS;
-				r_trapno-	: LONGINT;
-				r_err-		: LONGINT;
-				r_pc*		: ADDRESS;
-				r_cs-		: ADDRESS;
-				r_flags-	: LONGINT;
-				r_sp*		: ADDRESS;		(* sp at error (signal) *)
-				r_ss-		: LONGINT;
-				fpc-		: ADDRESS; 	(* FPcontext *)
-				oldmask-	: LONGINT;
-				cr2-		: LONGINT
+				r_8			: HUGEINT;
+  				r_9			: HUGEINT;
+  				r_10		: HUGEINT;
+  				r_11		: HUGEINT;
+  				r_12		: HUGEINT;
+  				r_13		: HUGEINT;
+  				r_14		: HUGEINT;
+  				r_15		: HUGEINT;
+  				r_di		: HUGEINT;
+  				r_si		: HUGEINT;
+  				r_bp-		: HUGEINT;
+  				r_bx		: HUGEINT;
+  				r_dx		: HUGEINT;
+  				r_ax		: HUGEINT;
+  				r_cx		: HUGEINT;
+  				r_sp-		: HUGEINT;
+  				r_pc-		: HUGEINT;
+  				r_efl		: HUGEINT;
+  				r_csgsfs	: HUGEINT;           (* Actually short cs, gs, fs, pad0.  *)
+  				err-		: HUGEINT;
+  				trapno-	: HUGEINT;
+  				oldmask	: HUGEINT;
+  				cr2			: HUGEINT;
 			END;
 
 	FPcontext* = POINTER TO FPcontextDesc;
@@ -1036,13 +1037,11 @@ VAR
 		argv := Glue.argv;
 		environ := Glue.environ;
 
-		libraryPaths[0] := "/lib/i386-linux-gnu/i686/cmov";
-		libraryPaths[1] := "/usr/lib/i386-linux-gnu";
-		libraryPaths[2] := "/lib/i386-linux-gnu";
-		libraryPaths[3] := "/lib";
-		libraryPaths[4] := "/usr/lib";
-		libraryPaths[5] := "/usr/lib32";
-		noPaths := 6;
+		libraryPaths[0] := "/lib/x86_64-linux-gnu";
+		libraryPaths[1] := "/usr/lib/x86_64-linux-gnu";
+		libraryPaths[2] := "/lib";
+		libraryPaths[3] := "/usr/lib";
+		noPaths := 4;
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 );

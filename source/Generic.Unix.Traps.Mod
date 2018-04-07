@@ -92,12 +92,6 @@ VAR
 		w.String( "SP  = " );  w.Address( mc.r_sp );  
 		w.String( " FP  = " );  w.Address( mc.r_bp );
 		w.String( " PC  = " );  w.Address( mc.r_pc );  w.Ln;
-		w.String( "EAX = "); w.Address( mc.r_ax );
-		w.String(" EBX = "); w.Address( mc.r_bx );
-		w.String(" ECX = "); w.Address( mc.r_cx );
-		w.String(" EDX = "); w.Address( mc.r_dx );
-		w.String(" ESI = "); w.Address( mc.r_si );
-		w.String(" EDI = "); w.Address( mc.r_di );  w.Ln;
 	END Registers;
 
 

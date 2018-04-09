@@ -261,31 +261,30 @@ TYPE
 
 
 TYPE
-	DevT* = HUGEINT;
+	DevT* = LONGWORD;
 	InoT* = LONGWORD;
 
 	Status* = RECORD
 				dev-		: DevT;
-				unused1-	: LONGINT;
-				ino-		: LONGINT;
-				mode-	: LONGINT;
-				nlink-		: LONGINT;
-				uid-		: LONGINT;
-				gid-		: LONGINT;
+				ino-		: InoT;
+				nlink-		: LONGWORD;
+				mode-	: WORD;
+				uid-		: WORD;
+				gid-		: WORD;
+				pad0-		: WORD;
 				rdev-		: DevT;
-				unused2-	: LONGINT;
-				size-		: LONGINT;
-				blksize-	: LONGINT;
-				blocks-	: LONGINT;
+				size-		: LONGWORD;
+				blksize-	: LONGWORD;
+				blocks-	: LONGWORD;
 				atime-	: Timeval;
 				mtime-	: Timeval;
 				ctime-	: Timeval;
-				unused-	: ARRAY 2 OF LONGINT;
+				reserved-	: ARRAY 3 OF LONGWORD;
 			END;
 	tvPtr* = POINTER TO Timeval;
 	Timeval* = RECORD
-				sec*	: HUGEINT;
-				usec*	: HUGEINT
+				sec*	: LONGWORD;
+				usec*	: LONGWORD;
 			END;
 
 	TmPtr* = POINTER TO Tm;
@@ -976,12 +975,12 @@ VAR
 
 	PROCEDURE fstat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
 	BEGIN
-		RETURN  fxstat( 3, fd, buf );
+		RETURN  fxstat( 1, fd, buf );
 	END fstat;
 
 	PROCEDURE stat*  ( path: ADDRESS;  VAR buf: Status ): LONGINT;
 	BEGIN
-		RETURN  xstat( 3, path, buf );
+		RETURN  xstat( 1, path, buf );
 	END stat;
 
 	

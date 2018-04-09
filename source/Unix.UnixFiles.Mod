@@ -458,7 +458,7 @@ TYPE
 										END;
 										p := Unix.realpath(ADDRESSOF(fullName), ADDRESSOF(xName));
 										IF (p # 0) THEN COPY(xName, fullName) END;
-										enum.PutEntry( fullName, flags, time, date, stat.size );
+										enum.PutEntry( fullName, flags, time, date, LONGINT (stat.size) );
 									END
 								END;
 								ent := Unix.readdir( dir );

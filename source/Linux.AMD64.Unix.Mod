@@ -189,11 +189,12 @@ TYPE
 
 TYPE
 	DevT* = HUGEINT;
+	InoT* = LONGINT;
 
 	Status* = RECORD
 				dev-		: DevT;
 				unused1-	: LONGINT;
-				ino-		: LONGINT;
+				ino-		: InoT;
 				mode-	: LONGINT;
 				nlink-		: LONGINT;
 				uid-		: LONGINT;
@@ -239,7 +240,8 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-, off-	: LONGINT;   (* these may change to HUGEINT in future Linux releases!! *)
+				ino-	: InoT;   (* this may change to HUGEINT in future Linux releases!! *)
+				off-	: LONGINT;   (* this may change to HUGEINT in future Linux releases!! *)
 				reclen-		: INTEGER;
 				typ-		: CHAR;
 				name-		: (*array of*) CHAR;

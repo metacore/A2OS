@@ -262,6 +262,7 @@ TYPE
 
 TYPE
 	DevT* = HUGEINT;
+	InoT* = LONGWORD;
 
 	Status* = RECORD
 				dev-		: DevT;
@@ -314,7 +315,8 @@ TYPE
 
 
 	Dirent* = POINTER TO RECORD
-				ino-, off-	: LONGINT;   (* these may change to HUGEINT in future Linux releases!! *)
+				ino-	: InoT;
+				off-	: LONGWORD;
 				reclen-	: INTEGER;
 				typ-		: CHAR;
 				name-	: (*array of*) CHAR;

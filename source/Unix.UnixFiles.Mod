@@ -531,7 +531,7 @@ TYPE
 				workName, registerName: Filename;
 				tempFile: BOOLEAN;
 				dev: Unix.DevT;
-				ino: LONGINT;
+				ino: Unix.InoT;
 				mtime: HUGEINT;
 				fsize, fpos: SIZE;
 				bufs: ARRAY NBufs OF Buffer;

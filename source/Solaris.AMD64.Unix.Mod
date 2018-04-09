@@ -190,11 +190,12 @@ TYPE
 
 TYPE
 	DevT* = LONGINT;
+	InoT* = LONGINT;
 
 	Status* = RECORD
 				dev-		: DevT;
 				pad1-		: ARRAY 3 OF LONGINT;
-				ino-		: LONGINT;
+				ino-		: InoT;
 				mode-	: LONGINT;
 				nlink-		: LONGINT;
 				uid-		: LONGINT;
@@ -242,7 +243,8 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-, off-	: LONGINT;
+				ino-	: InoT;
+				off-	: LONGINT;
 				reclen-	: INTEGER;
 				name-	: (*array of*) CHAR;
 			END;

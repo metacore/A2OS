@@ -2526,112 +2526,112 @@ TYPE
 		END EmitCas;
 
 		PROCEDURE EmitCopy(CONST instruction: IntermediateCode.Instruction);
-		VAR op1,op2,op3: Assembler.Operand; esi, edi, ecx, t: Ticket; temp,imm: Assembler.Operand; source, dest: IntermediateCode.Operand; size: HUGEINT;
+		VAR op1,op2,op3: Assembler.Operand; rs, rd, rc, t: Ticket; temp,imm: Assembler.Operand; source, dest: IntermediateCode.Operand; size: HUGEINT;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3, size) & (size = 4) THEN
-				Spill(physicalRegisters.Mapped(ESI));
-				Spill(physicalRegisters.Mapped(EDI));
-				esi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RS,inPC);
-				edi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RD,inPC);
-				MakeOperand(instruction.op1,Low,op1,edi);
-				MakeOperand(instruction.op2,Low,op2,esi);
+				Spill(physicalRegisters.Mapped(RS));
+				Spill(physicalRegisters.Mapped(RD));
+				rs := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RS,inPC);
+				rd := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RD,inPC);
+				MakeOperand(instruction.op1,Low,op1,rd);
+				MakeOperand(instruction.op2,Low,op2,rs);
 				emitter.Emit0(InstructionSet.opMOVSD);
-				UnmapTicket(esi);
-				UnmapTicket(edi);
+				UnmapTicket(rs);
+				UnmapTicket(rd);
 			ELSE
-				Spill(physicalRegisters.Mapped(ESI));
-				Spill(physicalRegisters.Mapped(EDI));
+				Spill(physicalRegisters.Mapped(RS));
+				Spill(physicalRegisters.Mapped(RD));
 				IF backend.cooperative THEN ap.spillable := TRUE END;
-				Spill(physicalRegisters.Mapped(ECX)); 
+				Spill(physicalRegisters.Mapped(RC)); 
 
-				esi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RS,inPC);
-				edi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RD,inPC);
-				ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,RC,inPC);
+				rs := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RS,inPC);
+				rd := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RD,inPC);
+				rc := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RC,inPC);
 
-				MakeOperand(instruction.op1,Low,op1,edi);
-				MakeOperand(instruction.op2,Low,op2,esi);
+				MakeOperand(instruction.op1,Low,op1,rd);
+				MakeOperand(instruction.op2,Low,op2,rs);
 
 				IF (instruction.op1.mode = IntermediateCode.ModeRegister) & (instruction.op1.register = IntermediateCode.SP) &  IntermediateCode.IsConstantInteger(instruction.op3, size) & (size >= 4096)  THEN
 					(* special case on stack: copy downwards for possible stack allocation *)
 					IF size MOD 4 # 0 THEN
 						imm := Assembler.NewImm32(size-1);
-						emitter.Emit2(InstructionSet.opADD, opEDI, imm);
-						emitter.Emit2(InstructionSet.opADD, opESI, imm);
+						emitter.Emit2(InstructionSet.opADD, opRDI, imm);
+						emitter.Emit2(InstructionSet.opADD, opRSI, imm);
 						imm := Assembler.NewImm32(size MOD 4);
-						emitter.Emit2(InstructionSet.opMOV, opECX, imm);
+						emitter.Emit2(InstructionSet.opMOV, opRC, imm);
 						emitter.Emit0(InstructionSet.opSTD); (* copy down *)
 						emitter.EmitPrefix (InstructionSet.prfREP);
 						emitter.Emit0(InstructionSet.opMOVSB);
 						imm := Assembler.NewImm32(size DIV 4);
-						emitter.Emit2(InstructionSet.opMOV, opECX, imm);
+						emitter.Emit2(InstructionSet.opMOV, opRC, imm);
 						emitter.EmitPrefix (InstructionSet.prfREP);
 						emitter.Emit0(InstructionSet.opMOVSD);
 					ELSE
 						imm := Assembler.NewImm32(size-4);
-						emitter.Emit2(InstructionSet.opADD, opEDI, imm);
-						emitter.Emit2(InstructionSet.opADD, opESI, imm);
+						emitter.Emit2(InstructionSet.opADD, opRDI, imm);
+						emitter.Emit2(InstructionSet.opADD, opRSI, imm);
 						imm := Assembler.NewImm32(size DIV 4);
-						emitter.Emit2(InstructionSet.opMOV, opECX, imm);
+						emitter.Emit2(InstructionSet.opMOV, opRC, imm);
 						emitter.Emit0(InstructionSet.opSTD); (* copy down *)
 						emitter.EmitPrefix (InstructionSet.prfREP);
 						emitter.Emit0(InstructionSet.opMOVSD);
 					END
 				ELSIF  IntermediateCode.IsConstantInteger(instruction.op3, size) THEN
 					imm := Assembler.NewImm32(size DIV 4);
-					emitter.Emit2(InstructionSet.opMOV, opECX, imm);
+					emitter.Emit2(InstructionSet.opMOV, opRC, imm);
 					emitter.Emit0(InstructionSet.opCLD); (* copy upwards *)
 					emitter.EmitPrefix (InstructionSet.prfREP);
 					emitter.Emit0(InstructionSet.opMOVSD);
 					IF size MOD 4 # 0 THEN
 						imm := Assembler.NewImm32(size MOD 4);
-						emitter.Emit2(InstructionSet.opMOV, opECX, imm);
+						emitter.Emit2(InstructionSet.opMOV, opRC, imm);
 						emitter.EmitPrefix (InstructionSet.prfREP);
 						emitter.Emit0(InstructionSet.opMOVSB);
 					END;
 				(* this does not work in the kernel -- for whatever reasons *)
 				ELSIF (instruction.op1.mode = IntermediateCode.ModeRegister) & (instruction.op1.register = IntermediateCode.SP) THEN
-					MakeOperand(instruction.op3,Low,op3,ecx);
-					t := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, IntermediateCode.int32);
+					MakeOperand(instruction.op3,Low,op3,rc);
+					t := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, instruction.op1.type);
 					TicketToOperand(t, temp);
-					emitter.Emit2(InstructionSet.opADD, opESI, opECX);
-					emitter.Emit2(InstructionSet.opADD, opEDI, opECX);
+					emitter.Emit2(InstructionSet.opADD, opRSI, opRC);
+					emitter.Emit2(InstructionSet.opADD, opRDI, opRC);
 					imm := Assembler.NewImm8(1);
-					emitter.Emit2(InstructionSet.opSUB, opESI, imm);
-					emitter.Emit2(InstructionSet.opSUB, opEDI, imm);
-					emitter.Emit2(InstructionSet.opMOV, temp, opECX);
+					emitter.Emit2(InstructionSet.opSUB, opRSI, imm);
+					emitter.Emit2(InstructionSet.opSUB, opRDI, imm);
+					emitter.Emit2(InstructionSet.opMOV, temp, opRC);
 					imm := Assembler.NewImm8(3);
-					emitter.Emit2(InstructionSet.opAND, opECX, imm);
+					emitter.Emit2(InstructionSet.opAND, opRC, imm);
 					emitter.Emit0(InstructionSet.opSTD); (* copy downwards *)
 					emitter.EmitPrefix (InstructionSet.prfREP);
 					emitter.Emit0(InstructionSet.opMOVSB);
 					imm := Assembler.NewImm8(2);
-					emitter.Emit2(InstructionSet.opMOV, opECX, temp);
-					emitter.Emit2(InstructionSet.opSHR, opECX, imm);
+					emitter.Emit2(InstructionSet.opMOV, opRC, temp);
+					emitter.Emit2(InstructionSet.opSHR, opRC, imm);
 					imm := Assembler.NewImm8(3);
-					emitter.Emit2(InstructionSet.opSUB, opESI, imm);
-					emitter.Emit2(InstructionSet.opSUB, opEDI, imm);
+					emitter.Emit2(InstructionSet.opSUB, opRSI, imm);
+					emitter.Emit2(InstructionSet.opSUB, opRDI, imm);
 					emitter.EmitPrefix (InstructionSet.prfREP);
 					emitter.Emit0(InstructionSet.opMOVSD);
 					emitter.Emit0(InstructionSet.opCLD);
 				ELSE
-					MakeOperand(instruction.op3,Low,op3,ecx);
-					t := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, IntermediateCode.int32);
+					MakeOperand(instruction.op3,Low,op3,rc);
+					t := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, instruction.op1.type);
 					TicketToOperand(t, temp);
-					emitter.Emit2(InstructionSet.opMOV, temp, opECX);
+					emitter.Emit2(InstructionSet.opMOV, temp, opRC);
 					imm := Assembler.NewImm8(3);
 					emitter.Emit2(InstructionSet.opAND, temp, imm);
 					imm := Assembler.NewImm8(2);
-					emitter.Emit2(InstructionSet.opSHR, opECX, imm);
+					emitter.Emit2(InstructionSet.opSHR, opRC, imm);
 					emitter.Emit0(InstructionSet.opCLD); (* copy upwards *)
 					emitter.EmitPrefix (InstructionSet.prfREP);
 					emitter.Emit0(InstructionSet.opMOVSD);
-					emitter.Emit2(InstructionSet.opMOV, opECX, temp);
+					emitter.Emit2(InstructionSet.opMOV, opRC, temp);
 					emitter.EmitPrefix (InstructionSet.prfREP);
 					emitter.Emit0(InstructionSet.opMOVSB);
 				END;
-				UnmapTicket(esi);
-				UnmapTicket(edi);
-				UnmapTicket(ecx);
+				UnmapTicket(rs);
+				UnmapTicket(rd);
+				UnmapTicket(rc);
 				IF backend.cooperative THEN
 					UnSpill(ap);
 					ap.spillable := FALSE;
@@ -2643,7 +2643,7 @@ TYPE
 		PROCEDURE EmitFill(CONST instruction: IntermediateCode.Instruction; down: BOOLEAN);
 		VAR reg,sizeInBits,i: LONGINT;val, value, size, dest: Assembler.Operand;
 			op: LONGINT;
-			edi, ecx: Ticket;
+			rd, rc: Ticket;
 		BEGIN
 			IF FALSE & (instruction.op2.mode = IntermediateCode.ModeImmediate) & (instruction.op2.symbol.name = "") & (instruction.op2.intValue < 5) THEN
 				sizeInBits := instruction.op3.type.sizeInBits;
@@ -2670,18 +2670,18 @@ TYPE
 					emitter.Emit2(InstructionSet.opMOV,dest,value);
 				END;
 			ELSE
-				Spill(physicalRegisters.Mapped(EDI));
+				Spill(physicalRegisters.Mapped(RD));
 				IF backend.cooperative THEN ap.spillable := TRUE END;
-				Spill(physicalRegisters.Mapped(ECX));
-				edi := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,EDI,inPC);
-				ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,ECX,inPC);
+				Spill(physicalRegisters.Mapped(RC));
+				rd := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RD,inPC);
+				rc := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RC,inPC);
 
-				MakeOperand(instruction.op1,Low,dest,edi);
-				MakeOperand(instruction.op2,Low,size,ecx);
+				MakeOperand(instruction.op1,Low,dest,rd);
+				MakeOperand(instruction.op2,Low,size,rc);
 				MakeOperand(instruction.op3,Low,value,NIL);
 				(*
-				emitter.Emit2(InstructionSet.opMOV,opEDI, op1[Low]);
-				emitter.Emit2(InstructionSet.opMOV,opECX, op3[Low]);
+				emitter.Emit2(InstructionSet.opMOV,opRDI, op1[Low]);
+				emitter.Emit2(InstructionSet.opMOV,opRC, op3[Low]);
 				*)
 				CASE instruction.op3.type.sizeInBits OF
 					IntermediateCode.Bits8: val := opAL; op := InstructionSet.opSTOSB;
@@ -2706,7 +2706,7 @@ TYPE
 				IF down THEN (* needed as calls to windows crash otherwise *)
 					emitter.Emit0(InstructionSet.opCLD);
 				END;
-				UnmapTicket(ecx);
+				UnmapTicket(rc);
 				IF backend.cooperative THEN
 					UnSpill(ap);
 					ap.spillable := FALSE;

@@ -1456,7 +1456,7 @@ TYPE
 
 	PROCEDURE ConvertSet*(this: SET; bits: LONGINT): SET;
 	BEGIN
-		RETURN this * {0 .. MIN (bits, MAX (SET)) - 1};
+		RETURN this * {0 .. MIN (bits - 1, MAX (SET))};
 	END ConvertSet;
 
 	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;

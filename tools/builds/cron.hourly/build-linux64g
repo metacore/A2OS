@@ -2,8 +2,8 @@
 
 dir="/var/tmp/a2/"
 update () { svn checkout --non-interactive --quiet --username eth.a2guest --password a2guest https://svn.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$dir" && make --directory "$dir" --quiet dependencies && version=$(svnversion "$dir/source"); }
-check () { make --question --directory "$dir" --quiet release platform=Linux64G; }
-build () { timeout 1h make --directory "$dir" --quiet release platform=Linux64G; }
+check () { make --question --directory "$dir" --quiet build platform=Linux64G; }
+build () { timeout 1h make --directory "$dir" --quiet build platform=Linux64G; }
 notify () { sendbuild "A2 Builds" "Linux64G" "$version" "$1"; }
 
 update || exit 1

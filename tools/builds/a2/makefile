@@ -42,8 +42,8 @@ Oberon.Execution.Test.Diff: oberon FoxTest.GofU source/Oberon.Execution.Test
 
 ifdef platform
 
-.PHONY: release
-release: $(if $(filter Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G, $(platform)), $(platform), $(error invalid platform))
+.PHONY: build
+build: $(if $(filter Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G, $(platform)), $(platform), $(error invalid platform))
 
 $(platform): oberon source/Release.Tool $(addprefix source/, $(shell env AOSPATH=source ./original Release.Build --list $(platform) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' '))
 	@rm -rf $@ && mkdir $@

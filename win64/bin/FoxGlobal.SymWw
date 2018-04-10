@@ -242,6 +242,7 @@ VAR
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType; 
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType; 
 	Character8-, Character16-, Character32-: SyntaxTree.CharacterType; 
+	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType; 
 	Float32-, Float64-: SyntaxTree.FloatType; 
 	Complex64-, Complex128-: SyntaxTree.ComplexType; 
 	Byte8: SyntaxTree.ByteType; 
@@ -286,12 +287,14 @@ VAR
 	PROCEDURE ^ MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT; 
 	PROCEDURE ^ MaxFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
 	PROCEDURE ^ MinFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
+	PROCEDURE ^ ConvertSet*(this: SET; bits: LONGINT): SET; 
 	PROCEDURE ^ IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetSignedIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value; 
 	PROCEDURE ^ NewBooleanValue*(system: System; position: Position; b: BOOLEAN): SyntaxTree.Value; 
+	PROCEDURE ^ GetSetType*(system: System; this: SET): SyntaxTree.SetType; 
 	PROCEDURE ^ NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value; 
 	PROCEDURE ^ NewCharacterValue*(system: System; position: Position; c: CHAR): SyntaxTree.Value; 
 	PROCEDURE ^ NewNilValue*(system: System; position: Position): SyntaxTree.Value; 

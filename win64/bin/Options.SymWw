@@ -33,6 +33,7 @@ TYPE
 		arg: Streams.Reader; 
 		error: Streams.Writer; 
 		setError: BOOLEAN; 
+		flagUnknownOptions: BOOLEAN; 
 		timestamp: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
@@ -47,6 +48,8 @@ TYPE
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ Parse*(arg: Streams.Reader; error: Streams.Writer): BOOLEAN; 
+		PROCEDURE ^ ParseStaged*(arg: Streams.Reader; error: Streams.Writer): BOOLEAN; 
+		PROCEDURE ^ ParseWithOptions(arg: Streams.Reader; error: Streams.Writer; flagUnknownOptions: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ ParseString*(CONST string: ARRAY OF CHAR; error: Streams.Writer): BOOLEAN; 
 		PROCEDURE ^ ParseOptions(): BOOLEAN; 
 		PROCEDURE ^ ParseOption(): BOOLEAN; 

@@ -1,5 +1,5 @@
 MODULE Serials;
-	IMPORT Streams, Modules, KernelLog, Commands;
+	IMPORT Streams, Modules, KernelLog, Commands, Machine, Trace;
 CONST 
 	Verbose = TRUE; 
 	MaxPorts* = 64; 
@@ -11,6 +11,10 @@ CONST
 	Stop1* = 1; 
 	Stop2* = 2; 
 	Stop1dot5* = 3; 
+	DefaultBPS = 115200; 
+	DefaultDataBits = 8; 
+	DefaultParity = ParNo; 
+	DefaultStop = Stop1; 
 	DTR* = 0; 
 	RTS* = 1; 
 	Break* = 2; 
@@ -53,11 +57,18 @@ TYPE
 	END Port; 
 VAR 
 	ports: ARRAY MaxPorts OF Port; 
+	tracePort: Port; 
+	traceChar0: Trace.CharProc; 
 
 	PROCEDURE ^ RegisterPort*(port: Port; CONST description: ARRAY OF CHAR); 
 	PROCEDURE ^ UnRegisterPort*(port: Port); 
 	PROCEDURE ^ RegisterOnboardPort*(portNumber: LONGINT; port: Port; CONST name, description: ARRAY OF CHAR); 
 	PROCEDURE ^ GetPort*(portNumber: LONGINT): Port; 
+	PROCEDURE ^ TraceChar(ch: CHAR); 
+	PROCEDURE ^ SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ IsTracePort*(port: Port): BOOLEAN; 
+	PROCEDURE ^ GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR params: SET; VAR res: LONGINT); 
+	PROCEDURE ^ SetTrace*(context: Commands.Context); 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 	PROCEDURE ^ CloseAllPorts*(context: Commands.Context); 

@@ -2046,15 +2046,16 @@ TYPE
 				END;
 			END;
 			IF constant THEN
-				value := SyntaxTree.NewSetValue(set.position,s);
-				value.SetType(system.setType);
+				value := Global.NewSetValue(system,set.position,s);
 				result.SetResolved(value);
+				result.SetType(value.type);
+			ELSE
+				result.SetType(system.setType);
 			END;
 			(* optimization possible
 				convert {a,b,1,2,3,4,c,d} into {a,b,c,d} + {1,2,3,4}
 				left this to the programmer...
 			*)
-			result.SetType(system.setType);
 			resolvedExpression := result;
 		END VisitSet;
 
@@ -2254,7 +2255,7 @@ TYPE
 						IF IsSetValue(left,set) THEN
 							value := SyntaxTree.NewSetValue(unaryExpression.position,-set);
 							result.SetResolved(value);
-							type := left.type;
+							type := Global.GetSetType(system,-set);
 							value.SetType(type);
 						ELSE
 							type := left.type;
@@ -2509,6 +2510,10 @@ TYPE
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.PortType) THEN
 					result := ConvertValue(position, expression, system.integerType);
+				ELSIF (type IS SyntaxTree.SetType) THEN
+					set := Global.ConvertSet(set,system.SizeOf(type));
+					result := SyntaxTree.NewSetValue(expression.position,set);
+					result.SetType(type);
 				ELSE
 					Error(position, "set value cannot be converted");
 					result := SyntaxTree.invalidExpression;
@@ -2909,10 +2914,9 @@ TYPE
 
 			PROCEDURE NewSet(v: SET);
 			BEGIN
-				value := SyntaxTree.NewSetValue(binaryExpression.position,v);
-				value.SetType(system.setType);
+				value := Global.NewSetValue(system,binaryExpression.position,v);
 				result.SetResolved(value);
-				type := system.setType;
+				type := value.type;
 			END NewSet;
 
 			PROCEDURE NewInteger(v: HUGEINT; t: SyntaxTree.Type);
@@ -8985,7 +8989,7 @@ TYPE
 						result := Global.BasicTypeDistance(system,this(SyntaxTree.BasicType),to(SyntaxTree.BasicType)) < Infinity;
 					END
 				ELSIF (to IS SyntaxTree.SetType) & (this IS SyntaxTree.SetType) THEN
-					result := to.sizeInBits = this.sizeInBits;
+					result := to.sizeInBits >= this.sizeInBits;
 				ELSIF (to IS SyntaxTree.IntegerType) & (this IS SyntaxTree.AddressType) THEN
 					result := to.sizeInBits >= this.sizeInBits; (* weak compatibility: (unsigned) address may be assigned to signed integer of same (or greater) size *)
 				ELSIF (to IS SyntaxTree.IntegerType) & (this IS SyntaxTree.SizeType) THEN

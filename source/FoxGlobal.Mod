@@ -201,6 +201,7 @@ VAR
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType;
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType;
 	Character8-, Character16-, Character32-: SyntaxTree.CharacterType;
+	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType;
 	Float32-, Float64-: SyntaxTree.FloatType;
 	Complex64-, Complex128-: SyntaxTree.ComplexType;
 	Byte8: SyntaxTree.ByteType;
@@ -851,6 +852,11 @@ TYPE
 		DeclareType(system.anyType,"ANY",system.globalScope);
 		DeclareType(system.objectType,"OBJECT",system.globalScope);
 
+		DeclareType(Set8, "SET8", system.globalScope);
+		DeclareType(Set16, "SET16", system.globalScope);
+		DeclareType(Set32, "SET32", system.globalScope);
+		DeclareType(Set64, "SET64", system.globalScope);
+
 		(* global functions *)
 		NewBuiltin(Abs,"ABS",system.globalScope,TRUE);
 		NewBuiltin(Ash,"ASH",system.globalScope,TRUE);
@@ -1448,6 +1454,11 @@ TYPE
 		IF system.SizeOf(type) = 32 THEN RETURN MIN(REAL) ELSE RETURN MIN(LONGREAL) END;
 	END MinFloat;
 
+	PROCEDURE ConvertSet*(this: SET; bits: LONGINT): SET;
+	BEGIN
+		RETURN this * {0 .. MIN (bits, MAX (SET)) - 1};
+	END ConvertSet;
+
 	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
 	VAR m: HUGEINT;
 	BEGIN
@@ -1520,12 +1531,21 @@ TYPE
 		value.SetType(system.booleanType);
 		RETURN value
 	END NewBooleanValue;
+	
+	PROCEDURE GetSetType*(system: System; this: SET): SyntaxTree.SetType;
+	BEGIN
+		IF this * {0 .. 7} = this THEN RETURN Set8
+		ELSIF this * { 0 .. 15 } = this THEN RETURN Set16
+		ELSIF this * { 0 .. 31 } = this THEN RETURN Set32
+		ELSE RETURN Set64
+		END
+	END GetSetType;
 
 	PROCEDURE NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value;
 	VAR value: SyntaxTree.SetValue;
 	BEGIN
 		value := SyntaxTree.NewSetValue(position,s);
-		value.SetType(system.setType);
+		value.SetType(GetSetType(system,s));
 		RETURN value
 	END NewSetValue;
 
@@ -1777,6 +1797,10 @@ TYPE
 		Character8 := SyntaxTree.NewCharacterType(8);
 		Character16 := SyntaxTree.NewCharacterType(16);
 		Character32 := SyntaxTree.NewCharacterType(32);
+		Set8 := SyntaxTree.NewSetType(8);
+		Set16 := SyntaxTree.NewSetType(16);
+		Set32 := SyntaxTree.NewSetType(32);
+		Set64 := SyntaxTree.NewSetType(64);
 	END Init;
 
 BEGIN

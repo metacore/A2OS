@@ -3730,6 +3730,7 @@ TYPE
 				Evaluate(x.left,left);
 				Evaluate(x.right,right);
 				Convert(left.op,setType);
+				Convert(right.op,setType);
 				ReuseCopy(temp.op,right.op);
 				Emit(Shr(position,temp.op,temp.op,left.op));
 				ReleaseOperand(right); ReleaseOperand(left);
@@ -7658,15 +7659,15 @@ TYPE
 			|Global.Excl,Global.Incl:
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
-				Convert(s1.op,setType);
+				Convert(s1.op,s0.op.type);
 				IF (s1.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
-					TrapC(BrltL,s1.op,IntermediateCode.Immediate(setType,setType.sizeInBits),IndexCheckTrap);
+					TrapC(BrltL,s1.op,IntermediateCode.Immediate(s0.op.type,p0.type.resolved.sizeInBits),IndexCheckTrap);
 				END;
 				ReuseCopy(res,s0.op);
 				ReleaseOperand(s0);
 				Reuse1(tmp,s1.op);
 				ReleaseOperand(s1);
-				Emit(Shl(position,tmp,IntermediateCode.Immediate(setType,1),s1.op));
+				Emit(Shl(position,tmp,IntermediateCode.Immediate(s0.op.type,1),s1.op));
 				IF x.id = Global.Excl THEN
 					Emit(Not(position,tmp,tmp));
 					Emit(And(position,res,res,tmp));
@@ -7675,7 +7676,7 @@ TYPE
 				END;
 				ReleaseIntermediateOperand(tmp);
 				Designate(p0,s0);
-				ToMemory(s0.op,setType,0);
+				ToMemory(s0.op,s0.op.type,0);
 				Emit(Mov(position,s0.op,res));
 				ReleaseOperand(s0); ReleaseIntermediateOperand(res);
 			(* ---- DISPOSE ----- *)

@@ -758,11 +758,11 @@ TYPE
 		END InitSetType;
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
-		BEGIN RETURN (this IS SetType)
+		BEGIN RETURN (this = SELF) OR (this IS SetType) & (this.sizeInBits = sizeInBits);
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
-		BEGIN RETURN (to IS SetType)
+		BEGIN RETURN (to IS SetType) & (to.sizeInBits >= sizeInBits)
 		END CompatibleTo;
 
 		PROCEDURE Accept*(v: Visitor);

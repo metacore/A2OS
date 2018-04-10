@@ -839,12 +839,21 @@ TYPE
 		END GetTemporaryRegister;
 
 		PROCEDURE GetImmediateMem(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR imm: Assembler.Operand);
-		VAR data: IntermediateCode.Section;pc: LONGINT;
+		VAR data: IntermediateCode.Section;pc: LONGINT; source, dest: Assembler.Operand; ticket: Ticket; 
 		BEGIN
 			data := GetDataSection();
 			pc := IntermediateBackend.EnterImmediate(data,vop);
-			Assembler.InitMem(imm, SHORT(vop.type.sizeInBits DIV 8) , Assembler.none,0);
-			Assembler.SetSymbol(imm,data.name,0,pc,0);
+			IF cpuBits = 64 THEN
+				Assembler.InitImm(source,8,0);
+				Assembler.SetSymbol(source,data.name,0,pc,0);
+				ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
+				TicketToOperand(ticket,dest);
+				emitter.Emit2(InstructionSet.opMOV,dest,source);
+				Assembler.InitMem(imm, SHORT(vop.type.sizeInBits DIV 8), ticket.register, 0);
+			ELSE
+				Assembler.InitMem(imm, SHORT(vop.type.sizeInBits DIV 8) , Assembler.none,0);
+				Assembler.SetSymbol(imm,data.name,0,pc,0);
+			END;
 		END GetImmediateMem;
 
 		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit: BOOLEAN);
@@ -930,17 +939,26 @@ TYPE
 				END;
 				offset := virtual.offset;
 				ASSERT(virtual.intValue = 0);
-			ELSIF virtual.symbol.name # "" THEN
-				physicalRegister := Assembler.none;
-				offset := virtual.offset;
-				ASSERT(virtual.intValue = 0);
-			ELSE
+			ELSIF virtual.symbol.name = "" THEN
 				physicalRegister := Assembler.none;
 				offset := SHORT(virtual.intValue);
 				ASSERT(virtual.offset = 0);
+			ELSIF cpuBits = 64 THEN
+				Assembler.InitImm(source,8,0);
+				Assembler.SetSymbol(source,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset);
+				ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
+				TicketToOperand(ticket,dest);
+				emitter.Emit2(InstructionSet.opMOV,dest,source);
+				physicalRegister := ticket.register;
+				offset := 0;
+				ASSERT(virtual.intValue = 0);
+			ELSE
+				physicalRegister := Assembler.none;
+				offset := virtual.offset;
+				ASSERT(virtual.intValue = 0);
 			END;
 			Assembler.InitMem(physical, SHORTINT(type.length * type.sizeInBits DIV 8) , physicalRegister, offset+4*part);
-			IF virtual.symbol.name # "" THEN
+			IF (virtual.symbol.name # "") & (cpuBits # 64) THEN
 				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+4*part);
 			END;
 		END GetMemory;
@@ -1905,6 +1923,11 @@ TYPE
 							emitterFixup := emitterFixup.nextFixup;
 						END;
 					END;
+				ELSIF cpuBits = 64 THEN
+					MakeOperand(instruction.op1,Low,op,NIL);
+					emitter.Emit1(InstructionSet.opCALL,op);
+					Assembler.InitOffset32(parSize,instruction.op2.intValue);
+					IF parSize.val # 0 THEN emitter.Emit2(InstructionSet.opADD,opSP,parSize) END;
 				ELSE
 					Assembler.InitOffset32(target,instruction.op1.intValue);
 					Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.offset,0);
@@ -2722,11 +2745,7 @@ TYPE
 			PROCEDURE JmpDest(brop: LONGINT);
 			BEGIN
 				IF instruction.op1.mode = IntermediateCode.ModeImmediate THEN
-					IF instruction.op1.symbol.name # in.name THEN
-						Assembler.InitOffset32(target,instruction.op1.intValue);
-						Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.symbolOffset,instruction.op1.offset);
-						emitter.Emit1(brop,target);
-					ELSE
+					IF instruction.op1.symbol.name = in.name THEN
 						dest := (instruction.op1.symbolOffset); (* this is the offset in the in-data section (intermediate code), it is not byte- *)
 						destPC := (in.instructions[dest].pc );
 						offset := destPC - (out.pc );
@@ -2741,6 +2760,13 @@ TYPE
 							Assembler.InitOffset32(target,destPC);
 							emitter.Emit1(brop,target);
 						END;
+					ELSIF cpuBits = 64 THEN
+						MakeOperand(instruction.op1,Low,target,NIL);
+						emitter.Emit1(brop,target);
+					ELSE
+						Assembler.InitOffset32(target,instruction.op1.intValue);
+						Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.symbolOffset,instruction.op1.offset);
+						emitter.Emit1(brop,target);
 					END;
 				ELSE
 					MakeOperand(instruction.op1,Low,target,NIL);

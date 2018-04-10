@@ -21,7 +21,7 @@ MODULE WMV24Component; (** AUTHOR "TF/staubesv"; PURPOSE "Terminal"; *)
  *)
 
 IMPORT
-	KernelLog, Streams, Configuration, Texts, TextUtilities, Strings,
+	KernelLog, Objects, Streams, Configuration, Texts, TextUtilities, Strings,
 	Modules, Kernel, Serials, XYModem, Files, Inputs,
 	WMWindowManager, WMMessages, WMRestorable, WMGraphics, WMRectangles,
 	WMComponents, WMStandardComponents, WMProgressComponents, WMTextView, WMEditors, WMPopups, WMDialogs,
@@ -181,7 +181,7 @@ TYPE
 TYPE
 
 	(* Recursive lock. This lock is used to provide exclusive access to the currently opened serial port to either
-	 * the Terminal or data tranfer operation *)
+	 * the Terminal or data transfer operation *)
 	Lock = OBJECT
 	VAR
 		lock : LONGINT;
@@ -1146,10 +1146,20 @@ TYPE
 		PROCEDURE ReceiveCharacters;
 		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len, res : LONGINT;
 		BEGIN
-			(* Receive at least one character *)
-			lock.Acquire(Terminal);
-			port.Receive(buffer, 0, ReceiveBufferSize, 1, len, res);
-			lock.Release;
+			len := 0;
+			res := Streams.Ok;
+			WHILE running & (res = Streams.Ok) & (len = 0) DO
+				lock.Acquire(Terminal);
+				len := port.Available();
+				IF len # 0 THEN
+					port.Receive(buffer, 0, ReceiveBufferSize, MIN(len,ReceiveBufferSize), len, res);
+				END;
+				lock.Release;
+				IF running & (res = Streams.Ok) & (len = 0) THEN 
+					Objects.Yield;
+				END;
+			END;
+
 			IF res = Serials.Ok THEN
 				FOR i := 0 TO len-1 DO
 

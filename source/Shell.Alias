@@ -37,3 +37,5 @@ whoimports=SystemTools.WhoImports
 lsusb=UsbInfo.Show
 ps=SystemTools.ShowProcesses
 halt=SystemTools.PowerDown
+xrecv=ShellSerial.XReceive
+yrecv=ShellSerial.YReceive

@@ -559,9 +559,9 @@ BEGIN
 	NEW(platforms);
 
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
-	DoAddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtension=.Obw --symbolFileExtension=.Obw");
-	DoAddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --writeBarriers");
-	DoAddPlatform("Win64G","-b=AMD --bits=64 --objectFile=Generic --newObjectFile  --mergeSections --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave");
+	DoAddPlatform("Win32","-b=AMD --objectFile=Binary --symbolFile=Binary --objectFileExtension=.Obw --symbolFileExtension=.Obw --cellsAreObjects");
+	DoAddPlatform("Win32G","-b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --writeBarriers --cellsAreObjects");
+	DoAddPlatform("Win64G","-b=AMD --bits=64 --objectFile=Generic --newObjectFile  --mergeSections --symbolFile=Textual  --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects");
 	DoAddPlatform("Win32C","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --objectFileExtension=.GofCW --symbolFileExtension=.SymCW");
 	DoAddPlatform("ARM","-b=ARM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos"); 
@@ -571,8 +571,8 @@ BEGIN
 	DoAddPlatform("A2G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	DoAddPlatform("A2Coop","-b=AMD --cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections");
 	DoAddPlatform("ARMA2","-b=ARM --objectFile=Generic --newObjectFile --symbolFile=Textual --mergeSections");
-	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC");
-	DoAddPlatform("Linux64G","-b=AMD --bits=64 --objectFile=Generic --newObjectFile --mergeSections --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC");
+	DoAddPlatform("Linux32G","-b=AMD --objectFile=Generic --newObjectFile --mergeSections --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects");
+	DoAddPlatform("Linux64G","-b=AMD --bits=64 --objectFile=Generic --newObjectFile --mergeSections --traceModule=Trace --symbolFile=Textual --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects");
 	
 	SetupDefaults;
 END Compiler.

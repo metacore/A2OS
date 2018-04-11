@@ -244,7 +244,7 @@ TYPE
 			A good concept has to be derived.
 		*)
 
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
+		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
 		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type;
 
 
@@ -721,6 +721,7 @@ TYPE
 		system.hugeintType := SyntaxTree.NewIntegerType(64, TRUE);
 		system.wordType := SyntaxTree.NewIntegerType(MIN(system.addressSize,32),TRUE);
 		system.longWordType := SyntaxTree.NewIntegerType(system.addressSize,TRUE);
+		system.wordSetType := SyntaxTree.NewSetType(system.wordType.sizeInBits);
 		system.realType := SyntaxTree.NewFloatType(32);
 		system.longrealType := SyntaxTree.NewFloatType(64);
 		(*
@@ -832,6 +833,7 @@ TYPE
 		DeclareType(system.hugeintType,"HUGEINT",system.globalScope);
 		DeclareType(system.wordType,"WORD",system.globalScope);
 		DeclareType(system.longWordType,"LONGWORD",system.globalScope);
+		DeclareType(system.wordSetType,"WORDSET",system.globalScope);
 
 		DeclareType(Integer8, "SIGNED8", system.globalScope);
 		DeclareType(Integer16, "SIGNED16", system.globalScope);

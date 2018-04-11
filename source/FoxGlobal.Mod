@@ -1592,8 +1592,9 @@ TYPE
 			WHILE toSize >= fromSize DO
 				toSize := toSize DIV 2; INC(distance);
 			END;
-		ELSIF (from IS SyntaxTree.CharacterType) & (to IS SyntaxTree.CharacterType) & (toSize >= fromSize)  OR
-			(from IS SyntaxTree.FloatType) & (to IS SyntaxTree.FloatType) & (toSize >= fromSize) 
+		ELSIF (from IS SyntaxTree.CharacterType) & (to IS SyntaxTree.CharacterType) & (toSize >= fromSize) OR
+			(from IS SyntaxTree.FloatType) & (to IS SyntaxTree.FloatType) & (toSize >= fromSize) OR
+			(from IS SyntaxTree.SetType) & (to IS SyntaxTree.SetType) & (toSize >= fromSize)
 		THEN
 			WHILE toSize >= fromSize DO
 				toSize := toSize DIV 2; INC(distance);

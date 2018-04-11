@@ -1,6 +1,6 @@
 all: oberon
 
-.PHONY: all compiler execution compilation execution clean
+.PHONY: all compiler execution compilation execution builds clean
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
@@ -40,6 +40,11 @@ execution: Oberon.Execution.Test.Diff
 
 Oberon.Execution.Test.Diff: oberon FoxTest.GofU source/Oberon.Execution.Test
 	@./oberon FoxTest.Compile source/Oberon.Execution.Test
+
+# builds
+
+builds:
+	@make $(foreach platform,$(platforms),&& make build platform=$(platform))
 
 ifdef platform
 

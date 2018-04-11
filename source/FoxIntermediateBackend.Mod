@@ -7659,15 +7659,15 @@ TYPE
 			|Global.Excl,Global.Incl:
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
-				Convert(s1.op,s0.op.type);
+				Convert(s1.op,IntermediateCode.GetType(system,t0));
 				IF (s1.op.mode # IntermediateCode.ModeImmediate) & ~isUnchecked THEN
-					TrapC(BrltL,s1.op,IntermediateCode.Immediate(s0.op.type,p0.type.resolved.sizeInBits),IndexCheckTrap);
+					TrapC(BrltL,s1.op,IntermediateCode.Immediate(s1.op.type,t0.sizeInBits),IndexCheckTrap);
 				END;
 				ReuseCopy(res,s0.op);
 				ReleaseOperand(s0);
 				Reuse1(tmp,s1.op);
 				ReleaseOperand(s1);
-				Emit(Shl(position,tmp,IntermediateCode.Immediate(s0.op.type,1),s1.op));
+				Emit(Shl(position,tmp,IntermediateCode.Immediate(s1.op.type,1),s1.op));
 				IF x.id = Global.Excl THEN
 					Emit(Not(position,tmp,tmp));
 					Emit(And(position,res,res,tmp));
@@ -7676,7 +7676,7 @@ TYPE
 				END;
 				ReleaseIntermediateOperand(tmp);
 				Designate(p0,s0);
-				ToMemory(s0.op,s0.op.type,0);
+				ToMemory(s0.op,s1.op.type,0);
 				Emit(Mov(position,s0.op,res));
 				ReleaseOperand(s0); ReleaseIntermediateOperand(res);
 			(* ---- DISPOSE ----- *)

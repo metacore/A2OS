@@ -84,18 +84,19 @@ TYPE
 				x*, y*, w*, h*: INTEGER
 			END;
 	Cursor* = ADDRESS;  KeySym* = ADDRESS;  KeyCode* = CHAR;
-	Event* = RECORD
-				typ*, serial*: LONGINT;
+	AnyEvent* = RECORD
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
-				window*, root*, subwindow*: Window;
-				time*, x*, y*, xRoot*, yRoot*, state*, button*: LONGINT;
-				sameScreen*, focus*: Bool;
-				state2*: LONGINT;
-				pad*: ARRAY 32 OF LONGINT
+				window*: Window;
+			END;
+	Event* = RECORD (AnyEvent)
+				pad*: ARRAY 192 - SIZE OF AnyEvent OF CHAR;
 			END;
 	SelectionEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				requestor*: Window;
@@ -103,7 +104,8 @@ TYPE
 				time*: Time
 			END;
 	SelectionRequestEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				owner*, requestor*: Window;
@@ -111,52 +113,57 @@ TYPE
 				time*: Time
 			END;
 	ExposeEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				window*: Window;
-				x*, y*, width*, height*, count*: LONGINT;
+				x*, y*, width*, height*, count*: WORD;
 			END;
 	GraphicsExposeEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				drawable*: Drawable;
-				x*, y*, width*, height*, count*, majorCode*, minorCode*: LONGINT;
+				x*, y*, width*, height*, count*, majorCode*, minorCode*: WORD;
 			END;
 	ButtonEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				window*, root*, subwindow*: Window;
 				time*: Time;
-				x*, y*, xRoot*, yRoot*, state*, button: LONGINT;
+				x*, y*, xRoot*, yRoot*, state*, button: WORD;
 				sameScreen: Bool
 			END;
 	KeyEvent* = RECORD
-				typ*, serial*: LONGINT;
+				typ*: WORD;
+				serial*: LONGWORD;
 				sendEvent*: Bool;
 				display*: DisplayPtr;
 				window*, root*, subwindow*: Window;
 				time*: Time;
-				x*, y*, xRoot*, yRoot*, state*, keycode*: LONGINT;
+				x*, y*, xRoot*, yRoot*, state*, keycode*: WORD;
 				sameScreen: Bool
 			END;
 
 	Image* = ADDRESS;
 	ImagePtr* = POINTER TO ImageDesc;
 	ImageDesc* = RECORD
-				width*, height*: LONGINT;
-				xoffset*, format*: LONGINT; data*: ADDRESS;
-				byteOrder*, bitmapUnit*, bitmapBitOrder*: LONGINT;
-				bitmapPad*, depth*, bytesPerLine*, bitsPerPixel*: LONGINT;
-				redmask*, greenmask*, bluemask*: LONGINT;
-				obdata*, createImage*, destroyImage*, getPixel*, putPixel*, subImage*, addPixel*: LONGINT
+				width*, height*: WORD;
+				xoffset*, format*: WORD; data*: ADDRESS;
+				byteOrder*, bitmapUnit*, bitmapBitOrder*: WORD;
+				bitmapPad*, depth*, bytesPerLine*, bitsPerPixel*: WORD;
+				redmask*, greenmask*, bluemask*: LONGWORD;
+				obdata*, createImage*, destroyImage*, getPixel*, putPixel*, subImage*, addPixel*: ADDRESS
 			END;
 	ErrorEvent* = RECORD
-				typ*: LONGINT;
+				typ*: WORD;
 				display*: DisplayPtr;
-				resourceid*, serial*: LONGINT;
+				resourceid*: ADDRESS;
+				serial*: LONGWORD;
 				errorCode*, requestCode*, minorCode*: CHAR
 			END;
 	ErrorEventPtr* = POINTER TO ErrorEvent;
@@ -328,7 +335,7 @@ VAR
 	CreateImage-:			PROCEDURE {C} ( d: DisplayPtr;  visual: VisualPtr;  depth, format, offset: WORD; 
 													data: ADDRESS;  width, height, bitmapPad, bytesPerLine: WORD ): Image;
 	DestroyImage-:			PROCEDURE {C} ( image: Image );
-	SubImage-:				PROCEDURE {C} ( image: Image;  x, y, width, height: LONGINT ): Image;
+	SubImage-:				PROCEDURE {C} ( image: Image;  x, y, width, height: WORD ): Image;
 	GetImage-:				PROCEDURE {C} ( d: DisplayPtr;  drawable: Drawable;
 													x, y, width, height: WORD; planeMask: LONGWORD; format: WORD ): Image;
 	GetSubImage-:			PROCEDURE {C} ( d: DisplayPtr;  drawable: Drawable;

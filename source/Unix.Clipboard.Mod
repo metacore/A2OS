@@ -216,7 +216,7 @@ VAR
 	END GetX11Selection;
 
 	PROCEDURE ReceiveSelection( VAR event: X11Api.XSelectionEvent );
-	VAR type: X11.Atom;  format, len, after: LONGINT;  prop, adr: ADDRESS; ch: CHAR; 
+	VAR type: X11.Atom;  format: WORD; len, after: LONGWORD;  prop, adr: ADDRESS; ch: CHAR; 
 	BEGIN {EXCLUSIVE}
 		rlen := 0; recBuffer[0] := 0X;
 		IF (event.selection = X11.XAPRIMARY) & (event.property = myProperty) THEN

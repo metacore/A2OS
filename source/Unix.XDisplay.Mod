@@ -111,7 +111,7 @@ TYPE
 				cmap				: X11.Colormap;
 				planesMask			: LONGINT;
 				foreground,
-				background			: LONGINT;
+				background			: LONGWORD;
 				rgb, defPal			: ARRAY 256 OF RGB;	(* 8-bit pseudo color *)
 				pixel				: ARRAY 256 OF LONGINT;   (* pixel values for Oberon colors *)
 
@@ -317,7 +317,7 @@ TYPE
 					Machine.Acquire( Machine.X11 );
 					IF depth > 8 THEN
 						res := X11.AllocColor( xdisp, cmap, ADDRESSOF( xcol ) );
-						IF res # 0 THEN  pixel[col] := xcol.pixel  END
+						IF res # 0 THEN  pixel[col] := LONGINT (xcol.pixel)  END
 					ELSE
 						xcol.flags := CHR( X11.DoAll );  xcol.pixel := pixel[col];
 						X11.StoreColor( xdisp, cmap, ADDRESSOF( xcol ) ) 

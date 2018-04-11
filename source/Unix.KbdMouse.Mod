@@ -17,7 +17,7 @@ CONST
 
 
 VAR
-	event: Api.XEvent;  xbuttons: SET;
+	event: Api.XEvent;  xbuttons: WORDSET;
 	compstatus: Api.ComposeStatus;
 
 	disp: XDisplay.Display;
@@ -70,7 +70,7 @@ VAR
 	VAR keycount, xr, yr, x, y, dz, i: LONGINT;
 		rw, cw: X11.Window;   
 		keysym: X11.KeySym;  xd: X11.DisplayPtr;
-		newxbuttons, bdiff: SET;
+		newxbuttons, bdiff: WORDSET;
 		km: Inputs.KeyboardMsg;
 		kp : Api.XKeyEvent;
 		be : Api.XButtonPressedEvent;

@@ -172,7 +172,7 @@ TYPE
 
 	(** The FindData structure describes a file found by the FindFirstFile or FindNextFile function. *)
 	FindData* = RECORD
-		dwFileAttributes*: DWORD;
+		dwFileAttributes*: WORDSET;
 		ftCreationTime*, ftLastAccessTime*, ftLastWriteTime*: FileTime;
 		nFileSizeHigh*, nFileSizeLow*: LONGINT;
 		dwReserved0*, dwReserved1*: LONGINT;
@@ -207,7 +207,7 @@ TYPE
 	END;
 
 	Context* = RECORD
-		ContextFlags*: DWORD;
+		ContextFlags*: WORDSET;
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: LONGINT;
 		FloatSave*: FloatingSaveArea;
 		GS*, FS*, ES*, DS*: LONGINT;
@@ -281,7 +281,7 @@ TYPE
 		dwX*, dwY*, dwXSize*, dwYSize*: LONGINT;
 		dwXCountChars*, dwYCountChars*: LONGINT;
 		dwFillAttribute*: LONGINT;
-		dwFlags*: DWORD;
+		dwFlags*: WORDSET;
 		wShowWindow*, cbReserved2*: INTEGER;
 		lpReserved2*: ADDRESS;
 		hStdInput*, hStdOutput*, hStdError*: HANDLE
@@ -387,10 +387,10 @@ VAR
 	(** The CreateFile function creates or opens the following objects and returns a handle that can be used to access the object:
 		 files, pipes, mailslots, communications resources, disk devices (Windows NT only), consoles, directories (open only) *)
 	CreateFile-: PROCEDURE {WINAPI} ( CONST lpFileName: ARRAY   OF CHAR;
-																dwDesiredAccess, dwShareMode: DWORD;
+																dwDesiredAccess, dwShareMode: WORDSET;
 																lpSecurityAttributes: ANY;
 																dwCreationDistribution: LONGINT;
-																dwFlagsAndAttributes: DWORD;
+																dwFlagsAndAttributes: WORDSET;
 																hTemplateFile: HANDLE ): HANDLE;
 	(** The CreateProcess function creates a new process and its primary thread. The new process executes the specified
 			executable file. *)
@@ -408,7 +408,7 @@ VAR
 	CreateThread-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS;
 																	  dwStackSize: LONGINT;
 																	  lpStartAddress: ThreadProc;
-																	  lpParameter: ANY;  dwCreationFlags: DWORD;
+																	  lpParameter: ANY;  dwCreationFlags: WORDSET;
 																	  VAR lpThreadId: LONGINT ): HANDLE;
 	(** The DeleteCriticalSection function releases all resources used by an unowned critical section object. *)
 	DeleteCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
@@ -420,9 +420,9 @@ VAR
 	(** The DuplicateHandle function duplicates an object handle. *)
 	DuplicateHandle-: PROCEDURE {WINAPI} ( hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE;
 																			 VAR lpTargetHandle: HANDLE;
-																			 dwDesiredAccess: DWORD;
+																			 dwDesiredAccess: WORDSET;
 																			 bInheritHandle: BOOL;
-																			 dwOptions: DWORD ): BOOL;
+																			 dwOptions: WORDSET ): BOOL;
 	(** The EnterCriticalSection function waits for ownership of the specified critical section object. *)
 	EnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	
@@ -461,7 +461,7 @@ VAR
 	GetCommandLine-: PROCEDURE {WINAPI} ( ): LPSTR;
 	(** The GetCommModemStatus function retrieves modem control-register values. *)
 	GetCommModemStatus-: PROCEDURE {WINAPI} ( hFile: HANDLE;
-																						VAR lpModemStat: DWORD ): BOOL;
+																						VAR lpModemStat: WORDSET ): BOOL;
 	(** The GetCommState function retrieves the current control settings for a specified communications device. *)
 	GetCommState-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																		 VAR lpDCB: DCB ): BOOL;
@@ -495,7 +495,7 @@ VAR
 	GetExitCodeProcess-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				  VAR lpExitCode: LONGINT ): BOOL;
 	(** The GetFileAttributes function returns attributes for a specified file or directory. *)
-	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): LONGINT;
+	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): WORDSET;
 	(** The GetFileSize function retrieves the size, in bytes, of the specified file. *)
 	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: LONGINT ): LONGINT;
 	GetFileSizeEx-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSize: HUGEINT ): BOOL;
@@ -519,7 +519,7 @@ VAR
 	(* The GetLogicalDrives function retrieves a bitmask representing the currently available disk drives.
 *)
 
-	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): WORDSET;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
 																				    nSize: LONGINT ): LONGINT;
@@ -603,7 +603,7 @@ VAR
 			(an atom) identifying the string. *)
 	GlobalAddAtom-: PROCEDURE {WINAPI} ( VAR lpString: ARRAY   OF CHAR ): ATOM;
 	(** The GlobalAlloc function allocates the specified number of bytes from the heap. *)
-	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: DWORD;  dwBytes: LONGINT ): HGLOBAL;
+	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: WORDSET;  dwBytes: LONGINT ): HGLOBAL;
 	(** The GlobalDeleteAtom function decrements the reference count of a global string atom. *)
 	GlobalDeleteAtom-: PROCEDURE {WINAPI} ( nAtom: ATOM ): ATOM;
 	(** The GlobalLock function locks a global memory object and returns a pointer to the first byte of the
@@ -643,7 +643,7 @@ VAR
 																						   VAR lpFileTime: FileTime ): BOOL;
 	(** The MoveFileEx function renames an existing file or directory. *)
 	MoveFileEx-: PROCEDURE {WINAPI} ( VAR lpExistingFileName, lpNewFileName: ARRAY   OF CHAR;
-																    dwFlags: DWORD ): BOOL;
+																    dwFlags: WORDSET ): BOOL;
 	(** The OutputDebugString function sends a string to the debugger for the current application. *)
 	outputDebugString-: PROCEDURE {WINAPI} ( CONST lpOutputString: ARRAY   OF CHAR );
 
@@ -653,7 +653,7 @@ VAR
 
 
 	(** The PurgeComm function discards all characters from the output or input buffer of a specified communications resource. *)
-	PurgeComm-: PROCEDURE {WINAPI} ( hFile: HANDLE;  dwFlags: DWORD ): BOOL;
+	PurgeComm-: PROCEDURE {WINAPI} ( hFile: HANDLE;  dwFlags: WORDSET ): BOOL;
 	(** The QueryDosDevice function retrieves information about MS-DOS device names. *)
 	QueryDosDevice-: PROCEDURE {WINAPI} ( lpDeviceName: ARRAY   OF CHAR;
 																		   VAR lpTargetPath: ARRAY   OF CHAR;
@@ -727,7 +727,7 @@ VAR
 	SetEvent-: PROCEDURE {WINAPI} ( hEvent: HANDLE ): BOOL;
 	(** The SetFileAttributes function sets a file's attributes. *)
 	SetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR;
-																			dwFileAttributes: DWORD ): BOOL;
+																			dwFileAttributes: WORDSET ): BOOL;
 	(** The SetFilePointer function moves the file pointer of an open file. *)
 	SetFilePointer-: PROCEDURE {WINAPI} ( hFile: HANDLE;  lDistanceToMove: LONGINT;
 																	    VAR lpDistanceToMoveHigh: LONGINT;
@@ -771,11 +771,11 @@ VAR
 	TryEnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection ): BOOL;
 	(** The VirtualAlloc function reserves or commits a region of pages in the virtual address space of the calling process. *)
 	VirtualAlloc-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
-																    flAllocationType, flProtect: DWORD ): ADDRESS;
+																    flAllocationType, flProtect: WORDSET ): ADDRESS;
 	(** The VirtualFree function releases or decommits (or both) a region of pages within the virtual address space of the
 			calling process. *)
 	VirtualFree-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
-																  dwFreeType: DWORD ): BOOL;
+																  dwFreeType: WORDSET ): BOOL;
 	(** The WaitForSingleObject function returns when one of the following occurs:
 			The specified object is in the signaled state.
 			The time-out interval elapses. *)
@@ -797,18 +797,6 @@ VAR
 	(* OutputString*: OutputStringProc; *)
 	Shutdown*: PROCEDURE ( code: LONGINT );
 
-	PROCEDURE SetToDW*(s: SET): DWORD;
-	BEGIN
-		RETURN SYSTEM.VAL(DWORD, s); 
-	END SetToDW;
-
-	PROCEDURE DWToSet*(d: DWORD): SET;
-	VAR a: ADDRESS;
-	BEGIN
-		a := d;
-		RETURN SYSTEM.VAL(SET, a); 
-	END DWToSet;
-	
 	(** Wrapper for getProcAddress. *)
 	PROCEDURE GetProcAddress*( hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS );
 	BEGIN
@@ -1062,4 +1050,3 @@ VAR
 		END EntryPoint;
 		
 END Kernel32.
-	

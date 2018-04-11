@@ -208,7 +208,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 			GetClassInfoEx functions. *)
 		WndClassEx* = RECORD
 			cbSize*: LONGINT;
-			style*: DWORD;
+			style*: WORDSET;
 			lpfnWndProc*: WndProc;
 			cbClsExtra*, cbWndExtra*: LONGINT;
 			hInstance*: Kernel32.HINSTANCE;
@@ -225,7 +225,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The WINDOWPOS structure contains information about the size and position of a window. *)
 		WindowPos* = RECORD  			hwnd*, hwndInsertAfter*: HWND;
 			x*, y*, cx*, cy*: LONGINT;
-			flags*: DWORD;
+			flags*: WORDSET;
 		END;
 
 		(** The WINDOWPLACEMENT structure contains information about the placement of a window on the screen. *)
@@ -279,7 +279,7 @@ MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
 		(** The CreateMenu function creates a menu. *)
 		CreateMenu-: PROCEDURE {WINAPI} (): HMenu;
 		(** The CreateWindow function creates an overlapped, pop-up, or child window. *)
-		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam): HWND;
+		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: WORDSET; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam): HWND;
 		(** The DefWindowProc function calls the default window procedure to provide default processing for any window
 			messages that an application does not process. *)
 		DefWindowProc-: WndProc;

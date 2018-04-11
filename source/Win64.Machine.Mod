@@ -468,7 +468,7 @@ BEGIN
 	traceName := "SystemTrace.txt";
 	SetupTraceName(traceName);
 	Trace.String("trace -> file "); Trace.String(traceName); Trace.Ln;
-	hout := Kernel32.CreateFile(traceName, SetToDW({Kernel32.GenericWrite}), SetToDW({Kernel32.FileShareRead}), NIL, Kernel32.CreateAlways, SetToDW({Kernel32.FileAttributeNormal}), Kernel32.NULL);
+	hout := Kernel32.CreateFile(traceName, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
 	Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
 	Trace.String(version); Trace.Ln; 
@@ -604,7 +604,7 @@ BEGIN
 		ToExecutablePath(DefaultConfigFile, defaultConfigFile);
 	END;
 	COPY(UserConfigFile, userConfigFile);
-	hfile := Kernel32.CreateFile( userConfigFile, SetToDW({Kernel32.GenericRead}), SetToDW({Kernel32.FileShareRead}), NIL , Kernel32.OpenExisting, SetToDW({Kernel32.FileAttributeNormal}), 0 );
+	hfile := Kernel32.CreateFile( userConfigFile, {Kernel32.GenericRead}, {Kernel32.FileShareRead}, NIL , Kernel32.OpenExisting, {Kernel32.FileAttributeNormal}, 0 );
 	IF hfile = Kernel32.InvalidHandleValue THEN
 		ToExecutablePath(UserConfigFile, userConfigFile);
 	ELSE
@@ -737,9 +737,9 @@ BEGIN
 	IF memBlkSize < MemBlockSize THEN memBlkSize := MemBlockSize END; 	(* MemBlockSize implicitly multiple of StaticBlockSize *)
 
 	initVal := 8*1024*1024;
-	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, SetToDW({Kernel32.MEMCommit, Kernel32.MEMReserve}), SetToDW({Kernel32.PageExecuteReadWrite}));
+	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
 	IF adr = NilVal THEN (* allocation failed *)
-		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, SetToDW({Kernel32.MEMCommit}), SetToDW({Kernel32.PageExecuteReadWrite}));
+		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
 	END;
 	
 	IF TraceVerbose THEN
@@ -870,12 +870,6 @@ BEGIN
 	END
 END InsertMemoryBlock;
 
-PROCEDURE SetToDW(set: SET): Kernel32.DWORD;
-BEGIN
-	RETURN SYSTEM.VAL(Kernel32.DWORD,set);
-END SetToDW;
-
-
 (* expand heap by allocating a new memory block - called during GC *)
 PROCEDURE ExpandHeap*(dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
 CONST MemBlockHeaderSize = BlockHeaderSize + RecordDescSize + BlockHeaderSize;
@@ -892,9 +886,9 @@ BEGIN
 	memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
 	INC(memBlkSize, (-memBlkSize) MOD MemBlockSize);
 	initVal := memBlockTail.startAdr + memBlockTail.size;
-	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, SetToDW({Kernel32.MEMCommit, Kernel32.MEMReserve}), SetToDW({Kernel32.PageExecuteReadWrite}));
+	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
 	IF adr = NilVal THEN (* allocation failed *)
-		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, SetToDW({Kernel32.MEMCommit}), SetToDW({Kernel32.PageExecuteReadWrite}));
+		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
 	END;
 	continue := adr = initVal;
 	IF TraceVerbose THEN
@@ -980,8 +974,8 @@ BEGIN
 		END;
 		memBlock.next := NIL;
 		startAdr := memBlock.startAdr; (* this value must be cached for the second call of Kernel32.VirtualFree *)
-		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, memBlock.startAdr), memBlock.size, SetToDW({Kernel32.MEMDecommit}));
-		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, startAdr ), 0, SetToDW({Kernel32.MEMRelease}));
+		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, memBlock.startAdr), memBlock.size, {Kernel32.MEMDecommit});
+		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, startAdr ), 0, {Kernel32.MEMRelease});
 	ELSE
 		HALT(535)	(* error in memory block management *)
 	END;

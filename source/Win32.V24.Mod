@@ -249,8 +249,8 @@ TYPE
 			Strings.Append(windowsComName, portname);
 
 			hFile := 	Kernel32.CreateFile( windowsComName,
-												  Kernel32.SetToDW({Kernel32.GenericRead, Kernel32.GenericWrite}), Kernel32.SetToDW({}),
-												  NIL , Kernel32.OpenExisting, Kernel32.SetToDW({}), Kernel32.NULL );
+												  {Kernel32.GenericRead, Kernel32.GenericWrite}, {},
+												  NIL , Kernel32.OpenExisting, {}, Kernel32.NULL );
 			IF hFile # Kernel32.InvalidHandleValue THEN
 				ret := Kernel32.GetCommState( hFile, dcb );
 				IF ret # Kernel32.False THEN
@@ -285,7 +285,7 @@ TYPE
 					IF res = Serials.Ok THEN
 						ret := Kernel32.SetCommState( hFile, dcb );
 						IF ret # Kernel32.False THEN
-							ret := Kernel32.PurgeComm( hFile, Kernel32.SetToDW({Kernel32.PurgeTXClear, Kernel32.PurgeRXClear}) );
+							ret := Kernel32.PurgeComm( hFile, {Kernel32.PurgeTXClear, Kernel32.PurgeRXClear} );
 							ret := Kernel32.SetupComm( hFile, 800H, 800H );
 							handle := hFile;
 							RETURN
@@ -374,15 +374,15 @@ TYPE
 	(** GetMC - Return the state of the specified modem control lines.  s contains
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*( VAR s: SET );
-		VAR state: Kernel32.DWORD;  res: LONGINT;
+		VAR state: WORDSET;  res: LONGINT;
 		BEGIN {EXCLUSIVE}
 			s := {};
 			IF handle # Kernel32.InvalidHandleValue THEN
 				res := Kernel32.GetCommModemStatus( handle, state );
-				IF Kernel32.MSCTSOn IN Kernel32.DWToSet(state) THEN INCL( s, Serials.CTS ) END;
-				IF Kernel32.MSDSROn IN Kernel32.DWToSet(state) THEN INCL( s, Serials.DSR ) END;
-				IF Kernel32.MSRingOn IN Kernel32.DWToSet(state) THEN INCL( s, Serials.RI ) END;
-				IF Kernel32.MSRLSDOn IN Kernel32.DWToSet(state) THEN INCL( s, Serials.DCD ) END
+				IF Kernel32.MSCTSOn IN state THEN INCL( s, Serials.CTS ) END;
+				IF Kernel32.MSDSROn IN state THEN INCL( s, Serials.DSR ) END;
+				IF Kernel32.MSRingOn IN state THEN INCL( s, Serials.RI ) END;
+				IF Kernel32.MSRLSDOn IN state THEN INCL( s, Serials.DCD ) END
 			END
 		END GetMC;
 

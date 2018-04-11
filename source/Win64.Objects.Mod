@@ -173,7 +173,7 @@ TYPE
 				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
 			ELSE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
-				state.ContextFlags := Kernel32.SetToDW(Kernel32.ContextControl + Kernel32.ContextInteger);
+				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
 				
@@ -816,7 +816,7 @@ BEGIN
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
 	
-	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, Kernel32.SetToDW({}), t.id);
+	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
 
 	IF TraceVerbose OR TraceOpenClose THEN
 		Machine.Acquire(Machine.TraceOutput);
@@ -1033,7 +1033,7 @@ END Await;
 			Machine.Acquire( Machine.Objects );
 			LOOP
 				retBOOL := Kernel32.SuspendThread( t.handle );
-				t.state.ContextFlags := SYSTEM.VAL(LONGINT, Kernel32.ContextControl);
+				t.state.ContextFlags := Kernel32.ContextControl;
 				retBOOL := Kernel32.GetThreadContext( t.handle, t.state );
 				mod := Modules.ThisModuleByAdr( t.state.PC );  Trace.String( "Objects Break at adr: " );
 				Trace.Int( t.state.PC, 5 );  Trace.Ln;
@@ -1109,7 +1109,7 @@ BEGIN
 	t.handle := Kernel32.GetCurrentThread();
 	t.id := Kernel32.GetCurrentThreadId();
 	proc := Kernel32.GetCurrentProcess();
-	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, Kernel32.SetToDW({}), 0, Kernel32.SetToDW({Kernel32.DuplicateSameAccess}));
+	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, t));
 	ASSERT(res # 0);

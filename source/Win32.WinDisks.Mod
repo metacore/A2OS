@@ -261,11 +261,11 @@ VAR
 	END AppendInt;
 
 	PROCEDURE OpenVolume( VAR handle: Kernel32.HANDLE;  flags: SET; CONST name: ARRAY OF CHAR; context : Commands.Context ): BOOLEAN;
-	VAR devname: ARRAY 256 OF CHAR;  tflags: SET; errorcode : LONGINT;
+	VAR devname: ARRAY 256 OF CHAR;  tflags: WORDSET; errorcode : LONGINT;
 	BEGIN
 		Strings.Concat( "\\.\", name, devname );
 		IF Disks.ReadOnly IN flags THEN tflags := {Kernel32.GenericRead} ELSE tflags := {(*2 (* Kernel32.GenericDelete *), *)Kernel32.GenericWrite,Kernel32.GenericRead} END;
-		handle := Kernel32.CreateFile( devname, Kernel32.SetToDW(tflags), Kernel32.SetToDW({Kernel32.FileShareRead, Kernel32.FileShareWrite}), NIL , Kernel32.OpenExisting, Kernel32.SetToDW({}), Kernel32.NULL );
+		handle := Kernel32.CreateFile( devname, tflags, {Kernel32.FileShareRead, Kernel32.FileShareWrite}, NIL, Kernel32.OpenExisting, {}, Kernel32.NULL );
 		IF (handle = Kernel32.InvalidHandleValue) THEN
 			errorcode := Kernel32.GetLastError();
 			context.error.String("Could not open '"); context.error.String(devname); context.error.String("' : ");

@@ -137,7 +137,7 @@ TYPE
 		win: Window;
 		finished: BOOLEAN;
 		className: ARRAY 32 OF CHAR;
-		style: SET;
+		style: WORDSET;
 		x, y, w, h: LONGINT;
 		hMenu: User32.HMenu
 	END;
@@ -239,7 +239,7 @@ VAR
 	BEGIN
 		str := "";
 		create.win.hWnd :=
-			User32.CreateWindowEx( 0, create.className, str, Kernel32.SetToDW(create.style), create.x, create.y, create.w, create.h,
+			User32.CreateWindowEx( 0, create.className, str, create.style, create.x, create.y, create.w, create.h,
 													   create.win.hWndParent, create.hMenu, Kernel32.hInstance,
 													   SYSTEM.VAL( User32.LParam, create ) );
 		IF User32.WSMaximize IN create.style THEN
@@ -748,7 +748,7 @@ VAR
 	VAR pos: User32.WindowPos;
 	BEGIN
 		SYSTEM.MOVE( lParam, ADDRESSOF( pos ), SIZEOF( User32.WindowPos ) );
-		IF ~(User32.SWPNoMove IN Kernel32.DWToSet(pos.flags)) THEN
+		IF ~(User32.SWPNoMove IN pos.flags) THEN
 			IF (pos.x < -disp.width) & (pos.y < -disp.height) THEN Minimize( win )
 			ELSIF (pos.x >= 0) & (pos.y >= 0) THEN Restore( win )
 			END
@@ -918,7 +918,7 @@ VAR
 	VAR str: ARRAY 32 OF CHAR;
 		ret: Kernel32.ATOM;
 	BEGIN
-		dummyClass.cbSize := SIZEOF( User32.WndClassEx );  dummyClass.style := Kernel32.SetToDW({});  dummyClass.lpfnWndProc := DummyProc;
+		dummyClass.cbSize := SIZEOF( User32.WndClassEx );  dummyClass.style := {};  dummyClass.lpfnWndProc := DummyProc;
 		dummyClass.cbClsExtra := 0;  dummyClass.cbWndExtra := 4;  dummyClass.hInstance := Kernel32.hInstance;
 		dummyClass.hIcon := Kernel32.NULL;  dummyClass.hIconSm := Kernel32.NULL;  dummyClass.hCursor := Kernel32.NULL;
 		dummyClass.hbrBackground := Kernel32.NULL;  dummyClass.lpszMenuName := Kernel32.NULL;
@@ -926,7 +926,7 @@ VAR
 		ret := User32.RegisterClassEx( dummyClass );
 
 		windowClass.cbSize := SIZEOF( User32.WndClassEx );
-		windowClass.style := Kernel32.SetToDW({7});   (* Cs_parentdc: INTEGER is 128  = 2^7 *)
+		windowClass.style := {7};   (* Cs_parentdc: INTEGER is 128  = 2^7 *)
 		windowClass.lpfnWndProc := WindowProc;  windowClass.cbClsExtra := 0;  windowClass.cbWndExtra := 4;
 		windowClass.hInstance := Kernel32.hInstance;  str := "Console";  windowClass.hIcon := User32.LoadIcon( Kernel32.hInstance, str );
 		str := "Console.Small";  windowClass.hIconSm := User32.LoadIcon( Kernel32.hInstance, str );  windowClass.hCursor := Kernel32.NULL;

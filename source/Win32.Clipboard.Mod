@@ -55,7 +55,7 @@ BEGIN
 			IF chBuff^[ind] = LF THEN INC(requiredSize); END; (* transform LF into CRLF *)
 			INC(ind);
 		END;
-		hMem := Kernel32.GlobalAlloc(Kernel32.SetToDW({Kernel32.GMemMoveable, Kernel32.GMemDDEShare}), requiredSize);
+		hMem := Kernel32.GlobalAlloc({Kernel32.GMemMoveable, Kernel32.GMemDDEShare}, requiredSize);
 		adr := Kernel32.GlobalLock(hMem);
 		ind := 0;
 		WHILE ind < size  DO

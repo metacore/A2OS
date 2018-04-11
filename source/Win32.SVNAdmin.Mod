@@ -996,9 +996,9 @@ END CheckChecksum;
 			Files.JoinPath ( path, name, dest );
 			Strings.Append ( dest, ".svn-base" );
 
-			Kernel32.SetFileAttributes ( dest, Kernel32.SetToDW({}) );
+			Kernel32.SetFileAttributes ( dest, {} );
 			Files.CopyFile ( file, dest, overwrite, res );
-			Kernel32.SetFileAttributes ( dest, Kernel32.SetToDW({Files.ReadOnly}) );
+			Kernel32.SetFileAttributes ( dest, {Files.ReadOnly} );
 			ASSERT ( res = Files.Ok );
 		END;
 	END CopyToBaseFile;
@@ -1007,24 +1007,24 @@ END CheckChecksum;
 
 	PROCEDURE SetFileAttribute* ( file : ARRAY OF CHAR );
 	BEGIN
-		Kernel32.SetFileAttributes ( file, Kernel32.SetToDW({Files.ReadOnly}) );
+		Kernel32.SetFileAttributes ( file, {Files.ReadOnly} );
 	END SetFileAttribute;
 
 	PROCEDURE RemoveFileAttribute* ( file : ARRAY OF CHAR );
 	BEGIN
-		Kernel32.SetFileAttributes ( file, Kernel32.SetToDW({}) );
+		Kernel32.SetFileAttributes ( file, {} );
 	END RemoveFileAttribute;
 
 
 	PROCEDURE SetFileAttribute2* ( file : ARRAY OF CHAR; f : Files.File );
 	BEGIN
-		Kernel32.SetFileAttributes ( file, Kernel32.SetToDW({Files.ReadOnly}) );
+		Kernel32.SetFileAttributes ( file, {Files.ReadOnly} );
 		INCL ( f.flags, Files.ReadOnly );
 	END SetFileAttribute2;
 
 	PROCEDURE RemoveFileAttribute2* ( file : ARRAY OF CHAR; f : Files.File );
 	BEGIN
-		Kernel32.SetFileAttributes ( file, Kernel32.SetToDW({}) );
+		Kernel32.SetFileAttributes ( file, {} );
 		EXCL ( f.flags, Files.ReadOnly );
 	END RemoveFileAttribute2;
 

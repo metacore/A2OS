@@ -5,6 +5,7 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
 tool := $(if $(wildcard oberon), ./oberon, ./original)
+platforms := Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G
 
 # module dependencies
 
@@ -43,7 +44,7 @@ Oberon.Execution.Test.Diff: oberon FoxTest.GofU source/Oberon.Execution.Test
 ifdef platform
 
 .PHONY: build
-build: $(if $(filter Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G, $(platform)), $(platform), $(error invalid platform))
+build: $(if $(filter $(platforms), $(platform)), $(platform), $(error invalid platform))
 
 $(platform): oberon source/Release.Tool $(addprefix source/, $(shell env AOSPATH=source ./original Release.Build --list $(platform) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' '))
 	@rm -rf $@ && mkdir $@
@@ -58,4 +59,4 @@ original: oberon
 
 clean:
 	@rm -f modules dependencies oberon *.SymU *.GofU *.Log *.log
-	@rm -rf Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G
+	@rm -rf $(platforms)

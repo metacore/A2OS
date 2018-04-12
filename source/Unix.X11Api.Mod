@@ -19,8 +19,8 @@ TYPE
 	Drawable* = X11.Drawable;
 	Colormap* = X11.Colormap;
 	ComposeStatus* = RECORD 
-		composePtr*: LONGINT; 	(* state table pointer *)
-		charsMatched*: LONGINT;  (* match state *)
+		composePtr*: ADDRESS; 	(* state table pointer *)
+		charsMatched*: WORD;  (* match state *)
 	 END ;
 	 
 	KeySym* = X11.KeySym;
@@ -391,8 +391,8 @@ CONST
 	(* X11/Xlib.h*) 	
 (* *********************************************** *)
 TYPE	
-	Bool* = LONGINT;
-	Status* = LONGINT;
+	Bool* = WORD;
+	Status* = WORD;
 
 CONST 
 	True* = 1; False* = 0;
@@ -401,57 +401,57 @@ CONST
 TYPE 
 	XSetWindowAttributes* = RECORD
 		backgroundPixmap*: Pixmap; (* background, None, or ParentRelative *)
-		backgroundPixel*: LONGINT;(* background pixel *)
+		backgroundPixel*: LONGWORD;(* background pixel *)
 		borderPixmap*: Pixmap;    (* border of the window or CopyFromParent *)
-		borderPixel*: LONGINT;(* border pixel value *)
-		bitGravity*: LONGINT;         (* one of bit gravity values *)
-		winGravity*: LONGINT;         (* one of the window gravity values *)
-		backingStore*: LONGINT;       (* NotUseful, WhenMapped, Always *)
-		backingPlanes*: LONGINT;(* planes to be preserved if possible *)
-		backingPixel*: LONGINT;(* value to use in restoring planes *)
+		borderPixel*: LONGWORD;(* border pixel value *)
+		bitGravity*: WORD;         (* one of bit gravity values *)
+		winGravity*: WORD;         (* one of the window gravity values *)
+		backingStore*: WORD;       (* NotUseful, WhenMapped, Always *)
+		backingPlanes*: LONGWORD;(* planes to be preserved if possible *)
+		backingPixel*: LONGWORD;(* value to use in restoring planes *)
 		saveUnder*: BOOLEAN;         (* should bits under be saved? (popups) *)
-		eventMask*:  LONGINT;         (* set of events that should be saved *)
-		doNotPropagateMask*: LONGINT;(* set of events that should not propagate *)
+		eventMask*:  LONGWORD;         (* set of events that should be saved *)
+		doNotPropagateMask*: LONGWORD;(* set of events that should not propagate *)
 		overrideRedirect*: BOOLEAN;  (* boolean value for override_redirect *)
 		colormap*: Colormap;       (* color map to be associated with window *)
 		cursor*: Cursor ;           (* cursor to be displayed (or None) *)
 	END ;
     	   
 	XWindowAttributes* = RECORD
-		x*, y*: LONGINT;			(* location of window *)
-		width*, height*: LONGINT;		(* width and height of window *)
-		borderWidth*: LONGINT;			(* border width of window *)
-		depth*: LONGINT;			(* depth of window *)
+		x*, y*: WORD;			(* location of window *)
+		width*, height*: WORD;		(* width and height of window *)
+		borderWidth*: WORD;			(* border width of window *)
+		depth*: WORD;			(* depth of window *)
 		visual* : VisualPtr;			(* the associated visual structure *)
 		root* : Window;				(* root of screen containing window *)
-		class*: LONGINT;			(* InputOutput, InputOnly*)
-		bitGravity*: LONGINT;			(* one of the bit gravity values *)
-		winGravity*: LONGINT;			(* one of the window gravity values *)
-		backingStore*: LONGINT;		(* NotUseful, WhenMapped, Always *)
-		backingPlanes*: LONGINT;		(* planes to be preserved if possible *)
-		backingPixel*: LONGINT;		(* value to be used when restoring planes *)
+		class*: WORD;			(* InputOutput, InputOnly*)
+		bitGravity*: WORD;			(* one of the bit gravity values *)
+		winGravity*: WORD;			(* one of the window gravity values *)
+		backingStore*: WORD;		(* NotUseful, WhenMapped, Always *)
+		backingPlanes*: LONGWORD;		(* planes to be preserved if possible *)
+		backingPixel*: LONGWORD;		(* value to be used when restoring planes *)
 		saveUnder*: BOOLEAN;			(* boolean, should bits under be saved? *)
 		colormap*: Colormap;			(* color map to be associated with window *)
 		mapInstalled*: BOOLEAN;		(* boolean, is color map currently installed*)
-		mapState*: LONGINT;		(* IsUnmapped, IsUnviewable, IsViewable *)
-		allEventMasks*: LONGINT;		(* set of events all people have interest in*)
-		yourEventMask*: LONGINT;		(* my event mask *)
-		doNotPropagateMask*: LONGINT;	(* set of events that should not propagate *)
+		mapState*: WORD;		(* IsUnmapped, IsUnviewable, IsViewable *)
+		allEventMasks*: LONGWORD;		(* set of events all people have interest in*)
+		yourEventMask*: LONGWORD;		(* my event mask *)
+		doNotPropagateMask*: LONGWORD;	(* set of events that should not propagate *)
 		overrideRedirect*: BOOLEAN;		(* boolean value for override-redirect *)
-		screen*: LONGINT; (*X11.Screen;*)			(* back pointer to correct screen *)
+		screen*: ADDRESS; (*X11.Screen;*)			(* back pointer to correct screen *)
 	END;
 
 	(* Data structure for host setting; getting routines. *)
 	TYPE XHostAddress* = RECORD
-			family* : LONGINT;		(* for example FamilyInternet *)
-			length* : LONGINT;		(* length of address, in bytes *)
+			family* : WORD;		(* for example FamilyInternet *)
+			length* : WORD;		(* length of address, in bytes *)
 			address*: ADDRESS;		(* pointer to where to find the bytes *)
 		END;
 
 	(* Data structure for ServerFamilyInterpreted addresses in host routines *)
 	TYPE XServerInterpretedAddress* = RECORD
-			typelength*: LONGINT;		(* length of type string, in bytes *)
-			valuelength*: LONGINT;	(* length of value string, in bytes *)
+			typelength*: WORD;		(* length of type string, in bytes *)
+			valuelength*: WORD;	(* length of value string, in bytes *)
 			type*: ADDRESS;		(* pointer to where to find the type string *)
 			value*: ADDRESS;		(* pointer to where to find the address *)
 		END;
@@ -459,11 +459,11 @@ TYPE
 
 	(* Data structure for XReconfigureWindow *)
 	TYPE XWindowChanges * = RECORD
-			x*, y*: LONGINT;
-			width*, height* : LONGINT;
-	 	   	borderWidth*: LONGINT;
+			x*, y*: WORD;
+			width*, height* : WORD;
+	 	   	borderWidth*: WORD;
 			sibling* : Window;
-	 	   	stackMode*: LONGINT;
+	 	   	stackMode*: WORD;
 		END;
 
 
@@ -471,20 +471,20 @@ TYPE
 	  used with WM_NORMAL_HINTS.
 	 *)
 	TYPE DataAspect*=RECORD 
-			x*: LONGINT;	(* numerator *)
-			y*: LONGINT;	(* denominator *)
+			x*: WORD;	(* numerator *)
+			y*: WORD;	(* denominator *)
 		END;		
 		
 	TYPE XSizeHints* = RECORD 
-			flags*: LONGINT;	(* marks which fields in this structure are defined *) (* HUGEINT ?*)
-			x*, y*: LONGINT;		(* obsolete for new window mgrs, but clients *)
-			width*, height*: LONGINT;	(* should set so old wm's don't mess up *)
-			minWidth*, minHeight*: LONGINT;
-			maxWidth*, maxHeight*: LONGINT;
-			widthInc*, heightInc*: LONGINT;
+			flags*: LONGWORD;	(* marks which fields in this structure are defined *) (* HUGEINT ?*)
+			x*, y*: WORD;		(* obsolete for new window mgrs, but clients *)
+			width*, height*: WORD;	(* should set so old wm's don't mess up *)
+			minWidth*, minHeight*: WORD;
+			maxWidth*, maxHeight*: WORD;
+			widthInc*, heightInc*: WORD;
 			maxAspect*, minAspect*: DataAspect;
-			baseWidth*, baseHeight*: LONGINT;		(* added by ICCCM version 1 *)
-			winGravity*: LONGINT;			(* added by ICCCM version 1 *)
+			baseWidth*, baseHeight*: WORD;		(* added by ICCCM version 1 *)
+			winGravity*: WORD;			(* added by ICCCM version 1 *)
 		END;
 	
 	(*  The next block of definitions are for window manager properties that
@@ -516,103 +516,103 @@ TYPE
 		Use type casting to obtain real event type.	
  *)
 
-	TYPE XEvent* = RECORD   (* size of this event is 192 bytes *)  
-			typ* : LONGINT;		(* of event, must bot be changed; first element *)
-			serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+	TYPE XEvent* = RECORD
+			typ* : WORD;		(* of event, must bot be changed; first element *)
+			serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 			sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 			display* : DisplayPtr;	(* Display the event was read from *)
 			window* : Window;	        (* "event" window it is reported relative to *)			
-			pad*: ARRAY 172 OF CHAR;  (* 192-SIZEOF(previoustypes),  type cast to corresponding event type*)
+			pad*: ARRAY 192 - SIZE OF XAnyEvent OF CHAR;
 	END;
 
 	TYPE XAnyEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;(* Display the event was read from *)
 		window* : Window;	(* window on which event was requested in event mask *)
 	END;
 	
-	TYPE XKeyEvent * = RECORD 
-		typ* : LONGINT;		(* of event *)
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+	TYPE XKeyEvent * = RECORD
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;	        (* "event" window it is reported relative to *)
 		root* : Window;	        (* root window that the event occurred on *)
 		subwindow* : Window;	(* child window *)
 		time* : Time;		(* milliseconds *)
-		x*, y* : LONGINT;		(* pointer x, y coordinates in event window *)
-		xRoot*, yRoot* : LONGINT;	(* coordinates relative to root *)
-		state* : SET;	(* key or button mask *)
-		keycode* : LONGINT(*word*);	(* detail *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
+		keycode* : WORD;	(* detail *)
 		sameScreen* : BOOLEAN;	(* same screen flag *)
 	END;
 	TYPE XKeyPressedEvent* = XKeyEvent;
 	TYPE XKeyReleasedEvent* = XKeyEvent;
 	
 	TYPE XButtonEvent * = RECORD 
-		typ* : LONGINT;		(* of event *)
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;	        (* "event" window it is reported relative to *)
 		root* : Window;	        (* root window that the event occurred on *)
 		subwindow* : Window;	(* child window *)
 		time* : Time;		(* milliseconds *)
-		x*, y* : LONGINT;		(* pointer x, y coordinates in event window *)
-		xRoot*, yRoot* : LONGINT;	(* coordinates relative to root *)
-		state* : SET;	(* key or button mask *)
-		button* : LONGINT(*word*);	(* detail *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
+		button* : WORD;	(* detail *)
 		sameScreen* : BOOLEAN;	(* same screen flag *)
 	END;
 	TYPE XButtonPressedEvent* = XButtonEvent;
 	TYPE XButtonReleasedEvent* = XButtonEvent;
 	
 	TYPE XMotionEvent * = RECORD 
-		typ* : LONGINT;		(* of event *)
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;	        (* "event" window reported relative to *)
 		root* : Window;	        (* root window that the event occurred on *)
 		subwindow* : Window;	(* child window *)
 		time* : Time;		(* milliseconds *)
-		x*, y* : LONGINT;		(* pointer x, y coordinates in event window *)
-		xRoot*, yRoot* : LONGINT;	(* coordinates relative to root *)
-		state* : SET;	(* key or button mask *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
 		isHint* : CHAR;		(* detail *)
-		sameScreen* : BOOLEAN;	(* same screen flag *)
+		sameScreen* : Bool;	(* same screen flag *)
 	END;
 	TYPE PointerMovedEvent* = XMotionEvent;
 	
 	TYPE  XCrossingEvent * = RECORD 
-		typ* : LONGINT;		(* of event *)
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;	        (* "event" window reported relative to *)
 		root* : Window;	        (* root window that the event occurred on *)
 		subwindow* : Window;	(* child window *)
 		time* : Time;		(* milliseconds *)
-		x*, y* : LONGINT;		(* pointer x, y coordinates in event window *)
-		xRoot*, yRoot* : LONGINT;	(* coordinates relative to root *)
-		mode* : LONGINT;		(* NotifyNormal, NotifyGrab, NotifyUngrab *)
-		detail* : LONGINT;
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		mode* : WORD;		(* NotifyNormal, NotifyGrab, NotifyUngrab *)
+		detail* : WORD;
 		(*
 		* NotifyAncestor, NotifyVirtual, NotifyInferior,
 		* NotifyNonlinear,NotifyNonlinearVirtual
 		*)
-		sameScreen* : BOOLEAN;	(* same screen flag *)
-		focus* : BOOLEAN;		(* boolean focus *)
-		state* : SET;	(* key or button mask *)
+		sameScreen* : Bool;	(* same screen flag *)
+		focus* : Bool;		(* boolean focus *)
+		state* : WORDSET;	(* key or button mask *)
 	END;
 	TYPE XEnterWindowEvent* = XCrossingEvent;
 	TYPE XLeaveWindowEvent* = XCrossingEvent;
 	
 	TYPE XFocusChangeEvent * = RECORD 
-		typ* : LONGINT;		(* FocusIn or FocusOut *)
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;		(* FocusIn or FocusOut *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;		(* window of event *)
@@ -629,8 +629,8 @@ TYPE
 	
 	(* generated on EnterWindow and FocusIn  when KeyMapState selected *)
 	TYPE XKeymapEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
@@ -638,64 +638,64 @@ TYPE
 	END;
 	
 	TYPE XExposeEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
-		x*, y* : LONGINT;
-		width*, height* : LONGINT;
-		count* : LONGINT;		(* if non-zero, at least this many more *)
+		x*, y* : WORD;
+		width*, height* : WORD;
+		count* : WORD;		(* if non-zero, at least this many more *)
 	END;
 	
 	TYPE XGraphicsExposeEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		drawable* : Drawable;
-		x*, y* : LONGINT;
-		width*, height* : LONGINT;
-		count* : LONGINT;		(* if non-zero, at least this many more *)
-		majorCode* : LONGINT;		(* core is CopyArea or CopyPlane *)
-		minorCode* : LONGINT;		(* not defined in the core *)
+		x*, y* : WORD;
+		width*, height* : WORD;
+		count* : WORD;		(* if non-zero, at least this many more *)
+		majorCode* : WORD;		(* core is CopyArea or CopyPlane *)
+		minorCode* : WORD;		(* not defined in the core *)
 	END;
 	
 	TYPE XNoExposeEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		drawable* : Drawable;
-		majorCode* : LONGINT;		(* core is CopyArea or CopyPlane *)
-		minorCode* : LONGINT;		(* not defined in the core *)
+		majorCode* : WORD;		(* core is CopyArea or CopyPlane *)
+		minorCode* : WORD;		(* not defined in the core *)
 	END;
 	
 	TYPE XVisibilityEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
-		state* : LONGINT;		(* Visibility state *)
+		state* : WORD;		(* Visibility state *)
 	END;
 	
 	TYPE XCreateWindowEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		parent* : Window;		(* parent of the window *)
 		window* : Window;		(* window id of window created *)
-		x*, y* : LONGINT;		(* window location *)
-		width*, height* : LONGINT;	(* size of window *)
-		borderWidth* : LONGINT;	(* border width *)
+		x*, y* : WORD;		(* window location *)
+		width*, height* : WORD;	(* size of window *)
+		borderWidth* : WORD;	(* border width *)
 		overrideRedirect* : BOOLEAN;	(* creation should be overridden *)
 	END;
 	
 	TYPE XDestroyWindowEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
@@ -703,8 +703,8 @@ TYPE
 	END;
 	
 	TYPE XUnmapEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
@@ -713,8 +713,8 @@ TYPE
 	END;
 	
 	TYPE XMapEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
@@ -723,8 +723,8 @@ TYPE
 	END;
 	
 	TYPE XMapRequestEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		parent* : Window;
@@ -732,99 +732,99 @@ TYPE
 	END;
 	
 	TYPE XReparentEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
 		window* : Window;
 		parent* : Window;
-		x*, y* : LONGINT;
+		x*, y* : WORD;
 		overrideRedirect* : BOOLEAN;
 	END;
 	
 	TYPE XConfigureEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
 		window* : Window;
-		x*, y* : LONGINT;
-		width*, height* : LONGINT;
-		borderWidth* : LONGINT;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		borderWidth* : WORD;
 		above* : Window;
 		overrideRedirect* : BOOLEAN;
 	END;
 	
 	TYPE XGravityEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
 		window* : Window;
-		x*, y* : LONGINT;
+		x*, y* : WORD;
 	END;
 	
 	TYPE XResizeRequestEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
-		width*, height* : LONGINT;
+		width*, height* : LONGWORD;
 	END;
 	
 	TYPE XConfigureRequestEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		parent* : Window;
 		window* : Window;
-		x*, y* : LONGINT;
-		width*, height* : LONGINT;
-		borderWidth* : LONGINT;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		borderWidth* : WORD;
 		above* : Window;
-		detail* : LONGINT;		(* Above, Below, TopIf, BottomIf, Opposite *)
-		valueMask* : LONGINT(*unsigned*);
+		detail* : WORD;		(* Above, Below, TopIf, BottomIf, Opposite *)
+		valueMask* : LONGWORD(*unsigned*);
 	END;
 	
 	TYPE XCirculateEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		event* : Window;
 		window* : Window;
-		place* : LONGINT;		(* PlaceOnTop, PlaceOnBottom *)
+		place* : WORD;		(* PlaceOnTop, PlaceOnBottom *)
 	END;
 	
 	TYPE XCirculateRequestEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		parent* : Window;
 		window* : Window;
-		place* : LONGINT;		(* PlaceOnTop, PlaceOnBottom *)
+		place* : WORD;		(* PlaceOnTop, PlaceOnBottom *)
 	END;
 	
 	TYPE XPropertyEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
 		atom* : Atom;
 		time* : Time;
-		state* : LONGINT;		(* NewValue, Deleted *)
+		state* : WORD;		(* NewValue, Deleted *)
 	END;
 	
 	TYPE XSelectionClearEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
@@ -833,8 +833,8 @@ TYPE
 	END;
 	
 	TYPE XSelectionRequestEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		owner* : Window;
@@ -846,8 +846,8 @@ TYPE
 	END;
 	
 	TYPE XSelectionEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		requestor* : Window;
@@ -862,13 +862,13 @@ TYPE
 		 Data40s* = ARRAY 10 OF INTEGER; (* 10x 16 bits *)
 		 Data40l* = ARRAY 5 OF LONGINT; (* 5x 32 bits *)
 	TYPE XClientMessageEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;
 		messageType* : Atom;
-		format* : LONGINT;
+		format* : WORD;
 		data*: Data40;
 			(* any of these, union 
 			b* : ARRAY 20 OF CHAR;
@@ -878,21 +878,21 @@ TYPE
 	END; 
 	
 	TYPE XMappingEvent * = RECORD 
-		typ* : LONGINT;
-		serial* : LONGINT(*unsigned*);	(* # of last request processed by server *)
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
 		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
 		display* : DisplayPtr;	(* Display the event was read from *)
 		window* : Window;		(* unused *)
-		request* : LONGINT;		(* one of MappingModifier, MappingKeyboard, MappingPointer *)
-		firstKeycode* : LONGINT;	(* first keycode *)
-		count* : LONGINT;		(* defines range of change w. firstKeycode*)
+		request* : WORD;		(* one of MappingModifier, MappingKeyboard, MappingPointer *)
+		firstKeycode* : WORD;	(* first keycode *)
+		count* : WORD;		(* defines range of change w. firstKeycode*)
 	END;
 	
 	TYPE XErrorEvent * = RECORD 
-		typ* : LONGINT;
+		typ* : WORD;
 		display* : DisplayPtr;	(* Display the event was read from *)
 		resourceid* : XID;		(* resource id *)
-		serial* : LONGINT(*unsigned*);	(* serial number of failed request *)
+		serial* : LONGWORD(*unsigned*);	(* serial number of failed request *)
 		errorCode* : CHAR(*unsigned*);	(* error code of failed request *)
 		requestCode* : CHAR(*unsigned*);	(* Major op-code of failed request *)
 		minorCode* : CHAR(*unsigned*);	(* Minor op-code of failed request *)
@@ -903,22 +903,22 @@ TYPE
 	(*  GenericEvent.  This event is the standard event for all newer extensions. *)
 	
 	TYPE XGenericEvent * = RECORD 
-		typ* : LONGINT;         (* of event. Always GenericEvent *)
-		serial* : LONGINT(*unsigned*);       (* # of last request processed *)
+		typ* : WORD;         (* of event. Always GenericEvent *)
+		serial* : LONGWORD(*unsigned*);       (* # of last request processed *)
 		sendEvent* : BOOLEAN;   (* true if from SendEvent request *)
 		display* : DisplayPtr;     (* Display the event was read from *)
-		extension* : LONGINT;    (* major opcode of extension that caused the event *)
-		evtype* : LONGINT;       (* actual event type. *)
+		extension* : WORD;    (* major opcode of extension that caused the event *)
+		evtype* : WORD;       (* actual event type. *)
 	END;
 	
 	TYPE XGenericEventCookie * = RECORD 
-		typ* : LONGINT;         (* of event. Always GenericEvent *)
-		serial* : LONGINT(*unsigned*);       (* # of last request processed *)
+		typ* : WORD;         (* of event. Always GenericEvent *)
+		serial* : LONGWORD(*unsigned*);       (* # of last request processed *)
 		sendEvent* : BOOLEAN;   (* true if from SendEvent request *)
 		display* : DisplayPtr;     (* Display the event was read from *)
-		extension* : LONGINT;    (* major opcode of extension that caused the event *)
-		evtype* : LONGINT;       (* actual event type. *)
-		cookie* : LONGINT(*word*);
+		extension* : WORD;    (* major opcode of extension that caused the event *)
+		evtype* : WORD;       (* actual event type. *)
+		cookie* : WORD;
 		data* : ADDRESS;
 	END;
 
@@ -939,7 +939,7 @@ TYPE
 	
 	ExtData* = POINTER TO ExtDataDesc;
 	ExtDataDesc* = RECORD
-		number*: LONGINT;		(* number returned by XRegisterExtension *)
+		number*: WORD;		(* number returned by XRegisterExtension *)
 		next*: ExtData;	(* next item on list of data for structure *)
 		free_private*: ADDRESS;	(* called to free private storage *)
 		extension* : ExtData;
@@ -959,27 +959,27 @@ TYPE
 	(* To allow arbitrary information with fonts, there are additional properties returned. *)
 	FontProp* = RECORD
 		name*: Atom;
-		card32*: LONGINT;
+		card32*: LONGWORD;
 	END;
 
 	FontStruct* = POINTER TO FontStructDesc;
 	FontStructDesc* = RECORD
 		ext_data*: ExtData;	(* hook for extension to hang data *)
 		fid*: X11.Font;            (* Font id for this font *)
-		direction*: LONGINT;	(* hint about direction the font is painted *)
-		min_char_or_byte2*: LONGINT;(* first character *)
-		max_char_or_byte2*: LONGINT;(* last character *)
-		min_byte1*: LONGINT;	(* first row that exists *)
-		max_byte1*: LONGINT;	(* last row that exists *)
-		all_chars_exist*: X11.Bool;(* flag if all characters have non-zero size*)
-		default_char*: LONGINT;	(* char to print for undefined character *)
-		n_properties*: LONGINT;   (* how many properties there are *)
+		direction*: WORD;	(* hint about direction the font is painted *)
+		min_char_or_byte2*: WORD;(* first character *)
+		max_char_or_byte2*: WORD;(* last character *)
+		min_byte1*: WORD;	(* first row that exists *)
+		max_byte1*: WORD;	(* last row that exists *)
+		all_chars_exist*: Bool;(* flag if all characters have non-zero size*)
+		default_char*: WORD;	(* char to print for undefined character *)
+		n_properties*: WORD;   (* how many properties there are *)
 		properties*: ADDRESS; (*POINTER TO ARRAY OF FontProp; *)	(* pointer to array of additional properties*)
 		min_bounds*: CharStruct;	(* minimum bounds over all existing char*)
 		max_bounds*: CharStruct;	(* maximum bounds over all existing char*)
 		per_char*: ADDRESS; (*POINTER TO ARRAY OF CharStruct;*)	(* first_char to last_char information *)
-		ascent*: LONGINT;		(* log. extent above baseline for spacing *)
-		descent*: LONGINT;	(* log. descent below baseline for spacing *)
+		ascent*: WORD;		(* log. extent above baseline for spacing *)
+		descent*: WORD;	(* log. descent below baseline for spacing *)
 	END;
 
 
@@ -988,8 +988,8 @@ TYPE
 	XTextProperty* = RECORD
 		value*: ADDRESS;		(* same as Property routines *)
 		encoding*: Atom;		(* prop type *)
-		format*: LONGINT;	(* prop data format: 8, 16, or 32 *)
-		nitems*: LONGINT;	(* number of data items in value *)
+		format*: WORD;	(* prop data format: 8, 16, or 32 *)
+		nitems*: LONGWORD;	(* number of data items in value *)
 	END;
 
 (*! ------------------- ends  Xutil.h ----------- *)	
@@ -998,59 +998,59 @@ VAR
 	xlib: ADDRESS;
 	
 	OpenDisplay- : PROCEDURE {C} (CONST name: ARRAY OF CHAR): DisplayPtr;
-	CloseDisplay- : PROCEDURE {C} (display:DisplayPtr): LONGINT;
-	CreateWindow- : PROCEDURE {C} (display: DisplayPtr; parent: Window; x, y: LONGINT; width, height, borderWidth, depth, class: LONGINT; visual: VisualPtr; valuemask: LONGINT;  VAR attributes: XSetWindowAttributes ): Window;
-	DestroyWindow-: PROCEDURE {C}(display:DisplayPtr; win: Window): LONGINT;
-	DisplayWidthMM-: PROCEDURE {C} (d: DisplayPtr; screen: LONGINT ): LONGINT;
+	CloseDisplay- : PROCEDURE {C} (display:DisplayPtr): WORD;
+	CreateWindow- : PROCEDURE {C} (display: DisplayPtr; parent: Window; x, y: WORD; width, height, borderWidth, depth, class: WORD; visual: VisualPtr; valuemask: LONGWORD;  VAR attributes: XSetWindowAttributes ): Window;
+	DestroyWindow-: PROCEDURE {C}(display:DisplayPtr; win: Window): WORD;
+	DisplayWidthMM-: PROCEDURE {C} (d: DisplayPtr; screen: WORD ): WORD;
 	FreeColormap- : PROCEDURE {C} (display: DisplayPtr; colormap: Colormap);
 	FreeCursor- : PROCEDURE {C} (display: DisplayPtr;  cursor: Cursor);
-	XGetAtomName- : PROCEDURE {C} (display: DisplayPtr; atom: Atom): LONGINT;
-	GetWindowAttributes- : PROCEDURE {C} (display: DisplayPtr; win: Window; VAR attr: XWindowAttributes): LONGINT;
+	XGetAtomName- : PROCEDURE {C} (display: DisplayPtr; atom: Atom): ADDRESS;
+	GetWindowAttributes- : PROCEDURE {C} (display: DisplayPtr; win: Window; VAR attr: XWindowAttributes): Status;
 	
 	GetWindowProperty-: PROCEDURE {C} (d: DisplayPtr; w: Window; property: Atom;
-											offset, length: LONGINT;  delete: Bool;  reqtype: Atom;  VAR typ: Atom;
-											VAR format, nitems, bytesafter, prop: LONGINT ): LONGINT;
+											offset, length: LONGWORD;  delete: Bool;  reqtype: Atom;  VAR typ: Atom;
+											VAR format: WORD; VAR nitems, bytesafter: LONGWORD; VAR prop: ADDRESS ): WORD;
 
-	GrabKeyboard-: PROCEDURE {C} (display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: LONGINT; time: Time): LONGINT;
-	GrabPointer-: PROCEDURE {C} (display:DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: LONGINT; pointermode, keyboardmode: LONGINT; confineto: Window; cursor: Cursor; time: Time): LONGINT;
+	GrabKeyboard-: PROCEDURE {C} (display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: WORD; time: Time): WORD;
+	GrabPointer-: PROCEDURE {C} (display:DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: WORD; pointermode, keyboardmode: WORD; confineto: Window; cursor: Cursor; time: Time): WORD;
 	InternAtom-: PROCEDURE {C} (display: DisplayPtr; CONST name: ARRAY OF CHAR;  onlyifexists: Bool ): Atom;
-	LookupKeysym- : PROCEDURE {C} (CONST event: XKeyEvent; index: LONGINT): KeySym;
-	LookupString-:	PROCEDURE {C} (VAR event: XKeyEvent; VAR buf: ARRAY OF CHAR;  bufsize: LONGINT; VAR keysym: KeySym; VAR cstat: ComposeStatus ): LONGINT;
+	LookupKeysym- : PROCEDURE {C} (CONST event: XKeyEvent; index: WORD): KeySym;
+	LookupString-:	PROCEDURE {C} (VAR event: XKeyEvent; VAR buf: ARRAY OF CHAR;  bufsize: WORD; VAR keysym: KeySym; VAR cstat: ComposeStatus ): WORD;
 	MapWindow- : PROCEDURE {C} (display: DisplayPtr; win: Window);
 	NextEvent-: PROCEDURE {C} (d: DisplayPtr; VAR event: XEvent );
-	Pending- : PROCEDURE {C} (display: DisplayPtr): LONGINT;
+	Pending- : PROCEDURE {C} (display: DisplayPtr): WORD;
 	RaiseWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window);
-	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: LONGINT): Window;	
-	SendEvent-: PROCEDURE {C} (d: DisplayPtr; w: Window; propagate: Bool; eventmask: LONGINT; event: ADDRESS ): Bool;
+	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: WORD): Window;	
+	SendEvent-: PROCEDURE {C} (d: DisplayPtr; w: Window; propagate: Bool; eventmask: LONGWORD; event: ADDRESS ): Status;
 	
 	SetNormalHints-: PROCEDURE {C} (d: DisplayPtr; w: Window; VAR hints: XSizeHints);
 	GetNormalHints-: PROCEDURE {C} (d: DisplayPtr; w: Window; VAR hints: XSizeHints): Status;
 	
 	SetStandardProperties-: PROCEDURE {C} (display: DisplayPtr; w: Window; CONST winName: ARRAY OF CHAR; 
-							CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap;  argv: ADDRESS; argc: LONGINT; VAR hints: XSizeHints);
-	SetWMProtocols-: PROCEDURE {C} (display: DisplayPtr; win: Window; protoclos: ADDRESS (* ARRAY OF Atoms *); count: LONGINT): LONGINT;
-	StoreName- : PROCEDURE {C} (display: DisplayPtr; win: Window; CONST s: ARRAY OF CHAR): LONGINT;
+							CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap;  argv: ADDRESS; argc: WORD; VAR hints: XSizeHints);
+	SetWMProtocols-: PROCEDURE {C} (display: DisplayPtr; win: Window; protocols: ADDRESS (* ARRAY OF Atoms *); count: WORD): Status;
+	StoreName- : PROCEDURE {C} (display: DisplayPtr; win: Window; CONST s: ARRAY OF CHAR): WORD;
 	UnmapWindow- : PROCEDURE {C} (display: DisplayPtr; win: Window);	
 
-	WarpPointer- : PROCEDURE {C} (display: DisplayPtr; srcwin, destwin: Window; srcx, srcy: LONGINT; srcwidth, srcheight: LONGINT; destx, desty: LONGINT);
+	WarpPointer- : PROCEDURE {C} (display: DisplayPtr; srcwin, destwin: Window; srcx, srcy: WORD; srcwidth, srcheight: WORD; destx, desty: WORD);
 
 	(* cut and paste delegates *)
 	SendSelection*:	 PROCEDURE {DELEGATE} (VAR event: XSelectionRequestEvent );
 	ReceiveSelection*:  PROCEDURE {DELEGATE} (VAR event: XSelectionEvent );
 	ClearSelection*: PROCEDURE {DELEGATE} ;
 
-	CheckTypedEvent-: PROCEDURE {C} (display: DisplayPtr; eventType: LONGINT; VAR event: XEvent): Bool;
-	CheckMaskEvent-: PROCEDURE {C} (display: DisplayPtr; eventMask: LONGINT; VAR event: XEvent): Bool;
+	CheckTypedEvent-: PROCEDURE {C} (display: DisplayPtr; eventType: WORD; VAR event: XEvent): Bool;
+	CheckMaskEvent-: PROCEDURE {C} (display: DisplayPtr; eventMask: LONGWORD; VAR event: XEvent): Bool;
 
-	CheckTypedWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventType: LONGINT; VAR event: XEvent): Bool;
-	CheckWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventMask: LONGINT; VAR event: XEvent): Bool;
+	CheckTypedWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventType: WORD; VAR event: XEvent): Bool;
+	CheckWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventMask: LONGWORD; VAR event: XEvent): Bool;
 	
 	(* Font *)
 	LoadQueryFont-: PROCEDURE {C} (display: DisplayPtr; name: ADDRESS): FontStruct;
-	QueryFont- : PROCEDURE {C} (display: DisplayPtr; name: ADDRESS): FontStruct;
+	QueryFont- : PROCEDURE {C} (display: DisplayPtr; name: XID): FontStruct;
 
-	KeycodeToKeysym-: PROCEDURE {C} (disp: DisplayPtr; keycode: LONGINT; index: LONGINT): KeySym;
-	KeysymToKeycode-: PROCEDURE {C} (disp: DisplayPtr; keysym: KeySym): LONGINT;
+	KeycodeToKeysym-: PROCEDURE {C} (disp: DisplayPtr; keycode: WORD; index: WORD): KeySym;
+	KeysymToKeycode-: PROCEDURE {C} (disp: DisplayPtr; keysym: KeySym): WORD;
 
 	XKeysymToString-  : PROCEDURE {C} (keysym: KeySym): ADDRESS;
 	

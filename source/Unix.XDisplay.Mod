@@ -631,7 +631,7 @@ VAR
 		IF pixmap = 0 THEN  HALT( 99 )  END;
 		pat := S.VAL( X11.PatternPtr, Unix.malloc( SIZEOF( X11.PatternDesc ) ) );
 		pat.x := 0;  pat.y := 0;  pat.w := width;  pat.h := height;  pat.pixmap := pixmap;
-		RETURN S.VAL( LONGINT, pat )
+		RETURN S.VAL( X11.Pattern, pat )
 	END NewPattern;
 
 	PROCEDURE InitNames;

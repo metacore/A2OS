@@ -423,7 +423,7 @@ TYPE
 	END Lock;
 
 	PROCEDURE Await*( cond: Condition;  slink: ADDRESS;  obj: ProtectedObject;  flags: SET );
-	VAR hdr: ObjectHeader;  p, c: Process; lock: LockT;  
+	VAR hdr {UNTRACED}: ObjectHeader;  p, c: Process; lock: LockT;  
 	BEGIN
 		IF 1 IN flags THEN  (* compiler did not generate IF *)
 			IF cond( slink ) THEN  (* condition already true *)  RETURN  END

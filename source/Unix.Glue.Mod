@@ -37,7 +37,7 @@ VAR
 
 
 	PROCEDURE Initialize*;
-	VAR i: LONGINT;
+	VAR i: ADDRESS;
 	BEGIN
 		S.MOVE( ADDRESSOF( AAgetadr ), ADDRESSOF( dlsym ), AddrSize );
 		

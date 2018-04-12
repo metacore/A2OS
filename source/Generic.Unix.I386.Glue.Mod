@@ -58,7 +58,7 @@ VAR
 	
 	
 	PROCEDURE {INITIAL, NOPAF} Init0;
-	VAR localvar: LONGINT;
+	VAR localvar: ADDRESS;
 	CONST CR = 0DX; NL = 0AX;
 	BEGIN
 		baseAdr := ADDRESSOF( Header );

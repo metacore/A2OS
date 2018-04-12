@@ -165,7 +165,7 @@ VAR
 	END Char;
  
 	PROCEDURE Init;
-	VAR i: LONGINT;
+	VAR i: ADDRESS;
 	BEGIN
 		baseAdr := ADDRESS OF EntryPoint;
 		endAdr := ADDRESS OF last;

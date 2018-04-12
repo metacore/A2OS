@@ -942,6 +942,8 @@ END Candidate;
 PROCEDURE RegisterCandidates*(adr: ADDRESS; size: SIZE);
 VAR end, p: ADDRESS;
 BEGIN
+	ASSERT (adr MOD AddressSize = 0);
+	ASSERT (size MOD AddressSize = 0);
 	(* current processor must hold Heaps lock *)
 	end := adr + size;
 	WHILE adr # end DO

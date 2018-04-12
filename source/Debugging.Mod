@@ -188,6 +188,10 @@ VAR
 	BEGIN
 	END Nothing;
 
+	PROCEDURE Halt*;
+	BEGIN HALT (1234);
+	END Halt;
+
 	PROCEDURE DisableGC*;
 	BEGIN
 		Heaps.GC := Nothing;

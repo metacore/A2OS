@@ -142,7 +142,7 @@ CONST
 TYPE
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
-	MutexType = ARRAY 8 OF ADDRESS;
+	MutexType = ARRAY 5 OF ADDRESS;
 	MutexAttributeType = ARRAY 1 OF WORD;
 
 	Condition_t* = ADDRESS;

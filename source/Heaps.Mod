@@ -667,13 +667,13 @@ BEGIN
 		IF sweepMarkValue < currentMarkValue THEN
 			(*Trace.String("clear free lists and lazy sweep"); Trace.Ln;*)
 			ClearFreeLists;
-			LazySweep(MAX(LONGINT), p)
+			LazySweep(MAX(SIZE), p)
 		END;
 		p := GetFreeBlockAndSplit(size)
 	ELSE
 		LazySweep(size, p)
 	END;
-	IF size # MAX(LONGINT) THEN
+	IF size # MAX(SIZE) THEN
 	INC(throughput, size);
 	END;
 END GetFreeBlock;
@@ -691,7 +691,7 @@ CONST StrongChecks = FALSE;
 BEGIN{UNCHECKED}
 	INC(NgcSweeps);
 	time1 := Machine.GetTimer();
-	ASSERT(~EnableFreeLists OR (size = MAX(LONGINT)));
+	ASSERT(~EnableFreeLists OR (size = MAX(SIZE)));
 	lastFreeBlockAdr := NilVal;
 	lastFreeBlock := NIL;
 	IF (sweepMemBlock = NIL) (* OR (sweepMarkValue < currentMarkValue)*) THEN (* restart lazy sweep including clearance of lists *)
@@ -1140,7 +1140,7 @@ BEGIN
 		(* TRACE(LONGINT((time2-time1) DIV (1024*1024))); *)
 	END;
 
-	IF EnableFreeLists THEN GetFreeBlock(MAX(LONGINT), f) END;
+	IF EnableFreeLists THEN GetFreeBlock(MAX(SIZE), f) END;
 
 END CollectGarbage;
 
@@ -1153,7 +1153,7 @@ END InvokeGC;
 PROCEDURE ReturnBlocks;
 VAR memBlock {UNTRACED}, free{UNTRACED}: Machine.MemoryBlock; p: ADDRESS; heapBlock {UNTRACED}: HeapBlock; f: FreeBlock;
 BEGIN
-	GetFreeBlock(MAX(LONGINT), f);
+	GetFreeBlock(MAX(SIZE), f);
 	memBlock := Machine.memBlockHead;
 	WHILE memBlock # NIL DO
 		free := NIL;
@@ -1178,7 +1178,7 @@ END ReturnBlocks;
 PROCEDURE FullSweep*;
 VAR p {UNTRACED}: FreeBlock;
 BEGIN
-	GetFreeBlock(MAX(LONGINT), p);
+	GetFreeBlock(MAX(SIZE), p);
 END FullSweep;
 
 PROCEDURE LazySweepGC*;
@@ -1188,8 +1188,8 @@ BEGIN
 	GC;
 	(* return blocks now *)
 	Machine.Acquire(Machine.Heaps);
-	(* trying to satisfy a request of MAX(LONGINT) bytes will never succeed - lazy sweep runs until end of heap *)
-	GetFreeBlock(MAX(LONGINT), p);
+	(* trying to satisfy a request of MAX(SIZE) bytes will never succeed - lazy sweep runs until end of heap *)
+	GetFreeBlock(MAX(SIZE), p);
 	IF EnableReturnBlocks THEN ReturnBlocks END;
 	Machine.Release(Machine.Heaps);
 END LazySweepGC;

@@ -23,7 +23,7 @@ CONST
 CONST
 	TraceVerbose = FALSE; 
 	AddressSize = SIZEOF(ADDRESS);
-	StaticBlockSize = 32;		(* static heap block size *)
+	StaticBlockSize = 8*AddressSize;		(* static heap block size *)
 	BlockHeaderSize = 2 * AddressSize;
 	(* change this when Heaps.HeapBlock is modified *)
 	RecordDescSize = 4 * AddressSize;  (* needs to be adapted in case Heaps.RecordBlockDesc is changed *)

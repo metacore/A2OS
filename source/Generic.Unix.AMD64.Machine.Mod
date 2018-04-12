@@ -20,9 +20,9 @@ CONST
 	AddressSize = SIZEOF(ADDRESS);
 	BlockHeaderSize = 2 * AddressSize;
 	RecordDescSize = 4 * AddressSize;  (* needs to be adapted in case Heaps.RecordBlockDesc is changed *)
-	StaticBlockSize = 32;		(* static heap block size *)
+	StaticBlockSize = 8 * AddressSize;	(* static heap block size *)
 
-	BlockSize = 32;
+	BlockSize = StaticBlockSize;
 	MemBlockSize* = 64*1024*1024;
 	
 	TraceOutput* = 0;	(* Trace output *)

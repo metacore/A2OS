@@ -146,11 +146,11 @@ TYPE
 	MutexAttributeType = ARRAY 1 OF WORD;
 
 	Condition_t* = ADDRESS;
-	ConditionType = ARRAY 12 OF WORD;
+	ConditionType = ARRAY 6 OF ADDRESS;
 	
 	Key_t* = ADDRESS;
 
-	Sigset_t= ARRAY 32 OF ADDRESS;
+	Sigset_t= ARRAY 16 OF ADDRESS;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
 	pid_t*		= LONGINT;

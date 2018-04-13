@@ -826,7 +826,7 @@ VAR
 
 	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
 	VAR
-		param: Sched_param;
+		param: Sched_param; res: LONGINT;
 	BEGIN
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
 		mainthread := pthread_self();
@@ -838,9 +838,8 @@ VAR
 			Perror("ThrInitialize: setparam");
 		END;
 
-		sigemptyset( ADDRESS OF sasuspend.sa_mask );
-		sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
-		sasuspend.sa_flags := SA_SIGINFO + (*SA_ONSTACK +*) SA_NODEFER;
+		res := sigfillset( ADDRESS OF sasuspend.sa_mask );
+		sasuspend.sa_flags := SA_SIGINFO;
 		sasuspend.sa_handler := suspend_handler_wrapper;
 		ASSERT(sigaction( T_SIGSUSPEND, ADDRESS OF sasuspend, NIL ) = 0);
 

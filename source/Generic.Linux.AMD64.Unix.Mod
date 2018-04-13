@@ -418,7 +418,7 @@ VAR
 	pthread_cond_wait: PROCEDURE {C} (cond: ADDRESS; mutex: ADDRESS): WORD;
 	pthread_cond_signal: PROCEDURE {C} (cond: ADDRESS): WORD;
 
-	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
+	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg:PROCEDURE): WORD;
 	pthread_exit: PROCEDURE {C} (thr: ADDRESS);
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
 	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
@@ -670,6 +670,16 @@ VAR
 		END;
 	END SetSigaltstack;
 
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} StarterWrapper;
+	CODE
+		PUSH	RDI ; proc
+		MOV	RAX, Starter
+		CALL	RAX
+		ADD	RSP, 8
+		RET
+	END StarterWrapper;
+
 	PROCEDURE {C} Starter(proc: PROCEDURE): ADDRESS;
 	VAR
 		me: Thread_t;
@@ -716,7 +726,7 @@ VAR
 		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
 		(*pthread_attr_setdetachstate(ADDRESS OF attr, 0);*)
 		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
-		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
+		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, StarterWrapper, p);
 		RETURN id;
 	END ThrStart;
 
@@ -747,6 +757,15 @@ VAR
 		END;
     END ThrKill;
 
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} resume_handler_wrapper;
+	CODE
+		PUSH	RDI ; sig
+		MOV	RAX, resume_handler
+		CALL	RAX
+		ADD	RSP, 8
+		RET
+	END resume_handler_wrapper;
 
 	PROCEDURE {C} resume_handler( sig: LONGINT );
 	BEGIN
@@ -765,6 +784,18 @@ VAR
 	END ThrResume;
 
 	VAR suspendHandler*: PROCEDURE(c: Ucontext);
+
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} suspend_handler_wrapper;
+	CODE
+		PUSH	RDI ; sig
+		PUSH	RSI ; scp
+		PUSH	RDX ; ucp
+		MOV	RAX, suspend_handler
+		CALL	RAX
+		ADD	RSP, 24
+		RET
+	END suspend_handler_wrapper;
 
 	PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
 	VAR block: Sigset_t; res: LONGINT;
@@ -810,12 +841,12 @@ VAR
 		sigemptyset( ADDRESS OF sasuspend.sa_mask );
 		sigaddset(  ADDRESS OF sasuspend.sa_mask, T_SIGRESUME );
 		sasuspend.sa_flags := SA_SIGINFO + (*SA_ONSTACK +*) SA_NODEFER;
-		sasuspend.sa_handler := suspend_handler;
+		sasuspend.sa_handler := suspend_handler_wrapper;
 		ASSERT(sigaction( T_SIGSUSPEND, ADDRESS OF sasuspend, NIL ) = 0);
 
 		sigemptyset( ADDRESS OF saresume.sa_mask );
 		saresume.sa_flags := 0;
-		saresume.sa_handler := resume_handler;
+		saresume.sa_handler := resume_handler_wrapper;
 		ASSERT(sigaction( T_SIGRESUME, ADDRESS OF saresume, NIL ) = 0);
 
 		RETURN TRUE;
@@ -939,6 +970,18 @@ VAR
 
 	VAR trap: SignalTrap;
 
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} SigHandlerWrapper;
+	CODE
+		PUSH	RDI ; sig
+		PUSH	RSI ; scp
+		PUSH	RDX ; ucp
+		MOV	RAX, SigHandler
+		CALL	RAX
+		ADD	RSP, 24
+		RET
+	END SigHandlerWrapper;
+
 	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF trap # NIL THEN
@@ -967,7 +1010,7 @@ VAR
 		ELSE
 			act.sa_flags :=  SA_SIGINFO + SA_NODEFER;
 		END;
-		act.sa_handler := ADDRESS OF SigHandler;
+		act.sa_handler := ADDRESS OF SigHandlerWrapper;
 		IF sigaction( sig, ADDRESS OF act, 0 ) # 0 THEN
 			Perror("sigaction");
 		END
@@ -1002,6 +1045,17 @@ VAR
 	VAR oberonXIOErrorHandler: OberonXIOErrorHandler;
 
 
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} X11ErrorHandlerWrapper;
+	CODE
+		PUSH	RDI ; d
+		PUSH	RSI ; err
+		MOV	RAX, X11ErrorHandler
+		CALL	RAX
+		ADD	RSP, 16
+		RET
+	END X11ErrorHandlerWrapper;
+
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
 	VAR res: LONGINT;
 	BEGIN
@@ -1012,7 +1066,17 @@ VAR
 		RETURN 0;
 	END X11ErrorHandler;
 
-	PROCEDURE X11IOErrorHandler(d: ADDRESS): WORD;
+	(* callback wrapper which creates the shadow space for parameter registers as currently required by the compiler *)
+	PROCEDURE {NOPAF} X11IOErrorHandlerWrapper;
+	CODE
+		PUSH	RDI ; d
+		MOV	RAX, X11IOErrorHandler
+		CALL	RAX
+		ADD	RSP, 8
+		RET
+	END X11IOErrorHandlerWrapper;
+
+	PROCEDURE {C} X11IOErrorHandler(d: ADDRESS): WORD;
 	VAR res: LONGINT;
 	BEGIN
 		TRACE(d);
@@ -1027,8 +1091,8 @@ VAR
 	BEGIN
 		oberonXErrorHandler := xErrorHandler;
 		oberonXIOErrorHandler := xIOErrorHandler;
-		res := xSetErrorHandler(ADDRESS OF X11ErrorHandler);
-		res := xSetIOErrorHandler(ADDRESS OF X11IOErrorHandler);
+		res := xSetErrorHandler(ADDRESS OF X11ErrorHandlerWrapper);
+		res := xSetIOErrorHandler(ADDRESS OF X11IOErrorHandlerWrapper);
 	END InitXErrorHandlers;
 
 	PROCEDURE Init;

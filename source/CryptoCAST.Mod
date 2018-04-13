@@ -15,11 +15,11 @@ TYPE
 				data: ARRAY 16 OF Key
 			END;
 
-	Block = ARRAY 2 OF SET;
+	Block = ARRAY 2 OF SET32;
 
 VAR
 	T0, T1, T2, T3: ARRAY 256 OF LONGINT;
-	T4, T5, T6, T7: ARRAY 256 OF SET;
+	T4, T5, T6, T7: ARRAY 256 OF SET32;
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
@@ -96,12 +96,12 @@ TYPE
 
 	PROCEDURE InitKeys( VAR keys: Keys;  CONST src: ARRAY OF CHAR;  len: LONGINT );
 	VAR buf: ARRAY 16 OF CHAR;
-		X, Z: ARRAY 4 OF SET;
+		X, Z: ARRAY 4 OF SET32;
 		x, z: ARRAY 16 OF INTEGER;
-		k: ARRAY 32 OF SET;
+		k: ARRAY 32 OF SET32;
 		i, j: LONGINT;
 
-		PROCEDURE Zz( i: INTEGER;  s: SET );
+		PROCEDURE Zz( i: INTEGER;  s: SET32 );
 		VAR l: LONGINT;
 		BEGIN
 			Z[i DIV 4] := s;  l := S.VAL( LONGINT, s );
@@ -111,7 +111,7 @@ TYPE
 			z[i + 0] := SHORT( l MOD 256 );
 		END Zz;
 
-		PROCEDURE Xx( i: INTEGER;  s: SET );
+		PROCEDURE Xx( i: INTEGER;  s: SET32 );
 		VAR l: LONGINT;
 		BEGIN
 			X[i DIV 4] := s;  l := S.VAL( LONGINT, s );
@@ -177,7 +177,7 @@ TYPE
 		END
 	END InitKeys;
 
-	PROCEDURE CAST1( VAR k: Key;  VAR L, R: SET );   (* +, xor, - *)
+	PROCEDURE CAST1( VAR k: Key;  VAR L, R: SET32 );   (* +, xor, - *)
 	VAR a, b, axb, t, c, d: LONGINT;
 	BEGIN
 		t := ROT( k.val + S.VAL( LI, R ), k.rot );
@@ -185,22 +185,22 @@ TYPE
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];
-		axb := S.VAL( LI, S.VAL( SET, a ) / S.VAL( SET, b ) );
-		L := L / S.VAL( SET, axb - c + d );
+		axb := S.VAL( LI, S.VAL( SET32, a ) / S.VAL( SET32, b ) );
+		L := L / S.VAL( SET32, axb - c + d );
 	END CAST1;
 
-	PROCEDURE CAST2( VAR k: Key;  VAR L, R: SET );   (* xor, -, + *)
+	PROCEDURE CAST2( VAR k: Key;  VAR L, R: SET32 );   (* xor, -, + *)
 	VAR t, a, b, c, d: LONGINT;
 	BEGIN
-		t := ROT( S.VAL( LI, S.VAL( SET, k.val )/R ), k.rot );
+		t := ROT( S.VAL( LI, S.VAL( SET32, k.val )/R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];  
-		L := L / (S.VAL( SET, a - b + c ) / S.VAL( SET, d ) );
+		L := L / (S.VAL( SET32, a - b + c ) / S.VAL( SET32, d ) );
 	END CAST2;
 
-	PROCEDURE CAST3( VAR k: Key;  VAR L, R: SET );   (* -, +, xor *)
+	PROCEDURE CAST3( VAR k: Key;  VAR L, R: SET32 );   (* -, +, xor *)
 	VAR t, a, b, c, d: LONGINT;
 	BEGIN
 		t := ROT( k.val - S.VAL( LI, R ), k.rot );
@@ -208,13 +208,13 @@ TYPE
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
 		c := T2[t MOD 256];  
-		L := L / S.VAL( SET, S.VAL( LI, S.VAL( SET, a + b ) / S.VAL( SET, c ) ) - d );
+		L := L / S.VAL( SET32, S.VAL( LI, S.VAL( SET32, a + b ) / S.VAL( SET32, c ) ) - d );
 	END CAST3;
 
 
 
 	PROCEDURE encrypt( VAR k: Keys;  VAR b: Block );
-	VAR l, r: SET;
+	VAR l, r: SET32;
 	BEGIN
 		l := b[0];  r := b[1];
 		CAST1( k.data[0], l, r );  CAST2( k.data[  1], r, l );  CAST3( k.data[  2], l, r );
@@ -229,7 +229,7 @@ TYPE
 	END encrypt;
 
 	PROCEDURE decrypt( VAR k: Keys;  VAR b: Block );
-	VAR l, r: SET;
+	VAR l, r: SET32;
 	BEGIN
 		l := b[0];  r := b[1];
 		IF ~k.short THEN

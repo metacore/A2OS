@@ -37,7 +37,7 @@ TYPE
 				BEGIN
 					w := bits DIV 32;  b := bits MOD 32;  len := w;
 					IF b # 0 THEN  INC( len );
-						d[w] := S.VAL( LONGINT,  S.VAL( SET, d[w] ) * {0..b} )
+						d[w] := S.VAL( LONGINT,  S.VAL( SET32, d[w] ) * {0..b} )
 					END
 				END Mask;
 
@@ -157,7 +157,7 @@ TYPE
 				BEGIN
 					w := n DIV 32;  bit := n MOD 32;
 					IF w >= len THEN  RETURN FALSE
-					ELSE  RETURN  bit IN S.VAL( SET, d[w] )
+					ELSE  RETURN  bit IN S.VAL( SET32, d[w] )
 					END
 				END BitSet;
 
@@ -277,7 +277,7 @@ VAR
 
 	(** random number with len 'bits' *)
 	PROCEDURE NewRand*( bits: LONGINT;  top, bottom: SHORTINT ): BigNumber;
-	VAR n, len, i, topbit: LONGINT;  topword: SET;  b: BigNumber;
+	VAR n, len, i, topbit: LONGINT;  topword: SET32;  b: BigNumber;
 	BEGIN
 		len := bits;  INC( len, (-len) MOD 32 );
 		NEW( b, len );
@@ -287,7 +287,7 @@ VAR
 		END;
 		b.len := (bits + 31) DIV 32;
 		topbit := (bits - 1)  MOD 32;
-		topword := S.VAL( SET, b.d[b.len - 1] ) * {0..topbit};
+		topword := S.VAL( SET32, b.d[b.len - 1] ) * {0..topbit};
 		IF top > 0 THEN INCL( topword, topbit ) END;
 		b.d[b.len - 1] := S.VAL( LONGINT, topword );
 		IF (bottom > 0) & ~ODD( b.d[0] ) THEN  INC( b.d[0] )  END;
@@ -411,7 +411,7 @@ VAR
 
 	PROCEDURE Invert( x: LONGINT ): LONGINT;
 	BEGIN
-		RETURN S.VAL( LONGINT, -S.VAL( SET, x ) )
+		RETURN S.VAL( LONGINT, -S.VAL( SET32, x ) )
 	END Invert;
 
 	PROCEDURE add( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );
@@ -569,12 +569,12 @@ VAR
 		ELSE bit := 63
 		END;
 		q := 0;  r := 0;
-		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET, a[bit DIV 32]) ) DO  DEC( bit )  END;
+		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET32, a[bit DIV 32]) ) DO  DEC( bit )  END;
 		WHILE bit >= 0 DO
 			overflow := r < 0;  r := ASH( r, 1 );
-			IF bit MOD 32 IN S.VAL( SET, a[bit DIV 32] ) THEN  INC( r )  END;
+			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r )  END;
 			IF overflow OR LessOrEqual( b, r ) THEN  r := r - b;
-				IF bit < 32 THEN  INCL( S.VAL( SET, q ), bit )  ELSE  q := -1  END;
+				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
 			END;
 			DEC( bit )
 		END;
@@ -605,14 +605,14 @@ VAR
 		ELSE  bit := 95
 		END;
 		q := 0;  r[0] := 0;  r[1] := 0;
-		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET, a[bit DIV 32]) ) DO  DEC( bit )  END;
+		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET32, a[bit DIV 32]) ) DO  DEC( bit )  END;
 		WHILE bit >= 0 DO
 			shift( r );	(* r := r*2 *)
-			IF bit MOD 32 IN S.VAL( SET, a[bit DIV 32] ) THEN  INC( r[0] )  END;
+			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r[0] )  END;
 			IF overflow OR ge( r, b ) THEN
 				borrow := LessOrEqual( r[0], b[0] );  r[0] := r[0] - b[0];  r[1] := r[1] - b[1];
 				IF borrow  THEN  DEC( r[1] )  END;
-				IF bit < 32 THEN  INCL( S.VAL( SET, q ), bit )  ELSE  q := -1  END;
+				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
 			END;
 			DEC( bit )
 		END;

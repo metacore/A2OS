@@ -47,13 +47,13 @@ TYPE
 				IF i < 16 THEN
 					X[i] := U.IntFromBufferBE( buf, pos );  INC( pos, 4 )
 				ELSE
-					s0 := sigma0( S.VAL( SET, X[(i + 1) MOD 16] ) );
-					s1 := sigma1( S.VAL( SET, X[(i + 14) MOD 16] ) );
+					s0 := sigma0( S.VAL( SET32, X[(i + 1) MOD 16] ) );
+					s1 := sigma1( S.VAL( SET32, X[(i + 14) MOD 16] ) );
 					s := s0 + s1 + X[(i + 9) MOD 16];
 					INC( X[i MOD 16], s );  
 				END;
-				T1 := X[i MOD 16] + h + Sigma1Ch( S.VAL(SET, e), f, g) + K256[i];
-				T2 := Sigma0Maj( S.VAL(SET, a), b, c );
+				T1 := X[i MOD 16] + h + Sigma1Ch( S.VAL(SET32, e), f, g) + K256[i];
+				T2 := Sigma0Maj( S.VAL(SET32, a), b, c );
 				h := g;  g := f;  f := e;  e := d + T1;
 				d := c;  c := b;  b := a;  a := T1 + T2;
 			END;
@@ -129,29 +129,29 @@ TYPE
 
 
 
-	PROCEDURE Sigma0Maj( x: SET; y, z: LONGINT ): LONGINT;
+	PROCEDURE Sigma0Maj( x: SET32; y, z: LONGINT ): LONGINT;
 	VAR a, b: LONGINT; 
 	BEGIN 
 		a := S.VAL( LONGINT, ROT( x , 30 ) / ROT( x, 19 ) / ROT( x, 10 ) );
-		b := S.VAL( LONGINT, (x * S.VAL( SET, y )) / 
-							  (x * S.VAL( SET, z )) / (S.VAL( SET, y ) * S.VAL( SET, z )) );
+		b := S.VAL( LONGINT, (x * S.VAL( SET32, y )) / 
+							  (x * S.VAL( SET32, z )) / (S.VAL( SET32, y ) * S.VAL( SET32, z )) );
 		RETURN a + b
 	END Sigma0Maj;
 	
-	PROCEDURE Sigma1Ch( x: SET;  y, z: LONGINT ): LONGINT;
+	PROCEDURE Sigma1Ch( x: SET32;  y, z: LONGINT ): LONGINT;
 	VAR a, b: LONGINT; 
 	BEGIN 
 		a := S.VAL( LONGINT, ROT( x , 26 ) / ROT( x, 21 ) / ROT( x, 7 ) );
-		b := S.VAL( LONGINT, (x * S.VAL( SET, y )) / ((-x ) * S.VAL( SET, z )) );
+		b := S.VAL( LONGINT, (x * S.VAL( SET32, y )) / ((-x ) * S.VAL( SET32, z )) );
 		RETURN a + b
 	END Sigma1Ch;
 
-	PROCEDURE sigma0( x: SET ): LONGINT;
+	PROCEDURE sigma0( x: SET32 ): LONGINT;
 	BEGIN 
 		RETURN S.VAL( LONGINT, ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
 	END sigma0;
 	
-	PROCEDURE sigma1( x: SET ): LONGINT;
+	PROCEDURE sigma1( x: SET32 ): LONGINT;
 	BEGIN 
 		RETURN S.VAL( LONGINT, ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
 	END sigma1;

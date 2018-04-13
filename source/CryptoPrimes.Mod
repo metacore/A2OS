@@ -205,7 +205,7 @@ VAR
 	END witness;
 
 	PROCEDURE Init;
-	VAR sieve: ARRAY N OF SET; i, j, p, n: LONGINT;
+	VAR sieve: ARRAY N OF SET32; i, j, p, n: LONGINT;
 	BEGIN
 		(* compute the first N small primes *)
 		FOR i := 0 TO N - 1 DO sieve[i] := {0..31} END;

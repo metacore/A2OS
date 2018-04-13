@@ -10,11 +10,11 @@ IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			VAR 
-				ske, skd: ARRAY 96 OF SET; ski: LONGINT;
-				ivx, ivy: SET;
+				ske, skd: ARRAY 96 OF SET32; ski: LONGINT;
+				ivx, ivy: SET32;
 
 				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
-				VAR X, Y: SET;  i: LONGINT;
+				VAR X, Y: SET32;  i: LONGINT;
 				BEGIN
 					ASSERT( keybits = 192 );
 					InitKey^( src, 64 );
@@ -47,7 +47,7 @@ TYPE
 				END SetIV;
 
 				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR i, r: LONGINT;  X, Y: SET;
+				VAR i, r: LONGINT;  X, Y: SET32;
 				BEGIN
 					ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -76,7 +76,7 @@ TYPE
 				END Encrypt;
 
 				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR i, r: LONGINT;  X, Y, X0, Y0: SET;
+				VAR i, r: LONGINT;  X, Y, X0, Y0: SET32;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -108,7 +108,7 @@ TYPE
 				END Decrypt;
 
 				
-				PROCEDURE RoundE*( VAR x, y: SET );
+				PROCEDURE RoundE*( VAR x, y: SET32 );
 				VAR i: D.Ind4;
 				BEGIN
 					D.Split( ske[ski] / x, i );  INC( ski );
@@ -117,7 +117,7 @@ TYPE
 					y := y / D.sb7[i.a] / D.sb5[i.b] / D.sb3[i.c] / D.sb1[i.d]
 				END RoundE;
 				
-				PROCEDURE RoundD*( VAR x, y: SET );
+				PROCEDURE RoundD*( VAR x, y: SET32 );
 				VAR i: D.Ind4;
 				BEGIN
 					D.Split( skd[ski] / x, i );  INC( ski );

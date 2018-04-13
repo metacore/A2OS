@@ -114,7 +114,7 @@ TYPE
 
 	PROCEDURE shor( a, b: CARD16 ): CARD16;
 	BEGIN
-		RETURN S.VAL( LI, S.VAL( SET, LSH( a, 9 ) ) + S.VAL( SET, LSH( b, -7 ) ) ) MOD 10000H;
+		RETURN S.VAL( LI, S.VAL( SET32, LSH( a, 9 ) ) + S.VAL( SET32, LSH( b, -7 ) ) ) MOD 10000H;
 	END shor;
 
 	PROCEDURE CalcEncryptionKeys( CONST src: ARRAY OF CHAR;  VAR e: KeyBlock );
@@ -184,7 +184,7 @@ TYPE
 
 	PROCEDURE Xor( a, b: CARD16 ): CARD16;
 	BEGIN
-		RETURN S.VAL( LONGINT, S.VAL( SET, a )/S.VAL( SET, b ) )
+		RETURN S.VAL( LONGINT, S.VAL( SET32, a )/S.VAL( SET32, b ) )
 	END Xor;
 
 	PROCEDURE Mul( a, b: CARD16 ): CARD16;

@@ -106,56 +106,56 @@ TYPE
 
 (*	PROCEDURE F1( b, c, d: LONGINT ): LONGINT;
 	BEGIN
-		RETURN S.VAL( LONGINT, ((S.VAL( SET, c ) / S.VAL( SET, d )) * S.VAL( SET, b )) / S.VAL( SET, d ) )
+		RETURN S.VAL( LONGINT, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) )
 	END F1;
 
 	PROCEDURE F2( b, c, d: LONGINT ): LONGINT;
 	BEGIN
-		RETURN S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) )
+		RETURN S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) )
 	END F2;
 
 	PROCEDURE F3( b, c, d: LONGINT ): LONGINT;
 	BEGIN
-		RETURN S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((S.VAL( SET, b ) + S.VAL( SET, c )) * S.VAL( SET, d )) )
+		RETURN S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) )
 	END F3;
 *)
 
-	PROCEDURE -tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET );
+	PROCEDURE -tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET32 );
 	BEGIN
 		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) + 
 			(*F1( b, c, d );*)
-			S.VAL( LONGINT, ((S.VAL( SET, c ) / S.VAL( SET, d )) * S.VAL( SET, b )) / S.VAL( SET, d ) );
+			S.VAL( LONGINT, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr0019;
 
-	PROCEDURE -tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
+	PROCEDURE -tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
 	BEGIN
 		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) + 
 			(*F2( b, c, d );*)
-			S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
+			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr2039;
 
-	PROCEDURE -tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET);
+	PROCEDURE -tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32);
 	BEGIN
 		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) + 
 			(*F3( b, c, d );*)
-			S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((S.VAL( SET, b ) + S.VAL( SET, c )) * S.VAL( SET, d )) );
+			S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) );
 		b := ROT( b, 30 )
 	END tr4059;
 
-	PROCEDURE -tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET );
+	PROCEDURE -tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
 	BEGIN
 		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) + 
 			(*F2( b, c, d );*)
-			S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
+			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr6079;
 
 	PROCEDURE HashBlock( VAR state: State;  CONST buf: ARRAY OF CHAR;  pos: LONGINT );
 	VAR 
 		A, B, C, D, E, T: LONGINT;
-		x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, xa, xb, xc, xd, xe, xf: SET;
+		x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, xa, xb, xc, xd, xe, xf: SET32;
 	BEGIN
 		A := state[0];  B := state[1];  C := state[2];  D := state[3];  E := state[4];
 

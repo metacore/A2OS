@@ -41,9 +41,9 @@ TYPE
 			RETURN x
 		END GetInt;
 		
-		PROCEDURE GetSet*(): SET;
+		PROCEDURE GetSet*(): SET32;
 		BEGIN
-			RETURN S.VAL( SET, GetInt() )
+			RETURN S.VAL( SET32, GetInt() )
 		END GetSet;
 		
 	END InitBuffer
@@ -248,7 +248,7 @@ VAR
 
 
 	PROCEDURE XORBlock*( VAR block, iv: ARRAY OF S.BYTE );
-	VAR a1, a2: ADDRESS; s1, s2: SET; i: LONGINT;
+	VAR a1, a2: ADDRESS; s1, s2: SET32; i: LONGINT;
 	BEGIN
 		a1 := ADDRESSOF( block );  a2 := ADDRESSOF( iv );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -319,7 +319,7 @@ VAR
 		END
 	END BlockToBufferLE;
 	
-	PROCEDURE SetToBufferBE*( val: SET;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
+	PROCEDURE SetToBufferBE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferBE( S.VAL( LONGINT, val ), buf, pos );
 	END SetToBufferBE;
@@ -332,7 +332,7 @@ VAR
 		buf[pos + 0] := CHR( val MOD 256 );
 	END IntToBufferBE;
 	
-	PROCEDURE SetToBufferLE*( val: SET;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
+	PROCEDURE SetToBufferLE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferLE( S.VAL( LONGINT, val ), buf, pos );
 	END SetToBufferLE;
@@ -346,9 +346,9 @@ VAR
 	END IntToBufferLE;
 	
 	
-	PROCEDURE SetFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET;
+	PROCEDURE SetFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET32;
 	BEGIN
-		RETURN  S.VAL( SET, IntFromBufferBE( buf, pos ) )
+		RETURN  S.VAL( SET32, IntFromBufferBE( buf, pos ) )
 	END SetFromBufferBE;
 	
 	PROCEDURE IntFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;
@@ -360,9 +360,9 @@ VAR
 	END IntFromBufferBE;
 
 
-	PROCEDURE SetFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET;
+	PROCEDURE SetFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET32;
 	BEGIN
-		RETURN  S.VAL( SET, IntFromBufferLE( buf, pos ) )
+		RETURN  S.VAL( SET32, IntFromBufferLE( buf, pos ) )
 	END SetFromBufferLE;
 
 	PROCEDURE IntFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;

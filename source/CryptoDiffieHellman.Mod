@@ -7,7 +7,7 @@ TYPE
 			VAR
 				p, g: B.BigNumber;
 				priv: B.BigNumber;
-				initstate: SET;
+				initstate: SET32;
 
 				PROCEDURE & Init*( prkeybits: INTEGER;  CONST pname: ARRAY OF CHAR );
 				BEGIN

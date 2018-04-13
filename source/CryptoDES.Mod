@@ -6,15 +6,15 @@ MODULE CryptoDES;	(** AUTHOR "G.F."; PUROSE "DES Cipher";	 *)
 
 IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
 CONST 
-	Mask01 = S.VAL( SET, 0AAAAAAAAH );
-	Mask02 = S.VAL( SET, 33333333H );
-	Mask04 = S.VAL( SET, 0F0F0F0FH );
-	Mask08 = S.VAL( SET, 00FF00FFH );
-	Mask16 = S.VAL( SET, 0000FFFFH );
+	Mask01 = S.VAL( SET32, 0AAAAAAAAH );
+	Mask02 = S.VAL( SET32, 33333333H );
+	Mask04 = S.VAL( SET32, 0F0F0F0FH );
+	Mask08 = S.VAL( SET32, 00FF00FFH );
+	Mask16 = S.VAL( SET32, 0000FFFFH );
 
 TYPE
-	Sandbox = ARRAY 64 OF SET;
-	BitSwap = ARRAY 16 OF SET;
+	Sandbox = ARRAY 64 OF SET32;
+	BitSwap = ARRAY 16 OF SET32;
 	Ind4* = RECORD a-, b-, c-, d-: LONGINT END;
 	
 VAR
@@ -24,11 +24,11 @@ VAR
 TYPE 
 	Cipher* = OBJECT (Ciphers.Cipher)		
 	VAR
-		ske, skd: ARRAY 32 OF SET;  ki: LONGINT;
-		ivx, ivy: SET;
+		ske, skd: ARRAY 32 OF SET32;  ki: LONGINT;
+		ivx, ivy: SET32;
 	
 		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: LONGINT );
-		VAR X, Y: SET;  i: LONGINT;
+		VAR X, Y: SET32;  i: LONGINT;
 		BEGIN
 			ASSERT( keybits = 64 );
 			InitKey^( src, keybits );
@@ -52,7 +52,7 @@ TYPE
 		
 		
 		PROCEDURE  Encrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
-		VAR i, r: LONGINT;   X, Y: SET;
+		VAR i, r: LONGINT;   X, Y: SET32;
 		BEGIN
 			ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 			ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -74,7 +74,7 @@ TYPE
 		
 		
 		PROCEDURE  Decrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
-		VAR i, r: LONGINT;  X, Y: SET;  X0, Y0: SET;
+		VAR i, r: LONGINT;  X, Y: SET32;  X0, Y0: SET32;
 		BEGIN
 			ASSERT( isKeyInitialized );
 			ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -98,7 +98,7 @@ TYPE
 		END Decrypt;
 		
 				
-		PROCEDURE RoundE*( VAR x, y: SET );
+		PROCEDURE RoundE*( VAR x, y: SET32 );
 		VAR i: Ind4;
 		BEGIN
 			Split( ske[ki] / x, i );  INC( ki );
@@ -107,7 +107,7 @@ TYPE
 			y := y / sb7[i.a] / sb5[i.b] / sb3[i.c] / sb1[i.d]
 		END RoundE;
 		
-		PROCEDURE RoundD*( VAR x, y: SET );
+		PROCEDURE RoundD*( VAR x, y: SET32 );
 		VAR i: Ind4;
 		BEGIN
 			Split( skd[ki] / x, i );  INC( ki );
@@ -124,7 +124,7 @@ TYPE
 	
 	END Cipher;
 	
-	PROCEDURE -Split*( x: SET; VAR i4: Ind4 );
+	PROCEDURE -Split*( x: SET32; VAR i4: Ind4 );
 	BEGIN
 		i4.a := S.VAL( LONGINT, x ) MOD 40H;
 		i4.b := S.VAL( LONGINT, x ) DIV 100H MOD 40H;
@@ -141,8 +141,8 @@ TYPE
 	
 	
 			
-	PROCEDURE IP*( VAR x, y: SET );	(* initial permutation *)
-	VAR t: SET;
+	PROCEDURE IP*( VAR x, y: SET32 );	(* initial permutation *)
+	VAR t: SET32;
 	BEGIN
 		t := (LSH( x,   -4 ) / y) * Mask04;	 y := y / t;  x := x / LSH( t, 4 );
 		t := (LSH( x, -16 ) / y) * Mask16;	 y := y / t;  x := x / LSH( t, 16 );
@@ -153,8 +153,8 @@ TYPE
 		x := ROT( x, 1 );			
 	END IP;
 		
-	PROCEDURE FP*( VAR x, y: SET );	(* final permutation *)
-	VAR t: SET;
+	PROCEDURE FP*( VAR x, y: SET32 );	(* final permutation *)
+	VAR t: SET32;
 	BEGIN
 		x := ROT( x, -1 );
 		t := (x / y) * Mask01;  x := x / t;  y := y / t;
@@ -167,24 +167,24 @@ TYPE
 	
 	
 	
-	PROCEDURE ComputeSubkeys*( x, y: SET;  VAR sk: ARRAY OF SET; ofs: LONGINT );
-	VAR t: SET; i: LONGINT;
+	PROCEDURE ComputeSubkeys*( x, y: SET32;  VAR sk: ARRAY OF SET32; ofs: LONGINT );
+	VAR t: SET32; i: LONGINT;
 		
-		PROCEDURE sms( CONST LRHs: BitSwap;  x: SET; rs, ls: LONGINT ): SET;
+		PROCEDURE sms( CONST LRHs: BitSwap;  x: SET32; rs, ls: LONGINT ): SET32;
 		VAR i: LONGINT;
 		BEGIN
 			i := S.VAL( LONGINT, LSH( x, -rs ) ) MOD 16;
 			RETURN LSH( LRHs[i], ls ) 
 		END sms;
 			
-		PROCEDURE sm( b: SET; shift, mask: LONGINT ): SET;
+		PROCEDURE sm( b: SET32; shift, mask: LONGINT ): SET32;
 		BEGIN
-			RETURN LSH( b, shift ) * S.VAL( SET,  mask )
+			RETURN LSH( b, shift ) * S.VAL( SET32,  mask )
 		END sm;
 		
 	BEGIN
-		t := (LSH( y, -4 ) / x) * S.VAL( SET, 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );		
-		t := (y / x) * S.VAL( SET, 10101010H ); x := x / t;  y := y / t;
+		t := (LSH( y, -4 ) / x) * S.VAL( SET32, 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );		
+		t := (y / x) * S.VAL( SET32, 10101010H ); x := x / t;  y := y / t;
 			
 		x := 
 			sms( LHs, x, 0, 3 ) + sms( LHs, x, 8, 2 ) + sms( LHs, x, 16, 1 ) + sms( LHs, x, 24, 0 ) +
@@ -234,7 +234,7 @@ TYPE
 		buf: U.InitBuffer;
 		
 	
-		PROCEDURE InitTable( VAR tab: ARRAY OF SET );
+		PROCEDURE InitTable( VAR tab: ARRAY OF SET32 );
 		VAR i: LONGINT; 
 		BEGIN
 			FOR i := 0 TO LEN( tab ) - 1 DO  tab[i] := buf.GetSet( )  END

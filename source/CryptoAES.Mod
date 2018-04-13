@@ -8,22 +8,22 @@ CONST
 	MaxRounds = 14;  
 	ECB = Ciphers.ECB;  CBC = Ciphers.CBC;  CTR = Ciphers.CTR;
 	
-	b0 = S.VAL( SET, 0000000FFH );  b1 = S.VAL( SET, 00000FF00H );  
-	b2 = S.VAL( SET, 000FF0000H );  b3 = S.VAL( SET, 0FF000000H );
+	b0 = S.VAL( SET32, 0000000FFH );  b1 = S.VAL( SET32, 00000FF00H );  
+	b2 = S.VAL( SET32, 000FF0000H );  b3 = S.VAL( SET32, 0FF000000H );
 
 TYPE
-	RTable = ARRAY 256 OF SET;
-	RKeys = ARRAY 4*(MaxRounds + 1) OF SET;
+	RTable = ARRAY 256 OF SET32;
+	RKeys = ARRAY 4*(MaxRounds + 1) OF SET32;
 	
 VAR
 	e0, e1, e2, e3, e4: RTable;
 	d0, d1, d2, d3, d4: RTable;
-	rcon: ARRAY 10 OF SET;   (* for 128-bit blocks, Rijndael never uses more than 10 rcon values *)
+	rcon: ARRAY 10 OF SET32;   (* for 128-bit blocks, Rijndael never uses more than 10 rcon values *)
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			TYPE
-				Block = ARRAY 4 OF SET;
+				Block = ARRAY 4 OF SET32;
 				Ind4 = RECORD a, b, c, d: LONGINT END;
 			VAR
 				rounds: SHORTINT;
@@ -52,7 +52,7 @@ TYPE
 					i := 4;
 					REPEAT
 						DEC( i );
-						x := S.VAL( LONGINT, iv[i] ) + 1;  iv[i] := S.VAL( SET, x )
+						x := S.VAL( LONGINT, iv[i] ) + 1;  iv[i] := S.VAL( SET32, x )
 					UNTIL (x # 0) OR (i = 0)
 				END IncIV;
 
@@ -158,7 +158,7 @@ TYPE
 					b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/dkey[p + 3];
 				END RoundD;
 				
-				PROCEDURE -split( s: SET;  VAR b: Ind4 );   (* split set into 4 indexes *)
+				PROCEDURE -split( s: SET32;  VAR b: Ind4 );   (* split set into 4 indexes *)
 				BEGIN
 					b.a := S.VAL( LONGINT, s ) MOD 100H;
 					b.b := S.VAL( LONGINT, s ) DIV 100H MOD 100H;
@@ -230,9 +230,9 @@ TYPE
 				
 				
 				PROCEDURE InvertKeys;
-				VAR i, j, k, p: LONGINT;  t: SET;  ib: Ind4;
+				VAR i, j, k, p: LONGINT;  t: SET32;  ib: Ind4;
 				
-					PROCEDURE ind( s: SET ): LONGINT;   (* extract index byte 0 *)
+					PROCEDURE ind( s: SET32 ): LONGINT;   (* extract index byte 0 *)
 					BEGIN
 						RETURN S.VAL( LONGINT, s ) MOD 100H
 					END ind;
@@ -282,7 +282,7 @@ TYPE
 
 		PROCEDURE xor( a, b: LONGINT ): LONGINT;
 		BEGIN
-			RETURN S.VAL( LONGINT, S.VAL( SET, a ) / S.VAL( SET, b ) )
+			RETURN S.VAL( LONGINT, S.VAL( SET32, a ) / S.VAL( SET32, b ) )
 		END xor;
 		
 		PROCEDURE f1( x: LONGINT ): LONGINT;
@@ -316,21 +316,21 @@ TYPE
 			i2 := f1( i1 );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i1 );  
 			ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
 
-			e0[i1] := S.VAL( SET, ((v2*100H + v1)*100H + v1)*100H + v3 );
-			e1[i1] := S.VAL( SET, ((v3*100H + v2)*100H + v1)*100H + v1 );
-			e2[i1] := S.VAL( SET, ((v1*100H + v3)*100H + v2)*100H + v1 );
-			e3[i1] := S.VAL( SET, ((v1*100H + v1)*100H + v3)*100H + v2 );
-			e4[i1] := S.VAL( SET, ((v1*100H + v1)*100H + v1)*100H + v1 );
+			e0[i1] := S.VAL( SET32, ((v2*100H + v1)*100H + v1)*100H + v3 );
+			e1[i1] := S.VAL( SET32, ((v3*100H + v2)*100H + v1)*100H + v1 );
+			e2[i1] := S.VAL( SET32, ((v1*100H + v3)*100H + v2)*100H + v1 );
+			e3[i1] := S.VAL( SET32, ((v1*100H + v1)*100H + v3)*100H + v2 );
+			e4[i1] := S.VAL( SET32, ((v1*100H + v1)*100H + v1)*100H + v1 );
 
-			d0[v1] := S.VAL( SET, ((ie*100H + i9)*100H + id)*100H + ib );
-			d1[v1] := S.VAL( SET, ((ib*100H + ie)*100H + i9)*100H + id );
-			d2[v1] := S.VAL( SET, ((id*100H + ib)*100H + ie)*100H + i9 );
-			d3[v1] := S.VAL( SET, ((i9*100H + id)*100H + ib)*100H + ie );
-			d4[v1] := S.VAL( SET, ((i1*100H + i1)*100H + i1)*100H + i1 );
+			d0[v1] := S.VAL( SET32, ((ie*100H + i9)*100H + id)*100H + ib );
+			d1[v1] := S.VAL( SET32, ((ib*100H + ie)*100H + i9)*100H + id );
+			d2[v1] := S.VAL( SET32, ((id*100H + ib)*100H + ie)*100H + i9 );
+			d3[v1] := S.VAL( SET32, ((i9*100H + id)*100H + ib)*100H + ie );
+			d4[v1] := S.VAL( SET32, ((i1*100H + i1)*100H + i1)*100H + i1 );
 		END;
 		t := 1;
 		FOR i1 := 0 TO 9 DO
-			rcon[i1] := S.VAL( SET, ASH( t, 24 ) );
+			rcon[i1] := S.VAL( SET32, ASH( t, 24 ) );
 			t := f1( t );
 		END;
 	END Initialize;

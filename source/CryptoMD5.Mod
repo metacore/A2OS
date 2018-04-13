@@ -100,28 +100,28 @@ VAR
 		PROCEDURE -F1( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 		VAR f: LONGINT;
 		BEGIN
-			f := S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, c )) + ((-S.VAL( SET, b )) * S.VAL( SET, d )) );
+			f := S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((-S.VAL( SET32, b )) * S.VAL( SET32, d )) );
 			a := ROT( a + f + x + t, s ) + b
 		END F1;
 
 		PROCEDURE -F2( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 		VAR f: LONGINT;
 		BEGIN
-			f := S.VAL( LONGINT, (S.VAL( SET, b ) * S.VAL( SET, d )) + (S.VAL( SET, c ) * (-S.VAL( SET, d ))) );
+			f := S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, d )) + (S.VAL( SET32, c ) * (-S.VAL( SET32, d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F2;
 
 		PROCEDURE -F3( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 		VAR f: LONGINT;
 		BEGIN
-			f := S.VAL( LONGINT, S.VAL( SET, b ) / S.VAL( SET, c ) / S.VAL( SET, d ) );
+			f := S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 			a := ROT( a + f + x + t, s ) + b
 		END F3;
 
 		PROCEDURE -F4( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 		VAR f: LONGINT;
 		BEGIN
-			f := S.VAL( LONGINT, S.VAL( SET, c ) / (S.VAL( SET, b ) + (-S.VAL( SET, d ))) );
+			f := S.VAL( LONGINT, S.VAL( SET32, c ) / (S.VAL( SET32, b ) + (-S.VAL( SET32, d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F4;
 	

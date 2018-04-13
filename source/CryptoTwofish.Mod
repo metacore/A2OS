@@ -10,12 +10,12 @@ CONST
 	N = 16;
 
 TYPE
-	Block = ARRAY 4 OF SET;
-	SKey = ARRAY 4 OF SET;
+	Block = ARRAY 4 OF SET32;
+	SKey = ARRAY 4 OF SET32;
 
 VAR
-	tab0: ARRAY 256 OF SET;
-	tab1: ARRAY 256 OF SET;
+	tab0: ARRAY 256 OF SET32;
+	tab1: ARRAY 256 OF SET32;
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
@@ -44,8 +44,8 @@ TYPE
 					nsub := 8 + N*2;
 					FOR i := 0 TO nsub DIV 2 - 1 DO
 						(* compute round subkeys for PHT *)
-						A := F32( S.VAL( SET, i*step ), k32e, keybits );  			 (* A uses even key dwords *)
-						B := ROT( F32( S.VAL( SET, i*step + bump ), k32o, keybits ), 8 );   (* B uses odd  key dwords *)
+						A := F32( S.VAL( SET32, i*step ), k32e, keybits );  			 (* A uses even key dwords *)
+						B := ROT( F32( S.VAL( SET32, i*step + bump ), k32o, keybits ), 8 );   (* B uses odd  key dwords *)
 						subkeys[i*2] := A + B;   							(* combine with a PHT *)
 						subkeys[i*2 + 1] := ROT( A + 2*B, 9 );
 					END
@@ -77,44 +77,44 @@ TYPE
 				END Decrypt;
 
 				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
-				VAR x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET;
+				VAR x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := U.SetFromBufferLE( buf, pos + i*4 ) / S.VAL( SET, subkeys[i] );
+						x[i] := U.SetFromBufferLE( buf, pos + i*4 ) / S.VAL( SET32, subkeys[i] );
 						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i]  END
 					END;
 					(* main Twofish encryption loop *)
 					FOR r := 0 TO N - 1 DO
 						t0 := F32( x[0], sbox, keybits );
 						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
-						x[2] := ROT( x[2] / S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] ), -1 );
-						x[3] := ROT( x[3], 1 ) / S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] );
+						x[2] := ROT( x[2] / S.VAL( SET32, t0 + t1 + subkeys[8 + 2*r] ), -1 );
+						x[3] := ROT( x[3], 1 ) / S.VAL( SET32, t0 + t1*2 + subkeys[8 + 2*r + 1] );
 						IF r < N - 1 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;  s1 := x[1];  x[1] := x[3];  x[3] := s1;
 						END
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i] / S.VAL( SET, subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
+						x[i] := x[i] / S.VAL( SET32, subkeys[4 + i] );  U.SetToBufferLE( x[i], buf, pos + i*4 );
 						IF mode = Ciphers.CBC THEN  iv[i] := x[i]  END
 					END;
 				END EncryptBlock;
 
 				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
-				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET;
+				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO  
 						x0[i] := U.SetFromBufferLE( buf, pos + i*4 );  
-						x[i] := x0[i] / S.VAL( SET, subkeys[4 + i] );   
+						x[i] := x0[i] / S.VAL( SET32, subkeys[4 + i] );   
 					END;
 					(* main Twofish decryption loop *)
 					FOR r := N - 1 TO 0 BY -1 DO
 						t0 := F32( x[0], sbox, keybits );
 						t1 := F32( ROT( x[1], 8 ), sbox, keybits );
-						x[2] := ROT( x[2], 1 );  x[2] := x[2] / S.VAL( SET, t0 + t1 + subkeys[8 + 2*r] );
-						x[3] := ROT( x[3] / S.VAL( SET, t0 + t1*2 + subkeys[8 + 2*r + 1] ), -1 );
+						x[2] := ROT( x[2], 1 );  x[2] := x[2] / S.VAL( SET32, t0 + t1 + subkeys[8 + 2*r] );
+						x[3] := ROT( x[3] / S.VAL( SET32, t0 + t1*2 + subkeys[8 + 2*r + 1] ), -1 );
 						IF r > 0 THEN  (* unswap, except for last round *)
 							s0 := x[0];  x[0] := x[2];  x[2] := s0;
 							s1 := x[1];  x[1] := x[3];  x[3] := s1;
@@ -122,7 +122,7 @@ TYPE
 					END;
 					(* copy out, with whitening *)
 					FOR i := 0 TO 3 DO
-						x[i] := x[i] / S.VAL( SET, subkeys[i] );
+						x[i] := x[i] / S.VAL( SET32, subkeys[i] );
 						IF mode = Ciphers.CBC THEN  x[i] := x[i] / iv[i];  iv[i] := x0[i]  END;
 						U.SetToBufferLE( x[i], buf, pos + i*4 );
 					END;
@@ -145,51 +145,51 @@ TYPE
 
 CONST
 	FDBK = 169H;
-	Fdbk2 = S.VAL( SET, FDBK DIV 2 );
-	Fdbk4 = S.VAL( SET, FDBK DIV 4 );
-	Byte0 = S.VAL( SET, 0FFH );
-	S14d = S.VAL( SET, 14DH );
-	S0a6 = S.VAL( SET, 0A6H );
+	Fdbk2 = S.VAL( SET32, FDBK DIV 2 );
+	Fdbk4 = S.VAL( SET32, FDBK DIV 4 );
+	Byte0 = S.VAL( SET32, 0FFH );
+	S14d = S.VAL( SET32, 14DH );
+	S0a6 = S.VAL( SET32, 0A6H );
 	
 	
-	PROCEDURE m1( x: LONGINT ): SET;
+	PROCEDURE m1( x: LONGINT ): SET32;
 	BEGIN
-		RETURN S.VAL( SET, x )
+		RETURN S.VAL( SET32, x )
 	END m1;
 
-	PROCEDURE mx( x: LONGINT ): SET;
-	VAR t: SET;
+	PROCEDURE mx( x: LONGINT ): SET32;
+	VAR t: SET32;
 	BEGIN
-		t := S.VAL( SET, x DIV 4 );
+		t := S.VAL( SET32, x DIV 4 );
 		IF ODD( x DIV 2 ) THEN  t := t / Fdbk2  END;
 		IF ODD( x ) THEN  t := t / Fdbk4  END;
-		RETURN S.VAL( SET, x ) / t
+		RETURN S.VAL( SET32, x ) / t
 	END mx;
 
-	PROCEDURE my( x: LONGINT ): SET;
-	VAR t1, t2: SET;
+	PROCEDURE my( x: LONGINT ): SET32;
+	VAR t1, t2: SET32;
 	BEGIN
-		t1 := S.VAL( SET, x DIV 2 );  t2 := S.VAL( SET, x DIV 4 );
+		t1 := S.VAL( SET32, x DIV 2 );  t2 := S.VAL( SET32, x DIV 4 );
 		IF ODD( x DIV 2 ) THEN  t2 := t2 / Fdbk2  END;
 		IF ODD( x ) THEN  t1 := t1 / Fdbk2;  t2 := t2 / Fdbk4  END;
-		RETURN S.VAL( SET, x ) / t1 / t2
+		RETURN S.VAL( SET32, x ) / t1 / t2
 	END my;
 
 	PROCEDURE split( x: LONGINT;  VAR v: SKey );
 	BEGIN
-		v[3] := S.VAL( SET, x DIV 1000000H MOD 100H );
-		v[2] := S.VAL( SET, x DIV 10000H MOD 100H );
-		v[1] := S.VAL( SET, x DIV 100H MOD 100H );
-		v[0] := S.VAL( SET, x MOD 100H );
+		v[3] := S.VAL( SET32, x DIV 1000000H MOD 100H );
+		v[2] := S.VAL( SET32, x DIV 10000H MOD 100H );
+		v[1] := S.VAL( SET32, x DIV 100H MOD 100H );
+		v[0] := S.VAL( SET32, x MOD 100H );
 	END split;
 	
-	PROCEDURE -Int( x: SET ): LONGINT;
+	PROCEDURE -Int( x: SET32 ): LONGINT;
 	BEGIN
 		RETURN S.VAL( LONGINT, x )
 	END Int;
 	
 
-	PROCEDURE F32( x: SET;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
+	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
 	VAR a, b, c, d, l: LONGINT;  k, k1: SKey;
 	BEGIN
 		(* Run each byte thru 8x8 S-boxes, xoring with key byte at each stage. *)
@@ -230,24 +230,24 @@ CONST
 
 	(* RS_MDS_Encode *)
 	PROCEDURE Encode( k0, k1: LONGINT ): LONGINT;
-	VAR i, j, b: LONGINT;  r, g2, g2s16, g3, g3s8, g3s24: SET;
+	VAR i, j, b: LONGINT;  r, g2, g2s16, g3, g3s8, g3s24: SET32;
 	BEGIN
-		r := S.VAL( SET, k1 );
+		r := S.VAL( SET32, k1 );
 		FOR i := 0 TO 1 DO
-			IF i # 0 THEN  r := r / S.VAL( SET, k0 )  END;
+			IF i # 0 THEN  r := r / S.VAL( SET32, k0 )  END;
 			FOR j := 0 TO 3 DO
 				b := S.VAL( LONGINT, LSH( r, -24 ) );
 
-				g2 := S.VAL( SET, b*2 );
+				g2 := S.VAL( SET32, b*2 );
 				IF b > 7FH THEN  g2 := (g2 / S14d) * Byte0  END;
 				g2s16 := LSH( g2, 16 );
 
-				g3 := S.VAL( SET, b DIV 2 ) / g2;
+				g3 := S.VAL( SET32, b DIV 2 ) / g2;
 				IF ODD( b ) THEN  g3 := g3 / S0a6  END;
 				g3s8 := LSH( g3, 8 );
 				g3s24 := LSH( g3s8, 16 );
 
-				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET, b ) 
+				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET32, b ) 
 			END
 		END;
 		RETURN S.VAL( LONGINT, r )

@@ -12,11 +12,11 @@ CONST
 	N = 16;  
 
 TYPE
-	TP = ARRAY N + 2 OF SET;
+	TP = ARRAY N + 2 OF SET32;
 	TS = RECORD 
 			a	: ARRAY 256 OF LONGINT;
 			b	: ARRAY 256 OF LONGINT;
-			c	: ARRAY 256 OF SET;
+			c	: ARRAY 256 OF SET32;
 			d	: ARRAY 256 OF LONGINT;
 		END;
 
@@ -28,10 +28,10 @@ TYPE
 			VAR
 				p: TP;
 				s: TS;
-				ivl, ivr: SET;
+				ivl, ivr: SET32;
 
 				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
-				VAR i, m: LONGINT;  xl, xr: SET;
+				VAR i, m: LONGINT;  xl, xr: SET32;
 				BEGIN
 					InitKey^( src, keybits );  m := keybits DIV 8;  s := s0;
 					FOR i := 0 TO N + 1 DO  
@@ -82,7 +82,7 @@ TYPE
 				END Decrypt;
 
 				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
-				VAR xl, xr, yl, yr: SET;
+				VAR xl, xr, yl, yr: SET32;
 				BEGIN
 					xl := U.SetFromBufferBE( buf, pos );  xr := U.SetFromBufferBE( buf, pos + 4 );
 					IF mode = Ciphers.CBC THEN  xl := xl/ivl;  xr := xr/ivr  END;
@@ -92,7 +92,7 @@ TYPE
 				END EncryptBlock;
 
 				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
-				VAR xl, xr, yl, yr: SET;
+				VAR xl, xr, yl, yr: SET32;
 				BEGIN
 					xl := U.SetFromBufferBE( buf, pos );  xr := U.SetFromBufferBE( buf, pos + 4 );
 					decrypt0( xl, xr, yl, yr );
@@ -101,18 +101,18 @@ TYPE
 				END DecryptBlock;
 				
 				
-				PROCEDURE F( x: LONGINT ): SET;
+				PROCEDURE F( x: LONGINT ): SET32;
 				VAR 
-					ab, c: SET; d: LONGINT; 
+					ab, c: SET32; d: LONGINT; 
 				BEGIN
-					ab := S.VAL( SET, s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
+					ab := S.VAL( SET32, s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
 					c := s.c[x DIV 100H MOD 100H];
 					d := s.d[x MOD 100H];
-					RETURN S.VAL( SET, S.VAL( LONGINT, ab/c ) + d );
+					RETURN S.VAL( SET32, S.VAL( LONGINT, ab/c ) + d );
 				END F;
 
-				PROCEDURE encrypt0( xl, xr: SET;  VAR yl, yr: SET );
-				VAR t: SET;  i: INTEGER;
+				PROCEDURE encrypt0( xl, xr: SET32;  VAR yl, yr: SET32 );
+				VAR t: SET32;  i: INTEGER;
 				BEGIN
 					FOR i := 0 TO N - 1 DO
 						xl := xl/p[i];  xr := F( S.VAL( LONGINT, xl ) )/xr;
@@ -122,8 +122,8 @@ TYPE
 					yr := xr/p[N];  yl := xl/p[N + 1];
 				END encrypt0;
 
-				PROCEDURE decrypt0( xl, xr: SET;  VAR yl, yr: SET );
-				VAR t: SET;  i: INTEGER;
+				PROCEDURE decrypt0( xl, xr: SET32;  VAR yl, yr: SET32 );
+				VAR t: SET32;  i: INTEGER;
 				BEGIN
 					FOR i := N + 1 TO 2 BY -1 DO
 						xl := xl/p[i];  xr := F( S.VAL( LONGINT, xl ) )/xr;

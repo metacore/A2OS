@@ -6343,7 +6343,7 @@ TYPE
 						IF ((type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType)) &
 							((expressionType IS SyntaxTree.NumberType) OR (expressionType IS SyntaxTree.AddressType) OR (expressionType IS SyntaxTree.SizeType)
 							OR (expressionType IS SyntaxTree.EnumerationType)
-							) OR ((type IS SyntaxTree.SetType) & (expression.type IS SyntaxTree.SetType)) THEN
+							) OR ((type IS SyntaxTree.SetType) & (expressionType IS SyntaxTree.SetType)) THEN
 							IF ((type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.IntegerType) & (~type(SyntaxTree.IntegerType).signed)) & (expressionType IS SyntaxTree.FloatType) THEN
 								Error(left.position,"invalid unsigned type in explicit conversion");
 							ELSE

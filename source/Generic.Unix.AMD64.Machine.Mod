@@ -457,7 +457,10 @@ END SetRDI;
 
 PROCEDURE -GetTimer* (): HUGEINT;
 CODE {SYSTEM.Pentium}
+	XOR RAX, RAX
 	RDTSC	; set EDX:EAX
+	SHL RDX, 32
+	OR RAX, RDX
 END GetTimer;
 
 

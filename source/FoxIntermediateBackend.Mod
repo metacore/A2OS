@@ -738,7 +738,7 @@ TYPE
 					ir.Emit(Nop(position)); (* placeholder for fill *)
 					*)
 
-					IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
+					IF (procedureType.callingConvention # SyntaxTree.OberonCallingConvention) & (~SysvABI(procedureType.callingConvention) OR (system.addressSize # 64)) THEN
 						registerParameters := backend.NumberParameterRegisters(procedureType.callingConvention);
 
 						(* assumption: registers are passed left to right and left parameters are in registers *)

@@ -58,6 +58,24 @@ LINUX32G -- 32 bit linux a2 using generic object files
 			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
+LINUX64G -- 64 bit linux a2 using generic object files
+================================
+
+	Release.Build --path=NewAos/ Linux64G ~
+	
+	## X11 bootconsole ##
+		StaticLinker.Link -p=Linux64G --path=NewAos/ 
+		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel 
+		KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates 
+		Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  BootConsole ~
+	
+	## Command line shell including compiler (and linker) ##
+		StaticLinker.Link -p=Linux64G --path=NewAos/
+			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
+			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
+
+
 DARWIN32G -- 32 bit darwin a2 using generic object files
 ================================
 

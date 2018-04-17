@@ -1397,7 +1397,9 @@ BEGIN
 			
 			SetPC(dataBlock);
 			p := dataBlock; 
-			EnterInCardSet(ADDRESS OF p);
+			IF (currentGeneration = Young) OR (youngCounts > 0) THEN
+				EnterInCardSet(ADDRESS OF p);
+			END;
 
 			(* clear must be done inside lock to ensure all traced pointer fields are initialized to NIL *)
 			Machine.Fill32(dataBlockAdr, blockSize - SIZEOF(RecordBlockDesc) - 2 * BlockHeaderSize, 0);	(* clear everything from dataBlockAdr until end of block *)
@@ -1457,7 +1459,9 @@ BEGIN
 		
 		SetPC(dataBlock);
 		p := dataBlock; 
-		EnterInCardSet(ADDRESS OF p);
+		IF (currentGeneration = Young) OR (youngCounts > 0) THEN
+			EnterInCardSet(ADDRESS OF p);
+		END;
 
 		(* clear must be done inside lock to ensure all traced pointer fields are initialized to NIL *)
 		Machine.Fill32(dataBlockAdr, blockSize - SIZEOF(ProtRecBlockDesc) - 2 * BlockHeaderSize, 0);	(* clear everything from dataBlockAdr to end of block *)
@@ -1533,7 +1537,9 @@ BEGIN
 
 				SetPC(dataBlock); 
 				p := dataBlock; 
-				EnterInCardSet(ADDRESS OF p);
+				IF (currentGeneration = Young) OR (youngCounts > 0) THEN
+					EnterInCardSet(ADDRESS OF p);
+				END;
 			ELSE
 				p := NIL
 			END;
@@ -1582,7 +1588,9 @@ VAR p: ANY; dim: SIZE;
 		SetSizes(p);
 		SetPC(p);
 		dest := p;
-		EnterInCardSet(ADDRESS OF dest);
+		IF (currentGeneration = Young) OR (youngCounts > 0) THEN
+			EnterInCardSet(ADDRESS OF dest);
+		END;
 END NewArray;
 
 

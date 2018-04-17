@@ -1282,10 +1282,16 @@ TYPE
 					END;
 					IF numberMachineWords >4 THEN
 						Assembler.InitImm(imm, 0, numberMachineWords DIV 4);
-						(* do not use EBX because it is not volative in WINAPI, do not use ECX: special register in COOP *)
-						emitter.Emit2(InstructionSet.opMOV, opRD, imm);
-						destPC := out.pc;
-						emitter.Emit1(InstructionSet.opDEC, opRD);
+						(* do not use EBX because it is not volative in WINAPI, do not use ECX: special register in COOP, do not use RD: register param in SysVABI *)
+						IF cpuBits = 64 THEN
+							emitter.Emit2(InstructionSet.opMOV, opR10, imm);
+							destPC := out.pc;
+							emitter.Emit1(InstructionSet.opDEC, opR10);
+						ELSE
+							emitter.Emit2(InstructionSet.opMOV, opRD, imm);
+							destPC := out.pc;
+							emitter.Emit1(InstructionSet.opDEC, opRD);
+						END;
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);
 						emitter.Emit1(InstructionSet.opPUSH, opRA);

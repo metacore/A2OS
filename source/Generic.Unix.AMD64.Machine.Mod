@@ -817,7 +817,6 @@ END GetTimer;
 	PROCEDURE UpdateTicks*;
 	BEGIN
 		ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
-TRACE (ticks);
 	END UpdateTicks;
 	
 	

@@ -597,6 +597,7 @@ TYPE
 			isModuleBody: BOOLEAN;
 			parametersSize: LONGINT;
 			position: LONGINT;
+			variable: SyntaxTree.Variable;
 
 			PROCEDURE Signature;
 			VAR parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType; returnType : SyntaxTree.Type;
@@ -739,8 +740,7 @@ TYPE
 
 					IF procedureType.callingConvention # SyntaxTree.OberonCallingConvention THEN
 						registerParameters := backend.NumberParameterRegisters(procedureType.callingConvention);
-						
-						
+
 						(* assumption: registers are passed left to right and left parameters are in registers *)
 						formalParameter := procedureType.firstParameter;
 						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
@@ -768,6 +768,35 @@ TYPE
 						implementationVisitor.EmitEnter(ir,x.position,x,cc,ToMemoryUnits(system,stackSize),registerNumber);
 					END;
 					pc := ir.pc-1;
+
+					IF SysvABI(procedureType.callingConvention) & (system.addressSize = 64) THEN
+						registerParameters := backend.NumberParameterRegisters(procedureType.callingConvention);
+
+						(* assumption: registers are passed left to right and left parameters are in registers *)
+						formalParameter := procedureType.firstParameter;
+						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
+							IF ~PassInRegister(formalParameter) THEN
+								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
+							ELSE
+								IF formalParameter.type.IsRecordType() THEN
+									ASSERT (formalParameter.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter});
+									type := addressType;
+								ELSE
+									type := GetType(system, formalParameter.type);
+								END;
+								IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(procedureType.callingConvention, type, registerNumber));
+								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
+								implementationVisitor.currentScope := currentScope;
+								variable := implementationVisitor.GetTemporaryVariable(formalParameter.type,FALSE,FALSE);
+								formalParameter.SetOffset(variable.offsetInBits);
+								IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+								ir.Emit(Mov(Basic.invalidPosition,dest, src));
+								implementationVisitor.ReleaseIntermediateOperand(src);
+								INC(registerNumber);
+								formalParameter := formalParameter.nextParameter;
+							END;
+						END;
+					END;
 
 				END;
 

@@ -456,7 +456,7 @@ END SetRDI;
 
 
 PROCEDURE -GetTimer* (): HUGEINT;
-CODE {SYSTEM.Pentium}
+CODE {SYSTEM.AMD64}
 	XOR RAX, RAX
 	RDTSC	; set EDX:EAX
 	SHL RDX, 32
@@ -817,6 +817,7 @@ END GetTimer;
 	PROCEDURE UpdateTicks*;
 	BEGIN
 		ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
+TRACE (ticks);
 	END UpdateTicks;
 	
 	

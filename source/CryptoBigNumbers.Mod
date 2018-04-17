@@ -287,7 +287,7 @@ VAR
 		END;
 		b.len := (bits + 31) DIV 32;
 		topbit := (bits - 1)  MOD 32;
-		topword := S.VAL( SET32, b.d[b.len - 1] ) * {0..topbit};
+		topword := SET32( S.VAL( SET32, b.d[b.len - 1] ) * {0..topbit} );
 		IF top > 0 THEN INCL( topword, topbit ) END;
 		b.d[b.len - 1] := S.VAL( LONGINT, topword );
 		IF (bottom > 0) & ~ODD( b.d[0] ) THEN  INC( b.d[0] )  END;

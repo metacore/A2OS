@@ -78,9 +78,9 @@ TYPE
 			ASSERT( position < 1600 );
 			laneNo := position DIV 64;  bit := position MOD 64; 
 			IF bit < 32 THEN
-				state[laneNo].low := state[laneNo].low / {bit}
+				state[laneNo].low := SET32( state[laneNo].low / {bit} )
 			ELSE
-				state[laneNo].high := state[laneNo].high / {bit - 32};
+				state[laneNo].high := SET32( state[laneNo].high / {bit - 32} );
 			END
 		END ComplementBit;
 

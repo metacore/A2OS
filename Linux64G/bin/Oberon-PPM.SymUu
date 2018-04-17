@@ -1,0 +1,50 @@
+MODULE PPM IN Oberon;
+	IMPORT BIT IN A2, Display, Documents, Files, Objects, Out, Pictures, Strings, Texts;
+CONST 
+	Portable = \"P"\; 
+	PlainGray = \"2"\; 
+	PlainColor = \"3"\; 
+	Bitmap = \"4"\; 
+	RawbitsGray = \"5"\; 
+	RawbitsColor = \"6"\; 
+	Comment = \"#"\; 
+	CR = Strings.CR; 
+	LF = Strings.LF; 
+	Tab = Strings.Tab; 
+TYPE 
+	Rider = RECORD 
+		rider: Files.Rider; 
+		reader: Texts.Reader; 
+		text: Texts.Text; 
+		ofs: LONGINT; 
+		eof: BOOLEAN; 
+		Read: PROCEDURE (VAR R: Rider; VAR c: CHAR); 
+		Pos: PROCEDURE (VAR R: Rider):LONGINT; 
+		Set: PROCEDURE (VAR R: Rider; pos: LONGINT); 
+	END; 
+VAR 
+	map, r0, g0, b0, r1, g1, b1: ARRAY 256 OF INTEGER; 
+	mode: CHAR; 
+	depth: LONGINT; 
+	delta: INTEGER; 
+	credit: BOOLEAN; 
+
+	PROCEDURE ^ ReadFile(VAR R: Rider; VAR c: CHAR); 
+	PROCEDURE ^ PosFile(VAR R: Rider): LONGINT; 
+	PROCEDURE ^ SetFile(VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ ReadText(VAR R: Rider; VAR c: CHAR); 
+	PROCEDURE ^ PosText(VAR R: Rider): LONGINT; 
+	PROCEDURE ^ SetText(VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ OpenRider(VAR FR: Files.Rider; VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ WhiteSpace(c: CHAR): BOOLEAN; 
+	PROCEDURE ^ SkipComment(VAR R: Rider; VAR c: CHAR); 
+	PROCEDURE ^ MagicNumber(VAR R: Rider): BOOLEAN; 
+	PROCEDURE ^ Value(VAR R: Rider): INTEGER; 
+	PROCEDURE ^ ScanGrayMap(pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
+	PROCEDURE ^ ScanColor(pict: Pictures.Picture; i, red, green, blue: INTEGER; conversion: BOOLEAN): INTEGER; 
+	PROCEDURE ^ LoadPPM(VAR R: Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPicture*; 
+	PROCEDURE ^ NewPicture*; 
+BEGIN
+END PPM.

@@ -1,0 +1,49 @@
+MODULE CryptoDES;
+	IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
+CONST 
+	Mask01 = S.VAL(SET32, 0AAAAAAAAH); 
+	Mask02 = S.VAL(SET32, 858993459); 
+	Mask04 = S.VAL(SET32, 252645135); 
+	Mask08 = S.VAL(SET32, 16711935); 
+	Mask16 = S.VAL(SET32, 65535); 
+TYPE 
+	Sandbox = ARRAY 64 OF SET32; 
+
+	BitSwap = ARRAY 16 OF SET32; 
+
+	Ind4* = RECORD 
+		a-, b-, c-, d-: LONGINT; 
+	END; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ske, skd: ARRAY 32 OF SET32; 
+		ki: LONGINT; 
+		ivx, ivy: SET32; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ RoundE*(VAR x, y: SET32); 
+		PROCEDURE ^ RoundD*(VAR x, y: SET32); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+VAR 
+	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox; 
+	LHs, RHs: BitSwap; 
+
+	PROCEDURE  - Split*(x: SET32; VAR i4: Ind4);
+	BEGIN
+		i4.a := (S.VAL(LONGINT, x) MOD 64); 
+		i4.b := ((S.VAL(LONGINT, x) DIV 256) MOD 64); 
+		i4.c := ((S.VAL(LONGINT, x) DIV 65536) MOD 64); 
+		i4.d := ((S.VAL(LONGINT, x) DIV 16777216) MOD 64)
+	END Split; 
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ IP*(VAR x, y: SET32); 
+	PROCEDURE ^ FP*(VAR x, y: SET32); 
+	PROCEDURE ^ ComputeSubkeys*(x, y: SET32; VAR sk: ARRAY OF SET32; ofs: LONGINT); 
+	PROCEDURE ^ InitializeSandboxes; 
+BEGIN
+END CryptoDES.

@@ -1,0 +1,15 @@
+MODULE WebHTTPTools;
+	IMPORT Commands, Files, IP, TCP, WebHTTP, WebHTTPClient, Streams, TFLog, Modules;
+CONST 
+VAR 
+	log: TFLog.Log; 
+
+	PROCEDURE ^ HexStrToIntDef(CONST x: ARRAY OF CHAR; def: LONGINT): LONGINT; 
+	PROCEDURE ^ MatchPrefixI(CONST prefix, str: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Get*(context: Commands.Context); 
+	PROCEDURE ^ Head*(context: Commands.Context); 
+	PROCEDURE ^ GetAll*(context: Commands.Context); 
+	PROCEDURE ^ Read*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WebHTTPTools.

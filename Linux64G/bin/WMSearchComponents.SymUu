@@ -1,0 +1,100 @@
+MODULE WMSearchComponents;
+	IMPORT Inputs, Strings, Texts, TextUtilities, UTF8Strings, WMWindowManager, WMRectangles, WMGraphics, WMMessages, WMComponents, WMStandardComponents, WMTextView, WMEditors;
+CONST 
+	SearchStringMaxLen = 128; 
+TYPE 
+	SearchString* = ARRAY SearchStringMaxLen OF CHAR; 
+
+	UcsSearchString* = ARRAY SearchStringMaxLen OF Texts.Char32; 
+
+	StackData = POINTER TO ARRAY OF LONGINT; 
+
+	PositionStack = OBJECT 
+	VAR 
+		data: StackData; 
+		size, top: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Push(l: LONGINT); 
+		PROCEDURE ^ Pop(): LONGINT; 
+		PROCEDURE ^ Expand; 
+		PROCEDURE ^ Invalidate; 
+	END PositionStack; 
+
+	Highlight = POINTER TO RECORD 
+		this: WMTextView.Highlight; 
+		next: Highlight; 
+	END; 
+
+	Highlights = OBJECT {EXCLUSIVE} 
+	VAR 
+		textView: WMTextView.TextView; 
+		highlights: Highlight; 
+
+		PROCEDURE ^ Add(from, to: LONGINT); 
+		PROCEDURE ^ RemoveAll; 
+		PROCEDURE ^  & Init*(textView: WMTextView.TextView); 
+	END Highlights; 
+
+	SearchPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		wrap, caseSensitive, backwards*, highlightAll: BOOLEAN; 
+		upperPanel, lowerPanel: WMStandardComponents.Panel; 
+		searchBtn, replBtn, replAllBtn, closeBtn, wrapBtn, caseSensitiveBtn, directionBtn, markAllBtn: WMStandardComponents.Button; 
+		searchEdit-, replEdit-: WMEditors.Editor; 
+		searchLabel, replLabel: WMStandardComponents.Label; 
+		textView: WMTextView.TextView; 
+		text: Texts.Text; 
+		pos, len: LONGINT; 
+		hitCount: LONGINT; 
+		posValid: BOOLEAN; 
+		positionStack: PositionStack; 
+		highlights: Highlights; 
+		lastPos: LONGINT; 
+		lastBackwards: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetToLastSelection*; 
+		PROCEDURE ^ SetText*(t: Texts.Text); 
+		PROCEDURE ^ SetTextView*(tv: WMTextView.TextView); 
+		PROCEDURE ^ ToggleVisibility*; 
+		PROCEDURE ^ HandlePreviousNext*(forward: BOOLEAN); 
+		PROCEDURE ^ HandleTab*(): BOOLEAN; 
+		PROCEDURE ^ HandleShortcut*(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ FocusHandler(hasFocus: BOOLEAN); 
+		PROCEDURE ^ WrapHandler(sender, data: ANY); 
+		PROCEDURE ^ CaseSensitiveHandler(sender, data: ANY); 
+		PROCEDURE ^ DirectionHandler(sender, data: ANY); 
+		PROCEDURE ^ HighlightAllHandler(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ SearchHandler*(sender, data: ANY); 
+		PROCEDURE ^ ReplaceHandler(sender, data: ANY); 
+		PROCEDURE ^ ReplaceAllHandler(sender, data: ANY); 
+		PROCEDURE ^ Replace(CONST ucsStr: ARRAY OF Texts.Char32); 
+		PROCEDURE ^ Search(CONST ucsStr: ARRAY OF Texts.Char32; from: LONGINT); 
+		PROCEDURE ^ SearchAndHighlight(from: LONGINT); 
+		PROCEDURE ^ SearchAndHighlightAll; 
+		PROCEDURE ^ RemoveHighlights; 
+		PROCEDURE ^ Highlight; 
+		PROCEDURE ^ CloseHandler(sender, data: ANY); 
+		PROCEDURE ^ SetSettings*(wrap, caseSensitive, backwards, highlightAll: BOOLEAN); 
+		PROCEDURE ^ GetSettings*(VAR wrap, caseSensitive, backwards, highlightAll: BOOLEAN); 
+		PROCEDURE ^ Finalize*; 
+	END SearchPanel; 
+
+	SearchWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		searchPanel: SearchPanel; 
+		hasBeenClosed-: BOOLEAN; 
+
+		PROCEDURE ^ SetTextView*(textView: WMTextView.TextView; text: Texts.Text); 
+		PROCEDURE ^  & New*(textView: WMTextView.TextView; text: Texts.Text); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ HandleShortcut(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
+	END SearchWindow; 
+VAR 
+	StrSearchPanel: Strings.String; 
+
+BEGIN
+END WMSearchComponents.

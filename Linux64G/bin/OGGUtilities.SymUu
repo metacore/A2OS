@@ -1,0 +1,155 @@
+MODULE OGGUtilities;
+	IMPORT SYSTEM, Strings, Files, KernelLog, SoundDevices, BIT;
+CONST 
+	Trace = 1; 
+	Error = 2; 
+	Debug = {Error}; 
+	MaxCodewordLength* = 33; 
+	MaxBlocksize* = 8192; 
+	NoHuffmanLeaf =  -1; 
+	GoLeft = 0; 
+	GoRight = 1; 
+	BaseVectorSize = 256; 
+	Nx* = 20; 
+TYPE 
+	PCMBuffer* = OBJECT 
+	VAR 
+		data*: ARRAY MaxBlocksize OF HUGEINT; 
+
+		PROCEDURE ^ Print*(name: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ PrintShort(name: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ ZeroBuffer*; 
+	END PCMBuffer; 
+
+	HuffmanTree* = OBJECT 
+	VAR 
+		start-: HuffmanNode; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ AddNode(value, length, codeword: LONGINT); 
+		PROCEDURE ^ IsValidLengthList*(VAR list: IntList; unused: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsOverspecified*(VAR list: IntList; unused: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsUnderspecified*(VAR list: IntList; unused: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetSumAndLimit(VAR list: IntList; VAR sum, limit: HUGEINT; unused: LONGINT); 
+		PROCEDURE ^ HasUsedEntries*(VAR list: IntList; unused: LONGINT): BOOLEAN; 
+		PROCEDURE ^ BuildTree*(VAR lengths: IntList; VAR codes: IntList; unused: LONGINT); 
+		PROCEDURE ^ GoLeftOrRight*(VAR node: HuffmanNode; bit: LONGINT); 
+		PROCEDURE ^ Print; 
+	END HuffmanTree; 
+
+	HuffmanNode* = OBJECT 
+	VAR 
+		left, right: HuffmanNode; 
+		value: LONGINT; 
+		isLeaf, isFull: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(value: LONGINT; isLeaf, isFull: BOOLEAN); 
+		PROCEDURE ^ GetValue*(): LONGINT; 
+		PROCEDURE ^ IsLeaf*(): BOOLEAN; 
+		PROCEDURE ^ Print; 
+		PROCEDURE ^ AddNode(value, length, restCodeword: LONGINT); 
+	END HuffmanNode; 
+
+	Vector* = OBJECT 
+	VAR 
+		capacity, len: LONGINT; 
+		data: ARRAY BaseVectorSize OF HUGEINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print*; 
+		PROCEDURE ^ Add*(value: HUGEINT); 
+		PROCEDURE ^ Increase(inc: HUGEINT); 
+		PROCEDURE ^ GetLen(): LONGINT; 
+		PROCEDURE ^ GetLast(): HUGEINT; 
+		PROCEDURE ^ GetValueAt*(idx: LONGINT): HUGEINT; 
+		PROCEDURE ^ IncValueAt(inc: HUGEINT; idx: LONGINT); 
+		PROCEDURE ^ SetValueAt(val: HUGEINT; idx: LONGINT); 
+		PROCEDURE ^ Concatenate(VAR v: Vector); 
+	END Vector; 
+
+	List* = OBJECT 
+	VAR 
+		length*: HUGEINT; 
+		start-, last-: ListElement; 
+
+		PROCEDURE ^  & Init*(first: ListElement); 
+		PROCEDURE ^ Append*(node: ListElement); 
+		PROCEDURE ^ Print*; 
+	END List; 
+
+	IntList* = OBJECT (List)
+	END IntList; 
+
+	ListElement* = OBJECT 
+	VAR 
+		next-: ListElement; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Print; 
+	END ListElement; 
+
+	IntElement* = OBJECT (ListElement)
+	VAR 
+		long-: LONGINT; 
+
+		PROCEDURE ^  & InitInt*(long: LONGINT); 
+		PROCEDURE ^ Print; 
+	END IntElement; 
+
+	BufferPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: LONGINT; 
+		buffer: POINTER TO ARRAY OF SoundDevices.Buffer; 
+
+		PROCEDURE ^ Append*(x: SoundDevices.Buffer); 
+		PROCEDURE ^ Remove*(): SoundDevices.Buffer; 
+		PROCEDURE ^  & Init*(n: LONGINT); 
+	END BufferPool; 
+VAR 
+	f: Files.File; 
+	w*: Files.Writer; 
+	Ny: LONGINT; 
+	ScaleFactor: HUGEINT; 
+
+	PROCEDURE ^ ILog*(x: LONGINT): LONGINT; 
+	PROCEDURE ^ Float32Unpack*(val: LONGINT): HUGEINT; 
+	PROCEDURE ^ Lookup1Values*(cbEntries, cbDimensions: LONGINT): LONGINT; 
+	PROCEDURE ^ LowNeighbor*(v: ARRAY OF LONGINT; x: LONGINT): LONGINT; 
+	PROCEDURE ^ HighNeighbor*(v: ARRAY OF LONGINT; x: LONGINT): LONGINT; 
+	PROCEDURE ^ RenderPoint*(x0, y0, x1, y1, x: LONGINT): LONGINT; 
+	PROCEDURE ^ RenderLine*(x0, y0, x1, y1: LONGINT; VAR v: ARRAY OF HUGEINT); 
+	PROCEDURE ^ EasySortRemember*(VAR data, sortptr: ARRAY OF LONGINT; n: LONGINT); 
+	PROCEDURE ^ Power*(x, n: LONGINT): LONGINT; 
+	PROCEDURE ^ PowerH(x: HUGEINT; n: LONGINT): HUGEINT; 
+	PROCEDURE ^ PowerR*(x: REAL; n: LONGINT): REAL; 
+	PROCEDURE ^ Log2n*(n: LONGINT): LONGINT; 
+	PROCEDURE ^ MultHugeFP*(a, b: HUGEINT): HUGEINT; 
+	PROCEDURE ^ MultDotProductFP*(residue, floor: HUGEINT): HUGEINT; 
+	PROCEDURE ^ MultFP*(a, b: HUGEINT): HUGEINT; 
+	PROCEDURE ^ DivFP*(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ ScaleUpHuge*(r: REAL): HUGEINT; 
+	PROCEDURE ^ ScaleUp*(r: LONGREAL): LONGINT; 
+	PROCEDURE ^ ScaleUpRealToHuge*(r: LONGREAL): HUGEINT; 
+	PROCEDURE ^ ScaleUpInt*(i: LONGINT): LONGINT; 
+	PROCEDURE ^ ScaleUpHugeInt*(i: HUGEINT): HUGEINT; 
+	PROCEDURE ^ ScaleDownRoundedHuge*(i: HUGEINT): LONGINT; 
+	PROCEDURE ^ ScaleDownHuge(i: HUGEINT): HUGEINT; 
+	PROCEDURE ^ GetFilename*(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Array2D*(name: ARRAY OF CHAR; VAR a: ARRAY OF ARRAY OF LONGINT); 
+	PROCEDURE ^ ArrayBool*(name: ARRAY OF CHAR; VAR a: ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Array*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT); 
+	PROCEDURE ^ ArrayHuge*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT); 
+	PROCEDURE ^ ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT; n: LONGINT); 
+	PROCEDURE ^ ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT; n: LONGINT); 
+	PROCEDURE ^ String*(str: ARRAY OF CHAR); 
+	PROCEDURE ^ Buffer*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+	PROCEDURE ^ CharToHex(ch: CHAR; VAR hex: ARRAY OF CHAR); 
+	PROCEDURE ^ GetHexDigit(val: LONGINT): CHAR; 
+	PROCEDURE ^ Var*(name: ARRAY OF CHAR; value: LONGINT); 
+	PROCEDURE ^ VarH*(name: ARRAY OF CHAR; value: HUGEINT); 
+	PROCEDURE ^ VarH2*(value: HUGEINT); 
+	PROCEDURE ^ PrintHex(x: LONGINT); 
+	PROCEDURE ^ VarReal*(name: ARRAY OF CHAR; value: LONGREAL); 
+	PROCEDURE ^ InitLogger*; 
+BEGIN
+END OGGUtilities.

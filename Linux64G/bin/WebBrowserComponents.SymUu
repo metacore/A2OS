@@ -1,0 +1,111 @@
+MODULE WebBrowserComponents;
+	IMPORT Strings, WMStandardComponents, WMGraphics, WMRectangles, WMEvents, WebHTTP, NewHTTPClient, Streams, Files, Raster, Codecs, KernelLog, WMComponents, WMTextView, Texts, TextUtilities, WMWindowManager, XML, SVG, SVGLoader;
+CONST 
+	verbose = TRUE; 
+	MaxHTTPConnections = 16; 
+	MaxHTTPConnectionPerServer = 3; 
+TYPE 
+	String = Strings.String; 
+
+	VisualComponent = WMComponents.VisualComponent; 
+
+	SVGPanel* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		img: SVG.Document; 
+
+		PROCEDURE ^  & New*(svg: XML.Element); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END SVGPanel; 
+
+	SVGLinkPanel* = OBJECT {EXCLUSIVE} (SVGPanel)
+	VAR 
+		onClick: WMEvents.EventSource; 
+		msg: ANY; 
+
+		PROCEDURE ^  & Create*(svg: XML.Element; loadLink: WMEvents.EventListener; msg: ANY); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+	END SVGLinkPanel; 
+
+	StretchImagePanel* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		img: WMGraphics.Image; 
+
+		PROCEDURE ^  & New*(rc: ResourceConnection; url: String; x, y: LONGINT); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END StretchImagePanel; 
+
+	StretchImageLinkPanel* = OBJECT {EXCLUSIVE} (StretchImagePanel)
+	VAR 
+		onClick: WMEvents.EventSource; 
+		msg: ANY; 
+
+		PROCEDURE ^  & Create*(rc: ResourceConnection; url: String; x, y: LONGINT; loadLink: WMEvents.EventListener; msg: ANY); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+	END StretchImageLinkPanel; 
+
+	TileImagePanel* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		img: WMGraphics.Image; 
+
+		PROCEDURE ^  & New*(rc: ResourceConnection; url: String); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END TileImagePanel; 
+
+	HR* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		x: LONGINT; 
+
+		PROCEDURE ^  & New*(x: LONGINT); 
+		PROCEDURE ^ ParentTvWidthChanged*(x: LONGINT); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END HR; 
+
+	ShortText* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		textView: WMTextView.TextView; 
+
+		PROCEDURE ^  & New*(txt: ARRAY OF CHAR); 
+	END ShortText; 
+
+	TextPanel* = OBJECT {EXCLUSIVE} (VisualComponent)
+
+		PROCEDURE ^  & New*(rc: ResourceConnection; url: String); 
+	END TextPanel; 
+
+	HTTPConnectionPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		connection: ARRAY MaxHTTPConnections OF ResourceConnection; 
+		conCnt: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Get*(url: String): ResourceConnection; 
+		PROCEDURE ^ PrivateGet(url: String): ResourceConnection; 
+		PROCEDURE ^ Release(rc: ResourceConnection); 
+		PROCEDURE ^ ServerCnt(server: String): LONGINT; 
+		PROCEDURE ^ GetServer(VAR url: ARRAY OF CHAR): String; 
+	END HTTPConnectionPool; 
+
+	ResourceConnection* = OBJECT {EXCLUSIVE} 
+	VAR 
+		url-: String; 
+		mimeType-: String; 
+		reader-: Streams.Reader; 
+		http: NewHTTPClient.HTTPConnection; 
+		busy: BOOLEAN; 
+		index: LONGINT; 
+		server: String; 
+		released: BOOLEAN; 
+
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Release*; 
+	END ResourceConnection; 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	httpConnectionPool*: HTTPConnectionPool; 
+
+	PROCEDURE ^ GetResourceConnection*(url: String): ResourceConnection; 
+	PROCEDURE ^ ClearFilename(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetMimeType(VAR filename: ARRAY OF CHAR): String; 
+	PROCEDURE ^ LoadImage*(reader: Streams.Reader; mimeType: ARRAY OF CHAR; name: ARRAY OF CHAR): WMGraphics.Image; 
+BEGIN
+END WebBrowserComponents.

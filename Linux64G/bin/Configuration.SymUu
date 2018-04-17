@@ -1,0 +1,36 @@
+MODULE Configuration;
+	IMPORT KernelLog, Strings, Files, XMLObjects, XML, XMLScanner, XMLParser;
+CONST 
+	Ok* = 0; 
+	ElementNotFound* = 10001; 
+	AttributeNotFound* = 10002; 
+	WrongType* = 10003; 
+	Error* = 10004; 
+	SaveConfigFile = \"Save.Configuration.XML"\; 
+	MyConfigFile = \"MyConfiguration.XML"\; 
+	ConfigFile = \"Configuration.XML"\; 
+	Section = \"Section"\; 
+	Setting = \"Setting"\; 
+	NameAttr = \"name"\; 
+	ValueAttr = \"value"\; 
+VAR 
+	config*: XML.Document; 
+	error: BOOLEAN; 
+
+	PROCEDURE ^ GetNamedElement*(parent: XML.Element; CONST type, name: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ GetSection*(CONST key: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ GetSetting*(CONST key: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ GetElementX(CONST type, key: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ Get*(CONST key: ARRAY OF CHAR; VAR val: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetBoolean*(CONST key: ARRAY OF CHAR; VAR value: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ GetColor*(CONST key: ARRAY OF CHAR; VAR value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ GetInteger*(CONST key: ARRAY OF CHAR; VAR value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Put*(CONST key, val: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ PutBoolean*(CONST key: ARRAY OF CHAR; value: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ PutColor*(CONST key: ARRAY OF CHAR; value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ WriteConfig; 
+	PROCEDURE ^ TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END Configuration.

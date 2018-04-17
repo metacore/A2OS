@@ -1,0 +1,128 @@
+MODULE Attributes IN Oberon;
+	IMPORT Objects, Oberon, Texts, Files, Reals IN A2, Fonts, Strings;
+CONST 
+	Inval* = Texts.Inval; 
+	Name* = Texts.Name; 
+	String* = Texts.String; 
+	Int* = Texts.Int; 
+	Real* = Texts.Real; 
+	LongReal* = Texts.LongReal; 
+	Char* = Texts.Char; 
+	Obj* = Texts.Object; 
+	Sboolean = 1; 
+	Sstring = 2; 
+	Sint = 3; 
+	Sreal = 4; 
+	Schar = 6; 
+	MaxLen = 256; 
+	TAB = 9X; 
+	CR = 0DX; 
+	LF = 0AX; 
+TYPE 
+	Reader* = POINTER TO ReaderDesc; 
+
+	ReaderDesc* = RECORD 
+		substitute*: BOOLEAN; 
+		text*: Texts.Text; 
+		eot*: BOOLEAN; 
+		lib*: Objects.Library; 
+		R: Texts.Reader; 
+		next: Reader; 
+	END; 
+
+	MacroHandler* = PROCEDURE (ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+
+	Macro = POINTER TO MacroDesc; 
+
+	MacroDesc = RECORD 
+		ch: CHAR; 
+		handle: MacroHandler; 
+		next: Macro; 
+	END; 
+
+	Scanner* = RECORD 
+		R*: Reader; 
+		eot*: BOOLEAN; 
+		nextCh*: CHAR; 
+		class*: INTEGER; 
+		i*: LONGINT; 
+		x*: REAL; 
+		y*: LONGREAL; 
+		c*: CHAR; 
+		len*: SHORTINT; 
+		s*: ARRAY MaxLen OF CHAR; 
+		o*: Objects.Object; 
+	END; 
+
+	Attr* = POINTER TO AttrDesc; 
+
+	AttrDesc* = RECORD 
+		next*: Attr; 
+		name*: Objects.Name; 
+	END; 
+
+	BoolAttr* = POINTER TO BoolDesc; 
+
+	BoolDesc* = RECORD (AttrDesc)
+		b*: BOOLEAN; 
+	END; 
+
+	CharAttr* = POINTER TO CharDesc; 
+
+	CharDesc* = RECORD (AttrDesc)
+		c*: CHAR; 
+	END; 
+
+	IntAttr* = POINTER TO IntDesc; 
+
+	IntDesc* = RECORD (AttrDesc)
+		i*: LONGINT; 
+	END; 
+
+	RealAttr* = POINTER TO RealDesc; 
+
+	RealDesc* = RECORD (AttrDesc)
+		r*: LONGREAL; 
+	END; 
+
+	StringAttr* = POINTER TO StringDesc; 
+
+	StringDesc* = RECORD (AttrDesc)
+		s*: ARRAY 256 OF CHAR; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	macros: Macro; 
+	uparrowdone: BOOLEAN; 
+
+	PROCEDURE ^ StrToTxt*(s: ARRAY OF CHAR; VAR T: Texts.Text); 
+	PROCEDURE ^ TxtToStr*(T: Texts.Text; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenR(VAR R: Reader; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Read*(VAR R: Reader; VAR ch: CHAR); 
+	PROCEDURE ^ OpenReader*(VAR R: Reader; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Pos*(VAR R: Reader): LONGINT; 
+	PROCEDURE ^ IsAscii(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ OpenScanner*(VAR S: Scanner; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Scan*(VAR S: Scanner); 
+	PROCEDURE ^ AddMacro*(ch: CHAR; handler: MacroHandler); 
+	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+	PROCEDURE ^ StoreAttributes*(VAR R: Files.Rider; A: Attr); 
+	PROCEDURE ^ LoadAttributes*(VAR R: Files.Rider; VAR A: Attr); 
+	PROCEDURE ^ CopyAttributes*(in: Attr; VAR out: Attr); 
+	PROCEDURE ^ InsertAttr*(VAR list: Attr; name: ARRAY OF CHAR; val: Attr); 
+	PROCEDURE ^ FindAttr*(name: ARRAY OF CHAR; list: Attr): Attr; 
+	PROCEDURE ^ DeleteAttr*(VAR list: Attr; name: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteAttr*(obj: Objects.Object; attr: ARRAY OF CHAR; VAR W: Texts.Writer); 
+	PROCEDURE ^ GetBool*(obj: Objects.Object; name: ARRAY OF CHAR; VAR b: BOOLEAN); 
+	PROCEDURE ^ GetInt*(obj: Objects.Object; name: ARRAY OF CHAR; VAR i: LONGINT); 
+	PROCEDURE ^ GetReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR x: REAL); 
+	PROCEDURE ^ GetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR y: LONGREAL); 
+	PROCEDURE ^ GetString*(obj: Objects.Object; name: ARRAY OF CHAR; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ SetBool*(obj: Objects.Object; name: ARRAY OF CHAR; b: BOOLEAN); 
+	PROCEDURE ^ SetInt*(obj: Objects.Object; name: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ SetReal*(obj: Objects.Object; name: ARRAY OF CHAR; x: REAL); 
+	PROCEDURE ^ SetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; y: LONGREAL); 
+	PROCEDURE ^ SetString*(obj: Objects.Object; name, s: ARRAY OF CHAR); 
+	PROCEDURE ^ Echo*; 
+BEGIN
+END Attributes.

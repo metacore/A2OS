@@ -1,0 +1,36 @@
+MODULE TuringCoatWnd;
+	IMPORT Raster, Random, Objects, WMRectangles, WMGraphics, Modules, Strings, WM := WMWindowManager, WMMessages;
+CONST 
+	m = 50; 
+	size = 4; 
+	WindowWidth = (m * size); 
+	WindowHeight = (m * size); 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	TCW* = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		mesh1, mesh2, n1: ARRAY m OF ARRAY m OF REAL; 
+		random: Random.Generator; 
+		alive, dead, alpha: BOOLEAN; 
+		i: LONGINT; 
+
+		PROCEDURE ^  & New*(alpha: BOOLEAN); 
+		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Generation; 
+		PROCEDURE ^ DrawIt; 
+	BEGIN{ACTIVE} 
+	END TCW; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ OpenAlpha*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TuringCoatWnd.

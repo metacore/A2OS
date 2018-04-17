@@ -1,0 +1,89 @@
+MODULE WebForum;
+	IMPORT DynamicWebpage, HTTPSupport, HTTPSession, WebAccounts, WebComplex, WebStd, PrevalenceSystem, XML, XMLObjects, Dates, Strings;
+CONST 
+	FeatureTrackerObjName = \"FeatureTracker"\; 
+	ThisModuleNameStr = \"WebForum"\; 
+	DefaultMaxPriority = 3; 
+	EditLabel = \"Edit"\; 
+	DeleteLabel = \"Delete"\; 
+	InsertSubEntryLabel = \"Insert subentry"\; 
+	AuthorLabel = \"Author: "\; 
+	AuthorHeaderLabel = \"Author"\; 
+	TitleTextLabel = \"Title text: "\; 
+	TitleTextHeaderLabel = \"Title"\; 
+	DetailTextLabel = \"Detail text: "\; 
+	ModifiedDateLabel = \"Modified date: "\; 
+	ModifiedDateHeaderLabel = \"Date"\; 
+	PriorityLabel = \"Priority: "\; 
+	PriorityHeaderLabel = \"Priority"\; 
+	TypeLabel = \"Type: "\; 
+	TypeHeaderLabel = \"Type"\; 
+	StatusLabel = \"Status: "\; 
+	StatusHeaderLabel = \"Status"\; 
+	RemoveInterestedContainerLabel = \"Remove from my interested containers"\; 
+	AddInterestedContainerLabel = \"Add to my interested containers"\; 
+	DetailTextIsMissingLabel = \"detail text is missing"\; 
+TYPE 
+	StringList = POINTER TO ARRAY OF Strings.String; 
+
+	FeatureEntry = OBJECT {EXCLUSIVE} (WebComplex.WebForumEntry)
+	VAR 
+		author: Strings.String; 
+		titleText: Strings.String; 
+		detailText: Strings.String; 
+		modifiedDate: WebStd.PtrDateTime; 
+		priority: LONGINT; 
+		type: Strings.String; 
+		status: Strings.String; 
+
+		PROCEDURE ^ Internalize*(input: XML.Content); 
+		PROCEDURE ^ Externalize*(): XML.Content; 
+		PROCEDURE ^ MakeNewEntryBold(lastLoginTime: WebStd.PtrDateTime; xmlText: XML.Container): XML.Container; 
+		PROCEDURE ^ TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): WebComplex.TableRow; 
+		PROCEDURE ^ DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END FeatureEntry; 
+
+	FeatureTracker* = OBJECT (WebComplex.WebForum)
+	VAR 
+		searchText: Strings.String; 
+		thisContainerName: Strings.String; 
+		lastLoginTime: WebStd.PtrDateTime; 
+		maxPrio: LONGINT; 
+		types: StringList; 
+		status: StringList; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetStringListFromXML(elem: XML.Element; subElemName: ARRAY OF CHAR): StringList; 
+		PROCEDURE ^ GetAdditionalEventHandlers*(): DynamicWebpage.EventHandlerList; 
+		PROCEDURE ^ SetInterested(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ GetDefaultSearchFilter*(): WebStd.PersistentDataFilter; 
+		PROCEDURE ^ RecursiveSearchFilter(featureEntry: FeatureEntry): BOOLEAN; 
+		PROCEDURE ^ DefaultFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ GetHeaderXMLContent*(persContainer: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ ThisObjectName*(): Strings.String; 
+		PROCEDURE ^ ThisModuleName*(): Strings.String; 
+		PROCEDURE ^ GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow; 
+		PROCEDURE ^ GetSearchFilter*(text: Strings.String): WebStd.PersistentDataFilter; 
+		PROCEDURE ^ SearchFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareAuthor(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareTitle(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareModifDate(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ ComparePriority(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareType(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareStatus(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+	END FeatureTracker; 
+VAR 
+	featureEntryDesc: PrevalenceSystem.PersistentObjectDescriptor; 
+
+	PROCEDURE ^ AppendOptionList(select: XML.Element; list: StringList; actualValue: Strings.String); 
+	PROCEDURE ^ GetNewFeatureEntry(): PrevalenceSystem.PersistentObject; 
+	PROCEDURE ^ GetPersistentObjectDescriptors*(): PrevalenceSystem.PersistentObjectDescSet; 
+	PROCEDURE ^ CreateFeatureTrackerElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ GetActiveElementDescriptors*(): DynamicWebpage.ActiveElementDescSet; 
+BEGIN
+END WebForum.

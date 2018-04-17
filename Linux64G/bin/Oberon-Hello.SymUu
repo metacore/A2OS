@@ -1,0 +1,7 @@
+MODULE Hello IN Oberon;
+	IMPORT Out;
+CONST 
+
+	PROCEDURE ^ World*; 
+BEGIN
+END Hello.

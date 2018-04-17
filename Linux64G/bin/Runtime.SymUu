@@ -1,0 +1,11 @@
+MODULE Runtime;
+	IMPORT SYSTEM;
+VAR 
+	kernelModule-: ARRAY 32 OF ADDRESS; 
+	modules-: LONGINT; 
+
+	PROCEDURE ^ InsertModule*(a: ADDRESS): BOOLEAN; 
+	PROCEDURE ^ CompareString*(CONST left, right: ARRAY OF CHAR): SHORTINT; 
+	PROCEDURE ^ CopyString*(VAR dest: ARRAY OF CHAR; CONST src: ARRAY OF CHAR); 
+BEGIN
+END Runtime.

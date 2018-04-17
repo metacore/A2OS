@@ -1,0 +1,20 @@
+MODULE VinciEditors IN Oberon;
+	IMPORT Objects, Input, Texts, Oberon, Strings, Attributes, Links, Display3, Effects, Gadgets, GfxMatrix, Leonardo, LeoPens, LeoFrames, LeoTools, LeoPanels, LeoPenEditors, VinciShapes;
+CONST 
+VAR 
+	Name: Objects.Object; 
+	Template: Texts.Text; 
+
+	PROCEDURE ^ RevertTool(editor: LeoPanels.Editor); 
+	PROCEDURE ^ ApplyTool(editor: LeoPanels.Editor); 
+	PROCEDURE ^ Load*; 
+	PROCEDURE ^ Track(frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ HandleTool(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Activate*; 
+	PROCEDURE ^ Revert(e: LeoPanels.Editor); 
+	PROCEDURE ^ Apply(e: LeoPanels.Editor); 
+	PROCEDURE ^ BuildPanel(e: LeoPanels.Editor); 
+	PROCEDURE ^ Handle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ New*; 
+BEGIN
+END VinciEditors.

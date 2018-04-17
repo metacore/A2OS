@@ -1,0 +1,30 @@
+MODULE Glue;
+	IMPORT SYSTEM, Trace;
+CONST 
+	base* = 134512640; 
+	debug* = {}; 
+TYPE 
+	; 
+VAR 
+	last-: RECORD 
+	END; 
+	baseAdr*: ADDRESS; 
+	endAdr*: ADDRESS; 
+	dlsym-: PROCEDURE {C}(handle: ADDRESS; name: ADDRESS):ADDRESS; 
+	dlopen-: PROCEDURE {C}(pathname: ADDRESS; mode: LONGINT):ADDRESS; 
+	dlclose-: PROCEDURE {C}(handle: ADDRESS); 
+	exit-: PROCEDURE {C}(status: LONGINT); 
+	stackBottom-: ADDRESS; 
+	argc-: WORD; 
+	argv-: ADDRESS; 
+	environ-: ADDRESS; 
+
+	PROCEDURE ^ EntryPoint; 
+	PROCEDURE ^ putc*(file: ADDRESS; c: CHAR); 
+	PROCEDURE ^ Dlsym*(handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS); 
+	PROCEDURE ^ Char(c: CHAR); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Init0; 
+	PROCEDURE ^ Initialize*; 
+BEGIN
+END Glue.

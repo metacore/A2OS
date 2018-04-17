@@ -1,0 +1,29 @@
+MODULE srRotaVox;
+	IMPORT srBase, srMath, Math;
+TYPE 
+	Voxel = srBase.Voxel; 
+
+	PT = srBase.PT; 
+
+	Ray = srBase.Ray; 
+
+	SREAL = srBase.SREAL; 
+
+	RVox* = OBJECT (Voxel)
+	VAR 
+		child: Voxel; 
+		phi: REAL; 
+		dtick: REAL; 
+		center: PT; 
+
+		PROCEDURE ^  & init*(c: Voxel; dt: REAL); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ d2(a, b: PT): SREAL; 
+		PROCEDURE ^ dia(a, b: PT): SREAL; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END RVox; 
+VAR 
+	Zaxis: PT; 
+
+BEGIN
+END srRotaVox.

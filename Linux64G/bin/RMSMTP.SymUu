@@ -1,0 +1,25 @@
+MODULE RMSMTP;
+	IMPORT SMTPClient, Commands, KernelLog, Strings, Streams, Classes := TFClasses, IMAPClient, IMAPUtilities;
+CONST 
+	DEBUG = TRUE; 
+	CR = 0DX; 
+	LF = 0AX; 
+	Port = 25; 
+	OK* = 0; 
+	CONNECTIONERROR* = 1; 
+	FROMERROR* = 2; 
+	TOERROR* = 3; 
+	CCERROR* = 4; 
+	BCCERROR* = 5; 
+	DATAERROR* = 6; 
+	FINISHERROR* = 7; 
+TYPE 
+	String* = Strings.String; 
+
+	PROCEDURE ^ Send*(context: Commands.Context); 
+	PROCEDURE ^ SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ parse*(context: Commands.Context; VAR message: IMAPClient.Message); 
+	PROCEDURE ^ readRestOfLine*(context: Commands.Context): String; 
+	PROCEDURE ^ AddressToSMTPString(address: IMAPUtilities.Address; VAR string: String); 
+BEGIN
+END RMSMTP.

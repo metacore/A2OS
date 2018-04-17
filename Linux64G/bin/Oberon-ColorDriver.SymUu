@@ -1,0 +1,12 @@
+MODULE ColorDriver IN Oberon;
+	IMPORT Display;
+TYPE 
+	ColorMsg* = RECORD (Display.FrameMsg)
+		col*: INTEGER; 
+	END; 
+VAR 
+	Color: INTEGER; 
+
+	PROCEDURE ^ NextCol*; 
+BEGIN
+END ColorDriver.

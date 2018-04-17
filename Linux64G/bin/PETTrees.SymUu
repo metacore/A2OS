@@ -1,0 +1,83 @@
+MODULE PETTrees;
+	IMPORT KernelLog, Streams, Diagnostics, Strings, Texts, WMStandardComponents, WMGraphics, WMComponents, WMTextView, WMEditors, WMTrees, WMEvents;
+CONST 
+	InvalidPosition* =  -1; 
+TYPE 
+	ExternalInfo* = OBJECT 
+	VAR 
+		filename-: ARRAY 32 OF CHAR; 
+		position-: LONGINT; 
+
+		PROCEDURE ^  & Init*(CONST filename: ARRAY OF CHAR; position: LONGINT); 
+	END ExternalInfo; 
+
+	ExternalDefinitionInfo* = OBJECT 
+	VAR 
+		filename-, definition-: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^  & Init*(CONST filename, definition: ARRAY OF CHAR); 
+	END ExternalDefinitionInfo; 
+
+	RefreshParameters* = OBJECT 
+	VAR 
+		diagnostics: Diagnostics.Diagnostics; 
+		log: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
+	END RefreshParameters; 
+
+	TreeNode* = OBJECT (WMTrees.TreeNode)
+	VAR 
+		pos*: Texts.TextPosition; 
+		color*: LONGINT; 
+		font*: WMGraphics.Font; 
+		external*: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+	END TreeNode; 
+
+	Tree* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		editor-: WMEditors.Editor; 
+		tree-: WMTrees.Tree; 
+		treeView-: WMTrees.TreeView; 
+		toolbar-: WMStandardComponents.Panel; 
+		onExpandNode-: WMEvents.EventSource; 
+		onGoToFile-: WMEvents.EventSource; 
+		onGoToDefinition-: WMEvents.EventSource; 
+		onRefresh-: WMEvents.EventSource; 
+		label: WMStandardComponents.Label; 
+		refreshBtn, sortBtn: WMStandardComponents.Button; 
+		highlight-: WMTextView.Highlight; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetTitle*(CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ SetEditor*(e: WMEditors.Editor); 
+		PROCEDURE ^ Erase*; 
+		PROCEDURE ^ GetNextNode(this: WMTrees.TreeNode; ignoreChildren: BOOLEAN): WMTrees.TreeNode; 
+		PROCEDURE ^ RefreshHandler*(sender, data: ANY); 
+		PROCEDURE ^ GetNewNode*(): TreeNode; 
+		PROCEDURE ^ AddNodes*(parent: TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
+		PROCEDURE ^ SortHandler(sender, data: ANY); 
+		PROCEDURE ^ SelectNodeByPos*(pos: LONGINT); 
+		PROCEDURE ^ BrowseToDefinition*(sender, data: ANY); 
+		PROCEDURE ^ SortTree(parent: WMTrees.TreeNode); 
+		PROCEDURE ^ IsNodeGreater*(left, right: WMTrees.TreeNode): BOOLEAN; 
+		PROCEDURE ^ SwapSiblings(parent, left, right: WMTrees.TreeNode); 
+		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET); 
+		PROCEDURE ^ SetEditorPosition*(position: LONGINT; doHighlight: BOOLEAN); 
+		PROCEDURE ^ ClickNode*(sender, node: ANY); 
+		PROCEDURE ^ MiddleClickNode*(sender, data: ANY); 
+		PROCEDURE ^ PrefixPostfixToCaption*(node: WMTrees.TreeNode; prePost: Strings.String; prefix: BOOLEAN); 
+		PROCEDURE ^ AddPrefixToCaption*(node: WMTrees.TreeNode; prefix: Strings.String); 
+		PROCEDURE ^ AddPostfixToCaption*(node: WMTrees.TreeNode; postfix: Strings.String); 
+		PROCEDURE ^ AddNumberPostfixToCaption*(node: WMTrees.TreeNode; number: LONGINT); 
+	END Tree; 
+
+	Factory* = PROCEDURE ():Tree; 
+VAR 
+	FontPlain-, FontBold-, FontItalic-: WMGraphics.Font; 
+	font: WMGraphics.Font; 
+
+BEGIN
+END PETTrees.

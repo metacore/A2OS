@@ -1,0 +1,101 @@
+MODULE SavePoints IN Oberon;
+	IMPORT Out, In, Modules, SaveScreen, Display, Display3, M := Math IN A2, RandomNumbers, Files, Texts, Oberon, Input;
+CONST 
+	versionString = \"SavePoints 1.3.2000 / jaco"\; 
+	Tag = 2475; 
+	Version = 3; 
+	Dist =   1.0000000E+001; 
+	ScaleX =   8.0000000E-001; 
+	ScaleY =   9.0000000E-001; 
+	MinVar =  -(3 * M.pi); 
+	MaxVar = (3 * M.pi); 
+	MinPeak = ((  1.5000000E+000 * M.pi) /   1.8000000E+002); 
+	MaxPeak = ((  3.5000000E+000 * M.pi) /   1.8000000E+002); 
+	MinDelta = ((  2.0000000E-002 * M.pi) /   1.8000000E+002); 
+	Filename = \"SavePoints.Data"\; 
+	Time = FALSE; 
+	minThick = 1; 
+	maxThick = 5; 
+	defThick = 3; 
+	minDura = 2; 
+	maxDura = 60; 
+	defDura = 20; 
+	minMorph = 10; 
+	maxMorph = 90; 
+	defMorph = 80; 
+	minFrames = 1; 
+	maxFrames = 30; 
+	defFrames = 20; 
+	nomorph = 0; 
+TYPE 
+	IntPoint = RECORD 
+		x, y, z: INTEGER; 
+	END; 
+
+	Point = RECORD 
+		x, y, z: REAL; 
+	END; 
+
+	Figure = POINTER TO ARRAY OF Point; 
+
+	Control = ARRAY 3 OF Point; 
+
+	Rotor = RECORD 
+		from, to, curr, peak: REAL; 
+	END; 
+
+	Colour = RECORD 
+		r, g, b: INTEGER; 
+	END; 
+VAR 
+	numfig: INTEGER; 
+	numpoint: INTEGER; 
+	figure: POINTER TO ARRAY OF ARRAY OF IntPoint; 
+	move: POINTER TO ARRAY OF ARRAY OF INTEGER; 
+	timefactor: POINTER TO ARRAY OF REAL; 
+	attributes: POINTER TO ARRAY OF SET; 
+	maxint, minint, max, min, factor: REAL; 
+	curfig: INTEGER; 
+	actv, curr, next: Figure; 
+	control: Control; 
+	rx, ry, rz: Rotor; 
+	morphoff: BOOLEAN; 
+	timefac: REAL; 
+	time: REAL; 
+	step: REAL; 
+	coltime: INTEGER; 
+	curcol: INTEGER; 
+	thick: INTEGER; 
+	dura: INTEGER; 
+	morph: INTEGER; 
+	frames: INTEGER; 
+	W, H: INTEGER; 
+	mypal, yourpal: ARRAY 256 OF Colour; 
+	avoid: ARRAY 8 OF SET; 
+	numcol: INTEGER; 
+	BG: INTEGER; 
+	mask: Display3.Mask; 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ Int2Fig(i: INTEGER; VAR f: Figure); 
+	PROCEDURE ^ ReadData; 
+	PROCEDURE ^ InitRotor(VAR r: Rotor; f, t, p: REAL); 
+	PROCEDURE ^ GetPal(VAR pal: ARRAY OF Colour); 
+	PROCEDURE ^ SetPal(VAR pal: ARRAY OF Colour); 
+	PROCEDURE ^ ClearAvoid; 
+	PROCEDURE ^ HSV2RGB(H, S, V: REAL; VAR R, G, B: INTEGER); 
+	PROCEDURE ^ InitColour; 
+	PROCEDURE ^ InitVars; 
+	PROCEDURE ^ Rotate(c, s: REAL; VAR x, y: REAL); 
+	PROCEDURE ^ Draw(VAR p: Point; c: INTEGER); 
+	PROCEDURE ^ Position(VAR F: Figure); 
+	PROCEDURE ^ Start; 
+	PROCEDURE ^ UpdateRotor(VAR r: Rotor; VAR a: REAL); 
+	PROCEDURE ^ Step; 
+	PROCEDURE ^ Stop; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove; 
+	PROCEDURE ^ Configuration*; 
+	PROCEDURE ^ InstallDefault*; 
+BEGIN
+END SavePoints.

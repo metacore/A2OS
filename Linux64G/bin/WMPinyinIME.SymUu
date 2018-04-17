@@ -1,0 +1,97 @@
+MODULE WMPinyinIME;
+	IMPORT KernelLog, Modules, Strings, Files, TextUtilities, UTF8Strings, WMInputMethods, WMMessages, WMRectangles, WMWindowManager, WMComponents, WMStandardComponents, WMEditors, WMGraphics, WMStringGrids, WMGrids;
+CONST 
+	imeName* = \"Pinyin"\; 
+TYPE 
+	CharInfo = RECORD 
+		pinyin: ARRAY 8 OF CHAR; 
+		ucs: LONGINT; 
+		freq: LONGINT; 
+		info: String; 
+	END; 
+
+	ListElement = POINTER TO RECORD 
+		next: ListElement; 
+	END; 
+
+	CompareProc = PROCEDURE {DELEGATE}(a, b: ListElement):LONGINT; 
+
+	PhraseInfo = POINTER TO RECORD (ListElement)
+		phrase: String; 
+		hanzi: String; 
+		info: String; 
+	END; 
+
+	String = Strings.String; 
+
+	ResultList = POINTER TO RECORD (ListElement)
+		pinyin: String; 
+		hanzi: String; 
+		freq: LONGINT; 
+	END; 
+
+	Characters = POINTER TO ARRAY OF CharInfo; 
+
+	Phrases = POINTER TO ARRAY OF PhraseInfo; 
+
+	Table = OBJECT 
+	VAR 
+		nofChars: LONGINT; 
+		characters: Characters; 
+		phrases: Phrases; 
+		nofPhrases: LONGINT; 
+
+		PROCEDURE ^ LoadCharacters; 
+		PROCEDURE ^ LoadPhrases; 
+		PROCEDURE ^ FindMatches(CONST s: ARRAY OF CHAR; resultList: ResultList; VAR nofResults: LONGINT); 
+	END Table; 
+
+	IMEWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		edit: WMEditors.Editor; 
+		list: WMStringGrids.StringGrid; 
+		spacings: WMGrids.Spacings; 
+		currentMatches: ResultList; 
+		lastMatch: ResultList; 
+		curEditStr: ARRAY 64 OF CHAR; 
+		table: Table; 
+		ime: IME; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(ime: IME; x, y: LONGINT; CONST text: ARRAY OF CHAR; table: Table); 
+		PROCEDURE ^ ListKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ EditKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ScheduleHide; 
+		PROCEDURE ^ WriteSelected; 
+		PROCEDURE ^ ClearSelection; 
+		PROCEDURE ^ Ok*(sender, data: ANY); 
+		PROCEDURE ^ TextChanged*(sender, data: ANY); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Hide; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END IMEWindow; 
+
+	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
+	VAR 
+		w: IMEWindow; 
+		table: Table; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ Finalize*; 
+	END IME; 
+VAR 
+	cap: ARRAY 256 OF CHAR; 
+	isNum: ARRAY 256 OF BOOLEAN; 
+
+	PROCEDURE ^ MatchPinyin*(pattern, string: ARRAY OF CHAR; complete: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatchPinyinFirstChars*(pattern, string: ARRAY OF CHAR; complete: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Sort(root: ListElement; compare: CompareProc); 
+	PROCEDURE ^ CompareResultListFreq(a, b: ListElement): LONGINT; 
+	PROCEDURE ^ SortPhraseInfoPinyin(a, b: ListElement): LONGINT; 
+	PROCEDURE ^ InitLookup; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPinyinIME.

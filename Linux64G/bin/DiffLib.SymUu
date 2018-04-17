@@ -1,0 +1,42 @@
+MODULE DiffLib;
+	IMPORT Streams, Texts, TextUtilities, Commands, Strings;
+CONST 
+	lineBufferSize = 1000; 
+	maxLineSize = 256; 
+	dirNone = 0; 
+	dirLeft = 1; 
+	dirUp = 2; 
+	dirRight = 4; 
+	dirDown = 5; 
+	dirDiag = 6; 
+TYPE 
+	LineBuffer = POINTER TO RECORD 
+		lines: ARRAY lineBufferSize OF LONGINT; 
+		next: LineBuffer; 
+		size: LONGINT; 
+	END; 
+
+	Element = RECORD 
+		val: LONGINT; 
+		dir: LONGINT; 
+	END; 
+
+	Handler* = PROCEDURE {DELEGATE}(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+
+	EmptyHandler* = PROCEDURE {DELEGATE}; 
+
+	SetupHandler* = PROCEDURE {DELEGATE}(nofLines: LONGINT); 
+VAR 
+	separator: BOOLEAN; 
+
+	PROCEDURE ^ GetLinePos(lineBuffer: LineBuffer; offset: LONGINT): LONGINT; 
+	PROCEDURE ^ GetLineBuffer(reader: Texts.TextReader; VAR size: LONGINT): LineBuffer; 
+	PROCEDURE ^ ReadLine(pos: LONGINT; reader: Texts.TextReader): Strings.String; 
+	PROCEDURE ^ Diff*(leftFile, rightFile: ARRAY OF CHAR; setup: SetupHandler; leftDiff, rightDiff, leftEqual, rightEqual: Handler; emptyLeft, emptyRight: EmptyHandler; out: Streams.Writer); 
+	PROCEDURE ^ Handle(line: LONGINT; reader: Texts.TextReader; buffer: LineBuffer; handler: Handler; out: Streams.Writer); 
+	PROCEDURE ^ Left(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Right(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Equal(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Compare*(context: Commands.Context); 
+BEGIN
+END DiffLib.

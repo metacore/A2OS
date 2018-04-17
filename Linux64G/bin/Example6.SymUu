@@ -1,0 +1,15 @@
+MODULE Example6;
+TYPE 
+	ReadersWritersScheduler* = OBJECT {EXCLUSIVE} 
+	VAR 
+		busy: BOOLEAN; 
+		readers, writers: LONGINT; 
+
+		PROCEDURE ^ StartRead*; 
+		PROCEDURE ^ EndRead*; 
+		PROCEDURE ^ StartWrite*; 
+		PROCEDURE ^ EndWrite*; 
+		PROCEDURE ^  & Init*; 
+	END ReadersWritersScheduler; 
+BEGIN
+END Example6.

@@ -1,0 +1,144 @@
+MODULE Joysticks;
+	IMPORT KernelLog, Modules, Streams, Commands, Plugins, Strings;
+CONST 
+	Ok* = 0; 
+	WrongParameter* = 1; 
+	Error* = 2; 
+	DefaultName = \"JOYSTICK"\; 
+	Verbose = TRUE; 
+	TraceRaw = 0; 
+	TraceCalibrationInfo = 1; 
+	Trace = {}; 
+	AxisX* = 0; 
+	AxisY* = 1; 
+	AxisZ* = 2; 
+	AxisRx* = 3; 
+	AxisRy* = 4; 
+	AxisRz* = 5; 
+	Slider1* = 6; 
+	Slider2* = 7; 
+	Slider3* = 8; 
+	Slider4* = 9; 
+	Button1* = 0; 
+	Button2* = 1; 
+	Button3* = 2; 
+	Button4* = 3; 
+	Button5* = 4; 
+	Button6* = 5; 
+	Button7* = 6; 
+	Button8* = 7; 
+	Button9* = 8; 
+	Button10* = 9; 
+	Button11* = 10; 
+	Button12* = 11; 
+	Button13* = 12; 
+	Button14* = 13; 
+	Button15* = 14; 
+	Button16* = 15; 
+	Button17* = 16; 
+	Button18* = 17; 
+	Button19* = 18; 
+	Button20* = 19; 
+	Button21* = 20; 
+	Button22* = 21; 
+	Button23* = 22; 
+	Button24* = 23; 
+	Button25* = 24; 
+	Button26* = 25; 
+	Button27* = 26; 
+	Button28* = 27; 
+	Button29* = 28; 
+	Button30* = 29; 
+	Button31* = 30; 
+	Button32* = 31; 
+	HatUp* = 0; 
+	HatRight* = 1; 
+	HatDown* = 2; 
+	HatLeft* = 3; 
+	MinAxisValue* =  -1024; 
+	MaxAxisValue* = 1024; 
+	MaxNbrOfButtons* = 32; 
+	MaxNbrOfAxis* = 32; 
+	MaxNbrOfCoolieHats* = 8; 
+	DefaultDeadzone =   5.0000000E-001; 
+	ErrorAxisNotImplemented = \"Axis not implemented"\; 
+	ErrorParameterOutOfRange = \"Parameter out of range"\; 
+	ErrorNoValidCenterPosition = \"Axis must be centerd when stopping calibration"\; 
+TYPE 
+	JoystickMessage* = RECORD 
+		id-: LONGINT; 
+	END; 
+
+	JoystickDisconnectedMessage* = RECORD (JoystickMessage)
+	END; 
+
+	JoystickConnectedMessage* = RECORD (JoystickMessage)
+	END; 
+
+	JoystickDataMessage* = RECORD (JoystickMessage)
+		buttons*: SET; 
+		axis*: ARRAY MaxNbrOfAxis OF LONGINT; 
+		coolieHat*: ARRAY MaxNbrOfCoolieHats OF SET; 
+	END; 
+
+	JoystickMessageHandler* = PROCEDURE {DELEGATE}(VAR msg: JoystickMessage); 
+
+	HandlerListNode = POINTER TO RECORD 
+		handler: JoystickMessageHandler; 
+		next: HandlerListNode; 
+	END; 
+
+	Axis = RECORD 
+		minValue, maxValue, centerValue: LONGINT; 
+		calMinValue, calMaxValue, calCenterValue: LONGINT; 
+		calCenterOffset: LONGINT; 
+		scaleFactorLow, scaleFactorHigh: REAL; 
+		deadzone: REAL; 
+	END; 
+
+	Joystick* = OBJECT {EXCLUSIVE} (Plugins.Plugin)
+	VAR 
+		id-: LONGINT; 
+		nbrOfButtons-: LONGINT; 
+		nbrOfCoolieHats-: LONGINT; 
+		nbrOfAxis-: LONGINT; 
+		implementedAxis-: SET; 
+		connected-: BOOLEAN; 
+		calibrationMode-: BOOLEAN; 
+		axis: ARRAY MaxNbrOfAxis OF Axis; 
+		lastMessage: JoystickDataMessage; 
+		lastMessageRaw: JoystickDataMessage; 
+		listHead: HandlerListNode; 
+
+		PROCEDURE ^ Register*(handler: JoystickMessageHandler); 
+		PROCEDURE ^ Unregister*(handler: JoystickMessageHandler); 
+		PROCEDURE ^ Poll*(VAR message: JoystickDataMessage): BOOLEAN; 
+		PROCEDURE ^ SetGlobalDeadzone*(deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SetDeadzone*(axisNbr: LONGINT; deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ StartCalibration*; 
+		PROCEDURE ^ StopCalibration*(VAR errorMsg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR message: JoystickMessage); 
+		PROCEDURE ^ AddAxis*(index, minValue, maxValue: LONGINT); 
+		PROCEDURE ^ AddCoolieHat*; 
+		PROCEDURE ^ ScaleRawValues(VAR message: JoystickDataMessage); 
+		PROCEDURE ^ ApplyDeadzone(VAR message: JoystickDataMessage); 
+		PROCEDURE ^ GetCalibrationData(VAR message: JoystickDataMessage); 
+		PROCEDURE ^ Show*(w: Streams.Writer); 
+		PROCEDURE ^ ShowAxis; 
+		PROCEDURE ^ ShowAxisNbr(axisNbr: LONGINT); 
+		PROCEDURE ^ ShowDataMessage(msg: JoystickDataMessage); 
+		PROCEDURE ^  & Init*(nbrOfButtons: LONGINT); 
+	END Joystick; 
+VAR 
+	registry-: Plugins.Registry; 
+	nextId: LONGINT; 
+
+	PROCEDURE ^ EventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+	PROCEDURE ^ GetId(): LONGINT; 
+	PROCEDURE ^ Round(value: REAL): LONGINT; 
+	PROCEDURE ^ GetAxisName*(axisNbr: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Joysticks.

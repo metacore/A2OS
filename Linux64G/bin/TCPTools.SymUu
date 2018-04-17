@@ -1,0 +1,8 @@
+MODULE TCPTools;
+	IMPORT Streams, Commands, Files, IP, TCP, DNS;
+CONST 
+	BufferSize = 4096; 
+
+	PROCEDURE ^ SendFile*(context: Commands.Context); 
+BEGIN
+END TCPTools.

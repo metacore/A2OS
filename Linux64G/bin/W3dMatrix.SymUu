@@ -1,0 +1,17 @@
+MODULE W3dMatrix;
+	IMPORT Vectors := W3dVectors, MathL;
+TYPE 
+	Matrix4x4* = ARRAY 4 OF ARRAY 4 OF LONGREAL; 
+VAR 
+	Identity4x4-: Matrix4x4; 
+
+	PROCEDURE ^ Translation4x4*(dx, dy, dz: LONGREAL): Matrix4x4; 
+	PROCEDURE ^ Stretch4x4*(dx, dy, dz: LONGREAL): Matrix4x4; 
+	PROCEDURE ^ Rotation4x4*(u: Vectors.TVector3d; phi: LONGREAL): Matrix4x4; 
+	PROCEDURE ^ MulMat*(A, B: Matrix4x4): Matrix4x4; 
+	PROCEDURE ^ Mul*(M: Matrix4x4; P: Vectors.TVector3d): Vectors.TVector3d; 
+	PROCEDURE ^ TransformDir*(M: Matrix4x4; P: Vectors.TVector3d): Vectors.TVector3d; 
+	PROCEDURE ^ CameraMatrix*(p: Vectors.TVector3d; lookAt, up: Vectors.TVector3d): Matrix4x4; 
+	PROCEDURE ^ PositionMatrix*(p, d, u: Vectors.TVector3d): Matrix4x4; 
+BEGIN
+END W3dMatrix.

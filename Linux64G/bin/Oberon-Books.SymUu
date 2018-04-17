@@ -1,0 +1,104 @@
+MODULE Books IN Oberon;
+	IMPORT Books0, Panels, Objects, Documents, Gadgets, Display, Display3, TextGadgets, TextGadgets0, BasicGadgets, Texts, Fonts, Oberon, Modules, Desktops, Effects;
+CONST 
+	EOL* = 0DX; 
+	Tab* = 9X; 
+	quote* = CHR(34); 
+	looksLib* = 0; 
+	looksCol* = 1; 
+	maxSect* = 4; 
+	linkCol* = 3; 
+	callCol* = 1; 
+	noteCol* = 8; 
+	link* = 1; 
+	call* = 2; 
+	note* = 3; 
+	formated* = 0; 
+	resize* = 1; 
+	icon* = 2; 
+	usesnotes* = 3; 
+	formatText* = 4; 
+	twoRow* = 5; 
+	invalid* = 15; 
+	left* = 16; 
+	middle* = 17; 
+	right* = 18; 
+	pad* = 19; 
+	border* = 4; 
+	borderL* = 1; 
+	borderR* = 0; 
+	borderT* = 0; 
+	borderB* = 1; 
+	barH* = 4; 
+	buttonW* = 50; 
+	buttonH* = 20; 
+	scrollBW* = 25; 
+TYPE 
+	TGFrame* = POINTER TO TGFrameDesc; 
+
+	Panel* = POINTER TO PanelDesc; 
+
+	Chain = POINTER TO ChainDesc; 
+
+	TGFrameDesc* = RECORD (TextGadgets.FrameDesc)
+		focus: BOOLEAN; 
+		lastPos*: LONGINT; 
+		panel*: Panel; 
+	END; 
+
+	PanelDesc* = RECORD (Panels.PanelDesc)
+		doc*: Documents.Document; 
+		iconStr*: ARRAY (2 * Books0.nameLen) OF CHAR; 
+		texts*, cur*: Books0.TextList; 
+		cmds*, notes*: Texts.Text; 
+		useStack*: Chain; 
+		imps*: Books0.ImpList; 
+		options*: SET; 
+		curC: Books0.ContElem; 
+		noteH*: INTEGER; 
+	END; 
+
+	ChainDesc = RECORD 
+		old: Books0.TextList; 
+		pos: LONGINT; 
+		next: Chain; 
+	END; 
+VAR 
+	Wr: Texts.Writer; 
+	B: Texts.Buffer; 
+	tmpT: Texts.Text; 
+	m: TextGadgets0.Methods; 
+	newPos*, newInd*: LONGINT; 
+
+	PROCEDURE ^ GetText*(P: Panel; VAR T: TGFrame); 
+	PROCEDURE ^ GetNote*(P: Panel; VAR T: TGFrame); 
+	PROCEDURE ^ ResizeControls*(P: Panel; T: TGFrame; w: INTEGER); 
+	PROCEDURE ^ MoveBar(P: Panel; M: Display.ModifyMsg; name: ARRAY OF CHAR; Y, mode: INTEGER; broadcast: BOOLEAN); 
+	PROCEDURE ^ ReDisplay*(VAR M: Display.ModifyMsg; mode: INTEGER; broadcast: BOOLEAN); 
+	PROCEDURE ^ CopyText*(from: Texts.Text; VAR to: Texts.Text); 
+	PROCEDURE ^ PanelHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewPanel*; 
+	PROCEDURE ^ HandleKey(F: TGFrame; M: Oberon.InputMsg); 
+	PROCEDURE ^ TextHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewText*(P: Panel); 
+	PROCEDURE ^ GetPanel*(VAR P: Panel); 
+	PROCEDURE ^ ShowText*(P: Panel; t: Books0.TextList; pos: LONGINT); 
+	PROCEDURE ^ GetPos(t: Texts.Text; obj: Objects.Object): LONGINT; 
+	PROCEDURE ^ Push*(P: Panel); 
+	PROCEDURE ^ GetInd*(P: Panel; cur: Books0.TextList): LONGINT; 
+	PROCEDURE ^ ChapUp*; 
+	PROCEDURE ^ ChapDown*; 
+	PROCEDURE ^ History*(P: Panel; t: Texts.Text); 
+	PROCEDURE ^ OpenCont(F: Books0.ContElem); 
+	PROCEDURE ^ EndOfLine(T: TGFrame; pos: LONGINT): LONGINT; 
+	PROCEDURE ^ GotoText*(P: Panel; ind, pos: LONGINT; sel: BOOLEAN); 
+	PROCEDURE ^ GetIndex*(P: Panel): Books0.TextList; 
+	PROCEDURE ^ ShowBook(e: Books0.ExtFrame); 
+	PROCEDURE ^ ShowFootNote*(P: Panel; pos1, pos2: LONGINT); 
+	PROCEDURE ^ GetFrame(dlink: Objects.Object): Display.Frame; 
+	PROCEDURE ^ ShowCallErr(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Call(F: TextGadgets0.Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object); 
+	PROCEDURE ^ LocateString(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ Pop*(P: Panel); 
+BEGIN
+END Books.

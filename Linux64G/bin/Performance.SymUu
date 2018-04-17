@@ -1,0 +1,7 @@
+MODULE Performance;
+VAR 
+	load*: ARRAY 3 OF REAL; 
+	idle*: ARRAY 1 OF LONGINT; 
+
+BEGIN
+END Performance.

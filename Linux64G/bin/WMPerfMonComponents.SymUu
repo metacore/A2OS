@@ -1,0 +1,213 @@
+MODULE WMPerfMonComponents;
+	IMPORT Plugins := WMPerfMonPlugins, Streams, Modules, Strings, KernelLog, WMRestorable, WMMessages, WMProperties, WMWindowManager, XML, WMComponents, WMStandardComponents, WMDiagramComponents, WMGrids, WMStringGrids, WMEditors, WMRectangles, WMGraphics, WMEvents;
+CONST 
+	UnknownView* = 0; 
+	GraphView* = 1; 
+	GridView* = 2; 
+	ChartView* = 3; 
+	DefaultPwWidth = 600; 
+	DefaultPwHeight = 200; 
+	MinPwWidth = 200; 
+	MinPwHeight = 100; 
+	Tab = 9X; 
+	BgFillColor* = 1145324799; 
+	TextColor* = WMGraphics.White; 
+	LineHeight* = 20; 
+	ButtonWidth* = 80; 
+	PerfViewFillColor = 1145324799; 
+	PerfViewColor = LONGINT(0FF0000FFH); 
+	UseSkinColors* = FALSE; 
+TYPE 
+	PluginContainer* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		pluginViews: PluginView; 
+		nbrOfPlugins: LONGINT; 
+
+		PROCEDURE ^ SetPluginHeights; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ AlignSubComponents*; 
+		PROCEDURE ^ AddPlugin*(plugin: Plugins.Plugin; viewType: LONGINT); 
+		PROCEDURE ^ LocatePlugins*(): BOOLEAN; 
+		PROCEDURE ^  & Init*; 
+	END PluginContainer; 
+
+	UpdateInfo = RECORD 
+		events: SET; 
+		perf: REAL; 
+		sampleInterval, sampleBufferSize, screenInterval: LONGINT; 
+	END; 
+
+	SelectionComponent* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		openGraphBtn, openGridBtn, openChartBtn, refreshBtn: WMStandardComponents.Button; 
+		grid: WMStringGrids.StringGrid; 
+		spacings: WMGrids.Spacings; 
+		applyBtn, clearBtn: WMStandardComponents.Button; 
+		sampleIntervalEditor, sampleBufferSizeEditor, screenIntervalEditor: WMEditors.TextField; 
+		cpuTimeLabel: Indicator; 
+		updateInfo, synchronizedUpdateInfo: UpdateInfo; 
+		w: Streams.StringWriter; 
+		alive, dead, update: BOOLEAN; 
+
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ CreatePluginWindows(viewType: LONGINT); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ GetSampleParameters(VAR ui, bs, si: LONGINT); 
+		PROCEDURE ^ SetSampleParameters(ui, bs, si: LONGINT); 
+		PROCEDURE ^ UpdateGrid; 
+		PROCEDURE ^ CreateSelectionPanel(): WMStandardComponents.GroupPanel; 
+		PROCEDURE ^ CreateBottomPanel(): WMStandardComponents.GroupPanel; 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ EventHandler(events: SET; perf: REAL); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Update; 
+	BEGIN{ACTIVE} 
+	END SelectionComponent; 
+
+	Indicator* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		value: ARRAY 128 OF CHAR; 
+		textColor: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetCaption*(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END Indicator; 
+
+	PluginView* = OBJECT {EXCLUSIVE} (WMStandardComponents.GroupPanel)
+	VAR 
+		plugin: Plugins.Plugin; 
+		statistics: WMDiagramComponents.Statistics; 
+		next: PluginView; 
+
+		PROCEDURE ^  & New*(plugin: Plugins.Plugin); 
+		PROCEDURE ^ InitView*; 
+		PROCEDURE ^ UpdateStats*(): BOOLEAN; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ ScaleDataset(scale: REAL; VAR dataset: WMDiagramComponents.Dataset); 
+		PROCEDURE ^ InitStats(dimensions: LONGINT); 
+	END PluginView; 
+
+	PluginGraphView* = OBJECT {EXCLUSIVE} (PluginView)
+	VAR 
+		stats: Streams.StringWriter; 
+		pview: WMDiagramComponents.MultiPointView; 
+		info: Indicator; 
+
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ InitView*; 
+		PROCEDURE ^ ShowStats; 
+	END PluginGraphView; 
+
+	PluginGridView = OBJECT {EXCLUSIVE} (PluginView)
+	VAR 
+		grid: WMStringGrids.StringGrid; 
+		ds: Plugins.DatasetDescriptor; 
+		spacings: WMGrids.Spacings; 
+		nofRows: LONGINT; 
+
+		PROCEDURE ^ NbrToStr(nbr: LONGREAL; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ UpdateGrid(sender, data: ANY); 
+		PROCEDURE ^ InitGrid; 
+		PROCEDURE ^ InitView*; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ Finalize*; 
+	END PluginGridView; 
+
+	PluginChartView = OBJECT {EXCLUSIVE} (PluginView)
+	VAR 
+		barChart: WMDiagramComponents.BarChart; 
+		ds: Plugins.DatasetDescriptor; 
+		heights: POINTER TO ARRAY OF LONGREAL; 
+
+		PROCEDURE ^ InitView*; 
+		PROCEDURE ^ UpdateChart(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END PluginChartView; 
+
+	PerfMonSimpleGraph* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		plugin-: WMProperties.StringProperty; 
+		showValues-: WMProperties.BooleanProperty; 
+		label: WMStandardComponents.Label; 
+		pview: WMDiagramComponents.MultiPointView; 
+		pluginInstance: Plugins.Plugin; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ InitDiagram(pluginInstance: Plugins.Plugin; index: LONGINT); 
+		PROCEDURE ^ InstallPlugin; 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END PerfMonSimpleGraph; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	PluginWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		plugin: Plugins.Plugin; 
+		width, height: LONGINT; 
+
+		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ SetActive*(active: BOOLEAN); 
+		PROCEDURE ^  & New*(plugin: Plugins.Plugin; c: WMRestorable.Context); 
+		PROCEDURE ^ LoadFromXml*(configuration: XML.Element); 
+		PROCEDURE ^ StoreToXml(): XML.Element; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+	END PluginWindow; 
+
+	PluginGraphWindow* = OBJECT {EXCLUSIVE} (PluginWindow)
+	VAR 
+		graphView: PluginGraphView; 
+		stop, clear, automin, automax, perSecond, legend: WMStandardComponents.Button; 
+
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
+		PROCEDURE ^ LoadFromXml*(configuration: XML.Element); 
+		PROCEDURE ^ StoreToXml(): XML.Element; 
+	END PluginGraphWindow; 
+
+	PluginGridWindow* = OBJECT {EXCLUSIVE} (PluginWindow)
+	VAR 
+		gridView: PluginGridView; 
+		allBtn, noneBtn, toggleBtn, graphBtn: WMStandardComponents.Button; 
+
+		PROCEDURE ^ SetHide(hide: BOOLEAN); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
+	END PluginGridWindow; 
+
+	PluginChartWindow* = OBJECT {EXCLUSIVE} (PluginWindow)
+	VAR 
+		chartView: PluginChartView; 
+		verticalBtn: WMStandardComponents.Button; 
+		vertical: BOOLEAN; 
+
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
+	END PluginChartWindow; 
+VAR 
+	PrototypePlugin: WMProperties.StringProperty; 
+	PrototypeShowValues: WMProperties.BooleanProperty; 
+	StrPluginContainer, StrSelectionComponent, StrPluginView, StrPluginGraphView, StrPluginGridView, StrPerfMonSimpleGraph, StrYes, StrNo, StrNotAvailable, StrIndicator, StrColor, StrName, StrCurrent, StrMin, StrMax, StrAvg, StrSum, StrMode, StrHidden, StrNormal: Strings.String; 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ GenPerfMonSimpleGraph*(): XML.Element; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ NewButton*(CONST caption: ARRAY OF CHAR; handler: WMEvents.EventListener): WMStandardComponents.Button; 
+	PROCEDURE ^ NewGroupPanel*(CONST caption: ARRAY OF CHAR; alignment, height: LONGINT): WMStandardComponents.GroupPanel; 
+	PROCEDURE ^ NewIndicator*(CONST caption: ARRAY OF CHAR; alignment, width, height: LONGINT): Indicator; 
+	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment, width, height: LONGINT): WMStandardComponents.Label; 
+	PROCEDURE ^ NewTextField*(width: LONGINT): WMEditors.TextField; 
+	PROCEDURE ^ NewPanel*(alignment, width, height: LONGINT): WMStandardComponents.Panel; 
+	PROCEDURE ^ RestorePlugin*(c: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonComponents.

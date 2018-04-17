@@ -1,0 +1,156 @@
+MODULE WebBrowserPanel;
+	IMPORT HTMLScanner, HTMLParser, HTMLTransformer, WebBrowserComponents, WMComponents, WMProperties, WMTextView, WMStandardComponents, Texts, WMEvents, TextUtilities, Codecs, XML, XMLObjects, Strings, KernelLog, Messages := WMMessages;
+CONST 
+	verbose = TRUE; 
+	modeSourceCode = 0; 
+	modeParsedHtml = 1; 
+	modeBbtXml = 2; 
+	modeBbtText = 3; 
+	outputMode = modeBbtText; 
+	typePercent = 0; 
+	typeParts = 1; 
+	typeFix = 2; 
+TYPE 
+	String = Strings.String; 
+
+	VisualComponent = WMComponents.VisualComponent; 
+
+	NotifyMsg* = POINTER TO RECORD 
+		url*: String; 
+		title*: String; 
+		loadID*: LONGINT; 
+	END; 
+
+	LoadedMsg* = POINTER TO RECORD 
+		vc: VisualComponent; 
+		url: String; 
+		title: String; 
+	END; 
+
+	FrameNode = POINTER TO RECORD 
+		next: FrameNode; 
+		name: String; 
+		scrolling: BOOLEAN; 
+		size: LONGINT; 
+		relative: BOOLEAN; 
+		panel: VisualComponent; 
+		isLast: BOOLEAN; 
+	END; 
+
+	FrameslotNode = POINTER TO RECORD 
+		next: FrameslotNode; 
+		size: LONGINT; 
+		type: LONGINT; 
+	END; 
+
+	FramesetNode = POINTER TO RECORD 
+		next: FramesetNode; 
+		frameset: XML.Element; 
+		src: String; 
+		name: String; 
+		scrolling: BOOLEAN; 
+	END; 
+
+	WebPanel* = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		url-: WMProperties.StringProperty; 
+		notify*: WMEvents.EventListener; 
+		openNewWindow*: PROCEDURE {DELEGATE}(url: String); 
+		loadLink*: WMEvents.EventListener; 
+		vc: VisualComponent; 
+		loadingText: WebBrowserComponents.ShortText; 
+		pending: BOOLEAN; 
+		loadID: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Load*(loadID: LONGINT); 
+		PROCEDURE ^ Loaded(sender, data: ANY); 
+		PROCEDURE ^ LoadLink(sender, data: ANY); 
+	END WebPanel; 
+
+	ContentLoader = OBJECT {EXCLUSIVE} 
+	VAR 
+		webPanel: WebPanel; 
+		msg: LoadedMsg; 
+		vc: VisualComponent; 
+		url: String; 
+		title: String; 
+		encodedUrl: ARRAY 1024 OF CHAR; 
+
+		PROCEDURE ^  & New*(webPanel: WebPanel); 
+	BEGIN{ACTIVE} 
+	END ContentLoader; 
+
+	HTMLPanel = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		rc: WebBrowserComponents.ResourceConnection; 
+		width: LONGINT; 
+		height: LONGINT; 
+		scrollbars: BOOLEAN; 
+		loadLink: WMEvents.EventListener; 
+		charset: String; 
+		frameName: String; 
+		firstResize: BOOLEAN; 
+		tv: WMTextView.TextView; 
+		text: Texts.Text; 
+		blankText: Texts.Text; 
+		vScrollbar: WMStandardComponents.Scrollbar; 
+		hScrollbar: WMStandardComponents.Scrollbar; 
+		scanner: HTMLScanner.Scanner; 
+		parser: HTMLParser.Parser; 
+		transformer: HTMLTransformer.Transformer; 
+		xmlDoc: XML.Document; 
+		textWriter: TextUtilities.TextWriter; 
+		bgImage: WebBrowserComponents.TileImagePanel; 
+		decoder: Codecs.TextDecoder; 
+		bbtDecoder: TextUtilities.BluebottleDecoder; 
+		encoder: Codecs.TextEncoder; 
+		res: LONGINT; 
+		contents: XMLObjects.Enumerator; 
+		content: ANY; 
+		framesetElem: XML.Element; 
+		frameset: FramesetPanel; 
+		titleElem: XML.Element; 
+		item: HTMLTransformer.EmbeddedObject; 
+
+		PROCEDURE ^  & New*(VAR title: String; rc: WebBrowserComponents.ResourceConnection; width: LONGINT; height: LONGINT; scrollbars: BOOLEAN; loadLink: WMEvents.EventListener; charset: String; frameName: String); 
+		PROCEDURE ^ Load(VAR title: String); 
+		PROCEDURE ^ Resized*; 
+	END HTMLPanel; 
+
+	FramesetPanel = OBJECT {EXCLUSIVE} (VisualComponent)
+	VAR 
+		framesetElem: XML.Element; 
+		baseAddress: String; 
+		width: LONGINT; 
+		height: LONGINT; 
+		loadLink: WMEvents.EventListener; 
+		frameborderSize: LONGINT; 
+		totalFixSizes: LONGINT; 
+		nodeIsCol: BOOLEAN; 
+		firstFrame: FrameNode; 
+
+		PROCEDURE ^  & New*(framesetElem: XML.Element; baseAddress: String; width: LONGINT; height: LONGINT; loadLink: WMEvents.EventListener); 
+		PROCEDURE ^ BuildFrameList; 
+		PROCEDURE ^ GetFrameWidth(frameItem: FrameNode): LONGINT; 
+		PROCEDURE ^ GetFrameHeight(frameItem: FrameNode): LONGINT; 
+		PROCEDURE ^ AlignFrame(frameItem: FrameNode); 
+		PROCEDURE ^ Resize; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ RemoveFramesFromPanel; 
+		PROCEDURE ^ AddFramesToPanel; 
+		PROCEDURE ^ LoadLink(sender, data: ANY); 
+		PROCEDURE ^ FindAndReloadFrame(link, target: String): BOOLEAN; 
+	END FramesetPanel; 
+VAR 
+	frameNameCount: LONGINT; 
+
+	PROCEDURE ^ GetContent(VAR url: String; VAR title: String; initWidth: LONGINT; initHeight: LONGINT; scrollbars: BOOLEAN; loadLink: WMEvents.EventListener; frameName: String): VisualComponent; 
+	PROCEDURE ^ DecodeLinkData*(data: ANY; VAR link: String; VAR target: String); 
+	PROCEDURE ^ GetElement(name: ARRAY OF CHAR; root: XML.Element): XML.Element; 
+	PROCEDURE ^ ParseFramesetAttr(frameset: XML.Element; VAR frameSlots: FrameslotNode; VAR frameborderSize: LONGINT; VAR fixSizes: LONGINT; VAR nodeIsCol: BOOLEAN); 
+	PROCEDURE ^ ParseFramesetRowsOrCols(attrValue: String; VAR firstSlot: FrameslotNode; VAR nodeCount: LONGINT; VAR fixSizes: LONGINT); 
+	PROCEDURE ^ ParseFramesetContent(frameset: XML.Element; VAR first: FramesetNode); 
+	PROCEDURE ^ GetNewFrameName(): String; 
+BEGIN
+END WebBrowserPanel.

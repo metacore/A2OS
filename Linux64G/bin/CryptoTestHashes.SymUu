@@ -1,0 +1,12 @@
+MODULE CryptoTestHashes;
+	IMPORT Hashes := CryptoHashes, Utils := CryptoUtils, Kernel, Out := KernelLog;
+CONST 
+
+	PROCEDURE ^ CheckHash(CONST modname, data, exphash: ARRAY OF CHAR); 
+	PROCEDURE ^ MeasureTime(CONST modname: ARRAY OF CHAR); 
+	PROCEDURE ^ TestMD5*; 
+	PROCEDURE ^ TestSHA1*; 
+	PROCEDURE ^ TestSHA256*; 
+	PROCEDURE ^ TestSHA3*; 
+BEGIN
+END CryptoTestHashes.

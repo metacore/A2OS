@@ -1,0 +1,161 @@
+MODULE FoxTranspilerBackend;
+	IMPORT Basic := FoxBasic, Global := FoxGlobal, Backend := FoxBackend, SyntaxTree := FoxSyntaxTree, Scanner := FoxScanner, Formats := FoxFormats, Files, Streams, Strings, Options, SymbolFileFormat := FoxTextualSymbolFile, Printout := FoxPrintout;
+CONST 
+	Space = \" "\; 
+	Tab = 9X; 
+	Comma = \","\; 
+	Semicolon = \";"\; 
+	LeftBrace = \"{"\; 
+	RightBrace = \"}"\; 
+	StructTag = \"_tag"\; 
+	BaseTag = \"_base"\; 
+	TypeTag = \"_type"\; 
+	LenTag = \"_len"\; 
+	PointerTag = \"_pointer"\; 
+	DelegateTag = \"_delegate"\; 
+	BaseObjectName = \"BaseObject"\; 
+	TypeDescriptorTag = \"_descriptor"\; 
+	DefaultStyle = 0; 
+	StailaStyle = 1; 
+TYPE 
+	Style = INTEGER; 
+
+	Indent = INTEGER; 
+
+	Identifier = ARRAY Scanner.MaxIdentifierLength OF CHAR; 
+
+	Transpiler* = OBJECT (SyntaxTree.Visitor)
+	VAR 
+		indent: Indent; 
+		writer: Streams.Writer; 
+		backend: TranspilerBackend; 
+		currentProcedureScope: SyntaxTree.ProcedureScope; 
+		initializeLocalData: BOOLEAN; 
+
+		PROCEDURE ^  & InitTranspiler(writer: Streams.Writer; backend: TranspilerBackend; initLocalData: BOOLEAN); 
+		PROCEDURE ^ DeclareModule(module: SyntaxTree.Module); 
+		PROCEDURE ^ DeclareImports(scope: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ DeclareVariables(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DeclareProcedures(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DeclareObjects(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DeclareDescriptor(record: SyntaxTree.RecordType); 
+		PROCEDURE ^ DefineModule(module: SyntaxTree.Module); 
+		PROCEDURE ^ DefineMain(module: SyntaxTree.Module); 
+		PROCEDURE ^ DefineImports(scope: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ DefineConstants(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DefineTypes(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DefineVariables(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DefineProcedures(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DefineObjects(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ DefineDescriptor(record: SyntaxTree.RecordType); 
+		PROCEDURE ^ BeginBlock; 
+		PROCEDURE ^ EndBlock; 
+		PROCEDURE ^ AccessBase(record, base: SyntaxTree.RecordType); 
+		PROCEDURE ^ BeginRuntimeCall(CONST module, procedure: ARRAY OF CHAR); 
+		PROCEDURE ^ EndRuntimeCall; 
+		PROCEDURE ^ Trace(expression: SyntaxTree.Expression); 
+		PROCEDURE ^ Convert(expression: SyntaxTree.Expression; type: SyntaxTree.Type); 
+		PROCEDURE ^ LockScope(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ UnlockScope(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ CompareTypeDescriptor(expression: SyntaxTree.Expression; type: SyntaxTree.Type); 
+		PROCEDURE ^ PrintIndent; 
+		PROCEDURE ^ PrintInclude(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ PrintComment(CONST comment: ARRAY OF CHAR); 
+		PROCEDURE ^ PrintComments(comment: SyntaxTree.Comment; item: OBJECT); 
+		PROCEDURE ^ PrintProcedure(procedure: SyntaxTree.Procedure); 
+		PROCEDURE ^ PrintParameter(symbol: SyntaxTree.Symbol; nested: BOOLEAN); 
+		PROCEDURE ^ PrintParameters(procedureType: SyntaxTree.ProcedureType; scope: SyntaxTree.Scope); 
+		PROCEDURE ^ PrintArgument(argument: SyntaxTree.Expression; parameter: SyntaxTree.Symbol; nested: BOOLEAN); 
+		PROCEDURE ^ PrintArguments(arguments: SyntaxTree.ExpressionList; index, count: LONGINT; parameter: SyntaxTree.Parameter; outerScope: SyntaxTree.Scope): BOOLEAN; 
+		PROCEDURE ^ PrintSelf; 
+		PROCEDURE ^ PrintDelegate(expression: SyntaxTree.Expression); 
+		PROCEDURE ^ PrintBody(procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; variable: SyntaxTree.Variable); 
+		PROCEDURE ^ PrintType(pointer: BOOLEAN; type: SyntaxTree.Type; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ PrintBasicType(type: SyntaxTree.BasicType); 
+		PROCEDURE ^ PrintVariable(variable: BOOLEAN; CONST name: ARRAY OF CHAR; type: SyntaxTree.Type); 
+		PROCEDURE ^ PrintCharacter(value: CHAR); 
+		PROCEDURE ^ PrintNew(arguments: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ PrintStatements(statements: SyntaxTree.StatementSequence); 
+		PROCEDURE ^ PrintCode(code: SyntaxTree.Code); 
+		PROCEDURE ^ PrintIfPart(ifPart: SyntaxTree.IfPart); 
+		PROCEDURE ^ PrintStatement(statement: SyntaxTree.Statement); 
+		PROCEDURE ^ PrintExpression(expression: SyntaxTree.Expression); 
+		PROCEDURE ^ PrintNegatedExpression(expression: SyntaxTree.Expression); 
+		PROCEDURE ^ VisitAssignment*(statement: SyntaxTree.Assignment); 
+		PROCEDURE ^ VisitIfStatement*(statement: SyntaxTree.IfStatement); 
+		PROCEDURE ^ VisitWithStatement*(statement: SyntaxTree.WithStatement); 
+		PROCEDURE ^ VisitWhileStatement*(statement: SyntaxTree.WhileStatement); 
+		PROCEDURE ^ VisitRepeatStatement*(statement: SyntaxTree.RepeatStatement); 
+		PROCEDURE ^ VisitLoopStatement*(statement: SyntaxTree.LoopStatement); 
+		PROCEDURE ^ VisitExitStatement*(statement: SyntaxTree.ExitStatement); 
+		PROCEDURE ^ VisitReturnStatement*(statement: SyntaxTree.ReturnStatement); 
+		PROCEDURE ^ VisitStatementBlock*(statement: SyntaxTree.StatementBlock); 
+		PROCEDURE ^ VisitAwaitStatement*(statement: SyntaxTree.AwaitStatement); 
+		PROCEDURE ^ VisitCaseStatement*(statement: SyntaxTree.CaseStatement); 
+		PROCEDURE ^ VisitForStatement*(statement: SyntaxTree.ForStatement); 
+		PROCEDURE ^ VisitProcedureCallStatement*(statement: SyntaxTree.ProcedureCallStatement); 
+		PROCEDURE ^ VisitSymbolDesignator*(expression: SyntaxTree.SymbolDesignator); 
+		PROCEDURE ^ VisitBuiltinCallDesignator*(expression: SyntaxTree.BuiltinCallDesignator); 
+		PROCEDURE ^ VisitProcedureCallDesignator*(expression: SyntaxTree.ProcedureCallDesignator); 
+		PROCEDURE ^ VisitBooleanValue*(expression: SyntaxTree.BooleanValue); 
+		PROCEDURE ^ VisitIntegerValue*(expression: SyntaxTree.IntegerValue); 
+		PROCEDURE ^ VisitCharacterValue*(expression: SyntaxTree.CharacterValue); 
+		PROCEDURE ^ VisitSetValue*(expression: SyntaxTree.SetValue); 
+		PROCEDURE ^ VisitRealValue*(expression: SyntaxTree.RealValue); 
+		PROCEDURE ^ VisitStringValue*(expression: SyntaxTree.StringValue); 
+		PROCEDURE ^ VisitNilValue*(expression: SyntaxTree.NilValue); 
+		PROCEDURE ^ VisitEnumerationValue*(expression: SyntaxTree.EnumerationValue); 
+		PROCEDURE ^ VisitUnaryExpression*(expression: SyntaxTree.UnaryExpression); 
+		PROCEDURE ^ VisitTypeGuardDesignator*(expression: SyntaxTree.TypeGuardDesignator); 
+		PROCEDURE ^ VisitSupercallDesignator*(expression: SyntaxTree.SupercallDesignator); 
+		PROCEDURE ^ VisitBinaryExpression*(expression: SyntaxTree.BinaryExpression); 
+		PROCEDURE ^ VisitSelfDesignator*(expression: SyntaxTree.SelfDesignator); 
+		PROCEDURE ^ VisitIndexDesignator*(expression: SyntaxTree.IndexDesignator); 
+		PROCEDURE ^ VisitConversion*(expression: SyntaxTree.Conversion); 
+		PROCEDURE ^ VisitDereferenceDesignator*(expression: SyntaxTree.DereferenceDesignator); 
+		PROCEDURE ^ VisitSet*(expression: SyntaxTree.Set); 
+	END Transpiler; 
+
+	TranspilerBackend* = OBJECT (Backend.Backend)
+	VAR 
+		defineMain, declarations, initLocalData: BOOLEAN; 
+		addressSize: LONGINT; 
+		style: Style; 
+		traceModule: Identifier; 
+
+		PROCEDURE ^  & InitTranspilerBackend; 
+		PROCEDURE ^ ProcessSyntaxTreeModule*(module: SyntaxTree.Module): Formats.GeneratedModule; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+		PROCEDURE ^ GetSystem*(): Global.System; 
+	END TranspilerBackend; 
+
+	PROCEDURE ^ AppendName(identifier: SyntaxTree.Identifier; VAR name: ARRAY OF CHAR; style: Style); 
+	PROCEDURE ^ IsEmptyRecord(record: SyntaxTree.RecordType): BOOLEAN; 
+	PROCEDURE ^ GetSymbolName(symbol: SyntaxTree.Symbol; VAR name: ARRAY OF CHAR; style: Style); 
+	PROCEDURE ^ GetScopeName(scope: SyntaxTree.Scope; VAR name: ARRAY OF CHAR; style: Style); 
+	PROCEDURE ^ GetSourceName(module: SyntaxTree.Module; VAR filename: Files.FileName; style: Style); 
+	PROCEDURE ^ GetHeaderName(module: SyntaxTree.Module; VAR filename: Files.FileName; style: Style); 
+	PROCEDURE ^ GetConstructor(recordType: SyntaxTree.RecordType): SyntaxTree.Procedure; 
+	PROCEDURE ^ GetStatementProcedure(statement: SyntaxTree.Statement): SyntaxTree.ProcedureScope; 
+	PROCEDURE ^ GetDeclaredType(expression: SyntaxTree.Expression): SyntaxTree.Type; 
+	PROCEDURE ^ IsMethod(expression: SyntaxTree.SymbolDesignator): BOOLEAN; 
+	PROCEDURE ^ IsVarParameter(symbol: SyntaxTree.Symbol): BOOLEAN; 
+	PROCEDURE ^ IsInExclusiveBlock(statement: SyntaxTree.Statement): BOOLEAN; 
+	PROCEDURE ^ IsOpenArray(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsStaticArray(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsDelegate(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsStructuredType(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsString(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsEmptyString(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsNegative(expression: SyntaxTree.Expression): BOOLEAN; 
+	PROCEDURE ^ IsInlineAssemblyCode(procedure: SyntaxTree.Procedure): BOOLEAN; 
+	PROCEDURE ^ GetRecordMethod(record: SyntaxTree.RecordType; method: LONGINT): SyntaxTree.Procedure; 
+	PROCEDURE ^ GetRecord(type: SyntaxTree.Type): SyntaxTree.RecordType; 
+	PROCEDURE ^ Replace(VAR string: ARRAY OF CHAR; replace, by: CHAR); 
+	PROCEDURE ^ FixStailaIdentifier(VAR identifier: ARRAY OF CHAR); 
+	PROCEDURE ^ FixIdentifier(VAR identifier: ARRAY OF CHAR; style: Style); 
+	PROCEDURE ^ Get*(): Backend.Backend; 
+BEGIN
+END FoxTranspilerBackend.

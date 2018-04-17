@@ -1,0 +1,287 @@
+MODULE DTPData;
+	IMPORT Files, XML, WMGraphics, Strings, WMWindowManager;
+CONST 
+TYPE 
+	MetaInformation* = OBJECT 
+	VAR 
+		author*, documentName*, documentTitle*: Strings.String; 
+	END MetaInformation; 
+
+	StyleObject* = OBJECT 
+	VAR 
+		name*: ARRAY 64 OF CHAR; 
+	END StyleObject; 
+
+	ParagraphStyleObject* = OBJECT (StyleObject)
+	VAR 
+		alignment*: LONGINT; 
+		spaceBefore*: REAL; 
+		spaceAfter*: REAL; 
+		leftIndent*: REAL; 
+		rightIndent*: REAL; 
+		firstIndent*: REAL; 
+		charStyle*: CharacterStyleObject; 
+
+		PROCEDURE ^ Clone*(): ParagraphStyleObject; 
+	END ParagraphStyleObject; 
+
+	CharacterStyleObject* = OBJECT (StyleObject)
+	VAR 
+		family*: ARRAY 32 OF CHAR; 
+		style*: SET; 
+		size*: REAL; 
+		leading*: REAL; 
+		baselineShift*: REAL; 
+		tracking*: REAL; 
+		kerning*: REAL; 
+		scaleHorizontal*: REAL; 
+		scaleVertical*: REAL; 
+		color*: LONGINT; 
+		bgColor*: LONGINT; 
+
+		PROCEDURE ^ Clone*(): CharacterStyleObject; 
+	END CharacterStyleObject; 
+
+	GraphicStyleObject* = OBJECT (StyleObject)
+	END GraphicStyleObject; 
+
+	CustomStyleObject* = OBJECT (StyleObject)
+	END CustomStyleObject; 
+
+	PStyles* = POINTER TO ARRAY OF ParagraphStyleObject; 
+
+	CStyles* = POINTER TO ARRAY OF CharacterStyleObject; 
+
+	GStyles* = POINTER TO ARRAY OF GraphicStyleObject; 
+
+	CustomStyles* = POINTER TO ARRAY OF CustomStyleObject; 
+
+	Document* = OBJECT 
+	VAR 
+		pageWidth, pageHeight: REAL; 
+		marginTop, marginBottom, marginLeft, marginRight: REAL; 
+		facingPages: BOOLEAN; 
+		meta: MetaInformation; 
+		objectCounter*: LONGINT; 
+		copyCounter*: LONGINT; 
+		nofPStyles*: LONGINT; 
+		pStyles*: PStyles; 
+		nofCStyles*: LONGINT; 
+		cStyles*: CStyles; 
+		nofGStyles*: LONGINT; 
+		gStyles*: GStyles; 
+		nofCustomStyles*: LONGINT; 
+		customStyles*: CustomStyles; 
+		defaultParagraphStyle*: ParagraphStyleObject; 
+		defaultCharacterStyle*: CharacterStyleObject; 
+		defaultGraphicStyle*: GraphicStyleObject; 
+		defaultCustomStyle*: CustomStyleObject; 
+		pages*: ContentPages; 
+		mpages*: MasterPages; 
+		contents*: Contents; 
+		nofContents*: LONGINT; 
+		frames*: Frames; 
+		dollyGuide*: GuideObject; 
+		currentPage*, firstPage*, lastPage*: PageObject; 
+		pageNumber*, nofPages*: LONGINT; 
+		currentMPage*, firstMPage*, lastMPage*: MasterPageObject; 
+		mpageNumber*, nofMPages*: LONGINT; 
+
+		PROCEDURE ^  & New*(width, height, margintop, marginbottom, marginleft, marginright: REAL; facingpages: BOOLEAN); 
+		PROCEDURE ^ AddDefaultStyles; 
+		PROCEDURE ^ AddStyle*(style: StyleObject); 
+		PROCEDURE ^ RemoveStyle*(style: StyleObject); 
+		PROCEDURE ^ GetCharacterStyleByName*(name: ARRAY OF CHAR): CharacterStyleObject; 
+		PROCEDURE ^ GetParagraphStyleByName*(name: ARRAY OF CHAR): ParagraphStyleObject; 
+		PROCEDURE ^ AddContent*(content: ContentObject); 
+		PROCEDURE ^ RemoveContent*(content: ContentObject); 
+		PROCEDURE ^ GetContentByName*(name: ARRAY OF CHAR): ContentObject; 
+		PROCEDURE ^ FixContents*; 
+		PROCEDURE ^ FixName*(name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
+		PROCEDURE ^ AddPage*(after: BOOLEAN); 
+		PROCEDURE ^ DeletePage*; 
+		PROCEDURE ^ NextPage*; 
+		PROCEDURE ^ PrevPage*; 
+		PROCEDURE ^ FirstPage*; 
+		PROCEDURE ^ LastPage*; 
+		PROCEDURE ^ AddMasterPage*(after: BOOLEAN); 
+		PROCEDURE ^ DeleteMasterPage*; 
+		PROCEDURE ^ NextMasterPage*; 
+		PROCEDURE ^ PrevMasterPage*; 
+		PROCEDURE ^ FirstMasterPage*; 
+		PROCEDURE ^ LastMasterPage*; 
+		PROCEDURE ^ SetPageWidth*(pagewidth: REAL); 
+		PROCEDURE ^ GetPageWidth*(): REAL; 
+		PROCEDURE ^ SetPageHeight*(pageheight: REAL); 
+		PROCEDURE ^ GetPageHeight*(): REAL; 
+		PROCEDURE ^ SetMargins*(top, bottom, left, right: REAL); 
+		PROCEDURE ^ GetMarginTop*(): REAL; 
+		PROCEDURE ^ GetMarginBottom*(): REAL; 
+		PROCEDURE ^ GetMarginLeft*(): REAL; 
+		PROCEDURE ^ GetMarginRight*(): REAL; 
+		PROCEDURE ^ SetFacingPages*(fpages: BOOLEAN); 
+		PROCEDURE ^ GetFacingPages*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentPage*(): PageObject; 
+		PROCEDURE ^ GetFirstPage*(): PageObject; 
+		PROCEDURE ^ GetLastPage*(): PageObject; 
+		PROCEDURE ^ GetCurrentMasterPage*(): MasterPageObject; 
+		PROCEDURE ^ GetFirstMasterPage*(): MasterPageObject; 
+		PROCEDURE ^ GetLastMasterPage*(): MasterPageObject; 
+		PROCEDURE ^ GetMasterByName*(name: Strings.String): MasterPageObject; 
+		PROCEDURE ^ GetCurrentPageNumber*(): LONGINT; 
+		PROCEDURE ^ GetCurrentMasterPageNumber*(): LONGINT; 
+	END Document; 
+
+	PageObject* = OBJECT 
+	VAR 
+		ownerDocument*: Document; 
+		masterpage*: MasterPageObject; 
+		next*, prev*: PageObject; 
+		firstFrame*, lastFrame*, currentFrame*: FrameObject; 
+		firstGuide*, lastGuide*, currentGuide*: GuideObject; 
+
+		PROCEDURE ^ SetOwner*(doc: Document); 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetMasterPage*(master: MasterPageObject); 
+		PROCEDURE ^ GetMasterPage*(): MasterPageObject; 
+		PROCEDURE ^ AddFrame*(x, y, w, h: REAL); 
+		PROCEDURE ^ InsertFrame*(frame: FrameObject); 
+		PROCEDURE ^ DeleteFrame*; 
+		PROCEDURE ^ NextFrame*; 
+		PROCEDURE ^ PrevFrame*; 
+		PROCEDURE ^ AddGuide*(position: REAL; horizontal: BOOLEAN); 
+		PROCEDURE ^ DeleteGuide*; 
+		PROCEDURE ^ Move2Front*; 
+		PROCEDURE ^ Move2Back*; 
+		PROCEDURE ^ Move2FrontStep*; 
+		PROCEDURE ^ Move2BackStep*; 
+		PROCEDURE ^ SetCurrentFrame*(frame: FrameObject); 
+		PROCEDURE ^ GetCurrentFrame*(): FrameObject; 
+		PROCEDURE ^ GetFirstFrame*(): FrameObject; 
+		PROCEDURE ^ GetLastFrame*(): FrameObject; 
+		PROCEDURE ^ GetCurrentGuide*(): GuideObject; 
+		PROCEDURE ^ GetFirstGuide*(): GuideObject; 
+		PROCEDURE ^ GetLastGuide*(): GuideObject; 
+	END PageObject; 
+
+	MasterPageObject* = OBJECT (PageObject)
+	VAR 
+		mpageName*: Strings.String; 
+		next*, prev*: MasterPageObject; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetName*(name: Strings.String); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+	END MasterPageObject; 
+
+	GuideObject* = OBJECT 
+	VAR 
+		horizontal: BOOLEAN; 
+		position: REAL; 
+		prev*, next*: GuideObject; 
+
+		PROCEDURE ^  & New*(posi: REAL; horiz: BOOLEAN); 
+		PROCEDURE ^ SetHorizontal*(isHorizontal: BOOLEAN); 
+		PROCEDURE ^ GetHorizontal*(): BOOLEAN; 
+		PROCEDURE ^ SetPosition*(posi: REAL); 
+		PROCEDURE ^ GetPosition*(): REAL; 
+		PROCEDURE ^ Clone*(): GuideObject; 
+	END GuideObject; 
+
+	FrameObject* = OBJECT 
+	VAR 
+		frameName: Strings.String; 
+		frameType: Strings.String; 
+		x, y, w, h: REAL; 
+		style: StyleObject; 
+		content: ContentObject; 
+		textwrapON: BOOLEAN; 
+		twrapTop, twrapBottom, twrapLeft, twrapRight: REAL; 
+		next*, prev*: FrameObject; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ SetName*(name: Strings.String); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ SetType*(type: Strings.String); 
+		PROCEDURE ^ GetType*(): Strings.String; 
+		PROCEDURE ^ FixExtent*; 
+		PROCEDURE ^ SetExtent*(x, y, w, h: REAL); 
+		PROCEDURE ^ SetSize*(w, h: REAL); 
+		PROCEDURE ^ SetPosition*(x, y: REAL); 
+		PROCEDURE ^ GetX*(): REAL; 
+		PROCEDURE ^ GetY*(): REAL; 
+		PROCEDURE ^ GetWidth*(): REAL; 
+		PROCEDURE ^ GetHeight*(): REAL; 
+		PROCEDURE ^ SetStyle*(style: StyleObject); 
+		PROCEDURE ^ GetStyle*(): StyleObject; 
+		PROCEDURE ^ SetContent*(content: ContentObject); 
+		PROCEDURE ^ GetContent*(): ContentObject; 
+		PROCEDURE ^ SetWrap*(wrap: BOOLEAN); 
+		PROCEDURE ^ GetWrap*(): BOOLEAN; 
+		PROCEDURE ^ SetWrapSize*(t, b, l, r: REAL); 
+		PROCEDURE ^ GetWrapTop*(): REAL; 
+		PROCEDURE ^ GetWrapBottom*(): REAL; 
+		PROCEDURE ^ GetWrapLeft*(): REAL; 
+		PROCEDURE ^ GetWrapRight*(): REAL; 
+		PROCEDURE ^ Clone*(): FrameObject; 
+	END FrameObject; 
+
+	ContentObject* = OBJECT 
+	VAR 
+		contentName*: Strings.String; 
+		redrawProc*: PROCEDURE {DELEGATE}; 
+		updatePropsPosition*: PROCEDURE {DELEGATE}(x, y: LONGINT); 
+		contentWidth*, contentHeight*: LONGINT; 
+		zoomFactor*: REAL; 
+		ownerDoc*: Document; 
+		hasFocus-: BOOLEAN; 
+		running-: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Clone*(): ContentObject; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: LONGINT; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Redraw*; 
+		PROCEDURE ^ UpdatePosition*(x, y: LONGINT); 
+		PROCEDURE ^ SetSize*(w, h: LONGINT); 
+		PROCEDURE ^ Resize*(zoomF: REAL); 
+		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SetFocus*(focus: BOOLEAN); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ FocusReceived*; 
+		PROCEDURE ^ GetPluginPointer*(): WMWindowManager.PointerInfo; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keyCode: LONGINT); 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ OnPageEnter*; 
+		PROCEDURE ^ OnPageLeave*; 
+		PROCEDURE ^ OnCreate*; 
+		PROCEDURE ^ OnDelete*; 
+		PROCEDURE ^ Load*(elem: XML.Element); 
+		PROCEDURE ^ FixLinks*; 
+		PROCEDURE ^ Store*(VAR w: Files.Writer); 
+	END ContentObject; 
+
+	ContentFactory* = PROCEDURE ():ContentObject; 
+
+	ContentPages* = POINTER TO ARRAY OF PageObject; 
+
+	MasterPages* = POINTER TO ARRAY OF MasterPageObject; 
+
+	Frames* = POINTER TO ARRAY OF FrameObject; 
+
+	Contents* = POINTER TO ARRAY OF ContentObject; 
+VAR 
+	dollyFrame*: FrameObject; 
+
+	PROCEDURE ^ NewObject*(): ContentObject; 
+	PROCEDURE ^ Min(a, b: REAL): REAL; 
+	PROCEDURE ^ Max(a, b: REAL): REAL; 
+BEGIN
+END DTPData.

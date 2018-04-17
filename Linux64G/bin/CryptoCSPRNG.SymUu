@@ -1,0 +1,8 @@
+MODULE CryptoCSPRNG;
+	IMPORT Machine, Clock, Heaps, SHA3 := CryptoSHA3;
+CONST 
+
+	PROCEDURE ^ CSRand*(VAR rand: ARRAY OF CHAR; bits: LONGINT); 
+	PROCEDURE ^ Noise(): HUGEINT; 
+BEGIN
+END CryptoCSPRNG.

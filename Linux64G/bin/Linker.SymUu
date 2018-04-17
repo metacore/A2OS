@@ -1,0 +1,9 @@
+MODULE Linker;
+	IMPORT SYSTEM, Linker0, Linker1, Streams, Files, Commands, Modules := Linker0;
+CONST 
+
+	PROCEDURE ^ GetOptions(r: Streams.Reader; VAR opts: ARRAY OF CHAR); 
+	PROCEDURE ^ ParseOptions(VAR options, prefix, extension: ARRAY OF CHAR); 
+	PROCEDURE ^ Link*(context: Commands.Context); 
+BEGIN
+END Linker.

@@ -1,0 +1,32 @@
+MODULE LeoImages IN Oberon;
+	IMPORT Files, Objects, Gadgets, Images, PictImages, GfxMatrix, GfxImages, Gfx, Leonardo;
+CONST 
+	noFilter* = 0; 
+	linearFilter* = 1; 
+TYPE 
+	Image* = POINTER TO ImageDesc; 
+
+	ImageDesc* = RECORD (Leonardo.ShapeDesc)
+		img*: Images.Image; 
+		mat*: GfxMatrix.Matrix; 
+		quick*: BOOLEAN; 
+		filter*: INTEGER; 
+		color*: Gfx.Color; 
+	END; 
+VAR 
+	Pattern: Images.Image; 
+
+	PROCEDURE ^ CalcBox(img: Image; CONST mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ Validate(img: Image; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ Render(img: Image; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ Locate(img: Image; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ Transform(img: Image; VAR msg: Leonardo.TransformMsg); 
+	PROCEDURE ^ GetMatrix(img: Image; VAR msg: Leonardo.MatrixMsg); 
+	PROCEDURE ^ HandleAttr(img: Image; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLink(img: Image; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Image); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(img: Image; x, y: REAL; obj: Images.Image); 
+	PROCEDURE ^ New*; 
+BEGIN
+END LeoImages.

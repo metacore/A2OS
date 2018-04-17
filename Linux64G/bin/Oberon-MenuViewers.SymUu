@@ -1,0 +1,37 @@
+MODULE MenuViewers IN Oberon;
+	IMPORT Input, Objects, Display, Viewers, Oberon;
+CONST 
+	FullColor = 15; 
+	minint = MIN(INTEGER); 
+	replace = Display.replace; 
+	invert = Display.invert; 
+	extend = Display.extend; 
+	reduce = Display.reduce; 
+	Modern = FALSE; 
+	AvoidLostViewer = FALSE; 
+TYPE 
+	Viewer* = POINTER TO ViewerDesc; 
+
+	ViewerDesc* = RECORD (Viewers.ViewerDesc)
+		menuH*: INTEGER; 
+	END; 
+VAR 
+	LightFrame, DarkFrame: INTEGER; 
+
+	PROCEDURE ^ Copy(V: Viewer; VAR V1: Viewer); 
+	PROCEDURE ^ Draw(V: Viewers.Viewer); 
+	PROCEDURE ^ Extend(V: Viewer; newY, newH: INTEGER); 
+	PROCEDURE ^ Reduce(V: Viewer; newY: INTEGER); 
+	PROCEDURE ^ Grow(V: Viewer; oldH: INTEGER); 
+	PROCEDURE ^ Shrink(V: Viewer; newH: INTEGER); 
+	PROCEDURE ^ ModifyFrame(F: Display.Frame; id, dY, Y, H: INTEGER); 
+	PROCEDURE ^ Restore(V: Viewer); 
+	PROCEDURE ^ ModifyViewer(V: Viewer; id, Y, H: INTEGER); 
+	PROCEDURE ^ Change(V: Viewer; X, Y: INTEGER; Keys: SET); 
+	PROCEDURE ^ Suspend(V: Viewer); 
+	PROCEDURE ^ Handle*(V: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GetName*(V: Viewer; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ New*(Menu, Main: Display.Frame; menuH, X, Y: INTEGER): Viewer; 
+	PROCEDURE ^ Init; 
+BEGIN
+END MenuViewers.

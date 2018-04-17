@@ -1,0 +1,50 @@
+MODULE PositionDebugging;
+	IMPORT Strings, WMComponents, WM := WMWindowManager, WMGraphics, WMGraphicUtilities, WMPopups, WMProperties, WMMessages, WMStandardComponents, Objects;
+CONST 
+TYPE 
+	DebugWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		dragging: BOOLEAN; 
+		lastX, lastY: LONGINT; 
+		debugComponent: DebugComponent; 
+		contextMenu: WMPopups.Popup; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ HandleClose(sender, par: ANY); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; Keys: SET); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ ChangePos(realPos, bidiPos: LONGINT); 
+	END DebugWindow; 
+
+	DebugComponent* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		str: Strings.String; 
+		viewMode*, color*: WMProperties.Int32Property; 
+
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+	END DebugComponent; 
+
+	DebugWindowNode = OBJECT 
+	VAR 
+		debugWindow: DebugWindow; 
+		next: DebugWindowNode; 
+
+		PROCEDURE ^  & New*(dw: DebugWindow); 
+	END DebugWindowNode; 
+VAR 
+	debugWindow: DebugWindow; 
+	firstNode, lastNode: DebugWindowNode; 
+	StrDebugComponent: Strings.String; 
+	prototypeColor: WMProperties.Int32Property; 
+
+	PROCEDURE ^ AppendToList(debugWindow: DebugWindow); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ CloseAll*; 
+	PROCEDURE ^ SetPos*(realPos, bidiPos: LONGINT); 
+BEGIN
+END PositionDebugging.

@@ -1,0 +1,27 @@
+MODULE WMPerfMonPluginMemory;
+	IMPORT Modules, WMPerfMonPlugins, Heaps;
+CONST 
+	ModuleName = \"WMPerfMonPluginMemory"\; 
+TYPE 
+	HeapHelper = OBJECT (WMPerfMonPlugins.Helper)
+	VAR 
+		free, total: SIZE; 
+
+		PROCEDURE ^ Update*; 
+	END HeapHelper; 
+
+	MemoryLoad* = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		h: HeapHelper; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END MemoryLoad; 
+VAR 
+	heapHelper: HeapHelper; 
+
+	PROCEDURE ^ InitPlugins; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginMemory.

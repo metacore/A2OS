@@ -1,0 +1,91 @@
+MODULE srVoxel3;
+	IMPORT srBase, srVoxel, srVoxel2, Random, srE;
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	Bloc3 = srVoxel2.Bloc3; 
+
+	Bloc5 = srVoxel2.Bloc5; 
+
+	Serp* = OBJECT (Voxel)
+	VAR 
+		core: SerpBloc; 
+
+		PROCEDURE ^  & init*(kore, mid: Voxel); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ tick*; 
+	END Serp; 
+
+	Tower* = OBJECT (Voxel)
+	VAR 
+		core: SlantBloc; 
+
+		PROCEDURE ^  & init*(a, b, c: Voxel); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ tick*; 
+	END Tower; 
+
+	SerpBloc = OBJECT (Bloc3)
+	VAR 
+		core: Voxel; 
+		containscamera: BOOLEAN; 
+
+		PROCEDURE ^  & init*(kore, mid: Voxel); 
+		PROCEDURE ^ SetMid(v: Voxel); 
+		PROCEDURE ^ Fill*(v: Voxel); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ limit(VAR ray: Ray); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+	END SerpBloc; 
+
+	BraidBloc* = OBJECT (SerpBloc)
+
+		PROCEDURE ^  & init*(kore, mid: Voxel); 
+	END BraidBloc; 
+
+	TowerBloc* = OBJECT (SerpBloc)
+
+		PROCEDURE ^  & init*(a, b: Voxel); 
+	END TowerBloc; 
+
+	SlantBloc* = OBJECT (SerpBloc)
+
+		PROCEDURE ^ fn(i, j, k: INTEGER): INTEGER; 
+		PROCEDURE ^  & init*(a, b: Voxel); 
+	END SlantBloc; 
+
+	VegeBloc* = OBJECT (SerpBloc)
+
+		PROCEDURE ^  & init*(kore, mid: Voxel); 
+	END VegeBloc; 
+
+	Tree3* = OBJECT (Bloc3)
+	VAR 
+		trunk, leaf, gap: Voxel; 
+
+		PROCEDURE ^  & init*(t, l, g: Voxel); 
+		PROCEDURE ^ Fill*(v: Voxel); 
+	END Tree3; 
+
+	Tree5* = OBJECT (Bloc5)
+	VAR 
+		trunk, leaf, gap: Voxel; 
+
+		PROCEDURE ^  & new*(t, l, g: Voxel); 
+		PROCEDURE ^ Fill*(v: Voxel); 
+	END Tree5; 
+VAR 
+	rand: Random.Generator; 
+	GO: BOOLEAN; 
+
+	PROCEDURE ^ STOPGO*; 
+BEGIN
+END srVoxel3.

@@ -1,0 +1,75 @@
+MODULE Printer IN Oberon;
+	IMPORT Files, Modules, Fonts, Texts, Input, Oberon, Pictures;
+CONST 
+	Unit300 = 3048; 
+TYPE 
+	Printer* = POINTER TO PrinterDesc; 
+
+	PrinterDesc* = RECORD 
+		res*: INTEGER; 
+		name*: ARRAY 64 OF CHAR; 
+		Height*, Width*, Depth*: INTEGER; 
+		FrameX*, FrameY*, FrameW*, FrameH*: INTEGER; 
+		Unit*: LONGINT; 
+		InitMetrics*: PROCEDURE (P: Printer); 
+		Open*: PROCEDURE (P: Printer; printer, options: ARRAY OF CHAR); 
+		Close*: PROCEDURE (P: Printer); 
+		Page*: PROCEDURE (P: Printer; nofcopies: INTEGER); 
+		ReplConst*: PROCEDURE (P: Printer; x, y, w, h: INTEGER); 
+		ReplPattern*: PROCEDURE (P: Printer; x, y, w, h: INTEGER; patno: INTEGER); 
+		Line*: PROCEDURE (P: Printer; x0, y0, x1, y1: INTEGER); 
+		Circle*: PROCEDURE (P: Printer; x0, y0, r: INTEGER); 
+		Ellipse*: PROCEDURE (P: Printer; x0, y0, a, b: INTEGER); 
+		Spline*: PROCEDURE (P: Printer; x0, y0, n, open: INTEGER; VAR X, Y: ARRAY OF INTEGER); 
+		Picture*: PROCEDURE (P: Printer; pict: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: INTEGER); 
+		UseListFont*: PROCEDURE (P: Printer; name: ARRAY OF CHAR); 
+		String*: PROCEDURE (P: Printer; x, y: INTEGER; str: ARRAY OF CHAR; fnt: Fonts.Font); 
+		ContString*: PROCEDURE (P: Printer; str: ARRAY OF CHAR; fnt: Fonts.Font); 
+		UseColor*: PROCEDURE (P: Printer; red, green, blue: INTEGER); 
+		GetMetric*: PROCEDURE (P: Printer; fnt: Fonts.Font):Fonts.Font; 
+	END; 
+
+	SendProc = PROCEDURE (port: INTEGER; ch: CHAR; VAR done: BOOLEAN); 
+
+	SpoolList = POINTER TO RECORD 
+		next: SpoolList; 
+		send: SendProc; 
+		r: Files.Rider; 
+		port: INTEGER; 
+		done: BOOLEAN; 
+		ch: CHAR; 
+		v24: BOOLEAN; 
+	END; 
+VAR 
+	Height*, Width*, Depth*: INTEGER; 
+	FrameX*, FrameY*, FrameW*, FrameH*: INTEGER; 
+	Unit*: LONGINT; 
+	res*: INTEGER; 
+	current*: Printer; 
+	spool: SpoolList; 
+	W: Texts.Writer; 
+	task: Oberon.Task; 
+	timeslice: LONGINT; 
+	spoollength, spoolpos: LONGINT; 
+
+	PROCEDURE ^ LoadDefaultPrinter; 
+	PROCEDURE ^ Install*(P: Printer); 
+	PROCEDURE ^ Open*(printer, options: ARRAY OF CHAR); 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Page*(nofcopies: INTEGER); 
+	PROCEDURE ^ ReplConst*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ ReplPattern*(x, y, w, h: INTEGER; patno: INTEGER); 
+	PROCEDURE ^ Line*(x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ Circle*(x0, y0, r: INTEGER); 
+	PROCEDURE ^ Ellipse*(x0, y0, a, b: INTEGER); 
+	PROCEDURE ^ Spline*(x0, y0, n, open: INTEGER; VAR X, Y: ARRAY OF INTEGER); 
+	PROCEDURE ^ Picture*(P: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: INTEGER); 
+	PROCEDURE ^ UseListFont*(name: ARRAY OF CHAR); 
+	PROCEDURE ^ String*(x, y: INTEGER; str: ARRAY OF CHAR; fnt: Fonts.Font); 
+	PROCEDURE ^ ContString*(str: ARRAY OF CHAR; fnt: Fonts.Font); 
+	PROCEDURE ^ UseColor*(red, green, blue: INTEGER); 
+	PROCEDURE ^ GetMetric*(fnt: Fonts.Font): Fonts.Font; 
+	PROCEDURE ^ Spool*(f: Files.File); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Printer.

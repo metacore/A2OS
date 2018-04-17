@@ -1,0 +1,111 @@
+MODULE Types;
+	IMPORT Strings, Texts, TextUtilities, Repositories, Streams;
+CONST 
+	Ok* = 0; 
+	Truncated* = 1; 
+	CannotConvert* =  -10; 
+	ConversionError* =  -11; 
+	TruncatedError* =  -12; 
+	CannotRead* =  -20; 
+	CannotWrite* =  -21; 
+	TargetIsNIL* =  -30; 
+TYPE 
+	Any* = RECORD 
+	END; 
+
+	Boolean* = RECORD (Any)
+		value*: BOOLEAN; 
+	END; 
+
+	Integer* = RECORD (Any)
+		value*: LONGINT; 
+	END; 
+
+	Real* = RECORD (Any)
+		value*: REAL; 
+	END; 
+
+	Longreal* = RECORD (Any)
+		value*: LONGREAL; 
+	END; 
+
+	Char* = RECORD (Any)
+		value*: CHAR; 
+	END; 
+
+	String32* = RECORD (Any)
+		value*: ARRAY 32 OF CHAR; 
+	END; 
+
+	String256* = RECORD (Any)
+		value*: ARRAY 256 OF CHAR; 
+	END; 
+
+	String* = RECORD (Any)
+		value*: Strings.String; 
+	END; 
+
+	DynamicString* = RECORD (Any)
+		value-: Strings.String; 
+		length: LONGINT; 
+		bufferLength: LONGINT; 
+	END; 
+
+	Set* = RECORD (Any)
+		value*: SET; 
+	END; 
+
+	Text* = RECORD (Any)
+		value*: Texts.Text; 
+	END; 
+
+	Object* = RECORD (Any)
+		value*: Repositories.Component; 
+	END; 
+
+	Generic* = RECORD (Any)
+		Get*: Getter; 
+		Set*: Setter; 
+	END; 
+
+	Getter* = PROCEDURE {DELEGATE}(CONST self: Generic; VAR target: Any; VAR res: LONGINT); 
+
+	Setter* = PROCEDURE {DELEGATE}(CONST self: Generic; CONST source: Any; VAR res: LONGINT); 
+VAR 
+	StrEmptyString: Strings.String; 
+
+	PROCEDURE ^ GetBoolean*(CONST source: Any; VAR value: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ SetBoolean*(VAR target: Any; value: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ GetInteger*(CONST source: Any; VAR value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ SetInteger*(VAR target: Any; value: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ GetReal*(CONST source: Any; VAR value: REAL; VAR res: LONGINT); 
+	PROCEDURE ^ SetReal*(VAR target: Any; value: REAL; VAR res: LONGINT); 
+	PROCEDURE ^ GetLongreal*(CONST source: Any; VAR value: LONGREAL; VAR res: LONGINT); 
+	PROCEDURE ^ SetLongreal*(VAR target: Any; value: LONGREAL; VAR res: LONGINT); 
+	PROCEDURE ^ GetChar*(CONST source: Any; VAR value: CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ SetChar*(VAR target: Any; value: CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetAOC*(CONST source: Any; VAR value: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ EnsureStringLength(VAR s: Strings.String; length: LONGINT); 
+	PROCEDURE ^ SetAOC*(VAR target: Any; CONST value: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetString*(CONST source: Any; VAR string: Strings.String; VAR res: LONGINT); 
+	PROCEDURE ^ SetString*(VAR target: Any; value: Strings.String; VAR res: LONGINT); 
+	PROCEDURE ^ GetSet*(CONST source: Any; VAR value: SET; VAR res: LONGINT); 
+	PROCEDURE ^ SetSet*(VAR target: Any; value: SET; VAR res: LONGINT); 
+	PROCEDURE ^ GetText*(CONST source: Any; VAR value: Texts.Text; VAR res: LONGINT); 
+	PROCEDURE ^ SetText*(VAR target: Any; CONST value: Texts.Text; VAR res: LONGINT); 
+	PROCEDURE ^ GetObject*(CONST source: Any; VAR value: Repositories.Component; VAR res: LONGINT); 
+	PROCEDURE ^ SetObject*(VAR target: Any; CONST value: Repositories.Component; VAR res: LONGINT); 
+	PROCEDURE ^ Assign*(VAR to: Any; CONST from: Any; VAR res: LONGINT); 
+	PROCEDURE ^ StringToComponent(CONST string: ARRAY OF CHAR; VAR component: Repositories.Component; VAR res: LONGINT); 
+	PROCEDURE ^ ComponentToString(CONST component: Repositories.Component; VAR string: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ NewString*(): DynamicString; 
+	PROCEDURE ^ EnsureLength*(VAR string: DynamicString; minLength: LONGINT); 
+	PROCEDURE ^ SetValue*(VAR string: DynamicString; CONST value: ARRAY OF CHAR); 
+	PROCEDURE ^ Free*(VAR string: DynamicString); 
+	PROCEDURE ^ Append*(VAR string: DynamicString; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ GetLength*(CONST string: DynamicString): LONGINT; 
+	PROCEDURE ^ CleanString(VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ FloatToString*(r: LONGREAL; fractionalDigits: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ InitStrings; 
+BEGIN
+END Types.

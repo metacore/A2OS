@@ -1,0 +1,61 @@
+MODULE FoxIntermediateLinker;
+	IMPORT Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile, GenericLinker, StaticLinker;
+CONST 
+	DefaultBackend = \"AMD"\; 
+TYPE 
+	SectionName* = ObjectFile.SectionName; 
+
+	Linker* = OBJECT 
+	CONST 
+		Trace = FALSE; 
+		RequireSortedSections = FALSE; 
+	TYPE 
+		ArrangementRestriction = RECORD 
+			fixed: BOOLEAN; 
+			positionOrAlignment: LONGINT; 
+		END; 
+	VAR 
+		backend-: Backend.Backend; 
+		diagnostics: Diagnostics.Diagnostics; 
+		platformName: SyntaxTree.IdentifierString; 
+		importList, loadedModules: Sections.NameList; 
+		allSections: Sections.SectionList; 
+		isSorted, alreadyPrearrangedSinceLastSort: BOOLEAN; 
+		originalRestrictions: POINTER TO ARRAY OF ArrangementRestriction; 
+		objectFile-: IRObjectFile.ObjectFileFormat; 
+
+		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend); 
+		PROCEDURE ^ PatchStackSize*(CONST typeName: SectionName; size: LONGINT); 
+		PROCEDURE ^ EmitAt(section: IntermediateCode.Section; index: LONGINT; CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN; 
+		PROCEDURE ^ PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ LinkPrefixed*(CONST sectionPrefix: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ MarkAsReachableByName*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ MarkAsReachableStartingWith*(CONST prefix: Basic.SegmentedName; allowedSections: SET); 
+		PROCEDURE ^ OperandSection(CONST operand: IntermediateCode.Operand): Sections.Section; 
+		PROCEDURE ^ MarkAsReachable*(section: Sections.Section); 
+		PROCEDURE ^ MarkReachabilityOfAll*(isReachable: BOOLEAN); 
+		PROCEDURE ^ DumpSections*(writer: Streams.Writer; sections: Sections.SectionList); 
+		PROCEDURE ^ StoreOriginalRestrictions; 
+		PROCEDURE ^ RestoreOriginalRestrictions; 
+		PROCEDURE ^ PrearrangeReachableDataSections*; 
+		PROCEDURE ^ PatchValueInSection*(CONST sectionName: Basic.SegmentedName; syntaxTreeValue: SyntaxTree.Value); 
+		PROCEDURE ^ ExtractModuleWithName(CONST desiredName: ARRAY OF CHAR): Sections.Module; 
+		PROCEDURE ^ SectionPositionComparison(leftObject, rightObject: ANY): BOOLEAN; 
+		PROCEDURE ^ SectionPositionAndSizeComparison(leftObject, rightObject: ANY): BOOLEAN; 
+		PROCEDURE ^ FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT); 
+		PROCEDURE ^ Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT): BOOLEAN; 
+		PROCEDURE ^ GenerateObjectFile*(objectFileFormat: Formats.ObjectFileFormat; log: Streams.Writer; CONST desiredName: ARRAY OF CHAR): BOOLEAN; 
+	END Linker; 
+
+	PROCEDURE ^ FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR); 
+	PROCEDURE ^ SectionNameToFileName(CONST sectionName: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
+	PROCEDURE ^ GetPriority*(block: Sections.Section): LONGINT; 
+	PROCEDURE ^ CopySections*(from, to: Sections.SectionList); 
+	PROCEDURE ^ Link*(context: Commands.Context); 
+	PROCEDURE ^ WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+BEGIN
+END FoxIntermediateLinker.

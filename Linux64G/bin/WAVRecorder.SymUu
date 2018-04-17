@@ -1,0 +1,58 @@
+MODULE WAVRecorder;
+	IMPORT SoundDevices, Codecs, WMDialogs, KernelLog, Streams, Files, Commands, Kernel;
+CONST 
+	Title = \"WAV Recorder"\; 
+TYPE 
+	Recorder* = OBJECT {EXCLUSIVE} 
+	VAR 
+		encoder: Codecs.AudioEncoder; 
+		soundDevice: SoundDevices.Driver; 
+		recChannel: SoundDevices.Channel; 
+		bufferPool: SoundDevices.BufferPool; 
+		buffer: SoundDevices.Buffer; 
+		out: Streams.Writer; 
+		channels, rate, bits, recLength: LONGINT; 
+		t: Kernel.Timer; 
+		ready, recording, paused, finished: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer); 
+		PROCEDURE ^ WriteBuffer(buf: SoundDevices.Buffer); 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ GetLength*(): LONGINT; 
+	BEGIN{ACTIVE} 
+	END Recorder; 
+
+	Bridge* = OBJECT {EXCLUSIVE} 
+	VAR 
+		soundDevice: SoundDevices.Driver; 
+		recChannel: SoundDevices.Channel; 
+		playChannel: SoundDevices.Channel; 
+		bufferPool: SoundDevices.BufferPool; 
+		buffer: SoundDevices.Buffer; 
+		channels, rate, bits: LONGINT; 
+		t: Kernel.Timer; 
+		ready, recording, paused, finished: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ Close*; 
+	BEGIN{ACTIVE} 
+	END Bridge; 
+VAR 
+	recorder: Recorder; 
+	bridge: Bridge; 
+	file: Files.File; 
+	filename: ARRAY 256 OF CHAR; 
+
+	PROCEDURE ^ WriteRawBELongInt(VAR w: Files.Writer; value: LONGINT); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ StartBridge*; 
+	PROCEDURE ^ StopBridge*; 
+BEGIN
+END WAVRecorder.

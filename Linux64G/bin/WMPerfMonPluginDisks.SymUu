@@ -1,0 +1,26 @@
+MODULE WMPerfMonPluginDisks;
+	IMPORT WMPerfMonPlugins, KernelLog, Disks, Plugins, Modules;
+CONST 
+	PluginName = \"DiskDevice"\; 
+	ModuleName = \"WMPerfMonPluginDisks"\; 
+TYPE 
+	DiskParameter = POINTER TO RECORD (WMPerfMonPlugins.Parameter)
+		dev: Disks.Device; 
+	END; 
+
+	DiskPlugin = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		dev: Disks.Device; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END DiskPlugin; 
+
+	PROCEDURE ^ AddPlugin(disk: Disks.Device); 
+	PROCEDURE ^ RemovePlugin(disk: Disks.Device); 
+	PROCEDURE ^ EventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+	PROCEDURE ^ InitPlugins; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginDisks.

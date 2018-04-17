@@ -1,0 +1,34 @@
+MODULE OdAuthBase;
+	IMPORT OdUtil, WebHTTP, Strings, Files;
+CONST 
+	DefaultHost = \"webdav.ethz.ch"\; 
+	AuthDat = \"FTP:/WebDAV/es.WebDAVAuth.Dat"\; 
+TYPE 
+	Basic* = OBJECT 
+	VAR 
+		host*: ARRAY 64 OF CHAR; 
+		pathRealms*: WebHTTP.AdditionalField; 
+		realmAuths*: WebHTTP.AdditionalField; 
+
+		PROCEDURE ^  & Init(CONST hostStr: ARRAY OF CHAR); 
+		PROCEDURE ^ Allowed(CONST path: ARRAY OF CHAR; auth: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetChallenge(CONST path: ARRAY OF CHAR; VAR challenges: OdUtil.Lines); 
+		PROCEDURE ^ Authorized*(VAR req: WebHTTP.RequestHeader; VAR res: WebHTTP.ResponseHeader): BOOLEAN; 
+	END Basic; 
+VAR 
+	encTable: ARRAY 64 OF CHAR; 
+	decTable: ARRAY 128 OF INTEGER; 
+	defaultAuth*: Basic; 
+	defaultHost*: ARRAY 64 OF CHAR; 
+
+	PROCEDURE ^ AddAdditionalFieldValue*(VAR af: WebHTTP.AdditionalField; CONST fieldName, value: ARRAY OF CHAR); 
+	PROCEDURE ^ GetAdditionalFieldVals*(af: WebHTTP.AdditionalField; CONST fieldName: ARRAY OF CHAR; prefix: BOOLEAN; VAR values: OdUtil.Lines): BOOLEAN; 
+	PROCEDURE ^ InitTables; 
+	PROCEDURE ^ EncodeString*(VAR in, out: ARRAY OF CHAR); 
+	PROCEDURE ^ GetAuth*(CONST host: ARRAY OF CHAR): Basic; 
+	PROCEDURE ^ SetBasicRealm*(host: ARRAY OF CHAR; CONST realm: ARRAY OF CHAR; path: ARRAY OF CHAR); 
+	PROCEDURE ^ SetBasicAuth*(host: ARRAY OF CHAR; CONST realm, user, password: ARRAY OF CHAR); 
+	PROCEDURE ^ unquote(VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ InitAuths; 
+BEGIN
+END OdAuthBase.

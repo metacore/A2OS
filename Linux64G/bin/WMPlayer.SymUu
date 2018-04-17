@@ -1,0 +1,69 @@
+MODULE WMPlayer;
+	IMPORT Strings, Modules, Commands, Files, Texts, TextUtilities, WMGraphics, WMMessages, WMComponents, WMStandardComponents, WMWindowManager, WMTextView, WMDialogs, MediaPlayer;
+CONST 
+	WindowTitle = \"Media Player"\; 
+	DefaultWidth = 800; 
+	DefaultHeight = 60; 
+	StyleRegular = {}; 
+	StyleBold = {0}; 
+	Tab = CHR(Texts.TabChar); 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	InfoWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		data: MediaPlayer.Setup; 
+		tv: WMTextView.TextView; 
+		text: Texts.Text; 
+		tw: TextUtilities.TextWriter; 
+		next: InfoWindow; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreateContent; 
+		PROCEDURE ^  & New*(setupData: MediaPlayer.Setup); 
+	END InfoWindow; 
+
+	Control = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		playBtn, stopBtn, pauseBtn: WMStandardComponents.Button; 
+		owner: Window; 
+
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^  & New(owner: Window); 
+	END Control; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn: WMStandardComponents.Button; 
+		search: WMStandardComponents.Scrollbar; 
+		timeLbl, totTimeLbl: WMStandardComponents.Label; 
+		player: MediaPlayer.Player; 
+		stepSize: LONGINT; 
+		filename: Files.FileName; 
+		setupData: MediaPlayer.Setup; 
+		infos: InfoWindow; 
+		windowInfo: WMWindowManager.WindowInfo; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ GenerateControl*(): ANY; 
+		PROCEDURE ^ Open*(CONST fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ SliderSearch(sender, data: ANY); 
+		PROCEDURE ^ Update*(status, pos, maxpos, displayTime: LONGINT); 
+		PROCEDURE ^ SetUpController*(setup: MediaPlayer.Setup); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ ConvertTime(ms: LONGINT; VAR hours, minutes, seconds: LONGINT); 
+	PROCEDURE ^ ConvertTimeToStr(ms: LONGINT; VAR timeStr: ARRAY OF CHAR); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPlayer.

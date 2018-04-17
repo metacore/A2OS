@@ -1,0 +1,51 @@
+MODULE Telnet IN Oberon;
+	IMPORT Input, Display, Fonts, Texts, MenuViewers, TextFrames, Oberon, TerminalFrames, Terminals, NetSystem, Objects;
+CONST 
+	left = 2; 
+	middle = 1; 
+	right = 0; 
+	OpenHeight = 24; 
+	menu = \"System.Close  System.Grow  Telnet.OpenLog  Telnet.Reset  Telnet.Close"\; 
+TYPE 
+	Task = POINTER TO TaskDesc; 
+
+	Terminal = POINTER TO TerminalDesc; 
+
+	TerminalDesc = RECORD (Terminals.TerminalDesc)
+		C: NetSystem.Connection; 
+		localecho: BOOLEAN; 
+		task: Task; 
+	END; 
+
+	TextFrame = POINTER TO TextFrameDesc; 
+
+	TextFrameDesc = RECORD (TextFrames.FrameDesc)
+		T: Terminal; 
+	END; 
+
+	TaskDesc = RECORD (Oberon.TaskDesc)
+		T: Terminal; 
+	END; 
+VAR 
+	cclos: ARRAY 19 OF CHAR; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Send0(T: Terminals.Terminal; ch: CHAR); 
+	PROCEDURE ^ Break0(T: Terminals.Terminal); 
+	PROCEDURE ^ Sb(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Will(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Wont(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Do(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Dont(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Receiver(me: Oberon.Task); 
+	PROCEDURE ^ SetUp(C: NetSystem.Connection; localecho: BOOLEAN); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Reset*; 
+	PROCEDURE ^ Send*; 
+	PROCEDURE ^ SetCaret(F: TextFrames.Frame); 
+	PROCEDURE ^ Handle(F: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenLog*; 
+	PROCEDURE ^ Clear*; 
+BEGIN
+END Telnet.

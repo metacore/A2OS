@@ -1,0 +1,23 @@
+MODULE EFIA2Loader;
+	IMPORT SYSTEM, EFI, Machine := EFIMachine, EFILib, EFIFileProtocol, EFIGraphicsOutput, EFIGraphicalConsole, Trace;
+CONST 
+	traceDebug = TRUE; 
+	kernelAddress = 1048576; 
+	bootTableAddress =  -1; 
+VAR 
+	bootTableBegin: ADDRESS; 
+	bootTableEnd: ADDRESS; 
+	bootTableCfgStrEntry: ADDRESS; 
+
+	PROCEDURE ^ SearchGraphicsMode(prot: EFIGraphicsOutput.Protocol; prefWidth, prefHeight, prefDepth, prefFormat: LONGINT; VAR info: EFIGraphicsOutput.GraphicsModeInfo): LONGINT; 
+	PROCEDURE ^ GetFrameBuffer(prefWidth, prefHeight, prefDepth, prefFormat: LONGINT; VAR framebufAddr: ADDRESS; VAR framebufSize: SIZE; VAR info: EFIGraphicsOutput.GraphicsModeInfo): EFI.Status; 
+	PROCEDURE ^ PrintGraphicsModes; 
+	PROCEDURE ^ LoadBootTable(CONST configFileName: ARRAY OF EFI.Char16; VAR btAddr: ADDRESS): EFI.Status; 
+	PROCEDURE ^ AddConfig(CONST name, val: ARRAY OF CHAR); 
+	PROCEDURE ^ AddConfigA(name: ADDRESS; namelen: LONGINT; val: ADDRESS; vallen: LONGINT); 
+	PROCEDURE ^ GetConfig(CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ Allocate(allocAddr: EFI.PhysicalAddress; kernelPages: LONGINT): EFI.Status; 
+	PROCEDURE ^ LoadKernel(CONST kernelFileName: ARRAY OF EFI.Char16; VAR kernelAddr: ADDRESS; VAR kernelSize: LONGINT): EFI.Status; 
+	PROCEDURE ^ LoadA2; 
+BEGIN
+END EFIA2Loader.

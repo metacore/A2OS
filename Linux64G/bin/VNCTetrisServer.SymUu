@@ -1,0 +1,79 @@
+MODULE VNCTetrisServer;
+	IMPORT Raster, KernelLog, Commands, Kernel, Random, VNCServer, WMRectangles, WMGraphics, Inputs, Modules, Files, IP, Dates, Strings;
+CONST 
+	Width = 10; 
+	Height = 30; 
+	BoxSize = 16; 
+	BlockSize = 5; 
+	NofBlocks = 7; 
+	ScoreHeight = 108; 
+	DataFile = \"VNCTetris.dat"\; 
+TYPE 
+	Block = ARRAY BlockSize OF ARRAY BlockSize OF CHAR; 
+
+	TimeDate = RECORD 
+		h, m, s, day, month, year: LONGINT; 
+	END; 
+
+	TT = OBJECT {EXCLUSIVE} 
+	VAR 
+		alive, dropped: BOOLEAN; 
+		field: ARRAY Width OF ARRAY Height OF CHAR; 
+		block: Block; 
+		posX, posY: LONGINT; 
+		timer: Kernel.Timer; 
+		mode: Raster.Mode; 
+		random: Random.Generator; 
+		lines, blocks, delay, delayDec: LONGINT; 
+		img: Raster.Image; 
+		paused, run: BOOLEAN; 
+		cheated: LONGINT; 
+		time: TimeDate; 
+		adrStr, timeStr: ARRAY 32 OF CHAR; 
+		vncInfo: VNCServer.VNCInfo; 
+		canvas: WMGraphics.BufferCanvas; 
+
+		PROCEDURE ^  & Create*(vncInfo: VNCServer.VNCInfo); 
+		PROCEDURE ^ Run; 
+		PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+		PROCEDURE ^ ClipAtImage(VAR x: WMRectangles.Rectangle; img: Raster.Image); 
+		PROCEDURE ^ AddDirty(l, t, r, b: LONGINT); 
+		PROCEDURE ^ Close; 
+		PROCEDURE ^ RotateBlock(VAR block: Block): Block; 
+		PROCEDURE ^ DrawBox(x, y: LONGINT; color: CHAR); 
+		PROCEDURE ^ SetBlock(x, y: LONGINT; clear: BOOLEAN); 
+		PROCEDURE ^ HasDownCollision(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HasCollision(VAR bl: Block; x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Move(dir: LONGINT): BOOLEAN; 
+		PROCEDURE ^ KeyPressed(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ NewBlock; 
+		PROCEDURE ^ RemoveLine(y: LONGINT); 
+		PROCEDURE ^ ClearLines; 
+		PROCEDURE ^ DropStep; 
+		PROCEDURE ^ UpdateScore(eog: BOOLEAN); 
+		PROCEDURE ^ AwaitRun; 
+	BEGIN{ACTIVE} 
+	END TT; 
+VAR 
+	colors: ARRAY (NofBlocks + 1) OF Raster.Pixel; 
+	gamesRunning, gamesTotal, maxConcurrent, highScore: LONGINT; 
+	shuttingDown: BOOLEAN; 
+	server: VNCServer.Server; 
+
+	PROCEDURE ^ StartTT(vncInfo: VNCServer.VNCInfo); 
+	PROCEDURE ^ AddGame; 
+	PROCEDURE ^ ReportScore(score: LONGINT); 
+	PROCEDURE ^ GetGamesTotal(): LONGINT; 
+	PROCEDURE ^ GetMaxConcurrent(): LONGINT; 
+	PROCEDURE ^ GetHighscore(): LONGINT; 
+	PROCEDURE ^ GetGamesRunning(): LONGINT; 
+	PROCEDURE ^ GetIsShuttingDown(): BOOLEAN; 
+	PROCEDURE ^ SubGame; 
+	PROCEDURE ^ Max(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ Run*(context: Commands.Context); 
+	PROCEDURE ^ StopNew*(context: Commands.Context); 
+	PROCEDURE ^ Uninstall*; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ ReadData; 
+BEGIN
+END VNCTetrisServer.

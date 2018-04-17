@@ -1,0 +1,39 @@
+MODULE FoxA2Interface;
+	IMPORT Streams, Basic := FoxBasic, WMUtilities, TextUtilities, WMGraphics, Diagnostics, Texts;
+CONST 
+	Tab = 9X; 
+TYPE 
+	Writer* = OBJECT (Basic.Writer)
+	VAR 
+		alertCount, commentCount, keywordCount: LONGINT; 
+
+		PROCEDURE ^  & InitA2Writer(w: Streams.Writer); 
+		PROCEDURE ^ SetFontStyle*(style: SET); 
+		PROCEDURE ^ SetColor; 
+		PROCEDURE ^ SetStyle; 
+		PROCEDURE ^ BeginAlert*; 
+		PROCEDURE ^ EndAlert*; 
+		PROCEDURE ^ BeginComment*; 
+		PROCEDURE ^ EndComment*; 
+		PROCEDURE ^ BeginKeyword*; 
+		PROCEDURE ^ EndKeyword*; 
+		PROCEDURE ^ AlertString*(CONST s: ARRAY OF CHAR); 
+	END Writer; 
+
+	StreamDiagnostics* = OBJECT (Diagnostics.Diagnostics)
+	VAR 
+		writer: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(w: Streams.Writer); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+	END StreamDiagnostics; 
+
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ DebugWriterFactory(CONST title: ARRAY OF CHAR): Streams.Writer; 
+	PROCEDURE ^ WriterFactory(w: Streams.Writer): Basic.Writer; 
+	PROCEDURE ^ DiagnosticsFactory(w: Streams.Writer): Diagnostics.Diagnostics; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END FoxA2Interface.

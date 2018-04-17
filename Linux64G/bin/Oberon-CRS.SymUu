@@ -1,0 +1,35 @@
+MODULE CRS IN Oberon;
+	IMPORT Texts;
+CONST 
+	EOL = 0DX; 
+	EOF = 0X; 
+	maxLexLen = 127; 
+	noSym = 38; 
+TYPE 
+	ErrorProc* = PROCEDURE (n: INTEGER; pos: LONGINT); 
+
+	StartTable = ARRAY 128 OF INTEGER; 
+VAR 
+	src*: Texts.Text; 
+	pos*: LONGINT; 
+	line*, col*, len*: INTEGER; 
+	nextPos*: LONGINT; 
+	nextLine*, nextCol*, nextLen*: INTEGER; 
+	errors*: INTEGER; 
+	Error*: ErrorProc; 
+	ch: CHAR; 
+	r: Texts.Reader; 
+	chPos: LONGINT; 
+	chLine: INTEGER; 
+	lineStart: LONGINT; 
+	oldEols: INTEGER; 
+	start: StartTable; 
+
+	PROCEDURE ^ NextCh; 
+	PROCEDURE ^ Comment(): BOOLEAN; 
+	PROCEDURE ^ Get*(VAR sym: INTEGER); 
+	PROCEDURE ^ GetName*(pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StdErrorProc*(n: INTEGER; pos: LONGINT); 
+	PROCEDURE ^ Reset*(t: Texts.Text; pos: LONGINT; errProc: ErrorProc); 
+BEGIN
+END CRS.

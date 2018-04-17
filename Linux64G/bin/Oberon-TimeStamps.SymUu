@@ -1,0 +1,36 @@
+MODULE TimeStamps IN Oberon;
+	IMPORT Files, Strings, Display, Display3, Printer, Printer3, Fonts, Objects, Oberon, Gadgets;
+CONST 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		font: Fonts.Font; 
+		cap: ARRAY 64 OF CHAR; 
+		col: INTEGER; 
+		w: INTEGER; 
+	END; 
+
+	RevFrame* = POINTER TO RevFrameDesc; 
+
+	RevFrameDesc* = RECORD (FrameDesc)
+		revision: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ P(x: LONGINT): INTEGER; 
+	PROCEDURE ^ DR(x: LONGINT): REAL; 
+	PROCEDURE ^ Print(F: Frame; Q: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Caption(F: Frame; VAR w, h: INTEGER; newtime: BOOLEAN); 
+	PROCEDURE ^ Modify(F: Frame; w, h: INTEGER); 
+	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: Frame); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ CopyRev*(VAR M: Objects.CopyMsg; from, to: RevFrame); 
+	PROCEDURE ^ RevHandle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitRev*(F: RevFrame); 
+	PROCEDURE ^ NewRev*; 
+BEGIN
+END TimeStamps.

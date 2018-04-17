@@ -1,0 +1,60 @@
+MODULE PlugIns IN Oberon;
+	IMPORT FileDir, Files, Objects, Display, Attributes, Links, Strings, Packages, Viewers, Views;
+CONST 
+	Done* = 0; 
+	NetworkErr* = 1; 
+	UserBreak* = 2; 
+	OtherError* = 3; 
+	Transfering* =  -1; 
+TYPE 
+	URLStr* = ARRAY 1024 OF CHAR; 
+
+	StreamList = POINTER TO RECORD 
+		stream: Stream; 
+		url: URLStr; 
+		next: StreamList; 
+	END; 
+
+	PlugIn* = POINTER TO RECORD (Objects.Object)
+		V*: Display.Frame; 
+		attrs: Attributes.Attr; 
+		gen: ARRAY 64 OF CHAR; 
+		getURL*: GetURLProc; 
+		postURL*: PostURLProc; 
+		error*: ErrorProc; 
+		base*: Stream; 
+		streams: StreamList; 
+		err: BOOLEAN; 
+	END; 
+
+	GetURLProc* = PROCEDURE (plugin: PlugIn; CONST url: ARRAY OF CHAR):LONGINT; 
+
+	PostURLProc* = PROCEDURE (plugin: PlugIn; CONST urlDest, urlSrc: ARRAY OF CHAR):LONGINT; 
+
+	ErrorProc* = PROCEDURE (plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
+
+	Stream* = POINTER TO RECORD (Objects.Object)
+		file*: FileDir.FileName; 
+		url*: URLStr; 
+		state*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Error(plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
+	PROCEDURE ^ StreamError*(plugin: PlugIn; stream: Stream); 
+	PROCEDURE ^ SameURL*(CONST urlA, urlB: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ MakeFullURL*(plugin: PlugIn; VAR url: ARRAY OF CHAR); 
+	PROCEDURE ^ FindStream(plugin: PlugIn; CONST url: ARRAY OF CHAR): StreamList; 
+	PROCEDURE ^ RemoveStream(plugin: PlugIn; CONST url: ARRAY OF CHAR); 
+	PROCEDURE ^ AddURL(plugin: PlugIn; CONST url: ARRAY OF CHAR); 
+	PROCEDURE ^ UpdateStream*(plugin: PlugIn; stream: Stream); 
+	PROCEDURE ^ Requested*(plugin: PlugIn; CONST url: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ RequestURL*(plugin: Objects.Object; CONST url: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ ProcessStream(plugin: PlugIn; stream: Stream); 
+	PROCEDURE ^ Handler*(plugin: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitPlugIn*(plugin: PlugIn); 
+	PROCEDURE ^ StreamHandler*(stream: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitStream*(stream: Stream); 
+	PROCEDURE ^ NewFileStream*(CONST file: ARRAY OF CHAR): Stream; 
+	PROCEDURE ^ CurrentPlugIn*(context: Objects.Object): PlugIn; 
+BEGIN
+END PlugIns.

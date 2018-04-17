@@ -1,0 +1,61 @@
+MODULE OpenTypeScan;
+	IMPORT OpenTypeInt;
+CONST 
+	Round* = 0; 
+	Dropouts* = 1; 
+	Stubs* = 2; 
+	Smart* = 3; 
+	X = OpenTypeInt.X; 
+	Y = OpenTypeInt.Y; 
+TYPE 
+	F26D6 = OpenTypeInt.F26D6; 
+
+	Fixed = OpenTypeInt.Fixed; 
+
+	Intersection = POINTER TO IntersectionDesc; 
+
+	IntersectionDesc = RECORD 
+		xy: F26D6; 
+		up: INTEGER; 
+		param: Fixed; 
+		next: Intersection; 
+		link: Intersection; 
+	END; 
+
+	Scanline = POINTER TO ScanlineDesc; 
+
+	ScanlineDesc = RECORD 
+		next, prev: Scanline; 
+		yx: F26D6; 
+		isect: Intersection; 
+	END; 
+
+	Rasterizer* = RECORD 
+		width*, height*: INTEGER; 
+		xmin*, ymin*, xmax*, ymax*: F26D6; 
+		rules: SET; 
+		hor, ver: Scanline; 
+	END; 
+
+	EnumData* = RECORD 
+	END; 
+
+	Enumerator* = PROCEDURE (rowcol: INTEGER; beg, end: F26D6; VAR data: EnumData); 
+VAR 
+	scanlinePool: Scanline; 
+	intersectionPool: Intersection; 
+
+	PROCEDURE ^ NewScanline(): Scanline; 
+	PROCEDURE ^ NewIntersection(): Intersection; 
+	PROCEDURE ^ DisposeIntersections(VAR first: Intersection); 
+	PROCEDURE ^ DisposeScanlines(VAR first: Scanline); 
+	PROCEDURE ^ DisposeRasterizer*(VAR ras: Rasterizer); 
+	PROCEDURE ^ Init(VAR first: Scanline); 
+	PROCEDURE ^ Insert(VAR scan: Scanline; yx, xy: F26D6; up: INTEGER; hint: Intersection; t: Fixed); 
+	PROCEDURE ^ IntersectLine(x0, y0, x1, y1: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed); 
+	PROCEDURE ^ IntersectBezier(x0, y0, x1, y1, x2, y2: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed); 
+	PROCEDURE ^ Convert*(outline: OpenTypeInt.Zone; rules: SET; VAR r: Rasterizer); 
+	PROCEDURE ^ EnumerateRows*(VAR r: Rasterizer; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ EnumerateColumns*(VAR r: Rasterizer; enum: Enumerator; VAR data: EnumData); 
+BEGIN
+END OpenTypeScan.

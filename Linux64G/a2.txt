@@ -1,0 +1,11 @@
+Files.AddSearchPath ../Linux64G/work ~
+Files.AddSearchPath ../Linux64G/bin~ (* ../Linux64G is a trick to get absolute path names *)
+Files.AddSearchPath ../source ~
+Files.SetWorkPath work ~
+Configuration.Init~
+FSTools.Mount WORK RelativeFileSystem . ~
+Display.Install ~
+WindowManager.Install ~
+Autostart.Run~
+Clipboard.Install~
+

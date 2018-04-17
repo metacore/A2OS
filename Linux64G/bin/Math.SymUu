@@ -1,0 +1,32 @@
+MODULE Math;
+	IMPORT SYSTEM;
+CONST 
+	e* =   2.7182818E+000; 
+	pi* =   3.1415927E+000; 
+
+	PROCEDURE {FingerPrint(-751567996)}  - Sin(x: REAL): REAL;
+	CODE
+	END Sin; 
+	PROCEDURE {FingerPrint(-1019244668)}  - Cos(x: REAL): REAL;
+	CODE
+	END Cos; 
+	PROCEDURE {FingerPrint(-189020367)}  - Arctan(x: REAL): REAL;
+	CODE
+	END Arctan; 
+	PROCEDURE {FingerPrint(-251293207)}  - Sqrt(x: REAL): REAL;
+	CODE
+	END Sqrt; 
+	PROCEDURE {FingerPrint(158989184)}  - Ln(x: REAL): REAL;
+	CODE
+	END Ln; 
+	PROCEDURE {FingerPrint(-988707964)}  - Exp(x: REAL): REAL;
+	CODE
+	END Exp; 
+	PROCEDURE ^ sin*(x: REAL): REAL; 
+	PROCEDURE ^ cos*(x: REAL): REAL; 
+	PROCEDURE ^ arctan*(x: REAL): REAL; 
+	PROCEDURE ^ sqrt*(x: REAL): REAL; 
+	PROCEDURE ^ ln*(x: REAL): REAL; 
+	PROCEDURE ^ exp*(x: REAL): REAL; 
+BEGIN
+END Math.

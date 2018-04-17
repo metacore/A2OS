@@ -1,0 +1,83 @@
+MODULE Files IN Oberon;
+	IMPORT SYSTEM, KernelLog IN A2, AosKernel := Kernel IN A2, Files IN A2, Kernel;
+CONST 
+	BufSize = 4096; 
+	MaxBufs = 4; 
+	Slow = FALSE; 
+	Trace = TRUE; 
+TYPE 
+	File* = POINTER TO RECORD 
+		buf: Buffer; 
+		bufs: LONGINT; 
+		alen, blen: LONGINT; 
+		r: Files.Rider; 
+		checktime, checkdate, checklen: LONGINT; 
+	END; 
+
+	Rider* = RECORD 
+		buf: Buffer; 
+		apos, bpos: LONGINT; 
+		eof*: BOOLEAN; 
+		res*: LONGINT; 
+		f: File; 
+	END; 
+
+	Buffer = POINTER TO RECORD 
+		apos, lim: LONGINT; 
+		mod: BOOLEAN; 
+		next: Buffer; 
+		data: ARRAY BufSize OF CHAR; 
+	END; 
+
+	Bytes4 = ARRAY 4 OF SYSTEM.BYTE; 
+
+	Bytes8 = ARRAY 8 OF SYSTEM.BYTE; 
+VAR 
+	files: AosKernel.FinalizedCollection; 
+	search: Files.File; 
+	found: File; 
+
+	PROCEDURE ^ UpdateFile(f: File); 
+	PROCEDURE ^ FileChanged(f: File): BOOLEAN; 
+	PROCEDURE ^ Search(f: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ New*(CONST name: ARRAY OF CHAR): File; 
+	PROCEDURE ^ Old*(CONST name: ARRAY OF CHAR): File; 
+	PROCEDURE ^ Register*(f: File); 
+	PROCEDURE ^ Close*(f: File); 
+	PROCEDURE ^ Length*(f: File): LONGINT; 
+	PROCEDURE ^ GetDate*(f: File; VAR t, d: LONGINT); 
+	PROCEDURE ^ SetDate*(f: File; t, d: LONGINT); 
+	PROCEDURE ^ Set*(VAR r: Rider; f: File; pos: LONGINT); 
+	PROCEDURE ^ Pos*(VAR r: Rider): LONGINT; 
+	PROCEDURE ^ Base*(VAR r: Rider): File; 
+	PROCEDURE ^ Read*(VAR r: Rider; VAR x: SYSTEM.BYTE); 
+	PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; len: LONGINT); 
+	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 
+	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ ReadSet*(VAR r: Rider; VAR x: SET); 
+	PROCEDURE ^ ReadBool*(VAR r: Rider; VAR x: BOOLEAN); 
+	PROCEDURE ^ ReadReal*(VAR r: Rider; VAR x: REAL); 
+	PROCEDURE ^ ReadLReal*(VAR r: Rider; VAR x: LONGREAL); 
+	PROCEDURE ^ ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ Write*(VAR r: Rider; x: SYSTEM.BYTE); 
+	PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; len: LONGINT); 
+	PROCEDURE ^ WriteInt*(VAR r: Rider; x: INTEGER); 
+	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ WriteSet*(VAR r: Rider; x: SET); 
+	PROCEDURE ^ WriteBool*(VAR r: Rider; x: BOOLEAN); 
+	PROCEDURE ^ WriteReal*(VAR r: Rider; x: REAL); 
+	PROCEDURE ^ WriteLReal*(VAR r: Rider; x: LONGREAL); 
+	PROCEDURE ^ WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteNum*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ Delete*(name: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ GetName*(f: File; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: LONGINT); 
+	PROCEDURE ^ WriteBuf(f: File; buf: Buffer); 
+	PROCEDURE ^ SearchBuf(f: File; pos: LONGINT): Buffer; 
+	PROCEDURE ^ GetBuf(f: File; pos: LONGINT): Buffer; 
+	PROCEDURE ^ Update(f: File); 
+	PROCEDURE ^ WriteFile(f: File); 
+BEGIN
+END Files.

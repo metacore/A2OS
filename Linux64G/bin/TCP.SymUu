@@ -1,0 +1,58 @@
+MODULE TCP;
+	IMPORT Out := KernelLog, IP, Streams, Unix, Sockets, Objects;
+CONST 
+	NilPort* = 0; 
+	Ok* = 0; 
+	ConnectionRefused* = 3701; 
+	ConnectionReset* = 3702; 
+	WrongInterface* = 3703; 
+	TimedOut* = 3704; 
+	NotConnected* = 3705; 
+	NoInterface* = 3706; 
+	InterfaceClosed* = 3707; 
+	NumStates* = 4; 
+	Closed* = 0; 
+	Listen* = 1; 
+	Established* = 2; 
+	Unused* = 4; 
+	OpenStates* = {Listen, Established}; 
+	ClosedStates* = {Unused, Closed}; 
+	HalfClosedStates* = (ClosedStates + {}); 
+	FinStates* = {Unused, Closed}; 
+TYPE 
+	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
+	VAR 
+		int-: IP.Interface; 
+		lport-: LONGINT; 
+		fip-: IP.Adr; 
+		fport-: LONGINT; 
+		state*: SHORTINT; 
+		socket: LONGINT; 
+		localAdr, foreignAdr: Sockets.SocketAdr; 
+		irs-: LONGINT; 
+		rcvnxt-: LONGINT; 
+		iss-: LONGINT; 
+		sndnxt-: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
+		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ State*(): LONGINT; 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Discard*; 
+		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: LONGINT); 
+		PROCEDURE ^ Requested*(): BOOLEAN; 
+	END Connection; 
+VAR 
+	trace: BOOLEAN; 
+
+	PROCEDURE ^ DisplayErrors*(par: ANY): ANY; 
+	PROCEDURE ^ DiscardAll*(par: ANY): ANY; 
+	PROCEDURE ^ ToggleTrace*; 
+BEGIN
+END TCP.

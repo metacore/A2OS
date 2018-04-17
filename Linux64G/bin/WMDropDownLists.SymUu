@@ -1,0 +1,106 @@
+MODULE WMDropDownLists;
+	IMPORT Objects, Inputs, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMEvents, WMWindowManager, WMComponents, WMStandardComponents, WMEditors, WMGrids, WMStringGrids;
+CONST 
+	Mode_SelectOnly* = 0; 
+	Mode_Editable* = 1; 
+	Mode_Eager* = 2; 
+	Ok* = 0; 
+	NotFound* = 1; 
+	DuplicateEntry* = 2; 
+	NoKey* = MIN(LONGINT); 
+	InitialEntryArraySize = 4; 
+	ShadowWidth = 5; 
+TYPE 
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		grid: WMStringGrids.StringGrid; 
+		dropDownList: DropDownList; 
+		isClosed: BOOLEAN; 
+		shadowRect, borderRect: WMRectangles.Rectangle; 
+
+		PROCEDURE ^  & New(x, y, width, height: LONGINT; grid: WMStringGrids.StringGrid; dropDownList: DropDownList); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Clicked(sender, data: ANY); 
+		PROCEDURE ^ PropagateSelection; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SelectEntry(next: BOOLEAN); 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ FocusLost*; 
+	END Window; 
+
+	Entry* = POINTER TO RECORD 
+		key-: LONGINT; 
+		name-: Strings.String; 
+	END; 
+
+	EntryArray = POINTER TO ARRAY OF Entry; 
+
+	EnumeratorProcedure* = PROCEDURE {DELEGATE}(entry: Entry; index: LONGINT); 
+
+	DropDownListModel* = OBJECT {EXCLUSIVE} 
+	VAR 
+		onChanged-: WMEvents.EventSource; 
+		entries: EntryArray; 
+		nofEntries: LONGINT; 
+		lockLevel: LONGINT; 
+		lockedBy: ANY; 
+		viewChanged: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ GetNofEntries*(): LONGINT; 
+		PROCEDURE ^ Add*(key: LONGINT; CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Remove*(CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Enumerate*(CONST mask: ARRAY OF CHAR; proc: EnumeratorProcedure); 
+		PROCEDURE ^ GetNofMatches*(CONST mask: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ FindDuplicate*(key: LONGINT; CONST name: ARRAY OF CHAR): Entry; 
+		PROCEDURE ^ FindByName*(CONST name: ARRAY OF CHAR): Entry; 
+		PROCEDURE ^ FindByKey*(key: LONGINT): Entry; 
+		PROCEDURE ^ ResizeEntryArray; 
+	END DropDownListModel; 
+
+	DropDownList* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		mode-: WMProperties.Int32Property; 
+		textColor-: WMProperties.ColorProperty; 
+		minGridWidth-: WMProperties.Int32Property; 
+		maxGridHeight-: WMProperties.Int32Property; 
+		model-: DropDownListModel; 
+		onSelect-: WMEvents.EventSource; 
+		selectedEntry: Entry; 
+		window: Window; 
+		grid: WMStringGrids.StringGrid; 
+		button: WMStandardComponents.Button; 
+		editor: WMEditors.Editor; 
+		captionI: Strings.String; 
+		currentMask: ARRAY 128 OF CHAR; 
+		nofMatches: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ SetSelection*(entry: Entry); 
+		PROCEDURE ^ SelectKey*(key: LONGINT); 
+		PROCEDURE ^ GetSelection*(): Entry; 
+		PROCEDURE ^ SetModel*(model: DropDownListModel); 
+		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ ModelChanged(sender, data: ANY); 
+		PROCEDURE ^ KeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ShowDropDownList(sender, data: ANY); 
+		PROCEDURE ^ InitGrid; 
+		PROCEDURE ^ AddRow(entry: Entry; index: LONGINT); 
+		PROCEDURE ^ UpdateGrid; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ SetMode(mode: LONGINT); 
+	END DropDownList; 
+VAR 
+	StrDropDownList: Strings.String; 
+	PrototypeTextColor: WMProperties.ColorProperty; 
+	PrototypeMode, PrototypeMinGridWidth, PrototypeMaxGridHeight: WMProperties.Int32Property; 
+	PrototypeIsEditable: WMProperties.BooleanProperty; 
+
+	PROCEDURE ^ GenDropDownList*(): XML.Element; 
+	PROCEDURE ^ Init; 
+BEGIN
+END WMDropDownLists.

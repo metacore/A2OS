@@ -1,0 +1,48 @@
+MODULE BMP IN Oberon;
+	IMPORT Display, Files, Pictures, Objects, Texts, Oberon;
+CONST 
+	TypeTag = \"BM"\; 
+	FHeaderSize = 14; 
+	RGB = 0; 
+	RLE8 = 1; 
+	RLE4 = 2; 
+TYPE 
+	FileHeader = RECORD 
+		type: ARRAY 4 OF CHAR; 
+		size: LONGINT; 
+		res1, res2: INTEGER; 
+		offBits: LONGINT; 
+	END; 
+
+	BitmapHeader = RECORD 
+		size: LONGINT; 
+		width, height: LONGINT; 
+		planes: INTEGER; 
+		depth: INTEGER; 
+		compression: LONGINT; 
+		sizeImage: LONGINT; 
+		Xppm, Yppm: LONGINT; 
+		clrUsed: LONGINT; 
+		clrImportant: LONGINT; 
+	END; 
+VAR 
+	ColorMap: ARRAY 256 OF INTEGER; 
+	W: Texts.Writer; 
+	error: BOOLEAN; 
+
+	PROCEDURE ^ WriteError(str: ARRAY OF CHAR); 
+	PROCEDURE ^ ScanFileHeader(VAR R: Files.Rider; VAR header: FileHeader); 
+	PROCEDURE ^ ScanBitmapHeader(VAR R: Files.Rider; VAR header: BitmapHeader); 
+	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
+	PROCEDURE ^ LoadRLE8(VAR R: Files.Rider; pict: Pictures.Picture); 
+	PROCEDURE ^ LoadRLE4(VAR R: Files.Rider; pict: Pictures.Picture); 
+	PROCEDURE ^ LoadRGB8(VAR R: Files.Rider; pict: Pictures.Picture); 
+	PROCEDURE ^ LoadRGB4(VAR R: Files.Rider; pict: Pictures.Picture); 
+	PROCEDURE ^ LoadRGB1(VAR R: Files.Rider; pict: Pictures.Picture); 
+	PROCEDURE ^ CheckFile*(VAR R: Files.Rider): BOOLEAN; 
+	PROCEDURE ^ LoadBmp*(VAR R: Files.Rider; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitPicture*; 
+	PROCEDURE ^ NewPicture*; 
+BEGIN
+END BMP.

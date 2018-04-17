@@ -1,0 +1,16 @@
+MODULE WMPerfMonPluginVNCServer;
+	IMPORT WMPerfMonPlugins, Modules, VNCServer;
+CONST 
+	ModuleName = \"WMPerfMonPluginVNCServer"\; 
+TYPE 
+	VncStats = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END VncStats; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ InitPlugin; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginVNCServer.

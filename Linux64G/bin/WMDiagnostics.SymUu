@@ -1,0 +1,121 @@
+MODULE WMDiagnostics;
+	IMPORT Locks, Strings, Diagnostics, Files, WMRectangles, WMGraphics, WMGraphicUtilities, WMBitmapFont, WMEvents, WMProperties, WMGrids, WMTextView;
+CONST 
+	TypeInformation* = Diagnostics.TypeInformation; 
+	TypeWarning* = Diagnostics.TypeWarning; 
+	TypeError* = Diagnostics.TypeError; 
+	Invalid* = Diagnostics.Invalid; 
+	ColorError = LONGINT(0FF3030A0H); 
+	ColorWarning = LONGINT(0D0D040C0H); 
+	ColorPCPosition = 8323232; 
+	PictureError = \"PETIcons.tar://errorpos.png"\; 
+	PictureWarning = \"PETIcons.tar://warningpos.png"\; 
+	PicturePCPosition = \"PETIcons.tar://pcpos.png"\; 
+	InitialArraySize = 16; 
+	Less =  -1; 
+	Equal = 0; 
+	Greater = 1; 
+	SortByTypeAscending* = 0; 
+	SortByTypeDescending* = 1; 
+	SortByPositionAscending* = 2; 
+	SortByPositionDescending* = 3; 
+	SortByErrorCodeAscending* = 4; 
+	SortByErrorCodeDescending* = 5; 
+TYPE 
+	Entry* = RECORD 
+		type-: LONGINT; 
+		source-: Files.FileName; 
+		position-, errorCode-: LONGINT; 
+		message-: ARRAY 256 OF CHAR; 
+	END; 
+
+	EntryArray = POINTER TO ARRAY OF Entry; 
+
+	Model* = OBJECT (Diagnostics.Diagnostics)
+	VAR 
+		entries: EntryArray; 
+		nofEntries-: LONGINT; 
+		nofInformations: LONGINT; 
+		nofWarnings: LONGINT; 
+		nofErrors: LONGINT; 
+		lock: Locks.RWLock; 
+		onChanged-: WMEvents.EventSource; 
+		changed: BOOLEAN; 
+		notificationEnabled: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ EnableNotification*; 
+		PROCEDURE ^ DisableNotification*; 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ CheckEntriesSize; 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Exists(type, position, errorCode: LONGINT; CONST message: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Add(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; VAR counter: LONGINT); 
+		PROCEDURE ^ GetSummary(VAR summary: ARRAY OF CHAR); 
+		PROCEDURE ^ Synchronize(VAR entries: ViewEntryArray; VAR nofEntries: LONGINT); 
+	END Model; 
+
+	CompareProcedure = PROCEDURE (CONST entry1, entry2: Entry):LONGINT; 
+
+	ViewEntry* = RECORD (Entry)
+		pos-: POINTER TO ARRAY OF WMTextView.PositionMarker; 
+	END; 
+
+	ViewEntryArray = POINTER TO ARRAY OF ViewEntry; 
+
+	CellInfo* = OBJECT (WMGrids.CellPositionInfo)
+	VAR 
+		entryValid-: BOOLEAN; 
+		entry-: ViewEntry; 
+
+		PROCEDURE ^  & Init(entryValid: BOOLEAN; CONST entry: ViewEntry; column, row: LONGINT); 
+	END CellInfo; 
+
+	DiagnosticsView* = OBJECT {EXCLUSIVE} (WMGrids.GenericGrid)
+	VAR 
+		showMarkers-: WMProperties.BooleanProperty; 
+		showMarkersI: BOOLEAN; 
+		sortBy-: WMProperties.Int32Property; 
+		sortByI: LONGINT; 
+		entries: ViewEntryArray; 
+		nofEntries: LONGINT; 
+		model: Model; 
+		textViews: POINTER TO ARRAY OF WMTextView.TextView; 
+		summary: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ OnClickHandler(sender, data: ANY); 
+		PROCEDURE ^ ShowMarkers(enable: BOOLEAN); 
+		PROCEDURE ^ SortBy(mode: LONGINT); 
+		PROCEDURE ^ GetCellData*(column, row: LONGINT): ANY; 
+		PROCEDURE ^ AddPositionMarkers; 
+		PROCEDURE ^ RemovePositionMarkers; 
+		PROCEDURE ^ GetFirstPosition*(VAR positions: ARRAY OF LONGINT; VAR type: LONGINT); 
+		PROCEDURE ^ GetNearestPosition*(cursorPosition, editorIndex: LONGINT; forward: BOOLEAN; VAR nearestPosition: LONGINT; VAR number: LONGINT); 
+		PROCEDURE ^ SelectEntry*(number: LONGINT; moveTo: BOOLEAN); 
+		PROCEDURE ^ SortEntries(compare: CompareProcedure; ascending: BOOLEAN); 
+		PROCEDURE ^ SetTextViews*(CONST textViews: ARRAY OF WMTextView.TextView); 
+		PROCEDURE ^ SetModel*(model: Model); 
+		PROCEDURE ^ ModelChanged(sender, data: ANY); 
+		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+	END DiagnosticsView; 
+VAR 
+	StrDiagnosticsView: Strings.String; 
+	PrototypeShowMarkers: WMProperties.BooleanProperty; 
+	PrototypeSortBy: WMProperties.Int32Property; 
+
+	PROCEDURE ^ CompareByPosition(CONST e1, e2: Entry): LONGINT; 
+	PROCEDURE ^ CompareByErrorCode(CONST e1, e2: Entry): LONGINT; 
+	PROCEDURE ^ CompareByType(CONST e1, e2: Entry): LONGINT; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+BEGIN
+END WMDiagnostics.

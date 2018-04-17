@@ -3106,7 +3106,7 @@ BEGIN
 			IF (diagnostics.nofMessages > 0) THEN
 				diagnostics.ToStream(context.out, Diagnostics.All);
 			END;
-			IF (diagnostics.nofErrors > 0) THEN
+			IF error OR (diagnostics.nofErrors > 0) THEN
 				context.result := Commands.CommandError;
 			END;
 		ELSE
@@ -3235,7 +3235,7 @@ BEGIN
 				diagnostics.ToStream(context.out, Diagnostics.All);
 				context.out.Ln;
 			END;
-			IF (diagnostics.nofErrors > 0) THEN
+			IF error OR (diagnostics.nofErrors > 0) THEN
 				context.result := Commands.CommandError;
 			END;
 		ELSE
@@ -3370,7 +3370,7 @@ BEGIN
 				END;
 				context.out.Ln;
 			END;
-			IF (diagnostics.nofErrors > 0) THEN
+			IF error OR (diagnostics.nofErrors > 0) THEN
 				context.result := Commands.CommandError;
 			END;
 		ELSE

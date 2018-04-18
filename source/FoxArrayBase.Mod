@@ -1296,7 +1296,12 @@ Sufficient (but not necessary) conditions:
 
 (*** copy *)
 	PROCEDURE Copy4( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
-	CODE {SYSTEM.i386}
+	BEGIN
+		WHILE len > 0 DO
+			SYSTEM.PUT32(dadr, SYSTEM.GET32(ladr));
+			INC(ladr, linc); INC(dadr, dinc); DEC(len);
+		END;
+	(*CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
 		MOV	EBX, [EBP+len]	;  EBX := len
@@ -1309,11 +1314,16 @@ Sufficient (but not necessary) conditions:
 		ADD	EDX, [EBP+dinc]	;  INC(EDX, rinc)
 		DEC	EBX	;  DEC(EBX)
 		JMP	start
-		end:
+		end:*)
 	END Copy4;
 
 	PROCEDURE Copy2( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
-	CODE {SYSTEM.i386}
+	BEGIN
+		WHILE len > 0 DO
+			SYSTEM.PUT16(dadr, SYSTEM.GET16(ladr));
+			INC(ladr, linc); INC(dadr, dinc); DEC(len);
+		END;
+	(*CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
 		MOV	EBX, [EBP+len]	;  EBX := len
@@ -1326,11 +1336,16 @@ Sufficient (but not necessary) conditions:
 		ADD	EDX, [EBP+dinc]	;  INC(EDX, rinc)
 		DEC	EBX	;  DEC(EBX)
 		JMP	start
-		end:
+		end:*)
 	END Copy2;
 
 	PROCEDURE Copy1( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
-	CODE {SYSTEM.i386}
+	BEGIN
+		WHILE len > 0 DO
+			SYSTEM.PUT8(dadr, SYSTEM.GET8(ladr));
+			INC(ladr, linc); INC(dadr, dinc); DEC(len);
+		END;
+	(*CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
 		MOV	EBX, [EBP+len]	;  EBX := len
@@ -1343,11 +1358,16 @@ Sufficient (but not necessary) conditions:
 		ADD	EDX, [EBP+dinc]	;  INC(EDX, rinc)
 		DEC	EBX	;  DEC(EBX)
 		JMP	start
-		end:
+		end:*)
 	END Copy1;
 
 	PROCEDURE Copy8( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
-	CODE {SYSTEM.i386}
+	BEGIN
+		WHILE len > 0 DO
+			SYSTEM.PUT64(dadr, SYSTEM.GET64(ladr));
+			INC(ladr, linc); INC(dadr, dinc); DEC(len);
+		END;
+	(*CODE {SYSTEM.i386}
 		MOV	ECX, [EBP+ladr]	;  ECX := ladr
 		MOV	EDX, [EBP+dadr]	;  EDX := dadr
 		MOV	EBX, [EBP+len]	;  EBX := len
@@ -1362,10 +1382,21 @@ Sufficient (but not necessary) conditions:
 		ADD	EDX, [EBP+dinc]	;  INC(EDX, rinc)
 		DEC	EBX	;  DEC(EBX)
 		JMP	start
-		end:
+		end:*)
 	END Copy8;
 
-	PROCEDURE -MoveB*( srcadr, destadr, len: SIZE );
+	PROCEDURE (*-*)MoveB*( srcadr, destadr, len: SIZE );
+	BEGIN
+		IF (srcadr >= destadr) OR (srcadr+len >= destadr) THEN
+			SYSTEM.MOVE(srcadr, destadr, len);
+		ELSE
+			INC(srcadr,len-1); INC(destadr,len-1);
+			WHILE len > 0 DO
+				SYSTEM.PUT8(destadr, SYSTEM.GET8(srcadr));
+				DEC(srcadr); DEC(destadr); DEC(len);
+			END;
+		END;
+	(**
 	(** Correct move if overlap, might be important for some array operations,
 		do not use SYSTEM.MOVE.  *)
 	CODE {SYSTEM.i386}
@@ -1397,7 +1428,7 @@ Sufficient (but not necessary) conditions:
 		REP
 		MOVSB	;  move rest in one byte steps
 		done:
-		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
+		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)*)
 	END MoveB;
 
 	PROCEDURE CopyContent( dest, src: ADDRESS; elementSize: SIZE );   (**! optimize *)

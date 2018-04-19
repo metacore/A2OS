@@ -359,10 +359,17 @@ BEGIN
 	END;
 END EnterInCardSet;
 
-PROCEDURE CheckAssignment*(dest, src: DataBlockU);
+PROCEDURE CheckInternalAssignment(dest, src: DataBlockU);
 BEGIN
 	IF (src # NIL) & (src.heapBlock # NIL) & (src.heapBlock.mark MOD GenerationMask = Young) THEN
 		EnterInCardSet(dest);
+	END;
+END CheckInternalAssignment;
+
+PROCEDURE CheckAssignment*(dest, src: DataBlockU);
+BEGIN
+	IF (currentGeneration = Young) OR (youngCounts > 0) THEN
+		CheckInternalAssignment(dest, src);
 	END;
 END CheckAssignment;
 
@@ -1678,7 +1685,7 @@ VAR assigns*: LONGINT;
 
 PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
 BEGIN
-	CheckAssignment(ADDRESS OF dest,src);
+	CheckInternalAssignment(ADDRESS OF dest,src);
 	dest := src;
 	INC(assigns);
 END Assign;
@@ -1688,7 +1695,7 @@ VAR i: LONGINT; sval: ADDRESS;
 BEGIN
 	FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
 		SYSTEM.GET(src+tag.pointerOffsets[i], sval);
-		CheckAssignment(dest + tag.pointerOffsets[i], sval); 
+		CheckInternalAssignment(dest + tag.pointerOffsets[i], sval); 
 	END;
 	SYSTEM.MOVE(src,dest,tag.recSize);
 	INC(assigns);
@@ -1700,7 +1707,7 @@ BEGIN
 	FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
 	FOR i := 0 TO numElems-1 DO
 		SYSTEM.GET(src+tag.pointerOffsets[i] + i * tag.recSize + tag.pointerOffsets[j], sval);
-		CheckAssignment(dest+ i * tag.recSize + tag.pointerOffsets[j], sval);
+		CheckInternalAssignment(dest+ i * tag.recSize + tag.pointerOffsets[j], sval);
 	END;
 	END;
 	SYSTEM.MOVE(src,dest,tag.recSize * numElems);

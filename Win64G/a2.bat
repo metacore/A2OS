@@ -1,1 +1,1 @@
-oberon64 run a2.txt
+oberon run a2.txt

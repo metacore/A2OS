@@ -129,7 +129,7 @@ VAR
 		Log.Float( r, len );
 	END Float;
 
-	PROCEDURE Hex*( i,j: LONGINT );
+	PROCEDURE Hex*( i: HUGEINT; j: LONGINT );
 	BEGIN
 		Log.Hex( i, j );
 	END Hex;

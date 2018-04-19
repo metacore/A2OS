@@ -359,8 +359,8 @@ BEGIN ConcatX (s, appendix, s)
 END AppendX;
 
 (** appends an integer number to a string *)
-PROCEDURE AppendInt*(VAR s: ARRAY OF CHAR; num: LONGINT);
-VAR number: ARRAY 16 OF CHAR;
+PROCEDURE AppendInt*(VAR s: ARRAY OF CHAR; num: HUGEINT);
+VAR number: ARRAY 21 OF CHAR;
 BEGIN
 	IntToStr(num,number); Append(s,number);
 END AppendInt;

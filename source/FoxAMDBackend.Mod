@@ -2869,18 +2869,21 @@ TYPE
 						END;
 					END;
 				ELSE
-					Assert(instruction.op2.type.form = IntermediateCode.SignedInteger,"no unsigned integer64");
 					Cmp(High,reverse);
 					CASE instruction.opcode OF
 					IntermediateCode.breq: hit := 0; fail := InstructionSet.opJNE;
 					|IntermediateCode.brne: hit := InstructionSet.opJNE; fail := 0;
 					|IntermediateCode.brge:
-						IF reverse THEN hit := InstructionSet.opJL; fail := InstructionSet.opJG;
-						ELSE hit := InstructionSet.opJG; fail := InstructionSet.opJL
+						IF instruction.op2.type.form = IntermediateCode.SignedInteger THEN
+							IF reverse THEN hit := InstructionSet.opJL; fail := InstructionSet.opJG ELSE hit := InstructionSet.opJG; fail := InstructionSet.opJL END;
+						ELSIF instruction.op2.type.form = IntermediateCode.UnsignedInteger THEN
+							IF reverse THEN hit := InstructionSet.opJB; fail := InstructionSet.opJA ELSE hit := InstructionSet.opJA; fail := InstructionSet.opJB END;
 						END;
 					|IntermediateCode.brlt:
-						IF reverse THEN hit := InstructionSet.opJG; fail := InstructionSet.opJL
-						ELSE hit := InstructionSet.opJL; fail := InstructionSet.opJG
+						IF instruction.op2.type.form = IntermediateCode.SignedInteger THEN
+							IF reverse THEN hit := InstructionSet.opJG; fail := InstructionSet.opJL ELSE hit := InstructionSet.opJL; fail := InstructionSet.opJG END;
+						ELSIF instruction.op2.type.form = IntermediateCode.UnsignedInteger THEN
+							IF reverse THEN hit := InstructionSet.opJA; fail := InstructionSet.opJB ELSE hit := InstructionSet.opJB; fail := InstructionSet.opJA END;
 						END;
 					END;
 					IF hit # 0 THEN JmpDest(hit)	END;

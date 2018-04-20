@@ -75,11 +75,11 @@ TYPE
 	VAR
 		nextFixup-: Fixup;
 		mode-: INTEGER; (* fixup mode: relative or absolute *)
-		displacement-: ObjectFile.Unit; (* displacement of the fixup ('source') *)
+		displacement-: Unit; (* displacement of the fixup ('source') *)
 		scale-: ObjectFile.Bits; (* exponent of scale factor (factor=2^scale) *)
 		patterns-: LONGINT;
 		pattern-: FixupPatterns; (* patterns describing the fixup format, cf. above *)
-		offset-: ObjectFile.Unit;
+		offset-: Unit;
 
 		symbol-: ObjectFile.Identifier; (* reference to the fixup's destination section *)
 		symbolOffset-: LONGINT; (* offset in intermediate section, must be patched (resolved and added to displacement) to destination section displacement *)

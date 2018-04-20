@@ -5375,7 +5375,7 @@ TYPE
 									END;
 
 									parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Open);
-									parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.lenType);
+									parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.sizeType);
 									IF ~CompatibleTo(system,type1,parameterType) THEN
 										Error(parameter1.position,"parameter incompatible to math array len type");
 										result := SyntaxTree.invalidExpression;

@@ -8510,7 +8510,7 @@ TYPE
 							WHILE (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form # SyntaxTree.Static) DO
 								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
 							END;
-							tmp := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType),ToMemoryUnits(system,system.SizeOf(type))); (* alignment *)
+							tmp := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.sizeType),ToMemoryUnits(system,system.SizeOf(type))); (* alignment *)
 							Emit(Push(position,tmp));
 							(* *)
 							IF SemanticChecker.ContainsPointer(type) THEN

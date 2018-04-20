@@ -1,6 +1,6 @@
 all: oberon
 
-.PHONY: all compiler execution compilation execution builds clean
+.PHONY: all compiler execution compilation execution builds build clean
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
@@ -48,12 +48,16 @@ builds:
 
 ifdef platform
 
-.PHONY: build
 build: $(if $(filter $(platforms), $(platform)), $(platform), $(error invalid platform))
 
 $(platform): oberon source/Release.Tool $(addprefix source/, $(shell env AOSPATH=source ./original Release.Build --list $(platform) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' '))
 	@rm -rf $@ && mkdir $@
 	@env AOSPATH=source ./oberon Release.Build --path=$@/ --build $(platform) || (rm -rf $@ && false)
+
+else
+
+build:
+	$(error undefined platform)
 
 endif
 

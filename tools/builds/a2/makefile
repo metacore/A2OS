@@ -20,7 +20,7 @@ Trace.GofU Streams.GofU: Runtime.GofU
 FoxArrayBase.GofU: ComplexNumbers.GofU
 
 %.GofU:
-	@$(tool) compile $(if $<, $<, $(error no target for $@))
+	@$(tool) compile -p=Linux32G $(if $<, $<, $(error no target for $@))
 
 # targets
 

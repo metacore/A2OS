@@ -5105,7 +5105,7 @@ TYPE
 			type0,type1,type2: SyntaxTree.Type;
 			type,base,parameterType: SyntaxTree.Type;
 			arrayType: SyntaxTree.ArrayType;
-			i,i0,i1: LONGINT;
+			i, i0, i1, value: LONGINT;
 			r,r0,r1,im: LONGREAL;
 			c: CHAR;
 			id: LONGINT;
@@ -5599,16 +5599,16 @@ TYPE
 						IF (numberActualParameters=1) OR (numberActualParameters =2) & IsIntegerValue(parameter1,i1) THEN
 							IF base IS SyntaxTree.ArrayType THEN
 								arrayType := base(SyntaxTree.ArrayType);
-								IF (arrayType.length # NIL) & (arrayType.length.resolved # NIL) & IsIntegerValue(arrayType.length,i) THEN
+								IF (arrayType.length # NIL) & (arrayType.length.resolved # NIL) & IsIntegerValue(arrayType.length,value) THEN
 									(* do not use length directly such as in result := length as this mide have side-effects when result types get converted *)
-									result := Global.NewIntegerValue(system,position,i);
+									result := Global.NewIntegerValue(system,position,value);
 									type := result.type;(* arrayType.length.type;*)
 									ASSERT(type # NIL);
 								END;
 							ELSIF base IS SyntaxTree.MathArrayType THEN
 								mathArrayType := base(SyntaxTree.MathArrayType);
-								IF (mathArrayType.length # NIL) & (mathArrayType.length.resolved # NIL) & IsIntegerValue(mathArrayType.length,i) THEN
-									result := Global.NewIntegerValue(system,position,i);
+								IF (mathArrayType.length # NIL) & (mathArrayType.length.resolved # NIL) & IsIntegerValue(mathArrayType.length,value) THEN
+									result := Global.NewIntegerValue(system,position,value);
 									type := result.type;
 									(*
 									type := mathArrayType.length.type;
@@ -6145,19 +6145,19 @@ TYPE
 					type := system.realType;
 					IF IsRealValue(parameter0, r) THEN
 						result.SetResolved(SyntaxTree.NewRealValue(position, r));
-					ELSIF CheckIntegerType(parameter0) & IsIntegerValue(parameter0, i) THEN
-						i0 := i; i := ABS(i);
-						IF i # 0 THEN
+					ELSIF CheckIntegerType(parameter0) & IsIntegerValue(parameter0, i0) THEN
+						value := ABS(i0);
+						IF value # 0 THEN
 							i1 := 23;
-							IF i >= 2*800000H THEN
-								REPEAT i := i DIV 2; INC(i1) UNTIL i < 2*800000H;
-							ELSIF i < 800000H THEN
-								REPEAT i := 2 * i; DEC(i1) UNTIL i >= 800000H;
+							IF value >= 2*800000H THEN
+								REPEAT value := value DIV 2; INC(i1) UNTIL value < 2*800000H;
+							ELSIF value < 800000H THEN
+								REPEAT value := 2 * value; DEC(i1) UNTIL value >= 800000H;
 							END;
-							i := (i1 + 127)*800000H - 800000H + i;
-							IF i0 < 0 THEN i := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, i) + {31}); END;
+							value := (i1 + 127)*800000H - 800000H + value;
+							IF i0 < 0 THEN value := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, value) + {31}); END;
 						END;
-						result.SetResolved(SyntaxTree.NewRealValue(position, SYSTEM.VAL(REAL, i)));
+						result.SetResolved(SyntaxTree.NewRealValue(position, SYSTEM.VAL(REAL, value)));
 					END;
 				(* ------- CONNECT -------*)
 				ELSIF (id = Global.Connect) & (CheckArity(2,3)) THEN

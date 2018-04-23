@@ -49,6 +49,7 @@ CONST
 	Ok* =  0;
 	Closed* = -1;
 	TransportError* = -2;  (** Error on transport layer, e.g. USB error in RS-232 over USB *)
+	TimeoutExpired* = -3; (** Timeout expired *)
 
 	(** Errors for Port.Open procedure *)
 	PortInUse* =  1; NoSuchPort* =  2; WrongBPS* =  3; WrongData* =  4; WrongParity* =  5; WrongStop* =  6;
@@ -127,6 +128,11 @@ TYPE
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*(VAR s: SET);
 		END GetMC;
+		
+		(** Setup receive timeout (maximum time allowed to elapse before arrival of the next data byte) in ms.
+			Use timeout <= 0 to disable receive timeout handling  *)
+		PROCEDURE SetReceiveTimeout*(timeout: LONGINT);
+		END SetReceiveTimeout;
 
 		PROCEDURE Show*;
 		BEGIN

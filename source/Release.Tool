@@ -335,9 +335,17 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Solaris32G {
-		INCLUDE "UNIXG UNIXG32 SOLARISG UNCOOP UNCOOP32"
+		INCLUDE "UNIXG UNIXG32 SOLARISG32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32G"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
+	Solaris64G {
+		INCLUDE "UNIXG UNIXG64 SOLARISG64 UNCOOP UNCOOP64"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux64G"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -380,7 +388,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	LINUXG32 { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
 	LINUXG64 { Generic.Linux.AMD64.Glue.Mod Generic.Linux.AMD64.Unix.Mod }
 	DARWING { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
-	SOLARISG { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
+	SOLARISG32 { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
+	SOLARISG64 { Generic.Unix.AMD.Glue.Mod Generic.Solaris.AMD64.Unix.Mod }
 
 	UNIX { Unix.Glue.Mod }
 	LINUX { Linux.I386.Unix.Mod }
@@ -433,7 +442,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	In.Mod Out.Mod
 
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Reals.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.Reals.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -520,7 +529,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BootShell.Mod
 
 	I386, UNIX32, UNIXG32 { I386.Network.Mod }
-	AMD64, UNIX64, UNIXG64 { AMD64.Network.Mod }
+	AMD64, UNIXG64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
@@ -707,7 +716,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	# Runtime support for math oberon (Move to runtime package? *)
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64, WINGEN64, UNIXG64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
@@ -751,7 +760,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# raster images (eos)
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Raster.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.Raster.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -784,7 +793,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Move to graphical package!!
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.WMRasterScale.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.WMRasterScale.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -1263,7 +1272,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	}
 
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.WMTransitions.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.WMTransitions.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod
@@ -1432,7 +1441,7 @@ END
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 {I386.EFIMachine.Mod}
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.EFIMachine.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.EFIMachine.Mod }
 
 
 	EFIBlockIO.Mod EFIDiskIO.Mod

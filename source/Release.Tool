@@ -389,7 +389,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	LINUXG64 { Generic.Linux.AMD64.Glue.Mod Generic.Linux.AMD64.Unix.Mod }
 	DARWING { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
 	SOLARISG32 { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
-	SOLARISG64 { Generic.Unix.AMD.Glue.Mod Generic.Solaris.AMD64.Unix.Mod }
+	SOLARISG64 { Generic.Unix.AMD64.Glue.Mod Generic.Solaris.AMD64.Unix.Mod }
 
 	UNIX { Unix.Glue.Mod }
 	LINUX { Linux.I386.Unix.Mod }

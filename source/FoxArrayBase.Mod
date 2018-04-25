@@ -2081,6 +2081,17 @@ Sufficient (but not necessary) conditions:
 		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( LONGINT ),ConvertLoopXL );
 		RETURN RESULT
 	END "@Convert";
+	
+	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF LONGINT ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		CASE SIZEOF(SIZE) OF
+			4: RETURN src;
+			|8: ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( SIZE ), ConvertLoopLX );
+		ELSE
+			HALT(100);
+		END;
+		RETURN RESULT
+	END "@Convert";
 
 	OPERATOR "ENTIER"*(CONST src: ARRAY [ ? ] OF LONGREAL ):  ARRAY [ ? ] OF LONGINT;
 	BEGIN

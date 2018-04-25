@@ -5,7 +5,7 @@
 MODULE HostLibs;
 
 IMPORT
-	Unix;
+	SYSTEM, Unix;
 
 TYPE
 	LibHandle* = ADDRESS; (** dynamic library handle type *)
@@ -50,8 +50,10 @@ CONST
 	*)
 	PROCEDURE FreeLibrary*(CONST lib: LibHandle): BOOLEAN;
 	BEGIN
-		Unix.Dlclose(lib);
-		RETURN TRUE;
+		IF lib # NIL THEN
+			Unix.Dlclose(lib);
+			RETURN TRUE;
+		END;
 	FINALLY
 		RETURN FALSE;
 	END FreeLibrary;

@@ -1866,6 +1866,7 @@ TYPE
 					result := (returnType = NIL) & (this.returnType = NIL) OR (returnType # NIL) & (this.returnType # NIL) & returnType.SameType(this.returnType.resolved);
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
+					result := result & (isDelegate = this.isDelegate);
 					IF result THEN
 						
 						p1 := selfParameter; p2 := this.selfParameter;

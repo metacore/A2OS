@@ -458,7 +458,7 @@ BEGIN
 END DummyRegressor;
 
 PROCEDURE WriteLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
-VAR len: ARRAY [*] OF LONGINT; i:LONGINT;
+VAR len: ARRAY [*] OF SIZE; i:LONGINT;
 BEGIN
 	ASSERT(DIM(t)>0);
 	len:=LEN(t);
@@ -470,7 +470,7 @@ BEGIN
 END WriteLR;
 
 PROCEDURE StoreLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
-VAR i:LONGINT; len: ARRAY [*] OF LONGINT;
+VAR i:LONGINT; len: ARRAY [*] OF SIZE;
 BEGIN
 	W.String("TENSOR 1.0 LR "); (* type, version *) W.Ln;
 	W.Int(DIM(t),0);

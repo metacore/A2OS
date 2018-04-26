@@ -5748,7 +5748,7 @@ TYPE
 			END;
 
 			alignment := procedureType.stackAlignment;
-			IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & (system.addressSize = 64) THEN
+			IF SysvABIorWINAPI(procedureType.callingConvention) & (system.addressSize = 64) THEN
 				alignment := 16 (* bytes *);
 			END;
 			IF alignment > 1 THEN
@@ -5759,6 +5759,13 @@ TYPE
 					IF gap < 4*ToMemoryUnits(system,system.addressSize) THEN 
 						gap := 4*ToMemoryUnits(system,system.addressSize); (* at least four registers get pushed*)
 					END;
+				ELSIF (SysvABI(procedureType.callingConvention) ) & (system.addressSize =64) THEN
+					gap := gap - 6*ToMemoryUnits(system,system.addressSize); 
+					IF gap < 0 THEN 
+						gap := 0
+					ELSE
+					END; 
+					gap := gap - ToMemoryUnits(system,system.offsetFirstParameter); (* alignment before the call *)
 				END;
 				gap := gap + ToMemoryUnits(system,system.offsetFirstParameter) + ToMemoryUnits(system,system.addressSize);
 

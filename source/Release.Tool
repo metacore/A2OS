@@ -1494,15 +1494,16 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	NbrInt8.Mod NbrInt16.Mod NbrInt32.Mod NbrInt64.Mod NbrInt.Mod NbrRat.Mod
 	NbrRe32.Mod NbrRe64.Mod NbrRe.Mod NbrCplx.Mod NbrStrings.Mod
 
+	DataErrors.Mod DataIO.Mod Data.Mod DataStacks.Mod DataQueues.Mod
+	DataLists.Mod DataTrees.Mod
+
+	MathInt.Mod MathRat.Mod MathReSeries.Mod MathRe.Mod MathCplxSeries.Mod
+	MathCplx.Mod MathCbrt.Mod MathErf.Mod MathGamma.Mod
+
+	CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
+	MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
+
 	NATIVE,WINORIG,WINGEN32,UNIXG32 {
-		DataErrors.Mod DataIO.Mod Data.Mod DataStacks.Mod DataQueues.Mod
-		DataLists.Mod DataTrees.Mod
-
-		MathInt.Mod MathRat.Mod MathReSeries.Mod MathRe.Mod MathCplxSeries.Mod
-		MathCplx.Mod MathCbrt.Mod MathErf.Mod MathGamma.Mod
-
-		CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
-		MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
 
 		# Disable index checking for these modules with \sx for efficiency
 		I386.Array1dBytes.Mod Array1dInt.Mod Array1dRat.Mod Array1dRe.Mod Array1dCplx.Mod I386.ArrayXdBytes.Mod

@@ -25,7 +25,7 @@ TYPE
 	BinaryAABLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	BinaryASBLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
 	
-	LenType = LONGINT; (* should be SIZE but for legacy reasons we have to use this *)
+	LenType = SIZE; (* should be SIZE but for legacy reasons we have to use this *)
 	
 CONST
 	debug = FALSE;   (* warning: debug=true -> a lot of output is generated -> traps are not displayed in Oberon (Kernel overflow) *)
@@ -2393,6 +2393,40 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "+";
 
+(** HUGEINT *)
+	PROCEDURE AddAHAHLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval: HUGEINT;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  SYSTEM.PUT( dadr, lval + rval );
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END AddAHAHLoop;
+
+	OPERATOR "+"*(CONST left,right: ARRAY [?] OF HUGEINT): ARRAY [?] OF HUGEINT;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( HUGEINT ), AddAHAHLoop);
+		RETURN RESULT
+	END "+";
+
+(** SIZE *)
+	PROCEDURE AddAYAYLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  SYSTEM.PUT( dadr, lval + rval );
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END AddAYAYLoop;
+
+	OPERATOR "+"*(CONST left,right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), AddAYAYLoop);
+		RETURN RESULT
+	END "+";
+
 
 (** LONGCOMPLEX *)
 	PROCEDURE AddALZALZLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
@@ -2564,6 +2598,56 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( COMPLEX ),
 										  AddAZSZLoop );
+		RETURN RESULT
+	END "+";
+	
+(** HUGEINT *)
+	PROCEDURE AddAHSHLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: HUGEINT;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, lval + rval );  INC( ladr, linc );
+			INC( dadr, dinc );  DEC( len );
+		END;
+	END AddAHSHLoop;
+
+	OPERATOR "+"*(CONST left: ARRAY [ ? ] OF HUGEINT; right: HUGEINT ): ARRAY [ ? ] OF HUGEINT;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( HUGEINT ),
+										  AddAZSZLoop );
+		RETURN RESULT
+	END "+";
+
+	OPERATOR "+"*(left: HUGEINT; CONST right: ARRAY [ ? ] OF HUGEINT): ARRAY [ ? ] OF HUGEINT;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( HUGEINT ),
+										  AddAZSZLoop );
+		RETURN RESULT
+	END "+";
+
+(** SIZE  *)
+	PROCEDURE AddAYSYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, lval + rval );  INC( ladr, linc );
+			INC( dadr, dinc );  DEC( len );
+		END;
+	END AddAYSYLoop;
+
+	OPERATOR "+"*(CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( SIZE ),
+										  AddAYSYLoop );
+		RETURN RESULT
+	END "+";
+
+	OPERATOR "+"*(left: SIZE; CONST right: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( SIZE ),
+										  AddAYSYLoop );
 		RETURN RESULT
 	END "+";
 
@@ -10054,12 +10138,13 @@ TYPE
 				*)
 				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
 			END;
-			IF tag = 0 THEN
+			IF tag = 0 THEN			
 				SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 				PutAdr( dest, Align(data) );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
-				PutAdr( dest, data+ ArrDataArrayOffset );
+				PutAdr( dest, data+ ArrDataArrayOffset );			
+
 			END;
 			PutPtr( dest, data );  PutSize( dest, Size );
 		END NewData;

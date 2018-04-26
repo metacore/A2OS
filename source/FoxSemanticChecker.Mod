@@ -9021,10 +9021,7 @@ TYPE
 						IsPointerType(this) & (IsTypeExtension(to,this) OR to(SyntaxTree.PointerType).isUnsafe OR ((to(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType) & SameType(to,this)))
 				     & (~to.isRealtime OR this.isRealtime);
 			ELSIF to IS SyntaxTree.ProcedureType THEN
-				result := (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.ProcedureType) & SameType(to(SyntaxTree.ProcedureType),this(SyntaxTree.ProcedureType))
-					& (~(this(SyntaxTree.ProcedureType).isDelegate) OR (to(SyntaxTree.ProcedureType).isDelegate))
-					& (~to.isRealtime OR this.isRealtime)
-					& ((this(SyntaxTree.ProcedureType).stackAlignment <=1) OR (this(SyntaxTree.ProcedureType).stackAlignment <= to(SyntaxTree.ProcedureType).stackAlignment));
+				result := (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.ProcedureType) & this.CompatibleTo(to)
 			ELSIF (to IS SyntaxTree.RecordType) & to(SyntaxTree.RecordType).isObject THEN
 				result := (this IS SyntaxTree.NilType) OR IsTypeExtension(to,this);
 			ELSIF to IS SyntaxTree.RecordType THEN

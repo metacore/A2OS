@@ -1851,8 +1851,8 @@ TYPE
 		BEGIN
 			returnType := type;
 		END SetReturnType;
-
-		PROCEDURE SameType*(this: Type): BOOLEAN;
+		
+		PROCEDURE SameSignature*(this: Type): BOOLEAN;
 		VAR result: BOOLEAN; p1,p2: Parameter;
 		BEGIN
 			result := FALSE;
@@ -1866,7 +1866,7 @@ TYPE
 					result := (returnType = NIL) & (this.returnType = NIL) OR (returnType # NIL) & (this.returnType # NIL) & returnType.SameType(this.returnType.resolved);
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
-					result := result & (isDelegate = this.isDelegate);
+					result :=  result & (isInterrupt = this.isInterrupt);
 					IF result THEN
 						
 						p1 := selfParameter; p2 := this.selfParameter;
@@ -1884,11 +1884,21 @@ TYPE
 			END;
 			recursion := FALSE;
 			RETURN result
+
+		END SameSignature;
+		
+
+		PROCEDURE SameType*(this: Type): BOOLEAN;
+		BEGIN
+			RETURN SameSignature(this) 
+				& (this(ProcedureType).isDelegate = isDelegate)
+				& (this(ProcedureType).isRealtime = isRealtime);
 		END SameType;
 
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
 		BEGIN
-			RETURN SameType(to) & (~isDelegate OR to(ProcedureType).isDelegate) & (~to.isRealtime OR isRealtime);
+			RETURN SameSignature(to) & (~isDelegate OR to(ProcedureType).isDelegate) & (~to.isRealtime OR isRealtime)
+					& ((stackAlignment <=1) OR (stackAlignment <= to(ProcedureType).stackAlignment));
 		END CompatibleTo;
 
 		PROCEDURE IsComposite*(): BOOLEAN;

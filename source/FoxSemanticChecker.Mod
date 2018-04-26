@@ -8978,7 +8978,7 @@ TYPE
 			this := this.resolved; to := to.resolved;
 			IF to=SyntaxTree.invalidType THEN result := FALSE
 			ELSIF to=SyntaxTree.typeDeclarationType THEN result := FALSE;
-			ELSIF to = this THEN
+			ELSIF (to = this) OR (to.SameType(this)) THEN
 				result := ~(to IS SyntaxTree.ArrayType) OR (to(SyntaxTree.ArrayType).form # SyntaxTree.Open);
 
 			ELSIF to IS SyntaxTree.BasicType THEN
@@ -9212,50 +9212,60 @@ TYPE
 		fromBase := Resolved(from.arrayBase);
 		toBase := Resolved(to.arrayBase);
 		i := Infinity;
-		IF from = to THEN
+		IF (from = to) OR (from.SameType(to)) THEN
 			i := 0;
 		ELSIF (from.form = to.form) THEN
 			(* static -> static, open -> open, tensor -> tensor *)
 			IF (from.form # SyntaxTree.Static) OR (from.staticLength = to.staticLength) THEN
-				IF fromBase = toBase THEN i := 0
+				IF  fromBase = toBase THEN i := 0
 				ELSIF toBase = NIL THEN i := 1
+				ELSIF toBase.SameType(fromBase) THEN i := 0
 				ELSIF (fromBase IS SyntaxTree.MathArrayType) & (toBase IS SyntaxTree.MathArrayType) THEN
 					i := MathArrayTypeDistance(system,fromBase(SyntaxTree.MathArrayType),toBase(SyntaxTree.MathArrayType),varpar);
 				ELSE
 					i := TypeDistance(system,fromBase, toBase, varpar);
+					IF i < Infinity THEN i := i * 5 END; 
 				END;
 			END;
 		ELSIF (to.form = SyntaxTree.Static) THEN
 			(* forbidden *)
 		ELSIF (from.form = SyntaxTree.Tensor) OR (to.form = SyntaxTree.Tensor) THEN
 			(* static -> tensor, open -> tensor, tensor -> open *)
-			IF toBase=fromBase THEN i := 0;
+			IF (toBase=fromBase) THEN i := 0;
 			ELSIF toBase = NIL THEN i := 1;
+			ELSIF toBase.SameType(fromBase) THEN i := 0
 			ELSIF (toBase IS SyntaxTree.MathArrayType) THEN
 				toBase := ArrayBase(toBase,Infinity);
 				IF (fromBase=toBase) THEN i := 0
 				ELSIF (toBase = NIL) THEN i:= 1
 				ELSIF (fromBase = NIL) THEN i := Infinity;
 				ELSE i := TypeDistance(system,fromBase,toBase,varpar);
+					IF i < Infinity THEN i := i * 5 END; 
 				END;
 			ELSIF (fromBase IS SyntaxTree.MathArrayType) THEN
 				fromBase := ArrayBase(fromBase,Infinity);
 				IF (fromBase=toBase) THEN i := 0
 				ELSIF (toBase = NIL) THEN i := 1
 				ELSIF (fromBase = NIL) THEN i := Infinity;
+				ELSIF toBase.SameType(fromBase) THEN i := 0
 				ELSE i := TypeDistance(system,fromBase,toBase,varpar);
+					IF i < Infinity THEN i := i * 5 END; 
 				END;
 			ELSE i := TypeDistance(system, fromBase, toBase, varpar);
+				IF i < Infinity THEN i := i * 5 END; 
 			END;
 			IF i # Infinity THEN INC(i,2) END;
 		ELSIF (from.form = SyntaxTree.Static) THEN
 			(* static -> open *)
-			IF toBase=fromBase THEN i := 0
+			IF (toBase=fromBase) THEN i := 0;
 			ELSIF toBase = NIL THEN i := 1
 			ELSIF fromBase = NIL THEN i := Infinity
+			ELSIF toBase.SameType(fromBase) THEN i := 0
 			ELSIF (toBase IS SyntaxTree.MathArrayType) & (fromBase IS SyntaxTree.MathArrayType) THEN
 				i := MathArrayTypeDistance(system,fromBase(SyntaxTree.MathArrayType),toBase(SyntaxTree.MathArrayType),varpar);
+
 			ELSE i := TypeDistance(system,fromBase, toBase, varpar);
+				IF i < Infinity THEN i := i * 5 END; 
 			END;
 			IF i # Infinity THEN INC(i,1) END;
 		ELSE HALT(100); (* unknown case *)
@@ -9304,7 +9314,6 @@ TYPE
 				actualParameter := actualParameters.GetExpression(i);
 				
 				
-
 
 				ASSERT(formalParameter.type # NIL);
 				IF (actualParameter.type = NIL) THEN distance := Infinity
@@ -9402,6 +9411,8 @@ TYPE
 		IF from = to THEN
 			i := 0
 		ELSIF (to = NIL) OR (from=NIL) THEN HALT(100); (* was: SYSTEM.ALL type, removed *)
+		ELSIF to.SameType(from) THEN 
+			i := 0;
 		ELSIF (from IS SyntaxTree.NilType) OR (to IS SyntaxTree.NilType) THEN
 			i := Infinity;
 		ELSIF (to IS SyntaxTree.ArrayType) & (to(SyntaxTree.ArrayType).length = NIL) & (to(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN

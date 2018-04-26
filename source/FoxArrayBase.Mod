@@ -2082,22 +2082,49 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "@Convert";
 	
-	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF LONGINT ): ARRAY [ ? ] OF SIZE;
-	BEGIN
-		CASE SIZEOF(SIZE) OF
-			4: RETURN src;
-			|8: ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( SIZE ), ConvertLoopLX );
-		ELSE
-			HALT(100);
-		END;
-		RETURN RESULT
-	END "@Convert";
 
 	OPERATOR "ENTIER"*(CONST src: ARRAY [ ? ] OF LONGREAL ):  ARRAY [ ? ] OF LONGINT;
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( LONGINT ),ConvertLoopXL );
 		RETURN RESULT
 	END "ENTIER";
+	
+	(** SIZES **)
+
+	PROCEDURE ConvertLoopLY( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval: LONGINT;  dval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END ConvertLoopLY;
+	
+	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF LONGINT ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		IF SIZEOF(SIZE) = SIZEOF(LONGINT) THEN
+			RETURN src;
+		ELSE
+			ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( SIZE ), ConvertLoopLY );
+		END;
+		RETURN RESULT
+	END "@Convert";
+
+	PROCEDURE ConvertLoopYZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval: SIZE;  dval: LONGREAL;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END ConvertLoopYZ;
+
+	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF SIZE ): ARRAY [ ? ] OF LONGREAL;
+	BEGIN
+		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( LONGREAL ), ConvertLoopYZ );
+		RETURN RESULT
+	END "@Convert";
+
 
 	(*** monadic not A -> ~A ********************************************************************)
 

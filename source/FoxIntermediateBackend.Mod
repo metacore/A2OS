@@ -4651,7 +4651,7 @@ TYPE
 
 		PROCEDURE PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; numberRegister: LONGINT);
 		VAR
-			type, descriptorType, baseType: SyntaxTree.Type;
+			type, descriptorType, baseType, componentType: SyntaxTree.Type;
 			operand, tmpOperand, variableOp, variable2Op: Operand;
 			baseReg, tmp, dimOp, null, dst: IntermediateCode.Operand;
 			variable, variable2: SyntaxTree.Variable;
@@ -5271,8 +5271,21 @@ TYPE
 				ELSE
 					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
 					Evaluate(expression, operand);
-					Pass((operand.tag)); (* real part *)
-					Pass((operand.op)) (* imaginary part *)
+					componentType := parameter.type.resolved(SyntaxTree.ComplexType).componentType;
+					IF (numberRegister > 0) OR (system.AlignmentOf(system.parameterAlignment,componentType) = system.AlignmentOf(system.variableAlignment,componentType)) THEN
+						Pass((operand.tag)); (* imaginary part *)
+						Pass((operand.op)) (* real part *)
+					ELSE
+						(* pass complex as a whole in order to comply with the variable alignment of its components *)
+						size := ToMemoryUnits(system,system.AlignmentOf(system.parameterAlignment,parameter.type));
+						Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
+						tmp := sp;
+						IntermediateCode.MakeMemory(tmp,operand.op.type);
+						Emit(Mov(position,tmp,operand.op)); (* real part *)
+						size := ToMemoryUnits(system,system.AlignmentOf(system.variableAlignment,componentType));
+						IntermediateCode.AddOffset(tmp,size);
+						Emit(Mov(position,tmp,operand.tag)); (* imaginary part *)
+					END
 				END
 			ELSE
 				IF (parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter) & ~(parameter.type.resolved IS SyntaxTree.RecordType) & ~(parameter.type.resolved IS SyntaxTree.ArrayType) THEN

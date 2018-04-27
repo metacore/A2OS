@@ -6,7 +6,7 @@ IMPORT Files, Commands, Streams, Strings;
 
 CONST 
 	LoaderFilename = "OberonLoader";
-	StartPos = 10*1024;	(* cf. OberonLoader.c *)
+	StartPos = 16*1024;	(* cf. OberonLoader.c *)
 
 	
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;

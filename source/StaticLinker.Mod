@@ -253,7 +253,6 @@ BEGIN
 	w.SetPos( 24 );
 	w.RawLInt( binsize );
 	w.RawLInt( relocations );
-	w.RawLInt( 0 );	(* base *)
 END WriteRelocations;
 
 PROCEDURE WriteOutputFile* (arrangement: Arrangement; CONST fileName: Files.FileName; linker: GenericLinker.Linker; fileFormat: FileFormat);
@@ -1093,7 +1092,9 @@ BEGIN
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
 	defaults.Add("A2G","--fileName=kernel.img --extension=.GofG --displacement=0100000H");
 	defaults.Add("Solaris32G", "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofU --displacement=0" );
+	defaults.Add("Solaris64G", "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofUu --displacement=0" );
 	defaults.Add("Darwin32G",   "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofU --displacement=0" );
+	defaults.Add("Darwin64G",   "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofUu --displacement=0" );
 END StaticLinker.
 
 StaticLinker.Link --fileName=test.exe --fileFormat=PE32 --displacement=401000H Test ~

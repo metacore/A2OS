@@ -30,8 +30,7 @@ VAR
 		DD 0
 		DD 0
 		DD 0				; size of statially linked binary	( filled in by static linker )
-		DD 0				; #relocations if base = 0	( filled in by static linker )
-		DD 08070000H 	; base 								( set 0 by static linker )
+		DD 0				; # relocations	( filled in by static linker )
 		DD @Init0		; Loader <-- Oberon (entrypoint)
 		DD @dlopen		; Loader --> Oberon 
 		DD @dlclose		; Loader --> Oberon 

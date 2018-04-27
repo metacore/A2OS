@@ -713,9 +713,9 @@ TYPE
 				END;
 			END;
 
-			callingConvention := backend.CallingConvention(procedureType.callingConvention);
+			callingConvention := procedureType.callingConvention;
 			IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
-				parametersSize := ProcedureParametersSize(backend.system,x, callingConvention);
+				parametersSize := ProcedureParametersSize(backend.system,x);
 			ELSE
 				parametersSize := 0;
 			END;
@@ -848,7 +848,7 @@ TYPE
 					END;
 
 					IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
-						parametersSize := ProcedureParametersSize(backend.system,x, callingConvention);
+						parametersSize := ProcedureParametersSize(backend.system,x);
 					ELSE
 						parametersSize := 0;
 					END;
@@ -5729,7 +5729,7 @@ TYPE
 
 			resultDesignator := procedureResultDesignator; procedureResultDesignator := NIL;
 			procedureType := x.left.type.resolved(SyntaxTree.ProcedureType);
-			callingConvention := backend.CallingConvention(procedureType.callingConvention);
+			callingConvention := procedureType.callingConvention;
 
 			dest := destination; destination := emptyOperand;
 			SaveRegisters();ReleaseUsedRegisters(saved);
@@ -5758,7 +5758,7 @@ TYPE
 			IF alignment > 1 THEN
 				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,reg, sp));
-				gap := ParametersSize(system, procedureType,callingConvention, FALSE); (* account for all parameters being pushed *)
+				gap := ParametersSize(system, procedureType,FALSE); (* account for all parameters being pushed *)
 				IF (callingConvention = SyntaxTree.WinAPICallingConvention) & (system.addressSize =64) THEN
 					IF gap < 4*ToMemoryUnits(system,system.addressSize) THEN (* in WINAPI 64bit there is at least space for four registers on the stack *)
 						gap := 4*ToMemoryUnits(system,system.addressSize); 
@@ -5785,7 +5785,7 @@ TYPE
 				(* align stack to 16-byte boundary *)
 				IntermediateCode.InitImmediate(mask,addressType,-16);
 				Emit(And(position,sp, sp, mask));
-				gap := (-ParametersSize( system, procedureType, callingConvention, FALSE )) MOD 16;
+				gap := (-ParametersSize( system, procedureType, FALSE )) MOD 16;
 				IF gap # 0 THEN
 					IntermediateCode.InitImmediate(size,addressType,gap);
 					Emit(Sub(position,sp,sp,size))
@@ -5910,7 +5910,7 @@ TYPE
 				END;
 				parametersSize := ProcParametersSize(symbol(SyntaxTree.Procedure));
 			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
-				parametersSize := ParametersSize(system,procedureType,callingConvention, FALSE);
+				parametersSize := ParametersSize(system,procedureType, FALSE);
 			END;
 
 
@@ -6475,7 +6475,7 @@ TYPE
 				ELSE
 					Symbol(procedureVariable, result);
 					LoadValue(result, procedureVariable.type.resolved);
-					size := ParametersSize(system, procedureVariable.type.resolved(SyntaxTree.ProcedureType), backend.CallingConvention(procedureVariable.type.resolved(SyntaxTree.ProcedureType).callingConvention), FALSE);
+					size := ParametersSize(system, procedureVariable.type.resolved(SyntaxTree.ProcedureType), FALSE);
 				END;
 				Emit(Call(position,result.op,size));
 			END CallProcedure;
@@ -8519,7 +8519,7 @@ TYPE
 						IF GetRuntimeProcedure("FoxArrayBase","AllocateTensorX",procedure,TRUE) THEN
 							left := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,procedure);
 							procedureType := procedure.type(SyntaxTree.ProcedureType);
-							callingConvention := backend.CallingConvention(procedureType.callingConvention);
+							callingConvention := procedureType.callingConvention;
 							left.SetType(procedure.type);
 							formalParameter := procedureType.firstParameter;
 							(* push array to allocate *)
@@ -10085,7 +10085,7 @@ TYPE
 				IF SemanticChecker.ReturnedAsParameter(right.type)  THEN
 					IF right IS SyntaxTree.ProcedureCallDesignator THEN
 						procedureType := right(SyntaxTree.ProcedureCallDesignator).left.type.resolved(SyntaxTree.ProcedureType);
-						RETURN backend.CallingConvention(procedureType.callingConvention) = SyntaxTree.OberonCallingConvention
+						RETURN procedureType.callingConvention = SyntaxTree.OberonCallingConvention
 					ELSIF right IS SyntaxTree.BuiltinCallDesignator THEN
 						WITH right: SyntaxTree.BuiltinCallDesignator DO
 							IF right.id = Global.Reshape THEN RETURN TRUE
@@ -10725,7 +10725,7 @@ TYPE
 					IF locked THEN Lock(FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
-				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (type IS SyntaxTree.EnumerationType) OR (backend.CallingConvention(procedureType.callingConvention) # SyntaxTree.OberonCallingConvention) THEN
+				ELSIF (type IS SyntaxTree.BasicType) & ~(type IS SyntaxTree.RangeType) & ~(type IS SyntaxTree.ComplexType) & ~type.IsPointer() OR (type IS SyntaxTree.EnumerationType) OR (procedureType.callingConvention # SyntaxTree.OberonCallingConvention) THEN
 					(* return without structured return parameter *)
 					Evaluate(expression,res);
 					delegate := (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).isDelegate);
@@ -10825,9 +10825,9 @@ TYPE
 			IF backend.cooperative THEN
 				BrL(exitLabel);
 			ELSE
-				callingConvention := backend.CallingConvention(procedureType.callingConvention);
+				callingConvention := procedureType.callingConvention;
 				IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
-					parametersSize := ProcedureParametersSize(backend.system,procedure, callingConvention);
+					parametersSize := ProcedureParametersSize(backend.system,procedure);
 				ELSE
 					parametersSize := 0;
 				END;
@@ -11132,9 +11132,9 @@ TYPE
 
 				IF currentIsInline THEN RETURN END;
 
-				callingConvention := backend.CallingConvention(procedureType(SyntaxTree.ProcedureType).callingConvention);
+				callingConvention := procedureType(SyntaxTree.ProcedureType).callingConvention;
 				IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
-					parametersSize := ProcedureParametersSize(backend.system,procedure,callingConvention);
+					parametersSize := ProcedureParametersSize(backend.system,procedure);
 				ELSE
 					parametersSize := 0;
 				END;
@@ -11147,7 +11147,7 @@ TYPE
 		
 		PROCEDURE ProcParametersSize(procedure: SyntaxTree.Procedure): LONGINT;
 		BEGIN
-			RETURN ProcedureParametersSize(system, procedure, backend.CallingConvention(procedure.type(SyntaxTree.ProcedureType).callingConvention)); 
+			RETURN ProcedureParametersSize(system, procedure); 
 		END ProcParametersSize;
 		
 
@@ -13728,7 +13728,7 @@ TYPE
 		cellsAreObjects: BOOLEAN;
 		preciseGC, trackLeave, writeBarriers: BOOLEAN; 
 		experiment: BOOLEAN; 
-		platformCallingConvention: SyntaxTree.CallingConvention;
+
 		
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
@@ -13853,7 +13853,6 @@ TYPE
 			options.Add(0X,"trackLeave", Options.Flag);
 			options.Add(0X,"writeBarriers", Options.Flag);
 			options.Add(0X,"experiment", Options.Flag);
-			options.Add(0X,"platformCC", Options.String);
 		END DefineOptions;
 
 		PROCEDURE GetOptions*(options: Options.Options);
@@ -13886,26 +13885,12 @@ TYPE
 			trackLeave := options.GetFlag("trackLeave");
 			writeBarriers := options.GetFlag("writeBarriers");
 			experiment := options.GetFlag("experiment");
-			platformCallingConvention := SyntaxTree.OberonCallingConvention;
-			IF options.GetString("platformCC", name) THEN
-				IF name = Global.StringC THEN platformCallingConvention := SyntaxTree.CCallingConvention
-				ELSIF name = Global.StringWinAPI THEN platformCallingConvention := SyntaxTree.WinAPICallingConvention
-				END;
-			END
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
 		BEGIN RETURN SymbolFileFormat.Get()
 		END DefaultSymbolFileFormat;
 		
-		PROCEDURE CallingConvention*(callingConvention: SyntaxTree.CallingConvention): SyntaxTree.CallingConvention;
-		BEGIN
-			IF callingConvention = SyntaxTree.PlatformCallingConvention THEN 
-				RETURN platformCallingConvention 
-			ELSE
-				RETURN callingConvention
-			END; 
-		END CallingConvention;
 		
 
 	END IntermediateBackend;
@@ -14368,7 +14353,7 @@ TYPE
 		Global.GetSymbolSegmentedName(typeDeclaration,name);
 	END GetRecordTypeName;
 
-	PROCEDURE ParametersSize(system: Global.System; procedureType: SyntaxTree.ProcedureType; callingConvention: SyntaxTree.CallingConvention; isNested: BOOLEAN): LONGINT;
+	PROCEDURE ParametersSize(system: Global.System; procedureType: SyntaxTree.ProcedureType; isNested: BOOLEAN): LONGINT;
 	VAR parSize: LONGINT; parameter: SyntaxTree.Parameter; 
 	BEGIN
 		parSize := 0;
@@ -14382,7 +14367,7 @@ TYPE
 		
 		parameter :=procedureType.lastParameter;
 		WHILE (parameter # NIL) DO
-			IF callingConvention IN SysvABIorWINAPI THEN
+			IF procedureType.callingConvention IN SysvABIorWINAPI THEN
 				INC(parSize, system.addressSize); 
 			ELSE
 				INC(parSize,system.SizeOfParameter(parameter));
@@ -14417,9 +14402,9 @@ TYPE
 		RETURN scope # NIL;
 	END InCellScope;
 
-	PROCEDURE ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure; callingConvention: SyntaxTree.CallingConvention): LONGINT;
+	PROCEDURE ProcedureParametersSize*(system: Global.System; procedure: SyntaxTree.Procedure): LONGINT;
 	BEGIN
-		RETURN ParametersSize(system,procedure.type(SyntaxTree.ProcedureType),callingConvention, IsNested(procedure));
+		RETURN ParametersSize(system,procedure.type(SyntaxTree.ProcedureType), IsNested(procedure));
 	END ProcedureParametersSize;
 
 	PROCEDURE ToMemoryUnits*(system: Global.System; size: SIZE): LONGINT;

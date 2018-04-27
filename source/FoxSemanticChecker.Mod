@@ -937,7 +937,11 @@ TYPE
 						procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
 					END
 				ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
-					procedureType.SetCallingConvention(SyntaxTree.PlatformCallingConvention); 
+					IF system.platformCallingConvention = SyntaxTree.UndefinedCallingConvention THEN
+						Error(position, "undefined platform calling convention");
+					ELSE
+						procedureType.SetCallingConvention(system.platformCallingConvention); 
+					END;
 				ELSIF HasFlag(modifiers, Global.NameNoReturn,position) THEN
 					procedureType.SetNoReturn(TRUE);
 				END;

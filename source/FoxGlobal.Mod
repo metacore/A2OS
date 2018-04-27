@@ -251,6 +251,7 @@ TYPE
 
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
+		platformCallingConvention-: SyntaxTree.CallingConvention;
 
 		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
@@ -276,8 +277,14 @@ TYPE
 			END;
 			CanPassInRegister :=NIL;
 			cellsAreObjects := FALSE;
+			platformCallingConvention := SyntaxTree.UndefinedCallingConvention;
 		END InitSystem;
 
+
+		PROCEDURE SetPlatformCallingConvention*(callingConvention: SyntaxTree.CallingConvention);
+		BEGIN
+			platformCallingConvention := callingConvention;
+		END SetPlatformCallingConvention;
 		PROCEDURE SetCellsAreObjects*(c: BOOLEAN);
 		BEGIN
 			cellsAreObjects := c;

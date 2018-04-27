@@ -23,6 +23,7 @@ CONST
 	DarwinCCallingConvention* =3;
 	InterruptCallingConvention* = 4;
 	PlatformCallingConvention*= 5;
+	UndefinedCallingConvention*=6;
 
 	(** Access Flags *)
 	InternalRead* = 0;			(** can read symbol in same module *)

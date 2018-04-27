@@ -41,6 +41,7 @@ TYPE
 		documentation*: Backend.Backend;
 		srcPath, destPath: Files.FileName;
 		replacements: SemanticChecker.Replacement;
+		platformCallingConvention: SyntaxTree.CallingConvention;
 	END;
 
 	PROCEDURE ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
@@ -151,6 +152,7 @@ TYPE
 		END;
 
 		system.SetCellsAreObjects(CellsAreObjects IN flags);
+		system.SetPlatformCallingConvention(options.platformCallingConvention);
 
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
@@ -304,6 +306,7 @@ TYPE
 		options.Add("D","destPath", Options.String);
 		options.Add(0X,"replacements", Options.String);
 		options.Add(0X,"cooperative", Options.Flag);
+		options.Add(0X,"platformCC",Options.String);
 
 		position := input.Pos();
 		parsed := options.ParseStaged(input, error);
@@ -423,6 +426,15 @@ TYPE
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
 			IF options.GetFlag("lineNumbers") THEN INCL(compilerOptions.flags, UseLineNumbers) END;
+			IF options.GetString("platformCC", name) THEN
+				IF name = Global.StringC THEN compilerOptions.platformCallingConvention := SyntaxTree.CCallingConvention
+				ELSIF name = Global.StringWinAPI THEN compilerOptions.platformCallingConvention := SyntaxTree.WinAPICallingConvention
+				ELSE
+					compilerOptions.platformCallingConvention := SyntaxTree.UndefinedCallingConvention
+				END;
+			ELSE
+				compilerOptions.platformCallingConvention := SyntaxTree.UndefinedCallingConvention
+			END
 		END;
 
 		IF options.GetFlag("showOptions") THEN options.Show(error) END;

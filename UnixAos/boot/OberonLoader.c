@@ -6,6 +6,9 @@
    Compile command:
       gcc -m32 -s -O OberonLoader.c -ldl -o OberonLoader
 
+      gcc -m64 -s -O OberonLoader.c -ldl -o OberonLoader
+
+
    The statically linked oberon binary 'oberon.bin' has to be
    appended to this loader by the following A2-command:
 
@@ -23,19 +26,18 @@
 #include <string.h>
 #include <dlfcn.h>
 
-#define Offset 10*1024	/* startpos of oberon.bin if it is appended to the loader binary */
+#define Offset 16*1024	/* startpos of the appended oberon binary */
 #define BlkSize 4*1024
 
 typedef void (*OberonProc)();
 typedef void *addr;
 typedef unsigned int uint;
 
-typedef struct {  /* cf. Generic.Unix.I386.Glue.Mod */
+typedef struct {  /* cf. Generic.Unix.*.Glue.Mod */
     /* Oberon --> loader: */
     char id[24];		/* must match coreID */
     int  codesize;	
-    int  relocations;		/* if base = 0 */
-    addr base;			/* must be 0 or match the address of buf */
+    int  relocations;
     OberonProc entry;		/* Glue.Init0 */
     /* loader --> Oberon: */
     addr *dlopenaddr;
@@ -47,7 +49,11 @@ typedef struct {  /* cf. Generic.Unix.I386.Glue.Mod */
     addr *cout;
 } *Header;
 
-char *coreID = "Oberon32G.binary";
+#if defined(__LP64__) || defined(_LP64)
+   char *coreID = "Oberon64G.binary";	/* cf. Generic.Unix.AMD64.Glue.Mod */
+#else
+   char *coreID = "Oberon32G.binary";	/* cf. Generic.Unix.I386.Glue.Mod */
+#endif
 
 addr buf;
 int fd;
@@ -75,7 +81,11 @@ void Relocate( uint relocations ) {
 
    for (i=0; i<relocations; i++) {
       a = buf + ReadInteger();
+#if defined(__LP64__) || defined(_LP64)
+      *a = buf+(ulong)(*a);
+#else
       *a = buf+(uint)(*a);
+#endif
    }
 }
 

@@ -5754,30 +5754,26 @@ TYPE
 			IF alignment > 1 THEN
 				IntermediateCode.InitRegister(reg,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 				Emit(Mov(position,reg, sp));
-				gap := ParametersSize(system, procedureType, FALSE); 
+				gap := ParametersSize(system, procedureType, FALSE); (* account for all parameters being pushed *)
 				IF (procedureType.callingConvention = SyntaxTree.WinAPICallingConvention) & (system.addressSize =64) THEN
-					IF gap < 4*ToMemoryUnits(system,system.addressSize) THEN 
-						gap := 4*ToMemoryUnits(system,system.addressSize); (* at least four registers get pushed*)
+					IF gap < 4*ToMemoryUnits(system,system.addressSize) THEN (* in WINAPI 64bit there is at least space for four registers on the stack *)
+						gap := 4*ToMemoryUnits(system,system.addressSize); 
 					END;
 				ELSIF (SysvABI(procedureType.callingConvention) ) & (system.addressSize =64) THEN
-					gap := gap - 6*ToMemoryUnits(system,system.addressSize); 
+					gap := gap - 6*ToMemoryUnits(system,system.addressSize); (* the first 6 parameters are passed via registers in SysVABI *)
 					IF gap < 0 THEN 
 						gap := 0
-					ELSE
 					END; 
-					gap := gap - ToMemoryUnits(system,system.offsetFirstParameter); (* alignment before the call *)
+				ELSE
+					gap := gap + ToMemoryUnits(system,system.offsetFirstParameter)	(* Oberon CC: alignment at the BP in the stack frame *)
 				END;
-				gap := gap + ToMemoryUnits(system,system.offsetFirstParameter) + ToMemoryUnits(system,system.addressSize);
+				gap := gap + ToMemoryUnits(system,system.addressSize); (* account for the additionally pushed stack pointer in any case *)
 
 				Emit(Sub(position,sp, sp, IntermediateCode.Immediate(addressType,gap)));
 				IntermediateCode.InitImmediate(mask,addressType,-alignment);
 				Emit(And(position,sp, sp, mask));
 				Emit(Add(position, sp, sp, IntermediateCode.Immediate(addressType, gap)));
 			 	Emit(Push(position,reg));
-				(*
-				IntermediateCode.InitMemory(mem, addressType, sp, 0);
-				Emit(Mov(position,mem,reg));
-				*)
 				ReleaseIntermediateOperand(reg);
 			END;
 

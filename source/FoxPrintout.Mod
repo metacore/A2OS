@@ -423,6 +423,8 @@ TYPE
 				Flag(Global.NameWinAPI,first)
 			ELSIF x.callingConvention = SyntaxTree.CCallingConvention THEN
 				Flag(Global.NameC,first)
+			ELSIF x.callingConvention = SyntaxTree.PlatformCallingConvention THEN
+				Flag(Global.NamePlatformCC,first)
 			END;
 			IF x.stackAlignment > 1 THEN Value(Global.NameStackAligned,x.stackAlignment,first) END;
 			IF ~first THEN w.String("}") END;
@@ -1231,6 +1233,8 @@ TYPE
 					Flag(Global.NameWinAPI,first)
 				ELSIF type.callingConvention = SyntaxTree.CCallingConvention THEN
 					Flag(Global.NameC,first)
+				ELSIF type.callingConvention = SyntaxTree.PlatformCallingConvention THEN
+					Flag(Global.NamePlatformCC,first)
 				END;
 
 				IF x.isInline & (mode = SymbolFile) THEN

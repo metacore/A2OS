@@ -22,6 +22,7 @@ CONST
 	WinAPICallingConvention* =2;
 	DarwinCCallingConvention* =3;
 	InterruptCallingConvention* = 4;
+	PlatformCallingConvention*= 5;
 
 	(** Access Flags *)
 	InternalRead* = 0;			(** can read symbol in same module *)

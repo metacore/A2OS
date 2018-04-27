@@ -936,6 +936,8 @@ TYPE
 					ELSE
 						procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
 					END
+				ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
+					procedureType.SetCallingConvention(SyntaxTree.PlatformCallingConvention); 
 				ELSIF HasFlag(modifiers, Global.NameNoReturn,position) THEN
 					procedureType.SetNoReturn(TRUE);
 				END;

@@ -2282,6 +2282,22 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "-";
 
+(** SIZE *)
+	PROCEDURE MinusLoopY( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, -lval );  INC( ladr, linc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END MinusLoopY;
+
+	OPERATOR "-"*(CONST src: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( SIZE ), MinusLoopY );
+		RETURN RESULT
+	END "-";
+
 (** REAL *)
 	PROCEDURE MinusLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval: REAL;
@@ -2758,6 +2774,23 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "-";
 
+(** SIZE *)
+	PROCEDURE SubAYAYLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  SYSTEM.PUT( dadr, lval - rval );
+			INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END SubAYAYLoop;
+
+	OPERATOR "-"*(CONST left,right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), SubAYAYLoop );
+		RETURN RESULT
+	END "-";
+
 (** REAL *)
 	PROCEDURE SubARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL;
@@ -2852,6 +2885,13 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "-";
 
+(** LONGINT *)
+	OPERATOR "-"*(CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		RESULT := left + (-right);
+		RETURN RESULT
+	END "-";
+	
 (** REAL *)
 	OPERATOR "-"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY [ ? ] OF REAL;
 	BEGIN
@@ -2935,7 +2975,24 @@ Sufficient (but not necessary) conditions:
 										  SIZEOF( LONGINT ), SubSLALLoop );
 		RETURN RESULT
 	END "-";
+	
+(** SIZE *)
+	PROCEDURE SubSYAYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval, dval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := rval - lval;  SYSTEM.PUT( dadr, dval );  INC( ladr, linc );
+			INC( dadr, dinc );  DEC( len );
+		END;
+	END SubSYAYLoop;
 
+	OPERATOR "-"*(left: SIZE; CONST right: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
+										  SIZEOF( SIZE ), SubSYAYLoop );
+		RETURN RESULT
+	END "-";
 (** REAL *)
 	PROCEDURE SubSRARLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: REAL;
@@ -3293,6 +3350,32 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
 										  SIZEOF( LONGINT ), MulALSLLoop );
+		RETURN RESULT
+	END "*";
+
+
+(** SIZE *)
+	PROCEDURE MulAYSYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.PUT( dadr, lval * rval );  INC( ladr, linc );
+			INC( dadr, dinc );  DEC( len );
+		END;
+	END MulAYSYLoop;
+
+	OPERATOR "*"*(CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), MulAYSYLoop );
+		RETURN RESULT
+	END "*";
+
+	OPERATOR "*"*(left: SIZE; CONST right: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
+										  SIZEOF( SIZE ), MulAYSYLoop );
 		RETURN RESULT
 	END "*";
 
@@ -4097,7 +4180,23 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "DIV";
 
+(** SIZE *)
+	PROCEDURE EDivAYAYLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  dval := lval DIV rval;
+			SYSTEM.PUT( dadr, dval );  INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END EDivAYAYLoop;
 
+	OPERATOR "DIV"*(CONST left,right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), EDivAYAYLoop );
+		RETURN RESULT
+	END "DIV";
 	(*** division array DIV scalar -> array and scalar DIV  array -> array ********************************************************************)
 
 (** SHORTINT *)
@@ -4205,6 +4304,41 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "DIV";
 
+(** SIZE *)
+	PROCEDURE DivAYSYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := lval DIV rval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END DivAYSYLoop;
+
+	OPERATOR "DIV"*(CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), DivALSLLoop );
+		RETURN RESULT
+	END "DIV";
+
+	PROCEDURE DivSYAYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := rval DIV lval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END DivSYAYLoop;
+
+	OPERATOR "DIV"*(left: SIZE; CONST right: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
+										  SIZEOF( SIZE ), DivSYAYLoop );
+		RETURN RESULT
+	END "DIV";
+
 	(*** element-wise modulus array MOD array -> array  ********************************************************************)
 
 (** SHORTINT *)
@@ -4261,6 +4395,23 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MOD";
 
+(** SIZE *)
+	PROCEDURE EModAYAYLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  SYSTEM.GET( radr, rval );  dval := lval MOD rval;
+			SYSTEM.PUT( dadr, dval );  INC( ladr, linc );  INC( radr, rinc );  INC( dadr, dinc );
+			DEC( len );
+		END;
+	END EModAYAYLoop;
+
+	OPERATOR "MOD"*(CONST left,right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), EModAYAYLoop );
+		RETURN RESULT
+	END "MOD";
 
 	(*** modulus array MOD scalar -> array and scalar MOD  array -> array ********************************************************************)
 
@@ -4368,6 +4519,43 @@ Sufficient (but not necessary) conditions:
 										  SIZEOF( LONGINT ), ModSLALLoop );
 		RETURN RESULT
 	END "MOD";
+	
+	
+(** SIZE *)
+	PROCEDURE ModAYSYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := lval MOD rval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END ModAYSYLoop;
+
+	OPERATOR "MOD"*(CONST left: ARRAY [ ? ] OF SIZE; right: SIZE ): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ),
+										  SIZEOF( SIZE ), ModAYSYLoop );
+		RETURN RESULT
+	END "MOD";
+
+	PROCEDURE ModSYAYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval, rval: SIZE;  dval: SIZE;
+	BEGIN
+		SYSTEM.GET( radr, rval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := rval MOD lval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END ModSYAYLoop;
+
+	OPERATOR "MOD"*(left: SIZE; CONST right: ARRAY [ ? ] OF SIZE): ARRAY [ ? ] OF SIZE;
+	BEGIN
+		ApplyBinaryASAOp( ADDRESSOF( RESULT ), ADDRESSOF( right ), ADDRESSOF( left ),
+										  SIZEOF( SIZE ), ModSYAYLoop );
+		RETURN RESULT
+	END "MOD";
+
 
 	(*** scalar product <array,array> -> scalar  ********************************************************************)
 
@@ -7779,6 +7967,25 @@ TYPE
 		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( LONGINT ), MinALALLoop );
 		RETURN RESULT
 	END "MIN";
+
+	TYPE SizePtr = POINTER {UNSAFE,UNTRACED} TO RECORD val: SIZE END;
+	
+	PROCEDURE MinAYAYLoop( ladr, radr, dadr: SizePtr; linc, rinc, dinc, len: SIZE); 
+	BEGIN
+		WHILE (len > 0) DO
+			IF ladr.val < ladr.val THEN dadr.val := ladr.val ELSE dadr.val := radr.val END;
+			ladr := ladr + linc;
+			radr := radr + rinc;
+			dadr := dadr + dinc;
+			DEC(len); 
+		END;
+	END MinAYAYLoop;
+
+	OPERATOR "MIN"*(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE ;
+	BEGIN
+		ApplyBinaryAAAOp( ADDRESSOF( RESULT ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( SIZE ), MinAYAYLoop );
+		RETURN RESULT
+	END "MIN";
 	
 	PROCEDURE MinAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
 	VAR lval, rval: INTEGER;
@@ -8123,6 +8330,24 @@ TYPE
 		RETURN val;
 	END "SUM";
 
+(** SIZE *)
+	PROCEDURE SumAYLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
+	VAR lval, dval: SIZE;
+	BEGIN
+		SYSTEM.GET( dadr, dval );
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := dval + lval;  INC( ladr, linc );  DEC( len );
+		END;
+		SYSTEM.PUT( dadr, dval );
+	END SumAYLoop;
+
+	OPERATOR "SUM"*( CONST left: ARRAY [ ? ] OF SIZE ): SIZE;
+	TYPE Type = SIZE;
+	VAR val: Type;
+	BEGIN
+		val := 0;  ApplyUnaryASOp( ADDRESSOF( val ), ADDRESSOF( left ), SumAYLoop );
+		RETURN val;
+	END "SUM";
 (** REAL *)
 	PROCEDURE SumARLoop( ladr, dadr: ADDRESS; linc, len: SIZE );
 	VAR lval, dval: REAL;

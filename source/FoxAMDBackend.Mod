@@ -1554,6 +1554,7 @@ TYPE
 		PROCEDURE EmitConvertFloat(CONST instruction: IntermediateCode.Instruction);
 		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: LONGINT;
 		temp, temp2, temp3, temp4: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
+			unsigned: BOOLEAN; 
 		BEGIN
 			vdest := instruction.op1; vsrc := instruction.op2;
 			srcType := vsrc.type;
@@ -1572,13 +1573,18 @@ TYPE
 							SpecialMove(InstructionSet.opCVTSD2SS, InstructionSet.opMOVSD, FALSE, dest, src, destType)
 						END;
 					END;
-				|IntermediateCode.SignedInteger:
+				|IntermediateCode.SignedInteger, IntermediateCode.UnsignedInteger:
 					(* put value to stack and then read from stack via Float *)
+					unsigned := srcType.form = IntermediateCode.UnsignedInteger;
 					IF vsrc.type.sizeInBits < IntermediateCode.Bits32 THEN
 						MakeOperand(vsrc,Low,src,NIL);
 						ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32);
 						TicketToOperand(ticket,temp);
-						emitter.Emit2(InstructionSet.opMOVSX,temp,src);
+						IF unsigned THEN
+							emitter.Emit2(InstructionSet.opMOVZX,temp,src);
+						ELSE
+							emitter.Emit2(InstructionSet.opMOVSX,temp,src);
+						END;
 						IF backend.forceFPU THEN (* via stack *)
 							emitter.Emit1(InstructionSet.opPUSH,temp);
 							UnmapTicket(ticket);
@@ -1591,6 +1597,17 @@ TYPE
 						EmitPush(vsrc,High);
 						EmitPush(vsrc,Low);
 						sizeInBytes := 8
+					ELSIF unsigned & (cpuBits=32) & ( vsrc.type.sizeInBits = IntermediateCode.Bits32) THEN (* UNSIGNED32 *)
+						sizeInBytes := 8;
+						Assembler.InitImm(zero,0,0);
+						emitter.Emit1(InstructionSet.opPUSH,zero);
+						EmitPush(vsrc,Low);						
+					ELSIF unsigned & ( vsrc.type.sizeInBits = IntermediateCode.Bits32) THEN (* UNSIGNED32 on 64-bit *)
+						MakeRegister(vsrc, Low, src); 
+						index := src.register;
+						index := index MOD 32 + RAX;
+						src := registerOperands[index];
+						espm := src;
 					ELSE
 						IF backend.forceFPU THEN (* via stack *)
 							EmitPush(vsrc,Low);
@@ -1601,7 +1618,11 @@ TYPE
 							IF Assembler.IsImmediateOperand(src) THEN (* use temporary register *)
 								ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32);
 								TicketToOperand(ticket,temp);
-								emitter.Emit2(InstructionSet.opMOVSX,temp,src);
+								IF unsigned THEN
+									emitter.Emit2(InstructionSet.opMOVZX,temp,src);
+								ELSE
+									emitter.Emit2(InstructionSet.opMOVSX,temp,src);
+								END;
 								espm := temp
 							ELSE
 								espm := src
@@ -1620,7 +1641,7 @@ TYPE
 						MakeOperand(vdest,Low,dest,NIL);
 						emitter.Emit1(InstructionSet.opFSTP,dest);
 						DEC(fpStackPointer);
-					ELSIF IsComplex(vsrc) THEN
+					ELSIF IsComplex(vsrc) OR unsigned & (cpuBits=32) & ( vsrc.type.sizeInBits = IntermediateCode.Bits32)  THEN
 						emitter.Emit1(InstructionSet.opFILD,espm);
 						MakeOperand(vdest,Low,dest,NIL);
 						IF Assembler.IsMemoryOperand(dest) THEN

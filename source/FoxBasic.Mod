@@ -28,24 +28,8 @@ CONST
 	InitListSize = 4;
 	InitErrMsgSize = 300;	(* initial size of array of error messages *)
 
-	(* value of constant NIL *)
-	nilval* = 0;
-
-	ExportedUnicodeSupport* = FALSE;
-
-	(* target machine minimum values of basic types expressed in host machine format: *)
-	MinSInt* = -80H;
-	MinInt* = -8000H;
-	MinLInt* = -80000000H;   (* i386: -2147483648*)
-
-	(* target machine maximum values of basic types expressed in host machine format: *)
-	MaxSInt* = 7FH;
-	MaxInt* = 7FFFH;
-	MaxLInt* = 7FFFFFFFH;   (* i386: 2147483647*)
-	MaxSet* = 31;   (* must be >= 15, else the bootstraped compiler cannot run (IN-tests) *)
-
-	invalidString*=-1;
-	InvalidCode*=Diagnostics.Invalid;
+	invalidString* = -1;
+	InvalidCode* = Diagnostics.Invalid;
 TYPE
 	(*
 	String* = POINTER TO ARRAY OF CHAR;

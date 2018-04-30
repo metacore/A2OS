@@ -757,10 +757,10 @@ BEGIN
 END Dump;
 
 BEGIN
-	AddrMode[0] := - {};
-	AddrMode[1] := - {};
-	AddrMode[2] := - {};
+	AddrMode[0] := { 0 .. 31 };
+	AddrMode[1] := { 0 .. 31 };
+	AddrMode[2] := { 0 .. 31 };
 	AddrMode[3] := { 24, 23 };
-	AddrMode[4] := - {};
+	AddrMode[4] := { 0 .. 31 };
 	SetConstantPoolBarrier(-1)
 END PCOARM.

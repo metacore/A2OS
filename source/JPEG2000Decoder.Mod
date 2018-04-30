@@ -2320,7 +2320,7 @@ MODULE JPEG2000Decoder;
 							END;
 
 							(* Set coefficients back to not visited *)
-							state[stateIdx] := curState * (-(STATE_VISITED_R1 + STATE_VISITED_R2));
+							state[stateIdx] := curState * SET (-(STATE_VISITED_R1 + STATE_VISITED_R2));
 
 							(* Scan 3rd row *)
 							INC(stateIdx, rowWidthState);
@@ -2456,7 +2456,7 @@ MODULE JPEG2000Decoder;
 							END;
 
 							(* Set coefficients back to not visited *)
-							state[stateIdx] := curState * (-(STATE_VISITED_R1 + STATE_VISITED_R2));
+							state[stateIdx] := curState * SET(-(STATE_VISITED_R1 + STATE_VISITED_R2));
 						END;
 
 						(* Move to next row of stripes *)
@@ -2621,7 +2621,7 @@ MODULE JPEG2000Decoder;
 
 							mask3 := SYSTEM.VAL(SET, LSH(J2KU.SWAP_MASK, (J2KU.LONGINT_BITS - 1)- magBits));
 							mask2 := -mask3;
-							mask1 := mask3 * (-J2KU.LONGINT_SIGN_BIT);
+							mask1 := mask3 * SET(-J2KU.LONGINT_SIGN_BIT);
 							approx := SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), (J2KU.LONGINT_BITS - 2) - magBits));
 
 							(* For every coefficient see if it belongs to the background or a ROI *)

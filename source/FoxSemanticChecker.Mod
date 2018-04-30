@@ -6120,7 +6120,7 @@ TYPE
 						END;
 
 						parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Open);
-						parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.longintType);
+						parameterType(SyntaxTree.MathArrayType).SetArrayBase(system.sizeType);
 						IF ~CompatibleTo(system,type1,parameterType) THEN
 							Error(parameter1.position,"parameter incompatible to math array of longint");
 							result := SyntaxTree.invalidExpression;

@@ -10039,7 +10039,7 @@ TYPE
 *)
 
 
-	PROCEDURE DoReshape*( VAR dest: ADDRESS;  src: ADDRESS; CONST shape: ARRAY [ * ] OF LONGINT );
+	PROCEDURE DoReshape*( VAR dest: ADDRESS;  src: ADDRESS; CONST shape: ARRAY [ * ] OF SIZE );
 	VAR i, Size: SIZE;  ptr, data: ANY;  new: ADDRESS;
 
 		oldSize, newSize: SIZE;  oldDim, newDim: SIZE;
@@ -10723,7 +10723,7 @@ TYPE
 		CONST src: ARRAY [?] OF basetype
 		CONST shape: ARRAY [*] OF LONGINT
 	*)
-	PROCEDURE Reshape*(CONST left: ARRAY [?]; CONST right: ARRAY [*] OF LONGINT): ARRAY [?];
+	PROCEDURE Reshape*(CONST left: ARRAY [?]; CONST right: ARRAY [*] OF SIZE): ARRAY [?];
 	BEGIN
 		DoReshape(SYSTEM.VAL(ADDRESS,RESULT), SYSTEM.VAL(ADDRESS,left), right);
 		RETURN RESULT

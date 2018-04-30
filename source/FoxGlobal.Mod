@@ -1617,6 +1617,11 @@ TYPE
 			WHILE toSize >= fromSize DO
 				toSize := toSize DIV 2; INC(distance);
 			END;
+		ELSIF (from IS SyntaxTree.SizeType) & (to IS SyntaxTree.FloatType) THEN
+			distance := 1;
+			WHILE toSize >= fromSize DO
+				toSize := toSize DIV 2; INC(distance);
+			END;
 		ELSIF (from IS SyntaxTree.RangeType) & (to IS SyntaxTree.RangeType) THEN
 			distance := 0;
 		ELSIF (from IS SyntaxTree.BooleanType) & (to IS SyntaxTree.BooleanType) THEN

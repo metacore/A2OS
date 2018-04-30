@@ -2831,14 +2831,14 @@ TYPE
 	(** <<value =  {1,2,3..5}>> **)
 	SetValue* = OBJECT (Value)
 		VAR
-			value-: SET;
+			value-: Basic.Set;
 
-		PROCEDURE & InitSetValue(position: Position; value: SET);
+		PROCEDURE & InitSetValue(position: Position; value: Basic.Set);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitSetValue;
 
-		PROCEDURE SetValue*(value: SET);
+		PROCEDURE SetValue*(value: Basic.Set);
 		BEGIN	SELF.value := value
 		END SetValue;
 
@@ -5874,7 +5874,7 @@ VAR
 		NEW( characterValue, position, value);  RETURN characterValue;
 	END NewCharacterValue;
 
-	PROCEDURE NewSetValue*(position: Position; value: SET): SetValue;
+	PROCEDURE NewSetValue*(position: Position; value: Basic.Set): SetValue;
 	VAR setValue: SetValue;
 	BEGIN
 		NEW(setValue, position, value); RETURN setValue

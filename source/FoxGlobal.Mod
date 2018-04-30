@@ -1464,9 +1464,11 @@ TYPE
 		IF system.SizeOf(type) = 32 THEN RETURN MIN(REAL) ELSE RETURN MIN(LONGREAL) END;
 	END MinFloat;
 
-	PROCEDURE ConvertSet*(this: SET; bits: LONGINT): SET;
+	PROCEDURE ConvertSet*(this: Basic.Set; bits: LONGINT): Basic.Set;
+	VAR i: LONGINT;
 	BEGIN
-		RETURN this * {0 .. MIN (bits - 1, MAX (SET))};
+		WHILE bits <= MAX (Basic.Set) DO EXCL (this, bits); INC (bits) END;
+		RETURN this;
 	END ConvertSet;
 
 	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
@@ -1542,7 +1544,7 @@ TYPE
 		RETURN value
 	END NewBooleanValue;
 	
-	PROCEDURE GetSetType*(system: System; this: SET): SyntaxTree.SetType;
+	PROCEDURE GetSetType*(system: System; this: Basic.Set): SyntaxTree.SetType;
 	BEGIN
 		IF this * {0 .. 7} = this THEN RETURN Set8
 		ELSIF this * { 0 .. 15 } = this THEN RETURN Set16
@@ -1551,7 +1553,7 @@ TYPE
 		END
 	END GetSetType;
 
-	PROCEDURE NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value;
+	PROCEDURE NewSetValue*(system: System; position: Position; s: Basic.Set): SyntaxTree.Value;
 	VAR value: SyntaxTree.SetValue;
 	BEGIN
 		value := SyntaxTree.NewSetValue(position,s);

@@ -829,13 +829,13 @@ TYPE
 		BEGIN
 			w.String("{");
 			i := 0;
-			WHILE (i<MAX(SET)) & ~(i IN x.value)  DO
+			WHILE (i<MAX(Basic.Set)) & ~(i IN x.value)  DO
 				INC(i);
 			END;
-			IF i<MAX(SET) THEN
+			IF i<MAX(Basic.Set) THEN
 				w.Int(i,1);
 				INC(i);
-				WHILE i < MAX(SET) DO
+				WHILE i < MAX(Basic.Set) DO
 					IF i IN x.value THEN w.String(","); w.Int(i,1); END;
 					INC(i)
 				END

@@ -1140,7 +1140,7 @@ TYPE
 			numberMethods, int: LONGINT;
 			real: LONGREAL;
 			bool: BOOLEAN;
-			set: SET;
+			set: Basic.Set;
 			v: SyntaxTree.Expression;
 			str: Scanner.StringType;
 			atype: SyntaxTree.ArrayType;
@@ -1962,7 +1962,7 @@ TYPE
 			element: SyntaxTree.Expression;
 			constant: BOOLEAN;
 			elements: SyntaxTree.ExpressionList;
-			s: SET;
+			s: Basic.Set;
 			result: SyntaxTree.Expression;
 			value: SyntaxTree.Value;
 
@@ -2205,7 +2205,7 @@ TYPE
 		PROCEDURE VisitUnaryExpression*(unaryExpression: SyntaxTree.UnaryExpression);
 		VAR
 			left: SyntaxTree.Expression;
-			int: HUGEINT; real, imaginary: LONGREAL; set: SET; operator: LONGINT;
+			int: HUGEINT; real, imaginary: LONGREAL; set: Basic.Set; operator: LONGINT;
 			bool: BOOLEAN;
 			result: SyntaxTree.Expression; type: SyntaxTree.Type; operatorCall: SyntaxTree.Expression;
 			value: SyntaxTree.Value;
@@ -2432,7 +2432,7 @@ TYPE
 		END MathArrayConversion;
 
 		PROCEDURE ConvertValue(position: Position; expression: SyntaxTree.Value; type: SyntaxTree.Type): SyntaxTree.Expression;
-		VAR result: SyntaxTree.Expression; int: HUGEINT; real, imaginary: LONGREAL; set: SET; char: CHAR; string: Scanner.StringType;
+		VAR result: SyntaxTree.Expression; int: HUGEINT; real, imaginary: LONGREAL; set: Basic.Set; char: CHAR; string: Scanner.StringType;
 		BEGIN
 			result := expression; type := type.resolved;
 			IF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
@@ -2454,7 +2454,7 @@ TYPE
 					result := SyntaxTree.NewComplexValue(expression.position, int, 0);
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.SetType) THEN
-					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(SET,int));
+					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(Basic.Set,HUGEINT(int)));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.CharacterType) OR (type IS SyntaxTree.ByteType) THEN
 					result := SyntaxTree.NewCharacterValue(expression.position,SYSTEM.VAL(CHAR,int));
@@ -2509,7 +2509,7 @@ TYPE
 				END
 			ELSIF IsSetValue(expression,set) THEN
 				IF (type IS SyntaxTree.IntegerType) THEN
-					result := SyntaxTree.NewIntegerValue(expression.position,SYSTEM.VAL(LONGINT,set));
+					result := SyntaxTree.NewIntegerValue(expression.position,SYSTEM.VAL(HUGEINT,set));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.CharacterType) OR (type IS SyntaxTree.ByteType) THEN (* for example: possible via ch = CHR(SYSTEM.VAL(LONGINT,set)) *)
 					result := SyntaxTree.NewCharacterValue(expression.position,SYSTEM.VAL(CHAR,set));
@@ -2547,7 +2547,7 @@ TYPE
 					result := SyntaxTree.NewIntegerValue(expression.position,SYSTEM.VAL(LONGINT,char));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.SetType) THEN
-					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(SET,char));
+					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(Basic.Set,HUGEINT(ORD(char))));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.CharacterType) THEN
 					result := SyntaxTree.NewCharacterValue(expression.position,char);
@@ -2901,7 +2901,7 @@ TYPE
 		PROCEDURE VisitBinaryExpression*(binaryExpression: SyntaxTree.BinaryExpression);
 		VAR left,right,result: SyntaxTree.Expression;
 			leftType, rightType: SyntaxTree.Type;
-			il,ir: LONGINT; rl,rr,a,b,c,d,divisor: LONGREAL; hl,hr: HUGEINT;bl,br: BOOLEAN; sl,sr: SET;  strl,strr: Scanner.StringType;
+			il,ir: LONGINT; rl,rr,a,b,c,d,divisor: LONGREAL; hl,hr: HUGEINT;bl,br: BOOLEAN; sl,sr: Basic.Set;  strl,strr: Scanner.StringType;
 			cl,cr: CHAR;
 			operator: LONGINT; operatorCall: SyntaxTree.Expression;
 			type: SyntaxTree.Type;
@@ -2918,7 +2918,7 @@ TYPE
 				type := system.booleanType
 			END NewBool;
 
-			PROCEDURE NewSet(v: SET);
+			PROCEDURE NewSet(v: Basic.Set);
 			BEGIN
 				value := Global.NewSetValue(system,binaryExpression.position,v);
 				result.SetResolved(value);
@@ -9577,7 +9577,7 @@ TYPE
 		RETURN result
 	END IsBooleanValue;
 
-	PROCEDURE IsSetValue(x: SyntaxTree.Expression; VAR value: SET): BOOLEAN;
+	PROCEDURE IsSetValue(x: SyntaxTree.Expression; VAR value: Basic.Set): BOOLEAN;
 	VAR result: BOOLEAN;
 	BEGIN
 		IF  (x.resolved # NIL) & (x.resolved IS SyntaxTree.SetValue) THEN

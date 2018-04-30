@@ -11542,10 +11542,10 @@ TYPE
 		END Size;
 
 
-		PROCEDURE Set(section: IntermediateCode.Section; value: SET);
+		PROCEDURE Set(section: IntermediateCode.Section; value: Basic.Set);
 		VAR op: IntermediateCode.Operand;
 		BEGIN
-			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),SYSTEM.VAL(LONGINT,value));
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.sizeType),SYSTEM.VAL(HUGEINT,value));
 			section.Emit(Data(Basic.invalidPosition,op));
 		END Set;
 

@@ -829,7 +829,7 @@ TYPE
 
 		(* fp = fp & Set *)
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
-		BEGIN FPSet(SELF.fp,x.value) END VisitSetValue;
+		BEGIN FPHugeInt(SELF.fp,SYSTEM.VAL(HUGEINT,x.value)) END VisitSetValue;
 
 		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
 		VAR element: SyntaxTree.Expression; i: LONGINT;

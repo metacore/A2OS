@@ -370,7 +370,7 @@ TYPE
 						IF Match(inputFile) THEN (* "<" filename *)
 							IF (cmd.context.in = context.in) THEN
 								Skip;
-								IF Token(fn, -char) & (fn # "") THEN
+								IF Token(fn, SET(-char)) & (fn # "") THEN
 									f := Files.Old(fn);
 									IF (f # NIL) THEN
 										Files.OpenReader(fr, f, 0);

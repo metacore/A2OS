@@ -153,11 +153,9 @@ TYPE
 	Sigset_t= ARRAY 32 OF ADDRESS;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
-	pid_t*		= LONGINT;
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
-	off_t*	= SIZE;
 
 
 CONST
@@ -261,18 +259,26 @@ TYPE
 
 
 TYPE
-	DevT* = HUGEINT;
-	InoT* = LONGINT;
+	dev_t*		= HUGEINT;
+	ino_t*		= LONGINT;
+	nlink_t*	= LONGINT;
+	mode_t*	= LONGINT;
+	off_t*		= LONGINT;
+	blksize_t*= LONGINT;
+	blkcnt_t*	= LONGINT;
+	uid_t*		= LONGINT;
+	gid_t*		= LONGINT;
+	pid_t*		= LONGINT;
 
 	Status* = RECORD
-				dev-		: DevT;
+				dev-		: dev_t;
 				unused1-	: LONGINT;
-				ino-		: InoT;
+				ino-		: ino_t;
 				mode-	: LONGINT;
 				nlink-		: LONGINT;
 				uid-		: LONGINT;
 				gid-		: LONGINT;
-				rdev-		: DevT;
+				rdev-		: dev_t;
 				unused2-	: LONGINT;
 				size-		: LONGINT;
 				blksize-	: LONGINT;
@@ -315,8 +321,8 @@ TYPE
 
 
 	Dirent* = POINTER TO RECORD
-				ino-	: InoT;   (* this may change to HUGEINT in future Linux releases!! *)
-				off-	: LONGINT;   (* this may change to HUGEINT in future Linux releases!! *)
+				ino-	: ino_t;   
+				off-	: off_t;   
 				reclen-	: INTEGER;
 				typ-		: CHAR;
 				name-	: (*array of*) CHAR;
@@ -362,10 +368,6 @@ TYPE
 				cr2-		: LONGINT
 			END;
 
-	FPcontext* = POINTER TO FPcontextDesc;
-	FPcontextDesc* = RECORD
-				(* ... *)
-			END;
 
 	PThreadAttr = RECORD
 		reserved1-: ARRAY 5 OF ADDRESS;

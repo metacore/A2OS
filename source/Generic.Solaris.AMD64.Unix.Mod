@@ -261,7 +261,7 @@ CONST
 	
 TYPE
 	Termios* = RECORD
-		iflags*, oflags*, cflags*, lflags*: SET;
+		iflags*, oflags*, cflags*, lflags*: SET32;
 		cc*: ARRAY 19 OF CHAR;
 		dummy-: ARRAY 2 OF LONGINT
 	END;
@@ -269,17 +269,26 @@ TYPE
 	(*------------------------------------------------------------------*)
 
 TYPE
-	DevT* = LONGWORD;
-	InoT* = LONGWORD;
+	dev_t*		= HUGEINT;
+	ino_t*		= HUGEINT;
+	nlink_t*	= LONGINT;
+	mode_t*	= LONGINT;
+	off_t*		= HUGEINT;
+	blksize_t*= LONGINT;
+	blkcnt_t*	= HUGEINT;
+	uid_t*		= LONGINT;
+	gid_t*		= LONGINT;
+	pid_t*		= LONGINT;
+	
 
 	Status* = RECORD
-				dev-		: DevT;
-				ino-		: InoT;
+				dev-		: dev_t;
+				ino-		: ino_t;
 				mode-	: WORD;
 				nlink-		: WORD;
 				uid-		: WORD;
 				gid-		: WORD;
-				rdev-		: DevT;
+				rdev-		: dev_t;
 				size-		: LONGWORD;
 				atime-	: Timeval;
 				mtime-	: Timeval;
@@ -320,8 +329,8 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-	: InoT;
-				off-	: LONGWORD;
+				ino-	: ino_t;
+				off-	: off_t;
 				reclen-	: INTEGER;
 				name-	: (*array of*) CHAR;
 			END;
@@ -377,11 +386,6 @@ TYPE
 				r_gsbase	: HUGEINT;
 			END;
 
-	FPcontext* = POINTER TO FPcontextDesc;
-	FPcontextDesc* = RECORD
-				i387-	: ARRAY 95 OF LONGINT;
-				filler-	: ARRAY 5 OF LONGINT
-			END;
 			
 	Sigaction = RECORD
 				sa_flags: LONGINT;
@@ -395,8 +399,6 @@ TYPE
 		unused: ARRAY 8 OF LONGINT; 
 	END;
 			
-	pid_t*	= WORD;
-	off_t* = LONGWORD;
 	
 	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): LONGINT;
 	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): LONGINT;

@@ -153,11 +153,9 @@ TYPE
 	Sigset_t= ARRAY 16 OF ADDRESS;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
-	pid_t*		= LONGINT;
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
-	off_t*	= SIZE;
 
 
 CONST
@@ -251,7 +249,7 @@ CONST
 
 TYPE
 	Termios* = RECORD
-		iflags*, oflags*, cflags*, lflags*: SET;
+		iflags*, oflags*, cflags*, lflags*: SET32;
 		line*: CHAR;
 		cc*	: ARRAY 32 OF CHAR;
 		ispeed-, ospeed-: LONGINT
@@ -261,18 +259,26 @@ TYPE
 
 
 TYPE
-	DevT* = LONGWORD;
-	InoT* = LONGWORD;
+	dev_t*		= HUGEINT;
+	ino_t*		= HUGEINT;
+	nlink_t*	= HUGEINT;
+	mode_t*	= LONGINT;
+	off_t*		= HUGEINT;
+	blksize_t*= HUGEINT;
+	blkcnt_t*	= HUGEINT;
+	uid_t*		= LONGINT;
+	gid_t*		= LONGINT;
+	pid_t*		= LONGINT;
 
 	Status* = RECORD
-				dev-		: DevT;
-				ino-		: InoT;
+				dev-		: dev_t;
+				ino-		: ino_t;
 				nlink-		: LONGWORD;
 				mode-	: WORD;
 				uid-		: WORD;
 				gid-		: WORD;
 				pad0-		: WORD;
-				rdev-		: DevT;
+				rdev-		: dev_t;
 				size-		: LONGWORD;
 				blksize-	: LONGWORD;
 				blocks-	: LONGWORD;
@@ -314,8 +320,8 @@ TYPE
 
 
 	Dirent* = POINTER TO RECORD
-				ino-	: InoT;
-				off-	: LONGWORD;
+				ino-	: ino_t;
+				off-	: off_t;
 				reclen-	: INTEGER;
 				typ-		: CHAR;
 				name-	: (*array of*) CHAR;

@@ -530,8 +530,8 @@ TYPE
 				fd: LONGINT;
 				workName, registerName: Filename;
 				tempFile: BOOLEAN;
-				dev: Unix.DevT;
-				ino: Unix.InoT;
+				dev: Unix.dev_t;
+				ino: Unix.ino_t;
 				mtime: HUGEINT;
 				fsize, fpos: SIZE;
 				bufs: ARRAY NBufs OF Buffer;

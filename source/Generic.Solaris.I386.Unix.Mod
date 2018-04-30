@@ -269,18 +269,27 @@ TYPE
 	(*------------------------------------------------------------------*)
 
 TYPE
-	DevT* = LONGINT;
-	InoT* = LONGINT;
-
+	dev_t*		= LONGINT;
+	ino_t*		= LONGINT;
+	nlink_t*	= LONGINT;
+	mode_t*	= LONGINT;
+	off_t*		= LONGINT;
+	blksize_t*= LONGINT;
+	blkcnt_t*	= LONGINT;
+	uid_t*		= LONGINT;
+	gid_t*		= LONGINT;
+	pid_t*		= LONGINT;
+	
+	
 	Status* = RECORD
-				dev-		: DevT;
+				dev-		: dev_t;
 				pad1-		: ARRAY 3 OF LONGINT;
-				ino-		: InoT;
+				ino-		: ino_t;
 				mode-	: LONGINT;
 				nlink-		: LONGINT;
 				uid-		: LONGINT;
 				gid-		: LONGINT;
-				rdev-		: DevT;
+				rdev-		: dev_t;
 				pad2-		: ARRAY 2 OF LONGINT;
 				size-		: LONGINT;
 				pad3-		: LONGINT;
@@ -323,8 +332,8 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-	: InoT;
-				off-	: LONGINT;
+				ino-	: ino_t;
+				off-	: off_t;
 				reclen-	: INTEGER;
 				name-	: (*array of*) CHAR;
 			END;
@@ -389,8 +398,6 @@ TYPE
 		unused: ARRAY 8 OF LONGINT; 
 	END;
 			
-	pid_t*	= LONGINT;
-	off_t* = SIZE;
 	
 	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): LONGINT;
 	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): LONGINT;

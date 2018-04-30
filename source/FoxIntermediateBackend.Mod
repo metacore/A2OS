@@ -11545,7 +11545,7 @@ TYPE
 		PROCEDURE Set(section: IntermediateCode.Section; value: Basic.Set);
 		VAR op: IntermediateCode.Operand;
 		BEGIN
-			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.sizeType),SYSTEM.VAL(HUGEINT,value));
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.setType),SYSTEM.VAL(Basic.Integer,value));
 			section.Emit(Data(Basic.invalidPosition,op));
 		END Set;
 

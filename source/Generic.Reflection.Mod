@@ -202,7 +202,7 @@ CONST
 	VAR set: SET; i: SIZE;
 	BEGIN
 		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN {} END; 
-		FOR i := 0 TO SIZEOF(LONGINT)-1 DO
+		FOR i := 0 TO SIZEOF(SET)-1 DO
 			SYSTEM.PUT8(ADDRESSOF(set)+i, refs[offset]);
 			INC(offset);
 		END;
@@ -212,7 +212,7 @@ CONST
 	(* skip a set in the byte stream *)
 	PROCEDURE SkipSet*(VAR offset: SIZE);
 	BEGIN
-		INC(offset, SIZEOF(LONGINT)); 
+		INC(offset, SIZEOF(SET)); 
 	END SkipSet;
 
 	(* consume a string in the byte stream *)

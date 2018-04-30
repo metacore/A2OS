@@ -268,17 +268,17 @@ TYPE
 
 
 TYPE
-	DevT* = LONGINT;
-	InoT* = LONGINT;
+	dev_t* = LONGINT;
+	ino_t* = LONGINT;
 
 	Status* = RECORD
-				dev-		: DevT;
-				ino-		: InoT;
+				dev-		: dev_t;
+				ino-		: ino_t;
 				mode-	: INTEGER;
 				nlink-		: INTEGER;
 				uid-		: LONGINT;
 				gid-		: LONGINT;
-				rdev-		: DevT;
+				rdev-		: dev_t;
 				atime-	: Timeval;
 				mtime-	: Timeval;
 				ctime-	: Timeval;
@@ -325,7 +325,7 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-		: InoT;
+				ino-		: ino_t;
 				reclen-	: INTEGER;
 				typ-		: SHORTINT;
 				namlen-	: SHORTINT;

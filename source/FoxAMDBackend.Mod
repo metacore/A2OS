@@ -1553,7 +1553,7 @@ TYPE
 
 		PROCEDURE EmitConvertFloat(CONST instruction: IntermediateCode.Instruction);
 		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: LONGINT;
-		temp, temp2, temp3, temp4: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
+		temp, temp2, temp3, temp4, zero: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
 			unsigned: BOOLEAN; 
 		BEGIN
 			vdest := instruction.op1; vsrc := instruction.op2;

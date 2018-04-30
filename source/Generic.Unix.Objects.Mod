@@ -339,7 +339,7 @@ TYPE
 
 	
 	PROCEDURE BodyStarter;
-	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP: ADDRESS;
+	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP, sp: ADDRESS;
 	BEGIN
 		Unix.MtxLock( startProcess );
 			p := newProcess;  newProcess := NIL;
@@ -357,7 +357,10 @@ TYPE
 		p.SetPriority( p.priority );
 
 		IF Restart IN p.flags THEN
+			(* store and restore stack pointer because it is saved on the stack during SYSVABI calls to ensure stack alignment *)
+			sp := S.GetStackPointer ();
 			res := Unix.sigsetjmp( ADDRESSOF( p.state0[0] ), 1 );
+			S.SetStackPointer (sp);
 		END;
 
 		p.mode := Running;

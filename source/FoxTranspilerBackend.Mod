@@ -1062,7 +1062,7 @@ TYPE
 		END VisitAwaitStatement;
 
 		PROCEDURE VisitCaseStatement* (statement: SyntaxTree.CaseStatement);
-		VAR i, value: LONGINT; casePart: SyntaxTree.CasePart; caseConstant: SyntaxTree.CaseConstant;
+		VAR i: LONGINT; value: Basic.Integer; casePart: SyntaxTree.CasePart; caseConstant: SyntaxTree.CaseConstant;
 		BEGIN
 			PrintIndent; writer.String ("switch ("); PrintExpression (statement.variable); writer.Char (')'); writer.Ln;
 			BeginBlock;
@@ -1230,7 +1230,7 @@ TYPE
 		END VisitBooleanValue;
 
 		PROCEDURE VisitIntegerValue* (expression: SyntaxTree.IntegerValue);
-		BEGIN IF expression.value = expression.hvalue THEN writer.Int (expression.value, 0); ELSE writer.String ("0x"); writer.Hex (expression.hvalue, 0); END;
+		BEGIN writer.Int (expression.value, 0);
 		END VisitIntegerValue;
 
 		PROCEDURE VisitCharacterValue* (expression: SyntaxTree.CharacterValue);

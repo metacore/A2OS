@@ -1034,7 +1034,7 @@ TYPE
 	VAR
 		enumerationScope-: EnumerationScope;
 		enumerationBase-: Type;
-		rangeLowest-,rangeHighest-: LONGINT;
+		rangeLowest-,rangeHighest-: Basic.Integer;
 
 		PROCEDURE &InitEnumerationType(position: Position; scope: Scope; enumerationScope: EnumerationScope);
 		BEGIN
@@ -1051,7 +1051,7 @@ TYPE
 		BEGIN enumerationBase := base
 		END SetEnumerationBase;
 
-		PROCEDURE SetRange*(lowest,highest: LONGINT);
+		PROCEDURE SetRange*(lowest,highest: Basic.Integer);
 		BEGIN rangeLowest := lowest; rangeHighest := highest;
 		END SetRange;
 
@@ -1102,7 +1102,7 @@ TYPE
 		BEGIN
 			SELF.length := length;
 			IF (length.resolved # NIL) & (length.resolved IS IntegerValue) THEN
-				staticLength := length.resolved(IntegerValue).value
+				staticLength := LONGINT (length.resolved(IntegerValue).value) (* TODO: staticLength should be of type Basic.Integer too *)
 			END;
 		END SetLength;
 
@@ -1184,7 +1184,7 @@ TYPE
 		BEGIN
 			SELF.length := length;
 			IF (length # NIL) & (length.resolved # NIL) & (length.resolved IS IntegerValue) THEN
-				staticLength := length.resolved(IntegerValue).value;
+				staticLength := LONGINT (length.resolved(IntegerValue).value); (* TODO: staticLength should be of type Basic.Integer too *)
 
 				(* optimization: unless the base type is a dynamic array, make this array static *)
 				IF ~((arrayBase # NIL) & (arrayBase IS MathArrayType) & (arrayBase(MathArrayType).form # Static)) THEN
@@ -2769,22 +2769,21 @@ TYPE
 	(** <<value = 123456>> **)
 	IntegerValue* = OBJECT (Value)
 		VAR
-			hvalue-: HUGEINT;
-			value-: LONGINT;
+			value-: Basic.Integer;
 
-		PROCEDURE & InitIntegerValue(position: Position; hvalue: HUGEINT);
+		PROCEDURE & InitIntegerValue(position: Position; value: Basic.Integer);
 		BEGIN
-			InitValue(position);  SELF.hvalue := hvalue; SELF.value := SHORT(hvalue);
+			InitValue(position);  SELF.value := value;
 		END InitIntegerValue;
 
-		PROCEDURE SetValue*(hvalue: HUGEINT);
-		BEGIN	SELF.hvalue := hvalue; SELF.value := SHORT(hvalue);
+		PROCEDURE SetValue*(value: Basic.Integer);
+		BEGIN	SELF.value := value;
 		END SetValue;
 
 		PROCEDURE Clone(): Expression;
 		VAR copy: IntegerValue;
 		BEGIN
-			NEW(copy, position, hvalue); RETURN copy
+			NEW(copy, position, value); RETURN copy
 		END Clone;
 
 		PROCEDURE Accept*(v: Visitor);
@@ -3043,14 +3042,14 @@ TYPE
 	(** <<value = enum.x >> **)
 	EnumerationValue* = OBJECT (Value)
 	VAR
-		value-: LONGINT;
+		value-: Basic.Integer;
 
-		PROCEDURE & InitEnumerationValue(position: Position; value: LONGINT);
+		PROCEDURE & InitEnumerationValue(position: Position; value: Basic.Integer);
 		BEGIN
 			InitValue(position);  SELF.value := value;
 		END InitEnumerationValue;
 
-		PROCEDURE SetValue*(value: LONGINT);
+		PROCEDURE SetValue*(value: Basic.Integer);
 		BEGIN SELF.value := value
 		END SetValue;
 
@@ -4028,7 +4027,7 @@ TYPE
 
 	END WithStatement;
 
-	CaseConstant*= POINTER TO RECORD min*,max*: LONGINT; next*: CaseConstant END;
+	CaseConstant*= POINTER TO RECORD min*,max*: Basic.Integer; next*: CaseConstant END;
 
 	(** << elements : statements >> **)
 	CasePart* = OBJECT (Part)
@@ -4077,12 +4076,12 @@ TYPE
 			variable-: Expression;
 			elsePart-: StatementSequence;
 			caseParts-: Basic.List;
-			min-,max-: LONGINT;
+			min-,max-: Basic.Integer;
 
 		PROCEDURE & InitCaseStatement( position: Position ; outer: Statement);
 		BEGIN
 			InitStatement(position,outer );  variable := NIL;  elsePart := NIL;  caseParts := NIL;
-			min := MAX(LONGINT); max := MIN(LONGINT);
+			min := MAX(Basic.Integer); max := MIN(Basic.Integer);
 		END InitCaseStatement;
 
 		PROCEDURE SetVariable*( expression: Expression );
@@ -4127,8 +4126,8 @@ TYPE
 		BEGIN position := SELF.position.start; v.VisitCaseStatement(SELF)
 		END Accept;
 
-		PROCEDURE MaxConstant*(): LONGINT;
-		VAR val,i: LONGINT; part: CasePart; const: CaseConstant;
+		PROCEDURE MaxConstant*(): Basic.Integer;
+		VAR val: Basic.Integer; i: LONGINT; part: CasePart; const: CaseConstant;
 		BEGIN
 			val := -1;
 			FOR i := 0 TO CaseParts() - 1 DO
@@ -4142,7 +4141,7 @@ TYPE
 			RETURN val;
 		END MaxConstant;
 
-		PROCEDURE SetMinMax*(min,max: LONGINT);
+		PROCEDURE SetMinMax*(min,max: Basic.Integer);
 		BEGIN
 			SELF.min := min; SELF.max := max;
 		END SetMinMax;
@@ -5862,7 +5861,7 @@ VAR
 		NEW(value,invalidPosition); RETURN value;
 	END NewValue;
 
-	PROCEDURE NewIntegerValue*( position: Position;  value: HUGEINT): IntegerValue;
+	PROCEDURE NewIntegerValue*( position: Position;  value: Basic.Integer): IntegerValue;
 	VAR integerValue: IntegerValue;
 	BEGIN
 		NEW( integerValue, position, value);  RETURN integerValue;
@@ -5915,7 +5914,7 @@ VAR
 		NEW( nilValue, position );  RETURN nilValue
 	END NewNilValue;
 
-	PROCEDURE NewEnumerationValue*( position: Position; value: LONGINT ): EnumerationValue;
+	PROCEDURE NewEnumerationValue*( position: Position; value: Basic.Integer ): EnumerationValue;
 	VAR enumeratorValue: EnumerationValue;
 	BEGIN
 		NEW( enumeratorValue, position, value );  RETURN enumeratorValue

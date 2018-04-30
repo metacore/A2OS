@@ -1037,7 +1037,7 @@ TYPE
 		InitOperand(op); op.mode := ModeImmediate; op.type := type; op.intValue := value;
 	END InitImmediate;
 
-	PROCEDURE Immediate*(type: Type; value: LONGINT): Operand;
+	PROCEDURE Immediate*(type: Type; value: HUGEINT): Operand;
 	VAR op: Operand;
 	BEGIN InitImmediate(op,type,value); RETURN op
 	END Immediate;

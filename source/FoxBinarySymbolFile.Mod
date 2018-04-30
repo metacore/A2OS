@@ -312,7 +312,7 @@ TYPE
 			check enumeration scope: enter symbols and check for duplicate names
 		**)
 		PROCEDURE CheckEnumerationScope(x: SyntaxTree.EnumerationScope);
-		VAR e: SyntaxTree.Constant; lowest, highest,value: LONGINT;
+		VAR e: SyntaxTree.Constant; lowest, highest,value: Basic.Integer;
 		BEGIN
 			lowest := 0; highest := 0;
 			e := x.firstConstant;
@@ -1642,9 +1642,7 @@ TYPE
 				ELSIF type = Global.Char16 THEN  w.RawNum(ORD(v(SyntaxTree.CharacterValue).value));
 				ELSIF type = Global.Char32 THEN w.RawNum(ORD(v(SyntaxTree.CharacterValue).value));
 				*)
-				ELSIF (type IS SyntaxTree.IntegerType) & (type.sizeInBits = 64) THEN w.RawHInt(v(SyntaxTree.IntegerValue).hvalue);
-				ELSIF (type IS SyntaxTree.IntegerType) & (type.sizeInBits = 32) & ~type(SyntaxTree.IntegerType).signed  THEN w.RawHInt(v(SyntaxTree.IntegerValue).hvalue);
-				ELSIF (type IS SyntaxTree.IntegerType) & (type.sizeInBits <= 32)  THEN w.RawNum(v(SyntaxTree.IntegerValue).value);
+				ELSIF type IS SyntaxTree.IntegerType THEN w.RawHInt(v(SyntaxTree.IntegerValue).value);
 				ELSIF type IS SyntaxTree.SetType THEN   w.RawNum(SYSTEM.VAL(LONGINT,v(SyntaxTree.SetValue).value));
 				ELSIF type IS SyntaxTree.FloatType THEN
 					IF type.sizeInBits = 32 THEN w.RawReal(SHORT(v(SyntaxTree.RealValue).value));
@@ -1653,7 +1651,7 @@ TYPE
 				ELSIF type IS SyntaxTree.StringType THEN  w.RawLInt(v(SyntaxTree.StringValue).length); w.RawString(v(SyntaxTree.StringValue).value^);
 				ELSIF type IS SyntaxTree.NilType THEN
 				ELSIF type IS SyntaxTree.ByteType THEN HALT(100)
-				ELSIF type IS SyntaxTree.EnumerationType THEN w.RawNum(v(SyntaxTree.EnumerationValue).value);
+				ELSIF type IS SyntaxTree.EnumerationType THEN w.RawHInt(v(SyntaxTree.EnumerationValue).value);
 				ELSE HALT(200);
 				END;
 			END Value;

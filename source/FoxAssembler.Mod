@@ -347,7 +347,7 @@ TYPE
 				result.valueR := result.value;
 				result.type := ConstantInteger;
 			ELSIF constant.type.resolved IS SyntaxTree.IntegerType THEN
-				result.value := constant.value.resolved(SyntaxTree.IntegerValue).hvalue;
+				result.value := constant.value.resolved(SyntaxTree.IntegerValue).value;
 				result.valueR := result.value;
 				result.type := ConstantInteger;
 			ELSIF constant.type.resolved IS SyntaxTree.FloatType THEN

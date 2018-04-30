@@ -586,7 +586,7 @@ TYPE
 			inline, finalizer: BOOLEAN;
 			procedureType: SyntaxTree.ProcedureType;
 			pc: LONGINT;
-			stackSize: LONGINT;
+			memorySize: Basic.Integer; stackSize: LONGINT;
 			name,baseObject: Basic.SegmentedName; ir: IntermediateCode.Section;
 			null,size,src,dest,fp,res: IntermediateCode.Operand;
 			callingConvention: LONGINT;
@@ -617,7 +617,7 @@ TYPE
 				END;
 			END Signature;
 
-			PROCEDURE CheckIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN;
+			PROCEDURE CheckIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN;
 			VAR result: BOOLEAN;
 			BEGIN
 				result := FALSE;
@@ -631,7 +631,7 @@ TYPE
 				RETURN result;
 			END CheckIntegerValue;
 
-			PROCEDURE HasValue(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN;
+			PROCEDURE HasValue(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR; VAR value: Basic.Integer): BOOLEAN;
 			VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
 			BEGIN
 				this := modifiers; id := SyntaxTree.NewIdentifier(name);
@@ -688,9 +688,9 @@ TYPE
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x = scope.outerScope(SyntaxTree.CellScope).bodyProcedure) THEN
 				inline := FALSE;
 				cellType := scope.outerScope(SyntaxTree.CellScope).ownerCell;
-				IF ~HasValue(cellType.modifiers,Global.StringDataMemorySize,stackSize) THEN stackSize := DefaultDataMemorySize END;
+				IF ~HasValue(cellType.modifiers,Global.StringDataMemorySize,memorySize) THEN memorySize := DefaultDataMemorySize END;
 				AddBodyCallStub(x);
-				AddStackAllocation(x,stackSize);
+				AddStackAllocation(x,memorySize);
 				ir := implementationVisitor.NewSection(module.allSections,Sections.BodyCodeSection, name,x,dump);
 				ir.SetExported(IsExported(x));
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x.isConstructor) THEN
@@ -968,7 +968,7 @@ TYPE
 			END;
 		END AddBodyCallStub;
 
-		PROCEDURE AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: LONGINT); (* code that is only necessary for static linkers *)
+		PROCEDURE AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: Basic.Integer); (* code that is only necessary for static linkers *)
 		VAR name: Basic.SegmentedName;
 			ir: IntermediateCode.Section; op: IntermediateCode.Operand;
 		BEGIN
@@ -7889,7 +7889,7 @@ TYPE
 				END
 			(* ---- HALT, SYSTEM.HALT----- *)
 			|Global.Halt, Global.systemHalt:
-				val := p0.resolved(SyntaxTree.IntegerValue).value;
+				val := LONGINT (p0.resolved(SyntaxTree.IntegerValue).value); (* TODO: fix explicit integer truncation *)
 				EmitTrap (position, val);
 			(* ---- ASSERT ----- *)
 			|Global.Assert:
@@ -7899,7 +7899,7 @@ TYPE
 					Condition(p0,trueL,falseL);
 
 					IF p1 = NIL THEN val := AssertTrap
-					ELSE val := p1.resolved(SyntaxTree.IntegerValue).value;
+					ELSE val := LONGINT(p1.resolved(SyntaxTree.IntegerValue).value); (* TODO: fix explicit integer truncation *)
 					END;
 
 					SetLabel(falseL);
@@ -9452,7 +9452,7 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("VisitIntegerValue") END;
 			InitOperand(result,ModeValue);
-			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.hvalue);
+			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
 			IF ~supportedImmediate(result.op)  &~inData THEN
 				GetImmediateMem(result.op)
 			END;
@@ -9469,7 +9469,7 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSetValue") END;
 			InitOperand(result,ModeValue);
-			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(LONGINT,x.value));
+			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
 		END VisitSetValue;
 
 		PROCEDURE VisitMathArrayValue*(x: SyntaxTree.MathArrayValue);
@@ -10486,23 +10486,23 @@ TYPE
 		END VisitWithStatement;
 
 		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
-		VAR var: Operand; jmp,res,op,tmp: IntermediateCode.Operand; j,i,size: LONGINT; part: SyntaxTree.CasePart; constant: SyntaxTree.CaseConstant;
+		VAR var: Operand; jmp,res,op,tmp: IntermediateCode.Operand; range, j: Basic.Integer; i,size: LONGINT; part: SyntaxTree.CasePart; constant: SyntaxTree.CaseConstant;
 			out,else: Label; label: Label;
 			fixups: POINTER TO ARRAY OF Label; section: IntermediateCode.Section; name: Basic.SegmentedName; string: ARRAY 32 OF CHAR;
 			symbol: SyntaxTree.Symbol;
 		BEGIN
 			(*! split case statement into if-elsif statements for large case label lists *)
 			IF Trace THEN TraceEnter("VisitCaseStatement") END;
-			size := x.max-x.min+1;
-			IF (size<0) OR (size > 1024*1024) THEN Error(x.position,"implementation restriction: case table size too large"); RETURN
+			range := x.max-x.min+1;
+			IF (range<0) OR (range > 1024*1024) THEN Error(x.position,"implementation restriction: case table size too large"); RETURN
 			END;
+			size := LONGINT(range);
 			Evaluate(x.variable,var);
 			ReuseCopy(tmp,var.op);
 			ReleaseIntermediateOperand(var.op);
 			var.op := tmp;
 			Emit(Sub(position,var.op,var.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,x.variable.type),x.min)));
 			Convert(var.op,addressType);
-			size := x.max-x.min+1;
 			else := NewLabel();
 			BrgeL(else,var.op,IntermediateCode.Immediate(addressType,size));
 			(*
@@ -10610,7 +10610,7 @@ TYPE
 
 
 			Assign(temporaryVariableDesignator,x.to);
-			IF x.by = NIL THEN by := 1 ELSE by := x.by.resolved(SyntaxTree.IntegerValue).hvalue END;
+			IF x.by = NIL THEN by := 1 ELSE by := x.by.resolved(SyntaxTree.IntegerValue).value END;
 			IF by > 0 THEN
 				cmp := Scanner.LessEqual
 			ELSE

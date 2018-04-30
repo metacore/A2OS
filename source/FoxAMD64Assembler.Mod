@@ -1651,7 +1651,7 @@ TYPE
 					IF (scopeSymbol.type.resolved IS SyntaxTree.CharacterType) & (scopeSymbol.type.resolved.sizeInBits=8)  THEN
 						x := ORD(scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.CharacterValue).value)
 					ELSIF scopeSymbol.type.resolved IS SyntaxTree.IntegerType THEN
-						x := scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.IntegerValue).value
+						x := LONGINT (scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.IntegerValue).value) (* TODO: fix explicit integer truncation *)
 					ELSE
 						Error("number expected");
 						RETURN FALSE;

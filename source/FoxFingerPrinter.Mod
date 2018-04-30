@@ -815,12 +815,12 @@ TYPE
 
 		(* fp = fp & (HugeInt | Number) *)
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
-		BEGIN IF x.type.sizeInBits = 64 THEN FPHugeInt(SELF.fp,x.hvalue) ELSE FPNumber(SELF.fp,x.value) END;
+		BEGIN FPHugeInt(SELF.fp,x.value)
 		END VisitIntegerValue;
 
 		(* fp = fp & (HugeInt | Number) *)
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
-		BEGIN FPNumber(SELF.fp,x.value)
+		BEGIN FPHugeInt(SELF.fp,x.value)
 		END VisitEnumerationValue;
 
 		(* fp = fp & ORD(char) *)

@@ -40,6 +40,7 @@ TYPE
 	SectionName*= ARRAY 256 OF CHAR;
 	MessageString*= ARRAY 256 OF CHAR;
 
+	Integer* = SIGNED64;
 	Set* = SET64;
 
 	ObjectArray = POINTER TO ARRAY OF ANY;

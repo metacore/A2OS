@@ -584,25 +584,8 @@ TYPE
 		END VisitBooleanValue;
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
-
-			PROCEDURE InBounds(val: HUGEINT; bits: LONGINT): BOOLEAN;
-			VAR m: HUGEINT;
-			BEGIN
-				m := ASH(HUGEINT(1),bits-1);
-				RETURN (val < m) & (-val <= m)
-			END InBounds;
 		BEGIN
-			(*! use subtype for representation form ?  *)
-			IF x.hvalue = MIN(HUGEINT) THEN
-				(* special case: display 8000000000000000H without leading minus sign
-					to avoid double minus sign for unary expression -8000000000000000H
-				*)
-				w.Char("0"); w.Hex(x.hvalue,-16); w.Char("H");
-			ELSIF InBounds(x.hvalue,32) THEN
-				Int(SHORT(x.hvalue));
-			ELSE
-				Hex(w,x.hvalue); w.Char("H");
-			END;
+			w.Int(x.value,1);
 			ToText(w,current.text,ElementType.Default);
 		END VisitIntegerValue;
 

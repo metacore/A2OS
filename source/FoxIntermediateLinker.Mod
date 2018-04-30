@@ -467,7 +467,7 @@ TYPE
 				IF syntaxTreeValue(SyntaxTree.BooleanValue).value THEN hugeintValue := 1 ELSE hugeintValue := 0 END
 			ELSIF syntaxTreeValue IS SyntaxTree.IntegerValue THEN
 				(* INTEGER *)
-				hugeintValue := syntaxTreeValue(SyntaxTree.IntegerValue).hvalue;
+				hugeintValue := syntaxTreeValue(SyntaxTree.IntegerValue).value;
 			ELSE
 				HALT(100)
 			END;

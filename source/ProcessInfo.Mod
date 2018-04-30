@@ -104,30 +104,30 @@ BEGIN
 END WriteMode;
 
 PROCEDURE WriteActiveObject*(t : Objects.Process; out : Streams.Writer);
-VAR adr : LONGINT;
+VAR adr : ADDRESS;
 BEGIN
 	IF t.obj # NIL THEN
-		SYSTEM.GET(SYSTEM.VAL(LONGINT, t.obj)-4, adr);
+		SYSTEM.GET(SYSTEM.VAL(ADDRESS, t.obj)-SIZEOF(ADDRESS), adr);
 		Reflection.WriteType(out, adr);
 	END;
 END WriteActiveObject;
 
 PROCEDURE WriteWaitingOn*(t : Objects.Process; out : Streams.Writer);
-VAR adr : LONGINT; mod : Modules.Module;
+VAR adr : ADDRESS; mod : Modules.Module;
 BEGIN
 	IF t.mode = Objects.AwaitingLock THEN
-		adr := SYSTEM.VAL(LONGINT, t.waitingOn);
+		adr := SYSTEM.VAL(ADDRESS, t.waitingOn);
 		IF adr # 0 THEN	(* can be 0 when snapshot is taken *)
-			SYSTEM.GET(adr-4, adr); DEC(adr, adr MOD 8);
+			SYSTEM.GET(adr-SIZEOF(ADDRESS), adr); DEC(adr, adr MOD 8);
 			IF adr = SYSTEM.TYPECODE(Modules.Module) THEN
 				mod := SYSTEM.VAL(Modules.Module, adr);
-				out.String(mod.name);
+				out.String(mod.name)
 			ELSE
-				Reflection.WriteType(out, adr);
+				Reflection.WriteType(out, adr)
 			END;
 		END
 	ELSIF t.mode = Objects.AwaitingCond THEN
-		Reflection.WriteProc(out, SYSTEM.VAL(LONGINT, t.condition));
+		Reflection.WriteProc(out, SYSTEM.VAL(ADDRESS, t.condition));
 	END;
 	out.Update;
 END WriteWaitingOn;

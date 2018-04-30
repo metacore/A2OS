@@ -5288,7 +5288,7 @@ positive: maximal value of set
 
 	MODULE Test;
 	CONST Result = MAX (SET)
-	BEGIN ASSERT (-{0..Result} = {})
+	BEGIN ASSERT (Result = SIZEOF (SET) * 8 - 1)
 	END Test.
 
 negative: arithmetic shift of constant set

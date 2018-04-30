@@ -12909,7 +12909,6 @@ TYPE
 			Address(section,0);
 			Address(section,0);
 			Set(section,{});
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(section, 0); END;
 			moduleSection := ModuleSection();
 			Symbol( section, moduleSection, moduleSection.pc,0);
 			IF procedureSection.symbol = NIL THEN 
@@ -13111,7 +13110,6 @@ TYPE
 					Info(source, "type flags");
 					flags := {};
 					Set( source, flags);
-					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
 					
 					Info(source, "pointer to module");
 					moduleSection := ModuleSection();
@@ -13218,7 +13216,6 @@ TYPE
 			flags := {};
 			IF  implementationVisitor.backend.preciseGC THEN INCL(flags,0) END;
 			Set( moduleSection, flags);
-			IF module.system.addressType.sizeInBits = 64 THEN Longint(moduleSection, 0); END;
 
 			IF implementationVisitor.backend.cooperative THEN
 				PatchSymbol(moduleSection,MonitorOffset,moduleSection.name,NIL,moduleSection.pc,0);
@@ -13351,7 +13348,6 @@ TYPE
 					flags := {};
 					IF isProtected THEN INCL(flags,31) END;
 					Set( source, flags);
-					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
 
 					Info(source, "pointer to module");
 					moduleSection := ModuleSection();

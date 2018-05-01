@@ -316,9 +316,17 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Darwin32G {
-		INCLUDE "UNIXG UNIXG32 DARWING UNCOOP UNCOOP32"
+		INCLUDE "UNIXG UNIXG32 DARWING32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32G"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
+	Darwin64G {
+		INCLUDE "UNIXG UNIXG64 DARWING64 UNCOOP UNCOOP64"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux64G"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -387,7 +395,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	LINUXG32 { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
 	LINUXG64 { Generic.Linux.AMD64.Glue.Mod Generic.Linux.AMD64.Unix.Mod }
-	DARWING { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
+	DARWING32 { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
+	DARWING64 { Generic.Unix.AMD64.Glue.Mod Generic.Darwin.AMD64.Unix.Mod }
 	SOLARISG32 { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
 	SOLARISG64 { Generic.Unix.AMD64.Glue.Mod Generic.Solaris.AMD64.Unix.Mod }
 

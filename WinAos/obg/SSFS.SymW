@@ -11,7 +11,7 @@ CONST
 	DeviceNotFound* = 4000; 
 	DeviceError* = 4001; 
 	PartitionTooSmall* = 5000; 
-	SSFS_MagicNumber = LONGINT(99887766H); 
+	SSFS_MagicNumber = LONGINT(2575857510); 
 	SSFS_Version = 1; 
 	BlockSize = 4096; 
 	DirectoryEntrySize = 256; 

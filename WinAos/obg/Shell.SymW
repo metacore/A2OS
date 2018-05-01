@@ -80,6 +80,7 @@ TYPE
 		upcall: NotifyProcedure; 
 		commandHistory: CommandHistory; 
 		firstCR: CHAR; 
+		currentCommand: Command; 
 
 		PROCEDURE ^  & Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR); 
 		PROCEDURE ^ Exit*; 
@@ -91,6 +92,7 @@ TYPE
 		PROCEDURE ^ ShowHelp; 
 		PROCEDURE ^ Execute(cmd: Command; wait: BOOLEAN; VAR exit: BOOLEAN); 
 		PROCEDURE ^ Run; 
+		PROCEDURE ^ IsCurrentCmdContext*(context: Commands.Context): BOOLEAN; 
 		PROCEDURE ^ AwaitDeath*; 
 		PROCEDURE ^ SetUpcall*(proc: NotifyProcedure); 
 		PROCEDURE ^ ParseAliases(r: Files.Reader); 

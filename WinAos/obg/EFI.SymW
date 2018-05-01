@@ -6,7 +6,7 @@ CONST
 	WarnDeleteFailure* = 2; 
 	WarnWriteFailure* = 3; 
 	WarnBufferTooSmall* = 4; 
-	Error* = LONGINT(80000000H); 
+	Error* = LONGINT(2147483648); 
 	ErrLoadError* = (Error + 1); 
 	ErrInvalidParameter* = (Error + 2); 
 	ErrUnsupported* = (Error + 3); 

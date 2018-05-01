@@ -6,7 +6,7 @@ CONST
 	ofFileVersion = SymbolFileFormat.FileVersionCurrent; 
 	ofEUEnd = 0X; 
 	ofEURecord = 1X; 
-	ofEUProcFlag = LONGINT(80000000H); 
+	ofEUProcFlag = LONGINT(2147483648); 
 	DefaultNofSysCalls = 12; 
 	NewRec = 0; 
 	NewArr = 1; 

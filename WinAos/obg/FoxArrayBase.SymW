@@ -86,7 +86,7 @@ TYPE
 
 	BinaryASBLoop = PROCEDURE (ladr, radr: ADDRESS; linc, len: SIZE):BOOLEAN; 
 
-	LenType = LONGINT; 
+	LenType = SIZE; 
 
 	FastMatMul* = PROCEDURE (matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE):BOOLEAN; 
 
@@ -169,6 +169,10 @@ TYPE
 	LongintPtr = POINTER {UNSAFE, UNTRACED} TO RECORD 
 		val: LONGINT; 
 	END; 
+
+	SizePtr = POINTER {UNSAFE, UNTRACED} TO RECORD 
+		val: SIZE; 
+	END; 
 VAR 
 	temporary*: T0; 
 	alloc*: LONGINT; 
@@ -245,39 +249,7 @@ VAR
 	PROCEDURE ^ Copy2(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy1(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy8(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
-	PROCEDURE {FingerPrint(1830087407)}  - MoveB*(srcadr, destadr, len: SIZE);
-	CODE {SYSTEM.i386}
-		MOV	ECX, [ESP]	;  len
-		MOV	EDI, [ESP+4]	;  destadr
-		MOV	ESI, [ESP+8]	;  srcadr
-		CMP	ESI, EDI
-		JAE	moveup	;  src adr greater then dest adr, no problem with moving up
-		MOV	EAX, ESI
-		ADD	EAX, ECX
-		CMP	EAX, EDI
-		JBE	moveup	;  no overlap, no problem, move up
-		MOV	ESI, EAX
-		ADD	EDI, ECX
-		DEC	ESI
-		DEC	EDI
-		STD	;  move down since overlap occured
-		REP
-		MOVSB
-		JMP	done
-		moveup:
-		CLD
-		MOV	BL, CL
-		SHR	ECX, 2
-		AND	BL, 00000003H	;  rest to move after 4 byte move
-		REP
-		MOVSD	;  move 4 bytes each step
-		MOV	CL, BL
-		REP
-		MOVSB	;  move rest in one byte steps
-		done:
-		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
-	
-	END MoveB; 
+	PROCEDURE ^ MoveB*(srcadr, destadr, len: SIZE); 
 	PROCEDURE ^ CopyContent(dest, src: ADDRESS; elementSize: SIZE); 
 	PROCEDURE ^ AllocateSame(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE): ANY; 
 	PROCEDURE ^ TempDescCopy(src: ADDRESS): ANY; 
@@ -327,6 +299,10 @@ VAR
 	PROCEDURE ^ ConvertLoopXL(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF LONGREAL): ARRAY [?] OF LONGINT; 
 	OPERATOR ^ "ENTIER"-(CONST src: ARRAY [?] OF LONGREAL): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ ConvertLoopLY(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF LONGINT): ARRAY [?] OF SIZE; 
+	PROCEDURE ^ ConvertLoopYZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF LONGREAL; 
 	PROCEDURE ^ NotLoopAB(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "~"-(CONST src: ARRAY [?] OF BOOLEAN): ARRAY [?] OF BOOLEAN; 
 	PROCEDURE ^ GenericLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: SHORTINT):SHORTINT); 
@@ -343,6 +319,8 @@ VAR
 	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ MinusLoopL(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ MinusLoopY(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ MinusLoopR(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF REAL): ARRAY [?] OF REAL; 
 	PROCEDURE ^ MinusLoopX(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -359,6 +337,10 @@ VAR
 	OPERATOR ^ "+"-(CONST left, right: ARRAY [?] OF LONGREAL): ARRAY [?] OF LONGREAL; 
 	PROCEDURE ^ AddAZAZLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "+"-(CONST left, right: ARRAY [?] OF COMPLEX): ARRAY [?] OF COMPLEX; 
+	PROCEDURE ^ AddAHAHLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "+"-(CONST left, right: ARRAY [?] OF HUGEINT): ARRAY [?] OF HUGEINT; 
+	PROCEDURE ^ AddAYAYLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "+"-(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ AddALZALZLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "+"-(CONST left, right: ARRAY [?] OF LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 	PROCEDURE ^ AddASSSLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -379,6 +361,12 @@ VAR
 	PROCEDURE ^ AddAZSZLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "+"-(CONST left: ARRAY [?] OF COMPLEX; right: COMPLEX): ARRAY [?] OF COMPLEX; 
 	OPERATOR ^ "+"-(left: COMPLEX; CONST right: ARRAY [?] OF COMPLEX): ARRAY [?] OF COMPLEX; 
+	PROCEDURE ^ AddAHSHLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "+"-(CONST left: ARRAY [?] OF HUGEINT; right: HUGEINT): ARRAY [?] OF HUGEINT; 
+	OPERATOR ^ "+"-(left: HUGEINT; CONST right: ARRAY [?] OF HUGEINT): ARRAY [?] OF HUGEINT; 
+	PROCEDURE ^ AddAYSYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "+"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): ARRAY [?] OF SIZE; 
+	OPERATOR ^ "+"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ AddALZSLZLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "+"-(CONST left: ARRAY [?] OF LONGCOMPLEX; right: LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 	OPERATOR ^ "+"-(left: LONGCOMPLEX; CONST right: ARRAY [?] OF LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
@@ -388,6 +376,8 @@ VAR
 	OPERATOR ^ "-"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ SubALALLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ SubAYAYLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "-"-(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ SubARARLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(CONST left, right: ARRAY [?] OF REAL): ARRAY [?] OF REAL; 
 	PROCEDURE ^ SubAXAXLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
@@ -399,6 +389,7 @@ VAR
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): ARRAY [?] OF SHORTINT; 
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): ARRAY [?] OF INTEGER; 
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY [?] OF LONGINT; 
+	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): ARRAY [?] OF SIZE; 
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF REAL; right: REAL): ARRAY [?] OF REAL; 
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): ARRAY [?] OF LONGREAL; 
 	OPERATOR ^ "-"-(CONST left: ARRAY [?] OF COMPLEX; right: COMPLEX): ARRAY [?] OF COMPLEX; 
@@ -409,6 +400,8 @@ VAR
 	OPERATOR ^ "-"-(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ SubSLALLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ SubSYAYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "-"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ SubSRARLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(left: REAL; CONST right: ARRAY [?] OF REAL): ARRAY [?] OF REAL; 
 	PROCEDURE ^ SubSXAXLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -450,6 +443,9 @@ VAR
 	PROCEDURE ^ MulALSLLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "*"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY [?] OF LONGINT; 
 	OPERATOR ^ "*"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ MulAYSYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "*"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): ARRAY [?] OF SIZE; 
+	OPERATOR ^ "*"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ MulARSRLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "*"-(CONST left: ARRAY [?] OF REAL; right: REAL): ARRAY [?] OF REAL; 
 	OPERATOR ^ "*"-(left: REAL; CONST right: ARRAY [?] OF REAL): ARRAY [?] OF REAL; 
@@ -535,6 +531,8 @@ VAR
 	OPERATOR ^ "DIV"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ EDivALALLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "DIV"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ EDivAYAYLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "DIV"-(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ DivASSSLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "DIV"-(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ DivSSASLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -547,12 +545,18 @@ VAR
 	OPERATOR ^ "DIV"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY [?] OF LONGINT; 
 	PROCEDURE ^ DivSLALLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "DIV"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ DivAYSYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "DIV"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): ARRAY [?] OF SIZE; 
+	PROCEDURE ^ DivSYAYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "DIV"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ EModASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "MOD"-(CONST left, right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ EModAIAILoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "MOD"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ EModALALLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "MOD"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ EModAYAYLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "MOD"-(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ ModASSSLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "MOD"-(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ ModSSASLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -565,6 +569,10 @@ VAR
 	OPERATOR ^ "MOD"-(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY [?] OF LONGINT; 
 	PROCEDURE ^ ModSLALLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "MOD"-(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ ModAYSYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "MOD"-(CONST left: ARRAY [?] OF SIZE; right: SIZE): ARRAY [?] OF SIZE; 
+	PROCEDURE ^ ModSYAYLoop(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "MOD"-(left: SIZE; CONST right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ SPASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	OPERATOR ^ "+*"-(CONST left, right: ARRAY [?] OF SHORTINT): LONGINT; 
 	PROCEDURE ^ SPAIAILoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
@@ -967,6 +975,8 @@ VAR
 	OPERATOR ^ "MIN"-(CONST left, right: ARRAY [?] OF REAL): ARRAY [?] OF REAL; 
 	PROCEDURE ^ MinALALLoop(ladr, radr, dadr: LongintPtr; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "MIN"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 
+	PROCEDURE ^ MinAYAYLoop(ladr, radr, dadr: SizePtr; linc, rinc, dinc, len: SIZE); 
+	OPERATOR ^ "MIN"-(CONST left, right: ARRAY [?] OF SIZE): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ MinAIAILoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	OPERATOR ^ "MIN"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	PROCEDURE ^ MinASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
@@ -1000,6 +1010,8 @@ VAR
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF INTEGER): INTEGER; 
 	PROCEDURE ^ SumALLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ SumAYLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
+	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF SIZE): SIZE; 
 	PROCEDURE ^ SumARLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF REAL): REAL; 
 	PROCEDURE ^ SumAXLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
@@ -1117,7 +1129,7 @@ VAR
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF REAL): ARRAY [*, *] OF REAL; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGREAL): ARRAY [*, *] OF LONGREAL; 
 	PROCEDURE ^ CheckTensorGeometry(left, right, dest: ADDRESS; ldim, rdim: SIZE): BOOLEAN; 
-	PROCEDURE ^ DoReshape*(VAR dest: ADDRESS; src: ADDRESS; CONST shape: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ DoReshape*(VAR dest: ADDRESS; src: ADDRESS; CONST shape: ARRAY [*] OF SIZE); 
 	PROCEDURE ^ AllocateTensorA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray); 
 	PROCEDURE ^ AllocateArrayA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray); 
 	PROCEDURE ^ AllocateTensorX*(VAR destA: ARRAY [?] ; CONST a: ARRAY [*] OF SIZE; Size: SIZE; tag: ADDRESS); 
@@ -1137,7 +1149,7 @@ VAR
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 	PROCEDURE ^ InitOptimization; 
 	PROCEDURE ^ CopyDescriptor*(VAR destPtr: ANY; src: ADDRESS; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE); 
-	PROCEDURE ^ Reshape*(CONST left: ARRAY [?] ; CONST right: ARRAY [*] OF LONGINT): ARRAY [?] ; 
+	PROCEDURE ^ Reshape*(CONST left: ARRAY [?] ; CONST right: ARRAY [*] OF SIZE): ARRAY [?] ; 
 	PROCEDURE ^ RangeFromInteger*(CONST integer: SIZE): RANGE; 
 	PROCEDURE ^ ExpandDimensions*(CONST sourceArray: ARRAY [?] ; CONST keptDimensions: ARRAY [*] OF BOOLEAN): ARRAY [?] ; 
 	OPERATOR ^ "LEN"-(CONST range: RANGE): SIZE; 

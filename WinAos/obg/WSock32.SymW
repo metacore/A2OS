@@ -41,7 +41,7 @@ CONST
 	SORcvBuf* = 4098; 
 	SOSndTimeo* = 4101; 
 	SORcvTimeo* = 4102; 
-	SIORcvAll* = LONGINT(98000001H); 
+	SIORcvAll* = LONGINT(2550136833); 
 	SDReceive* = 0; 
 	SDSend* = 1; 
 	SDboth* = 2; 

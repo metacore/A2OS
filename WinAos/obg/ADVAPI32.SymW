@@ -1,8 +1,8 @@
 MODULE ADVAPI32;
 	IMPORT SYSTEM, Kernel32, Modules, KernelLog;
 CONST 
-	HKEYClassesRoot* = LONGINT(80000000H); 
-	HKEYCurrentUser* = LONGINT(80000001H); 
+	HKEYClassesRoot* = LONGINT(2147483648); 
+	HKEYCurrentUser* = LONGINT(2147483649); 
 	RegNone* = 0; 
 	RegSZ* = 1; 
 	KeyQueryValue* = 0; 

@@ -47,7 +47,7 @@ CONST
 	ModeEXE = 2; 
 	EUEnd = 0X; 
 	EURecord = 1X; 
-	EUProcFlag = LONGINT(80000000H); 
+	EUProcFlag = LONGINT(2147483648); 
 TYPE 
 	ImageFileHeader = RECORD 
 		Machine: INTEGER; 

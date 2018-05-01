@@ -32,7 +32,7 @@ CONST
 	ImageScnMemShared = 268435456; 
 	ImageScnMemExecute = 536870912; 
 	ImageScnMemRead = 1073741824; 
-	ImageScnMemWrite = LONGINT(80000000H); 
+	ImageScnMemWrite = LONGINT(2147483648); 
 	ImageRelBasedAbsolute = 0; 
 	ImageRelBasedHigh = 1; 
 	ImageRelBasedLow = 2; 
@@ -47,7 +47,7 @@ CONST
 	RtGroupIcon = (RtIcon + 11); 
 	RtVersion = 16; 
 	DefaultLanguage = 1024; 
-	VsFfiSignature = LONGINT(0FEEF04BDH); 
+	VsFfiSignature = LONGINT(4277077181); 
 	VsFfiStrucVersion = 65536; 
 	VsFfiFileFlagsMask = 63; 
 	VosNtWindows32 = 262148; 

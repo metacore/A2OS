@@ -4,7 +4,7 @@ CONST
 	nilval* = 0; 
 	MinSInt* =  -128; 
 	MinInt* =  -32768; 
-	MinLInt* = LONGINT(80000000H); 
+	MinLInt* = LONGINT(2147483648); 
 	MaxSInt* = 127; 
 	MaxInt* = 32767; 
 	MaxLInt* = 2147483647; 

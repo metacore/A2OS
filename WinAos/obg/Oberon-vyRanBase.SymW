@@ -9,9 +9,9 @@ CONST
 	ccbase = 100; 
 	sysBitsTypeSize* = 4; 
 	sysHalfBitsType* = 65536; 
-	sysMaskFirstHalf* = LONGINT(0FFFF0000H); 
+	sysMaskFirstHalf* = LONGINT(4294901760); 
 	sysMaskSecondHalf* = 65535; 
-	sysMaxUnsigned* = LONGINT(0FFFFFFFFH); 
+	sysMaxUnsigned* = LONGINT(4294967295); 
 	sysSHL* = 1; 
 	sysSHR* =  -1; 
 TYPE 

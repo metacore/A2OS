@@ -5,13 +5,13 @@ CONST
 	DefaultWidth = 640; 
 	DefaultHeight = 300; 
 	PollingInterval = 1000; 
-	GridBgFillColor = LONGINT(0E0E0E0FFH); 
+	GridBgFillColor = LONGINT(3772834047); 
 	NofColumns = 7; 
-	ColorUnknown = LONGINT(0C0C0C0FFH); 
+	ColorUnknown = LONGINT(3233857791); 
 	ColorInformation = WMGraphics.White; 
 	ColorWarning = WMGraphics.Yellow; 
-	ColorError = LONGINT(0FF0000C0H); 
-	ColorCritical = LONGINT(0FF0000E0H); 
+	ColorError = LONGINT(4278190272); 
+	ColorCritical = LONGINT(4278190304); 
 	ColorAlert = WMGraphics.Blue; 
 	ColorFailure = WMGraphics.Red; 
 	ColorOther = WMGraphics.White; 

@@ -5,8 +5,8 @@ CONST
 	TypeWarning* = Diagnostics.TypeWarning; 
 	TypeError* = Diagnostics.TypeError; 
 	Invalid* = Diagnostics.Invalid; 
-	ColorError = LONGINT(0FF3030A0H); 
-	ColorWarning = LONGINT(0D0D040C0H); 
+	ColorError = LONGINT(4281348256); 
+	ColorWarning = LONGINT(3503308992); 
 	ColorPCPosition = 8323232; 
 	PictureError = \"PETIcons.tar://errorpos.png"\; 
 	PictureWarning = \"PETIcons.tar://warningpos.png"\; 

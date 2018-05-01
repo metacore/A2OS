@@ -10,12 +10,12 @@ CONST
 	ScrollbarWidth = 15; 
 	OverviewWidth = 10; 
 	DarkGreen = 12583167; 
-	DarkRed = LONGINT(0C00000FFH); 
-	DiffColorLeft = LONGINT(0FF000030H); 
+	DarkRed = LONGINT(3221225727); 
+	DiffColorLeft = LONGINT(4278190128); 
 	DiffColorRight = 65328; 
 	EmptyLineColor = WMGraphics.White; 
-	LineNbrBgColor = LONGINT(0E0E0FFFFH); 
-	BgColor = LONGINT(0CCCCCCFFH); 
+	LineNbrBgColor = LONGINT(3772841983); 
+	BgColor = LONGINT(3435973887); 
 	MouseWheelMultiplier = 3; 
 	NonDefaultFont = FALSE; 
 	FontName = \"Oberon"\; 

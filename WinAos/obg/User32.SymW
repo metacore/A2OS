@@ -62,7 +62,7 @@ CONST
 	WSVisible* = 28; 
 	WSMinimize* = 29; 
 	WSChild* = 30; 
-	CWUseDefault* = LONGINT(80000000H); 
+	CWUseDefault* = LONGINT(2147483648); 
 	SizeRestored* = 0; 
 	SizeMinimized* = 1; 
 	SizeMaximized* = 2; 
@@ -286,7 +286,7 @@ TYPE
 
 	WndClassEx* = RECORD 
 		cbSize*: LONGINT; 
-		style*: DWORD; 
+		style*: WORDSET; 
 		lpfnWndProc*: WndProc; 
 		cbClsExtra*, cbWndExtra*: LONGINT; 
 		hInstance*: Kernel32.HINSTANCE; 
@@ -302,7 +302,7 @@ TYPE
 	WindowPos* = RECORD 
 		hwnd*, hwndInsertAfter*: HWND; 
 		x*, y*, cx*, cy*: LONGINT; 
-		flags*: DWORD; 
+		flags*: WORDSET; 
 	END; 
 
 	WindowPlacement* = RECORD 
@@ -345,7 +345,7 @@ VAR
 	CloseClipboard-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
 	CreateAcceleratorTable-: PROCEDURE {WINAPI}(lpaccl: ADDRESS; cEntries: LONGINT):HAccel; 
 	CreateMenu-: PROCEDURE {WINAPI}():HMenu; 
-	CreateWindowEx-: PROCEDURE {WINAPI}(dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY OF CHAR; dwStyle: DWORD; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam):HWND; 
+	CreateWindowEx-: PROCEDURE {WINAPI}(dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY OF CHAR; dwStyle: WORDSET; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam):HWND; 
 	DefWindowProc-: WndProc; 
 	DestroyAcceleratorTable-: PROCEDURE {WINAPI}(hAccel: HAccel):Kernel32.BOOL; 
 	DestroyCursor-: PROCEDURE {WINAPI}(hCursor: HCursor):Kernel32.BOOL; 

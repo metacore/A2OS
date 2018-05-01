@@ -17,7 +17,7 @@ CONST
 	NoLoader = 3400; 
 	TraceBoot = FALSE; 
 	PreciseGC* = 0; 
-	ModuleInitTimeout = HUGEINT(0B2D05E00H); 
+	ModuleInitTimeout = HUGEINT(3000000000); 
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
 

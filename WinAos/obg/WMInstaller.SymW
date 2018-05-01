@@ -16,7 +16,7 @@ CONST
 	WindowHeight = 400; 
 	WindowMinWidth = 600; 
 	WindowMinHeight = 300; 
-	OberonColor = LONGINT(0D1616CAFH); 
+	OberonColor = LONGINT(3512822959); 
 	UpperPanelHeight = 60; 
 	LowerPanelHeight = 60; 
 	ButtonPanelHeight = 20; 

@@ -5,6 +5,7 @@ CONST
 	SymbolFile* = 1; 
 	SourceCode* = 2; 
 	All* = 3; 
+	DebugPosition = FALSE; 
 TYPE 
 	Printer* = OBJECT (SyntaxTree.Visitor)
 	VAR 

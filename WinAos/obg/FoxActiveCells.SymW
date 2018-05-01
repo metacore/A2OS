@@ -16,7 +16,7 @@ CONST
 	FloatingPointCapability* = Global.FloatingPointCapability; 
 	TRMSCapability* = Global.TRMSCapability; 
 	TraceError = FALSE; 
-	BasePortAddress = LONGINT(0FFFFFFE0H); 
+	BasePortAddress = LONGINT(4294967264); 
 	TraceSame = FALSE; 
 	CheckModules = 0; 
 	CheckParameters = 1; 

@@ -3,12 +3,12 @@ MODULE CryptoBlowfish;
 CONST 
 	N = 16; 
 TYPE 
-	TP = ARRAY (N + 2) OF SET; 
+	TP = ARRAY (N + 2) OF SET32; 
 
 	TS = RECORD 
 		a: ARRAY 256 OF LONGINT; 
 		b: ARRAY 256 OF LONGINT; 
-		c: ARRAY 256 OF SET; 
+		c: ARRAY 256 OF SET32; 
 		d: ARRAY 256 OF LONGINT; 
 	END; 
 
@@ -16,7 +16,7 @@ TYPE
 	VAR 
 		p: TP; 
 		s: TS; 
-		ivl, ivr: SET; 
+		ivl, ivr: SET32; 
 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
@@ -24,9 +24,9 @@ TYPE
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
-		PROCEDURE ^ F(x: LONGINT): SET; 
-		PROCEDURE ^ encrypt0(xl, xr: SET; VAR yl, yr: SET); 
-		PROCEDURE ^ decrypt0(xl, xr: SET; VAR yl, yr: SET); 
+		PROCEDURE ^ F(x: LONGINT): SET32; 
+		PROCEDURE ^ encrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
+		PROCEDURE ^ decrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 VAR 

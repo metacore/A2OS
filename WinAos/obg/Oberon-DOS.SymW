@@ -2,7 +2,7 @@ MODULE DOS IN Oberon;
 	IMPORT SYSTEM, Files, Fonts, Texts, Modules, Oberon, FATFiles;
 CONST 
 	BufSize = 32768; 
-	N2KDirMark = LONGINT(9B1EA38DH); 
+	N2KDirMark = LONGINT(2602476429); 
 VAR 
 	wd, wn: Texts.Writer; 
 	count: LONGINT; 

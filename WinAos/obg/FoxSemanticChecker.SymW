@@ -97,7 +97,7 @@ TYPE
 		PROCEDURE ^ VisitFloatType*(x: SyntaxTree.FloatType); 
 		PROCEDURE ^ VisitComplexType*(x: SyntaxTree.ComplexType); 
 		PROCEDURE ^ VisitStringType*(x: SyntaxTree.StringType); 
-		PROCEDURE ^ CheckEnumerationScope(x: SyntaxTree.EnumerationScope; VAR highest: LONGINT); 
+		PROCEDURE ^ CheckEnumerationScope(x: SyntaxTree.EnumerationScope; VAR highest: Basic.Integer); 
 		PROCEDURE ^ VisitEnumerationType*(x: SyntaxTree.EnumerationType); 
 		PROCEDURE ^ VisitRangeType*(x: SyntaxTree.RangeType); 
 		PROCEDURE ^ VisitQualifiedType*(x: SyntaxTree.QualifiedType); 
@@ -110,7 +110,7 @@ TYPE
 		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
 		PROCEDURE ^ FixProcedureType(procedureType: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ HasFlag(VAR modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position): BOOLEAN; 
-		PROCEDURE ^ HasValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HasValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position; VAR value: Basic.Integer): BOOLEAN; 
 		PROCEDURE ^ HasStringValue(modifiers: SyntaxTree.Modifier; name: SyntaxTree.Identifier; VAR position: Position; VAR value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SkipImplementation*(x: SyntaxTree.CellType): BOOLEAN; 
 		PROCEDURE ^ CheckModifiers(modifiers: SyntaxTree.Modifier; checkUse: BOOLEAN); 
@@ -190,15 +190,15 @@ TYPE
 		PROCEDURE ^ CheckSetType(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckStringType(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckTypeDeclarationType(x: SyntaxTree.Expression): BOOLEAN; 
-		PROCEDURE ^ CheckIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CheckIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN; 
 		PROCEDURE ^ CheckStringValue(x: SyntaxTree.Expression; VAR value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IsAddressValue(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ IsAddressExpression(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ IsSizeExpression(x: SyntaxTree.Expression): BOOLEAN; 
-		PROCEDURE ^ CheckEnumerationValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CheckEnumerationValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN; 
 		PROCEDURE ^ CheckCharacterValue(x: SyntaxTree.Expression; VAR value: CHAR): BOOLEAN; 
-		PROCEDURE ^ CheckPositiveIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT; includeZero: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ CheckPositiveIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer; includeZero: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ CheckPortType(x: SyntaxTree.Expression; VAR portType: SyntaxTree.PortType): BOOLEAN; 
 		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ NewTypeGuardDesignator(position: Position; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
@@ -234,7 +234,7 @@ TYPE
 		PROCEDURE ^ VisitIfStatement*(ifStatement: SyntaxTree.IfStatement); 
 		PROCEDURE ^ WithPart(withPart: SyntaxTree.WithPart; VAR symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ VisitWithStatement*(withStatement: SyntaxTree.WithStatement); 
-		PROCEDURE ^ CasePart(casePart: SyntaxTree.CasePart; type: SyntaxTree.Type; VAR allcases: SyntaxTree.CaseConstant; VAR min, max: LONGINT); 
+		PROCEDURE ^ CasePart(casePart: SyntaxTree.CasePart; type: SyntaxTree.Type; VAR allcases: SyntaxTree.CaseConstant; VAR min, max: Basic.Integer); 
 		PROCEDURE ^ VisitCaseStatement*(caseStatement: SyntaxTree.CaseStatement); 
 		PROCEDURE ^ VisitWhileStatement*(whileStatement: SyntaxTree.WhileStatement); 
 		PROCEDURE ^ VisitRepeatStatement*(repeatStatement: SyntaxTree.RepeatStatement); 
@@ -298,7 +298,7 @@ TYPE
 
 	PROCEDURE ^ IsOberonInline(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ Resolved(x: SyntaxTree.Type): SyntaxTree.Type; 
-	PROCEDURE ^ PowerOf2(x: LONGINT): BOOLEAN; 
+	PROCEDURE ^ PowerOf2(x: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ IsCellScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ InCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
@@ -319,13 +319,13 @@ TYPE
 	PROCEDURE ^ IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSignedIntegerType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsUnsignedIntegerType*(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ IsIntegerValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsEnumerationValue(x: SyntaxTree.Expression; VAR value: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN; 
+	PROCEDURE ^ IsEnumerationValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsRealValue(x: SyntaxTree.Expression; VAR value: LONGREAL): BOOLEAN; 
 	PROCEDURE ^ IsComplexValue(x: SyntaxTree.Expression; VAR realValue, imagValue: LONGREAL): BOOLEAN; 
 	PROCEDURE ^ IsCharacterValue(x: SyntaxTree.Expression; VAR value: CHAR): BOOLEAN; 
 	PROCEDURE ^ IsBooleanValue*(x: SyntaxTree.Expression; VAR value: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ IsSetValue(x: SyntaxTree.Expression; VAR value: SET): BOOLEAN; 
+	PROCEDURE ^ IsSetValue(x: SyntaxTree.Expression; VAR value: Basic.Set): BOOLEAN; 
 	PROCEDURE ^ IsStringValue(x: SyntaxTree.Expression; VAR value: Scanner.StringType): BOOLEAN; 
 	PROCEDURE ^ Indexable(x: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ SameType(t1, t2: SyntaxTree.Type): BOOLEAN; 
@@ -358,7 +358,7 @@ TYPE
 	PROCEDURE ^ RecordBase*(record: SyntaxTree.RecordType): SyntaxTree.RecordType; 
 	PROCEDURE ^ FindSuperProcedure*(scope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure): SyntaxTree.Procedure; 
 	PROCEDURE ^ GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure; 
-	PROCEDURE ^ EnterCase(VAR root: SyntaxTree.CaseConstant; min, max: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EnterCase(VAR root: SyntaxTree.CaseConstant; min, max: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker; 
 	PROCEDURE ^ NewWarnings*(diagnostics: Diagnostics.Diagnostics): Warnings; 
 	PROCEDURE ^ IsRangeType(type: SyntaxTree.Type): BOOLEAN; 
@@ -367,7 +367,7 @@ TYPE
 	PROCEDURE ^ IsComplexType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsArrayStructuredObjectType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ MathArrayStructureOfType(type: SyntaxTree.Type): SyntaxTree.MathArrayType; 
-	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsTensor(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticMathArray*(type: SyntaxTree.Type; VAR length: LONGINT; VAR baseType: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ SymbolHasAddress*(symbol: SyntaxTree.Symbol): BOOLEAN; 

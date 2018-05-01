@@ -29,6 +29,7 @@ CONST
 	Ok* = 0; 
 	Closed* =  -1; 
 	TransportError* =  -2; 
+	TimeoutExpired* =  -3; 
 	PortInUse* = 1; 
 	NoSuchPort* = 2; 
 	WrongBPS* = 3; 
@@ -53,6 +54,7 @@ TYPE
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 
 		PROCEDURE ^ GetMC*(VAR s: SET); 
+		PROCEDURE ^ SetReceiveTimeout*(timeout: LONGINT); 
 		PROCEDURE ^ Show*; 
 	END Port; 
 VAR 

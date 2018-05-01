@@ -1,7 +1,7 @@
 MODULE RAMVolumes;
 	IMPORT SYSTEM, Files;
 CONST 
-	DirMark = LONGINT(9B1EA38DH); 
+	DirMark = LONGINT(2602476429); 
 TYPE 
 	Volume* = OBJECT {EXCLUSIVE} (Files.Volume)
 	VAR 

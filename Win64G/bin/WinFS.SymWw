@@ -138,7 +138,6 @@ VAR
 	notifications: Notification; 
 	winFS: WinFileSystem; 
 
-	PROCEDURE ^ ToSet(d: UNSIGNED32): SET; 
 	PROCEDURE ^ DebugFile(f: File); 
 	PROCEDURE ^ IsLocalPath(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FixDriveLetter(VAR path: ARRAY OF CHAR); 
@@ -146,8 +145,8 @@ VAR
 	PROCEDURE ^ UpperCase(VAR src, dst: ARRAY OF CHAR); 
 	PROCEDURE ^ TempName(VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ FullPathName(name: ARRAY OF CHAR; VAR fname: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ FileFlags(flags: SET): SET; 
-	PROCEDURE ^ WindowsFlags(flags: SET): SET; 
+	PROCEDURE ^ FileFlags(flags: WORDSET): SET; 
+	PROCEDURE ^ WindowsFlags(flags: SET): WORDSET; 
 	PROCEDURE ^ NewFS*(context: Files.Parameters); 
 	PROCEDURE ^ Join(a1, a2, a3: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
 	PROCEDURE ^ MountDrive(CONST drive: ARRAY OF CHAR; context: Commands.Context); 
@@ -161,9 +160,9 @@ VAR
 	PROCEDURE ^ SameName*(VAR a, b: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckPath(fullName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckName*(name: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetAttributes*(file: ARRAY OF CHAR): SET; 
-	PROCEDURE ^ SetAttributes*(file: ARRAY OF CHAR; attrs: SET); 
-	PROCEDURE ^ SetFileAttributes*(file: ARRAY OF CHAR; attrs: SET); 
+	PROCEDURE ^ GetAttributes*(file: ARRAY OF CHAR): WORDSET; 
+	PROCEDURE ^ SetAttributes*(file: ARRAY OF CHAR; attrs: WORDSET); 
+	PROCEDURE ^ SetFileAttributes*(file: ARRAY OF CHAR; attrs: WORDSET); 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ GetTempDirectory*(VAR path: ARRAY OF CHAR); 

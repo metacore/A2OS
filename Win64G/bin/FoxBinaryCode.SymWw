@@ -37,11 +37,11 @@ TYPE
 	VAR 
 		nextFixup-: Fixup; 
 		mode-: INTEGER; 
-		displacement-: ObjectFile.Unit; 
+		displacement-: Unit; 
 		scale-: ObjectFile.Bits; 
 		patterns-: LONGINT; 
 		pattern-: FixupPatterns; 
-		offset-: ObjectFile.Unit; 
+		offset-: Unit; 
 		symbol-: ObjectFile.Identifier; 
 		symbolOffset-: LONGINT; 
 		resolved*: Sections.Section; 

@@ -86,6 +86,8 @@ CONST
 	ProtectModulesPointers = FALSE; 
 	CreateProcedureDescInfo = TRUE; 
 	WarningDynamicLoading = FALSE; 
+	SysvABI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention}; 
+	SysvABIorWINAPI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention, SyntaxTree.WinAPICallingConvention}; 
 TYPE 
 	Position = SyntaxTree.Position; 
 
@@ -168,7 +170,7 @@ TYPE
 		PROCEDURE ^ Parameters(first: SyntaxTree.Parameter); 
 		PROCEDURE ^ Procedure(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ AddBodyCallStub(bodyProcedure: SyntaxTree.Procedure); 
-		PROCEDURE ^ AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: LONGINT); 
+		PROCEDURE ^ AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: Basic.Integer); 
 		PROCEDURE ^ Module(x: SyntaxTree.Module; module: Sections.Module); 
 	END DeclarationVisitor; 
 
@@ -507,6 +509,7 @@ TYPE
 		PROCEDURE ^ Lock(lock: BOOLEAN); 
 		PROCEDURE ^ VisitStatementBlock*(x: SyntaxTree.StatementBlock); 
 		PROCEDURE ^ VisitCode*(x: SyntaxTree.Code); 
+		PROCEDURE ^ ProcParametersSize(procedure: SyntaxTree.Procedure): LONGINT; 
 		PROCEDURE ^ ParameterCopies(x: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ InitVariables(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT; 
@@ -545,7 +548,7 @@ TYPE
 		PROCEDURE ^ Info(section: IntermediateCode.Section; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Address(section: IntermediateCode.Section; value: ADDRESS); 
 		PROCEDURE ^ Size(section: IntermediateCode.Section; value: SIZE); 
-		PROCEDURE ^ Set(section: IntermediateCode.Section; value: SET); 
+		PROCEDURE ^ Set(section: IntermediateCode.Section; value: Basic.Set); 
 		PROCEDURE ^ Longint(section: IntermediateCode.Section; value: LONGINT); 
 		PROCEDURE ^ PatchAddress(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
@@ -644,8 +647,8 @@ VAR
 	PROCEDURE ^ GCD(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ SCM(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ CommonAlignment(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ PassBySingleReference(parameter: SyntaxTree.Parameter): BOOLEAN; 
-	PROCEDURE ^ PassInRegister(parameter: SyntaxTree.Parameter): BOOLEAN; 
+	PROCEDURE ^ PassBySingleReference(parameter: SyntaxTree.Parameter; callingConvention: SyntaxTree.CallingConvention): BOOLEAN; 
+	PROCEDURE ^ PassInRegister(parameter: SyntaxTree.Parameter; callingConvention: SyntaxTree.CallingConvention): BOOLEAN; 
 	PROCEDURE ^ AddRegisterEntry(VAR queue: RegisterEntry; register: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type); 
 	PROCEDURE ^ RemoveRegisterEntry(VAR queue: RegisterEntry; register: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Assert(cond: BOOLEAN; CONST reason: ARRAY OF CHAR); 
@@ -693,8 +696,6 @@ VAR
 	PROCEDURE ^ Mov(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ MovReplace(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Conv(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
-	PROCEDURE ^ SysvABI(cc: LONGINT): BOOLEAN; 
-	PROCEDURE ^ SysvABIorWINAPI(cc: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Call*(position: Basic.Position; op: IntermediateCode.Operand; parSize: LONGINT): IntermediateCode.Instruction; 
 	PROCEDURE ^ Exit(position: Basic.Position; pcOffset: LONGINT; callingConvention, unwind: LONGINT): IntermediateCode.Instruction; 
 	PROCEDURE ^ Return(position: Basic.Position; res: IntermediateCode.Operand): IntermediateCode.Instruction; 

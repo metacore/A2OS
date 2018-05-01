@@ -198,7 +198,7 @@ TYPE
 		win: Window; 
 		finished: BOOLEAN; 
 		className: ARRAY 32 OF CHAR; 
-		style: SET; 
+		style: WORDSET; 
 		x, y, w, h: LONGINT; 
 		hMenu: User32.HMenu; 
 	END; 

@@ -16,11 +16,11 @@ CONST
 	FillerSize = (((SectorSize - DirPgHeaderSize) MOD DirEntrySize) + 4); 
 	DirRootAdr = (1 * SectorFactor); 
 	N = (DirPgSize DIV 2); 
-	DirMark = LONGINT(9B1EA38DH); 
-	HeaderMark = LONGINT(9BA71D86H); 
+	DirMark = LONGINT(2602476429); 
+	HeaderMark = LONGINT(2611420550); 
 	MapIndexSize = ((SectorSize - 4) DIV 4); 
 	MapSize = (SectorSize DIV SIZEOF(SET)); 
-	MapMark = LONGINT(9C2F977FH); 
+	MapMark = LONGINT(2620364671); 
 	MaxBufs = 1024; 
 	InitHint = (200 * SectorFactor); 
 	Closed = 0X; 

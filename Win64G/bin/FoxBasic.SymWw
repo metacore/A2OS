@@ -20,15 +20,6 @@ CONST
 	StringTooLong* = 272; 
 	InitListSize = 4; 
 	InitErrMsgSize = 300; 
-	nilval* = 0; 
-	ExportedUnicodeSupport* = FALSE; 
-	MinSInt* =  -128; 
-	MinInt* =  -32768; 
-	MinLInt* =  -80000000H; 
-	MaxSInt* = 127; 
-	MaxInt* = 32767; 
-	MaxLInt* = 2147483647; 
-	MaxSet* = 31; 
 	invalidString* =  -1; 
 	InvalidCode* = Diagnostics.Invalid; 
 TYPE 
@@ -41,6 +32,10 @@ TYPE
 	SectionName* = ARRAY 256 OF CHAR; 
 
 	MessageString* = ARRAY 256 OF CHAR; 
+
+	Integer* = SIGNED64; 
+
+	Set* = SET64; 
 
 	ObjectArray = POINTER TO ARRAY OF ANY; 
 

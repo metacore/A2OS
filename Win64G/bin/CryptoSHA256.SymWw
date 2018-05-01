@@ -21,10 +21,10 @@ VAR
 	K256: ARRAY 64 OF LONGINT; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE ^ Sigma0Maj(x: SET; y, z: LONGINT): LONGINT; 
-	PROCEDURE ^ Sigma1Ch(x: SET; y, z: LONGINT): LONGINT; 
-	PROCEDURE ^ sigma0(x: SET): LONGINT; 
-	PROCEDURE ^ sigma1(x: SET): LONGINT; 
+	PROCEDURE ^ Sigma0Maj(x: SET32; y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ Sigma1Ch(x: SET32; y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ sigma0(x: SET32): LONGINT; 
+	PROCEDURE ^ sigma1(x: SET32): LONGINT; 
 	PROCEDURE ^ InitializeK; 
 BEGIN
 END CryptoSHA256.

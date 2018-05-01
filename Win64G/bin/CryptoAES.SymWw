@@ -5,18 +5,18 @@ CONST
 	ECB = Ciphers.ECB; 
 	CBC = Ciphers.CBC; 
 	CTR = Ciphers.CTR; 
-	b0 = S.VAL(SET, 255); 
-	b1 = S.VAL(SET, 65280); 
-	b2 = S.VAL(SET, 16711680); 
-	b3 = S.VAL(SET, 0FF000000H); 
+	b0 = S.VAL(SET32, 255); 
+	b1 = S.VAL(SET32, 65280); 
+	b2 = S.VAL(SET32, 16711680); 
+	b3 = S.VAL(SET32, 4278190080); 
 TYPE 
-	RTable = ARRAY 256 OF SET; 
+	RTable = ARRAY 256 OF SET32; 
 
-	RKeys = ARRAY (4 * (MaxRounds + 1)) OF SET; 
+	RKeys = ARRAY (4 * (MaxRounds + 1)) OF SET32; 
 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	TYPE 
-		Block = ARRAY 4 OF SET; 
+		Block = ARRAY 4 OF SET32; 
 
 		Ind4 = RECORD 
 			a, b, c, d: LONGINT; 
@@ -33,7 +33,7 @@ TYPE
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ RoundE(VAR b: Block); 
 		PROCEDURE ^ RoundD(VAR b: Block); 
-		PROCEDURE  - split(s: SET; VAR b: Ind4);
+		PROCEDURE  - split(s: SET32; VAR b: Ind4);
 		BEGIN
 			b.a := (S.VAL(LONGINT, s) MOD 256); 
 			b.b := ((S.VAL(LONGINT, s) DIV 256) MOD 256); 
@@ -49,7 +49,7 @@ TYPE
 VAR 
 	e0, e1, e2, e3, e4: RTable; 
 	d0, d1, d2, d3, d4: RTable; 
-	rcon: ARRAY 10 OF SET; 
+	rcon: ARRAY 10 OF SET32; 
 
 	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
 	PROCEDURE ^ Initialize; 

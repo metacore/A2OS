@@ -12,7 +12,7 @@ CONST
 	debug* = FALSE; 
 	TraceVerbose = FALSE; 
 	AddressSize = SIZEOF(ADDRESS); 
-	StaticBlockSize = 32; 
+	StaticBlockSize = (8 * AddressSize); 
 	BlockHeaderSize = (2 * AddressSize); 
 	RecordDescSize = (4 * AddressSize); 
 	TraceOutput* = 0; 
@@ -201,7 +201,6 @@ VAR
 	PROCEDURE ^ GetFreeK*(VAR total, lowFree, highFree: SIZE); 
 	PROCEDURE ^ TraceMemBlocks*; 
 	PROCEDURE ^ InsertMemoryBlock(memBlock: MemoryBlock); 
-	PROCEDURE ^ SetToDW(set: SET): Kernel32.DWORD; 
 	PROCEDURE ^ ExpandHeap*(dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS); 
 	PROCEDURE ^ SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS); 
 	PROCEDURE ^ FreeMemBlock*(memBlock: MemoryBlock); 

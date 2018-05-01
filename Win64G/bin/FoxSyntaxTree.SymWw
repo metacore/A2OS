@@ -6,6 +6,8 @@ CONST
 	WinAPICallingConvention* = 2; 
 	DarwinCCallingConvention* = 3; 
 	InterruptCallingConvention* = 4; 
+	PlatformCallingConvention* = 5; 
+	UndefinedCallingConvention* = 6; 
 	InternalRead* = 0; 
 	InternalWrite* = 1; 
 	ProtectedRead* = 2; 
@@ -359,11 +361,11 @@ TYPE
 	VAR 
 		enumerationScope-: EnumerationScope; 
 		enumerationBase-: Type; 
-		rangeLowest-, rangeHighest-: LONGINT; 
+		rangeLowest-, rangeHighest-: Basic.Integer; 
 
 		PROCEDURE ^  & InitEnumerationType(position: Position; scope: Scope; enumerationScope: EnumerationScope); 
 		PROCEDURE ^ SetEnumerationBase*(base: Type); 
-		PROCEDURE ^ SetRange*(lowest, highest: LONGINT); 
+		PROCEDURE ^ SetRange*(lowest, highest: Basic.Integer); 
 		PROCEDURE ^ Extends*(this: EnumerationType): BOOLEAN; 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
@@ -549,6 +551,7 @@ TYPE
 		PROCEDURE ^ AddParameter*(p: Parameter); 
 		PROCEDURE ^ RevertParameters*; 
 		PROCEDURE ^ SetReturnType*(type: Type); 
+		PROCEDURE ^ SameSignature*(this: Type): BOOLEAN; 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
@@ -848,11 +851,10 @@ TYPE
 
 	IntegerValue* = OBJECT (Value)
 	VAR 
-		hvalue-: HUGEINT; 
-		value-: LONGINT; 
+		value-: Basic.Integer; 
 
-		PROCEDURE ^  & InitIntegerValue(position: Position; hvalue: HUGEINT); 
-		PROCEDURE ^ SetValue*(hvalue: HUGEINT); 
+		PROCEDURE ^  & InitIntegerValue(position: Position; value: Basic.Integer); 
+		PROCEDURE ^ SetValue*(value: Basic.Integer); 
 		PROCEDURE ^ Clone(): Expression; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ Equals*(v: Value): BOOLEAN; 
@@ -873,10 +875,10 @@ TYPE
 
 	SetValue* = OBJECT (Value)
 	VAR 
-		value-: SET; 
+		value-: Basic.Set; 
 
-		PROCEDURE ^  & InitSetValue(position: Position; value: SET); 
-		PROCEDURE ^ SetValue*(value: SET); 
+		PROCEDURE ^  & InitSetValue(position: Position; value: Basic.Set); 
+		PROCEDURE ^ SetValue*(value: Basic.Set); 
 		PROCEDURE ^ Clone(): Expression; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 	END SetValue; 
@@ -941,10 +943,10 @@ TYPE
 
 	EnumerationValue* = OBJECT (Value)
 	VAR 
-		value-: LONGINT; 
+		value-: Basic.Integer; 
 
-		PROCEDURE ^  & InitEnumerationValue(position: Position; value: LONGINT); 
-		PROCEDURE ^ SetValue*(value: LONGINT); 
+		PROCEDURE ^  & InitEnumerationValue(position: Position; value: Basic.Integer); 
+		PROCEDURE ^ SetValue*(value: Basic.Integer); 
 		PROCEDURE ^ Clone(): Expression; 
 		PROCEDURE ^ Accept*(v: Visitor); 
 		PROCEDURE ^ Equals*(v: Value): BOOLEAN; 
@@ -1267,7 +1269,7 @@ TYPE
 	END WithStatement; 
 
 	CaseConstant* = POINTER TO RECORD 
-		min*, max*: LONGINT; 
+		min*, max*: Basic.Integer; 
 		next*: CaseConstant; 
 	END; 
 
@@ -1290,7 +1292,7 @@ TYPE
 		variable-: Expression; 
 		elsePart-: StatementSequence; 
 		caseParts-: Basic.List; 
-		min-, max-: LONGINT; 
+		min-, max-: Basic.Integer; 
 
 		PROCEDURE ^  & InitCaseStatement(position: Position; outer: Statement); 
 		PROCEDURE ^ SetVariable*(expression: Expression); 
@@ -1300,8 +1302,8 @@ TYPE
 		PROCEDURE ^ CaseParts*(): LONGINT; 
 		PROCEDURE ^ Clone(): Statement; 
 		PROCEDURE ^ Accept*(v: Visitor); 
-		PROCEDURE ^ MaxConstant*(): LONGINT; 
-		PROCEDURE ^ SetMinMax*(min, max: LONGINT); 
+		PROCEDURE ^ MaxConstant*(): Basic.Integer; 
+		PROCEDURE ^ SetMinMax*(min, max: Basic.Integer); 
 	END CaseStatement; 
 
 	WhileStatement* = OBJECT (Statement)
@@ -1721,16 +1723,16 @@ VAR
 	PROCEDURE ^ NewUnaryExpression*(position: Position; operand: Expression; operator: LONGINT): UnaryExpression; 
 	PROCEDURE ^ NewConversion*(position: Position; expression: Expression; type: Type; typeExpression: Expression): Conversion; 
 	PROCEDURE ^ NewValue*(): Value; 
-	PROCEDURE ^ NewIntegerValue*(position: Position; value: HUGEINT): IntegerValue; 
+	PROCEDURE ^ NewIntegerValue*(position: Position; value: Basic.Integer): IntegerValue; 
 	PROCEDURE ^ NewCharacterValue*(position: Position; value: CHAR): CharacterValue; 
-	PROCEDURE ^ NewSetValue*(position: Position; value: SET): SetValue; 
+	PROCEDURE ^ NewSetValue*(position: Position; value: Basic.Set): SetValue; 
 	PROCEDURE ^ NewMathArrayValue*(position: Position): MathArrayValue; 
 	PROCEDURE ^ NewRealValue*(position: Position; value: LONGREAL): RealValue; 
 	PROCEDURE ^ NewComplexValue*(position: Position; realValue, imagValue: LONGREAL): ComplexValue; 
 	PROCEDURE ^ NewStringValue*(position: Position; value: String): StringValue; 
 	PROCEDURE ^ NewBooleanValue*(position: Position; value: BOOLEAN): BooleanValue; 
 	PROCEDURE ^ NewNilValue*(position: Position): NilValue; 
-	PROCEDURE ^ NewEnumerationValue*(position: Position; value: LONGINT): EnumerationValue; 
+	PROCEDURE ^ NewEnumerationValue*(position: Position; value: Basic.Integer): EnumerationValue; 
 	PROCEDURE ^ NewStatement*(outer: Statement): Statement; 
 	PROCEDURE ^ CloneStatement*(statement: Statement): Statement; 
 	PROCEDURE ^ NewStatementSequence*(): StatementSequence; 

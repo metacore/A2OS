@@ -63,23 +63,23 @@ CONST
 	WaitObject0* = 0; 
 	SizeOf80387Registers* = 80; 
 	ExceptionMaximumParameters* = 15; 
-	ExceptionGuardPage* = LONGINT(80000001H); 
-	ExceptionBreakPoint* = LONGINT(80000003H); 
-	ExceptionSingleStep* = LONGINT(80000004H); 
-	ExceptionAccessViolation* = LONGINT(0C0000005H); 
-	ExceptionIllegalInstruction* = LONGINT(0C000001DH); 
-	ExceptionArrayBoundsExceeded* = LONGINT(0C000008CH); 
-	ExceptionFltDenormalOperand* = LONGINT(0C000008DH); 
-	ExceptionFltDivideByZero* = LONGINT(0C000008EH); 
-	ExceptionFltInexactResult* = LONGINT(0C000008FH); 
-	ExceptionFltInvalidOperation* = LONGINT(0C0000090H); 
-	ExceptionFltOverflow* = LONGINT(0C0000091H); 
-	ExceptionFltStackCheck* = LONGINT(0C0000092H); 
-	ExceptionFltUndeflow* = LONGINT(0C0000093H); 
-	ExceptionIntDivideByZero* = LONGINT(0C0000094H); 
-	ExceptionIntOverflow* = LONGINT(0C0000095H); 
-	ExceptionPrivInstruction* = LONGINT(0C0000096H); 
-	ExceptionStackOverflow* = LONGINT(0C00000FDH); 
+	ExceptionGuardPage* = LONGINT(2147483649); 
+	ExceptionBreakPoint* = LONGINT(2147483651); 
+	ExceptionSingleStep* = LONGINT(2147483652); 
+	ExceptionAccessViolation* = LONGINT(3221225477); 
+	ExceptionIllegalInstruction* = LONGINT(3221225501); 
+	ExceptionArrayBoundsExceeded* = LONGINT(3221225612); 
+	ExceptionFltDenormalOperand* = LONGINT(3221225613); 
+	ExceptionFltDivideByZero* = LONGINT(3221225614); 
+	ExceptionFltInexactResult* = LONGINT(3221225615); 
+	ExceptionFltInvalidOperation* = LONGINT(3221225616); 
+	ExceptionFltOverflow* = LONGINT(3221225617); 
+	ExceptionFltStackCheck* = LONGINT(3221225618); 
+	ExceptionFltUndeflow* = LONGINT(3221225619); 
+	ExceptionIntDivideByZero* = LONGINT(3221225620); 
+	ExceptionIntOverflow* = LONGINT(3221225621); 
+	ExceptionPrivInstruction* = LONGINT(3221225622); 
+	ExceptionStackOverflow* = LONGINT(3221225725); 
 	ContextIntel = 16; 
 	ContextControl* = {0, ContextIntel}; 
 	ContextInteger* = {1, ContextIntel}; 
@@ -174,7 +174,7 @@ TYPE
 	END; 
 
 	FindData* = RECORD 
-		dwFileAttributes*: DWORD; 
+		dwFileAttributes*: WORDSET; 
 		ftCreationTime*, ftLastAccessTime*, ftLastWriteTime*: FileTime; 
 		nFileSizeHigh*, nFileSizeLow*: LONGINT; 
 		dwReserved0*, dwReserved1*: LONGINT; 
@@ -205,7 +205,7 @@ TYPE
 
 	Context* = RECORD 
 		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE; 
-		ContextFlags*: DWORD; 
+		ContextFlags*: WORDSET; 
 		MxCsr*: DWORD; 
 		CS*, DS*, ES*, FS*, GS*, SS*: INTEGER; 
 		FLAGS*: DWORD; 
@@ -276,7 +276,7 @@ TYPE
 		dwX*, dwY*, dwXSize*, dwYSize*: LONGINT; 
 		dwXCountChars*, dwYCountChars*: LONGINT; 
 		dwFillAttribute*: LONGINT; 
-		dwFlags*: DWORD; 
+		dwFlags*: WORDSET; 
 		wShowWindow*, cbReserved2*: INTEGER; 
 		lpReserved2*: ADDRESS; 
 		hStdInput*, hStdOutput*, hStdError*: HANDLE; 
@@ -357,14 +357,14 @@ VAR
 	CopyFile-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; bFailIfExists: BOOL):BOOL; 
 	CreateDirectory-: PROCEDURE {WINAPI}(VAR lpPathName: ARRAY OF CHAR; lpSecurityAttributes: ANY):BOOL; 
 	CreateEvent-: PROCEDURE {WINAPI}(lpEventAttributes: ANY; bManualReset, bInitialState: BOOL; CONST lpName: ARRAY OF CHAR):HANDLE; 
-	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: DWORD; lpSecurityAttributes: ANY; dwCreationDistribution: LONGINT; dwFlagsAndAttributes: DWORD; hTemplateFile: HANDLE):HANDLE; 
+	CreateFile-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR; dwDesiredAccess, dwShareMode: WORDSET; lpSecurityAttributes: ANY; dwCreationDistribution: LONGINT; dwFlagsAndAttributes: WORDSET; hTemplateFile: HANDLE):HANDLE; 
 	CreateProcess-: PROCEDURE {WINAPI}(CONST lpApplicationName, lpCommandLine: ARRAY OF CHAR; lpProcessAttributes, lpThreadAttributes: ANY; bInheritHandles: BOOL; dwCreationFlags: LONGINT; lpEnvironment: ANY; VAR lpCurrentDirectory: ARRAY OF CHAR; VAR lpStartupInfo: StartupInfo; VAR lpProcessInformation: ProcessInformation):BOOL; 
 	CreateSemaphore-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; lInitialCount: LONGINT; lMaximumCount: LONGINT; lpName: LPSTR):HANDLE; 
-	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: LONGINT; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: DWORD; VAR lpThreadId: LONGINT):HANDLE; 
+	CreateThread-: PROCEDURE {WINAPI}(lpThreadAttributes: ADDRESS; dwStackSize: LONGINT; lpStartAddress: ThreadProc; lpParameter: ANY; dwCreationFlags: WORDSET; VAR lpThreadId: LONGINT):HANDLE; 
 	DeleteCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	DeleteFile-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):BOOL; 
 	DisableThreadLibraryCalls-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
-	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwOptions: DWORD):BOOL; 
+	DuplicateHandle-: PROCEDURE {WINAPI}(hSourceProcessHandle, hSourceHandle, hTargetProcessHandle: HANDLE; VAR lpTargetHandle: HANDLE; dwDesiredAccess: WORDSET; bInheritHandle: BOOL; dwOptions: WORDSET):BOOL; 
 	EnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	EscapeCommFunction-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFunc: LONGINT):BOOL; 
 	ExitProcess-: PROCEDURE {WINAPI}(uExitCode: LONGINT); 
@@ -378,7 +378,7 @@ VAR
 	FreeConsole-: PROCEDURE {WINAPI}():BOOL; 
 	FreeLibrary-: PROCEDURE {WINAPI}(hLibModule: HMODULE):BOOL; 
 	GetCommandLine-: PROCEDURE {WINAPI}():LPSTR; 
-	GetCommModemStatus-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpModemStat: DWORD):BOOL; 
+	GetCommModemStatus-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpModemStat: WORDSET):BOOL; 
 	GetCommState-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpDCB: DCB):BOOL; 
 	GetComputerName-: PROCEDURE {WINAPI}(VAR lpBuffer: ARRAY OF CHAR; VAR lpnSize: LONGINT):BOOL; 
 	GetCurrentDirectory-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
@@ -389,7 +389,7 @@ VAR
 	GetDiskFreeSpace-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters: LONGINT):BOOL; 
 	GetDriveType-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR):LONGINT; 
 	GetExitCodeProcess-: PROCEDURE {WINAPI}(hProcess: HANDLE; VAR lpExitCode: LONGINT):BOOL; 
-	GetFileAttributes-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR):DWORD; 
+	GetFileAttributes-: PROCEDURE {WINAPI}(CONST lpFileName: ARRAY OF CHAR):WORDSET; 
 	GetFileSize-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSizeHigh: LONGINT):LONGINT; 
 	GetFileSizeEx-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpFileSize: HUGEINT):BOOL; 
 	GetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
@@ -397,7 +397,7 @@ VAR
 	GetLastError-: PROCEDURE {WINAPI}():LONGINT; 
 	GetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime); 
 	GetLogicalDriveStrings-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
-	GetLogicalDrives-: PROCEDURE {WINAPI}():DWORD; 
+	GetLogicalDrives-: PROCEDURE {WINAPI}():WORDSET; 
 	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: LONGINT):LONGINT; 
 	GetModuleHandle-: PROCEDURE {WINAPI}(CONST lpModuleName: ARRAY OF CHAR):HMODULE; 
 	GetOverlappedResult-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL):BOOL; 
@@ -421,7 +421,7 @@ VAR
 	GetVersionEx-: PROCEDURE {WINAPI}(VAR lpVersionInfo: OSVersionInfo):BOOL; 
 	GetVolumeInformation-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpVolumeNameBuffer: ARRAY OF CHAR; nVolumeNameSize: LONGINT; VAR lpVolumeSerialNumber: LONGINT; VAR lpMaximumComponentLength: LONGINT; VAR lpFileSystemFlags: LONGINT; VAR lpFileSystemNameBuffer: ARRAY OF CHAR; nFileSystemNameSize: LONGINT):LONGINT; 
 	GlobalAddAtom-: PROCEDURE {WINAPI}(VAR lpString: ARRAY OF CHAR):ATOM; 
-	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: DWORD; dwBytes: LONGINT):HGLOBAL; 
+	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: WORDSET; dwBytes: LONGINT):HGLOBAL; 
 	GlobalDeleteAtom-: PROCEDURE {WINAPI}(nAtom: ATOM):ATOM; 
 	GlobalLock-: PROCEDURE {WINAPI}(hMem: HGLOBAL):ADDRESS; 
 	GlobalMemoryStatusEx-: PROCEDURE {WINAPI}(VAR lpBuffer: MemoryStatusEx):BOOL; 
@@ -435,10 +435,10 @@ VAR
 	InterlockedIncrement-: PROCEDURE {WINAPI}(VAR lpAddend: LONGINT):LONGINT; 
 	LeaveCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection); 
 	LocalFileTimeToFileTime-: PROCEDURE {WINAPI}(VAR lpLocalFileTime: FileTime; VAR lpFileTime: FileTime):BOOL; 
-	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: DWORD):BOOL; 
+	MoveFileEx-: PROCEDURE {WINAPI}(VAR lpExistingFileName, lpNewFileName: ARRAY OF CHAR; dwFlags: WORDSET):BOOL; 
 	outputDebugString-: PROCEDURE {WINAPI}(CONST lpOutputString: ARRAY OF CHAR); 
 	IsDebuggerPresent-: PROCEDURE {WINAPI}():BOOL; 
-	PurgeComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFlags: DWORD):BOOL; 
+	PurgeComm-: PROCEDURE {WINAPI}(hFile: HANDLE; dwFlags: WORDSET):BOOL; 
 	QueryDosDevice-: PROCEDURE {WINAPI}(CONST lpDeviceName: ARRAY OF CHAR; VAR lpTargetPath: ARRAY OF CHAR; ucchMax: LONGINT):LONGINT; 
 	QueryPerformanceCounter-: PROCEDURE {WINAPI}(VAR lpPerformaceCount: LargeInteger):BOOL; 
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI}(VAR lpFrequency: LargeInteger):BOOL; 
@@ -465,7 +465,7 @@ VAR
 	SetErrorMode-: PROCEDURE {WINAPI}(uMode: DWORD):DWORD; 
 	SetEndOfFile-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
 	SetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
-	SetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR; dwFileAttributes: DWORD):BOOL; 
+	SetFileAttributes-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR; dwFileAttributes: WORDSET):BOOL; 
 	SetFilePointer-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
 	SetFilePointerEx-: PROCEDURE {WINAPI}(hFile: HANDLE; lDistanceToMove: HUGEINT; VAR lpNewFilePointer: HUGEINT; dwMoveMethod: LONGINT):BOOL; 
 	SetFileTime-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime):BOOL; 
@@ -483,8 +483,8 @@ VAR
 	TlsGetValue-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT):LONGINT; 
 	TlsSetValue-: PROCEDURE {WINAPI}(dwTlsIndex, lpTlsValue: LONGINT):BOOL; 
 	TryEnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection):BOOL; 
-	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; flAllocationType, flProtect: DWORD):ADDRESS; 
-	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; dwFreeType: DWORD):BOOL; 
+	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; flAllocationType, flProtect: WORDSET):ADDRESS; 
+	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; dwFreeType: WORDSET):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
 	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; VAR lpOverlapped: Overlapped):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
@@ -492,8 +492,6 @@ VAR
 	g: BOOLEAN; 
 	hout: HANDLE; 
 
-	PROCEDURE ^ SetToDW*(s: SET): DWORD; 
-	PROCEDURE ^ DWToSet*(d: DWORD): SET; 
 	PROCEDURE ^ GetProcAddress*(hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS); 
 	PROCEDURE ^ CopyString*(lpString: LPSTR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutputDebugString*(CONST str: ARRAY OF CHAR); 

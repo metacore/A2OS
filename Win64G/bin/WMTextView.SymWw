@@ -25,8 +25,8 @@ CONST
 	Interclick02 = 2; 
 	InterclickCancelled = 99; 
 	SelectionColor = 65376; 
-	SelectionColorInterclick01 = LONGINT(0FFFF0060H); 
-	SelectionColorInterclick02 = LONGINT(0FF000060H); 
+	SelectionColorInterclick01 = LONGINT(4294901856); 
+	SelectionColorInterclick02 = LONGINT(4278190176); 
 	HLOver* = 0; 
 	HLUnder* = 1; 
 	HLWave* = 2; 

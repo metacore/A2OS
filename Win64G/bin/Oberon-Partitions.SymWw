@@ -9,7 +9,7 @@ CONST
 	MinPartSize = 64; 
 	N2KSS = 2048; 
 	N2KBPS = (N2KSS DIV BS); 
-	N2KDirMark = LONGINT(9B1EA38DH); 
+	N2KDirMark = LONGINT(2602476429); 
 	AosSSLog2 = 12; 
 	AosSS = ASH(1, AosSSLog2); 
 	AosBPS = (AosSS DIV BS); 
@@ -17,7 +17,7 @@ CONST
 	AosSTS = 128; 
 	AosXS = (AosSS DIV 4); 
 	AosHS = 568; 
-	AosDirMark = LONGINT(9B1EA38DH); 
+	AosDirMark = LONGINT(2602476429); 
 	AosType = 76; 
 	NativeType1 = 79; 
 	NativeType2 = 80; 

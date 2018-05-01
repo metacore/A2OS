@@ -13,6 +13,17 @@ CONST
 	XModem1K* = 1; 
 	YModem* = 2; 
 	DoYield = TRUE; 
+	TimeoutExpired = 1; 
+	CorruptedData = 2; 
+	InvalidHeader = 3; 
+	InvalidBlockNum = 4; 
+	TransferAborted = 5; 
+	EotError = 6; 
+	ModemIoError = 7; 
+	DataIoError = 8; 
+	FileNameUnspecified = 9; 
+	CreateFileFailure = 10; 
+	MaxNakCount = 3; 
 TYPE 
 	Modem* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -31,7 +42,7 @@ TYPE
 		PROCEDURE ^ Await*(VAR err: ARRAY OF CHAR); 
 		PROCEDURE ^ AwaitF*(VAR F: Files.File; VAR err: ARRAY OF CHAR); 
 		PROCEDURE ^ Stop; 
-		PROCEDURE ^ Read(VAR ch: CHAR): BOOLEAN; 
+		PROCEDURE ^ ReadChar(VAR ch: CHAR): BOOLEAN; 
 	END Modem; 
 
 	Sender* = OBJECT {EXCLUSIVE} (Modem)
@@ -48,6 +59,11 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Receiver; 
 
+	PROCEDURE ^ WaitForData(reader: Streams.Reader; minAvailable, timeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ AbortTransfer(modemWriter: Streams.Writer); 
+	PROCEDURE ^ InitReceiveTransfer(modemReader: Streams.Reader; modemWriter: Streams.Writer; mode, initTimeout, dataTimeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR fileName: ARRAY OF CHAR; VAR fileLength: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ ReceiveFileData(modemReader: Streams.Reader; modemWriter, dataWriter: Streams.Writer; mode, length, timeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR numBytesReceived: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Receive*(modemReader: Streams.Reader; modemWriter: Streams.Writer; VAR fileName: Files.FileName; mode: LONGINT; initTimeout, dataTimeout: LONGINT; VAR numBytesReceived: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR res: LONGINT); 
 	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ CRC16(VAR buf: ARRAY OF CHAR; len: LONGINT): LONGINT; 
 	PROCEDURE ^ GetPars(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: LONGINT): BOOLEAN; 

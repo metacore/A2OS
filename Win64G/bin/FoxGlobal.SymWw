@@ -3,6 +3,7 @@ MODULE FoxGlobal;
 CONST 
 	StringWinAPI* = \"WINAPI"\; 
 	StringC* = \"C"\; 
+	StringPlatformCC* = \"PlatformCC"\; 
 	StringMovable* = \"MOVABLE"\; 
 	StringUntraced* = \"UNTRACED"\; 
 	StringDelegate* = \"DELEGATE"\; 
@@ -217,11 +218,13 @@ TYPE
 		offsetFirstParameter-: LONGINT; 
 		operatorDefined-: ARRAY end OF BOOLEAN; 
 		addressSize-: LONGINT; 
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type; 
+		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type; 
 		CanPassInRegister-: PassInRegisterProc; 
 		cellsAreObjects-: BOOLEAN; 
+		platformCallingConvention-: SyntaxTree.CallingConvention; 
 
 		PROCEDURE ^  & InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar: LONGINT; cooperative: BOOLEAN); 
+		PROCEDURE ^ SetPlatformCallingConvention*(callingConvention: SyntaxTree.CallingConvention); 
 		PROCEDURE ^ SetCellsAreObjects*(c: BOOLEAN); 
 		PROCEDURE ^ SetRegisterPassCallback*(canPassInRegister: PassInRegisterProc); 
 		PROCEDURE ^ AddCapability*(name: SyntaxTree.Identifier); 
@@ -236,7 +239,7 @@ TYPE
 		PROCEDURE ^ IsLynx*(): BOOLEAN; 
 	END System; 
 VAR 
-	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NameMovable-, NameUntraced-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
+	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NamePlatformCC-, NameMovable-, NameUntraced-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier; 
 	Boolean8-, Boolean32-: SyntaxTree.BooleanType; 
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType; 
@@ -287,15 +290,15 @@ VAR
 	PROCEDURE ^ MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT; 
 	PROCEDURE ^ MaxFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
 	PROCEDURE ^ MinFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
-	PROCEDURE ^ ConvertSet*(this: SET; bits: LONGINT): SET; 
+	PROCEDURE ^ ConvertSet*(this: Basic.Set; bits: LONGINT): Basic.Set; 
 	PROCEDURE ^ IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetSignedIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value; 
 	PROCEDURE ^ NewBooleanValue*(system: System; position: Position; b: BOOLEAN): SyntaxTree.Value; 
-	PROCEDURE ^ GetSetType*(system: System; this: SET): SyntaxTree.SetType; 
-	PROCEDURE ^ NewSetValue*(system: System; position: Position; s: SET): SyntaxTree.Value; 
+	PROCEDURE ^ GetSetType*(system: System; this: Basic.Set): SyntaxTree.SetType; 
+	PROCEDURE ^ NewSetValue*(system: System; position: Position; s: Basic.Set): SyntaxTree.Value; 
 	PROCEDURE ^ NewCharacterValue*(system: System; position: Position; c: CHAR): SyntaxTree.Value; 
 	PROCEDURE ^ NewNilValue*(system: System; position: Position): SyntaxTree.Value; 
 	PROCEDURE ^ BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): LONGINT; 

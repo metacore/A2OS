@@ -75,11 +75,10 @@ VAR
 		kp : Api.XKeyEvent;
 		be : Api.XButtonPressedEvent;
 		em: Api.XExposeEvent;
-		cm : Api.XClientMessageEvent;
-		datal: Api.Data40l;
 		cn: Api.XConfigureEvent;
 		res, events: LONGINT;
 		buffer: ARRAY bufsize OF CHAR;
+		msg: LONGINT;
 	BEGIN
 		xd := disp.xdisp;
 		Machine.Acquire( Machine.X11 );
@@ -191,9 +190,12 @@ VAR
 			| Api.MappingNotify:
 					X11.RefreshKeyboardMapping( ADDRESSOF( event ) )
 			| Api.ClientMessage: 
-					cm := S.VAL( Api.XClientMessageEvent, event );
-					datal := S.VAL( Api.Data40l, cm.data );
-					IF  S.VAL( X11.Atom,datal[0] ) = disp.wmDelete THEN									
+					IF SIZEOF( ADDRESS ) = 8 THEN	(* hack to avoid a 64-bit X11Api (alignments are different in C and Oberon) !! *)
+						S.GET( ADDRESSOF( event ) + 56, msg )
+					ELSE 
+						S.GET( ADDRESSOF( event ) + 28, msg )
+					END;
+					IF msg = disp.wmDelete THEN
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
 						Modules.Shutdown( Modules.Reboot );

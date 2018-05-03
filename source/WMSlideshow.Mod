@@ -856,6 +856,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	VAR s : Slide;
 		w, h : LONGINT;
 		manager : WMWindowManager.WindowManager;
+		img: Image;
 	BEGIN
 		(* Load current slide *)
 		IF (app.slideNr > data.CountSlides()-1) THEN RETURN; END;
@@ -877,6 +878,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 				RETURN;
 			END;
 		END;
+		SELF.img := img;
 		manager := WMWindowManager.GetDefaultManager();
 		w := img.width;  h := img.height;
 		manager.SetWindowSize(SELF, w, h);

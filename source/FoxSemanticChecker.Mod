@@ -88,6 +88,7 @@ TYPE
 		system-: Global.System;
 		symbolFileFormat-: Formats.SymbolFileFormat;
 		backendName-: ARRAY 32 OF CHAR;
+		inConversion: LONGINT;
 
 
 		(* temporary variables for the visitors
@@ -140,6 +141,7 @@ TYPE
 			withEntries := NIL;
 			SELF.cellsAreObjects := system.cellsAreObjects;
 			COPY(backend, backendName);
+			inConversion := 0;
 		END InitChecker;
 
 		(** report error **)
@@ -2631,15 +2633,26 @@ TYPE
 				(* no type can be converted to an array-structured object type *)
 				HALT(100)
 			ELSIF (type IS SyntaxTree.MathArrayType) THEN
-				IF expression.type.resolved IS SyntaxTree.MathArrayType THEN
-					result := MathArrayConversion(position, expression,type);
-				ELSIF IsArrayStructuredObjectType(expression.type) THEN
-					expression := ConvertToMathArray(expression);
-					type := MathArrayStructureOfType(type);
-					result := MathArrayConversion(position, expression, type)
-				ELSE
-					Error(expression.position,"cannot convert non array type to array type")
-				END;
+					IF inConversion>5 THEN 
+						Error(expression.position,"recursive Conversion");
+						IF VerboseErrorMessage THEN
+							Printout.Info("expression",expression);
+							Printout.Info("type",type);
+						END;
+					END;
+					INC(inConversion); 
+					IF inConversion < 10 THEN 
+						IF expression.type.resolved IS SyntaxTree.MathArrayType THEN
+							result := MathArrayConversion(position, expression,type);
+						ELSIF IsArrayStructuredObjectType(expression.type) THEN
+							expression := ConvertToMathArray(expression);
+							type := MathArrayStructureOfType(type);
+							result := MathArrayConversion(position, expression, type)
+						ELSE
+							Error(expression.position,"cannot convert non array type to array type")
+						END;
+					END;
+					DEC(inConversion);
 			ELSIF (expression.type.resolved IS SyntaxTree.MathArrayType) THEN
 					IF (expression.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static)
 						OR ~(type IS SyntaxTree.ArrayType) THEN

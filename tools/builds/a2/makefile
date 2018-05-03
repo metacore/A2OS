@@ -8,9 +8,9 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 tool := $(if $(wildcard oberon), ./oberon, ./original)
 platforms := Linux32G Linux64G Darwin32G Solaris32G Win32G Win64G
 
-target := Linux32G
-object := .GofU
-symbol := .SymU
+target := Linux64G
+object := .GofUu
+symbol := .SymUu
 
 # module dependencies
 
@@ -27,7 +27,7 @@ FoxArrayBase$(object): ComplexNumbers$(object)
 %$(object):
 	@$(tool) compile -p=$(target) $(if $<, $<, $(error no target for $@))
 
-# targets
+# Fox Compiler
 
 oberon: $(addsuffix $(object), Runtime Trace Glue Unix Machine Heaps Modules Objects Streams Kernel Reflection KernelLog TrapWriters Commands Pipes StdIO Traps Files UnixFiles BitSets StringPool ObjectFile Diagnostics Reals Clock Dates Strings GenericLinker GenericLoader WMRectangles CLUTs Plugins Displays Raster UTF8Strings WMRasterScale SoundDevices XMLObjects DynamicStrings XML XMLScanner XMLParser Configuration Inflate CRC Unzip WMEvents Locks FP1616 Texts Archives Codecs WMGraphics WMDefaultFont StdIOShell Shell Options ProcessInfo0 ProcessInfo SystemVersion SystemTools Debugging FoxBasic FoxScanner FoxSyntaxTree FoxGlobal FoxParser FoxFingerPrinter FoxPrintout FoxFormats FoxSemanticChecker FoxBackend FoxFrontend Compiler FoxOberonFrontend FoxSections FoxBinaryCode FoxIntermediateCode FoxInterfaceComparison FoxTextualSymbolFile FoxIntermediateBackend FoxAMD64InstructionSet FoxAMD64Assembler FoxBinarySymbolFile FoxBinaryObjectFile FoxCodeGenerators FoxAMDBackend FoxGenericObjectFile Math MathL ComplexNumbers FoxArrayBase StaticLinker DependencyWalker Localization Repositories UnicodeProperties TextUtilities ReleaseThreadPool Zlib ZlibBuffers ZlibInflate ZlibReaders ZlibDeflate ZlibWriters Zip CompilerInterface Release)
 	@$(tool) StaticLinker.Link -p=$(target) --fileName=$@ Runtime Traps UnixFiles GenericLoader WMDefaultFont StdIOShell Shell SystemTools Compiler FoxOberonFrontend FoxAMDBackend FoxGenericObjectFile FoxArrayBase StaticLinker DependencyWalker Release && chmod +x $@
@@ -46,7 +46,7 @@ execution: Oberon.Execution.Test.Diff
 Oberon.Execution.Test.Diff: oberon FoxTest$(object) source/Oberon.Execution.Test
 	@./oberon FoxTest.Compile source/Oberon.Execution.Test
 
-# builds
+# A2 Builds
 
 builds:
 	@make $(foreach platform,$(platforms),&& make build platform=$(platform))

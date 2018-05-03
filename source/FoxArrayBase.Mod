@@ -2137,7 +2137,7 @@ Sufficient (but not necessary) conditions:
 
 	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF SIZE ): ARRAY [ ? ] OF REAL;
 	BEGIN
-		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopYZ );
+		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopYR );
 		RETURN RESULT
 	END "@Convert";
 

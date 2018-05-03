@@ -3266,8 +3266,8 @@ VAR
 		AddInstruction(opCWDE, "", "98", {optO32}, {cpu386});
 		AddInstruction(opDAA, "", "27", {optNot64}, {cpu8086});
 		AddInstruction(opDAS, "", "2F", {optNot64}, {cpu8086});
-		AddInstruction(opDEC, "reg16", "48rw", {optO16}, {cpu8086});
-		AddInstruction(opDEC, "reg32", "48rd", {optO32}, {cpu386});
+		AddInstruction(opDEC, "reg16", "48rw", {optO16,optNot64}, {cpu8086});
+		AddInstruction(opDEC, "reg32", "48rd", {optO32,optNot64}, {cpu386});
 		AddInstruction(opDEC, "reg/mem8", "FE/1", {}, {cpu8086});
 		AddInstruction(opDEC, "reg/mem16", "FF/1", {optO16}, {cpu8086});
 		AddInstruction(opDEC, "reg/mem32", "FF/1", {optO32}, {cpu386});
@@ -3471,8 +3471,8 @@ VAR
 		AddInstruction(opIN, "AL,DX", "EC", {}, {cpu8086});
 		AddInstruction(opIN, "AX,DX", "ED", {optO16}, {cpu8086});
 		AddInstruction(opIN, "EAX,DX", "ED", {optO32}, {cpu386});
-		AddInstruction(opINC, "reg16", "40rw", {optO16}, {cpu8086});
-		AddInstruction(opINC, "reg32", "40rd", {optO32}, {cpu386});
+		AddInstruction(opINC, "reg16", "40rw", {optO16,optNot64}, {cpu8086});
+		AddInstruction(opINC, "reg32", "40rd", {optO32,optNot64}, {cpu386});
 		AddInstruction(opINC, "reg/mem8", "FE/0", {}, {cpu8086});
 		AddInstruction(opINC, "reg/mem16", "FF/0", {optO16}, {cpu8086});
 		AddInstruction(opINC, "reg/mem32", "FF/0", {optO32}, {cpu386});

@@ -1479,7 +1479,10 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	SambaClient.Mod SambaServer.Mod
 
 	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
-	srBase.Mod srRayEngine.Mod srMath.Mod I386.srE.Mod srGL.Mod srHex.Mod srImage.Mod
+	srBase.Mod srRayEngine.Mod srMath.Mod
+	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.srE.Mod }
+	AMD64, WINGEN64, UNIXG64 { AMD64.srE.Mod }
+	srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
 	srM2Space.Mod srM3Space.Mod srM5Space.Mod srM6Space.Mod srRastermovie.Mod
 	srTexVox.Mod srThermoCell.Mod srTree.Mod sr3DTexture.Mod srLifeVox.Mod

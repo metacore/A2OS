@@ -532,7 +532,7 @@ TYPE
 							ELSIF i = regOperand THEN
 								INCL (rexPrefix, rexR)
 							END;
-						ELSIF (cpuBits = bits64) & (operands[i].type = reg8) & (InstructionSet.RegisterIndex(operands[i].register) >= 4) THEN
+						ELSIF (cpuBits = bits64) & (operands[i].type = reg8) & (operands[i].register >= InstructionSet.regSPL) & (operands[i].register <= InstructionSet.regDIL) THEN
 							INCL (rexPrefix, rex);
 						END;
 					END;

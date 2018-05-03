@@ -32,7 +32,7 @@ CONST
 	statistics= FALSE;
 	conservative=TRUE;
 
-	ArrDataArrayOffset=ADDRESS(16); (* offset of data in array with pointers *)
+	ArrDataArrayOffset=4*SIZEOF (ADDRESS); (* offset of data in array with pointers *)
 
 	AddressSize=SIZEOF(ADDRESS);
 	MathPtrOffset=0*AddressSize;
@@ -10348,7 +10348,7 @@ TYPE
 				dest.adr := Align(data);
 			ELSE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
-				dest.adr := data + ArrDataArrayOffset;
+				dest.adr := data + ADDRESS(ArrDataArrayOffset);
 			END;
 			SafePut(dest.ptr, data);
 			(*dest.ptr := data;*)
@@ -10410,7 +10410,7 @@ TYPE
 				PutAdr( dest, Align(data) );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
-				PutAdr( dest, data+ ArrDataArrayOffset );			
+				PutAdr( dest, data+ ADDRESS(ArrDataArrayOffset) );			
 
 			END;
 			PutPtr( dest, data );  PutSize( dest, Size );

@@ -180,6 +180,8 @@ TYPE
 		numElems: SIZE;
 		current: ADDRESS; (* unused *)
 		first: ADDRESS;
+		(* len info *)
+		(* data *)
 	END;
 	
 	(*StackBlock = POINTER{UNSAFE} TO StackBlockDesc;

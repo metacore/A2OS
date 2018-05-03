@@ -1,6 +1,7 @@
 all: oberon
+commit: compiler compilation execution builds
 
-.PHONY: all compiler execution compilation execution builds build clean
+.PHONY: all commit compiler compilation execution builds build clean
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 

@@ -368,7 +368,7 @@ CODE {SYSTEM.AMD64, SYSTEM.MMX}
 	;
 	; Initialize the counter and skip if the latter is equal to zero
 	;
-	PUSH		ECX
+	PUSH		RCX
 	MOV		ECX, [RBP + i]
 	CMP		ECX, 0
 	JZ			skip565
@@ -488,7 +488,7 @@ doblend565:
 	EMMS								; Declare FPU registers free
 
 skip565:
-	POP		ECX
+	POP		RCX
 END Calc565MMXLine;
 
 
@@ -590,7 +590,7 @@ PROCEDURE Calc888MMXLine (adra, adrb, adrr: ADDRESS; i : LONGINT; a64, m64 : HUG
 CODE {SYSTEM.AMD64, SYSTEM.MMX}
 
 	; (re)load the width counter
-	PUSH			ECX
+	PUSH			RCX
 	MOV			ECX, [RBP + i]
 
 	;
@@ -695,7 +695,7 @@ doblend24:
 	POP			RDI
 	EMMS								; Declare FPU registers free
 
-	POP			ECX
+	POP			RCX
 END Calc888MMXLine;
 
 (* ***

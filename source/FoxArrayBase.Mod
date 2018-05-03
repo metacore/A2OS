@@ -2126,6 +2126,21 @@ Sufficient (but not necessary) conditions:
 	END "@Convert";
 
 
+	PROCEDURE ConvertLoopYR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
+	VAR lval: SIZE;  dval: REAL;
+	BEGIN
+		WHILE (len > 0) DO
+			SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval );
+			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
+		END;
+	END ConvertLoopYR;
+
+	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF SIZE ): ARRAY [ ? ] OF REAL;
+	BEGIN
+		ApplyUnaryAAOp( ADDRESSOF( RESULT ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopYZ );
+		RETURN RESULT
+	END "@Convert";
+
 	(*** monadic not A -> ~A ********************************************************************)
 
 (** BOOLEAN *)
@@ -8260,7 +8275,7 @@ TYPE
 
 	(*** LEN: array -> array **)
 
-	OPERATOR "LEN"*(CONST left: ARRAY [?]): ARRAY [*] OF LenType;
+	OPERATOR "LEN"*(CONST left: ARRAY [?]): ARRAY [*] OF SIZE;
 	VAR src: ADDRESS; dim,i: SIZE;
 	BEGIN
 		src := SYSTEM.VAL(ADDRESS,left);

@@ -6810,61 +6810,6 @@ positive: type tests and guards on records and pointers on direct and indirect p
 		Test;
 	END Test.
 
-positive: inline procedure with fixups
-
-	MODULE Test;
-
-	IMPORT SYSTEM;
-
-	CONST const = 123;
-	VAR a, b: LONGINT;
-
-	PROCEDURE -P(): LONGINT;
-	CODE{SYSTEM.i386}
-		MOV EAX,b
-		MOV a,const
-		JMP end
-		MOV EAX,10
-		end:
-	END P;
-
-	PROCEDURE Q;
-	VAR b: LONGINT;
-	BEGIN
-		b := P();
-		ASSERT(a=123);
-		ASSERT(b=1234);
-	END Q;
-
-	BEGIN
-		b := 1234;
-		Q;
-		a := P();
-		ASSERT(a=1234);
-	END Test.
-
-positive: import inline assembler procedure
-
-	MODULE A;
-
-	IMPORT SYSTEM;
-
-	PROCEDURE -P*(a: LONGINT): LONGINT;
-	CODE{SYSTEM.i386}
-		POP EAX
-		ADD EAX,10
-	END P;
-
-	BEGIN
-		ASSERT(P(10) = 20);
-	END A.
-
-	MODULE Test;
-	IMPORT A;
-	BEGIN
-		ASSERT(A.P(10)=20)
-	END Test.
-
 positive: call a winapi procedure with an array of system byte
 
 	MODULE Test;

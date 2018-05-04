@@ -36,11 +36,11 @@ END GetAddress;
 
 (** ReplConst in previosly set picture with mode replace, H = 1 **)
 PROCEDURE ReplConst*(col, X, Y, W: INTEGER);
-VAR col4: SET; color: CHAR; pictAdr: ADDRESS; color4: ARRAY 4 OF CHAR;
+VAR col4: SET32; color: CHAR; pictAdr: ADDRESS; color4: ARRAY 4 OF CHAR;
 BEGIN
 	color := CHR(col);
 	color4[0] := color; color4[1] := color; color4[2] := color; color4[3] := color;
-	col4 := S.VAL(SET, color4);
+	col4 := S.VAL(SET32, color4);
 	pictAdr := baseAdr + lineW * Y + X;
 	WHILE W > 4 DO S.PUT(pictAdr, col4); DEC(W, 4); INC(pictAdr, 4) END;
 	WHILE W > 0 DO S.PUT(pictAdr, color); DEC(W); INC(pictAdr) END;

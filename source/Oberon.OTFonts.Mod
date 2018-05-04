@@ -197,7 +197,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 	BEGIN
 		font := lib(Font);
 		adr := ADDRESSOF(font.mem[0]);
-		SYSTEM.GET(adr + 4*ref, pat);
+		SYSTEM.GET(adr + SIZEOF (ADDRESS)*ref, pat);
 		IF pat = 0 THEN
 			no := OType.UnicodeToGlyph(font.inst.font, OType.CharToUnicode[ref]);
 			IF no # 0 THEN
@@ -211,9 +211,9 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 				pat := pat+3;
 				font.pattern := pat+2
 			ELSE
-				pat := adr + 4*100H + 3	(* address of default pattern *)
+				pat := adr + SIZEOF (ADDRESS)*100H + 3	(* address of default pattern *)
 			END;
-			SYSTEM.PUT(adr + 4*ref, pat)
+			SYSTEM.PUT(adr + SIZEOF (ADDRESS)*ref, pat)
 		END;
 		SYSTEM.GET(pat-3, ch); Char.dx := ORD(ch);
 		SYSTEM.GET(pat-2, s); Char.x := s;
@@ -284,9 +284,9 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 			font.maxY := SHORT(OTInt.MulDiv(otfont.head.yMax, font.inst.yppm, upm));
 
 			(* allocate space for index, metrics and patterns *)
-			NEW(font.mem, 4*100H + n * (10 + ((font.maxX - font.minX) DIV 8 + 1) * (font.maxY - font.minY)));
+			NEW(font.mem, SIZEOF (ADDRESS)*100H + n * (10 + ((font.maxX - font.minX) DIV 8 + 1) * (font.maxY - font.minY)));
 			adr := ADDRESSOF(font.mem[0]);
-			font.pattern := adr + 4*100H;
+			font.pattern := adr + SIZEOF (ADDRESS)*100H;
 			WHILE adr < font.pattern DO SYSTEM.PUT(adr, LONG(LONG(0))); INC(adr, 4) END;	(* mark as invalid *)
 			GetChar(font, 0, SYSTEM.VAL(Display.Pattern,adr))
 		END

@@ -540,13 +540,13 @@ END Demo1;*)
 
 (* from MatrixUtilities.Mod*)
 PROCEDURE LoadData(R:Streams.Reader): ARRAY [?] OF LONGREAL;
-VAR s: ARRAY 16 OF CHAR; i, k:LONGINT; len: ARRAY [*] OF LONGINT;
+VAR s: ARRAY 16 OF CHAR; i, k:LONGINT; len: ARRAY [*] OF SIZE; n: LONGINT;
 BEGIN
 	R.Ln(s);
 	ASSERT(s="TENSOR 1.0 LR "); 
 	IF R.GetInteger(k, FALSE) THEN NEW(len,k) ELSE HALT(200) END;
 	FOR i:=0 TO k-1 DO 
-		IF R.GetInteger(len[i],FALSE) THEN END;
+		IF R.GetInteger(n,FALSE) THEN len[i] := n; END;
 	END;
 	R.SkipLn;
 	IF (DIM(RESULT)#k) OR (LEN(RESULT)#len) THEN NEW(RESULT,len) END;

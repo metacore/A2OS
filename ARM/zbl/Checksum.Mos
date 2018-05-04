@@ -1,0 +1,51 @@
+MODULE Checksum;
+(**
+	AUTHOR Timothée Martiel, 01/2016
+	PURPOSE Pluggable checksum management for the bootloader
+*)
+
+IMPORT
+	Modules, Strings;
+
+CONST
+	MaxChecksums			= 32;
+
+	Ok *						= 0;	(** No error *)
+	InvalidChecksumAlgo *	= 6;	(** Checksum algorithm is not available *)
+	InvalidChecksum *			= 7;	(** Computed and reference checksums do not match *)
+
+TYPE
+	Checksum * = PROCEDURE (start, size: LONGINT; CONST value: ARRAY OF CHAR): LONGINT;
+
+VAR
+	checksums: ARRAY MaxChecksums OF RECORD type: ARRAY 32 OF CHAR; check: Checksum END;
+	checksumNb: LONGINT;
+
+	PROCEDURE Register * (CONST type: ARRAY OF CHAR; check: Checksum);
+	BEGIN
+		COPY(type, checksums[checksumNb].type);
+		checksums[checksumNb].check := check;
+		INC(checksumNb)
+	END Register;
+
+	PROCEDURE Check * (CONST type, reference: ARRAY OF CHAR; start, size: ADDRESS): LONGINT;
+	VAR
+		m: Modules.Module;
+		name: ARRAY 64 OF CHAR;
+		i: LONGINT;
+	BEGIN
+		COPY(type, name);
+		Strings.Append(name, 'Checksum');
+		Modules.ThisMod(name, m);
+		IF m = NIL THEN
+			RETURN InvalidChecksumAlgo
+		END;
+
+		FOR i := 0 TO checksumNb - 1 DO
+			IF checksums[i].type = type THEN
+				RETURN checksums[i].check(start, size, reference)
+			END
+		END;
+		RETURN InvalidChecksumAlgo
+	END Check;
+END Checksum.

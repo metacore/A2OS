@@ -1,0 +1,522 @@
+(* ported version of Minos to work with the ARM backend of the Fox Compiler Suite *)
+MODULE Log;   (**  AUTHOR "fof"; PURPOSE "configurable output ";  **)
+
+IMPORT SYSTEM;
+	(*** configurable output *)
+	
+	(*@
+		003 2007-07-09 tt formatted
+		002 2007-02-08 tt added set, Hex, flush
+		001 2006-06-22  fof  created
+	*)
+	
+	(**
+		verbose: output for programmers
+		normal: output understandable by a user
+		error: error reports - assumed to be important 
+	*)
+
+CONST 
+	quiet* = -2;  error* = -1;  normal* = 0;  verbose* = 1;  
+
+	TAB = 9X;	(* ASCII number for tabulator *)
+
+TYPE 
+	strP* = PROCEDURE ( CONST str: ARRAY OF CHAR );  
+	setP* = PROCEDURE ( s: SET );  
+	intP* = PROCEDURE ( i: LONGINT );  
+	hexP* = PROCEDURE ( i: LONGINT );  
+	realP* = PROCEDURE ( real: REAL );  
+	boolP* = PROCEDURE ( b: BOOLEAN );  
+	trapModeP* = PROCEDURE ( b: BOOLEAN );  
+	chP* = PROCEDURE ( c: CHAR );  
+	lnP* = PROCEDURE;  
+	clearP* = PROCEDURE;  
+	flushP* = PROCEDURE;  
+	bufferP* = PROCEDURE ( CONST buf: ARRAY OF CHAR (*SYSTEM.BYTE*);  offset, len: LONGINT );  
+	beepP* = PROCEDURE ( freq, duration: LONGINT );  
+
+VAR 
+	gMode: LONGINT;  str: strP;  int: intP;  real: realP;  bool: boolP;  ln: lnP;  ch: chP;  
+	flush: flushP;  hex: hexP;  set: setP;  buffer: bufferP;  clear: clearP;  beep: beepP;  
+	trapMode: trapModeP;  
+	
+	(** output procedures, output only generated if mode <= current mode (gMode) *)
+	PROCEDURE Str*( mode: LONGINT;  CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= mode THEN str( s ) END;  
+	END Str;  
+	
+	PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : LONGINT; CONST addColon : BOOLEAN );
+	VAR
+		i : LONGINT;
+		rest : LONGINT;
+	BEGIN
+		IF ( LEN( s ) < len ) THEN
+			rest := len - LEN( s );
+		ELSE
+			rest := 0;
+		END;
+		str( s );
+		FOR i := 0 TO rest -1 DO
+			ch(' ');
+		END;
+		IF ( addColon ) THEN
+			ch(':'); ch(' ');
+		END;
+	END StringA;
+
+	PROCEDURE Int*( mode: LONGINT;  i: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN int( i ) END;  
+	END Int;  
+
+	PROCEDURE Hex*( mode: LONGINT;  i: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN hex( i ) END;  
+	END Hex;  
+
+	PROCEDURE Real*( mode: LONGINT;  r: REAL );  
+	BEGIN 
+		IF gMode >= mode THEN real( r ) END;  
+	END Real;  
+
+	PROCEDURE Bool*( mode: LONGINT;  b: BOOLEAN );  
+	BEGIN 
+		IF gMode >= mode THEN bool( b ) END;  
+	END Bool;  
+
+	PROCEDURE Ch*( mode: LONGINT;  c: CHAR );  
+	BEGIN 
+		IF gMode >= mode THEN ch( c ) END;  
+	END Ch;  
+
+	PROCEDURE Buffer*( mode: LONGINT;  CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  
+										 offset, len: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN buffer( buf, offset, len ) END;  
+	END Buffer;  
+
+	PROCEDURE Ln*( mode: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN ln;  END;  
+	END Ln;  
+
+	PROCEDURE Flush*( mode: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN flush END;  
+	END Flush;  
+
+	PROCEDURE Clear*( mode: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN clear END;  
+	END Clear;  
+
+(*
+	PROCEDURE ShowTD*( mode: LONGINT;  ptr: LONGINT );  
+	VAR size, i: LONGINT;  
+	BEGIN 
+		IF gMode >= mode THEN 
+			SYSTEM.GET( ptr - 4, ptr );  ptr := ptr MOD 1000000H + Platform.RAMCore;  
+			str( "TD :" );  hex( ptr );  ln;  str( "TD Size: " );  SYSTEM.GET( ptr - 4, size );  
+			int( size MOD 1000000H );  ln;  str( "RECORD Size: " );  SYSTEM.GET( ptr, size );  int( size );  
+			ln;  i := 0;  
+			WHILE i < 8 DO 
+				ch( 09X );  ch( '[' );  SYSTEM.GET( ptr + 4 + i * 4, size );  int( i );  ch( ']' );  
+				hex( size );  ln;  INC( i )
+			END;  
+			str( "Ptrs: " );  SYSTEM.GET( ptr + 36, size );  int( size );  ln;  
+		END;  
+	END ShowTD;  
+*)
+	PROCEDURE Time*( mode: LONGINT );  
+	VAR timer: LONGINT;  len: LONGINT;  
+	BEGIN 
+		(* Int( mode, Kernel.GetTime() ); *)
+	END Time;  
+
+	PROCEDURE Beep*( mode: LONGINT;  freq, duration: LONGINT );  
+	BEGIN 
+		IF gMode >= mode THEN beep( freq, duration ) END;  
+	END Beep;  
+
+	PROCEDURE Tab*( mode: LONGINT);  
+	BEGIN 
+		Ch(mode, TAB);
+	END Tab;  
+
+(*** output procedures in normal mode, procedures with more than one argument add a line feed *)
+
+	PROCEDURE S*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= normal THEN str( s );  END;  
+	END S;  
+
+	PROCEDURE Set*( s: SET );  
+	BEGIN 
+		IF gMode >= normal THEN set( s );  END;  
+	END Set;  
+
+	PROCEDURE SL*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= normal THEN str( s );  ln();  END;  
+	END SL;  
+
+	PROCEDURE IL*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= normal THEN int( i );  ln();  END;  
+	END IL;  
+
+	PROCEDURE RL*( r: REAL );  
+	BEGIN 
+		IF gMode >= normal THEN real( r );  ln();  END;  
+	END RL;  
+
+	PROCEDURE I*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= normal THEN int( i );  END;  
+	END I;  
+
+	PROCEDURE H*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= normal THEN hex( i );  END;  
+	END H;  
+
+	PROCEDURE R*( r: REAL );  
+	BEGIN 
+		IF gMode >= normal THEN real( r ) END;  
+	END R;  
+
+	PROCEDURE C*( c: CHAR );  
+	BEGIN 
+		IF gMode >= normal THEN ch( c ) END;  
+	END C;  
+
+	PROCEDURE B*( b: BOOLEAN );  
+	BEGIN 
+		IF gMode >= normal THEN bool( b ) END;  
+	END B;  
+
+	PROCEDURE L*( );  
+	BEGIN 
+		IF gMode >= normal THEN ln();  END;  
+	END L;  
+
+	PROCEDURE T*( );  
+	BEGIN 
+		C(TAB);
+	END T;  
+
+	PROCEDURE SS*( CONST s1, s2: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= normal THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
+	END SS;  
+
+	PROCEDURE SI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	BEGIN 
+		IF gMode >= normal THEN 
+			str( s );  ch( ':' );  
+			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			ln;  
+		END;  
+	END SI;  
+
+	PROCEDURE SR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	BEGIN 
+		IF gMode >= normal THEN 
+			str( s );  ch( ':' );  
+			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			ln;  
+		END;  
+	END SR;  
+
+	PROCEDURE SC*( CONST s: ARRAY OF CHAR;  c: CHAR );  
+	BEGIN 
+		IF gMode >= normal THEN str( s );  ch( ':' );  ch( c );  ln;  END;  
+	END SC;  
+
+(*** output procedures in error mode, procedures with more than one argument add a line feed *)
+	PROCEDURE eS*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= error THEN str( s );  END;  
+	END eS;  
+
+	PROCEDURE eSet*( s: SET );  
+	BEGIN 
+		IF gMode >= error THEN set( s );  END;  
+	END eSet;  
+
+	PROCEDURE eSL*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= error THEN str( s );  ln();  END;  
+	END eSL;  
+
+	PROCEDURE eIL*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= error THEN int( i );  ln();  END;  
+	END eIL;  
+
+	PROCEDURE eRL*( r: REAL );  
+	BEGIN 
+		IF gMode >= error THEN real( r );  ln();  END;  
+	END eRL;  
+
+	PROCEDURE eI*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= error THEN int( i );  END;  
+	END eI;  
+
+	PROCEDURE eH*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= error THEN hex( i );  END;  
+	END eH;  
+
+	PROCEDURE eR*( r: REAL );  
+	BEGIN 
+		IF gMode >= error THEN real( r ) END;  
+	END eR;  
+
+	PROCEDURE eC*( c: CHAR );  
+	BEGIN 
+		IF gMode >= error THEN ch( c ) END;  
+	END eC;  
+
+	PROCEDURE eB*( b: BOOLEAN );  
+	BEGIN 
+		IF gMode >= error THEN bool( b ) END;  
+	END eB;  
+
+	PROCEDURE eL*( );  
+	BEGIN 
+		IF gMode >= error THEN ln();  END;  
+	END eL;  
+
+	PROCEDURE eT*( );  
+	BEGIN 
+		eC(TAB);
+	END eT;  
+
+	PROCEDURE eSS*( CONST s1, s2: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= error THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
+	END eSS;  
+
+	PROCEDURE eSI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	BEGIN 
+		IF gMode >= error THEN 
+			str( s );  ch( '=' );  
+			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			ln;  
+		END;  
+	END eSI;  
+
+	PROCEDURE eSR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	BEGIN 
+		IF gMode >= error THEN 
+			str( s );  ch( '=' );  
+			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			ln;  
+		END;  
+	END eSR;  
+
+	PROCEDURE eSC*( CONST s: ARRAY OF CHAR;  c: CHAR );  
+	BEGIN 
+		IF gMode >= error THEN str( s );  ch( ':' );  ch( c );  ln;  END;  
+	END eSC;  
+
+
+(*** output procedures in verbose mode, procedures with more than one argument add a line feed*)
+	PROCEDURE vS*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= verbose THEN str( s );  END;  
+	END vS;  
+
+	PROCEDURE vSet*( s: SET );  
+	BEGIN 
+		IF gMode >= verbose THEN set( s );  END;  
+	END vSet;  
+
+	PROCEDURE vSL*( CONST s: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= verbose THEN str( s );  ln();  END;  
+	END vSL;  
+
+	PROCEDURE vI*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= verbose THEN int( i );  END;  
+	END vI;  
+
+	PROCEDURE vIL*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= verbose THEN int( i );  ln();  END;  
+	END vIL;  
+
+	PROCEDURE vRL*( r: REAL );  
+	BEGIN 
+		IF gMode >= verbose THEN real( r );  ln();  END;  
+	END vRL;  
+
+	PROCEDURE vH*( i: LONGINT );  
+	BEGIN 
+		IF gMode >= verbose THEN hex( i );  END;  
+	END vH;  
+
+	PROCEDURE vR*( r: REAL );  
+	BEGIN 
+		IF gMode >= verbose THEN real( r ) END;  
+	END vR;  
+
+	PROCEDURE vC*( c: CHAR );  
+	BEGIN 
+		IF gMode >= verbose THEN ch( c ) END;  
+	END vC;  
+
+	PROCEDURE vB*( b: BOOLEAN );  
+	BEGIN 
+		IF gMode >= verbose THEN bool( b ) END;  
+	END vB;  
+
+	PROCEDURE vL*( );  
+	BEGIN 
+		IF gMode >= verbose THEN ln();  END;  
+	END vL; 
+
+	PROCEDURE vT*( );  
+	BEGIN 
+		vC(TAB);
+	END vT;  
+
+	PROCEDURE vSS*( CONST s1, s2: ARRAY OF CHAR );  
+	BEGIN 
+		IF gMode >= verbose THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
+	END vSS;  
+
+	PROCEDURE vSI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	BEGIN 
+		IF gMode >= verbose THEN 
+			str( s );  ch( '=' );  
+			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			ln;  
+		END;  
+	END vSI;  
+
+	PROCEDURE vSR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	BEGIN 
+		IF gMode >= verbose THEN 
+			str( s );  ch( '=' );  
+			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			ln;  
+		END;  
+	END vSR;  
+
+	PROCEDURE vSC*( CONST s: ARRAY OF CHAR;  c: CHAR );  
+	BEGIN 
+		IF gMode >= verbose THEN str( s );  ch( ':' );  ch( c );  ln;  END;  
+	END vSC;  
+
+(** set output procedures *)
+	PROCEDURE Redirect1*( s: strP;  i: intP;  h: hexP;  ss: setP;  r: realP;  b: boolP );  
+	BEGIN 
+		str := s;  int := i;  hex := h;  set := ss;  real := r;  bool := b;  
+	END Redirect1;  
+
+	PROCEDURE Redirect2*( c: chP;  l: lnP;  buf: bufferP;  cl: clearP;  fl: flushP;  
+											   be: beepP;  trap: trapModeP );  
+	BEGIN 
+		ch := c;  ln := l;  buffer := buf;  clear := cl;  flush := fl;  beep := be;  
+		trapMode := trap;  
+	END Redirect2;  
+
+(** set output mode *)
+	PROCEDURE SetMode*( mode: LONGINT );  
+	BEGIN 
+		gMode := mode;  
+	END SetMode;  
+
+(** get output mode *)
+	PROCEDURE GetMode*( ): LONGINT;  
+	BEGIN 
+		RETURN gMode
+	END GetMode;  
+
+(*** commands to set output modes *)
+	PROCEDURE Verbose*;  
+	BEGIN 
+		SetMode( verbose );  
+	END Verbose;  
+
+	PROCEDURE Normal*;  
+	BEGIN 
+		SetMode( normal );  
+	END Normal;  
+
+	PROCEDURE Error*;  
+	BEGIN 
+		SetMode( error );  
+	END Error;  
+
+	PROCEDURE Quiet*;  
+	BEGIN 
+		SetMode( quiet );  
+	END Quiet;  
+
+	PROCEDURE SetTrapMode*( enable: BOOLEAN );  
+	BEGIN 
+		trapMode( enable );  
+	END SetTrapMode;  
+
+	PROCEDURE Null*;  
+	BEGIN 
+	END Null;  
+
+	PROCEDURE NullStr*( CONST str: ARRAY OF CHAR );  
+	BEGIN 
+	END NullStr;  
+
+	PROCEDURE NullSet*( s: SET );  
+	BEGIN 
+	END NullSet;  
+
+	PROCEDURE NullInt*( i: LONGINT );  
+	BEGIN 
+	END NullInt;  
+
+	PROCEDURE NullHex*( i: LONGINT );  
+	BEGIN 
+	END NullHex;  
+
+	PROCEDURE NullReal*( real: REAL );  
+	BEGIN 
+	END NullReal;  
+
+	PROCEDURE NullBool*( b: BOOLEAN );  
+	BEGIN 
+	END NullBool;  
+
+	PROCEDURE NullChar*( c: CHAR );  
+	BEGIN 
+	END NullChar;  
+
+	PROCEDURE NullBuffer*( CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  offset, len: LONGINT );  
+	BEGIN 
+	END NullBuffer;  
+
+	PROCEDURE NullBeep*( freq, duration: LONGINT );  
+	BEGIN 
+	END NullBeep;  
+
+	PROCEDURE NullTrapMode*( trap: BOOLEAN );  
+	BEGIN 
+	END NullTrapMode;  
+
+(** reset output mode  and redirect output to Log  *)
+	PROCEDURE Reset*;  
+	BEGIN 
+		Redirect1( NullStr, NullInt, NullHex, NullSet, NullReal, NullBool );  
+		Redirect2( NullChar, Null, NullBuffer, Null, Null, NullBeep, NullTrapMode );  
+		SetMode( normal );  
+	END Reset;  
+
+BEGIN 
+	Reset;  
+END Log.

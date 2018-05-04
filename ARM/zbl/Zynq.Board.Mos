@@ -1,0 +1,48 @@
+MODULE Board;
+(**
+	AUTHOR Timothée Martiel, 12/2015
+	PURPOSE Board-specific hardware constants for Minos.
+*)
+CONST
+	k *						= 1024;				(** 1 k *)
+	M *					= k * k;			(** 1 M *)
+	G *						= k * k * k;		(** 1 G *)
+
+	CpuNb *				= 2;				(** Number of CPU cores available *)
+	CpuClockHz *			= 666666666;		(** CPU clock frequency in Hz *)
+	PsRefClockHz *		= 33333333;		(** Processing System (PS) external reference clock frequency in Hz *)
+
+	DDRSize *				= 512 * M;			(** DDR Memory Size *)
+	
+	UartInputClockHz *	= 50000000;		(** UART input clock frequency (Hz) *)
+	
+	KernelOutputUart *	= 1;					(** index of UART controller used for kernel output; -1 if UART is not used for kernel output *)
+	KernelUartBaudrate* = 115200;		(** kernel UART baudrate *)
+	
+	ShellUart* = KernelOutputUart;					(** UART used for command shell *)
+	ShellUartBaudrate* = KernelUartBaudrate;	(** shell UART baudrate *)
+
+	UsbPhyRstGpio *		= [-1, -1];			(** Reset GPIO pins for USB PHYs *)
+	UsbEnable *			= [FALSE, FALSE];	(** Which USB controller to enable? *)
+	UsbViewportInit *		= TRUE;			(** Use USB Viewport mechanism to reset PHY? *)
+
+	SdEnable0 *			= TRUE;			(** Enable SD0 controller? *)
+	SdEnable1 *			= FALSE;			(** Enable SD1 controller? *)
+	SdInputClockHz *		= PsRefClockHz;	(** SD controller input clock frequency (Hz) *)
+
+	PageTableBase *			= HeapBase - 16 * k;
+	RAMBASE*					= ADDRESS( 0H );
+	STACKBASE				= ADDRESS( PageTableBase );
+	UNDSP*					= ADDRESS( PageTableBase );
+	ABORTSP*					= ADDRESS( PageTableBase );
+	IRQSP*						= ADDRESS( PageTableBase );
+	SVCSP*						= ADDRESS( PageTableBase );
+
+	HeapEnd*					= UncachedHeapBase;
+	HeapBase*					= HeapEnd - 20 * M; (* for the time being .. *)
+	UncachedHeapEnd *		= DDRSize;
+	UncachedHeapBase *		= UncachedHeapEnd - 2 * M;
+	InitializeHeap*				= TRUE; (** Initialize allocated block heaps to 0 *)
+	InitializeUncachedHeap*	= TRUE; (** Initialize allocated uncached blocks to 0 *)
+	StartAddress *				= 0;
+END Board.

@@ -1,0 +1,217 @@
+MODULE SdDisks;
+(**
+	AUTHOR Timothée Martiel, 12/2015
+	PURPOSE Disk interface for the SD card driver
+*)
+
+IMPORT
+	SYSTEM,
+	Disks, Strings,
+	Sd, SdEnvironment,
+	Trace;
+
+CONST
+	(** Base name for SD block devices *)
+	BaseDevName = "SD";
+	(** Number of entries used in the cache *)
+	CacheSize = 32;
+
+TYPE
+	(** SD Block Device *)
+	BlockDevice * = POINTER TO BlockDeviceDesc;
+	BlockDeviceDesc * = RECORD (Disks.BlockDeviceDesc)
+		card: Sd.Card;
+		bufferSize: LONGINT;
+		cache: POINTER TO ARRAY OF CacheEntry;
+		nextSd: BlockDevice;
+	END;
+
+	(** SD cache entry. *)
+	CacheEntry = RECORD
+		buffer: POINTER TO ARRAY OF CHAR;
+		au: LONGINT;
+		active, mod: BOOLEAN;
+	END;
+
+	(** Create a new block device for the specified card *)
+	PROCEDURE InitBlockDevice * (d: BlockDevice; card: Sd.Card);
+	VAR
+		name, id: ARRAY 32 OF CHAR;
+		ignore, i: LONGINT;
+	BEGIN
+		name := BaseDevName;
+		Strings.IntToStr(devId, id);
+		INC(devId);
+		Strings.Append(name, id);
+		Disks.InitBlockDevice(d, name);
+		d.bufferSize := card.sdStatus.auSize DIV Sd.BlockSize;
+		NEW(d.cache, CacheSize);
+		FOR i := 0 TO CacheSize - 1 DO NEW(d.cache[i].buffer, d.bufferSize * Sd.BlockSize) END;
+
+		d.blockSize := Sd.BlockSize;
+		d.Read := Read;
+		d.Write := Write;
+		d.Open := Open;
+		d.Close := Close;
+		d.Reset := Reset;
+		d.GetSize := GetSize;
+		d.Handle := Handle;
+		d.card := card
+	END InitBlockDevice;
+
+	(** Read blocks from SD card *)
+	PROCEDURE Read (dev: Disks.BlockDevice;  block, num: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+	VAR
+		au, auOfs, idx, size, s: LONGINT;
+	BEGIN
+		WITH dev: BlockDevice DO
+			size := num * Sd.BlockSize;
+			WHILE size > 0 DO
+				au := block DIV dev.bufferSize;
+				auOfs := block MOD dev.bufferSize;
+				idx := au MOD CacheSize;
+				IF ~UpdateCacheEntry(dev, dev.cache[idx], au, res) THEN RETURN END;
+				s := MIN(size, (dev.bufferSize - auOfs) * Sd.BlockSize);
+				SYSTEM.MOVE(ADDRESSOF(dev.cache[idx].buffer[auOfs * Sd.BlockSize]), ADDRESSOF(data[ofs]), s);
+				DEC(size, s);
+				INC(ofs, s);
+				INC(block, s DIV Sd.BlockSize)
+			END
+		END
+	END Read;
+
+	(** Write blocks to SD card *)
+	PROCEDURE Write (dev: Disks.BlockDevice;  block, num: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+	VAR
+		au, auOfs, idx, size, s: LONGINT;
+	BEGIN
+		WITH dev: BlockDevice DO
+			size := num * Sd.BlockSize;
+			WHILE size > 0 DO
+				au := block DIV dev.bufferSize;
+				auOfs := block MOD dev.bufferSize;
+				idx := au MOD CacheSize;
+				IF ~UpdateCacheEntry(dev, dev.cache[idx], au, res) THEN RETURN END;
+				dev.cache[idx].mod := TRUE;
+				s := MIN(size, (dev.bufferSize - auOfs) * Sd.BlockSize);
+				ASSERT(ofs + s <= LEN(data));
+				ASSERT(auOfs * Sd.BlockSize + s <= LEN(dev.cache[idx].buffer));
+				SYSTEM.MOVE(ADDRESSOF(data[ofs]), ADDRESSOF(dev.cache[idx].buffer[auOfs * Sd.BlockSize]), s);
+				DEC(size, s);
+				INC(ofs, s);
+				INC(block, s DIV Sd.BlockSize)
+			END
+		END
+	END Write;
+
+	(** Update cache entry to make sure it contains the data for the given au *)
+	PROCEDURE UpdateCacheEntry (dev: BlockDevice; VAR cache: CacheEntry; au: LONGINT; VAR res: LONGINT): BOOLEAN;
+	VAR
+		ignore: BOOLEAN;
+	BEGIN
+		IF ~cache.active OR (cache.au # au) THEN
+			IF cache.active & cache.mod THEN
+				IF ~Sd.Write(dev.card, cache.au * dev.bufferSize, dev.bufferSize * Sd.BlockSize, cache.buffer^, 0, res) THEN
+					RETURN FALSE
+				END;
+			END;
+			IF ~Sd.Read(dev.card, au * dev.bufferSize, dev.bufferSize * Sd.BlockSize, cache.buffer^, 0, res) THEN
+				RETURN FALSE
+			END;
+			cache.active := TRUE;
+			cache.mod := FALSE;
+			cache.au := au
+		END;
+		RETURN TRUE
+	END UpdateCacheEntry;
+
+	(** Open a device: turn LED on *)
+	PROCEDURE Open (dev: Disks.BlockDevice; VAR res: LONGINT);
+	BEGIN
+		Sd.SetLedState(dev(BlockDevice).card.hc, TRUE)
+	END Open;
+
+	(** Close a device: turn off LED and sync cache *)
+	PROCEDURE Close (dev: Disks.BlockDevice; VAR res: LONGINT);
+	VAR
+		i: LONGINT;
+	BEGIN
+		WITH dev: BlockDevice DO
+			(* Sync cache *)
+			FOR i := 0 TO CacheSize - 1 DO
+				IF dev.cache[i].active & dev.cache[i].mod THEN
+					IF ~Sd.Write(dev.card, dev.cache[i].au * dev.bufferSize, dev.bufferSize * Sd.BlockSize, dev.cache[i].buffer^, 0, res) THEN RETURN END;
+				END
+			END;
+
+			(* Turn LED off *)
+			Sd.SetLedState(dev.card.hc, FALSE)
+		END
+	END Close;
+
+	(** Reset SD card -- not implemented yet *)
+	PROCEDURE Reset (dev: Disks.BlockDevice; VAR res: LONGINT);
+	BEGIN
+	END Reset;
+
+	(** Get size of device *)
+	PROCEDURE GetSize (dev: Disks.BlockDevice;  VAR size, res: LONGINT);
+	BEGIN
+			size := LONGINT(dev(BlockDevice).card.csd.capacity);
+			IF size < 0 THEN size := MAX(LONGINT) END;
+			res := Disks.Ok
+	END GetSize;
+
+	(** Handle messages *)
+	PROCEDURE Handle (dev: Disks.BlockDevice; msg: LONGINT; par1, par2: LONGINT; VAR res: LONGINT);
+	BEGIN
+		res := Disks.Ok
+	END Handle;
+
+	(** Handle SD Controller Events: create & register a new disk on card insertion, remove disk on card removal *)
+	PROCEDURE HandleSdEvent * (card: Sd.Card; event: LONGINT; param: ANY);
+	VAR
+		dev, prev: BlockDevice;
+	BEGIN
+		CASE event OF
+			 Sd.OnInitialization:
+				NEW(dev);
+				InitBlockDevice(dev, card);
+				INCL(dev.flags, Disks.Removable);
+				Disks.Register(dev);
+
+				INC(devId);
+				dev.nextSd := devices;
+				devices := dev;
+				SdEnvironment.String("Disk ");
+				SdEnvironment.String(dev.name);
+				SdEnvironment.String(" is now available");
+				SdEnvironment.Ln
+
+			|Sd.OnRemoval:
+				ASSERT(devices # NIL);
+				IF devices.card = card THEN
+					SdEnvironment.String("Removed disk ");
+					SdEnvironment.String(devices.name);
+					SdEnvironment.Ln;
+					devices := devices.nextSd
+				ELSE
+					dev := devices;
+					WHILE (dev # NIL) & (dev.card # card) DO
+						prev := dev;
+						dev := dev.nextSd
+					END;
+					ASSERT(dev # NIL);
+					SdEnvironment.String("[SD] ERROR: device ");
+					SdEnvironment.String(dev.name);
+					SdEnvironment.String(" was removed");
+					SdEnvironment.Ln;
+					prev.nextSd := dev.nextSd
+				END;
+		END
+	END HandleSdEvent;
+
+VAR
+	devId: LONGINT; (** Identifier number for next SD device *)
+	devices: BlockDevice; (** List of SD block devices *)
+END SdDisks.

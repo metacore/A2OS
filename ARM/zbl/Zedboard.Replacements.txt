@@ -1,0 +1,6 @@
+EnetBase.ThreadSafe = FALSE;
+EnetEmacPs7.AllowZeroPhyAddr0 = TRUE;
+EnetEmacPs7.AllowZeroPhyAddr1 = TRUE;
+EnetEmacPs7.EnableTrace = FALSE;
+Memory.InitTrace = FALSE;
+Sd.Synchronize = FALSE;

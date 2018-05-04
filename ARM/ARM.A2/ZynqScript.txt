@@ -1,0 +1,23 @@
+(* RAM FS *)
+RamFsController.NewRamVolume 10 4096
+RamFsController.NewDiskFS
+FSTools.SetDefault RAM
+
+(* FTP *)
+WebFTPServer.AddUser tim tim 4 RW
+WebFTPServer.Start
+
+(* Samba *)
+SambaController.NewSambaFS 192.168.0.1 Work guest guest
+
+(* VNC *)
+SystemTools.Load DisplayNull
+WindowManager.Install
+WMVNCView.Install AOS "a" 5000 0 0 1024 768
+
+(* Applications *)
+MainMenu.Open (* Requires a FS other than SMB *)
+Notepad.Open
+WMFileManager.Open
+
+UsbInfo.TraceOn Control ControlData Transfers Pipes

@@ -1,0 +1,73 @@
+cellnet TestGpo;
+import
+	Engines;
+
+type
+
+	Controller = cell{Arch="Xc7zPs"}
+						(
+						gpoOut: port out;
+						
+						clock0: port out;
+						resetn0: port out
+						);
+	begin
+
+	end Controller;
+
+var
+	ctl: Controller;	
+	gpo{DataWidth=8}: Engines.Gpo;
+	systemClock: Engines.SystemClock;
+	systemReset: Engines.SystemReset;
+begin
+	new(ctl);
+
+	new(systemClock);
+	new(systemReset);
+
+	connect(ctl.clock0,systemClock.input,0);
+	connect(ctl.resetn0,systemReset.input,0);
+
+	new(gpo);
+	connect(ctl.gpoOut,gpo.input,0);
+	
+end TestGpo.
+
+ActiveCellsComponents.AddPath "ActiveCells-HWL"~
+
+Compiler.Compile -b=TRM --objectFile=Intermediate --activeCells
+oc/TRM.TRMRuntime.Mod
+oc/TRM.Heaps.Mdf
+Fox/AxisChannels.Mod
+Fox/Engines.Mdf
+ARM.A2/TestGpo.Mdf
+~
+
+ActiveCellsComponents.BuildHardware --target="ActiveCells-HWL/Zedboard-Hybrid.achc.xml" --outputPath="TestGpo" TestGpo ~
+
+(* 
+	This is an example how to access GPO from ARM on Zynq
+*)
+
+module TestGpo;
+import SYSTEM;
+
+const
+	AxiBaseAddr0  = 07F000000H; (* base address of first AXI interface *)
+	ChanOffset  = 256*4; (* channel offset in bytes *)
+	InpValidOffset = 0; (* offset for accessing input valid flag of a channel *)
+	OutReadyOffset = 4; (* offset for accessing output ready flag of a channel *)
+	DataOffset = 8; (* offset for accessing channel data *)
+	
+	Chan0Addr = AxiBaseAddr0 + 0*ChanOffset; 
+	Chan1Addr = AxiBaseAddr0 + 1*ChanOffset;
+	
+	GpoPortAddr = Chan0Addr;
+	
+var
+	gpoValue: longint;
+begin
+	gpoValue := 256;
+	SYSTEM.PUT(GpoPortAddr,gpoValue);
+end TestGpo.

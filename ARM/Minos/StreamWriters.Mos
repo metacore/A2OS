@@ -1,0 +1,433 @@
+(**
+	AUTHOR: "Alexey Morozov, HighDim GmbH, 2011-2012";
+	PURPOSE: "I/O buffering with formatted writing and reading";
+
+	The implemented interface is used for outging messages from a TRM to another TRM which is responsible for translation of the messages sending via a comunication line to the user.
+*)
+MODULE StreamWriters;
+
+IMPORT
+	SYSTEM;
+
+CONST
+	Ok* = 0;   (** zero result code means no error occurred *)
+	EOF* = 4201;   (** error returned when Receive reads past end of file or stream *)
+
+	EOT* = 1AX;   (** EOT character *)
+
+	StringFull* = 4202;
+	FormatError* = 4203;   (** error returned when ReadInt fails *)
+
+	DefaultWriterSize* = 4096;
+
+	CR* = 0DX;  LF* = 0AX;
+
+TYPE
+
+	(** Any stream output procedure *)
+	Sender* = PROCEDURE(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+
+	Writer* = RECORD
+		tail: LONGINT;
+		buf: POINTER TO ARRAY OF CHAR;
+		res*: LONGINT; (** result of last output operation. *)
+		send: Sender;
+		sent-: LONGINT;  (** count of sent bytes *)
+		(* buf[0..tail-1] contains data to write. *)
+	END;
+
+	Hugeint = ARRAY 2 OF LONGINT	;
+
+VAR
+	months: ARRAY 12 * 4 + 1 OF CHAR;
+
+	(** Initialize a writer given a sender and a buffer size *)
+	PROCEDURE Init*(VAR wr: Writer; sender: Sender;  size: LONGINT);
+	BEGIN
+		ASSERT(sender # NIL);
+		NEW(wr.buf,size);  wr.send := sender; Reset(wr);
+	END Init;
+
+	(** Reset a writer *)
+	PROCEDURE Reset*(VAR wr: Writer);
+	BEGIN
+		wr.tail := 0;  wr.res := Ok;  wr.sent := 0
+	END Reset;
+
+	(** output all buffered data *)
+	PROCEDURE Update*(VAR wr: Writer);
+	BEGIN
+		IF (wr.res = Ok) THEN
+			wr.send( wr, wr.buf^, 0, wr.tail, TRUE , wr.res );
+			IF wr.res = Ok THEN INC( wr.sent, wr.tail );  wr.tail := 0 END
+		END
+	END Update;
+
+	(** Current write position. *)
+	PROCEDURE Pos*(VAR wr: Writer ): LONGINT;
+	BEGIN
+		RETURN wr.sent + wr.tail
+	END Pos;
+
+	(* -- Write raw binary data -- *)
+
+	(** Write one byte. *)
+	PROCEDURE Char*(VAR wr: Writer; x: CHAR );
+	BEGIN
+		IF (wr.tail = LEN( wr.buf )) & (wr.res = Ok) THEN
+			wr.send( wr, wr.buf^, 0, wr.tail, FALSE , wr.res );
+			IF wr.res = Ok THEN INC( wr.sent, wr.tail );  wr.tail := 0 END
+		END;
+		IF wr.res = Ok THEN wr.buf[wr.tail] := x;  INC( wr.tail ) END
+	END Char;
+
+	(** Write len bytes from x, starting at ofs. *)
+	PROCEDURE Bytes*(VAR wr: Writer; CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
+	VAR n: LONGINT;
+	BEGIN
+		ASSERT ( len >= 0 );
+		LOOP
+			n := LEN( wr.buf ) - wr.tail;   (* space available *)
+			IF n = 0 THEN
+				IF wr.res = Ok THEN  (* send current buffer *)
+					wr.send( wr, wr.buf^, 0, wr.tail, FALSE , wr.res );
+					IF wr.res = Ok THEN INC( wr.sent, wr.tail );  wr.tail := 0 ELSE EXIT END
+				ELSE
+					EXIT  (* should not be writing on an erroneous rider *)
+				END;
+				n := LEN( wr.buf )
+			END;
+			IF n > len THEN n := len END;
+			ASSERT ( wr.tail + n <= LEN( wr.buf ) );   (* index check *)
+			SYSTEM.MOVE( ADDRESSOF( x[ofs] ), ADDRESSOF( wr.buf[wr.tail] ), n );  INC( wr.tail, n );
+			IF len = n THEN EXIT END;   (* done *)
+			INC( ofs, n );  DEC( len, n )
+		END
+	END Bytes;
+
+	(** Write a SHORTINT. *)
+	PROCEDURE RawSInt*(VAR wr: Writer; x: SHORTINT );
+	BEGIN
+		Char(wr, SYSTEM.VAL( CHAR, x ) )
+	END RawSInt;
+
+	(** Write an INTEGER. *)
+	PROCEDURE RawInt*(VAR wr: Writer; x: INTEGER );
+	BEGIN
+		Char(wr,CHR(SYSTEM.MSK(x,0FFH)));
+		x := ROT(x,-8);
+		Char(wr,CHR(SYSTEM.MSK(x,0FFH)));
+	END RawInt;
+
+	(** Write a LONGINT. *)
+	PROCEDURE RawLInt*(VAR wr: Writer; x: LONGINT );
+	VAR i: LONGINT;
+	BEGIN
+		Char(wr,CHR(SYSTEM.MSK(x,0FFH)));
+		FOR i := 0 TO 2 DO
+			x := ROT(x,-8);
+			Char(wr,CHR(SYSTEM.MSK(x,0FFH)));
+		END;
+	END RawLInt;
+
+	(** Write a HUGEINT. *)
+	PROCEDURE RawHInt*(VAR wr: Writer; x: HUGEINT );
+	VAR xx: Hugeint;
+	BEGIN
+		xx := SYSTEM.VAL(Hugeint,x);
+		RawLInt(wr,xx[0]); RawLInt(wr,xx[1]);
+	END RawHInt;
+
+	(** Write a 32 bit value in network byte order (most significant byte first) *)
+	PROCEDURE Net32*(VAR wr: Writer; x: LONGINT );
+	BEGIN
+		Char(wr, CHR( x DIV 1000000H MOD 100H ) );  Char(wr, CHR( x DIV 10000H MOD 100H ) );  Char(wr, CHR( x DIV 100H MOD 100H ) );
+		Char(wr, CHR( x MOD 100H ) )
+	END Net32;
+
+	(** Write a 16 bit value in network byte order (most significant byte first) *)
+	PROCEDURE Net16*(VAR wr: Writer; x: LONGINT );
+	BEGIN
+		Char(wr, CHR( x DIV 100H MOD 100H ) );  Char(wr, CHR( x MOD 100H ) )
+	END Net16;
+
+	(** write unsigned byte *)
+	PROCEDURE Net8*(VAR wr: Writer; x: LONGINT );
+	BEGIN
+		Char(wr, CHR( x MOD 100H ) )
+	END Net8;
+
+	(** Write a SET. *)
+	PROCEDURE RawSet*(VAR wr: Writer; x: SET );
+	BEGIN
+		RawLInt(wr, SYSTEM.VAL( LONGINT, x ) )
+	END RawSet;
+
+	(** Write a BOOLEAN. *)
+	PROCEDURE RawBool*(VAR wr: Writer; x: BOOLEAN );
+	BEGIN
+		IF x THEN Char(wr, 1X ) ELSE Char(wr, 0X ) END
+	END RawBool;
+
+	(** Write a REAL. *)
+	PROCEDURE RawReal*(VAR wr: Writer; x: REAL );
+	BEGIN
+		RawLInt(wr, SYSTEM.VAL( LONGINT, x ) )
+	END RawReal;
+
+	(** Write a LONGREAL. *)
+	PROCEDURE RawLReal*(VAR wr: Writer; x: LONGREAL );
+	BEGIN
+		RawHInt(wr,SYSTEM.VAL(HUGEINT,x));
+	END RawLReal;
+
+	(** Write a 0X-terminated string, including the 0X terminator *)
+	PROCEDURE RawString*(VAR writer: Writer; CONST str: ARRAY OF CHAR );
+	BEGIN
+		String(writer,str); Char(writer,0X);
+	END RawString;
+
+	(** Write a number in a compressed format. *)
+	PROCEDURE RawNum*(VAR wr: Writer; x: LONGINT );
+	BEGIN
+		WHILE (x < -64) OR (x > 63) DO Char(wr, CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
+		Char(wr, CHR( x MOD 128 ) )
+	END RawNum;
+
+	(* -- Write formatted data -- *)
+
+	(** Write an ASCII end-of-line (CR/LF). *)
+	PROCEDURE Ln*(VAR wr: Writer);
+	BEGIN
+		Char(wr, CR );  Char(wr, LF )
+	END Ln;
+
+	(** Write a 0X-terminated string, excluding the 0X terminator *)
+	PROCEDURE String*(VAR wr: Writer; CONST str: ARRAY OF CHAR);
+	VAR i: LONGINT;
+	BEGIN
+		i := 0;
+		WHILE (i < LEN(str)) & (str[i] # 0X) DO
+			Char(wr,str[i]);
+			INC(i);
+		END;
+	END String;
+
+	(** Write a BOOLEAN as "TRUE" or "FALSE" *)
+	PROCEDURE Bool*(VAR wr: Writer; x: BOOLEAN);
+	BEGIN
+		IF x THEN String(wr,"TRUE"); ELSE String(wr,"FALSE"); END;
+	END Bool;
+
+	(** Write an integer in decimal right-justified in a field of at least w characters. *)
+	PROCEDURE Int*(VAR wr: Writer; x, w: LONGINT );
+	VAR
+		i, k, x0, y: LONGINT;
+		str: ARRAY 12 OF CHAR;
+	BEGIN
+		IF x < 0 THEN
+			IF x = MIN(LONGINT) THEN
+				DEC(w,11);
+				WHILE w > 0 DO Char(wr,' ');  DEC(w); END;
+				String(wr,"-2147483648");  RETURN;
+			ELSE DEC(w);  x0 := -x;
+			END
+		ELSIF x = 0 THEN
+			WHILE w > 1 DO Char(wr,' ');  DEC(w); END;
+			Char(wr,'0'); RETURN;
+		ELSE x0 := x;
+		END;
+
+		i := 0;
+		WHILE x0 > 0 DO
+			y := x0 DIV 10;
+			k := y*10;
+			k := x0-k;
+			k := k + 48;
+			(*str[i] := CHR(x - (y*10)+48);*) (*! compiler has a problem with this expression *)
+			str[i] := CHR(k);
+			x0 := y;
+			INC(i);
+		END;
+
+		WHILE w > i DO Char(wr,' ');  DEC(w); END;
+		IF x < 0 THEN Char(wr,'-') END;
+		REPEAT DEC(i);  Char(wr,str[i]); UNTIL i = 0;
+
+	(*VAR i, x0: LONGINT;
+		a: ARRAY 12 OF CHAR;
+	BEGIN
+		IF x < 0 THEN
+			IF x = MIN( LONGINT ) THEN
+				DEC( w, 11 );
+				WHILE w > 0 DO Char(wr, " " );  DEC( w ) END;
+				String(wr, "-2147483648" );  RETURN
+			ELSE DEC( w );  x0 := -x
+			END
+		ELSE x0 := x
+		END;
+		i := 0;
+		REPEAT a[i] := CHR( x0 MOD 10 + 30H );  x0 := x0 DIV 10;  INC( i ) UNTIL x0 = 0;
+		WHILE w > i DO Char(wr, " " );  DEC( w ) END;
+		IF x < 0 THEN Char(wr, "-" ) END;
+		REPEAT DEC( i );  Char(wr, a[i] ) UNTIL i = 0*)
+	END Int;
+
+	(** Write a SET in Oberon notation. *)
+	PROCEDURE Set*(VAR wr: Writer; s: SET );   (* from P. Saladin *)
+	VAR i, last: LONGINT;  dots: BOOLEAN;
+	BEGIN
+		Char(wr, "{" );  last := MIN( LONGINT );  dots := FALSE;
+		FOR i := MIN( SET ) TO MAX( SET ) DO
+			IF i IN s THEN
+				IF last = (i - 1) THEN
+					IF dots THEN String(wr, ".." );  dots := FALSE END;
+					IF (i = MAX( SET )) OR ~((i + 1) IN s) THEN Int(wr, i, 1 ) END
+				ELSE
+					IF last >= MIN( SET ) THEN String(wr, ", " ) END;
+					Int(wr, i, 1 );  dots := TRUE
+				END;
+				last := i
+			END
+		END;
+		Char(wr, "}" )
+	END Set;
+
+	(**
+		Write an integer in hexadecimal right-justified in a field of at least ABS(wr) characters.
+		If w < 0 THEN w least significant hex digits of x are written (potentially including leading zeros)
+	*)
+	PROCEDURE Hex*(VAR wr: Writer; x: LONGINT; w: LONGINT);
+	VAR filler: CHAR; i,maxw: LONGINT; a: ARRAY 10 OF CHAR; y: LONGINT;
+	BEGIN
+		IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 8 END;
+		i := 0;
+		REPEAT
+			y := x MOD 10H;
+			IF y < 10 THEN a[i] := CHR(y+ORD('0')) ELSE a[i] := CHR(y-10+ORD('A')) END;
+			x := x DIV 10H;
+			INC(i);
+		UNTIL (x=0) OR (i=maxw);
+		WHILE w > i DO Char(wr,filler);  DEC(w); END;
+		REPEAT DEC(i); Char(wr,a[i]); UNTIL i = 0;
+
+	(*VAR filler: CHAR; i,maxw: LONGINT; a: ARRAY 20 OF CHAR; y: HUGEINT;
+	BEGIN
+		IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 16 END;
+		i := 0;
+		REPEAT
+			y := x MOD 10H;
+			IF y < 10 THEN a[i] := CHR(y+ORD('0')) ELSE a[i] := CHR(y-10+ORD('A')) END;
+			x := x DIV 10H;
+			INC(i);
+		UNTIL (x=0) OR (i=maxw);
+		WHILE w > i DO Char(wr,filler);  DEC( w ) END;
+		REPEAT DEC( i ); Char(wr, a[i] ) UNTIL i = 0*)
+	END Hex;
+
+	(** Write "x" as a hexadecimal address. Do not use Hex because of arithmetic shift of the sign !*)
+	PROCEDURE Address* (VAR wr: Writer; x: ADDRESS);
+	BEGIN
+		Hex(wr,x,-2*SIZEOF(ADDRESS));
+	END Address;
+
+	PROCEDURE Pair(VAR wr: Writer; ch: CHAR;  x: LONGINT );
+	BEGIN
+		IF ch # 0X THEN Char(wr, ch ) END;
+		Char(wr, CHR( ORD( "0" ) + x DIV 10 MOD 10 ) );  Char(wr, CHR( ORD( "0" ) + x MOD 10 ) )
+	END Pair;
+
+	(** Write the date and time in ISO format (yyyy-mm-dd hh:mm:ss).  The t and d parameters are in Oberon time and date format.
+		If all parameters are within range, the output string is exactly 19 characters wide.  The t or d parameter can be -1, in which
+		case the time or date respectively are left out. *)
+	PROCEDURE Date*(VAR wr: Writer; t, d: LONGINT );
+	VAR ch: CHAR;
+	BEGIN
+		IF d # -1 THEN
+			Int(wr, 1900 + d DIV 512, 4 );   (* year *)
+			Pair(wr, "-", d DIV 32 MOD 16 );   (* month *)
+			Pair(wr, "-", d MOD 32 );   (* day *)
+			ch := " " (* space between date and time *)
+		ELSE
+			ch := 0X (* no space before time *)
+		END;
+		IF t # -1 THEN
+			Pair(wr, ch, t DIV 4096 MOD 32 );   (* hour *)
+			Pair(wr, ":", t DIV 64 MOD 64 );   (* min *)
+			Pair(wr, ":", t MOD 64 ) (* sec *)
+		END
+	END Date;
+
+	(** Write the date and time in RFC 822/1123 format without the optional day of the week (dd mmm yyyy hh:mm:ss SZZZZ) .
+		The t and d parameters are in Oberon time and date format.  The tz parameter specifies the time zone offset in minutes
+		(from -720 to 720 in steps of 30).  If all parameters are within range, the output string is exactly 26 characters wide.
+		The t, d or tz parameter can be -1, in which case the time, date or timezone respectively are left out. *)
+	PROCEDURE Date822*(VAR wr: Writer; t, d, tz: LONGINT );
+	VAR i, m: LONGINT;  ch: CHAR;
+	BEGIN
+		IF d # -1 THEN
+			Int(wr, d MOD 32, 2 );   (* day *)
+			m := (d DIV 32 MOD 16 - 1) * 4;   (* month *)
+			FOR i := m TO m + 3 DO Char(wr, months[i] ) END;
+			Int(wr, 1900 + d DIV 512, 5 );   (* year *)
+			ch := " " (* space *)
+		ELSE
+			ch := 0X (* no space *)
+		END;
+		IF t # -1 THEN
+			Pair(wr, ch, t DIV 4096 MOD 32 );   (* hour *)
+			Pair(wr, ":", t DIV 64 MOD 64 );   (* min *)
+			Pair(wr, ":", t MOD 64 );   (* sec *)
+			ch := " " (* space *)
+		ELSE
+			(* leave ch as before *)
+		END;
+		IF tz # -1 THEN
+			IF ch # 0X THEN Char(wr, ch ) END;
+			IF tz >= 0 THEN Pair(wr, "+", tz DIV 60 ) ELSE Pair(wr, "-", (-tz) DIV 60 ) END;
+			Pair(wr, 0X, ABS( tz ) MOD 60 )
+		END
+	END Date822;
+
+	(** Write a floating point number x using n character positions *)
+	PROCEDURE Float*(VAR writer: Writer; x: REAL; n: LONGINT);
+	BEGIN
+		(*! current implementation does not support 'n' parameter *)
+		FloatFix(writer,x,0,6,0);
+	END Float;
+
+	(** Write a floating point number x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
+	PROCEDURE FloatFix*(VAR writer: Writer; x: REAL; n, f, D: LONGINT);
+	VAR
+		d: LONGINT;
+	BEGIN
+		(*! current implementation does not support 'n' and 'D' parameters, to be implemented later *)
+		IF x < 0 THEN x := -x; Char(writer,'-'); END;
+		d := ENTIER(x);
+		Int(writer,d,0);
+		IF f > 0 THEN
+			Char(writer,'.');
+			x := x - d;
+			WHILE f > 0 DO
+				x := x * 10;
+				d := ENTIER(x);
+				Char(writer,CHR(48+d));
+				x := x - d;
+				DEC(f);
+			END;
+		END;
+	END FloatFix;
+
+	PROCEDURE NullSender*(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+	BEGIN
+		res := Ok
+	END NullSender;
+
+	PROCEDURE InitMod;
+	BEGIN
+		months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";
+	END InitMod;
+
+BEGIN
+	InitMod;
+END StreamWriters.

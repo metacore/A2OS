@@ -1,0 +1,35 @@
+MODULE TraceDevice;
+(**
+	AUTHOR: Timothee Martiel, Alexey Morozov, HighDim GmbH, 2013-2017
+	PURPOSE: simple abtraction for installing kernel tracing over Zynq PS UART
+*)
+
+IMPORT SYSTEM, Platform, Board, Trace, PsUartMin;
+
+VAR
+	uart: PsUartMin.UartRegisters;
+
+	PROCEDURE TraceChar(ch: CHAR);
+	VAR ignore: LONGINT;
+	BEGIN
+		PsUartMin.SendChar(uart, ch, TRUE, NIL, ignore);
+	END TraceChar;
+
+	PROCEDURE Install *;
+	VAR
+		res: LONGINT;
+	BEGIN
+		Trace.Init;
+		PsUartMin.Install(Board.KernelOutputUart, Platform.UartBase[Board.KernelOutputUart], Board.UartInputClockHz, res);
+		IF res # 0 THEN RETURN; END;
+
+		uart := PsUartMin.GetUart(Board.KernelOutputUart);
+
+		IF ~PsUartMin.SetBps(uart,Board.KernelUartBaudrate,res) THEN RETURN; END;
+		PsUartMin.Enable(uart,TRUE);
+
+		Trace.Char := TraceChar;
+		Trace.StringLn("installed TraceDevice");
+	END Install;
+
+END TraceDevice.

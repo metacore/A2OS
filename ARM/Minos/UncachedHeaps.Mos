@@ -1,0 +1,47 @@
+MODULE UncachedHeap; (** AUTHOR "Timothée Martiel"; PURPOSE "Secondary heap for uncached memory region of bootloader."; *)
+
+IMPORT SYSTEM, Board, Trace;
+
+CONST
+	(** Initialize Allocated memory to 0 *)
+	Initialize = Board.InitializeUncachedHeap;
+VAR
+	start, stop, last: ADDRESS;
+
+	(** Returns the beginning address of a reserved memory block of size 'size' *)
+	PROCEDURE New * (size: SIZE): ADDRESS;
+	VAR
+		adr: ADDRESS;
+		i: LONGINT;
+	BEGIN
+		adr := last;
+		INC(last, size);
+		ASSERT(last < stop);
+		ASSERT(start <= last);
+		IF Initialize THEN
+			FOR i := 0 TO size - 1 DO SYSTEM.PUT8(adr + i, 0) END
+		END;
+		RETURN adr
+	END New;
+
+	(** Free size available on the heap, in bytes. *)
+	PROCEDURE Free * (): SIZE;
+	BEGIN
+		RETURN stop - last
+	END Free;
+
+	PROCEDURE Show *;
+	BEGIN
+		Trace.String("Uncached Heap base = ");
+		Trace.Address(start);
+		Trace.String("; current = ");
+		Trace.Address(last);
+		Trace.String("; end = ");
+		Trace.Address(stop);
+		Trace.Ln
+	END Show;
+BEGIN
+	stop := Board.UncachedHeapEnd;
+	start := Board.UncachedHeapBase;
+	last := start;
+END UncachedHeap.

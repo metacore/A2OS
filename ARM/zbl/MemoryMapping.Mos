@@ -1,0 +1,49 @@
+MODULE MemoryMapping; (** AUTHOR ""; PURPOSE ""; *)
+
+IMPORT SYSTEM, Platform, Board, Trace, Memory;
+CONST
+	k	= 1024;
+	M	= k * k;
+	G	= M * k;
+
+	PROCEDURE SetSmpMode;
+	CODE
+		(*
+		mrc	p15, 0, r0, c1, c0, 1		/* Read ACTLR*/
+		orr	r0, r0, #(0x01 << 6)		/* set SMP bit */
+		orr	r0, r0, #(0x01 )		/* */
+		mcr	p15, 0, r0, c1, c0, 1		/* Write ACTLR*/
+		*)
+		MRC p15, 0, R0, C1, C0, 1
+		ORR R0, R0, #047H
+		MCR p15, 0, R0, C1, C0, 1
+		ISB
+	END SetSmpMode;
+
+	PROCEDURE SetupPageTable ;
+	VAR
+		i: LONGINT;
+	BEGIN
+		(* Reset all entries to 0 *)
+		FOR i := 0 TO Memory.PageTableLength DO
+			SYSTEM.PUT32( Memory.virtualPageTable+(i*4), 0 );
+		END;
+
+		(* 1:1 Mapping of first 120 MB. *)
+		Memory.AllocateMmu(0, 0, Board.HeapEnd, Memory.SrwUrw, Memory.Cacheable + Memory.Shareable);
+		(*Memory.AllocateMmu(0, 0, M, Memory.SrwUrw, Memory.Cacheable + Memory.Shareable);
+		Memory.AllocateMmu(M, M, 8 * M, Memory.SrwUrw, Memory.B);
+		Memory.AllocateMmu(9 * M, 9 * M, Board.HeapEnd - 9 * M, Memory.SrwUrw, Memory.Cacheable + Memory.Shareable);*)
+
+		(* 1:1, Non cached mapping for I/O *)
+		Memory.AllocateMmu(Board.UncachedHeapBase, Board.UncachedHeapBase, ADDRESS( 4 * G - Board.UncachedHeapBase), Memory.SrwUrw, Memory.Shareable + Memory.B);
+
+		SetSmpMode;
+	END SetupPageTable;
+
+BEGIN
+	(*Trace.StringLn("MMU - > Pre Memory Init");*)
+	SetupPageTable;
+	Memory.InitMemory;
+	(*Trace.StringLn("MMU -> Virtual Memory Initialized");*)
+END MemoryMapping.

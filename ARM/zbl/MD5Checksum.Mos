@@ -1,0 +1,43 @@
+MODULE MD5Checksum;
+(**
+	AUTHOR Timothée Martiel, 01/2016
+	PURPOSE MD5 checksum for the bootloader
+*)
+
+IMPORT
+	SYSTEM, Trace,
+	MD5,
+	Checksum;
+
+CONST
+	DigestLength = 33;
+
+TYPE
+	Writer = PROCEDURE(context: MD5.Context; size: LONGINT; start: ADDRESS; len: LONGINT);
+
+VAR
+	write: Writer;
+	context: MD5.Context;
+	digest: MD5.Digest;
+	value: ARRAY DigestLength OF CHAR;
+
+	PROCEDURE Md5Checksum (start, size: LONGINT; CONST reference: ARRAY OF CHAR): LONGINT;
+	BEGIN
+		MD5.Init(context);
+		write(context, size, ADDRESS(start), size);
+		MD5.Close(context, digest);
+		MD5.ToString(digest, value);
+		(*Trace.String("reference = "); Trace.StringLn(reference);
+		Trace.String("value     = "); Trace.StringLn(value);*)
+		IF value = reference THEN
+			RETURN Checksum.Ok
+		ELSE
+			RETURN Checksum.InvalidChecksum
+		END
+	END Md5Checksum;
+
+BEGIN
+	Checksum.Register("MD5", Md5Checksum);
+	context := MD5.New();
+	write := SYSTEM.VAL(Writer, MD5.WriteBytes)
+END MD5Checksum.

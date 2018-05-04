@@ -1,0 +1,51 @@
+MODULE Boot;
+(**
+	AUTHOR Timothée Martiel, 12/2015
+	PURPOSE Minos Boot image containing interrupt vector
+*)
+IMPORT SYSTEM;
+
+	PROCEDURE {INITIAL, NOPAF} Boot;
+	CODE
+		; interrupt vectors at address 0
+	RESET: 	LDR	PC, [PC, #reset-$-8]		; RESET
+	UNDEF: 	LDR	PC, [PC, #undef-$-8]		; UNDEF
+	SWI: 		LDR	PC, [PC, #swi-$-8]		; SWI
+	PREF: 		LDR	PC, [PC, #prefetch-$-8]	; Prefetch Abort
+	DATA: 		LDR	PC, [PC, #data-$-8]		; Data Abort
+	INVALID: 	B		INVALID					; not assigned
+	IRQ: 		LDR	PC, [PC, #irq-$-8]			; IRQ
+	FIQ: 		LDR	PC, [PC, #fiq-$-8]			; FIQ
+
+		; initial interrupt vector setup such that inifinte loop is triggered
+	reset: 		d32		init
+	undef: 		d32		UNDEF
+	swi: 		d32		SWI
+	prefetch: 	d32		PREF
+	data: 		d32		DATA
+	empty:		d32		0
+	irq: 		d32		IRQ
+	fiq: 		d32		FIQ
+
+	init:
+		; let only processor 0 through
+				MRC	P15, 0, R1, C0, C0, 5
+				AND	R1, R1, #0FH
+				CMP	R1, #0
+				BEQ	OKToRun
+
+		EndlessLoop0:
+				WFE
+				B		EndlessLoop0
+
+		OKToRun:
+			; call initialization script as provided by xilinx Tools
+				LDR	FP, [PC, #InitialFP-$-8]	; set stack pointer
+				LDR	SP, [PC, #InitialFP-$-8]	; set frame pointer
+				B		end
+
+		; constants used
+	InitialFP:	d32		0FFFF1000H ; initial frame pointer address, internal memory bank
+	end:
+	END Boot;
+END Boot.

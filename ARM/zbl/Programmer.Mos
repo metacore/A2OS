@@ -1,0 +1,249 @@
+MODULE Programmer;
+(**
+	AUTHOR Timothée Martiel, 01/2016
+	PURPOSE Generic interface for programming bootloader resources.
+*)
+IMPORT
+	SYSTEM,
+	Platform, Caches, Modules, Strings, StreamReaders, OFS, Trace;
+
+CONST
+	MaxProgrammers = 32;	(** Maximum number of destination types *)
+
+TYPE
+	(** Resource description record *)
+	Resource * = RECORD
+		name *: ARRAY 256 OF CHAR;	(** Name of the resource *)
+		start *, size *: ADDRESS;			(** Memory location of the resource *)
+		deployed: BOOLEAN;			(** Is the resource already deployed? *)
+	END;
+
+	(** Destination base object *)
+	Destination * = POINTER TO DestinationDesc;
+	DestinationDesc * = RECORD
+	END;
+
+	(**
+		Memory destination. This destination is always available.
+		It is the type of destination to use for ARM code.
+	*)
+	Memory * = POINTER TO MemoryDesc;
+	MemoryDesc * = RECORD (DestinationDesc)
+		address *: ADDRESS;	(** Address where the resource should be in memory *)
+		cpus *: SET;			(** Set of CPUs that should be explicitely started at the resource's start address *)
+	END;
+
+	(**
+		File destination.
+		This destination is always available.
+	*)
+	File * = POINTER TO FileDesc;
+	FileDesc * = RECORD (DestinationDesc)
+		name *: ARRAY 256 + 16 OF CHAR;	(** Name of the file, including filesystem prefix *)
+	END;
+
+	(** Programmer callback. Programs resource on destination *)
+	Programmer * = PROCEDURE (CONST resource: Resource; destination: Destination);
+	(** Destination predicate callback. Determines which resources are handled by the associated programmer *)
+	Predicate * = PROCEDURE (destination: Destination): BOOLEAN;
+	(** Destination factory. Creates destination object based on arguments from the reader. *)
+	Factory * = PROCEDURE (VAR args: StreamReaders.Reader): Destination;
+
+VAR
+	(** Status information of the programmer component *)
+	done *, error *: BOOLEAN;
+	(** List of programmers (i.e. destination types) *)
+	programmers: ARRAY MaxProgrammers OF RECORD type: ARRAY 256 OF CHAR; program: Programmer; accept: Predicate; get: Factory END;
+	(** Number of registered programmers *)
+	programmerNb: LONGINT;
+
+	(* CPU start management *)
+	cpuStart: SET;								(** Each CPU that need explicit starting is included here *)
+	cpuAdr: ARRAY 32 OF ADDRESS;			(** Start address for each CPU. Valid iff cpu IN cpuStart *)
+	arguments *: ARRAY 2 OF ADDRESS;	(** Arguments passed to processor 0 *)
+
+	(** Create a new destination object of type 'type' based on arguments 'args' *)
+	PROCEDURE GetDestination * (CONST type: ARRAY OF CHAR; VAR args: StreamReaders.Reader): Destination;
+	VAR
+		module: ARRAY 64 OF CHAR;
+		m: Modules.Module;
+		i: LONGINT;
+	BEGIN
+		IF (type # "memory") & (type # "file") THEN
+			COPY(type, module);
+			Strings.Append(module, "Programmer");
+			Modules.ThisMod(module, m);
+			IF m = NIL THEN Trace.String('Could not load module '); Trace.StringLn(module); RETURN NIL END
+		END;
+		FOR i := 0 TO programmerNb - 1 DO
+			IF programmers[i].type = type THEN
+				RETURN programmers[i].get(args)
+			END
+		END;
+		RETURN NIL
+	END GetDestination;
+
+	(** Program resource 'resource' to destination 'destination' *)
+	PROCEDURE Program * (VAR resource: Resource; CONST destination: Destination);
+	VAR
+		i: LONGINT;
+	BEGIN
+		IF resource.deployed THEN RETURN END;
+		error := TRUE;
+		FOR i := 0 TO programmerNb - 1 DO
+			IF programmers[i].accept(destination) THEN
+				programmers[i].program(resource, destination);
+				resource.deployed := TRUE
+			END
+		END;
+		done := TRUE
+	END Program;
+
+	(**
+		Register a new destination programmer. 'name' is the type of destination, 'program' is used to program resources for that destination,
+		'predicates' indicates which destinations this programmer can handle and 'factory' creates new destinations of that type.
+	*)
+	PROCEDURE RegisterProgrammer * (CONST name: ARRAY OF CHAR; program: Programmer; predicate: Predicate; factory: Factory);
+	BEGIN
+		COPY(name, programmers[programmerNb].type);
+		programmers[programmerNb].program := program;
+		programmers[programmerNb].accept := predicate;
+		programmers[programmerNb].get := factory;
+		INC(programmerNb)
+	END RegisterProgrammer;
+
+	(** Start all CPUs that needed explicit starting on their addresses. *)
+	PROCEDURE Start *;
+	VAR
+		arg0, arg1, cpu0Adr: ADDRESS;
+	BEGIN
+		Caches.CleanDCache;
+		Caches.DrainWriteBuffer;
+		Caches.InvalidateICache;
+		IF 1 IN cpuStart THEN
+			SYSTEM.PUT32(Platform.CPU1WakeupAddress, cpuAdr[1]);
+			CODE
+				SEV
+			END;
+		END;
+		IF 0 IN cpuStart THEN
+			arg0 := arguments[0];
+			arg1 := arguments[1];
+			cpu0Adr := cpuAdr[0];
+			CODE
+				LDR	R0, [FP, #arg0]		; Load arg0
+				LDR	R1, [FP, #arg1]		; Load arg1
+				LDR	R2, [FP, #cpu0Adr]	; Start address
+				BX		R2					; Start CPU0
+			END;
+		END;
+		LOOP
+			CODE
+				WFE
+			END;
+		END
+	END Start;
+
+	(** Reset the system *)
+	PROCEDURE Reset *;
+	BEGIN
+		Platform.slcr.SLCR_UNLOCK := Platform.SlcrUnlockKey;
+		Platform.slcr.PSS_RST_CTRL := 1
+	END Reset;
+
+	(** Memory programmer implementation. *)
+	PROCEDURE MemoryProgrammer (CONST resource: Resource; destination: Destination);
+	VAR
+		cpu: LONGINT;
+	BEGIN
+		WITH destination: Memory DO
+			IF resource.start # destination.address THEN
+				SYSTEM.MOVE(resource.start, destination.address, resource.size)
+			END;
+			cpuStart := cpuStart + destination.cpus;
+			FOR cpu := 0 TO 31 DO
+				IF cpu IN destination.cpus THEN
+					IF cpuAdr[cpu] # 0 THEN error := TRUE; RETURN END;
+					cpuAdr[cpu] := destination.address
+				END
+			END;
+			Caches.CleanDCacheRange(destination.address, resource.size);
+			Caches.DrainWriteBuffer;
+		END;
+		done := TRUE;
+		error := FALSE
+	END MemoryProgrammer;
+
+	(** Memory programmer predicate. *)
+	PROCEDURE MemoryAccept (destination: Destination): BOOLEAN;
+	BEGIN
+		RETURN destination IS Memory
+	END MemoryAccept;
+
+	(** Memory programmer factory. *)
+	PROCEDURE MemoryFactory (VAR args: StreamReaders.Reader): Destination;
+	VAR
+		dest: Memory;
+		i, address: LONGINT;
+	BEGIN
+		StreamReaders.SkipWhitespace(args);
+		IF StreamReaders.GetInteger(args, address, TRUE) THEN
+			NEW(dest);
+			dest.address := address;
+			WHILE StreamReaders.GetInteger(args, i, TRUE) DO INCL(dest.cpus, i) END;
+		ELSE
+			dest := NIL
+		END;
+		RETURN dest
+	END MemoryFactory;
+
+	PROCEDURE FileProgrammer (CONST resource: Resource; destination: Destination);
+	TYPE
+		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: LONGINT);
+	VAR
+		file: OFS.File;
+		rider: OFS.Rider;
+		write: Writer;
+	BEGIN
+		WITH destination: File DO
+			file := OFS.New(destination.name);
+			OFS.Set(rider, file, 0);
+			write := SYSTEM.VAL(Writer, OFS.WriteBytes);
+			write(rider, resource.size, resource.start, resource.size);
+			OFS.Register(file);
+			done := TRUE;
+			error := FALSE
+		END
+	END FileProgrammer;
+
+	PROCEDURE FileAccept (destination: Destination): BOOLEAN;
+	BEGIN
+		RETURN destination IS File
+	END FileAccept;
+
+	PROCEDURE FileFactory (VAR args: StreamReaders.Reader): Destination;
+	VAR
+		file: File;
+		prefix: ARRAY 32 OF CHAR;
+		i, len: LONGINT;
+	BEGIN
+		NEW(file);
+		IF StreamReaders.GetString(args, file.name) THEN
+			len := Strings.Find(':', file.name, 0);
+			IF len >= 0 THEN
+				(* Check that the explicit prefix is mounted *)
+				FOR i := 0 TO len - 1 DO prefix[i] := file.name[i] END;
+				Strings.Truncate(prefix, len);
+				IF OFS.This(prefix) = NIL THEN RETURN NIL END
+			END;
+			RETURN file
+		END;
+		RETURN NIL
+	END FileFactory;
+
+BEGIN
+	RegisterProgrammer("memory", MemoryProgrammer, MemoryAccept, MemoryFactory);
+	RegisterProgrammer("file", FileProgrammer, FileAccept, FileFactory);
+	done := TRUE;
+	error := FALSE
+END Programmer.

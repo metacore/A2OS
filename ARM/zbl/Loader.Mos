@@ -1,0 +1,118 @@
+MODULE Loader; (** AUTHOR "Timothée Martiel"; PURPOSE "Loader protocol-independent implementation for the Zynq Bootloader"; *)
+
+IMPORT
+	SYSTEM,
+	Platform, Board, Trace, Modules, Strings;
+
+CONST
+	(* Error Codes *)
+	Ok * = 0;
+	InvalidAddress * = 1;
+	ImageTooLarge * = 2;
+	InvalidProtocol * = 3;
+	InvalidHost * = 4;
+	ImageTransferError * = 5;
+
+	(** Bottom of the loadable address range *)
+	LoadAddressMin * = ADDRESS(Platform.M);
+	(** Top of the loadable address range *)
+	LoadAddressMax * = ADDRESS(Board.PageTableBase);
+
+	MaxLoadProtocols = 16;
+
+TYPE
+	Loader = RECORD
+		protocol: ARRAY 16 OF CHAR;
+		load: PROCEDURE (CONST name, host: ARRAY OF CHAR);
+	END;
+
+VAR
+	loaders: ARRAY MaxLoadProtocols OF Loader;
+	startAddress *, endAddress *: ADDRESS;
+	loaderNb, res: LONGINT;
+	done -, error -: BOOLEAN;
+
+	(** Load image 'name' from remote host 'host' using protocol 'protocol' *)
+	PROCEDURE Load * (CONST name, host, protocol: ARRAY OF CHAR);
+	VAR
+		module: ARRAY 256 OF CHAR;
+		m: Modules.Module;
+		i: LONGINT;
+	BEGIN
+		done := FALSE;
+		error := FALSE;
+		(* Load protocol module *)
+		(*module := Bootstrap.Prefix;
+		Strings.AppendChar(module, ':');
+		Strings.Append(module, protocol);*)
+		COPY(protocol, module);
+		Strings.Append(module, "Loader");
+		Modules.ThisMod(module, m);
+		IF m = NIL THEN
+			Trace.String("Module '");
+			Trace.String(protocol);
+			Trace.StringLn("Loader' not found.");
+			error := TRUE;
+			done := TRUE;
+			RETURN
+		END;
+
+		(* Load this element from where we stopped the previous one *)
+		startAddress := endAddress;
+		IF startAddress MOD 4 # 0 THEN INC(startAddress, 4 - startAddress MOD 4) END;
+		endAddress := startAddress;
+
+		(* Find load procedure and call it *)
+		done := FALSE;
+		error := FALSE;
+		i := 0;
+		WHILE (i < loaderNb) & (loaders[i].protocol # protocol) DO INC(i) END;
+		IF (i = loaderNb) (*OR (loaders[i].load = NIL)*) THEN
+			Trace.String("Could not find loader '");
+			Trace.String(protocol);
+			Trace.StringLn("'");
+			error := TRUE;
+			done := TRUE;
+			res := InvalidProtocol
+		ELSE
+			loaders[i].load(name, host)
+		END;
+	END Load;
+
+	PROCEDURE NotifyDone * (result: LONGINT);
+	BEGIN
+		done := TRUE;
+		error := result # 0;
+		res := result;
+		IF ~error THEN
+			(*IF endAddress > startAddress THEN
+				(*Caches.DrainWriteBuffer*)
+			END*)
+		END
+	END NotifyDone;
+
+	(** Register a new loader.
+		protocol is its protocol name
+		loader is the implementation
+	*)
+	PROCEDURE RegisterLoader * (CONST protocol: ARRAY OF CHAR; loader: PROCEDURE (CONST name, host: ARRAY OF CHAR));
+	BEGIN
+		ASSERT(loaderNb < MaxLoadProtocols);
+		Strings.Copy(protocol, loaders[loaderNb].protocol);
+		loaders[loaderNb].load := loader;
+		INC(loaderNb)
+	END RegisterLoader;
+
+	(** Copy buffer to the load address. Should be used by protocol-specific loaders *)
+	PROCEDURE CopyToRam * (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+	BEGIN
+		IF endAddress + len > LoadAddressMax THEN NotifyDone(ImageTooLarge) END;
+		SYSTEM.MOVE(ADDRESSOF(buf[ofs]), endAddress, len);
+		INC(endAddress, len)
+	END CopyToRam;
+
+BEGIN
+	startAddress := LoadAddressMin;
+	endAddress := startAddress;
+	done := TRUE
+END Loader.

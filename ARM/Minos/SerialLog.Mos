@@ -1,0 +1,237 @@
+(* ported version of Minos to work with the ARM backend of the Fox Compiler Suite *)
+MODULE SerialLog;
+(*---------------------------------------------------------*
+*	Copyright (c) ETH Zurich. All Rights Reserved.
+*---------------------------------------------------------*)
+
+(*@
+	009 2006-12-08 fof: inserted Disable procedure
+	008 2006-09-26 fof: inserted string end gaurd in Str
+	007 2006-08-07 tt: Removed WriteBytesNB
+	006 2006-07-19 tt: Introduced Device, removed Uart
+	005 2006-07-14 tt: Introduced Uart module
+	004 2006-07-13 tt: Introduced Platform dependend module
+	003 2006-06-29 tt: changed header format
+	002 2006-06-14 fof: added commands BlockingModeOn and BlockingModeOff
+	001 2006-06-15 tt: added commands UseHWUart UseBTUart, introduce variable dev
+*)
+
+
+IMPORT Device, Platform, Log, Uart, Trace;
+
+CONST
+	(* PC commands *)
+	Base = 4D5B9878H;
+	LOG* = Base + 20H;  FR* = Base + 21H;  MS* = Base + 23H;  FD* = Base + 24H;		(* commands *)
+	FS* = Base + 25H;  BEEP* = Base + 26H; CMD* = Base + 27H;
+
+	(*LogTypes*)
+	LN* = 21X;  STR* = 22X;  CH* = 23X;  INT* = 24X;  HEX* = 25X;  FLOAT* = 26X;
+	SETS* = 27X;  TIME* = 28X;  CLEAR* = 29X;  BUF* = 30X;
+
+VAR
+	blocking: BOOLEAN;  
+	dev: Device.Device;
+	trapMode : BOOLEAN;
+	
+	PROCEDURE Cmd (type: CHAR);
+	BEGIN
+		Device.WriteInt ( dev, LOG );
+		Device.Write (dev, type);
+	END Cmd;
+
+	PROCEDURE Await (numberOfCharacters: LONGINT): BOOLEAN;
+	BEGIN		
+		IF blocking THEN
+			REPEAT UNTIL Device.Free( dev ) >= numberOfCharacters;
+		END;
+		RETURN (Device.Free(dev) >= numberOfCharacters);
+	END Await;
+
+	PROCEDURE Ch( ch: CHAR );
+	BEGIN
+		IF Await ( 6 ) THEN
+			Cmd ( CH );  Device.Write( dev, ch )
+		END;
+		IF ( trapMode ) THEN
+			Trace.C( ch );
+		END;
+	END Ch;
+
+	PROCEDURE Hex( i: LONGINT );
+	BEGIN
+		IF Await ( 15 ) THEN
+			Cmd ( HEX ); Device.WriteInt( dev, i );
+			Cmd ( CH ); Device.Write( dev, 'H' );
+		END;
+		IF ( trapMode ) THEN
+			Trace.Hex( i, -8 );
+		END;
+	END Hex;
+
+	PROCEDURE Str( CONST str: ARRAY OF CHAR );
+	VAR offset, len, size: LONGINT;
+	BEGIN
+		
+		offset := 0;  len := LEN( str );  size := 0;
+
+		WHILE (size < len ) & (str[size] # 0X) DO INC( size );
+		END;
+		
+		IF (size > 0) & Await (6 + size) THEN
+			Cmd ( STR ); Device.WriteStr( dev, str );
+		END;
+		
+		IF ( trapMode ) THEN
+			Trace.String( str );
+		END;
+		
+	END Str;
+
+	PROCEDURE Int( i: LONGINT );
+	BEGIN
+		IF Await ( 9 ) THEN
+			Cmd ( INT ); Device.WriteInt( dev, i );
+		END;
+		IF ( trapMode ) THEN
+			Trace.Int( i, 12 );
+		END;
+	END Int;
+
+	PROCEDURE Real( a: REAL );
+	BEGIN
+		IF Await ( 9 ) THEN
+			Cmd ( FLOAT ); Device.WriteReal( dev, a );
+		END;
+		IF ( trapMode ) THEN
+			Trace.Real( a, 12, 2 );
+		END;
+	END Real;
+
+	PROCEDURE RealHex( a: REAL );
+	BEGIN
+		IF Await ( 15 )  THEN
+			Cmd ( HEX ); Device.WriteReal( dev, a );
+			Cmd ( CH ); Device.Write( dev, 'R' );
+		END;
+	END RealHex;
+
+	PROCEDURE FReal( a: LONGINT );
+	BEGIN
+		IF Await ( 9 )  THEN
+			Cmd ( FLOAT ); Device.WriteInt ( dev, a );
+		END;
+	END FReal;
+
+	PROCEDURE Set( a: SET );
+	BEGIN
+		IF Await ( 9 )  THEN
+			Cmd ( SETS ); Device.WriteSet ( dev, a );
+		END;
+	END Set;
+
+	PROCEDURE Bool( b: BOOLEAN );
+	BEGIN
+		IF b THEN
+			Str ("TRUE");
+		ELSE
+			Str ("FALSE");
+		END;
+	END Bool;
+
+	PROCEDURE Ln;
+	BEGIN
+		IF Await (5) THEN
+			Cmd ( LN );
+		END;
+		IF ( trapMode ) THEN
+			Trace.Ln;
+		END;
+	END Ln;
+
+	PROCEDURE Beep( freq, duration: LONGINT );
+	BEGIN
+		IF Await (12) THEN
+			Device.WriteInt ( dev, BEEP );  Device.WriteInt( dev, freq );
+			Device.WriteInt( dev, duration );
+		END;
+	END Beep;
+
+	PROCEDURE Clear;
+	BEGIN
+		IF Await ( 5 ) THEN
+			Cmd ( CLEAR );
+		END;
+	END Clear;
+
+	PROCEDURE SetBlocking*( block: BOOLEAN );
+	BEGIN
+		blocking := block;
+	END SetBlocking;
+
+	PROCEDURE Flush;
+	BEGIN
+		Device.Flush( dev );
+	END Flush;
+
+(* switch on blockign mode for messages sent via serial line *)
+	PROCEDURE BlockingModeOn*;
+	BEGIN
+		blocking := TRUE;
+	END BlockingModeOn;
+
+(* switch on blockign mode for messages sent via serial line *)
+	PROCEDURE BlockingModeOff*;
+	BEGIN
+		blocking := FALSE;
+	END BlockingModeOff;
+
+	PROCEDURE Buffer( CONST buf: ARRAY OF CHAR;  offset, len: LONGINT );
+	VAR free: LONGINT;
+	BEGIN
+		IF (offset + len) > LEN( buf ) THEN len := LEN( buf ) - offset;  END;
+
+		IF (len > 0) & Await ( 9 + len) THEN
+			Cmd ( BUF);
+			Device.WriteInt( dev, len );
+			Device.WriteChars( dev, buf, offset, len );
+		END;
+	END Buffer;
+
+	PROCEDURE Disable*;
+	BEGIN
+		Flush();  Device.Close( dev );  dev := Device.GetDevice( "NULL" );
+		Device.Open( dev );
+	END Disable;
+
+	PROCEDURE Trap( enable: BOOLEAN );
+	BEGIN
+		Trace.Ln;
+		Trace.StringLn("*** TRAP MODE ENABLED ***");
+		Trace.Ln;
+		trapMode := TRUE;
+	END Trap;
+
+	PROCEDURE Install*;
+	BEGIN
+		
+		Trace.StringLn("Serial Log Install().");
+		
+		dev := Device.GetDevice( Platform.MINOSCOMMAND );
+
+		IF ( dev # NIL ) THEN
+		
+			Trace.StringLn("Redirecting Log to SerialLog.");
+			Log.Redirect1( Str, Int, Hex, Set, Real, Bool );
+			Log.Redirect2( Ch, Ln, Buffer, Clear, Flush, Beep, Trap );
+			
+		END;
+		
+	END Install;
+
+BEGIN
+	blocking := FALSE;
+	trapMode := FALSE;
+	Uart.Install();
+	Trace.StringLn("SerialLog Init().");
+END SerialLog.

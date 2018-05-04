@@ -1,0 +1,18 @@
+MODULE UartLoader;  
+
+IMPORT Uart, UartTask, Trace;
+
+PROCEDURE Load*();
+BEGIN
+
+	Trace.StringLn("Enable IRQ Uart.");
+		
+	Uart.EnableIrqMode( 1, 32 );
+	UartTask.InstallTask();
+		
+	Trace.StringLn("done.");
+	
+END Load;
+
+BEGIN 
+END UartLoader.

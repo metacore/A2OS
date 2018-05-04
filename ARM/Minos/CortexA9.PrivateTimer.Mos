@@ -1,0 +1,130 @@
+MODULE PrivateTimer;
+
+(**
+	Author: Alexey Morozov, HighDim GmbH, 2013
+	Purpose: implementation of the driver for ARM Cortex-A9 MPCore private timer
+*)
+
+IMPORT
+	SYSTEM;
+
+CONST
+	(* register offsets *)
+	LoadOffset = 00H;
+	CounterRegOffset = 04H;
+	ControlRegOffset = 08H;
+	IsrRegOffset = 00CH;
+
+	(* control register masks *)
+	ControlEnableMask = {0};
+	ControlAutoReloadMask = {1};
+	ControlIrqEnableMask = {2};
+	ControlPrescalerMask = SYSTEM.VAL(SET,00000FF00H);
+
+TYPE
+	
+	(**
+		Timer descriptor
+	*)
+	Timer* = RECORD
+		baseAddr-: ADDRESS; (** timer base address *)
+	END;
+
+	(**
+		Initialize a timer given a private timer bas address
+	*)
+	PROCEDURE Init*(VAR timer: Timer; baseAddress: ADDRESS);
+	BEGIN		
+		timer.baseAddr := baseAddress;
+	END Init;
+
+	(**
+		Get private timer counter value
+
+		Remarks:
+			counter value changes decrementally from the initial value set by LoadTimer
+
+	*)
+	PROCEDURE GetCounterValue*(CONST timer: Timer): LONGINT;
+	BEGIN
+		RETURN SYSTEM.GET32(timer.baseAddr+CounterRegOffset);
+	END GetCounterValue;
+
+	(**
+		Load timer with a given 32-bit initial counter value
+	*)
+	PROCEDURE LoadTimer*(VAR timer: Timer; value: LONGINT);
+	BEGIN
+		SYSTEM.PUT32(timer.baseAddr+LoadOffset,value);
+	END LoadTimer;
+
+	(** Start timer *)
+	PROCEDURE Start*(VAR timer: Timer);
+	BEGIN
+		SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))+ControlEnableMask);
+	END Start;
+
+	(** Stop timer *)
+	PROCEDURE Stop*(VAR timer: Timer);
+	BEGIN
+		SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))-ControlEnableMask);
+	END Stop;
+
+	(** Enable/Disable auto reload of the timer counter *)
+	PROCEDURE EnableAutoReload*(VAR timer: Timer; enable: BOOLEAN);
+	BEGIN
+		IF enable THEN
+			SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))+ControlAutoReloadMask);
+		ELSE
+			SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))-ControlAutoReloadMask);
+		END;
+	END EnableAutoReload;
+
+	(**
+		Set 8-bit timer clock prescaler value
+	*)
+	PROCEDURE SetPrescaler*(VAR timer: Timer; value: LONGINT);
+	VAR reg: LONGINT;
+	BEGIN
+		reg := SYSTEM.GET32(timer.baseAddr+ControlRegOffset);
+		(* clear all prescaler control bits and set the prescaler value *)
+		SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,reg)-ControlPrescalerMask+SYSTEM.VAL(SET,LSH(value,8)));
+	END SetPrescaler;
+
+	(**
+		Get 8-bit timer clock prescaler value
+	*)
+	PROCEDURE GetPrescaler*(CONST timer: Timer): LONGINT;
+	BEGIN
+		RETURN LSH(SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset)) * ControlPrescalerMask),-8);
+	END GetPrescaler;
+
+	(** Enable/disable timer interrupt *)
+	PROCEDURE EnableInterrupt*(VAR timer: Timer; enable: BOOLEAN);
+	BEGIN
+		IF enable THEN
+			SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))+ControlIrqEnableMask);
+		ELSE
+			SYSTEM.PUT32(timer.baseAddr+ControlRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset))-ControlIrqEnableMask);
+		END;
+	END EnableInterrupt;
+
+	(** Get timer interrupt status
+
+		Remark:
+			returned status value indicates the timer counter register has reached zero
+	*)
+	PROCEDURE GetInterruptStatus*(CONST timer: Timer): LONGINT;
+	BEGIN
+		RETURN SYSTEM.GET32(timer.baseAddr+IsrRegOffset);
+	END GetInterruptStatus;
+
+	(**
+		Clear timer interrupt status
+	*)
+	PROCEDURE ClearInterruptStatus*(VAR timer: Timer);
+	BEGIN
+		SYSTEM.PUT32(timer.baseAddr+IsrRegOffset,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+IsrRegOffset)) - {0});
+	END ClearInterruptStatus;
+
+END PrivateTimer.

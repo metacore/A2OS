@@ -1,0 +1,34 @@
+MODULE Utils;
+IMPORT SYSTEM;
+
+	(* note that the biased exponent (exponent + 127) of an IEEE 32bit float starts at bit 23 *)
+	
+	(* add y to the binary exponent of y. PACK(x, y) is equivalent to  x := x * 2^y. *)
+	PROCEDURE PACK*(VAR x: REAL; y: LONGINT);
+	CODE
+		LDR R2, [FP, #x] ; R2 := address of x
+		LDR R3, [FP, #y] ; R3 := y
+		ADD SP, SP, #8
+	
+		LDR R4, [R2, #+0]; R4 := value of x
+		ADD R4, R4, R3, LSL #23 ; increase the (biased) exponent of x by y
+		STR R4, [R2, #+0] ; store new value of x
+	END PACK;
+	
+	(* remove the binary exponent on x and put it into y. UNPK is the reverse operation of PACK. The resulting x is normalized, i.e. 1.0 <= x < 2.0. *)
+	PROCEDURE UNPK*(VAR x: REAL; VAR y: LONGINT);
+	CODE
+		LDR R2, [FP, #x] ; R2 := address of x
+		LDR R3, [FP, #y] ; R3 := address of y
+		ADD SP, SP, #8
+		
+		LDR R4, [R2, #+0] ; R4 := value of x
+		MOV R5, R4, LSR #23 ; R5 := biased exponent (and sign) of x
+		SUB R5, R5, #127 ; R5 := exponent of x (biased exponent - 127)
+		STR R5, [R3, #+0] ; store exponent of x as value for y
+		SUB R4, R4, R5, LSL #23; reduce the biased exponent of x by the value of y
+		STR R4, [R2, #+0] ; store new value of x
+	END UNPK;
+		
+END Utils.
+

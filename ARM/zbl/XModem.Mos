@@ -1,0 +1,303 @@
+MODULE XModem; (** AUTHOR "Timothée Martiel"; PURPOSE "XModem protocol implementation for bootloader"; *)
+(**
+	Adapted from A2 sources: XModem.Mod
+*)
+IMPORT SYSTEM, Trace, StreamReaders, StreamWriters, EnetTiming, PrivateWatchdog;
+
+CONST
+	DebugR = FALSE;	(* debug receiver *)
+
+	(* result codes *)
+	Ok* = 0;
+	Timeout* = 1;
+	Error* = 2;
+
+	(* states *)
+	RInitCRC = 03X;
+	RInitChksum = 04X;
+	RData = 05X;
+	Abort = 06X;
+	Exit = 07X;
+
+	(* Timeouts ([ms]) *)
+	ReceiverInitTimeout = 3000;
+	ReceiverDataTimeout = 1000;
+	PurgeTimeout = 1000;
+
+	MaxRetries = 10;
+	MaxCRCThreshold = 3;
+
+	HeaderSize = 3;
+	BlockSize = 128;
+	LargeBlock = 1024 - BlockSize;
+	ChksumSize = 1;
+	CRCSize = 2;
+	PacketSizeChksum = HeaderSize + BlockSize + ChksumSize;
+	PacketSizeCRC = HeaderSize + BlockSize + CRCSize;
+	MaxPacketSize = PacketSizeCRC + LargeBlock;
+
+	(* symbols *)
+	SOH = 01X;
+	STX = 02X;
+	EOT = 04X;
+	ACK = 06X;
+	NAK = 15X;
+
+TYPE
+	Callback * = PROCEDURE (CONST buffer: ARRAY OF CHAR; ofs, len: LONGINT);
+
+VAR
+	state: CHAR;	(* current state *)
+	crc: BOOLEAN;	(* TRUE iff in CRC mode, FALSE iff in checksum mode *)
+	packetSize: LONGINT;	(* size of a packet, including header & checksum/CRC. Initialized by SendInit/ReceiveInit *)
+	retries: LONGINT;	(* # of retries *)
+	blockIndex: LONGINT;	(* # of block *)
+	msg: ARRAY 256 OF CHAR;	(* error message *)
+	crcThreshold: LONGINT;
+	buf: ARRAY MaxPacketSize OF CHAR; 
+
+	(** Receive a file from XModem in buffer. Returns 0 if error, received length otherwise *)
+	PROCEDURE Receive * (VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer; callback: Callback): LONGINT;
+	BEGIN
+		state := RInitCRC;
+		blockIndex := 1; retries := 0; crcThreshold := 0;
+		Purge(in);
+		WHILE (state # Abort) & (state # Exit) & (retries < MaxRetries) DO
+			CASE state OF
+			| RInitCRC: ReceiveInitCRC(in, out)
+			| RInitChksum: ReceiveInitChecksum(in, out)
+			| RData: ReceiveData(in, out, callback)
+			END
+			;PrivateWatchdog.Feed(3000)
+		END;
+		IF (state = Exit) THEN RETURN Ok
+		ELSE RETURN Error
+		END
+	END Receive;
+
+	PROCEDURE ReceiveInitCRC(VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer);
+	VAR res: LONGINT; ch: CHAR;
+	BEGIN
+		IF DebugR THEN
+			Trace.String("ReceiveInitCRC:"); Trace.Ln; Trace.String("  sending 'C'..."); Trace.Ln
+		END;
+		packetSize := PacketSizeCRC;
+		(* send "C" *)
+		crc := TRUE;
+		StreamWriters.Char(out, "C"); StreamWriters.Update(out);
+
+		(* wait for ACK *)
+		IF DebugR THEN Trace.String("  waiting for reply...") END;
+		res := Peek(in, ReceiverInitTimeout, ch);
+		IF (res = Ok) THEN
+			IF DebugR THEN Trace.String("got "); Trace.Hex(ORD(ch), -2); Trace.Char("X"); Trace.Ln END;
+			CASE ch OF
+			| SOH, STX: IF DebugR THEN Trace.String("  new state = RData"); Trace.Ln END; state := RData
+			| EOT: IF DebugR THEN Trace.String("  new state = Abort"); Trace.Ln END;
+				COPY("ReceiveInitCRC: got EOT", msg); state := Abort
+			ELSE
+				INC(retries); (* state stays the same (RInitCRC) *)
+				COPY("ReceiveInitCRC: wrong reply", msg);
+				IF DebugR THEN Trace.String("  retries = "); Trace.Int(retries, 0); Trace.Ln END
+			END
+		ELSE (* timeout *)
+			INC(crcThreshold);
+			IF DebugR THEN Trace.String("  timeout, CRC-threshold = "); Trace.Int(crcThreshold, 0); Trace.Ln END;
+			IF (crcThreshold = MaxCRCThreshold) THEN
+				IF DebugR THEN Trace.String("  switching to checksum-mode"); Trace.Ln END;
+				crc := FALSE; retries := 0; state := RInitChksum
+			END (* ELSE state stays the same (RInitCRC) *)
+		END
+	END ReceiveInitCRC;
+
+	PROCEDURE ReceiveInitChecksum(VAR in: StreamReaders.Reader;  VAR out: StreamWriters.Writer);
+	VAR res: LONGINT; ch: CHAR;
+	BEGIN
+		packetSize := PacketSizeChksum;
+		(* send NAK *)
+		StreamWriters.Char(out, NAK); StreamWriters.Update(out);
+
+		(* wait for transmission to begin *)
+		res := Peek(in, ReceiverInitTimeout, ch);
+		IF (res = Ok) THEN
+			state := RData
+		ELSE (* timeout *)
+			COPY("ReceiveInitChecksum: timeout", msg);
+			INC(retries)	(* state stays the same (RInitChksum) *)
+		END
+	END ReceiveInitChecksum;
+
+	PROCEDURE ReceiveData (VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer; callback: Callback);
+	VAR ch: CHAR; res, i, idx, c, cc, blk, pkt: LONGINT; ok: BOOLEAN;
+	BEGIN
+		IF DebugR THEN
+			Trace.String("ReceiveData:"); Trace.Ln; Trace.String("  waiting for first byte...")
+		END;
+		(* get first byte (SOH/EOT) *)
+		res := Peek(in, ReceiverDataTimeout, ch);
+
+		IF (res = 0) & ((ch = SOH) OR (ch = STX) OR (ch = EOT)) THEN
+			IF DebugR THEN Trace.String("got "); Trace.Hex(ORD(ch), -2); Trace.Char("X"); Trace.Ln END;
+			IF (ch = SOH) OR (ch = STX) THEN
+				blk := BlockSize;
+				pkt := packetSize;
+				IF ch = STX THEN INC(pkt, LargeBlock); INC(blk, LargeBlock) END;
+				IF DebugR THEN Trace.String("  receiving "); Trace.Int(pkt, 0); Trace.String(" bytes...") END;
+				(* receive pkt bytes *)
+				i := 0; res := 0;
+				WHILE (i < pkt) & (res = 0) DO
+					res := Get(in, ReceiverDataTimeout, buf[i]);
+					INC(i)
+				END;
+				IF DebugR THEN Trace.String("done (got "); Trace.Int(i, 0); Trace.String(" bytes)"); Trace.Ln END;
+
+				IF (res = 0) THEN
+					idx := GetHeader(buf);
+					IF (idx = blockIndex MOD 100H) THEN	(* correct block number *)
+						(* check checksum/CRC *)
+						IF crc THEN
+							c := LONG(ORD(buf[HeaderSize+blk]))*100H+ORD(buf[HeaderSize+blk+1]);
+							cc := CalcCRC(buf, HeaderSize, blk);
+							IF DebugR & (c # cc) THEN
+								Trace.String("  wrong checksum: "); Trace.Hex(cc, 8); Trace.String(", expected "); Trace.Hex(c, 8); Trace.Ln
+							END;
+							ok := c = c
+						ELSE
+							ok := CalcCheckSum(buf, HeaderSize, blk) = buf[HeaderSize+blk]
+						END;
+
+						IF ok THEN
+							IF DebugR THEN
+								Trace.String("  received block "); Trace.Int(blockIndex, 0); Trace.Ln
+							END;
+							PutData(buf, HeaderSize, blk, callback);
+							INC(blockIndex);
+							StreamWriters.Char(out, ACK); StreamWriters.Update(out)
+						ELSE
+							COPY("ReceiveData: checksum error", msg);
+							IF DebugR THEN Trace.String("  checksum error"); Trace.Ln END;
+							INC(retries);
+							StreamWriters.Char(out, NAK); StreamWriters.Update(out)
+						END
+					ELSIF (idx = (blockIndex-1) MOD 100H) THEN	(* maybe the sender lost our ACK *)
+						COPY("ReceiveData: got block n-1", msg);
+						IF DebugR THEN Trace.String("  got block n-1"); Trace.Ln END;
+						INC(retries); StreamWriters.Char(out, ACK); StreamWriters.Update(out)
+					ELSE
+						COPY("ReceiveData: wrong block number", msg);
+						state := Abort;
+						IF DebugR THEN
+							Trace.String("  wrong block number"); Trace.Int(idx, 5); Trace.String(", expected ");
+							Trace.Int(blockIndex, 0); Trace.Ln
+						END
+					END
+				ELSE
+					COPY("ReceiveData: timeout while receiving block", msg);
+					state := Abort
+				END
+			ELSE (* ch = EOT *)
+				IF (blockIndex = 1) THEN
+					COPY("ReceiveData: got EOT instead of first block", msg);
+					state := Abort
+				ELSE
+					StreamWriters.Char(out, ACK); StreamWriters.Update(out); state := Exit
+				END
+			END
+		ELSE (* timeout/wrong character *)
+			COPY("ReceiveData: timeout/wrong packet", msg);
+			IF DebugR THEN
+				Trace.String("timeout/wrong packet; res = "); Trace.Int(res, 0); Trace.String("; ch = ");
+				Trace.Hex(ORD(ch), -2); Trace.Ln
+			END;
+			INC(retries);
+			Purge(in);
+			StreamWriters.Char(out, NAK); StreamWriters.Update(out)
+		END
+	END ReceiveData;
+
+	PROCEDURE Get(VAR in: StreamReaders.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+	VAR milliTimer : EnetTiming.Timer;
+	BEGIN
+		IF (StreamReaders.Available(in) = 0) THEN
+			EnetTiming.SetTimerMilli(milliTimer, timeout);
+			EnetTiming.StartTimer(milliTimer);
+			REPEAT PrivateWatchdog.Feed(1000)
+			UNTIL (StreamReaders.Available(in) > 0) OR EnetTiming.IsTimerExpired(milliTimer);
+			IF (StreamReaders.Available(in) = 0) THEN
+				ch := 0X; RETURN Timeout
+			END
+		END;
+		ch := StreamReaders.Get(in);
+		RETURN Ok
+	END Get;
+
+	PROCEDURE Peek(VAR in: StreamReaders.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+	VAR milliTimer : EnetTiming.Timer;
+	BEGIN
+		IF (StreamReaders.Available(in) = 0) THEN
+			EnetTiming.SetTimerMilli(milliTimer, timeout);
+			EnetTiming.StartTimer(milliTimer);
+			REPEAT PrivateWatchdog.Feed(1000)
+			UNTIL (StreamReaders.Available(in) > 0) OR EnetTiming.IsTimerExpired(milliTimer);
+			IF (StreamReaders.Available(in) = 0) THEN
+				ch := 0X; RETURN Timeout
+			END
+		END;
+		ch := StreamReaders.Peek(in);
+		RETURN Ok
+	END Peek;
+
+	PROCEDURE Purge(VAR r: StreamReaders.Reader);
+	VAR ch: CHAR;
+	BEGIN
+		REPEAT UNTIL Get(r, PurgeTimeout, ch) = Timeout
+	END Purge;
+
+	PROCEDURE CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): CHAR;
+	VAR i, chksum: LONGINT;
+	BEGIN
+		chksum := 0;
+		FOR i := 0 TO len-1 DO chksum := chksum + ORD(buffer[ofs+i]) END;
+		RETURN CHR(chksum MOD 100H)
+	END CalcCheckSum;
+
+	PROCEDURE CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
+	VAR i, k, crc: LONGINT;
+	BEGIN
+		crc := 0;
+		FOR i := 0 TO len-1 DO
+			crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc) / SYSTEM.VAL(SET, ORD(buffer[ofs+i])*100H));
+			FOR k := 0 TO 7 DO
+				IF (15 IN SYSTEM.VAL(SET, crc)) THEN
+					crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc*2) / SYSTEM.VAL(SET, 1021H))
+				ELSE
+					crc := crc*2
+				END
+			END
+		END;
+		RETURN crc MOD 10000H
+	END CalcCRC;
+
+	PROCEDURE GetErrorMessage*(VAR string: ARRAY OF CHAR);
+	BEGIN
+		COPY(msg, string)
+	END GetErrorMessage;
+
+	PROCEDURE PutData(VAR tmp: ARRAY OF CHAR; ofs, len: LONGINT; callback: Callback);
+	BEGIN
+		callback(tmp, ofs, len)
+	END PutData;
+
+	PROCEDURE GetHeader(VAR buf: ARRAY OF CHAR): LONGINT;
+	VAR index: LONGINT;
+	BEGIN
+		IF (buf[0] = SOH) OR (buf[0] = STX) THEN
+			index := ORD(buf[1]);
+			IF (index # 255-ORD(buf[2])) THEN index := -1 END
+		ELSE
+			index := -1
+		END;
+		RETURN index
+	END GetHeader;
+
+END XModem.

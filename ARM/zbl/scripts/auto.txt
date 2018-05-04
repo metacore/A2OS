@@ -1,0 +1,2 @@
+program a2 memory 100000H 0 1
+start

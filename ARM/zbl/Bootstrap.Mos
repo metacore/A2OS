@@ -1,0 +1,46 @@
+MODULE Bootstrap;
+(**
+	AUTHOR Timothée Martiel, 01/2016
+	PURPOSE Bootloader bootstrapping module
+*)
+
+IMPORT
+	Trace, Board, TraceDevice, Memory, OFSDiskVolumes, OFS, Modules;
+
+CONST
+	Volume = 'SD0';
+	Partition = 2;
+	Prefix * = '_';
+
+VAR
+	m: Modules.Module;
+	v: OFSDiskVolumes.Volume;
+	res: LONGINT;
+
+BEGIN
+	TraceDevice.Install; (* install trace if it has not yet been installed *)	
+
+	v := NIL;
+	OFSDiskVolumes.New(Volume, Partition, v);
+	IF v = NIL THEN
+		Trace.String("OEB Boostrap: Failed to mount partition ");
+		Trace.String(Volume);
+		Trace.String("#");
+		Trace.Int(Partition, 0);
+		Trace.Ln;
+		LOOP END
+	END;
+	OFS.InitVol(v);
+	OFS.NewFS(Prefix, FALSE, v);
+
+	(*Trace.StringLn("OEB Starting...");*)
+	Modules.ThisMod("Bootloader", m);
+	IF m = NIL THEN
+		Trace.String("OEB Bootstrap: Failed to load module ");
+		Trace.String(Modules.errstring);
+		Trace.String(", error code: ");
+		Trace.Int(Modules.res, 0);
+		Trace.Ln;
+		LOOP END
+	END
+END Bootstrap.

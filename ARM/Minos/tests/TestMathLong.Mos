@@ -1,0 +1,382 @@
+MODULE TestMathLong;
+
+	IMPORT
+		SYSTEM, OFS, Tools, Log, Minos, Kernel, Math, FPE64, Platform;
+		
+	CONST
+		eps = 1.1920929E-7;
+		eps3 = 3.5762787E-7;
+		eps4 = 4.7683716E-7;
+		eps9 = 10.728836E-7;
+		eps31 = 3.6954880E-6;
+		
+		epsD = 1.1920929D-7;
+		
+	TYPE
+		Command = POINTER TO CommandDesc;
+		CompareHandler = PROCEDURE(): BOOLEAN;
+		CalcHandler = PROCEDURE();
+		ShowHandler = PROCEDURE(cmd: Command);
+		CommandDesc = RECORD
+			name: ARRAY 12 OF CHAR;
+			partypes: ARRAY 12 OF CHAR;
+			restype: ARRAY 4 OF CHAR;
+			calc: CalcHandler;
+			compare: CompareHandler;
+			show: ShowHandler;
+			n, ok: LONGINT;
+			next: Command;
+		END;
+		
+		ResultDesc = RECORD
+			single: REAL;
+			boolean: BOOLEAN;
+			int: LONGINT;
+			double: LONGREAL;
+		END;
+	
+	VAR
+		filenames: ARRAY 2, 20 OF CHAR;
+		rd: OFS.Rider;
+		cmds: Command;
+		singlepar: ARRAY 2 OF REAL;
+		intpar: LONGINT;
+		doublepar: ARRAY 2 OF LONGREAL;
+		trueres: ResultDesc;
+		calcres: ResultDesc;
+
+	(* single precision operations *)
+	PROCEDURE CalcABS(); BEGIN calcres.single := ABS(singlepar[0]) END CalcABS;
+	PROCEDURE CalcNEG(); BEGIN calcres.single := -singlepar[0] END CalcNEG;
+	PROCEDURE CalcADD(); BEGIN calcres.single := singlepar[0]+singlepar[1] END CalcADD;
+	PROCEDURE CalcSUB(); BEGIN calcres.single := singlepar[0]-singlepar[1] END CalcSUB;
+	PROCEDURE CalcMUL(); BEGIN calcres.single := singlepar[0]*singlepar[1] END CalcMUL;
+	PROCEDURE CalcDIV(); BEGIN calcres.single := singlepar[0]/singlepar[1] END CalcDIV;
+	PROCEDURE CalcENTIER(); BEGIN calcres.int := ENTIER(singlepar[0]) END CalcENTIER;
+	PROCEDURE CalcREAL(); BEGIN calcres.single := REAL(intpar) END CalcREAL;
+	PROCEDURE CalcGREATER(); BEGIN calcres.boolean := (singlepar[0]>singlepar[1]) END CalcGREATER;
+	PROCEDURE CalcLOWER(); BEGIN calcres.boolean := (singlepar[0]<singlepar[1]) END CalcLOWER;
+	PROCEDURE CalcSIN(); BEGIN calcres.single := Math.Sin(singlepar[0]) END CalcSIN;
+	PROCEDURE CalcCOS(); BEGIN calcres.single := Math.Cos(singlepar[0]) END CalcCOS;
+	PROCEDURE CalcSQRT(); BEGIN calcres.single := Math.Sqrt(singlepar[0]) END CalcSQRT;
+	PROCEDURE CalcEXP(); BEGIN calcres.single := Math.Exp(singlepar[0]) END CalcEXP;
+	PROCEDURE CalcLN(); BEGIN calcres.single := Math.Ln(singlepar[0]) END CalcLN;
+	PROCEDURE CalcARCTAN(); BEGIN calcres.single := Math.Arctan(singlepar[0]) END CalcARCTAN;
+	PROCEDURE CalcARCTAN2(); BEGIN calcres.single := Math.Arctan2(singlepar[0], singlepar[1]) END CalcARCTAN2;
+	
+	(* double precision operations *)
+	PROCEDURE CalcABSD(); BEGIN calcres.double := ABS(doublepar[0]) END CalcABSD;
+	PROCEDURE CalcNEGD(); BEGIN calcres.double := -doublepar[0] END CalcNEGD;
+	PROCEDURE CalcADDD(); BEGIN calcres.double := doublepar[0] + doublepar[1] END CalcADDD;
+	PROCEDURE CalcSUBD(); BEGIN calcres.double := doublepar[0] - doublepar[1] END CalcSUBD;
+	PROCEDURE CalcMULD(); BEGIN calcres.double := doublepar[0]*doublepar[1] END CalcMULD;
+	PROCEDURE CalcDIVD(); BEGIN calcres.double := doublepar[0]/doublepar[1] END CalcDIVD;
+	PROCEDURE CalcLOWERD(); BEGIN calcres.boolean := doublepar[0] < doublepar[1] END CalcLOWERD;
+	PROCEDURE CalcFLOATD(); BEGIN calcres.double := intpar END CalcFLOATD;
+	PROCEDURE CalcFIXD(); BEGIN calcres.int := ENTIER(doublepar[0]) END CalcFIXD;
+	PROCEDURE CalcSINGLED(); BEGIN calcres.single := REAL(doublepar[0]) END CalcSINGLED;
+	PROCEDURE CalcDOUBLED(); BEGIN calcres.double := singlepar[0] END CalcDOUBLED;
+
+	PROCEDURE GetRelativeError(a, b: REAL): REAL;
+	BEGIN
+		IF b # 0.0 THEN
+			a := ABS(a/b) - 1.0;
+		END;
+		RETURN ABS(a);
+	END GetRelativeError;
+	
+	PROCEDURE CompareR(): BOOLEAN; BEGIN RETURN calcres.single = trueres.single END CompareR;
+	PROCEDURE CompareB(): BOOLEAN; BEGIN RETURN calcres.boolean = trueres.boolean END CompareB;
+	PROCEDURE CompareI(): BOOLEAN; BEGIN RETURN calcres.int = trueres.int END CompareI;
+	PROCEDURE CompareLR(): BOOLEAN; BEGIN RETURN calcres.double = trueres.double END CompareLR;
+
+	PROCEDURE CompareAbsolute4eps(): BOOLEAN;
+	BEGIN
+		RETURN ABS(calcres.single - trueres.single) <= eps4;
+	END CompareAbsolute4eps;
+
+	PROCEDURE CompareRelative1eps(): BOOLEAN;
+	BEGIN
+		RETURN GetRelativeError(calcres.single, trueres.single) <= eps;
+	END CompareRelative1eps;
+
+	PROCEDURE CompareRelative3eps(): BOOLEAN;
+	BEGIN
+		RETURN GetRelativeError(calcres.single, trueres.single) <= eps3;
+	END CompareRelative3eps;
+	
+	PROCEDURE CompareRelative9eps(): BOOLEAN;
+	BEGIN
+		RETURN GetRelativeError(calcres.single, trueres.single) <= eps9;
+	END CompareRelative9eps;
+
+	PROCEDURE CompareRelative31eps(): BOOLEAN;
+	BEGIN
+		RETURN GetRelativeError(calcres.single, trueres.single) <= eps31;
+	END CompareRelative31eps;
+	
+	PROCEDURE CompareRelative1epsLR(): BOOLEAN;
+		VAR x0, y0: LONGREAL;
+	BEGIN
+		x0 := calcres.double;
+		y0 := trueres.double;
+		IF ABS(x0-y0) <= epsD THEN RETURN TRUE;
+		ELSE RETURN FALSE;
+		END;
+	END CompareRelative1epsLR;
+
+	PROCEDURE ShowRR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S("("); Log.R(singlepar[0]); Log.S(") ="); Log.RL(calcres.single);
+		Log.S("  TRUE RESULT: "); Log.R(trueres.single);
+		Log.S(" ERR:  abs:"); Log.R(ABS(calcres.single-trueres.single));
+		Log.S(" rel:"); Log.RL(GetRelativeError(calcres.single, trueres.single));
+	END ShowRR;
+	
+	PROCEDURE ShowRRR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S(" "); Log.R(singlepar[0]); Log.S(" "); Log.R(singlepar[1]);
+		Log.S(" "); Log.R(calcres.single);
+		Log.S(" ("); Log.R(trueres.single); Log.SL(")");
+	END ShowRRR;
+	
+	PROCEDURE ShowIR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S(" "); Log.I(intpar); Log.S(" ");
+		Log.S(" "); Log.R(calcres.single);
+		Log.S(" ("); Log.R(trueres.single); Log.SL(")");
+	END ShowIR;
+	
+	PROCEDURE ShowLR(a: LONGREAL);
+		VAR x: FPE64.Float64;
+	BEGIN
+		x := SYSTEM.VAL(FPE64.Float64, a);
+		Log.H(x.high); Log.H(x.low);
+	END ShowLR;
+	
+	PROCEDURE ShowLRLRLR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S(" ");
+		ShowLR(doublepar[0]); Log.S(" ");
+		ShowLR(doublepar[1]); Log.S(" ");
+		ShowLR(calcres.double); Log.S(" ");
+		Log.S(" (");
+		ShowLR(trueres.double);
+		Log.SL(")")
+	END ShowLRLRLR;
+
+	PROCEDURE ShowLRR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S(" ");
+		ShowLR(doublepar[0]); Log.S(" ");
+		Log.R(calcres.single); Log.S(" ");
+		Log.S(" ("); 
+		Log.R(trueres.single); 
+		Log.SL(")")
+	END ShowLRR;
+
+	PROCEDURE ShowRLR(cmd: Command);
+	BEGIN
+		Log.S(cmd.name); Log.S(" ");
+		Log.R(singlepar[0]); Log.S(" ");
+		ShowLR(calcres.double); Log.S(" ");
+		Log.S(" (");
+		ShowLR(trueres.double);
+		Log.SL(")")
+	END ShowRLR;
+
+	PROCEDURE ShowLogDate();
+		VAR ch: CHAR;
+	BEGIN
+		OFS.Read(rd, ch);
+		WHILE ch # 0X DO
+			Log.C(ch);
+			OFS.Read(rd, ch);
+		END;
+		Log.L;
+		Log.L;
+	END ShowLogDate;
+	
+	PROCEDURE GetCommandName(VAR s: ARRAY OF CHAR);
+		VAR ch: CHAR; i: LONGINT;
+	BEGIN
+		i := 0;
+		REPEAT
+			OFS.Read(rd, ch);
+			s[i] := CAP(ch);
+			INC(i);
+		UNTIL (ch = 0X) OR (i = LEN(s));
+		s[i-1] := 0X;
+	END GetCommandName;
+	
+	PROCEDURE ReadParameters(VAR s: ARRAY OF CHAR);
+		VAR i, ir, ilr: LONGINT;
+	BEGIN
+		ir := 0;
+		ilr := 0;
+		i := 0;
+		WHILE (i < LEN(s)) & (s[i] # 0X) DO
+			IF s[i] = 'r' THEN
+				OFS.ReadReal(rd, singlepar[ir]);
+				INC(ir);
+			ELSIF s[i] = 'i' THEN
+				OFS.ReadInt(rd, intpar);
+			ELSIF s[i] = 'l' THEN
+				INC(i);
+				IF s[i] = 'r' THEN
+					OFS.ReadBytes(rd, doublepar[ilr], 8);
+					INC(ilr);
+				END;
+			END;
+			INC(i);
+		END;
+	END ReadParameters;
+	
+	PROCEDURE ReadResult(VAR s: ARRAY OF CHAR);
+		VAR ch: CHAR;
+	BEGIN
+		IF s = "r" THEN
+			OFS.ReadReal(rd, trueres.single);
+		ELSIF s = "b" THEN
+			OFS.Read(rd, ch);
+			trueres.boolean := (ch # 0X);
+		ELSIF s = "i" THEN
+			OFS.ReadInt(rd, trueres.int);
+		ELSIF s = "lr" THEN
+			OFS.ReadBytes(rd, trueres.double, 8);
+		END;
+	END ReadResult;
+	
+	PROCEDURE Run*;
+		VAR
+			f: OFS.File;
+			name: ARRAY 12 OF CHAR;
+			n, ok, i: LONGINT;
+			cmd: Command;
+			t, dt: LONGINT;
+	BEGIN
+		dt := 0;
+		FOR i := 0 TO LEN(filenames, 0)-1 DO
+			f := Tools.RemoteReadFile(filenames[i]);
+			IF f # NIL THEN
+				OFS.Set(rd, f, 0);
+				ShowLogDate;
+				WHILE ~rd.eof DO
+					GetCommandName(name);
+					IF name # "" THEN
+						cmd := cmds;
+						WHILE (cmd # NIL) & (name # cmd.name) DO
+							cmd := cmd.next;
+						END;
+						IF cmd = NIL THEN
+							Log.SL("Unknown Command!");
+						ELSE
+							INC(cmd.n);
+							ReadParameters(cmd.partypes);
+							ReadResult(cmd.restype);
+							t := Kernel.GetOSTimer();
+							cmd.calc();
+							dt := dt + (Kernel.GetOSTimer() - t);
+							IF cmd.compare() THEN
+								INC(cmd.ok);
+							ELSIF cmd.show # NIL THEN
+								cmd.show(cmd);
+								Kernel.MilliWait(50);
+							END;
+						END;
+					END;
+				END;
+				OFS.Close(f);
+			ELSE
+				Log.S("Cannot read the file ");
+				Log.S(filenames[i]);
+				Log.SL(".");
+			END;
+		END;
+		
+		n := 0;
+		ok := 0;
+		Log.L; Log.SL("Command: ok / n");
+		cmd := cmds;
+		WHILE cmd # NIL DO
+			n := n + cmd.n;
+			ok := ok + cmd.ok;
+			IF cmd.n > 0 THEN
+				Log.S(cmd.name);
+				Log.S(": ");
+				Log.I(cmd.ok);
+				Log.S(" / ");
+				Log.IL(cmd.n);
+			END;
+			cmd := cmd.next;
+		END;
+		Log.L; Log.S("Number of tests: "); Log.IL(n);
+		Log.S("Successful: "); Log.IL(ok);
+		Log.S("Unsuccessful: "); Log.IL(n-ok); Log.L;
+		Log.S("Calculation time [ms]: ");
+		Log.RL(REAL(dt)/REAL(Platform.CLOCKDIVISOR)*10.0);
+		Kernel.MilliWait(1000);
+		Minos.Reset;
+	END Run;
+	
+	PROCEDURE InitCmd(CONST name, partypes: ARRAY 12 OF CHAR; restype: ARRAY 4 OF CHAR;
+							calc: CalcHandler; compare: CompareHandler; show: ShowHandler);
+		VAR c: Command;
+	BEGIN
+		NEW(c);
+		c.next := cmds;
+		c.name := name;
+		c.partypes := partypes;
+		c.restype := restype;
+		c.calc := calc;
+		c.compare := compare;
+		c.show := show;
+		c.n := 0;
+		c.ok := 0;
+		cmds := c;
+	END InitCmd;
+
+BEGIN
+	cmds := NIL;
+	(* single precision commands *)
+	InitCmd("ABS", "r", "r", CalcABS, CompareR, ShowRR);
+	InitCmd("NEG", "r", "r", CalcNEG, CompareR, ShowRR);
+	InitCmd("ADD", "rr", "r", CalcADD, CompareRelative1eps, ShowRRR);
+	InitCmd("SUB", "rr", "r", CalcSUB, CompareRelative1eps, ShowRRR);
+	InitCmd("MUL", "rr", "r", CalcMUL, CompareRelative1eps, ShowRRR);
+	InitCmd("DIV", "rr", "r", CalcDIV, CompareRelative1eps, ShowRRR);
+	InitCmd("ENTIER", "r", "i", CalcENTIER, CompareI, NIL);
+	InitCmd("REAL", "i", "r", CalcREAL, CompareRelative1eps, ShowIR);
+	InitCmd("GREATER", "rr", "b", CalcGREATER, CompareB, NIL);
+	InitCmd("LOWER", "rr", "b", CalcLOWER, CompareB, NIL);
+	InitCmd("SIN", "r", "r", CalcSIN, CompareAbsolute4eps, ShowRR);
+	InitCmd("COS", "r", "r", CalcCOS, CompareAbsolute4eps, ShowRR);
+	InitCmd("SQRT", "r", "r", CalcSQRT, CompareRelative1eps, ShowRR);
+	InitCmd("EXP", "r", "r", CalcEXP, CompareRelative31eps, ShowRR);
+	InitCmd("LN", "r", "r", CalcLN, CompareRelative9eps, ShowRR);
+	InitCmd("ARCTAN", "r", "r", CalcARCTAN, CompareRelative3eps, ShowRR);
+	InitCmd("ARCTAN2", "rr", "r", CalcARCTAN2, CompareRelative3eps, ShowRRR);
+	
+	(* double precision commands *)
+	InitCmd("ABSD", "lr", "lr", CalcABSD, CompareLR, NIL);
+	InitCmd("NEGD", "lr", "lr", CalcNEGD, CompareLR, NIL);
+	InitCmd("ADDD", "lrlr", "lr", CalcADDD, CompareRelative1epsLR, ShowLRLRLR);
+	InitCmd("SUBD", "lrlr", "lr", CalcSUBD, CompareRelative1epsLR, ShowLRLRLR);
+	InitCmd("MULD", "lrlr", "lr", CalcMULD, CompareRelative1epsLR, ShowLRLRLR);
+	InitCmd("DIVD", "lrlr", "lr", CalcDIVD, CompareLR, ShowLRLRLR);
+	InitCmd("LOWERD", "lrlr", "b", CalcLOWERD, CompareB, NIL);
+	InitCmd("FLOATD", "i", "lr", CalcFLOATD, CompareLR, NIL);
+	InitCmd("FIXD", "lr", "i", CalcFIXD, CompareI, NIL);
+	InitCmd("SINGLED", "lr", "r", CalcSINGLED, CompareR, ShowLRR);
+	InitCmd("DOUBLED", "r", "lr", CalcDOUBLED, CompareLR, ShowRLR);
+	
+	(* test vectors *)
+	filenames[0] := "MathTest.val";
+	filenames[1] := "FPE64Test.val";
+END TestMathLong.
+
+TestMathLong.Run
+TestMath
+
+PET.Open MathTest.val 
+

@@ -1,0 +1,139 @@
+MODULE KernelUtils;
+
+(* ----------------------------------------------------------------------------------------------------------------------- *)
+(* SYSTEM and KERNEL ACCESS FROM THE APPLICATION LAYER GO THROUGH THIS MODULE *)
+(* ----------------------------------------------------------------------------------------------------------------------- *)
+
+IMPORT SYSTEM, Bit, Clocks;
+
+VAR
+	tickDivisor : REAL;
+
+
+PROCEDURE IsValidSetParameter*( CONST value : LONGINT ) : BOOLEAN;
+VAR
+	res : BOOLEAN;
+BEGIN
+	res:=TRUE;
+	IF ( value < 0 ) OR ( value > 31 ) THEN
+		res:=FALSE;
+	END;
+	RETURN res
+END IsValidSetParameter;
+
+PROCEDURE GetSetAsInteger*( CONST value : SET ): LONGINT;
+VAR
+	res : LONGINT;
+BEGIN
+	res:=0;
+	res:=SYSTEM.VAL( LONGINT, value );
+	RETURN res
+END GetSetAsInteger;
+
+PROCEDURE GetIntegerAsSet*( CONST value : LONGINT ): SET;
+VAR
+	res : SET;
+BEGIN
+	res:={};
+	res:=SYSTEM.VAL( SET, value );
+	RETURN res
+END GetIntegerAsSet;
+
+PROCEDURE GetIntegerAsChar*( CONST value : LONGINT ): CHAR;
+VAR 
+	c : CHAR;
+BEGIN
+	c:=0X;
+	c:=SYSTEM.VAL(CHAR, value);
+	RETURN c
+END GetIntegerAsChar;
+
+PROCEDURE GetCharAsSet*( CONST value : CHAR ) : SET;
+VAR 
+	s : SET;
+BEGIN
+	s:={};
+	s:=SYSTEM.VAL(SET, value);
+	RETURN s
+END GetCharAsSet;
+
+PROCEDURE GetSetAsChar*( CONST value : SET ): CHAR;
+VAR 
+	c : CHAR;
+BEGIN
+	c:=0X;
+	c:=SYSTEM.VAL(CHAR, value);
+	RETURN c
+END GetSetAsChar;
+
+
+PROCEDURE GetOsTimer*() : LONGINT;
+BEGIN
+(*
+
+TODO 
+
+*)
+	RETURN  0;
+END GetOsTimer;
+
+PROCEDURE Ticks2Micros*( CONST ticks : LONGINT )  : LONGINT;
+VAR
+	res : LONGINT;
+BEGIN
+	RETURN ENTIER( ticks/tickDivisor );
+END Ticks2Micros;
+
+PROCEDURE GetTime*() : LONGINT;
+BEGIN
+(*
+	TODO
+*)
+	RETURN 0;
+END GetTime;
+
+PROCEDURE GetMem32*( CONST adr : LONGINT; VAR mem : LONGINT );
+BEGIN
+	SYSTEM.GET( adr, mem );
+END GetMem32;
+
+PROCEDURE GetSetMem32*( CONST adr : LONGINT; VAR mem : SET );
+BEGIN
+	SYSTEM.GET( adr, mem );
+END GetSetMem32;
+
+PROCEDURE PutMem32*( CONST adr : LONGINT; CONST mem : LONGINT );
+BEGIN
+	SYSTEM.PUT( adr, mem );
+END PutMem32;
+
+PROCEDURE GetIntAsReal*( CONST i : LONGINT ): REAL;
+BEGIN
+	RETURN SYSTEM.VAL(REAL,i)
+END GetIntAsReal;
+
+PROCEDURE GetIntLittleEndian*( CONST input : LONGINT; VAR output : ARRAY OF CHAR; VAR result : LONGINT );
+VAR i, tmpdata: LONGINT;
+BEGIN
+	tmpdata:=input;
+	IF ( LEN(output) = 4 ) THEN
+		FOR i:=0 TO 3 DO
+			output[i] := CHR( tmpdata );
+			tmpdata := tmpdata DIV 100H; 
+		END;
+		result:=0;
+	ELSE
+		result:=-1;
+	END;
+END GetIntLittleEndian;
+	
+BEGIN
+	tickDivisor := Clocks.GetTimerClock() / 1000000;
+END KernelUtils.
+
+(* ----------------------------------------------------------------------------------------------------------------------- *)
+(* END OF MODULE *)
+(* ----------------------------------------------------------------------------------------------------------------------- *)
+
+
+

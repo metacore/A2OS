@@ -1,0 +1,154 @@
+MODULE GlobalTimer; 
+
+IMPORT Platform, SYSTEM, Bit, KernelUtils, Trace;
+
+CONST
+	COMPAUTOINC 	= 3;
+	IRQENABLE		= 2;
+	COMPENABLE		= 1;
+	TIMERENABLE		= 0;
+
+	
+
+VAR
+
+
+PROCEDURE EnableTimer*();
+VAR
+	reg : SET;
+BEGIN
+	SYSTEM.PUT32( Platform.GlobalTimerCounterRegister0, 0 );
+	SYSTEM.PUT32( Platform.GlobalTimerCounterRegister1, 0 );
+	SYSTEM.GET( 	Platform.GlobalTimerControlRegister, reg );
+	reg := reg + { TIMERENABLE };
+	SYSTEM.PUT( 	Platform.GlobalTimerControlRegister, reg );
+END EnableTimer;
+
+PROCEDURE DisableTimer*();
+VAR
+	reg : SET;
+BEGIN
+	SYSTEM.GET( 	Platform.GlobalTimerControlRegister, reg );
+	reg := reg - { TIMERENABLE };
+	SYSTEM.PUT( 	Platform.GlobalTimerControlRegister, reg );
+END DisableTimer;
+
+PROCEDURE ShowTimer*();
+CONST 
+	COFF = 22;	
+	
+VAR
+	sreg : SET;
+	reg : LONGINT;
+BEGIN
+
+	Trace.Ln;
+	Trace.Ln;
+	Trace.StringLn("*** Global Timer Configuration ***");
+	Trace.Ln;
+	Trace.Ln;
+	
+	(* load the timer control register *)
+	SYSTEM.GET( Platform.GlobalTimerControlRegister, sreg );
+	
+	(* show the boolean flags of the timer *)
+	Trace.StringA("Timer Enabled", COFF, TRUE );
+	IF ( TIMERENABLE IN sreg ) THEN
+		Trace.StringLn("TRUE");
+	ELSE
+		Trace.StringLn("FALSE");
+	END;
+	Trace.StringA("Compare Enabled", COFF, TRUE );
+	IF ( COMPENABLE IN sreg ) THEN
+		Trace.StringLn("TRUE");
+	ELSE
+		Trace.StringLn("FALSE");
+	END;
+	Trace.StringA("IRQ Enabled", COFF, TRUE );
+	IF ( IRQENABLE IN sreg ) THEN
+		Trace.StringLn("TRUE");
+	ELSE
+		Trace.StringLn("FALSE");
+	END;
+	
+	Trace.StringA("Auto Inc Enabled", COFF, TRUE );
+	IF ( COMPAUTOINC IN sreg ) THEN
+		Trace.StringLn("TRUE");
+	ELSE
+		Trace.StringLn("FALSE");
+	END;
+	
+	
+	(* extract the divider used for the counter *)
+	reg := KernelUtils.GetSetAsInteger( sreg );
+	reg := reg DIV 100H;
+	reg := Bit.AND( reg, 0FFH );
+	Trace.StringA("Timer Prescaler", COFF, TRUE );
+	Trace.Int( reg, 3 ); Trace.Ln;
+
+
+END ShowTimer;
+
+PROCEDURE GetTimerValue( VAR upper, lower : LONGINT );
+VAR
+	high, low : LONGINT;
+	tmp : LONGINT;
+	running : BOOLEAN;
+BEGIN
+
+	high := 0;
+	running := TRUE;
+
+	SYSTEM.GET( Platform.GlobalTimerCounterRegister1, high );
+	
+	WHILE ( running ) DO
+		SYSTEM.GET( Platform.GlobalTimerCounterRegister0, low );
+		SYSTEM.GET( Platform.GlobalTimerCounterRegister1, tmp );
+		IF ( tmp = high ) THEN
+			running := FALSE;
+		ELSE
+			high := tmp;
+		END;	
+	END;
+	
+	(* assign the values and exit *)
+	upper := high;
+	lower := low;
+		
+END GetTimerValue;
+
+PROCEDURE GetTimerLowValue*() : LONGINT;
+VAR
+	high, low : LONGINT;
+BEGIN
+	GetTimerValue( high, low );
+	RETURN low;
+END GetTimerLowValue;
+
+PROCEDURE GetTime*(): HUGEINT;
+TYPE
+	Hugeint = ARRAY 2 OF LONGINT;
+VAR
+	time: HUGEINT;
+BEGIN
+	GetTimerValue(SYSTEM.VAL(Hugeint, time)[1], SYSTEM.VAL(Hugeint, time)[0]);
+	RETURN time
+END GetTime;
+
+PROCEDURE ShowValue*();
+VAR
+	high, low : LONGINT;
+BEGIN
+	GetTimerValue( high, low );
+	Trace.Ln;
+	Trace.StringLn("Timer Values");
+	Trace.Int( high, 8 ); Trace.Ln;
+	Trace.Int( low, 8 ); Trace.Ln;
+	Trace.Ln;
+END ShowValue;
+
+BEGIN
+END GlobalTimer.
+
+GlobalTimer.ShowValue
+GlobalTimer.ShowTimer

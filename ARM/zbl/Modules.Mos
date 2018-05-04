@@ -1,0 +1,283 @@
+(* ported version of Minos to work with the ARM backend of the Fox Compiler Suite *)
+MODULE Modules;
+
+(*@
+	001 2007-03-20 fn: New version based on old Modules Module, adapted to new compiler
+*)
+
+IMPORT SYSTEM, Kernel, Platform, OFS, Strings, Heaps, Caches, Trace;
+	
+	CONST
+		OK*= 0; NOTFOUND* = 1; NOTARM* = 2;  WRONGKEY*=3; NOMEMORY* = 4;
+		(* Linking *)
+		 MAXIMPS = 256;
+		C16 = 10000H; C24 = 1000000H;
+
+TYPE Name = ARRAY 32 OF CHAR;
+
+	Command* = POINTER TO CommandDesc;
+	CommandDesc = RECORD
+		next*: Command;
+		offset: LONGINT;
+		name*: Name
+	END;
+	
+	EntryTable = POINTER TO EntryTableDesc;
+	EntryTableDesc = RECORD
+		entry: ARRAY 256 OF LONGINT
+	END;
+
+	Module* = POINTER TO ModuleDesc;
+	ModuleDesc = RECORD 
+		next*: Module;
+		key: LONGINT;				(* Unique key of Module *)
+		dbase, pbase*: LONGINT;		(* dbase : Base address of Module Variables, pbase: Base address of code *)
+		size*, refcnt*: LONGINT;		(* size: code size in bytes, rofcnt: reference counter *)
+		command*: Command;		(* First command *)
+		entrytable: EntryTable;		(* Array containing the offset rel to pbase for each exported function *)
+		name*: Name				(* Name of module *)
+	END;
+
+VAR root*: Module;
+	res*: LONGINT; 
+	errstring*: ARRAY 32 OF CHAR;
+	
+	
+PROCEDURE GetRes*(VAR err: ARRAY OF CHAR): LONGINT;
+BEGIN
+	Strings.Copy(errstring, err);
+	RETURN res
+END GetRes;
+
+PROCEDURE JoinExtension (CONST name, extension: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
+VAR i, j: LONGINT;
+BEGIN
+	i := 0; WHILE name[i] # 0X DO fullname[i] := name[i]; INC(i) END;
+	j := 0; WHILE extension[j] # 0X DO fullname[i] := extension[j]; INC(i); INC(j) END;
+	fullname[i] := 0X
+END JoinExtension;
+
+PROCEDURE MakeName (CONST name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
+BEGIN JoinExtension (name, ".arm", fullname)
+END MakeName;
+
+PROCEDURE ReadString (VAR r: OFS.Rider; VAR string: ARRAY OF CHAR);
+VAR ch: CHAR; i: LONGINT;
+BEGIN i := 0;
+	REPEAT OFS.Read (r, ch); string[i] := ch; INC (i) UNTIL ch = 0X;
+END ReadString;
+
+PROCEDURE Fixup(pbase, fixloc, offset, base: LONGINT; CONST entry: ARRAY OF LONGINT);
+	VAR instr, next, pno, vno, reg, disp: LONGINT;
+BEGIN
+(*
+	Trace.Ln;
+	Trace.String("Fixup : pbase : "); Trace.Hex( pbase, -8 ); Trace.String(", fixloc : "); Trace.Hex( fixloc, -8 ); Trace.String(", offset : "); Trace.Hex( offset, -8 ); Trace.String(", base : "); Trace.Hex( base, -8 ); Trace.Ln;
+*)
+	WHILE fixloc # 0 DO
+		SYSTEM.GET (pbase + fixloc*4, instr); next := instr MOD LONGINT( 10000H );
+		pno := instr DIV LONGINT( 10000H ) MOD LONGINT( 100H );
+		IF instr DIV LONGINT( 1000000H ) MOD LONGINT( 100H ) = LONGINT( 0EBH ) THEN  (* case  BL *)
+			instr := instr DIV LONGINT( 1000000H ) * LONGINT( 1000000H ) + LONGINT(entry[pno] + offset - fixloc - 2) MOD LONGINT( 1000000H );
+		(*ELSIF instr DIV 1000000H = 0 THEN (*indir. variable address*) instr := entry[pno] + base*)
+		ELSE (*indir. proc. address*) instr := LONGINT( entry[pno]*4 ) + base
+		END ;
+		SYSTEM.PUT (pbase + fixloc*4, instr); fixloc := next
+	END
+END Fixup;
+
+PROCEDURE FixSelf (pbase, fixloc, base: LONGINT);
+	VAR instr, next: LONGINT;
+BEGIN
+(*
+	Trace.Ln;
+	Trace.String("FixSelf : pbase : "); Trace.Hex( pbase, -8 ); Trace.String(", fixloc : "); Trace.Hex( fixloc, -8 ); Trace.String(", base : "); Trace.Hex( base, -8 ); Trace.Ln;
+*)
+	WHILE fixloc # 0 DO
+		SYSTEM.GET (pbase+fixloc*4, instr); next := instr MOD 10000H;
+		SYSTEM.PUT (pbase+fixloc*4, instr DIV 10000H * 4 + base);
+		fixloc := next;
+	END
+END FixSelf;
+
+PROCEDURE FindModule*(CONST name: ARRAY OF CHAR; VAR m: Module);
+BEGIN m := root;
+	WHILE (m # NIL) & ~Strings.EqualIgnoreCase(m.name, name) DO m := m.next END;
+END FindModule;
+
+PROCEDURE Call (m: Module; entry: LONGINT);
+VAR 
+	p: PROCEDURE;
+BEGIN 
+	SYSTEM.PUT ( ADDRESSOF( p ), m.pbase + entry * 4); p
+END Call;
+
+PROCEDURE CallP*(m: Module; CONST pname: ARRAY OF CHAR): BOOLEAN;
+VAR cmd: Command;
+BEGIN cmd := m.command;
+	WHILE (cmd # NIL) & (cmd.name # pname) DO cmd := cmd.next END;
+	IF cmd # NIL THEN Call (m, cmd.offset) END;
+	RETURN cmd # NIL
+END CallP;
+
+PROCEDURE PrintModuleInfo*( m: Module );
+VAR	
+	c : Command;
+	i : LONGINT;
+	doLoop : BOOLEAN;
+BEGIN
+	IF m # NIL THEN
+		(*Trace.String("Module: "); Trace.StringLn(m.name);
+		Trace.String("size "); Trace.Int( m.size, 3 ); Trace.Ln;
+		Trace.String("dbase: "); Trace.Hex( m.dbase, -8 ); Trace.Ln;
+		Trace.String("pbase: "); Trace.Hex( m.pbase, -8 ); Trace.Ln;
+		Trace.Memory( m.pbase, m.size );
+		Trace.StringLn("Commands:");*)
+		c := m.command;
+		WHILE ( c # NIL ) DO
+			(*Trace.String( c.name ); Trace.String(", "); Trace.Hex( c.offset, -8 ); Trace.String(", abs "); Trace.Hex( m.pbase+c.offset, -8 ); Trace.Ln;*)
+			c := c.next;
+		END;
+		(*Trace.Ln;
+		Trace.StringLn("Entry Table : ");*)
+		i := 0; doLoop :=TRUE;
+		WHILE ( i < 256 ) & ( doLoop ) DO
+			IF ( i > 3 ) THEN
+				IF ( m.entrytable.entry[ i ] = 0 ) THEN
+					doLoop := FALSE;
+				END;
+			END;
+			(*Trace.Int( i , 3 ); Trace.String(": "); Trace.Hex( m.entrytable.entry[ i ], -8 ); Trace.String(", abs : "); Trace.Hex( m.entrytable.entry[ i ]+m.pbase, -8 ); Trace.Ln;*)
+			INC( i );
+		END;
+		(*Trace.Ln;*)
+	END;
+END PrintModuleInfo;
+
+(* Remove a module from the free module list *)
+(* PROCEDURE RemoveMod(mod: Module);
+VAR
+	m, prevMod: Module;
+BEGIN
+	m := mod;
+	IF m = root THEN
+		root := root.next;
+	ELSE
+		REPEAT
+			prevMod := m;
+			m := m.next;
+		UNTIL (m = NIL) OR (m = mod);
+		
+		IF m = mod THEN prevMod.next := m.next; END;
+	END;
+END RemoveMod;
+*)
+
+PROCEDURE ThisMod* (CONST modname: ARRAY OF CHAR; VAR mod: Module);
+VAR imp: Module; cmd: Command;
+	nofimp, nofentries, codelen, fix, fixself, i, j, base: LONGINT;
+	f: OFS.File; r: OFS.Rider; err: BOOLEAN;
+	name: ARRAY 32 OF CHAR;
+	key, offset, datasize: LONGINT;
+	import: ARRAY MAXIMPS OF Module;
+	fixroot: ARRAY MAXIMPS OF LONGINT;
+	tempMod: Module;
+BEGIN 
+	mod := root; res := OK;
+	WHILE (mod # NIL) & (mod.name # modname) DO mod := mod.next; END;
+	IF mod = NIL THEN  (*load*)
+		MakeName (modname, name);
+		f := OFS.Old(name);
+		IF f = NIL THEN
+			mod:=NIL; res := NOTFOUND; Strings.Copy (name, errstring);
+		ELSE
+			OFS.Set(r, f, 0);
+			NEW(mod); mod.next := root; mod.refcnt := 0; root := mod;
+			ReadString (r, mod.name);
+			OFS.ReadInt (r, mod.key);
+			OFS.ReadInt (r, fixself);
+			ReadString (r, name); err := FALSE; i := 0;
+			(*Trace.String("Load "); Trace.String( name ); Trace.StringLn(", done.");*)
+			WHILE (name[0] # 0X) & (res = OK) DO
+				OFS.ReadInt (r, key); OFS.ReadInt (r, fix);
+				ThisMod (name, imp);
+				IF imp # NIL THEN
+					IF key = imp.key THEN
+						import[i] := imp; INC (imp.refcnt); fixroot[i] := fix; INC(i)
+					ELSE 
+						res := WRONGKEY; Strings.Copy (name, errstring); (* RemoveMod(mod); *) mod := NIL;
+					END
+				END;
+				ReadString (r, name);
+			END;
+			nofimp := i;
+			
+			(*Trace.StringLn("Imports Done.");*)
+			
+			IF res = OK THEN
+				i := 0;
+				mod.command := NIL;
+				ReadString (r, name);
+				WHILE name[0] # 0X DO
+					NEW (cmd); cmd.next := mod.command; mod.command := cmd;
+					OFS.ReadInt (r, cmd.offset); cmd.name := name; 
+					ReadString (r, name);
+				END;
+				
+				OFS.ReadInt (r,  nofentries); NEW (mod.entrytable); 
+		
+				FOR i:=0 TO 255 DO
+					mod.entrytable.entry[0] := 0;
+				END;
+						
+				OFS.ReadInt (r, mod.entrytable.entry[0]); 
+				i := 0;
+				WHILE i < nofentries DO 
+					INC(i); 
+					OFS.ReadInt(r,  mod.entrytable.entry[i]); 
+				END ;
+				
+				(*Trace.StringLn("Entry Table done.");*)
+				
+				OFS.ReadInt (r, datasize); 
+				Heaps.Alloc(mod.dbase, datasize);
+				base := mod.dbase; WHILE datasize # 0 DO SYSTEM.PUT (base, 0); DEC (datasize, 4); INC (base, 4) END;
+				OFS.ReadInt (r, codelen); mod.size := codelen * 4; 
+				
+				(*Trace.StringLn("Data Section done.");*)
+				
+				Heaps.Alloc(mod.pbase, mod.size);
+				base := mod.pbase; WHILE codelen # 0 DO OFS.ReadInt (r, i); SYSTEM.PUT (base, i); DEC (codelen); INC (base, 4) END;
+				FixSelf(mod.pbase, fixself, mod.pbase); i := 0;
+				WHILE i < nofimp DO
+					offset := import[i].pbase - mod.pbase;
+					Fixup(mod.pbase, fixroot[i], (import[i].pbase - mod.pbase) DIV 4, import[i].pbase, import[i].entrytable.entry); INC(i);
+				END;
+				
+				(*Trace.StringLn("Code Section done.");*)
+				
+				(*
+				FOR i := 0 TO mod.size-1 BY 4 DO
+					SYSTEM.GET(mod.pbase+i*4, j);
+				END;
+				*)
+				
+				(* make sure all the data is flushed before we try and call the program *)
+				Caches.CleanDCacheRange( mod.pbase, mod.size );
+				(*Trace.StringLn("Cache flushed.");*)
+			
+				Call ( mod, mod.entrytable.entry[0] ); 
+				(*Trace.StringLn("Call done.");*)
+				
+			ELSE
+				(* Failed to load module, therefore remove it from the list of loaded modules *)
+				(* RemoveMod(mod); *)
+ 			END;
+			OFS.Close (f);
+		END;
+	END;
+END ThisMod;
+
+BEGIN
+	SYSTEM.GET ( Platform.ModRoot, root );
+END Modules.

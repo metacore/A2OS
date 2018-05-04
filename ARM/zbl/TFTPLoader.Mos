@@ -1,0 +1,32 @@
+MODULE TFTPLoader; (** AUTHOR "Timothée Martiel"; PURPOSE "Module implementing file loading using TFTP for the Zynq Bootloader"; *)
+
+IMPORT
+	EnetBase, EnetTftp,
+	Loader;
+
+VAR
+	tx: EnetTftp.Transfer;
+
+	(** TFTP Loader *)
+	PROCEDURE Load (CONST name, host: ARRAY OF CHAR);
+	VAR
+		src: EnetBase.IpAddr;
+		ignore: LONGINT;
+	BEGIN
+		IF ~EnetBase.StrToIpAddr(host, src) THEN Loader.NotifyDone(Loader.InvalidHost); RETURN END;
+		IF ~EnetTftp.ReadFile(tx, name, "octet", src, TftpReceiver, NIL, ignore) THEN Loader.NotifyDone(Loader.ImageTransferError) END
+	END Load;
+
+	(** Handler for TFTP protocol *)
+	PROCEDURE TftpReceiver (transfer: EnetTftp.Transfer; VAR buf: ARRAY OF CHAR; ofs, len, res: LONGINT; packet: EnetBase.Packet; endOfFile: BOOLEAN);
+	BEGIN
+		ASSERT(transfer = tx);
+		IF (res = 0) & (len > 0) THEN
+			Loader.CopyToRam(buf, ofs, len)
+		END;
+		IF endOfFile & ~Loader.error THEN Loader.NotifyDone(res) END
+	END TftpReceiver;
+
+BEGIN
+	Loader.RegisterLoader("TFTP", Load)
+END TFTPLoader.

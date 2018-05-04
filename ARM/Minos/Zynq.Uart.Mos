@@ -1,0 +1,396 @@
+MODULE Uart;
+(**
+	AUTHOR: Alexey Morozov, HighDim GmbH, 2013
+	PURPOSE: implementation of the driver for Xilinx Zynq UART PS controller
+*)
+
+IMPORT
+	SYSTEM, Platform := MinosPlatform;
+
+CONST
+	DefaultBaudrate* = 115200; (** defauilt UART baudrate *)
+	
+	(*! TO BE REMOVED (BEGIN) a workaround for problem with linking Platform (duplicated section) *)
+	UartBaseAddr* = [ADDRESS(0E0000000H),ADDRESS(0E0001000H)]; (* base address for all UART controllers present in the system *)
+	UartModemPinsConnected* = [FALSE,FALSE];
+	(*! TO BE REMOVED (END) *)
+
+	(** Register offsets for the UART controller *)
+	XUARTPS_CR_OFFSET = 000H;  (** Control Register [8:0] *)
+	XUARTPS_MR_OFFSET = 004H;  (* Mode Register [9:0] *)
+	XUARTPS_IER_OFFSET = 008H;  (* Interrupt Enable [12:0] *)
+	XUARTPS_IDR_OFFSET = 00CH;  (* Interrupt Disable [12:0] *)
+	XUARTPS_IMR_OFFSET = 010H;  (* Interrupt Mask [12:0] *)
+	XUARTPS_ISR_OFFSET = 014H;  (* Interrupt Status [12:0]*)
+	XUARTPS_BAUDGEN_OFFSET = 018H;  (* Baud Rate Generator [15:0] *)
+	XUARTPS_RXTOUT_OFFSET = 01CH;  (* RX Timeout [7:0] *)
+	XUARTPS_RXWM_OFFSET = 020H;  (* RX FIFO Trigger Level [5:0] *)
+	XUARTPS_MODEMCR_OFFSET = 024H;  (* Modem Control [5:0] *)
+	XUARTPS_MODEMSR_OFFSET = 028H;  (* Modem Status [8:0] *)
+	XUARTPS_SR_OFFSET = 02CH;  (* Channel Status [14:0] *)
+	XUARTPS_FIFO_OFFSET = 030H;  (* FIFO [7:0] *)
+	XUARTPS_BAUDDIV_OFFSET = 034H;  (* Baud Rate Divider [7:0] *)
+	XUARTPS_FLOWDEL_OFFSET = 038H;  (* Flow Delay [5:0] *)
+	XUARTPS_TXWM_OFFSET = 044H;  (* TX FIFO Trigger Level [5:0] *)
+
+
+	 (* Control Register Bit Definition
+
+	 	The Control register (CR) controls the major functions of the device.
+	 *)
+	XUARTPS_CR_STOPBRK = 000000100H; (* Stop transmission of break *)
+	XUARTPS_CR_STARTBRK = 000000080H; (* Set break *)
+	XUARTPS_CR_TORST = 000000040H; (* RX timeout counter restart *)
+	XUARTPS_CR_TX_DIS = 000000020H; (* TX disabled. *)
+	XUARTPS_CR_TX_EN = 000000010H; (* TX enabled *)
+	XUARTPS_CR_RX_DIS = 000000008H; (* RX disabled. *)
+	XUARTPS_CR_RX_EN = 000000004H; (* RX enabled *)
+	XUARTPS_CR_EN_DIS_MASK = 00000003CH; (* Enable/disable Mask *)
+	XUARTPS_CR_TXRST = 000000002H; (* TX logic reset *)
+	XUARTPS_CR_RXRST = 000000001H; (* RX logic reset *)
+
+
+
+	(* Mode Register Bit Definition
+
+		The mode register (MR) defines the mode of transfer as well as the data
+		format. If this register is modified during transmission or reception,
+		data validity cannot be guaranteed.
+	*)
+	XUARTPS_MR_CCLK = 000000400H; (* Input clock selection *)
+	XUARTPS_MR_CHMODE_R_LOOP = 000000300H; (* Remote loopback mode *)
+	XUARTPS_MR_CHMODE_L_LOOP = 000000200H; (* Local loopback mode *)
+	XUARTPS_MR_CHMODE_ECHO = 000000100H; (* Auto echo mode *)
+	XUARTPS_MR_CHMODE_NORM = 000000000H; (* Normal mode *)
+	XUARTPS_MR_CHMODE_SHIFT = 8; (* Mode shift *)
+	XUARTPS_MR_CHMODE_MASK = 000000300H; (* Mode mask *)
+	XUARTPS_MR_STOPMODE_2_BIT = 000000080H; (* 2 stop bits *)
+	XUARTPS_MR_STOPMODE_1_5_BIT = 000000040H; (* 1.5 stop bits *)
+	XUARTPS_MR_STOPMODE_1_BIT = 000000000H; (* 1 stop bit *)
+	XUARTPS_MR_STOPMODE_SHIFT = 6; (* Stop bits shift *)
+	XUARTPS_MR_STOPMODE_MASK = 0000000A0H; (* Stop bits mask *)
+	XUARTPS_MR_PARITY_NONE = 000000020H; (* No parity mode *)
+	XUARTPS_MR_PARITY_MARK = 000000018H; (* Mark parity mode *)
+	XUARTPS_MR_PARITY_SPACE = 000000010H; (* Space parity mode *)
+	XUARTPS_MR_PARITY_ODD = 000000008H; (* Odd parity mode *)
+	XUARTPS_MR_PARITY_EVEN = 000000000H; (* Even parity mode *)
+	XUARTPS_MR_PARITY_SHIFT = 3; (* Parity setting shift *)
+	XUARTPS_MR_PARITY_MASK = 000000038H; (* Parity mask *)
+	XUARTPS_MR_CHARLEN_6_BIT = 000000006H; (* 6 bits data *)
+	XUARTPS_MR_CHARLEN_7_BIT = 000000004H; (* 7 bits data *)
+	XUARTPS_MR_CHARLEN_8_BIT = 000000000H; (* 8 bits data *)
+	XUARTPS_MR_CHARLEN_SHIFT = 1; (* Data Length shift *)
+	XUARTPS_MR_CHARLEN_MASK = 000000006H; (* Data length mask *)
+	XUARTPS_MR_CLKSEL = 000000001H; (* Input clock selection *)
+
+	(** Interrupt Registers
+
+		Interrupt control logic uses the interrupt enable register (IER) and the
+		interrupt disable register (IDR) to set the value of the bits in the
+		interrupt mask register (IMR). The IMR determines whether to pass an
+		interrupt to the interrupt status register (ISR).
+		Writing a 1 to IER Enbables an interrupt, writing a 1 to IDR disables an
+		interrupt. IMR and ISR are read only, and IER and IDR are write only.
+		Reading either IER or IDR returns 0x00.
+
+		All four registers have the same bit definitions.
+	*)
+	XUARTPS_IXR_TOVR	= 000001000H; (** Tx FIFO Overflow interrupt *)
+	XUARTPS_IXR_TNFUL	= 000000800H; (** Tx FIFO Nearly Full interrupt *)
+	XUARTPS_IXR_TTRIG	= 000000400H; (** Tx Trig interrupt *)
+	XUARTPS_IXR_DMS		= 000000200H; (** Modem status change interrupt *)
+	XUARTPS_IXR_TOUT	= 000000100H; (** Timeout error interrupt *)
+	XUARTPS_IXR_PARITY 	= 000000080H; (** Parity error interrupt *)
+	XUARTPS_IXR_FRAMING	= 000000040H; (** Framing error interrupt *)
+	XUARTPS_IXR_OVER	= 000000020H; (** Overrun error interrupt *)
+	XUARTPS_IXR_TXFULL 	= 000000010H; (** TX FIFO full interrupt. *)
+	XUARTPS_IXR_TXEMPTY	= 000000008H; (** TX FIFO empty interrupt. *)
+	XUARTPS_IXR_RXFULL 	= 000000004H; (** RX FIFO full interrupt. *)
+	XUARTPS_IXR_RXEMPTY	= 000000002H; (** RX FIFO empty interrupt. *)
+	XUARTPS_IXR_RXOVR  	= 000000001H; (** RX FIFO trigger interrupt. *)
+	XUARTPS_IXR_MASK	= 000001FFFH; (** Valid bit mask *)
+
+	(** Channel Status Register
+
+		The channel status register (CSR) is provided to enable the control logic
+		to monitor the status of bits in the channel interrupt status register,
+		even if these are masked out by the interrupt mask register.
+	*)
+	XUARTPS_SR_TNFUL =	000004000H; (** TX FIFO Nearly Full Status *)
+	XUARTPS_SR_TTRIG	 =	000002000H; (** TX FIFO Trigger Status *)
+	XUARTPS_SR_FLOWDEL =	000001000H; (** RX FIFO fill over flow delay *)
+	XUARTPS_SR_TACTIVE =	000000800H; (** TX active *)
+	XUARTPS_SR_RACTIVE =	000000400H; (** RX active *)
+	XUARTPS_SR_DMS	 =	000000200H; (** Delta modem status change *)
+	XUARTPS_SR_TOUT	 =	000000100H; (** RX timeout *)
+	XUARTPS_SR_PARITY =	000000080H; (** RX parity error *)
+	XUARTPS_SR_FRAME =	000000040H; (** RX frame error *)
+	XUARTPS_SR_OVER	 =	000000020H; (** RX overflow error *)
+	XUARTPS_SR_TXFULL =	000000010H; (** TX FIFO full *)
+	XUARTPS_SR_TXEMPTY =	000000008H; (** TX FIFO empty *)
+	XUARTPS_SR_RXFULL =	000000004H; (** RX FIFO full *)
+	XUARTPS_SR_RXEMPTY =	000000002H; (** RX FIFO empty *)
+	XUARTPS_SR_RXOVR =	000000001H; (** RX FIFO fill over trigger *)
+
+
+	(* The following constant defines the amount of error that is allowed for
+		a specified baud rate. This error is the difference between the actual
+		baud rate that will be generated using the specified clock and the
+		desired baud rate.
+	*)
+	XUARTPS_MAX_BAUD_ERROR_RATE = 3;	(* max % error allowed *)
+
+TYPE
+
+	(** Configuration information about a controller used for initializing UartPs controller *)
+	UartPsCfg* = RECORD
+		baseAddr*: ADDRESS; (** base address *)
+		inputClockHz*: LONGINT; (** controller input clock rate in Hz *)
+		modemPinsConnected*: BOOLEAN; (** TRUE if modem pins connected via MIO or EMIO *)
+	END;
+
+	(** UART controller descriptor *)
+	Uart* = RECORD
+		cfg-: UartPsCfg;
+		baudrate-: LONGINT; (** current baudrate value *)
+		intrEnabled-: BOOLEAN; (** TRUE if TX/RX interrupt handling is enabled, FALSE by default *)
+	END;
+
+	UartPtr* = POINTER TO Uart;
+
+VAR
+	uarts-: ARRAY 2 OF UartPtr; (*uarts-: POINTER TO ARRAY OF UartPtr;*) (*! array allocation is not yet supported *)
+
+	(**
+		Initialize a UART controller given its configuration information
+	*)
+	PROCEDURE Init*(VAR uart: Uart; CONST cfg: UartPsCfg);
+	VAR
+		res: LONGINT;
+	BEGIN
+		uart.cfg := cfg;
+
+		(* disable all UART interrupts *)
+		SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_IDR_OFFSET,0FFFFFFFFH);
+
+		uart.intrEnabled := FALSE;
+
+		(* Set the default baudrate *)
+		SetBaudrate(uart,DefaultBaudrate,res);
+	END Init;
+
+	(**
+		Set UART baudrate
+
+		res: error code, 0 in case of success
+	*)
+	PROCEDURE SetBaudrate*(VAR uart: Uart; CONST baudrate: LONGINT; VAR res: LONGINT);
+	VAR
+		reg: SET;
+		inputClk: LONGINT;
+		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
+		bestError, bestBRGR, bestBAUDDIV: LONGINT;
+	BEGIN
+		(*
+			Make sure the baud rate is not impossilby large.
+	 		Fastest possible baud rate is Input Clock / 2
+		*)
+		IF baudrate*2 > uart.cfg.inputClockHz THEN res := 1; RETURN; END;
+
+		inputClk := uart.cfg.inputClockHz;
+
+		(* Check whether the input clock is divided by 8 *)
+		reg := SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_MR_OFFSET));
+		IF XUARTPS_MR_CLKSEL IN reg THEN
+			inputClk := inputClk  DIV 8;
+		END;
+
+		(* Determine the Baud divider. It can be 4 to 254.
+			Loop through all possible combinations *)
+		bestError := MAX(LONGINT);
+		FOR valBAUDDIV := 4 TO 255 DO
+
+			(* Calculate the value for BRGR register *)
+			valBRGR := inputClk DIV (baudrate * (valBAUDDIV + 1));
+
+			(* Calculate the baud rate from the BRGR value *)
+			calcBaudrate := inputClk DIV (valBRGR * (valBAUDDIV + 1));
+
+			(* Avoid unsigned integer underflow *)
+			IF baudrate > calcBaudrate THEN
+				baudError := baudrate - calcBaudrate;
+			ELSE
+				baudError := calcBaudrate - baudrate;
+			END;
+
+			(*
+				Find the calculated baud rate closest to requested baud rate.
+			*)
+			IF baudError < bestError THEN
+				bestBRGR := valBRGR;
+				bestBAUDDIV := valBAUDDIV;
+				bestError := baudError;
+			END;
+
+			INC(valBAUDDIV);
+		END;
+
+		(*
+			Make sure the best error is not too large.
+		*)
+		IF (bestError * 100) DIV baudrate > XUARTPS_MAX_BAUD_ERROR_RATE THEN (* baudrate error *)
+			res := 1; RETURN;
+		END;
+
+		(*
+			Disable TX and RX to avoid glitches when setting the baud rate.
+		*)
+		Enable(uart,FALSE);
+
+		(* write baudrate settings *)
+		SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_BAUDGEN_OFFSET,bestBRGR);
+		SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_BAUDDIV_OFFSET,bestBAUDDIV);
+
+		Enable(uart,TRUE);
+
+		uart.baudrate := baudrate;
+	END SetBaudrate;
+
+	(** Enable/Disable the transmitter and receiver of the UART *)
+	PROCEDURE Enable*(CONST uart: Uart; enable: BOOLEAN);
+	VAR reg: SET;
+	BEGIN
+		reg := SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_CR_OFFSET)) - SYSTEM.VAL(SET,XUARTPS_CR_EN_DIS_MASK);
+		IF enable THEN
+			reg := reg  + SYSTEM.VAL(SET,XUARTPS_CR_RX_EN) + SYSTEM.VAL(SET,XUARTPS_CR_TX_EN);
+		ELSE
+			reg := reg  + SYSTEM.VAL(SET,XUARTPS_CR_RX_DIS) + SYSTEM.VAL(SET,XUARTPS_CR_TX_DIS);
+		END;
+
+		SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_CR_OFFSET,reg);
+	END Enable;
+
+	(**
+		Send data to the UART
+	*)
+	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+	VAR csr: SET;
+	BEGIN
+
+		res := 0;
+
+		IF uart.intrEnabled THEN
+			(*
+				Disable the UART transmit interrupts to allow this call to stop a
+				previous operation that may be interrupt driven.
+			*)
+			SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_IDR_OFFSET,XUARTPS_IXR_TXEMPTY+XUARTPS_IXR_TXFULL);
+
+			HALT(100); (*! Not yet implemented! *)
+		ELSE
+
+			WHILE len > 0 DO
+
+				csr := SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_SR_OFFSET)); (* current state of Channel Status Register *)
+
+				IF csr * SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) # SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) THEN (* there is place for at minimum one byte in TX FIFO *)
+
+					SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_FIFO_OFFSET,ORD(buf[offs]));
+					INC(offs); DEC(len);
+
+					IF (len > 0) & (csr * SYSTEM.VAL(SET,XUARTPS_SR_TNFUL) # SYSTEM.VAL(SET,XUARTPS_SR_TNFUL)) THEN (* there is place for at minimum two bytes in TX FIFO *)
+						SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_FIFO_OFFSET,ORD(buf[offs]));
+						INC(offs); DEC(len);
+					END;
+				END;
+			END;
+
+		END;
+	END Send;
+
+	(**
+		Receive data from the UART
+	*)
+	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len, res: LONGINT);
+	BEGIN
+		res := 0;
+		len := 0;
+		min := MIN(size,min);
+		WHILE (min > 0) OR (Available(uart) > 0) DO
+			WHILE (size > 0) & (SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) # SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY)) DO
+				buf[offs] := CHR(SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_FIFO_OFFSET));
+				DEC(min); DEC(size); INC(offs); INC(len);
+			END;
+		END;
+	END Receive;
+
+	(** Send a single character to the UART
+
+		Remarks:
+		blocks until the transmit buffer is not full
+	*)
+	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: LONGINT);
+	BEGIN
+
+		(* Wait until there is space in TX FIFO *)
+		WHILE SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) = SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) DO
+		END;
+
+		(* Write the byte into the TX FIFO *)
+		SYSTEM.PUT32(uart.cfg.baseAddr+XUARTPS_FIFO_OFFSET,ORD(ch));
+	END SendChar;
+
+	(** Receive a single character from UART
+
+		Remarks:
+		blocks until a character is available
+	*)
+	PROCEDURE ReceiveChar*(CONST uart: Uart; VAR res: LONGINT): CHAR;
+	BEGIN
+
+		(* wait until data is available *)
+		WHILE SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) = SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) DO
+		END;
+
+		RETURN CHR(SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_FIFO_OFFSET));
+	END ReceiveChar;
+
+	(** Returns number of bytes available in the receive buffer *)
+	PROCEDURE Available*(CONST uart: Uart): LONGINT;
+	BEGIN
+		IF uart.intrEnabled THEN
+			HALT(100); (*! Not yet implemented! *)
+		ELSIF SYSTEM.VAL(SET,SYSTEM.GET32(uart.cfg.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) # SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) THEN
+			RETURN 1;
+		ELSE
+			RETURN 0;
+		END;
+	END Available;
+	
+	(** 
+		Install all UART controllers present in the system (according to the constants set in Platform); to be called by the Kernel 
+	*)
+	PROCEDURE Install*;
+	VAR
+		cfg: UartPsCfg;
+		i, res: LONGINT;
+	BEGIN
+		(*NEW(uarts,LEN(Platform.UartBaseAddr,0));*) (*! array allocation is not yet supported *)
+		FOR i := 0 TO LEN((*Platform.*)UartBaseAddr,0)-1 DO
+			NEW(uarts[i]);
+			cfg.baseAddr := (*Platform.*)UartBaseAddr[i];
+			cfg.inputClockHz := Platform.UartInputClockHz;
+			cfg.modemPinsConnected := (*Platform.*)UartModemPinsConnected[i];
+			Init(uarts[i]^,cfg);
+			SetBaudrate(uarts[i]^,115200,res);
+			Enable(uarts[i]^,FALSE); (* disable *)
+		END;
+		
+		(* enable only UART used for kernel output *)
+		IF Platform.KernelOutputUart >= 0 THEN
+			Enable(uarts[Platform.KernelOutputUart]^,TRUE);
+		END;
+	END Install;
+
+END Uart.
+

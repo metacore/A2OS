@@ -1,0 +1,50 @@
+MODULE A2ConfigProgrammer;
+(**
+	AUTHOR Timothée Martiel, 02/2016
+	PURPOSE A2 Configuration programmer for OEB
+*)
+
+IMPORT
+	SYSTEM,
+	Caches, StreamReaders, Trace,
+	Programmer;
+
+CONST
+	ConfigAddress = ADDRESS(1FFFF000H);
+	MaxConfigSize = 4096;
+
+TYPE
+	Config = POINTER TO ConfigDesc;
+	ConfigDesc = RECORD (Programmer.DestinationDesc)
+	END;
+
+VAR
+	config: Config;	 (** The only allowed config instance *)
+
+	PROCEDURE Factory (VAR args: StreamReaders.Reader): Programmer.Destination;
+	BEGIN
+		IF config = NIL THEN
+			NEW(config);
+		END;
+		RETURN config
+	END Factory;
+
+	PROCEDURE Accept (destination: Programmer.Destination): BOOLEAN;
+	BEGIN
+		RETURN destination IS Config
+	END Accept;
+
+	PROCEDURE Program (CONST resource: Programmer.Resource; destination: Programmer.Destination);
+	BEGIN
+		SYSTEM.MOVE(resource.start, 1FFFF000H, resource.size);
+		Caches.CleanDCacheRange(1FFFF000H, resource.size);
+		Programmer.arguments[0] := 1FFFF000H(*resource.start*);
+		Programmer.arguments[1] := resource.size;
+		Programmer.done := TRUE;
+		Programmer.error := FALSE
+	END Program;
+
+BEGIN
+	Programmer.RegisterProgrammer("A2Config", Program, Accept, Factory);
+	config := NIL
+END A2ConfigProgrammer.

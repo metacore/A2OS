@@ -1,0 +1,34 @@
+MODULE XModemLoader; (** AUTHOR "Timothée Martiel"; PURPOSE "XModem file transfers for bootloader"; *)
+
+IMPORT SYSTEM,
+	XModem, Bootloader, Loader;
+
+	PROCEDURE Load * (CONST name, host: ARRAY OF CHAR);
+	VAR res: LONGINT; msg: ARRAY 128 OF CHAR; char: CHAR;
+	BEGIN
+		res := XModem.Receive(Bootloader.input^, Bootloader.output^, Loader.CopyToRam);
+		(*IF res # 0 THEN
+			XModem.GetErrorMessage(msg);
+			Trace.String("XMODEM ERROR: ");
+			Trace.String(msg);
+			Trace.String(" (");
+			Trace.Int(res, 0);
+			Trace.StringLn(")")
+		END;*)
+		LOOP
+			SYSTEM.GET(Loader.endAddress - 1, char);
+			IF char # 1AX THEN EXIT END;
+			DEC(Loader.endAddress)
+		END;
+		Loader.NotifyDone(res)
+	END Load;
+
+	(*PROCEDURE CopyToRam * (CONST buffer: ARRAY OF CHAR; ofs, len: LONGINT);
+	BEGIN
+		WHILE buffer[ofs + len - 1] = 1AX DO DEC(len) END;
+		Loader.CopyToRam(buffer, ofs, len)
+	END CopyToRam;*)
+
+BEGIN
+	Loader.RegisterLoader("XModem", Load);
+END XModemLoader.

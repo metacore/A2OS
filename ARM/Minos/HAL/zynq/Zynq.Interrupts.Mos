@@ -1,0 +1,671 @@
+MODULE Interrupts;  
+
+IMPORT Platform, SYSTEM, Caches, Trace;
+
+CONST
+	(* Interrupt Vector base *)
+	InterruptVector 	= ADDRESS( 0H ); (* Check value *)
+	MinIRQ			= 0;
+	MaxIRQ			= 255;
+	MaxIRQHandlers 	= 4;
+	
+	(** Period at which the CPU timer interrupts, in micro seconds *)
+	TimerPeriod* 		= 1000;
+	
+	(** ID of the global timer IRQ *)
+	TimerIRQ* 		= 27;
+	PrivateTimerIRQ* 	= 29;
+	
+	PSUART0IRQ*		= 59;
+	PSUART1IRQ*		= 82;
+	
+	I2C0*				= 57;
+	I2C1*				= 80;
+	QSPI*				= 51;
+	
+	PLUARTIRQ*		= 61; (* interrupt from the PL UART in the programming logic subsystem *)
+	
+TYPE
+	(** processor state *)
+	State* = RECORD
+		R*: ARRAY 12 OF ADDRESS;		(** registers 0-11 *)
+		BP*, SP*, LR*, PC*: ADDRESS;	(** special registers *)
+		PSR*: ADDRESS;					(** processor state register *)
+		irq*: ADDRESS;					(** IRQ number *)
+	END;
+
+	(** NEON Coprocessor state *)
+	NEONState* = ARRAY (16 * 16) OF CHAR; (* 16 Quadword = 16 bytes registers *)
+
+	(** exception state *)
+	ExceptionState* = RECORD
+		halt*: LONGINT; 	(** halt code *)
+		pf*: LONGINT;		(** page fault address *)
+		locks*: SET;			(** active locks *)
+		SP*: LONGINT;		(** actual SP value at time of interrupt *)
+	END;
+
+	(* Interrupt Handler *)
+	Handler* = PROCEDURE {DELEGATE} ( irq: LONGINT );
+	TrapHandler* = PROCEDURE {DELEGATE} ( type, adr, fp: LONGINT; VAR resFP: LONGINT);
+
+VAR
+(** Interrupt Mask *)
+	IRQMask: SET;
+	
+	irqHandler: ARRAY MaxIRQ + 1, MaxIRQHandlers OF Handler;
+	irqCounter : LONGINT;
+	
+	trapHandler : TrapHandler;
+	
+	stateTag : LONGINT;
+	globalLR : LONGINT;
+	
+	
+PROCEDURE RegisterTimerHandler*( proc : Handler );
+BEGIN
+	InstallHandler( proc, PrivateTimerIRQ );
+END RegisterTimerHandler;
+	
+	
+(* Current processor's ID, between 0 and MaxProc - 1 *)
+PROCEDURE ID*(): LONGINT;
+CODE
+	MRC p15, 0, R0, C0, C0, 5
+	AND R0, R0, #3H; Get the last 2 bits of R0
+END ID;
+
+
+(*PROCEDURE InvalidateDCache*(dCacheBase: LONGINT);
+CODE
+	LDR R1, [FP, #dCacheBase]	; R1 contains the virtual address of a region of cacheable memory
+	LDR R1, [R1, #0]
+	MOV R0, #1024	; R0 is the loop count
+.loop1
+	MCR p15, 0, R1, c7, c2, 5	; allocate line in data cache
+	ADD R1, R1, #32	; increment the address in R1 to the next cache line
+	SUBS R0, R0, #1
+	BNE loop1
+
+	; clean the mini-data cache
+	MOV R0, #64
+.loop2
+	LDR R3, [R1], #32	; load and increment to next cache line
+	SUBS R0, R0, #1
+	BNE loop2
+
+	B invalidate
+	DCD dCacheBase
+	
+.invalidate	
+	; invalidate data cache and mini-data cache		
+	MCR p15, 0, R0, c7, c6, 0
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END InvalidateDCache;*)
+
+
+PROCEDURE EnableInterrupts*;
+VAR cpsr: LONGINT;
+BEGIN
+	SYSTEM.STPSR(0, cpsr);
+	cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) - {7, 8});
+	SYSTEM.LDPSR(0, cpsr);
+END EnableInterrupts;
+
+(* Taken from Minos/Kernel.Mos *)
+PROCEDURE DisableInterrupts*;
+VAR cpsr: LONGINT;
+BEGIN
+	SYSTEM.STPSR(0, cpsr);
+	cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) + {7, 8});
+	SYSTEM.LDPSR( 0, cpsr);
+END DisableInterrupts;
+
+PROCEDURE IsIRQEnabled(int: LONGINT): BOOLEAN;
+VAR
+	enabled: BOOLEAN;
+	reg: SET;
+BEGIN
+	(*Acquire(Interrupts);*)
+	SYSTEM.GET(Platform.ICDISER + 4 * (int DIV 32) , reg);
+	enabled := (int MOD 32) IN reg;
+	(*Release(Interrupts);*)
+	RETURN enabled
+END IsIRQEnabled;
+
+(* DefaultUndef - default handler for undefined instruction exceptions *)
+PROCEDURE DefaultUndefined;
+VAR
+	adr, fp: ADDRESS;
+	udf, resFP: LONGINT;
+BEGIN
+	CODE
+		SUB	R1, LR, #4	; save address of undefined instruction
+		STR R1, [FP, #adr]
+	END;
+	SYSTEM.GET(adr, udf);
+	fp := GetFP();
+	IF ( trapHandler # NIL ) THEN
+		trapHandler( Platform.DataAbort, adr, fp, resFP );
+	ELSE
+		Trace.Ln;
+		Trace.StringLn("Undefined Instruction Trap:");
+		Trace.String("  pc: "); Trace.Hex(adr, -8); Trace.Ln;
+		Trace.String("  instruction: "); Trace.Hex(udf, -8); Trace.Ln;
+		Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+		Trace.String("Kernel Halted");
+	END;
+	LOOP END;
+END DefaultUndefined;
+
+(* DefaultSWI - default handler for software interrupts *)
+PROCEDURE DefaultSWI;
+VAR
+	adr: ADDRESS;
+	fp, resFP : LONGINT;
+	swi: LONGINT;
+BEGIN
+	CODE
+		SUB R1, LR, #4
+		STR R1, [FP, #adr]			; store address in adr
+	END;
+	
+	fp := GetFP();
+	
+	SYSTEM.GET(adr, swi);
+	swi := swi MOD 1000000H;
+	IF ( trapHandler # NIL ) THEN
+		trapHandler( Platform.SWI, adr, fp, resFP );
+	ELSE
+		Trace.Ln;
+		Trace.StringLn("Software Interrupt:");
+		Trace.String("  pc: "); Trace.Hex(adr, -8); Trace.Ln;
+		Trace.String("  number: "); Trace.Hex(swi, -8); Trace.Ln;
+		Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+	END;
+	LOOP END;
+END DefaultSWI;
+
+(* Instruction Prefetch abort *)
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultPrefetchAbort;
+VAR lnk, fp: LONGINT;
+BEGIN
+	(* Store exception location. The location that trapped was lnk - 4 *)
+	lnk := SYSTEM.LNK() - 4;
+	fp := SYSTEM.FP();
+
+	Trace.String("Prefetch abort at location: "); Trace.Hex(lnk,-8); Trace.Ln;
+	Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+	
+	SYSTEM.STPSR(1, lnk);
+	Trace.String("SPSR: "); Trace.Address(lnk); Trace.Ln;		
+	(* Release(TraceOutput); *)
+	LOOP END;
+END DefaultPrefetchAbort;
+
+(* DefaultDataAbort - default handler for data abort exceptions *)
+PROCEDURE {NOPAF} DefaultDataAbort;
+VAR
+	pcAdr, faultAdr: ADDRESS;
+	inst, stat: LONGINT;
+	fp, resFP : LONGINT;
+BEGIN
+	CODE
+		SUB R1, LR, #8
+		STR R1, [FP, #pcAdr]
+		LDR R0, [R1, #0]
+		STR R0, [FP, #inst]
+
+		MRC	p15, 0, R0, C5, C0	; load fault status register (FSR)
+		AND	R0, R0, #0FFH			; only bits 7:0 are valid
+		STR R0, [FP, #stat]
+
+		MRC	p15, 0, R0, C6, C0	; load fault address (FAR)
+		STR R0, [FP, #faultAdr]
+	END;
+
+	
+	fp := GetFP();
+	
+	IF ( trapHandler # NIL ) THEN
+		trapHandler( Platform.DataAbort, pcAdr, fp, resFP );
+	ELSE
+		Trace.Ln;
+		Trace.StringLn("Data Abort Trap:");
+		Trace.String("  pc: "); Trace.Hex(pcAdr, -8); Trace.Ln;
+		Trace.String("  instruction: "); Trace.Hex(inst, -8); Trace.Ln;
+		Trace.String("  fault status: "); Trace.Hex(stat, -8); Trace.Ln;
+		Trace.String("  fault address: "); Trace.Hex(faultAdr, -8); Trace.Ln;
+		Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+		Trace.String("Kernel halted.");
+	END;
+	LOOP END;
+END DefaultDataAbort;
+
+(* DefaultIRQ - default handler for IRQs *)
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultIRQ;
+BEGIN
+	(* Acquire(TraceOutput); *)
+	Trace.StringLn("(IRQ)");
+	Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+	(* Release(TraceOutput); *)
+	
+	SYSTEM.PUT32( Platform.PrivateTimerInterruptStatusRegister, 1);
+END DefaultIRQ;
+
+(*
+PROCEDURE {NOPAF} IRQGlue;
+CODE
+	SUB		SP, SP, #72						; Room for the State record
+	STMIA		SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, FP, SP, LR} ;^
+	MOV R0, R0
+	SUB		R0, LR, #4						; return address = LR-4
+	STR		R0, [SP], #4					; push ('PC' in 'State'). SP points to offset 64
+	MRS		R0, SPSR						; get saved PSR
+	STR		R0, [SP], #4					; push ('PSR' in 'State'). SP points to offset 68
+
+	SUB SP, SP, #68
+	MOV R11, SP
+
+	LDR		R5, [pc, #state-$-8]			; load address of stateTag constant
+	STR		R5, [SP, #-4]!					; push value (type tag)
+	STR		R11, [SP, #-4]!					; push parameter (address of 'State' parameter)
+
+	BL IRQCaller
+	
+	LDR R11, [SP], #4
+	ADD SP, SP, #4
+
+	ADD		SP, SP, #72						; adjust SP & remove PAF
+	LDR		R0, [R11, #64]					; load 'State.PSR'
+	MSR		SPSR_cxsf, R0					; and store it into SPSR
+	LDR		R0, [R11, #60]					; load 'State.PC'...
+	MOV		LR, R0							; ...into LR (because we will return to LR, not PC)
+	ADD		R0, R11, #48					; R0 points to 'State.SP'
+	LDMIA		R0, { FP, SP, LR }^				; load 'State.SP' & 'State.LR' into user mode registers
+	MOV		R0, R0							; nop, to not access banked registers after LDM ^
+	LDMIA		R11, { R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10 } 				; restore unbanked regs
+	LDR		R11, [R11, #44]
+	
+	;BX LR
+	MOVS		PC, LR							; SPSR -> CPSR & return
+	
+	; Data section
+state:	d32 stateTag							; address of stateTag
+END IRQGlue;
+*)
+
+
+(* Primary interrupt handler *)
+PROCEDURE {INTERRUPT, PCOFFSET=4} IRQTrap;
+VAR 
+	spsr, count : LONGINT;  
+	lr, ack, irq : LONGINT;
+	state : State;
+	handler: Handler;  
+BEGIN
+
+
+	SYSTEM.STPSR( 1, spsr );   (* store SPSR *)
+
+(*	
+	(* Context Switch to SVC mode *)
+	SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.IRQDisabled + Platform.FIQDisabled); 
+	globalLR := SYSTEM.LNK();
+	
+	SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.IRQDisabled + Platform.FIQDisabled); 
+	lr := globalLR;
+	
+	(* Enable Interrupts *)
+	SYSTEM.LDPSR( 0, Platform.SVCMode );
+*)
+
+	(* call the irq handlers *)
+	(* IrqCaller( state );*)	
+	ack := SYSTEM.GET32( Platform.ICCIAR );
+	
+	(* service this irq *)
+	irq := ack MOD 1024;
+	
+	IF irq # 1023 THEN (* not a spurious IRQ *)
+
+		state.irq := irq;
+		
+		IF ( state.irq = PrivateTimerIRQ ) THEN	
+			SYSTEM.PUT32( Platform.PrivateTimerInterruptStatusRegister, 1);
+		END;
+
+		IF (MinIRQ <= irq) & (irq<= MaxIRQ) THEN
+			count := 0;
+			handler := irqHandler[irq, count];
+			WHILE (handler # NIL) & (count < MaxIRQHandlers - 1) DO
+				handler(irq);
+				DisableInterrupts; (* handler may have reactivated interrupts *)
+				INC(count);
+				handler := irqHandler[ irq, count ];
+			END;
+		END;
+		
+		SYSTEM.PUT32( Platform.ICCEOIR, ack );
+		
+	END;
+	
+(*	
+	(* Context Switch to IRQ mode*)
+	SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.IRQDisabled + Platform.FIQDisabled); 
+	globalLR := lr;
+	SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.IRQDisabled  + Platform.FIQDisabled); 
+	SYSTEM.SETLNK(globalLR);
+	SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.IRQDisabled  + Platform.FIQDisabled);			
+*)
+
+	SYSTEM.LDPSR( 1, spsr ); (* SPSR := old *) 
+
+END IRQTrap;
+
+
+(* DefaultFIQ - default handler for fast interrupts *)
+PROCEDURE DefaultFIQ;
+BEGIN
+	Trace.StringLn("Fast IRQ Trap");
+	Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
+	Trace.String("Kernel halted.");
+	LOOP END
+END DefaultFIQ;
+
+(* InstallDefaultInterrupts - installs default interrupt handlers *)
+PROCEDURE InstallDefaultInterrupts*;
+	VAR p: PROCEDURE; base: ADDRESS; pi: PROCEDURE {INTERRUPT};
+	i, int: LONGINT;
+BEGIN
+	
+	base := InterruptVector;
+	
+	p := DefaultUndefined; SYSTEM.PUT32(base + 024H, SYSTEM.VAL(LONGINT, p));
+	p := DefaultSWI; SYSTEM.PUT32(base + 028H, SYSTEM.VAL(LONGINT, p));
+	pi := DefaultPrefetchAbort; SYSTEM.PUT32(base + 02CH, SYSTEM.VAL(LONGINT, pi));
+	p := DefaultDataAbort; SYSTEM.PUT32(base + 030H, SYSTEM.VAL(LONGINT, p));
+	pi := IRQTrap; SYSTEM.PUT32(base + 038H, SYSTEM.VAL(LONGINT, pi));
+	p := DefaultFIQ; SYSTEM.PUT32(base + 03CH, SYSTEM.VAL(LONGINT, p));
+
+	FOR int := 0 TO MaxIRQ DO
+		FOR i := 0 TO MaxIRQHandlers -1 DO
+			irqHandler[int, i] := NIL
+		END
+	END;
+
+END InstallDefaultInterrupts;
+
+PROCEDURE GetPC*(): LONGINT;
+CODE
+	MOV R0, SP
+END GetPC;
+
+PROCEDURE GetFP*(): LONGINT;
+CODE
+	MOV R0, FP
+END GetFP;
+
+(** EnableIRQ - enables a hardware interrupt (also done automatically by InstallHandler) *)
+PROCEDURE EnableIrq*( num: LONGINT );
+VAR
+	add : LONGINT;
+	val : SET;
+	loc : LONGINT;
+BEGIN
+	IF num = PrivateTimerIRQ THEN Trace.StringLn("Enable PrivateTimer IRQ") END;
+	IF num = PSUART0IRQ THEN Trace.StringLn("Enable PSUART0 IRQ.") END;
+	IF num = PSUART1IRQ THEN Trace.StringLn("Enable PSUART1 IRQ."); END;
+	add := Platform.ICDISER + ( 4 * (num DIV 32));
+	SYSTEM.GET( add, val );
+	val := val +  {num MOD 32};
+	SYSTEM.PUT32( add, val ); 
+END EnableIrq;
+
+(** InstallHandler - installs a interrupt handler & enable IRQ if necessary.
+	On entry to h interrupts are disabled and may be enabled with XXXXX.  After handling the interrupt
+	the state of interrupts are restored.  The acknowledgement of a hardware interrupt is done automatically.
+	IRQs are mapped from MinIRQ to MaxIRQ. *)
+PROCEDURE InstallHandler*( h: Handler; int: LONGINT );
+VAR
+	i: LONGINT;
+BEGIN
+	
+	DisableInterrupts();
+	
+	i := 0;
+	
+	WHILE irqHandler[int, i] # NIL DO
+		INC(i)
+	END;
+
+	(* IRQGlue may traverse list while it is being modified. *)
+	irqHandler[int, i] := h;  
+
+ 	IF (int >= MinIRQ) & (int <= MaxIRQ) THEN 
+ 	
+ 		EnableIrq(int);
+
+		IF Platform.TraceInterrupts THEN
+			Trace.String("[Machine]InstallHandler: h = 0x"); Trace.Address(SYSTEM.VAL(LONGINT, h)); 
+			Trace.String("; int = "); Trace.Address(int);
+			Trace.String("; IRQMask = 0x"); Trace.Address(SYSTEM.VAL(LONGINT, IRQMask));
+			Trace.Ln; 
+		END;
+		
+	ELSE
+		Trace.String("[Machine]: Failed to enable interrupt, illegal number.");
+	END;
+	
+	EnableInterrupts();
+
+END InstallHandler;
+
+PROCEDURE RegisterTraphandler*( proc : TrapHandler );
+BEGIN
+	IF ( proc # NIL ) THEN
+		trapHandler := proc;
+	END;
+END RegisterTraphandler;
+
+
+(** Calls all handlers for all pending IRQs.
+	Is called by IRQGlue.
+*)
+PROCEDURE IrqCaller( VAR state: State );
+VAR 
+	i, reg, irq, ack, count: LONGINT;  
+	handler: Handler;  
+	icip: SET;
+	test: BOOLEAN;
+BEGIN
+
+(*
+	IF ( state.PSR MOD 20H ) # 1FH THEN
+		Trace.StringLn( "IRQCaller: Recursive IRQ" );
+	END;
+*)
+
+	ack := SYSTEM.GET32( Platform.ICCIAR );
+	
+	(* service this irq *)
+	irq := ack MOD 1024;
+	
+	IF irq # 1023 THEN (* not a spurious IRQ *)
+
+		state.irq := irq;
+		
+		IF ( state.irq = PrivateTimerIRQ ) THEN	
+			SYSTEM.PUT32( Platform.PrivateTimerInterruptStatusRegister, 1);
+		END;
+
+		IF (MinIRQ <= irq) & (irq<= MaxIRQ) THEN
+			count := 0;
+			handler := irqHandler[irq, count];
+			WHILE (handler # NIL) & (count < MaxIRQHandlers - 1) DO
+				handler(irq);
+				DisableInterrupts; (* handler may have reactivated interrupts *)
+				INC(count);
+				handler := irqHandler[ irq, count ];
+			END;
+		END;
+		
+		SYSTEM.PUT32( Platform.ICCEOIR, ack );
+		
+	END;
+
+(*
+	(* service pending IRQs *)
+	FOR reg := 0 TO 2 DO
+		SYSTEM.GET( Platform.ICDISPR+reg*4, icip );
+		i := 0;
+		WHILE (i <= 31) & (icip # {}) DO
+			IF (i IN icip) & IsIRQEnabled(i) THEN
+				
+				icip := icip - {i};
+				irq := i+reg*32;
+
+				Trace.String("Pending IRQ "); Trace.Hex(irq,-8); Trace.String(" "); Trace.Address(reg); Trace.Ln;
+				
+				count := 0;
+				state.irq := irq;
+				handler := irqHandler[irq, count];
+				
+				WHILE (handler # NIL) & (count < MaxIRQHandlers - 1) DO
+					handler(state);
+					DisableInterrupts; (* handler may have reactivated interrupts *)
+					INC(count);
+					handler := irqHandler[irq, count]
+				END;
+				SYSTEM.PUT32(Platform.ICCEOIR, irq); (* end of interrupt *)
+				SYSTEM.PUT32(Platform.ICDICPR+reg*4, {i}); (* clear pending bit *)
+			END;
+			
+			INC( i )
+		
+		END
+	END;
+*)
+
+	IF test THEN Trace.StringLn("End IRQCaller") END;
+
+END IrqCaller;
+
+(** Initializes IRQ handling. *)
+PROCEDURE InitInterrupts*;
+	CONST
+		EnableSecure=0;
+		EnableNonSecure=1;
+		NumberIRQs = 96;
+	VAR dummy: BOOLEAN; p: PROCEDURE; i, int: LONGINT;
+BEGIN
+
+	(* Acquire(Interrupts); *)
+	IRQMask := {};
+	(*SYSTEM.PUT32(IC + Platform.ICMR, IRQMask); (* mask all interrupts *)
+	SYSTEM.PUT32(IC + Platform.ICLR, {}); (* all interrupts to IRQ, no FIQ *)*)
+	(*
+	p := IRQGlue;
+	SYSTEM.PUT32(InterruptVector + 038H, SYSTEM.VAL(LONGINT, p));	(* install new handler *)
+	*)
+	
+	SYSTEM.PUT32(Platform.ICDDCR, 0);
+
+	FOR i := 32 DIV 16 TO (NumberIRQs-1) DIV 16 (* 2 bits per IRQ *)  DO
+		SYSTEM.PUT32(Platform.ICDICFR+i*4, 0);
+	END;
+
+	FOR i := 0  TO (NumberIRQs-1) DIV 4 (* 8 bits per IRQ *) DO
+		SYSTEM.PUT32(Platform.ICDIPR+i*4, LONGINT(0A0A0A0A0H)); (* set priority of each interrupt to 160 *)
+	END;
+
+	FOR i := (32 DIV 4) TO (NumberIRQs-1) DIV 4 (* 8 bits per IRQ *) DO
+		SYSTEM.PUT32(Platform.ICDIPTR+i*4, 1010101H); (* reset interrupt targets to processor 0 *)
+	END;
+
+	(* disable all interrupt forwardings *)
+	FOR i := 0 TO (NumberIRQs-1) DIV 32 (* 1 bit per IRQ *) DO
+		SYSTEM.PUT32(Platform.ICDICER+i*4, LONGINT(0FFFFFFFFH));
+	END;
+
+	SYSTEM.PUT32(Platform.ICCPMR, 0F0H);
+	SYSTEM.PUT32(Platform.ICCICR, {0,1,2});
+	SYSTEM.PUT32(Platform.ICCBPR, 0);
+
+	SYSTEM.PUT32(Platform.ICDDCR, {EnableSecure, EnableNonSecure});
+	(*Release(Interrupts);*)
+
+	(* InvalidateDCache(dCacheBase); *)
+	(*Caches.CleanDCache();*)
+	 
+	
+END InitInterrupts;
+
+PROCEDURE SetupInterruptLocation();
+CODE
+	; set IRQ vector base register to zero
+	mov r0, #0
+	mcr p15, 0, r0, c12, c0, 0
+	
+END SetupInterruptLocation;
+
+(* Setup the primary interrupt handler vectors. This must be done AFTER the MMU Setup, otherwise there's ROM mapped to
+	memory location 0(Interrupt vectors)*)
+PROCEDURE SetupInterruptVectors;
+	CONST Code = LONGINT(0E59FF018H); (* Code that represents LDR pc, pc + 18 *)
+	VAR i: LONGINT;
+BEGIN
+	Trace.StringLn("Setup IRQ Location!");
+	FOR i := 0 TO 7 DO
+		SYSTEM.PUT32( InterruptVector+ 4*i, Code );
+	END;
+END SetupInterruptVectors;
+
+(** Init private timer *)
+PROCEDURE InitSysTick*;
+
+CONST
+	
+	TimerEnable=0;
+	AutoReload=1;
+	IRQEnable=2;
+
+	Delay = LONGINT( 375000 );
+	
+BEGIN
+
+	(* disable first *)
+	SYSTEM.PUT32( Platform.PrivateTimerControlRegister, {} );	
+	SYSTEM.PUT32( Platform.PrivateTimerControlRegister, { TimerEnable, AutoReload, IRQEnable } );
+	SYSTEM.PUT32( Platform.PrivateLoadValueRegister, Delay );
+
+	EnableIrq( PrivateTimerIRQ ); 
+	 	
+END InitSysTick;
+
+
+
+
+
+BEGIN
+	
+	irqCounter := 0;
+	trapHandler := NIL;
+	
+	Trace.StringLn("Setup Interrupt handling.");
+	
+	SetupInterruptLocation();
+	(*SetupInterruptVectors();*)
+	InstallDefaultInterrupts();
+	Trace.StringLn("Initializing interrupts");
+	InitInterrupts();
+	Trace.StringLn("Interrupts Initialized")
+
+END Interrupts.

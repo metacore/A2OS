@@ -1,0 +1,131 @@
+MODULE SysUtils; (** AUTHOR ""; PURPOSE ""; *)
+IMPORT S:=SYSTEM;
+CONST
+	cacheline = 32;
+	L2CCBBase				= 0F8F02000H; (*XPS_L2CC_BASEADDR*)
+	L2CCCacheSync		= L2CCBBase + 00730H;		(* Cache Sync *)(*XPS_L2CC_CACHE_SYNC_OFFSET	*)
+	L2CCCacheIInvldPAOfs =	00770H;						(*XPS_L2CC_CACHE_INVLD_PA_OFFSET*)
+
+	L2CCCacheInvClnPAOfs= 007F0H;		(* Cache Invalidate and Clean by PA *)(*XPS_L2CC_CACHE_INV_CLN_PA_OFFSET*)
+	PageTableBaseAddress = 10000000H - 100000H;
+PROCEDURE -GetSP*(): ADDRESS;
+CODE
+    mov r0, sp
+END GetSP;
+
+PROCEDURE -dsb();
+CODE
+		d32		0F57FF04FH	; dsb
+END dsb;
+PROCEDURE -isb();
+CODE
+			d32		0F57FF06FH 	; isb to sync the change to the CacheSizeID reg
+END isb;
+
+PROCEDURE DCacheFlushRange*(adr:ADDRESS; len:LONGINT);
+VAR
+	end:ADDRESS;
+	L2CCOffset:ADDRESS;
+BEGIN
+(*	UartMin.Str("DCFRange;");*)
+	L2CCOffset := L2CCBBase + L2CCCacheInvClnPAOfs;
+	IF len # 0 THEN
+		(* Back the starting address up to the start of a cache line
+		    perform cache operations until adr+len *)
+		end := adr + len;
+		adr := S.VAL(ADDRESS,S.VAL(SET,adr) * (-S.VAL(SET,cacheline - 1)));
+
+		(* Select cache L0 Data cache in CSSR *)
+		CODE
+			mcr	p15, 2, r0,  c0,  c0, 0	(*		mtcp(XREG_CP15_CACHE_SIZE_SEL, 0);*)
+		END;
+		WHILE adr < end DO
+			(* Flush L1 Data cache line *)
+			CODE
+				str r3, [fp, #adr]    (* load*)
+				mcr	p15, 0, r3,  c7, c14, 1;				MCR XREG_CP15_CLEAN_INVAL_DC_LINE_MVA_POC :: "r" (adr));
+			END;
+			(* Flush L2 cache line *)
+			S.PUT(L2CCOffset, adr);
+			dsb();
+			adr := adr+cacheline;
+		END;
+	END;
+
+	(* Wait for L1 and L2 flush to complete *)
+	dsb();
+	REPEAT UNTIL S.GET32(L2CCCacheSync) = 0;
+END DCacheFlushRange;
+
+PROCEDURE DCacheInvalidateRange*(adr:ADDRESS; len:LONGINT);
+VAR
+	end:ADDRESS;
+	L2CCOffset:ADDRESS;
+BEGIN
+(*	UartMin.StrLn("DCIRange;");*)
+
+	L2CCOffset := L2CCBBase + L2CCCacheIInvldPAOfs;
+	IF len # 0 THEN
+		(* Back the starting address up to the start of a cache line
+		 * perform cache operations until adr+len
+		 *)
+		end := adr + len;
+		adr := S.VAL(ADDRESS,S.VAL(SET,adr) * (-S.VAL(SET,cacheline - 1)));
+
+		(* Select L1 Data cache in CSSR *)
+		CODE
+			mcr	p15, 2, r2,  c0,  c0, 0	(*		XREG_CP15_INVAL_DC_LINE_MVA_POC;*)
+		END;
+
+		WHILE adr < end DO
+			(* Invalidate L2 cache line *)
+			S.PUT(L2CCOffset, adr);
+			dsb();
+			(* Invalidate L1 Data cache line *)
+			CODE
+				str		r3, [fp, #adr]    (* load*)
+				mcr	p15, 0, r3,  c7, c6, 1;				MCR XREG_CP15_INVAL_DC_LINE_MVA_POC :: "r" (adr));
+			END;
+			adr :=adr + cacheline;
+		END;
+	END;
+
+	(* Wait for L1 and L2 invalidate to complete *)
+	dsb();
+
+	REPEAT UNTIL S.GET32(L2CCCacheSync) = 0;
+END DCacheInvalidateRange;
+
+PROCEDURE SetTlbAttributes*(addr:ADDRESS; attrib:SET);
+VAR
+	ptr, section:ADDRESS;
+
+BEGIN
+(*
+	mtcp(XREG_CP15_INVAL_UTLB_UNLOCKED, 0);*)
+	CODE
+		mov r3, #0
+		mcr p15, 0, r3, c8, c7,0
+	END;
+	dsb();
+
+	section := addr DIV 0100000H;
+	ptr := PageTableBaseAddress+ section;(*TODO: Platform.MMUPhysicalTableBase !!!!!!!!!!!!!!!!!!!*)
+	S.PUT(ptr, S.VAL(SET,addr) * S.VAL(SET,0FFF00000H) + attrib);
+	dsb();
+
+(*	mtcp(XREG_CP15_INVAL_UTLB_UNLOCKED, 0);
+	(* Invalidate all branch predictors *)
+	mtcp(XREG_CP15_INVAL_BRANCH_ARRAY, 0);
+	*)
+	CODE
+		mov r3, #0
+		mcr p15, 0, r3, c8, c7, 0
+		mcr p15, 0, r3, c7, c5, 6
+	END;
+	dsb(); (* ensure completion of the BP and TLB invalidation *)
+	isb(); (* synchronize context on this processor *)
+END SetTlbAttributes;
+
+
+END SysUtils.

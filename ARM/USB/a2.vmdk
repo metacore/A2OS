@@ -1,0 +1,27 @@
+# Disk DescriptorFile
+version=1
+CID=054aa3cf
+parentCID=ffffffff
+isNativeSnapshot="no"
+createType="monolithicFlat"
+
+# Extent description
+RW 400000 FLAT "A2USB.img" 0
+
+# The Disk Data Base 
+#DDB
+
+ddb.adapterType = "ide"
+ddb.encoding = "windows-1252"
+ddb.geometry.biosCylinders = "406"
+ddb.geometry.biosHeads = "16"
+ddb.geometry.biosSectors = "63"
+ddb.geometry.cylinders = "406"
+ddb.geometry.heads = "16"
+ddb.geometry.sectors = "63"
+ddb.longContentID = "9f41d1a648ee5e1e806f3822054aa3cf"
+ddb.uuid.image = "a028a4fa-0efc-4865-8864-0a36bd9877bd"
+ddb.uuid.modification = "f0a53f4a-d7fa-41a2-9f7b-0b3ebf7ddf2b"
+ddb.uuid.parent = "00000000-0000-0000-0000-000000000000"
+ddb.uuid.parentmodification = "8c8a9447-34f1-4f6b-8940-777b6c46118d"
+ddb.virtualHWVersion = "6"

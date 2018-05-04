@@ -1,0 +1,8 @@
+Board.UartInputClockHz = 100000000;
+Board.KernelOutputUart = 0;
+EnetBase.ThreadSafe = FALSE;
+EnetEmacPs7.AllowZeroPhyAddr0 = TRUE;
+EnetEmacPs7.AllowZeroPhyAddr1 = TRUE;
+EnetEmacPs7.EnableTrace = FALSE;
+Memory.InitTrace = TRUE;
+Sd.Synchronize = FALSE;

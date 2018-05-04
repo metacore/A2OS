@@ -1,0 +1,321 @@
+MODULE Trace;	(** AUTHOR "fn"; PURPOSE "Low-level trace output based on KernelLog"; *)
+
+IMPORT SYSTEM;
+
+CONST MAXBUFLEN = 32;
+
+TYPE
+	CharProc*= PROCEDURE (c:CHAR);
+VAR
+	Char*: CharProc;
+	Color*: PROCEDURE (c: SHORTINT);
+
+(** Send the specified characters to the trace output (cf. Streams.Sender). *)
+PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+BEGIN INC (len, ofs); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
+END Send;
+
+(** Skip to the next line on trace output. *)
+PROCEDURE Ln*;
+BEGIN Char (0DX); Char (0AX);
+END Ln;
+
+(** Write a string to the trace output. *)
+PROCEDURE String* (CONST s: ARRAY OF CHAR);
+VAR i: LONGINT;
+BEGIN i := 0; WHILE (i< LEN(s)) & (s[i] # 0X) DO Char (s[i]); INC (i) END;
+END String;
+
+PROCEDURE C*( CONST c : CHAR );
+BEGIN
+	Char( c );
+END C;
+
+PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : LONGINT; CONST addColon : BOOLEAN );
+VAR
+	i : LONGINT;
+	rest : LONGINT;
+BEGIN
+	IF ( LEN( s ) < len ) THEN
+		rest := len - LEN( s );
+	ELSE
+		rest := 0;
+	END;
+	String( s );
+	FOR i := 0 TO rest -1 DO
+		Char(' ');
+	END;
+	IF ( addColon ) THEN
+		Char(':'); Char(' ');
+	END;
+END StringA;
+
+PROCEDURE Real*(x: LONGREAL; dec, len: LONGINT);
+VAR 
+	res, i, n, x0: LONGINT; 
+	a: ARRAY MAXBUFLEN OF CHAR; 
+	z: LONGREAL;
+BEGIN
+	n := 0;
+	z := 1.0;
+	WHILE n < dec DO
+		z := z*10.0;
+		INC(n)
+	END;
+	x0 := FLOOR(x*z);
+	IF x < 0.0 THEN x0 := -x0 END;
+	i := 0;
+	IF n > 0 THEN
+		WHILE i < n DO
+			a[i] := CHR(x0 MOD 10 + 48);
+			x0 := x0 DIV 10;
+			INC(i)
+		END;
+		a[i] := '.';
+		INC(i)
+	END;
+	REPEAT
+		a[i] := CHR(x0 MOD 10 + 48);
+		x0 := x0 DIV 10;
+		INC(i)
+	UNTIL (x0 = 0) OR (i = MAXBUFLEN);
+	IF (x < 0.0) & (i < MAXBUFLEN) THEN a[i] := '-'; INC(i) END;
+	WHILE (i < len) & (i < MAXBUFLEN) DO a[i] := ' '; INC(i) END;
+	REPEAT DEC(i); Char( a[i] ); UNTIL i = 0
+END Real;
+
+(** Write a string to the trace output and skip to next line. *)
+PROCEDURE StringLn* (CONST s: ARRAY OF CHAR);
+BEGIN String (s); Ln;
+END StringLn;
+
+(** Write a character. *)
+PROCEDURE Int* (x,w: LONGINT);
+VAR i: SIZE; x0: LONGINT; a: ARRAY 21 OF CHAR;
+BEGIN
+	IF x < 0 THEN
+		IF x = MIN (LONGINT) THEN
+			DEC (w, 20);
+			WHILE w > 0 DO Char (' '); DEC (w) END;
+			String ("-9223372036854775808");
+			RETURN
+		ELSE
+			DEC (w); x0 := -x
+		END
+	ELSE
+		x0 := x
+	END;
+	i := 0;
+	REPEAT
+		a[i] := CHR (x0 MOD 10 + 30H); x0 := x0 DIV 10; INC (i)
+	UNTIL x0 = 0;
+	WHILE w > i DO Char (' '); DEC (w) END;
+	IF x < 0 THEN Char ('-') END;
+	REPEAT DEC (i); Char (a[i]) UNTIL i = 0
+END Int;
+
+PROCEDURE HInt*( x : HUGEINT; w: LONGINT );
+VAR i: SIZE; x0: HUGEINT; a: ARRAY 32 OF CHAR;
+BEGIN
+	IF x < 0 THEN
+		IF x = MIN (HUGEINT) THEN
+			DEC (w, 20);
+			WHILE w > 0 DO Char (' '); DEC (w) END;
+			String ("-tm");
+			RETURN
+		ELSE
+			DEC (w); x0 := -x
+		END
+	ELSE
+		x0 := x
+	END;
+	i := 0;
+	REPEAT
+		a[i] := CHR (x0 MOD 10 + 30H); x0 := x0 DIV 10; INC (i)
+	UNTIL x0 = 0;
+	WHILE w > i DO Char (' '); DEC (w) END;
+	IF x < 0 THEN Char ('-') END;
+	REPEAT DEC (i); Char (a[i]) UNTIL i = 0
+END HInt;
+
+PROCEDURE Boolean* (x : BOOLEAN);
+BEGIN IF x THEN String ("TRUE") ELSE String ("FALSE") END
+END Boolean;
+
+(** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
+PROCEDURE IntSuffix* (x, w: LONGINT; CONST suffix: ARRAY OF CHAR);
+CONST K = 1024; M = K*K; G = K*M;
+VAR mult: CHAR;
+BEGIN
+	IF x MOD K # 0 THEN
+		Int (x, w)
+	ELSE
+		IF x MOD M # 0 THEN mult := 'K'; x := x DIV K
+		ELSIF x MOD G # 0 THEN mult := 'M'; x := x DIV M
+		ELSE mult := 'G'; x := x DIV G
+		END;
+		Int (x, w-1); Char (mult)
+	END;
+	String (suffix)
+END IntSuffix;
+
+(**
+	Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
+	If w < 0 THEN w least significant hex digits of x are written (possibly including leading zeros)
+*)
+PROCEDURE Hex*(x: LONGINT; w: LONGINT );
+VAR i: LONGINT;
+	buf: ARRAY 2*SIZEOF(LONGINT)+2 OF CHAR;
+	neg: BOOLEAN;
+	c: LONGINT;
+BEGIN
+	IF w >= 0 THEN
+		i:= 0;
+		IF x < 0 THEN neg := TRUE; x :=-x ELSIF x=0 THEN buf := "0" ELSE neg := FALSE END;
+		i := 0;
+		REPEAT
+			c := x MOD 10H;
+			IF c < 10 THEN buf[i] := CHR(c+ORD("0")) ELSE buf[i] := CHR(c-10+ORD("A")) END;
+			x := x DIV 10H;
+			INC(i);
+		UNTIL (i = 2 * SIZEOF(LONGINT)) OR (x=0);
+		IF c > 9 THEN buf[i] := "0"; INC(i) END;
+		IF neg THEN buf[i] := "-"; INC(i) END;
+		WHILE(w > i) DO Char(" "); DEC(w); END;
+		REPEAT DEC(i); Char(buf[i]); UNTIL i=0;
+	ELSE
+		w := -w;
+		WHILE(w>2*SIZEOF(LONGINT)) DO
+			Char(" "); DEC(w);
+		END;
+		buf[w] := 0X;
+		REPEAT
+			DEC(w);
+			c := x MOD 10H;
+			IF c <10 THEN buf[w] := CHR(c+ORD("0")) ELSE buf[w] := CHR(c-10+ORD("A")) END;
+			x := x DIV 10H;
+		UNTIL w = 0;
+		String(buf);
+	END;
+
+END Hex;
+
+(** Write "x" as a hexadecimal address *)
+PROCEDURE Address* (x: ADDRESS);
+BEGIN
+	Hex(x,-2*SIZEOF(ADDRESS));
+END Address;
+
+(** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
+PROCEDURE HIntHex* (x: LONGINT; w: LONGINT);
+BEGIN Hex (x, w);
+END HIntHex;
+
+(** Write "x" as a set. *)
+PROCEDURE Set*(x: SET);
+VAR first: BOOLEAN; i: LONGINT;
+BEGIN
+	first := TRUE;
+	Char("{");
+	FOR i := 0 TO MAX(SET) DO
+		IF i IN x THEN
+			IF ~first THEN Char(",") ELSE first := FALSE END;
+			Int(i,1);
+		END;
+	END;
+	Char("}");
+END Set;
+
+(** Write a block of memory in hex. *)
+PROCEDURE Memory* (adr: ADDRESS; size: SIZE);
+VAR i, j: ADDRESS; ch: CHAR;
+BEGIN
+	size := adr+size-1;
+	FOR i := adr TO size BY 16 DO
+		Address (i); Char (' ');
+		FOR j := i TO i+15 DO
+			IF j <= size THEN
+				SYSTEM.GET (j, ch);
+				Char(' ');
+				Hex (ORD (ch), -2)
+			ELSE
+				Char (' ');
+			END
+		END;
+		Char (' ');
+		FOR j := i TO i+15 DO
+			IF j <= size THEN
+				SYSTEM.GET (j, ch);
+				IF (ch < ' ') OR (ch >= CHR (127)) THEN ch := '.' END;
+				Char (ch)
+			END
+		END;
+		Ln
+	END;
+END Memory;
+
+(** Write a buffer in hex. *)
+PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+BEGIN Memory (ADDRESSOF (buf[ofs]), len)
+END Buffer;
+
+(** Write bits (ofs..ofs+n-1) of x in binary. *)
+PROCEDURE Bits* (x: SET; ofs, n: LONGINT);
+BEGIN
+	REPEAT
+		DEC (n);
+		IF (ofs+n) IN x THEN Char ('1') ELSE Char ('0') END
+	UNTIL n = 0
+END Bits;
+
+(** Colors *)
+PROCEDURE Blue*;
+BEGIN Color (9);
+END Blue;
+
+PROCEDURE Green*;
+BEGIN Color (10);
+END Green;
+
+PROCEDURE Red*;
+BEGIN Color (12);
+END Red;
+
+PROCEDURE Yellow*;
+BEGIN Color (14);
+END Yellow;
+
+PROCEDURE Default*;
+BEGIN Color (7);
+END Default;
+
+
+PROCEDURE NullChar(c: CHAR);
+BEGIN
+END NullChar;
+
+PROCEDURE NullColor(c: SHORTINT);
+BEGIN
+END NullColor;
+
+PROCEDURE Init*;
+BEGIN
+	Char := NullChar;
+	Color := NullColor;	
+END Init;
+
+PROCEDURE Enter *;
+END Enter;
+
+PROCEDURE Exit *;
+BEGIN
+	Ln
+END Exit;
+
+(*
+BEGIN
+	Char := NullChar;
+	Color := NullColor;
+	*)
+END Trace.
+

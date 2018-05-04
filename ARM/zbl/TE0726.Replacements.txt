@@ -1,0 +1,11 @@
+Board.SdInputClockHz = 100000000;
+Board.SdEnable0 = FALSE;
+Board.SdEnable1 = TRUE;
+Board.UartInputClockHz = 100000000;
+EnetBase.ThreadSafe = FALSE;
+EnetEmacPs7.AllowZeroPhyAddr0 = TRUE;
+EnetEmacPs7.AllowZeroPhyAddr1 = TRUE;
+EnetEmacPs7.EnableTrace = FALSE;
+Memory.InitTrace = FALSE;
+Sd.Synchronize = FALSE;
+

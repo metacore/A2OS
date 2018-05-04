@@ -1,0 +1,601 @@
+MODULE Memory;   
+
+IMPORT Platform, Board, Caches, SYSTEM, Trace;
+
+CONST
+	(* access permissions *)
+	SrwUrw* = 3;
+	FullAccess* = SrwUrw*400H+SrwUrw*100H+SrwUrw*40H+SrwUrw*10H; (* for small pages only *)
+	LastStackPage* = SrwUrw*400H+SrwUrw*100H+SrwUrw*40H; (* for small pages only *)
+	
+	(* Control Register Flags *)
+	DCache 		= 2;
+	ICache 			= 12;
+	
+	(* Unit prefixes *)
+	k 				= 1024;
+	M 				= k * k;
+	LogM 			= 20; (* log2(M) *)
+	
+	
+	(* first level page table types *)
+	flCoarse = 1;
+	flSection = 2;
+	
+	(* Second Level *)
+	slFault = 0;
+	slSmall = 2;
+
+	(* cachable/bufferable mapping options *)
+	cb = 0;
+	C* = 8;(* + 4;*)
+	B* = 4;
+	CB* = C + B;
+	(* Inner and Outer Cacheable, Write-Through, no Write Allocate *)
+	Cacheable* = 100CH; (* here inner cacheable, write-back, write-allocate *)
+	(* Shareable *)
+	Shareable* = 10000H;
+
+	(* NIL *)
+	NilAdr* = -1;
+	(** Number of entries in the first level page table *)
+	PageTableLength* = 4096;
+
+	(** Initialize UART trace here *)
+	InitTrace * = FALSE;
+
+VAR
+	lnk : PROCEDURE;
+	dCacheBase : LONGINT;
+	virtualPageTable- : ADDRESS;
+	
+	
+	
+(** Enables current processor's L1 caches *)
+(*PROCEDURE EnableL1Cache;
+CODE
+	; Enable Cache and TLB maintenance broadcast
+	mrc	p15, 0, r0, c1, c0, 1
+	orr	r0, r0, #1H
+	mcr	p15, 0, r0, c1, c0, 1
+	isb
+
+	; Enable Caching in SCTLR
+	mrc	p15, 0, r0, c1, c0, 0
+	orr r0, r0, #4H
+	mcr	p15, 0, r0, c1, c0, 0
+	isb
+END EnableL1Cache;
+
+(** Enable L2 cache, prefetching and other speculative execution support *)
+PROCEDURE EnableL2Cache;
+CODE
+		ldr	r0,[pc, #L2CCCrtl-$-8]			; Load L2CC base address base + control register
+		mov	r1, #0				; force the disable bit
+		str	r1, [r0,#0]			; disable the L2 Caches
+
+		ldr	r0, [pc, #L2CCAuxCtrl-$-8]			; Load L2CC base address base + Aux control register
+		ldr	r1,[r0,#0]				; read the register
+		ldr	r2, [pc, #L2CCAuxControl-$-8]		; set the default bits
+		orr	r1,r1,r2
+		str	r1, [r0,#0]			; store the Aux Control Register
+
+		ldr	r0,[pc, #L2CCTAGLatReg-$-8]		; Load L2CC base address base + TAG Latency address
+		ldr	r1, [pc, #L2CCTAGLatency-$-8]		; set the latencies for the TAG
+		str	r1, [r0,#0]			; store the TAG Latency register Register
+
+		ldr	r0, [pc, #L2CCDataLatReg-$-8]		; Load L2CC base address base + Data Latency address
+		ldr	r1,[pc, #L2CCDataLatency-$-8]		; set the latencies for the Data
+		str	r1, [r0,#0]			; store the Data Latency register Register
+
+		ldr	r0,[pc, #L2CCWay-$-8]			; Load L2CC base address base + way register
+		ldr	r2, [pc, #H0xffff-$-8]
+		str	r2, [r0,#0]			; force invalidate
+
+		ldr	r0, [pc, #L2CCSync-$-8]			; need to poll 0x730, PSS_L2CC_CACHE_SYNC_OFFSET
+							; Load L2CC base address base + sync register
+		; poll for completion
+
+	Sync:
+		ldr	r1, [r0,#0]
+		cmp	r1, #0
+		bne	Sync
+
+		ldr	r0,[pc, #L2CCIntRaw-$-8]			; clear pending interrupts
+		ldr	r1,[r0,#0]
+		ldr	r0,[pc, #L2CCIntClear-$-8]
+		str	r1,[r0,#0]
+		ldr	r0,[pc,#L2CCCrtl-$-8]		; Load L2CC base address base + control register
+		ldr	r1,[r0,#0]					; read the register
+		mov	r2, #1					; set the enable bit
+		orr	r1,r1,r2
+		str	r1, [r0,#0]					; enable the L2 Caches
+
+		mrc	p15,0,r0,c1,c0,0		; flow prediction enable
+		orr	r0, r0, #0x800		; #0x800
+		mcr	p15,0,r0,c1,c0,0
+		isb
+
+		mrc	p15,0,r0,c1,c0,1		; read Auxiliary Control Register
+		orr	r0, r0, #4				; enable Dside prefetch
+		orr	r0, r0, #2				; enable L2 Prefetch hint
+		mcr	p15,0,r0,c1,c0,1		; write Auxiliary Control Register
+		isb
+		
+		b exit
+	; Data
+	H0xffff: 			d32 0FFFFH
+	L2CCWay:			d32 0F8F02000H + 077CH
+	L2CCSync:			d32 0F8F02000H + 0730H
+	L2CCCrtl:			d32 0F8F02000H + 0100H
+	L2CCAuxCtrl:		d32 0F8F02000H + 0104H
+	L2CCTAGLatReg: 	d32 0F8F02000H + 0108H
+	L2CCDataLatReg: 	d32 0F8F02000H + 010CH
+	L2CCIntClear:		d32 0F8F02000H + 0220H
+	L2CCIntRaw:		d32 0F8F02000H + 021CH
+	L2CCAuxControl:	d32 72360000H
+	L2CCTAGLatency:	d32 0111H
+	L2CCDataLatency:	d32 0121H
+
+	exit:
+END EnableL2Cache;*)
+
+(** Enables the Snoop Control Unit
+	for L1 coherency and LDREX/STREX global monitor
+*)
+PROCEDURE EnableSCU;
+CODE
+	; set scu enable bit in scu
+	ldr	r7, [pc, #H0xf8f00000-$-8]
+	ldr	r0, [r7, #0]
+	orr	r0, r0, #1
+	str	r0, [r7,#0]
+
+	; invalidate scu
+	ldr	r7, [pc, #H0xf8f0000c-$-8]
+	ldr	r6, [pc, #H0xffff-$-8]
+	str	r6, [r7, #0]
+
+	b exit
+
+; Data
+H0xf8f00000: 		d32 0F8F00000H
+H0xf8f0000c: 		d32 0F8F0000CH
+H0xffff: 			d32 0FFFFH
+exit:		
+END EnableSCU;
+
+(** Init NEON / VFP Engine *)
+PROCEDURE InitFPU;
+CODE
+	MRC p15, 0, R0, C1, C0, 2;
+	ORR R0, R0, #0x00f00000;
+	MCR p15, 0, R0, C1, C0, 2;
+	ISB
+	MOV R0, #0x40000000;
+	VMSR FPEXC, R0;
+END InitFPU;
+
+(** Activate Assymmetric Multiprocessing Mode for current CPU.
+	This desactivates L1 cache coherency
+*)
+PROCEDURE SetAmpMode;
+CODE
+	MRC p15, 0, R0, C1, C0, 1
+	MOV R1, #040H
+	RSB R1, R1, #0
+	ORR R0, R0, R1
+	MCR p15, 0, R0, C1, C0, 1
+	ISB
+END SetAmpMode;
+
+(** Enable coprocessors CP10 and CP11(= VFP and NEON engine) *)
+PROCEDURE EnableCoprocessors;
+CODE
+	mov	r0, r0
+	mrc	p15, 0, r1, c1, c0, 2		; read cp access control register (CACR) into r1
+	orr	r1, r1, #0xf00000		; enable full access for p10 & p11
+	mcr	p15, 0, r1, c1, c0, 2		; write back into CACR
+	isb
+END EnableCoprocessors;
+
+
+(*PROCEDURE FlushDCacheRange*( adr:ADDRESS; len:LONGINT );
+CONST
+	cacheline = 32;
+	L2CCBBase				= 0F8F02000H; (*XPS_L2CC_BASEADDR*)
+	L2CCCacheSync		= L2CCBBase + 00730H;		(* Cache Sync *)(*XPS_L2CC_CACHE_SYNC_OFFSET	*)
+	L2CCCacheInvClnPAOfs= 007F0H;		(* Cache Invalidate and Clean by PA *)(*XPS_L2CC_CACHE_INV_CLN_PA_OFFSET*)
+VAR
+	end:ADDRESS;
+	L2CCOffset:ADDRESS;
+BEGIN
+	L2CCOffset := L2CCBBase + L2CCCacheInvClnPAOfs;
+	IF len # 0 THEN
+		(* Back the starting address up to the start of a cache line
+		    perform cache operations until adr+len *)
+		end := adr + len;
+		adr := SYSTEM.VAL(ADDRESS,SYSTEM.VAL(SET,adr) * (-SYSTEM.VAL(SET,cacheline - 1)));
+
+		(* Select cache L0 Data cache in CSSR *)
+		CODE 
+			mcr	p15, 2, r0,  c0,  c0, 0	(*		mtcp(XREG_CP15_CACHE_SIZE_SEL, 0);*)
+		END;
+		WHILE adr < end DO
+			(* Flush L1 Data cache line *)
+			CODE
+				ldr r3, [fp, #adr]    (* load*)
+				mcr	p15, 0, r3,  c7, c14, 1;				MCR XREG_CP15_CLEAN_INVAL_DC_LINE_MVA_POC :: "r" (adr));
+			END;
+			(* Flush L2 cache line *)
+			SYSTEM.PUT(L2CCOffset, adr);
+			CODE
+				DSB
+			END;
+			adr := adr+cacheline;
+		END;
+	END;
+
+	(* Wait for L1 and L2 flush to complete *)
+	CODE
+		DSB
+	END;
+	REPEAT UNTIL SYSTEM.GET32(L2CCCacheSync) = 0;
+	
+END FlushDCacheRange;
+
+
+PROCEDURE DisableCache*();
+VAR
+	cr1: SET;
+BEGIN	
+	(* disable caching & buffering globally *)
+	cr1 := GetControlRegister();
+	SetControlRegister(cr1 - {DCache, ICache});
+	InvalidateDCache(dCacheBase);
+	InvalidateICache;
+	DrainWriteBuffer;	
+END DisableCache;	
+
+PROCEDURE CleanCache*();
+BEGIN
+	InvalidateDCache(dCacheBase);
+	InvalidateICache;
+	DrainWriteBuffer;	
+END CleanCache;
+
+PROCEDURE FlushDCache*( addr : ADDRESS );
+BEGIN
+	FlushDCacheRange( addr, M );
+END FlushDCache;
+	
+PROCEDURE InvalidateDCache*( dCacheBase: LONGINT );
+CODE
+	LDR R1, [FP, #dCacheBase]	; R1 contains the virtual address of a region of cacheable memory
+	LDR R1, [R1, #0]
+	MOV R0, #1024	; R0 is the loop count
+.loop1
+	MCR p15, 0, R1, c7, c2, 5	; allocate line in data cache
+	ADD R1, R1, #32	; increment the address in R1 to the next cache line
+	SUBS R0, R0, #1
+	BNE loop1
+
+	; clean the mini-data cache
+	MOV R0, #64
+.loop2
+	LDR R3, [R1], #32	; load and increment to next cache line
+	SUBS R0, R0, #1
+	BNE loop2
+
+	B invalidate
+	DCD dCacheBase
+	
+.invalidate	
+	; invalidate data cache and mini-data cache		
+	MCR p15, 0, R0, c7, c6, 0
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END InvalidateDCache;
+
+(* InvalidateICache - invalidates the ICache. Works only in a priviledged mode. *)
+PROCEDURE InvalidateICache*;
+CODE
+	MCR p15, 0, R0, c7, c5, 0	; invalidate ICache & BTB
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END InvalidateICache;
+
+(* InvalidateTLB: data and instruction TLBs - Works only in a priviledged mode *)
+PROCEDURE InvalidateTLB;
+CODE
+	MCR p15, 0, R0, c8, c7, 0	; invalidate I+D TLB
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END InvalidateTLB;
+
+(* InvalidateTLBEntry - invalidates the TLB for a given virtual address. Works only in a priviledged mode *)
+PROCEDURE InvalidateTLBEntry(address: LONGINT);
+CODE
+	LDR R0, [FP, #address]
+	ADD SP, SP, #4	; remove parameter
+	MCR p15, 0, R0, c8, c6, 1	; invalidate address
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END InvalidateTLBEntry;*)
+
+(* GetControlRegister - returns the control register of coprocessor 15 *)
+PROCEDURE -GetControlRegister(): SET;
+CODE
+	MRC p15, 0, R0, c1, c0, 0
+END GetControlRegister;
+
+(* SetControlRegister - sets the control register of coprocessor 15. Works only in a priviledged mode *)
+PROCEDURE -SetControlRegister(cr: SET);
+CODE
+	LDR R0, [SP, #cr]
+	ADD SP, SP, #4	; remove parameter
+	MCR p15, 0, R0, c1, c0, 0
+	; cpwait
+	MRC p15, 0, R0, c2, c0, 0
+	MOV R0, R0
+	SUB PC, PC, #4
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+	MOV R0, R0
+END SetControlRegister; 
+
+PROCEDURE CurrentBP*(): ADDRESS;
+CODE
+	MOV R0, FP
+END CurrentBP;
+
+PROCEDURE CurrentSP*(): ADDRESS;
+CODE
+	MOV R0, SP
+END CurrentSP;
+
+PROCEDURE CurrentPC*(): ADDRESS;
+CODE
+	MOV R0, PC
+END CurrentPC;
+
+PROCEDURE CurrentLR*(): ADDRESS;
+CODE
+	MOV R0, LR
+END CurrentLR;
+
+PROCEDURE ShowStack*();
+BEGIN
+	Trace.Memory( CurrentSP() - 512, 1024 );
+END ShowStack;
+
+(** SHR - logical shift right *)
+PROCEDURE SHR(value, shift: ADDRESS): LONGINT;
+CODE
+	LDR R0, [FP, #value]
+	LDR R1, [FP, #shift]
+
+	MOV R0, R0, LSR R1
+END SHR;
+
+(** SHRL - shift right and left. Mask out 'shift' lowest bits *)
+PROCEDURE SHRL(value, shift: LONGINT): LONGINT;
+(*CODE
+	LDR R0, [FP, #value]
+	LDR R1, [FP, #shift]
+
+	MOV R0, R0, LSR R1
+	MOV R0, R0, LSL R1*)
+BEGIN
+	value := LSH(value, -shift);
+	value := LSH(value, shift);
+	RETURN value
+END SHRL;
+
+(** Fills 'size' bytes with 'filler', from 'destAdr' on. size must be multiple of 4 *)
+PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+CODE
+	LDR R0, [FP, #filler]
+	LDR R1, [FP, #size]
+	LDR R3, [FP, #destAdr]
+	MOV R4, #0; counter
+
+	(* Check size MOD 4 = 0 *)
+	LSR R5, R1, #2
+	LSL R5, R5, #2
+	CMP R5, R1
+	BEQ Loop
+	SWI #8
+
+Loop:
+	CMP R4, R1
+	BGE Exit
+	ADD R5, R3, R4
+	STR R0, [R5, #0]; put(destAdr + counter, filler)
+	ADD R4, R4, #4; INC(counter, 4)
+	B Loop
+Exit:
+END Fill32;
+
+(** Fills 'size' bytes with 'filler', from 'destAdr' on. No restrictions on size *)
+PROCEDURE Fill8 * (destAdr: ADDRESS; size: SIZE; filler: CHAR);
+CODE
+	LDRB	R0, [FP, #filler]
+	LDR R1, [FP, #size]
+	LDR R3, [FP, #destAdr]
+	MOV R4, #0; counter
+
+Loop:
+	CMP R4, R1
+	BGE Exit
+	ADD R5, R3, R4
+	STRB R0, [R5, #0]; put(destAdr + counter, filler)
+	ADD R4, R4, #1; INC(counter, 4)
+	B Loop
+Exit:
+END Fill8;
+
+(* AllocateHeap - allocates and maps [physicalAddress...physicalAddress+size] to [virtualAddress...virtualAddress+size] *)
+PROCEDURE AllocateMmu*(virtualAddress, physicalAddress, size: ADDRESS; accessPermissions, flags: LONGINT);
+VAR i, index, entry: LONGINT;
+BEGIN
+	ASSERT(size MOD M = 0);
+	index := SHR(virtualAddress, LogM - 2);
+	FOR i := 0 TO SHR(size, LogM)-1 DO
+		(* Trace.String("AllocateMmu: page entry address: "); Trace.Address( virtualPageTable + index ); Trace.Ln; *)
+		entry := SYSTEM.GET32( virtualPageTable + index );
+		ASSERT(entry MOD 4 = 0); (* entry must be free *)
+		entry := physicalAddress + accessPermissions*400H + flags + flSection;
+		SYSTEM.PUT32( virtualPageTable + index, entry);
+		INC(index, 4); INC(physicalAddress, M);
+	END
+END AllocateMmu;
+
+(** Enable Memory Management and virtual memory. *)
+PROCEDURE EnableMM(translationBase, flags: ADDRESS);
+CODE
+	; Disable AFE (special permission mode) and TRE (special memory mode)
+	ldr r0, [pc, #pattern-$-8]
+	mrc p15, 0, r1, c1, c0, 0
+	and r1, r0, r1
+	mcr p15, 0, r1, c1, c0, 0
+	isb
+
+	ldr r0, [FP, #translationBase]
+	orr r0, r0, #07BH
+	mcr p15, 0, r0, c2, c0, 0
+	isb
+	;mvn r0, #0 	; mmu domains: 16 x 11 = manager on all domains
+	ldr r0, [pc, #domains-$-8]
+	mcr p15, 0, r0, c3, c0, 0
+	isb
+	ldr r0, [FP, #flags]
+	ldr r1, [FP, #sctlr-$-8]
+	orr r0, r0, r1 ; 1 bits in SCTLR
+	mcr p15, 0, r0, c1, c0, 0
+	isb
+
+	;dsb
+	;isb
+
+	b exit
+domains:	d32 55555555H		; Client on each domain
+pattern: d32 0CFFFFFFFH ; NOT(AFE+TRE)
+sctlr:	  d32 0C50078H
+exit:
+END EnableMM;
+
+PROCEDURE InitMemory *;
+	VAR
+		cr1: SET;
+		i, k, n: LONGINT;
+		base, adr: ADDRESS;
+	BEGIN
+		Caches.CleanDCacheRange(virtualPageTable, PageTableLength * 4);
+		(* disable caching & buffering globally *)
+		cr1 := GetControlRegister();
+		SetControlRegister(cr1 - {DCache, ICache});
+		
+		(* flush all caches & the write buffer and invalidate both TLBs *)
+		(*InvalidateDCache(dCacheBase);
+		InvalidateICache;*)
+		Caches.InvalidateDCache(dCacheBase);
+		Caches.InvalidateICache;
+		Caches.DrainWriteBuffer;
+		Caches.InvalidateTLB;
+
+		EnableMM( virtualPageTable, 1007H );
+	
+	END InitMemory;
+
+
+BEGIN
+	
+	(* no call before this, stack is invalidated. *)
+	SYSTEM.PUT32(ADDRESSOF(lnk), SYSTEM.LNK());
+
+	SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.FIQDisabled + Platform.IRQDisabled );   (* Disable interrupts, init SP, FP *)
+	SYSTEM.SETSP(Board.SVCSP);   (* configure memory *)
+	SYSTEM.SETFP(Board.SVCSP);
+	
+	SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.FIQDisabled + Platform.IRQDisabled );
+	SYSTEM.SETSP(Board.IRQSP);
+
+	SYSTEM.LDPSR( 0, Platform.UndefMode + Platform.FIQDisabled + Platform.IRQDisabled );
+	SYSTEM.SETSP(Board.UNDSP);
+
+	SYSTEM.LDPSR( 0, Platform.AbortMode + Platform.FIQDisabled + Platform.IRQDisabled );
+	SYSTEM.SETSP(Board.ABORTSP);
+
+	SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.FIQDisabled + Platform.IRQDisabled );   (* Disable interrupts, init SP, FP *)
+	
+	Trace.Init;
+	(*IF InitTrace THEN TraceDevice.Install; END;*)
+	
+	Trace.StringLn("Memory Setup Completed.");
+	
+	dCacheBase := 100000H;
+	virtualPageTable := Board.PageTableBase;
+	
+	SetAmpMode();
+	EnableSCU;
+	(*InvalidateTLB;
+	InvalidateICache;
+	InvalidateDCache( dCacheBase );*)
+	Caches.InvalidateTLB;
+	Caches.InvalidateICache;
+	Caches.InvalidateDCache(dCacheBase);
+	Caches.EnableL1Cache;
+	Caches.EnableL2Cache;
+	EnableCoprocessors;
+	InitFPU;
+	
+	lnk;
+END Memory.
+
+
+
+PROCEDURE InitProcessor*;
+	BEGIN
+		timer := DummyEvent;
+		Timeslice := DummyTimeslice;
+		SetSmpMode;
+		EnableSCU;
+		EnableL1Cache;
+		(*InvalidateTLB;
+		InvalidateICache;
+		InvalidateDCache(dCacheBase);*)
+		Caches.InvalidateTLB;
+		Caches.InvalidateICache;
+		Caches.InvalidateDCache;
+		(* SCU and L2 caches are enabled in the initialization sequence *)
+		EnableL2Cache;
+		EnableCoprocessors;
+		InitFPU;
+		allProcessors := {0}
+	END InitProcessor;

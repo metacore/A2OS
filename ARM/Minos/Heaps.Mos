@@ -1,0 +1,167 @@
+(* ported version of Minos to work with the ARM backend of the Fox Compiler Suite *)
+MODULE Heaps; (* originally called "MAU" *) (* Memory Allocation Unit; NW 15.12.2007*)
+(* These procedures must remain in this order!*)
+
+(*
+	001 2007-07-03 tt: Added this header and formatted Module
+	002 2007-09-04 tt: Added status info
+*)
+
+IMPORT SYSTEM, Board, Memory, Trace;
+
+CONST
+	Initialize = Board.InitializeHeap;
+
+VAR 
+	heapStart	: ADDRESS;	
+	heap		: ADDRESS;   	(*origin of free space*)
+	heapEnd	: ADDRESS;
+
+	PROCEDURE New*( VAR p: LONGINT;  T: LONGINT );   (*1*)
+	(*allocate record, add tag field of 1 word with offset -4*)
+	VAR i, size: LONGINT;  
+	BEGIN
+		p := heap + 4;
+		SYSTEM.PUT( heap, T );   (*adr of type descriptor (tag) to tagfield of new record*)
+		SYSTEM.GET( T, size );   (*obtain record size from type descriptor*)
+		IF size MOD 4 # 0 THEN INC(size, 4 - size MOD 4) END;
+		heap := p + size;
+		(* Clear heap *)
+		IF Initialize THEN Memory.Fill8(p, size, 0X) END;
+		ASSERT(heap < heapEnd);
+		ASSERT(heapStart <= heap);
+	END New; 
+	
+	PROCEDURE AllocH*(VAR a: LONGINT; len, elsize: LONGINT);  (*2*)
+		(*allocate open array on heap, prefix with size field of 1 word with offset -4*)
+		VAR i, adr, size: LONGINT;
+	BEGIN
+		size := len * elsize + 4; adr := ADDRESSOF(a);
+		SYSTEM.PUT(adr, heap - 12);   (*address of array into descriptor*)
+		SYSTEM.PUT(adr-4, len);   (*length of array into descriptor*)
+		SYSTEM.PUT(heap, size);   (*size of block into header*)
+		IF size MOD 4 # 0 THEN INC(size, 4 - size MOD 4) END;
+		IF Initialize THEN Memory.Fill8(heap + 4, len * elsize, 0X) END;
+		heap := heap + size;
+
+		ASSERT(heap < heapEnd);
+		ASSERT(heapStart <= heap);
+	END AllocH;
+
+	PROCEDURE AllocS*(VAR a: LONGINT; len, elsize: LONGINT);  (*3*)
+		(*allocate open array on stack*)
+		VAR adr: LONGINT;
+	BEGIN adr := ADDRESSOF(a); SYSTEM.SETSP(SYSTEM.SP() - len * elsize);
+		SYSTEM.PUT(adr, SYSTEM.SP());   (*address of array into descriptor*)
+		SYSTEM.PUT(adr-4, len)   (*length of array into descriptor*)
+	END AllocS;
+	
+	PROCEDURE Alloc*( VAR adr: LONGINT;  size: LONGINT );
+	(*allocate area from free space*)
+	VAR
+		i: LONGINT;
+	BEGIN
+		IF size MOD 4 # 0 THEN INC(size, 4 - size MOD 4) END;
+		adr := heap;
+		IF Initialize THEN Memory.Fill8(adr, size, 0X) END;
+		(*INC (size, 4);*)
+		(*SYSTEM.PUT (heap, size);*)
+		heap := heap + size;
+		ASSERT(heap < heapEnd);
+		ASSERT(heapStart <= heap);
+	END Alloc;  
+	
+	PROCEDURE HeapSize*(): LONGINT;
+	BEGIN
+		RETURN heapEnd - heapStart
+	END HeapSize;
+	
+	PROCEDURE Free*(): LONGINT;
+	BEGIN
+		RETURN heapEnd - heap
+	END Free;
+	
+	(* PROCEDURES THAT ARE USED BY THE FOX COMPILER *)
+	
+	(** NewSys - Implementation of SYSTEM.NEW. **)
+	PROCEDURE NewSys*(VAR pointer: ANY; size: SIZE; isRealtime: BOOLEAN);
+	VAR
+		pointerAsInteger: LONGINT;
+	BEGIN	
+		Alloc(pointerAsInteger, size);
+		pointer := SYSTEM.VAL(ANY, pointerAsInteger)
+	END NewSys;
+
+	(** NewRec - Implementation of NEW with a record.
+	- this is essentially a wrapper that calls New(...) **)
+	PROCEDURE NewRec*(VAR pointer: ANY; typeTag: ADDRESS; isRealtime: BOOLEAN);
+	VAR
+		pointerAsInteger: LONGINT;
+	BEGIN
+		New(pointerAsInteger, SYSTEM.VAL(LONGINT, typeTag));
+		pointer := SYSTEM.VAL(ANY, pointerAsInteger)
+	END NewRec;
+
+	(** NewArr - Implementation of NEW with an array containing pointers. *)
+	PROCEDURE NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN);
+	VAR
+		openArray: ARRAY 2 OF LONGINT;
+	BEGIN
+		AllocH(openArray[1], numElems * numDims, SYSTEM.GET32(elemTag));
+		p := SYSTEM.VAL(ANY, openArray[1]);
+	END NewArr;
+
+	
+	(* replacement for overcomplicated code emission -- at the cost of a slightly increased runtime cost *)
+	PROCEDURE NewArray*(CONST a: ARRAY OF SIZE;  tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY);
+	TYPE
+		UnsafeArray= POINTER {UNSAFE,UNTRACED} TO UnsafeArrayDesc;
+		UnsafeArrayDesc = RECORD
+			header : ARRAY 3 OF ADDRESS; 
+			len: ARRAY 8 OF SIZE;
+		END;
+	VAR p: ANY; dim: SIZE;
+			
+			PROCEDURE GetSize(): SIZE;
+			VAR i: SIZE; size: SIZE;
+			BEGIN
+				size := 1;
+				FOR i := 0 TO dim-1 DO
+					size := size * a[i];
+				END;
+				RETURN size*staticElements;
+			END GetSize;
+			
+			PROCEDURE SetSizes(dest: UnsafeArray);
+			VAR i: SIZE;
+			BEGIN
+				FOR i := 0 TO dim-1 DO
+					dest.len[i] := a[dim-1-i];
+				END;
+			END SetSizes;
+
+		BEGIN
+			(* static elements is requred for this case : POINTER TO ARRAY OF ARRAY X OF RecordWithPointer *)
+			dim := LEN( a,0 );
+			IF tag = NIL THEN
+				NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 3 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
+			ELSE
+				NewArr(p, tag, GetSize(), dim, FALSE);
+			END;
+			SetSizes(p);
+			dest := p;
+	END NewArray;
+	
+
+	PROCEDURE Show*();
+	BEGIN
+		Trace.String("Heap base : "); Trace.Hex( heapStart, -8 ); Trace.String("; heap "); Trace.Hex( heap, -8 ); Trace.String("; end "); Trace.Hex( heapEnd, -8 ); Trace.Ln;
+	END Show;
+
+BEGIN 
+	 (* Init heap, currently done manually *)
+	heapStart := Board.HeapBase;
+	heap := Board.HeapBase;
+	heapEnd := Board.HeapEnd;
+END Heaps.
+

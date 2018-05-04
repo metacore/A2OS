@@ -1,0 +1,243 @@
+MODULE UartMin;   
+
+(*
+ DO NOT use DIV, MOD or Real in this module as the floting point emulation might not yet be installed!!!
+*)
+
+IMPORT SYSTEM, Platform, Board, Trace;
+
+CONST
+ 	BaseUART0 				= LONGINT( 0E0000000H );
+	BaseUART1 				= LONGINT( 0E0001000H );
+
+	CONTROLREG0			= LONGINT( 00H );
+	MODEREG0				= LONGINT( 04H );
+	INTRPENREG0				= LONGINT( 08H );
+	INTERDISREG0				= LONGINT( 0CH );
+	INTERMASKREG0			= LONGINT( 10H );	(* read only *)
+	CHNLINTSTSREG0			= LONGINT( 14H );
+	BAUDRATEGENREG0		= LONGINT( 18H );	
+	RCVRTIMEOUTREG0		= LONGINT( 1CH );
+	RCVRFIFOTRIGLEV0		= LONGINT( 20H );
+	MODEMCTRLREG0		= LONGINT( 24H );
+	MODEMSTATUSREG0		= LONGINT( 28H );
+	CHANNELSTATUSREG0	= LONGINT( 2CH );
+	TXRXFIFO0					= LONGINT( 30H );
+	BAUDRATEDIVREG0		= LONGINT( 34H );
+	FLOWDELAYREG0			= LONGINT( 38H );
+	TXFIFOTRIGLEV0			= LONGINT( 44H );
+
+
+VAR 
+
+	base : LONGINT;
+	lnk : PROCEDURE;
+
+	PROCEDURE Flush*;  
+	VAR 
+		s: SET;
+	BEGIN
+		REPEAT 
+			SYSTEM.GET( CHANNELSTATUSREG0 + base, s ); 
+		UNTIL 3 IN s;  
+	END Flush;
+
+	PROCEDURE WriteChar (ch: CHAR);
+	VAR 
+		i : LONGINT;
+	BEGIN
+		SYSTEM.PUT( TXRXFIFO0 + base, ch); Flush;
+	END WriteChar;  
+
+	PROCEDURE OpenComPort*( baudrate, parity, databits (* fof *) : LONGINT; flowControl: BOOLEAN );  
+	VAR b, reg: LONGINT; s: SET;  
+	BEGIN 
+	(*
+			SYSTEM.PUT8( UARTIER + Base, 0 );   (* disable UART *)
+
+			FOR b := 0 TO 10000H DO END;
+			
+			SYSTEM.PUT8( UARTLCR + Base, 80H );   (* DLAB = 1 *)
+			b := 921600 DIV baudrate;
+			SYSTEM.PUT8( UARTDLL + Base, b MOD 100H );
+			
+			(* See PXA27x Errata Nr. 75: Uart baud rate may not be programmed correctly on back to back writes *)
+			REPEAT SYSTEM.GET(UARTDLL + Base, reg) UNTIL (b MOD 100H) = (reg MOD 100H);
+
+			SYSTEM.PUT8( UARTDLH + Base, b DIV 100H );
+			IF (databits <= 8) & (databits >= 5) THEN
+				parity := parity + databits - 5;
+			ELSE
+				INC( databits, 3H ) (* 8 Bit default *)
+			END;
+			SYSTEM.PUT8( UARTLCR + Base,  (* 3H +*) parity );   (* DLAB = 0, 8 data/1 stop *)
+			SYSTEM.PUT8( UARTMCR + Base, 0H );   (* disable UART interrupts *)
+			SYSTEM.PUT8( UARTFCR + Base, 1H );   (* enable FIFO *)
+			SYSTEM.PUT8( UARTIER + Base, 40H );  (* Enable UART, no interrupts *)	
+			
+			FOR b := 0 TO 10000H DO END;
+	*)		
+	END OpenComPort;
+	
+	PROCEDURE Init*;  
+	VAR
+		i: LONGINT;
+		reg, tempSet: SET;
+	BEGIN 		
+		
+		IF Board.KernelOutputUart = 0 THEN
+			base:=BaseUART0
+		ELSE
+			base:=BaseUART1
+		END;
+		Trace.Char := Ch;
+		(*Trace.StringLn("Trace connected to UART min.");*)
+
+	END Init;  
+
+	PROCEDURE Ln*;
+	BEGIN 
+		WriteChar (0DX); WriteChar (0AX)
+	END Ln;
+	
+	PROCEDURE Ch* (c: CHAR);
+	BEGIN 
+		WriteChar (c); 
+	END Ch;
+	
+	PROCEDURE Str* (CONST text: ARRAY OF CHAR);
+	VAR i: LONGINT;
+	BEGIN
+		i := 0; WHILE (i # LEN (text)) & (text[i] # 0X) DO WriteChar (text[i]); INC (i) END; 
+	END Str;
+	
+	PROCEDURE StrLn* (CONST text: ARRAY OF CHAR);
+	BEGIN 
+		Str (text); Ln;
+	END StrLn;
+	
+	PROCEDURE HexValue*( val: LONGINT);  
+	VAR 
+		i, j: LONGINT;
+		digits: ARRAY 36 OF LONGINT;
+		str: ARRAY 36 OF CHAR;
+	BEGIN
+		i := 0; j := 0;
+		REPEAT 
+(*			digits[i] := val MOD 10H;  INC( i );  val := val DIV 10H; UNTIL val = 0;   *)
+			digits[i] := val MOD 10H;  INC( i );  val := LSH(val, -4); UNTIL val = 0;
+		DEC( i );
+		WHILE i >= 0 DO
+			IF digits[i] > 9 THEN 
+				str[j] := CHR( digits[i] - 10 + ORD( 'A' ) );  
+			ELSE
+				str[j] := CHR( digits[i] + ORD( '0' ) );  
+			END;
+			INC( j );  DEC( i ) 
+		END;
+		str[j] := 0X;  
+
+		Str(str);
+	END HexValue;
+
+	PROCEDURE Hex* (val: LONGINT);
+	BEGIN 
+		HexValue (val)
+	END Hex;
+
+(*	PROCEDURE Int* (val: LONGINT);
+	BEGIN Value (val, 10)
+	END Int;
+
+	PROCEDURE Bits* (val: SET);
+	BEGIN HexValue (SYSTEM.VAL (LONGINT, val), 2);
+	END Bits;
+*)
+	PROCEDURE Bool* (bol: BOOLEAN);
+	BEGIN IF bol THEN Str ("TRUE") ELSE Str ("FALSE") END
+	END Bool;
+	
+	PROCEDURE Mem* (adr, size: LONGINT);
+	VAR b: CHAR; byte, val, i: LONGINT;
+	BEGIN
+		WHILE size # 0 DO
+			Hex (adr); Ch (20X);
+			IF size > 8 THEN i := 8 ELSE i := size END;
+			REPEAT
+				SYSTEM.GET (adr, b);
+				HexValue(ORD(b) DIV 10H);
+				HexValue (ORD (b) MOD 10H);
+				Ch (20X); INC (adr); DEC (i); DEC (size);
+			UNTIL i = 0;
+			Ln;
+		END;
+	END Mem;
+
+	PROCEDURE Set* (val: SET);
+	VAR i: LONGINT; comma: BOOLEAN;
+	BEGIN
+		Ch ('{'); i := 0; comma := FALSE;
+		WHILE i # 32 DO
+			IF i IN val THEN
+				IF comma THEN Str (", ") ELSE comma := TRUE END;
+				IF i >= 10H THEN HexValue(i DIV 10H) END; 
+				HexValue (i MOD 10H);
+			END; 
+			INC (i)
+		END;
+		Ch ('}');
+	END Set;
+
+	PROCEDURE PrintComPortSettings;
+	VAR
+		s: SET;
+	BEGIN
+	(*
+		SYSTEM.GET( GPDR0, s);
+		Str("GPDR0: "); Set(s); Ln;
+		SYSTEM.GET( GPDR1, s);
+		Str("GPDR1: "); Set(s); Ln;
+		SYSTEM.GET( GPDR2, s);
+		Str("GPDR2: "); Set(s); Ln;
+		SYSTEM.GET( GPDR3, s);
+		Str("GPDR2: "); Set(s); Ln;
+	
+		SYSTEM.GET( UARTIER + Base, s );
+		Str("UARTIER: "); Set(s); Ln;
+		SYSTEM.GET( UARTLCR + Base, s );
+		Str("UARTLCR: "); Set(s); Ln;
+		SYSTEM.GET( UARTMCR + Base, s );
+		Str("UARTMCR: "); Set(s); Ln;
+		SYSTEM.GET( UARTFCR + Base, s );
+		Str("UARTFCR: "); Set(s); Ln;
+	*)
+	END PrintComPortSettings;
+	
+	PROCEDURE IsAvailable*() : BOOLEAN;
+	VAR tmp : LONGINT;
+		 ret : BOOLEAN;
+	BEGIN
+		ret := FALSE;
+	 	(* SYSTEM.GET( UARTLSR+Base, tmp ); *)
+	 	RETURN ODD(tmp)
+(*
+		IF Bit.AND( tmp, 1 ) = 1 THEN
+			ret := TRUE;
+		END;
+		RETURN ret
+*)
+	END IsAvailable;  
+	
+	PROCEDURE GetChar*() : LONGINT;
+	VAR tmp : LONGINT;
+	BEGIN
+		SYSTEM.GET( TXRXFIFO0+base, tmp );
+		RETURN tmp
+	END GetChar;
+
+	PROCEDURE Done*;
+	BEGIN StrLn ("DONE"); REPEAT UNTIL FALSE
+	END Done;
+
+BEGIN
+END UartMin.

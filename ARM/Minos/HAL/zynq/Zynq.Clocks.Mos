@@ -1,0 +1,263 @@
+MODULE Clocks; 
+
+IMPORT Platform, SYSTEM, Bit, Trace;
+
+CONST
+	COFF = 26;
+	
+	PLLINPUTFRE	= LONGINT( 50000000 );
+	
+TYPE	
+	ClockValueType = RECORD
+		six21 : BOOLEAN;
+		fdiv : LONGINT;
+		divisor : LONGINT;
+		pllclk : LONGINT;
+		cpu6x4x : REAL;
+		cpu3x2x : REAL;
+		cpu2x : REAL;
+		cpu1x : REAL;
+	END;
+
+VAR
+	me : ClockValueType;
+	
+PROCEDURE GetPllDiv( reg : LONGINT ) : LONGINT;
+VAR 
+	res : LONGINT;
+BEGIN
+	res := reg DIV 1000H;
+	res := Bit.AND( res, 07FH );
+	RETURN res;
+END GetPllDiv;
+
+PROCEDURE GetDivisor( reg : LONGINT ) : LONGINT;
+VAR
+	res : LONGINT;
+BEGIN
+	res := reg DIV 100H;
+	res := Bit.AND( res, LONGINT( 03FH ));
+	RETURN res;
+END GetDivisor;
+
+PROCEDURE GetTimerClock*() : LONGINT;
+BEGIN
+	RETURN ENTIER( me.cpu3x2x );
+END GetTimerClock;
+
+(*
+PROCEDURE ShowPllSettings( VAR sreg : SET );
+VAR	
+	reg : LONGINT;
+BEGIN
+
+	(* show the boolean flags of the PLL *)
+	Trace.StringA("PLL Reset", COFF, TRUE );
+	IF ( 0 IN sreg ) THEN
+		Trace.StringLn("asserted");
+	ELSE
+		Trace.StringLn("de-asserted");
+	END;
+	
+	Trace.StringA("PLL Power Down", COFF, TRUE );
+	IF ( 1 IN sreg ) THEN
+		Trace.StringLn("down");
+	ELSE
+		Trace.StringLn("running");
+	END;
+	
+	Trace.StringA("PLL Bypass Source", COFF, TRUE );
+	IF ( 3 IN sreg ) THEN
+		Trace.StringLn("boot strap value");
+	ELSE
+		Trace.StringLn("bypass control bit");
+	END;
+	
+	Trace.StringA("PLL Bypass Control Bit", COFF, TRUE );
+	IF ( 4 IN sreg ) THEN
+		Trace.StringLn("bypassed");
+	ELSE
+		Trace.StringLn("enabled, not bypassed");
+	END;
+	
+	(* extract the divider used for the counter *)
+	reg := GetPllDiv( SYSTEM.VAL(LONGINT, sreg ));
+	Trace.StringA("PLL FDIV Value", COFF, TRUE );
+	Trace.String("0x"); Trace.Hex( reg, -8 ); Trace.Ln;
+	
+END ShowPllSettings;
+
+
+PROCEDURE ShowArmClock();
+VAR
+	sreg : SET;
+	reg : LONGINT;
+BEGIN
+
+	Trace.StringLn("* ARM PLL Configuration *");
+	Trace.Ln;
+
+	(* load the arm pll control register *)
+	(*SYSTEM.GET( Platform.SLCRARMPLL, sreg );*)
+	sreg := SYSTEM.VAL(SET, Platform.slcr.ARM_PLL_CTRL);
+	ShowPllSettings( sreg );
+
+	
+	Trace.Ln;
+	Trace.StringLn("* ARM Clk Configuration *");
+	Trace.Ln;
+
+	(* load the clock control register *)
+	(*SYSTEM.GET( Platform.SLCRARMCLKCONTROL, sreg );*)
+	sreg := SYSTEM.VAL(SET, Platform.slcr.ARM_CLK_CTRL);
+	Trace.StringA("Raw Register", COFF, TRUE ); 
+	reg := SYSTEM.VAL( LONGINT, sreg );
+	Trace.Hex( reg, -8 ); Trace.Ln;
+	
+	reg := reg DIV 10H;
+	reg := Bit.AND( reg, 03H );
+	
+	Trace.StringA("Clock Source", COFF, TRUE );
+	IF ( reg = 3 ) THEN
+		Trace.StringLn("IO PLL");
+	ELSIF ( reg = 2 ) THEN
+		Trace.StringLn("DDR3 PLL");
+	ELSE
+		Trace.StringLn("ARM PLL");
+	END;
+	
+	(* extract the clock divisor value *)
+	reg := GetDivisor( SYSTEM.VAL( LONGINT, sreg ) );
+	
+	Trace.StringA("Clock Divider", COFF, TRUE );
+	Trace.String("0x"); Trace.Hex( reg, -4 ); Trace.Ln;
+	
+	Trace.StringA("Clock 6x4x", COFF, TRUE );
+	IF ( 24 IN sreg ) THEN
+		Trace.StringLn("enabled");
+	ELSE
+		Trace.StringLn("disabled");
+	END;
+
+	Trace.StringA("Clock 3x2x", COFF, TRUE );
+	IF ( 25 IN sreg ) THEN
+		Trace.StringLn("enabled");
+	ELSE
+		Trace.StringLn("disabled");
+	END;
+
+	Trace.StringA("Clock 2x", COFF, TRUE );
+	IF ( 26 IN sreg ) THEN
+		Trace.StringLn("enabled");
+	ELSE
+		Trace.StringLn("disabled");
+	END;
+	
+	Trace.StringA("Clock 1x", COFF, TRUE );
+	IF ( 27 IN sreg ) THEN
+		Trace.StringLn("enabled");
+	ELSE
+		Trace.StringLn("disabled");
+	END;
+	
+	Trace.StringA("Clock CPU Peripherial", COFF, TRUE );
+	IF ( 28 IN sreg ) THEN
+		Trace.StringLn("enabled");
+	ELSE
+		Trace.StringLn("disabled");
+	END;
+	
+	Trace.Ln;
+	Trace.StringLn("* Clock Frequencies *");
+	Trace.Ln;
+	
+	Trace.StringA("Sys Clk", COFF, TRUE ); Trace.Int( PLLINPUTFRE, 10 ); Trace.String(" Hz"); Trace.Ln;
+	Trace.StringA("PLL Clk", COFF, TRUE ); Trace.Int( me.pllclk, 10 ); Trace.String(" Hz"); Trace.Ln;
+	Trace.StringA("FDIV", COFF, TRUE ); Trace.Int( me.fdiv, 10 ); Trace.Ln;
+	Trace.StringA("Divisor", COFF, TRUE ); Trace.Int( me.divisor, 10 ); Trace.Ln;
+	Trace.StringA("CPU Clock", COFF, TRUE ); Trace.Real( me.cpu6x4x, 0, 10 ); Trace.String(" Hz"); Trace.Ln;
+	Trace.StringA("CPU Clock 3x2x", COFF, TRUE ); Trace.Real( me.cpu3x2x, 0, 10 ); Trace.String(" Hz"); Trace.Ln;
+	Trace.StringA("CPU Clock 2x", COFF, TRUE ); Trace.Real( me.cpu2x, 0, 10 ); Trace.String(" Hz"); Trace.Ln;
+	Trace.StringA("CPU Clock 1x", COFF, TRUE ); Trace.Real( me.cpu1x, 0, 10 ); Trace.String(" Hz"); Trace.Ln;
+	
+END ShowArmClock;
+
+PROCEDURE ShowDdrClock();
+VAR
+	sreg : SET;
+BEGIN
+
+	Trace.StringLn("* DDR PLL Configuration *");
+	Trace.Ln;
+
+	(* load the ddr pll control register *)
+	(*SYSTEM.GET( Platform.SLCRDDRPLL, sreg );*)
+	sreg := SYSTEM.VAL(SET, Platform.slcr.DDR_PLL_CTRL);
+	ShowPllSettings( sreg );
+	
+END ShowDdrClock;
+
+
+PROCEDURE ShowClock*();
+
+BEGIN
+
+	Trace.Ln;
+	Trace.Ln;
+	Trace.StringLn("*** Global Clock Configuration ***");
+	Trace.Ln;
+	Trace.Ln;
+	
+	ShowArmClock();	
+	
+	Trace.Ln;
+	
+	ShowDdrClock();
+	
+	Trace.Ln;
+	Trace.Ln;
+
+END ShowClock;
+
+PROCEDURE ShowTimer*();
+BEGIN
+	Trace.String("Timer Clock : "); Trace.Int( GetTimerClock(), 12); Trace.Ln;
+END ShowTimer;
+*)
+PROCEDURE InitClocks*();
+CONST
+	OFFS = 12;
+VAR
+	reg : LONGINT;
+	f : LONGREAL;
+BEGIN
+	reg := Platform.slcr.ARM_PLL_CTRL;
+	(*SYSTEM.GET( Platform.SLCRARMPLL, reg );*)
+	me.fdiv := GetPllDiv( reg );
+	me.pllclk := me.fdiv * PLLINPUTFRE;
+	reg := Platform.slcr.ARM_CLK_CTRL;
+	(*SYSTEM.GET( Platform.SLCRARMCLKCONTROL, reg );*)
+	me.divisor := GetDivisor( reg );
+	IF ( me.six21 ) THEN
+		(* 6:2:1 setting on clock distributor *)
+		me.cpu6x4x := me.pllclk / me.divisor;
+		me.cpu1x := me.cpu6x4x / 6;
+		me.cpu2x := me.cpu6x4x / 3;
+		me.cpu3x2x := me.cpu6x4x / 2;
+	ELSE
+		(* 4:2:1 setting on clock distributor *)
+	END;
+	
+END InitClocks;
+
+BEGIN
+	me.six21 := TRUE; (* hardcoded for now *)
+	InitClocks;
+END Clocks.
+
+Clocks.ShowClock
+TClocks.InitClocks
+
+TClocks.ShowTimer
+
+

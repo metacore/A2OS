@@ -1,0 +1,263 @@
+\documentclass[a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% Uncomment/Add packages as needed. Try to keep it minimal.
+%\usepackage[bookmarks,bookmarksopen,bookmarksdepth=3]{hyperref}
+%\usepackage{color}
+%\usepackage{calc}
+%\usepackage{amsfonts}
+%\usepackage{float}
+\usepackage{graphicx,epstopdf}
+%\usepackage{amsmath}
+%\usepackage[percent]{overpic}
+%\usepackage{multicol}
+%\usepackage{multirow}
+%\usepackage{algorithm}
+
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\module}[1]{\texttt{#1}}
+
+\title{\texttt{A2} on ARM}
+\author{Dmytro Shulga \and Timothée Martiel}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section*{Introduction}
+This paper provides the description of A2 for ARM. This port of  A2 operating
+system to the ARM is currently maintained by Timothée Martiel.
+
+This document is organized as follows: section~\ref{sec:core} describes the
+minimal set of modules needed to run A2 on ARM, section~\ref{sec:port} explains
+how to adapt A2 to a new ARM CPU or board. Section~\ref{sec:drivers} describes
+the specificities of common ARM device drivers available on A2, and how to adapt
+them to your new hardware. At last, section~\ref{sec:design} details design and
+implementation choices of A2 on ARM for the interested reader.
+
+\section{Core Kernel Modules}
+\label{sec:core}
+The core kernel modules are the minimum set of modules needed to run A2 on ARM.
+These modules are usually linked together (and with other modules needed to
+provide dynamic module loading) into an executable file: the A2 static image.
+
+The core modules can be divided into 2 categories:
+\begin{enumerate}
+    \item low-level runtime modules, that provide runtime services for the lower
+        layers of the operating system and
+    \item the A2 core, which implements Active Oberon runtime services and is
+        the core of the A2 operating system.
+\end{enumerate}
+We will go through all modules in these categories and detail their purposes.
+
+\subsection{Low-Level Runtime}
+Modules in the low-level runtime provide basic support that is not directly
+related to the A2 core services (heaps, scheduling, synchronization, module
+loading).
+
+The modules present in the low-level runtime are:
+\begin{enumerate}
+    \item \module{Initializer},
+    \item \module{Runtime},
+    \item \module{Platform},
+    \item \module{FPE64},
+    \item \module{ARMRuntime},
+    \item \module{Trace},
+    \item \module{Uart}.
+\end{enumerate}
+
+\module{Initializer} provides the interrupt vector, placed at memory address
+$0$. It also provides basic processor initialization: default stack, disabling
+caches and MMU.
+
+The module \module{Runtime} is needed for dynamic module loading. It records
+every module loaded (from the kernel image) before \module{Modules}. When
+\module{Modules} is loaded, it will retrieve that information and use it to make
+these early modules available to the linker.
+
+\module{Platform} defines platform-specific constants. These constants are
+mostly memory-mapped register addresses.
+
+Modules \module{FPE64} and \module{ARMRuntime} provide a small computation
+library. \module{FPE64} implements 64 bits floating-point emulation.
+\module{ARMRuntime} provides integer division and modulo and a wrapper for
+floating-point emulation. Procedures exported in \module{ARMRuntime} are used
+automatically in compiler-generated code.
+
+\module{Trace} provides an output mechanism for the core A2 modules. On ARM it
+uses UART. So naturally, \module{Uart} is the UART driver.
+
+Note that, since the A2 services are not yet available when these modules are
+loaded and used, they must not rely on these services. That is, they are
+forbidden to use:
+\begin{enumerate}
+    \item \texttt{NEW}
+    \item \texttt{ACTIVE} objects
+    \item \texttt{EXCLUSIVE} blocks and procedures
+    \item dynamic module loading
+    \item scheduling
+\end{enumerate}
+To develop and maintain these modules, stick to a procedural style, using only
+static variables and no parallelism.
+
+\subsection{A2 Core}
+The A2 core modules implement Active Oberon language features that require
+runtime components. This makes the core of the operating system. The modules
+composing the A2 core are:
+\begin{enumerate}
+    \item \module{Machine},
+    \item \module{Heaps},
+    \item \module{Modules},
+    \item \module{Objects},
+    \item \module{Kernel}.
+\end{enumerate}
+
+\module{Machine} provides an abstraction of the processor and memory. It is
+responsible for providing various machine-dependent services, such as interrupt
+handling, cache maintenance, virtual memory management, spinlocks, etc. It also
+does the basic initialization of the booting processor.
+
+\module{Heaps} implements the heap and garbage collector.
+
+\module{Modules} maintains the list of available modules and provides module
+management services (loading, unloading, linking information, etc).
+
+\module{Objects} implements language features related to objects. It implements
+the scheduler(for \texttt{ACTIVE} objects) and object monitors (for
+\texttt{EXCLUSIVE} blocks and procedures). After initialization of this module,
+the scheduler is working: processes can be used.
+
+\module{Kernel} provides an abstraction layer of the kernel, finalizes the boot
+process (starting non-booting processors) and provides timer services.
+
+\section{Adapting A2 to new Hardware}
+\label{sec:port}
+% This section describes where platform and proc-specific code is and what might
+% require changes for a new board and proc
+% Organized by modules
+
+\section{Drivers and Services}
+\label{sec:drivers}
+% Organization and portability and specificities of drivers.
+\subsection{UART}
+\subsection{Ethernet}
+\subsection{USB}
+\subsection{DMA}
+
+\section{Design of A2 on ARM}
+% ARM-specific design and implementation, by topics
+\subsection{Memory}
+\subsection{Cache Management}
+\subsection{Locks}
+\subsection{Scheduling}
+\subsection{FPU}
+\subsection{Compiler}
+
+\end{document}
+%\section{A2 for ARM Description}
+
+
+\subsection{Kernel support modules}
+
+Following files are providing basic support for ARM platforms:
+\begin{enumerate}
+\item Initializer.Zynq.Mod
+\item Runtime.Mod
+\item Platform.Mod
+\item FPE64.Mod
+\item ARMRuntime.Mod
+\item Trace.Mod
+\item Zynq.Uart.Mod
+\end{enumerate}
+
+Now we go through the purposes of these modules with a little description.
+\subsubsection{Initializer.Zynq.Mod}
+
+This module provides \textbf{Init} procedure. This procedure is placed first in the image file (because of \{INITIAL\} modifier). It provides basic CPU initialization: disables MMU and sets the stack pointer. We disable MMU it make sure that we are working with physical addresses. And we set up the stack to be able to call procedures. We set stack address as $0x00030000$: this is the top of the stack. The stack grows downwards, so the new data will be written into the smallest stack address.  See Fig.\ref{figStack}.
+
+\begin{figure}[H]
+\center
+\includegraphics[scale=0.5]{stack.png}
+\caption{Stack} \label{figStack}
+\end{figure}
+
+It also calls procedure \textbf{InvalidateDCache}. 
+
+Module also has \textbf{Finalize} procedure that is written at the end of the image file because of \{FINAL\} modifier. This procedure is necessary to terminate the initial process. We will explain later what the initial process does.
+
+\subsubsection{Runtime.Mod}
+
+This module is used for dynamic module loading and it gives to the module \textbf{Modules.Mod} information on the statically linked modules that are linked in the image before \textbf{Modules.Mod}. 
+
+\textbf{Modules.Mod} needs to know about every module loaded in the system including those that are in the static image. In order to make those modules that are linked before \textbf{Modules.Mod} available to \textbf{Modules.Mod} the module \textbf{Runtime.Mod} provides the procedure \textbf{InsertModule}.
+
+\subsubsection{Platform.Mod}
+
+This module contains constants that are used by \textbf{Machine.Mod}. Most constants are essential I/O register addresses.
+
+\subsubsection{FPE64.Mod}
+
+It is a 64-bits floating point emulation runtime.
+
+\subsubsection{ARMRuntime.Mod}
+
+This module provides runtime support for integer and floating point computations.
+
+\subsubsection{Trace.Mod}
+
+This is kernel output procedures. It is wired to the UART.
+
+\subsubsection{Zynq.Uart.Mod}
+
+This is the UART driver. It is loaded before the system kernel. It makes it available to all the loaded code. It supports several UARTs. The UART that is used by \textbf{Trace.Mod} is determined by constant \textit{Platform.KernelOutputUart}, that represents an index in the \textit{uarts} array.
+
+
+\subsection{A2 Kernel}
+
+Here we describe the kernel itself that does everything. It is composed of the following modules:
+
+\begin{enumerate}
+\item ARM.Machine.Mod
+\item Heaps.Mod
+\item oc/Generic.Modules.Mod
+\item Objects.Mod
+\item Kernel.Mod
+\end{enumerate}
+
+\subsubsection{ARM.Machine.Mod}
+
+This module provides an abstraction of the platform (CPU, memory, etc.). It provides abstract processor manipulations, for example cache maintenance operations, interrupt handling, low-level locks, virtual memory management, stack management, default trap handling and multiprocessor booting.
+
+The steps of the initialization sequence within \textbf{ARM.Machine.Mod}:
+\begin{enumerate}
+\item setup interrupt stacks;
+\item install UART drivers and setup tracing;
+\item initialize the boot processor: enabling caches, FPU, memory sharing;
+\item install default interrupt handlers;
+\item initialize virtual memory: setup page tables, enable MMU;
+\item initialize low-level locks.
+\end{enumerate}
+
+\subsubsection{Heaps.Mod}
+
+It implements the heap. That is to say it provides:
+\begin{enumerate}
+\item the \textit{new} procedure;
+\item garbage collection.
+\end{enumerate}
+
+\subsubsection{oc/Generic.Modules.Mod}
+
+It maintains the list of loaded modules (\textit{root} variable) and it provides a generic interface for module management.
+
+\subsubsection{Objects.Mod}
+
+This module provides scheduling and object synchronization. Synchronization is provided by \{EXCLUSIVE\} modifier in the ActiveOberon language.
+
+\subsubsection{Kernel.Mod}
+
+It provides mainly timers for applications. It starts the non-booting processors. It also enables interrupts. 
+
+
+\end{document}

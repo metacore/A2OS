@@ -1,0 +1,96 @@
+MODULE ZynqInitializer;
+
+IMPORT SYSTEM, Platform, Board, TclInit;
+
+CONST
+	InitialStackPointer = 30000H;
+
+	(* initialization, minimal setup: setup initial stack pointer and mask interrupts*)
+	(* PROCEDURE {INITIAL} Init; *)
+	(*PROCEDURE {NOPAF, FIXED(Board.StartAddress)} Init;
+	CODE
+			; set IRQ vector base register to zero
+			mov	r0, #0
+			mcr	p15, 0, r0, c12, c0, 0
+
+			; disable MMU
+			mrc	p15, 0, r0, c1, c0, 0
+			bic		r0, r0, #1
+			mcr	p15, 0, r0, c1, c0, 0
+
+			ldr		fp, [pc, #InitialFP-$-8] ; set stack pointer
+			ldr		sp, [pc, #InitialFP-$-8] ; set frame pointer
+
+			; have to skip the constants because this is not a procedure that had been called, we are natively in initial code
+			ldr		r0, [pc, #Initialize-$-8]
+			blx		r0
+			;bl		InitializeTcl
+			b		end
+
+			; constants used
+		InitialFP: 	d32 30000H;InitialStackPointer ; initial frame pointer address, internal memory bank
+		Initialize:	d32 InitializeTcl
+		end:
+	END Init;*)
+
+	PROCEDURE {FINAL} Finalize;
+	BEGIN
+		LOOP END;
+	END Finalize;
+
+	(** Performs initialization specified in a TCL subset *)
+	PROCEDURE InitSubset(CONST data: ARRAY [*] OF ADDRESS);
+	VAR val, valo, mask: SET; i, j: LONGINT; opcode, adr: LONGINT;
+	BEGIN
+		(*IF LEN(data, 0) = 1 THEN RETURN END;*)
+		i := 0;
+		WHILE i < LEN(data,0) DO
+			opcode := data[i];
+			IF opcode = TclInit.mask_write THEN
+				adr := data[i+1]; mask := SYSTEM.VAL(SET,data[i+2]); val := SYSTEM.VAL(SET,data[i+3]); INC(i,4);
+				SYSTEM.GET(adr, valo);
+				val := mask*val + (-mask) * valo;
+				SYSTEM.PUT(adr, val);
+			ELSIF opcode = TclInit.mask_poll THEN
+				adr := data[i+1]; mask := SYSTEM.VAL(SET, data[i+2]); INC(i,3);
+				REPEAT
+					SYSTEM.GET(adr, val)
+				UNTIL val * mask # {}
+			ELSIF opcode = TclInit.mask_delay THEN
+				INC(i, 3);
+				FOR j := 0 TO 1000000 DO END
+			ELSE
+				INC(i)
+			END;
+		END;
+	END InitSubset;
+
+	(** Perform TCL initialization *)
+	PROCEDURE InitializeTcl;
+	VAR siliconVersion: LONGINT;
+	BEGIN
+		siliconVersion := LSH(SYSTEM.GET32(Platform.DevCfgBase + Platform.DevCfgMctrlOffset), -Platform.DevCfgMctrlPsVersionOfs) MOD 4;
+		CASE siliconVersion OF
+			 Platform.DevCfgMctrlPsVersion10:
+				InitSubset(TclInit.ps7_mio_init_data_1_0);
+				InitSubset(TclInit.ps7_pll_init_data_1_0);
+				InitSubset(TclInit.ps7_clock_init_data_1_0);
+				InitSubset(TclInit.ps7_ddr_init_data_1_0);
+				InitSubset(TclInit.ps7_peripherals_init_data_1_0)
+			|Platform.DevCfgMctrlPsVersion20:
+				InitSubset(TclInit.ps7_mio_init_data_2_0);
+				InitSubset(TclInit.ps7_pll_init_data_2_0);
+				InitSubset(TclInit.ps7_clock_init_data_2_0);
+				InitSubset(TclInit.ps7_ddr_init_data_2_0);
+				InitSubset(TclInit.ps7_peripherals_init_data_2_0)
+			|Platform.DevCfgMctrlPsVersion30, Platform.DevCfgMctrlPsVersion31:
+				InitSubset(TclInit.ps7_mio_init_data_3_0);
+				InitSubset(TclInit.ps7_pll_init_data_3_0);
+				InitSubset(TclInit.ps7_clock_init_data_3_0);
+				InitSubset(TclInit.ps7_ddr_init_data_3_0);
+				InitSubset(TclInit.ps7_peripherals_init_data_3_0)
+		END
+	END InitializeTcl;
+BEGIN
+	InitializeTcl
+END ZynqInitializer.

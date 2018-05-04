@@ -1,0 +1,7 @@
+Porting the VNC modules to ARM.
+
+The following modules are platform-dependent and need to be ported:
+	- IP
+	- Network
+	- WMRasterScale.Mod
+	- Raster.Mod

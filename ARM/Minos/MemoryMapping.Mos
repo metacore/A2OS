@@ -1,0 +1,34 @@
+MODULE MemoryMapping;
+(**
+	AUTHOR Timothée Martiel, 12/2015
+	PURPOSE Application-specific virtual memory mapping setup for Minos.
+*)
+
+IMPORT SYSTEM, Trace, Memory;
+CONST
+	k	= 1024;
+	M	= k * k;
+	G	= M * k;
+
+	PROCEDURE SetupPageTable ;
+	VAR
+		i: LONGINT;
+	BEGIN
+		(* Reset all entries to 0 *)
+		FOR i := 0 TO Memory.PageTableLength DO
+			SYSTEM.PUT32( Memory.virtualPageTable+(i*4), 0 );
+		END;
+
+		(* 1:1 Mapping of first 120 MB. *)
+		Memory.AllocateMmu(0, 0, 510 * M, Memory.SrwUrw, Memory.Cacheable + Memory.Shareable);
+		
+		(* 1:1, Non cached mapping for I/O *)
+		Memory.AllocateMmu(ADDRESS(040000000H), ADDRESS(040000000H), ADDRESS( 3008* M), Memory.SrwUrw, Memory.B);
+	END SetupPageTable;
+
+BEGIN
+	Trace.StringLn("MMU -> Pre Memory Init");
+	SetupPageTable;
+	Memory.InitMemory;
+	Trace.StringLn("MMU -> Virtual Memory Initialized");
+END MemoryMapping.

@@ -1,0 +1,28 @@
+MODULE TclInit;
+(**
+	AUTHOR Timothée Martiel, 12/2015
+	PURPOSE Default empty TCL initialization module for Minos on Zynq
+
+	Arrays of length 1 are interpreted by the TCL initializer code as 'skip subset'.
+*)
+CONST
+	mask_write * = 0;
+	mask_poll * = 1;
+	mask_delay * = 3;
+
+	ps7_pll_init_data_1_0 * = [-1];
+	ps7_clock_init_data_1_0 * = [-1];
+	ps7_ddr_init_data_1_0 * = [-1];
+	ps7_mio_init_data_1_0 * = [-1];
+	ps7_peripherals_init_data_1_0 * = [-1];
+	ps7_pll_init_data_2_0 * = [-1];
+	ps7_clock_init_data_2_0 * = [-1];
+	ps7_ddr_init_data_2_0 * = [-1];
+	ps7_mio_init_data_2_0 * = [-1];
+	ps7_peripherals_init_data_2_0 * = [-1];
+	ps7_pll_init_data_3_0 * = [-1];
+	ps7_clock_init_data_3_0 * = [-1];
+	ps7_ddr_init_data_3_0 * = [-1];
+	ps7_mio_init_data_3_0 * = [-1];
+	ps7_peripherals_init_data_3_0 * = [-1];
+END TclInit.

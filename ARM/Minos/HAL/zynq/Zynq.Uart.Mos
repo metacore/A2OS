@@ -1,0 +1,969 @@
+MODULE Uart;
+(**
+	AUTHOR: Alexey Morozov, HighDim GmbH, 2013
+	PURPOSE: implementation of the driver for Xilinx Zynq UART PS controller
+*)
+
+IMPORT
+	SYSTEM, Platform, Board, Device, Interrupts, UartConstants, Trace;
+
+CONST
+	DefaultBaudrate* = 115200; (** defauilt UART baudrate *)
+
+	UartNb* = 2;
+	
+	UartBaseAddr0* = ADDRESS(0E0000000H);
+	UartBaseAddr1* = ADDRESS(0E0001000H); (* base address for all UART controllers present in the system *)
+	UartModemPinsConnected0* = FALSE;
+	UartModemPinsConnected1* = FALSE;
+	UartInputClockHz* = Board.UartInputClockHz;
+
+	(** Register offsets for the UART controller *)
+	XUARTPS_CR_OFFSET = 000H;  (** Control Register [8:0] *)
+	XUARTPS_MR_OFFSET = 004H;  (* Mode Register [9:0] *)
+	XUARTPS_IER_OFFSET = 008H;  (* Interrupt Enable [12:0] *)
+	XUARTPS_IDR_OFFSET = 00CH;  (* Interrupt Disable [12:0] *)
+	XUARTPS_IMR_OFFSET = 010H;  (* Interrupt Mask [12:0] *)
+	XUARTPS_ISR_OFFSET = 014H;  (* Interrupt Status [12:0]*)
+	XUARTPS_BAUDGEN_OFFSET = 018H;  (* Baud Rate Generator [15:0] *)
+	XUARTPS_RXTOUT_OFFSET = 01CH;  (* RX Timeout [7:0] *)
+	XUARTPS_RXWM_OFFSET = 020H;  (* RX FIFO Trigger Level [5:0] *)
+	XUARTPS_MODEMCR_OFFSET = 024H;  (* Modem Control [5:0] *)
+	XUARTPS_MODEMSR_OFFSET = 028H;  (* Modem Status [8:0] *)
+	XUARTPS_SR_OFFSET = 02CH;  (* Channel Status [14:0] *)
+	XUARTPS_FIFO_OFFSET = 030H;  (* FIFO [7:0] *)
+	XUARTPS_BAUDDIV_OFFSET = 034H;  (* Baud Rate Divider [7:0] *)
+	XUARTPS_FLOWDEL_OFFSET = 038H;  (* Flow Delay [5:0] *)
+	XUARTPS_TXWM_OFFSET = 044H;  (* TX FIFO Trigger Level [5:0] *)
+
+
+	 (* Control Register Bit Definition
+
+	 	The Control register (CR) controls the major functions of the device.
+	 *)
+	XUARTPS_CR_STOPBRK 		= 000000100H; (* Stop transmission of break *)
+	XUARTPS_CR_STARTBRK 		= 000000080H; (* Set break *)
+	XUARTPS_CR_TORST 			= 000000040H; (* RX timeout counter restart *)
+	XUARTPS_CR_TX_DIS 			= 000000020H; (* TX disabled. *)
+	XUARTPS_CR_TX_EN 			= 000000010H; (* TX enabled *)
+	XUARTPS_CR_RX_DIS	 		= 000000008H; (* RX disabled. *)
+	XUARTPS_CR_RX_EN 			= 000000004H; (* RX enabled *)
+	XUARTPS_CR_EN_DIS_MASK 	= 00000003CH; (* Enable/disable Mask *)
+	XUARTPS_CR_TXRST 			= 000000002H; (* TX logic reset *)
+	XUARTPS_CR_RXRST 			= 000000001H; (* RX logic reset *)
+	
+	CTRLSTOPBRK 				= 8; (* Stop transmission of break *)
+	CTRLSTARTBRK 				= 7; (* Set break *)
+	CTRLTORST 					= 6; (* RX timeout counter restart *)
+	CTRLTX_DIS 					= 5; (* TX disabled. *)
+	CTRLTX_EN 					= 4; (* TX enabled *)
+	CTRLRX_DIS 					= 3; (* RX disabled. *)
+	CTRLRX_EN 					= 2; (* RX enabled *)
+	CTRLTXRST 					= 1; (* TX logic reset *)
+	CTRLRXRST 					= 0; (* RX logic reset *)
+
+
+	(* Mode Register Bit Definition
+
+		The mode register (MR) defines the mode of transfer as well as the data
+		format. If this register is modified during transmission or reception,
+		data validity cannot be guaranteed.
+	*)
+	XUARTPS_MR_CCLK = 000000400H; (* Input clock selection *)
+	XUARTPS_MR_CHMODE_R_LOOP = 000000300H; (* Remote loopback mode *)
+	XUARTPS_MR_CHMODE_L_LOOP = 000000200H; (* Local loopback mode *)
+	XUARTPS_MR_CHMODE_ECHO = 000000100H; (* Auto echo mode *)
+	XUARTPS_MR_CHMODE_NORM = 000000000H; (* Normal mode *)
+	XUARTPS_MR_CHMODE_SHIFT = 8; (* Mode shift *)
+	XUARTPS_MR_CHMODE_MASK = 000000300H; (* Mode mask *)
+	XUARTPS_MR_STOPMODE_2_BIT = 000000080H; (* 2 stop bits *)
+	XUARTPS_MR_STOPMODE_1_5_BIT = 000000040H; (* 1.5 stop bits *)
+	XUARTPS_MR_STOPMODE_1_BIT = 000000000H; (* 1 stop bit *)
+	XUARTPS_MR_STOPMODE_SHIFT = 6; (* Stop bits shift *)
+	XUARTPS_MR_STOPMODE_MASK = 0000000A0H; (* Stop bits mask *)
+	XUARTPS_MR_PARITY_NONE = 000000020H; (* No parity mode *)
+	XUARTPS_MR_PARITY_MARK = 000000018H; (* Mark parity mode *)
+	XUARTPS_MR_PARITY_SPACE = 000000010H; (* Space parity mode *)
+	XUARTPS_MR_PARITY_ODD = 000000008H; (* Odd parity mode *)
+	XUARTPS_MR_PARITY_EVEN = 000000000H; (* Even parity mode *)
+	XUARTPS_MR_PARITY_SHIFT = 3; (* Parity setting shift *)
+	XUARTPS_MR_PARITY_MASK = 000000038H; (* Parity mask *)
+	XUARTPS_MR_CHARLEN_6_BIT = 000000006H; (* 6 bits data *)
+	XUARTPS_MR_CHARLEN_7_BIT = 000000004H; (* 7 bits data *)
+	XUARTPS_MR_CHARLEN_8_BIT = 000000000H; (* 8 bits data *)
+	XUARTPS_MR_CHARLEN_SHIFT = 1; (* Data Length shift *)
+	XUARTPS_MR_CHARLEN_MASK = 000000006H; (* Data length mask *)
+	XUARTPS_MR_CLKSEL = 000000001H; (* Input clock selection *)
+
+	(** Interrupt Registers
+
+		Interrupt control logic uses the interrupt enable register (IER) and the
+		interrupt disable register (IDR) to set the value of the bits in the
+		interrupt mask register (IMR). The IMR determines whether to pass an
+		interrupt to the interrupt status register (ISR).
+		Writing a 1 to IER Enbables an interrupt, writing a 1 to IDR disables an
+		interrupt. IMR and ISR are read only, and IER and IDR are write only.
+		Reading either IER or IDR returns 0x00.
+
+		All four registers have the same bit definitions.
+	*)
+	XUARTPS_IXR_TOVR	= 000001000H; (** Tx FIFO Overflow interrupt *)
+	XUARTPS_IXR_TNFUL	= 000000800H; (** Tx FIFO Nearly Full interrupt *)
+	XUARTPS_IXR_TTRIG	= 000000400H; (** Tx Trig interrupt *)
+	XUARTPS_IXR_DMS		= 000000200H; (** Modem status change interrupt *)
+	XUARTPS_IXR_TOUT	= 000000100H; (** Timeout error interrupt *)
+	XUARTPS_IXR_PARITY 	= 000000080H; (** Parity error interrupt *)
+	XUARTPS_IXR_FRAMING	= 000000040H; (** Framing error interrupt *)
+	XUARTPS_IXR_OVER	= 000000020H; (** Overrun error interrupt *)
+	XUARTPS_IXR_TXFULL 	= 000000010H; (** TX FIFO full interrupt. *)
+	XUARTPS_IXR_TXEMPTY	= 000000008H; (** TX FIFO empty interrupt. *)
+	XUARTPS_IXR_RXFULL 	= 000000004H; (** RX FIFO full interrupt. *)
+	XUARTPS_IXR_RXEMPTY	= 000000002H; (** RX FIFO empty interrupt. *)
+	XUARTPS_IXR_RXOVR  	= 000000001H; (** RX FIFO trigger interrupt. *)
+
+	IRQTOVR					= 12; (** Tx FIFO Overflow interrupt *)
+	IRQTNFUL					= 11; (** Tx FIFO Nearly Full interrupt *)
+	IRQTTRIG					= 10; (** Tx Trig interrupt *)
+	IRQDMS					= 9; (** Modem status change interrupt *)
+	IRQTOUT					= 8; (** Timeout error interrupt *)
+	IRQPARITY 					= 7; (** Parity error interrupt *)
+	IRQFRAMING				= 6; (** Framing error interrupt *)
+	IRQOVER					= 5; (** Overrun error interrupt *)
+	IRQTXFULL 				= 4; (** TX FIFO full interrupt. *)
+	IRQTXEMPTY				= 3; (** TX FIFO empty interrupt. *)
+	IRQRXFULL 				= 2; (** RX FIFO full interrupt. *)
+	IRQRXEMPTY				= 1; (** RX FIFO empty interrupt. *)
+	IRQRXFIFO				  	= 0; (** RX FIFO trigger interrupt. *)
+
+	
+	XUARTPS_IXR_MASK	= 000001FFFH; (** Valid bit mask *)
+
+	(** Channel Status Register
+
+		The channel status register (CSR) is provided to enable the control logic
+		to monitor the status of bits in the channel interrupt status register,
+		even if these are masked out by the interrupt mask register.
+	*)
+	XUARTPS_SR_TNFUL =	000004000H; (** TX FIFO Nearly Full Status *)
+	XUARTPS_SR_TTRIG	 =	000002000H; (** TX FIFO Trigger Status *)
+	XUARTPS_SR_FLOWDEL =	000001000H; (** RX FIFO fill over flow delay *)
+	XUARTPS_SR_TACTIVE =	000000800H; (** TX active *)
+	XUARTPS_SR_RACTIVE =	000000400H; (** RX active *)
+	XUARTPS_SR_DMS	 =	000000200H; (** Delta modem status change *)
+	XUARTPS_SR_TOUT	 =	000000100H; (** RX timeout *)
+	XUARTPS_SR_PARITY =	000000080H; (** RX parity error *)
+	XUARTPS_SR_FRAME =	000000040H; (** RX frame error *)
+	XUARTPS_SR_OVER	 =	000000020H; (** RX overflow error *)
+	XUARTPS_SR_TXFULL =	000000010H; (** TX FIFO full *)
+	XUARTPS_SR_TXEMPTY =	000000008H; (** TX FIFO empty *)
+	XUARTPS_SR_RXFULL =	000000004H; (** RX FIFO full *)
+	XUARTPS_SR_RXEMPTY =	000000002H; (** RX FIFO empty *)
+	XUARTPS_SR_RXOVR =	000000001H; (** RX FIFO fill over trigger *)
+
+	SR_TNFUL 					=	14; (** TX FIFO Nearly Full Status *)
+	SR_TTRIG					=	13; (** TX FIFO Trigger Status *)
+	SR_FLOWDEL 				=	12; (** RX FIFO fill over flow delay *)
+	SR_TACTIVE 				=	11; (** TX active *)
+	SR_RACTIVE 				=	10; (** RX active *)
+	SR_DMS	 				=	9; (** Delta modem status change *)
+	SR_TOUT		 			=	8; (** RX timeout *)
+	SR_PARITY 					=	7; (** RX parity error *)
+	SR_FRAME 					=	6; (** RX frame error *)
+	SR_OVER	 				=	5; (** RX overflow error *)
+	SR_TXFULL 				=	4; (** TX FIFO full *)
+	SR_TXEMPTY	 			=	3; (** TX FIFO empty *)
+	SR_RXFULL 				=	2; (** RX FIFO full *)
+	SR_RXEMPTY 				=	1; (** RX FIFO empty *)
+	SR_RXOVR 					=	0; (** RX FIFO fill over trigger *)
+
+	(* The following constant defines the amount of error that is allowed for
+		a specified baud rate. This error is the difference between the actual
+		baud rate that will be generated using the specified clock and the
+		desired baud rate.
+	*)
+	XUARTPS_MAX_BAUD_ERROR_RATE = 3;	(* max % error allowed *)
+	
+	UARTBUFLEN						= 2048;
+	
+	PSUART0							= 0;
+	PSUART1							= 1;
+	
+
+TYPE
+
+	UARTBuffer = ARRAY UARTBUFLEN OF SYSTEM.BYTE;  
+	UartDesc* = RECORD ( Device.DeviceDesc )
+			id: LONGINT;
+			baseAddr: LONGINT; (* Adress of Base register *)
+			clockFrequency: LONGINT; (* the clock used for the UART *)
+			in, out, oin, oout: LONGINT; (* And and Out index in in (in, out) and outbuffer (oin, oout) *)
+			baudrate: LONGINT; (* Baudrate *) 
+			parity: LONGINT; (* Parity *) 
+			databits: LONGINT; (* Number of data bits *) 
+			trace: BOOLEAN; (* shall debug output be printed via Log? *)
+			open: BOOLEAN; (* Is the uart already initialised and open? *)
+			irqCnt: LONGINT;
+			irqEnabled: BOOLEAN; (* true, if this UART is handled by interrupts *) 
+			inbuffer, outbuffer: UARTBuffer; (* receive and sendbuffer *)
+			timeoutActive : BOOLEAN; (* if the timeout counter has been set *)
+			txIrqActive : BOOLEAN;
+	END;  
+	
+	UartCfg = RECORD
+		addr : LONGINT;
+		clock : LONGINT;
+	END;
+	
+	Uart* = POINTER TO UartDesc;  
+	
+VAR
+	uarts: ARRAY 2 OF Uart;  
+
+
+	(**
+		Initialize a UART controller given its configuration information
+	*)
+	PROCEDURE Init*( VAR uart: Uart; CONST cfg: UartCfg);
+	VAR
+		res: LONGINT;
+	BEGIN
+	
+		uart.baseAddr := cfg.addr;
+		uart.clockFrequency := cfg.clock;
+
+		(* disable all UART interrupts *)
+		SYSTEM.PUT32( uart.baseAddr+XUARTPS_IDR_OFFSET, 0FFFFFFFFH );
+
+		uart.irqEnabled := FALSE;
+
+		(* Set the default baudrate *)
+		
+		(*Trace.StringLn("Entering SetBaudrate.");
+		SetBaudrate( uart, DefaultBaudrate, res);*)
+		
+	END Init;
+	
+	PROCEDURE DoIrq( CONST no : LONGINT );
+	VAR
+		uart : Uart;
+		reg, ireg : SET;
+		cnt : LONGINT;
+		tort : BOOLEAN;
+	BEGIN
+	
+		tort := FALSE;
+		
+		IF ( GetUartByIndex( no, uart )) THEN
+			
+			(* check the timout flag and the fifo flag first *)
+			SYSTEM.GET( uart.baseAddr+XUARTPS_ISR_OFFSET, ireg );
+			
+			IF (IRQRXFIFO IN ireg ) OR (IRQTOUT IN ireg ) THEN
+				
+				SYSTEM.GET( uart.baseAddr+XUARTPS_SR_OFFSET, reg );
+				
+				WHILE ( ~(SR_RXEMPTY IN reg )) DO
+					uart.inbuffer[ uart.in ] :=  CHR( SYSTEM.GET32( uart.baseAddr+XUARTPS_FIFO_OFFSET ));
+					uart.in := ( uart.in + 1 ) MOD UARTBUFLEN;  
+					SYSTEM.GET( uart.baseAddr+XUARTPS_SR_OFFSET, reg );	
+				END;
+				
+				(* clear the flags now *)
+				uart.timeoutActive := FALSE;
+				
+			END;
+			
+			IF ( IRQTXEMPTY IN ireg ) THEN
+				
+				cnt := 0; 
+			
+				(* there is still data in the TX buffer, send it to the FIFO *)
+				WHILE ( uart.oin # uart.oout ) & ( cnt < 60 ) DO
+						
+						SYSTEM.PUT32( uart.baseAddr+XUARTPS_FIFO_OFFSET, ORD(uart.outbuffer[uart.oout]) );
+						uart.oout:= ( uart.oout+1 ) MOD UARTBUFLEN;  
+						
+						INC( cnt )
+						
+				END;	
+				
+				(* Trace.String("d");*)
+				
+				IF ( uart.oin = uart.oout ) THEN
+
+					(* set the flag to get the TX monitor to check the FIFO again *)
+					uart.txIrqActive := FALSE;
+					
+					(* disable the TX interrupt *)
+					SYSTEM.GET( uart.baseAddr+ XUARTPS_IER_OFFSET, reg );			
+					reg := reg - { IRQTXEMPTY };
+					SYSTEM.PUT( uart.baseAddr+ XUARTPS_IER_OFFSET, reg );
+					
+					(* Trace.String("(di)"); *)
+					
+				END;
+
+			END;
+			
+			SYSTEM.PUT( uart.baseAddr+XUARTPS_ISR_OFFSET, ireg );
+
+		END;
+	END DoIrq;
+	
+	PROCEDURE PSUartIrqHandler( irq: LONGINT );
+	BEGIN
+		(* check the IRQ source *)
+		IF ( irq = Interrupts.PSUART0IRQ ) THEN
+			DoIrq( 0 );
+		ELSIF ( irq = Interrupts.PSUART1IRQ ) THEN
+			DoIrq( 1 );
+		ELSE
+			Trace.StringLn("PSUart: Unknown IRQ call!");
+		END;	
+	END PSUartIrqHandler;
+
+	(**
+		Set UART baudrate
+
+		res: error code, 0 in case of success
+	*)
+	PROCEDURE SetBaudrate*( VAR uart: Uart; CONST baudrate: LONGINT; VAR res: LONGINT );
+	VAR
+		reg: SET;
+		inputClk: LONGINT;
+		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
+		bestError, bestBRGR, bestBAUDDIV: LONGINT;
+	BEGIN
+	
+		bestError := MAX(LONGINT);(*1000;*)
+		
+		(*
+			Make sure the baud rate is not impossilby large.
+	 		Fastest possible baud rate is Input Clock / 2
+		*)
+		Trace.String("Entering SetBaudrate : "); Trace.Int( baudrate, 10 ); Trace.Ln;
+		IF baudrate*2 > uart.clockFrequency THEN res := 1; RETURN; END;
+
+		inputClk := uart.clockFrequency;
+		Trace.String("Input Clock is : "); Trace.Int( inputClk, 10 ); Trace.Ln;
+
+		(* Check whether the input clock is divided by 8 *)
+		SYSTEM.GET( uart.baseAddr+XUARTPS_MR_OFFSET, reg );
+		IF XUARTPS_MR_CLKSEL IN reg THEN
+			Trace.StringLn("Input Clock is Divided by 8");
+			inputClk := inputClk DIV 8;
+		END;
+		
+		(* Determine the Baud divider. It can be 4 to 254.
+			Loop through all possible combinations *)
+
+		FOR valBAUDDIV := 4 TO 255 DO
+
+			(* Calculate the value for BRGR register *)
+			valBRGR := inputClk DIV (baudrate * (valBAUDDIV + 1));			
+
+			IF ( valBRGR > 0 ) THEN
+			
+				(* Calculate the baud rate from the BRGR value *)
+				calcBaudrate := inputClk DIV (valBRGR * (valBAUDDIV + 1));
+				
+				(* Avoid unsigned integer underflow *)
+				IF baudrate > calcBaudrate THEN
+					baudError := baudrate - calcBaudrate;
+				ELSE
+					baudError := calcBaudrate - baudrate;
+				END;
+
+				(*
+					Find the calculated baud rate closest to requested baud rate.
+				*)
+				IF baudError < bestError THEN
+					bestBRGR := valBRGR;
+					bestBAUDDIV := valBAUDDIV;
+					bestError := baudError;
+				END;
+			END;
+
+		END;
+
+		(*
+			Make sure the best error is not too large.
+		*)
+		IF (bestError * 100) DIV baudrate > XUARTPS_MAX_BAUD_ERROR_RATE THEN (* baudrate error *)
+			Trace.String("Baud Error : "); Trace.Int(( bestError *100 ) DIV baudrate, 3 ); Trace.StringLn("; Bailing out, Error too large.");
+			res := 1; RETURN;
+		END;
+
+		(*
+			Disable TX and RX to avoid glitches when setting the baud rate.
+		*)
+		
+		Trace.String("CD 	: "); Trace.Int( bestBRGR, 10 ); Trace.Ln;
+		Trace.String("DIV 	: "); Trace.Int( bestBAUDDIV, 10 ); Trace.Ln;
+		Trace.String("Actual baudrate: "); Trace.Int(inputClk DIV (bestBRGR * (bestBAUDDIV + 1)), 0); Trace.Ln;
+		
+		(* INVESTIGATE: Unclear why this works for UART1, but not for UART0 *)
+		IF ( uart.id # 0 ) THEN
+			Enable( uart, FALSE );
+		END;
+		
+		(* write baudrate settings *)
+		SYSTEM.PUT( uart.baseAddr+XUARTPS_BAUDGEN_OFFSET, bestBRGR );
+		SYSTEM.PUT( uart.baseAddr+XUARTPS_BAUDDIV_OFFSET, bestBAUDDIV );
+		
+		IF ( uart.id # 0 ) THEN
+			Enable( uart, TRUE );
+		END;
+		
+		uart.baudrate := baudrate;
+
+	END SetBaudrate;
+
+	(** Enable/Disable the transmitter and receiver of the UART *)
+	PROCEDURE Enable*( CONST uart: Uart; enable: BOOLEAN );
+	VAR reg: SET;
+		tmp : LONGINT;
+	BEGIN
+		SYSTEM.GET(uart.baseAddr+XUARTPS_CR_OFFSET, reg );
+
+		IF enable THEN
+			reg := reg  + { CTRLTX_EN, CTRLRX_EN } - { CTRLTX_DIS, CTRLRX_DIS };
+		ELSE
+			reg := reg  + { CTRLTX_DIS, CTRLRX_DIS } - { CTRLTX_EN, CTRLRX_EN };
+		END;
+
+
+		SYSTEM.PUT( uart.baseAddr+XUARTPS_CR_OFFSET, reg );
+
+		(* set the timeout counter of the UART to 255, used for transfering small amount of data to the buffer before the FIFO trigger level is reached *)
+		SYSTEM.PUT( uart.baseAddr+XUARTPS_RXTOUT_OFFSET, 255 );
+		
+	END Enable;
+	
+	(* select the UART by index, return TRUE if successful *)
+	PROCEDURE GetUartByIndex( CONST no : LONGINT; VAR uart : Uart ) : BOOLEAN;
+	VAR
+		ret : BOOLEAN;
+	BEGIN
+
+		uart := NIL;
+		ret := FALSE;
+				
+		IF ( no = 0 ) OR ( no = 1 ) THEN
+			uart := uarts[ no ];
+			ret := TRUE;
+		END;
+		
+		RETURN ret;
+	
+	END GetUartByIndex;
+	
+	
+	PROCEDURE EnableIrqMode*( CONST no : LONGINT; FifoLevel : LONGINT );
+	VAR
+		reg : SET;
+		uart : Uart;
+	BEGIN
+
+		IF ( GetUartByIndex( no, uart )) THEN 
+			
+			IF ( uart.id = 0 ) THEN
+				Interrupts.EnableIrq( Interrupts.PSUART0IRQ );
+			ELSE
+				Interrupts.EnableIrq( Interrupts.PSUART1IRQ );
+			END;
+		
+			(* set the  fifo RX trigger level to 32 *)
+			SYSTEM.PUT( uart.baseAddr+XUARTPS_RXWM_OFFSET, 32 ); 
+		
+			(* set the bits in the enable register *)
+			SYSTEM.PUT( uart.baseAddr+ XUARTPS_IER_OFFSET, { IRQTOUT, IRQRXFIFO } );
+			
+			(* read back the mask register *)
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_IMR_OFFSET, reg );
+			Trace.String("Uart IRQ Mask : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;
+
+			(* clear the interrupt status register *)
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_ISR_OFFSET, reg );
+			reg := reg - { IRQTOUT, IRQRXFIFO };
+			SYSTEM.PUT( uart.baseAddr+ XUARTPS_ISR_OFFSET, reg );
+			
+			Trace.String("Writing back Status Reg with : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;
+			
+			(* setup the timeout counter on the IRQ register *)
+			
+		END;
+				
+	END EnableIrqMode;
+	
+	PROCEDURE ShowIrqStatus*(CONST no : LONGINT );
+	VAR 
+		reg : SET;
+		uart : Uart;
+	BEGIN		
+		IF ( GetUartByIndex( no, uart )) THEN
+			SYSTEM.GET( uart.baseAddr+XUARTPS_ISR_OFFSET, reg );
+			Trace.String("IRQ Status ("); Trace.Int( no, 1 ); Trace.String(") : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;			
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_IER_OFFSET, reg );
+			Trace.String("IRQ Enable ("); Trace.Int( no, 1 ); Trace.String(") : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_IDR_OFFSET, reg );
+			Trace.String("IRQ Disable("); Trace.Int( no, 1 ); Trace.String(") : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_IMR_OFFSET, reg );
+			Trace.String("IRQ Mask   ("); Trace.Int( no, 1 ); Trace.String(") : "); Trace.Bits( reg, 0, 32 ); Trace.Ln;
+		END;
+		
+	END ShowIrqStatus;
+	
+	PROCEDURE ShowUartSettings*( CONST no : LONGINT );
+	CONST
+		OFF = 16;
+	VAR
+		uart : Uart;
+		reg : SET;
+		cd, bdiv : LONGINT;
+		sampleClk, baudClk : REAL;
+	BEGIN
+		IF ( GetUartByIndex( no, uart )) THEN
+			
+			SYSTEM.GET( uart.baseAddr+XUARTPS_BAUDGEN_OFFSET , cd );
+			SYSTEM.GET( uart.baseAddr+XUARTPS_BAUDDIV_OFFSET  , bdiv );
+			SYSTEM.GET( uart.baseAddr+XUARTPS_CR_OFFSET, reg ); 
+			
+			sampleClk := UartInputClockHz / bdiv;
+			baudClk := UartInputClockHz / ( cd * ( bdiv + 1));
+
+			Trace.Ln;
+			Trace.Ln;
+			Trace.StringLn("*** PS UART Settings ***");
+			Trace.Ln;
+		
+			Trace.StringA("Uart No", OFF, TRUE ); Trace.Int( no, 1 ); Trace.Ln;
+			
+			Trace.StringA("TX Enable", OFF, TRUE ); Trace.Bits( reg, CTRLTX_EN, 1 ); Trace.Ln;
+			Trace.StringA("TX Disable", OFF, TRUE ); Trace.Bits( reg, CTRLTX_DIS, 1 ); Trace.Ln;
+			Trace.StringA("RX Enable", OFF, TRUE ); Trace.Bits( reg, CTRLRX_EN, 1 ); Trace.Ln;
+			Trace.StringA("RX Disable", OFF, TRUE ); Trace.Bits( reg, CTRLRX_DIS, 1 ); Trace.Ln;
+			Trace.StringA("TX TO Rst", OFF, TRUE ); Trace.Bits( reg, CTRLTORST, 1); Trace.Ln; 	  		
+			Trace.StringA("CD Value", OFF, TRUE ); Trace.Int( cd, 8 ); Trace.Ln;
+			Trace.StringA("BD Value", OFF, TRUE ); Trace.Int( bdiv, 8 ); Trace.Ln;
+			Trace.StringA("Sample Clk [Hz]", OFF, TRUE ); Trace.Real( sampleClk, 0, 8 ); Trace.Ln;
+			Trace.StringA("Baud Clk [Hz]", OFF, TRUE ); Trace.Real( baudClk, 0, 8 ); Trace.Ln;	
+			
+			Trace.Ln;
+					 			
+		END;
+	END ShowUartSettings;
+	
+
+	(**
+		Send data to the UART
+	*)
+	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+	VAR csr: SET;
+	BEGIN
+
+		res := 0;
+
+		IF uart.irqEnabled THEN
+			(*
+				Disable the UART transmit interrupts to allow this call to stop a
+				previous operation that may be interrupt driven.
+			*)
+			SYSTEM.PUT32(uart.baseAddr+XUARTPS_IDR_OFFSET,XUARTPS_IXR_TXEMPTY+XUARTPS_IXR_TXFULL);
+
+			HALT(100); (*! Not yet implemented! *)
+		ELSE
+
+			WHILE len > 0 DO
+
+				csr := SYSTEM.VAL(SET,SYSTEM.GET32(uart.baseAddr+XUARTPS_SR_OFFSET)); (* current state of Channel Status Register *)
+
+				IF csr * SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) # SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) THEN (* there is place for at minimum one byte in TX FIFO *)
+
+					SYSTEM.PUT32(uart.baseAddr+XUARTPS_FIFO_OFFSET,ORD(buf[offs]));
+					INC(offs); DEC(len);
+
+					IF (len > 0) & (csr * SYSTEM.VAL(SET,XUARTPS_SR_TNFUL) # SYSTEM.VAL(SET,XUARTPS_SR_TNFUL)) THEN (* there is place for at minimum two bytes in TX FIFO *)
+						SYSTEM.PUT32(uart.baseAddr+XUARTPS_FIFO_OFFSET,ORD(buf[offs]));
+						INC(offs); DEC(len);
+					END;
+				END;
+			END;
+
+		END;
+	END Send;
+
+	(**
+		Receive data from the UART
+	*)
+	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len, res: LONGINT);
+	BEGIN
+		res := 0;
+		len := 0;
+		min := MIN(size,min);
+		WHILE (min > 0) OR UartAvailable(uart) DO
+			WHILE (size > 0) & (SYSTEM.VAL(SET,SYSTEM.GET32(uart.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) # SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY)) DO
+				buf[offs] := CHR(SYSTEM.GET32(uart.baseAddr+XUARTPS_FIFO_OFFSET));
+				DEC(min); DEC(size); INC(offs); INC(len);
+			END;
+		END;
+	END Receive;
+
+	(** Send a single character to the UART
+
+		Remarks:
+		blocks until the transmit buffer is not full
+	*)
+	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: LONGINT);
+	BEGIN
+
+		(* Wait until there is space in TX FIFO *)
+		WHILE SYSTEM.VAL(SET,SYSTEM.GET32(uart.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) = SYSTEM.VAL(SET,XUARTPS_SR_TXFULL) DO
+		END;
+
+		(* Write the byte into the TX FIFO *)
+		SYSTEM.PUT32( uart.baseAddr+XUARTPS_FIFO_OFFSET,ORD(ch));
+		
+	END SendChar;
+
+	(** Receive a single character from UART
+
+		Remarks:
+		blocks until a character is available
+	*)
+	PROCEDURE ReceiveChar*( CONST uart: Uart; VAR res: LONGINT ): CHAR;
+	BEGIN
+
+		(* wait until data is available *)
+		WHILE SYSTEM.VAL(SET,SYSTEM.GET32(uart.baseAddr+XUARTPS_SR_OFFSET)) * SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) = SYSTEM.VAL(SET,XUARTPS_SR_RXEMPTY) DO
+		END;
+
+		RETURN CHR(SYSTEM.GET32(uart.baseAddr+XUARTPS_FIFO_OFFSET));
+	END ReceiveChar;
+
+	(** Returns TRUE if there is at least 1 char in the receive buffer *)
+	PROCEDURE UartAvailable*(CONST uart: Uart): BOOLEAN;
+	VAR
+		reg : SET;
+	BEGIN		
+		SYSTEM.GET( uart.baseAddr+XUARTPS_SR_OFFSET, reg );
+		IF  ( SR_RXEMPTY IN reg ) THEN
+			RETURN FALSE;
+		ELSE
+			RETURN TRUE;
+		END;
+	END UartAvailable;
+	
+	(* close the device *)
+	PROCEDURE Close(dev: Device.Device);  
+	BEGIN
+		Trace.String("In Uart close, adr : "); Trace.Hex( dev(Uart).baseAddr, -8 ); Trace.String(", id is : "); Trace.Int( dev(Uart).id, 2 ); Trace.Ln;  
+		IF dev(Uart).open = TRUE THEN 
+			Enable( dev(Uart), FALSE );	
+			dev(Uart).open := FALSE  
+		END
+	END Close;  
+
+	(* Bytes available for read *)
+	PROCEDURE Available( dev: Device.Device ): LONGINT;  
+	BEGIN 
+		(*DoUart( dev(Uart));*)
+		RETURN (dev(Uart).in - dev(Uart).out) MOD UARTBUFLEN;
+	END Available;  
+
+	(* Get the number of bytes that are free in the send buffer *)
+	PROCEDURE Free( dev: Device.Device ): LONGINT;  
+	VAR 
+		avail: LONGINT;  
+	BEGIN 
+		avail := UARTBUFLEN - 1 - ((dev(Uart).oin - dev(Uart).oout) MOD UARTBUFLEN );  
+		RETURN avail
+	END Free;  
+	
+	PROCEDURE Write( dev: Device.Device; CONST buf: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR len: LONGINT );
+	VAR 
+		end, free: LONGINT;  
+		uart: Uart;  
+	BEGIN 
+		IF (len > 0) & (ofs >= 0) THEN 
+			uart := dev(Uart);  
+			free := Free(dev);  
+			IF free < len THEN len := free  END;  
+			end := ofs + len;  
+			WHILE ofs < end DO 
+				uart.outbuffer[ uart.oin ] := buf[ ofs ];  
+				uart.oin := ( uart.oin + 1 ) MOD UARTBUFLEN;  
+				INC( ofs )  
+			END;  
+		ELSE 
+			len := 0  
+		END;
+		
+		(* HACK 
+		DoUart( uart );
+		*)
+	
+	END Write;  
+
+	PROCEDURE Read( dev: Device.Device; VAR buf: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR len: LONGINT );
+	VAR 
+		end, available: LONGINT; 
+		uart: Uart;  
+	BEGIN 
+		
+		(* HACK 
+		uart := dev(Uart);
+		DoUart( uart );
+		*)
+		
+		IF (len > 0) & (ofs >= 0) THEN
+			uart := dev(Uart);  
+			available := Available(dev);  
+			IF available < len THEN len := available END;  
+			end := ofs + len;  
+			WHILE ofs < end DO 
+				buf[ofs] := uart.inbuffer[ uart.out ];  
+				uart.out := ( uart.out + 1 ) MOD UARTBUFLEN;  
+				INC( ofs )  
+			END;  
+		ELSE 
+			len := 0
+		END
+
+	END Read;  
+
+	PROCEDURE Flush( dev: Device.Device );  
+	VAR 
+		base: LONGINT;
+		value : SET;  
+	BEGIN 
+		base := dev(Uart).baseAddr;
+		Trace.String("*** Entering Flush : "); Trace.Hex( base, -8 ); Trace.Ln;  
+		REPEAT UNTIL Free( dev(Uart) ) = UARTBUFLEN - 1;  
+		REPEAT SYSTEM.GET( base+XUARTPS_SR_OFFSET, value ) UNTIL SR_TXEMPTY IN value;
+	END Flush;  
+
+	PROCEDURE EmptyFifo( CONST no : LONGINT );  
+	VAR 
+		used, res: LONGINT; 
+		uart : Uart;
+	BEGIN 
+		IF ( GetUartByIndex( no, uart )) THEN
+			IF ( UartAvailable( uart )) THEN
+				used := ( uart.in - uart.out ) MOD UARTBUFLEN;  
+				IF used < UARTBUFLEN - 1 THEN 
+						uart.inbuffer[ uart.in ] := ReceiveChar( uart, res );  
+						uart.in := ( uart.in + 1 ) MOD UARTBUFLEN;  
+						INC(used)  
+				END; 
+			END; 
+		END;
+	END EmptyFifo;  
+
+	PROCEDURE CheckRxFifo( uart: Uart);  
+	VAR 
+		reg : SET;
+	BEGIN 
+		IF ( UartAvailable( uart ) ) & ~uart.timeoutActive THEN
+			(* Trace.String("(cr)"); *)
+			(* if there is a char in the FIFO, set the timeout counter to IRQ on timeout *)
+			SYSTEM.GET( uart.baseAddr+XUARTPS_CR_OFFSET, reg ); 
+			reg := reg + { CTRLTORST };
+			SYSTEM.PUT( uart.baseAddr+XUARTPS_CR_OFFSET, reg );
+			uart.timeoutActive := TRUE;
+		END; 
+	END CheckRxFifo;  
+
+	PROCEDURE CheckTxBuffer( uart : Uart );
+	VAR
+		reg : SET;
+	BEGIN
+		
+		(* Trace.String("(ct)"); *)
+		
+		IF ( uart.oin # uart.oout ) & ( ~uart.txIrqActive ) THEN
+						
+			(* there is data in the buffer, arm the IRQ to trigger on empty TX FIFO *)
+			SYSTEM.GET( uart.baseAddr+ XUARTPS_IER_OFFSET, reg );			
+			reg := reg + { IRQTXEMPTY };
+			SYSTEM.PUT( uart.baseAddr+ XUARTPS_IER_OFFSET, reg );
+	
+			(* Trace.String("(ei)"); *)
+			uart.txIrqActive := TRUE;	
+			
+			UartHandler( uart, 2 );
+					
+		END;
+	END CheckTxBuffer;
+	
+	PROCEDURE UartHandler( uart: Uart; CONST size : LONGINT );  
+	VAR 
+		res, k: LONGINT;  
+	BEGIN 
+	
+		INC( uart.irqCnt );
+		k := 0;
+		
+
+		WHILE ( uart.oin # uart.oout ) & ( k < size ) DO
+				
+				(*
+				SendChar( uart, uart.outbuffer[uart.oout], res ); (* put to fifo *)
+				Trace.String("out="); Trace.Hex( uart.out , -8 ); Trace.Ln;
+				Trace.String("add="); Trace.Hex( ADDRESSOF( uart.outbuffer ), -8 ); Trace.Ln;
+				*)
+				SYSTEM.PUT32( uart.baseAddr+XUARTPS_FIFO_OFFSET, ORD( uart.outbuffer[ uart.oout ] ));
+				uart.oout:= ( uart.oout+1 ) MOD UARTBUFLEN;  
+				
+				INC(k)
+				
+		END;	
+
+	END UartHandler;  
+
+	PROCEDURE Command( dev: Device.Device; cmd, param: LONGINT; VAR res: LONGINT );  
+	VAR 
+		reg: SET; 
+		uart: Uart;  
+	BEGIN 
+		res := 0; 
+		uart := dev(Uart);  
+		CASE cmd OF
+		UartConstants.SETBAUDRATE: uart.baudrate := param
+		| UartConstants.SETPARITY: uart.parity := param
+		| UartConstants.SETDATABITS: uart.databits := param		  
+		END
+	END Command;  
+	
+	PROCEDURE DoUartCheck*();
+	VAR
+		uart : Uart;
+	BEGIN
+			
+		CheckRxFifo( uarts[0] );
+		CheckTxBuffer( uarts[0] ); 
+		
+		CheckRxFifo( uarts[1] );
+		CheckTxBuffer( uarts[1] ); 
+
+	END DoUartCheck;
+
+	PROCEDURE Open( dev: Device.Device );
+	VAR 
+		uart: Uart; 
+		res: LONGINT; 
+	BEGIN
+	
+		Trace.StringLn("Entering Open().");
+	
+		uart := dev(Uart);
+	
+		Trace.String("Open is trying to open id : "); Trace.Int( uart.id, 2); Trace.String(", "); Trace.Hex( uart.baseAddr, -8 ); Trace.Ln; 	
+		
+		
+		IF ( uart = NIL ) THEN Trace.StringLn("Uart.Open( dev ) is nil"); END;
+		IF ( uart.open ) THEN Trace.StringLn("Uart.Open( dev ) is open"); END;
+		
+		IF (uart # NIL) & (~uart.open) THEN 
+			
+			Trace.StringLn("Setting baudrate and opening Uart.");
+			
+			(* reset the pointers to the ring buffer *)
+			uart.in := 0; 
+			uart.out := 0;  
+			uart.oin := 0; 
+			uart.oout := 0; 
+			
+			SetBaudrate( uart, uart.baudrate, res );
+			Enable( uart, TRUE );
+			
+			uart.open := TRUE;
+			
+		ELSE
+			Trace.StringLn("Uart.Open(dev) failed.");
+		END 
+	END Open;  
+
+
+	
+	(** 
+		Install all UART controllers present in the system (according to the constants set in Platform); to be called by the Kernel 
+	*)
+	PROCEDURE Install*;
+	VAR
+		cfg: UartCfg;
+		i, res: LONGINT;
+	BEGIN
+	
+		Trace.StringLn("Entering UART install");
+	
+		FOR i := 0 TO UartNb-1 DO
+			
+			Trace.String("Init PSUART "); Trace.Int( i, 1 ); Trace.Ln;
+			
+			NEW( uarts[i] );
+			
+			(* init the object with the base initializer *)
+			Device.InitDevice( uarts[ i ] );
+			
+			(* assign the function calls *)
+			uarts[ i ].Open := Open; 
+			uarts[ i ].Close := Close;  
+			uarts[ i ].Write := Write;  
+			uarts[ i ].Read := Read;  
+			uarts[ i ].Available := Available;  
+			uarts[ i ].Free := Free;  
+			uarts[ i ].Command := Command;  
+			uarts[ i ].Flush := Flush;  
+			uarts[ i ].id := i;
+			
+			uarts[ i ].in := 0; 
+			uarts[ i ].out := 0;  
+			uarts[ i ].oin := 0; 
+			uarts[ i ].oout := 0; 
+			
+			uarts[ i ].timeoutActive := FALSE;
+			uarts[ i ].txIrqActive := FALSE;
+			
+			IF i = 0 THEN
+				cfg.addr := UartBaseAddr0;
+			ELSE
+				cfg.addr := UartBaseAddr1;
+			END;
+			cfg.clock := UartInputClockHz;
+			
+			Trace.StringLn("Entering Init for PSUART");
+			
+			Init( uarts[i], cfg );
+			
+			Trace.StringLn("Exit Init().");
+
+			(*IF ( i # 0 ) THEN
+				SetBaudrate( uarts[i], 115200, res );
+				Enable( uarts[i], FALSE ); (* disable *)
+				uarts[ i ].open := FALSE;
+			END;*)
+			
+		END;
+		
+		Interrupts.InstallHandler( PSUartIrqHandler, Interrupts.PSUART0IRQ );
+		Interrupts.InstallHandler( PSUartIrqHandler, Interrupts.PSUART1IRQ );
+	
+		Device.Install( uarts[ PSUART0 ], "PSUART0" );  
+		Device.Install( uarts[ PSUART1 ], "PSUART1" );  
+				
+	END Install;
+	
+	PROCEDURE Show*();
+	BEGIN
+		ShowUartSettings( 0 );
+		ShowIrqStatus( 0 );
+		ShowUartSettings( 1 );
+		ShowIrqStatus( 1 );
+	END Show;
+
+BEGIN
+END Uart.
+
+Uart.Show
+

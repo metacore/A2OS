@@ -1,0 +1,451 @@
+MODULE Kernel;
+
+(*
+	
+	
+*)
+	IMPORT SYSTEM, Platform, Caches, Interrupts, GlobalTimer, IoControl, Trace, Bit;
+
+	CONST	
+		kVersion* = "Ayk 1.0e";
+
+
+	TYPE
+
+		(* The prototype of an interrupt handler *)
+		ExceptionHandler* = PROCEDURE {INTERRUPT} ( );
+
+		(* The prototype of an interrupt handler *)
+		Handler* = PROCEDURE();
+
+		(* The prototype of a timer interrupt handler
+			should be used to implement the scheduler *)
+		TimerHandler* = PROCEDURE();
+
+		(* The prototype of a trap handler
+			As soon as the systen is up and running, a custom trap handler can be install *)
+		TrapHandler* = PROCEDURE(type, adr, fp: LONGINT; VAR resFP: LONGINT);
+
+		(* The prototype of a undefined instruction trap handler
+			Can be used to decode custom instructions *)
+		UDFHandler* = PROCEDURE(adr: LONGINT);
+
+	VAR
+		(* Consists of the delay used to call MicroWait(0)
+			Is used to make MicroWait as accurate as possible *)
+		delayCompensation: LONGINT;
+		DelayDivisor: LONGINT;
+
+		(* not necessary on ARM Cortex 9: we have an autoreset
+		(* the time, when the next timer interrupt shall occur *)
+		nextTimerInterrupt: LONGINT;
+		*)
+
+		(* main irq handlers *)
+		irqHandlers: ARRAY Platform.MaxNumIrq OF Handler;
+
+		(* Handlers for GPIO interrupts *)
+		gpioHandlers: ARRAY Platform.NumGPIOPins OF Handler;
+
+		(* The system time in milliseconds. Is updated by the primary timer interrupt
+			handler *)
+		timer: LONGINT;
+
+		(* User installable handlers for timer, traps and Udefinded instruction traps *)
+		timerHandler: TimerHandler; trapHandler: TrapHandler;
+		udfHandler: UDFHandler;
+
+		(* Temporary variable that stores the lnk register. Must be a global variable to be
+			accessible in all processor modes *)
+		lnk: PROCEDURE;
+		cnt: LONGINT;
+		snoop: LONGINT;
+		lr: ADDRESS;
+		
+		toggle : BOOLEAN;
+
+	(* Copy procedure like SYSTEM.MOVE. src and dst must be Aligned to LONGINT *)
+	PROCEDURE Move*(src, dst, len: LONGINT);
+		VAR i, word: LONGINT; chr: CHAR;
+	BEGIN
+		IF len > 0 THEN
+			(* Copy Integerwise if possible *)
+			IF (src MOD 4 # 0) OR (dst MOD 4 # 0) THEN
+				WHILE len > 0 DO
+					SYSTEM.GET(src, chr); SYSTEM.PUT(dst, chr);
+					INC(src); INC(dst); DEC(len);
+				END;
+			ELSE
+				i := len DIV 4;
+				WHILE i > 0 DO
+					SYSTEM.GET(src, word); SYSTEM.PUT(dst, word);
+					INC(src, 4); INC(dst, 4); DEC(i);
+				END;
+
+				i := len MOD 4;
+				WHILE i > 0 DO
+					SYSTEM.GET(src, chr); SYSTEM.PUT(dst, chr);
+					INC(src); INC(dst); DEC(i);
+				END;
+			END;
+		END;
+	END Move;
+
+	(* Assumes interrupts are disabled *)
+	PROCEDURE CleanCache*;	
+	BEGIN
+		Caches.CleanDCache();	
+	END CleanCache;
+
+
+	PROCEDURE EnableIRQs*;
+	VAR cpsr: LONGINT;
+	BEGIN
+		SYSTEM.STPSR(0, cpsr);
+		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) - {7, 8});
+		SYSTEM.LDPSR(0, cpsr);
+	END EnableIRQs;
+
+	(* Taken from Minos/Kernel.Mos *)
+	PROCEDURE DisableIRQs*;
+	VAR cpsr: LONGINT;
+	BEGIN
+		SYSTEM.STPSR(0, cpsr);
+		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) + {7, 8});
+		SYSTEM.LDPSR( 0, cpsr);
+	END DisableIRQs;
+
+
+	
+(*
+
+	(* Enable the system clock *)
+	PROCEDURE EnableIOCLK*;
+	BEGIN
+		GPIOInit(Platform.MHZ3686K, TRUE , 1);
+	END EnableIOCLK;
+
+	(* Enable/Disable the system clock to a specific device *)
+	PROCEDURE EnableClock*(num: LONGINT; enable: BOOLEAN);
+		VAR reg: SET;
+	BEGIN
+		IF(num >= Platform.MinValidClock) & (num <= Platform.MaxValidClock) THEN
+			SYSTEM.GET(Platform.CKEN, reg);
+			IF enable THEN reg := reg + {num} ELSE reg := reg - {num} END;
+			SYSTEM.PUT32(Platform.CKEN, reg);
+		END;
+	END EnableClock;
+	*)
+
+
+(*
+	PROCEDURE Timer0IrqHandler( );
+	VAR a: SET;
+	BEGIN
+		(*Trace.StringLn("TimerIRQ");*)
+		IF timerHandler # NIL THEN
+			(* Context Switch *)
+			SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.IRQDisabled + Platform.FIQDisabled);
+			lr := SYSTEM.LNK();
+			SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.FIQDisabled);
+			timerHandler;
+			(* Go back to IRQ mode Context Switch *)
+			SYSTEM.LDPSR( 0, Platform.SVCMode + Platform.IRQDisabled + Platform.FIQDisabled);
+			SYSTEM.SETLNK(lr);
+			SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.IRQDisabled + Platform.FIQDisabled);
+		END;
+		Trace.String(".");
+	END Timer0IrqHandler;
+	*)
+	
+	(* Get the internal hardware clock cycle counter *)
+	PROCEDURE GetOSTimer*(): LONGINT;
+		VAR i: LONGINT;
+	BEGIN
+		RETURN GlobalTimer.GetTimerLowValue();
+	END GetOSTimer;
+	
+	PROCEDURE Reset*();
+	BEGIN
+	END Reset;
+
+	(* the main interrupt timer routine. Used for doing the timecritical work in the main scheduler *)
+	(*
+	PROCEDURE Timer0IrqHandler;
+	VAR lr, lirq, cpsr, fp: LONGINT;
+	BEGIN
+
+		(*
+		Trace.String("0");
+		INC(snoop);
+		*)
+
+		(* Set timer to new timeout *)
+		nextTimerInterrupt := nextTimerInterrupt + (Platform.OSDELAY);
+
+		(*
+		IF ( snoop = 1 ) THEN
+			Trace.String("N ");
+			Trace.Hex( nextTimerInterrupt, -8);
+			Trace.Ln;
+			Trace.String(" O ");
+			Trace.Hex( GetOSTimer(),-8);
+			Trace.Ln;
+		END;
+		*)
+
+		SYSTEM.PUT32( Platform.OSMR0, nextTimerInterrupt );
+
+		(* clear match *)
+		SYSTEM.PUT32(Platform.OSSR, 1); (* Clear Match *)
+		SYSTEM.PUT32(Platform.OSIER, 1); (* Enable Interrupt on Match0 *)
+
+
+		INC(timer, Platform.UNIT);
+(*
+		IF timerHandler # NIL THEN
+
+			(*
+			cpsr := Platform.SVCMode;
+			cpsr := Bit.ORR(cpsr, 0C0H);
+			SYSTEM.LDPSR(0, cpsr);
+			*)
+
+			CODE
+				MRS	R0, CPSR
+				BIC		R0,R0,#01FH	(* clear the mode bits 						*)
+				ORR	R0,R0,#013H	(* enable supervisor mode 					*)
+				ORR	R0,R0,#0C0H	(* disable IRQ 								*)
+				MSR	CPSR_c,R0		(* store the status register 					*)
+			END;
+
+			lr:= SYSTEM.LNK();
+
+			CODE
+				MRS	R0, CPSR
+				BIC		R0,R0,#0C0H	(* clear the IRQ bits, enable the global IRQ	*)
+				MSR	CPSR_c,R0		(* store the status register 					*)
+			END;
+
+			(*
+			SYSTEM.LDPSR(0, Platform.SVCMode );
+			*)
+
+
+			timerHandler;
+
+			(*
+			(* disable the IRQs *)
+			SYSTEM.STPSR(0, cpsr);
+			cpsr := Bit.ORR(cpsr, 0C0H);
+			SYSTEM.LDPSR(0, cpsr);
+			*)
+
+			CODE
+				MRS	R0, CPSR
+				ORR	R0,R0,#0C0H	(* disable IRQ 								*)
+				MSR	CPSR_c,R0		(* store the status register 					*)
+			END;
+
+
+			(* restore the link register *)
+			SYSTEM.SETLNK( lr );
+
+			CODE
+				MRS	R0, CPSR
+				BIC		R0,R0,#01FH	(* clear the mode bits, IRQ is still disabled	*)
+				ORR	R0,R0,#012H	(* enable IRQ processor mode				*)
+				MSR	CPSR_c,R0		(* store the status register 					*)
+			END;
+
+			(*
+			(* return to IRQ mode *)
+			SYSTEM.LDPSR(0, Platform.IRQMode + Platform.IRQDisabled+ Platform.FIQDisabled );
+			*)
+
+		END;
+*)
+
+	END Timer0IrqHandler;
+*)
+
+
+
+	(*
+	(* Reset the watchdog. Do this periodically, otherwise the system will reboot *)
+	PROCEDURE ResetWatchdog;
+		VAR reg: LONGINT;
+	BEGIN
+		SYSTEM.GET(Platform.OSCR, reg);
+		reg := reg + Platform.WatchdogTimerIntervall;
+		SYSTEM.PUT32(Platform.OSMR3, reg);
+	END ResetWatchdog;
+
+	(* Enable the system Watchdog. Once enabled, the watchdog can only be disabled by rebooting the system *)
+	PROCEDURE EnableWatchdog;
+	BEGIN
+		ResetWatchdog;
+		(* Set bit 0 to enable the watchdog. The watchdog can only be disabled by resettting the cpu *)
+		SYSTEM.PUT32(Platform.OWER, {0});
+	END EnableWatchdog;
+
+	(* Get the internal hardware clock cycle counter *)
+	PROCEDURE GetOSTimer*(): LONGINT;
+		VAR i: LONGINT;
+	BEGIN
+		SYSTEM.GET(Platform.OSCR, i); RETURN i
+	END GetOSTimer;
+
+	*)
+	(* Wait uSec microseconds, max allowed is 429000 uSecs *)
+	(* min @ 100Mhz is 2.1 usec *)
+	(*
+	PROCEDURE MicroWait*(uSec: LONGINT);
+		VAR current, wait: LONGINT;
+	BEGIN
+		SYSTEM.GET(Platform.OSCR, current);
+		wait := current +((uSec * DelayDivisor) DIV 1000H) - delayCompensation;
+		REPEAT SYSTEM.GET(Platform.OSCR, current);
+		UNTIL current > wait;
+	END MicroWait;
+
+	(* Wait mSec milliseconds *)
+	PROCEDURE MilliWait*(mSec: LONGINT);
+	BEGIN
+		WHILE mSec > 0 DO MicroWait(1000); DEC(mSec); END;
+	END MilliWait;
+
+	(* Calculate the overhead of calling MicroWait(0) *)
+	PROCEDURE SetDelayCompensation*;
+		VAR startTime, stopTime: LONGINT;
+	BEGIN
+		delayCompensation := 0;
+		DelayDivisor := ENTIER(REAL(Platform.CLOCKDIVISOR) / 2.44140625);
+
+		DisableIRQs; SYSTEM.GET(Platform.OSCR, startTime); MicroWait(0);
+		SYSTEM.GET(Platform.OSCR, stopTime); (*EnableIRQs; *)
+
+		IF stopTime > startTime THEN delayCompensation := stopTime - startTime;
+		ELSE delayCompensation := startTime - stopTime;
+		END;
+	END SetDelayCompensation;
+	*)
+	(* Get the system time in milliseconds, driven by the timer interrupt, rel to system boot up *)
+	PROCEDURE GetTime*(): LONGINT;
+	BEGIN
+		RETURN timer
+	END GetTime;
+	
+	PROCEDURE UpdateTime*( irq: LONGINT );
+	BEGIN
+		INC( timer );
+		(*
+		IF ( timer MOD 1000 ) = 0 THEN
+			Trace.String("c");
+		END;
+		*)
+		IF ( toggle ) THEN
+			IoControl.ClearPin( 26 );
+		ELSE
+			IoControl.SetPin( 26 );
+		END;
+		
+		toggle := ~toggle;
+		
+	END UpdateTime;
+	
+	PROCEDURE ShowTime*();
+	BEGIN
+		Trace.String("Time : "); Trace.Int( timer, 8 ); Trace.Ln;
+	END ShowTime;
+	
+
+
+	(* Init the system *)
+	PROCEDURE Init;
+	VAR val: SET;
+	BEGIN
+		
+		timer := 0;
+		delayCompensation := 0;
+		
+		Interrupts.RegisterTimerHandler( UpdateTime );
+
+		Trace.StringLn("Init Finished()");
+
+	END Init;
+	
+	PROCEDURE EnableMMU*(translationBase, flags: ADDRESS);
+	BEGIN
+		Trace.String("tb = "); Trace.Hex(translationBase,-8); Trace.Ln;
+		CODE
+			ldr r0, [FP, #translationBase]
+			orr r0, r0, #05BH
+			mcr p15, 0, r0, c2, c0, 0
+
+			mvn r0, #0 	; mmu domains: 1111 = manager
+			mcr p15, 0, r0, c3, c0, 0
+
+			ldr r0, [FP, #flags ]
+			mcr p15, 0, r0, c1, c0, 0
+		END;
+		Trace.StringLn("enabled");
+		(*
+		dsb();
+		isb();
+		*)
+	END EnableMMU;
+
+	CONST
+		PageTableBaseAddress = 10000000H - 100000H; (* 1 MB below highest address *);
+
+	(* 1 MB page table entry *)
+	PROCEDURE MapPage*(virtual, physical: LONGINT; flags: LONGINT);
+	CONST
+		PageSize = 100000H; (* 1 MB pages *)
+	BEGIN
+		ASSERT(virtual >= 0);
+		ASSERT(virtual < 1000H);
+		ASSERT(physical >= 0);
+		ASSERT(physical < 1000H);
+
+		SYSTEM.PUT(PageTableBaseAddress + virtual*4, physical * PageSize + flags);
+		(*IF PageTableBaseAddress MOD 40H = 0 THEN
+			UartMin.Str("map: "); UartMin.Hex(PageTableBaseAddress+virtual*4);
+			UartMin.Str(" -> "); UartMin.Hex(physical*PageSize + flags);
+			UartMin.Ln;
+		END;
+		*)
+	END MapPage;
+
+	CONST
+		(* bits *)
+		NS = 80000H;;
+		nG = 20000H;
+		S = 10000H;
+		AP2 = 8000H;
+		TEX = 1000H;
+		AP = 400H;
+		IMP = 200H;
+		Domain = 20H;
+		XN=10H;
+		C=8H;
+		B=4H;
+
+		Section = 2;
+
+		MappedCached* = B + AP*3H + TEX*5H + S + Section + 0FH * Domain;
+		MappedNonCached* = Section;
+		Unmapped* = 0;
+
+BEGIN
+	
+	Trace.StringLn("Init kernel Init()");
+
+	Init;
+	
+	toggle := FALSE;
+
+	Trace.StringLn("Module init of kernel completed.");
+	
+END Kernel.

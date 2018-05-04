@@ -1,0 +1,79 @@
+MODULE ZynqFpgaProgrammer;
+(**
+	AUTHOR Timothée Martiel, 01/2016
+	PURPOSE FPGA programmer for Zynq-7000 SoC
+*)
+
+IMPORT
+	SYSTEM, Platform, Caches, StreamReaders,
+	EnetTiming,
+	Programmer;
+
+CONST
+	Timeout = 5000;
+
+TYPE
+	Fpga * = POINTER TO FpgaDesc;
+	FpgaDesc * = RECORD (Programmer.DestinationDesc)
+	END;
+
+	PROCEDURE ProgramFpga (CONST resource: Programmer.Resource; destination: Programmer.Destination);
+	VAR
+		timer: EnetTiming.Timer;
+		res, i: LONGINT;
+		start, size: ADDRESS;
+	BEGIN
+		start := resource.start;
+		size := resource.size;
+
+		Caches.CleanDCacheRange(start, size);
+		EnetTiming.SetTimerMilli(timer, Timeout);
+
+		IF size > 512 * Platform.M THEN Programmer.error := TRUE; Programmer.done := TRUE; RETURN END;
+
+		Platform.devcfg.CTRL := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, Platform.devcfg.CTRL) - {25});
+
+		(* Clear DMA_DONE and PL_PROGRAMMED interrupts *)
+		Platform.devcfg.INT_STS := SYSTEM.VAL(LONGINT, {2, 13});
+		(* Start DMA *)
+		Platform.devcfg.DMA_SRC_ADDR := start + 1;
+		Platform.devcfg.DMA_DST_ADDR := Platform.DevCfgDmaPlAdr;
+		Platform.devcfg.DMA_SRC_LEN := (size) DIV 4;
+		Platform.devcfg.DMA_DST_LEN := (size) DIV 4;
+		(* Wait until DMA done and PL programmed *)
+		EnetTiming.StartTimer(timer);
+		REPEAT UNTIL ({2, 13} * SYSTEM.VAL(SET, Platform.devcfg.INT_STS) = {2, 13}) OR (EnetTiming.IsTimerExpired(timer));
+		IF {2, 13} * SYSTEM.VAL(SET, Platform.devcfg.INT_STS) # {2, 13} THEN
+			(* Programming failed *)
+			Programmer.done := TRUE;
+			Programmer.error := TRUE;
+			RETURN
+		END;
+
+		Platform.slcr.SLCR_UNLOCK := Platform.SlcrUnlockKey;
+		(* Bring PL out of reset ??? *)
+		Platform.slcr.FPGA_RST_CTRL := {0 .. 3};
+		(* Enable Level shifters *)
+		Platform.slcr.LVL_SHFTR_EN := 0FH;
+		Platform.slcr.SLCR_LOCK := Platform.SlcrLockKey;
+
+		Programmer.done := TRUE;
+		Programmer.error := FALSE
+	END ProgramFpga;
+
+	PROCEDURE Accept (destination: Programmer.Destination): BOOLEAN;
+	BEGIN
+		RETURN destination IS Fpga
+	END Accept;
+
+	PROCEDURE Factory (VAR args: StreamReaders.Reader): Programmer.Destination;
+	VAR
+		dest: Fpga;
+	BEGIN
+		NEW(dest);
+		RETURN dest
+	END Factory;
+
+BEGIN
+	Programmer.RegisterProgrammer("ZynqFpga", ProgramFpga, Accept, Factory)
+END ZynqFpgaProgrammer.

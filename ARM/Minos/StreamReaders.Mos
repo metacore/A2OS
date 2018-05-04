@@ -1,0 +1,470 @@
+MODULE StreamReaders;
+
+IMPORT
+	SYSTEM; 
+CONST
+	
+	Ok* = 0;   (** zero result code means no error occurred *)
+	EOF* = 4201;   (** error returned when Receive reads past end of file or stream *)
+
+	EOT* = 1AX;   (** EOT character *)
+
+	StringFull = 4202;
+	FormatError* = 4203;   (** error returned when ReadInt fails *)
+	
+	CR* = 0DX;  LF* = 0AX;  TAB* = 9X;  SP* = 20X;
+
+TYPE
+
+	Float = REAL;
+	
+	Bytes2 = ARRAY 2 OF CHAR;
+	Bytes4 = ARRAY 4 OF CHAR;
+	Bytes8 = ARRAY 8 OF CHAR;
+	
+	(** Any stream input procedure. *)
+	Receiver* = PROCEDURE( VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+
+	Reader* = RECORD
+		head, tail: LONGINT;
+		buf: POINTER TO ARRAY OF CHAR;
+		res*: LONGINT;   (** result of last input operation. *)
+		receive: Receiver;
+		received*: LONGINT;   (** count of received bytes *)
+	END;
+
+	PROCEDURE Init*(VAR reader: Reader; receiver: Receiver; size: LONGINT);
+	BEGIN
+		NEW(reader.buf,size);
+		reader.receive := receiver;
+		reader.res := 0;
+	END Init;
+	
+	(** reset the reader by dropping the bytes in the buffer, resetting the result code and setting received to 0.
+		This is used by seekable extensions of the reader *)
+	PROCEDURE Reset*(VAR r: Reader);
+	BEGIN
+		r.head := 0;  r.tail := 0;  r.res := Ok;  r.received := 0
+	END Reset;
+
+	(** Return bytes currently available in input buffer. *)
+	PROCEDURE Available*(VAR r: Reader): LONGINT;
+	VAR n: LONGINT;
+	BEGIN
+		IF (r.res = Ok) THEN
+			IF (r.head = r.tail) THEN r.head := 0;  r.receive( r, r.buf^, 0, LEN( r.buf ), 0, r.tail, r.res );  INC( r.received, r.tail );
+			ELSIF (r.tail # LEN( r.buf )) THEN
+				r.receive( r, r.buf^, r.tail, LEN( r.buf ) - r.tail, 0, n, r.res );   (* poll *)
+				INC( r.tail, n );  INC( r.received, n )
+			END;
+			IF r.res = EOF THEN r.res := Ok END  (* ignore EOF here *)
+		END;
+		RETURN r.tail - r.head
+	END Available;
+
+	(** Current read position. *)
+	PROCEDURE Pos*(CONST r: Reader): LONGINT;
+	BEGIN
+		RETURN r.received - (r.tail - r.head)
+	END Pos;
+
+	(** -- Read raw binary data -- *)
+
+	(** Read one byte. x=0X if no success (e.g. file ended) *)
+	PROCEDURE Char*(VAR r: Reader; VAR x: CHAR );
+	BEGIN
+		IF (r.head = r.tail) & (r.res = Ok) THEN r.head := 0;  r.receive( r, r.buf^, 0, LEN( r.buf ), 1, r.tail, r.res );  INC( r.received, r.tail ) END;
+		IF r.res = Ok THEN x := r.buf[r.head];  INC( r.head ) ELSE x := 0X END
+	END Char;
+
+	(** Like Read, but return result. Return 0X if no success (e.g. file ended) *)
+		PROCEDURE Get*(VAR r: Reader): CHAR;
+		BEGIN
+			IF (r.head = r.tail) & (r.res = Ok) THEN r.head := 0;  r.receive( r, r.buf^, 0, LEN( r.buf ), 1, r.tail, r.res );  INC( r.received, r.tail ) END;
+			IF r.res = Ok THEN INC( r.head );  RETURN r.buf[r.head - 1] ELSE RETURN 0X END
+		END Get;
+
+	(** Like Get, but leave the byte in the input buffer. *)
+	PROCEDURE Peek*(VAR r: Reader): CHAR;
+	BEGIN
+		IF (r.head = r.tail) & (r.res = Ok) THEN
+			r.head := 0;  r.receive( r, r.buf^, 0, LEN( r.buf ), 1, r.tail, r.res );  INC( r.received, r.tail );
+			IF r.res = EOF THEN  (* ignore EOF here *)
+				r.res := Ok;  r.tail := 0; RETURN 0X (* Peek returns 0X at eof *)
+			END
+		END;
+		IF r.res = Ok THEN RETURN r.buf[r.head] ELSE RETURN 0X END
+	END Peek;
+
+	(** Read size bytes into x, starting at ofs.  The len parameter returns the number of bytes that were actually read. *)
+	PROCEDURE Bytes*(VAR r: Reader; VAR x: ARRAY OF CHAR;  ofs, size: LONGINT;  VAR len: LONGINT );
+	VAR n: LONGINT;
+	BEGIN
+		ASSERT ( size >= 0 );
+		len := 0;
+		LOOP
+			n := r.tail - r.head;   (* bytes available *)
+			IF n = 0 THEN  (* no data available *)
+				r.head := 0;
+				IF r.res = Ok THEN  (* fill buffer *)
+					r.receive( r, r.buf^, 0, LEN( r.buf ), 1, r.tail, r.res );  INC( r.received, r.tail )
+				END;
+				IF r.res # Ok THEN  (* should not be reading from erroneous rider *)
+					WHILE size # 0 DO x[ofs] := 0X;  INC( ofs );  DEC( size ) END;   (* clear rest of buffer *)
+					IF (r.res = EOF) & (len # 0) THEN r.res := Ok END;   (* ignore EOF if some data being returned *)
+					EXIT
+				END;
+				n := r.tail
+			END;
+			IF n > size THEN n := size END;
+			ASSERT ( ofs + n <= LEN( x ) );   (* index check *)
+			SYSTEM.MOVE( ADDRESSOF( r.buf[r.head] ), ADDRESSOF( x[ofs] ), n );  INC( r.head, n );  INC( len, n );
+			IF size = n THEN EXIT END;   (* done *)
+			INC( ofs, n );  DEC( size, n )
+		END
+	END Bytes;
+
+	(** Skip n bytes on the reader. *)
+	PROCEDURE SkipBytes*(VAR r: Reader; n: LONGINT );
+	VAR ch: CHAR;
+	BEGIN
+		WHILE n > 0 DO ch := Get(r);  DEC( n ) END
+	END SkipBytes;
+
+	(** Read a SHORTINT. *)
+	PROCEDURE RawSInt*(VAR r: Reader; VAR x: SHORTINT );
+	BEGIN
+		x := SYSTEM.VAL( SHORTINT, Get(r) )
+	END RawSInt;
+
+	(** Read an INTEGER. *)
+	PROCEDURE RawInt*(VAR r: Reader; VAR x: INTEGER );
+	VAR x0, x1: CHAR;
+	BEGIN
+		x0 := Get(r);  x1 := Get(r);   (* defined order *)
+		x := ORD( x1 ) * 100H + ORD( x0 )
+	END RawInt;
+
+	(** Read a LONGINT. *)
+	PROCEDURE RawLInt*(VAR r: Reader; VAR x: LONGINT );
+	VAR ignore: LONGINT;
+	BEGIN
+		Bytes(r,SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
+	END RawLInt;
+
+	(** Read a HUGEINT. *)
+	PROCEDURE RawHInt*(VAR r: Reader; VAR x: HUGEINT );
+	VAR ignore: LONGINT;
+	BEGIN
+		Bytes(r,SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
+	END RawHInt;
+
+	(** Read a 32 bit value in network byte order (most significant byte first) *)
+	PROCEDURE Net32*(VAR r: Reader): LONGINT;
+	BEGIN
+		RETURN LONG( ORD( Get(r) ) ) * 1000000H + LONG( ORD( Get(r) ) ) * 10000H + LONG( ORD( Get(r) ) ) * 100H + LONG( ORD( Get(r) ) )
+	END Net32;
+
+	(** Read an unsigned 16bit value in network byte order (most significant byte first) *)
+	PROCEDURE Net16*(VAR r: Reader): LONGINT;
+	BEGIN
+		RETURN LONG( ORD( Get(r) ) ) * 100H + LONG( ORD( Get(r) ) )
+	END Net16;
+
+	(** Read an unsigned byte *)
+	PROCEDURE Net8*(VAR r: Reader): LONGINT;
+	BEGIN
+		RETURN LONG( ORD( Get(r) ) )
+	END Net8;
+
+	(** Read a SET. *)
+	PROCEDURE RawSet*(VAR r: Reader; VAR x: SET );
+	VAR ignore: LONGINT;
+	BEGIN
+		Bytes(r,SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
+	END RawSet;
+
+	(** Read a BOOLEAN. *)
+	PROCEDURE RawBool*(VAR r: Reader; VAR x: BOOLEAN );
+	BEGIN
+		x := (Get(r) # 0X)
+	END RawBool;
+
+	(** Read a REAL. *)
+	PROCEDURE RawReal*(VAR r: Reader; VAR x: REAL );
+	VAR ignore: LONGINT;
+	BEGIN
+		Bytes(r,SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
+	END RawReal;
+
+	(** Read a LONGREAL. *)
+	PROCEDURE RawLReal*(VAR r: Reader; VAR x: LONGREAL );
+	VAR ignore: LONGINT;
+	BEGIN
+		Bytes(r,SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
+	END RawLReal;
+
+	(** Read a 0X-terminated string.  If the input string is larger than x, read the full string and assign the truncated 0X-terminated value to x. *)
+	PROCEDURE RawString*(VAR r: Reader; VAR x: ARRAY OF CHAR );
+	VAR i, m: LONGINT;  ch: CHAR;
+	BEGIN
+		i := 0;  m := LEN( x ) - 1;
+		LOOP
+			ch := Get(r);   (* also returns 0X on error *)
+			IF ch = 0X THEN EXIT END;
+			IF i < m THEN x[i] := ch;  INC( i ) END
+		END;
+		x[i] := 0X
+	END RawString;
+	
+	(** Read a number in a compressed format. *)
+	PROCEDURE RawNum*(VAR r: Reader; VAR x: LONGINT );
+	VAR ch: CHAR;  n, y: LONGINT;
+	BEGIN
+		n := 0;  y := 0;  ch := Get(r);
+		WHILE ch >= 80X DO INC( y, LSH( LONG( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get(r) END;
+		x := ASH( LSH( LONG( ORD( ch ) ), 25 ), n - 25 ) + y
+	END RawNum;
+
+	(** -- Read formatted data (uses Peek for one character lookahead) -- *)
+
+	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
+
+	PROCEDURE Int*(VAR r: Reader; VAR x: LONGINT;  hex: BOOLEAN );
+	VAR vd, vh, sgn, d: LONGINT;  ch: CHAR;  ok: BOOLEAN;
+	BEGIN
+		vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
+		IF Peek(r) = "-" THEN sgn := -1;  ch := Get(r) END;
+		LOOP
+			ch := Peek(r);
+			IF (ch >= "0") & (ch <= "9") THEN d := ORD( ch ) - ORD( "0" )
+			ELSIF hex & (CAP( ch ) >= "A") & (CAP( ch ) <= "F") THEN d := ORD( CAP( ch ) ) - ORD( "A" ) + 10
+			ELSE EXIT
+			END;
+			vd := 10 * vd + d;  vh := 16 * vh + d;   (* ignore overflow *)
+			ch := Get(r);  ok := TRUE
+		END;
+		IF hex & (CAP( ch ) = "H") THEN  (* optional "H" present *)
+			vd := vh;   (* use the hex value *)
+			ch := Get(r)
+		END;
+		x := sgn * vd;
+		IF (r.res = 0) & ~ok THEN r.res := FormatError END
+	END Int;
+	
+	(** Return TRUE iff at the end of a line (or file). *)
+	PROCEDURE EOLN*(VAR r: Reader): BOOLEAN;
+	VAR ch: CHAR;
+	BEGIN
+		ch := Peek(r);  RETURN (ch = CR) OR (ch = LF) OR (r.res # Ok)
+	END EOLN;
+
+	(** Read all characters until the end of the line (inclusive).  If the input string is larger than x, read the full string and assign
+		the truncated 0X-terminated value to x. *)
+	PROCEDURE Ln*(VAR r: Reader; VAR x: ARRAY OF CHAR );
+	VAR i, m: LONGINT;  ch: CHAR;
+	BEGIN
+		i := 0;  m := LEN( x ) - 1;
+		LOOP
+			ch := Peek(r);
+			IF (ch = CR) OR (ch = LF) OR (r.res # Ok) THEN EXIT END;
+			IF i < m THEN x[i] := ch;  INC( i ) END;
+			ch := Get(r)
+		END;
+		x[i] := 0X;
+		IF ch = CR THEN ch := Get(r) END;
+		IF Peek(r) = LF THEN ch := Get(r) END
+	END Ln;
+
+	(** Read all characters until the end of the line (inclusive) or an <EOT> character.
+		If the input string is larger than x, read the full string and assign the truncated 0X-terminated
+		value to x. *)
+	PROCEDURE LnEOT*(VAR r: Reader; VAR x: ARRAY OF CHAR );
+	VAR i, m: LONGINT;  ch: CHAR;
+	BEGIN
+		i := 0;  m := LEN( x ) - 1;
+		LOOP
+			ch := Peek(r);
+			IF (ch = CR) OR (ch = LF) OR (ch = EOT) OR (r.res # Ok) THEN EXIT END;
+			IF i < m THEN x[i] := ch;  INC( i ) END;
+			ch := Get(r)
+		END;
+		x[i] := 0X;
+		IF ch = CR THEN ch := Get(r) END;
+		IF Peek(r) = LF THEN ch := Get(r) END;
+		IF ch = EOT THEN ch := Get(r) END
+	END LnEOT;
+
+	(** Skip over all characters until the end of the line (inclusive). *)
+	PROCEDURE SkipLn*(VAR r: Reader);
+	VAR ch: CHAR;
+	BEGIN
+		LOOP
+			ch := Peek(r);
+			IF (ch = CR) OR (ch = LF) OR (r.res # Ok) THEN EXIT END;
+			ch := Get(r)
+		END;
+		IF ch = CR THEN ch := Get(r) END;
+		IF Peek(r) = LF THEN ch := Get(r) END
+	END SkipLn;
+
+	(** Skip over space and TAB characters. *)
+	PROCEDURE SkipSpaces*(VAR r: Reader);
+	VAR ch: CHAR;
+	BEGIN
+		LOOP
+			ch := Peek(r);
+			IF (ch # TAB) & (ch # SP) THEN EXIT END;
+			ch := Get(r)
+		END
+	END SkipSpaces;
+
+	(** Skip over space, TAB and EOLN characters. *)
+	PROCEDURE SkipWhitespace*(VAR r: Reader);
+	VAR ch: CHAR;
+	BEGIN
+		LOOP
+			ch := Peek(r);
+			IF (ch # SP) & (ch # CR) & (ch # LF) & (ch # TAB) THEN EXIT END;
+			ch := Get(r)
+		END
+	END SkipWhitespace;
+
+	(** Read a token, consisting of any string of characters terminated by space, TAB or EOLN. *)
+	PROCEDURE Token*(VAR r: Reader; VAR token: ARRAY OF CHAR );
+	VAR j, max: LONGINT;  ch: CHAR;
+	BEGIN
+		j := 0;  max := LEN( token ) - 1;
+		LOOP
+			ch := Peek(r);
+			IF (ch = SP) OR (ch = CR) OR (ch = LF) OR (ch = TAB) OR (r.res # Ok) THEN EXIT END;
+			IF j < max THEN token[j] := ch;  INC( j ) END;
+			ch := Get(r)
+		END;
+		token[j] := 0X
+	END Token;
+
+	(** Read an optionally "" or '' enquoted string.  Will not read past the end of a line. *)
+	PROCEDURE String*(VAR r: Reader; VAR string: ARRAY OF CHAR );
+	VAR c, delimiter: CHAR;  i, len: LONGINT;
+	BEGIN
+		c := Peek(r);
+		IF (c # "'") & (c # '"') THEN Token(r,string )
+		ELSE
+			delimiter := Get(r);  c := Peek(r);  i := 0;  len := LEN( string ) - 1;
+			WHILE (i < len) & (c # delimiter) & (c # CR) & (c # LF) & (r.res = Ok) DO string[i] := Get(r);  INC( i );  c := Peek(r) END;
+			IF (c = delimiter) THEN c := Get(r) END;
+			string[i] := 0X
+		END
+	END String;
+
+	(** First skip whitespace, then read string *)
+	PROCEDURE GetString*(VAR r: Reader; VAR string : ARRAY OF CHAR): BOOLEAN;
+	BEGIN
+		SkipWhitespace(r);
+		String(r,string);
+		RETURN string[0] # 0X;
+	END GetString;
+
+	(** First skip whitespace, then read integer *)
+	PROCEDURE GetInteger*(VAR r: Reader; VAR integer : LONGINT; isHexadecimal : BOOLEAN): BOOLEAN;
+	BEGIN
+		SkipWhitespace(r);
+		Int(r,integer, isHexadecimal);
+		RETURN r.res = Ok;
+	END GetInteger;
+
+	(** First skip whitespace, then read 1 byte character *)
+	PROCEDURE GetChar*(VAR r: Reader; VAR ch : CHAR): BOOLEAN;
+	BEGIN
+		SkipWhitespace(r);
+		Char(r,ch);
+		RETURN ch # 0X;
+	END GetChar;
+
+	PROCEDURE GetFloat*(VAR r: Reader; VAR x: Float): BOOLEAN;
+	VAR str: ARRAY 32 OF CHAR;
+	BEGIN
+		IF GetString(r,str) THEN
+			StrToFloat(str,x);
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END;
+	END GetFloat;
+
+	(** converts a string to a real value *)
+	(* adopted from Strings.Mod *)
+	PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: Float);
+	VAR p, e: LONGINT; y, g: Float; neg, negE: BOOLEAN;
+	BEGIN
+		p := 0;
+		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
+		IF s[p] = "-" THEN neg := TRUE; INC(p) ELSE neg := FALSE END;
+		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
+
+		y := 0;
+		WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+			y := y * 10 + (ORD(s[p]) - 30H);
+			INC(p);
+		END;
+		IF s[p] = "." THEN
+			INC(p); g := 1;
+			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+				g := g / 10; y := y + g * (ORD(s[p]) - 30H);
+				INC(p);
+			END;
+		END;
+		IF (s[p] = "d") OR (s[p] = "D") OR (s[p] = "e") OR (s[p] = "E") THEN
+			INC(p); e := 0;
+			IF s[p] = "-" THEN negE := TRUE; INC(p)
+			ELSIF s[p] = "+" THEN negE := FALSE; INC(p)
+			ELSE negE := FALSE
+			END;
+			WHILE (s[p] = "0") DO INC(p) END;
+			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+				e := e * 10 + (ORD(s[p]) - 30H);
+				INC(p);
+			END;
+			IF negE THEN 
+				FOR p := 1 TO e DO y := y * (Float(1)/Float(10)); END;
+				(*y := y / Reals.Ten(e);*)
+			ELSE 
+				FOR p := 1 TO e DO y := y * Float(10); END;
+				(*y := y * Reals.Ten(e);*)
+			END;
+		END;
+		IF neg THEN y := -y END;
+		r := y
+	END StrToFloat;
+
+	PROCEDURE SetString * (VAR r: Reader; CONST str: ARRAY OF CHAR);
+	VAR
+		len: LONGINT;
+	BEGIN
+		len := 0;
+		WHILE str[len] # 0X DO INC(len) END;
+		IF len > LEN(r.buf) THEN len := LEN(r.buf) END;
+		r.head := 0;
+		r.tail := len;
+		r.received := len;
+		r.res := Ok;
+		SYSTEM.MOVE(ADDRESSOF(str[0]), ADDRESSOF(r.buf[0]), len)
+	END SetString;
+
+	PROCEDURE SetRawString * (VAR r: Reader; CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+	BEGIN
+		IF len > LEN(r.buf) THEN len := LEN(r.buf) END;
+		r.head := 0;
+		r.tail := len;
+		r.received := len;
+		r.res := Ok;
+		SYSTEM.MOVE(ADDRESSOF(buf[ofs]), ADDRESSOF(r.buf[0]), len)
+	END SetRawString;
+
+	PROCEDURE StringReaderReceive * (VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT);
+	BEGIN
+		IF min = 0 THEN res := Ok ELSE res := EOF END;
+		len := 0
+	END StringReaderReceive;
+END StreamReaders.

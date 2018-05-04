@@ -1,0 +1,2086 @@
+(* ported version of Minos to work with the ARM backend of the Fox Compiler Suite *)
+(* ETH Oberon, Copyright 2006 ETH Zuerich Institut fuer Computersysteme, ETH Zentrum, CH-8092 Zuerich.
+Refer to the "General ETH Oberon System Source License" contract available at: http://www.oberon.ethz.ch/ *)
+
+MODULE OFS;	(** non-portable *)	(* pjm/bsm/be *)
+
+(* Oberon file system base - Support for file system and volume implementations. *)
+
+IMPORT SYSTEM, Kernel, Log, Strings, Trace;
+
+CONST
+	ReadOnly* = 0; Removable* = 1;		(** Volume property flags *)
+	
+	(** Enumerate flags supported by  *)
+	EnumSize* = 0;	(** enable size parameter of EntryHandler. *)
+	EnumTime* = 1;	(** enable time and data parameters of EntryHandler. *)
+	EnumRecursive* = 2;	(** enumerate recursively into subdirectories. *)
+	EnumStop* = 15;	(** stop enumeration (can be set in EntryHandler). *)
+
+	(** return values for a FileSystem's handler procedure *)
+	Ok* = 0;
+	Unsupported* = -1;
+	Error* = 2;
+
+(*	Reserved = 32;		(* Blocks reserved for system on Boot volumes *) *)
+	
+	InvalidAddress = -1;
+	
+	(* Length of filenames *) 
+	PreLength = 16;		(* Length of filesystem identifier *)
+	LocalLength = 128;	(* Length of filename without filesystem identifier *)
+	FileNameLength = PreLength + LocalLength;
+	
+	(* TODO: Do this better. At the moment the Bitmap is statically preallocated *)
+	BitmapSize = 4096;
+
+	DEBUG = FALSE;
+	thisModuleName = "OFS";	(* used for kernel log messages *)
+
+	(* min number of block a valume can have *)
+	MinVolSize = 4;
+
+	SF = 29;	(* SectorFactor *)
+
+	DirMark* 		= LONGINT(9B1EA38DH);			(* The main directory *)
+	HeaderMark 	= LONGINT(9BA71D86H);			(* a data file *)
+	MapMark 		= LONGINT(9C2F977FH);			(* a bitmap block *)
+	
+	DirRootAdr = 1*SF;
+
+	MaxFiles = 10;
+	MaxBuffers = 2;
+	InitHint = 200*SF;
+
+	(* Change the following parameters to get a different sectorsize *)
+	(* From here: 4096 byte blocks *)
+	(*SS* = 4096;			(* SectorSize *)
+	STS = 128;			(* SecTabSize *)
+	XS = SS DIV 4;		(* IndexSize *)
+	HS = 568;			(* HeaderSize *)
+	DirPgSize = 102;
+	N = DirPgSize DIV 2;
+	FillerSize = 4;*)
+	STS = 128;
+	SS* = 4096;
+	XS = SS DIV 4;
+	DiskAdrSize = 4; (* bytes *)
+
+	HS =  4 (* mark *) + LocalLength + 4*4 (* aleng, bleng, time, date *) + (STS+1)*DiskAdrSize;
+
+	DirEntrySize = LocalLength + 2*DiskAdrSize (* adr, p *);
+	DirPgHeaderSize = 2*4 (* mark, m *) + DiskAdrSize (* p0 *) + 4 (* min. FillerSize *);
+	DirPgSize = (SS - DirPgHeaderSize) DIV DirEntrySize;
+	FillerSize = (SS - DirPgHeaderSize) MOD DirEntrySize + 4 (* min. FillerSize *);
+	N = DirPgSize DIV 2;
+
+	(* generic bitmap size *)
+	MapIndexSize = (SS-4) DIV 4;
+	MapSize = SS DIV 4;	(* {MapSize MOD 32 = 0} *)
+
+TYPE
+	Array = ARRAY 2000 OF LONGINT;
+	(* A callback function which is used in Enumerate *)
+	EntryHandler* = PROCEDURE(CONST name: ARRAY OF CHAR; time, date, size: LONGINT; VAR flags: SET);
+	(* The basic disc sector, all "real" used disksector types are derived from this *)
+	DiskSector*  = RECORD END;	
+
+	(* Volume is the base type of all volumes.  It provides operations on an abstract array of file system 
+		data blocks of blockSize bytes, numbered from 1 to size. *)
+	Volume* = POINTER TO VolumeDesc;
+	VolumeDesc* = RECORD
+		name*: ARRAY 32 OF CHAR;		(* descriptive name - e.g. for matching with Partitions.Show *)
+		blockSize*: LONGINT;			(* block size in bytes *)
+		size*: LONGINT;					(* size in blocks *)
+		flags*: SET;						(* ReadOnly, Removable, Boot *)
+
+		AllocBlock*: PROCEDURE (vol: Volume; hint: LONGINT; VAR adr: LONGINT; VAR res: LONGINT);
+		FreeBlock*, MarkBlock*: PROCEDURE (vol: Volume; adr: LONGINT; VAR res: LONGINT);
+
+		(* A the block with number "adr" as used *)
+		Marked*: PROCEDURE (vol: Volume; adr: LONGINT; VAR res: LONGINT): BOOLEAN;
+		(* Returns the number of available blocks *)
+		Available*: PROCEDURE (vol: Volume): LONGINT;
+		GetBlock*, PutBlock*: PROCEDURE (vol: Volume; adr: LONGINT; VAR blk: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+		Finalize*: PROCEDURE (vol: Volume);
+		Sync*: PROCEDURE(vol: Volume);
+		(* used blocks *)
+		used: LONGINT;
+		(* This bitmap is used to mark in memory if a block is used or not. Currently static allocated... todo: change this *)
+		map: POINTER TO ARRAY (*BitmapSize*) OF SET
+	END;
+	
+	(* The name of a mounted filesystem which can be used to address it *)
+	Prefix* = ARRAY PreLength OF CHAR;
+	(* The physically stored filename without prefix *)
+	LocalName* = ARRAY LocalLength OF CHAR;
+	(* Filename with prefix and LocalName *)
+	FileName* = ARRAY FileNameLength OF CHAR;
+
+	FileSystem* = POINTER TO FileSystemDesc;
+	File* = POINTER TO FileDesc;
+	Buffer* = POINTER TO BufferRecord;
+	
+	Rider* = RECORD
+		eof*: BOOLEAN;	(** has end of file been passed *)
+		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
+			(** private fields for implementors *)
+		apos*, bpos*: LONGINT;	(* apos: The sectornumber, bpos: The offset in the sector *)
+		hint*: Buffer;			(* used as a hint for new block allocation. This is basically the current data block *)
+		file*: File;				(* The file this filesystem is working on *)
+		fs*: FileSystem			(* The mounted filesystem, this file is working on *)
+	END;
+	
+	FileHd = POINTER TO FileHeader;
+
+	(* Generic disk sector *)
+	DataSector = RECORD (DiskSector)
+		B: ARRAY SS OF CHAR
+	END;
+	
+	(* A disk sector buffer, used in RAM *)
+	BufferRecord* = RECORD
+		apos*, lim*: LONGINT;			(* apos: sectornumber, lin: current pos in buffer *)
+		mod*: BOOLEAN;
+		next*: Buffer;
+		data*: DataSector
+	END;
+
+	(* A physical Index sector *)
+	IndexSector = RECORD (DiskSector)
+		x: ARRAY XS OF LONGINT
+	END;
+	
+	SectorTable = ARRAY STS OF LONGINT;
+	
+	FileDesc* = RECORD
+		key*: LONGINT;	(* unique id for registered file, never 0, basically the blocknumber of the file header *)
+		fs*: FileSystem;	(* file system containing file *)
+		next*: File;
+
+		aleng, bleng: LONGINT;		(* aleng: number of used sectors, blen: pos in last used sector *)
+		nofbufs: LONGINT;			(* number of data buffers *)
+		modH, registered: BOOLEAN;	(* modH: File header modified flag, registered: This file has already been registered *)
+		sechint: LONGINT;			(* the number of the last block allocated to this file *)
+		name: FileName;			(* The filename *)
+		time: LONGINT;				(* The last access time *)
+		ext: LONGINT;				(* number of sector representing the superIndex *)
+		firstbuf*: Buffer;				(* the one and only data buffer *)
+		sec: SectorTable				(* table that contains the addresses of the directly addressable sectors *)
+	END;
+
+	FileSystemDesc* = RECORD
+		next: FileSystem;	(* file system search path *)
+		link: FileSystem;	(* list of mounted file systems *)
+		prefix*: Prefix;	(** mount prefix *)
+		desc*: ARRAY 32 OF CHAR;	(** description of file system *)
+		vol*: Volume	(** underlying volume, if any (a boot FS must have a volume) *)
+	END;
+	
+	FileHeader = RECORD (DiskSector)   (* allocated in the first page of each file on disk *)
+		mark: LONGINT;					(* The mark distinguishes the type of the sector. In this case always a file *)
+		name: LocalName;
+		aleng, bleng: LONGINT;
+		date, time: LONGINT;
+		sec: SectorTable;				(* direct addressable sectors *)
+		ext: LONGINT;					(* number of sector that contains the indirect addressable sectors *)
+		data: ARRAY SS - HS OF CHAR	(* File data to fill the FileHeader *)
+	END;
+
+	DirEntry = RECORD		(*B-tree node*)	(* a directory entry *)
+		name: LocalName;
+		adr: LONGINT; 		(*sec no of file header*)
+		p: LONGINT  		(*sec no of left descendant (DirPage) in directory, used if the name is *)
+	END;
+
+	DirPage = RECORD (DiskSector)			(* A disk sector that contains Directory entries *)
+		mark: LONGINT;						(* The mark distinguishes the type of the sector. In this case a directory *)
+		m: LONGINT;						(* number of stored elements *)
+		p0: LONGINT; 						(* sec no of left descendant (DirPage) in directory. Contains the files with names 
+											   "smaller" than e[0] *)
+		fill: ARRAY FillerSize OF CHAR;
+		e: ARRAY DirPgSize OF DirEntry
+	END;
+
+	(* Header of the bitmap which is stored to disk. *)
+	(* The bitmap is always indirectly addressed *)
+	MapIndex = RECORD (DiskSector)
+		mark: LONGINT;
+		index: ARRAY MapIndexSize OF LONGINT
+	END;
+	
+	(* a sector which actually contains a part of the bitmap *)
+	MapSector = RECORD (DiskSector)
+		map: ARRAY MapSize OF SET
+	END;
+	
+VAR
+	(* The one and only directory *)
+	hp: FileHeader;
+	fullname: FileName;
+
+	fsroot: FileSystem;	(* file system search path root *)
+	fsmount: FileSystem;	(* list of known file systems *)
+	froot: File;	(* list of known open files, with dummy head *)
+	
+	filePool: File;	(* A list of files. The number of elements in this pool determine the maximum number of files that can be opened *)
+(*	bufPool: Buffer;	(* A list of buffers. Contains MaxFiles*MaxBuffers elements *) *)
+
+(** Predefined volume methods (need not be used). *)
+
+PROCEDURE First*(): FileSystem;
+BEGIN
+	RETURN fsroot
+END First;
+
+(* Join prefix and name to fullname = ( prefix ":" name ) *)
+PROCEDURE JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
+ VAR 
+	i, j: LONGINT;
+BEGIN
+	i := 0; WHILE prefix[i] # 0X DO fullname[i] := prefix[i]; INC(i) END;
+	fullname[i] := ':'; INC(i);
+	j := 0; WHILE name[j] # 0X DO fullname[i] := name[j]; INC(i); INC(j) END;
+	fullname[i] := 0X
+END JoinName;
+
+PROCEDURE FSGetSector(vol: Volume; src: LONGINT;  VAR dest: DiskSector);
+VAR
+	res: LONGINT;
+BEGIN
+	(*
+	IF src MOD SF # 0 THEN
+		HALT(15)
+	END;
+	*)
+	vol.GetBlock(vol, src DIV SF, dest, 0, res);
+END FSGetSector;
+
+PROCEDURE FSPutSector(vol: Volume;  dest: LONGINT;  VAR src: DiskSector);
+VAR
+	res: LONGINT;
+BEGIN
+	(*
+	ASSERT(~(ReadOnly IN vol.flags));
+	IF dest MOD SF # 0 THEN 
+		HALT(15) 
+	END;
+	*)
+	vol.PutBlock(vol, dest DIV SF, src, 0, res);
+END FSPutSector;
+
+PROCEDURE FSAllocSector(vol: Volume;  hint: LONGINT;  VAR sec: LONGINT);
+VAR 
+	res: LONGINT;
+BEGIN
+	ASSERT(~(ReadOnly IN vol.flags));
+	vol.AllocBlock(vol, hint DIV SF, sec, res);
+	sec := sec * SF
+END FSAllocSector;
+
+PROCEDURE FSMarkSector(vol: Volume;  sec: LONGINT);
+VAR 
+	res: LONGINT;
+BEGIN
+	ASSERT(~(ReadOnly IN vol.flags));
+	vol.MarkBlock(vol, sec DIV SF, res)
+END FSMarkSector;
+
+PROCEDURE FSFreeSector(vol: Volume;  sec: LONGINT);
+VAR 
+	res: LONGINT;
+BEGIN
+	ASSERT(~(ReadOnly IN vol.flags));
+	vol.FreeBlock(vol, sec DIV SF, res)
+END FSFreeSector;
+
+PROCEDURE FSMarked(vol: Volume;  sec: LONGINT): BOOLEAN;
+VAR 
+	res: LONGINT;
+BEGIN
+	ASSERT(~(ReadOnly IN vol.flags));
+	RETURN vol.Marked(vol, sec DIV SF, res)
+END FSMarked;
+
+PROCEDURE FSSize(vol: Volume): LONGINT;
+BEGIN
+	ASSERT(vol.size >= MinVolSize);
+	RETURN vol.size
+END FSSize;
+
+(* Search a file in a specific volume, A contains the address of the file. 0 if not found *)
+PROCEDURE Search(vol: Volume; CONST name: FileName; VAR A: LONGINT);
+VAR i, L, R: LONGINT; dadr: LONGINT; a: DirPage;
+BEGIN
+	A := -1;
+	dadr := DirRootAdr;
+	REPEAT
+		FSGetSector(vol, dadr, a);
+
+		ASSERT(a.mark = DirMark);
+		L := 0; R := a.m; (*binary search*)
+		WHILE L < R DO
+			i := (L+R) DIV 2;
+			IF Strings.Compare(name, a.e[i].name) <= 0 THEN R := i ELSE L := i+1 END
+		END ;
+
+		IF (R < a.m) & (name = a.e[R].name) THEN
+			A := a.e[R].adr;
+		ELSE
+			IF R = 0 THEN dadr := a.p0 ELSE dadr := a.e[R-1].p END ;
+			IF dadr = 0 THEN A := 0; END;
+		END;
+	UNTIL A >= 0;
+END Search;
+
+PROCEDURE CopyDirEntry(CONST src: DirEntry; VAR dest: DirEntry );
+BEGIN
+	Strings.Copy( src.name, dest.name);
+	dest.adr := src.adr;
+	dest.p := src.p;
+END CopyDirEntry;
+
+PROCEDURE insert(vol: Volume; CONST name: FileName; dpg0:  LONGINT; 
+								VAR h: BOOLEAN; VAR v: DirEntry; fad: LONGINT; VAR replacedFad: LONGINT (*gc*));
+(*h = "tree has become higher and v is ascending element"*)
+VAR ch: CHAR; i, j, L, R: LONGINT; dpg1: LONGINT; u: DirEntry; a: DirPage;
+BEGIN (*~h*)
+	FSGetSector(vol, dpg0, a);
+	L := 0; R := a.m; (*binary search*)
+	WHILE L < R DO
+		i := (L+R) DIV 2;
+		IF Strings.Compare(name, a.e[i].name) <= 0 THEN R := i ELSE L := i+1 END
+	END ;
+	replacedFad := 0;
+	IF (R < a.m) & (name = a.e[R].name) THEN
+		replacedFad := a.e[R].adr; (*gc*)
+		a.e[R].adr := fad; FSPutSector(vol, dpg0, a)  (*replace*)
+	ELSE (*not on this page*)
+		IF R = 0 THEN dpg1 := a.p0 ELSE dpg1 := a.e[R-1].p END ;
+		IF dpg1 = 0 THEN (*not in tree, insert*)
+			u.adr := fad; u.p := 0; h := TRUE; j := 0;
+			REPEAT ch := name[j]; u.name[j] := ch; INC(j)
+			UNTIL ch = 0X;
+			WHILE j < LocalLength DO u.name[j] := 0X; INC(j) END
+		ELSE
+			insert(vol, name, dpg1, h, u, fad, replacedFad)
+		END ;
+		IF h THEN (*insert u to the left of e[R]*)
+			IF a.m < DirPgSize THEN
+				h := FALSE; i := a.m;
+				WHILE i > R DO DEC(i); CopyDirEntry( a.e[i], a.e[i+1]) END;
+				CopyDirEntry(u, a.e[R]); INC(a.m)
+			ELSE (*split page and assign the middle element to v*)
+				a.m := N; a.mark := DirMark;
+				IF R < N THEN (*insert in left half*)
+					CopyDirEntry( a.e[N-1], v); i := N-1;
+					WHILE i > R DO DEC(i); CopyDirEntry( a.e[i], a.e[i+1]) END ;
+					CopyDirEntry(u, a.e[R]); FSPutSector(vol, dpg0, a);
+					FSAllocSector(vol, dpg0, dpg0); i := 0;
+					WHILE i < N DO CopyDirEntry(a.e[i+N], a.e[i]); INC(i) END
+				ELSE (*insert in right half*)
+					FSPutSector(vol, dpg0, a);
+					FSAllocSector(vol, dpg0, dpg0); DEC(R, N); i := 0;
+					IF R = 0 THEN CopyDirEntry(u, v);
+					ELSE CopyDirEntry(a.e[N], v);
+						WHILE i < R-1 DO CopyDirEntry(a.e[N+1+i], a.e[i]); INC(i) END ;
+						CopyDirEntry(u, a.e[i]); INC(i)
+					END ;
+					WHILE i < N DO CopyDirEntry(a.e[N+i], a.e[i]); INC(i) END
+				END ;
+				a.p0 := v.p; v.p := dpg0
+			END ;
+			FSPutSector(vol, dpg0, a)
+		END
+	END
+END insert;
+
+PROCEDURE Insert(vol: Volume; CONST name: FileName; fad: LONGINT; VAR replacedFad: LONGINT);
+VAR oldroot: LONGINT; h: BOOLEAN; U: DirEntry; a: DirPage;
+BEGIN
+	h := FALSE;
+	insert(vol, name, DirRootAdr, h, U, fad, replacedFad); (*gc*)
+	IF h THEN (*root overflow*)
+		FSGetSector(vol, DirRootAdr, a);
+		FSAllocSector(vol, DirRootAdr, oldroot); FSPutSector(vol, oldroot, a);
+		a.mark := DirMark; a.m := 1; a.p0 := oldroot; CopyDirEntry(U, a.e[0]);
+		FSPutSector(vol, DirRootAdr, a)
+	END
+END Insert;
+
+PROCEDURE underflow(vol: Volume; VAR c: DirPage; (*ancestor page*) dpg0:  LONGINT;
+		s: LONGINT; (*insertion point in c*) VAR h: BOOLEAN); (*c undersize*)
+VAR i, k: LONGINT; dpg1: LONGINT; a, b: DirPage; (*a := underflowing page, b := neighbouring page*)
+BEGIN
+	FSGetSector(vol, dpg0, a);
+	(*h & a.m = N-1 & dpg0 = c.e[s-1].p*)
+	IF s < c.m THEN (*b := page to the right of a*)
+		dpg1 := c.e[s].p; FSGetSector(vol, dpg1, b);
+		k := (b.m-N+1) DIV 2; (*k = no. of items available on page b*)
+		CopyDirEntry(c.e[s], a.e[N-1]); a.e[N-1].p := b.p0;
+		IF k > 0 THEN
+			(*move k-1 items from b to a, one to c*) 
+			i := 0;
+			WHILE i < k-1 DO CopyDirEntry(b.e[i], a.e[i+N]); INC(i) END ;
+			CopyDirEntry(b.e[i], c.e[s]); b.p0 := c.e[s].p;
+			c.e[s].p := dpg1; b.m := b.m - k; i := 0;
+			WHILE i < b.m DO CopyDirEntry(b.e[i+k], b.e[i]); INC(i) END ;
+			FSPutSector(vol, dpg1, b); a.m := N-1+k; h := FALSE
+		ELSE (*merge pages a and b, discard b*) i := 0;
+			WHILE i < N DO CopyDirEntry(b.e[i], a.e[i+N]); INC(i) END ;
+			i := s; DEC(c.m);
+			WHILE i < c.m DO CopyDirEntry(c.e[i+1], c.e[i]); INC(i) END ;
+			a.m := 2*N; h := c.m < N;
+			FSFreeSector(vol, dpg1) (* added by tt *)
+		END ;
+		FSPutSector(vol, dpg0, a)
+	ELSE (*b := page to the left of a*) DEC(s);
+		IF s = 0 THEN dpg1 := c.p0 ELSE dpg1 := c.e[s-1].p END ;
+		FSGetSector(vol, dpg1, b);
+		k := (b.m-N+1) DIV 2; (*k = no. of items available on page b*)
+		IF k > 0 THEN
+			i := N-1;
+			WHILE i > 0 DO DEC(i); CopyDirEntry(a.e[i], a.e[i+k]); END ;
+			i := k-1; CopyDirEntry(c.e[s], a.e[i]); a.e[i].p := a.p0;
+			(*move k-1 items from b to a, one to c*) b.m := b.m -k;
+			WHILE i > 0 DO DEC(i); CopyDirEntry(b.e[i+b.m+1], a.e[i]); END ;
+			CopyDirEntry(b.e[b.m], c.e[s]); a.p0 := c.e[s].p;
+			c.e[s].p := dpg0; a.m := N-1+k; h := FALSE;
+			FSPutSector(vol, dpg0, a)
+		ELSE (*merge pages a and b, discard a*)
+			c.e[s].p := a.p0; CopyDirEntry(c.e[s], b.e[N]); i := 0;
+			WHILE i < N-1 DO CopyDirEntry(a.e[i], b.e[i+N+1]); INC(i) END ;
+			b.m := 2*N; DEC(c.m); h := c.m < N;
+			FSFreeSector(vol, dpg0) (* added by tt*)
+		END ;
+		FSPutSector(vol, dpg1, b)
+	END
+END underflow;
+
+PROCEDURE del(vol: Volume; dpg1: LONGINT; VAR h: BOOLEAN; VAR a: DirPage; VAR R: LONGINT);
+	VAR dpg2: LONGINT; (*global: a, R*) b: DirPage;
+BEGIN
+	FSGetSector(vol, dpg1, b); dpg2 := b.e[b.m-1].p;
+	IF dpg2 # 0 THEN del(vol, dpg2, h, a, R);
+		IF h THEN underflow(vol, b, dpg2, b.m, h); FSPutSector(vol, dpg1, b) END
+	ELSE
+		b.e[b.m-1].p := a.e[R].p; CopyDirEntry(b.e[b.m-1], a.e[R]);
+		DEC(b.m); h := b.m < N; FSPutSector(vol, dpg1, b)
+	END
+END del;
+
+
+PROCEDURE delete(vol: Volume; CONST name: FileName; dpg0: LONGINT; VAR h: BOOLEAN; VAR fad: LONGINT);
+(*search and delete entry with key name; if a page underflow arises,
+	balance with adjacent page or merge; h := "page dpg0 is undersize"*)
+VAR i, L, R: LONGINT; dpg1: LONGINT; a: DirPage;
+BEGIN (*~h*)
+	FSGetSector(vol, dpg0, a);
+	L := 0; R := a.m; (*binary search*)
+	WHILE L < R DO
+		i := (L+R) DIV 2;
+		IF Strings.Compare(name, a.e[i].name) <= 0 THEN R := i ELSE L := i+1 END
+	END ;
+	IF R = 0 THEN dpg1 := a.p0 ELSE dpg1 := a.e[R-1].p END ;
+	IF (R < a.m) & (name = a.e[R].name) THEN
+		(*found, now delete*) fad := a.e[R].adr;
+		IF dpg1 = 0 THEN  (*a is a leaf page*)
+			DEC(a.m); h := a.m < N; i := R;
+			WHILE i < a.m DO CopyDirEntry(a.e[i+1], a.e[i]); INC(i) END
+		ELSE del(vol, dpg1, h, a, R);
+			IF h THEN underflow(vol, a, dpg1, R, h) END
+		END ;
+		FSPutSector(vol, dpg0, a)
+	ELSIF dpg1 # 0 THEN
+		delete(vol, name, dpg1, h, fad);
+		IF h THEN underflow(vol, a, dpg1, R, h); FSPutSector(vol, dpg0, a) END
+	ELSE (*not in tree*) fad := 0
+	END
+END delete;
+
+(* Remove the file "name" from the volume "vol". "fad" contains the address
+	of the found file header block or 0 if the file was not found *)
+PROCEDURE DirDelete(vol: Volume; CONST name: FileName; VAR fad: LONGINT);
+VAR h: BOOLEAN; newroot: LONGINT; a: DirPage;
+BEGIN
+	h := FALSE;
+	delete(vol, name, DirRootAdr, h, fad);
+	IF h THEN (*root underflow*)
+		FSGetSector(vol, DirRootAdr, a);
+		IF (a.m = 0) & (a.p0 # 0) THEN
+			newroot := a.p0; FSGetSector(vol, newroot, a);
+			FSPutSector(vol, DirRootAdr, a); (*discard newroot*)
+			FSFreeSector(vol, newroot);		(* added by tt *)
+		END
+	END
+END DirDelete;
+
+PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT);
+VAR
+	done: BOOLEAN;
+BEGIN
+	done := FALSE;
+	pos := 0;
+	REPEAT
+		IF mask[pos] = 0X THEN
+			pos := -1; diff := 0; 
+			done := TRUE;
+		ELSIF mask[pos] = '*' THEN
+			IF mask[pos+1] = 0X THEN pos := -1 END;
+			diff := 0;
+			done := TRUE;
+		END;
+		IF ~done THEN
+			diff := ORD(name[pos]) - ORD(mask[pos]);
+			IF diff # 0 THEN done := TRUE; ELSE INC(pos); END;
+		END;
+	UNTIL done;
+END MatchPrefix;
+
+(* This is procedure is ugly... Should be rewritten some time ... *)
+PROCEDURE Match(pos: LONGINT; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
+VAR i0, i1, j0, j1: LONGINT; f, done: BOOLEAN;
+BEGIN
+	f := TRUE;
+	done := FALSE;
+	IF pos # -1 THEN
+		i0 := pos; j0 := pos;
+		REPEAT
+			IF pat[i0] = '*' THEN
+				INC(i0);
+				IF pat[i0] = 0X THEN done := TRUE; END
+			ELSE
+				IF name[j0] # 0X THEN f := FALSE END;
+				done := TRUE;
+			END;
+			IF ~done THEN
+				f := FALSE;
+
+				WHILE (name[j0] # 0X) & ~f DO
+					i1 := i0; j1 := j0;
+					WHILE( (pat[i1] # 0X) & (pat[i1] # '*') & (pat[i1] = name[j1])) DO
+							INC(i1); INC(j1)
+					END;
+						
+					IF (pat[i1] = 0X) OR (pat[i1] = '*') THEN 
+						f := TRUE; j0 := j1; i0 := i1;
+					ELSE						
+						INC(j0)
+					END;
+				END;
+
+				IF ~f THEN done := TRUE; END
+			END;
+		UNTIL done;
+	END;
+	RETURN f & (name[0] # 0X)
+END Match;
+
+PROCEDURE enumerate(fs: FileSystem; CONST mask: ARRAY OF CHAR; dpg: LONGINT; VAR flags: SET; proc: EntryHandler);
+VAR i, pos, diff: LONGINT; dpg1: LONGINT; a: DirPage; time, date, size: LONGINT;
+BEGIN
+	FSGetSector(fs.vol, dpg, a); i := 0;
+	WHILE (i < a.m) & ~(EnumStop IN flags) DO
+		MatchPrefix(mask, a.e[i].name, pos, diff);
+		IF i = 0 THEN dpg1 := a.p0 ELSE dpg1 := a.e[i-1].p END;
+		IF diff >= 0 THEN (* matching prefix *)
+			IF dpg1 # 0 THEN enumerate(fs, mask, dpg1, flags, proc) END;
+			IF diff = 0 THEN
+				IF ~(EnumStop IN flags) & Match(pos, mask, a.e[i].name) THEN
+					IF flags * {EnumSize, EnumTime} # {} THEN
+						FSGetSector(fs.vol, a.e[i].adr, hp);
+						time := hp.time;  date := hp.date;
+						size := hp.aleng*SS + hp.bleng - HS
+					ELSE
+						time := 0; date := 0; size := MIN(LONGINT)
+					END;
+					IF fs = fsroot THEN
+						proc(a.e[i].name, time, date, size, flags)
+					ELSE
+						JoinName(fs.prefix, a.e[i].name, fullname);
+						proc(fullname, time, date, size, flags)
+					END
+				END
+			ELSE flags := flags + {EnumStop}
+			END
+		END;
+		INC(i)
+	END;
+	IF ~(EnumStop IN flags) & (i > 0) & (a.e[i-1].p # 0) THEN
+		enumerate(fs, mask, a.e[i-1].p, flags, proc)
+	END
+END enumerate;
+
+PROCEDURE sift(L, R: LONGINT; VAR A: Array);
+	VAR i, j: LONGINT; x: LONGINT; exit: BOOLEAN;
+BEGIN 
+	j := L; x := A[j];
+	exit := FALSE;
+	REPEAT 
+		i := j; j := 2*j + 1;
+		IF (j+1 < R) & (A[j] < A[j+1]) THEN INC(j) END ;
+		IF (j >= R) OR (x > A[j]) THEN exit := TRUE; 
+		ELSE  A[i] := A[j] END;
+	UNTIL exit;
+	A[i] := x
+END sift;
+
+PROCEDURE MarkSectors( vol: Volume; VAR k: LONGINT; VAR A: Array; VAR bad: BOOLEAN; VAR files: LONGINT );
+VAR L, R, i, j, n: LONGINT; x: LONGINT; hd: FileHeader; sup, sub: IndexSector;
+BEGIN
+	Log.vS(" marking");
+	L := k DIV 2; R := k; (*heapsort*)
+	WHILE L > 0 DO DEC(L); sift(L, R, A) END ;
+	WHILE R > 0 DO
+		DEC(R); x := A[0]; A[0] := A[R]; A[R] := x; sift(L, R, A)
+	END;
+	WHILE L < k DO
+		bad := FALSE; INC(files);
+		IF files MOD 128 = 0 THEN Log.vC('.') END;
+		FSGetSector(vol, A[L], hd);
+		IF hd.aleng < STS THEN
+			j := hd.aleng + 1;
+			REPEAT
+				DEC(j);
+				IF hd.sec[j] # 0 THEN FSMarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
+			UNTIL j = 0
+		ELSE
+			j := STS;
+			REPEAT
+				DEC(j);
+				IF hd.sec[j] # 0 THEN FSMarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
+			UNTIL j = 0;
+			IF hd.ext = 0 THEN hd.aleng := STS-1; bad := TRUE END;
+			IF ~bad THEN
+				FSMarkSector(vol, hd.ext); FSGetSector(vol, hd.ext, sup);
+				n := (hd.aleng - STS) DIV XS; i := 0;
+				WHILE (i <= n) & ~bad DO
+					IF sup.x[i] # 0 THEN
+						FSMarkSector(vol, sup.x[i]); FSGetSector(vol, sup.x[i], sub);
+						IF i < n THEN j := XS
+						ELSE j := (hd.aleng - STS) MOD XS + 1
+						END;
+						REPEAT
+							DEC(j);
+							IF (sub.x[j] MOD SF = 0) & (sub.x[j] > 0) THEN
+								FSMarkSector(vol, sub.x[j])
+							ELSE
+								bad := TRUE
+							END
+						UNTIL j = 0;
+						INC(i)
+					ELSE bad := TRUE
+					END;
+					IF bad THEN
+						IF i = 0 THEN hd.aleng := STS-1
+						ELSE hd.aleng := STS + (i-1) * XS
+						END
+					END
+				END
+			END
+		END;
+		IF bad THEN
+			Log.L; Log.S(hd.name); Log.S(" truncated");
+			hd.bleng := SS; IF hd.aleng < 0 THEN hd.aleng := 0 (* really bad *) END;
+			FSPutSector(vol, A[L], hd)
+		END;
+		INC(L)
+	END
+END MarkSectors;
+
+PROCEDURE TraverseDir(vol: Volume; dpg: LONGINT; VAR A: Array; VAR k: LONGINT; VAR bad: BOOLEAN; VAR files: LONGINT);
+	VAR i: LONGINT; a: DirPage;
+BEGIN
+	FSGetSector(vol, dpg, a); FSMarkSector(vol, dpg); i := 0;
+	WHILE i < a.m DO
+		A[k] := a.e[i].adr; INC(k); INC(i);
+		IF k = 2000 THEN MarkSectors(vol, k, A, bad, files); k := 0 END
+	END ;
+	IF a.p0 # 0 THEN
+		TraverseDir(vol, a.p0, A, k, bad, files); i := 0;
+		WHILE i < a.m DO
+			TraverseDir(vol, a.e[i].p, A, k, bad, files); INC(i)
+		END
+	END
+END TraverseDir;
+
+PROCEDURE DirStartup(vol: Volume; VAR init: BOOLEAN);
+VAR
+	j, sec, size, q, free, thres: LONGINT; mi: MapIndex; ms: MapSector;
+	found, done: BOOLEAN;
+BEGIN
+	size := FSSize(vol); init := FALSE; found := FALSE;
+	IF (vol.Available(vol) = size) & (size # 0) THEN	(* all sectors available *)
+		FSGetSector(vol, size*SF, mi);
+		IF mi.mark = MapMark THEN
+			j := 0;	(* check consistency of index *)
+			WHILE (j # MapIndexSize) & (mi.index[j] >= 0) & (mi.index[j] MOD SF = 0) DO
+				INC(j)
+			END;
+			IF j = MapIndexSize THEN
+				found := TRUE;
+				mi.mark := 0; FSPutSector(vol, size*SF, mi);	(* invalidate index *)
+				j := 0; sec := 1; q := 0;
+
+				done := FALSE;
+				WHILE ~((j = MapIndexSize) OR (mi.index[j] = 0)) & ~done DO
+					FSGetSector(vol, mi.index[j], ms);
+					REPEAT
+						IF (sec MOD 32) IN ms.map[sec DIV 32 MOD MapSize] THEN
+							FSMarkSector(vol, sec*SF);
+							INC(q)
+						END;
+						IF sec = size THEN done := TRUE
+						ELSE INC(sec) END;
+					UNTIL (sec MOD (MapSize*32) = 0) OR done;
+					INC(j)
+				END;
+
+			(*	Kernel.GetConfig("DiskGC", s);	todo: What is this??
+				thres := 0; j := 0;
+				WHILE s[j] # 0X DO thres := thres*10+(ORD(s[j])-48); INC(j) END;
+				IF thres < 10 THEN thres := 10
+				ELSIF thres > 100 THEN thres := 100
+				END;
+			*)
+		
+				thres := 10;
+				ASSERT(q = size-vol.Available(vol));
+				free := vol.Available(vol)*100 DIV size;
+				IF (free > thres) & (vol.Available(vol)*SS > 10000H) THEN
+					init := TRUE
+				ELSE	(* undo *)
+					FOR j := SF TO size*SF BY SF DO
+						IF FSMarked(vol, j) THEN FSFreeSector(vol, j) END
+					END;
+					ASSERT(vol.Available(vol) = size);
+					Log.S(thisModuleName);
+					Log.S(': '); Log.I(free);
+					Log.S("% free, forcing disk GC on ");
+					Log.S(vol.name); Log.L
+				END
+			END
+		END;
+		(*IF ~found THEN
+			Kernel.WriteString(thisModuleName);
+			Kernel.WriteString(": Index not found on ");
+			Kernel.WriteString(vol.name); Kernel.WriteLn
+		END*)
+	END;
+END DirStartup;
+
+PROCEDURE DirInit(vol: Volume; VAR init: BOOLEAN);
+VAR k: LONGINT; A: ARRAY 2000 OF LONGINT; files: LONGINT; bad: BOOLEAN;
+BEGIN
+	IF ~(ReadOnly IN vol.flags) THEN
+		k := 0;  init := FALSE;
+		DirStartup(vol, init);
+		IF ~init THEN
+			files := 0;
+			Log.S(thisModuleName);
+			Log.S(": Scanning ");
+			Log.S(vol.name); Log.S("...");
+			TraverseDir(vol, DirRootAdr, A,k,bad,files); 
+			MarkSectors(vol, k, A, bad, files);
+			init := TRUE;
+			Log.I(files); Log.S(" files"); Log.L
+		END
+	ELSE
+		init := TRUE
+	END;
+END DirInit;
+
+PROCEDURE DirCleanup(vol: Volume);
+VAR i, j, p, q, sec, size: LONGINT; mi: MapIndex; ms: MapSector;
+	abort, exit: BOOLEAN;
+BEGIN
+	abort := FALSE; exit := FALSE;
+	size := FSSize(vol); i := size*SF;
+	IF ~(ReadOnly IN vol.flags) & ~FSMarked(vol, i) THEN	(* last sector is free *)
+		j := 0; sec := 1; q := 0;
+		
+		WHILE ~abort & ~exit DO
+			REPEAT DEC(i, SF) UNTIL (i = 0) OR ~FSMarked(vol, i);	(* find a free sector *)
+			IF i = 0 THEN abort :=  TRUE; 
+			ELSE	(* no more space, don't commit *)
+				mi.index[j] := i; INC(j);
+				FOR p := 0 TO MapSize-1 DO ms.map[p] := {} END;
+				REPEAT
+					IF FSMarked(vol, sec*SF) THEN
+						ms.map[sec DIV 32 MOD MapSize] := ms.map[sec DIV 32 MOD MapSize] + {sec MOD 32};
+						INC(q)
+					END;
+					IF sec = size THEN
+						FSPutSector(vol, i, ms);
+						exit := TRUE;
+					END;
+					INC(sec)
+				UNTIL (sec MOD (MapSize*32) = 0) OR exit;
+				IF ~abort & ~exit THEN
+					FSPutSector(vol, i, ms)
+				END;
+			END;
+		END;
+		IF ~abort THEN	
+			WHILE j # MapIndexSize DO mi.index[j] := 0; INC(j) END;
+			mi.mark := MapMark;
+			FSPutSector(vol, size*SF, mi);	(* commit *)
+			Log.S(thisModuleName);
+			Log.S(": Map saved on ");
+			Log.S(vol.name); Log.L
+		END;
+	END
+END DirCleanup;
+
+(* Check a file name. *)
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT);
+	VAR i: LONGINT; ch: CHAR; exit: BOOLEAN;
+BEGIN
+	ch := s[0]; i := 0;
+	IF ('A' <= CAP(ch)) & (CAP(ch) <= 'Z') THEN
+		exit := FALSE;
+		REPEAT
+			name[i] := ch; INC(i); ch := s[i];
+			IF ch = 0X THEN
+				WHILE i < LocalLength DO name[i] := 0X; INC(i) END ;
+				res := 0; 
+				exit := TRUE;
+			END ;
+			IF ~exit THEN
+				IF ~(('A' <= CAP(ch)) & (CAP(ch) <= 'Z')
+					OR ('0' <= ch) & (ch <= '9') OR (ch = '.')) THEN res := 3; exit := TRUE;
+				END ;
+				IF (i = LocalLength-1) & ~exit THEN res := 4; exit := TRUE END
+			END;
+		UNTIL exit;
+	ELSIF ch = 0X THEN name[0] := 0X; res := -1
+	ELSE res := 3
+	END
+END Check;
+
+(* Creates a new file with the specified name. *)
+PROCEDURE FSNew(fs: FileSystem; CONST name: ARRAY OF CHAR): File;
+VAR i, res: LONGINT; f: File; head: FileHd; namebuf: FileName; buf: Buffer;
+BEGIN
+	f := NIL; Check(name, namebuf, res);
+	IF (res <= 0) & (filePool # NIL) THEN
+		f := filePool; filePool := filePool.next;
+		
+		(* Invalidate buffers *)
+		buf := f.firstbuf;
+		REPEAT buf.apos := InvalidAddress; buf := buf.next; UNTIL buf = f.firstbuf;
+		
+		buf := f.firstbuf;
+		
+		FOR i := 0 TO SS - 1 DO
+			buf.data.B[i] := 0X;
+		END;
+
+		buf.apos := 0; buf.mod := TRUE; buf.lim := HS;
+		SYSTEM.PUT (ADDRESSOF (head), ADDRESSOF(buf.data));
+		head.mark := HeaderMark;
+		head.aleng := 0; head.bleng := HS; Strings.Copy(namebuf, head.name);
+		head.time := Kernel.GetTime();
+
+		f.fs := fs; f.key := 0; f.aleng := 0; f.bleng := HS; f.modH := TRUE;
+		f.time := head.time;
+		Strings.Copy(namebuf, f.name); f.sechint := InitHint;
+		f.registered := FALSE;
+		f.ext := 0; i := 0;
+		REPEAT f.sec[i] := 0; head.sec[i] := 0; INC(i) UNTIL i = STS
+	END;
+	RETURN f
+END FSNew;
+
+PROCEDURE CopySectorTable(CONST src: ARRAY OF LONGINT; VAR dest: ARRAY OF LONGINT );
+VAR
+	i: LONGINT;
+BEGIN
+	FOR i := 0 TO STS -1 DO
+		dest[i] := src[i];
+	END;
+END CopySectorTable;
+
+(* Store the fileheader of file f in h *)
+PROCEDURE UpdateHeader(f: File; VAR h: FileHeader);
+BEGIN
+	h.aleng := f.aleng; h.bleng := f.bleng;
+	CopySectorTable(f.sec, h.sec);
+	h.ext := f.ext;
+	h.time := f.time
+END UpdateHeader;
+
+PROCEDURE ReadBuf(f: File; buf: Buffer; pos: LONGINT);
+VAR sec: LONGINT; xpos: LONGINT;
+	index: IndexSector;
+BEGIN
+	IF pos < STS THEN
+		sec := f.sec[pos]
+	ELSE
+		xpos := pos-STS;
+
+		(* replaced: sec := f.ext.sub[xpos DIV XS].sec.x[xpos MOD XS] *)
+		FSGetSector(f.fs.vol, f.ext, index);
+		FSGetSector(f.fs.vol, index.x[xpos DIV XS], index);
+		sec := index.x[xpos MOD XS];
+	END;
+	FSGetSector(f.fs.vol, sec, buf.data);
+	IF pos < f.aleng THEN buf.lim := SS ELSE buf.lim := f.bleng END;
+	buf.apos := pos; buf.mod := FALSE
+END ReadBuf;
+
+PROCEDURE NewSuper(f: File);
+VAR i: LONGINT; super: LONGINT; sec: IndexSector;
+BEGIN
+	FSAllocSector(f.fs.vol, f.key, super);
+	f.ext := super; 
+	
+	(* Clear sector *)
+	FOR i := 0 TO XS-1 DO sec.x[i] := 0 END;
+	FSPutSector(f.fs.vol, super, sec);
+END NewSuper;
+
+PROCEDURE WriteBuf(f: File; buf: Buffer);
+VAR i, j, k, xpos: LONGINT; secadr: LONGINT; super, sub: LONGINT; vol: Volume;
+	ptr: FileHd; src, dst: LONGINT; tempFileHeader: FileHeader;
+	superSec, subSec: IndexSector;
+BEGIN
+	vol := f.fs.vol;
+	f.time := Kernel.GetTime(); f.modH := TRUE;
+	IF buf.apos < STS THEN
+		secadr := f.sec[buf.apos];
+		IF secadr = 0 THEN	(* This buffer has never been written to disk, allocate one on the disk *)
+			FSAllocSector(vol, f.sechint, secadr);
+			f.modH := TRUE; f.sec[buf.apos] := secadr; f.sechint := secadr
+		END;
+		IF buf.apos = 0 THEN	(* If this sector has number 0, it is the FileHeader itself. *)
+			SYSTEM.PUT (ADDRESSOF (ptr), ADDRESSOF(buf.data));
+			UpdateHeader(f, ptr^);
+			f.modH := FALSE
+		END
+	ELSE
+		(* The block is not directly adressable, so get the appropraite super and sub index blocks or allocate them
+		   if they do not already exist *)
+		super := f.ext;
+		IF super = 0 THEN NewSuper(f); super := f.ext END;
+		xpos := buf.apos-STS;
+		i := xpos DIV XS; 
+		FSGetSector(vol, super, superSec);
+		sub := superSec.x[i];
+		IF sub = 0 THEN
+			FSAllocSector(vol, f.sechint, sub); f.sechint := sub;
+			FOR j := 0 TO XS-1 DO subSec.x[j] := 0 END;
+			superSec.x[i] := sub; 
+			FSPutSector(vol, super, superSec);
+		ELSE
+			FSGetSector(vol, sub, subSec);
+		END;
+		k := xpos MOD XS; secadr := subSec.x[k];
+		IF secadr = 0 THEN
+			FSAllocSector(vol, f.sechint, secadr); f.sechint := secadr;
+			subSec.x[k] := secadr;
+			FSPutSector(vol, sub, subSec);
+		END
+	END;
+	FSPutSector(vol, secadr, buf.data); buf.mod := FALSE;
+END WriteBuf;
+
+(* Search and get the buffer with number pos if file f. NIL if not found *)
+PROCEDURE SearchBuf(f: File; pos: LONGINT): Buffer;
+VAR buf: Buffer;
+BEGIN
+	buf := f.firstbuf;
+	WHILE (buf # NIL) & (buf.apos # pos) DO
+		buf := buf.next;
+		IF buf = f.firstbuf THEN buf := NIL; END
+	END;
+	RETURN buf
+END SearchBuf;
+
+(* Get the buffer at position pos. Never returns NIL*)
+PROCEDURE GetBuf(f: File; pos: LONGINT): Buffer;
+VAR buf: Buffer;
+BEGIN
+	buf := f.firstbuf;
+	WHILE (buf.apos # pos) DO
+		IF buf.next = f.firstbuf THEN
+			(* take one of the buffers *)
+			f.firstbuf := buf;
+			IF (buf.mod) & (buf.apos # InvalidAddress) THEN WriteBuf(f, buf) END;
+			buf.apos := pos;
+			IF pos <= f.aleng THEN ReadBuf(f, buf, pos) END;
+		END;
+		IF buf.apos # pos THEN buf := buf.next END;
+	END;
+	RETURN buf
+END GetBuf;
+
+(* Return unique id for file, or 0 if it does not exist. *)
+PROCEDURE FileKey(fs: FileSystem; CONST name: ARRAY OF CHAR): LONGINT;
+	VAR res: LONGINT; namebuf: FileName; header: LONGINT;
+BEGIN
+	header := 0;
+	Check(name, namebuf, res);
+	IF res = 0 THEN
+		Search(fs.vol, namebuf, header)
+	END;
+	RETURN header
+END FileKey;
+
+(* Open an existing file. *)
+PROCEDURE FSOld(fs: FileSystem; CONST name: ARRAY OF CHAR): File;
+VAR
+	i, k, res: LONGINT; f: File; header: LONGINT; buf: Buffer; head: FileHd;
+	namebuf: FileName; super: LONGINT; sub: LONGINT; sec: IndexSector; vol: Volume;
+BEGIN
+	f := NIL; Check(name, namebuf, res);
+	IF res = 0 THEN
+		vol := fs.vol;
+		Search(vol, namebuf, header);
+		IF (header # 0) & (filePool # NIL) THEN
+			f := filePool; filePool := filePool.next;
+		
+			(* Invalidate buffers *)
+			buf := f.firstbuf;
+			REPEAT buf.apos := InvalidAddress; buf := buf.next; UNTIL buf = f.firstbuf;
+		
+			buf.apos := 0; buf.mod := FALSE;
+			FSGetSector(vol, header, buf.data);
+			SYSTEM.PUT (ADDRESSOF (head), ADDRESSOF(buf.data));
+
+			f.fs := fs; f.key := header;
+			f.aleng := head.aleng; f.bleng := head.bleng;
+			f.time := head.time;
+			IF f.aleng = 0 THEN buf.lim := f.bleng ELSE buf.lim := SS END;
+			Strings.Copy(namebuf, f.name); f.registered := TRUE;
+			CopySectorTable(head.sec, f.sec);
+			f.ext := head.ext;
+			f.sechint := header; f.modH := FALSE
+		END
+	END;
+	RETURN f
+END FSOld;
+
+PROCEDURE Unbuffer(f: File); (* f.sec*)
+VAR
+	i, k: LONGINT; buf: Buffer; head: FileHeader;
+	sec: IndexSector; vol: Volume;
+BEGIN
+	vol := f.fs.vol;
+	
+	(* Flush all data buffers *)
+	buf := f.firstbuf;
+	REPEAT
+		IF buf.mod & (buf.apos # InvalidAddress) THEN 
+			(*WriteBuf(f, f.firstbuf);*)
+			WriteBuf(f, buf);
+			buf.apos := InvalidAddress;
+		END;
+		buf := buf.next;
+	UNTIL f.firstbuf = buf;
+	
+	(* And write file header *)
+	IF f.modH THEN
+		FSGetSector(vol, f.sec[0], head); UpdateHeader(f, head);
+		FSPutSector(vol, f.sec[0], head); f.modH := FALSE
+	END
+END Unbuffer;
+
+(** Find an open file.  Can also be used to see if a given file is open.  If it is not, then it is safe to purge its sectors when it is deleted or replaced (through rename). *)
+PROCEDURE FindOpenFile*(fs: FileSystem; key: LONGINT): File;
+VAR f: File;
+BEGIN
+	f := froot;
+	REPEAT f := f.next UNTIL (f = NIL) OR ((f.key = key) & (f.fs = fs));
+	RETURN f
+END FindOpenFile;
+
+PROCEDURE LogGC(CONST procname, prefix, name: ARRAY OF CHAR);
+BEGIN
+	Log.vS(thisModuleName);
+	Log.vC('.');
+	Log.vS(procname);
+	Log.vC(' ');
+	Log.vS(prefix);
+	Log.vC(':');
+	Log.vS(name);
+	Log.vL;
+END LogGC;
+
+PROCEDURE Free(vol: Volume; adr: LONGINT);
+BEGIN 
+	IF (adr # 0) & FSMarked(vol, adr) THEN FSFreeSector(vol, adr) END
+END Free;
+
+PROCEDURE PurgeOnDisk(fs: FileSystem; hdadr: LONGINT); (*bsm*)
+	VAR hd: FileHeader; supi, subi: IndexSector; aleng, i, k: LONGINT;
+		secCount, subAdr: LONGINT; vol: Volume;
+BEGIN 
+	ASSERT(fs.vol # NIL); 
+	vol := fs.vol;
+	FSGetSector(vol, hdadr, hd);
+	LogGC("PurgeOnDisk", fs.prefix, hd.name);
+	aleng := hd.aleng;
+	secCount := aleng+1;
+	IF secCount > STS THEN secCount := STS END;
+	FOR i := 0 TO secCount-1 DO 
+		Free(fs.vol, hd.sec[i]) 
+	END;
+	aleng := aleng - secCount;
+	IF aleng >= 0 THEN 
+		FSGetSector(vol, hd.ext, supi);
+		WHILE (aleng >= 0) DO
+			subAdr := supi.x[aleng DIV XS];
+			FSGetSector(vol, subAdr, subi);
+			FOR i := 0 TO aleng MOD XS DO 
+				Free(fs.vol, subi.x[i]) 
+			END;
+			Free(fs.vol, subAdr);
+			aleng := aleng - (aleng MOD XS + 1);
+		END;
+		Free(fs.vol, hd.ext);
+	END;
+END PurgeOnDisk;
+
+PROCEDURE FSRegister(f: File; VAR res: LONGINT);
+	VAR repAdr: LONGINT; (* address of the file replaced through register, 0 if no such file *)
+		repFile: File;
+BEGIN
+	Unbuffer(f);
+	IF ~f.registered & (f.name # "") THEN
+		Insert(f.fs.vol, f.name, f.sec[0], repAdr);
+		f.registered := TRUE; f.key := f.sec[0];
+		IF (repAdr # 0) & (f.sec[0] # repAdr) THEN
+			repFile := FindOpenFile(f.fs, repAdr);
+			IF repFile = NIL THEN
+				PurgeOnDisk(f.fs(FileSystem), repAdr)	(* Purge file if it is not open *)
+			ELSE 
+				repFile.registered := FALSE
+			END;
+		END;
+		res := 0
+	ELSE
+		res := 1
+	END
+END FSRegister;
+
+PROCEDURE PutIntoFilePool(f: File);
+VAR
+	temp: File;
+	buf: Buffer;
+BEGIN
+	(* The File must be removed from the open list, before it can be put into the File Pool for reuse *)
+	IF (f.key # 0) & (FindOpenFile(f.fs, f.key) # NIL) THEN
+		Log.S("File " ); Log.S(f.name); Log.SL(" is still open!"); Log.Flush(Log.normal);
+		HALT(8);
+	END;
+	
+	buf := f.firstbuf;
+	REPEAT 
+		buf.apos := InvalidAddress;
+		buf := buf.next;
+	UNTIL (buf = f.firstbuf);
+	
+	temp := filePool;
+	WHILE (temp # NIL) & (temp # f) DO temp := temp.next END;
+	IF temp = NIL THEN
+		f.next := filePool; filePool := f;
+	END;
+END PutIntoFilePool;
+
+PROCEDURE LogFS(fs: FileSystem);
+BEGIN
+	IF fs.vol # NIL THEN Log.vS(fs.vol.name); Log.vC(' ') END;
+	Log.vS(fs.desc)
+END LogFS;
+
+PROCEDURE FileCleanup(f: File);
+VAR p, c, temp: File;
+BEGIN
+	Log.vS("OFS: Cleanup "); Log.vI(f.key); 
+	Log.vC(' '); LogFS(f.fs); Log.vL;
+	
+	(* Remove file from open list, and put it back into the pool *)
+	p := froot; c := froot.next;
+	WHILE c # NIL DO
+		IF c = f THEN 
+			p.next := c.next; 
+			temp := c;
+			c := c.next;
+			PutIntoFilePool(temp);
+		ELSE 
+			p := c;
+			c := c.next;
+		END;
+	END;
+	Log.vSL("FileCleanup finished");
+END FileCleanup;
+
+(* Returns the current length of a file. *)
+PROCEDURE Length*(f: File): LONGINT;
+BEGIN
+	RETURN f.aleng*SS + f.bleng - HS
+END Length;
+
+(* Returns the time (t) and date (d) when a file was last modified. *)
+PROCEDURE GetTime*(f: File; VAR t: LONGINT);
+BEGIN
+	t := f.time;
+END GetTime;
+
+(* Sets the modification time (t) of a file. *)
+PROCEDURE SetTime*(f: File; t: LONGINT);
+BEGIN
+	f.modH := TRUE; f.time := t;
+END SetTime;
+
+(* Positions a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
+PROCEDURE Set*(VAR r: Rider; f: File; pos: LONGINT);
+VAR a, b: LONGINT;
+BEGIN
+	r.eof := FALSE; r.res := 0; r.file := f; r.fs := f.fs;
+	IF pos < 0 THEN
+		a := 0; b := HS
+	ELSIF pos < f.aleng*SS + f.bleng - HS THEN
+		a := (pos + HS) DIV SS; b := (pos + HS) MOD SS
+	ELSE
+		a := f.aleng; b := f.bleng
+	END;
+	r.apos := a; r.bpos := b; r.hint := f.firstbuf
+END Set;
+
+(* Returns the offset of a Rider positioned on a file. *)
+PROCEDURE Pos*(VAR r: Rider): LONGINT;
+BEGIN
+	RETURN r.apos*SS + r.bpos - HS
+END Pos;
+
+(* Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
+PROCEDURE Read*(VAR r: Rider; VAR x: CHAR);
+VAR buf: Buffer; f: File;
+BEGIN
+	buf := r.hint(Buffer); f := r.file;
+	IF r.apos # buf.apos THEN buf := GetBuf(f, r.apos); r.hint := buf END;
+	IF r.bpos < buf.lim THEN
+		x := SYSTEM.VAL(CHAR, buf.data.B[r.bpos]); INC(r.bpos)
+	ELSIF r.apos < f.aleng THEN
+		INC(r.apos);
+		buf := SearchBuf(f, r.apos);
+		IF buf = NIL THEN
+			buf := r.hint(Buffer);
+			IF (buf.mod) & (buf.apos # InvalidAddress)  THEN WriteBuf(f, buf) END ;
+			ReadBuf(f, buf, r.apos)
+		ELSE
+			r.hint := buf
+		END ;
+		x := SYSTEM.VAL(CHAR, buf.data.B[0]); r.bpos := 1
+	ELSE
+		x := 0X; r.eof := TRUE
+	END
+END Read;
+
+(* Reads a sequence of length n bytes into the buffer x, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
+PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
+VAR src, dst, m: LONGINT; buf: Buffer; f: File;
+BEGIN
+	IF LEN(x) < n THEN HALT(19) END ;
+	IF n > 0 THEN
+		dst := ADDRESSOF(x[0]);
+		buf := r.hint(Buffer); f := r.file;
+		IF r.apos # buf.apos THEN buf := GetBuf(f, r.apos); r.hint := buf END;
+
+		WHILE n > 0 DO
+			src := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + n;
+			IF m <= buf.lim THEN
+				Kernel.Move(src,dst,  n); r.bpos := m; r.res := 0; n := 0;
+			ELSIF buf.lim = SS THEN
+				m := buf.lim - r.bpos;
+				IF m > 0 THEN Kernel.Move(src, dst, m); dst := dst + m; n := n - m END ;
+				IF r.apos < f.aleng THEN
+					INC(r.apos); r.bpos := 0; buf := SearchBuf(f, r.apos);
+					IF buf = NIL THEN
+						buf := r.hint(Buffer);
+						IF buf.mod & (buf.apos # InvalidAddress) THEN WriteBuf(f, buf) END ;
+						ReadBuf(f, buf, r.apos)
+					ELSE
+						r.hint := buf
+					END
+				ELSE
+					r.bpos := buf.lim; r.res := n; r.eof := TRUE; n := 0;
+				END
+			ELSE
+				m := buf.lim - r.bpos;
+				IF m > 0 THEN Kernel.Move(src, dst,  m); r.bpos := buf.lim END ;
+				r.res := n - m; r.eof := TRUE; n := 0;
+			END
+		END
+	ELSE
+		r.res := 0
+	END
+END ReadBytes;
+
+PROCEDURE ReadInt*(VAR r: Rider; VAR x: LONGINT);
+BEGIN
+	ReadBytes(r, x, 4);
+END ReadInt;
+
+PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
+BEGIN
+	ReadBytes(r, x, 4);
+END ReadSet;
+
+PROCEDURE ReadReal*(VAR r: Rider; VAR x: REAL);
+BEGIN
+	ReadBytes(r, x, 4);
+END ReadReal;
+
+PROCEDURE NewSub(f: File);
+VAR i, k: LONGINT; sub: LONGINT; sec: IndexSector;
+	vol: Volume;
+BEGIN
+	IF f.ext = 0 THEN NewSuper(f) END;
+
+	vol := f.fs.vol;
+	k := (f.aleng - STS) DIV XS;
+	IF k = XS THEN HALT(18) END;
+	FSAllocSector(vol, f.sechint, sub); f.sechint := sub;
+	FOR i := 0 TO XS-1 DO sec.x[i] := 0 END;
+	FSPutSector(vol, sub, sec);
+	
+	FSGetSector(vol, f.ext, sec);
+	sec.x[k] := sub;
+	FSPutSector(vol, f.ext, sec);
+END NewSub;
+
+(* Writes a byte into the file at the Rider position, advancing the Rider by one. *)
+PROCEDURE Write*(VAR r: Rider; x: CHAR);
+VAR f: File; buf: Buffer;
+BEGIN
+	buf := r.hint(Buffer); f := r.file;
+	IF r.apos # buf.apos THEN buf := GetBuf(f, r.apos); r.hint := buf END;
+	IF r.bpos >= buf.lim THEN
+		IF r.bpos < SS THEN
+			INC(buf.lim); INC(f.bleng); f.modH := TRUE
+		ELSE
+			WriteBuf(f, buf); INC(r.apos); buf := SearchBuf(f, r.apos);
+			IF buf = NIL THEN
+				buf := r.hint(Buffer);
+				IF r.apos <= f.aleng THEN
+					ReadBuf(f, buf, r.apos);
+				ELSE
+					buf.apos := r.apos; buf.lim := 1; INC(f.aleng); f.bleng := 1; f.modH := TRUE;
+					IF (f.aleng - STS) MOD XS = 0 THEN NewSub(f) END
+				END
+			ELSE
+				r.hint := buf
+			END;
+			r.bpos := 0
+		END
+	END;
+	buf.data.B[r.bpos] := x; INC(r.bpos); buf.mod := TRUE;
+END Write;
+
+(* Writes the buffer x containing n bytes into a file at the Rider position. *)
+PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
+VAR src, dst, m: LONGINT; f: File; buf: Buffer;
+BEGIN
+	IF LEN(x) < n THEN HALT(19) END;
+	IF n > 0 THEN
+		src := ADDRESSOF(x[0]);
+		buf := r.hint(Buffer); f := r.file;
+		IF r.apos # buf.apos THEN buf := GetBuf(f, r.apos); r.hint := buf END;
+		WHILE n > 0 DO
+			buf.mod := TRUE; dst := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + n;
+			IF m <= buf.lim THEN
+				Kernel.Move(src, dst,  n); r.bpos := m; n := 0;
+			ELSIF m <= SS THEN
+				Kernel.Move(src, dst, n); r.bpos := m;
+				f.bleng := m; buf.lim := m; f.modH := TRUE; n := 0;
+			ELSE
+				m := SS - r.bpos;
+				IF m > 0 THEN Kernel.Move(src, dst, m); src := src + m; n := n - m END;
+				WriteBuf(f, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(f, r.apos);
+				IF buf = NIL THEN
+					buf := r.hint(Buffer);
+					IF r.apos <= f.aleng THEN ReadBuf(f, buf, r.apos)
+					ELSE
+						buf.apos := r.apos; buf.lim := 0; INC(f.aleng); f.bleng := 0; f.modH := TRUE;
+						IF (f.aleng - STS) MOD XS = 0 THEN NewSub(f) END
+					END
+				ELSE
+					r.hint := buf
+				END
+			END
+		END
+	END
+END WriteBytes;
+
+PROCEDURE WriteInt*(VAR r: Rider; VAR x: LONGINT);
+BEGIN
+	WriteBytes(r, x, 4);
+END WriteInt;
+
+PROCEDURE WriteSet*(VAR r: Rider; VAR x: SET);
+BEGIN
+	WriteBytes(r, x, 4);
+END WriteSet;
+
+PROCEDURE WriteReal*(VAR r: Rider; VAR x: REAL);
+BEGIN
+	WriteBytes(r, x, 4);
+END WriteReal;
+
+PROCEDURE Purge(fs: FileSystem; f: File); (*bsm*)
+VAR 
+	k, i, j, aleng, secCount, super, sub: LONGINT;
+	superSec, subSec: IndexSector;
+	vol: Volume;
+BEGIN
+	ASSERT(f.fs = fs);
+	vol := fs.vol;
+	LogGC("Purge", fs.prefix, f.name);
+	aleng := f.aleng;
+	secCount := aleng + 1;
+	IF secCount > STS THEN secCount := STS END;
+	FOR i := 0 TO secCount - 1 DO 
+		Free(fs.vol, f.sec[i]) 
+	END;
+	aleng := aleng - secCount;
+	IF aleng >= 0 THEN 
+		FSGetSector(vol, f.ext, superSec);
+		WHILE (aleng >= 0) DO
+			sub := superSec.x[aleng DIV XS];
+			FSGetSector(vol, sub, subSec);
+			FOR i := 0 TO aleng MOD XS DO 
+				Free(fs.vol, subSec.x[i]) 
+			END;
+			Free(fs.vol, sub);
+			aleng := aleng - (aleng MOD XS + 1);
+		END;
+		Free(fs.vol, f.ext);
+	END;
+END Purge;
+
+PROCEDURE Registered(fs: FileSystem; f: File): BOOLEAN; (*bsm*)
+BEGIN
+	ASSERT(fs IS FileSystem); ASSERT(f.fs = fs);
+	RETURN f.registered
+END Registered;
+
+(* Deletes a file. res = 0 indicates success. *)
+PROCEDURE FSDelete(fs: FileSystem; CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: LONGINT);
+VAR 
+	adr: LONGINT; namebuf: FileName; head: FileHeader; vol: Volume;  r: LONGINT; 
+	delFile: File; (*bsm*)
+BEGIN
+	Check(name, namebuf, r);  res := r;
+	IF res = 0 THEN
+		vol := fs.vol;
+		DirDelete(vol, namebuf, adr);
+		key := adr;
+		IF adr # 0 THEN
+			FSGetSector(vol, adr, head);
+			head.mark := HeaderMark+1;	(* invalidate mark of file on disk *)
+			FSPutSector(vol, adr, head);
+			delFile := FindOpenFile(fs, key);
+			IF delFile = NIL THEN
+				PurgeOnDisk(fs(FileSystem), adr);
+			ELSE
+				delFile.registered := FALSE
+			END;
+		ELSE
+			res := 2
+		END
+	ELSE
+		key := 0
+	END
+END FSDelete; 
+
+(* Renames a file. res = 0 indicates success. *)
+PROCEDURE FSRename(fs: FileSystem; CONST old, new: ARRAY OF CHAR; VAR res: LONGINT);
+VAR 
+	adr: LONGINT; oldbuf, newbuf: FileName;  head: FileHeader; 
+	vol: Volume; f: File; r: LONGINT;
+	repFile: File;
+	repAdr: LONGINT; (* address of the file replaced through the rename, 0 if no such file *)
+BEGIN
+	Check(old, oldbuf, r);  res := r;
+	IF res = 0 THEN
+		Check(new, newbuf, r);  res := r;
+		IF res = 0 THEN
+			vol := fs.vol;
+			DirDelete(vol, oldbuf, adr);
+			IF adr # 0 THEN
+				f := FindOpenFile(fs, adr);
+				IF f # NIL THEN Strings.Copy(newbuf, f.name); END;
+				Insert(vol, newbuf, adr, repAdr);
+				FSGetSector(vol, adr, head);
+				Strings.Copy(newbuf, head.name);
+				FSPutSector(vol, adr, head);
+				IF (repAdr # 0) & (adr # repAdr) THEN(*bsm*)
+					repFile := FindOpenFile(fs, repAdr);
+					IF (repFile = NIL) THEN 
+						PurgeOnDisk(fs(FileSystem), repAdr)
+					ELSE 
+						repFile.registered := FALSE
+					END;
+				END;
+			ELSE res := 2
+			END
+		END
+	END
+END FSRename;
+
+PROCEDURE GetName*(f: File; VAR name: ARRAY OF CHAR);
+BEGIN
+	Strings.Copy(f.name, name)
+END GetName;
+
+(* File system initialization and finalization *)
+
+PROCEDURE Finalize(fs: FileSystem);
+VAR
+	tempVol : Volume;
+BEGIN
+	fs := fs(FileSystem); (* Safety Check *)
+	DirCleanup(fs.vol);
+	tempVol := fs.vol;
+	tempVol.Finalize(fs.vol);
+	fs.vol := NIL	(* prevent access in case user still has file handles *)
+END Finalize;
+
+(** Find file system with specified prefix. *)
+PROCEDURE This*(CONST prefix: ARRAY OF CHAR): FileSystem;
+VAR fs: FileSystem;
+BEGIN
+	fs := fsroot; WHILE (fs # NIL) & (fs.prefix # prefix) DO fs := fs.next END;
+	RETURN fs
+END This;
+
+(** Add file system at end of list, with specified prefix, which must be unique. *)
+PROCEDURE Add(fs: FileSystem; CONST prefix: ARRAY OF CHAR);
+VAR p, c: FileSystem;
+BEGIN
+	Log.vS("OFS: Adding ");  LogFS(fs);  Log.vL;
+	COPY(prefix, fs.prefix);
+	p := NIL; c := fsroot;
+	WHILE c # NIL DO
+		ASSERT((c # fs) & (c.prefix # fs.prefix));	(* duplicate insertion not allowed *)
+		p := c; c := c.next
+	END;
+	IF p = NIL THEN fsroot := fs ELSE p.next := fs END;
+	fs.next := NIL;
+	fs.link := fsmount; fsmount := fs	(* push on mount list *)
+END Add;
+
+PROCEDURE Format(vol: Volume);
+VAR
+	i: LONGINT;
+	block: DataSector;
+BEGIN
+	IF (vol#NIL) & (vol.blockSize = SS) & (vol.size >= MinVolSize) THEN
+		FSGetSector(vol, DirRootAdr, block);
+		FOR i := 0 TO SS - 1 DO
+			block.B[i] := 0X;
+		END;
+		
+		block.B[0] := CHR(DirMark);
+		block.B[1] := CHR(DirMark DIV 100H);
+		block.B[2] := CHR(DirMark DIV 10000H);
+		block.B[3] := CHR(DirMark DIV 1000000H);
+
+		FSPutSector(vol, DirRootAdr, block);
+	END;
+END Format;
+
+(** Generate a new file system object. *)
+PROCEDURE 	NewFS*(CONST prefix: Prefix; format: BOOLEAN; vol: Volume);
+VAR
+	fs: FileSystem;  init: BOOLEAN;
+BEGIN
+	IF vol # NIL THEN
+		IF This(prefix) = NIL THEN
+			IF (vol.blockSize = SS) & (vol.size >= MinVolSize) THEN				
+				IF format THEN Format(vol); END;
+				
+				FSGetSector(vol, DirRootAdr, hp);
+				
+				IF hp.mark = DirMark THEN	(* assume it is an Aos filesystem *)
+					NEW(fs);  fs.vol := vol;
+					ASSERT(vol.size < MAX(LONGINT) DIV SF);
+					Strings.Copy( "GCAosFS", fs.desc);
+					DirInit(vol, init);
+					ASSERT(init);	(* will have to undo changes to vol before continuing *)
+					Add(fs, prefix);
+				ELSE
+					Log.S(thisModuleName);
+					Log.S(": File system not found on ");
+					Log.S(vol.name);  Log.L;
+					Log.S("Directory mark: "); Log.H( hp.mark); Log.L;
+				END
+			ELSE
+				Log.S(thisModuleName);
+				Log.S(": Bad volume size");  Log.L
+			END
+		ELSE
+			Log.S(thisModuleName);
+			Log.S(": ");  Log.S(prefix);
+			Log.S(" already in use");  Log.L
+		END;
+	ELSE
+		Log.S(thisModuleName);
+		Log.S(": ");  Log.S(prefix);
+		Log.S(" volume is NIL");  Log.L
+	END;		
+END NewFS;
+
+(* (* Clean up when module freed. *)
+PROCEDURE Cleanup;
+VAR fs: FileSystem;
+BEGIN
+	IF Kernel.shutdown = 0 THEN
+		REPEAT	(* unmount all AosFSs *)
+			fs := First();	(* look for fs to unmount *)
+			WHILE (fs # NIL) & ~(fs IS FileSystem) DO
+				fs := Next(fs)
+			END;
+			IF fs # NIL THEN Remove(fs) END
+		UNTIL fs = NIL
+	END
+END Cleanup;
+
+*)
+
+PROCEDURE DefaultAllocBlock*(vol: Volume; hint: LONGINT; VAR adr: LONGINT; VAR res: LONGINT);
+VAR
+	found: BOOLEAN;
+BEGIN
+	found := FALSE;
+	IF ReadOnly IN vol.flags THEN HALT(21) END;
+	ASSERT(hint >= 0);
+	IF hint > vol.size THEN hint := 0 END;
+	adr := hint+1;
+
+	REPEAT
+		IF adr > vol.size THEN adr := 0 END;
+		
+		IF (adr MOD 32) IN vol.map[adr DIV 32] THEN
+			INC(adr) (* Block in use *)
+		ELSE
+			vol.map[adr DIV 32] := vol.map[adr DIV 32] + {adr MOD 32};
+			found := TRUE;
+		END;
+		IF (adr = hint) & (~found) THEN HALT(20) END
+	UNTIL found;
+
+	INC(vol.used);
+	res := Ok;
+END DefaultAllocBlock;
+
+PROCEDURE DefaultFreeBlock*(vol: Volume; adr: LONGINT; VAR res: LONGINT);
+BEGIN
+	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
+	IF ReadOnly IN vol.flags THEN HALT(21) END;
+	vol.map[adr DIV 32] := vol.map[adr DIV 32] - {adr MOD 32};
+	DEC(vol.used);
+	res := Ok;
+END DefaultFreeBlock;
+
+PROCEDURE DefaultMarkBlock*(vol: Volume; adr: LONGINT; VAR res: LONGINT);
+BEGIN
+	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
+	IF ReadOnly IN vol.flags THEN HALT(21) END;
+	vol.map[adr DIV 32] := vol.map[adr DIV 32] + {adr MOD 32};
+	INC(vol.used);
+	res := Ok;
+END DefaultMarkBlock;
+
+PROCEDURE DefaultMarked*(vol: Volume; adr: LONGINT; VAR res: LONGINT): BOOLEAN;
+BEGIN
+	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
+	IF ReadOnly IN vol.flags THEN HALT(21) END;
+	res := Ok;
+	RETURN (adr MOD 32) IN vol.map[adr DIV 32]
+END DefaultMarked;
+
+PROCEDURE DefaultAvailable*(vol: Volume): LONGINT;
+BEGIN
+	RETURN vol.size-vol.used
+END DefaultAvailable;
+
+PROCEDURE DefaultSync*(vol: Volume);
+BEGIN
+END DefaultSync;
+
+(** Init procedure for private data of above methods only.  vol.flags and vol.size must be set before. *)
+PROCEDURE InitVol*(vol: Volume);
+VAR maplen: LONGINT;
+BEGIN
+	IF ~(ReadOnly IN vol.flags) THEN
+		maplen := (vol.size+1+31) DIV 32;
+		(*ASSERT( BitmapSize >= maplen); (* todo: replace this with: NEW(vol.map, maplen); *)*)
+		NEW(vol.map, maplen);
+		WHILE maplen > 0 DO DEC(maplen); vol.map[maplen] := {} END;
+		vol.map[0] := vol.map[0] + {0};	(* reserve sector 0 (illegal to use) *)
+		vol.used := 0
+	ELSE
+		vol.used := vol.size
+	END
+END InitVol;
+
+(** Finalize procedure for volumes. *)
+PROCEDURE DefaultFinalizeVol*(vol: Volume);
+BEGIN
+	(* vol.map := NIL; *)		(* todo: uncomment this *)
+	vol.AllocBlock := NIL; vol.FreeBlock := NIL; vol.MarkBlock := NIL; vol.Marked := NIL;
+	vol.Available := NIL; vol.GetBlock := NIL; vol.PutBlock := NIL; vol.Sync := NIL; 
+	vol.Finalize := NIL
+END DefaultFinalizeVol;
+
+(** File name prefix support. *)
+
+(** Split fullname = ( prefix ":" name ) into prefix and name *)
+PROCEDURE SplitName(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
+VAR i, j: LONGINT;
+BEGIN
+	i := 0; WHILE (fullname[i] # ':') & (fullname[i] # 0X) DO INC(i) END;
+	IF (fullname[i] # ':') OR (i >= LEN(prefix)) THEN
+		Strings.Copy("", prefix); Strings.Copy (fullname, name);
+	ELSE
+		j := 0; WHILE j # i DO prefix[j] := fullname[j]; INC(j) END;
+		prefix[j] := 0X;
+		j := 0; REPEAT INC(i); name[j] := fullname[i]; INC(j) UNTIL fullname[i] = 0X
+	END
+END SplitName;
+
+(** File system list support. *)
+
+PROCEDURE DeleteFS(fs: FileSystem);
+VAR p, c: FileSystem;
+BEGIN
+	p := NIL; c := fsroot;
+	WHILE c # fs DO p := c; c := c.next END;	(* fs must be in list *)
+	IF p = NIL THEN fsroot := c.next ELSE p.next := c.next END;
+	c.next := NIL
+END DeleteFS;
+
+(** Promote fs to the start of the list. *)
+PROCEDURE Promote*(fs: FileSystem);
+BEGIN
+	DeleteFS(fs); fs.next := fsroot; fsroot := fs
+END Promote;
+
+PROCEDURE Close*(f: File);
+VAR
+	temp: File;
+BEGIN
+	Unbuffer(f);
+	
+	IF (f.fs # NIL) & (f.fs.vol # NIL) THEN
+		IF ~(ReadOnly IN f.fs.vol.flags) THEN
+			IF ~Registered(f.fs, f) THEN 
+				Purge(f.fs, f)
+			END;
+		END;
+	END;
+
+	(* Put File in filePool *)
+	FileCleanup(f);
+	PutIntoFilePool(f);
+END Close;
+
+(** Remove the file system and finalize it. *)
+PROCEDURE Remove*(fs: FileSystem);
+VAR f: File; count: LONGINT; p, c: FileSystem;
+BEGIN
+	Log.vS("OFS: Removing ");  LogFS(fs);  Log.vL;
+	f := froot.next; count := 0;
+	WHILE f # NIL DO
+		IF f.fs = fs THEN INC(count); Close(f); f.fs := NIL END;
+		f := f.next
+	END;
+	IF count # 0 THEN
+		Log.S("OFS: "); Log.I(count);
+		Log.S(" open files");
+		IF fs.vol # NIL THEN
+			Log.S(" on "); Log.S(fs.vol.name)
+		END;
+		Log.L
+	END;
+	Finalize(fs); DeleteFS(fs);
+	p := NIL; c := fsmount;
+	WHILE c # fs DO p := c; c := c.link END;
+	IF p = NIL THEN fsmount := c.link ELSE p.link := c.link END;
+	c.link := NIL
+END Remove;
+
+(** Return next file system. *)
+PROCEDURE Next*(fs: FileSystem): FileSystem;
+BEGIN
+	RETURN fs.next
+END Next;
+
+(* Find file in open file list, or open and add it. *)
+PROCEDURE Open(fs: FileSystem; CONST fname: ARRAY OF CHAR): File;
+VAR f: File; key: LONGINT;
+BEGIN
+	f := NIL;
+	IF (fs # NIL) & (fname # "") THEN
+		key := FileKey(fs, fname);
+		IF key # 0 THEN
+			f := froot.next;
+			WHILE (f # NIL) & ((f.fs # fs) OR (f.key # key)) DO f := f.next END
+		END;
+		IF f = NIL THEN
+			f := FSOld(fs, fname);
+			IF f # NIL THEN
+				ASSERT(f.key # 0);	(* key must be set *)
+				f.next := froot.next; froot.next := f;
+(*				Kernel.RegisterObject(f, Collect, FALSE); *)
+(*				Kernel.RegisterObject(f, FileCleanup, FALSE) *)
+			END
+		END
+	END;
+	RETURN f
+END Open;
+
+(** Open an existing file, searching through the mounted file system list if no prefix is specified. *)
+PROCEDURE Old*(CONST name: ARRAY OF CHAR): File;
+VAR fs: FileSystem; f: File; prefix: Prefix; fname: LocalName;
+BEGIN
+	f := NIL;
+	SplitName(name, prefix, fname);
+	IF prefix = "" THEN
+		fs := fsroot;
+		WHILE (fs # NIL) & (f = NIL) DO
+			f := Open(fs, fname); fs := Next(fs);
+		END
+	ELSE
+		f := Open(This(prefix), fname)
+	END;
+	RETURN f
+END Old;
+
+(** Create a new file.  If no prefix is specified, create the file on the first file system in the mounted list.*)
+PROCEDURE New*(CONST name: ARRAY OF CHAR): File;
+VAR fs: FileSystem; f: File; prefix: Prefix; fname: LocalName;
+BEGIN
+	f := NIL; SplitName(name, prefix, fname);
+
+	IF prefix = "" THEN
+		fs := fsroot;	(* use default file system *)
+		IF fname = "" THEN	(* anonymous file on unspecified file system *)
+			WHILE (fs # NIL) & ((fs.vol = NIL) OR (ReadOnly IN fs.vol.flags)) DO
+				fs := Next(fs)	(* find a writable file system *)
+			END;
+			IF fs = NIL THEN fs := fsroot END	(* none found, relapse to default *)
+		END
+	ELSE
+		fs := This(prefix)
+	END;
+	IF fs # NIL THEN
+		IF (fs.vol = NIL) OR ~(ReadOnly IN fs.vol.flags) THEN
+			f := FSNew(fs, fname);
+		ELSE
+			Log.vS("Could not create file "); Log.vL;
+		END;
+	ELSE
+		Log.vS("In OFS.New, no filesystem found"); Log.vL;
+	END;
+	RETURN f
+END New;
+
+(** Delete a file. res = 0 indicates success. *)
+PROCEDURE Delete*(VAR name: ARRAY OF CHAR; VAR res: LONGINT);
+VAR fs: FileSystem; p, c, temp: File; key: LONGINT; prefix: Prefix; fname: LocalName;
+BEGIN
+	SplitName(name, prefix, fname);
+	IF prefix = "" THEN fs := fsroot ELSE fs := This(prefix) END;
+	IF fs # NIL THEN
+		IF (fs.vol = NIL) OR ~(ReadOnly IN fs.vol.flags) THEN
+			FSDelete(fs, fname, key, res);
+			IF key # 0 THEN
+				p := froot; c := froot.next;
+				WHILE c # NIL DO
+					IF (c.fs = fs) & (c.key = key) THEN 
+						p.next := c.next; 
+						temp := c;
+						c := c.next;
+						PutIntoFilePool(temp) 
+					ELSE 
+						p := c;
+						c := c.next;
+					END;
+				END
+			END
+		ELSE
+			res := 3	(* can not modify read-only volume *)
+		END
+	ELSE
+		res := 2	(* file system not found *)
+	END
+END Delete;
+
+(** Rename a file. res = 0 indicates success. *)
+PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: LONGINT);
+VAR ofs, nfs: FileSystem; pold, pnew: Prefix; fold, fnew: LocalName;
+BEGIN
+	SplitName(old, pold, fold);
+	SplitName(new, pnew, fnew);
+	IF pold = "" THEN ofs := fsroot; ELSE ofs := This(pold) END;
+	IF pnew = "" THEN nfs := fsroot; ELSE nfs := This(pnew) END;
+	IF (nfs # NIL) & (ofs = nfs) THEN
+		IF (nfs.vol = NIL) OR ~(ReadOnly IN nfs.vol.flags) THEN
+			FSRename(nfs, fold, fnew, res)
+		ELSE
+			res := 3	(* can not modify read-only volume *)
+		END
+	ELSE
+		res := 2
+	END
+END Rename;
+
+(** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically closed. *)
+PROCEDURE Register*(f: File);
+VAR res: LONGINT;
+	c,p: File;
+BEGIN
+	IF f # NIL THEN
+		FSRegister(f, res);
+		IF res = 0 THEN	(* new file was registered *)
+			ASSERT(f.key # 0);
+(*			f.next := froot.next; froot.next := f; *)	(* Do not put that file into the open list!! *)
+ 			FileCleanup(f);	(* Kernel.RegisterObject(f, FileCleanup, FALSE) *)
+		ELSE
+			IF res = 1 THEN	(* file was registered already *)
+				(* Remove file from open list *)
+				FileCleanup(f);
+				
+(*				p := froot; c := froot.next;
+				WHILE c # NIL DO
+					IF c = f THEN p.next := c.next; ELSE p := c; END; 
+					c := c.next;
+				END
+*)			ELSE	(* error occured while registering *)
+				HALT(17)
+			END;
+		END;
+	
+		(* Put File in filePool *)
+		PutIntoFilePool(f);
+	END;
+END Register;
+
+PROCEDURE Available*(CONST name: ARRAY OF CHAR ): LONGINT;
+VAR
+	fs: FileSystem;
+	avail: LONGINT;
+	temp: PROCEDURE (vol: Volume): LONGINT;
+BEGIN
+	IF name = "" THEN fs := fsroot ELSE fs := This(name) END;
+	
+	IF fs.vol # NIL THEN
+		temp := fs.vol.Available;
+		avail := temp(fs.vol)*fs.vol.blockSize;
+	ELSE
+		avail := 0;
+	END;
+	RETURN avail
+END Available;
+
+(** Enumerates files matching mask by upcalling proc for every file.  If EnumSize flags is set, size parameter of proc upcall will be valid.  If EnumTime is set, time will be valid.  All flags are passed through to the upcall in the flags parameter. *)
+PROCEDURE Enumerate*(CONST mask: ARRAY OF CHAR; VAR flags: SET; proc: EntryHandler);
+VAR fs: FileSystem; prefix: Prefix; fmask: LocalName;
+BEGIN
+	SplitName(mask, prefix, fmask);
+	IF prefix = "" THEN
+		fs := fsroot;
+		WHILE fs # NIL DO
+			flags := flags - {EnumStop};
+			enumerate(fs, fmask, DirRootAdr, flags, proc);
+			fs := Next(fs)
+		END
+	ELSE
+		fs := This(prefix);
+		IF fs # NIL THEN enumerate(fs, fmask, DirRootAdr, flags, proc) END
+	END
+END Enumerate;
+
+(** Checks if a file system has open files. *)
+PROCEDURE HasOpenFiles*(fs: FileSystem): BOOLEAN;
+VAR f: File;
+BEGIN
+	f := froot;
+	REPEAT f := f.next UNTIL (f = NIL) OR (f.fs = fs);
+	RETURN f # NIL
+END HasOpenFiles;
+
+(* Clean up file systems when shutting down or unloading module.  File systems are cleaned up in reverse order of installation. *)
+PROCEDURE FSCleanup;
+BEGIN
+	WHILE fsmount # NIL DO
+		Remove(fsmount)
+	END
+END FSCleanup;
+
+PROCEDURE InitFilePool;
+VAR
+	i, j: LONGINT;
+	f: File;
+	buf: Buffer;
+BEGIN
+	filePool := NIL;
+	FOR i := 0 TO MaxFiles - 1 DO
+		NEW(f);
+		f.key := 0;	(* Invalidate file *)
+		f.next := filePool; filePool := f; f.firstbuf := NIL;
+
+		FOR j := 0 TO MaxBuffers -1 DO
+			NEW(buf);
+			buf.next := f.firstbuf; f.firstbuf := buf;
+			buf.apos := InvalidAddress
+		END;
+		
+		buf := f.firstbuf;
+		WHILE buf.next # NIL DO
+			buf := buf.next;
+		END;
+		
+		buf.next := f.firstbuf;
+	END;
+END InitFilePool;
+
+BEGIN
+	Trace.StringLn("Entering Init() OFS.");
+	fsroot := NIL; fsmount := NIL; filePool := NIL;
+	NEW(froot); froot.next := NIL; froot.key := 0; froot.fs := NIL;
+	
+	InitFilePool;
+
+	ASSERT((SIZEOF(FileHeader) = SS) & (SIZEOF(IndexSector) = SS) & (SIZEOF(DataSector) = SS) &
+		(SIZEOF(DirPage) = SS) & (SIZEOF(MapIndex) = SS) & (SIZEOF(MapSector) = SS));
+	ASSERT((MapSize MOD 32) = 0);
+	Trace.StringLn("Completed, exiting.");
+END OFS.
+
+(**
+	On-the-fly GC by bsm
+
+	In order to be non-leaking, a file system must provide the following:
+	- FileSystem.Purge -- to reclaim blocks of an open (being closed) file
+	- FileSystem.Registered -- reports if a particular open file is registered in the file directory
+	
+	The following procedures need to be modified to purge file blocks when appropriate.
+	- FileSystem.Register -- if an entry to a file, F, which is not open is replaced, purge F.
+	- FileSystem.Rename -- same as register.
+	- FileSystem.Delete -- if the entry being deleted refers to a file, F, which is not open, purge F.
+	
+	The procedure FindOpenFile may be used to see if a given file is open or not.
+*)
+(*
+	aleng * SS + bleng = length (including header)
+	apos * SS + bpos = current position
+	0 <= bpos <= lim <= SS
+	0 <= apos <= aleng < STS
+	(apos < aleng) & (lim = SS) OR (apos = aleng)
+*)

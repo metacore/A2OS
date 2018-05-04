@@ -1,0 +1,1163 @@
+MODULE Bootloader; (** AUTHOR "Timothée Martiel"; PURPOSE "Bootloader command interpreter"; *)
+
+IMPORT
+	SYSTEM,
+	Platform, Heaps, Board, Trace, UartMin := PsUartMin, Uart := PsUart, Interrupts, PrivateWatchdog, Modules, StreamReaders, StreamWriters, Strings, OFS, OFSStreams, OFSDiskVolumes,
+	Enet, EnetBase, EnetInterfaces, EnetStreams, EnetTiming, EnetUdp, EnetUdpChannels, EmacPs7 := EnetEmacPs7,
+	Bootstrap, Loader, Programmer, Checksum;
+
+CONST
+	(* Commands *)
+	LoadCmd					= "load";			(** Planning Command to upload a resource from external source *)
+	ProgramCmd				= "deploy";		(** Planning Command to deploy a resource on a device *)
+	CheckCmd					= "check";			(** Planning Command to check consistency of a resource *)
+	SaveCmd					= "save";			(** Planning Command to save a resource in persistent storage *)
+	StartCmd					= "start";			(** Execute Plan command *)
+	FlushCmd					= "flush";			(** Partial Execute Plan command *)
+	NetStartCmd				= "netstart";		(** Network command: start network *)
+	NetInfoCmd				= "netinfo";		(** Network command: network state *)
+	NetStopCmd				= "netstop";		(** Network command: stop network *)
+	SetSourceCmd				= "setsource";		(** Environment Command: set upload file source *)
+	SetTimeoutCmd			= "timeout";		(** Environment Command: (re)activates timeout *)
+	SetInputCmd				= "setinput";		(** Environment Command: set command input channel *)
+	ContinueCmd				= "continue";		(** Environment Command: set input to file 'auto.txt' *)
+	MountCmd				= "mount";		(** Environment Command: mount an additional AOS file system *)
+	ManualCmd				= "echo";			(** Environment Command: change operation mode *)
+	ResetCmd					= "reset";			(** Environment Command: restart bootloader *)
+	PrintCmd					= "print";			(** Environment Command: print a textual resource *)
+	DumpCmd					= "dump";			(** Environment Command: print a binary resource *)
+	ListCmd					= "list";			(** Environment Command: print a list of active resources *)
+	NopCmd					= "nop";			(** Environment Command: does nothing *)
+
+	Escape						= "$";				(** UART escape command to get immediate manual control *)
+	EscapeLength				= 1;				(** Number of characters in the escape sequence *)
+
+	(* Errors *)
+	Ok *						= 0;	(** No error *)
+	InvalidCommand *		= 1;	(** Command is not known *)
+	InvalidArgument *			= 2;	(** Command argument is wrong or missing *)
+	InvalidProtocol *			= 3;	(** Load protocol is not available *)
+	InvalidResource *			= 4;	(** No resource with that name exist *)
+	InvalidDestination *		= 5;	(** Programming destination is not available *)
+	InvalidChecksumAlgo *	= 6;	(** Checksum algorithm is not available *)
+	InvalidChecksum *			= 7;	(** Computed and reference checksums do not match *)
+	ProgrammingFailed *		= 8;
+	LoadingFailed *			= 9;
+	NetworkError *			= 10;
+
+	(* Error strings *)
+	InvalidCommandStr		= "Invalid command";
+	InvalidArgumentStr		= "Invalid argument";
+	InvalidProtocolStr			= "Invalid load protocol";
+	InvalidResourceStr			= "Invalid resource";
+	InvalidDestinationStr		= "Invalid programming destination";
+	InvalidChecksumAlgoStr	= "Invalid checksum algorithm";
+	InvalidChecksumStr		= "Invalid checksum";
+	ProgrammingFailedStr		= "Could not program resource";
+	LoadingFailedStr			= "Could not load resource";
+	NetworkErrorStr			= "Network error";
+
+	(* Acknowledge messages *)
+	AckOk						= "OK: ";	(** Acknwoledge prefix for successful command *)
+	AckError					= "ERR: ";	(** Acknowledge prefix for error in command *)
+
+	(* Broadcast message header *)
+	BcastHeader				= "INFO: ";	(** String prepended to all broadcast messages, identifying them *)
+	BcastEntering				= "Enter";		(** Message announcing availability of bootloader on that communication channel *)
+	BcastLeaving				= "Leave";		(** Message announcing that the bootloader leaves this channel *)
+
+	(* Default parameters *)
+	IntfMacAddr				= "00:0A:35:00:01:03";		(** Board MAC address *)
+	Guid						= HUGEINT(0);
+	CommandPort				= 5999;						(** Port used for UDP command channel *)
+	InitializationScript			= 'init.txt';					(** Name of the initialization script *)
+	AutoScript					= 'auto.txt';				(** Name of the automatic execution script *)
+	LogFile						= '.log';					(** Suffix of the output file for file input mode. *)
+
+	(* States *)
+	Ready *					= 0;	(** Waiting for a command *)
+	Acknowledge *			= 1;	(** Command execution done (including error), need to send acknowledge *)
+	Programming *			= 2;	(** Executing programming command *)
+	Loading *					= 3;	(** Executing loading command *)
+	ProgrammingDone *		= 4;	(** Done programming command, doing bookkeeping *)
+	(*LoadingDone *			= 5;	(** Done loading command, doing bookkeeping *)*)
+
+	(* Inputs *)
+	InputFile					= 0;	(** Input is from a file *)
+	InputUart					= 1;	(** Input is from UART *)
+	InputUdp					= 2;	(** Input is from UDP channel *)
+
+	(* Network states *)
+	NetDown 					= 0;	(** Network is down *)
+	NetCfgStatic				= 1;	(** Network is configured with static IP *)
+	NetCfgDhcp				= 2;	(** Network is configured for DHCP *)
+	NetUp						= 3;	(** Network is running *)
+
+	(* Internal parameters *)
+	MaxResources				= 32;			(** Maximum number of active resources *)
+	FilenameLength *			= 256 + 16;	(** Length of file, resource, destination... names *)
+	CR							= 0DX;
+	LF							= 0AX;
+	Delete						= 7FX;
+	Backspace					= 08X;
+	Prompt						= 'oeb% ';		(** Prompt for interactive use *)
+
+VAR
+	(* General parameters *)
+	error *,												(** Error state of the last operation *)
+	state *,												(** Bootloader state *)
+	last,												(** position of last read character on current command line *)
+	current,											(** index of resource index currently being deployed *)
+	inputType,											(** current command input type *)
+	timeout: LONGINT;								(** Current timeout value *)
+	input *: POINTER TO StreamReaders.Reader;	(** Command input stream *)
+	output *: POINTER TO StreamWriters.Writer;	(** Command output stream *)
+	reply,												(** Acknowledge message. If '', then a default message is used *)
+	line: ARRAY 512 OF CHAR;						(** Content of the last command *)
+	host,												(** host name *)
+	protocol,											(** load protocol name *)
+	algorithm: ARRAY 128 OF CHAR;					(** checksum algorithm *)
+	cmdReader: StreamReaders.Reader;				(** String reader for parsing commands *)
+	timer: EnetTiming.Timer;							(** Timer for timeout management *)
+	echo,												(** Should the bootloader echo the command back? *)
+	flush,												(** Is programming giving control back to command or not? *)
+	interactive,											(** Did the timeout to default script stop? *)
+	reset: BOOLEAN;									(** Does ProgrammingDone state reset bootloader? *)
+
+	(* Network parameters *)
+	netState: LONGINT;								(** Network state *)
+	netAddress,										(** IP address *)
+	netMask,											(** Subnetwork mask *)
+	netGateway: EnetBase.IpAddr;						(** Network gateway *)
+	cmdSocket: EnetUdp.Socket;						(** UDP Command socket *)
+	netTaskHandler: EnetBase.TaskHandler;			(** ENET task handler *)
+
+	(* Additional file systems *)
+	fs: ARRAY 32 OF ARRAY 32 OF CHAR;			(** Array of all additional FS prefixes *)
+	fsNb: LONGINT;									(** Number of additional FS used *)
+
+	(* Command parameters *)
+	doLog: BOOLEAN;								(** Do we setup a log file when switching to file input? *)
+	file,													(** File argument *)
+	internal,											(** Internal file name for a resource *)
+	resource,											(** Resource argument *)
+	destination,										(** Destination argument *)
+	checksum: ARRAY FilenameLength OF CHAR;	(** Checksum algorithm argument *)
+
+	(* Resource management *)
+	resources: ARRAY MaxResources OF Programmer.Resource;			(** Active resources descriptors *)
+	destinations: ARRAY MaxResources OF Programmer.Destination;	(** Device descriptors for each resource *)
+	resourceNb: LONGINT;												(** Number of active resources *)
+
+	(** Debug and command UART *)
+	uart -: Uart.UartController;
+
+	(** Read available input until new line or not yet available. Returns TRUE iff a new command was read. *)
+	PROCEDURE ReadCommand (): BOOLEAN;
+	VAR
+		ch: CHAR;
+		end: BOOLEAN;
+	BEGIN
+		end := FALSE;
+		WHILE (StreamReaders.Available(input^) > 0) & ~end DO
+			ch := StreamReaders.Get(input^);
+			IF (ch = 0X) OR (ch = LF) OR (ch = CR) THEN
+				end := TRUE;
+			ELSIF (ch = Backspace) OR (ch = Delete) THEN
+				IF last >= 1 THEN
+					DEC(last);
+					line[last] := 0X;
+					IF echo THEN
+						StreamWriters.Char(output^, ch);
+						StreamWriters.Update(output^)
+					END
+				END;
+			ELSIF (' ' <= ch) & (ch <= '~') THEN
+				line[last] := ch;
+				INC(last);
+				IF echo THEN StreamWriters.Char(output^, ch); StreamWriters.Update(output^) END;
+			END
+		END;
+		line[last] := 0X;
+		RETURN end
+	END ReadCommand;
+
+	(** Execute the last read command. *)
+	PROCEDURE ExecuteCommand;
+	VAR
+		cmd, arg, ip: ARRAY 32 OF CHAR;
+		prefix: ARRAY 16 OF CHAR;
+		i: LONGINT;
+	BEGIN
+		error := Ok;
+		StreamReaders.SetString(cmdReader, line);
+		IF StreamReaders.GetString(cmdReader, cmd) & echo & (cmd # '') THEN
+	 		StreamWriters.Ln(output^);
+	 		StreamWriters.Update(output^)
+		END;
+
+		IF cmd = '' THEN
+			(* Empty command, ignore it *)
+			IF echo THEN
+				StreamWriters.Ln(output^);
+				StreamWriters.String(output^, Prompt);
+				StreamWriters.Update(output^)
+			END;
+			(*line := '';
+			last := 0*)
+		ELSIF cmd = NopCmd THEN
+			state := Acknowledge;
+			error := Ok
+		ELSIF cmd = LoadCmd THEN (* arguments: file resource *)
+			IF StreamReaders.GetString(cmdReader, file) THEN
+				IF StreamReaders.GetString(cmdReader, resource) THEN
+					Loader.Load(file, host, protocol);
+					state := Loading;
+					error := Ok
+				ELSE
+					error := InvalidArgument;
+					state := Acknowledge
+				END
+			ELSE
+				error := InvalidArgument;
+				state := Acknowledge
+			END
+
+		ELSIF cmd = ProgramCmd THEN (* arguments: resource destination destinationOptions *)
+			state := Acknowledge;
+			IF StreamReaders.GetString(cmdReader, resource) THEN
+				IF StreamReaders.GetString(cmdReader, destination) THEN
+					i := ThisResource(resource, TRUE);
+					IF i = -1 THEN
+						error := InvalidResource;
+					ELSE
+						destinations[i] := Programmer.GetDestination(destination, cmdReader);
+						IF destinations[i] = NIL THEN
+							error := InvalidDestination
+						END;
+					END
+				ELSE
+					error := InvalidArgument;
+				END
+			ELSE
+				error := InvalidArgument;
+			END;
+
+		ELSIF cmd = CheckCmd THEN (* arguments: resource algorithm referenceValue *)
+			state := Acknowledge;
+			IF StreamReaders.GetString(cmdReader, resource) THEN
+				IF StreamReaders.GetString(cmdReader, algorithm) THEN
+					IF StreamReaders.GetString(cmdReader, checksum) THEN
+						i := ThisResource(resource, TRUE);
+						IF i = -1 THEN
+							error := InvalidResource
+						ELSE
+							error := Checksum.Check(algorithm, checksum, resources[i].start, resources[i].size)
+						END;
+					ELSE
+						error := InvalidArgument;
+					END
+				ELSE
+					error := InvalidArgument;
+				END
+			ELSE
+				error := InvalidArgument;
+			END
+
+		ELSIF cmd = FlushCmd THEN
+			state := Programming;
+			error := Ok;
+			Programmer.error := FALSE;
+			Programmer.done := TRUE;
+			current := -1;
+			flush := TRUE
+
+		ELSIF cmd = StartCmd THEN (* no argument *)
+			state := Programming;
+			error := Ok;
+			Programmer.error := FALSE;
+			Programmer.done := TRUE;
+			current := -1;
+			flush := FALSE;
+
+		ELSIF cmd = SaveCmd THEN (* argument: resource *)
+			state := Acknowledge;
+			IF StreamReaders.GetString(cmdReader, resource) THEN
+				i := ThisResource(resource, FALSE);
+				IF i = -1 THEN
+					error := InvalidResource
+				ELSIF SaveResource(i) THEN
+					error := Ok
+				ELSE
+					error := 100
+				END
+			ELSE
+				error := InvalidArgument;
+			END
+
+		ELSIF cmd = NetStartCmd THEN (* argument: address mask gateway or DHCP *)
+			IF StreamReaders.GetString(cmdReader, arg) THEN
+				IF arg = 'DHCP' THEN
+					netState := NetCfgDhcp;
+					error := Ok;
+					state := Acknowledge
+				ELSIF EnetBase.StrToIpAddr(arg, netAddress) THEN
+					IF StreamReaders.GetString(cmdReader, arg) & EnetBase.StrToIpAddr(arg, netMask) THEN
+						IF StreamReaders.GetString(cmdReader, arg) & EnetBase.StrToIpAddr(arg, netGateway) THEN
+							netState := NetCfgStatic;
+							error := Ok;
+							state := Acknowledge
+						ELSE
+							error := InvalidArgument;
+							state := Acknowledge
+						END
+					ELSE
+						error := InvalidArgument;
+						state := Acknowledge
+					END
+				ELSE
+					error := InvalidArgument;
+					state := Acknowledge
+				END;
+				IF (error = Ok) & StartNetwork() THEN
+					netState := NetUp
+				ELSIF error = Ok THEN
+					error := NetworkError;
+					state := Acknowledge;
+					netState := NetDown
+				ELSE
+					netState := NetDown
+				END
+			ELSE
+				error := InvalidArgument;
+				state := Acknowledge
+			END
+
+		ELSIF cmd = NetInfoCmd THEN (* no argument *)
+			error := Ok;
+			state := Acknowledge;
+			IF netState = NetDown THEN
+				reply := "Network is down"
+			ELSIF netState = NetUp THEN
+				reply := "Network is up, ip = ";
+				IF ~EnetBase.IpAddrToStr(netAddress, ip) THEN
+					error := NetworkError;
+					RETURN
+				END;
+				Strings.Append(reply, ip);
+				Strings.Append(reply, ", mask = ");
+				IF ~EnetBase.IpAddrToStr(netMask, ip) THEN
+					error := NetworkError;
+					RETURN
+				END;
+				Strings.Append(reply, ip);
+				Strings.Append(reply, ", gateway = ");
+				IF ~EnetBase.IpAddrToStr(netGateway, ip) THEN
+					error := NetworkError;
+					RETURN
+				END;
+				Strings.Append(reply, ip)
+			ELSE
+				error := NetworkError
+			END
+
+		ELSIF cmd = NetStopCmd THEN
+
+		ELSIF cmd = SetSourceCmd THEN (* argument: protocol protocolOptions *)
+			IF StreamReaders.GetString(cmdReader, protocol) THEN
+				IF protocol = "TFTP" THEN
+					IF StreamReaders.GetString(cmdReader, host) THEN
+						state := Acknowledge;
+						error := Ok
+					ELSE
+						error := InvalidArgument;
+						state := Acknowledge
+					END
+				ELSIF protocol = "XModem" THEN
+					state := Acknowledge;
+					error := Ok
+				ELSE
+					error := InvalidProtocol;
+					state := Acknowledge
+				END;
+			ELSE
+				error := InvalidArgument;
+				state := Acknowledge
+			END;
+
+		ELSIF cmd = SetTimeoutCmd THEN	(* argument: timeout in s *)
+			IF StreamReaders.GetInteger(cmdReader, timeout, FALSE) THEN
+				timeout := timeout * 1000;
+				EnetTiming.SetTimerMilli(timer, timeout);
+				EnetTiming.StartTimer(timer);
+				interactive := FALSE;
+				error := Ok
+			ELSE
+				error := InvalidArgument
+			END;
+			state := Acknowledge
+
+		ELSIF cmd = SetInputCmd THEN (* arguments: inputSource *)
+			IF StreamReaders.GetString(cmdReader, arg) THEN
+				(* This command behaves a bit specially: we cannot acknowledge after the operation, so we do it before, explicitely, without going to the Acknowledge state *)
+				error := Ok;
+				IF arg = 'UART' THEN
+					DoAcknowledge;
+					Broadcast(BcastLeaving);
+					IF inputType = InputFile THEN CloseInputFile END;
+					SetupInputUART;
+				ELSIF arg = 'UDP' THEN
+					DoAcknowledge;
+					Broadcast(BcastLeaving);
+					IF inputType = InputFile THEN CloseInputFile END;
+					SetupInputUdp
+				ELSE
+					(*IF ~StreamReaders.GetString(cmdReader, arg) THEN
+						doLog := FALSE
+					ELSIF arg = 'log' THEN
+						doLog := TRUE
+					ELSE
+						error := InvalidArgument;
+						state := Acknowledge
+					END;*)
+					IF error = Ok THEN
+						(* Assume input is a filename *)
+						IF inputType = InputFile THEN CloseInputFile END;
+						SetupInputFile(arg, TRUE, TRUE)
+					END
+				END;
+				Broadcast(BcastEntering)
+			ELSE
+				error := InvalidArgument;
+				state := Acknowledge
+			END
+
+		ELSIF cmd = ContinueCmd THEN
+			IF inputType = InputFile THEN CloseInputFile END;
+			SetupInputFile(AutoScript, TRUE, TRUE);
+			Broadcast(BcastEntering);
+			error := Ok;
+			state := Acknowledge
+
+		ELSIF cmd = MountCmd THEN (* paramters: prefix disk partition *)
+			state := Acknowledge;
+			IF StreamReaders.GetString(cmdReader, prefix) THEN
+				IF StreamReaders.GetString(cmdReader, arg) THEN
+					IF StreamReaders.GetInteger(cmdReader, i, FALSE) THEN
+						error := Mount(prefix, arg, i)
+					ELSE
+						error := InvalidArgument
+					END
+				ELSE
+					error := InvalidArgument
+				END
+			ELSE
+				error := InvalidArgument
+			END
+
+		ELSIF cmd = ManualCmd THEN
+			IF StreamReaders.GetString(cmdReader, arg) THEN
+				error := Ok;
+				state := Acknowledge;
+				IF arg = 'on' THEN
+					Echo(TRUE)
+				ELSIF arg = 'off' THEN
+					Echo(FALSE)
+				ELSE
+					error := InvalidArgument
+				END
+			ELSE
+				error := InvalidArgument;
+				state := Acknowledge
+			END
+
+		ELSIF cmd = ResetCmd THEN
+			error := Ok;
+			state := ProgrammingDone;
+			reset := TRUE
+
+
+		ELSIF cmd = PrintCmd THEN
+			IF StreamReaders.GetString(cmdReader, arg) THEN
+				i := ThisResource(arg, FALSE);
+				IF i = -1 THEN
+					error := InvalidResource
+				ELSE
+					PrintResource(i, TRUE);
+					error := Ok
+				END
+			ELSE
+				error := InvalidArgument
+			END;
+			state := Acknowledge
+
+		ELSIF cmd = DumpCmd THEN
+			IF StreamReaders.GetString(cmdReader, arg) THEN
+				i := ThisResource(arg, FALSE);
+				IF i = -1 THEN
+					error := InvalidResource
+				ELSE
+					PrintResource(i, FALSE);
+					error := Ok
+				END
+			ELSE
+				error := InvalidArgument
+			END;
+			state := Acknowledge
+
+		ELSIF cmd = ListCmd THEN
+			IF resourceNb = 0 THEN
+				Trace.StringLn("No active resource yet")
+			ELSE
+				Trace.StringLn("Active Resources");
+				FOR i := 0 TO resourceNb - 1 DO
+					Trace.Int(i, 0);
+					Trace.String(": ");
+					Trace.String(resources[i].name);
+					Trace.String(", size = ");
+					Trace.Int(resources[i].size, 0);
+					IF destinations[i] # NIL THEN Trace.String(", deployed") END;
+					Trace.Ln
+				END
+			END;
+			state := Acknowledge;
+			error := Ok
+
+		ELSIF cmd = "nop" THEN
+			state := Acknowledge;
+			error := Ok
+
+		(* Internal state display command *)
+		ELSIF cmd = "$$$" THEN
+			(*Trace.Char := Char;*)
+			(*Trace.Ln;*)
+			Heaps.Show;
+			Trace.String("SP = ");
+			Trace.Address(SYSTEM.SP());
+			Trace.Ln;
+			Trace.String("Loader end address = ");
+			Trace.Address(Loader.endAddress);
+			Trace.Ln;
+			Trace.StringLn("Resources: ");
+			FOR i := 0 TO resourceNb - 1 DO
+				Trace.String(resources[i].name);
+				Trace.String(": start = "); Trace.Address(resources[i].start);
+				Trace.String(", end = "); Trace.Address(resources[i].start + resources[i].size);
+				Trace.String(", size = "); Trace.Int(resources[i].size, 0); Trace.Ln
+			END;
+			error := Ok;
+			state := Acknowledge
+
+		(* Rabbit *)
+		ELSIF cmd = 'rabbithole' THEN
+			Trace.Ln;
+			Trace.StringLn("You are stuck in the rabbit hole now!");
+			Trace.StringLn("     /");
+			Trace.StringLn("()()/");
+			Trace.StringLn('(oo)');
+			Trace.StringLn('("")');
+			error := Ok;
+			state := Acknowledge;
+			LOOP END
+
+		ELSIF cmd = 'owl' THEN
+			Trace.Ln;
+			Trace.StringLn("(\/)");
+			Trace.StringLn('(oo)');
+			Trace.StringLn('(,,)');
+			error := Ok;
+			state := Acknowledge
+
+		ELSE
+			error := InvalidCommand;
+			state := Acknowledge
+		END
+	END ExecuteCommand;
+
+	(** Main loop of the bootloader. Implements the state machine *)
+	PROCEDURE Run;
+	VAR
+		esc: ARRAY EscapeLength + 1 OF CHAR;
+		len, res: LONGINT;
+		ignore: BOOLEAN;
+	BEGIN
+		StreamReaders.Init(cmdReader, StreamReaders.StringReaderReceive, LEN(line));
+		interactive := TRUE;	(* No timeout is set by default *)
+		state := Ready;
+		Echo(FALSE);
+		LOOP
+			PrivateWatchdog.Feed(3000);
+			IF ~EnetInterfaces.UpdateAll(res) THEN Trace.StringLn("Network Connection Error: "); Trace.Int(res, 0); Trace.Ln END;
+			IF ~interactive THEN
+				IF EnetTiming.IsTimerExpired(timer) THEN
+					(* Automatic timeout expired *)
+					Broadcast(BcastLeaving);
+					SetupInputFile(AutoScript, TRUE, FALSE);
+					Broadcast(BcastEntering);
+					interactive := TRUE;
+					last := 0;
+					line[last] := 0X;
+				ELSE
+					(* Try to read escape sequence *)
+					Uart.Receive(uart, esc, 0, EscapeLength, 0, len, NIL, res);
+					esc[len] := 0X;
+					IF (res = StreamReaders.Ok) & (esc = Escape) THEN
+						interactive := TRUE;
+						Echo(TRUE);
+						SetupInputUART
+					END
+				END
+			END;
+			CASE state OF
+				 Acknowledge:
+				 	DoAcknowledge;
+					state := Ready;
+					error := Ok
+
+				|Ready:
+					IF ReadCommand() THEN
+						IF inputType # InputFile THEN
+							interactive := TRUE
+						END;
+						ExecuteCommand
+					END
+
+				|Programming:
+					IF Programmer.done THEN
+						IF Programmer.error THEN
+							error := ProgrammingFailed;
+							state := Acknowledge
+						ELSIF current = resourceNb - 1 THEN
+							error := Ok;
+							IF flush THEN
+								(* Forget all resources and go back to interpreter *)
+								resourceNb := 0;
+								state := Acknowledge
+							ELSE
+								state := ProgrammingDone
+							END
+						ELSE
+							INC(current);
+							IF destinations[current] # NIL THEN
+								Programmer.Program(resources[current], destinations[current])
+							END
+						END
+					END
+
+				|ProgrammingDone:
+					(* Acknowledge before loosing transmission line *)
+					DoAcknowledge;
+					Broadcast(BcastLeaving);
+					IF inputType = InputFile THEN CloseInputFile END;
+					ignore := EnetInterfaces.UpdateAll(res);
+
+					(* Cleanup: stop watchdog, unmount FS and stop network *)
+					PrivateWatchdog.Stop;
+					Trace.StringLn("Unmounting filesystems...");
+					UnmountAll;
+					OFS.Remove(OFS.This(Bootstrap.Prefix));
+					Trace.StringLn("Shutting down network...");
+					ignore := EnetInterfaces.StopAll(res);
+
+					IF ~reset THEN
+						(* This call does not return *)
+						Programmer.Start
+					ELSE
+						(* This call does not return either *)
+						Programmer.Reset
+					END
+
+				|Loading:
+					IF Loader.done THEN
+						IF Loader.error THEN
+							error := LoadingFailed
+						ELSE
+							error := Ok;
+							AddResource(resource, Loader.startAddress, Loader.endAddress - Loader.startAddress)
+						END;
+						state := Acknowledge
+					END
+			END
+		END
+	END Run;
+
+	(**
+		Finds a resource by name. Returns its index in the loaded resource array. If 'loadPersistend' is TRUE and the resource is not loaded,
+		it will be loaded from file.
+		This procedure returns -1 if the resource was not found.
+	*)
+	PROCEDURE ThisResource (CONST name: ARRAY OF CHAR; loadPersistent: BOOLEAN): LONGINT;
+	VAR
+		i: LONGINT;
+	BEGIN
+		i := 0;
+		WHILE (i < resourceNb) & (resources[i].name # name) DO INC(i) END;
+		IF (i = resourceNb) & loadPersistent THEN
+			IF LoadResource(resource) THEN
+				AddResource(resource, Loader.startAddress, Loader.endAddress - Loader.startAddress)
+			ELSE
+				i := -1
+			END
+		END;
+		IF i = resourceNb THEN i := -1 END;
+		RETURN i
+	END ThisResource;
+
+	(**
+		Adds a resource to the active resource list, replace any existing active resource with the same name.
+		Clears any destination for that resource.
+	*)
+	PROCEDURE AddResource (CONST name: ARRAY OF CHAR; start, size: ADDRESS);
+	VAR
+		i: LONGINT;
+	BEGIN
+		i := ThisResource(name, FALSE);
+		IF i = -1 THEN
+			i := resourceNb;
+			INC(resourceNb)
+		ELSIF destinations[i] # NIL THEN
+			destinations[i] := NIL
+		END;
+		resources[i].start := start;
+		resources[i].size := size;
+		COPY(resource, resources[i].name)
+	END AddResource;
+
+	(**
+		Load a persistent resource as an active resource. Does not enter it in the list
+		of active resources.
+	*)
+	PROCEDURE LoadResource (CONST name: ARRAY OF CHAR): BOOLEAN;
+	TYPE
+		Reader = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; len: LONGINT);
+	VAR
+		r: OFS.Rider;
+		f: OFS.File;
+		read: Reader;
+		len: LONGINT;
+	BEGIN
+		Loader.startAddress := Loader.endAddress;
+		IF Loader.startAddress MOD 4 # 0 THEN INC(Loader.startAddress, 4 - Loader.startAddress MOD 4) END;
+
+		internal := Bootstrap.Prefix;
+		Strings.AppendChar(internal, ':');
+		Strings.Append(internal, name);
+		f := OFS.Old(internal);
+		IF f = NIL THEN RETURN FALSE END;
+
+		OFS.Set(r, f, 0);
+		len := OFS.Length(f);
+		read := SYSTEM.VAL(Reader, OFS.ReadBytes);
+		read(r, Loader.LoadAddressMax - Loader.startAddress, Loader.startAddress, len);
+		Loader.endAddress := Loader.startAddress + len;
+		OFS.Close(f);
+		RETURN TRUE
+	END LoadResource;
+
+	(**
+		Save an active resource to persistent storage.
+	*)
+	PROCEDURE SaveResource (i: LONGINT): BOOLEAN;
+	TYPE
+		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: LONGINT);
+	VAR
+		r: OFS.Rider;
+		f: OFS.File;
+		write: Writer;
+	BEGIN
+		internal := Bootstrap.Prefix;
+		Strings.AppendChar(internal, ':');
+		Strings.Append(internal, resources[i].name);
+		f := OFS.New(internal);
+		IF f = NIL THEN RETURN FALSE END;
+		OFS.Set(r, f, 0);
+		write := SYSTEM.VAL(Writer, OFS.WriteBytes);
+		write(r, Loader.LoadAddressMax - Loader.startAddress, Loader.startAddress, resources[i].size);
+		OFS.Register(f);
+		RETURN TRUE
+	END SaveResource;
+
+	(** Print a resource, as textual content or binary content *)
+	PROCEDURE PrintResource (i: LONGINT; textual: BOOLEAN);
+	VAR
+		c: LONGINT;
+		char: CHAR;
+	BEGIN
+		ASSERT(i >= 0);
+		IF textual THEN
+			FOR c := 0 TO resources[i].size - 1 DO
+				char := CHR(SYSTEM.GET8(resources[i].start + c));
+				IF char = 0AX (* LF *) THEN Trace.Char(0DX (* CR *)) END;
+				Trace.Char(char)
+			END
+		ELSE
+			(*! TODO: send over output rather than trace *)
+			Trace.Memory(resources[i].start, resources[i].size)
+		END;
+	END PrintResource;
+
+	(** Mount a filesystem *)
+	PROCEDURE Mount (CONST prefix: ARRAY 16 OF CHAR; CONST disk: ARRAY OF CHAR; parition: LONGINT): LONGINT;
+	VAR
+		v: OFSDiskVolumes.Volume;
+	BEGIN
+		v := NIL;
+		OFSDiskVolumes.New(disk, parition, v);
+		IF v = NIL THEN RETURN 100 END;
+		OFS.InitVol(v);
+		OFS.NewFS(prefix, FALSE, v);
+		COPY(prefix, fs[fsNb]);
+		INC(fsNb);
+		RETURN Ok
+	END Mount;
+
+	(** Unmount all additional file systems *)
+	PROCEDURE UnmountAll;
+	VAR
+		i: LONGINT;
+	BEGIN
+		FOR i := 0 TO fsNb - 1 DO
+			OFS.Remove(OFS.This(fs[i]))
+		END
+	END UnmountAll;
+
+	(** Start initialization. *)
+	PROCEDURE StartNetwork (): BOOLEAN;
+	VAR
+		res: LONGINT;
+		dev: EnetBase.LinkDevice;
+		macAddr: EnetBase.MacAddr;
+		intf: Enet.Interface;
+	BEGIN
+		(* initialize the interface *)
+		IF ~EmacPs7.GetDevice(0,1024,1024,2048,1024,dev,res) THEN RETURN FALSE END;
+		NEW(intf);
+		Enet.InitInterface(intf,dev,res);
+		IF res # 0 THEN RETURN FALSE END;
+
+		(* setup link layer of the interface *)
+		IF ~EnetBase.StrToMacAddr(IntfMacAddr,macAddr) THEN RETURN FALSE END;
+		IF ~EnetInterfaces.SetMacAddr(intf,macAddr,res) THEN RETURN FALSE END;
+		IF ~EnetInterfaces.SetLinkSpeed(intf,"Auto",TRUE,res) THEN RETURN FALSE END;
+
+		(* setup IP configuration of the interface *)
+		IF netState = NetCfgStatic THEN
+			IF ~EnetInterfaces.SetIpConfig(intf,netAddress,netMask,netGateway,res) THEN RETURN FALSE END
+		ELSIF netState = NetCfgDhcp THEN
+			(* DHCP is not supported yet *)
+			RETURN FALSE
+		ELSE
+			RETURN FALSE
+		END;
+
+		IF ~EnetInterfaces.Add(intf,res) THEN RETURN FALSE END;
+		IF ~EnetInterfaces.StartAll(res) THEN RETURN FALSE END;
+		RETURN TRUE
+	END StartNetwork;
+
+	(** UART receiver *)
+	PROCEDURE Receive ( VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+	BEGIN
+		Uart.Receive(uart, buf, ofs, size, min, len, NIL, res)
+	END Receive;
+
+	(** UART sender *)
+	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+	BEGIN
+		Uart.Send(uart, buf, ofs, len, propagate, NIL, res)
+	END Send;
+
+	(** Change command input to UART *)
+	PROCEDURE SetupInputUART;
+	BEGIN
+		NEW(input);
+		StreamReaders.Init(input^, Receive, 128);
+		NEW(output);
+		StreamWriters.Init(output^, Send, 128);
+		inputType := InputUart
+	END SetupInputUART;
+
+	(** Change command input to UDP *)
+	PROCEDURE SetupInputUdp;
+	VAR
+		in: EnetStreams.Reader;
+		out: EnetStreams.Writer;
+		ignore: LONGINT;
+		channel: EnetUdpChannels.Channel;
+	BEGIN
+		NEW(in);
+		NEW(out);
+		ASSERT(EnetUdp.NewSocket(cmdSocket, CommandPort, ignore));
+		ASSERT(EnetUdpChannels.NewChannel(channel, cmdSocket, EnetBase.NilIpAddr, CommandPort, ignore));
+		EnetUdpChannels.InitReader(in, 128, channel);
+		EnetUdpChannels.InitWriter(out, 128, {}, channel);
+		input := in;
+		output := out;
+		inputType := InputUdp
+	END SetupInputUdp;
+
+	(** Change command input to file 'name' *)
+	PROCEDURE SetupInputFile (CONST name: ARRAY OF CHAR; log, ack: BOOLEAN);
+	VAR
+		f: OFS.File;
+		reader: POINTER TO OFSStreams.Reader;
+		writer: POINTER TO OFSStreams.Writer;
+		nullWriter: POINTER TO StreamWriters.Writer;
+	BEGIN
+		Echo(FALSE);
+
+		internal := Bootstrap.Prefix;
+		Strings.AppendChar(internal, ':');
+		Strings.Append(internal, name);
+		f := OFS.Old(internal);
+		IF f = NIL THEN
+			error := InvalidArgument;
+			state := Acknowledge;
+			RETURN
+		END;
+		NEW(reader);
+		OFSStreams.OpenReader(reader^, 1024, f);
+
+		IF log THEN
+			internal[Strings.Find('.', internal, 0)] := 0X;
+			Strings.Append(internal, LogFile);
+			f := OFS.New(internal);
+			IF f = NIL THEN
+				error := InvalidArgument;
+				state := Acknowledge;
+				RETURN
+			END;
+			NEW(writer);
+			OFSStreams.OpenWriter(writer^, 1024, f);
+			output := writer
+		ELSE
+			NEW(nullWriter);
+			StreamWriters.Init(nullWriter^, StreamWriters.NullSender, 32)
+		END;
+
+		IF ack THEN
+			(* explicit command: acknowledge and broadcast *)
+			DoAcknowledge;
+			Broadcast(BcastLeaving);
+			StreamWriters.Update(output^)
+		END;
+		state := Ready;
+		error := Ok;
+		input := reader;
+		inputType := InputFile
+	END SetupInputFile;
+
+	PROCEDURE CloseInputFile *;
+	BEGIN
+		OFS.Close(input^(OFSStreams.Reader).rider.file);
+		OFS.Register(output^(OFSStreams.Writer).rider.file)
+	END CloseInputFile;
+
+	(** Broadcast 'message' on the current command output channel *)
+	PROCEDURE Broadcast (CONST message: ARRAY OF CHAR);
+	VAR
+		msg: ARRAY 128 OF CHAR;
+		res: LONGINT;
+	BEGIN
+		msg := BcastHeader;
+		Strings.Append(msg, message);
+		Strings.AppendChar(msg, CR);
+		Strings.AppendChar(msg, LF);
+		IF (inputType = InputUdp) & ((message = BcastEntering) OR (~interactive)) THEN
+			(* We do not have a host to speak to, so broadcast message *)
+			IF netTaskHandler = NIL THEN
+				NEW(netTaskHandler);
+				netTaskHandler.handle := HandleUDP;
+			END;
+
+			IF ~EnetUdp.SendTo(cmdSocket, EnetBase.BroadcastIpAddr, CommandPort, msg, 0, Strings.Length(msg), {}, netTaskHandler, res) THEN
+				Trace.String("Could not broadcast on UDP (error ");
+				Trace.Int(res, 0);
+				Trace.StringLn(")")
+			END;
+			ASSERT(EnetInterfaces.UpdateAll(res))
+		ELSE
+			StreamWriters.String(output^, msg);
+			StreamWriters.Update(output^)
+		END
+	END Broadcast;
+
+	(** Send acknowledge message according to the state parameters *)
+	PROCEDURE DoAcknowledge;
+	BEGIN
+		IF error = Ok THEN
+			StreamWriters.String(output^, AckOk);
+			IF reply = '' THEN
+				StreamWriters.String(output^, line)
+			ELSE
+				StreamWriters.String(output^, reply)
+			END;
+			StreamWriters.Ln(output^);
+			StreamWriters.Update(output^)
+		ELSE
+			StreamWriters.String(output^, AckError);
+			PrintErrorMessage;
+			StreamWriters.Ln(output^);
+			StreamWriters.Update(output^)
+		END;
+
+		IF echo THEN
+			StreamWriters.String(output^, Prompt);
+			StreamWriters.Update(output^)
+		END;
+
+		(* Reset for next command *)
+		line := "";
+		last := 0;
+		reply[0] := 0X
+	END DoAcknowledge;
+
+	(** Print error message on current command output, according to current error code *)
+	PROCEDURE PrintErrorMessage;
+	BEGIN
+		CASE error OF
+			 InvalidCommand: StreamWriters.String(output^, InvalidCommandStr)
+			|InvalidArgument: StreamWriters.String(output^, InvalidArgumentStr)
+			|InvalidProtocol:
+				StreamWriters.String(output^, InvalidProtocolStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, protocol)
+			|InvalidResource:
+				StreamWriters.String(output^, InvalidResourceStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, resource)
+			|InvalidDestination:
+				StreamWriters.String(output^, InvalidDestinationStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, destination)
+			|InvalidChecksumAlgo:
+				StreamWriters.String(output^, InvalidChecksumAlgoStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, algorithm)
+			|InvalidChecksum: StreamWriters.String(output^, InvalidChecksumStr)
+			|ProgrammingFailed:
+				StreamWriters.String(output^, ProgrammingFailedStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, resources[current].name)
+			|LoadingFailed:
+				StreamWriters.String(output^, LoadingFailedStr);
+				StreamWriters.String(output^, ": ");
+				StreamWriters.String(output^, file);
+				StreamWriters.String(output^, ' as ');
+				StreamWriters.String(output^, resource)
+			|NetworkError:
+				StreamWriters.String(output^, NetworkErrorStr)
+		ELSE
+			StreamWriters.String(output^, "command failed: ");
+			StreamWriters.String(output^, line)
+		END;
+	END PrintErrorMessage;
+
+	(** Activate or desactivate echo for manual input *)
+	PROCEDURE Echo (on: BOOLEAN);
+	BEGIN
+		echo := on;
+		(*IF on THEN
+			Trace.Char := Char
+		ELSE
+			Trace.Init
+		END*)
+	END Echo;
+
+	(** UDP dummy completion handler *)
+	PROCEDURE HandleUDP (task: EnetBase.TaskHandler);
+	END HandleUDP;
+
+	PROCEDURE TrapHandler (type, adr, fp: LONGINT; VAR resFP: LONGINT);
+		VAR op: ADDRESS; nextFP, dataAdr: LONGINT; m, main: Modules.Module;
+	BEGIN
+		(* Display type of the trap *)
+		IF type = Platform.SWI THEN
+			SYSTEM.GET(adr, op);
+			op := op MOD 1000000H;
+			Trace.String("Trap no: "); Trace.Int(op, 0);
+			CASE op OF
+				 1: Trace.String(" (index out of bounds)");
+				|2: Trace.String(" (type guard violation)");
+				|3: Trace.String(" (destination array shorter than source array)");
+				|4: Trace.String(" (invalid CASE index)");
+				|5: Trace.String(" (invalid array in NEW)");
+				|6: Trace.String(" (string too long or destination array too short)");
+				|7: Trace.String(" (integer division by zero or negative divisor)");
+			ELSE Trace.String(" (Unknown error)");
+			END;
+			Trace.Ln;
+		ELSIF type = Platform.UndefInstr THEN
+			Trace.String("Undefined instruction trap at location "); Trace.Hex(adr, -8); Trace.Ln;
+		ELSIF type = Platform.PrefAbort THEN
+			Trace.String("Prefetch Abort at PC adr "); Trace.Hex(adr, -8); Trace.Ln;
+		ELSIF type = Platform.DataAbort THEN
+			Trace.String("Data Abort trap at PC adr "); Trace.Hex(adr, -8); Trace.Ln;
+			SYSTEM.STCPR(0F00H, 6H, dataAdr);	(* data access location that trapped *)
+			Trace.String("Tried to access adr "); Trace.Hex(dataAdr, -8); Trace.Ln;
+		END;
+
+ 		main := Modules.root; m := main;
+ 		WHILE (m # NIL) & ((adr < m.pbase) OR (adr >= m.pbase + m.size)) DO m := m.next END;
+ 		IF m # NIL THEN
+ 			Trace.String("Module: "); Trace.String(m.name); Trace.String(", code base: "); Trace.Hex(m.pbase, -8);
+ 			Trace.String(", code size: "); Trace.Int(m.size, 0);
+	 		Trace.String(" PC = (abs: "); Trace.Hex(adr, -8); Trace.String(") (rel: "); Trace.Int(adr - m.pbase, 0); Trace.StringLn(")");
+ 		ELSE
+ 			Trace.String("Module: unknown"); Trace.String(" PC = (abs: "); Trace.Hex(adr, -8); Trace.StringLn(")");
+ 		END;
+
+		(* As all registers are saved while entering the trap, it is possible to get the original
+			FP (reg12) from the local stack *)
+		SYSTEM.GET(fp + 48, fp);
+	 	(* traverse the stack *)
+		SYSTEM.GET(fp, nextFP);
+		WHILE (nextFP # 0) & (m # NIL) DO
+			m := main; SYSTEM.GET(fp + 4, adr); (* the previous link register is stored in fp + 4 *)
+			DEC(adr, 4);	 (* We are not interested in the return address, but one before this *)
+			WHILE (m # NIL) & ((adr < m.pbase) OR (adr >= m.pbase + m.size)) DO m := m.next END;
+			IF m # NIL THEN
+				Trace.String("Module: "); Trace.String(m.name); Trace.String(" PC = (abs: "); Trace.Hex(adr, -8); Trace.String(") (rel: "); Trace.Int(adr - m.pbase, 0); Trace.StringLn(")");
+				fp := nextFP; SYSTEM.GET(fp, nextFP);
+			ELSE
+				Trace.String("Unknown module, PC = (abs: "); Trace.Hex(adr, -8); Trace.StringLn(')');
+			END;
+		END;
+		Trace.StringLn("EOB Halted");
+		LOOP END;
+	END TrapHandler;
+
+	(* Initialize shell UART *)
+	PROCEDURE InitShellUart;
+	BEGIN
+		Trace.StringLn("installing UART");
+		Uart.Install(Board.ShellUart, Platform.UartBase[Board.ShellUart], Board.UartInputClockHz, error);
+		IF error # 0 THEN
+			LOOP END;
+		END;
+
+		uart := Uart.GetUart(Board.ShellUart);
+
+		Uart.Open(uart, Board.ShellUartBaudrate, 8, UartMin.ParNo, UartMin.Stop1, error);
+		IF error # 0 THEN
+			LOOP END
+		END;
+	END InitShellUart;
+
+BEGIN
+	InitShellUart;
+	Trace.StringLn("Oberon Embedded Bootloader started");
+
+	(* Start watchdog *)
+	PrivateWatchdog.Init(Board.CpuClockHz DIV 2);
+	IF PrivateWatchdog.Triggered() THEN Trace.StringLn("Rebooting after watchdog reset") END;
+	Interrupts.RegisterTraphandler(TrapHandler);
+	PrivateWatchdog.Start(PrivateWatchdog.Reset, 3000);
+
+	(* Configuring input on init script *)
+	SetupInputFile(InitializationScript, TRUE, FALSE);
+	Broadcast(BcastEntering);
+
+	(* Starting main loop *)
+	Run
+END Bootloader.

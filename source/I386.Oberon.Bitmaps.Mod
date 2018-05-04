@@ -20,8 +20,8 @@ TYPE
 	Bitmap* = POINTER TO BitmapDesc;
 	BitmapDesc* = RECORD	(* cf. Display.DisplayBlock  *)
 		width*, height*, depth*: INTEGER;	(* offset 0, 2, 4 *)
-		wth*: LONGINT; address*: ADDRESS;	(* offset 8, 12 *)
-		size: LONGINT
+		wth*, size: LONGINT;	(* offset 8, 12 *)
+		address*: ADDRESS;	(* offset 16 *)
 	END;
 
 	Buffer = RECORD bytes: ARRAY BufSize OF CHAR END;

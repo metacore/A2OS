@@ -603,7 +603,7 @@ BEGIN
 		IF (w > 0) & (h > 0) THEN
 			pd := 0; SYSTEM.GET(adr+4, SYSTEM.VAL(INTEGER, pd));
 			IF pd = 8 THEN
-				SYSTEM.GET(adr+8, pw); SYSTEM.GET(adr+12, src);
+				SYSTEM.GET(adr+8, pw); SYSTEM.GET(adr+16, src);
 				INC(src, (dy+h-1)*pw + dx);	(* top left corner *)
 				IF w*h*disp.format+1 > LEN(buf^) THEN NEW(buf, w*h*disp.format+1) END;	(* +1 for *** below *)
 				dst := ADDRESSOF(buf[0]);

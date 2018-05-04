@@ -22,9 +22,14 @@ CONST
 		Return: TRUE in case of success
 	*)
 	PROCEDURE LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN;
+	VAR err: LONGINT;
 	BEGIN
 		lib := Kernel32.LoadLibrary(fileName);
-		RETURN (lib # NilLibHandle);
+		IF lib # NilLibHandle THEN
+			RETURN TRUE;
+		END;
+		err := Kernel32.GetLastError();
+		TRACE(fileName, err);
 	FINALLY
 		RETURN FALSE;
 	END LoadLibrary;
@@ -33,7 +38,7 @@ CONST
 		Free a previously loaded dynamic library
 
 		lib: library handle
-		
+
 		Return: TRUE in case of success
 	*)
 	PROCEDURE FreeLibrary*(CONST lib: LibHandle): BOOLEAN;

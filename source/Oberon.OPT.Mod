@@ -601,7 +601,7 @@ VAR
 	BEGIN
 		topScope := universe;  OpenScope( 0, NIL );  nofmod := 1;  SYSimported := FALSE;  impSelf := FALSE;  sfpresent := TRUE;
 		newSF := (OPM.newsf IN OPM.parserOptions);  extSF := newSF OR (OPM.extsf IN OPM.parserOptions);
-		modules[0] := NewMod();  SYSTEM.MOVE( SYSTEM.VAL( LONGINT, topScope ), SYSTEM.VAL( LONGINT, modules[0] ), SIZEOF( ObjDesc ) );
+		modules[0] := NewMod();  SYSTEM.MOVE( SYSTEM.VAL( ADDRESS, topScope ), SYSTEM.VAL( ADDRESS, modules[0] ), SIZEOF( ObjDesc ) );
 		modules[0].name := name;  topScope := modules[0];
 	END Init;
 

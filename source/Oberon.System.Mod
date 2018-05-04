@@ -332,17 +332,17 @@ BEGIN
 END WriteK;
 
 PROCEDURE ShowModules*;
-VAR T: Texts.Text; M: Modules.Module; size, n, t, tag: LONGINT;
+VAR T: Texts.Text; M: Modules.Module; n, t: LONGINT; size: SIZE; tag: ADDRESS;
 BEGIN
 	T := TextFrames.Text("");
 	M := AosModules.root; n := 0; t := 0;
 	WHILE M # NIL DO
-		SYSTEM.GET(SYSTEM.VAL(LONGINT, M.code)-4, tag);	(* indirect tag *)
+		SYSTEM.GET(SYSTEM.VAL(ADDRESS, M.code)- SIZEOF (ADDRESS), tag);	(* indirect tag *)
 		SYSTEM.GET(tag, size);
-		Texts.WriteString(W, M.name); Texts.WriteInt(W, size, 8);
+		Texts.WriteString(W, M.name); Texts.WriteInt(W, LONGINT (size), 8);
 		Texts.WriteInt(W, M.refcnt, 4);
 		Texts.WriteLn(W); M := M.next;
-		INC(n); INC(t, size)
+		INC(n); INC(t, LONGINT (size))
 	END;
 	IF n > 1 THEN
 		Texts.WriteLn(W); Texts.WriteInt(W, n, 1); Texts.WriteString(W, " modules use ");
@@ -877,13 +877,13 @@ BEGIN
 END ShowCommands;
 
 PROCEDURE ShowTasks*;
-VAR T: Texts.Text;  n: Oberon.Task;  ofs, t: LONGINT;  m: Modules.Module;
+VAR T: Texts.Text;  n: Oberon.Task;  ofs: ADDRESS; t: LONGINT;  m: Modules.Module;
 BEGIN
 	n := Oberon.NextTask;  t := Input.Time();
 	REPEAT
-		ofs := SYSTEM.VAL(LONGINT, n.handle);  m := AosModules.ThisModuleByAdr(ofs);
+		ofs := SYSTEM.VAL(ADDRESS, n.handle);  m := AosModules.ThisModuleByAdr(ofs);
 		Texts.WriteString(W, m.name);  Texts.WriteString(W, "  PC = ");
-		Texts.WriteInt(W, ofs-LONGINT(ADDRESSOF(m.code[0])), 1);
+		Texts.WriteInt(W, LONGINT(ofs-ADDRESSOF(m.code[0])), 1);
 		IF n.safe THEN Texts.WriteString(W, "  safe  ")
 		ELSE Texts.WriteString(W, "  unsafe  ")
 		END;

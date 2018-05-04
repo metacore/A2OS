@@ -359,7 +359,7 @@ BEGIN
 		Traps.Show(p, int, exc, TRUE);
 		INCL(int.FLAGS, Machine.IFBit);	(* enable interrupts on return *)
 		int.EBP := 0; int.ESP := p.restartSP;	(* reset stack *)
-		proc := TerminateInLock; int.PC := SYSTEM.VAL(LONGINT, proc);	(* terminate *)
+		proc := TerminateInLock; int.PC := SYSTEM.VAL(ADDRESS, proc);	(* terminate *)
 		return := TRUE	(* return to TerminateInLock procedure at user level *)
 	ELSE
 		lockedBy := NIL; level := 0	(* Oberon.Loop will re-acquire lock *)

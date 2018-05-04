@@ -93,15 +93,15 @@ TYPE
 		fd: LONGINT; 
 		workName, registerName: Filename; 
 		tempFile: BOOLEAN; 
-		dev: Unix.DevT; 
-		ino: LONGINT; 
+		dev: Unix.dev_t; 
+		ino: Unix.ino_t; 
 		mtime: HUGEINT; 
 		fsize, fpos: SIZE; 
 		bufs: ARRAY NBufs OF Buffer; 
 		swapper, state: LONGINT; 
 
 		PROCEDURE ^  & Init(fs: Files.FileSystem); 
-		PROCEDURE ^ OpenUnixFile; 
+		PROCEDURE ^ CreateUnixFile; 
 		PROCEDURE ^ Flush(buf: Buffer); 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
 		PROCEDURE ^ SetX(VAR r: Files.Rider; p: LONGINT); 

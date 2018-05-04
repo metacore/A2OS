@@ -1,5 +1,5 @@
 MODULE WMV24Component;
-	IMPORT KernelLog, Streams, Configuration, Texts, TextUtilities, Strings, Modules, Kernel, Serials, XYModem, Files, Inputs, WMWindowManager, WMMessages, WMRestorable, WMGraphics, WMRectangles, WMComponents, WMStandardComponents, WMProgressComponents, WMTextView, WMEditors, WMPopups, WMDialogs, XML, XMLObjects, WMSearchComponents, Commands, V24, T := Trace;
+	IMPORT KernelLog, Objects, Streams, Configuration, Texts, TextUtilities, Strings, Modules, Kernel, Serials, XYModem, Files, Inputs, WMWindowManager, WMMessages, WMRestorable, WMGraphics, WMRectangles, WMComponents, WMStandardComponents, WMProgressComponents, WMTextView, WMEditors, WMPopups, WMDialogs, XML, XMLObjects, WMSearchComponents, Commands, V24, T := Trace;
 CONST 
 	DefaultWidth = 800; 
 	DefaultHeight = 400; 

@@ -193,7 +193,7 @@ VAR
 	PROCEDURE ^ Convert; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ MainThreadSleep; 
-	PROCEDURE ^ Final; 
+	PROCEDURE ^ {FINAL} Final; 
 	PROCEDURE ^ GCStatusFactory(): Heaps.GCStatus; 
 BEGIN
 END Objects.

@@ -46,7 +46,7 @@ TYPE
 		clip: Clip; 
 		cmap: X11.Colormap; 
 		planesMask: LONGINT; 
-		foreground, background: LONGINT; 
+		foreground, background: LONGWORD; 
 		rgb, defPal: ARRAY 256 OF RGB; 
 		pixel: ARRAY 256 OF LONGINT; 
 		xformat: LONGINT; 

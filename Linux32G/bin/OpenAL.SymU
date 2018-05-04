@@ -214,6 +214,8 @@ TYPE
 
 	PALCdouble* = ADDRESS; 
 
+	PALCchar* = ADDRESS; 
+
 	PALCbyte* = ADDRESS; 
 
 	PALCshort* = ADDRESS; 
@@ -226,7 +228,7 @@ TYPE
 
 	PALCuint* = ADDRESS; 
 VAR 
-	oallib: LONGINT; 
+	oallib: ADDRESS; 
 	alEnable-: PROCEDURE {C}(capability: ALenum); 
 	alDisable-: PROCEDURE {C}(capability: ALenum); 
 	alIsEnabled-: PROCEDURE {C}(capability: ALenum):ALboolean; 
@@ -313,7 +315,7 @@ VAR
 	alcIsExtensionPresentXXX-: PROCEDURE {C}(device: ALCdevice; extName: ADDRESS):ALCboolean; 
 	alcGetProcAddressXXX-: PROCEDURE {C}(device: ALCdevice; funcName: ADDRESS):ADDRESS; 
 	alcGetEnumValue-: PROCEDURE {C}(device: ALCdevice; VAR enumName: ALCubyte):ALCenum; 
-	alcGetString-: PROCEDURE {C}(device: ALCdevice; param: ALCenum):LONGINT; 
+	alcGetString-: PROCEDURE {C}(device: ALCdevice; param: ALCenum):PALCchar; 
 	alcGetIntegerv-: PROCEDURE {C}(device: ALCdevice; param: ALCenum; size: ALCsizei; data: PALCint); 
 	alcCaptureOpenDeviceXXX-: PROCEDURE {C}(devicename: ADDRESS; frequency: ALCuint; format: ALCenum; buffersize: ALCsizei):ALCdevice; 
 	alcCaptureCloseDevice-: PROCEDURE {C}(device: ALCdevice):ALCboolean; 
@@ -330,7 +332,7 @@ VAR
 	PROCEDURE ^ GetStringFromAddr(adr: ADDRESS): Strings.String; 
 	PROCEDURE ^ ALGetString*(name: ALCenum): Strings.String; 
 	PROCEDURE ^ ALCGetString*(device: ALCdevice; name: ALCenum): Strings.String; 
-	PROCEDURE ^ GetDevStringFromAddr(adr: LONGINT): Strings.String; 
+	PROCEDURE ^ GetDevStringFromAddr(adr: ADDRESS): Strings.String; 
 	PROCEDURE ^ ALCGetDeviceList*(device: ALCdevice; name: ALCenum): PString256; 
 BEGIN
 END OpenAL.

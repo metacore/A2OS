@@ -216,7 +216,7 @@ VAR
 	PROCEDURE ^ Memory*(type: Type; base: Operand; offset: LONGINT): Operand; 
 	PROCEDURE ^ IsConstantInteger*(CONST op: Operand; VAR value: HUGEINT): BOOLEAN; 
 	PROCEDURE ^ InitImmediate*(VAR op: Operand; type: Type; value: HUGEINT); 
-	PROCEDURE ^ Immediate*(type: Type; value: LONGINT): Operand; 
+	PROCEDURE ^ Immediate*(type: Type; value: HUGEINT): Operand; 
 	PROCEDURE ^ InitFloatImmediate*(VAR op: Operand; type: Type; value: LONGREAL); 
 	PROCEDURE ^ FloatImmediate*(type: Type; value: LONGREAL): Operand; 
 	PROCEDURE ^ InitNumber*(VAR op: Operand; value: HUGEINT); 

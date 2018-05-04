@@ -10,7 +10,7 @@ CONST
 	red* = 16711680; 
 	green* = 65280; 
 	blue* = 255; 
-	trans* = LONGINT(80000000H); 
+	trans* = LONGINT(2147483648); 
 	invert* = 1073741824; 
 	BufSize = 65536; 
 TYPE 

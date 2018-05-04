@@ -7,7 +7,7 @@ CONST
 	nrLanes = 25; 
 TYPE 
 	Lane = RECORD 
-		low, high: SET; 
+		low, high: SET32; 
 	END; 
 
 	State = ARRAY nrLanes OF Lane; 
@@ -38,6 +38,6 @@ VAR
 	PROCEDURE ^ Round(VAR a: State; r: LONGINT); 
 	PROCEDURE ^ InitializeRoundConstants; 
 	PROCEDURE ^ InitializeRhoOffsets; 
-	PROCEDURE ^ LFSR86540(VAR LFSR: SET): BOOLEAN; 
+	PROCEDURE ^ LFSR86540(VAR LFSR: SET32): BOOLEAN; 
 BEGIN
 END CryptoKeccakF1600.

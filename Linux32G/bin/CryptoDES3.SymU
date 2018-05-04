@@ -4,16 +4,16 @@ CONST
 TYPE 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
-		ske, skd: ARRAY 96 OF SET; 
+		ske, skd: ARRAY 96 OF SET32; 
 		ski: LONGINT; 
-		ivx, ivy: SET; 
+		ivx, ivy: SET32; 
 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ RoundE*(VAR x, y: SET); 
-		PROCEDURE ^ RoundD*(VAR x, y: SET); 
+		PROCEDURE ^ RoundE*(VAR x, y: SET32); 
+		PROCEDURE ^ RoundD*(VAR x, y: SET32); 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 

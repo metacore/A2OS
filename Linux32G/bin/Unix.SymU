@@ -112,7 +112,7 @@ CONST
 	SA_ONSTACK = 134217728; 
 	SA_RESTART = 268435456; 
 	SA_NODEFER = 1073741824; 
-	SA_RESETHAND = 80000000H; 
+	SA_RESETHAND = 2147483648; 
 	PTHREAD_CANCEL_ENABLE = 0; 
 	PTHREAD_CANCEL_DISABLE = 1; 
 	PTHREAD_CANCEL_ASYNCHRONOUS = 0; 
@@ -194,15 +194,11 @@ TYPE
 
 	SignalTrap = PROCEDURE (sig: LONGINT; mc: Mcontext); 
 
-	pid_t* = LONGINT; 
-
 	path_t* = ARRAY OF CHAR; 
 
 	arg_t* = ARRAY OF CHAR; 
 
 	argv_t* = ARRAY OF arg_t; 
-
-	off_t* = SIZE; 
 
 	Termios* = RECORD 
 		iflags*, oflags*, cflags*, lflags*: SET; 
@@ -211,17 +207,35 @@ TYPE
 		ispeed-, ospeed-: LONGINT; 
 	END; 
 
-	DevT* = HUGEINT; 
+	dev_t* = HUGEINT; 
+
+	ino_t* = LONGINT; 
+
+	nlink_t* = LONGINT; 
+
+	mode_t* = LONGINT; 
+
+	off_t* = LONGINT; 
+
+	blksize_t* = LONGINT; 
+
+	blkcnt_t* = LONGINT; 
+
+	uid_t* = LONGINT; 
+
+	gid_t* = LONGINT; 
+
+	pid_t* = LONGINT; 
 
 	Status* = RECORD 
-		dev-: DevT; 
+		dev-: dev_t; 
 		unused1-: LONGINT; 
-		ino-: LONGINT; 
+		ino-: ino_t; 
 		mode-: LONGINT; 
 		nlink-: LONGINT; 
 		uid-: LONGINT; 
 		gid-: LONGINT; 
-		rdev-: DevT; 
+		rdev-: dev_t; 
 		unused2-: LONGINT; 
 		size-: LONGINT; 
 		blksize-: LONGINT; 
@@ -261,7 +275,8 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET; 
 
 	Dirent* = POINTER TO RECORD 
-		ino-, off-: LONGINT; 
+		ino-: ino_t; 
+		off-: off_t; 
 		reclen-: INTEGER; 
 		typ-: CHAR; 
 		name-: CHAR; 
@@ -307,11 +322,6 @@ TYPE
 		fpc-: ADDRESS; 
 		oldmask-: LONGINT; 
 		cr2-: LONGINT; 
-	END; 
-
-	FPcontext* = POINTER TO FPcontextDesc; 
-
-	FPcontextDesc* = RECORD 
 	END; 
 
 	PThreadAttr = RECORD 
@@ -376,7 +386,7 @@ VAR
 	sched_get_priority_max: PROCEDURE {C}(policy: LONGINT):LONGINT; 
 	sched_get_priority_min: PROCEDURE {C}(policy: LONGINT):LONGINT; 
 	pthread_setschedparam: PROCEDURE {C}(thread: Thread_t; policy: LONGINT; param: ADDRESS):WORD; 
-	pthread_getschedparam: PROCEDURE {C}(thread: Thread_t; policy: LONGINT; param: ADDRESS):WORD; 
+	pthread_getschedparam: PROCEDURE {C}(thread: Thread_t; policy: ADDRESS; param: ADDRESS):WORD; 
 	pthread_setcancelstate: PROCEDURE {C}(state: LONGINT; oldstate: ADDRESS):LONGINT; 
 	pthread_setcanceltype: PROCEDURE {C}(type: LONGINT; oldtype: ADDRESS):LONGINT; 
 	sigaction: PROCEDURE {C}(signum: LONGINT; CONST act, oldact: ADDRESS):LONGINT; 
@@ -445,9 +455,9 @@ VAR
 	errno_location: PROCEDURE {C}():ADDRESS; 
 	xSetErrorHandler: PROCEDURE {C}(h: ADDRESS):WORD; 
 	xSetIOErrorHandler: PROCEDURE {C}(h: ADDRESS):WORD; 
-	libc-: LONGINT; 
-	libp-: LONGINT; 
-	libx-: LONGINT; 
+	libc-: ADDRESS; 
+	libp-: ADDRESS; 
+	libx-: ADDRESS; 
 	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR; 
 	noPaths: LONGINT; 
 	sigstk: Stack; 
@@ -485,7 +495,7 @@ VAR
 	PROCEDURE ^ ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN); 
 	PROCEDURE ^ ThrInitialize*(VAR low, high: LONGINT): BOOLEAN; 
 	PROCEDURE ^ CopyContext*(CONST from: McontextDesc; VAR to: McontextDesc); 
-	PROCEDURE ^ ModifyContext*(cont: Mcontext; pc, bp, sp: LONGINT); 
+	PROCEDURE ^ ModifyContext*(cont: Mcontext; pc, bp, sp: ADDRESS); 
 	PROCEDURE ^ Perror*(CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Dlsym*(lib: ADDRESS; CONST sym: ARRAY OF CHAR; objAddr: ADDRESS); 
 	PROCEDURE ^ Dlopen*(CONST libname: ARRAY OF CHAR; mode: LONGINT): ADDRESS; 

@@ -2,7 +2,7 @@ MODULE CRC;
 	IMPORT SYSTEM, Streams;
 CONST 
 	Init16 =  -1; 
-	Init32 = LONGINT(0FFFFFFFFH); 
+	Init32 = LONGINT(4294967295); 
 TYPE 
 	CRC16Stream* = OBJECT (Streams.Writer)
 	VAR 

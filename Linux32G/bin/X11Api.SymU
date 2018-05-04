@@ -482,126 +482,126 @@ TYPE
 	Colormap* = X11.Colormap; 
 
 	ComposeStatus* = RECORD 
-		composePtr*: LONGINT; 
-		charsMatched*: LONGINT; 
+		composePtr*: ADDRESS; 
+		charsMatched*: WORD; 
 	END; 
 
 	KeySym* = X11.KeySym; 
 
-	Bool* = LONGINT; 
+	Bool* = WORD; 
 
-	Status* = LONGINT; 
+	Status* = WORD; 
 
 	XSetWindowAttributes* = RECORD 
 		backgroundPixmap*: Pixmap; 
-		backgroundPixel*: LONGINT; 
+		backgroundPixel*: LONGWORD; 
 		borderPixmap*: Pixmap; 
-		borderPixel*: LONGINT; 
-		bitGravity*: LONGINT; 
-		winGravity*: LONGINT; 
-		backingStore*: LONGINT; 
-		backingPlanes*: LONGINT; 
-		backingPixel*: LONGINT; 
+		borderPixel*: LONGWORD; 
+		bitGravity*: WORD; 
+		winGravity*: WORD; 
+		backingStore*: WORD; 
+		backingPlanes*: LONGWORD; 
+		backingPixel*: LONGWORD; 
 		saveUnder*: BOOLEAN; 
-		eventMask*: LONGINT; 
-		doNotPropagateMask*: LONGINT; 
+		eventMask*: LONGWORD; 
+		doNotPropagateMask*: LONGWORD; 
 		overrideRedirect*: BOOLEAN; 
 		colormap*: Colormap; 
 		cursor*: Cursor; 
 	END; 
 
 	XWindowAttributes* = RECORD 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		borderWidth*: LONGINT; 
-		depth*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		borderWidth*: WORD; 
+		depth*: WORD; 
 		visual*: VisualPtr; 
 		root*: Window; 
-		class*: LONGINT; 
-		bitGravity*: LONGINT; 
-		winGravity*: LONGINT; 
-		backingStore*: LONGINT; 
-		backingPlanes*: LONGINT; 
-		backingPixel*: LONGINT; 
+		class*: WORD; 
+		bitGravity*: WORD; 
+		winGravity*: WORD; 
+		backingStore*: WORD; 
+		backingPlanes*: LONGWORD; 
+		backingPixel*: LONGWORD; 
 		saveUnder*: BOOLEAN; 
 		colormap*: Colormap; 
 		mapInstalled*: BOOLEAN; 
-		mapState*: LONGINT; 
-		allEventMasks*: LONGINT; 
-		yourEventMask*: LONGINT; 
-		doNotPropagateMask*: LONGINT; 
+		mapState*: WORD; 
+		allEventMasks*: LONGWORD; 
+		yourEventMask*: LONGWORD; 
+		doNotPropagateMask*: LONGWORD; 
 		overrideRedirect*: BOOLEAN; 
-		screen*: LONGINT; 
+		screen*: ADDRESS; 
 	END; 
 
 	XHostAddress* = RECORD 
-		family*: LONGINT; 
-		length*: LONGINT; 
+		family*: WORD; 
+		length*: WORD; 
 		address*: ADDRESS; 
 	END; 
 
 	XServerInterpretedAddress* = RECORD 
-		typelength*: LONGINT; 
-		valuelength*: LONGINT; 
+		typelength*: WORD; 
+		valuelength*: WORD; 
 		type*: ADDRESS; 
 		value*: ADDRESS; 
 	END; 
 
 	XWindowChanges* = RECORD 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		borderWidth*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		borderWidth*: WORD; 
 		sibling*: Window; 
-		stackMode*: LONGINT; 
+		stackMode*: WORD; 
 	END; 
 
 	DataAspect* = RECORD 
-		x*: LONGINT; 
-		y*: LONGINT; 
+		x*: WORD; 
+		y*: WORD; 
 	END; 
 
 	XSizeHints* = RECORD 
-		flags*: LONGINT; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		minWidth*, minHeight*: LONGINT; 
-		maxWidth*, maxHeight*: LONGINT; 
-		widthInc*, heightInc*: LONGINT; 
+		flags*: LONGWORD; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		minWidth*, minHeight*: WORD; 
+		maxWidth*, maxHeight*: WORD; 
+		widthInc*, heightInc*: WORD; 
 		maxAspect*, minAspect*: DataAspect; 
-		baseWidth*, baseHeight*: LONGINT; 
-		winGravity*: LONGINT; 
+		baseWidth*, baseHeight*: WORD; 
+		winGravity*: WORD; 
 	END; 
 
 	XEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
-		pad*: ARRAY 172 OF CHAR; 
+		pad*: ARRAY (192 -  SIZE OF XAnyEvent) OF CHAR; 
 	END; 
 
 	XAnyEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 	END; 
 
 	XKeyEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		root*: Window; 
 		subwindow*: Window; 
 		time*: Time; 
-		x*, y*: LONGINT; 
-		xRoot*, yRoot*: LONGINT; 
-		state*: SET; 
-		keycode*: LONGINT; 
+		x*, y*: WORD; 
+		xRoot*, yRoot*: WORD; 
+		state*: WORDSET; 
+		keycode*: WORD; 
 		sameScreen*: BOOLEAN; 
 	END; 
 
@@ -610,18 +610,18 @@ TYPE
 	XKeyReleasedEvent* = XKeyEvent; 
 
 	XButtonEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		root*: Window; 
 		subwindow*: Window; 
 		time*: Time; 
-		x*, y*: LONGINT; 
-		xRoot*, yRoot*: LONGINT; 
-		state*: SET; 
-		button*: LONGINT; 
+		x*, y*: WORD; 
+		xRoot*, yRoot*: WORD; 
+		state*: WORDSET; 
+		button*: WORD; 
 		sameScreen*: BOOLEAN; 
 	END; 
 
@@ -630,39 +630,39 @@ TYPE
 	XButtonReleasedEvent* = XButtonEvent; 
 
 	XMotionEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		root*: Window; 
 		subwindow*: Window; 
 		time*: Time; 
-		x*, y*: LONGINT; 
-		xRoot*, yRoot*: LONGINT; 
-		state*: SET; 
+		x*, y*: WORD; 
+		xRoot*, yRoot*: WORD; 
+		state*: WORDSET; 
 		isHint*: CHAR; 
-		sameScreen*: BOOLEAN; 
+		sameScreen*: Bool; 
 	END; 
 
 	PointerMovedEvent* = XMotionEvent; 
 
 	XCrossingEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		root*: Window; 
 		subwindow*: Window; 
 		time*: Time; 
-		x*, y*: LONGINT; 
-		xRoot*, yRoot*: LONGINT; 
-		mode*: LONGINT; 
-		detail*: LONGINT; 
-		sameScreen*: BOOLEAN; 
-		focus*: BOOLEAN; 
-		state*: SET; 
+		x*, y*: WORD; 
+		xRoot*, yRoot*: WORD; 
+		mode*: WORD; 
+		detail*: WORD; 
+		sameScreen*: Bool; 
+		focus*: Bool; 
+		state*: WORDSET; 
 	END; 
 
 	XEnterWindowEvent* = XCrossingEvent; 
@@ -670,8 +670,8 @@ TYPE
 	XLeaveWindowEvent* = XCrossingEvent; 
 
 	XFocusChangeEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
@@ -684,8 +684,8 @@ TYPE
 	XFocusOutEvent* = XFocusChangeEvent; 
 
 	XKeymapEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
@@ -693,64 +693,64 @@ TYPE
 	END; 
 
 	XExposeEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		count*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		count*: WORD; 
 	END; 
 
 	XGraphicsExposeEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		drawable*: Drawable; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		count*: LONGINT; 
-		majorCode*: LONGINT; 
-		minorCode*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		count*: WORD; 
+		majorCode*: WORD; 
+		minorCode*: WORD; 
 	END; 
 
 	XNoExposeEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		drawable*: Drawable; 
-		majorCode*: LONGINT; 
-		minorCode*: LONGINT; 
+		majorCode*: WORD; 
+		minorCode*: WORD; 
 	END; 
 
 	XVisibilityEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
-		state*: LONGINT; 
+		state*: WORD; 
 	END; 
 
 	XCreateWindowEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		parent*: Window; 
 		window*: Window; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		borderWidth*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		borderWidth*: WORD; 
 		overrideRedirect*: BOOLEAN; 
 	END; 
 
 	XDestroyWindowEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
@@ -758,8 +758,8 @@ TYPE
 	END; 
 
 	XUnmapEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
@@ -768,8 +768,8 @@ TYPE
 	END; 
 
 	XMapEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
@@ -778,8 +778,8 @@ TYPE
 	END; 
 
 	XMapRequestEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		parent*: Window; 
@@ -787,99 +787,99 @@ TYPE
 	END; 
 
 	XReparentEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
 		window*: Window; 
 		parent*: Window; 
-		x*, y*: LONGINT; 
+		x*, y*: WORD; 
 		overrideRedirect*: BOOLEAN; 
 	END; 
 
 	XConfigureEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
 		window*: Window; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		borderWidth*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		borderWidth*: WORD; 
 		above*: Window; 
 		overrideRedirect*: BOOLEAN; 
 	END; 
 
 	XGravityEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
 		window*: Window; 
-		x*, y*: LONGINT; 
+		x*, y*: WORD; 
 	END; 
 
 	XResizeRequestEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
-		width*, height*: LONGINT; 
+		width*, height*: LONGWORD; 
 	END; 
 
 	XConfigureRequestEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		parent*: Window; 
 		window*: Window; 
-		x*, y*: LONGINT; 
-		width*, height*: LONGINT; 
-		borderWidth*: LONGINT; 
+		x*, y*: WORD; 
+		width*, height*: WORD; 
+		borderWidth*: WORD; 
 		above*: Window; 
-		detail*: LONGINT; 
-		valueMask*: LONGINT; 
+		detail*: WORD; 
+		valueMask*: LONGWORD; 
 	END; 
 
 	XCirculateEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		event*: Window; 
 		window*: Window; 
-		place*: LONGINT; 
+		place*: WORD; 
 	END; 
 
 	XCirculateRequestEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		parent*: Window; 
 		window*: Window; 
-		place*: LONGINT; 
+		place*: WORD; 
 	END; 
 
 	XPropertyEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		atom*: Atom; 
 		time*: Time; 
-		state*: LONGINT; 
+		state*: WORD; 
 	END; 
 
 	XSelectionClearEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
@@ -888,8 +888,8 @@ TYPE
 	END; 
 
 	XSelectionRequestEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		owner*: Window; 
@@ -901,8 +901,8 @@ TYPE
 	END; 
 
 	XSelectionEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		requestor*: Window; 
@@ -921,61 +921,61 @@ TYPE
 	Data40l* = ARRAY 5 OF LONGINT; 
 
 	XClientMessageEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
 		messageType*: Atom; 
-		format*: LONGINT; 
+		format*: WORD; 
 		data*: Data40; 
 	END; 
 
 	XMappingEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
 		window*: Window; 
-		request*: LONGINT; 
-		firstKeycode*: LONGINT; 
-		count*: LONGINT; 
+		request*: WORD; 
+		firstKeycode*: WORD; 
+		count*: WORD; 
 	END; 
 
 	XErrorEvent* = RECORD 
-		typ*: LONGINT; 
+		typ*: WORD; 
 		display*: DisplayPtr; 
 		resourceid*: XID; 
-		serial*: LONGINT; 
+		serial*: LONGWORD; 
 		errorCode*: CHAR; 
 		requestCode*: CHAR; 
 		minorCode*: CHAR; 
 	END; 
 
 	XGenericEvent* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
-		extension*: LONGINT; 
-		evtype*: LONGINT; 
+		extension*: WORD; 
+		evtype*: WORD; 
 	END; 
 
 	XGenericEventCookie* = RECORD 
-		typ*: LONGINT; 
-		serial*: LONGINT; 
+		typ*: WORD; 
+		serial*: LONGWORD; 
 		sendEvent*: BOOLEAN; 
 		display*: DisplayPtr; 
-		extension*: LONGINT; 
-		evtype*: LONGINT; 
-		cookie*: LONGINT; 
+		extension*: WORD; 
+		evtype*: WORD; 
+		cookie*: WORD; 
 		data*: ADDRESS; 
 	END; 
 
 	ExtData* = POINTER TO ExtDataDesc; 
 
 	ExtDataDesc* = RECORD 
-		number*: LONGINT; 
+		number*: WORD; 
 		next*: ExtData; 
 		free_private*: ADDRESS; 
 		extension*: ExtData; 
@@ -993,7 +993,7 @@ TYPE
 
 	FontProp* = RECORD 
 		name*: Atom; 
-		card32*: LONGINT; 
+		card32*: LONGWORD; 
 	END; 
 
 	FontStruct* = POINTER TO FontStructDesc; 
@@ -1001,69 +1001,69 @@ TYPE
 	FontStructDesc* = RECORD 
 		ext_data*: ExtData; 
 		fid*: X11.Font; 
-		direction*: LONGINT; 
-		min_char_or_byte2*: LONGINT; 
-		max_char_or_byte2*: LONGINT; 
-		min_byte1*: LONGINT; 
-		max_byte1*: LONGINT; 
-		all_chars_exist*: X11.Bool; 
-		default_char*: LONGINT; 
-		n_properties*: LONGINT; 
+		direction*: WORD; 
+		min_char_or_byte2*: WORD; 
+		max_char_or_byte2*: WORD; 
+		min_byte1*: WORD; 
+		max_byte1*: WORD; 
+		all_chars_exist*: Bool; 
+		default_char*: WORD; 
+		n_properties*: WORD; 
 		properties*: ADDRESS; 
 		min_bounds*: CharStruct; 
 		max_bounds*: CharStruct; 
 		per_char*: ADDRESS; 
-		ascent*: LONGINT; 
-		descent*: LONGINT; 
+		ascent*: WORD; 
+		descent*: WORD; 
 	END; 
 
 	XTextProperty* = RECORD 
 		value*: ADDRESS; 
 		encoding*: Atom; 
-		format*: LONGINT; 
-		nitems*: LONGINT; 
+		format*: WORD; 
+		nitems*: LONGWORD; 
 	END; 
 VAR 
 	xlib: ADDRESS; 
 	OpenDisplay-: PROCEDURE {C}(CONST name: ARRAY OF CHAR):DisplayPtr; 
-	CloseDisplay-: PROCEDURE {C}(display: DisplayPtr):LONGINT; 
-	CreateWindow-: PROCEDURE {C}(display: DisplayPtr; parent: Window; x, y: LONGINT; width, height, borderWidth, depth, class: LONGINT; visual: VisualPtr; valuemask: LONGINT; VAR attributes: XSetWindowAttributes):Window; 
-	DestroyWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window):LONGINT; 
-	DisplayWidthMM-: PROCEDURE {C}(d: DisplayPtr; screen: LONGINT):LONGINT; 
+	CloseDisplay-: PROCEDURE {C}(display: DisplayPtr):WORD; 
+	CreateWindow-: PROCEDURE {C}(display: DisplayPtr; parent: Window; x, y: WORD; width, height, borderWidth, depth, class: WORD; visual: VisualPtr; valuemask: LONGWORD; VAR attributes: XSetWindowAttributes):Window; 
+	DestroyWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window):WORD; 
+	DisplayWidthMM-: PROCEDURE {C}(d: DisplayPtr; screen: WORD):WORD; 
 	FreeColormap-: PROCEDURE {C}(display: DisplayPtr; colormap: Colormap); 
 	FreeCursor-: PROCEDURE {C}(display: DisplayPtr; cursor: Cursor); 
-	XGetAtomName-: PROCEDURE {C}(display: DisplayPtr; atom: Atom):LONGINT; 
-	GetWindowAttributes-: PROCEDURE {C}(display: DisplayPtr; win: Window; VAR attr: XWindowAttributes):LONGINT; 
-	GetWindowProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom; offset, length: LONGINT; delete: Bool; reqtype: Atom; VAR typ: Atom; VAR format, nitems, bytesafter, prop: LONGINT):LONGINT; 
-	GrabKeyboard-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: LONGINT; time: Time):LONGINT; 
-	GrabPointer-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: LONGINT; pointermode, keyboardmode: LONGINT; confineto: Window; cursor: Cursor; time: Time):LONGINT; 
+	XGetAtomName-: PROCEDURE {C}(display: DisplayPtr; atom: Atom):ADDRESS; 
+	GetWindowAttributes-: PROCEDURE {C}(display: DisplayPtr; win: Window; VAR attr: XWindowAttributes):Status; 
+	GetWindowProperty-: PROCEDURE {C}(d: DisplayPtr; w: Window; property: Atom; offset, length: LONGWORD; delete: Bool; reqtype: Atom; VAR typ: Atom; VAR format: WORD; VAR nitems, bytesafter: LONGWORD; VAR prop: ADDRESS):WORD; 
+	GrabKeyboard-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: WORD; time: Time):WORD; 
+	GrabPointer-: PROCEDURE {C}(display: DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: WORD; pointermode, keyboardmode: WORD; confineto: Window; cursor: Cursor; time: Time):WORD; 
 	InternAtom-: PROCEDURE {C}(display: DisplayPtr; CONST name: ARRAY OF CHAR; onlyifexists: Bool):Atom; 
-	LookupKeysym-: PROCEDURE {C}(CONST event: XKeyEvent; index: LONGINT):KeySym; 
-	LookupString-: PROCEDURE {C}(VAR event: XKeyEvent; VAR buf: ARRAY OF CHAR; bufsize: LONGINT; VAR keysym: KeySym; VAR cstat: ComposeStatus):LONGINT; 
+	LookupKeysym-: PROCEDURE {C}(CONST event: XKeyEvent; index: WORD):KeySym; 
+	LookupString-: PROCEDURE {C}(VAR event: XKeyEvent; VAR buf: ARRAY OF CHAR; bufsize: WORD; VAR keysym: KeySym; VAR cstat: ComposeStatus):WORD; 
 	MapWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
 	NextEvent-: PROCEDURE {C}(d: DisplayPtr; VAR event: XEvent); 
-	Pending-: PROCEDURE {C}(display: DisplayPtr):LONGINT; 
+	Pending-: PROCEDURE {C}(display: DisplayPtr):WORD; 
 	RaiseWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
-	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: LONGINT):Window; 
-	SendEvent-: PROCEDURE {C}(d: DisplayPtr; w: Window; propagate: Bool; eventmask: LONGINT; event: ADDRESS):Bool; 
+	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: WORD):Window; 
+	SendEvent-: PROCEDURE {C}(d: DisplayPtr; w: Window; propagate: Bool; eventmask: LONGWORD; event: ADDRESS):Status; 
 	SetNormalHints-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR hints: XSizeHints); 
 	GetNormalHints-: PROCEDURE {C}(d: DisplayPtr; w: Window; VAR hints: XSizeHints):Status; 
-	SetStandardProperties-: PROCEDURE {C}(display: DisplayPtr; w: Window; CONST winName: ARRAY OF CHAR; CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap; argv: ADDRESS; argc: LONGINT; VAR hints: XSizeHints); 
-	SetWMProtocols-: PROCEDURE {C}(display: DisplayPtr; win: Window; protoclos: ADDRESS; count: LONGINT):LONGINT; 
-	StoreName-: PROCEDURE {C}(display: DisplayPtr; win: Window; CONST s: ARRAY OF CHAR):LONGINT; 
+	SetStandardProperties-: PROCEDURE {C}(display: DisplayPtr; w: Window; CONST winName: ARRAY OF CHAR; CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap; argv: ADDRESS; argc: WORD; VAR hints: XSizeHints); 
+	SetWMProtocols-: PROCEDURE {C}(display: DisplayPtr; win: Window; protocols: ADDRESS; count: WORD):Status; 
+	StoreName-: PROCEDURE {C}(display: DisplayPtr; win: Window; CONST s: ARRAY OF CHAR):WORD; 
 	UnmapWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window); 
-	WarpPointer-: PROCEDURE {C}(display: DisplayPtr; srcwin, destwin: Window; srcx, srcy: LONGINT; srcwidth, srcheight: LONGINT; destx, desty: LONGINT); 
+	WarpPointer-: PROCEDURE {C}(display: DisplayPtr; srcwin, destwin: Window; srcx, srcy: WORD; srcwidth, srcheight: WORD; destx, desty: WORD); 
 	SendSelection*: PROCEDURE {DELEGATE}(VAR event: XSelectionRequestEvent); 
 	ReceiveSelection*: PROCEDURE {DELEGATE}(VAR event: XSelectionEvent); 
 	ClearSelection*: PROCEDURE {DELEGATE}; 
-	CheckTypedEvent-: PROCEDURE {C}(display: DisplayPtr; eventType: LONGINT; VAR event: XEvent):Bool; 
-	CheckMaskEvent-: PROCEDURE {C}(display: DisplayPtr; eventMask: LONGINT; VAR event: XEvent):Bool; 
-	CheckTypedWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventType: LONGINT; VAR event: XEvent):Bool; 
-	CheckWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventMask: LONGINT; VAR event: XEvent):Bool; 
+	CheckTypedEvent-: PROCEDURE {C}(display: DisplayPtr; eventType: WORD; VAR event: XEvent):Bool; 
+	CheckMaskEvent-: PROCEDURE {C}(display: DisplayPtr; eventMask: LONGWORD; VAR event: XEvent):Bool; 
+	CheckTypedWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventType: WORD; VAR event: XEvent):Bool; 
+	CheckWindowEvent-: PROCEDURE {C}(display: DisplayPtr; window: Window; eventMask: LONGWORD; VAR event: XEvent):Bool; 
 	LoadQueryFont-: PROCEDURE {C}(display: DisplayPtr; name: ADDRESS):FontStruct; 
-	QueryFont-: PROCEDURE {C}(display: DisplayPtr; name: ADDRESS):FontStruct; 
-	KeycodeToKeysym-: PROCEDURE {C}(disp: DisplayPtr; keycode: LONGINT; index: LONGINT):KeySym; 
-	KeysymToKeycode-: PROCEDURE {C}(disp: DisplayPtr; keysym: KeySym):LONGINT; 
+	QueryFont-: PROCEDURE {C}(display: DisplayPtr; name: XID):FontStruct; 
+	KeycodeToKeysym-: PROCEDURE {C}(disp: DisplayPtr; keycode: WORD; index: WORD):KeySym; 
+	KeysymToKeycode-: PROCEDURE {C}(disp: DisplayPtr; keysym: KeySym):WORD; 
 	XKeysymToString-: PROCEDURE {C}(keysym: KeySym):ADDRESS; 
 
 	PROCEDURE ^ GetStringFromAddress*(adr: ADDRESS): PChar; 

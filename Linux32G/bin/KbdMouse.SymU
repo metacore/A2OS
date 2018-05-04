@@ -13,7 +13,7 @@ TYPE
 	END Poll; 
 VAR 
 	event: Api.XEvent; 
-	xbuttons: SET; 
+	xbuttons: WORDSET; 
 	compstatus: Api.ComposeStatus; 
 	disp: XDisplay.Display; 
 	MMseen, MRseen: BOOLEAN; 

@@ -5,7 +5,7 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = "A2 Generic, ";
+	Version = "A2 Gen. 32-bit, ";
 
 	DefaultObjectFileExtension* = ".GofU";
 	

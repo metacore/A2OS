@@ -20,7 +20,7 @@ CONST
 	EUrecScope = 1; 
 	EUerrScope =  -1; 
 	EUProcFlagBit = 31; 
-	Sentinel = LONGINT(0FFFFFFFFH); 
+	Sentinel = LONGINT(4294967295); 
 TYPE 
 	ObjHeader = RECORD 
 		entries, commands, pointers, types, modules, links, dataLinks: LONGINT; 

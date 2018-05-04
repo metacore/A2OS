@@ -1,0 +1,71 @@
+MODULE MathRe;
+	IMPORT NbrInt, NbrRe, DataErrors, MathInt, MathRat, MathReSeries;
+CONST 
+TYPE 
+	ArcSinA = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ArcSinA; 
+
+	ArcSinhA = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ArcSinhA; 
+
+	ArcSinhB = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ArcSinhB; 
+
+	ArcTanhA = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ArcTanhA; 
+
+	ArcTanhB = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END ArcTanhB; 
+
+	TanA = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END TanA; 
+
+	TanB = OBJECT {EXCLUSIVE} (MathReSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END TanB; 
+VAR 
+	MaxFactorial-, maxIterations: NbrInt.Integer; 
+	delta, expInfinity, expNegligible, expZero, ln2, ln2Inv, ln10, ln10Inv, sqrtInfinity: NbrRe.Real; 
+
+	PROCEDURE ^ Binomial*(top: NbrRe.Real; bottom: NbrInt.Integer): NbrRe.Real; 
+	PROCEDURE ^ Factorial*(n: NbrInt.Integer): NbrRe.Real; 
+	PROCEDURE ^ Random*(): NbrRe.Real; 
+	PROCEDURE ^ Step*(x, x0: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Sqrt*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Pythag*(x, y: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ IntPower*(x: NbrRe.Real; n: NbrInt.Integer): NbrRe.Real; 
+	PROCEDURE ^ Power*(x: NbrRe.Real; y: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Exp*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Exp2*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Exp10*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Ln*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Log2*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Log*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Sin*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Cos*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Tan*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcSin*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcCos*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcTan*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcTan2*(xn, xd: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Sinh*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Cosh*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ Tanh*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcSinh*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcCosh*(x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ ArcTanh*(x: NbrRe.Real): NbrRe.Real; 
+BEGIN
+END MathRe.

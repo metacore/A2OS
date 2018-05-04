@@ -5,10 +5,10 @@ CONST
 	TraceUse = FALSE; 
 	Optimize = FALSE; 
 	NewRefSection = TRUE; 
-	Sentinel = LONGINT(0FFFFFFFFH); 
+	Sentinel = LONGINT(4294967295); 
 	EUEnd = 0X; 
 	EURecord = 1X; 
-	EUProcFlag = LONGINT(80000000H); 
+	EUProcFlag = LONGINT(2147483648); 
 TYPE 
 	StringBuf = ARRAY 256 OF CHAR; 
 

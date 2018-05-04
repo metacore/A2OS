@@ -1,7 +1,7 @@
 MODULE CryptoDES;
 	IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
 CONST 
-	Mask01 = S.VAL(SET32, 0AAAAAAAAH); 
+	Mask01 = S.VAL(SET32, 2863311530); 
 	Mask02 = S.VAL(SET32, 858993459); 
 	Mask04 = S.VAL(SET32, 252645135); 
 	Mask08 = S.VAL(SET32, 16711935); 

@@ -2,7 +2,7 @@ MODULE Heaps;
 	IMPORT Runtime, SYSTEM, Trace, Machine;
 CONST 
 	Paranoid = TRUE; 
-	DebugValue = LONGINT(0DEADDEADH); 
+	DebugValue = LONGINT(3735936685); 
 	Stats* = TRUE; 
 	AddressSize = SIZEOF(ADDRESS); 
 	MaxTries = 16; 
@@ -211,7 +211,7 @@ VAR
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 
 	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
-	cardSet: ARRAY ((100000000H DIV SetSize) DIV CardSize) OF SET; 
+	cardSet: ARRAY ((4294967296 DIV SetSize) DIV CardSize) OF SET; 
 	youngCounts: LONGINT; 
 	throughput: SIZE; 
 	assigns*: LONGINT; 
@@ -223,6 +223,7 @@ VAR
 	PROCEDURE ^ ShowCards*; 
 	PROCEDURE ^ ClearCardSet; 
 	PROCEDURE ^ EnterInCardSet(adr: ADDRESS); 
+	PROCEDURE ^ CheckInternalAssignment(dest, src: DataBlockU); 
 	PROCEDURE ^ CheckAssignment*(dest, src: DataBlockU); 
 	PROCEDURE ^ SweepCardSet; 
 	PROCEDURE ^ Inspect(block{UNTRACED} : ANY; generation: LONGINT); 

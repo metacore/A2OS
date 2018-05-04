@@ -19,7 +19,7 @@ VAR
 	PROCEDURE ^ Int*(i, j: LONGINT); 
 	PROCEDURE ^ Set*(set: SET); 
 	PROCEDURE ^ Float*(r: LONGREAL; len: LONGINT); 
-	PROCEDURE ^ Hex*(i, j: LONGINT); 
+	PROCEDURE ^ Hex*(i: HUGEINT; j: LONGINT); 
 	PROCEDURE ^ HIntHex*(x: HUGEINT); 
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ Update*; 

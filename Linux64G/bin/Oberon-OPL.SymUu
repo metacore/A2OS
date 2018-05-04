@@ -486,7 +486,7 @@ CONST
 	STI = OPO.STI; 
 	EUEnd = 0X; 
 	EURecord = 1X; 
-	EUProcFlag = LONGINT(80000000H); 
+	EUProcFlag = LONGINT(2147483648); 
 	notag = 1; 
 	stdcall = 2; 
 	cdecl = 3; 

@@ -1,5 +1,5 @@
 MODULE NbrRe64;
-	IMPORT SYSTEM, Streams, MathL, NbrInt8, NbrInt16, NbrInt32, NbrInt64, NbrRe32;
+	IMPORT Streams, MathL, NbrInt8, NbrInt16, NbrInt32, NbrInt64, NbrRe32;
 CONST 
 	E* = MathL.e; 
 	Pi* = MathL.pi; 
@@ -10,29 +10,6 @@ VAR
 	minExp, maxExp: NbrInt16.Integer; 
 	Radix-: NbrInt8.Integer; 
 
-	PROCEDURE ^ Int64ToReal(i: NbrInt64.Integer): Real; 
-	PROCEDURE ^ RealToInt64(r: Real): NbrInt64.Integer; 
-	OPERATOR ^ ":="-(VAR l: Real; r: NbrInt64.Integer); 
-	OPERATOR ^ "="-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ "="-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ "#"-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ "#"-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ "<"-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ "<"-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ ">"-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ ">"-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ "<="-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ "<="-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ ">="-(l: Real; r: NbrInt64.Integer): BOOLEAN; 
-	OPERATOR ^ ">="-(l: NbrInt64.Integer; r: Real): BOOLEAN; 
-	OPERATOR ^ "+"-(l: Real; r: NbrInt64.Integer): Real; 
-	OPERATOR ^ "+"-(l: NbrInt64.Integer; r: Real): Real; 
-	OPERATOR ^ "-"-(l: Real; r: NbrInt64.Integer): Real; 
-	OPERATOR ^ "-"-(l: NbrInt64.Integer; r: Real): Real; 
-	OPERATOR ^ "*"-(l: Real; r: NbrInt64.Integer): Real; 
-	OPERATOR ^ "*"-(l: NbrInt64.Integer; r: Real): Real; 
-	OPERATOR ^ "/"-(l: Real; r: NbrInt64.Integer): Real; 
-	OPERATOR ^ "/"-(l: NbrInt64.Integer; r: Real): Real; 
 	PROCEDURE ^ Abs*(x: Real): Real; 
 	PROCEDURE ^ Entier*(x: Real): NbrInt32.Integer; 
 	PROCEDURE ^ LEntier*(x: Real): NbrInt64.Integer; 

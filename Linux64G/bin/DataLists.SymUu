@@ -1,0 +1,52 @@
+MODULE DataLists;
+	IMPORT NbrInt, DataErrors, DataIO, Data;
+CONST 
+	SHALLOW = 10; 
+	DEEP = 11; 
+	VERSION* = 1; 
+TYPE 
+	Node = OBJECT 
+	VAR 
+		prev, next: Node; 
+		datum: Data.Datum; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Attach(datum: Data.Datum; depth: NbrInt.Integer); 
+	END Node; 
+
+	Rider* = OBJECT {EXCLUSIVE} 
+	VAR 
+		home, node: Node; 
+		eol-: BOOLEAN; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Home*; 
+		PROCEDURE ^ Previous*; 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ Get*(): Data.Datum; 
+		PROCEDURE ^ Inspect*(): Data.Datum; 
+		PROCEDURE ^ Find(key: Data.Key; VAR found: BOOLEAN); 
+		PROCEDURE ^ Retrieve*(key: Data.Key): Data.Datum; 
+		PROCEDURE ^ Update*(new: Data.Datum; VAR successful: BOOLEAN); 
+	END Rider; 
+
+	List* = OBJECT {EXCLUSIVE} 
+	VAR 
+		len-: NbrInt.Integer; 
+		rider-: Rider; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: List); 
+		PROCEDURE ^ Read*(R: DataIO.Reader); 
+		PROCEDURE ^ Write*(W: DataIO.Writer); 
+		PROCEDURE ^ Delete*(key: Data.Key; VAR successful: BOOLEAN); 
+		PROCEDURE ^ Insert*(datum: Data.Datum; VAR successful: BOOLEAN); 
+	END List; 
+
+	PROCEDURE ^ LoadObj(R: DataIO.Reader; VAR obj: OBJECT); 
+	PROCEDURE ^ StoreObj(W: DataIO.Writer; obj: OBJECT); 
+	PROCEDURE ^ Register; 
+	PROCEDURE ^ Load*(R: DataIO.Reader; VAR obj: List); 
+	PROCEDURE ^ Store*(W: DataIO.Writer; obj: List); 
+BEGIN
+END DataLists.

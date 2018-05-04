@@ -15,7 +15,7 @@ CONST
 	LineHeight* = 20; 
 	ButtonWidth* = 80; 
 	PerfViewFillColor = 1145324799; 
-	PerfViewColor = LONGINT(0FF0000FFH); 
+	PerfViewColor = LONGINT(4278190335); 
 	UseSkinColors* = FALSE; 
 TYPE 
 	PluginContainer* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)

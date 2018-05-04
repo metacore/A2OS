@@ -1,0 +1,26 @@
+MODULE CalcDiethelm;
+	IMPORT NbrRe, DataErrors, MathRe, MathGamma, CalcFn, CalcD1;
+CONST 
+TYPE 
+	Romberg = OBJECT 
+	VAR 
+		index: LONGINT; 
+		error, soln: NbrRe.Real; 
+		factors: POINTER TO ARRAY OF NbrRe.Real; 
+		tableau: ARRAY 8 OF POINTER TO ARRAY OF NbrRe.Real; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Update(newSolution: NbrRe.Real); 
+	END Romberg; 
+VAR 
+	minTol, maxTol: NbrRe.Real; 
+
+	PROCEDURE ^ CreateDiffFactors(alpha: NbrRe.Real; x: Romberg); 
+	PROCEDURE ^ CreateIntFactors(alpha: NbrRe.Real; x: Romberg); 
+	PROCEDURE ^ CreateDiffEqnFactors(alpha: NbrRe.Real; x: Romberg); 
+	PROCEDURE ^ VerifyTolerance(VAR tol: NbrRe.Real); 
+	PROCEDURE ^ SolveI*(f: CalcFn.ReArg; x, order: NbrRe.Real; VAR tol: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ SolveD*(f: CalcFn.ReArg; x, order: NbrRe.Real; VAR tol: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ SolveFODE*(f: CalcFn.Re2Arg; y0: ARRAY OF NbrRe.Real; x, order: NbrRe.Real; VAR tol: NbrRe.Real): NbrRe.Real; 
+BEGIN
+END CalcDiethelm.

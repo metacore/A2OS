@@ -8,9 +8,8 @@ TYPE
 
 	BitmapDesc* = RECORD 
 		width*, height*, depth*: INTEGER; 
-		wth*: LONGINT; 
+		wth*, size: LONGINT; 
 		address*: ADDRESS; 
-		size: LONGINT; 
 	END; 
 
 	Buffer = RECORD 

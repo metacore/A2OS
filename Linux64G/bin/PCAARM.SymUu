@@ -58,7 +58,7 @@ CONST
 	MinLoadSpecialOffset =  -255; 
 	MaxLoadSpecialOffset = 255; 
 	MaxShifterOperand = 2130706432; 
-	MinShifterOperand = LONGINT(80000000H); 
+	MinShifterOperand = LONGINT(2147483648); 
 TYPE 
 	AsmInline* = OBJECT (PCLIR.AsmInline)
 	VAR 

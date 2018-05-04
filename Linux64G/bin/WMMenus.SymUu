@@ -12,9 +12,9 @@ CONST
 	ShadowHeight = 5; 
 	ShadowOffsetVertical = 5; 
 	ShadowOffsetHorizontal = 5; 
-	LightGrey = LONGINT(0C0C0C0FFH); 
-	LightGreyDrag = LONGINT(0C0C0C0C0H); 
-	WhiteDrag = LONGINT(0FFFFFFC0H); 
+	LightGrey = LONGINT(3233857791); 
+	LightGreyDrag = LONGINT(3233857728); 
+	WhiteDrag = LONGINT(4294967232); 
 	TextImageDistance = 4; 
 	MinImageWidth = 4; 
 	HMenuDistance = 8; 

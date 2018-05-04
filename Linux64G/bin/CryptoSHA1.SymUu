@@ -32,12 +32,12 @@ TYPE
 	END tr2039; 
 	PROCEDURE  - tr4059(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(8F1BBCDCH)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) * S.VAL(SET32, c)) + ((S.VAL(SET32, b) + S.VAL(SET32, c)) * S.VAL(SET32, d))))); 
+		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(2400959708)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) * S.VAL(SET32, c)) + ((S.VAL(SET32, b) + S.VAL(SET32, c)) * S.VAL(SET32, d))))); 
 		b := ROT(b, 30)
 	END tr4059; 
 	PROCEDURE  - tr6079(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(0CA62C1D6H)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
+		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(3395469782)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
 		b := ROT(b, 30)
 	END tr6079; 
 	PROCEDURE ^ HashBlock(VAR state: State; CONST buf: ARRAY OF CHAR; pos: LONGINT); 

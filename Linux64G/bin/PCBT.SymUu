@@ -15,7 +15,7 @@ CONST
 	interfacelookup* = 9; 
 	registerinterface* = 10; 
 	getprocedure* = 11; 
-	FixupSentinel* = LONGINT(0FFFFFFFFH); 
+	FixupSentinel* = LONGINT(4294967295); 
 	UndefEntryNo* =  -1; 
 	OberonCC* = 1; 
 	OberonPassivateCC* = 2; 

@@ -236,6 +236,20 @@ TYPE
 		adcs	r1, r1, r3
 
 	END MulS64;
+	
+	PROCEDURE MulU64*(x, y: UHUGEINT): UHUGEINT;
+	CODE
+		ldr r0, [FP,#x]
+		ldr r1, [FP,#x+4]
+
+		ldr r2, [FP,#y]
+		ldr r3, [FP,#y+4]
+
+		mul r3, r0, r3 ; r3 := xlo * yhi
+		mla r3, r1, r2, r3 ; r3 := r3 + xhi * ylo
+		umull r0, r1, r0, r2 ; r0 := lo(xlo * ylo); r1 := hi(xlo * ylo)
+		add r1, r1, r3 ; r1 := r1 + r3
+	END MulU64;
 
 	(* signed division and modulus
 	- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one

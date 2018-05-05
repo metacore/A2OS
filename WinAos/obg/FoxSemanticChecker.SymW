@@ -57,6 +57,7 @@ TYPE
 		system-: Global.System; 
 		symbolFileFormat-: Formats.SymbolFileFormat; 
 		backendName-: ARRAY 32 OF CHAR; 
+		inConversion: LONGINT; 
 		resolvedType: SyntaxTree.Type; 
 		resolvedExpression: SyntaxTree.Expression; 
 		resolvedStatement: SyntaxTree.Statement; 

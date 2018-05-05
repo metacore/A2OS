@@ -209,6 +209,14 @@ TYPE
 				sp := state.SP; bp := state.BP; 
 			
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
+					IF (bp < stackBottom) & (bp # 0) THEN
+						S.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF n > 1024 THEN
+							desc := S.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
+							END;
+						END;
+					END; 
 					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
 						Heaps.RegisterCandidates( sp, stackBottom - sp );
 					END;

@@ -35,7 +35,7 @@ CONST
 	*)
 	PROCEDURE LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN;
 	BEGIN
-		lib := Unix.Dlopen(fileName, 0x0002);
+		lib := Unix.Dlopen(fileName, 0x0001); (* RTLD_LAZY: use lazy binding - resolve symbols only at the user request *)
 		RETURN (lib # NilLibHandle);
 	FINALLY
 		RETURN FALSE;

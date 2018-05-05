@@ -957,9 +957,9 @@ TYPE
 				offset := virtual.offset;
 				ASSERT(virtual.intValue = 0);
 			END;
-			Assembler.InitMem(physical, SHORTINT(type.length * type.sizeInBits DIV 8) , physicalRegister, offset+4*part);
+			Assembler.InitMem(physical, SHORTINT(type.length * type.sizeInBits DIV 8) , physicalRegister, offset+ (cpuBits DIV 8) *part);
 			IF (virtual.symbol.name # "") & (cpuBits # 64) THEN
-				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+4*part);
+				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+ (cpuBits DIV 8) *part);
 			END;
 		END GetMemory;
 		
@@ -1062,7 +1062,7 @@ TYPE
 		PROCEDURE AllocateStack(sizeInBytes: LONGINT);
 		VAR sizeOp: Assembler.Operand; opcode: LONGINT;
 		BEGIN
-			ASSERT(sizeInBytes MOD 4 (* (cpuBits DIV 8) *) = 0);
+			ASSERT(sizeInBytes MOD (cpuBits DIV 8) = 0);
 			IF sizeInBytes < 0 THEN
 				sizeInBytes := -sizeInBytes; opcode := InstructionSet.opADD;
 			ELSIF sizeInBytes > 0 THEN
@@ -1410,9 +1410,11 @@ TYPE
 		END EmitReturn;
 
 		PROCEDURE EmitMovFloat(CONST vdest,vsrc:IntermediateCode.Operand);
-		VAR dest,src, espm: Assembler.Operand; sizeInBytes: SHORTINT; vcopy: IntermediateCode.Operand;
+		VAR dest,src, espm: Assembler.Operand; sizeInBytes: SHORTINT; stackSize: LONGINT; vcopy: IntermediateCode.Operand;
 		BEGIN
 			sizeInBytes := SHORTINT(vdest.type.sizeInBits DIV 8);
+			stackSize := sizeInBytes;
+			Basic.Align(stackSize, cpuBits DIV 8); 
 			IF vdest.type.form IN IntermediateCode.Integer THEN
 				(* e.g. in SYSTEM.VAL(LONGINT, r) *)
 				IF vsrc.mode = IntermediateCode.ModeMemory THEN
@@ -1432,7 +1434,7 @@ TYPE
 							emitter.Emit1(InstructionSet.opFSTP,dest);
 							DEC(fpStackPointer);
 						ELSE
-							AllocateStack(sizeInBytes);
+							AllocateStack(stackSize);
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							emitter.Emit1(InstructionSet.opFSTP,espm);
 							DEC(fpStackPointer);
@@ -1448,7 +1450,7 @@ TYPE
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, src, vsrc.type);
 						ELSE (* need temporary stack argument *)
-							AllocateStack(sizeInBytes);
+							AllocateStack(stackSize);
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							Move(espm, src, vsrc.type);
 							MakeOperand(vdest,Low,dest,NIL);
@@ -1481,7 +1483,7 @@ TYPE
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							emitter.Emit1(InstructionSet.opFLD,espm);
 							ASSERT(sizeInBytes >0);
-							AllocateStack(-sizeInBytes);
+							AllocateStack(-stackSize);
 						END;
 						INC(fpStackPointer);
 						MakeOperand(vdest,Low,dest,NIL);
@@ -1501,7 +1503,7 @@ TYPE
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, espm, vdest.type);
-							AllocateStack(-sizeInBytes);
+							AllocateStack(-stackSize);
 						END;
 					END;
 				END;
@@ -1611,7 +1613,7 @@ TYPE
 					ELSE
 						IF backend.forceFPU THEN (* via stack *)
 							EmitPush(vsrc,Low);
-							sizeInBytes := SHORTINT(4 (* cpuBits DIV 8*)) (*SHORT(srcType.sizeInBits DIV 8)*);
+							sizeInBytes := SHORTINT(cpuBits DIV 8);
 						ELSE (* via memory or register *)
 							sizeInBytes := 0;
 							MakeOperand(vsrc,Low,src,NIL);
@@ -1636,7 +1638,7 @@ TYPE
 						emitter.Emit1(InstructionSet.opFILD,espm);
 						INC(fpStackPointer);
 						ASSERT(sizeInBytes >0);
-						Basic.Align(sizeInBytes, 4 (* cpuBits DIV 8*));
+						Basic.Align(sizeInBytes, cpuBits DIV 8);
 						AllocateStack(-sizeInBytes);
 						MakeOperand(vdest,Low,dest,NIL);
 						emitter.Emit1(InstructionSet.opFSTP,dest);
@@ -2402,7 +2404,7 @@ TYPE
 			MakeOperand(instruction.op3,Low,op3,NIL);
 			IF instruction.op3.mode = IntermediateCode.ModeImmediate THEN
 				size := instruction.op3.type.sizeInBits DIV 8;
-				Basic.Align(size, 4 (* cpuBits DIV 8 *) );
+				Basic.Align(size, cpuBits DIV 8 );
 				AllocateStack(size);
 				Assembler.InitMem(memop,SHORT(instruction.op3.type.sizeInBits DIV 8),SP,0);
 				emitter.Emit2(InstructionSet.opMOV,memop,op3);
@@ -2428,7 +2430,7 @@ TYPE
 
 			IF instruction.op3.mode = IntermediateCode.ModeImmediate THEN
 				size := instruction.op3.type.sizeInBits DIV 8;
-				Basic.Align(size, 4 (* cpuBits DIV 8*) );
+				Basic.Align(size, cpuBits DIV 8 );
 				AllocateStack(-size);
 			END;
 		END EmitDivMod;

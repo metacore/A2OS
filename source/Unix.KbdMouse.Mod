@@ -17,7 +17,7 @@ CONST
 
 
 VAR
-	event: Api.XEvent;  xbuttons: WORDSET;
+	event: Api.XEvent;  xbuttons: SET32;
 	compstatus: Api.ComposeStatus;
 
 	disp: XDisplay.Display;
@@ -43,7 +43,7 @@ VAR
 	END CheckAlternateKeys;
 
 
-	PROCEDURE SendMouseMsg( x, y, dz: LONGINT; xbuttons: SET );
+	PROCEDURE SendMouseMsg( x, y, dz: LONGINT; xbuttons: SET32 );
 	VAR mm: Inputs.AbsMouseMsg;
 	BEGIN
 		Machine.Release( Machine.X11 ); 
@@ -70,15 +70,16 @@ VAR
 	VAR keycount, xr, yr, x, y, dz, i: LONGINT;
 		rw, cw: X11.Window;   
 		keysym: X11.KeySym;  xd: X11.DisplayPtr;
-		newxbuttons, bdiff: WORDSET;
+		newxbuttons, bdiff: SET32;
 		km: Inputs.KeyboardMsg;
 		kp : Api.XKeyEvent;
 		be : Api.XButtonPressedEvent;
 		em: Api.XExposeEvent;
+		cm : Api.XClientMessageEvent;
+		datal: Api.Data40l;
 		cn: Api.XConfigureEvent;
 		res, events: LONGINT;
 		buffer: ARRAY bufsize OF CHAR;
-		msg: LONGINT;
 	BEGIN
 		xd := disp.xdisp;
 		Machine.Acquire( Machine.X11 );
@@ -190,12 +191,9 @@ VAR
 			| Api.MappingNotify:
 					X11.RefreshKeyboardMapping( ADDRESSOF( event ) )
 			| Api.ClientMessage: 
-					IF SIZEOF( ADDRESS ) = 8 THEN	(* hack to avoid a 64-bit X11Api (alignments are different in C and Oberon) !! *)
-						S.GET( ADDRESSOF( event ) + 56, msg )
-					ELSE 
-						S.GET( ADDRESSOF( event ) + 28, msg )
-					END;
-					IF msg = disp.wmDelete THEN
+					cm := S.VAL( Api.XClientMessageEvent, event );
+					datal := S.VAL( Api.Data40l, cm.data );
+					IF  S.VAL( X11.Atom,datal[0] ) = disp.wmDelete THEN									
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
 						Modules.Shutdown( Modules.Reboot );

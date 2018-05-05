@@ -873,7 +873,7 @@ VAR
 		IF h = 0 THEN
 			Trace.String( "Unix.Dlopen: loading library " );
 			Trace.String( libname );  Trace.String( " failed" );  Trace.Ln;
-			LOOP END;
+		(*	LOOP END;*)
 		END;
 		RETURN h
 	END Dlopen;

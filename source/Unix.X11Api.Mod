@@ -857,10 +857,11 @@ TYPE
 		time* : Time;
 	END;
 	
-	TYPE Data40 * = ARRAY 40 OF CHAR; (* max of these is 40 bytes*)
-		 Data40b* = ARRAY 20 OF CHAR; (* 20x 8 bits *)
-		 Data40s* = ARRAY 10 OF INTEGER; (* 10x 16 bits *)
-		 Data40l* = ARRAY 5 OF LONGINT; (* 5x 32 bits *)
+	TYPE 
+		Data40 * = ARRAY 5 OF LONGWORD; (* max of these is 40 bytes*)
+		Data40b* = ARRAY 20 OF CHAR; (* 20x 8 bits *)
+		Data40s* = ARRAY 10 OF INTEGER; (* 10x 16 bits *)
+		Data40l* = ARRAY 5 OF LONGINT; (* 5x 32 bits *)
 	TYPE XClientMessageEvent * = RECORD 
 		typ* : WORD;
 		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)

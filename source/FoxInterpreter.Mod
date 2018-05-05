@@ -743,7 +743,7 @@ TYPE
 
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
 		BEGIN
-			NewSet(x.value)
+			NewSet(SET(x.value))
 		END VisitSetValue;
 
 		PROCEDURE VisitMathArrayValue*(x: SyntaxTree.MathArrayValue);

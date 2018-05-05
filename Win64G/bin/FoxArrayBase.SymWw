@@ -4,7 +4,7 @@ CONST
 	debug = FALSE; 
 	statistics = FALSE; 
 	conservative = TRUE; 
-	ArrDataArrayOffset = ADDRESS(16); 
+	ArrDataArrayOffset = (4 * SIZEOF(ADDRESS)); 
 	AddressSize = SIZEOF(ADDRESS); 
 	MathPtrOffset = (0 * AddressSize); 
 	MathAdrOffset = (1 * AddressSize); 
@@ -303,6 +303,8 @@ VAR
 	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF LONGINT): ARRAY [?] OF SIZE; 
 	PROCEDURE ^ ConvertLoopYZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF LONGREAL; 
+	PROCEDURE ^ ConvertLoopYR(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF REAL; 
 	PROCEDURE ^ NotLoopAB(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "~"-(CONST src: ARRAY [?] OF BOOLEAN): ARRAY [?] OF BOOLEAN; 
 	PROCEDURE ^ GenericLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: SHORTINT):SHORTINT); 
@@ -1003,7 +1005,7 @@ VAR
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF REAL): REAL; 
 	PROCEDURE ^ MaxAXLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "MAX"-(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
-	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF LenType; 
+	OPERATOR ^ "LEN"-(CONST left: ARRAY [?] ): ARRAY [*] OF SIZE; 
 	PROCEDURE ^ SumASLoop(ladr, dadr: ADDRESS; linc, len: SIZE); 
 	OPERATOR ^ "SUM"-(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
 	PROCEDURE ^ SumAILoop(ladr, dadr: ADDRESS; linc, len: SIZE); 

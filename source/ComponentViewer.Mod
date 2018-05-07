@@ -2,7 +2,7 @@ MODULE ComponentViewer;	(** AUTHOR "TF"; PURPOSE "Testbed for the component syst
 
 IMPORT
 	Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents,
-	WMRestorable, Streams, D:= Debugging, Files, WMRectangles, WMGraphicsSmooth;
+	WMRestorable, Streams, D:= Debugging, Files, WMGraphicsSmooth;
 
 CONST
 	DefaultWidth = 320;
@@ -72,7 +72,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
-		VAR dx, dy, width, height : LONGINT;
+		VAR dx, dy : LONGINT;
 		BEGIN
 			IF dragging THEN
 				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
@@ -100,6 +100,7 @@ VAR
 	viewPort: WMWindowManager.ViewPort;
 	manager: WMWindowManager.WindowManager;
 BEGIN
+	IF vc = NIL THEN RETURN END;
 	IF width # 0 THEN
 		vc.bounds.SetWidth(width);
 	ELSE
@@ -204,7 +205,7 @@ END DoOpen;
 
 
 PROCEDURE SetProperties(c:WMComponents.Component; CONST attr: ARRAY OF CHAR);
-VAR property, value: ARRAY 32 OF CHAR; ch: CHAR; 
+VAR property, value: ARRAY 32 OF CHAR;
 VAR r: Streams.StringReader;
 BEGIN
 	NEW(r, LEN(attr)); 

@@ -184,6 +184,7 @@ VAR
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ GCLoop*; 
+	PROCEDURE ^ SystemA2IsUp*; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
 	PROCEDURE ^ LeaveA2; 

@@ -209,7 +209,7 @@ TYPE
 				sp := state.SP; bp := state.BP; 
 			
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
-					IF (bp < stackBottom) & (bp # 0) THEN
+					IF  (stackBottom # 0) & (bp < stackBottom) & (bp >1024) THEN
 						S.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
 							IF n > 1024 THEN
@@ -807,8 +807,13 @@ TYPE
 		SystemA2Up := TRUE;
 		LOOP Sleep( 100 ) END
 	END GCLoop;		
-	
-	
+
+	(* in order to get the traps running correctly without a BootConsole *)
+	PROCEDURE SystemA2IsUp*;
+	BEGIN
+		SystemA2Up := TRUE;		
+	END SystemA2IsUp;
+			
 	PROCEDURE CurrentProcessTime*(): HUGEINT;
 	BEGIN
 		RETURN  Machine.GetTimer()

@@ -209,7 +209,7 @@ TYPE
 				sp := state.SP; bp := state.BP; 
 			
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
-					IF  (stackBottom # 0) & (bp < stackBottom) & (bp >1024) THEN
+					IF  (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
 						S.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
 							IF n > 1024 THEN
@@ -222,7 +222,7 @@ TYPE
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					IF bp < stackBottom THEN
-						WHILE (bp # Heaps.NilVal) & (bp > 1024) & (bp < stackBottom) DO (* do not test for bp >= sp: could be wrong temporarily! *)
+						WHILE (bp # Heaps.NilVal) & (bp >= sp - SIZE OF ADDRESS) & (bp < stackBottom) DO (*  bp = sp - SIZE OF ADDRESS: happens temporarily upon leaving procedures *)
 							S.GET( bp, n );
 							IF ODD( n ) THEN (* procedure descriptor at bp *)
 								IF n > 1024 THEN

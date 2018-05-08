@@ -71,6 +71,7 @@ VAR
 	xdisp		: X11.DisplayPtr;
 	primary		: X11.Window;
 	secondary	: X11.Window;
+	clipboard: X11.Atom;
 	
 
 	
@@ -168,7 +169,7 @@ VAR
 		TextUtilities.TextToStr( text, sendBuffer^ );  slen := Strings.Length( sendBuffer^ );
 		A2ToUnix;
 		Machine.Acquire( Machine.X11 );
-		X11.SetSelectionOwner( xdisp, X11.XAPRIMARY, primary, X11.lastEventTime );	
+		X11.SetSelectionOwner( xdisp, clipboard (* X11.XAPRIMARY *), primary, X11.lastEventTime );	
 		Machine.Release( Machine.X11 );
 	END PutToClipboard;
 
@@ -180,7 +181,7 @@ VAR
 		ev.selection := event.selection;
 		ev.target := event.target;
 		ev.time := event.time;
-		IF (event.selection = X11.XAPRIMARY) & (event.target = X11.XASTRING) THEN
+		IF (event.selection = clipboard) & (event.target = X11.XASTRING) THEN
 			ev.property := event.property;
 			Machine.Acquire( Machine.X11 );
 			X11.ChangeProperty( xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace, 
@@ -241,13 +242,15 @@ VAR
 
 
 	PROCEDURE GetXDisplay;
-	VAR p: Plugins.Plugin;  disp: XDisplay.Display;
+	VAR p: Plugins.Plugin;  disp: XDisplay.Display; name: ARRAY 16 OF CHAR; 
 	BEGIN
 		p := Displays.registry.Await("XDisplay");
 		disp := p(XDisplay.Display);
 		xdisp := disp.xdisp;  
 		primary := disp.primary;  
 		secondary := disp.secondary;
+		clipboard := X11.InternAtom(xdisp,ADDRESSOF("CLIPBOARD"),1); 
+		(*clipboard := X11.XAPRIMARY;*)
 	END GetXDisplay;
 
 	(* set Selection handlers to NIL *)
@@ -299,13 +302,8 @@ VAR
 BEGIN
 END Clipboard.
 
-
-
- Clipboard.Install ~
-
-
  SystemTools.Free Clipboard ~
-	
+ Clipboard.Install ~
 	
 	  ---------------------------------------------
 	   Cut & paste between X11 applications and UnixAos. 

@@ -1841,10 +1841,8 @@ TYPE
 				ELSIF sizeInBits = 16 THEN
 					Emit2(opMOV, operand, InstructionSet.NewRegister(operand.register, InstructionSet.shiftLSL, None, 16));
 					Emit2(opMOV, operand, InstructionSet.NewRegister(operand.register, InstructionSet.shiftLSR, None, 16))
-				ELSIF sizeInBits = 32 THEN
-					(* nothing to do *)
 				ELSE
-					HALT(100)
+					(* nothing to do *)
 				END
 			ELSIF (sizeInBits < 32)  THEN
 				ASSERT(operand.mode = InstructionSet.modeImmediate);
@@ -2443,8 +2441,6 @@ TYPE
 
 			irShiftOperand := irInstruction.op3;
 
-			ASSERT((irShiftOperand.type.form = IntermediateCode.UnsignedInteger) & ~IsComplex(irShiftOperand)); (* the shift operand is assumed to be a single part unsigned integer *)
-
 			(* use ARM register or shift immediate to represent IR shift operand *)
 			IF (irShiftOperand.mode = IntermediateCode.ModeImmediate) & (irShiftOperand.symbol.name = "") THEN
 				shiftAmountImmediate := LONGINT(irShiftOperand.intValue); (* note that at this point the shift amount could also be >= 32 *)
@@ -2453,7 +2449,9 @@ TYPE
 			ELSE
 				shiftAmountImmediate := 0;
 				shiftAmountRegister := RegisterFromIrOperand(irShiftOperand, Low, emptyOperand);
-				ZeroExtendOperand(shiftAmountRegister, irShiftOperand.type.sizeInBits)
+				IF ~IsComplex(irShiftOperand) THEN 
+					ZeroExtendOperand(shiftAmountRegister, irShiftOperand.type.sizeInBits)
+				END;
 			END;
 
 			CASE irInstruction.opcode OF
@@ -2580,9 +2578,13 @@ TYPE
 							Emit3(opORR, destination[Low], temp, InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftLSR, None, shiftAmountImmediate));
 							Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, None, shiftAmountImmediate))
 						ELSIF shiftAmountImmediate >= 32 THEN
-							IF shiftAmountImmediate > 64 THEN shiftAmountImmediate := 64 END;
+							ASSERT(shiftAmountImmediate < 64); 
 							Emit2(opMOV, destination[Low], InstructionSet.NewRegister(source[High].register, shiftMode, None, shiftAmountImmediate - 32));
-							Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, None, 32))
+							IF  irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+								Emit2(opMOV, destination[High], InstructionSet.NewImmediate(0))
+							ELSE
+								Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, None, 31))
+							END;
 						ELSE
 							HALT(100)
 						END
@@ -2598,7 +2600,11 @@ TYPE
 						(* shift amount >= 32: *)
 						Emit3WithCondition(opSUB, temp, shiftAmountRegister, InstructionSet.NewImmediate(32), InstructionSet.conditionGE);
 						Emit2WithCondition(opMOV, destination[Low], InstructionSet.NewRegister(source[High].register, shiftMode, temp.register, 0), InstructionSet.conditionGE);
-						Emit2WithCondition(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, shiftAmountRegister.register, 0), InstructionSet.conditionGE)
+						IF  irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+							Emit2WithCondition(opMOV, destination[High], InstructionSet.NewImmediate(0), InstructionSet.conditionGE)
+						ELSE
+							Emit2WithCondition(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, None, 31), InstructionSet.conditionGE)
+						END;
 					END
 				ELSE
 					(* simple right shift: *)
@@ -2817,6 +2823,7 @@ TYPE
 			fixupPatternList: ObjectFile.FixupPatterns;
 			identifier: ObjectFile.Identifier;
 			hiHit, hiFail, lowHit: LONGINT;
+			unsigned: BOOLEAN; 
 
 			PROCEDURE JmpDest(branchConditionCode: LONGINT);
 			BEGIN
@@ -2893,6 +2900,13 @@ TYPE
 				ASSERT((irLeft.type.form = irRight.type.form) & (irLeft.type.sizeInBits = irRight.type.sizeInBits));
 
 				IF IsInteger(irLeft) THEN
+					unsigned := irLeft.type.form = IntermediateCode.UnsignedInteger;
+					(* swap operands if beneficial *)
+					IF ~IrOperandIsDirectlyEncodable(irRight, Low) & IrOperandIsDirectlyEncodable(irLeft, Low) THEN
+						isSwapped := TRUE;
+						SwapIrOperands(irLeft, irRight)
+					END;
+
 					IF IsComplex(irLeft) THEN
 						CASE irInstruction.opcode OF
 						| IntermediateCode.breq, IntermediateCode.brne: (* left = right, left # right *)
@@ -2908,16 +2922,76 @@ TYPE
 							IF irInstruction.opcode = IntermediateCode.brne THEN lowHit := InstructionSet.conditionNE END;
 
 						| IntermediateCode.brlt, IntermediateCode.brge: (* left < right, left >= right *)
-							IF irInstruction.opcode = IntermediateCode.brlt THEN lowHit := InstructionSet.conditionLT ELSE lowHit := InstructionSet.conditionGE END;
+							CASE irInstruction.opcode OF
+							IntermediateCode.brge:
+								IF isSwapped THEN
+									IF unsigned THEN 
+										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI; 
+									ELSE
+										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT; 
+									END;
+									lowHit := InstructionSet.conditionLS
+								ELSE
+									IF unsigned THEN 
+										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO; 
+									ELSE
+										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT; 
+									END;
+									lowHit := InstructionSet.conditionHS
+									
+								END;
+							|IntermediateCode.brlt:
+								IF isSwapped THEN
+									IF unsigned THEN 
+										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO; 
+									ELSE
+										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT; 
+									END; 
+									lowHit := InstructionSet.conditionHI
+								ELSE
+									IF unsigned THEN 
+										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI; 
+									ELSE
+										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT; 
+									END;
+									lowHit := InstructionSet.conditionLO
+								END;
+							END;
 
-							ASSERT(irLeft.type.form = IntermediateCode.SignedInteger);
+							(*
+								compare hi part (as float)
+								if hiHit then br dest
+								elsif hiFail then br fail
+								else compare low part (as unsigned int)
+									if lowHit then br dest
+									end
+								end,
+								fail:
+							*)
+
+							(* hi part *)
+							left[High] := RegisterFromIrOperand(irLeft, High, emptyOperand);
+							right[High] := RegisterOrImmediateFromIrOperand(irRight, High, emptyOperand);
+							Cmp(left[High], right[High], FALSE);
+							IF hiHit # None THEN
+								JmpDest(hiHit)
+							END;
+							IF hiFail # None THEN
+								NEW(fixupPatternList, 1);
+								fixupPatternList[0].offset := 0;
+								fixupPatternList[0].bits := 24;
+								identifier.name := in.name;
+								identifier.fingerprint := in.fingerprint;
+								failFixup := BinaryCode.NewFixup(BinaryCode.Relative, out.pc, identifier, irInstruction.op1.symbolOffset, -8, -2, fixupPatternList);
+								out.fixupList.AddFixup(failFixup);
+								Emit1WithCondition(opB, InstructionSet.NewImmediate(branchDistance), hiFail)
+							END;
+
+							(* low part *)
 							left[Low] := RegisterFromIrOperand(irLeft, Low, emptyOperand);
-							right[Low] := RegisterOrImmediateFromIrOperand(irRight, Low, emptyOperand);
-							temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
-							Emit3WithFlags(opSUB, temp, left[Low], right[Low], {InstructionSet.flagS});
-							left[High] := RegisterFromIrOperand(irLeft, High, left[Low]);
-							right[High] := RegisterOrImmediateFromIrOperand(irRight, High, right[Low]);
-							Emit3WithFlags(opSBC, temp, left[High], right[High], {InstructionSet.flagS}) (* the high part of the subtraction determines the sign *)
+							right[Low] := RegisterFromIrOperand(irRight, Low, emptyOperand);
+							Cmp(left[Low], right[Low], FALSE);
+
 
 						ELSE
 							HALT(100)
@@ -2925,12 +2999,6 @@ TYPE
 
 					ELSE
 						ASSERT((irLeft.type.form IN IntermediateCode.Integer) & (irLeft.type.sizeInBits <= 32));
-
-						(* swap operands if beneficial *)
-						IF ~IrOperandIsDirectlyEncodable(irRight, Low) & IrOperandIsDirectlyEncodable(irLeft, Low) THEN
-							isSwapped := TRUE;
-							SwapIrOperands(irLeft, irRight)
-						END;
 
 						left[Low] := RegisterFromIrOperand(irLeft, Low, emptyOperand);
 						right[Low] := RegisterOrImmediateFromIrOperand(irRight, Low, emptyOperand);

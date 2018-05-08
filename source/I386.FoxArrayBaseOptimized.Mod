@@ -34,9 +34,6 @@ CONST
 	cMatMulStride* = 3;  cMatMulBlocked* = 4;
 
 VAR
-	alignedC*, unalignedC*, singleC*: LONGINT;   (* counters for debugging and statistics *)
-	rejectMatMul*: LONGINT;
-	matAllocTime*, matCompTime*: LONGINT;
 	cBlockSize*: LONGINT;  nrProcesses*: LONGINT;
 	lastUsedBlockSize*: SIZE;
 
@@ -1221,9 +1218,6 @@ VAR
 		ADD	EDX, 8	;  now EDX IS 16 byte aligned	;
 		DEC	EAX	;  one element has been processed
 		aligned:
-		MOV	ESI, alignedC	;
-		INC	ESI	;
-		MOV	alignedC, ESI	;
 		aligned8:
 		CMP	EAX, 8	;
 		JL	aligned2	;  len < 4- > EXIT TO singlepieces
@@ -1263,9 +1257,6 @@ VAR
 		JMP	aligned2	;
 		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
 		unaligned: ;
-		MOV	ESI, unalignedC	;
-		INC	ESI	;
-		MOV	unalignedC, ESI	;
 		unaligned8: ;
 		CMP	EAX, 8	;
 		JL	unaligned2	;  len < 4- > EXIT TO singlepieces
@@ -1305,9 +1296,6 @@ VAR
 		JMP	unaligned2	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ESI, singleC	;
-		INC	ESI	;
-		MOV	singleC, ESI	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -1380,9 +1368,6 @@ VAR
 		CMP	ESI, 0	;
 		JNE	align	;
 		aligned:
-		MOV	ESI, alignedC	;
-		INC	ESI	;
-		MOV	alignedC, ESI	;
 		aligned16:
 		CMP	EAX, 16	;
 		JL	aligned4	;  len < 16- > EXIT TO singlepieces
@@ -1422,9 +1407,6 @@ VAR
 		JMP	aligned4	;
 		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
 		unaligned: ;
-		MOV	ESI, unalignedC	;
-		INC	ESI	;
-		MOV	unalignedC, ESI	;
 		unaligned16: ;
 		CMP	EAX, 16	;
 		JL	unaligned4	;  len < 4- > EXIT TO singlepieces
@@ -1464,9 +1446,6 @@ VAR
 		JMP	unaligned4	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ESI, singleC	;
-		INC	ESI	;
-		MOV	singleC, ESI	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -1571,9 +1550,6 @@ VAR
 		DEC	EAX	;  one element has been processed
 		;  LOOP FOR 4 pieces aligned
 		aligned:
-		MOV	ESI, alignedC	;
-		INC	ESI	;
-		MOV	alignedC, ESI	;
 		aligned6:
 		CMP	EAX, 6	;
 		JL	aligned2	;  len < 4- > EXIT TO singlepieces
@@ -1606,9 +1582,6 @@ VAR
 		SUB	EAX, 2	;
 		JMP	aligned2	;
 		unaligned:
-		MOV	ESI, unalignedC	;
-		INC	ESI	;
-		MOV	unalignedC, ESI	;
 		unaligned6:
 		CMP	EAX, 6	;
 		JL	unaligned2	;  len < 4- > EXIT TO singlepieces
@@ -1646,9 +1619,6 @@ VAR
 		ADDPD	XMM0, XMM1	;
 		JMP	singlepieces	;
 		single:
-		MOV	ESI, singleC	;
-		INC	ESI	;
-		MOV	singleC, ESI	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	store	;  len <= 0- > EXIT
@@ -1714,9 +1684,6 @@ VAR
 		CMP	ESI, 0	;
 		JNE	align	;
 		aligned:
-		MOV	ESI, alignedC	;
-		INC	ESI	;
-		MOV	alignedC, ESI	;
 		aligned12:
 		CMP	EAX, 12	;
 		JL	aligned4	;  len < 4- > EXIT TO singlepieces
@@ -1749,9 +1716,6 @@ VAR
 		SUB	EAX, 4	;
 		JMP	aligned4	;
 		unaligned:
-		MOV	ESI, unalignedC	;
-		INC	ESI	;
-		MOV	unalignedC, ESI	;
 		unaligned12:
 		CMP	EAX, 12	;
 		JL	unaligned4	;  len < 4- > EXIT TO singlepieces
@@ -1794,9 +1758,6 @@ VAR
 		SHUFPS	XMM0, XMM0, 1*2	;  dest 2- > dest 0
 		JMP	singlepieces	;
 		single:
-		MOV	ESI, singleC	;
-		INC	ESI	;
-		MOV	singleC, ESI	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	store	;  len <= 0- > EXIT
@@ -1950,9 +1911,6 @@ VAR
 		DEC	EAX	;  one element has been processed
 		;  LOOP FOR 8 pieces aligned(no better performance with 14 pieces!)
 		aligned:
-		MOV	ECX, alignedC	;
-		INC	ECX	;
-		MOV	alignedC, ECX	;
 		aligned8:
 		CMP	EAX, 8	;
 		JL	aligned2	;  len < 4- > EXIT TO singlepieces
@@ -1985,9 +1943,6 @@ VAR
 		JMP	aligned2	;
 		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
 		unaligned: ;
-		MOV	ECX, unalignedC	;
-		INC	ECX	;
-		MOV	unalignedC, ECX	;
 		unaligned8: ;
 		CMP	EAX, 8	;
 		JL	unaligned2	;  len < 12- > EXIT
@@ -2020,9 +1975,6 @@ VAR
 		JMP	unaligned2	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ECX, singleC	;
-		INC	ECX	;
-		MOV	singleC, ECX	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -2091,9 +2043,6 @@ VAR
 		CMP	ESI, 0	;
 		JNE	align	;
 		aligned:
-		MOV	ECX, alignedC	;
-		INC	ECX	;
-		MOV	alignedC, ECX	;
 		aligned16:
 		CMP	EAX, 16	;
 		JL	aligned4	;  len < 4- > EXIT TO singlepieces
@@ -2126,9 +2075,6 @@ VAR
 		JMP	aligned4	;
 		;  LOOP FOR 16 unaligned pieces(20 pieces not better!)
 		unaligned: ;
-		MOV	ECX, unalignedC	;
-		INC	ECX	;
-		MOV	unalignedC, ECX	;
 		unaligned16: ;
 		CMP	EAX, 16	;
 		JL	unaligned4	;  len < 12- > EXIT
@@ -2161,9 +2107,6 @@ VAR
 		JMP	unaligned4	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ECX, singleC	;
-		INC	ECX	;
-		MOV	singleC, ECX	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -2228,9 +2171,6 @@ VAR
 		DEC	EAX	;  one element has been processed
 		;  LOOP FOR 8 pieces aligned(no better performance with 14 pieces!)
 		aligned:
-		MOV	ECX, alignedC	;
-		INC	ECX	;
-		MOV	alignedC, ECX	;
 		aligned8:
 		CMP	EAX, 8	;
 		JL	aligned2	;  len < 4- > EXIT TO singlepieces
@@ -2273,9 +2213,6 @@ VAR
 		JMP	aligned2	;
 		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
 		unaligned: ;
-		MOV	ECX, unalignedC	;
-		INC	ECX	;
-		MOV	unalignedC, ECX	;
 		unaligned8: ;
 		CMP	EAX, 8	;
 		JL	unaligned2	;  len < 12- > EXIT
@@ -2318,9 +2255,6 @@ VAR
 		JMP	unaligned2	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ECX, singleC	;
-		INC	ECX	;
-		MOV	singleC, ECX	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -2393,9 +2327,6 @@ VAR
 		CMP	ESI, 0	;
 		JNE	align	;
 		aligned:
-		MOV	ECX, alignedC	;
-		INC	ECX	;
-		MOV	alignedC, ECX	;
 		aligned16:
 		CMP	EAX, 16	;
 		JL	aligned4	;  len < 4- > EXIT TO singlepieces
@@ -2438,9 +2369,6 @@ VAR
 		JMP	aligned4	;
 		;  LOOP FOR 16 unaligned pieces(20 pieces not better!)
 		unaligned: ;
-		MOV	ECX, unalignedC	;
-		INC	ECX	;
-		MOV	unalignedC, ECX	;
 		unaligned16: ;
 		CMP	EAX, 16	;
 		JL	unaligned4	;  len < 12- > EXIT
@@ -2483,9 +2411,6 @@ VAR
 		JMP	unaligned4	;
 		;  one piece left OR non-contiguous data
 		single:
-		MOV	ECX, singleC	;
-		INC	ECX	;
-		MOV	singleC, ECX	;
 		singlepieces: ;
 		CMP	EAX, 0	;
 		JLE	endL	;  len <= 0- > EXIT
@@ -6599,8 +6524,6 @@ VAR
 	END SetParameters;
 
 BEGIN
-	alignedC := 0;  unalignedC := 0;  singleC := 0;
-	matAllocTime := 0;  matCompTime := 0;
 	cBlockSize := 0;   (* automatic *)
 	nrProcesses := Machine.NumberOfProcessors();   (* automatic *)
 

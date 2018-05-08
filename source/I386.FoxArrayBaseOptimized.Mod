@@ -212,10 +212,10 @@ VAR
 
 	PROCEDURE -L1Block1XA( adrA, adrB, adrC: ADDRESS; K: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
-		MOV	EAX, [ESP+0]	;  K[EBP]	;  EAX IS counter
-		MOV	EDX, [ESP+4]	;  adrC[EBP]
-		MOV	ECX, [ESP+8]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EBX, [ESP+12]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
+		MOV	EAX, [ESP+K]	;  EAX IS counter
+		MOV	EDX, [ESP+adrC]
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
 		FLD	QWORD [EDX]	;  S.GET(dadr, x)
 		loop8:
 		CMP	EAX, 8
@@ -287,15 +287,15 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1XA;
 
-	PROCEDURE -L1Block1XSSE( adrA (*12*) , adrB (*8*) , adrC (*4*) : ADDRESS; K (*0*) : SIZE );
+	PROCEDURE -L1Block1XSSE( adrA, adrB, adrC: ADDRESS; K: SIZE );
 	(*
 		matrixA, matrixB must be stored in special format
 		K>0 guaranteed
 	*)
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
-		MOV	EBX, [ESP+12]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
-		MOV	ECX, [ESP+8]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EDX, [ESP+0]	;  K[EBP]	;  EDX IS counter
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EDX, [ESP+K]	;  EDX IS counter
 		XORPD	XMM2, XMM2	;
 		kLoop8: ;
 		CMP	EDX, 8	;
@@ -338,7 +338,7 @@ VAR
 		SUB	EDX, 2
 		JMP	kLoop2	;
 		horizontalAdd:
-		MOV	EDI, [ESP+4]	;  adrC[EBP]	;
+		MOV	EDI, [ESP+adrC]	;
 		MOVAPD	XMM1, XMM2	;
 		SHUFPD	XMM1, XMM1, 1	;  low bits < -high bits
 		ADDPD	XMM2, XMM1	;
@@ -348,15 +348,15 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1XSSE;
 
-	PROCEDURE -L1Block5XSSE( adrA (*16*) , adrB (*12*) , adrC (*8*): ADDRESS; IncC (*4*) , K (*0*) : SIZE );
+	PROCEDURE -L1Block5XSSE( adrA, adrB, adrC: ADDRESS; IncC, K: SIZE );
 	(*
 		matrixA and matrix B are stored in special format !
 		K > 0 is guaranteed
 	*)
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
-		MOV	EBX, [ESP+16]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
-		MOV	ECX, [ESP+12]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EDX, [ESP+0]	;  K[EBP]	;  EDX IS counter
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EDX, [ESP+K]	;  EDX IS counter
 		XORPD	XMM2, XMM2	;
 		XORPD	XMM3, XMM3	;
 		XORPD	XMM4, XMM4	;
@@ -487,8 +487,8 @@ VAR
 		SUB	EDX, 2
 		JMP	kLoop2	;
 		horizontalAdd: ;  add and store
-		MOV	EDI, [ESP+8]	;  adrC[EBP]	;
-		MOV	EAX, [ESP+4]	;  IncC[EBP]	;
+		MOV	EDI, [ESP+adrC]	;
+		MOV	EAX, [ESP+IncC]	;
 		MOVAPD	XMM1, XMM2	;
 		SHUFPD	XMM1, XMM1, 1	;  low bits < -high bits
 		ADDPD	XMM2, XMM1	;
@@ -522,12 +522,12 @@ VAR
 		ADD	ESP, 20	;
 	END L1Block5XSSE;
 
-	PROCEDURE -L1Block1RA( adrA, adrB, adrC: ADDRESS; K:SIZE );
+	PROCEDURE -L1Block1RA( adrA, adrB, adrC: ADDRESS; K: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
-		MOV	EAX, [ESP+0]	;  K[EBP]	;  EAX IS counter
-		MOV	EDX, [ESP+4]	;  adrC[EBP]
-		MOV	ECX, [ESP+8]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EBX, [ESP+12]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
+		MOV	EAX, [ESP+K]	;  EAX IS counter
+		MOV	EDX, [ESP+adrC]
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
 		FLD	DWORD [EDX]	;  S.GET(dadr, x)
 		loop16:
 		CMP	EAX, 16
@@ -647,15 +647,15 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1RA;
 
-	PROCEDURE -L1Block1RSSE( adrA (*12*) , adrB (*8*) , adrC (*4*): ADDRESS; K (*0*) : SIZE );
+	PROCEDURE -L1Block1RSSE( adrA, adrB, adrC: ADDRESS; K: SIZE );
 	(*
 		matrixA, matrixB must be stored in special format
 		K>0 guaranteed
 	*)
 	CODE {SYSTEM.i386, SYSTEM.SSE}
-		MOV	EBX, [ESP+12]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
-		MOV	ECX, [ESP+8]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EDX, [ESP+0]	;  K[EBP]	;  EDX IS counter
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EDX, [ESP+K]	;  EDX IS counter
 		XORPS	XMM2, XMM2	;
 		kLoop16: ;
 		CMP	EDX, 16	;
@@ -698,7 +698,7 @@ VAR
 		SUB	EDX, 4
 		JMP	kLoop4	;
 		horizontalAdd:
-		MOV	EDI, [ESP+4]	;  adrC[EBP]	;
+		MOV	EDI, [ESP+adrC]	;
 		MOVLHPS	XMM1, XMM2	;
 		ADDPS	XMM1, XMM2	;
 		SHUFPS	XMM2, XMM1, 48	;
@@ -710,15 +710,15 @@ VAR
 		ADD	ESP, 16	;
 	END L1Block1RSSE;
 
-	PROCEDURE -L1Block5RSSE( adrA (*16*) , adrB (*12*) , adrC (*8*): ADDRESS; IncC (*4*) , K (*0*) : SIZE );
+	PROCEDURE -L1Block5RSSE( adrA, adrB, adrC: ADDRESS; IncC, K: SIZE );
 	(*
 		matrixA and matrix B are stored in special format !
 		K > 0 is guaranteed
 	*)
 	CODE {SYSTEM.i386, SYSTEM.SSE}
-		MOV	EBX, [ESP+16]	;  adrA[EBP]	;  EBX IS POINTER TO data OF matrix A
-		MOV	ECX, [ESP+12]	;  adrB[EBP]	;  ECX IS POINTER TO data OF matrix B
-		MOV	EDX, [ESP+0]	;  K[EBP]	;  EDX IS counter
+		MOV	EBX, [ESP+adrA]	;  EBX IS POINTER TO data OF matrix A
+		MOV	ECX, [ESP+adrB]	;  ECX IS POINTER TO data OF matrix B
+		MOV	EDX, [ESP+K]	;  EDX IS counter
 		XORPS	XMM2, XMM2	;
 		XORPS	XMM3, XMM3	;
 		XORPS	XMM4, XMM4	;
@@ -848,8 +848,8 @@ VAR
 		SUB	EDX, 4
 		JMP	kLoop4	;
 		horizontalAdd: ;  add and store
-		MOV	EDI, [ESP+8]	;  adrC[EBP]	;
-		MOV	EAX, [ESP+4]	;  IncC[EBP]	;
+		MOV	EDI, [ESP+adrC]	;
+		MOV	EAX, [ESP+IncC]	;
 		MOVLHPS	XMM1, XMM2	;
 		ADDPS	XMM1, XMM2	;
 		SHUFPS	XMM2, XMM1, 48	;
@@ -895,27 +895,27 @@ VAR
 
 	PROCEDURE -Align4( adr: ADDRESS ): ADDRESS;
 	CODE {SYSTEM.i386}
-		MOV	EAX, [ESP]	;
+		MOV	EAX, [ESP+adr]	;
 		NEG	EAX	;
 		AND	EAX, 3H	;
-		ADD	EAX, [ESP]	;
+		ADD	EAX, [ESP+adr]	;
 		ADD	ESP, 4
 	END Align4;
 
 	PROCEDURE -Align2( adr: ADDRESS ): ADDRESS;
 	CODE {SYSTEM.i386}
-		MOV	EAX, [ESP]	;
+		MOV	EAX, [ESP+adr]	;
 		NEG	EAX	;
 		AND	EAX, 1H	;
-		ADD	EAX, [ESP]	;
+		ADD	EAX, [ESP+adr]	;
 		ADD	ESP, 4
 	END Align2;
 
 	PROCEDURE -ZeroR( adr: ADDRESS;  count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+4]	;  adr[EBP]	;  address OF dest index
-		MOV	ECX, [ESP+0]	;  count[EBP]	;  counter
+		MOV	EDI, [ESP+adr]	;  address OF dest index
+		MOV	ECX, [ESP+count]	;  counter
 		MOV	EAX, 0	;  value
 		CLD	;  incremental
 		REP	;
@@ -926,8 +926,8 @@ VAR
 	PROCEDURE -ZeroX( adr: ADDRESS;  count: SIZE );
 	(** For 64 bit types *)
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+4]	;  adr[EBP]	;  address OF dest index
-		MOV	ECX, [ESP+0]	;  count[EBP]	;  counter
+		MOV	EDI, [ESP+adr]	;  address OF dest index
+		MOV	ECX, [ESP+count]	;  counter
 		SHL	ECX, 1	;
 		MOV	EAX, 0	;  value
 		CLD	;  incremental
@@ -939,9 +939,9 @@ VAR
 	PROCEDURE -ZeroRI( adr: SIZE; inc, count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+8]	;  adr[EBP]	;  address OF dest index
-		MOV	EBX, [ESP+4]	;
-		MOV	ECX, [ESP+0]	;  count[EBP]	;  counter
+		MOV	EDI, [ESP+adr]	;  address OF dest index
+		MOV	EBX, [ESP+inc]	;
+		MOV	ECX, [ESP+count]	;  counter
 		CMP	EBX, 4	;
 		JE	fastzero	;
 		MOV	EAX, 0	;
@@ -964,9 +964,9 @@ VAR
 	PROCEDURE -ZeroXI( adr: ADDRESS; inc, count: SIZE );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+8]	;  adr[EBP]	;  address OF dest index
-		MOV	EBX, [ESP+4]	;
-		MOV	ECX, [ESP+0]	;  count[EBP]	;  counter
+		MOV	EDI, [ESP+adr]	;  address OF dest index
+		MOV	EBX, [ESP+inc]	;
+		MOV	ECX, [ESP+count]	;  counter
 		MOV	EAX, 0	;
 		CMP	EBX, 8	;
 		JE	fastzero	;
@@ -989,10 +989,10 @@ VAR
 
 	PROCEDURE -MovR( from, to0, frominc, count: SIZE );
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+8]	;  TO
-		MOV	ESI, [ESP+12]	;  from
-		MOV	ECX, [ESP+0]	;  count
-		MOV	EBX, [ESP+4]	;  inc
+		MOV	EDI, [ESP+to0]	;  TO
+		MOV	ESI, [ESP+from]	;  from
+		MOV	ECX, [ESP+count]	;  count
+		MOV	EBX, [ESP+frominc]	;  inc
 		CMP	EBX, 4	;
 		JE	fastmove	;
 		loopL:
@@ -1014,10 +1014,10 @@ VAR
 
 	PROCEDURE -MovX( from, to0: ADDRESS; frominc, count:SIZE );
 	CODE {SYSTEM.i386}
-		MOV	EDI, [ESP+8]	;  TO
-		MOV	ESI, [ESP+12]	;  from
-		MOV	ECX, [ESP+0]	;  count
-		MOV	EBX, [ESP+4]	;  inc
+		MOV	EDI, [ESP+to0]	;  TO
+		MOV	ESI, [ESP+from]	;  from
+		MOV	ECX, [ESP+count]	;  count
+		MOV	EBX, [ESP+frominc]	;  inc
 		CMP	EBX, 8	;
 		JE	fastmove	;
 		loopL:
@@ -1042,16 +1042,16 @@ VAR
 
 	PROCEDURE -MovR5( src: ADDRESS; inc, stride: SIZE; dest: ADDRESS; count: SIZE);
 	CODE {SYSTEM.i386}
-		MOV	ESI, [ESP+16]	;  src
-		MOV	EBX, [ESP+12]	;  inc
-		MOV	ECX, [ESP+8]	;  stride
-		MOV	EDI, [ESP+4]	;  dest
+		MOV	ESI, [ESP+src]	;  src
+		MOV	EBX, [ESP+inc]	;  inc
+		MOV	ECX, [ESP+stride]	;  stride
+		MOV	EDI, [ESP+dest]	;  dest
 		loopL:
-		MOV	EAX, [ESP]	;  count
+		MOV	EAX, [ESP+count]	;  count
 		CMP	EAX, 0	;
 		JLE	endL	;
 		SUB	EAX, 4	;
-		MOV	[ESP], EAX	;
+		MOV	[ESP+count], EAX	;
 		MOV	EDX, ESI	;
 		MOV	EAX, [EDX]	;
 		MOV	[EDI], EAX	;
@@ -1482,7 +1482,7 @@ VAR
 		endL:
 	END AddARARLoopSSE;
 
-	PROCEDURE SPAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*) : ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE SPAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1505,7 +1505,7 @@ VAR
 		FWAIT	;
 	END SPAXAXLoopA;
 
-	PROCEDURE SPARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE SPARARLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.FPU}
 		MOV	EAX, [EBP+len]	;  eax := len
 		MOV	EBX, [EBP+ladr]	;  ebx := ladr
@@ -1529,7 +1529,7 @@ VAR
 	END SPARARLoopA;
 
 (* sse version of scalar product *)
-	PROCEDURE SPAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE SPAXAXLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE2}
 		;  register initialization
 		MOV	EAX, [EBP+len]	;  EAX reserverd FOR length
@@ -1666,7 +1666,7 @@ VAR
 	END SPAXAXLoopSSE;
 
 (* sse version of scalar product *)
-	PROCEDURE SPARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE SPARARLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	CODE {SYSTEM.i386, SYSTEM.SSE}
 		;  register initialization
 		MOV	EAX, [EBP+len]	;  EAX reserverd FOR length
@@ -5119,46 +5119,46 @@ VAR
 	*)
 (******  matrix multiplication using fast scalar product ******)
 
-	PROCEDURE MatMulAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0D0 );   (* initialization of scalar product to 0 *)
 		SPAXAXLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulAXAXLoopA;
 
-	PROCEDURE MatMulAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulAXAXLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0D0 );   (* initialization of scalar product to 0 *)
 		SPAXAXLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulAXAXLoopSSE;
 
-	PROCEDURE MatMulARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulARARLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0E0 );   (* initialization of scalar product to 0 *)
 		SPARARLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulARARLoopA;
 
-	PROCEDURE MatMulARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulARARLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SYSTEM.PUT( dadr, 0.0E0 );   (* initialization of scalar product to 0 *)
 		SPARARLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulARARLoopSSE;
 
-	PROCEDURE MatMulIncAXAXLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulIncAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SPAXAXLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncAXAXLoopA;
 
-	PROCEDURE MatMulIncAXAXLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulIncAXAXLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SPAXAXLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncAXAXLoopSSE;
 
-	PROCEDURE MatMulIncARARLoopA( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulIncARARLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SPARARLoopA( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncARARLoopA;
 
-	PROCEDURE MatMulIncARARLoopSSE( ladr (*28*) , radr (*24*) , dadr (*20*): ADDRESS; linc (*16*) , rinc (*12*) , len (*8*) : SIZE );
+	PROCEDURE MatMulIncARARLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BEGIN
 		SPARARLoopSSE( ladr, radr, dadr, linc, rinc, len );   (* apply scalar product *)
 	END MatMulIncARARLoopSSE;

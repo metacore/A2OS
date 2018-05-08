@@ -66,8 +66,8 @@ TYPE
 				c := c.prev;
 			END;
 			IF c = last THEN
-				NEW( c );  SYSTEM.NEW( c.p, size + 12 );
-				c.adr := Align( SYSTEM.VAL( LONGINT, c.p ), 16 );
+				NEW( c );  SYSTEM.NEW( c.p, size + 16 );
+				c.adr := Align( c.p , 16 );
 				c.size := size;
 			ELSE
 				c.prev.next := c.next;
@@ -5095,13 +5095,13 @@ VAR
 	PROCEDURE MatMulHBlockR( MatrixA, MatrixB, MatrixC: ADDRESS;
 	  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 												    add: BOOLEAN );
-	VAR fromA, toA, fromB, toB: ADDRESS; BlockSize: SIZE;
+	VAR fromA, toA, fromB, toB: SIZE; BlockSize: SIZE;
 		(*
 		computation of C[i,j] = Sum{k=0..Cols-1} A[i,k]*B[j,k], i.e. A*B`
 	*)
 
-		PROCEDURE Block( fromA, toA, fromB, toB: ADDRESS );
-		VAR i, j: ADDRESS;  adrA, adrB, adrC: ADDRESS;
+		PROCEDURE Block( fromA, toA, fromB, toB: SIZE );
+		VAR i, j: SIZE;  adrA, adrB, adrC: ADDRESS;
 		BEGIN
 			FOR i := fromA TO toA - 1 DO
 				adrA := MatrixA + i * Stride;
@@ -5138,12 +5138,12 @@ VAR
 	PROCEDURE MatMulHBlockX( MatrixA, MatrixB, MatrixC: ADDRESS;
 		  (*inc=4*) Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE;
 												    add: BOOLEAN );
-	VAR fromA, toA, fromB, toB: ADDRESS; BlockSize: SIZE;
+	VAR fromA, toA, fromB, toB: SIZE; BlockSize: SIZE;
 		(*
 		computation of C[i,j] = Sum{k=0..Cols-1} A[i,k]*B[j,k], i.e. A*B`
 	*)
-		PROCEDURE Block( fromA, toA, fromB, toB: ADDRESS );
-		VAR adrA, adrB, adrC: ADDRESS; i, j: ADDRESS;
+		PROCEDURE Block( fromA, toA, fromB, toB: SIZE );
+		VAR adrA, adrB, adrC: ADDRESS; i, j: SIZE;
 		BEGIN
 			FOR i := fromA TO toA - 1 DO
 				adrA := MatrixA + i * Stride;
@@ -5202,7 +5202,7 @@ VAR
 	PROCEDURE MatMulARARTransposed( matrixA, matrixB, matrixC: ADDRESS;
 		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 																  add: BOOLEAN ): BOOLEAN;
-	VAR stride, adrB, adrC: ADDRESS;
+	VAR stride: SIZE; adrB, adrC: ADDRESS;
 		proc: POINTER TO ARRAY OF MatMulHObjR;
 		from, to0, i: SIZE;  cacheA, cacheB: Cache;
 		t: HUGEINT;
@@ -5259,7 +5259,7 @@ VAR
 	PROCEDURE MatMulAXAXTransposed( matrixA, matrixB, matrixC: ADDRESS;
 		 IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 																  add: BOOLEAN ): BOOLEAN;
-	VAR stride, adrB, adrC: ADDRESS;
+	VAR stride: SIZE; adrB, adrC: ADDRESS;
 		proc: POINTER TO ARRAY OF MatMulHObjX;
 		from, to0, i: SIZE;  cacheA, cacheB: Cache;
 		t: HUGEINT;

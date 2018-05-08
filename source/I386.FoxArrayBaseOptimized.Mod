@@ -2509,7 +2509,7 @@ VAR
 		MOV	EBX, [EBP+ladr]	;  EBX reserved for ladr
 		MOV	ESI, [EBP+radr]	;  ESI reserved for radr
 		MOV	EAX, [EBP+len]	;  EAX reserverd for length
-		MOV	ECX, stride[EBP]	;  ECX reserved for stride
+		MOV	ECX, [EBP+stride]	;  ECX reserved for stride
 		XORPD	XMM2, XMM2	;
 		XORPD	XMM3, XMM3	;
 		XORPD	XMM4, XMM4	;
@@ -2648,13 +2648,13 @@ VAR
 		JMP	singlepieces	;
 		store:
 		MOVSD	[EDX], XMM2	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSD	[EDX], XMM3	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSD	[EDX], XMM4	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSD	[EDX], XMM5	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSD	[EDX], XMM6	;
 		end:
 	END AlignedSPXSSE5;
@@ -2752,7 +2752,7 @@ VAR
 		MOV	EBX, [EBP+ladr]	;  EBX reserved for ladr
 		MOV	ESI, [EBP+radr]	;  ECX reserved for radr
 		MOV	EAX, [EBP+len]	;  EAX reserverd for length
-		MOV	ECX, stride[EBP]	;
+		MOV	ECX, [EBP+stride]	;
 		XORPS	XMM2, XMM2	;
 		XORPS	XMM3, XMM3	;
 		XORPS	XMM4, XMM4	;
@@ -2899,13 +2899,13 @@ VAR
 		JMP	singlepieces	;
 		store:
 		MOVSS	[EDX], XMM2	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSS	[EDX], XMM3	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSS	[EDX], XMM4	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSS	[EDX], XMM5	;
-		ADD	EDX, incd[EBP]	;
+		ADD	EDX, [EBP+incd]	;
 		MOVSS	[EDX], XMM6	;
 		end:
 	END AlignedSPRSSE5;
@@ -3085,7 +3085,7 @@ VAR
 		store:
 		MOVSS	[EDX], XMM0	;
 		ADD	EDX, [EBP+dinc]	;
-		ADD	EDI, stride[EBP]	;
+		ADD	EDI, [EBP+stride]	;
 		DEC	ESI	;
 		JMP	outerloop	;
 		end:

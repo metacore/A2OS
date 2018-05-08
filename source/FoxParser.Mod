@@ -289,7 +289,6 @@ TYPE
 
 		(** Get next symbol from scanner and store it in object-local variable 'symbol' *)
 		PROCEDURE NextSymbol*;
-		VAR comment: SyntaxTree.Comment;
 		BEGIN
 			(*
 				error := ~scanner.GetNextSymbol(symbol) OR error;
@@ -327,14 +326,12 @@ TYPE
 
 		(** Check if current symbol equals sym. If yes then return true, return false otherwise *)
 		PROCEDURE PeekB*(token: Scanner.Token): BOOLEAN;
-		VAR comment: SyntaxTree.Comment;
 		BEGIN
 			RETURN TokenB() = token
 		END PeekB;
 
 		(** Check if current symbol equals sym. If yes then return true, return false otherwise *)
 		PROCEDURE Peek*(token: Scanner.Token): BOOLEAN;
-		VAR comment: SyntaxTree.Comment;
 		BEGIN
 			SkipComments(FALSE);
 			RETURN Token() = token
@@ -1257,8 +1254,7 @@ TYPE
 		(** Code = {  any \ 'end' \ 'with' } ['with' {('in'|'out') StatementSequence}] . **)
 		PROCEDURE Code(outer: SyntaxTree.Statement): SyntaxTree.Code;
 		VAR startPos: Position; endPos, i ,len: LONGINT; codeString: Scanner.StringType; code: SyntaxTree.Code;
-			end: Scanner.Token; in, out: BOOLEAN; left, right: SyntaxTree.Identifier;
-			statements, rules: SyntaxTree.StatementSequence;
+			end: Scanner.Token; in, out: BOOLEAN; statements, rules: SyntaxTree.StatementSequence;
 		BEGIN
 			startPos := symbol.position;
 			end := scanner.SkipToEndOfCode(startPos.start, endPos, symbol);
@@ -1359,7 +1355,6 @@ TYPE
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			baseType: SyntaxTree.Type;
 			identifier: SyntaxTree.Identifier;
-			str: Scanner.StringType;
 			type: SyntaxTree.Type;
 			modifiers: SyntaxTree.Modifier;
 		BEGIN
@@ -2002,7 +1997,7 @@ TYPE
 			procedureType: SyntaxTree.ProcedureType;
 			operator: SyntaxTree.Operator;
 			access: SET;
-			i: LONGINT; ch: CHAR; position: Position;
+			i: LONGINT; position: Position;
 			modifiers: SyntaxTree.Modifier; (* nopov *)
 			isInline, forward: BOOLEAN;
 		BEGIN
@@ -2238,7 +2233,7 @@ TYPE
 
 		PROCEDURE Module*(): SyntaxTree.Module;
 		VAR moduleName, context: SyntaxTree.Identifier;  module: SyntaxTree.Module;  position: Position; isCellNet: BOOLEAN;
-			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; c: SyntaxTree.Comment;
+			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; (* c: SyntaxTree.Comment; *)
 		BEGIN
 			IF Trace THEN S( "Module" ) END;
 			position := symbol.position;

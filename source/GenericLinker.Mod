@@ -513,7 +513,7 @@ BEGIN
 END Header;
 
 PROCEDURE OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList);
-VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap;  version: LONGINT;
+VAR binary: BOOLEAN; poolMap: ObjectFile.PoolMap;  version: LONGINT;
 BEGIN
 	version := Header(reader, NIL, binary, poolMap, offers, requires);
 END OffersRequires;

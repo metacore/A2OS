@@ -122,7 +122,6 @@ TYPE
 		END InitTable;
 
 		PROCEDURE IndexByIdentifier*(identifier: IdentifierType): LONGINT;
-		VAR stringPoolIndex: LONGINT;
 		BEGIN
 			IF Has(identifier) THEN
 				RETURN GetInt(identifier)
@@ -528,7 +527,7 @@ TYPE
 		(* multiline indicates that a string may occupy more than one lines, either concatenated or via multi-strings " "  " "
 		*)
 		PROCEDURE GetString(VAR symbol: Symbol; multiLine, multiString, useControl: BOOLEAN);
-		VAR och: CHAR; error: BOOLEAN; done: BOOLEAN;
+		VAR och: CHAR; error: BOOLEAN;
 		CONST control = '\';
 
 			PROCEDURE Append(ch :CHAR);
@@ -1002,7 +1001,7 @@ TYPE
 		(** set the diagnostics mode of the scanner (diagnostics = NIL ==> no report) and reset the error state
 			intended for silent symbol peeeking after the end of a module *)
 		PROCEDURE ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics);
-		VAR b: BOOLEAN; d: Diagnostics.Diagnostics;
+		VAR d: Diagnostics.Diagnostics;
 		BEGIN
 			error := FALSE;
 			d := SELF.diagnostics; SELF.diagnostics := diagnostics; diagnostics := d;

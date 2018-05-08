@@ -1148,8 +1148,6 @@ TYPE
 			str: Scanner.StringType;
 			atype: SyntaxTree.ArrayType;
 			prev: SyntaxTree.Scope;
-			skip: BOOLEAN;
-			svalue: ARRAY 32 OF CHAR;
 			
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
@@ -6892,7 +6890,6 @@ TYPE
 		PROCEDURE VisitProcedure*(procedure: SyntaxTree.Procedure);
 		VAR super,proc: SyntaxTree.Procedure; record: SyntaxTree.RecordType;
 			procedureType: SyntaxTree.ProcedureType;
-			type: SyntaxTree.Type;
 			selfParameter: SyntaxTree.Parameter; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType: SyntaxTree.QualifiedType;
 			value: Basic.Integer;

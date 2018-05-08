@@ -1220,7 +1220,7 @@ TYPE
 	END ModuleFileName;
 	
 	PROCEDURE ModuleSectionIdentifier*(name, context: SyntaxTree.Identifier): SyntaxTree.Identifier;
-	VAR s,n: SyntaxTree.IdentifierString; 
+	VAR n: SyntaxTree.IdentifierString; 
 	BEGIN
 		IF context # SyntaxTree.invalidIdentifier THEN
 			GetModuleSectionName(name, context, n);
@@ -1255,13 +1255,11 @@ TYPE
 	END ContextFromName;
 
 	PROCEDURE GetModuleName*(module: SyntaxTree.Module; VAR name: ARRAY OF CHAR);
-	VAR n: SyntaxTree.IdentifierString;
 	BEGIN
 		GetModuleSectionName(module.name, module.context, name);
 	END GetModuleName;
 
 	PROCEDURE GetModuleSegmentedName*(module: SyntaxTree.Module; VAR name: Basic.SegmentedName);
-	VAR moduleName: SyntaxTree.IdentifierString;
 	BEGIN
 		name[0] := ModuleSectionIdentifier(module.name, module.context);
 		name[1] := -1;
@@ -1290,7 +1288,6 @@ TYPE
 		END GetSymbolScope;
 
 		PROCEDURE FindSymbol(name: SyntaxTree.Identifier): SyntaxTree.Symbol;
-		VAR symbols: SyntaxTree.Symbol;
 		BEGIN
 			IF scope = scope.ownerModule.moduleScope THEN
 				symbol := scope.ownerModule.moduleScope.ImportByModuleName(name, scope.ownerModule.context);
@@ -1366,7 +1363,7 @@ TYPE
 	END GetSymbolName;
 
 	PROCEDURE GetSymbolSegmentedNameInScope*(symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope; VAR pooledName: Basic.SegmentedName);
-	VAR n: SyntaxTree.String; td: SyntaxTree.TypeDeclaration; i: LONGINT;
+	VAR td: SyntaxTree.TypeDeclaration; i: LONGINT;
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
 		BEGIN
 			IF scope = NIL THEN (* do nothing, locally declared temporary symbol *)
@@ -1465,7 +1462,6 @@ TYPE
 	END MinFloat;
 
 	PROCEDURE ConvertSet*(this: Basic.Set; bits: LONGINT): Basic.Set;
-	VAR i: LONGINT;
 	BEGIN
 		WHILE bits <= MAX (Basic.Set) DO EXCL (this, bits); INC (bits) END;
 		RETURN this;

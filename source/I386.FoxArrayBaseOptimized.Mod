@@ -4770,7 +4770,7 @@ VAR
 				 M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE;
 										  IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE;
 										  add: BOOLEAN );
-	VAR lenA, lenB, len: SIZE; adrA, adrB, adrC: ADDRESS;  m: SIZE;
+	VAR lenA, lenB: SIZE; adrA, adrB, adrC: ADDRESS;  m: SIZE;
 		M1, M2, i: SIZE;  val: REAL;  inc: SIZE;
 		obj: POINTER TO ARRAY OF MultiplyObjectR;
 		t: HUGEINT;  cache: Cache;

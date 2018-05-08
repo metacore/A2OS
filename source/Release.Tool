@@ -730,6 +730,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
 	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
+	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"

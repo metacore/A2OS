@@ -4725,7 +4725,7 @@ TYPE
 			ASSERT(v # NIL);
 			ASSERT(after # NIL);
 			v.nextVariable := after.nextVariable;
-			after.nextVariable := v.nextVariable;
+			after.nextVariable := v;
 			IF after = lastVariable THEN lastVariable := v END; 
 		END InsertVariable;
 

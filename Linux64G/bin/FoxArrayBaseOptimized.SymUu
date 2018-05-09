@@ -1,0 +1,246 @@
+MODULE FoxArrayBaseOptimized;
+	IMPORT SYSTEM, ArrayBase := FoxArrayBase, Machine, KernelLog, Commands;
+CONST 
+	L2CacheSize = (512 * 1024); 
+	L1BlockN = 5; 
+	L2BARatio = 1; 
+	L0BlockKR = 4; 
+	L1MaxBlockKR = 336; 
+	L2BlockSize = 81920; 
+	L0BlockKX = 2; 
+	L1MaxBlockKX = 256; 
+	debug = FALSE; 
+	parallel = TRUE; 
+	SSE = TRUE; 
+	MaxCachePoolSize = 0; 
+	maxProcesses = 32; 
+	cMatMulDynamic* =  -1; 
+	cMatMulScalarProduct* = 0; 
+	cMatMulNaive* = 1; 
+	cMatMulTransposed* = 2; 
+	cMatMulStride* = 3; 
+	cMatMulBlocked* = 4; 
+TYPE 
+	Cache = POINTER TO RECORD 
+		p: ANY; 
+		adr: ADDRESS; 
+		size: SIZE; 
+		prev, next: Cache; 
+	END; 
+
+	CachePool = OBJECT {EXCLUSIVE} 
+	VAR 
+		first, last: Cache; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Acquire(size: SIZE): Cache; 
+		PROCEDURE ^ Release(c: Cache); 
+	END CachePool; 
+
+	ComputationObj = OBJECT {EXCLUSIVE} 
+	VAR 
+		done: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Compute; 
+		PROCEDURE ^ Wait; 
+	BEGIN{ACTIVE, EXCLUSIVE} 
+	END ComputationObj; 
+
+	MatMulHObjR = OBJECT {EXCLUSIVE} (ComputationObj)
+	VAR 
+		MatrixA, MatrixB, MatrixC: ADDRESS; 
+		Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; 
+		add: BOOLEAN; 
+
+		PROCEDURE ^  & InitR*(MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; add: BOOLEAN); 
+		PROCEDURE ^ Compute; 
+	END MatMulHObjR; 
+
+	MatMulHObjX = OBJECT {EXCLUSIVE} (ComputationObj)
+	VAR 
+		MatrixA, MatrixB, MatrixC: ADDRESS; 
+		Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; 
+		add: BOOLEAN; 
+
+		PROCEDURE ^  & InitX*(MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; add: BOOLEAN); 
+		PROCEDURE ^ Compute; 
+	END MatMulHObjX; 
+
+	MultiplyObjectR = OBJECT {EXCLUSIVE} (ComputationObj)
+	VAR 
+		adrA, adrB: ADDRESS; 
+		C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE; 
+		start, finished: BOOLEAN; 
+
+		PROCEDURE ^  & InitR*(adrA, adrB: ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE); 
+		PROCEDURE ^ Compute; 
+	END MultiplyObjectR; 
+
+	MultiplyObjectX = OBJECT {EXCLUSIVE} (ComputationObj)
+	VAR 
+		adrA, adrB: ADDRESS; 
+		C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE; 
+		start, finished: BOOLEAN; 
+
+		PROCEDURE ^  & InitX*(adrA, adrB: ADDRESS; C, M, N, K, IncC, StrideC, L2BlockM, L2BlockN, L2BlockK: SIZE); 
+		PROCEDURE ^ Compute; 
+	END MultiplyObjectX; 
+VAR 
+	cBlockSize*: LONGINT; 
+	nrProcesses*: LONGINT; 
+	lastUsedBlockSize*: SIZE; 
+	allocT-, copyT-, zeroT-, compT-: HUGEINT; 
+	cachePool: CachePool; 
+
+	PROCEDURE {FingerPrint(2113020961)}  - L1Block1XA(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	CODE
+	END L1Block1XA; 
+	PROCEDURE {FingerPrint(-1118880696)}  - L1Block1XSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	CODE
+	END L1Block1XSSE; 
+	PROCEDURE {FingerPrint(-820878638)}  - L1Block5XSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
+	CODE
+	END L1Block5XSSE; 
+	PROCEDURE {FingerPrint(1209696010)}  - L1Block1RA(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	CODE
+	END L1Block1RA; 
+	PROCEDURE {FingerPrint(-1118885816)}  - L1Block1RSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	CODE
+	END L1Block1RSSE; 
+	PROCEDURE {FingerPrint(-904764718)}  - L1Block5RSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
+	CODE
+	END L1Block5RSSE; 
+	PROCEDURE {FingerPrint(-456874700)}  - Align4(adr: ADDRESS): ADDRESS;
+	CODE
+	END Align4; 
+	PROCEDURE {FingerPrint(-456868556)}  - Align2(adr: ADDRESS): ADDRESS;
+	CODE
+	END Align2; 
+	PROCEDURE {FingerPrint(-1943211689)}  - ZeroR(adr: ADDRESS; count: SIZE);
+	CODE
+	END ZeroR; 
+	PROCEDURE {FingerPrint(-2043874985)}  - ZeroX(adr: ADDRESS; count: SIZE);
+	CODE
+	END ZeroX; 
+	PROCEDURE {FingerPrint(-2054443377)}  - ZeroRI(adr: SIZE; inc, count: SIZE);
+	CODE
+	END ZeroRI; 
+	PROCEDURE {FingerPrint(-2054492489)}  - ZeroXI(adr: ADDRESS; inc, count: SIZE);
+	CODE
+	END ZeroXI; 
+	PROCEDURE {FingerPrint(-1484795167)}  - MovR(from, to0, frominc, count: SIZE);
+	CODE
+	END MovR; 
+	PROCEDURE {FingerPrint(-1479421223)}  - MovX(from, to0: ADDRESS; frominc, count: SIZE);
+	CODE
+	END MovX; 
+	PROCEDURE {FingerPrint(1698786545)}  - MovR5(src: ADDRESS; inc, stride: SIZE; dest: ADDRESS; count: SIZE);
+	CODE
+	END MovR5; 
+	PROCEDURE ^ AddAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ AddARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ AddAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ AddARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ SPAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ SPARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ SPAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ SPARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MulAXSXLoopA(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ MulARSRLoopA(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ IncMulAXSXLoopA(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ IncMulARSRLoopA(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ MulAXSXLoopSSE(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ MulARSRLoopSSE(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ IncMulAXSXLoopSSE(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ IncMulARSRLoopSSE(ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ AlignedSPXSSE(ladr, radr, dadr: ADDRESS; len: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ AlignedSPRSSE(ladr, radr, dadr: ADDRESS; len: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ Copy4(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ Copy8(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
+	PROCEDURE ^ Transpose4A(ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
+	PROCEDURE ^ Transpose4(ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
+	PROCEDURE ^ Transpose8(ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
+	PROCEDURE ^ Transpose8A(ladr, dadr: ADDRESS; lstride, linc, dstride, dinc, rows, cols: SIZE); 
+	PROCEDURE ^ SSEMul24BlockR(VAR CbFirst: SIZE; StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul12BlockX(VAR CbFirst: SIZE; StrideA, StrideB, StrideC, Ca, Ra, Cb, Rb: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul16BlockR(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul8BlockX(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul8BlockR(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul4BlockX(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul4BlockR(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ SSEMul2BlockX(StrideA, StrideB, StrideC, Ca, Ra, CbFrom: SIZE; matrixA, matrixB, matrixC: ADDRESS; add: BOOLEAN); 
+	PROCEDURE ^ MagicBlockR(M, N, K: SIZE; VAR L2BlockM, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE ^ MagicBlockX(M, N, K: SIZE; VAR L2BlockM, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE ^ DispCR(adrM: ADDRESS; inc, stride, M, N: SIZE); 
+	PROCEDURE ^ DispCX(adrM: ADDRESS; inc, stride, M, N: SIZE); 
+	PROCEDURE ^ L3BlockX(matrixA, matrixB, matrixC: ADDRESS; M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE ^ L3BlockR(matrixA, matrixB, matrixC: ADDRESS; M, N, K, incC, strideC, L2BlockM, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE ^ Align(adr: ADDRESS; align: SIZE): ADDRESS; 
+	PROCEDURE ^ CopyAX(matrixA, dest: ADDRESS; IncA, StrideA: SIZE; K, M, L2BlockK, L2BlockM: SIZE); 
+	PROCEDURE ^ CopyAR(matrixA, dest: ADDRESS; IncA, StrideA: SIZE; K, M, L2BlockK, L2BlockM: SIZE); 
+	PROCEDURE ^ CopyBX(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE ^ CopyBR(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
+	PROCEDURE {FingerPrint(1951090261)}  - GetTimer(): HUGEINT;
+	CODE
+	END GetTimer; 
+	PROCEDURE ^ Tic(VAR t: HUGEINT); 
+	PROCEDURE ^ Toc(VAR t, addto: HUGEINT); 
+	PROCEDURE ^ MultiplyX(A, B, C: ADDRESS; M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE; IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ MultiplyR(A, B, C: ADDRESS; M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE; IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ MatMulAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulIncAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulIncAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulIncARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulIncARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
+	PROCEDURE ^ MatMulHBlockR(MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ MatMulHBlockX(MatrixA, MatrixB, MatrixC: ADDRESS; Stride, IncC, StrideC, RowsA, RowsB, Cols: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ CopyDataR(src, dest: ADDRESS; incSrc, strideSrc, incDest, strideDest, rows, cols: SIZE); 
+	PROCEDURE ^ CopyDataX(src, dest: ADDRESS; incSrc, strideSrc, incDest, strideDest, rows, cols: SIZE); 
+	PROCEDURE ^ MatMulARARTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulAXAXTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulARARSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulAXAXSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulARARNaiive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ MatMulAXAXNaiive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE; add: BOOLEAN); 
+	PROCEDURE ^ BestMethod(M, N, K: SIZE): LONGINT; 
+	PROCEDURE ^ MatMulR(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulX(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncR(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncX(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulARARBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulAXAXBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MatMulRNaive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulXNaive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncRNaive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncXNaive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulXTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncXTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulRTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncRTransposed(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulXSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncXSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulRSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncRSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulRBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncRBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulXBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ MatMulIncXBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
+	PROCEDURE ^ SetMatMulMethod*(i: LONGINT); 
+	PROCEDURE ^ MatMulR2x2(dadr, ladr, radr: ADDRESS); 
+	PROCEDURE ^ MatMulR3x3(dadr, ladr, radr: ADDRESS); 
+	PROCEDURE ^ MatMulR4x4(dadr, ladr, radr: ADDRESS); 
+	PROCEDURE ^ MatVecMulR2x2(dadr, ladr, radr: ADDRESS); 
+	PROCEDURE ^ MatVecMulR4x4(dadr, ladr, radr: ADDRESS); 
+	PROCEDURE ^ InstallMatMul*(context: Commands.Context); 
+	PROCEDURE ^ InstallAsm*; 
+	PROCEDURE ^ InstallSSE*; 
+	PROCEDURE ^ InstallSSE2*; 
+	PROCEDURE ^ InstallSSE3*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ SetParameters*(context: Commands.Context); 
+BEGIN
+END FoxArrayBaseOptimized.

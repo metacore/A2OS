@@ -2,7 +2,7 @@
 MODULE Clipboard;	(** AUTHOR "G.F."; PUROSE "X11 clipboard interface";  *)
 
 IMPORT	SYSTEM, Unix, Machine, X11, X11Api, Displays, XDisplay, Plugins, Log := KernelLog, 
-		Modules, Texts, TextUtilities, Strings, HostClipboard, Objects;
+		Modules, Texts, TextUtilities, Strings, HostClipboard, Objects, Commands, Options;
 
 CONST  
 	BufferSize = 2000H;
@@ -249,8 +249,6 @@ VAR
 		xdisp := disp.xdisp;  
 		primary := disp.primary;  
 		secondary := disp.secondary;
-		clipboard := X11.InternAtom(xdisp,ADDRESSOF("CLIPBOARD"),1); 
-		(*clipboard := X11.XAPRIMARY;*)
 	END GetXDisplay;
 
 	(* set Selection handlers to NIL *)
@@ -270,31 +268,39 @@ VAR
 	END Cleanup;
 
 
-	PROCEDURE Install*;
+	PROCEDURE Install*(context: Commands.Context);
+	VAR options: Options.Options;
 	BEGIN
+		NEW(options);
+		options.Add("p","primary", Options.String);
 		IF Unix.Version = "Darwin" THEN
 			Log.String( "Can't register the X11 clipboard in the Darwin port (ABI incompatiblity)" ); Log.Ln
 		ELSE
-			GetXDisplay;  
-			X11Api.SendSelection := SendSelection;
-			X11Api.ReceiveSelection := ReceiveSelection;
-			X11Api.ClearSelection := ClearSelection;
-			
-			Machine.Acquire( Machine.X11 );
-			myProperty := X11.InternAtom( xdisp, ADDRESSOF("UNICODE"), X11.False );
-			Machine.Release( Machine.X11 );
-			
-			NEW( sendBuffer );  NEW( recBuffer );  slen := 0;  rlen := 0;
-			NEW( utf8Buffer );  ulen := 0;
-			
-			(* register with AosText clipboard *)
-			Texts.clipboard.onTextChanged.Add( ClipboardChanged );
-			HostClipboard.SetHandlers( GetFromClipboard, PutToClipboard );
-			
-			NEW( grabber );
-			
-			Modules.InstallTermHandler( Cleanup );
-			Log.Enter; Log.String("X11 clipboard registered at host clipboard interface."); Log.Exit;
+			IF options.Parse(context.arg, context.error) THEN
+				GetXDisplay;  
+				X11Api.SendSelection := SendSelection;
+				X11Api.ReceiveSelection := ReceiveSelection;
+				X11Api.ClearSelection := ClearSelection;
+				
+				Machine.Acquire( Machine.X11 );
+				myProperty := X11.InternAtom( xdisp, ADDRESSOF("UNICODE"), X11.False );
+				clipboard := X11.InternAtom(xdisp,ADDRESSOF("CLIPBOARD"),1); 
+				Machine.Release( Machine.X11 );
+				
+				IF options.GetFlag("primary") THEN clipboard := X11.XAPRIMARY END; 
+				
+				NEW( sendBuffer );  NEW( recBuffer );  slen := 0;  rlen := 0;
+				NEW( utf8Buffer );  ulen := 0;
+				
+				(* register with AosText clipboard *)
+				Texts.clipboard.onTextChanged.Add( ClipboardChanged );
+				HostClipboard.SetHandlers( GetFromClipboard, PutToClipboard );
+				
+				NEW( grabber );
+				
+				Modules.InstallTermHandler( Cleanup );
+				Log.Enter; Log.String("X11 clipboard registered at host clipboard interface."); Log.Exit;
+			END;
 		END
 	END Install;
 

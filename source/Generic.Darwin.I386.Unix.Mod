@@ -76,7 +76,8 @@ CONST
 	rdonly* = {};  rdwr* = {1};  creat* = {6};  trunc* = {9};
 
 	(* access modes *)
-	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};
+(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -161,11 +162,9 @@ TYPE
 	Sigset = ARRAY 4 OF CHAR;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
-	pid_t*		= LONGINT;
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
-	off_t*		= HUGEINT;
 
 
 CONST
@@ -230,14 +229,13 @@ CONST
 	B200*	= 200;
 	B300*	= 300;
 	B600*	= 600;
-	B1200*		= 1200;
-	B1800*		= 1800;
-	B2400*		= 2400;
-	B4800*		= 4800;
-	B9600*		= 9600;
+	B1200*	= 1200;
+	B1800*	= 1800;
+	B2400*	= 2400;
+	B4800*	= 4800;
+	B9600*	= 9600;
 	B19200*	= 19200;
 	B38400*	= 38400;
-
 	B57600*	= 57600;
 	B115200*	= 115200;
 	B230400*	= 230400;
@@ -250,7 +248,7 @@ CONST
 	   CS7*		= {9}; 	(* 7 bits *)
 	   CS8*		= {8,9};	(* 8 bits *)
 	CSTOPB*	= {10};	(* send 2 stop bits *)
-	CREAD*	= {11};	(* enable receiver *)
+	CREAD*		= {11};	(* enable receiver *)
 	PARENB*	= {12};	(* parity enable *)
 	PARODD*	= {13};	(* odd parity, else even *)
 	HUPCL*		= {14};	(* hang up on last close *)
@@ -268,8 +266,16 @@ TYPE
 
 
 TYPE
-	dev_t* = LONGINT;
-	ino_t* = LONGINT;
+	dev_t*		= LONGINT;
+	ino_t*		= LONGINT;
+	nlink_t*	= INTEGER;
+	mode_t*	= INTEGER;
+	off_t*		= HUGEINT;
+	blksize_t*= LONGINT;
+	blkcnt_t*	= HUGEINT;
+	uid_t*		= LONGINT;
+	gid_t*		= LONGINT;
+	pid_t*		= LONGINT;
 
 	Status* = RECORD
 				dev-		: dev_t;
@@ -325,7 +331,7 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 	Dirent* = POINTER TO RECORD
-				ino-		: ino_t;
+				ino-		: LONGINT;
 				reclen-	: INTEGER;
 				typ-		: SHORTINT;
 				namlen-	: SHORTINT;
@@ -355,17 +361,18 @@ TYPE
 				r_trapno-		: LONGINT;
 				r_err-			: LONGINT;
 				r_faultvaddr-	: ADDRESS;
+				
 				r_ax-			: ADDRESS;
 				r_bx-			: ADDRESS;
 				r_cx-			: ADDRESS;
 				r_dx-			: ADDRESS;
 				r_di-			: ADDRESS;
 				r_si-			: ADDRESS;
-				r_bp*			: ADDRESS;
-				r_sp*			: ADDRESS;
+				r_bp-			: ADDRESS;
+				r_sp-			: ADDRESS;
 				r_ss-			: ADDRESS;
 				r_flags-		: ADDRESS;
-				r_pc*			: ADDRESS;
+				r_pc-			: ADDRESS;
 				r_cs-			: ADDRESS;
 				r_ds-			: ADDRESS;
 				r_es-			: ADDRESS;
@@ -475,7 +482,7 @@ VAR
 	pread-		: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE; pos: off_t ): SIZE;
 	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
 	pwrite-		: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE; pos: off_t ): SIZE;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags, mode: SET ): LONGINT;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET;  mode: mode_t ): LONGINT;
 	close-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
 	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset: off_t; origin: LONGINT ): off_t;
 	fsync-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
@@ -490,7 +497,7 @@ VAR
 	realpath-	: PROCEDURE {C} (file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: off_t ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
 	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;

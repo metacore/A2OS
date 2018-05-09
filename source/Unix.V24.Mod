@@ -57,7 +57,7 @@ TYPE
 				res := Serials.WrongData;  RETURN;
 			END;
 
-			fd := Unix.open( ADDRESSOF(portname), Unix.rdwr, {} );
+			fd := Unix.open( ADDRESSOF(portname), Unix.rdwr, 0 );
 			IF fd = -1 THEN  
 				fd := 0;  res := Serials.NoSuchPort;  RETURN 
 			END;
@@ -133,8 +133,9 @@ TYPE
 		END Available;
 
 		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: LONGINT );
+		VAR r: SIZE;
 		BEGIN	
-			res := Unix.read( fd, ADDRESSOF(ch), 1);
+			r := Unix.read( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
 			IF res = 1 THEN 
 				INC( charactersReceived );
 				res := Serials.Ok;
@@ -145,8 +146,9 @@ TYPE
 
 		(** Send - Send a byte to the specified port.  Waits until buffer space is available.  res = 0 iff ok. *)		
 		PROCEDURE SendChar*( ch: CHAR;  VAR res: LONGINT );
+		VAR r: SIZE;
 		BEGIN
-			res := Unix.write( fd, ADDRESSOF(ch), 1);
+			r := Unix.write( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
 			IF res = 1 THEN 
 				INC( charactersSent );
 				res := Serials.Ok;
@@ -156,9 +158,10 @@ TYPE
 		END SendChar;
 
 		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT );
+		VAR r: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
-			res := Unix.write( fd, ADDRESSOF(buf[ofs]), len );
+			r := Unix.write( fd, ADDRESSOF(buf[ofs]), len );  res := LONGINT(r);
 			IF res < 0 THEN 
 				res := Serials.TransportError;
 			ELSE	
@@ -168,7 +171,7 @@ TYPE
 		END Send;
 
 		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
-		VAR i, l, read: LONGINT;
+		VAR i, l: LONGINT;  read: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
 			ASSERT ( LEN( buf ) >= ofs + min );   (* array bound check not implemented in Kernel32.ReadFile *)
@@ -179,7 +182,7 @@ TYPE
 				IF  l > 0 THEN
 					read := Unix.read(fd, ADDRESSOF(buf[i]), l );
 					IF  read = l  THEN
-						charactersReceived := charactersReceived + read;
+						charactersReceived := charactersReceived + LONGINT(read);
 						DEC( min, l );  DEC( size, l );  INC( len, l );  INC( i, l );
 					ELSE
 						(* If we've already received <min> bytes, <res> will become Serials.Ok later *)

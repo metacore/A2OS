@@ -150,10 +150,11 @@ CONST
 	
 		
 	(* open flags *)
-	rdonly* = {};  rdwr* = {1};  creat* = {8};  trunc* = {9};
+	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({8});  trunc* = SET32({9});
 
 	(* access modes *)
-	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};
+(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;  
 	
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -474,19 +475,19 @@ VAR
 	pthread_sigmask	: PROCEDURE {C} ( how: LONGINT; set: ADDRESS; oldset: ADDRESS ): LONGINT;
 	
 	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
-	posix_spawnp- 	: PROCEDURE{C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
+	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
 	(*more restrictive than spawnp*)
-	posix_spawn- 	: PROCEDURE{C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
-	waitpid-			: PROCEDURE{C} ( pid: pid_t; status: ADDRESS; options: LONGINT ): pid_t;
-	pipe-				: PROCEDURE{C} ( pipefd: ADDRESS ): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)	
-	dup2-				: PROCEDURE{C} ( oldfd,newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
-	dup-				: PROCEDURE{C} ( oldfd: LONGINT ): LONGINT;
+	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
+	waitpid-			: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: LONGINT ): pid_t;
+	pipe-				: PROCEDURE {C} ( pipefd: ADDRESS ): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)	
+	dup2-				: PROCEDURE {C} ( oldfd,newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
+	dup-				: PROCEDURE {C} ( oldfd: LONGINT ): LONGINT;
 	
-	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags, mode: SET ): LONGINT;
+	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
+	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET32;  mode: mode_t ): LONGINT;
 	close-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
-	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset: LONGWORD; origin: WORD ): LONGWORD;
+	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset: off_t; origin: WORD ): off_t;
 	fsync-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
 	ioctl-			: PROCEDURE {C} ( fd: LONGINT; request: LONGINT; arg: ADDRESS ): LONGINT;
 	unlink-		: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
@@ -499,7 +500,7 @@ VAR
 	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 	
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
 	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;

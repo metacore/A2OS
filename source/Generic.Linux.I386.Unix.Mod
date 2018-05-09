@@ -76,7 +76,8 @@ CONST
 	rdonly* = {};  rdwr* = {1};  creat* = {6};  trunc* = {9};
 
 	(* access modes *)
-	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};
+(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH; 
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -463,7 +464,7 @@ VAR
 
 	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
 	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags, mode: SET ): LONGINT;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET; mode: mode_t ): LONGINT;
 	close-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
 	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset, origin: SIZE ): LONGINT;
 	fsync-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
@@ -475,10 +476,10 @@ VAR
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
-	realpath-	: PROCEDURE {C} (file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
+	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
 	xstat-			: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;

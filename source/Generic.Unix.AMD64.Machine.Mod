@@ -846,14 +846,14 @@ END GetTimer;
 	END CPUSpeed;
 	
 	PROCEDURE Log( c: CHAR );
-	VAR ignore: LONGINT;
+	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( 1, ADDRESSOF( c ), 1 );
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END Log;
 	
 	PROCEDURE LogFileOnly( c: CHAR );
-	VAR ignore: LONGINT;
+	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END LogFileOnly;

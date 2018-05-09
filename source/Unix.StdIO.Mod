@@ -44,37 +44,28 @@ BEGIN
 END Args;
 
 PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
-VAR ures,i,err: LONGINT;
+VAR ures: HUGEINT;  i, err: LONGINT;
 BEGIN
 	len := 0;
 	REPEAT
 		ures := Unix.read( 0, ADDRESSOF( data[ofs] ), size );
-		IF ures > 0 THEN  INC( ofs, ures );  DEC( size, ures );  INC( len, ures )  END;
+		IF ures > 0 THEN  
+			INC( ofs, LONGINT(ures) );  DEC( size, LONGINT(ures) );  INC( len, LONGINT(ures) )  
+		END;
 		IF ures < 0 THEN err := Unix.errno() END;
 	UNTIL (len >= min) OR ((ures <= 0) & (err # Unix.EINTR) & (err # 0));
 	IF len >= min THEN  res := Streams.Ok  ELSE  res := Streams.EOF  END;
-	(*
-	TRACE(len, size, min, ures, Unix.errno(),err);
-	IF len < min THEN
-		Unix.Perror("receive: ")
-	END;
-	Trace.String("received: "); 
-	FOR i := ofs-len TO ofs-1 DO
-		Trace.Char(data[i]); 
-	END;
-	Trace.Ln;
-	*)
 END ReceiveStdin;
 
 PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: LONGINT );
-VAR ignore: LONGINT;
+VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 1, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok
 END SendStdout;
 
 
 PROCEDURE SendErrout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: LONGINT );
-VAR ignore: LONGINT;
+VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 2, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok
 END SendErrout;

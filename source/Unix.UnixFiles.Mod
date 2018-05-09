@@ -259,7 +259,7 @@ TYPE
 
 				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
 				VAR f: File;  stat: Unix.Status;  fd, r, pos: LONGINT; 
-					oflags: SET;  nextdir, path: Filename; 
+					oflags: SET32;  nextdir, path: Filename; 
 				BEGIN  {EXCLUSIVE}
 					IF name = "" THEN  RETURN NIL  END;
 					
@@ -276,7 +276,7 @@ TYPE
 						IF r >= 0 THEN
 							r := Unix.access( ADDRESSOF( path ), Unix.W_OK );
 							IF r < 0 THEN  oflags := Unix.rdonly  ELSE  oflags := Unix.rdwr  END;
-							fd := UnixOpen( ADDRESSOF( path ), oflags, {} );
+							fd := UnixOpen( ADDRESSOF( path ), oflags, 0 );
 							IF fd >= 0 THEN
 								r := Unix.fstat( fd, stat );
 								f := collection.ByStat(stat);
@@ -337,7 +337,7 @@ TYPE
 				(* return remaining old file, if any *)
 				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT ): LONGINT;
 				CONST Bufsize = 4096;
-				VAR fdold, fdnew, fo, n, r: LONGINT;  ostat, nstat: Unix.Status;
+				VAR fdold, fdnew, fo, r: LONGINT;  n, n2: SIZE;  ostat, nstat: Unix.Status;
 					buf: ARRAY Bufsize OF CHAR;
 				BEGIN {EXCLUSIVE}
 					fo := NoDesc;
@@ -352,7 +352,7 @@ TYPE
 						IF r < 0 THEN (* could not rename, try copy *)
 							res := Unix.errno( );
 							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
-								fdold := UnixOpen( ADDRESSOF( old ), Unix.rdonly, {} );
+								fdold := UnixOpen( ADDRESSOF( old ), Unix.rdonly, 0 );
 								fo := fdold;
 								IF fdold < 0 THEN    
 									res := Unix.errno( );  
@@ -366,8 +366,8 @@ TYPE
 								REPEAT
 									n := UnixRead( fdold, ADDRESSOF( buf ), Bufsize ); 
 									IF n > 0 THEN
-										r := UnixWrite( fdnew, ADDRESSOF( buf ), n );
-										IF r < 0 THEN
+										n2 := UnixWrite( fdnew, ADDRESSOF( buf ), n );
+										IF n2 < 0 THEN
 											r := Unix.close( fdold );  
 											r := Unix.close( fdnew );   
 											RETURN NoDesc;
@@ -521,7 +521,7 @@ TYPE
 	
 	Buffer =	POINTER TO RECORD (Files.Hint)
 					chg: BOOLEAN;
-					org, size: LONGINT;
+					org, size: SIZE;
 					data: ARRAY Bufsize OF CHAR;
 				END;
 	
@@ -574,7 +574,7 @@ TYPE
 				
 						
 				PROCEDURE Flush( buf: Buffer );
-				VAR res: LONGINT;  stat: Unix.Status;
+				VAR n: SIZE;  res: LONGINT;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
 						IF fd = NoDesc THEN  CreateUnixFile  END;
@@ -583,8 +583,8 @@ TYPE
 								Halt( SELF, TRUE, "UnixFiles.File.Flush: lseek failed" ) 
 							END 
 						END;
-						res := UnixWrite( fd, ADDRESSOF( buf.data ), buf.size );
-						IF res < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Flush: write failed" )  END;
+						n := UnixWrite( fd, ADDRESSOF( buf.data ), buf.size );
+						IF n < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Flush: write failed" )  END;
 						fpos := buf.org + buf.size;  buf.chg := FALSE;
 						res := Unix.fstat( fd, stat );  mtime := stat.mtime.sec
 					END
@@ -597,7 +597,7 @@ TYPE
 				END Set;
 						
 				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
-				VAR  org, offset, i, n: LONGINT;  buf: Buffer;
+				VAR  org, offset, i: LONGINT;  n: SIZE;  buf: Buffer;
 				BEGIN 
 					r.file := SELF;  r.fs := fs;
 					IF p > fsize THEN  p := LONGINT(fsize)
@@ -638,7 +638,7 @@ TYPE
 						END;
 						buf.org := org;  buf.chg := FALSE
 					ELSE
-						org := buf.org 
+						org := LONGINT(buf.org)
 					END;
 
 					r.hint := buf;  r.apos := org;  r.bpos := offset;  
@@ -671,22 +671,22 @@ TYPE
 				END Read;
 
 				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR xpos, min, restInBuf, offset: LONGINT;  buf: Buffer;  
+				VAR xpos, offset, restInBuf: SIZE;  min: LONGINT;  buf: Buffer;  
 				BEGIN  {EXCLUSIVE}
 					x[ofs] := 0X;  xpos := ofs;  
 					buf := r.hint(Buffer);  offset := r.bpos;
 					WHILE len > 0 DO
 						IF (r.apos # buf.org) OR (offset >= Bufsize) THEN  
-							SetX( r, r.apos + offset );  
+							SetX( r, r.apos + LONGINT(offset) );  
 							buf := r.hint(Buffer);  offset := r.bpos  
 						END;
 						restInBuf := buf.size - offset;
 						IF restInBuf = 0 THEN  r.res := len;  r.eof := TRUE;  RETURN
-						ELSIF len > restInBuf THEN  min := restInBuf
+						ELSIF len > restInBuf THEN  min := LONGINT(restInBuf)
 						ELSE  min := len
 						END;
 						S.MOVE( ADDRESSOF( buf.data ) + offset, ADDRESSOF( x ) + xpos, min );
-						INC( offset, min );  r.bpos := offset;
+						INC( offset, min );  r.bpos := LONGINT(offset);
 						INC( xpos, min );  DEC( len, min )
 					END;
 					r.res := 0;  r.eof := FALSE;
@@ -1114,7 +1114,7 @@ TYPE
 	(*!	The system calls open, read and write return -1 when they get interrupted 
 		by receiving a signal. Possibly through Objects.SuspendActivities() (GC).
 	*)
-	PROCEDURE UnixOpen( path: ADDRESS; flags, permissions: SET ): LONGINT;
+	PROCEDURE UnixOpen( path: ADDRESS; flags: SET32; permissions: Unix.mode_t ): LONGINT;
 	VAR 
 		fd, fo, errno: LONGINT;  failure: BOOLEAN;
 	BEGIN
@@ -1136,8 +1136,8 @@ TYPE
 		RETURN fd
 	END UnixOpen;
 	
-	PROCEDURE UnixRead( fd: LONGINT; buf: ADDRESS; len: SIZE ): LONGINT;
-	VAR n: LONGINT;
+	PROCEDURE UnixRead( fd: LONGINT; buf: ADDRESS; len: SIZE ): SIZE;
+	VAR n: SIZE;
 	BEGIN
 		REPEAT
 			n := Unix.read( fd, buf, len )
@@ -1145,8 +1145,8 @@ TYPE
 		RETURN n
 	END UnixRead;	
 	
-	PROCEDURE UnixWrite( fd: LONGINT; buf: ADDRESS; len: SIZE ): LONGINT;
-	VAR n: LONGINT;
+	PROCEDURE UnixWrite( fd: LONGINT; buf: ADDRESS; len: SIZE ): SIZE;
+	VAR n: SIZE;
 	BEGIN
 		REPEAT
 			n := Unix.write( fd, buf, len )

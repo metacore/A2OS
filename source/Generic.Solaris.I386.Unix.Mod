@@ -153,7 +153,8 @@ CONST
 	rdonly* = {};  rdwr* = {1};  creat* = {8};  trunc* = {9};
 
 	(* access modes *)
-	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};
+(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH; 
 	
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -481,9 +482,9 @@ VAR
 	dup2-				: PROCEDURE{C} ( oldfd,newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
 	dup-				: PROCEDURE{C} ( oldfd: LONGINT ): LONGINT;
 	
-	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): LONGINT;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags, mode: SET ): LONGINT;
+	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
+	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET; mode: mode_t ): LONGINT;
 	close-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
 	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset, origin: SIZE ): LONGINT;
 	fsync-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
@@ -498,7 +499,7 @@ VAR
 	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 	
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
 	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;

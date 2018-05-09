@@ -912,7 +912,7 @@ TYPE
 		time*: Time; 
 	END; 
 
-	Data40* = ARRAY 40 OF CHAR; 
+	Data40* = ARRAY 5 OF LONGWORD; 
 
 	Data40b* = ARRAY 20 OF CHAR; 
 

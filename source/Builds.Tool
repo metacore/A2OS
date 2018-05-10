@@ -55,7 +55,7 @@ LINUX32G -- 32 bit linux a2 using generic object files
 		StaticLinker.Link -p=Linux32G --path=NewAos/
 			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
-			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
+			Shell ~  StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
 LINUX64G -- 64 bit linux a2 using generic object files
@@ -73,7 +73,7 @@ LINUX64G -- 64 bit linux a2 using generic object files
 		StaticLinker.Link -p=Linux64G --path=NewAos/
 			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
-			Shell StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
+			Shell ~ StaticLinker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
 DARWIN32G -- 32 bit darwin a2 using generic object files
@@ -105,11 +105,54 @@ Win64G -- work in progress
 	
 	Release.Build --path=NewAos/ Win64G ~
 
-	StaticLinker.Link --path=./NewAos/ --fileFormat=PE64CUI --fileName=oberon64.exe --extension=GofWw --displacement=401000H  
+	StaticLinker.Link  --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H  
 		Runtime Trace Kernel32 
 		Heaps Modules Objects Kernel
 		KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 
 		StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell Traps SystemTools ~
 
-	FSTools.CloseFiles oberon64.exe  ~
+	FSTools.CloseFiles oberon.exe  ~
 	~
+	
+	
+-----
+
+	SystemTools.DoCommands	
+		FSTools.DeleteFiles -s NewAos/* ~
+		Release.Build --build --path=NewAos/ Linux64G ~
+		StaticLinker.Link -p=Linux64G --path=NewAos/
+			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
+			Shell ~ 
+		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux64/bin/*.* ~ 
+		FSTools.CopyFiles -o oberon => ../../Linux64/oberon ~ 
+
+		FSTools.DeleteFiles -s NewAos/* ~
+		Release.Build --build --path=NewAos/ Linux32G ~
+		StaticLinker.Link -p=Linux32G --path=NewAos/
+			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
+			Shell ~
+		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux32G/bin/*.* ~ 
+		FSTools.CopyFiles -o oberon => ../../Linux32G/oberon ~ 
+
+		FSTools.DeleteFiles -s NewAos/* ~
+		Release.Build --build --path=NewAos/ Win32G ~
+		StaticLinker.Link --path=NewAos/ --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  
+			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool 
+			ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~		
+		FSTools.CopyFiles -oq NewAos/*.* => ../../WinAos/obg/*.* ~ 
+		FSTools.CopyFiles -o A2.exe => ../../WinAos/A2.exe ~ 
+
+		FSTools.DeleteFiles -s NewAos/* ~
+		Release.Build --build --path=NewAos/ Win64G ~
+		StaticLinker.Link --path=NewAos/  --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H  
+			Runtime Trace Kernel32 
+			Heaps Modules Objects Kernel
+			KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets 
+			StringPool ObjectFile GenericLinker Reflection  GenericLoader Shell  StdIOShell Traps SystemTools ~
+		FSTools.CopyFiles -oq NewAos/*.* => ../../Win64G/bin/*.* ~ 
+		FSTools.CopyFiles -o oberon.exe => ../../Win64G/oberon.exe ~ 
+
+		FSTools.DeleteFiles -s NewAos/* ~
+		~ 

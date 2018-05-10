@@ -177,11 +177,12 @@ VAR
 
 	(* expand heap by allocating a new memory block *)
 	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
-	VAR mBlock: MemoryBlock;  alloc, s: SIZE;  a, adr: ADDRESS; 
+	VAR mBlock: MemoryBlock;  alloc, s, alignOffset: SIZE;  a, adr: ADDRESS; 
 	BEGIN 
 		IF size < (MemBlockSize - (2*BlockSize))  THEN  alloc := MemBlockSize  
 		ELSE  alloc := size + (2*BlockSize);
-		END;  
+		END; 
+		alloc := alloc + StaticBlockSize; 
 		INC( alloc, (-alloc) MOD Unix.PageSize );
 		
 		IF Unix.posix_memalign( adr, Unix.PageSize, alloc ) # 0 THEN
@@ -192,16 +193,17 @@ VAR
 			IF Unix.mprotect( adr, alloc, 7 (* READ WRITE EXEC *) ) # 0 THEN
 				Unix.Perror( "Machine.ExpandHeap: mprotect" )
 			END;
+			alignOffset := (-adr) MOD StaticBlockSize;
 			
 			mBlock := S.VAL( MemoryBlock, adr );  
 			mBlock.next := NIL;  
 			mBlock.startAdr := adr;
 			mBlock.size := alloc;  
-			mBlock.beginBlockAdr := adr + BlockSize - AddrSize;  
+			mBlock.beginBlockAdr := adr + BlockSize +alignOffset;  
 			
-			ASSERT( (mBlock.beginBlockAdr + AddrSize) MOD BlockSize = 0 );  
+			ASSERT( mBlock.beginBlockAdr MOD BlockSize = 0 );  
 
-			s := adr + alloc - mBlock.beginBlockAdr - BlockSize; 
+			s := adr + alloc - mBlock.beginBlockAdr;
 			DEC( s, s MOD BlockSize );  
 			ASSERT( s >= size );  
 			mBlock.endBlockAdr := mBlock.beginBlockAdr + s; 

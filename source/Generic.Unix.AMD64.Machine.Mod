@@ -212,7 +212,7 @@ VAR
 			a := mBlock.beginBlockAdr;
 			S.PUT( a, a + AddrSize );	(* tag *)
 			S.PUT( a + AddrSize, s - AddrSize );  (* size *)
-			S.PUT( a + AddrSize + SizeSize, S.VAL( ADDRESS, 0 ) ); (* next *)
+			S.PUT( a + AddrSize + SizeSize, NIL ); (* next *)
 			
 			beginBlockAdr := mBlock.beginBlockAdr;
 			endBlockAdr := mBlock.endBlockAdr;
@@ -784,18 +784,18 @@ END GetTimer;
 
 		(* correct fields *)
 		S.PUT(memBlockAdr + HeapBlockOffset, memHeaderAdr + BlockHeaderSize);	(* set reference to header part of memory block correctly *)
-		S.PUT(memBlockAdr + TypeDescOffset, 0);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
+		S.PUT(memBlockAdr + TypeDescOffset, NIL);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
 		S.PUT(memHeaderAdr + BlockHeaderSize + DataAdrOffset, memBlockAdr);		(* set dataAdr of RecordBlockDesc to correct value *)
 		S.PUT(memHeaderAdr + BlockHeaderSize + 2*AddressSize , memBlkSize);
 
 		(* fill first heap block *)
-		S.PUT(beginBlockAdr,0);
-		S.PUT(beginBlockAdr+AddressSize,0);
-		S.PUT(beginBlockAdr+2*AddressSize,0);
+		S.PUT(beginBlockAdr,NIL);
+		S.PUT(beginBlockAdr+AddressSize,NIL);
+		S.PUT(beginBlockAdr+2*AddressSize,NIL);
 		S.PUT(beginBlockAdr+3*AddressSize,beginBlockAdr+7*AddressSize);
 		S.PUT(beginBlockAdr+4*AddressSize,endBlockAdr-beginBlockAdr);
 		S.PUT(beginBlockAdr+5*AddressSize,beginBlockAdr+2*AddressSize);
-		S.PUT(beginBlockAdr+6*AddressSize,0);
+		S.PUT(beginBlockAdr+6*AddressSize,NIL);
 
 		memoryBlock := memBlock;
 	END InitHeap;

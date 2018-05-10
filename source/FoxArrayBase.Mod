@@ -47,7 +47,7 @@ CONST
 	DimensionMismatch=401;
 	AllocationForbidden=402;
 	
-	ArrayAlignment=8;
+	ArrayAlignment=16;
 
 	TensorFlag = 0;  RangeFlag = 1;  TemporaryFlag = 2;
 

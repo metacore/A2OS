@@ -932,7 +932,7 @@ BEGIN
 	SplitFullName(sourceName, srcPrefix, srcPath, srcFilename, srcExtension);
 	index := 0;
 	FOR i := 0 TO LEN(targetMask)-1 DO
-		IF targetMask[i] = "." THEN
+		IF (targetMask[i] = ".") & (targetMask[i+1]#".") & (targetMask[i+1]#"/") THEN
 			isExtension := TRUE;
 			targetName[index] := targetMask[i];
 			INC(index);

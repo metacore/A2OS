@@ -767,19 +767,19 @@ BEGIN
 
 	(* correct fields *)
 	SYSTEM.PUT(memBlockAdr + HeapBlockOffset, memHeaderAdr + BlockHeaderSize);	(* set reference to header part of memory block correctly *)
-	SYSTEM.PUT(memBlockAdr + TypeDescOffset, 0);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
+	SYSTEM.PUT(memBlockAdr + TypeDescOffset, NIL);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
 	SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + DataAdrOffset, memBlockAdr);		(* set dataAdr of RecordBlockDesc to correct value *)
 	SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + 2*AddressSize , memBlkSize);
 
 	(* fill first heap block *)
-	SYSTEM.PUT(beginBlockAdr,0);
-	SYSTEM.PUT(beginBlockAdr+AddressSize,0);
-	SYSTEM.PUT(beginBlockAdr+2*AddressSize,0);
+	SYSTEM.PUT(beginBlockAdr,NIL);
+	SYSTEM.PUT(beginBlockAdr+AddressSize,NIL);
+	SYSTEM.PUT(beginBlockAdr+2*AddressSize,NIL);
 	(* change this when Heaps.HeapBlock is modified *)
 	SYSTEM.PUT(beginBlockAdr+3*AddressSize,beginBlockAdr+7*AddressSize);
 	SYSTEM.PUT(beginBlockAdr+4*AddressSize,endBlockAdr-beginBlockAdr);
 	SYSTEM.PUT(beginBlockAdr+5*AddressSize,beginBlockAdr+2*AddressSize);
-	SYSTEM.PUT(beginBlockAdr+6*AddressSize,0);
+	SYSTEM.PUT(beginBlockAdr+6*AddressSize,NIL);
 
 
 	memoryBlock := memBlock;
@@ -933,7 +933,7 @@ BEGIN
 
 			(* correct fields *)
 			SYSTEM.PUT(memBlockAdr + HeapBlockOffset, memHeaderAdr + BlockHeaderSize);	(* set reference to header part of memory block correctly *)
-			SYSTEM.PUT(memBlockAdr + TypeDescOffset, 0);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
+			SYSTEM.PUT(memBlockAdr + TypeDescOffset, NIL);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
 			SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + DataAdrOffset, memBlockAdr);		(* set dataAdr of RecordBlockDesc to correct value *)
 
 			InsertMemoryBlock(memBlock);

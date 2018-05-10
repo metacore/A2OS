@@ -10,11 +10,7 @@ CONST
 	MTTR* = 12; 
 	MMX* = 23; 
 	debug* = FALSE; 
-	TraceVerbose = FALSE; 
-	AddressSize = SIZEOF(ADDRESS); 
-	StaticBlockSize = (8 * AddressSize); 
-	BlockHeaderSize = (2 * AddressSize); 
-	RecordDescSize = (4 * AddressSize); 
+	StaticBlockSize = (8 * SIZEOF(ADDRESS)); 
 	TraceOutput* = 0; 
 	Memory* = 1; 
 	Heaps* = 2; 
@@ -26,9 +22,7 @@ CONST
 	GC* = 8; 
 	MaxLocks = 9; 
 	StrongChecks = FALSE; 
-	MemoryBlockOfs = ((BlockHeaderSize + RecordDescSize) + BlockHeaderSize); 
 	MemBlockSize = ((32 * 1024) * 1024); 
-	MinMemBlockSize = ((4 * 1024) * 1024); 
 	NilVal = 0; 
 	Second* = 1000; 
 	Ok* = 0; 
@@ -43,10 +37,10 @@ TYPE
 		adr*, size*: LONGINT; 
 	END; 
 
-	MemoryBlock* = POINTER TO MemoryBlockDesc; 
+	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc; 
 
 	MemoryBlockDesc* = RECORD 
-		next-{UNTRACED} : MemoryBlock; 
+		next-: MemoryBlock; 
 		startAdr-: ADDRESS; 
 		size-: SIZE; 
 		beginBlockAdr-, endBlockAdr-: ADDRESS; 
@@ -81,11 +75,8 @@ VAR
 	hin, hout: Kernel32.HANDLE; 
 	lock-: ARRAY MaxLocks OF CHAR; 
 	cs: ARRAY MaxLocks OF Kernel32.CriticalSection; 
-	trace: ARRAY 2 OF CHAR; 
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR; 
 	gcThreshold-: SIZE; 
-	bootHeapAdr: ADDRESS; 
-	bootHeapSize: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
 	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
@@ -178,7 +169,6 @@ VAR
 	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: LONGINT); 
 	PROCEDURE ^ SetupSSE2Ext; 
 	PROCEDURE ^ ReadCommandLine(VAR commandLine: ARRAY OF CHAR); 
-	PROCEDURE ^ ParseLine(VAR c: ARRAY OF CHAR; VAR iniFile: ARRAY OF CHAR); 
 	PROCEDURE ^ TraceChar(c: CHAR); 
 	PROCEDURE ^ SetTraceFile*; 
 	PROCEDURE ^ SetTraceConsole*; 
@@ -187,7 +177,7 @@ VAR
 	PROCEDURE ^ ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR); 
 	PROCEDURE ^ Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR); 
 	PROCEDURE ^ Init*; 
-	PROCEDURE ^ Start; 
+	PROCEDURE ^ Start*; 
 	PROCEDURE ^ InitLocks; 
 	PROCEDURE ^ CleanupLocks*; 
 	PROCEDURE ^ Acquire*(level: LONGINT); 
@@ -195,7 +185,6 @@ VAR
 	PROCEDURE ^ GetMemStatus(VAR stat: Kernel32.MemoryStatusEx): BOOLEAN; 
 	PROCEDURE ^ GetKernelStacks*(VAR stack: ARRAY OF Stack); 
 	PROCEDURE ^ SetGCParams*; 
-	PROCEDURE ^ InitHeap(VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS); 
 	PROCEDURE ^ GetStaticHeap*(VAR beginBlockAdr, endBlockAdr, freeBlockAdr: ADDRESS); 
 	PROCEDURE ^ ValidHeapAddress*(p: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ GetFreeK*(VAR total, lowFree, highFree: SIZE); 
@@ -207,8 +196,6 @@ VAR
 	PROCEDURE ^ PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS; 
 	PROCEDURE ^ NumberOfProcessors*(): LONGINT; 
 	PROCEDURE ^ ChangeByteOrder*(n: LONGINT): LONGINT; 
-	PROCEDURE ^ TraceColor(c: SHORTINT); 
-	PROCEDURE ^ LogChar(c: CHAR); 
 	PROCEDURE {FingerPrint(1709768814)}  - GetRAX*(): HUGEINT;
 	CODE{SYSTEM.AMD64}
 

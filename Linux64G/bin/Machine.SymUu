@@ -7,13 +7,8 @@ CONST
 	Second* = 1000; 
 	MTTR* = 12; 
 	MMX* = 23; 
-	AddrSize = SIZEOF(ADDRESS); 
-	SizeSize = SIZEOF(SIZE); 
 	AddressSize = SIZEOF(ADDRESS); 
-	BlockHeaderSize = (2 * AddressSize); 
-	RecordDescSize = (4 * AddressSize); 
 	StaticBlockSize = (8 * AddressSize); 
-	BlockSize = StaticBlockSize; 
 	MemBlockSize* = ((64 * 1024) * 1024); 
 	TraceOutput* = 0; 
 	Memory* = 1; 
@@ -27,14 +22,13 @@ CONST
 	MaxLocks* = 9; 
 	MaxCPU* = 4; 
 	IsCooperative* = FALSE; 
-	TraceMemBlocks = FALSE; 
 TYPE 
 	Vendor* = ARRAY 13 OF CHAR; 
 
-	MemoryBlock* = POINTER TO MemoryBlockDesc; 
+	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc; 
 
 	MemoryBlockDesc* = RECORD 
-		next-{UNTRACED} : MemoryBlock; 
+		next-: MemoryBlock; 
 		startAdr-: ADDRESS; 
 		size-: SIZE; 
 		beginBlockAdr-, endBlockAdr-: ADDRESS; 
@@ -43,8 +37,6 @@ TYPE
 	State* = RECORD 
 		PC*, BP*, SP*: ADDRESS; 
 	END; 
-
-	; 
 VAR 
 	mtx: ARRAY MaxLocks OF Unix.Mutex_t; 
 	version-: ARRAY 64 OF CHAR; 
@@ -69,8 +61,6 @@ VAR
 	logfile: LONGINT; 
 	traceHeap: BOOLEAN; 
 	timer0: HUGEINT; 
-	Last: RECORD 
-	END; 
 
 	PROCEDURE ^ ID*(): LONGINT; 
 	PROCEDURE ^ FlushDCacheRange*(adr: ADDRESS; len: LONGINT); 
@@ -234,7 +224,6 @@ VAR
 	PROCEDURE ^ Release*(level: LONGINT); 
 	PROCEDURE ^ Shutdown*(reboot: BOOLEAN); 
 	PROCEDURE ^ SetGCParams*; 
-	PROCEDURE ^ InitHeap(VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS); 
 	PROCEDURE ^ InitConfig; 
 	PROCEDURE ^ UpdateTicks*; 
 	PROCEDURE ^ InitThreads; 
@@ -246,6 +235,6 @@ VAR
 	PROCEDURE ^ VerboseLog*; 
 	PROCEDURE ^ Append(VAR a: ARRAY OF CHAR; CONST this: ARRAY OF CHAR); 
 	PROCEDURE ^ Init; 
-	PROCEDURE ^ Init0; 
+	PROCEDURE ^ Init0*; 
 BEGIN
 END Machine.

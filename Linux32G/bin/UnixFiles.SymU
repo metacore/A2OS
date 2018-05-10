@@ -84,7 +84,7 @@ TYPE
 
 	Buffer = POINTER TO RECORD (Files.Hint)
 		chg: BOOLEAN; 
-		org, size: LONGINT; 
+		org, size: SIZE; 
 		data: ARRAY Bufsize OF CHAR; 
 	END; 
 
@@ -146,9 +146,9 @@ VAR
 	PROCEDURE ^ GetTempName(CONST finalName: ARRAY OF CHAR; VAR tempName: Filename); 
 	PROCEDURE ^ Install; 
 	PROCEDURE ^ Initialize; 
-	PROCEDURE ^ UnixOpen(path: ADDRESS; flags, permissions: SET): LONGINT; 
-	PROCEDURE ^ UnixRead(fd: LONGINT; buf: ADDRESS; len: SIZE): LONGINT; 
-	PROCEDURE ^ UnixWrite(fd: LONGINT; buf: ADDRESS; len: SIZE): LONGINT; 
+	PROCEDURE ^ UnixOpen(path: ADDRESS; flags: SET32; permissions: Unix.mode_t): LONGINT; 
+	PROCEDURE ^ UnixRead(fd: LONGINT; buf: ADDRESS; len: SIZE): SIZE; 
+	PROCEDURE ^ UnixWrite(fd: LONGINT; buf: ADDRESS; len: SIZE): SIZE; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
 	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
 	PROCEDURE ^ Finalization; 

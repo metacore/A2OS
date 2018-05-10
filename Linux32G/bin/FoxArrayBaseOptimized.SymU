@@ -87,9 +87,6 @@ TYPE
 		PROCEDURE ^ Compute; 
 	END MultiplyObjectX; 
 VAR 
-	alignedC*, unalignedC*, singleC*: LONGINT; 
-	rejectMatMul*: LONGINT; 
-	matAllocTime*, matCompTime*: LONGINT; 
 	cBlockSize*: LONGINT; 
 	nrProcesses*: LONGINT; 
 	lastUsedBlockSize*: SIZE; 
@@ -184,9 +181,6 @@ VAR
 	PROCEDURE ^ CopyAR(matrixA, dest: ADDRESS; IncA, StrideA: SIZE; K, M, L2BlockK, L2BlockM: SIZE); 
 	PROCEDURE ^ CopyBX(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
 	PROCEDURE ^ CopyBR(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
-	PROCEDURE {FingerPrint(1951090261)}  - GetTimer(): HUGEINT;
-	CODE
-	END GetTimer; 
 	PROCEDURE ^ Tic(VAR t: HUGEINT); 
 	PROCEDURE ^ Toc(VAR t, addto: HUGEINT); 
 	PROCEDURE ^ MultiplyX(A, B, C: ADDRESS; M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE; IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE; add: BOOLEAN); 

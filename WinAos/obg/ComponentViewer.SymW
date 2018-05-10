@@ -1,5 +1,5 @@
 MODULE ComponentViewer;
-	IMPORT Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents, WMRestorable, Streams, D := Debugging, Files, WMRectangles, WMGraphicsSmooth;
+	IMPORT Modules, Commands, Options, XML, Repositories, WMMessages, WMWindowManager, WMComponents, WMRestorable, Streams, D := Debugging, Files, WMGraphicsSmooth;
 CONST 
 	DefaultWidth = 320; 
 	DefaultHeight = 240; 

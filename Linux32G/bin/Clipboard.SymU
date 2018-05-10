@@ -1,5 +1,5 @@
 MODULE Clipboard;
-	IMPORT SYSTEM, Unix, Machine, X11, X11Api, Displays, XDisplay, Plugins, Log := KernelLog, Modules, Texts, TextUtilities, Strings, HostClipboard, Objects;
+	IMPORT SYSTEM, Unix, Machine, X11, X11Api, Displays, XDisplay, Plugins, Log := KernelLog, Modules, Texts, TextUtilities, Strings, HostClipboard, Objects, Commands, Options;
 CONST 
 	BufferSize = 8192; 
 TYPE 
@@ -26,6 +26,7 @@ VAR
 	xdisp: X11.DisplayPtr; 
 	primary: X11.Window; 
 	secondary: X11.Window; 
+	clipboard: X11.Atom; 
 
 	PROCEDURE ^ A2ToUnix; 
 	PROCEDURE ^ UnixToA2; 
@@ -40,6 +41,6 @@ VAR
 	PROCEDURE ^ ReceiveSelection(VAR event: X11Api.XSelectionEvent); 
 	PROCEDURE ^ GetXDisplay; 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Install*(context: Commands.Context); 
 BEGIN
 END Clipboard.

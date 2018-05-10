@@ -124,8 +124,8 @@ Win64G -- work in progress
 			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO 
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   GenericLoader  SystemTools StdIOShell 
 			Shell ~ 
-		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux64/bin/*.* ~ 
-		FSTools.CopyFiles -o oberon => ../../Linux64/oberon ~ 
+		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux64G/bin/*.* ~ 
+		FSTools.CopyFiles -o oberon => ../../Linux64G/oberon ~ 
 
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Linux32G ~

@@ -21,11 +21,7 @@ CONST
 	debug* = FALSE;   (** display more debug output during booting *)
 
 CONST
-	AddressSize = SIZEOF(ADDRESS);
-	StaticBlockSize = 32;		(* static heap block size *)
-	BlockHeaderSize = 2 * AddressSize;
-	(* change this when Heaps.HeapBlock is modified *)
-	RecordDescSize = 4 * AddressSize;  (* needs to be adapted in case Heaps.RecordBlockDesc is changed *)
+	StaticBlockSize = 8*SIZEOF(ADDRESS);		(* static heap block size *)
 
 (** standard lock levels (in order) *)  (* also refer to Traps.Show *)
 	TraceOutput* = 0;   (* Trace output *)
@@ -41,12 +37,8 @@ CONST
 
 	StrongChecks = FALSE;
 
-	HeaderSize = 40H; (* cf. Linker0 *)
-	EndBlockOfs = 38H;	(* cf. Linker0 *)
-	MemoryBlockOfs = BlockHeaderSize + RecordDescSize + BlockHeaderSize; (* memory block (including header) starts at offset HeaderSize *)
 
 	MemBlockSize = 32*1024*1024; (* must be multiple of StaticBlockSize *)
-	MinMemBlockSize = 4*1024*1024;
 
 	NilVal = 0;
 
@@ -66,9 +58,9 @@ TYPE
 		adr*, size*: LONGINT
 	END;
 
-	MemoryBlock* = POINTER TO MemoryBlockDesc;
+	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc;
 	MemoryBlockDesc* = RECORD
-		next- {UNTRACED}: MemoryBlock;
+		next- : MemoryBlock;
 		startAdr-: ADDRESS; 		(* sort key in linked list of memory blocks *)
 		size-: SIZE;
 		beginBlockAdr-, endBlockAdr-: ADDRESS
@@ -76,7 +68,7 @@ TYPE
 
 	(* dummy definition to make GC work for both I386 and Win32 - copied from I386.Machine.Mod, but not really used *)
 	Stack* = RECORD	(** values are read-only *)
-			low: ADDRESS;		(* lowest virtual address that may be allocated for stack *)
+		low: ADDRESS;		(* lowest virtual address that may be allocated for stack *)
 		adr*: ADDRESS;		(* lowest address on allocated stack *)	(* exported for Objects only *)
 		high*: ADDRESS;	(* next virtual address after stack *)	(* exported for Objects only *)
 	END;
@@ -111,8 +103,6 @@ VAR
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR;
 
 	gcThreshold-: SIZE;
-	bootHeapAdr: ADDRESS; 	(* initialized by linker, variable name must not be changed, see Win32.Aos.Link *)
-	bootHeapSize: SIZE; 			(* initialized by linker, variable name must not be changed, see Win32.Aos.Link *)
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
 
 
@@ -456,7 +446,6 @@ VAR
 	ch: CHAR;
 
 	PROCEDURE AppendDecimals(int: LONGINT; from, to: LONGINT);
-	VAR ten: LONGINT;
 	BEGIN
 		WHILE to >= from DO
 			traceName[i] := CHR(ORD("0")+ int DIV to MOD 10); INC(i);
@@ -594,7 +583,7 @@ BEGIN
 	END;
 END Init;
 
-	PROCEDURE {INITIAL, NOPAF} Start;
+	PROCEDURE {INITIAL, NOPAF} Start*;
 	BEGIN
 		Init; (* cannot allocate variables in here *)
 	END Start;
@@ -666,111 +655,10 @@ BEGIN
 	gcThreshold := 10*1024*1024; (* 10 MB *)
 END SetGCParams;
 
-(* expand heap by allocating a new memory block - called during GC *)
-PROCEDURE InitHeap(VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
-CONST MemBlockHeaderSize = BlockHeaderSize + RecordDescSize + BlockHeaderSize;
-	TypeDescOffset = -AddressSize; (* see Heaps.Mod *)
-	HeapBlockOffset = - 2 * AddressSize; (* see Heaps.Mod *)
-	DataAdrOffset = AddressSize; (* offset of dataAdr field in Heaps.HeapBlockDesc *)
-VAR memDescSize, memBlkSize, alignOffset: SIZE; adr, memHeaderAdr, memBlockAdr, memBlockHeadAdr: ADDRESS;
-	memBlock {UNTRACED}: MemoryBlock; i: LONGINT; ch: CHAR; h: HUGEINT; size: LONGINT;
-	initVal: LONGINT;
-BEGIN
-
-	(*
-		HeapBlockPtr -- bootHeapAdr
-	4	Type
-	8	Mark
-	12	DataAdr
-	16	Size
-	20	HeapBlockPtr
-	24	Type
-	28	next  -- MemoryBlock
-	32	startAdr
-	36	size
-	40	beginBlockAdr
-	44	endBlockAdr
-	48		--beginBlockAdr
-	....
-			--endBlockAdr
-
-	*)
-	size := 1;
-	memDescSize := MemBlockHeaderSize + SIZEOF(MemoryBlockDesc);
-	INC(memDescSize, (-memDescSize) MOD StaticBlockSize); 	(* round up to multiple of StaticBlockSize *)
-	INC(size, (-size) MOD StaticBlockSize); (* round up to multiple of StaticBlockSize *)
-	memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
-	IF memBlkSize < MemBlockSize THEN memBlkSize := MemBlockSize END; 	(* MemBlockSize implicitly multiple of StaticBlockSize *)
-
-	initVal := 8*1024*1024;
-	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
-	IF adr = NilVal THEN (* allocation failed *)
-		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
-	END;
-	Trace.String("first heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
-	Trace.String("first heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
-	Trace.String("first heap block adr "); Trace.Int(adr,1); Trace.Ln;
-	ASSERT(adr # 0);
-
-	alignOffset := (-adr) MOD StaticBlockSize;
-
-	memHeaderAdr := adr + alignOffset;  	(* force alignment of memory block start *)
-	memBlockAdr := memHeaderAdr + MemBlockHeaderSize;
-	memBlock := SYSTEM.VAL(MemoryBlock, memBlockAdr);
-	beginBlockAdr := memHeaderAdr + memDescSize;
-
-	memBlock.next := NIL;
-	memBlock.startAdr := adr;
-	memBlock.size := memBlkSize;
-
-	beginBlockAdr := memHeaderAdr + memDescSize;
-	endBlockAdr := adr + memBlkSize - alignOffset;
-	memBlock.beginBlockAdr := beginBlockAdr;
-	memBlock.endBlockAdr := endBlockAdr;
-
-	(* correct fields *)
-	SYSTEM.PUT(memBlockAdr + HeapBlockOffset, memHeaderAdr + BlockHeaderSize);	(* set reference to header part of memory block correctly *)
-	SYSTEM.PUT(memBlockAdr + TypeDescOffset, NIL);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
-	SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + DataAdrOffset, memBlockAdr);		(* set dataAdr of RecordBlockDesc to correct value *)
-	SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + 2*AddressSize , memBlkSize);
-
-	(* fill first heap block *)
-	SYSTEM.PUT(beginBlockAdr,NIL);
-	SYSTEM.PUT(beginBlockAdr+AddressSize,NIL);
-	SYSTEM.PUT(beginBlockAdr+2*AddressSize,NIL);
-	(* change this when Heaps.HeapBlock is modified *)
-	SYSTEM.PUT(beginBlockAdr+3*AddressSize,beginBlockAdr+7*AddressSize);
-	SYSTEM.PUT(beginBlockAdr+4*AddressSize,endBlockAdr-beginBlockAdr);
-	SYSTEM.PUT(beginBlockAdr+5*AddressSize,beginBlockAdr+2*AddressSize);
-	SYSTEM.PUT(beginBlockAdr+6*AddressSize,NIL);
-
-
-	memoryBlock := memBlock;
-END InitHeap;
-
 (** Get first memory block and first free address, the first free address is identical to memBlockHead.endBlockAdr *)
 PROCEDURE GetStaticHeap*(VAR beginBlockAdr, endBlockAdr, freeBlockAdr: ADDRESS);
-VAR memBlockAdr: ADDRESS;
 BEGIN
-	InitHeap(memBlockHead,beginBlockAdr, endBlockAdr);
-	memBlockTail := memBlockHead;
-
-	(*
-	SYSTEM.GET(bootHeapAdr + EndBlockOfs, freeBlockAdr);
-	ASSERT(freeBlockAdr MOD StaticBlockSize = 0);
-	memBlockAdr := bootHeapAdr + HeaderSize + MemoryBlockOfs;
-
-
-	memBlockHead := SYSTEM.VAL(MemoryBlock, memBlockAdr); (* this block will never be freed since there is a global reference (initBlock in Heaps.Mod) to it *)
-	memBlockHead.startAdr := bootHeapAdr;
-	memBlockHead.size := bootHeapSize;
-	ASSERT(memBlockHead.beginBlockAdr MOD StaticBlockSize = 0);
-	ASSERT((memBlockHead.endBlockAdr - memBlockHead.beginBlockAdr) MOD StaticBlockSize = 0);
-	memBlockTail := memBlockHead;
-	*)
-	beginBlockAdr := memBlockHead.beginBlockAdr;
-	endBlockAdr := memBlockHead.endBlockAdr;
-	freeBlockAdr := beginBlockAdr;
+	beginBlockAdr := NIL; endBlockAdr := NIL; freeBlockAdr := NIL; 
 END GetStaticHeap;
 
 (* returns if an address is a currently allocated heap address *)
@@ -827,84 +715,63 @@ BEGIN
 	ELSE (* insert in middle or at end of list *)
 		memBlock.next := cur;
 		prev.next := memBlock;
-		IF cur = NIL THEN
-			memBlockTail := memBlock
-		END
+	END;
+	IF cur = NIL THEN
+		memBlockTail := memBlock
 	END
 END InsertMemoryBlock;
 
-(* expand heap by allocating a new memory block - called during GC *)
-PROCEDURE ExpandHeap*(dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
-CONST MemBlockHeaderSize = BlockHeaderSize + RecordDescSize + BlockHeaderSize;
-	TypeDescOffset = -AddressSize; (* see Heaps.Mod *)
-	HeapBlockOffset = - 2 * AddressSize; (* see Heaps.Mod *)
-	DataAdrOffset = AddressSize; (* offset of dataAdr field in Heaps.HeapBlockDesc *)
-VAR memDescSize, memBlkSize, alignOffset: SIZE; adr, memHeaderAdr, memBlockAdr, memBlockHeadAdr: ADDRESS;
-	memBlock {UNTRACED}: MemoryBlock; i: LONGINT; ch: CHAR; h: HUGEINT; initVal: LONGINT;
-	continue: BOOLEAN;
-BEGIN
-	memDescSize := MemBlockHeaderSize + SIZEOF(MemoryBlockDesc);
-	INC(memDescSize, (-memDescSize) MOD StaticBlockSize); 	(* round up to multiple of StaticBlockSize *)
-	INC(size, (-size) MOD StaticBlockSize); (* round up to multiple of StaticBlockSize *)
-	memBlkSize := memDescSize + size + StaticBlockSize; 		(* add StaticBlockSize to account for alignments different from multiples of StaticBlockSize *)
-	INC(memBlkSize, (-memBlkSize) MOD MemBlockSize);
-	initVal := memBlockTail.startAdr + memBlockTail.size;
-	adr := Kernel32.VirtualAlloc(initVal, memBlkSize, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
-	IF adr = NilVal THEN (* allocation failed *)
-		adr := Kernel32.VirtualAlloc(NilVal, memBlkSize, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
-	END;
-	continue := adr = initVal;
-	Trace.String("expand heap block intVal "); Trace.Int(initVal,1); Trace.Ln;
-	Trace.String("expand heap block memBlkSize "); Trace.Int(memBlkSize,1); Trace.Ln;
-	Trace.String("expand heap block adr "); Trace.Int(adr,1); Trace.Ln;
-	ASSERT(adr # 0);
+	(* expand heap by allocating a new memory block *)
+	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
+	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr,initVal: ADDRESS; continue: BOOLEAN;
+	BEGIN 
+		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
+		alloc := size + StaticBlockSize;
+		IF alloc < MemBlockSize THEN alloc := MemBlockSize END;
+		INC( alloc, (-alloc) MOD StaticBlockSize );
 
+		IF memBlockTail # NIL THEN
+			initVal := memBlockTail.startAdr + memBlockTail.size;
+		ELSE
+			initVal := NIL
+		END;
+		adr := Kernel32.VirtualAlloc(initVal, alloc, {Kernel32.MEMCommit, Kernel32.MEMReserve}, {Kernel32.PageExecuteReadWrite});
+		IF adr = NilVal THEN (* allocation failed *)
+			adr := Kernel32.VirtualAlloc(NilVal, alloc, {Kernel32.MEMCommit}, {Kernel32.PageExecuteReadWrite});
+		END;
+		continue := adr = initVal;
+		ASSERT(adr MOD StaticBlockSize = 0); (* is fulfilled because VirtualAlloc is on page granularity *)
+	
 	IF adr # 0 THEN
 
-		alignOffset := (-adr) MOD StaticBlockSize;
-
 		IF continue THEN
-			memBlock := memBlockTail;
-			memBlock.size := memBlock.size + memBlkSize;
+			memoryBlock := memBlockTail;
+			memoryBlock.size := memoryBlock.size + alloc;
 
 			beginBlockAdr := memBlockTail.endBlockAdr;
 			endBlockAdr := beginBlockAdr;
-			INC(endBlockAdr, memBlkSize);
+			INC(endBlockAdr, alloc);
 		ELSE
-			memHeaderAdr := adr + alignOffset;  	(* force alignment of memory block start *)
-			memBlockAdr := memHeaderAdr + MemBlockHeaderSize;
-			memBlock := SYSTEM.VAL(MemoryBlock, memBlockAdr);
-			memBlock.next := NIL;
-			memBlock.startAdr := adr;
-			memBlock.size := memBlkSize;
+			mBlock := adr;  
+			mBlock.next := NIL;  
+			mBlock.startAdr := adr;
+			mBlock.size := alloc;  
 
-			beginBlockAdr := memHeaderAdr + memDescSize;
-			endBlockAdr := adr + memBlkSize - alignOffset;
-			memBlock.beginBlockAdr := beginBlockAdr;
-			memBlock.endBlockAdr := beginBlockAdr;
-			(* upon memory block insertion memBlock.beginBlockAdr = memBlock.endBlockAdr to denote that the memory block has no valid heap blocks yet
-			     - necessary for real-time GC. Memory block end address is set by caller by using SetMemBlockEndAddress after fitting free block in. *)
+			beginBlockAdr := adr + StaticBlockSize;
+			endBlockAdr := beginBlockAdr + alloc - StaticBlockSize;
 
-			(* copy header of memBlockHead to header of memBlock - byte by byte *)
-			memBlockHeadAdr := SYSTEM.VAL(ADDRESS, memBlockHead);
-			FOR i := 0 TO MemBlockHeaderSize - 1 DO
-				SYSTEM.GET(memBlockHeadAdr - MemBlockHeaderSize + i, ch);
-				SYSTEM.PUT(memBlockAdr - MemBlockHeaderSize + i, ch)
-			END;
-
-			(* correct fields *)
-			SYSTEM.PUT(memBlockAdr + HeapBlockOffset, memHeaderAdr + BlockHeaderSize);	(* set reference to header part of memory block correctly *)
-			SYSTEM.PUT(memBlockAdr + TypeDescOffset, NIL);										(* set type descriptor field of memory block to default value, memory blocks are not traced by GC *)
-			SYSTEM.PUT(memHeaderAdr + BlockHeaderSize + DataAdrOffset, memBlockAdr);		(* set dataAdr of RecordBlockDesc to correct value *)
-
-			InsertMemoryBlock(memBlock);
+			mBlock.beginBlockAdr := beginBlockAdr;  
+			mBlock.endBlockAdr := beginBlockAdr; (* block is still empty -- Heaps module will set the upper bound *)
+			
+			InsertMemoryBlock( mBlock );
+						
+			memoryBlock := mBlock;
 		END;
-
-		memoryBlock := memBlock;
 	ELSE
-		beginBlockAdr := 0; endBlockAdr := 0;
+		beginBlockAdr := 0; endBlockAdr := 0; memoryBlock := NIL;
 	END;
 END ExpandHeap;
+
 
 (* Set memory block end address *)
 PROCEDURE SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS);

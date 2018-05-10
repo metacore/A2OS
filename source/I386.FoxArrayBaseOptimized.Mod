@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE & Init*;
 		BEGIN
 			NEW( first );  first.size := 0;   (* sentinel *)
-			NEW( last );  last.size := MAX( LONGINT );   (* sentinel *)
+			NEW( last );  last.size := MAX( SIZE );   (* sentinel *)
 			first.next := last;  first.prev := NIL; last.prev := first;  last.next := NIL;
 		END Init;
 
@@ -4691,20 +4691,14 @@ VAR
 	END DispMX;
 	*)
 
-	PROCEDURE -GetTimer( ): HUGEINT;
-	CODE {SYSTEM.Pentium}
-		CPUID	;
-		RDTSC
-	END GetTimer;
-
 	PROCEDURE Tic( VAR t: HUGEINT );
 	BEGIN
-		t := GetTimer();
+		t := Machine.GetTimer();
 	END Tic;
 
 	PROCEDURE Toc( VAR t, addto: HUGEINT );
 	BEGIN
-		INC( addto, GetTimer() - t );  t := GetTimer();
+		INC( addto, Machine.GetTimer() - t );  t := Machine.GetTimer();
 	END Toc;
 
 	PROCEDURE MultiplyX( A, B, C: ADDRESS;

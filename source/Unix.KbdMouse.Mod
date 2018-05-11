@@ -6,7 +6,7 @@ MODULE KbdMouse;   (* g.f.	9.7.07 *)
 
 (* replacement for the keyboard and mouse drivers in the Unix ports *)
 
-IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Api:=X11Api, Modules, Objects;
+IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Api:=X11Api, Objects;
 
 CONST
 	ML = 0;  MM = 1;  MR = 2;
@@ -34,6 +34,14 @@ TYPE
 
 VAR
 	poll: Poll; keySymbol: ARRAY 256 OF LONGINT;
+	
+	PROCEDURE TerminateA2;
+	VAR
+		res: LONGINT;
+		s: ARRAY 256 OF CHAR;
+	BEGIN
+		Commands.Call( "WMTerminator.Shutdown", {}, res, s );
+	END TerminateA2;
 	
 
 	PROCEDURE CheckAlternateKeys( VAR mb: SET );
@@ -196,7 +204,8 @@ VAR
 					IF  S.VAL( X11.Atom,datal[0] ) = disp.wmDelete THEN									
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
-						Modules.Shutdown( Modules.Reboot );
+						TerminateA2;
+					(*	Modules.Shutdown( Modules.Reboot ); *)
 					END; 
 			| Api.UnmapNotify:
 			| Api.MapNotify: 

@@ -1051,7 +1051,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMRestorable.Mod Release.Auto.dsk
 	WMApplications.Mod
 
-	WMDialogs.Mod
+	WMDialogs.Mod WMTerminator.Mod
 	WMDocumentEditor.Mod
 
 	WMErrors.Mod

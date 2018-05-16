@@ -5296,6 +5296,9 @@ TYPE
 					IF currentIsRealtime THEN
 						Error(position, "forbidden new in realtime block");
 					END;
+					IF IsUnsafePointer(type0) THEN 
+						Error(position, "forbidden new on unsafe pointer");
+					END;
 					(* check constructor *)
 					IF (first =0) OR CheckVariable(parameter0) THEN
 						IF type0 IS SyntaxTree.PointerType THEN
@@ -8408,7 +8411,7 @@ TYPE
 			i: LONGINT;
 			
 			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
-			VAR baseType: SyntaxTree.Type; property, prop: SyntaxTree.Property; variable: SyntaxTree.Variable;
+			VAR baseType: SyntaxTree.Type; property: SyntaxTree.Property;
 			BEGIN
 				IF type.baseType # NIL THEN 
 					baseType := type.baseType.resolved;

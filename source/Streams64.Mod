@@ -53,7 +53,7 @@ TYPE
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT; (** result of last output operation. *)
 		send: Sender;
-		sent*: HUGEINT;  (** count of sent bytes *)
+		sent*: TSize;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
 		PROCEDURE & InitWriter*( send: Sender;  size: LONGINT );
@@ -86,7 +86,7 @@ TYPE
 		END Update;
 
 	(** Current write position. *)
-		PROCEDURE Pos*( ): HUGEINT;
+		PROCEDURE Pos*( ): TSize;
 		BEGIN
 			RETURN sent + tail;
 		END Pos;
@@ -506,8 +506,9 @@ TYPE
 		END CanSetPos;
 
 	(* Set the position for the writer *)
-		PROCEDURE SetPos*( pos: HUGEINT );
+		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
+			ASSERT( MAX( LONGINT ) >= pos );
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			tail := LONGINT( pos );  sent := 0;  res := Ok;
 		END SetPos;
@@ -544,7 +545,7 @@ TYPE
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT;   (** result of last input operation. *)
 		receive: Receiver;
-		received*: HUGEINT;   (** count of received bytes *)
+		received*: TSize;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
 		PROCEDURE & InitReader*( receive: Receiver;  size: LONGINT );
@@ -568,7 +569,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: HUGEINT );
+		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;
@@ -589,7 +590,7 @@ TYPE
 		END Available;
 
 	(** Current read position. *)
-		PROCEDURE Pos*( ): HUGEINT;
+		PROCEDURE Pos*( ): TSize;
 		BEGIN
 			RETURN received - (tail - head)
 		END Pos;
@@ -651,7 +652,7 @@ TYPE
 		END Bytes;
 
 	(** Skip n bytes on the reader. *)
-		PROCEDURE SkipBytes*( n: HUGEINT );
+		PROCEDURE SkipBytes*( n: TSize );
 		VAR ch: CHAR;
 		BEGIN
 			WHILE n > 0 DO ch := Get();  DEC( n ) END
@@ -981,8 +982,9 @@ TYPE
 		END CanSetPos;
 
 	(** Set the reader position *)
-		PROCEDURE SetPos*( pos: HUGEINT );
+		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
+			ASSERT( MAX( LONGINT ) >= pos );
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			head := LONGINT( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;

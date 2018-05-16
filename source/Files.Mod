@@ -1171,6 +1171,11 @@ BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END ReadLInt;
 
+PROCEDURE ReadHInt*(VAR r: Rider; VAR x: HUGEINT);
+BEGIN
+	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+END ReadHInt;
+
 PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
 CONST Size = SIZEOF (SET);
 TYPE Bytes = ARRAY Size OF CHAR;
@@ -1239,6 +1244,11 @@ PROCEDURE WriteLInt*(VAR r: Rider; x: LONGINT);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END WriteLInt;
+
+PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);
+BEGIN
+	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+END WriteHInt;
 
 PROCEDURE WriteSet*(VAR r: Rider; x: SET);
 CONST Size = SIZEOF (SET);

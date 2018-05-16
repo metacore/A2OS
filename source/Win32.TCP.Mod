@@ -292,7 +292,6 @@ TYPE
 			IF res = Ok THEN
 				fip.usedProtocol := IP.IPv4;
 				fip.ipv4Adr := sockname.sinAddr;  fport := WSock32.ntohs( sockname.sinPort );
-				fip.ipv4Adr := WSock32.ntohl( fip.ipv4Adr );
 			END;
 			IF Trace THEN KernelLog.Enter;  KernelLog.String( "SetPortAndIp " );  Report( SELF );  KernelLog.Exit; END;
 		END SetPortAndIp;

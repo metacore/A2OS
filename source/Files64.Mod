@@ -72,7 +72,7 @@ TYPE
 		eof*: BOOLEAN;	(** has end of file been passed *)
 		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*: HUGEINT;
+		apos*: TSize;
 		bpos*: LONGINT;
 		hint*: Hint;
 		file*: File;
@@ -99,14 +99,14 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : HUGEINT);
+		PROCEDURE SetPos*(pos : TSize);
 		BEGIN
 			file.Set(r, pos);
 			Reset;
 			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 		END SetPos;
 
-		PROCEDURE &InitFileReader*(file : File; pos: HUGEINT);
+		PROCEDURE &InitFileReader*(file : File; pos: TSize);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -137,20 +137,20 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : HUGEINT);
+		PROCEDURE SetPos*(pos : TSize);
 			BEGIN
 			Update;
 			file.Set(r, pos);
 			Reset;
 		END SetPos;
 
-		PROCEDURE Pos*(): HUGEINT;
+		PROCEDURE Pos*(): TSize;
 		BEGIN
 			Update;
 			RETURN file.Pos(r)
 		END Pos;
 
-		PROCEDURE &InitFileWriter*(file: File; pos: HUGEINT);
+		PROCEDURE &InitFileWriter*(file: File; pos: TSize);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -234,7 +234,7 @@ TYPE
 
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-		VAR enum: Enumerator; time, date: LONGINT; size: HUGEINT;
+		VAR enum: Enumerator; time, date: LONGINT; size: TSize;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
@@ -264,12 +264,12 @@ TYPE
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
-		PROCEDURE Set*(VAR r: Rider; pos: HUGEINT);
+		PROCEDURE Set*(VAR r: Rider; pos: TSize);
 		BEGIN HALT(301) END Set;	(* abstract *)
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r: Rider): HUGEINT;
+		PROCEDURE Pos*(VAR r: Rider): TSize;
 		BEGIN HALT(301) END Pos;	(* abstract *)
 
 		(** Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
@@ -294,7 +294,7 @@ TYPE
 
 		(** Return the current length of a file. *)
 
-		PROCEDURE Length*(): HUGEINT;
+		PROCEDURE Length*(): TSize;
 		BEGIN HALT(301) END Length;	(* abstract *)
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
@@ -377,14 +377,14 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: HUGEINT): BOOLEAN;
-		VAR len, temp: LONGINT;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: TSize): BOOLEAN;
+		VAR len: LONGINT;
 		BEGIN
 			ReadNum(r, len);
 			IF ~r.eof THEN
 				name[len] := 0X;	(* index check *)
 				r.file.ReadBytes(r, name, 0, len);
-				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadHInt(r, size);
+				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadTSize(r, size);
 				ASSERT(~r.eof)
 			END;
 			RETURN ~r.eof
@@ -400,14 +400,14 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:HUGEINT);
+		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:TSize);
 		VAR len: LONGINT;
 		BEGIN
 			ASSERT(adding);
 			INC(SELF.size);
 			len := 0; WHILE name[len] # 0X DO INC(len) END;
 			WriteNum(r, len); r.file.WriteBytes(r, name, 0, len);
-			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteHInt(r, size)
+			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteTSize(r, size)
 		END PutEntry;
 
 	END Enumerator;
@@ -444,7 +444,7 @@ VAR
 
 (** Open a reader on a file at the specified position. *)
 
-PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: HUGEINT);
+PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: TSize);
 BEGIN
 	IF b = NIL THEN
 		NEW(b, f, pos)
@@ -455,7 +455,7 @@ END OpenReader;
 
 (** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 
-PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: HUGEINT);
+PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: TSize);
 BEGIN
 	NEW(b, f, pos)
 END OpenWriter;
@@ -1077,8 +1077,15 @@ END ReadLInt;
 
 PROCEDURE ReadHInt*(VAR r: Rider; VAR x: HUGEINT);
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(HUGEINT))
+	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END ReadHInt;
+
+PROCEDURE ReadTSize*(VAR r: Rider; VAR x: TSize);
+CONST Size = SIZEOF (TSize);
+TYPE Bytes = ARRAY Size OF CHAR;
+BEGIN
+	r.file.ReadBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+END ReadTSize;
 
 PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
 CONST Size = SIZEOF (SET);
@@ -1149,10 +1156,17 @@ BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END WriteLInt;
 
-PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);(*TODO HUGEINT *)
+PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, SIZEOF(HUGEINT))
+	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteHInt;
+
+PROCEDURE WriteTSize*(VAR r: Rider; x: TSize);
+CONST Size = SIZEOF (TSize);
+TYPE Bytes = ARRAY Size OF CHAR;
+BEGIN
+	r.file.WriteBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+END WriteTSize;
 
 PROCEDURE WriteSet*(VAR r: Rider; x: SET);
 CONST Size = SIZEOF (SET);

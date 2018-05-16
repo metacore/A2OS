@@ -1,6 +1,6 @@
 MODULE FoxProfiler; (** AUTHOR "fof"; PURPOSE "minimal implementation of a compiler supported profiler"; *)
 
-IMPORT KernelLog,Objects,Machine,SYSTEM,Streams,Commands;
+IMPORT KernelLog,Objects,SYSTEM,Streams,Commands;
 
 CONST
 	TraceAdd=FALSE;
@@ -101,7 +101,7 @@ VAR
 	(* logging *)
 	log: Streams.Writer;
 	(* timing *)
-	frequency: LONGREAL; n: LONGINT;
+	frequency: LONGREAL;
 
 	PROCEDURE Put*(key, value: SIZE);
 	VAR hash: SIZE;
@@ -177,7 +177,6 @@ VAR
 	END AddProcedure;
 
 	PROCEDURE GetTimer(): HUGEINT;
-	VAR cpuCycles: Objects.CpuCyclesArray;
 	BEGIN
 		RETURN Objects.CurrentProcessTime();
 	END GetTimer;

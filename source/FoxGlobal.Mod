@@ -1437,8 +1437,7 @@ TYPE
 		IF signed THEN
 			RETURN ASH (HUGEINT(1), system.SizeOf (type) - 1) - 1;
 		ELSE
-			RETURN LSH( HUGEINT(-1), -( 64 - system.SizeOf (type));
-(*			RETURN ASH (HUGEINT(1), system.SizeOf (type)) -1;*)
+			RETURN LSH (HUGEINT(-1), system.SizeOf (type) - 64);
 		END;
 	END MaxInteger;
 

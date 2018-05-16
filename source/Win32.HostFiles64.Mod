@@ -447,7 +447,7 @@ TYPE
 		fileSystem: WinFileSystem;
 
 		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: LONGINT ; fs: WinFileSystem);
-		VAR s: SET;  res: Kernel32.BOOL;
+		VAR s: WORDSET;  res: Kernel32.BOOL;
 		BEGIN
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
@@ -611,14 +611,14 @@ TYPE
 		END SetDate;
 
 		PROCEDURE GetAttributes*(): SET;
-		VAR s: SET;
+		VAR s: WORDSET;
 		BEGIN
 			s := Kernel32.GetFileAttributes( fname );
 			RETURN FileFlags(s);
 		END GetAttributes;
 
 		PROCEDURE SetAttributes*(a: SET);
-		VAR s: SET;
+		VAR s: WORDSET;
 		BEGIN
 			s:= WindowsFlags(a);
 			SetFileAttributes(fname,s);
@@ -804,7 +804,7 @@ VAR
 	END FullPathName;
 
 	(* convert flags from windows file flags to A2 file flags *)
-	PROCEDURE FileFlags( flags: SET ): SET;
+	PROCEDURE FileFlags( flags: WORDSET ): SET;
 	VAR s: SET;
 	BEGIN
 		s := {};
@@ -818,8 +818,8 @@ VAR
 	END FileFlags;
 
 	(* convert flags from A2 file flags to windows file flags *)
-	PROCEDURE WindowsFlags(flags: SET): SET;
-	VAR s: SET;
+	PROCEDURE WindowsFlags(flags: SET): WORDSET;
+	VAR s: WORDSET;
 	BEGIN
 		s := {};
 		IF  Directory IN flags THEN INCL( s,  Kernel32.FileAttributeDirectory) END;
@@ -1096,19 +1096,19 @@ VAR
 		RETURN ok
 	END CheckName;
 
-	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): SET;   (** non-portable *)
-	VAR attrs: SET;
+	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): WORDSET;   (** non-portable *)
+	VAR attrs: WORDSET;
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := Kernel32.GetFileAttributes( file );
 		IF attrs = {0..31} THEN RETURN {} ELSE RETURN attrs END
 	END GetAttributes;
 
-	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: SET );   (** non-portable *)
+	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
 	END SetAttributes;
 
-	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: SET );   (** non-portable *)
+	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
 	END SetFileAttributes;

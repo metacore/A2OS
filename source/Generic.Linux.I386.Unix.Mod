@@ -1041,12 +1041,13 @@ VAR
 		environ := Glue.environ;
 
 		libraryPaths[0] := "/lib/i386-linux-gnu/i686/cmov";
-		libraryPaths[1] := "/usr/lib/i386-linux-gnu";
-		libraryPaths[2] := "/lib/i386-linux-gnu";
+		libraryPaths[1] := "/lib/i386-linux-gnu";
+		libraryPaths[2] := "/lib32";
 		libraryPaths[3] := "/lib";
-		libraryPaths[4] := "/usr/lib";
+		libraryPaths[4] := "/usr/lib/i386-linux-gnu";
 		libraryPaths[5] := "/usr/lib32";
-		noPaths := 6;
+		libraryPaths[6] := "/usr/lib";
+		noPaths := 7;
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 );

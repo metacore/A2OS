@@ -1044,10 +1044,12 @@ VAR
 		environ := Glue.environ;
 
 		libraryPaths[0] := "/lib/x86_64-linux-gnu";
-		libraryPaths[1] := "/usr/lib/x86_64-linux-gnu";
+		libraryPaths[1] := "/lib64";
 		libraryPaths[2] := "/lib";
-		libraryPaths[3] := "/usr/lib";
-		noPaths := 4;
+		libraryPaths[3] := "/usr/lib/x86_64-linux-gnu";
+		libraryPaths[4] := "/usr/lib64";
+		libraryPaths[5] := "/usr/lib";
+		noPaths := 6;
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 );

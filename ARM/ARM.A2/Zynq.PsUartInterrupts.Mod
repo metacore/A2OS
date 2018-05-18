@@ -5,7 +5,7 @@
 MODULE PsUartInterrupts;
 
 IMPORT
-	PsUartMin, Platform, Objects;
+	Platform, Machine;
 
 TYPE
 	(** UART interrupt handler *)
@@ -15,12 +15,12 @@ VAR
 	intrHandler0, intrHandler1: UartInterruptHandler;
 	intrHandlerParam0, intrHandlerParam1: ANY;
 
-	PROCEDURE IntrHandlerUart0();
+	PROCEDURE IntrHandlerUart0(VAR state: Machine.State);
 	BEGIN
 		intrHandler0(intrHandlerParam0);
 	END IntrHandlerUart0;
 
-	PROCEDURE IntrHandlerUart1();
+	PROCEDURE IntrHandlerUart1(VAR state: Machine.State);
 	BEGIN
 		intrHandler1(intrHandlerParam1);
 	END IntrHandlerUart1;
@@ -44,11 +44,11 @@ VAR
 			0:
 				intrHandler0 := interruptHandler;
 				intrHandlerParam0 := interruptHandlerParam;
-				Objects.InstallHandler(IntrHandlerUart0,Platform.UartIrq[0]);
+				Machine.InstallHandler(IntrHandlerUart0,Platform.UartIrq[0]);
 			|1:
 				intrHandler1 := interruptHandler;
 				intrHandlerParam1 := interruptHandlerParam;
-				Objects.InstallHandler(IntrHandlerUart1,Platform.UartIrq[1]);
+				Machine.InstallHandler(IntrHandlerUart1,Platform.UartIrq[1]);
 		ELSE
 			RETURN FALSE;
 		END;

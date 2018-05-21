@@ -7,7 +7,7 @@ TYPE
 	PChar* = POINTER TO ARRAY OF CHAR;
 
 	VisualPtr = X11.VisualPtr;
-	VisualInfoPtr*  = POINTER TO X11.VisualInfo; 
+	VisualInfoPtr*  = POINTER {UNSAFE, UNTRACED} TO X11.VisualInfo; 
 	DisplayPtr* = X11.DisplayPtr;
 	Window * = X11.Window;
 	Time* = X11.Time;
@@ -938,7 +938,7 @@ TYPE
 	called to free private storage 
 		free_private_proc* = PROCEDURE (extension: ExtData): LONGINT;*)
 	
-	ExtData* = POINTER TO ExtDataDesc;
+	ExtData* = POINTER {UNTRACED, UNSAFE} TO ExtDataDesc;
 	ExtDataDesc* = RECORD
 		number*: WORD;		(* number returned by XRegisterExtension *)
 		next*: ExtData;	(* next item on list of data for structure *)
@@ -963,7 +963,7 @@ TYPE
 		card32*: LONGWORD;
 	END;
 
-	FontStruct* = POINTER TO FontStructDesc;
+	FontStruct* = POINTER  {UNTRACED, UNSAFE} TO FontStructDesc;
 	FontStructDesc* = RECORD
 		ext_data*: ExtData;	(* hook for extension to hang data *)
 		fid*: X11.Font;            (* Font id for this font *)

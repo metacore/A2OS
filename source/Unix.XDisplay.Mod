@@ -595,7 +595,7 @@ VAR
 							CONST image: ARRAY OF SET;  
 							width, height: INTEGER ): X11.Pattern;
 	VAR
-		pixmap: X11.Pixmap;  pat: X11.PatternPtr;
+		pixmap: X11.Pixmap;  pat {UNTRACED}: X11.PatternPtr;
 		w, h, i, j, b, dest, srcw, destb, srci, desti: LONGINT;
 		data: ARRAY 256*32 OF CHAR;   (* 256*256 bits *)
 	BEGIN
@@ -724,7 +724,7 @@ VAR
 
 	PROCEDURE SuppressX11Cursors( d: Display );
 	VAR 
-		fg, bg: X11.Color;  src, msk: X11.PatternPtr;
+		fg, bg: X11.Color;  src {UNTRACED}, msk {UNTRACED}: X11.PatternPtr;
 		image: ARRAY 17 OF SET;  i: INTEGER;
 		noCursor: X11.Cursor;
 	BEGIN

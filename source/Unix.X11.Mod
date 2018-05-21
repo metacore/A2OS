@@ -19,7 +19,7 @@ TYPE
 	Pixmap* = ADDRESS;
 
 	Pattern* = ADDRESS (* = PatternPtr *) ;
-	PatternPtr* = POINTER TO PatternDesc;
+	PatternPtr* = POINTER {UNSAFE, UNTRACED} TO PatternDesc;
 	PatternDesc* = RECORD
 				x*, y*: LONGINT;
 				w*, h*: INTEGER;
@@ -31,7 +31,7 @@ TYPE
 				p*: PatternDesc
 			END;
 
-	Font* = POINTER TO Bytes;
+	Font* = POINTER  {UNSAFE, UNTRACED} TO Bytes;
 	Bytes* = RECORD
 				metrics*: ARRAY 256 OF MetricDesc;
 				xid*: LONGINT
@@ -64,7 +64,7 @@ TYPE
 				redMask*, greenMask*, blueMask*: LONGWORD;
 				bitsPerRgb*, mapEntries*: WORD
 			END;
-	VisualPtr* = POINTER TO Visual;
+	VisualPtr* = POINTER {UNTRACED, UNSAFE} TO Visual;
 	VisualInfo* = RECORD
 				visual*{UNTRACED}:  VisualPtr;
 				visualID*: VisualID;
@@ -150,7 +150,7 @@ TYPE
 			END;
 
 	Image* = ADDRESS;
-	ImagePtr* = POINTER TO ImageDesc;
+	ImagePtr* = POINTER {UNSAFE, UNTRACED} TO ImageDesc;
 	ImageDesc* = RECORD
 				width*, height*: WORD;
 				xoffset*, format*: WORD; data*: ADDRESS;
@@ -166,7 +166,7 @@ TYPE
 				serial*: LONGWORD;
 				errorCode*, requestCode*, minorCode*: CHAR
 			END;
-	ErrorEventPtr* = POINTER TO ErrorEvent;
+	ErrorEventPtr* = POINTER {UNSAFE, UNTRACED} TO ErrorEvent;
 	ErrorHandler* = PROCEDURE ( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;
 	IOErrorHandler = PROCEDURE ( d: DisplayPtr; p2, p3, p4: LONGINT ): LONGINT;
 

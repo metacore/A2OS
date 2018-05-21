@@ -288,13 +288,13 @@ TYPE
 				ctime-	: Timeval;
 				reserved-	: ARRAY 3 OF LONGWORD;
 			END;
-	tvPtr* = POINTER TO Timeval;
+	tvPtr* = POINTER {UNSAFE, UNTRACED} TO Timeval;
 	Timeval* = RECORD
 				sec*	: LONGWORD;
 				usec*	: LONGWORD;
 			END;
 
-	TmPtr* = POINTER TO Tm;
+	TmPtr* = POINTER {UNSAFE, UNTRACED} TO Tm;
 	Tm* = RECORD
 				sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: LONGINT;
 				gmtoff*, tmzone*: LONGINT;
@@ -320,7 +320,7 @@ TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
 
-	Dirent* = POINTER TO RECORD
+	Dirent* = POINTER {UNSAFE, UNTRACED} TO RECORD
 				ino-	: ino_t;
 				off-	: off_t;
 				reclen-	: INTEGER;
@@ -334,7 +334,7 @@ TYPE
 				size*		: SIZE
 			END;
 
-	Ucontext* = POINTER TO UcontextDesc;
+	Ucontext* = POINTER {UNSAFE, UNTRACED} TO UcontextDesc;
 	UcontextDesc* = RECORD
 				flags-		: SET;
 				link-		: ADDRESS;
@@ -342,7 +342,7 @@ TYPE
 				mc-		: McontextDesc
 			END;
 
-	Mcontext* = POINTER TO McontextDesc;
+	Mcontext* = POINTER{UNSAFE, UNTRACED}  TO McontextDesc;
 	McontextDesc* = RECORD
 				r_8			: HUGEINT;
   				r_9			: HUGEINT;
@@ -369,7 +369,7 @@ TYPE
   				cr2			: HUGEINT;
 			END;
 
-	FPcontext* = POINTER TO FPcontextDesc;
+	FPcontext* = POINTER{UNSAFE, UNTRACED}  TO FPcontextDesc;
 	FPcontextDesc* = RECORD
 				(* ... *)
 			END;

@@ -114,7 +114,7 @@ TYPE
 			flags*: SET;	 (* e.g. compilation flags *)
 			
 		PROCEDURE FindRoots*;	(* override *)
-		VAR i: LONGINT; ptr: ANY; false: BOOLEAN;
+		VAR i: LONGINT; ptr {UNTRACED}: ANY; false: BOOLEAN;
 		VAR name: Name;
 		BEGIN
 			name := SELF.name;

@@ -64,7 +64,7 @@ TYPE
 				redMask*, greenMask*, blueMask*: LONGWORD;
 				bitsPerRgb*, mapEntries*: WORD
 			END;
-	VisualPtr* = POINTER TO Visual;
+	VisualPtr* = POINTER {UNSAFE,UNTRACED} TO Visual;
 	VisualInfo* = RECORD
 				visual*{UNTRACED}:  VisualPtr;
 				visualID*: VisualID;
@@ -150,7 +150,7 @@ TYPE
 			END;
 
 	Image* = ADDRESS;
-	ImagePtr* = POINTER TO ImageDesc;
+	ImagePtr* = POINTER {UNSAFE,UNTRACED} TO ImageDesc;
 	ImageDesc* = RECORD
 				width*, height*: WORD;
 				xoffset*, format*: WORD; data*: ADDRESS;

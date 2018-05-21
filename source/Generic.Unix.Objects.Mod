@@ -347,7 +347,7 @@ TYPE
 
 	
 	PROCEDURE BodyStarter;
-	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP, sp: ADDRESS;
+	VAR p: Process;  res: LONGINT; prevBP, sp: ADDRESS;
 	BEGIN
 		Unix.MtxLock( startProcess );
 			p := newProcess;  newProcess := NIL;
@@ -384,7 +384,7 @@ TYPE
 	
 	
 	(* initialize the ObjectHeader, requires lockMutex temporarily *)
-	PROCEDURE InitProtHeader( hdr: ObjectHeader);
+	PROCEDURE InitProtHeader( hdr {UNTRACED}: ObjectHeader);
 	VAR lock: LockT;
 	BEGIN
 		(* we cannot hold the lockMute here because allocation can trigger the GC that requires the lock when activating the finalizers *)
@@ -399,7 +399,7 @@ TYPE
 	
 	
 	PROCEDURE CreateProcess*( body: Body;  priority: LONGINT;  flags: SET;  obj: ProtectedObject );
-	VAR p: Process;  hdr: ObjectHeader;
+	VAR p: Process;  hdr{UNTRACED}: ObjectHeader;
 	BEGIN
 		Unix.MtxLock( createProcess );
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  
@@ -411,7 +411,7 @@ TYPE
 	END CreateProcess;
 
 	PROCEDURE Lock*( obj: ProtectedObject;  exclusive: BOOLEAN );
-	VAR hdr: ObjectHeader;  p: Process; lock: LockT;
+	VAR hdr {UNTRACED}: ObjectHeader;  p : Process; lock: LockT;
 	BEGIN
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
@@ -461,7 +461,7 @@ TYPE
 	END Await;
 
 	PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
-	VAR hdr: ObjectHeader;  c: Process; lock: LockT;
+	VAR hdr{UNTRACED}: ObjectHeader;  c: Process; lock: LockT;
 	BEGIN
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
 		lock := S.VAL(LockT,hdr.lock);
@@ -537,13 +537,13 @@ TYPE
 	END Yield;
 	
 	(* Return current process. (DEPRECATED, use ActiveObject) *)
-	PROCEDURE CurrentProcess*( ): Process;	
+	PROCEDURE CurrentProcess*( ):  Process;	
 	BEGIN
-		RETURN S.VAL( Process, Unix.ReadKey( processPointer ) )
+		RETURN S.VAL( Process , Unix.ReadKey( processPointer ) )
 	END CurrentProcess;
 	
 	PROCEDURE CurrentContext*(): ANY;
-	VAR p: Process;
+	VAR p : Process;
 	BEGIN
 		p := CurrentProcess();
 		IF p # NIL THEN RETURN p.context
@@ -629,8 +629,9 @@ TYPE
 	END FinalizeActiveObj;
 
 	PROCEDURE FinalizeProtObject( obj: ANY );
-	VAR hdr: ObjectHeader; lock: LockT;
+	VAR hdr{UNTRACED}: ObjectHeader; lock: LockT;
 	BEGIN
+		TRACE("FINALIZE");
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		IF hdr.lock # NIL THEN
 			lock := S.VAL(LockT, hdr.lock);
@@ -839,7 +840,7 @@ TYPE
 	END LeaveA2;
 
 	PROCEDURE ReenterA2;
-	VAR cur: Process;
+	VAR cur : Process;
 	BEGIN
 		IF clock = NIL THEN  RETURN  END;
 		cur := CurrentProcess();
@@ -894,8 +895,8 @@ TYPE
 											
 		GetStacksize;  
 		Convert;
-		NEW( clock );  StartTimerActivity;  timerStopped := FALSE;
-		
+		StartTimerActivity;  timerStopped := FALSE;
+		NEW( clock );  
 		NEW( finalizerCaller );
 		
 		Heaps.gcStatus := GCStatusFactory()

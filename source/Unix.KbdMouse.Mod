@@ -252,6 +252,12 @@ VAR
 	BEGIN
 		RETURN X11.StringToKeysym( ADDRESSOF( str ) )
 	END Keysym;
+	
+	PROCEDURE DisableMouseEmulation*;
+	BEGIN
+		MMseen := TRUE; MRseen := TRUE;
+	END DisableMouseEmulation;
+	
 
 	PROCEDURE Init*;
 	VAR FK: ARRAY 8 OF CHAR;

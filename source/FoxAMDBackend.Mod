@@ -2564,9 +2564,10 @@ TYPE
 			Spill(physicalRegisters.Mapped(register));
 			ra := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op2.type,register,inPC);
 			IF IntermediateCode.OperandEquals (instruction.op2,instruction.op3) THEN
-				MakeOperand(instruction.op1,Low,op1,ra);
-				Assembler.InitMem(mem,SHORT(instruction.op1.type.sizeInBits DIV 8),op1.register,0);
-				emitter.Emit2(InstructionSet.opMOV,op1,mem);
+				MakeRegister(instruction.op1,Low,op1(*,ra*));
+				Assembler.InitMem(mem,SHORT(instruction.op2.type.sizeInBits DIV 8),op1.register,0);
+				TicketToOperand(ra, op2);
+				emitter.Emit2(InstructionSet.opMOV,op2,mem);
 			ELSE
 				MakeOperand(instruction.op2,Low,op2,ra);
 				MakeRegister(instruction.op1,Low,op1);

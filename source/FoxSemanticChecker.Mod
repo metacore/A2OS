@@ -5791,6 +5791,15 @@ TYPE
 								|64: type := Global.Integer32
 							END;
 						END;
+					ELSIF IsUnsignedIntegerType(type) THEN
+						IF (type.sizeInBits = 8) OR (type = Global.Unsigned8) THEN Error(parameter0.position,"short not applicable")
+						ELSE
+							CASE type.sizeInBits OF
+								16: type := Global.Unsigned8
+								|32: type := Global.Unsigned16
+								|64: type := Global.Unsigned32
+							END;
+						END;
 					ELSIF type IS SyntaxTree.FloatType THEN
 						IF (type.sizeInBits = 32) OR (type = system.realType) THEN Error(parameter0.position,"short not applicable")
 						ELSIF type = system.longrealType THEN type := system.realType
@@ -5823,6 +5832,15 @@ TYPE
 							8: type := Global.Integer16
 							|16: type := Global.Integer32
 							|32: type := Global.Integer64
+							END;
+						END;
+					ELSIF IsUnsignedIntegerType(type) THEN
+						IF (type.sizeInBits = 64) OR (type = Global.Unsigned64) THEN Error(parameter0.position,"long not applicable")
+						ELSE
+							CASE type.sizeInBits OF
+							8: type := Global.Unsigned16
+							|16: type := Global.Unsigned32
+							|32: type := Global.Unsigned64
 							END;
 						END;
 					ELSIF type IS SyntaxTree.FloatType THEN

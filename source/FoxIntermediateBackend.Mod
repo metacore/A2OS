@@ -12007,8 +12007,8 @@ TYPE
 					IF (symbol # NIL) & (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection) & (symbol.type # Sections.ExitCodeSection) & (symbol.type # Sections.InlineCodeSection) THEN
 						this := sections[s].name;
 						level := 0;
-						WHILE  (this[level] > 0) DO
-							WHILE  (this[level] > 0) & (prev[level] = this[level]) DO
+						WHILE (level < LEN(this)) & (this[level] > 0) DO
+							WHILE (level < LEN(this)) & (this[level] > 0) & (prev[level] = this[level]) DO
 								INC(level);
 							END;
 							WHILE level < olevel DO 
@@ -12023,7 +12023,7 @@ TYPE
 								scopes[olevel].gelements := scopes[olevel].gelements + scopes[olevel].elements;
 								DEC(olevel); 
 							END;
-							IF (this[level] > 0) THEN
+							IF (level < LEN(this)) & (this[level] > 0) THEN
 								IF level > olevel THEN 
 									(*TRACE("opening",level); *)
 									IF scopes[level].section = NIL THEN

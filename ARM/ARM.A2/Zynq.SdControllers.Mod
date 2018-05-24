@@ -138,7 +138,7 @@ VAR
 				NEW(hc[i], Platform.SdBase[i], Platform.SdIrq[i], SdEnvironment.HcClock(i));
 				Sd.SetEventHandler(hc[i].hc, hc[i].HandleEvent, NIL);
 				hc[i].WaitForEventCompletion;
-				Sd.SetBlocker(hc[i].hc, hc[i].handler.Block)
+(*				Sd.SetBlocker(hc[i].hc, hc[i].handler.Block)*)
 			ELSE
 				IF Sd.EnableTrace THEN
 					Log.String("[SD] Not Enabling controller "); Log.Int(i, 0); Log.Ln

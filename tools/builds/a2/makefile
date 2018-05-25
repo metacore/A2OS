@@ -21,6 +21,7 @@ dependencies: modules source/*.Mod
 	@./original DependencyWalker.Walk --fileExtension=$(object) $(addprefix source/, $(shell sort -u modules)) DependencyWalker.Mod | tr -d '\r' | grep "^.\+\$(object):" > $@
 
 -include dependencies
+FoxArrayBase$(object): ComplexNumbers$(object)
 
 %$(object):
 	@$(tool) compile -p=$(target) $(if $<, $<, $(error no target for $@))

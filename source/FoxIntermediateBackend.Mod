@@ -12176,10 +12176,11 @@ TYPE
 				sfTypeMathStaticArray = 26X;
 				sfTypeMathOpenArray = 27X;
 				sfTypeMathTensor = 28X;
-				sfTypeDelegate = 29X;
-				sfTypeENUM = 2AX; 
-				sfTypeCELL = 2BX;
-				sfTypePORT = 2CX;
+				sfTypeProcedure = 29X;
+				sfTypeDelegate = 2AX;
+				sfTypeENUM = 2BX; 
+				sfTypeCELL = 2CX;
+				sfTypePORT = 2DX;
 				
 				sfIN = 0X;
 				sfOUT = 1X;
@@ -12233,6 +12234,7 @@ TYPE
 						| sfTypeMathStaticArray length:SIZE Type
 						| sfTypeMathTensor Type
 						| sfTypeRecord tdAdr:ADDRESS 
+						| sfTypeProcedure {Parameter} return:Type
 						| sfTypeDelegate {Parameter} return:Type
 						| sfTypePort (sfIN | sfOUT)
 						| sfTypeBOOLEAN
@@ -12367,7 +12369,11 @@ TYPE
 							END;
 						| type: SyntaxTree.ProcedureType DO
 								IF ~Indirect(type) THEN
-									Char(section, sfTypeDelegate);
+									IF type.isDelegate THEN
+										Char(section, sfTypeDelegate);
+									ELSE
+										Char(section, sfTypeProcedure);
+									END;
 									parameter := type.firstParameter;
 									WHILE(parameter # NIL) DO
 										NParameter(parameter, -1);

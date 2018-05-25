@@ -57,10 +57,11 @@ CONST
 	sfTypeMathStaticArray* = 26X;
 	sfTypeMathOpenArray* = 27X;
 	sfTypeMathTensor* = 28X;
-	sfTypeDelegate* = 29X; 
-	sfTypeENUM* = 2AX;
-	sfTypeCELL* = 2BX;
-	sfTypePORT* = 2CX;
+	sfTypeProcedure* = 29X; 
+	sfTypeDelegate* = 2AX; 
+	sfTypeENUM* = 2BX;
+	sfTypeCELL* = 2CX;
+	sfTypePORT* = 2DX;
 
 	
 	sfIN* = 0X;
@@ -98,6 +99,7 @@ CONST
 			| sfTypeMathStaticArray length:SIZE Type
 			| sfTypeMathTensor Type
 			| sfTypeRecord tdAdr:ADDRESS 
+			| sfTypeProcedure {Parameter} return:Type
 			| sfTypeDelegate {Parameter} return:Type
 			| sfTypePort (sfIN | sfOUT)
 			| sfTypeBOOLEAN
@@ -347,7 +349,7 @@ CONST
 		b: BOOLEAN;
 		c: CHAR; c8: CHAR8; c16: CHAR16; c32: CHAR32;
 		s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
-		sz: SIZE; a: ADDRESS;
+		sz: SIZE; a, pc: ADDRESS;
 		word: WORD; lword: LONGWORD;
 		s8: SIGNED8; s16: SIGNED16; s32: SIGNED32; s64: SIGNED64;
 		u8: UNSIGNED8; u16: UNSIGNED16; u32: UNSIGNED32; u64: UNSIGNED64;
@@ -356,6 +358,7 @@ CONST
 		lcplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
 		set: SET;
 		byte: SYSTEM.BYTE;
+		procedure: ARRAY 256 OF CHAR;
 
 		PROCEDURE Signed(i: HUGEINT);
 		BEGIN
@@ -464,6 +467,14 @@ CONST
 			SYSTEM.GET(adr, word); Signed(word);
 		| sfTypePORT:
 			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
+		| sfTypeProcedure, sfTypeDelegate:
+			size := SIZE OF ADDRESS;
+			SYSTEM.GET(adr, a); pc := NIL; GetProcedureName(a, procedure, pc);
+			IF pc # NIL THEN w.String(procedure) ELSE Unsigned(a, SIZE OF ADDRESS) END;
+			IF type = sfTypeDelegate THEN
+				SYSTEM.GET(adr + size, a); INC(size, SIZE OF ADDRESS);
+				w.String(" {"); Unsigned(a, SIZE OF ADDRESS); w.String("}");
+			END;
 		ELSE
 			w.String("UNKOWN TYPE "); Unsigned(ORD(type),1);
 		END;
@@ -607,8 +618,8 @@ CONST
 				a := GetAddress(refs, offset); 
 				WriteType(w,a);
 				w.String(")");
-			| sfTypeDelegate: 
-				w.String(" (DELEGATE)");
+			| sfTypeProcedure, sfTypeDelegate: 
+				WriteBasicValue(w, type, adr, size);
 				WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
 				SkipType(refs, offset); 
 			| sfTypePORT:
@@ -674,7 +685,7 @@ CONST
 		| sfTypeMathStaticArray: SkipSize(offset); SkipType(refs, offset);
 		| sfTypeMathTensor: SkipType(refs, offset); 
 		| sfTypeRecord: SkipSize(offset);
-		| sfTypeDelegate: 
+		| sfTypeProcedure, sfTypeDelegate: 
 			WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
 			SkipType(refs, offset);
 		| sfTypeENUM:
@@ -1108,8 +1119,8 @@ TYPE
 		| sfTypeMathStaticArray: w.String("ARRAY ["); w.Int(GetSize(refs, offset),1); w.String("] OF "); ReportType(w, refs, offset);
 		| sfTypeMathTensor: w.String("ARRAY [?] OF "); ReportType(w, refs, offset); 
 		| sfTypeRecord: w.String("RECORD ");  w.Address(GetAddress(refs, offset)); 
-		| sfTypeDelegate: 
-			w.String("PROCEDURE ("); 	
+		| sfTypeProcedure, sfTypeDelegate: 
+			w.String("PROCEDURE"); IF c = sfTypeDelegate THEN w.String(" {DELEGATE}") END; w.String(" (");
 			WHILE refs[offset] = sfVariable DO ReportVariable(w, refs, offset) END;
 			w.String("):"); ReportType(w, refs, offset); 
 		| sfTypeBOOLEAN: w.String("BOOLEAN"); 

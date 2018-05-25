@@ -1,0 +1,292 @@
+MODULE Leonardo IN Oberon;
+	IMPORT Files, Display, Objects, Texts, Oberon, Strings, Gadgets, GfxMatrix, GfxRegions, Gfx;
+CONST 
+	get* = 1; 
+	reset* = 2; 
+	validate* = 3; 
+	integrate* = 1; 
+	delete* = 2; 
+	clone* = 3; 
+	up* = 1; 
+	down* = 2; 
+	top* = 3; 
+	bottom* = 4; 
+	reverse* = 5; 
+	active* = 1; 
+	passive* = 2; 
+	marksonly* = 3; 
+	marked* = 4; 
+	accumulate* = 2; 
+	inside* = 1; 
+	overlap* = 2; 
+	project* = 3; 
+	apply* = 1; 
+	notify* = 2; 
+	border* = 12; 
+TYPE 
+	Shape* = POINTER TO ShapeDesc; 
+
+	ShapeDesc* = RECORD (Objects.ObjDesc)
+		cont*: Shape; 
+		up*, down*: Shape; 
+		llx*, lly*, urx*, ury*: REAL; 
+		bw*: REAL; 
+		sel*: BOOLEAN; 
+		marked*: BOOLEAN; 
+	END; 
+
+	Container* = POINTER TO ContainerDesc; 
+
+	ContainerDesc* = RECORD (ShapeDesc)
+		bottom*, top*: Shape; 
+		subsel*: BOOLEAN; 
+	END; 
+
+	Figure* = POINTER TO FigureDesc; 
+
+	Layer* = POINTER TO LayerDesc; 
+
+	LayerDesc* = RECORD (ContainerDesc)
+		fig*: Figure; 
+		name*: ARRAY 16 OF CHAR; 
+		display*, print*, align*: BOOLEAN; 
+	END; 
+
+	Command = POINTER TO CommandDesc; 
+
+	FigureDesc* = RECORD (Objects.ObjDesc)
+		bottom*, top*: Shape; 
+		active*: Layer; 
+		seltime*: LONGINT; 
+		damage: GfxRegions.Region; 
+		bw: REAL; 
+		lockLevel: INTEGER; 
+		cmdLevel: INTEGER; 
+		maxCmds, nofCmds: INTEGER; 
+		curCmd: Command; 
+		firstCmd: Command; 
+		undoCmd: Command; 
+	END; 
+
+	Action* = POINTER TO ActionDesc; 
+
+	ActionProc* = PROCEDURE (fig: Figure; action: Action); 
+
+	ActionDesc* = RECORD 
+		do*, undo*: ActionProc; 
+		link: Action; 
+	END; 
+
+	CommandDesc = RECORD 
+		next, prev: Command; 
+		actions, done, last: Action; 
+	END; 
+
+	ControlAction* = POINTER TO ControlActionDesc; 
+
+	ControlActionDesc* = RECORD (ActionDesc)
+		down, bottom, top, up: Shape; 
+		cont: Container; 
+	END; 
+
+	AttrAction = POINTER TO AttrActionDesc; 
+
+	AttrActionDesc = RECORD (ActionDesc)
+		shape: Shape; 
+		name: ARRAY 32 OF CHAR; 
+	END; 
+
+	IntAction = POINTER TO IntActionDesc; 
+
+	IntActionDesc = RECORD (AttrActionDesc)
+		int: LONGINT; 
+	END; 
+
+	RealAction = POINTER TO RealActionDesc; 
+
+	RealActionDesc = RECORD (AttrActionDesc)
+		real: REAL; 
+	END; 
+
+	StringAction = POINTER TO StringActionDesc; 
+
+	StringActionDesc = RECORD (AttrActionDesc)
+		str: ARRAY 64 OF CHAR; 
+	END; 
+
+	UpdateMsg* = RECORD (Display.FrameMsg)
+		fig*: Figure; 
+		reg*: GfxRegions.Region; 
+		bw*: REAL; 
+	END; 
+
+	ShapeMsg* = RECORD (Objects.ObjMsg)
+		fig*: Figure; 
+	END; 
+
+	UnmarkMsg = RECORD (ShapeMsg)
+	END; 
+
+	SelectMsg* = RECORD (ShapeMsg)
+		id*: INTEGER; 
+		res*: Shape; 
+	END; 
+
+	ControlMsg* = RECORD (ShapeMsg)
+		id*: INTEGER; 
+		bottom*, top*: Shape; 
+		cont*, up*, down*: Shape; 
+	END; 
+
+	OrderMsg* = RECORD (ShapeMsg)
+		id*: INTEGER; 
+	END; 
+
+	LocalizedMsg* = RECORD (ShapeMsg)
+		lgm*: GfxMatrix.Matrix; 
+	END; 
+
+	ValidateMsg* = RECORD (LocalizedMsg)
+	END; 
+
+	CoordMsg* = RECORD (LocalizedMsg)
+		dest*: Shape; 
+		res*: GfxMatrix.Matrix; 
+	END; 
+
+	ConsumeMsg* = RECORD (LocalizedMsg)
+		llx*, lly*, urx*, ury*: REAL; 
+		bottom*, top*: Shape; 
+		slgm*: GfxMatrix.Matrix; 
+		recv*: Shape; 
+	END; 
+
+	RenderMsg* = RECORD (LocalizedMsg)
+		id*: INTEGER; 
+		ctxt*: Gfx.Context; 
+		gsm*: GfxMatrix.Matrix; 
+		llx*, lly*, urx*, ury*: REAL; 
+	END; 
+
+	LocateMsg* = RECORD (LocalizedMsg)
+		id*: INTEGER; 
+		llx*, lly*, urx*, ury*: REAL; 
+		res*: Shape; 
+		x*, y*: REAL; 
+		px*, py*: REAL; 
+	END; 
+
+	TransformMsg* = RECORD (LocalizedMsg)
+		id*: INTEGER; 
+		notify*: BOOLEAN; 
+		mat*: GfxMatrix.Matrix; 
+	END; 
+
+	MatrixMsg* = RECORD (LocalizedMsg)
+		dest*: Shape; 
+		x0*, y0*, x1*, y1*, tol*: REAL; 
+		done*: BOOLEAN; 
+		mat*: GfxMatrix.Matrix; 
+	END; 
+
+	BroadcastMsg* = RECORD (Display.FrameMsg)
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Update(fig: Figure); 
+	PROCEDURE ^ DisableUpdate*(fig: Figure); 
+	PROCEDURE ^ EnableUpdate*(fig: Figure); 
+	PROCEDURE ^ UpdateRect*(fig: Figure; llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ UpdateShape*(fig: Figure; shape: Shape); 
+	PROCEDURE ^ ValidateSelection*(fig: Figure); 
+	PROCEDURE ^ Selection*(fig: Figure): Shape; 
+	PROCEDURE ^ Select*(fig: Figure; shapes: Shape); 
+	PROCEDURE ^ Deselect*(fig: Figure; shapes: Shape); 
+	PROCEDURE ^ ClearSelection*(fig: Figure); 
+	PROCEDURE ^ MarkSelection*(fig: Figure); 
+	PROCEDURE ^ Validate*(fig: Figure); 
+	PROCEDURE ^ InvertActions(cmd: Command); 
+	PROCEDURE ^ DoActions(fig: Figure; cmd: Command); 
+	PROCEDURE ^ UndoActions(fig: Figure; cmd: Command); 
+	PROCEDURE ^ BeginCommand*(fig: Figure); 
+	PROCEDURE ^ AddAction*(fig: Figure; action: Action); 
+	PROCEDURE ^ CancelCommand*(fig: Figure); 
+	PROCEDURE ^ EndCommand*(fig: Figure); 
+	PROCEDURE ^ Undo*(fig: Figure); 
+	PROCEDURE ^ Redo*(fig: Figure); 
+	PROCEDURE ^ DoBoolAction(fig: Figure; act: Action); 
+	PROCEDURE ^ SetBool*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: BOOLEAN); 
+	PROCEDURE ^ DoIntAction(fig: Figure; act: Action); 
+	PROCEDURE ^ SetInt*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: LONGINT); 
+	PROCEDURE ^ DoRealAction(fig: Figure; act: Action); 
+	PROCEDURE ^ SetReal*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: REAL); 
+	PROCEDURE ^ DoStringAction(fig: Figure; act: Action); 
+	PROCEDURE ^ SetString*(fig: Figure; shape: Shape; name, val: ARRAY OF CHAR); 
+	PROCEDURE ^ SetColor*(fig: Figure; shape: Shape; col: Display.Color); 
+	PROCEDURE ^ SetMatrix*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ Exchange(a: AttrAction); 
+	PROCEDURE ^ BeginTransform*(fig: Figure; list: Shape; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ CancelTransform*(fig: Figure); 
+	PROCEDURE ^ EndTransform*(fig: Figure); 
+	PROCEDURE ^ Transform*(fig: Figure; list: Shape; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ Integrate*(fig: Figure; shapes: Shape); 
+	PROCEDURE ^ Delete*(fig: Figure; shapes: Shape); 
+	PROCEDURE ^ Clone*(fig: Figure; shapes: Shape; VAR copy: Shape); 
+	PROCEDURE ^ Consume*(fig: Figure; llx, lly, urx, ury: REAL; shapes: Shape; VAR recv: Shape); 
+	PROCEDURE ^ Render*(fig: Figure; id: INTEGER; ctxt: Gfx.Context); 
+	PROCEDURE ^ Locate*(fig: Figure; id: INTEGER; llx, lly, urx, ury: REAL): Shape; 
+	PROCEDURE ^ Project*(fig: Figure; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL; VAR res: Shape); 
+	PROCEDURE ^ DrawHandles*(llx, lly, urx, ury: REAL; VAR rm: RenderMsg); 
+	PROCEDURE ^ ProjectToHandles*(shape: Shape; llx, lly, urx, ury: REAL; VAR lm: LocateMsg); 
+	PROCEDURE ^ GetHandleMatrix*(llx, lly, urx, ury: REAL; VAR msg: MatrixMsg); 
+	PROCEDURE ^ ContainingFigure*(shape: Shape): Figure; 
+	PROCEDURE ^ GetCoordSystem*(shape: Shape; VAR lgm: GfxMatrix.Matrix); 
+	PROCEDURE ^ ShapeAttr*(shape: Shape; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ CopyShape*(VAR msg: Objects.CopyMsg; from, to: Shape); 
+	PROCEDURE ^ HandleShape*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitShape*(shape: Shape; handle: Objects.Handler); 
+	PROCEDURE ^ ToComponents*(bottom: Shape; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ CopyComponents*(VAR msg: Objects.CopyMsg; srcbot: Shape; VAR dstbot, dsttop: Shape); 
+	PROCEDURE ^ WriteComponents*(VAR r: Files.Rider; lib: Objects.Library; bottom: Shape); 
+	PROCEDURE ^ ReadComponents*(VAR r: Files.Rider; lib: Objects.Library; VAR bottom, top: Shape); 
+	PROCEDURE ^ GetComponentsBox*(bottom: Shape; VAR llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ SelectContainer*(cont: Container; VAR msg: SelectMsg); 
+	PROCEDURE ^ ConsumeAction(fig: Figure; action: Action); 
+	PROCEDURE ^ DeleteAction(fig: Figure; action: Action); 
+	PROCEDURE ^ AddConsumeAction*(fig: Figure; down, bottom, top, up: Shape; cont: Container); 
+	PROCEDURE ^ AddDeleteAction*(fig: Figure; down, bottom, top, up: Shape; cont: Container); 
+	PROCEDURE ^ ControlContainer*(cont: Container; VAR msg: ControlMsg); 
+	PROCEDURE ^ OrderContainer*(cont: Container; VAR msg: OrderMsg); 
+	PROCEDURE ^ ConsumeContainer*(cont: Container; VAR msg: ConsumeMsg); 
+	PROCEDURE ^ RenderContainer*(cont: Container; VAR msg: RenderMsg); 
+	PROCEDURE ^ ValidateContainer*(cont: Container; VAR msg: ValidateMsg); 
+	PROCEDURE ^ GetContainerCoords*(cont: Container; VAR msg: CoordMsg); 
+	PROCEDURE ^ LocateContainer*(cont: Container; VAR msg: LocateMsg); 
+	PROCEDURE ^ TransformContainer*(cont: Container; VAR msg: TransformMsg); 
+	PROCEDURE ^ GetContainerMatrix*(cont: Container; VAR msg: MatrixMsg); 
+	PROCEDURE ^ CopyContainer*(VAR msg: Objects.CopyMsg; from, to: Container); 
+	PROCEDURE ^ HandleContainer*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitContainer*(cont: Container; handle: Objects.Handler; bottom, top: Shape); 
+	PROCEDURE ^ LayerAttr(layer: Layer; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ CopyLayer*(VAR msg: Objects.CopyMsg; from, to: Layer); 
+	PROCEDURE ^ HandleLayer*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitLayer*(layer: Layer; name: ARRAY OF CHAR; display, print, align: BOOLEAN); 
+	PROCEDURE ^ NewLayer*; 
+	PROCEDURE ^ ConsumeLayer(fig: Figure; act: Action); 
+	PROCEDURE ^ RemoveLayer(fig: Figure; act: Action); 
+	PROCEDURE ^ AddLayer*(fig: Figure; layer: Layer); 
+	PROCEDURE ^ DeleteLayer*(fig: Figure); 
+	PROCEDURE ^ MoveLayerUp*(fig: Figure); 
+	PROCEDURE ^ MoveLayerDown*(fig: Figure); 
+	PROCEDURE ^ FigureAttr(fig: Figure; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ FigureLinks(fig: Figure; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ CopyFigure*(VAR msg: Objects.CopyMsg; from, to: Figure); 
+	PROCEDURE ^ HandleFigure*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitFigure*(fig: Figure); 
+	PROCEDURE ^ NewFigure*; 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ HandleRuler(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ NewRuler*; 
+BEGIN
+END Leonardo.

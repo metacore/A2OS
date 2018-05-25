@@ -1,0 +1,104 @@
+MODULE WMPerfMonPluginHeap;
+	IMPORT SYSTEM, Machine, Heaps, Modules, WMGraphics, WMPerfMonPlugins;
+CONST 
+	ModuleName = \"WMPerfMonPluginHeap"\; 
+	BlockSize = (8 * SIZEOF(ADDRESS)); 
+TYPE 
+	SizeArray = ARRAY 27 OF LONGINT; 
+
+	BlocksHelper = OBJECT (WMPerfMonPlugins.Helper)
+	VAR 
+		blocks, recblks, sysblks, arrblks, protrecblks, freeblks, unknowns: LONGINT; 
+		blockssize, recblksize, sysblksize, arrblksize, protrecblksize, freeblksize, unknownsize: SIZE; 
+		heapsize: SIZE; 
+		blockSizes, recblkSizes, sysblkSizes, arrblkSizes, protrecblkSizes, freeblkSizes: SizeArray; 
+
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ ClearSizeArrays; 
+		PROCEDURE ^ AddSize(size: SIZE; VAR array: SizeArray); 
+	END BlocksHelper; 
+
+	Blocks = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		h: BlocksHelper; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END Blocks; 
+
+	BlockTotalSizes = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		h: BlocksHelper; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END BlockTotalSizes; 
+
+	BlockSizesBase = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		h: BlocksHelper; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+	END BlockSizesBase; 
+
+	BlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END BlockSizes; 
+
+	SysBlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END SysBlockSizes; 
+
+	RecBlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END RecBlockSizes; 
+
+	ProtRecBlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END ProtRecBlockSizes; 
+
+	ArrBlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END ArrBlockSizes; 
+
+	FreeBlockSizes = OBJECT {EXCLUSIVE} (BlockSizesBase)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END FreeBlockSizes; 
+
+	GcRuns = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END GcRuns; 
+
+	NewBlockCalls = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END NewBlockCalls; 
+
+	BytesAllocated = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END BytesAllocated; 
+VAR 
+	blocksHelper: BlocksHelper; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ InitPlugins; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginHeap.

@@ -1,0 +1,232 @@
+MODULE MediaPlayer;
+	IMPORT SoundDevices, Codecs, KernelLog, Streams, Commands, Kernel, Modules, WMTransitions, WMRectangles, WMGraphics, WMWindowManager, Raster, Strings;
+CONST 
+	Ok* = 0; 
+	CouldNotOpenStream* = 1; 
+	AudioNotCompatible* = 2; 
+	VideoNotCompatible* = 3; 
+	DemuxNotCompatible* = 4; 
+	NoVideoDecoder* = 5; 
+	NoAudioDecoder* = 6; 
+	NoDecoders* = 7; 
+	WrongParameters* = 8; 
+	NotReady* = 1; 
+	Ready* = 2; 
+	Playing* = 3; 
+	Paused* = 4; 
+	Stopped* = 5; 
+	InTransition* = 7; 
+	Finished* = 9; 
+	Closed* = 10; 
+	Error* = 99; 
+	NoRequest = 0; 
+	AudioBufferSize = 288; 
+	AudioBuffers = 160; 
+	AudioConstantDelay = 100; 
+	VBUFFERS = 10; 
+	UpdateInterval = 500; 
+	ForceFullscreen = FALSE; 
+	ForceDefaultView = FALSE; 
+	PointerInvisibleAfter = 2000; 
+	PerformanceStats = FALSE; 
+	TraceNone = {}; 
+	TracePlayer = {1}; 
+	TraceOpen = {2}; 
+	TraceFiller = {3}; 
+	TraceTransitions = {4}; 
+	TraceStates = {5}; 
+	TraceRendering = {6}; 
+	TraceEof = {7}; 
+	Trace = TraceNone; 
+	Debug = TRUE; 
+TYPE 
+	VideoBuffer = WMGraphics.Image; 
+
+	VideoBufferPool = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: LONGINT; 
+		buffer: POINTER TO ARRAY OF VideoBuffer; 
+
+		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^ Add(x: VideoBuffer); 
+		PROCEDURE ^ Remove(): VideoBuffer; 
+		PROCEDURE ^ NofBuffers(): LONGINT; 
+	END VideoBufferPool; 
+
+	KeyEventHandler* = PROCEDURE {DELEGATE}(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+
+	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: LONGINT; keys: SET); 
+
+	PlayerWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
+	VAR 
+		player: Player; 
+		rect: WMRectangles.Rectangle; 
+		videoWidth, videoHeight: LONGINT; 
+		fullscreen-: BOOLEAN; 
+		lastFrame: WMGraphics.Image; 
+		posX, posY: LONGINT; 
+		timer: Kernel.Timer; 
+		lastTimestamp, timestamp: LONGINT; 
+		extPointerDownHandler*: PointerDownHandler; 
+		extKeyEventHandler*: KeyEventHandler; 
+		alive, dead: BOOLEAN; 
+
+		PROCEDURE ^  & New*(w, h: LONGINT; alpha: BOOLEAN; player: Player; autoHideCursor: BOOLEAN); 
+		PROCEDURE ^ ToggleFullscreen*; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ ShowBlack*; 
+		PROCEDURE ^ ShowFrame*(frame: WMGraphics.Image); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ SetPointerVisible(visible: BOOLEAN); 
+	BEGIN{ACTIVE} 
+	END PlayerWindow; 
+
+	Filler = OBJECT {EXCLUSIVE} 
+	VAR 
+		videoDecoder: Codecs.VideoDecoder; 
+		vBufferPool: VideoBufferPool; 
+		readyBufferPool: VideoBufferPool; 
+		vBuffer: VideoBuffer; 
+		blackBuffer: VideoBuffer; 
+		drop: LONGINT; 
+		frame: VideoBuffer; 
+		alive, positionChanged: BOOLEAN; 
+		framesDecoded: LONGINT; 
+		min, max, tot: LONGINT; 
+		perf: LONGINT; 
+		dropped: LONGINT; 
+
+		PROCEDURE ^  & New*(videoWidth, videoHeight: LONGINT; videoDecoder: Codecs.VideoDecoder); 
+		PROCEDURE ^ GetNextBuffer(): VideoBuffer; 
+		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
+		PROCEDURE ^ DropFrames(n: LONGINT); 
+		PROCEDURE ^ GetPos(): LONGINT; 
+		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: LONGINT); 
+		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ NofFullBuffers(): LONGINT; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ Close; 
+	BEGIN{ACTIVE} 
+	END Filler; 
+
+	Setup* = POINTER TO RECORD 
+		uri-: ARRAY 256 OF CHAR; 
+		hasAudio-, hasVideo-: BOOLEAN; 
+		canSeek-: BOOLEAN; 
+		maxTime-: LONGINT; 
+		width-, height-: LONGINT; 
+		mspf-: LONGINT; 
+		maxFrames-: LONGINT; 
+		channels-, bits-, rate-: LONGINT; 
+	END; 
+
+	Context = POINTER TO RECORD 
+		uri: ARRAY 256 OF CHAR; 
+		hasVideo, hasAudio: BOOLEAN; 
+		canSeek: BOOLEAN; 
+		pos, oldPos: LONGINT; 
+		video: Codecs.VideoDecoder; 
+		maxFrames, maxTime: LONGINT; 
+		width, height, mspf: LONGINT; 
+		filler: Filler; 
+		vBuffer: VideoBuffer; 
+		audio: Codecs.AudioDecoder; 
+		channels, bits, rate: LONGINT; 
+		posRate: LONGINT; 
+		aBuffer: SoundDevices.Buffer; 
+		channel: SoundDevices.Channel; 
+		bufferpool: SoundDevices.BufferPool; 
+		delay: LONGINT; 
+		transition: WMTransitions.TransitionFade; 
+		transitionFrame: LONGINT; 
+		transitionDuration: LONGINT; 
+		transitionImg: VideoBuffer; 
+		black: VideoBuffer; 
+	END; 
+
+	EofProc = PROCEDURE {DELEGATE}(sender, data: ANY); 
+
+	EofHandler = OBJECT {EXCLUSIVE} 
+	VAR 
+		proc: EofProc; 
+		player: Player; 
+		alive, dead, called: BOOLEAN; 
+
+		PROCEDURE ^ Call; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^  & New*(player: Player); 
+	BEGIN{ACTIVE} 
+	END EofHandler; 
+
+	Player* = OBJECT {EXCLUSIVE} 
+	VAR 
+		state: LONGINT; 
+		current, next: Context; 
+		nextState: LONGINT; 
+		nextContext: Context; 
+		requestProcessed: BOOLEAN; 
+		lock: BOOLEAN; 
+		console*: BOOLEAN; 
+		soundDevice: SoundDevices.Driver; 
+		mixerChannel, pcmChannel, mChannel: SoundDevices.MixerChannel; 
+		channelName: ARRAY 128 OF CHAR; 
+		pw: PlayerWindow; 
+		timer: Kernel.Timer; 
+		tickStart: LONGINT; 
+		tickDelay: LONGINT; 
+		lastUpdate: LONGINT; 
+		videoFramesPlayed: LONGINT; 
+		mspf: LONGINT; 
+		setup*: PROCEDURE {DELEGATE}(data: Setup); 
+		update*: PROCEDURE {DELEGATE}(state, pos, maxpos, displayTime: LONGINT); 
+		eof: EofHandler; 
+
+		PROCEDURE ^ Open*(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Play*; 
+		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: LONGINT; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ GetPos*(): LONGINT; 
+		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetEofAction(proc: EofProc); 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Acquire; 
+		PROCEDURE ^ Release; 
+		PROCEDURE ^ RequestState(state: LONGINT; context: Context); 
+		PROCEDURE ^ GetRequestedState(VAR state: LONGINT; VAR context: Context); 
+		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ GetState(): LONGINT; 
+		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY); 
+		PROCEDURE ^ CheckWindow(context: Context); 
+		PROCEDURE ^ InitTime; 
+		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT): Context; 
+		PROCEDURE ^ FreeContext(context: Context); 
+		PROCEDURE ^ Loop(sender, data: ANY); 
+		PROCEDURE ^ Quit(sender, data: ANY); 
+		PROCEDURE ^ RenderAudio(c: Context); 
+		PROCEDURE ^ RenderVideo(c: Context); 
+		PROCEDURE ^ RenderVideoTransition(from, to: Context); 
+		PROCEDURE ^ Render(c1, c2: Context); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ StopIntern; 
+		PROCEDURE ^ StartPlayIntern; 
+		PROCEDURE ^ PauseIntern; 
+		PROCEDURE ^ ResumeIntern; 
+		PROCEDURE ^ OpenIntern(nextContext: Context); 
+		PROCEDURE ^ IsValidStateTransition(from, to: LONGINT): BOOLEAN; 
+		PROCEDURE ^ EvaluateState; 
+	BEGIN{ACTIVE} 
+	END Player; 
+VAR 
+	mplayer: Player; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ TransitionTo*(context: Commands.Context); 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ SetEofAction*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END MediaPlayer.

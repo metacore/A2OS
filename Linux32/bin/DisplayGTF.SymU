@@ -1,0 +1,55 @@
+MODULE DisplayGTF;
+	IMPORT SYSTEM, MathL, Strings, Commands;
+CONST 
+	GTFLockVF = 1; 
+	GTFLockHF = 2; 
+	GTFLockPF = 3; 
+TYPE 
+	GTFConstants = RECORD 
+		margin: LONGREAL; 
+		cellGran: LONGREAL; 
+		minPorch: LONGREAL; 
+		vSyncRqd: LONGREAL; 
+		hSync: LONGREAL; 
+		minVSyncBP: LONGREAL; 
+		m: LONGREAL; 
+		c: LONGREAL; 
+		k: LONGREAL; 
+		j: LONGREAL; 
+	END; 
+
+	GTFHCRTC = RECORD 
+		hTotal: LONGINT; 
+		hDisp: LONGINT; 
+		hSyncStart: LONGINT; 
+		hSyncEnd: LONGINT; 
+	END; 
+
+	GTFVCRTC = RECORD 
+		vTotal: LONGINT; 
+		vDisp: LONGINT; 
+		vSyncStart: LONGINT; 
+		vSyncEnd: LONGINT; 
+	END; 
+
+	GTFTimings = RECORD 
+		h: GTFHCRTC; 
+		v: GTFVCRTC; 
+		hSyncPol: CHAR; 
+		vSyncPol: CHAR; 
+		interlace: CHAR; 
+		vFreq: LONGREAL; 
+		hFreq: LONGREAL; 
+	END; 
+VAR 
+	conf*: ARRAY 512 OF CHAR; 
+	hex: ARRAY 17 OF CHAR; 
+
+	PROCEDURE ^ pow(x: LONGREAL; n: LONGINT): LONGREAL; 
+	PROCEDURE ^ Round(v: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GetInternalConstants(VAR c: GTFConstants); 
+	PROCEDURE ^ GTFCalcTimings(hPixels, vLines, freq: LONGREAL; type: LONGINT; wantMargins, wantInterlace: BOOLEAN; VAR t: GTFTimings); 
+	PROCEDURE ^ VesaConf(mode, width, height, depth, hz: LONGINT; VAR conf: ARRAY OF CHAR); 
+	PROCEDURE ^ Mode*(context: Commands.Context); 
+BEGIN
+END DisplayGTF.

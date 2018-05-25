@@ -1,0 +1,88 @@
+MODULE DataIO;
+	IMPORT Modules, Streams, Files, Dates, NbrInt, NbrRat, NbrRe, NbrCplx, NbrStrings, DataErrors;
+CONST 
+TYPE 
+	Item = POINTER TO RECORD 
+		type: Modules.TypeDesc; 
+		load: LoadProc; 
+		store: StoreProc; 
+		next: Item; 
+	END; 
+
+	Registry = POINTER TO RECORD 
+		root: Item; 
+	END; 
+
+	Card = OBJECT 
+	VAR 
+		number: NbrInt.Integer; 
+		type: Modules.TypeDesc; 
+		next: Card; 
+
+		PROCEDURE ^ Read(R: Reader); 
+		PROCEDURE ^ Write(W: Writer); 
+	END Card; 
+
+	Library = OBJECT 
+	VAR 
+		entries: NbrInt.Integer; 
+		root, card: Card; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Read(R: Reader); 
+		PROCEDURE ^ Write(W: Writer); 
+		PROCEDURE ^ Push(type: Modules.TypeDesc); 
+	END Library; 
+
+	Reader* = OBJECT (Files.Reader)
+	VAR 
+		lib: Library; 
+		file: File; 
+
+		PROCEDURE ^ ReaderAvailable(): BOOLEAN; 
+		PROCEDURE ^ DateTime*(VAR x: Dates.DateTime); 
+		PROCEDURE ^ Integer*(VAR x: NbrInt.Integer); 
+		PROCEDURE ^ Rational*(VAR x: NbrRat.Rational); 
+		PROCEDURE ^ Complex*(VAR x: NbrCplx.Complex); 
+		PROCEDURE ^ PtrString*(VAR x: NbrStrings.String); 
+		PROCEDURE ^ Object*(VAR x: OBJECT); 
+	END Reader; 
+
+	Writer* = OBJECT (Files.Writer)
+	VAR 
+		lib: Library; 
+		file: File; 
+
+		PROCEDURE ^ DateTime*(x: Dates.DateTime); 
+		PROCEDURE ^ Integer*(x: NbrInt.Integer); 
+		PROCEDURE ^ Rational*(x: NbrRat.Rational); 
+		PROCEDURE ^ Real*(x: NbrRe.Real); 
+		PROCEDURE ^ Complex*(x: NbrCplx.Complex); 
+		PROCEDURE ^ PtrString*(x: NbrStrings.String); 
+		PROCEDURE ^ Object*(x: OBJECT); 
+	END Writer; 
+
+	File* = OBJECT 
+	VAR 
+		F: Files.File; 
+		lib: Library; 
+		initialwpos: LONGINT; 
+		R-: Reader; 
+		W-: Writer; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Length*(): LONGINT; 
+	END File; 
+
+	LoadProc* = PROCEDURE (R: Reader; VAR obj: OBJECT); 
+
+	StoreProc* = PROCEDURE (W: Writer; obj: OBJECT); 
+VAR 
+	registry: Registry; 
+
+	PROCEDURE ^ PlugIn*(obj: ANY; load: LoadProc; store: StoreProc); 
+	PROCEDURE ^ Open*(fileName: Files.FileName): File; 
+	PROCEDURE ^ Rewind*(f: File); 
+	PROCEDURE ^ Close*(f: File); 
+BEGIN
+END DataIO.

@@ -1,9 +1,0 @@
-MODULE PDFExample;
-	IMPORT WMGraphics, PDF;
-CONST 
-
-	PROCEDURE ^ PolyLine*; 
-	PROCEDURE ^ FillPoly*; 
-	PROCEDURE ^ Text*; 
-BEGIN
-END PDFExample.

@@ -1,0 +1,95 @@
+MODULE Icons IN Oberon;
+	IMPORT Objects, Gadgets, Effects, Display, Display3, Texts, Oberon, Files, Input, Fonts, Links, Views, Printer, Printer3, Documents;
+CONST 
+	pinsize = 10; 
+	offset = 2; 
+TYPE 
+	View* = POINTER TO ViewDesc; 
+
+	ViewDesc* = RECORD (Gadgets.ViewDesc)
+	END; 
+
+	Icon* = POINTER TO IconDesc; 
+
+	IconDesc* = RECORD (Gadgets.FrameDesc)
+		caption*: ARRAY 64 OF CHAR; 
+		col: INTEGER; 
+		h: INTEGER; 
+	END; 
+
+	Iconizer* = POINTER TO IconizerDesc; 
+
+	IconizerDesc* = RECORD (Gadgets.FrameDesc)
+		closedF*, openF*: Display.Frame; 
+		closed*: BOOLEAN; 
+		popup*: BOOLEAN; 
+		pin*: BOOLEAN; 
+		sel*: BOOLEAN; 
+		pos*: BOOLEAN; 
+		poping: BOOLEAN; 
+		px, py, oX, oY, cX, cY: INTEGER; 
+	END; 
+
+	StackDesc = RECORD 
+		iconizer: Iconizer; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	top: Iconizer; 
+
+	PROCEDURE ^ SetMasks(F: Display.Frame; M: Display3.Mask); 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ RestoreView(F: View; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ PrintView(F: View; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyView*(VAR M: Objects.CopyMsg; from, to: View); 
+	PROCEDURE ^ ViewHandle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ ViewOf*(f: Gadgets.Frame): View; 
+	PROCEDURE ^ InitView*(F: View); 
+	PROCEDURE ^ NewView*; 
+	PROCEDURE ^ ToIcon(F: Icon; x, y, w, h: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ StringSize(s: ARRAY OF CHAR; VAR w, h: INTEGER); 
+	PROCEDURE ^ IconSize(F: Icon; VAR w, h: INTEGER); 
+	PROCEDURE ^ Change(F: Icon); 
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ IconAttr(F: Icon; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ IconLink(F: Icon; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ RestoreIcon(R: Display3.Mask; F: Icon; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ PrintIcon(F: Icon; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ LocateMsg(F: Icon; x, y, w, h: INTEGER; VAR M: Display.LocateMsg); 
+	PROCEDURE ^ CopyIcon*(VAR M: Objects.CopyMsg; from, to: Icon); 
+	PROCEDURE ^ Size(F: Icon; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ TrackHighlight(R: Display3.Mask; VAR X, Y: INTEGER; x, y, w, h: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ IconTrack(F: Icon; R: Display3.Mask; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ HasCmdAttr(F: Display.Frame; attr: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ IconHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ MakeIcon*(F: Icon; name: ARRAY OF CHAR; icon: Objects.Object); 
+	PROCEDURE ^ NewIcon*; 
+	PROCEDURE ^ Push(VAR S: StackDesc; F: Iconizer); 
+	PROCEDURE ^ Pop(VAR S: StackDesc); 
+	PROCEDURE ^ Top(): Iconizer; 
+	PROCEDURE ^ To(F: Iconizer; childu, childv: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ Flip*; 
+	PROCEDURE ^ SetLinkObject(F: Iconizer; f: Display.Frame; closed: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ IconizerAttr(F: Iconizer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ IconizerLink(F: Iconizer; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ LocateIconizer(F: Iconizer; VAR M: Display.LocateMsg); 
+	PROCEDURE ^ AdjustIconizer(F: Iconizer; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ AdjustIconizerChild(F: Iconizer; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ ConsumeIconizer(F: Iconizer; VAR M: Display.ConsumeMsg); 
+	PROCEDURE ^ TrackPopup(F: Iconizer; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ PrintIconizer(F: Iconizer; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ RestoreIconizer(R: Display3.Mask; F: Iconizer; x, y, w, h: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ RestoreIconizerArea(R: Display3.Mask; F: Iconizer; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyIconizer*(VAR M: Objects.CopyMsg; from, to: Iconizer); 
+	PROCEDURE ^ StoreIconizer(F: Iconizer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadIconizer(F: Iconizer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ UpdateMask(F: Iconizer; x, y, w, h: INTEGER; VAR M: Display3.UpdateMaskMsg); 
+	PROCEDURE ^ TrackIconizer(F: Iconizer; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ IconizerHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ MakeIconizer*(F: Iconizer; close, open: Display.Frame); 
+	PROCEDURE ^ NewIconizer*; 
+	PROCEDURE ^ Break*; 
+	PROCEDURE ^ CreateIcon*(F: Icon; caption, icon: ARRAY OF CHAR); 
+	PROCEDURE ^ InsertIcon*; 
+BEGIN
+END Icons.

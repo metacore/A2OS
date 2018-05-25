@@ -1,0 +1,17 @@
+MODULE TextCompiler;
+	IMPORT Streams, Modules, Basic := FoxBasic, Compiler, TextUtilities, Diagnostics, Texts, Backend := FoxBackend, SyntaxTree := FoxSyntaxTree, CompilerInterface, Formats := FoxFormats, Strings, UTF8Strings, Commands;
+CONST 
+	Name = \"Fox"\; 
+	Description = \"Oberon Compiler"\; 
+	FileExtension = \"MOD"\; 
+
+	PROCEDURE ^ GetClipboardReader(): Streams.Reader; 
+	PROCEDURE ^ GetSelectionReader(): Streams.Reader; 
+	PROCEDURE ^ GetTextReader(text: Texts.Text; position: LONGINT): Streams.Reader; 
+	PROCEDURE ^ UTF8Size(text: Texts.Text; startPos, len: LONGINT): LONGINT; 
+	PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ CompileSelection*(context: Commands.Context); 
+	PROCEDURE ^ CompileClipboard*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END TextCompiler.

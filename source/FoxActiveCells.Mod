@@ -1,6 +1,6 @@
 MODULE FoxActiveCells; (** AUTHOR "fof"; PURPOSE "hardware library for the ActiveCells compiler"; *)
 (*! deprecated -- not used any more in Active Cells 3 *)
-IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams,  D := Debugging, Diagnostics, Strings, Commands, GenericLinker, StaticLinker, SYSTEM, Modules;
+IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams,  D := Debugging, Diagnostics, Strings, Commands, GenericLinker, Linker, SYSTEM, Modules;
 
 CONST
 	In*= SyntaxTree.InPort; Out*= SyntaxTree.OutPort;
@@ -944,7 +944,7 @@ TYPE
 		PROCEDURE LinkType*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: LONGINT): BOOLEAN;
 		VAR
 			fileName, codeFileName, dataFileName: Files.FileName;
-			code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker;
+			code, data: Linker.Arrangement; linker: GenericLinker.Linker;
 			module: Module;
 			linkRoot,msg: SyntaxTree.String;
 			i: LONGINT;
@@ -962,7 +962,7 @@ TYPE
 			linker.SetLinkRoot(linkRoot);
 			FOR i := 0 TO modules.Length()-1 DO
 				module := modules.GetModule(i);
-				StaticLinker.ReadObjectFile(module.name, "",ObjectFileExtension,linker);
+				Linker.ReadObjectFile(module.name, "",ObjectFileExtension,linker);
 			END;
 
 			(* do linking after having read in all blocks to account for potential constraints *)
@@ -976,8 +976,8 @@ TYPE
 			Files.JoinExtension(fileName,DataFileExtension,dataFileName);
 
 			IF ~linker.error THEN
-				StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
-				StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+				Linker.WriteOutputFile (code, codeFileName, linker, Linker.WriteTRMCodeFile);
+				Linker.WriteOutputFile (data, dataFileName, linker, Linker.WriteTRMDataFile);
 				GetFullName(msg,NIL); Strings.Append(msg," successfully linked");
 				IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
 				IF specification.log # NIL THEN specification.log.String(msg); specification.log.Ln END;

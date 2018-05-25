@@ -1,0 +1,31 @@
+MODULE OpenTypeFonts;
+	IMPORT SYSTEM, Strings, OTInt := OpenTypeInt, OType := OpenType, OpenTypeScan, Files, KernelLog, Commands;
+CONST 
+	ScreenDPI = 71; 
+	FontId = 0DBX; 
+	FontFont = 0; 
+	FontMetric = 1; 
+TYPE 
+	RasterData* = RECORD (OType.RasterData)
+		adr*: ADDRESS; 
+		bpr*: LONGINT; 
+		len*: LONGINT; 
+	END; 
+
+	Char* = POINTER TO CharDesc; 
+
+	CharDesc* = RECORD 
+		dx*, x*, y*, w*, h*: INTEGER; 
+		pat*: LONGINT; 
+	END; 
+VAR 
+	Pattern: ARRAY ((360 * 360) DIV 8) OF CHAR; 
+	Glyph: OType.Glyph; 
+	Char2: Char; 
+
+	PROCEDURE ^ FillRect*(llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0); 
+	PROCEDURE ^ MakeFont(inst: OType.Instance; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Make*(context: Commands.Context); 
+	PROCEDURE ^ IsNumber(str: ARRAY OF CHAR): BOOLEAN; 
+BEGIN
+END OpenTypeFonts.

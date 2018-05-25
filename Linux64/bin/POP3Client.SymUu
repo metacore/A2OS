@@ -1,0 +1,36 @@
+MODULE POP3Client;
+	IMPORT Streams, Files, IP, DNS, TCP, Strings, KernelLog;
+CONST 
+	StateIdle = 0; 
+	StateConnected = 1; 
+	StateAuthenticate = 2; 
+	StateTransaction = 3; 
+	ResOk* = 0; 
+	ResFailed* = 1; 
+	ResAlreadyOpen* = 2; 
+	ResServerNotFound* = 3; 
+	ResNoConnection* = 4; 
+	ResUserPassError* = 5; 
+	ResServerNotReady* = 6; 
+	ResServerFailed* = 7; 
+TYPE 
+	POP3Client* = OBJECT {EXCLUSIVE} 
+	VAR 
+		connection: TCP.Connection; 
+		w: Streams.Writer; 
+		r: Streams.Reader; 
+		state: LONGINT; 
+		message: ARRAY 513 OF CHAR; 
+
+		PROCEDURE ^ Connect*(CONST host: ARRAY OF CHAR; port: LONGINT; CONST user, password: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Login*(CONST user, password: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Quit*; 
+		PROCEDURE ^ List*; 
+		PROCEDURE ^ GetMessage*(nr: LONGINT; CONST filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ NOOP*; 
+		PROCEDURE ^ ReadResponse(VAR message: ARRAY OF CHAR): BOOLEAN; 
+	END POP3Client; 
+
+	PROCEDURE ^ Test*; 
+BEGIN
+END POP3Client.

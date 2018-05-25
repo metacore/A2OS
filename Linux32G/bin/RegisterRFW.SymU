@@ -1,9 +1,0 @@
-MODULE RegisterRFW;
-	IMPORT Streams, WebHTTP, HTTPSupport, WebCGI, Files, KernelLog, Dates, Strings;
-CONST 
-
-	PROCEDURE ^ AppendData(filename: ARRAY OF CHAR; r: HTTPSupport.HTTPRequest); 
-	PROCEDURE ^ RegisterRFW4*(context: WebCGI.CGIContext); 
-	PROCEDURE ^ RegisterRFW3*(context: WebCGI.CGIContext); 
-BEGIN
-END RegisterRFW.

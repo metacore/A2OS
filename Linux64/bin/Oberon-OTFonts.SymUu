@@ -1,0 +1,36 @@
+MODULE OTFonts IN Oberon;
+	IMPORT SYSTEM, Files, Objects, Fonts, Texts, Oberon, Strings, Display, OTInt, OType;
+CONST 
+	ScreenDPI = 91; 
+TYPE 
+	RasterData = RECORD (OType.RasterData)
+		adr: ADDRESS; 
+		bpr: LONGINT; 
+		len: LONGINT; 
+	END; 
+
+	Font = POINTER TO FontDesc; 
+
+	FontDesc = RECORD (Fonts.FontDesc)
+		inst: OType.Instance; 
+		glyph: OType.Glyph; 
+		mem: POINTER TO ARRAY OF CHAR; 
+		pattern: Display.Pattern; 
+	END; 
+VAR 
+	Pattern: ARRAY ((360 * 360) DIV 8) OF CHAR; 
+	Glyph: OType.Glyph; 
+	Char: Fonts.Char; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ FillRect(llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0); 
+	PROCEDURE ^ MakeFont(inst: OType.Instance; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetChar(font: Font; no: INTEGER; VAR pat: Display.Pattern); 
+	PROCEDURE ^ GetCharObj(lib: Objects.Library; ref: INTEGER; VAR obj: Objects.Object); 
+	PROCEDURE ^ LoadFont(font: Font); 
+	PROCEDURE ^ Load(lib: Objects.Library); 
+	PROCEDURE ^ New(): Objects.Library; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Make*; 
+BEGIN
+END OTFonts.

@@ -1,0 +1,45 @@
+MODULE X509;
+	IMPORT Streams, Dates, CryptoBigNumbers, CryptoRSA, ASN1, KernelLog;
+CONST 
+	Trace = FALSE; 
+	AllowNotTrusted* = 0; 
+	AllowOutdated* = 1; 
+	Bypass* = 31; 
+TYPE 
+	Entity* = RECORD 
+		country-, organisation-, organisationUnit-, distName-, state-, commonName-: POINTER TO ARRAY OF CHAR; 
+		serial-: LONGINT; 
+	END; 
+
+	Certificate* = POINTER TO RECORD 
+		version-, serial-: LONGINT; 
+		algorithm-: POINTER TO ARRAY OF CHAR; 
+		validity-: RECORD 
+			notBefore-, notAfter-: Dates.DateTime; 
+		END; 
+		identifier-: POINTER TO ARRAY OF CHAR; 
+		publicKey-: CryptoRSA.Key; 
+		issuer-, subject-: Entity; 
+		parent-, next: Certificate; 
+	END; 
+VAR 
+	roots: Certificate; 
+
+	PROCEDURE ^ Verify*(chain: Certificate; flags: SET): BOOLEAN; 
+	PROCEDURE ^ Read*(reader: Streams.Reader): Certificate; 
+	PROCEDURE ^ Write*(writer: Streams.Writer; cert: Certificate); 
+	PROCEDURE ^ AddToTrusted*(certificate: Certificate); 
+	PROCEDURE ^ IsDigit(char: CHAR): BOOLEAN; 
+	PROCEDURE ^ ReadUTCTime(reader: Streams.Reader; VAR date: Dates.DateTime): BOOLEAN; 
+	PROCEDURE ^ WriteUTCTime(writer: Streams.Writer; CONST date: Dates.DateTime); 
+	PROCEDURE ^ ReadGeneralizedTime(reader: Streams.Reader; VAR date: Dates.DateTime): BOOLEAN; 
+	PROCEDURE ^ WriteGeneralizedTime(writer: Streams.Writer; CONST date: Dates.DateTime); 
+	PROCEDURE ^ ReadTime(reader: Streams.Reader; VAR date: Dates.DateTime): BOOLEAN; 
+	PROCEDURE ^ FormatEntity(triplet: ASN1.Triplet; VAR entity: Entity); 
+	PROCEDURE ^ FormatRsaPublicKey*(publicKey: ASN1.Triplet; VAR key: CryptoRSA.Key); 
+	PROCEDURE ^ PrintDate(date: Dates.DateTime; writer: Streams.Writer); 
+	PROCEDURE ^ PrintEntity(entity: Entity; writer: Streams.Writer); 
+	PROCEDURE ^ PrintCertificate*(certificate: Certificate; writer: Streams.Writer); 
+	PROCEDURE ^ Check(b: BOOLEAN); 
+BEGIN
+END X509.

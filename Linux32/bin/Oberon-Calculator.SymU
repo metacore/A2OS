@@ -1,0 +1,101 @@
+MODULE Calculator IN Oberon;
+	IMPORT MathL IN A2, Oberon, Objects, Texts;
+CONST 
+	EOC = \"~"\; 
+	Done* = 0; 
+	UnmatchedBrackets* = 1; 
+	UnknownOperator* = 2; 
+	MisplacedOperator* = 3; 
+	MisplacedOperand* = 4; 
+	NoOperand* = 5; 
+	InternalError* = 6; 
+	PREFIX = 1; 
+	POSTFIX = 2; 
+	INFIX = 3; 
+	OPERAND = 4; 
+TYPE 
+	UnaryFunc* = PROCEDURE (x: LONGREAL):LONGREAL; 
+
+	BinaryFunc* = PROCEDURE (x: LONGREAL; y: LONGREAL):LONGREAL; 
+
+	Reference = POINTER TO ReferenceDesc; 
+
+	ReferenceDesc = RECORD 
+		name: Objects.Name; 
+		weight: INTEGER; 
+		next: Reference; 
+	END; 
+
+	PrefixOperator = POINTER TO PrefixOperatorDesc; 
+
+	PrefixOperatorDesc = RECORD (ReferenceDesc)
+		op: UnaryFunc; 
+	END; 
+
+	InfixOperator = POINTER TO InfixOperatorDesc; 
+
+	InfixOperatorDesc = RECORD (ReferenceDesc)
+		op: BinaryFunc; 
+	END; 
+
+	Node = POINTER TO NodeDesc; 
+
+	NodeDesc = RECORD 
+		left, right, up: Node; 
+	END; 
+
+	Operator = POINTER TO OperatorDesc; 
+
+	OperatorDesc = RECORD (NodeDesc)
+		ref: Reference; 
+	END; 
+
+	Result = POINTER TO ResultDesc; 
+
+	ResultDesc = RECORD (NodeDesc)
+	END; 
+
+	Value = POINTER TO ValueDesc; 
+
+	ValueDesc = RECORD (NodeDesc)
+		value: LONGREAL; 
+	END; 
+
+	Expression* = POINTER TO ExpressionDesc; 
+
+	ExpressionDesc* = RECORD 
+		root, curr: Node; 
+		res*, nest, last: INTEGER; 
+	END; 
+VAR 
+	F, D: LONGINT; 
+	ref: Reference; 
+	test*: Expression; 
+
+	PROCEDURE ^ Add(to, this: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Subtract(this, from: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Multiply(by, this: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Divide(by, this: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Power*(base, exponent: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Fac*(this: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Calc(node: Node; VAR res: INTEGER): LONGREAL; 
+	PROCEDURE ^ Weight(node: Node): INTEGER; 
+	PROCEDURE ^ InitNode(node: Node); 
+	PROCEDURE ^ NewResult(): Result; 
+	PROCEDURE ^ InitExpression*(VAR exp: Expression); 
+	PROCEDURE ^ AppendValue(exp: Expression; val: Value); 
+	PROCEDURE ^ AppendBracket*(VAR exp: Expression; bracket: CHAR); 
+	PROCEDURE ^ CloseAllBrackets*(VAR exp: Expression); 
+	PROCEDURE ^ AppendOperator*(VAR exp: Expression; op: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendOperand*(VAR exp: Expression; op: LONGREAL); 
+	PROCEDURE ^ Scan*(VAR exp: Expression; VAR S: Texts.Scanner); 
+	PROCEDURE ^ EvaluateCurrent*(exp: Expression): LONGREAL; 
+	PROCEDURE ^ EvaluateRoot*(exp: Expression): LONGREAL; 
+	PROCEDURE ^ Fraction*; 
+	PROCEDURE ^ Exponent*; 
+	PROCEDURE ^ Calculate*; 
+	PROCEDURE ^ AddPrefixOperator*(name: ARRAY OF CHAR; f: UnaryFunc); 
+	PROCEDURE ^ AddInfixOperator*(name: ARRAY OF CHAR; w: INTEGER; f: BinaryFunc); 
+	PROCEDURE ^ AddPostfixOperator*(name: ARRAY OF CHAR; f: UnaryFunc); 
+BEGIN
+END Calculator.

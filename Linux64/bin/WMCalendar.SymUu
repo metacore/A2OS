@@ -1,0 +1,136 @@
+MODULE WMCalendar;
+	IMPORT Dates, Strings, Modules, Kernel, XML, WMRectangles, Raster, WMRasterScale, WMGraphics, WMGraphicUtilities, WMMessages, WMWindowManager, WMRestorable, WMEvents, WMProperties, WMComponents, WMStandardComponents, WMPopups;
+CONST 
+	Monday* = 1; 
+	Tuesday* = 2; 
+	Wednesday* = 3; 
+	Thursday* = 4; 
+	Friday* = 5; 
+	Saturday* = 6; 
+	Sunday* = 7; 
+	January* = 1; 
+	February* = 2; 
+	March* = 3; 
+	April* = 4; 
+	May* = 5; 
+	June* = 6; 
+	July* = 7; 
+	August* = 8; 
+	September* = 9; 
+	October* = 10; 
+	November* = 11; 
+	December* = 12; 
+	MinCellWidth = 5; 
+	MinCellHeight = 5; 
+	NofColumns = 7; 
+	NofRows = 7; 
+	WindowWidth = 200; 
+	WindowHeight = 200; 
+	NotInitialized = 0; 
+	Running = 1; 
+	Terminating = 2; 
+	Terminated = 3; 
+TYPE 
+	SelectionWrapper* = OBJECT 
+	VAR 
+		year-, month-, day-, week-, weekDay-: LONGINT; 
+
+		PROCEDURE ^  & Init(year, month, day, week, weekDay: LONGINT); 
+	END SelectionWrapper; 
+
+	Calendar* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		onSelect-: WMEvents.EventSource; 
+		allowSelection-: WMProperties.BooleanProperty; 
+		year-, month-: WMProperties.Int32Property; 
+		firstDayOfWeek-: WMProperties.Int32Property; 
+		clText-, clTextTitle-, clTextWeekend-, clTextOtherMonths-, clTextCurrentDay-, clMouseOver-: WMProperties.ColorProperty; 
+		currentDayImageName-: WMProperties.StringProperty; 
+		currentDayImage: WMGraphics.Image; 
+		backgroundImageName-: WMProperties.StringProperty; 
+		backgroundImage: WMGraphics.Image; 
+		mouseOverColumn, mouseOverRow: LONGINT; 
+		selected: BOOLEAN; 
+		currentDate: Dates.DateTime; 
+		date0: Dates.DateTime; 
+		cellWidth, cellHeight: LONGINT; 
+		fixWidth, fixHeight: LONGINT; 
+		state: LONGINT; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ RecacheProperties*; 
+		PROCEDURE ^ NextMonth*; 
+		PROCEDURE ^ PreviousMonth*; 
+		PROCEDURE ^ ChangeMonth(delta: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ GetDateXY(x, y: LONGINT; VAR dt: Dates.DateTime): BOOLEAN; 
+		PROCEDURE ^ GetCell(x, y: LONGINT; VAR column, row: LONGINT); 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ UpdateCurrentDate; 
+	BEGIN{ACTIVE} 
+	END Calendar; 
+
+	CalendarController* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		calendar: Calendar; 
+		prevBtn, nextBtn: WMStandardComponents.Button; 
+		dateLabel: WMStandardComponents.Label; 
+		state: LONGINT; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ UpdateDateLabel; 
+		PROCEDURE ^ SetCalendar*(calendar: Calendar); 
+	END CalendarController; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		calendar: Calendar; 
+		control: CalendarController; 
+		colorScheme: LONGINT; 
+		contextMenu: WMPopups.Popup; 
+		dragging, resizing: BOOLEAN; 
+		lastX, lastY: LONGINT; 
+
+		PROCEDURE ^  & New*(context: WMRestorable.Context); 
+		PROCEDURE ^ SetColorScheme(scheme: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ HandleClose(sender, par: ANY); 
+		PROCEDURE ^ HandleCurrentDay(sender, data: ANY); 
+		PROCEDURE ^ HandleToggleColor(sender, data: ANY); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	WeekDay: ARRAY 8 OF ARRAY 16 OF CHAR; 
+	nofWindows: LONGINT; 
+	StrCalendar, StrCalendarController, StrOnSelect, StrOnSelectInfo: Strings.String; 
+	PrototypeAllowSelection: WMProperties.BooleanProperty; 
+	PrototypeYear, PrototypeMonth, PrototypeFirstDayOfWeek: WMProperties.Int32Property; 
+	PrototypeClText, PrototypeClTextTitle, PrototypeClTextWeekend, PrototypeClTextOtherMonths, PrototypeClTextCurrentDay, PrototypeClMouseOver: WMProperties.ColorProperty; 
+	PrototypeCurrentDayImageName, PrototypeBackgroundImageName: WMProperties.StringProperty; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ GenCalendar*(): XML.Element; 
+	PROCEDURE ^ SameDay(dt1, dt2: Dates.DateTime): BOOLEAN; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMCalendar.

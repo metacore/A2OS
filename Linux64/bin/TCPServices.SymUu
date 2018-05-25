@@ -1,0 +1,42 @@
+MODULE TCPServices;
+	IMPORT KernelLog, IP, TCP, TLS, Configuration, Strings;
+CONST 
+	Ok* = TCP.Ok; 
+	Trace = TRUE; 
+TYPE 
+	Service* = OBJECT {EXCLUSIVE} 
+	VAR 
+		res: LONGINT; 
+		service, client: TCP.Connection; 
+		root, agent: Agent; 
+		new: NewAgent; 
+
+		PROCEDURE ^  & Start*(port: LONGINT; new: NewAgent; VAR res: LONGINT); 
+		PROCEDURE ^ Remove(a: Agent); 
+		PROCEDURE ^ Stop*; 
+	BEGIN{ACTIVE} 
+	END Service; 
+
+	TLSService* = OBJECT {EXCLUSIVE} (Service)
+	VAR 
+		policy: TLS.Policy; 
+		ctx: TLS.Context; 
+		cipherSuites: ARRAY TLS.Suites OF LONGINT; 
+
+		PROCEDURE ^  & Start*(port: LONGINT; new: NewAgent; VAR res: LONGINT); 
+	END TLSService; 
+
+	Agent* = OBJECT 
+	VAR 
+		client-: TCP.Connection; 
+		next: Agent; 
+		s-: Service; 
+
+		PROCEDURE ^  & Start*(c: TCP.Connection; s: Service); 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ Terminate*; 
+	END Agent; 
+
+	NewAgent* = PROCEDURE {DELEGATE}(c: TCP.Connection; s: Service):Agent; 
+BEGIN
+END TCPServices.

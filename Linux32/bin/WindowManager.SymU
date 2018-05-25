@@ -1,0 +1,184 @@
+MODULE WindowManager;
+	IMPORT KernelLog, Kernel, Strings, Plugins, Inputs, Modules, Displays, Graphics := WMGraphics, Messages := WMMessages, DW := WMDefaultWindows, WM := WMWindowManager, Rect := WMRectangles, Raster, WMFontManager, Commands, Options;
+CONST 
+	DirtyBufSize = 128; 
+	CombineLookahead = 64; 
+	XYResizeHandleSize = 15; 
+	ZF =   9.0000000E-001; 
+	ZD =   1.0000000E-001; 
+TYPE 
+	Window = WM.Window; 
+
+	Rectangle = Rect.Rectangle; 
+
+	ViewPort* = OBJECT (WM.ViewPort)
+	VAR 
+		backbuffer: Graphics.Image; 
+		deviceRect: Rect.Rectangle; 
+		canvas: Graphics.BufferCanvas; 
+		state: Graphics.CanvasState; 
+		display: Displays.Display; 
+		internnavig, navig: BOOLEAN; 
+		lastx, lasty: LONGINT; 
+		lastKeys: SET; 
+		modifierKeys: SET; 
+		meta: BOOLEAN; 
+		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+
+		PROCEDURE ^  & New*(disp: Displays.Display); 
+		PROCEDURE ^ GetKeyState*(VAR state: SET); 
+		PROCEDURE ^ KeyEvent(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ PointerEvent(x, y, z, dx, dy, dz: LONGINT; keys: SET); 
+		PROCEDURE ^ ZoomToWindow(w: Window); 
+		PROCEDURE ^ SetInitialWindowBounds(w: Window); 
+		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ Update*(r: Rectangle; top: Window); 
+		PROCEDURE ^ Refresh*(top: Window); 
+		PROCEDURE ^ GetWMCoordinates*(CONST r: Rect.Rectangle): Rect.Rectangle; 
+		PROCEDURE ^ Draw(r: Rectangle; top: Window); 
+	END ViewPort; 
+
+	DirtyQ = OBJECT {EXCLUSIVE} 
+	VAR 
+		dirtyHead, dirtyTail: LONGINT; 
+		dirtyBuf: ARRAY DirtyBufSize OF Rectangle; 
+		overflow: BOOLEAN; 
+
+		PROCEDURE ^ Has(): BOOLEAN; 
+		PROCEDURE ^ Get(VAR r: Rectangle); 
+		PROCEDURE ^ Add(VAR r: Rectangle); 
+	END DirtyQ; 
+
+	UnhitableWindow = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+	END UnhitableWindow; 
+
+	WindowManager* = OBJECT {EXCLUSIVE} (WM.WindowManager)
+	VAR 
+		top, bottom: Window; 
+		dirtyQ: DirtyQ; 
+		patches: ARRAY CombineLookahead OF Rectangle; 
+		running: BOOLEAN; 
+		views: WM.ViewPort; 
+		kdprev: LONGINT; 
+		pointerKeys: SET; 
+		pointerOwner: Window; 
+		pointerX, pointerY: LONGINT; 
+		pointerInfo: WM.PointerInfo; 
+		focusOwner: Window; 
+		fifi: Fifi; 
+		dragging: BOOLEAN; 
+		dragImage: Graphics.Image; 
+		dragCursor: UnhitableWindow; 
+		dragInfo: WM.DragInfo; 
+		dragSender: Window; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ ShutDown*; 
+		PROCEDURE ^ CheckChain*(details: BOOLEAN); 
+		PROCEDURE ^ InsertAfter(old, new: Window); 
+		PROCEDURE ^ FindTopWindow(stayontop: BOOLEAN): Window; 
+		PROCEDURE ^ FindBottomWindow(stayOnBottom: BOOLEAN): Window; 
+		PROCEDURE ^ Broadcast*(VAR m: Messages.Message); 
+		PROCEDURE ^ Add*(left, top: LONGINT; w: Window; flags: SET); 
+		PROCEDURE ^ InternalRemove(w: Window); 
+		PROCEDURE ^ Remove*(w: Window); 
+		PROCEDURE ^ ToFront*(x: Window); 
+		PROCEDURE ^ ToBack*(x: Window); 
+		PROCEDURE ^ SetWindowFlag*(w: Window; flag: LONGINT; include: BOOLEAN); 
+		PROCEDURE ^ SetWindowPos*(w: Window; x, y: LONGINT); 
+		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: LONGINT); 
+		PROCEDURE ^ AddView*(v: WM.ViewPort); 
+		PROCEDURE ^ RefreshView*(v: WM.ViewPort); 
+		PROCEDURE ^ RefreshViews; 
+		PROCEDURE ^ RemoveView*(v: WM.ViewPort); 
+		PROCEDURE ^ ReplaceBackground*(w: Window): Window; 
+		PROCEDURE ^ GetPopulatedArea*(VAR r: Rectangle); 
+		PROCEDURE ^ GetFirst*(): Window; 
+		PROCEDURE ^ GetNext*(cur: Window): Window; 
+		PROCEDURE ^ GetPrev*(cur: Window): Window; 
+		PROCEDURE ^ SetFocus*(w: Window); 
+		PROCEDURE ^ GetPositionOwnerIntern(x, y: LONGINT; owner: WM.ViewPort): Window; 
+		PROCEDURE ^ GetPositionOwner*(x, y: LONGINT): Window; 
+		PROCEDURE ^ CheckPointerImage*; 
+		PROCEDURE ^ GetFocusOwner*(): Window; 
+		PROCEDURE ^ PointerEvent(VAR msg: Messages.Message); 
+		PROCEDURE ^ KeyEvent*(VAR m: Messages.Message); 
+		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
+		PROCEDURE ^ AddDirty*(VAR rect: Rectangle); 
+		PROCEDURE ^ AddVisibleDirty*(w: Window; rect: Rectangle); 
+		PROCEDURE ^ RedrawDirty; 
+		PROCEDURE ^ DefaultDecorator(w: Window); 
+		PROCEDURE ^ Touch; 
+	BEGIN{ACTIVE, SAFE} 
+	END WindowManager; 
+
+	MouseObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		view: ViewPort; 
+		x, y, z: LONGINT; 
+		threshold, speedup: LONGINT; 
+		enableMMEmulation: BOOLEAN; 
+		lastTime, lastX, lastY: LONGINT; 
+		prevKeys: SET; 
+		inDoubleClick: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(t, s: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+	END MouseObj; 
+
+	KeyboardObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		view: ViewPort; 
+		ch: LONGINT; 
+
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+		PROCEDURE ^ MapChars(VAR ch: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END KeyboardObj; 
+
+	Toucher = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		alive: BOOLEAN; 
+
+	BEGIN{ACTIVE} 
+	END Toucher; 
+
+	Fifi = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		delay: LONGINT; 
+		time: Kernel.MilliTimer; 
+		alive, done: BOOLEAN; 
+
+		PROCEDURE ^ Cleanup; 
+		PROCEDURE ^ Done; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^  & Init*(delay: LONGINT); 
+	BEGIN{ACTIVE} 
+	END Fifi; 
+VAR 
+	DoubleClick: LONGINT; 
+	session: WindowManager; 
+	toucher: Toucher; 
+	defaultKeyboard: KeyboardObj; 
+	defaultMouse: MouseObj; 
+	CharToUnicode: ARRAY 256 OF LONGINT; 
+
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
+	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: LONGINT; noPointer: BOOLEAN); 
+	PROCEDURE ^ Replace*(color: LONGINT; noPointer: BOOLEAN); 
+	PROCEDURE ^ InitCharMaps; 
+	PROCEDURE ^ CleanUp; 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ TraceChain*; 
+	PROCEDURE ^ SetDoubleClick*(context: Commands.Context); 
+BEGIN
+END WindowManager.

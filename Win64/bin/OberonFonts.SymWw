@@ -1,0 +1,25 @@
+MODULE OberonFonts;
+	IMPORT Strings, Files, S := SYSTEM, Log := KernelLog, Modules, TextUtilities, OTInt := OpenTypeInt, OType := OpenType, OpenTypeScan;
+CONST 
+	ScreenDPI = 71; 
+	FontId = 0DBX; 
+	FontFont = 0X; 
+TYPE 
+	Name = ARRAY 32 OF CHAR; 
+
+	RasterData* = RECORD (OType.RasterData)
+		adr*: ADDRESS; 
+		bpr*: LONGINT; 
+		len*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ FillRect(llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0); 
+	PROCEDURE ^ MakeFont(inst: OType.Instance; glyph: OType.Glyph; name: ARRAY OF CHAR): Files.File; 
+	PROCEDURE ^ IsDigit(c: CHAR): BOOLEAN; 
+	PROCEDURE ^ MakeTtfName(CONST oname: ARRAY OF CHAR; VAR ttfname: Name; VAR size, res: INTEGER); 
+	PROCEDURE ^ ProvideFont*(CONST oname: ARRAY OF CHAR); 
+	PROCEDURE ^ Allocatable*(CONST oname: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Finalize; 
+BEGIN
+END OberonFonts.

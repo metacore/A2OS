@@ -1,0 +1,148 @@
+MODULE MPEGVideoDecoder;
+	IMPORT SYSTEM, Codec := Codecs, Raster, Streams, KernelLog, Files, WMGraphics, MPEGTables, WM := WMWindowManager, Rectangles := WMRectangles, Kernel, Commands, Util := MPEGUtilities;
+CONST 
+	SCPicture* = CHR(0); 
+	SCUserData* = CHR(178); 
+	SCSequenceHeader* = CHR(179); 
+	SCSequenceError* = CHR(180); 
+	SCExtension* = CHR(181); 
+	SCSequenceEnd* = CHR(183); 
+	SCGOP* = CHR(184); 
+	SCSystemEnd* = CHR(185); 
+	SCPack* = CHR(186); 
+	SCSystemHeader* = CHR(187); 
+	SCReservedStream* = CHR(188); 
+	SCPrivateStream* = CHR(189); 
+	SCPaddingStream* = CHR(190); 
+	SCPrivateStream2* = CHR(191); 
+	PicStructReserved* = 0; 
+	PicStructTopField* = 1; 
+	PicStructBottomField* = 2; 
+	PicStructFrame* = 3; 
+	FMTReserved* = 0; 
+	FMTField* = 1; 
+	FMTFrame* = 2; 
+	FMTDualPrime* = 3; 
+	forward = 0; 
+	backward = 1; 
+	horizontal = 0; 
+	vertical = 1; 
+	mv1 = 0; 
+	mv2 = 1; 
+TYPE 
+	StreamType = RECORD 
+		stream*: Codec.DemuxStream; 
+		idByte*: CHAR; 
+		pos: LONGINT; 
+		bytesLeftInPacket: LONGINT; 
+		eos: BOOLEAN; 
+	END; 
+
+	PW* = OBJECT {EXCLUSIVE} (WM.DoubleBufferWindow)
+
+		PROCEDURE ^  & InitNew*(w, h: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Close*; 
+	END PW; 
+
+	MPEGVideoDecoder* = OBJECT (Codec.VideoDecoder)
+	VAR 
+		videoWidth, videoHeight: LONGINT; 
+		videoWidthDiv2, videoHeightDiv2: LONGINT; 
+		videoWidthDiv16, videoHeightDiv16: LONGINT; 
+		aspectRatioIndex, frameRateIndex: LONGINT; 
+		bitRate: LONGINT; 
+		stream*: Util.BitStream; 
+		reader: Util.StreamReader; 
+		idct: Util.IDCT; 
+		yuv2rgb: Util.ColorSpace; 
+		dequantizer: Util.Dequantizer; 
+		blocks: Util.BlockActions; 
+		intraQM: Util.PointerToArrayOfLONGINT; 
+		nonintraQM: Util.PointerToArrayOfLONGINT; 
+		curFrame: Util.Frame; 
+		prevRef, nextRef: Util.Frame; 
+		nextFrameToRender: Util.Frame; 
+		mvinfos: Util.MotionVectorInfos; 
+		frameNr: LONGINT; 
+		realFrameNr: LONGINT; 
+		time: LONGINT; 
+		mspf: LONGINT; 
+		hasMoreFrames: BOOLEAN; 
+		MPEG2: BOOLEAN; 
+		MainProfile: BOOLEAN; 
+		LevelID: LONGINT; 
+		ChromaFormat: LONGINT; 
+		picExt: Util.PicCodingExt; 
+		mbSkipped: BOOLEAN; 
+		dcY, dcCb, dcCr: LONGINT; 
+		mbMotionForwOld, mbMotionBackOld: BOOLEAN; 
+		mbIntraOld: BOOLEAN; 
+		mbAddress: LONGINT; 
+		mbAddressLast: LONGINT; 
+		mbAddressLastIntra: LONGINT; 
+		macroblockNr: INTEGER; 
+		frameMotionType: LONGINT; 
+		dctType: BOOLEAN; 
+		block: Util.PointerToArrayOfLONGINT; 
+		frametype: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
+		PROCEDURE ^ ParseSequenceHeader(): BOOLEAN; 
+		PROCEDURE ^ ReadExtension(): BOOLEAN; 
+		PROCEDURE ^ ReadTimecode; 
+		PROCEDURE ^ GetVideoInfo*(VAR width, height, millisecondsPerFrame: LONGINT); 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentFrame*(): LONGINT; 
+		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
+		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SkipNext(): LONGINT; 
+		PROCEDURE ^ Next*; 
+		PROCEDURE ^ DecodeSlice(type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ DecodeMacroBlock(type: LONGINT; VAR quantScale: LONGINT): BOOLEAN; 
+		PROCEDURE ^ InsertInterlacedPrediction(forw, back: BOOLEAN; address: LONGINT; VAR mvi: Util.MotionVectorInfos); 
+		PROCEDURE ^ InsertPrediction(forward, backward: BOOLEAN; address, mvfx, mvfy, mvbx, mvby: LONGINT); 
+		PROCEDURE ^ DecodeMotionVectors(r, s, t: LONGINT); 
+		PROCEDURE ^ MotionDisplacement(fb, hv: LONGINT); 
+		PROCEDURE ^ DecodeBlock(nr: SHORTINT; coeffs: Util.PointerToArrayOfLONGINT; intra: BOOLEAN; VAR qScale: LONGINT; first: BOOLEAN; type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ DecodeBlock2(nr: SHORTINT; coeffs: Util.PointerToArrayOfLONGINT; intra: BOOLEAN; VAR qScale: LONGINT; first: BOOLEAN; type: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Render*(img: Raster.Image); 
+	END MPEGVideoDecoder; 
+
+	MPEGDemultiplexer* = OBJECT (Codec.AVDemultiplexer)
+	VAR 
+		input: Streams.Reader; 
+		bytesRead: LONGINT; 
+		streams: ARRAY 64 OF POINTER TO StreamType; 
+		nextStreamNr: LONGINT; 
+		singleStream: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ GotoNextStartCode(): BOOLEAN; 
+		PROCEDURE ^ SkipZeros(): LONGINT; 
+		PROCEDURE ^ ReadPackHeader(): BOOLEAN; 
+		PROCEDURE ^ ReadSystemHeader(): BOOLEAN; 
+		PROCEDURE ^ isNewStream(id: CHAR): BOOLEAN; 
+		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
+		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GetStream*(streamNr: LONGINT): Codec.DemuxStream; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): Codec.AVStreamInfo; 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ SkipData(streamNr: LONGINT; size: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ GetPosInMuxedStream*(streamNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GotoNextPacket(VAR stream: StreamType): BOOLEAN; 
+		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ HasMoreData(streamNr: LONGINT): BOOLEAN; 
+	END MPEGDemultiplexer; 
+
+	PROCEDURE ^ GotoNextMarker(VAR stream: Util.BitStream; VAR marker: CHAR): BOOLEAN; 
+	PROCEDURE ^ Sign(value: LONGINT): LONGINT; 
+	PROCEDURE ^ DecoderFactory*(): Codec.VideoDecoder; 
+	PROCEDURE ^ DemuxFactory*(): Codec.AVDemultiplexer; 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+BEGIN
+END MPEGVideoDecoder.

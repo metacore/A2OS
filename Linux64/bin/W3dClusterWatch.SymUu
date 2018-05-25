@@ -1,0 +1,74 @@
+MODULE W3dClusterWatch;
+	IMPORT KernelLog, Kernel, MathL, Streams, Modules, Files, Commands, Strings, WM := WMWindowManager, Rect := WMRectangles, Raster, WMGraphics, IP, DNS, TCP, Classes := TFClasses, Vectors := W3dVectors, Matrix := W3dMatrix, AbstractWorld := W3dAbstractWorld, World := W3dWorld, ObjectGenerator := W3dObjectGenerator, XML, Scanner := XMLScanner, XMLParser, Objects := XMLObjects;
+CONST 
+	CATPort = 9999; 
+	NoCAT = 0; 
+	AosCAT = 1; 
+	LinuxCAT = 2; 
+	WindowsCAT = 3; 
+	SuseCAT = 4; 
+	UnknownCAT = 5; 
+	BoxDistance = 250; 
+TYPE 
+	UpdateProc = PROCEDURE {DELEGATE}; 
+
+	Info = OBJECT {EXCLUSIVE} 
+	VAR 
+		pos: Vectors.TVector3d; 
+		host: ARRAY 64 OF CHAR; 
+		os, oldos: ARRAY 32 OF CHAR; 
+		load: ARRAY 32 OF CHAR; 
+		running, oldrunning: LONGINT; 
+		obj: AbstractWorld.Object; 
+		timer: Kernel.Timer; 
+		interval: LONGINT; 
+		world: AbstractWorld.World; 
+		connection: TCP.Connection; 
+		alive: BOOLEAN; 
+		index: LONGINT; 
+		render: UpdateProc; 
+
+		PROCEDURE ^  & Init*(world: AbstractWorld.World; pos: Vectors.TVector3d; host: ARRAY OF CHAR; interval: LONGINT; update: UpdateProc); 
+		PROCEDURE ^ RefreshInfo(host: ARRAY OF CHAR; VAR osName, osLoad: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Update; 
+		PROCEDURE ^ Kill; 
+	BEGIN{ACTIVE} 
+	END Info; 
+
+	Window = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		alive, dead: BOOLEAN; 
+		timer: Kernel.Timer; 
+		interval: LONGINT; 
+		lookat: Vectors.TVector3d; 
+		radius, angle, height: LONGREAL; 
+		mouseKeys: SET; 
+		oldX, oldY: LONGINT; 
+		world: World.World; 
+		mx, my, mz: LONGREAL; 
+		infoList: Classes.List; 
+		index: LONGINT; 
+
+		PROCEDURE ^ ParseLine(line: XML.Element; pos: Vectors.TVector3d); 
+		PROCEDURE ^ ParseLayer(layer: XML.Element; pos: Vectors.TVector3d); 
+		PROCEDURE ^ Load(filename: ARRAY OF CHAR); 
+		PROCEDURE ^  & New*(interval: LONGINT; fileName: ARRAY OF CHAR); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Render; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+	END Window; 
+VAR 
+	OSColor: ARRAY 6 OF LONGINT; 
+	OSImg: ARRAY 6 OF Raster.Image; 
+	w: Window; 
+	timg: Raster.Image; 
+	mode: Raster.Mode; 
+
+	PROCEDURE ^ MatchI(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Watch*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Max(a, b: LONGREAL): LONGREAL; 
+BEGIN
+END W3dClusterWatch.

@@ -1,0 +1,34 @@
+MODULE V24;
+	IMPORT Kernel32, KernelLog, Heaps, Kernel, Commands, Serials, Strings;
+CONST 
+	MaxPortNo = 32; 
+TYPE 
+	Port* = OBJECT {EXCLUSIVE} (Serials.Port)
+	VAR 
+		handle: Kernel32.HANDLE; 
+		portname: ARRAY 6 OF CHAR; 
+		timer: Kernel.Timer; 
+		rOverlapped, wOverlapped: Kernel32.Overlapped; 
+
+		PROCEDURE ^  & Init*(port: LONGINT); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ FinalizePort(ptr: ANY); 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ ClearMC*(s: SET); 
+		PROCEDURE ^ SetMC*(s: SET); 
+		PROCEDURE ^ GetMC*(VAR s: SET); 
+		PROCEDURE ^ Wait; 
+		PROCEDURE ^ Close*; 
+	END Port; 
+
+	PROCEDURE ^ Scan*(context: Commands.Context); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END V24.

@@ -1,0 +1,104 @@
+MODULE TFWebForum;
+	IMPORT Dates, Strings, XML, XMLObjects, XMLScanner, XMLParser, Commands, Files, Streams, IP, Kernel, KernelLog, WebHTTP, WebCGI, HTTPSupport;
+CONST 
+	ForumConfigFile = \"WebForums.dat"\; 
+TYPE 
+	String = Strings.String; 
+
+	HTMLWriter = OBJECT 
+	VAR 
+		w*: Streams.Writer; 
+
+		PROCEDURE ^  & New*(w: Streams.Writer); 
+		PROCEDURE ^ Head*(CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ Br*; 
+		PROCEDURE ^ Nbsp*; 
+		PROCEDURE ^ InputText*(CONST name: ARRAY OF CHAR; value: String); 
+		PROCEDURE ^ Hide*(CONST name, value: ARRAY OF CHAR); 
+		PROCEDURE ^ BeginOptionField*(CONST name, value: ARRAY OF CHAR); 
+		PROCEDURE ^ Option*(CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ EndOptionField*; 
+		PROCEDURE ^ Submit(CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ InputArea*(CONST name: ARRAY OF CHAR; value: String); 
+		PROCEDURE ^ TextLink*(CONST text, target: ARRAY OF CHAR); 
+		PROCEDURE ^ Tail*; 
+		PROCEDURE ^ TAHTMLString(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ HTMLString(CONST s: ARRAY OF CHAR); 
+	END HTMLWriter; 
+
+	EntryInfo = RECORD 
+		subject, id, datetime, author: String; 
+		entry: XML.Element; 
+		level: LONGINT; 
+	END; 
+
+	EntryList = POINTER TO ARRAY OF EntryInfo; 
+
+	Forum = OBJECT {EXCLUSIVE} 
+	VAR 
+		doc: XML.Document; 
+		forum: XML.Element; 
+		errors: BOOLEAN; 
+		entryList: EntryList; 
+		nofEntries: LONGINT; 
+		title, editor, password: Strings.String; 
+		filename: ARRAY 128 OF CHAR; 
+
+		PROCEDURE ^  & Create*; 
+		PROCEDURE ^ SetTitle(CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ SetEditor(CONST editor, password: ARRAY OF CHAR); 
+		PROCEDURE ^ Fail(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ StoreInternal(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ AddEntryToParent*(parent, entry: XML.Element); 
+		PROCEDURE ^ FindElement*(CONST path: ARRAY OF CHAR): XML.Element; 
+		PROCEDURE ^ GetEntryPath(e: XML.Element; VAR path: ARRAY OF CHAR); 
+		PROCEDURE ^ AddEntryToList(e: XML.Element); 
+		PROCEDURE ^ Traverse(c: XML.Content; data: ANY); 
+		PROCEDURE ^ GetSubjectList*(VAR e: EntryList; VAR nof: LONGINT); 
+		PROCEDURE ^ AddEntry*(CONST path: ARRAY OF CHAR; entry: XML.Element); 
+		PROCEDURE ^ DeleteEntry*(CONST path: ARRAY OF CHAR); 
+		PROCEDURE ^ EditEntry(parent: XML.Element; subject, author, email, datetime, ip, text: String); 
+	END Forum; 
+
+	ForumInfo = RECORD 
+		id: ARRAY 256 OF CHAR; 
+		fileName: ARRAY 256 OF CHAR; 
+		content: Forum; 
+	END; 
+
+	ForumList = POINTER TO ARRAY OF ForumInfo; 
+VAR 
+	uriLiteral: ARRAY 256 OF BOOLEAN; 
+	empty: String; 
+	forumList: ForumList; 
+	nofForum: LONGINT; 
+
+	PROCEDURE ^ GetSubElementByType*(parent: XML.Element; CONST type: ARRAY OF CHAR): XML.Element; 
+	PROCEDURE ^ MakeEntry*(subject, author, email, datetime, ip, text: String): XML.Element; 
+	PROCEDURE ^ PostingToHTML*(w: Streams.Writer; h: HTMLWriter; subject, author, email, datetime, ip, text: String); 
+	PROCEDURE ^ ReadEntry*(entry: XML.Element; VAR subject, author, email, datetime, ip, text: String); 
+	PROCEDURE ^ ListLink(VAR forumID, link: ARRAY OF CHAR); 
+	PROCEDURE ^ ShowLink(VAR forumID, entryID, link: ARRAY OF CHAR); 
+	PROCEDURE ^ ReplyLink(VAR forumID, entryID, link: ARRAY OF CHAR); 
+	PROCEDURE ^ PublishPostLink(VAR forumID, entryID, link: ARRAY OF CHAR); 
+	PROCEDURE ^ DeletePostLink(VAR forumID, entryID, link: ARRAY OF CHAR); 
+	PROCEDURE ^ GetParentLink(VAR forumID, entryID, link: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ List*(forum: Forum; forumID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ Show*(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ QueryPost(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ QueryEditPost(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ QueryDeletePost(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ PublishPost(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ DeletePost(forum: Forum; forumID, entryID: ARRAY OF CHAR; context: WebCGI.CGIContext); 
+	PROCEDURE ^ Access*(context: WebCGI.CGIContext); 
+	PROCEDURE ^ InitURILiterals; 
+	PROCEDURE ^ AddForum(CONST id, fileName: ARRAY OF CHAR); 
+	PROCEDURE ^ GetForumInternal(CONST id: ARRAY OF CHAR): Forum; 
+	PROCEDURE ^ GetForum(CONST id: ARRAY OF CHAR): Forum; 
+	PROCEDURE ^ LoadForumList; 
+	PROCEDURE ^ StoreForumList; 
+	PROCEDURE ^ CreateForum*(context: Commands.Context); 
+BEGIN
+END TFWebForum.

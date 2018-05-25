@@ -2,7 +2,7 @@
 
 FSTools.Mount ZBL RelativeFileSystem HDCT/zbl~
 
-Compiler.Compile -p=Win32G
+Compiler.Compile -p=Win32
 
 TFTPServer.Mod
 ZBL:/tools/OEBInterfaces.Mod

@@ -1,0 +1,17 @@
+MODULE Example4;
+TYPE 
+	Buffer* = OBJECT 
+	VAR 
+		next: Buffer; 
+	END Buffer; 
+
+	BufferPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		root: Buffer; 
+
+		PROCEDURE ^ Acquire*(VAR buf: Buffer); 
+		PROCEDURE ^ Release*(buf: Buffer); 
+		PROCEDURE ^  & Init*; 
+	END BufferPool; 
+BEGIN
+END Example4.

@@ -1,0 +1,9 @@
+MODULE Popups IN Oberon;
+	IMPORT Attributes, Display, Gadgets, Icons, Oberon, Objects, Panels, TextFields, TextGadgets, Texts;
+CONST 
+
+	PROCEDURE ^ InsertFrame(F, f: Display.Frame; u, v: INTEGER); 
+	PROCEDURE ^ Build*(desc: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER): Objects.Object; 
+	PROCEDURE ^ Insert*; 
+BEGIN
+END Popups.

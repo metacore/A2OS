@@ -1,0 +1,214 @@
+MODULE WMV24Component;
+	IMPORT KernelLog, Objects, Streams, Configuration, Texts, TextUtilities, Strings, Modules, Kernel, Serials, XYModem, Files, Inputs, WMWindowManager, WMMessages, WMRestorable, WMGraphics, WMRectangles, WMComponents, WMStandardComponents, WMProgressComponents, WMTextView, WMEditors, WMPopups, WMDialogs, XML, XMLObjects, WMSearchComponents, Commands, V24, T := Trace;
+CONST 
+	DefaultWidth = 800; 
+	DefaultHeight = 400; 
+	DefaultPort = 1; 
+	DefaultBps = 115200; 
+	DefaultDataBits = 8; 
+	DefaultParity = Serials.ParNo; 
+	DefaultStopBits = Serials.Stop1; 
+	DefaultIndicateKeyboardFocus = TRUE; 
+	DefaultShortcutsEnabled = FALSE; 
+	DefaultShowStatusBar = TRUE; 
+	DefaultLineFeed = FALSE; 
+	DefaultUseBackspace = TRUE; 
+	DefaultEcho = FALSE; 
+	DefaultUTF8Support = FALSE; 
+	UpdateInterval = 200; 
+	ReceiveBufferSize = 1024; 
+	TraceCharactersSent = {0}; 
+	TraceCharactersReceived = {1}; 
+	Trace = {}; 
+	Backspace = 8X; 
+	CR = 0DX; 
+	LF = 0AX; 
+	ESC = 1BX; 
+	DEL = 7FX; 
+	Free = 0; 
+	Terminal = 1; 
+	DataTransfer = 2; 
+	ModuleName = \"WMV24Component"\; 
+TYPE 
+	Settings = OBJECT 
+	VAR 
+		portSettings: ARRAY 64 OF CHAR; 
+		indicateKeyboardFocus: BOOLEAN; 
+		showStatusBar: BOOLEAN; 
+		shortcutsEnabled: BOOLEAN; 
+		linefeed: BOOLEAN; 
+		echo: BOOLEAN; 
+		utf8Support: BOOLEAN; 
+		useBackspace: BOOLEAN; 
+		xReceiveCommand, yReceiveCommand: Strings.String; 
+		xSendCommand, ySendCommand: Strings.String; 
+
+		PROCEDURE ^ Load; 
+		PROCEDURE ^ GetDefaultPortSettings(VAR portSettings: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*; 
+	END Settings; 
+
+	Lock = OBJECT {EXCLUSIVE} 
+	VAR 
+		lock: LONGINT; 
+		locklevel: LONGINT; 
+
+		PROCEDURE ^ TryAcquire(lock: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Acquire(lock: LONGINT); 
+		PROCEDURE ^ Release; 
+		PROCEDURE ^ TakeLock(lock: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END Lock; 
+
+	Command = POINTER TO RECORD 
+		name: ARRAY 64 OF CHAR; 
+		commandString: ARRAY 256 OF CHAR; 
+		next: Command; 
+	END; 
+
+	ProgressInfo = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		progressBar: WMProgressComponents.ProgressBar; 
+		filenameLabel: WMStandardComponents.Label; 
+		progressLabel: WMStandardComponents.Label; 
+		currentBytes, maxBytes: LONGINT; 
+		w: Streams.StringWriter; 
+		string: ARRAY 128 OF CHAR; 
+
+		PROCEDURE ^ SetProgress(progress: LONGINT); 
+		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR; length: LONGINT); 
+	END ProgressInfo; 
+
+	CustomTextView = OBJECT {EXCLUSIVE} (WMTextView.TextView)
+	VAR 
+		selecting, selectWords, dragPossible: BOOLEAN; 
+		lastPos: LONGINT; 
+		downX, downY: LONGINT; 
+		utilreader: Texts.TextReader; 
+		text: Texts.Text; 
+
+		PROCEDURE ^ SetText*(text: Texts.Text); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^  & Init*; 
+	END CustomTextView; 
+
+	TerminalComponent = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		settings: Settings; 
+		in: Streams.Reader; 
+		out: Streams.Writer; 
+		port: Serials.Port; 
+		portNr, bps, databits, parity, stop: LONGINT; 
+		open: BOOLEAN; 
+		lock: Lock; 
+		w: TextUtilities.TextWriter; 
+		textView: CustomTextView; 
+		text: Texts.Text; 
+		searchPanel: WMSearchComponents.SearchPanel; 
+		opencloseBtn: WMStandardComponents.Button; 
+		settingsEdit: WMEditors.Editor; 
+		sendXBtn, sendYBtn: WMStandardComponents.Button; 
+		receiveXBtn, receiveYBtn: WMStandardComponents.Button; 
+		lowerToolBar: WMStandardComponents.Panel; 
+		sendCommandBtn: WMStandardComponents.Button; 
+		sendCommandEditor: WMEditors.Editor; 
+		commandPopup: WMPopups.Popup; 
+		commandMenuBtn: WMStandardComponents.Button; 
+		status: WMStandardComponents.Label; 
+		dsr: WMStandardComponents.Label; 
+		clearStatusBtn: WMStandardComponents.Button; 
+		overrunErrors, framingErrors, parityErrors, breakInterrupts, transportErrors, otherErrors: LONGINT; 
+		statusUpdater: StatusUpdater; 
+		running: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
+		PROCEDURE ^ HandleCommandMenuButton(sender, data: ANY); 
+		PROCEDURE ^ HandleCommandPopup(sender, data: ANY); 
+		PROCEDURE ^ HandleSendCommandButton(sender, data: ANY); 
+		PROCEDURE ^ HandleClearStatusButton(sender, data: ANY); 
+		PROCEDURE ^ HandleSearchButton(sender, data: ANY); 
+		PROCEDURE ^ HandleClearButton(sender, data: ANY); 
+		PROCEDURE ^ HandleCopyButton(sender, data: ANY); 
+		PROCEDURE ^ HandlePasteButton(sender, data: ANY); 
+		PROCEDURE ^ HandleXYButtons(sender, data: ANY); 
+		PROCEDURE ^ HandleShortcut(ucs: LONGINT; flags: SET; keySym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExtKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ExtFocus(hasFocus: BOOLEAN); 
+		PROCEDURE ^ CreateUpperToolBar(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreateCommandMenu(): WMStandardComponents.Button; 
+		PROCEDURE ^ CreateLowerToolBar(): WMStandardComponents.Panel; 
+		PROCEDURE ^ CreateStatusBar(): WMStandardComponents.Panel; 
+		PROCEDURE ^ CreateContent; 
+		PROCEDURE ^ Wait(ms: LONGINT); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetPanelCoordinates(VAR gx, gy: LONGINT); 
+		PROCEDURE ^ CopyFromClipboard; 
+		PROCEDURE ^ GetXYCommand(send: BOOLEAN; mode: LONGINT): Strings.String; 
+		PROCEDURE ^ SendXYCommand(send: BOOLEAN; CONST command, filename: ARRAY OF CHAR); 
+		PROCEDURE ^ SendXYModem(CONST filename: ARRAY OF CHAR; mode: LONGINT); 
+		PROCEDURE ^ ReceiveXYModem(filename: ARRAY OF CHAR; mode: LONGINT); 
+		PROCEDURE ^ ResetStatus; 
+		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
+		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: LONGINT); 
+		PROCEDURE ^ EvaluateError(res: LONGINT); 
+		PROCEDURE ^ ReceiveCharacters; 
+	BEGIN{ACTIVE} 
+	END TerminalComponent; 
+
+	StatusUpdater = OBJECT {EXCLUSIVE} 
+	VAR 
+		terminal: TerminalComponent; 
+		writer: Streams.StringWriter; 
+		alive, dead: BOOLEAN; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^ UpdateStatusLabel; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^  & Init*(terminal: TerminalComponent); 
+	BEGIN{ACTIVE} 
+	END StatusUpdater; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	ProgressWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^  & New*(vc: WMComponents.VisualComponent; x, y: LONGINT); 
+	END ProgressWindow; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		terminal: TerminalComponent; 
+
+		PROCEDURE ^ GetStartupSize(VAR width, height: LONGINT); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(c: WMRestorable.Context; context: Commands.Context); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+	timeout: BOOLEAN; 
+	StrProgressInfo, StrCustomTextView, StrTerminalComponent: Strings.String; 
+
+	PROCEDURE ^ ControlKeyDown(flags: SET): BOOLEAN; 
+	PROCEDURE ^ LoadCommandMenu(): Command; 
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ Show(CONST string: ARRAY OF CHAR); 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ NewTerminalComponent*(): XML.Element; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Timeout; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ InitV24; 
+BEGIN
+END WMV24Component.

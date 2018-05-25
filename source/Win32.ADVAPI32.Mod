@@ -3,8 +3,7 @@
 MODULE ADVAPI32;  (** non-portable / source: Win32.ADVAPI32.Mod *)	(* ejz *)
 IMPORT SYSTEM, Kernel32, Modules, KernelLog; 		(* ALEX *)
 
-	(** This module defines all the Win32 ADVAPI32 APIs used by Oberon.
-	Note this module is part of the Oberon inner-core and must be linked with PELinker. *)
+	(** This module defines all the Win32 ADVAPI32 APIs used by Oberon. *)
 
 CONST
 	(** HKEYs *)

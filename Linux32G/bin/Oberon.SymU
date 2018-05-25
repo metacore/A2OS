@@ -1,8 +1,0 @@
-MODULE Oberon;
-	IMPORT Modules, Commands, Strings, OberonDisplay, Displays, Plugins;
-CONST 
-
-	PROCEDURE ^ Call*(context: Commands.Context); 
-	PROCEDURE ^ Start*(context: Commands.Context); 
-BEGIN
-END Oberon.

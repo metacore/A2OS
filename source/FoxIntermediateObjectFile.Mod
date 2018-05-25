@@ -2,7 +2,7 @@ MODULE FoxIntermediateObjectFile; (** AUTHOR ""; PURPOSE "Intermediate Object Fi
 
 IMPORT
 	Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, ObjectFile,
-	Files, Strings, Options, Diagnostics, TextualSymbolFile := FoxTextualSymbolFile, Streams, Basic := FoxBasic,
+	Files, Strings, Options, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Streams, Basic := FoxBasic,
 	SyntaxTree := FoxSyntaxTree,  D := Debugging, Global := FoxGlobal, Parser := FoxIntermediateParser, Commands,  KernelLog, Backend := FoxBackend;
 
 CONST
@@ -423,7 +423,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;
-		BEGIN RETURN TextualSymbolFile.Get();
+		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 
 		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);

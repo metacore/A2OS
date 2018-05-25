@@ -66,15 +66,15 @@ END  StdIO.
 
 SystemTools.DoCommands 
 
-	Compiler.Compile  -b=AMD --objectFile=Generic --symbolFile=Textual --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
-		Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
-		Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
+	Compiler.Compile  -b=AMD --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
+		Runtime.Mod Trace.Mod Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
+		Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
 		I386.Reals.Mod Reflection.Mod Locks.Mod Win32.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
 
 		Win32.WinTrace.Mod Win32.WinFS.Mod 
 
 		Diagnostics.Mod StringPool.Mod BitSets.Mod ObjectFile.Mod 
-		GenericLinker.Mod GenericLoader.Mod Options.Mod Debugging.Mod
+		GenericLinker.Mod Loader.Mod Options.Mod Debugging.Mod
 		
 		Win32.StdIO.Mod 		Pipes.Mod Shell.Mod TestStdIO.Mod
 		
@@ -83,9 +83,9 @@ SystemTools.DoCommands
 		~ 
 		
 		
-	StaticLinker.Link --fileFormat=PE32CUI --fileName=fox.exe --extension=Gox --displacement=401000H
+	Linker.Link --fileFormat=PE32CUI --fileName=fox.exe --extension=Gox --displacement=401000H
 		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
-		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader
+		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader
 		WinTrace StdIO Pipes Shell TestStdIO ~
 		
 		FSTools.CloseFiles fox.exe ~ 

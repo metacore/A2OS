@@ -1,0 +1,78 @@
+MODULE FractalDemo;
+	IMPORT Objects, XML, WMComponents, WMGraphics, WMGraphicUtilities, Raster, KernelLog, Kernel, Strings, Math, WMProperties, WMRectangles;
+CONST 
+	MaxIter = 2048; 
+TYPE 
+	WorkUnit = POINTER TO RECORD 
+		terminate: BOOLEAN; 
+		x0, y0, x1, y1: LONGREAL; 
+		w, h, maxIter, ys, ye: LONGINT; 
+		result: POINTER TO ARRAY OF LONGINT; 
+		next: WorkUnit; 
+	END; 
+
+	WorkUnitQ = OBJECT {EXCLUSIVE} 
+	VAR 
+		work: WorkUnit; 
+
+		PROCEDURE ^ Add(wu: WorkUnit); 
+		PROCEDURE ^ Get(): WorkUnit; 
+	END WorkUnitQ; 
+
+	CalcThread = OBJECT {EXCLUSIVE} 
+	VAR 
+		alive: BOOLEAN; 
+		i, j: LONGINT; 
+		dx, dy: LONGREAL; 
+		wu: WorkUnit; 
+		workQ, resultQ: WorkUnitQ; 
+		x, y: LONGREAL; 
+
+		PROCEDURE ^  & Init*(workQ, resultQ: WorkUnitQ); 
+		PROCEDURE ^ StartWork; 
+		PROCEDURE ^ Finished; 
+		PROCEDURE ^ AwaitFinished; 
+		PROCEDURE ^ Calc(x, y: LONGREAL): LONGINT; 
+	BEGIN{ACTIVE, PRIORITY(Objects.Low)} 
+	END CalcThread; 
+
+	List = POINTER TO RECORD 
+		next: List; 
+		x0, x1, y0, y1: LONGREAL; 
+		depth: LONGINT; 
+	END; 
+
+	MandelbrotSetViewer = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		nofProcesses: WMProperties.Int32Property; 
+		backBmp: Raster.Image; 
+		bc: WMGraphics.BufferCanvas; 
+		dy: LONGREAL; 
+		list, l: List; 
+		selecting: BOOLEAN; 
+		x0, y0, x1, y1: LONGINT; 
+		palette: ARRAY MaxIter OF WMGraphics.Color; 
+		workQ, resultQ: WorkUnitQ; 
+		recalcNeeded, alive, calculating: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Recalc; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ NeedRecalc; 
+		PROCEDURE ^ PrepareBuffer; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Initialize*; 
+	BEGIN{ACTIVE} 
+	END MandelbrotSetViewer; 
+VAR 
+	PrototypeNofProcesses: WMProperties.Int32Property; 
+	StrMandelbrotSetViewer: Strings.String; 
+
+	PROCEDURE ^ GenMandelbrotSetViewer*(): XML.Element; 
+	PROCEDURE ^ InitPrototypes; 
+BEGIN
+END FractalDemo.

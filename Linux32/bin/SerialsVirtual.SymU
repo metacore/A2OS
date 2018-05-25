@@ -1,0 +1,68 @@
+MODULE SerialsVirtual;
+	IMPORT KernelLog, Strings, Modules, Commands, Streams, Files, Kernel, Random, Serials;
+CONST 
+	Verbose = TRUE; 
+	BufferSize = 1024; 
+	EnableSendSpeedLimitation = TRUE; 
+	ModuleName = \"SerialsVirtual"\; 
+TYPE 
+	SendProcedure = PROCEDURE {DELEGATE}(ch: CHAR; VAR res: LONGINT); 
+
+	VirtualPort = OBJECT {EXCLUSIVE} (Serials.Port)
+	VAR 
+		buffer: ARRAY BufferSize OF CHAR; 
+		head, tail: LONGINT; 
+		open: BOOLEAN; 
+		bps, data, parity, stop: LONGINT; 
+		mc: SET; 
+		sender: SendProcedure; 
+		eachNCharacters, waitForMs: LONGINT; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^ PutChar(ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ ClearMC*(s: SET); 
+		PROCEDURE ^ SetMC*(s: SET); 
+		PROCEDURE ^ GetMC*(VAR s: SET); 
+		PROCEDURE ^  & Init*; 
+	END VirtualPort; 
+
+	PortSniffer = OBJECT {EXCLUSIVE} (Serials.Port)
+	VAR 
+		port: Serials.Port; 
+		in, out: Streams.Writer; 
+
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ ClearMC*(s: SET); 
+		PROCEDURE ^ SetMC*(s: SET); 
+		PROCEDURE ^ GetMC*(VAR s: SET); 
+		PROCEDURE ^  & Init*(port: Serials.Port; in, out: Streams.Writer); 
+	END PortSniffer; 
+VAR 
+	active: ARRAY (Serials.MaxPorts + 1) OF BOOLEAN; 
+	errorRate: LONGREAL; 
+	random: Random.Generator; 
+
+	PROCEDURE ^ ShowModule; 
+	PROCEDURE ^ GetSlowdownValues(bps: LONGINT; VAR eachNCharacters, waitForMs, res: LONGINT); 
+	PROCEDURE ^ IsValidPortNumber(portNbr: LONGINT): BOOLEAN; 
+	PROCEDURE ^ SendFileIntern(portNbr: LONGINT; CONST filename: ARRAY OF CHAR; loop: BOOLEAN; context: Commands.Context); 
+	PROCEDURE ^ SendFile*(context: Commands.Context); 
+	PROCEDURE ^ StopSendFile*(context: Commands.Context); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ InstallSniffer*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ SetErrorRate*(context: Commands.Context); 
+BEGIN
+END SerialsVirtual.

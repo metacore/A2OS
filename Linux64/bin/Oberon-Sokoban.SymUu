@@ -1,0 +1,85 @@
+MODULE Sokoban IN Oberon;
+	IMPORT Files, Objects, Input, Display, Pictures, Display3, Fonts, Effects, Strings, Gadgets, Texts, Oberon, TextGadgets, TextDocs, Documents, Desktops;
+CONST 
+	left = 2; 
+	MaxN = 32; 
+	MaxM = 32; 
+	Outside = 0; 
+	Floor = 1; 
+	Wall = 2; 
+	CanPark = 4; 
+	FloorCan = 8; 
+	ParkedCan = 12; 
+	Man = 16; 
+	ParkMan = 20; 
+	Left = CHR(196); 
+	Right = CHR(195); 
+	Up = CHR(193); 
+	Down = CHR(194); 
+	Back = \"b"\; 
+	DocGen = \"Sokoban.NewDoc"\; 
+	DEL = CHR(127); 
+	border = 1; 
+	Levels = \"Sokoban.Data"\; 
+	HighScores = \"Sokoban.Score"\; 
+	DefaultBackPict = \"Flock.Pict"\; 
+	DefaultWallPict = \"Pebbles.Pict"\; 
+	DefaultParkPict = \"Crochet.Pict"\; 
+	DefaultUserName = \"unknown"\; 
+	CurVer = 0; 
+	Menu = \"Sokoban.Restart[Restart] Desktops.StoreDoc[Store]"\; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	Task = POINTER TO TaskDesc; 
+
+	TaskDesc = RECORD (Oberon.TaskDesc)
+		F: Frame; 
+	END; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		level: INTEGER; 
+		world: ARRAY (MaxN + 2) OF ARRAY (MaxM + 2) OF SHORTINT; 
+		mani, manj, oldmani, oldmanj, n, m, moves: INTEGER; 
+		backPictName, wallPictName, parkPictName, userName: ARRAY 32 OF CHAR; 
+		backPict, wallPict, parkPict: Pictures.Picture; 
+		focus, nameFocus, done, movedCan: BOOLEAN; 
+		startTime, time: LONGINT; 
+		task: Task; 
+	END; 
+
+	UpdateMsg = RECORD (Display.FrameMsg)
+		name, moves, time: BOOLEAN; 
+		points: INTEGER; 
+		new: ARRAY 4 OF RECORD 
+			x, y: INTEGER; 
+		END; 
+	END; 
+VAR 
+	statusBarH: INTEGER; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ RestoreField(F: Frame; field: SHORTINT; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CalcSize(F: Frame; x, y: INTEGER; VAR xo, yo, dx, dy: INTEGER); 
+	PROCEDURE ^ ShowStatus(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; level, moves, time, name: BOOLEAN); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CheckDone(F: Frame); 
+	PROCEDURE ^ StopTask(F: Frame); 
+	PROCEDURE ^ LoadLevel(F: Frame); 
+	PROCEDURE ^ ShowHighScores*; 
+	PROCEDURE ^ CheckScore(F: Frame); 
+	PROCEDURE ^ Timer(me: Oberon.Task); 
+	PROCEDURE ^ StartTask(F: Frame); 
+	PROCEDURE ^ MoveMan(F: Frame; ch: CHAR); 
+	PROCEDURE ^ Consume(F: Frame; ch: CHAR); 
+	PROCEDURE ^ CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame); 
+	PROCEDURE ^ UpdateName(F: Frame); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ Restart*; 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ StoreDoc(D: Documents.Document); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+BEGIN
+END Sokoban.

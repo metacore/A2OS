@@ -1,7 +1,0 @@
-MODULE BootManager;
-	IMPORT Commands, Files;
-CONST 
-
-	PROCEDURE ^ Split*(context: Commands.Context); 
-BEGIN
-END BootManager.

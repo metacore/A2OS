@@ -1,0 +1,44 @@
+MODULE SaveParticles IN Oberon;
+	IMPORT Modules, Display, In, Out, SaveScreen, Input;
+CONST 
+	versionString = \"SaveParticles: 2000.03.29 - bpsm"\; 
+	minParticleCount = 16; 
+	maxParticleCount = 256; 
+	defParticleCount = 64; 
+	minParticleSize = 1; 
+	maxParticleSize = 32; 
+	defParticleSize = 4; 
+	minSpeed = 1; 
+	maxSpeed = 16; 
+	defSpeed = 10; 
+	minFrameRate = 1; 
+	maxFrameRate = 30; 
+	defFrameRate = 20; 
+	randomOrigin = 0; 
+	centerOrigin = 1; 
+	minOrigin = randomOrigin; 
+	maxOrigin = centerOrigin; 
+	defOrigin = randomOrigin; 
+TYPE 
+	Particle = RECORD 
+		x, y, vx, vy: INTEGER; 
+		tolive: INTEGER; 
+		color: INTEGER; 
+	END; 
+VAR 
+	particleCount: INTEGER; 
+	particleSize: INTEGER; 
+	speed: INTEGER; 
+	frameRate: INTEGER; 
+	origin: INTEGER; 
+	particle: ARRAY maxParticleCount OF Particle; 
+
+	PROCEDURE ^ CreateParticle(VAR p: Particle; color: INTEGER); 
+	PROCEDURE ^ StartParticles; 
+	PROCEDURE ^ StepParticles; 
+	PROCEDURE ^ StopParticles; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove; 
+	PROCEDURE ^ Configuration*; 
+BEGIN
+END SaveParticles.

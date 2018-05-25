@@ -1,0 +1,13 @@
+MODULE RAWPrinter;
+	IMPORT Files, Streams, IP, TCP, DNS;
+CONST 
+	DefConPort = 9100; 
+	FILENOTFOUND =  -1; 
+	HOSTNOTFOUND =  -2; 
+	READERNIL =  -3; 
+	OK = 0; 
+
+	PROCEDURE ^ PrintFile*(CONST printer, fn: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ PrintStream*(CONST printer: ARRAY OF CHAR; reader: Streams.Reader; VAR res: LONGINT); 
+BEGIN
+END RAWPrinter.

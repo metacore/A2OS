@@ -1,0 +1,10 @@
+MODULE RandomNumbers IN Oberon;
+	IMPORT SYSTEM, Math IN A2, Oberon;
+VAR 
+	Z, t, d: LONGINT; 
+
+	PROCEDURE ^ Uniform*(): REAL; 
+	PROCEDURE ^ Exp*(mu: REAL): REAL; 
+	PROCEDURE ^ InitSeed*(seed: LONGINT); 
+BEGIN
+END RandomNumbers.

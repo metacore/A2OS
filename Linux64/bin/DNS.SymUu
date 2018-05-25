@@ -1,0 +1,32 @@
+MODULE DNS;
+	IMPORT S := SYSTEM, Out := KernelLog, Unix, IP, Files;
+CONST 
+	Ok* = 0; 
+	NotFound* = 3601; 
+	BadName* = 3602; 
+	MaxNofServer* = 10; 
+TYPE 
+	Name* = ARRAY 128 OF CHAR; 
+
+	Hostent = POINTER TO RECORD 
+		name: ADDRESS; 
+		aliases: ADDRESS; 
+		addrtype: LONGINT; 
+		length: LONGINT; 
+		addrlist: ADDRESS; 
+	END; 
+VAR 
+	domain*: Name; 
+	nlib: ADDRESS; 
+	gethostbyaddr: PROCEDURE {C}(adr: ADDRESS; len, typ: LONGINT):Hostent; 
+	gethostbyname: PROCEDURE {C}(name: ADDRESS):Hostent; 
+	gethostname: PROCEDURE {C}(name: ADDRESS; len: SIZE):LONGINT; 
+	NDNSReceived-, NDNSSent-, NDNSMismatchID-, NDNSError-: LONGINT; 
+
+	PROCEDURE ^ MailHostByDomain*(CONST domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ HostByName*(CONST hostname: ARRAY OF CHAR; VAR addr: IP.Adr; VAR res: LONGINT); 
+	PROCEDURE ^ HostByNumber*(addr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetHostName*(VAR name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetLocalDomain(VAR dom: ARRAY OF CHAR); 
+BEGIN
+END DNS.

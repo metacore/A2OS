@@ -1,0 +1,34 @@
+MODULE W3dAbstractWorld;
+	IMPORT Vectors := W3dVectors, Raster;
+TYPE 
+	Vertex* = OBJECT 
+
+		PROCEDURE ^ SetPos*(p: Vectors.TVector3d); 
+		PROCEDURE ^ SetUV*(u, v: LONGREAL); 
+	END Vertex; 
+
+	Texture* = OBJECT 
+	END Texture; 
+
+	Object* = OBJECT 
+
+		PROCEDURE ^ SetIndex*(idx: LONGINT); 
+		PROCEDURE ^ AddTexture*(img: Raster.Image): Texture; 
+		PROCEDURE ^ AddVertex*(p: Vectors.TVector3d): Vertex; 
+		PROCEDURE ^ AddTriangle*(a, b, c: Vertex; color: LONGINT; tex: Texture; mask0, culled: BOOLEAN); 
+		PROCEDURE ^ Clear*; 
+	END Object; 
+
+	World* = OBJECT 
+
+		PROCEDURE ^ CreateObject*(): Object; 
+		PROCEDURE ^ AddObject*(x: Object); 
+		PROCEDURE ^ ReplaceObject*(x, y: Object); 
+		PROCEDURE ^ SetAnimated*(obj: Object; animated: BOOLEAN); 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ SetCamera*(p, d, u: Vectors.TVector3d); 
+		PROCEDURE ^ Render*(img: Raster.Image; movingOnly: BOOLEAN); 
+		PROCEDURE ^ GetOwnerIndex*(x, y: LONGINT): LONGINT; 
+	END World; 
+BEGIN
+END W3dAbstractWorld.

@@ -1,0 +1,146 @@
+MODULE MineSweeper IN Oberon;
+	IMPORT Modules, Files, Input, Display, Display3, Fonts, Printer, Printer3, Effects, Objects, Attributes, Gadgets, Oberon, TextFields, Pictures, Panels, Documents, Desktops, Out, Strings;
+CONST 
+	Version = \"V 1.2"\; 
+	PictName = \"MineSweeperBD.Pict"\; 
+	IconName = \"Icons2.Bombe"\; 
+	FontName = \"Default10b.Scn.Fnt"\; 
+	ViewName = \"Mine"\; 
+	MenuString = \"Desktops.StoreDoc[Store] MineSweeper.NewGame[New]"\; 
+	BoxW = 16; 
+	BoxH = 16; 
+	MinFieldW = 8; 
+	MaxFieldW = 30; 
+	MinFieldH = 8; 
+	MaxFieldH = 16; 
+	MinMines = 10; 
+	MaxMines = 99; 
+	FieldDX = 90; 
+	FieldDY = (BoxH DIV 2); 
+	TimeDX = (BoxW DIV 2); 
+	TimeDY = FieldDY; 
+	TimeW = 70; 
+	TimeH = 20; 
+	TimeCol = 9; 
+	CountDX = TimeDX; 
+	CountDY = (TimeDY + (2 * BoxH)); 
+	CountW = TimeW; 
+	CountH = TimeH; 
+	CountCol = 7; 
+	VW = ((2 * TimeDX) + TimeW); 
+	VH = ((CountDY + CountH) + (BoxH DIV 2)); 
+	PW = (((MinFieldW * BoxW) + FieldDX) + (BoxH DIV 2)); 
+	PH = 204; 
+	PausedCol = 12; 
+	DrawFields* = 0; 
+	Time* = 1; 
+	Flag* = 2; 
+	DrawAll* = 3; 
+	CoveredUp* = 1; 
+	Neutral* = 2; 
+	FlagSet* = 3; 
+	NotSure* = 4; 
+	FalseSet* = 5; 
+	NotFound* = 6; 
+	Bombe* =  -1; 
+	Left = 2; 
+	Middle = 1; 
+	Right = 0; 
+TYPE 
+	Area = RECORD 
+		state*: SHORTINT; 
+		mines*: SHORTINT; 
+	END; 
+
+	Field* = POINTER TO FieldDesc; 
+
+	FieldDesc* = RECORD (Gadgets.ObjDesc)
+		area*: ARRAY MaxFieldW OF ARRAY MaxFieldH OF Area; 
+		W, H: INTEGER; 
+		mines: INTEGER; 
+		time: LONGINT; 
+		NrToGo: INTEGER; 
+		NrFound: INTEGER; 
+		NrCovered: INTEGER; 
+		pause: BOOLEAN; 
+		over: BOOLEAN; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+	END; 
+
+	MinePanel* = POINTER TO MinePanelDesc; 
+
+	MinePanelDesc* = RECORD (Panels.PanelDesc)
+	END; 
+
+	Coords = POINTER TO CoordsDesc; 
+
+	CoordsDesc = ARRAY (((MaxFieldW * MaxFieldH) + 1) * 2) OF SHORTINT; 
+
+	UpdateMsg* = RECORD (Display.FrameMsg)
+		id*: INTEGER; 
+		obj*: Objects.Object; 
+		coords*: Coords; 
+	END; 
+
+	NotifyMsg* = RECORD (Display.FrameMsg)
+		dt*: LONGINT; 
+	END; 
+VAR 
+	seek: LONGINT; 
+	task: Oberon.Task; 
+	lastTime: LONGINT; 
+	changedFields: Coords; 
+	curArrayPos: INTEGER; 
+	MineCols: ARRAY 9 OF INTEGER; 
+	font: Fonts.Font; 
+	flagDesc1, flagDesc2, mineDesc: ARRAY 11 OF SET; 
+	flag1, flag2, mine: Display.Pattern; 
+
+	PROCEDURE ^ Random(z: INTEGER): INTEGER; 
+	PROCEDURE ^ Timer(me: Oberon.Task); 
+	PROCEDURE ^ InitField*(F: Field; w, h, m: INTEGER; pause: BOOLEAN); 
+	PROCEDURE ^ SetPause(F: Field; b: BOOLEAN); 
+	PROCEDURE ^ TogglePause*(F: Field); 
+	PROCEDURE ^ GetTime*(F: Field; VAR t: LONGINT); 
+	PROCEDURE ^ GetNrToGo*(F: Field; VAR nr: INTEGER); 
+	PROCEDURE ^ IsOver*(F: Field): BOOLEAN; 
+	PROCEDURE ^ InsertXY(x, y: INTEGER); 
+	PROCEDURE ^ GameOver(F: Field); 
+	PROCEDURE ^ DoCoverUp(F: Field; x, y: INTEGER; normal: BOOLEAN); 
+	PROCEDURE ^ CoverUp*(F: Field; x, y: INTEGER; normal: BOOLEAN); 
+	PROCEDURE ^ ToggleState*(F: Field; x, y: INTEGER); 
+	PROCEDURE ^ FieldAttr(F: Field; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyField*(VAR M: Objects.CopyMsg; from, to: Field); 
+	PROCEDURE ^ FieldHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ DisplayToField(x, y, w, h, pX, pY: INTEGER; VAR fieldX, fieldY: INTEGER); 
+	PROCEDURE ^ FieldToDisplay(x, y, w, h, pX, pY: INTEGER; VAR dispX, dispY: INTEGER); 
+	PROCEDURE ^ DrawTime(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawCount(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawField(F: Frame; M: Display3.Mask; x, y, w, h, pX, pY: INTEGER; paused: BOOLEAN); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ TrackLeftRight(F: Frame; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackMiddle(F: Frame; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ PanelAttr(F: MinePanel; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CopyPanel*(VAR M: Objects.CopyMsg; from, to: MinePanel); 
+	PROCEDURE ^ PanelHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InsertSlider(P: Gadgets.Frame; model: Objects.Object; name: ARRAY OF CHAR; X, min, max: INTEGER); 
+	PROCEDURE ^ InsertButton(P: Gadgets.Frame; model: Objects.Object; capt, cmd: ARRAY OF CHAR; popout: BOOLEAN; X: INTEGER); 
+	PROCEDURE ^ LoadDocument*(D: Documents.Document); 
+	PROCEDURE ^ StoreDocument(D: Documents.Document); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewField*; 
+	PROCEDURE ^ NewView*; 
+	PROCEDURE ^ NewPanel*; 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ NewGame*; 
+	PROCEDURE ^ Deinstall*; 
+BEGIN
+END MineSweeper.

@@ -1,0 +1,7 @@
+MODULE Display;
+	IMPORT Commands;
+CONST 
+
+	PROCEDURE ^ Install*; 
+BEGIN
+END Display.

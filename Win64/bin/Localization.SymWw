@@ -1,0 +1,17 @@
+MODULE Localization;
+CONST 
+TYPE 
+	Language* = RECORD 
+		code*: ARRAY 3 OF CHAR; 
+	END; 
+
+	Languages* = POINTER TO ARRAY OF Language; 
+VAR 
+	currentLanguage: Language; 
+	preferenceList: Languages; 
+
+	PROCEDURE ^ GetCurrentLanguage*(): Language; 
+	PROCEDURE ^ GetLanguagePreferences*(): Languages; 
+	PROCEDURE ^ SetLanguage*(CONST language: Language); 
+BEGIN
+END Localization.

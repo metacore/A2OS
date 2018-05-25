@@ -1,8 +1,0 @@
-MODULE FileHandlers;
-	IMPORT Files, Configuration, Strings, Commands, Streams;
-CONST 
-
-	PROCEDURE ^ OpenFile*(CONST path: ARRAY OF CHAR; err: Streams.Writer; caller: OBJECT); 
-	PROCEDURE ^ Open*(context: Commands.Context); 
-BEGIN
-END FileHandlers.

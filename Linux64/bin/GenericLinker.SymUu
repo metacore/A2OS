@@ -1,0 +1,98 @@
+MODULE GenericLinker;
+	IMPORT ObjectFile, Streams, Diagnostics, Strings, SYSTEM;
+CONST 
+	InvalidAddress* =  -1; 
+	Fixed* = 0; 
+	EntryCode* = 1; 
+	InitCode* = 2; 
+	ExitCode* = 3; 
+	BodyCode* = 4; 
+	Code* = 5; 
+	Data* = 6; 
+	Const* = 7; 
+	Empty* = 8; 
+	UseAll* = {Fixed .. Empty}; 
+	UseInitCode* = {Fixed .. ExitCode}; 
+	UseAllButInitCode* = {Fixed, BodyCode .. Empty}; 
+TYPE 
+	Address* = ADDRESS; 
+
+	HashEntrySegmentedName = RECORD 
+		key: ObjectFile.SegmentedName; 
+		value: Block; 
+	END; 
+
+	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName; 
+
+	HashTableSegmentedName* = OBJECT 
+	VAR 
+		table: HashSegmentedNameArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(CONST key: ObjectFile.SegmentedName; value: Block); 
+		PROCEDURE ^ Get*(CONST key: ObjectFile.SegmentedName): Block; 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ Hash(CONST name: ObjectFile.SegmentedName): LONGINT; 
+		PROCEDURE ^ HashValue(CONST key: ObjectFile.SegmentedName): LONGINT; 
+		PROCEDURE ^ Grow; 
+	END HashTableSegmentedName; 
+
+	Arrangement* = OBJECT 
+
+		PROCEDURE ^ Preallocate*(CONST section: ObjectFile.Section); 
+		PROCEDURE ^ Allocate*(CONST section: ObjectFile.Section): Address; 
+		PROCEDURE ^ Patch*(pos, value: Address; offset, bits, unit: ObjectFile.Bits); 
+		PROCEDURE ^ CheckReloc*(target: Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch); 
+	END Arrangement; 
+
+	Block* = POINTER TO RECORD (ObjectFile.Section)
+		next: Block; 
+		address*: Address; 
+		aliasOf*: Block; 
+		referenced, used: BOOLEAN; 
+		priority: LONGINT; 
+	END; 
+
+	Linker* = OBJECT 
+	VAR 
+		diagnostics: Diagnostics.Diagnostics; 
+		usedCategories: SET; 
+		error-: BOOLEAN; 
+		log-: Streams.Writer; 
+		code, data: Arrangement; 
+		firstBlock, firstLinkedBlock: Block; 
+		linkRoot: ObjectFile.SectionName; 
+		hash: HashTableSegmentedName; 
+
+		PROCEDURE ^  & InitLinker*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; useCategories: SET; code, data: Arrangement); 
+		PROCEDURE ^ SetLinkRoot*(CONST root: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source, message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source, message: ARRAY OF CHAR); 
+		PROCEDURE ^ ErrorP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source, message: ARRAY OF CHAR); 
+		PROCEDURE ^ InformationP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ FindBlock*(CONST identifier: ObjectFile.Identifier): Block; 
+		PROCEDURE ^ ImportBlock*(CONST fixup: ObjectFile.Fixup): Block; 
+		PROCEDURE ^ ExportBlock*(block: Block); 
+		PROCEDURE ^ GetArrangement(block: Block): Arrangement; 
+		PROCEDURE ^ Precedes*(this, that: Block): BOOLEAN; 
+		PROCEDURE ^ AddSection*(CONST section: ObjectFile.Section); 
+		PROCEDURE ^ Resolve*; 
+		PROCEDURE ^ PatchAlias*(block: Block); 
+		PROCEDURE ^ Link*; 
+		PROCEDURE ^ Reference(block: Block; used: BOOLEAN); 
+		PROCEDURE ^ Prearrange(block: Block); 
+		PROCEDURE ^ Arrange(block: Block); 
+		PROCEDURE ^ Patch(block: Block); 
+		PROCEDURE ^ Diagnose(block: Block); 
+	END Linker; 
+
+	PROCEDURE ^ GetPriority(block: Block): LONGINT; 
+	PROCEDURE ^ Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT; 
+	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
+	PROCEDURE ^ Process*(reader: Streams.Reader; linker: Linker); 
+BEGIN
+END GenericLinker.

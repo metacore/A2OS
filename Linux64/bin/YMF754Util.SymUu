@@ -1,0 +1,8 @@
+MODULE YMF754Util;
+	IMPORT Commands, Streams, Codecs, Files, Strings;
+CONST 
+	FNameInstRAM = \"YMF754.Bin"\; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+BEGIN
+END YMF754Util.

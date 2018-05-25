@@ -1,0 +1,138 @@
+MODULE WebFTPServer;
+	IMPORT Kernel, Modules, IP, TCP, TCPServices, Objects, Commands, Streams, Files, KernelLog, Dates, Strings;
+CONST 
+	moduleName = \"WebFTPServer: "\; 
+	LogFile = \"FTP.Log"\; 
+	PathDelimiter = Files.PathDelimiter; 
+	CmdLen = 32; 
+	LineLen = 1024; 
+	UserFile = \"WebFTPUsers.dat"\; 
+	BufSize = (16 * 1024); 
+	dirLen = 1024; 
+	nameLen = 32; 
+	pwdLen = 32; 
+	CR = 0DX; 
+	LF = 0AX; 
+	Tab = 9X; 
+	Timeout = (900 * 1000); 
+	PasvTimeout = (60 * 1000); 
+	MaxErrors = 10; 
+	FTPControlPort = 21; 
+	FTPDataPort = 20; 
+	ASCII = 0; 
+	IMAGE = 1; 
+	Active = 0; 
+	Passive = 1; 
+	Ok = 0; 
+	RNFR = 1; 
+	REST = 2; 
+	Msg215 = \"UNIX"\; 
+	Msg220 = \"Aos FTP Server ready."\; 
+	Msg221 = \"Goodbye."\; 
+	Msg226 = \"Closing data connection."\; 
+	Msg230 = \"User logged in, proceed."\; 
+	Msg350 = \"Requested file action pending further information."\; 
+	Msg425 = \"Can't open data connection."\; 
+	Msg500 = \": not understood."\; 
+	Msg504 = \"Command not implemented for that parameter."\; 
+	Msg530 = \"Please login with USER and PASS."\; 
+	Msg553 = \"File name not allowed."\; 
+	NoPermissionMsg = \"No permission."\; 
+	read = 0; 
+	write = 1; 
+	passwrq = 2; 
+	mailpwd = 3; 
+TYPE 
+	User = POINTER TO RECORD 
+		name: ARRAY nameLen OF CHAR; 
+		password, currentlogins, maxlogins: LONGINT; 
+		permissions: SET; 
+		root: ARRAY dirLen OF CHAR; 
+		next: User; 
+	END; 
+
+	LogEntry = RECORD 
+		user: ARRAY nameLen OF CHAR; 
+		ip: IP.Adr; 
+		method: ARRAY 16 OF CHAR; 
+		uri: ARRAY 1024 OF CHAR; 
+		status, result: LONGINT; 
+		pending: BOOLEAN; 
+	END; 
+
+	FTPAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
+	VAR 
+		running: BOOLEAN; 
+		in: Streams.Reader; 
+		out: Streams.Writer; 
+		dataAdr: IP.Adr; 
+		dataPort: LONGINT; 
+		timeout, pasvTimeout: Objects.Timer; 
+		line: ARRAY LineLen OF CHAR; 
+		cmd: ARRAY CmdLen OF CHAR; 
+		logged, quit: BOOLEAN; 
+		user: User; 
+		type: SHORTINT; 
+		workDir: ARRAY dirLen OF CHAR; 
+		rnfrName: ARRAY dirLen OF CHAR; 
+		state: LONGINT; 
+		mode: LONGINT; 
+		consecutiveErrors: LONGINT; 
+		restMarker: LONGINT; 
+		pasvListener: TCP.Connection; 
+		logEntry: LogEntry; 
+
+		PROCEDURE ^ TimeoutHandler; 
+		PROCEDURE ^ PasvTimeoutHandler; 
+		PROCEDURE ^ ReadCommand(VAR cmd, param: ARRAY OF CHAR); 
+		PROCEDURE ^ SendString(str: ARRAY OF CHAR); 
+		PROCEDURE ^ SendMessage(code: LONGINT; msg: ARRAY OF CHAR); 
+		PROCEDURE ^ GetWorkingDirMsg(VAR msg: ARRAY OF CHAR); 
+		PROCEDURE ^ GetDirectories(name: ARRAY OF CHAR; VAR usr, system: ARRAY OF CHAR); 
+		PROCEDURE ^ CheckDirectory(name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Directory(name: ARRAY OF CHAR; full: BOOLEAN); 
+		PROCEDURE ^ Size(name: ARRAY OF CHAR); 
+		PROCEDURE ^ WaitEstablished(c: TCP.Connection); 
+		PROCEDURE ^ Retrieve(name: ARRAY OF CHAR; marker: LONGINT); 
+		PROCEDURE ^ Store(name: ARRAY OF CHAR; marker: LONGINT); 
+		PROCEDURE ^ Execute(VAR cmd, param: ARRAY OF CHAR); 
+	BEGIN{ACTIVE, SAFE} 
+	END FTPAgent; 
+VAR 
+	Hex: ARRAY 16 OF CHAR; 
+	ftp: TCPServices.Service; 
+	users: User; 
+	shutdown: BOOLEAN; 
+	w3cf: Files.File; 
+	w3cw: Streams.Writer; 
+	NclientsTotal*, NclientsActive*, NMebiBReceived*, NMebiBSent*, NbytesReceived*, NbytesSent*: LONGINT; 
+
+	PROCEDURE ^ IncreaseSent(delta: LONGINT); 
+	PROCEDURE ^ IncreaseReceived(delta: LONGINT); 
+	PROCEDURE ^ IncreaseActive(delta: LONGINT); 
+	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
+	PROCEDURE ^ StrToInt(str: ARRAY OF CHAR; VAR val: LONGINT); 
+	PROCEDURE ^ StrToIntPos(VAR str: ARRAY OF CHAR; VAR i: INTEGER): LONGINT; 
+	PROCEDURE ^ SplitPort(parm: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: LONGINT); 
+	PROCEDURE ^ SplitEPRT(param: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: LONGINT); 
+	PROCEDURE ^ BinaryTransfer(r: Streams.Reader; w: Streams.Writer); 
+	PROCEDURE ^ ASCIITransfer(r: Streams.Reader; w: Streams.Writer); 
+	PROCEDURE ^ Code(VAR s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ ComposeDirectory(path, name: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ NewFTPAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ AddUser*(context: Commands.Context); 
+	PROCEDURE ^ RemoveUser*(context: Commands.Context); 
+	PROCEDURE ^ ListUsers*(context: Commands.Context); 
+	PROCEDURE ^ LoadUsers(VAR users: User); 
+	PROCEDURE ^ StoreUsers(users: User; context: Commands.Context); 
+	PROCEDURE ^ FindUser(name: ARRAY OF CHAR): User; 
+	PROCEDURE ^ UserLogin(user: User): BOOLEAN; 
+	PROCEDURE ^ UserLogout(user: User); 
+	PROCEDURE ^ OpenW3CLog(fn: ARRAY OF CHAR); 
+	PROCEDURE ^ W3CLog(e: LogEntry); 
+	PROCEDURE ^ FlushLog*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WebFTPServer.

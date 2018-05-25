@@ -19,7 +19,7 @@ TYPE
 	Pixmap* = ADDRESS;
 
 	Pattern* = ADDRESS (* = PatternPtr *) ;
-	PatternPtr* = POINTER {UNSAFE, UNTRACED} TO PatternDesc;
+	PatternPtr* = POINTER TO PatternDesc;
 	PatternDesc* = RECORD
 				x*, y*: LONGINT;
 				w*, h*: INTEGER;
@@ -31,7 +31,7 @@ TYPE
 				p*: PatternDesc
 			END;
 
-	Font* = POINTER  {UNSAFE, UNTRACED} TO Bytes;
+	Font* = POINTER TO Bytes;
 	Bytes* = RECORD
 				metrics*: ARRAY 256 OF MetricDesc;
 				xid*: LONGINT
@@ -64,7 +64,7 @@ TYPE
 				redMask*, greenMask*, blueMask*: LONGWORD;
 				bitsPerRgb*, mapEntries*: WORD
 			END;
-	VisualPtr* = POINTER {UNTRACED, UNSAFE} TO Visual;
+	VisualPtr* = POINTER {UNSAFE,UNTRACED} TO Visual;
 	VisualInfo* = RECORD
 				visual*{UNTRACED}:  VisualPtr;
 				visualID*: VisualID;
@@ -150,7 +150,7 @@ TYPE
 			END;
 
 	Image* = ADDRESS;
-	ImagePtr* = POINTER {UNSAFE, UNTRACED} TO ImageDesc;
+	ImagePtr* = POINTER {UNSAFE,UNTRACED} TO ImageDesc;
 	ImageDesc* = RECORD
 				width*, height*: WORD;
 				xoffset*, format*: WORD; data*: ADDRESS;
@@ -166,7 +166,7 @@ TYPE
 				serial*: LONGWORD;
 				errorCode*, requestCode*, minorCode*: CHAR
 			END;
-	ErrorEventPtr* = POINTER {UNSAFE, UNTRACED} TO ErrorEvent;
+	ErrorEventPtr* = POINTER {UNSAFE,UNTRACED} TO ErrorEvent;
 	ErrorHandler* = PROCEDURE ( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;
 	IOErrorHandler = PROCEDURE ( d: DisplayPtr; p2, p3, p4: LONGINT ): LONGINT;
 
@@ -378,6 +378,7 @@ VAR
 	PROCEDURE LinkToX;
 	VAR xlib: ADDRESS;
 	BEGIN
+		Unix.LinkToX;
 		xlib := Unix.Dlopen( Unix.libX11name, 2 );
 		IF xlib = 0 THEN  (* try default version *)
 		 xlib := Unix.Dlopen( "libX11.so", 2 )
@@ -492,7 +493,7 @@ VAR
 		Unix.Dlsym( xlib, "XAllocColor", ADDRESSOF( AllocColor ) );
 	END LinkToX;
 
-	PROCEDURE MyErrorHandler( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;
+	PROCEDURE MyErrorHandler( d: DisplayPtr;  err {UNTRACED}: ErrorEventPtr ): LONGINT;
 	BEGIN
 		ErrorFlag := TRUE;
 		GetErrorText( d, ORD( err.errorCode ), ErrorText, BufferSize );
@@ -500,7 +501,7 @@ VAR
 		RETURN 0
 	END MyErrorHandler;
 
-	PROCEDURE MyIOErrorHandler( d: DisplayPtr; p2, p3, p4: LONGINT ): LONGINT;
+	PROCEDURE MyIOErrorHandler( d: DisplayPtr): LONGINT;
 	BEGIN
 		ErrorFlag := TRUE;  ErrorText := "X11 I/O Error";
 		Trace.StringLn( ErrorText );
@@ -517,6 +518,5 @@ BEGIN
 			(* Oberon procedures cannot be used as callback procedures because of
 				incompatibilities between the PPC Oberon ABI and the PPC SYSV ABI.
 				PPC Oberon follows the old MAC and IBM AIX ABI *)
-	Unix.Dlsym( 0, "InitXErrH", ADDRESSOF( InitXErrorHandlers ) );
-	InitXErrorHandlers( MyErrorHandler, MyIOErrorHandler );
+	Unix.InitXErrorHandlers( MyErrorHandler, MyIOErrorHandler );
 END X11.

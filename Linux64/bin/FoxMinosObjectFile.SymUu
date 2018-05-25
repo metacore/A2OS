@@ -1,0 +1,35 @@
+MODULE FoxMinosObjectFile;
+	IMPORT Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, FingerPrinter := FoxFingerPrinter, Sections := FoxSections, Streams, D := Debugging, Files, SYSTEM, Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options, Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine;
+CONST 
+	Trace = FALSE; 
+TYPE 
+	Name = ARRAY 256 OF CHAR; 
+
+	ByteArray = POINTER TO ARRAY OF CHAR; 
+
+	Fixup = OBJECT 
+	VAR 
+		nextFixup: Fixup; 
+		fixup: BinaryCode.Fixup; 
+		fixupSection: Sections.Section; 
+	END Fixup; 
+
+	ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
+	VAR 
+		extension, prefix: Basic.FileName; 
+
+		PROCEDURE ^ Export*(module: Formats.GeneratedModule; symbolFileFormat: Formats.SymbolFileFormat): BOOLEAN; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+		PROCEDURE ^ ForceModuleBodies*(): BOOLEAN; 
+		PROCEDURE ^ GetExtension*(VAR ext: ARRAY OF CHAR); 
+	END ObjectFileFormat; 
+
+	PROCEDURE ^ GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT; 
+	PROCEDURE ^ FindPC(pc: LONGINT; module: Sections.Module; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
+	PROCEDURE ^ MakeSectionOffsets(module: Sections.Module; VAR varSize, codeSize, bodyOffset: LONGINT; VAR code: ByteArray); 
+	PROCEDURE ^ WriteObjectFile*(w: Streams.Writer; module: Sections.Module; symbolFile: Files.File; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
+	PROCEDURE ^ Get*(): Formats.ObjectFileFormat; 
+BEGIN
+END FoxMinosObjectFile.

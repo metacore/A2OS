@@ -1,7 +1,0 @@
-MODULE CryptoTestBigNumbers;
-	IMPORT BN := CryptoBigNumbers, Out := KernelLog;
-CONST 
-
-	PROCEDURE ^ Test1*; 
-BEGIN
-END CryptoTestBigNumbers.

@@ -1,0 +1,179 @@
+MODULE IMAPGUI;
+	IMPORT Streams, Strings, KernelLog, Classes := TFClasses, Kernel, Modules, IMAPClient, IMAPUtilities, WMComponents, WMStandardComponents, WMWindowManager, WMRectangles, WMEditors, WMDialogs, Raster, WMGrids, WMStringGrids, WMGraphics, WMPopups, WMTrees, WMMessages, WMRestorable, Texts, UTF8Strings, Files, XML, XMLScanner, XMLParser, RMSMTP;
+CONST 
+	WindowTitle = \"MailClient"\; 
+	CR = 0DX; 
+	LF = 0AX; 
+	DEBUG = FALSE; 
+	REFRESHTIME = (1000 * 2); 
+TYPE 
+	String = Strings.String; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	LoadWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		offline: WMStandardComponents.Checkbox; 
+		filename: WMEditors.Editor; 
+		load, cancel: WMStandardComponents.Button; 
+		ready, valid: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ LoadHandler(sender, data: ANY); 
+		PROCEDURE ^ GetAnswer(VAR file: String; VAR b: BOOLEAN); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+	END LoadWindow; 
+
+	SaveWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		filename: WMEditors.Editor; 
+		save, cancel: WMStandardComponents.Button; 
+		ready, valid: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ SaveHandler(sender, data: ANY); 
+		PROCEDURE ^ GetAnswer(VAR file: String); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+	END SaveWindow; 
+
+	MessageWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		topToolbar, statusbar, headerPanel, messagePanel: WMStandardComponents.Panel; 
+		statusLabel: WMStandardComponents.Label; 
+		send, reply, saveDraft: WMStandardComponents.Button; 
+		from, to, cc, subject, date: WMEditors.Editor; 
+		messageField: WMEditors.Editor; 
+		message: IMAPClient.Message; 
+		window: Window; 
+		folder: IMAPClient.Folder; 
+
+		PROCEDURE ^  & New*(win: Window); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ ButtonHandler*(sender, data: ANY); 
+		PROCEDURE ^ Reply; 
+		PROCEDURE ^ Send; 
+		PROCEDURE ^ SaveDraft; 
+		PROCEDURE ^ BuildMessage; 
+		PROCEDURE ^ NewMessage*; 
+		PROCEDURE ^ DisplayMessage*(message: IMAPClient.Message); 
+	END MessageWindow; 
+
+	SearchWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		answered, unanswered, deleted, undeleted, draft, undraft, flagged, unflagged, seen, unseen, recent, old: WMStandardComponents.Checkbox; 
+		subject, text, from, minSize, maxSize: WMEditors.Editor; 
+		search, cancel: WMStandardComponents.Button; 
+		before, on, after: WMStandardComponents.Checkbox; 
+		day, month, year: WMEditors.Editor; 
+		utf8: WMStandardComponents.Checkbox; 
+		status: WMStandardComponents.Label; 
+		w: Window; 
+
+		PROCEDURE ^  & New*(win: Window); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ SearchHandler(sender, data: ANY); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+	END SearchWindow; 
+
+	PreferencesWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		SMTPServer, SMTPThisHost, SentFolder, DraftFolder, TrashBin, From: WMEditors.Editor; 
+		ExpungeOnFolderChange, ExpungeOnDelete, UseDragNDropAsMove, ExpungeOnMove, UseATrashBin: WMStandardComponents.Checkbox; 
+		ok, cancel: WMStandardComponents.Button; 
+		window: Window; 
+		oldPreferences: IMAPClient.AccountPreferences; 
+
+		PROCEDURE ^  & New*(win: Window); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ OKHandler(sender, data: ANY); 
+		PROCEDURE ^ CancelHandler(sender, data: ANY); 
+	END PreferencesWindow; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		topToolbar, messagePanel: WMStandardComponents.Panel; 
+		statusLabel, currentFolderLabel, currentMessagesLabel: WMStandardComponents.Label; 
+		connect, disconnect, reload, abort, search, save, load, new, expunge, preferences, download, switchToOffline, switchToOnline: WMStandardComponents.Button; 
+		messageGrid: WMStringGrids.StringGrid; 
+		folderTree: WMTrees.TreeView; 
+		tree: WMTrees.Tree; 
+		colWidths: WMGrids.Spacings; 
+		address: WMEditors.Editor; 
+		popup: WMPopups.Popup; 
+		px, py: LONGINT; 
+		IconRead, IconAnswered, IconUnread, IconDeleted: WMGraphics.Image; 
+		copyTarget: IMAPClient.Folder; 
+		client: IMAPClient.Client; 
+		timer: Kernel.Timer; 
+		updateFlag: BOOLEAN; 
+		active: BOOLEAN; 
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ ResizeGrid; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ DisplayMessage(sender, data: ANY); 
+		PROCEDURE ^ ChangeFolder(sender, data: ANY); 
+		PROCEDURE ^ FolderContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ CreateDir(sender, data: ANY); 
+		PROCEDURE ^ RenameDir(sender, data: ANY); 
+		PROCEDURE ^ DeleteDir(sender, data: ANY); 
+		PROCEDURE ^ TargetDir(sender, data: ANY); 
+		PROCEDURE ^ SentFolder(sender, data: ANY); 
+		PROCEDURE ^ DraftFolder(sender, data: ANY); 
+		PROCEDURE ^ TrashBin(sender, data: ANY); 
+		PROCEDURE ^ MessagesDragDropped(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ MessagesStartDrag(sender, data: ANY); 
+		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
+		PROCEDURE ^ MessageContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ GetMessageSelection(): Classes.List; 
+		PROCEDURE ^ CopyMessages(sender, data: ANY); 
+		PROCEDURE ^ DeleteMessages(sender, data: ANY); 
+		PROCEDURE ^ RestoreMessages(sender, data: ANY); 
+		PROCEDURE ^ Connect; 
+		PROCEDURE ^ Disconnect; 
+		PROCEDURE ^ Reload; 
+		PROCEDURE ^ Abort; 
+		PROCEDURE ^ Search; 
+		PROCEDURE ^ Save; 
+		PROCEDURE ^ NewSend; 
+		PROCEDURE ^ Expunge; 
+		PROCEDURE ^ DownloadAllMessages; 
+		PROCEDURE ^ SwitchToOffline; 
+		PROCEDURE ^ SwitchToOnline; 
+		PROCEDURE ^ Load; 
+		PROCEDURE ^ SetPreferences; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ DisplayCurrentFolder; 
+		PROCEDURE ^ UpdateStatusLabels; 
+		PROCEDURE ^ UpdateFolders; 
+		PROCEDURE ^ UpdateMessages; 
+		PROCEDURE ^ RefreshDisplay; 
+	BEGIN{ACTIVE} 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ OutputError(CONST error: ARRAY OF CHAR); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END IMAPGUI.

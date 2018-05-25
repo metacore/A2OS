@@ -1,0 +1,88 @@
+MODULE SoundDevices;
+	IMPORT Plugins, Modules;
+CONST 
+	ResOK* = 0; 
+	ResQualityReduced* = 1; 
+	ResNoMoreChannels* = 10; 
+	ResUnsupportedFrequency* = 20; 
+	ResUnsupportedSubChannels* = 30; 
+	ResUnsupportedSamplingRes* = 40; 
+	ResUnsupportedFormat* = 50; 
+	ChannelPlay* = 0; 
+	ChannelRecord* = 1; 
+	FormatPCM* = 0; 
+TYPE 
+	Buffer* = OBJECT 
+	VAR 
+		len*: LONGINT; 
+		data*: POINTER TO ARRAY OF CHAR; 
+	END Buffer; 
+
+	BufferPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		head, num: LONGINT; 
+		buffer: POINTER TO ARRAY OF Buffer; 
+
+		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^ Add*(x: Buffer); 
+		PROCEDURE ^ Remove*(): Buffer; 
+		PROCEDURE ^ NofBuffers*(): LONGINT; 
+	END BufferPool; 
+
+	BufferListener* = PROCEDURE {DELEGATE}(buffer: Buffer); 
+
+	MixerChannel* = OBJECT 
+
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetDesc*(VAR desc: ARRAY OF CHAR); 
+		PROCEDURE ^ SetVolume*(volume: LONGINT); 
+		PROCEDURE ^ GetVolume*(): LONGINT; 
+		PROCEDURE ^ SetMute*(mute: BOOLEAN); 
+		PROCEDURE ^ GetIsMute*(): BOOLEAN; 
+	END MixerChannel; 
+
+	MixerChangedProc* = PROCEDURE {DELEGATE}(channel: MixerChannel); 
+
+	Channel* = OBJECT 
+
+		PROCEDURE ^ GetChannelKind*(): LONGINT; 
+		PROCEDURE ^ SetVolume*(volume: LONGINT); 
+		PROCEDURE ^ GetVolume*(): LONGINT; 
+		PROCEDURE ^ GetPosition*(): LONGINT; 
+		PROCEDURE ^ RegisterBufferListener*(bufferListener: BufferListener); 
+		PROCEDURE ^ Start*; 
+		PROCEDURE ^ QueueBuffer*(x: Buffer); 
+		PROCEDURE ^ Pause*; 
+		PROCEDURE ^ Stop*; 
+		PROCEDURE ^ Close*; 
+	END Channel; 
+
+	Driver* = OBJECT (Plugins.Plugin)
+	VAR 
+		masterIn*, masterOut*: MixerChannel; 
+
+		PROCEDURE ^ Init*; 
+		PROCEDURE ^ Enable*; 
+		PROCEDURE ^ Disable*; 
+		PROCEDURE ^ NofNativeFrequencies*(): LONGINT; 
+		PROCEDURE ^ GetNativeFrequency*(nr: LONGINT): LONGINT; 
+		PROCEDURE ^ NofSamplingResolutions*(): LONGINT; 
+		PROCEDURE ^ GetSamplingResolution*(nr: LONGINT): LONGINT; 
+		PROCEDURE ^ NofSubChannelSettings*(): LONGINT; 
+		PROCEDURE ^ GetSubChannelSetting*(nr: LONGINT): LONGINT; 
+		PROCEDURE ^ NofWaveFormats*(): LONGINT; 
+		PROCEDURE ^ GetWaveFormat*(nr: LONGINT): LONGINT; 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
+		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
+		PROCEDURE ^ GetMixerChannel*(channelNr: LONGINT; VAR channel: MixerChannel); 
+		PROCEDURE ^ GetNofMixerChannels*(): LONGINT; 
+	END Driver; 
+VAR 
+	devices*: Plugins.Registry; 
+
+	PROCEDURE ^ GetDefaultDevice*(): Driver; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END SoundDevices.

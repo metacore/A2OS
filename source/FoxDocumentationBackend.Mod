@@ -134,7 +134,7 @@ The following describes how a documentation is generated from a module:
 
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Scanner := FoxScanner, Backend := FoxBackend, Formats := FoxFormats,
-		Options, Streams, Runtime, Strings, SymbolFileFormat := FoxBinarySymbolFile, Diagnostics,
+		Options, Streams, Runtime, Strings, SymbolFileFormat := FoxTextualSymbolFile, Diagnostics,
 		DocumentationTree := FoxDocumentationTree, DocumentationPrinter := FoxDocumentationPrinter, DocumentationHtml := FoxDocumentationHtml, DocumentationParser := FoxDocumentationParser, DocumentationScanner := FoxDocumentationScanner,
 		D := Debugging, Files;
 

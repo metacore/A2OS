@@ -4,7 +4,7 @@ IMPORT
 	IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Backend := FoxBackend,
 	Global := FoxGlobal, Formats := FoxFormats, 
 	ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile,
-	GenericLinker, StaticLinker;
+	GenericLinker, StaticLinker := Linker;
 
 CONST
 	DefaultBackend = "AMD";
@@ -756,7 +756,7 @@ TYPE
 		VAR
 			codeFileName, dataFileName: Files.FileName;
 			typeName, instanceName, linkRoot: SectionName;
-			code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker;
+			code, data: Linker.Arrangement; linker: GenericLinker.Linker;
 			i: LONGINT;
 			logFile: Files.File; linkerLog: Files.Writer;
 			type: ActiveCells.Type;
@@ -843,7 +843,7 @@ TYPE
 			NEW (linker, specification.diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
 
 			linker.SetLinkRoot("" (* linkRoot *)); (* take all initcode sections *)
-			StaticLinker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
+			Linker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
 
 			(* do linking after having read in all blocks to account for potential constraints *)
 			IF ~linker.error THEN linker.Link; END;
@@ -880,8 +880,8 @@ TYPE
 			Files.JoinExtension(instanceName,ActiveCells.DataFileExtension,dataFileName);
 
 			IF ~linker.error THEN
-				StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
-				StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+				Linker.WriteOutputFile (code, codeFileName, linker, Linker.WriteTRMCodeFile);
+				Linker.WriteOutputFile (data, dataFileName, linker, Linker.WriteTRMDataFile);
 				IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
 				IF specification.log # NIL THEN
 					specification.log.String(instanceName);
@@ -1033,7 +1033,7 @@ TYPE
 			VAR
 				codeFileName, dataFileName: Files.FileName;
 				typeName, instanceName, linkRoot: SectionName;
-				code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker;
+				code, data: Linker.Arrangement; linker: GenericLinker.Linker;
 				i: LONGINT;
 				logFile: Files.File; linkerLog: Files.Writer;
 				type: ActiveCells.Type;
@@ -1097,7 +1097,7 @@ TYPE
 				NEW (linker, specification.diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
 
 				linker.SetLinkRoot("" (* linkRoot *)); (* take all initcode sections *)
-				StaticLinker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
+				Linker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
 
 				(* do linking after having read in all blocks to account for potential constraints *)
 				IF ~linker.error THEN linker.Link; END;
@@ -1134,8 +1134,8 @@ TYPE
 				Files.JoinExtension(instanceName,ActiveCells.DataFileExtension,dataFileName);
 
 				IF ~linker.error THEN
-					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
-					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
+					Linker.WriteOutputFile (code, codeFileName, linker, Linker.WriteTRMCodeFile);
+					Linker.WriteOutputFile (data, dataFileName, linker, Linker.WriteTRMDataFile);
 					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
 					IF specification.log # NIL THEN
 						specification.log.String(instanceName);

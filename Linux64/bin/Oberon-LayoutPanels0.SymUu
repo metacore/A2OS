@@ -1,0 +1,112 @@
+MODULE LayoutPanels0 IN Oberon;
+	IMPORT Objects, Gadgets, Display, Display3, Effects, Texts, Oberon;
+CONST 
+	left = 0; 
+	right = 1; 
+	bottom = 2; 
+	top = 3; 
+	meleft = 12; 
+	meright = 13; 
+	mebottom = 14; 
+	metop = 15; 
+	samewidth = 4; 
+	sameheight = 5; 
+	hstatic = 6; 
+	vstatic = 7; 
+	innerleft = 8; 
+	innerright = 9; 
+	innerbottom = 10; 
+	innertop = 11; 
+TYPE 
+	Element* = POINTER TO ElementDesc; 
+
+	ElementDesc* = RECORD (Gadgets.FrameDesc)
+		format*: SET; 
+		hfactor*, vfactor*, row*, col*, minx*, miny*, minw*, minh*: INTEGER; 
+		size*: PROCEDURE (e: Element); 
+		make*: PROCEDURE (e: Element; x, y, w, h: INTEGER); 
+	END; 
+
+	Container* = POINTER TO ContainerDesc; 
+
+	ContainerDesc* = RECORD (ElementDesc)
+		hborder*, vborder*: INTEGER; 
+	END; 
+
+	IntArray = POINTER TO ARRAY OF INTEGER; 
+
+	Table* = POINTER TO TableDesc; 
+
+	TableDesc* = RECORD (ContainerDesc)
+		cols*, rows*, hdist*, vdist*, hfill*, vfill*: INTEGER; 
+		gmaxw*, gmaxh*, hexpand*, vexpand*, hoffset*, voffset*: IntArray; 
+	END; 
+
+	PanelMsg* = RECORD (Display.FrameMsg)
+		sender, panel*: Gadgets.Frame; 
+	END; 
+
+	ContainerMsg* = RECORD (Display.FrameMsg)
+		sender, container*: Gadgets.Frame; 
+	END; 
+
+	CalcMsg* = RECORD (Objects.ObjMsg)
+	END; 
+
+	ConsumeMsg* = RECORD (Display.ConsumeMsg)
+		e*: Element; 
+	END; 
+VAR 
+	head: Element; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ DisplayArea(receiver: Display.Frame; u, v, w, h: INTEGER); 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ SimpleToElements(F: Container; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ GetContainer*(sender: Element): Container; 
+	PROCEDURE ^ GetPanel*(sender: Element): Gadgets.Frame; 
+	PROCEDURE ^ DummyHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Drop*(obj: Objects.Object; dest: Display.Frame; u, v: INTEGER); 
+	PROCEDURE ^ Integrate*(obj: Objects.Object); 
+	PROCEDURE ^ CalcPanelOf(e: Element); 
+	PROCEDURE ^ GetElementOf*(obj: Objects.Object; e: Element): Element; 
+	PROCEDURE ^ CopyElements*(f: Display.Frame): Display.Frame; 
+	PROCEDURE ^ LinkGadgets*(e: Element; link: Display.Frame): Display.Frame; 
+	PROCEDURE ^ KillFrames(p: Objects.Object; objlist: Display.Frame); 
+	PROCEDURE ^ SetRowCol(t: Table); 
+	PROCEDURE ^ InsertElementAfter*(e0, e: Element); 
+	PROCEDURE ^ InsertRow*(tab: Table; y: INTEGER; recalc: BOOLEAN); 
+	PROCEDURE ^ InsertCol*(tab: Table; x: INTEGER; recalc: BOOLEAN); 
+	PROCEDURE ^ RemoveRow*(tab: Table; y: INTEGER; recalc: BOOLEAN); 
+	PROCEDURE ^ RemoveCol*(tab: Table; x: INTEGER; recalc: BOOLEAN); 
+	PROCEDURE ^ InsertGadget*(e: Element; obj: Gadgets.Frame); 
+	PROCEDURE ^ InsertPlaceElement*(c: Container; e: Element); 
+	PROCEDURE ^ ReplaceElement*(c: Container; e0, e1: Element; recalc: BOOLEAN); 
+	PROCEDURE ^ ClearElement*(e: Element; VAR objlist: Display.Frame): BOOLEAN; 
+	PROCEDURE ^ Select*(e: Element; u, v: INTEGER; border: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ ClosestTableElement*(t: Table; x, y: INTEGER): Element; 
+	PROCEDURE ^ ElementHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ ContainerHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ TableHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ SizeElement(e: Element); 
+	PROCEDURE ^ SizeContainer(c: Element); 
+	PROCEDURE ^ SizeTable(t: Element); 
+	PROCEDURE ^ MakeElement(e: Element; x, y, w, h: INTEGER); 
+	PROCEDURE ^ MakePlace(c: Element; x, y, w, h: INTEGER); 
+	PROCEDURE ^ FillCols(space, cols, fills: INTEGER; expand, max: IntArray; sameSize: BOOLEAN); 
+	PROCEDURE ^ SetOffset(cols, border, dist: INTEGER; max, offset: IntArray); 
+	PROCEDURE ^ MakeTable(t: Element; x, y, w, h: INTEGER); 
+	PROCEDURE ^ InitElement(obj: Element); 
+	PROCEDURE ^ NewElement*(): Element; 
+	PROCEDURE ^ InitContainer(obj: Container); 
+	PROCEDURE ^ NewContainer*(): Container; 
+	PROCEDURE ^ InitTable(obj: Table); 
+	PROCEDURE ^ NewTable*(): Table; 
+	PROCEDURE ^ EmptyTable*(rows, cols: INTEGER): Table; 
+	PROCEDURE ^ Parse*(T: Texts.Text; VAR obj: Element; lib: Objects.Library); 
+	PROCEDURE ^ Produce*(e: Element; T: Texts.Text); 
+	PROCEDURE ^ GetSelection*(e: Element): Display.Frame; 
+	PROCEDURE ^ Info*(e: Display.Frame); 
+	PROCEDURE ^ DebugElements*(e: Element; depth: INTEGER); 
+BEGIN
+END LayoutPanels0.

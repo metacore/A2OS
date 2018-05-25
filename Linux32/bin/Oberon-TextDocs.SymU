@@ -1,0 +1,71 @@
+MODULE TextDocs IN Oberon;
+	IMPORT Files, Objects, Display, Oberon, Gadgets, Texts, TextGadgets0, TextGadgets, Documents, Desktops, Attributes, Links, Fonts, Printer;
+CONST 
+	MaxPatLen = 128; 
+	dirty = 16; 
+	UserMenu = \"Desktops.Copy[Copy] TextDocs.Search[Search] TextDocs.Replace[Rep] TextDocs.ReplaceAll[RepAll] Desktops.StoreDoc[Store]"\; 
+	Menu = \"Desktops.Copy[Copy] TextDocs.Search[Search] TextDocs.Replace[Rep] Desktops.StoreDoc[Store]"\; 
+	LogMenu = \"Desktops.Copy[Copy] TextDocs.Locate[Locate] System.Clear[Clear]"\; 
+TYPE 
+	StoreMsg = RECORD (Display.FrameMsg)
+		text: Texts.Text; 
+	END; 
+VAR 
+	sPat: ARRAY MaxPatLen OF CHAR; 
+	sDv: ARRAY (MaxPatLen + 1) OF INTEGER; 
+	sPatLen: INTEGER; 
+	lTime: LONGINT; 
+	rBuf: Texts.Buffer; 
+	InitW, InitH, InitLogW, InitLogH: INTEGER; 
+	sCol: INTEGER; 
+	W: Texts.Writer; 
+	FixedDocs: BOOLEAN; 
+
+	PROCEDURE ^ open(D: Documents.Document; T: Texts.Text; name: ARRAY OF CHAR; VAR w, h: INTEGER); 
+	PROCEDURE ^ LoadAttrs(D: Documents.Document; main: TextGadgets.Frame); 
+	PROCEDURE ^ LoadTextDocument(D: Documents.Document); 
+	PROCEDURE ^ StoreAttrs(D: Documents.Document; main: TextGadgets.Frame); 
+	PROCEDURE ^ StoreTextDocument(D: Documents.Document); 
+	PROCEDURE ^ UpdateChangeCheck(D: Documents.Document; dlink: Objects.Object); 
+	PROCEDURE ^ HandleUpdate(D: Documents.Document; VAR M: Texts.UpdateMsg); 
+	PROCEDURE ^ HandleStoreMsg(D: Documents.Document; T: Texts.Text; dlink: Objects.Object); 
+	PROCEDURE ^ Handler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ DocHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitDoc*(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ LogHandler*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ LoadLog(D: Documents.Document); 
+	PROCEDURE ^ StoreLog(D: Documents.Document); 
+	PROCEDURE ^ InitLog*(D: Documents.Document); 
+	PROCEDURE ^ NewLog*; 
+	PROCEDURE ^ GetText*(VAR par: Display.Frame): Texts.Text; 
+	PROCEDURE ^ SetCaret*(F: Display.Frame; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Locate*; 
+	PROCEDURE ^ controls(F: TextGadgets.Frame); 
+	PROCEDURE ^ Controls*; 
+	PROCEDURE ^ MarkPatPos(tF: TextGadgets0.Frame; pos: LONGINT); 
+	PROCEDURE ^ CalcDispVec(time: LONGINT); 
+	PROCEDURE ^ SPatFound(text: Texts.Text; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ search(VAR S: Attributes.Scanner; tF: TextGadgets.Frame); 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ replace(all: BOOLEAN); 
+	PROCEDURE ^ Replace*; 
+	PROCEDURE ^ ReplaceAll*; 
+	PROCEDURE ^ Recall*; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ChangeFont*; 
+	PROCEDURE ^ ChangeColor*; 
+	PROCEDURE ^ ChangeOffset*; 
+	PROCEDURE ^ SearchDiff*; 
+	PROCEDURE ^ SearchColor*; 
+	PROCEDURE ^ ReplaceColor*; 
+	PROCEDURE ^ AdjustStyles*; 
+	PROCEDURE ^ PrintSetup*; 
+	PROCEDURE ^ ShowText*(title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER); 
+	PROCEDURE ^ ReplaceSystemEditor*; 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ GetFrame(): TextGadgets0.Frame; 
+	PROCEDURE ^ Left*; 
+	PROCEDURE ^ Right*; 
+BEGIN
+END TextDocs.

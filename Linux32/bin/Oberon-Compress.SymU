@@ -1,0 +1,126 @@
+MODULE Compress IN Oberon;
+	IMPORT FileDir, Files, Modules, Texts, Oberon, Objects, Gadgets, Documents, TextDocs, Desktops;
+CONST 
+	BufferSize = (4 * 1024); 
+	IndexBitCount = 12; 
+	LengthBitCount = 4; 
+	WindowSize = 4096; 
+	RawLookAheadSize = 16; 
+	BreakEven = 1; 
+	LookAheadSize = (RawLookAheadSize + BreakEven); 
+	TreeRoot = WindowSize; 
+	EndOfStream = 0; 
+	Unused = 0; 
+	Temp = \"Temp.Compress"\; 
+	err1 = \"Error in archive"\; 
+	err2 = \" not found"\; 
+	err3 = \"encryption key needed"\; 
+	xx = 32768; 
+	Menu = 0; 
+	Cmd = 1; 
+	EOFName = \"~ "\; 
+	Done* = 0; 
+	ArchiveNotFound* = 1; 
+	ErrorInArchive* = 2; 
+	EntryNotFound* = 3; 
+	ArchiveExists* = 4; 
+	FileError* = 5; 
+	KeyNeeded* = 6; 
+	DocId0 = 0F7X; 
+	DocId1 = 7X; 
+	DocMenu = \"Compress.Open[Open] Compress.Add[Add] Compress.Extract[Extract] Compress.Delete[Delete] TextDocs.Search[Search]"\; 
+	encryption* = 0; 
+TYPE 
+	Node = RECORD 
+		parent, smallerChild, largerChild: INTEGER; 
+	END; 
+
+	Name* = ARRAY 32 OF CHAR; 
+
+	Header* = RECORD 
+		name*: Name; 
+		length*, check: LONGINT; 
+		date*, time*: LONGINT; 
+		ratio*: REAL; 
+		extensions*: SET; 
+	END; 
+
+	List = POINTER TO ListDesc; 
+
+	ListDesc = RECORD 
+		name: FileDir.FileName; 
+		next: List; 
+	END; 
+
+	HeaderList = POINTER TO HeaderListDesc; 
+
+	HeaderListDesc = RECORD 
+		header: Header; 
+		next: HeaderList; 
+	END; 
+
+	EnumProc* = PROCEDURE (h: Header; VAR stop: BOOLEAN); 
+
+	CryptProc* = PROCEDURE (VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER); 
+VAR 
+	W: Texts.Writer; 
+	Buffer: ARRAY BufferSize OF CHAR; 
+	BufferPtr, CurBitNr, CurByte, Len, maxLen: LONGINT; 
+	Window: ARRAY ((WindowSize + RawLookAheadSize) + 1) OF CHAR; 
+	Tree: ARRAY (WindowSize + 1) OF Node; 
+	Err, verbose, sorted: BOOLEAN; 
+	cmdSource: LONGINT; 
+	headerList: HeaderList; 
+	Decrypt*, Encrypt*: CryptProc; 
+	curKey: ARRAY 64 OF CHAR; 
+
+	PROCEDURE ^ ReadHeader(VAR R: Files.Rider; VAR h: Header; VAR err: BOOLEAN); 
+	PROCEDURE ^ WriteHeader(VAR R: Files.Rider; VAR h: Header); 
+	PROCEDURE ^ CopyFrom(VAR Ri, Ro: Files.Rider; len: LONGINT); 
+	PROCEDURE ^ CopyTo(VAR Ri, Ro: Files.Rider); 
+	PROCEDURE ^ InputBit(VAR R: Files.Rider): LONGINT; 
+	PROCEDURE ^ InputBits(VAR R: Files.Rider; count: LONGINT): LONGINT; 
+	PROCEDURE ^ FlushBits(VAR R: Files.Rider); 
+	PROCEDURE ^ OutputBit(VAR R: Files.Rider; bit: LONGINT); 
+	PROCEDURE ^ OutputBits(VAR R: Files.Rider; bits, count: LONGINT); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ InitTree(r: LONGINT); 
+	PROCEDURE ^ ContractNode(oldNode, newNode: LONGINT); 
+	PROCEDURE ^ ReplaceNode(oldNode, newNode: LONGINT); 
+	PROCEDURE ^ DeleteString(p: LONGINT); 
+	PROCEDURE ^ AddString(newNode: LONGINT; VAR matchPosition: LONGINT): LONGINT; 
+	PROCEDURE ^ Compress(VAR Input, Output: Files.Rider; maxbytes: LONGINT); 
+	PROCEDURE ^ Expand(VAR Input, Output: Files.Rider); 
+	PROCEDURE ^ CopyToArc*(VAR Ri, Ro: Files.Rider; len: LONGINT; VAR h: Header); 
+	PROCEDURE ^ CopyFromArc*(VAR Ri, Ro: Files.Rider; VAR h: Header; VAR res: INTEGER); 
+	PROCEDURE ^ GetArcName(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Remove(VAR nameList: List; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Search(nameList: List; VAR name: ARRAY OF CHAR): List; 
+	PROCEDURE ^ ClearCrypt*; 
+	PROCEDURE ^ InstallCrypt*(install, key: ARRAY OF CHAR); 
+	PROCEDURE ^ GetArgs(VAR nameList: List); 
+	PROCEDURE ^ Trimm(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ NextName(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ InsertHeadSort(h: Header; VAR stop: BOOLEAN); 
+	PROCEDURE ^ Enumerate*(archive: ARRAY OF CHAR; enumProc: EnumProc; sorted: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ AddFile*(archive: ARRAY OF CHAR; VAR file: ARRAY OF CHAR; VAR R: Files.Rider; len: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ WriteDocHead(VAR R: Files.Rider); 
+	PROCEDURE ^ DeleteFile*(archive, file: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ExtractFile*(archive, file: ARRAY OF CHAR; VAR R: Files.Rider; VAR res: INTEGER); 
+	PROCEDURE ^ ExtractAllFiles*(archive: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ CreateArchive*(archive: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ShowHead(h: Header; VAR stop: BOOLEAN); 
+	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ Directory*; 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ Delete*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ NewFile(VAR name: ARRAY OF CHAR): Files.File; 
+	PROCEDURE ^ Extract*; 
+	PROCEDURE ^ InsertHeadEnd(h: Header; VAR stop: BOOLEAN); 
+	PROCEDURE ^ Rename*; 
+	PROCEDURE ^ ExtractAll*; 
+BEGIN
+END Compress.

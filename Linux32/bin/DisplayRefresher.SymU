@@ -1,0 +1,12 @@
+MODULE DisplayRefresher;
+	IMPORT Modules, KernelLog, Inputs, WMMessages, WMWindowManager;
+CONST 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	viewport: WMWindowManager.ViewPort; 
+
+	PROCEDURE ^ Handle(VAR msg: WMMessages.Message; VAR discard: BOOLEAN); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END DisplayRefresher.

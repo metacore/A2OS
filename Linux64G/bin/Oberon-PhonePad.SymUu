@@ -1,9 +1,0 @@
-MODULE PhonePad IN Oberon;
-	IMPORT Objects, Texts, Gadgets, Attributes, Links;
-CONST 
-VAR 
-	W: Texts.Writer; 
-
-	PROCEDURE ^ Search*; 
-BEGIN
-END PhonePad.

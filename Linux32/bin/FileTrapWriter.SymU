@@ -1,0 +1,13 @@
+MODULE FileTrapWriter;
+	IMPORT Trace, Modules, Streams, TrapWriters, Files, Dates, Strings;
+CONST 
+
+	PROCEDURE ^ GenerateName*(CONST prefix: ARRAY OF CHAR; index: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ GetNewFile*(CONST prefix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): Files.File; 
+	PROCEDURE ^ TrapWriterFactory*(): Streams.Writer; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Uninstall*; 
+	PROCEDURE ^ HaltTest*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END FileTrapWriter.

@@ -13,7 +13,7 @@ Compiler.Compile --noInterfaceCheck
 
 	Compiler.Compile *)
 
-	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
+	BitSets.Mod ObjectFile.Mod GenericLinker.Mod Linker.Mod
 	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
 	FoxFormats.Mod 	FoxFingerPrinter.Mod FoxPrintout.Mod
 	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
@@ -21,9 +21,9 @@ Compiler.Compile --noInterfaceCheck
 	FoxFrontend.Mod 
 	FoxCompiler.Mod 
 	FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-  	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+  	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
-	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
+	FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
 	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
 	FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
@@ -56,8 +56,8 @@ compiler options:
 	-i	--info				flag		report more detailed information in error messages and in printout (for debugging)
 	-b	--backend		string	specification of backend (such as, for example, -b=AMD or -b=Intermediate)
 	-f	--findPC			integer	specification of a pc to be located in code
-		--symbolFile	string	specification of a symbol file format (example: --symbolFile=Binary)
-		--objectFile		string	specification of an object file format(example: --objectFile=Binary)
+		--symbolFile	string	specification of a symbol file format (example: --symbolFile=Textual)
+		--objectFile		string	specification of an object file format(example: --objectFile=Generic)
 		--activeCells	flag		use active cells language extension
 	-w	--warnings		flag		show warnings
 		--darwinHost	flag		use Darwin (MacOSX) calling convention for ext. C procedures
@@ -65,19 +65,10 @@ compiler options:
 	-d	--documentation	string	install documentation engine
 	-S	--sourcePath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
-	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32G, defined in FoxCompiler.Mod
+	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in FoxCompiler.Mod
 
 backend options (intermediate and AMD)
 		--trace			string	display trace information for sections (--trace=* : all sections)
-
-binary object file options
-		--objectFileExtension	string	extension to be used for object file
-
-binary symbol file options
-		--symbolFileExtension	string	extension to be used for symbol file (for reading only)
-		--noRedefinition		flag		redefinition of symbols is forbidden (no new symbols)
-		--noModification		flag		modification of symbols is forbidden
-		--noInterfaceCheck		flag		do not import self to check for redefinition/modification
 
 generic object file options
 		--textualObjectFile		flag		store the object file in textual (UTF8) form
@@ -110,8 +101,8 @@ SystemTools.DoCommands
 	FoxTest.Compile	-l=Test.Log ActiveCells.Execution.Test ActiveCells.Execution.TestDiff ~
 	FoxTest.Compile	-l=Test.Log MathArrays.Execution.Test  ~ 
 ~
-	TextCompiler.CompileClipboard -p=Win32G  ~
-	TextCompiler.CompileSelection -p=Win32G ~
+	TextCompiler.CompileClipboard -p=Win32  ~
+	TextCompiler.CompileSelection -p=Win32 ~
 
 open regression test files
 PET.Open Oberon.Compilation.Test ~
@@ -141,7 +132,7 @@ Building a library:
 		Kernel32.GofW Machine.GofW Heaps.GofW Modules.GofW Objects.GofW
 		Kernel.GofW KernelLog.GofW Streams.GofW Commands.GofW Files.GofW 
 		WinFS.GofW Clock.GofW Dates.GofW Reals.GofW Strings.GofW Diagnostics.GofW BitSets.GofW StringPool.GofW ObjectFile.GofW GenericLinker.GofW Reflection.GofW 
-		GenericLoader.GofW
+		Loader.GofW
 		WinTrace.GofW StdIO.GofW
 		~ 
 		

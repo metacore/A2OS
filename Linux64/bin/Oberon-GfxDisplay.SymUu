@@ -1,0 +1,88 @@
+MODULE GfxDisplay IN Oberon;
+	IMPORT Display, Fonts, Colors, Images, GfxMatrix, GfxImages, GfxRegions, GfxFonts, Gfx, GfxRaster;
+CONST 
+	red = Images.r; 
+	green = Images.g; 
+	blue = Images.b; 
+	alpha = Images.a; 
+	MaxRun = 256; 
+TYPE 
+	Context* = POINTER TO ContextDesc; 
+
+	ContextDesc* = RECORD (GfxRaster.ContextDesc)
+		orgX*, orgY*: REAL; 
+		scale*: REAL; 
+		defClip*: GfxRegions.Region; 
+		bg*: Gfx.Color; 
+		bgCol: Display.Color; 
+		bgPix: Images.Pixel; 
+		dcol: Display.Color; 
+		srcOverDst: Images.Mode; 
+	END; 
+
+	RegData = RECORD (GfxRegions.EnumData)
+		dc: Context; 
+		dx, dy: INTEGER; 
+		pat: Display.Pattern; 
+		img: Images.Image; 
+		col: Display.Color; 
+	END; 
+
+	BlendDotProc = PROCEDURE (dc: Context; img: Images.Image; mx, my: INTEGER; x, y: LONGINT); 
+
+	CopyRunProc = PROCEDURE (img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+
+	BlendRunProc = PROCEDURE (dc: Context; img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+
+	WarpProc = PROCEDURE (dc: Context; img: Images.Image; dx, dy, x0, y0, x1, y1: INTEGER; VAR m: GfxMatrix.Matrix; VAR f: GfxImages.Filter); 
+
+	CopyImageProc = PROCEDURE (dc: Context; img: Images.Image; dx, dy: INTEGER; VAR filter: GfxImages.Filter); 
+VAR 
+	TrueColor, TransferBlock: BOOLEAN; 
+	Methods: Gfx.Methods; 
+	BlendDot: BlendDotProc; 
+	CopyRun: CopyRunProc; 
+	BlendRun: BlendRunProc; 
+	TileRect: GfxRegions.Enumerator; 
+	Warp: WarpProc; 
+	BlendImageRect: GfxRegions.Enumerator; 
+	CopyImage: CopyImageProc; 
+	Buffer: Images.Image; 
+
+	PROCEDURE ^ CreateBuffer(w, h: INTEGER); 
+	PROCEDURE ^ BlendDotBlk(dc: Context; img: Images.Image; mx, my: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ BlendDotRGB(dc: Context; img: Images.Image; mx, my: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ BlendDotIdx(dc: Context; img: Images.Image; mx, my: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ Dot(rc: GfxRaster.Context; x, y: LONGINT); 
+	PROCEDURE ^ DrawRunRGB(VAR buf: ARRAY OF CHAR; len, x, y: LONGINT); 
+	PROCEDURE ^ DrawRunIdx(VAR buf: ARRAY OF CHAR; len, x, y: LONGINT); 
+	PROCEDURE ^ CopyRunRGB(img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ CopyRunIdx(img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ BlendRunRGB(dc: Context; img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ BlendRunIdx(dc: Context; img: Images.Image; mx, my, len: INTEGER; x, y: LONGINT); 
+	PROCEDURE ^ DrawRect(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ TileRectBlk(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ TileRectPix(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Rect(rc: GfxRaster.Context; llx, lly, urx, ury: LONGINT); 
+	PROCEDURE ^ SetColPatRGB(rc: GfxRaster.Context; col: Gfx.Color; pat: Gfx.Pattern); 
+	PROCEDURE ^ SetColPatIdx(rc: GfxRaster.Context; col: Gfx.Color; pat: Gfx.Pattern); 
+	PROCEDURE ^ CopyPattern(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Show(ctxt: Gfx.Context; x, y: REAL; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ WarpBlk(dc: Context; img: Images.Image; dx, dy, x0, y0, x1, y1: INTEGER; VAR m: GfxMatrix.Matrix; VAR f: GfxImages.Filter); 
+	PROCEDURE ^ WarpPix(dc: Context; img: Images.Image; dx, dy, x0, y0, x1, y1: INTEGER; VAR m: GfxMatrix.Matrix; VAR f: GfxImages.Filter); 
+	PROCEDURE ^ DrawImageRectBlk(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ DrawImageRectPix(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ BlendImageRectPix(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ CopyImageBlk(dc: Context; img: Images.Image; dx, dy: INTEGER; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ CopyImagePix(dc: Context; img: Images.Image; dx, dy: INTEGER; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ Image(ctxt: Gfx.Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ ResetCTM(ctxt: Gfx.Context); 
+	PROCEDURE ^ ResetClip(ctxt: Gfx.Context); 
+	PROCEDURE ^ InitMethods; 
+	PROCEDURE ^ SetClipRect*(dc: Context; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ SetClipRegion*(dc: Context; reg: GfxRegions.Region); 
+	PROCEDURE ^ SetCoordinates*(dc: Context; x, y, scale: REAL); 
+	PROCEDURE ^ SetBGColor*(dc: Context; col: Gfx.Color); 
+	PROCEDURE ^ Init*(dc: Context; llx, lly, urx, ury: INTEGER); 
+BEGIN
+END GfxDisplay.

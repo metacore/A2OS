@@ -1,0 +1,21 @@
+MODULE Examples1 IN Oberon;
+	IMPORT Gadgets, Objects, Files, Texts, Oberon;
+CONST 
+	ModName = \"Examples1"\; 
+	VersionNo = 2; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		x: INTEGER; 
+		ptr0, ptr1: Gadgets.Frame; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ WriteVersion(VAR R: Files.Rider); 
+	PROCEDURE ^ ReadVersion(VAR R: Files.Rider); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+BEGIN
+END Examples1.

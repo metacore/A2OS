@@ -1,0 +1,159 @@
+MODULE FoxTRMInstructionSet;
+	IMPORT Commands, Options, Streams, Sections := FoxSections, BinaryCode := FoxBinaryCode, Global := FoxGlobal, Basic := FoxBasic, D := Debugging, ObjectFile, Disassembler := FoxDisassembler, Files, BitSets;
+CONST 
+	checkMnemonic = TRUE; 
+	maxMnemonicNameLength = 8; 
+	maxNumberInstructions = 100; 
+	regselW = 3; 
+	opcodeW = 4; 
+	conditionW = 4; 
+	opMOV* = 0; 
+	opNOT* = 1; 
+	opADD* = 2; 
+	opFADD* = 3; 
+	opSUB* = 4; 
+	opFSUB* = 5; 
+	opAND* = 6; 
+	opBIC* = 7; 
+	opOR* = 8; 
+	opXOR* = 9; 
+	opMUL* = 10; 
+	opFMUL* = 11; 
+	opLDH* = 12; 
+	opROR* = 13; 
+	opBLR* = 14; 
+	opBR* = 15; 
+	opSPSR* = 16; 
+	opIRET* = 17; 
+	opLD* = 18; 
+	opST* = 19; 
+	opBL* = 20; 
+	opBEQ* = 21; 
+	opBNE* = 22; 
+	opBAE* = 23; 
+	opBB* = 24; 
+	opBN* = 25; 
+	opBNN* = 26; 
+	opBO* = 27; 
+	opBNO* = 28; 
+	opBA* = 29; 
+	opBBE* = 30; 
+	opBGE* = 31; 
+	opBLT* = 32; 
+	opBGT* = 33; 
+	opBLE* = 34; 
+	opBT* = 35; 
+	opBF* = 36; 
+	opBZS* = 37; 
+	opBZC* = 38; 
+	opBCS* = 39; 
+	opBCC* = 40; 
+	opBNS* = 41; 
+	opBNC* = 42; 
+	opBVS* = 43; 
+	opBVC* = 44; 
+	opHADD* = 45; 
+	opFHADD* = 46; 
+	numberMnemonics* = 47; 
+	None* =  -1; 
+	Rd = 0; 
+	Rs = 1; 
+	VRd = 2; 
+	VRs = 3; 
+	Imm10 = 4; 
+	SignedImm10 = 5; 
+	Imm14 = 6; 
+	MemRegImm7 = 7; 
+	VRd0 = 8; 
+	ZeroRegister* = 7; 
+	Register* = 1; 
+	Immediate* = 2; 
+	Memory* = 3; 
+	LR* = 7; 
+	SP* = 6; 
+	globalP* = 5; 
+	FP* = 4; 
+TYPE 
+	OperandType = INTEGER; 
+
+	OperandFormatType = INTEGER; 
+
+	RegisterIndex = LONGINT; 
+
+	InstructionFormat* = RECORD 
+		mnemonic-: LONGINT; 
+		code, mask: SET; 
+		capabilities-: SET; 
+		op1, op2: OperandFormatType; 
+	END; 
+
+	Mnemonic* = RECORD 
+		name-: ARRAY maxMnemonicNameLength OF CHAR; 
+		number-: LONGINT; 
+		firstInstructionFormat, lastInstructionFormat: LONGINT; 
+	END; 
+
+	NumberedName = RECORD 
+		name: ARRAY maxMnemonicNameLength OF CHAR; 
+		number: LONGINT; 
+	END; 
+
+	Operand* = RECORD 
+		type-: OperandType; 
+		size: LONGINT; 
+		register-: RegisterIndex; 
+		imm-: LONGINT; 
+		fixup-: BinaryCode.Fixup; 
+	END; 
+
+	Instruction* = RECORD 
+		format-: LONGINT; 
+		op1-, op2-: Operand; 
+	END; 
+
+	InstructionSet* = OBJECT 
+	VAR 
+		mnemonics-: ARRAY numberMnemonics OF Mnemonic; 
+		mnemonicsSorted-: ARRAY numberMnemonics OF NumberedName; 
+		instructionFormats-: ARRAY maxNumberInstructions OF InstructionFormat; 
+		numberInstructionFormats-: LONGINT; 
+		inverseCondition-: ARRAY numberMnemonics OF LONGINT; 
+		instructionW-: LONGINT; 
+		RelativeBranchFixupBits-: LONGINT; 
+		BranchAndLinkFixupBits-: LONGINT; 
+		ImmediateFixupBits-: LONGINT; 
+		MemoryOffsetFixupBits-: LONGINT; 
+
+		PROCEDURE ^  & InitInstructionSet*(instructionWidth: LONGINT); 
+		PROCEDURE ^ FindInstructionFormat(mnem: LONGINT; op1, op2: Operand): LONGINT; 
+		PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic: LONGINT; op1, op2: Operand); 
+		PROCEDURE ^ IsValidInstruction*(CONST instruction: Instruction): BOOLEAN; 
+		PROCEDURE ^ Encode*(CONST instruction: Instruction): LONGINT; 
+		PROCEDURE ^ Decode*(code: LONGINT; VAR instruction: Instruction); 
+		PROCEDURE ^ EmitInstruction*(CONST instruction: Instruction; mnem: LONGINT; code: BinaryCode.Section); 
+		PROCEDURE ^ Emit*(mnem: LONGINT; CONST op1, op2: Operand; code: BinaryCode.Section); 
+		PROCEDURE ^ FindMnemonic*(CONST mnem: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ FindRegister*(CONST name: ARRAY OF CHAR): SHORTINT; 
+		PROCEDURE ^ NumberToSet(code: LONGINT): SET; 
+		PROCEDURE ^ SetToNumber(set: SET): LONGINT; 
+		PROCEDURE ^ InitInstructions; 
+		PROCEDURE ^ InitRegister*(VAR operand: Operand; reg: LONGINT); 
+		PROCEDURE ^ InitImmediate*(VAR operand: Operand; bits: LONGINT; imm: LONGINT); 
+		PROCEDURE ^ InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: LONGINT); 
+		PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SHORTINT; fixup: BinaryCode.Fixup); 
+		PROCEDURE ^ AddFixup*(VAR operand: Operand; fixup: BinaryCode.Fixup); 
+		PROCEDURE ^ InitOperand*(VAR operand: Operand); 
+		PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
+		PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instruction: Instruction); 
+		PROCEDURE ^ DumpBits*(w: Streams.Writer; set: SET; numberBits: LONGINT); 
+		PROCEDURE ^ DumpInstructionFormats*(context: Commands.Context); 
+	END InstructionSet; 
+VAR 
+	decodeInstance: InstructionSet; 
+
+	PROCEDURE ^ Hex(ch: CHAR): LONGINT; 
+	PROCEDURE ^ ReadCode(file: Files.File): BitSets.BitSet; 
+	PROCEDURE ^ ReadData(file: Files.File): BitSets.BitSet; 
+	PROCEDURE ^ Disassemble*(context: Commands.Context); 
+BEGIN
+END FoxTRMInstructionSet.

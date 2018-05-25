@@ -1,0 +1,26 @@
+MODULE Traps;
+	IMPORT SYSTEM, Kernel32, Machine, TrapWriters, KernelLog, Streams, Modules, Objects, Kernel, Reflection, SystemVersion;
+CONST 
+	RecursiveLimit = 16; 
+	TraceVerbose = FALSE; 
+	TestTrap = TRUE; 
+	TrapMaxCharacters = (32 * 1024); 
+	halt* = Objects.halt; 
+	haltUnbreakable* = Objects.haltUnbreakable; 
+VAR 
+	modes: ARRAY 25 OF CHAR; 
+	flags: ARRAY 13 OF CHAR; 
+	trapState: LONGINT; 
+	check: Objects.Process; 
+
+	PROCEDURE ^ Show*(p: Objects.Process; VAR int: Kernel32.Context; VAR exc: Kernel32.ExceptionRecord; long: BOOLEAN); 
+	PROCEDURE ^ SetLastExceptionState(ex: Kernel32.Context); 
+	PROCEDURE ^ CheckBP(fp: ADDRESS): ADDRESS; 
+	PROCEDURE ^ HandleException(VAR int: Kernel32.Context; VAR exc: Kernel32.ExceptionRecord; VAR handled: BOOLEAN); 
+	PROCEDURE ^ SetTrapVariable(pc, fp: ADDRESS); 
+	PROCEDURE ^ Unbreakable(p: Objects.Process; VAR int: Kernel32.Context; VAR exc: Kernel32.ExceptionRecord; VAR handled: BOOLEAN); 
+	PROCEDURE ^ Exception(VAR int: Kernel32.Context; VAR exc: Kernel32.ExceptionRecord; VAR handled: BOOLEAN); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END Traps.

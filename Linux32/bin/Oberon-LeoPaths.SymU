@@ -1,0 +1,224 @@
+MODULE LeoPaths IN Oberon;
+	IMPORT Files, Math IN A2, Display, Objects, Attributes, Strings, Gadgets, PictImages, GfxMatrix, GfxImages, GfxPaths, Gfx, Leonardo, LeoPens;
+CONST 
+	get* = 1; 
+	set* = 2; 
+	term* = 0; 
+	coincident* = 1; 
+	collinear* = 2; 
+	symmetric* = 3; 
+	wrap* = 4; 
+	start* = 1; 
+	end* = 2; 
+	notify* = 3; 
+	wedge* = 0; 
+	segment* = 1; 
+TYPE 
+	Point* = POINTER TO PointDesc; 
+
+	PointDesc* = RECORD (Leonardo.ShapeDesc)
+		x*, y*: REAL; 
+		link*: Leonardo.Shape; 
+	END; 
+
+	LinkMsg* = RECORD (Leonardo.LocalizedMsg)
+		id*: SHORTINT; 
+		done*: BOOLEAN; 
+		x*, y*: REAL; 
+	END; 
+
+	LinkAction = POINTER TO LinkActionDesc; 
+
+	LinkActionDesc = RECORD (Leonardo.ActionDesc)
+		p: Point; 
+		link: Leonardo.Shape; 
+	END; 
+
+	Path* = POINTER TO PathDesc; 
+
+	PathDesc* = RECORD (Leonardo.ContainerDesc)
+		pen*: LeoPens.Pen; 
+	END; 
+
+	ContourMsg* = RECORD (Leonardo.ShapeMsg)
+		done*: BOOLEAN; 
+	END; 
+
+	RenderMsg* = RECORD (Leonardo.ShapeMsg)
+		pen*: LeoPens.Pen; 
+	END; 
+
+	Segment* = POINTER TO SegmentDesc; 
+
+	SegmentDesc* = RECORD (Leonardo.ContainerDesc)
+		pen*: LeoPens.Pen; 
+		closed*: BOOLEAN; 
+		pred*, succ*: SHORTINT; 
+		boff*, eoff*: REAL; 
+		len*: REAL; 
+	END; 
+
+	ConnectMsg* = RECORD (Leonardo.ShapeMsg)
+		id*: SHORTINT; 
+		pos*: SHORTINT; 
+		mode*: SHORTINT; 
+		done*: BOOLEAN; 
+		x*, y*: REAL; 
+		dx*, dy*: REAL; 
+	END; 
+
+	ValidateMsg* = RECORD (Leonardo.ShapeMsg)
+		pos*: SHORTINT; 
+		off*: REAL; 
+	END; 
+
+	SplitMsg* = RECORD (Leonardo.LocalizedMsg)
+		llx*, lly*, urx*, ury*: REAL; 
+	END; 
+
+	ModeAction = POINTER TO ModeActionDesc; 
+
+	ModeActionDesc = RECORD (Leonardo.ActionDesc)
+		seg: Segment; 
+		mode: SHORTINT; 
+	END; 
+
+	Arc* = POINTER TO ArcDesc; 
+
+	ArcDesc* = RECORD (SegmentDesc)
+		mode*: SHORTINT; 
+		mat*: GfxMatrix.Matrix; 
+		dx0, dy0, dx1, dy1: REAL; 
+	END; 
+
+	ArcData = RECORD (GfxPaths.EnumData)
+		n: LONGINT; 
+		dx0, dy0, dx1, dy1: REAL; 
+	END; 
+
+	Pathifier* = POINTER TO PathifierDesc; 
+
+	PathifierDesc* = RECORD (LeoPens.PenDesc)
+		bot*, top*: Segment; 
+		enter: Segment; 
+		elem: SHORTINT; 
+		x0, y0, x, y: REAL; 
+	END; 
+VAR 
+	Img*: ARRAY 4 OF GfxImages.Image; 
+	Rec: LeoPens.Recorder; 
+	ArcPath: GfxPaths.Path; 
+	PathifierMethods: LeoPens.Methods; 
+
+	PROCEDURE ^ InitPointImages; 
+	PROCEDURE ^ DoLink(fig: Leonardo.Figure; a: Leonardo.Action); 
+	PROCEDURE ^ UndoLink(fig: Leonardo.Figure; a: Leonardo.Action); 
+	PROCEDURE ^ Unlink(fig: Leonardo.Figure; p: Point); 
+	PROCEDURE ^ ControlPoint(p: Point; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ ValidatePoint(p: Point; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ ConsumePoint(p: Point; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ RenderPoint*(p: Point; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ LocatePoint(p: Point; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ TransformPoint(p: Point; VAR msg: Leonardo.TransformMsg); 
+	PROCEDURE ^ LinkPoint(p: Point; VAR msg: LinkMsg); 
+	PROCEDURE ^ SplitPoint(p: Point; VAR msg: SplitMsg); 
+	PROCEDURE ^ GetPointItem*(p: Point; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ CopyPoint*(VAR msg: Objects.CopyMsg; from, to: Point); 
+	PROCEDURE ^ HandlePoint*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPoint*(p: Point; x, y: REAL); 
+	PROCEDURE ^ NewPoint*; 
+	PROCEDURE ^ CalcPathBox(path: Path; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ SelectPath*(path: Path; VAR msg: Leonardo.SelectMsg); 
+	PROCEDURE ^ ControlPath*(path: Path; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ ValidatePath(path: Path; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ ConsumePath(path: Path; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ RenderPath(path: Path; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ GetPathMatrix*(path: Path; VAR msg: Leonardo.MatrixMsg); 
+	PROCEDURE ^ CopyPath*(VAR msg: Objects.CopyMsg; from, to: Path); 
+	PROCEDURE ^ HandlePath*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPath*(path: Path; bottom, top: Leonardo.Shape; pen: LeoPens.Pen); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ GetFirstLast*(seg: Segment; VAR first, last: Point); 
+	PROCEDURE ^ Pred*(seg: Segment): Leonardo.Shape; 
+	PROCEDURE ^ Succ*(seg: Segment): Leonardo.Shape; 
+	PROCEDURE ^ GetPred*(seg: Segment; VAR dx, dy: REAL); 
+	PROCEDURE ^ GetSucc*(seg: Segment; VAR dx, dy: REAL); 
+	PROCEDURE ^ SwapPred(fig: Leonardo.Figure; a: Leonardo.Action); 
+	PROCEDURE ^ ChangePred*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ SwapSucc(fig: Leonardo.Figure; a: Leonardo.Action); 
+	PROCEDURE ^ ChangeSucc*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ ConnectPred*(fig: Leonardo.Figure; seg: Segment; pred: Leonardo.Shape); 
+	PROCEDURE ^ ConnectSucc*(fig: Leonardo.Figure; seg: Segment; succ: Leonardo.Shape); 
+	PROCEDURE ^ ControlSegment*(seg: Segment; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ OrderSegment*(seg: Segment; VAR msg: Leonardo.OrderMsg); 
+	PROCEDURE ^ CalcSegmentBox*(seg: Segment; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ ValidateSegmentLength*(seg: Segment; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ ValidateSegment*(seg: Segment; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ ConsumeSegment*(seg: Segment; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ ConsumePoints*(seg: Segment; VAR msg: Leonardo.ConsumeMsg); 
+	PROCEDURE ^ RenderSegment*(seg: Segment; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ TransformSegment*(seg: Segment; VAR msg: Leonardo.TransformMsg); 
+	PROCEDURE ^ ConnectSegment*(seg: Segment; VAR msg: ConnectMsg); 
+	PROCEDURE ^ CopySegment*(VAR msg: Objects.CopyMsg; from, to: Segment); 
+	PROCEDURE ^ HandleSegment*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitSegment*(seg: Segment; handle: Objects.Handler; bottom, top: Point; closed: BOOLEAN; pen: LeoPens.Pen); 
+	PROCEDURE ^ SplitSegment*(fig: Leonardo.Figure; seg, new: Segment; at: Point; mode: SHORTINT); 
+	PROCEDURE ^ SetPred*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ SetSucc*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ OnLine*(x0, y0, x1, y1, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ DrawPolyline(poly: Segment; pen: LeoPens.Pen); 
+	PROCEDURE ^ DragPolyline(poly: Segment; ctxt: Gfx.Context); 
+	PROCEDURE ^ RenderPolyline(poly: Segment; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ ProjectPolyline(poly: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ LocatePolyline(poly: Segment; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ SplitPolyline(poly: Segment; VAR msg: SplitMsg); 
+	PROCEDURE ^ HandlePolyline*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPolyline*(poly: Segment; bottom, top: Point; closed: BOOLEAN; pen: LeoPens.Pen); 
+	PROCEDURE ^ NewPolyline*; 
+	PROCEDURE ^ SubdivideBezier(at, x0, y0, x1, y1, x2, y2, x3, y3: REAL; VAR x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: REAL); 
+	PROCEDURE ^ OnBezier(x0, y0, x1, y1, x2, y2, x3, y3, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ DrawBezier(bez: Segment; pen: LeoPens.Pen); 
+	PROCEDURE ^ DragBezier(bez: Segment; ctxt: Gfx.Context); 
+	PROCEDURE ^ RenderBezier(bez: Segment; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ ProjectBezier(bez: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ LocateBezier(bez: Segment; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ SplitBezier(bez: Segment; VAR msg: SplitMsg); 
+	PROCEDURE ^ HandleBezier*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitBezier*(bezier: Segment; bottom, top: Point; closed: BOOLEAN; pen: LeoPens.Pen); 
+	PROCEDURE ^ NewBezierX*; 
+	PROCEDURE ^ ArcToPath(arc: Arc; path: GfxPaths.Path); 
+	PROCEDURE ^ EnumArc(VAR data: GfxPaths.EnumData); 
+	PROCEDURE ^ CalcArcBox*(arc: Arc; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ ControlArc(arc: Arc; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ ValidateArc(arc: Arc; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ DrawArc(arc: Arc; pen: LeoPens.Pen); 
+	PROCEDURE ^ DragArc(arc: Arc; ctxt: Gfx.Context); 
+	PROCEDURE ^ RenderArc(arc: Arc; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ LocateArc(arc: Arc; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ TransformArc(arc: Arc; VAR msg: Leonardo.TransformMsg); 
+	PROCEDURE ^ GetArcMatrix(arc: Arc; VAR msg: Leonardo.MatrixMsg); 
+	PROCEDURE ^ ConnectArc(arc: Arc; VAR msg: ConnectMsg); 
+	PROCEDURE ^ CopyArc*(VAR msg: Objects.CopyMsg; from, to: Arc); 
+	PROCEDURE ^ HandleArc*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitArc*(arc: Arc; x, y, rx, ry, start, end: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ NewArcX*; 
+	PROCEDURE ^ HandlePathifier*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPathifier*(pen: Pathifier); 
+	PROCEDURE ^ NewPathifier*; 
+	PROCEDURE ^ BeginPathifier(pen: LeoPens.Pen; ctxt: Gfx.Context); 
+	PROCEDURE ^ EnterPathifier(pen: LeoPens.Pen; x, y, dx, dy, bdist: REAL); 
+	PROCEDURE ^ ExitPathifier(pen: LeoPens.Pen; dx, dy, dist: REAL); 
+	PROCEDURE ^ PathifyLine(pen: LeoPens.Pen; x, y: REAL); 
+	PROCEDURE ^ PathifyArc(pen: LeoPens.Pen; x, y, x0, y0, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ PathifyBezier(pen: LeoPens.Pen; x, y, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ InitPathifiers; 
+	PROCEDURE ^ Realize*(path: Path); 
+	PROCEDURE ^ NewPolygon*; 
+	PROCEDURE ^ NewArc*; 
+	PROCEDURE ^ NewBezier*; 
+	PROCEDURE ^ NewSpline*; 
+	PROCEDURE ^ ReadLegacyCurves(VAR r: Files.Rider; path: Path); 
+	PROCEDURE ^ HandleLegacyPath(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ NewPath*; 
+BEGIN
+END LeoPaths.

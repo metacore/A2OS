@@ -1,0 +1,133 @@
+MODULE ReleaseThreadPool;
+	IMPORT KernelLog;
+CONST 
+	Ready = 0; 
+	GotWork = 5; 
+	Working = 8; 
+	Finished = 20; 
+	Error = 70; 
+	Exception = 80; 
+	Terminating = 99; 
+	Terminated = 100; 
+	MaxNofDependencies = 64; 
+	NoMoreDependencies* =  -1; 
+	MoreDependencies =  -2; 
+	Stats = TRUE; 
+TYPE 
+	Dependencies* = ARRAY (MaxNofDependencies + 1) OF LONGINT; 
+
+	JobProcedure* = PROCEDURE {DELEGATE}(parameters: ANY; VAR error: BOOLEAN); 
+
+	Job = OBJECT {EXCLUSIVE} 
+	VAR 
+		proc: JobProcedure; 
+		parameters: ANY; 
+		uid: LONGINT; 
+		priority: LONGINT; 
+		completed: BOOLEAN; 
+		dependencies: Dependencies; 
+		previous, next: Job; 
+		hashPrevious, hashNext: Job; 
+
+		PROCEDURE ^ IsCompleted(): BOOLEAN; 
+		PROCEDURE ^  & Init; 
+	END Job; 
+
+	Worker = OBJECT {EXCLUSIVE} 
+	VAR 
+		job: Job; 
+		state: LONGINT; 
+		threadPool: ThreadPool; 
+		previous, next: Worker; 
+
+		PROCEDURE ^ SetJob(job: Job); 
+		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ DoJob; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^  & Init(threadPool: ThreadPool); 
+	BEGIN{ACTIVE} 
+	END Worker; 
+
+	WorkerList = OBJECT {EXCLUSIVE} 
+	VAR 
+		head: Worker; 
+		nofWorkers: LONGINT; 
+
+		PROCEDURE ^ GetNofWorkers(): LONGINT; 
+		PROCEDURE ^ Get(): Worker; 
+		PROCEDURE ^ Add(worker: Worker); 
+		PROCEDURE ^  & Init; 
+	END WorkerList; 
+
+	HashTable = OBJECT {EXCLUSIVE} 
+	VAR 
+		table: POINTER TO ARRAY OF Job; 
+		size: LONGINT; 
+
+		PROCEDURE ^ Find(uid: LONGINT): Job; 
+		PROCEDURE ^ Add(job: Job); 
+		PROCEDURE ^ Remove(job: Job); 
+		PROCEDURE ^  & Init(size: LONGINT); 
+	END HashTable; 
+
+	SortedJobList = OBJECT {EXCLUSIVE} 
+	VAR 
+		head: Job; 
+		nofJobs: LONGINT; 
+
+		PROCEDURE ^ Get(): Job; 
+		PROCEDURE ^ Add(job: Job); 
+		PROCEDURE ^ Remove(job: Job); 
+		PROCEDURE ^  & Init; 
+	END SortedJobList; 
+
+	JobManager = OBJECT {EXCLUSIVE} 
+	VAR 
+		hashTable: HashTable; 
+		readyList: SortedJobList; 
+		waitingList: SortedJobList; 
+
+		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^ GetReadyJob(): Job; 
+		PROCEDURE ^ Add(job: Job); 
+		PROCEDURE ^ Remove(job: Job); 
+		PROCEDURE ^ ReCheckDependencies; 
+		PROCEDURE ^ IsReady(job: Job): BOOLEAN; 
+	END JobManager; 
+
+	JobPool = OBJECT {EXCLUSIVE} 
+	VAR 
+		head: Job; 
+		nextUid: LONGINT; 
+
+		PROCEDURE ^ Get(): Job; 
+		PROCEDURE ^ Recycle(job: Job); 
+		PROCEDURE ^ GetUID(): LONGINT; 
+		PROCEDURE ^  & Init; 
+	END JobPool; 
+
+	ThreadPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		readyList: WorkerList; 
+		jobPool: JobPool; 
+		jobManager: JobManager; 
+		workers: POINTER TO ARRAY OF Worker; 
+		hadError: BOOLEAN; 
+		jobsOnTheFly: LONGINT; 
+		doScheduling: BOOLEAN; 
+		alive, dead: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(nofWorkers: LONGINT); 
+		PROCEDURE ^ CreateJob*(proc: JobProcedure; parameters: ANY; priority: LONGINT; CONST dependencies: Dependencies): LONGINT; 
+		PROCEDURE ^ AwaitAllDone*; 
+		PROCEDURE ^ JobDone(worker: Worker; job: Job); 
+		PROCEDURE ^ DoScheduling; 
+		PROCEDURE ^ Close*; 
+	BEGIN{ACTIVE} 
+	END ThreadPool; 
+VAR 
+	NjobsCreated-, NjobsDone-, NjobErrors-, NjobHandoverSucceeded-, NjobHandoverFailed-, NjobPoolCreated-, NjobPoolRecycled-, NjobPoolReused-, NdependencyChecks-, NdependenciesResolved-, NdependenciesPersist-, Nscheduling-, NjobsScheduled-, Nlookups-, NlookupCollisions-, NlookupNotFound-: LONGINT; 
+
+	PROCEDURE ^ ClearStats*; 
+BEGIN
+END ReleaseThreadPool.

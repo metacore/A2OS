@@ -3,8 +3,8 @@
 MODULE GDI32;  (** non-portable / source: Win32.GDI32.Mod *)	(* ejz *)
 IMPORT SYSTEM, Kernel32, User32;
 
-	(** This module defines all the Win32 GDI32 APIs used by Oberon.
-	Note this module is part of the Oberon inner-core and must be linked with PELinker. *)
+	(** This module defines all the Win32 GDI32 APIs used by Oberon. *)
+
 TYPE DWORD = Kernel32.DWORD;
 
 CONST

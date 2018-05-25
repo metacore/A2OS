@@ -1,0 +1,12 @@
+MODULE Example3;
+TYPE 
+	Clock* = OBJECT {EXCLUSIVE} 
+	VAR 
+		now: LONGINT; 
+
+		PROCEDURE ^ Delay*(n: LONGINT); 
+		PROCEDURE ^ Tick*; 
+		PROCEDURE ^  & Init*; 
+	END Clock; 
+BEGIN
+END Example3.

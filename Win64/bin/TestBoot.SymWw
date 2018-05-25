@@ -1,0 +1,12 @@
+MODULE TestBoot;
+CONST 
+TYPE 
+	Object = OBJECT {EXCLUSIVE} 
+
+	BEGIN{ACTIVE} 
+	END Object; 
+VAR 
+	obj: Object; 
+
+BEGIN
+END TestBoot.

@@ -1,0 +1,51 @@
+MODULE LeoLists IN Oberon;
+	IMPORT Files, Display, Input, Objects, Fonts, Oberon, Attributes, Links, Display3, Effects, Gadgets, Leonardo;
+CONST 
+	Indent = 12; 
+	Tab = 10; 
+TYPE 
+	Line = POINTER TO RECORD 
+		next, prev: Line; 
+		shape: Leonardo.Shape; 
+		level: INTEGER; 
+		parent, open: BOOLEAN; 
+	END; 
+
+	List* = POINTER TO ListDesc; 
+
+	ListDesc* = RECORD (Gadgets.FrameDesc)
+		cont: Objects.Object; 
+		lines: Line; 
+		first, point: Line; 
+		pos, max: Objects.Object; 
+		active: Leonardo.Shape; 
+	END; 
+VAR 
+	Font: Fonts.Font; 
+	Time, Wait: LONGINT; 
+
+	PROCEDURE ^ DrawFold(mask: Display3.Mask; col, x, y, dim, mode: INTEGER; open: BOOLEAN); 
+	PROCEDURE ^ DrawLine(list: List; mask: Display3.Mask; x, y, w: INTEGER; l: Line); 
+	PROCEDURE ^ Restore(list: List; x, y, w, h, lx, ly: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ Print(list: List; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ UpdateLevel(list: List; cont: Objects.Object; VAR l: Line; level: INTEGER); 
+	PROCEDURE ^ UpdateModel(list: List); 
+	PROCEDURE ^ SetPos(list: List; update: BOOLEAN); 
+	PROCEDURE ^ SetMax(list: List); 
+	PROCEDURE ^ SetCont(list: List); 
+	PROCEDURE ^ Update(list: List; VAR msg: Gadgets.UpdateMsg); 
+	PROCEDURE ^ ScrollDist(list: List; y: INTEGER): INTEGER; 
+	PROCEDURE ^ LocateLine(list: List; y: INTEGER; VAR l: Line; VAR ly: INTEGER); 
+	PROCEDURE ^ MayScroll(): BOOLEAN; 
+	PROCEDURE ^ Scroll(list: List; scroll, lx, ly: INTEGER; mask: Display3.Mask; dlink: Objects.Object); 
+	PROCEDURE ^ ToggleLine(list: List; line: Line); 
+	PROCEDURE ^ TrackSel(list: List; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackPoint(list: List; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ HandleAttr*(list: List; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks*(list: List; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: List); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(list: List; fig: Leonardo.Figure; cont: Objects.Object); 
+	PROCEDURE ^ New*; 
+BEGIN
+END LeoLists.

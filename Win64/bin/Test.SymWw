@@ -1,0 +1,7 @@
+MODULE Test;
+
+	PROCEDURE ^ TestO(a, b, c, d, e: SIZE); 
+	PROCEDURE ^ {WINAPI} TestW(a, b, c, d, e: SIZE); 
+	PROCEDURE ^ Test; 
+BEGIN
+END Test.

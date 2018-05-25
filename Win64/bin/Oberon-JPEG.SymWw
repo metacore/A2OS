@@ -1,0 +1,494 @@
+MODULE JPEG IN Oberon;
+	IMPORT F := Files, T := Texts, P := Pictures, D := Display, BIT IN A2, Files, Oberon, Objects, Pictures;
+CONST 
+	AnzResFarben = 20; 
+	AnzFarben = (256 - AnzResFarben); 
+	ColorsOld* = 0; 
+	ColorsNew* = 1; 
+	DitherNone* = 0; 
+	DitherFS* = 1; 
+	Float* = 0; 
+	Integer* = 1; 
+	Scale* = 2; 
+	DCTSIZE = 8; 
+	DCTSIZE2 = 64; 
+	NUMQUANTTBLS = 4; 
+	NUMHUFFTBLS = 4; 
+	NUMARITHTBLS = 16; 
+	MAXCOMPSINSCAN = 4; 
+	MAXSAMPFACTOR = 4; 
+	MAXBLOCKSINMCU = 10; 
+	BITSINJSAMPLE = 8; 
+	MAXCOMPONENTS = 4; 
+	MAXJSAMPLE = 255; 
+	CENTERJSAMPLE = 128; 
+	JPEGMAXDIMENSION = 1024; 
+	MAXQCOMPS = 4; 
+	HUFFLOOKAHEAD = 8; 
+	MINGETBITS = 25; 
+	JPEGHEADEROK = 0; 
+	JPEGHEADERTABLESONLY = 1; 
+	JPEGSUSPENDED = 2; 
+	JCSUNKNOWN = 0; 
+	JCSGRAYSCALE = 1; 
+	JCSRGB = 2; 
+	JCSYCBCR = 3; 
+	JCSCMYK = 4; 
+	JCSYCCK = 5; 
+	JPEGEOI = 0D9X; 
+	JPEGFF = 0FFX; 
+	DSTATESTART = 200; 
+	DSTATEINHEADER = 201; 
+	DSTATEREADY = 202; 
+	DSTATESCANNING = 203; 
+	DSTATERAWOK = 204; 
+	DSTATESTOPPING = 205; 
+	RGBRED = 0; 
+	RGBGREEN = 1; 
+	RGBBLUE = 2; 
+	RGBPIXELSIZE = 3; 
+	JBUFPASSTHRU = 1; 
+	MainPass = 0; 
+	PrereadPass = 1; 
+	OutputPass = 2; 
+	PostPass = 3; 
+	MSOF0 = 0C0X; 
+	MSOF1 = 0C1X; 
+	MSOF2 = 0C2X; 
+	MSOF3 = 0C3X; 
+	MSOF5 = 0C5X; 
+	MSOF6 = 0C6X; 
+	MSOF7 = 0C7X; 
+	MJPG = 0C8X; 
+	MSOF9 = 0C9X; 
+	MSOF10 = 0CAX; 
+	MSOF11 = 0CBX; 
+	MSOF13 = 0CDX; 
+	MSOF14 = 0CEX; 
+	MSOF15 = 0CFX; 
+	MDHT = 0C4X; 
+	MDAC = 0CCX; 
+	MRST0 = 0D0X; 
+	MRST1 = 0D1X; 
+	MRST2 = 0D2X; 
+	MRST3 = 0D3X; 
+	MRST4 = 0D4X; 
+	MRST5 = 0D5X; 
+	MRST6 = 0D6X; 
+	MRST7 = 0D7X; 
+	MSOI = 0D8X; 
+	MEOI = 0D9X; 
+	MSOS = 0DAX; 
+	MDQT = 0DBX; 
+	MDNL = 0DCX; 
+	MDRI = 0DDX; 
+	MAPP0 = 0E0X; 
+	MAPP1 = 0E1X; 
+	MAPP2 = 0E2X; 
+	MAPP3 = 0E3X; 
+	MAPP4 = 0E4X; 
+	MAPP5 = 0E5X; 
+	MAPP6 = 0E6X; 
+	MAPP7 = 0E7X; 
+	MAPP8 = 0E8X; 
+	MAPP9 = 0E9X; 
+	MAPP10 = 0EAX; 
+	MAPP11 = 0EBX; 
+	MAPP12 = 0ECX; 
+	MAPP13 = 0EDX; 
+	MAPP14 = 0EEX; 
+	MAPP15 = 0EFX; 
+	MCOM = 0FEX; 
+	MTEM = 1X; 
+	Max = 1048575; 
+TYPE 
+	CInfoPtr = POINTER TO CInfoDesc; 
+
+	SrcPtr = POINTER TO SrcDesc; 
+
+	SrcDesc = RECORD 
+		startOfFile: BOOLEAN; 
+		rider: F.Rider; 
+		file: F.File; 
+	END; 
+
+	JSampRow = POINTER TO ARRAY (JPEGMAXDIMENSION * RGBPIXELSIZE) OF CHAR; 
+
+	JSampArray = POINTER TO JSADesc; 
+
+	JSADesc = RECORD 
+		row: ARRAY (BITSINJSAMPLE * MAXSAMPFACTOR) OF JSampRow; 
+	END; 
+
+	JSampImage = POINTER TO JSIDesc; 
+
+	JSIDesc = RECORD 
+		comp: ARRAY MAXCOMPONENTS OF JSampArray; 
+	END; 
+
+	JBlock = POINTER TO ARRAY DCTSIZE2 OF INTEGER; 
+
+	DCTTablePtr = POINTER TO ARRAY DCTSIZE2 OF REAL; 
+
+	DCTITablePtr = POINTER TO ARRAY DCTSIZE2 OF LONGINT; 
+
+	DCTSTablePtr = POINTER TO ARRAY DCTSIZE2 OF LONGINT; 
+
+	JPEGCompInfoPtr = POINTER TO JPEGCompInfoDesc; 
+
+	JPEGCompInfoDesc = RECORD 
+		componentID: INTEGER; 
+		componentIndex: INTEGER; 
+		hSampFactor: SHORTINT; 
+		vSampFactor: SHORTINT; 
+		quantTblNo: INTEGER; 
+		dcTblNo: SHORTINT; 
+		acTblNo: SHORTINT; 
+		widthInBlocks: LONGINT; 
+		heightInBlocks: LONGINT; 
+		DCTScaledSize: INTEGER; 
+		downSampledWidth: LONGINT; 
+		downSampledHeight: LONGINT; 
+		componentNeeded: BOOLEAN; 
+		MCUWidth: INTEGER; 
+		MCUHeight: INTEGER; 
+		MCUBlocks: INTEGER; 
+		MCUSampleWidth: INTEGER; 
+		lastColWidth: INTEGER; 
+		lastRowHeight: INTEGER; 
+		dctTable: DCTTablePtr; 
+		dctITable: DCTITablePtr; 
+		dctSTable: DCTSTablePtr; 
+		IDCTMethod: PROCEDURE (cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	END; 
+
+	FSErrPtr = POINTER TO ARRAY (JPEGMAXDIMENSION + 2) OF INTEGER; 
+
+	ColIndexPtr = POINTER TO ColIndex; 
+
+	ColIndex = ARRAY 3 OF ARRAY (MAXJSAMPLE + 1) OF INTEGER; 
+
+	MarkerPtr = POINTER TO MarkerDesc; 
+
+	MarkerDesc = RECORD 
+		sawSOI: BOOLEAN; 
+		sawSOF: BOOLEAN; 
+		nextRestartNum: INTEGER; 
+		discardedBytes: INTEGER; 
+	END; 
+
+	MasterPtr = POINTER TO MasterDesc; 
+
+	MasterDesc = RECORD 
+		usingMergedUpsample: BOOLEAN; 
+		passType: SHORTINT; 
+		passNumber: INTEGER; 
+		totalPasses: INTEGER; 
+		needPostPass: BOOLEAN; 
+		isLastPass: BOOLEAN; 
+		eoiProcessed: BOOLEAN; 
+	END; 
+
+	JHuffTblPtr = POINTER TO JHuffTbl; 
+
+	JHuffTbl = RECORD 
+		bits: ARRAY 17 OF INTEGER; 
+		huffVal: ARRAY 256 OF INTEGER; 
+	END; 
+
+	JQuantTblPtr = POINTER TO JQuantTbl; 
+
+	JQuantTbl = RECORD 
+		quantVal: ARRAY DCTSIZE2 OF LONGINT; 
+	END; 
+
+	SavableState = RECORD 
+		getBuffer: LONGINT; 
+		bitsLeft: INTEGER; 
+		lastDcVal: ARRAY MAXCOMPSINSCAN OF INTEGER; 
+	END; 
+
+	WorkingStatePtr = POINTER TO WorkingState; 
+
+	WorkingState = RECORD 
+		unreadMarker: CHAR; 
+		cur: SavableState; 
+		cInfo: CInfoPtr; 
+	END; 
+
+	DDerivedTblPtr = POINTER TO DDerivedTbl; 
+
+	DDerivedTbl = RECORD 
+		mincode: ARRAY 17 OF LONGINT; 
+		maxcode: ARRAY 18 OF LONGINT; 
+		valptr: ARRAY 17 OF INTEGER; 
+		pub: JHuffTblPtr; 
+		lookNBits: ARRAY 256 OF INTEGER; 
+		lookSym: ARRAY 256 OF INTEGER; 
+	END; 
+
+	EntropyPtr = POINTER TO EntropyDesc; 
+
+	EntropyDesc = RECORD 
+		saved: SavableState; 
+		restartsToGo: INTEGER; 
+		printedEod: BOOLEAN; 
+		dcDerivedTbls: ARRAY NUMHUFFTBLS OF DDerivedTblPtr; 
+		acDerivedTbls: ARRAY NUMHUFFTBLS OF DDerivedTblPtr; 
+	END; 
+
+	DestPtr = POINTER TO DestDesc; 
+
+	DestDesc = RECORD 
+		buffer: JSampArray; 
+		bufferHeight: LONGINT; 
+		pict: P.Picture; 
+		curOutputRow: LONGINT; 
+		padBytes: INTEGER; 
+		rowWidth: LONGINT; 
+		dataWidth: LONGINT; 
+		colors: ARRAY 256 OF INTEGER; 
+	END; 
+
+	CQuantPtr = POINTER TO CQuantDesc; 
+
+	CQuantDesc = RECORD 
+		onOddRow: BOOLEAN; 
+		colorQuantize: PROCEDURE (cInfo: CInfoPtr; inputBuf: JSampArray; outputBuf: JSampArray; outRowCtr: INTEGER; numRows: INTEGER); 
+		fsErrors: ARRAY MAXQCOMPS OF FSErrPtr; 
+		colorIndex: ColIndex; 
+	END; 
+
+	UpsampleProc = PROCEDURE (cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+
+	UpsamplePtr = POINTER TO UpsampleDesc; 
+
+	UpsampleDesc = RECORD 
+		needContextRows: BOOLEAN; 
+		upsample: PROCEDURE (cInfo: CInfoPtr; inputBuf: JSampImage; VAR inRowGroupCtr: LONGINT; inRowGroupsAvail: LONGINT; outputBuf: JSampArray; VAR outRowCtr: LONGINT; outRowsAvail: LONGINT); 
+		colorBuf: ARRAY MAXCOMPONENTS OF JSampArray; 
+		nextRowOut: INTEGER; 
+		rowsToGo: LONGINT; 
+		rowGroupHeight: ARRAY MAXCOMPONENTS OF INTEGER; 
+		hExpand: ARRAY MAXCOMPONENTS OF INTEGER; 
+		vExpand: ARRAY MAXCOMPONENTS OF INTEGER; 
+		methods: ARRAY MAXCOMPONENTS OF UpsampleProc; 
+	END; 
+
+	MainPtr = POINTER TO MainDesc; 
+
+	MainDesc = RECORD 
+		numChunks: LONGINT; 
+		buffer: JSampImage; 
+		bufferFull: BOOLEAN; 
+		rowGroupCtr: LONGINT; 
+		processData: PROCEDURE (cInfo: CInfoPtr; outputBuf: JSampArray; VAR outRowCtr: LONGINT; outRowsAvail: LONGINT); 
+	END; 
+
+	CoefPtr = POINTER TO CoefDesc; 
+
+	CoefDesc = RECORD 
+		decompressData: PROCEDURE (cInfo: CInfoPtr; outputBuf: JSampImage):BOOLEAN; 
+		MCUColNum: LONGINT; 
+		MCURowNum: LONGINT; 
+		MCUBuffer: ARRAY MAXBLOCKSINMCU OF JBlock; 
+		wholeImage: BOOLEAN; 
+	END; 
+
+	PostPtr = POINTER TO PostDesc; 
+
+	PostDesc = RECORD 
+		postProcessData: PROCEDURE (cInfo: CInfoPtr; inputBuf: JSampImage; VAR inRowGroupCtr, inRowGroupsAvail: LONGINT; outputBuf: JSampArray; VAR outRowCtr: LONGINT; VAR outRowsAvail: LONGINT); 
+		buffer: JSampArray; 
+		stripHeight: LONGINT; 
+		wholeImage: BOOLEAN; 
+	END; 
+
+	CConvertPtr = POINTER TO CConvertDesc; 
+
+	CConvertDesc = RECORD 
+		colorConvert: PROCEDURE (cInfo: CInfoPtr; inputBuf: ARRAY OF JSampArray; inputRow: LONGINT; outputBuf: JSampArray; outRowCtr: LONGINT; numRows: INTEGER); 
+	END; 
+
+	CInfoDesc = RECORD 
+		globalState: INTEGER; 
+		imageWidth: LONGINT; 
+		imageHeight: LONGINT; 
+		numComponents: SHORTINT; 
+		selectIDCT: SHORTINT; 
+		jpegColorSpace: INTEGER; 
+		outColorSpace: INTEGER; 
+		scaleNum, scaleDenom: INTEGER; 
+		outputGamma: LONGREAL; 
+		rawDataOut: BOOLEAN; 
+		doFancyUpsampling: BOOLEAN; 
+		sawJFIFMarker: BOOLEAN; 
+		sawAdobeMarker: BOOLEAN; 
+		AdobeTransform: INTEGER; 
+		compInfo: ARRAY MAXCOMPONENTS OF JPEGCompInfoPtr; 
+		unreadMarker: CHAR; 
+		restartInterval: LONGINT; 
+		arithDcL: ARRAY NUMARITHTBLS OF INTEGER; 
+		arithDcU: ARRAY NUMARITHTBLS OF INTEGER; 
+		arithAcK: ARRAY NUMARITHTBLS OF INTEGER; 
+		arithCode: BOOLEAN; 
+		CCIR601Sampling: BOOLEAN; 
+		densityUnit: INTEGER; 
+		XDensity, YDensity: LONGINT; 
+		dataPrecision: SHORTINT; 
+		compsInScan: SHORTINT; 
+		curCompInfo: ARRAY MAXCOMPSINSCAN OF JPEGCompInfoPtr; 
+		dcHuffTbl: ARRAY NUMHUFFTBLS OF JHuffTblPtr; 
+		acHuffTbl: ARRAY NUMHUFFTBLS OF JHuffTblPtr; 
+		quantTbl: ARRAY NUMQUANTTBLS OF JQuantTblPtr; 
+		outputWidth: LONGINT; 
+		outputHeight: LONGINT; 
+		outputScanline: LONGINT; 
+		totaliMCURows: LONGINT; 
+		MCUsPerRow: LONGINT; 
+		MCURowsInScan: LONGINT; 
+		outColorComponents: INTEGER; 
+		outputComponents: INTEGER; 
+		maxHSampFactor: INTEGER; 
+		maxVSampFactor: INTEGER; 
+		recOutbufHeight: INTEGER; 
+		blocksInMCU: INTEGER; 
+		MCUMembership: ARRAY MAXBLOCKSINMCU OF INTEGER; 
+		twoPassQuantize: BOOLEAN; 
+		ditherMode: SHORTINT; 
+		desiredNumberOfColors: INTEGER; 
+		actualNumberOfColors: INTEGER; 
+		minDCTScaledSize: INTEGER; 
+		colorMap: ColIndexPtr; 
+		colorMode: INTEGER; 
+		post: PostPtr; 
+		coef: CoefPtr; 
+		cconvert: CConvertPtr; 
+		cquant: CQuantPtr; 
+		upsample: UpsamplePtr; 
+		entropy: EntropyPtr; 
+		src: SrcPtr; 
+		marker: MarkerPtr; 
+		master: MasterPtr; 
+		main: MainPtr; 
+	END; 
+VAR 
+	W: T.Writer; 
+	ZAG: ARRAY (DCTSIZE2 + 16) OF SHORTINT; 
+	ZIG: ARRAY DCTSIZE2 OF SHORTINT; 
+	RL: ARRAY 1024 OF INTEGER; 
+	i, x: INTEGER; 
+	crRTab, cbBTab: ARRAY 257 OF INTEGER; 
+	crGTab, cbGTab: ARRAY 257 OF LONGINT; 
+	fix14, fix17, fix07, fix03: LONGINT; 
+	extendTest: ARRAY 16 OF INTEGER; 
+	extendOff: ARRAY 16 OF INTEGER; 
+	dots: POINTER TO ARRAY OF INTEGER; 
+	err: INTEGER; 
+
+	PROCEDURE ^ initSource(cInfo: CInfoPtr); 
+	PROCEDURE ^ skipInputData(cInfo: CInfoPtr; numBytes: LONGINT); 
+	PROCEDURE ^ jpegInitSrc(cInfo: CInfoPtr; file: F.File); 
+	PROCEDURE ^ ErrMsg(msg: ARRAY OF CHAR; num: INTEGER); 
+	PROCEDURE ^ fileEnd(cInfo: CInfoPtr); 
+	PROCEDURE ^ ReadChar(cInfo: CInfoPtr; VAR char: CHAR): BOOLEAN; 
+	PROCEDURE ^ ReadShort(cInfo: CInfoPtr; VAR short: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ ReadInt(cInfo: CInfoPtr; VAR int: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ReadUINT8(cInfo: CInfoPtr; VAR int: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ReadUINT16(cInfo: CInfoPtr; VAR long: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ByteSplit(int: INTEGER; VAR byte03, byte47: SHORTINT); 
+	PROCEDURE ^ getSOI(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getSOF(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getSOS(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getApp0(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getApp14(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getDAC(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getDHT(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getDQT(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ getDRI(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ skipVariable(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ nextMarker(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ firstMarker(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ readMarkers(cInfo: CInfoPtr): INTEGER; 
+	PROCEDURE ^ resyncToRestart(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ readRestartMarker(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ resetMarkerReader(cInfo: CInfoPtr); 
+	PROCEDURE ^ jinitMarkerReader(cInfo: CInfoPtr); 
+	PROCEDURE ^ fixHuffTbl(cInfo: CInfoPtr; htbl: JHuffTblPtr; pdtbl: DDerivedTblPtr); 
+	PROCEDURE ^ startPassHuff(cInfo: CInfoPtr); 
+	PROCEDURE ^ fillBitBuffer(state: WorkingStatePtr; nbits: INTEGER): BOOLEAN; 
+	PROCEDURE ^ checkBitBuffer(state: WorkingStatePtr; nbits: INTEGER): BOOLEAN; 
+	PROCEDURE ^ getBits(state: WorkingStatePtr; nbits: INTEGER): INTEGER; 
+	PROCEDURE ^ peekBits(state: WorkingStatePtr; nbits: INTEGER): INTEGER; 
+	PROCEDURE ^ dropBits(state: WorkingStatePtr; nbits: INTEGER); 
+	PROCEDURE ^ slowDECODE(state: WorkingStatePtr; htbl: DDerivedTblPtr; minBits: INTEGER): INTEGER; 
+	PROCEDURE ^ huffDECODE(VAR result: INTEGER; state: WorkingStatePtr; htbl: DDerivedTblPtr): BOOLEAN; 
+	PROCEDURE ^ huffEXTEND(x, s: INTEGER): INTEGER; 
+	PROCEDURE ^ processRestart(cInfo: CInfoPtr): BOOLEAN; 
+	PROCEDURE ^ decodeMCU(cInfo: CInfoPtr; VAR MCUData: ARRAY OF JBlock): BOOLEAN; 
+	PROCEDURE ^ jinitHuffDecoder(cInfo: CInfoPtr); 
+	PROCEDURE ^ startInputPassIDCT(cInfo: CInfoPtr); 
+	PROCEDURE ^ startOutputPassIDCT(cInfo: CInfoPtr); 
+	PROCEDURE ^ rangeLimit(x: INTEGER): INTEGER; 
+	PROCEDURE ^ jpegIDCTIFast(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	PROCEDURE ^ jpegIDCT4X4(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	PROCEDURE ^ jpegIDCT2X2(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	PROCEDURE ^ jpegIDCT1X1(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	PROCEDURE ^ jpegIDCTFloat(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; coefBlock: JBlock; outputBuf: JSampArray; outputRow, outputCol: LONGINT); 
+	PROCEDURE ^ jinitIDCT(cInfo: CInfoPtr); 
+	PROCEDURE ^ decompressData(cInfo: CInfoPtr; outputBuf: JSampImage): BOOLEAN; 
+	PROCEDURE ^ startPassCoef(cInfo: CInfoPtr; passMode: SHORTINT); 
+	PROCEDURE ^ jinitDCoefController(cInfo: CInfoPtr; needFullBuffer: BOOLEAN); 
+	PROCEDURE ^ rangeLimit2(x: INTEGER): INTEGER; 
+	PROCEDURE ^ jcopySampleRows(inputArray: JSampArray; sourceRow: INTEGER; outputArray: JSampArray; destRow: INTEGER; numRows: INTEGER; numCols: LONGINT); 
+	PROCEDURE ^ yccRGBConvert(cInfo: CInfoPtr; inputBuf: ARRAY OF JSampArray; inputRow: LONGINT; outputBuf: JSampArray; outRowCtr: LONGINT; numRows: INTEGER); 
+	PROCEDURE ^ nullConvert(cInfo: CInfoPtr; inputBuf: ARRAY OF JSampArray; inputRow: LONGINT; outputBuf: JSampArray; outRowCtr: LONGINT; numRows: INTEGER); 
+	PROCEDURE ^ grayscaleConvert(cInfo: CInfoPtr; inputBuf: ARRAY OF JSampArray; inputRow: LONGINT; outputBuf: JSampArray; outRowCtr: LONGINT; numRows: INTEGER); 
+	PROCEDURE ^ jinitColorDeconverter(cInfo: CInfoPtr); 
+	PROCEDURE ^ startPassUpsample(cInfo: CInfoPtr); 
+	PROCEDURE ^ sepUpsample(cInfo: CInfoPtr; inputBuf: JSampImage; VAR inRowGroupCtr: LONGINT; inRowGroupsAvail: LONGINT; outputBuf: JSampArray; VAR outRowCtr: LONGINT; outRowsAvail: LONGINT); 
+	PROCEDURE ^ fullsizeUpsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ noopUpsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ intUpsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ h2v1Upsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ h2v2Upsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ h2v1FancyUpsample(cInfo: CInfoPtr; compptr: JPEGCompInfoPtr; inputData: JSampArray; inRowCtr: LONGINT; outputData: JSampArray); 
+	PROCEDURE ^ jinitUpsampler(cInfo: CInfoPtr); 
+	PROCEDURE ^ selectNColors(cInfo: CInfoPtr; VAR Ncolors: ARRAY OF INTEGER): INTEGER; 
+	PROCEDURE ^ largestInputValue(j, maxj: LONGINT): LONGINT; 
+	PROCEDURE ^ createColormap(cInfo: CInfoPtr); 
+	PROCEDURE ^ colorQuantize(cInfo: CInfoPtr; inputBuf: JSampArray; outputBuf: JSampArray; outRowCtr: INTEGER; numRows: INTEGER); 
+	PROCEDURE ^ colorQuantize3(cInfo: CInfoPtr; inputBuf: JSampArray; outputBuf: JSampArray; outRowCtr: INTEGER; numRows: INTEGER); 
+	PROCEDURE ^ quantizeFSDither(cInfo: CInfoPtr; inputBuf: JSampArray; outputBuf: JSampArray; outRowCtr: INTEGER; numRows: INTEGER); 
+	PROCEDURE ^ jinit1PassQuantizer(cInfo: CInfoPtr); 
+	PROCEDURE ^ postProcess1Pass(cInfo: CInfoPtr; inputBuf: JSampImage; VAR inRowGroupCtr, inRowGroupsAvail: LONGINT; outputBuf: JSampArray; VAR outRowCtr: LONGINT; VAR outRowsAvail: LONGINT); 
+	PROCEDURE ^ startPassPost(cInfo: CInfoPtr; passMode: SHORTINT); 
+	PROCEDURE ^ jinitDPostController(cInfo: CInfoPtr; needFullBuffer: BOOLEAN); 
+	PROCEDURE ^ processDataSimpleMain(cInfo: CInfoPtr; outputBuf: JSampArray; VAR outRowCtr: LONGINT; outRowsAvail: LONGINT); 
+	PROCEDURE ^ startPassMain(cInfo: CInfoPtr; passMode: SHORTINT); 
+	PROCEDURE ^ jinitDMainController(cInfo: CInfoPtr; needFullBuffer: BOOLEAN); 
+	PROCEDURE ^ roundUp(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ jpegCalcOutputDim(cInfo: CInfoPtr); 
+	PROCEDURE ^ perScanSetup(cInfo: CInfoPtr); 
+	PROCEDURE ^ masterSelection(cInfo: CInfoPtr); 
+	PROCEDURE ^ prepareForPass(cInfo: CInfoPtr); 
+	PROCEDURE ^ finishPass(cInfo: CInfoPtr); 
+	PROCEDURE ^ jinitMasterDecompress(cInfo: CInfoPtr); 
+	PROCEDURE ^ putPixelRows(cInfo: CInfoPtr; dest: DestPtr; numScanLines: LONGINT); 
+	PROCEDURE ^ writeColorMap(cInfo: CInfoPtr; dest: DestPtr); 
+	PROCEDURE ^ Max3(m1, m2, m3: INTEGER): INTEGER; 
+	PROCEDURE ^ adjustColorMap(cInfo: CInfoPtr; dest: DestPtr); 
+	PROCEDURE ^ jinitDest(cInfo: CInfoPtr; dest: DestPtr); 
+	PROCEDURE ^ jpegCreateDecompress(cInfo: CInfoPtr); 
+	PROCEDURE ^ defaultDecompressParams(cInfo: CInfoPtr); 
+	PROCEDURE ^ jpegReadHeader(cInfo: CInfoPtr); 
+	PROCEDURE ^ jpegStartDecompress(cInfo: CInfoPtr); 
+	PROCEDURE ^ jpegReadScanlines(cInfo: CInfoPtr; scanlines: JSampArray; VAR maxLines: LONGINT): LONGINT; 
+	PROCEDURE ^ jpegFinishDecompress(cInfo: CInfoPtr); 
+	PROCEDURE ^ Decode*(file: F.File; VAR pict: P.Picture; idct, factor, dither, colorMode: INTEGER); 
+	PROCEDURE ^ Pict*; 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPicture*; 
+	PROCEDURE ^ NewPicture*; 
+BEGIN
+END JPEG.

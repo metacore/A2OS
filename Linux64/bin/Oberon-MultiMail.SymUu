@@ -1,0 +1,10 @@
+MODULE MultiMail IN Oberon;
+	IMPORT Files, Objects, Texts, Oberon, Strings, Fonts, Base64, NetTools, MIME, Mail, Links, Gadgets, Lists, Streams, TextStreams;
+CONST 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ SearchText(text: Texts.Text; CONST pat: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Send*; 
+BEGIN
+END MultiMail.

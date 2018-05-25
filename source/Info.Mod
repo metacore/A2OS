@@ -842,7 +842,7 @@ SystemTools.Free Info ~
 
 Debugging.DisableGC
 Debugging.EnableGC 
-Compiler.Compile -p=Win32G FoxIntermediateBackend.Mod ~
+Compiler.Compile -p=Win32 FoxIntermediateBackend.Mod ~
 Info.AllObjects ~
 Info.AllObjects * ~
 

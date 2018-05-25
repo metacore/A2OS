@@ -1,0 +1,114 @@
+MODULE TextFrames IN Oberon;
+	IMPORT Input, Modules, Objects, Display, Viewers, Fonts, Texts, Oberon, MenuViewers;
+CONST 
+	CR = 0DX; 
+	replace = Display.replace; 
+	paint = Display.paint; 
+	invert = Display.invert; 
+	extend = Display.extend; 
+	reduce = Display.reduce; 
+	StandardMenu = \"System.Close System.Copy System.Grow Edit.Search Edit.Store"\; 
+	LogMenu = \"System.Clear Edit.Locate Edit.Search Edit.Store"\; 
+	OpenCmd = \"Edit.Open"\; 
+	Modern = FALSE; 
+	SmallDisplay = TRUE; 
+	MoveArea = TRUE; 
+TYPE 
+	Line = POINTER TO LineDesc; 
+
+	LineDesc = RECORD 
+		len: LONGINT; 
+		wid: INTEGER; 
+		eot: BOOLEAN; 
+		next: Line; 
+	END; 
+
+	Location* = RECORD 
+		org*, pos*: LONGINT; 
+		dx*, x*, y*: INTEGER; 
+		lin: Line; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Display.FrameDesc)
+		text*: Texts.Text; 
+		org*: LONGINT; 
+		col*: INTEGER; 
+		lsp*: INTEGER; 
+		left*, right*, top*, bot*: INTEGER; 
+		markH*: INTEGER; 
+		time*: LONGINT; 
+		mark*, car*, sel*: INTEGER; 
+		carloc*: Location; 
+		selbeg*, selend*: Location; 
+		trailer: Line; 
+	END; 
+VAR 
+	menuH*, barW*, left*, right*, top*, bot*, lsp*: INTEGER; 
+	MarkColor, BarColor, MenuBG, TextBG, FullColor, mode: INTEGER; 
+	asr, dsr, selH, markW, eolW: INTEGER; 
+	ch: CHAR; 
+	W, KW: Texts.Writer; 
+	box: Fonts.Char; 
+	BoxPat: ARRAY 12 OF SET; 
+	hintPos: LONGINT; 
+	saved: Oberon.CaretMsg; 
+
+	PROCEDURE ^ Min(i, j: INTEGER): INTEGER; 
+	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ ReplConst(col: INTEGER; F: Frame; X, Y, W, H: INTEGER; mode: INTEGER); 
+	PROCEDURE ^ UpdateMark(F: Frame); 
+	PROCEDURE ^ Width(VAR R: Texts.Reader; len: LONGINT): INTEGER; 
+	PROCEDURE ^ DisplayLine(F: Frame; L: Line; VAR R: Texts.Reader; X, Y: INTEGER; len: LONGINT); 
+	PROCEDURE ^ Validate(T: Texts.Text; VAR org: LONGINT); 
+	PROCEDURE ^ Mark*(F: Frame; mark: INTEGER); 
+	PROCEDURE ^ DrawIcon(F: Frame); 
+	PROCEDURE ^ Restore*(F: Frame); 
+	PROCEDURE ^ Suspend*(F: Frame); 
+	PROCEDURE ^ Extend*(F: Frame; newY: INTEGER); 
+	PROCEDURE ^ Reduce*(F: Frame; newY: INTEGER); 
+	PROCEDURE ^ Show*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ LocateLine(F: Frame; y: INTEGER; VAR loc: Location); 
+	PROCEDURE ^ LocateString(F: Frame; x, y: INTEGER; VAR loc: Location); 
+	PROCEDURE ^ LocateChar(F: Frame; x, y: INTEGER; VAR loc: Location); 
+	PROCEDURE ^ LocatePos(F: Frame; pos: LONGINT; VAR loc: Location); 
+	PROCEDURE ^ Pos*(F: Frame; X, Y: INTEGER): LONGINT; 
+	PROCEDURE ^ FlipCaret(F: Frame); 
+	PROCEDURE ^ SetCaret*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ TrackCaret*(F: Frame; X, Y: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ RemoveCaret*(F: Frame); 
+	PROCEDURE ^ FlipSelection(F: Frame; VAR beg, end: Location); 
+	PROCEDURE ^ SetSelection*(F: Frame; beg, end: LONGINT); 
+	PROCEDURE ^ TrackSelection*(F: Frame; X, Y: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ RemoveSelection*(F: Frame); 
+	PROCEDURE ^ TrackLine*(F: Frame; X, Y: INTEGER; VAR org: LONGINT; VAR keysum: SET); 
+	PROCEDURE ^ TrackWord*(F: Frame; X, Y: INTEGER; VAR pos: LONGINT; VAR keysum: SET); 
+	PROCEDURE ^ RemoveMarks(F: Frame); 
+	PROCEDURE ^ GetAttr*(F: Frame; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ CallCmd(cmd: ARRAY OF CHAR; F: Frame; pos: LONGINT; new: BOOLEAN); 
+	PROCEDURE ^ Call*(F: Frame; pos: LONGINT; new: BOOLEAN); 
+	PROCEDURE ^ Write*(F: Frame; ch: CHAR; lib: Objects.Library; col, voff: SHORTINT); 
+	PROCEDURE ^ Defocus*(F: Frame); 
+	PROCEDURE ^ Neutralize*(F: Frame); 
+	PROCEDURE ^ Modify*(F: Frame; id, dY, Y, H: INTEGER); 
+	PROCEDURE ^ Open*(F: Frame; H: Objects.Handler; T: Texts.Text; org: LONGINT; col, left, right, top, bot, lsp: INTEGER); 
+	PROCEDURE ^ Copy*(F: Frame; VAR F1: Frame); 
+	PROCEDURE ^ CopyOver*(F: Frame; text: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ GetSelection*(F: Frame; VAR M: Oberon.SelectMsg); 
+	PROCEDURE ^ GetCaret*(F: Frame; VAR M: Oberon.CaretMsg); 
+	PROCEDURE ^ LineLen(VAR R: Texts.Reader): LONGINT; 
+	PROCEDURE ^ Update*(F: Frame; beg, end, len: LONGINT); 
+	PROCEDURE ^ Recall(F: Frame); 
+	PROCEDURE ^ SaveCaret; 
+	PROCEDURE ^ RestoreCaret; 
+	PROCEDURE ^ Edit*(F: Frame; X, Y: INTEGER; Keys: SET); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Menu(name, commands: ARRAY OF CHAR): Texts.Text; 
+	PROCEDURE ^ Text*(name: ARRAY OF CHAR): Texts.Text; 
+	PROCEDURE ^ NewMenu*(name, commands: ARRAY OF CHAR): Frame; 
+	PROCEDURE ^ NewText*(text: Texts.Text; pos: LONGINT): Frame; 
+	PROCEDURE ^ ShowText(title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER); 
+	PROCEDURE ^ ReplaceSystemEditor*; 
+BEGIN
+END TextFrames.

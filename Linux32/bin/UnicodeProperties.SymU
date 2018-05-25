@@ -1,0 +1,78 @@
+MODULE UnicodeProperties;
+	IMPORT Texts, Codecs, Files, Streams, KernelLog, Strings;
+CONST 
+	NUL* = 0; 
+	EOT* = 4; 
+	LF* = 10; 
+	CR* = 13; 
+	SP* = 32; 
+	CacheDebugging = FALSE; 
+TYPE 
+	CacheElement = OBJECT 
+	VAR 
+		next: CacheElement; 
+		key: Texts.Char32; 
+		sValue: ARRAY 256 OF CHAR; 
+		cValue: Texts.Char32; 
+
+		PROCEDURE ^  & Init*(key: Texts.Char32; CONST sValue: ARRAY OF CHAR; cValue: Texts.Char32); 
+	END CacheElement; 
+
+	CharacterPropertyCache = OBJECT 
+	VAR 
+		internalCache: POINTER TO ARRAY OF CacheElement; 
+		cacheSize: LONGINT; 
+
+		PROCEDURE ^  & Init*(size: LONGINT); 
+		PROCEDURE ^ SLookup(char: Texts.Char32; VAR res: ARRAY OF CHAR); 
+		PROCEDURE ^ CLookup(char: Texts.Char32): Texts.Char32; 
+		PROCEDURE ^ SInsert(char: Texts.Char32; CONST value: ARRAY OF CHAR); 
+		PROCEDURE ^ CInsert(char: Texts.Char32; value: Texts.Char32); 
+		PROCEDURE ^ Print; 
+	END CharacterPropertyCache; 
+
+	TxtReader = OBJECT 
+	VAR 
+		filename: ARRAY 256 OF CHAR; 
+		text: Texts.Text; 
+		textReader: Texts.TextReader; 
+		startPos: LONGINT; 
+		decoder: Codecs.TextDecoder; 
+		msg: ARRAY 512 OF CHAR; 
+		fullname: ARRAY 256 OF CHAR; 
+		file: Files.File; 
+		in: Streams.Reader; 
+		decoderRes: LONGINT; 
+
+		PROCEDURE ^ LoadTxtFile; 
+		PROCEDURE ^ FindStartPos; 
+		PROCEDURE ^ NextLine; 
+	END TxtReader; 
+
+	UnicodeTxtReader* = OBJECT (TxtReader)
+	VAR 
+		charTypeCache, mirrorPropCache: CharacterPropertyCache; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ FindStartPos; 
+		PROCEDURE ^ GetBidiCharacterType*(char: Texts.Char32; VAR res: Strings.String); 
+		PROCEDURE ^ IsMirroredChar*(char: Texts.Char32): BOOLEAN; 
+		PROCEDURE ^ IsWhiteSpaceChar*(char: Texts.Char32): BOOLEAN; 
+		PROCEDURE ^ GetProperty*(char: Texts.Char32; pos: LONGINT; VAR res: ARRAY OF CHAR); 
+		PROCEDURE ^ PrintCharTypeCache*; 
+	END UnicodeTxtReader; 
+
+	BidiMirroringTxtReader* = OBJECT (TxtReader)
+	VAR 
+		mirrorCache: CharacterPropertyCache; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ FindStartPos; 
+		PROCEDURE ^ GetSourceChar(): Texts.Char32; 
+		PROCEDURE ^ GetTargetChar(): Texts.Char32; 
+		PROCEDURE ^ GetMirroredChar*(char: Texts.Char32): Texts.Char32; 
+	END BidiMirroringTxtReader; 
+VAR 
+	error-: BOOLEAN; 
+BEGIN
+END UnicodeProperties.

@@ -1,0 +1,37 @@
+MODULE Presentation;
+	IMPORT Streams, Commands, KernelLog, WM := WMWindowManager, Graphics := WMGraphics, Files, Raster, WMTransitions, Strings, WMDialogs;
+CONST 
+TYPE 
+	Slide = POINTER TO RECORD 
+		img: Graphics.Image; 
+		text, keywords: Strings.String; 
+		next, prev: Slide; 
+	END; 
+
+	PWin = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		current: Slide; 
+		transition: WMTransitions.TransitionFade; 
+		fadeImage: Raster.Image; 
+		bigPointer: WM.PointerInfo; 
+		showPointer: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Start; 
+		PROCEDURE ^ TogglePointer; 
+		PROCEDURE ^ DrawImg(fade: BOOLEAN); 
+		PROCEDURE ^ Next(fade: BOOLEAN); 
+		PROCEDURE ^ Prev; 
+		PROCEDURE ^ Search; 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keySym: LONGINT); 
+	END PWin; 
+VAR 
+	head, tail: Slide; 
+
+	PROCEDURE ^ Clear*; 
+	PROCEDURE ^ AddSlide(CONST name, text, keywords: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadSlides*(context: Commands.Context); 
+	PROCEDURE ^ Load*(context: Commands.Context); 
+	PROCEDURE ^ Go*; 
+BEGIN
+END Presentation.

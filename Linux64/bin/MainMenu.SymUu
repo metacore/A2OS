@@ -1,0 +1,45 @@
+MODULE MainMenu;
+	IMPORT KernelLog, XML, Modules, Files, Inputs, WMMessages, WMStandardComponents, WMComponents, WMTabComponents, Strings, WM := WMWindowManager;
+CONST 
+	MenuFilePrefix = \"MenuPage"\; 
+TYPE 
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		tabs: WMTabComponents.Tabs; 
+		pages: ARRAY 100 OF WMComponents.VisualComponent; 
+		tabList: ARRAY 100 OF WMTabComponents.Tab; 
+		currentPage: WMComponents.VisualComponent; 
+		currentPageNr: LONGINT; 
+		page: WMStandardComponents.Panel; 
+		moveToFront: BOOLEAN; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ SetOriginator*(extView: ANY); 
+		PROCEDURE ^ UpdatePages; 
+		PROCEDURE ^ TryLoad(CONST name: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ LoadPages*; 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ TabSelected(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+	END Window; 
+
+	Starter = OBJECT {EXCLUSIVE} 
+	VAR 
+		originator: ANY; 
+		w: Window; 
+
+		PROCEDURE ^  & Init*(o: ANY); 
+	BEGIN{ACTIVE} 
+	END Starter; 
+VAR 
+	window: Window; 
+	manager: WM.WindowManager; 
+
+	PROCEDURE ^ MessagePreview(VAR m: WMMessages.Message; VAR discard: BOOLEAN); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END MainMenu.

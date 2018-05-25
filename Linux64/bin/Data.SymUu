@@ -1,0 +1,55 @@
+MODULE Data;
+	IMPORT NbrInt64, NbrInt, DataErrors, DataIO;
+CONST 
+	VERSION* = 1; 
+	BASE = 78; 
+	CHARACTERS* = 10; 
+TYPE 
+	Key* = RECORD 
+		k: NbrInt64.Integer; 
+	END; 
+
+	Datum* = OBJECT {EXCLUSIVE} 
+	VAR 
+		key: Key; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: Datum); 
+		PROCEDURE ^ Read*(R: DataIO.Reader); 
+		PROCEDURE ^ Write*(W: DataIO.Writer); 
+		PROCEDURE ^ GetKey*(VAR k: Key); 
+		PROCEDURE ^ SetKey*(k: Key); 
+	END Datum; 
+
+	Word* = ARRAY (CHARACTERS + 1) OF CHAR; 
+VAR 
+	intToChar: POINTER TO ARRAY OF CHAR; 
+	charToInt: POINTER TO ARRAY OF LONGINT; 
+	Sentinel-: Key; 
+
+	OPERATOR ^ ":="-(VAR l: Key; r: NbrInt.Integer); 
+	OPERATOR ^ ":="-(VAR l: Key; r: NbrInt64.Integer); 
+	OPERATOR ^ "="-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ "#"-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ "<"-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ ">"-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ "<="-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ ">="-(l, r: Key): BOOLEAN; 
+	OPERATOR ^ "="-(l, r: Datum): BOOLEAN; 
+	OPERATOR ^ "#"-(l, r: Datum): BOOLEAN; 
+	OPERATOR ^ "<"-(l, r: Datum): BOOLEAN; 
+	OPERATOR ^ ">"-(l, r: Datum): BOOLEAN; 
+	OPERATOR ^ "<="-(l, r: Datum): BOOLEAN; 
+	OPERATOR ^ ">="-(l, r: Datum): BOOLEAN; 
+	PROCEDURE ^ KeyToInt64*(key: Key; VAR x: NbrInt64.Integer); 
+	PROCEDURE ^ KeyToWord*(key: Key; VAR word: Word); 
+	PROCEDURE ^ WordToKey*(word: Word; VAR key: Key); 
+	PROCEDURE ^ MakeCharToInt; 
+	PROCEDURE ^ MakeIntToChar; 
+	PROCEDURE ^ LoadObj(R: DataIO.Reader; VAR obj: OBJECT); 
+	PROCEDURE ^ StoreObj(W: DataIO.Writer; obj: OBJECT); 
+	PROCEDURE ^ Register; 
+	PROCEDURE ^ Load*(R: DataIO.Reader; VAR obj: Datum); 
+	PROCEDURE ^ Store*(W: DataIO.Writer; obj: Datum); 
+BEGIN
+END Data.

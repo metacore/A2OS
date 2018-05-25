@@ -1,0 +1,108 @@
+MODULE WMFTPClient;
+	IMPORT WMStandardComponents, WMWindowManager, WMComponents, FTPClient, TextUtilities, WMMessages, WMGraphics, Strings, WMRectangles, Modules, KernelLog, WMPopups, Raster, Texts, WMEditors, WMGrids, WMStringGrids, WMDialogs, WMProperties, WMDropTarget, Streams;
+CONST 
+	BufSize = (16 * 1024); 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	SelectionWrapper = POINTER TO RECORD 
+		sel: FTPClient.FTPListing; 
+	END; 
+
+	FTPDropInterface = OBJECT (WMDropTarget.DropFiles)
+	VAR 
+		w: Streams.Writer; 
+		ftp: FTPClient.FTPClient; 
+
+		PROCEDURE ^  & New*(ftp: FTPClient.FTPClient); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: LONGINT); 
+		PROCEDURE ^ ClosePut*(VAR res: LONGINT); 
+	END FTPDropInterface; 
+
+	FTPDropTarget = OBJECT (WMDropTarget.DropTarget)
+	VAR 
+		ftp: FTPClient.FTPClient; 
+
+		PROCEDURE ^  & New*(ftp: FTPClient.FTPClient); 
+		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+	END FTPDropTarget; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		topToolbar, statusbar: WMStandardComponents.Panel; 
+		statusLabel, conLabel, busyLabel: WMStandardComponents.Label; 
+		connect, refresh: WMStandardComponents.Button; 
+		address, port, cmd: WMEditors.Editor; 
+		fullList: WMStandardComponents.Checkbox; 
+		ftpPanel: FTPPanel; 
+		ftp: FTPClient.FTPClient; 
+		connected: BOOLEAN; 
+		busy: BOOLEAN; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ ConnectHandler(sender, data: ANY); 
+		PROCEDURE ^ Connect; 
+		PROCEDURE ^ Disconnect; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ CommandHandler(sender, data: ANY); 
+		PROCEDURE ^ ListHandler(sender, data: ANY); 
+		PROCEDURE ^ ChangeDir(path: Strings.String); 
+		PROCEDURE ^ RefreshHandler(sender, data: ANY); 
+		PROCEDURE ^ SetConnected(con: BOOLEAN); 
+		PROCEDURE ^ SetBusy(bus: BOOLEAN); 
+	END Window; 
+
+	FTPPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		grid: WMStringGrids.StringGrid; 
+		colWidths: WMGrids.Spacings; 
+		path: WMProperties.StringProperty; 
+		filter: WMProperties.StringProperty; 
+		prefixSearch: WMProperties.BooleanProperty; 
+		filterEdit, pathEdit: WMEditors.Editor; 
+		popup: WMPopups.Popup; 
+		px, py: LONGINT; 
+		parent: FTPClient.FTPEntry; 
+		selection: FTPClient.FTPListing; 
+		owner: Window; 
+		curList: FTPClient.FTPListing; 
+		nofEntries: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetColSize; 
+		PROCEDURE ^ ClickSelected(sender, data: ANY); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ DeleteEntries(sender, data: ANY); 
+		PROCEDURE ^ RenameEntry(sender, data: ANY); 
+		PROCEDURE ^ CreateDir(sender, data: ANY); 
+		PROCEDURE ^ TextChanged(sender, data: ANY); 
+		PROCEDURE ^ PathChanged(sender, data: ANY); 
+		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
+		PROCEDURE ^ PrepareList; 
+		PROCEDURE ^ MyDragDropped(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ DragDroppedList(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
+		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
+		PROCEDURE ^ GetSelection(): FTPClient.FTPListing; 
+		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ IsFolder(entry: FTPClient.FTPEntry): BOOLEAN; 
+		PROCEDURE ^ GetImage(entry: FTPClient.FTPEntry): WMGraphics.Image; 
+	END FTPPanel; 
+VAR 
+	nofWindows: LONGINT; 
+	FileListPathProt: WMProperties.StringProperty; 
+	FileListFilterProt: WMProperties.StringProperty; 
+	FileListPrefixSearchProt: WMProperties.BooleanProperty; 
+	StrFTPPanel: Strings.String; 
+
+	PROCEDURE ^ InitStrings; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMFTPClient.

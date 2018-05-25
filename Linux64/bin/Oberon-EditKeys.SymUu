@@ -1,0 +1,116 @@
+MODULE EditKeys IN Oberon;
+	IMPORT Objects, Oberon, Input, Fonts, Display, Texts, Documents, TextGadgets0, TextGadgets, TextDocs, Desktops;
+CONST 
+	IdentLen = 32; 
+	DefaultFile = \"EditKeys.Text"\; 
+	DefaultMacro = \"OTHERWISE"\; 
+	InstallMacro = \"INSTALL"\; 
+	cmdSym = 0; 
+	nameSym = 1; 
+	stretchSym = 2; 
+	lparen = 3; 
+	rparen = 4; 
+	bslash = 5; 
+	eof = 6; 
+	writeCmd = \"0"\; 
+	charCmd = \"1"\; 
+	fntCmd = \"2"\; 
+	voffCmd = \"3"\; 
+	callCmd = \"4"\; 
+	argCmd = \"A"\; 
+	execCmd = \"B"\; 
+	paramCmd = \"C"\; 
+	keepCmd = \"5"\; 
+	pickCmd = \"6"\; 
+	caretCmd = \"7"\; 
+	indentCmd = \"8"\; 
+	freezeCmd = \"9"\; 
+	fntPreset = 0; 
+	pickPreset = 1; 
+	voffPreset = 2; 
+	caretPreset = 3; 
+	freezePreset = 4; 
+TYPE 
+	Ident = ARRAY IdentLen OF CHAR; 
+
+	Definition = POINTER TO DefinitionDesc; 
+
+	Sequence = POINTER TO SequenceDesc; 
+
+	DefinitionDesc = RECORD 
+		left, right: Definition; 
+		in: BOOLEAN; 
+		trig: Ident; 
+		seq: Sequence; 
+	END; 
+
+	SequenceDesc = RECORD 
+		next: Sequence; 
+		sym: INTEGER; 
+		cmd: CHAR; 
+		def: Definition; 
+		stretch: Texts.Buffer; 
+	END; 
+
+	; 
+VAR 
+	defs, dmy: Definition; 
+	ch, cmd, hotKey: CHAR; 
+	sym, errs: INTEGER; 
+	errpos: LONGINT; 
+	name, trig: Ident; 
+	stretch, buf, indent: Texts.Buffer; 
+	T: Texts.Text; 
+	R: Texts.Reader; 
+	W, WB, WL: Texts.Writer; 
+	map: ARRAY 17 OF CHAR; 
+	preset: RECORD 
+		set: SET; 
+		pos, caret: LONGINT; 
+		frame: TextGadgets.Frame; 
+		def, fnt: Fonts.Font; 
+		voff: SHORTINT; 
+	END; 
+
+	PROCEDURE ^ OpenText(title: ARRAY OF CHAR; T: Texts.Text; systemtrack: BOOLEAN); 
+	PROCEDURE ^ Flip(VAR src, dst: ARRAY OF CHAR); 
+	PROCEDURE ^ WLog; 
+	PROCEDURE ^ Ch(ch: CHAR); 
+	PROCEDURE ^ Str(s: ARRAY OF CHAR); 
+	PROCEDURE ^ FlipStr(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Gap; 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ Char(ch: CHAR); 
+	PROCEDURE ^ Append(SB, DB: Texts.Buffer); 
+	PROCEDURE ^ Find(VAR name, trig: Ident; insert: BOOLEAN): Definition; 
+	PROCEDURE ^ ResetDefs; 
+	PROCEDURE ^ Trigger(VAR trig: Ident): Definition; 
+	PROCEDURE ^ Mark(err: ARRAY OF CHAR); 
+	PROCEDURE ^ GetCh; 
+	PROCEDURE ^ CharCode; 
+	PROCEDURE ^ Name; 
+	PROCEDURE ^ Save(text: Texts.Text; beg, end: LONGINT; buf: Texts.Buffer); 
+	PROCEDURE ^ Stretch; 
+	PROCEDURE ^ Comment; 
+	PROCEDURE ^ GetSym; 
+	PROCEDURE ^ ParseText; 
+	PROCEDURE ^ ReadText(name: ARRAY OF CHAR; beg: LONGINT); 
+	PROCEDURE ^ Insert(frame: TextGadgets.Frame; buf: Texts.Buffer); 
+	PROCEDURE ^ Delete(frame: TextGadgets.Frame; beg, end: LONGINT); 
+	PROCEDURE ^ Err(def: Definition; s: ARRAY OF CHAR); 
+	PROCEDURE ^ PopArg(def: Definition; class: SHORTINT; VAR S: Texts.Scanner; VAR stack: Sequence); 
+	PROCEDURE ^ PushArg(buf: Texts.Buffer; VAR stack: Sequence); 
+	PROCEDURE ^ ThisArg(n: LONGINT; args: Sequence): Sequence; 
+	PROCEDURE ^ GetArguments(text: Texts.Text; pos: LONGINT; VAR pin: LONGINT; VAR args: Sequence); 
+	PROCEDURE ^ Expand(def: Definition; VAR stack, args, params: Sequence); 
+	PROCEDURE ^ InitialExec(name: Ident); 
+	PROCEDURE ^ Process(frame: TextGadgets.Frame; ch: CHAR; VAR del: LONGINT); 
+	PROCEDURE ^ Key(frame: TextGadgets.Frame; ch: CHAR; VAR handled: BOOLEAN); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Reset*; 
+	PROCEDURE ^ Read*; 
+	PROCEDURE ^ Definitions*; 
+	PROCEDURE ^ GetKeyCode*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END EditKeys.

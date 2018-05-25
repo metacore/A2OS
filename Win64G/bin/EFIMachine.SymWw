@@ -1,9 +1,0 @@
-MODULE EFIMachine;
-	IMPORT SYSTEM, EFI;
-VAR 
-	p0, p1: ADDRESS; 
-
-	PROCEDURE ^ JumpTo*(adr: ADDRESS; rax, rsi, rdi, rcx, rdx: HUGEINT); 
-	PROCEDURE ^ {FIXED(4198400)} EntryPoint; 
-BEGIN
-END EFIMachine.

@@ -1,0 +1,46 @@
+MODULE TextStreams IN Oberon;
+	IMPORT SYSTEM, Streams, Strings, Reals IN A2, Texts;
+CONST 
+TYPE 
+	ReaderStream = POINTER TO ReaderStreamDesc; 
+
+	ReaderStreamDesc = RECORD (Streams.StreamDesc)
+		R: Texts.Reader; 
+		T: Texts.Text; 
+		pos: LONGINT; 
+		ch: CHAR; 
+	END; 
+
+	WriterStream = POINTER TO WriterStreamDesc; 
+
+	WriterStreamDesc = RECORD (Streams.StreamDesc)
+		W: Texts.Writer; 
+		T: Texts.Text; 
+	END; 
+
+	PROCEDURE ^ Read*(S: Streams.Stream; VAR ch: CHAR); 
+	PROCEDURE ^ ReadString*(S: Streams.Stream; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Write*(S: Streams.Stream; ch: CHAR); 
+	PROCEDURE ^ WriteDate*(S: Streams.Stream; t, d: LONGINT); 
+	PROCEDURE ^ WriteHex*(S: Streams.Stream; x: LONGINT); 
+	PROCEDURE ^ WriteString*(S: Streams.Stream; s: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteInt*(S: Streams.Stream; x, n: LONGINT); 
+	PROCEDURE ^ WriteLn*(S: Streams.Stream); 
+	PROCEDURE ^ WriteLongReal*(S: Streams.Stream; x: LONGREAL; n: LONGINT); 
+	PROCEDURE ^ WriteLongRealFix*(S: Streams.Stream; x: LONGREAL; n, f, D: LONGINT); 
+	PROCEDURE ^ WriteLongRealHex*(S: Streams.Stream; x: LONGREAL); 
+	PROCEDURE ^ WriteReal*(S: Streams.Stream; x: REAL; n: LONGINT); 
+	PROCEDURE ^ WriteRealFix*(S: Streams.Stream; x: REAL; n, f, E: LONGINT); 
+	PROCEDURE ^ WriteRealHex*(S: Streams.Stream; x: REAL); 
+	PROCEDURE ^ ReadTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
+	PROCEDURE ^ ReaderAvailable(S: Streams.Stream): LONGINT; 
+	PROCEDURE ^ ReaderState(S: Streams.Stream): INTEGER; 
+	PROCEDURE ^ CloseReader(S: Streams.Stream); 
+	PROCEDURE ^ OpenReader*(T: Texts.Text; pos: LONGINT): Streams.Stream; 
+	PROCEDURE ^ WriteTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
+	PROCEDURE ^ WriterState(S: Streams.Stream): INTEGER; 
+	PROCEDURE ^ FlushWriter(S: Streams.Stream); 
+	PROCEDURE ^ CloseWriter(S: Streams.Stream); 
+	PROCEDURE ^ OpenWriter*(Log: Texts.Text): Streams.Stream; 
+BEGIN
+END TextStreams.

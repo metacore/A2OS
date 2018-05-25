@@ -1,0 +1,48 @@
+MODULE SVGRenderer;
+	IMPORT SVG, SVGColors, SVGGradients, SVGFilters, SVGUtilities, XMLObjects, Gfx, GfxBuffer, GfxPaths, GfxImages, GfxMatrix, Math, Raster;
+CONST 
+TYPE 
+	RenderTargetPool = OBJECT 
+	VAR 
+		list: XMLObjects.ArrayCollection; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Alloc*(VAR doc: SVG.Document; width, height: LONGINT); 
+		PROCEDURE ^ Free*(doc: SVG.Document); 
+	END RenderTargetPool; 
+
+	Renderer* = OBJECT 
+	VAR 
+		gradients*: SVGGradients.GradientDict; 
+		filters*: SVGFilters.FilterDict; 
+		ctxt: GfxBuffer.Context; 
+		mode: SET; 
+		rasterMode: Raster.Mode; 
+		filterStack: SVGFilters.FilterStack; 
+		renderTarget: SVG.Document; 
+		renderTargetPool: RenderTargetPool; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ FillWhite*(state: SVG.State); 
+		PROCEDURE ^ RenderBegin(state: SVG.State; recordPathMode: BOOLEAN); 
+		PROCEDURE ^ RenderEnd(state: SVG.State; recordPathMode: BOOLEAN); 
+		PROCEDURE ^ BeginFilter*(filter: SVGFilters.Filter; state: SVG.State); 
+		PROCEDURE ^ EndFilter*(state: SVG.State); 
+		PROCEDURE ^ Bezier3To(current, bezier1, bezier2: SVG.Coordinate); 
+		PROCEDURE ^ Bezier2To(start, bezier, end: SVG.Coordinate); 
+		PROCEDURE ^ ArcTo(radius, flags, start, end: SVG.Coordinate; xrot: SVG.Length); 
+		PROCEDURE ^ RenderImage*(x, y, width, height: SVG.Length; image: SVG.Document; state: SVG.State); 
+		PROCEDURE ^ RenderRect*(x, y, width, height: SVG.Length; state: SVG.State); 
+		PROCEDURE ^ RenderRoundedRect*(x, y, width, height, rx, ry: SVG.Length; state: SVG.State); 
+		PROCEDURE ^ RenderCircle*(x, y, r: SVG.Length; state: SVG.State); 
+		PROCEDURE ^ RenderEllipse*(x, y, rx, ry: SVG.Length; state: SVG.State); 
+		PROCEDURE ^ RenderLine*(x1, y1, x2, y2: SVG.Length; state: SVG.State); 
+		PROCEDURE ^ RenderPoly*(points: SVG.String; closed: BOOLEAN; state: SVG.State); 
+		PROCEDURE ^ RenderPath*(d: SVG.String; state: SVG.State); 
+	END Renderer; 
+
+	PROCEDURE ^ GetColor(color: SVG.Color): Gfx.Color; 
+	PROCEDURE ^ GetBBoxes(path: GfxPaths.Path; objectToWorldSpace: SVG.Transform; VAR worldBBox, objectBBox: SVG.Box); 
+	PROCEDURE ^ SetMatrix(objectToWorldSpace: SVG.Transform; ctxt: GfxBuffer.Context); 
+BEGIN
+END SVGRenderer.

@@ -1,0 +1,100 @@
+MODULE BasicFigures IN Oberon;
+	IMPORT Math IN A2, Files, Display, Display3, Printer, Printer3, Effects, Objects, Gadgets, Oberon;
+CONST 
+	filled* = 0; 
+	closed* = 1; 
+	editpoints* = 3; 
+	trackmode* = 3; 
+	PointOffset = 2; 
+	PointSize = 5; 
+TYPE 
+	Point* = POINTER TO PointDesc; 
+
+	PointDesc* = RECORD 
+		prev*, next*: Point; 
+		x*, y*: INTEGER; 
+	END; 
+
+	Figure* = POINTER TO FigureDesc; 
+
+	Methods* = POINTER TO MethodDesc; 
+
+	MethodDesc* = RECORD 
+		Draw*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+		Print*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: INTEGER); 
+		Normalize*: PROCEDURE (F: Figure; VAR x, y, w, h: INTEGER); 
+		Modify*: PROCEDURE (F: Figure; nw, nh: INTEGER); 
+		HitTest*: PROCEDURE (F: Figure; x, y, mx, my: INTEGER):BOOLEAN; 
+	END; 
+
+	FigureDesc* = RECORD (Gadgets.FrameDesc)
+		p*: Point; 
+		width*: INTEGER; 
+		state0*: SET; 
+		col*: INTEGER; 
+		patno*: INTEGER; 
+		do*: Methods; 
+	END; 
+VAR 
+	CircleMethods*, LineMethods*, RectMethods*, Rect3DMethods*, SplineMethods*: Methods; 
+	u, v: ARRAY 2048 OF INTEGER; 
+
+	PROCEDURE ^ Distance(x, y, x0, y0: INTEGER): INTEGER; 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Max(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Dev(x: INTEGER): INTEGER; 
+	PROCEDURE ^ GetPat(no: INTEGER): Display.Pattern; 
+	PROCEDURE ^ Inside(p: Point; x, y: INTEGER; X, Y: LONGINT): BOOLEAN; 
+	PROCEDURE ^ FigureAttr(F: Figure; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreFigure(F: Figure; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PrintFigure(F: Figure; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyFigure*(VAR M: Objects.CopyMsg; from, to: Figure); 
+	PROCEDURE ^ ThisPoint*(F: Figure; x, y, mx, my: INTEGER): Point; 
+	PROCEDURE ^ EmptyHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ ThisFrame(not: Display.Frame; X, Y: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER); 
+	PROCEDURE ^ HasCmdAttr(F: Display.Frame; attr: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Track*(F: Figure; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ ModifyFigure(F: Figure; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ FigureHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ AddPoint*(F: Figure; x, y: INTEGER); 
+	PROCEDURE ^ DrawLine*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+	PROCEDURE ^ PrintLine*(F: Figure; M: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ HitTestLine*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN; 
+	PROCEDURE ^ NormalizeLine*(F: Figure; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ ModifyLine*(F: Figure; nw, nh: INTEGER); 
+	PROCEDURE ^ LineHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitLine*(F: Figure; x, y, x0, y0: INTEGER); 
+	PROCEDURE ^ NewLine*; 
+	PROCEDURE ^ DrawCircle*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+	PROCEDURE ^ PrintCircle*(F: Figure; M: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ NormalizeCircle*(F: Figure; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ ModifyCircle*(F: Figure; nw, nh: INTEGER); 
+	PROCEDURE ^ HitTestCircle*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN; 
+	PROCEDURE ^ CircleHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitCircle*(F: Figure; r: INTEGER); 
+	PROCEDURE ^ NewCircle*; 
+	PROCEDURE ^ DrawRect*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+	PROCEDURE ^ PrintRect*(F: Figure; M: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ NormalizeRect*(F: Figure; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ ModifyRect*(F: Figure; nw, nh: INTEGER); 
+	PROCEDURE ^ HitTestRect*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN; 
+	PROCEDURE ^ RectHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitRect*(F: Figure; w, h: INTEGER); 
+	PROCEDURE ^ NewRect*; 
+	PROCEDURE ^ DrawRect3D*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+	PROCEDURE ^ PrintRect3D*(F: Figure; M: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Rect3DHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitRect3D*(F: Figure; w, h: INTEGER); 
+	PROCEDURE ^ NewRect3D*; 
+	PROCEDURE ^ MakePoly(VAR RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: INTEGER; VAR X, Y: ARRAY OF INTEGER; VAR k: INTEGER); 
+	PROCEDURE ^ SplineToPoly(c: Point; closed: BOOLEAN; VAR X, Y: ARRAY OF INTEGER; VAR k: INTEGER); 
+	PROCEDURE ^ DrawSpline*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER); 
+	PROCEDURE ^ PrintSpline*(F: Figure; M: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ NormalizeSpline*(F: Figure; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ ModifySpline*(F: Figure; nw, nh: INTEGER); 
+	PROCEDURE ^ HitTestSpline*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN; 
+	PROCEDURE ^ SplineHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitSpline*(F: Figure); 
+	PROCEDURE ^ NewSpline*; 
+BEGIN
+END BasicFigures.

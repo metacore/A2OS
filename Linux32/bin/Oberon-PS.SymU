@@ -1,0 +1,12 @@
+MODULE PS IN Oberon;
+	IMPORT Display, Texts, Oberon, Pictures, Files;
+CONST 
+	PW = 580; 
+	PH = 820; 
+	EOL = 0DX; 
+
+	PROCEDURE ^ FadeUp(P: Pictures.Picture; max: INTEGER); 
+	PROCEDURE ^ ChName(VAR t: ARRAY OF CHAR); 
+	PROCEDURE ^ PictToPost*; 
+BEGIN
+END PS.

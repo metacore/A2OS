@@ -1,0 +1,43 @@
+MODULE Partitions;
+	IMPORT KernelLog, Texts, TextUtilities, Disks, Files, Lib := PartitionsLib, Plugins, Commands, Streams, Strings, FATScavenger;
+CONST 
+	Trace = FALSE; 
+	Invalid = MIN(LONGINT); 
+	BootManagerMBRFile = \"BootManagerMBR.Bin"\; 
+	BootManagerTailFile = \"BootManagerTail.Bin"\; 
+
+	PROCEDURE ^ ShowOps*(context: Commands.Context); 
+	PROCEDURE ^ ShowOp*(context: Commands.Context); 
+	PROCEDURE ^ Abort*(context: Commands.Context); 
+	PROCEDURE ^ Remove*(context: Commands.Context); 
+	PROCEDURE ^ Mount*(context: Commands.Context); 
+	PROCEDURE ^ Format*(context: Commands.Context); 
+	PROCEDURE ^ UpdateBootFile*(context: Commands.Context); 
+	PROCEDURE ^ GetConfig*(context: Commands.Context); 
+	PROCEDURE ^ SetConfig*(context: Commands.Context); 
+	PROCEDURE ^ Check*(context: Commands.Context); 
+	PROCEDURE ^ ChangeType*(context: Commands.Context); 
+	PROCEDURE ^ Delete*(context: Commands.Context); 
+	PROCEDURE ^ Create*(context: Commands.Context); 
+	PROCEDURE ^ Activate*(context: Commands.Context); 
+	PROCEDURE ^ Deactivate*(context: Commands.Context); 
+	PROCEDURE ^ ChangeActiveBit(active: BOOLEAN; context: Commands.Context); 
+	PROCEDURE ^ FileToPartition*(context: Commands.Context); 
+	PROCEDURE ^ PartitionToFile*(context: Commands.Context); 
+	PROCEDURE ^ WriteMBR*(context: Commands.Context); 
+	PROCEDURE ^ UpdateBootLoader*(context: Commands.Context); 
+	PROCEDURE ^ InstallBootManager*(context: Commands.Context); 
+	PROCEDURE ^ ShowBlockCallback(text: Texts.Text); 
+	PROCEDURE ^ ShowBlocks*(context: Commands.Context); 
+	PROCEDURE ^ Eject*(context: Commands.Context); 
+	PROCEDURE ^ Sync*(context: Commands.Context); 
+	PROCEDURE ^ Unsafe*(context: Commands.Context); 
+	PROCEDURE ^ Safe*(context: Commands.Context); 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ ShowDevice(context: Commands.Context; disk: Lib.Disk; verbose: BOOLEAN); 
+	PROCEDURE ^ ShowTable(context: Commands.Context; disk: Lib.Disk; table: Disks.PartitionTable; verbose: BOOLEAN); 
+	PROCEDURE ^ ShowAosFSLimits*(context: Commands.Context); 
+	PROCEDURE ^ UpdateDiskModel*(context: Commands.Context); 
+	PROCEDURE ^ GetSelection*(context: Commands.Context; check: BOOLEAN; VAR selection: Lib.Selection): BOOLEAN; 
+BEGIN
+END Partitions.

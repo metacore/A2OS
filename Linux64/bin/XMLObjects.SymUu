@@ -1,0 +1,111 @@
+MODULE XMLObjects;
+	IMPORT Strings;
+TYPE 
+	String = Strings.String; 
+
+	Collection* = OBJECT 
+
+		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetEnumerator*(): Enumerator; 
+		PROCEDURE ^ Add*(p: ANY); 
+		PROCEDURE ^ Remove*(p: ANY); 
+	END Collection; 
+
+	ListElem = OBJECT 
+	VAR 
+		elem: ANY; 
+		next: ListElem; 
+
+		PROCEDURE ^  & Init*(elem: ANY); 
+	END ListElem; 
+
+	List* = OBJECT {EXCLUSIVE} (Collection)
+	VAR 
+		first, last: ListElem; 
+		nofElems: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetEnumerator*(): Enumerator; 
+		PROCEDURE ^ Add*(p: ANY); 
+		PROCEDURE ^ Remove*(p: ANY); 
+	END List; 
+
+	PTRArray* = POINTER TO ARRAY OF ANY; 
+
+	ArrayCollection* = OBJECT {EXCLUSIVE} (Collection)
+	VAR 
+		elems: PTRArray; 
+		nofElems: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetEnumerator*(): Enumerator; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Add*(p: ANY); 
+		PROCEDURE ^ Remove*(p: ANY); 
+		PROCEDURE ^ GetElement*(i: LONGINT): ANY; 
+		PROCEDURE ^ Invert*(ptr1, ptr2: ANY): BOOLEAN; 
+		PROCEDURE ^ GetElementPos*(ptr: ANY): LONGINT; 
+		PROCEDURE ^ MoveUp*(ptr: ANY; i: LONGINT): BOOLEAN; 
+		PROCEDURE ^ MoveDown*(ptr: ANY; i: LONGINT): BOOLEAN; 
+	END ArrayCollection; 
+
+	Enumerator* = OBJECT 
+
+		PROCEDURE ^ HasMoreElements*(): BOOLEAN; 
+		PROCEDURE ^ GetNext*(): ANY; 
+		PROCEDURE ^ Reset*; 
+	END Enumerator; 
+
+	ListEnumerator* = OBJECT (Enumerator)
+	VAR 
+		coll: List; 
+		current: ListElem; 
+
+		PROCEDURE ^  & Init*(list: List); 
+		PROCEDURE ^ HasMoreElements*(): BOOLEAN; 
+		PROCEDURE ^ GetNext*(): ANY; 
+		PROCEDURE ^ Reset*; 
+	END ListEnumerator; 
+
+	ArrayEnumerator* = OBJECT (Enumerator)
+	VAR 
+		array: PTRArray; 
+		current: LONGINT; 
+
+		PROCEDURE ^  & Init*(array: PTRArray); 
+		PROCEDURE ^ HasMoreElements*(): BOOLEAN; 
+		PROCEDURE ^ GetNext*(): ANY; 
+		PROCEDURE ^ Reset*; 
+	END ArrayEnumerator; 
+
+	Dictionary* = OBJECT 
+
+		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ Get*(key: ARRAY OF CHAR): ANY; 
+		PROCEDURE ^ GetEnumerator*(): Enumerator; 
+		PROCEDURE ^ Add*(key: ARRAY OF CHAR; p: ANY); 
+		PROCEDURE ^ Remove*(key: ARRAY OF CHAR); 
+	END Dictionary; 
+
+	StringArray = POINTER TO ARRAY OF String; 
+
+	ArrayDict* = OBJECT {EXCLUSIVE} (Dictionary)
+	VAR 
+		nofElems: LONGINT; 
+		keys: StringArray; 
+		elems: PTRArray; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ Get*(key: ARRAY OF CHAR): ANY; 
+		PROCEDURE ^ GetEnumerator*(): Enumerator; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Add*(key: ARRAY OF CHAR; p: ANY); 
+		PROCEDURE ^ Remove*(key: ARRAY OF CHAR); 
+	END ArrayDict; 
+
+	PROCEDURE ^ StringLength(CONST string: ARRAY OF CHAR): LONGINT; 
+BEGIN
+END XMLObjects.

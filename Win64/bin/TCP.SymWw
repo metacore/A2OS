@@ -1,0 +1,79 @@
+MODULE TCP;
+	IMPORT WSock32, Modules, Kernel, Streams, IP, Objects, KernelLog, SYSTEM;
+CONST 
+	Trace = FALSE; 
+	NilPort* = 0; 
+	Ok* = 0; 
+	ConnectionRefused* = 3701; 
+	NotConnected* = 3705; 
+	TimedOut* = 3704; 
+	NumStates* = 12; 
+	Closed* = 0; 
+	Listen* = 1; 
+	SynSent* = 2; 
+	SynReceived* = 3; 
+	Established* = 4; 
+	CloseWait* = 5; 
+	FinWait1* = 6; 
+	Closing* = 7; 
+	LastAck* = 8; 
+	FinWait2* = 9; 
+	TimeWait* = 10; 
+	Unused* = 11; 
+	OpenStates* = {Listen, SynReceived, Established, CloseWait, FinWait1, FinWait2}; 
+	ClosedStates* = {Unused, Closed, Closing, LastAck, TimeWait}; 
+	HalfClosedStates* = (ClosedStates + {FinWait1, FinWait2}); 
+	FinStates* = {Unused, Closed, CloseWait, Closing, LastAck, TimeWait}; 
+	Timeout = 14; 
+	NoDelay = 2; 
+	DoKeepAlive = 3; 
+TYPE 
+	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
+	VAR 
+		int-: IP.Interface; 
+		lport-: LONGINT; 
+		fip-: IP.Adr; 
+		fport-: LONGINT; 
+		state*: SHORTINT; 
+		sndnxt-: LONGINT; 
+		iss-: LONGINT; 
+		rcvnxt-: LONGINT; 
+		irs-: LONGINT; 
+		socket: WSock32.Socket; 
+		sndwnd-: LONGINT; 
+		sndcwnd-: LONGINT; 
+		sndcc-: LONGINT; 
+		rcvwnd-: LONGINT; 
+		srtt-: LONGINT; 
+		timeout: Objects.Timer; 
+		flags: SET; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ State*(): LONGINT; 
+		PROCEDURE ^ HandleTimeout; 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ SetPortAndIp; 
+		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: LONGINT); 
+		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
+		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
+		PROCEDURE ^ Discard*; 
+		PROCEDURE ^ Requested*(): BOOLEAN; 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Finalize(ptr: ANY); 
+	END Connection; 
+VAR 
+	pool*: Kernel.FinalizedCollection; 
+	selectTimeout: WSock32.TimeVal; 
+
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Finalize(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ ReportState(state: LONGINT); 
+	PROCEDURE ^ Report(c: Connection); 
+	PROCEDURE ^ ReportResult(res: LONGINT); 
+BEGIN
+END TCP.

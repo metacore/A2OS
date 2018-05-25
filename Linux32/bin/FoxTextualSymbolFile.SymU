@@ -1,0 +1,19 @@
+MODULE FoxTextualSymbolFile;
+	IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Formats := FoxFormats, Files, Streams, Printout := FoxPrintout, Parser := FoxParser, SemanticChecker := FoxSemanticChecker, InterfaceComparison := FoxInterfaceComparison, Options, Diagnostics;
+CONST 
+	Trace = FALSE; 
+TYPE 
+	TextualSymbolFile = OBJECT (Formats.SymbolFileFormat)
+	VAR 
+		extension: Basic.FileName; 
+		noRedefinition, noModification: BOOLEAN; 
+
+		PROCEDURE ^ Import*(CONST moduleFileName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module; 
+		PROCEDURE ^ Export*(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+	END TextualSymbolFile; 
+
+	PROCEDURE ^ Get*(): Formats.SymbolFileFormat; 
+BEGIN
+END FoxTextualSymbolFile.

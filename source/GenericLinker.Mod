@@ -532,4 +532,4 @@ END Process;
 END GenericLinker.
 
 
-Compiler.Compile --objectFile=Generic --newObjectFile GenericLinker.Mod   ~~~
+Compiler.Compile --newObjectFile GenericLinker.Mod   ~~~

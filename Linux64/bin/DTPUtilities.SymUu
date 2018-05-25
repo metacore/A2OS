@@ -1,0 +1,285 @@
+MODULE DTPUtilities;
+	IMPORT KernelLog, Files, XML, XMLParser, XMLScanner, WMStandardComponents, WMGraphics, WMGraphicUtilities, XMLObjects, WMComponents, WMRectangles, WMDialogs, Texts, WMEditors, Dates, Strings, WMGrids, WMStringGrids, WMWindowManager, WMPopups, Raster, WMEvents, WMRasterScale, DTPData;
+CONST 
+	AlignLeft = 0; 
+	AlignCenter = 1; 
+	AlignRight = 2; 
+	AlignJustified = 3; 
+	StyleRegular = 0; 
+	StyleBold = 1; 
+	StyleItalic = 2; 
+	StyleBoldItalic = 3; 
+	BtnStyleSimple* = 0; 
+	BtnStyleRoundH* = 1; 
+	BtnStyleRoundV* = 2; 
+	BtnStyleGlass* = 3; 
+	BtnStyleElevator* = 4; 
+TYPE 
+	ObjectPropertyWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	END ObjectPropertyWindow; 
+
+	PropertyEntry* = OBJECT 
+
+		PROCEDURE ^ Set*; 
+		PROCEDURE ^ Get*; 
+	END PropertyEntry; 
+
+	StringPropertyEntry* = OBJECT (PropertyEntry)
+	VAR 
+		name: ARRAY 16 OF CHAR; 
+		value: ARRAY 32 OF CHAR; 
+		onClick: WMEvents.EventSource; 
+	END StringPropertyEntry; 
+
+	RealPropertyEntry* = OBJECT (PropertyEntry)
+	VAR 
+		name: ARRAY 16 OF CHAR; 
+		value: REAL; 
+		onClick: WMEvents.EventSource; 
+	END RealPropertyEntry; 
+
+	IntPropertyEntry* = OBJECT (PropertyEntry)
+	VAR 
+		name: ARRAY 16 OF CHAR; 
+		value: LONGINT; 
+		onClick: WMEvents.EventSource; 
+	END IntPropertyEntry; 
+
+	BooleanPropertyEntry* = OBJECT (PropertyEntry)
+	VAR 
+		name: ARRAY 16 OF CHAR; 
+		value: BOOLEAN; 
+		onClick: WMEvents.EventSource; 
+	END BooleanPropertyEntry; 
+
+	PropertyList* = OBJECT 
+	VAR 
+		list: ARRAY 16 OF PropertyEntry; 
+
+		PROCEDURE ^ Add(entry: PropertyEntry); 
+		PROCEDURE ^ Grow; 
+	END PropertyList; 
+
+	ListChooserWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	END ListChooserWindow; 
+
+	ListChooser* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	END ListChooser; 
+
+	ColorChooserWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		chooser: ColorChooser; 
+		label: WMStandardComponents.Label; 
+		panel: WMStandardComponents.Panel; 
+		button: WMStandardComponents.Button; 
+		result, chosenColor*: LONGINT; 
+		shown: BOOLEAN; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Show*(x, y: LONGINT; VAR chosen: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ PressHandler(sender, data: ANY); 
+		PROCEDURE ^ OKHandler(sender, data: ANY); 
+		PROCEDURE ^ SetResult(res: LONGINT); 
+		PROCEDURE ^ GetFieldContent(VAR string: ARRAY OF CHAR); 
+	END ColorChooserWindow; 
+
+	ColorChooser* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		colors: ARRAY 19 OF LONGINT; 
+		theCaller: ColorChooserWindow; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetCaller(caller: ColorChooserWindow); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ BuildPalette; 
+	END ColorChooser; 
+
+	ContextMenuData = OBJECT 
+	VAR 
+		val: LONGINT; 
+
+		PROCEDURE ^  & New*(val: LONGINT); 
+	END ContextMenuData; 
+
+	StyleEditor* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		document: DTPData.Document; 
+		pstyleButton, cstyleButton, gstyleButton, customButton, button, button1, button2, button3, button4: WMStandardComponents.Button; 
+		shown: BOOLEAN; 
+		popup: WMPopups.Popup; 
+		currentPStyle, tempPStyle: DTPData.ParagraphStyleObject; 
+		currentCStyle, tempCStyle: DTPData.CharacterStyleObject; 
+		currentGStyle, tempGStyle: DTPData.GraphicStyleObject; 
+		currentCustomStyle, tempCustomStyle: DTPData.CustomStyleObject; 
+		oldPStyleName, oldCStyleName, oldGStyleName, oldCustomStyleName: ARRAY 256 OF CHAR; 
+		previewLabel: PreviewPanel; 
+		fontNotFound: WMStandardComponents.Label; 
+		tabPanel, buttonPanel: WMStandardComponents.Panel; 
+		tabColor, tabSelectedColor: LONGINT; 
+		UpdateProc*: PROCEDURE {DELEGATE}; 
+		pstylePanel, cstylePanel, gstylePanel, customPanel: WMStandardComponents.Panel; 
+		pList, cList, gList, customList: WMStringGrids.StringGrid; 
+		pName, pAlign, pFirstIndent, pLeftIndent, pRightIndent, pSpaceBefore, pSpaceAfter, pDefCharStyle: WMEditors.Editor; 
+		cName, cFont, cSize, cStyle, cBaselineShift, cLeading, cColor, cBackColor, cTracking, cKerning, cStretchH, cStretchV: WMEditors.Editor; 
+		styleCounter: LONGINT; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreateEditorField(): WMEditors.Editor; 
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Hide*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ LoadStyleList*(VAR doc: DTPData.Document); 
+		PROCEDURE ^ FocusHandler(hasFocus: BOOLEAN); 
+		PROCEDURE ^ TabHandler(sender, data: ANY); 
+		PROCEDURE ^ PClickSelected(sender, data: ANY); 
+		PROCEDURE ^ CClickSelected(sender, data: ANY); 
+		PROCEDURE ^ GClickSelected(sender, data: ANY); 
+		PROCEDURE ^ CustomClickSelected(sender, data: ANY); 
+		PROCEDURE ^ UpdateValueHandler(sender, data: ANY); 
+		PROCEDURE ^ UpdateList; 
+		PROCEDURE ^ NewPHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportPHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportParagraphStyles(filename: ARRAY OF CHAR); 
+		PROCEDURE ^ RemovePHandler(sender, data: ANY); 
+		PROCEDURE ^ ApplyPHandler(sender, data: ANY); 
+		PROCEDURE ^ LoadParagraphStyle(pstyle: DTPData.ParagraphStyleObject); 
+		PROCEDURE ^ NewCHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportCHandler(sender, data: ANY); 
+		PROCEDURE ^ ImportCharacterStyles(filename: ARRAY OF CHAR); 
+		PROCEDURE ^ RemoveCHandler(sender, data: ANY); 
+		PROCEDURE ^ ApplyCHandler(sender, data: ANY); 
+		PROCEDURE ^ LoadCharacterStyle(cstyle: DTPData.CharacterStyleObject); 
+		PROCEDURE ^ AlignHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ AlignPopupHandler(sender, data: ANY); 
+		PROCEDURE ^ StyleHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
+		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+	END StyleEditor; 
+
+	Tab* = OBJECT {EXCLUSIVE} (WMStandardComponents.Button)
+	VAR 
+		openSides*: SET; 
+
+		PROCEDURE ^  & Init*; 
+	END Tab; 
+
+	Checkbox* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		caption*: ARRAY 64 OF CHAR; 
+		leftBorder*: LONGINT; 
+		font: WMGraphics.Font; 
+		checked*, default*, hasThreeStates*, inactive*: BOOLEAN; 
+		imgChecked, imgUnchecked, imgCheckedDefault, imgCheckedInactive, imgUncheckedInactive: WMGraphics.Image; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+	END Checkbox; 
+
+	PreviewPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Label)
+	VAR 
+		fontColor*: LONGINT; 
+		fontBackColor*: LONGINT; 
+		oldFont: WMGraphics.Font; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END PreviewPanel; 
+
+	LinePanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		isHorizontal: BOOLEAN; 
+		caption*: ARRAY 64 OF CHAR; 
+		captionColor*: LONGINT; 
+		captionFont: WMGraphics.Font; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+	END LinePanel; 
+
+	GroupPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		border: WMRectangles.Rectangle; 
+		caption*: ARRAY 64 OF CHAR; 
+		captionFont: WMGraphics.Font; 
+		centerContent, panel: WMStandardComponents.Panel; 
+		spacerLeft, spacerTop, spacerRight, spacerBottom: WMStandardComponents.Panel; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ CreateComponent; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ UpdateBorder; 
+		PROCEDURE ^ SetCaption*(string: ARRAY OF CHAR); 
+		PROCEDURE ^ AddContent*(content: XML.Content); 
+	END GroupPanel; 
+
+	BorderPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		border*: WMRectangles.Rectangle; 
+		centerContent, panel: WMStandardComponents.Panel; 
+		spacerLeft, spacerTop, spacerRight, spacerBottom: WMStandardComponents.Panel; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ CreateComponent; 
+		PROCEDURE ^ UpdateBorder; 
+		PROCEDURE ^ SetBorder*(left, top, right, bottom: LONGINT); 
+		PROCEDURE ^ GetBorder*(): WMRectangles.Rectangle; 
+		PROCEDURE ^ AddContent*(content: XML.Content); 
+	END BorderPanel; 
+
+	CustomPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
+	VAR 
+		border*: WMRectangles.Rectangle; 
+		centerContent, panel: WMStandardComponents.Panel; 
+		spacerLeft, spacerTop, spacerRight, spacerBottom: WMStandardComponents.Panel; 
+		caption*: ARRAY 128 OF CHAR; 
+		textColor*: LONGINT; 
+		font*: WMGraphics.Font; 
+		alignH*, alignV*: LONGINT; 
+		hasBevel*: BOOLEAN; 
+		bevelWidth*: LONGINT; 
+		bevelColor*: LONGINT; 
+		bevelDown*: BOOLEAN; 
+		hasInnerBevel*: BOOLEAN; 
+		innerBevelWidth*: LONGINT; 
+		innerBevelColor*: LONGINT; 
+		innerBevelDown*: BOOLEAN; 
+		hasGlass*: BOOLEAN; 
+		glassWidth*: LONGINT; 
+		glassDown*: BOOLEAN; 
+		glassOpenSides*: SET; 
+		img*: Raster.Image; 
+		imgBorderWidth*: LONGINT; 
+		altFillColor*: LONGINT; 
+		fillMode*: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ CreateComponent; 
+		PROCEDURE ^ UpdateBorder; 
+		PROCEDURE ^ SetBorder*(left, top, right, bottom: LONGINT); 
+		PROCEDURE ^ GetBorder*(): WMRectangles.Rectangle; 
+		PROCEDURE ^ AddContent*(content: XML.Content); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ DrawRepeating(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; image: Raster.Image; mode: LONGINT); 
+	END CustomPanel; 
+VAR 
+	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
+	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
+
+	PROCEDURE ^ Min*(a, b: REAL): REAL; 
+	PROCEDURE ^ Max*(a, b: REAL): REAL; 
+	PROCEDURE ^ Inc*(VAR a, b: REAL); 
+	PROCEDURE ^ Dec*(VAR a, b: REAL); 
+	PROCEDURE ^ FixpToFloat*(x: LONGINT): REAL; 
+	PROCEDURE ^ FloatToFixp*(x: REAL): LONGINT; 
+	PROCEDURE ^ OutReal*(input: REAL; digits: LONGINT); 
+	PROCEDURE ^ ROUND*(input: REAL): LONGINT; 
+	PROCEDURE ^ RANDOM*(upperBound, lowerBound: LONGINT): LONGINT; 
+BEGIN
+END DTPUtilities.

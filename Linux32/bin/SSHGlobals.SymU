@@ -1,0 +1,30 @@
+MODULE SSHGlobals;
+	IMPORT SYSTEM, Texts, TextUtilities, UTF8Strings, Strings, Commands, Ciphers := CryptoCiphers, Out := KernelLog;
+CONST 
+	ConfigFile* = \"SSH.Configuration.Text"\; 
+	HostkeysFile* = \"SSH.KnownHosts.Data"\; 
+	PrivateKeyFile* = \"SSH.RSAKey.priv"\; 
+	PublicKeyFile* = \"SSH.RSAKey.pub"\; 
+	HT = 9X; 
+	CR = 0DX; 
+	NL = 0AX; 
+TYPE 
+	Buffer = POINTER TO ARRAY OF CHAR; 
+VAR 
+	buf: Buffer; 
+	bp: LONGINT; 
+	debug-: SET; 
+	hexd: ARRAY 17 OF CHAR; 
+
+	PROCEDURE ^ SetDebug*(context: Commands.Context); 
+	PROCEDURE ^ NextLine; 
+	PROCEDURE ^ GetConfigString(VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ GetConfigInt(VAR i: LONGINT); 
+	PROCEDURE ^ GetCipherList*(VAR list: ARRAY OF CHAR); 
+	PROCEDURE ^ GetHMacList*(VAR list: ARRAY OF CHAR); 
+	PROCEDURE ^ GetCipherParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bits: LONGINT; VAR mode: SHORTINT); 
+	PROCEDURE ^ GetHMacParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bytes: LONGINT); 
+	PROCEDURE ^ ExpandBuf(VAR buf: Buffer; newSize: LONGINT); 
+	PROCEDURE ^ GetConfigBuffer(): Buffer; 
+BEGIN
+END SSHGlobals.

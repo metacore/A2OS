@@ -1,0 +1,24 @@
+MODULE PCTest;
+	IMPORT TestSuite, Diagnostics, Streams, PCS, PC, Commands, Modules, Strings, CompilerInterface, Texts, TextUtilities, Files;
+CONST 
+TYPE 
+	Tester = OBJECT (TestSuite.Tester)
+	VAR 
+		log: Streams.Writer; 
+		execute: BOOLEAN; 
+		options: ARRAY 100 OF CHAR; 
+
+		PROCEDURE ^  & InitTester*(log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; execute: BOOLEAN; CONST options: ARRAY OF CHAR); 
+		PROCEDURE ^ Handle*(r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER; 
+	END Tester; 
+
+	PROCEDURE ^ DriveTest(context: Commands.Context; execute: BOOLEAN); 
+	PROCEDURE ^ Compile*(context: Commands.Context); 
+	PROCEDURE ^ Execute*(context: Commands.Context); 
+	PROCEDURE ^ DriveTextTests(reader: Streams.Reader; CONST regrfile: ARRAY OF CHAR; execute: BOOLEAN; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics); 
+	PROCEDURE ^ ParseTests(text: Texts.Text; CONST source: ARRAY OF CHAR; VAR regrfile: ARRAY OF CHAR; VAR r: Streams.Reader; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
+	PROCEDURE ^ ParseOptions(CONST options: ARRAY OF CHAR; VAR execute, regression: BOOLEAN; CONST regrfile: ARRAY OF CHAR); 
+	PROCEDURE ^ RunTests(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END PCTest.

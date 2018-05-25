@@ -1,0 +1,8 @@
+MODULE Rot13 IN Oberon;
+	IMPORT Fonts, Texts, Oberon;
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Decode*; 
+BEGIN
+END Rot13.

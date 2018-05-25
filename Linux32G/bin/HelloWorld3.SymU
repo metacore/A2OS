@@ -1,7 +1,0 @@
-MODULE HelloWorld3;
-	IMPORT WMDialogs;
-CONST 
-
-	PROCEDURE ^ Hello*; 
-BEGIN
-END HelloWorld3.

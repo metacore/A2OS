@@ -1,0 +1,165 @@
+MODULE JPEG2000DecoderUtil;
+	IMPORT SYSTEM, KernelLog;
+CONST 
+	LONGINT_BITS* = SYSTEM.VAL(LONGINT, (SIZEOF(LONGINT) * 8)); 
+	LONGINT_SIGN_BIT* = {(LONGINT_BITS - 1)}; 
+	SWAP_MASK* = SYSTEM.VAL(LONGINT,  -1); 
+	SUB_LL* = 0; 
+	SUB_HL* = 1; 
+	SUB_LH* = 2; 
+	SUB_HH* = 3; 
+	DEFAULT_READER_SIZE = 65536; 
+	WRITE_ERROR = 2907; 
+TYPE 
+	LongIntArrayPtr* = POINTER TO ARRAY OF LONGINT; 
+
+	LongInt2DArrayPtr* = POINTER TO ARRAY OF LongIntArrayPtr; 
+
+	LongInt3DArrayPtr* = POINTER TO ARRAY OF LongInt2DArrayPtr; 
+
+	LongInt4DArrayPtr* = POINTER TO ARRAY OF LongInt3DArrayPtr; 
+
+	ByteArrayPtr* = POINTER TO ARRAY OF CHAR; 
+
+	RealArrayPtr* = POINTER TO ARRAY OF REAL; 
+
+	SetArrayPtr* = POINTER TO ARRAY OF SET; 
+
+	ByteArrayReader* = OBJECT 
+	VAR 
+		arr: ByteArrayPtr; 
+		arrPos, dataLen: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(arr: ByteArrayPtr; offset, len: LONGINT); 
+		PROCEDURE ^ ReInit*(arr: ByteArrayPtr; offset, len: LONGINT); 
+		PROCEDURE ^ SetArray*(arr: ByteArrayPtr; offset, len: LONGINT); 
+		PROCEDURE ^ Read*(): LONGINT; 
+	END ByteArrayReader; 
+
+	BitSource* = OBJECT 
+
+		PROCEDURE ^ NextBit*(): LONGINT; 
+	END BitSource; 
+
+	DataBitReader* = OBJECT (BitSource)
+	VAR 
+		br: ByteArrayReader; 
+		curByte: LONGINT; 
+		curBytePos: LONGINT; 
+
+		PROCEDURE ^  & InitNew*(br: ByteArrayReader); 
+		PROCEDURE ^ ReInit*(br: ByteArrayReader); 
+		PROCEDURE ^ NextBit*(): LONGINT; 
+		PROCEDURE ^ NextSegment*(data: ByteArrayPtr; offset, len: LONGINT); 
+		PROCEDURE ^ CheckBytePadding*(): BOOLEAN; 
+	END DataBitReader; 
+
+	CodedCblk* = RECORD 
+		cpasses*: LONGINT; 
+		nseg*: LONGINT; 
+		segLen*: LongIntArrayPtr; 
+		dataOffset*: LONGINT; 
+		dataLen*: LONGINT; 
+		data*: ByteArrayPtr; 
+	END; 
+
+	BlkInfo* = OBJECT 
+	VAR 
+		ulx*, uly*: LONGINT; 
+		height*, width*: LONGINT; 
+	END BlkInfo; 
+
+	CblkInfo* = OBJECT (BlkInfo)
+	VAR 
+		ulsx*, ulsy*: LONGINT; 
+		truncpt*: LONGINT; 
+		cpasseslyr*: LongIntArrayPtr; 
+		zerobp*: LONGINT; 
+		curbp*: LONGINT; 
+		datalenlyr*: LongIntArrayPtr; 
+		subbinfo*: SubbandInfo; 
+		index*: LONGINT; 
+	END CblkInfo; 
+
+	SubbandInfo* = OBJECT 
+	VAR 
+		type*: LONGINT; 
+		index*: LONGINT; 
+		ulcx*, ulcy*: LONGINT; 
+		ulsx*, ulsy*: LONGINT; 
+		width*, height*: LONGINT; 
+		nblocksx*, nblocksy*: LONGINT; 
+		magbits*: LONGINT; 
+		component*: LONGINT; 
+		reslevel*: LONGINT; 
+		declevel*: LONGINT; 
+	END SubbandInfo; 
+
+	TreeNode = RECORD 
+		value: LONGINT; 
+		valid: BOOLEAN; 
+	END; 
+
+	TagTree* = OBJECT 
+	VAR 
+		maxLevel: LONGINT; 
+		maxX: LONGINT; 
+		maxY: LONGINT; 
+		nodes: POINTER TO ARRAY OF POINTER TO ARRAY OF TreeNode; 
+		src: BitSource; 
+
+		PROCEDURE ^  & InitNew*(ncblx, ncbly: LONGINT; src: BitSource); 
+		PROCEDURE ^ Update*(x, y: LONGINT; threshold: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsValid*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CurrentVal*(x, y: LONGINT): LONGINT; 
+	END TagTree; 
+
+	DecoderOptions* = OBJECT 
+	VAR 
+		crOpt*: CodestreamReaderOptions; 
+		edOpt*: EntropyDecoderOptions; 
+		roiOpt*: ROIDescalerOptions; 
+		deqOpt*: DequantizerOptions; 
+		invDWTOpt*: InverseDWTOptions; 
+		invMCTOpt*: InverseMCTOptions; 
+	END DecoderOptions; 
+
+	ComponentOptions* = OBJECT 
+	VAR 
+		component*: LONGINT; 
+	END ComponentOptions; 
+
+	CodestreamReaderOptions* = OBJECT (ComponentOptions)
+	VAR 
+		printComments*: BOOLEAN; 
+	END CodestreamReaderOptions; 
+
+	EntropyDecoderOptions* = OBJECT (ComponentOptions)
+	VAR 
+		concealError*: BOOLEAN; 
+	END EntropyDecoderOptions; 
+
+	ROIDescalerOptions* = OBJECT (ComponentOptions)
+	VAR 
+		noROI*: BOOLEAN; 
+	END ROIDescalerOptions; 
+
+	DequantizerOptions* = OBJECT (ComponentOptions)
+	END DequantizerOptions; 
+
+	InverseDWTOptions* = OBJECT (ComponentOptions)
+	VAR 
+		filterRev*: LONGINT; 
+		filterIrrev*: LONGINT; 
+	END InverseDWTOptions; 
+
+	InverseMCTOptions* = OBJECT (ComponentOptions)
+	VAR 
+		nonRebuildBuffer*: BOOLEAN; 
+	END InverseMCTOptions; 
+
+	PROCEDURE ^ Log2Floor*(x: LONGINT): LONGINT; 
+	PROCEDURE ^ SubbandToSubbandIndex*(subband: LONGINT): LONGINT; 
+	PROCEDURE ^ SubbandIndexToSubband*(reslevel, subbIndex: LONGINT): LONGINT; 
+BEGIN
+END JPEG2000DecoderUtil.

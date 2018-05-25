@@ -1,9 +1,0 @@
-MODULE PKCS1;
-	IMPORT CryptoBigNumbers, CryptoRSA, CryptoUtils, KernelLog;
-CONST 
-	Trace = FALSE; 
-
-	PROCEDURE ^ Encrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT); 
-	PROCEDURE ^ Decrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT); 
-BEGIN
-END PKCS1.

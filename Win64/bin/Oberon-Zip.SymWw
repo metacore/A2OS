@@ -1,0 +1,107 @@
+MODULE Zip IN Oberon;
+	IMPORT Files, Zlib IN A2, ZlibReaders, ZlibWriters;
+CONST 
+	Ok* = 0; 
+	FileError* =  -1; 
+	NotZipArchiveError* =  -2; 
+	EntryNotFound* =  -3; 
+	EntryAlreadyExists* =  -4; 
+	NotSupportedError* =  -5; 
+	DataError* =  -6; 
+	BadName* =  -7; 
+	ReaderError* =  -8; 
+	DefaultCompression* = ZlibWriters.DefaultCompression; 
+	NoCompression* = ZlibWriters.NoCompression; 
+	BestSpeed* = ZlibWriters.BestSpeed; 
+	BestCompression* = ZlibWriters.BestCompression; 
+	DefaultStrategy* = ZlibWriters.DefaultStrategy; 
+	Filtered* = ZlibWriters.Filtered; 
+	HuffmanOnly* = ZlibWriters.HuffmanOnly; 
+	Supported = 0; 
+	IncompatibleVersion = 1; 
+	Encrypted = 2; 
+	UnsupCompMethod = 3; 
+	Stored = 0; 
+	Deflated = 8; 
+	SupportedCompMethods = {Stored, Deflated}; 
+	CompatibleVersions = 1; 
+	LocalFileHeaderSignature = 67324752; 
+	CentralFileHeaderSignature = 33639248; 
+	EndOfCentralDirSignature = 101010256; 
+TYPE 
+	Entry* = POINTER TO EntryDesc; 
+
+	EntryDesc* = RECORD 
+		name-: ARRAY 256 OF CHAR; 
+		method: INTEGER; 
+		time-, date-: LONGINT; 
+		crc32: LONGINT; 
+		compSize-, uncompSize-: LONGINT; 
+		intFileAttr: INTEGER; 
+		extFileAttr: LONGINT; 
+		extraField, comment-: POINTER TO ARRAY OF CHAR; 
+		genPurpBitFlag: INTEGER; 
+		support: SHORTINT; 
+		dataDescriptor: BOOLEAN; 
+		offsetLocal: LONGINT; 
+		offsetFileData: LONGINT; 
+		offsetCentralDir: LONGINT; 
+		next: Entry; 
+	END; 
+
+	Archive* = POINTER TO ArchiveDesc; 
+
+	ArchiveDesc* = RECORD 
+		nofEntries-: INTEGER; 
+		comment-: POINTER TO ARRAY OF CHAR; 
+		file: Files.File; 
+		offset: LONGINT; 
+		firstEntry, lastEntry: Entry; 
+	END; 
+
+	Reader* = POINTER TO ReaderDesc; 
+
+	ReaderDesc* = RECORD 
+		res-: LONGINT; 
+		open: BOOLEAN; 
+		ent: Entry; 
+	END; 
+
+	UncompReader = POINTER TO UncompReaderDesc; 
+
+	UncompReaderDesc = RECORD (ReaderDesc)
+		fr: Files.Rider; 
+		crc32: LONGINT; 
+	END; 
+
+	DefReader = POINTER TO DefReaderDesc; 
+
+	DefReaderDesc = RECORD (ReaderDesc)
+		zr: ZlibReaders.Reader; 
+	END; 
+
+	PROCEDURE ^ StringLength(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ OberonToDosTime(t: LONGINT): INTEGER; 
+	PROCEDURE ^ OberonToDosDate(d: LONGINT): INTEGER; 
+	PROCEDURE ^ DosToOberonTime(t: INTEGER): LONGINT; 
+	PROCEDURE ^ DosToOberonDate(d: INTEGER): LONGINT; 
+	PROCEDURE ^ Copy(VAR src, dst: Files.Rider; len: LONGINT; compCRC32: BOOLEAN; VAR crc32: LONGINT); 
+	PROCEDURE ^ ReadEntry(VAR r: Files.Rider): Entry; 
+	PROCEDURE ^ WriteLocalFileHeader(ent: Entry; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteFileHeader(ent: Entry; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteEndOfCentDir(arc: Archive; VAR r: Files.Rider); 
+	PROCEDURE ^ WriteCentralDirectory(arc: Archive; VAR r: Files.Rider); 
+	PROCEDURE ^ OpenArchive*(name: ARRAY OF CHAR; VAR res: LONGINT): Archive; 
+	PROCEDURE ^ CreateArchive*(VAR name: ARRAY OF CHAR; VAR res: LONGINT): Archive; 
+	PROCEDURE ^ FirstEntry*(arc: Archive): Entry; 
+	PROCEDURE ^ NextEntry*(ent: Entry): Entry; 
+	PROCEDURE ^ GetEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR res: LONGINT): Entry; 
+	PROCEDURE ^ ExtractEntry*(arc: Archive; ent: Entry; VAR dst: Files.Rider; VAR res: LONGINT); 
+	PROCEDURE ^ AddEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR src: Files.Rider; len: LONGINT; level, strategy: SHORTINT; VAR res: LONGINT); 
+	PROCEDURE ^ DeleteEntry*(arc: Archive; VAR ent: Entry; VAR res: LONGINT); 
+	PROCEDURE ^ OpenReader*(arc: Archive; ent: Entry): Reader; 
+	PROCEDURE ^ ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ Read*(r: Reader; VAR ch: CHAR); 
+	PROCEDURE ^ Close*(r: Reader); 
+BEGIN
+END Zip.

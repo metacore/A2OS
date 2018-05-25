@@ -1,0 +1,33 @@
+MODULE MathMitLef;
+	IMPORT NbrInt, NbrRe, NbrCplx, DataErrors, MathRe, MathGamma, MathCplx, MathCplxSeries, CalcGauss;
+CONST 
+TYPE 
+	MitLef = OBJECT (MathCplxSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END MitLef; 
+
+	AsympMitLef = OBJECT (MathCplxSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END AsympMitLef; 
+
+	DMitLef = OBJECT (MathCplxSeries.Coefficient)
+
+		PROCEDURE ^ Evaluate*; 
+	END DMitLef; 
+VAR 
+	maxIterations: NbrInt.Integer; 
+	storeAlpha, storeBeta, tolerance: NbrRe.Real; 
+	yk: ARRAY 2 OF NbrRe.Real; 
+	yp: ARRAY 3 OF NbrRe.Real; 
+
+	PROCEDURE ^ K(x: NbrRe.Real; z: NbrCplx.Complex): NbrCplx.Complex; 
+	PROCEDURE ^ P(x: NbrRe.Real; z: NbrCplx.Complex): NbrCplx.Complex; 
+	PROCEDURE ^ GammaIsSingularAt(x: NbrRe.Real): BOOLEAN; 
+	PROCEDURE ^ Fn*(alpha, beta, x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ CplxFn*(alpha, beta: NbrRe.Real; z: NbrCplx.Complex): NbrCplx.Complex; 
+	PROCEDURE ^ DFn*(alpha, beta, x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ DCplxFn*(alpha, beta: NbrRe.Real; z: NbrCplx.Complex): NbrCplx.Complex; 
+BEGIN
+END MathMitLef.

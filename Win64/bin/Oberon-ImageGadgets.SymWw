@@ -1,0 +1,34 @@
+MODULE ImageGadgets IN Oberon;
+	IMPORT Files, Display, Printer, Objects, Fonts, Oberon, Display3, Printer3, Gadgets, Colors, Images;
+CONST 
+	buffered* = 0; 
+	dithered* = 1; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		options*: SET; 
+		cache: Images.Image; 
+	END; 
+
+	; 
+VAR 
+	Enum: RECORD 
+		img: Images.Image; 
+		x, y: INTEGER; 
+	END; 
+
+	PROCEDURE ^ ValidateCache(frame: Frame); 
+	PROCEDURE ^ UpdateCache(frame: Frame; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ RestoreRuns(x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreLines(x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreBlock(x, y, w, h: INTEGER); 
+	PROCEDURE ^ Restore*(frame: Frame; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintRect(dx, dy, dw, dh: INTEGER); 
+	PROCEDURE ^ Print*(frame: Frame; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(frame: Frame; img: Images.Image); 
+	PROCEDURE ^ New*; 
+BEGIN
+END ImageGadgets.

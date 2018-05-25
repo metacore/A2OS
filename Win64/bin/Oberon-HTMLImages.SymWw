@@ -1,0 +1,60 @@
+MODULE HTMLImages IN Oberon;
+	IMPORT Objects, Strings, HyperDocs, Display, Texts, Display3, Oberon, Gadgets, Effects, Links, Rembrandt, HTTPDocs0, HTMLDocs, Documents, Desktops, Attributes, Files, Pictures, Fonts;
+CONST 
+	middle = 1; 
+TYPE 
+	Area = POINTER TO AreaDesc; 
+
+	AreaDesc = RECORD 
+		key: LONGINT; 
+		x, y: INTEGER; 
+		next: Area; 
+	END; 
+
+	Map = POINTER TO MapDesc; 
+
+	MapDesc = RECORD (Gadgets.ObjDesc)
+		name: ARRAY 64 OF CHAR; 
+		areas: Area; 
+		next: Map; 
+	END; 
+
+	RectArea = POINTER TO RectAreaDesc; 
+
+	RectAreaDesc = RECORD (AreaDesc)
+		x2, y2: INTEGER; 
+	END; 
+
+	Icon = POINTER TO IconDesc; 
+
+	IconDesc = RECORD (Rembrandt.FrameDesc)
+		entry: HTTPDocs0.Entry; 
+	END; 
+VAR 
+	maps: Map; 
+
+	PROCEDURE ^ HandleMap(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitMap(map: Map); 
+	PROCEDURE ^ NewMap*; 
+	PROCEDURE ^ MAP(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ InitMaps(P: HTMLDocs.Page); 
+	PROCEDURE ^ AREA(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ LoadIMG*; 
+	PROCEDURE ^ LoadAllIcons*; 
+	PROCEDURE ^ CopyIcon(VAR C: Objects.CopyMsg; F, F1: Icon); 
+	PROCEDURE ^ StoreEntry(F: Icon; VAR R: Files.Rider; entry: HTTPDocs0.Entry); 
+	PROCEDURE ^ LoadEntry(F: Icon; VAR R: Files.Rider; VAR entry: HTTPDocs0.Entry); 
+	PROCEDURE ^ IconHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewIcon*; 
+	PROCEDURE ^ LocalName(VAR url, name: ARRAY OF CHAR); 
+	PROCEDURE ^ FetchObj(P: HTMLDocs.Page; VAR S: HTMLDocs.Scanner): Objects.Object; 
+	PROCEDURE ^ IMG(VAR S: HTMLDocs.Scanner; on: BOOLEAN); 
+	PROCEDURE ^ Dummy(P: HTMLDocs.Page); 
+	PROCEDURE ^ NewMAP*; 
+	PROCEDURE ^ NewAREA*; 
+	PROCEDURE ^ NewIMG*; 
+	PROCEDURE ^ FindMap(name: ARRAY OF CHAR): Map; 
+	PROCEDURE ^ EditArea(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; VAR M: Oberon.InputMsg; x, y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ImgHandle(F: Objects.Object; VAR M: Objects.ObjMsg); 
+BEGIN
+END HTMLImages.

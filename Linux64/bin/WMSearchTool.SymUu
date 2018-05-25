@@ -1,0 +1,112 @@
+MODULE WMSearchTool;
+	IMPORT Files, Modules, WMGraphics, WMSystemComponents, WMComponents, WMStandardComponents, WMWindowManager, WMEditors, WMRectangles, WMMessages, WMRestorable, Strings, Inputs;
+CONST 
+	RListSize = 1000; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Editor = OBJECT {EXCLUSIVE} (WMEditors.Editor)
+	VAR 
+		nextFocus, prevFocus: WMComponents.VisualComponent; 
+		withShift: BOOLEAN; 
+
+		PROCEDURE ^ FocusNext*; 
+		PROCEDURE ^ FocusPrev*; 
+		PROCEDURE ^ KeyPressed*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ SetDoubleLinkedNextFocus(next: Editor); 
+	END Editor; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		status: WMStandardComponents.Panel; 
+		statusLabel: WMStandardComponents.Label; 
+		pathEdit, fmaskEdit, contentEdit: Editor; 
+		searchBtn, stopBtn: WMStandardComponents.Button; 
+		filelist: WMSystemComponents.FileList; 
+		lb: ListBuffer; 
+		s: Searcher; 
+		d: GridDisplayer; 
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ OnEnterHandler(sender, data: ANY); 
+		PROCEDURE ^ OnEscapeHandler(sender, data: ANY); 
+		PROCEDURE ^ FillFirstMountedFS(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ SearchDoneHandler; 
+		PROCEDURE ^ SearchStartHandler; 
+		PROCEDURE ^ SearchHandler(sender, data: ANY); 
+		PROCEDURE ^ StopHandler(sender, data: ANY); 
+		PROCEDURE ^ StopSearcherAndDisplayer; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+
+	SearchPar = RECORD 
+		path, fmask, content: ARRAY 256 OF CHAR; 
+	END; 
+
+	Searcher = OBJECT {EXCLUSIVE} 
+	VAR 
+		newlyStarted, stopped: BOOLEAN; 
+		currentPar, newPar: SearchPar; 
+		lb: ListBuffer; 
+
+		PROCEDURE ^  & Init*(lb: ListBuffer); 
+		PROCEDURE ^ Start(searchPar: SearchPar); 
+		PROCEDURE ^ AwaitNewStart; 
+		PROCEDURE ^ CopySearchParams; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ IsStopped(): BOOLEAN; 
+		PROCEDURE ^ ContainsStr(CONST filename, content: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Match(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SearchPath; 
+	BEGIN{ACTIVE} 
+	END Searcher; 
+
+	GridDisplayHandler = PROCEDURE {DELEGATE}(CONST data: ARRAY OF WMSystemComponents.DirEntry; noEl: LONGINT); 
+
+	SearchStatusHandler = PROCEDURE {DELEGATE}; 
+
+	GridDisplayer = OBJECT {EXCLUSIVE} 
+	VAR 
+		rl: RetrievedList; 
+		display: GridDisplayHandler; 
+		startHandler, stopHandler: SearchStatusHandler; 
+		newlyStarted, stopped: BOOLEAN; 
+		lb: ListBuffer; 
+
+		PROCEDURE ^  & Init*(lb: ListBuffer; display: GridDisplayHandler; sh, dh: SearchStatusHandler); 
+		PROCEDURE ^ Start; 
+		PROCEDURE ^ AwaitNewStart; 
+		PROCEDURE ^ Stop; 
+	BEGIN{ACTIVE} 
+	END GridDisplayer; 
+
+	RetrievedList = RECORD 
+		data: ARRAY RListSize OF WMSystemComponents.DirEntry; 
+		noEl: INTEGER; 
+	END; 
+
+	ListBuffer = OBJECT {EXCLUSIVE} 
+	VAR 
+		data: ARRAY RListSize OF WMSystemComponents.DirEntry; 
+		in, out, maxNoEl: INTEGER; 
+		finished: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ Put(d: WMSystemComponents.DirEntry); 
+		PROCEDURE ^ Finished; 
+		PROCEDURE ^ Get(VAR rlist: RetrievedList); 
+	END ListBuffer; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMSearchTool.

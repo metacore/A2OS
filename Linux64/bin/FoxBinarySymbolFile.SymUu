@@ -1,0 +1,192 @@
+MODULE FoxBinarySymbolFile;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Files, Streams, Kernel, SYSTEM, D := Debugging, Diagnostics, Options, Formats := FoxFormats, InterfaceComparison := FoxInterfaceComparison, Commands, Printout := FoxPrintout, SemanticChecker := FoxSemanticChecker, Machine;
+CONST 
+	TraceImport = 0; 
+	TraceExport = 1; 
+	Trace = {}; 
+	sfTypeBoolean = 1; 
+	sfTypeChar8 = 2; 
+	sfTypeChar16 = 3; 
+	sfTypeChar32 = 4; 
+	sfTypeShortint = 5; 
+	sfTypeInteger = 6; 
+	sfTypeLongint = 7; 
+	sfTypeHugeint = 8; 
+	sfTypeReal = 9; 
+	sfTypeLongreal = 10; 
+	sfTypeSet = 11; 
+	sfTypeString = 12; 
+	sfTypeNoType = 13; 
+	sfTypeNilType = 14; 
+	sfTypeByte = 15; 
+	sfTypeAny = 16; 
+	sfTypeObject = 17; 
+	sfTypeAddress = 18; 
+	sfTypeSize = 19; 
+	sfTypeUnsigned8 = 20; 
+	sfTypeUnsigned16 = 21; 
+	sfTypeUnsigned32 = 22; 
+	sfTypeUnsigned64 = 23; 
+	sfLastType = 23; 
+	sfMod1 = (sfLastType + 1); 
+	sfModOther = 45; 
+	sfTypeOpenArray = 46; 
+	sfTypeStaticArray = 48; 
+	sfTypePointer = 49; 
+	sfTypeRecord = 50; 
+	sfTypeProcedure = 51; 
+	sfSysFlag = 52; 
+	sfInvisible = 53; 
+	sfHidden = 172; 
+	sfReadOnly = 54; 
+	sfObjFlag = 55; 
+	sfConst = 55; 
+	sfVar = 56; 
+	sfTypeEnumeration = 57; 
+	sfXProcedure = 58; 
+	sfOperator = 59; 
+	sfTProcedure = 60; 
+	sfCProcedure = sfTProcedure; 
+	sfAlias = 61; 
+	sfType = 62; 
+	sfEnd = 63; 
+	sfTypeOpenMathArray = 64; 
+	sfTypeTensor = 66; 
+	sfTypeStaticMathArray = 67; 
+	sfTypeAll = 68; 
+	sfTypeRange = 69; 
+	sfTypeComplex = 70; 
+	sfTypeLongcomplex = 71; 
+	sfInline = 171; 
+	sfProtected = 0; 
+	sfActive = 1; 
+	sfSafe = 2; 
+	sfClass = 16; 
+	sfDelegate = 5; 
+	sfUntraced = 4; 
+	sfWinAPIParam = 13; 
+	sfCParam = 14; 
+	sfDarwinCParam = 15; 
+	sfRealtime = 21; 
+	sfDynamic = 22; 
+	sfUnsafe = 23; 
+	sfDisposable = 24; 
+	sfFictive = 25; 
+	Undef = MIN(LONGINT); 
+	FileTag = 0BBX; 
+	NoZeroCompress = 0ADX; 
+	FileVersion* = 0B1X; 
+	FileVersionOC* = 0B2X; 
+	FileVersionCurrent* = 0B4X; 
+TYPE 
+	TypeReference = OBJECT (SyntaxTree.Type)
+	VAR 
+		nr: LONGINT; 
+
+		PROCEDURE ^  & InitTypeReference(nr: LONGINT); 
+	END TypeReference; 
+
+	IndexToType = OBJECT (Basic.List)
+
+		PROCEDURE ^ PutType(nr: LONGINT; type: SyntaxTree.Type); 
+		PROCEDURE ^ GetType(nr: LONGINT): SyntaxTree.Type; 
+	END IndexToType; 
+
+	LateFix = POINTER TO RECORD 
+		p: ANY; 
+		next: LateFix; 
+	END; 
+
+	LateFixList = OBJECT 
+	VAR 
+		first, last: LateFix; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Get(): ANY; 
+		PROCEDURE ^ Add(p: ANY); 
+	END LateFixList; 
+
+	Resolver = OBJECT (SyntaxTree.Visitor)
+	VAR 
+		typeList: IndexToType; 
+		system: Global.System; 
+		typeFixes: LateFixList; 
+		checker: SemanticChecker.Checker; 
+
+		PROCEDURE ^  & Init(system: Global.System; symbolFile: BinarySymbolFile; importCache: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ VisitType*(x: SyntaxTree.Type); 
+		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 
+		PROCEDURE ^ VisitByteType*(x: SyntaxTree.ByteType); 
+		PROCEDURE ^ VisitBooleanType*(x: SyntaxTree.BooleanType); 
+		PROCEDURE ^ VisitSetType*(x: SyntaxTree.SetType); 
+		PROCEDURE ^ VisitAddressType*(x: SyntaxTree.AddressType); 
+		PROCEDURE ^ VisitSizeType*(x: SyntaxTree.SizeType); 
+		PROCEDURE ^ VisitAnyType*(x: SyntaxTree.AnyType); 
+		PROCEDURE ^ VisitObjectType*(x: SyntaxTree.ObjectType); 
+		PROCEDURE ^ VisitNilType*(x: SyntaxTree.NilType); 
+		PROCEDURE ^ VisitCharacterType*(x: SyntaxTree.CharacterType); 
+		PROCEDURE ^ VisitIntegerType*(x: SyntaxTree.IntegerType); 
+		PROCEDURE ^ VisitFloatType*(x: SyntaxTree.FloatType); 
+		PROCEDURE ^ VisitComplexType*(x: SyntaxTree.ComplexType); 
+		PROCEDURE ^ VisitQualifiedType*(x: SyntaxTree.QualifiedType); 
+		PROCEDURE ^ VisitStringType*(x: SyntaxTree.StringType); 
+		PROCEDURE ^ VisitRangeType*(x: SyntaxTree.RangeType); 
+		PROCEDURE ^ CheckEnumerationScope(x: SyntaxTree.EnumerationScope); 
+		PROCEDURE ^ VisitEnumerationType*(x: SyntaxTree.EnumerationType); 
+		PROCEDURE ^ VisitArrayType*(arrayType: SyntaxTree.ArrayType); 
+		PROCEDURE ^ VisitMathArrayType*(arrayType: SyntaxTree.MathArrayType); 
+		PROCEDURE ^ VisitPointerType*(pointerType: SyntaxTree.PointerType); 
+		PROCEDURE ^ FixPointerType(pointerType: SyntaxTree.PointerType); 
+		PROCEDURE ^ VisitRecordType*(recordType: SyntaxTree.RecordType); 
+		PROCEDURE ^ VisitProcedureType*(procedureType: SyntaxTree.ProcedureType); 
+		PROCEDURE ^ FixProcedureType(procedureType: SyntaxTree.ProcedureType); 
+		PROCEDURE ^ ResolveType(type: SyntaxTree.Type): SyntaxTree.Type; 
+		PROCEDURE ^ FixTypes; 
+		PROCEDURE ^ Scope(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ Resolve(module: SyntaxTree.Module; typeList: IndexToType); 
+	END Resolver; 
+
+	Index = POINTER TO RECORD 
+		tag: LONGINT; 
+	END; 
+
+	TypeToIndex = OBJECT (Basic.HashTable)
+
+		PROCEDURE ^ GetIndex(type: SyntaxTree.Type): LONGINT; 
+		PROCEDURE ^ PutIndex(type: SyntaxTree.Type; nr: LONGINT); 
+	END TypeToIndex; 
+
+	Attribute = OBJECT 
+	VAR 
+		numberTypes: LONGINT; 
+		indexToType: IndexToType; 
+		typeToIndex: TypeToIndex; 
+
+		PROCEDURE ^  & Init; 
+	END Attribute; 
+
+	IndexToAttribute = OBJECT (Basic.List)
+
+		PROCEDURE ^ PutAttribute(nr: LONGINT; attribute: Attribute); 
+		PROCEDURE ^ GetAttribute(nr: LONGINT): Attribute; 
+	END IndexToAttribute; 
+
+	BinarySymbolFile* = OBJECT (Formats.SymbolFileFormat)
+	VAR 
+		file-: Files.File; 
+		extension-: Basic.FileName; 
+		noRedefinition, noModification, noInterfaceCheck: BOOLEAN; 
+		version: CHAR; 
+
+		PROCEDURE ^ Import*(CONST moduleName: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module; 
+		PROCEDURE ^ Export*(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+	END BinarySymbolFile; 
+
+	PROCEDURE ^ MakeFileName(VAR file: ARRAY OF CHAR; CONST name, prefix, suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenSymFile(CONST name, prefix, suffix: ARRAY OF CHAR; VAR r: Streams.Reader; VAR version: CHAR): BOOLEAN; 
+	PROCEDURE ^ Get*(): Formats.SymbolFileFormat; 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+BEGIN
+END FoxBinarySymbolFile.

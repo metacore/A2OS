@@ -1,0 +1,50 @@
+MODULE srVoxel5;
+	IMPORT srBase, srVoxel;
+CONST 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	SwastiVox* = OBJECT (Voxel)
+	VAR 
+		r, g, b, br, bg, bb: SREAL; 
+		SW: ARRAY 8 OF ARRAY 8 OF CHAR; 
+
+		PROCEDURE ^  & swastinit*; 
+		PROCEDURE ^ SetSwastiColor*(red, green, blue: SREAL); 
+		PROCEDURE ^ SetBackColor*(red, green, blue: SREAL); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END SwastiVox; 
+
+	Blinker = OBJECT (Voxel)
+	VAR 
+		varray: ARRAY 10 OF Voxel; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ Shade*(VAR ray: srBase.Ray); 
+	END Blinker; 
+
+	Blinker7 = OBJECT (Voxel)
+	VAR 
+		varray: ARRAY 7 OF Voxel; 
+
+		PROCEDURE ^  & init*; 
+	END Blinker7; 
+
+	Blinker13 = OBJECT (Voxel)
+	VAR 
+		varray: ARRAY 13 OF Voxel; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ Shade*(VAR ray: srBase.Ray); 
+	END Blinker13; 
+VAR 
+	ff1*: Blinker; 
+	ff2*: Blinker7; 
+	ff3*: Blinker13; 
+
+BEGIN
+END srVoxel5.

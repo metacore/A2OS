@@ -1,0 +1,18 @@
+#!/bin/sh
+
+dir="/var/tmp/a2/"
+update () { svn checkout --non-interactive --quiet --username eth.a2guest --password a2guest https://svn.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$dir" && make --directory "$dir" --quiet dependencies && version=$(svnversion "$dir/source"); }
+check () { make --question --directory "$dir" --quiet build platform=Linux32; }
+build () { timeout 1h make --directory "$dir" --quiet build platform=Linux32; }
+notify () { sendbuild "A2 Builds" "Linux32" "$version" "$1"; }
+
+update || exit 1
+check && exit 0
+status="Building"; output=""
+notify "$status" < /dev/null
+cleanup () { echo "$output" | notify $status; }
+trap cleanup exit
+trap "status=Aborted" int term kill
+status="Failed"; output=$(build 2>&1)
+test $? -eq 0 && status="Succeeded" && output=""
+exit 0

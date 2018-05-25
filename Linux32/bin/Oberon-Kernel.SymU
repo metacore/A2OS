@@ -1,0 +1,42 @@
+MODULE Kernel IN Oberon;
+	IMPORT Machine IN A2, KernelLog IN A2, Objects IN A2, Kernel IN A2, Clock IN A2;
+CONST 
+	LittleEndian* = TRUE; 
+	LsbIs0* = TRUE; 
+TYPE 
+	Finalizer* = PROCEDURE (obj: ANY); 
+
+	OberonFinalizer = OBJECT 
+	VAR 
+		fin: Finalizer; 
+		next: OberonFinalizer; 
+		obj: ANY; 
+
+		PROCEDURE ^ Finalize(obj: ANY); 
+	END OberonFinalizer; 
+VAR 
+	version*: ARRAY 64 OF CHAR; 
+	lockedBy: ANY; 
+	level: LONGINT; 
+	oberon: ANY; 
+	finalizeRoot: OberonFinalizer; 
+	NfinalizeAlive, NfinalizeDead: LONGINT; 
+	finalizers: Kernel.FinalizedCollection; 
+
+	PROCEDURE ^ WriteChar*(c: CHAR); 
+	PROCEDURE ^ WriteString*(s: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteLn*; 
+	PROCEDURE ^ WriteInt*(x, w: LONGINT); 
+	PROCEDURE ^ WriteHex*(x, w: LONGINT); 
+	PROCEDURE ^ WriteMemory*(adr, size: LONGINT); 
+	PROCEDURE ^ Used*(): LONGINT; 
+	PROCEDURE ^ GC*; 
+	PROCEDURE ^ RegisterObject*(obj: ANY; fin: Finalizer; basic: BOOLEAN); 
+	PROCEDURE ^ GetClock*(VAR time, date: LONGINT); 
+	PROCEDURE ^ SetClock*(time, date: LONGINT); 
+	PROCEDURE ^ GetConfig*(name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ LockOberon*; 
+	PROCEDURE ^ UnlockOberon*; 
+	PROCEDURE ^ CheckOberonLock*; 
+BEGIN
+END Kernel.

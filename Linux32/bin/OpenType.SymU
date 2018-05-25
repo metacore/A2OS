@@ -1,0 +1,236 @@
+MODULE OpenType;
+	IMPORT OpenTypeInt, OpenTypeScan, KernelLog, Strings, Files;
+CONST 
+	SharpenContours = TRUE; 
+	Copyright* = 0; 
+	Family* = 1; 
+	Subfamily* = 2; 
+	UniqueID* = 3; 
+	FullName* = 4; 
+	Version* = 5; 
+	PSName* = 6; 
+	Trademark* = 7; 
+	Manufacturer* = 8; 
+	Designer* = 9; 
+	Description* = 10; 
+	VendorURL* = 11; 
+	DesignerURL* = 12; 
+	Hinted* = 0; 
+	Width* = 1; 
+	Outline* = 2; 
+	Raster* = 3; 
+	Grey* = 4; 
+	DefaultCacheSize* = 8; 
+	NumTables = 32; 
+	CharMapSize = 254; 
+	CallStackSize = 32; 
+	X = OpenTypeInt.X; 
+	Y = OpenTypeInt.Y; 
+	Debug = FALSE; 
+TYPE 
+	Fixed* = OpenTypeInt.Fixed; 
+
+	F26D6* = OpenTypeInt.F26D6; 
+
+	F2D14* = OpenTypeInt.F2D14; 
+
+	FUnit* = OpenTypeInt.FUnit; 
+
+	CacheObj = POINTER TO CacheObjDesc; 
+
+	CacheObjDesc = RECORD 
+		prev, next: CacheObj; 
+		stamp: LONGINT; 
+	END; 
+
+	Cache* = RECORD 
+		entries, max: INTEGER; 
+		sent: CacheObj; 
+	END; 
+
+	TableEntry = RECORD 
+		tag: LONGINT; 
+		checkSum: LONGINT; 
+		offset, length: LONGINT; 
+	END; 
+
+	FontHeader* = RECORD 
+		flags: INTEGER; 
+		unitsPerEm*: INTEGER; 
+		xMin*, yMin*, xMax*, yMax*: FUnit; 
+		lowestRecPPEM*: INTEGER; 
+		indexToLocFormat: INTEGER; 
+	END; 
+
+	HorHeader* = RECORD 
+		ascender*, descender*, lineGap*: FUnit; 
+		advanceWidthMax*, minLeftSideBearing*, minRightSideBearing*, xMaxExtent*: FUnit; 
+		numberOfHMetrics: LONGINT; 
+	END; 
+
+	CharMapSegment* = RECORD 
+		start*, end*, delta*, offset*: INTEGER; 
+	END; 
+
+	CharMapSegments* = POINTER TO ARRAY OF CharMapSegment; 
+
+	CharMapGlyphs* = POINTER TO ARRAY OF INTEGER; 
+
+	CharMap* = RECORD 
+		segCount*: INTEGER; 
+		seg*: CharMapSegments; 
+		glyph*: CharMapGlyphs; 
+	END; 
+
+	MaxProfile* = RECORD 
+		numGlyphs*: LONGINT; 
+		maxPoints, maxContours: INTEGER; 
+		maxCompositePoints, maxCompositeContours: INTEGER; 
+		maxZones, maxTwilightPoints: INTEGER; 
+		maxStorage: INTEGER; 
+		maxFunctionDefs, maxInstructionDefs: INTEGER; 
+		maxStackElements, maxSizeOfInstructions: INTEGER; 
+	END; 
+
+	HorMetric = RECORD 
+		aw: INTEGER; 
+		lsb: INTEGER; 
+	END; 
+
+	HorMetrics = POINTER TO ARRAY OF HorMetric; 
+
+	LinearThresholds = POINTER TO ARRAY OF CHAR; 
+
+	Font* = POINTER TO FontDesc; 
+
+	FontDesc* = RECORD (CacheObjDesc)
+		name*: ARRAY 64 OF CHAR; 
+		file*: Files.File; 
+		inst*: Cache; 
+		table: ARRAY NumTables OF TableEntry; 
+		numTables: INTEGER; 
+		head*: FontHeader; 
+		hhea*: HorHeader; 
+		cmap*: CharMap; 
+		maxp*: MaxProfile; 
+		hmtx: HorMetrics; 
+		LTSH: LinearThresholds; 
+		fontProg, cvtProg, glyphProg: OpenTypeInt.Code; 
+		stack: OpenTypeInt.Stack; 
+		callStack: OpenTypeInt.CallStack; 
+		func: OpenTypeInt.Functions; 
+		instr: OpenTypeInt.Instructions; 
+		store: OpenTypeInt.Store; 
+		cvt: OpenTypeInt.CVT; 
+		cvtLen: LONGINT; 
+		twilight: OpenTypeInt.Zone; 
+	END; 
+
+	Matrix* = ARRAY 4 OF Fixed; 
+
+	Instance* = POINTER TO InstanceDesc; 
+
+	InstanceDesc* = RECORD (CacheObjDesc)
+		font*: Font; 
+		ptsize*: F26D6; 
+		xdpi*, ydpi*: INTEGER; 
+		xppm*, yppm*: F26D6; 
+		mat*: Matrix; 
+		xmin*, ymin*, xmax*, ymax*: F26D6; 
+		useHints*, useGrey*: BOOLEAN; 
+		rotated, stretched: BOOLEAN; 
+		aw: POINTER TO ARRAY OF CHAR; 
+		func: OpenTypeInt.Functions; 
+		instr: OpenTypeInt.Instructions; 
+		store: OpenTypeInt.Store; 
+		cvt: OpenTypeInt.CVT; 
+		twilight: OpenTypeInt.Zone; 
+		state: OpenTypeInt.State; 
+	END; 
+
+	Glyph* = POINTER TO GlyphDesc; 
+
+	GlyphDesc* = RECORD 
+		font*: Font; 
+		awx*, awy*: INTEGER; 
+		hbx*, hby*: INTEGER; 
+		rw*, rh*: INTEGER; 
+		xmin*, ymin*, xmax*, ymax*: F26D6; 
+		lppx, rppx: F26D6; 
+		outline, simple, comp: OpenTypeInt.Zone; 
+		fixDropouts: BOOLEAN; 
+		scanType: INTEGER; 
+		store: OpenTypeInt.Store; 
+		cvt: OpenTypeInt.CVT; 
+	END; 
+
+	OutlineData0* = RECORD 
+	END; 
+
+	OutlineData* = RECORD (OutlineData0)
+		moveto*: PROCEDURE (x, y: F26D6; VAR data: OutlineData0); 
+		lineto*: PROCEDURE (x, y: F26D6; VAR data: OutlineData0); 
+		bezierto*: PROCEDURE (x, y: ARRAY OF F26D6; n: INTEGER; VAR data: OutlineData0); 
+	END; 
+
+	RasterData0* = RECORD (OpenTypeScan.EnumData)
+	END; 
+
+	RasterData* = RECORD (RasterData0)
+		rect*: PROCEDURE (llx, lly, urx, ury, opacity: INTEGER; VAR data: RasterData0); 
+	END; 
+
+	DebugLogArray = POINTER TO ARRAY OF Strings.String; 
+
+	DebugLog = OBJECT 
+	VAR 
+		log: DebugLogArray; 
+		logEntries: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Add(logEntry: ARRAY OF CHAR); 
+		PROCEDURE ^ AddB(logEntry: ARRAY OF CHAR; logVal: BOOLEAN); 
+		PROCEDURE ^ AddI(logEntry: ARRAY OF CHAR; logVal: LONGINT); 
+		PROCEDURE ^ Flush; 
+	END DebugLog; 
+VAR 
+	FontCache*: Cache; 
+	CharToUnicode*: ARRAY 256 OF INTEGER; 
+	Identity*: Matrix; 
+	CacheStamp: LONGINT; 
+	MacChar, UniChar: ARRAY 256 OF INTEGER; 
+	Log: DebugLog; 
+
+	PROCEDURE ^ InitCache*(VAR cache: Cache); 
+	PROCEDURE ^ SetCacheSize*(VAR cache: Cache; max: INTEGER); 
+	PROCEDURE ^ Append(VAR cache: Cache; obj: CacheObj); 
+	PROCEDURE ^ FindTable*(font: Font; name: ARRAY OF CHAR; VAR offset, length: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ReadInt*(VAR r: Files.Rider; VAR i: INTEGER); 
+	PROCEDURE ^ ReadLInt*(VAR r: Files.Rider; VAR l: LONGINT); 
+	PROCEDURE ^ Read16U*(VAR r: Files.Rider; VAR i: LONGINT); 
+	PROCEDURE ^ LoadHeader(font: Font): BOOLEAN; 
+	PROCEDURE ^ LoadHorHeader(font: Font): BOOLEAN; 
+	PROCEDURE ^ LoadCharMap(font: Font): BOOLEAN; 
+	PROCEDURE ^ LoadMaxProfile(font: Font): BOOLEAN; 
+	PROCEDURE ^ LoadHorMetrics(font: Font): BOOLEAN; 
+	PROCEDURE ^ LoadCVT(font: Font); 
+	PROCEDURE ^ LoadLinearThresholds(font: Font); 
+	PROCEDURE ^ LoadFont(font: Font): BOOLEAN; 
+	PROCEDURE ^ ExecFontProg(font: Font); 
+	PROCEDURE ^ Open*(name: ARRAY OF CHAR): Font; 
+	PROCEDURE ^ GetName*(font: Font; id: INTEGER; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ UnicodeToGlyph*(font: Font; code: LONGINT): LONGINT; 
+	PROCEDURE ^ CalcPPEm(font: Font; ptsize: F26D6; xdpi, ydpi: INTEGER; VAR xppm, yppm: F26D6); 
+	PROCEDURE ^ GetInstance*(font: Font; ptsize: F26D6; xdpi, ydpi: INTEGER; mat: Matrix; VAR inst: Instance); 
+	PROCEDURE ^ InitGlyph*(glyph: Glyph; font: Font); 
+	PROCEDURE ^ LoadSimpleOutline(VAR r: Files.Rider; glyph: Glyph; inst: Instance; num: LONGINT; contours: INTEGER; hinted, rotated, stretched: BOOLEAN); 
+	PROCEDURE ^ LoadOutline(glyph: Glyph; inst: Instance; num: LONGINT; hinted, rotated, stretched: BOOLEAN); 
+	PROCEDURE ^ LoadGlyph*(inst: Instance; glyph: Glyph; VAR ras: OpenTypeScan.Rasterizer; num: LONGINT; mode: SET); 
+	PROCEDURE ^ EnumOutline*(glyph: Glyph; VAR data: OutlineData); 
+	PROCEDURE ^ SharpenC(VAR x0, x1, a0, a1: INTEGER); 
+	PROCEDURE ^ EnumRow(row: INTEGER; beg, end: F26D6; VAR data: OpenTypeScan.EnumData); 
+	PROCEDURE ^ EnumCol(col: INTEGER; beg, end: F26D6; VAR data: OpenTypeScan.EnumData); 
+	PROCEDURE ^ EnumRaster*(VAR ras: OpenTypeScan.Rasterizer; VAR data: RasterData); 
+	PROCEDURE ^ InitCharMaps; 
+BEGIN
+END OpenType.

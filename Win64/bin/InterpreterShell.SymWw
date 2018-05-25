@@ -1,0 +1,112 @@
+MODULE InterpreterShell;
+	IMPORT Modules, Commands, Streams, Pipes, Strings, Files, Interpreter := FoxInterpreter, Diagnostics, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Printout := FoxPrintout, InterpreterSymbols := FoxInterpreterSymbols;
+CONST 
+	ExitShell* = 1; 
+	Clear* = 2; 
+	Version = \"InterpreterShell v1.0"\; 
+	DefaultAliasFile = \"Shell.Alias"\; 
+	NestingLevelIndicator = \">"\; 
+	MaxLen = 512; 
+	CmdLen = 64; 
+	ParamLen = MaxLen; 
+	CR = 0DX; 
+	LF = 0AX; 
+	TAB = 9X; 
+	Backspace = 8X; 
+	Space = 20X; 
+	Delete = 7FX; 
+	Escape = 1BX; 
+	EscapeChar1 = Escape; 
+	EscapeChar2 = \"["\; 
+	CursorUp = 0C1X; 
+	CursorDown = 0C2X; 
+	start = {}; 
+	inputFile = {0}; 
+	pipe = {1}; 
+	outputFile = {2}; 
+	outputFileAppend = {3}; 
+	ampersand = {4}; 
+	whitespace = {5}; 
+	eoln = {6}; 
+	char = {7}; 
+	EndOfParam = (((((pipe + inputFile) + outputFile) + outputFileAppend) + ampersand) + eoln); 
+	ErrFileNotFound = 1; 
+	ErrInvalidFilename = 2; 
+	ErrAlreadyPiped = 3; 
+	ErrPipeAtBeginning = 4; 
+	ErrInvalidCommand = 5; 
+	ErrEolnExpected = 6; 
+TYPE 
+	CommandsString = POINTER TO RECORD 
+		prev, next: CommandsString; 
+		string: ARRAY MaxLen OF CHAR; 
+	END; 
+
+	CommandHistory = OBJECT 
+	VAR 
+		first, current: CommandsString; 
+
+		PROCEDURE ^ GetNextCommand(VAR cmd: ARRAY OF CHAR); 
+		PROCEDURE ^ GetPreviousCommand(VAR cmd: ARRAY OF CHAR); 
+		PROCEDURE ^ AddCommand(CONST cmd: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*; 
+	END CommandHistory; 
+
+	Command = POINTER TO RECORD 
+		command: ARRAY CmdLen OF CHAR; 
+		parameters: ARRAY ParamLen OF CHAR; 
+		context: Commands.Context; 
+		pipe: Pipes.Pipe; 
+		next: Command; 
+	END; 
+
+	Alias = POINTER TO RECORD 
+		alias, command: ARRAY CmdLen OF CHAR; 
+		parameters: ARRAY ParamLen OF CHAR; 
+		next: Alias; 
+	END; 
+
+	NotifyProcedure* = PROCEDURE {DELEGATE}(command: LONGINT); 
+
+	Shell* = OBJECT {EXCLUSIVE} 
+	TYPE 
+		StringType = POINTER TO ARRAY OF CHAR; 
+
+		Reader* = OBJECT {EXCLUSIVE} (Streams.Reader)
+		VAR 
+			length: LONGINT; 
+			data: StringType; 
+			rofs: LONGINT; 
+
+			PROCEDURE ^  & Init*(initialSize: LONGINT); 
+			PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+			PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		END Reader; 
+	VAR 
+		echo, dead, close: BOOLEAN; 
+		context: Commands.Context; 
+		command: ARRAY MaxLen OF CHAR; 
+		res: LONGINT; 
+		nestingLevel: LONGINT; 
+		aliases: Alias; 
+		prompt: ARRAY 32 OF CHAR; 
+		seenCR: CHAR; 
+		upcall: NotifyProcedure; 
+		commandHistory: CommandHistory; 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR); 
+		PROCEDURE ^ Exit*; 
+		PROCEDURE ^ DeleteStringFromDisplay(CONST x: ARRAY OF CHAR); 
+		PROCEDURE ^ ReadCommand(w: Streams.Writer); 
+		PROCEDURE ^ ReadAlias(cmd: Command; verbose: BOOLEAN); 
+		PROCEDURE ^ Run; 
+		PROCEDURE ^ AwaitDeath*; 
+		PROCEDURE ^ SetUpcall*(proc: NotifyProcedure); 
+		PROCEDURE ^ ParseAliases(r: Files.Reader); 
+		PROCEDURE ^ LoadAliasesFromFile(filename: ARRAY OF CHAR); 
+	BEGIN{ACTIVE, SAFE} 
+	END Shell; 
+
+	PROCEDURE ^ Start*(context: Commands.Context); 
+BEGIN
+END InterpreterShell.

@@ -1,0 +1,69 @@
+MODULE Locks;
+	IMPORT SYSTEM, KernelLog, Objects, Streams, Reflection, Kernel;
+CONST 
+	Statistics = TRUE; 
+TYPE 
+	Lock* = OBJECT {EXCLUSIVE} 
+	VAR 
+		lockedBy: ANY; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ HasLock*(): BOOLEAN; 
+	END Lock; 
+
+	RecursiveLock* = OBJECT {EXCLUSIVE} 
+	VAR 
+		lockLevel: LONGINT; 
+		lockedBy: ANY; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ HasLock*(): BOOLEAN; 
+	END RecursiveLock; 
+
+	LockReleasedHandler* = PROCEDURE {DELEGATE}; 
+
+	ReaderLockInfo = RECORD 
+		owner: ANY; 
+		lockLevel: LONGINT; 
+	END; 
+
+	ReaderLockList = POINTER TO ARRAY OF ReaderLockInfo; 
+
+	RWLock* = OBJECT {EXCLUSIVE} 
+	VAR 
+		lockLevel: LONGINT; 
+		lockedBy: ANY; 
+		lastReader: ANY; 
+		nofReaders: LONGINT; 
+		readers: ReaderLockList; 
+		wlReleaseHandler: LockReleasedHandler; 
+		DEADLOCK: BOOLEAN; 
+		nofReadLocks, nofWriteLocks: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ AcquireWrite*; 
+		PROCEDURE ^ ReleaseWrite*; 
+		PROCEDURE ^ HasWriteLock*(): BOOLEAN; 
+		PROCEDURE ^ GetWLockLevel*(): LONGINT; 
+		PROCEDURE ^ SetLockReleasedHandler*(handler: LockReleasedHandler); 
+		PROCEDURE ^ AcquireRead*; 
+		PROCEDURE ^ ReleaseRead*; 
+		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
+		PROCEDURE ^ InternalHasReadLock(): BOOLEAN; 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ SetDeadLock; 
+		PROCEDURE ^ WriteLock*; 
+		PROCEDURE ^ WriteStats*; 
+	END RWLock; 
+VAR 
+	locks: Kernel.FinalizedCollection; 
+
+	PROCEDURE ^ RegisterLock(x: ANY); 
+	PROCEDURE ^ DL(obj: ANY; VAR cont: BOOLEAN); 
+	PROCEDURE ^ DeadLock*; 
+BEGIN
+END Locks.

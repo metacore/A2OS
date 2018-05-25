@@ -1,0 +1,10 @@
+MODULE ColorModels;
+
+	PROCEDURE ^ RGBToHSV*(r, g, b: LONGINT; VAR h, s, v: REAL); 
+	PROCEDURE ^ HSVToRGB*(h, s, v: REAL; VAR rl, gl, bl: LONGINT); 
+	PROCEDURE ^ RGBToCMY*(r, g, b: REAL; VAR c, m, y: REAL); 
+	PROCEDURE ^ CMYToRGB*(c, m, y: REAL; VAR r, g, b: LONGINT); 
+	PROCEDURE ^ RGBToCMYK*(rl, gl, bl: LONGINT; VAR c, m, y, k: REAL); 
+	PROCEDURE ^ CMYKToRGB*(c, m, y, k: REAL; VAR r, g, b: REAL); 
+BEGIN
+END ColorModels.

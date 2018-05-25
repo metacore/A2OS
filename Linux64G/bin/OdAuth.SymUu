@@ -1,9 +1,0 @@
-MODULE OdAuth;
-	IMPORT OdAuthBase, Commands, Streams;
-CONST 
-
-	PROCEDURE ^ SetBasicRealm*(context: Commands.Context); 
-	PROCEDURE ^ SetBasicAuth*(context: Commands.Context); 
-	PROCEDURE ^ SetDefaultHost*(context: Commands.Context); 
-BEGIN
-END OdAuth.

@@ -1,0 +1,47 @@
+MODULE WMAnimations;
+	IMPORT Streams, Kernel, KernelLog, Strings, Files, Codecs, Raster, WMRectangles, WMGraphics, XML, WMProperties, WMComponents;
+CONST 
+	Ok = 0; 
+	NoDecoderFound = 1; 
+	FileNotFound = 2; 
+	Error = 3; 
+	State_Waiting = 0; 
+	State_Rendering = 1; 
+	State_Terminating = 99; 
+	State_Terminated = 100; 
+TYPE 
+	Animation* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		imageName-: WMProperties.StringProperty; 
+		isRepeating-: WMProperties.BooleanProperty; 
+		scaleImage-: WMProperties.BooleanProperty; 
+		forceNoBg-: WMProperties.BooleanProperty; 
+		sequence: Codecs.ImageSequence; 
+		first, current: Codecs.ImageDescriptor; 
+		image: Raster.Image; 
+		aux_canvas: WMGraphics.BufferCanvas; 
+		state: LONGINT; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
+		PROCEDURE ^ LoadImages; 
+		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
+		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ Update; 
+	BEGIN{ACTIVE} 
+	END Animation; 
+VAR 
+	PrototypeImageName: WMProperties.StringProperty; 
+	PrototypeIsRepeating, PrototypeScaleImage, PrototypeForceNoBg: WMProperties.BooleanProperty; 
+	StrAnimation: Strings.String; 
+
+	PROCEDURE ^ OpenAnimation(filename: ARRAY OF CHAR; VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+	PROCEDURE ^ GenAnimation*(): XML.Element; 
+	PROCEDURE ^ FindAnimation*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Animation; 
+	PROCEDURE ^ InitPrototypes; 
+	PROCEDURE ^ InitStrings; 
+BEGIN
+END WMAnimations.

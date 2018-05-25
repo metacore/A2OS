@@ -1,24 +1,23 @@
 MODULE Machine;	(** AUTHOR "pjm, G.F."; PURPOSE "Bootstrapping, configuration and machine interface"; *)
 
-
 IMPORT S := SYSTEM, Trace, Unix, Glue;
 
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
 	
-	Version = "Aos (rev.7355)";
+	Version = "A2 Gen. 32-bit, ";
 
-	DefaultObjectFileExtension* = ".Obj";
+	DefaultObjectFileExtension* = ".GofU";
 	
 	Second* = 1000; (* frequency of ticks increments in Hz *)
 
 	(** bits in features variable *)
 	MTTR* = 12;  MMX* = 23; 
 	
-	AddrSize = SIZEOF( ADDRESS );
-	SizeSize = SIZEOF( SIZE );
 	
-	BlockSize = 32;
+	AddressSize = SIZEOF(ADDRESS);
+	StaticBlockSize = 8 * AddressSize;	(* static heap block size *)
+
 	MemBlockSize* = 64*1024*1024;
 	
 	TraceOutput* = 0;	(* Trace output *)
@@ -30,32 +29,25 @@ CONST
 	Processors* = 6;	(*!  Interprocessor interrupts,  not used in UnixAos *)
 	KernelLog* = 7;		(* Atomic output *)
 	X11* = 8;				(* XWindows I/O *)
-	Trap* = 9;
-	GC = 10;
-	MaxLocks* = 11;   (* { <= 32 } *)
+	MaxLocks* = 9;   (* { <= 32 } *)
 	
 	MaxCPU* = 4;
-	
+	IsCooperative* = FALSE;
 
 TYPE	
 	Vendor* = ARRAY 13 OF CHAR;	
 
-	MemoryBlock* = POINTER TO MemoryBlockDesc;
+	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc;
 	MemoryBlockDesc* = RECORD
-		next- {UNTRACED}: MemoryBlock;
+		next- : MemoryBlock;
 		startAdr-: ADDRESS; 		(* sort key in linked list of memory blocks *)
 		size-: SIZE; 					
 		beginBlockAdr-, endBlockAdr-: ADDRESS
 	END;
 	
-	(** processor state, ordering of record fields is predefined! *)
-		(*!(not used in UnixAos, for interface compatibility only)*)
-	State* = RECORD					(* offsets used in FieldInterrupt, FieldIRQ and Objects.RestoreState *)
-		EDI*, ESI*, ERR*, ESP0*, EBX*, EDX*, ECX*, EAX*: LONGINT;	(** ESP0 = ADR(s.INT) *)
-		INT*, BP*, PC*, CS*: LONGINT;	(* BP and ERR are exchanged by glue code, for procedure link *)
-		FLAGS*: SET;
-		SP*, SS*: LONGINT;			(** only valid if (VMBit IN s.EFLAGS) OR (CS MOD 4 < s.CS MOD 4) *)
-		ES*, DS*, FS*, GS*: LONGINT;	(** only valid if (VMBit IN s.FLAGS) *)
+	(** processor state *)
+	State* = RECORD	
+		PC*, BP*, SP*: ADDRESS
 	END;
 	
 	
@@ -74,9 +66,7 @@ VAR
 	SSE42Support-	: BOOLEAN;
 	SSE5Support-	: BOOLEAN;
 	AVXSupport-		: BOOLEAN;
-	
-	GCacquired- : BOOLEAN;
-	
+		
 	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 	
 	prioLow-, prioHigh-: LONGINT;	(* permitted thread priorities *)
@@ -84,52 +74,54 @@ VAR
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
 	mhz-: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
 	
-	standaloneAppl-: BOOLEAN;
-	
-	firstMemBlock: MemoryBlockDesc;		(* pseudo heap *)
-	
+	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
 	
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	
-	thrInitialize	: PROCEDURE {REALTIME, C} ( VAR low, high: LONGINT ): BOOLEAN;
-	
-	mtxInit			: PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Mutex_t;
-	mtxDestroy	: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	mtxLock		: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	mtxUnlock	: PROCEDURE {REALTIME, C} ( mtx: Unix.Mutex_t );
-	
-	conInit			: PROCEDURE {REALTIME, C}  ( dummy: LONGINT ): Unix.Condition_t;
-	conDestroy	: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	conWait		: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t;  mtx: Unix.Mutex_t );
-	conSignal		: PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	
-	thrSleep		: PROCEDURE {REALTIME, C} ( ms: LONGINT );
-	thrThis			: PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Thread_t;
-	
-
-	
+	logname: ARRAY 32 OF CHAR;
 	logfile: LONGINT;
 	traceHeap: BOOLEAN;
-	
-	timer0	: HUGEINT;
-	
 
+	timer0	: HUGEINT;
 
 	(** Return current processor ID (0 to MaxNum-1). *)
-	PROCEDURE {REALTIME} ID* (): LONGINT;
+	PROCEDURE  ID* (): LONGINT;
 	BEGIN
 		RETURN 0
 	END ID;
-		
-		
+
+	(**
+	 * Flush Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+	 * left empty on Intel architecture.
+	 *)
+	PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: LONGINT);
+	END FlushDCacheRange;
+
+	(**
+	 * Invalidate Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+	 * left empty on Intel architecture.
+	 *)
+	PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: LONGINT);
+	END InvalidateDCacheRange;
+
+	(**
+	 * Invalidate Instruction Cache for the specified virtual address range. If len is negative, flushes the whole cache.
+	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
+	 * left empty on Intel architecture.
+	 *)
+	PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
+	END InvalidateICacheRange;
+	
 	(* insert given memory block in sorted list of memory blocks, sort key is startAdr field - called during GC *)
 	PROCEDURE InsertMemoryBlock(memBlock: MemoryBlock);
 	VAR cur {UNTRACED}, prev {UNTRACED}: MemoryBlock;
 	BEGIN
 		cur := memBlockHead;
 		prev := NIL;
-		WHILE (cur # NIL) & (cur.startAdr < memBlock.startAdr) DO
+		WHILE (cur # NIL) & (ADDRESS OF cur^ < ADDRESS OF memBlock^) DO
 			prev := cur;
 			cur := cur.next
 		END;
@@ -139,9 +131,9 @@ VAR
 		ELSE (* insert in middle or at end of list *)
 			prev.next := memBlock;
 			memBlock.next := cur;
-			IF cur = NIL THEN
-				memBlockTail := memBlock
-			END
+		END;
+		IF cur = NIL THEN
+			memBlockTail := memBlock
 		END
 	END InsertMemoryBlock;
 
@@ -177,74 +169,84 @@ VAR
 	
 
 	(* expand heap by allocating a new memory block *)
-	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR beginBlockAdr, endBlockAdr: ADDRESS );
-	VAR mBlock: MemoryBlock;  alloc, s: SIZE;  a, adr: ADDRESS; 
+	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
+	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr: ADDRESS; 
 	BEGIN 
-		IF size < (MemBlockSize - (2*BlockSize))  THEN  alloc := MemBlockSize  
-		ELSE  alloc := size + (2*BlockSize);
-		END;  
+		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
+		alloc := size + StaticBlockSize;
+		IF alloc < MemBlockSize THEN alloc := MemBlockSize END;
+
+		ASSERT((Unix.PageSize > StaticBlockSize) & (Unix.PageSize MOD StaticBlockSize = 0));  (* alignment to Unix.PageSize implies alignment to StaticBlockSize *)
 		INC( alloc, (-alloc) MOD Unix.PageSize );
-		
+
 		IF Unix.posix_memalign( adr, Unix.PageSize, alloc ) # 0 THEN
 			Unix.Perror( "Machine.ExpandHeap: posix_memalign" );
 			beginBlockAdr := 0;
-			endBlockAdr := 0
+			endBlockAdr := 0;
+			memoryBlock := NIL;
 		ELSE
 			IF Unix.mprotect( adr, alloc, 7 (* READ WRITE EXEC *) ) # 0 THEN
 				Unix.Perror( "Machine.ExpandHeap: mprotect" )
-			END;
-			
-			mBlock := S.VAL( MemoryBlock, adr );  
+			END;			
+			mBlock := adr;  
 			mBlock.next := NIL;  
 			mBlock.startAdr := adr;
 			mBlock.size := alloc;  
-			mBlock.beginBlockAdr := adr + BlockSize - AddrSize;  
-			
-			ASSERT( (mBlock.beginBlockAdr + AddrSize) MOD BlockSize = 0 );  
 
-			s := adr + alloc - mBlock.beginBlockAdr - BlockSize; 
-			DEC( s, s MOD BlockSize );  
-			ASSERT( s >= size );  
-			mBlock.endBlockAdr := mBlock.beginBlockAdr + s; 
+			beginBlockAdr := adr + StaticBlockSize;
+			endBlockAdr := beginBlockAdr + alloc - StaticBlockSize;
+
+			mBlock.beginBlockAdr := beginBlockAdr;  
+			mBlock.endBlockAdr := beginBlockAdr; (* block is still empty -- Heaps module will set the upper bound *)
 			
 			InsertMemoryBlock( mBlock );
 			IF traceHeap THEN TraceHeap( mBlock )  END;
-			
-			a := mBlock.beginBlockAdr;
-			S.PUT( a, a + AddrSize );	(* tag *)
-			S.PUT( a + AddrSize, s - AddrSize );  (* size *)
-			S.PUT( a + AddrSize + SizeSize, S.VAL( ADDRESS, 0 ) ); (* next *)
-			
-			beginBlockAdr := mBlock.beginBlockAdr;
-			endBlockAdr := mBlock.endBlockAdr;
+						
+			memoryBlock := mBlock;
 		END  
 	END ExpandHeap;
-	
+		
+	(* Set memory block end address *)
+	PROCEDURE SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS);
+	BEGIN
+		ASSERT(endBlockAdr >= memBlock.beginBlockAdr);
+		memBlock.endBlockAdr := endBlockAdr
+	END SetMemoryBlockEndAddress;
+
 	PROCEDURE TraceHeap( new: MemoryBlock );
 	VAR cur{UNTRACED}: MemoryBlock;
 	BEGIN
 		Trace.Ln;
 		Trace.String( "Heap expanded" );  Trace.Ln;
+		Trace.String("Static Heap: "); Trace.Hex(Glue.baseAdr, -8); Trace.String(" - "); Trace.Hex(Glue.endAdr, -8); 
+		Trace.Ln;
 		cur := memBlockHead;
 		WHILE cur # NIL DO
-			Trace.Hex( cur.startAdr, -8 );  Trace.String( "   " );  Trace.Int( cur.size, 15 );
+			Trace.Hex( cur.startAdr, -8 );  Trace.String( "   " );  Trace.Hex( cur.startAdr + cur.size, -8 );
 			IF cur = new THEN  Trace.String( "  (new)" )  END;
 			Trace.Ln;
 			cur := cur.next
 		END
 	END TraceHeap;
-	
+
+	(** Get first memory block and first free address, the first free address is identical to memBlockHead.endBlockAdr *)
+	PROCEDURE GetStaticHeap*(VAR beginBlockAdr, endBlockAdr, freeBlockAdr: ADDRESS);
+	BEGIN
+		beginBlockAdr := NIL; endBlockAdr := NIL; freeBlockAdr := NIL;
+	END GetStaticHeap;
+
 
 	(* returns if an address is a currently allocated heap address *)
 	PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
 	VAR mb: MemoryBlock; 
 	BEGIN
+		IF (p>=Glue.baseAdr) & (p<=Glue.endAdr) THEN RETURN TRUE END;
 		mb := memBlockHead;  
 		WHILE mb # NIL DO
 			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
 			mb := mb.next;  
 		END;  
-		RETURN FALSE  
+		RETURN FALSE;
 	END ValidHeapAddress;
 	
 
@@ -260,7 +262,7 @@ VAR
 	
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
-	PROCEDURE {REALTIME} Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE {SYSTEM.i386}
 		MOV EDI, [EBP+destAdr]
 		MOV ECX, [EBP+size]
@@ -274,7 +276,6 @@ VAR
 		CLD
 		REP STOSD
 	END Fill32;
-
 
 PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
 END Portin8;
@@ -342,7 +343,7 @@ CODE {SYSTEM.i386}
 END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-PROCEDURE {REALTIME} -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+PROCEDURE  -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
 CODE {SYSTEM.i386}
 	POP EBX		; new
 	POP EAX		; old
@@ -352,81 +353,81 @@ END AtomicCAS;
 
 
 (* Return current instruction pointer *)
-PROCEDURE {REALTIME} CurrentPC* (): ADDRESS;
+PROCEDURE  CurrentPC* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, [EBP+4]
 END CurrentPC;
 
 (* Return current frame pointer *)
-PROCEDURE {REALTIME} -CurrentBP* (): ADDRESS;
+PROCEDURE  -CurrentBP* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, EBP
 END CurrentBP;
 
 (* Set current frame pointer *)
-PROCEDURE {REALTIME} -SetBP* (bp: ADDRESS);
+PROCEDURE  -SetBP* (bp: ADDRESS);
 CODE {SYSTEM.i386}
 	POP EBP
 END SetBP;
 
 (* Return current stack pointer *)
-PROCEDURE {REALTIME} -CurrentSP* (): ADDRESS;
+PROCEDURE  -CurrentSP* (): ADDRESS;
 CODE {SYSTEM.i386}
 	MOV EAX, ESP
 END CurrentSP;
 
 (* Set current stack pointer *)
-PROCEDURE {REALTIME} -SetSP* (sp: ADDRESS);
+PROCEDURE  -SetSP* (sp: ADDRESS);
 CODE {SYSTEM.i386}
 	POP ESP
 END SetSP;
 
-PROCEDURE {REALTIME} -GetEAX*(): LONGINT;
+PROCEDURE  -GetEAX*(): LONGINT;
 CODE{SYSTEM.i386}
 END GetEAX;
 
-PROCEDURE {REALTIME} -GetECX*(): LONGINT;
+PROCEDURE  -GetECX*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,ECX	
 END GetECX;
 
-PROCEDURE {REALTIME} -GetESI*(): LONGINT;
+PROCEDURE  -GetESI*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,ESI	
 END GetESI;
 
-PROCEDURE {REALTIME} -GetEDI*(): LONGINT;
+PROCEDURE  -GetEDI*(): LONGINT;
 CODE{SYSTEM.i386}
 	MOV EAX,EDI	
 END GetEDI;
 
 
-PROCEDURE {REALTIME} -SetEAX*(n: LONGINT);
+PROCEDURE  -SetEAX*(n: LONGINT);
 CODE{SYSTEM.i386}	
 	POP EAX
 END SetEAX;
 
-PROCEDURE {REALTIME} -SetEBX*(n: LONGINT);
+PROCEDURE  -SetEBX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EBX
 END SetEBX;
 
-PROCEDURE {REALTIME} -SetECX*(n: LONGINT);
+PROCEDURE  -SetECX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP ECX
 END SetECX;
 
-PROCEDURE {REALTIME} -SetEDX*(n: LONGINT);
+PROCEDURE  -SetEDX*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EDX
 END SetEDX;
 
-PROCEDURE {REALTIME} -SetESI*(n: LONGINT);
+PROCEDURE  -SetESI*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP ESI
 END SetESI;
 
-PROCEDURE {REALTIME} -SetEDI*(n: LONGINT);
+PROCEDURE  -SetEDI*(n: LONGINT);
 CODE{SYSTEM.i386}
 	POP EDI
 END SetEDI;
@@ -504,8 +505,10 @@ END GetTimer;
 
 	(* function returning the number of processors that are available to Aos *)
 	PROCEDURE NumberOfProcessors*( ): LONGINT;
+	VAR res: LONGINT;
 	BEGIN
-		RETURN 1
+		res := Unix.getnprocs();
+		RETURN res;
 	END NumberOfProcessors;
 
 	(*! non portable code, for native Aos only *)
@@ -640,75 +643,49 @@ END GetTimer;
 
 	(* Initialize locks. *)
 	PROCEDURE InitLocks;  
-	VAR i: LONGINT;  
+	VAR i: LONGINT; 
 	BEGIN 
 		i := 0;  
-		WHILE i < MaxLocks DO  mtx[i] := mtxInit(0);  INC( i )  END;   
+		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  INC( i )  END;   
 	END InitLocks;  
 
 	PROCEDURE CleanupLocks*;  
 	VAR i: LONGINT;  
 	BEGIN 
 		i := 0;  
-		WHILE i < MaxLocks DO  mtxDestroy( mtx[i] );  INC( i ) END;  	
+		WHILE i < MaxLocks DO  Unix.MtxDestroy( mtx[i] );  INC( i ) END;  	
 	END CleanupLocks;  
 	
 	(** Acquire a spin-lock. *)
 	PROCEDURE  Acquire*( level: LONGINT );   (* non reentrant lock *)
 	BEGIN 
-		mtxLock( mtx[level] );
+		Unix.MtxLock( mtx[level] );
 	END Acquire;  
 
 	(** Release a spin-lock. *)
 	PROCEDURE  Release*( level: LONGINT );   
 	BEGIN 
-		mtxUnlock( mtx[level] );
+		Unix.MtxUnlock( mtx[level] );
 	END Release;  
 	
-	PROCEDURE  AcquireGC*( ): BOOLEAN;  
-	VAR res: BOOLEAN;
-	BEGIN 
-		mtxLock( mtx[GC] );
-		IF ~GCacquired THEN  GCacquired := TRUE;  res := TRUE  ELSE  res := FALSE  END;
-		mtxUnlock( mtx[GC] );
-		RETURN  res
-	END AcquireGC;  
-
-	(** Release a spin-lock. *)
-	PROCEDURE  ReleaseGC*;   
-	BEGIN 
-		mtxLock( mtx[GC] );
-		GCacquired := FALSE;
-		mtxUnlock( mtx[GC] )
-	END ReleaseGC;  
 	
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
-	VAR ignore: LONGINT;
+	VAR r: LONGINT;  logstat: Unix.Status;
 	BEGIN
-		ignore := Unix.close( logfile );
+		r := Unix.fstat( logfile, logstat );
+		r := Unix.close( logfile );
+		IF logstat.size = 0 THEN  r := Unix.unlink( ADDRESSOF( logname) )  END;
 		IF reboot THEN  Unix.exit( 0 )  ELSE  Unix.exit( 1 )  END;
 	END Shutdown;
 		
 
 		
 
-	PROCEDURE InitHeap;
-	VAR heapAdr, firstBlock: ADDRESS; size: SIZE;  
+	(* Set machine-dependent parameter gcThreshold *)
+	PROCEDURE SetGCParams*;
 	BEGIN
-		Unix.Dlsym( 0, "heapAdr", ADDRESSOF( heapAdr ) );  
-		Unix.Dlsym( 0, "heapSize", ADDRESSOF( size ) );  
-		firstBlock := heapAdr + ((-heapAdr - AddrSize) MOD BlockSize);
-		size := heapAdr + size - BlockSize - firstBlock;  DEC( size, size MOD BlockSize + BlockSize );
-
-		firstMemBlock.next := NIL;
-		firstMemBlock.startAdr := heapAdr;
-		firstMemBlock.beginBlockAdr :=  firstBlock;
-		firstMemBlock.endBlockAdr := firstBlock + size;  
-		firstMemBlock.size := size;
-	
-		memBlockHead := S.VAL( MemoryBlock, ADDRESSOF( firstMemBlock ) );
-		memBlockTail := memBlockHead;
-	END InitHeap;
+		gcThreshold := 10*1024*1024; (* 10 MB *)
+	END SetGCParams;
 
 	PROCEDURE InitConfig;
 	VAR a: ADDRESS;  i: LONGINT;  c: CHAR;
@@ -732,7 +709,7 @@ END GetTimer;
 	PROCEDURE InitThreads;
 	VAR res: BOOLEAN; 
 	BEGIN
-		res := thrInitialize( prioLow, prioHigh );
+		res := Unix.ThrInitialize( prioLow, prioHigh );
 		IF ~res THEN
 			Trace.StringLn( "Machine.InitThreads: no threads support in boot environment.  teminating" ); 
 			Unix.exit( 1 )
@@ -747,7 +724,7 @@ END GetTimer;
 	PROCEDURE CPUSpeed;
 	VAR t0, t1: HUGEINT; 
 	BEGIN
-		t0 := GetTimer();  thrSleep( 100 );  t1 := GetTimer();
+		t0 := GetTimer();  Unix.ThrSleep( 100 );  t1 := GetTimer();
 		mhz := (t1 - t0) DIV 100000;
 		IF Glue.debug # {} THEN
 			Trace.String( "CPU speed: ~" );  Trace.Int( SHORT( mhz ), 0);  Trace.String( " MHz" );  Trace.Ln
@@ -755,37 +732,30 @@ END GetTimer;
 	END CPUSpeed;
 	
 	PROCEDURE Log( c: CHAR );
-	VAR ignore: LONGINT;
+	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( 1, ADDRESSOF( c ), 1 );
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END Log;
 	
 	PROCEDURE LogFileOnly( c: CHAR );
-	VAR ignore: LONGINT;
+	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END LogFileOnly;
 	
 	
 	PROCEDURE InitLog;
-	VAR name, cmd: ARRAY 32 OF CHAR;  pid, i: LONGINT; 
+	VAR pid, i: LONGINT; 
 	BEGIN
-		name := "AOS.xxxxx.Log";
+		logname := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;
 		REPEAT
-			name[i] := CHR( pid MOD 10 + ORD( '0' ) );  DEC( i );
+			logname[i] := CHR( pid MOD 10 + ORD( '0' ) );  DEC( i );
 			pid := pid DIV 10;		
 		UNTIL i = 3;
-		logfile := Unix.open( ADDRESSOF( name ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-		IF Unix.argc > 2 THEN
-			Unix.GetArgval( "-x", cmd );
-			IF cmd # "" THEN  SilentLog;  standaloneAppl := TRUE 
-			ELSE  VerboseLog 
-			END
-		ELSE
-			VerboseLog
-		END
+		logfile := Unix.open( ADDRESSOF( logname ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
+		VerboseLog;	
 	END InitLog;
 	
 	PROCEDURE SilentLog*;
@@ -811,31 +781,13 @@ END GetTimer;
 
 	PROCEDURE Init;
 	VAR vendor: Vendor; ver: LONGINT;
-	BEGIN
-		Unix.Dlsym( 0, "thrInitialize",	ADDRESSOF( thrInitialize ) );
+	BEGIN		
+		COPY( Unix.Version, version );  Append( version, Version ); Append(version, S.Date);
 		
-		Unix.Dlsym( 0, "mtxInit",		ADDRESSOF( mtxInit ) );
-		Unix.Dlsym( 0, "mtxDestroy",	ADDRESSOF( mtxDestroy ) );
-		Unix.Dlsym( 0, "mtxLock",		ADDRESSOF( mtxLock ) );
-		Unix.Dlsym( 0, "mtxUnlock",	ADDRESSOF( mtxUnlock ) );
-		
-		Unix.Dlsym( 0, "conInit",		ADDRESSOF( conInit ) );
-		Unix.Dlsym( 0, "conDestroy",	ADDRESSOF( conDestroy ) );
-		Unix.Dlsym( 0, "conWait",		ADDRESSOF( conWait ) );
-		Unix.Dlsym( 0, "conSignal",	ADDRESSOF( conSignal ) );
-			
-		Unix.Dlsym( 0, "thrSleep",	ADDRESSOF( thrSleep ) );
-		Unix.Dlsym( 0, "thrThis",		ADDRESSOF( thrThis ) );
-		
-		standaloneAppl := FALSE;
-				
-		COPY( Unix.Version, version );  Append( version, Version );
 		timer0 := GetTimer( );  ticks := 0;
 		InitThreads;
 		InitLocks;
-
 		traceHeap := 1 IN Glue.debug;
-		InitHeap;
 		InitConfig;
 		InitLog;
 		CPUSpeed;
@@ -845,8 +797,11 @@ END GetTimer;
 		fcr := (FCR() - {0,2,3,10,11}) + {0..5,8,9};	(* default FCR RC=00B *)
 	END Init;
 
-BEGIN
-	Init
+	PROCEDURE {INITIAL} Init0*;
+	BEGIN
+		Init;
+	END Init0;
+	
 END Machine.
 
 (*

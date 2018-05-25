@@ -1,0 +1,14 @@
+MODULE BinToCode;
+	IMPORT Files, Commands, Streams;
+CONST 
+	BufferAddressName = \"a"\; 
+	MaxBufferSize = 4; 
+TYPE 
+	Buffer = ARRAY MaxBufferSize OF CHAR; 
+VAR 
+	hexdigit: ARRAY 17 OF CHAR; 
+
+	PROCEDURE ^ WriteBuffer(w: Streams.Writer; CONST buffer: Buffer; offset, size: LONGINT); 
+	PROCEDURE ^ Convert*(context: Commands.Context); 
+BEGIN
+END BinToCode.

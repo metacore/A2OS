@@ -1,0 +1,53 @@
+MODULE V24;
+	IMPORT Unix, Log := KernelLog, Serials, Objects, Commands, Strings;
+CONST 
+	TIOCM_LE = 0; 
+	TIOCM_DTR = 1; 
+	TIOCM_RTS = 2; 
+	TIOCM_ST = 3; 
+	TIOCM_SR = 4; 
+	TIOCM_CTS = 5; 
+	TIOCM_CAR = 6; 
+	TIOCM_RNG = 7; 
+	TIOCM_DSR = 8; 
+	TIOCM_CD = TIOCM_CAR; 
+	TIOCM_RI = TIOCM_RNG; 
+	IGNBRK = {0}; 
+	BRKINT = {1}; 
+	IGNPAR = {2}; 
+	TCSANOW = 0; 
+	TCSADRAIN = 1; 
+	TCSAFLUSH = 2; 
+	NumberOfPorts = 4; 
+TYPE 
+	Port* = OBJECT {EXCLUSIVE} (Serials.Port)
+	VAR 
+		fd: LONGINT; 
+		portname: ARRAY 128 OF CHAR; 
+
+		PROCEDURE ^  & Init*(port: LONGINT; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ ClearMC*(s: SET); 
+		PROCEDURE ^ SetMC*(s: SET); 
+		PROCEDURE ^ GetMC*(VAR s: SET); 
+	END Port; 
+VAR 
+	tcgetattr: PROCEDURE {C}(fd: LONGINT; VAR tio: Unix.Termios):LONGINT; 
+	tcsetattr: PROCEDURE {C}(fd: LONGINT; action: LONGINT; VAR tio: Unix.Termios):LONGINT; 
+	cfsetispeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: LONGINT):LONGINT; 
+	cfsetospeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: LONGINT):LONGINT; 
+	cfgetispeed: PROCEDURE {C}(VAR tio: Unix.Termios):LONGINT; 
+	cfgetospeed: PROCEDURE {C}(VAR tio: Unix.Termios):LONGINT; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Map*(context: Commands.Context); 
+	PROCEDURE ^ Initialize; 
+BEGIN
+END V24.

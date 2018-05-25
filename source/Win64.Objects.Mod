@@ -1348,4 +1348,4 @@ SystemTools.ShowStacks ~
 
 Heaps.SetMetaData 
 
-StaticLinker.Link --fileFormat=PE32 --fileName=A2GC.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+Linker.Link --fileFormat=PE32 --fileName=A2GC.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~

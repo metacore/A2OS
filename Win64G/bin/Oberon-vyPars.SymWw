@@ -1,8 +1,0 @@
-MODULE vyPars IN Oberon;
-	IMPORT vyHostTexts, vyParser;
-CONST 
-	idversion* = \"vyPar v0.1d0"\; 
-
-	PROCEDURE ^ OpenParScanner(VAR sc: vyParser.Scanner); 
-BEGIN
-END vyPars.

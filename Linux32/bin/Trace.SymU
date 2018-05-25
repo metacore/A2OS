@@ -1,0 +1,36 @@
+MODULE Trace;
+	IMPORT SYSTEM;
+CONST 
+TYPE 
+	CharProc* = PROCEDURE (c: CHAR); 
+VAR 
+	Char*: CharProc; 
+	Color*: PROCEDURE (c: SHORTINT); 
+
+	PROCEDURE ^ Enter*; 
+	PROCEDURE ^ Exit*; 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Ln*; 
+	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ StringLn*(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Int*(x: HUGEINT; w: LONGINT); 
+	PROCEDURE ^ Boolean*(x: BOOLEAN); 
+	PROCEDURE ^ IntSuffix*(x, w: LONGINT; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Hex*(x: HUGEINT; w: LONGINT); 
+	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ HIntHex*(x: HUGEINT; w: LONGINT); 
+	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ StackFrames-(skip, count, size: SIZE); 
+	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+	PROCEDURE ^ Bits*(x: SET; ofs, n: LONGINT); 
+	PROCEDURE ^ Set*(x: SET); 
+	PROCEDURE ^ Blue*; 
+	PROCEDURE ^ Green*; 
+	PROCEDURE ^ Red*; 
+	PROCEDURE ^ Yellow*; 
+	PROCEDURE ^ Default*; 
+	PROCEDURE ^ NullChar(c: CHAR); 
+	PROCEDURE ^ NullColor(c: SHORTINT); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END Trace.

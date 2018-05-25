@@ -1,0 +1,25 @@
+MODULE FNHistories;
+	IMPORT KernelLog;
+CONST 
+TYPE 
+	HistoryItem = POINTER TO RECORD 
+		item: ANY; 
+		previous, next: HistoryItem; 
+	END; 
+
+	History* = OBJECT 
+	VAR 
+		start, current: HistoryItem; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
+		PROCEDURE ^ Insert*(item: ANY); 
+		PROCEDURE ^ GetCurrent*(): ANY; 
+		PROCEDURE ^ Back*(): BOOLEAN; 
+		PROCEDURE ^ BackTo*(item: ANY): BOOLEAN; 
+		PROCEDURE ^ Forward*(): BOOLEAN; 
+		PROCEDURE ^ ForwardTo*(item: ANY): BOOLEAN; 
+		PROCEDURE ^ Dump*; 
+	END History; 
+BEGIN
+END FNHistories.

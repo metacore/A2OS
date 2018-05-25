@@ -1,7 +1,0 @@
-MODULE WTSPict IN Oberon;
-	IMPORT WTS, Pictures, Objects, Files, Rembrandt;
-
-	PROCEDURE ^ Load(P: Pictures.Picture; VAR R: Files.Rider); 
-	PROCEDURE ^ New*; 
-BEGIN
-END WTSPict.

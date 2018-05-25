@@ -1,0 +1,32 @@
+MODULE ColorTools IN Oberon;
+	IMPORT Objects, Gadgets, Effects, Display, Display3, Oberon, Files, Input, Texts, Views, Printer, Printer3;
+CONST 
+	VersionNo = 2; 
+	ModName = \"ColorTools"\; 
+TYPE 
+	ColorPicker* = POINTER TO ColorPickerDesc; 
+
+	ColorPickerDesc* = RECORD (Gadgets.FrameDesc)
+		cmd*: ARRAY 64 OF CHAR; 
+		colors*: ARRAY 256 OF INTEGER; 
+		col*: INTEGER; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ WriteVersion(VAR R: Files.Rider); 
+	PROCEDURE ^ Parse(VAR s: ARRAY OF CHAR; VAR n: INTEGER; VAR values: ARRAY OF INTEGER); 
+	PROCEDURE ^ Unparse(n: INTEGER; VAR values: ARRAY OF INTEGER; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ ColorPickerAttr(F: ColorPicker; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Grid(F: ColorPicker; R: Display3.Mask; b, x, y: INTEGER); 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ PickColor(F: ColorPicker; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ RestoreColorPicker(R: Display3.Mask; F: ColorPicker; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PrintColorPicker(F: ColorPicker; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyColorPicker*(VAR M: Objects.CopyMsg; from, to: ColorPicker); 
+	PROCEDURE ^ ColorPickerHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitColorPicker*(F: ColorPicker); 
+	PROCEDURE ^ NewColorPicker*; 
+	PROCEDURE ^ ChangeColor*; 
+BEGIN
+END ColorTools.

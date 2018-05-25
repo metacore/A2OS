@@ -1,0 +1,97 @@
+MODULE Events;
+	IMPORT KernelLog, Modules, Clock;
+CONST 
+	Unknown* =  -1; 
+	Undefined* = 0; 
+	Information* = 1; 
+	Warning* = 2; 
+	Error* = 3; 
+	Critical* = 4; 
+	Alert* = 5; 
+	Failure* = 6; 
+	Running = 1; 
+	Terminating = 2; 
+	Terminated = 3; 
+	QueueSize = 256; 
+	ModuleName = \"Events"\; 
+	Verbose = TRUE; 
+	Debug = FALSE; 
+TYPE 
+	Name* = Modules.Name; 
+
+	Message* = ARRAY 468 OF CHAR; 
+
+	Event* = RECORD 
+		originator*: Name; 
+		type*, class*, subclass*, code*: SHORTINT; 
+		message*: Message; 
+		date*, time*: LONGINT; 
+	END; 
+
+	Sink* = OBJECT {EXCLUSIVE} 
+	VAR 
+		name*: Name; 
+		next: Sink; 
+		filters: Filter; 
+
+		PROCEDURE ^ AddFilter*(filter: Filter); 
+		PROCEDURE ^ RemoveFilter*(filter: Filter); 
+		PROCEDURE ^ HandleInternal(event: Event); 
+		PROCEDURE ^ Handle*(event: Event); 
+	END Sink; 
+
+	FilterO* = OBJECT 
+	VAR 
+		next: FilterO; 
+
+		PROCEDURE ^ Filter*(event: Event; VAR discard: BOOLEAN); 
+	END FilterO; 
+
+	Filter* = FilterO; 
+
+	EventQueue = OBJECT {EXCLUSIVE} 
+	VAR 
+		size: LONGINT; 
+		head, len: LONGINT; 
+		ringbuffer: POINTER TO ARRAY OF Event; 
+		running: BOOLEAN; 
+
+		PROCEDURE ^ Enqueue(event: Event): BOOLEAN; 
+		PROCEDURE ^ Dequeue(VAR event: Event); 
+		PROCEDURE ^ IsFull(): BOOLEAN; 
+		PROCEDURE ^ IsEmpty(): BOOLEAN; 
+		PROCEDURE ^ AwaitEvents; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^  & Init*(size: LONGINT); 
+	END EventQueue; 
+
+	EventDispatcher = OBJECT {EXCLUSIVE} 
+	VAR 
+		state: LONGINT; 
+		queue: EventQueue; 
+		sinks: Sink; 
+
+		PROCEDURE ^ Register(sink: Sink); 
+		PROCEDURE ^ Unregister(sink: Sink); 
+		PROCEDURE ^ Dispatch(event: Event); 
+		PROCEDURE ^ DispatchEvents; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^  & Init*; 
+	BEGIN{ACTIVE} 
+	END EventDispatcher; 
+VAR 
+	dispatcher: EventDispatcher; 
+	NnofEvents-, NnofDiscarded-, NnofEventsHandled-, NnofEventsNotHandled-, NnofUnknown-, NnofUndefined-, NnofInformation-, NnofWarning-, NnofError-, NnofCritical-, NnofFailure-, NnofListeners-: LONGINT; 
+
+	PROCEDURE ^ Register*(sink: Sink); 
+	PROCEDURE ^ Unregister*(sink: Sink); 
+	PROCEDURE ^ Add*(event: Event; showOnKernelLog: BOOLEAN); 
+	PROCEDURE ^ AddEvent*(CONST originator: Name; type, class, subclass, code: SHORTINT; CONST message: Message; showOnKernelLog: BOOLEAN); 
+	PROCEDURE ^ NewEvent*(CONST originator: Name; type, class, subclass, code: SHORTINT; CONST message: Message): Event; 
+	PROCEDURE ^ ShowOnKernelLog(event: Event); 
+	PROCEDURE ^ UpdateStats(event: Event; discarded: BOOLEAN); 
+	PROCEDURE ^ ClearStats*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Events.

@@ -1,0 +1,24 @@
+MODULE TGA IN Oberon;
+	IMPORT Display, Files, Objects, Out, Pictures;
+CONST 
+TYPE 
+	Color = ARRAY 3 OF INTEGER; 
+
+	Header = RECORD 
+		IDlength: CHAR; 
+		cmap, type: SHORTINT; 
+		cmaporigin, cmaplength: INTEGER; 
+		csize: SHORTINT; 
+		xorigin, yorigin, width, height: INTEGER; 
+		depth, descriptor: SHORTINT; 
+	END; 
+
+	PROCEDURE ^ GetTgaHeader(VAR R: Files.Rider; VAR H: Header): BOOLEAN; 
+	PROCEDURE ^ DataFieldError; 
+	PROCEDURE ^ GetPalette(VAR R: Files.Rider; P: Pictures.Picture; H: Header): BOOLEAN; 
+	PROCEDURE ^ LoadTga(VAR R: Files.Rider; colorConversion: BOOLEAN; P: Pictures.Picture); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitPicture*; 
+	PROCEDURE ^ NewPicture*; 
+BEGIN
+END TGA.

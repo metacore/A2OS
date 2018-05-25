@@ -1,0 +1,19 @@
+MODULE CalcD4;
+	IMPORT NbrInt, NbrRe, NbrCplx, MathRe, CalcFn;
+CONST 
+	Forward* = 9; 
+	Central* = 10; 
+	Backward* = 11; 
+VAR 
+	epsilon, zero: NbrRe.Real; 
+
+	PROCEDURE ^ DoNothing(x: NbrRe.Real); 
+	PROCEDURE ^ DoCplxNothing(z: NbrCplx.Complex); 
+	PROCEDURE ^ Solve*(f: CalcFn.ReArg; atX: NbrRe.Real; differencing: NbrInt.Integer): NbrRe.Real; 
+	PROCEDURE ^ SolveCplx*(f: CalcFn.CplxArg; atZ: NbrCplx.Complex; differencing: NbrInt.Integer): NbrCplx.Complex; 
+	PROCEDURE ^ SolveCplxRe*(f: CalcFn.CplxArg; atZ: NbrCplx.Complex; differencing: NbrInt.Integer): NbrCplx.Complex; 
+	PROCEDURE ^ SolveCplxIm*(f: CalcFn.CplxArg; atZ: NbrCplx.Complex; differencing: NbrInt.Integer): NbrCplx.Complex; 
+	PROCEDURE ^ SolveCplxAbs*(f: CalcFn.CplxArg; atZ: NbrCplx.Complex; differencing: NbrInt.Integer): NbrCplx.Complex; 
+	PROCEDURE ^ SolveCplxArg*(f: CalcFn.CplxArg; atZ: NbrCplx.Complex; differencing: NbrInt.Integer): NbrCplx.Complex; 
+BEGIN
+END CalcD4.

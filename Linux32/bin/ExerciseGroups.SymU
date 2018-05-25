@@ -1,0 +1,191 @@
+MODULE ExerciseGroups;
+	IMPORT WebComplex, WebAccounts, WebStd, DynamicWebpage, PrevalenceSystem, HTTPSupport, HTTPSession, XML, XMLObjects, Strings, DynamicStrings, TFClasses, KernelLog;
+CONST 
+	SingleGroupDatagridName = \"SingleGroupDatagrid"\; 
+	AllGroupsDatagridName = \"AllGroupsDatagrid"\; 
+	ThisModuleNameStr = \"ExerciseGroups"\; 
+	AllGroupsContainerPrefixName = \"dxp-exercisegroups-allgroups-"\; 
+	PersonGradePrefixName = \"dxp-grade-"\; 
+	NextButtonLabel = \"Weiter"\; 
+	BackButtonLabel = \"Zurueck"\; 
+	SearchText = \"Suchen: "\; 
+	EmptyListText = \"Kein Eintrag"\; 
+	InsertGroupText = \"Neue Gruppe erstellen"\; 
+	SubmitButtonLabel = \"Speichern"\; 
+	UnapplySortLabel = \"Sortierung aufheben"\; 
+	UnapplyFilterLabel = \"Alle Eintraege anzeigen"\; 
+	ExerciseName = \"Uebung "\; 
+	EditExerciseGradesLabel = \"Uebungsuebersicht anschauen"\; 
+	CloseExerciseGradesLabel = \"Zurueck zur Liste der Uebungsgruppenmitglieder"\; 
+	EmailToTheWholeGroup = \"E-Mail an die ganze Gruppe"\; 
+	AddNewExerciseLabel = \"Neue Aufgabe einfuegen"\; 
+	DeleteAnExerciseLabel = \"Aufgabe loeschen"\; 
+	SendGradeNotoficationLabel = \"Student benachrichtigen"\; 
+	InsertToGroupLabel = \"In Uebungsgruppe eintragen"\; 
+	GradeNotificationSubject = \"Geloeste Uebungen"\; 
+	GradeNotificationSalutation = \"Hallo"\; 
+	GradeNotificationBodyHead = \"Du hast die folgende Anzahl Punkte in den Uebungen erreicht:"\; 
+	GradeNotificationBodyTail = \"Tschuess"\; 
+	MailCR = \"%0D%0A"\; 
+TYPE 
+	IntObj = OBJECT 
+	VAR 
+		number: LONGINT; 
+	END IntObj; 
+
+	IntList = OBJECT {EXCLUSIVE} 
+	VAR 
+		list: TFClasses.List; 
+		locked: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetCount(): LONGINT; 
+		PROCEDURE ^ GetItem(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ GetIntObj(pos: LONGINT): IntObj; 
+		PROCEDURE ^ Exchange(pos, newNumber: LONGINT); 
+		PROCEDURE ^ Add(newNumber: LONGINT); 
+		PROCEDURE ^ Remove(pos: LONGINT); 
+		PROCEDURE ^ Lock; 
+		PROCEDURE ^ Unlock; 
+	END IntList; 
+
+	Person* = OBJECT {EXCLUSIVE} (WebComplex.WebForumEntry)
+	VAR 
+		firstname: Strings.String; 
+		lastname: Strings.String; 
+		email: Strings.String; 
+		leginr: Strings.String; 
+		grades: IntList; 
+
+		PROCEDURE ^ Internalize*(input: XML.Content); 
+		PROCEDURE ^ Externalize*(): XML.Content; 
+		PROCEDURE ^ TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): WebComplex.TableRow; 
+		PROCEDURE ^ DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetGradesDetailView(): XML.Content; 
+		PROCEDURE ^ EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetExerciseListHeaderRow(nofCols: LONGINT): XML.Element; 
+	END Person; 
+
+	SingleGroupDatagrid* = OBJECT (WebComplex.WebForum)
+	VAR 
+		searchText: Strings.String; 
+		maxEntries: LONGINT; 
+
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetHeaderXMLContent*(persContainer: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ ThisObjectName*(): Strings.String; 
+		PROCEDURE ^ ThisModuleName*(): Strings.String; 
+		PROCEDURE ^ GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow; 
+		PROCEDURE ^ GetSearchFilter*(text: Strings.String): WebStd.PersistentDataFilter; 
+		PROCEDURE ^ SearchFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ GetDefaultOrdering*(): WebStd.PersistentDataCompare; 
+		PROCEDURE ^ GetEmptyListMessage*(request: HTTPSupport.HTTPRequest): XML.Container; 
+		PROCEDURE ^ GetBackButtonLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetInsertLinkLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetSubmitButtonLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetUnapplySortLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetUnapplyFilterLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ CompareFirstName(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareEmail(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareLegiNr(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+	END SingleGroupDatagrid; 
+
+	Group* = OBJECT {EXCLUSIVE} (WebComplex.WebForumEntry)
+	VAR 
+		name: Strings.String; 
+		assistant: Strings.String; 
+		date: Strings.String; 
+		place: Strings.String; 
+		info: Strings.String; 
+		openToJoin: BOOLEAN; 
+		maxPeople: LONGINT; 
+		members: WebStd.PersistentDataContainer; 
+		membersDgId: Strings.String; 
+		gradesEditListId: Strings.String; 
+		toggleBlockId: Strings.String; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Internalize*(input: XML.Content); 
+		PROCEDURE ^ Externalize*(): XML.Content; 
+		PROCEDURE ^ GetReferrencedObjects*(): PrevalenceSystem.PersistentObjectList; 
+		PROCEDURE ^ UpdateGrade(personOid, exerciseNo, newGrade: LONGINT); 
+		PROCEDURE ^ GetFreePlaces(): Strings.String; 
+		PROCEDURE ^ TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): WebComplex.TableRow; 
+		PROCEDURE ^ DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetGradesEditListView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetSingleGroupDatagridView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ AddNewExercise; 
+		PROCEDURE ^ DeleteExercise(pos: LONGINT); 
+	END Group; 
+
+	AllGroupsDatagrid* = OBJECT (WebComplex.WebForum)
+	VAR 
+		searchText: Strings.String; 
+		accessConstraint: XML.Element; 
+		reInitializeSubContainer: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ UpdateObject*(obj: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
+		PROCEDURE ^ ThisObjectName*(): Strings.String; 
+		PROCEDURE ^ ThisModuleName*(): Strings.String; 
+		PROCEDURE ^ GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow; 
+		PROCEDURE ^ GetEmptyListMessage*(request: HTTPSupport.HTTPRequest): XML.Container; 
+		PROCEDURE ^ GetBackButtonLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetInsertLinkLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetSubmitButtonLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetUnapplySortLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetUnapplyFilterLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
+		PROCEDURE ^ GetSearchFilter*(text: Strings.String): WebStd.PersistentDataFilter; 
+		PROCEDURE ^ SearchFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareName(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareAssistant(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareDate(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ ComparePlace(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+		PROCEDURE ^ CompareInfo(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+	END AllGroupsDatagrid; 
+
+	GradesEditList* = OBJECT (DynamicWebpage.StateFullActiveElement)
+	VAR 
+		group: Group; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ TransformForGroup(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetGradesEditView(objectId: Strings.String; activeOrdering: WebStd.PersistentDataCompare): XML.Content; 
+		PROCEDURE ^ GetExerciseListHeaderRow(objectId: Strings.String; allowDelete: BOOLEAN; nofCols: LONGINT): XML.Element; 
+		PROCEDURE ^ GetPersonGradesEditRow(nofCols: LONGINT; person: Person): XML.Element; 
+		PROCEDURE ^ GetNotification(person: Person): XML.Content; 
+		PROCEDURE ^ UpdateList(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ AddNewExercise(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ DeleteExercise(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
+		PROCEDURE ^ GetEventHandlers*(): DynamicWebpage.EventHandlerList; 
+	END GradesEditList; 
+
+	SummaryList* = OBJECT (DynamicWebpage.StateLessActiveElement)
+
+		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
+	END SummaryList; 
+VAR 
+	personDesc: PrevalenceSystem.PersistentObjectDescriptor; 
+	groupDesc: PrevalenceSystem.PersistentObjectDescriptor; 
+
+	PROCEDURE ^ IsAuthorizedUser(request: HTTPSupport.HTTPRequest): BOOLEAN; 
+	PROCEDURE ^ CompareLastName(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 
+	PROCEDURE ^ GetNewPerson(): PrevalenceSystem.PersistentObject; 
+	PROCEDURE ^ GetNewGroup(): PrevalenceSystem.PersistentObject; 
+	PROCEDURE ^ GetPersistentObjectDescriptors*(): PrevalenceSystem.PersistentObjectDescSet; 
+	PROCEDURE ^ CreateSingleGroupDgElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateAllGroupsDatagridElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateGradesEditListElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ CreateSummaryListElement(): DynamicWebpage.ActiveElement; 
+	PROCEDURE ^ GetActiveElementDescriptors*(): DynamicWebpage.ActiveElementDescSet; 
+BEGIN
+END ExerciseGroups.

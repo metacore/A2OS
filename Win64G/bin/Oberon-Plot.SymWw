@@ -1,9 +1,0 @@
-MODULE Plot IN Oberon;
-	IMPORT Objects, Gadgets, BasicGadgets, Math IN A2;
-CONST 
-
-	PROCEDURE ^ FindY(): BasicGadgets.Integer; 
-	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: REAL): REAL; 
-	PROCEDURE ^ Plot*; 
-BEGIN
-END Plot.

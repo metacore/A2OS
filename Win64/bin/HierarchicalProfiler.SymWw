@@ -1,0 +1,111 @@
+MODULE HierarchicalProfiler;
+	IMPORT SYSTEM, Machine, Streams, Modules, Objects, Kernel, Reflection, Commands, Options, Strings, Errors, HierarchicalProfiler0;
+CONST 
+	Ok* = 0; 
+	AlreadyRunning* = 5101; 
+	NotRunning* = 5102; 
+	NoProfileDataAvailable* = 5103; 
+	SampleBufferFull* = 5104; 
+	SampleBufferNotInitialized* = 5105; 
+	Hierarchical* = 0; 
+	Flat* = 1; 
+	None* = 0; 
+	Threads* = 1; 
+	Processors* = 2; 
+	ThreadsProcessors* = 3; 
+	ProcessorsThreads* = 4; 
+	NotRunningNoDataAvailable* = 0; 
+	NotRunningDataAvailable* = 1; 
+	Running* = 2; 
+	DefaultMaxTime = 30; 
+	MaxUnwindingDepth = 64; 
+	Invalid = 0; 
+TYPE 
+	Name = ARRAY 256 OF CHAR; 
+
+	Sample = ARRAY MaxUnwindingDepth OF ADDRESS; 
+
+	Samples = POINTER TO ARRAY OF Sample; 
+
+	SampleInfo = RECORD 
+		processorID: LONGINT; 
+		process: Objects.Process; 
+	END; 
+
+	SampleInfos = POINTER TO ARRAY OF SampleInfo; 
+
+	Node* = OBJECT 
+	VAR 
+		parent-: Node; 
+		child-: Node; 
+		sibling-: Node; 
+		count-: LONGINT; 
+		percent-: REAL; 
+		nofChildren-: LONGINT; 
+		name-: Name; 
+		extern*: BOOLEAN; 
+		marked*: BOOLEAN; 
+		next: Node; 
+
+		PROCEDURE ^ GetCaption*(): Strings.String; 
+		PROCEDURE ^ Show(out: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END Node; 
+
+	VisitorProcedure* = PROCEDURE {DELEGATE}(node: Node); 
+
+	Profile* = OBJECT {EXCLUSIVE} 
+	VAR 
+		nodes-: Node; 
+		nofSamples-: LONGINT; 
+		nofProcessors-: LONGINT; 
+		nofRunsTooDeep-: LONGINT; 
+		nofUnwindingFaults-: LONGINT; 
+		nofSamplesNotStored-: LONGINT; 
+		pattern: ARRAY 64 OF CHAR; 
+		minPercent: LONGINT; 
+
+		PROCEDURE ^ FindNode(CONST name: Name; list: Node): Node; 
+		PROCEDURE ^ MergeNode(newNode, parent: Node); 
+		PROCEDURE ^ Flatten*(parent: Node); 
+		PROCEDURE ^ VisitorClearMark(node: Node); 
+		PROCEDURE ^ Mark*(CONST pattern: ARRAY OF CHAR; minPercent: LONGINT); 
+		PROCEDURE ^ VisitorSetMark(node: Node); 
+		PROCEDURE ^ VisitNodes(node: Node; visitorProc: VisitorProcedure); 
+		PROCEDURE ^ Visit*(visitorProc: VisitorProcedure); 
+		PROCEDURE ^  & Init*; 
+	END Profile; 
+VAR 
+	samples: Samples; 
+	sampleInfos: SampleInfos; 
+	maxNofSamples: LONGINT; 
+	nofRunsTooDeep: LONGINT; 
+	nofUnwindingFaults: LONGINT; 
+	nofSamplesNotStored: LONGINT; 
+	nofSamples: LONGINT; 
+	currentIndex: LONGINT; 
+	locked: BOOLEAN; 
+	state: LONGINT; 
+
+	PROCEDURE ^ FindChildNode(CONST name: Name; parent: Node): Node; 
+	PROCEDURE ^ MergeChildNode(CONST procedureName: ARRAY OF CHAR; parent: Node): Node; 
+	PROCEDURE ^ AddSample(profile: Node; type, info: LONGINT; CONST sampleInfo: SampleInfo; CONST sample: Sample); 
+	PROCEDURE ^ HandleTimer(id: LONGINT; process: Objects.Process; pc, bp, lowAdr, highAdr: ADDRESS); 
+	PROCEDURE ^ InvalidateSample(VAR sample: Sample); 
+	PROCEDURE ^ SortChildren(parent: Node); 
+	PROCEDURE ^ PostProcessNode(profile: Profile; node: Node); 
+	PROCEDURE ^ PostProcessProfile(profile: Profile); 
+	PROCEDURE ^ CreateProfile(type: LONGINT; info: LONGINT): Profile; 
+	PROCEDURE ^ GetBufferSize*(time: LONGINT): LONGINT; 
+	PROCEDURE ^ GetProfile*(type, info: LONGINT; VAR profile: Profile; VAR res: LONGINT); 
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ StartProfiling*(maxTime: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ StopProfiling*(VAR res: LONGINT); 
+	PROCEDURE ^ Continue*(context: Commands.Context); 
+	PROCEDURE ^ ContinueProfiling*(VAR res: LONGINT); 
+	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: LONGINT): LONGINT; 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END HierarchicalProfiler.

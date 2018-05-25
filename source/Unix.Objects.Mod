@@ -27,67 +27,47 @@ CONST
 
 	(* Process modes (in UnixAos Running means Running or Ready!) *)
 	Unknown* = 0;  Ready* = 1;  Running* = 2;  AwaitingLock* = 3;
-	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6;
+	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6; 
 
 	Second* = 1000;	(* frequency of ticks increments in Hz *)
 
 	DefaultStacksize = 128*1024;
 	
-	AddrSize = SIZEOF( ADDRESS )
-
 
 VAR
 	(* timer *)
 	timerActivity		: TimerActivity;
+	clock				: Clock;
 	timers				: Timer;  
 	timerListMutex	: Unix.Mutex_t;
 	
+	timerStopped: BOOLEAN;
+	
 	(* processes *)
-	mainProcess	: Process;	(* runs the GC *)
+	SystemA2Up- 	: BOOLEAN;
 	root-	: Process;	(*!  Anchor of all instantiated threads in system *)
 	stacksize: LONGINT;		(* stack size of active objects, adjustable via boot parameter *)
 	
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
-	startProcess	: Unix.Mutex_t;
+	startProcess		: Unix.Mutex_t;
+	lockMutex		: Unix.Mutex_t;
 	childrunning		: Unix.Condition_t;
-		
+	
+	processPointer	: Unix.Key_t;
+	
 	newProcess: Process;
 	nextPID: LONGINT;
 	
-	(* garbage colletion *)
-	gcFinished: Unix.Condition_t; igc: Unix.Mutex_t;
-	collect: BOOLEAN;
 	finalizerCaller	: FinalizerCaller;
-	finCaller			: Process;
-	
-	
-	(* the dummy parameters assure proper stack alignment when compiled with 
-		option "\A" or "--darwinHost" *)
-	mtxInit: 		PROCEDURE {REALTIME, C}  ( dummy: LONGINT ): Unix.Mutex_t;
-	mtxDestroy: 	PROCEDURE {REALTIME, C}  ( mtx: Unix.Mutex_t );
-	mtxLock: 		PROCEDURE {REALTIME, C}  ( mtx: Unix.Mutex_t );
-	mtxUnlock:	PROCEDURE {REALTIME, C}  ( mtx: Unix.Mutex_t );
-
-	conInit: 		PROCEDURE {REALTIME, C}  ( dummy: LONGINT ): Unix.Condition_t;
-	conDestroy:	PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	conWait: 		PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t;  mtx: Unix.Mutex_t );
-	conSignal: 	PROCEDURE {REALTIME, C}  ( cond: Unix.Condition_t );
-	
-	thrStart: 			PROCEDURE {REALTIME, C} ( p: PROCEDURE;  stackLen: LONGINT ): Unix.Thread_t;
-	thrThis: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT ): Unix.Thread_t;
-	thrSleep: 			PROCEDURE {REALTIME, C} ( ms: LONGINT );
-	thrYield: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT );
-	thrExit: 			PROCEDURE {REALTIME, C} ( dummy: LONGINT );
-	thrSuspend: 		PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	thrResume: 		PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	thrSetPriority: 	PROCEDURE {REALTIME, C} ( t: Unix.Thread_t;  prio: LONGINT );
-	thrGetPriority: 	PROCEDURE {REALTIME, C} ( t: Unix.Thread_t ): LONGINT;
-	thrKill: 			PROCEDURE {REALTIME, C} ( t: Unix.Thread_t );
-	
+	mainthread: Unix.Thread_t;	
 	
 
 TYPE
+
+	LockT= POINTER TO RECORD
+		mtx, enter: ADDRESS;
+	END;
 
 	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
 
@@ -135,7 +115,7 @@ TYPE
 					END
 				END;
 				IF r # NIL THEN  Remove( r )  END;
-				IF h # NIL THEN  (* not canceled *) h  END
+				IF h # NIL THEN  (* not canceled *) h END
 			ELSE				
 				BEGIN{EXCLUSIVE}
 					AWAIT( restart );  restart := FALSE;
@@ -143,6 +123,14 @@ TYPE
 			END
 		END
 	END TimerActivity;
+	
+	Clock* = OBJECT
+	BEGIN {ACTIVE}
+		LOOP
+			Unix.ThrSleep( 10 ); 
+			IF ~timerStopped THEN  timerActivity.UpdateTicks  END
+		END;
+	END Clock;
 
 
 
@@ -160,13 +148,13 @@ TYPE
 	VAR 
 		n: Heaps.FinalizerNode;  start: BOOLEAN;
 	
-		PROCEDURE Start;
+		PROCEDURE Activate;
 		BEGIN {EXCLUSIVE}
 			start := TRUE
-		END Start;
+		END Activate;
 		
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
-		finCaller := CurrentProcess( );  start := FALSE;
+		start := FALSE;
 		LOOP 
 			BEGIN {EXCLUSIVE} AWAIT( start ) END;
 			start := FALSE;
@@ -180,7 +168,6 @@ TYPE
 					n.finalizer(n.objStrong)	(* may acquire locks *)
 				END;
 			END;
-			Machine.ReleaseGC
 		END
 	END FinalizerCaller;
 	
@@ -189,12 +176,11 @@ TYPE
 	Body = PROCEDURE ( self: ProtectedObject );
 	Condition = PROCEDURE ( slink: ADDRESS ): BOOLEAN;
 	
-	Process* = OBJECT (Heaps.RootObject)
+	Process* = OBJECT (Heaps.ProcessLink)
 	VAR
-		threadId			: Unix.Thread_t;
+		threadId-			: Unix.Thread_t;
 		nextProcess-	: Process;	(* next in list of all processes *)
 		stackBottom	-	: ADDRESS;
-		SP-				: ADDRESS;	(* SP value at last NEW *)
 		id-				: LONGINT;
 		body			: Body;
 		mode-		: LONGINT;
@@ -206,21 +192,63 @@ TYPE
 		condFP-		: ADDRESS;			(* awaited process' condition's context *)
 		continue		: Unix.Condition_t;	(* gets signaled when condition yields true *)
 		waitingOn-	: ProtectedObject;
-		procID-		: LONGINT;				(* processor ID where running, not used in UnixAos *)
-		state-			: Machine.State;		(*! not used in UnixAos! *)
-		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
-		context: ANY; (* commands cotext *)
-				
+		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
+		state-			: Machine.State;	
+		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)					
+		context: ANY; (* commands context *)
+
 		PROCEDURE FindRoots*;
-		VAR sp, ptr: ADDRESS;
+		VAR sp, bp, n, a0, a1, adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 		BEGIN
 			IF mode # Terminated THEN
-				sp := SP;
-				WHILE sp < stackBottom DO  
-					S.GET( sp, ptr );  
-					IF (ptr # 0) & (ptr MOD 8 = 0) THEN  Heaps.AddCandidate( ptr )  END;  
-					INC( sp, AddrSize )  
+				
+				IF SELF = CurrentProcess() THEN
+					state.SP := Machine.CurrentSP( );
+					state.BP := Machine.CurrentBP( );
 				END;
+				sp := state.SP; bp := state.BP; 
+			
+				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN	
+					IF  (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
+						S.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF n > 1024 THEN
+							desc := S.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
+							END;
+						END;
+					END; 
+					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
+						Heaps.RegisterCandidates( sp, stackBottom - sp );
+					END;
+				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+					IF bp < stackBottom THEN
+						WHILE (bp # Heaps.NilVal) & (bp >= sp - SIZE OF ADDRESS) & (bp < stackBottom) DO (*  bp = sp - SIZE OF ADDRESS: happens temporarily upon leaving procedures *)
+							S.GET( bp, n );
+							IF ODD( n ) THEN (* procedure descriptor at bp *)
+								IF n > 1024 THEN
+									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
+									IF desc # NIL THEN
+										a0 := ADDRESSOF( desc.offsets );
+										a1 :=  S.VAL( ADDRESS, desc.offsets );
+										ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+										FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+											adr := bp + desc.offsets[i]; (* pointer at offset *)
+											S.GET( adr, p ); (* load pointer *)
+											IF p # NIL THEN 
+												Heaps.Mark( p );
+											END
+										END
+									END
+								END;
+								S.GET( bp + SIZEOF( ADDRESS ), bp );
+							ELSE (* classical stack frame *)
+								bp := n; 
+							END;
+						END;
+						ASSERT( (bp = stackBottom) OR (bp < 1024) , 12345 );
+					END; 
+				END
+				
 			END;
 			Heaps.Mark( nextProcess ) 
 		END FindRoots;
@@ -231,37 +259,36 @@ TYPE
 			IF SELF = CurrentProcess() THEN  Exit
 			ELSE
 				Machine.Acquire( Machine.X11 );  (* let the thread to be killed first finish its last I/O, if any *)
-				mtxLock( processList );
+				Unix.MtxLock( processList );
 					pt := NIL; t := root;  kt := 0;
 					WHILE (t # NIL ) & (t # SELF) DO  pt := t;  t := t.nextProcess  END;
 					IF t = SELF THEN
 						kt := threadId;
 						IF pt = NIL THEN  root := t.nextProcess  ELSE  pt.nextProcess := t.nextProcess  END;
 					END;
-				mtxUnlock( processList );
-				IF kt # 0 THEN  thrKill( kt )  END;
+				Unix.MtxUnlock( processList );
+				IF kt # 0 THEN  Unix.ThrKill( kt )  END;
 				Machine.Release( Machine.X11 );
 			END
 		END Cancel;
 
 		PROCEDURE GetPriority( ): LONGINT;
 		BEGIN
-			RETURN thrGetPriority( threadId ) 
+			RETURN Unix.ThrGetPriority( threadId ) 
 		END GetPriority;
 
 		PROCEDURE SetPriority( prio: LONGINT );
 		VAR pr: LONGINT;
 		BEGIN
 			pr := max( Machine.prioLow, min( prio, Machine.prioHigh ) );
-			thrSetPriority( threadId, pr );	(* works only if SUID root *)
+			Unix.ThrSetPriority( threadId, pr );	(* works only if SUID root *)
 			priority := GetPriority( )	
 		END SetPriority;
-				
+		
 				
 		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
-		VAR  thr: Unix.Thread_t;
 		BEGIN
-			SELF.obj := obj;  condition := NIL;  continue := conInit(0);
+			SELF.obj := obj;  condition := NIL;  continue := Unix.NewCond( );
 			flags := fl;
 			priority := prio;
 			nextProcess := NIL;
@@ -270,48 +297,80 @@ TYPE
 				newProcess := SELF;
 				ASSERT( bodyProc # NIL );
 				body := bodyProc;  
-				mtxLock( startProcess );
-					thr := thrStart( BodyStarter, stacksize );
-					conWait( childrunning, startProcess );
-				mtxUnlock( startProcess );
+				Unix.MtxLock( startProcess );
+				threadId := Unix.ThrStart( BodyStarter, stacksize );
+				Unix.CondWait( childrunning, startProcess );
+				Unix.MtxUnlock( startProcess );
 				RegisterFinalizer( SELF, FinalizeProcess );
 			ELSE 
 				(* first process *)
 				stackBottom := Glue.stackBottom;  
-				SP := Machine.CurrentSP( );
-				threadId := thrThis(0);
+				threadId := Unix.ThrThis( );
 				id := 0;  nextPID := 1;
 				root := SELF;
-				mainProcess := SELF;
 				mode := Running;
+				Unix.WriteKey( processPointer, SELF );
 			END;
 		END Initialize;
 				
 	END Process;
 
 
+	GCStatusExt = OBJECT (Heaps.GCStatus)
+	
+		(*	called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects 
+			lock here since writing the set of variables here must not be interrupted, i.e. atomic writing of the set of variables
+			is absolutely necessary.  They system may hang if the lock is not taken. *)
+		PROCEDURE SetgcOngoing( value: BOOLEAN );	
+		VAR cur: Process;
+		BEGIN (* serialize writers *)
+			cur := CurrentProcess();
+			IF value THEN
+				Machine.Acquire( Machine.Objects );	
+				Machine.Acquire( Machine.Heaps );
+				cur.state.SP := Machine.CurrentSP();
+				cur.state.BP := Machine.CurrentBP();
+				cur.state.PC := ADDRESSOF( GCLoop );
+					
+				SuspendActivities;
+				Heaps.CollectGarbage( Modules.root );
+					
+				Machine.Release( Machine.Heaps );
+				Machine.Release( Machine.Objects );
+				ResumeActivities;
+				finalizerCaller.Activate;
+			END;	
+		END SetgcOngoing;
+	
+	END GCStatusExt;
+
+
 	
 	PROCEDURE BodyStarter;
-	VAR p{UNTRACED}: Process;  res: LONGINT; prevBP: ADDRESS;
+	VAR p: Process;  res: LONGINT; prevBP, sp: ADDRESS;
 	BEGIN
-		mtxLock( startProcess );
+		Unix.MtxLock( startProcess );
 			p := newProcess;  newProcess := NIL;
-			p.threadId := thrThis(0);  
+			Unix.WriteKey( processPointer, p );
 			p.id := nextPID;  INC( nextPID );
-			p.SP := Machine.CurrentSP(  );  
 			p.stackBottom := Machine.CurrentBP( );
 			S.GET( p.stackBottom, prevBP );
 			S.PUT( prevBP, S.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
-			mtxLock( processList );
+			Unix.MtxLock( processList );
 				p.nextProcess := root;  root := p;
-			mtxUnlock( processList );
-			conSignal( childrunning );
-		mtxUnlock( startProcess );
+			Unix.MtxUnlock( processList );
+			Unix.CondSignal( childrunning );
+		Unix.MtxUnlock( startProcess );
 
 		p.SetPriority( p.priority );
+
 		IF Restart IN p.flags THEN
+			(* store and restore stack pointer because it is saved on the stack during SYSVABI calls to ensure stack alignment *)
+			sp := S.GetStackPointer ();
 			res := Unix.sigsetjmp( ADDRESSOF( p.state0[0] ), 1 );
+			S.SetStackPointer (sp);
 		END;
+
 		p.mode := Running;
 		p.body( p.obj );
 		p.mode := Terminated;
@@ -323,69 +382,94 @@ TYPE
 
 	(*---------------------   create,  lock,  await,  unlock   -------------------------*)
 	
-	PROCEDURE InitProtHeader( hdr: ObjectHeader );
+	
+	(* initialize the ObjectHeader, requires lockMutex temporarily *)
+	PROCEDURE InitProtHeader( hdr {UNTRACED}: ObjectHeader);
+	VAR lock: LockT;
 	BEGIN
-		hdr.mtx := mtxInit( 0 );  hdr.enter := conInit( 0 );  hdr.lockedBy := NIL;  
+		(* we cannot hold the lockMute here because allocation can trigger the GC that requires the lock when activating the finalizers *)
+		NEW(lock);
+		Unix.MtxLock(lockMutex);
+		IF hdr.lock = NIL THEN
+			lock.mtx := Unix.NewMtx( );  lock.enter := Unix.NewCond( );  hdr.lockedBy := NIL; 
+			hdr.lock := lock;
+		END;
+		Unix.MtxUnlock(lockMutex);
 	END InitProtHeader;
 	
 	
 	PROCEDURE CreateProcess*( body: Body;  priority: LONGINT;  flags: SET;  obj: ProtectedObject );
-	VAR p: Process;  hdr: ObjectHeader;
+	VAR p: Process;  hdr{UNTRACED}: ObjectHeader;
 	BEGIN
-		mtxLock( createProcess );
-		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  InitProtHeader( hdr );
+		Unix.MtxLock( createProcess );
+		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  
+		InitProtHeader( hdr );
 		IF priority = 0 THEN  priority := Normal  END;
 		NEW( p, obj, body, priority, flags, stacksize ) ;	(* execute BodyStarter as new (posix or solaris) thread *)
-		mtxUnlock( createProcess );
+		Unix.MtxUnlock( createProcess );
 		RegisterFinalizer( obj, FinalizeActiveObj )
 	END CreateProcess;
 
 	PROCEDURE Lock*( obj: ProtectedObject;  exclusive: BOOLEAN );
-	VAR hdr: ObjectHeader;  p: Process; 
+	VAR hdr {UNTRACED}: ObjectHeader;  p : Process; lock: LockT;
 	BEGIN
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
+		p.state.SP := Machine.CurrentSP( );
+		p.state.BP := Machine.CurrentBP( );
+		p.state.PC := Machine.CurrentPC( );
 		p.mode := AwaitingLock;
-		IF hdr.mtx = 0 THEN  InitProtHeader( hdr )  END;
-		mtxLock( hdr.mtx );
+
+		(*! we might want to replace the lock mutex by a lock free construct *)
+		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;		
+		lock := S.VAL(LockT, hdr.lock);
+		p.mode := AwaitingLock;
+		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
 			(* wait until threads with complied AWAIT conditions have left the monitor *)
-			conWait( hdr.enter, hdr.mtx );
+			Unix.CondWait( lock.enter, lock.mtx );
 		END;
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
 	END Lock;
 
 	PROCEDURE Await*( cond: Condition;  slink: ADDRESS;  obj: ProtectedObject;  flags: SET );
-	VAR hdr: ObjectHeader;  p, c: Process;
+	VAR hdr {UNTRACED}: ObjectHeader;  p, c: Process; lock: LockT;  
 	BEGIN
 		IF 1 IN flags THEN  (* compiler did not generate IF *)
 			IF cond( slink ) THEN  (* condition already true *)  RETURN  END
 		END;
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
+		lock := S.VAL(LockT, hdr.lock);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
 		
-		p := CurrentProcess();  p.succ := NIL;  p.condition := cond;  p.condFP := slink;   
+		p := CurrentProcess();  
+		ASSERT( hdr.lockedBy = p, 2204 ); 
+		p.succ := NIL;  p.condition := cond;  p.condFP := slink;   
 		p.waitingOn := obj;  p.mode := AwaitingCond;
 		
 		Put( hdr.awaitingCond, p );
-		
 		hdr.lockedBy := c;
-		IF c # NIL THEN  conSignal( c.continue )  ELSE  conSignal( hdr.enter )  END;
-		conWait( p.continue, hdr.mtx );   
+		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
+
+		p.state.SP := Machine.CurrentSP( );
+		p.state.BP := Machine.CurrentBP( );
+		p.state.PC := Machine.CurrentPC( );
+		Unix.CondWait( p.continue, lock.mtx );   
 		
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
 	END Await;
 
 	PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
-	VAR hdr: ObjectHeader;  c: Process;
+	VAR hdr{UNTRACED}: ObjectHeader;  c: Process; lock: LockT;
 	BEGIN
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );  c := NIL;
+		lock := S.VAL(LockT,hdr.lock);
 		IF hdr.awaitingCond.head # NIL THEN  c := FindCondition( hdr.awaitingCond )  END;
 		
 		hdr.lockedBy := c;
-		IF c # NIL THEN  conSignal( c.continue )  ELSE  conSignal( hdr.enter )  END;
-		mtxUnlock( hdr.mtx );
+		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
+		Unix.MtxUnlock( lock.mtx );
 	END Unlock;
 	
 	
@@ -444,28 +528,22 @@ TYPE
 
 	PROCEDURE Sleep*( ms: LONGINT );
 	BEGIN
-		thrSleep( ms )
+		Unix.ThrSleep( ms );
 	END Sleep;
 
 	PROCEDURE Yield*;	(* Relinquish control. *)
 	BEGIN
-		thrYield(0);
+		Unix.ThrYield( );
 	END Yield;
 	
 	(* Return current process. (DEPRECATED, use ActiveObject) *)
-	PROCEDURE CurrentProcess*( ): Process;	
-	VAR me: Unix.Thread_t;  p: Process;
+	PROCEDURE CurrentProcess*( ):  Process;	
 	BEGIN
-		me := thrThis(0);
-		mtxLock( processList );
-		p := root;
-		WHILE (p # NIL) & (p.threadId # me) DO  p := p.nextProcess  END;
-		mtxUnlock( processList );
-		RETURN p
+		RETURN S.VAL( Process , Unix.ReadKey( processPointer ) )
 	END CurrentProcess;
-
+	
 	PROCEDURE CurrentContext*(): ANY;
-	VAR p: Process;
+	VAR p : Process;
 	BEGIN
 		p := CurrentProcess();
 		IF p # NIL THEN RETURN p.context
@@ -479,7 +557,8 @@ TYPE
 		p := CurrentProcess();
 		IF p # NIL THEN p.context := context END;
 	END SetContext;
-
+	
+	
 	(* Return the active object currently executing. *)
 	PROCEDURE ActiveObject*( ): ANY;		
 	VAR p: Process;
@@ -537,24 +616,26 @@ TYPE
 	PROCEDURE FinalizeActiveObj( obj: ANY );
 	VAR p: Process;
 	BEGIN
-		mtxLock( processList );
+		Unix.MtxLock( processList );
 			p := root;
 			WHILE (p # NIL) & (p.obj # obj) DO p := p.nextProcess  END;
-		mtxUnlock( processList );
+		Unix.MtxUnlock( processList );
 		IF (p # NIL) & (p.obj = obj) THEN
 			p.mode := Terminated;
-			conDestroy( p.continue );  p.continue := 0;
+			Unix.CondDestroy( p.continue );  p.continue := 0;
 			FinalizeProtObject( obj );
 			p.Cancel
 		END;
 	END FinalizeActiveObj;
 
 	PROCEDURE FinalizeProtObject( obj: ANY );
-	VAR hdr: ObjectHeader;
+	VAR hdr{UNTRACED}: ObjectHeader; lock: LockT;
 	BEGIN
+		TRACE("FINALIZE");
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
-		IF hdr.mtx # 0 THEN
-			mtxDestroy( hdr.mtx );  hdr.mtx := 0
+		IF hdr.lock # NIL THEN
+			lock := S.VAL(LockT, hdr.lock);
+			Unix.MtxDestroy( lock.mtx );  lock.mtx := 0
 		END
 	END FinalizeProtObject;
 
@@ -564,7 +645,7 @@ TYPE
 	BEGIN
 		p := obj(Process);
 		IF p.continue # 0 THEN
-			conDestroy( p.continue );  p.continue := 0
+			Unix.CondDestroy( p.continue );  p.continue := 0
 		END
 	END FinalizeProcess;
 	
@@ -574,14 +655,14 @@ TYPE
 	BEGIN
 		me := CurrentProcess();
 		me.mode := Terminated;
-		mtxLock( processList );
+		Unix.MtxLock( processList );
 			prev := NIL;  p := root;
 			WHILE (p # NIL ) & (p # me) DO  prev := p;  p := p.nextProcess  END;
 			IF p = me THEN
 				IF prev = NIL THEN  root := p.nextProcess  ELSE  prev.nextProcess := p.nextProcess  END;
 			END;
-		mtxUnlock( processList );
-		thrExit(0)
+		Unix.MtxUnlock( processList );
+		Unix.ThrExit( );
 	END Exit;
 
 	PROCEDURE ExitTrap*;
@@ -604,7 +685,7 @@ TYPE
 	PROCEDURE Remove( t: Timer );  (* remove timer from list of active timers *)
 	VAR p, x: Timer;
 	BEGIN
-		mtxLock( timerListMutex ); 
+		Unix.MtxLock( timerListMutex ); 
 		t.trigger := 0;  t.handler := NIL;
 		IF timers # NIL THEN
 			IF t = timers THEN  
@@ -616,18 +697,18 @@ TYPE
 			END;
 			t.next := NIL
 		END;
-		mtxUnlock( timerListMutex )
+		Unix.MtxUnlock( timerListMutex )
 	END Remove;
 	
 	PROCEDURE Insert( t: Timer );
 	VAR  p, x: Timer;
 	BEGIN
-		mtxLock( timerListMutex ); 
+		Unix.MtxLock( timerListMutex ); 
 		p := NIL;  x := timers;
 		WHILE (x # NIL) & (x.trigger < t.trigger)  DO  p := x;  x := p.next  END;
 		t.next := x;
 		IF p = NIL THEN  timers := t  ELSE   p.next := t  END;
-		mtxUnlock( timerListMutex )
+		Unix.MtxUnlock( timerListMutex )
 	END Insert;
 
 	PROCEDURE SetTimeout*( t: Timer;  h: EventHandler;  ms: LONGINT );
@@ -657,77 +738,83 @@ TYPE
 
 
 	(*--------------------  Garbage Collection  ------------------------------------*)
+
 	
+	PROCEDURE GetContext( ctxt: Unix.Ucontext );
+	VAR t: Process; context: Unix.McontextDesc;
+	BEGIN
+		t := CurrentProcess( );
+		Unix.CopyContext( ctxt.mc, context );
+		t.state.PC := context.r_pc;
+		t.state.BP := context.r_bp;
+		t.state.SP := context.r_sp
+	END GetContext;
 	
 	(* called by WMProcessInfo to obtain the current state of a running process *)
 	PROCEDURE UpdateProcessState*( p: Process );	
-	BEGIN
-		(*  update p.stat.{PC,BP,SP}  *)
+	BEGIN 
+		IF p.threadId = Unix.ThrThis( ) THEN
+			p.state.PC := Machine.CurrentPC( );
+			p.state.BP := Machine.CurrentBP( );
+			p.state.SP := Machine.CurrentSP( )	
+		ELSE
+			IF p.mode = Running THEN
+				timerStopped := TRUE;
+				Unix.ThrSleep( 3 );
+				IF p.mode = Running THEN	(* still running *)
+					Unix.ThrSuspend( p.threadId, TRUE );
+					Unix.ThrResume( p.threadId );
+				END;
+				timerStopped := FALSE
+			END			
+		END	
 	END UpdateProcessState;
-
+	
 	PROCEDURE SuspendActivities;
-	VAR t: Process;  
+	VAR t, me: Process;  
 	BEGIN
+		me := CurrentProcess();
 		t := root;
 		WHILE t # NIL DO
-			IF (t # mainProcess) & (t # finCaller) THEN  thrSuspend( t.threadId )  END;
+			IF t # me THEN  
+				Unix.ThrSuspend( t.threadId, t.mode = Running );
+			END;
 			t := t.nextProcess
 		END;
 	END SuspendActivities;
 
 	PROCEDURE ResumeActivities;
-	VAR t: Process;  
+	VAR t, me: Process;  
 	BEGIN
+		me := CurrentProcess();
 		t := root;
 		WHILE t # NIL DO
-			IF (t # mainProcess) & (t # finCaller) THEN  thrResume( t.threadId )  END;
+			IF (t # me) THEN  
+				Unix.ThrResume( t.threadId );
+			END;
 			t := t.nextProcess
 		END;
 	END ResumeActivities;
 	
 
-	PROCEDURE SaveSP;   (* save current SP for usage by the GC *)
-	VAR me: Unix.Thread_t;  t: Process;
-	BEGIN
-		me := thrThis(0);  t := root;
-		WHILE (t # NIL ) & (t.threadId # me) DO  t := t.nextProcess  END;
-		IF t # NIL THEN  t.SP := Machine.CurrentSP( )  END
-	END SaveSP;
-		
-	
-	PROCEDURE InvokeGC;
-	BEGIN
-		IF Machine.AcquireGC() THEN (* gets released by FinalizerCaller *)
-			collect := TRUE;
-			conWait( gcFinished, igc )
-		END;
-	END InvokeGC;
-	
-	(*!	GCLoop gets called as last procedure in BootConsole (main thread). 
-		The stack of the main thread is not limited by the  boot parameter 'StackSize' !!
-	*)
 	PROCEDURE GCLoop*;	(* Timer and GC activity *)
 	BEGIN
-		SetPriority( GCPriority );
-		LOOP
-			IF collect THEN  
-				collect := FALSE;
-				Machine.Acquire( Machine.Heaps );
-				SuspendActivities;
-				Heaps.CollectGarbage( Modules.root );
-				Machine.Release( Machine.Heaps );
-				ResumeActivities;
-				finalizerCaller.Start;
-				conSignal( gcFinished );
-			ELSE
-				thrSleep( 10 ); 
-			END;
-			timerActivity.UpdateTicks
-		END
-	END GCLoop;	
-	
-	
-	
+		(*	
+		If using BootConsole keep main thread running.
+		If the thread is blocked by a mutex (MainThreadSleep)
+		the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
+		but terminate A2 (at least in Solaris).		
+		*)
+		SystemA2Up := TRUE;
+		LOOP Sleep( 100 ) END
+	END GCLoop;		
+
+	(* in order to get the traps running correctly without a BootConsole *)
+	PROCEDURE SystemA2IsUp*;
+	BEGIN
+		SystemA2Up := TRUE;		
+	END SystemA2IsUp;
+			
 	PROCEDURE CurrentProcessTime*(): HUGEINT;
 	BEGIN
 		RETURN  Machine.GetTimer()
@@ -738,12 +825,36 @@ TYPE
 		RETURN Machine.mhz * 1000000
 	END TimerFrequency;
 
+
+	PROCEDURE LeaveA2;
+	VAR cur: Process; bp, n: ADDRESS;
+	BEGIN
+		IF clock = NIL THEN  RETURN  END;
+		cur := CurrentProcess();
+		IF cur # NIL THEN 
+			bp := Machine.CurrentBP();
+			S.GET( bp, n );
+			IF ODD( n ) THEN S.GET( bp + SIZEOF( ADDRESS ), bp )  ELSE  bp := n  END;
+			cur.state.BP := bp;
+		END;
+	END LeaveA2;
+
+	PROCEDURE ReenterA2;
+	VAR cur : Process;
+	BEGIN
+		IF clock = NIL THEN  RETURN  END;
+		cur := CurrentProcess();
+		IF cur # NIL THEN 
+			cur.state.BP := 0;
+		END;	
+	END ReenterA2;
+	
 	
 	(*----------------------------- initialization ----------------------------------*)
 	
 	PROCEDURE StartTimerActivity;
 	BEGIN
-		timerListMutex := mtxInit(0);  timers := NIL;  
+		timerListMutex := Unix.NewMtx( );  timers := NIL;  
 		NEW( timerActivity );
 	END StartTimerActivity;
 
@@ -768,55 +879,74 @@ TYPE
 	VAR p: Process;
 	BEGIN
 		(* make current thread the first active object  *)
+		mainthread := Unix.ThrThis();
 		NEW( p, NIL, NIL, 0, {}, 0 );
 	END Convert;
 
 	PROCEDURE Init;
-	BEGIN		
-		Unix.Dlsym( 0, "mtxInit",		ADDRESSOF( mtxInit ) );
-		Unix.Dlsym( 0, "mtxDestroy",	ADDRESSOF( mtxDestroy ) );
-		Unix.Dlsym( 0, "mtxLock",		ADDRESSOF( mtxLock ) );
-		Unix.Dlsym( 0, "mtxUnlock",	ADDRESSOF( mtxUnlock ) );
-		Unix.Dlsym( 0, "conInit",		ADDRESSOF( conInit ) );
-		Unix.Dlsym( 0, "conDestroy",	ADDRESSOF( conDestroy ) );
-		Unix.Dlsym( 0, "conWait",		ADDRESSOF( conWait ) );
-		Unix.Dlsym( 0, "conSignal",	ADDRESSOF( conSignal ) );
+	BEGIN
+		Unix.suspendHandler := GetContext;
 		
-		Unix.Dlsym( 0, "thrStart",	ADDRESSOF( thrStart ) );
-		Unix.Dlsym( 0, "thrThis",		ADDRESSOF( thrThis ) );
-		Unix.Dlsym( 0, "thrSleep",	ADDRESSOF( thrSleep ) );
-		Unix.Dlsym( 0, "thrYield",	ADDRESSOF( thrYield ) );
-		Unix.Dlsym( 0, "thrExit",		ADDRESSOF( thrExit ) );
-		Unix.Dlsym( 0, "thrSuspend",			ADDRESSOF( thrSuspend ) );
-		Unix.Dlsym( 0, "thrResume",			ADDRESSOF( thrResume ) );
-		Unix.Dlsym( 0, "thrGetPriority",	ADDRESSOF( thrGetPriority ) );
-		Unix.Dlsym( 0, "thrSetPriority",	ADDRESSOF( thrSetPriority ) );
-		Unix.Dlsym( 0, "thrKill",				ADDRESSOF( thrKill ) );
+		createProcess := Unix.NewMtx( );  processList := Unix.NewMtx( );
+		startProcess := Unix.NewMtx( );  childrunning := Unix.NewCond( ); 
+		lockMutex := Unix.NewMtx( );
 		
-		createProcess := mtxInit( 0 );  processList := mtxInit( 0 );
-		startProcess := mtxInit(0);  childrunning := conInit(0); 
-				
-		collect := FALSE;
-		igc := mtxInit( 0 );  gcFinished := conInit( 0 ); 
-							
+		processPointer := Unix.NewKey( );
+											
 		GetStacksize;  
-		
 		Convert;
-		StartTimerActivity;
-		
+		StartTimerActivity;  timerStopped := FALSE;
+		NEW( clock );  
 		NEW( finalizerCaller );
 		
-		Heaps.saveSP := SaveSP;
-		Heaps.GC := InvokeGC;
-		Heaps.InvokeGC := InvokeGC;
+		Heaps.gcStatus := GCStatusFactory()
 	END Init;
+
+TYPE 
+	MainThread = OBJECT
+	VAR exit: BOOLEAN;
+		
+		PROCEDURE & Init;
+		BEGIN
+			exit := FALSE;
+		END Init;
+		
+		PROCEDURE Await();
+		BEGIN {EXCLUSIVE}
+			AWAIT( exit );
+		END Await;
+
+	END MainThread;
 	
+VAR main: MainThread;
+	
+	PROCEDURE MainThreadSleep;
+	BEGIN
+		NEW( main );
+		main.Await( );
+		Unix.exit( 0 );
+	END MainThreadSleep;
+	
+	PROCEDURE {FINAL} Final;
+	BEGIN
+		MainThreadSleep;
+	END Final;
+
+	PROCEDURE GCStatusFactory(): Heaps.GCStatus;
+	VAR gcStatusExt : GCStatusExt;
+	BEGIN
+		ASSERT( Heaps.gcStatus = NIL );
+		NEW( gcStatusExt );
+		RETURN gcStatusExt
+	END GCStatusFactory;
+
 VAR
 	(* for compatibility and later extension *)
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
 	
 BEGIN
 	TraceProcessHook := NIL;
+	SystemA2Up := FALSE;
 	Init;
 END Objects.
 

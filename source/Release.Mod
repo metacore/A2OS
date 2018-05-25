@@ -3395,7 +3395,7 @@ END Release.
 
 SystemTools.Free Release ~
 
-Release.FindPosition WinAos Usbdi.Mod ~
+Release.FindPosition A2 Usbdi.Mod ~
 
 Release.Analyze --details ~
 
@@ -3404,8 +3404,6 @@ Release.Check ~
 Release.Build A2 ~
 
 Release.Build --path="../Test/" -b A2 ~
-Release.Build --path="../ObjT1/" -bn WinAos ~
-Release.Build --path="../TestE/" eWinAos ~
 
 Release.Build --path="../Test/" --xml A2 ~
 
@@ -3414,12 +3412,10 @@ Release.CheckFiles -f=C2Release.Tool ../../CF/trunk/source/*.* ~
 Release.Build --path="../Test/" -z A2 ~
 
 Release.RequiredModules A2 WMTextView ~
-Release.WhoImports WinAos WMComponents ~
+Release.WhoImports A2 WMComponents ~
 
 Release.Tool ~
 
 Release.Build --path="../Test" -b -x="Build Oberon Contributions " A2 ~
 
-Release.Rebuild -b WinAos WMTextView.Mod ~
-
-Release.Build -b  WinAos ~
+Release.Rebuild -b A2 WMTextView.Mod ~

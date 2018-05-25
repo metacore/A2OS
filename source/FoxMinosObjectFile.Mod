@@ -32,7 +32,7 @@ TYPE
 		BEGIN
 			Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 			Basic.Concat(fileName,prefix,moduleName,extension);
-			IF Trace THEN D.Str("FoxBinaryObjectFile.ObjectFileFormat.Export "); D.Str(moduleName); D.Ln; END;
+			IF Trace THEN D.Str("FoxMinosObjectFile.ObjectFileFormat.Export "); D.Str(moduleName); D.Ln; END;
 
 			IF ~(module IS Sections.Module) THEN
 				Basic.Error(diagnostics, module.module.sourceName, Basic.invalidPosition, "generated module format does not match object file format");

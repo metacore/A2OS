@@ -1,0 +1,21 @@
+MODULE FTP;
+	IMPORT FTPClient, Commands, Streams, Files, Texts, TextUtilities;
+CONST 
+	BufSize = (16 * 1024); 
+	LocalFileNotFound =  -2; 
+VAR 
+	ftp: FTPClient.FTPClient; 
+
+	PROCEDURE ^ PutFile(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ PutText(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ GetFile(ftp: FTPClient.FTPClient; remote, local: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ PutFiles*(context: Commands.Context); 
+	PROCEDURE ^ PutTexts*(context: Commands.Context); 
+	PROCEDURE ^ GetFiles*(context: Commands.Context); 
+	PROCEDURE ^ MakeDir*(context: Commands.Context); 
+	PROCEDURE ^ ChangeDir*(context: Commands.Context); 
+	PROCEDURE ^ Directory*(context: Commands.Context); 
+	PROCEDURE ^ Close*(context: Commands.Context); 
+BEGIN
+END FTP.

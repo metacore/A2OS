@@ -1,9 +1,0 @@
-MODULE WinApplications;
-	IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
-CONST 
-
-	PROCEDURE ^ CallProcess(par: ARRAY OF CHAR; visible: BOOLEAN): LONGINT; 
-	PROCEDURE ^ Call*(CONST proc, par: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ Run*(context: Commands.Context); 
-BEGIN
-END WinApplications.

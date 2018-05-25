@@ -617,7 +617,7 @@ END WMSimpleGraphs.
 SystemTools.Free WMSimpleGraphs ~
 SystemTools.FreeDownTo MatrixBase ~
 
-Compiler.Compile -p=Win32G WMSimpleGraphs.Mod ~
+Compiler.Compile -p=Win32 WMSimpleGraphs.Mod ~
 
 WMSimpleGraphs.Demo 1 ~
 WMSimpleGraphs.Open  MultiGraph.MtA Graphs~ 

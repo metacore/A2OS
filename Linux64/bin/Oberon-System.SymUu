@@ -1,0 +1,84 @@
+MODULE System IN Oberon;
+	IMPORT SYSTEM, Kernel, AosFS := Files IN A2, Files, Modules, Objects, Display, Input, Fonts, Viewers, Texts, Oberon, TextFrames, KernelLog IN A2, Streams IN A2, Machine IN A2, Heaps IN A2, AosModules := Modules IN A2, AosActive := Objects IN A2, ProcessInfo IN A2, Commands IN A2;
+CONST 
+	OberonBaseModule = \"Oberon-Kernel"\; 
+	WMWindowManager = \"WMWindowManager"\; 
+	LogWindow = \"LogWindow"\; 
+	MaxString = 64; 
+	MaxArray = 10; 
+	LogTime = (Input.TimeUnit DIV 2); 
+	BufSize = 8192; 
+TYPE 
+	Bytes = AosModules.Bytes; 
+
+	OberonRunner = OBJECT {EXCLUSIVE} 
+	VAR 
+		exception: BOOLEAN; 
+
+	BEGIN{ACTIVE, SAFE, PRIORITY(AosActive.Normal)} 
+	END OberonRunner; 
+VAR 
+	W, LogW: Texts.Writer; 
+	init: BOOLEAN; 
+	count: LONGINT; 
+	task: Oberon.Task; 
+	fixed: Fonts.Font; 
+	buf: POINTER TO ARRAY OF CHAR; 
+	log: Texts.Text; 
+	oberonRunner: OberonRunner; 
+	time0, date0: LONGINT; 
+
+	PROCEDURE ^ OpenText(title: ARRAY OF CHAR; T: Texts.Text; system: BOOLEAN); 
+	PROCEDURE ^ SetFont*; 
+	PROCEDURE ^ SetColor*; 
+	PROCEDURE ^ SetOffset*; 
+	PROCEDURE ^ Time*; 
+	PROCEDURE ^ Collect*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ OpenLog*; 
+	PROCEDURE ^ Clear*; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ CloseTrack*; 
+	PROCEDURE ^ Recall*; 
+	PROCEDURE ^ Copy*; 
+	PROCEDURE ^ Grow*; 
+	PROCEDURE ^ Free*; 
+	PROCEDURE ^ WriteK(VAR W: Texts.Writer; k: LONGINT); 
+	PROCEDURE ^ ShowModules*; 
+	PROCEDURE ^ ListLibrary(L: Objects.Library); 
+	PROCEDURE ^ ShowLibraries*; 
+	PROCEDURE ^ FreeLibraries*; 
+	PROCEDURE ^ Directory*; 
+	PROCEDURE ^ CopyFile(name: ARRAY OF CHAR; VAR S: Texts.Scanner); 
+	PROCEDURE ^ CopyFiles*; 
+	PROCEDURE ^ RenameFile(name: ARRAY OF CHAR; VAR S: Texts.Scanner); 
+	PROCEDURE ^ RenameFiles*; 
+	PROCEDURE ^ DeleteFile(VAR name: ARRAY OF CHAR; VAR S: Texts.Scanner); 
+	PROCEDURE ^ DeleteFiles*; 
+	PROCEDURE ^ Watch*; 
+	PROCEDURE ^ GetNum(refs: Bytes; VAR i, num: LONGINT); 
+	PROCEDURE ^ FindProc(refs: Bytes; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos, base: LONGINT); 
+	PROCEDURE ^ Variables(refs: Bytes; i, base: LONGINT); 
+	PROCEDURE ^ OutState(VAR name: ARRAY OF CHAR; t: Texts.Text); 
+	PROCEDURE ^ State*; 
+	PROCEDURE ^ ShowCommands*; 
+	PROCEDURE ^ ShowTasks*; 
+	PROCEDURE ^ Standalone(): BOOLEAN; 
+	PROCEDURE ^ FreeOberon; 
+	PROCEDURE ^ Quit*; 
+	PROCEDURE ^ Reboot*; 
+	PROCEDURE ^ LogHandler(me: Oberon.Task); 
+	PROCEDURE ^ OpenKernelLog*; 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ Greetings; 
+	PROCEDURE ^ WriteType(VAR W: Texts.Writer; adr: LONGINT); 
+	PROCEDURE ^ ShowActive*; 
+	PROCEDURE ^ StopProcess(halt: BOOLEAN); 
+	PROCEDURE ^ HaltObject*; 
+	PROCEDURE ^ TerminateObject*; 
+	PROCEDURE ^ TerminateObjects*; 
+	PROCEDURE ^ StartLog*; 
+	PROCEDURE ^ StopLog*; 
+BEGIN
+END System.

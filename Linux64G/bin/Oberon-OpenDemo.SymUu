@@ -1,9 +1,0 @@
-MODULE OpenDemo IN Oberon;
-	IMPORT Objects, Gadgets, PanelDocs, Documents, Desktops;
-CONST 
-
-	PROCEDURE ^ ShowGadget(CONST name: ARRAY OF CHAR; main: Gadgets.Frame); 
-	PROCEDURE ^ Do*; 
-	PROCEDURE ^ Open*; 
-BEGIN
-END OpenDemo.

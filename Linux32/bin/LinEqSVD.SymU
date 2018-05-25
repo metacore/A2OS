@@ -1,0 +1,26 @@
+MODULE LinEqSVD;
+	IMPORT Nbr := NbrRe, Vec := VecRe, Mtx := MtxRe, LinEq := LinEqRe, Errors := DataErrors, MathRe, Out := KernelLog;
+CONST 
+TYPE 
+	Solver* = OBJECT 
+	VAR 
+		u-, w-, vt-: Mtx.Matrix; 
+		threshold*: Nbr.Real; 
+		iterations*: LONGINT; 
+		Reciprocal: Vec.Map; 
+		zero, mag: Nbr.Real; 
+
+		PROCEDURE ^  & Initialize*(VAR A: Mtx.Matrix); 
+		PROCEDURE ^ decompose; 
+		PROCEDURE ^ PseudoInverse*(): Mtx.Matrix; 
+		PROCEDURE ^ reciprocal(VAR x: Nbr.Real); 
+	END Solver; 
+
+	PROCEDURE ^ pythag(a, b: Nbr.Real): Nbr.Real; 
+	PROCEDURE ^ Max(x, y: Nbr.Real): Nbr.Real; 
+	PROCEDURE ^ MinI(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ sign(x: Nbr.Real): LONGINT; 
+	PROCEDURE ^ Log(m: Mtx.Matrix); 
+	PROCEDURE ^ Test*; 
+BEGIN
+END LinEqSVD.

@@ -1,0 +1,40 @@
+MODULE SynergyClient;
+	IMPORT Modules, Objects, Commands, Streams, IP, TCP, DNS, KernelLog, Strings, Inputs, WMWindowManager, WMMessages;
+CONST 
+	DebugKeyboard = FALSE; 
+TYPE 
+	SynergyClient = OBJECT {EXCLUSIVE} 
+	VAR 
+		in: Streams.Reader; 
+		out: Streams.Writer; 
+		connection: TCP.Connection; 
+		packet: ARRAY 2048 OF CHAR; 
+		errors: BOOLEAN; 
+		manager: WMWindowManager.WindowManager; 
+		originator: WMWindowManager.ViewPort; 
+		mouseKeys: SET; 
+		mouseX, mouseY: LONGINT; 
+		running: BOOLEAN; 
+		screenName: ARRAY 128 OF CHAR; 
+		lastKeysym, lastUcs: LONGINT; 
+
+		PROCEDURE ^  & New*(conn: TCP.Connection; sName: ARRAY OF CHAR); 
+		PROCEDURE ^ GetPacket16(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ GetPacket32(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ SendClientHello(screenName: ARRAY OF CHAR); 
+		PROCEDURE ^ SendDINF(left, top, width, height, wrap, pointerX, pointerY: LONGINT); 
+		PROCEDURE ^ SendNOP; 
+		PROCEDURE ^ MouseEvent(x, y, dz: LONGINT; keys: SET); 
+		PROCEDURE ^ KeyEvent(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ ConvertKey(keyId, keyMask, keyButton: LONGINT; VAR ucs: LONGINT; VAR flags: SET; VAR keysym: LONGINT; down: BOOLEAN); 
+		PROCEDURE ^ Loop; 
+	BEGIN{ACTIVE} 
+	END SynergyClient; 
+VAR 
+	client: SynergyClient; 
+
+	PROCEDURE ^ Connect*(context: Commands.Context); 
+	PROCEDURE ^ Close*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END SynergyClient.

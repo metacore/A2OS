@@ -1,0 +1,26 @@
+MODULE WMPerfMonPluginNetwork;
+	IMPORT WMPerfMonPlugins, Network, Plugins, Modules;
+CONST 
+	PluginName = \"NetworkSpeed"\; 
+	ModuleName = \"WMPerfMonPluginNetwork"\; 
+TYPE 
+	NetParameter* = POINTER TO RECORD (WMPerfMonPlugins.Parameter)
+		device*: Network.LinkDevice; 
+	END; 
+
+	NetworkSpeed* = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		l: Network.LinkDevice; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END NetworkSpeed; 
+
+	PROCEDURE ^ AddPlugin(dev: Network.LinkDevice); 
+	PROCEDURE ^ RemovePlugin(dev: Network.LinkDevice); 
+	PROCEDURE ^ EventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+	PROCEDURE ^ InitPlugins; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginNetwork.

@@ -1,0 +1,23 @@
+MODULE ZipDocs IN Oberon;
+	IMPORT Files, Oberon, Objects, Texts, Zip, ZipTool, Gadgets, Documents, Desktops, TextGadgets, TextDocs;
+CONST 
+	Menu = \"ZipDocs.Add[Add] ZipDocs.Open[Open] ZipDocs.Extract[Extract] ZipDocs.ExtractAll[ExtractAll] ZipDocs.Delete[Delete] TextDocs.Search[Search]"\; 
+	path = FALSE; 
+	overwrite = FALSE; 
+	EXTRACT = 1; 
+	OPEN = 2; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ GetArcName(VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ doExtract(action: INTEGER); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Extract*; 
+	PROCEDURE ^ ExtractAll*; 
+	PROCEDURE ^ Add*; 
+	PROCEDURE ^ Delete*; 
+	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+BEGIN
+END ZipDocs.

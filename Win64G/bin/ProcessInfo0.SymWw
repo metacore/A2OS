@@ -1,9 +1,0 @@
-MODULE ProcessInfo0;
-	IMPORT SYSTEM, Machine, Heaps, Objects;
-TYPE 
-	ProcessArray* = ARRAY OF Objects.Process; 
-
-	PROCEDURE ^ GetProcesses*(VAR array: ProcessArray; VAR nofProcesses: LONGINT); 
-	PROCEDURE ^ GetProcess*(id: LONGINT): Objects.Process; 
-BEGIN
-END ProcessInfo0.

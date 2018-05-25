@@ -1,7 +1,0 @@
-MODULE HelloWorld1;
-	IMPORT KernelLog;
-CONST 
-
-	PROCEDURE ^ Do*; 
-BEGIN
-END HelloWorld1.

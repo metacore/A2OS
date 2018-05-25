@@ -1,0 +1,50 @@
+MODULE DBF IN Oberon;
+	IMPORT Files, Dates, Strings;
+CONST 
+	Done* = 0; 
+	CorruptedFile* = 1; 
+	OutOfRange* = 2; 
+	RecordDeleted* = 3; 
+	TypeNotSupported* = 4; 
+	Character* = ORD(\"C"\); 
+	Date* = ORD(\"D"\); 
+	Logical* = ORD(\"L"\); 
+	Numeric* = ORD(\"N"\); 
+TYPE 
+	Field* = POINTER TO FieldDesc; 
+
+	FieldDesc* = RECORD 
+		name*: ARRAY 12 OF CHAR; 
+		type*: LONGINT; 
+		address: LONGINT; 
+		width: LONGINT; 
+		digits*: LONGINT; 
+		next*: Field; 
+	END; 
+
+	FieldValue* = RECORD 
+		character*: ARRAY 256 OF CHAR; 
+		date*: LONGINT; 
+		logical*: BOOLEAN; 
+		numeric*: LONGREAL; 
+	END; 
+
+	Reader* = RECORD 
+		R: Files.Rider; 
+		firstRecord, thisRecord: LONGINT; 
+		nRecords*: LONGINT; 
+		sizeRecord: LONGINT; 
+		fields*: Field; 
+		res*: INTEGER; 
+	END; 
+
+	PROCEDURE ^ ReadDate(VAR R: Reader; VAR date: LONGINT); 
+	PROCEDURE ^ ReadLInt(VAR R: Reader; VAR i: LONGINT); 
+	PROCEDURE ^ ReadInt(VAR R: Reader; VAR i: INTEGER); 
+	PROCEDURE ^ Open*(VAR R: Reader; F: Files.File; pos: LONGINT); 
+	PROCEDURE ^ Set*(VAR R: Reader; record: LONGINT); 
+	PROCEDURE ^ ToDate(VAR R: Reader; VAR value: FieldValue); 
+	PROCEDURE ^ ToLogical(VAR R: Reader; VAR value: FieldValue); 
+	PROCEDURE ^ Read*(VAR R: Reader; field: Field; VAR value: FieldValue); 
+BEGIN
+END DBF.

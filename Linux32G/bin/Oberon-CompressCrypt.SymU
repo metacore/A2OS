@@ -1,8 +1,0 @@
-MODULE CompressCrypt IN Oberon;
-	IMPORT Files, Strings, Compress;
-
-	PROCEDURE ^ Decrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER); 
-	PROCEDURE ^ Encrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER); 
-	PROCEDURE ^ Install*; 
-BEGIN
-END CompressCrypt.

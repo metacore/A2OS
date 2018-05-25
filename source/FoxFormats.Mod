@@ -137,8 +137,8 @@ TYPE
 	BEGIN
 		symbolFileFormat := NIL;
 		IF Strings.Length(name) > 0 THEN
-			GETPROCEDURE(name,"Get", factory); (* try long name for example -G=OCBinarySymbolFile *)
-			IF factory = NIL THEN (* try short name for example -G=Binary *)
+			GETPROCEDURE(name,"Get", factory); (* try long name for example -G=FoxTextualSymbolFile *)
+			IF factory = NIL THEN (* try short name for example -G=Textual *)
 				procname := "Fox";
 				Strings.Append(procname, name);
 				Strings.Append(procname, "SymbolFile");
@@ -160,8 +160,8 @@ TYPE
 	BEGIN
 		objectFileFormat := NIL;
 		IF Strings.Length(name) > 0 THEN
-			GETPROCEDURE(name,"Get", factory); (* try long name for example -G=OCBinaryObjectFile *)
-			IF factory = NIL THEN (* try short name for example -G=Binary*)
+			GETPROCEDURE(name,"Get", factory); (* try long name for example -G=FoxGenericObjectFile *)
+			IF factory = NIL THEN (* try short name for example -G=Generic*)
 				procname := "Fox";
 				Strings.Append(procname, name);
 				Strings.Append(procname, "ObjectFile");

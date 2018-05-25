@@ -1,0 +1,30 @@
+MODULE CryptoSHA256;
+	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
+CONST 
+	BlockSize = 64; 
+TYPE 
+	Hash* = OBJECT (Hashes.Hash)
+	VAR 
+		hash: ARRAY 8 OF LONGINT; 
+		Nl, Nh: LONGINT; 
+		cdata: ARRAY BlockSize OF CHAR; 
+		cn: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ HashBlock(CONST buf: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ HashContextBlock; 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+	END Hash; 
+VAR 
+	K256: ARRAY 64 OF LONGINT; 
+
+	PROCEDURE ^ NewHash*(): Hashes.Hash; 
+	PROCEDURE ^ Sigma0Maj(x: SET32; y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ Sigma1Ch(x: SET32; y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ sigma0(x: SET32): LONGINT; 
+	PROCEDURE ^ sigma1(x: SET32): LONGINT; 
+	PROCEDURE ^ InitializeK; 
+BEGIN
+END CryptoSHA256.

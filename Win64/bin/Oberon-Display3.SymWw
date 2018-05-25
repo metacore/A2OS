@@ -1,0 +1,131 @@
+MODULE Display3 IN Oberon;
+	IMPORT Display, Objects, Fonts, Pictures, Oberon, Texts;
+CONST 
+	replace* = Display.replace; 
+	paint* = Display.paint; 
+	invert* = Display.invert; 
+	filled* = 1; 
+	maxcoord = 8192; 
+	add = 1; 
+	subtract = 2; 
+	BrushSize = 100; 
+TYPE 
+	Mask* = POINTER TO MaskDesc; 
+
+	OverlapMsg* = RECORD (Display.FrameMsg)
+		M*: Mask; 
+	END; 
+
+	UpdateMaskMsg* = RECORD (Display.FrameMsg)
+	END; 
+
+	Run = POINTER TO RunDesc; 
+
+	RunDesc = RECORD 
+		x, w, right: INTEGER; 
+		value: INTEGER; 
+		next, prev: Run; 
+	END; 
+
+	ScanLine = POINTER TO ScanLineDesc; 
+
+	ScanLineDesc = RECORD 
+		y, h, top: INTEGER; 
+		maymerge: BOOLEAN; 
+		run: Run; 
+		next, prev: ScanLine; 
+	END; 
+
+	MaskDesc* = RECORD 
+		x*, y*: INTEGER; 
+		X*, Y*, W*, H*: INTEGER; 
+		sX, sY, sW, sH: INTEGER; 
+		simple: BOOLEAN; 
+		scanline: ScanLine; 
+	END; 
+
+	EnumProc* = PROCEDURE (X, Y, W, H: INTEGER); 
+
+	Brush = RECORD 
+		brul, brur: ARRAY BrushSize OF INTEGER; 
+		bufl, bufr: ARRAY BrushSize OF INTEGER; 
+		bufh, brushr: INTEGER; 
+		x, y, mode: INTEGER; 
+		col: Display.Color; 
+		M: Mask; 
+		pat: Display.Pattern; 
+	END; 
+VAR 
+	selectpat*: Display.Pattern; 
+	FG*, BG*: INTEGER; 
+	red*, green*, blue*: INTEGER; 
+	black*, white*: INTEGER; 
+	topC*: INTEGER; 
+	bottomC*: INTEGER; 
+	upC*: INTEGER; 
+	downC*: INTEGER; 
+	groupC*: INTEGER; 
+	invertC*: INTEGER; 
+	textC*: INTEGER; 
+	textbackC*: INTEGER; 
+	textmode*: INTEGER; 
+	typ: INTEGER; 
+	aM, bM: Mask; 
+	tmpP: Pictures.Picture; 
+	tmpM, dX, dY: INTEGER; 
+	compactionflag: BOOLEAN; 
+	drawingPolygon: BOOLEAN; 
+	brush: Brush; 
+
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Max(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ Clip(M: Mask; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ Open0(M: Mask); 
+	PROCEDURE ^ Open*(M: Mask); 
+	PROCEDURE ^ Enum*(M: Mask; enum: EnumProc); 
+	PROCEDURE ^ EnumInvert*(M: Mask; enum: EnumProc); 
+	PROCEDURE ^ EnumRect*(M: Mask; X, Y, W, H: INTEGER; enum: EnumProc); 
+	PROCEDURE ^ SplitScan(s: ScanLine; y: INTEGER); 
+	PROCEDURE ^ MergeScanLine(s: ScanLine); 
+	PROCEDURE ^ Compact(M: Mask); 
+	PROCEDURE ^ DoLine(s: ScanLine; x, y, w, h: INTEGER); 
+	PROCEDURE ^ ExclLine(s: ScanLine; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Copy*(from: Mask; VAR to: Mask); 
+	PROCEDURE ^ Add*(M: Mask; X, Y, W, H: INTEGER); 
+	PROCEDURE ^ AdjustMask*(M: Mask; X, Y, W, H: INTEGER); 
+	PROCEDURE ^ Subtract*(M: Mask; X, Y, W, H: INTEGER); 
+	PROCEDURE ^ Intersect*(M: Mask; X, Y, W, H: INTEGER); 
+	PROCEDURE ^ IntersectMasks1(x, y, w, h: INTEGER); 
+	PROCEDURE ^ IntersectMasks0(X, Y, W, H: INTEGER); 
+	PROCEDURE ^ IntersectMasks*(A, B: Mask; VAR R: Mask); 
+	PROCEDURE ^ SubtractMasks*(A, B: Mask; VAR R: Mask); 
+	PROCEDURE ^ Shift*(M: Mask); 
+	PROCEDURE ^ Rectangular*(M: Mask; VAR X, Y, W, H: INTEGER): BOOLEAN; 
+	PROCEDURE ^ CopyMask*(M: Mask; X, Y: INTEGER; mode: INTEGER); 
+	PROCEDURE ^ ReplConst*(M: Mask; col: Display.Color; X, Y, W, H, mode: INTEGER); 
+	PROCEDURE ^ Visible*(M: Mask; X, Y, W, H: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Dot*(M: Mask; col: Display.Color; X, Y, mode: INTEGER); 
+	PROCEDURE ^ FillPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; pX, pY, X, Y, W, H, mode: INTEGER); 
+	PROCEDURE ^ CopyPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, mode: INTEGER); 
+	PROCEDURE ^ Rect*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, W, H, width, mode: INTEGER); 
+	PROCEDURE ^ Rect3D*(M: Mask; topcol, botcol: Display.Color; X, Y, W, H, width, mode: INTEGER); 
+	PROCEDURE ^ FilledRect3D*(M: Mask; topcol, botcol, incol: Display.Color; X, Y, W, H, width, mode: INTEGER); 
+	PROCEDURE ^ BrushJump(VAR b: Brush; x, y: INTEGER); 
+	PROCEDURE ^ BrushWalk(VAR b: Brush; x, y: INTEGER); 
+	PROCEDURE ^ BrushFlush(VAR b: Brush); 
+	PROCEDURE ^ InitBrush(VAR b: Brush; M: Mask; pat: Display.Pattern; col: Display.Color; w, mode: INTEGER); 
+	PROCEDURE ^ Line*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, X1, Y1, width, mode: INTEGER); 
+	PROCEDURE ^ FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, mode: INTEGER); 
+	PROCEDURE ^ Poly*(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, width: INTEGER; style: SET; mode: INTEGER); 
+	PROCEDURE ^ Ellipse*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, a, b, width: INTEGER; style: SET; mode: INTEGER); 
+	PROCEDURE ^ Circle*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, r, width: INTEGER; style: SET; mode: INTEGER); 
+	PROCEDURE ^ String*(M: Mask; col: Display.Color; X, Y: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER); 
+	PROCEDURE ^ CenterString*(M: Mask; col: Display.Color; X, Y, W, H: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER); 
+	PROCEDURE ^ StringSize*(s: ARRAY OF CHAR; fnt: Fonts.Font; VAR w, h, dsr: INTEGER); 
+	PROCEDURE ^ EnumPict(X, Y, W, H: INTEGER); 
+	PROCEDURE ^ Pict*(M: Mask; P: Pictures.Picture; X, Y, W, H, DX, DY, mode: INTEGER); 
+	PROCEDURE ^ ReplPict*(M: Mask; P: Pictures.Picture; px, py, X, Y, W, H, mode: INTEGER); 
+	PROCEDURE ^ Init; 
+BEGIN
+END Display3.

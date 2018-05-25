@@ -1,0 +1,37 @@
+MODULE BenchXML;
+	IMPORT KernelLog, Streams, Modules, Commands, Options, Dates, Strings, Files, XML, XMLScanner, XMLParser;
+CONST 
+	DefaultNofTimes = 1000; 
+	DefaultNofWorkers = 1; 
+	Waiting = 0; 
+	Working = 1; 
+	Terminating = 2; 
+	Terminated = 3; 
+TYPE 
+	Worker = OBJECT {EXCLUSIVE} 
+	VAR 
+		file: Files.File; 
+		pooling: SET; 
+		nofTimes: LONGINT; 
+		state: LONGINT; 
+
+		PROCEDURE ^  & Init*(file: Files.File; nofTimes: LONGINT; pooling: SET); 
+		PROCEDURE ^ Start; 
+		PROCEDURE ^ Terminate; 
+		PROCEDURE ^ Parse; 
+	BEGIN{ACTIVE} 
+	END Worker; 
+VAR 
+	error: BOOLEAN; 
+	workers: POINTER TO ARRAY OF Worker; 
+	nofActiveWorkers: LONGINT; 
+
+	PROCEDURE ^ DecrementNofActiveWorkers; 
+	PROCEDURE ^ ParseFile(file: Files.File; pooling: SET): XML.Document; 
+	PROCEDURE ^ BenchParser*(context: Commands.Context); 
+	PROCEDURE ^ ToSeconds(nofDays, nofHours, nofMinutes, nofSeconds: LONGINT): LONGINT; 
+	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ShowUsage(out: Streams.Writer); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END BenchXML.

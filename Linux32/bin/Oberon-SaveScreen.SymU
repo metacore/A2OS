@@ -1,0 +1,47 @@
+MODULE SaveScreen IN Oberon;
+	IMPORT Modules, Objects, Texts, In, Viewers, Oberon, Input, Display;
+CONST 
+	defWaitTime = (10 * 60); 
+	defFrameRate = 20; 
+	defWaitPeriod = 15; 
+	mouseTolerance = 3; 
+	versionString = \"1.1.4 - 2000.04.03 - bpsm"\; 
+	dormant = 0; 
+	waiting = 1; 
+	drawingD = 2; 
+	drawingW = 3; 
+	nostate =  -1; 
+TYPE 
+	FaderProc* = PROCEDURE ; 
+VAR 
+	W: Texts.Writer; 
+	seed: LONGINT; 
+	Start, Step, Stop: FaderProc; 
+	waitLimit: LONGINT; 
+	waitTime, waitPeriod, drawPeriod: LONGINT; 
+	oldMouseX, oldMouseY: INTEGER; 
+	state: INTEGER; 
+	task: Oberon.Task; 
+	filler: Viewers.Viewer; 
+
+	PROCEDURE ^ Msg(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Rand*(range: INTEGER): INTEGER; 
+	PROCEDURE ^ Limit*(min, val, max: INTEGER): INTEGER; 
+	PROCEDURE ^ HandleFiller(V: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ TaskHandler(task: Oberon.Task); 
+	PROCEDURE ^ ChangeState(newState: INTEGER); 
+	PROCEDURE ^ StartDefault; 
+	PROCEDURE ^ StepDefault; 
+	PROCEDURE ^ StopDefault; 
+	PROCEDURE ^ SetWaitTime*(seconds: LONGINT); 
+	PROCEDURE ^ SetFrameRate*(framesPerSecond: INTEGER); 
+	PROCEDURE ^ InstallFader*(newStart, newStep, newStop: FaderProc); 
+	PROCEDURE ^ InstallDefault*; 
+	PROCEDURE ^ RemoveFader*(start, step, stop: FaderProc); 
+	PROCEDURE ^ InstallTask; 
+	PROCEDURE ^ Deactivate*; 
+	PROCEDURE ^ Activate*; 
+	PROCEDURE ^ Run*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END SaveScreen.

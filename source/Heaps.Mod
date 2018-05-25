@@ -1868,25 +1868,23 @@ TraceHeap:
 Co
 
 
-Compiler.Compile -p=Win32G --writeBarriers --traceModule=Trace
-Runtime.Mod Trace.Mod Generic.Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
-Generic.Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
-Commands.Mod I386.Reals.Mod Generic.Reflection.Mod
+Compiler.Compile -p=Win32 --writeBarriers --traceModule=Trace
+Runtime.Mod Trace.Mod Win32.Kernel32.Mod Win32.Machine.Mod Heaps.Mod 
+Modules.Mod Win32.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
+Commands.Mod I386.Reals.Mod Reflection.Mod
 Win32.Traps.Mod Win32.WinTrace.Mod Win32.StdIO.Mod Locks.Mod Win32.Clock.Mod Disks.Mod Files.Mod 
 Dates.Mod Strings.Mod UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod 
 OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod 
 ISO9660Volumes.Mod ISO9660Files.Mod Win32.User32.Mod Win32.WinTrace.Mod Win32.ODBC.Mod 
 Win32.Shell32.Mod Win32.SQL.Mod Win32.WinFS.Mod RelativeFileSystem.Mod BitSets.Mod Diagnostics.Mod 
-StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod BootConsole.Mod 
+StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod BootConsole.Mod 
 
 ~
 
-Compiler.Compile -p=Win32G --traceModule=Trace --writeBarriers Heaps.Mod ~
-StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  GenericLoader  BootConsole ~
+Compiler.Compile -p=Win32 --traceModule=Trace --writeBarriers Heaps.Mod ~
+Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
 FSTools.CloseFiles A2.exe ~
 
-
-FoxBinarySymbolFile.Test /temp/obj/Heaps ~
 
 Heaps.ShowCards 
 

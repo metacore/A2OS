@@ -1,0 +1,246 @@
+MODULE Raster;
+	IMPORT SYSTEM, KernelLog, Machine, Streams, CLUTs, Displays;
+CONST 
+	b* = 0; 
+	g* = 1; 
+	r* = 2; 
+	a* = 3; 
+	custom* = 0; 
+	a1* = 1; 
+	a8* = 2; 
+	d8* = 3; 
+	p8* = 4; 
+	bgr555* = 5; 
+	bgr565* = 6; 
+	bgr466* = 7; 
+	bgr888* = 8; 
+	bgra8888* = 9; 
+	p16* = 10; 
+	color* = 0; 
+	alpha* = 1; 
+	index* = 2; 
+	clear* = 0; 
+	srcCopy* = 1; 
+	dstCopy* = 2; 
+	srcOverDst* = 3; 
+	dstOverSrc* = 4; 
+	srcInDst* = 5; 
+	dstInSrc* = 6; 
+	srcWithoutDst* = 7; 
+	dstWithoutSrc* = 8; 
+	srcAtopDst* = 9; 
+	dstAtopSrc* = 10; 
+	srcXorDst* = 11; 
+	InvDst* = 12; 
+	InvOverDst* = 13; 
+	MAXCOL = 65536; 
+TYPE 
+	Pixel* = ARRAY 4 OF CHAR; 
+
+	Palette* = OBJECT 
+	VAR 
+		col*: POINTER TO ARRAY OF Pixel; 
+		used*: LONGINT; 
+		clut: CLUTs.CLUT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Init*(used: LONGINT); 
+	END Palette; 
+
+	Format0* = RECORD 
+		code*: SHORTINT; 
+		bpp*: SHORTINT; 
+		align*: SHORTINT; 
+		components*: SET; 
+		pal*: Palette; 
+	END; 
+
+	PackProc* = PROCEDURE (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+
+	Format* = RECORD (Format0)
+		pack*: PackProc; 
+		unpack*: PackProc; 
+	END; 
+
+	Image* = OBJECT 
+	VAR 
+		width*, height*: LONGINT; 
+		fmt*: Format; 
+		bpr*: LONGINT; 
+		adr*: ADDRESS; 
+		mem*: POINTER TO ARRAY OF CHAR; 
+	END Image; 
+
+	Mode0* = RECORD 
+		src*, dst*: Format; 
+		op*: LONGINT; 
+		col*: Pixel; 
+		buf: Pixel; 
+		map: POINTER TO ARRAY OF INTEGER; 
+	END; 
+
+	TransferProc* = PROCEDURE (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+
+	Mode* = RECORD (Mode0)
+		transfer*: TransferProc; 
+	END; 
+
+	PictureTransferParameters* = POINTER TO RECORD 
+		img*: Image; 
+		name*: ARRAY 128 OF CHAR; 
+		done*: BOOLEAN; 
+	END; 
+VAR 
+	A1*, A8*, D8*, BGR555*, BGR565*, BGR466*, BGR888*, BGRA8888*: Format; 
+	PixelFormat*: Format; 
+	Clamp*: ARRAY 1280 OF CHAR; 
+	Zero: Pixel; 
+	Bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 
+	Set, Clr: ARRAY 256 OF ARRAY 8 OF CHAR; 
+	MMXenabled*, SSE2enabled*: BOOLEAN; 
+
+	PROCEDURE ^ SetRGB*(VAR pix: Pixel; red, green, blue: LONGINT); 
+	PROCEDURE ^ SetRGBA*(VAR pix: Pixel; red, green, blue, alpha: LONGINT); 
+	PROCEDURE ^ GetRGBA*(pix: Pixel; VAR red, green, blue, alpha: LONGINT); 
+	PROCEDURE ^ PaletteIndex*(pal: Palette; red, green, blue: LONGINT): LONGINT; 
+	PROCEDURE ^ InitPalette*(pal: Palette; used, bits: LONGINT); 
+	PROCEDURE ^ InitGrayPalette*(pal: Palette; used, bits: LONGINT); 
+	PROCEDURE ^ CopyPalette*(from, to: Palette); 
+	PROCEDURE ^ ComputePalette*(img: Image; pal: Palette; reservedcols, maxcols, bits: LONGINT); 
+	PROCEDURE ^ PackA1(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackA1(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackA8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackA8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackP8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackP8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackD8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackD8(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackP16(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackP16(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackBGR555(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackBGR555(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackBGR565(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackBGR565(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackBGR466(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackBGR466(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackBGR888(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackBGR888(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ PackBGRA8888(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ UnpackBGRA8888(VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel); 
+	PROCEDURE ^ DisplayFormat*(format: LONGINT): Format; 
+	PROCEDURE ^ InitFormat*(VAR fmt: Format; code, bpp, align: SHORTINT; comps: SET; pal: Palette; pack, unpack: PackProc); 
+	PROCEDURE ^ InitPaletteFormat*(VAR fmt: Format; pal: Palette); 
+	PROCEDURE ^ Same*(VAR fmt0, fmt1: Format): BOOLEAN; 
+	PROCEDURE ^ Init*(img: Image; width, height: LONGINT; VAR fmt: Format; bpr: LONGINT; adr: ADDRESS); 
+	PROCEDURE ^ InitBuf*(img: Image; width, height: LONGINT; VAR fmt: Format; bpr, offset: LONGINT; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ InitRect*(img, base: Image; x, y, w, h: LONGINT); 
+	PROCEDURE ^ Create*(img: Image; width, height: LONGINT; fmt: Format); 
+	PROCEDURE ^ CreateWithBuffer*(img: Image; width, height: LONGINT; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: ADDRESS); 
+	PROCEDURE ^ InitMode*(VAR mode: Mode; op: SHORTINT); 
+	PROCEDURE ^ InitModeColor*(VAR mode: Mode; op: SHORTINT; red, green, blue: LONGINT); 
+	PROCEDURE ^ SetModeColor*(VAR mode: Mode; red, green, blue: LONGINT); 
+	PROCEDURE ^ Blend*(op: LONGINT; VAR src, dst: Pixel); 
+	PROCEDURE ^ AnyBlendAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ InvAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ InvOverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ ClearAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Clear1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ ClearBytes(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Set1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ ConstCopy8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ ConstCopy16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ ConstCopy24(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Copy1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Copy8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ I8CopyI8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Copy16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ I16CopyI16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Copy24(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Copy32(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyBytesCopyAnyBytes(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8CopyA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1CopyA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyP8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyP8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGR888CopyP8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyP8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P8CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P8CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P8CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P8CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyD8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyD8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGR888CopyD8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyD8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ D8CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ D8CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ D8CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ D8CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P16CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ P16CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGR888CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Any16CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ SSE2BGRA8888CopyBGR888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGR888CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGR888CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ SSE2BGR888CopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyCopyBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888CopyAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ EmptyTransfer(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyOverA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8OverA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888OverA1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverConst8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverConst16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverConst24(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A1OverConst32(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ AnyOverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8OverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8OverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888OverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888OverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888OverAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888Over565*(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ MMXBGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ SSE2BGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Bind*(VAR mode: Mode; VAR src, dst: Format); 
+	PROCEDURE ^ Get*(img: Image; x, y: LONGINT; VAR pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Put*(img: Image; x, y: LONGINT; pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Fill*(img: Image; llx, lly, urx, ury: LONGINT; pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Clear*(img: Image); 
+	PROCEDURE ^ GetPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 
+	PROCEDURE ^ PutPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 
+	PROCEDURE ^ Copy*(src, dst: Image; llx, lly, urx, ury, dx, dy: LONGINT; VAR mode: Mode); 
+	PROCEDURE ^ FillPattern*(pat, dst: Image; llx, lly, urx, ury, px, py: LONGINT; VAR mode: Mode); 
+	PROCEDURE ^ Darken*(img: Image; factor: REAL); 
+	PROCEDURE ^ Fade*(img: Image; factor: REAL); 
+	PROCEDURE ^ Opaque*(img: Image; factor: REAL); 
+	PROCEDURE ^ Add*(i, j, res: Image); 
+	PROCEDURE ^ Dither*(src, dst: Image); 
+	PROCEDURE ^ Write*(VAR fr: Streams.Writer; img: Image); 
+	PROCEDURE ^ Read*(VAR fr: Streams.Reader; img: Image); 
+	PROCEDURE ^ InitBitTables; 
+	PROCEDURE ^ InitClamp; 
+	PROCEDURE ^ ToggleMMX*; 
+	PROCEDURE ^ ToggleSSE2*; 
+	PROCEDURE ^ ColorToIndex*(col: LONGINT): LONGINT; 
+	PROCEDURE ^ IndexToColor*(index: LONGINT): LONGINT; 
+BEGIN
+END Raster.

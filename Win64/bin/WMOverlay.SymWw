@@ -1,0 +1,66 @@
+MODULE WMOverlay;
+	IMPORT Modules, Files, Inputs, Strings, Raster, WMRectangles, WMGraphics, WMGraphicUtilities, WMWindowManager, WMRestorable, WMDialogs;
+CONST 
+	Mode_Idle = 0; 
+	Mode_Drawing = 1; 
+	Pointer_Arrow = 0; 
+	Pointer_Crosshair = 1; 
+	NofImages = 4; 
+	NofFunctions = 3; 
+	Function_Close = 0; 
+	Function_Clear = 1; 
+	Function_ToggleMode = 2; 
+	IconWidth = 48; 
+	IconHeight = 48; 
+	Border = 16; 
+	FontName = \"Vera"\; 
+	FontSize = 24; 
+TYPE 
+	Item = RECORD 
+		isEnabled: BOOLEAN; 
+		bgEnabled: LONGINT; 
+		rect: WMRectangles.Rectangle; 
+		image, imageHover: WMGraphics.Image; 
+	END; 
+
+	Window = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
+	VAR 
+		lx, ly, stringX, stringY, stringX0, stringY0: LONGINT; 
+		mode: LONGINT; 
+		currentString: ARRAY 1024 OF CHAR; 
+		currentIdx: LONGINT; 
+		mrEnabled: BOOLEAN; 
+		mouseOver: LONGINT; 
+		currentPointer: LONGINT; 
+		currentIndex: LONGINT; 
+		color, bgColor: LONGINT; 
+		dragStartX, dragStartY: LONGINT; 
+		dragging, noDrag: BOOLEAN; 
+		modifierFlags: SET; 
+		items: ARRAY (NofFunctions + NofImages) OF Item; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ GetItemIndex(x, y: LONGINT): LONGINT; 
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; width, height, quality: LONGINT); 
+		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerLeave*; 
+		PROCEDURE ^ ProcessCommand(item: Item; index: LONGINT); 
+		PROCEDURE ^ FocusLost*; 
+		PROCEDURE ^ Fill(color: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keySym: LONGINT); 
+	END Window; 
+VAR 
+	window: Window; 
+	viewport: WMWindowManager.ViewPort; 
+
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Toggle*; 
+	PROCEDURE ^ ToggleMode*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMOverlay.

@@ -1,0 +1,84 @@
+MODULE srVoxel2;
+	IMPORT srBase, Random, srVoxel, srE, Out := KernelLog;
+CONST 
+	POS = TRUE; 
+	NEG = FALSE; 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	AR2* = ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF Voxel; 
+
+	AR3* = ARRAY 3 OF ARRAY 3 OF ARRAY 3 OF Voxel; 
+
+	AR5* = ARRAY 5 OF ARRAY 5 OF ARRAY 5 OF Voxel; 
+
+	AR10* = ARRAY 10 OF ARRAY 10 OF ARRAY 10 OF Voxel; 
+
+	NilVox* = OBJECT (Voxel)
+
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END NilVox; 
+
+	Bloc2* = OBJECT (Voxel)
+	VAR 
+		blox*: AR2; 
+
+		PROCEDURE ^ split*; 
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ turn; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+	END Bloc2; 
+
+	Bloc3* = OBJECT (Voxel)
+	VAR 
+		blox*: AR3; 
+
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ flipx*; 
+		PROCEDURE ^ flipy*; 
+		PROCEDURE ^ flipz*; 
+		PROCEDURE ^ fill(v: Voxel); 
+		PROCEDURE ^ fillSerp*(v, w: Voxel); 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+	END Bloc3; 
+
+	Bloc5* = OBJECT (Voxel)
+	VAR 
+		blox*: AR5; 
+		airred, airgreen, airblue, airblack: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ fill*(v: Voxel); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ deathray*(VAR ray: Ray); 
+	END Bloc5; 
+
+	Bloc10* = OBJECT (Voxel)
+	VAR 
+		blox*: AR10; 
+		airred, airgreen, airblue, airblack: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
+		PROCEDURE ^ fill*(v: Voxel); 
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ deathray*(VAR ray: Ray); 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+	END Bloc10; 
+VAR 
+	rand: Random.Generator; 
+	nil*: NilVox; 
+
+BEGIN
+END srVoxel2.

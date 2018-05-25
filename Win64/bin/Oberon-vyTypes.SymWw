@@ -1,0 +1,45 @@
+MODULE vyTypes IN Oberon;
+	IMPORT Texts, vyHostTexts, vyHost, vyBase, vyLongintVec, vyBooleanVec, vyIntVec, vyRealVec, vyLongrealVec;
+CONST 
+	idversion* = \"vyTypes 0.0a3"\; 
+	cBOOLEAN* = 1; 
+	cREAL* = 5; 
+	cUNDEF* =  -1; 
+	cBadType* = 1; 
+	cBadLen* = 2; 
+	cOK* = {}; 
+TYPE 
+	Struct* = vyBase.OPTStruct; 
+
+	tShortintVector* = vyBase.tVector; 
+
+	tSetVector* = vyBase.tVector; 
+
+	PROCEDURE ^ NumForm*(data: vyBase.tData): SHORTINT; 
+	PROCEDURE ^ NrNaNs*(data: vyBase.tData): LONGINT; 
+	PROCEDURE ^ Dummy(NotYetImplemented: BOOLEAN); 
+	PROCEDURE ^ Write*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
+	PROCEDURE ^ Outline*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
+	PROCEDURE ^ ChunkSummary(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
+	PROCEDURE ^ VGetR*(v: vyBase.tVector; pos: LONGINT): REAL; 
+	PROCEDURE ^ GetValueR*(v: vyBase.tData): REAL; 
+	PROCEDURE ^ Sort*(VAR v: vyBase.tVector); 
+	PROCEDURE ^ SortById*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
+	PROCEDURE ^ SortWId*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
+	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ VGetMinMax*(v: vyBase.tVector; VAR min, max: LONGREAL; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ VGetMinMaxR*(v: vyBase.tVector; VAR rmin, rmax: REAL; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ VGetMinMaxX*(v: vyBase.tVector; VAR min, max: LONGREAL; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ Sub*(x, y: vyBase.tVector; diff: vyBase.tVector); 
+	PROCEDURE ^ Copy*(src: vyBase.tData; VAR dest: vyBase.tData); 
+	PROCEDURE ^ SameLayout(a, b: vyBase.tVector): BOOLEAN; 
+	PROCEDURE ^ SameType*(VAR a, b: vyBase.tData): BOOLEAN; 
+	PROCEDURE ^ Compatible*(VAR a, b: vyBase.tData): BOOLEAN; 
+	PROCEDURE ^ Summary*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
+	PROCEDURE ^ DebugSummary*(v: vyBase.tData); 
+	PROCEDURE ^ DebugWrite*(v: vyBase.tData); 
+	PROCEDURE ^ Short*(from: vyBase.tData): vyBase.tData; 
+	PROCEDURE ^ Entier*(from: vyBase.tData; offs, factor: LONGREAL): vyBase.tData; 
+	PROCEDURE ^ CvtReal*(src: vyBase.tData): vyBase.tData; 
+BEGIN
+END vyTypes.

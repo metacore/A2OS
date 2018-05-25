@@ -1,0 +1,27 @@
+MODULE TFStringPool;
+	IMPORT Trace, Strings;
+CONST 
+	BufSize = 1024; 
+TYPE 
+	Buffer = POINTER TO ARRAY BufSize OF CHAR; 
+
+	BufferList = POINTER TO ARRAY OF Buffer; 
+
+	StringPool* = OBJECT {EXCLUSIVE} 
+	VAR 
+		bufList: BufferList; 
+		end*: LONGINT; 
+		nofBufs: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GrowBufList; 
+		PROCEDURE ^ AddString*(CONST str: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetString*(i: LONGINT; VAR str: ARRAY OF CHAR); 
+		PROCEDURE ^ Equal*(a, b: LONGINT): BOOLEAN; 
+	END StringPool; 
+VAR 
+	s: StringPool; 
+
+	PROCEDURE ^ Test*(par: ANY): ANY; 
+BEGIN
+END TFStringPool.

@@ -1,0 +1,52 @@
+MODULE Sisiphus IN Oberon;
+	IMPORT SYSTEM, Modules, Objects, Input, Display, Oberon, Math IN A2, Files, Gadgets, Display3, Printer;
+CONST 
+	IStag = 753; 
+	left = 2; 
+	middle = 1; 
+	right = 0; 
+	HSide = 31; 
+	Side = 64; 
+	MaxN = 64; 
+	Sleep = 100; 
+TYPE 
+	Icon = ARRAY 2 OF RECORD 
+		addr: ADDRESS; 
+		image: ARRAY (Side + 1) OF SET; 
+	END; 
+
+	Frame* = POINTER TO RECORD (Gadgets.FrameDesc)
+		col*: INTEGER; 
+		age*: LONGINT; 
+	END; 
+
+	NotifyMsg = RECORD (Display.FrameMsg)
+	END; 
+
+	SyncMsg = RECORD (Display.FrameMsg)
+	END; 
+
+	; 
+VAR 
+	N: LONGINT; 
+	Task: Oberon.Task; 
+	Fig: ARRAY MaxN OF Icon; 
+
+	PROCEDURE ^ EmptyFig; 
+	PROCEDURE ^ LoadFig(file: ARRAY OF CHAR); 
+	PROCEDURE ^ Draw(M: Display3.Mask; VAR icn: Icon; x, y, color: INTEGER); 
+	PROCEDURE ^ P(x: INTEGER): INTEGER; 
+	PROCEDURE ^ PrintIcn(VAR icn: Icon; x, y: INTEGER); 
+	PROCEDURE ^ HotSpot(X, Y, W, H, X0, Y0: INTEGER); 
+	PROCEDURE ^ SaveScreen(x0, y0: INTEGER; keys: SET; col: INTEGER; VAR State: LONGINT); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Sync*; 
+	PROCEDURE ^ Step(me: Oberon.Task); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Sisiphus.

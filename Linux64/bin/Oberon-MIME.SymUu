@@ -1,0 +1,93 @@
+MODULE MIME IN Oberon;
+	IMPORT Streams, TextStreams, Files, Dates, Strings, Fonts, Texts, Display, Display3, Objects, Attributes, Gadgets, BasicFigures, Out, Oberon;
+CONST 
+	BufLen = 1024; 
+	MaxLine = (BufLen - 1); 
+	MaxSMTPLine = 1000; 
+	MimeVersion* = \"Mime-Version: 1.0"\; 
+	TextMime* = \"text/plain"\; 
+	ISOVer* = \"ISO-8859-1"\; 
+	OberonMime* = \"application/compressed/oberon"\; 
+	EncAuto* =  -1; 
+	EncBin* = 0; 
+	Enc8Bit* = 1; 
+	Enc7Bit* = 2; 
+	EncQuoted* = 3; 
+	EncBase64* = 4; 
+	EncAsciiCoder* = 5; 
+	EncAsciiCoderC* = 6; 
+	EncAsciiCoderCPlain* = 7; 
+	ContEncQuoted* = \"Content-Transfer-Encoding: quoted-printable"\; 
+	ContEnc7Bit* = \"Content-Transfer-Encoding: 7bit"\; 
+	ContEnc8Bit* = \"Content-Transfer-Encoding: 8bit"\; 
+	ContEncBase64* = \"Content-Transfer-Encoding: Base64"\; 
+TYPE 
+	OpenString* = POINTER TO ARRAY OF CHAR; 
+
+	Header* = POINTER TO HeaderDesc; 
+
+	HeaderDesc* = RECORD 
+		fields*: OpenString; 
+	END; 
+
+	ContentType* = POINTER TO ContentTypeDesc; 
+
+	ContentTypeDesc* = RECORD 
+		typ*: ARRAY 32 OF CHAR; 
+		subTyp*: ARRAY 64 OF CHAR; 
+		suffix*: ARRAY 8 OF CHAR; 
+		prefix*: ARRAY 128 OF CHAR; 
+		support*: BOOLEAN; 
+		next: ContentType; 
+	END; 
+
+	Content* = POINTER TO ContentDesc; 
+
+	ContentDesc* = RECORD 
+		h: Header; 
+		pos, len*: LONGINT; 
+		typ*: ContentType; 
+		encoding*: LONGINT; 
+	END; 
+
+	Part = POINTER TO PartDesc; 
+
+	PartDesc = RECORD 
+		name: ARRAY 64 OF CHAR; 
+		no: LONGINT; 
+		next: Part; 
+	END; 
+VAR 
+	contTypes*: ContentType; 
+	textCont*: Content; 
+
+	PROCEDURE ^ ReadHeader*(S, echo: Streams.Stream; VAR h: Header; VAR len: LONGINT); 
+	PROCEDURE ^ FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: LONGINT); 
+	PROCEDURE ^ FindField*(h: Header; field: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ NextValue*(h: Header; VAR pos: LONGINT); 
+	PROCEDURE ^ HexVal(ch: CHAR): LONGINT; 
+	PROCEDURE ^ DecodeValue(VAR value: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractValue*(h: Header; pos: LONGINT; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ FindParam*(h: Header; pos: LONGINT; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractEMail*(h: Header; pos: LONGINT; VAR email: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToMonth(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GMTTime(h, m, s: LONGINT; zone: ARRAY OF CHAR; VAR time, date: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetClock*(VAR time, date: LONGINT); 
+	PROCEDURE ^ ExtractGMTDate*(h: Header; pos: LONGINT; VAR time, date: LONGINT); 
+	PROCEDURE ^ EnumMIME(key, value: ARRAY OF CHAR); 
+	PROCEDURE ^ GetContentType*(fullTyp: ARRAY OF CHAR): ContentType; 
+	PROCEDURE ^ LoadTypes; 
+	PROCEDURE ^ MakeTempName*(contType: ContentType; VAR tempName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractContentType*(h: Header; pos: LONGINT; VAR cont: Content); 
+	PROCEDURE ^ ReadText*(in: Streams.Stream; VAR W: Texts.Writer; cont: Content; mail: BOOLEAN); 
+	PROCEDURE ^ SearchBoundary(F: Files.File; VAR boundary: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ TextEncoding*(h: Header; pos: LONGINT; cont: Content); 
+	PROCEDURE ^ HorzRule(VAR W: Texts.Writer; name: ARRAY OF CHAR); 
+	PROCEDURE ^ DecodePart(F: Files.File; beg, end: LONGINT; T: Texts.Text; VAR W: Texts.Writer; VAR parts: Part; mail: BOOLEAN); 
+	PROCEDURE ^ DecodeMultipartFile(F: Files.File; VAR T: Texts.Text; boundary: ARRAY OF CHAR; mail: BOOLEAN); 
+	PROCEDURE ^ ReadMultipartText*(in: Streams.Stream; VAR T: Texts.Text; cont: Content; mail: BOOLEAN); 
+	PROCEDURE ^ HexDigit(i: LONGINT): CHAR; 
+	PROCEDURE ^ WriteText*(T: Texts.Text; beg, end: LONGINT; out: Streams.Stream; cont: Content; mail, crlf: BOOLEAN); 
+	PROCEDURE ^ WriteISOMime*(S: Streams.Stream; cont: Content); 
+BEGIN
+END MIME.

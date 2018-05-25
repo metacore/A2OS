@@ -1,0 +1,125 @@
+MODULE FoxInterpreterBackend;
+	IMPORT Basic := FoxBasic, SYSTEM, Diagnostics, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options, IntermediateBackend := FoxIntermediateBackend, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, Trace := KernelLog, Streams, SymbolFileFormat := FoxTextualSymbolFile;
+CONST 
+	StackSize = 1024; 
+	AddressSize = SIZEOF(ADDRESS); 
+TYPE 
+	PC = RECORD 
+		section: Intermediate.Section; 
+		index: LONGINT; 
+	END; 
+
+	Int1 = SHORTINT; 
+
+	Int2 = INTEGER; 
+
+	Int4 = LONGINT; 
+
+	Int8 = HUGEINT; 
+
+	Float4 = REAL; 
+
+	Float8 = LONGREAL; 
+
+	Value = RECORD 
+		int1: Int1; 
+		int2: Int2; 
+		int4: Int4; 
+		int8: Int8; 
+		float4: Float4; 
+		float8: Float8; 
+	END; 
+
+	Address = LONGINT; 
+
+	Size = LONGINT; 
+
+	Memory = POINTER TO ARRAY OF SYSTEM.BYTE; 
+
+	Heap = OBJECT 
+	VAR 
+		memory: Memory; 
+		currentSize: Size; 
+
+		PROCEDURE ^  & InitMemory; 
+		PROCEDURE ^ Allocate(size: Size): Address; 
+		PROCEDURE ^ IsValid(address: Address): BOOLEAN; 
+		PROCEDURE ^ GetObject(address: Address): OBJECT; 
+		PROCEDURE ^ PutObject(address: Address; object: OBJECT); 
+		PROCEDURE ^ GetValue(address: Address; CONST type: Intermediate.Type; VAR value: Value); 
+		PROCEDURE ^ PutValue(address: Address; CONST type: Intermediate.Type; CONST value: Value); 
+		PROCEDURE ^ Copy(dest, source, size: Address); 
+		PROCEDURE ^ Fill(dest, size: Address; CONST value: Value; CONST type: Intermediate.Type); 
+	END Heap; 
+
+	Interpreter = OBJECT 
+	VAR 
+		backend: InterpreterBackend; 
+		pc: PC; 
+		sp, fp: Address; 
+		registers: ARRAY 16 OF Value; 
+		addressType: Intermediate.Type; 
+		trace: Streams.Writer; 
+		module: Sections.Module; 
+
+		PROCEDURE ^  & InitInterpreter(backend: InterpreterBackend; addressSize: SHORTINT; m: Sections.Module); 
+		PROCEDURE ^ Dump(section: Intermediate.Section; address: Address; CONST instruction: Intermediate.Instruction); 
+		PROCEDURE ^ AllocateSection(s: Sections.Section); 
+		PROCEDURE ^ InitializeSection(s: Sections.Section); 
+		PROCEDURE ^ InitializeInstruction(VAR instruction: Intermediate.Instruction; address: Address; section: Intermediate.Section); 
+		PROCEDURE ^ Resolve(VAR op: Intermediate.Operand); 
+		PROCEDURE ^ Designate(VAR operand: Intermediate.Operand): Address; 
+		PROCEDURE ^ Evaluate(VAR operand: Intermediate.Operand; VAR value: Value); 
+		PROCEDURE ^ EvaluateAddress(VAR operand: Intermediate.Operand): Address; 
+		PROCEDURE ^ Store(VAR operand: Intermediate.Operand; CONST value: Value); 
+		PROCEDURE ^ CallSection(section: Intermediate.Section); 
+		PROCEDURE ^ Run; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^ Error(CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Execute(VAR instr: Intermediate.Instruction; VAR pc: PC); 
+		PROCEDURE ^ Push(VAR operand: Intermediate.Operand); 
+		PROCEDURE ^ Pop(VAR operand: Intermediate.Operand); 
+		PROCEDURE ^ Branch(address: Address; VAR pc: PC); 
+		PROCEDURE ^ Call(address: Address; VAR pc: PC); 
+		PROCEDURE ^ Return(VAR pc: PC; size: Address); 
+	END Interpreter; 
+
+	InterpreterBackend = OBJECT (IntermediateBackend.IntermediateBackend)
+	VAR 
+		heap: Heap; 
+		addressSize, setSize: LONGINT; 
+
+		PROCEDURE ^  & InitInterpreterBackend; 
+		PROCEDURE ^ GetSystem*(): Global.System; 
+		PROCEDURE ^ ProcessSyntaxTreeModule*(x: SyntaxTree.Module): Formats.GeneratedModule; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
+	END InterpreterBackend; 
+
+	PROCEDURE ^ GetSizeOf(CONST instruction: Intermediate.Instruction): Size; 
+	PROCEDURE ^ SetInteger(VAR value: Value; CONST type: Intermediate.Type; integer: Int8); 
+	PROCEDURE ^ GetAddress(CONST value: Value; CONST type: Intermediate.Type): Address; 
+	PROCEDURE ^ SetFloat(VAR value: Value; CONST type: Intermediate.Type; float: Float8); 
+	PROCEDURE ^ Convert(VAR value: Value; CONST from, to: Intermediate.Type); 
+	PROCEDURE ^ Negate(VAR value: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Complement(VAR value: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Absolute(VAR value: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Multiply(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Divide(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Modulo(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Subtract(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Add(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ And(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Or(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ Xor(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ ShiftLeft(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ ShiftRight(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ RotateLeft(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ RotateRight(VAR dest: Value; CONST source: Value; CONST type: Intermediate.Type); 
+	PROCEDURE ^ IsEqual(CONST value1, value2: Value; CONST type: Intermediate.Type): BOOLEAN; 
+	PROCEDURE ^ IsLessThan(CONST value1, value2: Value; CONST type: Intermediate.Type): BOOLEAN; 
+	PROCEDURE ^ Traverse(list: Sections.SectionList; handle: PROCEDURE {DELEGATE}(section: Sections.Section)); 
+	PROCEDURE ^ Get*(): Backend.Backend; 
+BEGIN
+END FoxInterpreterBackend.

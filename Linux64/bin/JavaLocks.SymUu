@@ -1,0 +1,30 @@
+MODULE JavaLocks;
+	IMPORT Objects;
+TYPE 
+	JavaLock* = OBJECT {EXCLUSIVE} 
+	VAR 
+		depth, in, out: LONGINT; 
+		locker: ANY; 
+
+		PROCEDURE ^ Lock*; 
+		PROCEDURE ^ Unlock*; 
+		PROCEDURE ^ Wait*; 
+		PROCEDURE ^ WaitTime*(ms: LONGINT); 
+		PROCEDURE ^ Notify*; 
+		PROCEDURE ^ NotifyAll*; 
+		PROCEDURE ^ Wakeup; 
+		PROCEDURE ^  & Init*; 
+	END JavaLock; 
+
+	Sleeper = OBJECT {EXCLUSIVE} 
+	VAR 
+		lock: JavaLock; 
+		done: BOOLEAN; 
+		timer: Objects.Timer; 
+
+		PROCEDURE ^ HandleTimeout; 
+		PROCEDURE ^ Stop; 
+		PROCEDURE ^  & Start*(lock: JavaLock; ms: LONGINT); 
+	END Sleeper; 
+BEGIN
+END JavaLocks.

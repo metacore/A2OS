@@ -1,0 +1,87 @@
+MODULE Disks;
+	IMPORT SYSTEM, KernelLog, Modules, Plugins;
+CONST 
+	Read* = 0; 
+	Write* = 1; 
+	Ok* = 0; 
+	MediaChanged* = 2501; 
+	WriteProtected* = 2502; 
+	Unsupported* = 2503; 
+	DeviceInUse* = 2504; 
+	MediaMissing* = 2505; 
+	ReadOnly* = 0; 
+	Removable* = 1; 
+	Mounted* = 0; 
+	Primary* = 1; 
+	Boot* = 2; 
+	Valid* = 3; 
+	BS = 512; 
+	Trace = FALSE; 
+	TraceBoot = FALSE; 
+	Stats* = TRUE; 
+TYPE 
+	Message* = RECORD 
+	END; 
+
+	Partition* = RECORD 
+		type*: LONGINT; 
+		start*, size*: LONGINT; 
+		flags*: SET; 
+		ptblock*: LONGINT; 
+		ptoffset*: LONGINT; 
+	END; 
+
+	PartitionTable* = POINTER TO ARRAY OF Partition; 
+
+	Device* = OBJECT (Plugins.Plugin)
+	VAR 
+		blockSize*: LONGINT; 
+		flags*: SET; 
+		table*: PartitionTable; 
+		openCount*: LONGINT; 
+		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: HUGEINT; 
+
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(VAR res: LONGINT); 
+		PROCEDURE ^ Close*(VAR res: LONGINT); 
+	END Device; 
+
+	EjectMsg* = RECORD (Message)
+	END; 
+
+	SyncMsg* = RECORD (Message)
+	END; 
+
+	LockMsg* = RECORD (Message)
+	END; 
+
+	UnlockMsg* = RECORD (Message)
+	END; 
+
+	SavePowerMsg* = RECORD (Message)
+	END; 
+
+	GetGeometryMsg* = RECORD (Message)
+		cyls*, hds*, spt*: LONGINT; 
+	END; 
+
+	ShutdownMsg* = RECORD (Message)
+	END; 
+
+	DiskBlock = ARRAY BS OF CHAR; 
+VAR 
+	registry*: Plugins.Registry; 
+
+	PROCEDURE ^ InitDevice*(d: Device); 
+	PROCEDURE ^ Resize(VAR p: PartitionTable; n: LONGINT); 
+	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
+	PROCEDURE ^ Extended(type: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ValidFlag(f: CHAR): BOOLEAN; 
+	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n, res: LONGINT; VAR valid: BOOLEAN); 
+	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: LONGINT; VAR p: PartitionTable; VAR n, res: LONGINT); 
+	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: LONGINT); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Disks.

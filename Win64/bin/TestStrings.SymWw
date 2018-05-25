@@ -1,0 +1,13 @@
+MODULE TestStrings;
+	IMPORT SYSTEM, Commands, Strings, KernelLog;
+CONST 
+	Step = (MAX(LONGINT) DIV 5); 
+
+	PROCEDURE ^ TestIntegerConversion*(context: Commands.Context); 
+	PROCEDURE ^ TestHexConversion*(context: Commands.Context); 
+	PROCEDURE ^ TestNegativeHexConversion*(context: Commands.Context); 
+	PROCEDURE ^ TestSetConversion*(context: Commands.Context); 
+	PROCEDURE ^ TestSplitJoin*(context: Commands.Context); 
+	PROCEDURE ^ PerformTests*(context: Commands.Context); 
+BEGIN
+END TestStrings.

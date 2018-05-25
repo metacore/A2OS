@@ -1,0 +1,21 @@
+MODULE ASCIITab IN Oberon;
+	IMPORT Files, Objects, Display, Printer, Fonts, Texts, Display3, Printer3, Effects, Oberon, Gadgets;
+CONST 
+	middle = 1; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		font: Fonts.Font; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Track(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER); 
+	PROCEDURE ^ CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame); 
+	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*; 
+BEGIN
+END ASCIITab.

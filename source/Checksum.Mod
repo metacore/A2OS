@@ -86,7 +86,6 @@ END Checksum.
 	Checksum.MD5  
 			Files.Mod 
 			Unix.UnixFiles.Mod
-			Loader.Mod
 			NoFile.Mod
 			~
 	

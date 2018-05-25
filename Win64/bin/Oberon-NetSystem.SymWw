@@ -1,0 +1,96 @@
+MODULE NetSystem IN Oberon;
+	IMPORT SYSTEM, Modules IN A2, IP IN A2, UDP IN A2, TCP IN A2, DNS IN A2, Kernel, Input, Texts, Oberon, Strings, Fonts;
+CONST 
+	CloseTimeout = 5000; 
+	anyport* = 0; 
+	done* = 0; 
+	error* = 1; 
+	closed* = 0; 
+	listening* = 1; 
+	in* = 2; 
+	out* = 3; 
+	inout* = 4; 
+	waitCon* = 5; 
+	errorCon* = 6; 
+	CR = 0DX; 
+	LF = 0AX; 
+TYPE 
+	Connection* = POINTER TO ConnectionDesc; 
+
+	ConnectionDesc* = RECORD 
+		res*: INTEGER; 
+		pcb: TCP.Connection; 
+	END; 
+
+	IPAdr* = IP.Adr; 
+
+	Socket* = POINTER TO SocketDesc; 
+
+	SocketDesc* = RECORD 
+		res*: INTEGER; 
+		pcb: UDP.Socket; 
+	END; 
+
+	Password = POINTER TO PasswordDesc; 
+
+	PasswordDesc = RECORD 
+		service, user, host, passwd: ARRAY 64 OF CHAR; 
+		next: Password; 
+	END; 
+
+	Bytes = ARRAY MAX(LONGINT) OF CHAR; 
+VAR 
+	int*: IP.Interface; 
+	anyIP*: IPAdr; 
+	allIP*: IPAdr; 
+	hostIP*: IPAdr; 
+	hostName*: ARRAY 64 OF CHAR; 
+	crlf: ARRAY 2 OF CHAR; 
+	started: BOOLEAN; 
+	passwords: Password; 
+	w: Texts.Writer; 
+	state: ARRAY TCP.NumStates OF INTEGER; 
+
+	PROCEDURE ^ ToHost*(num: ARRAY OF CHAR; VAR adr: IPAdr; VAR done: BOOLEAN); 
+	PROCEDURE ^ ToNum*(adr: IPAdr; VAR num: ARRAY OF CHAR); 
+	PROCEDURE ^ GetIP*(name: ARRAY OF CHAR; VAR adr: IPAdr); 
+	PROCEDURE ^ GetName*(IP: IPAdr; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenConnection*(VAR C: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ AsyncOpenConnection*(VAR C: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ CloseConnection*(C: Connection); 
+	PROCEDURE ^ DiscardConnection*(C: Connection); 
+	PROCEDURE ^ Cleanup(c: ANY); 
+	PROCEDURE ^ Requested*(C: Connection): BOOLEAN; 
+	PROCEDURE ^ Accept*(C: Connection; VAR newC: Connection; VAR res: INTEGER); 
+	PROCEDURE ^ State*(C: Connection): INTEGER; 
+	PROCEDURE ^ Available*(C: Connection): LONGINT; 
+	PROCEDURE ^ Read*(C: Connection; VAR ch: CHAR); 
+	PROCEDURE ^ ReadBytes*(C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ ReadInt*(C: Connection; VAR x: INTEGER); 
+	PROCEDURE ^ ReadLInt*(C: Connection; VAR x: LONGINT); 
+	PROCEDURE ^ ReadString*(C: Connection; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Write*(C: Connection; ch: CHAR); 
+	PROCEDURE ^ WriteBytes*(C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ WriteInt*(C: Connection; x: INTEGER); 
+	PROCEDURE ^ WriteLInt*(C: Connection; x: LONGINT); 
+	PROCEDURE ^ WriteString*(C: Connection; s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetPartner*(C: Connection; VAR remIP: IPAdr; VAR remPort: INTEGER); 
+	PROCEDURE ^ OpenSocket*(VAR S: Socket; locPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ CloseSocket*(S: Socket); 
+	PROCEDURE ^ SendDG*(S: Socket; remIP: IPAdr; remPort: INTEGER; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ ReceiveDG*(S: Socket; VAR remIP: IPAdr; VAR remPort: INTEGER; pos: LONGINT; VAR len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ AvailableDG*(S: Socket): LONGINT; 
+	PROCEDURE ^ PutInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; x: INTEGER); 
+	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; x: LONGINT); 
+	PROCEDURE ^ GetInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; VAR x: INTEGER); 
+	PROCEDURE ^ GetLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; VAR x: LONGINT); 
+	PROCEDURE ^ WriteURL(VAR service, user, host: ARRAY OF CHAR); 
+	PROCEDURE ^ GetPassword*(service, host: ARRAY OF CHAR; VAR user, password: ARRAY OF CHAR); 
+	PROCEDURE ^ DelPassword*(service, user, host: ARRAY OF CHAR); 
+	PROCEDURE ^ SetUser*; 
+	PROCEDURE ^ ClearUser*; 
+	PROCEDURE ^ Start*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ WriteIPPortAdr(VAR w: Texts.Writer; adr: IP.Adr; port: LONGINT); 
+BEGIN
+END NetSystem.

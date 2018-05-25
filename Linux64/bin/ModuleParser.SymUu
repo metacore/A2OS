@@ -1,0 +1,348 @@
+MODULE ModuleParser;
+	IMPORT Strings, Files, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities;
+CONST 
+	Public* = 1; 
+	PublicRO* = 2; 
+	Private* = 3; 
+	Exclusive* = 1; 
+	Active* = 2; 
+	Safe* = 3; 
+	Priority* = 4; 
+	Unchecked* = 5; 
+	Uncooperative* = 6; 
+	HasExclusiveBlock* = 7; 
+	Overwrite* = 8; 
+	Overwritten* = 9; 
+	Interrupt* = 10; 
+	ExclusiveStr = \"EXCLUSIVE"\; 
+	ActiveStr = \"ACTIVE"\; 
+	RealtimeStr = \"REALTIME"\; 
+	SafeStr = \"SAFE"\; 
+	PriorityStr = \"PRIORITY"\; 
+	UncheckedStr = \"UNCHECKED"\; 
+	UncooperativeStr = \"UNCOOPERATIVE"\; 
+	NoPAFStr = \"NOPAF"\; 
+	FixedStr = \"FIXED"\; 
+	AlignedStr = \"FIXED"\; 
+	DynamicStr = \"DYNAMIC"\; 
+	InterruptStr = \"INTERRUPT"\; 
+	PCOffsetStr = \"PCOFFSET"\; 
+TYPE 
+	InfoItem* = OBJECT 
+	VAR 
+		name*: Strings.String; 
+		pos*: LONGINT; 
+	END InfoItem; 
+
+	Node* = OBJECT 
+	VAR 
+		parent-: Node; 
+
+		PROCEDURE ^ GetModule*(): Module; 
+		PROCEDURE ^  & Init*(parent: Node); 
+	END Node; 
+
+	NodeList* = OBJECT (Node)
+	VAR 
+		next*: NodeList; 
+	END NodeList; 
+
+	Import* = OBJECT (NodeList)
+	VAR 
+		ident*, alias*, context*: InfoItem; 
+	END Import; 
+
+	Definition* = OBJECT (NodeList)
+	VAR 
+		ident*: InfoItem; 
+		refines*: Qualident; 
+		procs*: ProcHead; 
+	END Definition; 
+
+	Type* = OBJECT (Node)
+	VAR 
+		qualident*: Qualident; 
+		array*: Array; 
+		record*: Record; 
+		pointer*: Pointer; 
+		object*: Object; 
+		enum*: Enum; 
+		cell*: Cell; 
+		port*: Port; 
+		procedure*: Procedure; 
+	END Type; 
+
+	Array* = OBJECT (Node)
+	VAR 
+		open*: BOOLEAN; 
+		len*: InfoItem; 
+		base*: Type; 
+	END Array; 
+
+	Record* = OBJECT (Node)
+	VAR 
+		super*: Qualident; 
+		superPtr*: Record; 
+		fieldList*: FieldDecl; 
+	END Record; 
+
+	FieldDecl* = OBJECT (NodeList)
+	VAR 
+		identList*: IdentList; 
+		type*: Type; 
+	END FieldDecl; 
+
+	Pointer* = OBJECT (Node)
+	VAR 
+		type*: Type; 
+	END Pointer; 
+
+	Enum* = OBJECT (Node)
+	VAR 
+		identList*: IdentList; 
+	END Enum; 
+
+	Port* = OBJECT (Node)
+	END Port; 
+
+	Cell* = OBJECT (Node)
+	VAR 
+		modifiers*: SET; 
+		declSeq*: DeclSeq; 
+		bodyPos-: LONGINT; 
+		formalPars*: FormalPars; 
+
+		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
+	END Cell; 
+
+	Object* = OBJECT (Node)
+	VAR 
+		super*, implements*: Qualident; 
+		superPtr*: Object; 
+		modifiers*: SET; 
+		declSeq*: DeclSeq; 
+		bodyPos-: LONGINT; 
+
+		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
+	END Object; 
+
+	Procedure* = OBJECT (Node)
+	VAR 
+		delegate*: BOOLEAN; 
+		formalPars*: FormalPars; 
+	END Procedure; 
+
+	DeclSeq* = OBJECT (NodeList)
+	VAR 
+		constDecl*: ConstDecl; 
+		typeDecl*: TypeDecl; 
+		varDecl*: VarDecl; 
+		procDecl*: ProcDecl; 
+
+		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
+		PROCEDURE ^ FindTypeDecl*(CONST name: ARRAY OF CHAR): TypeDecl; 
+	END DeclSeq; 
+
+	ConstDecl* = OBJECT (NodeList)
+	VAR 
+		identDef*: IdentDef; 
+		constExpr*: Expr; 
+		expr*: InfoItem; 
+	END ConstDecl; 
+
+	TypeDecl* = OBJECT (NodeList)
+	VAR 
+		identDef*: IdentDef; 
+		type*: Type; 
+	END TypeDecl; 
+
+	VarDecl* = OBJECT (NodeList)
+	VAR 
+		identList*: IdentList; 
+		type*: Type; 
+	END VarDecl; 
+
+	ProcDecl* = OBJECT (NodeList)
+	VAR 
+		head*: ProcHead; 
+		declSeq*: DeclSeq; 
+		bodyPos-: LONGINT; 
+	END ProcDecl; 
+
+	ProcHead* = OBJECT (NodeList)
+	VAR 
+		sysFlag*: InfoItem; 
+		constructor*, inline*, operator*: BOOLEAN; 
+		modifiers*: SET; 
+		identDef*: IdentDef; 
+		formalPars*: FormalPars; 
+	END ProcHead; 
+
+	FormalPars* = OBJECT (Node)
+	VAR 
+		fpSectionList*: FPSection; 
+		returnType*: Type; 
+	END FormalPars; 
+
+	FPSection* = OBJECT (NodeList)
+	VAR 
+		var*, const*: BOOLEAN; 
+		identList*: IdentList; 
+		type*: Type; 
+	END FPSection; 
+
+	Expr* = OBJECT (NodeList)
+	VAR 
+		simpleExprL*, simpleExprR*: SimpleExpr; 
+		relation*: InfoItem; 
+	END Expr; 
+
+	SimpleExpr* = OBJECT (NodeList)
+	VAR 
+		sign*: InfoItem; 
+		termL*, termR*: Term; 
+		addOp*: AddOp; 
+	END SimpleExpr; 
+
+	Term* = OBJECT (NodeList)
+	VAR 
+		factorL*, factorR*: Factor; 
+		mulOp*: MulOp; 
+	END Term; 
+
+	Factor* = OBJECT (NodeList)
+	VAR 
+		designator*: Designator; 
+		number*, string*, nil*, bool*: InfoItem; 
+		set*: Element; 
+		expr*: Expr; 
+		factor*: Factor; 
+	END Factor; 
+
+	Designator* = OBJECT (NodeList)
+	VAR 
+		qualident*: Qualident; 
+		ident*, arrowUp*: InfoItem; 
+		exprList*: Expr; 
+	END Designator; 
+
+	Qualident* = OBJECT (NodeList)
+	VAR 
+		ident*: InfoItem; 
+	END Qualident; 
+
+	Element* = OBJECT (NodeList)
+	VAR 
+		expr*, upToExpr*: Expr; 
+	END Element; 
+
+	MulOp* = OBJECT (NodeList)
+	VAR 
+		op*: InfoItem; 
+	END MulOp; 
+
+	AddOp* = OBJECT (NodeList)
+	VAR 
+		op*: InfoItem; 
+	END AddOp; 
+
+	IdentDef* = OBJECT 
+	VAR 
+		ident*: InfoItem; 
+		vis*: SHORTINT; 
+		initializer*: InfoItem; 
+		external*: Strings.String; 
+	END IdentDef; 
+
+	IdentList* = OBJECT (NodeList)
+	VAR 
+		identDef*: IdentDef; 
+	END IdentList; 
+
+	Module* = OBJECT (Node)
+	VAR 
+		ident*, context*: InfoItem; 
+		importList*: Import; 
+		modifiers*: SET; 
+		definitions*: Definition; 
+		declSeq*: DeclSeq; 
+		bodyPos-: LONGINT; 
+		hasError-: BOOLEAN; 
+		resolved*: BOOLEAN; 
+
+		PROCEDURE ^ FindTypeDecl*(CONST name: ARRAY OF CHAR): TypeDecl; 
+		PROCEDURE ^ FindImport*(CONST name: ARRAY OF CHAR): Import; 
+	END Module; 
+
+	Parser = OBJECT 
+	VAR 
+		symbol: FoxScanner.Symbol; 
+		scanner: FoxScanner.Scanner; 
+		hasError: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(scanner: FoxScanner.Scanner); 
+		PROCEDURE ^ NextSymbol; 
+		PROCEDURE ^ ModuleP(VAR module: Module); 
+		PROCEDURE ^ ImportListP(import: Import); 
+		PROCEDURE ^ DefinitionP(definition: Definition); 
+		PROCEDURE ^ DeclSeqP(declSeq: DeclSeq); 
+		PROCEDURE ^ ConstDeclP(const: ConstDecl); 
+		PROCEDURE ^ TypeDeclP(type: TypeDecl); 
+		PROCEDURE ^ VarDeclP(var: VarDecl); 
+		PROCEDURE ^ ProcDeclP(proc: ProcDecl); 
+		PROCEDURE ^ ProcHeadP(head: ProcHead); 
+		PROCEDURE ^ SysFlag; 
+		PROCEDURE ^ OSAIrq; 
+		PROCEDURE ^ FormalParsP(pars: FormalPars); 
+		PROCEDURE ^ FPSectionP(fpSection: FPSection); 
+		PROCEDURE ^ TypeP(type: Type); 
+		PROCEDURE ^ ArrayP(array: Array); 
+		PROCEDURE ^ RecordP(record: Record); 
+		PROCEDURE ^ FieldListP(fieldList: FieldDecl); 
+		PROCEDURE ^ FieldDeclP(fieldDecl: FieldDecl); 
+		PROCEDURE ^ PointerP(pointer: Pointer); 
+		PROCEDURE ^ EnumP(enum: Enum); 
+		PROCEDURE ^ PortP(port: Port); 
+		PROCEDURE ^ ObjectP(object: Object); 
+		PROCEDURE ^ CellP(cell: Cell); 
+		PROCEDURE ^ ProcedureP(proc: Procedure); 
+		PROCEDURE ^ ConstExprP(delimiter1, delimiter2: FoxScanner.Token; expr: InfoItem); 
+		PROCEDURE ^ BlockModifierP(allowBody: BOOLEAN; VAR modifiers: SET); 
+		PROCEDURE ^ ProcedureModifierP(procHead: ProcHead); 
+		PROCEDURE ^ ModifierValueP(VAR value: LONGINT); 
+		PROCEDURE ^ BodyP(allowBody: BOOLEAN; VAR modifiers: SET); 
+		PROCEDURE ^ QualidentP(qualident: Qualident); 
+		PROCEDURE ^ IdentDefP(identDef: IdentDef); 
+		PROCEDURE ^ Check(token: FoxScanner.Token); 
+		PROCEDURE ^ Error(pos: LONGINT); 
+	END Parser; 
+
+	ListEntry = POINTER TO RECORD 
+		module: Module; 
+		next: ListEntry; 
+	END; 
+
+	ModuleCache = OBJECT {EXCLUSIVE} 
+	VAR 
+		head: ListEntry; 
+		nofModules: LONGINT; 
+
+		PROCEDURE ^ Add(module: Module); 
+		PROCEDURE ^ Get(CONST moduleName: ARRAY OF CHAR): Module; 
+		PROCEDURE ^ Enumerate(enumerator: EnumeratorProc); 
+		PROCEDURE ^ FindEntry(CONST moduleName: ARRAY OF CHAR): ListEntry; 
+		PROCEDURE ^  & Init; 
+	END ModuleCache; 
+
+	EnumeratorProc = PROCEDURE {DELEGATE}(module: Module; cache: ModuleCache); 
+
+	PROCEDURE ^ AppendLast(head, node: NodeList); 
+	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR moduleName, typeName: ARRAY OF CHAR); 
+	PROCEDURE ^ FindType(CONST name: ARRAY OF CHAR; type: LONGINT; definitionModule: Module; cache: ModuleCache): TypeDecl; 
+	PROCEDURE ^ ResolveTypeHierarchy(module: Module; cache: ModuleCache); 
+	PROCEDURE ^ ResolveMethodOverwrites(module: Module; cache: ModuleCache); 
+	PROCEDURE ^ ParseFile*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics): Module; 
+	PROCEDURE ^ SetSuperTypes*(module: Module); 
+	PROCEDURE ^ Parse*(scanner: FoxScanner.Scanner; VAR module: Module); 
+BEGIN
+END ModuleParser.

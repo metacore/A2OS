@@ -1,0 +1,60 @@
+MODULE EditTools IN Oberon;
+	IMPORT Objects, Texts, Oberon, Fonts, Files, Display, Attributes, Gadgets, Documents, TextGadgets, TextDocs, Desktops, Strings;
+CONST 
+	Ascii = 0; 
+	Unix = 1; 
+	Mac = 2; 
+	Unicode = 3; 
+VAR 
+	W, WR: Texts.Writer; 
+
+	PROCEDURE ^ Plural(n: LONGINT; CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ SkipArrow(VAR S: Texts.Scanner); 
+	PROCEDURE ^ SplitFontName(CONST fn: ARRAY OF CHAR; VAR i, j, size: INTEGER); 
+	PROCEDURE ^ CombineFontName(CONST prefix, suffix: ARRAY OF CHAR; i, j, size: INTEGER; VAR fn: ARRAY OF CHAR); 
+	PROCEDURE ^ IsFont(lib: Objects.Library): BOOLEAN; 
+	PROCEDURE ^ ThisFont(CONST name: ARRAY OF CHAR): Fonts.Font; 
+	PROCEDURE ^ IncFontSize*(T: Texts.Text; beg, end: LONGINT; delta: INTEGER); 
+	PROCEDURE ^ ChangeFontSize*(T: Texts.Text; beg, end: LONGINT; old, new: INTEGER); 
+	PROCEDURE ^ ChangeFontFamily*(T: Texts.Text; beg, end: LONGINT; CONST old, new: ARRAY OF CHAR); 
+	PROCEDURE ^ ChangeFontStyle*(T: Texts.Text; beg, end: LONGINT; old, new: CHAR); 
+	PROCEDURE ^ ChangeFont*(T: Texts.Text; beg, end: LONGINT; CONST old, new: ARRAY OF CHAR); 
+	PROCEDURE ^ IncSize*; 
+	PROCEDURE ^ ChangeSize*; 
+	PROCEDURE ^ ChangeStyle*; 
+	PROCEDURE ^ ChangeFamily*; 
+	PROCEDURE ^ Change*; 
+	PROCEDURE ^ ChangeCol*(T: Texts.Text; beg, end: LONGINT; old, new: INTEGER); 
+	PROCEDURE ^ ChangeColor*; 
+	PROCEDURE ^ Changevoff*(T: Texts.Text; beg, end: LONGINT; old, new: INTEGER); 
+	PROCEDURE ^ ChangeVoff*; 
+	PROCEDURE ^ Incvoff*(T: Texts.Text; beg, end: LONGINT; delta: INTEGER); 
+	PROCEDURE ^ IncVoff*; 
+	PROCEDURE ^ upper*(T: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ Upper*; 
+	PROCEDURE ^ lower*(T: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ Lower*; 
+	PROCEDURE ^ flipCase*(T: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ FlipCase*; 
+	PROCEDURE ^ open(os: SHORTINT); 
+	PROCEDURE ^ OpenAscii*; 
+	PROCEDURE ^ OpenUnix*; 
+	PROCEDURE ^ OpenUnicode*; 
+	PROCEDURE ^ StoreDoc(D: Documents.Document; os: SHORTINT); 
+	PROCEDURE ^ StoreUnixDoc(D: Documents.Document); 
+	PROCEDURE ^ StoreUnicodeDoc(D: Documents.Document); 
+	PROCEDURE ^ StoreAsciiDoc(D: Documents.Document); 
+	PROCEDURE ^ store(os: SHORTINT); 
+	PROCEDURE ^ StoreAscii*; 
+	PROCEDURE ^ StoreUnix*; 
+	PROCEDURE ^ StoreMac*; 
+	PROCEDURE ^ StoreUnicode*; 
+	PROCEDURE ^ RemoveObjects*; 
+	PROCEDURE ^ Count*(T: Texts.Text; beg, end: LONGINT; VAR wc, pc, ec: LONGINT); 
+	PROCEDURE ^ GetMainArg(VAR S: Texts.Scanner; VAR beg, end: LONGINT); 
+	PROCEDURE ^ Words*; 
+	PROCEDURE ^ ShowAttrs*; 
+	PROCEDURE ^ ShowPos*; 
+	PROCEDURE ^ LocateLine*; 
+BEGIN
+END EditTools.

@@ -1,0 +1,52 @@
+MODULE WMBitmapFont;
+	IMPORT KernelLog, Commands, Graphics := WMGraphics, Raster, XML, Parser := XMLParser, Scanner := XMLScanner, Objects := XMLObjects, Strings, WMRectangles, Files;
+CONST 
+TYPE 
+	Char32 = LONGINT; 
+
+	Glyph = RECORD 
+		img: Graphics.Image; 
+		code: Char32; 
+		fpos: LONGINT; 
+		loaded: BOOLEAN; 
+	END; 
+
+	GlyphArray = POINTER TO ARRAY OF Glyph; 
+
+	GlyphRange = RECORD 
+		firstCode, lastCode: LONGINT; 
+		glyphs: GlyphArray; 
+	END; 
+
+	GlyphRangeArray = POINTER TO ARRAY OF GlyphRange; 
+
+	Font = OBJECT (Graphics.Font)
+	VAR 
+		nofGlyphRanges: LONGINT; 
+		glyphRanges: GlyphRangeArray; 
+		grc: LONGINT; 
+		placeholderimg: Graphics.Image; 
+		fontFile: Files.File; 
+		empty: WMRectangles.Rectangle; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: Graphics.Image); 
+		PROCEDURE ^ HasChar*(char: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: Graphics.GlyphSpacings); 
+		PROCEDURE ^ LoadGlyph(code: LONGINT; VAR g: Glyph); 
+		PROCEDURE ^ FindGlyphRange(code: Char32; VAR gri: LONGINT): BOOLEAN; 
+		PROCEDURE ^ FindGlyph(code: Char32; VAR glyph: Glyph): BOOLEAN; 
+		PROCEDURE ^ CountGlyphes(): LONGINT; 
+		PROCEDURE ^ Import(filename: ARRAY OF CHAR); 
+		PROCEDURE ^ RasterToBWRLBytes(img: Raster.Image; VAR buf: ARRAY OF CHAR; VAR pos: LONGINT); 
+		PROCEDURE ^ Save(filename: ARRAY OF CHAR); 
+		PROCEDURE ^ ReadGlyph(VAR f: Files.File; VAR g: Glyph); 
+		PROCEDURE ^ Load(filename: ARRAY OF CHAR); 
+	END Font; 
+VAR 
+	bimbofont*: Font; 
+
+	PROCEDURE ^ Load*; 
+	PROCEDURE ^ Import*(context: Commands.Context); 
+BEGIN
+END WMBitmapFont.

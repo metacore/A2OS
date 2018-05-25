@@ -1,0 +1,24 @@
+MODULE Centronics IN Oberon;
+	IMPORT SYSTEM, Kernel IN A2, Machine IN A2;
+CONST 
+	LPT1* = 0; 
+	LPT2* = 1; 
+	LPT3* = 2; 
+	Timeout = 0; 
+VAR 
+	adr: ARRAY 3 OF INTEGER; 
+	num: INTEGER; 
+
+	PROCEDURE ^ Halt(msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Wait; 
+	PROCEDURE ^ Start*(port: INTEGER); 
+	PROCEDURE ^ Reset*(port: INTEGER); 
+	PROCEDURE ^ Stop*(port: INTEGER); 
+	PROCEDURE ^ Send*(port: INTEGER; x: CHAR); 
+	PROCEDURE ^ SendPoll*(port: INTEGER; x: CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ Available*(port: INTEGER): LONGINT; 
+	PROCEDURE ^ Receive*(port: INTEGER; VAR x: CHAR); 
+	PROCEDURE ^ Detected(adr: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Centronics.

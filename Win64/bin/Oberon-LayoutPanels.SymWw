@@ -1,0 +1,58 @@
+MODULE LayoutPanels IN Oberon;
+	IMPORT Files, Objects, Texts, Display, Display3, Effects, Gadgets, Oberon, Panels, PanelDocs, Documents, LP0 := LayoutPanels0;
+CONST 
+	oldGenerator = \"Panels.NewPanel"\; 
+	newGenerator = \"LayoutPanels.NewPanel"\; 
+	Version = 1; 
+TYPE 
+	Panel* = POINTER TO PanelDesc; 
+
+	PanelDesc* = RECORD (Panels.PanelDesc)
+		layout*: Texts.Text; 
+		saveOld: BOOLEAN; 
+	END; 
+VAR 
+	methods*: Panels.Methods; 
+
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ StoreText(T: Texts.Text; VAR R: Files.Rider); 
+	PROCEDURE ^ LoadText(T: Texts.Text; VAR R: Files.Rider); 
+	PROCEDURE ^ StorePanel*(F: Panel; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadPanel*(F: Panel; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ CopyPanel*(VAR M: Objects.CopyMsg; from, to: Panel); 
+	PROCEDURE ^ PanelAttr(F: Panel; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ PanelLink(F: Panel; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Adjust(F: Panel; x, y: INTEGER; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ RestoreArea*(F: Panels.Panel; x, y, u, v, w, h: INTEGER; M: Display3.Mask; dlink: Objects.Object); 
+	PROCEDURE ^ BuildElementMasks(F: Panels.Panel; f: Display.Frame; partialupdate, allTransp: BOOLEAN); 
+	PROCEDURE ^ UpdateMasks*(F: Panels.Panel; partialupdate, buildback: BOOLEAN); 
+	PROCEDURE ^ ResetElements*(F: Panel); 
+	PROCEDURE ^ TrackMouse*(F: Panels.Panel; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ BuildLayoutNewSize(F: Panel; w, h: INTEGER); 
+	PROCEDURE ^ UpdateLayout(F: Panel); 
+	PROCEDURE ^ ToElement(F: Panel; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ InsertInTable(F: Panel; c: LP0.Table; e: LP0.Element; new: Objects.Object); 
+	PROCEDURE ^ InsertInContainer(F: Panel; c: LP0.Container; new: Objects.Object; x, y: INTEGER); 
+	PROCEDURE ^ ConsumeElement*(F: Panel; top: LP0.Element; new: Objects.Object; x, y: INTEGER); 
+	PROCEDURE ^ PanelHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitPanel*(P: Panel); 
+	PROCEDURE ^ NewPanel*; 
+	PROCEDURE ^ TrackCaret*(F: Panels.Panel; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackSelectChild*(F: Panels.Panel; VAR M: Oberon.InputMsg; child: Gadgets.Frame); 
+	PROCEDURE ^ InsertFrames*(F: Panels.Panel; u, v: INTEGER; list: Objects.Object); 
+	PROCEDURE ^ RemoveFrames*(F: Panels.Panel; list: Display.Frame); 
+	PROCEDURE ^ TranslateChildren*(F: Panels.Panel; list: Display.Frame; count, dx, dy: INTEGER); 
+	PROCEDURE ^ DragSelection*(F: Panels.Panel; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ ConsumeChar*(F: Panels.Panel; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ DocHandle*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitDoc*(D: Documents.Document; W, H: INTEGER); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ AddCol*; 
+	PROCEDURE ^ AddRow*; 
+	PROCEDURE ^ DelCol*; 
+	PROCEDURE ^ DelRow*; 
+	PROCEDURE ^ InsertTable*; 
+	PROCEDURE ^ InsertPlace*; 
+	PROCEDURE ^ Minimize*; 
+BEGIN
+END LayoutPanels.

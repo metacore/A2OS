@@ -1,0 +1,73 @@
+MODULE SVGLoader;
+	IMPORT SVG, SVGColors, SVGGradients, SVGFilters, SVGRenderer, XML, XMLObjects, XMLLoader, Strings, Math, WMGraphics;
+CONST 
+	OnOmittedParseDefault = 0; 
+	OnOmittedDontChange = 1; 
+	OnOmittedError = 2; 
+TYPE 
+	SVGLoader = OBJECT 
+	VAR 
+		ppi: LONGREAL; 
+		state: SVG.State; 
+		mainDocument: SVG.Document; 
+		renderer: SVGRenderer.Renderer; 
+		fePrev: SVGFilters.FilterElement; 
+		sizeForced: BOOLEAN; 
+		widthForced, heightForced: LONGINT; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ ForceSize(width, height: LONGINT); 
+		PROCEDURE ^ LoadRoot(e: XML.Element); 
+		PROCEDURE ^ GetDocument(): SVG.Document; 
+		PROCEDURE ^ GetActualWidth(): SVG.Length; 
+		PROCEDURE ^ GetActualHeight(): SVG.Length; 
+		PROCEDURE ^ GetActualDiagonal(): SVG.Length; 
+		PROCEDURE ^ GetName(e: XML.Element): XML.String; 
+		PROCEDURE ^ LoadElement(e: XML.Element); 
+		PROCEDURE ^ LoadSubElements(e: XML.Element); 
+		PROCEDURE ^ LoadSVG(e: XML.Element); 
+		PROCEDURE ^ LoadGroup(e: XML.Element); 
+		PROCEDURE ^ LoadDefs(e: XML.Element); 
+		PROCEDURE ^ LoadLinearGradient(e: XML.Element; id: XML.String); 
+		PROCEDURE ^ LoadRadialGradient(e: XML.Element; id: XML.String); 
+		PROCEDURE ^ LoadGradientParentAttribute(e: XML.Element; gradient: SVGGradients.Gradient): BOOLEAN; 
+		PROCEDURE ^ LoadGradientStops(e: XML.Element; gradient: SVGGradients.Gradient); 
+		PROCEDURE ^ LoadGradientStop(e: XML.Element; gradient: SVGGradients.Gradient); 
+		PROCEDURE ^ LoadFilter(e: XML.Element; id: XML.String); 
+		PROCEDURE ^ LoadFilterElements(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFECommonAttributes(e: XML.Element; fe: SVGFilters.FilterElement; filter: SVGFilters.Filter; loadIn: BOOLEAN); 
+		PROCEDURE ^ LoadFEBlend(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEOffset(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEColorMatrix(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEGaussianBlur(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEMerge(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEMergeNodes(e: XML.Element; fe: SVGFilters.feMerge; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEFlood(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFEImage(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFETile(e: XML.Element; filter: SVGFilters.Filter); 
+		PROCEDURE ^ LoadFilterInAttribute(e: XML.Element; filter: SVGFilters.Filter; name: ARRAY OF CHAR; VAR in: SVGFilters.In); 
+		PROCEDURE ^ LoadFilterAttribute(e: XML.Element): SVGFilters.Filter; 
+		PROCEDURE ^ LoadFilterAttributeBegin(e: XML.Element); 
+		PROCEDURE ^ LoadFilterAttributeEnd; 
+		PROCEDURE ^ LoadImage(e: XML.Element); 
+		PROCEDURE ^ LoadRect(e: XML.Element); 
+		PROCEDURE ^ LoadCircle(e: XML.Element); 
+		PROCEDURE ^ LoadEllipse(e: XML.Element); 
+		PROCEDURE ^ LoadLine(e: XML.Element); 
+		PROCEDURE ^ LoadPoly(e: XML.Element; closed: BOOLEAN); 
+		PROCEDURE ^ LoadPath(e: XML.Element); 
+		PROCEDURE ^ LoadPaintAttributes(e: XML.Element); 
+		PROCEDURE ^ LoadViewBoxAttributes(e: XML.Element; VAR transform: SVG.Transform; width0, height0: SVG.Length); 
+		PROCEDURE ^ LoadAttrNumber(e: XML.Element; name: ARRAY OF CHAR; VAR number: SVG.Number; percentageAllowed: BOOLEAN; percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadAttrLength(e: XML.Element; name: ARRAY OF CHAR; VAR length: SVG.Length; percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadAttrTransform(e: XML.Element; name: ARRAY OF CHAR; VAR transform: SVG.Transform); 
+		PROCEDURE ^ LoadAttrParsed(e: XML.Element; name: ARRAY OF CHAR; VAR parsed: SHORTINT; onOmitted: SHORTINT; default: ARRAY OF CHAR; parser: PROCEDURE (value: XML.String; VAR parsed: SHORTINT)); 
+		PROCEDURE ^ LoadAttribute(e: XML.Element; name: ARRAY OF CHAR): XML.String; 
+		PROCEDURE ^ LoadOpacity(e: XML.Element; name: ARRAY OF CHAR; VAR color: SVG.Color; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
+	END SVGLoader; 
+
+	PROCEDURE ^ LoadSVG*(svgName: ARRAY OF CHAR): SVG.Document; 
+	PROCEDURE ^ LoadSVGEmbedded*(root: XML.Element): SVG.Document; 
+	PROCEDURE ^ LoadSizedSVG*(svgName: ARRAY OF CHAR; width, height: LONGINT): SVG.Document; 
+BEGIN
+END SVGLoader.

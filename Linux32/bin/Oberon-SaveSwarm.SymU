@@ -1,0 +1,67 @@
+MODULE SaveSwarm IN Oberon;
+	IMPORT Out, In, Modules, SaveScreen, Display, Display3, RandomNumbers;
+CONST 
+	versionString = \"SaveSwarm 25.1.2000"\; 
+	minSpeed = 1; 
+	maxSpeed = 10; 
+	defaultSpeed = 2; 
+	minSize = 2; 
+	maxSize = 1000; 
+	defaultSize = 100; 
+	minBorder = 0; 
+	maxBorder = 100; 
+	defaultBorder = 20; 
+	minCol = 0; 
+	maxCol = 256; 
+	defaultMincol = 40; 
+	defaultMaxcol = 48; 
+	defaultWaspcol = 0; 
+	minBacc = 1; 
+	maxBacc = 100; 
+	defaultBacc = 2; 
+	minBvel = 1; 
+	maxBvel = 100; 
+	defaultBvel = 12; 
+	minWacc = 1; 
+	maxWacc = 100; 
+	defaultWacc = 5; 
+	minWvel = 1; 
+	maxWvel = 100; 
+	defaultWvel = 10; 
+TYPE 
+	Bee = RECORD 
+		x, y: ARRAY 3 OF INTEGER; 
+		vx, vy: INTEGER; 
+	END; 
+
+	BeeSwarm = POINTER TO ARRAY OF Bee; 
+
+	Swarm = RECORD 
+		X, Y, W, H: INTEGER; 
+		speed, time: INTEGER; 
+		size: INTEGER; 
+		mincol, maxcol, col, colstep: INTEGER; 
+		waspcol: INTEGER; 
+		wacc, wvel: INTEGER; 
+		border: INTEGER; 
+		wasp: Bee; 
+		bacc, bvel: INTEGER; 
+		bees: BeeSwarm; 
+	END; 
+VAR 
+	swarm: Swarm; 
+	mask: Display3.Mask; 
+	speed, size, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER; 
+
+	PROCEDURE ^ RandomizeSwarm(VAR s: Swarm); 
+	PROCEDURE ^ InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER); 
+	PROCEDURE ^ AgeSwarm(VAR s: Swarm; m: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Start; 
+	PROCEDURE ^ Step; 
+	PROCEDURE ^ Stop; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Configuration*; 
+	PROCEDURE ^ Remove; 
+	PROCEDURE ^ InstallDefault*; 
+BEGIN
+END SaveSwarm.

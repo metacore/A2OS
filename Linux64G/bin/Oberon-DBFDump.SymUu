@@ -1,9 +1,0 @@
-MODULE DBFDump IN Oberon;
-	IMPORT Files, DBF, Reals IN A2, Strings, Texts, Oberon;
-CONST 
-VAR 
-	W: Texts.Writer; 
-
-	PROCEDURE ^ Show*; 
-BEGIN
-END DBFDump.

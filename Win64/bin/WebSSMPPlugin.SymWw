@@ -1,0 +1,30 @@
+MODULE WebSSMPPlugin;
+	IMPORT Streams, Commands, Classes := TFClasses, Strings, Files, WebHTTP, WebHTTPServer;
+CONST 
+	MaxServiceNameSize* = 32; 
+	PluginName = \"SSMP-Plugin"\; 
+TYPE 
+	SSMPMethod* = PROCEDURE {DELEGATE}(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+
+	ServiceInfo = OBJECT 
+	VAR 
+		name: ARRAY MaxServiceNameSize OF CHAR; 
+		service: SSMPMethod; 
+	END ServiceInfo; 
+
+	SSMPPlugin = OBJECT (WebHTTPServer.HTTPPlugin)
+
+		PROCEDURE ^  & Init*(CONST name: WebHTTPServer.Name); 
+		PROCEDURE ^ CanHandle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; secure: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Handle*(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	END SSMPPlugin; 
+VAR 
+	services: Classes.List; 
+
+	PROCEDURE ^ ExecuteService(CONST name: ARRAY OF CHAR; VAR request: WebHTTP.RequestHeader; in: Streams.Reader; out: Streams.Writer); 
+	PROCEDURE ^ WriteFile*(VAR request: WebHTTP.RequestHeader; VAR s: Streams.Writer; f: Files.File); 
+	PROCEDURE ^ RegisterMethod*(CONST name: ARRAY OF CHAR; handler: SSMPMethod); 
+	PROCEDURE ^ UnregisterMethod*(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+BEGIN
+END WebSSMPPlugin.

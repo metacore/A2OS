@@ -1,0 +1,54 @@
+MODULE srM6Space;
+	IMPORT srBase, srE, Out := KernelLog;
+CONST 
+	POS = TRUE; 
+	NEG = FALSE; 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	PT = srBase.PT; 
+
+	COLOR = srBase.COLOR; 
+
+	Ray = srBase.Ray; 
+
+	Voxel = srBase.Voxel; 
+
+	NCUBE = RECORD 
+		filled: BOOLEAN; 
+		normal: PT; 
+		color: COLOR; 
+	END; 
+
+	cell* = OBJECT (Voxel)
+	VAR 
+		blox: AR6; 
+		nblox: NR6; 
+		sixblox: BR6; 
+		airred, airgreen, airblue, airblack: SREAL; 
+
+		PROCEDURE ^  & init*; 
+		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
+		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ fill*(v: Voxel); 
+		PROCEDURE ^ fillwithprobability*(v: Voxel; p: SREAL); 
+		PROCEDURE ^ fillchequer*(v, w: Voxel); 
+		PROCEDURE ^ color(VAR ray: Ray; cube: NCUBE); 
+		PROCEDURE ^ Shade*(VAR ray: Ray); 
+		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
+		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
+		PROCEDURE ^ deathray*(VAR ray: Ray); 
+		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
+		PROCEDURE ^ line*(a, b: PT; level: LONGINT; v: Voxel); 
+	END cell; 
+
+	AR6 = ARRAY 6 OF ARRAY 6 OF ARRAY 6 OF Voxel; 
+
+	NR6 = ARRAY 6 OF ARRAY 6 OF ARRAY 6 OF NCUBE; 
+
+	BR6 = ARRAY 6 OF ARRAY 6 OF ARRAY 6 OF cell; 
+
+	PROCEDURE ^ pdiv(VAR p: PT; d: SREAL); 
+BEGIN
+END srM6Space.

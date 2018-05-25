@@ -1,0 +1,38 @@
+MODULE EFILib;
+	IMPORT SYSTEM, EFI, EFIFileProtocol, EFISimpleFS, EFILoadedImage, Trace;
+CONST 
+	maxAllocations = 128; 
+TYPE 
+	Allocation = RECORD 
+		baseAddress: EFI.PhysicalAddress; 
+		numPages: EFI.Int; 
+	END; 
+
+	PtrToLongString = POINTER TO ARRAY 1024 OF EFI.Char16; 
+VAR 
+	allocations: ARRAY maxAllocations OF Allocation; 
+	numAllocations: LONGINT; 
+	args: PtrToLongString; 
+	argLen: LONGINT; 
+	argPos: LONGINT; 
+
+	PROCEDURE ^ AllocateMemory*(VAR addr: EFI.PhysicalAddress; numPages: EFI.Int): EFI.Status; 
+	PROCEDURE ^ FreeMemory*; 
+	PROCEDURE ^ GetMemoryMapping*(VAR adr: EFI.PhysicalAddress): EFI.Status; 
+	PROCEDURE ^ GetMemorySize*(VAR memsize: EFI.Int64): EFI.Status; 
+	PROCEDURE ^ ExitBootServices*(): EFI.Status; 
+	PROCEDURE ^ GetArgs*(VAR loadOptionsSize: LONGINT; VAR loadOptions: EFILoadedImage.PtrToArrayOfByte): EFI.Status; 
+	PROCEDURE ^ InitArgs*(): EFI.Status; 
+	PROCEDURE ^ GetNextArg*(VAR arg: ARRAY OF EFI.Char16): BOOLEAN; 
+	PROCEDURE ^ ReadString*(VAR buf: ARRAY OF EFI.Char16); 
+	PROCEDURE ^ IntToString*(CONST x: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StringToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringToLongString*(CONST str: ARRAY OF CHAR; VAR lstr: ARRAY OF EFI.Char16); 
+	PROCEDURE ^ GetProtocol*(CONST guid: EFI.GUID; VAR prot: EFI.Protocol): EFI.Status; 
+	PROCEDURE ^ GetFileSize*(file: EFIFileProtocol.Protocol): EFI.Int64; 
+	PROCEDURE ^ OpenFile*(CONST fn: ARRAY OF EFI.Char16): EFIFileProtocol.Protocol; 
+	PROCEDURE ^ OpenFileOnDevice(CONST fn: ARRAY OF EFI.Char16; deviceHandle: EFI.Handle): EFIFileProtocol.Protocol; 
+	PROCEDURE ^ LoadFile*(file: EFIFileProtocol.Protocol; VAR loadAddr: ADDRESS): EFI.Status; 
+	PROCEDURE ^ ReportError*(status: EFI.Status); 
+BEGIN
+END EFILib.

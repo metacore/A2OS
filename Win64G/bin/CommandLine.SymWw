@@ -1,7 +1,0 @@
-MODULE CommandLine;
-	IMPORT Kernel32, SYSTEM, Streams, FileHandlers;
-
-	PROCEDURE ^ Read(VAR commandLine: ARRAY OF CHAR); 
-	PROCEDURE ^ Open*; 
-BEGIN
-END CommandLine.

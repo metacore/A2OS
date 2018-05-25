@@ -1,0 +1,94 @@
+MODULE VinciShapes IN Oberon;
+	IMPORT Files, Objects, Display, Texts, Oberon, Gadgets, Scheme, Ops := SchemeOps, Vinci, GfxMatrix, Gfx, Leonardo, LeoPens, LeoPaths;
+CONST 
+	bool* = 1; 
+	int* = 2; 
+	real* = 3; 
+	string* = 5; 
+	color* = 6; 
+	object* = 7; 
+	shape* = 8; 
+	pen* = 9; 
+	name* = 10; 
+TYPE 
+	Parameter* = POINTER TO ParamDesc; 
+
+	ParamDesc* = RECORD 
+		next*: Parameter; 
+		name*: ARRAY 64 OF CHAR; 
+		sym*: Scheme.Object; 
+		kind*: INTEGER; 
+		imin*, imax*: LONGINT; 
+		rmin*, rmax*: REAL; 
+	END; 
+
+	Shape* = POINTER TO ShapeDesc; 
+
+	ShapeDesc* = RECORD (Leonardo.ContainerDesc)
+		par*: Parameter; 
+		text*: Texts.Text; 
+		valid*: BOOLEAN; 
+		env: Scheme.Environment; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Leonardo.ShapeDesc)
+		w*, h*: REAL; 
+		mat*: GfxMatrix.Matrix; 
+	END; 
+VAR 
+	render, drag, matrix, bbox, locate, colorSym, shapeSym, quoteSym: Scheme.Object; 
+	strPool: Scheme.Pool; 
+
+	PROCEDURE ^ ColorToInt(col: Scheme.Object; VAR i: LONGINT); 
+	PROCEDURE ^ IntToColor(i: LONGINT; VAR col: Scheme.Object); 
+	PROCEDURE ^ Evaluate(ctxt: Scheme.Context; env: Scheme.Environment; obj: Scheme.Object): Scheme.Object; 
+	PROCEDURE ^ IsMatrix(obj: Scheme.Object): BOOLEAN; 
+	PROCEDURE ^ GetMatrix(s: Shape; VAR m: GfxMatrix.Matrix); 
+	PROCEDURE ^ GetBox(s: Shape; VAR m: GfxMatrix.Matrix; VAR llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ CalcBox(s: Shape; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ Select(s: Shape; VAR msg: Leonardo.SelectMsg); 
+	PROCEDURE ^ Control(s: Shape; VAR msg: Leonardo.ControlMsg); 
+	PROCEDURE ^ Render(s: Shape; VAR msg: Leonardo.RenderMsg); 
+	PROCEDURE ^ Validate(s: Shape; VAR msg: Leonardo.ValidateMsg); 
+	PROCEDURE ^ Locate(s: Shape; VAR msg: Leonardo.LocateMsg); 
+	PROCEDURE ^ UpdatePen(s: Shape; VAR msg: LeoPens.UpdateMsg); 
+	PROCEDURE ^ HandleAttr(s: Shape; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(s: Shape; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Read*(shape: Shape); 
+	PROCEDURE ^ CopyShape*(VAR msg: Objects.CopyMsg; from, to: Shape); 
+	PROCEDURE ^ BindParams(s: Shape; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ WriteParams(s: Shape; VAR r: Files.Rider); 
+	PROCEDURE ^ ReadParams(s: Shape; VAR r: Files.Rider); 
+	PROCEDURE ^ HandleShape(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitShape*(shape: Shape; text: Texts.Text); 
+	PROCEDURE ^ NewShape*; 
+	PROCEDURE ^ Integrate*; 
+	PROCEDURE ^ CopyFrame*(VAR msg: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ HandleFrame*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(frame: Frame; w, h: REAL); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ Append(vs: Shape; par: Parameter); 
+	PROCEDURE ^ NumVal(ctxt: Scheme.Context; VAR args: Scheme.Object): REAL; 
+	PROCEDURE ^ FindShape(ctxt: Scheme.Context): Shape; 
+	PROCEDURE ^ ShapeArg(ctxt: Scheme.Context; VAR args: Scheme.Object): Leonardo.Shape; 
+	PROCEDURE ^ EvalFrame(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalPoint(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalMatrix(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalComponent(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalInteger(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalReal(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalString(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalBool(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalColor(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalPen(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalName(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalRectInit(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ GetRectArg(ctxt: Scheme.Context; VAR args: Scheme.Object; VAR llx, lly, urx, ury: REAL); 
+	PROCEDURE ^ EvalRectApply(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalRectOverlap(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalRectInside(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+	PROCEDURE ^ EvalRectContains(c: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
+BEGIN
+END VinciShapes.

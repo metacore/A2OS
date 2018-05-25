@@ -1,8 +1,0 @@
-MODULE Lissajous IN Oberon;
-	IMPORT Math IN A2, Objects, Gadgets, BasicGadgets, Complex;
-CONST 
-
-	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: REAL): REAL; 
-	PROCEDURE ^ Do*; 
-BEGIN
-END Lissajous.

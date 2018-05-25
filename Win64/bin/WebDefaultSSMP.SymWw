@@ -1,0 +1,42 @@
+MODULE WebDefaultSSMP;
+	IMPORT Machine, Streams, Modules, WebSSMPPlugin, Clock, WebHTTP, WebHTTPServer, Performance, Reflection, Kernel;
+CONST 
+	Samples = 60; 
+TYPE 
+	TimeSampleQueryMethod = PROCEDURE {DELEGATE}():LONGINT; 
+
+	TimeSampler = OBJECT {EXCLUSIVE} 
+	VAR 
+		hits: POINTER TO ARRAY OF LONGINT; 
+		pos: LONGINT; 
+		timer: Kernel.Timer; 
+		query: TimeSampleQueryMethod; 
+		interval, nofSamples: LONGINT; 
+		alive: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(queryMethod: TimeSampleQueryMethod; interval, samples: LONGINT); 
+		PROCEDURE ^ Step; 
+		PROCEDURE ^ QuerySamples(VAR x: ARRAY OF LONGINT); 
+		PROCEDURE ^ Kill; 
+	BEGIN{ACTIVE} 
+	END TimeSampler; 
+VAR 
+	hitSampler: TimeSampler; 
+
+	PROCEDURE ^ HTMLBarChartVertical(VAR out: Streams.Writer; samples: ARRAY OF LONGINT; start, end: LONGINT; chartheight, barwidth, border, color: LONGINT); 
+	PROCEDURE ^ ServerNofRequests(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ ServerRPMChart(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ ServerNofRequestsPerMinute(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemTime(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemStartTime(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemLoad(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemIdle(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemVersion(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ ReadName(VAR b: Streams.Reader; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ SystemState(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SystemGet(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ QueryRPM(): LONGINT; 
+BEGIN
+END WebDefaultSSMP.

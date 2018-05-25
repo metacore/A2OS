@@ -1,0 +1,179 @@
+MODULE LeoTools IN Oberon;
+	IMPORT Files, Math IN A2, Objects, Display, Fonts, Printer, Input, Oberon, Pictures, Strings, Attributes, Links, Display3, Printer3, Effects, Gadgets, Colors, Images, GfxMatrix, GfxImages, GfxPaths, GfxRegions, GfxFonts, Gfx, GfxPrinter, GfxBuffer, Leonardo, LeoFrames;
+CONST 
+	inch* =   9.1440000E+001; 
+	cm* = (inch /   2.5400000E+000); 
+	A4W* = (21 * cm); 
+	A4H* = (  2.9700000E+001 * cm); 
+	LetterW* = (  8.5000000E+000 * inch); 
+	LetterH* = (11 * inch); 
+	RulerW = 32; 
+	RulerH = 19; 
+	InfoH = 16; 
+	AuxH = (RulerH + InfoH); 
+	ML = 2; 
+	MM = 1; 
+	MR = 0; 
+	translate = 0; 
+	scale = 1; 
+	rotate = 2; 
+	shear = 3; 
+	mirror = 4; 
+	aux = 5; 
+TYPE 
+	Tool* = POINTER TO ToolDesc; 
+
+	ToolDesc* = RECORD (Gadgets.ObjDesc)
+		frame*: LeoFrames.Frame; 
+		unit*: REAL; 
+		zx*, zy*: REAL; 
+		pageW*, pageH*: REAL; 
+		buffered*: BOOLEAN; 
+		grid*: RECORD 
+			ticks*: INTEGER; 
+			visible*: BOOLEAN; 
+			active*: BOOLEAN; 
+		END; 
+		hints*: RECORD 
+			visible*: BOOLEAN; 
+			incontents*: BOOLEAN; 
+			x*, y*: INTEGER; 
+		END; 
+	END; 
+
+	ToolMsg* = RECORD (Display.FrameMsg)
+		handle*: Objects.Handler; 
+	END; 
+
+	Context* = POINTER TO ContextDesc; 
+
+	ContextDesc* = RECORD (Gfx.ContextDesc)
+		orgX, orgY: REAL; 
+		scale: REAL; 
+		cx, cy, cw, ch: INTEGER; 
+		u, v, u0, v0: REAL; 
+		px, py: INTEGER; 
+		deferred: BOOLEAN; 
+	END; 
+
+	PathData = RECORD (GfxPaths.EnumData)
+		context: Context; 
+	END; 
+
+	; 
+VAR 
+	DC*: Context; 
+	Tolerance*: Objects.Object; 
+	AlignAxes*: Objects.Object; 
+	ToolHandler*: Objects.Handler; 
+	Methods: Gfx.Methods; 
+	Unit, PageWidth, PageHeight, GridTicks, GridVisible, GridActive, Buffered: Objects.Object; 
+	Focus*: RECORD 
+		frame*: LeoFrames.Frame; 
+		style*: INTEGER; 
+		points*: INTEGER; 
+		x*, y*: ARRAY 2 OF REAL; 
+		visible*: BOOLEAN; 
+	END; 
+	Pat: ARRAY 6 OF Display.Pattern; 
+	BC: GfxBuffer.Context; 
+	Font: Fonts.Font; 
+	Pict: Pictures.Picture; 
+
+	PROCEDURE ^ ResetCTM(ctxt: Gfx.Context); 
+	PROCEDURE ^ ResetClip(ctxt: Gfx.Context); 
+	PROCEDURE ^ GetClipRect(ctxt: Gfx.Context; VAR llx, lly, urx, ury: REAL); 
+	PROCEDURE ^ GetClip(ctxt: Gfx.Context): Gfx.ClipArea; 
+	PROCEDURE ^ SetClip(ctxt: Gfx.Context; clip: Gfx.ClipArea); 
+	PROCEDURE ^ EnterLine(dc: Context; u, v: REAL; draw: BOOLEAN); 
+	PROCEDURE ^ DrawLine(dc: Context; u, v: REAL); 
+	PROCEDURE ^ StrokePathElem(VAR data: GfxPaths.EnumData); 
+	PROCEDURE ^ Begin(ctxt: Gfx.Context; mode: SET); 
+	PROCEDURE ^ End(ctxt: Gfx.Context); 
+	PROCEDURE ^ Enter(ctxt: Gfx.Context; x, y, dx, dy: REAL); 
+	PROCEDURE ^ Exit(ctxt: Gfx.Context; dx, dy: REAL); 
+	PROCEDURE ^ Close(ctxt: Gfx.Context); 
+	PROCEDURE ^ LineTo(ctxt: Gfx.Context; x, y: REAL); 
+	PROCEDURE ^ ArcTo(ctxt: Gfx.Context; x, y, x0, y0, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ BezierTo(ctxt: Gfx.Context; x, y, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ Show(ctxt: Gfx.Context; x, y: REAL; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Render(ctxt: Gfx.Context; mode: SET); 
+	PROCEDURE ^ Image(ctxt: Gfx.Context; x, y: REAL; img: GfxImages.Image; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ InitMethods; 
+	PROCEDURE ^ Reset*(frame: LeoFrames.Frame; fx, fy: INTEGER); 
+	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Tool); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(tool: Tool); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Current*(frame: LeoFrames.Frame): Tool; 
+	PROCEDURE ^ InitFrame*(frame: LeoFrames.Frame; fig: Leonardo.Figure); 
+	PROCEDURE ^ NewFrame*; 
+	PROCEDURE ^ InContents*(x, y, fx, fy, fw, fh: INTEGER): BOOLEAN; 
+	PROCEDURE ^ AdjustMask*(mask: Display3.Mask; frame: LeoFrames.Frame; fx, fy: INTEGER); 
+	PROCEDURE ^ FrameToPoint*(frame: LeoFrames.Frame; fx, fy: INTEGER; VAR px, py: REAL); 
+	PROCEDURE ^ PointToFrame*(frame: LeoFrames.Frame; px, py: REAL; VAR fx, fy: INTEGER); 
+	PROCEDURE ^ PointToRuler*(tool: Tool; px, py: REAL; VAR rx, ry: REAL); 
+	PROCEDURE ^ RulerToPoint*(tool: Tool; rx, ry: REAL; VAR px, py: REAL); 
+	PROCEDURE ^ Angle*(dx, dy: REAL): REAL; 
+	PROCEDURE ^ AlignToGrid*(tool: Tool; VAR px, py: REAL); 
+	PROCEDURE ^ AlignToAxis*(tool: Tool; sx, sy: REAL; VAR x, y: REAL); 
+	PROCEDURE ^ AlignToShape*(tool: Tool; x, y: REAL; VAR px, py: REAL); 
+	PROCEDURE ^ Align*(tool: Tool; ox, oy: REAL; VAR px, py: REAL); 
+	PROCEDURE ^ FlipHints(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ ShowHints*(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask; x, y: INTEGER; inContents: BOOLEAN); 
+	PROCEDURE ^ ClearHints*(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ String*(mask: Display3.Mask; fg, bg: Display.Color; sx, sy: INTEGER; s: ARRAY OF CHAR); 
+	PROCEDURE ^ StringWidth*(s: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ ShowStatus*(frame: LeoFrames.Frame; fx, fy: INTEGER; mask: Display3.Mask; s: ARRAY OF CHAR); 
+	PROCEDURE ^ ClearStatus*(frame: LeoFrames.Frame; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ Append*(t: ARRAY OF CHAR; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ AppendReal*(x: REAL; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ AppendPoint*(tool: Tool; px, py: REAL; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ AppendDir*(tool: Tool; dx, dy: REAL; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ AppendFocus*(tool: Tool; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ AppendTool*(tool: Tool; x, y: REAL; str: ARRAY OF CHAR; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ Number(mask: Display3.Mask; x, y: INTEGER; n: LONGINT); 
+	PROCEDURE ^ CalcTicks(unit: REAL; ticks: INTEGER; VAR ticks0, ticks1: LONGINT); 
+	PROCEDURE ^ RestoreVRuler(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreHRuler(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreOrigin(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreZoom(tool: Tool; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestorePage(tool: Tool; llx, lly, urx, ury: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreGrid(tool: Tool; llx, lly, urx, ury: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreFigure(tool: Tool; llx, lly, urx, ury: INTEGER; clip: GfxRegions.Region); 
+	PROCEDURE ^ Restore(tool: Tool; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PNumber(mask: Display3.Mask; x, y: INTEGER; n: LONGINT); 
+	PROCEDURE ^ PrintVRuler(tool: Tool; x, y, w, h, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintHRuler(tool: Tool; x, y, w, h, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintOrigin(tool: Tool; x, y, w, h, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintZoom(tool: Tool; x, y, w, h, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintPage(tool: Tool; llx, lly, urx, ury, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ PrintGrid(tool: Tool; llx, lly, urx, ury, p: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ Print(tool: Tool; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Update(tool: Tool; VAR msg: Leonardo.UpdateMsg); 
+	PROCEDURE ^ Scroll(frame: LeoFrames.Frame; dx, dy: INTEGER); 
+	PROCEDURE ^ InitFocusPatterns; 
+	PROCEDURE ^ FlipFocus(fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ ShowFocus(fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ HideFocus(fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ CycleFocus; 
+	PROCEDURE ^ GetDragStyle(frame: LeoFrames.Frame; VAR style, points: INTEGER; VAR fx0, fy0, fx1, fy1: REAL); 
+	PROCEDURE ^ CalcMatrix(tool: Tool; style, points: INTEGER; fx0, fy0, fx1, fy1, x0, y0, x1, y1: REAL; VAR mat: GfxMatrix.Matrix; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ CalcDrag(tool: Tool; x0, y0, x1, y1: REAL; VAR mat: GfxMatrix.Matrix; VAR s: ARRAY OF CHAR; VAR len: INTEGER); 
+	PROCEDURE ^ TrackVRuler(frame: LeoFrames.Frame; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackHRuler(frame: LeoFrames.Frame; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackOrigin(tool: Tool; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackZoom(frame: LeoFrames.Frame; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackFocus(tool: Tool; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackMove(tool: Tool; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackSelection(tool: Tool; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackTool*(tool: Tool; str: ARRAY OF CHAR; marker: Oberon.Marker; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ Track*(tool: Tool; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ Consume(frame: LeoFrames.Frame; VAR msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleFrame*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Activate*(handle: Objects.Handler); 
+	PROCEDURE ^ ActivateFocus*; 
+	PROCEDURE ^ HandleLegacyFrame(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ NewLegacyFrame*; 
+BEGIN
+END LeoTools.

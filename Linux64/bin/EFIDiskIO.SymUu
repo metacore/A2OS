@@ -1,0 +1,21 @@
+MODULE EFIDiskIO;
+	IMPORT EFI, SYSTEM;
+CONST 
+	Revision* = 65536; 
+TYPE 
+	Protocol* = POINTER TO ProtocolDescription; 
+
+	DiskIOReadDisk* = PROCEDURE {C}(This: Protocol; MediaId: EFI.Int32; Offset: EFI.Int64; BufferSize: EFI.Int; Buffer: ADDRESS):EFI.Status; 
+
+	DiskIOWriteDisk* = PROCEDURE {C}(This: Protocol; MediaId: EFI.Int32; Offset: EFI.Int64; BufferSize: EFI.Int; Buffer: ADDRESS):EFI.Status; 
+
+	ProtocolDescription* = RECORD (EFI.ProtocolDescription)
+		Revision-: EFI.Int64; 
+		ReadDisk-: DiskIOReadDisk; 
+		WriteDisk-: DiskIOWriteDisk; 
+	END; 
+VAR 
+	GUID-: EFI.GUID; 
+
+BEGIN
+END EFIDiskIO.

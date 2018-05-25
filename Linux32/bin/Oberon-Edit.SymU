@@ -1,0 +1,30 @@
+MODULE Edit IN Oberon;
+	IMPORT Files, Objects, Display, Viewers, MenuViewers, Printer, Fonts, Texts, TextFrames, Oberon;
+CONST 
+	CR = 0DX; 
+	maxlen = 32; 
+	StandardMenu = \"System.Close System.Copy System.Grow Edit.Search Edit.Store"\; 
+VAR 
+	W: Texts.Writer; 
+	time: LONGINT; 
+	M: INTEGER; 
+	pat: ARRAY maxlen OF CHAR; 
+	d: ARRAY 256 OF INTEGER; 
+	textX, pagenoX, headerY, topY, botY: INTEGER; 
+
+	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ Store*; 
+	PROCEDURE ^ CopyFont*; 
+	PROCEDURE ^ ChangeFont*; 
+	PROCEDURE ^ ChangeColor*; 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ Locate*; 
+	PROCEDURE ^ AddPrefix*; 
+	PROCEDURE ^ RemovePrefix*; 
+	PROCEDURE ^ Recall*; 
+	PROCEDURE ^ Print*; 
+	PROCEDURE ^ InitPattern; 
+BEGIN
+END Edit.

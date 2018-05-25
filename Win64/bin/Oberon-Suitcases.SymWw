@@ -1,0 +1,37 @@
+MODULE Suitcases IN Oberon;
+	IMPORT Files, Display, Display3, Fonts, Printer, Printer3, Effects, Attributes, Objects, Gadgets, Oberon, Texts, TextGadgets, Desktops, TextDocs, Documents, Out;
+CONST 
+TYPE 
+	FileObj* = POINTER TO FileObjDesc; 
+
+	FileObjDesc* = RECORD (Gadgets.ObjDesc)
+		F*: Files.File; 
+		beg*, len*: LONGINT; 
+	END; 
+
+	Suitcase* = POINTER TO SuitcaseDesc; 
+
+	SuitcaseDesc* = RECORD (Gadgets.FrameDesc)
+		col*: INTEGER; 
+		label*: ARRAY 64 OF CHAR; 
+	END; 
+
+	PROCEDURE ^ FileObjHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenFileObj*(obj: FileObj; F: Files.File); 
+	PROCEDURE ^ NewFileObj*; 
+	PROCEDURE ^ UnpackFileObj*(obj: FileObj; CONST filename: ARRAY OF CHAR); 
+	PROCEDURE ^ SuitcaseAttr(F: Suitcase; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreSuitcase(F: Suitcase; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Print(F: Suitcase; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopySuitcase*(VAR M: Objects.CopyMsg; from, to: Suitcase); 
+	PROCEDURE ^ OpenSuitcase(F: Suitcase; obj: Objects.Object); 
+	PROCEDURE ^ SuitcaseHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitSuitcase*(F: Suitcase); 
+	PROCEDURE ^ NewSuitcase*; 
+	PROCEDURE ^ GetLabel(T: Texts.Text; VAR label: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeTextSuitcase*(F: Suitcase; label: ARRAY OF CHAR; T: Texts.Text); 
+	PROCEDURE ^ MakeFileSuitcase*(F: Suitcase; CONST filename: ARRAY OF CHAR); 
+	PROCEDURE ^ PackText*; 
+	PROCEDURE ^ PackFiles*; 
+BEGIN
+END Suitcases.

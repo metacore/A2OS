@@ -1,0 +1,12 @@
+MODULE Example8;
+TYPE 
+	Semaphore* = OBJECT {EXCLUSIVE} 
+	VAR 
+		s: INTEGER; 
+
+		PROCEDURE ^ V*; 
+		PROCEDURE ^ P*; 
+		PROCEDURE ^  & Init*(s: INTEGER); 
+	END Semaphore; 
+BEGIN
+END Example8.

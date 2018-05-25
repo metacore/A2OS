@@ -1,0 +1,15 @@
+MODULE Snow;
+	IMPORT Modules, Commands, WMWindowManager, WMGraphics, Kernel, Random;
+CONST 
+	DefaultNofFlakes = 20; 
+	Idle = 0; 
+	Running = 1; 
+	Terminating = 2; 
+	Terminated = 3; 
+VAR 
+	state: LONGINT; 
+
+	PROCEDURE ^ Snow*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Snow.

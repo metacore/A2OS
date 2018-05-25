@@ -1,0 +1,24 @@
+MODULE WMRectangles;
+TYPE 
+	Rectangle* = RECORD 
+		l*, t*, r*, b*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ MoveRel*(VAR x: Rectangle; deltaX, deltaY: LONGINT); 
+	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+	PROCEDURE ^ ClipRect*(VAR rect, bounds: Rectangle); 
+	PROCEDURE ^ RectEmpty*(x: Rectangle): BOOLEAN; 
+	PROCEDURE ^ PointInRect*(x, y: LONGINT; rect: Rectangle): BOOLEAN; 
+	PROCEDURE ^ IsContained*(VAR outer, inner: Rectangle): BOOLEAN; 
+	PROCEDURE ^ IsEqual*(CONST a, b: Rectangle): BOOLEAN; 
+	PROCEDURE ^ Intersect*(VAR a, b: Rectangle): BOOLEAN; 
+	PROCEDURE ^ SetRect*(VAR rect: Rectangle; l, t, r, b: LONGINT); 
+	PROCEDURE ^ Area*(VAR r: Rectangle): LONGINT; 
+	PROCEDURE ^ ExtendRect*(VAR old, addition: Rectangle); 
+	PROCEDURE ^ MakeRect*(l, t, r, b: LONGINT): Rectangle; 
+	PROCEDURE ^ ResizeRect*(x: Rectangle; units: LONGINT): Rectangle; 
+	PROCEDURE ^ Normalize*(VAR rect: Rectangle); 
+BEGIN
+END WMRectangles.

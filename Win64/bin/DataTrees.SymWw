@@ -1,0 +1,67 @@
+MODULE DataTrees;
+	IMPORT NbrInt, DataErrors, DataIO, Data;
+CONST 
+	slantLeft = 9; 
+	level = 10; 
+	slantRight = 11; 
+	SHALLOW = 0; 
+	DEEP = 1; 
+	VERSION* = 1; 
+TYPE 
+	Node = OBJECT 
+	VAR 
+		balance: NbrInt.Integer; 
+		left, right: Node; 
+		datum: Data.Datum; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Attach(datum: Data.Datum; depth: NbrInt.Integer); 
+	END Node; 
+
+	Rider* = OBJECT {EXCLUSIVE} 
+	VAR 
+		root, node: Node; 
+		eotl-, eotr-: BOOLEAN; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ EOT; 
+		PROCEDURE ^ Home*; 
+		PROCEDURE ^ Left*; 
+		PROCEDURE ^ Right*; 
+		PROCEDURE ^ Get*(): Data.Datum; 
+		PROCEDURE ^ Inspect*(): Data.Datum; 
+		PROCEDURE ^ Find(key: Data.Key; VAR found: BOOLEAN); 
+		PROCEDURE ^ Retrieve*(key: Data.Key): Data.Datum; 
+		PROCEDURE ^ Update*(new: Data.Datum; VAR successful: BOOLEAN); 
+	END Rider; 
+
+	Tree* = OBJECT {EXCLUSIVE} 
+	VAR 
+		entries-: NbrInt.Integer; 
+		rider-: Rider; 
+
+		PROCEDURE ^  & Initialize*; 
+		PROCEDURE ^ Copy*(VAR copy: Tree); 
+		PROCEDURE ^ Read*(R: DataIO.Reader); 
+		PROCEDURE ^ Write*(W: DataIO.Writer); 
+		PROCEDURE ^ Delete*(key: Data.Key; VAR successful: BOOLEAN); 
+		PROCEDURE ^ Put(datum: Data.Datum; depth: NbrInt.Integer; VAR successful: BOOLEAN); 
+		PROCEDURE ^ Insert*(datum: Data.Datum; VAR successful: BOOLEAN); 
+		PROCEDURE ^ Height*(): NbrInt.Integer; 
+	END Tree; 
+
+	PROCEDURE ^ SingleLL(VAR node: Node); 
+	PROCEDURE ^ SingleRR(VAR node: Node); 
+	PROCEDURE ^ DoubleLR(VAR node: Node); 
+	PROCEDURE ^ DoubleRL(VAR node: Node); 
+	PROCEDURE ^ GrowLeft(VAR rider: Rider; VAR node: Node; VAR htChanged: BOOLEAN); 
+	PROCEDURE ^ GrowRight(VAR rider: Rider; VAR node: Node; VAR htChanged: BOOLEAN); 
+	PROCEDURE ^ ShrinkLeft(VAR rider: Rider; VAR node: Node; VAR htChanged: BOOLEAN); 
+	PROCEDURE ^ ShrinkRight(VAR rider: Rider; VAR node: Node; VAR htChanged: BOOLEAN); 
+	PROCEDURE ^ LoadObj(R: DataIO.Reader; VAR obj: OBJECT); 
+	PROCEDURE ^ StoreObj(W: DataIO.Writer; obj: OBJECT); 
+	PROCEDURE ^ Register; 
+	PROCEDURE ^ Load*(R: DataIO.Reader; VAR obj: Tree); 
+	PROCEDURE ^ Store*(W: DataIO.Writer; obj: Tree); 
+BEGIN
+END DataTrees.

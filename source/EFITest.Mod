@@ -63,7 +63,7 @@ BEGIN
 	TestFS;
 END EFITest.
 
-Compiler.Compile  --objectFile=Generic --symbolFile=Textual --extensions
+Compiler.Compile --extensions
 	Runtime.Mod Trace.Mod EFI.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod EFILib.Mod EFITest.Mod ~
-StaticLinker.Link --fileName=test.efi --fileFormat=EFI32 --displacement=401000H
+Linker.Link --fileName=test.efi --fileFormat=EFI32 --displacement=401000H
 	Runtime Trace EFI EFITrace EFISimpleFS EFIFileProtocol EFILib EFITest ~

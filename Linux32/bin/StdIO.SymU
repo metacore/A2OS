@@ -1,0 +1,18 @@
+MODULE StdIO;
+	IMPORT S := SYSTEM, Modules, Commands, Streams, Pipes, Unix;
+CONST 
+	AddrSize = SIZEOF(ADDRESS); 
+TYPE 
+	String = POINTER TO ARRAY OF CHAR; 
+VAR 
+	env-: Commands.Context; 
+	stdInDecoupler: Pipes.ReadDecoupler; 
+
+	PROCEDURE ^ Args(): String; 
+	PROCEDURE ^ ReceiveStdin(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+	PROCEDURE ^ SendStdout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ SendErrout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Setup; 
+BEGIN
+END StdIO.

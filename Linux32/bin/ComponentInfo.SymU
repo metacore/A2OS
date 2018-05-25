@@ -1,0 +1,23 @@
+MODULE ComponentInfo;
+	IMPORT Streams, Commands, Strings, KernelLog, XML, XMLObjects, WMWindowManager, WMProperties, WMEvents, WMComponents;
+CONST 
+	MaxNofWindows = 100; 
+TYPE 
+	Windows = ARRAY MaxNofWindows OF WMWindowManager.Window; 
+
+	Statistics = OBJECT 
+	VAR 
+		nofComponents, nofVisualComponents, nofOtherElements, nofEventSources, nofEventListeners: LONGINT; 
+		nofBooleanProperties, nofInt32Properties, nofColorProperties, nofRectangleProperties, nofStringProperties, nofOtherProperties: LONGINT; 
+
+		PROCEDURE ^  & Reset; 
+		PROCEDURE ^ Add(stats: Statistics); 
+		PROCEDURE ^ Show(out: Streams.Writer); 
+	END Statistics; 
+
+	PROCEDURE ^ DumpComponent*(obj: ANY; out: Streams.Writer); 
+	PROCEDURE ^ GatherStatistics*(component: XML.Element; stats: Statistics); 
+	PROCEDURE ^ ShowStatistics*(context: Commands.Context); 
+	PROCEDURE ^ ShowPrototypes*(context: Commands.Context); 
+BEGIN
+END ComponentInfo.

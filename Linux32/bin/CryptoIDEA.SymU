@@ -1,0 +1,36 @@
+MODULE CryptoIDEA;
+	IMPORT S := SYSTEM, Ciphers := CryptoCiphers;
+CONST 
+TYPE 
+	CARD16 = LONGINT; 
+
+	LI = LONGINT; 
+
+	Block = ARRAY 4 OF CARD16; 
+
+	KeyBlock = ARRAY 9 OF ARRAY 6 OF CARD16; 
+
+	Cipher* = OBJECT (Ciphers.Cipher)
+	VAR 
+		ekeys, dkeys: KeyBlock; 
+		iv: Block; 
+
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: LONGINT); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; p: LONGINT); 
+		PROCEDURE ^  & Init*; 
+	END Cipher; 
+
+	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
+	PROCEDURE ^ Inverse(x: CARD16): CARD16; 
+	PROCEDURE ^ shor(a, b: CARD16): CARD16; 
+	PROCEDURE ^ CalcEncryptionKeys(CONST src: ARRAY OF CHAR; VAR e: KeyBlock); 
+	PROCEDURE ^ CalcDecryptionKeys(CONST e: KeyBlock; VAR d: KeyBlock); 
+	PROCEDURE ^ IDEACipher(VAR b: Block; CONST key: KeyBlock); 
+	PROCEDURE ^ Xor(a, b: CARD16): CARD16; 
+	PROCEDURE ^ Mul(a, b: CARD16): CARD16; 
+BEGIN
+END CryptoIDEA.

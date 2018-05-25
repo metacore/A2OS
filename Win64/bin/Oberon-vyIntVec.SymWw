@@ -1,0 +1,97 @@
+MODULE vyIntVec IN Oberon;
+	IMPORT Files, Objects, vyBase, vyHostTexts, vyinteger := vyInteger, vyLongintVec, vyName;
+CONST 
+	idversion* = \"vvyIntVec 0.0a4"\; 
+TYPE 
+	index* = LONGINT; 
+
+	integer* = INTEGER; 
+
+	tVector* = POINTER TO tVectorDesc; 
+
+	tVectorDesc* = RECORD (vyBase.tVectorDesc)
+	END; 
+
+	tINTEGER* = POINTER TO tINTEGERDesc; 
+
+	tINTEGERDesc* = RECORD (vyBase.tDataDesc)
+		i*: INTEGER; 
+	END; 
+
+	tMinMaxCache = POINTER TO tMinMaxCacheDesc; 
+
+	tMinMaxCacheDesc = RECORD (vyBase.tCacheDesc)
+		min, max: integer; 
+		minpos, maxpos, nans: LONGINT; 
+	END; 
+
+	tMeanCache = POINTER TO tMeanCacheDesc; 
+
+	tMeanCacheDesc = RECORD (vyBase.tCacheDesc)
+		mean, ssq: LONGREAL; 
+		nans: LONGINT; 
+	END; 
+
+	tBuf* = POINTER TO tBufDesc; 
+
+	tBufDesc* = RECORD (vyBase.tBufDesc)
+		data: POINTER TO ARRAY OF INTEGER; 
+	END; 
+
+	ArrayOp1Function* = PROCEDURE (VAR arg: ARRAY OF INTEGER); 
+
+	ArrayOp2Function* = PROCEDURE (VAR arg1, arg2: ARRAY OF INTEGER); 
+
+	PROCEDURE ^ NewBufs(size: index): tBuf; 
+	PROCEDURE ^ Store0(VAR R: Files.Rider; o: tVector); 
+	PROCEDURE ^ Store0INTEGER(VAR R: Files.Rider; o: tINTEGER); 
+	PROCEDURE ^ Load0(VAR R: Files.Rider; o: tVector); 
+	PROCEDURE ^ Load0INTEGER(VAR R: Files.Rider; o: tINTEGER); 
+	PROCEDURE ^ HandleAttributes(o: tVector; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleAttributesINTEGER(o: tINTEGER; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ GenIntegerObject*; 
+	PROCEDURE ^ NewIntegerObject*(i: integer): tINTEGER; 
+	PROCEDURE ^ FlushVecCaches(vec: vyBase.tVector); 
+	PROCEDURE ^ BufMinMax(buf: vyBase.tBuf): tMinMaxCache; 
+	PROCEDURE ^ BufMean(buf: vyBase.tBuf): tMeanCache; 
+	PROCEDURE ^ SetNrData(vec: tVector; size: index); 
+	PROCEDURE ^ New*(size: index): tVector; 
+	PROCEDURE ^ NewConstVector*(size: LONGINT; val: integer): vyBase.tVector; 
+	PROCEDURE ^ GC*(vec: vyBase.tVector); 
+	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
+	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
+	PROCEDURE ^ Len*(vec: vyBase.tVector): LONGINT; 
+	PROCEDURE ^ NewIntegerArray*(sizes: ARRAY OF LONGINT): vyBase.tVector; 
+	PROCEDURE ^ NewAlikeVector*(model: vyBase.tVector): vyBase.tVector; 
+	PROCEDURE ^ Append*(x: INTEGER; v: vyBase.tVector); 
+	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: INTEGER; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: LONGREAL; VAR nrNaNs: LONGINT); 
+	PROCEDURE ^ Get*(v: vyBase.tVector; pos: LONGINT): INTEGER; 
+	PROCEDURE ^ Set*(val: INTEGER; v: vyBase.tVector; pos: LONGINT); 
+	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): integer; 
+	PROCEDURE ^ SetIndexed*(xval: integer; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
+	PROCEDURE ^ Fill*(v: vyBase.tVector; val: INTEGER; offs, count: LONGINT); 
+	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: INTEGER; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ CopyData*(src, dest: vyBase.tVector); 
+	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF INTEGER; v: vyBase.tVector; len: LONGINT; srcoffs, destoffs: LONGINT); 
+	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF INTEGER); 
+	PROCEDURE ^ DoArrayOp1*(v: vyBase.tVector; op1: ArrayOp1Function); 
+	PROCEDURE ^ DoArrayOp2*(v1, v2: vyBase.tVector; op2: ArrayOp2Function); 
+	PROCEDURE ^ SortEachChunkINTEGER*(c: tBuf); 
+	PROCEDURE ^ SortEachChunkINTEGERWId*(c: tBuf; cid: vyLongintVec.tBuf); 
+	PROCEDURE ^ tcI(c: vyBase.tBuf): tBuf; 
+	PROCEDURE ^ MergeSortedChunkINTEGER(s1, s2: tBuf): BOOLEAN; 
+	PROCEDURE ^ MergeSortedChunkINTEGERWId(s1, s2: tBuf; s1id, s2id: vyLongintVec.tBuf): BOOLEAN; 
+	PROCEDURE ^ OrderedInteger(left, right: vyBase.tBuf): BOOLEAN; 
+	PROCEDURE ^ SortBuf*(VAR chunk: tBuf); 
+	PROCEDURE ^ SortBufWId*(VAR chunk: tBuf; VAR chunkid: vyLongintVec.tBuf); 
+	PROCEDURE ^ Sort*(VAR v: tVector); 
+	PROCEDURE ^ SortWId*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
+	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ WriteChunk(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
+	PROCEDURE ^ Write*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
+	PROCEDURE ^ ChunkSummary*(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
+BEGIN
+END vyIntVec.

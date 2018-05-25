@@ -1,0 +1,44 @@
+MODULE WMOGGPlayer;
+	IMPORT Commands, Files, Modules, Strings, WMMessages, WMComponents, WMStandardComponents, WMGrids, WMStringGrids, OGGVorbisPlayer, WM := WMWindowManager;
+CONST 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	PlaylistEntry = OBJECT 
+	VAR 
+		url: Strings.String; 
+	END PlaylistEntry; 
+
+	Player = OBJECT {EXCLUSIVE} 
+	VAR 
+		url: Strings.String; 
+		dummy: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(url: Strings.String); 
+	BEGIN{ACTIVE} 
+	END Player; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		playBtn, stopBtn: WMStandardComponents.Button; 
+		list: WMStringGrids.StringGrid; 
+		player: Player; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New*(filename: Files.FileName); 
+		PROCEDURE ^ FillList(OGGlist: ARRAY OF CHAR); 
+		PROCEDURE ^ Play(sender, data: ANY); 
+		PROCEDURE ^ Stop(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMOGGPlayer.

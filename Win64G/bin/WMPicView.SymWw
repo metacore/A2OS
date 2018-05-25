@@ -1,8 +1,0 @@
-MODULE WMPicView;
-	IMPORT Commands, Streams, Strings, Codecs, Raster, Files, WMRectangles, WMGraphics, WM := WMWindowManager;
-CONST 
-
-	PROCEDURE ^ Open*(context: Commands.Context); 
-	PROCEDURE ^ Convert*(context: Commands.Context); 
-BEGIN
-END WMPicView.

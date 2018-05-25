@@ -1,0 +1,42 @@
+MODULE V24Gadgets IN Oberon;
+	IMPORT Fonts, Texts, Oberon, Objects, Terminals, TerminalGadgets, Gadgets, Documents, Desktops, V24, TextDocs, Display, Files, Kernel, Input;
+CONST 
+	OpenHeight = 24; 
+TYPE 
+	Task = POINTER TO TaskDesc; 
+
+	Terminal = POINTER TO TerminalDesc; 
+
+	TerminalDesc = RECORD (Terminals.TerminalDesc)
+		localecho, stop: BOOLEAN; 
+		port, bps, data, stopb, parity: LONGINT; 
+	END; 
+
+	TaskDesc = RECORD (Oberon.TaskDesc)
+		T: Terminal; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	fixed: Fonts.Font; 
+
+	PROCEDURE ^ Send0(T: Terminals.Terminal; ch: CHAR); 
+	PROCEDURE ^ Break0(T: Terminals.Terminal); 
+	PROCEDURE ^ WriteString(T: Terminals.Terminal; str: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteLn(T: Terminals.Terminal); 
+	PROCEDURE ^ Receiver(me: Oberon.Task); 
+	PROCEDURE ^ Cleanup(f: ANY); 
+	PROCEDURE ^ OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: LONGINT); 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Reset*; 
+	PROCEDURE ^ ToggleEcho*; 
+	PROCEDURE ^ Log(F: TerminalGadgets.Frame); 
+	PROCEDURE ^ OpenLog*; 
+	PROCEDURE ^ SendString(T: Terminals.Terminal; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Send*; 
+	PROCEDURE ^ SendS(VAR br: Files.Rider; T: Terminals.Terminal); 
+	PROCEDURE ^ SendSRec*; 
+	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*; 
+BEGIN
+END V24Gadgets.

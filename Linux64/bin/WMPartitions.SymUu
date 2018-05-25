@@ -1,0 +1,296 @@
+MODULE WMPartitions;
+	IMPORT Streams, Modules, Commands, Strings, Disks, Files, Texts, TextUtilities, Codecs, PartitionsLib, DiskVolumes, OldDiskVolumes, FATVolumes, ISO9660Volumes, FATScavenger, DiskBenchmark, DiskTests, Installer, WMRectangles, WMGraphics, WMMessages, WMRestorable, WMWindowManager, WMProperties, WMDialogs, WMComponents, WMStandardComponents, WMTextView, WMEditors, WMGrids, WMTabComponents, WMPartitionsComponents;
+CONST 
+	ResNone = 0; 
+	ResOk = 1; 
+	ResCancel = 2; 
+	ParInteger = 0; 
+	ParString = 1; 
+	ParBoolean = 2; 
+	SelectionValid = 1; 
+	SelectionInvalid = 2; 
+	SelectionMaybe = 3; 
+	SelectionNotSupported = 0; 
+	DefaultWidth = 700; 
+	DefaultHeight = 400; 
+	WindowMinWidth = 350; 
+	WindowMinHeight = 350; 
+	NofTabs = 6; 
+	BackgroundColor = 1145324799; 
+	MarginH = 5; 
+	MarginV = 5; 
+	MarginColor = 1145324799; 
+	ButtonHeight = 20; 
+	ButtonWidth = 80; 
+	ButtonSpacer = 2; 
+	StatusBarHeight = 20; 
+	StatusBarBgColor = WMGraphics.Blue; 
+	RemoveSelected = 0; 
+	RemoveFinished = 1; 
+	RemoveAll = 2; 
+	DefaultPrefix = \"Auto"\; 
+	DefaultFatCacheSize = \"2048"\; 
+	CeLabelHeight = 20; 
+	CeOpPanelHeight = (ButtonHeight + (2 * MarginV)); 
+	CeKeyWidth = 100; 
+	CeEditPanelHeight = (((3 * ButtonHeight) + (2 * MarginV)) + (2 * ButtonSpacer)); 
+	CeCellHeightMinSpacer = 2; 
+	ToFile = 0; 
+	ToPartition = 1; 
+	UseSkinColors = FALSE; 
+TYPE 
+	Plugin = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		owner: Window; 
+		selection: WMPartitionsComponents.Selection; 
+
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ IsValid(selection: WMPartitionsComponents.Selection): BOOLEAN; 
+	END Plugin; 
+
+	FSToolsPlugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		mount: WMStandardComponents.Button; 
+		prefixEditor, fsEditor: WMEditors.Editor; 
+		mountPanel: WMStandardComponents.Panel; 
+		forceRWlabel, enableWBlabel, cacheSizeLabel: WMStandardComponents.Label; 
+		forceRW, enableWB: WMStandardComponents.Button; 
+		cacheSizeEditor: WMEditors.Editor; 
+		parForceRW, parEnableWB: BOOLEAN; 
+		unmount, force: WMStandardComponents.Button; 
+		parForce: BOOLEAN; 
+		info: WMStandardComponents.Label; 
+		prefixUsed: ARRAY 128 OF BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ WriteK(k: LONGINT; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ GenPrefix(): Files.Prefix; 
+		PROCEDURE ^ SetPrefixUsed(CONST prefix: ARRAY OF CHAR); 
+		PROCEDURE ^ GetPrefixNbr(CONST iprefix: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetFATspecific(VAR volPar: ARRAY OF CHAR); 
+		PROCEDURE ^ Mount(sender, data: ANY); 
+		PROCEDURE ^ Force(sender, data: ANY); 
+		PROCEDURE ^ ForceRW(sender, data: ANY); 
+		PROCEDURE ^ EnableWB(sender, data: ANY); 
+		PROCEDURE ^ Unmount(sender, data: ANY); 
+		PROCEDURE ^ DetectFS(dev: Disks.Device; part: LONGINT): LONGINT; 
+	END FSToolsPlugin; 
+
+	ConfigEditor = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		config: PartitionsLib.Configuration; 
+		configTable: PartitionsLib.ConfigTable; 
+		popup: PopupWindow; 
+		mainpanel: WMStandardComponents.Panel; 
+		titlelabel: WMStandardComponents.Label; 
+		grid: WMPartitionsComponents.NoWheelGrid; 
+		gridContainer: WMStandardComponents.Panel; 
+		gridPanel: WMPartitionsComponents.BevelPanel; 
+		selectedRow: LONGINT; 
+		cellHeight: LONGINT; 
+		scrollbarY: WMStandardComponents.Scrollbar; 
+		editPanel: WMPartitionsComponents.BevelPanel; 
+		editorKey, editorValue: WMEditors.Editor; 
+		add, delete, replace, clear, moveup, movedown: WMStandardComponents.Button; 
+		opPanel: WMPartitionsComponents.BevelPanel; 
+		set, get: WMStandardComponents.Button; 
+		toFile, toPartition: WMStandardComponents.Button; 
+		editorFile, editorPartition: WMEditors.Editor; 
+		target: LONGINT; 
+		fileLeft: LONGINT; 
+		statusLabel: WMStandardComponents.Label; 
+		hex: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ LoadFromPartition(CONST devpart: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ StoreToPartition(CONST devpart: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadFromFile(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ StoreToFile(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSelection(selection: WMPartitionsComponents.Selection): BOOLEAN; 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ScrollY(sender, data: ANY); 
+		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
+		PROCEDURE ^ GridClicked(sender, data: ANY); 
+		PROCEDURE ^ UpdateGrid; 
+		PROCEDURE ^ UpdateLayout(width, height: LONGINT); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+	END ConfigEditor; 
+
+	PartitionsPlugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		show, eject, checkPartition, activeBit, format, changeType, delete, create, partitionToFile, fileToPartition, writeMBR, editPBR: WMStandardComponents.Button; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ Create(sender, data: ANY); 
+		PROCEDURE ^ Delete(sender, data: ANY); 
+		PROCEDURE ^ WriteMBR(sender, data: ANY); 
+		PROCEDURE ^ EditPBR(sender, data: ANY); 
+		PROCEDURE ^ Format(sender, data: ANY); 
+		PROCEDURE ^ ChangeType(sender, data: ANY); 
+		PROCEDURE ^ ActiveBit(sender, data: ANY); 
+		PROCEDURE ^ FileToPartition(sender, data: ANY); 
+		PROCEDURE ^ PartitionToFile(sender, data: ANY); 
+		PROCEDURE ^ ShowCallback(text: Texts.Text); 
+		PROCEDURE ^ Show(sender, data: ANY); 
+		PROCEDURE ^ Eject(sender, data: ANY); 
+		PROCEDURE ^ CheckPartition(sender, data: ANY); 
+	END PartitionsPlugin; 
+
+	A2Plugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		config, updateLoader, updateBoot, bootManagerBtn, installBtn: WMStandardComponents.Button; 
+		popup: PopupWindow; 
+
+		PROCEDURE ^ Config(sender, data: ANY); 
+		PROCEDURE ^ UpdateLoader(sender, data: ANY); 
+		PROCEDURE ^ UpdateBoot(sender, data: ANY); 
+		PROCEDURE ^ InstallBootManager(sender, data: ANY); 
+		PROCEDURE ^ Install(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^  & Init*; 
+	END A2Plugin; 
+
+	ScavengerPlugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		start, doSurfaceScan, doCompareFats, doLostClusters, doWrite: WMStandardComponents.Button; 
+		surfaceScan, compareFats, lostClusters, write: BOOLEAN; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ StartScan(sender, data: ANY); 
+		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
+	END ScavengerPlugin; 
+
+	TestsPlugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		writeDataBtn, testPartitionBtn, verifyDataBtn, writeZerosBtn, benchmarkBtn: WMStandardComponents.Button; 
+
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ WriteTestData(sender, data: ANY); 
+		PROCEDURE ^ WriteZeros(sender, data: ANY); 
+		PROCEDURE ^ TestPartition(sender, data: ANY); 
+		PROCEDURE ^ VerifyTestData(sender, data: ANY); 
+		PROCEDURE ^ WriteK(k: LONGINT; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ BenchPartition(sender, data: ANY); 
+		PROCEDURE ^  & Init*; 
+	END TestsPlugin; 
+
+	ReportWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		textView: WMTextView.TextView; 
+
+		PROCEDURE ^ Show*; 
+		PROCEDURE ^  & New*(text: Texts.Text; width, height: LONGINT; visible: BOOLEAN); 
+	END ReportWindow; 
+
+	Parameter = RECORD 
+		description: ARRAY 32 OF CHAR; 
+		type: LONGINT; 
+		resInteger: LONGINT; 
+		resString: ARRAY 32 OF CHAR; 
+		resBoolean: BOOLEAN; 
+		width: LONGINT; 
+		valid: BOOLEAN; 
+		optional: BOOLEAN; 
+		default: BOOLEAN; 
+	END; 
+
+	Parameters = POINTER TO ARRAY OF Parameter; 
+
+	PopupWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		okBtn, cancelBtn: WMStandardComponents.Button; 
+		parameterPanel: WMStandardComponents.GroupPanel; 
+		parameters: Parameters; 
+		editors: POINTER TO ARRAY OF WMEditors.TextField; 
+		boxes: POINTER TO ARRAY OF WMStandardComponents.Button; 
+		vc: POINTER TO ARRAY OF WMComponents.VisualComponent; 
+		operationName, diskpartString: Strings.String; 
+		textView: WMTextView.TextView; 
+		text: Texts.Text; 
+		attr: Texts.Attributes; 
+		result: LONGINT; 
+		width, height: LONGINT; 
+
+		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^ SetText(text: Texts.Text); 
+		PROCEDURE ^ SetTextAsString(CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ SetParameters(CONST operationName: ARRAY OF CHAR; selection: PartitionsLib.Selection; VAR parameters: Parameters); 
+		PROCEDURE ^ Popup(x, y: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ BuildLayout; 
+		PROCEDURE ^ EvalParameters(): BOOLEAN; 
+		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
+		PROCEDURE ^ Ok(sender, data: ANY); 
+		PROCEDURE ^ Cancel(sender, data: ANY); 
+		PROCEDURE ^ Close*; 
+	END PopupWindow; 
+
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		tabs: WMTabComponents.Tabs; 
+		tabList: ARRAY NofTabs OF WMTabComponents.Tab; 
+		tabPanels: ARRAY NofTabs OF WMComponents.VisualComponent; 
+		tabPanel: WMStandardComponents.Panel; 
+		curTabPanel: WMComponents.VisualComponent; 
+		curTab: WMTabComponents.Tab; 
+		partitionSelector: WMPartitionsComponents.PartitionSelector; 
+		operationSelector: WMPartitionsComponents.OperationSelector; 
+		operationspanel: WMStandardComponents.Panel; 
+		selectedPlugin: Plugin; 
+		refreshBtn, showDetailsBtn: WMStandardComponents.Button; 
+		pluginPanel: WMStandardComponents.Panel; 
+		statusLabel: WMStandardComponents.Label; 
+		width, height: LONGINT; 
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ TabSelected(sender, data: ANY); 
+		PROCEDURE ^ CompletionHandler(operation: PartitionsLib.Operation; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ UpdateStatusLabel(string: Strings.String); 
+		PROCEDURE ^ ShowDetails(sender, data: ANY); 
+		PROCEDURE ^ Refresh(sender, data: ANY); 
+		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ PartitionSelected(sender, data: ANY); 
+		PROCEDURE ^ UpdateContent*; 
+		PROCEDURE ^ UpdateSelection(selection: WMPartitionsComponents.Selection); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+
+	OperationsPlugin = OBJECT {EXCLUSIVE} (Plugin)
+	VAR 
+		abort, remove, showerrors: WMStandardComponents.Button; 
+		finished, all, selected: WMStandardComponents.Button; 
+		removeMode: LONGINT; 
+		info: WMStandardComponents.Label; 
+		selector: WMPartitionsComponents.OperationSelector; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetSelector(selector: WMPartitionsComponents.OperationSelector); 
+		PROCEDURE ^ GetSelectedOperation(): WMPartitionsComponents.Operation; 
+		PROCEDURE ^ OnOperationSelected(sender, data: ANY); 
+		PROCEDURE ^ UpdateInfoLabel(operation: WMPartitionsComponents.Operation); 
+		PROCEDURE ^ CheckBoxes(sender, data: ANY); 
+		PROCEDURE ^ Resized*; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ Abort(sender, data: ANY); 
+		PROCEDURE ^ Remove(sender, data: ANY); 
+		PROCEDURE ^ Showerrors(sender, data: ANY); 
+		PROCEDURE ^ Finalize*; 
+	END OperationsPlugin; 
+VAR 
+	window: Window; 
+
+	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+BEGIN
+END WMPartitions.

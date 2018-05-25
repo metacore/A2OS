@@ -757,7 +757,7 @@
 					INCLUDE COMPILER COMPILEOPTIONS TARGET EXTENSION PATH EXCLUDEPACKAGES DISABLED
 				</Group>
 				<Group style="Red">
-					WIN iWIN eWIN
+					WIN
 				</Group>
 				<Group style="Blue">
 					NATIVE AMD64 I386

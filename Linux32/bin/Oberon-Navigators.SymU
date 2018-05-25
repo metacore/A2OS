@@ -1,0 +1,24 @@
+MODULE Navigators IN Oberon;
+	IMPORT Display, Display3, Printer, Printer3, Effects, Objects, Gadgets, Oberon, Documents, Desktops, Views;
+CONST 
+	MaxLevel = 3; 
+	leftpos = 0; 
+	toppos = 0; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+	END; 
+
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Cx(F: Frame; x: LONGINT): INTEGER; 
+	PROCEDURE ^ Cy(F: Frame; y: LONGINT): INTEGER; 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ Focus(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitNavigator*(F: Frame); 
+	PROCEDURE ^ NewNavigator*; 
+BEGIN
+END Navigators.

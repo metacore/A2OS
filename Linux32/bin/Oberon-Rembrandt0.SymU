@@ -1,0 +1,57 @@
+MODULE Rembrandt0 IN Oberon;
+	IMPORT Oberon, Display, Strings, Gadgets, Texts, Pictures, Objects, D3 := Display3, Out, Files, Math IN A2;
+CONST 
+	max = 256; 
+TYPE 
+	ColFrame* = POINTER TO ColFrameDesc; 
+
+	ColFrameDesc* = RECORD (Gadgets.FrameDesc)
+		col*: INTEGER; 
+	END; 
+
+	Color* = POINTER TO ColorDesc; 
+
+	ColorDesc* = RECORD (Gadgets.ObjDesc)
+		col*: INTEGER; 
+	END; 
+
+	; 
+
+	; 
+VAR 
+	Z: LONGINT; 
+	color*: Color; 
+	noc*, maxnoc*: INTEGER; 
+	coltable*: ARRAY max OF RECORD 
+		r*, g*, b*: INTEGER; 
+	END; 
+	r, g, b, rpal, gpal, bpal: ARRAY 256 OF INTEGER; 
+	floyd: POINTER TO RECORD 
+		errr, errg, errb, clamp: ARRAY 1024 OF LONGINT; 
+		hash: ARRAY 16 OF ARRAY 16 OF ARRAY 16 OF CHAR; 
+	END; 
+
+	PROCEDURE ^ Uniform*(): REAL; 
+	PROCEDURE ^ InitSeed*(seed: LONGINT); 
+	PROCEDURE ^ InitFloyd; 
+	PROCEDURE ^ Floyd*(S, D: Pictures.Picture); 
+	PROCEDURE ^ RGBtoHSV(R, G, B: REAL; VAR H, S, V: REAL); 
+	PROCEDURE ^ HSVtoRGB(H, S, V: REAL; VAR R, G, B: REAL); 
+	PROCEDURE ^ Reduce*(S, D: Pictures.Picture; ds, dv: REAL); 
+	PROCEDURE ^ HandleColor*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewColorObj*; 
+	PROCEDURE ^ HandleColFrame*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewColFrame*; 
+	PROCEDURE ^ CopyBlock*(S, D: Pictures.Picture; x, y: INTEGER; w, h, dx, dy, mode: INTEGER); 
+	PROCEDURE ^ ReplConst*(P: Pictures.Picture; col, x, y, w, h: INTEGER); 
+	PROCEDURE ^ AllocatePictureMem*(VAR P: Pictures.Picture; w, h, d: INTEGER); 
+	PROCEDURE ^ NearestColor*(r, g, b: LONGINT): INTEGER; 
+	PROCEDURE ^ Gamma(val: INTEGER; gamma: REAL): INTEGER; 
+	PROCEDURE ^ Darken*; 
+	PROCEDURE ^ Lighten*; 
+	PROCEDURE ^ SetColor*; 
+	PROCEDURE ^ ChangeColor*; 
+	PROCEDURE ^ ResetAll*; 
+	PROCEDURE ^ ResetOne*; 
+BEGIN
+END Rembrandt0.

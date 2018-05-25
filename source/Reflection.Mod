@@ -1,8 +1,9 @@
-MODULE Reflection; (** AUTHOR "fof"; PURPOSE "tools for module, stack and process reflection"; *)
+MODULE Reflection; 
+(** (c) Felix Friedrich, ETH Zurich, 2016 -- Reflection with more structured references section emitted by FoxCompiler *)
 
-IMPORT Modules,Streams,Machine,Heaps,Objects,Kernel,Trace,SYSTEM;
+IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace, Kernel;
 
-CONST
+CONST 
 	ShowAllProcs = TRUE;
 	MaxFrames = 128;
 	MaxString = 64;
@@ -10,271 +11,125 @@ CONST
 	MaxCols = 70;
 	Sep = "  ";
 	SepLen = 2;
+	LineDelay = 0;
 
-	LineDelay = 0; (* set this value to the number of cycles of an empty for loop that the reflection should wait after a new line
-					 * useful for screen racing when no persistent trace medium is available
-					 * no timer mechanism used because at low level tracing this may exactly not be available because IRQs do not work any more or so.
-					 *)
+CONST 
+	sfTypeNone* = 0X;
+	sfTypeCHAR* = 01X;
+	sfTypeCHAR8* = 02X;
+	sfTypeCHAR16* = 03X;
+	sfTypeCHAR32* = 04X;
+	sfTypeRANGE* = 05X;
+	sfTypeSHORTINT* = 06X;
+	sfTypeINTEGER* = 07X;
+	sfTypeLONGINT* = 08X;
+	sfTypeHUGEINT* = 09X;
+	sfTypeWORD* = 0AX;
+	sfTypeLONGWORD* = 0BX;
+	sfTypeSIGNED8* = 0CX;
+	sfTypeSIGNED16* = 0DX;
+	sfTypeSIGNED32* = 0EX;
+	sfTypeSIGNED64* = 0FX;
+	sfTypeUNSIGNED8* = 10X;
+	sfTypeUNSIGNED16* = 11X; 
+	sfTypeUNSIGNED32* = 12X;
+	sfTypeUNSIGNED64* = 13X;
+	sfTypeREAL* = 14X;
+	sfTypeLONGREAL* = 15X;
+	sfTypeCOMPLEX* = 16X;
+	sfTypeLONGCOMPLEX* = 17X;
+	sfTypeBOOLEAN* = 18X;
+	sfTypeSET* = 19X;
+	sfTypeANY* = 1AX;
+	sfTypeOBJECT* = 1BX; 
+	sfTypeBYTE* = 1CX; 
+	sfTypeADDRESS* = 1DX; 
+	sfTypeSIZE* = 1EX; 
+	sfTypeIndirect*= 1FX; 
 
-TYPE
-	Variable* = RECORD
-		adr-: ADDRESS;
-		type-, size-, n-, tdadr-: LONGINT
-	END;
+	sfTypeRecord* = 20X;	
 
-VAR
-	modes: ARRAY 25 OF CHAR;
+	sfTypePointerToRecord* = 21X;
+	sfTypePointerToArray* = 22X;
+	sfTypeOpenArray* = 23X;
+	sfTypeStaticArray* = 24X;
+	sfTypeDynamicArray* = 25X;
+	sfTypeMathStaticArray* = 26X;
+	sfTypeMathOpenArray* = 27X;
+	sfTypeMathTensor* = 28X;
+	sfTypeDelegate* = 29X; 
+	sfTypeENUM* = 2AX;
+	sfTypeCELL* = 2BX;
+	sfTypePORT* = 2CX;
+
+	
+	sfIN* = 0X;
+	sfOUT* = 1X;
+	
+	flagDelegate*=0;
+	flagConstructor*=1;
+	
+	(* variable / parameter addressing modes *)
+	sfAbsolute* = 0X; (* global vars *)
+	sfRelative* = 1X; (* variables, value parameters *)
+	sfIndirect* = 2X; (* var parameters *) 
+
+	sfScopeBegin* = 0F0X;
+	sfScopeEnd* = 0F1X; 
+	sfProcedure* = 0F2X; 
+	sfVariable* = 	0F3X;
+	sfTypeDeclaration* = 0F4X;
+	sfModule*= 0FFX;
 
 	(*
-		Reference = {OldRef | ProcRef} .
-		OldRef = 0F8X offset/n name/s {Variable} .
-		ProcRef = 0F9X offset/n nofPars/n RetType procLev/1 slFlag/1 name/s {Variable} .
-		RetType = 0X | Var | ArrayType | Record .
-		ArrayType = 12X | 14X | 15X .	(* static array, dynamic array, open array *)
-		Record = 16X .
-		Variable = VarMode (Var | ArrayVar | RecordVar ) offset/n name/s .
-		VarMode = 1X | 3X .	(* direct, indirect *)
-		Var = 1X .. 0FX .	(* byte, boolean, char, shortint, integer, longint, real, longreal, set, ptr, proc, string *)
-		ArrayVar = (81X .. 8EX) dim/n .	(* byte, boolean, char, shortint, integer, longint, real, longreal, set, ptr, proc *)
-		RecordVar = (16X | 1DX) tdadr/n .	(* record, recordpointer *)
+		References section format: 
+		Scope = sfScopeBegin {variable:Variable} {procedure:Procedure} {typeDecl:TypeDeclaration} sfScopeEnd.
+		Module = sfModule prevSymbolOffset:SIZE name:String Scope.
+		Procedure = sfProcedure prevSymbolOffset:SIZE name:String start:ADR end:ADR flags:SET {parameter:Variable} returnType:Type Scope.
+		Variable = sfVariable prevSymbolOffset:SIZE name:String (sfRelative offset: SIZE | sfIndirec offset: SIZE | sfAbsolute address:ADDRESS) type:Type.
+		TypeDeclaration = sfTypeDeclaration prevSymbolOffset:SIZE name:String typeInfo:ADR Scope.
+		Type = 
+			sfTypePointerToRecord 
+			| sfTypePointerToArray Type
+			| sfTypeOpenArray Type
+			| sfTypeDynamicArray Type
+			| sfTypeStaticArray length:SIZE Type
+			| sfTypeMathOpenArray Type 
+			| sfTypeMathStaticArray length:SIZE Type
+			| sfTypeMathTensor Type
+			| sfTypeRecord tdAdr:ADDRESS 
+			| sfTypeDelegate {Parameter} return:Type
+			| sfTypePort (sfIN | sfOUT)
+			| sfTypeBOOLEAN
+			| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
+			| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
+			| sfTypeSIGNED8 | sfTypeSIGNED16 | sfTypeSIGNED32 | sfTypeSIGNED64
+			| sfTypeUNSIGNED8 | sfTypeUNSIGNED16 | sfTypeUNSIGNED32 | sfTypeUNSIGNED64
+			| sfTypeWORD | sfTypeLONGWORD
+			| sfTypeREAL | sfTypeLONGREAL
+			| sfTypeCOMPLEX | sfTypeLONGCOMPLEX
+			| sfTypeSET | sfTypeANY | sfTypeOBJECT | sfTypeBYTE | sfTypeADDRESS | sfTypeSIZE
+			| sfTypeIndirect offset:SIZE.
 	*)
 
-	(** Write a variable value.  The v parameter is a variable descriptor obtained with NextVar.  Parameter col is incremented with the (approximate) number of characters written. *)
-	PROCEDURE WriteVar*(w: Streams.Writer; VAR v: Variable; VAR col: LONGINT);
-	VAR ch: CHAR;
-	BEGIN
-		IF v.type = 15 THEN
-			w.Char(22X);
-			LOOP
-				IF (v.n = 0) OR (~CheckHeapAddress(v.adr)) THEN EXIT END;
-				SYSTEM.GET(v.adr, ch);
-				INC(v.adr);
-				IF (ch < " ") OR (ch > "~") THEN EXIT END;
-				w.Char(ch); INC(col); DEC(v.n)
-			END;
-			w.Char(22X); INC(col, 2);
-			IF ch # 0X THEN w.Char("!") END
-		ELSE
-			WHILE v.n > 0 DO
-				WriteSimpleVar(w, v.adr, v.type, v.tdadr, col);
-				DEC(v.n); INC(v.adr, v.size);
-				IF v.n > 0 THEN
-					w.String(", "); INC(col, 2)
-				END
-			END
-		END
-	END WriteVar;
 
+	VAR
+		modes: ARRAY 25 OF CHAR;
+
+	TYPE 
+		Name = ARRAY 128 OF CHAR;
+
+		Meta* = RECORD
+			module-: Modules.Module;
+			refs-: Modules.Bytes;
+			offset*: SIZE;
+		END;
+    
 	PROCEDURE CheckHeapAddress(address: ADDRESS): BOOLEAN;
 	BEGIN
 		RETURN Machine.ValidHeapAddress(address);
 	END CheckHeapAddress;
-
-	(* Get a compressed refblk number. *)
-	PROCEDURE GetNum( refs: Modules.Bytes;  VAR i, num: LONGINT );
-	VAR
-		n, s, x: LONGINT; 
-	BEGIN
-		IF NewObjectFile(refs) THEN
-			(* Copying byte by byte to avoid unaligned memory accesses on ARM *)
-			SYSTEM.PUT8(ADDRESSOF(num), refs[i]);
-			SYSTEM.PUT8(ADDRESSOF(num) + 1, refs[i + 1]);
-			SYSTEM.PUT8(ADDRESSOF(num) + 2, refs[i + 2]);
-			SYSTEM.PUT8(ADDRESSOF(num) + 3, refs[i + 3]);
-			INC(i,4);
-		ELSE
-			s := 0;  n := 0;  x := ORD(refs[i]);  INC( i );
-			WHILE x >= 128 DO  INC( n, ASH( x - 128, s ) );  INC( s, 7 );  x := ORD(refs[i]);  INC( i )  END;
-			num := n + ASH( x MOD 64 - x DIV 64 * 64, s )
-		END;
-	END GetNum;
-
-	(** Step to the next variable in the refs block.  The name parameter returns empty if no more variables are found.  The attributes are returned in v.  Parameter refpos is modified.  *)
-	PROCEDURE NextVar*(refs: Modules.Bytes; VAR refpos: LONGINT; base: ADDRESS; VAR name: ARRAY OF CHAR; VAR v: Variable);
-	VAR x: Variable; j: LONGINT; ch, mode: CHAR;
-	BEGIN
-		name[0] := 0X;	(* empty name signals end or error *)
-		IF refpos < LEN(refs^)-1 THEN
-			mode := refs[refpos]; INC(refpos);
-			IF (mode >= 1X) & (mode <= 3X) THEN	(* var *)
-				x.type := ORD(refs[refpos]); INC(refpos);
-				IF x.type > 80H THEN
-					IF x.type = 83H THEN x.type := 15 ELSE DEC(x.type, 80H) END;
-					GetNum(refs, refpos, x.n)
-				ELSIF (x.type = 16H) OR (x.type = 1DH) THEN
-					GetNum(refs, refpos, x.tdadr); x.n := 1
-				ELSE
-					IF x.type = 15 THEN x.n := MaxString (* best guess *) ELSE x.n := 1 END
-				END;
-				(* get address *)
-				GetNum(refs, refpos, j);
-				x.adr := base + j;	(* convert to absolute address *)
-				IF x.n = 0 THEN	(* open array (only on stack, not global variable) *)
-					SYSTEM.GET(x.adr+4, x.n)	(* real LEN from stack *)
-				END;
-				IF mode # 1X THEN SYSTEM.GET(x.adr, x.adr) END;	(* indirect *)
-				(* get size *)
-				CASE x.type OF
-					1..4,15: x.size := 1
-					|5: x.size := 2
-					|6..7,9,13,14,29: x.size := 4
-					|8, 16: x.size := 8
-					|22: x.size := 0; ASSERT(x.n <= 1)
-				ELSE x.size := -1
-				END;
-				IF x.size >= 0 THEN	(* ok, get name *)
-					ch := refs[refpos]; INC(refpos); j := 0;
-					WHILE ch # 0X DO
-						IF j < LEN(name)-1 THEN name[j] := ch; INC(j) END;	(* truncate long names *)
-						ch := refs[refpos]; INC(refpos)
-					END;
-					name[j] := 0X; v := x	(* non-empty name *)
-				END
-			END
-		END
-	END NextVar;
-
-	(** Find the specified global variable and return its descriptor.  Returns TRUE iff the variable is found. *)
-	PROCEDURE FindVar*(mod: Modules.Module; CONST name: ARRAY OF CHAR; VAR v: Variable): BOOLEAN;
-	VAR refs: Modules.Bytes; refpos: LONGINT; base: ADDRESS; n: ARRAY 64 OF CHAR;
-	BEGIN
-		InitVar(mod, refs, refpos, base);
-		IF refpos # -1 THEN
-			LOOP
-				NextVar(refs, refpos, base, n, v);
-				IF n = "" THEN EXIT END;
-				IF n = name THEN RETURN TRUE END
-			END
-		END;
-		RETURN FALSE
-	END FindVar;
-
-	(** Find global variables of mod (which may be NIL) and return it in the refs, refpos and base parameters for use by NextVar.  If not found, refpos returns -1. *)
-	PROCEDURE InitVar*(mod: Modules.Module; VAR refs: Modules.Bytes; VAR refpos: LONGINT; VAR base: ADDRESS);
-	VAR ch: CHAR; startpc,pc,end: ADDRESS;
-	BEGIN
-		refpos := -1;
-		IF mod # NIL THEN
-			refs := mod.refs; base := mod.sb;
-			IF (refs # NIL) & (LEN(refs) # 0) THEN
-				IF FindProcByName(mod,"$$",pc,end) THEN
-					refpos := FindProc(refs, pc, startpc);
-				END;
-				IF refpos # -1 THEN
-					ch := refs[refpos]; INC(refpos);
-					WHILE ch # 0X DO ch := refs[refpos]; INC(refpos) END
-				END
-			END
-		END
-	END InitVar;
-
-	PROCEDURE NewObjectFile(refs: Modules.Bytes): BOOLEAN;
-	BEGIN
-		RETURN (refs # NIL) & (LEN(refs) >0) & (refs[0]=0FFX);
-	END NewObjectFile;
-
-	(* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
-	PROCEDURE FindProc(refs: Modules.Bytes; modpc: ADDRESS; VAR startpc: ADDRESS): LONGINT;
-	VAR pos, len, t, tstart, tend, proc: LONGINT; ch: CHAR; newObjectFile, found: BOOLEAN;
-	BEGIN
-		IF (refs=NIL) OR (LEN(refs) = 0) THEN RETURN -1 END;
-		newObjectFile := NewObjectFile(refs);
-		proc := -1; pos := 0; len := LEN(refs^);
-		IF newObjectFile THEN INC(pos) END;
-		ch := refs[pos]; INC(pos); tstart := 0;
-		found := FALSE;
-
-		WHILE ~found & (pos < len) & ((ch = 0F8X) OR (ch = 0F9X)) DO	(* proc *)
-			GetNum(refs, pos, tstart);	(* procedure offset *)
-			IF newObjectFile THEN
-				GetNum(refs,pos,tend);
-				found := (tstart <=modpc) & (tend  > modpc)
-			ELSE
-				found := tstart > modpc
-			END;
-				IF ch = 0F9X THEN
-					GetNum(refs, pos, t);	(* nofPars *)
-					INC(pos, 3)	(* RetType, procLev, slFlag *);
-					IF newObjectFile THEN INC(pos,6) END;
-				END;
-			IF ~found THEN (* not yet found -- remember startpc and position for next iteration *)
-				startpc := tstart;
-				proc := pos;	(* remember this position, just before the name *)
-				REPEAT ch := refs[pos]; INC(pos) UNTIL ch = 0X;	(* pname *)
-				IF pos < len THEN
-					ch := refs[pos]; INC(pos);	(* 1X | 3X | 0F8X | 0F9X *)
-					WHILE (pos < len) & (ch >= 1X) & (ch <= 3X) DO	(* var *)
-						ch := refs[pos]; INC(pos);	(* type *)
-						IF (ch >= 81X) OR (ch = 16X) OR (ch = 1DX) THEN
-							GetNum(refs, pos, t)	(* dim/tdadr *)
-						END;
-						GetNum(refs, pos, t);	(* vofs *)
-						REPEAT ch := refs[pos]; INC(pos) UNTIL ch = 0X;	(* vname *)
-						IF pos < len THEN ch := refs[pos]; INC(pos) END	(* 1X | 3X | 0F8X | 0F9X *)
-					END
-				END
-			END;
-		END;
-		IF newObjectFile THEN
-			IF found THEN
-				startpc := tstart; proc := pos;
-			ELSE proc := -1
-			END;
-		END;
-		RETURN proc
-	END FindProc;
-
-	(* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
-	PROCEDURE FindProcByName*(mod: Modules.Module; CONST name: ARRAY OF CHAR;  VAR from, to: ADDRESS): BOOLEAN;
-	VAR i, namePos, m, t, temp: LONGINT; ch: CHAR; newObjectFile: BOOLEAN;
-		refs: Modules.Bytes; success: BOOLEAN;
-		tstart, tend: ADDRESS;
-	BEGIN
-		IF mod = NIL THEN RETURN FALSE END;
-		refs := mod.refs;
-		IF (refs=NIL) OR (LEN(refs) = 0) THEN RETURN FALSE END;
-		newObjectFile := NewObjectFile(refs);
-		i := 0; m := LEN(refs^);
-		IF newObjectFile THEN INC(i) END;
-		ch := refs[i]; INC(i); tstart := 0;
-		success := FALSE;
-		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) & ~success DO	(* proc *)
-			GetNum(refs, i, temp);	(* pofs *)
-			tstart := temp;
-			IF newObjectFile THEN GetNum(refs,i,temp); tend := temp END;
-			IF ch = 0F9X THEN
-				GetNum(refs, i, t);	(* nofPars *)
-				INC(i, 3)	(* RetType, procLev, slFlag *);
-				IF newObjectFile THEN INC(i,6) END;
-			END;
-			namePos := 0; success := TRUE;
-			REPEAT ch := refs[i]; INC(i); success := success & (ch = name[namePos]); INC(namePos); UNTIL ch = 0X;	(* pname *)
-			IF i < m THEN
-				ch := refs[i]; INC(i);	(* 1X | 3X | 0F8X | 0F9X *)
-				WHILE (i < m) & (ch >= 1X) & (ch <= 3X) DO	(* var *)
-					ch := refs[i]; INC(i);	(* type *)
-					IF (ch >= 81X) OR (ch = 16X) OR (ch = 1DX) THEN
-						GetNum(refs, i, t)	(* dim/tdadr *)
-					END;
-					GetNum(refs, i, t);	(* vofs *)
-					REPEAT ch := refs[i]; INC(i) UNTIL ch = 0X;	(* vname *)
-					IF i < m THEN ch := refs[i]; INC(i) END	(* 1X | 3X | 0F8X | 0F9X *)
-				END
-			END;
-		END;
-		IF success & ~newObjectFile THEN
-			IF (ch = 0F8X) OR (ch = 0F9X) THEN
-				GetNum(refs, i, temp); tend := temp;
-			ELSE
-				tend :=LEN(mod.code);
-			END;
-			INC(tstart, ADDRESSOF(mod.code[0]));
-			INC(tend, ADDRESSOF(mod.code[0]));
-		END;
-		from := tstart; to := tend;
-		RETURN success
-	END FindProcByName;
-
+	
 	PROCEDURE Wait(w: Streams.Writer);
 	VAR i: LONGINT;
 	BEGIN
@@ -283,189 +138,128 @@ VAR
 			w.Update
 		END;
 	END Wait;
-
-	(* Display variables. *)
-	PROCEDURE Variables(w: Streams.Writer; refs: Modules.Bytes; refpos: LONGINT; base: ADDRESS);
-	VAR v: Variable; j, col: LONGINT; name: ARRAY 64 OF CHAR; etc: BOOLEAN;
-	CONST dense = FALSE;
+	
+	PROCEDURE Expect(pos: SIZE; b: BOOLEAN): BOOLEAN;
 	BEGIN
-		LOOP
-			NextVar(refs, refpos, base, name, v);
-			IF name[0] = 0X THEN EXIT END;
-			(* write name *)
-			IF (col # 0 ) & (v.n > 1) & (v.type # 15) THEN	(* Ln before array (except string) *)
-				w.Ln; col := 0; Wait(w);
-			END;
-			w.String(Sep); w.String(name); w.Char("=");
-			j := 0; WHILE name[j] # 0X DO INC(j) END;
-			INC(col, SepLen+1+j);
-				(* write variable *)
-			IF (v.adr >= -4) & (v.adr < 4096) THEN	(* must be NIL VAR parameter *)
-				w.String("NIL ("); w.Hex(v.adr, -8);
-				w.Char(")"); INC(col, 14)
-			ELSE
-				etc := FALSE;
-				IF v.type = 15 THEN
-					IF v.n > MaxString THEN etc := TRUE; v.n := MaxString END
-				ELSE
-					IF v.n > MaxArray THEN etc := TRUE; v.n := MaxArray END
-				END;
-				IF (v.type <= 8) & ((v.adr > base + 64) OR (v.adr < base - 4096)) & (~CheckHeapAddress( v.adr )) THEN
-					(* CONST parameter ? *)
-					w.String( "???" )
-				ELSE
-					WriteVar(w, v, col);	(* write value *)
-				END;
-				IF etc THEN w.String("..."); INC(col, 3) END;
-				IF ~dense THEN
-					w.Ln; col := 0; Wait(w);
-				END;
-			END;
-			IF col > MaxCols THEN w.Ln; col := 0; Wait(w); END
+		IF ~b THEN Trace.String("Format error in references section @"); Trace.Int(pos,1); Trace.Ln END;
+		RETURN b;
+	END Expect;
+
+
+	(* consume a char from the byte stream *)
+	PROCEDURE GetChar*(refs: Modules.Bytes; VAR offset: SIZE): CHAR;
+	VAR c: CHAR; 
+	BEGIN
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0X END; 
+		c := refs[offset];
+		INC(offset);
+		RETURN c;
+	END GetChar;
+
+	(* skip a char in the byte stream *)
+	PROCEDURE SkipChar*(VAR offset: SIZE);
+	BEGIN
+		INC(offset, SIZEOF(CHAR)); 
+	END SkipChar;
+	
+	(* consume an address in the byte stream *)
+	PROCEDURE GetAddress*(refs: Modules.Bytes; VAR offset: SIZE): ADDRESS;
+	VAR adr: ADDRESS; i: SIZE;
+	BEGIN
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0 END; 
+		FOR i := 0 TO SIZEOF(ADDRESS)-1 DO
+			SYSTEM.PUT8(ADDRESSOF(adr)+i, GetChar(refs, offset));
 		END;
-		IF col # 0 THEN w.Ln; Wait(w) END
-	END Variables;
+		RETURN adr;
+	END GetAddress;
 
-	(** Write the state of the specified module. *)
-	PROCEDURE ModuleState*(w: Streams.Writer; mod: Modules.Module);
-	VAR refpos: LONGINT; base: ADDRESS; refs: Modules.Bytes;
+	(* skip an address in the byte stream *)
+	PROCEDURE SkipAddress*(VAR offset: SIZE);
 	BEGIN
-		InitVar(mod, refs, refpos, base);
-		IF refpos # -1 THEN
-			w.String("State "); w.String(mod.name); w.Char(":"); w.Ln; Wait(w);
-			Variables(w, refs, refpos, base)
-		END
-	END ModuleState;
+		INC(offset, SIZEOF(ADDRESS)); 
+	END SkipAddress;
 
-	(* Write the specified procedure name and returns parameters for use with NextVar and Variables. *)
-	PROCEDURE WriteProc0(w: Streams.Writer; mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Modules.Bytes;
-			VAR refpos: LONGINT; VAR base: ADDRESS);
-	VAR ch: CHAR; startpc: ADDRESS;
+	(* consume a size in the byte stream *)
+	PROCEDURE GetSize*(refs: Modules.Bytes; VAR offset: SIZE): SIZE;
+	VAR size: SIZE; i: SIZE;
 	BEGIN
-		refpos := -1;
-		IF mod = NIL THEN
-			IF pc = 0 THEN w.String("NIL")
-			ELSE
-				w.String("Unknown PC="); w.Address(pc); w.Char("H")
-			END;
-			IF fp # -1 THEN
-				w.String(" FP="); w.Address(fp); w.Char("H")
-			END
-		ELSE
-			w.String(mod.name);
-			IF ~NewObjectFile(mod.refs) THEN
-				DEC(pc, ADDRESSOF(mod.code[0]));
-			END;
-			refs := mod.refs;
-			IF (refs # NIL) & (LEN(refs) # 0) THEN
-				refpos := FindProc(refs, pc, startpc);
-				IF refpos # -1 THEN
-					w.Char(".");
-					ch := refs[refpos]; INC(refpos);
-					IF ch = "$" THEN base := mod.sb ELSE base := fp END;	(* for variables *)
-					WHILE ch # 0X DO w.Char(ch); ch := refs[refpos]; INC(refpos) END;
-					w.Char(":"); w.Int(LONGINT(pc-startpc),1);
-				END
-			END;
-			w.String(" pc="); w.Int(LONGINT(pc),1); w.String(" ["); w.Address (pc); w.String("H]");
-			w.String(" = "); w.Int(LONGINT(startpc),1);  w.String(" + "); w.Int(LONGINT(pc-startpc),1);
-			w.String(" crc="); w.Hex(mod.crc,-8);
-			Wait(w);
-		END
-	END WriteProc0;
-
-	(** Find procedure name and write it. *)
-	PROCEDURE WriteProc*(w: Streams.Writer; pc: ADDRESS);
-	VAR refs: Modules.Bytes; refpos: LONGINT; base: ADDRESS;
-	BEGIN
-		WriteProc0(w, Modules.ThisModuleByAdr0(pc), pc, -1, refs, refpos, base)
-	END WriteProc;
-
-	(* Returns the name of the procedure the pc is in. Searchs in m.refs *)
-	PROCEDURE GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS);
-	VAR
-		methadr, i: LONGINT;
-		ch: CHAR;
-		m: Modules.Module;
-	BEGIN
-		m := Modules.ThisModuleByAdr0(pc);
-
-
-		IF m # NIL THEN
-
-			IF ~NewObjectFile(m.refs) THEN
-				DEC(pc, ADDRESSOF(m.code[0]));
-			END;
-
-			methadr := FindProc(m.refs, pc, startpc);
-			IF methadr # -1 THEN
-				i := 0;
-				ch := m.refs[methadr]; INC(methadr);
-				WHILE ch # 0X DO
-					name[i] := ch;
-					ch := m.refs[methadr];
-					INC(methadr);
-					INC(i);
-				END;
-				IF ~NewObjectFile(m.refs) THEN
-					INC(startpc, ADDRESSOF(m.code[0]));
-				END;
-			END;
-			name[i] := 0X;
-		ELSE
-			name := "Unkown"; (* Better: name := "" *)
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN 0 END; 
+		FOR i := 0 TO SIZEOF(SIZE)-1 DO
+			SYSTEM.PUT8(ADDRESSOF(size)+i, refs[offset]);
+			INC(offset);
 		END;
-	END GetProcedureName;
+		RETURN size;
+	END GetSize;
 
-	(* 	A simple introspection method, must be adapted if there are any changes to the
-		refs section in a module. *)
-	PROCEDURE GetVariableAdr*(pc, fp: ADDRESS;  CONST varname: ARRAY OF CHAR): ADDRESS;
-	VAR
-		m: Modules.Module;
-		v: Variable;
-		pos: LONGINT;
-		base: ADDRESS;
-		name: ARRAY 256 OF CHAR;
-		ch: CHAR;
-		startpc: ADDRESS;
+	(* skip a size in the byte stream *)
+	PROCEDURE SkipSize*(VAR offset: SIZE);
 	BEGIN
-		pos := -1;
-		m := Modules.ThisModuleByAdr0(pc);
-		IF m # NIL THEN
-			IF ~NewObjectFile(m.refs) THEN
-				DEC(pc, ADDRESSOF(m.code[0]));
-			END;
-			pos := FindProc(m.refs, pc, startpc);
+		INC(offset, SIZEOF(SIZE)); 
+	END SkipSize;
 
-			IF pos # -1 THEN
-
-				ch := m.refs[pos]; INC(pos);
-				(* for variables *)
-				IF ch = "$" THEN
-					base := m.sb;
-				ELSE
-					base := fp;
-				END;
-
-				 (* Read the name *)
-				WHILE ch # 0X DO ch := m.refs[pos]; INC(pos) END;
-
-				NextVar(m.refs, pos, base, name, v);
-
-				WHILE name[0] # 0X DO
-					IF name = varname THEN
-						RETURN v.adr;
-					ELSE
-						NextVar(m.refs, pos, base, name, v);
-					END
-				END
-			END
+	(* consume a set in the byte stream *)
+	PROCEDURE GetSet*(refs: Modules.Bytes; VAR offset: SIZE): SET;
+	VAR set: SET; i: SIZE;
+	BEGIN
+		IF ~Expect(offset, offset < LEN(refs)) THEN RETURN {} END; 
+		FOR i := 0 TO SIZEOF(SET)-1 DO
+			SYSTEM.PUT8(ADDRESSOF(set)+i, refs[offset]);
+			INC(offset);
 		END;
+		RETURN set;
+	END GetSet;
 
-		RETURN -1;
+	(* skip a set in the byte stream *)
+	PROCEDURE SkipSet*(VAR offset: SIZE);
+	BEGIN
+		INC(offset, SIZEOF(SET)); 
+	END SkipSet;
 
-	END GetVariableAdr;
+	(* consume a string in the byte stream *)
+	PROCEDURE GetString*(refs: Modules.Bytes; VAR offset: SIZE; VAR string: ARRAY OF CHAR);
+	VAR ch: CHAR; i: SIZE; 
+	BEGIN
+		i := 0; 
+		REPEAT
+			ch := GetChar(refs, offset); 
+			string[i] := ch;
+			INC(i); 
+		UNTIL ch = 0X; 
+	END GetString;
 
+	(* skip a string in the byte stream *)
+	PROCEDURE SkipString*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		WHILE(refs[offset] # 0X) DO INC(offset) END; INC(offset);
+	END SkipString;
+	
+	(* extract a full name from the byte stream by traversing up the symbols in their scopes *)
+	PROCEDURE GetFullName*(refs: Modules.Bytes; offset: SIZE; VAR name: ARRAY OF CHAR);
+	VAR n: SIZE; 
+	
+		PROCEDURE Traverse(offset: SIZE);
+		VAR c: CHAR;
+		BEGIN
+			IF offset >= 0 THEN
+				c := GetChar(refs, offset);
+				IF (c = sfProcedure) OR (c=sfVariable) OR (c=sfTypeDeclaration) OR (c=sfModule) THEN
+					Traverse(GetSize(refs, offset));
+				END;
+				IF (n > 0) & (n<LEN(name)) THEN name[n] := "."; INC(n); END;
+				WHILE (n<LEN(name)) & (refs[offset] # 0X) DO
+					name[n] := refs[offset];
+					INC(n); INC(offset);
+				END;
+			END;
+		END Traverse;
+		
+	BEGIN
+		n := 0;
+		Traverse(offset);
+		name[n] := 0X;
+	END GetFullName; 
+
+	
 	(* "lock free" version of Modules.ThisTypeByAdr *)
 	PROCEDURE ThisTypeByAdr(adr: ADDRESS; VAR m: Modules.Module; VAR t: Modules.TypeDesc);
 	BEGIN
@@ -482,6 +276,7 @@ VAR
 		END
 	END ThisTypeByAdr;
 
+	(* output type descriptor information *)
 	PROCEDURE WriteType*(w: Streams.Writer; adr: ADDRESS);
 	VAR module: Modules.Module; typeDesc: Modules.TypeDesc;
 	BEGIN
@@ -507,88 +302,681 @@ VAR
 		END;
 	END WriteType;
 
-	PROCEDURE WriteSimpleVar( w: Streams.Writer;  adr, type, tdadr: ADDRESS;  VAR col: LONGINT );
-	VAR ch: CHAR;  sval: SHORTINT;  ival: INTEGER;  lval: LONGINT;  rval: REAL; xval: LONGREAL; hval : HUGEINT;
-		address: ADDRESS; pos0: LONGINT; setval: SET;
+	(* Write the specified procedure name and returns parameters for use with Variables  *)
+	PROCEDURE WriteProc0(w: Streams.Writer; mod: Modules.Module; pc, fp: ADDRESS;  VAR refs: Modules.Bytes; VAR refpos: SIZE; VAR base: ADDRESS);
+	VAR ch: CHAR; startpc, end: ADDRESS; offset: SIZE;  name: Name;
 	BEGIN
-		pos0 := w.Pos();
-		IF (adr # 0) OR (type = 22) THEN
+		refpos := -1;
+		IF mod = NIL THEN
+			IF pc = 0 THEN w.String("NIL")
+			ELSE
+				w.String("Unknown PC="); w.Address(pc); w.Char("H")
+			END;
+			IF fp # -1 THEN
+				w.String(" FP="); w.Address(fp); w.Char("H")
+			END
+		ELSE
+			refs := mod.refs;
+			refpos := FindByAdr(refs, 0, pc);
+			IF refpos >= 0 THEN
+				offset := refpos;
+				IF GetChar(refs, offset) = sfProcedure THEN
+					SkipSize(offset);
+					SkipString(refs, offset);
+					GetFullName(refs, refpos, name); 
+					startpc := GetAddress(refs, offset);
+					end := GetAddress(refs, offset); 
+					SkipSet(offset);
+					w.String(name); 
+					w.Char(":"); w.Int(pc-startpc,1);
+					base := fp; (*! only for local !! *)
+					refpos := offset; 
+				END;
+			ELSE
+				w.String("procedure not found in module "); w.String(mod.name);
+			END;
+			w.String(" pc="); w.Int(pc,1); w.String(" ["); w.Address (pc); w.String("H]");
+			w.String(" = "); w.Int(startpc,1);  w.String(" + "); w.Int(pc-startpc,1);
+			w.String(" crc="); w.Hex(mod.crc,-8);
+			(*Wait(w);*)
+		END
+	END WriteProc0;
+	
+	PROCEDURE WriteBasicValue*(w: Streams.Writer; type: CHAR; adr: ADDRESS; VAR size: SIZE);
+	VAR
+		b: BOOLEAN;
+		c: CHAR; c8: CHAR8; c16: CHAR16; c32: CHAR32;
+		s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
+		sz: SIZE; a: ADDRESS;
+		word: WORD; lword: LONGWORD;
+		s8: SIGNED8; s16: SIGNED16; s32: SIGNED32; s64: SIGNED64;
+		u8: UNSIGNED8; u16: UNSIGNED16; u32: UNSIGNED32; u64: UNSIGNED64;
+		r: REAL; x: LONGREAL;
+		cplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: REAL END;
+		lcplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
+		set: SET;
+		byte: SYSTEM.BYTE;
+
+		PROCEDURE Signed(i: HUGEINT);
+		BEGIN
+			w.Int(i,1);
+		END Signed;
+		
+		PROCEDURE Unsigned(i: HUGEINT; size: SIZE);
+		BEGIN
+			w.Hex(i,-2*size);
+		END Unsigned;
+			
+	BEGIN
+		CASE type OF
+		| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
+			size := SIZEOF(ADDRESS);
+			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
+		| sfTypeBOOLEAN: 
+			size := SIZEOF(BOOLEAN);
+			SYSTEM.GET(adr, b); IF b THEN w.String("true") ELSE w.String("false") END; 
+		| sfTypeCHAR, sfTypeCHAR8: 
+			size := SIZEOF(CHAR);
+			SYSTEM.GET(adr, c); IF (c > " ") & (c <= "~") THEN w.Char( c ); ELSE w.Hex( ORD( c ), -2 );  w.Char( "X" ) END;
+		| sfTypeCHAR16:
+			size := SIZEOF(CHAR16);
+			SYSTEM.GET(adr, i); w.Hex(i,-4); w.Char("X");
+		| sfTypeCHAR32:
+			size := SIZEOF(CHAR32);
+			SYSTEM.GET(adr, l); w.Hex(l,-8); w.Char("X");
+		| sfTypeSHORTINT: 
+			size := SIZEOF(SHORTINT);
+			SYSTEM.GET(adr, s); Signed(s);
+		| sfTypeINTEGER:  
+			size := SIZEOF(INTEGER);
+			SYSTEM.GET(adr, i); Signed(i);
+		| sfTypeLONGINT: 
+			size := SIZEOF(LONGINT);
+			SYSTEM.GET(adr, l); Signed(l);
+		| sfTypeHUGEINT: 
+			size := SIZEOF(HUGEINT);
+			SYSTEM.GET(adr, h); Signed(h);
+		| sfTypeWORD: 
+			size := SIZEOF(WORD);
+			SYSTEM.GET(adr, word); Signed(word);
+		| sfTypeLONGWORD: 
+			size := SIZEOF(LONGWORD);
+			SYSTEM.GET(adr, lword); Signed(lword);
+		| sfTypeSIGNED8:
+			size := SIZEOF(SIGNED8);
+			SYSTEM.GET(adr, s8); Signed(s8);
+		| sfTypeSIGNED16:
+			size := SIZEOF(SIGNED16);
+			SYSTEM.GET(adr, s16); Signed(s16);
+		| sfTypeSIGNED32:
+			size := SIZEOF(SIGNED32);
+			SYSTEM.GET(adr, s32); Signed(s32);		
+		| sfTypeSIGNED64:
+			size := SIZEOF(SIGNED64);
+			SYSTEM.GET(adr, s64); Signed(s64);		
+		| sfTypeUNSIGNED8:
+			size := SIZEOF(UNSIGNED8); 
+			SYSTEM.GET(adr, u8); Unsigned(u8, SIZEOF(UNSIGNED8));	
+		| sfTypeUNSIGNED16:
+			size := SIZEOF(UNSIGNED16); 
+			SYSTEM.GET(adr, u16); Unsigned(u16, SIZEOF(UNSIGNED16));	
+		| sfTypeUNSIGNED32:
+			size := SIZEOF(UNSIGNED32); 
+			SYSTEM.GET(adr, u32); Unsigned(u32, SIZEOF(UNSIGNED32));	
+		| sfTypeUNSIGNED64:
+			size := SIZEOF(UNSIGNED64); 
+			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));	
+		| sfTypeREAL:
+			size := SIZEOF(REAL);
+			SYSTEM.GET(adr, r); w.Float(r,7);
+			w.String(" ("); 
+			SYSTEM.GET(adr, u32); Unsigned(u32, SIZEOF(UNSIGNED32));	
+			w.String(")"); 
+		| sfTypeLONGREAL:
+			size := SIZEOF(LONGREAL);
+			SYSTEM.GET(adr, x); w.Float(x,13);
+			w.String(" ("); 
+			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));	
+			w.String(")"); 
+		| sfTypeCOMPLEX:
+			size := SIZEOF(COMPLEX);
+			cplx := adr; w.Float(cplx.re,7); w.String("+ i*"); w.Float(cplx.im,7);
+		| sfTypeLONGCOMPLEX:
+			size := SIZEOF(LONGCOMPLEX);
+			lcplx := adr;
+			w.Float(lcplx.re,13); w.String("+ i*"); w.Float(lcplx.im,13);
+		| sfTypeSET:
+			size := SIZEOF(SET);
+			SYSTEM.GET(adr, set); w.Set(set);
+		| sfTypeBYTE:
+			size := SIZEOF(SYSTEM.BYTE);
+			SYSTEM.GET(adr, c); Unsigned(ORD(c), 1);
+		| sfTypeRANGE:
+			size := SIZEOF(RANGE);
+			SYSTEM.GET(adr, sz); Unsigned(sz,SIZEOF(SIZE)); w.String(".."); Unsigned(sz, SIZEOF(SIZE)); 
+		| sfTypeADDRESS:
+			size := SIZEOF(ADDRESS);
+			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
+		| sfTypeSIZE:
+			size := SIZEOF(SIZE);
+			SYSTEM.GET(adr, sz); Signed(sz); w.String("["); Unsigned(sz, SIZEOF(SIZE)); w.String("]");
+		| sfTypeENUM:
+			SYSTEM.GET(adr, word); Signed(word);
+		| sfTypePORT:
+			SYSTEM.GET(adr, a); Unsigned(a, SIZEOF(ADDRESS));
+		ELSE
+			w.String("UNKOWN TYPE "); Unsigned(ORD(type),1);
+		END;
+		w.Update;
+	END WriteBasicValue;
+	
+	PROCEDURE OnHeapOrStack(adr: ADDRESS; low, high: ADDRESS): BOOLEAN;
+	BEGIN
+		RETURN (low <= adr) & (adr < high) OR CheckHeapAddress(adr);
+	END OnHeapOrStack;
+	
+	PROCEDURE WriteValueString*(w: Streams.Writer; adr: ADDRESS; maxLen: SIZE; low, high: ADDRESS);
+	CONST MaxString = 96; 
+	VAR ch: CHAR;
+	BEGIN
+		IF maxLen > MaxString THEN maxLen := MaxString END; 
+		w.Char('"');
+		LOOP
+			IF (maxLen <= 0) OR ~OnHeapOrStack(adr, low, high) THEN
+			 EXIT END;
+			SYSTEM.GET(adr, ch);
+			IF (ch < " ") OR (ch > "~") THEN EXIT END;
+			w.Char(ch);
+			INC(adr);
+			DEC(maxLen);
+		END;
+		w.Char('"');
+		IF maxLen = 0 THEN w.String("..."); END;
+	END WriteValueString;
+	
+	PROCEDURE WriteMathArray*(w: Streams.Writer; adr: ADDRESS; low, high: ADDRESS);
+		TYPE 
+		LenInc = RECORD
+			len: SIZE;
+			inc: SIZE
+		END;
+
+		UnsafeArray= POINTER {UNSAFE} TO RECORD
+			ptr: ANY;
+			adr: ADDRESS;
+			flags: SET;
+			dim: SIZE;
+			elementSize: SIZE;
+			lens: ARRAY 8 OF LenInc;
+		END;
+		
+		VAR t {UNTRACED}: UnsafeArray; i: SIZE;
+	BEGIN
+		IF adr = NIL THEN w.String(" (NIL)"); 
+		ELSIF  OnHeapOrStack(adr, low, high) THEN
+			t := adr;
+			w.String(" len/inc=[ ");
+			IF t.dim < 8 THEN
+				FOR i := 0 TO t.dim-1 DO
+					w.Int(t.lens[i].len,0);
+					w.String("/");
+					w.Int(t.lens[i].inc,0);
+					IF i < t.dim-1 THEN w.String(" , ") END;
+				END;
+			END;
+			w.String(" ]");
+			w.String(" flags = "); w.Set(t.flags);
+			w.String(" adr = "); w.Address(t.adr); 
+			w.String(" ptr = "); w.Address(t.ptr); 
+			w.String(" elementSize = "); w.Int(t.elementSize,0);
+		ELSE
+			w.String("(UNKNOWN)");
+		END;
+	END WriteMathArray;
+	
+
+	PROCEDURE WriteValue*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE; adr: ADDRESS; low, high: ADDRESS);
+	VAR type: CHAR; a: ADDRESS; size, ofs: SIZE; len,i: SIZE;
+	BEGIN
+		IF ~OnHeapOrStack(adr, low, high) THEN
+			SkipType(refs, offset);
+			w.String("INVALID ADR:"); w.Address(adr);
+			RETURN;
+		END;
+		type := GetChar(refs, offset);
+		IF type = sfTypeIndirect THEN
+			ofs := GetSize(refs, offset); 
+			WriteValue(w, refs, ofs, adr, low, high);
+		ELSE
 			CASE type OF
-			1, 3:  (* BYTE, CHAR *)
-					SYSTEM.GET( adr, ch );
-					IF (ch > " ") & (ch <= "~") THEN w.Char( ch ); ELSE w.Hex( ORD( ch ), -2 );  w.Char( "X" ) END;
-			| 2:    (* BOOLEAN *)
-					SYSTEM.GET( adr, ch );
-					IF ch = 0X THEN w.String( "FALSE" )
-					ELSIF ch = 1X THEN w.String( "TRUE" )
-					ELSE w.Int( ORD( ch ), 1 );
-					END;
-			| 4:    (* SHORTINT *)
-					SYSTEM.GET( adr, sval );
-					w.Int( sval, 1 );
-					IF sval > 0H THEN w.String(" ("); w.Hex(sval, -2); w.String("H)") END;
-			| 5:    (* INTEGER *)
-					SYSTEM.GET( adr, ival );
-					w.Int( ival, 1 );
-					IF ival > 0H THEN w.String(" (");w.Hex(ival,-4);w.Char("H");w.String(")"); END;
-			| 6:    (* LONGINT *)
-					SYSTEM.GET( adr, lval );
-					w.Int( lval, 1 );
-					IF lval > 0H THEN w.String( " (" );  w.Hex( lval,-8 );  w.String( "H)" );  END;
-			| 7:     (* REAL *)
-					SYSTEM.GET(adr,rval); SYSTEM.GET(adr,lval);
-					w.Float(rval,15);
-					IF lval > 0H THEN w.String(" ("); w.Hex(lval,-8);w.Char( "H" ); w.String(")"); END;
-			| 8:      (* LONGREAL *)
-					SYSTEM.GET(adr,xval);SYSTEM.GET(adr,hval);
-					w.Float(xval,15);
-					IF hval > 0H THEN  w.String( " (" );  w.Hex(hval,-16);  w.String( "H)" );  END;
-			| 13,29: (* POINTER *)
-					SYSTEM.GET( adr, address ); w.Address( address );  w.String( "H" );
-					(* output type information, if available: *)
+				sfTypeNone:
+				w.String("NONE");
+			| sfTypePointerToRecord, sfTypeANY, sfTypeOBJECT:
+				WriteBasicValue(w,type, adr, size);
+				SYSTEM.GET(adr, a);
+				IF a = 0 THEN
+					w.String(" NIL");
+				ELSIF CheckHeapAddress(a) THEN
+					SYSTEM.GET(a + Heaps.TypeDescOffset, a);
 					w.String(" (");
-					(* do a check if the address is in the heap range *)
-					IF CheckHeapAddress(address) THEN
-						SYSTEM.GET(address + Heaps.TypeDescOffset, address);
-						WriteType(w,address);
-					ELSE w.String("NIL");
-					END;
+					WriteType(w,a);
 					w.String(")");
-			| 16:   (* HUGEINT *)
-					SYSTEM.GET( adr , hval );
-					IF hval = 0 THEN  w.Char( '0' ); 
-					ELSIF hval > 0 THEN  w.Hex( hval, 1 ); w.Char( 'H' )
-					ELSE w.Hex( hval, -16 ); 
-					END;
-			| 9:    (* SET *)
-					SYSTEM.GET( adr, setval );
-					w.Set( setval );
-			| 22:  (* RECORD *)
-					w.String( "Rec@" );  w.Hex( tdadr, -8 );  w.Char( "H" );
-			| 14:  (* PROC *)
-					SYSTEM.GET( adr, lval );  WriteProc( w, lval );
+				ELSE
+					w.String(" (UNKNOWN)");
+				END;
+			| sfTypePointerToArray: 
+				WriteBasicValue(w, sfTypeANY, adr, size);
+				SYSTEM.GET(adr, a);
+				IF ~OnHeapOrStack(a,low,high) THEN w.String(" (INVALID)") END;
+				SkipType(refs, offset);
+			| sfTypeOpenArray: 
+				IF (refs[offset] = sfTypeCHAR) OR (refs[offset] = sfTypeCHAR8)  THEN (* ARRAY OF CHAR *)
+					SYSTEM.GET(adr, a);
+					WriteValueString(w, a, MaxString, low, high);
+				ELSE
+					w.String("... (NO STRING)")
+				END;
+				SkipType(refs, offset);
+			| sfTypeStaticArray: 
+				len := GetSize(refs, offset); 
+				IF (refs[offset] = sfTypeCHAR)  OR (refs[offset] = sfTypeCHAR8) THEN (* ARRAY x OF CHAR *)
+					WriteValueString(w, adr, len, low, high);
+				ELSE
+					w.String("... (NO STRING)");
+				END;
+				SkipType(refs, offset);
+			| sfTypeDynamicArray: 
+				w.String("... (DYNAMIC ARRAY)");
+				SkipType(refs, offset); 
+			| sfTypeMathOpenArray: 
+				w.String(" OPEN MATH ARRAY ");
+				SkipType(refs, offset);
+				WriteMathArray(w, adr, low, high);
+			| sfTypeMathStaticArray: 
+				w.String(" ... (MATH STATIC ARRAY)");
+				SkipSize(offset); SkipType(refs, offset);
+			| sfTypeMathTensor: 
+				w.String(" TENSOR ");
+				SYSTEM.GET(adr, a);
+				WriteBasicValue(w, sfTypeANY, adr, size);
+				WriteMathArray(w, a, low, high);
+				SkipType(refs, offset); 
+			| sfTypeRecord: 
+				w.String("...");
+				w.String("(");
+				a := GetAddress(refs, offset); 
+				WriteType(w,a);
+				w.String(")");
+			| sfTypeDelegate: 
+				w.String(" (DELEGATE)");
+				WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
+				SkipType(refs, offset); 
+			| sfTypePORT:
+				WriteBasicValue(w, type, adr, size);
+				SkipChar(offset);
+			ELSE
+				WriteBasicValue(w, type, adr, size);
+			END;
+			w.Update;
+		END;
+	END WriteValue;
+		
+	PROCEDURE WriteVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE;  base: ADDRESS; low, high: ADDRESS);
+	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  prevScope: SIZE; c: CHAR;
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		prevScope := GetSize(refs, offset);
+		GetString(refs, offset, name); 
+		w.String(Sep); w.String(name); w.Char("=");
+		c := GetChar(refs, offset); 
+		IF c = sfRelative THEN
+			adr := base + GetSize(refs, offset)
+		ELSIF c = sfIndirect THEN
+			adr := base + GetSize(refs, offset);
+			w.Address(adr); w.String("->"); 
+			IF ~OnHeapOrStack(adr,low,high) THEN w.String(" (INVALID)"); 
+				SkipType(refs,offset);
+				RETURN;
+			END;
+			SYSTEM.GET(adr, adr);
+		ELSE (* absolute *)
+			adr := GetAddress(refs, offset);
+		END;
+		w.String(" [@");w.Int(adr-base,1); w.String("] ");
+		WriteValue(w, refs, offset, adr, low, high); 
+	END WriteVariable; 
+	
+	(* write variables taking meta information from stream in stream at offset, potentially stored at base address
+	 *)
+	PROCEDURE WriteVariables*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE; base: ADDRESS; low, high: ADDRESS);
+	VAR count: SIZE; 
+	BEGIN
+		WHILE refs[offset] = sfVariable DO
+			WriteVariable(w, refs, offset, base, low, high); w.Ln;
+			(*INC(count); *)
+		END; 
+		IF count > 0 THEN w.Ln; Wait(w); END;
+	END WriteVariables;
+
+	(* skip type metadata in stream *)
+	PROCEDURE SkipType*(refs: Modules.Bytes; VAR offset: SIZE);
+	VAR size: SIZE;  adr: SIZE; c: CHAR;
+	BEGIN
+		c := GetChar(refs, offset);
+		CASE c OF
+			sfTypeNone .. sfTypeSIZE: 
+		| sfTypePointerToRecord:
+		| sfTypePointerToArray:SkipType(refs, offset);
+		| sfTypeOpenArray: SkipType(refs, offset);
+		| sfTypeStaticArray: SkipSize(offset); SkipType(refs, offset);
+		| sfTypeDynamicArray: SkipType(refs, offset); 
+		| sfTypeMathOpenArray: SkipType(refs, offset);
+		| sfTypeMathStaticArray: SkipSize(offset); SkipType(refs, offset);
+		| sfTypeMathTensor: SkipType(refs, offset); 
+		| sfTypeRecord: SkipSize(offset);
+		| sfTypeDelegate: 
+			WHILE refs[offset] = sfVariable DO SkipVariable(refs, offset) END;
+			SkipType(refs, offset);
+		| sfTypeENUM:
+		| sfTypePORT: SkipChar(offset);
+		| sfTypeIndirect: SkipSize(offset);
+		ELSE (* ?? *)
+		END;
+	END SkipType;
+
+	(* skip procedure metadata in stream *)
+	PROCEDURE SkipProcedure*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
+		SkipSize(offset);
+		SkipString(refs, offset);
+		SkipAddress(offset);
+		SkipAddress(offset);
+		SkipSet(offset);
+		WHILE (refs[offset] = sfVariable)  DO	SkipVariable(refs, offset) END;
+		SkipType(refs, offset); 
+		SkipScope(refs, offset);
+	END SkipProcedure;
+
+
+	(* skip variable metadata in stream *)
+	PROCEDURE SkipVariable*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		SkipSize(offset);
+		SkipString(refs, offset); 
+		SkipChar(offset);
+		SkipAddress(offset);
+		SkipType(refs, offset); 	
+	END SkipVariable;
+
+	(* skip type declaration meta data in stream *)
+	PROCEDURE SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
+		SkipSize(offset);
+		SkipString(refs, offset); 
+		SkipAddress(offset);
+		IF refs[offset] = sfScopeBegin THEN SkipScope(refs, offset) END;	
+	END SkipTypeDeclaration;
+
+	(* skip type declaration meta data in stream *)
+	PROCEDURE SkipModule*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END;
+		SkipSize(offset);
+		SkipString(refs, offset); 
+		IF refs[offset] = sfScopeBegin THEN SkipScope(refs, offset) END;	
+	END SkipModule;
+	
+	(* skip a scope in stream *)
+	PROCEDURE SkipScope*(refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN	
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
+		WHILE (refs[offset] = sfVariable)  DO SkipVariable(refs, offset) END;
+		WHILE (refs[offset] = sfProcedure) DO SkipProcedure(refs, offset) END;
+		WHILE (refs[offset] = sfTypeDeclaration)  DO SkipTypeDeclaration(refs, offset)	END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+	END SkipScope;
+
+	TYPE 
+	Search = RECORD
+		name: ARRAY 256 OF CHAR; 	(* for search by name *)
+		nameOffset: SIZE;				(* to incrementally search through scopes *)
+		minLevel: LONGINT; 					(* in order to stop scope search *)
+		pc: ADDRESS;							(* for search by address *)
+		pos: SIZE;							(* symbol position in stream, -1 if not found *)
+		found: BOOLEAN;						(* if found *)
+	END;
+
+	(* check if stream contains the string part stored in search record with respective offset *)
+	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR ofs: SIZE;
+	BEGIN
+		IF find.minLevel > level THEN
+			SkipString(refs, offset)
+		ELSE
+			ofs := find.nameOffset;
+			WHILE (refs[offset] # 0X) & (find.name[ofs] = refs[offset]) DO
+				INC(offset); INC(ofs);
+			END;
+			IF (refs[offset] = 0X) THEN
+				IF find.name[ofs] = 0X THEN
+					find.found := TRUE;
+				ELSIF find.name[ofs] = "." THEN
+					find.minLevel := level+1;
+					find.nameOffset := ofs+1;
+				END;
+			END;
+			WHILE(refs[offset] # 0X) DO INC(offset) END;
+			INC(offset);
+		END;
+	END FindString;
+
+	(* find a symbol by name or pc starting from the procedure stream section *)
+	PROCEDURE FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  start, end: ADDRESS; pos: SIZE; 
+	BEGIN
+		pos := offset; 
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END; 	
+		SkipSize(offset);
+		FindString(refs, offset, level, find);
+		start := GetAddress(refs, offset);
+		end := GetAddress(refs, offset);
+		SkipSet(offset);
+		find.found := find.found OR (start <= find.pc) & (find.pc < end);
+		IF find.found THEN
+			find.pos := pos; 
+			RETURN; 
+		END;
+		WHILE (refs[offset] = sfVariable) DO
+			IF find.minLevel <= level+1 THEN
+				FindInVariable(refs, offset, level+1, find);
+				IF find.found THEN RETURN END;
+			ELSE
+				SkipVariable(refs, offset)
 			END;
 		END;
-		INC(col,w.Pos()-pos0);
-	END WriteSimpleVar;
+		SkipType(refs, offset); 
+		FindInScope(refs, offset, level+1, find);
+	END FindInProcedure;
+
+	(* find a symbol by name or pc starting from the variable stream section *)
+	PROCEDURE FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  pos: SIZE; 
+	BEGIN
+		pos := offset; 
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;  	
+		SkipSize(offset);
+		FindString(refs, offset, level, find); 
+		IF find.found THEN
+			find.pos := pos; 
+			RETURN;
+		END; 
+		SkipChar(offset);
+		SkipSize(offset);
+		SkipType(refs, offset); 
+	END FindInVariable; 
+
+	(* find a symbol by name or pc starting from the type declaration stream section *)
+	PROCEDURE FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR name: ARRAY 128 OF CHAR;  adr, pos: SIZE; 
+	BEGIN
+		pos := offset;
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END;
+		SkipSize(offset);
+		FindString(refs, offset, level, find); 
+		IF find.found THEN 
+			find.pos := pos;
+			RETURN;
+		END;
+		SkipAddress(offset);
+		IF refs[offset] = sfScopeBegin THEN FindInScope(refs, offset, level+1, find) END;
+	END FindInTypeDeclaration; 
+	
+	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR pos: SIZE;
+	BEGIN
+		pos := offset;
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END;
+		SkipSize(offset);
+		FindString(refs, offset, level, find); 
+		IF find.found THEN 
+			find.pos := pos;
+			RETURN;
+		END;
+		FindInScope(refs, offset, level+1, find);
+	END FindInModule;
+
+	(* find a symbol by name or pc in a scope in the stream *)
+	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	VAR no,i: SIZE;
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
+		WHILE ~find.found &(refs[offset] = sfVariable) &  (find.minLevel <= level) DO (* Variable *)
+			FindInVariable(refs, offset, level, find); 
+		END;
+		WHILE ~find.found & (refs[offset] = sfProcedure)  & (find.minLevel <= level) DO (* Procedure *)
+			FindInProcedure(refs, offset, level, find);
+		END;
+		WHILE ~find.found & (refs[offset] = sfTypeDeclaration) & (find.minLevel <= level) DO (* TypeDeclaration *)
+			FindInTypeDeclaration(refs, offset,level, find); 
+		END;
+		IF find.found OR (find.minLevel > level) THEN RETURN END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+	END FindInScope;
+	
+	PROCEDURE InitSearch(VAR search: Search);
+	BEGIN
+		search.found := FALSE;
+		search.pos := -1;
+		search.name := "";
+		search.nameOffset := 0;
+		search.minLevel := 0;
+		search.pc := 0;
+	END InitSearch;
+	
+	(* Find a symbol in the stream starting at offset. 
+		If name is supposed to contain the referred to symbol, choose skipFirstSymbol = FALSE
+			Example FindByName(m.refs, 0, "Reflection.FindByName", FALSE)
+		otherwise choose skipFirstSymbol = TRUE
+			Example FindByName(m.refs, 0, "FindByName", TRUE);
+	*)
+	PROCEDURE FindByName*(refs: Modules.Bytes; offset: SIZE; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
+	VAR search: Search; 
+	BEGIN
+		InitSearch(search); 
+		COPY(name, search.name);
+		IF skipFirstSymbol THEN search.minLevel := 1 END;
+		CASE refs[offset] OF
+			sfModule: FindInModule(refs, offset, 0, search);
+			|sfVariable: FindInVariable(refs, offset, 0, search);
+			|sfProcedure: FindInProcedure(refs, offset, 0, search);
+			|sfTypeDeclaration: FindInTypeDeclaration(refs, offset, 0, search);
+		ELSE (* wrong position in stream *)
+		END;
+		RETURN search.pos;
+	END FindByName;
+
+	PROCEDURE FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE;
+	VAR search: Search;
+	BEGIN
+		InitSearch(search);
+		search.pc := pc;
+		CASE refs[offset] OF
+			sfModule: FindInModule(refs, offset, 0, search);
+			|sfVariable: FindInVariable(refs, offset, 0, search);
+			|sfProcedure: FindInProcedure(refs, offset, 0, search);
+			|sfTypeDeclaration: FindInTypeDeclaration(refs, offset, 0, search);
+		ELSE (* wrong position in stream *)
+		END;
+		RETURN search.pos;
+	END FindByAdr;
+
+	(** service procedures *) 
+	
+	(** Find procedure name and write it. *)
+	PROCEDURE WriteProc*(w: Streams.Writer; pc: ADDRESS);
+	VAR refs: Modules.Bytes; refpos: SIZE; base: ADDRESS;
+	BEGIN
+		WriteProc0(w, Modules.ThisModuleByAdr0(pc), pc,  -1, refs, refpos, base)
+	END WriteProc;
+	
+	(** Write the state of the specified module. *)
+	PROCEDURE ModuleState*(w: Streams.Writer; mod: Modules.Module);
+	VAR offset: SIZE; base: ADDRESS; refs: Modules.Bytes;
+	BEGIN
+		IF mod = NIL THEN RETURN END;
+		refs := mod.refs;
+		offset := 0; 
+		
+		w.String("State "); w.String(mod.name); w.Char(":"); 
+		w.String(" (CRC = "); w.Hex(mod.crc,-8) ; w.String(")");
+		w.Ln; Wait(w);
+		IF (GetChar(refs, offset) = sfModule) THEN
+			SkipSize(offset);
+			SkipString(refs, offset);
+			IF (GetChar(refs, offset) = sfScopeBegin) THEN
+				WriteVariables(w, refs, offset, 0, 0, 0)
+			END;
+		END;
+	END ModuleState;
+
+	PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
+	VAR n: ADDRESS;
+	BEGIN
+		IF bp # NIL THEN
+			SYSTEM.GET(bp, n);
+			IF ODD(n) THEN INC(bp, SIZEOF(ADDRESS)) END;
+		END;
+		RETURN bp;
+	END CheckBP;
+	
 
 	(* Display call trackback. *)
-	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS; long, overflow: BOOLEAN);
-	VAR count,refpos: LONGINT; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
+	PROCEDURE StackTraceBack*(w: Streams.Writer; pc, bp: ADDRESS; low,high: ADDRESS; long, overflow: BOOLEAN);
+	VAR count,offset: SIZE; stacklow: ADDRESS; base: ADDRESS; m: Modules.Module; refs: Modules.Bytes;
 	BEGIN
 		count := 0;	(* frame count *)
 		REPEAT
 			m := Modules.ThisModuleByAdr0(pc);
-			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= stacklow) & (bp <= stackhigh) THEN
+			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= low) & (bp < high) & (bp MOD SIZEOF(ADDRESS)=0) THEN
 				IF CheckHeapAddress( pc ) THEN
-					WriteProc0(w, m, pc, bp, refs, refpos, base); w.Ln;Wait(w); w.Update;
+					WriteProc0(w, m, pc, bp, refs, offset, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)
-						IF refpos # -1 THEN Variables(w, refs, refpos, base) END;
-						IF FALSE & (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
+						IF offset >= 0 THEN 
+							WriteVariables(w,refs,offset, base, low, high); 
+							SkipType(refs, offset);
+							IF Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN
+								WriteVariables(w,refs,offset, base, low, high); 
+							END;
+						END;
+						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
 					END;
 				ELSE
 					w.String( "Unknown external procedure, pc = " );  w.Address( pc );  w.Ln; Wait(w);
 				END;
+				bp := CheckBP(bp);
 				SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);	(* return addr from stack *)
 				SYSTEM.GET(bp, bp);	(* follow dynamic link *)
 				INC(count)
@@ -645,7 +1033,225 @@ VAR
 		END
 	END WriteProcess;
 	
+	(* for interface compatibility *)
+	PROCEDURE GetVariableAdr*(fp, pc: ADDRESS; CONST name: ARRAY OF CHAR): SIZE;
+	BEGIN
+		RETURN -1; 
+	END GetVariableAdr;
 	
+	PROCEDURE GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS);
+	VAR m: Modules.Module; offset: SIZE;
+	BEGIN
+		name := "";
+		m := Modules.ThisModuleByAdr0(pc);
+		IF m # NIL THEN
+			offset := FindByAdr(m.refs,0,pc);
+			IF offset >= 0 THEN
+				GetFullName(m.refs, offset, name);
+				IF GetChar(m.refs, offset) = sfProcedure THEN
+					SkipSize(offset);
+					SkipString(m.refs,offset);
+					startpc := GetAddress(m.refs, offset);
+				END;
+			END;
+		END;
+	END GetProcedureName;
+
+TYPE
+	Variable* = RECORD
+		adr-: ADDRESS;
+		type-, size-, n-: SIZE;
+		tdadr-: ADDRESS;
+	END;
+	
+	(* half-stub for module Info to work *)
+	PROCEDURE FindVar*(mod: Modules.Module; CONST name: ARRAY OF CHAR; VAR v: Variable): BOOLEAN;
+	VAR offset: SIZE; size: SIZE;adr: ADDRESS;
+	BEGIN
+		offset := FindByName(mod.refs, 0,name, TRUE);
+		IF offset < 0 THEN RETURN FALSE END;
+		IF ~Expect(offset, GetChar(mod.refs, offset) = sfVariable) THEN RETURN FALSE END;
+		SkipSize(offset);
+		SkipString(mod.refs, offset); 
+		IF GetChar(mod.refs, offset) = sfRelative THEN
+			size := GetSize(mod.refs, offset);
+		ELSE (* absolute *)
+			adr := GetAddress(mod.refs, offset);
+		END;
+		
+		v.adr := adr;
+		v.type := 0;
+		v.size := 0;
+		v.n := 0;
+		v.tdadr :=  0;
+		RETURN TRUE;
+	END FindVar;
+	
+	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT);
+	BEGIN
+	END WriteVar;
+
+
+	
+	PROCEDURE ReportType*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR size: SIZE; c: CHAR;
+	BEGIN
+		c := GetChar(refs, offset);
+		CASE c OF
+			sfTypeNone: w.String("no type");
+		| sfTypePointerToRecord: w.String("POINTER TO RECORD");
+		| sfTypePointerToArray: w.String("POINTER TO"); ReportType(w, refs, offset);
+		| sfTypeOpenArray: w.String("ARRAY OF "); ReportType(w, refs, offset);
+		| sfTypeStaticArray: w.String("ARRAY "); w.Int(GetSize(refs, offset),1 ); w.String(" OF "); ReportType(w, refs, offset);
+		| sfTypeDynamicArray: w.String("DARRAY OF "); ReportType(w,refs, offset); 
+		| sfTypeMathOpenArray: w.String("ARRAY [*] OF "); ReportType(w, refs, offset);
+		| sfTypeMathStaticArray: w.String("ARRAY ["); w.Int(GetSize(refs, offset),1); w.String("] OF "); ReportType(w, refs, offset);
+		| sfTypeMathTensor: w.String("ARRAY [?] OF "); ReportType(w, refs, offset); 
+		| sfTypeRecord: w.String("RECORD ");  w.Address(GetAddress(refs, offset)); 
+		| sfTypeDelegate: 
+			w.String("PROCEDURE ("); 	
+			WHILE refs[offset] = sfVariable DO ReportVariable(w, refs, offset) END;
+			w.String("):"); ReportType(w, refs, offset); 
+		| sfTypeBOOLEAN: w.String("BOOLEAN"); 
+		| sfTypeCHAR: w.String("CHAR"); 
+		| sfTypeCHAR8: w.String("CHAR8"); 
+		| sfTypeCHAR16: w.String("CHAR16"); 
+		| sfTypeCHAR32: w.String("CHAR32"); 
+		| sfTypeSHORTINT: w.String("SHORTINT"); 
+		| sfTypeINTEGER: w.String("INTEGER"); 
+		| sfTypeLONGINT: w.String("LONGINT"); 
+		| sfTypeHUGEINT: w.String("HUGEINT"); 
+		| sfTypeWORD: w.String("WORD"); 
+		| sfTypeLONGWORD: w.String("LONGWORD"); 
+		| sfTypeSIGNED8: w.String("SIGNED8"); 
+		| sfTypeSIGNED16: w.String("SIGNED16"); 
+		| sfTypeSIGNED32: w.String("SIGNED32"); 
+		| sfTypeSIGNED64: w.String("SIGNED64"); 
+		| sfTypeUNSIGNED8: w.String("UNSIGNED8"); 
+		| sfTypeUNSIGNED16: w.String("UNSIGNED16"); 
+		| sfTypeUNSIGNED32: w.String("UNSIGNED32"); 
+		| sfTypeUNSIGNED64: w.String("UNSIGNED64"); 
+		| sfTypeREAL: w.String("REAL"); 
+		| sfTypeLONGREAL: w.String("LONGREAL"); 
+		| sfTypeCOMPLEX: w.String("COMPLEX"); 
+		| sfTypeLONGCOMPLEX: w.String("LONGCOMPLEX"); 
+		| sfTypeSET: w.String("SET"); 
+		| sfTypeANY: w.String("ANY"); 
+		| sfTypeOBJECT: w.String("OBJECT"); 
+		| sfTypeBYTE: w.String("BYTE"); 
+		| sfTypeRANGE: w.String("RANGE"); 
+		| sfTypeADDRESS: w.String("ADDRESS"); 
+		| sfTypeSIZE: w.String("SIZE"); 
+		| sfTypePORT: w.String("PORT"); IF GetChar(refs,offset) = sfIN THEN w.String("IN") ELSE w.String("OUT") END;
+		| sfTypeIndirect: w.String ("INDIRECT AT "); w.Int(GetSize(refs, offset),1);
+		ELSE w.String("????? TYPE ?????");
+		END;
+	END ReportType;
+
+	PROCEDURE ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR name: Name;  start, end: ADDRESS;  flags: SET; 
+	BEGIN
+		w.Int(offset,1); w.String(":");
+		w.String("PROCEDURE "); 
+		IF ~Expect(offset, GetChar(refs, offset) = sfProcedure) THEN RETURN END;
+		SkipSize(offset);
+		GetString(refs, offset, name); 
+		w.String(name); 
+		start := GetAddress(refs, offset);
+		end := GetAddress(refs, offset);
+		flags := GetSet(refs, offset); 
+		IF flags # {} THEN
+			w.Set(flags);
+		END;
+		w.String("[@"); w.Address(start); w.String(" - "); w.Address(end); w.String("]");
+		w.String("("); w.Ln;
+		WHILE refs[offset] = sfVariable DO
+			ReportVariable(w, refs, offset);
+		END;
+		w.String(")"); 
+		w.String(":"); 
+		ReportType(w, refs, offset); 
+		w.Ln;
+		ReportScope(w, refs, offset);
+	END ReportProcedure;
+
+
+	PROCEDURE ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS;  size: SIZE;
+	BEGIN
+		w.Int(offset,1); w.String(":");
+		w.String("VAR "); 
+		IF ~Expect(offset, GetChar(refs, offset) = sfVariable) THEN RETURN END;
+		SkipSize(offset);
+		GetString(refs, offset, name); 
+		w.String(name); 
+		IF GetChar(refs, offset) = sfRelative THEN
+			size := GetSize(refs, offset);
+			w.String("[@"); w.Int(size,1); w.String("]");
+		ELSE (* absolute *)
+			adr := GetAddress(refs, offset);
+			w.String("[@"); w.Address(adr); w.String("]");
+		END;
+		w.String(":"); 
+		ReportType(w, refs, offset); 
+		w.Ln;
+	END ReportVariable; 
+
+	PROCEDURE ReportTypeDeclaration*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR name: ARRAY 128 OF CHAR;  adr: ADDRESS; 
+	BEGIN
+		w.Int(offset,1); w.String(":");
+		w.String("TYPE "); 
+		IF ~Expect(offset, GetChar(refs, offset) = sfTypeDeclaration) THEN RETURN END; 	
+		SkipSize(offset);
+		GetString(refs, offset, name); 
+		w.String(name); 
+		adr := GetAddress(refs, offset);
+		w.String(" "); 
+		w.Address(adr); 
+		w.Ln;
+		IF refs[offset] = sfScopeBegin THEN ReportScope(w, refs, offset) END;
+	END ReportTypeDeclaration; 
+
+	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	BEGIN
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END; 
+		w.Int(offset,1); w.String(": Scope"); w.Ln;
+		WHILE (refs[offset] = sfVariable) DO (* Variable *)
+			ReportVariable(w, refs, offset); 
+		END;
+		WHILE (refs[offset] = sfProcedure) DO (* Procedure *)
+			ReportProcedure(w, refs, offset);
+		END;
+		WHILE (refs[offset] = sfTypeDeclaration) DO (* TypeDeclaration *)
+			ReportTypeDeclaration(w, refs, offset); 
+		END;
+		IF ~Expect(offset, GetChar(refs, offset) = sfScopeEnd) THEN RETURN END;
+		w.String("END"); w.Ln; 
+	END ReportScope;
+	
+	PROCEDURE ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE);
+	VAR name: Name;
+	BEGIN
+		w.String("MODULE "); 
+		IF ~Expect(offset, GetChar(refs, offset) = sfModule) THEN RETURN END; 
+		SkipSize(offset);
+		GetString(refs, offset, name); 
+		w.String(name); 
+		ReportScope(w, refs, offset); 
+	END ReportModule;
+					
+	PROCEDURE Report*(w:Streams.Writer; refs: Modules.Bytes; offset: SIZE);
+	BEGIN
+		CASE refs[offset] OF
+			sfModule: ReportModule(w, refs, offset);
+			|sfVariable: ReportVariable(w, refs, offset);
+			|sfProcedure: ReportProcedure(w, refs, offset);
+			|sfTypeDeclaration: ReportTypeDeclaration(w, refs, offset);
+		ELSE (* wrong position in stream *)
+		END;
+	END Report;
+
 
 VAR trace: Streams.Writer;
 
@@ -663,11 +1269,23 @@ VAR trace: Streams.Writer;
 	PROCEDURE TraceProcesses*;
 	BEGIN
 		Objects.TraceProcessHook := TraceH;
+		
 		Kernel.GC;
 		Objects.TraceProcessHook := NIL;
 	END TraceProcesses;
+	
+	PROCEDURE Test*;
+	VAR res: LONGINT; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE; 
+	BEGIN
+		mod := Modules.ThisModule("Reflection",res,msg);
+		ReportModule(trace, mod.refs, pos); 
+	END Test;
+	
 
 BEGIN
-	NEW(trace, Trace.Send, 4096); 
+	NEW(trace, Trace.Send, 4 (*4096*) );  (* trace asap *)
 	modes := " rdy run awl awc awe rip";   (* 4 characters per mode from Objects.Ready to Objects.Terminated *)
 END Reflection.
+
+
+Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~

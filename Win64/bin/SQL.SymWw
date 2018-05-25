@@ -1,0 +1,212 @@
+MODULE SQL;
+	IMPORT ODBC, Modules, KernelLog, SYSTEM, Files, Kernel, Heaps;
+CONST 
+	NTS =  -3; 
+	DataAtExec =  -2; 
+	BlockSize = 1024; 
+	Error* =  -1; 
+	Success* = 0; 
+	SuccessWithInfo* = 1; 
+	NeedData* = 99; 
+	NoDataFound* = 100; 
+	InParam* = 1; 
+	InOutParam* = 2; 
+	OutParam* = 4; 
+	SqlBitType* =  -7; 
+	SqlTinyIntType* =  -6; 
+	SqlBigIntType* =  -5; 
+	SqlLongVarBinaryType* =  -4; 
+	SqlVarBinaryType* =  -3; 
+	SqlBinaryType* =  -2; 
+	SqlLongVarCharType* =  -1; 
+	SqlCharType* = 1; 
+	SqlNumericType* = 2; 
+	SqlDecimalType* = 3; 
+	SqlLongIntType* = 4; 
+	SqlIntType* = 5; 
+	SqlFloatType* = 6; 
+	SqlRealType* = 7; 
+	SqlLongRealType* = 8; 
+	SqlDateType* = 9; 
+	SqlTimeType* = 10; 
+	SqlTimeStampType* = 11; 
+	SqlVarCharType* = 12; 
+	CharType* = 1; 
+	LongIntType* = 4; 
+	IntType* = 5; 
+	ShortIntType* =  -6; 
+	RealType* = 7; 
+	LongRealType* = 8; 
+	DateType* = 9; 
+	TimeType* = 10; 
+	TimeStampType* = 11; 
+	FileType* =  -4; 
+	BinaryType* =  -2; 
+	BooleanType* =  -7; 
+	FetchNext* = 1; 
+	FetchFirst* = 2; 
+	FetchLast* = 3; 
+	FetchPrevious* = 4; 
+	FetchAbsolute* = 5; 
+	FetchRelative* = 6; 
+	SQLAttrCursorScrollable =  -1; 
+	SQLNonScrollable = 0; 
+	SQLScrollable = 1; 
+	SQLAttrODBCCursors = 110; 
+	SQLCursorUseIfNeeded = 0; 
+	SQLCursorUseODBC = 1; 
+	SQLCursorUseDriver = 2; 
+TYPE 
+	SourcesHandler* = PROCEDURE (name, desc: ARRAY OF CHAR); 
+
+	ErrorProc* = PROCEDURE (state, msg: ARRAY OF CHAR; errorcode: LONGINT); 
+
+	Connection* = POINTER TO ConnectionDesc; 
+
+	Statement* = POINTER TO StatementDesc; 
+
+	Row* = POINTER TO RowDesc; 
+
+	ErrBuff = POINTER TO ErrBuffDesc; 
+
+	ConnectionDesc = RECORD 
+		hdbc: ODBC.HDBC; 
+		closed: BOOLEAN; 
+		stmt: Statement; 
+		res*: INTEGER; 
+	END; 
+
+	StatementDesc = RECORD 
+		next: Statement; 
+		hstmt: ODBC.HSTMT; 
+		c: Connection; 
+		results, params: Row; 
+		firstExec, errBuffered: BOOLEAN; 
+		error: ErrBuff; 
+		res*: INTEGER; 
+	END; 
+
+	ErrBuffDesc = RECORD 
+		state: ARRAY 6 OF CHAR; 
+		msg: ARRAY 512 OF CHAR; 
+		native: LONGINT; 
+		next: ErrBuff; 
+	END; 
+
+	Field* = POINTER TO FieldDesc; 
+
+	FieldDesc* = RECORD 
+		next, prev: Field; 
+		dir: INTEGER; 
+		name*: ARRAY 32 OF CHAR; 
+		len*: LONGINT; 
+		sqlType*: INTEGER; 
+		isNull*: BOOLEAN; 
+		nullable*: BOOLEAN; 
+	END; 
+
+	IntField* = POINTER TO IntFieldDesc; 
+
+	IntFieldDesc* = RECORD (FieldDesc)
+		i*: LONGINT; 
+	END; 
+
+	NumericField* = POINTER TO NumericFieldDesc; 
+
+	NumericFieldDesc* = RECORD (FieldDesc)
+		str*: ARRAY 256 OF CHAR; 
+	END; 
+
+	StringField* = POINTER TO StringFieldDesc; 
+
+	StringFieldDesc* = RECORD (FieldDesc)
+		str*: ARRAY 256 OF CHAR; 
+	END; 
+
+	RealField* = POINTER TO RealFieldDesc; 
+
+	RealFieldDesc* = RECORD (FieldDesc)
+		r*: LONGREAL; 
+	END; 
+
+	DateField* = POINTER TO DateFieldDesc; 
+
+	DateFieldDesc* = RECORD (FieldDesc)
+		year*, month*, day*: INTEGER; 
+	END; 
+
+	TimeField* = POINTER TO TimeFieldDesc; 
+
+	TimeFieldDesc* = RECORD (FieldDesc)
+		hour*, minute*, second*: INTEGER; 
+	END; 
+
+	TimeStampField* = POINTER TO TimeStampFieldDesc; 
+
+	TimeStampFieldDesc* = RECORD (FieldDesc)
+		year*, month*, day*, hour*, minute*, second*: INTEGER; 
+		fraction*: LONGINT; 
+	END; 
+
+	FileField* = POINTER TO FileFieldDesc; 
+
+	FileFieldDesc* = RECORD (FieldDesc)
+		f*: Files.File; 
+	END; 
+
+	BinaryField* = POINTER TO BinaryFieldDesc; 
+
+	BinaryFieldDesc* = RECORD (FieldDesc)
+		b*: ARRAY 256 OF SYSTEM.BYTE; 
+	END; 
+
+	BooleanField* = POINTER TO BooleanFieldDesc; 
+
+	BooleanFieldDesc* = RECORD (FieldDesc)
+		b*: BOOLEAN; 
+	END; 
+
+	SentinelField = POINTER TO SentinelFieldDesc; 
+
+	SentinelFieldDesc = RECORD (FieldDesc)
+	END; 
+
+	RowDesc* = RECORD 
+		dsc: Field; 
+		cols*: INTEGER; 
+	END; 
+
+	ParamType* = RECORD 
+		oberonType*, sqlType*, inOut*: INTEGER; 
+		name*: ARRAY 32 OF CHAR; 
+	END; 
+
+	PROCEDURE ^ AllocRow(VAR row: Row); 
+	PROCEDURE ^ AppendField(r: Row; f: Field); 
+	PROCEDURE ^ FirstField*(r: Row; VAR f: Field); 
+	PROCEDURE ^ NextField*(VAR f: Field); 
+	PROCEDURE ^ PrevField*(VAR f: Field); 
+	PROCEDURE ^ FindField*(r: Row; name: ARRAY OF CHAR; VAR f: Field); 
+	PROCEDURE ^ PrintError(state, msg: ARRAY OF CHAR; errorCode: LONGINT); 
+	PROCEDURE ^ DummyEnum(state, msg: ARRAY OF CHAR; code: LONGINT); 
+	PROCEDURE ^ InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: LONGINT); 
+	PROCEDURE ^ EnumErrors*(c: Connection; s: Statement; enum: ErrorProc); 
+	PROCEDURE ^ FinalizeConnection(obj: ANY); 
+	PROCEDURE ^ Terminate; 
+	PROCEDURE ^ Open*(source, user, passwd: ARRAY OF CHAR): Connection; 
+	PROCEDURE ^ Close*(c: Connection); 
+	PROCEDURE ^ BindParameters*(s: Statement; types: ARRAY OF ParamType; numParams: INTEGER; VAR paramRow: Row); 
+	PROCEDURE ^ PrepareStatement*(c: Connection; sqlStatement: ARRAY OF CHAR; VAR resultRow: Row): Statement; 
+	PROCEDURE ^ Execute*(s: Statement); 
+	PROCEDURE ^ RowCount*(s: Statement; VAR rows: LONGINT); 
+	PROCEDURE ^ Fetch*(s: Statement); 
+	PROCEDURE ^ FetchExtended*(s: Statement; fetchType: INTEGER; rowToFetch: LONGINT; VAR numFetchedRows: LONGINT; VAR rowStatus: INTEGER); 
+	PROCEDURE ^ Commit*(c: Connection); 
+	PROCEDURE ^ Rollback*(c: Connection); 
+	PROCEDURE ^ EnumDataSources*(enum: SourcesHandler; VAR res: INTEGER); 
+	PROCEDURE ^ EnumDrivers*(enum: SourcesHandler; VAR res: INTEGER); 
+	PROCEDURE ^ Tables*(c: Connection; VAR row: Row): Statement; 
+	PROCEDURE ^ GetTypeName*(c: Connection; sqlType: INTEGER; VAR typeName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ CloseStatement*(s: Statement); 
+BEGIN
+END SQL.

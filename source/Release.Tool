@@ -1,92 +1,56 @@
 # To compile all files in a specific release...
 #
-# A2
-#
-#	Release.Build A2 ~
-#
-#	Bootimage (IDE)
-#	Linker.Link \PAOS: \.Obx AOS:IDE.Bin 0100000H 1000H Kernel Traps
-#	ATADisks DiskVolumes DiskFS BootConsole ~
-#
-#	Bootimage (USB)
-#	Linker.Link \PAOS: \.Obx AOS:USB.Bin 0100000H 1000H Kernel Traps
-#	UsbHubDriver UsbEhci UsbUhci UsbOhci UsbStorageBoot
-#	DiskVolumes DiskFS BootConsole ~
-#
 # A2 Cooperative
 #
 #	Release.Build --build --path="./" A2Cooperative ~
-#	StaticLinker.Link --fileName=a2.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader BootConsole ~
+#	Linker.Link --fileName=a2.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
 # A2 RPi Cooperative
 #
 #	Release.Build --build --path="./" A2RPiCooperative ~
-#	StaticLinker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
+#	Linker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # A2 Zynq Cooperative
 #
 #	Release.Build --build --path="./" A2ZynqCooperative ~
-#	StaticLinker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
+#	Linker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # WINAOS
-#
-# There are two different variants of WinAOS:
-#
-#	Internal version: Oberon Application runs in a WinAos Window
-#
-#	Release.Build --build WinAos ~
-#
-#	Bootimage
-#	PELinker.Link --path=../obj/ Win32.Aos.Link ~
-#
-#	External version: Oberon Applications runs in a separate MS Windows Window
-#
-#	Release.Build eWinAos ~
-#
-#	Bootimage
-#	PELinker.Link --path=../ObjE/ Win32.Aos.Link ~
-#
-# WINAOS generic
-#	Release.Build Win32G ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader BootConsole ~
+#	Release.Build Win32 ~
+#	Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
 # Command line shell:
-# StaticLinker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
+# Linker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 #
-# LinuxAOS Generic
-#	Release.Build Linux32G ~
+# LinuxAOS
+#	Release.Build Linux32 ~
 # Command line version:
-#	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader Shell SystemTools StdIOShell ~
+#	Linker.Link -p=Linux32 Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader Shell SystemTools StdIOShell ~
 # X11 Bootconsole:
-#	StaticLinker.Link -p=Linux32G Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker GenericLoader BootConsole ~
+#	Linker.Link -p=Linux32 Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
-# SolarisAOS Generic
-#    Release.Build Solaris32G ~
+# SolarisAOS
+#    Release.Build Solaris32 ~
 # X11 Bootconsole:
-#    StaticLinker.Link -p=Solaris32G --path=NewAos/
+#    Linker.Link -p=Solaris32 --path=NewAos/
 #		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
-#		BitSets StringPool GenericLinker Reflection GenericLoader BootConsole ~
+#		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
 #    UnixBinary.Build oberon.bin -> A2Core ~
 #
-# DarwinAOS Generic
-#    Release.Build Darwin32G ~
+# DarwinAOS
+#    Release.Build Darwin32 ~
 # X11 Bootconsole:
-#    StaticLinker.Link -p=Darwin32G --path=NewAos/
+#    Linker.Link -p=Darwin32 --path=NewAos/
 #		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
-#		BitSets StringPool GenericLinker Reflection GenericLoader BootConsole ~
+#		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
 #    UnixBinary.Build oberon.bin -> A2Core ~
 #
 # WINAOS Cooperative
 #	Release.Build --path="./" WinAosCooperative ~
-#	StaticLinker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection GenericLoader BootConsole ~
+#	Linker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	FSTools.CloseFiles A2.exe ~
-#
-# Notes:
-#	-	The command PELinker.Link creates the Aos.exe executable file. Per default, it will be created in the Work folder.
-#	-	The configuration file aos.ini specifies from which directory the object files are loaded. If you want to switch between the
-#		internal and external version, you need to adapted aos.ini.
 #
 # For the detailed command syntax: See Release.Mod
 #
@@ -138,21 +102,22 @@ HEADER
 END
 
 BUILDS
-	A2 {
-		INCLUDE "NATIVE NATIVEORIG I386 I386ORIG UNCOOP UNCOOP32"
+	A2
+	{
+		INCLUDE "NATIVE I386 I386GEN UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
+		COMPILEOPTIONS "--newObjectFile --mergeSections"
 		TARGET "AMD"
-		EXTENSION "Obx"
-		SYMBOLEXTENSION "Obx"
+		EXTENSION "GofG"
+		SYMBOLEXTENSION "SymG"
 		PATH "AOS"
-		EXCLUDEPACKAGES ""
+		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	A2Cooperative {
 		INCLUDE "NATIVE I386 COOP NATIVECOOP NATIVEI386COOP I386COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "AMD"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -163,7 +128,7 @@ BUILDS
 	A2RPiCooperative {
 		INCLUDE "NATIVE ARM RPI COOP RPICOOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -174,7 +139,7 @@ BUILDS
 	A2ZynqCooperative {
 		INCLUDE "NATIVE ARM ZYNQ COOP ZYNQCOOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -182,71 +147,26 @@ BUILDS
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	A2NewObjectFile
+	Win32
 	{
-		INCLUDE "NATIVE NATIVEGEN I386 I386GEN UNCOOP UNCOOP32"
+		INCLUDE "WIN WIN32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--objectFile=Generic --newObjectFile --mergeSections"
-		TARGET "AMD"
-		EXTENSION "GofG"
-		SYMBOLEXTENSION "SymG"
-		PATH "AOS"
-		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	Win32G
-	{
-		INCLUDE "WIN iWIN WINGEN WINGEN32 UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Win32G"
+		COMPILEOPTIONS "-p=Win32"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
-	Win64G
+	Win64
 	{
-		INCLUDE "WIN iWIN WINGEN WINGEN64 UNCOOP UNCOOP64"
+		INCLUDE "WIN WIN64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Win64G"
+		COMPILEOPTIONS "-p=Win64"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	A2_64 {
-		INCLUDE "NATIVE NATIVEORIG AMD64 AMD64ORIG UNCOOP UNCOOP64"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--bits=64"
-		TARGET "AMD"
-		EXTENSION "Abx"
-		SYMBOLEXTENSION "Abx"
-		PATH "AOS:"
-		EXCLUDEPACKAGES "Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	A2mini {
-		INCLUDE "NATIVE NATIVEORIG I386 I386ORIG UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obx"
-		SYMBOLEXTENSION "Obx"
-		PATH "AOS:"
-		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	WinAos {
-		INCLUDE "WIN WINORIG iWIN UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obw"
-		SYMBOLEXTENSION "Obw"
-		PATH "../obj/"
-		EXCLUDEPACKAGES ""
-		DISABLED "FALSE"
-	}
 	WinAosCooperative {
-		INCLUDE "WIN iWIN COOP WINCOOP I386COOP"
+		INCLUDE "WIN COOP WINCOOP I386COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --objectFile=Generic --newObjectFile --traceModule=Trace"
+		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace"
 		TARGET "AMD"
 		EXTENSION "GofCW"
 		SYMBOLEXTENSION "SymCW"
@@ -254,106 +174,50 @@ BUILDS
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
-	WinAosMini
-	{
-		INCLUDE "WIN WINORIG iWIN UNCOOP UNCOOP32"
+	Linux32 {
+		INCLUDE "UNIX UNIX32 LINUX32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obw"
-		SYMBOLEXTENSION "Obw"
-		PATH ""
-		EXCLUDEPACKAGES "Build Education Fun Testing Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts CjkFonts Pr3Fonts Pr6Fonts"
-		DISABLED "FALSE"
-	}
-	eWinAos {
-		INCLUDE "WIN WINORIG eWIN UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obw"
-		SYMBOLEXTENSION "Obw"
-		PATH "../ObjE/"
-		EXCLUDEPACKAGES ""
-		DISABLED "FALSE"
-	}
-	LinuxAos {
-		INCLUDE "UNIX UNIX32 LINUX UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obj"
-		SYMBOLEXTENSION "Obj"
-		PATH "NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	Linux32G {
-		INCLUDE "UNIXG UNIXG32 LINUXG32 UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32G"
+		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	Linux64G {
-		INCLUDE "UNIXG UNIXG64 LINUXG64 UNCOOP UNCOOP64"
+	Linux64 {
+		INCLUDE "UNIX UNIX64 LINUX64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64G"
+		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	DarwinAos {
-		INCLUDE "UNIX UNIX32 DARWIN UNCOOP UNCOOP32"
+	Darwin32 {
+		INCLUDE "UNIX UNIX32 DARWIN32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--darwinHost"
-		TARGET "AMD"
-		EXTENSION "Obj"
-		SYMBOLEXTENSION "Obj"
+		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	Darwin32G {
-		INCLUDE "UNIXG UNIXG32 DARWING32 UNCOOP UNCOOP32"
+	Darwin64 {
+		INCLUDE "UNIX UNIX64 DARWIN64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32G"
+		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	Darwin64G {
-		INCLUDE "UNIXG UNIXG64 DARWING64 UNCOOP UNCOOP64"
+	Solaris32 {
+		INCLUDE "UNIX UNIX32 SOLARIS32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64G"
+		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	SolarisAos {
-		INCLUDE "UNIX UNIX32 SOLARIS UNCOOP UNCOOP32"
+	Solaris64 {
+		INCLUDE "UNIX UNIX64 SOLARIS64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS ""
-		TARGET "AMD"
-		EXTENSION "Obj"
-		SYMBOLEXTENSION "Obj"
-		PATH "./NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	Solaris32G {
-		INCLUDE "UNIXG UNIXG32 SOLARISG32 UNCOOP UNCOOP32"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32G"
-		PATH "./NewAos/"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	Solaris64G {
-		INCLUDE "UNIXG UNIXG64 SOLARISG64 UNCOOP UNCOOP64"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64G"
+		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -393,49 +257,37 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQCOOP { HeapManager.Mod Zynq.Environment.Mod }
 	WINCOOP { Win32.Environment.Mod }
 
-	LINUXG32 { Generic.Linux.I386.Glue.Mod Generic.Linux.I386.Unix.Mod }
-	LINUXG64 { Generic.Linux.AMD64.Glue.Mod Generic.Linux.AMD64.Unix.Mod }
-	DARWING32 { Generic.Unix.I386.Glue.Mod Generic.Darwin.I386.Unix.Mod }
-	DARWING64 { Generic.Unix.AMD64.Glue.Mod Generic.Darwin.AMD64.Unix.Mod }
-	SOLARISG32 { Generic.Unix.I386.Glue.Mod Generic.Solaris.I386.Unix.Mod }
-	SOLARISG64 { Generic.Unix.AMD64.Glue.Mod Generic.Solaris.AMD64.Unix.Mod }
+	LINUX32 { Linux.I386.Glue.Mod Linux.I386.Unix.Mod }
+	LINUX64 { Linux.AMD64.Glue.Mod Linux.AMD64.Unix.Mod }
+	DARWIN32 { Unix.I386.Glue.Mod Darwin.I386.Unix.Mod }
+	DARWIN64 { Unix.AMD64.Glue.Mod Darwin.AMD64.Unix.Mod }
+	SOLARIS32 { Unix.I386.Glue.Mod Solaris.I386.Unix.Mod }
+	SOLARIS64 { Unix.AMD64.Glue.Mod Solaris.AMD64.Unix.Mod }
 
-	UNIX { Unix.Glue.Mod }
-	LINUX { Linux.I386.Unix.Mod }
-	DARWIN { Darwin.I386.Unix.Mod }
-	SOLARIS { Solaris.I386.Unix.Mod }
+	WIN32 { Win32.Kernel32.Mod }
+	WIN64 { Win64.Kernel32.Mod }
 
-	WINORIG { Win32.Kernel32.Mod}
-	WINGEN32 {Generic.Win32.Kernel32.Mod}
-	WINGEN64 {Generic.Win64.Kernel32.Mod}
-
-	I386ORIG { I386.Machine.Mod }
-	I386GEN { Generic.I386.Machine.Mod }
-	AMD64 { AMD64.Machine.Mod }
-	WINORIG, WINGEN32 {Win32.Machine.Mod }
-	WINGEN64 {Win64.Machine.Mod}
+	I386GEN { I386.Machine.Mod }
+	WIN32 {Win32.Machine.Mod }
+	WIN64 {Win64.Machine.Mod}
 	COOP { Mutexes.Mod }
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
 
 	UNIX32 { Unix.I386.Machine.Mod }
-	UNIXG32 { Generic.Unix.I386.Machine.Mod }
-	UNIXG64 { Generic.Unix.AMD64.Machine.Mod }
+	UNIX64 { Unix.AMD64.Machine.Mod }
 
-	NATIVEORIG, NATIVEGEN, WINORIG, WINGEN, UNIXG { Heaps.Mod }
-	UNIX { Unix.Heaps.Mod }
+	NATIVE, WIN, UNIX { Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
 
-	NATIVEORIG, WINORIG, UNIX { Modules.Mod }
-	NATIVEGEN, WINGEN, UNIXG { Generic.Modules.Mod}
+	NATIVE, WIN, UNIX { Modules.Mod }
 	COOP { Coop.Modules.Mod GarbageCollector.Mod }
 
-	NATIVEORIG, NATIVEGEN { Objects.Mod Kernel.Mod }
-	WINORIG, WINGEN32 { Win32.Objects.Mod }
-	WINGEN64 { Win64.Objects.Mod }
-	WINGEN { Win32.Kernel.Mod }
+	NATIVE { Objects.Mod Kernel.Mod }
+	WIN32 { Win32.Objects.Mod }
+	WIN64 { Win64.Objects.Mod }
+	WIN { Win32.Kernel.Mod }
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
-	UNIXG { Generic.Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
 END
 
@@ -450,40 +302,34 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Reals.Mod }
-	AMD64, WINGEN64, UNIXG64 { AMD64.Reals.Mod }
+	I386, WIN32, UNIX32 { I386.Reals.Mod }
+	WIN64, UNIX64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
-	NATIVEORIG,WINORIG,UNIX { Reflection.Mod }
-	NATIVEGEN, WINGEN, UNIXG {Generic.Reflection.Mod}
-	COOP { Generic.Reflection.Mod }
+	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
-	NATIVEORIG, NATIVEGEN { Traps.Mod }
-	AMD64 { AMD64.Traps.Mod }
+	NATIVE { Traps.Mod }
 	ARM { ARM.Traps.Mod }
-	WINORIG, WINGEN32 { Win32.Traps.Mod }
-	WINGEN64 {Win64.Traps.Mod}
+	WIN32 { Win32.Traps.Mod }
+	WIN64 {Win64.Traps.Mod}
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
-	UNIXG { Unix.StdIO.Mod Generic.Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
-	WINGEN {Win32.WinTrace.Mod Win32.StdIO.Mod }
+	WIN {Win32.WinTrace.Mod Win32.StdIO.Mod }
 
 	# Recursive and R/W locks
 	Locks.Mod
 
 	# PCI bus interface
 	I386 {BiosFreePCI.Mod }
-	AMD64 { AMD64.PCI.Mod }
 
 	# Realtime clock driver
 	NATIVE { Clock.Mod }
 	WIN { Win32.Clock.Mod }
-	UNIX, UNIXG { Unix.Clock.Mod }
+	UNIX { Unix.Clock.Mod }
 
 	# Memory cache control
-	I386ORIG, I386GEN { I386.MemCache.Mod }
-	AMD64ORIG { AMD64.MemCache.Mod }
+	I386GEN { I386.MemCache.Mod }
 	COOP { Coop.MemCache.Mod }
 
 	# Block device interface
@@ -501,23 +347,22 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	FATVolumes.Mod FATFiles.Mod
 	ISO9660Volumes.Mod ISO9660Files.Mod
 
-	UNIX, UNIXG { Unix.UnixFiles.Mod }
+	UNIX { Unix.UnixFiles.Mod }
 
 	WIN {
 		Win32.User32.Mod Win32.WinTrace.Mod Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod
 		Win32.WinFS.Mod
 	}
 
-	NATIVE,WIN,UNIX,UNIXG { RelativeFileSystem.Mod } # file system relative to path
+	RelativeFileSystem.Mod	# file system relative to path
 
-	NATIVEORIG,WINORIG,UNIX { Loader.Mod }
-	NATIVEGEN, WINGEN, COOP, UNIXG {BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod GenericLoader.Mod }
+	BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod
 
 	# binding modules
 	NATIVE,WIN { BootConsole.Mod }
-	UNIX, UNIXG { Unix.BootConsole.Mod }
+	UNIX { Unix.BootConsole.Mod }
 
-	UNIXG,WINGEN { Shell.Mod StdIOShell.Mod }
+	UNIX,WIN { Shell.Mod StdIOShell.Mod }
 
 	Displays.Mod
 
@@ -537,15 +382,15 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BootShell.Mod
 
-	I386, UNIX32, UNIXG32 { I386.Network.Mod }
-	AMD64, UNIXG64 { AMD64.Network.Mod }
+	I386, UNIX32 { I386.Network.Mod }
+	UNIX64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
 	ActiveTimers.Mod
 
 	WIN { Win32.GDI32.Mod }
-	WINORIG, WINGEN { Win32.Display.Mod }
+	WIN { Win32.Display.Mod }
 	WINCOOP { Coop.Win32.Display.Mod }
 
 	WIN {
@@ -558,7 +403,6 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	}
 
 	I386 { I386.IP.Mod I386.IPv4.Mod }
-	AMD64 { AMD64.IP.Mod AMD64.IPv4.Mod }
 	ARM { ARM.IP.Mod ARM.IPv4.Mod }
 
 	NATIVE {
@@ -568,13 +412,13 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Ping.Mod TraceRoute.Mod TCPPortLog.Mod		# network tools
 	}
 
-	UNIX, UNIXG {
+	UNIX {
 		Unix.IP.Mod
 		Unix.Sockets.Mod
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}
 
-	UNIX, UNIXG { UnixBinary.Mod }
+	UNIX { UnixBinary.Mod }
 
 	# Serial port interface
 	Serials.Mod
@@ -599,21 +443,20 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# Serial port drivers (implement Serials interface)
 	NATIVE { V24.Mod }
 	WIN { Win32.V24.Mod }
-	UNIX, UNIXG { Unix.V24.Mod }
+	UNIX { Unix.V24.Mod }
 
 	# PC speaker driver
 	NATIVE { Beep.Mod }
 	WIN { Win32.Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
-	UNIX, UNIXG { Unix.OpenAL.Mod OpenALSound.Mod }
+	UNIX { Unix.OpenAL.Mod OpenALSound.Mod }
 
 	WIN { Win32.WinDisks.Mod } # direct windows disk access, implements Disks interface
 
 	NATIVE { SCSI.Mod }
 
 	I386 { I386.ATADisks.Mod }
-	AMD64 { AMD64.ATADisks.Mod }
 
 	I386 { I386.Adaptec7Script.Mod Adaptec7.Mod } # Adaptec SCSI driver
 
@@ -625,7 +468,6 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PS/2 keyboard incl. layouts
 
 	I386 { I386.Keyboard.Mod }
-	AMD64 { AMD64.Keyboard.Mod }
 
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin
@@ -668,7 +510,6 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 
 	I386 { I386.UsbKeyboard.Mod }
-	AMD64 { AMD64.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
@@ -689,7 +530,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		BluetoothHCI.Mod BluetoothL2CAP.Mod BluetoothRFCOMM.Mod
 	}
 
-	NATIVEORIG {
+	NATIVE {
 		# Floppy disk driver
 		Diskettes.Mod
 	}
@@ -701,15 +542,15 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	StringPool.Mod Diagnostics.Mod Debugging.Mod
 
 	Fox.Tool
-	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
+	BitSets.Mod ObjectFile.Mod GenericLinker.Mod Linker.Mod
 	FoxBasic.Mod FoxProgTools.Mod FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
 	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerPrinter.Mod FoxPrintout.Mod
 	FoxParser.Mod FoxCSharpParser.Mod FoxSemanticChecker.Mod
 	FoxBackend.Mod FoxSections.Mod FoxFrontend.Mod
 	FoxCompiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
-	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
+	FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
 	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
 	FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
@@ -723,14 +564,14 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64, WINGEN64, UNIXG64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	WIN64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.FoxArrayBaseOptimized.Mod }
-	AMD64, WINGEN64, UNIX64, UNIXG64 { AMD64.FoxArrayBaseOptimized.Mod }
+	I386, WIN32, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
+	WIN64, UNIX64, UNIX64 { AMD64.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -739,7 +580,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	Errors.Mod errors.txt
 
 	# Access to system functions
-	UNIX, UNIXG { Unix.ProcessInfo0.Mod }
+	UNIX { Unix.ProcessInfo0.Mod }
 	NATIVE, WIN { ProcessInfo0.Mod }
 	ProcessInfo.Mod
 
@@ -753,8 +594,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	AMD64, WINGEN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	I386, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	WIN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
@@ -769,8 +610,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.Raster.Mod }
-	AMD64, WINGEN64, UNIXG64 { AMD64.Raster.Mod }
+	I386, WIN32, UNIX32 { I386.Raster.Mod }
+	WIN64, UNIX64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -802,8 +643,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.WMRasterScale.Mod }
-	AMD64, WINGEN64, UNIXG64 { AMD64.WMRasterScale.Mod }
+	I386, WIN32, UNIX32 { I386.WMRasterScale.Mod }
+	WIN64, UNIX64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -832,7 +673,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	I386,WINORIG,WINGEN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
+	I386,WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend
@@ -869,9 +710,9 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	config.txt # default config string settings
 	PartitionEditorTable.Mod
 
-	NATIVEORIG{ Profiler.Mod HierarchicalProfiler0.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
-	WINORIG, WINGEN { Win32.HierarchicalProfiler0.Mod }
-	NATIVEORIG, WINORIG, WINGEN { HierarchicalProfiler.Mod}
+	# { Profiler.Mod HierarchicalProfiler0.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
+	WIN { Win32.HierarchicalProfiler0.Mod }
+	WIN { HierarchicalProfiler.Mod}
 
 	FTPClient.Mod
 
@@ -900,8 +741,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386, WINORIG, WINGEN32, UNIX32,UNIXG32 { I386.CPUID.Mod }
-	AMD64, WINGEN64 { AMD64.CPUID.Mod }
+	I386, WIN32, UNIX32 { I386.CPUID.Mod }
+	WIN64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
 
@@ -919,8 +760,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPServices.Mod TestServer.Mod	# TCP services
 	TCPTools.Mod						# Some useful TCP-related commands
 
-	NATIVEORIG { Performance.Mod }
-	WIN, UNIX, UNIXG, NATIVECOOP { Win32.Performance.Mod } # This is just a dummy
+	# { Performance.Mod }
+	WIN, UNIX, NATIVECOOP { Win32.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod
 
@@ -932,8 +773,6 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
-	I386ORIG { I386.MemInfo.Mod }	# basic tools module
-	AMD64ORIG { AMD64.MemInfo.Mod }
 	I386,WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod
@@ -979,7 +818,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin # MP3 Decoder
 
 	# Video codecs
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 {
+	I386, WIN32, UNIX32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod	# MPEG1/2 Support
@@ -1017,9 +856,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	cjkfont.bfnt # since used as fallback
 
 	WindowManager.Mod
-	UNIX { Unix.X11.Mod }
-	UNIXG { Generic.Unix.X11.Mod }
-	UNIX, UNIXG { Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod Unix.KbdMouse.Mod Unix.Clipboard.Mod Unix.Display.Mod }
+	UNIX { Unix.X11.Mod Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod Unix.KbdMouse.Mod Unix.Clipboard.Mod Unix.Display.Mod }
 
 
 	# Icons representing applications (don't put icons used by applications inside!)
@@ -1060,7 +897,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMCharMap.Mod
 	WMUnicodeMarkerTool.Mod
 
-	UNIX, UNIXG { Unix.DisplayRefresher.Mod }
+	UNIX { Unix.DisplayRefresher.Mod }
 
 	Standard.rep Models.rep Shapes.rep Colors.rep System.rep
 
@@ -1134,7 +971,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	MultiLogger.Mod
 
-	I386, WIN, UNIX {
+	I386, WIN {
 		MemoryReader.Mod Decoder.Mod I386Decoder.Mod	# GUI decoder
 		ARMDecoder.Mod AMD64Decoder.Mod DecoderRes.zip
 	}
@@ -1150,13 +987,13 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonAlerts.Mod WMPerfMonAlertsUtils.Mod WMPerfMonAlerts.XML
 
 	# perfmon kernel plugins
-	NATIVEORIG, NATIVEGEN {
+	NATIVE {
 		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
 		WMPerfMonPluginInterrupts.Mod
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
 	WIN { Win32.WMPerfMonPluginCpu.Mod Win32.WMPerfMonPluginMemory.Mod }
-	UNIX, UNIXG { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
+	UNIX { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
 
 	NATIVE,WIN {
 		WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod
@@ -1181,7 +1018,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMShell.Mod	# GUI for Shell
 
 	# GUI for hierarchical profiler (HierarchicalProfiler.Mod)
-	NATIVEORIG, WINORIG, WINGEN { WMProfiler.Mod }
+	WIN { WMProfiler.Mod }
 
 	# ssh
 	SSH.Tool
@@ -1268,7 +1105,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	HotKeysCommands.Mod
 
-	I386, WIN, UNIX { I386.VMWareTools.Mod }		# VMWare
+	I386, WIN { I386.VMWareTools.Mod }		# VMWare
 	SynergyClient.Mod			# Synergy
 
 	NATIVE {
@@ -1281,8 +1118,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.WMTransitions.Mod }
-	AMD64, WINGEN64, UNIXG64 { AMD64.WMTransitions.Mod }
+	I386, WIN32, UNIX32 { I386.WMTransitions.Mod }
+	WIN64, UNIX64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod
@@ -1367,7 +1204,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 
 	CSV.Test
 
-	NATIVEORIG, NATIVEGEN {
+	NATIVE {
 		TestLocks.Mod
 		BenchSpeedup.Mod BenchObjCount.Mod
 		BenchClockDrift.Mod BenchNew.Mod BenchLocks.Mod
@@ -1375,8 +1212,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 		BluetoothTest.Mod
 	}
 
-	I386ORIG, I386GEN { I386.BenchInterrupts.Mod }
-	AMD64 { AMD64.BenchInterrupts.Mod }
+	I386GEN { I386.BenchInterrupts.Mod }
 
 	BenchTCP.Mod
 
@@ -1438,21 +1274,14 @@ PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip" DESCRIPTION "Build Tools
 	IsoImages.Mod
 	ReleaseThreadPool.Mod Release.Mod Release.Tool	# Build release tool
 	PETReleaseTree.Mod
-	Linker0.Mod Linker1.Mod Linker.Mod
-	WIN { Win32.Aos.Link }
-	UNIX {
-		Unix.BootLinkerHeaps.Mod Unix.BootLinkerModules.Mod Unix.BootLinkerLoader.Mod
-		Unix.BootLinker.Mod UnixAos.Tool
-	}
 	OBEMBR4.ASM BootManager.Asm OBL.Asm # Asm
 	BootManager.Mod BootManager.Tool # Splits up BootManager.Bin into BootManagerMBR.Bin and BootManagerTail.Bin
 END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 {I386.EFIMachine.Mod}
-	AMD64, WINGEN64, UNIXG64 { AMD64.EFIMachine.Mod }
-
+	I386, WIN32, UNIX32 {I386.EFIMachine.Mod}
+	WIN64, UNIX64 { AMD64.EFIMachine.Mod }
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
 	EFIFileProtocol.Mod EFISimpleFS.Mod
@@ -1481,8 +1310,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
 	srBase.Mod srRayEngine.Mod srMath.Mod
-	I386, WINORIG, WINGEN32, UNIX32, UNIXG32 { I386.srE.Mod }
-	AMD64, WINGEN64, UNIXG64 { AMD64.srE.Mod }
+	I386, WIN32, UNIX32 { I386.srE.Mod }
+	WIN64, UNIX64 { AMD64.srE.Mod }
 	srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
 	srM2Space.Mod srM3Space.Mod srM5Space.Mod srM6Space.Mod srRastermovie.Mod
@@ -1516,7 +1345,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
 	MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
 
-	NATIVE,WINORIG,WINGEN32,UNIXG32 {
+	NATIVE,WIN32,UNIX32 {
 
 		# Disable index checking for these modules with \sx for efficiency
 		I386.Array1dBytes.Mod Array1dInt.Mod Array1dRat.Mod Array1dRe.Mod Array1dCplx.Mod I386.ArrayXdBytes.Mod
@@ -1587,11 +1416,11 @@ END
 
 PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon for A2"
 	# emulation modules
-	NATIVE,UNIX, UNIXG { Oberon.Kernel.Mod }
+	NATIVE, UNIX { Oberon.Kernel.Mod }
 	NATIVE,WIN { Oberon.Types.Mod }
 	WIN { Win32.Oberon.Kernel.Mod }
 	Oberon.Modules.Mod
-	NATIVE,UNIX, UNIXG { Oberon.FileDir.Mod Oberon.Files.Mod }
+	NATIVE, UNIX { Oberon.FileDir.Mod Oberon.Files.Mod }
 	WIN { Win32.Oberon.FileDir.Mod Win32.Oberon.Files.Mod }
 
 	Oberon.Disks.Mod
@@ -1599,46 +1428,34 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Oberon.Objects.Mod
 	OberonInput.Mod	# WM-less Oberon I/O
 
-	NATIVE,iWIN, UNIX, UNIXG {
-		OberonDisplay.Mod Oberon.Display.Mod Oberon.Display.Mod
-		Oberon.Input.Mod	# WM-based Display & Input
-		Oberon.Viewers.Mod Oberon.Fonts.Mod
-	}
+	OberonDisplay.Mod Oberon.Display.Mod Oberon.Display.Mod
+	Oberon.Input.Mod	# WM-based Display & Input
+	Oberon.Viewers.Mod Oberon.Fonts.Mod
 
-	NATIVE, iWIN, UNIX, UNIXG {Oberon.Mod}
-
-	eWIN {
-	Win32.Oberon.Mod
-	Win32.Threads.Mod
-	Win32.Oberon.Displays.Mod Win32.Oberon.Display.Mod Win32.Oberon.Viewers.Mod
-	Win32.Oberon.Input.Mod Win32.Oberon.Fonts.Mod Win32.Oberon.Windows.Mod
-	}
+	Oberon.Mod
 
 	Oberon.Texts.Mod
 
 	WIN { Win32.OberonConfiguration.Mod }
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.Oberon.Mod }
-	eWIN { Win32.Oberon.WinFonts.Mod Win32.Oberon.Oberon.Mod }
+	Oberon.Oberon.Mod
 
 	Oberon.MenuViewers.Mod Oberon.TextFrames.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.System.Mod }
+	Oberon.System.Mod
 
 	Oberon.In.Mod Oberon.Out.Mod Oberon.Dates.Mod Oberon.Strings.Mod	# Utility modules
 
-	NATIVE, iWIN { Oberon.Centronics.Mod }
+	NATIVE, WIN { Oberon.Centronics.Mod }
 
-	NATIVE,iWIN,UNIX, UNIXG { I386.Oberon.Bitmaps.Mod Oberon.Pictures.Mod }
+	I386.Oberon.Bitmaps.Mod Oberon.Pictures.Mod
 
 	Oberon.RandomNumbers.Mod
 
 	Oberon.V24.Mod
 	NATIVE { Oberon.Printer.Mod }
-	UNIX, UNIXG{ Unix.Oberon.Printer.Mod }
-	eWIN { Win32.Oberon.Bitmaps.Mod Win32.Oberon.Pictures.Mod }
+	UNIX { Unix.Oberon.Printer.Mod }
 	WIN { Win32.Oberon.Printer.Mod Win32.ADVAPI32.Mod }
-	eWIN { Win32.Oberon.System.Mod Win32.OberonDisplay.Mod }
 
 	Compiler.Tool Oberon.OPM.Mod Oberon.OPS.Mod Oberon.OPT.Mod Oberon.OPB.Mod Oberon.OPA.Mod Oberon.OPP.Mod	# Compiler (prk)
 	Oberon.OPO.Mod Oberon.OPL.Mod Oberon.OPC.Mod Oberon.OPV.Mod Oberon.Compiler.Mod Oberon.OPAData.Mod OPA.Data
@@ -1646,23 +1463,23 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Edit.Tool Oberon.Edit.Mod	# Edit
 	Script.Tool Oberon.Styles.Mod Oberon.ScriptFrames.Mod Oberon.Script.Mod	# Script
 
-	NATIVEORIG, NATIVEGEN {
+	NATIVE {
 	Oberon.Diskettes.Mod	# Diskette driver
 	Backup.Tool Oberon.Diskette.Mod Oberon.Backup.Mod	# Backup
 	}
 
 	Partitions.Tool Oberon.Partitions.Mod	# Partition
 
-	NATIVE, iWIN { Oberon.Miscellaneous.Mod }	# Miscellaneous
+	NATIVE, WIN { Oberon.Miscellaneous.Mod }	# Miscellaneous
 	Miscellaneous.Tool
 
 	Oberon.Browser.Mod	# Browser (Compiler.Tool)
 	DOS.Tool Oberon.FATFiles.Mod Oberon.DOS.Mod	# DOS
 	Oberon.Hello.Mod	# Demo program (UserGuide.Text)
 
-	NATIVE,UNIX, UNIXG { Oberon.PSPrinter.Mod PSHeader.Text Oberon.HPLaserPrinter.Mod Oberon.HPPCL.Mod }	# Printer drivers
+	NATIVE, UNIX { Oberon.PSPrinter.Mod PSHeader.Text Oberon.HPLaserPrinter.Mod Oberon.HPPCL.Mod }	# Printer drivers
 	WIN { Win32.Oberon.PSPrinter.Mod }
-	UNIX, UNIXG { Unix.Oberon.UnixPrinter.Mod }
+	UNIX { Unix.Oberon.UnixPrinter.Mod }
 
 	Default.Pal Light.Pal Dark.Pal White.Pal Black.Pal	# Palettes
 
@@ -1671,9 +1488,8 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	# Configuration
 	Configuration.Tool
-	WINORIG, WINGEN32 { Win32.Oberon.Registry.Mod }
-	eWIN { Win32.Oberon.Configuration.Mod }
-	NATIVE,iWIN { Oberon.Configuration.Mod }
+	WIN32 { Win32.Oberon.Registry.Mod }
+	NATIVE, WIN { Oberon.Configuration.Mod }
 
 # Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
 	Tools.Tool
@@ -1683,7 +1499,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	NATIVE { Oberon.NetSystem.Mod }
 	WIN { Win32.Oberon.NetSystem.Mod }
-	UNIX, UNIXG { Unix.Oberon.NetSystem.Mod }
+	UNIX { Unix.Oberon.NetSystem.Mod }
 
 	Oberon.HelloServer.Mod
 
@@ -1725,20 +1541,12 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	Colors.Tool
 
-	NATIVE,iWIN,UNIX, UNIXG {
-		Oberon.Colors.Mod	# Color models
-		Oberon.Display3.Mod Oberon.Effects.Mod
-	}
-
-	eWIN {
-		Win32.Oberon.Colors.Mod
-		Win32.Oberon.Display3.Mod Win32.Oberon.Effects.Mod
-	}
+	Oberon.Colors.Mod	# Color models
+	Oberon.Display3.Mod Oberon.Effects.Mod
 
 	Oberon.Printer3.Mod Oberon.Attributes.Mod Oberon.Links.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.Gadgets.Mod }
-	eWIN { Win32.Oberon.Gadgets.Mod }
+	Oberon.Gadgets.Mod
 
 	WIN { Win32.Oberon.PrinterInfo.Mod }
 
@@ -1749,15 +1557,13 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	Oberon.Panels.Mod
 
 
-	NATIVE,WIN, UNIXG { Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod }
-	UNIX { Unix.Oberon.TextGadgets0.Mod Unix.Oberon.TextGadgets.Mod }
+	Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod
 
 	Oberon.BasicFigures.Mod
 
-	NATIVE,WIN,UNIXG { Oberon.Scrollbars.Mod }
-	UNIX { Unix.Oberon.Scrollbars.Mod Unix.Oberon.TextSBControl.Mod }
+	Oberon.Scrollbars.Mod
 
-	NATIVE,UNIX, UNIXG { Oberon.Directories.Mod }
+	NATIVE, UNIX { Oberon.Directories.Mod }
 	WIN { Win32.Oberon.Directories.Mod }
 
 	Oberon.Clocks.Mod Oberon.Organizers.Mod
@@ -1765,21 +1571,16 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	Oberon.ProgressMeters.Mod Oberon.Sisiphus.Mod Sisyphus.Data
 	Oberon.Documents.Mod Oberon.Views.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.Desktops.Mod }
-	eWIN { Win32.Oberon.Desktops.Mod }
+	Oberon.Desktops.Mod
 
-	NATIVE,WIN, UNIXG{ Oberon.TextDocs.Mod }
-	UNIX { Unix.Oberon.TextDocs.Mod }
+	Oberon.TextDocs.Mod
 
 	TextDocs.Lib Oberon.PanelDocs.Mod	# Document catalog
 	Oberon.Icons.Mod Oberon.ColorTools.Mod Oberon.NamePlates.Mod Oberon.Navigators.Mod Oberon.NoteBooks.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.Finder.Mod }
-	eWIN { Win32.Oberon.Finder.Mod }
+	Oberon.Finder.Mod
 
 	Oberon.GadgetsIn.Mod Oberon.GadgetsOut.Mod
-
-	eWIN { Win32.Oberon.Miscellaneous.Mod Win32.COMDLG32.Mod Win32.Oberon.WinMenus.Mod Win32.Oberon.WinPrinter.Mod }
 
 	Libraries.Panel Oberon.ScrollViews.Mod Oberon.RefGadgets.Mod Oberon.Columbus.Mod Columbus.Lib	# Columbus in Popups.Tool
 	ObjExplorer.Panel Oberon.ObjExplorer.Mod	# ObjExplorer in Popups.Tool
@@ -1795,8 +1596,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	Oberon.StyleGadgets.Mod Oberon.ScriptGadgets.Mod
 	Rembrandt.Panel Oberon.Rembrandt0.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.Rembrandt.Mod }
-	eWIN { Win32.Oberon.Rembrandt.Mod }
+	Oberon.Rembrandt.Mod
 
 	Oberon.RembrandtDocs.Mod	# Rembrandt in Popups.Tool
 	Oberon.RembrandtTools.Mod Rembrandt.Lib Clown.Pict Grapes.Pict
@@ -1804,29 +1604,23 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	PC.Tool Oberon.ErrorGadgets.Mod Oberon.PC.Mod	# Oberon Interface for PACO
 
-	WINORIG,WINGEN32 { Win32.PELinker.Mod PELinker.Tool }
-
-	iWIN { Win32.Oberon.Clipboard.Mod }
-	eWIN { Win32.External.Oberon.Clipboard.Mod Win32.Oberon.RegistryTools.Mod }
-	WIN { Win32.Oberon.FontRes.Mod FontRes.Tool }
-	UNIX, UNIXG{ Unix.Oberon.Clipboard.Mod }
-	WIN,UNIX, UNIXG { Clipboard.Tool }
+	WIN { Win32.Oberon.Clipboard.Mod Win32.Oberon.FontRes.Mod FontRes.Tool }
+	UNIX { Unix.Oberon.Clipboard.Mod }
+	WIN, UNIX { Clipboard.Tool }
 
 	Oberon.JPEG.Mod Oberon.GIF.Mod Oberon.XBM.Mod Oberon.BMP.Mod Oberon.ICO.Mod Oberon.PCX.Mod Oberon.TGA.Mod Oberon.IFF.Mod	# Picture converters
 	Oberon.ColorModels.Mod Oberon.XPM.Mod Oberon.PPM.Mod Oberon.PSD.Mod
 
 	Images.Tool Oberon.Images.Mod
 
-	NATIVE,iWIN,UNIX, UNIXG { Oberon.ImageGadgets.Mod }
-	eWIN { Win32.Oberon.WinImages.Mod Win32.Oberon.ImageGadgets.Mod }
+	Oberon.ImageGadgets.Mod
 
 	Oberon.ImageDocs.Mod	# Images
 
 	Oberon.PictImages.Mod Oberon.BMPImages.Mod Oberon.JPEGImages.Mod Oberon.GIFImages.Mod Oberon.PSDImages.Mod
 	Colors.Panel
 
-	NATIVE, iWIN,UNIX, UNIXG { Oberon.ColorGadgets.Mod }
-	eWIN { Win32.Oberon.ColorGadgets.Mod }
+	Oberon.ColorGadgets.Mod
 
 	Oberon.PCXImages.Mod	# Color views
 	Oberon.ColorWells.Mod	# Leonardo legacy
@@ -1866,7 +1660,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	WIN { Win32.Oberon.PlugInDocs.Mod }
 
-	NATIVEORIG, NATIVEGEN {
+	NATIVE {
 	Oberon.Profiler.Mod	# alternative profiler (prk)
 	Oberon.FATDocs.Mod	# FAT browser (be)
 	}
@@ -2018,8 +1812,7 @@ END
 PACKAGE OberonVoyager ARCHIVE "OberonVoyager.zip" SOURCE "OberonVoyagerSrc.zip" DESCRIPTION "Oberon Voyager"
 
 	# Portability Module
-	eWIN { Win32.Oberon.vyPortability.Mod }
-	NATIVE, iWIN,UNIX, UNIXG { Oberon.vyPortability.Mod }
+	Oberon.vyPortability.Mod
 	Oberon.vyHost.Mod Oberon.vyHostFonts.Mod	# Host modules
 	Oberon.vyLinks.Mod Oberon.vyHostStrings.Mod Oberon.vyHostTexts.Mod Oberon.vyBase.Mod Oberon.vyName.Mod	# Base and Name
 	Oberon.vyScanners.Mod Oberon.vyParser.Mod Oberon.vyPars.Mod Oberon.vyIn.Mod Oberon.vyOut.Mod Oberon.vyFiles.Mod Oberon.vyTextsCtl.Mod	# In and Output
@@ -2050,14 +1843,12 @@ END
 PACKAGE OberonAnts ARCHIVE "OberonAnts.zip" SOURCE "OberonAntsSrc.zip" DESCRIPTION "OberonAnts"
 	Oberon.antsS3.ScrollbarsR.Mod Oberon.antsCommandInvoker.Mod	# generic tools
 
-	eWIN { Win32.Oberon.antsPortability.Mod }
-	NATIVE,iWIN,UNIX,UNIXG { Oberon.antsPortability.Mod }	# Portability
+	Oberon.antsPortability.Mod	# Portability
 
 	NATIVE,WIN {
 		Oberon.antsExpressionsObjects.Mod Oberon.antsExpressions.Mod Oberon.antsExpressionsDefaults.Mod	# command prompt interpreter
 		Oberon.antsSecurity.Mod Oberon.antsOrganizers.Mod Oberon.antsMessages.Mod Oberon.antsScriptObjects.Mod
 	}
-	eWIN { Win32.Oberon.antsTracking.Mod }
 	NATIVE,WIN {
 		Oberon.antsContainers.Mod Oberon.antsTexts.Mod Oberon.antsGlobals.Mod Oberon.antsBasicGadgets.Mod Oberon.antsOnTheFly.Mod
 		Oberon.antsConstRandom.Mod Oberon.antsFiles.Mod Oberon.antsCommands.Mod Oberon.ants.fofAutomatic.Mod Oberon.antsArrays.Mod

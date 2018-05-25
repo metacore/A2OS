@@ -61,7 +61,11 @@ TYPE
 
 		PROCEDURE &Init*(size: LONGINT);
 		BEGIN
-			head := 0; num := 0; NEW(buffer, size); closed := FALSE
+			head := 0; num := 0;
+			IF (buffer = NIL) OR (LEN(buffer) # size) THEN
+				NEW( buffer, size );
+			END;
+			closed := FALSE
 		END Init;
 
 		PROCEDURE Close*;

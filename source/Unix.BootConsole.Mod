@@ -197,6 +197,7 @@ VAR
 	END InitSignalHandling;
 	
 BEGIN
+	Machine.VerboseLog;
 	Glue.Initialize;
 	InitializeCoreModules;
 	InitSignalHandling;

@@ -672,9 +672,11 @@ END GetTimer;
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
 	VAR r: LONGINT;  logstat: Unix.Status;
 	BEGIN
-		r := Unix.fstat( logfile, logstat );
-		r := Unix.close( logfile );
-		IF logstat.size = 0 THEN  r := Unix.unlink( ADDRESSOF( logname) )  END;
+		IF logfile > 0 THEN
+			r := Unix.fstat( logfile, logstat );
+			r := Unix.close( logfile );
+			IF logstat.size = 0 THEN  r := Unix.unlink( ADDRESSOF( logname) )  END;
+		END;
 		IF reboot THEN  Unix.exit( 0 )  ELSE  Unix.exit( 1 )  END;
 	END Shutdown;
 		
@@ -748,6 +750,7 @@ END GetTimer;
 	PROCEDURE InitLog;
 	VAR pid, i: LONGINT; 
 	BEGIN
+		IF logfile > 0 THEN RETURN END;
 		logname := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;
 		REPEAT
@@ -755,16 +758,17 @@ END GetTimer;
 			pid := pid DIV 10;		
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( logname ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-		VerboseLog;	
 	END InitLog;
 	
 	PROCEDURE SilentLog*;
 	BEGIN
+		InitLog;
 		Trace.Char := LogFileOnly
 	END SilentLog;
 	
 	PROCEDURE VerboseLog*;
 	BEGIN
+		InitLog;
 		Trace.Char := Log
 	END VerboseLog;
 
@@ -789,7 +793,6 @@ END GetTimer;
 		InitLocks;
 		traceHeap := 1 IN Glue.debug;
 		InitConfig;
-		InitLog;
 		CPUSpeed;
 		IF CpuIdSupported() THEN
 			CPUID( vendor, ver, features, features2 );	 SetupSSE2Ext

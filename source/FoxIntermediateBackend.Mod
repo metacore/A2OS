@@ -6215,7 +6215,6 @@ TYPE
 						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
 						IntermediateCode.InitImmediate(op,addressType,0);
 						source(IntermediateCode.Section).Emit(Data(position,op));
-						source.SetReferenced(FALSE)
 					ELSE
 						name := source.name;
 					END;
@@ -10515,7 +10514,6 @@ TYPE
 			symbol.SetScope(moduleScope);
 			NEW(fixups,size); FOR i := 0 TO size-1 DO fixups[i] := NIL END;
 			section := NewSection(module.allSections, Sections.ConstSection,name,SyntaxTree.NewSymbol(name[1]),commentPrintout # NIL);
-			section.isCaseTable := TRUE;
 			IntermediateCode.InitAddress(jmp, addressType, section.name, GetFingerprint(section.symbol), 0);
 			ReuseCopy(res,var.op);
 			ReleaseOperand(var);
@@ -13128,7 +13126,6 @@ TYPE
 					Basic.SegmentedNameToString(name, sectionName);
 					*)
 					Name(source,sectionName);
-					source.SetReferenced(FALSE);
 					patchInfoPC := source.pc;
 					Size(source, 0);
 			END NewModuleInfo;
@@ -13366,7 +13363,6 @@ TYPE
 					Basic.SegmentedNameToString(name, sectionName);
 					*)
 					Name(source,sectionName);
-					source.SetReferenced(FALSE);
 					Size(source, 0);
 					RETURN source;
 			END NewTypeDescriptorInfo;
@@ -13543,7 +13539,6 @@ TYPE
 
 							Info(source, "record size");
 							Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
-							source.SetReferenced(FALSE);
 							CooperativeMethodTable(FALSE);
 	
 							base := source;
@@ -13551,7 +13546,6 @@ TYPE
 							Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 							source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
 							source.SetExported(IsExported(td));
-							source.SetReferenced(FALSE);
 						END;
 
 	
@@ -13584,7 +13578,6 @@ TYPE
 						Info(source, "base record descriptor");
 						Symbol(source, base, 0, 0);
 						CooperativeMethodTable(TRUE);
-						source.SetReferenced(FALSE);
 						
 						IF recordType.hasPointers THEN
 							IF ~HasExplicitTraceMethod (recordType) THEN
@@ -13663,7 +13656,6 @@ TYPE
 						Address(source, ToMemoryUnits(module.system,module.system.SizeOf(recordType)));
 						TdTable(TypeTags, FALSE);
 						MethodTable(FALSE);
-						source.SetReferenced(FALSE);
 					END;
 			END NewTypeDescriptor;
 

@@ -34,11 +34,8 @@ TYPE
 		fingerprint-: LONGINT; (* fingerprint of the corresponding syntax tree node *)
 		bitsPerUnit-: LONGINT; (* the unit size given in bits *)
 
-		(* for compatibility with old object file format *)
 		symbol-: SyntaxTree.Symbol; (* corresponding symbol in AST *)
 		offset-: LONGINT;
-		isCaseTable*: BOOLEAN; (* necessary because old object file format cannot patch fixups in variable/constant area *)
-		referenced-: BOOLEAN;
 
 		(* for linking *)
 		isReachable-: BOOLEAN;
@@ -49,22 +46,16 @@ TYPE
 			SELF.symbol := symbol;
 			SELF.type := type;
 			offset := 0;
-			referenced := TRUE;
 			fixed := FALSE;
 			positionOrAlignment := 1;
 			fingerprint := 0;
 			bitsPerUnit := UnknownSize;
-			isCaseTable := FALSE;
 		END InitSection;
 
 		PROCEDURE IsCode*(): BOOLEAN;
 		BEGIN
 			RETURN type IN {EntryCodeSection .. CodeSection};
 		END IsCode;
-
-		PROCEDURE SetReferenced*(ref: BOOLEAN);
-		BEGIN referenced := ref;
-		END SetReferenced;
 
 		PROCEDURE SetOffset*(offset: LONGINT);
 		BEGIN SELF.offset := offset;

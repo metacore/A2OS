@@ -203,12 +203,6 @@ VAR
 		END;
 		Init;
 	END Init0;
-	
-	PROCEDURE Initialize*;
-	BEGIN
-		(* nothing, only for compatibility *)
-	END Initialize;
-	
 
 END Glue.
 

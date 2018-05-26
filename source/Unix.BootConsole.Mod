@@ -198,7 +198,6 @@ VAR
 	
 BEGIN
 	Machine.VerboseLog;
-	Glue.Initialize;
 	InitializeCoreModules;
 	InitSignalHandling;
 	StartSystem;

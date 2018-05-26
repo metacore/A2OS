@@ -68,12 +68,6 @@ VAR
 		
 		stackBottom := ADDRESSOF( localvar ) + 2*SIZEOF( ADDRESS );
 	END Init0;
-	
-	PROCEDURE Initialize*;
-	BEGIN
-		(* nothing, only for compatibility *)
-	END Initialize;
-	
 
 END Glue.
 

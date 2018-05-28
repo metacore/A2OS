@@ -1,11 +1,13 @@
 MODULE PsSerials; (** AUTHOR "Timothée Martiel, 11/2017"; PURPOSE "Serial interface for Zynq PS UARTs"; *)
 
-IMPORT Platform, BootConfig, Modules, Strings, PsUartMin, PsUart, Serials, Objects;
+IMPORT Platform, BootConfig, Modules, Strings, PsUartMin, PsUart, Serials, Objects, Machine;
 
 TYPE
 	Port = OBJECT (Serials.Port)
 	VAR
 		uart: PsUart.UartController;
+		
+		sendCharLock := FALSE : BOOLEAN;
 
 		PROCEDURE & Init (id: LONGINT);
 		BEGIN
@@ -46,8 +48,11 @@ TYPE
 
 		PROCEDURE SendChar(char: CHAR; VAR res: LONGINT);
 		BEGIN
+			Machine.AcquireObject(sendCharLock);
 			(*! use Yield0 method to make sure no low-level lock is acquired here - required when used as trace output *)
 			PsUart.SendChar(uart, char, TRUE, Yield0, res);
+		FINALLY
+			Machine.ReleaseObject(sendCharLock);
 		END SendChar;
 
 		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);

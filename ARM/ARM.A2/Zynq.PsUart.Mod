@@ -309,10 +309,20 @@ VAR
 		res: error code, 0 in case of success
 	*)
 	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: UartMin.BusyLoopCallback; VAR res: LONGINT);
-	TYPE ArrayOfChar1 = ARRAY 1 OF CHAR;
+	BEGIN
+		(*! for the moment just write directly to the FIFO *)
+		res := 0;
+		WHILE uart.open DO
+			IF ~(UartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
+				uart.regs.fifo := ORD(ch); RETURN;
+			END;
+		END;
+		
+		res := UartMin.Closed;
+	(*TYPE ArrayOfChar1 = ARRAY 1 OF CHAR;
 	BEGIN
 		(*!TODO: do not use interrupts here to avoid problems when SendChar is used for trace output *)
-		Send(uart, SYSTEM.VAL(ArrayOfChar1,ch), 0, 1, propagate, onBusy, res);
+		Send(uart, SYSTEM.VAL(ArrayOfChar1,ch), 0, 1, propagate, onBusy, res);*)
 	END SendChar;
 
 	(**
@@ -507,13 +517,21 @@ VAR
 	PROCEDURE Show*;
 	BEGIN
 		IF uarts[0] # NIL THEN
-			Trace.StringLn("PS UART0 registers:");
+			Trace.StringLn("PS UART0:");
 			PrintRegisters(uarts[0].regs);
+			Trace.String("rxBufRdPos="); Trace.Int(uarts[0].rxBufRdPos,0); Trace.Ln;
+			Trace.String("rxBufWrPos="); Trace.Int(uarts[0].rxBufWrPos,0); Trace.Ln;
+			Trace.String("txBufRdPos="); Trace.Int(uarts[0].txBufRdPos,0); Trace.Ln;
+			Trace.String("txBufWrPos="); Trace.Int(uarts[0].txBufWrPos,0); Trace.Ln;
 			Trace.Ln;
 		END;
 		IF uarts[1] # NIL THEN
-			Trace.StringLn("PS UART1 registers:");
+			Trace.StringLn("PS UART1:");
 			PrintRegisters(uarts[1].regs);
+			Trace.String("rxBufRdPos="); Trace.Int(uarts[1].rxBufRdPos,0); Trace.Ln;
+			Trace.String("rxBufWrPos="); Trace.Int(uarts[1].rxBufWrPos,0); Trace.Ln;
+			Trace.String("txBufRdPos="); Trace.Int(uarts[1].txBufRdPos,0); Trace.Ln;
+			Trace.String("txBufWrPos="); Trace.Int(uarts[1].txBufWrPos,0); Trace.Ln;
 			Trace.Ln;
 		END;
 

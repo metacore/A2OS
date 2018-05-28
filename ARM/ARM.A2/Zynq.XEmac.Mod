@@ -762,7 +762,7 @@ TYPE
 
 				IF SYSTEM.GET32(currentBd + 4) = 0 THEN
 					SYSTEM.GET(iobase + Nwctrl, reg);
-					reg := reg * (-NwctrlRxEn);
+					reg := reg * SET(-NwctrlRxEn);
 					SYSTEM.PUT(iobase + Nwctrl, reg);
 
 					SYSTEM.GET(iobase + Nwctrl, reg);
@@ -990,7 +990,7 @@ TYPE
 			(* Disable transmitter *)
 			IF TransmitterEnable IN opts  THEN
 				SYSTEM.GET(iobase + Nwctrl, reg);
-				reg := reg * (-NwctrlTxEn);
+				reg := reg * SET(-NwctrlTxEn);
 				SYSTEM.PUT(iobase + Nwctrl, reg);
 				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
 			END;
@@ -998,7 +998,7 @@ TYPE
 			(* Disable receiver *)
 			IF ReceiverEnable IN opts  THEN
 				SYSTEM.GET(iobase + Nwctrl, reg);
-				reg := reg * (-NwctrlRxEn);
+				reg := reg * SET(-NwctrlRxEn);
 				SYSTEM.PUT(iobase + Nwctrl, reg);
 				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
 			END;
@@ -1023,7 +1023,7 @@ TYPE
 			ASSERT(divisor < 8);
 
 			SYSTEM.GET(iobase + Nwcfg, reg);
-			reg := reg * (-NwcfgMdcClkDiv);
+			reg := reg * SET(-NwcfgMdcClkDiv);
 			reg := reg + SYSTEM.VAL(SET, LSH(divisor, NwcfgMdcShift));
 			SYSTEM.PUT(iobase + Nwcfg, reg);
 		END SetMdioDivisor;
@@ -1066,7 +1066,7 @@ TYPE
 
 			(* There are reserved bits in TOP so don't affect them *)
 			SYSTEM.GET(iobase + Laddr1h + (index * 8), reg);
-			reg := reg * (-LaddrMach) + SYSTEM.VAL(SET, ORD(mac[4]) + LSH(ORD(mac[5]), 8));
+			reg := reg * SET(-LaddrMach) + SYSTEM.VAL(SET, ORD(mac[4]) + LSH(ORD(mac[5]), 8));
 			SYSTEM.PUT(iobase + Laddr1h + index * 8, reg);
 
 			dev.local := mac;
@@ -1259,7 +1259,7 @@ TYPE
 			SYSTEM.GET(iobase + Rxcnt, tmp);
 			IF tmp = 0 THEN
 				SYSTEM.GET(iobase + Nwctrl, reg);
-				reg := reg * (-NwctrlRxEn);
+				reg := reg * SET(-NwctrlRxEn);
 				SYSTEM.PUT(iobase + Nwctrl, reg);
 				SYSTEM.GET(iobase + Nwctrl, reg);
 				reg := reg  + NwctrlRxEn;

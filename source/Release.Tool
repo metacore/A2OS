@@ -30,22 +30,22 @@
 #	Linker.Link -p=Linux32 Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
 # SolarisAOS
-#    Release.Build Solaris32 ~
+#	Release.Build Solaris32 ~
 # X11 Bootconsole:
-#    Linker.Link -p=Solaris32 --path=NewAos/
+#	Linker.Link -p=Solaris32 --path=NewAos/
 #		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
 #		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
-#    UnixBinary.Build oberon.bin -> A2Core ~
+#	UnixBinary.Build oberon.bin -> A2Core ~
 #
 # DarwinAOS
-#    Release.Build Darwin32 ~
+#	Release.Build Darwin32 ~
 # X11 Bootconsole:
-#    Linker.Link -p=Darwin32 --path=NewAos/
+#	Linker.Link -p=Darwin32 --path=NewAos/
 #		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
 #		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
-#    UnixBinary.Build oberon.bin -> A2Core ~
+#	UnixBinary.Build oberon.bin -> A2Core ~
 #
 # WINAOS Cooperative
 #	Release.Build --path="./" WinAosCooperative ~
@@ -102,8 +102,7 @@ HEADER
 END
 
 BUILDS
-	A2
-	{
+	A2 {
 		INCLUDE "NATIVE I386 I386GEN UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--newObjectFile --mergeSections"
@@ -147,16 +146,14 @@ BUILDS
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	Win32
-	{
+	Win32 {
 		INCLUDE "WIN WIN32 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win32"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
-	Win64
-	{
+	Win64 {
 		INCLUDE "WIN WIN64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win64"
@@ -247,8 +244,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	# cooperative runtime system
 	COOP { Counters.Mod }
-	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod}
-	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod}
+	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
+	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod }
 	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
@@ -268,8 +265,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN64 { Win64.Kernel32.Mod }
 
 	I386GEN { I386.Machine.Mod }
-	WIN32 {Win32.Machine.Mod }
-	WIN64 {Win64.Machine.Mod}
+	WIN32 { Win32.Machine.Mod }
+	WIN64 { Win64.Machine.Mod }
 	COOP { Mutexes.Mod }
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
@@ -312,16 +309,16 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	NATIVE { Traps.Mod }
 	ARM { ARM.Traps.Mod }
 	WIN32 { Win32.Traps.Mod }
-	WIN64 {Win64.Traps.Mod}
+	WIN64 { Win64.Traps.Mod }
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
-	WIN {Win32.WinTrace.Mod Win32.StdIO.Mod }
+	WIN { Win32.WinTrace.Mod Win32.StdIO.Mod }
 
 	# Recursive and R/W locks
 	Locks.Mod
 
 	# PCI bus interface
-	I386 {BiosFreePCI.Mod }
+	I386 { BiosFreePCI.Mod }
 
 	# Realtime clock driver
 	NATIVE { Clock.Mod }
@@ -359,10 +356,10 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod
 
 	# binding modules
-	NATIVE,WIN { BootConsole.Mod }
+	NATIVE, WIN { BootConsole.Mod }
 	UNIX { Unix.BootConsole.Mod }
 
-	UNIX,WIN { Shell.Mod StdIOShell.Mod }
+	UNIX, WIN { Shell.Mod StdIOShell.Mod }
 
 	Displays.Mod
 
@@ -673,7 +670,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	I386,WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
+	I386, WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend
@@ -712,7 +709,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# { Profiler.Mod HierarchicalProfiler0.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
 	WIN { Win32.HierarchicalProfiler0.Mod }
-	WIN { HierarchicalProfiler.Mod}
+	WIN { HierarchicalProfiler.Mod }
 
 	FTPClient.Mod
 
@@ -773,13 +770,13 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
-	I386,WIN { Info.Mod }
+	I386, WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod
 	TFLog.Mod WebHTTP.Mod							# extended HTTP Server (tf/be)
 	WebHTTPClient.Mod WebHTTPTools.Mod WebHTTPServer.Mod
 	WebHTTPServerTools.Mod WebSSMPPlugin.Mod
-	NATIVE,WIN { WebDefaultSSMP.Mod }
+	NATIVE, WIN { WebDefaultSSMP.Mod }
 	WebHTTPServerStatistics.Mod
 
 	NATIVE { WebWormWatch.Mod }
@@ -795,7 +792,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	}
 
 	FTPFS.Mod
-	NATIVE,WIN { WebFTPServer.Mod }	# FTP server (be)
+	NATIVE, WIN { WebFTPServer.Mod }	# FTP server (be)
 
 	XModem.Mod
 
@@ -945,7 +942,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMFileManager.Mod WMSearchTool.Mod
 	WMFTPClient.Mod
 
-	NATIVE { WMUsbInfo.Mod WMUsbInfo.tar	}
+	NATIVE { WMUsbInfo.Mod WMUsbInfo.tar }
 
 	# Skin support
 	SkinLanguage.Mod FNHistories.Mod SkinEngine.Mod SkinConfig.XML
@@ -995,7 +992,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WIN { Win32.WMPerfMonPluginCpu.Mod Win32.WMPerfMonPluginMemory.Mod }
 	UNIX { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
 
-	NATIVE,WIN {
+	NATIVE, WIN {
 		WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod
 	}
 	WMPerfMonPluginProcesses.Mod
@@ -1082,7 +1079,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	IMAPGUI.Mod IMAPIcons.tar
 
 	# Some additional plugins for the performance monitor
-	NATIVE,WIN { WMPerfMonPluginFTPServer.Mod }
+	NATIVE, WIN { WMPerfMonPluginFTPServer.Mod }
 	WMPerfMonPluginHTTPServer.Mod
 	WMPerfMonPluginQuoteServer.Mod WMPerfMonPluginVNCServer.Mod
 	WMPerfMonPluginExample.Mod	# perfmon misc plugins
@@ -1244,7 +1241,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 END
 
 PACKAGE Education ARCHIVE "Education.zip" SOURCE "EducationSrc.zip" DESCRIPTION "Examples and Programs For Education Purposes"
-	NATIVE,WIN { SSFS.Mod } # Simple Silly File System
+	NATIVE, WIN { SSFS.Mod } # Simple Silly File System
 	HelloWorld.Mod HelloWorld1.Mod HelloWorld2.Mod HelloWorld3.Mod
 	# examples
 	Example1.Mod Example2.Mod Example3.Mod
@@ -1280,7 +1277,7 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WIN32, UNIX32 {I386.EFIMachine.Mod}
+	I386, WIN32, UNIX32 { I386.EFIMachine.Mod }
 	WIN64, UNIX64 { AMD64.EFIMachine.Mod }
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
@@ -1323,7 +1320,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	# Video for Windows
 	RasterPixelFormats.Mod
-	WIN { Win32.VfW.Mod VideoExample.Mod TestVideo.Mod}
+	WIN { Win32.VfW.Mod VideoExample.Mod TestVideo.Mod }
 
 	WMOverlay.Mod WMOverlay.tar
 
@@ -1345,7 +1342,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
 	MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
 
-	NATIVE,WIN32,UNIX32 {
+	NATIVE, WIN32, UNIX32 {
 
 		# Disable index checking for these modules with \sx for efficiency
 		I386.Array1dBytes.Mod Array1dInt.Mod Array1dRat.Mod Array1dRe.Mod Array1dCplx.Mod I386.ArrayXdBytes.Mod
@@ -1417,7 +1414,7 @@ END
 PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon for A2"
 	# emulation modules
 	NATIVE, UNIX { Oberon.Kernel.Mod }
-	NATIVE,WIN { Oberon.Types.Mod }
+	NATIVE, WIN { Oberon.Types.Mod }
 	WIN { Win32.Oberon.Kernel.Mod }
 	Oberon.Modules.Mod
 	NATIVE, UNIX { Oberon.FileDir.Mod Oberon.Files.Mod }
@@ -1845,11 +1842,11 @@ PACKAGE OberonAnts ARCHIVE "OberonAnts.zip" SOURCE "OberonAntsSrc.zip" DESCRIPTI
 
 	Oberon.antsPortability.Mod	# Portability
 
-	NATIVE,WIN {
+	NATIVE, WIN {
 		Oberon.antsExpressionsObjects.Mod Oberon.antsExpressions.Mod Oberon.antsExpressionsDefaults.Mod	# command prompt interpreter
 		Oberon.antsSecurity.Mod Oberon.antsOrganizers.Mod Oberon.antsMessages.Mod Oberon.antsScriptObjects.Mod
 	}
-	NATIVE,WIN {
+	NATIVE, WIN {
 		Oberon.antsContainers.Mod Oberon.antsTexts.Mod Oberon.antsGlobals.Mod Oberon.antsBasicGadgets.Mod Oberon.antsOnTheFly.Mod
 		Oberon.antsConstRandom.Mod Oberon.antsFiles.Mod Oberon.antsCommands.Mod Oberon.ants.fofAutomatic.Mod Oberon.antsArrays.Mod
 		Oberon.antsReadWrite.Mod Oberon.antsCaches.Mod Oberon.antsPictCoordinate.Mod Oberon.antsBellman.Mod Oberon.antsDirSet.Mod

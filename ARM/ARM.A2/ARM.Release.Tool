@@ -51,7 +51,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 		ZYNQ:/ARM.Machine.Mod
 	}
 	Heaps.Mod
-	NATIVE { Generic.Modules.Mod }
+	NATIVE { Modules.Mod }
 	ARM {
 		ZYNQ:/ARM.Objects.Mod
 		ZYNQ:/ARM.Kernel.Mod
@@ -72,7 +72,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Strings.Mod
 	Files.Mod
 	Disks.Mod
-	Generic.Reflection.Mod
+	Reflection.Mod
 	TrapWriters.Mod
 	ARM { ARM.Traps.Mod }
 	Locks.Mod
@@ -168,7 +168,7 @@ END
 
 PACKAGE BootConsole ARCHIVE "BootConsole.zip" SOURCE "BootConsoleSrc.zip" DESCRIPTION "Boot console that installs base system from boot config"
 	Caches.Mod DiskVolumes.Mod DiskFS.Mod
-	BitSets.Mod StringPool.Mod ObjectFile.Mod Diagnostics.Mod GenericLinker.Mod GenericLoader.Mod
+	BitSets.Mod StringPool.Mod ObjectFile.Mod Diagnostics.Mod GenericLinker.Mod Loader.Mod
 	BootConsole.Mod
 END
 
@@ -351,22 +351,21 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	CompilerInterface.Mod
 
 	Fox.Tool
-	BitSets.Mod ObjectFile.Mod GenericLinker.Mod StaticLinker.Mod
-	FoxBasic.Mod  FoxProgTools.Mod  FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
-	FoxFormats.Mod 	FoxFingerPrinter.Mod FoxPrintout.Mod
-	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
-	FoxBackend.Mod FoxSections.Mod
-	FoxFrontend.Mod
-	FoxCompiler.Mod
-	FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
-  	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod FoxBinarySymbolFile.Mod
+	BitSets.Mod ObjectFile.Mod GenericLinker.Mod Linker.Mod
+	FoxBasic.Mod FoxProgTools.Mod FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
+	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerPrinter.Mod FoxPrintout.Mod
+	FoxParser.Mod FoxCSharpParser.Mod FoxSemanticChecker.Mod
+	FoxBackend.Mod FoxSections.Mod FoxFrontend.Mod
+	FoxCompiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
-	FoxBinaryObjectFile.Mod FoxGenericObjectFile.Mod
+	FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
 	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
 	FoxARMInstructionSet.Mod FoxARMAssembler.Mod FoxARMBackend.Mod	FoxMinosObjectFile.Mod
 	FoxIntermediateParser.Mod FoxIntermediateObjectFile.Mod FoxIntermediateLinker.Mod
 	FoxTRMInstructionSet.Mod FoxTRMAssembler.Mod FoxTRMBackend.Mod
+
 	FoxInterpreterBackend.Mod FoxTranspilerBackend.Mod
 	FoxDocumentationScanner.Mod FoxDocumentationTree.Mod FoxDocumentationPrinter.Mod FoxDocumentationHtml.Mod
 	FoxDocumentationParser.Mod FoxDocumentationBackend.Mod

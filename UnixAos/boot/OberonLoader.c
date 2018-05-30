@@ -32,8 +32,9 @@
 typedef void (*OberonProc)();
 typedef void *addr;
 typedef unsigned int uint;
+typedef unsigned long ulong;
 
-typedef struct {  /* cf. Generic.Unix.*.Glue.Mod */
+typedef struct {  /* cf. Unix.*.Glue.Mod */
     /* Oberon --> loader: */
     char id[24];		/* must match coreID */
     int  codesize;	
@@ -50,14 +51,14 @@ typedef struct {  /* cf. Generic.Unix.*.Glue.Mod */
 } *Header;
 
 #if defined(__LP64__) || defined(_LP64)
-   char *coreID = "Oberon64G.binary";	/* cf. Generic.Unix.AMD64.Glue.Mod */
+   char *coreID = "Oberon64G.binary";	/* cf. Unix.AMD64.Glue.Mod */
 #else
-   char *coreID = "Oberon32G.binary";	/* cf. Generic.Unix.I386.Glue.Mod */
+   char *coreID = "Oberon32G.binary";	/* cf. Unix.I386.Glue.Mod */
 #endif
 
-addr buf;
+addr heap;
+uint heapsize;
 int fd;
-uint bufsize;
 
 void cout( char c ) {
    char buf[8];
@@ -80,12 +81,8 @@ void Relocate( uint relocations ) {
    uint i;
 
    for (i=0; i<relocations; i++) {
-      a = buf + ReadInteger();
-#if defined(__LP64__) || defined(_LP64)
-      *a = buf+(ulong)(*a);
-#else
-      *a = buf+(uint)(*a);
-#endif
+      a = heap + ReadInteger();
+      *a += (ulong)heap;
    }
 }
 
@@ -118,8 +115,7 @@ int main( int argc, char *argv[], char *env[] ) {
    size_t fsize;
    struct stat sb;
    Header header;
-   char *path;
-   addr a;
+   char *path, *buf;
 
    fd = open( *argv, O_RDONLY );
    if (fd < 0) {
@@ -142,20 +138,20 @@ int main( int argc, char *argv[], char *env[] ) {
    }
    binsize = header->codesize;
    relocations = header->relocations;
-
-   bufsize = BlkSize;
-   while (bufsize < binsize) bufsize += BlkSize;
-   r = lseek( fd, Offset, SEEK_SET );
-
    free( buf );
-   r = posix_memalign( &buf, BlkSize, bufsize );
-   if (mprotect( buf, bufsize, PROT_READ|PROT_WRITE|PROT_EXEC) != 0)
+
+   heapsize = BlkSize;
+   while (heapsize < binsize) heapsize += BlkSize;
+
+   r = lseek( fd, Offset, SEEK_SET );
+   r = posix_memalign( &heap, BlkSize, heapsize );
+   if (mprotect( heap, heapsize, PROT_READ|PROT_WRITE|PROT_EXEC) != 0)
       perror("mprotect");
-   n = read( fd, buf, binsize );
+   n = read( fd, heap, binsize );
 
    Relocate( relocations );
 
-   header = (Header)buf;
+   header = (Header)heap;
    *(header->dlopenaddr) = dlopen;
    *(header->dlcloseaddr) = dlclose;
    *(header->dlsymaddr) = dlsym;

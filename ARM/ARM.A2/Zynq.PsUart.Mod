@@ -251,7 +251,8 @@ VAR
 		uart.regs.ier := (RxDataInterrupts+RxErrorInterrupts+TxErrorInterrupts);
 
 		UartMin.Enable(uart.regs,TRUE);
-
+		
+		res := 0;
 		uart.open := TRUE;
 	END Open;
 
@@ -433,7 +434,7 @@ VAR
 	BEGIN
 		IF ~uart.open THEN res := UartMin.Closed; RETURN; END;
 
-		res := UartMin.Ok;
+		res := 0;
 		len := 0;
 
 		IF size = 0 THEN RETURN; END;

@@ -289,10 +289,12 @@ VAR
 	PROCEDURE Install*(context: Commands.Context);
 	VAR options: Options.Options;
 	BEGIN
-		NEW(options);
-		options.Add("r", "reverse", Options.Flag);
-		IF options.Parse(context.arg, context.error) THEN
-			IF options.GetFlag("r") THEN Displays.Reverse() END;
+		IF context # NIL THEN
+			NEW(options);
+			options.Add("r", "reverse", Options.Flag);
+			IF options.Parse(context.arg, context.error) THEN
+				IF options.GetFlag("r") THEN Displays.Reverse() END;
+			END;
 		END;
 	END Install;
 

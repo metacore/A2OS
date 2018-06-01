@@ -1,5 +1,5 @@
 MODULE Reflection; 
-(** (c) Felix Friedrich, ETH Zurich, 2016 -- Reflection with more structured references section emitted by FoxCompiler *)
+(** (c) Felix Friedrich, ETH Zurich, 2016 -- Reflection with more structured references section emitted by Fox Compiler *)
 
 IMPORT Modules, Streams, SYSTEM, Machine, Heaps, Objects, Trace, Kernel;
 

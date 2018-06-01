@@ -19,7 +19,7 @@ Compiler.Compile --noInterfaceCheck
 	FoxParser.Mod FoxCSharpParser.Mod  FoxSemanticChecker.Mod
 	FoxBackend.Mod FoxSections.Mod 
 	FoxFrontend.Mod 
-	FoxCompiler.Mod 
+	Compiler.Mod 
 	FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
   	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
@@ -38,7 +38,7 @@ Compiler.Compile --noInterfaceCheck
 	ActiveCellsRunner.mod 
 
 	FoxProfiler.Mod
-	FoxTextCompiler.Mod FoxA2Interface.Mod Versioning.Mod TestSuite.Mod FoxTest.Mod
+	TextCompiler.Mod FoxA2Interface.Mod Versioning.Mod TestSuite.Mod FoxTest.Mod
 	
 	PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
 	InterpreterShell.Mod WMInterpreterShell.Mod 
@@ -65,7 +65,7 @@ compiler options:
 	-d	--documentation	string	install documentation engine
 	-S	--sourcePath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
-	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in FoxCompiler.Mod
+	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod
 
 backend options (intermediate and AMD)
 		--trace			string	display trace information for sections (--trace=* : all sections)

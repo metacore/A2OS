@@ -544,7 +544,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerPrinter.Mod FoxPrintout.Mod
 	FoxParser.Mod FoxCSharpParser.Mod FoxSemanticChecker.Mod
 	FoxBackend.Mod FoxSections.Mod FoxFrontend.Mod
-	FoxCompiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
+	Compiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
 	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
 	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 	FoxGenericObjectFile.Mod
@@ -664,7 +664,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	KernelLogger.Mod
 
 	# Compiler interfaces
-	CompilerInterface.Mod FoxTextCompiler.Mod
+	CompilerInterface.Mod TextCompiler.Mod
 
 	# PC - Parallel Compiler (self-compile only)
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk

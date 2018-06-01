@@ -984,7 +984,7 @@ Sufficient (but not necessary) conditions:
 (** apply binary operator : array x array -> array *)
 
 
-	PROCEDURE ApplyBinaryAAAOp( VAR dest: UnsafeArrayT; CONST left, right: UnsafeArray; elementSize: SIZE;
+	PROCEDURE ApplyBinaryAAAOp( VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE;
 														    Loop: BinaryAAALoop );
 	VAR loopd, looplen, loopli, loopri, loopdi: SIZE;  p: ANY;  glen: SIZE;
 		origdest: SIZE;  modes: SET;  dim: SIZE;
@@ -2022,11 +2022,7 @@ Sufficient (but not necessary) conditions:
 	
 	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF LONGINT ): ARRAY {UNSAFE} [ ? ] OF SIZE;
 	BEGIN
-		IF SIZEOF(SIZE) = SIZEOF(LONGINT) THEN
-			RETURN src;
-		ELSE
-			ApplyUnaryAAOp(RESULT, src,SIZEOF( SIZE ), ConvertLoopLY );
-		END;
+		ApplyUnaryAAOp(RESULT, src,SIZEOF( SIZE ), ConvertLoopLY );
 		RETURN RESULT
 	END "@Convert";
 

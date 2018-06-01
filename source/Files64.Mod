@@ -87,7 +87,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: TSize; VAR len: TSize; VAR res: LONGINT);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -125,7 +125,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: TSize; propagate: BOOLEAN; VAR res: LONGINT);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -279,7 +279,7 @@ TYPE
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: TSize);
 		BEGIN HALT(301) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
@@ -289,7 +289,7 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: TSize);
 		BEGIN HALT(301) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
@@ -811,7 +811,7 @@ VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : LONGINT;
+	len : TSize;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)

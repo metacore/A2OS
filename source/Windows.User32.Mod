@@ -1,6 +1,6 @@
 (* Copyright (c) 1994 - 2000 Emil J. Zeller *)
 
-MODULE User32; (** non-portable / source: Win32.User32.Mod *)	(* ejz  *)
+MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 	IMPORT SYSTEM, Kernel32;
 
 	(** This module defines all the Win32 User32 APIs used by Oberon. *)

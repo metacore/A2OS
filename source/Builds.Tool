@@ -27,14 +27,14 @@ WIN32 -- 32-bit windows a2
 FSTools.CloseFiles oberon.exe ~
 
 Compiler.Compile -p=Win32
-Runtime.Mod Trace.Mod Win32.I386.Kernel32.Mod Win32.I386.Machine.Mod Heaps.Mod
-Modules.Mod Win32.I386.Objects.Mod Win32.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod
+Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod
+Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod
 Commands.Mod In.Mod Out.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod
-SystemVersion.Mod Win32.I386.Traps.Mod Win32.WinTrace.Mod Win32.StdIO.Mod Locks.Mod Win32.Clock.Mod
+SystemVersion.Mod Windows.I386.Traps.Mod Windows.WinTrace.Mod Windows.StdIO.Mod Locks.Mod Windows.Clock.Mod
 Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod
 DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod
-FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod ISO9660Files.Mod Win32.User32.Mod Win32.WinTrace.Mod
-Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod Win32.WinFS.Mod RelativeFileSystem.Mod BitSets.Mod
+FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod ISO9660Files.Mod Windows.User32.Mod Windows.WinTrace.Mod
+Windows.ODBC.Mod Windows.Shell32.Mod Windows.SQL.Mod Windows.WinFS.Mod RelativeFileSystem.Mod BitSets.Mod
 Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod BootConsole.Mod
 Shell.Mod StdIOShell.Mod ~
 

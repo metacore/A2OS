@@ -245,14 +245,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
-	WINCOOP { Coop.Win32.I386.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod }
+	WINCOOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
 	NATIVECOOP { HeapManager.Mod BIOS.Environment.Mod }
 	RPICOOP { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQCOOP { HeapManager.Mod Zynq.Environment.Mod }
-	WINCOOP { Win32.Environment.Mod }
+	WINCOOP { Windows.Environment.Mod }
 
 	LINUX32 { Linux.I386.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX64 { Linux.AMD64.Glue.Mod Linux.AMD64.Unix.Mod }
@@ -261,12 +261,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	SOLARIS32 { Unix.I386.Glue.Mod Solaris.I386.Unix.Mod }
 	SOLARIS64 { Unix.AMD64.Glue.Mod Solaris.AMD64.Unix.Mod }
 
-	WIN32 { Win32.I386.Kernel32.Mod }
-	WIN64 { Win32.AMD64.Kernel32.Mod }
+	WIN32 { Windows.I386.Kernel32.Mod }
+	WIN64 { Windows.AMD64.Kernel32.Mod }
 
 	I386GEN { I386.Machine.Mod }
-	WIN32 { Win32.I386.Machine.Mod }
-	WIN64 { Win32.AMD64.Machine.Mod }
+	WIN32 { Windows.I386.Machine.Mod }
+	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod }
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
@@ -281,9 +281,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Coop.Modules.Mod GarbageCollector.Mod }
 
 	NATIVE { Objects.Mod Kernel.Mod }
-	WIN32 { Win32.I386.Objects.Mod }
-	WIN64 { Win32.AMD64.Objects.Mod }
-	WIN { Win32.Kernel.Mod }
+	WIN32 { Windows.I386.Objects.Mod }
+	WIN64 { Windows.AMD64.Objects.Mod }
+	WIN { Windows.Kernel.Mod }
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
 END
@@ -308,11 +308,11 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	NATIVE { Traps.Mod }
 	ARM { ARM.Traps.Mod }
-	WIN32 { Win32.I386.Traps.Mod }
-	WIN64 { Win32.AMD64.Traps.Mod }
+	WIN32 { Windows.I386.Traps.Mod }
+	WIN64 { Windows.AMD64.Traps.Mod }
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
-	WIN { Win32.WinTrace.Mod Win32.StdIO.Mod }
+	WIN { Windows.WinTrace.Mod Windows.StdIO.Mod }
 
 	# Recursive and R/W locks
 	Locks.Mod
@@ -322,7 +322,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# Realtime clock driver
 	NATIVE { Clock.Mod }
-	WIN { Win32.Clock.Mod }
+	WIN { Windows.Clock.Mod }
 	UNIX { Unix.Clock.Mod }
 
 	# Memory cache control
@@ -347,8 +347,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	UNIX { Unix.UnixFiles.Mod }
 
 	WIN {
-		Win32.User32.Mod Win32.WinTrace.Mod Win32.ODBC.Mod Win32.Shell32.Mod Win32.SQL.Mod
-		Win32.WinFS.Mod
+		Windows.User32.Mod Windows.WinTrace.Mod Windows.ODBC.Mod Windows.Shell32.Mod Windows.SQL.Mod
+		Windows.WinFS.Mod
 	}
 
 	RelativeFileSystem.Mod	# file system relative to path
@@ -386,19 +386,19 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	ActiveTimers.Mod
 
-	WIN { Win32.GDI32.Mod }
-	WIN { Win32.Display.Mod }
-	WINCOOP { Coop.Win32.Display.Mod }
+	WIN { Windows.GDI32.Mod }
+	WIN { Windows.Display.Mod }
+	WINCOOP { Coop.Windows.Display.Mod }
 
-	WIN { Win32.WSock32.Mod }
-	WIN32 { Win32.I386.Network.Mod Win32.I386.IP.Mod }
-	WIN64 { Win32.AMD64.Network.Mod Win32.AMD64.IP.Mod }
+	WIN { Windows.WSock32.Mod }
+	WIN32 { Windows.I386.Network.Mod Windows.I386.IP.Mod }
+	WIN64 { Windows.AMD64.Network.Mod Windows.AMD64.IP.Mod }
 
 	WIN {
-		Win32.DNS.Mod
-		Win32.UDP.Mod
-		Win32.TCP.Mod
-		Win32.CommandLine.Mod	# Command Line Parsing for Windows A2
+		Windows.DNS.Mod
+		Windows.UDP.Mod
+		Windows.TCP.Mod
+		Windows.CommandLine.Mod	# Command Line Parsing for Windows A2
 	}
 
 	I386 { I386.IP.Mod I386.IPv4.Mod }
@@ -443,17 +443,17 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	# Serial port drivers (implement Serials interface)
 	NATIVE { V24.Mod }
-	WIN { Win32.V24.Mod }
+	WIN { Windows.V24.Mod }
 	UNIX { Unix.V24.Mod }
 
 	# PC speaker driver
 	NATIVE { Beep.Mod }
-	WIN { Win32.Beep.Mod }
+	WIN { Windows.Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
 	UNIX { Unix.OpenAL.Mod OpenALSound.Mod }
 
-	WIN { Win32.WinDisks.Mod } # direct windows disk access, implements Disks interface
+	WIN { Windows.WinDisks.Mod } # direct windows disk access, implements Disks interface
 
 	NATIVE { SCSI.Mod }
 
@@ -588,7 +588,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	SystemTools.Mod
 	Reboot.Mod # Tool to reboot machine after delay (and write system reboot time to file)
 
-	WIN { Win32.WinApplications.Mod }
+	WIN { Windows.WinApplications.Mod }
 
 	NATIVE {
 		DriverDatabase.Mod DriverDatabase.XML
@@ -685,7 +685,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Interface to host system clipboard
 	HostClipboard.Mod
-	WIN { Win32.Clipboard.Mod }
+	WIN { Windows.Clipboard.Mod }
 
 	Tar.Mod
 
@@ -712,7 +712,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PartitionEditorTable.Mod
 
 	# { Profiler.Mod HierarchicalProfiler0.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
-	WIN { Win32.HierarchicalProfiler0.Mod }
+	WIN { Windows.HierarchicalProfiler0.Mod }
 	WIN { HierarchicalProfiler.Mod }
 
 	FTPClient.Mod
@@ -762,7 +762,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPTools.Mod						# Some useful TCP-related commands
 
 	# { Performance.Mod }
-	WIN, UNIX, NATIVECOOP { Win32.Performance.Mod } # This is just a dummy
+	WIN, UNIX, NATIVECOOP { Windows.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod
 
@@ -959,7 +959,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMProcessInfo.Mod
 	WMObjectTracker.Mod
 	NATIVE { WMTCPTracker.Mod }
-	WIN { Win32.WMTCPTracker.Mod }
+	WIN { Windows.WMTCPTracker.Mod }
 
 	WMKernelLog.Mod # GUI for KernelLogger.Mod
 	WMEventLog.Mod	# GUI for Events.Mod
@@ -993,7 +993,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 		WMPerfMonPluginInterrupts.Mod
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
-	WIN { Win32.WMPerfMonPluginCpu.Mod Win32.WMPerfMonPluginMemory.Mod }
+	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
 	UNIX { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
 
 	NATIVE, WIN {
@@ -1270,7 +1270,7 @@ END
 
 PACKAGE Build ARCHIVE "Build.zip" SOURCE "BuildSrc.zip" DESCRIPTION "Build Tools"
 	Build.Tool Build.VMWare.Tool
-	WIN { Win32.Build.Tool Win32.BuildMini.Tool }
+	WIN { Windows.Build.Tool Windows.BuildMini.Tool }
 	AosInst.Tool Aos.Par			# Install tool
 	IsoImages.Mod
 	ReleaseThreadPool.Mod Release.Mod Release.Tool	# Build release tool
@@ -1324,7 +1324,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	# Video for Windows
 	RasterPixelFormats.Mod
-	WIN { Win32.VfW.Mod VideoExample.Mod TestVideo.Mod }
+	WIN { Windows.VfW.Mod VideoExample.Mod TestVideo.Mod }
 
 	WMOverlay.Mod WMOverlay.tar
 
@@ -1400,7 +1400,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	SVNOutput.Mod
 	SVNUtil.Mod
 	NATIVE { SVNAdmin.Mod }
-	WIN { Win32.SVNAdmin.Mod }
+	WIN { Windows.SVNAdmin.Mod }
 	NATIVE, WIN {
 		OdSvn.Mod
 		SVNWebDAV.Mod
@@ -1419,10 +1419,10 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	# emulation modules
 	NATIVE, UNIX { Oberon.Kernel.Mod }
 	NATIVE, WIN { Oberon.Types.Mod }
-	WIN { Win32.Oberon.Kernel.Mod }
+	WIN { Windows.Oberon.Kernel.Mod }
 	Oberon.Modules.Mod
 	NATIVE, UNIX { Oberon.FileDir.Mod Oberon.Files.Mod }
-	WIN { Win32.Oberon.FileDir.Mod Win32.Oberon.Files.Mod }
+	WIN { Windows.Oberon.FileDir.Mod Windows.Oberon.Files.Mod }
 
 	Oberon.Disks.Mod
 
@@ -1437,7 +1437,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	Oberon.Texts.Mod
 
-	WIN { Win32.OberonConfiguration.Mod }
+	WIN { Windows.OberonConfiguration.Mod }
 
 	Oberon.Oberon.Mod
 
@@ -1459,7 +1459,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Oberon.V24.Mod
 	NATIVE { Oberon.Printer.Mod }
 	UNIX { Unix.Oberon.Printer.Mod }
-	WIN { Win32.Oberon.Printer.Mod Win32.ADVAPI32.Mod }
+	WIN { Windows.Oberon.Printer.Mod Windows.ADVAPI32.Mod }
 
 	Compiler.Tool Oberon.OPM.Mod Oberon.OPS.Mod Oberon.OPT.Mod Oberon.OPB.Mod Oberon.OPA.Mod Oberon.OPP.Mod	# Compiler (prk)
 	Oberon.OPO.Mod Oberon.OPL.Mod Oberon.OPC.Mod Oberon.OPV.Mod Oberon.Compiler.Mod Oberon.OPAData.Mod OPA.Data
@@ -1482,7 +1482,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Oberon.Hello.Mod	# Demo program (UserGuide.Text)
 
 	NATIVE, UNIX { Oberon.PSPrinter.Mod PSHeader.Text Oberon.HPLaserPrinter.Mod Oberon.HPPCL.Mod }	# Printer drivers
-	WIN { Win32.Oberon.PSPrinter.Mod }
+	WIN { Windows.Oberon.PSPrinter.Mod }
 	UNIX { Unix.Oberon.UnixPrinter.Mod }
 
 	Default.Pal Light.Pal Dark.Pal White.Pal Black.Pal	# Palettes
@@ -1492,7 +1492,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	# Configuration
 	Configuration.Tool
-	WIN32 { Win32.Oberon.Registry.Mod }
+	WIN32 { Windows.Oberon.Registry.Mod }
 	NATIVE, WIN { Oberon.Configuration.Mod }
 
 # Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
@@ -1502,7 +1502,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Release.NetSystem.Tool
 
 	NATIVE { Oberon.NetSystem.Mod }
-	WIN { Win32.Oberon.NetSystem.Mod }
+	WIN { Windows.Oberon.NetSystem.Mod }
 	UNIX { Unix.Oberon.NetSystem.Mod }
 
 	Oberon.HelloServer.Mod
@@ -1552,7 +1552,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	Oberon.Gadgets.Mod
 
-	WIN { Win32.Oberon.PrinterInfo.Mod }
+	WIN { Windows.Oberon.PrinterInfo.Mod }
 
 	Oberon.BasicGadgets.Mod Oberon.TextFields.Mod Oberon.ListRiders.Mod Oberon.ListModels.Mod Oberon.ListDags.Mod	# Gadget catalog in Gadgets.Panel
 	Oberon.ListGadgets.Mod
@@ -1568,7 +1568,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 	Oberon.Scrollbars.Mod
 
 	NATIVE, UNIX { Oberon.Directories.Mod }
-	WIN { Win32.Oberon.Directories.Mod }
+	WIN { Windows.Oberon.Directories.Mod }
 
 	Oberon.Clocks.Mod Oberon.Organizers.Mod
 	Oberon.Complex.Mod Oberon.SetGadgets.Mod Oberon.TimeStamps.Mod Oberon.Gages.Mod Oberon.AudioGadgets.Mod
@@ -1608,7 +1608,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	PC.Tool Oberon.ErrorGadgets.Mod Oberon.PC.Mod	# Oberon Interface for PACO
 
-	WIN { Win32.Oberon.Clipboard.Mod Win32.Oberon.FontRes.Mod FontRes.Tool }
+	WIN { Windows.Oberon.Clipboard.Mod Windows.Oberon.FontRes.Mod FontRes.Tool }
 	UNIX { Unix.Oberon.Clipboard.Mod }
 	WIN, UNIX { Clipboard.Tool }
 
@@ -1662,7 +1662,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	Oberon.Packages.Mod Oberon.PlugIns.Mod Oberon.HTMLPlugIns.Mod	# Packages
 
-	WIN { Win32.Oberon.PlugInDocs.Mod }
+	WIN { Windows.Oberon.PlugInDocs.Mod }
 
 	NATIVE {
 	Oberon.Profiler.Mod	# alternative profiler (prk)

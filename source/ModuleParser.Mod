@@ -1460,7 +1460,7 @@ VAR
 		IF ~FileExists(filename) THEN
 			filename := GenerateFilename("I386.", context, moduleName, ".Mod");
 			IF ~FileExists(filename) THEN
-				filename := GenerateFilename("Win32.", context, moduleName, ".Mod");
+				filename := GenerateFilename("Windows.", context, moduleName, ".Mod");
 				IF ~FileExists(filename) THEN
 					filename := GenerateFilename("Unix.", context, moduleName, ".Mod");
 					IF ~FileExists(filename) THEN

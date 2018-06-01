@@ -1,5 +1,5 @@
 # 1)
-Compiler.Compile  Streams64.Mod Files64.Mod Win32.HostFiles64.Mod RelativeFiles64.Mod FSTools64.Mod ~
+Compiler.Compile  Streams64.Mod Files64.Mod Windows.HostFiles64.Mod RelativeFiles64.Mod FSTools64.Mod ~
 
 # 2)
 # WINAOS generic

@@ -1,6 +1,6 @@
 (* Copyright (c) 2004 - 2005 DP Sisteme  2000 srl*)
 
-MODULE Shell32; (** non-portable / source: Win32.Shell32.Mod *)
+MODULE Shell32; (** non-portable / source: Windows.Shell32.Mod *)
 	IMPORT SYSTEM, Kernel32, Modules;
 	CONST
 	(*

@@ -1,6 +1,6 @@
 (* Copyright (c) 1994 - 2000 Emil J. Zeller *)
 
-MODULE Clipboard IN Oberon; (** non-portable / source: Win32.Clipboard.Mod *)	(* ejz  *)
+MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	(* ejz  *)
 	IMPORT SYSTEM, Kernel32 IN A2, User32 IN A2, Files, (*Displays,*)  Display, Strings, Fonts, Texts, Oberon, Gadgets,
 		Desktops;
 

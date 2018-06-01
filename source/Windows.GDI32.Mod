@@ -1,6 +1,6 @@
 (* Copyright (c) 1994 - 2000 Emil J. Zeller *)
 
-MODULE GDI32;  (** non-portable / source: Win32.GDI32.Mod *)	(* ejz *)
+MODULE GDI32;  (** non-portable / source: Windows.GDI32.Mod *)	(* ejz *)
 IMPORT SYSTEM, Kernel32, User32;
 
 	(** This module defines all the Win32 GDI32 APIs used by Oberon. *)

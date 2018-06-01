@@ -1,6 +1,6 @@
-MODULE Display;   (** fof , source Win32.Windows.Mod+Win32.Displays.Mod+Win32.Display.Mod+Win32.Viewers.Mod **)
+MODULE Display;   (** fof , source Win32.Windows.Mod+Win32.Displays.Mod+Windows.Display.Mod+Win32.Viewers.Mod **)
 
-IMPORT SYSTEM, Environment, Activities, Counters, Kernel32, User32, Modules, KernelLog, GDI32, Displays, Strings,
+IMPORT SYSTEM, Kernel32, User32, Modules, KernelLog, GDI32, Displays, Strings,
 	AosInputs := Inputs, Commands, Objects,WinFS, Options;
 
 CONST
@@ -58,7 +58,7 @@ CONST
 
 	Sizemaximized = 2;  Sizeminimized = 1;  Sizerestored = 0;
 
-	WindowTitle = "WinAOS (Cooperative)";
+	WindowTitle = "WinAOS";
 
 	WM_DEVICECHANGE = 0219H;
 
@@ -128,8 +128,6 @@ TYPE
 		dx, dy: LONGINT;
 		hBrush: GDI32.HBrush;
 		frame: BOOLEAN;
-
-		processor: Activities.Activity;
 	END;
 
 	DisplayProc* = PROCEDURE ( disp: Window );
@@ -139,7 +137,7 @@ TYPE
 		win: Window;
 		finished: BOOLEAN;
 		className: ARRAY 32 OF CHAR;
-		style: SET;
+		style: WORDSET;
 		x, y, w, h: LONGINT;
 		hMenu: User32.HMenu
 	END;
@@ -147,9 +145,52 @@ TYPE
 	(** handler called for registered window messages *)
 	WindowHandlerProc* = PROCEDURE {WINAPI} ( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;
 																					  lParam: User32.LParam ): User32.LResult;
+
+	WinMain = OBJECT
+	VAR create: CreateStruct; process: Objects.Process;
+
+		PROCEDURE & Init*( c: CreateStruct );
+		BEGIN
+			create := c;
+		END Init;
+
+		PROCEDURE MsgLoop;
+		VAR msg: User32.Msg;  i: LONGINT; mode: LONGINT;
+		BEGIN
+			LOOP
+				mode := process.mode;
+				SYSTEM.PUT32(ADDRESS OF process.mode, Objects.AwaitingEvent); (* for the profiler *)
+				i := User32.GetMessage( msg, 0, 0, 0 );
+				SYSTEM.PUT32(ADDRESS OF process.mode, mode); (* for the profiler *)
+				IF i = 0 THEN EXIT
+				ELSIF i # -1 THEN
+					IF ( msg.message = User32.WMKeyDown ) THEN
+						(* Translate virtual key code  to character. This generates a WMChar message if translation succeeds. Since
+						AOS doesn't allow ALT-Printable-Keys combinations, we don't translate User32.WMSysKeyDown messages
+						that would generate WMSysChar messages *)
+						i := User32.TranslateMessage( msg );
+					END;
+					i := User32.DispatchMessage( msg )
+				END;
+				mode := process.mode;
+				SYSTEM.PUT32(ADDRESS OF process.mode, Objects.AwaitingEvent); (* for the profiler *)
+				Kernel32.Sleep( 10 );   (*ALEX 2005.11.30 this is essential*)
+				SYSTEM.PUT32(ADDRESS OF process.mode, mode); (* for the profiler *)
+			END
+		END MsgLoop;
+
+	BEGIN {ACTIVE}
+		process := Objects.CurrentProcess();
+		KernelLog.String( "Display: Initialize message dispatcher..." );  KernelLog.Ln;
+		RegisterClasses();  CreateHWND( create );  create := NIL;
+		KernelLog.String( "Display: Start message dispatching" ); KernelLog.Ln;
+		MsgLoop();   (* EXIT *)  (*ALEX 2005.11.29 commented the LOOP*)
+		UnregisterClasses();
+	END WinMain;
+
 	Display = OBJECT (Displays.Display) (* only one instance of this object allowed ! *)
 
-		PROCEDURE Transfer( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
+		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
 		BEGIN
 
 			IF letWindowsHandleTheBuffer THEN
@@ -362,8 +403,7 @@ VAR
 	PROCEDURE {WINAPI} DummyProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															  lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  create: CreateStruct;  ret: Kernel32.BOOL;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		Environment.RestoreActivity;
+	BEGIN
 		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
 
 		IF win # NIL THEN RETURN DummyHandler( win, uMsg, wParam, lParam )
@@ -372,7 +412,7 @@ VAR
 			lParam := SYSTEM.VAL( User32.LParam, create.win );
 			ret := User32.PostMessage( hwnd, WMSetup, wParam, lParam )
 		ELSIF uMsg = WMSetup THEN
-			win := SYSTEM.VAL( Window, lParam );  ret := User32.SetWindowLong( hwnd, GWLWindow, lParam );
+			win := SYSTEM.VAL( Window, lParam );  ret := User32.SetWindowLong( hwnd, GWLWindow, LONGINT(lParam) );
 			create := SYSTEM.VAL( CreateStruct, wParam );
 			IF ~(dummy IN win.state) THEN SetupWin( win ) ELSE Add( win, TRUE ) END;
 			IF ~(external IN win.state) THEN INC( nWindows ) END;
@@ -384,7 +424,7 @@ VAR
 	END DummyProc;
 
 	PROCEDURE ChangeCursor;
-	VAR point: User32.Point;  ret: Kernel32.BOOL;
+	VAR point: User32.Point;  ret: Kernel32.HANDLE;
 	BEGIN
 		ret := User32.GetCursorPos( point );  ret := User32.SetCursor( hCurrentCursor );
 		IF hCurrentCursor = Kernel32.NULL THEN
@@ -407,12 +447,12 @@ VAR
 	END Min;
 
 	PROCEDURE HandleMouse( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR m: AosInputs.AbsMouseMsg;  oldx, oldy: LONGINT;  keys: SET; ret: Kernel32.BOOL;
+	VAR m: AosInputs.AbsMouseMsg;  oldx, oldy: LONGINT;  keys: SET; ret: Kernel32.HANDLE;
 	BEGIN
 		(* User32.SetCursor(hCurrentCursor);*)
 		oldx := win.track.X;  oldy := win.track.Y;  
-		win.track.X := SHORT( lParam MOD ASH( 1, 16 ) ) - win.dx;
-		win.track.Y := SHORT( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
+		win.track.X := LONGINT( lParam MOD ASH( 1, 16 ) ) - win.dx;
+		win.track.Y := LONGINT( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
 		m.x := win.track.X;  m.y := win.track.Y;  m.z := win.track.Z;
 
 		m.dx := 0;  m.dy := 0;  m.dz := 0;
@@ -450,7 +490,7 @@ VAR
 		| User32.WMXButtonUp:
 				EXCL( keys, MX )
 		| User32.WMMouseWheel:
-				IF SHORT( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
+				IF LONGINT(wParam) DIV 10000H  > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
 				m.x := oldx;  m.y := oldy;  win.track.X := oldx;  win.track.Y := oldy;
 				(* strange: if wheel used, then coordinates are not realtive to windows -> use coordinates of last event, fof *)
 		ELSE
@@ -482,7 +522,7 @@ VAR
 	PROCEDURE HandleChar( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key: LONGINT;
 	BEGIN
-		GetChar( wParam, lParam, ch, key );
+		GetChar( LONGINT(wParam), LONGINT(lParam), ch, key );
 		GetKeyFlags(msg.flags);
 		msg.ch := ch;  msg.keysym := key;
 		(*
@@ -502,7 +542,7 @@ VAR
 	PROCEDURE HandleKey( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key : LONGINT; rect: User32.Rect;  ret: Kernel32.BOOL;
 	BEGIN
-		DecomposeKeyEvent( wParam, lParam, ch, key, FALSE );
+		DecomposeKeyEvent( LONGINT(wParam), LONGINT(lParam), ch, key, FALSE );
 
 		IF  (key = AosInputs.KsF8) & (maximized IN win.state) & ~fullscreen (*ALEX 2005.11.30*) THEN
 			IF win.frame THEN
@@ -533,7 +573,7 @@ VAR
 		GetKeyFlags(msg.flags);
 		IF (msg.flags * AosInputs.Ctrl # {}) & (msg.flags * AosInputs.Alt = {}) & (VK0 <= wParam) & (wParam <= VK9) THEN
 			(* Same behaviour as AOS *)
-			ch := CHR(wParam); key := wParam;
+			ch := CHR(wParam); key := LONGINT(wParam);
 		END;
 
 		IF (AosInputs.LeftAlt IN msg.flags) & (AosInputs.LeftShift IN msg.flags) THEN
@@ -572,7 +612,7 @@ VAR
 	PROCEDURE HandleKeyUp( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg; key : LONGINT;
 	BEGIN
-		DecomposeKeyEvent( wParam, lParam, ch, key, TRUE );
+		DecomposeKeyEvent( LONGINT(wParam), LONGINT(lParam), ch, key, TRUE );
 		GetKeyFlags(msg.flags);
 
 		IF ~((AosInputs.LeftAlt IN msg.flags) & (AosInputs.LeftShift IN msg.flags)) THEN
@@ -614,7 +654,7 @@ VAR
 	VAR x, y, w, h, dx, dy, bw, bh: LONGINT;  hOldBr: GDI32.HBrush;  ret: Kernel32.BOOL;
 	BEGIN
 		IF ~(minimized IN win.state) THEN
-			IF id = resize THEN win.width := lParam MOD ASH( 1, 16 );  win.height := lParam DIV ASH( 1, 16 );  SetDocRect( win, TRUE ) END;
+			IF id = resize THEN win.width := LONGINT(lParam) MOD ASH( 1, 16 );  win.height := LONGINT(lParam) DIV ASH( 1, 16 );  SetDocRect( win, TRUE ) END;
 			ret := User32.ValidateRect( win.hWnd, NIL );
 			IF win.hDC = 0 THEN GetDC( win );  END;
 
@@ -677,7 +717,7 @@ VAR
 	BEGIN
 		IF traceDisplay THEN
 			ret := GDI32.BitBlt( win.hDC (* = destination *) , x + dx, y + dy, w, h, win.bmphdc (* source *) , x, y, GDI32.NotSrcCopy );
-			Environment.Sleep(50);
+			Kernel32.Sleep(50);
 		END;
 		ret := GDI32.BitBlt( win.hDC (* = destination *) , x + dx, y + dy, w, h, win.bmphdc (* source *) , x, y, GDI32.SrcCopy );
 	END ToWindow;
@@ -720,7 +760,7 @@ VAR
 	PROCEDURE WindowHandler( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;
 													  lParam: User32.LParam ): User32.LResult;
 
-	VAR handled: BOOLEAN; ret: Kernel32.BOOL;
+	VAR handled: BOOLEAN; ret: Kernel32.HANDLE;
 
 		closer: OBJECT (* to call a close request in an A2 thread, otherwise finalization does not work etc. *)
 		BEGIN{ACTIVE}
@@ -785,20 +825,20 @@ VAR
 	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
 	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: LONGINT;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		Environment.RestoreActivity;
+	BEGIN
+
 		IF uMsg = WM_DEVICECHANGE THEN
 			IF wParam = DBT_DEVICEARRIVAL THEN
 				dbh := SYSTEM.VAL(DEV_BROADCAST_HDRP,lParam);
 				IF dbh.dbch_devicetype = DBT_DEVTYP_VOLUME THEN
 					dbv := SYSTEM.VAL(DEV_BROADCAST_VOLUMEP,lParam);
-					WinFS.DeviceNotification(wParam,dbv.dbcv_unitmask);
+					WinFS.DeviceNotification(LONGINT(wParam),dbv.dbcv_unitmask);
 				END;
 			ELSIF wParam = DBT_DEVICEREMOVECOMPLETE THEN
 				dbh := SYSTEM.VAL(DEV_BROADCAST_HDRP,lParam);
 				IF dbh.dbch_devicetype = DBT_DEVTYP_VOLUME THEN
 					dbv := SYSTEM.VAL(DEV_BROADCAST_VOLUMEP,lParam);
-					WinFS.DeviceNotification(wParam,dbv.dbcv_unitmask);
+					WinFS.DeviceNotification(LONGINT(wParam),dbv.dbcv_unitmask);
 				END;
 			END;
 		END;
@@ -918,46 +958,11 @@ VAR
 		RETURN w
 	END FirstWindow;
 
-	PROCEDURE {WINAPI} WindowThread (create {UNTRACED}: ANY): LONGINT;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		Kernel32.InstallExceptionHandler;
-		Activities.CallVirtual (MessageLoop, create, create(CreateStruct).win.processor);
-		RETURN 0;
-	END WindowThread;
-
-	PROCEDURE MessageLoop (c: ADDRESS);
-	VAR activity: Activities.Activity; create: CreateStruct;
-	VAR msg: User32.Msg;  i: LONGINT; mode: LONGINT;
-	BEGIN
-		create := SYSTEM.VAL (CreateStruct, c);
-		KernelLog.String( "Display: Initialize message dispatcher..." );  KernelLog.Ln;
-		RegisterClasses();  CreateHWND( create );  create := NIL;
-		KernelLog.String( "Display: Start message dispatching" ); KernelLog.Ln;
-		REPEAT
-			i := User32.GetMessage( msg, 0, 0, 0 );
-			IF i = 0 THEN
-			ELSIF i # -1 THEN
-				IF ( msg.message = User32.WMKeyDown ) THEN
-					(* Translate virtual key code  to character. This generates a WMChar message if translation succeeds. Since
-					AOS doesn't allow ALT-Printable-Keys combinations, we don't translate User32.WMSysKeyDown messages
-					that would generate WMSysChar messages *)
-					User32.TranslateMessage( msg );
-				END;
-				User32.DispatchMessage( msg )
-			END;
-		UNTIL (i = 0) OR (Environment.status # 0);
-		UnregisterClasses();
-		Counters.Dec (Activities.awaiting);
-	END MessageLoop;
-
 	PROCEDURE CreateWin( create: CreateStruct );
-	VAR  hThread: Kernel32.HANDLE; theWin: Window; ret: Kernel32.BOOL;
+	VAR theWin: Window;  done: BOOLEAN;  winMain: WinMain;  ret: Kernel32.BOOL;
 	BEGIN
 		IF nWindows <= 0 THEN
-			Counters.Inc (Activities.awaiting);
-			create.win.processor := Activities.CreateVirtualProcessor ();
-			Kernel32.CreateThread (NIL, 0, WindowThread, create, {}, NIL);
-			root := create.win;
+			NEW( winMain, create );  root := create.win;
 		ELSE
 			theWin := FirstWindow();
 			ret := User32.PostMessage( theWin.hWnd, WMCreateWindow, 0, SYSTEM.VAL( User32.LParam, create ) )
@@ -970,8 +975,7 @@ VAR
 	PROCEDURE {WINAPI} ControlWindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
 																		    lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  ret: Kernel32.BOOL;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		Environment.RestoreActivity;
+	BEGIN
 		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN
@@ -983,7 +987,7 @@ VAR
 
 	PROCEDURE {WINAPI} UnregisterControlWinClass;
 	VAR ret: Kernel32.BOOL;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	BEGIN
 		IF aControlWinClass # Kernel32.NULL THEN
 			ret := User32.UnregisterClass( controlClassName, Kernel32.hInstance );  aControlWinClass := Kernel32.NULL
 		END

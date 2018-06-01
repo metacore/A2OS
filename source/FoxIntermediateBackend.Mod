@@ -11569,7 +11569,11 @@ TYPE
 				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
 				TypeRecordBaseOffset := TypeTags + 2; (* MPO, typeInfo *)
 				(* change this when Heaps.HeapBlock is modified *)
-				RecordBaseOffset := 8; 		
+				IF implementationVisitor.system.addressType.sizeInBits = 64 THEN
+					RecordBaseOffset := 8; (* addresses *)		
+				ELSE
+					RecordBaseOffset := 9; (* addresses *)
+				END;
 			END;
 			SELF.simple := simple;
 			SELF.implementationVisitor := implementationVisitor;
@@ -12981,7 +12985,7 @@ TYPE
 					offset := ToMemoryUnits(module.system, 18* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				ELSE
 					(* change this when Heaps.HeapBlock is modified *)
-					offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+					offset := ToMemoryUnits(module.system, 23* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				END;
 			END;
 			import :=  module.module.moduleScope.firstImport;

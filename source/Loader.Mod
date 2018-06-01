@@ -555,7 +555,7 @@ VAR
 
 				moduleAdr := linker.moduleBlock.address;
 				IF ~Machine.IsCooperative THEN
-					SYSTEM.GET(moduleAdr+3*SIZEOF(ADDRESS), moduleAdr);
+					SYSTEM.GET(moduleAdr+2*SIZEOF(ADDRESS)+2*SIZEOF(WORD), moduleAdr);
 					SYSTEM.GET(moduleAdr-2*SIZEOF(ADDRESS), heapBlockAdr);
 					ASSERT(heapBlockAdr = linker.moduleBlock.address+2*SIZEOF(ADDRESS));
 				END;

@@ -1692,20 +1692,6 @@ BEGIN
 	RETURN total-free;
 END Used;
 
-PROCEDURE GetPCs*();
-VAR bp,pc: ADDRESS;
-BEGIN
-		bp := CheckBP(Machine.CurrentBP()); 
-		SYSTEM.GET(bp, bp); 
-		bp := CheckBP(bp);
-		SYSTEM.GET(bp+SIZEOF(ADDRESS), pc);
-		TRACE(pc);
-		SYSTEM.GET(bp, bp); 
-		bp := CheckBP(bp);
-		SYSTEM.GET(bp+SIZEOF(ADDRESS), pc);
-		TRACE(pc);
-END GetPCs;
-
 PROCEDURE DecRefCount(VAR count: WORD): BOOLEAN;
 VAR value: WORD;
 BEGIN
@@ -1822,9 +1808,6 @@ BEGIN{UNCHECKED} (* omit any range checks etc.*)
 				END;
 			END;
 			h.refCount := -1;
-		END;
-		IF count > 100 THEN
-		TRACE(count);
 		END;
 		(*
 		ASSERT(CheckPointer(p));
@@ -2092,14 +2075,6 @@ BEGIN
 	currentGeneration := Old;
 	Machine.Release(Machine.Heaps);
 END SetOld;
-
-PROCEDURE Report*;
-BEGIN
-	TRACE(resets, refers, assigns);
-END Report;
-
-
-
 
 PROCEDURE SetHeuristic*;
 BEGIN

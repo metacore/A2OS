@@ -4,10 +4,11 @@ Files.AddSearchPath ../source ~
 Files.SetWorkPath work ~
 Configuration.Init~
 FSTools.Mount WORK RelativeFileSystem . ~
+Debugging.DisableGC~
 Display.Install ~
 WindowManager.Install ~
 Autostart.Run~
 Clipboard.Install~
 Objects.SystemA2IsUp~
-DisplayRefresher.Start~
-
+KbdMouse.DisableMouseEmulation ~
+DisplayRefresher.Install~

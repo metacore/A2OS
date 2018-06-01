@@ -56,6 +56,7 @@ TYPE
 		PROCEDURE ^ RawLReal*(x: LONGREAL); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ RawNum*(x: LONGINT); 
+		PROCEDURE ^ RawSize*(x: SIZE); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ Int*(x: HUGEINT; w: SIZE); 
@@ -113,6 +114,7 @@ TYPE
 		PROCEDURE ^ RawLReal*(VAR x: LONGREAL); 
 		PROCEDURE ^ RawString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ RawNum*(VAR x: LONGINT); 
+		PROCEDURE ^ RawSize*(VAR x: SIZE); 
 		PROCEDURE ^ Int*(VAR x: LONGINT; hex: BOOLEAN); 
 		PROCEDURE ^ Real*(VAR real: LONGREAL); 
 		PROCEDURE ^ EOLN*(): BOOLEAN; 

@@ -25,7 +25,7 @@ VAR
 	PROCEDURE ^ FCR*(): SET; 
 	PROCEDURE ^ SetFCR*(s: SET); 
 	PROCEDURE {FingerPrint(-2082488222)}  - Round*(x: REAL): LONGINT;
-	CODE {SYSTEM.386, SYSTEM.FPU}
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD DWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
@@ -33,7 +33,7 @@ VAR
 
 	END Round; 
 	PROCEDURE {FingerPrint(1322012586)}  - RoundL*(x: LONGREAL): LONGINT;
-	CODE {SYSTEM.386, SYSTEM.FPU}
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD QWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT

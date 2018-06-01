@@ -1,5 +1,5 @@
 MODULE KbdMouse;
-	IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Api := X11Api, Modules, Objects;
+	IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Api := X11Api, Objects;
 CONST 
 	ML = 0; 
 	MM = 1; 
@@ -20,12 +20,14 @@ VAR
 	poll: Poll; 
 	keySymbol: ARRAY 256 OF LONGINT; 
 
+	PROCEDURE ^ TerminateA2; 
 	PROCEDURE ^ CheckAlternateKeys(VAR mb: SET); 
 	PROCEDURE ^ SendMouseMsg(x, y, dz: LONGINT; xbuttons: SET32); 
 	PROCEDURE ^ SendKeyboardMsg(km: Inputs.KeyboardMsg); 
 	PROCEDURE ^ PollXQueue; 
 	PROCEDURE ^ KeyState(): SET; 
 	PROCEDURE ^ Keysym(CONST str: ARRAY OF CHAR): X11.KeySym; 
+	PROCEDURE ^ DisableMouseEmulation*; 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ InitKeysym; 
 	PROCEDURE ^ GetXDisplay; 

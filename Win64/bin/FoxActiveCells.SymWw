@@ -1,5 +1,5 @@
 MODULE FoxActiveCells;
-	IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams, D := Debugging, Diagnostics, Strings, Commands, GenericLinker, StaticLinker, SYSTEM, Modules;
+	IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Global := FoxGlobal, Files, Streams, D := Debugging, Diagnostics, Strings, Commands, GenericLinker, Linker, SYSTEM, Modules;
 CONST 
 	In* = SyntaxTree.InPort; 
 	Out* = SyntaxTree.OutPort; 

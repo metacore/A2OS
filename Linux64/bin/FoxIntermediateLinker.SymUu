@@ -1,5 +1,5 @@
 MODULE FoxIntermediateLinker;
-	IMPORT Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile, GenericLinker, StaticLinker;
+	IMPORT Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, ObjectFile, BinaryCode := FoxBinaryCode, Commands, Options, IRObjectFile := FoxIntermediateObjectFile, GenericLinker, StaticLinker := Linker;
 CONST 
 	DefaultBackend = \"AMD"\; 
 TYPE 

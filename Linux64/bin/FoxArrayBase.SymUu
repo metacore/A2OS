@@ -1,5 +1,5 @@
 MODULE FoxArrayBase;
-	IMPORT SYSTEM, KernelLog, Heaps, Math, MathL, ComplexNumbers;
+	IMPORT SYSTEM, KernelLog, Heaps, MathL, ComplexNumbers;
 CONST 
 	debug = FALSE; 
 	statistics = FALSE; 
@@ -108,6 +108,10 @@ TYPE
 	Tensor = POINTER TO ArrayDescriptor; 
 
 	UnsafeArray* = POINTER {UNSAFE, UNTRACED} TO RECORD (ArrayDescriptor)
+		lens*: ARRAY 8 OF LenInc; 
+	END; 
+
+	UnsafeArrayT* = POINTER {UNSAFE} TO RECORD (ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc; 
 	END; 
 
@@ -228,36 +232,37 @@ VAR
 	PROCEDURE ^ FindPattern3(left, right, dest: ADDRESS; dim: SIZE; VAR d, len, linc, ri, di: SIZE); 
 	PROCEDURE ^ Reverse(src: ADDRESS; dim: SIZE); 
 	PROCEDURE ^ CopyUpCompatible(dest, src: ADDRESS; VAR modes: SET); 
-	PROCEDURE ^ AllocateTemp(VAR dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY; 
-	PROCEDURE ^ ApplyGenericUnaryAAOpS(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE (x: SHORTINT):SHORTINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpI(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE (x: INTEGER):INTEGER); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpL(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE (x: LONGINT):LONGINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpH(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE (x: HUGEINT):HUGEINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpR(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE (x: REAL):REAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpX(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE (x: LONGREAL):LONGREAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpZ(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE (x: COMPLEX):COMPLEX); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(d, l: ADDRESS; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
-	PROCEDURE ^ ApplyUnaryAAOp(d, l: ADDRESS; elementSize: SIZE; Loop: UnaryAALoop); 
-	PROCEDURE ^ ApplyUnaryASOp(dest, l: ADDRESS; Loop: UnaryASLoop); 
-	PROCEDURE ^ ApplyUnarySAOp(d, right: ADDRESS; Loop: UnarySALoop); 
-	PROCEDURE ^ ApplyBinaryAAAOp(d, l, r: ADDRESS; elementSize: SIZE; Loop: BinaryAAALoop); 
-	PROCEDURE ^ ApplyBinaryASAOp(d, l, right: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
-	PROCEDURE ^ ApplyBinaryAASOp(dest, l, r: ADDRESS; Loop: BinaryAASLoop); 
-	PROCEDURE ^ ApplyBinaryAABOp(l, r: ADDRESS; Loop: BinaryAABLoop; geometryMismatchDefault: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ ApplyBinaryASBOp(l, right: ADDRESS; Loop: BinaryASBLoop): BOOLEAN; 
+	PROCEDURE ^ AllocateTemp(dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY; 
+	PROCEDURE ^ ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE (x: SHORTINT):SHORTINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE (x: INTEGER):INTEGER); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE (x: LONGINT):LONGINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE (x: HUGEINT):HUGEINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE (x: REAL):REAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE (x: LONGREAL):LONGREAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE (x: COMPLEX):COMPLEX); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
+	PROCEDURE ^ ApplyUnaryAAOp(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE; Loop: UnaryAALoop); 
+	PROCEDURE ^ ApplyUnaryASOp(dest: ADDRESS; CONST left: UnsafeArray; Loop: UnaryASLoop); 
+	PROCEDURE ^ ApplyUnarySAOp(VAR dest: UnsafeArrayT; right: ADDRESS; Loop: UnarySALoop); 
+	PROCEDURE ^ ApplyBinaryAAAOp(VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE; Loop: BinaryAAALoop); 
+	PROCEDURE ^ ApplyBinaryASAOp(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; right: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
+	PROCEDURE ^ ApplyBinaryAASOp(dest: ADDRESS; CONST left, right: UnsafeArrayT; Loop: BinaryAASLoop); 
+	PROCEDURE ^ ApplyBinaryAABOp(CONST left, right: UnsafeArrayT; Loop: BinaryAABLoop; geometryMismatchDefault: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ ApplyBinaryASBOp(CONST left: UnsafeArrayT; right: ADDRESS; Loop: BinaryASBLoop): BOOLEAN; 
 	PROCEDURE ^ Copy4(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy2(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy1(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ Copy8(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	PROCEDURE ^ MoveB*(srcadr, destadr, len: SIZE); 
 	PROCEDURE ^ CopyContent(dest, src: ADDRESS; elementSize: SIZE); 
-	PROCEDURE ^ AllocateSame(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE): ANY; 
-	PROCEDURE ^ TempDescCopy(src: ADDRESS): ANY; 
-	PROCEDURE ^ CopyArraySelf*(dest, src: ADDRESS; elementsize: SIZE); 
-	PROCEDURE ^ CopyArray*(dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
-	PROCEDURE ^ CopyTensorSelf*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
-	PROCEDURE ^ CopyTensor*(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE); 
-	PROCEDURE ^ ShallowCopy*(VAR dest: ADDRESS; src: ADDRESS): ANY; 
+	PROCEDURE ^ AllocateSameT(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE): BOOLEAN; 
+	PROCEDURE ^ TempDescCopy(CONST src: UnsafeArrayT): UnsafeArrayT; 
+	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
+	PROCEDURE ^ CopyArraySelf*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE); 
+	PROCEDURE ^ CopyArray*(dest: UnsafeArray; CONST src: UnsafeArrayT; elementsize: SIZE); 
+	PROCEDURE ^ CopyTensorSelf*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE); 
+	PROCEDURE ^ CopyTensor*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE); 
+	PROCEDURE ^ ShallowCopy*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT); 
 	PROCEDURE ^ ZeroCopy*(CONST src: ARRAY [?] ; VAR dest: ARRAY [?] ); 
 	OPERATOR ^ "ALIAS"-(CONST src: ARRAY [?] ): ARRAY [?] ; 
 	PROCEDURE ^ SameShape(l, r: ADDRESS): BOOLEAN; 
@@ -1044,6 +1049,8 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF INTEGER; right: INTEGER); 
 	PROCEDURE ^ AssignSLALLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ AssignSHAHLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF HUGEINT; right: HUGEINT); 
 	PROCEDURE ^ AssignSRARLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF REAL; right: REAL); 
 	PROCEDURE ^ AssignSXAXLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
@@ -1053,7 +1060,7 @@ VAR
 	PROCEDURE ^ AssignSLZALZLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF LONGCOMPLEX; right: LONGCOMPLEX); 
 	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: SIZE): ANY; 
-	PROCEDURE ^ AllocateVector(dest: ADDRESS; l0, elementsize: SIZE): ANY; 
+	PROCEDURE ^ AllocateVector(CONST dest: UnsafeArrayT; l0, elementsize: SIZE); 
 	PROCEDURE ^ ApplyMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
 	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
 	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
@@ -1123,8 +1130,8 @@ VAR
 	OPERATOR ^ "*"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	OPERATOR ^ "*"-(CONST left, right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ Overlap(src1, src2: ADDRESS): BOOLEAN; 
-	PROCEDURE ^ AllocateTransposed(VAR dest: ADDRESS; src: ADDRESS; elementsize: SIZE): ANY; 
-	PROCEDURE ^ Transpose*(dest, left: ADDRESS; Size: SIZE); 
+	PROCEDURE ^ AllocateTransposed(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE): BOOLEAN; 
+	PROCEDURE ^ Transpose*(dest: UnsafeArray; CONST left: UnsafeArrayT; Size: SIZE); 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF SHORTINT): ARRAY [*, *] OF SHORTINT; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF INTEGER): ARRAY [*, *] OF INTEGER; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGINT): ARRAY [*, *] OF LONGINT; 
@@ -1139,9 +1146,9 @@ VAR
 	PROCEDURE ^ IncrA*(VAR dest: ARRAY [*] OF SIZE; src: ADDRESS); 
 	PROCEDURE ^ Len*(src: ADDRESS; d: SIZE): SIZE; 
 	PROCEDURE ^ Incr*(src: ADDRESS; d: SIZE): SIZE; 
-	PROCEDURE ^ AllocateTensor(VAR dest: ADDRESS; left, right: ADDRESS; Size: SIZE): ANY; 
+	PROCEDURE ^ AllocateTensor(VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; Size: SIZE); 
 	PROCEDURE ^ FindPatternTensor(left, right: ADDRESS; VAR rdim, len, linc, ri: SIZE); 
-	PROCEDURE ^ ApplyTensorAAAOp(d, l, r: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
+	PROCEDURE ^ ApplyTensorAAAOp(VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE; Loop: BinaryASALoop); 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF INTEGER): ARRAY [?] OF INTEGER; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF LONGINT): ARRAY [?] OF LONGINT; 

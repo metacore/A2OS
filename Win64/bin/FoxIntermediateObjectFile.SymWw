@@ -1,5 +1,5 @@
 MODULE FoxIntermediateObjectFile;
-	IMPORT Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, ObjectFile, Files, Strings, Options, Diagnostics, TextualSymbolFile := FoxTextualSymbolFile, Streams, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, D := Debugging, Global := FoxGlobal, Parser := FoxIntermediateParser, Commands, KernelLog, Backend := FoxBackend;
+	IMPORT Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, ObjectFile, Files, Strings, Options, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Streams, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, D := Debugging, Global := FoxGlobal, Parser := FoxIntermediateParser, Commands, KernelLog, Backend := FoxBackend;
 CONST 
 	Trace = FALSE; 
 	DeveloperVersion = TRUE; 

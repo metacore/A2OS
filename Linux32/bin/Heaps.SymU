@@ -1,6 +1,7 @@
 MODULE Heaps;
 	IMPORT Runtime, SYSTEM, Trace, Machine;
 CONST 
+	EnableRefCount = TRUE; 
 	Paranoid = TRUE; 
 	DebugValue = LONGINT(3735936685); 
 	Stats* = TRUE; 
@@ -65,7 +66,8 @@ TYPE
 	HeapBlockDesc* = RECORD 
 		heapBlock{FICTIVE(-8)} : ADDRESS; 
 		typeDesc{FICTIVE(-4), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
-		mark: LONGINT; 
+		mark: WORD; 
+		refCount: WORD; 
 		dataAdr-: ADDRESS; 
 		size-: SIZE; 
 		nextMark{UNTRACED} : HeapBlock; 
@@ -76,7 +78,7 @@ TYPE
 	FreeBlockU = POINTER {UNSAFE, UNTRACED} TO FreeBlockDesc; 
 
 	FreeBlockDesc* = RECORD (HeapBlockDesc)
-		next: FreeBlock; 
+		next{UNTRACED} : FreeBlock; 
 	END; 
 
 	SystemBlock* = POINTER TO SystemBlockDesc; 
@@ -181,6 +183,10 @@ TYPE
 	UnsafeArrayDesc = RECORD (ArrayDataBlockDesc)
 		len: ARRAY 8 OF SIZE; 
 	END; 
+
+	; 
+
+	; 
 VAR 
 	markList: MarkList; 
 	freeLists: FreeLists; 
@@ -211,20 +217,18 @@ VAR
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 
 	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
+	resets, refers, assigns: SIZE; 
 	cardSet: ARRAY ((4294967296 DIV SetSize) DIV CardSize) OF SET; 
 	youngCounts: LONGINT; 
 	throughput: SIZE; 
-	assigns*: LONGINT; 
 
 	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
-	PROCEDURE ^ AppendToMarkList(heapBlock: HeapBlock); 
-	PROCEDURE ^ ExtractFromMarkList(): HeapBlock; 
+	PROCEDURE ^ AppendToMarkList(heapBlock: HeapBlockU); 
+	PROCEDURE ^ ExtractFromMarkList(): HeapBlockU; 
 	PROCEDURE ^ ShowCards*; 
 	PROCEDURE ^ ClearCardSet; 
 	PROCEDURE ^ EnterInCardSet(adr: ADDRESS); 
-	PROCEDURE ^ CheckInternalAssignment(dest, src: DataBlockU); 
-	PROCEDURE ^ CheckAssignment*(dest, src: DataBlockU); 
 	PROCEDURE ^ SweepCardSet; 
 	PROCEDURE ^ Inspect(block{UNTRACED} : ANY; generation: LONGINT); 
 	PROCEDURE ^ Mark*(p{UNTRACED} : ANY); 
@@ -232,7 +236,7 @@ VAR
 	PROCEDURE ^ WriteType*(t: ADDRESS); 
 	PROCEDURE ^ ClearFreeLists; 
 	PROCEDURE ^ AppendFree(VAR freeList: FreeList; block: FreeBlock); 
-	PROCEDURE ^ GetFree(VAR freeList: FreeList): FreeBlock; 
+	PROCEDURE ^ GetFree(VAR freeList: FreeList): FreeBlockU; 
 	PROCEDURE ^ InsertSorted(VAR freeList: FreeList; block: FreeBlock); 
 	PROCEDURE ^ AppendFreeBlock(block: FreeBlock); 
 	PROCEDURE ^ FindFreeBlock(size: SIZE): FreeBlock; 
@@ -265,6 +269,23 @@ VAR
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
 	PROCEDURE ^ HeapSize*(): SIZE; 
 	PROCEDURE ^ Used*(): SIZE; 
+	PROCEDURE ^ DecRefCount(VAR count: WORD): BOOLEAN; 
+	PROCEDURE ^ RefCount*(p: DataBlockU): WORD; 
+	PROCEDURE ^ RecursiveReset(h{UNTRACED} : HeapBlock); 
+	PROCEDURE ^ Reset*(old: DataBlockU); 
+	PROCEDURE ^ ResetMathArray*(p: POINTER {UNSAFE, UNTRACED} TO RECORD 
+		p: ADDRESS; 
+	END); 
+	PROCEDURE ^ ResetRecord*(src: ADDRESS; tag: StaticTypeBlockU); 
+	PROCEDURE ^ ResetArray*(src: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
+	PROCEDURE ^ Refer*(old: DataBlockU); 
+	PROCEDURE ^ ReferMathArray*(p: POINTER {UNSAFE, UNTRACED} TO RECORD 
+		p: ADDRESS; 
+	END); 
+	PROCEDURE ^ ReferRecord*(src: ADDRESS; tag: StaticTypeBlockU); 
+	PROCEDURE ^ ReferArray*(src: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
+	PROCEDURE ^ CheckInternalAssignment(dest, src: DataBlockU); 
+	PROCEDURE ^ CheckAssignment*(dest, src: DataBlockU); 
 	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
 	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
 	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 

@@ -461,7 +461,7 @@ TYPE
 
 	VisualPtr = X11.VisualPtr; 
 
-	VisualInfoPtr* = POINTER TO X11.VisualInfo; 
+	VisualInfoPtr* = POINTER {UNSAFE, UNTRACED} TO X11.VisualInfo; 
 
 	DisplayPtr* = X11.DisplayPtr; 
 
@@ -972,7 +972,7 @@ TYPE
 		data*: ADDRESS; 
 	END; 
 
-	ExtData* = POINTER TO ExtDataDesc; 
+	ExtData* = POINTER {UNSAFE, UNTRACED} TO ExtDataDesc; 
 
 	ExtDataDesc* = RECORD 
 		number*: WORD; 
@@ -996,7 +996,7 @@ TYPE
 		card32*: LONGWORD; 
 	END; 
 
-	FontStruct* = POINTER TO FontStructDesc; 
+	FontStruct* = POINTER {UNSAFE, UNTRACED} TO FontStructDesc; 
 
 	FontStructDesc* = RECORD 
 		ext_data*: ExtData; 

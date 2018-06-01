@@ -218,6 +218,7 @@ VAR
 	PROCEDURE ^ ReadSInt*(VAR r: Rider; VAR x: SHORTINT); 
 	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 
 	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ ReadHInt*(VAR r: Rider; VAR x: HUGEINT); 
 	PROCEDURE ^ ReadSet*(VAR r: Rider; VAR x: SET); 
 	PROCEDURE ^ ReadBool*(VAR r: Rider; VAR x: BOOLEAN); 
 	PROCEDURE ^ ReadReal*(VAR r: Rider; VAR x: REAL); 
@@ -227,6 +228,7 @@ VAR
 	PROCEDURE ^ WriteSInt*(VAR r: Rider; x: SHORTINT); 
 	PROCEDURE ^ WriteInt*(VAR r: Rider; x: INTEGER); 
 	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ WriteHInt*(VAR r: Rider; x: HUGEINT); 
 	PROCEDURE ^ WriteSet*(VAR r: Rider; x: SET); 
 	PROCEDURE ^ WriteBool*(VAR r: Rider; x: BOOLEAN); 
 	PROCEDURE ^ WriteReal*(VAR r: Rider; x: REAL); 

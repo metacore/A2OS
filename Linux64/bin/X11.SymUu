@@ -156,7 +156,7 @@ TYPE
 		bitsPerRgb*, mapEntries*: WORD; 
 	END; 
 
-	VisualPtr* = POINTER TO Visual; 
+	VisualPtr* = POINTER {UNSAFE, UNTRACED} TO Visual; 
 
 	VisualInfo* = RECORD 
 		visual*{UNTRACED} : VisualPtr; 
@@ -260,7 +260,7 @@ TYPE
 
 	Image* = ADDRESS; 
 
-	ImagePtr* = POINTER TO ImageDesc; 
+	ImagePtr* = POINTER {UNSAFE, UNTRACED} TO ImageDesc; 
 
 	ImageDesc* = RECORD 
 		width*, height*: WORD; 

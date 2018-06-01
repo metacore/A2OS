@@ -1,5 +1,5 @@
 MODULE FoxProfiler;
-	IMPORT KernelLog, Objects, Machine, SYSTEM, Streams, Commands;
+	IMPORT KernelLog, Objects, SYSTEM, Streams, Commands;
 CONST 
 	TraceAdd = FALSE; 
 	TraceEnter = FALSE; 
@@ -47,7 +47,6 @@ VAR
 	processes: ARRAY MaxProcesses OF Process; 
 	log: Streams.Writer; 
 	frequency: LONGREAL; 
-	n: LONGINT; 
 
 	PROCEDURE ^ Put*(key, value: SIZE); 
 	PROCEDURE ^ Get*(key: SIZE): SIZE; 

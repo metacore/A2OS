@@ -393,13 +393,17 @@ TYPE
 
 	MathArrayType* = OBJECT (Type)
 	VAR 
+		modifiers-: Modifier; 
 		arrayBase-: Type; 
 		length-: Expression; 
 		staticLength-: LONGINT; 
 		staticIncrementInBits-: LONGINT; 
 		form-: LONGINT; 
+		isUnsafe-: BOOLEAN; 
 
 		PROCEDURE ^  & InitMathArrayType(position: Position; scope: Scope; form: LONGINT); 
+		PROCEDURE ^ SetModifiers*(m: Modifier); 
+		PROCEDURE ^ SetUnsafe*(unsafe: BOOLEAN); 
 		PROCEDURE ^ SetForm*(form: LONGINT); 
 		PROCEDURE ^ SetArrayBase*(type: Type); 
 		PROCEDURE ^ SetLength*(length: Expression); 

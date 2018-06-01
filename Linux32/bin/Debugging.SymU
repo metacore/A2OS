@@ -33,5 +33,6 @@ VAR
 	PROCEDURE ^ DisableGC*; 
 	PROCEDURE ^ EnableGC*; 
 	PROCEDURE ^ ReportProcedureDescriptors*; 
+	PROCEDURE ^ ReportModule*(context: Commands.Context); 
 BEGIN
 END Debugging.

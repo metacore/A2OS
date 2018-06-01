@@ -1,80 +1,109 @@
 MODULE Loader;
-	IMPORT SYSTEM, KernelLog, Commands, Heaps, Modules, Machine, Streams, Files;
+	IMPORT SYSTEM, KernelLog, Modules, Streams, Files, D := KernelLog, GenericLinker, ObjectFile, Diagnostics, Strings, StringPool, Trace, Machine;
 CONST 
 	Ok = 0; 
+	LinkerError = 3400; 
 	FileNotFound = 3401; 
-	TagInvalid = 3402; 
-	FileCorrupt = 3403; 
-	IncompatibleImport = 3405; 
-	IncompatibleModuleName = 3406; 
-	AddressSize = SIZEOF(ADDRESS); 
-	MaxStructs = 1024; 
-	FileTag = 0BBX; 
-	NoZeroCompress = 0ADX; 
-	FileVersion* = 0B1X; 
-	FileVersionOC = 0B2X; 
-	CurrentFileVersion = 0B4X; 
-	EUEnd = 0; 
-	EURecord = 1; 
-	EUobjScope = 0; 
-	EUrecScope = 1; 
-	EUerrScope =  -1; 
-	EUProcFlagBit = 31; 
-	Sentinel = LONGINT(0FFFFFFFFH); 
-	UsesDefinitions = 31; 
-	DefinitionModule = \"Interfaces"\; 
+	CommandTrapped* = 3904; 
+	SupportOldObjectFileFormat = FALSE; 
+	TraceLoading = FALSE; 
 TYPE 
-	ObjHeader = RECORD 
-		entries, commands, pointers, types, modules, links, dataLinks: LONGINT; 
-		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs, crc: LONGINT; 
-		staticTdSize: LONGINT; 
-		name: Modules.Name; 
+	HashEntryIntInt = RECORD 
+		key, value: SIZE; 
 	END; 
 
-	DataLinkRec = RECORD 
-		mod: LONGINT; 
-		entry: LONGINT; 
-		fixups: LONGINT; 
-		ofs: POINTER TO ARRAY OF SIZE; 
+	HashIntArray = POINTER TO ARRAY OF HashEntryIntInt; 
+
+	HashEntryIntAny = RECORD 
+		key: SIZE; 
+		value: ANY; 
 	END; 
 
-	LinkRec = RECORD 
-		mod: LONGINT; 
-		entry: LONGINT; 
-		link: SIZE; 
+	HashIntAnyArray = POINTER TO ARRAY OF HashEntryIntAny; 
+
+	HashTableInt = OBJECT 
+	VAR 
+		table: HashIntArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: SIZE; value: SIZE); 
+		PROCEDURE ^ Get*(key: SIZE): SIZE; 
+		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
+		PROCEDURE ^ Grow; 
+	END HashTableInt; 
+
+	HashTableIntAny* = OBJECT 
+	VAR 
+		table: HashIntAnyArray; 
+		size: LONGINT; 
+		used-: LONGINT; 
+		maxLoadFactor: REAL; 
+
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
+		PROCEDURE ^ Get*(key: LONGINT): ANY; 
+		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Clear*; 
+		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
+		PROCEDURE ^ Grow; 
+	END HashTableIntAny; 
+
+	Data = RECORD 
+		size, pos: LONGINT; 
+		bytes: Modules.Bytes; 
+		firstAddress: ADDRESS; 
 	END; 
 
-	TypeRec = RECORD 
-		init: BOOLEAN; 
-		entry, methods, inhMethods, baseMod: LONGINT; 
-		baseEntry: ADDRESS; 
-	END; 
+	Arrangement* = OBJECT (GenericLinker.Arrangement)
+	VAR 
+		code, data: Data; 
+		hasBody: BOOLEAN; 
+		bodyAddress: ADDRESS; 
+
+		PROCEDURE ^  & InitArrangement; 
+		PROCEDURE ^ Preallocate*(CONST section: ObjectFile.Section); 
+		PROCEDURE ^ Allocate*(CONST section: ObjectFile.Section): GenericLinker.Address; 
+		PROCEDURE ^ Patch*(pos, value: GenericLinker.Address; offset, bits, unit: ObjectFile.Bits); 
+	END Arrangement; 
+
+	ModuleList = OBJECT {EXCLUSIVE} 
+	VAR 
+		hash: HashTableIntAny; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ ThisModule(module: Modules.Module): HashTableInt; 
+	END ModuleList; 
+
+	Linker = OBJECT (GenericLinker.Linker)
+	VAR 
+		moduleName: ObjectFile.SegmentedName; 
+		importBlock: GenericLinker.Block; 
+		hash: HashTableIntAny; 
+		moduleBlock: GenericLinker.Block; 
+
+		PROCEDURE ^  & InitLinkerX*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; code, data: GenericLinker.Arrangement; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ FindBlock*(CONST identifier: ObjectFile.Identifier): GenericLinker.Block; 
+		PROCEDURE ^ ExportBlock*(block: GenericLinker.Block); 
+		PROCEDURE ^ ImportBlock*(CONST fixup: ObjectFile.Fixup): GenericLinker.Block; 
+	END Linker; 
 VAR 
-	trace: BOOLEAN; 
+	moduleList: ModuleList; 
+	testTypeDescs: Modules.Bytes; 
+	InternalModuleName: StringPool.Index; 
 
-	PROCEDURE ^ ReadHeader(r: Streams.Reader; VAR h: ObjHeader; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
-	PROCEDURE ^ ReadString8(r: Streams.Reader; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ AllocateModule(m: Modules.Module; h: ObjHeader); 
-	PROCEDURE ^ ReadEntryBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadCommandBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadPointerBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadImportBlock(r: Streams.Reader; m: Modules.Module; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ ReadDataLinkBlock(r: Streams.Reader; dataLinks: LONGINT; VAR d: ARRAY OF DataLinkRec): BOOLEAN; 
-	PROCEDURE ^ ReadLinkBlock(r: Streams.Reader; links, entries: LONGINT; VAR l: ARRAY OF LinkRec; VAR f: ARRAY OF LONGINT; VAR caseTableSize: LONGINT): BOOLEAN; 
-	PROCEDURE ^ ReadConstBlock(r: Streams.Reader; m: Modules.Module; h: ObjHeader): BOOLEAN; 
-	PROCEDURE ^ ReadExportBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadCodeBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadUseBlock(r: Streams.Reader; m: Modules.Module; VAR dataLink: ARRAY OF DataLinkRec; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ ReadTypeBlock(r: Streams.Reader; m: Modules.Module; VAR type: ARRAY OF TypeRec): BOOLEAN; 
-	PROCEDURE ^ ReadRefBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ FixupGlobals(m: Modules.Module; VAR dataLink: ARRAY OF DataLinkRec); 
-	PROCEDURE ^ FixupLinks(m: Modules.Module; VAR link: ARRAY OF LinkRec; VAR fixupCounts: ARRAY OF LONGINT; caseTableSize: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ FixupCommands(m: Modules.Module); 
-	PROCEDURE ^ InitType(m: Modules.Module; VAR type: ARRAY OF TypeRec; i: LONGINT); 
-	PROCEDURE ^ ReadExTableBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
-	PROCEDURE ^ ReadPtrsInProcBlock(r: Streams.Reader; m: Modules.Module): BOOLEAN; 
+	PROCEDURE ^ InitData(VAR data: Data); 
+	PROCEDURE ^ IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN; 
+	PROCEDURE ^ DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data); 
+	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): ADDRESS; 
 	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module; 
-	PROCEDURE ^ Trace*(context: Commands.Context); 
-	PROCEDURE ^ Init; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove*; 
 BEGIN
 END Loader.

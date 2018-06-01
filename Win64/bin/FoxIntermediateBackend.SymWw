@@ -374,6 +374,8 @@ TYPE
 		PROCEDURE ^ CreateResetMethod(scope: SyntaxTree.ProcedureScope); 
 		PROCEDURE ^ CallResetProcedure(dest, tag: IntermediateCode.Operand; type: SyntaxTree.Type); 
 		PROCEDURE ^ ResetVariables(scope: SyntaxTree.ProcedureScope); 
+		PROCEDURE ^ Reset(symbol: SyntaxTree.Symbol; refer: BOOLEAN); 
+		PROCEDURE ^ ResetVariables2(scope: SyntaxTree.ProcedureScope; refer: BOOLEAN); 
 		PROCEDURE ^ CreateProcedureDescriptor(procedure: SyntaxTree.Procedure); 
 		PROCEDURE ^ AddImport(CONST moduleName: ARRAY OF CHAR; VAR module: SyntaxTree.Module; force: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ EnsureSymbol(CONST moduleName, procedureName: SyntaxTree.IdentifierString); 

@@ -28,13 +28,10 @@ TYPE
 		bitsPerUnit-: LONGINT; 
 		symbol-: SyntaxTree.Symbol; 
 		offset-: LONGINT; 
-		isCaseTable*: BOOLEAN; 
-		referenced-: BOOLEAN; 
 		isReachable-: BOOLEAN; 
 
 		PROCEDURE ^  & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ IsCode*(): BOOLEAN; 
-		PROCEDURE ^ SetReferenced*(ref: BOOLEAN); 
 		PROCEDURE ^ SetOffset*(offset: LONGINT); 
 		PROCEDURE ^ SetReachability*(isReachable: BOOLEAN); 
 		PROCEDURE ^ SetBitsPerUnit*(bitsPerUnit: LONGINT); 

@@ -146,7 +146,7 @@ VAR
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
 	PROCEDURE ^ BodyStarter; 
-	PROCEDURE ^ InitProtHeader(hdr: ObjectHeader); 
+	PROCEDURE ^ InitProtHeader(hdr{UNTRACED} : ObjectHeader); 
 	PROCEDURE ^ CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); 
 	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
 	PROCEDURE ^ Await*(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET); 

@@ -25,6 +25,5 @@ VAR
 	PROCEDURE ^ Char(c: CHAR); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Init0; 
-	PROCEDURE ^ Initialize*; 
 BEGIN
 END Glue.

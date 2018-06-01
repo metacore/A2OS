@@ -59,7 +59,10 @@ TYPE
 		PROCEDURE & InitWriter*( send: Sender;  size: LONGINT );
 		BEGIN
 			ASSERT ( send # NIL );
-			NEW( buf, size );  SELF.send := send;  Reset
+			IF (buf = NIL) OR (LEN(buf) # size) THEN
+				NEW( buf, size );
+			END;
+			SELF.send := send;  Reset
 		END InitWriter;
 
 		PROCEDURE Reset*;
@@ -72,7 +75,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: HUGEINT );
+		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;

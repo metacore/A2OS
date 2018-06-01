@@ -245,7 +245,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
-	WINCOOP { Coop.Win32.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod }
+	WINCOOP { Coop.Win32.I386.Kernel32.Mod Win32.Processors.Mod Win32.Timer.Mod }
 	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
@@ -261,12 +261,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	SOLARIS32 { Unix.I386.Glue.Mod Solaris.I386.Unix.Mod }
 	SOLARIS64 { Unix.AMD64.Glue.Mod Solaris.AMD64.Unix.Mod }
 
-	WIN32 { Win32.Kernel32.Mod }
-	WIN64 { Win64.Kernel32.Mod }
+	WIN32 { Win32.I386.Kernel32.Mod }
+	WIN64 { Win32.AMD64.Kernel32.Mod }
 
 	I386GEN { I386.Machine.Mod }
-	WIN32 { Win32.Machine.Mod }
-	WIN64 { Win64.Machine.Mod }
+	WIN32 { Win32.I386.Machine.Mod }
+	WIN64 { Win32.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod }
 	I386COOP { Coop.I386.Machine.Mod }
 	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
@@ -281,8 +281,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Coop.Modules.Mod GarbageCollector.Mod }
 
 	NATIVE { Objects.Mod Kernel.Mod }
-	WIN32 { Win32.Objects.Mod }
-	WIN64 { Win64.Objects.Mod }
+	WIN32 { Win32.I386.Objects.Mod }
+	WIN64 { Win32.AMD64.Objects.Mod }
 	WIN { Win32.Kernel.Mod }
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
@@ -308,8 +308,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	NATIVE { Traps.Mod }
 	ARM { ARM.Traps.Mod }
-	WIN32 { Win32.Traps.Mod }
-	WIN64 { Win64.Traps.Mod }
+	WIN32 { Win32.I386.Traps.Mod }
+	WIN64 { Win32.AMD64.Traps.Mod }
 	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
 	WIN { Win32.WinTrace.Mod Win32.StdIO.Mod }

@@ -602,7 +602,7 @@ TYPE
 				- static array of open array forbidden
 		**)
 		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
-		VAR arrayBase: SyntaxTree.Type;
+		VAR arrayBase: SyntaxTree.Type; modifiers: SyntaxTree.Modifier; position: SyntaxTree.Position;
 		BEGIN
 			IF TypeNeedsResolution(x) THEN
 				x.SetArrayBase(ResolveType(x.arrayBase));
@@ -628,6 +628,9 @@ TYPE
 					END;
 					x.SetHasPointers((x.form # SyntaxTree.Static) OR arrayBase.hasPointers);
 				END;
+				modifiers := x.modifiers;
+				x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
+				CheckModifiers(modifiers, TRUE);
 				x.SetState(SyntaxTree.Resolved);
 			END;
 			resolvedType := ResolvedType(x);
@@ -1769,6 +1772,8 @@ TYPE
 					result := CompatibleTo(system,actualType,formalType);
 				ELSIF (formalType IS SyntaxTree.ArrayType) & (formalType(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
 					result := OpenArrayCompatible(formalType(SyntaxTree.ArrayType),actualType);
+				ELSIF IsUnsafePointer(formalType) & IsUnsafePointer(actualType) THEN
+					result := TRUE;
 				ELSIF (formalType IS SyntaxTree.MathArrayType) THEN
 					IF IsArrayStructuredObjectType(actualType) THEN
 						actualType := MathArrayStructureOfType(actualType)
@@ -2641,7 +2646,11 @@ TYPE
 					INC(inConversion); 
 					IF inConversion < 10 THEN 
 						IF expression.type.resolved IS SyntaxTree.MathArrayType THEN
-							result := MathArrayConversion(position, expression,type);
+							IF IsTensor(expression.type) & (IsUnsafePointer(type) OR (type IS SyntaxTree.AddressType)) THEN
+								result := expression
+							ELSE
+								result := MathArrayConversion(position, expression,type);
+							END;
 						ELSIF IsArrayStructuredObjectType(expression.type) THEN
 							expression := ConvertToMathArray(expression);
 							type := MathArrayStructureOfType(type);
@@ -2652,7 +2661,9 @@ TYPE
 					END;
 					DEC(inConversion);
 			ELSIF (expression.type.resolved IS SyntaxTree.MathArrayType) THEN
-					IF (expression.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static)
+					IF IsTensor(expression.type) & (IsUnsafePointer(type) OR (type IS SyntaxTree.AddressType)) THEN
+						result := expression; result.SetType(type);
+					ELSIF (expression.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static)
 						OR ~(type IS SyntaxTree.ArrayType) THEN
 						Error(expression.position,"cannot convert array type to non-array type")
 					END;
@@ -8680,7 +8691,7 @@ TYPE
 											ASSERT(thatParameter # NIL);
 											IF ~SameType(thisParameter.type, thatParameter.type) THEN
 												operandsAreEqual := FALSE;
-												IF ~CompatibleTo(system, thisParameter.type, thatParameter.type) THEN
+												IF TypeDistance(system, thisParameter.type, thatParameter.type, thisParameter.kind = SyntaxTree.VarParameter) =Infinity THEN
 													operandsAreCompatible := FALSE
 												END
 											END;
@@ -9041,7 +9052,9 @@ TYPE
 					result := IsCharacterType(this)
 				ELSIF (to IS SyntaxTree.SizeType) & ((this IS SyntaxTree.SizeType) OR (this IS SyntaxTree.IntegerType) OR IsAddressType(this, system.addressSize)) THEN
 					result := to.sizeInBits >= this.sizeInBits (*! weak compatibility: signed size type may be assigned with unsigned address type of same size *)
-				ELSIF (to IS SyntaxTree.AddressType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.SizeType) OR IsPointerType(this) OR (this IS SyntaxTree.ProcedureType)) THEN
+				ELSIF (to IS SyntaxTree.AddressType) & ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR (this IS SyntaxTree.SizeType) OR IsPointerType(this) OR (this IS SyntaxTree.ProcedureType)
+					OR IsTensor(this)
+				) THEN
 					result := to.sizeInBits >= this.sizeInBits; (*! weak compatibility: addresses may be assigned with signed integer *)
 				ELSIF (to IS SyntaxTree.RangeType) & (this IS SyntaxTree.RangeType) THEN
 					result := TRUE;
@@ -9050,11 +9063,13 @@ TYPE
 				ELSE
 					result := FALSE
 				END;
-
+			ELSIF IsUnsafePointer(to) & IsUnsafePointer(this) THEN
+				result := TRUE;
 			ELSIF to IS SyntaxTree.PointerType THEN
-				result := (this IS SyntaxTree.NilType) OR ((this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType)) & to(SyntaxTree.PointerType).isUnsafe OR
-						IsPointerType(this) & (IsTypeExtension(to,this) OR to(SyntaxTree.PointerType).isUnsafe OR ((to(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType) & SameType(to,this)))
-				     & (~to.isRealtime OR this.isRealtime);
+				result := (this IS SyntaxTree.NilType) OR
+						IsUnsafePointer(to) & ( (this IS SyntaxTree.AddressType) OR (this IS SyntaxTree.IntegerType) OR IsPointerType(this) OR IsTensor(this)) OR
+						(IsPointerType(this) & IsTypeExtension(to,this) OR 
+						((to(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.ArrayType) & SameType(to,this))) & (~to.isRealtime OR this.isRealtime);
 			ELSIF to IS SyntaxTree.ProcedureType THEN
 				result := (this IS SyntaxTree.NilType) OR (this IS SyntaxTree.ProcedureType) & this.CompatibleTo(to)
 			ELSIF (to IS SyntaxTree.RecordType) & to(SyntaxTree.RecordType).isObject THEN
@@ -9742,7 +9757,9 @@ TYPE
 		IF type = NIL THEN result := FALSE
 		ELSE
 		type := type.resolved;
-		result :=  (type IS SyntaxTree.PointerType) & type(SyntaxTree.PointerType).isUnsafe;
+		result :=  (type IS SyntaxTree.PointerType) & type(SyntaxTree.PointerType).isUnsafe OR 
+			(type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) 
+			& type(SyntaxTree.MathArrayType).isUnsafe;
 		END;
 		RETURN result
 	END IsUnsafePointer;
@@ -10243,10 +10260,6 @@ TYPE
 		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(procedureType.returnType);
 	END StructuredReturnType;
 	
-	
-
-
-
 
 END FoxSemanticChecker.
 

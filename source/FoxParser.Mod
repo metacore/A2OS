@@ -1543,12 +1543,14 @@ TYPE
 			type: SyntaxTree.Type;
 			base: SyntaxTree.Type;
 			expression: SyntaxTree.Expression;
+			modifiers: SyntaxTree.Modifier;
 
 			PROCEDURE MathArray(): SyntaxTree.Type;
 			VAR mathType: SyntaxTree.MathArrayType; base: SyntaxTree.Type;
 			BEGIN
 				IF Optional(Scanner.Questionmark) THEN
 					mathType := SyntaxTree.NewMathArrayType(position,parentScope, SyntaxTree.Tensor);
+					
 				ELSIF Optional(Scanner.Times) THEN (* open array *)
 					mathType := SyntaxTree.NewMathArrayType(position,parentScope, SyntaxTree.Open);
 				ELSE (* size given *)
@@ -1563,13 +1565,20 @@ TYPE
 						base := Type(SyntaxTree.invalidIdentifier , parentScope );   (* base type *)
 					END;
 				END;
+				mathType.SetModifiers(modifiers);
+				modifiers := NIL; 
 				mathType.SetArrayBase(base);
 				RETURN mathType;
 			END MathArray;
 
 		BEGIN
 			IF Trace THEN S( "ArrayType" ) END;
-			(* array symbol already consumed *)
+			(* array symbol already consumed *)				
+			
+			IF Optional(Scanner.LeftBrace) THEN
+				modifiers := Flags();
+			END;
+
 			IF Optional(Scanner.LeftBracket) THEN (* math array *)
 				type := MathArray();
 			ELSIF Optional( Scanner.Of ) THEN  (* open array *)
@@ -1590,6 +1599,9 @@ TYPE
 					base := Type(SyntaxTree.invalidIdentifier , parentScope );   (* base type *)
 					arrayType.SetArrayBase( base );
 				END;
+			END;
+			IF modifiers # NIL THEN
+				Error(modifiers.position, Diagnostics.Invalid, "forbidden modifiers");
 			END;
 			IF Trace THEN E( "ArrayType" ) END;
 			RETURN type

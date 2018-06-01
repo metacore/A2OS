@@ -1159,17 +1159,29 @@ TYPE
 	(** <<ARRAY '[' length | '*' | '?' ']' OF baseType>> **)
 	MathArrayType* = OBJECT (Type)
 		VAR
+			modifiers-: Modifier; (* set by the parser *)
 			arrayBase-: Type;
 			length-: Expression;
 			staticLength-: LONGINT;
 			staticIncrementInBits-: LONGINT;
 			form-: LONGINT;
+			isUnsafe-: BOOLEAN;
 
 		PROCEDURE & InitMathArrayType(position: Position;scope: Scope; form: LONGINT);
 		BEGIN
-			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SetForm(form); SELF.scope := scope;
+			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SetForm(form); SELF.scope := scope; isUnsafe := FALSE; modifiers := NIL;
 		END InitMathArrayType;
-
+		
+		PROCEDURE SetModifiers*(m: Modifier);
+		BEGIN
+			modifiers := m;
+		END SetModifiers;
+		
+		PROCEDURE SetUnsafe*(unsafe: BOOLEAN);
+		BEGIN
+			isUnsafe := unsafe;
+		END SetUnsafe;
+		
 		PROCEDURE SetForm*(form: LONGINT);
 		BEGIN
 			SELF.form := form; IF form # Static THEN SetHasPointers(TRUE) END;
@@ -2639,10 +2651,10 @@ TYPE
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN 
-			(*! semantic of x.y.z := new : if x is untraced then the effect of y.z := new remains untraced! 
-				In other words: difference between y := x.y; y.z := new and x.y.z := new.
+			(*! semantic of x.y := new : 
+				if x is untraced then assignments to x^.y can be traced, depending on traceability of field y in x
 			*)
-			RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
+			RETURN type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
 		END NeedsTrace;
 
 	END DereferenceDesignator;

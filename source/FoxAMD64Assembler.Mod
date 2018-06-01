@@ -487,8 +487,13 @@ TYPE
 								INCL (rexPrefix, rexB)
 							END;
 							IF (InstructionSet.RegisterType(operands[i].register) = reg32) & (cpuBits # bits32) THEN
-								IF Trace THEN KernelLog.String(" adr prefix "); KernelLog.Ln;   END;
-								adrPrefix := TRUE;
+								IF cpuBits = bits64 THEN
+									ErrorSI("invalid effective address (1)", mnem,operands);
+									RETURN FALSE;
+								ELSE
+									IF Trace THEN KernelLog.String(" adr prefix "); KernelLog.Ln;   END;
+									adrPrefix := TRUE;
+								END;
 							END;
 							IF InstructionSet.RegisterType(operands[i].register)=reg16 THEN
 								IF cpuBits = bits64 THEN

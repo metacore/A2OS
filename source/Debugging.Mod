@@ -229,6 +229,25 @@ VAR
 		END;
 	END ReportProcedureDescriptors;
 
+	PROCEDURE ReportModule* (context: Commands.Context);
+	VAR m: Modules.Module; name: Modules.Name;
+	BEGIN
+		IF ~context.arg.GetString (name) THEN
+			context.result := Commands.CommandParseError;
+			RETURN;
+		END;
+		m := Modules.root;
+		WHILE (m # NIL) DO
+			IF m.name = name THEN
+				Reflection.Report (context.out, m.refs, 0);
+				context.result := Commands.Ok;
+				RETURN;
+			END;
+			m := m.next;
+		END;
+		context.result := Commands.CommandError;
+	END ReportModule;
+
 BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );
 END Debugging.

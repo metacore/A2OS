@@ -220,6 +220,13 @@ TYPE
 			Char( CHR( x MOD 128 ) )
 		END RawNum;
 
+	(** Write a size in a compressed format. *)
+		PROCEDURE RawSize*( x: SIZE );
+		BEGIN
+			WHILE (x < -64) OR (x > 63) DO Char( CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
+			Char( CHR( x MOD 128 ) )
+		END RawSize;
+
 		(** -- Write formatted data -- *)
 
 	(** Write an ASCII end-of-line (CR/LF). *)
@@ -760,6 +767,15 @@ TYPE
 			WHILE ch >= 80X DO INC( y, LSH( LONGINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
 			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
+
+	(** Read a size in a compressed format. *)
+		PROCEDURE RawSize*( VAR x: SIZE );
+		VAR ch: CHAR;  n, y: SIZE;
+		BEGIN
+			n := 0;  y := 0;  ch := Get();
+			WHILE ch >= 80X DO INC( y, LSH( SIZE( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( SIZE( ORD( ch ) ), SIZE OF SIZE * 8 - 7 ), n - SIZE OF SIZE * 8 - 7 ) + y
+		END RawSize;
 
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)
 

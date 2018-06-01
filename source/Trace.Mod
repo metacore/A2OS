@@ -28,7 +28,7 @@ END Ln;
 
 (** Write a string to the trace output. *)
 PROCEDURE String* (CONST s: ARRAY OF CHAR);
-VAR i: LONGINT; c: CHAR;
+VAR i: SIZE; c: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED} FOR i := 0 TO LEN (s) - 1 DO c := s[i]; IF c = 0X THEN RETURN END; Char (c) END;
 END String;
 
@@ -38,7 +38,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} String (s); Ln;
 END StringLn;
 
 (** Write a character. *)
-PROCEDURE Int* (x: HUGEINT; w: LONGINT);
+PROCEDURE Int* (x: HUGEINT; w: SIZE);
 VAR i: SIZE; x0: HUGEINT; a: ARRAY 21 OF CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF x < 0 THEN
@@ -67,7 +67,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} IF x THEN String ("TRUE") ELSE String ("FALSE")
 END Boolean;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
-PROCEDURE IntSuffix* (x, w: LONGINT; CONST suffix: ARRAY OF CHAR);
+PROCEDURE IntSuffix* (x: HUGEINT; w: SIZE; CONST suffix: ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -87,8 +87,8 @@ END IntSuffix;
 	Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 	If w < 0 THEN w least significant hex digits of x are written (possibly including leading zeros)
 *)
-PROCEDURE Hex*(x: HUGEINT; w: LONGINT );
-VAR i: LONGINT;
+PROCEDURE Hex*(x: HUGEINT; w: SIZE );
+VAR i: SIZE;
 	buf: ARRAY 2*SIZEOF(HUGEINT)+2 OF CHAR;
 	neg: BOOLEAN;
 	c: HUGEINT;
@@ -131,7 +131,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Address;
 
 (** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
-PROCEDURE HIntHex* (x: HUGEINT; w: LONGINT);
+PROCEDURE HIntHex* (x: HUGEINT; w: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED} Hex (x, w);
 END HIntHex;
 
@@ -195,7 +195,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} Memory (ADDRESSOF (buf[ofs]), len)
 END Buffer;
 
 (** Write bits (ofs..ofs+n-1) of x in binary. *)
-PROCEDURE Bits* (x: SET; ofs, n: LONGINT);
+PROCEDURE Bits* (x: SET; ofs, n: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	REPEAT
 		DEC (n);
@@ -204,7 +204,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Bits;
 
 PROCEDURE Set*(x: SET);
-VAR first: BOOLEAN; i: LONGINT;
+VAR first: BOOLEAN; i: SIZE;
 BEGIN
 	first := TRUE;
 	Char("{");

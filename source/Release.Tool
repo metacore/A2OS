@@ -390,10 +390,12 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	WIN { Win32.Display.Mod }
 	WINCOOP { Coop.Win32.Display.Mod }
 
+	WIN { Win32.WSock32.Mod }
+	WIN32 { Win32.I386.Network.Mod Win32.I386.IP.Mod }
+	WIN64 { Win32.AMD64.Network.Mod Win32.AMD64.IP.Mod }
+
 	WIN {
-		Win32.WSock32.Mod
-		Win32.Network.Mod
-		Win32.IP.Mod Win32.DNS.Mod
+		Win32.DNS.Mod
 		Win32.UDP.Mod
 		Win32.TCP.Mod
 		Win32.CommandLine.Mod	# Command Line Parsing for Windows A2
@@ -409,8 +411,10 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Ping.Mod TraceRoute.Mod TCPPortLog.Mod		# network tools
 	}
 
+	UNIX32 { Unix.I386.IP.Mod }
+	UNIX64 { Unix.AMD64.IP.Mod }
+
 	UNIX {
-		Unix.IP.Mod
 		Unix.Sockets.Mod
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}
@@ -1445,7 +1449,10 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	NATIVE, WIN { Oberon.Centronics.Mod }
 
-	I386.Oberon.Bitmaps.Mod Oberon.Pictures.Mod
+	I386, WIN32, UNIX32 { I386.Oberon.Bitmaps.Mod }
+	WIN64, UNIX64 { AMD64.Oberon.Bitmaps.Mod }
+
+	Oberon.Pictures.Mod
 
 	Oberon.RandomNumbers.Mod
 

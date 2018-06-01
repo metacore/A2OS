@@ -235,21 +235,21 @@ VAR
 	(** -- Processor initialization -- *)
 
 	PROCEDURE -SetFCR( s: SET );
-	CODE {SYSTEM.i386, SYSTEM.FPU}
-		FLDCW	[ESP]	;  parameter s
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
+		FLDCW	[RSP]	;  parameter s
 		POP	EAX
 	END SetFCR;
 
 	PROCEDURE -FCR( ): SET;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
 		PUSH	0
-		FNSTCW	[ESP]
+		FNSTCW	[RSP]
 		FWAIT
 		POP	EAX
 	END FCR;
 
 	PROCEDURE -InitFPU;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
 		FNINIT
 	END InitFPU;
 
@@ -263,34 +263,34 @@ VAR
 (** CPU identification. *)
 
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
-	CODE {SYSTEM.i386, SYSTEM.Pentium}
+	CODE {SYSTEM.AMD64, SYSTEM.Pentium}
 		MOV	EAX, 0
 		CPUID
 		CMP	EAX, 0
 		JNE	ok
-		MOV	ESI, [EBP+vendor]
-		MOV	[ESI], AL	;  AL = 0
-		MOV	ESI, [EBP+version]
-		MOV	[ESI], EAX	;  EAX = 0
-		MOV	ESI, [EBP+features1]
-		MOV	[ESI], EAX
-		MOV	ESI, [EBP+features2]
-		MOV	[ESI], EAX
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], AL	;  AL = 0
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX	;  EAX = 0
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], EAX
 		JMP	end
 		ok:
-		MOV	ESI, [EBP+vendor]
-		MOV	[ESI], EBX
-		MOV	[ESI+4], EDX
-		MOV	[ESI+8], ECX
-		MOV	BYTE [ESI+12], 0
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], EBX
+		MOV	[RSI+4], EDX
+		MOV	[RSI+8], ECX
+		MOV	BYTE [RSI+12], 0
 		MOV	EAX, 1
 		CPUID
-		MOV	ESI, [EBP+version]
-		MOV	[ESI], EAX
-		MOV	ESI, [EBP+features1]
-		MOV	[ESI], EDX
-		MOV	ESI, [EBP+features2]
-		MOV	[ESI], ECX
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EDX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], ECX
 		end:
 	END CPUID;
 
@@ -810,7 +810,7 @@ END NumberOfProcessors;
 (* function for changing byte order *)
 PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
 CODE { SYSTEM.Pentium }
-	MOV EAX, [EBP+n]				; load n in eax
+	MOV EAX, [RBP+n]				; load n in eax
 	BSWAP EAX						; swap byte order
 END ChangeByteOrder;
 

@@ -176,9 +176,9 @@ END fcr;
 
 (** Return state of the floating-point control register. *)
 PROCEDURE FCR*(): SET;
-CODE {SYSTEM.386, SYSTEM.FPU}
+CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	PUSH 0
-	FSTCW [ESP]
+	FSTCW [RSP]
 	FWAIT
 	POP EAX
 END FCR;
@@ -186,14 +186,14 @@ END FCR;
 (** Set state of floating-point control register.  Traps reset this to the default.  Note that changing the rounding mode affects rounding of imprecise results as well as the ENTIER operation. *)
 
 PROCEDURE SetFCR*(s: SET);
-CODE {SYSTEM.386, SYSTEM.FPU}
+CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLDCW [RBP + s]
 END SetFCR;
 
 (** Round x to an integer using the current rounding mode. *)
 
 PROCEDURE -Round*(x: REAL): LONGINT;	(** non-portable *)
-CODE {SYSTEM.386, SYSTEM.FPU}
+CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD DWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
@@ -203,7 +203,7 @@ END Round;
 (** Round x to an integer using the current rounding mode. *)
 
 PROCEDURE -RoundL*(x: LONGREAL): LONGINT;	(** non-portable *)
-CODE {SYSTEM.386, SYSTEM.FPU}
+CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD QWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT

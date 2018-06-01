@@ -27,17 +27,17 @@ TYPE
 
 TYPE
 	(** Any stream output procedure or method. *)
-	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
 
 	Connection* = OBJECT
 
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -49,14 +49,14 @@ TYPE
 TYPE
 	Writer* = OBJECT
 	VAR
-		tail: LONGINT;
+		tail: TSize;
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT; (** result of last output operation. *)
 		send: Sender;
 		sent*: TSize;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
-		PROCEDURE & InitWriter*( send: Sender;  size: LONGINT );
+		PROCEDURE & InitWriter*( send: Sender;  size: TSize );
 		BEGIN
 			ASSERT ( send # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -107,8 +107,8 @@ TYPE
 		END Char;
 
 	(** Write len bytes from x, starting at ofs. *)
-		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR n: LONGINT;
+		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: TSize );
+		VAR n: TSize;
 		BEGIN
 			ASSERT ( len >= 0 );
 			LOOP
@@ -493,12 +493,12 @@ TYPE
 	(** A special writer that buffers output to be fetched by GetString or GetRawString. *)
 	StringWriter* = OBJECT (Writer)
 
-		PROCEDURE & InitStringWriter*( size: LONGINT );
+		PROCEDURE & InitStringWriter*( size: TSize );
 		BEGIN
 			InitWriter( Send, size )
 		END InitStringWriter;
 
-		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
 		BEGIN
 			res := StringFull
 		END Send;
@@ -544,14 +544,14 @@ TYPE
 	(** A reader buffers input received from a Receiver.  Must not be shared between processes. *)
 	Reader* = OBJECT
 	VAR
-		head, tail: LONGINT;
+		head, tail: TSize;
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: LONGINT;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: TSize;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
-		PROCEDURE & InitReader*( receive: Receiver;  size: LONGINT );
+		PROCEDURE & InitReader*( receive: Receiver;  size: TSize );
 		BEGIN
 			ASSERT ( receive # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -578,8 +578,8 @@ TYPE
 		END SetPos;
 
 	(** Return bytes currently available in input buffer. *)
-		PROCEDURE Available*( ): LONGINT;
-		VAR n: LONGINT;
+		PROCEDURE Available*( ): TSize;
+		VAR n: TSize;
 		BEGIN
 			IF (res = Ok) THEN
 				IF (head = tail) THEN head := 0;  receive( buf^, 0, LEN( buf ), 0, tail, res );  INC( received, tail );
@@ -627,8 +627,8 @@ TYPE
 		END Peek;
 
 	(** Read size bytes into x, starting at ofs.  The len parameter returns the number of bytes that were actually read. *)
-		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: LONGINT;  VAR len: LONGINT );
-		VAR n: LONGINT;
+		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: TSize;  VAR len: TSize );
+		VAR n: TSize;
 		BEGIN
 			ASSERT ( size >= 0 );
 			len := 0;
@@ -677,14 +677,14 @@ TYPE
 
 	(** Read a LONGINT. *)
 		PROCEDURE RawLInt*( VAR x: LONGINT );
-		VAR ignore: LONGINT;
+		VAR ignore: TSize;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawLInt;
 
 	(** Read a HUGEINT. *)
 		PROCEDURE RawHInt*( VAR x: HUGEINT );
-		VAR ignore: LONGINT;
+		VAR ignore: TSize;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawHInt;
@@ -715,7 +715,7 @@ TYPE
 
 	(** Read a SET. *)
 		PROCEDURE RawSet*( VAR x: SET );
-		VAR ignore: LONGINT;
+		VAR ignore: TSize;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawSet;
@@ -728,14 +728,14 @@ TYPE
 
 	(** Read a REAL. *)
 		PROCEDURE RawReal*( VAR x: REAL );
-		VAR ignore: LONGINT;
+		VAR ignore: TSize;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawReal;
 
 	(** Read a LONGREAL. *)
 		PROCEDURE RawLReal*( VAR x: LONGREAL );
-		VAR ignore: LONGINT;
+		VAR ignore: TSize;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawLReal;
@@ -974,7 +974,7 @@ TYPE
 	(** A special reader that buffers input set by SetString or SetRawString. *)
 	StringReader* = OBJECT (Reader)
 
-		PROCEDURE & InitStringReader*( size: LONGINT );
+		PROCEDURE & InitStringReader*( size: TSize );
 		BEGIN
 			InitReader( Receive, size )
 		END InitStringReader;
@@ -992,7 +992,7 @@ TYPE
 			head := LONGINT( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;

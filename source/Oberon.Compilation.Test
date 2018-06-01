@@ -39301,7 +39301,7 @@ positive: export inline code with reference to (local) constant
 	PROCEDURE -P*;
 	CONST const=16;
 	CODE{SYSTEM.i386}
-		MOV EAX,[EAX+const]
+		MOV EAX,const
 	END P;
 	END Test.
 

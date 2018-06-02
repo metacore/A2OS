@@ -1,0 +1,12 @@
+MODULE WebHTTPServerTools;
+	IMPORT Commands, WebHTTPServer;
+CONST 
+	ModuleName = \"WebHTTPServerTools"\; 
+
+	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ Stop*(context: Commands.Context); 
+	PROCEDURE ^ AddHost*(context: Commands.Context); 
+	PROCEDURE ^ RemoveHost*(context: Commands.Context); 
+	PROCEDURE ^ ListHosts*(context: Commands.Context); 
+BEGIN
+END WebHTTPServerTools.

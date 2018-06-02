@@ -1,0 +1,63 @@
+MODULE VMWareTools;
+	IMPORT SYSTEM, Strings, Modules, KernelLog, WMWindowManager, WMMessages, Texts, TextUtilities, HostClipboard, Kernel;
+CONST 
+TYPE 
+	MouseGrabber = OBJECT {EXCLUSIVE} 
+	VAR 
+		timer: Kernel.Timer; 
+		alive: BOOLEAN; 
+		t: LONGINT; 
+
+	BEGIN{ACTIVE} 
+	END MouseGrabber; 
+VAR 
+	manager: WMWindowManager.WindowManager; 
+	viewPort: WMWindowManager.ViewPort; 
+	w, h: LONGINT; 
+	hw: LONGINT; 
+	oldGUIBits: SET; 
+	mouseGrabber: MouseGrabber; 
+	textbuffer: Strings.String; 
+
+	PROCEDURE {FingerPrint(1358130412)}  - ReadMouse(): LONGINT;
+	CODE
+	END ReadMouse; 
+	PROCEDURE {FingerPrint(-1155347524)}  - WriteMouse(pos: LONGINT);
+	CODE
+	END WriteMouse; 
+	PROCEDURE {FingerPrint(271179232)}  - SendLength(l: LONGINT);
+	CODE
+	END SendLength; 
+	PROCEDURE {FingerPrint(371898467)}  - Send4Chars(chars: LONGINT);
+	CODE
+	END Send4Chars; 
+	PROCEDURE {FingerPrint(-812544433)}  - ReceiveLength(): LONGINT;
+	CODE
+	END ReceiveLength; 
+	PROCEDURE {FingerPrint(1503499842)}  - Receive4Chars(): LONGINT;
+	CODE
+	END Receive4Chars; 
+	PROCEDURE {FingerPrint(272035970)}  - GetVirtualHWVersion(): LONGINT;
+	CODE
+	END GetVirtualHWVersion; 
+	PROCEDURE {FingerPrint(1738347114)}  - GetVMWareVersion(): LONGINT;
+	CODE
+	END GetVMWareVersion; 
+	PROCEDURE {FingerPrint(1347886038)}  - SetGUIOptions(options: SET);
+	CODE
+	END SetGUIOptions; 
+	PROCEDURE {FingerPrint(2102215645)}  - GetGUIOptions(): SET;
+	CODE
+	END GetGUIOptions; 
+	PROCEDURE ^ SetMousePos(x, y: LONGINT); 
+	PROCEDURE ^ SetTextToClipBoard(CONST text: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTextFromClipBoard(VAR s: Strings.String); 
+	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 
+	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
+	PROCEDURE ^ GetHostClipboard*; 
+	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
+	PROCEDURE ^ MessagePreview(VAR m: WMMessages.Message; VAR discard: BOOLEAN); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END VMWareTools.

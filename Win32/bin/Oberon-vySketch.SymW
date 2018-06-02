@@ -1,0 +1,23 @@
+MODULE vySketch IN Oberon;
+	IMPORT Objects, Display, vyHostTexts, vyTypes, vyPort, vyGraphBase, vyCharts, vyName, vyEvents;
+CONST 
+	idversion* = \"vySketch v0r0a2"\; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyCharts.tLayerDesc)
+		breaks: ARRAY 32 OF LONGINT; 
+		nrOfBreaks: INTEGER; 
+	END; 
+
+	PROCEDURE ^ Recall(sketch: tLayer); 
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ Respond(sketch: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open(sketch: tLayer); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Clear*; 
+BEGIN
+END vySketch.

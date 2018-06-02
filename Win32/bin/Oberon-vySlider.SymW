@@ -1,0 +1,56 @@
+MODULE vySlider IN Oberon;
+	IMPORT Files, Objects, Display, vyHostStrings, vyHostTexts, vyParser, vyBase, vyName, vyRectangles, vyHostDisplay := vyGraphBase, vyTracking, vyPort, vyEvents;
+CONST 
+	idversion* = \"vySlider v0r0a2"\; 
+	buttomWidth = 12; 
+	buttomHeight = 12; 
+	slideWidth = 20; 
+	slideHeight = 10; 
+	leftMargin = 10; 
+	rightMargin = 10; 
+	bottomMargin = 10; 
+	up = 0; 
+	down = 1; 
+	grey1 = 12; 
+TYPE 
+	tSlider* = POINTER TO tSliderDesc; 
+
+	tSliderDesc* = RECORD (vyPort.tLayerDesc)
+		Xr, Yr, Wr, Hr: INTEGER; 
+		X, Y, W, H: INTEGER; 
+		barBegin, barEnd, pos: INTEGER; 
+		rlx, lx, rx, rrx, by, sx, sy: INTEGER; 
+		min, max, value-: REAL; 
+		ticks: INTEGER; 
+		cmd: ARRAY 64 OF CHAR; 
+	END; 
+VAR 
+	left-, runLeft-, right-, runRight-: vyHostDisplay.tSign; 
+	thisSlider: tSlider; 
+	slink*, dlink*: Objects.Object; 
+
+	PROCEDURE ^ Copy(src, dest: tSlider); 
+	PROCEDURE ^ P2dToP(slider: tSlider; x: REAL): INTEGER; 
+	PROCEDURE ^ PToP2d(slider: tSlider; x: INTEGER): REAL; 
+	PROCEDURE ^ TrimLocation(slider: tSlider); 
+	PROCEDURE ^ IncValue(slider: tSlider; direction: INTEGER): REAL; 
+	PROCEDURE ^ DrawSlide(slider: tSlider; x, y: INTEGER); 
+	PROCEDURE ^ Recall(slider: tSlider; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Respond(slider: tSlider; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ PointInSlider(x, y: INTEGER; slider: tSlider; VAR event: vyEvents.EventMsg): BOOLEAN; 
+	PROCEDURE ^ Responsible(slider: tSlider; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tSlider; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tSlider; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tSlider; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(F: tSlider); 
+	PROCEDURE ^ Open*(F: tSlider; picture: vyPort.Picture; min, max, value: REAL; ticks: INTEGER); 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Cmd*; 
+	PROCEDURE ^ help; 
+	PROCEDURE ^ Set*; 
+	PROCEDURE ^ Help*; 
+	PROCEDURE ^ InitPattern; 
+BEGIN
+END vySlider.

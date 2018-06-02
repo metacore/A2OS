@@ -1,0 +1,33 @@
+MODULE WMPerfMonPluginProcesses;
+	IMPORT Machine, Modules, Objects, Commands, Strings, WMPerfMonPlugins, ProcessInfo;
+CONST 
+	ModuleName = \"WMPerfMonPluginProcesses"\; 
+TYPE 
+	ProcessStatsParameter = OBJECT (WMPerfMonPlugins.Parameter)
+	VAR 
+		process: Objects.Process; 
+
+		PROCEDURE ^  & Init(process: Objects.Process); 
+	END ProcessStatsParameter; 
+
+	ProcessStats = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)
+	VAR 
+		process: Objects.Process; 
+		lastCycles, currentCycles: Objects.CpuCyclesArray; 
+		lastTimer: HUGEINT; 
+		lastSamplesValid: BOOLEAN; 
+
+		PROCEDURE ^ Init*(p: WMPerfMonPlugins.Parameter); 
+		PROCEDURE ^ UpdateDataset*; 
+	END ProcessStats; 
+VAR 
+	nextID, nofProcessors: LONGINT; 
+
+	PROCEDURE ^ GetID(): LONGINT; 
+	PROCEDURE ^ GetNofProcessors(): LONGINT; 
+	PROCEDURE ^ SetNofProcessors*(context: Commands.Context); 
+	PROCEDURE ^ Install*(context: Commands.Context); 
+	PROCEDURE ^ Init; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMPerfMonPluginProcesses.

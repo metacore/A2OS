@@ -1,0 +1,8 @@
+MODULE vyQuickDraw IN Oberon;
+	IMPORT vyTypes, vyHostDisplay := vyGraphBase, vyGraphBase, vyPatterns, vyStd2dLayer;
+CONST 
+	idversion* = \"vyQuickDraw v0r0a2"\; 
+
+	PROCEDURE ^ Median*; 
+BEGIN
+END vyQuickDraw.

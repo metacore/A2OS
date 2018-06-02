@@ -1,0 +1,29 @@
+MODULE antsRandom IN Oberon;
+	IMPORT vyRanBase, vyRanParksMiller, vyRandom, antsCommands, vyBase, Objects, Attributes, antsObjects, Gadgets, vyLongrealVec, antsPortability, Math := MathL IN A2, aM := antsMessages;
+CONST 
+VAR 
+	default-: vyRanBase.tRandom; 
+
+	PROCEDURE ^ max*(): LONGINT; 
+	PROCEDURE ^ SetGen*(g: vyRanBase.tRandom); 
+	PROCEDURE ^ Laplace*(mu, lambda: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ LCG(a, b, c, seed: antsPortability.Hugeint): antsPortability.Hugeint; 
+	PROCEDURE ^ SetRandu*; 
+	PROCEDURE ^ SetExA*; 
+	PROCEDURE ^ SetExC*; 
+	PROCEDURE ^ SetExD*; 
+	PROCEDURE ^ SetMarsaglia*; 
+	PROCEDURE ^ DoApplyRNG(obj: vyBase.Object; VAR u: LONGREAL); 
+	PROCEDURE ^ ApplyRNG*; 
+	PROCEDURE ^ DoBoxMuller(obj: vyBase.Object; VAR n1, n2: LONGREAL); 
+	PROCEDURE ^ ApplyBoxMuller*; 
+	PROCEDURE ^ DoPolarMethod(obj: vyBase.Object; VAR n1, n2: LONGREAL); 
+	PROCEDURE ^ ApplyPolarMethod*; 
+	PROCEDURE ^ PowerH(this, power: LONGINT): antsPortability.Hugeint; 
+	PROCEDURE ^ NewDynamicRNG*; 
+	PROCEDURE ^ Max(i1, i2: LONGINT): LONGINT; 
+	PROCEDURE ^ MakeShifted*; 
+	PROCEDURE ^ MakePaired*; 
+BEGIN
+END antsRandom.

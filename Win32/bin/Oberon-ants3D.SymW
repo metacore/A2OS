@@ -1,0 +1,28 @@
+MODULE ants3D IN Oberon;
+	IMPORT vyLinks, antsArrayObjects, antsCommands, vyRealVec, vyBase, vyCG := vyName, vyHostStrings, antsRegions, Objects, antsPictCoordinate, antsToolbox, antsViews, aM := antsMessages, antsHybridObjects, Files, Gadgets;
+CONST 
+TYPE 
+	ConsistencyObject = OBJECT (antsHybridObjects.Object)
+	VAR 
+		in: antsArrayObjects.tINTEGERObject; 
+		out: vyRealVec.tChunkedMatrix; 
+		x0, y0, w0, h0: LONGINT; 
+
+		PROCEDURE ^ Update*; 
+		PROCEDURE ^ Bind*(VAR M: Objects.BindMsg); 
+		PROCEDURE ^ Load*(VAR R: Files.Rider); 
+		PROCEDURE ^ Store*(VAR R: Files.Rider); 
+	END ConsistencyObject; 
+
+	PROCEDURE ^ GenConsistencyObject*; 
+	PROCEDURE ^ UpdateMatrix(A: antsArrayObjects.tINTEGERObject; VAR m: vyRealVec.tMatrixChunk; x0, y0, w0, h0: LONGINT; scaleminmax: BOOLEAN); 
+	PROCEDURE ^ MatrixFromArray(A: antsArrayObjects.tINTEGERObject; VAR m: vyRealVec.tMatrixChunk; x0, y0, w0, h0: LONGINT; scaleminmax: BOOLEAN); 
+	PROCEDURE ^ ScaleMatrix*; 
+	PROCEDURE ^ MatrixObjectFromArray*(A: antsArrayObjects.tINTEGERObject; x, y, w, h: LONGINT; scaleminmax: BOOLEAN): vyRealVec.tChunkedMatrix; 
+	PROCEDURE ^ View3d*; 
+	PROCEDURE ^ DataFromArray(A: antsArrayObjects.tINTEGERObject; name: vyCG.tNameArray; x, y, w, h: LONGINT; scaleminmax: BOOLEAN); 
+	PROCEDURE ^ MakeMatrixFromArray*; 
+	PROCEDURE ^ NewFromRegion*; 
+	PROCEDURE ^ MakeVectorFromLine*; 
+BEGIN
+END ants3D.

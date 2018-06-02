@@ -1,0 +1,109 @@
+MODULE vyMatrixTypes IN Oberon;
+	IMPORT Reals IN A2, MathL IN A2, Texts, vyBase, vyIntVec, vyRealVec, vyLongrealVec, vyHostStrings, vyQFisher, vyHostTexts;
+CONST 
+	idversion* = \"v0r0d3.gs"\; 
+TYPE 
+	label = ARRAY 32 OF CHAR; 
+
+	labels = POINTER TO ARRAY OF label; 
+
+	par = RECORD 
+		min, max, mean: LONGREAL; 
+	END; 
+
+	pars = POINTER TO ARRAY OF par; 
+
+	tRow = POINTER TO tRowDesc; 
+
+	tRowDesc = RECORD 
+		v: vyBase.tVector; 
+		next: tRow; 
+	END; 
+
+	tMatrix* = POINTER TO tMatrixDesc; 
+
+	tMatrixDesc* = RECORD 
+		rows-, columns-: LONGINT; 
+		transposed-: BOOLEAN; 
+		rowlabels*, collabels*: labels; 
+		firstrow: tRow; 
+		rowcache: tRow; 
+		cachedrow: LONGINT; 
+		rParsCache, cParsCache: pars; 
+	END; 
+
+	tIntGetProc = PROCEDURE (me: tMatrix; row, col: LONGINT):INTEGER; 
+
+	tIntSetProc = PROCEDURE (val: INTEGER; me: tMatrix; row, col: LONGINT); 
+
+	tIntMatrix = POINTER TO tIntMatrixDesc; 
+
+	tIntMatrixDesc = RECORD (tMatrixDesc)
+		Get: tIntGetProc; 
+		Set: tIntSetProc; 
+	END; 
+
+	tRealGetProc = PROCEDURE (me: tMatrix; row, col: LONGINT):REAL; 
+
+	tRealSetProc = PROCEDURE (val: REAL; me: tMatrix; row, col: LONGINT); 
+
+	tRealMatrix = POINTER TO tRealMatrixDesc; 
+
+	tRealMatrixDesc = RECORD (tMatrixDesc)
+		Get: tRealGetProc; 
+		Set: tRealSetProc; 
+	END; 
+
+	VDist* = PROCEDURE (v1, v2: vyBase.tVector):LONGREAL; 
+
+	PROCEDURE ^ copyLabel(VAR l1, l2: label); 
+	PROCEDURE ^ InsertLabel(from: labels; at: LONGINT; s: ARRAY OF CHAR): labels; 
+	PROCEDURE ^ DoInsertNewRow(me: tMatrix; at: LONGINT; typ: vyBase.OPTStruct); 
+	PROCEDURE ^ DoInsertNewCol(me: tMatrix; at: LONGINT; typ: vyBase.OPTStruct); 
+	PROCEDURE ^ InsertNewRow*(me: tMatrix; at: LONGINT); 
+	PROCEDURE ^ InsertNewColumn*(me: tMatrix; at: LONGINT); 
+	PROCEDURE ^ DoDeleteRow(M: tMatrix; at: LONGINT); 
+	PROCEDURE ^ DoDeleteColumn(M: tMatrix; at: LONGINT); 
+	PROCEDURE ^ DeleteRow*(M: tMatrix; at: LONGINT); 
+	PROCEDURE ^ DeleteColumn*(M: tMatrix; at: LONGINT); 
+	PROCEDURE ^ GetInt*(me: tMatrix; row, col: LONGINT): INTEGER; 
+	PROCEDURE ^ SetInt*(val: INTEGER; me: tMatrix; row, col: LONGINT); 
+	PROCEDURE ^ GetIRow*(M: tMatrix; row: LONGINT): vyBase.tVector; 
+	PROCEDURE ^ GetICol*(M: tMatrix; col: LONGINT): vyBase.tVector; 
+	PROCEDURE ^ SetIRow*(v: vyBase.tVector; M: tMatrix; row: LONGINT); 
+	PROCEDURE ^ SetICol*(v: vyBase.tVector; M: tMatrix; col: LONGINT); 
+	PROCEDURE ^ GetReal*(me: tMatrix; row, col: LONGINT): REAL; 
+	PROCEDURE ^ SetReal*(val: REAL; me: tMatrix; row, col: LONGINT); 
+	PROCEDURE ^ GetRRow*(M: tMatrix; row: LONGINT): vyBase.tVector; 
+	PROCEDURE ^ GetRCol*(M: tMatrix; col: LONGINT): vyBase.tVector; 
+	PROCEDURE ^ SetRRow*(v: vyBase.tVector; M: tMatrix; row: LONGINT); 
+	PROCEDURE ^ SetRCol*(v: vyBase.tVector; M: tMatrix; col: LONGINT); 
+	PROCEDURE ^ InsertRow*(M: tMatrix; rowv: vyBase.tVector; at: LONGINT); 
+	PROCEDURE ^ AppendR*(M: tMatrix; rowv: vyBase.tVector); 
+	PROCEDURE ^ InsertColumn*(M: tMatrix; colv: vyBase.tVector; at: LONGINT); 
+	PROCEDURE ^ AppendC*(M: tMatrix; colv: vyBase.tVector); 
+	PROCEDURE ^ rParsCache(M: tMatrix); 
+	PROCEDURE ^ GetRPars*(M: tMatrix; row: LONGINT; VAR min, max, mean: LONGREAL); 
+	PROCEDURE ^ cParsCache(M: tMatrix); 
+	PROCEDURE ^ GetCPars*(M: tMatrix; col: LONGINT; VAR min, max, mean: LONGREAL); 
+	PROCEDURE ^ GetPars*(M: tMatrix; VAR min, max, mean: LONGREAL); 
+	PROCEDURE ^ DoGetReal(M: tMatrix; row, col: LONGINT): REAL; 
+	PROCEDURE ^ DoGetRealTransposed(me: tMatrix; row, col: LONGINT): REAL; 
+	PROCEDURE ^ DoSetReal(val: REAL; M: tMatrix; row, col: LONGINT); 
+	PROCEDURE ^ DoSetRealTransposed(val: REAL; me: tMatrix; row, col: LONGINT); 
+	PROCEDURE ^ setRLabel*(s: ARRAY OF CHAR; M: tMatrix; row: LONGINT); 
+	PROCEDURE ^ setCLabel*(s: ARRAY OF CHAR; M: tMatrix; col: LONGINT); 
+	PROCEDURE ^ getRLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; row: LONGINT); 
+	PROCEDURE ^ getCLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; col: LONGINT); 
+	PROCEDURE ^ AdjustAccess(m: tMatrix); 
+	PROCEDURE ^ Transpose*(m: tMatrix); 
+	PROCEDURE ^ Init*(m: tMatrix; rows, columns: LONGINT); 
+	PROCEDURE ^ NewRealMatrix*(rows, columns: LONGINT): tMatrix; 
+	PROCEDURE ^ L1Dist*(v1, v2: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ L2Dist*(v1, v2: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ CorrDist*(v1, v2: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ NewRowDistMatrix*(data: tMatrix; distf: VDist): tMatrix; 
+	PROCEDURE ^ NewColDistMatrix*(data: tMatrix; distf: VDist): tMatrix; 
+	PROCEDURE ^ WriteMatrix*(M: tMatrix); 
+BEGIN
+END vyMatrixTypes.

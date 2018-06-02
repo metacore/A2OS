@@ -1,0 +1,41 @@
+MODULE vyHostStrings IN Oberon;
+	IMPORT Reals IN A2;
+CONST 
+	maxreallen = 20; 
+	ExpChar = \"E"\; 
+VAR 
+	TenM1, Ten7, Ten8: LONGREAL; 
+	HexDig: ARRAY 17 OF CHAR; 
+
+	PROCEDURE ^ Length*(s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Append*(VAR dest: ARRAY OF CHAR; extra: ARRAY OF CHAR); 
+	PROCEDURE ^ Insert*(source: ARRAY OF CHAR; pos: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ Delete*(VAR s: ARRAY OF CHAR; pos, n: LONGINT); 
+	PROCEDURE ^ Replace*(source: ARRAY OF CHAR; pos: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ Extract*(source: ARRAY OF CHAR; pos, n: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ Pos*(pattern, s: ARRAY OF CHAR; pos: LONGINT): LONGINT; 
+	PROCEDURE ^ Cap*(VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Equal*(s1, s2: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Less*(s1, s2: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Diff*(s1, s2: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ AppendInt*(x, fieldlen: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToHexStr*(x: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendHex*(x: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ RealToHexStr*(x: LONGREAL; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ RealToStr*(x: LONGREAL; n: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ RealToStrOld*(x: LONGREAL; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ RealToFixStr*(x: LONGREAL; VAR str: ARRAY OF CHAR; n, f, D: LONGINT); 
+	PROCEDURE ^ AppendRealFix*(x: LONGREAL; n, k, D: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendLongReal*(x: LONGREAL; n: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendReal*(x: REAL; n: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendLongRealHex*(x: LONGREAL; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendRealHex*(x: LONGREAL; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendDate*(t, d: LONGINT; VAR dest: ARRAY OF CHAR); 
+	PROCEDURE ^ BruteSearch*(VAR s: ARRAY OF CHAR; VAR pat: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ KMPSearch*(VAR s: ARRAY OF CHAR; VAR pat: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ BMSearch*(VAR s: ARRAY OF CHAR; VAR pat: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ RKSearch*(VAR s: ARRAY OF CHAR; VAR pat: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ SeqName*(stub: ARRAY OF CHAR; sep: CHAR; seqnr: LONGINT; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ NameToSeq*(name: ARRAY OF CHAR; sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: LONGINT); 
+BEGIN
+END vyHostStrings.

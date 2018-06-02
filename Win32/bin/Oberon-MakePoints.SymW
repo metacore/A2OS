@@ -1,0 +1,84 @@
+MODULE MakePoints IN Oberon;
+	IMPORT SYSTEM, M := Math IN A2, Files, Texts, Oberon, Fonts, Display, R := RandomNumbers;
+CONST 
+	versionString = \"MakePoints 1.3.2000 / jaco"\; 
+	Tag = 2475; 
+	Version = 3; 
+	MaxPoint = 350; 
+	MaxFig = 40; 
+	Filename = \"SavePoints.Data"\; 
+	Verbose = FALSE; 
+	nomorph = 0; 
+TYPE 
+	Point = RECORD 
+		x, y, z: REAL; 
+	END; 
+
+	Figure = ARRAY MaxPoint OF Point; 
+
+	Movement = ARRAY MaxPoint OF INTEGER; 
+
+	Pat = POINTER TO RECORD 
+		w, h: CHAR; 
+		pixmap: ARRAY 8192 OF CHAR; 
+	END; 
+VAR 
+	figure: ARRAY MaxFig OF Figure; 
+	move: ARRAY MaxFig OF Movement; 
+	timefactor: ARRAY MaxFig OF REAL; 
+	attributes: ARRAY MaxFig OF SET; 
+	curfig, curpoint: INTEGER; 
+	min, max: Point; 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ Rea(x: LONGREAL; n: INTEGER); 
+	PROCEDURE ^ Str(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ Ch(ch: CHAR); 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ Int(x: LONGINT; n: INTEGER); 
+	PROCEDURE ^ Prepare; 
+	PROCEDURE ^ Postpare; 
+	PROCEDURE ^ GetPoint(VAR p: Point; n: INTEGER); 
+	PROCEDURE ^ SetPoint(VAR p: Point; x, y, z: REAL); 
+	PROCEDURE ^ Set(x, y, z: REAL); 
+	PROCEDURE ^ SetTimeFactor(t: REAL); 
+	PROCEDURE ^ SetAttributes(s: SET); 
+	PROCEDURE ^ From(f, t, p: REAL): REAL; 
+	PROCEDURE ^ Rotate(c, s: REAL; VAR x, y: REAL); 
+	PROCEDURE ^ DistanceSqr(p1, p2: Point): REAL; 
+	PROCEDURE ^ InitMovement; 
+	PROCEDURE ^ Sphere; 
+	PROCEDURE ^ Torus; 
+	PROCEDURE ^ Cylinder; 
+	PROCEDURE ^ Cube; 
+	PROCEDURE ^ Box; 
+	PROCEDURE ^ Spiral; 
+	PROCEDURE ^ Milky; 
+	PROCEDURE ^ Plane; 
+	PROCEDURE ^ Eiffel; 
+	PROCEDURE ^ TrigSurface; 
+	PROCEDURE ^ Mobius; 
+	PROCEDURE ^ Dumbbell; 
+	PROCEDURE ^ Ball1; 
+	PROCEDURE ^ Ball2; 
+	PROCEDURE ^ Cross; 
+	PROCEDURE ^ Helix; 
+	PROCEDURE ^ Key; 
+	PROCEDURE ^ Venus; 
+	PROCEDURE ^ Mars; 
+	PROCEDURE ^ Text(CONST font, text: ARRAY OF CHAR); 
+	PROCEDURE ^ Pyramid(n: INTEGER); 
+	PROCEDURE ^ Hypercube; 
+	PROCEDURE ^ Mug; 
+	PROCEDURE ^ Eggs; 
+	PROCEDURE ^ ZAFlag; 
+	PROCEDURE ^ Component(n: INTEGER); 
+	PROCEDURE ^ PC; 
+	PROCEDURE ^ Pyramids; 
+	PROCEDURE ^ Countdown; 
+	PROCEDURE ^ MakeFigure(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultFigures; 
+	PROCEDURE ^ WriteData; 
+	PROCEDURE ^ Write*; 
+BEGIN
+END MakePoints.

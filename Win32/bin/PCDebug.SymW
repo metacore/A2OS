@@ -1,0 +1,23 @@
+MODULE PCDebug;
+	IMPORT SYSTEM, Machine, KernelLog, Modules;
+CONST 
+	NotImplemented* = 0; 
+	NotOptimized* = 1; 
+TYPE 
+	List = POINTER TO RECORD 
+		pc: ADDRESS; 
+		next: List; 
+	END; 
+VAR 
+	pclist: List; 
+	Hex: ARRAY 17 OF CHAR; 
+
+	PROCEDURE ^ ReadNum(VAR pos: ADDRESS; VAR i: LONGINT); 
+	PROCEDURE ^ WriteString*(str: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR pos: LONGINT); 
+	PROCEDURE ^ WriteHex*(val: ADDRESS; VAR name: ARRAY OF CHAR; VAR pos: LONGINT); 
+	PROCEDURE ^ GetProcedure*(pc: ADDRESS; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTypeName*(p: ANY; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ToDo*(class: LONGINT); 
+	PROCEDURE ^ ResetToDo*; 
+BEGIN
+END PCDebug.

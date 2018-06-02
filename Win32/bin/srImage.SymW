@@ -1,0 +1,13 @@
+MODULE srImage;
+	IMPORT srBase;
+CONST 
+	W = srBase.W; 
+	H = srBase.H; 
+TYPE 
+	SREAL = srBase.SREAL; 
+
+	Image = srBase.IMAGE; 
+
+	PROCEDURE ^ filterbilinear*(VAR img: Image); 
+BEGIN
+END srImage.

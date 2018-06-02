@@ -1,0 +1,50 @@
+MODULE antsBellman IN Oberon;
+	IMPORT antsArrays, vyLongreal, aM := antsMessages;
+CONST 
+	cInval* =  -1; 
+	cMean1d* = 0; 
+	cMedian* = 1; 
+	cMean2d* = 2; 
+	cHampel* = 3; 
+	cSaegezahn* = 4; 
+	cHuber* = 5; 
+TYPE 
+	Function* = PROCEDURE (k, n: LONGINT):LONGREAL; 
+
+	Statistic* = POINTER TO StatisticDesc; 
+
+	StatisticDesc* = RECORD 
+		type*: INTEGER; 
+		m*, s*: antsArrays.X2d; 
+		n*, N*: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ Min(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ Step(VAR argmin: ARRAY OF INTEGER; VAR min: ARRAY OF LONGREAL; n, minw, maxw: LONGINT; p: Function); 
+	PROCEDURE ^ Bellman*(VAR argmin: antsArrays.I1d; VAR min: antsArrays.X1d; N, minw, maxw: LONGINT; p: Function; initvalue: LONGREAL); 
+	PROCEDURE ^ BellmanMatrix*(VAR argmin: antsArrays.I2d; VAR min: antsArrays.X2d; N: LONGINT; p: Function); 
+	PROCEDURE ^ PartitionMatrix*(argmin: antsArrays.I2d; VAR result: antsArrays.X2d; p: Function); 
+	PROCEDURE ^ IntervalLenMatrix*(argmin: antsArrays.I2d; VAR result: antsArrays.I2d); 
+	PROCEDURE ^ InterVarMatrix*(rstern: antsArrays.I2d; s: Statistic; VAR intVar: antsArrays.X2d); 
+	PROCEDURE ^ IntervalLen*(argmin: antsArrays.I1d; VAR result: antsArrays.I1d); 
+	PROCEDURE ^ Partition*(argmin: antsArrays.I1d; VAR result: antsArrays.X1d; p: Function); 
+	PROCEDURE ^ InitStatistic1d*(VAR statistic: Statistic; N: LONGINT); 
+	PROCEDURE ^ InitStatistic2d*(VAR statistic: Statistic; N, M: LONGINT); 
+	PROCEDURE ^ ComputeMeanStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ median(y: ARRAY OF LONGREAL; start, ende: LONGINT): LONGREAL; 
+	PROCEDURE ^ ComputeMedianStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ ComputeHampelStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ ComputeSaegezahnStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ ComputeHuberStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ CreateSortedArray(y: ARRAY OF LONGREAL; start, ende: LONGINT): antsArrays.X1d; 
+	PROCEDURE ^ ComputeMeanStat2d*(VAR A: ARRAY OF ARRAY OF LONGREAL; VAR s: Statistic); 
+	PROCEDURE ^ GetMean1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetMedian1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetSsq1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetSAbs1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetMean2d*(s: Statistic; fromx, fromy, tox, toy: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetSsq2d*(s: Statistic; fromx, fromy, tox, toy: LONGINT): LONGREAL; 
+	PROCEDURE ^ gammaScanning*(min: antsArrays.X2d; VAR jumps: antsArrays.I1d; VAR gamma: antsArrays.X1d); 
+BEGIN
+END antsBellman.

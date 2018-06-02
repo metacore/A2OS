@@ -1,0 +1,43 @@
+MODULE antsMDimDiscreteIsingS IN Oberon;
+	IMPORT antsObjects, antsFunctions, Objects, Files, Gadgets, antsNeighbourhoods, antsRegions, Attributes, aM := antsMessages, antsArrayObjects, Math := MathL IN A2, antsKernel, antsModels, antsCommands, vyName, vyBase, antsCaches, vyRanBase, Links;
+CONST 
+TYPE 
+	intArray = POINTER TO ARRAY OF INTEGER; 
+
+	realArray = POINTER TO ARRAY OF LONGREAL; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		dim-: LONGINT; 
+		n*: antsNeighbourhoods.Neighbours; 
+		f: antsFunctions.Function; 
+		dataf: antsFunctions.Function; 
+		fcache: realArray; 
+		datafcache: realArray; 
+		current: intArray; 
+		currentR: realArray; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ U(VAR values: ARRAY OF INTEGER; M: tModel): LONGREAL; 
+	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: LONGINT; VAR values: ARRAY OF INTEGER); 
+	PROCEDURE ^ PseudoLikTab*(o: antsArrayObjects.tINTEGERObject; M: tModel; VAR values: ARRAY OF ARRAY OF LONGREAL); 
+	PROCEDURE ^ PseudoLikPrepare*(o: antsArrayObjects.tINTEGERObject; M: tModel; VAR T: antsNeighbourhoods.NeighbourTable); 
+	PROCEDURE ^ PseudoLik*(o: antsNeighbourhoods.NeighbourTable; M: tModel; AIC: BOOLEAN): LONGREAL; 
+	PROCEDURE ^ Sync1(m: tModel); 
+	PROCEDURE ^ MakeCaches(m: tModel; depth: LONGINT; data: BOOLEAN); 
+	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ OneSweep*(M: antsKernel.samplingMsg); 
+	PROCEDURE ^ Metropolis(msg: antsKernel.samplingMsg); 
+	PROCEDURE ^ Exchange(msg: antsKernel.samplingMsg); 
+	PROCEDURE ^ CopyOrig(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; n: antsNeighbourhoods.Neighbours; f: antsFunctions.Function; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+	PROCEDURE ^ AttachDataF*; 
+BEGIN
+END antsMDimDiscreteIsingS.

@@ -1,0 +1,46 @@
+MODULE FoxIntermediateParser;
+	IMPORT Strings, Diagnostics, D := Debugging, SyntaxTree := FoxSyntaxTree, Scanner := FoxScanner, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, Basic := FoxBasic, Streams, Files, Global := FoxGlobal;
+CONST 
+	IntermediateCodeExtension = \"Fil"\; 
+	Trace = FALSE; 
+TYPE 
+	MessageString = ARRAY 256 OF CHAR; 
+
+	Position = Basic.Position; 
+
+	IntermediateCodeParser* = OBJECT 
+	CONST 
+		Trace = FALSE; 
+		Strict = TRUE; 
+	VAR 
+		diagnostics: Diagnostics.Diagnostics; 
+		error: BOOLEAN; 
+		symbol: Scanner.Symbol; 
+		scanner: Scanner.AssemblerScanner; 
+		system: Global.System; 
+
+		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; s: Global.System); 
+		PROCEDURE ^ Error(pos: Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ NextSymbol; 
+		PROCEDURE ^ ThisToken(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectToken(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectAnyIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IgnoreNewLines; 
+		PROCEDURE ^ ExpectLineDelimiter(): BOOLEAN; 
+		PROCEDURE ^ ParseLineNumber(expectedLineNumber: LONGINT); 
+		PROCEDURE ^ ParseOperand(VAR operand: IntermediateCode.Operand; sectionList: Sections.SectionList); 
+		PROCEDURE ^ ParseInstruction(VAR instruction: IntermediateCode.Instruction; sectionList: Sections.SectionList); 
+		PROCEDURE ^ ParseSectionContent*(scanner: Scanner.AssemblerScanner; section: IntermediateCode.Section; sectionList: Sections.SectionList); 
+		PROCEDURE ^ ParseSectionProperties(VAR section: IntermediateCode.Section); 
+		PROCEDURE ^ ParseModuleContent*(scanner: Scanner.AssemblerScanner; module: Sections.Module): BOOLEAN; 
+		PROCEDURE ^ ParseModule*(system: Global.System): Sections.Module; 
+	END IntermediateCodeParser; 
+
+	PROCEDURE ^ ParseReader*(reader: Streams.Reader; diagnostics: Diagnostics.Diagnostics; module: Sections.Module): BOOLEAN; 
+	PROCEDURE ^ ParseFile*(CONST pathName, moduleName: ARRAY OF CHAR; system: Global.System; diagnostics: Diagnostics.Diagnostics): Sections.Module; 
+BEGIN
+END FoxIntermediateParser.

@@ -1,0 +1,35 @@
+MODULE antsMDimDiscreteGS IN Oberon;
+	IMPORT antsObjects, antsFunctions, Objects, Files, Gadgets, antsNeighbourhoods, antsRegions, antsArrayObjects, Math := MathL IN A2, antsKernel, antsModels, antsCommands, vyName, vyBase, antsCaches, vyRanBase, Links, antsGlobals, aM := antsMessages;
+CONST 
+TYPE 
+	intArray = POINTER TO ARRAY OF INTEGER; 
+
+	realArray = POINTER TO ARRAY OF LONGREAL; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		dim-: LONGINT; 
+		n*: antsNeighbourhoods.Neighbours; 
+		interactionF: antsFunctions.FunctionXd; 
+		current: realArray; 
+		currentR: realArray; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ U(VAR values: ARRAY OF LONGREAL; M: tModel): LONGREAL; 
+	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: LONGINT; VAR values: ARRAY OF LONGREAL); 
+	PROCEDURE ^ MakeCaches(m: tModel; depth: LONGINT; data: BOOLEAN); 
+	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ OneSweep*(M: antsKernel.samplingMsg); 
+	PROCEDURE ^ Metropolis(msg: antsKernel.samplingMsg); 
+	PROCEDURE ^ Exchange(msg: antsKernel.samplingMsg); 
+	PROCEDURE ^ CopyOrig(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; n: antsNeighbourhoods.Neighbours; if: antsFunctions.FunctionXd; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsMDimDiscreteGS.

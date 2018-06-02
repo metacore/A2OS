@@ -1,0 +1,14 @@
+MODULE vyChiSquare IN Oberon;
+	IMPORT MathL IN A2;
+CONST 
+	INF = MAX(LONGREAL); 
+TYPE 
+	extended = LONGREAL; 
+
+	integer = LONGINT; 
+
+	PROCEDURE ^ SChiSq*(n: integer; x: extended): extended; 
+	PROCEDURE ^ PFChiSq*(n: integer; x: extended): extended; 
+	PROCEDURE ^ chs1*(bins: ARRAY OF LONGINT; ebins: ARRAY OF LONGREAL; nbins: LONGINT; knstrn: LONGINT; VAR df, chsq, prob: LONGREAL); 
+BEGIN
+END vyChiSquare.

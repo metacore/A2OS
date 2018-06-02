@@ -1,0 +1,42 @@
+MODULE vyRanCombo IN Oberon;
+	IMPORT vyRanBase, Files, Objects, S := SYSTEM;
+CONST 
+	cModuleName = \"vyRanCombo"\; 
+	cSeedVersion = 0; 
+	sysBitsTypeSize = vyRanBase.sysBitsTypeSize; 
+	sysMaxUnsigned = vyRanBase.sysMaxUnsigned; 
+	sysMaskSecondHalf = vyRanBase.sysMaskSecondHalf; 
+	sysSHR = vyRanBase.sysSHR; 
+	mwcParam = 30903; 
+TYPE 
+	tRandom = vyRanBase.tRandom; 
+
+	tSeed = OBJECT (vyRanBase.tSeed)
+	VAR 
+		x, y, z: LONGINT; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	Bits = vyRanBase.Bits; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ Combo*(VAR x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ Next(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ DoAsserts; 
+BEGIN
+END vyRanCombo.

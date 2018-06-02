@@ -1,0 +1,98 @@
+MODULE antsMCView IN Oberon;
+	IMPORT antsCommands, aM := antsMessages, vyRandom, vyName, vyBase, Objects, vyGraphBase, vyPort, Display, vyDisplay2d, Oberon, Input, Files, Gadgets;
+CONST 
+	mappertype = 1; 
+	matrixtype = 2; 
+TYPE 
+	Map* = POINTER TO ARRAY OF LONGINT; 
+
+	Usage* = POINTER TO ARRAY OF BOOLEAN; 
+
+	MapQueue* = POINTER TO MapQueueDesc; 
+
+	MapQueueDesc* = RECORD 
+		m: Map; 
+		u: Usage; 
+		next: MapQueue; 
+		coal: BOOLEAN; 
+	END; 
+
+	Mapper* = PROCEDURE (VAR A: ARRAY OF LONGINT); 
+
+	Matrix* = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+
+	Vector* = POINTER TO ARRAY OF LONGREAL; 
+
+	Chain = POINTER TO ChainDesc; 
+
+	ChainDesc = RECORD (vyBase.ObjDesc)
+		backwards: BOOLEAN; 
+		q: MapQueue; 
+		qlen: LONGINT; 
+		m: Mapper; 
+		A, cA: Matrix; 
+		dim: LONGINT; 
+		ran: Vector; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		c: Chain; 
+		type: INTEGER; 
+	END; 
+VAR 
+	cur: vyBase.Object; 
+	templ: tLayer; 
+	globalCount: LONGINT; 
+
+	PROCEDURE ^ StoreVector(VAR R: Files.Rider; VAR V: Vector); 
+	PROCEDURE ^ LoadVector(VAR R: Files.Rider; VAR V: Vector); 
+	PROCEDURE ^ StoreMatrix(VAR R: Files.Rider; VAR M: Matrix); 
+	PROCEDURE ^ LoadMatrix(VAR R: Files.Rider; VAR M: Matrix); 
+	PROCEDURE ^ StoreMap(VAR R: Files.Rider; m: Map); 
+	PROCEDURE ^ LoadMap(VAR R: Files.Rider; VAR m: Map); 
+	PROCEDURE ^ StoreUsage(VAR R: Files.Rider; m: Usage); 
+	PROCEDURE ^ LoadUsage(VAR R: Files.Rider; VAR m: Usage); 
+	PROCEDURE ^ StoreMapQueue(VAR R: Files.Rider; q: MapQueue); 
+	PROCEDURE ^ LoadMapQueue(VAR R: Files.Rider; VAR q: MapQueue); 
+	PROCEDURE ^ StoreMapper(VAR R: Files.Rider; VAR m: Mapper); 
+	PROCEDURE ^ LoadMapper(VAR R: Files.Rider; VAR m: Mapper); 
+	PROCEDURE ^ StoreChain(VAR R: Files.Rider; VAR c: Chain); 
+	PROCEDURE ^ LoadChain(VAR R: Files.Rider; VAR c: Chain); 
+	PROCEDURE ^ DefaultMapper(VAR m: ARRAY OF LONGINT); 
+	PROCEDURE ^ OneRMapper(VAR m: ARRAY OF LONGINT); 
+	PROCEDURE ^ Count(VAR m: ARRAY OF LONGINT; dim: LONGINT): LONGINT; 
+	PROCEDURE ^ Copy(VAR from, to: ARRAY OF LONGINT; dim: LONGINT); 
+	PROCEDURE ^ ItApply(VAR m, n: ARRAY OF LONGINT; dim: LONGINT; count: LONGINT); 
+	PROCEDURE ^ MapperIt(VAR m: ARRAY OF LONGINT); 
+	PROCEDURE ^ PaintPoint(dim: LONGINT; at: LONGINT; q: MapQueue); 
+	PROCEDURE ^ PaintPoint2(dim: LONGINT; at: LONGINT; q: MapQueue); 
+	PROCEDURE ^ PaintMap(q: MapQueue; at: LONGINT); 
+	PROCEDURE ^ PaintChain(c: Chain); 
+	PROCEDURE ^ PaintMatrix(c: Chain); 
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ GHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(chart: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowMatrix*; 
+	PROCEDURE ^ cHandler(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ GenL*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ SetMapper*; 
+	PROCEDURE ^ NewQueue(dim: LONGINT): MapQueue; 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ Check*; 
+	PROCEDURE ^ SetQUsage(first: MapQueue); 
+	PROCEDURE ^ DoApplyMapper(c: Chain); 
+	PROCEDURE ^ ApplyMapper*; 
+	PROCEDURE ^ DoApplyMapperForw(c: Chain); 
+	PROCEDURE ^ ApplyMapperForw*; 
+	PROCEDURE ^ TimeSlice(time: LONGREAL); 
+	PROCEDURE ^ ApplyMapperR*; 
+BEGIN
+END antsMCView.

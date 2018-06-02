@@ -1,0 +1,23 @@
+MODULE antsSecurity IN Oberon;
+	IMPORT Oberon, Texts, Modules, Objects, Strings;
+CONST 
+VAR 
+	allowMultipleThreads*: BOOLEAN; 
+	blocked*: BOOLEAN; 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ Assert*(asserted: BOOLEAN; fail: ARRAY OF CHAR); 
+	PROCEDURE ^ Block*; 
+	PROCEDURE ^ Release*; 
+	PROCEDURE ^ Command*(P: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*; 
+	PROCEDURE ^ CheckDisplay*(halt: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Execute*(P: Modules.Command); 
+	PROCEDURE ^ Halt*(cause: ARRAY OF CHAR); 
+	PROCEDURE ^ Kill*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ OpenScript*(t: Texts.Text; pos, num: LONGINT; executorObj, context: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ SetProgress*(i: INTEGER); 
+	PROCEDURE ^ Init*; 
+BEGIN
+END antsSecurity.

@@ -1,0 +1,39 @@
+MODULE antsMDimEstimator IN Oberon;
+	IMPORT antsObjects, vyGraphBase, vyPort, vyLongrealVec, vyDisplay2d, antsInteractivePar, antsNeighbourhoods, vyHostStrings, antsArrayObjects, MathL IN A2, antsCommands, vyBase, antsDirSet, vyHostTexts, vyName, vyLinks, Objects, Files, Gadgets, antsSecurity, aM := antsMessages;
+CONST 
+TYPE 
+	Estimator = POINTER TO EstimatorDesc; 
+
+	EstimatorDesc = RECORD (vyBase.ObjDesc)
+		lowdim, highdim: LONGINT; 
+		Isotropic: vyLinks.Link; 
+		NonIsotropic: vyLinks.Link; 
+		nisoAIC, isoAIC: vyBase.tVector; 
+		nisoAICMin, isoAICMin: INTEGER; 
+		nisoAICMinTotal, isoAICMinTotal: BOOLEAN; 
+		current: INTEGER; 
+	END; 
+VAR 
+	tempO: antsArrayObjects.tINTEGERObject; 
+	tempDim: LONGINT; 
+	tx-, ty-, tw-, th-: LONGINT; 
+	temptable: POINTER TO ARRAY OF ARRAY OF LONGINT; 
+	n: antsNeighbourhoods.Neighbours; 
+
+	PROCEDURE ^ tabelize(o: antsArrayObjects.tINTEGERObject; dim: LONGINT); 
+	PROCEDURE ^ Calc(pos: LONGINT; dim: LONGINT; par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ IsingPMLE(o: antsArrayObjects.tObject; dim: LONGINT; par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ func(VAR Par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ StoreF(VAR R: Files.Rider; s: Estimator); 
+	PROCEDURE ^ LoadF(VAR R: Files.Rider; s: Estimator); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ HandleLinkMsg(l: vyLinks.Link; name: ARRAY OF CHAR; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewEstimator*; 
+	PROCEDURE ^ Estimate*; 
+	PROCEDURE ^ DoShow(e: Estimator); 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsMDimEstimator.

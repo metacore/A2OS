@@ -1,0 +1,128 @@
+MODULE FoxAssembler;
+	IMPORT Streams, Strings, Diagnostics, D := Debugging, Commands, BinaryCode := FoxBinaryCode, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, Scanner := FoxScanner, Basic := FoxBasic, SYSTEM, ObjectFile;
+CONST 
+	Trace* = FALSE; 
+	MaxOperands* = 3; 
+	MaxPasses* = 2; 
+	ConstantInteger* = 0; 
+	ConstantFloat* = 1; 
+	Fixup* = 2; 
+	Offset* = 3; 
+	ConstantIntegerOrOffset* = {ConstantInteger, Offset}; 
+TYPE 
+	OperandString = ARRAY 256 OF CHAR; 
+
+	Position = Basic.Position; 
+
+	FixupElement = POINTER TO RECORD 
+		fixup: BinaryCode.Fixup; 
+		next: FixupElement; 
+	END; 
+
+	NamedLabel* = OBJECT 
+	VAR 
+		section: IntermediateCode.Section; 
+		offset, displacement: LONGINT; 
+		name-: Scanner.IdentifierString; 
+		nextNamedLabel-: NamedLabel; 
+		fixupList: FixupElement; 
+
+		PROCEDURE ^  & InitNamedLabel(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetFixup(): BinaryCode.Fixup; 
+		PROCEDURE ^ ResetDisplacements; 
+		PROCEDURE ^ SetOffset*(ofs: LONGINT); 
+	END NamedLabel; 
+
+	NamedLabelList* = OBJECT 
+	VAR 
+		first-, last-: NamedLabel; 
+
+		PROCEDURE ^  & InitNamedLabelList; 
+		PROCEDURE ^ Add*(n: NamedLabel); 
+		PROCEDURE ^ ResetDisplacements; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): NamedLabel; 
+	END NamedLabelList; 
+
+	Result* = RECORD 
+		type*: INTEGER; 
+		sizeInBits*: INTEGER; 
+		value*: HUGEINT; 
+		valueR*: LONGREAL; 
+		fixup*: BinaryCode.Fixup; 
+	END; 
+
+	NamedResult* = POINTER TO RECORD (Result)
+		name: Scanner.IdentifierString; 
+		nextResult: NamedResult; 
+	END; 
+
+	NamedResultList* = OBJECT 
+	VAR 
+		first, last: NamedResult; 
+		number: LONGINT; 
+
+		PROCEDURE ^  & InitNamedResultList; 
+		PROCEDURE ^ Add*(n: NamedResult); 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): NamedResult; 
+	END NamedResultList; 
+
+	Assembler* = OBJECT 
+	VAR 
+		diagnostics: Diagnostics.Diagnostics; 
+		error-: BOOLEAN; 
+		errorPosition-: Position; 
+		symbol-: Scanner.Symbol; 
+		scanner: Scanner.AssemblerScanner; 
+		orgOffset: LONGINT; 
+		section-: IntermediateCode.Section; 
+		code-: BinaryCode.Section; 
+		labels: NamedLabelList; 
+		results: NamedResultList; 
+		scope: SyntaxTree.Scope; 
+		module: Sections.Module; 
+		pass-: LONGINT; 
+
+		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ SetContext(CONST context: Scanner.Context); 
+		PROCEDURE ^ Error*(pos: SyntaxTree.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ErrorSS*(pos: SyntaxTree.Position; CONST s1, s2: ARRAY OF CHAR); 
+		PROCEDURE ^ NextSymbol*; 
+		PROCEDURE ^ ThisToken*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ThisIdentifier*(CONST this: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ExpectToken*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExpectConstantInteger*(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Section; 
+		PROCEDURE ^ DefineLabel(pos: Position; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetLabel(pos: Position; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ CopyResult(CONST from: Result; VAR to: Result); 
+		PROCEDURE ^ DefineResult(pos: Position; CONST name: ARRAY OF CHAR; CONST r: Result); 
+		PROCEDURE ^ SetResult(CONST name: ARRAY OF CHAR; CONST r: Result); 
+		PROCEDURE ^ SymbolInScope(CONST ident: ARRAY OF CHAR): SyntaxTree.Symbol; 
+		PROCEDURE ^ ConstantSymbol(pos: Position; constant: SyntaxTree.Constant; VAR result: Result): BOOLEAN; 
+		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT; 
+		PROCEDURE ^ NonConstantSymbol(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN; 
+		PROCEDURE ^ GetNonConstant*(pos: Position; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN; 
+		PROCEDURE ^ LocalOffset(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN; 
+		PROCEDURE ^ GetConstant*(pos: Position; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN; 
+		PROCEDURE ^ Factor(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Term(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Expression*(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Data(CONST ident: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Reserve(CONST ident: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits); 
+		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
+		PROCEDURE ^ IgnoreNewLines; 
+		PROCEDURE ^ DoAssemble; 
+		PROCEDURE ^ InlineAssemble*(scanner: Scanner.AssemblerScanner; section: IntermediateCode.Section; scope: SyntaxTree.Scope; module: Sections.Module); 
+		PROCEDURE ^ Assemble*(scanner: Scanner.AssemblerScanner); 
+		PROCEDURE ^ AllSections*; 
+		PROCEDURE ^ Text*(scanner: Scanner.AssemblerScanner); 
+	END Assembler; 
+
+	PROCEDURE ^ DumpResult*(w: Streams.Writer; result: Result); 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ TestScanner*(context: Commands.Context); 
+BEGIN
+END FoxAssembler.

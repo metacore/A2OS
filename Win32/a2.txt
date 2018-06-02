@@ -1,0 +1,12 @@
+Heaps.SetMetaData ~
+Traps.Install ~
+Files.AddSearchPath bin~
+Files.AddSearchPath ../source~
+Files.SetWorkPath work~
+Configuration.Init~
+Machine.SetTraceFile~
+FSTools.Mount WORK RelativeFileSystem Work~
+Display.Install ~
+WindowManager.Install ~
+Clipboard.Install ~
+Autostart.Run~

@@ -1,0 +1,13 @@
+MODULE Coco IN Oberon;
+	IMPORT Oberon, Texts, CRS, CRP, CRT;
+CONST 
+	minErrDist = 8; 
+VAR 
+	w: Texts.Writer; 
+	lastErrPos: LONGINT; 
+
+	PROCEDURE ^ Error(n: INTEGER; pos: LONGINT); 
+	PROCEDURE ^ Options(VAR s: Texts.Scanner); 
+	PROCEDURE ^ Compile*; 
+BEGIN
+END Coco.

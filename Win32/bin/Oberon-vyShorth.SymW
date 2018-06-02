@@ -1,0 +1,33 @@
+MODULE vyShorth IN Oberon;
+	IMPORT Gadgets, Objects, Display, vyHostTexts, vyLinks, vyBase, vyRealVec, vyTypes, vyName, vyGraphBase, vyDisplay2d, vyPort;
+CONST 
+	idversion* = \"vyShorth v0r0a3"\; 
+	cMin = 0; 
+	cMax = 1; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Recall(shorth: tLayer); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ AdjustCoord(pict: vyPort.Picture; obj: tLayer); 
+	PROCEDURE ^ SetModel(pict: vyPort.Picture; obj: tLayer; data: Objects.Object); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+	PROCEDURE ^ NewPict*; 
+BEGIN
+END vyShorth.

@@ -1,0 +1,53 @@
+MODULE ants4dArrayObjects IN Oberon;
+	IMPORT vyBase, vyInteger, Objects, antsCommands, vyRanBase, MathL IN A2, Gadgets, Files, vyName, vyHostTexts, antsObjects, ants3dArrayObjects, antsArrays, aM := antsMessages;
+CONST 
+	defaultdepth = 2; 
+TYPE 
+	tArray* = antsArrays.I4d; 
+
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		w*, h*, d*, t*, depth*: LONGINT; 
+		A*: tArray; 
+		ACache*: tArray; 
+		F: ants3dArrayObjects.tObject; 
+		Fd: LONGINT; 
+	END; 
+VAR 
+	newobject-: tObject; 
+
+	PROCEDURE ^ UniformO*(o: tObject); 
+	PROCEDURE ^ ExampleO*(o: tObject); 
+	PROCEDURE ^ ExampleOBall*(o: tObject); 
+	PROCEDURE ^ ExampleOBall2*(o: tObject); 
+	PROCEDURE ^ ExampleOBall3*(o: tObject); 
+	PROCEDURE ^ ExampleOColumn*(o: tObject); 
+	PROCEDURE ^ Init*(o: tObject); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Refresh*(obj: vyBase.Object); 
+	PROCEDURE ^ SetDepth*(obj: tObject; depth: LONGINT); 
+	PROCEDURE ^ EmbedArray*(A: tArray; o: tObject); 
+	PROCEDURE ^ NewArray*(w, h, d, t: LONGINT): tArray; 
+	PROCEDURE ^ NewObject*(w, h, d, t, depth: LONGINT): tObject; 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ ChangeSize(o: tObject; w, h, d, t: INTEGER); 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ StoreA(VAR R: Files.Rider; A: tArray); 
+	PROCEDURE ^ LoadA(VAR R: Files.Rider): tArray; 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ CopyArray*(a: tArray; VAR A: tArray; sx, sy, sz, st, w, h, zl, tl, dx, dy, dz, dt: LONGINT); 
+	PROCEDURE ^ CopyArrayPart(from, to: tObject); 
+	PROCEDURE ^ CopyObject*(from, to: tObject); 
+	PROCEDURE ^ ObjectCopy(from: tObject): tObject; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Copy*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Uniform*; 
+	PROCEDURE ^ Channel*; 
+	PROCEDURE ^ Example*; 
+	PROCEDURE ^ Attach*; 
+	PROCEDURE ^ Next*; 
+BEGIN
+END ants4dArrayObjects.

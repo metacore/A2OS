@@ -1,0 +1,140 @@
+MODULE GfxPaths;
+	IMPORT Math, GfxMatrix;
+CONST 
+	Stop* = 0; 
+	Enter* = 1; 
+	Line* = 2; 
+	Arc* = 3; 
+	Bezier* = 4; 
+	Exit* = 5; 
+	ElemBlockSize = 16; 
+	CoordBlockSize = 32; 
+	MaxSplinePoints* = 128; 
+	Left = 0; 
+	Right = 1; 
+	Bottom = 2; 
+	Top = 3; 
+TYPE 
+	ElemBlock = POINTER TO ElemBlockDesc; 
+
+	ElemBlockDesc = RECORD 
+		next: ElemBlock; 
+		elem: ARRAY ElemBlockSize OF SHORTINT; 
+		coords: INTEGER; 
+	END; 
+
+	CoordBlock = POINTER TO CoordBlockDesc; 
+
+	CoordBlockDesc = RECORD 
+		next: CoordBlock; 
+		x, y: ARRAY CoordBlockSize OF REAL; 
+	END; 
+
+	Path* = POINTER TO PathDesc; 
+
+	PathDesc* = RECORD 
+		elems*, coords*: INTEGER; 
+		firstEB, lastEB: ElemBlock; 
+		firstCB, lastCB: CoordBlock; 
+	END; 
+
+	Scanner* = RECORD 
+		path*: Path; 
+		pos*: INTEGER; 
+		elem*: INTEGER; 
+		x*, y*: REAL; 
+		dx*, dy*: REAL; 
+		x0*, y0*, x1*, y1*, x2*, y2*: REAL; 
+		curEB: ElemBlock; 
+		curCB: CoordBlock; 
+		epos, cpos: INTEGER; 
+	END; 
+
+	EnumData* = RECORD 
+		elem*: INTEGER; 
+		x*, y*, dx*, dy*, x0*, y0*, x1*, y1*, x2*, y2*: REAL; 
+	END; 
+
+	Enumerator* = PROCEDURE (VAR data: EnumData); 
+
+	ProjectData = RECORD (EnumData)
+		px, py: REAL; 
+		rx, ry: REAL; 
+		sx, sy: REAL; 
+		dist: REAL; 
+	END; 
+
+	QueryData = RECORD (EnumData)
+		llx, lly, urx, ury: REAL; 
+		sx, sy: REAL; 
+		code: SET; 
+		sum: LONGINT; 
+		hit, thorough: BOOLEAN; 
+	END; 
+
+	LengthData = RECORD (EnumData)
+		sx, sy: REAL; 
+		len: REAL; 
+	END; 
+
+	DirData = RECORD (EnumData)
+		cx, cy: REAL; 
+		sdx, sdy: REAL; 
+		edx, edy: REAL; 
+	END; 
+
+	SplitData = RECORD (EnumData)
+		head, tail: Path; 
+		offset: REAL; 
+		sx, sy: REAL; 
+		sdx, sdy: REAL; 
+	END; 
+VAR 
+	Coords: ARRAY (Exit + 1) OF SHORTINT; 
+
+	PROCEDURE ^ AddElem(path: Path; elem: SHORTINT); 
+	PROCEDURE ^ AddCoord(path: Path; x, y: REAL); 
+	PROCEDURE ^ Clear*(path: Path); 
+	PROCEDURE ^ AddEnter*(path: Path; x, y, dx, dy: REAL); 
+	PROCEDURE ^ AddLine*(path: Path; x, y: REAL); 
+	PROCEDURE ^ AddArc*(path: Path; x, y, x0, y0, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ AddBezier*(path: Path; x, y, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ AddExit*(path: Path; dx, dy: REAL); 
+	PROCEDURE ^ AddRect*(path: Path; llx, lly, urx, ury: REAL); 
+	PROCEDURE ^ Append*(to, from: Path); 
+	PROCEDURE ^ Open*(VAR s: Scanner; path: Path; pos: INTEGER); 
+	PROCEDURE ^ Scan*(VAR s: Scanner); 
+	PROCEDURE ^ EnumArc*(x0, y0, x1, y1, x2, y2, x, y, flatness: REAL; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ EnumBezier*(x1, y1, x2, y2, x, y, flatness: REAL; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ SolveClosed(n: LONGINT; VAR x, y, d: ARRAY OF REAL); 
+	PROCEDURE ^ Solve(n: LONGINT; VAR x, y, d: ARRAY OF REAL); 
+	PROCEDURE ^ EnumSpline*(VAR x, y: ARRAY OF REAL; n: LONGINT; closed: BOOLEAN; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ Enumerate*(path: Path; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ EnumFlattened*(path: Path; flatness: REAL; enum: Enumerator; VAR data: EnumData); 
+	PROCEDURE ^ Empty*(path: Path): BOOLEAN; 
+	PROCEDURE ^ Code(VAR data: QueryData; x, y: REAL): SET; 
+	PROCEDURE ^ EnumQuery(VAR data: EnumData); 
+	PROCEDURE ^ InPath*(llx, lly, urx, ury: REAL; path: Path; evenOdd: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ OnPath*(llx, lly, urx, ury: REAL; path: Path): BOOLEAN; 
+	PROCEDURE ^ EnumBoxElem(VAR data: EnumData); 
+	PROCEDURE ^ GetBox*(path: Path; VAR llx, lly, urx, ury: REAL); 
+	PROCEDURE ^ LineLength*(x0, y0, x1, y1: REAL): REAL; 
+	PROCEDURE ^ EnumLength(VAR data: EnumData); 
+	PROCEDURE ^ ArcLength*(sx, sy, ex, ey, x0, y0, x1, y1, x2, y2, flatness: REAL): REAL; 
+	PROCEDURE ^ BezierLength*(x0, y0, x1, y1, x2, y2, x3, y3, flatness: REAL): REAL; 
+	PROCEDURE ^ Length*(path: Path; flatness: REAL): REAL; 
+	PROCEDURE ^ Reverse*(src, dst: Path); 
+	PROCEDURE ^ Copy*(src, dst: Path); 
+	PROCEDURE ^ Apply*(path: Path; VAR mat: GfxMatrix.Matrix); 
+	PROCEDURE ^ GetDir(VAR data: EnumData); 
+	PROCEDURE ^ Close*(path: Path); 
+	PROCEDURE ^ EnumSplit(VAR data: EnumData); 
+	PROCEDURE ^ Split*(path: Path; offset: REAL; head, tail: Path); 
+	PROCEDURE ^ IntersectLines*(x1, y1, dx1, dy1, x2, y2, dx2, dy2: REAL; VAR x, y: REAL); 
+	PROCEDURE ^ IntersectLineCircle*(sx, sy, tx, ty, mx, my, r: REAL; VAR x1, y1, x2, y2: REAL; VAR nsol: LONGINT); 
+	PROCEDURE ^ ProjectToLine*(px, py, qx, qy, x, y: REAL; VAR u, v: REAL); 
+	PROCEDURE ^ ProjectToEllipse*(ax, ay, bx, by, x, y: REAL; VAR u, v: REAL); 
+	PROCEDURE ^ EnumProject(VAR data: EnumData); 
+	PROCEDURE ^ ProjectToPath*(path: Path; x, y: REAL; VAR u, v: REAL); 
+BEGIN
+END GfxPaths.

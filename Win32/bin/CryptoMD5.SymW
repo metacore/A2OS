@@ -1,0 +1,27 @@
+MODULE CryptoMD5;
+	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
+CONST 
+TYPE 
+	Buffer = ARRAY 16 OF LONGINT; 
+
+	Hash* = OBJECT (Hashes.Hash)
+	VAR 
+		A, B, C, D: LONGINT; 
+		N: LONGINT; 
+		X: Buffer; 
+		cb: ARRAY 4 OF LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*; 
+		PROCEDURE ^ Write(ch: CHAR); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+	END Hash; 
+VAR 
+	T: ARRAY 65 OF LONGINT; 
+
+	PROCEDURE ^ NewHash*(): Hashes.Hash; 
+	PROCEDURE ^ MD5(CONST X: Buffer; VAR A, B, C, D: LONGINT); 
+	PROCEDURE ^ Initialize; 
+BEGIN
+END CryptoMD5.

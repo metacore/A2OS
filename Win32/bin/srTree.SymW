@@ -1,0 +1,24 @@
+MODULE srTree;
+	IMPORT srBase, srGL, srVoxel, srM2Space;
+TYPE 
+	PT = srBase.PT; 
+
+	tree* = OBJECT (srBase.V)
+	VAR 
+		context: srGL.Context; 
+		cell*: srM2Space.cell; 
+		a, b, c, z: PT; 
+		angle: REAL; 
+
+		PROCEDURE ^  & new*; 
+		PROCEDURE ^ tick*; 
+		PROCEDURE ^ trunk; 
+		PROCEDURE ^ branch(level, limit, rep: INTEGER); 
+		PROCEDURE ^ twig; 
+	END tree; 
+VAR 
+	green, blue, red: srVoxel.DiffuseVox; 
+	Tree*: tree; 
+
+BEGIN
+END srTree.

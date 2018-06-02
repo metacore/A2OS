@@ -1,0 +1,38 @@
+MODULE vyLayers3d IN Oberon;
+	IMPORT Objects, vyBase, vyGraphBase, Oberon, vyDisplay2d, vyPHIGS3D, vyPaint3d, Input, antsCommandList := vyCommandMenus, vyPort, vyEvents;
+CONST 
+	idversion* = \"vyLayer3d v0r0a3"\; 
+TYPE 
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tCoordinate3d* = POINTER TO tCoordinate3dDesc; 
+
+	tCoordinate3dDesc = RECORD (vyDisplay2d.tCoordinate2dDesc)
+		c3d-: vyPHIGS3D.tCoordinate3d; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+	END; 
+VAR 
+	newcoordinate3d*: tCoordinate3d; 
+	newLayer*: tLayer; 
+	passevent: BOOLEAN; 
+
+	PROCEDURE ^ CopyC3d(src, dest: tCoordinate3d); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(layer: tLayer; id: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenViewWindow(c: tCoordinate3d; event: vyEvents.EventMsg); 
+	PROCEDURE ^ OpenViewWindow2(c: tCoordinate3d; event: vyEvents.EventMsg); 
+	PROCEDURE ^ CloseViewWindow(c: tCoordinate3d; event: vyEvents.EventMsg); 
+	PROCEDURE ^ Rotate(c: tCoordinate3d; event: vyEvents.EventMsg); 
+	PROCEDURE ^ DoHandleC3dAttributes(o: tCoordinate3d; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ selectlayer; 
+	PROCEDURE ^ Select(c: tCoordinate3d; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ C3dHandler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenC3d*(c: tCoordinate3d); 
+	PROCEDURE ^ NewCoordinate3d*; 
+	PROCEDURE ^ NewLayer3d*; 
+BEGIN
+END vyLayers3d.

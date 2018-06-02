@@ -1,0 +1,15 @@
+MODULE Base64 IN Oberon;
+	IMPORT Files, Fonts, Texts, Oberon;
+CONST 
+VAR 
+	encTable: ARRAY 64 OF CHAR; 
+	decTable: ARRAY 128 OF INTEGER; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN; 
+	PROCEDURE ^ Decode*; 
+	PROCEDURE ^ EncodeFile*(F: Files.File; T: Texts.Text); 
+	PROCEDURE ^ Encode*; 
+	PROCEDURE ^ InitTables; 
+BEGIN
+END Base64.

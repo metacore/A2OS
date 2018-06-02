@@ -1,0 +1,33 @@
+MODULE antsMatrixPar IN Oberon;
+	IMPORT antsObjects, Files, vyBase, Objects, vyName, antsCommands, aM := antsMessages;
+CONST 
+TYPE 
+	MatrixArray* = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+
+	Matrix* = POINTER TO MatrixDesc; 
+
+	MatrixDesc* = RECORD (vyBase.ObjDesc)
+		dimx-, dimy-: INTEGER; 
+		par*: MatrixArray; 
+	END; 
+
+	PROCEDURE ^ WriteMatrix(VAR R: Files.Rider; n: Matrix); 
+	PROCEDURE ^ ReadMatrix(VAR R: Files.Rider; VAR n: Matrix); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoNew*(dimy, dimx: INTEGER): Matrix; 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ CopyMatrixArray(n: Matrix; from: MatrixArray); 
+	PROCEDURE ^ Fill(a: MatrixArray; with: LONGREAL); 
+	PROCEDURE ^ ChangeDim*(n: Matrix; dimy, dimx: INTEGER); 
+	PROCEDURE ^ Symmetry*(n: Matrix); 
+	PROCEDURE ^ MinMax*(n: Matrix; VAR min, max: LONGREAL); 
+	PROCEDURE ^ Standardize*(n: Matrix); 
+	PROCEDURE ^ L0*(n: Matrix); 
+	PROCEDURE ^ L1*(n: Matrix); 
+	PROCEDURE ^ L2*(n: Matrix); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoWrite*(n: Matrix); 
+	PROCEDURE ^ Write*; 
+BEGIN
+END antsMatrixPar.

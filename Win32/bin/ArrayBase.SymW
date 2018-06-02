@@ -1,0 +1,1038 @@
+MODULE ArrayBase;
+	IMPORT KernelLog, SYSTEM, Heaps;
+CONST 
+	debug = FALSE; 
+	conservative = FALSE; 
+	statistics = TRUE; 
+	ptroffs = 0; 
+	adroffs = 4; 
+	flagoffs = 8; 
+	dimoffs = 12; 
+	sizeoffs = 16; 
+	lenoffs = 20; 
+	incoffs = 24; 
+	GeometryMismatch = 400; 
+	DimensionMismatch = 401; 
+	AllocationForbidden = 402; 
+	TensorFlag = 0; 
+	RangeFlag = 1; 
+	TemporaryFlag = 2; 
+	down = 0; 
+	up = 1; 
+	SmallMatrixFlag = 3; 
+	SmallVectorFlag = 3; 
+	Size2Flag = 4; 
+	Size3Flag = 5; 
+	Size4Flag = 6; 
+	Size5Flag = 7; 
+	Size6Flag = 8; 
+	Size7Flag = 9; 
+	Size8Flag = 10; 
+	Mat2x2 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size2Flag}); 
+	Mat3x3 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size3Flag}); 
+	Mat4x4 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size4Flag}); 
+	Mat5x5 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size5Flag}); 
+	Mat6x6 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size6Flag}); 
+	Mat7x7 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size7Flag}); 
+	Mat8x8 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, Size8Flag}); 
+	Vec2 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size2Flag}); 
+	Vec3 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size3Flag}); 
+	Vec4 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size4Flag}); 
+	Vec5 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size5Flag}); 
+	Vec6 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size6Flag}); 
+	Vec7 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size7Flag}); 
+	Vec8 = SYSTEM.VAL(LONGINT, {SmallVectorFlag, Size8Flag}); 
+	MatVec2x2 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size2Flag}); 
+	MatVec3x3 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size3Flag}); 
+	MatVec4x4 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size4Flag}); 
+	MatVec5x5 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size5Flag}); 
+	MatVec6x6 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size6Flag}); 
+	MatVec7x7 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size7Flag}); 
+	MatVec8x8 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size8Flag}); 
+TYPE 
+	Address = LONGINT; 
+
+	UnaryAALoop = PROCEDURE (ladr, dadr, linc, dinc, len: Address); 
+
+	UnaryASLoop = PROCEDURE (ladr, dadr, linc, len: Address); 
+
+	BinaryAAALoop = PROCEDURE (ladr, radr, dadr, linc, rinc, dinc, len: Address); 
+
+	BinaryASALoop = PROCEDURE (ladr, radr, dadr, linc, dinc, len: Address); 
+
+	BinaryAASLoop = PROCEDURE (ladr, radr, dadr, linc, rinc, len: Address); 
+
+	BinaryAABLoop = PROCEDURE (ladr, radr, linc, rinc, len: Address):BOOLEAN; 
+
+	BinaryASBLoop = PROCEDURE (ladr, radr, linc, len: Address):BOOLEAN; 
+
+	FastMatMul* = PROCEDURE (matrixA, matrixB, matrixC, IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: LONGINT):BOOLEAN; 
+
+	TransposeP* = PROCEDURE (ladr, dadr, lstride, linc, dstride, dinc, rows, cols: LONGINT); 
+
+	T0 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (0 * 8)) OF CHAR; 
+	END; 
+
+	T1 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (1 * 8)) OF CHAR; 
+	END; 
+
+	T2 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (2 * 8)) OF CHAR; 
+	END; 
+
+	T3 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (3 * 8)) OF CHAR; 
+	END; 
+
+	T4 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (4 * 8)) OF CHAR; 
+	END; 
+
+	T5 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (5 * 8)) OF CHAR; 
+	END; 
+
+	T6 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (6 * 8)) OF CHAR; 
+	END; 
+
+	T7 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (7 * 8)) OF CHAR; 
+	END; 
+
+	T8 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (8 * 8)) OF CHAR; 
+	END; 
+
+	T9 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (9 * 8)) OF CHAR; 
+	END; 
+
+	T10 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (10 * 8)) OF CHAR; 
+	END; 
+
+	T11 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (11 * 8)) OF CHAR; 
+	END; 
+
+	T12 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (12 * 8)) OF CHAR; 
+	END; 
+
+	T13 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (13 * 8)) OF CHAR; 
+	END; 
+
+	T14 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (14 * 8)) OF CHAR; 
+	END; 
+
+	T15 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (15 * 8)) OF CHAR; 
+	END; 
+
+	T16 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (16 * 8)) OF CHAR; 
+	END; 
+
+	T17 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (17 * 8)) OF CHAR; 
+	END; 
+
+	T18 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (18 * 8)) OF CHAR; 
+	END; 
+
+	T19 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (19 * 8)) OF CHAR; 
+	END; 
+
+	T20 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (20 * 8)) OF CHAR; 
+	END; 
+
+	T21 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (21 * 8)) OF CHAR; 
+	END; 
+
+	T22 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (22 * 8)) OF CHAR; 
+	END; 
+
+	T23 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (23 * 8)) OF CHAR; 
+	END; 
+
+	T24 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (24 * 8)) OF CHAR; 
+	END; 
+
+	T25 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (25 * 8)) OF CHAR; 
+	END; 
+
+	T26 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (26 * 8)) OF CHAR; 
+	END; 
+
+	T27 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (27 * 8)) OF CHAR; 
+	END; 
+
+	T28 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (28 * 8)) OF CHAR; 
+	END; 
+
+	T29 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (29 * 8)) OF CHAR; 
+	END; 
+
+	T30 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (30 * 8)) OF CHAR; 
+	END; 
+
+	T31 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (31 * 8)) OF CHAR; 
+	END; 
+
+	T32 = POINTER TO RECORD 
+		ptr: ANY; 
+		a: ARRAY (lenoffs + (32 * 8)) OF CHAR; 
+	END; 
+
+	SmallMatMul* = PROCEDURE (dadr, ladr, radr: LONGINT); 
+VAR 
+	alloc*: LONGINT; 
+	allocTemp*: LONGINT; 
+	loopSPAXAX*, loopSPARAR*: BinaryAASLoop; 
+	loopAddAXAX*, loopAddARAR*: BinaryAAALoop; 
+	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop; 
+	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop; 
+	loopMulAXSX*, loopMulARSR*: BinaryASALoop; 
+	loopIncMulAXSX*, loopIncMulARSR*: BinaryASALoop; 
+	matMulX*, matMulR*: FastMatMul; 
+	matMulIncX*, matMulIncR*: FastMatMul; 
+	transpose4*: TransposeP; 
+	transpose8*: TransposeP; 
+	matMulR2x2*: SmallMatMul; 
+	matMulR3x3*: SmallMatMul; 
+	matMulR4x4*: SmallMatMul; 
+	matVecMulR2x2*: SmallMatMul; 
+	matVecMulR3x3*: SmallMatMul; 
+	matVecMulR4x4*: SmallMatMul; 
+	matMulLR2x2*: SmallMatMul; 
+	matMulLR3x3*: SmallMatMul; 
+	matMulLR4x4*: SmallMatMul; 
+	matVecMulLR2x2*: SmallMatMul; 
+	matVecMulLR3x3*: SmallMatMul; 
+	matVecMulLR4x4*: SmallMatMul; 
+
+	PROCEDURE ^ SetDefaults*; 
+	PROCEDURE ^ Err(CONST s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetArrayDesc(dim: LONGINT): ANY; 
+	PROCEDURE ^ GetInc(base, dim: Address): LONGINT; 
+	PROCEDURE ^ PutInc(base, dim, val: Address); 
+	PROCEDURE ^ GetLen(base, dim: Address): LONGINT; 
+	PROCEDURE ^ PutLen(base, dim, val: Address); 
+	PROCEDURE ^ GetAdr(base: Address): Address; 
+	PROCEDURE ^ PutAdr(base, value: Address); 
+	PROCEDURE ^ GetPtr(base: Address): Address; 
+	PROCEDURE ^ PutPtr(base, value: Address); 
+	PROCEDURE ^ GetSize(base: Address): LONGINT; 
+	PROCEDURE ^ PutSize(base: Address; dim: LONGINT); 
+	PROCEDURE ^ GetDim(base: Address): LONGINT; 
+	PROCEDURE ^ GetFlags(base: Address): SET; 
+	PROCEDURE ^ PutDim(base: Address; dim: LONGINT); 
+	PROCEDURE ^ PutFlags(base: Address; flags: SET); 
+	PROCEDURE ^ Halt(code: LONGINT; left, right, dest: LONGINT); 
+	PROCEDURE ^ FindPattern1(left, dim: Address; VAR d, len, linc: LONGINT); 
+	PROCEDURE ^ FindPattern2(left, right: Address; dim: LONGINT; VAR d, len, linc, ri: LONGINT); 
+	PROCEDURE ^ FindPattern3(left, right, dest: Address; dim: LONGINT; VAR d, len, linc, ri, di: LONGINT); 
+	PROCEDURE ^ Reverse(src: Address; dim: LONGINT); 
+	PROCEDURE ^ CopyUpCompatible(dest, src: Address; VAR modes: SET); 
+	PROCEDURE ^ AllocateTemp(VAR dest: Address; src: Address; Size: LONGINT): ANY; 
+	PROCEDURE ^ ApplyUnaryAAOp(d, l: Address; elementSize: LONGINT; Loop: UnaryAALoop); 
+	PROCEDURE ^ ApplyUnaryASOp(dest, l: Address; Loop: UnaryASLoop); 
+	PROCEDURE ^ ApplyBinaryAAAOp(d, l, r: Address; elementSize: LONGINT; Loop: BinaryAAALoop); 
+	PROCEDURE ^ ApplyBinaryASAOp(d, l, right: Address; elementSize: LONGINT; Loop: BinaryASALoop); 
+	PROCEDURE ^ ApplyBinaryAASOp(dest, l, r: Address; Loop: BinaryAASLoop); 
+	PROCEDURE ^ ApplyBinaryAABOp(l, r: Address; Loop: BinaryAABLoop): BOOLEAN; 
+	PROCEDURE ^ ApplyBinaryASBOp(l, right: Address; Loop: BinaryASBLoop): BOOLEAN; 
+	PROCEDURE ^ Copy4(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ Copy2(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ Copy1(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ Copy8(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE {FingerPrint(1857348743)}  - MoveB*(srcadr, destadr, len: LONGINT);
+	CODE {SYSTEM.i386}
+		MOV	ECX, [ESP]	;  len
+		MOV	EDI, [ESP+4]	;  destadr
+		MOV	ESI, [ESP+8]	;  srcadr
+		CMP	ESI, EDI
+		JAE	moveup	;  src adr greater then dest adr, no problem with moving up
+		MOV	EAX, ESI
+		ADD	EAX, ECX
+		CMP	EAX, EDI
+		JBE	moveup	;  no overlap, no problem, move up
+		MOV	ESI, EAX
+		ADD	EDI, ECX
+		DEC	ESI
+		DEC	EDI
+		STD	;  move down since overlap occured
+		REP
+		MOVSB
+		JMP	done
+		moveup:
+		CLD
+		MOV	BL, CL
+		SHR	ECX, 2
+		AND	BL, 00000003H	;  rest to move after 4 byte move
+		REP
+		MOVSD	;  move 4 bytes each step
+		MOV	CL, BL
+		REP
+		MOVSB	;  move rest in one byte steps
+		done:
+		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
+	
+	END MoveB; 
+	PROCEDURE ^ CopyContent(dest, src, elementSize: LONGINT); 
+	PROCEDURE ^ AllocateSame(VAR dest: LONGINT; src: LONGINT; elementsize: LONGINT): ANY; 
+	PROCEDURE ^ TempDescCopy(src: Address): ANY; 
+	PROCEDURE ^ CopyArraySelf*(dest, src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ CopyArray*(dest: Address; src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ CopyTensorSelf*(VAR dest: Address; src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ CopyTensor*(VAR dest: Address; src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ ShallowCopy*(VAR dest: Address; src: Address); 
+	PROCEDURE ^ DescriptorCopy(src, dest: LONGINT); 
+	PROCEDURE ^ ZeroCopyArray*(dest: Address; src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ ZeroCopyTensor*(VAR dest: Address; src: Address; elementsize: LONGINT); 
+	PROCEDURE ^ SameShape(l, r: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Report(CONST name: ARRAY OF CHAR; s: LONGINT); 
+	PROCEDURE ^ ZeroCopy*(left, elementSize, dest, dim: LONGINT); 
+	PROCEDURE ^ ConvertASAILoop(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertASAI*(VAR dest: ARRAY [?] OF INTEGER; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ConvertLoopSL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertASAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ConvertLoopSR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertASAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ConvertLoopSX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertASAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ConvertLoopIS(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAIAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ConvertLoopIL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAIAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ConvertLoopIR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAIAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ConvertLoopIX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAIAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ConvertLoopLI(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertALAI*(VAR dest: ARRAY [?] OF INTEGER; CONST src: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ConvertLoopLR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertALAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ConvertLoopLX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertALAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ConvertLoopRL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertARAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ConvertLoopRX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertARAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ConvertLoopXR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAXAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ConvertLoopXL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ConvertAXAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ NotLoopAB(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ NotAB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST src: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ MinusLoopS(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MinusAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ MinusLoopI(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MinusAI*(VAR dest: ARRAY [?] OF INTEGER; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ MinusLoopL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MinusAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ MinusLoopR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MinusAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF REAL); 
+	PROCEDURE ^ MinusLoopX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MinusAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ AddASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ AddAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ AddALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ AddARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ AddAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ AddASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ AddSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ AddAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ AddSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ AddALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ AddSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ AddARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ AddSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ AddAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AddAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ AddSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ SubASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ SubAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ SubALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ SubARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ SubAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ SubASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ SubAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ SubALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ SubARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ SubAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ SubSSASLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ SubSIAILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ SubSLALLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ SubSRARLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ SubSXAXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ SubSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EMulASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EMulAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EMulALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EMulARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EMulAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EMulIncASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulIncASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EMulIncAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulIncAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EMulIncALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulIncALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EMulIncARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulIncARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EMulIncAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EMulIncAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ MulASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MulASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ MulSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ MulAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MulAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ MulSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ MulALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MulALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ MulSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ MulARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MulARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ MulSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ MulAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ MulAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ MulSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ IncMulASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ IncMulASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ IncMulSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ DecMulASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ DecMulSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ IncMulAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ IncMulAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ IncMulSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ DecMulAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ DecMulSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ IncMulALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ IncMulALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ IncMulSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ DecMulALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ DecMulSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ IncMulARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ IncMulARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ IncMulSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ DecMulARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ DecMulSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ IncMulAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ IncMulAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ IncMulSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ DecMulAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ DecMulSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EDivideASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivideASAS*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EDivideAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivideAIAI*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EDivideALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivideALAL*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EDivideARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivideARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EDivideAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivideAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ DivideASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideASSS*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ DivideSSASLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideSSAS*(VAR dest: ARRAY [?] OF REAL; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ DivideAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideAISI*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ DivideSIAILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideSIAI*(VAR dest: ARRAY [?] OF REAL; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ DivideALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideALSL*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ DivideSLALLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideSLAL*(VAR dest: ARRAY [?] OF REAL; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ DivideARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ DivideSRARLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideSRAR*(VAR dest: ARRAY [?] OF REAL; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ DivideAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ DivideSXAXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivideSXAX*(VAR dest: ARRAY [?] OF LONGREAL; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EDivASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EDivAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EDivALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EDivALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ DivASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ DivSSASLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ DivAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ DivSIAILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ DivALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ DivSLALLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ DivSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EModASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EModASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EModAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EModAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EModALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EModALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ModASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ ModSSASLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModSSAS*(VAR dest: ARRAY [?] OF SHORTINT; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ModAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ ModSIAILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModSIAI*(VAR dest: ARRAY [?] OF INTEGER; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ModALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ ModSLALLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ModSLAL*(VAR dest: ARRAY [?] OF LONGINT; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ SPASASLoop(ladr, radr, dadr, linc, rinc, len: LONGINT); 
+	PROCEDURE ^ SPASAS*(CONST left, right: ARRAY [?] OF SHORTINT): LONGINT; 
+	PROCEDURE ^ SPAIAILoop(ladr, radr, dadr, linc, rinc, len: LONGINT); 
+	PROCEDURE ^ SPAIAI*(CONST left, right: ARRAY [?] OF INTEGER): LONGINT; 
+	PROCEDURE ^ SPALALLoop(ladr, radr, dadr, linc, rinc, len: LONGINT); 
+	PROCEDURE ^ SPALAL*(CONST left, right: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ SPARARLoop(ladr, radr, dadr, linc, rinc, len: LONGINT); 
+	PROCEDURE ^ SPARAR*(CONST left, right: ARRAY [?] OF REAL): REAL; 
+	PROCEDURE ^ SPAXAXLoop(ladr, radr, dadr, linc, rinc, len: LONGINT); 
+	PROCEDURE ^ SPAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ EEqlABABLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlABAB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ EEqlASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EEqlAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EEqlALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EEqlARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EEqlAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EEqlABSBLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlABSB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
+	PROCEDURE ^ EEqlSBAB*(VAR dest: ARRAY [?] OF BOOLEAN; left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ EEqlASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ EEqlSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EEqlAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ EEqlSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EEqlALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ EEqlSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EEqlARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ EEqlSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EEqlAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EEqlAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ EEqlSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ENeqABABLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqABAB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ ENeqASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ENeqAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ENeqALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ENeqARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ENeqAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ENeqABSBLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqABSB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
+	PROCEDURE ^ ENeqSBAB*(VAR dest: ARRAY [?] OF BOOLEAN; left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ ENeqASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ ENeqSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ENeqAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ ENeqSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ENeqALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ ENeqSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ENeqARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ ENeqSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ENeqAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ENeqAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ ENeqSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EGtrASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EGtrAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EGtrALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EGtrARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EGtrAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EGtrASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ ELssSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EGtrAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ ELssSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EGtrALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ ELssSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EGtrARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ ELssSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EGtrAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGtrAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ ELssSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EGeqASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EGeqAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EGeqALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EGeqARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EGeqAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ EGeqASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ ELeqSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ EGeqAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ ELeqSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ EGeqALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ ELeqSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ EGeqARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ ELeqSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ EGeqAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ EGeqAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ ELeqSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ELssASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ELssAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ELssALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ELssARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ELssAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ELssASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ EGtrSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ELssAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ EGtrSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ELssALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ EGtrSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ELssARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ EGtrSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ELssAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELssAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ EGtrSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ELeqASASLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqASAS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ELeqAIAILoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqAIAI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ELeqALALLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqALAL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ELeqARARLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqARAR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ELeqAXAXLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqAXAX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ELeqASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqASSS*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ EGeqSSAS*(VAR dest: ARRAY [?] OF BOOLEAN; left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ ELeqAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqAISI*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ EGeqSIAI*(VAR dest: ARRAY [?] OF BOOLEAN; left: INTEGER; CONST right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ ELeqALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqALSL*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ EGeqSLAL*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGINT; CONST right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ ELeqARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqARSR*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ EGeqSRAR*(VAR dest: ARRAY [?] OF BOOLEAN; left: REAL; CONST right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ ELeqAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ELeqAXSX*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ EGeqSXAX*(VAR dest: ARRAY [?] OF BOOLEAN; left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ ElOrABABLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ElOrABAB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ ElAndABABLoop(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
+	PROCEDURE ^ ElAndABAB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left, right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ ElOrABSBLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ElOrABSB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
+	PROCEDURE ^ ElOrSBAB*(VAR dest: ARRAY [?] OF BOOLEAN; left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ ElAndABSBLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ ElAndABSB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
+	PROCEDURE ^ ElAndSBAB*(VAR dest: ARRAY [?] OF BOOLEAN; left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN); 
+	PROCEDURE ^ LssASASLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GeqASASLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LssAIAILoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ GeqAIAILoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ LssALALLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqALALLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssARARLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ GeqARARLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ LssAXAXLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GeqAXAXLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GtrASASLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LeqASASLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GtrAIAILoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ LeqAIAILoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ GtrALALLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqALALLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrARARLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ LeqARARLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ GtrAXAXLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ LeqAXAXLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ EqlABABLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlABAB*(CONST left, right: ARRAY [?] OF BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ NeqABAB*(CONST left, right: ARRAY [?] OF BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ EqlASASLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ NeqASAS*(CONST left, right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ EqlAIAILoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ NeqAIAI*(CONST left, right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ EqlALALLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ NeqALAL*(CONST left, right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlARARLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ NeqARAR*(CONST left, right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ EqlAXAXLoop(ladr, radr, linc, rinc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ NeqAXAX*(CONST left, right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ EqlABSBLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlABSB*(CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ EqlSBAB*(left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ NeqABSB*(CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ NeqSBAB*(left: BOOLEAN; CONST right: ARRAY [?] OF BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ EqlASSSLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ EqlSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ NeqASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ NeqSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ EqlAISILoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ EqlSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ NeqAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ NeqSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ EqlALSLLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ NeqALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ NeqSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlARSRLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ EqlSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ NeqARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ NeqSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ EqlAXSXLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EqlAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ EqlSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ NeqAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ NeqSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GtrASSSLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LssSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GtrAISILoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ LssSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ GtrALSLLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrARSRLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ LssSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ GtrAXSXLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ LssSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GeqASSSLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LeqSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GeqAISILoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ LeqSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ GeqALSLLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqARSRLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ LeqSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ GeqAXSXLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ LeqSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ LeqASSSLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GeqSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LeqAISILoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ GeqSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ LeqALSLLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GeqSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqARSRLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ GeqSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ LeqAXSXLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LeqAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GeqSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ LssASSSLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssASSS*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GtrSSAS*(left: SHORTINT; CONST right: ARRAY [?] OF SHORTINT): BOOLEAN; 
+	PROCEDURE ^ LssAISILoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAISI*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): BOOLEAN; 
+	PROCEDURE ^ GtrSIAI*(left: INTEGER; CONST right: ARRAY [?] OF INTEGER): BOOLEAN; 
+	PROCEDURE ^ LssALSLLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssALSL*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GtrSLAL*(left: LONGINT; CONST right: ARRAY [?] OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssARSRLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssARSR*(CONST left: ARRAY [?] OF REAL; right: REAL): BOOLEAN; 
+	PROCEDURE ^ GtrSRAR*(left: REAL; CONST right: ARRAY [?] OF REAL): BOOLEAN; 
+	PROCEDURE ^ LssAXSXLoop(ladr, radr, linc, len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LssAXSX*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GtrSXAX*(left: LONGREAL; CONST right: ARRAY [?] OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ MinASLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MinAS*(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
+	PROCEDURE ^ MinAILoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MinAI*(CONST left: ARRAY [?] OF INTEGER): INTEGER; 
+	PROCEDURE ^ MinALLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MinAL*(CONST left: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ MinARLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MinAR*(CONST left: ARRAY [?] OF REAL): REAL; 
+	PROCEDURE ^ MinAXLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MinAX*(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ MaxASLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MaxAS*(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
+	PROCEDURE ^ MaxAILoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MaxAI*(CONST left: ARRAY [?] OF INTEGER): INTEGER; 
+	PROCEDURE ^ MaxALLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MaxAL*(CONST left: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ MaxARLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MaxAR*(CONST left: ARRAY [?] OF REAL): REAL; 
+	PROCEDURE ^ MaxAXLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ MaxAX*(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ SumASLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ SumAS*(CONST left: ARRAY [?] OF SHORTINT): SHORTINT; 
+	PROCEDURE ^ SumAILoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ SumAI*(CONST left: ARRAY [?] OF INTEGER): INTEGER; 
+	PROCEDURE ^ SumALLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ SumAL*(CONST left: ARRAY [?] OF LONGINT): LONGINT; 
+	PROCEDURE ^ SumARLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ SumAR*(CONST left: ARRAY [?] OF REAL): REAL; 
+	PROCEDURE ^ SumAXLoop(ladr, dadr, linc, len: LONGINT); 
+	PROCEDURE ^ SumAX*(CONST left: ARRAY [?] OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ AbsLoopS(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AbsAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST src: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ AbsLoopI(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AbsAI*(VAR dest: ARRAY [?] OF INTEGER; CONST src: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ AbsLoopL(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AbsAL*(VAR dest: ARRAY [?] OF LONGINT; CONST src: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ AbsLoopR(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AbsAR*(VAR dest: ARRAY [?] OF REAL; CONST src: ARRAY [?] OF REAL); 
+	PROCEDURE ^ AbsLoopX(ladr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AbsAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST src: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ AssignABSBLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignABSB*(VAR dest: ARRAY [?] OF BOOLEAN; CONST left: ARRAY [?] OF BOOLEAN; right: BOOLEAN); 
+	PROCEDURE ^ AssignASSSLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignASSS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT); 
+	PROCEDURE ^ AssignAISILoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignAISI*(VAR dest: ARRAY [?] OF INTEGER; CONST left: ARRAY [?] OF INTEGER; right: INTEGER); 
+	PROCEDURE ^ AssignALSLLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignALSL*(VAR dest: ARRAY [?] OF LONGINT; CONST left: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ AssignARSRLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignARSR*(VAR dest: ARRAY [?] OF REAL; CONST left: ARRAY [?] OF REAL; right: REAL); 
+	PROCEDURE ^ AssignAXSXLoop(ladr, radr, dadr, linc, dinc, len: LONGINT); 
+	PROCEDURE ^ AssignAXSX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL); 
+	PROCEDURE ^ AllocateMatrix(dest: Address; rows, cols, elementsize: LONGINT): ANY; 
+	PROCEDURE ^ AllocateVector(dest: Address; l0, elementsize: LONGINT): ANY; 
+	PROCEDURE ^ ApplyMatMulLoop(dest, left, right: Address; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: Address; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: Address; Size: LONGINT; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ MatMulASASLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulASAS*(VAR dest: ARRAY [*, *] OF SHORTINT; CONST left, right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatVecMulASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*, *] OF SHORTINT; CONST right: ARRAY [*] OF SHORTINT); 
+	PROCEDURE ^ VecMatMulASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*] OF SHORTINT; CONST right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatMulAIAILoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulAIAI*(VAR dest: ARRAY [*, *] OF INTEGER; CONST left, right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatVecMulAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*, *] OF INTEGER; CONST right: ARRAY [*] OF INTEGER); 
+	PROCEDURE ^ VecMatMulAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*] OF INTEGER; CONST right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatMulALALLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulALAL*(VAR dest: ARRAY [*, *] OF LONGINT; CONST left, right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatVecMulALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*, *] OF LONGINT; CONST right: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ VecMatMulALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*] OF LONGINT; CONST right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatMulARARLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulARAR*(VAR dest: ARRAY [*, *] OF REAL; CONST left, right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatVecMulARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*, *] OF REAL; CONST right: ARRAY [*] OF REAL); 
+	PROCEDURE ^ VecMatMulARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*] OF REAL; CONST right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatMulAXAXLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulAXAX*(VAR dest: ARRAY [*, *] OF LONGREAL; CONST left, right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ MatVecMulAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*, *] OF LONGREAL; CONST right: ARRAY [*] OF LONGREAL); 
+	PROCEDURE ^ VecMatMulAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*] OF LONGREAL; CONST right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ MatMulIncASASLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulIncASAS*(VAR dest: ARRAY [*, *] OF SHORTINT; CONST left, right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatVecMulIncASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*, *] OF SHORTINT; CONST right: ARRAY [*] OF SHORTINT); 
+	PROCEDURE ^ VecMatMulIncASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*] OF SHORTINT; CONST right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatMulDecASAS*(VAR dest: ARRAY [*, *] OF SHORTINT; CONST left, right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatVecMulDecASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*, *] OF SHORTINT; CONST right: ARRAY [*] OF SHORTINT); 
+	PROCEDURE ^ VecMatMulDecASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left: ARRAY [*] OF SHORTINT; CONST right: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ MatMulIncAIAILoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulIncAIAI*(VAR dest: ARRAY [*, *] OF INTEGER; CONST left, right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatVecMulIncAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*, *] OF INTEGER; CONST right: ARRAY [*] OF INTEGER); 
+	PROCEDURE ^ VecMatMulIncAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*] OF INTEGER; CONST right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatMulDecAIAI*(VAR dest: ARRAY [*, *] OF INTEGER; CONST left, right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatVecMulDecAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*, *] OF INTEGER; CONST right: ARRAY [*] OF INTEGER); 
+	PROCEDURE ^ VecMatMulDecAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left: ARRAY [*] OF INTEGER; CONST right: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ MatMulIncALALLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulIncALAL*(VAR dest: ARRAY [*, *] OF LONGINT; CONST left, right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatVecMulIncALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*, *] OF LONGINT; CONST right: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ VecMatMulIncALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*] OF LONGINT; CONST right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatMulDecALAL*(VAR dest: ARRAY [*, *] OF LONGINT; CONST left, right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatVecMulDecALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*, *] OF LONGINT; CONST right: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ VecMatMulDecALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left: ARRAY [*] OF LONGINT; CONST right: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ MatMulIncARARLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulIncARAR*(VAR dest: ARRAY [*, *] OF REAL; CONST left, right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatVecMulIncARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*, *] OF REAL; CONST right: ARRAY [*] OF REAL); 
+	PROCEDURE ^ VecMatMulIncARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*] OF REAL; CONST right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatMulDecARAR*(VAR dest: ARRAY [*, *] OF REAL; CONST left, right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatVecMulDecARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*, *] OF REAL; CONST right: ARRAY [*] OF REAL); 
+	PROCEDURE ^ VecMatMulDecARAR*(VAR dest: ARRAY [*] OF REAL; CONST left: ARRAY [*] OF REAL; CONST right: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ MatMulIncAXAXLoop(ladr, radr, dadr, linc, rinc, len: Address); 
+	PROCEDURE ^ MatMulIncAXAX*(VAR dest: ARRAY [*, *] OF LONGREAL; CONST left, right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ MatVecMulIncAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*, *] OF LONGREAL; CONST right: ARRAY [*] OF LONGREAL); 
+	PROCEDURE ^ VecMatMulIncAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*] OF LONGREAL; CONST right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ MatMulDecAXAX*(VAR dest: ARRAY [*, *] OF LONGREAL; CONST left, right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ MatVecMulDecAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*, *] OF LONGREAL; CONST right: ARRAY [*] OF LONGREAL); 
+	PROCEDURE ^ VecMatMulDecAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left: ARRAY [*] OF LONGREAL; CONST right: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ CrossProductASAS*(VAR dest: ARRAY [*] OF SHORTINT; CONST left, right: ARRAY [*] OF SHORTINT); 
+	PROCEDURE ^ CrossProductAIAI*(VAR dest: ARRAY [*] OF INTEGER; CONST left, right: ARRAY [*] OF INTEGER); 
+	PROCEDURE ^ CrossProductALAL*(VAR dest: ARRAY [*] OF LONGINT; CONST left, right: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ CrossProductARAR*(VAR dest: ARRAY [*] OF REAL; CONST left, right: ARRAY [*] OF REAL); 
+	PROCEDURE ^ CrossProductAXAX*(VAR dest: ARRAY [*] OF LONGREAL; CONST left, right: ARRAY [*] OF LONGREAL); 
+	PROCEDURE ^ Overlap(src1, src2: Address): BOOLEAN; 
+	PROCEDURE ^ Transpose*(dest, left: Address; Size: LONGINT); 
+	PROCEDURE ^ TransposeAS*(VAR dest: ARRAY [*, *] OF SHORTINT; CONST left: ARRAY [*, *] OF SHORTINT); 
+	PROCEDURE ^ TransposeAI*(VAR dest: ARRAY [*, *] OF INTEGER; CONST left: ARRAY [*, *] OF INTEGER); 
+	PROCEDURE ^ TransposeAL*(VAR dest: ARRAY [*, *] OF LONGINT; CONST left: ARRAY [*, *] OF LONGINT); 
+	PROCEDURE ^ TransposeAR*(VAR dest: ARRAY [*, *] OF REAL; CONST left: ARRAY [*, *] OF REAL); 
+	PROCEDURE ^ TransposeAX*(VAR dest: ARRAY [*, *] OF LONGREAL; CONST left: ARRAY [*, *] OF LONGREAL); 
+	PROCEDURE ^ CheckTensorGeometry(left, right, dest: Address; ldim, rdim: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Reshape*(VAR dest: LONGINT; src: LONGINT; CONST shape: ARRAY [*] OF LONGINT); 
+	PROCEDURE ^ AllocateTensorX*(VAR dest: LONGINT; CONST a: ARRAY [*] OF LONGINT; Size: LONGINT); 
+	PROCEDURE ^ LenA*(VAR dest: ARRAY [*] OF LONGINT; src: Address); 
+	PROCEDURE ^ IncrA*(VAR dest: ARRAY [*] OF LONGINT; src: Address); 
+	PROCEDURE ^ Len*(src: Address; d: LONGINT): LONGINT; 
+	PROCEDURE ^ Incr*(src: Address; d: LONGINT): LONGINT; 
+	PROCEDURE ^ AllocateTensor(VAR dest: LONGINT; left, right: Address; Size: LONGINT): ANY; 
+	PROCEDURE ^ FindPatternTensor(left, right: Address; VAR rdim, len, linc, ri: LONGINT); 
+	PROCEDURE ^ ApplyTensorAAAOp(d, l, r: Address; elementSize: LONGINT; Loop: BinaryASALoop); 
+	PROCEDURE ^ TensorProdASAS*(VAR dest: ARRAY [?] OF SHORTINT; CONST left, right: ARRAY [?] OF SHORTINT); 
+	PROCEDURE ^ TensorProdAIAI*(VAR dest: ARRAY [?] OF INTEGER; CONST left, right: ARRAY [?] OF INTEGER); 
+	PROCEDURE ^ TensorProdALAL*(VAR dest: ARRAY [?] OF LONGINT; CONST left, right: ARRAY [?] OF LONGINT); 
+	PROCEDURE ^ TensorProdARAR*(VAR dest: ARRAY [?] OF REAL; CONST left, right: ARRAY [?] OF REAL); 
+	PROCEDURE ^ TensorProdAXAX*(VAR dest: ARRAY [?] OF LONGREAL; CONST left, right: ARRAY [?] OF LONGREAL); 
+	PROCEDURE ^ MinSXSX*(l, r: LONGREAL): LONGREAL; 
+	PROCEDURE ^ MaxSXSX*(l, r: LONGREAL): LONGREAL; 
+	PROCEDURE ^ MinSRSR*(l, r: REAL): REAL; 
+	PROCEDURE ^ MaxSRSR*(l, r: REAL): REAL; 
+	PROCEDURE ^ InitOptimization; 
+BEGIN
+END ArrayBase.

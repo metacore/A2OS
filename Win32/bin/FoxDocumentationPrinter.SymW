@@ -1,0 +1,26 @@
+MODULE FoxDocumentationPrinter;
+	IMPORT Tree := FoxDocumentationTree, Scanner := FoxDocumentationScanner, Streams;
+CONST 
+	debug = FALSE; 
+TYPE 
+	ParagraphType = Tree.ParagraphType; 
+
+	ElementType = Tree.ElementType; 
+
+	Printer* = OBJECT 
+	VAR 
+		writer: Streams.Writer; 
+
+		PROCEDURE ^  & InitPrinter*(writer: Streams.Writer); 
+		PROCEDURE ^ Section*(section: Tree.Section); 
+		PROCEDURE ^ SectionList*(sections: Tree.Sections); 
+		PROCEDURE ^ Document*(document: Tree.Document); 
+		PROCEDURE ^ Chars*(c: CHAR; rep: LONGINT); 
+		PROCEDURE ^ Paragraph*(paragraph: Tree.Paragraph); 
+		PROCEDURE ^ ParagraphList*(paragraphs: Tree.Paragraphs); 
+		PROCEDURE ^ PrintText*(textElement: Tree.TextElement; separator: CHAR); 
+		PROCEDURE ^ TextElement*(textElement: Tree.TextElement); 
+		PROCEDURE ^ Text*(text: Tree.Text); 
+	END Printer; 
+BEGIN
+END FoxDocumentationPrinter.

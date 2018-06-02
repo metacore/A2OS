@@ -1,0 +1,38 @@
+MODULE antsModels IN Oberon;
+	IMPORT antsObjects, vyBase, antsArrayObjects, antsCommands, Objects, Files, antsGlobals, Gadgets, antsMC, antsCaches, vyHostStrings, antsKernel, Links, antsRegions, aM := antsMessages;
+CONST 
+TYPE 
+	Parameters* = antsGlobals.Parameters; 
+
+	ParameterNames* = antsGlobals.ParameterNames; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	PotentialFunction* = PROCEDURE (M: tModel; A: vyBase.Object):LONGREAL; 
+
+	tModelDesc* = RECORD (vyBase.ObjDesc)
+		coolingTemp-: LONGREAL; 
+		synced*: BOOLEAN; 
+		MCache*: antsCaches.FullCache; 
+		maxCacheSize-: LONGINT; 
+		region*: antsRegions.tRegion; 
+		par*: Parameters; 
+		parNames*: ParameterNames; 
+		hotupdate*: BOOLEAN; 
+	END; 
+
+	PROCEDURE ^ StoreParameters(VAR R: Files.Rider; p: Parameters; pn: ParameterNames); 
+	PROCEDURE ^ ReadParameters(VAR R: Files.Rider; VAR p: Parameters; VAR pn: ParameterNames); 
+	PROCEDURE ^ Store(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ Load(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ Init(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(par: tModel); 
+	PROCEDURE ^ SetTemperature*(par: tModel; temp: LONGREAL); 
+	PROCEDURE ^ SetMaxCache*(par: tModel; maxCacheSize: LONGINT); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoAttachRegion*(model: tModel; region: antsRegions.tRegion); 
+	PROCEDURE ^ AttachRegion*; 
+	PROCEDURE ^ RemoveRegion*; 
+BEGIN
+END antsModels.

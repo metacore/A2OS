@@ -1,0 +1,40 @@
+MODULE antsRegions IN Oberon;
+	IMPORT Files, Objects, antsObjects, vyBase, antsViews, antsCommands, vyName, vyTracking, vyPort, Display, Gadgets, vyGraphBase, antsPictCoordinate, aM := antsMessages, Input, antsArrayObjects, antsToolbox, vyHostStrings, Effects, antsPortability, antsSecurity, vyRectangles;
+CONST 
+TYPE 
+	tRegion* = POINTER TO tRegionDesc; 
+
+	tRegionDesc* = RECORD (vyBase.ObjDesc)
+		x*, y*, w*, h*: INTEGER; 
+		view*: antsViews.tLayer; 
+		valid*: BOOLEAN; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		r*: tRegion; 
+		filled: BOOLEAN; 
+	END; 
+VAR 
+	A-: antsArrayObjects.tINTEGERObject; 
+	current*: tRegion; 
+
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ LayerHandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ LayerHandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ LayerHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GenL*; 
+	PROCEDURE ^ Open*(layer: tLayer; id: vyName.tNameArray; r: tRegion); 
+	PROCEDURE ^ InsertView*; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ GrowRectangleRLFilled*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ DoSelectRegion*(r: tRegion); 
+	PROCEDURE ^ SelectRegion*; 
+	PROCEDURE ^ Get*(r: tRegion; A: antsArrayObjects.tObject; VAR x, y, w, h: LONGINT); 
+	PROCEDURE ^ InteractiveGetArray*(r: tRegion): antsArrayObjects.tObject; 
+	PROCEDURE ^ Init*; 
+BEGIN
+END antsRegions.

@@ -1,0 +1,28 @@
+MODULE vyDialogElems IN Oberon;
+	IMPORT Display, vyRectangles, vyHostDisplay := vyGraphBase, vyTracking, vyEvents;
+CONST 
+	idversion* = \"vyDialogElems v0r0d3"\; 
+TYPE 
+	tButton* = POINTER TO tButtonDesc; 
+
+	tButtonDesc* = RECORD 
+		x, y, w, h, dsr: INTEGER; 
+		text: ARRAY 32 OF CHAR; 
+		sign: vyHostDisplay.tSign; 
+		pressed: BOOLEAN; 
+		recall*: PROCEDURE (b: tButton; x0, y0: INTEGER); 
+		track*: PROCEDURE (b: tButton; x0, y0: INTEGER); 
+		press*: PROCEDURE (b: tButton; x0, y0: INTEGER):BOOLEAN; 
+		switch*: PROCEDURE (b: tButton; x0, y0: INTEGER):BOOLEAN; 
+		pointInButton*: PROCEDURE (x, y: INTEGER; b: tButton; x0, y0: INTEGER):BOOLEAN; 
+	END; 
+
+	PROCEDURE ^ RecallButton(b: tButton; x0, y0: INTEGER); 
+	PROCEDURE ^ EraseButton(b: tButton; x0, y0: INTEGER); 
+	PROCEDURE ^ TrackButton(b: tButton; x0, y0: INTEGER); 
+	PROCEDURE ^ PointInButton(x, y: INTEGER; b: tButton; x0, y0: INTEGER): BOOLEAN; 
+	PROCEDURE ^ PressButton(b: tButton; x0, y0: INTEGER): BOOLEAN; 
+	PROCEDURE ^ SwitchButton(b: tButton; x0, y0: INTEGER): BOOLEAN; 
+	PROCEDURE ^ OpenButton*(b: tButton; x, y, w, h, dsr: INTEGER; text: ARRAY OF CHAR; sign: vyHostDisplay.tSign); 
+BEGIN
+END vyDialogElems.

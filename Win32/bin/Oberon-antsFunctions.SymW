@@ -1,0 +1,63 @@
+MODULE antsFunctions IN Oberon;
+	IMPORT antsObjects, vyName, antsCommands, vyBase, vyLongrealVec, Files, Objects, Gadgets, vyHostTexts, antsOnTheFly, Texts, Links, aM := antsMessages;
+CONST 
+TYPE 
+	Array* = POINTER TO ARRAY OF LONGREAL; 
+
+	Function* = POINTER TO FunctionDesc; 
+
+	FunctionDesc* = RECORD (vyBase.ObjDesc)
+		of: Function; 
+		x, val: vyBase.tVector; 
+		f1d: antsOnTheFly.Function1d; 
+		Mapping-: ARRAY 1024 OF CHAR; 
+		set*: PROCEDURE (f: Function; at, val: LONGREAL); 
+		get*: PROCEDURE (f: Function; at: LONGREAL):LONGREAL; 
+		editable-: BOOLEAN; 
+	END; 
+
+	FunctionXd* = POINTER TO FunctionXdDesc; 
+
+	FunctionXdDesc* = RECORD (vyBase.ObjDesc)
+		Mapping-: ARRAY 1024 OF CHAR; 
+		get*: PROCEDURE (f: FunctionXd; at: ARRAY OF LONGREAL):LONGREAL; 
+		fxd: antsOnTheFly.FunctionXd; 
+	END; 
+
+	PROCEDURE ^ GetInterpolated(f: Function; at: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GetDefault(f: Function; at: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GetDefaultXd(f: FunctionXd; at: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ SetValue(f: Function; at, val: LONGREAL); 
+	PROCEDURE ^ SetCreate(f: Function; at, val: LONGREAL); 
+	PROCEDURE ^ NoopSet(f: Function; at, val: LONGREAL); 
+	PROCEDURE ^ GetF1d(f: Function; at: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GetFxd(f: FunctionXd; at: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Get1dOf(f: Function; at: LONGREAL): LONGREAL; 
+	PROCEDURE ^ SetProcedures(f: Function); 
+	PROCEDURE ^ GetCache*(f: Function; from, to, by: LONGREAL; VAR a: Array); 
+	PROCEDURE ^ SetCache*(f: Function; from, to, by: LONGREAL; a: Array); 
+	PROCEDURE ^ StoreFXd(VAR R: Files.Rider; s: FunctionXd); 
+	PROCEDURE ^ LoadFXd(VAR R: Files.Rider; s: FunctionXd); 
+	PROCEDURE ^ StoreF(VAR R: Files.Rider; s: Function); 
+	PROCEDURE ^ LoadF(VAR R: Files.Rider; s: Function); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ HandlerXd*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ GenXd*; 
+	PROCEDURE ^ Define*; 
+	PROCEDURE ^ DoDefine*(name: vyName.tNameArray; VAR f: Function); 
+	PROCEDURE ^ DefineXd*; 
+	PROCEDURE ^ DoDefineXd*(name: vyName.tNameArray); 
+	PROCEDURE ^ IsFunctionOf*; 
+	PROCEDURE ^ DoIsFunctionOf*(obj1, obj2: vyBase.Object); 
+	PROCEDURE ^ SetF1d*(f: Function; map: antsOnTheFly.Function1d); 
+	PROCEDURE ^ Set*; 
+	PROCEDURE ^ DoSet*(const: ARRAY OF CHAR; VAR function: ARRAY OF CHAR; VAR f: Function); 
+	PROCEDURE ^ SetXd*; 
+	PROCEDURE ^ DoSetXd*(obj: vyBase.Object; const, function: ARRAY OF CHAR); 
+	PROCEDURE ^ CompileText*; 
+	PROCEDURE ^ DoCompileText*(VAR bobj: vyBase.Object); 
+	PROCEDURE ^ CompileText2*; 
+BEGIN
+END antsFunctions.

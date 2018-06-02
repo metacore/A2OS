@@ -1,0 +1,178 @@
+MODULE ET IN Oberon;
+	IMPORT Display, Texts, TextFrames, Viewers, Files, Input, MenuViewers, Oberon, Objects, Fonts;
+CONST 
+	AsciiTemp = \"ET.XXX.Tmp"\; 
+	ErrorsText = \"OberonErrors.Text"\; 
+	PopupText = \"ET.Popup.Menu"\; 
+	LogFile = \"ET.Name.Log"\; 
+	UserMenu = \"System.Close System.Copy System.Grow ET.Move ET.Search ET.Replace ET.Store"\; 
+	SysMenu = \"System.Close System.Copy System.Grow ET.Store"\; 
+	LogMenu = \"ET.Clear ET.Locate ET.Error ET.Search ET.Store"\; 
+	UserAscii = \"System.Close System.Copy System.Grow ET.Move ET.Search ET.Replace ET.StoreAscii"\; 
+	SysAscii = \"System.Close System.Copy System.Grow ET.StoreAscii"\; 
+	Err =  -1; 
+	CR = 0DX; 
+	TAB = 9X; 
+	SPACE = \" "\; 
+	LF = 0AX; 
+	Quote = 22X; 
+	LtArrow = 0C4X; 
+	RtArrow = 0C3X; 
+	ML = 2; 
+	MM = 1; 
+	MR = 0; 
+	Fnt = 0; 
+	Colr = 1; 
+	MaxPatLen = 128; 
+	BufLen = 64; 
+	FG = Display.FG; 
+TYPE 
+	Frame = Display.Frame; 
+
+	Object = Objects.Object; 
+
+	ObjMsg = Objects.ObjMsg; 
+
+	UpdateMsg = Texts.UpdateMsg; 
+
+	SelectMsg = Oberon.SelectMsg; 
+
+	Handler = Objects.Handler; 
+
+	FocMsg = RECORD (Display.FrameMsg)
+		V: Viewers.Viewer; 
+	END; 
+
+	BackRdr = RECORD 
+		text: Texts.Text; 
+		buf: ARRAY BufLen OF CHAR; 
+		begPos: LONGINT; 
+		last, next: INTEGER; 
+		beg: BOOLEAN; 
+	END; 
+
+	MenuStr = ARRAY 255 OF CHAR; 
+
+	; 
+VAR 
+	tW, WL: Texts.Writer; 
+	popup: Texts.Text; 
+	para: Texts.Text; 
+	log: RECORD 
+		f: Files.File; 
+		r: Files.Rider; 
+	END; 
+	sPat: ARRAY MaxPatLen OF CHAR; 
+	sDv: ARRAY (MaxPatLen + 1) OF INTEGER; 
+	sPatLen: INTEGER; 
+	rBuf: Texts.Buffer; 
+	lTime: LONGINT; 
+	inFnt: Fonts.Font; 
+	inColor: SHORTINT; 
+	menuAvail: BOOLEAN; 
+	filter: BOOLEAN; 
+	mStr: ARRAY 6 OF MenuStr; 
+	sX, sY: INTEGER; 
+	ii: INTEGER; 
+
+	PROCEDURE ^ Min(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ ScanName(DX: INTEGER; VAR X, Y: INTEGER; VAR S: Texts.Scanner); 
+	PROCEDURE ^ ViewerName(V: Viewers.Viewer; VAR S: Texts.Scanner); 
+	PROCEDURE ^ ScanPara(VAR S: Texts.Scanner); 
+	PROCEDURE ^ ScanQuote(VAR S: Texts.Scanner; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ FocusViewer(): Viewers.Viewer; 
+	PROCEDURE ^ SetFocus(V: Viewers.Viewer); 
+	PROCEDURE ^ Defocus(tF: TextFrames.Frame); 
+	PROCEDURE ^ GetSelData(tF: TextFrames.Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ GetSelFrame(VAR F: TextFrames.Frame); 
+	PROCEDURE ^ ReaderFnt(VAR R: Texts.Reader): Fonts.Font; 
+	PROCEDURE ^ AdjustFont(VAR W: Texts.Writer; VAR R: Texts.Reader); 
+	PROCEDURE ^ SetDefFont(VAR W: Texts.Writer); 
+	PROCEDURE ^ LinesOf(tF: TextFrames.Frame): INTEGER; 
+	PROCEDURE ^ OpenBackRdr(VAR bR: BackRdr; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ BackRead(VAR bR: BackRdr; VAR ch: CHAR); 
+	PROCEDURE ^ RPos(VAR bR: BackRdr): LONGINT; 
+	PROCEDURE ^ LinesUp(text: Texts.Text; pos: LONGINT; nbr: INTEGER): LONGINT; 
+	PROCEDURE ^ RemoveMarks(tF: TextFrames.Frame); 
+	PROCEDURE ^ ShowPos(tF: TextFrames.Frame; pos: LONGINT); 
+	PROCEDURE ^ SendTabs(tF: TextFrames.Frame; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ ScrollFrame(tF: TextFrames.Frame; X, Y: INTEGER; keys: SET); 
+	PROCEDURE ^ DisplayMenu(tF: TextFrames.Frame; X, Y: INTEGER; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ TrackedMM(tF: TextFrames.Frame; X, Y: INTEGER; keys: SET): BOOLEAN; 
+	PROCEDURE ^ right(F: Frame; nbr: SHORTINT); 
+	PROCEDURE ^ Right*; 
+	PROCEDURE ^ IsCh(T: Texts.Text; pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ left(F: Frame; nbr: SHORTINT); 
+	PROCEDURE ^ Left*; 
+	PROCEDURE ^ SetInFnt(tF: TextFrames.Frame; VAR inFnt: Fonts.Font; VAR inCol: SHORTINT); 
+	PROCEDURE ^ PredSelFrame(tF: TextFrames.Frame): TextFrames.Frame; 
+	PROCEDURE ^ PreHandleMR(tF: TextFrames.Frame; VAR X, Y: INTEGER; keys: SET); 
+	PROCEDURE ^ GetSelection(tF: TextFrames.Frame; VAR M: SelectMsg; VAR handled: BOOLEAN); 
+	PROCEDURE ^ MarkMenu(F: Frame; updT: Texts.Text); 
+	PROCEDURE ^ UnMarkMenu(F: Frame); 
+	PROCEDURE ^ IsWarning(VAR M: UpdateMsg): BOOLEAN; 
+	PROCEDURE ^ TextProcessor(tF: TextFrames.Frame; VAR M: UpdateMsg); 
+	PROCEDURE ^ Handle*(F: Object; VAR M: ObjMsg); 
+	PROCEDURE ^ AsciiText(name: ARRAY OF CHAR): Texts.Text; 
+	PROCEDURE ^ NewMF(mTitle: ARRAY OF CHAR; typ: INTEGER; VAR menuH: INTEGER): TextFrames.Frame; 
+	PROCEDURE ^ NewETF(text: Texts.Text; org: LONGINT): TextFrames.Frame; 
+	PROCEDURE ^ OpenViewer(text: Texts.Text; title: ARRAY OF CHAR; pos: LONGINT; X, Y: INTEGER; kind: SHORTINT): Viewers.Viewer; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ NewSys*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ OpenSys*; 
+	PROCEDURE ^ OpenAscii*; 
+	PROCEDURE ^ OpenSysAscii*; 
+	PROCEDURE ^ CalcDispVec(time: LONGINT); 
+	PROCEDURE ^ SPatFound(tF: TextFrames.Frame; text: Texts.Text; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ WriteDate(VAR r: Files.Rider; t, d: LONGINT); 
+	PROCEDURE ^ UpdateNameLog(name: ARRAY OF CHAR; typ: CHAR); 
+	PROCEDURE ^ RenameOld(name: ARRAY OF CHAR); 
+	PROCEDURE ^ store(typ: CHAR); 
+	PROCEDURE ^ Store*; 
+	PROCEDURE ^ StoreChar*; 
+	PROCEDURE ^ StoreAscii*; 
+	PROCEDURE ^ Cleartrack(X: INTEGER); 
+	PROCEDURE ^ ClearTrack*; 
+	PROCEDURE ^ ClearSysTrack*; 
+	PROCEDURE ^ ValidX(X: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ValidY(Y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Marker*; 
+	PROCEDURE ^ MarkPatPos(tF: TextFrames.Frame; pos: LONGINT); 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ SearchDiff*; 
+	PROCEDURE ^ replace(): BOOLEAN; 
+	PROCEDURE ^ Replace*; 
+	PROCEDURE ^ ReplaceAll*; 
+	PROCEDURE ^ Locate*; 
+	PROCEDURE ^ Error*; 
+	PROCEDURE ^ MenuExchange(F: Frame; vwrName, menuStr: ARRAY OF CHAR); 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ ExchangeMenu*; 
+	PROCEDURE ^ Delete*; 
+	PROCEDURE ^ Move*; 
+	PROCEDURE ^ LogOpen(X, Y: INTEGER); 
+	PROCEDURE ^ OpenLog*; 
+	PROCEDURE ^ Clear*; 
+	PROCEDURE ^ Recall*; 
+	PROCEDURE ^ Font*; 
+	PROCEDURE ^ Color*; 
+	PROCEDURE ^ Do*; 
+	PROCEDURE ^ Process(text: Texts.Text; beg, end: LONGINT; s: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*; 
+	PROCEDURE ^ ListNames*; 
+	PROCEDURE ^ Para*; 
+	PROCEDURE ^ Remind*; 
+	PROCEDURE ^ NameLog*; 
+	PROCEDURE ^ Filter*; 
+	PROCEDURE ^ Popup*; 
+	PROCEDURE ^ SetMenu*; 
+	PROCEDURE ^ StrSearch(pat: ARRAY OF CHAR; VAR str: ARRAY OF CHAR; VAR pos: LONGINT); 
+	PROCEDURE ^ StrDelete(VAR str: ARRAY OF CHAR; pos, len: LONGINT); 
+	PROCEDURE ^ ShowText(title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER); 
+	PROCEDURE ^ ReplaceSystemEditor*; 
+BEGIN
+END ET.

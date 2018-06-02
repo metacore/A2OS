@@ -1,0 +1,46 @@
+MODULE vySurface IN Oberon;
+	IMPORT Objects, Display, vyLinks, vyParser, vyHostDisplay := vyGraphBase, vyHostStrings, antsColors := vyColorPalettes, antsCommandList := vyCommandMenus, Files, Gadgets, vyBase, vyName, vyHost, vyRealVec, vyPort, vyPolyWorld, vyLayers3d, vyPHIGS3D, vyPaint3d, vyAxis, vyEvents;
+CONST 
+	idversion* = \"vySurfacePlot v0r0a2"\; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyLayers3d.tLayerDesc)
+		m: vyRealVec.tChunkedMatrix; 
+		pal: antsColors.Palette; 
+		sp: vyPolyWorld.tObject; 
+		axisx0, axisx1, axisxstep: REAL; 
+		axisy0, axisy1, axisystep: REAL; 
+		axisz0, axisz1, axiszstep: REAL; 
+		commands*: antsCommandList.List; 
+		lines: BOOLEAN; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(surface: tLayer); 
+	PROCEDURE ^ Responsible(surface: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ ColorView; 
+	PROCEDURE ^ wireFrame; 
+	PROCEDURE ^ niveauline; 
+	PROCEDURE ^ smoothlighting; 
+	PROCEDURE ^ lighting; 
+	PROCEDURE ^ painter; 
+	PROCEDURE ^ niveau; 
+	PROCEDURE ^ lines; 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Bind(obj: Objects.Object; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(surface: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ DoSetRendering*(surface: tLayer; renderId: INTEGER); 
+	PROCEDURE ^ SetRendering*; 
+	PROCEDURE ^ SetAxis*; 
+BEGIN
+END vySurface.

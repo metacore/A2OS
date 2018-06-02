@@ -1,0 +1,19 @@
+MODULE Configuration IN Oberon;
+	IMPORT Modules, Display, Input, Viewers, Texts, Oberon;
+CONST 
+	CR = 0DX; 
+	Default = \"Configuration.Text"\; 
+VAR 
+	W: Texts.Writer; 
+	sX, sY: INTEGER; 
+
+	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner); 
+	PROCEDURE ^ do*(T: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ DoText*; 
+	PROCEDURE ^ DoCommands*; 
+	PROCEDURE ^ ValidX(X: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ValidY(Y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Marker*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END Configuration.

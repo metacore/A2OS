@@ -1,0 +1,45 @@
+MODULE PCARMDecoder IN Oberon;
+	IMPORT SYSTEM, Modules, Oberon, Files, Texts, Fonts, Out, Decoder;
+CONST 
+VAR 
+	bigEndian: BOOLEAN; 
+	W*: Texts.Writer; 
+	name0, name1, branch, branchl, dfloat, mfloat, cptnf, tnf, CC, Rot, Psr, Reg, FReg, Copr, CReg: ARRAY 128 OF CHAR; 
+	halfword: ARRAY 16 OF CHAR; 
+
+	PROCEDURE ^ Ch(ch: CHAR); 
+	PROCEDURE ^ Str(s: ARRAY OF CHAR); 
+	PROCEDURE ^ Int(i: LONGINT); 
+	PROCEDURE ^ tab; 
+	PROCEDURE ^ Ln; 
+	PROCEDURE ^ FixHex(n: LONGINT); 
+	PROCEDURE ^ Hex(n: LONGINT); 
+	PROCEDURE ^ word(VAR n: ARRAY OF CHAR; p: LONGINT); 
+	PROCEDURE ^ word2(VAR n: ARRAY OF CHAR; p: LONGINT); 
+	PROCEDURE ^ word3(VAR n: ARRAY OF CHAR; p: LONGINT); 
+	PROCEDURE ^ cond(cc: LONGINT); 
+	PROCEDURE ^ s; 
+	PROCEDURE ^ l; 
+	PROCEDURE ^ byte; 
+	PROCEDURE ^ copr(n: LONGINT); 
+	PROCEDURE ^ reg(n: LONGINT); 
+	PROCEDURE ^ creg(n: LONGINT); 
+	PROCEDURE ^ psr(s, a: LONGINT); 
+	PROCEDURE ^ rot(t, c: LONGINT); 
+	PROCEDURE ^ imm(i, r: LONGINT); 
+	PROCEDURE ^ PCRelAddr(adr, sign, ofs: LONGINT); 
+	PROCEDURE ^ decode(adr, code: LONGINT); 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ Decode*(pc, code: LONGINT; raw: BOOLEAN); 
+	PROCEDURE ^ DecodeManual*; 
+	PROCEDURE ^ DecoderPlugin(VAR pc: LONGINT; VAR r: Files.Rider; VAR w: Texts.Writer); 
+	PROCEDURE ^ HeaderCallback(VAR dataSize, constSize, codeSize: LONGINT); 
+	PROCEDURE ^ DecodeRaw*; 
+	PROCEDURE ^ InstallDecoder*; 
+	PROCEDURE ^ Remove; 
+	PROCEDURE ^ Initialize; 
+	PROCEDURE ^ SetBigEndian*; 
+	PROCEDURE ^ SetLittleEndian*; 
+	PROCEDURE ^ SwapBytes(VAR code: LONGINT); 
+BEGIN
+END PCARMDecoder.

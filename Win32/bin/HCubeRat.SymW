@@ -1,0 +1,76 @@
+MODULE HCubeRat;
+	IMPORT SYSTEM, NbrInt, ArrayXdBytes, ArrayXd := ArrayXdRat, NbrRat, DataErrors, HCubeInt, DataIO;
+CONST 
+	VERSION* = 1; 
+TYPE 
+	Value* = ArrayXd.Value; 
+
+	Index* = LONGINT; 
+
+	Array* = ArrayXd.Array; 
+
+	IntValue = ArrayXd.IntValue; 
+
+	ArrayH* = ArrayXd.Array4; 
+
+	Map* = ArrayXd.Map; 
+
+	HCube* = OBJECT {EXCLUSIVE} (ArrayXd.Array)
+	VAR 
+		lenx-, leny-, lenz-, lent-: LONGINT; 
+		ox-, oy-, oz-, ot-: LONGINT; 
+		Get-: PROCEDURE {DELEGATE}(x, y, z, t: Index):Value; 
+
+		PROCEDURE ^ AlikeX*(): ArrayXdBytes.Array; 
+		PROCEDURE ^ NewRangeX*(neworigin, newlen: ArrayXdBytes.IndexArray; copydata: BOOLEAN); 
+		PROCEDURE ^ ValidateCache*; 
+		PROCEDURE ^ SetBoundaryCondition*(c: SHORTINT); 
+		PROCEDURE ^  & New*(ox, w, oy, h, oz, d, ot, td: LONGINT); 
+		PROCEDURE ^ Alike*(): HCube; 
+		PROCEDURE ^ NewRange*(ox, w, oy, h, oz, d, ot, td: LONGINT; copydata: BOOLEAN); 
+		PROCEDURE ^ Copy*(): HCube; 
+		PROCEDURE ^ Set*(x, y, z, t: Index; v: Value); 
+		PROCEDURE ^ CopyToVec*(dest: Array; dim: Index; srcx, srcy, srcz, srct, destx, len: Index); 
+		PROCEDURE ^ CopyToMtx*(dest: Array; dimx, dimy: Index; srcx, srcy, srcz, srct, destx, desty, lenx, leny: Index); 
+		PROCEDURE ^ CopyToCube*(dest: Array; dimx, dimy, dimz: Index; srcx, srcy, srcz, srct, destx, desty, destz, lenx, leny, lenz: Index); 
+		PROCEDURE ^ CopyToHCube*(dest: Array; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
+		PROCEDURE ^ CopyTo1dArray*(VAR dest: ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dpos, dlen: LONGINT); 
+		PROCEDURE ^ CopyTo2dArray*(VAR dest: ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dlenx, dleny: LONGINT); 
+		PROCEDURE ^ CopyTo3dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT); 
+		PROCEDURE ^ CopyTo4dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT); 
+		PROCEDURE ^ CopyFrom1dArray*(VAR src: ARRAY OF Value; spos, slen: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
+		PROCEDURE ^ CopyFrom2dArray*(VAR src: ARRAY OF ARRAY OF Value; sposx, spoxy, slenx, sleny: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
+		PROCEDURE ^ CopyFrom3dArray*(VAR src: ARRAY OF ARRAY OF ARRAY OF Value; sposx, spoxy, sposz, slenx, sleny, slenz: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
+		PROCEDURE ^ CopyFrom4dArray*(VAR src: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; sposx, spoxy, sposz, spost, slenx, sleny, slenz, slent: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
+	END HCube; 
+
+	OPERATOR ^ ":="-(VAR l: HCube; VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value); 
+	OPERATOR ^ ":="-(VAR l: HCube; r: HCubeInt.HCube); 
+	OPERATOR ^ ":="-(VAR l: HCube; r: Value); 
+	OPERATOR ^ ":="-(VAR l: HCube; r: IntValue); 
+	OPERATOR ^ "+"-(l, r: HCube): HCube; 
+	OPERATOR ^ "-"-(l, r: HCube): HCube; 
+	OPERATOR ^ "+"-(l: HCube; r: Value): HCube; 
+	OPERATOR ^ "+"-(l: HCube; r: IntValue): HCube; 
+	OPERATOR ^ "+"-(l: Value; r: HCube): HCube; 
+	OPERATOR ^ "+"-(l: IntValue; r: HCube): HCube; 
+	OPERATOR ^ "-"-(l: HCube; r: Value): HCube; 
+	OPERATOR ^ "-"-(l: HCube; r: IntValue): HCube; 
+	OPERATOR ^ "-"-(l: Value; r: HCube): HCube; 
+	OPERATOR ^ "-"-(l: IntValue; r: HCube): HCube; 
+	OPERATOR ^ "-"-(l: HCube): HCube; 
+	OPERATOR ^ "*"-(l: HCube; r: Value): HCube; 
+	OPERATOR ^ "*"-(l: HCube; r: IntValue): HCube; 
+	OPERATOR ^ "*"-(l: Value; r: HCube): HCube; 
+	OPERATOR ^ "*"-(l: IntValue; r: HCube): HCube; 
+	OPERATOR ^ "/"-(l: HCube; r: Value): HCube; 
+	OPERATOR ^ "/"-(l: HCube; r: IntValue): HCube; 
+	OPERATOR ^ "/"-(l: Value; r: HCube): HCube; 
+	OPERATOR ^ "/"-(l: IntValue; r: HCube): HCube; 
+	PROCEDURE ^ LoadHCube(R: DataIO.Reader; VAR obj: OBJECT); 
+	PROCEDURE ^ StoreHCube(W: DataIO.Writer; obj: OBJECT); 
+	PROCEDURE ^ Register; 
+	PROCEDURE ^ Load*(R: DataIO.Reader; VAR obj: HCube); 
+	PROCEDURE ^ Store*(W: DataIO.Writer; obj: HCube); 
+BEGIN
+END HCubeRat.

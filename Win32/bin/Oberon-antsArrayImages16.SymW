@@ -1,0 +1,32 @@
+MODULE antsArrayImages16 IN Oberon;
+	IMPORT antsArrayImages, Objects, antsObjects, antsArrayObjects, Images, antsCommands, vyName, vyBase, vyLinks, antsFunctions, vyLongrealVec, antsHistogramEdit, antsPointPlot, vyPort, Files, Gadgets, vyCommandMenus, aM := antsMessages;
+CONST 
+	maxHistogramLen = 1000; 
+TYPE 
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (antsArrayImages.tObjectDesc)
+		histogram*: vyBase.tVector; 
+		curve*: antsHistogramEdit.tObject; 
+		warned: SET; 
+	END; 
+VAR 
+	greyvF: antsFunctions.Function; 
+	global: tObject; 
+
+	PROCEDURE ^ SetHisto(obj: tObject); 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ A2P*(o: Objects.Object); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ AdjustCurve(obj: tObject); 
+	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ viewhist; 
+	PROCEDURE ^ DoShowHistogram*(obj: tObject); 
+	PROCEDURE ^ ShowHistogram*; 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsArrayImages16.

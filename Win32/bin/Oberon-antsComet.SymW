@@ -1,0 +1,30 @@
+MODULE antsComet IN Oberon;
+	IMPORT antsObjects, Files, antsKernel, antsArrayObjects, antsModels, antsCommands, vyName, Objects, vyRanBase, vyRandom, vyBase, vyLongrealVec, Gadgets, aM := antsMessages;
+CONST 
+TYPE 
+	LRA = POINTER TO ARRAY OF LONGREAL; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		pointsx, pointsy, mass: LRA; 
+		points: LONGINT; 
+		vertmassv: vyBase.tVector; 
+	END; 
+VAR 
+	localModel: tModel; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ Range(x, y, w, h: LONGINT): BOOLEAN; 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ ChangePoints(m: tModel; points: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; points: LONGINT); 
+	PROCEDURE ^ NewPars(m: tModel); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsComet.

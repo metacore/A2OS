@@ -1,0 +1,25 @@
+MODULE vyRandom IN Oberon;
+	IMPORT MathL IN A2, vyRanBase, vyRanParksMiller;
+CONST 
+	idversion* = \"Random v0.1d4"\; 
+VAR 
+	twopi: LONGREAL; 
+
+	PROCEDURE ^ Uniform*(): LONGREAL; 
+	PROCEDURE ^ UniformV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Exp*(mu: LONGREAL): LONGREAL; 
+	PROCEDURE ^ ExpV*(mu: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Cauchy*(): LONGREAL; 
+	PROCEDURE ^ CauchyV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Gauss*(mu, sigmasq: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GaussV*(mu, sigmasq: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ GaussM*(mu, sigmasq: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GaussMV*(mu, sigmasq: LONGREAL; count: LONGINT; VAR gauss: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Weibull*(beta: LONGREAL): LONGREAL; 
+	PROCEDURE ^ WeibullV*(beta: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Gumbel*(): LONGREAL; 
+	PROCEDURE ^ GumbelV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ VonMises*(Kappa: LONGREAL): LONGREAL; 
+	PROCEDURE ^ VonMisesV*(Kappa: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+BEGIN
+END vyRandom.

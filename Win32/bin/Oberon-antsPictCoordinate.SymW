@@ -1,0 +1,68 @@
+MODULE antsPictCoordinate IN Oberon;
+	IMPORT vyBase, vyGraphBase, vyDisplay2d, Input, vyEvents, Objects, Files, vyRectangles, Pictures, vyCommandMenus, Display, Images, aM := antsMessages, Oberon;
+CONST 
+TYPE 
+	tZoom* = POINTER TO tZoomDesc; 
+
+	tZoomDesc* = RECORD 
+		x-, y-, dx-, dy-: INTEGER; 
+		next: tZoom; 
+	END; 
+
+	Selection* = POINTER TO SelectionDesc; 
+
+	SelectionDesc* = RECORD (vyDisplay2d.SelDesc)
+		px*, py*, pw*, ph*: INTEGER; 
+	END; 
+
+	tCoordinate* = POINTER TO tCoordinateDesc; 
+
+	tCoordinateDesc* = RECORD (vyDisplay2d.tCoordinate2dDesc)
+		x-, y-, dx-, dy-, X-, Y-, W-, H-: INTEGER; 
+		vx-, vy-, px-, py-, pw-, ph-: INTEGER; 
+		zoom: tZoom; 
+		pictW*, pictH*: INTEGER; 
+		fixed*, free*: BOOLEAN; 
+		p*: Pictures.Picture; 
+		i*: Images.Image; 
+	END; 
+
+	ttt = RECORD 
+		x, y, dx, dy: INTEGER; 
+		c: tCoordinate; 
+	END; 
+VAR 
+	command: ttt; 
+	tc*: tCoordinate; 
+	currentsel*: Selection; 
+	passevent: BOOLEAN; 
+	globalHost: Objects.Object; 
+
+	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ ShiftCoordinate(c: tCoordinate; event: vyEvents.EventMsg); 
+	PROCEDURE ^ zoomin; 
+	PROCEDURE ^ zoomout; 
+	PROCEDURE ^ usecurrentsel; 
+	PROCEDURE ^ MakeSel*(cc: tCoordinate; sel: Selection; xx, yy, ww, hh: INTEGER); 
+	PROCEDURE ^ removesel; 
+	PROCEDURE ^ selectlayer; 
+	PROCEDURE ^ Select(c: tCoordinate; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ ZoomOut(c: tCoordinate); 
+	PROCEDURE ^ AdjustRect(VAR x, y, w, h: INTEGER): BOOLEAN; 
+	PROCEDURE ^ GetXY*(c: tCoordinate; fromx, fromy: INTEGER; VAR x, y: INTEGER); 
+	PROCEDURE ^ ZoomIn(c: tCoordinate; x, y, w, h: INTEGER); 
+	PROCEDURE ^ IncSize*(c: tCoordinate); 
+	PROCEDURE ^ DecSize*(c: tCoordinate); 
+	PROCEDURE ^ Center*(w, h: INTEGER; c: tCoordinate); 
+	PROCEDURE ^ CopyC(source, dest: tCoordinate); 
+	PROCEDURE ^ CalcV(c: tCoordinate); 
+	PROCEDURE ^ WriteCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate); 
+	PROCEDURE ^ ReadCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate); 
+	PROCEDURE ^ DoHandleAttributes(o: tCoordinate; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ CHandler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenC*(c: tCoordinate; dx, dy: INTEGER); 
+	PROCEDURE ^ Gen*; 
+BEGIN
+END antsPictCoordinate.

@@ -1,0 +1,231 @@
+MODULE TextGadgets0 IN Oberon;
+	IMPORT Display, Display3, Printer3, Effects, Objects, Gadgets, Oberon, Input, Texts, Fonts, Modules, Files, Printer, Strings;
+CONST 
+	Version = 5; 
+	eolW* = 5; 
+	LArrow* = 0C4X; 
+	RArrow* = 0C3X; 
+	mayselect* = 1; 
+	mayfocus* = 2; 
+	mayexecute* = 3; 
+	mayscroll* = 4; 
+	maydelegate* = 5; 
+	maymvchildren* = 6; 
+	mayconsume* = 7; 
+	keepfont* = 8; 
+	autoindent* = 9; 
+	sizeadjust* = 10; 
+	grow* = 11; 
+	shrink* = 12; 
+	caption* = 13; 
+	deepcopy* = 14; 
+	blockadj* = 15; 
+	locked* = 16; 
+	autoscroll* = 17; 
+	flat* = 18; 
+	buflen = 128; 
+	sliderW* = 14; 
+	delete = 2; 
+	insert = 1; 
+	change = 0; 
+TYPE 
+	BackRd* = RECORD 
+		text*: Texts.Text; 
+		buf: ARRAY buflen OF CHAR; 
+		start: LONGINT; 
+		last, next: INTEGER; 
+		eot: BOOLEAN; 
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	Line* = POINTER TO LineDesc; 
+
+	Box* = POINTER TO BoxDesc; 
+
+	Methods* = POINTER TO MethodBlock; 
+
+	Loc* = RECORD 
+		org*: LONGINT; 
+		pos*: LONGINT; 
+		x*, y*, dx*: INTEGER; 
+		line*: Line; 
+	END; 
+
+	BoxDesc* = RECORD 
+		next*: Box; 
+		org*: LONGINT; 
+		f*: Display.Frame; 
+		x*, voff*: INTEGER; 
+	END; 
+
+	LineDesc* = RECORD 
+		next*: Line; 
+		base*: INTEGER; 
+		w*, h*, dsr*, asr*: INTEGER; 
+		left*, right*: INTEGER; 
+		len*: LONGINT; 
+		box*: Box; 
+		eot*: BOOLEAN; 
+		draw*: LONGINT; 
+		spaces*: INTEGER; 
+		obj*: Objects.Object; 
+		extra*: LONGINT; 
+	END; 
+
+	MethodBlock* = RECORD 
+		Background*: PROCEDURE (F: Frame; R: Display3.Mask; X, Y, x, y, w, h: INTEGER); 
+		Format*: PROCEDURE (F: Frame; org: LONGINT; L: Line); 
+		InSync*: PROCEDURE (F: Frame; L1, L2: Line):BOOLEAN; 
+		Display*: PROCEDURE (F: Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: Line; dlink: Objects.Object); 
+		LocateChar*: PROCEDURE (F: Frame; x, y, X, Y: INTEGER; VAR loc: Loc); 
+		LocatePos*: PROCEDURE (F: Frame; pos: LONGINT; VAR loc: Loc); 
+		LocateString*: PROCEDURE (F: Frame; x, y, X, Y: INTEGER; VAR loc: Loc); 
+		PrintFormat*: PROCEDURE (F: Frame; org: LONGINT; L: Line; VAR pagebreak: BOOLEAN); 
+		Print*: PROCEDURE (F: Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: Line; dlink: Objects.Object); 
+		Call*: PROCEDURE (F: Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object); 
+	END; 
+
+	DrawDesc* = RECORD 
+		org0, org1, org2, org3, org4, orgL: LONGINT; 
+		L0, L1, L2, L3, L4, LL: Line; 
+		Y0, Y1, Y2, Y3, Y4, t: INTEGER; 
+	END; 
+
+	FrameDesc* = RECORD (Gadgets.ViewDesc)
+		state0*: SET; 
+		text*: Texts.Text; 
+		org*, time*, frametime: LONGINT; 
+		left*, right*, top*, bottom*: INTEGER; 
+		linespacing*, asr*, dsr*, h*, boxdsr*: INTEGER; 
+		trailer*: Line; 
+		do*: Methods; 
+		car*: BOOLEAN; 
+		carpos*: Loc; 
+		carX: INTEGER; 
+		sel*: BOOLEAN; 
+		selbeg*, selend*: Loc; 
+		col*, invertC*: INTEGER; 
+		desc: DrawDesc; 
+	END; 
+
+	CaretMsg = RECORD (Gadgets.UpdateMsg)
+		loc: Loc; 
+	END; 
+
+	SelectMsg = RECORD (Display.FrameMsg)
+		beg, end: Loc; 
+	END; 
+
+	ScrollMsg = RECORD (Display.FrameMsg)
+		pos: LONGINT; 
+	END; 
+VAR 
+	PrintertopY*, PrinterbotY*, PrinterleftX*, PagenoX*, HeaderY*: INTEGER; 
+	W, Wmsg: Texts.Writer; 
+	myfnt: Fonts.Font; 
+	mycol, myvoff: INTEGER; 
+	dummyFrame: Gadgets.Frame; 
+	scrollhint: BOOLEAN; 
+	printOpts*: SET; 
+	saved: Oberon.CaretMsg; 
+	clipboard: Texts.Buffer; 
+
+	PROCEDURE ^ Max(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ ConvertMsg(VAR M: Texts.UpdateMsg; VAR id: INTEGER; VAR beg, end: LONGINT); 
+	PROCEDURE ^ InSync*(F: Frame; L1, L2: Line): BOOLEAN; 
+	PROCEDURE ^ OpenBackRd*(VAR R: BackRd; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Read*(VAR R: BackRd; VAR ch: CHAR); 
+	PROCEDURE ^ RdPos*(VAR R: BackRd): LONGINT; 
+	PROCEDURE ^ LinesUp*(T: Texts.Text; pos: LONGINT; no: INTEGER): LONGINT; 
+	PROCEDURE ^ NewMask(F: Frame); 
+	PROCEDURE ^ ToBoxes*(F: Frame; x, y: INTEGER; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ FindLine(F: Frame; y, Y: INTEGER; VAR org: LONGINT; VAR L: Line); 
+	PROCEDURE ^ LocateBox*(F: Frame; X, Y, x, y, w, h: INTEGER; VAR L: Line): Box; 
+	PROCEDURE ^ FlipCaret(F: Frame; R: Display3.Mask; x, y, w, h: INTEGER; loc: Loc); 
+	PROCEDURE ^ FlipCaretMsg(F: Frame; loc: Loc); 
+	PROCEDURE ^ RemoveCaret*(F: Frame); 
+	PROCEDURE ^ SetFont(text: Texts.Text; cpos: LONGINT); 
+	PROCEDURE ^ SetCaretWithScroll0(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ SetCaretWithScroll(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ SetCaret*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ TrackCaret*(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y, w, h: INTEGER; VAR loc: Loc); 
+	PROCEDURE ^ TrackWord*(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y, w, h: INTEGER; VAR pos: LONGINT); 
+	PROCEDURE ^ TrackLine*(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: INTEGER; VAR org: LONGINT; VAR L: Line); 
+	PROCEDURE ^ LinesOf*(F: Frame): INTEGER; 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ ScrollTo*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ RestoreSlider(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawScrollChanges(F: Frame; pos, stamp: LONGINT; dlink: Objects.Object; x, y, w, h: INTEGER; VAR d: DrawDesc); 
+	PROCEDURE ^ ScrollUpdate(F: Frame; pos, stamp: LONGINT; VAR d: DrawDesc); 
+	PROCEDURE ^ Below(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Above(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ FlipSelection(F: Frame; R: Display3.Mask; x, y: INTEGER; s, e: Loc); 
+	PROCEDURE ^ FlipSelectionMsg(F: Frame; beg, end: Loc); 
+	PROCEDURE ^ RemoveSelection*(F: Frame); 
+	PROCEDURE ^ SetSelection*(F: Frame; beg, end: LONGINT); 
+	PROCEDURE ^ TrackSelection*(F: Frame; VAR keysum: SET; x, y: INTEGER; VAR beg, end: Loc; dlink: Objects.Object); 
+	PROCEDURE ^ UnselectSelectedFrames(T: Texts.Text); 
+	PROCEDURE ^ GetSelection(F: Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ CopyStretch(text: Texts.Text; beg, end: LONGINT; VAR W: Texts.Writer; F: Frame); 
+	PROCEDURE ^ CopyOver*(F: Frame; text: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ CopyList*(obj: Objects.Object; depth: INTEGER; VAR obj0: Objects.Object); 
+	PROCEDURE ^ DeleteSelectedFrames*(T: Texts.Text); 
+	PROCEDURE ^ GetSelectedFrames*(T: Texts.Text; VAR obj: Objects.Object); 
+	PROCEDURE ^ HasCmdAttr(F: Frame; attr: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Call*(F: Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object); 
+	PROCEDURE ^ ScrollUp(F: Frame; org: LONGINT); 
+	PROCEDURE ^ EditSlider*(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER); 
+	PROCEDURE ^ locate(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ Locate*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ SaveCaret; 
+	PROCEDURE ^ RestoreCaret; 
+	PROCEDURE ^ Pos(F: Frame; x, y, X, Y: INTEGER): LONGINT; 
+	PROCEDURE ^ Lines(F: Frame; lines: LONGINT); 
+	PROCEDURE ^ Edit*(F: Frame; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Right*(F: Frame; nbr: SHORTINT); 
+	PROCEDURE ^ Left*(F: Frame; nbr: SHORTINT); 
+	PROCEDURE ^ Copy(F: Frame; VAR pos: LONGINT; cut: BOOLEAN); 
+	PROCEDURE ^ Write(F: Frame; dlink: Objects.Object; x, y: INTEGER; ch: CHAR; fnt: Objects.Library; col, voff: INTEGER); 
+	PROCEDURE ^ Recall(F: Frame); 
+	PROCEDURE ^ Update*(F: Frame; dlink: Objects.Object; id: INTEGER; beg, end: LONGINT; x, y, w, h: INTEGER; stamp: LONGINT; VAR d: DrawDesc); 
+	PROCEDURE ^ DrawChanges(F: Frame; dlink: Objects.Object; id: INTEGER; beg, end: LONGINT; x, y, w, h: INTEGER; stamp: LONGINT; d: DrawDesc); 
+	PROCEDURE ^ AdjustChild*(F: Frame; x, y: INTEGER; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ UpdateChild*(F: Frame; x, y: INTEGER; VAR M: Gadgets.UpdateMsg); 
+	PROCEDURE ^ RemoveChild*(F: Frame; x, y: INTEGER; VAR M: Display.ControlMsg); 
+	PROCEDURE ^ InsertObj(F: Frame; pos: LONGINT; obj: Objects.Object); 
+	PROCEDURE ^ FormatFrame*(F: Frame); 
+	PROCEDURE ^ RestoreFrame*(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ RestoreFrameArea*(F: Frame; M: Display3.Mask; x, y, w, h, U, V, W, H: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ ChildRestore(F: Frame; VAR M: Display.DisplayMsg; x, y: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ ChildRestoreSelection(F: Frame; VAR M: Display.DisplayMsg; x, y: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ ChildUpdate(F: Frame; VAR M: Gadgets.UpdateMsg; x, y: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ StoreFrame(F: Frame; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadFrame(F: Frame; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ FrameLink(F: Frame; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Dimensions*(F: Frame; VAR w, h: INTEGER); 
+	PROCEDURE ^ OptimalSize(F: Frame; VAR w, h: INTEGER); 
+	PROCEDURE ^ AdjustSize(F: Frame; w, h: INTEGER); 
+	PROCEDURE ^ Title(VAR headertext: ARRAY OF CHAR); 
+	PROCEDURE ^ Pageno(pageno: INTEGER); 
+	PROCEDURE ^ PrintText*(F: Frame; VAR headertext: ARRAY OF CHAR); 
+	PROCEDURE ^ P(x: INTEGER): INTEGER; 
+	PROCEDURE ^ PrintTextGadget(F: Frame; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Print(F: Frame; x, y: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ InScrollBar(F: Frame; X, Y, x, y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ LocateMsg(F: Frame; VAR M: Display.LocateMsg); 
+	PROCEDURE ^ ModifyFrame(F: Frame; VAR M: Display.ModifyMsg); 
+	PROCEDURE ^ FindObj(F: Frame; VAR M: Objects.FindMsg); 
+	PROCEDURE ^ Consume(F: Frame; x, y: INTEGER; VAR M: Display.ConsumeMsg); 
+	PROCEDURE ^ UpdateText(F: Frame; x, y, w, h: INTEGER; VAR M: Texts.UpdateMsg); 
+	PROCEDURE ^ TGSelect(F: Frame; x, y: INTEGER; VAR M: SelectMsg); 
+	PROCEDURE ^ DSelect(F: Frame; x, y: INTEGER; VAR M: Display.SelectMsg); 
+	PROCEDURE ^ OSelect(F: Frame; x, y: INTEGER; VAR M: Oberon.SelectMsg); 
+	PROCEDURE ^ DControl(F: Frame; x, y: INTEGER; VAR M: Display.ControlMsg); 
+	PROCEDURE ^ OControl(F: Frame; x, y: INTEGER; VAR M: Oberon.ControlMsg); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitFrame*(F: Frame; T: Texts.Text); 
+	PROCEDURE ^ InitPagePosition; 
+BEGIN
+END TextGadgets0.

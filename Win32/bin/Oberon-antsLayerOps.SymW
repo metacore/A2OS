@@ -1,0 +1,8 @@
+MODULE antsLayerOps IN Oberon;
+	IMPORT antsViews, antsPictureViews, antsImageViews, antsArrayImages, antsArrayPictures, antsArrayObjects, aM := antsMessages, vyPort, Objects, Images, Pictures;
+CONST 
+
+	PROCEDURE ^ PictToImage(pict: Pictures.Picture; img: Images.Image); 
+	PROCEDURE ^ Exchange*; 
+BEGIN
+END antsLayerOps.

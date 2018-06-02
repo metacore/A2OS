@@ -1,0 +1,12 @@
+MODULE OpenDemo2 IN Oberon;
+	IMPORT Out, Files, Objects, Gadgets, Panels, Documents, Desktops;
+CONST 
+
+	PROCEDURE ^ LoadPanel*(D: Documents.Document); 
+	PROCEDURE ^ StorePanel*(D: Documents.Document); 
+	PROCEDURE ^ DocHandle*(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+	PROCEDURE ^ ShowGadget(name: ARRAY OF CHAR); 
+	PROCEDURE ^ Do*; 
+BEGIN
+END OpenDemo2.

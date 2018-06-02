@@ -1,0 +1,6 @@
+MODULE WTSStamp IN Oberon;
+	IMPORT TimeStamps;
+
+	PROCEDURE ^ New*; 
+BEGIN
+END WTSStamp.

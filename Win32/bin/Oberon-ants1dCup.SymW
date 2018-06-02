@@ -1,0 +1,28 @@
+MODULE ants1dCup IN Oberon;
+	IMPORT antsObjects, Files, antsKernel, antsModels, antsCommands, vyName, Objects, vyBase, Gadgets, vyLongrealVec, Links, vyRandom, Math := MathL IN A2, vyRanBase, aM := antsMessages, Attributes;
+CONST 
+	version* = 0; 
+	moduleName = \"ants1dCup.Gen"\; 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		alpha: LONGREAL; 
+		lambda: LONGREAL; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel; metropolis: BOOLEAN); 
+	PROCEDURE ^ Init(s: antsKernel.Kernel); 
+	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ HandleBind(o: tModel; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(msg: tModel; name: vyName.tNameArray); 
+	PROCEDURE ^ NewPars(o: tModel); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ DoNewModel*(name: vyName.tNameArray): tModel; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END ants1dCup.

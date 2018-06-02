@@ -1,0 +1,58 @@
+MODULE antsLinkView IN Oberon;
+	IMPORT Display, vyBase, vyName, vyGraphBase, vyDisplay2d, vyPort, vyEvents, vyLinks, antsObjects, Attributes, antsPlots, vyTracking, Files, vyHighlight, Gadgets, vyGraph := antsGraph, Objects, antsCommands, Strings, vyCommandMenus, aM := antsMessages;
+CONST 
+	sourcenode = 1; 
+	usernode = 2; 
+TYPE 
+	Real = LONGREAL; 
+
+	tNode = POINTER TO tNodeDesc; 
+
+	tNodeDesc = RECORD (vyGraph.tNodeDesc)
+		o: Objects.Object; 
+		dir: INTEGER; 
+		level, levelpos: INTEGER; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		graph: vyGraph.tGraph; 
+		root: vyBase.Object; 
+	END; 
+VAR 
+	minlevel, maxlevel: INTEGER; 
+	currange: POINTER TO ARRAY OF INTEGER; 
+	graph: vyGraph.tGraph; 
+	min, max: INTEGER; 
+	vvv: tNode; 
+	tempLayer: tLayer; 
+	tempN: tNode; 
+
+	PROCEDURE ^ StoreNode(VAR R: Files.Rider; n: tNode); 
+	PROCEDURE ^ LoadNode(VAR R: Files.Rider; n: tNode); 
+	PROCEDURE ^ NHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ GenN*; 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ InstallGraph*(level: tLayer; debug: BOOLEAN); 
+	PROCEDURE ^ range(n: vyGraph.tNode); 
+	PROCEDURE ^ rangepos(n: vyGraph.tNode); 
+	PROCEDURE ^ posit(n: vyGraph.tNode); 
+	PROCEDURE ^ minlevel1(n: vyGraph.tNode); 
+	PROCEDURE ^ maxlevel1(n: vyGraph.tNode); 
+	PROCEDURE ^ RefineGraph(g: vyGraph.tGraph); 
+	PROCEDURE ^ Recall(layer: tLayer; msg: Display.DisplayMsg); 
+	PROCEDURE ^ Respond(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ DoubleClick(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ StoreL(VAR R: Files.Rider; L: tLayer); 
+	PROCEDURE ^ LoadL(VAR R: Files.Rider; n: tLayer); 
+	PROCEDURE ^ viewNode; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GenL*; 
+	PROCEDURE ^ Open(layer: tLayer; root: vyBase.Object; debug: BOOLEAN); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ Show*; 
+BEGIN
+END antsLinkView.

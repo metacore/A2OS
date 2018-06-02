@@ -1,0 +1,49 @@
+MODULE GfxPKFonts IN Oberon;
+	IMPORT Files, FileDir, Math IN A2, Display, Strings, Images, GfxMatrix, GfxImages, GfxPaths, GfxFonts;
+CONST 
+TYPE 
+	Base = POINTER TO BaseDesc; 
+
+	BaseDesc = RECORD 
+		next: Base; 
+		name: ARRAY 32 OF CHAR; 
+		ptsize: INTEGER; 
+		scale: REAL; 
+		xmin, ymin, xmax, ymax: LONGINT; 
+		flag: ARRAY 256 OF CHAR; 
+		pos: ARRAY 256 OF LONGINT; 
+		buf: POINTER TO ARRAY OF CHAR; 
+	END; 
+
+	Font* = POINTER TO FontDesc; 
+
+	FontDesc* = RECORD (GfxFonts.FontDesc)
+		base: Base; 
+		bmat: GfxMatrix.Matrix; 
+		fmt: Images.Format; 
+	END; 
+VAR 
+	Bases: Base; 
+	Src, Dst: Images.Image; 
+	Inv: ARRAY 256 OF CHAR; 
+	Class: GfxFonts.Methods; 
+	SizeScale, BestSizeScale, BestScale: REAL; 
+	Name: ARRAY 32 OF CHAR; 
+	BestSize: LONGINT; 
+
+	PROCEDURE ^ InitInv; 
+	PROCEDURE ^ GetBaseWidth(base: Base; ch: CHAR; VAR dx, dy: LONGINT); 
+	PROCEDURE ^ GetBaseDim(base: Base; ch: CHAR; VAR x, y, w, h: LONGINT); 
+	PROCEDURE ^ GetBaseMap(base: Base; ch: CHAR; VAR x, y: LONGINT; VAR map: Images.Image); 
+	PROCEDURE ^ LoadBase(VAR name: ARRAY OF CHAR): Base; 
+	PROCEDURE ^ EnumFile(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ OpenBase(VAR name: ARRAY OF CHAR; ptsize: INTEGER; scale: REAL): Base; 
+	PROCEDURE ^ Derive(gfont: GfxFonts.Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font; 
+	PROCEDURE ^ GetWidth(gfont: GfxFonts.Font; ch: CHAR; VAR dx, dy: REAL); 
+	PROCEDURE ^ GetMap(gfont: GfxFonts.Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
+	PROCEDURE ^ GetOutline(gfont: GfxFonts.Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
+	PROCEDURE ^ Open*(VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font; 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ InitClass; 
+BEGIN
+END GfxPKFonts.

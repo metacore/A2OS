@@ -1,0 +1,85 @@
+MODULE vyLinks IN Oberon;
+	IMPORT Files, Objects, Gadgets;
+CONST 
+	ErrBase = 100; 
+	ErrWrRefNOObj* = 10; 
+	ErrWrRefPriv* = 11; 
+	ErrWrRefNoRef* = 12; 
+	ErrRdRefNoObj* = 20; 
+	ErrRdRefNotFound* = 21; 
+	nohotlink* = 1; 
+	changedvals* = 2; 
+	linkfailed* = 3; 
+	dispositionflags* = {nohotlink}; 
+	statusflags* = {changedvals, linkfailed}; 
+TYPE 
+	Link* = POINTER TO LinkDesc; 
+
+	LinkDesc* = RECORD 
+		link*: Link; 
+		flags*: SET; 
+		obj*: Objects.Object; 
+	END; 
+
+	LinkL* = POINTER TO LinkLDesc; 
+
+	LinkLDesc* = RECORD (LinkDesc)
+		val-: LONGINT; 
+	END; 
+
+	Queue* = POINTER TO QueueDesc; 
+
+	QueueDesc* = RECORD (LinkDesc)
+		qlink*: Link; 
+		first-: Link; 
+		last-: Link; 
+		count-: LONGINT; 
+	END; 
+VAR 
+	caching-: BOOLEAN; 
+	ErrCache-: LinkL; 
+	lasterr: LinkL; 
+	errcode-: LONGINT; 
+	NoObject-: Objects.Object; 
+	NoObjectHandler*: Objects.Handler; 
+
+	PROCEDURE ^ ResetErr*; 
+	PROCEDURE ^ CacheErrors*; 
+	PROCEDURE ^ HaltErrors*; 
+	PROCEDURE ^ AddErr*(ob: Objects.Object; code: LONGINT); 
+	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ WriteRef(VAR r: Files.Rider; lib: Objects.Library; obj: Objects.Object); 
+	PROCEDURE ^ ReadRef(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object); 
+	PROCEDURE ^ StoreLinkObj*(VAR R: Files.Rider; lib: Objects.Library; listobj: Objects.Object); 
+	PROCEDURE ^ LoadLinkObj*(VAR R: Files.Rider; lib: Objects.Library; VAR listobj: Objects.Object); 
+	PROCEDURE ^ StoreLinks*(VAR R: Files.Rider; lib: Objects.Library; list: Link); 
+	PROCEDURE ^ LoadLinks*(VAR R: Files.Rider; lib: Objects.Library; VAR list: Link); 
+	PROCEDURE ^ CopyPtr(VAR M: Objects.CopyMsg; obj: Objects.Object): Objects.Object; 
+	PROCEDURE ^ CopyLinks*(VAR M: Objects.CopyMsg; in: Link; VAR out: Link); 
+	PROCEDURE ^ FindLinks*(links: Link; VAR M: Objects.FindMsg); 
+	PROCEDURE ^ ForwardMsgToLinks*(links: Link; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Bind*(obj: Objects.Object; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ BindLinks*(list: Link; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ InsertObj*(VAR list: Link; obj: Objects.Object); 
+	PROCEDURE ^ InsertObjOnce*(VAR list: Link; obj: Objects.Object); 
+	PROCEDURE ^ FindObj*(obj: Objects.Object; list: Link): Link; 
+	PROCEDURE ^ DeleteLink*(VAR list: Link; obj: Objects.Object); 
+	PROCEDURE ^ ToLinks*(list: Link; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InsertFirstLink*(VAR linkchain: Link; newlink: Link); 
+	PROCEDURE ^ InsertLastLink*(VAR linkchain: Link; newlink: Link); 
+	PROCEDURE ^ MakeSLink*(link: Link; VAR obj: Objects.Object); 
+	PROCEDURE ^ MakeDLink*(link: Link; VAR obj: Objects.Object); 
+	PROCEDURE ^ GetLastObj*(link: Link): Objects.Object; 
+	PROCEDURE ^ GetSLink*(obj: Objects.Object; VAR link: Link); 
+	PROCEDURE ^ GetDLink*(obj: Objects.Object; VAR link: Link); 
+	PROCEDURE ^ OpenQueue*(queue: Queue); 
+	PROCEDURE ^ EnqueueFirst*(queue: Queue; item: Link); 
+	PROCEDURE ^ EnqueueLast*(queue: Queue; item: Link); 
+	PROCEDURE ^ Dequeue*(queue: Queue; item: Link); 
+	PROCEDURE ^ IsEmptyQueue*(queue: Queue): BOOLEAN; 
+	PROCEDURE ^ SeqName*(stub: ARRAY OF CHAR; sep: CHAR; seqnr: LONGINT; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ NameToSeq*(name: ARRAY OF CHAR; sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: LONGINT); 
+	PROCEDURE ^ LinkCount*(link: Link): LONGINT; 
+	PROCEDURE ^ DoHandleLinks*(VAR p: Link; NameStub: ARRAY OF CHAR; VAR M: Objects.LinkMsg); 
+BEGIN
+END vyLinks.

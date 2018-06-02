@@ -1,0 +1,10 @@
+MODULE WMDesktops;
+	IMPORT Commands, WMWindowManager, WMRestorable;
+VAR 
+	manager: WMWindowManager.WindowManager; 
+
+	PROCEDURE ^ Load*(context: Commands.Context); 
+	PROCEDURE ^ Store*(context: Commands.Context); 
+	PROCEDURE ^ CloseAllWindows; 
+BEGIN
+END WMDesktops.

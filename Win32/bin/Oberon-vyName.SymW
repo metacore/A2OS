@@ -1,0 +1,48 @@
+MODULE vyName IN Oberon;
+	IMPORT Objects, Files, vyBase, vyHostStrings, Gadgets, Texts, vyHostTexts, vyLinks;
+CONST 
+	idversion* = \"vyName 0.0a5"\; 
+	cNameLength = 32; 
+TYPE 
+	tNameArray* = ARRAY cNameLength OF CHAR; 
+
+	tName* = POINTER TO tNameDesc; 
+
+	tNameDesc = RECORD (Gadgets.ObjDesc)
+		Object*: vyBase.Object; 
+		Name: tNameArray; 
+		id: LONGINT; 
+		highid: LONGINT; 
+		prev, next: tName; 
+	END; 
+VAR 
+	NameBase*: tName; 
+
+	PROCEDURE ^ DoInsert(VAR NameBase: tName; VAR temp: tName); 
+	PROCEDURE ^ DoInsert2(VAR NameBase: tName; VAR temp: tName); 
+	PROCEDURE ^ GetFather(NameBase: tName; VAR temp: tName; VAR left: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Rebuild(VAR NameBase: tName; VAR this: tName); 
+	PROCEDURE ^ Rename(VAR NameBase: tName; VAR temp: tName; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Attributes(obj: tName; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ StoreName0(obj: tName; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ LoadName0(obj: tName; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Links(obj: tName; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Handle*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(name: tName); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ DoRegister(VAR NameBase: tName; ob: vyBase.Object; VAR Name: tNameArray); 
+	PROCEDURE ^ Register*(VAR NameBase: tName; ob: vyBase.Object; Name: ARRAY OF CHAR); 
+	PROCEDURE ^ RegisterNamed*(ob: vyBase.Object; Name: ARRAY OF CHAR); 
+	PROCEDURE ^ Find*(NameBase: tName; Name: tNameArray): vyBase.Object; 
+	PROCEDURE ^ FindObj*(name: ARRAY OF CHAR): vyBase.Object; 
+	PROCEDURE ^ FindMult*(NameBase: tName; Name: tNameArray): vyLinks.Link; 
+	PROCEDURE ^ FindMultObj*(name: ARRAY OF CHAR): vyLinks.Link; 
+	PROCEDURE ^ GetName*(NameBase: tName; VAR Name: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtName*(stub: tNameArray; ext: tNameArray; extnum: LONGINT; VAR name: tNameArray); 
+	PROCEDURE ^ IsExtName*(VAR name: tNameArray; ext: tNameArray; VAR stub: tNameArray; VAR extnum: LONGINT): BOOLEAN; 
+	PROCEDURE ^ UniqueExtName*(NameBase: tName; stub: tNameArray; ext: tNameArray; VAR newname: tNameArray); 
+	PROCEDURE ^ Dump*; 
+	PROCEDURE ^ GetObjId*(o: vyBase.Object; VAR id: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendObjId*(o: vyBase.Object; VAR id: ARRAY OF CHAR); 
+BEGIN
+END vyName.

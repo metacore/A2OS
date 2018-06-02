@@ -1,0 +1,49 @@
+MODULE vyScatter2 IN Oberon;
+	IMPORT Gadgets, Objects, Display, vyHostStrings, vyHostTexts, vyHostDisplay := vyGraphBase, vyBase, vyGraphBase, vyLinks, vyName, vyBooleanVec, vyTypes, Out, vyRectangles, Attributes, vyPort, vyDisplay2d, vyHighlight, vyEvents, Files, vyCommandMenus;
+CONST 
+	idversion* = \"vyScatter2 v0r0a3"\; 
+	cMin = 0; 
+	cMax = 1; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		ViewLastOnly: BOOLEAN; 
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+	newlayer-: tLayer; 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(scatter: tLayer); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: Coordinate); 
+	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
+	PROCEDURE ^ Select(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Prompt(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ LinkName(obj: vyBase.Object; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ AdjustCoord(pict: vyPort.Picture; obj: tLayer); 
+	PROCEDURE ^ SetModel(pict: vyPort.Picture; obj: tLayer; data: Objects.Object); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ pattern; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ NewPict*; 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ OpenO*(F: tLayer; x, y: Objects.Object); 
+	PROCEDURE ^ OpenL*(F: tLayer; list: vyLinks.Link); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(x, y: Objects.Object); 
+	PROCEDURE ^ AddObservation*(x, y: Real; scatter: tLayer); 
+BEGIN
+END vyScatter2.

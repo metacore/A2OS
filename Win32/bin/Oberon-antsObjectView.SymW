@@ -1,0 +1,165 @@
+MODULE antsObjectView IN Oberon;
+	IMPORT Objects, vyBase, vyHostStrings, vyName, vyLinks, vyPort, Display, vyDisplay2d, vyHostTexts, vyTracking, aM := antsMessages, vyGraphBase, vyRectangles, vyEvents, vyCommandMenus, Oberon, Texts, Gadgets, vyHost, Files, antsObjects;
+CONST 
+	disty = 1; 
+	distx = 15; 
+	TICKS = 100; 
+	HideEntryConstName = \"** hide **"\; 
+	MAXD = 20; 
+	RegisterEntryConstName = \" ! ReRegister Object ! "\; 
+	WriteAllEntriesConstName = \"Write Out All Entries"\; 
+	ShowConstName = \"Show Plot"\; 
+TYPE 
+	ViewList = POINTER TO ViewListDesc; 
+
+	ViewListDesc = RECORD 
+		this: vyTracking.List; 
+		gen: vyTracking.List; 
+		next: ViewList; 
+	END; 
+
+	tNode* = POINTER TO tNodeDesc; 
+
+	tEntry = POINTER TO tEntryDesc; 
+
+	tEntryDesc = RECORD (vyLinks.LinkDesc)
+		name, val: ARRAY 256 OF CHAR; 
+		X, Y, W, H: INTEGER; 
+		selected: BOOLEAN; 
+		visible: BOOLEAN; 
+		node: tNode; 
+	END; 
+
+	tNodeDesc* = RECORD 
+		entries: vyLinks.Link; 
+		root: Objects.Object; 
+		name, val: ARRAY 256 OF CHAR; 
+		entriesvisible: BOOLEAN; 
+		entriescount: LONGINT; 
+		repetition: BOOLEAN; 
+		X, Y, W, H: INTEGER; 
+		x, y: LONGREAL; 
+		selected: BOOLEAN; 
+		visible: BOOLEAN; 
+	END; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		node: tNode; 
+		distance: INTEGER; 
+		forbidden: ARRAY 128 OF vyName.tNameArray; 
+		forbiddencount: INTEGER; 
+		commands: vyCommandMenus.List; 
+		lastLink: LONGINT; 
+		lifeUpdate: BOOLEAN; 
+	END; 
+
+	NodeProc = PROCEDURE (n: tNode); 
+
+	EntryProc = PROCEDURE (e: tEntry); 
+VAR 
+	enumChar: ARRAY 1024 OF vyName.tNameArray; 
+	enumCount: INTEGER; 
+	ObjList: vyLinks.Link; 
+	LastObj: vyLinks.Link; 
+	tempLayer: tLayer; 
+	Xtemp, Ytemp, Wtemp, Htemp: INTEGER; 
+	tempNode: tNode; 
+	nousersandsources: BOOLEAN; 
+	GVList: ViewList; 
+	gadgets: ViewList; 
+	maxdepth: INTEGER; 
+
+	PROCEDURE ^ StoreEntry(VAR R: Files.Rider; lib: Objects.Library; entry: vyLinks.Link); 
+	PROCEDURE ^ LoadEntry(VAR R: Files.Rider; lib: Objects.Library; VAR entry: vyLinks.Link); 
+	PROCEDURE ^ StoreNode(VAR R: Files.Rider; lib: Objects.Library; node: tNode); 
+	PROCEDURE ^ LoadNode(VAR R: Files.Rider; lib: Objects.Library; VAR node: tNode); 
+	PROCEDURE ^ Store0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ InList(obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ PutInList(obj: Objects.Object); 
+	PROCEDURE ^ Equal(CONST s1, s2: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ MyEnum(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ Enqueue(VAR start: vyLinks.Link; link: vyLinks.Link); 
+	PROCEDURE ^ Entries(node: tNode; CONST rname, rval: ARRAY OF CHAR; depth: LONGINT); 
+	PROCEDURE ^ ListFromDummy(layer: tLayer); 
+	PROCEDURE ^ BoxedText(a1, a2: ARRAY OF CHAR; x, y: LONGREAL; VAR X, Y, W, H: INTEGER; n: tNode; selected: BOOLEAN); 
+	PROCEDURE ^ RecallNode(n: tNode; VAR x, y: LONGREAL; oldx, oldy: LONGREAL; drx, dry: LONGREAL; SY1, SY2: INTEGER); 
+	PROCEDURE ^ xyinNode(n: tNode; VAR x, y: INTEGER): tNode; 
+	PROCEDURE ^ xyinEntry(n: tNode; VAR x, y: INTEGER; VAR mynode: tNode): tEntry; 
+	PROCEDURE ^ SelectNode(n: tNode); 
+	PROCEDURE ^ SelectEntry(e: tEntry); 
+	PROCEDURE ^ DeSelectNode(n: tNode); 
+	PROCEDURE ^ DeSelectEntry(e: tEntry); 
+	PROCEDURE ^ HideSelectedNode(n: tNode); 
+	PROCEDURE ^ HideSelectedEntry(e: tEntry); 
+	PROCEDURE ^ ShowSelectedNode(n: tNode); 
+	PROCEDURE ^ ShowSelectedEntry(e: tEntry); 
+	PROCEDURE ^ ForAllDo(n: tNode; nP: NodeProc; nE: EntryProc); 
+	PROCEDURE ^ ForAllVisibleDo(n: tNode; nP: NodeProc; nE: EntryProc); 
+	PROCEDURE ^ UnSelectAll(L: tLayer); 
+	PROCEDURE ^ UnHideAll(L: tLayer); 
+	PROCEDURE ^ DoHideSelection(L: tLayer); 
+	PROCEDURE ^ SelectInRectNode(n: tNode); 
+	PROCEDURE ^ SelectInRectEntry(n: tEntry); 
+	PROCEDURE ^ DoSelect(L: tLayer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ SubscribeNameNode(n: tNode); 
+	PROCEDURE ^ SubscribeNameEntry(n: tEntry); 
+	PROCEDURE ^ HideIfForbiddenNode(n: tNode); 
+	PROCEDURE ^ HideIfForbiddenEntry(n: tEntry); 
+	PROCEDURE ^ SelectIfForbiddenNode(n: tNode); 
+	PROCEDURE ^ SelectIfForbiddenEntry(n: tEntry); 
+	PROCEDURE ^ HideNamed; 
+	PROCEDURE ^ Select(L: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ InNode(L: tLayer; x, y: INTEGER): tNode; 
+	PROCEDURE ^ InEntry(L: tLayer; x, y: INTEGER; VAR mynode: tNode): tEntry; 
+	PROCEDURE ^ EntryUpdate(Entry: tEntry); 
+	PROCEDURE ^ SetTempNode(n: tNode); 
+	PROCEDURE ^ SubscribeMe(n: tNode); 
+	PROCEDURE ^ NodeSubscribe(L: tLayer); 
+	PROCEDURE ^ LinksUpdate(L: tLayer); 
+	PROCEDURE ^ UpdateSpecial(L: tLayer); 
+	PROCEDURE ^ Recall(layer: tLayer; msg: Display.DisplayMsg); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ GetGadgetsTable(CONST name: ARRAY OF CHAR): vyTracking.List; 
+	PROCEDURE ^ MakeTextField(n: tNode; e: tEntry; event: vyEvents.EventMsg); 
+	PROCEDURE ^ GetTable(CONST name: ARRAY OF CHAR): vyTracking.List; 
+	PROCEDURE ^ ViewObject(n: tNode; e: vyEvents.EventMsg); 
+	PROCEDURE ^ ViewEntry(entrynode: tNode; entry: tEntry; event: vyEvents.EventMsg); 
+	PROCEDURE ^ Respond(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(M: Objects.ObjMsg; source, dest: tLayer); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ BindAll(n: tNode; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ HideSelection; 
+	PROCEDURE ^ InvSelNode(n: tNode); 
+	PROCEDURE ^ InvSelEntry(e: tEntry); 
+	PROCEDURE ^ InverseSelection; 
+	PROCEDURE ^ InvHideSelection; 
+	PROCEDURE ^ ShowAll; 
+	PROCEDURE ^ AutoUpdate; 
+	PROCEDURE ^ NoAutoUpdate; 
+	PROCEDURE ^ ManualUpdate; 
+	PROCEDURE ^ Big; 
+	PROCEDURE ^ Med; 
+	PROCEDURE ^ Small; 
+	PROCEDURE ^ CollapseNode(n: tNode); 
+	PROCEDURE ^ Collapse; 
+	PROCEDURE ^ DeleteSelected(n: tNode); 
+	PROCEDURE ^ Delete; 
+	PROCEDURE ^ InvDelete; 
+	PROCEDURE ^ DeleteFromDummy; 
+	PROCEDURE ^ Noop; 
+	PROCEDURE ^ DeleteNamed; 
+	PROCEDURE ^ Init(image: tLayer); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ AllObjects*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ EnableUsersAndSources*; 
+	PROCEDURE ^ DisableUsersAndSources*; 
+	PROCEDURE ^ TrackingInsertName(VAR list: vyTracking.List; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ InitGVList; 
+BEGIN
+END antsObjectView.

@@ -1,0 +1,21 @@
+MODULE EventsMemoryLog;
+	IMPORT Modules, Events, EventsUtils;
+CONST 
+	MaxNofWrapper = 16; 
+	EventsPerWrapper = 256; 
+TYPE 
+	EventLogger = OBJECT {EXCLUSIVE} (Events.Sink)
+	VAR 
+		events: EventsUtils.EventContainer; 
+
+		PROCEDURE ^ Handle*(event: Events.Event); 
+		PROCEDURE ^  & Init*; 
+	END EventLogger; 
+VAR 
+	eventLog-: EventLogger; 
+
+	PROCEDURE ^ GetEvents*(): EventsUtils.EventContainer; 
+	PROCEDURE ^ Clear*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END EventsMemoryLog.

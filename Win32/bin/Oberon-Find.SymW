@@ -1,0 +1,29 @@
+MODULE Find IN Oberon;
+	IMPORT Objects, Attributes, Gadgets, Oberon, Files, Lists, Texts, FileDir, Input;
+CONST 
+TYPE 
+	File = POINTER TO FileDesc; 
+
+	FileDesc = RECORD 
+		name: ARRAY 32 OF CHAR; 
+		next: File; 
+	END; 
+VAR 
+	spat, pat: ARRAY 64 OF CHAR; 
+	Output, CommandLine: BOOLEAN; 
+	progress, list: Objects.Object; 
+	file: File; 
+	out: Texts.Text; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ ScanPar(VAR s: Texts.Scanner); 
+	PROCEDURE ^ OpenViewer(name: ARRAY OF CHAR; T: Texts.Text); 
+	PROCEDURE ^ BrowseFile(filename: ARRAY OF CHAR); 
+	PROCEDURE ^ ListFiles(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ GetStrAttr(obj: Objects.Object; name: ARRAY OF CHAR; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ SetDetOutput*; 
+	PROCEDURE ^ Domain*; 
+	PROCEDURE ^ All*; 
+BEGIN
+END Find.

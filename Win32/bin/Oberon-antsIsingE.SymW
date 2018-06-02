@@ -1,0 +1,8 @@
+MODULE antsIsingE IN Oberon;
+	IMPORT antsEmpiricD;
+TYPE 
+	DistFunction* = PROCEDURE (E: antsEmpiricD.EmpiricalDistribution; beta, h: LONGREAL):LONGREAL; 
+VAR 
+	thisDist*: DistFunction; 
+BEGIN
+END antsIsingE.

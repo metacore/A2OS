@@ -1,0 +1,17 @@
+MODULE antsMinimizeF IN Oberon;
+CONST 
+	range = 30; 
+TYPE 
+	Function = PROCEDURE (a: ARRAY OF LONGREAL):LONGREAL; 
+
+	Function2 = PROCEDURE (beta, h: LONGREAL):LONGREAL; 
+VAR 
+	exceeded*: BOOLEAN; 
+
+	PROCEDURE ^ AmoTry(VAR P: ARRAY OF ARRAY OF LONGREAL; VAR Y: ARRAY OF LONGREAL; VAR sum: ARRAY OF LONGREAL; ndim, ihi: LONGINT; func: Function; VAR nfunc: LONGINT; fac: LONGREAL): LONGREAL; 
+	PROCEDURE ^ swap*(VAR y1, y2: LONGREAL); 
+	PROCEDURE ^ swapv*(VAR y1, y2: ARRAY OF LONGREAL); 
+	PROCEDURE ^ Amoeba*(VAR P: ARRAY OF ARRAY OF LONGREAL; VAR Y: ARRAY OF LONGREAL; ndim: LONGINT; ftol: LONGREAL; func: Function; VAR nfunc: LONGINT); 
+	PROCEDURE ^ Downhill*(func: Function2; VAR beta, h: LONGREAL; prec: LONGREAL); 
+BEGIN
+END antsMinimizeF.

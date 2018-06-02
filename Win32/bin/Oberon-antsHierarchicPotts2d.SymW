@@ -1,0 +1,31 @@
+MODULE antsHierarchicPotts2d IN Oberon;
+	IMPORT antsToolbox, antsArrayObjects, Strings := vyHostStrings, antsCommands, vyBase, vyLongrealVec, Input, Oberon, vyLongreal, antsRegions, antsSecurity, antsPortability, antsBellman, antsArrays, antsReadWrite, antsPlots, aM := antsMessages;
+CONST 
+VAR 
+	globalStat: antsBellman.Statistic; 
+	globalGamma: LONGREAL; 
+	globaly1, globaly2: LONGINT; 
+	globalRstern: antsArrays.I1d; 
+	globalBellman: antsArrays.X1d; 
+	globalMinWeite, globalMaxWeite: LONGINT; 
+	inDirectory, outDirectory: ARRAY 256 OF CHAR; 
+
+	PROCEDURE ^ ApplyInteractively*; 
+	PROCEDURE ^ PottsFile(in, out: ARRAY OF CHAR; minWeite, maxWeite: LONGINT); 
+	PROCEDURE ^ FileEnum(path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+	PROCEDURE ^ OnDirectory*; 
+	PROCEDURE ^ Function1d(from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ CumFunction(from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ MatrixFunction(from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ CumFunction2(from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ MatrixFunction2(from, to: LONGINT): LONGREAL; 
+	PROCEDURE ^ statMean(k1, k2: LONGINT): LONGREAL; 
+	PROCEDURE ^ CumWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF LONGREAL; rstern: antsArrays.I1d; y1, y2: LONGINT); 
+	PROCEDURE ^ MatrixWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF LONGREAL; rstern: antsArrays.I1d); 
+	PROCEDURE ^ Scale*(VAR orig: ARRAY OF LONGREAL; VAR gamma: LONGREAL); 
+	PROCEDURE ^ ScaleMatrix*(VAR S: ARRAY OF ARRAY OF LONGREAL; VAR gamma: LONGREAL); 
+	PROCEDURE ^ PottsStatLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL); 
+	PROCEDURE ^ MatrixPottsLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL; minweit, maxweit: LONGINT; lengths: BOOLEAN); 
+	PROCEDURE ^ PottsToVec*; 
+BEGIN
+END antsHierarchicPotts2d.

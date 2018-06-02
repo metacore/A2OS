@@ -1,0 +1,29 @@
+MODULE vyLine IN Oberon;
+	IMPORT Files, Objects, Display, vyBase, vyGraphBase, vyEvents, vyHostDisplay := vyGraphBase, vyHostStrings, vyName, vyPort, vyParser;
+CONST 
+	idversion* = \"vyLine v0r0a2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		lBounded, rBounded: BOOLEAN; 
+		lBound, rBound: REAL; 
+		a, b: REAL; 
+	END; 
+
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ Recall(line: tLayer; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Respond(line: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(line: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(F: tLayer); 
+	PROCEDURE ^ Open*(F: tLayer; lBounded, rBounded: BOOLEAN; lBound, rBound, a, b: REAL); 
+	PROCEDURE ^ Insert*; 
+BEGIN
+END vyLine.

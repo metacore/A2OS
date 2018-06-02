@@ -1,0 +1,59 @@
+MODULE NamePlates IN Oberon;
+	IMPORT Objects, Input, Display, Fonts, Texts, Display3, Oberon, Gadgets, Effects, Printer, Printer3, Files, Documents, Viewers, Desktops;
+CONST 
+	VersionNo = 1; 
+	MaxLen = 128; 
+	CarHeight = 14; 
+	CarWidth = 2; 
+	Xoffset = 10; 
+	TranslatePlate = TRUE; 
+	PrefixBehind = FALSE; 
+TYPE 
+	NamePlate* = POINTER TO NamePlateDesc; 
+
+	NamePlateDesc* = RECORD (Gadgets.FrameDesc)
+		selbeg, selend: INTEGER; 
+		time: LONGINT; 
+		carpos, carx, cary: INTEGER; 
+		val: ARRAY MaxLen OF CHAR; 
+		start: INTEGER; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	invTF: INTEGER; 
+	XtraOffset: INTEGER; 
+
+	PROCEDURE ^ Update(obj: Objects.Object); 
+	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Yoffset(F: NamePlate): INTEGER; 
+	PROCEDURE ^ Length(VAR S: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ InsertChar(VAR S: ARRAY OF CHAR; pos: INTEGER; ch: CHAR); 
+	PROCEDURE ^ DeleteChar(VAR S: ARRAY OF CHAR; pos: INTEGER); 
+	PROCEDURE ^ Delete(VAR S: ARRAY OF CHAR; beg, end: INTEGER); 
+	PROCEDURE ^ DocToPlate(F: NamePlate); 
+	PROCEDURE ^ PlateToDoc(F: NamePlate); 
+	PROCEDURE ^ FindModel(F: NamePlate; dlink: Objects.Object); 
+	PROCEDURE ^ UpdateNamePlate(F: NamePlate); 
+	PROCEDURE ^ ConsumeChar(F: NamePlate; ch: CHAR); 
+	PROCEDURE ^ LocateChar(F: NamePlate; x, mx: INTEGER; VAR pos: INTEGER); 
+	PROCEDURE ^ LocatePos(F: NamePlate; pos: INTEGER; VAR x, y: INTEGER); 
+	PROCEDURE ^ FlipCaret(R: Display3.Mask; F: NamePlate; x, y: INTEGER); 
+	PROCEDURE ^ SetCaret(R: Display3.Mask; F: NamePlate; x, y, pos: INTEGER); 
+	PROCEDURE ^ RemoveCaret(R: Display3.Mask; F: NamePlate; x, y: INTEGER); 
+	PROCEDURE ^ TrackCaret(VAR DR: Display3.Mask; F: NamePlate; x, y: INTEGER); 
+	PROCEDURE ^ FlipSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER; spos, epos: INTEGER); 
+	PROCEDURE ^ RemoveSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER); 
+	PROCEDURE ^ TrackSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER); 
+	PROCEDURE ^ GetSelection(F: NamePlate; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ NamePlateAttr(F: NamePlate; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ ConsumeText(F: NamePlate; VAR M: Oberon.ConsumeMsg); 
+	PROCEDURE ^ Dot(R: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ RestoreNamePlate(R: Display3.Mask; F: NamePlate; x, y, w, h: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ PrintNamePlate(F: NamePlate; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ CopyNamePlate*(VAR M: Objects.CopyMsg; from, to: NamePlate); 
+	PROCEDURE ^ NamePlateHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitNamePlate*(F: NamePlate); 
+	PROCEDURE ^ NewNamePlate*; 
+BEGIN
+END NamePlates.

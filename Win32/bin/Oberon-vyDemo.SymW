@@ -1,0 +1,8 @@
+MODULE vyDemo IN Oberon;
+	IMPORT vyHostTexts, In, vyRegress;
+CONST 
+	idversion* = \"vyDemo v0r0d3"\; 
+
+	PROCEDURE ^ SetLevel*; 
+BEGIN
+END vyDemo.

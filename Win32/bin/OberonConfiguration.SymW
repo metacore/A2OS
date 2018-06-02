@@ -1,0 +1,112 @@
+MODULE OberonConfiguration;
+CONST 
+	TAB = 9X; 
+	CR = 0DX; 
+	LF = 0AX; 
+	MaxStrLen = 512; 
+	MaxIdLen = 64; 
+	eot = 0; 
+	lbrace = 2; 
+	rbrace = 3; 
+	eol = 4; 
+	equals = 6; 
+	char = 7; 
+	whitespace = 8; 
+	EOR* = 0X; 
+	cr* = 0; 
+	crlf* = 1; 
+	lf* = 2; 
+	lfcr* = 3; 
+TYPE 
+	tName = ARRAY (MaxIdLen + 1) OF CHAR; 
+
+	tString = ARRAY MaxStrLen OF CHAR; 
+
+	tEntry* = POINTER TO RECORD 
+		name-: tName; 
+		next: tEntry; 
+		father-: tSegment; 
+	END; 
+
+	KeyValueEnumerator* = PROCEDURE (key, value: ARRAY OF CHAR); 
+
+	EntryEnumerator* = PROCEDURE (entry: tEntry); 
+
+	tValue* = POINTER TO RECORD (tEntry)
+		value*: tString; 
+	END; 
+
+	tSegment* = POINTER TO RECORD (tEntry)
+		nEntries: LONGINT; 
+		entries: tEntry; 
+	END; 
+
+	WriterProc* = PROCEDURE (ch: CHAR); 
+
+	ReaderProc* = PROCEDURE (VAR ch: CHAR); 
+
+	tWriter = OBJECT 
+	VAR 
+		PutCh: WriterProc; 
+		EndOfLine: SHORTINT; 
+
+		PROCEDURE ^  & Init*(w: WriterProc; eol: SHORTINT); 
+		PROCEDURE ^ WriteSpace(level: LONGINT); 
+		PROCEDURE ^ WriteLn; 
+		PROCEDURE ^ WriteString(str: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteEntry(e: tEntry; VAR level: LONGINT); 
+		PROCEDURE ^ WriteSegment(s: tSegment; VAR level: LONGINT); 
+	END tWriter; 
+
+	tParser = OBJECT 
+	VAR 
+		writer: tWriter; 
+		ch, lastch: CHAR; 
+		noerr: BOOLEAN; 
+		pos: LONGINT; 
+		buflen, bufpos: LONGINT; 
+		buf: ARRAY (MaxIdLen + 2) OF CHAR; 
+		och: CHAR; 
+		GetCh: ReaderProc; 
+
+		PROCEDURE ^  & Init*(r: ReaderProc; w: WriterProc); 
+		PROCEDURE ^ err(n: ARRAY OF CHAR); 
+		PROCEDURE ^ Getchb(VAR ch: CHAR); 
+		PROCEDURE ^ Getch(VAR ch: CHAR); 
+		PROCEDURE ^ Get(VAR sym: SHORTINT); 
+		PROCEDURE ^ White(VAR sym: SHORTINT); 
+		PROCEDURE ^ SkipNL(VAR sym: SHORTINT); 
+		PROCEDURE ^ Entry(VAR sym: SHORTINT; name: ARRAY OF CHAR; segment: tSegment); 
+		PROCEDURE ^ Subsection(VAR sym: SHORTINT; name: ARRAY OF CHAR; segment: tSegment): BOOLEAN; 
+		PROCEDURE ^ AssignHead(VAR sym: SHORTINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Segment(VAR sym: SHORTINT; segment: tSegment); 
+		PROCEDURE ^ Configuration(): tSegment; 
+	END tParser; 
+VAR 
+	EndOfLine*: SHORTINT; 
+	PathSeparator-: CHAR; 
+
+	PROCEDURE ^ Write*(e: tEntry; w: WriterProc; level: LONGINT); 
+	PROCEDURE ^ Append(e: tEntry; VAR to: tEntry); 
+	PROCEDURE ^ AddSegment*(to: tSegment; name: ARRAY OF CHAR): tSegment; 
+	PROCEDURE ^ AddValue*(to: tSegment; name, value: ARRAY OF CHAR); 
+	PROCEDURE ^ NullCh(ch: CHAR); 
+	PROCEDURE ^ Read*(r: ReaderProc; err: WriterProc): tSegment; 
+	PROCEDURE ^ Delete(e: tEntry; VAR from: tEntry); 
+	PROCEDURE ^ StripQuotes*(VAR n: ARRAY OF CHAR); 
+	PROCEDURE ^ SameName(n1, n2: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ FindNamedEntry*(in: tSegment; name: ARRAY OF CHAR): tEntry; 
+	PROCEDURE ^ RenameEntry*(e: tEntry; name: ARRAY OF CHAR); 
+	PROCEDURE ^ RemoveEntry*(e: tEntry); 
+	PROCEDURE ^ AddEntry*(e: tEntry; to: tSegment); 
+	PROCEDURE ^ EnumerateEntries*(enum: EntryEnumerator; segment: tEntry); 
+	PROCEDURE ^ EnumerateVals*(enum: KeyValueEnumerator; segment: tEntry); 
+	PROCEDURE ^ Find*(root: tSegment; name: ARRAY OF CHAR): tEntry; 
+	PROCEDURE ^ FindOrCreateSegment(root: tSegment; name: ARRAY OF CHAR): tSegment; 
+	PROCEDURE ^ DeletePath*(root: tSegment; name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DeleteKeyValue*(root: tSegment; path, key: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ SetKeyValue*(root: tSegment; path, key, value: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetKeyValue*(root: tSegment; path, key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ SetPathSeparator*(ch: CHAR); 
+BEGIN
+END OberonConfiguration.

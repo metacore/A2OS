@@ -1,0 +1,43 @@
+MODULE antsMatrixParView IN Oberon;
+	IMPORT vyPort, Objects, vyName, vyBase, vyGraphBase, Display, vyEvents, Files, Gadgets, vyCommandMenus, vyHostStrings, vyRectangles, vyCG := vyName, antsCommands, vyLayers2d := vyDisplay2d, antsMatrixPar, aM := antsMessages;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		n-: antsMatrixPar.Matrix; 
+		commands: vyCommandMenus.List; 
+		viewnum: BOOLEAN; 
+		symmetric: BOOLEAN; 
+		method: INTEGER; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ GHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ WriteOut; 
+	PROCEDURE ^ ViewNum; 
+	PROCEDURE ^ IncMethod; 
+	PROCEDURE ^ ToggleSymmetry; 
+	PROCEDURE ^ DecMethod; 
+	PROCEDURE ^ L0; 
+	PROCEDURE ^ L1; 
+	PROCEDURE ^ L2; 
+	PROCEDURE ^ Init(layer: tLayer); 
+	PROCEDURE ^ AdjustXY(layer: tLayer); 
+	PROCEDURE ^ OpenLayer(layer: tLayer; n: antsMatrixPar.Matrix); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewLayer*(n: antsMatrixPar.Matrix): tLayer; 
+	PROCEDURE ^ DoShow*(n: antsMatrixPar.Matrix): tLayer; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsMatrixParView.

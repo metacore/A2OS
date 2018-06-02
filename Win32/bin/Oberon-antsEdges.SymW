@@ -1,0 +1,8 @@
+MODULE antsEdges IN Oberon;
+	IMPORT antsArrayObjects, antsCommands, vyBase, aM := antsMessages;
+CONST 
+
+	PROCEDURE ^ MakeEdges*; 
+	PROCEDURE ^ MakeDiff*; 
+BEGIN
+END antsEdges.

@@ -1,0 +1,27 @@
+MODULE antsMasks IN Oberon;
+	IMPORT vyBase, antsArrayObjects, aM := antsMessages;
+CONST 
+	MAXSIZE = 256; 
+TYPE 
+	Mask* = OBJECT (vyBase.Object)
+	VAR 
+		enum-: ARRAY MAXSIZE OF ARRAY 2 OF INTEGER; 
+		contained: ARRAY MAXSIZE OF BOOLEAN; 
+		enumsize-: INTEGER; 
+		posy-, posx-: INTEGER; 
+		on-: antsArrayObjects.tINTEGERObject; 
+		Ax*, Ay*, Aw*, Ah*: LONGINT; 
+		onA: antsArrayObjects.tINTEGERArray; 
+
+		PROCEDURE ^ mask*(A: vyBase.Object); 
+		PROCEDURE ^ vals*(VAR val: ARRAY OF INTEGER; offset: LONGINT); 
+		PROCEDURE ^ vis*(y, x: INTEGER): BOOLEAN; 
+		PROCEDURE ^ add*(y, x: INTEGER; pos: INTEGER); 
+		PROCEDURE ^ init*; 
+		PROCEDURE ^ moveTo*(VAR y, x: INTEGER); 
+		PROCEDURE ^ valsAt*(VAR y, x: INTEGER; VAR val: ARRAY OF INTEGER; offset: LONGINT); 
+	END Mask; 
+
+	PROCEDURE ^ Doadd(m: Mask; y, x: INTEGER; pos: INTEGER); 
+BEGIN
+END antsMasks.

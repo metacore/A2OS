@@ -1,0 +1,14 @@
+MODULE BootConsole;
+	IMPORT Machine, Trace, KernelLog, Modules, Streams, Objects, Files, Commands;
+CONST 
+	ModuleName = \"Console"\; 
+	TraceBoot = FALSE; 
+
+	PROCEDURE ^ BootCommand(CONST config: ARRAY OF CHAR; flags: SET); 
+	PROCEDURE ^ GetString(VAR i: LONGINT; CONST r: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Error(CONST config, val: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ Generate(CONST name: ARRAY OF CHAR; par: Files.Parameters): BOOLEAN; 
+	PROCEDURE ^ OpenVolume(CONST config: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenVolumes; 
+BEGIN
+END BootConsole.

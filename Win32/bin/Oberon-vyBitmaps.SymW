@@ -1,0 +1,53 @@
+MODULE vyBitmaps IN Oberon;
+	IMPORT Files, vyBase, vyHostTexts;
+CONST 
+	ClusterSize = 1024; 
+	MaxNumOfClusters = 1024; 
+	BUFSIZE = 1024; 
+TYPE 
+	Color* = RECORD 
+		r*, g*, b*: INTEGER; 
+	END; 
+
+	Colors* = ARRAY 256 OF Color; 
+
+	PixelCluster = POINTER TO PixelClusterDesc; 
+
+	PixelClusterDesc = RECORD 
+		pixel: ARRAY ClusterSize OF SET; 
+	END; 
+
+	PClusterArray = ARRAY MaxNumOfClusters OF PixelCluster; 
+
+	tBitmap* = POINTER TO tBitmapDesc; 
+
+	tBitmapDesc* = RECORD (vyBase.ObjDesc)
+		W-, H-, Depth-, ColorDepth-: INTEGER; 
+		PCluster: POINTER TO PClusterArray; 
+		colors-: Colors; 
+	END; 
+VAR 
+	NPOS, NCLUSTER, NSET, NBIT: LONGINT; 
+	BUFFER: ARRAY BUFSIZE OF CHAR; 
+
+	PROCEDURE ^ exp2*(z: INTEGER): INTEGER; 
+	PROCEDURE ^ bit*(VAR pos: SHORTINT; VAR number: INTEGER): INTEGER; 
+	PROCEDURE ^ NewBitmap*(W, H, Depth, ColorDepth: LONGINT): tBitmap; 
+	PROCEDURE ^ GetPosition(bmp: tBitmap; x, y: LONGINT; VAR pos, cluster, set, bit: LONGINT); 
+	PROCEDURE ^ SetNextPixel*(Bitmap: tBitmap; val: LONGINT); 
+	PROCEDURE ^ SetAPixel*(Bitmap: tBitmap; X, Y: LONGINT; val: LONGINT); 
+	PROCEDURE ^ SetARect*(Bitmap: tBitmap; RectX, RectY, W, H: LONGINT; val: LONGINT); 
+	PROCEDURE ^ SetALine*(Bitmap: tBitmap; FromX, FromY, ToX, ToY: LONGINT; val: LONGINT); 
+	PROCEDURE ^ GetAPixel*(Bitmap: tBitmap; X, Y: LONGINT): LONGINT; 
+	PROCEDURE ^ SetAColor*(Bitmap: tBitmap; i: INTEGER; col: Color); 
+	PROCEDURE ^ WriteColor(RF: vyBase.FilesWriter; col: Color); 
+	PROCEDURE ^ ReadColor(RF: vyBase.FilesReader; VAR col: Color); 
+	PROCEDURE ^ Write*(VAR RF: vyBase.FilesWriter; Bitmap: tBitmap); 
+	PROCEDURE ^ Read*(VAR RF: vyBase.FilesReader; VAR Bitmap: tBitmap); 
+	PROCEDURE ^ ImportGIF*(VAR RF: vyBase.FilesReader; VAR Bitmap: tBitmap); 
+	PROCEDURE ^ ExportGIF*(VAR RF: vyBase.FilesWriter; Bitmap: tBitmap); 
+	PROCEDURE ^ CopyColors*(source: tBitmap; VAR dest: tBitmap); 
+	PROCEDURE ^ CopyBitmap*(source: tBitmap; VAR dest: tBitmap); 
+	PROCEDURE ^ ResizedBitmap*(source: tBitmap; w, h: INTEGER): tBitmap; 
+BEGIN
+END vyBitmaps.

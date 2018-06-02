@@ -1,0 +1,39 @@
+MODULE vyScatter3 IN Oberon;
+	IMPORT Gadgets, Objects, Display, vyHostStrings, vyHostTexts, vyBase, vyGraphBase, vyLinks, vyName, vyBooleanVec, vyTypes, vyPHIGS3D, vyPaint3d, Attributes, vyPort, vyLayers3d, vyHighlight, vyEvents;
+CONST 
+	idversion* = \"vyScatter3 v0r0a2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyLayers3d.tLayerDesc)
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(scatter: tLayer); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: Coordinate); 
+	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Prompt(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(scatter: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ OpenO*(F: tLayer; x, y, z: Objects.Object); 
+	PROCEDURE ^ OpenL*(F: tLayer; list: vyLinks.Link); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(x, y, z: Objects.Object); 
+BEGIN
+END vyScatter3.

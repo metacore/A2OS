@@ -1,0 +1,253 @@
+MODULE vyGraphBase IN Oberon;
+	IMPORT Objects, Files, Display, vyBase, Pictures, Display3, Fonts, Oberon, vyHost, vyGraphBase0, Images, Strings;
+CONST 
+	UseDBDefaultVal = TRUE; 
+	invert* = Display.invert; 
+	paint* = Display.paint; 
+	replace* = Display.replace; 
+	filled* = Display3.filled; 
+	display = 0; 
+	print = 1; 
+	left* = 0; 
+	center* = 1; 
+	right* = 2; 
+	bottom* = 0; 
+	top* = 2; 
+	StdFnt = \"Syntax10.Scn.Fnt"\; 
+	correctScreendumpBlack* = FALSE; 
+	pixel* = 1; 
+	xcorrection* = 1; 
+	ycorrection* = 1; 
+	maxNumPoints = 100; 
+	NAN = MAX(INTEGER); 
+TYPE 
+	doubleBuffer* = vyGraphBase0.doubleBuffer; 
+
+	tPatPrinter* = vyGraphBase0.tPatPrinter; 
+
+	tSign* = vyGraphBase0.tSign; 
+
+	tPalette* = POINTER TO tPaletteDesc; 
+
+	tPaletteDesc = RECORD 
+		red, green, blue: ARRAY 256 OF INTEGER; 
+	END; 
+
+	Style* = RECORD 
+		fcol*, bcol*: Display.Color; 
+		mode*: INTEGER; 
+		style*: SET; 
+		pattern*: LONGINT; 
+		pensize*: INTEGER; 
+		fnt*: ARRAY 64 OF CHAR; 
+		fillcol*, selectcol*: Display.Color; 
+		fillpat*, selectpat*: LONGINT; 
+		alpha*: INTEGER; 
+	END; 
+
+	CursorMarker* = Oberon.Marker; 
+
+	Real* = vyBase.Real; 
+
+	Coordinate* = INTEGER; 
+
+	Color* = Display.Color; 
+
+	tRegion2d = POINTER TO tRegion2dDesc; 
+
+	tRegion2dDesc = RECORD 
+		x, y, w, h: Real; 
+		prev: tRegion2d; 
+	END; 
+
+	tCoordinate2d* = POINTER TO tCoordinate2dDesc; 
+
+	tCoordinate2dDesc = RECORD 
+		x0, y0: INTEGER; 
+		x, y, w, h: INTEGER; 
+		x2d, y2d, w2d, h2d: Real; 
+		xFact, yFact: Real; 
+		zoomCache: tRegion2d; 
+	END; 
+
+	tPolygon = ARRAY maxNumPoints OF Coordinate; 
+
+	; 
+VAR 
+	DisplayHeight*, DisplayWidth*: INTEGER; 
+	UseDoubleBuffering*: BOOLEAN; 
+	theCoordinate, screenCoordinate: tCoordinate2d; 
+	stdPalette*, bluePalette*, yellowRedBluePalette*, greyPalette*, userPalette*: tPalette; 
+	mincol*, maxcol*: Display.Color; 
+	selectpat-: Display.Pattern; 
+	FG*, BG*: Display.Color; 
+	white-, dgrey-, mgrey-, lgrey-, black-, green-, red-, blue-, yellow-: Display.Color; 
+	cyan-, dkred-, dkgreen-, dkblue-, orange-, skyblue-, dkcyan-: Display.Color; 
+	bottomC*: INTEGER; 
+	textC*: INTEGER; 
+	textbackC*: INTEGER; 
+	S-: Style; 
+	defaultStyle*: Style; 
+	pen: RECORD 
+		x, y: INTEGER; 
+	END; 
+	clipping-: BOOLEAN; 
+	status: INTEGER; 
+	stdFnt: ARRAY 32 OF CHAR; 
+	vStringJustification-, hStringJustification-: INTEGER; 
+	vPatJustification-, hPatJustification-: INTEGER; 
+	theCursor: CursorMarker; 
+	Crosshair*, Wheel*, DefPoint*: CursorMarker; 
+	wheel, defPoint: Display.Pattern; 
+	Display2Local*, Local2Display*: PROCEDURE (VAR x, y: INTEGER); 
+	dbx, dby: INTEGER; 
+
+	PROCEDURE ^ Min(a, b: vyBase.Index): vyBase.Index; 
+	PROCEDURE ^ DoSetPalette*(pal: tPalette); 
+	PROCEDURE ^ SetClippingRoutines; 
+	PROCEDURE ^ SetImageRoutines; 
+	PROCEDURE ^ SetNonClippingRoutines; 
+	PROCEDURE ^ OpenPrinter*(x, y, px, py: INTEGER); 
+	PROCEDURE ^ ClosePrinter*; 
+	PROCEDURE ^ UseClipMask*(mask: Display3.Mask); 
+	PROCEDURE ^ GetMask*(): Display3.Mask; 
+	PROCEDURE ^ GetClipRect*(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ EmptyIntersection*(x, y, w, h, X, Y, W, H: INTEGER): BOOLEAN; 
+	PROCEDURE ^ ClipCheck*(x, y, w, h: INTEGER): BOOLEAN; 
+	PROCEDURE ^ CorrectCol(col: Display.Color): Display.Color; 
+	PROCEDURE ^ InvertCorrectCol(col: Display.Color): Display.Color; 
+	PROCEDURE ^ SetStyle*(s: Style); 
+	PROCEDURE ^ GetStyle*(VAR s: Style); 
+	PROCEDURE ^ HandleStyleAttributes*(VAR s: Style; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ WriteStyle*(VAR R: Files.Rider; VAR s: Style); 
+	PROCEDURE ^ ReadStyle*(VAR R: Files.Rider; VAR s: Style); 
+	PROCEDURE ^ SetBackColor*(col: Display.Color); 
+	PROCEDURE ^ GetBackColor*(VAR col: Display.Color); 
+	PROCEDURE ^ SetForeColor*(col: Display.Color); 
+	PROCEDURE ^ SetFColRGBA*(r, g, b, a: INTEGER); 
+	PROCEDURE ^ SetBColRGBA*(r, g, b, a: INTEGER); 
+	PROCEDURE ^ GetFColRGBA*(VAR r, g, b, a: INTEGER); 
+	PROCEDURE ^ GetBColRGBA*(VAR r, g, b, a: INTEGER); 
+	PROCEDURE ^ GetForeColor*(VAR col: Display.Color); 
+	PROCEDURE ^ SetPenSize*(size: INTEGER); 
+	PROCEDURE ^ GetPenSize*(VAR size: INTEGER); 
+	PROCEDURE ^ SetDisplayMode*(m: INTEGER); 
+	PROCEDURE ^ GetDisplayMode*(VAR m: INTEGER); 
+	PROCEDURE ^ SetDisplayStyle*(s: SET); 
+	PROCEDURE ^ GetDisplayStyle*(VAR s: SET); 
+	PROCEDURE ^ SetDisplayPattern*(p: LONGINT); 
+	PROCEDURE ^ GetDisplayPattern*(VAR p: LONGINT); 
+	PROCEDURE ^ SetFont*(fnt: ARRAY OF CHAR); 
+	PROCEDURE ^ SetAlpha*(a: INTEGER); 
+	PROCEDURE ^ MoveTo*(x, y: INTEGER); 
+	PROCEDURE ^ MoveTo2d*(x2d, y2d: Real); 
+	PROCEDURE ^ Line*(x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ Line2d*(x2d0, y2d0, x2d1, y2d1: Real); 
+	PROCEDURE ^ LineTo*(x, y: INTEGER); 
+	PROCEDURE ^ LineTo2d*(x2d, y2d: Real); 
+	PROCEDURE ^ GiveRegularRect(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ FrameRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ FrameRect2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ ShadowRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ PaintRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ PaintRect2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ EraseRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ EraseRect2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ InvertRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ InvertRect2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ FillRect*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ FillRect2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ ReplPict*(pict: Pictures.Picture; px, py, x, y, w, h: INTEGER); 
+	PROCEDURE ^ Pict*(picture: Pictures.Picture; x, y, w, h, dx, dy: INTEGER); 
+	PROCEDURE ^ StretchedPict*(picture: Pictures.Picture; x, y, w, h, dx, dy, dw, dh: INTEGER); 
+	PROCEDURE ^ Pict2d*(picture: Pictures.Picture; x, y, w, h: INTEGER; dx, dy: Real); 
+	PROCEDURE ^ StretchedPict2d*(picture: Pictures.Picture; x, y, w, h: INTEGER; dx, dy, dw, dh: Real); 
+	PROCEDURE ^ Image*(image: Images.Image; x, y, w, h, dx, dy: INTEGER); 
+	PROCEDURE ^ StretchedImage*(image: Images.Image; x, y, w, h, dx, dy, dw, dh: INTEGER); 
+	PROCEDURE ^ StretchedImage2d*(image: Images.Image; x, y, w, h: INTEGER; dx, dy, dw, dh: Real); 
+	PROCEDURE ^ ReplConst*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ ReplConst2d*(x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ FitFillArea(VAR x, y: ARRAY OF INTEGER; numPoints: INTEGER); 
+	PROCEDURE ^ FrameFillArea*(x, y: ARRAY OF INTEGER; numPoints: vyHost.Index); 
+	PROCEDURE ^ FrameFillArea2d*(x, y: ARRAY OF Real; numPoints: vyBase.Index); 
+	PROCEDURE ^ PaintFillArea*(x, y: ARRAY OF INTEGER; numPoints: vyHost.Index); 
+	PROCEDURE ^ PaintFillArea2d*(x, y: ARRAY OF Real; numPoints: vyBase.Index); 
+	PROCEDURE ^ EraseFillArea*(x, y: ARRAY OF INTEGER; numPoints: vyHost.Index); 
+	PROCEDURE ^ EraseFillArea2d*(x, y: ARRAY OF Real; numPoints: vyBase.Index); 
+	PROCEDURE ^ InvertFillArea*(x, y: ARRAY OF INTEGER; numPoints: vyHost.Index); 
+	PROCEDURE ^ InvertFillArea2d*(x, y: ARRAY OF Real; numPoints: vyBase.Index); 
+	PROCEDURE ^ FrameCircle*(x, y, r: INTEGER); 
+	PROCEDURE ^ FrameEllipse*(x, y, a, b: INTEGER); 
+	PROCEDURE ^ SetStringJustification*(hJust, vJust: INTEGER); 
+	PROCEDURE ^ GetStringSize*(f, s: ARRAY OF CHAR; VAR w, h, dsr: INTEGER); 
+	PROCEDURE ^ GetStringLocation(VAR x, y: INTEGER; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetStringFrame*(X, Y: INTEGER; f, s: ARRAY OF CHAR; VAR x, y, w, h, dsr: INTEGER); 
+	PROCEDURE ^ GetStringFrame2d*(x2d, y2d: Real; f, s: ARRAY OF CHAR; VAR x, y, w, h, dsr: Coordinate); 
+	PROCEDURE ^ String*(x, y: INTEGER; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ String2d*(x2d, y2d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ EraseString*(x, y: INTEGER; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ EraseString2d*(x2d, y2d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ InvertString*(x, y: INTEGER; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ InvertString2d*(x2d, y2d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ Justify(VAR x, y: INTEGER; sgn: tSign); 
+	PROCEDURE ^ PaintPat*(x, y: INTEGER; sgn: tSign); 
+	PROCEDURE ^ PaintPat2d*(x2d, y2d: Real; sgn: tSign); 
+	PROCEDURE ^ ErasePat*(x, y: INTEGER; sgn: tSign); 
+	PROCEDURE ^ ErasePat2d*(x2d, y2d: Real; sgn: tSign); 
+	PROCEDURE ^ SetPatternJustification*(hJust, vJust: INTEGER); 
+	PROCEDURE ^ StorePattern*(VAR R: Files.Rider; sgn: tSign); 
+	PROCEDURE ^ LoadPattern*(VAR R: Files.Rider): tSign; 
+	PROCEDURE ^ NewPattern*(image: ARRAY OF SET; w, h: INTEGER; prn: tPatPrinter): tSign; 
+	PROCEDURE ^ openDB*(VAR db: vyGraphBase0.doubleBuffer; x, y, w, h: INTEGER; translucent: BOOLEAN); 
+	PROCEDURE ^ closeDB*; 
+	PROCEDURE ^ writeDB*; 
+	PROCEDURE ^ SetCursor*(shape: CursorMarker); 
+	PROCEDURE ^ GetCursor*(VAR shape: CursorMarker); 
+	PROCEDURE ^ DrawCursor*(x, y: INTEGER); 
+	PROCEDURE ^ FadeCursor*; 
+	PROCEDURE ^ DrawCrosshair(x, y: INTEGER); 
+	PROCEDURE ^ DrawWheel(x, y: INTEGER); 
+	PROCEDURE ^ DrawDefPoint(x, y: INTEGER); 
+	PROCEDURE ^ CursorInit; 
+	PROCEDURE ^ PalettePath*(r1, g1, b1, r2, g2, b2, start, end: INTEGER; palette: tPalette); 
+	PROCEDURE ^ InstallPalettes; 
+	PROCEDURE ^ WriteRegion*(VAR R: Files.Rider; VAR reg: tRegion2d); 
+	PROCEDURE ^ ReadRegion*(VAR R: Files.Rider; VAR reg: tRegion2d); 
+	PROCEDURE ^ WriteCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate2d); 
+	PROCEDURE ^ ReadCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate2d); 
+	PROCEDURE ^ WriteCoordinate2d*(VAR R: Files.Rider; VAR c: tCoordinate2d); 
+	PROCEDURE ^ ReadCoordinate2d*(VAR R: Files.Rider; VAR c: tCoordinate2d); 
+	PROCEDURE ^ HandleCoordinate2dAttr*(VAR M: Objects.AttrMsg; VAR c: tCoordinate2d); 
+	PROCEDURE ^ CopyCoordinate2d*(sc, dc: tCoordinate2d); 
+	PROCEDURE ^ RealToCoord*(r: Real): Coordinate; 
+	PROCEDURE ^ ShiftCoordinate*(x, y: INTEGER); 
+	PROCEDURE ^ SyncFactors; 
+	PROCEDURE ^ SetScreenRgn*(x, y, w, h: Coordinate); 
+	PROCEDURE ^ GetScreenRgn*(VAR x, y, w, h: Coordinate); 
+	PROCEDURE ^ SetRealWorldRgn*(x2d, y2d, w2d, h2d, stretch: Real); 
+	PROCEDURE ^ GetRealWorldRgn*(VAR x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ Global2Local0(VAR x, y: INTEGER); 
+	PROCEDURE ^ Local2Global0(VAR x, y: INTEGER); 
+	PROCEDURE ^ Global2Local1(VAR x, y: INTEGER); 
+	PROCEDURE ^ Local2Global1(VAR x, y: INTEGER); 
+	PROCEDURE ^ Global2Local*(VAR x, y: INTEGER); 
+	PROCEDURE ^ Local2Global*(VAR x, y: INTEGER); 
+	PROCEDURE ^ SetCoordinate*(c: tCoordinate2d); 
+	PROCEDURE ^ SetScreenCoordinate*; 
+	PROCEDURE ^ GetCoordinate*(): tCoordinate2d; 
+	PROCEDURE ^ OpenCoordinate*(c: tCoordinate2d; x, y: INTEGER); 
+	PROCEDURE ^ OpenCoordinate1*(c: tCoordinate2d; x, y, w, h: INTEGER); 
+	PROCEDURE ^ OpenCoordinate2d*(c: tCoordinate2d; x, y, w, h: Real); 
+	PROCEDURE ^ InsetRealWorldRegion*(dxPix, dyPix: Coordinate); 
+	PROCEDURE ^ FixCoordinate*(x, y: Coordinate); 
+	PROCEDURE ^ MoveRealWorldRgn*(x2d, y2d: Real); 
+	PROCEDURE ^ PointToPoint2d*(x, y: Coordinate; VAR x2d, y2d: Real); 
+	PROCEDURE ^ Point2dToPoint*(x2d, y2d: Real; VAR x, y: Coordinate); 
+	PROCEDURE ^ VectorToVector2d*(dx, dy: Coordinate; VAR dx2d, dy2d: Real); 
+	PROCEDURE ^ RectToRect2d*(x, y, w, h: Coordinate; VAR x2d, y2d, w2d, h2d: Real); 
+	PROCEDURE ^ Rect2dToRect*(x2d, y2d, w2d, h2d: Real; VAR x, y, w, h: Coordinate); 
+	PROCEDURE ^ ZoomIn*(x, y, w, h: Coordinate); 
+	PROCEDURE ^ ZoomOut*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END vyGraphBase.

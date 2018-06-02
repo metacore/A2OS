@@ -1,0 +1,50 @@
+MODULE antsPEVIsingDS IN Oberon;
+	IMPORT antsArrayObjects, Math := MathL IN A2, aM := antsMessages, antsPEV, antsKernel, antsModels, antsCommands, vyCG := vyName, antsCaches, Files, Objects, vyHostStrings, vyRanBase;
+CONST 
+TYPE 
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		a: ARRAY 15 OF LONGREAL; 
+		cp, ce, cv: antsCaches.FullCache; 
+	END; 
+VAR 
+	GM: tModel; 
+	depth: INTEGER; 
+
+	PROCEDURE ^ Open*(M: tModel); 
+	PROCEDURE ^ dist(e1, e2: INTEGER): REAL; 
+	PROCEDURE ^ dist2(e1, e2: INTEGER): REAL; 
+	PROCEDURE ^ f1(e, v1, v2: INTEGER): LONGREAL; 
+	PROCEDURE ^ f2(v, e1, e2, e3, e4: INTEGER): LONGREAL; 
+	PROCEDURE ^ f3(e, p1, p2: INTEGER): LONGREAL; 
+	PROCEDURE ^ f4(p: INTEGER): LONGREAL; 
+	PROCEDURE ^ f5(e: INTEGER): LONGREAL; 
+	PROCEDURE ^ f6(v: INTEGER): LONGREAL; 
+	PROCEDURE ^ f7(p1, p2: INTEGER): LONGREAL; 
+	PROCEDURE ^ UP(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ EP(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ DistriFromLocalChar(F: antsPEV.tField; y, x: LONGINT); 
+	PROCEDURE ^ FastestC(F: antsPEV.tField); 
+	PROCEDURE ^ UE(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ EE(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ DistriFromLocalCharE(F: antsPEV.tField; y, x: LONGINT); 
+	PROCEDURE ^ FastestEC(F: antsPEV.tField); 
+	PROCEDURE ^ UV(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ EV(VAR a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ DistriFromLocalCharV(F: antsPEV.tField; y, x: LONGINT); 
+	PROCEDURE ^ FastestVC(F: antsPEV.tField); 
+	PROCEDURE ^ CreateCaches(m: tModel; d: INTEGER); 
+	PROCEDURE ^ OneSweep*(s: antsKernel.Kernel); 
+	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
+	PROCEDURE ^ WriteArray(VAR R: Files.Rider; VAR A: ARRAY OF LONGREAL); 
+	PROCEDURE ^ ReadArray(VAR R: Files.Rider; VAR A: ARRAY OF LONGREAL); 
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ ArrayHandleAttribute(VAR M: Objects.AttrMsg; prefix: ARRAY OF CHAR; VAR array: ARRAY OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyCG.tNameArray); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsPEVIsingDS.

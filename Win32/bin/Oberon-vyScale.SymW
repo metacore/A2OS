@@ -1,0 +1,58 @@
+MODULE vyScale IN Oberon;
+	IMPORT Objects, Display, vyGraphBase, Files, vyRectangles, vyPort, vyAxis, vyParser, vyEvents;
+CONST 
+	idversion* = \"vyScale v0r0a2"\; 
+	yTopMargin = (10 * vyGraphBase.pixel); 
+	yBotMargin = (35 * vyGraphBase.pixel); 
+	yWidth = (35 * vyGraphBase.pixel); 
+	xLeftMargin = yWidth; 
+	xRigthMargin = (10 * vyGraphBase.pixel); 
+	xHeigth = yBotMargin; 
+	LabelFont = \"Syntax10.Scn.Fnt"\; 
+	left = 0; 
+	middle = 1; 
+	right = 2; 
+	top = 0; 
+	bottom = 2; 
+TYPE 
+	Real = vyGraphBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		hdigits, vdigits: INTEGER; 
+		haxe: vyAxis.tAxe; 
+		vaxe: vyAxis.tAxe; 
+		ow, oh: Coordinate; 
+		hr, vr: Real; 
+		dx, dy: Coordinate; 
+		xregion, yregion: Coordinate; 
+		ToReal: BOOLEAN; 
+		trx, try: REAL; 
+	END; 
+VAR 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ GiveXAxisRect(scale: tLayer; VAR x, y, w, h: Coordinate; VAR flip: BOOLEAN; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GiveYAxisRect(scale: tLayer; VAR x, y, w, h: Coordinate; VAR flip: BOOLEAN; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ PointInXAxis(scale: tLayer; X, Y: Coordinate; VAR msg: Objects.ObjMsg): BOOLEAN; 
+	PROCEDURE ^ PointInYAxis(scale: tLayer; X, Y: Coordinate; VAR msg: Objects.ObjMsg): BOOLEAN; 
+	PROCEDURE ^ Recall(scale: tLayer; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ DoControl(scale: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ DoControl2(scale: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(scale: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Store0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tLayer); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(scale: tLayer; id: ARRAY OF CHAR); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ InsertX*; 
+BEGIN
+END vyScale.

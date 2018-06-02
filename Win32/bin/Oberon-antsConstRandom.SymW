@@ -1,0 +1,32 @@
+MODULE antsConstRandom IN Oberon;
+	IMPORT vyRanBase, Objects, Files, aM := antsMessages;
+CONST 
+	idversion* = \"constRandom"\; 
+TYPE 
+	Bits = LONGINT; 
+
+	tRandom = POINTER TO tRandomDesc; 
+
+	tRandomDesc = RECORD (vyRanBase.tRandomNumberDesc)
+		constval: LONGINT; 
+		max: LONGINT; 
+	END; 
+
+	PROCEDURE ^ Next(r: vyRanBase.tRandom); 
+	PROCEDURE ^ Max(r: vyRanBase.tRandom): LONGINT; 
+	PROCEDURE ^ Get(r: vyRanBase.tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): LONGREAL; 
+	PROCEDURE ^ RandomUVX(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ RandomUV(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
+	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ RandomLV(r: vyRanBase.tRandom; top, count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tRandom; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ New*(val, max: LONGINT): tRandom; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END antsConstRandom.

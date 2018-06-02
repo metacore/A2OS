@@ -1,0 +1,46 @@
+MODULE antsColors IN Oberon;
+	IMPORT Display, antsCommands, Colors, vyBase, Objects, Gadgets, Files, vyPort, vyEvents, vyName, antsObjects, vyCommandMenus, aM := antsMessages, vyGraphBase, vyDisplay2d, vyTracking, Input, Attributes, Oberon, antsToolbox, vyHostTexts, Effects, vyColorPalettes, Texts;
+CONST 
+TYPE 
+	Palette* = vyColorPalettes.Palette; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		p-: Palette; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ PNew*; 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ LGetCol*(l: tLayer; x, y: INTEGER; VAR index: INTEGER): BOOLEAN; 
+	PROCEDURE ^ rgbp(p: Palette; first, last: INTEGER); 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ SendColors; 
+	PROCEDURE ^ openfile(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadPal; 
+	PROCEDURE ^ storefile(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ StorePal; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(layer: tLayer; p: Palette); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Path1*; 
+	PROCEDURE ^ Path2*; 
+	PROCEDURE ^ LPath*; 
+	PROCEDURE ^ Path*; 
+	PROCEDURE ^ InteractiveSetCol*; 
+	PROCEDURE ^ ShowPalette*(pa: Palette); 
+	PROCEDURE ^ ShowCurrent*; 
+	PROCEDURE ^ ShowTinyPalette*(pa: Palette); 
+	PROCEDURE ^ ViewNewPalette*; 
+	PROCEDURE ^ Edit*; 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsColors.

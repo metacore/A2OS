@@ -1,0 +1,46 @@
+MODULE antsInteractivePar IN Oberon;
+	IMPORT vyPort, Objects, vyName, vyBase, vyGraphBase, Display, vyEvents, Files, Gadgets, vyCommandMenus, aM := antsMessages, vyHostStrings, vyRectangles, vyCG := vyName, antsCommands, vyLayers2d := vyDisplay2d, antsNeighbourhoods, antsToolbox, Math := MathL IN A2;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		n-: antsNeighbourhoods.Neighbours; 
+		maxx, maxy: LONGINT; 
+		dim: INTEGER; 
+		isotropic: BOOLEAN; 
+		commands: vyCommandMenus.List; 
+		viewnum: BOOLEAN; 
+		max: LONGREAL; 
+	END; 
+VAR 
+	tempLayer: tLayer; 
+
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ OnLayer(layer: tLayer; VAR event: vyEvents.EventMsg): BOOLEAN; 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Wheel(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ GHandler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ WriteOut; 
+	PROCEDURE ^ ViewNum; 
+	PROCEDURE ^ openfile(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadPar; 
+	PROCEDURE ^ storefile(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ StorePar; 
+	PROCEDURE ^ Init(layer: tLayer); 
+	PROCEDURE ^ AdjustXY(layer: tLayer); 
+	PROCEDURE ^ OpenLayer(layer: tLayer; n: antsNeighbourhoods.Neighbours); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewLayer*(n: antsNeighbourhoods.Neighbours): tLayer; 
+	PROCEDURE ^ DoShow*(n: antsNeighbourhoods.Neighbours): tLayer; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ToggleDisable*; 
+BEGIN
+END antsInteractivePar.

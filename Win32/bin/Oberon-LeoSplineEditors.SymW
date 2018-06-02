@@ -1,0 +1,9 @@
+MODULE LeoSplineEditors IN Oberon;
+	IMPORT Input, Objects, Oberon, Display3, Effects, Attributes, Links, Gadgets, Leonardo, LeoPens, LeoPaths, LeoFrames, LeoTools, LeoPanels, LeoPenEditors, LeoPathEditors, LeoSplines;
+CONST 
+
+	PROCEDURE ^ TrackSpline(frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ SplineTool(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ ActivateSpline*; 
+BEGIN
+END LeoSplineEditors.

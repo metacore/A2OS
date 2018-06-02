@@ -1,0 +1,9 @@
+MODULE CalcConvolution;
+	IMPORT NbrInt, NbrRe, DataErrors, MathInt, MathRe, CalcFn;
+CONST 
+
+	PROCEDURE ^ LogP(p, x: NbrRe.Real): NbrRe.Real; 
+	PROCEDURE ^ GetArrayDimension*(x, t: NbrRe.Real; n: NbrInt.Integer): NbrInt.Integer; 
+	PROCEDURE ^ Solve*(k: CalcFn.ReArg; f: CalcFn.Re2Arg; x, t: NbrRe.Real; n, p: NbrInt.Integer; VAR soln: ARRAY OF ARRAY OF NbrRe.Real); 
+BEGIN
+END CalcConvolution.

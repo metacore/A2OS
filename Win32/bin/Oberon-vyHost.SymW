@@ -1,0 +1,55 @@
+MODULE vyHost IN Oberon;
+	IMPORT SYSTEM, Oberon, Texts, Viewers, Display, TextFrames, Objects, Links;
+CONST 
+	idversion* = \"vyHost Oberon S3 0.1d3"\; 
+	charset* = \"Oberon"\; 
+	TextElemCode* = 1CX; 
+	precc* = 100; 
+	postcc* = 120; 
+	notyetcc* = 99; 
+	fatalcc* = 98; 
+	second* = 300; 
+	slides* = 150; 
+	movie* = 15; 
+	maxdims* = 10; 
+TYPE 
+	Index* = LONGINT; 
+
+	Viewer* = Viewers.Viewer; 
+
+	Frame* = Display.Frame; 
+VAR 
+	ticks-: LONGINT; 
+	w: Texts.Writer; 
+
+	PROCEDURE ^ Addr*(p: ANY): LONGINT; 
+	PROCEDURE ^ GetCaret*(VAR F: Frame; VAR text: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ GetSelectionText*(VAR text: Texts.Text; VAR beg, end: LONGINT); 
+	PROCEDURE ^ GetPar*; 
+	PROCEDURE ^ GetParText*(VAR text: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ GetMarkedViewer*; 
+	PROCEDURE ^ GetMarkedText*(VAR text: Texts.Text); 
+	PROCEDURE ^ GetNamedText*(name: ARRAY OF CHAR; VAR text: Texts.Text); 
+	PROCEDURE ^ GetVisibleOutput(VAR F: Frame; VAR text: Texts.Text); 
+	PROCEDURE ^ StringLength*(s: ARRAY OF CHAR): Index; 
+	PROCEDURE ^ StringAppend*(extra: ARRAY OF CHAR; start: Index; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ StringAppendInt*(x, n: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ StringAppendHex*(x: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ StringAppendDate*(t, d: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ CallWString*(name: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ CallWStringX*(name, pre: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ XpwrI*(x: REAL; i: INTEGER): REAL; 
+	PROCEDURE ^ XLpwrIL*(x: LONGREAL; i: LONGINT): LONGREAL; 
+	PROCEDURE ^ Ten*(i: INTEGER): REAL; 
+	PROCEDURE ^ TenL*(i: LONGINT): LONGREAL; 
+	PROCEDURE ^ GetString*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetLInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: INTEGER): BOOLEAN; 
+	PROCEDURE ^ GetSInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: SHORTINT): BOOLEAN; 
+	PROCEDURE ^ GetLReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GetReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: REAL): BOOLEAN; 
+	PROCEDURE ^ ShowId*; 
+	PROCEDURE ^ DisplayNewPattern*(x, y: INTEGER; VAR img: ARRAY OF SET): ADDRESS; 
+	PROCEDURE ^ StackFrame*(msg: ARRAY OF CHAR); 
+BEGIN
+END vyHost.

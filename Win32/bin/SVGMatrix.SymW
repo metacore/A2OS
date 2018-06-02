@@ -1,0 +1,30 @@
+MODULE SVGMatrix;
+	IMPORT Math;
+CONST 
+	Eps =   1.0000000E-005; 
+TYPE 
+	Number* = LONGREAL; 
+
+	Point* = RECORD 
+		x*, y*: Number; 
+	END; 
+
+	Matrix* = OBJECT 
+	VAR 
+		a*, b*, c*, d*, e*, f*: Number; 
+
+		PROCEDURE ^ SetIdentity*; 
+		PROCEDURE ^ Set*(newa, newb, newc, newd, newe, newf: Number); 
+		PROCEDURE ^ TransformBy*(othera, otherb, otherc, otherd, othere, otherf: Number): Matrix; 
+		PROCEDURE ^ Translate*(x, y: Number): Matrix; 
+		PROCEDURE ^ Scale*(x, y: Number): Matrix; 
+		PROCEDURE ^ Rotate*(angle, x, y: Number): Matrix; 
+		PROCEDURE ^ SkewX*(angle: Number): Matrix; 
+		PROCEDURE ^ SkewY*(angle: Number): Matrix; 
+		PROCEDURE ^ Multiply*(other: Matrix): Matrix; 
+		PROCEDURE ^ Invert*(): Matrix; 
+		PROCEDURE ^ Transform*(VAR p: Point): Point; 
+		PROCEDURE ^ TransformLength*(VAR p: Number): Number; 
+	END Matrix; 
+BEGIN
+END SVGMatrix.

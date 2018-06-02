@@ -1,0 +1,15 @@
+MODULE antsBasicGadgets IN Oberon;
+	IMPORT BasicGadgets, Objects, Gadgets, Links, aM := antsMessages;
+CONST 
+VAR 
+	valchanged: BOOLEAN; 
+
+	PROCEDURE ^ NewInteger*; 
+	PROCEDURE ^ NewBoolean*; 
+	PROCEDURE ^ NewReal*; 
+	PROCEDURE ^ NewString*; 
+	PROCEDURE ^ GetObjectName(m: Objects.Object; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewModelLinked*(link: Objects.Object; name: ARRAY OF CHAR); 
+BEGIN
+END antsBasicGadgets.

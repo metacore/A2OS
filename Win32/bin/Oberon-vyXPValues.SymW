@@ -1,0 +1,97 @@
+MODULE vyXPValues IN Oberon;
+	IMPORT jbrtStdNormal, vyKolSmirL, M := MathL IN A2, vyLongrealVec, vyLongreal, vyBase, Objects, Strings, Gadgets, Files;
+CONST 
+TYPE 
+	Real = vyBase.Real; 
+
+	XPValue* = OBJECT (vyBase.Object)
+	VAR 
+		x-, p-: vyLongrealVec.tLONGREAL; 
+		distrName*: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ Store*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ Load*(VAR M: Objects.FileMsg); 
+	END XPValue; 
+
+	ActiveXPValue* = OBJECT (XPValue)
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*; 
+		PROCEDURE ^ TakeNewSource*(newSource: Objects.Object; VAR accepted: BOOLEAN); 
+	END ActiveXPValue; 
+
+	CalcPXP* = OBJECT (ActiveXPValue)
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ TakeNewSource*(newSource: Objects.Object; VAR accepted: BOOLEAN); 
+	END CalcPXP; 
+
+	StdNormalXP* = OBJECT (CalcPXP)
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*; 
+	END StdNormalXP; 
+
+	ExpXP* = OBJECT (CalcPXP)
+	VAR 
+		lambda-: Real; 
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ Store*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ Load*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ NewData*; 
+	END ExpXP; 
+
+	KolSmirXP* = OBJECT (ActiveXPValue)
+	VAR 
+		source-: vyLongrealVec.tLONGREAL; 
+		n-: LONGINT; 
+		values: POINTER TO ARRAY OF Real; 
+		cur: LONGINT; 
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*; 
+		PROCEDURE ^ TakeNewSource*(newSource: Objects.Object; VAR accepted: BOOLEAN); 
+		PROCEDURE ^ Store*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ Load*(VAR M: Objects.FileMsg); 
+	END KolSmirXP; 
+
+	KolSmirVecXP* = OBJECT (ActiveXPValue)
+	VAR 
+		source-: vyBase.tVector; 
+		n-: LONGINT; 
+		a: POINTER TO ARRAY OF Real; 
+
+		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ Store*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ Load*(VAR M: Objects.FileMsg); 
+		PROCEDURE ^ NewData*; 
+		PROCEDURE ^ TakeNewSource*(newSource: Objects.Object; VAR accepted: BOOLEAN); 
+	END KolSmirVecXP; 
+
+	PROCEDURE ^ XPValueHandleLinkMsg(o: XPValue; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleXPValue*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitXPValue*(value: XPValue; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocXPValue*; 
+	PROCEDURE ^ HandleActiveXPValue*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitActiveXPValue*(value: XPValue; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocActiveXPValue*; 
+	PROCEDURE ^ InitCalcPXP*(value: CalcPXP; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocCalcPXP*; 
+	PROCEDURE ^ InitStdNormalXP*(obj: StdNormalXP; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocStdNormalXP*; 
+	PROCEDURE ^ ExpXPGetName(VAR s: ARRAY OF CHAR; lambda: Real); 
+	PROCEDURE ^ InitExpXP*(obj: ExpXP; lambda: Real; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocExpXP*; 
+	PROCEDURE ^ KolSmirXPGetName(VAR s: ARRAY OF CHAR; n: LONGINT); 
+	PROCEDURE ^ KolSmirXPClear*(obj: KolSmirXP); 
+	PROCEDURE ^ HandleKolSmirXP*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitKolSmirXP*(obj: KolSmirXP; n: LONGINT; source, x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocKolSmirXP*; 
+	PROCEDURE ^ KolSmirVecXPGetName(VAR s: ARRAY OF CHAR; n: LONGINT); 
+	PROCEDURE ^ KolSmirVecXPNewSource(obj: KolSmirVecXP; source: vyBase.tVector); 
+	PROCEDURE ^ InitKolSmirVecXP*(obj: KolSmirVecXP; source: vyBase.tVector; x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ AllocKolSmirVecXP*; 
+BEGIN
+END vyXPValues.

@@ -1,0 +1,39 @@
+MODULE CryptoDSA;
+	IMPORT B := CryptoBigNumbers, SHA1 := CryptoSHA1, P := CryptoPrimes, U := CryptoUtils, Streams, Base64 := CryptoBase64, BIT;
+CONST 
+TYPE 
+	Number = B.BigNumber; 
+
+	Signature* = OBJECT 
+	VAR 
+		r-: Number; 
+		s-: Number; 
+
+		PROCEDURE ^  & Init*(r, s: Number); 
+	END Signature; 
+
+	Key* = OBJECT 
+	VAR 
+		name-: ARRAY 128 OF CHAR; 
+		private-: BOOLEAN; 
+		p-: Number; 
+		q-: Number; 
+		g-: Number; 
+		y-: Number; 
+		inv, r: Number; 
+
+		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; len: INTEGER): Signature; 
+		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: INTEGER; sig: Signature): BOOLEAN; 
+	END Key; 
+VAR 
+	one: Number; 
+
+	PROCEDURE ^ GenParams*(dsa: Key; bits: INTEGER; CONST seed: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeKeys*(bits: INTEGER; CONST seed: ARRAY OF CHAR; VAR pub, priv: Key); 
+	PROCEDURE ^ PubKey*(p, q, g, y: Number): Key; 
+	PROCEDURE ^ LoadPrivateKey*(r: Streams.Reader; CONST passwd: ARRAY OF CHAR): Key; 
+	PROCEDURE ^ StorePrivateKey*(w: Streams.Writer; k: Key; CONST passwd: ARRAY OF CHAR); 
+	PROCEDURE ^ StorePublicKey*(w: Streams.Writer; k: Key); 
+	PROCEDURE ^ LoadPublicKey*(r: Streams.Reader): Key; 
+BEGIN
+END CryptoDSA.

@@ -1,0 +1,43 @@
+MODULE WMXMLTree;
+	IMPORT Streams, XML, XMLObjects, WMGraphics, WMComponents, WMStandardComponents, WMTextView, WMEditors, WMEvents, Strings, TextUtilities, Texts, WMTrees, XMLScanner, XMLParser, UTF8Strings;
+CONST 
+TYPE 
+	Error* = RECORD 
+		pos-: LONGINT; 
+		line-, row-: LONGINT; 
+		msg-: ARRAY 128 OF CHAR; 
+	END; 
+
+	ErrorList* = POINTER TO ARRAY OF Error; 
+
+	XMLView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		tree: WMTrees.Tree; 
+		treeView: WMTrees.TreeView; 
+		toolbar: WMStandardComponents.Panel; 
+		errorMsg: WMEditors.Editor; 
+		refresh-: WMStandardComponents.Button; 
+		onRefresh-: WMEvents.EventSource; 
+		label-: WMStandardComponents.Label; 
+		hasErrors: BOOLEAN; 
+		highlight: WMTextView.Highlight; 
+		showErrorMessage*: BOOLEAN; 
+		errorList: ErrorList; 
+		text: Texts.Text; 
+		editor: WMEditors.Editor; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ SetEditor*(e: WMEditors.Editor); 
+		PROCEDURE ^ Click(sender, data: ANY); 
+		PROCEDURE ^ AddSubNode(node: WMTrees.TreeNode; xml: XML.Element); 
+		PROCEDURE ^ SetDocument(xml: XML.Element); 
+		PROCEDURE ^ GetErrorList*(): ErrorList; 
+		PROCEDURE ^ AddErrorToList(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Refresh*(sender, data: ANY); 
+	END XMLView; 
+VAR 
+	StrXMLView: Strings.String; 
+
+BEGIN
+END WMXMLTree.

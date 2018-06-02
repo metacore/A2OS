@@ -1,0 +1,30 @@
+MODULE vySet IN Oberon;
+	IMPORT Files, vyBase;
+CONST 
+	idversion* = \" v0r0a2"\; 
+	fmtany* = 0; 
+	fmtend* = 0; 
+	fmtplain* = 1; 
+	fmtpacked* = 2; 
+
+	PROCEDURE ^ Write*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF SET; start: LONGINT); 
+	PROCEDURE ^ Read*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF SET; start: LONGINT); 
+	PROCEDURE ^ WriteFmt*(prefform: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF SET; start: LONGINT); 
+	PROCEDURE ^ ReadFmt*(VAR form: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF SET; start: LONGINT); 
+	PROCEDURE ^ Fill*(len: LONGINT; VAR x: ARRAY OF SET; start: LONGINT; val: SET); 
+	PROCEDURE ^ FillPat*(count: LONGINT; VAR x: ARRAY OF SET; start, step: LONGINT; val: SET); 
+	PROCEDURE ^ Copy*(len: LONGINT; VAR src: ARRAY OF SET; srcstart: LONGINT; VAR dest: ARRAY OF SET; deststart: LONGINT); 
+	PROCEDURE ^ CopyPat*(count: LONGINT; VAR src: ARRAY OF SET; start, step: LONGINT; VAR dest: ARRAY OF SET; deststart, deststep: LONGINT); 
+	PROCEDURE ^ Count*(VAR x: ARRAY OF SET; len: LONGINT): LONGINT; 
+	PROCEDURE ^ And*(VAR x, y: ARRAY OF SET; VAR z: ARRAY OF SET; len: LONGINT); 
+	PROCEDURE ^ Or*(VAR x, y: ARRAY OF SET; VAR z: ARRAY OF SET; len: LONGINT); 
+	PROCEDURE ^ XOr*(VAR x, y: ARRAY OF SET; VAR z: ARRAY OF SET; len: LONGINT); 
+	PROCEDURE ^ Not*(VAR x: ARRAY OF SET; VAR z: ARRAY OF SET; len: LONGINT); 
+	PROCEDURE ^ Get2d*(VAR x: ARRAY OF SET; rows, row, column: LONGINT): SET; 
+	PROCEDURE ^ Set2d*(VAR x: ARRAY OF SET; rows, row, column: LONGINT; val: SET); 
+	PROCEDURE ^ Get2dM*(VAR x: ARRAY OF SET; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR dest: ARRAY OF ARRAY OF SET); 
+	PROCEDURE ^ Set2dM*(VAR x: ARRAY OF SET; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR src: ARRAY OF ARRAY OF SET); 
+	PROCEDURE ^ Get2dF*(VAR x: ARRAY OF SET; columns, row, column: LONGINT): SET; 
+	PROCEDURE ^ Set2dF*(VAR x: ARRAY OF SET; columns, row, column: LONGINT; val: SET); 
+BEGIN
+END vySet.

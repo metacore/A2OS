@@ -1,0 +1,60 @@
+MODULE fofAutomatic IN Oberon;
+	IMPORT Texts, Oberon, antsCommands, Input, TextFrames, Display, Gadgets, Objects, Out, antsSecurity, aM := antsMessages;
+CONST 
+TYPE 
+	Loop = OBJECT 
+	VAR 
+		startpos: LONGINT; 
+		total: LONGINT; 
+		current: LONGINT; 
+		loop: Loop; 
+
+		PROCEDURE ^  & Init(pos: LONGINT); 
+	END Loop; 
+
+	Task = POINTER TO TaskDesc; 
+
+	TaskDesc = RECORD (Oberon.TaskDesc)
+		executorObj: Objects.Object; 
+		context: Objects.Object; 
+		curnum, num: LONGINT; 
+		interactive: BOOLEAN; 
+		text: Texts.Text; 
+		pos: LONGINT; 
+		curtext: Texts.Text; 
+		curpos: LONGINT; 
+		checktime: LONGINT; 
+		contextFrame: Display.Frame; 
+		mynext: Task; 
+	END; 
+VAR 
+	diag: BOOLEAN; 
+	mintime, maxtime, minchecktime: LONGINT; 
+	tempX: INTEGER; 
+	lastcontext: Objects.Object; 
+	found: BOOLEAN; 
+	tasks: Task; 
+	current*, stopped*, demon*: Oberon.Task; 
+	locked*: BOOLEAN; 
+
+	PROCEDURE ^ NextLine(text: Texts.Text; pos: LONGINT): LONGINT; 
+	PROCEDURE ^ NextCommand(VAR text: Texts.Text; VAR pos: LONGINT; execute: BOOLEAN; VAR bt: LONGINT); 
+	PROCEDURE ^ OneTimeSlice(t: Oberon.Task): BOOLEAN; 
+	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ CheckOnDisplay(t: Task): BOOLEAN; 
+	PROCEDURE ^ DoTask(t: Oberon.Task); 
+	PROCEDURE ^ Search(c: Objects.Object): Task; 
+	PROCEDURE ^ Remove(t: Task); 
+	PROCEDURE ^ Install(t: Task); 
+	PROCEDURE ^ TCopy(t: Texts.Text; from, to: LONGINT): Texts.Text; 
+	PROCEDURE ^ Do*; 
+	PROCEDURE ^ Schedule*; 
+	PROCEDURE ^ Pause*; 
+	PROCEDURE ^ DiagOn*; 
+	PROCEDURE ^ DiagOff*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ StopAll*; 
+	PROCEDURE ^ Lock*; 
+	PROCEDURE ^ Unlock*; 
+BEGIN
+END fofAutomatic.

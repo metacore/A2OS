@@ -1,0 +1,40 @@
+MODULE WMBunny;
+	IMPORT Commands, WMMessages, WMGraphics, Modules, Raster, Random, Kernel, KernelLog, Rectangles := WMRectangles, WM := WMWindowManager;
+CONST 
+	Width = 1024; 
+	Height = 768; 
+TYPE 
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	Bunny = OBJECT {EXCLUSIVE} (WM.Window)
+	VAR 
+		posX, posY: LONGINT; 
+		alive: BOOLEAN; 
+		timer: Kernel.Timer; 
+		random: Random.Generator; 
+		nofFrames, frame, step: LONGINT; 
+		movie: Raster.Image; 
+		keyPressed: SET; 
+
+		PROCEDURE ^  & New*(movie: Raster.Image; frames, step: LONGINT); 
+		PROCEDURE ^ Move; 
+		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	BEGIN{ACTIVE} 
+	END Bunny; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Free*; 
+	PROCEDURE ^ InternalInsert(CONST fname: ARRAY OF CHAR; frames, step: LONGINT); 
+	PROCEDURE ^ Insert*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMBunny.

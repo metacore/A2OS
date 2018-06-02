@@ -1,0 +1,45 @@
+MODULE antsPEV IN Oberon;
+	IMPORT antsArrayObjects, vyBase, Objects, Gadgets, Files, vyHostStrings, antsViews, vyName, antsCommands, aM := antsMessages;
+CONST 
+TYPE 
+	tField* = POINTER TO tFieldDesc; 
+
+	tFieldDesc* = RECORD (vyBase.ObjDesc)
+		A*: antsArrayObjects.tINTEGERObject; 
+		Aorig*: antsArrayObjects.tINTEGERObject; 
+		Eh*, Ev*: antsArrayObjects.tINTEGERObject; 
+		V*: antsArrayObjects.tINTEGERObject; 
+		w*, h*: LONGINT; 
+	END; 
+
+	tArray* = antsArrayObjects.tObject; 
+
+	Operation* = PROCEDURE (F: tField; y, x: LONGINT); 
+
+	PROCEDURE ^ DoUniform*(F: tField); 
+	PROCEDURE ^ EGetENeighboursV*(F: tField; y, x: LONGINT; VAR e, p1, p2: INTEGER); 
+	PROCEDURE ^ EGetENeighboursH*(F: tField; y, x: LONGINT; VAR e, p1, p2: INTEGER); 
+	PROCEDURE ^ EGetPNeighbours*(F: tField; y, x: LONGINT; VAR p, p1, p2, p3, p4, e1, e2, e3, e4: INTEGER); 
+	PROCEDURE ^ ESetPNeighbours*(F: tField; y, x: LONGINT; p, p1, p2, p3, p4, e1, e2, e3, e4: INTEGER); 
+	PROCEDURE ^ EEdgeBetween*(F: tField; y, x, y2, x2: LONGINT): BOOLEAN; 
+	PROCEDURE ^ EVGetENeighboursH*(F: tField; y, x: LONGINT; VAR e, p1, p2, v1, v2: INTEGER); 
+	PROCEDURE ^ EVGetENeighboursV*(F: tField; y, x: LONGINT; VAR e, p1, p2, v1, v2: INTEGER); 
+	PROCEDURE ^ EVGetVNeighbours*(F: tField; y, x: LONGINT; VAR v, e1, e2, e3, e4: INTEGER); 
+	PROCEDURE ^ E2GetENeighboursH*(F: tField; y, x: LONGINT; VAR e, e1, e2, e3, e4, e5, e6, e7, e8: INTEGER); 
+	PROCEDURE ^ E2GetENeighboursV*(F: tField; y, x: LONGINT; VAR e, e1, e2, e3, e4, e5, e6, e7, e8: INTEGER); 
+	PROCEDURE ^ ForAllDo*(F: tField; O: Operation); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ HandleFileMsg(obj: tField; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tField; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tField; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Insert(F: tField; Aorig, A, Ev, Eh, V: antsArrayObjects.tINTEGERObject); 
+	PROCEDURE ^ New*(w, h, d: LONGINT; name: vyName.tNameArray): tField; 
+	PROCEDURE ^ NewField*; 
+	PROCEDURE ^ FieldHasChanged*(F: tField); 
+	PROCEDURE ^ DoShow*(F: tField); 
+	PROCEDURE ^ ShowField*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsPEV.

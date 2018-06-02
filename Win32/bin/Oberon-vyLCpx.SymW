@@ -1,0 +1,12 @@
+MODULE vyLCpx IN Oberon;
+	IMPORT realmath := MathL IN A2;
+CONST 
+	idversion* = \" v0r0d1"\; 
+TYPE 
+	real = LONGREAL; 
+
+	index = LONGINT; 
+
+	PROCEDURE ^ PolarToC*(len: index; VAR rho, phi: ARRAY OF real; VAR Re, Im: ARRAY OF real; start: index); 
+BEGIN
+END vyLCpx.

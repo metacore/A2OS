@@ -1,0 +1,1 @@
+oberon run a2.txt

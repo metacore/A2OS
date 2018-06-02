@@ -1,0 +1,23 @@
+MODULE WMObjectTracker;
+	IMPORT Modules, Commands, Strings, WMGraphics, WMComponents, WMProcessInfo, WMMessages, WMRestorable, WM := WMWindowManager;
+CONST 
+	DefaultWidth = 800; 
+	DefaultHeight = 400; 
+TYPE 
+	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		processManager: WMProcessInfo.ProcessManager; 
+
+		PROCEDURE ^  & New*(c: WMRestorable.Context); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	window: Window; 
+
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
+	PROCEDURE ^ Close*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMObjectTracker.

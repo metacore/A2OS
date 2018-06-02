@@ -1,0 +1,23 @@
+MODULE vyRectPlot IN Oberon;
+	IMPORT vyXPValues, G := vyGraphBase, S := vyHostStrings, vyPort, vyName, vyBase, vyDisplay2d, Display, Objects, Files, Gadgets;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		passConsume: BOOLEAN; 
+		xp-: vyXPValues.XPValue; 
+	END; 
+
+	PROCEDURE ^ Redraw(layer: tLayer); 
+	PROCEDURE ^ Consume(layer: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ Load0(VAR r: Files.Rider; VAR v: tLayerDesc); 
+	PROCEDURE ^ Store0(VAR r: Files.Rider; VAR v: tLayerDesc); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ DoOpen*(layer: tLayer; data: vyXPValues.XPValue; VAR layerid: ARRAY OF CHAR; passConsume: BOOLEAN); 
+	PROCEDURE ^ Open*(layer: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Alloc*; 
+BEGIN
+END vyRectPlot.

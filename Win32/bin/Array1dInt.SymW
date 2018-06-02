@@ -1,0 +1,113 @@
+MODULE Array1dInt;
+	IMPORT SYSTEM, Array1dBytes, DataErrors, NbrInt, NbrInt64, NbrRe;
+CONST 
+	sz = SIZEOF(Value); 
+TYPE 
+	Value* = NbrInt.Integer; 
+
+	LongerValue* = NbrInt64.Integer; 
+
+	ShorterValue* = INTEGER; 
+
+	RealValue* = NbrRe.Real; 
+
+	Array* = POINTER TO ARRAY OF Value; 
+
+	Index* = LONGINT; 
+
+	Map* = PROCEDURE {DELEGATE}(VAR i: Value); 
+
+	PROCEDURE ^ Copy*(VAR x: ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, destoffset, len: Index); 
+	PROCEDURE ^ CreateCopy*(VAR x: ARRAY OF Value): Array; 
+	PROCEDURE ^ CopyPat*(VAR x: ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ CreateCopyPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): Array; 
+	PROCEDURE ^ Fill*(x: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ FillPat*(x: Value; VAR res: ARRAY OF Value; offset, step, piecelen, pieces: Index); 
+	PROCEDURE ^ Negate*(VAR x: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ NegatePat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index); 
+	PROCEDURE ^ Abs*(VAR x: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ AbsPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index); 
+	PROCEDURE ^ AddAA*(VAR x, y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ SubtractAA*(VAR x, y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ MultAA*(VAR x, y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ ScalarProduct*(VAR x, y: ARRAY OF Value; VAR res: Value; xoffset, yoffset, len: Index); 
+	PROCEDURE ^ ScalarProductPat*(VAR x, y: ARRAY OF Value; VAR res: Value; xoffset, yoffset, xstep, ystep, piecelen, pieces: Index); 
+	PROCEDURE ^ ModAA*(VAR x, y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ DivAA*(VAR x, y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ EqualsAA*(VAR x, y: ARRAY OF Value; offset, len: Index): BOOLEAN; 
+	PROCEDURE ^ AddAV*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ AddAVPat*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ SubtractAV*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ SubtractAVPat*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ SubtractVA*(VAR x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ SubtractVAPat*(x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ MultAV*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ MultAVPat*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ DivAV*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ DivAVPat*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ DivVA*(x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ DivVAPat*(x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ ModAV*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ ModAVPat*(VAR x: ARRAY OF Value; y: Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ ModVA*(x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ ModVAPat*(x: Value; VAR y: ARRAY OF Value; VAR res: ARRAY OF Value; srcoffset, srcstep, destoffset, deststep, piecelen, pieces: Index); 
+	PROCEDURE ^ ApplyMap*(map: Map; VAR res: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ ApplyMapPat*(map: Map; VAR res: ARRAY OF Value; offset, step, piecelen, pieces: Index); 
+	PROCEDURE ^ Min*(VAR x: ARRAY OF Value; offset, len: Index; VAR minpos: Index): Value; 
+	PROCEDURE ^ Max*(VAR x: ARRAY OF Value; offset, len: Index; VAR maxpos: Index): Value; 
+	PROCEDURE ^ MinMax*(VAR x: ARRAY OF Value; offset, len: Index; VAR min, max: Value; minpos, maxpos: Index); 
+	PROCEDURE ^ MinMaxPat*(map: Map; VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index; VAR min, max: Value; minpos, maxpos: Index); 
+	PROCEDURE ^ MeanSsq*(VAR x: ARRAY OF Value; offset, len: Index; VAR mean, ssq: RealValue); 
+	PROCEDURE ^ kSmallestModify*(k: Index; VAR a: ARRAY OF Value; len: LONGINT): Value; 
+	PROCEDURE ^ kSmallest*(k: Index; VAR a: ARRAY OF Value; len: LONGINT): Value; 
+	PROCEDURE ^ Median*(VAR a: ARRAY OF Value; len: LONGINT): Value; 
+	PROCEDURE ^ HammingWeight*(VAR x: ARRAY OF Value; offset, len: Index): Index; 
+	PROCEDURE ^ HammingWeightPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): Index; 
+	PROCEDURE ^ HammingDist*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): Index; 
+	PROCEDURE ^ L1Norm*(VAR x: ARRAY OF Value; offset, len: Index): Value; 
+	PROCEDURE ^ L1NormPat*(map: Map; VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): Value; 
+	PROCEDURE ^ L1Dist*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): Value; 
+	PROCEDURE ^ L2NormSq*(VAR x: ARRAY OF Value; offset, len: Index): NbrRe.Real; 
+	PROCEDURE ^ L2Norm*(VAR x: ARRAY OF Value; offset, len: Index): NbrRe.Real; 
+	PROCEDURE ^ L2NormPatSq*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): NbrRe.Real; 
+	PROCEDURE ^ L2NormPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): NbrRe.Real; 
+	PROCEDURE ^ L2DistSq*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): NbrRe.Real; 
+	PROCEDURE ^ L2Dist*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): NbrRe.Real; 
+	PROCEDURE ^ LInftyNorm*(VAR x: ARRAY OF Value; offset, len: Index): Value; 
+	PROCEDURE ^ LInftyNormPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): Value; 
+	PROCEDURE ^ LInftyDist*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): Value; 
+	PROCEDURE ^ MinIndex(x, y: Index): Index; 
+	PROCEDURE ^ SetLen*(VAR a: Array; len: Index); 
+	PROCEDURE ^ RemoveBlock*(VAR x: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ InsertBlock*(VAR x: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ ShiftBlock*(VAR x: ARRAY OF Value; from, to, len: Index); 
+	PROCEDURE ^ RemovePat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: LONGINT): Array; 
+	PROCEDURE ^ Remove*(VAR x: ARRAY OF Value; offset, len: LONGINT): Array; 
+	PROCEDURE ^ InsertPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: LONGINT): Array; 
+	PROCEDURE ^ Insert*(VAR x: ARRAY OF Value; offset, len: LONGINT): Array; 
+	PROCEDURE ^ GetPieces*(VAR a: ARRAY OF Value; offset, step, piecelen: LONGINT): LONGINT; 
+	PROCEDURE ^ Long*(VAR x: ARRAY OF Value; res: ARRAY OF LongerValue; len: Index); 
+	PROCEDURE ^ Short*(VAR x: ARRAY OF Value; res: ARRAY OF ShorterValue; len: Index); 
+	PROCEDURE ^ Sort*(VAR x: ARRAY OF Value; offset, len: Index); 
+	PROCEDURE ^ SortWithIndex*(VAR x: ARRAY OF Value; VAR index: ARRAY OF Index; offset, len: Index); 
+	PROCEDURE ^ SortByIndex*(VAR x: ARRAY OF Value; VAR index: ARRAY OF Index; offset, len: Index); 
+	OPERATOR ^ "-"-(x: Array): Array; 
+	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF Value); 
+	OPERATOR ^ "="-(l: Array; VAR r: ARRAY OF Value): BOOLEAN; 
+	OPERATOR ^ "="-(VAR l: ARRAY OF Value; r: Array): BOOLEAN; 
+	OPERATOR ^ ":="-(VAR l: Array; r: Value); 
+	OPERATOR ^ "+"-(l, r: Array): Array; 
+	OPERATOR ^ "+"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "+"-(r: Value; l: Array): Array; 
+	OPERATOR ^ "-"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "-"-(l: Value; r: Array): Array; 
+	OPERATOR ^ "-"-(l, r: Array): Array; 
+	OPERATOR ^ "*"-(l, r: Array): Value; 
+	OPERATOR ^ "*"-(l: Value; r: Array): Array; 
+	OPERATOR ^ "*"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "DIV"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "DIV"-(l: Value; r: Array): Array; 
+	OPERATOR ^ "MOD"-(l: Array; r: Value): Array; 
+	OPERATOR ^ "MOD"-(l: Value; r: Array): Array; 
+BEGIN
+END Array1dInt.

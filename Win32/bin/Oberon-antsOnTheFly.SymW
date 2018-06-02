@@ -1,0 +1,35 @@
+MODULE antsOnTheFly IN Oberon;
+	IMPORT vyHost, vyHostTexts, Texts, Modules, Oberon, vyHostStrings, Files, Objects, aM := antsMessages, Builder, Display, antsTexts, PC, AosModules := Modules IN A2;
+CONST 
+	standardModule = \"antsOnTheFlyMod.Text"\; 
+TYPE 
+	Function1d* = PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL; 
+
+	FunctionXd* = PROCEDURE {DELEGATE}(x: ARRAY OF LONGREAL):LONGREAL; 
+VAR 
+	debug*: BOOLEAN; 
+	f1d*: Function1d; 
+	f1dName*: ARRAY 1024 OF CHAR; 
+	fXd*: FunctionXd; 
+	fXdName*: ARRAY 1024 OF CHAR; 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Module(source: Texts.Text; opt: ARRAY OF CHAR; log: Texts.Text; VAR error: BOOLEAN); 
+	PROCEDURE ^ InsertArray(t: Texts.Text; at: LONGINT; Array: ARRAY OF CHAR); 
+	PROCEDURE ^ Find(a: ARRAY OF CHAR; t: Texts.Text; VAR at: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Replace(t: Texts.Text; pattern: ARRAY OF CHAR; by: ARRAY OF CHAR); 
+	PROCEDURE ^ Set1d*(const, function: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ SetXd*(const, function: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ StoreF1d*(R: Files.Rider; mapping: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadF1d*(R: Files.Rider; VAR mapping: ARRAY OF CHAR; VAR fxd: Function1d); 
+	PROCEDURE ^ StoreFXd*(R: Files.Rider; mapping: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadFXd*(R: Files.Rider; VAR mapping: ARRAY OF CHAR; VAR fxd: FunctionXd); 
+	PROCEDURE ^ Test1d*; 
+	PROCEDURE ^ TestXd*; 
+	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: LONGINT; err: INTEGER); 
+	PROCEDURE ^ RemoveErrors(T: Texts.Text); 
+	PROCEDURE ^ markErrors(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame; offset, len: LONGINT); 
+	PROCEDURE ^ GetModuleName*(VAR modName: ARRAY OF CHAR); 
+	PROCEDURE ^ CompileText*(t: Texts.Text; inModule, cmd: ARRAY OF CHAR; begpat, endpat: ARRAY OF CHAR): BOOLEAN; 
+BEGIN
+END antsOnTheFly.

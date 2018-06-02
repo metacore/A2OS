@@ -1,0 +1,31 @@
+MODULE vyCaption IN Oberon;
+	IMPORT Files, Objects, Display, vyHostTexts, vyScanners, vyBase, vyName, vyGraphBase, vyHostStrings, vyRectangles, vyTracking, vyHostDisplay := vyGraphBase, vyPort, vyEvents;
+CONST 
+	idversion* = \"vyCaption 0r0a2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		xr, yr: Real; 
+		string: ARRAY 128 OF CHAR; 
+		font: ARRAY 32 OF CHAR; 
+	END; 
+VAR 
+	font: ARRAY 32 OF CHAR; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(caption: tLayer); 
+	PROCEDURE ^ Respond(caption: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(caption: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(F: tLayer); 
+	PROCEDURE ^ Open*(F: tLayer; string: ARRAY OF CHAR); 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ Alloc*; 
+BEGIN
+END vyCaption.

@@ -1,0 +1,91 @@
+MODULE antsObjects IN Oberon;
+	IMPORT vyPort, Objects, vyBase, vyLinks, Files, Gadgets, vyName, antsCommands, antsBasicGadgets, Desktops, Columbus, SYSTEM, Oberon, Display, BasicGadgets, vyHostTexts, Links, Texts, Documents, Attributes, TextGadgets, Input, antsToolbox, aM := antsMessages, Strings, Types, vyCommandMenus, vyEvents;
+CONST 
+	classBoolean* = \"Boolean"\; 
+	classInteger* = \"Integer"\; 
+	classReal* = \"Real"\; 
+	classString* = \"String"\; 
+	classUnknown* = \"Unknown"\; 
+TYPE 
+	Index* = LONGINT; 
+
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		all: vyLinks.Link; 
+	END; 
+
+	PAConsistTrafoProc* = PROCEDURE (o: Objects.Object); 
+
+	tlinkList* = POINTER TO tlinkListDesc; 
+
+	tlinkListDesc* = RECORD 
+		name*: vyName.tNameArray; 
+		obj*: Objects.Object; 
+		host*: Objects.Object; 
+		next*: tlinkList; 
+	END; 
+
+	UpdateTask = POINTER TO UpdateTaskDesc; 
+
+	UpdateTaskDesc = RECORD (Oberon.TaskDesc)
+		nexttime: LONGINT; 
+		t: Texts.Text; 
+		pos: LONGINT; 
+		D: Documents.Document; 
+		l: vyLinks.Link; 
+	END; 
+VAR 
+	obj-: tObject; 
+	antsObjects: vyLinks.Link; 
+	currobj: Objects.Object; 
+	currcount: LONGINT; 
+	currName: ARRAY 64 OF ARRAY 32 OF CHAR; 
+	linklist*, curlinklist: tlinkList; 
+	found: BOOLEAN; 
+
+	PROCEDURE ^ Bind*(obj: Objects.Object; VAR msg: Objects.BindMsg); 
+	PROCEDURE ^ Clear*; 
+	PROCEDURE ^ UndoClear*; 
+	PROCEDURE ^ Update*; 
+	PROCEDURE ^ Register*(o: vyBase.Object); 
+	PROCEDURE ^ vyRegister*(o: vyBase.Object); 
+	PROCEDURE ^ DeRegister*(o: vyBase.Object); 
+	PROCEDURE ^ StoreF(VAR R: Files.Rider; o: tObject); 
+	PROCEDURE ^ LoadF(VAR R: Files.Rider; o: tObject); 
+	PROCEDURE ^ HandleLinkMsg(l: vyLinks.Link; name: ARRAY OF CHAR; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ UnSubscribe*; 
+	PROCEDURE ^ Subscribe*; 
+	PROCEDURE ^ BasicModel*(obj: Objects.Object; attribute: ARRAY OF CHAR; VAR class: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ GadgetToModel*(gen: ARRAY OF CHAR; model: Objects.Object); 
+	PROCEDURE ^ SetLnk*; 
+	PROCEDURE ^ DeleteLnk*; 
+	PROCEDURE ^ WriteAttribute*; 
+	PROCEDURE ^ SetAttribute*; 
+	PROCEDURE ^ EnumInsertGadget(CONST A: ARRAY OF CHAR); 
+	PROCEDURE ^ EnumBaseNames(CONST A: ARRAY OF CHAR); 
+	PROCEDURE ^ DoAllFields*(obj: Objects.Object; nobasic: BOOLEAN); 
+	PROCEDURE ^ WriteAttributes*; 
+	PROCEDURE ^ DependentToFront*; 
+	PROCEDURE ^ vyObjects*; 
+	PROCEDURE ^ GetLink*(o: Objects.Object; name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ SetLink*(link: Objects.Object; o: Objects.Object; name: ARRAY OF CHAR); 
+	PROCEDURE ^ ListInspect*; 
+	PROCEDURE ^ ListView*; 
+	PROCEDURE ^ ListAttributes*; 
+	PROCEDURE ^ ListList*; 
+	PROCEDURE ^ EnumLinks(CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeLinkList*; 
+	PROCEDURE ^ DoFindContext(obj: Objects.Object; objname: ARRAY OF CHAR; up, down: BOOLEAN); 
+	PROCEDURE ^ FindContext*; 
+	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ WriteObject(VAR w: Texts.Writer; o: Objects.Object); 
+	PROCEDURE ^ UpdateT(t: Oberon.Task); 
+	PROCEDURE ^ ListBaseObjects*; 
+	PROCEDURE ^ ListThese*; 
+	PROCEDURE ^ NewEmptyObject*; 
+	PROCEDURE ^ Startup*; 
+BEGIN
+END antsObjects.

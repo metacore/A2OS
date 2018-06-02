@@ -1,0 +1,39 @@
+MODULE vyFctEdit IN Oberon;
+	IMPORT Objects, Display, vyHostTexts, vyBase, vyGraphBase, vyRealVec, vyTypes, vyParser, vyName, vyRectangles, vyDisplay2d, Gadgets, vyPort, vyCharts, vyAxis, vyLongrealVec, vyEvents, Files;
+CONST 
+	idversion* = \"vyFunctionEdit v0r0a2"\; 
+TYPE 
+	Real = vyGraphBase.Real; 
+
+	Color = vyGraphBase.Color; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyCharts.tLayerDesc)
+		ox: vyBase.Object; 
+		xr, yr, wr, hr: Real; 
+		dx: Real; 
+		ticks: LONGINT; 
+		hot: BOOLEAN; 
+		vScale, hScale: BOOLEAN; 
+	END; 
+VAR 
+	hotColor, coolColor: Color; 
+
+	PROCEDURE ^ Grid(editor: tLayer; v, h: Coordinate); 
+	PROCEDURE ^ Recall(editor: tLayer; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Edit(editor: tLayer; event: vyEvents.EventMsg): BOOLEAN; 
+	PROCEDURE ^ Responsible(editor: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ ChangeNumberData*(editor: tLayer; num: LONGINT); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tLayer); 
+	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Embed*(editor: tLayer; obj: vyBase.tVector; x, y, w, h: REAL; vScale, hScale, hot: BOOLEAN): vyPort.Picture; 
+	PROCEDURE ^ Apply*; 
+BEGIN
+END vyFctEdit.

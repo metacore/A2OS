@@ -1,0 +1,98 @@
+MODULE CryptoBigNumbers;
+	IMPORT S := SYSTEM, Streams, Random, Kernel, Out := KernelLog;
+CONST 
+	BufferPoolSize = 16; 
+TYPE 
+	digits = POINTER TO ARRAY OF LONGINT; 
+
+	BigNumber* = OBJECT 
+	VAR 
+		len-: LONGINT; 
+		neg-: BOOLEAN; 
+		d-: digits; 
+
+		PROCEDURE ^  & Init(bitsize: LONGINT); 
+		PROCEDURE ^ Mask*(bits: LONGINT); 
+		PROCEDURE ^ IsZero*(): BOOLEAN; 
+		PROCEDURE ^ EQ*(b: BigNumber): BOOLEAN; 
+		PROCEDURE ^ NEQ*(b: BigNumber): BOOLEAN; 
+		PROCEDURE ^ GT*(b: BigNumber): BOOLEAN; 
+		PROCEDURE ^ GEQ*(b: BigNumber): BOOLEAN; 
+		PROCEDURE ^ Shift*(n: LONGINT); 
+		PROCEDURE ^ Dec*; 
+		PROCEDURE ^ Inc*; 
+		PROCEDURE ^ Negate*; 
+		PROCEDURE ^ BitSize*(): LONGINT; 
+		PROCEDURE ^ BitSet*(n: LONGINT): BOOLEAN; 
+		PROCEDURE ^ adjust(newlen: LONGINT); 
+	END BigNumber; 
+
+	dig2 = ARRAY 2 OF LONGINT; 
+
+	dig3 = ARRAY 3 OF LONGINT; 
+
+	Montgomery = OBJECT 
+	VAR 
+		bits: LONGINT; 
+		r, n, t1, t2: BigNumber; 
+
+		PROCEDURE ^  & Init(x: BigNumber); 
+		PROCEDURE ^ Convert(VAR val: BigNumber); 
+		PROCEDURE ^ Reduce(VAR val: BigNumber); 
+		PROCEDURE ^ Mult(a, b: BigNumber): BigNumber; 
+	END Montgomery; 
+VAR 
+	bufferPool: ARRAY BufferPoolSize OF digits; 
+	nextFreeBuffer: LONGINT; 
+	randomgenerator: Random.Generator; 
+
+	PROCEDURE ^ max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ LessThan(x, y: LONGINT): BOOLEAN; 
+	PROCEDURE ^ LessOrEqual(x, y: LONGINT): BOOLEAN; 
+	PROCEDURE ^ RandomBytes*(VAR buf: ARRAY OF CHAR; p: LONGINT; n: LONGINT); 
+	PROCEDURE ^ adjust(VAR d: digits; dl, len: LONGINT); 
+	PROCEDURE ^ NewRand*(bits: LONGINT; top, bottom: SHORTINT): BigNumber; 
+	PROCEDURE ^ NewRandRange*(range: BigNumber): BigNumber; 
+	PROCEDURE ^ fixlen(VAR d: digits; VAR len: LONGINT); 
+	PROCEDURE ^ h2i(c: CHAR): LONGINT; 
+	PROCEDURE ^ AssignHex*(VAR b: BigNumber; CONST hex: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ AssignBin*(VAR b: BigNumber; CONST buf: ARRAY OF CHAR; pos, len: LONGINT); 
+	PROCEDURE ^ GetBinaryValue*(VAR b: BigNumber; VAR data: ARRAY OF CHAR; ofs: LONGINT); 
+	PROCEDURE ^ AssignInt*(VAR b: BigNumber; val: LONGINT); 
+	PROCEDURE ^ cmpd(VAR a, b: digits; len: LONGINT): SHORTINT; 
+	PROCEDURE ^ ucmp(VAR a, b: BigNumber): SHORTINT; 
+	PROCEDURE ^ Cmp*(a, b: BigNumber): SHORTINT; 
+	PROCEDURE ^ copy(a, b: digits; len: LONGINT); 
+	PROCEDURE ^ Copy*(VAR a, b: BigNumber); 
+	PROCEDURE ^ Invert(x: LONGINT): LONGINT; 
+	PROCEDURE ^ add(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
+	PROCEDURE ^ sub(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
+	PROCEDURE ^ Add*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ Sub*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ MulAdd(VAR high, low: LONGINT; b, c, d: LONGINT); 
+	PROCEDURE ^ mul(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
+	PROCEDURE ^ muls(a: digits; b: LONGINT; c: digits; al: LONGINT; VAR cl: LONGINT); 
+	PROCEDURE ^ Mul*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ div64(CONST a: dig2; VAR b: LONGINT): LONGINT; 
+	PROCEDURE ^ div96(CONST a: dig3; CONST b: dig2): LONGINT; 
+	PROCEDURE ^ Div2*(a, b: BigNumber; VAR q, r: BigNumber); 
+	PROCEDURE ^ ModWord*(VAR a: BigNumber; b: LONGINT): LONGINT; 
+	PROCEDURE ^ Div*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ Mod*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ Exp*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ ModMul*(a, b, m: BigNumber): BigNumber; 
+	PROCEDURE ^ wbits(exp: BigNumber): LONGINT; 
+	PROCEDURE ^ ModExp*(a, b, m: BigNumber): BigNumber; 
+	PROCEDURE ^ GCD*(a, b: BigNumber): BigNumber; 
+	PROCEDURE ^ ModInverse*(a, m: BigNumber): BigNumber; 
+	PROCEDURE ^ TextWrite*(w: Streams.Writer; b: BigNumber); 
+	PROCEDURE ^ Print*(b: BigNumber); 
+	PROCEDURE ^ nibble(r: Streams.Reader): CHAR; 
+	PROCEDURE ^ TextRead*(r: Streams.Reader; VAR b: BigNumber); 
+	PROCEDURE ^ FileRead*(r: Streams.Reader; VAR b: BigNumber); 
+	PROCEDURE ^ FileWrite*(w: Streams.Writer; b: BigNumber); 
+	PROCEDURE ^ GetBuffer(): digits; 
+	PROCEDURE ^ RecycleBuffer(d: digits); 
+	PROCEDURE ^ InitRandomgenerator; 
+BEGIN
+END CryptoBigNumbers.

@@ -1,0 +1,113 @@
+MODULE antsCommands IN Oberon;
+	IMPORT vyName, vyHostStrings, vyBase, vyScanners, Texts, Objects, Gadgets, Links, aM := antsMessages, Modules, antsPortability, vyLongintVec, vyLongrealVec;
+CONST 
+	UnqualifiedName* = \"unqualified"\; 
+	ctObject* = 100; 
+TYPE 
+	tParameter* = POINTER TO tParameterDesc; 
+
+	tParameterDesc* = RECORD 
+		used: BOOLEAN; 
+		next-: tParameter; 
+	END; 
+
+	tString* = POINTER TO tStringDesc; 
+
+	tStringDesc* = RECORD (tParameterDesc)
+		string-: ARRAY 1024 OF CHAR; 
+	END; 
+
+	tName* = POINTER TO tNameDesc; 
+
+	tNameDesc* = RECORD (tStringDesc)
+		name-: vyName.tNameArray; 
+	END; 
+
+	tReal* = POINTER TO tRealDesc; 
+
+	tRealDesc* = RECORD (tParameterDesc)
+		real-: LONGREAL; 
+	END; 
+
+	tNumber* = POINTER TO tNumberDesc; 
+
+	tNumberDesc* = RECORD (tRealDesc)
+		number-: LONGINT; 
+	END; 
+
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (tNameDesc)
+		object-: vyBase.Object; 
+	END; 
+
+	tSymbol* = POINTER TO tSymbolDesc; 
+
+	tSymbolDesc* = RECORD (tParameterDesc)
+		symbol-: CHAR; 
+	END; 
+
+	tScanList* = POINTER TO tItemDesc; 
+
+	tItemDesc = RECORD 
+		keyname: vyName.tNameArray; 
+		pars: tParameter; 
+		text: Texts.Text; 
+		pos: LONGINT; 
+		end: LONGINT; 
+		next: tScanList; 
+		spos*: LONGINT; 
+	END; 
+VAR 
+	keytoken*: CHAR; 
+	lastScanned-: tScanList; 
+	usageS, callerS: ARRAY 256 OF CHAR; 
+	haveCaller: BOOLEAN; 
+
+	PROCEDURE ^ NewItem(VAR item: tScanList; keyname: ARRAY OF CHAR; text: Texts.Text; start, pos: LONGINT); 
+	PROCEDURE ^ AppendParameter(item: tScanList; par: tParameter); 
+	PROCEDURE ^ GetSymbol(sc: vyScanners.Scanner): CHAR; 
+	PROCEDURE ^ ReadUntilChar(text: Texts.Text; VAR pos: LONGINT; start: CHAR; VAR s: ARRAY OF CHAR; VAR eot: BOOLEAN); 
+	PROCEDURE ^ ReadString(text: Texts.Text; VAR pos: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Qualifier(VAR scanner: vyScanners.Scanner; VAR start, pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Qualifier2(VAR scanner: vyScanners.Scanner; VAR start, pos: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ WaitForEndOfComment(VAR sc: vyScanners.Scanner; VAR eot: BOOLEAN); 
+	PROCEDURE ^ Scan*(VAR sc: vyScanners.Scanner): tScanList; 
+	PROCEDURE ^ ScanFromPar*(usage: ARRAY OF CHAR): tScanList; 
+	PROCEDURE ^ InitScan*(usage: ARRAY OF CHAR); 
+	PROCEDURE ^ ItemFromKeyword(list: tScanList; key: ARRAY OF CHAR): tScanList; 
+	PROCEDURE ^ ParsFromKeyword*(list: tScanList; key: ARRAY OF CHAR): tParameter; 
+	PROCEDURE ^ SetPosition(list: tScanList; to: tScanList); 
+	PROCEDURE ^ GetFromPosition*(list: tScanList): tParameter; 
+	PROCEDURE ^ GetRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GetReal*(key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GetNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetNumber*(key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetStringFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetString*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetNameFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetName*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetObjectInContext*(key: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ GetObjectFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
+	PROCEDURE ^ GetObject*(key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
+	PROCEDURE ^ ExpectRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ ExpectReal*(key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ ExpectNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ExpectNumber*(key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ExpectStringFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExpectString*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExpectNameFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExpectName*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExpectObjectFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
+	PROCEDURE ^ ExpectObject*(key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
+	PROCEDURE ^ dDumpParList(p: tParameter); 
+	PROCEDURE ^ dDumpScanList(m: tScanList); 
+	PROCEDURE ^ DumpParList*(p: tParameter); 
+	PROCEDURE ^ DumpScanList*(m: tScanList); 
+	PROCEDURE ^ FindKeyword*(list: tScanList; key: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ExpectKeyword*(list: tScanList; key: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Find*(key: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Expect*(key: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsCommands.

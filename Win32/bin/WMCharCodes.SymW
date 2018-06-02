@@ -1,0 +1,10 @@
+MODULE WMCharCodes;
+	IMPORT Strings, UTF8Strings, Files, Streams;
+CONST 
+VAR 
+	gb2312Table: ARRAY 65536 OF LONGINT; 
+
+	PROCEDURE ^ GB2312ToUTF8*(from: Strings.String): Strings.String; 
+	PROCEDURE ^ LoadGBTable; 
+BEGIN
+END WMCharCodes.

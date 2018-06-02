@@ -1,0 +1,31 @@
+MODULE vyGrid IN Oberon;
+	IMPORT Files, Objects, Display, vyHostTexts, vyBase, vyName, vyGraphBase, vyPort, vyParser, vyEvents;
+CONST 
+	idversion* = \"vyGrid v0r0a2"\; 
+	Syntax = \"Lattice.Insert <x0> <y0> <dx> <dy>"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc = RECORD (vyPort.tLayerDesc)
+		x0, y0, dx, dy: Real; 
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Setparameter(grid: tLayer; x0, y0, dx, dy: Real); 
+	PROCEDURE ^ Recall(grid: tLayer; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Respond(grid: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(grid: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(F: tLayer; x0, y0, dx, dy: REAL); 
+	PROCEDURE ^ Insert*; 
+BEGIN
+END vyGrid.

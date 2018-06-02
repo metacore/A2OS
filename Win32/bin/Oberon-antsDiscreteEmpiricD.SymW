@@ -1,0 +1,46 @@
+MODULE antsDiscreteEmpiricD IN Oberon;
+	IMPORT vyBase, antsArrayObjects, antsEmpiricD, Objects, aM := antsMessages;
+TYPE 
+	Index = LONGINT; 
+
+	txv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+
+	tv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+
+	EmpiricalDistribution* = POINTER TO EDDesc; 
+
+	EDDesc = RECORD (antsEmpiricD.EDDesc)
+		card-: LONGINT; 
+		xv: txv; 
+		v: tv; 
+	END; 
+
+	tParameter* = POINTER TO tParameterDesc; 
+
+	tParameterDesc* = RECORD (antsEmpiricD.tParameterDesc)
+		card: LONGINT; 
+	END; 
+
+	tEDGenerator* = POINTER TO tEDGeneratorDesc; 
+
+	tEDGeneratorDesc = RECORD (vyBase.ObjDesc)
+		par: tParameter; 
+		gen: PROCEDURE (g: tEDGenerator); 
+	END; 
+VAR 
+	debug: BOOLEAN; 
+
+	PROCEDURE ^ InitED(E: EmpiricalDistribution); 
+	PROCEDURE ^ R*(E: EmpiricalDistribution; x, v1, v2, v3, v4: LONGINT): LONGINT; 
+	PROCEDURE ^ M*(E: EmpiricalDistribution; v1, v2, v3, v4: Index): LONGINT; 
+	PROCEDURE ^ F*(E: EmpiricalDistribution; x, v1, v2, v3, v4: Index): LONGREAL; 
+	PROCEDURE ^ Sort4(v1, v2, v3, v4: LONGINT; VAR e1, e2, e3, e4: LONGINT); 
+	PROCEDURE ^ EmpiricalDistributeS(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ EmpiricalDistributeCS(Eo, Ee: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ GenerateED(g: tEDGenerator); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(gen: tEDGenerator; from: vyBase.Object); 
+	PROCEDURE ^ DebugOn*; 
+	PROCEDURE ^ DebugOff*; 
+BEGIN
+END antsDiscreteEmpiricD.

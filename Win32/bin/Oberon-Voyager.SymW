@@ -1,0 +1,45 @@
+MODULE Voyager IN Oberon;
+	IMPORT Objects, Texts, vyLinks, vyHostTexts, vyBase, vyName, vyScanners, vyParser, vyRealVec, vyTypes, vyRanBase, vyRandom, vyMouseData, vyRegress, vyHostStrings, Gadgets, Links;
+CONST 
+	idversion* = \"Voyager v0.1a3"\; 
+	cDefaultPlotName = \"vyScatter"\; 
+TYPE 
+	tGeneratorProc = PROCEDURE ():LONGREAL; 
+VAR 
+	gnrObjects: INTEGER; 
+	gplotname: vyName.tNameArray; 
+	gobjects: Objects.Object; 
+	gGenerator: tGeneratorProc; 
+
+	PROCEDURE ^ ReadData*; 
+	PROCEDURE ^ ReadTable*; 
+	PROCEDURE ^ WriteData*; 
+	PROCEDURE ^ WriteTable*; 
+	PROCEDURE ^ Summary*; 
+	PROCEDURE ^ Regress*; 
+	PROCEDURE ^ capsarg(VAR arg: vyName.tNameArray); 
+	PROCEDURE ^ NextDot(VAR str: ARRAY OF CHAR; VAR i: INTEGER; VAR part: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Locate(VAR procname: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; context: Objects.Object): Objects.Object; 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ Sort*; 
+	PROCEDURE ^ StdGauss(): LONGREAL; 
+	PROCEDURE ^ TrappedMouse(): LONGREAL; 
+	PROCEDURE ^ Random*; 
+	PROCEDURE ^ NewSampleMd*; 
+	PROCEDURE ^ NewSample*; 
+	PROCEDURE ^ Register*; 
+	PROCEDURE ^ DeRegister*; 
+	PROCEDURE ^ Step*; 
+	PROCEDURE ^ Run*; 
+	PROCEDURE ^ Stop*; 
+	PROCEDURE ^ Id*; 
+	PROCEDURE ^ help; 
+	PROCEDURE ^ set; 
+	PROCEDURE ^ status; 
+	PROCEDURE ^ Help*; 
+	PROCEDURE ^ Set*; 
+	PROCEDURE ^ Status*; 
+	PROCEDURE ^ Launch*; 
+	PROCEDURE ^ OpenLog*; 
+BEGIN
+END Voyager.

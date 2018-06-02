@@ -1,0 +1,42 @@
+MODULE vyLabel IN Oberon;
+	IMPORT Objects, Oberon, Display, Texts, Files, Fonts, vyBase, vyHostStrings, vyRectangles, vyGraphBase, vyHostDisplay := vyGraphBase, vyPort, vyParser, vyHostTexts, vyEvents;
+CONST 
+	idversion* = \"vyLabel v0r0a2"\; 
+	VMargin = 5; 
+	HMargin = 10; 
+	StdFont = \"Syntax10.Scn.Fnt"\; 
+	realcoord = 5; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		xi, yi, w, h, dsr: INTEGER; 
+		xr, yr: Real; 
+		atx, aty: INTEGER; 
+		name: ARRAY 64 OF CHAR; 
+	END; 
+VAR 
+	UsedFont-: ARRAY 32 OF CHAR; 
+	AttachX-, AttachY-: INTEGER; 
+	slink*, dlink*: Objects.Object; 
+
+	PROCEDURE ^ Copy(src, dest: tLayer); 
+	PROCEDURE ^ PointInLabel(label: tLayer; X1, Y1: INTEGER; VAR msg: Objects.ObjMsg): BOOLEAN; 
+	PROCEDURE ^ Recall(label: tLayer; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ DoControl(label: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(label: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Init(F: tLayer); 
+	PROCEDURE ^ Open*(F: tLayer; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ DoSetAttachment*(hor, ver: INTEGER); 
+	PROCEDURE ^ SetAttachment*; 
+	PROCEDURE ^ SetFont*; 
+	PROCEDURE ^ Alloc*; 
+BEGIN
+END vyLabel.

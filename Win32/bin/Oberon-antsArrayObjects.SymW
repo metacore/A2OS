@@ -1,0 +1,149 @@
+MODULE antsArrayObjects IN Oberon;
+	IMPORT vyBase, vyInteger, vyLongint, vyLongreal, Objects, antsCommands, antsToolbox, vyCommandMenus, vyRectangles, antsPictCoordinate, Links, Attributes, Files, vyName, vyHostTexts, antsObjects, vyLongrealVec, antsReadWrite, vyLinks, vyStrings := vyHostStrings, antsArrays, Input, vyTracking, aM := antsMessages, antsFiles;
+CONST 
+TYPE 
+	tINTEGERArray* = antsArrays.I2d; 
+
+	tLONGINTArray* = antsArrays.L2d; 
+
+	tLONGREALArray* = antsArrays.X2d; 
+
+	tObject* = POINTER TO tObjectDesc; 
+
+	tObjectDesc* = RECORD (vyBase.ObjDesc)
+		w*, h*: LONGINT; 
+	END; 
+
+	tINTEGERObject* = POINTER TO tINTEGERObjectDesc; 
+
+	tINTEGERObjectDesc* = RECORD (tObjectDesc)
+		A*, Cache*: tINTEGERArray; 
+		depth*: LONGINT; 
+	END; 
+
+	tLONGINTObject* = POINTER TO tLONGINTObjectDesc; 
+
+	tLONGINTObjectDesc* = RECORD (tObjectDesc)
+		A*, Cache*: tLONGINTArray; 
+		depth*: LONGINT; 
+	END; 
+
+	tLONGREALObject* = POINTER TO tLONGREALObjectDesc; 
+
+	tLONGREALObjectDesc* = RECORD (tObjectDesc)
+		A*, Cache*: tLONGREALArray; 
+		depth*: LONGREAL; 
+	END; 
+VAR 
+	globalLA: tLONGINTArray; 
+	newobject-: tObject; 
+	globalD: LONGINT; 
+	globalobj: tObject; 
+	loadedobj*: tObject; 
+	ra*: POINTER TO ARRAY OF LONGREAL; 
+	la*: POINTER TO ARRAY OF LONGINT; 
+	ia*: POINTER TO ARRAY OF INTEGER; 
+
+	PROCEDURE ^ UniformO*(o: tObject); 
+	PROCEDURE ^ CopyII*(a: tINTEGERArray; VAR A: tINTEGERArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyLI*(a: tLONGINTArray; VAR A: tINTEGERArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyRI*(a: tLONGREALArray; VAR A: tINTEGERArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyIL*(a: tINTEGERArray; VAR A: tLONGINTArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyUnsignedIL*(a: tINTEGERArray; VAR A: tLONGINTArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyLL*(a: tLONGINTArray; VAR A: tLONGINTArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyRL*(a: tLONGREALArray; VAR A: tLONGINTArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyIR*(a: tINTEGERArray; VAR A: tLONGREALArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyUnsignedIR*(a: tINTEGERArray; VAR A: tLONGREALArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyLR*(a: tLONGINTArray; VAR A: tLONGREALArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ CopyRR*(a: tLONGREALArray; VAR A: tLONGREALArray; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ FillIntArray*(val: INTEGER; A: tINTEGERArray; x, y, w, h: LONGINT); 
+	PROCEDURE ^ FillLongintArray*(val: LONGINT; A: tLONGINTArray; x, y, w, h: LONGINT); 
+	PROCEDURE ^ FillLongrealArray*(val: LONGREAL; A: tLONGREALArray; x, y, w, h: LONGINT); 
+	OPERATOR ^ "+"-(a, b: tLONGREALArray): tLONGREALArray; 
+	OPERATOR ^ "-"-(a, b: tLONGREALArray): tLONGREALArray; 
+	OPERATOR ^ "*"-(a, b: tLONGREALArray): tLONGREALArray; 
+	OPERATOR ^ "/"-(a, b: tLONGREALArray): tLONGREALArray; 
+	OPERATOR ^ "+"-(a: tLONGREALArray; b: LONGREAL): tLONGREALArray; 
+	OPERATOR ^ "-"-(a: tLONGREALArray; b: LONGREAL): tLONGREALArray; 
+	OPERATOR ^ "*"-(a: tLONGREALArray; b: LONGREAL): tLONGREALArray; 
+	OPERATOR ^ "/"-(a: tLONGREALArray; b: LONGREAL): tLONGREALArray; 
+	OPERATOR ^ "/"-(a: tLONGREALArray; b: INTEGER): tLONGREALArray; 
+	OPERATOR ^ "*"-(a: tLONGREALArray; b: INTEGER): tLONGREALArray; 
+	OPERATOR ^ "+"-(a: tLONGREALArray; b: INTEGER): tLONGREALArray; 
+	OPERATOR ^ "-"-(a: tLONGREALArray; b: INTEGER): tLONGREALArray; 
+	OPERATOR ^ ":="-(VAR a: tLONGREALArray; b: LONGREAL); 
+	OPERATOR ^ ":="-(VAR o: tObject; val: INTEGER); 
+	OPERATOR ^ ":="-(VAR o: tObject; val: LONGINT); 
+	OPERATOR ^ ":="-(VAR o: tObject; val: LONGREAL); 
+	PROCEDURE ^ Init*(o: tObject); 
+	PROCEDURE ^ GenINTEGERObj*; 
+	PROCEDURE ^ GenLONGINTObj*; 
+	PROCEDURE ^ GenLONGREALObj*; 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ Refresh*(obj: vyBase.Object); 
+	PROCEDURE ^ SetDepth*(obj: tINTEGERObject; depth: LONGINT); 
+	PROCEDURE ^ StoreINTEGERArray(VAR R: Files.Rider; A: tINTEGERArray); 
+	PROCEDURE ^ LoadINTEGERArray(VAR R: Files.Rider): tINTEGERArray; 
+	PROCEDURE ^ StoreLONGINTArray(VAR R: Files.Rider; A: tLONGINTArray); 
+	PROCEDURE ^ LoadLONGINTArray(VAR R: Files.Rider): tLONGINTArray; 
+	PROCEDURE ^ StoreLONGREALArray(VAR R: Files.Rider; A: tLONGREALArray); 
+	PROCEDURE ^ LoadLONGREALArray(VAR R: Files.Rider): tLONGREALArray; 
+	PROCEDURE ^ IntObj*(A: tINTEGERArray; depth: LONGINT): tINTEGERObject; 
+	PROCEDURE ^ IntObjR*(A: tLONGREALArray; depth: LONGINT): tINTEGERObject; 
+	PROCEDURE ^ IntObjL*(A: tLONGINTArray; depth: LONGINT): tINTEGERObject; 
+	PROCEDURE ^ LIntObj*(A: tLONGINTArray; depth: LONGINT): tLONGINTObject; 
+	PROCEDURE ^ RealObj*(A: tLONGREALArray; depth: LONGINT): tLONGREALObject; 
+	PROCEDURE ^ EmbedINTEGERArray*(A: tINTEGERArray; o: tINTEGERObject); 
+	PROCEDURE ^ EmbedLONGINTArray*(A: tLONGINTArray; o: tLONGINTObject); 
+	PROCEDURE ^ EmbedLONGREALArray*(A: tLONGREALArray; o: tLONGREALObject); 
+	PROCEDURE ^ NewINTEGERArray*(w, h: LONGINT): tINTEGERArray; 
+	PROCEDURE ^ NewLONGINTArray*(w, h: LONGINT): tLONGINTArray; 
+	PROCEDURE ^ NewLONGREALArray*(w, h: LONGINT): tLONGREALArray; 
+	PROCEDURE ^ NewINTEGERObject*(w, h, d: LONGINT): tINTEGERObject; 
+	PROCEDURE ^ NewLONGINTObject*(w, h, d: LONGINT): tLONGINTObject; 
+	PROCEDURE ^ NewLONGREALObject*(w, h: LONGINT; d: LONGREAL): tLONGREALObject; 
+	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ ChangeSize*(o: tObject; w, h: LONGINT); 
+	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ SetLongreal*(A: tObject; a: tLONGREALArray); 
+	PROCEDURE ^ SetLongint*(A: tObject; a: tLONGINTArray); 
+	PROCEDURE ^ SetInt*(A: tObject; a: tINTEGERArray); 
+	PROCEDURE ^ CopyArrayPart(from, to: tObject); 
+	PROCEDURE ^ CopyObject*(from, to: tObject); 
+	PROCEDURE ^ ObjectCopy(from: tObject): tObject; 
+	PROCEDURE ^ upsidedown; 
+	PROCEDURE ^ leftsideright; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Copy*; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Uniform*; 
+	PROCEDURE ^ Channel*; 
+	PROCEDURE ^ GetRowCol*(x, y: LONGINT; o: tObject; col, row: vyBase.tVector); 
+	PROCEDURE ^ ReadASCII*(VAR o: tINTEGERObject; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ ReadPGM*(VAR o: tINTEGERObject; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ StorePGMAscii*(A: tINTEGERObject; VAR FR: Files.Rider); 
+	PROCEDURE ^ ReadPGMAscii*(VAR A: tINTEGERObject; VAR FR: Files.Rider): BOOLEAN; 
+	PROCEDURE ^ finishstore(VAR f: Files.File; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ StoreDialoged*(A: tLONGINTArray; depth: LONGINT; name: ARRAY OF CHAR); 
+	PROCEDURE ^ StoreDialogedI*(A: tINTEGERArray; depth: LONGINT; name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetSel(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ storepgmsel; 
+	PROCEDURE ^ cutsel; 
+	PROCEDURE ^ storepgm; 
+	PROCEDURE ^ finalizepgmP2(VAR F: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ storepgmP2; 
+	PROCEDURE ^ finishload*(VAR f: Files.File; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ finishload2*(VAR f: Files.File; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ finishloadP2*(VAR f: Files.File; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadDialoged*; 
+	PROCEDURE ^ LoadDialogedP2*; 
+	PROCEDURE ^ LoadP2*; 
+	PROCEDURE ^ Load*; 
+	PROCEDURE ^ LoadASCII*; 
+	PROCEDURE ^ LoadDialogedASCII*; 
+	PROCEDURE ^ InteractiveGetRowCol*(row, col: vyBase.tVector; r, c: vyBase.Object); 
+	PROCEDURE ^ RowCol*; 
+BEGIN
+END antsArrayObjects.

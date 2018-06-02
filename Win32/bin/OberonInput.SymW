@@ -1,0 +1,50 @@
+MODULE OberonInput;
+	IMPORT KernelLog, Modules, Inputs, Plugins, Displays;
+CONST 
+	BufSize = 32; 
+TYPE 
+	DefaultInput = OBJECT (Inputs.OberonInput)
+	VAR 
+		keyboard: KeyboardObj; 
+		mouse: MouseObj; 
+
+		PROCEDURE ^ Mouse*(VAR x, y: INTEGER; VAR keys: SET); 
+		PROCEDURE ^ Read*(VAR ch: CHAR; VAR break: BOOLEAN); 
+		PROCEDURE ^ Available*(VAR num: INTEGER; VAR break: BOOLEAN); 
+		PROCEDURE ^ KeyState*(VAR k: SET); 
+	END DefaultInput; 
+
+	KeyboardObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		input: Inputs.OberonInput; 
+		head, tail: LONGINT; 
+		keys: SET; 
+		break: BOOLEAN; 
+		buf: ARRAY BufSize OF CHAR; 
+
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+		PROCEDURE ^ Read(VAR ch: CHAR; VAR b: BOOLEAN); 
+		PROCEDURE ^ Available(VAR num: INTEGER; VAR b: BOOLEAN); 
+		PROCEDURE ^ KeyState(VAR k: SET); 
+		PROCEDURE ^  & Init*; 
+	END KeyboardObj; 
+
+	MouseObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
+	VAR 
+		input: Inputs.OberonInput; 
+		curKeys: SET; 
+		curX, curY: INTEGER; 
+
+		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
+		PROCEDURE ^ Mouse(VAR x, y: INTEGER; VAR keys: SET); 
+		PROCEDURE ^  & Init*; 
+	END MouseObj; 
+VAR 
+	default: DefaultInput; 
+
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Remove*; 
+	PROCEDURE ^ SwitchToWM*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END OberonInput.

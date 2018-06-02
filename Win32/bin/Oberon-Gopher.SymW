@@ -1,0 +1,39 @@
+MODULE Gopher IN Oberon;
+	IMPORT Files, Objects, Display, Fonts, Texts, Oberon, NetSystem, Strings, HyperDocs, NetTools, Display3, Gadgets, Links, TextGadgets, Documents, Desktops, TextDocs, Attributes, MIME;
+CONST 
+	TempFile = \"Temp.Gopher"\; 
+	TempGifFile = \"Temp.Gopher.gif"\; 
+	TempHTMLFile = \"Temp.Gopher.html"\; 
+	GopherDefPort = 70; 
+	TelnetDefPort = 23; 
+	MimeType = 0FFX; 
+	Menu = \"HyperDocs.Back[Back] Desktops.StoreDoc[Store]"\; 
+VAR 
+	W: Texts.Writer; 
+	proxyHost: ARRAY NetTools.ServerStrLen OF CHAR; 
+	proxyPort: INTEGER; 
+	proxy: BOOLEAN; 
+
+	PROCEDURE ^ TextDoc(D: Documents.Document; C: NetSystem.Connection); 
+	PROCEDURE ^ CSODoc(D: Documents.Document; C: NetSystem.Connection); 
+	PROCEDURE ^ ReadLine(VAR R: Texts.Reader; VAR line: ARRAY OF CHAR); 
+	PROCEDURE ^ RegisterGopherAdr(host, selector, search: ARRAY OF CHAR; type: CHAR; port: INTEGER): LONGINT; 
+	PROCEDURE ^ SplitMenuLine(VAR line: ARRAY OF CHAR; desc: BOOLEAN; VAR type: CHAR; VAR selector, host: ARRAY OF CHAR; VAR port: LONGINT; VAR login, plus: BOOLEAN); 
+	PROCEDURE ^ WriteMenuLink(T: Texts.Text; type: CHAR; VAR selector, host: ARRAY OF CHAR; port: LONGINT; login, plus: BOOLEAN): LONGINT; 
+	PROCEDURE ^ HorzRule(): Objects.Object; 
+	PROCEDURE ^ MenuDoc(D: Documents.Document; C: NetSystem.Connection; mkey: LONGINT); 
+	PROCEDURE ^ BinDoc(D: Documents.Document; C: NetSystem.Connection; typ: CHAR); 
+	PROCEDURE ^ GopherPlusAns(C: NetSystem.Connection; VAR maxLen: LONGINT; VAR mail: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ MimeDoc(D: Documents.Document; C: NetSystem.Connection; VAR selector: ARRAY OF CHAR); 
+	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; host, selector: ARRAY OF CHAR; port: INTEGER; plus: CHAR; crlf: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Request(D: Documents.Document; key: LONGINT; VAR host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER); 
+	PROCEDURE ^ SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT; 
+	PROCEDURE ^ ParseAttrs(T, OutT: Texts.Text); 
+	PROCEDURE ^ Info*; 
+	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewLinkScheme*; 
+	PROCEDURE ^ LoadDoc(D: Documents.Document); 
+	PROCEDURE ^ NewDoc*; 
+BEGIN
+END Gopher.

@@ -1,0 +1,187 @@
+MODULE FoxCSharpParser;
+	IMPORT Strings, StringPool, Diagnostics, D := Debugging, Basic := FoxBasic, FoxScanner, Scanner := FoxCSharpScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, KernelLog;
+CONST 
+	Trace = FALSE; 
+	Public = 0; 
+	Internal = 1; 
+	LynxCase = FoxScanner.Lowercase; 
+TYPE 
+	Position* = Scanner.Position; 
+
+	LocalIdentEntry = OBJECT 
+	VAR 
+		next: LocalIdentEntry; 
+		level: LONGINT; 
+		name: SyntaxTree.Identifier; 
+		local: SyntaxTree.Identifier; 
+	END LocalIdentEntry; 
+
+	LocalIdentTable = OBJECT 
+	VAR 
+		head: LocalIdentEntry; 
+		level: LONGINT; 
+		suffix: LONGINT; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Reset; 
+		PROCEDURE ^ OpenScope; 
+		PROCEDURE ^ CloseScope; 
+		PROCEDURE ^ Enter(name: SyntaxTree.Identifier): SyntaxTree.Identifier; 
+		PROCEDURE ^ Find(name: SyntaxTree.Identifier): SyntaxTree.Identifier; 
+	END LocalIdentTable; 
+
+	Parser* = OBJECT 
+	VAR 
+		scanner: Scanner.Scanner; 
+		symbol-: Scanner.Symbol; 
+		diagnostics: Diagnostics.Diagnostics; 
+		currentScope: SyntaxTree.Scope; 
+		recentCommentItem: ANY; 
+		recentLine: LONGINT; 
+		recentComment: SyntaxTree.Comment; 
+		moduleScope: SyntaxTree.ModuleScope; 
+		error-: BOOLEAN; 
+		initStatements: SyntaxTree.StatementSequence; 
+		initOuter: SyntaxTree.Statement; 
+		delegateModifiers: SyntaxTree.Modifier; 
+		lynxChar: SyntaxTree.Identifier; 
+		lynxSbyte: SyntaxTree.Identifier; 
+		lynxShort: SyntaxTree.Identifier; 
+		lynxInt: SyntaxTree.Identifier; 
+		lynxLong: SyntaxTree.Identifier; 
+		lynxFloat: SyntaxTree.Identifier; 
+		lynxDouble: SyntaxTree.Identifier; 
+		lynxBool: SyntaxTree.Identifier; 
+		lynxObject: SyntaxTree.Identifier; 
+		lynxString: SyntaxTree.Identifier; 
+		lynxNewobj: SyntaxTree.Identifier; 
+		lynxNewarr: SyntaxTree.Identifier; 
+		lynxAsop: SyntaxTree.Identifier; 
+		lynxUnop: SyntaxTree.Identifier; 
+		lynxBinop: SyntaxTree.Identifier; 
+		lynxSend: SyntaxTree.Identifier; 
+		lynxReceive: SyntaxTree.Identifier; 
+		lynxRecvnb: SyntaxTree.Identifier; 
+		lynxConnect: SyntaxTree.Identifier; 
+		lynxDelegate: SyntaxTree.Identifier; 
+		lynxNewsel: SyntaxTree.Identifier; 
+		lynxAddsel: SyntaxTree.Identifier; 
+		lynxSelect: SyntaxTree.Identifier; 
+		lynxSelidx: SyntaxTree.Identifier; 
+		lynxType: SyntaxTree.Identifier; 
+		identMain: SyntaxTree.Identifier; 
+		localIdentTable: LocalIdentTable; 
+		indent: LONGINT; 
+
+		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ InitDelegateModifiers; 
+		PROCEDURE ^ InitSystemNames; 
+		PROCEDURE ^ S(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ EE(CONST s, t: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ NextSymbol; 
+		PROCEDURE ^ Peek(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Mandatory(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Check(token: Scanner.Token); 
+		PROCEDURE ^ MandatoryIdentifier(VAR name: SyntaxTree.Identifier): BOOLEAN; 
+		PROCEDURE ^ Identifier(VAR position: Position): SyntaxTree.Identifier; 
+		PROCEDURE ^ Optional(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Ignore(token: Scanner.Token); 
+		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
+		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^ MapOperator(token: Scanner.Token): LONGINT; 
+		PROCEDURE ^ NewUnaryExpression(position: Position; operand: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
+		PROCEDURE ^ NewBinaryExpression(position: Position; left, right: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
+		PROCEDURE ^ NewTypeExpression(position: Position): SyntaxTree.Expression; 
+		PROCEDURE ^ NewReceiveExpression(position: Position; left, right: SyntaxTree.Expression): SyntaxTree.Expression; 
+		PROCEDURE ^ MapNumberType(numberType: LONGINT): LONGINT; 
+		PROCEDURE ^ EnterInit; 
+		PROCEDURE ^ QualifiedIdentifier(): SyntaxTree.QualifiedIdentifier; 
+		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ ArgumentList(expressionList: SyntaxTree.ExpressionList); 
+		PROCEDURE ^ Accessors(expression: SyntaxTree.Expression; arrayCreation: BOOLEAN): SyntaxTree.Expression; 
+		PROCEDURE ^ PrimaryExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ UnaryExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ MultiplicativeExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ AdditiveExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ ShiftExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ RelationalExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ EqualityExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ AndExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ ExclusiveOrExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ InclusiveOrExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ ConditionalAndExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ ConditionalOrExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ Expression(): SyntaxTree.Expression; 
+		PROCEDURE ^ LocalVariableDeclaration(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement; type: SyntaxTree.Type); 
+		PROCEDURE ^ LocalConstantDeclaration(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ Block(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ NewAsopStatement(position: Position; operator: LONGINT; left: SyntaxTree.Designator; right: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ PatchPortReference(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
+		PROCEDURE ^ NewPortStatement(position: Position; name: SyntaxTree.Identifier; left: SyntaxTree.Designator; right: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ StatementExpression(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement; expression: SyntaxTree.Expression): BOOLEAN; 
+		PROCEDURE ^ ExpressionStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN; 
+		PROCEDURE ^ IfStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ SwitchSection(caseStatement: SyntaxTree.CaseStatement; VAR haveDefault: BOOLEAN); 
+		PROCEDURE ^ SwitchStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ NewLynxNewsel(position: Position; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ NewLynxAddsel(position: Position; index: LONGINT; variable: SyntaxTree.Identifier; channel: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ NewLynxSelect(position: Position): SyntaxTree.Expression; 
+		PROCEDURE ^ NewLynxSelidx(position: Position; variable: SyntaxTree.Identifier; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ SelectSection(statements: SyntaxTree.StatementSequence; caseStatement: SyntaxTree.CaseStatement; index: LONGINT; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ SelectStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ WhileStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ DoStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ StatementExpressionList(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ ForInitializer(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ ForIterator(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ ForStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ ReturnStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ BreakStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ EmbeddedStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN; 
+		PROCEDURE ^ ExpressionOrDeclaration(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement; VAR isDeclaration: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ Statement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN; 
+		PROCEDURE ^ StatementList(outer: SyntaxTree.Statement): SyntaxTree.StatementSequence; 
+		PROCEDURE ^ Body(scope: SyntaxTree.ProcedureScope): SyntaxTree.Body; 
+		PROCEDURE ^ RankSpecifier(type: SyntaxTree.Type): SyntaxTree.Type; 
+		PROCEDURE ^ NonArrayType(): SyntaxTree.Type; 
+		PROCEDURE ^ Type(): SyntaxTree.Type; 
+		PROCEDURE ^ AppendModifier(VAR list: SyntaxTree.Modifier; modifier: SyntaxTree.Modifier); 
+		PROCEDURE ^ Attributes(): SyntaxTree.Modifier; 
+		PROCEDURE ^ Modifiers(VAR modifiers: SET); 
+		PROCEDURE ^ IdentifierAccess(modifiers: SET; allowedReadOnly: BOOLEAN): SET; 
+		PROCEDURE ^ ConstantDeclarator(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type); 
+		PROCEDURE ^ ConstantDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET); 
+		PROCEDURE ^ VariableDeclarator(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type; name: SyntaxTree.Identifier; position: Position); 
+		PROCEDURE ^ FieldDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type; name: SyntaxTree.Identifier; position: Position); 
+		PROCEDURE ^ FixedParameter(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ FormalParameterList(procedureType: SyntaxTree.ProcedureType; parentScope: SyntaxTree.Scope; returnType: SyntaxTree.Type); 
+		PROCEDURE ^ ConstructorInitializer(scope: SyntaxTree.ProcedureScope); 
+		PROCEDURE ^ ProcedureDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type; name: SyntaxTree.Identifier; position: Position; isConstructor: BOOLEAN); 
+		PROCEDURE ^ MethodDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type; name: SyntaxTree.Identifier; position: Position); 
+		PROCEDURE ^ ConstructorDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; name: SyntaxTree.Identifier; position: Position); 
+		PROCEDURE ^ BodyDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; type: SyntaxTree.Type; name: SyntaxTree.Identifier; position: Position); 
+		PROCEDURE ^ MemberDeclaration(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ ClassMemberDeclaration(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ ClassMemberDeclarations(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ ClassDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET); 
+		PROCEDURE ^ StructMemberDeclaration(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ StructMemberDeclarations(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ StructDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET); 
+		PROCEDURE ^ DelegateDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET); 
+		PROCEDURE ^ PortDeclaration(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ PortList(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope); 
+		PROCEDURE ^ CellMemberDeclaration(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ CellMemberDeclarations(parentScope: SyntaxTree.Scope; parentName: SyntaxTree.Identifier); 
+		PROCEDURE ^ CellDeclaration(parentScope: SyntaxTree.Scope; modifiers: SET; attributes: SyntaxTree.Modifier; isCellNet: BOOLEAN); 
+		PROCEDURE ^ ImportDirective(moduleScope: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ ImportDirectives(moduleScope: SyntaxTree.ModuleScope); 
+		PROCEDURE ^ Module*(): SyntaxTree.Module; 
+	END Parser; 
+VAR 
+	invalidPosition: Position; 
+
+	PROCEDURE ^ NewParser*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics): Parser; 
+BEGIN
+END FoxCSharpParser.

@@ -1,0 +1,41 @@
+MODULE vyRanSupr IN Oberon;
+	IMPORT S := SYSTEM, Objects, Files, vyRanBase;
+CONST 
+	cModuleName = \"vyRanSupr"\; 
+	cSeedVersion = 0; 
+	sysMaxUnsigned = vyRanBase.sysMaxUnsigned; 
+TYPE 
+	tSeed = OBJECT (vyRanBase.tSeed)
+	VAR 
+		x, y: LONGINT; 
+		add: BOOLEAN; 
+		n: LONGINT; 
+
+		PROCEDURE ^ Store*(VAR r: Files.Rider); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+	END tSeed; 
+
+	tRandom = vyRanBase.tRandom; 
+
+	Bits = vyRanBase.Bits; 
+VAR 
+	seedAdd: BOOLEAN; 
+
+	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
+	PROCEDURE ^ NextSeed(seed: tSeed); 
+	PROCEDURE ^ Next(r: tRandom); 
+	PROCEDURE ^ Max(r: tRandom): Bits; 
+	PROCEDURE ^ Get(r: tRandom): Bits; 
+	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
+	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ Reset(r: tRandom); 
+	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ InitBasic(r: tRandom); 
+	PROCEDURE ^ Init(r: tRandom); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ GetNew*(): tRandom; 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Install*; 
+BEGIN
+END vyRanSupr.

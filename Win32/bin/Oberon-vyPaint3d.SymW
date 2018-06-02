@@ -1,0 +1,24 @@
+MODULE vyPaint3d IN Oberon;
+	IMPORT vyBase, vyGraphBase, vyHostDisplay := vyGraphBase, vyPHIGS3D;
+CONST 
+	idversion* = \"vyPaint3d v0r0a2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+VAR 
+	pen: ARRAY 3 OF Real; 
+
+	PROCEDURE ^ SetCoordinate*(c: vyPHIGS3D.tCoordinate3d); 
+	PROCEDURE ^ DisplayPointToPoint*(x, y: INTEGER; err: INTEGER; VAR x3d, y3d, z3d: Real); 
+	PROCEDURE ^ MoveTo*(x3d, y3d, z3d: Real); 
+	PROCEDURE ^ Line*(x3d0, y3d0, z3d0, x3d1, y3d1, z3d1: Real); 
+	PROCEDURE ^ LineTo*(x3d, y3d, z3d: Real); 
+	PROCEDURE ^ FrameRect*(x3d, y3d, z3d, w, h, nx, ny, nz: Real); 
+	PROCEDURE ^ String*(x3d, y3d, z3d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ EraseString*(x3d, y3d, z3d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ InvertString*(x3d, y3d, z3d: Real; f, s: ARRAY OF CHAR); 
+	PROCEDURE ^ PaintPat*(x3d, y3d, z3d: Real; sgn: vyHostDisplay.tSign); 
+	PROCEDURE ^ ErasePat*(x3d, y3d, z3d: Real; sgn: vyHostDisplay.tSign); 
+BEGIN
+END vyPaint3d.

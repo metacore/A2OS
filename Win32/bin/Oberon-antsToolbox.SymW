@@ -1,0 +1,120 @@
+MODULE antsToolbox IN Oberon;
+	IMPORT Pictures, Images, Files, Objects, Oberon, vyHostTexts, vyDisplay2d, PictConverters, antsCommands, vyRectangles, Display, SYSTEM, vyPort, vyLinks, Gadgets, vyParser, Input, vyTracking, Texts, Strings, Modules, vyHost, vyBase, vyCommandMenus, Links, TextDocs, antsTexts, GIF, vyHostStrings, aM := antsMessages, Effects, antsEffects, Attributes, Documents, Desktops, vyName, fofAutomatic, antsPortability, Types;
+CONST 
+TYPE 
+	tBuffer* = RECORD 
+		X, Y, W, H: INTEGER; 
+		x, y: INTEGER; 
+		buf: Images.Image; 
+		img: Images.Image; 
+	END; 
+
+	hist = POINTER TO histDesc; 
+
+	histDesc = RECORD 
+		D: Documents.Document; 
+		next: hist; 
+		name: ARRAY 128 OF CHAR; 
+	END; 
+
+	GetCoordMsg* = RECORD (Objects.ObjMsg)
+		x*, y*: INTEGER; 
+		xr*, yr*: LONGREAL; 
+		w*, h*: LONGINT; 
+		layer*: vyPort.tLayer; 
+		update*: BOOLEAN; 
+		a*: vyBase.Object; 
+	END; 
+
+	FileFinalize* = PROCEDURE (VAR f: Files.File; name: ARRAY OF CHAR); 
+
+	ObjProc* = PROCEDURE (x, y: LONGINT; a: Objects.Object; link: Objects.Object); 
+VAR 
+	finalize: FileFinalize; 
+	suffix: ARRAY 32 OF CHAR; 
+	imgconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
+	pictconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
+	tempX, tempY: INTEGER; 
+	lastframe: Display.Frame; 
+	oldhh: PROCEDURE (VAR D: Documents.Document); 
+	dhist: hist; 
+	history: hist; 
+	LoadedObject*: Objects.Object; 
+	open: antsPortability.openFileDialog; 
+	store: antsPortability.storeFileDialog; 
+	currentDialog: antsPortability.dialog; 
+	task: Oberon.Task; 
+	gPict: Pictures.Picture; 
+	dlink: Objects.Object; 
+
+	PROCEDURE ^ ViewLayer*(VAR f: vyPort.Frame; VAR p: vyPort.Picture; l: vyPort.tLayer; VAR c: Objects.Object); 
+	PROCEDURE ^ ImageToPict*(img: Images.Image; pict: Pictures.Picture); 
+	PROCEDURE ^ PictToImage*(pict: Pictures.Picture; img: Images.Image); 
+	PROCEDURE ^ Install*(name: ARRAY OF CHAR); 
+	PROCEDURE ^ InstallConverter(name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ LoadPicture0(VAR pict: Pictures.Picture; R: Files.Rider; VAR done: BOOLEAN); 
+	PROCEDURE ^ LoadGIF*(VAR pict: Pictures.Picture; fname: ARRAY OF CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ LoadPicture*(VAR pict: Pictures.Picture; fname: ARRAY OF CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ LoadImage*(VAR image: Images.Image; fname: ARRAY OF CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ StorePictAsGIF*(pict: Pictures.Picture; R: Files.Rider); 
+	PROCEDURE ^ StoreImageAsGIF*(img: Images.Image; R: Files.Rider); 
+	PROCEDURE ^ InitConversions; 
+	PROCEDURE ^ SplitName*(VAR name, MName, PName: ARRAY OF CHAR); 
+	PROCEDURE ^ GetLayerXY*(x, y: INTEGER; VAR pict: vyPort.Picture): vyLinks.Link; 
+	PROCEDURE ^ FrontLayerXY*(x, y: INTEGER; VAR pict: vyPort.Picture): vyPort.tLayer; 
+	PROCEDURE ^ MsgToXY*(x, y: INTEGER; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ SplitNameM(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetType*(type: ARRAY OF CHAR): antsPortability.Type; 
+	PROCEDURE ^ IsType*(obj: ANY; t: antsPortability.Type): BOOLEAN; 
+	PROCEDURE ^ TypedLayer*(llist: vyLinks.Link; type: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ TypedLayerXY*(x, y: INTEGER; type: ARRAY OF CHAR; VAR pict: vyPort.Picture): vyPort.tLayer; 
+	PROCEDURE ^ MsgToTypedXY*(x, y: INTEGER; VAR msg: Objects.ObjMsg; type: ARRAY OF CHAR); 
+	PROCEDURE ^ SelectFrame*(): Display.Frame; 
+	PROCEDURE ^ SetSize*; 
+	PROCEDURE ^ CopyCoordinates*; 
+	PROCEDURE ^ GetDisplay(X, Y, W, H: INTEGER): Images.Image; 
+	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ DoFrameToGIF*(f: Display.Frame; name: ARRAY OF CHAR); 
+	PROCEDURE ^ MakefileName*(prefix, suffix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ Adjust(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ OpenBigBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CloseBuffer(buf: tBuffer); 
+	PROCEDURE ^ WriteBufferImg(buf: tBuffer); 
+	PROCEDURE ^ GetBufRect(buf: tBuffer; x, y, w, h: INTEGER; VAR X, Y, W, H: INTEGER); 
+	PROCEDURE ^ CheckBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ ZoomRect*(r, g, b: INTEGER; x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ HistoryHook(VAR D: Documents.Document); 
+	PROCEDURE ^ LoadAlpha*(VAR img: Images.Image; name: ARRAY OF CHAR; VAR done: BOOLEAN); 
+	PROCEDURE ^ Launch*; 
+	PROCEDURE ^ Ants*; 
+	PROCEDURE ^ FrameToGIF*; 
+	PROCEDURE ^ FrameToGIF2*; 
+	PROCEDURE ^ InteractiveGetCoordinates*(VAR xr, yr: LONGREAL; VAR wr, hr: LONGREAL); 
+	PROCEDURE ^ InteractiveMsg*(VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Test*; 
+	PROCEDURE ^ ShowFrame*; 
+	PROCEDURE ^ CountMultipleObj*(name: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ SetDocName*(d: Documents.Document; name: ARRAY OF CHAR); 
+	PROCEDURE ^ NameOpened*(name: ARRAY OF CHAR); 
+	PROCEDURE ^ NameOpenedWId*(name: ARRAY OF CHAR; obj: vyBase.Object); 
+	PROCEDURE ^ StartDisplayHelp*(s: ARRAY OF CHAR); 
+	PROCEDURE ^ EndDisplayHelp*; 
+	PROCEDURE ^ CheckSuffix(VAR name: ARRAY OF CHAR; suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ FinalizeFile*; 
+	PROCEDURE ^ FileOpen*(p: FileFinalize; filtername, filter: ARRAY OF CHAR); 
+	PROCEDURE ^ FileStore*(p: FileFinalize; filtername, filter, stdsuffix, name: ARRAY OF CHAR); 
+	PROCEDURE ^ finpg(VAR f: Files.File; fname: ARRAY OF CHAR); 
+	PROCEDURE ^ FocusPictToGIF*; 
+	PROCEDURE ^ Test2*; 
+	PROCEDURE ^ SetCoords*; 
+	PROCEDURE ^ GetCoords*; 
+	PROCEDURE ^ InteractiveGetArray*(): vyBase.Object; 
+	PROCEDURE ^ InteractiveGetVector*(): vyBase.Object; 
+	PROCEDURE ^ Search*; 
+	PROCEDURE ^ ReplaceTextPart*; 
+	PROCEDURE ^ InteractiveDo*(objects: Objects.Object; objproc: ObjProc); 
+	PROCEDURE ^ ThisToHistory(this: Documents.Document; VAR history: hist); 
+	PROCEDURE ^ FindDoc(history: hist; VAR name: ARRAY OF CHAR): Documents.Document; 
+	PROCEDURE ^ ReplaceDoc*; 
+BEGIN
+END antsToolbox.

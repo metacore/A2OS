@@ -1,0 +1,25 @@
+MODULE antsKernelViewer IN Oberon;
+	IMPORT antsKernel, antsObjects, vyPort, Files, Gadgets, vyGraphBase, vyEvents, Display, Objects, vyBase, vyName, vyDisplay2d, Attributes, vyLinks, vyRectangles, aM := antsMessages;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		kernel: antsKernel.Kernel; 
+	END; 
+
+	Real = LONGREAL; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(layer: tLayer; msg: Display.DisplayMsg); 
+	PROCEDURE ^ StoreL(VAR R: Files.Rider; L: tLayer); 
+	PROCEDURE ^ LoadL(VAR R: Files.Rider; n: tLayer); 
+	PROCEDURE ^ Respond(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GenL*; 
+	PROCEDURE ^ Open(layer: tLayer; kernel: antsKernel.Kernel); 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsKernelViewer.

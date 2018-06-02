@@ -1,0 +1,60 @@
+MODULE FoxFormats;
+	IMPORT SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Strings, Streams, Diagnostics, Options, Files;
+CONST 
+	NoFindPC* = MAX(LONGINT); 
+TYPE 
+	SectionName = ARRAY 256 OF CHAR; 
+
+	GeneratedModule* = OBJECT 
+	VAR 
+		module-: SyntaxTree.Module; 
+		system-: Global.System; 
+		findPC-: LONGINT; 
+		moduleName-: SectionName; 
+
+		PROCEDURE ^ SetFindPC*(findPC: LONGINT); 
+		PROCEDURE ^  & Init*(module: SyntaxTree.Module; system: Global.System); 
+		PROCEDURE ^ SetModuleName*(CONST moduleName: ARRAY OF CHAR); 
+		PROCEDURE ^ SetSystem*(system: Global.System); 
+		PROCEDURE ^ Dump*(w: Streams.Writer); 
+	END GeneratedModule; 
+
+	SymbolFileFormat* = OBJECT 
+	VAR 
+		diagnostics-: Diagnostics.Diagnostics; 
+		system-: Global.System; 
+		path-: Files.FileName; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; system: Global.System; CONST path: ARRAY OF CHAR); 
+		PROCEDURE ^ Export*(module: SyntaxTree.Module; importCache: SyntaxTree.ModuleScope): BOOLEAN; 
+		PROCEDURE ^ Import*(CONST name: ARRAY OF CHAR; importCache: SyntaxTree.ModuleScope): SyntaxTree.Module; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ GetExtension*(VAR ext: ARRAY OF CHAR); 
+	END SymbolFileFormat; 
+
+	ObjectFileFormat* = OBJECT 
+	VAR 
+		diagnostics-: Diagnostics.Diagnostics; 
+		path-: Files.FileName; 
+		extension-: Files.FileName; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^ Export*(module: GeneratedModule; symbolFileFormat: SymbolFileFormat): BOOLEAN; 
+		PROCEDURE ^ DefineOptions*(options: Options.Options); 
+		PROCEDURE ^ GetOptions*(options: Options.Options); 
+		PROCEDURE ^ DefaultSymbolFileFormat*(): SymbolFileFormat; 
+		PROCEDURE ^ ForceModuleBodies*(): BOOLEAN; 
+		PROCEDURE ^ SetExtension*(CONST ext: ARRAY OF CHAR); 
+		PROCEDURE ^ GetExtension*(VAR ext: ARRAY OF CHAR); 
+		PROCEDURE ^ SetPath*(CONST path: ARRAY OF CHAR); 
+		PROCEDURE ^ GetPath*(VAR path: ARRAY OF CHAR); 
+	END ObjectFileFormat; 
+
+	PROCEDURE ^ GetSymbolFileFormat*(CONST name: ARRAY OF CHAR): SymbolFileFormat; 
+	PROCEDURE ^ GetObjectFileFormat*(CONST name: ARRAY OF CHAR): ObjectFileFormat; 
+	PROCEDURE ^ Assert(b: BOOLEAN; CONST reason: ARRAY OF CHAR); 
+BEGIN
+END FoxFormats.

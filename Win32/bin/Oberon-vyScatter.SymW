@@ -1,0 +1,8 @@
+MODULE vyScatter IN Oberon;
+	IMPORT vyHostTexts, vyBase, vyScatter1, vyScatter2, vyScatter3;
+CONST 
+	idversion* = \"vyScatter v0r0a2"\; 
+
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END vyScatter.

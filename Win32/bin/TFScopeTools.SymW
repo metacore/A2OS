@@ -1,0 +1,14 @@
+MODULE TFScopeTools;
+	IMPORT KernelLog, TS := TFTypeSys, Strings;
+CONST 
+
+	PROCEDURE ^ FindType*(d: TS.Designator; scope: TS.Scope): TS.Type; 
+	PROCEDURE ^ DealiaseType*(t: TS.Type): TS.Type; 
+	PROCEDURE ^ ShowDesignator*(d: TS.Designator); 
+	PROCEDURE ^ ShowType*(t: TS.Type); 
+	PROCEDURE ^ GetSourceReference*(no: TS.NamedObject; VAR filename, scopePath: ARRAY OF CHAR); 
+	PROCEDURE ^ ID*(no: TS.NamedObject); 
+	PROCEDURE ^ IDScope*(s: TS.Scope); 
+	PROCEDURE ^ QualidentToString*(scope: TS.Scope; q: TS.Designator): Strings.String; 
+BEGIN
+END TFScopeTools.

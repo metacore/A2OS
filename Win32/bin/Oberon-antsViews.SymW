@@ -1,0 +1,48 @@
+MODULE antsViews IN Oberon;
+	IMPORT vyPort, Oberon, vyName, vyBase, Display, vyEvents, vyColorPalettes, antsObjects, antsArrayObjects, antsArrayPictures16, antsArrayImages16, antsArrayPictures, antsArrayImages, Files, aM := antsMessages, vyHostStrings, vyTracking, antsToolbox, vyHost, antsCommands, antsPictCoordinate, Objects, vyCommandMenus, Gadgets, vyLinks, vyGraphBase, ants3dArrayObjects, antsColors, ants1dArrayVectors;
+CONST 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		refArray*: antsArrayObjects.tINTEGERObject; 
+		commands*: vyCommandMenus.List; 
+		pal*: vyColorPalettes.Palette; 
+		grid-: BOOLEAN; 
+		preview: BOOLEAN; 
+	END; 
+VAR 
+	tempLayer-: tLayer; 
+
+	PROCEDURE ^ CheckColors*(l: tLayer; depth: LONGINT); 
+	PROCEDURE ^ Recall(layer: tLayer); 
+	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ incSize; 
+	PROCEDURE ^ decSize; 
+	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ View3d; 
+	PROCEDURE ^ exchange; 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ ObjectView; 
+	PROCEDURE ^ ColorView; 
+	PROCEDURE ^ TColorView; 
+	PROCEDURE ^ decalpha; 
+	PROCEDURE ^ incalpha; 
+	PROCEDURE ^ fix*; 
+	PROCEDURE ^ free*; 
+	PROCEDURE ^ grid; 
+	PROCEDURE ^ prev; 
+	PROCEDURE ^ Init*(layer: tLayer); 
+	PROCEDURE ^ DefaultPath*(layer: tLayer; textureplot: BOOLEAN); 
+	PROCEDURE ^ Open*(layer: tLayer; id: vyName.tNameArray); 
+	PROCEDURE ^ DoShowI*(a: antsArrayObjects.tINTEGERArray; depth: LONGINT); 
+	PROCEDURE ^ DoShowR*(a: antsArrayObjects.tLONGREALArray; depth: LONGINT); 
+	PROCEDURE ^ DoShow*(obj: vyBase.Object); 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ ShowP*; 
+BEGIN
+END antsViews.

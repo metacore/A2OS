@@ -1,0 +1,114 @@
+MODULE TextGadgets IN Oberon;
+	IMPORT Display3, TextGadgets0, Objects, Display, Gadgets, Texts, Oberon, Fonts, Files, Printer, Effects, Printer3, Input, Strings;
+CONST 
+	left* = 1; 
+	middle* = 2; 
+	right* = 3; 
+	pad* = 4; 
+	pagebreak* = 5; 
+	wysiwyg* = 6; 
+	span* = 7; 
+	printerW* = 8; 
+	frameW* = 9; 
+	nocontrol* = 1; 
+	writemode = Display.paint; 
+	replace = 3; 
+	delete = 2; 
+	insert = 1; 
+	change = 0; 
+	MaxTabs = 32; 
+	markerH = 4; 
+TYPE 
+	Style* = POINTER TO StyleDesc; 
+
+	StyleDesc* = RECORD (Gadgets.FrameDesc)
+		text*: Texts.Text; 
+		mode*: SET; 
+		leftM*, width*: INTEGER; 
+		noTabs*: SHORTINT; 
+		tab*: ARRAY MaxTabs OF INTEGER; 
+	END; 
+
+	Control* = POINTER TO ControlDesc; 
+
+	ControlDesc* = RECORD (Gadgets.FrameDesc)
+	END; 
+
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (TextGadgets0.FrameDesc)
+		control*: SET; 
+	END; 
+VAR 
+	methods*: TextGadgets0.Methods; 
+	macroHook*: Objects.Handler; 
+	popupHook*: Objects.Handler; 
+	lastfont: Fonts.Font; 
+	lastlib: Fonts.Font; 
+	dummy: Fonts.Char; 
+	BoxPat: ARRAY 12 OF SET; 
+	stylefnt: Fonts.Font; 
+	dummyF: Display.Frame; 
+	dummydlink: Objects.Object; 
+	dx, dy: INTEGER; 
+	dummyT: TextGadgets0.Frame; 
+	dTx, dTy: INTEGER; 
+	dummyM: Display3.Mask; 
+
+	PROCEDURE ^ Visible(F: Frame; obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ PrintVisible(F: Frame; obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ FindStyle*(T: Texts.Text; beg: LONGINT): Style; 
+	PROCEDURE ^ Max(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Below(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ Above(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ CurStyle(F: Frame; L: TextGadgets0.Line; VAR mode: SET; VAR leftM, width: INTEGER); 
+	PROCEDURE ^ DisplayParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: INTEGER); 
+	PROCEDURE ^ Dev(x: INTEGER): INTEGER; 
+	PROCEDURE ^ PrintParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: INTEGER); 
+	PROCEDURE ^ Background(F: TextGadgets0.Frame; R: Display3.Mask; X, Y, x, y, w, h: INTEGER); 
+	PROCEDURE ^ InSync(F: TextGadgets0.Frame; L, L1: TextGadgets0.Line): BOOLEAN; 
+	PROCEDURE ^ ClearCache; 
+	PROCEDURE ^ Lookup(L: Fonts.Font; ch: CHAR; VAR minY, maxY, dx, y, h: INTEGER); 
+	PROCEDURE ^ Voff(obj: Objects.Object): INTEGER; 
+	PROCEDURE ^ TabSize(obj: Objects.Object; w: INTEGER; VAR dx, pdx: INTEGER); 
+	PROCEDURE ^ Format(F: TextGadgets0.Frame; org: LONGINT; L: TextGadgets0.Line); 
+	PROCEDURE ^ PrinterTabSize(obj: Objects.Object; w: INTEGER; VAR dx, pdx: INTEGER); 
+	PROCEDURE ^ PrintFormat(F: TextGadgets0.Frame; org: LONGINT; L: TextGadgets0.Line; VAR break: BOOLEAN); 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER); 
+	PROCEDURE ^ RestoreFrame0(x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; X, Y, x, y: INTEGER; f: Display.Frame; dlink: Objects.Object); 
+	PROCEDURE ^ DisplayLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: TextGadgets0.Line; dlink: Objects.Object); 
+	PROCEDURE ^ PrintLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: TextGadgets0.Line; dlink: Objects.Object); 
+	PROCEDURE ^ FindLine(F: TextGadgets0.Frame; y, Y: INTEGER; VAR org: LONGINT; VAR L: TextGadgets0.Line); 
+	PROCEDURE ^ LocateChar(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ LocatePos(F: TextGadgets0.Frame; pos: LONGINT; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ LocateString*(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ Call(F: TextGadgets0.Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object); 
+	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
+	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ HandleStyleAdjust(F: Frame; Sobj: Style); 
+	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ ConvertMsg(VAR M: Texts.UpdateMsg; VAR id: INTEGER; VAR beg, end: LONGINT); 
+	PROCEDURE ^ StyleChange(F: Style); 
+	PROCEDURE ^ AdjustStyle(F: Frame; style: Style; W: INTEGER); 
+	PROCEDURE ^ AdjustStyles(F: Frame; W: INTEGER); 
+	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(F: Frame; T: Texts.Text; note: BOOLEAN); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ NewNote*; 
+	PROCEDURE ^ StyleAttr(F: Style; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreStyle(F: Style; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CopyStyle*(VAR M: Objects.CopyMsg; from, to: Style); 
+	PROCEDURE ^ Highlight(R: Display3.Mask; x, y, w, h: INTEGER): BOOLEAN; 
+	PROCEDURE ^ TrackStyle(F: Style; x, y: INTEGER; R: Display3.Mask; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ StyleHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ newStyle*(): Style; 
+	PROCEDURE ^ NewStyleProc*; 
+	PROCEDURE ^ NewStyle*; 
+	PROCEDURE ^ ControlAttr(F: Control; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ RestoreControl(F: Control; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ CopyControl*(VAR M: Objects.CopyMsg; from, to: Control); 
+	PROCEDURE ^ ControlHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewControl*; 
+BEGIN
+END TextGadgets.

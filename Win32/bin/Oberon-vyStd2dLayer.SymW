@@ -1,0 +1,22 @@
+MODULE vyStd2dLayer IN Oberon;
+	IMPORT Objects, Display, vyHostTexts, vyParser, vyBase, vyHostStrings, vyTypes, vyName, vyDisplay2d, vyPort;
+CONST 
+	idversion* = \"vyStd2dLayer v0r0a3"\; 
+	sourceModule = \"vyQuickDraw"\; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		recallProcedure: ARRAY 32 OF CHAR; 
+	END; 
+VAR 
+	x*: vyBase.tVector; 
+
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Recall(layer: tLayer; msg: Display.DisplayMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open*(layer: tLayer; data: Objects.Object; recallProc: ARRAY OF CHAR); 
+	PROCEDURE ^ Show*; 
+	PROCEDURE ^ Alloc*; 
+BEGIN
+END vyStd2dLayer.

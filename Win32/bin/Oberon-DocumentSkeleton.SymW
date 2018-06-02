@@ -1,0 +1,15 @@
+MODULE DocumentSkeleton IN Oberon;
+	IMPORT Attributes, Desktops, Display, Documents, Files, Gadgets, Links, Oberon, Objects, Texts, ColorDriver;
+CONST 
+	Menu = \"Desktops.StoreDoc[Store] DocumentSkeleton.Cycle[Cycle]"\; 
+VAR 
+	W: Texts.Writer; 
+
+	PROCEDURE ^ Cycle*; 
+	PROCEDURE ^ NextColor(doc: Documents.Document; col: INTEGER); 
+	PROCEDURE ^ Load(D: Documents.Document); 
+	PROCEDURE ^ Store(D: Documents.Document); 
+	PROCEDURE ^ Handler(D: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewDoc*; 
+BEGIN
+END DocumentSkeleton.

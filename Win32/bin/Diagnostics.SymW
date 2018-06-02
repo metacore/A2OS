@@ -1,0 +1,61 @@
+MODULE Diagnostics;
+	IMPORT Streams;
+CONST 
+	Invalid* = MIN(LONGINT); 
+	TypeInformation* = 0; 
+	TypeWarning* = 1; 
+	TypeError* = 2; 
+	All* = {0 .. 2}; 
+	Tab = 9X; 
+TYPE 
+	Diagnostics* = OBJECT 
+
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+	END Diagnostics; 
+
+	Entry* = POINTER TO RECORD 
+		type*: LONGINT; 
+		source*: ARRAY 128 OF CHAR; 
+		position*, errorCode*: LONGINT; 
+		message*: ARRAY 256 OF CHAR; 
+		next*: Entry; 
+	END; 
+
+	EntryArray* = POINTER TO ARRAY OF Entry; 
+
+	EnumProc* = PROCEDURE {DELEGATE}(e: Entry); 
+
+	DiagnosticsList* = OBJECT {EXCLUSIVE} (Diagnostics)
+	VAR 
+		entries-: Entry; 
+		nofErrors-: LONGINT; 
+		nofWarnings-: LONGINT; 
+		nofInformations-: LONGINT; 
+		nofMessages-: LONGINT; 
+
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer; mask: SET); 
+		PROCEDURE ^  & Reset*; 
+		PROCEDURE ^ ForAll*(proc: EnumProc); 
+		PROCEDURE ^ GetEntries*(): EntryArray; 
+		PROCEDURE ^ InsertSorted(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; VAR counter: LONGINT); 
+		PROCEDURE ^ NewEntry*(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
+	END DiagnosticsList; 
+
+	StreamDiagnostics* = OBJECT (Diagnostics)
+	VAR 
+		writer: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(w: Streams.Writer); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+	END StreamDiagnostics; 
+
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR); 
+BEGIN
+END Diagnostics.

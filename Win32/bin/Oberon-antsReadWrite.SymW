@@ -1,0 +1,44 @@
+MODULE antsReadWrite IN Oberon;
+	IMPORT aM := antsMessages, vyLongrealVec, vyLongintVec, vyIntVec, antsCommands, vyBase, vyName, antsSecurity, antsArrays, antsFiles, vyPort, SYSTEM;
+CONST 
+TYPE 
+	Rider* = OBJECT (antsFiles.Rider)
+
+		PROCEDURE ^ ReadI1d*(VAR x: antsArrays.I1d); 
+		PROCEDURE ^ ReadL1d*(VAR x: antsArrays.L1d); 
+		PROCEDURE ^ ReadX1d*(VAR x: antsArrays.X1d); 
+		PROCEDURE ^ WriteI1d*(x: antsArrays.I1d); 
+		PROCEDURE ^ WriteL1d*(x: antsArrays.L1d); 
+		PROCEDURE ^ WriteX1d*(x: antsArrays.X1d); 
+		PROCEDURE ^ ScanMatrix*(VAR rows, cols: LONGINT); 
+		PROCEDURE ^ WriteNilMatrix*; 
+		PROCEDURE ^ WriteMatrixX*(VAR A: ARRAY OF ARRAY OF LONGREAL); 
+		PROCEDURE ^ ReadMatrixX*(VAR A: ARRAY OF ARRAY OF LONGREAL); 
+		PROCEDURE ^ WriteMatrixL*(VAR A: ARRAY OF ARRAY OF LONGINT); 
+		PROCEDURE ^ ReadMatrixL*(VAR A: ARRAY OF ARRAY OF LONGINT); 
+		PROCEDURE ^ WriteMatrixI*(VAR A: ARRAY OF ARRAY OF INTEGER); 
+		PROCEDURE ^ ReadMatrixI*(VAR A: ARRAY OF ARRAY OF INTEGER); 
+		PROCEDURE ^ ReadRowX*(VAR v: vyLongrealVec.tVector; row: LONGINT); 
+		PROCEDURE ^ ReadRowL*(VAR v: vyLongintVec.tVector; row: LONGINT); 
+		PROCEDURE ^ ReadRowI*(VAR v: vyIntVec.tVector; row: LONGINT); 
+		PROCEDURE ^ ReadColX*(VAR v: vyLongrealVec.tVector; col: LONGINT); 
+		PROCEDURE ^ ReadColL*(VAR v: vyLongintVec.tVector; col: LONGINT); 
+		PROCEDURE ^ ReadColI*(VAR v: vyIntVec.tVector; col: LONGINT); 
+		PROCEDURE ^ WriteX2d*(A: antsArrays.X2d); 
+		PROCEDURE ^ WriteL2d*(A: antsArrays.L2d); 
+		PROCEDURE ^ WriteI2d*(A: antsArrays.I2d); 
+		PROCEDURE ^ ReadX2d*(VAR A: antsArrays.X2d); 
+		PROCEDURE ^ ReadI2d*(VAR A: antsArrays.I2d); 
+		PROCEDURE ^ ReadL2d*(VAR A: antsArrays.L2d); 
+	END Rider; 
+
+	PROCEDURE ^ StorePGM*(VAR A: antsArrays.L2d; fname: ARRAY OF CHAR; d: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ReadLine(VAR RR: antsFiles.Rider); 
+	PROCEDURE ^ ReadPGM*(VAR A: antsArrays.L2d; fname: ARRAY OF CHAR; VAR d: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Analyze*; 
+	PROCEDURE ^ Read*; 
+	PROCEDURE ^ Write*; 
+	PROCEDURE ^ ToBin*; 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsReadWrite.

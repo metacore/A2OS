@@ -1,0 +1,35 @@
+MODULE vyDistribution IN Oberon;
+	IMPORT Objects, Display, vyHostTexts, vyBase, vyLinks, vyTypes, vyName, vyDisplay2d, vyPort, Gadgets, vyGraphBase;
+CONST 
+	idversion* = \"vyDistribution v0r0a4"\; 
+	cMin = 0; 
+	cMax = 1; 
+TYPE 
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+	newlayer-: tLayer; 
+
+	PROCEDURE ^ Recall(F: tLayer); 
+	PROCEDURE ^ Copy(source, dest: tLayer); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ AdjustCoord(pict: vyPort.Picture; obj: tLayer); 
+	PROCEDURE ^ SetModel(pict: vyPort.Picture; obj: tLayer; data: Objects.Object); 
+	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
+	PROCEDURE ^ Store0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ Init*(F: tLayer; data: Objects.Object); 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(obj: Objects.Object); 
+	PROCEDURE ^ NewPict*; 
+	PROCEDURE ^ NewPic*; 
+BEGIN
+END vyDistribution.

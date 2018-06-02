@@ -1,0 +1,66 @@
+MODULE StyleGadgets IN Oberon;
+	IMPORT Display3, Gadgets, Display, Fonts, Objects, Oberon, Texts, Input, Styles;
+CONST 
+	left* = 0; 
+	right* = 1; 
+	fmode* = 0; 
+	leftmarg* = 1; 
+	width* = 2; 
+	tabs* = 3; 
+	Adjust* = {left, right}; 
+	break* = 3; 
+	grid* = 2; 
+	get* = 0; 
+	set* = 1; 
+	ScnUnit = 10000; 
+	mm = 36000; 
+	pageW* = (160 * mm); 
+	scnW* = (pageW DIV ScnUnit); 
+	MinTab = 8; 
+	BoxH = 7; 
+	BoxW = 8; 
+	TabW = 5; 
+	MinW = (scnW DIV 6); 
+	MaxTabs = 32; 
+	ML = 2; 
+	MM = 1; 
+	MR = 0; 
+TYPE 
+	Frame* = POINTER TO FrameDesc; 
+
+	FrameDesc* = RECORD (Gadgets.FrameDesc)
+		style*: Styles.Style; 
+		col*: INTEGER; 
+	END; 
+VAR 
+	W: Texts.Writer; 
+	dash, dash2: Display.Pattern; 
+	nfnt: Fonts.Font; 
+
+	PROCEDURE ^ Screen(x: LONGINT): INTEGER; 
+	PROCEDURE ^ Doc(x: INTEGER): LONGINT; 
+	PROCEDURE ^ DrawTab(F: Frame; msk: Display3.Mask; sel, x, y, mode: INTEGER); 
+	PROCEDURE ^ DrawMode(F: Frame; msk: Display3.Mask; opts: SET; x, y, w, mode: INTEGER); 
+	PROCEDURE ^ DrawName(style: Styles.Style; msk: Display3.Mask; x, y, w: INTEGER); 
+	PROCEDURE ^ DrawBox(F: Frame; msk: Display3.Mask; x, y, X, Y, W: INTEGER); 
+	PROCEDURE ^ Wide(F: Frame): BOOLEAN; 
+	PROCEDURE ^ DrawTabs(F: Frame; msk: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ DrawBar(F: Frame; msk: Display3.Mask; x, y, w: INTEGER); 
+	PROCEDURE ^ Update(style: Styles.Style; what, dX: INTEGER); 
+	PROCEDURE ^ CheckTab(style: Styles.Style; i: INTEGER); 
+	PROCEDURE ^ FindTab(F: Frame; x: INTEGER; VAR d, t: INTEGER); 
+	PROCEDURE ^ TrackMouse(VAR x, y: INTEGER; VAR keys, keysum: SET); 
+	PROCEDURE ^ TrackLeft(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR left: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ TrackRight(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR w: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ LocTab(style: Styles.Style; t, x: INTEGER): INTEGER; 
+	PROCEDURE ^ TrackTab(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR tabX, t: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ TrackMode(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ Edit(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; Keys: SET; VAR res: INTEGER); 
+	PROCEDURE ^ CopyF(s, d: Frame); 
+	PROCEDURE ^ Restore(F: Frame; msk: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Handle(F: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ NewFrame*(style: Styles.Style): Display.Frame; 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ Init; 
+BEGIN
+END StyleGadgets.

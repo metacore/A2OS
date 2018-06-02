@@ -1,0 +1,219 @@
+MODULE ReleaseVisualizer;
+	IMPORT Streams, Modules, KernelLog, Commands, Options, Strings, Files, WMRectangles, Texts, TextUtilities, Scanner := ReleaseVisualizerScanner, PDF, WMMessages, WMGraphics, WMGraphicUtilities, WMWindowManager, WMComponents, WMStandardComponents;
+CONST 
+	BoxH = 100; 
+	VSpace = 20; 
+	BoxW = 200; 
+	HSpace = 20; 
+	E = 0; 
+	N = 1; 
+	W = 2; 
+	S = 3; 
+	KeepAwayDist = 5; 
+	TraceSC = FALSE; 
+	DefaultContext = \"A2"\; 
+TYPE 
+	Import* = POINTER TO RECORD 
+		m*: ModuleInfo; 
+		next*: Import; 
+	END; 
+
+	ModuleInfo* = OBJECT 
+	VAR 
+		name*, context*: ARRAY 32 OF CHAR; 
+		desc*, file*: Strings.String; 
+		author*, purpose*: Strings.String; 
+		imports*: Import; 
+		linesOfCode: LONGINT; 
+		ok*: BOOLEAN; 
+		maxdepth: LONGINT; 
+		level*: LONGINT; 
+		nofTotalImports*: LONGINT; 
+		nofDirectImports*: LONGINT; 
+		icMod: ModuleInfo; 
+		icDecision: BOOLEAN; 
+		reference*: ANY; 
+		group*, subgroup*: LONGINT; 
+		subsystems*: SET; 
+
+		PROCEDURE ^ Dump(details: BOOLEAN); 
+		PROCEDURE ^  & Init(CONST name, context: ARRAY OF CHAR); 
+	END ModuleInfo; 
+
+	ModuleArray* = POINTER TO ARRAY OF ModuleInfo; 
+
+	ModuleList* = OBJECT 
+	VAR 
+		modules*: ModuleArray; 
+		nofModules*: LONGINT; 
+		errors: BOOLEAN; 
+		s: Scanner.Scanner; 
+		currentModule: ModuleInfo; 
+		currentFile: Files.FileName; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ CalcNofDirectImports; 
+		PROCEDURE ^ CalcTotalImports*; 
+		PROCEDURE ^ CalcLevels*(maxLevel: LONGINT); 
+		PROCEDURE ^ GetDepth*(m: ModuleInfo): LONGINT; 
+		PROCEDURE ^ Imports*(m, i: ModuleInfo): BOOLEAN; 
+		PROCEDURE ^ Dump*(details: BOOLEAN); 
+		PROCEDURE ^ GetModule*(CONST name, context: ARRAY OF CHAR): ModuleInfo; 
+		PROCEDURE ^ AddImport*(m: ModuleInfo; CONST importName, context: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(CONST str: ARRAY OF CHAR); 
+		PROCEDURE ^ Eat(sym: LONGINT); 
+		PROCEDURE ^ CommentToStructure; 
+		PROCEDURE ^ Next; 
+		PROCEDURE ^ ParseImports; 
+		PROCEDURE ^ ParseModule; 
+		PROCEDURE ^ ScanModule(CONST filename: ARRAY OF CHAR); 
+		PROCEDURE ^ ScanForModules(CONST filemask: ARRAY OF CHAR; out: Streams.Writer); 
+	END ModuleList; 
+
+	KillerMsg = OBJECT 
+	END KillerMsg; 
+
+	RealRect* = RECORD 
+		l*, t*, r*, b*: LONGREAL; 
+	END; 
+
+	Point = RECORD 
+		x, y: LONGREAL; 
+	END; 
+
+	PointArray = POINTER TO ARRAY OF Point; 
+
+	Object = OBJECT 
+	VAR 
+		aabb: RealRect; 
+		parent: Object; 
+
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END Object; 
+
+	ObjectList = POINTER TO ARRAY OF Object; 
+
+	Graphic = OBJECT (Object)
+	VAR 
+		list: ObjectList; 
+		nofObj: LONGINT; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Add(o: Object); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END Graphic; 
+
+	Rectangle = OBJECT (Object)
+
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END Rectangle; 
+
+	Line = OBJECT (Object)
+
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END Line; 
+
+	Title = OBJECT (Object)
+	VAR 
+		title: ARRAY 100 OF CHAR; 
+
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END Title; 
+
+	SmartConnector = OBJECT (Object)
+	VAR 
+		from, to: Object; 
+		way: PointArray; 
+		nofPoints: LONGINT; 
+		a, b: Point; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ SetFromTo(f, t: Object); 
+		PROCEDURE ^ CalcDirs(p, d: Point; VAR alternate: LONGINT; VAR d0, d1: LONGREAL): LONGINT; 
+		PROCEDURE ^ HasIntersection(p: Point; d: LONGINT; VAR mdist: LONGREAL; VAR colBox: RealRect): BOOLEAN; 
+		PROCEDURE ^ Go(VAR p: Point; d: LONGINT; dist: LONGREAL); 
+		PROCEDURE ^ CalcPath; 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END SmartConnector; 
+
+	ModuleBox = OBJECT (Rectangle)
+	VAR 
+		name, info: ARRAY 64 OF CHAR; 
+		color: LONGINT; 
+		m: ModuleInfo; 
+		rellayerpos: LONGREAL; 
+
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+	END ModuleBox; 
+
+	DrawSpace = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
+	VAR 
+		g: Graphic; 
+		dx, dy: LONGREAL; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ XSetPos(dx, dy: LONGREAL); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
+	END DrawSpace; 
+
+	SubSystemInfo = RECORD 
+		mn: ARRAY 64 OF CHAR; 
+		m: ModuleInfo; 
+		color: LONGINT; 
+		nr, group: LONGINT; 
+		propagate: BOOLEAN; 
+	END; 
+
+	SubSystems = OBJECT 
+	VAR 
+		s: ARRAY 1024 OF SubSystemInfo; 
+		scount, colorTable: ARRAY 64 OF LONGINT; 
+		nofSubSystemInfo: LONGINT; 
+		ml: ModuleList; 
+
+		PROCEDURE ^ AddSubSystem(nr: LONGINT; CONST baseModule, context: ARRAY OF CHAR; color, group: LONGINT; propagate: BOOLEAN); 
+		PROCEDURE ^ GetColor(snr: LONGINT): LONGINT; 
+		PROCEDURE ^  & Init(ml: ModuleList); 
+		PROCEDURE ^ CheckModule(m: ModuleInfo); 
+	END SubSystems; 
+
+	ModuleInfoList = POINTER TO ARRAY OF ModuleInfo; 
+
+	Level = RECORD 
+		n: LONGINT; 
+		m: ModuleInfoList; 
+		groupLength, groupStart: ARRAY 32 OF LONGINT; 
+		nofGroups: LONGINT; 
+		groupCounts: ARRAY 32 OF LONGINT; 
+		groupSlots: ARRAY 32 OF LONGINT; 
+		yAdvance: LONGINT; 
+	END; 
+
+	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	VAR 
+		label: WMStandardComponents.Label; 
+		viewer: DrawSpace; 
+		hScroll, vScroll: WMStandardComponents.Scrollbar; 
+		range: WMRectangles.Rectangle; 
+		ml: ModuleList; 
+		subSystems: SubSystems; 
+
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^  & New(ml: ModuleList); 
+		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
+		PROCEDURE ^ WritePDF(sender, data: ANY); 
+		PROCEDURE ^ Populate; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+VAR 
+	nofWindows: LONGINT; 
+
+	PROCEDURE ^ CountLines(text: Texts.Text): LONGINT; 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ IncCount; 
+	PROCEDURE ^ DecCount; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END ReleaseVisualizer.

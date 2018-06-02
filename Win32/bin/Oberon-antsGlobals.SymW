@@ -1,0 +1,34 @@
+MODULE antsGlobals IN Oberon;
+	IMPORT Objects, antsPortability, aM := antsMessages, vyHostStrings;
+CONST 
+TYPE 
+	Parameters* = POINTER TO ARRAY OF LONGREAL; 
+
+	ParameterNames* = POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
+
+	Name = ARRAY 256 OF CHAR; 
+
+	List = POINTER TO ListDesc; 
+
+	ListDesc = RECORD 
+		object: Objects.Object; 
+		name: Name; 
+		prev, next: List; 
+	END; 
+VAR 
+	globals, last: List; 
+	current*: Objects.Object; 
+	globalParameters*: Parameters; 
+	debug*: BOOLEAN; 
+
+	PROCEDURE ^ ParameterHandleAttribute*(VAR M: Objects.AttrMsg; VAR p: Parameters; VAR pn: ParameterNames): BOOLEAN; 
+	PROCEDURE ^ Insert(VAR l: List; VAR name: ARRAY OF CHAR; object: Objects.Object); 
+	PROCEDURE ^ Set*(object: Objects.Object; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Remove*(name: ARRAY OF CHAR); 
+	PROCEDURE ^ Get*(name: ARRAY OF CHAR): Objects.Object; 
+	PROCEDURE ^ GetCur*(name: ARRAY OF CHAR); 
+	PROCEDURE ^ Init*; 
+	PROCEDURE ^ DumpOne(VAR l: List); 
+	PROCEDURE ^ Dump*; 
+BEGIN
+END antsGlobals.

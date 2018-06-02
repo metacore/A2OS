@@ -1,0 +1,11 @@
+MODULE antsArrayConversions IN Oberon;
+	IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Strings, Objects, Links, aM := antsMessages, antsSecurity, vyBase, vyName, vyTracking, Effects, Pictures, Display, antsArrayObjects, antsArrayPictures16;
+CONST 
+
+	PROCEDURE ^ getSuffix(name: ARRAY OF CHAR; VAR suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ finish(VAR f: Files.File; name: ARRAY OF CHAR); 
+	PROCEDURE ^ LoadDialoged*; 
+	PROCEDURE ^ Grey*; 
+	PROCEDURE ^ Put*; 
+BEGIN
+END antsArrayConversions.

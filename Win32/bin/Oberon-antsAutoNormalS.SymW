@@ -1,0 +1,27 @@
+MODULE antsAutoNormalS IN Oberon;
+	IMPORT antsObjects, Objects, Files, Gadgets, antsNeighbourhoods, antsRegions, vyRandom, aM := antsMessages, antsArrayObjects, antsKernel, antsModels, antsCommands, vyName, vyBase, Links, antsSecurity;
+CONST 
+TYPE 
+	intArray = POINTER TO ARRAY OF INTEGER; 
+
+	tModel* = POINTER TO tModelDesc; 
+
+	tModelDesc* = RECORD (antsModels.tModelDesc)
+		dim-: LONGINT; 
+		mu, sigmasq: LONGREAL; 
+		n*: antsNeighbourhoods.Neighbours; 
+		current: intArray; 
+	END; 
+
+	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
+	PROCEDURE ^ MakeCaches(m: tModel); 
+	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ OneSweep*(s: antsKernel.Kernel; visit: antsKernel.visitingScheme); 
+	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenModel*(M: tModel; n: antsNeighbourhoods.Neighbours; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Gen*; 
+	PROCEDURE ^ NewModel*; 
+BEGIN
+END antsAutoNormalS.

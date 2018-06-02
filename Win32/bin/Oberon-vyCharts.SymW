@@ -1,0 +1,37 @@
+MODULE vyCharts IN Oberon;
+	IMPORT Files, Objects, Display, vyHostDisplay := vyGraphBase, vyHostTexts, vyHostStrings, vyBase, vyGraphBase, vyLinks, vyName, vyRealVec, vyTypes, vyPort, vyEvents, vyLongrealVec, Attributes;
+CONST 
+	idversion* = \"vyCharts v0r0a4"\; 
+TYPE 
+	Real = vyGraphBase.Real; 
+
+	Coordinate = vyGraphBase.Coordinate; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tLayerDesc* = RECORD (vyPort.tLayerDesc)
+		paint: BOOLEAN; 
+	END; 
+VAR 
+	slink*, dlink*: Objects.Object; 
+
+	PROCEDURE ^ Recall(chart: tLayer); 
+	PROCEDURE ^ Respond(chart: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; src, dest: tLayer); 
+	PROCEDURE ^ Responsible(chart: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 
+	PROCEDURE ^ Store0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ Load0(o: tLayer; VAR M: Objects.FileMsg); 
+	PROCEDURE ^ HandleAttributes(obj: tLayer; VAR M: Objects.AttrMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ OpenChart128*(chart: tLayer; id: vyName.tNameArray); 
+	PROCEDURE ^ Open*(chart: tLayer; data: Objects.Object); 
+	PROCEDURE ^ OpenO*(chart: tLayer; x, y: Objects.Object); 
+	PROCEDURE ^ OpenL*(chart: tLayer; data: vyLinks.Link); 
+	PROCEDURE ^ New*; 
+	PROCEDURE ^ Alloc*; 
+	PROCEDURE ^ ShowP*; 
+	PROCEDURE ^ ShowL*(list: vyLinks.Link); 
+	PROCEDURE ^ ShowO*(x, y: Objects.Object); 
+BEGIN
+END vyCharts.

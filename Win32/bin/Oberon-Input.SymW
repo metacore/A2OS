@@ -1,0 +1,22 @@
+MODULE Input IN Oberon;
+	IMPORT SYSTEM, KernelLog IN A2, Kernel IN A2, Plugins IN A2, Inputs IN A2, Display;
+CONST 
+	TimeUnit* = 1000; 
+	SHIFT* = 0; 
+	CTRL* = 1; 
+	ALT* = 2; 
+	Trace = FALSE; 
+VAR 
+	minX, minY, maxX, maxY: LONGINT; 
+	input: Inputs.OberonInput; 
+
+	PROCEDURE ^ Available*(): INTEGER; 
+	PROCEDURE ^ Mouse*(VAR keys: SET; VAR x, y: INTEGER); 
+	PROCEDURE ^ Read*(VAR ch: CHAR); 
+	PROCEDURE ^ Time*(): LONGINT; 
+	PROCEDURE ^ KeyState*(VAR keys: SET); 
+	PROCEDURE ^ Await*(delay: LONGINT); 
+	PROCEDURE ^ SetMouseLimits*(x, y, w, h: INTEGER); 
+	PROCEDURE ^ Init*(x: LONGINT); 
+BEGIN
+END Input.

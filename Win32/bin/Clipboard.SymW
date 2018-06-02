@@ -1,0 +1,13 @@
+MODULE Clipboard;
+	IMPORT SYSTEM, Kernel32, User32, KernelLog, Modules, Texts, TextUtilities, HostClipboard;
+CONST 
+	CR = 0DX; 
+	LF = 0AX; 
+
+	PROCEDURE ^ GetFromClipboard(text: Texts.Text); 
+	PROCEDURE ^ PutToClipboard(text: Texts.Text); 
+	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
+	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END Clipboard.

@@ -1,0 +1,45 @@
+MODULE vyRegress IN Oberon;
+	IMPORT Texts, vyHostTexts, vyParser, vyBase, vyName, vyRealVec, vyTypes, vyDisplay2d, vyPort, vyScatter2, vyLine, vyLinePlot, vyQFisher, MathL IN A2, Out;
+CONST 
+	idversion* = \"vyRegress v0r0a2"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tRegression = RECORD 
+		slope, intercept, errvar: LONGREAL; 
+		count: LONGINT; 
+		ymean, yssq: LONGREAL; 
+	END; 
+
+	tFBandParameter = POINTER TO tFBandParameterDesc; 
+
+	tFBandParameterDesc = RECORD (vyLinePlot.tParameterDesc)
+		Regression: tRegression; 
+		UpBand, F: LONGREAL; 
+	END; 
+
+	tEstimator* = PROCEDURE (Regressor, Response: vyBase.tData; VAR Estimation: vyBase.tData); 
+
+	tConfidence* = PROCEDURE (Estimation: vyBase.tData; VAR ConfidenceSet: vyBase.tData); 
+VAR 
+	w: vyBase.TextsWriter; 
+	namex, namey: vyName.tNameArray; 
+	obx, oby: vyBase.tVector; 
+	tempx, tempy: vyBase.Object; 
+	Fit, Resid: vyBase.tVector; 
+	para1, para2: tFBandParameter; 
+	xyPict, resPict: vyPort.Picture; 
+	level*: Real; 
+
+	PROCEDURE ^ SetEstimator*(Estimator: tEstimator; Confidence: tConfidence); 
+	PROCEDURE ^ WR(x: LONGREAL); 
+	PROCEDURE ^ WS(x: ARRAY OF CHAR); 
+	PROCEDURE ^ ReportStattyp(VAR name: ARRAY OF CHAR; VAR s: vyQFisher.Stattyp); 
+	PROCEDURE ^ ReportRegression(VAR namey, namex: ARRAY OF CHAR; par: tFBandParameter); 
+	PROCEDURE ^ FBand(x: Real; para: vyLinePlot.tParameter): Real; 
+	PROCEDURE ^ NewResidualsAndFit*(response, regressor: vyBase.tVector; offs, slope: LONGREAL; VAR residuals, fit: vyBase.tVector); 
+	PROCEDURE ^ CalcRegress(response, regressor: vyBase.tVector; VAR regression: tRegression); 
+	PROCEDURE ^ DoRegress*(response, regressor: vyBase.tVector; inSim: BOOLEAN); 
+	PROCEDURE ^ Regress*; 
+BEGIN
+END vyRegress.

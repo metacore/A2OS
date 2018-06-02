@@ -1,0 +1,40 @@
+MODULE vySlider2d IN Oberon;
+	IMPORT Objects, Display, vyHostTexts, vyBase, vyName, vyRealVec, vyTypes, vyHostDisplay := vyGraphBase, vyGraphBase, vyDisplay2d, vyPort, vyCharts, vySlider, vyEvents;
+CONST 
+	idversion* = \"vySlider2d v0r0d6"\; 
+TYPE 
+	Real = vyBase.Real; 
+
+	tLayer* = POINTER TO tLayerDesc; 
+
+	tCtlSlider = POINTER TO tCtlSliderDesc; 
+
+	tCtlSliderDesc = RECORD (vySlider.tSliderDesc)
+		host: tLayer; 
+	END; 
+
+	tLayerDesc = RECORD (vyCharts.tLayerDesc)
+		locked: BOOLEAN; 
+		pos: LONGINT; 
+		slider: tCtlSlider; 
+	END; 
+
+	tMsg* = RECORD (Objects.ObjMsg)
+	END; 
+VAR 
+	ball, canal: vyHostDisplay.tSign; 
+
+	PROCEDURE ^ Line(x, y, X, Y: INTEGER); 
+	PROCEDURE ^ MoveBallTo(slider2d: tLayer; pos: LONGINT); 
+	PROCEDURE ^ Recall(slider2d: tLayer; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ Copy(sLayer, dLayer: tLayer); 
+	PROCEDURE ^ DefinePath(slider2d: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Responsible(slider: tLayer; VAR event: vyEvents.EventMsg); 
+	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ Open(slider: tLayer; picture: vyPort.Picture); 
+	PROCEDURE ^ Insert*; 
+	PROCEDURE ^ Define*; 
+	PROCEDURE ^ Sync*; 
+	PROCEDURE ^ InitPattern; 
+BEGIN
+END vySlider2d.

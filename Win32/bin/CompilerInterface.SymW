@@ -1,0 +1,37 @@
+MODULE CompilerInterface;
+	IMPORT KernelLog, Streams, Commands, Strings, Texts, Diagnostics;
+CONST 
+	ModuleName = \"CompilerInterface"\; 
+TYPE 
+	Name* = ARRAY 16 OF CHAR; 
+
+	Description* = ARRAY 128 OF CHAR; 
+
+	FileExtension* = ARRAY 16 OF CHAR; 
+
+	CompileTextProc* = PROCEDURE {DELEGATE}(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+
+	Compiler* = OBJECT 
+	VAR 
+		name-: Name; 
+		description-: Description; 
+		fileExtension-: FileExtension; 
+		compileText: CompileTextProc; 
+		next: Compiler; 
+
+		PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+		PROCEDURE ^ Show(out: Streams.Writer); 
+		PROCEDURE ^  & Init*(CONST name: Name; CONST description: Description; CONST fileExtension: FileExtension; compileText: CompileTextProc); 
+	END Compiler; 
+VAR 
+	compilers: Compiler; 
+
+	PROCEDURE ^ FindCompilerByName(CONST name: ARRAY OF CHAR): Compiler; 
+	PROCEDURE ^ GetCompiler*(fileExtension: FileExtension): Compiler; 
+	PROCEDURE ^ GetCompilerByName*(CONST name: ARRAY OF CHAR): Compiler; 
+	PROCEDURE ^ GetCompilerByFilename*(filename: ARRAY OF CHAR): Compiler; 
+	PROCEDURE ^ Show*(context: Commands.Context); 
+	PROCEDURE ^ Register*(CONST name: Name; CONST description: Description; fileExtension: FileExtension; compileText: CompileTextProc); 
+	PROCEDURE ^ Unregister*(CONST name: Name); 
+BEGIN
+END CompilerInterface.

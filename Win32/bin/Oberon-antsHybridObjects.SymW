@@ -1,0 +1,21 @@
+MODULE antsHybridObjects IN Oberon;
+	IMPORT vyBase, Objects, Files, aM := antsMessages, Modules IN A2, Types, Strings, Gadgets, antsObjects, vyName;
+CONST 
+TYPE 
+	Object* = OBJECT (vyBase.Object)
+
+		PROCEDURE ^ Generator*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Attributes*(VAR M: Objects.AttrMsg); 
+		PROCEDURE ^ Links*(VAR M: Objects.LinkMsg); 
+		PROCEDURE ^ Store*(VAR R: Files.Rider); 
+		PROCEDURE ^ Load*(VAR R: Files.Rider); 
+		PROCEDURE ^ BindObj*(VAR M: Objects.BindMsg; o: vyBase.Object); 
+		PROCEDURE ^ Bind*(VAR M: Objects.BindMsg); 
+		PROCEDURE ^ Update*; 
+	END Object; 
+
+	PROCEDURE ^ HybridObjectHandler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Test*; 
+BEGIN
+END antsHybridObjects.

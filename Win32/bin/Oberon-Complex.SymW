@@ -1,0 +1,17 @@
+MODULE Complex IN Oberon;
+	IMPORT Math IN A2, Files, Objects, Gadgets, Strings;
+CONST 
+TYPE 
+	Complex* = POINTER TO ComplexDesc; 
+
+	ComplexDesc* = RECORD (Gadgets.ObjDesc)
+		real*, imag*: REAL; 
+	END; 
+
+	PROCEDURE ^ Phi(obj: Complex): REAL; 
+	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Complex); 
+	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
+	PROCEDURE ^ Init*(obj: Complex); 
+	PROCEDURE ^ New*; 
+BEGIN
+END Complex.

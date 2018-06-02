@@ -1,0 +1,49 @@
+MODULE antsPottsSimulation IN Oberon;
+	IMPORT vyBase, antsCommands, antsSecurity, antsPottsSimDataStructure, antsPottsSimAdministration, vyName, vyPort, vyLongrealVec, antsArrays, Objects, ListRiders, Attributes, Gadgets, Strings, Out, antsFiles, vyRealVec;
+CONST 
+	TAB = Strings.Tab; 
+VAR 
+	set: antsPottsSimDataStructure.SetChain; 
+	actualDataSet: ARRAY 1024 OF CHAR; 
+	actualData: ARRAY 1024 OF CHAR; 
+	actualDataReko: ARRAY 1024 OF CHAR; 
+	actualMonotone: ARRAY 1024 OF CHAR; 
+	actualDegraded: ARRAY 1024 OF CHAR; 
+	actualReko: ARRAY 1024 OF CHAR; 
+	actualResults: ARRAY 1024 OF CHAR; 
+	mycont: Objects.Object; 
+
+	PROCEDURE ^ ReadData*; 
+	PROCEDURE ^ UpdatePanel*; 
+	PROCEDURE ^ SaveCont*; 
+	PROCEDURE ^ DataRekoLoop*; 
+	PROCEDURE ^ CreateData*; 
+	PROCEDURE ^ UpdateDataset*; 
+	PROCEDURE ^ DoUpdateDataset*(datasetname: ARRAY OF CHAR; VAR datavec: vyBase.Object; VAR datarekovec: vyBase.Object; VAR monotonevec: vyBase.Object; VAR degradedvec: vyBase.Object; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ UpdateData*; 
+	PROCEDURE ^ DoUpdateData*(datasetname, dataname: ARRAY OF CHAR; VAR datavec: vyBase.Object; VAR datarekovec: vyBase.Object; VAR monotonevec: vyBase.Object; VAR degradedvec: vyBase.Object; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ UpdateDataReko*; 
+	PROCEDURE ^ DoUpdateDataReko*(datasetname, dataname, datarekoname: ARRAY OF CHAR; VAR datarekovec: vyBase.Object); 
+	PROCEDURE ^ UpdateMonotone*; 
+	PROCEDURE ^ DoUpdateMonotone*(datasetname, dataname, monotonename: ARRAY OF CHAR; VAR monotonevec: vyBase.Object; VAR degradedvec: vyBase.Object; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ UpdateDegraded*; 
+	PROCEDURE ^ DoUpdateDegraded*(datasetname, dataname, monotonename, degradedname: ARRAY OF CHAR; VAR degradedvec: vyBase.Object; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ UpdateReko*; 
+	PROCEDURE ^ DoUpdateReko*(datasetname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ NoiseLoop*; 
+	PROCEDURE ^ RekoLoop*; 
+	PROCEDURE ^ SetDataRekoFields*(dataresults: antsArrays.X1d); 
+	PROCEDURE ^ SetRekoFields*(results: antsArrays.X1d); 
+	PROCEDURE ^ SetNoiseField*(var: LONGREAL); 
+	PROCEDURE ^ SetVec*(VAR vector: vyBase.Object; array: antsArrays.X1d); 
+	PROCEDURE ^ DelDataset*; 
+	PROCEDURE ^ DoDelDataset(VAR datavec: vyBase.Object; VAR datarekovec: vyBase.Object; VAR monotonevec: vyBase.Object; VAR degradedvec: vyBase.Object; VAR rekovec: vyBase.Object); 
+	PROCEDURE ^ DelData*; 
+	PROCEDURE ^ DelAllDegraded*; 
+	PROCEDURE ^ DelAllReko*; 
+	PROCEDURE ^ CopyData*; 
+	PROCEDURE ^ ShowAllDataRekoResults*; 
+	PROCEDURE ^ ShowAllRekoResults*; 
+	PROCEDURE ^ OutDeb*; 
+BEGIN
+END antsPottsSimulation.

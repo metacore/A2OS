@@ -48,7 +48,7 @@ END NumberOfPorts;
 	values above).  stop is the number of stop bits (Stop values above).  res returns 0
 	if ok, or error code on error.  1 means port already in use.  2 means no such port.
 	3 means bad bps value.  4 means bad data/parity/stop.   DTR and RTS are enabled. *)
-PROCEDURE Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: LONGINT);
+PROCEDURE Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: WORD);
 VAR port : Serials.Port;
 BEGIN
 	res := NoSuchPort;
@@ -67,14 +67,14 @@ END Stop;
 
 (** Send - Send a byte to the specified port. Waits until buffer space is available. res = Ok iff ok. *)
 (**  Antediluvian: Kept for compatibility. - Use Writer... instead. *)
-PROCEDURE Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: WORD);
 BEGIN
 	ports[portNo].SendChar(CHR(x), res);
 END Send;
 
 (** SendBytes - Send n bytes to the specified port. Waits until buffer space is available. res = Ok iff all ok. *)
 (**  Antediluvian: Kept for compatibility. - Use Writer... instead. *)
-PROCEDURE SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT);
+PROCEDURE SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD);
 VAR i: LONGINT;
 BEGIN
 	i := 0;  res := Serials.Ok;
@@ -84,7 +84,7 @@ BEGIN
 END SendBytes;
 
 (** Receive - Read one byte from the specified port. Waits until a byte is available. res = Ok iff ok. *)
-PROCEDURE Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: WORD);
 VAR ch: CHAR;
 BEGIN
 	ports[portNo].ReceiveChar(ch, res);
@@ -93,7 +93,7 @@ END Receive;
 
 (** ReceiveBytes - Read n bytes from the specified port. Waits until n bytes are available. res = Ok iff ok.
 		In case of error, the reception ends immediately at the first character in error. More data may be left in the buffer. *)
-PROCEDURE ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT);
+PROCEDURE ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD);
 VAR i: LONGINT;
 BEGIN
 	i := 0;  res := Serials.Ok;

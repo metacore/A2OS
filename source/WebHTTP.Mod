@@ -143,7 +143,7 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR i: LONGINT;
 		BEGIN
 			ASSERT(chunked);
@@ -248,7 +248,7 @@ TYPE
 			Streams.OpenWriter(inW, Sender);
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR i: LONGINT;
 		BEGIN
 			i := ofs;
@@ -499,7 +499,7 @@ BEGIN
 	END;
 END GetMethodName;
 
-PROCEDURE ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: LONGINT; log : TFLog.Log);
+PROCEDURE ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD; log : TFLog.Log);
 VAR s: ARRAY 32 OF CHAR; af: AdditionalField; ch :CHAR; wellformed: BOOLEAN;
 BEGIN
 	header.host[0] := 0X;
@@ -526,7 +526,7 @@ BEGIN
 	END
 END ParseRequest;
 
-PROCEDURE ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: LONGINT);
+PROCEDURE ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD);
 VAR s: ARRAY 32 OF CHAR; af: AdditionalField; ch :CHAR; i:LONGINT;
 BEGIN
 	i:=0;
@@ -549,7 +549,7 @@ BEGIN
 	res := OK
 END ParseRequestHeaderFields;
 
-PROCEDURE ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: LONGINT; log : TFLog.Log);
+PROCEDURE ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log : TFLog.Log);
 VAR s, sLow: ARRAY 32 OF CHAR; af: AdditionalField;
 	i :LONGINT; ch :CHAR; wellformed: BOOLEAN;
 BEGIN
@@ -588,7 +588,7 @@ BEGIN
 	END;
 END ParseReply;
 
-PROCEDURE ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: LONGINT; log : TFLog.Log);
+PROCEDURE ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log : TFLog.Log);
 VAR s, sLow: ARRAY 32 OF CHAR; af: AdditionalField;
 	i :LONGINT; ch :CHAR;
 BEGIN

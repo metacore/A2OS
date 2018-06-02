@@ -26,7 +26,7 @@ VAR
 
 	PROCEDURE LoadModule( CONST name: Modules.Name );
 	VAR
-		m: Module;  res: LONGINT;  msg: ARRAY 256 OF CHAR;
+		m: Module;  res: WORD;  msg: ARRAY 256 OF CHAR;
 	BEGIN
 		m := Modules.ThisModule( name, res, msg );
 		IF m = NIL THEN
@@ -36,7 +36,7 @@ VAR
 
 	PROCEDURE Command( CONST cmd: Modules.Name );
 	VAR
-		res: LONGINT;
+		res: WORD;
 		s: ARRAY 256 OF CHAR;
 	BEGIN
 		Commands.Call( cmd, {}, res, s );
@@ -60,7 +60,7 @@ VAR
 	END ThisCommand;
 
 	PROCEDURE Execute( CONST modName, procName: Modules.Name );
-	VAR m: Module;  cmd: PROCEDURE;  res: LONGINT;
+	VAR m: Module;  cmd: PROCEDURE;  res: WORD;
 		msg: ARRAY 256 OF CHAR;
 	BEGIN
 		m := Modules.ThisModule( modName, res, msg );

@@ -265,7 +265,7 @@ END RenameFile;
 
 (* DeleteFile - deletes the file 'name' in the current directory of F. *)
 PROCEDURE DeleteFile(name: ARRAY OF CHAR; par: Parameter): BOOLEAN;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	WITH par: DeletePar DO
 		IF (name # "") THEN
@@ -345,7 +345,7 @@ END CreateDirectory;
 
 (* RemoveDirectory - removes the directory 'name' in the current directory of F. *)
 PROCEDURE RemoveDirectory(name: ARRAY OF CHAR; par: Parameter): BOOLEAN;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	WITH par: DeletePar DO
 		IF (name # "") THEN

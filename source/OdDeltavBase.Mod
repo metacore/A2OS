@@ -2246,7 +2246,7 @@ END thawedVCRs;
 (* REPORT  *)
 (* REPORT  *)
 
-PROCEDURE GetErrorMsg(res: LONGINT; VAR s: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR);
 VAR temp: ARRAY 8 OF CHAR;
 BEGIN
 (***********
@@ -2276,7 +2276,7 @@ END GetErrorMsg;
 (** Create a FAT Directory: path. Includes prefix, e.g. "FTP:/New Folder/A/B/C" *)
 PROCEDURE CreDir*(path: ARRAY OF CHAR);
 VAR p: ARRAY 1024 OF CHAR;
-	res: LONGINT; msg: ARRAY 256 OF CHAR;
+	res: WORD; msg: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(path, p);
 	OdUtil.Msg3("Creating directory: ", p, ": ");
@@ -2295,7 +2295,7 @@ END CreDir;
 (** Remove a FAT Directory: path ["\F"]. Includes prefix, e.g. "FTP:/A/B/C". Use 'force' for  deletion of non-empty dirs. *)
 PROCEDURE RemDir*(path: ARRAY OF CHAR; force: BOOLEAN);
 VAR p: ARRAY 1024 OF CHAR;
-	res: LONGINT; msg: ARRAY 256 OF CHAR;
+	res: WORD; msg: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(path, p);
 	OdUtil.Msg3("Deleting directory: ", p, ": ");

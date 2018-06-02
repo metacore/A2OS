@@ -21,7 +21,7 @@ TYPE
 			RETURN num
 		END Available;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: WORD);
 		BEGIN
 			ASSERT(len >= 0);
 			BEGIN {EXCLUSIVE}
@@ -135,7 +135,7 @@ TYPE
 			head, tail: LONGINT;	(* buffer[head..(tail-1) MOD LEN] contains data (circular).  one character is reserved. *)
 			buffer: POINTER TO ARRAY OF CHAR;
 
-		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: WORD);
 		VAR n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT(len >= 0);

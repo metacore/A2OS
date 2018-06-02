@@ -889,7 +889,7 @@ END CreateProcess;
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
 PROCEDURE Lock*(obj: ProtectedObject; exclusive: BOOLEAN );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; res: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; res: WORD;
 BEGIN  (* {called from user level} *)
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
 	IF StrongChecks THEN
@@ -945,7 +945,7 @@ END FindCondition;
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
 PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c: Process; res: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c: Process; res: WORD;
 BEGIN
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
 	IF StrongChecks THEN
@@ -987,7 +987,7 @@ END Unlock;
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
 PROCEDURE Await*( cond: Condition;  slink: LONGINT;  obj: ProtectedObject;  flags: SET );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process;  res: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process;  res: WORD;
 BEGIN
 	IF 1 IN flags THEN  (* compiler did not generate IF *)
 		IF cond(slink) THEN
@@ -1283,7 +1283,7 @@ BEGIN
 END GetCpuCycles;
 
 PROCEDURE CurrentProcessTime*(): HUGEINT;
-VAR res: LONGINT; result: HUGEINT;
+VAR res: WORD; result: HUGEINT;
 BEGIN
 	IF (Kernel32.QueryThreadCycleTime # NIL) THEN
 		res := Kernel32.QueryThreadCycleTime(CurrentProcess().handle, result);

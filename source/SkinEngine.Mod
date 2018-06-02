@@ -80,7 +80,7 @@ END LoadCursors;
 (* load window-style specified by xml-tree with root el *)
 PROCEDURE LoadWindow(el : XML.Element) : WM.WindowStyle;
 VAR contents, en : Objects.Enumerator; p : ANY; x, y : XML.Element;
-	s, ts, ss : XML.String; desc : WM.WindowStyle; res : LONGINT;
+	s, ts, ss : XML.String; desc : WM.WindowStyle; res : WORD;
 
 		PROCEDURE Error(CONST x: ARRAY OF CHAR);
 		BEGIN
@@ -402,7 +402,7 @@ END GetSkinFromStream;
 (** parse T and return a skin-object defined by the bsl-definition provided in T *)
 PROCEDURE GetSkinFromText*(CONST filename : ARRAY OF CHAR; t : Texts.Text; re : ReportError; warnings : BOOLEAN) : Skin;
 VAR encoder : Codecs.TextEncoder; pipe : Pipes.Pipe; w : Streams.Writer;
-	r : Streams.Reader; res : LONGINT;
+	r : Streams.Reader; res : WORD;
 BEGIN
 	NEW(pipe, 10000);
 	Streams.OpenWriter(w, pipe.Send);
@@ -417,7 +417,7 @@ END GetSkinFromText;
 
 (** return a skin-object defined by the *.skin-file specified by FILENAME *)
 PROCEDURE GetSkinFromFile*(CONST filename : ARRAY OF CHAR; re : ReportError; warnings : BOOLEAN) : Skin;
-VAR res : LONGINT; in : Streams.Reader; decoder : Codecs.TextDecoder; skin : Skin;
+VAR res : WORD; in : Streams.Reader; decoder : Codecs.TextDecoder; skin : Skin;
 	description : ARRAY 128 OF CHAR;
 BEGIN
 	decoder := Codecs.GetTextDecoder("UTF-8");
@@ -438,7 +438,7 @@ END GetSkinFromFile;
 
 (** Set the currently installed skin as default i.e. register it in the autostart-section of Configuration.XML *)
 PROCEDURE SetCurrentAsDefault*(context  : Commands.Context);
-VAR val : ARRAY 128 OF CHAR; res : LONGINT;
+VAR val : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	IF current # NIL THEN
 		val := "SkinEngine.Load "; Strings.Append(val, current.filename);

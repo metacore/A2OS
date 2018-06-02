@@ -162,7 +162,7 @@ TYPE
 		END New;
 
 		PROCEDURE Load(deviceName : ARRAY OF CHAR; block : LONGINT);
-		VAR pt : PartitionTable.PartitionTable; blockStr : ARRAY 16 OF CHAR; message: ARRAY 256 OF CHAR; res : LONGINT;
+		VAR pt : PartitionTable.PartitionTable; blockStr : ARRAY 16 OF CHAR; message: ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			Strings.TrimWS(deviceName);
 			deviceNameEditor.SetAsString(deviceName);
@@ -198,7 +198,7 @@ TYPE
 		END Resizing;
 
 		PROCEDURE HandleChange(changeType : LONGINT; VAR partition : PartitionTable.Partition);
-		VAR deviceName : ARRAY 32 OF CHAR; res : LONGINT;
+		VAR deviceName : ARRAY 32 OF CHAR; res : WORD;
 		BEGIN
 			deviceNameEditor.GetAsString(deviceName);
 			PartitionTable.Changed(changeType, partition, deviceName, res);
@@ -224,7 +224,7 @@ TYPE
 VAR
 	nofWindows : LONGINT;
 
-PROCEDURE GetErrorMessage(CONST string1, devicename : ARRAY OF CHAR; res : LONGINT; VAR message: ARRAY OF CHAR);
+PROCEDURE GetErrorMessage(CONST string1, devicename : ARRAY OF CHAR; res : WORD; VAR message: ARRAY OF CHAR);
 VAR nbr : ARRAY 8 OF CHAR;
 BEGIN
 	COPY(string1, message);

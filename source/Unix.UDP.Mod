@@ -26,7 +26,7 @@ TYPE
 
 
 				(** Constructor *)
-				PROCEDURE & Open*( lport: LONGINT;  VAR res: LONGINT );
+				PROCEDURE & Open*( lport: LONGINT;  VAR res: WORD );
 				VAR laddr: Sockets.SocketAdr;
 				BEGIN
 					ASSERT( (lport >= 0) & (lport < 10000H) );
@@ -55,7 +55,7 @@ TYPE
 				PROCEDURE Send*( fip: IP.Adr;  
 								   fport: LONGINT;  
 								   CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;
-								   VAR res: LONGINT );
+								   VAR res: WORD );
 				VAR addr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (fport >= 0) & (fport < 10000H) );  

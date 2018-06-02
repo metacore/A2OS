@@ -164,7 +164,7 @@ END Cap;
 
 (* Check - check filename.  Return correct name, or empty name if incorrect. *)
 
-PROCEDURE Check(s: ARRAY OF CHAR;  VAR name: Filename; VAR res: LONGINT);
+PROCEDURE Check(s: ARRAY OF CHAR;  VAR name: Filename; VAR res: WORD);
 VAR i, j: LONGINT;  ok: BOOLEAN;  ch: CHAR;
 BEGIN
 	res := 0; i := 0;  ok := FALSE;
@@ -216,7 +216,7 @@ END IsDOS;
 
 (* ReadSectors - Read sectors from a partition *)
 
-PROCEDURE ReadSectors(d: Drive;  sec, num: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE ReadSectors(d: Drive;  sec, num: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE; VAR res: WORD);
 VAR part: Disks.Partition;
 BEGIN
 	part := d.dev.table[d.part];
@@ -230,7 +230,7 @@ END ReadSectors;
 
 (* WriteSectors - Write sectors in a partition *)
 
-PROCEDURE WriteSectors(d: Drive;  sec, num: LONGINT;  VAR buf: ARRAY OF SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE WriteSectors(d: Drive;  sec, num: LONGINT;  VAR buf: ARRAY OF SYSTEM.BYTE; VAR res: WORD);
 VAR part: Disks.Partition;
 BEGIN
 	part := d.dev.table[d.part];
@@ -245,7 +245,7 @@ END WriteSectors;
 
 (* WriteFAT12 - Write 12-bit FAT *)
 
-PROCEDURE WriteFAT12(d: Drive; copy: LONGINT; VAR res: LONGINT);
+PROCEDURE WriteFAT12(d: Drive; copy: LONGINT; VAR res: WORD);
 VAR
 	b: ARRAY 1000H*3 DIV 2 OF CHAR;  i, j, val: LONGINT;
 	even: BOOLEAN;
@@ -266,7 +266,7 @@ END WriteFAT12;
 
 (* FlushDrive - Flush a drive - write its FATs to disk *)
 
-PROCEDURE FlushDrive(d: Drive; VAR res: LONGINT);
+PROCEDURE FlushDrive(d: Drive; VAR res: WORD);
 VAR i: LONGINT;
 BEGIN
 	res := 0;
@@ -284,7 +284,7 @@ END FlushDrive;
 
 (* ReadFAT12 - read the 12-bit FAT (floppy drives) *)
 
-PROCEDURE ReadFAT12(d: Drive; VAR res: LONGINT);
+PROCEDURE ReadFAT12(d: Drive; VAR res: WORD);
 VAR
 	b: ARRAY 1000H*3 DIV 2 OF CHAR; i, j, val: LONGINT;
 	even: BOOLEAN;
@@ -364,7 +364,7 @@ END FindDrive;
 
 (* OpenDrive - Open a drive, get all partition information, FAT & root dir. *)
 
-PROCEDURE OpenDrive(letter: CHAR; VAR d: Drive; VAR res: LONGINT);
+PROCEDURE OpenDrive(letter: CHAR; VAR d: Drive; VAR res: WORD);
 VAR b: ARRAY SS OF CHAR;  i: SHORTINT; n: LONGINT; num: SHORTINT;
 BEGIN (* Pre: num is a valid drive number *)
 	res := 0;
@@ -531,7 +531,7 @@ END GetDir;
 (* PutDir - Update information in a directory entry *)
 
 PROCEDURE PutDir(VAR dir: ARRAY OF CHAR; ofs: LONGINT; name: ARRAY OF CHAR; attr : SET;
-	time, date, firstcl, len, operation: LONGINT; delete: BOOLEAN;  VAR res: LONGINT);
+	time, date, firstcl, len, operation: LONGINT; delete: BOOLEAN;  VAR res: WORD);
 VAR t: LONGINT; str: DirEntryName; prefix: Filename;
 BEGIN
 	IF firstcl = -1 THEN firstcl := 0 END;
@@ -558,7 +558,7 @@ END PutDir;
 	Return values: if (d # NIL) then file exist, and the file's attributes are returned. *)
 
 PROCEDURE LocateFile(name: ARRAY OF CHAR;  VAR d: Drive;  VAR firstdircl, dircl, dirofs,
-	time, date, firstcl, len: LONGINT; VAR attr: SET;  VAR res: LONGINT);
+	time, date, firstcl, len: LONGINT; VAR attr: SET;  VAR res: WORD);
 VAR
 	name1: DirEntryName;
 	ddirfirstcl, ddircl, ddirofs, dtime, ddate, dfirstcl, dlen, cl, ofs: LONGINT;
@@ -639,7 +639,7 @@ BEGIN
 	dirofs := i
 END AllocEntry;
 
-PROCEDURE AllocateDirEntry(VAR f: Handle0; VAR res: LONGINT);
+PROCEDURE AllocateDirEntry(VAR f: Handle0; VAR res: WORD);
 VAR dir : Filename; tmp: DirEntryName; d: Drive; dircl, i, max, pcl: LONGINT;  attr: SET;
 BEGIN
 	IF (f.dircl # -1) OR (f.dirofs # -1) OR (f.firstdircl # -1) THEN
@@ -725,7 +725,7 @@ END Length0;
 
 (* UpdateDirEntry - update the directory entry for the file, on disk. *)
 
-PROCEDURE UpdateDirEntry(VAR f: Handle0; operation: LONGINT; delete: BOOLEAN; VAR res: LONGINT);
+PROCEDURE UpdateDirEntry(VAR f: Handle0; operation: LONGINT; delete: BOOLEAN; VAR res: WORD);
 VAR buf : ARRAY SS OF CHAR; d : Drive;
 BEGIN (* Pre: f is a registered file *)
 	IF ReadOnly IN f.attr THEN
@@ -762,7 +762,7 @@ END UpdateDirEntry;
 
 (* Purge0 - deallocate clusters in FAT that belongs to file. *)
 
-PROCEDURE Purge0(VAR f: Handle0; delete: BOOLEAN; VAR res: LONGINT);
+PROCEDURE Purge0(VAR f: Handle0; delete: BOOLEAN; VAR res: WORD);
 VAR d: Drive; cl, pcl, r: LONGINT;
 BEGIN
 	IF ReadOnly IN f.attr THEN
@@ -787,7 +787,7 @@ END Purge0;
 
 (* Old0 - return a valid file handle if file exists. *)
 
-PROCEDURE Old0(VAR f: Handle0; VAR res: LONGINT);
+PROCEDURE Old0(VAR f: Handle0; VAR res: WORD);
 VAR d: Drive; len: LONGINT;
 BEGIN
 	LocateFile(f.name, d, f.firstdircl, f.dircl, f.dirofs, f.time, f.date, f.firstcl, len, f.attr, res);
@@ -819,7 +819,7 @@ END Old0;
 (* New0 - check that file name prefix is a valid, existing directory; if so,
 	initialize the file handle *)
 
-PROCEDURE New0(VAR f: Handle0; VAR res: LONGINT);
+PROCEDURE New0(VAR f: Handle0; VAR res: WORD);
 VAR t: LONGINT; dirAttr: SET; dir: Filename; tmp: DirEntryName;
 BEGIN
 	IF CheckNew THEN
@@ -898,7 +898,7 @@ END ReadCluster;
 	firstcl returns the new (first) cluster allocated for the file. *)
 
 PROCEDURE WriteCluster(drive: Drive; VAR firstcl: LONGINT; attr: SET;
-	VAR data: ARRAY OF SYSTEM.BYTE; apos: LONGINT;  VAR res: LONGINT);
+	VAR data: ARRAY OF SYSTEM.BYTE; apos: LONGINT;  VAR res: WORD);
 VAR d: Drive;  p, cl, pcl, mcl: LONGINT;
 BEGIN
 	IF ReadOnly IN attr THEN
@@ -942,7 +942,7 @@ END WriteCluster;
 
 (* Register0 - create and write a directory entry for the file. *)
 
-PROCEDURE Register0(VAR f: Handle0; VAR res: LONGINT);
+PROCEDURE Register0(VAR f: Handle0; VAR res: WORD);
 BEGIN
 	res := 0;
 	AllocateDirEntry(f, res);
@@ -956,7 +956,7 @@ BEGIN
 	END
 END Register0;
 
-PROCEDURE Rename0(VAR old, new: Filename; VAR res: LONGINT);
+PROCEDURE Rename0(VAR old, new: Filename; VAR res: WORD);
 VAR
 	dir: Filename; f: Handle0; d: Drive; firstdircl, t: LONGINT;
 	attr: SET; tmp: DirEntryName;
@@ -1042,7 +1042,7 @@ END GetFreeDiskSpace;
 
 (** Enumerate a directory.  path must be a full path specification with a 8.3-style wildcard. *)
 
-PROCEDURE Enumerate*(path: ARRAY OF CHAR;  handler: EntryHandler;  VAR res: LONGINT);
+PROCEDURE Enumerate*(path: ARRAY OF CHAR;  handler: EntryHandler;  VAR res: WORD);
 CONST Ext = {ReadOnly..VolLabel};
 VAR
 	name: Filename;  mask: DirEntryName;  d: Drive;  attr: SET;  continue, wild: BOOLEAN;
@@ -1101,7 +1101,7 @@ END SameFile;
 
 (** New - Creates a new file with the specified name. Returns a valid File if successful, otherwise NIL. *)
 
-PROCEDURE New*(name: ARRAY OF CHAR; VAR res: LONGINT): File;
+PROCEDURE New*(name: ARRAY OF CHAR; VAR res: WORD): File;
 VAR f: File; buf: Buffer; namebuf: Filename; handle: Handle0;
 BEGIN
 	f := NIL;
@@ -1124,7 +1124,7 @@ END New;
 
 (* ReadBuf - Read data into a buffer *)
 
-PROCEDURE ReadBuf(f: File;  buf: Buffer; apos: LONGINT; VAR res: LONGINT);
+PROCEDURE ReadBuf(f: File;  buf: Buffer; apos: LONGINT; VAR res: WORD);
 VAR rplen: LONGINT;
 BEGIN
 	(* Pre: the file contains a cluster corresponding to apos, or trying to
@@ -1150,7 +1150,7 @@ END ReadBuf;
 
 (* WriteBuf - Write a modified buffer *)
 
-PROCEDURE WriteBuf(f: File; buf: Buffer; VAR res: LONGINT);
+PROCEDURE WriteBuf(f: File; buf: Buffer; VAR res: WORD);
 BEGIN
 	WriteCluster(f.handle.drive, f.handle.firstcl, f.handle.attr, buf.data^, buf.apos, res);
 	Kernel.GetClock(f.handle.time, f.handle.date);  f.mod := TRUE;
@@ -1173,7 +1173,7 @@ END Buf;
 
 (* GetBuf - Return a buffer containing the specified position, loading it if necessary. *)
 
-PROCEDURE GetBuf(f: File;  apos: LONGINT; VAR res: LONGINT): Buffer;
+PROCEDURE GetBuf(f: File;  apos: LONGINT; VAR res: WORD): Buffer;
 VAR buf: Buffer;
 BEGIN
 	res := 0;
@@ -1205,7 +1205,7 @@ END GetBuf;
 
 (** Old - Open an existing file. The same file descriptor is returned if a file is opened multiple times. *)
 
-PROCEDURE Old*(name: ARRAY OF CHAR; VAR res: LONGINT): File;
+PROCEDURE Old*(name: ARRAY OF CHAR; VAR res: WORD): File;
 VAR f: File; handle: Handle0; buf: Buffer; namebuf: Filename;
 BEGIN
 	res := 0;
@@ -1247,7 +1247,7 @@ END Old;
 
 (* Unbuffer - write all modified buffers of file to disk, possibly updating the directory entry. *)
 
-PROCEDURE Unbuffer(f: File; VAR res: LONGINT);
+PROCEDURE Unbuffer(f: File; VAR res: WORD);
 VAR buf: Buffer;
 BEGIN
 	res := 0;
@@ -1265,7 +1265,7 @@ END Unbuffer;
 (** Register - register a file created with New in the directory, replacing the previous entry in the directory
 	with the same name. The file is automatically closed. *)
 
-PROCEDURE Register*(f: File; VAR res: LONGINT);
+PROCEDURE Register*(f: File; VAR res: WORD);
 VAR ignore: LONGINT;
 BEGIN
 	res := 0;
@@ -1288,7 +1288,7 @@ END Register;
 (** Close - flushes the changes made to a file to disk, and updates directory entry if registered.
 	Does NOT Register a new file automatically. *)
 
-PROCEDURE Close*(f: File; VAR res: LONGINT);
+PROCEDURE Close*(f: File; VAR res: WORD);
 BEGIN
 	res := 0;
 	IF f # NIL THEN Unbuffer(f, res) END
@@ -1297,7 +1297,7 @@ END Close;
 (* PurgeFile - deallocate all file's clusters in FAT, and depending on the
 	value of *delete*, delete the file name from the directory. *)
 
-PROCEDURE PurgeFile(f: File; delete: BOOLEAN; VAR res: LONGINT);
+PROCEDURE PurgeFile(f: File; delete: BOOLEAN; VAR res: WORD);
 BEGIN
 	res := 0;
 	IF f # NIL THEN
@@ -1312,7 +1312,7 @@ END PurgeFile;
 	other references exist to the file.  All disk clusters belonging to the file are marked as available in the FAT.
 	The directory entry for the file is NOT deleted. *)
 
-PROCEDURE Purge*(f: File; VAR res: LONGINT);
+PROCEDURE Purge*(f: File; VAR res: WORD);
 BEGIN
 	PurgeFile(f, FALSE, res)
 END Purge;
@@ -1376,7 +1376,7 @@ END Base;
 (** Read - Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the
 	file has been reached. *)
 
-PROCEDURE Read*(VAR r: Rider; VAR x: SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE Read*(VAR r: Rider; VAR x: SYSTEM.BYTE; VAR res: WORD);
 VAR buf: Buffer; old: Rider;
 BEGIN
 	res := 0;
@@ -1405,7 +1405,7 @@ END Read;
 (** ReadBytes - Reads a sequence of length n bytes into the buffer x, advancing the Rider. Less bytes will
 	be read when reading over the length of the file. r.res indicates the number of unread bytes. *)
 
-PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT;  VAR res: LONGINT);
+PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT;  VAR res: WORD);
 VAR src, dst: ADDRESS; m: LONGINT;  buf: Buffer; old: Rider;
 BEGIN
 	res := 0;
@@ -1447,34 +1447,34 @@ END ReadBytes;
 Portable routines to read the standard Oberon types.
 *)
 
-	PROCEDURE ReadInt*(VAR R: Rider; VAR x: INTEGER; VAR res: LONGINT);
+	PROCEDURE ReadInt*(VAR R: Rider; VAR x: INTEGER; VAR res: WORD);
 		VAR x0, x1: SHORTINT;
 	BEGIN Read(R, x0, res); IF res = 0 THEN Read(R, x1, res) END;
 		x := LONG(x1) * 100H + LONG(x0) MOD 100H
 	END ReadInt;
 
-	PROCEDURE ReadLInt*(VAR R: Rider; VAR x: LONGINT; VAR res: LONGINT);
+	PROCEDURE ReadLInt*(VAR R: Rider; VAR x: LONGINT; VAR res: WORD);
 	BEGIN ReadBytes(R, x, 4, res)
 	END ReadLInt;
 
-	PROCEDURE ReadSet*(VAR R: Rider; VAR x: SET; VAR res: LONGINT);
+	PROCEDURE ReadSet*(VAR R: Rider; VAR x: SET; VAR res: WORD);
 	BEGIN ReadBytes(R, x, 4, res)
 	END ReadSet;
 
-	PROCEDURE ReadBool*(VAR R: Rider; VAR x: BOOLEAN; VAR res: LONGINT);
+	PROCEDURE ReadBool*(VAR R: Rider; VAR x: BOOLEAN; VAR res: WORD);
 		VAR s: SHORTINT;
 	BEGIN Read(R, s, res); x := s # 0
 	END ReadBool;
 
-	PROCEDURE ReadReal*(VAR R: Rider; VAR x: REAL; VAR res: LONGINT);
+	PROCEDURE ReadReal*(VAR R: Rider; VAR x: REAL; VAR res: WORD);
 	BEGIN ReadBytes(R, x, 4, res)
 	END ReadReal;
 
-	PROCEDURE ReadLReal*(VAR R: Rider; VAR x: LONGREAL; VAR res: LONGINT);
+	PROCEDURE ReadLReal*(VAR R: Rider; VAR x: LONGREAL; VAR res: WORD);
 	BEGIN ReadBytes(R, x, 8, res)
 	END ReadLReal;
 
-	PROCEDURE ReadString*(VAR R: Rider; VAR x: ARRAY OF CHAR; VAR res: LONGINT);
+	PROCEDURE ReadString*(VAR R: Rider; VAR x: ARRAY OF CHAR; VAR res: WORD);
 		VAR i: INTEGER; ch: CHAR;
 	BEGIN i := 0;
 		LOOP
@@ -1489,7 +1489,7 @@ Portable routines to read the standard Oberon types.
 
 (** Reads a number in compressed variable length notation using the minimum amount of bytes. *)
 
-	PROCEDURE ReadNum*(VAR R: Rider; VAR x: LONGINT; VAR res: LONGINT);
+	PROCEDURE ReadNum*(VAR R: Rider; VAR x: LONGINT; VAR res: WORD);
 		VAR ch: CHAR; n: INTEGER; y: LONGINT;
 	BEGIN n := 0; y := 0; Read(R, ch, res);
 		WHILE (res = 0) & (ch >= 80X) DO
@@ -1500,7 +1500,7 @@ Portable routines to read the standard Oberon types.
 
 (** Writes a byte into the file at the Rider position, advancing the Rider by one. *)
 
-PROCEDURE Write*(VAR r: Rider; x: SYSTEM.BYTE; VAR res: LONGINT);
+PROCEDURE Write*(VAR r: Rider; x: SYSTEM.BYTE; VAR res: WORD);
 VAR f: File; buf: Buffer; oldR: Rider; oldH: Handle0;
 BEGIN
 	IF r.file.handle.readOnly THEN
@@ -1537,7 +1537,7 @@ END Write;
 
 (** Writes the buffer x containing n bytes into a file at the Rider position. *)
 
-PROCEDURE WriteBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT;  VAR res: LONGINT);
+PROCEDURE WriteBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT;  VAR res: WORD);
 VAR src, dst: ADDRESS; m: LONGINT; f: File; buf: Buffer; oldR: Rider; oldH: Handle0;
 BEGIN
 	IF r.file.handle.readOnly THEN
@@ -1581,33 +1581,33 @@ END WriteBytes;
 Portable routines to write the standard Oberon types.
 *)
 
-	PROCEDURE WriteInt*(VAR R: Rider; x: INTEGER; VAR res: LONGINT);
+	PROCEDURE WriteInt*(VAR R: Rider; x: INTEGER; VAR res: WORD);
 	BEGIN Write(R, SHORT(x), res);
 		IF res = 0 THEN Write(R, SHORT(x DIV 100H), res) END
 	END WriteInt;
 
-	PROCEDURE WriteLInt*(VAR R: Rider; x: LONGINT; VAR res: LONGINT);
+	PROCEDURE WriteLInt*(VAR R: Rider; x: LONGINT; VAR res: WORD);
 	BEGIN WriteBytes(R, x, 4, res)
 	END WriteLInt;
 
-	PROCEDURE WriteSet*(VAR R: Rider; x: SET; VAR res: LONGINT);
+	PROCEDURE WriteSet*(VAR R: Rider; x: SET; VAR res: WORD);
 	BEGIN WriteBytes(R, x, 4, res)
 	END WriteSet;
 
-	PROCEDURE WriteBool*(VAR R: Rider; x: BOOLEAN; VAR res: LONGINT);
+	PROCEDURE WriteBool*(VAR R: Rider; x: BOOLEAN; VAR res: WORD);
 	BEGIN
 		IF x THEN Write(R, 1, res) ELSE Write(R, 0, res) END
 	END WriteBool;
 
-	PROCEDURE WriteReal*(VAR R: Rider; x: REAL; VAR res: LONGINT);
+	PROCEDURE WriteReal*(VAR R: Rider; x: REAL; VAR res: WORD);
 	BEGIN WriteBytes(R, x, 4, res)
 	END WriteReal;
 
-	PROCEDURE WriteLReal*(VAR R: Rider; x: LONGREAL; VAR res: LONGINT);
+	PROCEDURE WriteLReal*(VAR R: Rider; x: LONGREAL; VAR res: WORD);
 	BEGIN WriteBytes(R, x, 8, res)
 	END WriteLReal;
 
-	PROCEDURE WriteString*(VAR R: Rider; x: ARRAY OF CHAR; VAR res: LONGINT);
+	PROCEDURE WriteString*(VAR R: Rider; x: ARRAY OF CHAR; VAR res: WORD);
 		VAR i: INTEGER; ch: CHAR;
 	BEGIN i := 0;
 		LOOP ch := x[i]; Write(R, ch, res); INC(i);
@@ -1618,7 +1618,7 @@ Portable routines to write the standard Oberon types.
 
 (** Writes a number in a compressed format. *)
 
-	PROCEDURE WriteNum*(VAR R: Rider; x: LONGINT; VAR res: LONGINT);
+	PROCEDURE WriteNum*(VAR R: Rider; x: LONGINT; VAR res: WORD);
 	BEGIN
 		res := 0;
 		WHILE (res = 0) & ((x < - 64) OR (x > 63)) DO
@@ -1629,7 +1629,7 @@ Portable routines to write the standard Oberon types.
 
 (** Delete - deletes a file. res = 0 indicates success. *)
 
-PROCEDURE Delete*(name: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE Delete*(name: ARRAY OF CHAR; VAR res: WORD);
 VAR f, p, c: File;
 BEGIN
 	f := Old(name, res);
@@ -1652,7 +1652,7 @@ END Delete;
 
 (** Rename - renames a file. res = 0 indicates success. *)
 
-PROCEDURE Rename*(old, new: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE Rename*(old, new: ARRAY OF CHAR; VAR res: WORD);
 VAR oldbuf, newbuf: Filename;
 BEGIN
 	Check(old, oldbuf, res);
@@ -1666,7 +1666,7 @@ BEGIN
 END Rename;
 
 PROCEDURE Unmount(dev: Disks.Device;  part: SHORTINT);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	EXCL(dev.table[part].flags, Disks.Mounted);
 	Disks.Close(dev, res)	(* ignore res *)

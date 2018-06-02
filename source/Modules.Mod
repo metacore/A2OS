@@ -131,7 +131,7 @@ TYPE
 
 	END Module;
 
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT;
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: WORD;
 			VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
 
 VAR
@@ -424,7 +424,7 @@ END Initialize;
 	END SortExceptionTable;
 	
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
-PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module;
+PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module;
 VAR m: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT; registered: BOOLEAN;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ByName(name, registered);
@@ -621,7 +621,7 @@ BEGIN
 END InstallTermHandler;
 
 (** Free a module. The module's termination handler, if any, is called first. Then all objects that have finalizers in this module are finalized (even if they are still reachable). Then the module's data and code are invalidated. *)
-PROCEDURE FreeModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR);
+PROCEDURE FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR);
 VAR p, m: Module; term: TerminationHandler; i: LONGINT;
 BEGIN
 	m := ModuleByName(name);

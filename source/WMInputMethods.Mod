@@ -138,7 +138,7 @@ VAR
 	None- : IMEInterface;
 
 (* Returns the installer procedure of the desired IME *)
-PROCEDURE GetIME*(CONST name : ARRAY OF CHAR; VAR res : LONGINT) : IMEInstaller;
+PROCEDURE GetIME*(CONST name : ARRAY OF CHAR; VAR res : WORD) : IMEInstaller;
 VAR
 	config, installerName, msg : ARRAY 128 OF CHAR;
 	moduleName, procedureName : Modules.Name;

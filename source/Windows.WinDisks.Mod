@@ -52,12 +52,12 @@ TYPE
 		next: VirtualDisk;
 		drive: LONGINT;
 
-		PROCEDURE Finish( VAR res: LONGINT );
+		PROCEDURE Finish( VAR res: WORD );
 		BEGIN
 			Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
 		END Finish;
 
-		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT );
+		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD );
 		VAR bool, n,err: LONGINT;  pos: HUGEINT;  poslow, poshigh: LONGINT;  large: Kernel32.LargeInteger;
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid;  RETURN;  END;
@@ -121,7 +121,7 @@ TYPE
 			size := SELF.size;  res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle*( VAR msg: Disks.Message;  VAR res: LONGINT );
+		PROCEDURE Handle*( VAR msg: Disks.Message;  VAR res: WORD );
 		BEGIN
 			res := Disks.Unsupported;
 		END Handle;
@@ -197,7 +197,7 @@ VAR
 	END Uninstall;
 
 	PROCEDURE Cleanup;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		WHILE (disks # NIL ) DO disks.Finish( res );  Disks.registry.Remove( disks );  disks := disks.next;  END;
 	END Cleanup;
@@ -320,7 +320,7 @@ VAR
 	PROCEDURE Install*(context : Commands.Context);   (** diskname filename [blocksize]  ~ *)
 	VAR
 		diskname, flagss: ARRAY 256 OF CHAR;  flags: SET;
-		res: LONGINT; handle: Kernel32.HANDLE;  pdg: DISK_GEOMETRY;  size: LONGINT;  vd: VirtualDisk;  drive: LONGINT;
+		res: WORD; handle: Kernel32.HANDLE;  pdg: DISK_GEOMETRY;  size: LONGINT;  vd: VirtualDisk;  drive: LONGINT;
 		i: LONGINT;
 	BEGIN
 		context.arg.SkipWhitespace;
@@ -367,7 +367,7 @@ VAR
 	END Install;
 
 	PROCEDURE Notification(type: LONGINT; drives: SET);
-	VAR v: VirtualDisk; res: LONGINT;
+	VAR v: VirtualDisk; res: WORD;
 	BEGIN
 		IF type = WinFS.deviceArrival THEN
 		ELSIF type = WinFS.deviceRemove THEN

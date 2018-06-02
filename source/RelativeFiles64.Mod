@@ -48,7 +48,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			RETURN fs.Old0(new);
 		END Old0;
 
-		PROCEDURE CreateDirectory0* (name: ARRAY OF CHAR;     VAR res: LONGINT);
+		PROCEDURE CreateDirectory0* (name: ARRAY OF CHAR;     VAR res: WORD);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new); fs.CreateDirectory0(new,res);
@@ -82,7 +82,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			MakeRel(name,new);  fs.RemoveDirectory0(new,force,key,res);
 		END RemoveDirectory0;
 
-		PROCEDURE Rename0* (old, new: ARRAY OF CHAR;     f: Files.File;      VAR res: LONGINT);
+		PROCEDURE Rename0* (old, new: ARRAY OF CHAR;     f: Files.File;      VAR res: WORD);
 		VAR old1,new1: PathName;
 		BEGIN
 			MakeRel(old,old1); MakeRel(new,new1);fs.Rename0(old1,new1,f,res);

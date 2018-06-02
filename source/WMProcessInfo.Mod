@@ -587,7 +587,7 @@ BEGIN
 END CheckBP;
 
 PROCEDURE OpenCpuLoadWindow(pid : LONGINT);
-VAR commandString, msg : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; res : LONGINT;
+VAR commandString, msg : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; res : WORD;
 BEGIN
 	commandString := "WMPerfMonPluginProcesses.Install ";
 	Strings.IntToStr(pid, nbr);

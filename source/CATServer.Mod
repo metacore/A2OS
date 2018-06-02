@@ -39,7 +39,7 @@ END NewCATAgent;
 
 
 PROCEDURE Start*;
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	IF cat = NIL THEN
 		NEW(cat, CATPort, NewCATAgent, res);

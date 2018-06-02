@@ -62,7 +62,7 @@ TYPE
 		END Init;
 
 		PROCEDURE WriteBuffer(buf : SoundDevices.Buffer);
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			encoder.Write(buf, res);
 			INC(recLength, buf.len);

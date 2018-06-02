@@ -25,7 +25,7 @@ TYPE POP3Client* = OBJECT
 		state : LONGINT;
 		message : ARRAY 513 OF CHAR;
 
-		PROCEDURE Connect*(CONST host: ARRAY OF CHAR; port : LONGINT; CONST user, password: ARRAY OF CHAR;  VAR res : LONGINT);
+		PROCEDURE Connect*(CONST host: ARRAY OF CHAR; port : LONGINT; CONST user, password: ARRAY OF CHAR;  VAR res : WORD);
 		VAR fadr : IP.Adr;
 		BEGIN {EXCLUSIVE}
 			res := 0;
@@ -128,7 +128,7 @@ TYPE POP3Client* = OBJECT
 	END POP3Client;
 
 PROCEDURE Test*;
-VAR client : POP3Client; res : LONGINT;
+VAR client : POP3Client; res : WORD;
 BEGIN
 	NEW(client);
 	client.Connect("lillian.ethz.ch", 110, "user", "password", res);

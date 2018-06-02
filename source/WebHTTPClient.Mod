@@ -19,7 +19,7 @@ TYPE
 		PROCEDURE & InitContentReader * (in: Streams.Reader; CONST h: WebHTTP.ResponseHeader);
 		VAR
 			token: ARRAY 64 OF CHAR;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			InitReader(Receive, 1024);
 			SELF.in := in;
@@ -66,7 +66,7 @@ TYPE
 		END Receive;
 	END ContentReader;
 
-PROCEDURE Head*(CONST url : ARRAY OF CHAR; VAR con : TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res : LONGINT);
+PROCEDURE Head*(CONST url : ARRAY OF CHAR; VAR con : TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res : WORD);
 VAR
 	host : ARRAY 128 OF CHAR;
 	path : ARRAY 256 OF CHAR;
@@ -98,7 +98,7 @@ END Head;
 
 (** The HTTP versions is ignored and set to 1.0; uri and host are ignored and taken from the url parameter *)
 PROCEDURE Get*(CONST url : ARRAY OF CHAR; VAR rHeader : WebHTTP.RequestHeader;
-								VAR con : TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR out : Streams.Reader; VAR res : LONGINT);
+								VAR con : TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR out : Streams.Reader; VAR res : WORD);
 VAR
 	host : ARRAY 128 OF CHAR;
 	path : ARRAY 256 OF CHAR;

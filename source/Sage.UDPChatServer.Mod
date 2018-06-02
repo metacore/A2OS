@@ -110,7 +110,7 @@ TYPE
 	PROCEDURE Server_NewUserReply (ip: IP.Adr; port: LONGINT; uin: LONGINT;
 		seqNum: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.NEW_USER_REPLY, seqNum, sendBuf);
@@ -124,7 +124,7 @@ TYPE
 	PROCEDURE Server_LoginReply (client: Base.Client;
 		sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.LOGIN_REPLY, client.inSeqNum, sendBuf);
@@ -156,7 +156,7 @@ TYPE
 	PROCEDURE Server_ACK (client: Base.Client;
 		sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.ACK, client.inSeqNum, sendBuf);
@@ -168,7 +168,7 @@ TYPE
 	PROCEDURE Server_UserStatus (client, receiver: Base.Client;
 		status: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (status, receiver.outSeqNum, sendBuf);
@@ -524,7 +524,7 @@ END Log;
 PROCEDURE Start* ;
 VAR
 	s: UDP.Socket;
-	res: LONGINT;
+	res: WORD;
 	str: ARRAY 256 OF CHAR;
 BEGIN
 	IF instance = NIL THEN

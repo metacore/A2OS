@@ -236,7 +236,7 @@ TYPE
 
 	UnicodePiece* = OBJECT(Piece)
 		(** index in text position; index and (index + length) must be in the piece *)
-		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : LONGINT);
+		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : WORD);
 		END GetUCS32Buf;
 
 		(** index in text position; index and (index + length) must be in the piece *)
@@ -281,7 +281,7 @@ TYPE
 		END Clone;
 
 		(** index in text position; index and (index + length) must be in the piece *)
-		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : LONGINT);
+		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : WORD);
 		VAR i, j : LONGINT;
 		BEGIN
 			i := index - startpos; IF (i < 0) OR (i >= len) THEN ucs[0] := 0; res := -1; RETURN END;
@@ -533,7 +533,7 @@ TYPE
 		END Changed;
 
 		PROCEDURE ReadCh*(VAR ucs32 : LONGINT);
-		VAR res : LONGINT; tfont: FontInfo;
+		VAR res : WORD; tfont: FontInfo;
 			tempObj : ObjectPiece;
 		BEGIN
 			eot := (backwards) & (position = 0) OR (~backwards) & (position = text.GetLength());

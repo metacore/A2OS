@@ -1404,7 +1404,7 @@ TYPE
 			END;
 		END DCT;
 
-		PROCEDURE Open*(in: Streams.Reader; VAR res: LONGINT);
+		PROCEDURE Open*(in: Streams.Reader; VAR res: WORD);
 		VAR
 			tmp: LONGINT;
 		BEGIN
@@ -1502,7 +1502,7 @@ TYPE
 		(* @params: sample: the sample to seek, goKeySample: if we have a containerformat which 	*)
 		(*		        specifies keysamples, this flag can be set, res: the result of the seekoperation		*)
 		(* @returns: nothing																		*)
-		PROCEDURE SeekSample*(sample : LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekSample*(sample : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		BEGIN
 			IF ~CanSeek() THEN res := Codecs.ResFailed; RETURN; END;
 			COPY("0000", cHeader);
@@ -1513,7 +1513,7 @@ TYPE
 		END SeekSample;
 
 		(* Seeks the Sample at the position given in ms *)
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		BEGIN
 			SeekSample(ENTIER(millisecond*samplesPerSec/1000), goKeySample, res);
 		END SeekMillisecond;

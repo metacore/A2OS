@@ -44,7 +44,7 @@ TYPE
 			IF r.res = Streams.Ok THEN res := Ok ELSE res := r.res END
 		END GetReplyCode;
 
-		PROCEDURE SendCommand*(CONST cmd, arg : ARRAY OF CHAR; VAR res:LONGINT);
+		PROCEDURE SendCommand*(CONST cmd, arg : ARRAY OF CHAR; VAR res:WORD);
 		BEGIN
 			IF Trace THEN
 				KernelLog.Enter; KernelLog.String("CMD:"); KernelLog.String(cmd); KernelLog.String(" "); KernelLog.String(arg); KernelLog.Exit;
@@ -84,7 +84,7 @@ TYPE
 		END Open;
 
 		PROCEDURE Close*;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			IF open THEN
 				sendReady := FALSE; open := FALSE;

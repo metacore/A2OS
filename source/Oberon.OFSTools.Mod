@@ -41,7 +41,7 @@ END GetSelection;
 PROCEDURE GetFileSystemFactory(CONST name : ARRAY OF CHAR; error : Streams.Writer) : AosFS.FileSystemFactory;
 VAR
 	factory : AosFS.FileSystemFactory;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : LONGINT;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	factory := NIL;
 	Commands.Split(name, moduleName, procedureName, res, msg);
@@ -58,7 +58,7 @@ VAR
 	factory : AosFS.FileSystemFactory;
 	parvol, parfs: AosFS.Parameters; s: Texts.Scanner; i, k : LONGINT;
 	temp, par, alias, genvol, genfs: ARRAY 64 OF CHAR; prefix: AosFS.Prefix;
-	r : Streams.StringReader; w : Streams.StringWriter; string : ARRAY 1024 OF CHAR; res : LONGINT;
+	r : Streams.StringReader; w : Streams.StringWriter; string : ARRAY 1024 OF CHAR; res : WORD;
 BEGIN
 	string := "";
 	Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);

@@ -148,7 +148,7 @@ TYPE
 		END HandleTimeout;
 
 		(** blocks until a HCI packet is available or a timeout occurs. Packet filters are priorized over the Get request *)
-		PROCEDURE Get*(VAR p: Packet; timeout: LONGINT; VAR res: LONGINT);
+		PROCEDURE Get*(VAR p: Packet; timeout: LONGINT; VAR res: WORD);
 		VAR timer: IDTimer;
 		BEGIN {EXCLUSIVE}
 			IF (head = NIL) THEN
@@ -179,7 +179,7 @@ TYPE
 		END GetNextHandler;
 
 		(* naaa...won't work. besser: filter rein, der alles frisst, dann wieder rausnehmen *)
-		PROCEDURE GetNext*(VAR p: Packet; timeout: LONGINT; VAR res: LONGINT);
+		PROCEDURE GetNext*(VAR p: Packet; timeout: LONGINT; VAR res: WORD);
 		VAR f: Filter; timer: IDTimer;
 		BEGIN {EXCLUSIVE}
 			(* lock *)
@@ -277,19 +277,19 @@ TYPE
 		END GetSink;
 
 		(** send a HCI packet *)
-		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		BEGIN
 			HALT(301)
 		END Send;
 
-		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		BEGIN
 			HALT(301)
 		END Send1H;
 
 		PROCEDURE Send2H*(type: LONGINT; VAR hdr1: ARRAY OF CHAR; hdr1len: LONGINT;
 								VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT;
-								VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+								VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		BEGIN
 			HALT(301)
 		END Send2H;

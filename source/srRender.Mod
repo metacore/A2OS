@@ -693,7 +693,7 @@ BEGIN
 END clampspeed;
 
 PROCEDURE Demo*;
-VAR res : LONGINT; msg : ARRAY 128 OF CHAR;
+VAR res : WORD; msg : ARRAY 128 OF CHAR;
 BEGIN
 	Commands.Call("Notepad.Open srReadMe.Text", {Commands.Wait}, res, msg); (* ignore res *)
 	Open;

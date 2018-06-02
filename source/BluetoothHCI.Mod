@@ -390,7 +390,7 @@ TYPE
 
 		(** initialize the module, get BDADDR, MTUs, etc *)
 		PROCEDURE Initialize*(): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);
@@ -455,7 +455,7 @@ TYPE
 		PROCEDURE SendCommand*(OGF, OCF: LONGINT; params: ARRAY OF CHAR; len: LONGINT;
 										VAR packet: Bluetooth.EventPacket;
 										 VAR pending: BOOLEAN;
-										 VAR res: LONGINT);
+										 VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			InSendCommand(OGF, OCF, params, len, packet, pending, res)
 		END SendCommand;
@@ -463,7 +463,7 @@ TYPE
 		PROCEDURE InSendCommand(OGF, OCF: LONGINT; params: ARRAY OF CHAR; len: LONGINT;
 										VAR packet: Bluetooth.EventPacket;
 										VAR pending: BOOLEAN;
-										VAR res: LONGINT);
+										VAR res: WORD);
 		VAR
 			cmd: POINTER TO ARRAY  OF CHAR; i: LONGINT;
 		BEGIN (* EXCLUSIVE *)
@@ -535,7 +535,7 @@ TYPE
 			END;
 		END InSendCommand;
 
-		PROCEDURE GetEvent*(timeout: LONGINT; VAR event: Bluetooth.EventPacket; VAR res: LONGINT);
+		PROCEDURE GetEvent*(timeout: LONGINT; VAR event: Bluetooth.EventPacket; VAR res: WORD);
 		VAR p: Bluetooth.Packet;
 		BEGIN
 			IF TraceHCI THEN
@@ -578,7 +578,7 @@ TYPE
 			par: ARRAY 5 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			par[0] := CHR(lap MOD 100H);
 			par[1] := CHR((lap DIV 100H) MOD 100H);
@@ -612,7 +612,7 @@ TYPE
 			par: ARRAY 3 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			par[0] := CHR(linkHandle MOD 100H);
 			par[1] := CHR(linkHandle DIV 100H);
@@ -626,7 +626,7 @@ TYPE
 		PROCEDURE SetEventMask*(eventMask : LONGINT) : LONGINT;
 		VAR
 			par : ARRAY 8 OF CHAR;
-			res: LONGINT;
+			res: WORD;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
 		BEGIN
@@ -645,7 +645,7 @@ TYPE
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);
@@ -702,7 +702,7 @@ TYPE
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			par[0] := mode;
 			InSendCommand(ogfControl, ocfWriteScanEnable, par, 1, event, pending, res);
@@ -715,7 +715,7 @@ TYPE
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			InSendCommand(ogfControl,ocfReadScanEnable,"",0,event,pending,res);
 			scanEnable := event.params[4];
@@ -728,7 +728,7 @@ TYPE
 			par: ARRAY 4 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : LONGINT;
+			res : WORD;
 			outHandle : LONGINT;
 		BEGIN
 			par[0] := CHR(inHandle MOD 100H);
@@ -758,7 +758,7 @@ TYPE
 			par: ARRAY 2 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : LONGINT;
+			res : WORD;
 			outHandle : LONGINT;
 		BEGIN
 			par[0] := CHR(inHandle MOD 100H);
@@ -790,7 +790,7 @@ TYPE
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			par[0] := baudRate;
 			InSendCommand(ogfEricsson,ocfSetUARTBaudRate,par,LEN(par),event,pending,res);
@@ -833,7 +833,7 @@ TYPE
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			InSendCommand(ogfInformational, ocfReadBufferSize, "", 0, event, pending, res);
 			IF pending THEN res := Bluetooth.ErrInvalidEvent
@@ -1175,7 +1175,7 @@ TYPE
 	DisconnectionComplete* = PROCEDURE {DELEGATE} (sender : HCI; status,handle,reason : LONGINT);
 	InquiryComplete* = PROCEDURE {DELEGATE} (sender: HCI; status: LONGINT);
 
-	ConnectionEvent* = PROCEDURE{DELEGATE} (sender: HCI; link: Link; res: LONGINT);
+	ConnectionEvent* = PROCEDURE{DELEGATE} (sender: HCI; link: Link; res: WORD);
 	(*OnReceiveACLDataEvent* = PROCEDURE{DELEGATE} (link: Link; acl: Bluetooth.ACLPacket); *)
 		(*handle, PB, PC, len: LONGINT; VAR data: ARRAY OF CHAR);*)
 	InquiryEvent* = PROCEDURE {DELEGATE} (sender: HCI; bdAddr: Bluetooth.BDAddr; deviceClass: Bluetooth.DeviceClass;

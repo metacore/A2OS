@@ -213,7 +213,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE ProcessStream(plugin: PlugIn; stream: Stream);
 		VAR
 			obj: Objects.Object; str: FileDir.FileName; streaml: StreamList;
-			M: Objects.AttrMsg; res: LONGINT;
+			M: Objects.AttrMsg; res: WORD;
 	BEGIN
 		streaml := FindStream(plugin, stream.url);
 		IF streaml # NIL THEN

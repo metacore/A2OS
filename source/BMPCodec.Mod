@@ -34,7 +34,7 @@ TYPE
 		END Log;
 
 		(* open the decoder on a file *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
 			pix: Raster.Pixel; ch: CHAR;
 		BEGIN
@@ -144,7 +144,7 @@ TYPE
 		PROCEDURE SetQuality*(quality : LONGINT);
 		END SetQuality;
 
-		PROCEDURE WriteImage*(img : Raster.Image; VAR res : LONGINT);
+		PROCEDURE WriteImage*(img : Raster.Image; VAR res : WORD);
 		VAR
 			col, redMask, greenMask, blueMask: LONGINT;
 			palentries, dataSize: LONGINT; bpp: INTEGER;

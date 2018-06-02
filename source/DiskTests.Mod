@@ -388,7 +388,7 @@ BEGIN
 	END;
 END TransferBlocks;
 
-PROCEDURE ShowDiskres(res : LONGINT; out : Streams.Writer);
+PROCEDURE ShowDiskres(res : WORD; out : Streams.Writer);
 BEGIN
 	IF res = Disks.Ok THEN out.String("Ok");
 	ELSIF res = Disks.MediaChanged THEN out.String("MediaChanged");

@@ -100,7 +100,7 @@ VAR
 	buf: Bytes;
 
 
-PROCEDURE Message(CONST msg1, msg2: ARRAY OF CHAR; res: LONGINT);
+PROCEDURE Message(CONST msg1, msg2: ARRAY OF CHAR; res: WORD);
 BEGIN
 	KernelLog.String(Header); KernelLog.String(msg1); KernelLog.String(msg2);
 	IF res # 0 THEN

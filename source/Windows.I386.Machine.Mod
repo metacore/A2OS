@@ -429,7 +429,7 @@ BEGIN
 END SetTraceFile;
 
 PROCEDURE SetTraceConsole;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	Trace.String("trace -> console"); Trace.Ln;
 	res := Kernel32.AllocConsole ();
@@ -488,7 +488,7 @@ BEGIN
 END SetupTraceName;
 
 PROCEDURE RemoveTraceFile;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF traceName[0] # 0X THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;

@@ -80,7 +80,7 @@ TYPE
 			PROCEDURE OpenPlayChannel*(	VAR channel: SoundDevices.Channel; 
 												samplingRate, samplingResolution: LONGINT;
 												nofSubChannels, format : LONGINT; 
-											VAR res : LONGINT );
+											VAR res : WORD );
 			BEGIN {EXCLUSIVE}
 				IF ~enabled  THEN
 					Log.Enter;
@@ -148,7 +148,7 @@ TYPE
 			PROCEDURE OpenRecordChannel*(	VAR channel: SoundDevices.Channel; 
 													samplingRate, samplingResolution: LONGINT;
 													 nofSubChannels, format : LONGINT; 
-												VAR res : LONGINT );
+												VAR res : WORD );
 			BEGIN {EXCLUSIVE}
 				(* not impemented *)
 				res := SoundDevices.ResNoMoreChannels;
@@ -367,7 +367,7 @@ VAR  driver: Driver;
 
 	(* Install the driver *)
 	PROCEDURE Install*;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		(* Avoid multiple installation *)
 		IF driver = NIL THEN

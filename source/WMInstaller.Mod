@@ -606,7 +606,7 @@ TYPE
 		END GetDiskPartString;
 
 		PROCEDURE ReallyDoInstallation(selection : WMPartitionsComponents.Selection) : BOOLEAN;
-		VAR res : LONGINT; string : ARRAY 256 OF CHAR; diskPartString : Strings.String;
+		VAR res : WORD; string : ARRAY 256 OF CHAR; diskPartString : Strings.String;
 		BEGIN
 			ASSERT(IsValidSelection(selection));
 			string := "The installation will delete all content on partition ";
@@ -741,7 +741,7 @@ TYPE
 		END UnlockPartition;
 
 		PROCEDURE OpenDevice(device : Disks.Device) : BOOLEAN;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			IF (device # NIL) THEN
 				device.Open(res);
@@ -762,7 +762,7 @@ TYPE
 		END CloseDevice;
 
 		PROCEDURE GetConfiguration(selection : WMPartitionsComponents.Selection; packages : Installer.Packages; VAR configuration : Installer.Configuration) : BOOLEAN;
-		VAR reader : Streams.Reader; res : LONGINT; msg : ARRAY 128 OF CHAR;
+		VAR reader : Streams.Reader; res : WORD; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			IF IsValidSelection(selection) THEN
 				NEW(configuration, selection.disk, selection.partition);
@@ -1266,7 +1266,7 @@ BEGIN
 END InitStrings;
 
 PROCEDURE LoadOberonText(CONST filename : ARRAY OF CHAR; VAR text : Texts.Text);
-VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; res : LONGINT;
+VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; res : WORD;
 BEGIN
 	text := NIL;
 	reader := Codecs.OpenInputStream(filename);

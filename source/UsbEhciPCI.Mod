@@ -139,7 +139,7 @@ TYPE
 		iobaseVirt: ADDRESS;
 		pciCmdStsReg, sbrn  : LONGINT;
 		index : LONGINT;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Looking for PCI Enhanced USB Host Controllers..."); KernelLog.Ln; END;
 		(* Traverse all USB EHCI Host Controllers of all PCI busses in the system *)

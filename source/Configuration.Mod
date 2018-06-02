@@ -76,7 +76,7 @@ BEGIN
 END GetElementX;
 
 (** 	Find the setting specified by the key, which is a path name through the sections to the setting, and return its value. *)
-PROCEDURE Get*(CONST key: ARRAY OF CHAR; VAR val: ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE Get*(CONST key: ARRAY OF CHAR; VAR val: ARRAY OF CHAR; VAR res : WORD);
 VAR e: XML.Element; s: Strings.String; a: XML.Attribute;
 BEGIN {EXCLUSIVE}
 	e := GetElementX(Setting, key);
@@ -107,7 +107,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END Get;
 
-PROCEDURE GetBoolean*(CONST key : ARRAY OF CHAR; VAR value : BOOLEAN; VAR res : LONGINT);
+PROCEDURE GetBoolean*(CONST key : ARRAY OF CHAR; VAR value : BOOLEAN; VAR res : WORD);
 VAR string : ARRAY 8 OF CHAR;
 BEGIN
 	Get(key, string, res);
@@ -122,7 +122,7 @@ BEGIN
 	END;
 END GetBoolean;
 
-PROCEDURE GetColor*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : LONGINT);
+PROCEDURE GetColor*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : WORD);
 VAR string : ARRAY 16 OF CHAR; tempres : LONGINT;
 BEGIN
 	Get(key, string, res);
@@ -134,7 +134,7 @@ BEGIN
 END GetColor;
 
 
-PROCEDURE GetInteger*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : LONGINT);
+PROCEDURE GetInteger*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : WORD);
 VAR string : ARRAY 16 OF CHAR;
 BEGIN
 	Get(key, string, res);
@@ -145,7 +145,7 @@ BEGIN
 END GetInteger;
 
 (** update (or insert if necessairy) the setting specified by the key. if the specified section/setting is not yet existing, it will be created *)
-PROCEDURE Put*(CONST key, val : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE Put*(CONST key, val : ARRAY OF CHAR; VAR res : WORD);
 VAR e, child : XML.Element; i, j : LONGINT; name : ARRAY 64 OF CHAR;
 BEGIN {EXCLUSIVE}
 	res := Ok;
@@ -175,19 +175,19 @@ BEGIN {EXCLUSIVE}
 	END
 END Put;
 
-PROCEDURE PutBoolean*(CONST key : ARRAY OF CHAR; value : BOOLEAN; VAR res : LONGINT);
+PROCEDURE PutBoolean*(CONST key : ARRAY OF CHAR; value : BOOLEAN; VAR res : WORD);
 BEGIN
 	IF value THEN Put(key, "TRUE", res) ELSE Put(key, "FALSE", res); END;
 END PutBoolean;
 
-PROCEDURE PutColor*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : LONGINT);
+PROCEDURE PutColor*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : WORD);
 VAR string : ARRAY 9 OF CHAR;
 BEGIN
 	Strings.IntToHexStr(value, 8, string);
 	Put(key, string, res);
 END PutColor;
 
-PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : LONGINT);
+PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : WORD);
 VAR string : ARRAY 16 OF CHAR;
 BEGIN
 	Strings.IntToStr(value, string);

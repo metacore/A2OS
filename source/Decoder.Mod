@@ -1779,7 +1779,7 @@ TYPE
 		PROCEDURE DecodeModuleHandler(sender, data : ANY);
 		VAR moduleNameStr, msg : ARRAY 256 OF CHAR;
 			module : Modules.Module;
-			res : LONGINT;
+			res : WORD;
 			moduleInfoMemory : ModuleInfoMemory;
 			header: ObjHeader;
 		BEGIN

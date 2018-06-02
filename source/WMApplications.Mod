@@ -350,7 +350,7 @@ VAR
 	window : Window;
 	info : ApplicationInfo;
 	writer : Streams.Writer;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	ASSERT((context # NIL) & (context.appData # NIL));
 	string := context.appData.GetAttributeValue("repository");
@@ -374,7 +374,7 @@ BEGIN
 	END;
 END Restore;
 
-PROCEDURE ShowRes(res : LONGINT; CONST repositoryName, applicationName : ARRAY OF CHAR; out : Streams.Writer);
+PROCEDURE ShowRes(res : WORD; CONST repositoryName, applicationName : ARRAY OF CHAR; out : Streams.Writer);
 BEGIN
 	ASSERT(out # NIL);
 	CASE res OF
@@ -394,7 +394,7 @@ BEGIN
 END ShowRes;
 
 PROCEDURE GetApplicationInfo(CONST repositoryName, applicationName : ARRAY OF CHAR; VAR info : ApplicationInfo) : LONGINT;
-VAR repository : Repositories.Repository; application : XML.Element; res : LONGINT;
+VAR repository : Repositories.Repository; application : XML.Element; res : WORD;
 BEGIN
 	repository := Repositories.ThisRepository(repositoryName);
 	IF (repository # NIL) THEN
@@ -411,7 +411,7 @@ BEGIN
 END GetApplicationInfo;
 
 PROCEDURE ParseApplication(CONST applicationName : ARRAY OF CHAR; CONST application : XML.Element; VAR info : ApplicationInfo) : BOOLEAN;
-VAR enumerator : XMLObjects.Enumerator; ptr : ANY; string : Strings.String; component : Repositories.Component; res : LONGINT;
+VAR enumerator : XMLObjects.Enumerator; ptr : ANY; string : Strings.String; component : Repositories.Component; res : WORD;
 
 	PROCEDURE GetFlags(element : XML.Element) : SET;
 	VAR flags : SET; value : BOOLEAN;

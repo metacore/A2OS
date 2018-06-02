@@ -238,7 +238,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END MakeFixedDistCode;
 
 	(* build huffman tree for given code *)
-	PROCEDURE BuildTree (VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: LONGINT);
+	PROCEDURE BuildTree (VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: WORD);
 		CONST
 			maxLen = 15;	(* maximum bit length of any code *)
 		VAR
@@ -746,7 +746,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	PROCEDURE InflateBlocks (VAR s: Stream);
 		VAR
-			wavail, t, cnt, len: LONGINT; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SHORTINT; code: Code; res: LONGINT;
+			wavail, t, cnt, len: LONGINT; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SHORTINT; code: Code; res: WORD;
 			node: Node; lltree, dtree: Tree;
 	BEGIN
 		IF s.write < s.read THEN wavail := s.read - s.write - 1
@@ -1032,7 +1032,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	(** inflate until either input or output buffer runs out; if op is 'Finish', Inflate returns with either 'StreamEnd' or an error **)
 	PROCEDURE Inflate* (VAR stream: Stream; flush: SHORTINT);
-		VAR res: LONGINT; byte: CHAR; (* inxt, onxt: LONGINT; *)
+		VAR res: WORD; byte: CHAR; (* inxt, onxt: LONGINT; *)
 	BEGIN
 		IF ~stream.open THEN
 			stream.res.code := StreamError

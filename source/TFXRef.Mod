@@ -793,7 +793,7 @@ END InitWithText;
 PROCEDURE ProcessFile(CONST filename, targetPath : ARRAY OF CHAR; indexFile : Streams.Writer);
 VAR
 	module : TS.Module;
-	t : Texts.Text; res : LONGINT;
+	t : Texts.Text; res : WORD;
 	r : Streams.StringReader;
 	str : Strings.String;
 	name, path, targetFile : ARRAY 1024 OF CHAR;
@@ -841,7 +841,7 @@ VAR
 	sr : Streams.Reader;
 	t0, t1 : LONGINT;
 	module : TS.Module;
-	t : Texts.Text; res : LONGINT;
+	t : Texts.Text; res : WORD;
 	textReader : TextUtilities.TextReader;
 BEGIN
 	NEW(globalUses);

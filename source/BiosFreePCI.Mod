@@ -56,7 +56,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 
 
 	PROCEDURE PCIPresent*(VAR version, lastPCIbus, hwMech: LONGINT): LONGINT;
-	VAR res: LONGINT; pci: Pci; r0: LONGINT;
+	VAR res: WORD; pci: Pci; r0: LONGINT;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci);
@@ -142,7 +142,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END FindPCIClassCode;
 
 	PROCEDURE GenerateSpecialCycle*(busNr, specCycleData: LONGINT): LONGINT;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			(*
@@ -166,7 +166,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	PROCEDURE GetIrqRoutingOptions*(VAR rt: RouteTable; VAR IrqBitmap: SET): LONGINT;
 	CONST dbN = 16*8;
 	VAR
-		res: LONGINT;
+		res: WORD;
 		(*eflags, state: SET;
 		rb: RouteBuffer; db: ARRAY dbN OF CHAR;
 		last: RouteTable;
@@ -214,7 +214,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END GetIrqRoutingOptions;
 
 	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: LONGINT): LONGINT;
-	VAR res:LONGINT;
+	VAR res:WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			(*
@@ -237,7 +237,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 
 	(** Set bits included in <mask> in the PCI command register if not set already *)
 	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : LONGINT) : LONGINT;
-	VAR cmdReg : LONGINT; res : LONGINT;
+	VAR cmdReg : LONGINT; res : WORD;
 	BEGIN
 		res := ReadConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
 		IF (res = Done) THEN
@@ -324,7 +324,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END GetAdr1;
 
 	PROCEDURE PCIReadConfig32(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET; res: LONGINT;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -340,7 +340,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig32;
 
 	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: LONGINT; int: INTEGER;
+	VAR adr, dataAdr: LONGINT; state: SET;res: WORD; int: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -357,7 +357,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig16;
 
 	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: LONGINT; chr: CHAR;
+	VAR adr, dataAdr: LONGINT; state: SET;res: WORD; chr: CHAR;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -374,7 +374,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig8;
 
 	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: LONGINT;
+	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -390,7 +390,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIWriteConfig32;
 
 	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: LONGINT;
+	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -406,7 +406,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIWriteConfig16;
 
 	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: LONGINT;
+	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();

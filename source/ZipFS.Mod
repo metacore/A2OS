@@ -162,7 +162,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 	PROCEDURE NewFS*(context : Files.Parameters);
 	VAR
 		name: Files.FileName;
-		F: Files.File; zip: Unzip.ZipFile; fs: FileSystem; res: LONGINT;
+		F: Files.File; zip: Unzip.ZipFile; fs: FileSystem; res: WORD;
 	BEGIN
 		IF (Files.This(context.prefix) = NIL) THEN
 			context.arg.SkipWhitespace; context.arg.String(name);

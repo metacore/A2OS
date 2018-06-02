@@ -11,7 +11,7 @@ TYPE
 		ch : CHAR;
 		V24writer : Streams.Writer;	(* Writer used by this serial port tracer *)
 		alive : BOOLEAN;
-		res : LONGINT;
+		res : WORD;
 
 	PROCEDURE &Init*(seqNo, portNo, bps : LONGINT);
 	BEGIN

@@ -293,7 +293,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 	END Init;
 
 	PROCEDURE Startup*;
-		VAR data: WSAData; res: LONGINT;
+		VAR data: WSAData; res: WORD;
 	BEGIN
 		KernelLog.String("WSAStartup ");
 		res := WSAStartup(2, data);
@@ -307,7 +307,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 	END Startup;
 
 	PROCEDURE CleanUp*;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		IF wsaStarted THEN
 			res := WSACleanup();

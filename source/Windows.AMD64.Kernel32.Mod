@@ -1108,7 +1108,7 @@ VAR hout: HANDLE;
 
 
 	PROCEDURE SetTraceConsole;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		hout := GetStdHandle (STDOutput);
 		Trace.Char := TraceChar;

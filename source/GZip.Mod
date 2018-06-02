@@ -38,7 +38,7 @@ TYPE
 		VAR
 			writer: Streams.Writer;
 			s : ZlibDeflate.Stream;
-			res : LONGINT;
+			res : WORD;
 			crc32-: LONGINT; (*crc32 of uncompressed data*)
 			out : POINTER TO ARRAY BufSize OF CHAR;
 			flush: SHORTINT;
@@ -77,7 +77,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR
 			done : BOOLEAN;
 		BEGIN
@@ -136,7 +136,7 @@ TYPE
 	Inflator* = OBJECT	(** not sharable between multiple processes *)
 		VAR
 			reader: Streams.Reader;
-			res: LONGINT;
+			res: WORD;
 			transparent : BOOLEAN;
 			crc32-: LONGINT; (*crc32 of uncompressed data*)
 			in : POINTER TO ARRAY BufSize OF CHAR;

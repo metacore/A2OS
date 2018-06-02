@@ -328,7 +328,7 @@ TYPE
 	(** ----------- Code Generator Types ----------------------*)
 	CodeArray* = POINTER TO ARRAY OF CHAR;
 	InitHandler* = PROCEDURE(): BOOLEAN;	(** Code generator initialization. Called before code generation *)
-	DoneHandler* = PROCEDURE(VAR res: LONGINT);	(** called after code generation. result = 0 indicates success *)
+	DoneHandler* = PROCEDURE(VAR res: WORD);	(** called after code generation. result = 0 indicates success *)
 	GetCodeHandler* = PROCEDURE(VAR code: CodeArray; VAR codelength, hdrlength, addressFactor: LONGINT); (** returns the code *)
 		(** codelength = actual size of the code (bytes); hdrlength = value stored in header file as code length (bytes)
 			addressFactor = addresses in fixup-lists are multiplied by this factor *)
@@ -859,7 +859,7 @@ VAR
 	BEGIN RETURN FALSE
 	END CGInit;
 
-	PROCEDURE CGDone(VAR res: LONGINT);
+	PROCEDURE CGDone(VAR res: WORD);
 	BEGIN res := -1
 	END CGDone;
 

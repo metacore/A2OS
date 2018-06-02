@@ -136,7 +136,7 @@ TYPE
 	(* for internal use only. abstract buffer class *)
 	Buffer = OBJECT
 
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : WORD);
 		BEGIN HALT(301)
 		END Send;
 
@@ -170,7 +170,7 @@ TYPE
 		END Init;
 
 		(* buffer any data until propagate is TRUE *)
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : WORD);
 		VAR i : LONGINT;
 		BEGIN
 			IF closed THEN res := StreamClosed; RETURN END;
@@ -573,7 +573,7 @@ TYPE
 	END CopyArchiveName;
 
 	PROCEDURE Backup(f: Files.File);
-	VAR old, new: Files.FileName; res: LONGINT;
+	VAR old, new: Files.FileName; res: WORD;
 	BEGIN
 		f.GetName(old); COPY(old, new);
 		Strings.Append(new, ".Bak");

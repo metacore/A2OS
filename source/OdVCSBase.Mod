@@ -128,7 +128,7 @@ TYPE
 VAR
 	errMsg*: ARRAY 256 OF CHAR;
 	formatStr: ARRAY FormatLen+1 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 
 (* Split a filename in it's directory part and member name.
 	filename = [ filesystem ":" ] ["/"] [ dir "/" ] base. *)
@@ -163,7 +163,7 @@ END splitDirBase;
 PROCEDURE makeDirs(name: ARRAY OF CHAR): LONGINT;
 VAR
 	dir, base: ARRAY 128 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 	dirFile: Files.File;
 BEGIN
 	Files.SplitPath(name, dir, base);

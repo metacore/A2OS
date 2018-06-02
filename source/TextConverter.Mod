@@ -2,7 +2,7 @@ MODULE TextConverter; (** AUTHOR "negelef"; PURPOSE "automated text format conve
 
 IMPORT Commands, Streams, Diagnostics, Files, Texts, TextUtilities;
 
-TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 
 PROCEDURE Convert (diagnostics: Diagnostics.Diagnostics; list: Streams.Reader; converter: Converter);
 VAR text: Texts.Text; filename: Files.FileName; format, res: LONGINT;

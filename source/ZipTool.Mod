@@ -47,7 +47,7 @@ BEGIN
 END Append;
 
 PROCEDURE OpenArchive(CONST archiveName : ARRAY OF CHAR; errorLog : Streams.Writer) : Zip.Archive;
-VAR archive : Zip.Archive; res : LONGINT;
+VAR archive : Zip.Archive; res : WORD;
 BEGIN
 	archive := Zip.OpenArchive(archiveName, res);
 	IF (res # Zip.Ok) THEN
@@ -60,7 +60,7 @@ END OpenArchive;
 
 
 (** Writes the directory of an archive. **)
-PROCEDURE WriteDirectory*(out, error : Streams.Writer; CONST archiveName: ARRAY OF CHAR; details: BOOLEAN; VAR res: LONGINT);
+PROCEDURE WriteDirectory*(out, error : Streams.Writer; CONST archiveName: ARRAY OF CHAR; details: BOOLEAN; VAR res: WORD);
 VAR
 	archive: Zip.Archive;
 	entry: Zip.Entry;
@@ -105,7 +105,7 @@ PROCEDURE Directory*(context : Commands.Context);
 VAR
 	archiveName : Files.FileName;
 	options : Options.Options;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("d", "details", Options.Flag);
@@ -119,7 +119,7 @@ END Directory;
 PROCEDURE DoExtract(
 	action: LONGINT;
 	archive: Zip.Archive; entry: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File;
-	path, overwrite, show: BOOLEAN; out, error : Streams.Writer; VAR res: LONGINT);
+	path, overwrite, show: BOOLEAN; out, error : Streams.Writer; VAR res: WORD);
 VAR
 	f, of: Files.File; r: Files.Rider;
 	bakname, temp: ARRAY 256 OF CHAR; res2: LONGINT;
@@ -191,7 +191,7 @@ END DoExtract;
 	If path is set, the file is stored in the directory according to the relative path in name.
 	If overwrite is set, files with the same name are overwritten, otherwise they are renamed to name.Bak.
 	Possible results: cf. Zip.ExtractEntry **)
-PROCEDURE ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; CONST name: ARRAY OF CHAR; path, overwrite: BOOLEAN; log, error : Streams.Writer; VAR res: LONGINT);
+PROCEDURE ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; CONST name: ARRAY OF CHAR; path, overwrite: BOOLEAN; log, error : Streams.Writer; VAR res: WORD);
 VAR temp: Files.File;
 BEGIN
 	DoExtract(EXTRACT, arc, ent, name, temp, path, overwrite, FALSE, log, error, res);
@@ -203,7 +203,7 @@ END ExtractFile;
 	Possible results: cf. Zip.ExtractEntry **)
 PROCEDURE OpenFile*(
 	arc: Zip.Archive; ent: Zip.Entry; CONST name: ARRAY OF CHAR; VAR tempfile: Files.File;
-	path, overwrite, show: BOOLEAN; log, error : Streams.Writer; VAR res: LONGINT);
+	path, overwrite, show: BOOLEAN; log, error : Streams.Writer; VAR res: WORD);
 BEGIN
 	DoExtract(OPEN, arc, ent, name, tempfile, path, overwrite, show, log, error, res);
 END OpenFile;
@@ -358,7 +358,7 @@ END ExtractAll;
 	level: specifies the compression level (0: no compression, 9: best compression)
 	strategy: specifies the compression strategy (from 0 - 2)
 	res = Zip.Ok, Zip.BadName, Zip.EntryAlreadyExists, Zip.DataError **)
-PROCEDURE AddFile*(arc: Zip.Archive; CONST srcname : ARRAY OF CHAR; CONST dstname: ARRAY OF CHAR; level, strategy: LONGINT; VAR res: LONGINT);
+PROCEDURE AddFile*(arc: Zip.Archive; CONST srcname : ARRAY OF CHAR; CONST dstname: ARRAY OF CHAR; level, strategy: LONGINT; VAR res: WORD);
 VAR f: Files.File; r: Files.Rider;
 BEGIN
 	f := Files.Old(srcname);

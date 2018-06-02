@@ -31,7 +31,7 @@ TYPE
 			fip: IP.Adr;
 		PROCEDURE &Init*;
 		VAR
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			stopping := FALSE;
 			NEW(buffer, 10000H);
@@ -91,7 +91,7 @@ TYPE
 		(* starts the server: registers the OSCService s and creates the TCPServices.Service, which listens for connections *)
 		PROCEDURE &InitTCPServer*;
 		VAR
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			NEW(tcpservice, ServerPort, newAgent, res);
 		END InitTCPServer;
@@ -140,7 +140,7 @@ END StopTCPRead;
 
 PROCEDURE MessageTest1(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	(* This Test should receive an empty OSC message *)
 	IF (m.argumentcount = 0) & (~ m.noTypeTagString) THEN
@@ -155,7 +155,7 @@ END MessageTest1;
 PROCEDURE SendMsg1*;
 VAR
 	m: OSC.OSCMessage;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M1'));
 	IF udpclient # NIL THEN res := udpclient.Send(m); END;
@@ -165,7 +165,7 @@ END SendMsg1;
 
 PROCEDURE MessageTest2(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one Integer (47) *)
@@ -189,7 +189,7 @@ PROCEDURE SendMsg2*;
 VAR
 	m: OSC.OSCMessage;
 	i: OSC.OSCParamInteger;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M2'));
 	NEW(i, 47); m.AddArgument(i);
@@ -200,7 +200,7 @@ END SendMsg2;
 
 PROCEDURE MessageTest3(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one Float (8.25) *)
@@ -224,7 +224,7 @@ PROCEDURE SendMsg3*;
 VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamFloat;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M3'));
 	NEW(p, 8.25); m.AddArgument(p);
@@ -235,7 +235,7 @@ END SendMsg3;
 
 PROCEDURE MessageTest4(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 	param: OSC.OSCParamObject;
 	ok: BOOLEAN; i: LONGINT;
 BEGIN
@@ -267,7 +267,7 @@ VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamBlob;
 	data: OSC.Blob; i: LONGINT;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(data, 32);
 	FOR i:=0 TO 31 DO data[i] := CHR(i+1); END;
@@ -281,7 +281,7 @@ END SendMsg4;
 
 PROCEDURE MessageTest5(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one String (TEST5)^5 *)
@@ -305,7 +305,7 @@ PROCEDURE SendMsg5*;
 VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamString;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M5'));
 	NEW(p, Strings.NewString('TEST5TEST5TEST5TEST5TEST5')); m.AddArgument(p);
@@ -319,7 +319,7 @@ PROCEDURE SendBundle1*;
 VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(b, tt, NIL, 0);
@@ -334,7 +334,7 @@ VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
 	i: OSC.OSCParamInteger;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(m, Strings.NewString('/tests/M2'));
@@ -351,7 +351,7 @@ VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
 	i: OSC.OSCParamInteger;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(m, Strings.NewString('/tests/M2'));
@@ -367,7 +367,7 @@ END SendBundle3;
 
 PROCEDURE Echo(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF ~ m.noTypeTagString THEN
 		res := m.Return(ackmessage);
@@ -378,7 +378,7 @@ END Echo;
 
 PROCEDURE Ret(m: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF ~ m.noTypeTagString THEN
 		res := m.Return(m);
@@ -390,7 +390,7 @@ END Ret;
 
 PROCEDURE StartEvalService*;
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(registry);
 	registry.AddMethod(Strings.NewString('/tests/M1'), MessageTest1);
@@ -418,7 +418,7 @@ END StopEvalService;
 
 PROCEDURE StartUDPClient*;
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(udpclient, IP.StrToAdr(ServerIP), ServerPort, UDP.NilPort, res);
 	IF res # UDP.Ok THEN
@@ -440,7 +440,7 @@ END StopUDPClient;
 
 PROCEDURE StartTCPClient*;
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(tcpclient, IP.StrToAdr(ServerIP), ServerPort, TCP.NilPort, res);
 	IF res # TCP.Ok THEN

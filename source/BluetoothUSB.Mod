@@ -191,7 +191,7 @@ TYPE
 			END;
 		END ReadACL;
 
-		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		VAR  i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF TraceSend THEN
@@ -212,7 +212,7 @@ TYPE
 			END;
 		END Send;
 
-		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		VAR  i: LONGINT; buffer : POINTER TO ARRAY OF CHAR; bufferLen : LONGINT;
 		BEGIN
 			IF TraceSend THEN
@@ -242,7 +242,7 @@ TYPE
 		END Send1H;
 
 		PROCEDURE Send2H*(type: LONGINT; VAR hdr1: ARRAY OF CHAR; hdr1len: LONGINT;
-				VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+				VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		VAR
 			i: LONGINT;
 			buffer : POINTER TO ARRAY OF CHAR;

@@ -34,7 +34,7 @@ Example:
 VAR
 	client: OSCTCPClient (or OSCUDPClient);
 	p, newp: OSCPacket;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(client, fip, fport, TCP.NilPort, res);
 	...
@@ -97,7 +97,7 @@ TYPE
 			Supply UDP.NilPort for lport, if you don't want to specify a fixed local port for communication.
 			In res the returnvalue of the UDP.Socket's creations is returned. If res doesn't equal to UDP.Ok, the
 			client shouldn't be used *)
-		PROCEDURE &InitUDP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: LONGINT);
+		PROCEDURE &InitUDP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: WORD);
 		BEGIN
 			SELF.fip := fip;
 			SELF.fport := fport;
@@ -172,7 +172,7 @@ TYPE
 
 		(* Creates a new UDPServer listening on UDP port lport.. Sends received packets to service.
 			If res is not UDP.Ok, then the server will immediately quit *)
-		PROCEDURE &InitUDPServer*(service: OSCService.OSCService; lport: LONGINT; VAR res: LONGINT);
+		PROCEDURE &InitUDPServer*(service: OSCService.OSCService; lport: LONGINT; VAR res: WORD);
 		BEGIN
 			ASSERT(service # NIL);
 			oscservice := service;
@@ -242,7 +242,7 @@ TYPE
 		(* creates a new OSCTCPClient and connects to fip:fport. The user can also specify a local port to use for the outgoing
 			connection. If TCP.NilPort is used, the operating system assigns a free local port number. If res doesn't euqal to
 			TCP.Ok then this client shouldn't be used. *)
-		PROCEDURE &InitTCP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: LONGINT);
+		PROCEDURE &InitTCP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: WORD);
 		BEGIN
 			NEW(connection);
 			connection.Open(lport, fip, fport, res);
@@ -277,7 +277,7 @@ TYPE
 		VAR
 			oscservice: OSCService.OSCService;
 			newpacket: OSC.OSCPacket;
-			res: LONGINT;
+			res: WORD;
 
 		PROCEDURE &StartOSCAgent*(oscs: OSCService.OSCService; c: TCP.Connection; s: TCPServices.Service);
 		BEGIN
@@ -314,7 +314,7 @@ TYPE
 			service: OSCService.OSCService;
 
 		(* starts the server: registers the OSCService s and creates the TCPServices.Service, which listens for connections *)
-		PROCEDURE &InitTCPServer*(s: OSCService.OSCService; lport: LONGINT; VAR res: LONGINT);
+		PROCEDURE &InitTCPServer*(s: OSCService.OSCService; lport: LONGINT; VAR res: WORD);
 		BEGIN
 			ASSERT(s # NIL);
 			service := s;
@@ -343,7 +343,7 @@ TYPE
 	VAR
 		buffer: OSC.String;
 		size: ARRAY 4 OF CHAR;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		ASSERT(p # NIL);
 		buffer := p.GetBytes();
@@ -384,7 +384,7 @@ TYPE
 	PROCEDURE SendUDP(s: UDP.Socket; fip: IP.Adr; fport: LONGINT; p: OSC.OSCPacket): LONGINT;
 	VAR
 		buffer: OSC.String;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		ASSERT(p # NIL);
 		buffer := p.GetBytes();
@@ -433,7 +433,7 @@ TYPE
 			b: OSC.OSCBundle;
 			tt: OSC.OSCTimeTag;
 			ip: IP.Adr;
-			res: LONGINT;
+			res: WORD;
 	BEGIN
 		ip := IP.StrToAdr('192.168.150.1'); KernelLog.Int(res, 4);
 		NEW(socket, ip, 57110, 57110, res); KernelLog.Int(res, 4);
@@ -460,7 +460,7 @@ TYPE
 			b: OSC.OSCBundle;
 			tt: OSC.OSCTimeTag;
 			ip: IP.Adr;
-			res: LONGINT;
+			res: WORD;
 	BEGIN
 		ip := IP.StrToAdr('192.168.150.1'); KernelLog.Int(res, 4);
 		NEW(c, ip, 2009, TCP.NilPort, res); KernelLog.Int(res, 4);

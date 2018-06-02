@@ -678,7 +678,7 @@ VAR
 		me: Thread_t;
 		old, new: Sigset_t;
 		param: Sched_param;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		me := pthread_self();
 		SetSigaltstack();
@@ -756,7 +756,7 @@ VAR
 	END resume_handler;
 
 	PROCEDURE ThrResume*( thr: Thread_t );
-	VAR  res: LONGINT;
+	VAR  res: WORD;
 	BEGIN
 		res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
 		resume_done := 0; 
@@ -770,7 +770,7 @@ VAR
 	VAR suspendHandler*: PROCEDURE(c: Ucontext);
 
 	PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
-	VAR block: Sigset_t; res: LONGINT;
+	VAR block: Sigset_t; res: WORD;
 	BEGIN
 		IF suspendHandler # NIL THEN suspendHandler( S.VAL( Ucontext, ucp) ) END;
 	    res := sigfillset( ADDRESS OF block );
@@ -781,7 +781,7 @@ VAR
 	END suspend_handler;
 
 	PROCEDURE ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN);
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 	    suspend_done := 0;
@@ -798,7 +798,7 @@ VAR
 
 	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
 	VAR
-		param: Sched_param; res: LONGINT;
+		param: Sched_param; res: WORD;
 	BEGIN
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
 		mainthread := pthread_self();
@@ -907,7 +907,7 @@ VAR
 
 
 	PROCEDURE getSysinfo;
-	VAR res: LONGINT;  p: INTEGER;
+	VAR res: WORD;  p: INTEGER;
 		buf: ARRAY 4096 OF CHAR;
 
 		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );
@@ -1005,7 +1005,7 @@ VAR
 
 
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		TRACE(d,err);
 		IF oberonXErrorHandler # NIL THEN
@@ -1015,7 +1015,7 @@ VAR
 	END X11ErrorHandler;
 
 	PROCEDURE X11IOErrorHandler(d: ADDRESS): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		TRACE(d);
 		IF oberonXIOErrorHandler # NIL THEN

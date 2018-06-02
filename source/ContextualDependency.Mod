@@ -762,7 +762,7 @@ TYPE
 			contextFound, validContext, charFound : BOOLEAN;
 			charString : XML.String;
 			charCode : Texts.Char32;
-			res : LONGINT;
+			res : WORD;
 			base16, neg : BOOLEAN;
 			genericRangeSize, offset : LONGINT;
 

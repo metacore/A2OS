@@ -145,7 +145,7 @@ TYPE
 			END ScmBulkTransport;
 
 		PROCEDURE ScmWaitNotBusy(timeout : LONGINT) : LONGINT;
-		VAR status : CHAR; res : LONGINT;
+		VAR status : CHAR; res : WORD;
 		BEGIN
 			LOOP
 				res := ScmRead(ScmATA, 17X, status, 1000);
@@ -171,7 +171,7 @@ TYPE
 		END ScmWaitNotBusy;
 
 		PROCEDURE ScmReadUserIO(VAR dataflags: CHAR; timeout : LONGINT) : LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, 82H, 0C0H, 0, 0, buffer^, 0, 1, timeout);
 			dataflags := buffer[0];
@@ -184,7 +184,7 @@ TYPE
 		END ScmWriteUserIO;
 
 		PROCEDURE ScmRead(access, reg : CHAR; VAR content: CHAR; timeout : LONGINT) : LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, ORD(access), 0C0H, ORD(reg), 0, buffer^, 0, 1, timeout);
 			content := buffer[0];
@@ -228,7 +228,7 @@ TYPE
 		END ScmMultipleWrite;
 
 		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			command[0] := 0C0X;
 			command[1] := SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, access)+ {1}));
@@ -247,7 +247,7 @@ TYPE
 		END ScmReadBlock;
 
 		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : LONGINT; VAR tlen : LONGINT; timeout : LONGINT): LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			command[0] := 40X;
 			command[1] := SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, access)+ {0,1}));
@@ -275,7 +275,7 @@ TYPE
 			status : CHAR;
 			i, msgindex, msglen : INTEGER;
 			tmplen : LONGINT;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF numregs > 19 THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbStorage: ScmRWBlockTest too many registers"); KernelLog.Ln; END;
@@ -391,7 +391,7 @@ TYPE
 		END ScmSetShuttleFeatures;
 
 		PROCEDURE Initialization*() : BOOLEAN;
-		VAR status : CHAR; res : LONGINT;
+		VAR status : CHAR; res : WORD;
 		BEGIN
 			IF Debug.Trace & Debug.traceScInit THEN KernelLog.String("UsbStorage: Initializing SCM USB-ATAPI Shuttle... "); KernelLog.Ln; END;
 			res := ScmWriteUserIO(SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, ScmUioOE0) + SYSTEM.VAL(SET, ScmUioOE1))),

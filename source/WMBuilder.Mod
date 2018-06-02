@@ -191,7 +191,7 @@ TYPE
 		END LoadRepository;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR filename : ARRAY 256 OF CHAR; res : LONGINT;
+		VAR filename : ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			IF (sender = loadBtn) THEN
 				filenameEditor.GetAsString(filename);
@@ -257,7 +257,7 @@ TYPE
 		END OnComponentClicked;
 
 		PROCEDURE OnClickedSelected(sender, data : ANY);
-		VAR command, msg : ARRAY 384 OF CHAR; res : LONGINT; string : Strings.String;
+		VAR command, msg : ARRAY 384 OF CHAR; res : WORD; string : Strings.String;
 		BEGIN
 			IF (data # NIL) & (data IS WMRepositories.EntryWrapper) THEN
 				IF (data(WMRepositories.EntryWrapper).repository # NIL) & (data(WMRepositories.EntryWrapper).element # NIL) THEN
@@ -790,7 +790,7 @@ TYPE
 		END FixBounds;
 
 		PROCEDURE IsInActiveFrameHandle(x, y : LONGINT) : LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			res := IsInFrameHandle(x, y);
 			IF (res # No) & ~(res IN activeHandles) THEN
@@ -1685,7 +1685,7 @@ TYPE
 
 		PROCEDURE CheckCursor(x, y : LONGINT; keys, modifierFlags : SET);
 		CONST ShiftValue = 256;
-		VAR ignore : WMRectangles.Rectangle; res : LONGINT;
+		VAR ignore : WMRectangles.Rectangle; res : WORD;
 		BEGIN
 			IF paint THEN
 				IF (oldPointerInfo # Paint) THEN
@@ -1864,7 +1864,7 @@ TYPE
 		END PointerLeave;
 
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR down : BOOLEAN; res : LONGINT; rect : WMRectangles.Rectangle;
+		VAR down : BOOLEAN; res : WORD; rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerDown^(x, y, keys);
 			mouseKeys := keys;
@@ -2094,7 +2094,7 @@ TYPE
 			END;
 		END DragOver;
 
-		PROCEDURE DragAddComponent(component : Repositories.Component; VAR res : LONGINT); (* ! needs work work hierarchical buildup *)
+		PROCEDURE DragAddComponent(component : Repositories.Component; VAR res : WORD); (* ! needs work work hierarchical buildup *)
 		VAR x, y : LONGINT; c: WMComponents.VisualComponent; 
 			rect:WMRectangles.Rectangle; id:ARRAY 64 OF CHAR; b:BOOLEAN;
 		BEGIN
@@ -2743,7 +2743,7 @@ TYPE
 			SetInfo(windowInfo);
 		END UpdateInfo;
 
-		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : WORD);
 		VAR w : EditWindow;
 		BEGIN
 			w := windowList.Get(info.id);
@@ -2829,7 +2829,7 @@ TYPE
 		END HandleOpenBtn;
 
 		PROCEDURE HandleSaveBtn(sender, data : ANY);
-		VAR w : EditWindow; filename : Files.FileName; res : LONGINT;
+		VAR w : EditWindow; filename : Files.FileName; res : WORD;
 		BEGIN
 			w := windowList.GetActive();
 			IF (w # NIL) THEN
@@ -2940,7 +2940,7 @@ TYPE
 			repositoryName, componentName : ARRAY 64 OF CHAR; refNum : LONGINT;
 			name, filename : Files.FileName;
 			repository : Repositories.Repository;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			w := windowList.GetActive();
 			IF (w = NIL) THEN RETURN; END;
@@ -3072,7 +3072,7 @@ TYPE
 			END;
 		END UpdateFramePosition;
 
-		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : WORD);
 		VAR window : EditWindow; content : XML.Content; panel : WMStandardComponents.Panel; width, height : LONGINT;
 		BEGIN
 			content := WMComponents.Load(filename);
@@ -3103,7 +3103,7 @@ TYPE
 			END;
 		END Load;
 
-		PROCEDURE Store(CONST filename : ARRAY OF CHAR; window : EditWindow; VAR res : LONGINT);
+		PROCEDURE Store(CONST filename : ARRAY OF CHAR; window : EditWindow; VAR res : WORD);
 		VAR file : Files.File; writer : Files.Writer;
 		BEGIN
 			ASSERT(window # NIL);
@@ -3123,7 +3123,7 @@ TYPE
 		END Store;
 
 		PROCEDURE LoadWindows(data : XML.Element);
-		VAR c : XML.Content; e : XML.Element; s : Strings.String; bounds : WMRectangles.Rectangle; filename : Files.FileName; res : LONGINT;
+		VAR c : XML.Content; e : XML.Element; s : Strings.String; bounds : WMRectangles.Rectangle; filename : Files.FileName; res : WORD;
 		BEGIN
 			ASSERT(data # NIL);
 			c := data.GetFirst();

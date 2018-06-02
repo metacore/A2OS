@@ -179,7 +179,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END SetupTraceName;
 
 PROCEDURE RemoveTraceFile;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF traceName[0] # 0X THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;

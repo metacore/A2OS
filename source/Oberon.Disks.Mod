@@ -43,9 +43,9 @@ TYPE
 	Partition* = Disks.Partition;
 	PartitionTable* = Disks.PartitionTable;
 
-	TransferProc* = PROCEDURE (dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+	TransferProc* = PROCEDURE (dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: LONGINT);
-	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: LONGINT);
+	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: WORD);
 
 (** The base for block devices. It provides operations on an abstract array of disk blocks of blockSize bytes,
 numbered from 0 to size-1. If applicable, a PC-format partition table starts at block 0, and can be read into
@@ -79,7 +79,7 @@ BEGIN
 	dev.table := dev.real.table; dev.openCount := dev.real.openCount
 END Update;
 
-PROCEDURE Transfer(dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+PROCEDURE Transfer(dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 BEGIN
 	dev.real.Transfer(op, block, num, data, ofs, res);
 	Update(dev)
@@ -91,7 +91,7 @@ BEGIN
 	Update(dev)
 END GetSize;
 
-PROCEDURE Handle(dev: Device; VAR msg: Message; VAR res: LONGINT);
+PROCEDURE Handle(dev: Device; VAR msg: Message; VAR res: WORD);
 BEGIN
 	dev.real.Handle(msg, res);
 	Update(dev)
@@ -122,7 +122,7 @@ END GetRegistered;
 partition spanning the entire device, with type = 256. If the device has been opened before, do nothing and
 return DeviceInUse, otherwise return Ok. On any other error dev.table is set NIL. *)
 
-PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: LONGINT);
+PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: WORD);
 BEGIN
 	Disks.UpdatePartitionTable(dev.real, res);
 	Update(dev)
@@ -130,14 +130,14 @@ END UpdatePartitionTable;
 
 (** Open the device and increment its open count if successful. If the device is opened for the first time,
 lock it and update its partition table. *)
-PROCEDURE Open*(dev: Device; VAR res: LONGINT);
+PROCEDURE Open*(dev: Device; VAR res: WORD);
 BEGIN
 	dev.real.Open(res);
 	Update(dev)
 END Open;
 
 (** Close the device and decrement its open count. Unlock it if the open count has reached 0. *)
-PROCEDURE Close*(dev: Device; VAR res: LONGINT);
+PROCEDURE Close*(dev: Device; VAR res: WORD);
 BEGIN
 	dev.real.Close(res);
 	Update(dev)

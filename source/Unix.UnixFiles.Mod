@@ -88,7 +88,7 @@ TYPE
 				fs.Delete0( name, key, res );
 			END Delete0;
 
-			PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: LONGINT );
+			PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
 			BEGIN
 				fs.Rename0( old, new, fold, res );
 			END Rename0;
@@ -104,7 +104,7 @@ TYPE
 				RETURN fs.FileKey( name );
 			END FileKey;
 
-			PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: LONGINT );
+			PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: WORD );
 			BEGIN
 				fs.CreateDirectory0( name, res );
 			END CreateDirectory0;
@@ -335,7 +335,7 @@ TYPE
 				
 				
 				(* return remaining old file, if any *)
-				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT ): LONGINT;
+				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: WORD ): LONGINT;
 				CONST Bufsize = 4096;
 				VAR fdold, fdnew, fo, r: LONGINT;  n, n2: SIZE;  ostat, nstat: Unix.Status;
 					buf: ARRAY Bufsize OF CHAR;
@@ -389,14 +389,14 @@ TYPE
 					RETURN fo;
 				END TryRename;
 
-				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: LONGINT );
+				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: WORD );
 				VAR of: LONGINT;
 				BEGIN
 					of := TryRename(old, new, f, res);
 				END Rename0;
 				
 
-				PROCEDURE CreateDirectory0*( path: ARRAY OF CHAR;  VAR res: LONGINT );
+				PROCEDURE CreateDirectory0*( path: ARRAY OF CHAR;  VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					r := Unix.mkdir( ADDRESSOF( path ), Unix.rwxrwxrwx );
@@ -574,7 +574,7 @@ TYPE
 				
 						
 				PROCEDURE Flush( buf: Buffer );
-				VAR n: SIZE;  res: LONGINT;  stat: Unix.Status;
+				VAR n: SIZE;  res: WORD;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
 						IF fd = NoDesc THEN  CreateUnixFile  END;
@@ -776,7 +776,7 @@ TYPE
 				END SetAttributes;
 
 
-				PROCEDURE Register0*( VAR res: LONGINT );
+				PROCEDURE Register0*( VAR res: WORD );
 				VAR fo, r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF (state = Create) & (registerName # "") THEN  

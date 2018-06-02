@@ -520,7 +520,7 @@ MODULE MyTVDriver;
 PROCEDURE Install*;
 VAR
 	dev: TVDriver.VideoCaptureDevice;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(dev);
 	... set the device properties ...

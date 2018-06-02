@@ -10,7 +10,7 @@ CONST
 
 (** Set the cache properties of the specified physical memory area on the current processor. {physAdr, size MOD PS = 0}  Must be called from supervisor mode. *)
 
-PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: LONGINT);
+PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
 VAR i, n, f: LONGINT; mask, base: SET; j, k: ADDRESS;
 BEGIN
 	res := 1507	(* implementation restriction - fixed entries not supported *)
@@ -18,7 +18,7 @@ END LocalSetCacheProperties;
 
 (** Broadcast a LocalSetCacheProperties operation to all processors. *)
 
-PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: LONGINT);
+PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
 BEGIN
 	res := 1507	(* implementation restriction - fixed entries not supported *)
 END GlobalSetCacheProperties;

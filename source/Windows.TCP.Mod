@@ -76,7 +76,7 @@ TYPE
 	(** Open a TCP connection (only use once per Connection instance).
 				Use TCP.NilPort for lport to automatically assign an unused local port.
 			*)
-		PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: LONGINT );
+		PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: WORD );
 		VAR adr: WSock32.sockaddrIn;  err: LONGINT; str: ARRAY 64 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN
@@ -145,7 +145,7 @@ TYPE
 		END Open;
 
 	(** Send data on a TCP connection. *)
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 		VAR err : LONGINT;
 		BEGIN
 			ASSERT((ofs >= 0) & (ofs + len <= LEN(data)));
@@ -225,7 +225,7 @@ TYPE
 			INCL( flags, Timeout )
 		END HandleTimeout;
 
-		PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: LONGINT );
+		PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: WORD );
 		BEGIN {EXCLUSIVE}
 			IF ~(state IN (good + bad)) THEN
 				IF ms # -1 THEN
@@ -244,7 +244,7 @@ TYPE
 
 	(** Close a TCP connection (half-close). *)
 		PROCEDURE Close*;
-		VAR res: LONGINT; closetimer: Objects.Timer; (* fof 070102 *)
+		VAR res: WORD; closetimer: Objects.Timer; (* fof 070102 *)
 		BEGIN {EXCLUSIVE}
 			IF state = Closed THEN RETURN END;
 			(*IF receiver # NIL THEN receiver.Terminate END;  *)
@@ -279,7 +279,7 @@ TYPE
 		END Close;
 
 		PROCEDURE SetPortAndIp;
-		VAR sockname: WSock32.sockaddrIn;  lensockname: LONGINT;  res: LONGINT;
+		VAR sockname: WSock32.sockaddrIn;  lensockname: LONGINT;  res: WORD;
 		BEGIN
 			lensockname := SIZEOF( WSock32.sockaddrIn );
 			res := WSock32.getsockname( socket, sockname, lensockname );
@@ -297,7 +297,7 @@ TYPE
 		END SetPortAndIp;
 
 	(** Accept a client waiting on a listening connection. Blocks until a client is available or the connection is closed. *)
-		PROCEDURE Accept*( VAR client: Connection;  VAR res: LONGINT );
+		PROCEDURE Accept*( VAR client: Connection;  VAR res: WORD );
 		VAR s: WSock32.Socket;  adr: WSock32.sockaddrIn;  adrlen: LONGINT;
 			str: ARRAY 64 OF CHAR;
 		BEGIN
@@ -392,7 +392,7 @@ TYPE
 
 	(* Finalize the Connection object *)
 		PROCEDURE Finalize( ptr: ANY );
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.Enter;  KernelLog.String( "TCP.Finalize " );  Report( SELF );  KernelLog.Exit; END;
 			ASSERT ( ptr = SELF );
@@ -464,7 +464,7 @@ VAR
 		KernelLog.String( "]" );
 	END Report;
 
-	PROCEDURE ReportResult( res: LONGINT );
+	PROCEDURE ReportResult( res: WORD );
 	BEGIN
 		IF res = Ok THEN KernelLog.String( "Ok" );
 		ELSIF res = ConnectionRefused THEN KernelLog.String( "ConnectionRefused" )

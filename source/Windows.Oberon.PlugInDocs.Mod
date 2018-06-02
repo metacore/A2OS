@@ -73,7 +73,7 @@ HALT(100);
 		VAR
 			S: Attributes.Scanner; R: Request;
 			obj: Objects.Object; doc: Documents.Document;
-			res: LONGINT;
+			res: WORD;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Attributes.Scan(S);
@@ -153,7 +153,7 @@ Out.String("PostStream "); Out.Int(state, 0); Out.Ln();
 		VAR
 			S: Attributes.Scanner; R: Request;
 			obj: Objects.Object; doc: Documents.Document;
-			file, name: FileDir.FileName; res: LONGINT;
+			file, name: FileDir.FileName; res: WORD;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Attributes.Scan(S);

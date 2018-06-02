@@ -158,7 +158,7 @@ BEGIN
 END Alias;
 
 PROCEDURE Delete*(context : Commands.Context);
-VAR filename: Files.FileName; res: LONGINT;
+VAR filename: Files.FileName; res: WORD;
 BEGIN
 	WHILE context.arg.GetString(filename) DO
 		context.out.String(filename); context.out.Char(09X);
@@ -216,7 +216,7 @@ BEGIN
 END Exit;
 
 PROCEDURE Free*(context : Commands.Context);
-VAR name: AosModules.Name; msg: String; res: LONGINT;
+VAR name: AosModules.Name; msg: String; res: WORD;
 BEGIN
 	IF context.arg.GetString(name) THEN
 		context.out.String(name); context.out.Char(09X);
@@ -262,7 +262,7 @@ END Modules;
 	cmdline = cmdpar { "|" cmdpar } [ ( ">" | ">>" ) file ] .
 	cmdpar = cmd { par } [ "<" file ] .
 *)
-PROCEDURE execute(context : Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR);
+PROCEDURE execute(context : Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR);
 VAR
 	ctx: Context; R: Streams.StringReader; cmd, prev, cmds: Command; i, j, p, ofs, len: LONGINT; ch, filter: CHAR;
 	in, pR: Streams.Reader; out, err, pW: Streams.Writer; file: Files.FileName; F, newF: Files.File; fR: Files.Reader;
@@ -397,7 +397,7 @@ BEGIN
 END execute;
 
 PROCEDURE Start*(context : Commands.Context);
-VAR msg: String; res: LONGINT; string : POINTER TO ARRAY OF CHAR;
+VAR msg: String; res: WORD; string : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF (context.arg IS Streams.StringReader) & (context.arg.Available() > 0) THEN
 		NEW(string, context.arg.Available() +1);
@@ -417,7 +417,7 @@ BEGIN
 	Close(context);
 END Version;
 
-PROCEDURE Execute*(par: Commands.Context;  VAR cmdline: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR);
+PROCEDURE Execute*(par: Commands.Context;  VAR cmdline: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR);
 BEGIN
 	execute(par, cmdline, {Commands.Wait}, res, msg)
 END Execute;

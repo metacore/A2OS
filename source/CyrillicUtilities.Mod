@@ -62,7 +62,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -109,7 +109,7 @@ TYPE
 			END
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 			c: CHAR;
 		BEGIN
@@ -145,7 +145,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			(*r : Files.Reader;*)
 			tempUCS32 : ARRAY 1024 OF Char32;
@@ -193,7 +193,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 			c: CHAR;
 		BEGIN
@@ -229,7 +229,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -276,7 +276,7 @@ TYPE
 			END
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 			c: CHAR;
 		BEGIN
@@ -312,7 +312,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -359,7 +359,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 			c: CHAR;
 		BEGIN
@@ -395,7 +395,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -442,7 +442,7 @@ TYPE
 			END
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 			c: CHAR;
 		BEGIN

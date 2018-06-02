@@ -57,14 +57,14 @@ BEGIN
 	IF len >= min THEN  res := Streams.Ok  ELSE  res := Streams.EOF  END;
 END ReceiveStdin;
 
-PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: LONGINT );
+PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: WORD );
 VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 1, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok
 END SendStdout;
 
 
-PROCEDURE SendErrout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: LONGINT );
+PROCEDURE SendErrout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: WORD );
 VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 2, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok

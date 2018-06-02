@@ -270,7 +270,7 @@ TYPE
 		END GenerateControl;
 
 		PROCEDURE Open*(CONST fileName : ARRAY OF CHAR);
-		VAR res : LONGINT; msg : ARRAY 256 OF CHAR;
+		VAR res : WORD; msg : ARRAY 256 OF CHAR;
 		BEGIN
 			COPY(fileName, filename);
 			player.Open(filename, msg, res);

@@ -50,7 +50,7 @@ END GetErrorString;
 
 (** Get error message for the specified error number. If no message can be found, a generic error message is generated *)
 PROCEDURE GetErrorMessage*(errorCode : LONGINT) : ErrorMessage;
-VAR errorMessage : ErrorMessage; res : LONGINT;
+VAR errorMessage : ErrorMessage; res : WORD;
 BEGIN {EXCLUSIVE}
 	res := -1;
 	Get(errorCode, errorMessage, res);
@@ -93,7 +93,7 @@ BEGIN
 	INC(index);
 END Add;
 
-PROCEDURE Get(number : LONGINT; VAR errorMessage : ErrorMessage; VAR res : LONGINT);
+PROCEDURE Get(number : LONGINT; VAR errorMessage : ErrorMessage; VAR res : WORD);
 VAR i : LONGINT;
 BEGIN
 	IF (cache # NIL) THEN
@@ -108,7 +108,7 @@ BEGIN
 	END;
 END Get;
 
-PROCEDURE ParseLine(reader : Streams.Reader; VAR errorMessage : ErrorMessage; VAR res : LONGINT);
+PROCEDURE ParseLine(reader : Streams.Reader; VAR errorMessage : ErrorMessage; VAR res : WORD);
 VAR line : ARRAY MaxLineLength OF CHAR;
 BEGIN
 	IF reader.GetInteger(errorMessage.code, FALSE) THEN
@@ -121,7 +121,7 @@ BEGIN
 	res := reader.res;
 END ParseLine;
 
-PROCEDURE ParseFile(CONST filename : Files.FileName; VAR res : LONGINT);
+PROCEDURE ParseFile(CONST filename : Files.FileName; VAR res : WORD);
 VAR file : Files.File; reader : Files.Reader; errorMessage : ErrorMessage; ch : CHAR;
 BEGIN
 	file := Files.Old(filename);
@@ -152,7 +152,7 @@ END ParseFile;
 
 (**	Load and parse a error message file. *)
 PROCEDURE Open*(context : Commands.Context); (** [filename] ~ *)
-VAR filename : Files.FileName; res : LONGINT;
+VAR filename : Files.FileName; res : WORD;
 BEGIN {EXCLUSIVE}
 	index := 0; cache := NIL;
 	context.arg.SkipWhitespace; context.arg.String(filename);

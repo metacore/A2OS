@@ -48,7 +48,7 @@ CONST
 	ModelWindowWidth = 320; ModelWindowHeight = 80;
 
 TYPE
-	SetStringProcedure = PROCEDURE {DELEGATE} (CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : LONGINT);
+	SetStringProcedure = PROCEDURE {DELEGATE} (CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : WORD);
 
 	DropTarget = OBJECT(WMDropTarget.DropTarget)
 	VAR
@@ -90,7 +90,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			setString(string, position, res);
 		END Set;
@@ -150,7 +150,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateAdrLabel(object : XML.Element);
-		VAR string : Types.String32; res : LONGINT; nbrStr : ARRAY 17 OF CHAR; t: Modules.TypeDesc;
+		VAR string : Types.String32; res : WORD; nbrStr : ARRAY 17 OF CHAR; t: Modules.TypeDesc;
 		BEGIN
 			IF (object # NIL) THEN
 				t := Modules.TypeOf(object);
@@ -230,7 +230,7 @@ TYPE
 			END;
 		END MyDragDropped;
 
-		PROCEDURE SetDroppedString( CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : LONGINT);
+		PROCEDURE SetDroppedString( CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : WORD);
 		VAR object: ANY; gen: XML.GeneratorProcedure; moduleName, procedureName ,msg: Modules.Name; element: XML.Element;
 
 		BEGIN
@@ -1126,7 +1126,7 @@ TYPE
 		color : WMProperties.ColorProperty;
 		editor : WMEditors.TextField;
 		colorPot : WMColorComponents.ColorPot;
-		res : LONGINT;
+		res : WORD;
 		outOfDate : BOOLEAN;
 
 		PROCEDURE &Init*;
@@ -1467,7 +1467,7 @@ TYPE
 		END HandleButton;
 
 		PROCEDURE Apply(force : BOOLEAN);
-		VAR reference : WMProperties.ReferenceProperty; string, oldString : ARRAY 256 OF CHAR; stringType: Types.String256; res: LONGINT;
+		VAR reference : WMProperties.ReferenceProperty; string, oldString : ARRAY 256 OF CHAR; stringType: Types.String256; res: WORD;
 		BEGIN
 			reference := SELF.reference;
 			IF (reference # NIL) THEN
@@ -1493,7 +1493,7 @@ TYPE
 		END Apply;
 
 		PROCEDURE Synchronize(force : BOOLEAN);
-		VAR reference : WMProperties.ReferenceProperty;string : ARRAY 256 OF CHAR; stringType: Types.String256; res: LONGINT;
+		VAR reference : WMProperties.ReferenceProperty;string : ARRAY 256 OF CHAR; stringType: Types.String256; res: WORD;
 		BEGIN
 			reference := SELF.reference;
 			IF (reference # NIL) & (force OR (lastTimestamp # reference.GetTimestamp())) THEN
@@ -1527,7 +1527,7 @@ TYPE
 		END Disable;
 
 		PROCEDURE UpdateButton(object : XML.Element);
-		VAR string : Types.String32; res : LONGINT; nbrStr : ARRAY 17 OF CHAR; t: Modules.TypeDesc;
+		VAR string : Types.String32; res : WORD; nbrStr : ARRAY 17 OF CHAR; t: Modules.TypeDesc;
 		BEGIN
 			IF (object # NIL) THEN
 				button.fillColor.Set(WMGraphics.Green);
@@ -1601,7 +1601,7 @@ TYPE
 		alignment_chooser : WMDropDownLists.DropDownList;
 
 		PROCEDURE &Init*;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			Init^;
 			SetNameAsString(StrAlignmentPropertyView);
@@ -1833,7 +1833,7 @@ TYPE
 			enabledView.SetProperty(NIL);
 		END ResetProperties;
 
-		PROCEDURE SetProperty(property : WMProperties.Property; VAR res : LONGINT);
+		PROCEDURE SetProperty(property : WMProperties.Property; VAR res : WORD);
 		VAR name : Strings.String;
 		BEGIN
 			res := Ok;
@@ -1961,7 +1961,7 @@ TYPE
 			boundsView.SetEnabled(s);
 		END SetAlignment;
 
-		PROCEDURE SetProperty(property : WMProperties.Property; VAR res : LONGINT);
+		PROCEDURE SetProperty(property : WMProperties.Property; VAR res : WORD);
 		VAR name : Strings.String;
 		BEGIN
 			res := Ok;
@@ -3664,7 +3664,7 @@ TYPE
 		END HandleShiftReturn;
 
 		PROCEDURE SetModel*(model : Models.Model);
-		VAR string : Types.DynamicString; res : LONGINT;
+		VAR string : Types.DynamicString; res : WORD;
 		BEGIN
 			Acquire;
 			IF (SELF.model # NIL) THEN SELF.model.onChanged.Remove(ModelChanged); END;
@@ -3693,7 +3693,7 @@ TYPE
 		END SetModel;
 
 		PROCEDURE ModelChanged(sender, data : ANY);
-		VAR model : Models.Model; string : Types.String256; res : LONGINT;
+		VAR model : Models.Model; string : Types.String256; res : WORD;
 		BEGIN
 			IF autoRefresh THEN
 				model := SELF.model;

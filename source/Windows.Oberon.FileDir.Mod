@@ -78,7 +78,7 @@ BEGIN
 END EnumerateFiles;
 
 PROCEDURE CreateDirectory*(name: ARRAY OF CHAR; done: BOOLEAN);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	Files.CreateDirectory(name,res);
 	done := (res=0);

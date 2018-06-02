@@ -1621,7 +1621,7 @@ TYPE
 			InitWriter(Send, 256)
 		END InitStream;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR idx: LONGINT;
 		BEGIN
 			WHILE len > 0 DO

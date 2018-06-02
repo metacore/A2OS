@@ -322,7 +322,7 @@ TYPE
 		END FPSection;
 
 		PROCEDURE FormalPars(scope: PCT.ProcScope; VAR rtype: PCT.Struct; pflags: SET); (* ejz *)
-			VAR o: PCT.Symbol; res: LONGINT;
+			VAR o: PCT.Symbol; res: WORD;
 		BEGIN
 			rtype := PCT.NoType;
 			IF sym = lparen THEN
@@ -502,7 +502,7 @@ TYPE
 		END ObjectType;
 
 		PROCEDURE DefinitionType(pos: LONGINT;  VAR t: PCT.Struct;  name: StringPool.Index);
-		VAR  intf: ARRAY 1 OF PCT.Interface; parser: InterfaceParser; recscope: PCT.RecScope; int: PCT.Interface; res: LONGINT;
+		VAR  intf: ARRAY 1 OF PCT.Interface; parser: InterfaceParser; recscope: PCT.RecScope; int: PCT.Interface; res: WORD;
 		BEGIN
 			INCL(PCM.codeOptions, PCM.ExportDefinitions);
 			IF sym = refines THEN
@@ -531,7 +531,7 @@ TYPE
 
 (** fof >> *)
 		PROCEDURE TensorType( VAR t: PCT.Struct );
-		VAR aarray: PCT.Tensor;  base: PCT.Struct;  res: LONGINT;
+		VAR aarray: PCT.Tensor;  base: PCT.Struct;  res: WORD;
 		BEGIN
 			Type( base, noname );  NEW( aarray );  t := aarray;  PCT.InitTensor( aarray, base, res );
 			IF res # PCT.Ok THEN Error( res, scanner.errpos ) END;
@@ -765,7 +765,7 @@ TYPE
 		END ConstDecl;
 
 		PROCEDURE FixForwards;
-		VAR obj: PCT.Symbol; state: SHORTINT; res: LONGINT;
+		VAR obj: PCT.Symbol; state: SHORTINT; res: WORD;
 		BEGIN
 			state := PCT.structallocated;
 			IF isRecord THEN state := PCT.structdeclared END;
@@ -1260,7 +1260,7 @@ TYPE
 
 		PROCEDURE Factor(VAR x: PCB.Expression);
 		VAR el: PCB.ExprList;  d, dh: PCB.Designator;  o: PCT.Symbol; h: PCT.Variable; hiddenVarName : StringPool.Index;
-			rtype: PCT.Struct; pos: LONGINT; mod: PCT.Symbol; ap: PCB.AnyProc; res : LONGINT;
+			rtype: PCT.Struct; pos: LONGINT; mod: PCT.Symbol; ap: PCB.AnyProc; res : WORD;
 			m: PCT.Proc;
 			pars: ARRAY 1 OF PCB.Expression; (* ug *)
 			(** fof >> *)
@@ -1699,7 +1699,7 @@ TYPE
 		END StatementBlock;
 
 		PROCEDURE CallNewOnObject (code: PCC.Code;  suppress: BOOLEAN;  proc: PCB.Designator;  params: PCB.ExprList;  curlevel: SHORTINT);
-		VAR varName: StringPool.Index; symbol: PCT.Variable; res: LONGINT; parameters: PCB.ExprList; item: PCB.Expression; tempVar: PCB.Designator;
+		VAR varName: StringPool.Index; symbol: PCT.Variable; res: WORD; parameters: PCB.ExprList; item: PCB.Expression; tempVar: PCB.Designator;
 		BEGIN
 			symbol := codescope.FindHiddenVar (-PCB.newfn, codescope);
 			ASSERT (suppress OR (symbol # NIL));
@@ -2260,7 +2260,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;	(* vars and procs are allowed, no const and types *)
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			LOOP
 				(* allow ident w/o var, to minimize the misleading err 83 in the rest of the module *)
@@ -2340,7 +2340,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;	(* vars and procs are allowed, no const and types *)
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			LOOP
 				(* allow ident w/o var, to minimize the misleading err 83 in the rest of the module *)
@@ -2504,7 +2504,7 @@ TYPE
 		VAR modscope: PCT.ModScope;	(*cached value*)
 
 		PROCEDURE ImportList;
-			VAR alias, name: StringPool.Index; new: PCT.Module; res: LONGINT;
+			VAR alias, name: StringPool.Index; new: PCT.Module; res: WORD;
 		BEGIN
 			LOOP
 				IF sym # ident THEN Error(ident, scanner.errpos); EXIT END;
@@ -2592,7 +2592,7 @@ TYPE
 		END Await;
 
 		PROCEDURE & InitModule*(modscope: PCT.ModScope; s: PCS.Scanner);
-			VAR recscope: PCT.RecScope; rec: PCT.Record; res: LONGINT;i, j: LONGINT;   (** fof  *)
+			VAR recscope: PCT.RecScope; rec: PCT.Record; res: WORD;i, j: LONGINT;   (** fof  *)
 		BEGIN
 			Machine.AtomicInc(NModules);
 			NEW(sync, 10(*timeout*)); sync.Enter;
@@ -2648,7 +2648,7 @@ TYPE
 
 		(** fof >> *)
 		PROCEDURE Epilog;
-		VAR res: LONGINT;  sym: PCT.Symbol;  var: PCT.Variable;
+		VAR res: WORD;  sym: PCT.Symbol;  var: PCT.Variable;
 		BEGIN
 			(* check if the array module has been used in PCArrays. If so then put it into the scope to protect from unloading *)
 			IF PCArrays.ArrayModule # NIL THEN  (* must be done here by this process *)

@@ -10,10 +10,10 @@ CONST
 
 TYPE
 	Service* = OBJECT	(** TCP service object - handles opening and closing of connections *)
-		VAR res: LONGINT; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
+		VAR res: WORD; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
 
 		(** Start is called indirectly by OpenService. *)
-		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: LONGINT);
+		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: WORD);
 		BEGIN
 			NEW(service); service.Open(port, IP.NilAdr, TCP.NilPort, res);
 			IF res = Ok THEN
@@ -78,7 +78,7 @@ TYPE
 		  ctx: TLS.Context; cipherSuites: ARRAY TLS.Suites OF LONGINT;
 
 		(** Start is called indirectly by OpenService. *)
-		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: LONGINT);
+		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: WORD);
 			VAR
 				newService: TLS.Connection;
 		   certificate : ARRAY 500 OF CHAR;

@@ -425,7 +425,7 @@ TYPE
 		filenameEdit : WMEditors.Editor;
 
 		PROCEDURE HandleLoadButton(sender, data : ANY);
-		VAR events : EventsUtils.EventContainer; filename, msg : ARRAY 256 OF CHAR; res : LONGINT;
+		VAR events : EventsUtils.EventContainer; filename, msg : ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			IF filename # "" THEN
@@ -442,7 +442,7 @@ TYPE
 		END HandleLoadButton;
 
 		PROCEDURE HandleStoreButton(sender, data : ANY);
-		VAR filename, msg : ARRAY 256 OF CHAR; res : LONGINT;
+		VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			IF (filename # "") & (eventLog.events # NIL) THEN

@@ -181,7 +181,7 @@ TYPE
 		END Init;
 
 		(* Open a video stream by reading the sequence header *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
 			marker: CHAR;
 
@@ -467,7 +467,7 @@ TYPE
 			RETURN time;
 		END GetCurrentTime;
 
-		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			i: LONGINT;
 			code: CHAR;
@@ -538,7 +538,7 @@ TYPE
 			res := Codec.ResOk;
 		END SeekFrame;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			newframe: LONGINT;
 
@@ -1932,7 +1932,7 @@ TYPE
 		END Init;
 
 		(** open the demultiplexer on an input stream *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
 			oldPos, i: LONGINT;
 			startCode: CHAR;
@@ -2354,7 +2354,7 @@ TYPE
 
 
 		(* seek the streamNr to position pos with seekType. itemSize contains the size of the element seeked to, if known and applicable; res = 0 if Ok, otherwise an error number *)
-		PROCEDURE SetStreamPos*(streamNr :  LONGINT; seekType : LONGINT; pos : LONGINT; VAR itemSize : LONGINT;  VAR res : LONGINT);
+		PROCEDURE SetStreamPos*(streamNr :  LONGINT; seekType : LONGINT; pos : LONGINT; VAR itemSize : LONGINT;  VAR res : WORD);
 		VAR
 			cur: POINTER TO StreamType;
 			len: LONGINT;

@@ -3,7 +3,7 @@ MODULE Oberon IN A2; (** AUTHOR "negelef"; PURPOSE "Oberon command interpreter i
 IMPORT Modules, Commands, Strings, OberonDisplay, Displays, Plugins ;
 
 	PROCEDURE Call* (context: Commands.Context);
-	VAR string, msg: ARRAY 64 OF CHAR; module, command: Modules.Name; res: LONGINT; procedure: PROCEDURE;
+	VAR string, msg: ARRAY 64 OF CHAR; module, command: Modules.Name; res: WORD; procedure: PROCEDURE;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String (string);
 		Commands.Split (string, module, command, res, msg);

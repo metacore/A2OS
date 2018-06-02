@@ -532,7 +532,7 @@ BEGIN {EXCLUSIVE}
 END FindHosts;
 
 (** remove the virtual host given by name *)
-PROCEDURE RemoveHost*(CONST host : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE RemoveHost*(CONST host : ARRAY OF CHAR; VAR res : WORD);
 VAR i : LONGINT; o, h : ANY;
 BEGIN {EXCLUSIVE}
 	hosts.Lock;
@@ -548,7 +548,7 @@ BEGIN {EXCLUSIVE}
 END RemoveHost;
 
 (** Start the basic Server functionality. *)
-PROCEDURE StartHTTP*(root : ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StartHTTP*(root : ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (http = NIL) THEN
 		Strings.Trim(root, " "); defaultHost.SetPrefix(root);
@@ -567,7 +567,7 @@ BEGIN {EXCLUSIVE}
 END StartHTTP;
 
 (** Start the basic Server functionality. *)
-PROCEDURE StartHTTPS*(root : ARRAY OF CHAR; CONST  logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StartHTTPS*(root : ARRAY OF CHAR; CONST  logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (https = NIL) THEN
 		Strings.Trim(root, " "); defaultHost.SetPrefix(root);
@@ -586,7 +586,7 @@ BEGIN {EXCLUSIVE}
 END StartHTTPS;
 
 (** Stop the server *)
-PROCEDURE StopHTTP*(VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StopHTTP*(VAR msg : ARRAY OF CHAR; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (http # NIL) THEN
 		res := Ok; COPY("", msg);
@@ -599,7 +599,7 @@ BEGIN {EXCLUSIVE}
 END StopHTTP;
 
 (** Stop the server *)
-PROCEDURE StopHTTPS*(VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StopHTTPS*(VAR msg : ARRAY OF CHAR; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (https # NIL) THEN
 		res := Ok; COPY("", msg);

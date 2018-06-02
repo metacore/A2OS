@@ -98,7 +98,7 @@ TYPE
 			of the overriding constructor!
 		*)
 		PROCEDURE &Constr*(type, mtu, adrSize: LONGINT);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			ASSERT((mtu >= 0) & (mtu <= MaxPacketSize));
 			ASSERT((adrSize >= 0) & (adrSize <= MaxLinkAdrSize));
@@ -596,7 +596,7 @@ END OutLinkAdr;
 (** Copy data from array to array *)
 
 PROCEDURE Copy*(VAR from, to: ARRAY OF CHAR; fofs, tofs, len: LONGINT);
-		VAR res: LONGINT;
+		VAR res: WORD;
 BEGIN
 	IF len > 0 THEN
 		ASSERT((fofs+len <= LEN(from)) & (tofs+len <= LEN(to)));

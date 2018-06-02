@@ -574,7 +574,7 @@ by calling its handler when the system has nothing else to do. *)
     END Reboot;
 
 	PROCEDURE SwitchToWM;
-	VAR res: LONGINT; s: ARRAY 256 OF CHAR;
+	VAR res: WORD; s: ARRAY 256 OF CHAR;
 	BEGIN
 		OpenTrack(0, Display.Width);	(* inhibit display updates *)
 		s := "";	(* remove default Oberon input device and install virtual display and input devices *)

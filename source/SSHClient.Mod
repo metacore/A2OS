@@ -1112,7 +1112,7 @@ Out.Ln;
 			END ConnectHandler;
 
 			PROCEDURE HelpHandler( sender, data: ANY );
-			VAR res: LONGINT; msg: ARRAY 128 OF CHAR;
+			VAR res: WORD; msg: ARRAY 128 OF CHAR;
 			BEGIN
 				Commands.Call( "PAR Notepad.Open SSH.Tool ~", {}, res, msg );
 				IF res # Commands.Ok THEN  Out.String( msg ); Out.Ln  END;

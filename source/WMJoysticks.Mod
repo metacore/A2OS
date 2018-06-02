@@ -193,7 +193,7 @@ TYPE
 		END HandleJoystickMessage;
 
 		PROCEDURE HandleCalibrationButton(sender, data : ANY);
-		VAR res : LONGINT; message : ARRAY 128 OF CHAR;
+		VAR res : WORD; message : ARRAY 128 OF CHAR;
 		BEGIN
 			IF joystick.calibrationMode THEN
 				joystick.StopCalibration(message, res);

@@ -337,7 +337,7 @@ TYPE
 		END Connect;
 
 		PROCEDURE ConnectResponse(identifier: CHAR; response, status: LONGINT): LONGINT;
-		VAR cmd: ARRAY 12 OF CHAR; res: LONGINT; sc: SignallingChannel;
+		VAR cmd: ARRAY 12 OF CHAR; res: WORD; sc: SignallingChannel;
 		BEGIN {EXCLUSIVE}
 			ASSERT(state = W4L2CAConnectRsp);
 			IF TraceChannel THEN
@@ -671,7 +671,7 @@ TYPE
 		PROCEDURE Write*(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT; VAR size: LONGINT): LONGINT;
 
 		VAR
-			res: LONGINT;
+			res: WORD;
 
 		BEGIN
 
@@ -835,7 +835,7 @@ TYPE
 		PROCEDURE Signal(link: HCI.Link; code, identifier: CHAR; command: ARRAY OF CHAR; len: LONGINT): LONGINT;
 
 		VAR
-				res : LONGINT;
+				res : WORD;
 
 		BEGIN (* {EXCLUSIVE} TODO *)
 
@@ -1533,7 +1533,7 @@ TYPE
 		END AcceptACLConnection;
 
 		(*----- lower layer events -----*)
-		PROCEDURE Connect(sender: HCI.HCI; link: HCI.Link; res: LONGINT);
+		PROCEDURE Connect(sender: HCI.HCI; link: HCI.Link; res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF (res = 0) THEN
 				IF TraceHCIManager THEN
@@ -1551,7 +1551,7 @@ TYPE
 			END;
 		END Connect;
 
-		PROCEDURE Disconnect(sender: HCI.HCI; link: HCI.Link; res: LONGINT);
+		PROCEDURE Disconnect(sender: HCI.HCI; link: HCI.Link; res: WORD);
 		VAR p,q : L2CAP;
 		BEGIN {EXCLUSIVE}
 			IF TraceHCIManager THEN

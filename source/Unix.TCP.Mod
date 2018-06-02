@@ -66,7 +66,7 @@ TYPE
 
 				(** Open a TCP connection (only use once per Connection instance).
 					Use TCP.NilPort for lport to automatically assign an unused local port.*)
-				PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: LONGINT );
+				PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: WORD );
 				VAR ignore: BOOLEAN;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (state = Unused) & (lport >= 0) & (lport < 10000H) & (fport >= 0) & (fport < 10000H) );
@@ -126,7 +126,7 @@ TYPE
 
 
 				(** Send data on a TCP connection. *)
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 				VAR n: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF trace THEN  Out.String( "Send: socket=" );  Out.Int( socket, 0 )  END;
@@ -235,7 +235,7 @@ TYPE
 				END State;
 
 				(** Wait until the connection state is either in the good or bad set, up to "ms" milliseconds. *)
-				PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: LONGINT );
+				PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: WORD );
 				BEGIN
 					WHILE (ms > 0) & ~(state IN (good+bad)) DO  Objects.Sleep( 10 );  DEC( ms, 10 )  END;
 					IF state IN good THEN
@@ -261,7 +261,7 @@ TYPE
 
 				(** Accept a client waiting on a listening connection. Blocks until a client is available or the
 					  connection is closed. *)
-				PROCEDURE Accept*( VAR client: Connection;  VAR res: LONGINT );
+				PROCEDURE Accept*( VAR client: Connection;  VAR res: WORD );
 				VAR newsocket: LONGINT;  peerAdr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
 					IF trace THEN

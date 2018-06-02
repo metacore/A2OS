@@ -33,7 +33,7 @@ TYPE
 		(* virtual disk geometry CHS *)
 		cyls, hds, spt : LONGINT;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid; RETURN; END;
 			ASSERT((ofs >= 0) & (ofs + num * blockSize <= LEN(data)));
@@ -58,7 +58,7 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			HALT(301); (* abstract *)
 		END TransferOperation;
@@ -68,7 +68,7 @@ TYPE
 			size := SELF.size;	res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg : Disks.Message; VAR res : LONGINT);
+		PROCEDURE Handle*(VAR msg : Disks.Message; VAR res : WORD);
 		BEGIN
 			IF (msg IS Disks.GetGeometryMsg) & (cyls > 0) THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -96,7 +96,7 @@ TYPE
 		file : Files.File;
 		rider : Files.Rider;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			file.Set(rider, SYSTEM.VAL (LONGINT, block * blockSize));
 			IF rider.res # Files.Ok THEN res := BlockNumberInvalid; RETURN; END;
@@ -133,7 +133,7 @@ TYPE
 	VAR
 		memory : MemoryBlock;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			IF op = Disks.Read THEN
 				ASSERT((block  + num) * blockSize <= LEN(memory));

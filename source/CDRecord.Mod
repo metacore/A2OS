@@ -330,7 +330,7 @@ TYPE
 
 		PROCEDURE AddTrack*(filename: Strings.String; trackType : LONGINT; permitCopy: BOOLEAN) : LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			track: InformationTrack;
 			file: Files.File;
 		BEGIN
@@ -390,7 +390,7 @@ TYPE
 		PROCEDURE GetBufferCapacity(VAR totalCapacity, unusedCapacity: LONGINT): LONGINT;
 		VAR
 			capacity: Lib.BufferCapacity;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			res := Lib.ReadBufferCapacity(dev, FALSE, ADDRESSOF(capacity), SIZEOF(Lib.BufferCapacity));
 			IF res = ResOk THEN
@@ -647,7 +647,7 @@ TYPE
 
 		PROCEDURE Write(op, startSec, nofBlocks: LONGINT; adr: ADDRESS): LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			LOOP
 				res := dev.TransferEx(op, startSec, nofBlocks, adr, dma & UseDma);
@@ -662,7 +662,7 @@ TYPE
 
 		PROCEDURE PadTrack(op: LONGINT; track: InformationTrack) : LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			startSec, secsToPad, nofBlocks: LONGINT;
 			buf: POINTER TO ARRAY OF CHAR;
 		BEGIN
@@ -823,7 +823,7 @@ TYPE
 
 		PROCEDURE GetWriteParams(VAR  params: WriteParams): LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			page: Lib.WriteParameterPage;
 		BEGIN
 			res := Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage));
@@ -919,7 +919,7 @@ TYPE
 		PROCEDURE CheckIncompatibleMedium(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 5) & (msg.asc = 30);
@@ -945,7 +945,7 @@ TYPE
 		PROCEDURE CheckNoMediumPresent*(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 2) & (msg.asc = 3AH) & ((msg.ascq = 0) OR (msg.ascq = 1) OR (msg.ascq = 2));
@@ -955,7 +955,7 @@ TYPE
 		PROCEDURE IsInProgress*(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 2) & (msg.asc = 4) & ((msg.ascq = 4) OR (msg.ascq = 7) OR (msg.ascq = 8));
@@ -1170,7 +1170,7 @@ VAR
 	device : ATADisks.DeviceATAPI;
 	i, cur: LONGINT;
 	cap: Capabilities;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	res := ResErr;
 	FOR i := 0 TO MaxRecorders-1 DO
@@ -1315,7 +1315,7 @@ END InsertionSort;
 PROCEDURE GetSense*(dev: ATADisks.DeviceATAPI);
 VAR
 	msg: ATADisks.GetSenseMsg;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := dev.RequestSense();
 	dev.Handle(msg, res);
@@ -1370,7 +1370,7 @@ END MsfToSector;
 
 PROCEDURE Test*;
 VAR
-	res: LONGINT;
+	res: WORD;
 	settings: BurnSettings;
 	compilation: Compilation;
 	recorders: ARRAY MaxRecorders OF CDRecorder;

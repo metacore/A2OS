@@ -2096,7 +2096,7 @@ g) Static array as return type of a function
 		END AppendRange;
 
 		PROCEDURE Finish*;
-		VAR e: Entry;  a: PCT.EnhArray;  res: LONGINT;
+		VAR e: Entry;  a: PCT.EnhArray;  res: WORD;
 		BEGIN
 			WHILE (type IS PCT.EnhArray) DO  (* append remaining indexes as range "..", i.e. A[1] -> A[1,..,..] for VAR A: ARRAY [..,..,..] OF Type  *)
 				AppendRange( -1, NIL , NIL , NIL );
@@ -2297,7 +2297,7 @@ g) Static array as return type of a function
 		END AppendFiller;
 
 		PROCEDURE Finish*;
-		VAR e: Entry;  a: PCT.EnhArray;  res: LONGINT;
+		VAR e: Entry;  a: PCT.EnhArray;  res: WORD;
 		BEGIN
 			ASSERT( type # NIL );
 			IF isRange THEN
@@ -2731,7 +2731,7 @@ BEGIN
 	RETURN c
 END ConstExpression;
 
-PROCEDURE NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: LONGINT): PCT.Array;
+PROCEDURE NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: WORD): PCT.Array;
 	VAR a: DynSizedArray;
 BEGIN
 	NEW(a);
@@ -4821,7 +4821,7 @@ END RealtimeCompatible;
 		restype, rtype, ltype: PCT.Struct;   (* must be determined by inspection of lopd and ropd -> table *)
 		lbase, rbase, largest: PCT.Struct;  idx: StringPool.Index;
 		proc: PCT.Proc;  p: PCT.Parameter;
-		myscope: PCT.ProcScope;  res: LONGINT;  t: PCT.Tensor;
+		myscope: PCT.ProcScope;  res: WORD;  t: PCT.Tensor;
 	BEGIN
 		IF l # NIL THEN ltype := l.type ELSE ltype := NIL END;
 		IF r # NIL THEN rtype := r.type ELSE rtype := NIL END;
@@ -5548,7 +5548,7 @@ END RealtimeCompatible;
 	PROCEDURE Init;
 
 		PROCEDURE NewSProc(m: PCT.Module;  name: ARRAY OF CHAR;  nr: LONGINT);
-		VAR s: SProcInfo;  n: PCS.Name; res: LONGINT;
+		VAR s: SProcInfo;  n: PCS.Name; res: WORD;
 		BEGIN
 			StringPool.GetIndex(name, n);
 			m.scope.CreateSymbol(n, PCT.Public, PCT.NoType, res); ASSERT(res = PCT.Ok);
@@ -5557,7 +5557,7 @@ END RealtimeCompatible;
 		END NewSProc;
 
 		PROCEDURE NewConst(m: PCT.Module;  name: ARRAY OF CHAR;  val: LONGINT);
-			VAR n: StringPool.Index; res: LONGINT; c: PCT.Const;
+			VAR n: StringPool.Index; res: WORD; c: PCT.Const;
 		BEGIN
 			StringPool.GetIndex(name, n);
 			c := PCT.NewIntConst(val, PCT.GetIntType(val));
@@ -5565,7 +5565,7 @@ END RealtimeCompatible;
 		END NewConst;
 
 		PROCEDURE MakeInline(name: ARRAY OF CHAR; fnr: LONGINT);
-		VAR  inline: PCLIR.AsmInline;  code: PCLIR.AsmBlock;  ps: PCT.ProcScope; idx: StringPool.Index; res: LONGINT;
+		VAR  inline: PCLIR.AsmInline;  code: PCLIR.AsmBlock;  ps: PCT.ProcScope; idx: StringPool.Index; res: WORD;
 		BEGIN
 			NEW(inline); NEW(code); inline.code := code;
 			NEW(ps); PCT.InitScope(ps, PCT.System.scope, {}, FALSE);  ps.code := inline; PCT.SetOwner(ps);

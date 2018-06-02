@@ -1112,7 +1112,7 @@ BEGIN
 END Day;
 
 PROCEDURE setLog;
-	VAR fileName: Files.FileName; res: LONGINT;
+	VAR fileName: Files.FileName; res: WORD;
 	BEGIN
 		Day(day);
 		Strings.Concat(logFileBase, ".", fileName); Strings.Append(fileName, day);
@@ -1370,7 +1370,7 @@ VAR pp : PostTestPlugin;
 
 
 				(* pastes the fileClipboard into the file with the given name if it doesn't exist already *)
-PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: WORD);
 VAR writer : Writer;
 	reader : Reader;
 	file : File;

@@ -466,7 +466,7 @@ TYPE
 			SELF.win := win;
 		END New;
 
-		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			win.Load(url, "AUTO");
 			res := 0
@@ -914,7 +914,7 @@ TYPE
 
 			PROCEDURE HandleDiff;
 			VAR
-				filename, string : Filename; context : Commands.Context; res : LONGINT;
+				filename, string : Filename; context : Commands.Context; res : WORD;
 				arg : Streams.StringReader;
 			BEGIN
 				IF (settings.diffCommand = "") THEN
@@ -1306,7 +1306,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE ButtonHandler(sender, data : ANY);
-		VAR options : CompilerOptions; searchString : SearchString; res : LONGINT;
+		VAR options : CompilerOptions; searchString : SearchString; res : WORD;
 		BEGIN
 			IF sender = undoBtn THEN
 				currentPage.editor.Undo;
@@ -1703,7 +1703,7 @@ TYPE
 			SetInfo(windowInfo);
 		END UpdateInfo;
 
-		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : WORD);
 		BEGIN
 			IF (pages[info.id] # NIL) THEN SelectTab(info.id); END;
 		END HandleDocumentInfo;
@@ -1893,7 +1893,7 @@ TYPE
 
 		PROCEDURE Load(CONST filename,  format : ARRAY OF CHAR);
 		VAR
-			text : Texts.Text; res : LONGINT;
+			text : Texts.Text; res : WORD;
 			decoder : Codecs.TextDecoder;
 			msg : ARRAY 512 OF CHAR;
 			readonly : BOOLEAN;
@@ -2038,7 +2038,7 @@ TYPE
 
 		PROCEDURE Store(CONST filename, format  : ARRAY OF CHAR);
 		VAR
-			res : LONGINT;
+			res : WORD;
 			msg : ARRAY 512 OF CHAR;
 			name, backName, fullname, archiveName, entryName, path: Filename;
 			syntaxHighlighterName : ARRAY 32 OF CHAR;
@@ -2330,7 +2330,7 @@ TYPE
 		VAR
 			path, filename : Files.FileName;
 			name, extension, msg : ARRAY 128 OF CHAR;
-			tw : TextUtilities.TextWriter; res : LONGINT;
+			tw : TextUtilities.TextWriter; res : WORD;
 		BEGIN
 			ASSERT(currentPage # NIL);
 			Files.SplitPath(currentPage.filename, path, filename);
@@ -2808,7 +2808,7 @@ BEGIN
 END Uncomment;
 
 PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY OF CHAR);
-VAR filename, extension, config : Files.FileName; res : LONGINT; tries: LONGINT;
+VAR filename, extension, config : Files.FileName; res : WORD; tries: LONGINT;
 BEGIN
 	name := "";
 	tries := 0; 
@@ -2863,7 +2863,7 @@ BEGIN (* caller holds module lock *)
 END LoadScratchText;
 
 PROCEDURE StoreText(CONST filename : ARRAY OF CHAR; text : Texts.Text);
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	text.AcquireRead;
 	TextUtilities.StoreOberonText(text, filename, res);
@@ -2871,7 +2871,7 @@ BEGIN
 END StoreText;
 
 PROCEDURE LoadText(CONST filename : ARRAY OF CHAR) : Texts.Text;
-VAR text : Texts.Text; res : LONGINT;
+VAR text : Texts.Text; res : WORD;
 BEGIN
 	NEW(text);
 	text.AcquireWrite;
@@ -2932,7 +2932,7 @@ BEGIN {EXCLUSIVE}
 END Cleanup;
 
 PROCEDURE LoadModule(CONST moduleName : ARRAY OF CHAR);
-VAR module : Modules.Module; msg : ARRAY 128 OF CHAR; res : LONGINT;
+VAR module : Modules.Module; msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	module := Modules.ThisModule(moduleName, res, msg);
 END LoadModule;

@@ -27,17 +27,17 @@ TYPE
 
 TYPE
 	(** Any stream output procedure or method. *)
-	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
+	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: WORD );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: WORD );
 
 	Connection* = OBJECT
 
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: WORD );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: WORD );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -498,7 +498,7 @@ TYPE
 			InitWriter( Send, size )
 		END InitStringWriter;
 
-		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: TSize;  propagate: BOOLEAN;  VAR res: WORD );
 		BEGIN
 			res := StringFull
 		END Send;
@@ -992,7 +992,7 @@ TYPE
 			head := LONGINT( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: LONGINT );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: TSize;  VAR len: TSize; VAR res: WORD );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;

@@ -690,7 +690,7 @@ VAR
 		me: Thread_t;
 		old, new: Sigset;
 		param: Sched_param;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		me := pthread_self();
 		SetSigaltstack();
@@ -722,7 +722,7 @@ VAR
 	VAR
 		attr: PThreadAttrType;
 		id: Thread_t;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		pthread_attr_init( ADDRESSOF( attr ) );
 		pthread_attr_setscope( ADDRESSOF( attr ), PTHREAD_SCOPE_SYSTEM );
@@ -884,7 +884,7 @@ VAR
 
 
 	PROCEDURE getSysinfo;
-	VAR res: LONGINT;  p: INTEGER;
+	VAR res: WORD;  p: INTEGER;
 		buf: ARRAY 4096 OF CHAR;
 
 		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );
@@ -978,7 +978,7 @@ VAR
 
 
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		TRACE(d,err);
 		IF oberonXErrorHandler # NIL THEN
@@ -988,7 +988,7 @@ VAR
 	END X11ErrorHandler;
 
 	PROCEDURE X11IOErrorHandler(d: ADDRESS): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		TRACE(d);
 		IF oberonXIOErrorHandler # NIL THEN

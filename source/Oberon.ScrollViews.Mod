@@ -62,7 +62,7 @@ BEGIN RETURN SHORT(X * Display.Unit DIV Printer.Unit)
 END P;
 
 PROCEDURE Value (VAR bar: Bar; x, y, w, h, X, Y: INTEGER; min, max: LONGINT): LONGINT;
-VAR res: LONGINT;
+VAR res: WORD;
 
 	PROCEDURE CalcVal (x, w, bx, bw: INTEGER; min, max: LONGINT): LONGINT;
 	VAR r, d: LONGINT;

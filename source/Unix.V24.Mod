@@ -45,7 +45,7 @@ TYPE
 		END Init;
 		
 		(* adapted from LNO.V24.Mod *)
-		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: LONGINT );
+		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: WORD );
 		VAR 
 			err, speed: LONGINT;
 			tio: Unix.Termios;
@@ -132,7 +132,7 @@ TYPE
 			RETURN num;
 		END Available;
 
-		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: LONGINT );
+		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: WORD );
 		VAR r: SIZE;
 		BEGIN	
 			r := Unix.read( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
@@ -145,7 +145,7 @@ TYPE
 		END ReceiveChar;
 
 		(** Send - Send a byte to the specified port.  Waits until buffer space is available.  res = 0 iff ok. *)		
-		PROCEDURE SendChar*( ch: CHAR;  VAR res: LONGINT );
+		PROCEDURE SendChar*( ch: CHAR;  VAR res: WORD );
 		VAR r: SIZE;
 		BEGIN
 			r := Unix.write( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
@@ -157,7 +157,7 @@ TYPE
 			END;
 		END SendChar;
 
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT );
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD );
 		VAR r: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)

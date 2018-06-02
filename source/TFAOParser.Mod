@@ -1103,7 +1103,7 @@ BEGIN {EXCLUSIVE}
 END DecWorker;
 
 PROCEDURE ScanModule*(CONST filename : ARRAY OF CHAR; dump : BOOLEAN; VAR m : TS.Module);
-VAR t : Texts.Text; res : LONGINT;
+VAR t : Texts.Text; res : WORD;
 	s : S.Scanner;
 	p : Parser;
 BEGIN

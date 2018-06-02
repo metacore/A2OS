@@ -37,7 +37,7 @@ VAR
 	
 	PROCEDURE TerminateA2;
 	VAR
-		res: LONGINT;
+		res: WORD;
 		s: ARRAY 256 OF CHAR;
 	BEGIN
 		Commands.Call( "WMTerminator.Shutdown", {}, res, s );

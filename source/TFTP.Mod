@@ -115,7 +115,7 @@ TYPE
 		END ReceiveAck;
 
 		(* SendAck - sends an ack packet *)
-		PROCEDURE SendAck(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; blockNr: LONGINT; VAR res: LONGINT);
+		PROCEDURE SendAck(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; blockNr: LONGINT; VAR res: WORD);
 		VAR ackHdr: ARRAY 4 OF CHAR; retries: LONGINT;
 		BEGIN
 			Put2(ackHdr, 0, ACK); Put2(ackHdr, 2, blockNr);
@@ -126,7 +126,7 @@ TYPE
 		END SendAck;
 
 		(* SendError - sends an error packet *)
-		PROCEDURE SendError(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; errNo: INTEGER; s: ErrorMsg; VAR res: LONGINT);
+		PROCEDURE SendError(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; errNo: INTEGER; s: ErrorMsg; VAR res: WORD);
 		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: LONGINT;
 		BEGIN
 			Put2(errHdr, 0, ERROR); Put2(errHdr, 2, errNo);

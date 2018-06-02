@@ -105,7 +105,7 @@ END ExpandAlias;
 PROCEDURE GetFileSystemFactory(CONST name : ARRAY OF CHAR; error : Streams.Writer) : Files.FileSystemFactory;
 VAR
 	factory : Files.FileSystemFactory;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : LONGINT;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	factory := NIL;
 	Commands.Split(name, moduleName, procedureName, res, msg);
@@ -399,7 +399,7 @@ VAR
 	enum : Files.Enumerator;
 	enumContext : Commands.Context;
 	arg : Streams.StringReader;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	NEW(options);
 	options.Add("s", "subdirectories", Options.Flag);
@@ -692,7 +692,7 @@ BEGIN
 END RenameFiles;
 
 PROCEDURE CreateDirectory*(context : Commands.Context); (* path ~ *)
-VAR path : Files.FileName; res : LONGINT;
+VAR path : Files.FileName; res : WORD;
 BEGIN
 	IF context.arg.GetString(path) THEN
 		Files.CreateDirectory(path, res);
@@ -706,7 +706,7 @@ BEGIN
 END CreateDirectory;
 
 PROCEDURE DeleteDirectory*(context : Commands.Context); (* path ~ *)
-VAR path : Files.FileName; res : LONGINT;
+VAR path : Files.FileName; res : WORD;
 BEGIN
 	IF context.arg.GetString(path) THEN
 		Files.RemoveDirectory(path, FALSE, res);
@@ -1084,7 +1084,7 @@ BEGIN
 	out.String("FSTools64: Pattern matching is disabled in SAFE mode. Press FSTools64.Unsafe ~ to enable pattern matching."); out.Ln;
 END ShowUnsafeMessage;
 
-PROCEDURE ShowRes(out : Streams.Writer; res : LONGINT);
+PROCEDURE ShowRes(out : Streams.Writer; res : WORD);
 BEGIN
 	out.String("(");
 	CASE res OF

@@ -432,7 +432,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	END SameFiles;
 	*)
 	(*
-	PROCEDURE DeleteFiles(CONST fileSelectionMask: ARRAY OF CHAR; context: Commands.Context; VAR res: LONGINT);
+	PROCEDURE DeleteFiles(CONST fileSelectionMask: ARRAY OF CHAR; context: Commands.Context; VAR res: WORD);
 	VAR
 		enum: Files.Enumerator;
 		flags: SET;

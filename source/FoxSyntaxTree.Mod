@@ -1539,7 +1539,7 @@ TYPE
 		END SetProtected;
 
 		PROCEDURE Level*():LONGINT;
-		VAR type: RecordType; res: LONGINT;
+		VAR type: RecordType; res: WORD;
 		BEGIN
 			type := SELF;
 			res := 0;

@@ -1708,7 +1708,7 @@ TYPE
 	*)
 	
 	PROCEDURE GetModule*(CONST name: ARRAY OF CHAR): ModuleResult;
-	VAR msg: ARRAY 128 OF CHAR; res: LONGINT; mod:ModuleResult; m: Modules.Module; meta: Meta;
+	VAR msg: ARRAY 128 OF CHAR; res: WORD; mod:ModuleResult; m: Modules.Module; meta: Meta;
 	BEGIN
 		m := Modules.ThisModule(name, res, msg);
 		IF m # NIL THEN 

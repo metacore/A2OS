@@ -70,7 +70,7 @@ TYPE
 		END Play;
 
 		PROCEDURE Stop*;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN {EXCLUSIVE}
 			(* playChannel.Stop *)
 			playChannel.Pause;
@@ -87,7 +87,7 @@ TYPE
 
 		(* set in 1/10 sec *)
 		PROCEDURE SetPos*(pos: LONGINT);
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN {EXCLUSIVE}
 			pos := ENTIER(pos / 10 * rate);
 			decoder.SeekSample(pos, FALSE, res);

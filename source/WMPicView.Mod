@@ -52,7 +52,7 @@ END Open;
 PROCEDURE Convert*(context : Commands.Context);
 VAR fni, fno,
 	inName, outName : Files.FileName;
-	res : LONGINT;
+	res : WORD;
 	dec : Codecs.ImageDecoder;
 	enc : Codecs.ImageEncoder;
 	img : Raster.Image;

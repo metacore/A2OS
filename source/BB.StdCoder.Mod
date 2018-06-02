@@ -44,7 +44,7 @@ VAR
 	END ShowError;
 
 
-	PROCEDURE read( r: Streams.Reader; VAR res: LONGINT ): LONGINT;
+	PROCEDURE read( r: Streams.Reader; VAR res: WORD ): LONGINT;
 	VAR ch: CHAR; x: LONGINT;
 	BEGIN
 		IF res = 0 THEN
@@ -64,7 +64,7 @@ VAR
 
 
 	PROCEDURE ReadHeader(		r: Streams.Reader; 
-									VAR res: LONGINT;  VAR name: ARRAY OF CHAR;  VAR type: LONGINT );
+									VAR res: WORD;  VAR name: ARRAY OF CHAR;  VAR type: LONGINT );
 	VAR 
 		x, bits, i: LONGINT; ch: CHAR; tag: ARRAY 16 OF CHAR;
 	BEGIN
@@ -97,7 +97,7 @@ VAR
 	END ReadHeader;
 	
 	
-	PROCEDURE SkipFileType(r: Streams.Reader; VAR res: LONGINT ): BOOLEAN;
+	PROCEDURE SkipFileType(r: Streams.Reader; VAR res: WORD ): BOOLEAN;
 	VAR x, bits, i: LONGINT; ch: CHAR;  ftype: FileType; 
 	BEGIN
 		res := 0;  i := 0; bits := 0;  x := 0;
@@ -111,7 +111,7 @@ VAR
 	END SkipFileType;
 	
 	
-	PROCEDURE ReadInteger( r: Streams.Reader; VAR res: LONGINT ): LONGINT;
+	PROCEDURE ReadInteger( r: Streams.Reader; VAR res: WORD ): LONGINT;
 	VAR bits, val: LONGINT;
 	BEGIN
 		bits := 0;  val := 0;
@@ -120,7 +120,7 @@ VAR
 	END ReadInteger;
 	
 	
-	PROCEDURE ReadFile( r: Streams.Reader; VAR res: LONGINT ): Files.File;
+	PROCEDURE ReadFile( r: Streams.Reader; VAR res: WORD ): Files.File;
 	VAR 
 		hash, x, bits, i, len, sum, s: LONGINT; byte: SHORTINT;  f: Files.File;  w: Files.Writer;
 	BEGIN
@@ -155,7 +155,7 @@ VAR
 	
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
-		f: Files.File;  res: LONGINT;  name2: Files.FileName; 
+		f: Files.File;  res: WORD;  name2: Files.FileName; 
 	BEGIN
 		f := Files.Old( name );
 		IF f # NIL THEN
@@ -213,7 +213,7 @@ VAR
 	
 	
 	PROCEDURE DecodeFile( r: Streams.Reader; CONST name: Files.FileName );
-	VAR res: LONGINT; f: Files.File;
+	VAR res: WORD; f: Files.File;
 	BEGIN
 		IF SkipFileType( r, res ) THEN
 			f := ReadFile( r, res );
@@ -225,7 +225,7 @@ VAR
 	END DecodeFile;
 	
 	
-	PROCEDURE DecodeFileList ( r: Streams.Reader; VAR res: LONGINT );
+	PROCEDURE DecodeFileList ( r: Streams.Reader; VAR res: WORD );
 	VAR 
 		i: LONGINT; p, files: FileList; ch: CHAR;
 		f: Files.File; fr: Files.Reader; path: Files.FileName;

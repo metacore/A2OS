@@ -241,7 +241,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo, 4 for Quadro etc.
 			format is the wave format
 		*)
-		PROCEDURE OpenPlayChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : LONGINT);
+		PROCEDURE OpenPlayChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
 		END OpenPlayChannel;
 
 (** Recording *)
@@ -256,7 +256,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo, 4 for Quadro etc.
 			format is the wave format
 		*)
-		PROCEDURE OpenRecordChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : LONGINT);
+		PROCEDURE OpenRecordChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
 		END OpenRecordChannel;
 
 (** Mixer *)

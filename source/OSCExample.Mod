@@ -35,7 +35,7 @@ VAR
 (* client procedure, which sends the received packet back to the sender *)
 PROCEDURE EchoPacket(p: OSC.OSCMessage);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := p.Return(p);
 END EchoPacket;
@@ -64,7 +64,7 @@ END DumpPacket;
 
 PROCEDURE StartSampleService*;
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(registry);	(* creates a new registry *)
 	registry.AddMethod(Strings.NewString('/dumpme'), DumpPacket); (* register a new procedure *)
@@ -93,7 +93,7 @@ VAR
 	udp: OSCNet.OSCUDPClient;
 	fip: IP.Adr;
 	fport: LONGINT;
-	res: LONGINT;
+	res: WORD;
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
 BEGIN

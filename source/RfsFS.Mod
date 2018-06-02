@@ -36,7 +36,7 @@ TYPE
 		(** Creates a new file with the specified name **)
 		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			f: File;
 			buf: Buffer;
 			namebuf, nameTemp: FileName;
@@ -83,7 +83,7 @@ TYPE
 		(** opens an existing File **)
 		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			f: File;
 			buf: Buffer;
 			namebuf: FileName;
@@ -164,7 +164,7 @@ TYPE
 		END Delete0;
 
 		(** renames a file. res = 0 indicates success **)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR oldbuf, newbuf: FileName; errorcode: LONGINT;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
@@ -235,7 +235,7 @@ TYPE
 		(** return an unique id for a file registered in the filesystem **)
 		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
 			VAR
-				res: LONGINT;
+				res: WORD;
 				namebuf: FileName;
 				hashval, errorcode: LONGINT;
 		BEGIN {EXCLUSIVE}
@@ -626,7 +626,7 @@ TYPE
 		END GetName;
 
 		(** registers a file in the filesystem **)
-		PROCEDURE Register0*(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: WORD);
 		VAR
 			buf: Buffer;
 			errorcode: LONGINT;
@@ -684,7 +684,7 @@ TYPE
 VAR newfs*: FileSystem;
 
 
-PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT);
+PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
 	VAR i: LONGINT; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;
@@ -710,7 +710,7 @@ BEGIN
 END Check;
 
 (*
-PROCEDURE CheckTmp(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT);
+PROCEDURE CheckTmp(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
 	VAR i: LONGINT; ch: CHAR;
 BEGIN
 	s[6] := 0X;

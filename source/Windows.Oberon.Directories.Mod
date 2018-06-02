@@ -148,7 +148,7 @@ END BuildList;
 
 (*========== Rider handling ==========*)
 PROCEDURE SetItem (R: Rider; item: Item);
-VAR d: Data; res: LONGINT;
+VAR d: Data; res: WORD;
 BEGIN
 	R.item := item; R.eol := item.key < 0; R.dsc := item.dsc # NIL;
 	IF (R.d = NIL) OR ~(R.d IS Data) THEN NEW(d); R.d := d ELSE d := R.d(Data) END;

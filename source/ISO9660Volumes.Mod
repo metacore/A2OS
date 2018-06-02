@@ -22,7 +22,7 @@ MODULE ISO9660Volumes;	(* AUTHOR "?/be"; PURPOSE "ISO 9660 volume (ported from N
 			spc: LONGINT;	(* sectors per cluster *)
 
 			PROCEDURE Finalize*;
-			VAR res: LONGINT;
+			VAR res: WORD;
 			BEGIN {EXCLUSIVE}
 				IF debug THEN KernelLog.String("Entering OFSISO9660Volumes.Finalize"); KernelLog.Ln END;
 				EXCL(dev.flags, Disks.Mounted);

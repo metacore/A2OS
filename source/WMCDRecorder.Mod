@@ -236,7 +236,7 @@ TYPE
 
 		PROCEDURE IdentifyRecorders(): LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			dlg: WaitDialog;
 			ticks : LONGINT;
 		BEGIN
@@ -411,7 +411,7 @@ TYPE
 			typeDlg: BlankTypeDialog;
 			disc: CDRecord.Disc;
 			recorder: CDRecord.CDRecorder;
-			res: LONGINT;
+			res: WORD;
 			waitDlg: WaitDialog;
 		BEGIN
 			IF IdentifyRecorders() # ResOk THEN RETURN END;
@@ -454,7 +454,7 @@ TYPE
 			info: MakeIsoImages.ISOInfo;
 			compilation: CDRecord.Compilation;
 			image: String;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IdentifyRecorders() = ResErr THEN RETURN END;
 			NEW(imageDlg, Strings.NewString("Burn"), bounds, 300, 400);
@@ -497,7 +497,7 @@ TYPE
 			dataPanel: DataPanel;
 			sessDlg: SessionDialog;
 			bootDlg: BootDialog;
-			res: LONGINT;
+			res: WORD;
 			audioProject: AudioProject;
 			dataProject: DataProject;
 		BEGIN
@@ -590,7 +590,7 @@ TYPE
 
 		PROCEDURE WaitOnDisc(recorder: CDRecord.CDRecorder): LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			waitDlg: WaitDialog;
 		BEGIN
 			NEW(waitDlg, Strings.NewString("Waiting"), bounds, 200, 100, TRUE);
@@ -2131,7 +2131,7 @@ TYPE
 			SELF.node := node;
 		END New;
 
-		PROCEDURE URL*(CONST url: ARRAY OF CHAR; VAR res: LONGINT);
+		PROCEDURE URL*(CONST url: ARRAY OF CHAR; VAR res: WORD);
 		BEGIN
 			IF panel.enabled.Get() THEN
 				panel.AddFile(url, node);

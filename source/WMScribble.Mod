@@ -37,7 +37,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keySym : LONGINT);
-		VAR res: LONGINT; filename : ARRAY 128 OF CHAR;
+		VAR res: WORD; filename : ARRAY 128 OF CHAR;
 		BEGIN
 			IF ucs = ORD("s") THEN
 				filename := "scribble.bmp";

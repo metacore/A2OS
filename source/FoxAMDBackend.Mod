@@ -211,7 +211,7 @@ TYPE
 		VAR i,sizeInBits,length, form: LONGINT;
 
 			PROCEDURE GetGPHint(offset: LONGINT): LONGINT;
-			VAR res: LONGINT;
+			VAR res: WORD;
 			BEGIN
 				IF (hint # none) & (hint >= AL) & (hint <= EDI) & (toVirtual[hint MOD 32 + offset]=free) & ~Reserved(hint) THEN res := hint MOD 32 + offset ELSE res := none END;
 				hint := none;
@@ -219,7 +219,7 @@ TYPE
 			END GetGPHint;
 
 			PROCEDURE GetHint(from,to: LONGINT): LONGINT;
-			VAR res: LONGINT;
+			VAR res: WORD;
 			BEGIN
 				IF (hint # none) & (hint >= from) & (hint <= to) & (toVirtual[hint]=free) & ~Reserved(hint) THEN res := hint ELSE res := none END;
 				hint := none;
@@ -422,7 +422,7 @@ TYPE
 		VAR i: LONGINT;
 
 			PROCEDURE GetGPHint(offset: LONGINT): LONGINT;
-			VAR res: LONGINT;
+			VAR res: WORD;
 			BEGIN
 				IF (hint # none) & (hint >= AL) & (hint <= R15) & (toVirtual[hint MOD 32 + offset]=free) & ~Reserved(hint) THEN res := hint MOD 32 + offset ELSE res := none END;
 				hint := none;

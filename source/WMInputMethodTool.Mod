@@ -141,7 +141,7 @@ TYPE
 			The new IME's name is taken to identify its installer. Some colors are changed and finally the installer is called. *)
 		PROCEDURE ChangeIME(sender, data : ANY);
 		VAR
-			res : LONGINT;
+			res : WORD;
 			install : WMInputMethods.IMEInstaller;
 		BEGIN
 			res := -1;

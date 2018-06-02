@@ -11,7 +11,7 @@ MODULE RAWPrinter; (** AUTHOR "dk"; PURPOSE "Printing Raw to Port 9100"; *)
 		OK = 0;
 
 
-	PROCEDURE PrintFile*(CONST printer, fn: ARRAY OF CHAR; VAR res : LONGINT);
+	PROCEDURE PrintFile*(CONST printer, fn: ARRAY OF CHAR; VAR res : WORD);
 	VAR
 		fileReader : Files.Reader;
 		file : Files.File;
@@ -26,7 +26,7 @@ MODULE RAWPrinter; (** AUTHOR "dk"; PURPOSE "Printing Raw to Port 9100"; *)
 	END PrintFile;
 
 
-	PROCEDURE PrintStream*(CONST printer : ARRAY OF CHAR; reader : Streams.Reader; VAR res : LONGINT);
+	PROCEDURE PrintStream*(CONST printer : ARRAY OF CHAR; reader : Streams.Reader; VAR res : WORD);
 		VAR
 			writer: Streams.Writer;
 			buf : ARRAY 10000 OF CHAR;
@@ -67,7 +67,7 @@ Usage:
 
 PROCEDURE PrintTest1*();
 VAR
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	RAWPrinter.PrintFile("129.132.134.122", "test.ps", res);
 	KernelLog.String("Printing res : "); KernelLog.Int(res, 5); KernelLog.Ln;
@@ -77,7 +77,7 @@ END PrintTest1;
 PROCEDURE PrintTest2*();
 VAR
 	file : Files.File;
-	res : LONGINT;
+	res : WORD;
 	reader : Files.Reader;
 BEGIN
 	file := Files.Old("test.ps");

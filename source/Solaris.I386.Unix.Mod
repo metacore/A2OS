@@ -736,7 +736,7 @@ VAR
 	VAR 
 		attr: PthreadAttributeDesc;
 		id: Thread_t;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		pthread_attr_init( ADDRESSOF( attr ) );
 		pthread_attr_setscope( ADDRESSOF( attr ), PTHREAD_SCOPE_SYSTEM);
@@ -882,7 +882,7 @@ VAR
 	
 	
 	PROCEDURE {C} X11ErrorHandler( d: ADDRESS; err: ADDRESS ): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		IF oberonXErrorHandler # NIL THEN 
 			res := oberonXErrorHandler( d, err );
@@ -891,7 +891,7 @@ VAR
 	END X11ErrorHandler;
 
 	PROCEDURE {C} X11IOErrorHandler( d: ADDRESS ): WORD;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		IF oberonXIOErrorHandler # NIL THEN
 			res := oberonXIOErrorHandler( d );
@@ -974,7 +974,7 @@ VAR
 	END GetArgval;
 
 	PROCEDURE getSysinfo;
-	VAR res: LONGINT;  p: INTEGER;
+	VAR res: WORD;  p: INTEGER;
 		buf: ARRAY 4096 OF CHAR;
 
 		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );

@@ -634,7 +634,7 @@ TYPE
 			caption : ARRAY 128 OF CHAR;
 			params : Parameters;
 			string : Strings.String;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF PartitionsLib.diskModel.GetDisk(devpart, selection, FALSE) THEN
 				string := configTable.GetAsString();
@@ -664,7 +664,7 @@ TYPE
 		END StoreToPartition;
 
 		PROCEDURE LoadFromFile(CONST filename : ARRAY OF CHAR);
-		VAR caption, msg : ARRAY 256 OF CHAR; res : LONGINT;
+		VAR caption, msg : ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			configTable.LoadFromFile(filename, msg, res);
 			IF (res = PartitionsLib.Ok) THEN
@@ -678,7 +678,7 @@ TYPE
 		END LoadFromFile;
 
 		PROCEDURE StoreToFile(CONST filename : ARRAY OF CHAR);
-		VAR caption, msg : ARRAY 256 OF CHAR; res : LONGINT;
+		VAR caption, msg : ARRAY 256 OF CHAR; res : WORD;
 		BEGIN
 			configTable.StoreToFile(filename, msg, res);
 			IF (res = PartitionsLib.Ok) THEN
@@ -690,7 +690,7 @@ TYPE
 		END StoreToFile;
 
 		PROCEDURE SetSelection(selection : WMPartitionsComponents.Selection) : BOOLEAN;
-		VAR string, diskpartStr : ARRAY 128 OF CHAR; temp : ARRAY 4 OF CHAR; res : LONGINT;
+		VAR string, diskpartStr : ARRAY 128 OF CHAR; temp : ARRAY 4 OF CHAR; res : WORD;
 		BEGIN
 			diskpartStr := "";
 			Strings.Append(diskpartStr, selection.disk.device.name);
@@ -1178,7 +1178,7 @@ TYPE
 		VAR
 			create : PartitionsLib.CreatePartition;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & ~selection.disk.isDiskette THEN
 				NEW(param, 2);
@@ -1206,7 +1206,7 @@ TYPE
 		VAR
 			delete : PartitionsLib.DeletePartition;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF  ~selection.disk.isDiskette & IsValid(selection) &
 			    (selection.disk.device # NIL) & (selection.partition < LEN(selection.disk.device.table))
@@ -1231,7 +1231,7 @@ TYPE
 		VAR
 			writeMBR : PartitionsLib.WriteMBR;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF (selection.disk.device # NIL) & (selection.partition = 0) & (selection.disk.table # NIL) & ~selection.disk.isDiskette THEN
 				NEW(popup, 250, 180, FALSE);
@@ -1256,7 +1256,7 @@ TYPE
 		END WriteMBR;
 
 		PROCEDURE EditPBR(sender, data : ANY);
-		VAR cmd, msg : ARRAY 512 OF CHAR; nbr : ARRAY 16 OF CHAR; res : LONGINT;
+		VAR cmd, msg : ARRAY 512 OF CHAR; nbr : ARRAY 16 OF CHAR; res : WORD;
 		BEGIN
 			IF (selection.disk.device # NIL) & (selection.disk.table # NIL) & (selection.partition < LEN(selection.disk.table)) & ~selection.disk.isDiskette THEN
 				cmd := "PartitionEditor.Open ";
@@ -1282,7 +1282,7 @@ TYPE
 			popup : PopupWindow; params : Parameters;
 			cancel, doClose : BOOLEAN;
 			fs : LONGINT;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & ((selection.disk.table[selection.partition].flags * {Disks.Valid} # {}) OR selection.disk.isDiskette) THEN
 
@@ -1392,7 +1392,7 @@ TYPE
 			oldtype, newtype : LONGINT;
 			popup : PopupWindow;
 			param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & (selection.disk.table[selection.partition].flags * {Disks.Valid} # {}) THEN
 				NEW(param, 1);
@@ -1421,7 +1421,7 @@ TYPE
 			popup : PopupWindow; param : Parameters;
 			string : ARRAY 64 OF CHAR;
 			on : BOOLEAN;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & (Disks.Valid IN selection.disk.table[selection.partition].flags) & ~selection.disk.isDiskette THEN
 				on := Disks.Boot IN selection.disk.table[selection.partition].flags;
@@ -1545,7 +1545,7 @@ TYPE
 			result : ARRAY 128 OF CHAR;
 			popup : PopupWindow; param : Parameters;
 			eject : BOOLEAN;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF (selection.disk.device # NIL) & (~selection.disk.isDiskette) THEN
 				IF (Disks.Removable IN selection.disk.device.flags) THEN
@@ -1622,7 +1622,7 @@ TYPE
 		VAR
 			updateLoader : PartitionsLib.UpdateBootLoader;
 			param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -1646,7 +1646,7 @@ TYPE
 		VAR
 			updateBoot : PartitionsLib.UpdateBootFile;
 			param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -1670,7 +1670,7 @@ TYPE
 		VAR
 			installBootManager : PartitionsLib.InstallBootManager;
 			param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
 				NEW(popup, 300, 200, FALSE);
@@ -1699,7 +1699,7 @@ TYPE
 			text : Texts.Text; textWriter : TextUtilities.TextWriter;
 			reader : Streams.Reader;
 			params : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) & ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR selection.disk.isDiskette) THEN
 				NEW(packages); NEW(errorWriter, LEN(errorString));
@@ -1941,7 +1941,7 @@ TYPE
 		VAR
 			testDataWriter : DiskTests.TestDataWriter;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -1966,7 +1966,7 @@ TYPE
 		VAR
 			zeroWriter : DiskTests.ZeroWriter;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -1991,7 +1991,7 @@ TYPE
 		VAR
 			diskTest : DiskTests.DiskTest;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 4);
@@ -2021,7 +2021,7 @@ TYPE
 		VAR
 			testDataChecker : DiskTests.TestDataChecker;
 			popup : PopupWindow; param : Parameters;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -2278,7 +2278,7 @@ TYPE
 		END SetParameters;
 
 		(** Show popup window at position (x,y); call is blocking; res = ResNone | ResCancel | ResOk *)
-		PROCEDURE Popup(x, y : LONGINT;  VAR res : LONGINT);
+		PROCEDURE Popup(x, y : LONGINT;  VAR res : WORD);
 		BEGIN
 			BuildLayout;
 			WMWindowManager.AddWindow (SELF, x, y);
@@ -2762,7 +2762,7 @@ TYPE
 		END UpdateContent;
 
 		PROCEDURE UpdateSelection(selection : WMPartitionsComponents.Selection);
-		VAR caption, temp : ARRAY 128 OF CHAR; res : LONGINT;
+		VAR caption, temp : ARRAY 128 OF CHAR; res : WORD;
 		BEGIN
 			caption := "";
 

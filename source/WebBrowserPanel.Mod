@@ -197,7 +197,7 @@ TYPE
 		decoder : Codecs.TextDecoder;
 		bbtDecoder : TextUtilities.BluebottleDecoder;
 		encoder : Codecs.TextEncoder;
-		res : LONGINT;
+		res : WORD;
 		contents: XMLObjects.Enumerator;
 		content: ANY;
 		framesetElem : XML.Element;

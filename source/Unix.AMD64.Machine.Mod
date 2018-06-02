@@ -510,7 +510,7 @@ END GetTimer;
 
 	(* function returning the number of processors that are available to Aos *)
 	PROCEDURE NumberOfProcessors*( ): LONGINT;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		res := Unix.getnprocs();
 		RETURN res;

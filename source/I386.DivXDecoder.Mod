@@ -1797,7 +1797,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 
 		(* Sets the the stream on which to read *)
-		PROCEDURE Open*(in: Streams.Reader; VAR res: LONGINT );
+		PROCEDURE Open*(in: Streams.Reader; VAR res: WORD );
 		BEGIN
 			SELF.s := in;
 			NEW( mp4State);
@@ -1838,7 +1838,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 			RETURN frameCounter;
 		END GetCurrentFrame;
 
-		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			seekType: LONGINT;
 			dummy: LONGINT;
@@ -1856,7 +1856,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		END SeekFrame;
 
 		(* Seeks a position based on timevalue. If gokeyframe is set, the next following keyframe is searched *)
-		PROCEDURE SeekMillisecond*(millisecond: LONGINT; goKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekMillisecond*(millisecond: LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			frame: LONGINT;
 			dummy: LONGINT;

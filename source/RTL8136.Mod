@@ -2900,7 +2900,7 @@ TYPE
 		PROCEDURE DebugConfig;
 		VAR
 			s: SET;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			KernelLog.String("*** BEGIN OF NIC CONFIGURATION ***"); KernelLog.Ln;
 

@@ -556,7 +556,7 @@ END TransferBlock;
 (** Change screen mode. *)
 PROCEDURE SetMode*(x: LONGINT; s: SET);
 VAR p: Plugins.Plugin; t : Kernel.Timer;
-	res : LONGINT; msg : ARRAY 64 OF CHAR;
+	res : WORD; msg : ARRAY 64 OF CHAR;
 	name : ARRAY 64 OF CHAR; context: Commands.Context;
 BEGIN
 	context := Commands.GetContext ();

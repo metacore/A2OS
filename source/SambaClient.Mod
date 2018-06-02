@@ -120,7 +120,7 @@ TYPE
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR
 			check : BOOLEAN;
 			closekey : LONGINT;
@@ -322,7 +322,7 @@ TYPE
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT);
+		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
 		VAR check: BOOLEAN;
 		BEGIN
 			IF Trace THEN
@@ -680,7 +680,7 @@ TYPE
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically updated.  End users use Files.Register instead. *)
 
-		PROCEDURE Register0*(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: WORD);
 		BEGIN END Register0;
 
 		(** Flush the changes made to a file from its buffers. Register0 will automatically update a file. *)
@@ -699,7 +699,7 @@ TYPE
 		PROCEDURE Connect(CONST host: ARRAY OF CHAR; port: LONGINT; VAR c: Connection);
 		VAR
 			fadr: IP.Adr;
-			res: LONGINT;
+			res: WORD;
 		BEGIN {EXCLUSIVE}
 			res := 0;
 			DNS.HostByName(host, fadr, res);

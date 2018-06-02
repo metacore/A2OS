@@ -815,7 +815,7 @@ TYPE
 	(** View management *)
 		(** Add a view *)
 		PROCEDURE AddView*(v : WM.ViewPort);
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			lock.AcquireWrite;
 			v.manager := SELF;
@@ -1603,7 +1603,7 @@ BEGIN
 END FillSession;
 
 PROCEDURE Replace*(color: LONGINT; noPointer: BOOLEAN);
-VAR disp : Plugins.Plugin; view : ViewPort; r : Rectangle; res : LONGINT;
+VAR disp : Plugins.Plugin; view : ViewPort; r : Rectangle; res : WORD;
 BEGIN
 	disp := Displays.registry.Await("");
 	IF (disp(Displays.Display).format = Displays.color8888) THEN

@@ -3876,7 +3876,7 @@ TYPE
 		END StartCommand;
 
 		PROCEDURE Start(sender, data: ANY);
-		VAR msg: ARRAY 512 OF CHAR; res: LONGINT;
+		VAR msg: ARRAY 512 OF CHAR; res: WORD;
 		BEGIN
 			IF (data # NIL) & (data IS ClickInfo) THEN
 				IF data(ClickInfo).cmdPar # NIL THEN

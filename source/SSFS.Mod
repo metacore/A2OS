@@ -66,7 +66,7 @@ TYPE
 		sectorsPerBlock : LONGINT;
 
 		(* read a block as array of character *)
-		PROCEDURE ReadBlock(blockNumber : LONGINT; VAR block : Block; VAR res : LONGINT);
+		PROCEDURE ReadBlock(blockNumber : LONGINT; VAR block : Block; VAR res : WORD);
 		BEGIN
 			IF (0 <= blockNumber) & (blockNumber < nofBlocks) THEN
 				device.Transfer(Disks.Read, device.table[partition].start + blockNumber * sectorsPerBlock, sectorsPerBlock, block, 0, res);
@@ -76,7 +76,7 @@ TYPE
 		END ReadBlock;
 
 		(* write a block to disk *)
-		PROCEDURE WriteBlock(blockNumber : LONGINT; VAR block : Block; VAR res : LONGINT);
+		PROCEDURE WriteBlock(blockNumber : LONGINT; VAR block : Block; VAR res : WORD);
 		BEGIN
 			IF (0 <= blockNumber) & (blockNumber < nofBlocks) THEN
 				device.Transfer(Disks.Write, device.table[partition].start + blockNumber * sectorsPerBlock, sectorsPerBlock, block, 0, res);
@@ -93,7 +93,7 @@ TYPE
 		END Finalize;
 
 		(* constructor of Volume: set variables for device, partition and geometry plus some sanity checks *)
-		PROCEDURE &Init*(device : Disks.Device; partition : LONGINT; VAR res : LONGINT);
+		PROCEDURE &Init*(device : Disks.Device; partition : LONGINT; VAR res : WORD);
 		BEGIN
 			ASSERT((device # NIL) & (device.table # NIL) & (partition < LEN(device.table)));
 			SELF.device := device; SELF.partition := partition;
@@ -132,7 +132,7 @@ TYPE
 		fileSystem : FileSystem;
 
 		(** Mark the specified block as free *)
-		PROCEDURE FreeBlock(blockNumber : LONGINT; VAR res : LONGINT);
+		PROCEDURE FreeBlock(blockNumber : LONGINT; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			IF (0 <= blockNumber) & (blockNumber < fileSystem.volume.nofBlocks) THEN
 				SetUsed(blockNumber, FALSE);
@@ -144,7 +144,7 @@ TYPE
 		END FreeBlock;
 
 		(** Get the address of the next free block and mark it as used *)
-		PROCEDURE AllocateBlock(VAR res : LONGINT) : LONGINT;
+		PROCEDURE AllocateBlock(VAR res : WORD) : LONGINT;
 		VAR blockNumber : LONGINT;
 		BEGIN {EXCLUSIVE}
 			blockNumber := FindFreeBlock(res, TRUE);
@@ -157,7 +157,7 @@ TYPE
 		END AllocateBlock;
 
 		(* Find a free block and return its block number. *)
-		PROCEDURE FindFreeBlock(VAR res : LONGINT; useHint : BOOLEAN) : LONGINT; (* private *)
+		PROCEDURE FindFreeBlock(VAR res : WORD; useHint : BOOLEAN) : LONGINT; (* private *)
 		VAR blockNumber : LONGINT;
 		BEGIN
 			IF useHint & (hint >= fileSystem.superBlock.firstDataBlock) THEN
@@ -201,7 +201,7 @@ TYPE
 		END SetUsed;
 
 		(* Writes the block of the block bitmap that has changed back to disk *)
-		PROCEDURE WriteBack(blockNumber : LONGINT; VAR res : LONGINT); (* private *)
+		PROCEDURE WriteBack(blockNumber : LONGINT; VAR res : WORD); (* private *)
 		VAR data : Block; blockIdx, index : LONGINT;
 		BEGIN
 			ClearBlock(data);
@@ -220,7 +220,7 @@ TYPE
 		END WriteBack;
 
 		(* load all bitmap-blocks from the disk *)
-		PROCEDURE LoadFromDisk(VAR res : LONGINT); (* Called only once by FileSystem.Init *)
+		PROCEDURE LoadFromDisk(VAR res : WORD); (* Called only once by FileSystem.Init *)
 		VAR data : Block; blockNumber, blockIdx, index : LONGINT;
 		BEGIN
 			ASSERT(fileSystem.superBlock.freeBlockBitmapSize # 0); (* volume formatted? *)
@@ -316,7 +316,7 @@ TYPE
 		bitmap : BlockBitmap; (* free blocks bitmap *)
 
 		(* constructor: set variables and read super block, check if file system is formatted, res = Ok indicates success  *)
-		PROCEDURE &Init*(volume : Volume; VAR res : LONGINT);
+		PROCEDURE &Init*(volume : Volume; VAR res : WORD);
 		VAR block : Block;
 		BEGIN
 			ASSERT(volume # NIL);
@@ -432,7 +432,7 @@ TYPE
 
 		(* Called by File.Update. We write back the Inode here since we want the file system to be locked while doing that *)
 		PROCEDURE UpdateInode(inode : Inode; inodeAdr : LONGINT);
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN {EXCLUSIVE}
 			ASSERT(inodeAdr >= superBlock.firstDataBlock);
 			volume.WriteBlock(inodeAdr, SYSTEM.VAL(Block, inode), res);
@@ -499,13 +499,13 @@ TYPE
 			END;
 		END Delete0;
 
-		PROCEDURE DeleteFile(inode : Inode; inodeAdr : LONGINT; VAR res : LONGINT);
+		PROCEDURE DeleteFile(inode : Inode; inodeAdr : LONGINT; VAR res : WORD);
 		BEGIN
 			DeleteDnodes(inode, res);
 			bitmap.FreeBlock(inodeAdr, res);
 		END DeleteFile;
 
-		PROCEDURE DeleteDnodes(inode : Inode; VAR res : LONGINT);
+		PROCEDURE DeleteDnodes(inode : Inode; VAR res : WORD);
 		VAR i : LONGINT; finished : BOOLEAN;
 		BEGIN
 			finished := FALSE;
@@ -523,7 +523,7 @@ TYPE
 		END DeleteDnodes;
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		BEGIN  {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END Rename0;
@@ -575,7 +575,7 @@ TYPE
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT);
+		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END CreateDirectory0;
@@ -588,7 +588,7 @@ TYPE
 		END RemoveDirectory0;
 
 		(* format a volume for using this file system *)
-		PROCEDURE Format(VAR res : LONGINT);
+		PROCEDURE Format(VAR res : WORD);
 		VAR block : Block; i : LONGINT;
 		BEGIN {EXCLUSIVE}
 			(* Volume layout - SuperBlock is block 0 *)
@@ -845,7 +845,7 @@ TYPE
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name.
 		The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: WORD);
 		BEGIN
 			Update;
 		END Register0;
@@ -878,7 +878,7 @@ BEGIN
 	FOR i := 0 TO LEN(inode.direct)-1 DO inode.direct[i] := 0; END;
 END ClearInode;
 
-PROCEDURE GetFileSystem(context : Commands.Context; VAR res : LONGINT) : FileSystem;
+PROCEDURE GetFileSystem(context : Commands.Context; VAR res : WORD) : FileSystem;
 VAR
 	devPart, devicename : ARRAY 64 OF CHAR; partition : LONGINT;
 	device : Disks.Device;
@@ -949,7 +949,7 @@ END GetFileSystem;
 
 (** Format the specified disk or partition with the SSFS file system *)
 PROCEDURE Format*(context : Commands.Context); (** device#partition ~ *)
-VAR fileSystem : FileSystem; res : LONGINT;
+VAR fileSystem : FileSystem; res : WORD;
 BEGIN
 	fileSystem := GetFileSystem(context, res);
 	IF (res = Ok) OR (res = NotFormatted) THEN
@@ -965,7 +965,7 @@ END Format;
 
 (** Mount the specified SSFS file system *)
 PROCEDURE Mount*(context : Commands.Context); (** prefix device#partition ~*)
-VAR prefix : Files.Prefix; fileSystem : FileSystem; res : LONGINT;
+VAR prefix : Files.Prefix; fileSystem : FileSystem; res : WORD;
 BEGIN
 	IF context.arg.GetString(prefix) THEN
 		IF (Files.This(prefix) = NIL) THEN

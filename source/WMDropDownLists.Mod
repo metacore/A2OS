@@ -215,7 +215,7 @@ TYPE
 			RETURN nofEntries;
 		END GetNofEntries;
 
-		PROCEDURE Add*(key : LONGINT; CONST name : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Add*(key : LONGINT; CONST name : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			Acquire;
 			IF (FindDuplicate(key, name) = NIL) THEN
@@ -232,7 +232,7 @@ TYPE
 			Release;
 		END Add;
 
-		PROCEDURE Remove*(CONST name : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Remove*(CONST name : ARRAY OF CHAR; VAR res : WORD);
 		VAR i : LONGINT;
 		BEGIN
 			Acquire;

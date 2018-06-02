@@ -106,7 +106,7 @@ TYPE
 		proc : CommandProc;
 		commandProc : CommandContextProc;
 
-		msg : ARRAY 128 OF CHAR; res : LONGINT;
+		msg : ARRAY 128 OF CHAR; res : WORD;
 
 		module : Modules.Module;
 		state : LONGINT;
@@ -129,7 +129,7 @@ TYPE
 			state := Started;
 		END Init;
 
-		PROCEDURE Join(this : LONGINT; VAR res : LONGINT; VAR msg : ARRAY OF CHAR);
+		PROCEDURE Join(this : LONGINT; VAR res : WORD; VAR msg : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
 			AWAIT(state >= this);
 			res := SELF.res; COPY(SELF.msg, msg);
@@ -194,13 +194,13 @@ BEGIN
 	RETURN reader;
 END GetEmptyReader;
 
-PROCEDURE SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+PROCEDURE SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 END SendNothing;
 
 (** Splits a command string of the form moduleName.commandProcName into its components. Can be used to check whether a
 	command string is syntactically correct, i.e. is of the form 'ModuleName "." [ProcedureName]' *)
 
-PROCEDURE Split*(CONST cmdstr : ARRAY OF CHAR; VAR moduleName, procedureName : Modules.Name; VAR res : LONGINT; VAR msg : ARRAY OF CHAR);
+PROCEDURE Split*(CONST cmdstr : ARRAY OF CHAR; VAR moduleName, procedureName : Modules.Name; VAR res : WORD; VAR msg : ARRAY OF CHAR);
 VAR i, j : LONGINT; maxlen, cmdlen : LONGINT;
 BEGIN
 	res := CommandParseError;
@@ -245,7 +245,7 @@ END GetContext;
 	Returns res = Ok if successful, otherwise msg contains error message.
 	The command can call GetConext() to get its context, which is also passed directly. *)
 
-PROCEDURE Activate*(CONST cmd : ARRAY OF CHAR; context : Context; flags : SET; VAR res : LONGINT; VAR msg : ARRAY OF CHAR);
+PROCEDURE Activate*(CONST cmd : ARRAY OF CHAR; context : Context; flags : SET; VAR res : WORD; VAR msg : ARRAY OF CHAR);
 VAR moduleName, commandName : Modules.Name; run : Runner;
 BEGIN
 
@@ -269,7 +269,7 @@ END Activate;
 		params = {<any character except ";">} .
 *)
 
-PROCEDURE Call*(cmds : ARRAY OF CHAR; flags : SET; VAR res : LONGINT; VAR msg : ARRAY OF CHAR);
+PROCEDURE Call*(cmds : ARRAY OF CHAR; flags : SET; VAR res : WORD; VAR msg : ARRAY OF CHAR);
 VAR  outer, context : Context; arg : Streams.StringReader; i, j, k : LONGINT; mode : ARRAY 5 OF CHAR;
 par : POINTER TO ARRAY OF CHAR;
 BEGIN

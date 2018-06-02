@@ -108,7 +108,7 @@ END Directory;
 
 PROCEDURE CopyDosToOberon(from, to: ARRAY OF CHAR; VAR ok: BOOLEAN);
 VAR
-	fat: FATFiles.File;  oberon: Files.File;  res: LONGINT;  src: FATFiles.Rider;  dst: Files.Rider;
+	fat: FATFiles.File;  oberon: Files.File;  res: WORD;  src: FATFiles.Rider;  dst: Files.Rider;
 	buf: ARRAY BufSize OF CHAR;
 BEGIN
 	ok := FALSE; fat := FATFiles.Old(from, res);
@@ -131,7 +131,7 @@ END CopyDosToOberon;
 
 PROCEDURE CopyOberonToDos(from, to: ARRAY OF CHAR; VAR ok: BOOLEAN);
 VAR
-	fat: FATFiles.File;  oberon: Files.File;  res: LONGINT;  dst: FATFiles.Rider;  src: Files.Rider;
+	fat: FATFiles.File;  oberon: Files.File;  res: WORD;  dst: FATFiles.Rider;  src: Files.Rider;
 	buf: ARRAY BufSize OF CHAR;
 BEGIN
 	ok := FALSE; oberon := Files.Old(from);
@@ -280,7 +280,7 @@ END CopyTo;
 (** DOS.Delete { file } ~  Delete files on DOS drive. *)
 
 PROCEDURE Delete*;
-VAR s: Texts.Scanner;  res: LONGINT;
+VAR s: Texts.Scanner;  res: WORD;
 BEGIN
 	OpenScanner(s);
 	WHILE s.class IN {Texts.Name, Texts.String} DO
@@ -296,7 +296,7 @@ END Delete;
 (** DOS.Rename { from => to } ~  Rename files on a DOS file system. *)
 
 PROCEDURE Rename*;	(* { from => to } ~ *)
-VAR s: Texts.Scanner;  from, to: ARRAY 64 OF CHAR;  res: LONGINT;
+VAR s: Texts.Scanner;  from, to: ARRAY 64 OF CHAR;  res: WORD;
 BEGIN
 	OpenScanner(s);
 	WHILE s.class IN {Texts.Name, Texts.String} DO

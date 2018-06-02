@@ -226,7 +226,7 @@ TYPE
 		END Poll;
 
 		(** Set the deadzone for all axis *)
-		PROCEDURE SetGlobalDeadzone*(deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE SetGlobalDeadzone*(deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : WORD);
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
@@ -238,7 +238,7 @@ TYPE
 		END SetGlobalDeadzone;
 
 		(** Set the deadzone for the specified axis *)
-		PROCEDURE SetDeadzone*(axisNbr : LONGINT; deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE SetDeadzone*(axisNbr : LONGINT; deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF (axisNbr < 0) OR (axisNbr >= MaxNbrOfAxis) OR (~(axisNbr IN implementedAxis)) THEN
 				errorMessage := ErrorAxisNotImplemented;
@@ -266,7 +266,7 @@ TYPE
 		END StartCalibration;
 
 		(* At the time this procedure is called, the axes should be in center position *)
-		PROCEDURE StopCalibration*(VAR errorMsg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE StopCalibration*(VAR errorMsg : ARRAY OF CHAR; VAR res : WORD);
 		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
@@ -525,7 +525,7 @@ BEGIN
 END Show;
 
 PROCEDURE Init;
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	registry.AddEventHandler(EventHandler, res);
 	IF res # Plugins.Ok THEN

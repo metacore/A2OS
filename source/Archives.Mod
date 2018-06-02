@@ -90,7 +90,7 @@ TYPE
 		a : StringObject;
 		archive : Archive;
 		config, factoryName : ARRAY 128 OF CHAR;
-		res : LONGINT;
+		res : WORD;
 	BEGIN
 		archive := NIL;
 		config := "Archives."; Strings.Append(config, type);
@@ -111,7 +111,7 @@ TYPE
 		a : StringObject;
 		archive : Archive;
 		config, factoryName : ARRAY 128 OF CHAR;
-		res : LONGINT;
+		res : WORD;
 	BEGIN
 		archive := NIL;
 		config := "Archives."; Strings.Append(config, type);

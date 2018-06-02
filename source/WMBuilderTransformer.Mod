@@ -317,7 +317,7 @@ TYPE
 			NEW(imports, 1024); importsWriter := imports.GetWriter();
 		END Init;
 
-		PROCEDURE Transform(component, parent : WMComponents.Component;  VAR res : LONGINT);
+		PROCEDURE Transform(component, parent : WMComponents.Component;  VAR res : WORD);
 		VAR
 			thisIdent : Identifier;
 			enum : XMLObjects.Enumerator;
@@ -537,7 +537,7 @@ TYPE
 			END;
 		END Transform;
 
-		PROCEDURE GenerateCode(CONST targetName, templateName, skeletonName,  moduleName : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE GenerateCode(CONST targetName, templateName, skeletonName,  moduleName : ARRAY OF CHAR; VAR res : WORD);
 		VAR base, skeleton : Texts.Text; format : LONGINT; fileName : Files.FileName;
 		BEGIN
 			NEW(base); TextUtilities.LoadAuto(base, templateName, format, res);
@@ -563,7 +563,7 @@ TYPE
 			END;
 		END GenerateCode;
 
-		PROCEDURE ApplyBase(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE ApplyBase(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : WORD);
 		VAR error : BOOLEAN;
 		BEGIN
 			ASSERT(text # NIL);
@@ -575,7 +575,7 @@ TYPE
 			Replace("[CREATEFORM]", createForm, text, error);
 		END ApplyBase;
 
-		PROCEDURE ApplySkeleton(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE ApplySkeleton(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : WORD);
 		VAR error : BOOLEAN; name : ARRAY 64 OF CHAR;
 		BEGIN
 			ASSERT(text # NIL);
@@ -707,7 +707,7 @@ BEGIN
 	END;
 END GetTypeAsString;
 
-PROCEDURE TransformComponent*(component : WMComponents.Component; CONST base, skeleton, fileName, moduleName : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE TransformComponent*(component : WMComponents.Component; CONST base, skeleton, fileName, moduleName : ARRAY OF CHAR; VAR res : WORD);
 VAR transformer : Transformer;
 BEGIN
 	ASSERT(component # NIL);
@@ -723,7 +723,7 @@ VAR
 	options : Options.Options;
 	componentName, baseName, skeletonName, moduleName, fileName : Files.FileName;
 	content : XML.Content; component : Repositories.Component;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	NEW(options);
 	options.Add("b", "base", Options.String);

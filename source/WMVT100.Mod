@@ -904,7 +904,7 @@ MODULE WMVT100; (* ejz,  ph *)
 	PROCEDURE Open*(CONST name: ARRAY OF CHAR; port:LONGINT; type:LONGINT; error:Streams.Writer):Window;
 	VAR
 		inst: Window;
-		title: Strings.String; adr: IP.Adr; res: LONGINT;
+		title: Strings.String; adr: IP.Adr; res: WORD;
 		C: TCP.Connection; TC: Connection; 
 	BEGIN
 		IF port = 0 THEN port := 23 END;

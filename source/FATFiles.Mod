@@ -98,7 +98,7 @@ TYPE
 	FilePurger = OBJECT
 		VAR count: LONGINT;
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN ASSERT(~f(File).registered);
 			KernelLog.Enter;
 			KernelLog.String(moduleName); KernelLog.String("purging anonymous file '"); KernelLog.String(f(File).long); KernelLog.String("'...");
@@ -310,7 +310,7 @@ TYPE
 		END Delete0X;
 
 		(* Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR oldpath, oldname, newpath, newname: Filename; r: File; dir: Directory; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			res := ErrInvalidFilename;
@@ -412,7 +412,7 @@ TYPE
 			RETURN key
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*(path: ARRAY OF CHAR; VAR res: LONGINT);
+		PROCEDURE CreateDirectory0*(path: ARRAY OF CHAR; VAR res: WORD);
 		VAR f: File; d: Directory; i,j: LONGINT; name: Filename; lookup: BOOLEAN; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
@@ -497,7 +497,7 @@ TYPE
 			END
 		END RemoveDirectory0;
 
-		PROCEDURE QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: LONGINT);
+		PROCEDURE QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: WORD);
 		VAR f: File; label: ARRAY 11 OF CHAR; i: LONGINT;
 			clean: FileEnumerator; c: CHAR; dummy: BOOLEAN;
 		BEGIN {EXCLUSIVE}
@@ -739,7 +739,7 @@ TYPE
 
 		(* Write logical cluster. Depending on buf.cluster, a new physical cluster may be allocated. cf. ReadBuffer *)
 		PROCEDURE WriteBuffer(buffer: Buffer);
-		VAR link: Address; res: LONGINT;
+		VAR link: Address; res: WORD;
 		BEGIN
 			IF (buffer.cluster < 2) THEN	(* allocate new cluster *)
 				IF (buffer.cluster = -EOC) THEN link := FATVolumes.FREE
@@ -913,7 +913,7 @@ TYPE
 
 		(* Register a file created with New in the directory, replacing the previous file in the directory with the same name.
 			The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: WORD);
 		VAR dir: Directory; old: File; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF ~registered THEN
@@ -963,7 +963,7 @@ TYPE
 			END
 		END UpdateX;
 
-		PROCEDURE DeleteClusterChain(VAR res: LONGINT);
+		PROCEDURE DeleteClusterChain(VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			UpdateX;
 			fs.vol(FATVolumes.Volume).FreeClusterChain(cluster, res);
@@ -1028,7 +1028,7 @@ TYPE
 	END;
 
 	ResultParam = POINTER TO RECORD(Parameter)
-		res: LONGINT
+		res: WORD
 	END;
 
 	TailGenParam = POINTER TO RECORD(Parameter)
@@ -1516,7 +1516,7 @@ TYPE
 			IF ro THEN INCL(attr, faReadOnly) END
 		END WriteFileHeaderX;
 
-		PROCEDURE NewSubdirectory(name: ARRAY OF CHAR; VAR res: LONGINT): Directory;
+		PROCEDURE NewSubdirectory(name: ARRAY OF CHAR; VAR res: WORD): Directory;
 		VAR upName: Filename; dir: Directory; f: File; i, t, d, p: LONGINT; r: Files.Rider; entry: ARRAY 32 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(name) & ValidateName(name) THEN
@@ -1579,7 +1579,7 @@ TYPE
 			END
 		END DeleteCallback;
 
-		PROCEDURE DeleteContents(VAR res: LONGINT);
+		PROCEDURE DeleteContents(VAR res: WORD);
 		VAR par: ResultParam; enum: FileEnumerator;
 		BEGIN {EXCLUSIVE}
 			NEW(enum, cluster);
@@ -1673,7 +1673,7 @@ TYPE
 		END InitSize;
 
 		PROCEDURE ReadBuffer(buffer: Buffer; pos: LONGINT);
-		VAR vol: FATVolumes.FAT1216Volume; res: LONGINT;
+		VAR vol: FATVolumes.FAT1216Volume; res: WORD;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);
 			IF (pos < 0) OR (pos >= vol.numRootSectors) THEN HALT(ErrInvalidParams) END;
@@ -1683,7 +1683,7 @@ TYPE
 		END ReadBuffer;
 
 		PROCEDURE WriteBuffer(buffer: Buffer);
-		VAR vol: FATVolumes.FAT1216Volume; res: LONGINT;
+		VAR vol: FATVolumes.FAT1216Volume; res: WORD;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);
 			IF (buffer.cluster < 0) OR (buffer.cluster >= vol.numRootSectors) THEN HALT(ErrInvalidParams) END;
@@ -1723,7 +1723,7 @@ BEGIN
 END NewFS;
 
 PROCEDURE PurgeFile(f: ANY);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	WITH f: File DO
 		IF ~f.registered & (f.cluster # NotAssigned) THEN

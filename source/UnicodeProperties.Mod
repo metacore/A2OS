@@ -472,7 +472,7 @@ TYPE
 			sourceString : ARRAY 7 OF CHAR;
 			sourceInt, tempChar : Texts.Char32;
 			i : INTEGER;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			sourceInt := -1;
 			i := -1;
@@ -501,7 +501,7 @@ TYPE
 			targetString : ARRAY 7 OF CHAR;
 			targetInt, tempChar : Texts.Char32;
 			i : INTEGER;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			targetInt := -1;
 			i := -1;

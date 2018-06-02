@@ -83,7 +83,7 @@ END ToNum;
 (** GetIP delivers the ip-number of a named host. If a symbolic name is given, it will be resolved by use of domain name servers. *)
 
 PROCEDURE GetIP*(CONST name: ARRAY OF CHAR; VAR adr: IPAdr);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	adr := IP.StrToAdr(name);
 	IF IP.IsNilAdr(adr) THEN
@@ -97,7 +97,7 @@ END GetIP;
 (** GetName is the reverse of GetIP. Given an ip-number, it delivers the name of a host. *)
 
 PROCEDURE GetName* (IP: IPAdr; VAR name: ARRAY OF CHAR);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF started THEN
 		DNS.HostByNumber(IP, name, res)
@@ -280,7 +280,7 @@ END ReadString;
 (** Blocking write a single byte to C. *)
 
 PROCEDURE Write* (C: Connection; ch: CHAR);
-VAR res: LONGINT; buf: ARRAY 1 OF CHAR;
+VAR res: WORD; buf: ARRAY 1 OF CHAR;
 BEGIN
 	buf[0] := ch;
 	C.pcb.Send(buf, 0, 1, FALSE, res);
@@ -290,7 +290,7 @@ END Write;
 (** Blocking write len bytes of data (beginning at pos in buf) to C. *)
 
 PROCEDURE WriteBytes* (C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	ASSERT(pos+len <= LEN(buf));
 	C.pcb.Send(SYSTEM.VAL(Bytes, buf), pos, len, FALSE, res);
@@ -300,7 +300,7 @@ END WriteBytes;
 (** Blocking write two bytes in network byte ordering to C. *)
 
 PROCEDURE WriteInt* (C: Connection; x: INTEGER);
-VAR res: LONGINT; buf: ARRAY 2 OF CHAR;
+VAR res: WORD; buf: ARRAY 2 OF CHAR;
 BEGIN
 	buf[0] := CHR(x DIV 100H MOD 100H); buf[1] := CHR(x MOD 100H);
 	C.pcb.Send(buf, 0, 2, FALSE, res);
@@ -310,7 +310,7 @@ END WriteInt;
 (** Blocking write four bytes in network byte ordering to C. *)
 
 PROCEDURE WriteLInt* (C: Connection; x: LONGINT);
-VAR res: LONGINT; buf: ARRAY 4 OF CHAR;
+VAR res: WORD; buf: ARRAY 4 OF CHAR;
 BEGIN
 	buf[0] := CHR(x DIV 1000000H MOD 100H); buf[1] := CHR(x DIV 10000H MOD 100H);
 	buf[2] := CHR(x DIV 100H MOD 100H); buf[3] := CHR(x MOD 100H);
@@ -369,7 +369,7 @@ END CloseSocket;
 (** Sends len bytes of data (beginning at pos in buf) to the host specified by remIP and remPort. *)
 
 PROCEDURE SendDG* (S: Socket; remIP: IPAdr; remPort: INTEGER; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	ASSERT(pos+len <= LEN(buf));	(* index check *)
 	S.pcb.Send(remIP, LONG(remPort) MOD 10000H, SYSTEM.VAL(Bytes, buf), pos, len, res);

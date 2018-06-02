@@ -103,7 +103,7 @@ BEGIN
 	END
 END Split;
 
-PROCEDURE GetErrorMsg(res: LONGINT; VAR s: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR);
 BEGIN
 	CASE res OF
 	| FATFiles.ErrReadOnly: COPY("read-only file system", s)
@@ -155,7 +155,7 @@ END SetRootDirectory;
 
 PROCEDURE CreateDirectory*; (** path (including prefix, e.g. "FAT:/New Folder/A/B/C") *)
 VAR p: ARRAY 1024 OF CHAR; W: Texts.Writer; S: Texts.Scanner;
-	res: LONGINT; msg: ARRAY 256 OF CHAR;
+	res: WORD; msg: ARRAY 256 OF CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	Texts.WriteString(W, "Creating directory: "); Texts.Append(Oberon.Log, W.buf);
@@ -178,7 +178,7 @@ END CreateDirectory;
 
 PROCEDURE RemoveDirectory*; (** path ["\F"]. Path includes prefix, e.g. "FAT:/A/B/C". Use "\F" option to force deletion of non-empty directories. *)
 VAR p: ARRAY 1024 OF CHAR; W: Texts.Writer; S: Texts.Scanner;
-	res: LONGINT; msg: ARRAY 256 OF CHAR; force: BOOLEAN; o: CHAR;
+	res: WORD; msg: ARRAY 256 OF CHAR; force: BOOLEAN; o: CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	Texts.WriteString(W, "Deleting directory: "); Texts.Append(Oberon.Log, W.buf);
@@ -278,7 +278,7 @@ END Template;
 
 PROCEDURE QuickFormat*; (** prefix [label] *)
 VAR p: ARRAY 128 OF CHAR; path: Path; fs: Files.FileSystem;
-	W: Texts.Writer; S: Texts.Scanner; res: LONGINT; msg: ARRAY 256 OF CHAR;
+	W: Texts.Writer; S: Texts.Scanner; res: WORD; msg: ARRAY 256 OF CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	OpenScanner(S);

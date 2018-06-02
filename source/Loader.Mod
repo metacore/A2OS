@@ -355,7 +355,7 @@ TYPE
 		END ExportBlock;
 
 		PROCEDURE ImportBlock*(CONST fixup: ObjectFile.Fixup): GenericLinker.Block;
-		VAR name: Modules.Name; res: LONGINT;
+		VAR name: Modules.Name; res: WORD;
 			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: ADDRESS; m: HashTableInt;
 			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
 			fp: SIZE;
@@ -527,7 +527,7 @@ VAR
 		RETURN address
 	END DoAllocate;
 	
-	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Modules.Module;
+	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: WORD; VAR msg: ARRAY OF CHAR): Modules.Module;
 	TYPE Body=PROCEDURE;
 	VAR
 		file: Files.File; reader: Files.Reader; linker: Linker;
@@ -625,7 +625,7 @@ VAR
 	PROCEDURE ConcurrentLoad*;
 	VAR i: LONGINT;
 		o: OBJECT 		VAR
-			mod: Modules.Module; res: LONGINT; msg: ARRAY 32 OF CHAR;
+			mod: Modules.Module; res: WORD; msg: ARRAY 32 OF CHAR;
 		BEGIN{ACTIVE}
 			WHILE(~startConcurrentLoad) DO END;
 			mod := Modules.ThisModule("Test",res,msg);

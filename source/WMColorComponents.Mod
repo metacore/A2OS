@@ -293,7 +293,7 @@ TYPE
 			text : Texts.Text;
 			textPos : Texts.TextPosition;
 			hex: ARRAY 10 OF CHAR;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF (data # NIL) & (data IS WMWindowManager.DragInfo) THEN
 				di := data(WMWindowManager.DragInfo);

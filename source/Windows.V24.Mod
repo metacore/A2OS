@@ -99,7 +99,7 @@ TYPE
 			NEW( fn ); fn.finalizer := SELF.FinalizePort; Heaps.AddFinalizer( SELF, fn );
 		END Init;
 
-		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: LONGINT );
+		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: WORD );
 		BEGIN {EXCLUSIVE}
 			IF handle = Kernel32.InvalidHandleValue THEN
 				SetPortState( bps, data, parity, stop, res );
@@ -116,7 +116,7 @@ TYPE
 		END Open;
 
 	(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 		VAR written: LONGINT;  ret: Kernel32.BOOL;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
@@ -138,7 +138,7 @@ TYPE
 		END Send;
 
 	(** Send a single character to the UART. *)
-		PROCEDURE SendChar*( ch: CHAR; VAR res: LONGINT );
+		PROCEDURE SendChar*( ch: CHAR; VAR res: WORD );
 		VAR ret: Kernel32.BOOL;  written: LONGINT;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
@@ -203,7 +203,7 @@ TYPE
 		END Receive;
 
 	(** Wait for the next character is received in the input buffer.  *)
-		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: LONGINT );
+		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: WORD );
 		VAR l, ret, read: LONGINT;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
@@ -237,7 +237,7 @@ TYPE
 	data is the number of bits per communication unit.  parity is the parity mode.
 	stop is the number of stop bits.
 	res: Ok, PortInUse, NoSuchPort, WrongBPS, WrongData, WrongParity, WrongStop, Failed *)
-		PROCEDURE SetPortState( bps, data, parity, stop: LONGINT;  VAR res: LONGINT );
+		PROCEDURE SetPortState( bps, data, parity, stop: LONGINT;  VAR res: WORD );
 		VAR
 			hFile: Kernel32.HANDLE;  dcb: Kernel32.DCB;
 			ret: Kernel32.BOOL;  err: LONGINT;
@@ -358,7 +358,7 @@ TYPE
 
 	(** SetMC - Set the specified modem control lines.  s may contain DTR, RTS & Break. *)
 		PROCEDURE SetMC*( s: SET );
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN {EXCLUSIVE}
 			IF handle # Kernel32.InvalidHandleValue THEN
 				IF Serials.Break IN s THEN res := Kernel32.SetCommBreak( handle ) END;
@@ -374,7 +374,7 @@ TYPE
 	(** GetMC - Return the state of the specified modem control lines.  s contains
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*( VAR s: SET );
-		VAR state: WORDSET;  res: LONGINT;
+		VAR state: WORDSET;  res: WORD;
 		BEGIN {EXCLUSIVE}
 			s := {};
 			IF handle # Kernel32.InvalidHandleValue THEN

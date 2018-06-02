@@ -297,7 +297,7 @@ MODULE Miscellaneous IN Oberon;	(** portable, except where noted *) (*JG 20.5.94
   END MakeDOSText;
 
 	PROCEDURE V24Write(ch: CHAR);
-	VAR dr: CHAR;  res: LONGINT;
+	VAR dr: CHAR;  res: WORD;
 	BEGIN
 		IF V24.Available(port) > 0 THEN
 			V24.Receive(port, dr, res);
@@ -311,7 +311,7 @@ MODULE Miscellaneous IN Oberon;	(** portable, except where noted *) (*JG 20.5.94
 (** Send the listed files directly to the printer specified as first parameter. *)
 	PROCEDURE PrintFiles*;	(** non-portable *)
 	VAR S: Texts.Scanner; Port, fname: ARRAY 32 OF CHAR;
-			f: Files.File; R: Files.Rider; ch: CHAR;  res: LONGINT;
+			f: Files.File; R: Files.Rider; ch: CHAR;  res: WORD;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 		IF (S.class = Texts.Name) OR (S.class = Texts.String) THEN

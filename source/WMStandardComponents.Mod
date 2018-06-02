@@ -203,7 +203,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Run*(sender, par : ANY); (** Eventhandler *)
-		VAR res : LONGINT; execute : String; msg : ARRAY 128 OF CHAR;
+		VAR res : WORD; execute : String; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			(* synchronize if not synchronized *)
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.Run, sender, par)
@@ -425,7 +425,7 @@ TYPE
 		END SetCaption;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR string : Types.String256; res : LONGINT; m: Models.Model;
+		VAR string : Types.String256; res : WORD; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(string, res);
@@ -588,7 +588,7 @@ TYPE
 		END CheckClickHandler;
 
 		PROCEDURE ExecuteClickHandler;
-		VAR s : Strings.String; res : LONGINT; msg : ARRAY 64 OF CHAR;
+		VAR s : Strings.String; res : WORD; msg : ARRAY 64 OF CHAR;
 		BEGIN
 			s := onClickHandler.Get();
 			IF s # NIL THEN
@@ -705,7 +705,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR boolean : Types.Boolean; res : LONGINT; m: Models.Model;
+		VAR boolean : Types.Boolean; res : WORD; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(boolean, res);
@@ -717,7 +717,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE ChangeModel(value : BOOLEAN);
-		VAR boolean : Types.Boolean; res : LONGINT; m: Models.Model;
+		VAR boolean : Types.Boolean; res : WORD; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(model, m) THEN
 				IF isInverse.Get() THEN boolean.value := ~value ELSE boolean.value := value END;
@@ -1462,7 +1462,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR integer : Types.Integer; res : LONGINT; m: Models.Model;
+		VAR integer : Types.Integer; res : WORD; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(integer, res);
@@ -1473,7 +1473,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE ChangeModel(value : LONGINT);
-		VAR integer : Types.Integer; res : LONGINT; m: Models.Model;
+		VAR integer : Types.Integer; res : WORD; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(model, m) THEN
 				integer.value := value;
@@ -2148,7 +2148,7 @@ TYPE
 		END TrackerPointerUp;
 
 		PROCEDURE ChangeModel;
-		VAR m: Models.Model; real: Types.Integer; res : LONGINT;
+		VAR m: Models.Model; real: Types.Integer; res : WORD;
 		BEGIN
 			IF WMProperties.GetModel(model,m) THEN
 				real.value := pos.Get();

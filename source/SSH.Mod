@@ -208,7 +208,7 @@ TYPE
 				rbstart, rbend: LONGINT;
 				interactive: BOOLEAN;
 
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT );
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 				VAR p: T.Packet; l: LONGINT; t: CHAR;
 					buf: ARRAY 512 OF CHAR;
 				BEGIN
@@ -786,7 +786,7 @@ TYPE
 		locPort, destPort: LONGINT;
 		arg: Streams.Reader;
 		strings: Strings.StringArray;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		arg := context.arg;
 		arg.SkipWhitespace; arg.String( token );

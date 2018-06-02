@@ -735,7 +735,7 @@ MODULE Packages IN Oberon; (** portable / source: Native.Packages.Mod *)	(* ejz 
 (* Implementation of an Application installer for local package files. *)
 
 	PROCEDURE GetURL(context: Objects.Object; CONST purl: ARRAY OF CHAR): LONGINT;
-		VAR F: Files.File; gen: FileDir.FileName; res: LONGINT; url: POINTER TO ARRAY OF CHAR;
+		VAR F: Files.File; gen: FileDir.FileName; res: WORD; url: POINTER TO ARRAY OF CHAR;
 	BEGIN
 		NEW(url,LEN(purl));
 		COPY (purl,url^);
@@ -766,7 +766,7 @@ MODULE Packages IN Oberon; (** portable / source: Native.Packages.Mod *)	(* ejz 
 	(** Install packages available in your Oberon directories. For network installation of packages use
 		HTMLPlugIns.Install. *)
 	PROCEDURE Install*;
-		VAR T: Texts.Text; S: Texts.Scanner; res: LONGINT;
+		VAR T: Texts.Text; S: Texts.Scanner; res: WORD;
 	BEGIN
 		OpenScanner(T, S); res := 0;
 		WHILE (S.class IN {Texts.Name, Texts.String}) & (res = 0) DO
@@ -776,7 +776,7 @@ MODULE Packages IN Oberon; (** portable / source: Native.Packages.Mod *)	(* ejz 
 	END Install;
 
 	PROCEDURE Load(D: Documents.Document);
-		VAR F: Files.File; obj: Objects.Object; gen, err: FileDir.FileName; res: LONGINT;
+		VAR F: Files.File; obj: Objects.Object; gen, err: FileDir.FileName; res: WORD;
 	BEGIN
 		D.dsc := NIL;
 		F := Files.Old(D.name);

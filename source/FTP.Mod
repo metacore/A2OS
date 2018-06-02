@@ -10,7 +10,7 @@ CONST
 
 VAR ftp : FTPClient.FTPClient;
 
-PROCEDURE PutFile(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE PutFile(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : WORD);
 VAR buf: ARRAY BufSize OF CHAR; len: LONGINT;
 	f : Files.File; r : Files.Reader;
 	w : Streams.Writer;
@@ -29,7 +29,7 @@ BEGIN
 	END;
 END PutFile;
 
-PROCEDURE PutText(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE PutText(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : WORD);
 VAR w : Streams.Writer;
         text: Texts.Text;
         r: Texts.TextReader;
@@ -53,7 +53,7 @@ BEGIN
 	text.ReleaseRead
 END PutText;
 
-PROCEDURE GetFile(ftp : FTPClient.FTPClient; remote, local : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE GetFile(ftp : FTPClient.FTPClient; remote, local : ARRAY OF CHAR; VAR res : WORD);
 VAR buf: ARRAY BufSize OF CHAR; len: LONGINT;
 	f : Files.File; w : Files.Writer;
 	r : Streams.Reader;
@@ -76,7 +76,7 @@ END GetFile;
 PROCEDURE  Open*(context : Commands.Context);
 VAR
 	host, user, password : ARRAY 256 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp # NIL THEN
 		context.out.String("Already open"); context.out.Ln;
@@ -107,7 +107,7 @@ PROCEDURE PutFiles*(context : Commands.Context);
 VAR
 	local, path, remote : ARRAY 256 OF CHAR;
 	tok : ARRAY 8 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not connected"); context.out.Ln;
@@ -141,7 +141,7 @@ PROCEDURE PutTexts*(context : Commands.Context);
 VAR
 	local, path, remote : ARRAY 256 OF CHAR;
 	tok : ARRAY 8 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not connected"); context.out.Ln;
@@ -174,7 +174,7 @@ PROCEDURE GetFiles*(context : Commands.Context);
 VAR
 	local, remote : ARRAY 256 OF CHAR;
 	tok : ARRAY 8 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not connected"); context.out.Ln;
@@ -206,7 +206,7 @@ END GetFiles;
 PROCEDURE MakeDir*(context : Commands.Context);
 VAR
 	path : ARRAY 256 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not open"); context.out.Ln;
@@ -223,7 +223,7 @@ END MakeDir;
 PROCEDURE ChangeDir*(context : Commands.Context);
 VAR
 	path : ARRAY 256 OF CHAR;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not open"); context.out.Ln;
@@ -253,7 +253,7 @@ BEGIN
 END Directory;
 
 PROCEDURE Close*(context : Commands.Context);
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not connected"); context.out.Ln;

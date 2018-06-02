@@ -310,7 +310,7 @@ TYPE
 		VAR
 			changeInfo : ChangeInfo;
 			string: ARRAY 32 OF CHAR;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			NEW(changeInfo);
 			IF (famCheck.state.Get() = 1) THEN

@@ -1061,7 +1061,7 @@ TYPE
 			RETURN style;
 		END GetStyle;
 
-		PROCEDURE AddToken(CONST tokenname : ARRAY OF CHAR; style : Style; VAR res : LONGINT);
+		PROCEDURE AddToken(CONST tokenname : ARRAY OF CHAR; style : Style; VAR res : WORD);
 		VAR token, t : Word; length, index1, index2 : LONGINT;
 		BEGIN
 			ASSERT((Strings.Length(tokenname) > 0) & (style # NIL) & (style.name # ""));
@@ -1088,7 +1088,7 @@ TYPE
 			END;
 		END AddToken;
 
-		PROCEDURE AddWord(CONST keyword : ARRAY OF CHAR; style : Style; VAR res : LONGINT);
+		PROCEDURE AddWord(CONST keyword : ARRAY OF CHAR; style : Style; VAR res : WORD);
 		VAR word, w : Word; nofWildcards, index1, index2, length : LONGINT;
 		BEGIN
 			ASSERT((Strings.Length(keyword) > 0) & (style # NIL) & (style.name # ""));
@@ -1416,7 +1416,7 @@ VAR
 	fontsize, color, bgcolor, voff : LONGINT;
 	fontstyle : SET;
 	defined : SET;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	ASSERT((element # NIL) & (styles # NIL) & (diagnostics # NIL));
 	string := element.GetName();
@@ -1544,7 +1544,7 @@ VAR
 	string : Strings.String; ptr : ANY;
 	reader : Streams.StringReader;
 	token : ARRAY 128 OF CHAR;
-	style : Style; res : LONGINT;
+	style : Style; res : WORD;
 BEGIN
 	ASSERT((element # NIL) & (highlighter # NIL) & (styles # NIL) & (diagnostics # NIL));
 	ASSERT((type = TypeWords) OR (type = TypeTokens));

@@ -6,7 +6,7 @@ TYPE
 	LinkDevice =  OBJECT(Network.LinkDevice)
 
 		PROCEDURE &Constr*(type, mtu, adrSize: LONGINT);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			Constr^(type, mtu, adrSize); (* call inherited constructor first *)
 

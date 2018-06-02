@@ -847,7 +847,7 @@ BEGIN
 	RETURN img
 END LoadImage;
 
-PROCEDURE StoreImage*(img : Raster.Image; CONST name : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StoreImage*(img : Raster.Image; CONST name : ARRAY OF CHAR; VAR res : WORD);
 VAR encoder : Codecs.ImageEncoder;
 	f : Files.File;
 	w : Files.Writer;

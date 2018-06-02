@@ -34,7 +34,7 @@ TYPE
 	END Display;
 
 PROCEDURE Install*;
-VAR d: Display; res: LONGINT;
+VAR d: Display; res: WORD;
 BEGIN
 	NEW(d); d.desc := "Null display driver";
 	Displays.registry.Add(d, res);

@@ -41,7 +41,7 @@ CONST
 
 TYPE
 
-	SendProcedure = PROCEDURE {DELEGATE} (ch : CHAR; VAR res : LONGINT);
+	SendProcedure = PROCEDURE {DELEGATE} (ch : CHAR; VAR res : WORD);
 
 	(** Virtual serial port the can be linked to other virtual serial port *)
 	VirtualPort = OBJECT (Serials.Port);
@@ -61,7 +61,7 @@ TYPE
 
 		(** Virtual Port Interface *)
 
-		PROCEDURE PutChar(ch : CHAR; VAR res : LONGINT);
+		PROCEDURE PutChar(ch : CHAR; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN
 				res := Serials.Closed;
@@ -79,7 +79,7 @@ TYPE
 
 		(** Serial Port Interface *)
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN ShowModule; KernelLog.String(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -101,7 +101,7 @@ TYPE
 			IF Verbose THEN ShowModule; KernelLog.String(name); KernelLog.String(" closed"); KernelLog.Ln; END;
 		END Close;
 
-		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
 		VAR wait: BOOLEAN;
 		BEGIN
 			BEGIN{EXCLUSIVE}
@@ -121,7 +121,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN END;
 			AWAIT((tail # head) OR ~open);
@@ -140,7 +140,7 @@ TYPE
 		END Available;
 
 		(* Set the port state: speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN
 			SELF.bps := bps; SELF.data := data; SELF.parity := parity; SELF.stop := stop;
 			res := Serials.Ok;
@@ -190,7 +190,7 @@ TYPE
 		port : Serials.Port;
 		in, out : Streams.Writer;
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			port.Open(bps, data, parity, stop, res);
 			IF res = Serials.Ok THEN
@@ -203,7 +203,7 @@ TYPE
 			port.Close;
 		END Close;
 
-		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			port.SendChar(ch, res);
 			IF res = Serials.Ok THEN
@@ -222,7 +222,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			port.ReceiveChar(ch, res);
 			IF res = Serials.Ok THEN

@@ -28,7 +28,7 @@ TYPE
 	END Init;
 
 		(** res = 0 if Connection opened *)
-		PROCEDURE Open*(VAR res: LONGINT);
+		PROCEDURE Open*(VAR res: WORD);
 			VAR ip: IP.Adr;
 		BEGIN
 			IF rpcConn.state = TCP.Unused THEN
@@ -87,7 +87,7 @@ TYPE
 		END Receive;
 
 		(** if the connection is down Send tries to connect again **)
-		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: LONGINT; VAR res: WORD);
 		BEGIN{EXCLUSIVE}
 			res := TCP.NotConnected;
 			IF off < 0 THEN
@@ -106,7 +106,7 @@ TYPE
 			rpcConn.Send(buf, off, len, FALSE, res);
 		END Send;
 
-		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: LONGINT);
+		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD);
 		BEGIN
 			rpcConn.AwaitState(good, bad, ms, res);
 		END AwaitState;

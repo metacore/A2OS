@@ -83,7 +83,7 @@ END SetMTTRphysMask;
 
 (** Set the cache properties of the specified physical memory area on the current processor. {physAdr, size MOD PS = 0}  Must be called from supervisor mode. *)
 
-PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: LONGINT);
+PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
 VAR i, n, f: LONGINT; mask, base: SET; j, k: ADDRESS;
 BEGIN
 	ASSERT((physAdr MOD PS = 0) & (size MOD PS = 0) & (size # 0));
@@ -148,7 +148,7 @@ END HandleSetCacheProperties;
 
 (** Broadcast a LocalSetCacheProperties operation to all processors. *)
 
-PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: LONGINT);
+PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
 VAR i: LONGINT; msg: SetCacheMessage;
 BEGIN
 	NEW(msg); msg.physAdr := physAdr; msg.size := size; msg.type := type;

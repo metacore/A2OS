@@ -57,7 +57,7 @@ TYPE
 
 TYPE
 	ChargenAgent = OBJECT (TCPServices.Agent)
-		VAR res: LONGINT;
+		VAR res: WORD;
 
 	BEGIN {ACTIVE}
 		LOOP
@@ -101,7 +101,7 @@ BEGIN
 END InitChargenBuf;
 
 PROCEDURE Open*;
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	NEW(discard, DiscardPort, NewDiscardAgent, res);
 	NEW(echo, EchoPort, NewEchoAgent, res);

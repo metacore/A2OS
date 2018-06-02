@@ -369,7 +369,7 @@ BEGIN
 	RETURN TRUE
 END Init;
 
-PROCEDURE Done(VAR res: LONGINT);
+PROCEDURE Done(VAR res: WORD);
 BEGIN
 	PCO.Close;
 	res := 0

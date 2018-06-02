@@ -481,7 +481,7 @@ MODULE JPEG2000DecoderUtil;
 			VAR
 				r: Files.Rider;
 
-			PROCEDURE Send(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+			PROCEDURE Send(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 				BEGIN
 					r.file.WriteBytes(r, buf, ofs, len);
 					IF propagate THEN r.file.Update END;

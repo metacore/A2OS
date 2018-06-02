@@ -184,7 +184,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 			END SB;
 
 			PROCEDURE Command;
-				VAR msg: ARRAY MaxLine OF CHAR; res: LONGINT;
+				VAR msg: ARRAY MaxLine OF CHAR; res: WORD;
 			BEGIN
 				ShellCommands.Execute(ctx, line, res, msg);
 				IF res # 0 THEN
@@ -287,7 +287,7 @@ KernelLog.String("ESC ["); KernelLog.Char(ch); KernelLog.Ln()
 	END NewAgent;
 
 	PROCEDURE OpenService*;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		IF service = NIL THEN
 			NEW(service, 23, NewAgent,res)

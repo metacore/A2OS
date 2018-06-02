@@ -70,7 +70,7 @@ TYPE
 
 
 		(** Constructor *)
-		PROCEDURE &Open*(lport: LONGINT; VAR res: LONGINT);
+		PROCEDURE &Open*(lport: LONGINT; VAR res: WORD);
 		BEGIN
 			open := TRUE;
 			ASSERT((lport >= 0) & (lport < 10000H));
@@ -91,7 +91,7 @@ TYPE
 
 		(** Send a UDP datagram to the foreign address specified by "fip" and "fport".
 			The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized. *)
-		PROCEDURE Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT);
+		PROCEDURE Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		VAR
 			int: IP.Interface;
 

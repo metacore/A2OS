@@ -12,7 +12,7 @@ TYPE
 	RunnerDHCP = OBJECT
 		VAR
 			int: IP.Interface;
-			res: LONGINT;
+			res: WORD;
 
 		PROCEDURE &Constr*(int: IP.Interface);
 		BEGIN
@@ -30,7 +30,7 @@ TYPE
 
 VAR
 	(* temporary variables used in module body *)
-	res: LONGINT;
+	res: WORD;
 
 
 PROCEDURE Added(dev: Network.LinkDevice);

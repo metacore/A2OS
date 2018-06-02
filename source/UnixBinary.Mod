@@ -11,7 +11,7 @@ CONST
 	
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
 	VAR
-		name2: ARRAY 128 OF CHAR;  res: LONGINT;
+		name2: ARRAY 128 OF CHAR;  res: WORD;
 	BEGIN
 		IF Files.Old( name ) # NIL THEN
 			COPY( name, name2);  Strings.Append( name2, ".Bak" );

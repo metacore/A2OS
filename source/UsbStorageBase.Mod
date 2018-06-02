@@ -870,7 +870,7 @@ TYPE
 		storageDeviceList : UsbStorageDevice;
 		suffixUsed : ARRAY 100 OF BOOLEAN;
 		regName : ARRAY 32 OF CHAR;
-		res : LONGINT;
+		res : WORD;
 
 		PROCEDURE Add*(dev : UsbStorageDevice);
 		VAR i : LONGINT;
@@ -1136,7 +1136,7 @@ BEGIN
 	END;
 END ShowSenseData;
 
-PROCEDURE ShowRes(res : LONGINT);
+PROCEDURE ShowRes(res : WORD);
 BEGIN
 	IF Debug.Level >= Debug.Errors THEN
 	CASE res OF

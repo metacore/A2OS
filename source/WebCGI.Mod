@@ -73,7 +73,7 @@ END MyMatch;
 PROCEDURE FindProcedure(name : ARRAY OF CHAR) : CGIContextProc;
 VAR
 	cur : CGIProcInfo; cgiProc : CGIContextProc;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : LONGINT;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : WORD;
 BEGIN {EXCLUSIVE}
 	Strings.Delete(name, 0, 5);
 	cur := cgiProcs;
@@ -104,7 +104,7 @@ PROCEDURE StoreCGIs;
 VAR f : Files.File;
 	w : Files.Writer;
 	cur : CGIProcInfo;
-	res : LONGINT;
+	res : WORD;
 	n0, n1 : ARRAY 64 OF CHAR;
 BEGIN
 	n0 := "CGIConfig.dat"; n1 := "CGIConfig.dat.Bak";

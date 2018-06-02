@@ -173,11 +173,11 @@ TYPE
 		BEGIN HALT(301); END HasPhyOwnership;
 
 		(** Read a MII/GMII register *)
-		PROCEDURE ReadRegister16*(register: LONGINT; VAR value : SET; VAR res : LONGINT); (* abstract *)
+		PROCEDURE ReadRegister16*(register: LONGINT; VAR value : SET; VAR res : WORD); (* abstract *)
 		BEGIN HALT(301); END ReadRegister16;
 
 		(** Write a MII/GMII register *)
-		PROCEDURE WriteRegister16*(register : LONGINT; value : SET; VAR res : LONGINT); (* abstract *)
+		PROCEDURE WriteRegister16*(register : LONGINT; value : SET; VAR res : WORD); (* abstract *)
 		BEGIN HALT(301); END WriteRegister16;
 
 		(** MII Management Interface *)
@@ -204,7 +204,7 @@ TYPE
 		END Release;
 
 		(** Enable/disable auto-negotiation *)
-		PROCEDURE EnableAutoNegotiation*(enable : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE EnableAutoNegotiation*(enable : BOOLEAN; VAR res : WORD);
 		VAR anar, bmcr, bmsr : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -255,7 +255,7 @@ TYPE
 		END EnableAutoNegotiation;
 
 		(** Get link configuration negotiated by auto-negotiation *)
-		PROCEDURE GetAutoNegotiationResult*(VAR linkspeed : LONGINT; VAR fullDuplex : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE GetAutoNegotiationResult*(VAR linkspeed : LONGINT; VAR fullDuplex : BOOLEAN; VAR res : WORD);
 		VAR bmsr, anar, aner, anlpar, supported : SET; timeout : LONGINT; string : ARRAY 64 OF CHAR;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -342,7 +342,7 @@ TYPE
 		END GetLinkStatus;
 
 		(** Manually set the link speed and operating mode. This disables auto-negotiation as side-effect. *)
-		PROCEDURE ConfigureLink*(speed : LONGINT; fullDuplex : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE ConfigureLink*(speed : LONGINT; fullDuplex : BOOLEAN; VAR res : WORD);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -387,7 +387,7 @@ TYPE
 			WriteRegister16(BMCR, value, res);
 		END ConfigureLink;
 
-		PROCEDURE EnableLoopback*(enable : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE EnableLoopback*(enable : BOOLEAN; VAR res : WORD);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -401,7 +401,7 @@ TYPE
 		END EnableLoopback;
 
 		(** Reset the PHY. Sets the Control and the Status registers to their default values. *)
-		PROCEDURE Reset*(VAR res : LONGINT);
+		PROCEDURE Reset*(VAR res : WORD);
 		VAR timeout, interval : LONGINT; value : SET;
 		BEGIN (*  {EXCLUSIVE} *)
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -420,7 +420,7 @@ TYPE
 			IF Trace * TraceCommands # {} THEN KernelLog.String("done."); KernelLog.Ln; END;
 		END Reset;
 
-		PROCEDURE GetIdentifier*(VAR identifier : Identifier; VAR res : LONGINT);
+		PROCEDURE GetIdentifier*(VAR identifier : Identifier; VAR res : WORD);
 		VAR phyIdr1, phyIdr2 : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -440,7 +440,7 @@ TYPE
 		END GetIdentifier;
 
 		PROCEDURE Diag*;
-		VAR identifier : Identifier; res : LONGINT; bmsr, anar, anlpar, register : SET;
+		VAR identifier : Identifier; res : WORD; bmsr, anar, anlpar, register : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
 			KernelLog.String("MII information:"); KernelLog.Ln;

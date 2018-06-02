@@ -20,7 +20,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	Device = OBJECT (Disks.Device)
 	VAR drive: LONGINT;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			IF op = Disks.Read THEN res := ReadBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
 			ELSIF op = Disks.Write THEN res := WriteBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
@@ -33,7 +33,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 			res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: WORD);
 		BEGIN
 			IF msg IS Disks.GetGeometryMsg THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -132,7 +132,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 
 (* ---- Calculate disk geometry ---- *)
 
-	PROCEDURE Partsize(drive: LONGINT; VAR res: LONGINT);
+	PROCEDURE Partsize(drive: LONGINT; VAR res: WORD);
 	VAR
 		p, cyl, lcyl, cyl2, sector2, head2, extpend, extcyl, lend, pend, i: LONGINT;
 		pp, lpp: Part;
@@ -203,7 +203,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		END
 	END Partsize;
 
-	PROCEDURE Setsize(drive: LONGINT; VAR res: LONGINT);
+	PROCEDURE Setsize(drive: LONGINT; VAR res: WORD);
 	VAR cylinders, temp, heads, sectors, capacity: LONGINT;
 	BEGIN
 		cylinders := 1024; sectors := 62;
@@ -234,7 +234,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	END Setsize;
 
 	PROCEDURE GetGeo(drive: LONGINT);
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		devs[drive].heads := 0; devs[drive].heads0 := 0;
 		devs[drive].cylinders := 0; devs[drive].cylinders0 := 0;

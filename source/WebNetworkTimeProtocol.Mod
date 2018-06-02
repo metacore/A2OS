@@ -43,7 +43,7 @@ END;
 
 
 (** get a single time record from an NTP time server. *)
-PROCEDURE Get*(fip:IP.Adr; fport:LONGINT; VAR p:Packet; VAR res:LONGINT);
+PROCEDURE Get*(fip:IP.Adr; fport:LONGINT; VAR p:Packet; VAR res:WORD);
 VAR socket: UDP.Socket; len, high, low:LONGINT;
 	buf: ARRAY 1024 OF CHAR;
 	sw:Streams.StringWriter;

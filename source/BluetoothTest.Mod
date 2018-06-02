@@ -32,7 +32,7 @@ TYPE
 		END ListHCIConnections;
 
 		PROCEDURE InitL2CAP;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			IF (l2cap # NIL) THEN CloseL2CAP END;
 			(* NEW(l2cap, hci, res); *)
@@ -56,7 +56,7 @@ TYPE
 		END CloseL2CAP;
 
 		PROCEDURE ConnectIndication(indication: L2CAP.Indication);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			KernelLog.String(ident); KernelLog.String(": connect indication!!!"); KernelLog.Ln;
 			WITH indication: L2CAP.ConnectInd DO
@@ -66,7 +66,7 @@ TYPE
 		END ConnectIndication;
 
 		PROCEDURE ConfigIndication(indication: L2CAP.Indication);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			WITH indication: L2CAP.ConfigInd DO
 				KernelLog.String(ident); KernelLog.String(": configuration indication:"); KernelLog.Ln;
@@ -291,7 +291,7 @@ END ReadLocalName;
 PROCEDURE ChangeLocalName*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	name: ARRAY 248 OF CHAR; event: Bluetooth.EventPacket; pending: BOOLEAN; res : LONGINT;
+	name: ARRAY 248 OF CHAR; event: Bluetooth.EventPacket; pending: BOOLEAN; res : WORD;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetString(name) THEN
 		d := Find(ident);
@@ -358,7 +358,7 @@ BEGIN
 END WriteClassOfDevice;
 
 PROCEDURE Reset*(context : Commands.Context);
-VAR ident: Ident; d: Device; res: LONGINT;
+VAR ident: Ident; d: Device; res: WORD;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -376,7 +376,7 @@ END Reset;
 PROCEDURE ReadScanEnable*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	res: LONGINT; event: Bluetooth.EventPacket; pending: BOOLEAN;
+	res: WORD; event: Bluetooth.EventPacket; pending: BOOLEAN;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -426,7 +426,7 @@ END WriteScanEnable;
 PROCEDURE SetFilter*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	cond: ARRAY 1 OF CHAR; res: LONGINT;
+	cond: ARRAY 1 OF CHAR; res: WORD;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -654,7 +654,7 @@ END Supported;
 PROCEDURE ReadLocalSupportedFeatures*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	res: LONGINT; event: Bluetooth.EventPacket; pending: BOOLEAN;
+	res: WORD; event: Bluetooth.EventPacket; pending: BOOLEAN;
 	s: SET;
 BEGIN
 	IF context.arg.GetString(ident) THEN

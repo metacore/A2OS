@@ -10,7 +10,7 @@ TYPE
 			width, height: LONGINT;
 
 		(* open the decoder on a file *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
 			xmlScanner: XMLScanner.Scanner;
 			xmlParser: XMLParser.Parser;

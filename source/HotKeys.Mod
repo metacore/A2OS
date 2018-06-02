@@ -281,7 +281,7 @@ VAR
 	caller: OBJECT
 	VAR
 		command: XML.String;
-		msg : ARRAY 256 OF CHAR; res : LONGINT;
+		msg : ARRAY 256 OF CHAR; res : WORD;
 
 		PROCEDURE & Init(c: XML.String);
 		BEGIN

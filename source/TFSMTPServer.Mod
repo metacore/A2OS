@@ -405,7 +405,7 @@ BEGIN
 END CreateAccounts;
 
 PROCEDURE Start*;
-VAR e: XML.Element; a: XML.Attribute; s : String; res : LONGINT;
+VAR e: XML.Element; a: XML.Attribute; s : String; res : WORD;
 BEGIN
 	IF smtp = NIL THEN
 		IF LoadSettings("TFMailConfig.XML") THEN

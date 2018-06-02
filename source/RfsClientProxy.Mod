@@ -710,7 +710,7 @@ TYPE
 		(** this procedure is called from RfsClientProxy.New, it dows the Authentication and changes **)
 		(** the directory on the server **)
 		PROCEDURE Mount*(VAR errorcode: LONGINT);
-			VAR res: LONGINT;
+			VAR res: WORD;
 		BEGIN
 			errorcode := RECEIVERROR;
 			connection.Open(res);
@@ -843,7 +843,7 @@ BEGIN
 END New;
 
 PROCEDURE GetResult(connection: RfsConnection.Connection; VAR errorcode, dataBytes, received: LONGINT; VAR buf: ARRAY OF CHAR);
-	VAR res: LONGINT;
+	VAR res: WORD;
 BEGIN
 	errorcode := ReadInteger(connection, res);
 	IF res = Ok THEN
@@ -881,7 +881,7 @@ BEGIN
 END Char2Int;
 
 
-PROCEDURE ReadInteger*(connection: RfsConnection.Connection; VAR res: LONGINT): LONGINT;
+PROCEDURE ReadInteger*(connection: RfsConnection.Connection; VAR res: WORD): LONGINT;
 	VAR val, received: LONGINT; buf: ARRAY 4 OF CHAR;
 BEGIN
 	connection.Receive(buf, 0, 4, received, res);

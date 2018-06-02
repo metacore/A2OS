@@ -160,7 +160,7 @@ TYPE
 			Hide;
 		END OKHandler;
 
-		PROCEDURE SetResult(res: LONGINT);
+		PROCEDURE SetResult(res: WORD);
 		BEGIN {EXCLUSIVE}
 			result := res;
 		END SetResult;

@@ -1081,7 +1081,7 @@ BEGIN
 END ScanUD;
 
 PROCEDURE AddStorageDevices(VAR dev: Sbp2Dev);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	(* now add to disk system *)
 	Disks.registry.Add(dev,res);

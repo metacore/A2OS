@@ -697,7 +697,7 @@ TYPE
 		END DoMountPartition;
 
 		PROCEDURE DoUnmount;
-		VAR context : Commands.Context; arg : Streams.StringReader;  msg : ARRAY 128 OF CHAR; res : LONGINT;
+		VAR context : Commands.Context; arg : Streams.StringReader;  msg : ARRAY 128 OF CHAR; res : WORD;
 		BEGIN
 			installLog.String("Unmounting "); installLog.String(diskpartString); installLog.String("... "); installLog.Update;
 			NEW(arg, LEN(config.mountPrefix)); arg.SetRaw(config.mountPrefix, 0, LEN(config.mountPrefix));
@@ -911,7 +911,7 @@ TYPE
 			IF (reportProgress # NIL) THEN reportProgress(nofFilesExtracted); END;
 		END ReportProgress;
 
-		PROCEDURE ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res : WORD);
 		VAR file: Files.File; w : Files.Writer; string : ARRAY 256 OF CHAR;
 		BEGIN
 			res := 0;
@@ -932,7 +932,7 @@ TYPE
 		END ExtractEntry;
 
 		PROCEDURE Unzip(zipFile : AosUnzip.ZipFile) : BOOLEAN;
-		VAR e : AosUnzip.Entry; res : LONGINT; name : Files.FileName;
+		VAR e : AosUnzip.Entry; res : WORD; name : Files.FileName;
 		BEGIN
 			res := 0;
 			e := zipFile.GetFirst();
@@ -953,7 +953,7 @@ TYPE
 		END Unzip;
 
 		PROCEDURE OpenZipFile(CONST filename : ARRAY OF CHAR; reportErrors : BOOLEAN) : AosUnzip.ZipFile;
-		VAR file : Files.File; res : LONGINT; string : ARRAY 256 OF CHAR; zipFile : AosUnzip.ZipFile;
+		VAR file : Files.File; res : WORD; string : ARRAY 256 OF CHAR; zipFile : AosUnzip.ZipFile;
 		BEGIN
 			zipFile := NIL;
 			file := Files.Old(filename);

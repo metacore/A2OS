@@ -852,7 +852,7 @@ TYPE
 
 		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel;
 		samplingRate, samplingResolution, nofSubChannels, format : LONGINT;
-		VAR res : LONGINT);
+		VAR res : WORD);
 		VAR i, count : LONGINT;
 		BEGIN {EXCLUSIVE}
 			channel := NIL;
@@ -887,7 +887,7 @@ TYPE
 
 		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel;
 		samplingRate, samplingResolution, nofSubChannels, format : LONGINT;
-		VAR res: LONGINT);
+		VAR res: WORD);
 		VAR i : LONGINT;
 		BEGIN
 			channel := NIL;

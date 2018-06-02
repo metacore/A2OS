@@ -142,7 +142,7 @@ TYPE
 	SmtpAgent* = OBJECT (TCPServices.Agent)
 	VAR
 			ch: CHAR;				(*current input character*)
-			res: LONGINT;
+			res: WORD;
 			out: Streams.Writer; in: Streams.Reader;
 			log : Files.Writer;
 			env : Envelope;
@@ -382,7 +382,7 @@ TYPE
 
 	(* Begin Parser Productions *)
 	PROCEDURE HELO*;
-		VAR res : LONGINT;
+		VAR res : WORD;
 	BEGIN
 		Confirm(SyHelo);
 		sym := SyCopy; ToMemory (env.mta);
@@ -1027,7 +1027,7 @@ BEGIN
 END Announce;
 
 PROCEDURE Open*;
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	IF smtp = NIL THEN
 		NEW(smtp, AlmSmtpReceiverPort, NewSmtpAgent, res);

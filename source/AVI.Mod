@@ -267,7 +267,7 @@ IMPORT
 		videoFramePos: LONGINT;
 		audioFramePos: LONGINT;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		BEGIN
 			r := in;
 			res := AOC.ResFailed;
@@ -1132,8 +1132,8 @@ IMPORT
 			END;
 		END GetData;
 
-		PROCEDURE SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT);
-		(* PROCEDURE SetStreamPos*(streamNr, pos : LONGINT; VAR res: LONGINT); *)
+		PROCEDURE SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD);
+		(* PROCEDURE SetStreamPos*(streamNr, pos : LONGINT; VAR res: WORD); *)
 		VAR
 			n0, n1, n, spos: LONGINT;
 			(* seekType, itemSize : LONGINT; *)

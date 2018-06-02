@@ -77,7 +77,7 @@ TYPE
 		PROCEDURE make*;
 		VAR
 			resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-			out : Streams.Reader; res: LONGINT;
+			out : Streams.Reader; res: WORD;
 		BEGIN
 			OdClient.ShowMethodUrl(WebHTTP.MkactivityM, url^);
 			client.Mkactivity(url^, resHeader, out, res);
@@ -96,7 +96,7 @@ TYPE
 
 		PROCEDURE delete*;
 		VAR resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-			out : Streams.Reader; res: LONGINT;
+			out : Streams.Reader; res: WORD;
 		BEGIN
 			ASSERT ( url # NIL );
 
@@ -215,7 +215,7 @@ TYPE
 
 	PROCEDURE Get(CONST url: ARRAY OF CHAR; VAR f: Files.File);
 	VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader;
-		res: LONGINT;
+		res: WORD;
 		out : Streams.Reader;
 	BEGIN
 		OdClient.ShowMethodUrl(WebHTTP.GetM, url);
@@ -434,7 +434,7 @@ TYPE
 	VAR splitter: OdXml.StringSplitter;
 		name: ARRAY 64 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-		out : Streams.Reader; res: LONGINT;
+		out : Streams.Reader; res: WORD;
 		list: WebHTTP.AdditionalField;
 		repos : OdClient.Repos;
 	BEGIN
@@ -542,7 +542,7 @@ TYPE
 
 	(* There must be already a version (e.g. the newest which can be checked out) to make a delta on it for an older. *)
 	PROCEDURE UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR;
-		headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res : LONGINT );
+		headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res : WORD );
 	VAR resBody: XML.Document;
 		reqBody: UpdateReq;
 		resHeader: WebHTTP.ResponseHeader;
@@ -741,7 +741,7 @@ TYPE
 	VAR resBody: XML.Document;
 		reqBody: LogReq;
 		resHeader: WebHTTP.ResponseHeader;
-		out : Streams.Reader; res : LONGINT;
+		out : Streams.Reader; res : WORD;
 		versions: OdUtil.Dict; logItem: LogItem;
 		repos : OdClient.Repos;
 	BEGIN
@@ -787,7 +787,7 @@ TYPE
 		logText: ARRAY 256 OF CHAR; lenStr: ARRAY 16 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
 		reqHeader: WebHTTP.RequestHeader;
-		in: Files.Reader; out : Streams.Reader; res: LONGINT;
+		in: Files.Reader; out : Streams.Reader; res: WORD;
 		props: WebHTTP.AdditionalField;
 		root: XML.Element; s: XML.String;
 		f: Files.File;
@@ -937,7 +937,7 @@ TYPE
 		lenStr: ARRAY 32 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
 		reqHeader: WebHTTP.RequestHeader;
-		out : Streams.Reader; res: LONGINT;
+		out : Streams.Reader; res: WORD;
 		props: WebHTTP.AdditionalField;
 		root: XML.Element; s: XML.String;
 		f: Files.File; in: Files.Reader;
@@ -1018,7 +1018,7 @@ TYPE
 	(* Hide checkout stuff in a procedure.  *)
 	PROCEDURE Checkout*(url: ARRAY OF CHAR; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR);
 	VAR doc: XML.Document;
-		out : Streams.Reader; res: LONGINT;
+		out : Streams.Reader; res: WORD;
 		root: XML.Element; s: U.String;
 		s1, s2: ARRAY 256 OF CHAR;
 		repos : OdClient.Repos;
@@ -1052,7 +1052,7 @@ TYPE
 	PROCEDURE Proppatch*(url: ARRAY OF CHAR; VAR props: WebHTTP.AdditionalField;  CONST err: ARRAY OF CHAR);
 	VAR resHeader: WebHTTP.ResponseHeader;
 		doc: XML.Document;
-		out : Streams.Reader; res: LONGINT;
+		out : Streams.Reader; res: WORD;
 		root: XML.Element; s: U.String;
 		s1: ARRAY 256 OF CHAR;
 		repos : OdClient.Repos;
@@ -1090,7 +1090,7 @@ TYPE
 	(* Hide merge stuff.  *)
 	PROCEDURE Merge*(url: ARRAY OF CHAR; actUrl: U.String; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR);
 	VAR doc: XML.Document;
-		out : Streams.Reader; res: LONGINT;
+		out : Streams.Reader; res: WORD;
 		root: XML.Element; s: U.String;
 		s1, s2: ARRAY 265 OF CHAR;
 		repos : OdClient.Repos;
@@ -1124,7 +1124,7 @@ TYPE
 		log.Enter; log.String( "" );  log.Exit;
 	END Merge;
 
-	PROCEDURE SvnWrite ( parent : XML.Element; CONST path, filename, version : ARRAY OF CHAR; added : BOOLEAN; VAR res : LONGINT );
+	PROCEDURE SvnWrite ( parent : XML.Element; CONST path, filename, version : ARRAY OF CHAR; added : BOOLEAN; VAR res : WORD );
 	VAR
 		enum: XMLObjects.Enumerator;
 		p: ANY;
@@ -1367,7 +1367,7 @@ TYPE
 		END;
 	END SvnWrite;
 
-	PROCEDURE SvnParseUpdate(doc: XML.Document; CONST workUrl, workName : ARRAY OF CHAR; VAR res : LONGINT );
+	PROCEDURE SvnParseUpdate(doc: XML.Document; CONST workUrl, workName : ARRAY OF CHAR; VAR res : WORD );
 	VAR
 		s : XML.String;
 		root, e : XML.Element;

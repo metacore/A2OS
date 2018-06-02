@@ -191,7 +191,7 @@ PROCEDURE Module*(scanner: PCS.Scanner; CONST source, options: ARRAY OF CHAR; br
 VAR
 	scope: PCT.ModScope; dest, objF: ARRAY 16 OF CHAR;
 	size: LONGINT; R: PCM.Rider; new, extend, nofile, skip: BOOLEAN;
-	version: CHAR; res: LONGINT;
+	version: CHAR; res: WORD;
 	str: StringBuf;
 	msg: ARRAY 32 OF CHAR;
 	finished: BOOLEAN; copyscanner: PCS.Scanner; sym: SHORTINT;
@@ -392,7 +392,7 @@ VAR
 	code, i: LONGINT; str: XML.String;
 	dynStr: DynamicStrings.DynamicString;
 	r : Files.Reader;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	Configuration.Get("Paco.ErrorMessages", ErrorFile, res);
 	IF (res # Configuration.Ok) THEN ErrorFile := DefaultErrorFile END;

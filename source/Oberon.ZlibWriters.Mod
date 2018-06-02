@@ -135,7 +135,7 @@ BEGIN
 END Close;
 
 (** compress srclen bytes from src to dst with specified level and strategy. dstlen returns how many bytes have been written. **)
-PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: LONGINT);
+PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD);
 VAR
 	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: LONGINT;
 BEGIN

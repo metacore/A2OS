@@ -66,7 +66,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE LoadImages;
-		VAR name : Strings.String; res : LONGINT;
+		VAR name : Strings.String; res : WORD;
 		BEGIN
 			first := NIL; current := NIL; image := NIL;
 			name := imageName.Get();
@@ -191,7 +191,7 @@ VAR
 
 	StrAnimation : Strings.String;
 
-PROCEDURE OpenAnimation(filename : ARRAY OF CHAR; VAR sequence : Codecs.ImageSequence; VAR res : LONGINT);
+PROCEDURE OpenAnimation(filename : ARRAY OF CHAR; VAR sequence : Codecs.ImageSequence; VAR res : WORD);
 VAR
 	name, extension : Files.FileName; reader : Streams.Reader;
 	animationDecoder : Codecs.AnimationDecoder; imageDecoder : Codecs.ImageDecoder;

@@ -117,7 +117,7 @@ TYPE
 		END PointerUp;
 
 		PROCEDURE ExecuteCommand;
-		VAR cmdString : Strings.String; msg : ARRAY 128 OF CHAR; res : LONGINT;
+		VAR cmdString : Strings.String; msg : ARRAY 128 OF CHAR; res : WORD;
 		BEGIN
 			cmdString := iconComponent.commandString.Get();
 			IF (cmdString # NIL) THEN

@@ -22,7 +22,7 @@ positive: UNLOAD the CSV module before the tests
 
 	MODULE Test;
 	IMPORT Modules;
-	VAR res: LONGINT; msg: ARRAY 64 OF CHAR;
+	VAR res: WORD; msg: ARRAY 64 OF CHAR;
 	BEGIN
 		Modules.FreeModule("TestShared", res, msg);
 		Modules.FreeModule("CSV", res, msg);
@@ -62,7 +62,7 @@ positive: setup test base module with shared functions
 		END GetScanner;
 
 		PROCEDURE Cleanup;
-		VAR fnstr: Strings.String; res: LONGINT;
+		VAR fnstr: Strings.String; res: WORD;
 		BEGIN
 			IF canTest THEN
 				fnstr := Strings.NewString(fn);
@@ -328,7 +328,7 @@ positive: UNLOAD the CSV module after the tests
 
 	MODULE Test;
 	IMPORT Modules;
-	VAR res: LONGINT; msg: ARRAY 64 OF CHAR;
+	VAR res: WORD; msg: ARRAY 64 OF CHAR;
 	BEGIN
 		Modules.FreeModule("TestShared", res, msg);
 		Modules.FreeModule("CSV", res, msg);

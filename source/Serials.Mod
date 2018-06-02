@@ -64,17 +64,17 @@ TYPE
 		(** Characters sent/read since port has been opened. Consider these fields read-only! *)
 		charactersSent*, charactersReceived* : LONGINT;
 
-		PROCEDURE Open* (bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open* (bps, data, parity, stop : LONGINT; VAR res: WORD);
 		END Open;
 
 		PROCEDURE Close* ;
 		END Close;
 
-		PROCEDURE SendChar* (ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar* (ch: CHAR; VAR res : WORD);
 		END SendChar;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR i : LONGINT;
 		BEGIN
 			i := 0;
@@ -85,7 +85,7 @@ TYPE
 			END
 		END Send;
 
-		PROCEDURE ReceiveChar* (VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar* (VAR ch: CHAR; VAR res: WORD);
 		END ReceiveChar;
 
 		(** Receive size characters into buf, starting at ofs and return the effective number of bytes read in len.
@@ -211,7 +211,7 @@ BEGIN {EXCLUSIVE}
 END GetPort;
 
 PROCEDURE TraceChar(ch: CHAR);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF tracePort # NIL THEN
 		tracePort.SendChar(ch, res);
@@ -224,7 +224,7 @@ END TraceChar;
 	portNumber: serial port number, or 0 to disable trace output, or a negative value for rolling back to the initial trace output configuration
 	bps, data, parity, stop: serial port settings
 *)
-PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: LONGINT);
+PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: WORD);
 VAR
 	isOpen0: BOOLEAN;
 	bps0, data0, parity0, stop0 : LONGINT;
@@ -303,7 +303,7 @@ END IsTracePort;
 	params: set of parameters specified by the user (0-bps, 1-data, 2-parity, 3-stop)
 	res: error code, 0 in case of success
 *)
-PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR params: SET; VAR res: LONGINT);
+PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR params: SET; VAR res: WORD);
 VAR
 	str : ARRAY 32 OF CHAR;
 	d: LONGINT;

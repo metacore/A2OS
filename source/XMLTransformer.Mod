@@ -91,7 +91,7 @@ END GetNewSpan;
 PROCEDURE FindProcedure(name : ARRAY OF CHAR) : TransformProc;
 VAR
 	transformProc : TransformProc;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : LONGINT;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : WORD;
 	cur : XMLPluginProcInfo;
 BEGIN {EXCLUSIVE}
 	Strings.Delete(name, 0, 3);
@@ -123,7 +123,7 @@ PROCEDURE StoreXMLPlugins;
 VAR f : Files.File;
 	w : Files.Writer;
 	cur : XMLPluginProcInfo;
-	res : LONGINT;
+	res : WORD;
 	n0, n1 : ARRAY 64 OF CHAR;
 BEGIN
 	n0 := "XMLPluginConfig.dat"; n1 := "XMLPluginConfig.dat.Bak";

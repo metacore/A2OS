@@ -39,7 +39,7 @@ TYPE
 			size, sectors, heads, tracks: LONGINT;
 			gap, rate, spec1, spec2, fgap: CHAR;
 
-		PROCEDURE Transfer*(op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT);
+		PROCEDURE Transfer*(op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
 		BEGIN
 			Transfer1(SELF, op, start, num, buf, ofs, res);
 			IF Disks.Stats THEN
@@ -66,7 +66,7 @@ TYPE
 			GetSize1(SELF, size, res)
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: WORD);
 		BEGIN
 			Handle1(SELF, msg, res)
 		END Handle;
@@ -402,7 +402,7 @@ BEGIN
 	IF dev.media = media THEN RETURN Ok ELSE RETURN Disks.MediaChanged END
 END Do;
 
-PROCEDURE Transfer0(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT);
+PROCEDURE Transfer0(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
 VAR dev: Device; sector, head, track, s, ofs0, n, max, start0, num0: LONGINT;
 BEGIN
 	dev := d(Device);
@@ -435,7 +435,7 @@ BEGIN
 	END
 END Transfer0;
 
-PROCEDURE Transfer1(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: LONGINT);
+PROCEDURE Transfer1(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
 BEGIN {EXCLUSIVE}
 	Transfer0(d, op, start, num, buf, ofs, res)
 END Transfer1;
@@ -448,7 +448,7 @@ BEGIN {EXCLUSIVE}
 	IF res = Disks.Ok THEN size := dev.size ELSE size := 0 END
 END GetSize1;
 
-PROCEDURE Handle1(d: Disks.Device;  VAR msg: Disks.Message;  VAR res: LONGINT);
+PROCEDURE Handle1(d: Disks.Device;  VAR msg: Disks.Message;  VAR res: WORD);
 VAR dev: Device;  buf: ARRAY BS OF CHAR;
 BEGIN {EXCLUSIVE}
 	dev := d(Device);

@@ -239,7 +239,7 @@ MODULE Test;
 IMPORT StdIO, Commands, Streams, Modules;
 
 PROCEDURE Execute(context: Commands.Context);
-VAR str, msg: ARRAY 256 OF CHAR;  res: LONGINT;
+VAR str, msg: ARRAY 256 OF CHAR;  res: WORD;
 BEGIN
 	IF ~context.arg.GetString(str) THEN RETURN END;
 	IF ~context.arg.GetString(str) THEN 

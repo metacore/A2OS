@@ -67,7 +67,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 
 	PROCEDURE Start*;
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		DNS.GetHostName( hostName, res );
 		IF res = DNS.Ok  THEN
@@ -93,7 +93,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 
 	PROCEDURE AsyncGetIP*( VAR hostInfo: HostInfo; name: ARRAY OF CHAR );
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		NEW( hostInfo ); Strings.Lower( name, name );
 		hostInfo.next := NIL; COPY( name, hostInfo.name );
@@ -124,7 +124,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END GetIP;
 
 	PROCEDURE AsyncGetName*( VAR hostInfo: HostInfo; IP: IPAdr );
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 			NEW( hostInfo );
 			hostInfo.getip := FALSE; hostInfo.next := NIL;
@@ -510,7 +510,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END AvailableDG;
 
 	PROCEDURE SendDG* ( soc: Socket; remIP: IPAdr; remport: INTEGER; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE );
-	VAR res: LONGINT;
+	VAR res: WORD;
 	BEGIN
 		soc.Send( remIP, LONG(remport) MOD 10000H, S.VAL( Bytes, buf ), pos, len, res )
 	END SendDG;

@@ -50,7 +50,7 @@ TYPE
 			RETURN (w * size) / 1000
 		END GetStringWidth;
 
-		PROCEDURE LoadAFM(filename : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE LoadAFM(filename : ARRAY OF CHAR; VAR res : WORD);
 		VAR f : Files.File; r : Files.Reader;
 			t  : ARRAY 32 OF CHAR;
 			hasName, hasCharMetrics, isC : BOOLEAN;
@@ -102,7 +102,7 @@ TYPE
 	END FontMetrics;
 
 VAR times*, helvetica*, helveticaBold*  : FontMetrics;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	NEW(times);
 	times.LoadAFM("TIR.AFM", res);

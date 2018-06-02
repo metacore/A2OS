@@ -371,7 +371,7 @@ TYPE
 		(** Open a TCP connection (only use once per Connection instance).
 			Use TCP.NilPort for lport to automatically assign an unused local port.
 		*)
-		PROCEDURE Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			ASSERT((state = Unused) & (lport >= 0) & (lport < 10000H) & (fport >= 0) & (fport < 10000H));
 			IF timeSource # NIL THEN
@@ -414,7 +414,7 @@ TYPE
 
 
 		(** Send data on a TCP connection. *)
-		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR buf: SendBuffer; len0: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF StrongChecks THEN Invariant(SELF) END;
@@ -642,7 +642,7 @@ TYPE
 
 
 		(** Wait until the connection state is either in the good or bad set, up to "ms" milliseconds. *)
-		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: LONGINT);
+		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF ~(state IN (good+bad)) THEN
 				IF ms # -1 THEN
@@ -699,7 +699,7 @@ TYPE
 
 
 		(** Accept a client waiting on a listening connection. Blocks until a client is available or the connection is closed. *)
-		PROCEDURE Accept*(VAR client: Connection; VAR res: LONGINT);
+		PROCEDURE Accept*(VAR client: Connection; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			AWAIT((state # Listen) OR (acceptNext # NIL));
 			IF acceptNext # NIL THEN
@@ -940,7 +940,7 @@ TYPE
 			ELSE an active open is assumed.
 			IF (lport = NilPort), an ephemeral port is assigned.
 		*)
-		PROCEDURE Add(p: Connection; lport, fport: LONGINT; VAR res: LONGINT);
+		PROCEDURE Add(p: Connection; lport, fport: LONGINT; VAR res: WORD);
 		VAR i, sport: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF ((fport # NilPort) & (IP.IsNilAdr(p.fip))) OR (* workaround for XOR *)
@@ -1848,7 +1848,7 @@ VAR
 
 	PROCEDURE ProcessListen(): BOOLEAN;	(* fig. 28.15-17 *)
 	VAR
-		res: LONGINT;
+		res: WORD;
 		q: Connection;
 	BEGIN
 		IF Rst IN pf THEN GotoDrop; RETURN FALSE END;

@@ -1953,7 +1953,7 @@ TYPE
 		VAR di : WMWindowManager.DragInfo;
 			dt : WMDropTarget.DropTarget;
 		(*	itf : WMDropTarget.DropInterface;
-			res : LONGINT;
+			res : WORD;
 			targetText, temp : Texts.Text;
 			pos, a, b : LONGINT; *)
 		BEGIN

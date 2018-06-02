@@ -80,10 +80,10 @@ TYPE
 		PROCEDURE SendFrame*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT); (* abstract *)
 		BEGIN {EXCLUSIVE} HALT(301); END SendFrame;
 
-		PROCEDURE GetLinkAddress*(VAR linkAddress : Network.LinkAdr; VAR res : LONGINT); (* abstract *)
+		PROCEDURE GetLinkAddress*(VAR linkAddress : Network.LinkAdr; VAR res : WORD); (* abstract *)
 		BEGIN HALT(301); END GetLinkAddress;
 
-		PROCEDURE SetLinkAddress*(linkAddress : Network.LinkAdr; VAR res : LONGINT); (* abstract *)
+		PROCEDURE SetLinkAddress*(linkAddress : Network.LinkAdr; VAR res : WORD); (* abstract *)
 		BEGIN HALT(301); END SetLinkAddress;
 
 		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : LONGINT); (* abstract *)

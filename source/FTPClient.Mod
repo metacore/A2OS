@@ -58,7 +58,7 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Open*(CONST host, user, password : ARRAY OF CHAR; port : LONGINT; VAR res : LONGINT);
+		PROCEDURE Open*(CONST host, user, password : ARRAY OF CHAR; port : LONGINT; VAR res : WORD);
 		VAR fadr : IP.Adr;
 		BEGIN {EXCLUSIVE}
 			res := 0;
@@ -125,7 +125,7 @@ TYPE
 			END;
 		END ReadResponse;
 
-		PROCEDURE Close*(VAR res : LONGINT);
+		PROCEDURE Close*(VAR res : WORD);
 		BEGIN
 			w.String("QUIT"); w.Ln; w.Update;
 			ReadResponse(code, msg);
@@ -147,7 +147,7 @@ TYPE
 			RETURN (ch >= '0') & (ch <='9')
 		END IsNum;
 
-		PROCEDURE GetDataConnection( VAR res : LONGINT);
+		PROCEDURE GetDataConnection( VAR res : WORD);
 		VAR ch : CHAR; i, j : LONGINT; ipstr : ARRAY 16 OF CHAR; p0, p1, port : LONGINT;
 			str : ARRAY 32 OF CHAR;
 
@@ -235,7 +235,7 @@ TYPE
 			END
 		END WaitEstablished;
 
-		PROCEDURE OpenDataConnection(VAR connection : TCP.Connection; VAR res : LONGINT);
+		PROCEDURE OpenDataConnection(VAR connection : TCP.Connection; VAR res : WORD);
 		BEGIN
 			IF passiveTransfer THEN
 				NEW(connection); connection.Open(TCP.NilPort, dataIP, dataPort, res)
@@ -256,7 +256,7 @@ TYPE
 			END
 		END OpenDataConnection;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			GetDataConnection(res);
@@ -281,7 +281,7 @@ TYPE
 			END
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : WORD);
 		BEGIN
 			busy := FALSE;
 			IF dataCon # NIL THEN
@@ -297,7 +297,7 @@ TYPE
 			END
 		END ClosePut;
 
-		PROCEDURE OpenGet*(CONST remoteName : ARRAY OF CHAR; VAR r : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE OpenGet*(CONST remoteName : ARRAY OF CHAR; VAR r : Streams.Reader; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			busy := TRUE;
@@ -322,7 +322,7 @@ TYPE
 			END
 		END OpenGet;
 
-		PROCEDURE CloseGet*(VAR res : LONGINT);
+		PROCEDURE CloseGet*(VAR res : WORD);
 		BEGIN
 			IF dataCon # NIL THEN
 				dataCon.Close;
@@ -338,7 +338,7 @@ TYPE
 			END
 		END CloseGet;
 
-		PROCEDURE DeleteFile*(CONST remoteName : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE DeleteFile*(CONST remoteName : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("DELE "); w.String(remoteName); w.Ln; w.Update;
@@ -346,7 +346,7 @@ TYPE
 			IF (code >= 200) & (code <300) THEN res := ResOk ELSE res := ResFailed END
 		END DeleteFile;
 
-		PROCEDURE ChangeDir*(CONST dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE ChangeDir*(CONST dir : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("CWD "); w.String(dir); w.Ln; w.Update;
@@ -354,7 +354,7 @@ TYPE
 			IF (code >= 200) & (code <300) THEN res := ResOk ELSE res := ResFailed END
 		END ChangeDir;
 
-		PROCEDURE MakeDir*(CONST dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE MakeDir*(CONST dir : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("MKD "); w.String(dir); w.Ln; w.Update;
@@ -362,7 +362,7 @@ TYPE
 			IF (code >= 200) & (code <300) THEN res := ResOk ELSE res := ResFailed END
 		END MakeDir;
 
-		PROCEDURE RemoveDir*(CONST dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE RemoveDir*(CONST dir : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("RMD "); w.String(dir); w.Ln; w.Update;
@@ -370,7 +370,7 @@ TYPE
 			IF (code >= 200) & (code <300) THEN res := ResOk ELSE res := ResFailed END
 		END RemoveDir;
 
-		PROCEDURE RenameFile*(CONST currentName, newName : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE RenameFile*(CONST currentName, newName : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("RNFR "); w.String(currentName); w.Ln; w.Update;
@@ -387,7 +387,7 @@ TYPE
 
 		PROCEDURE EnumerateNames*;
 		VAR
-			res : LONGINT;
+			res : WORD;
 			r : Streams.Reader; s, filename : ARRAY 256 OF CHAR;
 			flags : ARRAY 11 OF CHAR;
 			type : ARRAY 4 OF CHAR;
@@ -474,7 +474,7 @@ TYPE
 		END EnumerateNames;
 
 		PROCEDURE EnumerateDir*(CONST args : ARRAY OF CHAR);
-		VAR  res : LONGINT;
+		VAR  res : WORD;
 			r : Streams.Reader; s, filename : ARRAY 256 OF CHAR;
 			flags : ARRAY 11 OF CHAR;
 			type : ARRAY 4 OF CHAR;
@@ -611,7 +611,7 @@ TYPE
 			listing[nofEntries-1] := entry;
 		END AddFTPEntryToListing;
 
-		PROCEDURE GetCurrentDir*(VAR dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE GetCurrentDir*(VAR dir : ARRAY OF CHAR; VAR res : WORD);
 		VAR p : LONGINT;
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
@@ -631,7 +631,7 @@ TYPE
 			END;
 		END GetCurrentDir;
 
-		PROCEDURE Raw*(CONST cmd : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Raw*(CONST cmd : ARRAY OF CHAR; VAR res : WORD);
 		VAR extMsg : ARRAY 4096 OF CHAR;
 			command : ARRAY 32 OF CHAR; arguments : ARRAY 512 OF CHAR;
 		BEGIN

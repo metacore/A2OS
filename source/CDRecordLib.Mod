@@ -423,7 +423,7 @@ TYPE
 PROCEDURE GetNextAddress*(dev: Ata.DeviceATAPI; VAR adr: LONGINT): LONGINT;
 VAR
 	info: TrackInfo;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := ReadTrackInformation(dev, FALSE, TRAdrType1, TRInvisible, ADDRESSOF(info), SIZEOF(TrackInfo));
 	IF res = ResOk THEN
@@ -440,7 +440,7 @@ END ReadSessionInfo;
 PROCEDURE GetTrackDescriptor*(dev: Ata.DeviceATAPI; tno: LONGINT; VAR toc: TocDescriptor): LONGINT;
 VAR
 	buf: POINTER TO ARRAY OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	NEW(buf, SIZEOF(TocHeader) + SIZEOF(TocDescriptor));
 	res := ReadToc(dev, FALSE, TCFormatToc, tno, ADDRESSOF(buf^), LEN(buf));
@@ -537,7 +537,7 @@ END SetAllocationLength;
 PROCEDURE ModeSense*(dev: Ata.DeviceATAPI; pageControl, pageCode: LONGINT; adr: ADDRESS; len: LONGINT) : LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(5AH);
@@ -563,7 +563,7 @@ END ModeSense;
 PROCEDURE Blank*(dev: Ata.DeviceATAPI; immediate: BOOLEAN; type, tno: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(0A1H);
@@ -587,7 +587,7 @@ END Blank;
 PROCEDURE SendOPCInformation*(dev: Ata.DeviceATAPI; doOPC: BOOLEAN): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(54H);
@@ -610,7 +610,7 @@ END SendOPCInformation;
 PROCEDURE GetConfiguration*(dev: Ata.DeviceATAPI; rt, start: LONGINT; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(46H);
@@ -636,7 +636,7 @@ END GetConfiguration;
 PROCEDURE SynchronizeCache*(dev: Ata.DeviceATAPI; immediate: BOOLEAN): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(35H);
@@ -655,7 +655,7 @@ END SynchronizeCache;
 PROCEDURE ModeSelect*(dev: Ata.DeviceATAPI;  save: BOOLEAN; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(55H);
@@ -680,7 +680,7 @@ END ModeSelect;
 PROCEDURE ReadDiscInformation*(dev: Ata.DeviceATAPI; dataType: LONGINT; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(51H);
@@ -703,7 +703,7 @@ END ReadDiscInformation;
 PROCEDURE ReadToc*(dev: Ata.DeviceATAPI; msf: BOOLEAN; format, tno:  LONGINT; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(43H);
@@ -730,7 +730,7 @@ END ReadToc;
 PROCEDURE Verify*(dev: Ata.DeviceATAPI; lba, length: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(2FH);
@@ -754,7 +754,7 @@ END Verify;
 PROCEDURE ReadCD*(dev: Ata.DeviceATAPI; lba, length, adr, size, type, subChannel: LONGINT; flags: SET; dma: BOOLEAN): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(0BEH);
@@ -797,7 +797,7 @@ END ReadCD;
 PROCEDURE GetPerformance*(dev: Ata.DeviceATAPI; type, dataType, lba, maxDescr: LONGINT; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(0ACH);
@@ -829,7 +829,7 @@ END GetPerformance;
 PROCEDURE ReadTrackInformation*(dev: Ata.DeviceATAPI; appendable: BOOLEAN; adrType, adrnr: LONGINT; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(52H);
@@ -859,7 +859,7 @@ END ReadTrackInformation;
 PROCEDURE CloseTrackSess*(dev: Ata.DeviceATAPI; immediate: BOOLEAN; func, trackNr: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(5BH);
@@ -883,7 +883,7 @@ END CloseTrackSess;
 PROCEDURE ReadBufferCapacity*(dev: Ata.DeviceATAPI; block: BOOLEAN; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(5CH);
@@ -908,7 +908,7 @@ END ReadBufferCapacity;
 PROCEDURE SetCDSpeed*(dev: Ata.DeviceATAPI; readSpeed, writeSpeed, rotControl: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(0BBH);
@@ -933,7 +933,7 @@ END SetCDSpeed;
 PROCEDURE SendCueSheet*(dev: Ata.DeviceATAPI; adr: ADDRESS; len: LONGINT): LONGINT;
 VAR
 	command: Ata.CommandPacket;
-	res: LONGINT;
+	res: WORD;
 	status: SET;
 BEGIN
 	command := dev.NewCommandPacket(5DH);

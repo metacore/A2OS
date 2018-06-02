@@ -276,7 +276,7 @@ TYPE
 
 		PROCEDURE Retrieve(name: ARRAY OF CHAR; marker: LONGINT);
 		VAR data: TCP.Connection; w: Streams.Writer; f: Files.File; r: Files.Reader;
-			filename, msg: ARRAY dirLen OF CHAR; res: LONGINT;
+			filename, msg: ARRAY dirLen OF CHAR; res: WORD;
 		BEGIN
 			IF (type = ASCII) THEN COPY("ASCII", msg) ELSE COPY("Binary", msg) END;
 			Strings.Append(msg, " data connection for "); Strings.Append(msg, name);
@@ -325,7 +325,7 @@ TYPE
 
 		PROCEDURE Store(name: ARRAY OF CHAR; marker: LONGINT);
 		VAR data: TCP.Connection; r: Streams.Reader; f: Files.File; w: Files.Writer;
-			filename, msg: ARRAY dirLen OF CHAR; res: LONGINT;
+			filename, msg: ARRAY dirLen OF CHAR; res: WORD;
 		BEGIN
 			IF (type = ASCII) THEN COPY("ASCII", msg) ELSE COPY("Binary", msg) END;
 			Strings.Append(msg, " data connection for "); Strings.Append(msg, name);
@@ -893,7 +893,7 @@ BEGIN
 END NewFTPAgent;
 
 PROCEDURE Start*(context : Commands.Context); (** ["\l:" log file] *)
-VAR c, opt: CHAR; str, log: ARRAY 1024 OF CHAR;	res : LONGINT;
+VAR c, opt: CHAR; str, log: ARRAY 1024 OF CHAR;	res : WORD;
 BEGIN
 	IF ftp = NIL THEN
 		COPY(LogFile, log);

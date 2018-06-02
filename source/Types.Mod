@@ -86,15 +86,15 @@ TYPE
 	END;
 
 	(** Get own value and store it into target *)
-	Getter* = PROCEDURE {DELEGATE} (CONST self : Generic; VAR target : Any; VAR res : LONGINT);
+	Getter* = PROCEDURE {DELEGATE} (CONST self : Generic; VAR target : Any; VAR res : WORD);
 
 	(** Set own value from source *)
-	Setter* = PROCEDURE {DELEGATE} (CONST self : Generic; CONST source : Any; VAR res : LONGINT);
+	Setter* = PROCEDURE {DELEGATE} (CONST self : Generic; CONST source : Any; VAR res : WORD);
 
 VAR
 	StrEmptyString : Strings.String;
 
-PROCEDURE GetBoolean*(CONST source : Any; VAR value : BOOLEAN; VAR res : LONGINT);
+PROCEDURE GetBoolean*(CONST source : Any; VAR value : BOOLEAN; VAR res : WORD);
 VAR temp : ARRAY 2 OF CHAR; boolean : Boolean;
 BEGIN
 	res := Ok;
@@ -130,7 +130,7 @@ BEGIN
 	END;
 END GetBoolean;
 
-PROCEDURE SetBoolean*(VAR target : Any; value : BOOLEAN; VAR res : LONGINT);
+PROCEDURE SetBoolean*(VAR target : Any; value : BOOLEAN; VAR res : WORD);
 VAR temp : ARRAY 2 OF CHAR; boolean : Boolean;
 BEGIN
 	res := Ok;
@@ -164,7 +164,7 @@ BEGIN
 	END;
 END SetBoolean;
 
-PROCEDURE GetInteger*(CONST source : Any; VAR value : LONGINT; VAR res : LONGINT);
+PROCEDURE GetInteger*(CONST source : Any; VAR value : LONGINT; VAR res : WORD);
 VAR integer : Integer;
 BEGIN
 	res := Ok;
@@ -200,7 +200,7 @@ BEGIN
 	END;
 END GetInteger;
 
-PROCEDURE SetInteger*(VAR target : Any; value : LONGINT;  VAR res : LONGINT);
+PROCEDURE SetInteger*(VAR target : Any; value : LONGINT;  VAR res : WORD);
 VAR integer : Integer;
 BEGIN
 	res := Ok;
@@ -239,7 +239,7 @@ BEGIN
 	END;
 END SetInteger;
 
-PROCEDURE GetReal*(CONST source : Any; VAR value : REAL; VAR res : LONGINT);
+PROCEDURE GetReal*(CONST source : Any; VAR value : REAL; VAR res : WORD);
 VAR longreal : LONGREAL; real : Real;
 BEGIN
 	res := Ok;
@@ -279,7 +279,7 @@ BEGIN
 	END;
 END GetReal;
 
-PROCEDURE SetReal*(VAR target : Any; value : REAL; VAR res : LONGINT);
+PROCEDURE SetReal*(VAR target : Any; value : REAL; VAR res : WORD);
 VAR real : Real; w:Streams.StringWriter;
 BEGIN
 	res := Ok;
@@ -319,7 +319,7 @@ BEGIN
 	END;
 END SetReal;
 
-PROCEDURE GetLongreal*(CONST source : Any; VAR value : LONGREAL; VAR res : LONGINT);
+PROCEDURE GetLongreal*(CONST source : Any; VAR value : LONGREAL; VAR res : WORD);
 VAR longreal : Longreal;
 BEGIN
 	res := Ok;
@@ -355,7 +355,7 @@ BEGIN
 	END;
 END GetLongreal;
 
-PROCEDURE SetLongreal*(VAR target : Any; value : LONGREAL; VAR res : LONGINT);
+PROCEDURE SetLongreal*(VAR target : Any; value : LONGREAL; VAR res : WORD);
 VAR longreal : Longreal; w:Streams.StringWriter;
 BEGIN
 	res := Ok;
@@ -394,7 +394,7 @@ BEGIN
 	END;
 END SetLongreal;
 
-PROCEDURE GetChar*(CONST source : Any; VAR value : CHAR; VAR res : LONGINT);
+PROCEDURE GetChar*(CONST source : Any; VAR value : CHAR; VAR res : WORD);
 VAR string : ARRAY 8 OF CHAR; char : Char;
 BEGIN
 	res := Ok;
@@ -429,7 +429,7 @@ BEGIN
 	END;
 END GetChar;
 
-PROCEDURE SetChar*(VAR target : Any; value : CHAR; VAR res : LONGINT);
+PROCEDURE SetChar*(VAR target : Any; value : CHAR; VAR res : WORD);
 VAR temp : ARRAY 2 OF CHAR; char : Char;
 BEGIN
 	res := Ok;
@@ -468,7 +468,7 @@ BEGIN
 	END;
 END SetChar;
 
-PROCEDURE GetAOC*(CONST source : Any; VAR value : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE GetAOC*(CONST source : Any; VAR value : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	res := Ok;
 	IF (source IS String) THEN
@@ -522,7 +522,7 @@ BEGIN
 END EnsureStringLength;
 
 
-PROCEDURE SetAOC*(VAR target : Any; CONST value : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE SetAOC*(VAR target : Any; CONST value : ARRAY OF CHAR; VAR res : WORD);
 VAR temp : LONGREAL; string : String;
 BEGIN
 	res := Ok;
@@ -569,7 +569,7 @@ BEGIN
 	END;
 END SetAOC;
 
-PROCEDURE GetString*(CONST source : Any; VAR string : Strings.String; VAR res : LONGINT);
+PROCEDURE GetString*(CONST source : Any; VAR string : Strings.String; VAR res : WORD);
 VAR
 	value : ARRAY 64 OF CHAR; (*? !!! *)
 	n: LONGINT;
@@ -615,7 +615,7 @@ BEGIN
 	END;
 END GetString;
 
-PROCEDURE SetString*(VAR target : Any; value : Strings.String; VAR res : LONGINT);
+PROCEDURE SetString*(VAR target : Any; value : Strings.String; VAR res : WORD);
 BEGIN
 	IF (value # NIL) THEN
 		SetAOC(target, value^, res);
@@ -627,7 +627,7 @@ BEGIN
 	END;
 END SetString;
 
-PROCEDURE GetSet*(CONST source : Any; VAR value : SET; VAR res : LONGINT);
+PROCEDURE GetSet*(CONST source : Any; VAR value : SET; VAR res : WORD);
 VAR set : Set;
 BEGIN
 	res := Ok;
@@ -659,7 +659,7 @@ BEGIN
 	END;
 END GetSet;
 
-PROCEDURE SetSet*(VAR target : Any; value : SET; VAR res : LONGINT);
+PROCEDURE SetSet*(VAR target : Any; value : SET; VAR res : WORD);
 VAR set : Set;
 BEGIN
 	res := Ok;
@@ -690,7 +690,7 @@ BEGIN
 	END;
 END SetSet;
 
-PROCEDURE GetText*(CONST source : Any; VAR value : Texts.Text; VAR res : LONGINT);
+PROCEDURE GetText*(CONST source : Any; VAR value : Texts.Text; VAR res : WORD);
 VAR
 	temp : ARRAY 64 OF CHAR;
 	text : Text;
@@ -762,7 +762,7 @@ BEGIN
 	END;
 END GetText;
 
-PROCEDURE SetText*(VAR target : Any; CONST value : Texts.Text; VAR res : LONGINT);
+PROCEDURE SetText*(VAR target : Any; CONST value : Texts.Text; VAR res : WORD);
 VAR text : Text; temp : ARRAY 64 OF CHAR; lr : LONGREAL;
 BEGIN
 	res := Ok;
@@ -809,7 +809,7 @@ BEGIN
 	END;
 END SetText;
 
-PROCEDURE GetObject*(CONST source : Any; VAR value : Repositories.Component; VAR res : LONGINT);
+PROCEDURE GetObject*(CONST source : Any; VAR value : Repositories.Component; VAR res : WORD);
 VAR object : Object;
 BEGIN
 	res := Ok;
@@ -841,7 +841,7 @@ BEGIN
 	END;
 END GetObject;
 
-PROCEDURE SetObject*(VAR target : Any; CONST value : Repositories.Component; VAR res : LONGINT);
+PROCEDURE SetObject*(VAR target : Any; CONST value : Repositories.Component; VAR res : WORD);
 VAR object : Object;
 BEGIN
 	res := Ok;
@@ -868,7 +868,7 @@ BEGIN
 	END;
 END SetObject;
 
-PROCEDURE Assign*(VAR to : Any; CONST from : Any; VAR res : LONGINT);
+PROCEDURE Assign*(VAR to : Any; CONST from : Any; VAR res : WORD);
 VAR string : String;
 BEGIN
 	IF (from IS Boolean) THEN
@@ -912,7 +912,7 @@ END Assign;
 
 
 
-PROCEDURE StringToComponent(CONST string : ARRAY OF CHAR; VAR component : Repositories.Component; VAR res : LONGINT);
+PROCEDURE StringToComponent(CONST string : ARRAY OF CHAR; VAR component : Repositories.Component; VAR res : WORD);
 VAR repositoryName, componentName : ARRAY 64 OF CHAR; componentID : LONGINT;
 BEGIN
 	component := NIL;
@@ -923,7 +923,7 @@ BEGIN
 	END;
 END StringToComponent;
 
-PROCEDURE ComponentToString(CONST component : Repositories.Component; VAR string : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE ComponentToString(CONST component : Repositories.Component; VAR string : ARRAY OF CHAR; VAR res : WORD);
 VAR repository : Repositories.Repository; componentName : Repositories.Name; nbr : ARRAY 16 OF CHAR; componentID : LONGINT;
 BEGIN
 	string := "";

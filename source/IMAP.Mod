@@ -63,7 +63,7 @@ TYPE
 		PROCEDURE &Init* (VAR host: ARRAY OF CHAR; port: LONGINT; VAR result: LONGINT);
 		VAR
 			ip: IP.Adr;
-			res: LONGINT;
+			res: WORD;
 			ret: Classes.List;
 		BEGIN
 			logout := FALSE;

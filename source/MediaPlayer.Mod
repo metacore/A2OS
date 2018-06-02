@@ -367,7 +367,7 @@ TYPE
 			 RETURN videoDecoder.GetCurrentFrame()
 		END GetPos;
 
-		PROCEDURE SeekAndGetFrame(pos: LONGINT; VAR f : WMGraphics.Image; VAR res : LONGINT);
+		PROCEDURE SeekAndGetFrame(pos: LONGINT; VAR f : WMGraphics.Image; VAR res : WORD);
 		BEGIN  {EXCLUSIVE}
 			ASSERT(frame # NIL);
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
@@ -382,7 +382,7 @@ TYPE
 			IF videoDecoder.HasMoreData() THEN positionChanged := TRUE; END;
 		END SeekAndGetFrame;
 
-		PROCEDURE SeekFrame(pos : LONGINT; isKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekFrame(pos : LONGINT; isKeyFrame : BOOLEAN; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
 				vBufferPool.Add(readyBufferPool.Remove())
@@ -589,7 +589,7 @@ TYPE
 		(** -- Player Controls ----------------------------------------------- *)
 
 		(* Open the given uri *)
-		PROCEDURE Open*(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Open*(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 		VAR  context : Context;
 		BEGIN
 			context := GetContext(uri, msg, res);
@@ -611,7 +611,7 @@ TYPE
 		END Play;
 
 		(* pos & duration set in number of video frames *)
-		PROCEDURE DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 		VAR context : Context; audioPos : LONGINT;
 		BEGIN
 			IF Trace * TraceTransitions # {} THEN
@@ -682,7 +682,7 @@ TYPE
 
 		(* Get in  1/10 sec. Returns -1 if information is not available. *)
 		PROCEDURE GetPos*(): LONGINT;
-		VAR context : Context; res : LONGINT;
+		VAR context : Context; res : WORD;
 		BEGIN {EXCLUSIVE}
 			res := -1;
 			context := current;
@@ -839,7 +839,7 @@ TYPE
 		END InitTime;
 
 		(* Allocate ressources required for playing the audio/video stream *)
-		PROCEDURE GetContext(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT) : Context;
+		PROCEDURE GetContext(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD) : Context;
 		VAR
 			in, audioStream, videoStream : Streams.Reader;
 			demux : Codecs.AVDemultiplexer;
@@ -1169,7 +1169,7 @@ TYPE
 		END Close;
 
 		PROCEDURE StopIntern;
-		VAR img : WMGraphics.Image; res : LONGINT;
+		VAR img : WMGraphics.Image; res : WORD;
 		BEGIN
 			FreeContext(next); next := NIL;
 			IF current # NIL THEN
@@ -1183,7 +1183,7 @@ TYPE
 		END StopIntern;
 
 		PROCEDURE StartPlayIntern;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			IF current # NIL THEN
 				IF state = Finished THEN
@@ -1237,7 +1237,7 @@ TYPE
 		END ResumeIntern;
 
 		PROCEDURE OpenIntern(nextContext : Context);
-		VAR img : WMGraphics.Image; data : Setup; res : LONGINT;
+		VAR img : WMGraphics.Image; data : Setup; res : WORD;
 		BEGIN
 			FreeContext(next); next := NIL;
 			FreeContext(current); current := nextContext;
@@ -1416,7 +1416,7 @@ VAR mplayer : Player;
 
 (** Play the specified video/audio file *)
 PROCEDURE Open*(context : Commands.Context); (** <filename> ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : LONGINT;
+VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
 BEGIN {EXCLUSIVE}
 	context.arg.String(filename);
 	IF mplayer = NIL THEN NEW(mplayer); END;
@@ -1432,7 +1432,7 @@ END Open;
 
 (** Do a transition to the specified video/audio file (of the specified duration) *)
 PROCEDURE TransitionTo*(context : Commands.Context); (** <filename> [transitionDuration] ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; duration : LONGINT; res : LONGINT;
+VAR filename, msg : ARRAY 256 OF CHAR; duration : LONGINT; res : WORD;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	context.arg.SkipWhitespace; context.arg.Int(duration, FALSE);

@@ -67,7 +67,7 @@ END Error;
 
 PROCEDURE Generate(CONST name: ARRAY OF CHAR; par: Files.Parameters): BOOLEAN;
 VAR
-	factory : Files.FileSystemFactory; res: LONGINT; msg: ARRAY 256 OF CHAR;
+	factory : Files.FileSystemFactory; res: WORD; msg: ARRAY 256 OF CHAR;
 	moduleName, procedureName : Modules.Name;
 BEGIN
 	Commands.Split(name, moduleName, procedureName, res, msg);

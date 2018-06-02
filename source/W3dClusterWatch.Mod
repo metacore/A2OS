@@ -57,7 +57,7 @@ TYPE
 		END Init;
 
 		PROCEDURE RefreshInfo(host: ARRAY OF CHAR; VAR osName, osLoad: ARRAY OF CHAR) : BOOLEAN;
-		VAR res: LONGINT;
+		VAR res: WORD;
 			fip: IP.Adr;
 			in : Streams.Reader;
 			out : Streams.Writer;

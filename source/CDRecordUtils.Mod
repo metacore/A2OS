@@ -753,7 +753,7 @@ END SetBE32;
 
 PROCEDURE Mp3ToWave*(srcFileName, destFileName : Strings.String; onConvertStatusChanged: StatusProc) : LONGINT;
 VAR
-	res: LONGINT;
+	res: WORD;
 	srcFile, destFile : Files.File;
 	decoder: Codecs.AudioDecoder;
 	encoder: Codecs.AudioEncoder;
@@ -813,7 +813,7 @@ PROCEDURE GetFreeSpace*(CONST destination: ARRAY OF CHAR; VAR freeSpace: LONGINT
 VAR
 	fs: Files.FileSystem;
 	prefix, name: ARRAY MaxLen OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := ResErr;
 	Files.SplitName(destination, prefix, name);
@@ -829,7 +829,7 @@ PROCEDURE IsReadOnly*(CONST destination: ARRAY OF CHAR; VAR readOnly: BOOLEAN): 
 VAR
 	fs: Files.FileSystem;
 	prefix, name: ARRAY MaxLen OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := ResErr;
 	Files.SplitName(destination, prefix, name);
@@ -844,7 +844,7 @@ END IsReadOnly;
 PROCEDURE GetDevice*(file: Files.File; VAR device: Disks.Device): LONGINT;
 VAR
 	fs: Files.FileSystem;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	res := ResErr;
 	fs := file.fs;

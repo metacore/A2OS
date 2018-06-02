@@ -74,7 +74,7 @@ VAR
 	
 	
 	PROCEDURE LoadHighlighter;
-	VAR res: LONGINT; msg: ARRAY 128 OF CHAR;
+	VAR res: WORD; msg: ARRAY 128 OF CHAR;
 	BEGIN 
 		Commands.Call( "SyntaxHighlighter.Open PrettyPrintHighlighter.XML", {}, res, msg );
 		highlighterU := SyntaxHighlighter.GetHighlighter( "PrintOberon" );

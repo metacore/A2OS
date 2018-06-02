@@ -410,7 +410,7 @@ TYPE
 		VAR name, msg: ARRAY 32 OF CHAR;
 			string: Strings.String;
 			i : LONGINT;
-			(* res : LONGINT;	*)
+			(* res : WORD;	*)
 		BEGIN
 			drawPanel.selectionON := FALSE;
 			msg := "";
@@ -1273,7 +1273,7 @@ TYPE
 			pixelPerMM : REAL;
 			renderCanvas: WMGraphics.BufferCanvas;
 			renderImg: Raster.Image;
-			res: LONGINT;
+			res: WORD;
 			oldDocOriginX, oldDocOriginY : LONGINT;
 			oldZoomFactor: REAL;
 			oldZoomMode: LONGINT;
@@ -2337,7 +2337,7 @@ TYPE
 		PROCEDURE InstantiatePlugin*(CONST name: ARRAY OF CHAR): DTPData.ContentObject;
 		VAR
 			contentObject : DTPData.ContentObject; gen: DTPData.ContentFactory;
-			moduleName, procedureName : Modules.Name; msg : ARRAY 16 OF CHAR; res : LONGINT;
+			moduleName, procedureName : Modules.Name; msg : ARRAY 16 OF CHAR; res : WORD;
 			pp : ANY;
 		BEGIN
 			contentObject := NIL;

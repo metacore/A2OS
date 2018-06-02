@@ -32,7 +32,7 @@ TYPE
 		out: Streams.Writer;
 		h: WaveHeader;
 
-		PROCEDURE Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res : LONGINT);
+		PROCEDURE Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res : WORD);
 		BEGIN
 			res := -1;
 			IF out = NIL THEN
@@ -84,7 +84,7 @@ TYPE
 			res := 0
 		END Open;
 
-		PROCEDURE Write*(buffer : SoundDevices.Buffer; VAR res : LONGINT);
+		PROCEDURE Write*(buffer : SoundDevices.Buffer; VAR res : WORD);
 		BEGIN
 			out.Bytes(buffer.data^, 0, buffer.len);
 			out.Update
@@ -98,7 +98,7 @@ TYPE
 		h: WaveHeader;
 		hasMoreBytes : BOOLEAN;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR len: LONGINT; c: CHAR;
 		BEGIN
 			res := -1;
@@ -226,7 +226,7 @@ TYPE
 			h.dataSize := length-SIZEOF(WaveHeader);
 		END SetStreamLength;
 
-		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		VAR seekType: LONGINT;
 		BEGIN
 			seekType := Codecs.SeekByte;
@@ -234,7 +234,7 @@ TYPE
 			in.SetPos(h.fileSize - h.dataSize + ENTIER(sample / h.sRate * h.bRate))
 		END SeekSample;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		BEGIN
 			SeekSample(ENTIER(millisecond / 1000 * h.sRate), goKeySample, res)
 		END SeekMillisecond;
@@ -260,7 +260,7 @@ TYPE
 		h : WaveHeader;
 		hasMoreBytes : BOOLEAN;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		BEGIN
 			res := -1;
 			IF in = NIL THEN
@@ -326,7 +326,7 @@ TYPE
 			h.dataSize := length
 		END SetStreamLength;
 
-		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		VAR seekType: LONGINT;
 		BEGIN
 			KernelLog.String("pu= "); KernelLog.Int(sample, 0);
@@ -336,7 +336,7 @@ TYPE
 			in.SetPos(ENTIER(sample * h.bitsPerSample / 8 * h.nofCh))
 		END SeekSample;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
 		BEGIN
 			SeekSample(ENTIER(millisecond / 1000 * h.sRate), goKeySample, res)
 		END SeekMillisecond;

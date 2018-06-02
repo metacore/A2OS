@@ -3413,7 +3413,7 @@ END ScanPCI;
 (* Install procedure for installing a TV card. *)
 PROCEDURE InstallDevices;
 VAR
-	res: LONGINT;
+	res: WORD;
 	dev: VideoCaptureDevice;
 BEGIN {EXCLUSIVE}
 	IF nOfInstalledDevices = 0 THEN

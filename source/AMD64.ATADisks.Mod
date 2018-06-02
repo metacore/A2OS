@@ -224,7 +224,7 @@ TYPE
 			DeviceReset = SYSTEM.VAL(LONGINT, Protocol_DeviceReset);
 			NonData = SYSTEM.VAL(LONGINT, Protocol_NonData);
 		VAR
-			res: LONGINT;
+			res: WORD;
 			ch: CHAR;
 			dma: BOOLEAN;
 		BEGIN {EXCLUSIVE}
@@ -390,7 +390,7 @@ TYPE
 		VAR
 			ch: CHAR;
 			s: SET;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			(* Clear Interrupt & Errror *)
 			Machine.Portin8(bmbase + Ofs_BMStatus, ch); s := SYSTEM.VAL(SET, ORD(ch));
@@ -460,7 +460,7 @@ TYPE
 		VAR
 			t: Kernel.MilliTimer;
 			status: SET;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			IF state = 1 THEN RETURN Res_Err; END;
 			(* HSR0 *)
@@ -485,7 +485,7 @@ TYPE
 			cmdPacket: CommandPacket;
 			ch: CHAR;
 			status, devReg: SET;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			(* HI1 *)
 			res := WaitStatus({Status_BSY, Status_DRQ}, {}, {}, ms, status);
@@ -749,7 +749,7 @@ TYPE
 			States: HPD0(Check_Status_A), HPD1 (Send_Packet), HPD2 (Check_Status_B), HPD3 (INTRQ_wait), HPD4 (Transfer_Data) *)
 		PROCEDURE ProtPacketDMA(command: CommandPacket; ms: LONGINT; VAR status: SET): LONGINT;
 		VAR
-			res: LONGINT;
+			res: WORD;
 			ch: CHAR;
 			s: SET;
 			t: Kernel.MilliTimer;
@@ -801,7 +801,7 @@ TYPE
 
 		PROCEDURE CreateDevice(devNum: LONGINT): LONGINT;
 		VAR status: SET;
-			res: LONGINT; dev, devATA: Device; devATAPI: DeviceATAPI; ch: CHAR;
+			res: WORD; dev, devATA: Device; devATAPI: DeviceATAPI; ch: CHAR;
 			buf: ARRAY BS DIV 2 OF INTEGER;
 			command: Command;
 			devReg: SET;
@@ -968,7 +968,7 @@ TYPE
 		cmdLBA: CommandLBA;
 		cmdLBA48: CommandLBA48;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR
 			num1, try, ignore: LONGINT; bufAdr: ADDRESS;
 			dma: BOOLEAN;
@@ -1028,7 +1028,7 @@ TYPE
 			res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: WORD);
 		BEGIN
 			res := Disks.Unsupported;
 			IF msg IS Disks.GetGeometryMsg THEN
@@ -1081,7 +1081,7 @@ TYPE
 		END TransferEx;
 
 		PROCEDURE Reset(): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			IF TraceVerbose & (trace * TraceCommands # {})  THEN Show(name); KernelLog.String(" reset controller"); KernelLog.Ln; END;
 			res := controller.Reset();
@@ -1105,7 +1105,7 @@ TYPE
 		END InitDevice;
 
 		PROCEDURE Flush(): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			res := Disks.Unsupported;
 			IF FlushBit IN id.type THEN
@@ -1123,7 +1123,7 @@ TYPE
 		PROCEDURE MediaLock(lock: BOOLEAN): LONGINT;
 		VAR
 			command: CommandLBA;
-			res: LONGINT;
+			res: WORD;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			IF RMSNBit IN id.type THEN
@@ -1393,7 +1393,7 @@ TYPE
 		END Create;
 
 		PROCEDURE Finalize;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			(* unregister device *)
 			Disks.registry.Remove(SELF);
@@ -1440,7 +1440,7 @@ TYPE
 			END;
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: WORD);
 		BEGIN
 			res := Disks.Unsupported;
 			IF msg IS Disks.GetGeometryMsg THEN
@@ -1489,7 +1489,7 @@ TYPE
 			RETURN res;
 		END ExecuteCommand;
 
-		PROCEDURE ProcessSense(VAR res: LONGINT);
+		PROCEDURE ProcessSense(VAR res: WORD);
 		BEGIN
 			IF res = Res_OK THEN
 				sense := 0; asc := 0; ascq := 0;
@@ -1530,7 +1530,7 @@ TYPE
 		END TransferEx;
 
 		PROCEDURE WaitUntilReady(): LONGINT;
-		VAR res: LONGINT; retry: BOOLEAN;
+		VAR res: WORD; retry: BOOLEAN;
 		BEGIN
 			REPEAT
 				retry := FALSE;
@@ -1582,7 +1582,7 @@ TYPE
 		VAR
 			command: CommandPacket;
 			buf: ARRAY 18 OF CHAR;
-			res: LONGINT;
+			res: WORD;
 			status: SET;
 		BEGIN
 			IF TraceVerbose & (trace * (TraceCommands + TraceAtapi) # {}) THEN
@@ -1619,7 +1619,7 @@ TYPE
 		PROCEDURE TestUnitReady*(): LONGINT;
 		VAR
 			command: CommandPacket;
-			res: LONGINT;
+			res: WORD;
 			status: SET;
 		BEGIN
 			IF TraceVerbose & (trace * (TraceCommands + TraceAtapi) # {}) THEN
@@ -1672,7 +1672,7 @@ TYPE
 		PROCEDURE MediaLock*(lock: BOOLEAN): LONGINT;
 		VAR
 			command: CommandPacket;
-			res: LONGINT;
+			res: WORD;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			command := NewCommandPacket(1EH); (* prevent/allow medium removal *)
@@ -1689,7 +1689,7 @@ TYPE
 		PROCEDURE Powersave(): LONGINT;
 		VAR
 			command: CommandPacket;
-			res: LONGINT;
+			res: WORD;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			command := NewCommandPacket(1BH); (* start/stop unit *)
@@ -1801,7 +1801,7 @@ TYPE
 		END NewCommandPacket;
 
 		PROCEDURE IdentifyDevice(buf: ARRAY OF INTEGER): LONGINT;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			maxTransfer := 65535;
 
@@ -1880,7 +1880,7 @@ TYPE
 		END ShowDevice;
 
 		PROCEDURE &Create*(acontroller: Controller; adev: LONGINT; identifyDevice: ARRAY OF INTEGER);
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			INCL(id.type, AtapiBit);
 			NEW(cmdPacket);

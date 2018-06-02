@@ -66,7 +66,7 @@ BEGIN
 END NewStyle;
 
 (** Writes the directory of an archive. **)
-PROCEDURE WriteDirectory*(VAR W: Texts.Writer; archive: ARRAY OF CHAR; details, tabs: BOOLEAN; VAR res: LONGINT);
+PROCEDURE WriteDirectory*(VAR W: Texts.Writer; archive: ARRAY OF CHAR; details, tabs: BOOLEAN; VAR res: WORD);
 VAR
 	style: Objects.Object;
 	arc: Zip.Archive;
@@ -123,7 +123,7 @@ PROCEDURE Directory*;
 VAR
 	S: Texts.Scanner; T1, T2: Texts.Text; beg, end, time: LONGINT;
 	details, tabs: BOOLEAN;	(* show details of Entries *)
-	res: LONGINT; width: INTEGER;
+	res: WORD; width: INTEGER;
 BEGIN
 	details := FALSE; tabs := FALSE;
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -152,7 +152,7 @@ END Directory;
 
 PROCEDURE doExtract(action: INTEGER;
 						arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File;
-						path, overwrite,show: BOOLEAN; VAR res: LONGINT);
+						path, overwrite,show: BOOLEAN; VAR res: WORD);
 VAR
 	f, of: Files.File; r: Files.Rider;
 	bakname, temp: ARRAY 256 OF CHAR; res2: INTEGER;
@@ -218,7 +218,7 @@ END doExtract;
 	If path is set, the file is stored in the directory according to the relative path in name.
 	If overwrite is set, files with the same name are overwritten, otherwise they are renamed to name.Bak.
 	Possible results: cf. Zip.ExtractEntry **)
-PROCEDURE ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; path, overwrite: BOOLEAN; VAR res: LONGINT);
+PROCEDURE ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; path, overwrite: BOOLEAN; VAR res: WORD);
 VAR
 	temp: Files.File;
 BEGIN
@@ -230,7 +230,7 @@ END ExtractFile;
 	If overwrite is set, files with the same name are overwritten, otherwise they are renamed to name.Bak.
 	Possible results: cf. Zip.ExtractEntry **)
 PROCEDURE OpenFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File;
-										path, overwrite, show: BOOLEAN; VAR res: LONGINT);
+										path, overwrite, show: BOOLEAN; VAR res: WORD);
 BEGIN
 	doExtract(OPEN,arc,ent,name,tempfile,path,overwrite,show,res);
 END OpenFile;
@@ -239,7 +239,7 @@ PROCEDURE cmdOpenExtract (action: INTEGER);
 VAR
 	S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT;
 	arc: Zip.Archive; ent: Zip.Entry; name: ARRAY 256 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 	path, overwrite: BOOLEAN;
 	temp: Files.File;
 BEGIN
@@ -346,7 +346,7 @@ VAR
 	path, overwrite: BOOLEAN; prefix: ARRAY 64 OF CHAR; name: ARRAY 256 OF CHAR;
 	arc: Zip.Archive;
 	ent: Zip.Entry;
-	res: LONGINT;
+	res: WORD;
 	n, m: LONGINT;	(* number of extracted files *)
 BEGIN
 	path := FALSE; overwrite := FALSE; prefix := "";
@@ -424,7 +424,7 @@ END Open;
 	level: specifies the compression level (0: no compression, 9: best compression)
 	strategy: specifies the compression strategy (from 0 - 2)
 	res = Zip.Ok, Zip.BadName, Zip.EntryAlreadyExists, Zip.DataError **)
-PROCEDURE AddFile*(arc: Zip.Archive; srcname, dstname: ARRAY OF CHAR; level, strategy: SHORTINT; VAR res: LONGINT);
+PROCEDURE AddFile*(arc: Zip.Archive; srcname, dstname: ARRAY OF CHAR; level, strategy: SHORTINT; VAR res: WORD);
 VAR
 	f: Files.File; r: Files.Rider;
 BEGIN
@@ -548,7 +548,7 @@ VAR
 	S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT;
 	arc: Zip.Archive;
 	ent: Zip.Entry;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	Texts.WriteString(W, "ZipTool.Delete ");
 	T := Oberon.Par.text;

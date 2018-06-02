@@ -175,7 +175,7 @@ TYPE
 			editEndPosition := cursorPosition;
 		END SetEditStart;
 
-		PROCEDURE Send( CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send( CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR i : LONGINT;
 		BEGIN
 			lock.Acquire;

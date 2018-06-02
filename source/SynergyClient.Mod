@@ -250,7 +250,7 @@ VAR
 PROCEDURE Connect*(context : Commands.Context);
 VAR
 	serverIP : IP.Adr;
-	res : LONGINT;
+	res : WORD;
 	connection : TCP.Connection;
 	server, screenName : ARRAY 128 OF CHAR;
 BEGIN

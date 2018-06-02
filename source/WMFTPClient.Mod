@@ -25,7 +25,7 @@ TYPE
 			SELF.ftp := ftp
 		END New;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
 		BEGIN
 			res := -1;
 			IF ftp = NIL THEN RETURN END;
@@ -35,7 +35,7 @@ TYPE
 			ELSE w := outw END
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : WORD);
 		BEGIN
 			res := -1;
 			KernelLog.String("ClosePut called"); KernelLog.Ln;
@@ -228,7 +228,7 @@ TYPE
 		END Connect;
 
 		PROCEDURE Disconnect;
-		VAR res : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			IF ftp = NIL THEN
 				KernelLog.String("not connected"); KernelLog.Ln;
@@ -249,7 +249,7 @@ TYPE
 		END Close;
 
 		PROCEDURE CommandHandler(sender, data : ANY);
-		VAR res : LONGINT; command : ARRAY 256 OF CHAR;
+		VAR res : WORD; command : ARRAY 256 OF CHAR;
 		BEGIN
 			IF ftp = NIL THEN
 				KernelLog.String("not connected"); KernelLog.Ln;
@@ -280,7 +280,7 @@ TYPE
 		END ListHandler;
 
 		PROCEDURE ChangeDir(path :Strings.String);
-		VAR res : LONGINT; dir : ARRAY 256 OF CHAR;
+		VAR res : WORD; dir : ARRAY 256 OF CHAR;
 		BEGIN
 			IF ftp = NIL THEN
 				KernelLog.String("not connected"); KernelLog.Ln;
@@ -490,7 +490,7 @@ TYPE
 
 		PROCEDURE RenameEntry(sender, data : ANY);
 		VAR  d : FTPClient.FTPEntry; rename : WMDialogs.MiniStringInput;
-			res : LONGINT;
+			res : WORD;
 			name, op : ARRAY 128 OF CHAR;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
@@ -519,7 +519,7 @@ TYPE
 		END RenameEntry;
 
 		PROCEDURE CreateDir(sender, data : ANY);
-		VAR res : LONGINT;
+		VAR res : WORD;
 			name : ARRAY 128 OF CHAR;
 		BEGIN
 			COPY("NewFolder", name);
@@ -735,7 +735,7 @@ TYPE
 			RETURN selection
 		END GetSelection;
 
-		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : WORD);
 		VAR w : Streams.Writer;
 			r : Streams.Reader;
 			buf: ARRAY BufSize OF CHAR; len : LONGINT;

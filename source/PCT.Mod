@@ -187,7 +187,7 @@ TYPE
 			SELF.state := state
 		END ChangeState;
 
-		PROCEDURE CreateSymbol*(name: StringIndex; vis: SET; type: Struct; VAR res: LONGINT);
+		PROCEDURE CreateSymbol*(name: StringIndex; vis: SET; type: Struct; VAR res: WORD);
 			VAR o: Symbol;
 		BEGIN
 			NEW(o);
@@ -195,7 +195,7 @@ TYPE
 			Insert(SELF, o, res);
 		END CreateSymbol;
 
-		PROCEDURE CreateValue*(name: StringIndex; vis: SET; c: Const; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateValue*(name: StringIndex; vis: SET; c: Const; pos: LONGINT; (*fof*) VAR res: WORD);
 			VAR v: Value;
 		BEGIN
 			v := NewValue(name, vis, c); v.pos := pos; (*fof*)
@@ -207,7 +207,7 @@ TYPE
 			END
 		END CreateValue;
 
-		PROCEDURE CreateType*(name: StringIndex;  vis: SET;  type: Struct; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateType*(name: StringIndex;  vis: SET;  type: Struct; pos: LONGINT; (*fof*) VAR res: WORD);
 			VAR t: Type;
 		BEGIN
 			NEW(t);
@@ -220,7 +220,7 @@ TYPE
 			END
 		END CreateType;
 
-		PROCEDURE CreateAlias*(ov: Variable; type: Struct; (* scope: Scope; extern: BOOLEAN; *) VAR res: LONGINT);
+		PROCEDURE CreateAlias*(ov: Variable; type: Struct; (* scope: Scope; extern: BOOLEAN; *) VAR res: WORD);
 			VAR v: Alias;
 		BEGIN
 			NEW(v); v.name := ov.name; v.vis := ov.vis; v.type := type;
@@ -230,11 +230,11 @@ TYPE
 			Insert((* scope *) SELF, v, res)
 		END CreateAlias;
 
-		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*)  info: ANY; (* ug *) VAR res: LONGINT);
+		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*)  info: ANY; (* ug *) VAR res: WORD);
 		BEGIN  HALT(99)	(*abstract*)
 		END CreateVar;
 
-		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: WORD);
 		BEGIN  HALT(99)	(*abstract*)
 		END CreateProc;
 
@@ -275,7 +275,7 @@ TYPE
 		withGuard*, withSym*: Symbol;
 
 		(* ug *)
-		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*)  info: ANY; VAR res: LONGINT);
+		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*)  info: ANY; VAR res: WORD);
 		VAR s: Scope;
 		BEGIN
 			s := parent;
@@ -305,7 +305,7 @@ TYPE
 			SELF.cc := cc
 		END SetCC;
 
-		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info: ANY; (*ug*) VAR res: LONGINT);
+		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info: ANY; (*ug*) VAR res: WORD);
 			VAR v: LocalVar;
 		BEGIN
 			NEW(v); v.pos := pos; (*fof*)
@@ -342,7 +342,7 @@ TYPE
 			END
 		END ReversePars;
 
-		PROCEDURE CreatePar*(vis: SET;  ref: BOOLEAN;  name: StringIndex;  flags: SET;  type: Struct; pos: LONGINT;   (*fof 070731 *) VAR res: LONGINT);
+		PROCEDURE CreatePar*(vis: SET;  ref: BOOLEAN;  name: StringIndex;  flags: SET;  type: Struct; pos: LONGINT;   (*fof 070731 *) VAR res: WORD);
 			VAR p: Parameter;
 
 			(* ug *)
@@ -371,7 +371,7 @@ TYPE
 		END CreatePar;
 
 		(** fof >> *)
-		PROCEDURE CreateReturnPar*(type: Struct; VAR res: LONGINT);
+		PROCEDURE CreateReturnPar*(type: Struct; VAR res: WORD);
 		(* if return type of the function admits it, create the return parameter *)
 		VAR v: ReturnParameter; RetName: StringIndex;
 		BEGIN
@@ -385,7 +385,7 @@ TYPE
 		END CreateReturnPar;
 		(** << fof  *)
 
-		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: WORD);
 			VAR p: Proc;
 		BEGIN
 			p := NewProc(vis, name, flags, scope(ProcScope), return, res);
@@ -407,7 +407,7 @@ TYPE
 			firstMeth-, lastMeth-: Method;
 			totalVarCount-, totalProcCount-: LONGINT;	(**var/proc count including base type (overwritten method are counted only once)*)
 
-		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info : ANY; (*ug*) VAR res: LONGINT);
+		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info : ANY; (*ug*) VAR res: WORD);
 			VAR f: Field; obj: Symbol;
 		BEGIN
 			ASSERT(vis # Hidden);
@@ -429,7 +429,7 @@ TYPE
 			END
 		END CreateVar;
 
-		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: WORD);
 			VAR m: Method;
 		BEGIN
 			m := NewMethod(vis, name, flags, scope(ProcScope), return, owner, pos, res);
@@ -469,7 +469,7 @@ TYPE
 			records-: Record;
 			nofRecs-: INTEGER;
 
-		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info: ANY; (*ug*) VAR res: LONGINT);
+		PROCEDURE CreateVar*(name: StringIndex;  vis, flags: SET;  type: Struct; pos: LONGINT; (*fof*) info: ANY; (*ug*) VAR res: WORD);
 			VAR v: GlobalVar;
 		BEGIN
 			NEW(v); v.pos := pos; (*fof*) InitSymbol(v, name, vis, type); v.flags := flags; CheckVar(v, {static}, {static, open} (* fof *) ,res);
@@ -488,7 +488,7 @@ TYPE
 			END
 		END CreateVar;
 
-		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: LONGINT);
+		PROCEDURE CreateProc*(name: StringIndex;  vis, flags: SET;  scope: (*Proc*)Scope;  return: Struct; pos: LONGINT; (*fof*) VAR res: WORD);
 			VAR p: Proc;
 		BEGIN
 			p := NewProc(vis, name, flags, scope(ProcScope), return, res);
@@ -501,7 +501,7 @@ TYPE
 			END;
 		END CreateProc;
 
-		PROCEDURE AddModule*(alias: StringIndex; m: Module; pos: LONGINT; (* fof *) VAR res: LONGINT);
+		PROCEDURE AddModule*(alias: StringIndex; m: Module; pos: LONGINT; (* fof *) VAR res: WORD);
 		BEGIN
 			Insert(SELF, NewModule(alias, TRUE, m.flags, m.scope), res);
 			m.pos := pos; (* fof *)
@@ -1017,7 +1017,7 @@ VAR
 	(* CompareSignature - res < 0 ==> s1 < s1; used for sorting overloaded procedures *)
 
 	PROCEDURE CompareSignature(s1, s2: Parameter): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 
 		PROCEDURE GetInfo(t: Struct;  VAR m: Module;  VAR o: Symbol);
 		BEGIN
@@ -1033,7 +1033,7 @@ VAR
 		VAR
 			m1, m2: Module;
 			o1, o2: Symbol;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			GetInfo(t1, m1,o1);
 			GetInfo(t2, m2, o2);
@@ -1148,7 +1148,7 @@ VAR
 		*)
 	END InitScope;
 
-	PROCEDURE Insert(scope: Scope; obj: Symbol; VAR res: LONGINT);
+	PROCEDURE Insert(scope: Scope; obj: Symbol; VAR res: WORD);
 	VAR  p, q: Symbol; d: LONGINT;
 	BEGIN
 		ASSERT((scope.ownerID = 0) OR (PCM.GetProcessID() = scope.ownerID), 501); (*fof  global scope has no process id (=0) since different processes may insert elements here, cf. procedure Init *)
@@ -1502,7 +1502,7 @@ VAR
 		RETURN FindProcedure(search, search, name, i, parlist, identic, FALSE)
 	END FindSameSignature;
 
-	PROCEDURE CheckInterfaceImpl(rec, int: Record; VAR res: LONGINT);
+	PROCEDURE CheckInterfaceImpl(rec, int: Record; VAR res: WORD);
 		VAR m: Proc; o (* , faulty *): Symbol;
 	BEGIN
 		m := int.scope.firstProc;
@@ -1777,7 +1777,7 @@ VAR
 	PROCEDURE NewArrayConst*( VAR data: ARRAY OF SYSTEM.BYTE;   len: ARRAY OF LONGINT;  dim: LONGINT;  base: Struct; basesize: LONGINT): Const;
 	(* create new array constant with dimension LEN(len) und shape len of base type base with size basesize (defined in PCBT) *)
 	VAR c: ConstArray;  i, lencheck: LONGINT;  a: EnhArray;
-		res: LONGINT;  inc: LONGINT;
+		res: WORD;  inc: LONGINT;
 	BEGIN
 
 		ASSERT( dim <= LEN( len ) );  NEW( c );
@@ -1800,7 +1800,7 @@ VAR
 
 	(** ------------ Structure Creation ------------------- *)
 
-	PROCEDURE CheckArrayBase(a: Array; allowedMode: SET; VAR res: LONGINT);
+	PROCEDURE CheckArrayBase(a: Array; allowedMode: SET; VAR res: WORD);
 	VAR  base: Array;
 	BEGIN
 		ASSERT(a.base # NIL, 500);
@@ -1823,7 +1823,7 @@ VAR
 	END CheckArrayBase;
 
 (** fof >> *)
-	PROCEDURE CheckEnhArrayBase( a: EnhArray;   allowedMode: SET;  VAR res: LONGINT );
+	PROCEDURE CheckEnhArrayBase( a: EnhArray;   allowedMode: SET;  VAR res: WORD );
 	VAR base: EnhArray;
 	BEGIN
 		ASSERT( a.base # NIL , 500 );
@@ -1852,7 +1852,7 @@ VAR
 	END ElementType;
 (** << fof  *)
 
-	PROCEDURE InitOpenArray*(a: Array;  base: Struct; VAR res: LONGINT);
+	PROCEDURE InitOpenArray*(a: Array;  base: Struct; VAR res: WORD);
 	BEGIN
 		res := Ok;
 		a.mode := open; a.base := base;
@@ -1860,7 +1860,7 @@ VAR
 		INC(a.opendim);
 	END InitOpenArray;
 
-	PROCEDURE InitStaticArray*(a: Array; len: LONGINT; base: Struct; VAR res: LONGINT);
+	PROCEDURE InitStaticArray*(a: Array; len: LONGINT; base: Struct; VAR res: WORD);
 	BEGIN
 		res := Ok;
 		a.mode := static; a.len := len; a.base := base;
@@ -1869,12 +1869,12 @@ VAR
 	END InitStaticArray;
 
 (** fof >> *)
-	PROCEDURE InitTensor*( a: Tensor;  base: Struct;  VAR res: LONGINT );
+	PROCEDURE InitTensor*( a: Tensor;  base: Struct;  VAR res: WORD );
 	BEGIN
 		res := Ok;  a.base := base;  (* any checks ? *)
 	END InitTensor;
 
-	PROCEDURE InitOpenEnhArray*( a: EnhArray;  base: Struct;  allow: SET; VAR res: LONGINT );   (*fof*)
+	PROCEDURE InitOpenEnhArray*( a: EnhArray;  base: Struct;  allow: SET; VAR res: WORD );   (*fof*)
 	BEGIN
 		res := Ok;  a.mode := open;  a.base := base;  a.len := 0;
 		CheckEnhArrayBase( a, allow, res );  INC( a.opendim );
@@ -1882,7 +1882,7 @@ VAR
 		(* it is not allowed to mix open and static arrays *)
 	END InitOpenEnhArray;
 
-	PROCEDURE InitStaticEnhArray*( a: EnhArray;   len: LONGINT;   base: Struct;  allow: SET;   VAR res: LONGINT );   (*fof*)
+	PROCEDURE InitStaticEnhArray*( a: EnhArray;   len: LONGINT;   base: Struct;  allow: SET;   VAR res: WORD );   (*fof*)
 	BEGIN
 		res := Ok;  a.mode := static;  a.len := len;  a.base := base;
 		IF len < 0 THEN res := IllegalValue;  a.len := 1 END;
@@ -1901,7 +1901,7 @@ VAR
 	END SetEnhArrayInc;
 
 	PROCEDURE BuildOpenArray*( base: Struct; dim: LONGINT ): Struct;
-	VAR a: EnhArray;  res: LONGINT;
+	VAR a: EnhArray;  res: WORD;
 	BEGIN
 		IF dim > 0 THEN
 			base := BuildOpenArray( base, dim - 1 );  NEW( a );
@@ -1911,7 +1911,7 @@ VAR
 	END BuildOpenArray;
 
 	PROCEDURE BuildTensor*( base: Struct ): Tensor;
-	VAR a: Tensor;  res: LONGINT;
+	VAR a: Tensor;  res: WORD;
 	BEGIN
 		NEW( a );  InitTensor( a, base, res );  RETURN a;
 	END BuildTensor;
@@ -1946,7 +1946,7 @@ VAR
 		END;
 	END CopyMethods;
 
-	PROCEDURE InitRecord*(r: Record;  base: Struct;  CONST intf: Interfaces; scope: RecScope;  isInterface, isImported, isDynamic: BOOLEAN; VAR res: LONGINT);
+	PROCEDURE InitRecord*(r: Record;  base: Struct;  CONST intf: Interfaces; scope: RecScope;  isInterface, isImported, isDynamic: BOOLEAN; VAR res: WORD);
 		VAR i: LONGINT;
 	BEGIN
 		res := Ok;
@@ -1986,7 +1986,7 @@ VAR
 		WHILE (i > 0) DO  DEC(i); r.intf[i] := intf[i]  END
 	END InitRecord;
 
-	PROCEDURE NewRecord*(base: Struct;  scope: RecScope;  flags: SET; imported: BOOLEAN; VAR res: LONGINT): Record;
+	PROCEDURE NewRecord*(base: Struct;  scope: RecScope;  flags: SET; imported: BOOLEAN; VAR res: WORD): Record;
 	VAR  r: Record; intf: ARRAY 1 OF Interface;
 	BEGIN
 		ASSERT(flags - {SystemType} = {}, 500);
@@ -1998,14 +1998,14 @@ VAR
 	END NewRecord;
 
 (** fof >> *)
-	PROCEDURE InitCustomArray*(r: CustomArray;  base: Struct;  dim: LONGINT;scope: CustomArrayScope; VAR res: LONGINT);
+	PROCEDURE InitCustomArray*(r: CustomArray;  base: Struct;  dim: LONGINT;scope: CustomArrayScope; VAR res: WORD);
 	VAR i: LONGINT;intf: ARRAY 1 OF Interface;
 	BEGIN
 		InitRecord(r,NoType, intf, scope, FALSE, FALSE, FALSE, res);
 		r.dim := dim;  r.etyp := base;
 	END InitCustomArray;
 
-	PROCEDURE NewCustomArray*(base: Struct; dim: LONGINT;  scope: CustomArrayScope;  VAR res: LONGINT): Pointer;
+	PROCEDURE NewCustomArray*(base: Struct; dim: LONGINT;  scope: CustomArrayScope;  VAR res: WORD): Pointer;
 	VAR  p: Pointer;  r: CustomArray;
 	BEGIN
 		res := Ok;
@@ -2017,7 +2017,7 @@ VAR
 	END NewCustomArray;
 (** << fof  *)
 
-	PROCEDURE NewClass*(base: Struct;  CONST implements: Interfaces;  scope: RecScope;  imported: BOOLEAN; VAR res: LONGINT): Pointer;
+	PROCEDURE NewClass*(base: Struct;  CONST implements: Interfaces;  scope: RecScope;  imported: BOOLEAN; VAR res: WORD): Pointer;
 	VAR  p: Pointer;  r: Record;
 	BEGIN
 		res := Ok;
@@ -2032,7 +2032,7 @@ VAR
 		RETURN p
 	END NewClass;
 
-	PROCEDURE NewInterface*(CONST implements: Interfaces;  scope: RecScope;  imported: BOOLEAN; VAR res: LONGINT): Pointer;
+	PROCEDURE NewInterface*(CONST implements: Interfaces;  scope: RecScope;  imported: BOOLEAN; VAR res: WORD): Pointer;
 	VAR  p: Pointer;  r: Record;
 	BEGIN
 		res := Ok;
@@ -2043,7 +2043,7 @@ VAR
 		RETURN p
 	END NewInterface;
 
-	PROCEDURE InitPointer*(ptr: Pointer;  base: Struct; VAR res: LONGINT);
+	PROCEDURE InitPointer*(ptr: Pointer;  base: Struct; VAR res: WORD);
 	BEGIN
 		res := Ok;
 		ASSERT(base # NIL, 500);
@@ -2074,7 +2074,7 @@ VAR
 *)
 	END InitPointer;
 
-	PROCEDURE InitDelegate*(p: Delegate; return: Struct;  scope: ProcScope; flags: SET; VAR res: LONGINT);
+	PROCEDURE InitDelegate*(p: Delegate; return: Struct;  scope: ProcScope; flags: SET; VAR res: WORD);
 	BEGIN
 		ASSERT(return # NIL, 500);
 		ASSERT(scope # NIL, 501);
@@ -2110,7 +2110,7 @@ VAR
 		RETURN v
 	END NewValue;
 
-	PROCEDURE CheckVar(v: Variable; allowedArray: SET; allowedEnhArray: SET;   (* fof *) VAR res: LONGINT);
+	PROCEDURE CheckVar(v: Variable; allowedArray: SET; allowedEnhArray: SET;   (* fof *) VAR res: WORD);
 	BEGIN
 		IF (v.type IS Array) & ~(v.type(Array).mode IN allowedArray) THEN
 			res := IllegalType; v.type := UndefType
@@ -2125,14 +2125,14 @@ VAR
 		END;
 	END CheckVar;
 
-	PROCEDURE NewGlobalVar*(vis: SET;  name: LONGINT;  flags: SET;  type: Struct; VAR res: LONGINT): GlobalVar;	(** for PCOM object comparison - don't insert in scope *)
+	PROCEDURE NewGlobalVar*(vis: SET;  name: LONGINT;  flags: SET;  type: Struct; VAR res: WORD): GlobalVar;	(** for PCOM object comparison - don't insert in scope *)
 	VAR  v: GlobalVar;
 	BEGIN
 		res := Ok;
 		NEW(v); InitSymbol(v, name, vis, type); v.flags := flags; CheckVar(v, {static}, {static} (* fof *) ,res); RETURN v
 	END NewGlobalVar;
 
-	PROCEDURE InitProc(p: Proc; vis: SET;  name: StringIndex;  scope: ProcScope;  return: Struct; VAR res: LONGINT);
+	PROCEDURE InitProc(p: Proc; vis: SET;  name: StringIndex;  scope: ProcScope;  return: Struct; VAR res: WORD);
 	VAR o: Proc;
 	BEGIN
 		ASSERT(return # NIL, 500);
@@ -2156,7 +2156,7 @@ VAR
 		IF scope.imported THEN PreAllocate(NIL, scope) ELSE PreAllocate(scope.module.scope, scope) END
 	END InitProc;
 
-	PROCEDURE NewProc*(vis: SET;  name: StringIndex;  flags: SET;  scope: ProcScope;  return: Struct; VAR res: LONGINT): Proc;	(** for PCOM object comparison - don't insert in scope *)
+	PROCEDURE NewProc*(vis: SET;  name: StringIndex;  flags: SET;  scope: ProcScope;  return: Struct; VAR res: WORD): Proc;	(** for PCOM object comparison - don't insert in scope *)
 	VAR p: Proc; i: LONGINT;
 	BEGIN
 		res := Ok;
@@ -2170,7 +2170,7 @@ VAR
 		RETURN p
 	END NewProc;
 
-	PROCEDURE FindOverwrittenMethod(owner: Record; name: StringPool.Index; mscope: ProcScope; VAR res: LONGINT): Method;
+	PROCEDURE FindOverwrittenMethod(owner: Record; name: StringPool.Index; mscope: ProcScope; VAR res: WORD): Method;
 		VAR pars: ARRAY 32 OF Struct; i, parCount: LONGINT; obj: Symbol; super: Method; par: Parameter;
 	BEGIN
 		IF owner.brec # NIL THEN
@@ -2191,7 +2191,7 @@ VAR
 		RETURN super
 	END FindOverwrittenMethod;
 
-	PROCEDURE NewMethod(vis: SET;  name: StringIndex;  flags: SET;  scope: ProcScope;  return: Struct;  boundTo: Record; pos: LONGINT; VAR res: LONGINT): Method;
+	PROCEDURE NewMethod(vis: SET;  name: StringIndex;  flags: SET;  scope: ProcScope;  return: Struct;  boundTo: Record; pos: LONGINT; VAR res: WORD): Method;
 	VAR p: Method;  faulty: Symbol; initializer: BOOLEAN;
 	BEGIN
 		res := Ok;
@@ -2294,7 +2294,7 @@ VAR
 
 	(** ---------------- Special Functions --------------------- *)
 
-	PROCEDURE SetMode*(scope: Scope;  mode: LONGINT; VAR res: LONGINT);
+	PROCEDURE SetMode*(scope: Scope;  mode: LONGINT; VAR res: WORD);
 	BEGIN
 		res := Ok;
 		IF mode = exclusive THEN
@@ -2315,7 +2315,7 @@ VAR
 		END
 	END SetMode;
 
-	PROCEDURE SetProcFlag*(scope: Scope; flag: LONGINT; VAR res: LONGINT);
+	PROCEDURE SetProcFlag*(scope: Scope; flag: LONGINT; VAR res: WORD);
 	BEGIN
 		IF (flag = RealtimeProc) & (scope IS ProcScope) THEN
 			WITH scope: ProcScope DO
@@ -2472,7 +2472,7 @@ VAR
 	END DummyPrePostAllocate;
 
 	PROCEDURE NewBasic(m: Module; CONST name: ARRAY OF CHAR): Basic;
-	VAR b: Basic; res: LONGINT;
+	VAR b: Basic; res: WORD;
 	BEGIN
 		NEW(b);
 		m.scope.CreateType(StringPool.GetIndex1(name), Public, b, 0 (* fof *), res); ASSERT(res = Ok);
@@ -2480,7 +2480,7 @@ VAR
 	END NewBasic;
 
 	PROCEDURE Init;
-	VAR  scope: ModScope; idx: StringIndex; res: LONGINT;
+	VAR  scope: ModScope; idx: StringIndex; res: WORD;
 	BEGIN
 		InitDB(database);
 		BodyName := StringPool.GetIndex1(BodyNameStr);

@@ -13,7 +13,7 @@ TYPE
 	UnicodeString*	= POINTER TO ARRAY OF LONGINT;
 
 PROCEDURE Unicode2Ascii*(unicode : UnicodeString) : AsciiString;
-VAR utf8, ascii : AsciiString; res : LONGINT;
+VAR utf8, ascii : AsciiString; res : WORD;
 BEGIN
 	IF unicode # NIL THEN
 		NEW(utf8, LEN(unicode)+1);  (* +1 because of the 0X string termination *)

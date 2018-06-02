@@ -81,7 +81,7 @@ MODULE PCI;	(** non-portable *)
 	END BiosServiceDirectory;
 
 	PROCEDURE FindBios32Service*(serviceId, serviceFkt: LONGINT; VAR serviceAdr: ADDRESS; VAR serviceLen, entryOffset: LONGINT): LONGINT;
-	VAR ch: CHAR; res: LONGINT; state: SET;
+	VAR ch: CHAR; res: WORD; state: SET;
 	BEGIN {EXCLUSIVE}
 		IF bios32 THEN
 			state := Machine.DisableInterrupts();
@@ -342,7 +342,7 @@ MODULE PCI;	(** non-portable *)
 
 	(** Set bits included in <mask> in the PCI command register if not set already *)
 	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : LONGINT) : LONGINT;
-	VAR cmdReg : LONGINT; res : LONGINT;
+	VAR cmdReg : LONGINT; res : WORD;
 	BEGIN
 		res := ReadConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
 		IF (res = Done) THEN

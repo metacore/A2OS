@@ -58,7 +58,7 @@ PROCEDURE snap*(img: Raster.Image);
 VAR
 	t: ARRAY 24 OF CHAR;
 	n: ARRAY 8 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	INC(frame);
 	Strings.Append(t,title);
@@ -71,7 +71,7 @@ END snap;
 
 PROCEDURE snapshot*(img: Raster.Image);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	WMGraphics.StoreImage(img,"SYS:snapshot.bmp", res);
 	Out.String("snap snap"); Out.Ln;

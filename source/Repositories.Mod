@@ -297,7 +297,7 @@ TYPE
 			END;
 		END Add;
 
-		PROCEDURE Parse(reader : Streams.Reader;  VAR res : LONGINT);
+		PROCEDURE Parse(reader : Streams.Reader;  VAR res : WORD);
 		VAR buffer : Strings.Buffer; entry : Entry; ch : CHAR;
 
 			PROCEDURE ReportError(CONST msg : ARRAY OF CHAR; position : LONGINT);
@@ -688,7 +688,7 @@ TYPE
 			AddAttribute^(attribute);
 		END AddAttribute;
 
-		PROCEDURE LoadLanguage(VAR language :Language;  VAR res : LONGINT);
+		PROCEDURE LoadLanguage(VAR language :Language;  VAR res : WORD);
 		VAR translator : Translator; reader : Streams.Reader;
 		BEGIN {EXCLUSIVE}
 			ASSERT(repository # NIL);
@@ -796,7 +796,7 @@ TYPE
 
 		(* Post-instantiation initialization *)
 		PROCEDURE Initialize() : LONGINT;
-		VAR enum : XMLObjects.Enumerator; ptr : ANY; element : XML.Element; res : LONGINT;
+		VAR enum : XMLObjects.Enumerator; ptr : ANY; element : XML.Element; res : WORD;
 		BEGIN
 			nextID := 0;
 			element := FindChild(SELF, "Components");
@@ -968,7 +968,7 @@ TYPE
 			RETURN component;
 		END GetComponent;
 
-		PROCEDURE PutComponent*(component : Component; CONST name : ARRAY OF CHAR; VAR id : LONGINT; VAR res : LONGINT);
+		PROCEDURE PutComponent*(component : Component; CONST name : ARRAY OF CHAR; VAR id : LONGINT; VAR res : WORD);
 		VAR ci : ComponentInfo; filename : Files.FileName; nbrStr : ARRAY 16 OF CHAR; cname : Name;
 		BEGIN
 			ASSERT(component # NIL); (* TBD: Locking *)
@@ -1001,7 +1001,7 @@ TYPE
 			IncrementTimestamp(timestamp);
 		END PutComponent;
 
-		PROCEDURE UnbindComponent*(CONST name : ARRAY OF CHAR; id : LONGINT; VAR res : LONGINT);
+		PROCEDURE UnbindComponent*(CONST name : ARRAY OF CHAR; id : LONGINT; VAR res : WORD);
 		VAR ci : ComponentInfo;
 		BEGIN
 			ci := FindComponentInfo(name, id);
@@ -1026,7 +1026,7 @@ TYPE
 			IncrementTimestamp(timestamp);
 		END Unbind;
 
-		PROCEDURE RemoveComponent*(CONST name : ARRAY OF CHAR; refNum : LONGINT; VAR res : LONGINT);
+		PROCEDURE RemoveComponent*(CONST name : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
 		VAR ci : ComponentInfo;
 		BEGIN
 			archive.Acquire;
@@ -1044,7 +1044,7 @@ TYPE
 			IncrementTimestamp(timestamp);
 		END RemoveComponent;
 
-		PROCEDURE Remove*(component : Component; VAR res : LONGINT);
+		PROCEDURE Remove*(component : Component; VAR res : WORD);
 		VAR ci : ComponentInfo;
 		BEGIN
 			ci := components;
@@ -1086,7 +1086,7 @@ TYPE
 			RETURN nextID;
 		END GetID;
 
-		PROCEDURE Store*(VAR res : LONGINT);
+		PROCEDURE Store*(VAR res : WORD);
 		VAR writer : Streams.Writer;context: StoreContext;
 		BEGIN
 			archive.Acquire;
@@ -1101,7 +1101,7 @@ TYPE
 			archive.Release;
 		END Store;
 
-		PROCEDURE StoreComponent(CONST filename : ARRAY OF CHAR; component : Component; VAR res : LONGINT);
+		PROCEDURE StoreComponent(CONST filename : ARRAY OF CHAR; component : Component; VAR res : WORD);
 		VAR writer : Streams.Writer; context: StoreContext;
 		BEGIN
 			ASSERT(component # NIL);
@@ -1188,7 +1188,7 @@ TYPE
 
 		PROCEDURE InstantiateLate*(e: XML.Element): XML.Element;
 		VAR generator: XML.String; element: XML.Element;
-			moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : LONGINT;
+			moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : WORD;
 			generate : XML.GeneratorProcedure;
 			a: XML.Attribute;
 			enumerator: XMLObjects.Enumerator;
@@ -1285,7 +1285,7 @@ END LockChildren;
 
 PROCEDURE GenerateComponent*(CONST generator : ARRAY OF CHAR) : Component;
 VAR
-	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : LONGINT;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : WORD;
 	generate : XML.GeneratorProcedure;
 	element : XML.Element;
 BEGIN
@@ -1469,7 +1469,7 @@ BEGIN
 	Files.SplitExtension(name, repositoryName, extension);
 END SplitFilename;
 
-PROCEDURE GetCommand*(CONST command : ARRAY OF CHAR; VAR res : LONGINT) : Command;
+PROCEDURE GetCommand*(CONST command : ARRAY OF CHAR; VAR res : WORD) : Command;
 VAR proc : Command; moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR;
 BEGIN
 	proc := NIL;
@@ -1505,7 +1505,7 @@ BEGIN
 	END;
 END ExtractCommand;
 
-PROCEDURE CallCommand*(CONST command : ARRAY OF CHAR; VAR context : Context; VAR res : LONGINT);
+PROCEDURE CallCommand*(CONST command : ARRAY OF CHAR; VAR context : Context; VAR res : WORD);
 VAR
 	cmd : ARRAY 64 OF CHAR; param : POINTER TO ARRAY OF CHAR; reader : Streams.StringReader;
 	proc : Command;  i, j : LONGINT; object: ANY;
@@ -1557,7 +1557,7 @@ BEGIN
 	END;
 END CallCommand;
 
-PROCEDURE GetTranslationInfo*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR word : Strings.String; VAR res : LONGINT);
+PROCEDURE GetTranslationInfo*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR word : Strings.String; VAR res : WORD);
 VAR repositoryName, dictionaryName, temp : ARRAY 512 OF CHAR; i, j : LONGINT;
 BEGIN
 	res := Ok;
@@ -1601,7 +1601,7 @@ BEGIN
 END GetTranslationInfo;
 
 PROCEDURE Translate*(CONST string : ARRAY OF CHAR; languages : Localization.Languages) : Strings.String;
-VAR dictionary : Dictionary; word, translation : Strings.String; res : LONGINT;
+VAR dictionary : Dictionary; word, translation : Strings.String; res : WORD;
 BEGIN
 	ASSERT(languages # NIL);
 	GetTranslationInfo(string, dictionary, word, res);
@@ -1614,7 +1614,7 @@ BEGIN
 	RETURN translation;
 END Translate;
 
-PROCEDURE GetDictionary*(CONST repositoryName, dictionaryName : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR res : LONGINT);
+PROCEDURE GetDictionary*(CONST repositoryName, dictionaryName : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	dictionary := NIL;
@@ -1631,7 +1631,7 @@ BEGIN
 	END;
 END GetDictionary;
 
-PROCEDURE GetDictionaryByString*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR res : LONGINT);
+PROCEDURE GetDictionaryByString*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR res : WORD);
 VAR repositoryName : Files.FileName; dictionaryName : ARRAY 128 OF CHAR; ignoreID : LONGINT;
 BEGIN
 	IF SplitName(string, repositoryName, dictionaryName, ignoreID) THEN
@@ -1641,7 +1641,7 @@ BEGIN
 	END;
 END GetDictionaryByString;
 
-PROCEDURE GetComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR component : Component; VAR res : LONGINT);
+PROCEDURE GetComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR component : Component; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	component := NIL;
@@ -1658,7 +1658,7 @@ BEGIN
 	END;
 END GetComponent;
 
-PROCEDURE GetComponentByString*(CONST string : ARRAY OF CHAR; VAR component : Component; VAR res : LONGINT);
+PROCEDURE GetComponentByString*(CONST string : ARRAY OF CHAR; VAR component : Component; VAR res : WORD);
 VAR repositoryName : Files.FileName; componentName : ARRAY 128 OF CHAR; componentID : LONGINT;
 BEGIN
 	IF SplitName(string, repositoryName, componentName, componentID) THEN
@@ -1668,7 +1668,7 @@ BEGIN
 	END;
 END GetComponentByString;
 
-PROCEDURE PutComponent*(component : Component; CONST repositoryName, componentName : ARRAY OF CHAR; VAR id : LONGINT; VAR res : LONGINT);
+PROCEDURE PutComponent*(component : Component; CONST repositoryName, componentName : ARRAY OF CHAR; VAR id : LONGINT; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	ASSERT(component # NIL);
@@ -1680,7 +1680,7 @@ BEGIN
 	END;
 END PutComponent;
 
-PROCEDURE UnbindComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : LONGINT);
+PROCEDURE UnbindComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	repository := ThisRepository(repositoryName);
@@ -1691,7 +1691,7 @@ BEGIN
 	END;
 END UnbindComponent;
 
-PROCEDURE RemoveComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : LONGINT);
+PROCEDURE RemoveComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	repository := ThisRepository(repositoryName);
@@ -1703,7 +1703,7 @@ BEGIN
 END RemoveComponent;
 
 (* Append repository to global list of repositories *)
-PROCEDURE Add(repository : Repository; VAR res : LONGINT);
+PROCEDURE Add(repository : Repository; VAR res : WORD);
 VAR r : Repository;
 BEGIN (* {EXCLUSIVE} *)
 	ASSERT(repository # NIL);
@@ -1724,7 +1724,7 @@ BEGIN (* {EXCLUSIVE} *)
 END Add;
 
 (* Remove repository from global list of repositories *)
-PROCEDURE Remove(repository : Repository; VAR res : LONGINT);
+PROCEDURE Remove(repository : Repository; VAR res : WORD);
 VAR r : Repository;
 BEGIN (* {EXCLUSIVE} *)
 	ASSERT(repository # NIL);
@@ -1755,7 +1755,7 @@ END FindRepository;
 
 (** Retrieve a repository be name *)
 PROCEDURE ThisRepository*(CONST name : ARRAY OF CHAR) : Repository;
-VAR r : Repository; res : LONGINT;
+VAR r : Repository; res : WORD;
 BEGIN {EXCLUSIVE}
 	r := FindRepository(name);
 	IF (r = NIL) THEN
@@ -1797,7 +1797,7 @@ BEGIN {EXCLUSIVE}
 END GetAll;
 
 (* Load a repository *)
-PROCEDURE LoadRepository(CONST name : ARRAY OF CHAR; VAR res : LONGINT) : Repository;
+PROCEDURE LoadRepository(CONST name : ARRAY OF CHAR; VAR res : WORD) : Repository;
 VAR
 	filename : Files.FileName;
 	repository : Repository;
@@ -1859,7 +1859,7 @@ BEGIN (* {EXCLUSIVE} *)
 END LoadRepository;
 
 (** Unload a currently loaded repository *)
-PROCEDURE UnloadRepository*(CONST name : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE UnloadRepository*(CONST name : ARRAY OF CHAR; VAR res : WORD);
 VAR repository : Repository;
 BEGIN {EXCLUSIVE}
 	repository := FindRepository(name);
@@ -1871,7 +1871,7 @@ BEGIN {EXCLUSIVE}
 END UnloadRepository;
 
 (**	Store the current state of a currenlty loaded  repository *)
-PROCEDURE StoreRepository*(CONST name : ARRAY OF CHAR;  VAR res : LONGINT);
+PROCEDURE StoreRepository*(CONST name : ARRAY OF CHAR;  VAR res : WORD);
 VAR repository : Repository;
 BEGIN {EXCLUSIVE}
 	repository := FindRepository(name);
@@ -1886,7 +1886,7 @@ END StoreRepository;
 (**	Create an empty new repository.
 	The repository name is derived from the filename (repository name = filename without extension)
 	The repository is not loaded upon creation  *)
-PROCEDURE CreateRepository*(CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE CreateRepository*(CONST filename : ARRAY OF CHAR; VAR res : WORD);
 VAR
 	repository : Repository;
 	archive : Archives.Archive;
@@ -1953,7 +1953,7 @@ VAR generator: PROCEDURE(): XML.Element;
 VAR
 	l,name: Strings.String;
 	moduleName, procedureName: Modules.Name;
-	res: LONGINT; msg: ARRAY 32 OF CHAR;
+	res: WORD; msg: ARRAY 32 OF CHAR;
 	component: Component;
 	element: XML.Element;
 BEGIN
@@ -1992,7 +1992,7 @@ VAR generator: PROCEDURE(): XML.Element;
 VAR
 	l,name: Strings.String;
 	moduleName, procedureName: Modules.Name;
-	res: LONGINT; msg: ARRAY 32 OF CHAR;
+	res: WORD; msg: ARRAY 32 OF CHAR;
 	component: Component;
 	element: XML.Element;
 BEGIN
@@ -2020,7 +2020,7 @@ BEGIN
 	RETURN component
 END ComponentFromXML;
 
-PROCEDURE ShowRes*(res : LONGINT; out : Streams.Writer);
+PROCEDURE ShowRes*(res : WORD; out : Streams.Writer);
 BEGIN
 	ASSERT(out # NIL);
 	out.String("res: "); out.Int(res, 0);
@@ -2047,7 +2047,7 @@ END ShowRes;
 
 (** Create an empty repository *)
 PROCEDURE Create*(context : Commands.Context); (** repositoryName ~ *)
-VAR repositoryName : Files.FileName; res : LONGINT;
+VAR repositoryName : Files.FileName; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(repositoryName);
 	context.out.String("Creating repository '"); context.out.String(repositoryName); context.out.String("' ... ");
@@ -2062,7 +2062,7 @@ BEGIN
 END Create;
 
 PROCEDURE Store*(context : Commands.Context); (** repositoryName ~ *)
-VAR repositoryName : Files.FileName; res : LONGINT;
+VAR repositoryName : Files.FileName; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(repositoryName);
 	context.out.String("Storing repository '"); context.out.String(repositoryName); context.out.String("' ... "); context.out.Update;
@@ -2090,7 +2090,7 @@ BEGIN
 END Load;
 
 PROCEDURE Unload*(context : Commands.Context); (** repositoryName ~ *)
-VAR repositoryName : Files.FileName; res : LONGINT;
+VAR repositoryName : Files.FileName; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(repositoryName);
 	context.out.String("Unloaded repository '"); context.out.String(repositoryName); context.out.String("' ... "); context.out.Update;
@@ -2169,7 +2169,7 @@ BEGIN
 END DumpAll;
 
 PROCEDURE Call*(context : Commands.Context); (** moduleName.procedureName [params] ~ *)
-VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : LONGINT;
+VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : WORD;
 BEGIN
 	NEW(c,	NIL, NIL, context.out, context.error, context.caller);
 	IF (context.arg.Available() > 0) THEN

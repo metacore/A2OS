@@ -1008,7 +1008,7 @@ BEGIN
 END Standalone;
 
 PROCEDURE FreeOberon;
-VAR context : Commands.Context; arg : Streams.StringReader; res: LONGINT; msg: ARRAY 128 OF CHAR;
+VAR context : Commands.Context; arg : Streams.StringReader; res: WORD; msg: ARRAY 128 OF CHAR;
 BEGIN
 	Oberon.OpenTrack(0, Display.Width);	(* inhibit display updates *)
 	COPY(OberonBaseModule, msg);
@@ -1299,7 +1299,7 @@ END StopLog;
 (** Load the window manager and jump into it. *)
 
 	PROCEDURE LoadWM;
-	VAR res: LONGINT; s: ARRAY 128 OF CHAR;
+	VAR res: WORD; s: ARRAY 128 OF CHAR;
 	BEGIN
 		IF Standalone() THEN
 			Oberon.OpenTrack(0, Display.Width);	(* inhibit display updates *)

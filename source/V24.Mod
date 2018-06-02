@@ -79,7 +79,7 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN KernelLog.String(ModuleName); KernelLog.String(": "); KernelLog.String(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -99,7 +99,7 @@ TYPE
 		END Open;
 
 		(** Send a single character to the UART. *)
-		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
 		VAR s: SET;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -112,7 +112,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN END;
 			AWAIT(tail # head);
@@ -153,7 +153,7 @@ TYPE
 		END Available;
 
 		(* Set the port state: speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		CONST TCR = 2;
 		VAR s: SET; tcr: LONGINT;
 		BEGIN

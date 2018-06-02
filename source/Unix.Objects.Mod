@@ -347,7 +347,7 @@ TYPE
 
 	
 	PROCEDURE BodyStarter;
-	VAR p: Process;  res: LONGINT; prevBP, sp: ADDRESS;
+	VAR p: Process;  res: WORD; prevBP, sp: ADDRESS;
 	BEGIN
 		Unix.MtxLock( startProcess );
 			p := newProcess;  newProcess := NIL;

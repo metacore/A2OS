@@ -267,7 +267,7 @@ BEGIN
 *)
 END WriteType;
 
-PROCEDURE WriteErrorMsg(VAR w: Texts.Writer; res: LONGINT);
+PROCEDURE WriteErrorMsg(VAR w: Texts.Writer; res: WORD);
 BEGIN
 	IF res = Disks.MediaChanged THEN
 		Texts.WriteString(w, "media changed")
@@ -340,7 +340,7 @@ BEGIN
 	END
 END UserInterrupt;
 
-PROCEDURE ShowDevice(VAR w: Texts.Writer; d: Disks.Device; verbose: BOOLEAN; VAR res: LONGINT);
+PROCEDURE ShowDevice(VAR w: Texts.Writer; d: Disks.Device; verbose: BOOLEAN; VAR res: WORD);
 VAR size: LONGINT; geo: Disks.GetGeometryMsg;
 BEGIN
 	Texts.WriteString(w, "Disk: "); Texts.WriteString(w, d.name);
@@ -460,7 +460,7 @@ END GetTableGeometry;
 
 (* Get drive geometry and adjust it. *)
 
-PROCEDURE GetGeometry(dev: Disks.Device; VAR geo: Disks.GetGeometryMsg; VAR res: LONGINT);
+PROCEDURE GetGeometry(dev: Disks.Device; VAR geo: Disks.GetGeometryMsg; VAR res: WORD);
 VAR thds, tspt, dsize: LONGINT; org: Disks.GetGeometryMsg;
 BEGIN
 	dev.handle(dev, geo, res);
@@ -780,7 +780,7 @@ END GetDriveNum;
 
 (* Write the OBL boot loader and an empty config table to disk. *)
 
-PROCEDURE InitOBL(dev: Disks.Device; part, flag: LONGINT; VAR res: LONGINT);
+PROCEDURE InitOBL(dev: Disks.Device; part, flag: LONGINT; VAR res: WORD);
 CONST Size = LoaderSize*BS;
 VAR
 	b: ARRAY Size OF CHAR; i, tsize, rsize, lsize: LONGINT;
@@ -836,7 +836,7 @@ END InitOBL;
 
 (* Initialize the Aos file system in a partition. See AosFiles.Volume.Init *)
 
-PROCEDURE InitAosFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: LONGINT);
+PROCEDURE InitAosFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: WORD);
 VAR fssize, i, j, ofs, size, x, fsofs: LONGINT; b: ARRAY BS OF CHAR;
 BEGIN
 	ofs := dev.table[part].start; size := dev.table[part].size;
@@ -886,7 +886,7 @@ END InitAosFS;
 
 (* Initialize the Native file system in a partition. *)
 
-PROCEDURE InitNativeFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: LONGINT);
+PROCEDURE InitNativeFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: WORD);
 VAR ofs, size, fssize, fsofs, startfs, i: LONGINT; b: ARRAY N2KSS*2 OF CHAR;
 BEGIN
 	ofs := dev.table[part].start; size := dev.table[part].size;
@@ -1008,7 +1008,7 @@ BEGIN
 	RETURN seed MOD N
 END Random;
 
-PROCEDURE CheckPartition(dev: Disks.Device; part: LONGINT; VAR res: LONGINT);
+PROCEDURE CheckPartition(dev: Disks.Device; part: LONGINT; VAR res: WORD);
 CONST Size = 16*512; Max = 50;
 VAR
 	start, size, i, j, pr, seed, len, ticks, t0, t1, date: LONGINT;
@@ -1088,7 +1088,7 @@ END GetVars;
 
 (* Read a config table from the specified partition. *)
 
-PROCEDURE GetTable(dev: Disks.Device; part: LONGINT; VAR table: ConfigTable; VAR res: LONGINT);
+PROCEDURE GetTable(dev: Disks.Device; part: LONGINT; VAR table: ConfigTable; VAR res: WORD);
 VAR tsize, reserved, fsOfs: LONGINT;
 BEGIN
 	table := NIL; GetVars(dev, part, tsize, reserved, fsOfs, res);
@@ -1100,7 +1100,7 @@ END GetTable;
 
 (* Overwrite the config table on the specified partition. *)
 
-PROCEDURE PutTable(dev: Disks.Device; part: LONGINT; table: ConfigTable; VAR res: LONGINT);
+PROCEDURE PutTable(dev: Disks.Device; part: LONGINT; table: ConfigTable; VAR res: WORD);
 VAR tsize, reserved, fsOfs: LONGINT;
 BEGIN
 	GetVars(dev, part, tsize, reserved, fsOfs, res);
@@ -1170,7 +1170,7 @@ BEGIN
 	sum := (-sum) MOD 100H
 END WriteFile;
 
-PROCEDURE CheckFile(f: Files.File; dev: Disks.Device; pos: LONGINT; sum: LONGINT; VAR res: LONGINT);
+PROCEDURE CheckFile(f: Files.File; dev: Disks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD);
 CONST Size = 32;
 VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num, i: LONGINT;
 BEGIN
@@ -1204,7 +1204,7 @@ END CheckFile;
 
 (* Write a boot file on the specified partition. *)
 
-PROCEDURE InitBootFile(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT);
+PROCEDURE InitBootFile(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
 CONST Frag = 7; LoadAdr = 1000H; StartAdr = 1000H; Frags = 1;
 VAR table: ConfigTable; i, tsize, reserved, fsOfs, sum, start: LONGINT; data: ARRAY 12+8*Frags OF CHAR;
 BEGIN
@@ -1510,7 +1510,7 @@ BEGIN
 	END
 END Check;
 
-PROCEDURE ChangePartType(dev: Disks.Device; part: LONGINT; oldtype, newtype: LONGINT; VAR res: LONGINT);
+PROCEDURE ChangePartType(dev: Disks.Device; part: LONGINT; oldtype, newtype: LONGINT; VAR res: WORD);
 VAR b: ARRAY BS OF CHAR; e: LONGINT;
 BEGIN
 	ASSERT(dev.table[part].type = oldtype);
@@ -1556,7 +1556,7 @@ BEGIN
 	END
 END ChangeType;
 
-PROCEDURE DeletePrimary(dev: Disks.Device; part: LONGINT; type: LONGINT; VAR res: LONGINT);
+PROCEDURE DeletePrimary(dev: Disks.Device; part: LONGINT; type: LONGINT; VAR res: WORD);
 VAR b: ARRAY BS OF CHAR; e, i: LONGINT;
 BEGIN
 	ASSERT(dev.table[part].type = type);
@@ -1608,7 +1608,7 @@ BEGIN
 	END
 END Delete;
 
-PROCEDURE CreatePrimary(dev: Disks.Device; table: Disks.PartitionTable; part, size, spt, hds, type: LONGINT; VAR res: LONGINT);
+PROCEDURE CreatePrimary(dev: Disks.Device; table: Disks.PartitionTable; part, size, spt, hds, type: LONGINT; VAR res: WORD);
 VAR i, e, t, start, end: LONGINT; buf: ARRAY BS OF CHAR;
 BEGIN
 	ASSERT(dev.blockSize = BS);
@@ -1901,7 +1901,7 @@ END WriteMBR;
 
 (* Overwrite the existing boot loader with the new one, leaving critical data untouched. *)
 
-PROCEDURE UpdateOBL(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT);
+PROCEDURE UpdateOBL(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
 CONST Size = LoaderSize*BS;
 VAR
 	b, bnew: ARRAY Size OF CHAR; i, tsize, rsize, lsize: LONGINT;

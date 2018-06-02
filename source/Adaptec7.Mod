@@ -1820,7 +1820,7 @@ BEGIN	WriteScsiState(firstBus)
 END ScsiState;
 
 PROCEDURE Test*;
-VAR  d: Bus;  res: LONGINT;
+VAR  d: Bus;  res: WORD;
 BEGIN
 	d := firstBus;
 	KernelLog.String("Adaptec7.Test"); KernelLog.Int(aCount, 0); KernelLog.Ln;
@@ -1830,7 +1830,7 @@ BEGIN
 END Test;
 
 PROCEDURE Scan*;
-VAR  d: Bus;  res: LONGINT;  i: SHORTINT;  inq: SCSI.InquiryData;
+VAR  d: Bus;  res: WORD;  i: SHORTINT;  inq: SCSI.InquiryData;
 BEGIN
 	d := firstBus;
 	KernelLog.String("Adaptec7.Scan"); KernelLog.Int(aCount, 0); KernelLog.Ln;

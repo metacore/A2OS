@@ -98,7 +98,7 @@ TYPE
 		VAR
 			section, e : XML.Element;
 			p : ANY; enum: XMLObjects.Enumerator;
-			string : ARRAY 16 OF CHAR; res : LONGINT;
+			string : ARRAY 16 OF CHAR; res : WORD;
 
 			PROCEDURE Error;
 			BEGIN KernelLog.String("WindowManager.FontManager subsection missing in Configuration. Running on defaults"); KernelLog.Ln
@@ -128,7 +128,7 @@ TYPE
 		VAR
 			factory : FontFactory; font : WMGraphics.Font;
 			moduleName, procedureName : Modules.Name;
-			msg : ARRAY 32 OF CHAR; res : LONGINT;
+			msg : ARRAY 32 OF CHAR; res : WORD;
 		BEGIN
 			IF (ln = NIL) THEN RETURN NIL END;
 			font := NIL;

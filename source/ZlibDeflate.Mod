@@ -1446,7 +1446,7 @@ BEGIN
 END SetParams;
 
 (** compress complete stream and return output length in len **)
-PROCEDURE Compress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: LONGINT);
+PROCEDURE Compress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: WORD);
 	VAR s: Stream;
 BEGIN
 	ZlibBuffers.Init(s.in, src, srcoffset, srclen, srclen);

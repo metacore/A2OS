@@ -397,7 +397,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		res*:LONGINT;
 
 	(* open the decoder on an InputStream *)
-	PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+	PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 	VAR trap: BOOLEAN;
 	BEGIN
 		Streams.OpenWriter(logger, KernelLog.Send); (*default logger, can be overwritten with NIL or alternative writer *)

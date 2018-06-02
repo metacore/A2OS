@@ -48,7 +48,7 @@ TYPE
 	RunnerDHCP = OBJECT
 		VAR
 			int: IP.Interface;
-			res: LONGINT;
+			res: WORD;
 
 		PROCEDURE &Constr*(int: IP.Interface);
 		BEGIN
@@ -68,7 +68,7 @@ VAR
 	hasXMLErrors: BOOLEAN;
 
 	(* temporary variables used in module body *)
-	res: LONGINT;
+	res: WORD;
 
 
 (* Error output for XML parser *)
@@ -81,7 +81,7 @@ END Error;
 
 
 (**Get interface configurations from NetInit.XML for the specified device. *)
-PROCEDURE GetConfig(CONST devName: ARRAY OF CHAR; VAR res:LONGINT): Config;
+PROCEDURE GetConfig(CONST devName: ARRAY OF CHAR; VAR res:WORD): Config;
 VAR
 	netConfigElem: XML.Element;
 	elem: XML.Element;

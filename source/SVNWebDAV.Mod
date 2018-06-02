@@ -7,7 +7,7 @@ IMPORT
 	OdSvn, OdXml;
 
 
-	PROCEDURE Checkout* (svn : OdSvn.OdSvn; CONST pathName : ARRAY OF CHAR; CONST workName : ARRAY OF CHAR; VAR res : LONGINT );
+	PROCEDURE Checkout* (svn : OdSvn.OdSvn; CONST pathName : ARRAY OF CHAR; CONST workName : ARRAY OF CHAR; VAR res : WORD );
 	VAR
 		name, err, vcc, repoUUID, bln, bc, version, workUrl : ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
@@ -59,7 +59,7 @@ IMPORT
 
 
 	(* SVN update using .svn directories *)
-	PROCEDURE Update* (svn : OdSvn.OdSvn; CONST pathName : ARRAY OF CHAR; pathNameVersion : LONGINT;  CONST workName : ARRAY OF CHAR; VAR res : LONGINT );
+	PROCEDURE Update* (svn : OdSvn.OdSvn; CONST pathName : ARRAY OF CHAR; pathNameVersion : LONGINT;  CONST workName : ARRAY OF CHAR; VAR res : WORD );
 	VAR
 		name, err, vcc, repoUUID, bln, bc, version, workUrl : ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
@@ -105,7 +105,7 @@ IMPORT
 		svn.UpdateReport ( pathName, vcc, workUrl, pathNameVersion, ver, workName, res );
 	END Update;
 
-	PROCEDURE Commit* ( svn : OdSvn.OdSvn; CONST pathName, workName, message : ARRAY OF CHAR; VAR res : LONGINT );
+	PROCEDURE Commit* ( svn : OdSvn.OdSvn; CONST pathName, workName, message : ARRAY OF CHAR; VAR res : WORD );
 	VAR
 		act: OdSvn.Activity;
 		uuid : Strings.String;
@@ -342,7 +342,7 @@ IMPORT
 		err, wrk, tmp2 : ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
 		svn : OdSvn.OdSvn;
-		res : LONGINT;
+		res : WORD;
 		resHeader: WebHTTP.ResponseHeader;
 		m : SVNOutput.Message;
 	BEGIN
@@ -445,7 +445,7 @@ IMPORT
 		END;
 	END ExpectedResult;
 
-	PROCEDURE Mkcol* ( CONST url : ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : LONGINT );
+	PROCEDURE Mkcol* ( CONST url : ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : WORD );
 	VAR
 		resHeader: WebHTTP.ResponseHeader;
 		out : Streams.Reader;
@@ -454,7 +454,7 @@ IMPORT
 		svn.pfStatus := resHeader.statuscode;
 	END Mkcol;
 
-	PROCEDURE Delete* ( CONST url : ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : LONGINT );
+	PROCEDURE Delete* ( CONST url : ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : WORD );
 	VAR
 		resHeader: WebHTTP.ResponseHeader;
 		out : Streams.Reader;
@@ -464,7 +464,7 @@ IMPORT
 	END Delete;
 
 	(* sends 'workName' to the svn.wrk address *)
-	PROCEDURE Put* ( CONST workUrl, workName: ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : LONGINT );
+	PROCEDURE Put* ( CONST workUrl, workName: ARRAY OF CHAR; svn : OdSvn.OdSvn; VAR res : WORD );
 	VAR
 		f : Files.File;
 		resHeader: WebHTTP.ResponseHeader;
@@ -492,7 +492,7 @@ IMPORT
 		END;
 	END Put;
 
-	PROCEDURE PrintError ( svn : OdSvn.OdSvn; VAR res : LONGINT );
+	PROCEDURE PrintError ( svn : OdSvn.OdSvn; VAR res : WORD );
 	BEGIN
 		svn.context.out.String ( "Server response: " ); svn.context.out.Int ( svn.pfStatus, 0 ); svn.context.out.Ln;
 		IF svn.pfStatus = 401 THEN

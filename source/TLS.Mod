@@ -650,7 +650,7 @@ TYPE
 
 		(** open a TLS connection (only use once per Connection instance). Use IP.NilPort for lport to automatically assign
 		an unused local port. Use IP.NilAdr for fip to open a passive connection. *)
-		PROCEDURE Open*(  lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT );
+		PROCEDURE Open*(  lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD );
 		BEGIN
 			(*ASSERT( IP.IsNilAdr(fip) );	(* only server-side is implemented *)*)
 			(*ASSERT( context # NIL );*)	(* context must be set before calling Open *)
@@ -692,7 +692,7 @@ TYPE
 		END SetConnection;
 
 		(** Call this method only on a passive (listenig server-side) TLS.Connection. Non blocking *)
-		PROCEDURE Accept*( VAR client: TCP.Connection; VAR res: LONGINT );
+		PROCEDURE Accept*( VAR client: TCP.Connection; VAR res: WORD );
 			VAR
 				newTLSConn: Connection;
 				newTCPConn: TCP.Connection;
@@ -732,7 +732,7 @@ TYPE
 		END Close;
 
 		(** Send secured data *)
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD );
 			VAR i, size: LONGINT;
 		BEGIN {EXCLUSIVE}
 			AWAIT((state = TCP.Established) OR (state = TCP.Closed));
@@ -851,7 +851,7 @@ TYPE
 			END
 		END InitializeConnectionState;
 
-		PROCEDURE PrepareConnectionState( state: ConnectionState; cipherSuite: LONGINT ; VAR res : LONGINT);
+		PROCEDURE PrepareConnectionState( state: ConnectionState; cipherSuite: LONGINT ; VAR res : WORD);
 		BEGIN
 			ASSERT( cipherSuite # 0 );
 			res := Ok;
@@ -885,7 +885,7 @@ TYPE
 			END;
 		END PrepareConnectionState;
 
-		PROCEDURE PrepareSecurityParameters( sp: SecurityParameters; cipherSuite: LONGINT ; VAR res : LONGINT);
+		PROCEDURE PrepareSecurityParameters( sp: SecurityParameters; cipherSuite: LONGINT ; VAR res : WORD);
 		BEGIN
 			ASSERT( cipherSuite # 0 );
 			res := Ok;
@@ -1708,7 +1708,7 @@ TYPE
 
 		PROCEDURE Transition( VAR data: ARRAY OF CHAR; action, subAction, ofs, len: LONGINT );
 			VAR dummy: ARRAY 1 OF CHAR;
-				res : LONGINT;
+				res : WORD;
 		BEGIN
 			IF action = ChangeCipherSpec THEN
 				CASE handshakeState OF

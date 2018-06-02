@@ -26,7 +26,7 @@ PROCEDURE TraceRoute*(context : Commands.Context);
 VAR
 	hostname: DNS.Name;
 	milliTimer : Kernel.MilliTimer;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	BEGIN {EXCLUSIVE}
 		AWAIT(~running);

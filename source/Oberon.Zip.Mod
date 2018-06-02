@@ -316,7 +316,7 @@ END WriteCentralDirectory;
 	- Ok: operation was successful
 	- FileError: file with specified name does not exist
 	- NotZipArchiveError: file is not a correct zipfile **)
-PROCEDURE OpenArchive*(name: ARRAY OF CHAR; VAR res: LONGINT): Archive;
+PROCEDURE OpenArchive*(name: ARRAY OF CHAR; VAR res: WORD): Archive;
 VAR
 	arc: Archive;
 	ent: Entry;
@@ -381,7 +381,7 @@ END OpenArchive;
 (** Returns an Archive that corresponds to a file with specified name;
 	if there is already a zip-file with the same name, this already existing archive is returned;
 	possible results: cf. OpenArchive **)
-PROCEDURE CreateArchive*(VAR name: ARRAY OF CHAR; VAR res: LONGINT): Archive;
+PROCEDURE CreateArchive*(VAR name: ARRAY OF CHAR; VAR res: WORD): Archive;
 VAR
 	f: Files.File;
 	r: Files.Rider;
@@ -425,7 +425,7 @@ END NextEntry;
 	- Ok: Operation was successful
 	- NotZipArchiveError: arc is not a valid Archive
 	- EntryNotFound: no Entry corresponding to name was found **)
-PROCEDURE GetEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR res: LONGINT): Entry;
+PROCEDURE GetEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR res: WORD): Entry;
 VAR
 	ent: Entry;
 BEGIN
@@ -453,7 +453,7 @@ END GetEntry;
 	- NotSupportedError: data of ent are encrypted or compression method is not supported
 	- DataError: zipfile is corrupted
 	- BadName: entry has a bad file name **)
-PROCEDURE ExtractEntry*(arc: Archive; ent: Entry; VAR dst: Files.Rider; VAR res: LONGINT);
+PROCEDURE ExtractEntry*(arc: Archive; ent: Entry; VAR dst: Files.Rider; VAR res: WORD);
 VAR
 	src: Files.Rider; crc32: LONGINT;
 BEGIN
@@ -498,7 +498,7 @@ END ExtractEntry;
 	- EntryAlreadyExists: there is already an Entry in arc with the same name
 	- DataError: error during compression
 	- BadName: src is not based on a valid file **)
-PROCEDURE AddEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR src: Files.Rider; len: LONGINT; level, strategy: SHORTINT; VAR res: LONGINT);
+PROCEDURE AddEntry*(arc: Archive; VAR name: ARRAY OF CHAR; VAR src: Files.Rider; len: LONGINT; level, strategy: SHORTINT; VAR res: WORD);
 VAR
 	dst: Files.Rider; ent: Entry; start: LONGINT;
 BEGIN
@@ -573,7 +573,7 @@ END AddEntry;
 	- Ok: ent was deleted, ent is set to NIL
 	- NotZipArchiveError: arc is not a valid zip-archive
 	- EntryNotFound: ent is not an Entry of Archive arc **)
-PROCEDURE DeleteEntry*(arc: Archive; VAR ent: Entry; VAR res: LONGINT);
+PROCEDURE DeleteEntry*(arc: Archive; VAR ent: Entry; VAR res: WORD);
 CONST
 	BufSize = 4000H;
 VAR

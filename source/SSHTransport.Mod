@@ -60,7 +60,7 @@ TYPE
 
 				PROCEDURE & Open*( CONST hostname: ARRAY OF CHAR );
 				VAR
-					res: LONGINT;  adr: IP.Adr;  p: LONGINT;
+					res: WORD;  adr: IP.Adr;  p: LONGINT;
 				BEGIN
 					state := Closed;
 					Out.String( "connecting to " );  Out.String( hostname );  Out.String( " ... " );

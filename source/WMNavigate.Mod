@@ -698,7 +698,7 @@ TYPE
 			menu : MenuWindow;
 			type, index2 : LONGINT;
 			infoKeys : SET;
-			res : LONGINT;
+			res : WORD;
 			rect : WMRectangles.Rectangle;
 			closeWindow : DoCloseWindow;
 			same: BOOLEAN;

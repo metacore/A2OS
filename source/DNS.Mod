@@ -372,7 +372,7 @@ BEGIN
 	END
 END RetrieveInfo;
 
-PROCEDURE SendQuery(pcb: UDP.Socket; server: IP.Adr; name: ARRAY OF CHAR; type: LONGINT; VAR buf: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE SendQuery(pcb: UDP.Socket; server: IP.Adr; name: ARRAY OF CHAR; type: LONGINT; VAR buf: ARRAY OF CHAR; VAR res: WORD);
 VAR len: LONGINT;
 BEGIN
 	len := 0; res := 0;
@@ -435,7 +435,7 @@ END QueryDNS;
 
 (** Find the host responsible for mail exchange of the specified domain. *)
 
-PROCEDURE MailHostByDomain*(domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE MailHostByDomain*(domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: WORD);
 VAR
 	buf: ARRAY 512 OF CHAR;
 	timeout: LONGINT;
@@ -458,7 +458,7 @@ END MailHostByDomain;
 
 (** Find the IP address of the specified host. *)
 
-PROCEDURE HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: LONGINT);
+PROCEDURE HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: WORD);
 VAR
 	buf: ARRAY 512 OF CHAR;
 	name: Name;
@@ -505,7 +505,7 @@ END HostByName;
 
 (** Find the host name of the specified IP address. *)
 
-PROCEDURE HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: WORD);
 VAR
 	buf: ARRAY 512 OF CHAR;
 	name: Name;

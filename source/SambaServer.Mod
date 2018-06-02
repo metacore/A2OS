@@ -240,7 +240,7 @@ PROCEDURE HandleCreateNew(c: Connection);
 VAR
 	filename: ARRAY 256 OF CHAR;
 	f: Files.File;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF Trace THEN KernelLog.String("Handle Create New: "); KernelLog.Int(c.cmd, 0); KernelLog.Ln(); END;
 
@@ -289,7 +289,7 @@ END HandleCreateNew;
 PROCEDURE HandleCreateDir(c: Connection);
 VAR
 	dirname: ARRAY 256 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF Trace THEN KernelLog.String("Handle Create Directory: "); KernelLog.Int(c.cmd, 0); KernelLog.Ln(); END;
 
@@ -317,7 +317,7 @@ END HandleCreateDir;
 PROCEDURE HandleDeleteDir(c: Connection);
 VAR
 	dirname: ARRAY 256 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF Trace THEN KernelLog.String("Handle Delete Directory: "); KernelLog.Int(c.cmd, 0); KernelLog.Ln(); END;
 
@@ -1115,7 +1115,7 @@ PROCEDURE HandleRename(c : Connection);
 VAR
 	oldName, newName,
 	oldPath, newPath: ARRAY 256 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF Trace THEN KernelLog.String("Handle Rename: "); KernelLog.Int(c.cmd, 0); KernelLog.Ln(); END;
 
@@ -1154,7 +1154,7 @@ END HandleRename;
 PROCEDURE HandleDelete(c: Connection);
 VAR
 	name, path: ARRAY 256 OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF Trace THEN KernelLog.String("Handle Delete: "); KernelLog.Int(c.cmd, 0); KernelLog.Ln(); END;
 
@@ -1907,7 +1907,7 @@ END NewAgent;
 
 PROCEDURE StartServer*(context: Commands.Context);
 VAR
-	res: LONGINT;
+	res: WORD;
 BEGIN {EXCLUSIVE}
 	IF service = NIL THEN
 		lastUID := 777;

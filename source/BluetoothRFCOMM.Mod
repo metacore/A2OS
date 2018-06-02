@@ -444,7 +444,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 
 		VAR
 			info : ARRAY 127 OF CHAR;

@@ -316,7 +316,7 @@ TYPE
 		END Copy;
 
 		PROCEDURE &Init*(name : ARRAY OF CHAR; w, h, x, y : LONGINT);
-		VAR res : LONGINT; ptr : WM.PointerInfo; pixel : Raster.Pixel; mode : Raster.Mode;
+		VAR res : WORD; ptr : WM.PointerInfo; pixel : Raster.Pixel; mode : Raster.Mode;
 			s : ARRAY 16 OF CHAR;
 		BEGIN
 			ml := MAX(LONGINT); mt := MAX(LONGINT); mr := MIN(LONGINT); mb := MIN(LONGINT);

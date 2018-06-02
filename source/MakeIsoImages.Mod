@@ -1222,7 +1222,7 @@ TYPE
 
 			PROCEDURE WriteImages(w: Streams.Writer): LONGINT;
 			VAR
-				res : LONGINT;
+				res : WORD;
 				cur: BCEntry;
 			BEGIN
 				cur := root;
@@ -1354,7 +1354,7 @@ VAR
 	node: Node;
 	cur: Directory;
 	pathname: ARRAY MaxLen OF CHAR;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	node := dir.content;
 	WHILE node # NIL DO
@@ -1825,7 +1825,7 @@ END GetVolumeDescriptor;
 PROCEDURE Make*(context : Commands.Context);
 VAR
 	rootDir, isoDest: String;
-	res : LONGINT;
+	res : WORD;
 	settings: IsoSettings;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(isoDest^);

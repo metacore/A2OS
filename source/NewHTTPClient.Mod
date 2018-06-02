@@ -53,7 +53,7 @@ TYPE
 		PROCEDURE Open;
 		VAR
 			fadr: IP.Adr;
-			res : LONGINT;
+			res : WORD;
 
 		BEGIN
 			IF (con # NIL) & (con.state = TCP.Established) THEN RETURN END;
@@ -69,7 +69,7 @@ TYPE
 			IF con # NIL THEN con.Close; con := NIL END;
 		END Close;
 
-		PROCEDURE Get*(CONST url : ARRAY OF CHAR; http11 : BOOLEAN; VAR out : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Get*(CONST url : ARRAY OF CHAR; http11 : BOOLEAN; VAR out : Streams.Reader; VAR res : WORD);
 		VAR w : Streams.Writer; r : Streams.Reader;
 			x : WebHTTP.AdditionalField;
 			host : ARRAY 128 OF CHAR;
@@ -127,7 +127,7 @@ TYPE
 		END Get;
 		
 				(*POST HTTP/1.1 message. needs either a Content-Length of the body or a chunked transfer encoding*)
-		PROCEDURE Post*(CONST url : ARRAY OF CHAR; CONST headervars: ARRAY OF CHAR; MIME: ARRAY OF CHAR; body: Streams.Reader; length: LONGINT;  VAR out : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Post*(CONST url : ARRAY OF CHAR; CONST headervars: ARRAY OF CHAR; MIME: ARRAY OF CHAR; body: Streams.Reader; length: LONGINT;  VAR out : Streams.Reader; VAR res : WORD);
 		VAR w : Streams.Writer; r : Streams.Reader;
 			x : WebHTTP.AdditionalField;
 			host : ARRAY 128 OF CHAR;
@@ -212,7 +212,7 @@ END CleanUp;
 PROCEDURE Test*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	NEW(h);
 	h.Get("http://www.bimbodot.org", TRUE, r, res);
@@ -225,7 +225,7 @@ END Test;
 PROCEDURE Test2*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : LONGINT;
+	res : WORD;
 	f:Files.File;
 	fr: Files.Reader;
 BEGIN
@@ -241,7 +241,7 @@ END Test2;
 PROCEDURE TestGoogle*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : LONGINT;
+	res : WORD;
 BEGIN
 	NEW(h);
 

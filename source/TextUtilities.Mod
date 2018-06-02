@@ -25,7 +25,7 @@ CONST
 TYPE
 	Char32 = Texts.Char32;
 	Text = Texts.Text;
-	LoaderProc* = PROCEDURE {DELEGATE} (text : Text; filename : ARRAY OF CHAR; VAR res : LONGINT);
+	LoaderProc* = PROCEDURE {DELEGATE} (text : Text; filename : ARRAY OF CHAR; VAR res : WORD);
 
 TYPE
 	FormatDescriptor = OBJECT
@@ -67,7 +67,7 @@ TYPE
 			InitWriter (Add, 128 * 1024);
 		END Init;
 
-		PROCEDURE Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR
 			p, i, idx, pos : LONGINT;
 			nextAttribute: LONGINT;
@@ -407,7 +407,7 @@ TYPE
 			IF attr # NIL THEN text.SetAttributes(oldpos, len, attr) END
 		END InsertPiece;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		CONST DocBlockId = 0F7X; OldTextBlockId = 1X; TextBlockId = 0F0X; OldTextSpex = 0F0X; TextSpex = 1X; LibBlockId = 0DBX;
 		VAR
 			ch: CHAR;
@@ -641,7 +641,7 @@ TYPE
 			w.RawLInt(len);
 		END WritePiece;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		CONST TextBlockId = 0F0X;
 		VAR r: Texts.TextReader;
 			ch :Char32;
@@ -910,7 +910,7 @@ TYPE
 			Error(msg);
 		END MalformedXML;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
 			scanner : XMLScanner.Scanner; parser : XMLParser.Parser;
 			d : XML.Document;
@@ -1202,7 +1202,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR
 			buf : Strings.String; rbuf : ARRAY 4 OF CHAR;
 			bytesPerChar, length, counter : LONGINT;
@@ -1322,7 +1322,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : Texts.Char32;
@@ -1373,7 +1373,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i, p : LONGINT; resstr : ARRAY 7 OF CHAR;
 		BEGIN
 			res := -1;
@@ -1404,7 +1404,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, m: LONGINT;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -1451,7 +1451,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 		BEGIN
 			res :=  -1;
@@ -1480,7 +1480,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR i, j, m : LONGINT;
 			tempUCS32 : ARRAY 1057 OF Char32; (* 1025 *)
 			ch : CHAR;
@@ -1536,7 +1536,7 @@ TYPE
 			END;
 		END Open;
 
-		PROCEDURE WriteText*(text : Texts.Text; VAR res : LONGINT);
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR r : Texts.TextReader; ch : Texts.Char32; i, j, k : LONGINT;
 			byte : ARRAY 2 OF CHAR;
 		BEGIN
@@ -1767,7 +1767,7 @@ BEGIN
 END DecodeAuto;
 
 (** Load text using codecs *)
-PROCEDURE Load*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE Load*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : WORD);
 VAR decoder : Codecs.TextDecoder; in: Streams.Reader; t : Text;
 BEGIN
 	ASSERT(text # NIL);
@@ -1793,19 +1793,19 @@ BEGIN
 END Load;
 
 (** Import text in ASCII format. *)
-PROCEDURE LoadAscii*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadAscii*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Load(text, filename, "ISO8859-1", res)
 END LoadAscii;
 
 (** Import text in UTF8 format. *)
-PROCEDURE LoadUTF8*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadUTF8*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Load(text, filename, "UTF-8", res)
 END LoadUTF8;
 
 (** import text in UCS16 format *)
-PROCEDURE LoadUCS16*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadUCS16*(text : Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 VAR f : Files.File; r : Files.Reader;
 	 i, m  : LONGINT;
 	tempUCS32 : ARRAY 1024 OF Char32;
@@ -1838,19 +1838,19 @@ BEGIN
 END LoadUCS16;
 
 (** Import an Oberon Text *)
-PROCEDURE LoadOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE LoadOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD);
 BEGIN
 	Load(text, fileName, "Oberon", res)
 END LoadOberonText;
 
 (** Import a BBT Text *)
-PROCEDURE LoadText*(text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadText*(text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Load(text, filename, "BBT", res)
 END LoadText;
 
 (** store text using codecs *)
-PROCEDURE Store*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE Store*(text : Text; CONST filename, format : ARRAY OF CHAR; VAR res : WORD);
 VAR file : Files.File; w : Files.Writer; encoder : Codecs.TextEncoder;
 BEGIN
 	ASSERT(text # NIL);
@@ -1875,25 +1875,25 @@ BEGIN
 END Store;
 
 (** Export text in ASCII format. Objects, attributes and characters > CHR(128) are lost *)
-PROCEDURE ExportAscii*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE ExportAscii*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Store(text, fileName, "ISO8859-1", res)
 END ExportAscii;
 
 (** Export text in UTF8 format Objects and attributes are lost *)
-PROCEDURE ExportUTF8*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE ExportUTF8*(text : Text; CONST fileName : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Store(text, fileName, "UTF-8", res)
 END ExportUTF8;
 
 (** Export text in Oberon format Objects are lost *)
-PROCEDURE StoreOberonText*(text : Text; CONST fileName: ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StoreOberonText*(text : Text; CONST fileName: ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Store(text, fileName, "Oberon", res)
 END StoreOberonText;
 
 (** Export text in Bluebottle format *)
-PROCEDURE StoreText*(text : Texts.Text; CONST fileName : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StoreText*(text : Texts.Text; CONST fileName : ARRAY OF CHAR; VAR res : WORD);
 BEGIN
 	Store(text, fileName, "BBT", res)
 END StoreText;
@@ -2142,7 +2142,7 @@ END ConvertAll;
 (* Converts the file with the given name into bb file format *)
 PROCEDURE ConvertFile(CONST file: ARRAY OF CHAR; context : Commands.Context);
 VAR ext, ext2: ARRAY 16 OF CHAR; file2 : ARRAY 256 OF CHAR;
-	text : Texts.Text; res : LONGINT;
+	text : Texts.Text; res : WORD;
 BEGIN
 	ext2 := "mod"; (* extension for the converted files *)
 	Strings.GetExtension(file, file2, ext);
@@ -2568,7 +2568,7 @@ VAR
 	defaultAttributes 			: Texts.Attributes;
 	font 						: WMGraphics.Font;
 	textColor, textBackColor	: LONGINT;
-	res 						: LONGINT;
+	res 						: WORD;
 BEGIN
 	NEW( defaultAttributes );
 	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextBackColor", textBackColor, res );

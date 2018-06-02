@@ -42,7 +42,7 @@ TYPE
 		PROCEDURE Info (context: Commands.Context);
 		VAR
 			i : INTEGER;
-			res : LONGINT;
+			res : WORD;
 			s : ARRAY 256 OF CHAR;
 			args : SVNArgument.Argument;
 			b : BOOLEAN;
@@ -92,7 +92,7 @@ TYPE
 			args : SVNArgument.Argument;
 			adminEntry : SVNAdmin.Entry;
 			m : SVNOutput.Message;
-			res : LONGINT;
+			res : WORD;
 		BEGIN { EXCLUSIVE }
 			NEW ( adminEntry, context );
 			NEW ( args );
@@ -162,7 +162,7 @@ TYPE
 			i : INTEGER;
 			s, tmp, tmp2, svndir : ARRAY 256 OF CHAR;
 			b : BOOLEAN;
-			res : LONGINT;
+			res : WORD;
 		BEGIN { EXCLUSIVE }
 			NEW ( adminEntry, context );
 			NEW ( args );
@@ -229,7 +229,7 @@ TYPE
 			s : ARRAY 256 OF CHAR;
 			b : BOOLEAN;
 			i : INTEGER;
-			res : LONGINT;
+			res : WORD;
 			cnt, j : LONGINT;
 			args : SVNArgument.Argument;
 			adminEntry : SVNAdmin.Entry;
@@ -364,7 +364,7 @@ TYPE
 			args : SVNArgument.Argument;
 			m : SVNOutput.Message;
 			tmp, svndir, tmp2 : ARRAY 256 OF CHAR;
-			res : LONGINT;
+			res : WORD;
 			adminEntry : SVNAdmin.Entry;
 			searcher : SVNUtil.FSItemSearch;
 		BEGIN { EXCLUSIVE }

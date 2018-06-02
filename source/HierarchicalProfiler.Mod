@@ -517,7 +517,7 @@ BEGIN
 END GetBufferSize;
 
 (**	Generate hierarchical profile of the last profiler run's data. Returns NIL if no data available *)
-PROCEDURE GetProfile*(type, info : LONGINT; VAR profile : Profile; VAR res : LONGINT);
+PROCEDURE GetProfile*(type, info : LONGINT; VAR profile : Profile; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	profile := NIL;
 	IF (state # Running) THEN
@@ -563,7 +563,7 @@ BEGIN
 END Start;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)
-PROCEDURE StartProfiling*(maxTime : LONGINT; VAR res : LONGINT);
+PROCEDURE StartProfiling*(maxTime : LONGINT; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	ASSERT(maxTime > 0);
 	IF (state # Running) THEN
@@ -586,7 +586,7 @@ END StartProfiling;
 
 (** Stop profiling. The profile data is not discarded. It can be retrieved using the procedure 'GetProfile' *)
 PROCEDURE Stop*(context : Commands.Context);
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	StopProfiling(res);
 	IF (res = Ok) THEN
@@ -599,7 +599,7 @@ BEGIN
 END Stop;
 
 (** Stop profiling. The profile data is not discarded. It can be retrieved using the procedure 'GetProfile' *)
-PROCEDURE StopProfiling*(VAR res : LONGINT);
+PROCEDURE StopProfiling*(VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (state = Running) THEN
 		HierarchicalProfiler0.Disable;
@@ -611,7 +611,7 @@ BEGIN {EXCLUSIVE}
 END StopProfiling;
 
 PROCEDURE Continue*(context : Commands.Context); (** ~ *)
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	ContinueProfiling(res);
 	IF (res = Ok) THEN
@@ -622,7 +622,7 @@ BEGIN
 	context.out.Ln;
 END Continue;
 
-PROCEDURE ContinueProfiling*(VAR res : LONGINT);
+PROCEDURE ContinueProfiling*(VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	IF (state # Running) THEN
 		IF (samples # NIL) THEN

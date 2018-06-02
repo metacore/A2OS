@@ -655,7 +655,7 @@ TYPE
 		END ToStream;
 
 		(** Generate a file that contains the list of all source code files of this build in compile order *)
-		PROCEDURE GenerateToolFile*(CONST filename : Files.FileName; VAR res : LONGINT);
+		PROCEDURE GenerateToolFile*(CONST filename : Files.FileName; VAR res : WORD);
 		VAR text : Texts.Text; tw : TextUtilities.TextWriter; dateTime : Dates.DateTime; temp : ARRAY 256 OF CHAR;
 		BEGIN
 			NEW(text); NEW(tw, text);
@@ -694,7 +694,7 @@ TYPE
 		END GenerateToolFile;
 
 		(* Generate a XML file describing the packages use by WMInstaller.Mod *)
-		PROCEDURE GeneratePackageFile(CONST filename : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE GeneratePackageFile(CONST filename : ARRAY OF CHAR; VAR res : WORD);
 		VAR
 			packageArray : PackageArray; package : Package;
 			fullname : Files.FileName; file : Files.File; w : Files.Writer;
@@ -764,7 +764,7 @@ TYPE
 		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR err : BOOLEAN);
 		VAR packageArray : PackageArray; i, res : LONGINT;
 
-			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: LONGINT);
+			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: WORD);
 			VAR f: Files.File; r: Files.Rider; pathName, fileName: Files.FileName;
 			BEGIN
 				f := Files.Old(srcname);
@@ -840,7 +840,7 @@ TYPE
 				COPY (mid, filename); Strings.Append(filename, "."); Strings.Append(filename, suf);
 			END StripReleasePrefix;
 
-			PROCEDURE GenerateZipFile(package : Package; sourceCode : BOOLEAN; VAR res : LONGINT);
+			PROCEDURE GenerateZipFile(package : Package; sourceCode : BOOLEAN; VAR res : WORD);
 			VAR
 				file : File; archiveName, source, dest : Files.FileName;
 				archive : Zip.Archive;
@@ -2699,7 +2699,7 @@ END GetReader;
 PROCEDURE CallCommand(CONST command, arguments : ARRAY OF CHAR; context : Commands.Context);
 VAR
 	newContext : Commands.Context; arg : Streams.StringReader;
-	msg : ARRAY 128 OF CHAR; res : LONGINT;
+	msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	NEW(arg, 256); arg.Set(arguments);
 	NEW(newContext, NIL, arg, context.out, context.error, context.caller);
@@ -2790,7 +2790,7 @@ VAR
 	build : LONGINT; ignore : Streams.StringWriter; error, ignoreError, checkAll : BOOLEAN;
 
 	PROCEDURE CreateRamDisk(context : Commands.Context) : BOOLEAN;
-	VAR res : LONGINT; msg : ARRAY 128 OF CHAR; fs : Files.FileSystem;
+	VAR res : WORD; msg : ARRAY 128 OF CHAR; fs : Files.FileSystem;
 	BEGIN
 		Commands.Call("FSTools.Mount CHECKBUILDS RamFS 500000 4096", {Commands.Wait}, res, msg);
 		IF (res # Commands.Ok) THEN
@@ -2801,7 +2801,7 @@ VAR
 	END CreateRamDisk;
 
 	PROCEDURE UnmountRamDisk(context : Commands.Context);
-	VAR res : LONGINT; msg : ARRAY 128 OF CHAR;
+	VAR res : WORD; msg : ARRAY 128 OF CHAR;
 	BEGIN
 		Commands.Call("FSTools.Unmount CHECKBUILDS", {Commands.Wait}, res, msg);
 		IF (res # Commands.Ok) THEN
@@ -2812,7 +2812,7 @@ VAR
 	PROCEDURE DeleteFiles(CONST pattern : ARRAY OF CHAR);
 	VAR
 		enum : Files.Enumerator; flags : SET; time, date, size : LONGINT; name : Files.FileName;
-		res : LONGINT;
+		res : WORD;
 	BEGIN
 		NEW(enum); enum.Open(pattern, {});
 		WHILE enum.GetEntry(name, flags, time, date, size) DO

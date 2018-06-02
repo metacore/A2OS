@@ -398,7 +398,7 @@ TYPE
 		PROCEDURE ReadMACAddress;
 		VAR
 			i: INTEGER;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			(* MAC address is in registers 00H - 05H *)
 			IF DebugMAC IN Debug THEN
@@ -934,7 +934,7 @@ TYPE
 		PROCEDURE DebugConfig;
 		VAR
 			s: SET;
-			res: LONGINT;
+			res: WORD;
 		BEGIN
 			KernelLog.String("*** BEGIN OF NIC CONFIGURATION ***"); KernelLog.Ln;
 

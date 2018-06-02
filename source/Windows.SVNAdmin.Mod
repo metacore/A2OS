@@ -108,7 +108,7 @@ TYPE
 			END;
 		END ReadVersionUrl;
 
-		PROCEDURE SetPath* ( CONST p : ARRAY OF CHAR; VAR res : LONGINT );
+		PROCEDURE SetPath* ( CONST p : ARRAY OF CHAR; VAR res : WORD );
 		BEGIN
 			r := NIL;
 			readGlobalData := FALSE;
@@ -119,7 +119,7 @@ TYPE
 			ASSERT ( (res = SVNOutput.ResOK) OR (res = SVNOutput.ResNOTVERSIONED) );
 		END SetPath;
 
-		PROCEDURE AnalyzePath ( VAR res : LONGINT );
+		PROCEDURE AnalyzePath ( VAR res : WORD );
 		BEGIN
 			pathIsFile := FALSE;
 			res := SVNOutput.ResOK;
@@ -159,7 +159,7 @@ TYPE
 
 		PROCEDURE CreateTempfile*;
 		VAR
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF SVNUtil.FileExists ( entriesfiletemp ) THEN
 				Files.Delete ( entriesfiletemp, res );
@@ -274,7 +274,7 @@ TYPE
 			- name: name of the directory inside the path which will be added
 			- addGlobal: usually the first
 		*)
-		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : LONGINT );
+		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : WORD );
 		VAR
 			file, entryfile, tmp, tmp2 : Files.FileName;
 			res1, time, date, size : LONGINT;
@@ -367,7 +367,7 @@ TYPE
 			RETURN w;
 		END CreateDummy;
 
-		PROCEDURE ReadData* ( VAR res : LONGINT );
+		PROCEDURE ReadData* ( VAR res : WORD );
 		VAR
 			i : INTEGER;
 			tmp : ARRAY 256 OF CHAR;
@@ -436,7 +436,7 @@ TYPE
 			END;
 		END ReadData;
 
-		PROCEDURE ReadFileData ( CONST name : ARRAY OF CHAR; VAR res : LONGINT );
+		PROCEDURE ReadFileData ( CONST name : ARRAY OF CHAR; VAR res : WORD );
 		VAR
 			tmp : ARRAY 256 OF CHAR;
 			start: ARRAY 2 OF CHAR;
@@ -625,7 +625,7 @@ TYPE
 
 		PROCEDURE WriteUpdate*;
 		VAR
-			res : LONGINT;
+			res : WORD;
 			overwrite : BOOLEAN;
 		BEGIN
 			w.Update;
@@ -851,7 +851,7 @@ TYPE
 	PROCEDURE CreateDirectory* ( CONST path : ARRAY OF CHAR );
 	VAR
 		tmp, tmp2, svndir : Files.FileName;
-		res : LONGINT;
+		res : WORD;
 		f : Files.File;
 		w : Files.Writer;
 	BEGIN
@@ -934,7 +934,7 @@ BEGIN
 END CheckChecksum;
 
 
-	PROCEDURE Traverse* ( CONST path : ARRAY OF CHAR; handler : TraverseHandler; data : ANY; verurl : BOOLEAN;  VAR res : LONGINT );
+	PROCEDURE Traverse* ( CONST path : ARRAY OF CHAR; handler : TraverseHandler; data : ANY; verurl : BOOLEAN;  VAR res : WORD );
 	VAR
 		tmp, tmp2 : ARRAY 256 OF CHAR;
 		adminEntry : Entry;
@@ -984,7 +984,7 @@ END CheckChecksum;
 
 	PROCEDURE CopyToBaseFile* ( CONST file : ARRAY OF CHAR );
 	VAR
-		res : LONGINT;
+		res : WORD;
 		overwrite : BOOLEAN;
 		dest, path, name : Files.FileName;
 	BEGIN

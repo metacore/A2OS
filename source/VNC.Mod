@@ -836,7 +836,7 @@ END OpenVNC;
 (* Close a VNC connection. *)
 
 PROCEDURE CloseVNC*(VAR c: Connection);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	pool.Remove(c);
 	c.pcb.Close();
@@ -848,7 +848,7 @@ BEGIN
 END CloseVNC;
 
 PROCEDURE PrintConnection(c: Connection; out : Streams.Writer);
-VAR res: LONGINT; name: ARRAY 128 OF CHAR;
+VAR res: WORD; name: ARRAY 128 OF CHAR;
 BEGIN
 	out.Int(c.id, 1);
 	CASE c.fmt.code OF

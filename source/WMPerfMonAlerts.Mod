@@ -312,7 +312,7 @@ VAR
 	(* XML scanner/parser *)
 	xmlHasErrors : BOOLEAN;
 
-PROCEDURE Add*(CONST fullname : ARRAY OF CHAR; type, trigger : LONGINT; value1, value2 : LONGREAL; onAlert, onLeave : XML.String; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE Add*(CONST fullname : ARRAY OF CHAR; type, trigger : LONGINT; value1, value2 : LONGREAL; onAlert, onLeave : XML.String; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR a, alert : AlertObject; plugin : WMPerfMonPlugins.Plugin; index : LONGINT;
 BEGIN {EXCLUSIVE}
 	plugin := WMPerfMonPlugins.updater.GetByFullname(fullname, index, msg);
@@ -340,7 +340,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END Add;
 
-PROCEDURE AddByString*(CONST string : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE AddByString*(CONST string : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR alert : AlertInfo; r : Streams.StringReader;
 BEGIN
 	NEW(r, LEN(string)); r.SetRaw(string, 0, LEN(string));
@@ -350,7 +350,7 @@ BEGIN
 	END;
 END AddByString;
 
-PROCEDURE AddByStream(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE AddByStream(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR alert : AlertInfo;
 BEGIN
 	ParseAlert(r, alert, msg, res);
@@ -360,7 +360,7 @@ BEGIN
 END AddByStream;
 
 PROCEDURE AddByCommand*(context : Commands.Context);
-VAR msg : ARRAY 128 OF CHAR; res : LONGINT;
+VAR msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	AddByStream(context.arg, msg, res);
 	IF res = Ok THEN
@@ -425,7 +425,7 @@ BEGIN {EXCLUSIVE}
 	RETURN nofRemoved;
 END RemoveAlertByID;
 
-PROCEDURE SetStateByID*(id, state : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE SetStateByID*(id, state : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR alert : AlertObject;
 BEGIN {EXCLUSIVE}
 	ASSERT((state = Off) OR (state = On) OR (state = Triggered) OR (state = Reset));
@@ -472,7 +472,7 @@ BEGIN {EXCLUSIVE}
 END CheckAlerts;
 
 PROCEDURE ExecuteCommand(command : XML.String);
-VAR msg : ARRAY 128 OF CHAR; res : LONGINT;
+VAR msg : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	IF command # NIL THEN
 		Commands.Call(command^, {}, res, msg);
@@ -497,7 +497,7 @@ BEGIN
 	RETURN string;
 END GetAttributeValue;
 
-PROCEDURE GetLongreal(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR res : LONGINT) : LONGREAL;
+PROCEDURE GetLongreal(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR res : WORD) : LONGREAL;
 VAR string : XML.String; nbr : LONGREAL;
 BEGIN
 	res := Error;
@@ -647,7 +647,7 @@ BEGIN
 END GetEvent;
 
 (* Parses string: fullname type trigger value1 value2  "onAlertCommand" "onLeaveCommand" *)
-PROCEDURE ParseAlert*(r: Streams.Reader; VAR alert : AlertInfo; VAR msg : ARRAY OF CHAR; res : LONGINT);
+PROCEDURE ParseAlert*(r: Streams.Reader; VAR alert : AlertInfo; VAR msg : ARRAY OF CHAR; res : WORD);
 VAR string : ARRAY 256 OF CHAR;
 BEGIN
 	(* parse fullname *)
@@ -804,7 +804,7 @@ BEGIN
 	xmlHasErrors := TRUE;
 END ReportError;
 
-PROCEDURE LoadXmlDocument(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT) : XML.Document;
+PROCEDURE LoadXmlDocument(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD) : XML.Document;
 VAR
 	scanner : XMLScanner.Scanner; parser : XMLParser.Parser; document : XML.Document;
 	in : Files.Reader; f : Files.File;
@@ -892,7 +892,7 @@ BEGIN
 	RETURN elem;
 END GetRulesAsXmlX;
 
-PROCEDURE LoadRuleFileX(CONST filename : ARRAY OF CHAR; VAR alerts : AlertObject; VAR nbrOfRules : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadRuleFileX(CONST filename : ARRAY OF CHAR; VAR alerts : AlertObject; VAR nbrOfRules : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR document : XML.Document;
 BEGIN
 	document := LoadXmlDocument(filename, msg, res);
@@ -901,7 +901,7 @@ BEGIN
 	END;
 END LoadRuleFileX;
 
-PROCEDURE StoreRuleFileX(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StoreRuleFileX(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR file : Files.File; rules : XML.Element; w : Files.Writer;
 BEGIN
 	file := Files.New(filename);
@@ -921,7 +921,7 @@ BEGIN
 	END;
 END StoreRuleFileX;
 
-PROCEDURE LoadRules*(CONST filename : ARRAY OF CHAR; append : BOOLEAN; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE LoadRules*(CONST filename : ARRAY OF CHAR; append : BOOLEAN; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR alerts : AlertObject; nbrOfRules : LONGINT;
 BEGIN {EXCLUSIVE}
 	LoadRuleFileX(filename, alerts, nbrOfRules, msg, res);
@@ -930,7 +930,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END LoadRules;
 
-PROCEDURE StoreRules*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE StoreRules*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 BEGIN {EXCLUSIVE}
 	StoreRuleFileX(filename, msg, res);
 END StoreRules;
@@ -950,7 +950,7 @@ BEGIN {EXCLUSIVE}
 END Load;
 
 PROCEDURE Store*(context : Commands.Context); (** filename ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : LONGINT;
+VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	StoreRuleFileX(filename, msg, res);

@@ -38,7 +38,7 @@ TYPE
 			overwriteAll := FALSE; overwriteNever := FALSE; abort := FALSE;
 		END New;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
 		VAR oldFile : Files.File; name : ARRAY 1024 OF CHAR;
 		BEGIN
 			res := -1;
@@ -80,7 +80,7 @@ TYPE
 			IF TraceCopy IN Trace THEN KernelLog.Ln; END;
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : WORD);
 		BEGIN
 			IF (f # NIL) & (w # NIL)  THEN
 				w.Update;
@@ -617,7 +617,7 @@ TYPE
 		PROCEDURE Duplicate(sender, data : ANY);
 		VAR  d : DirEntry;
 			name : ARRAY FileNameLength (* was 128*) OF CHAR;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -792,7 +792,7 @@ END Open;
 			END;
 		END MyStartDrag;
 
-		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : WORD);
 		VAR w : Streams.Writer;
 			f : Files.File;
 			r : Files.Reader;

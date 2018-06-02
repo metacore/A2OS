@@ -5,7 +5,7 @@ IMPORT StdIO, Commands, Modules, Trace;
 CONST Verbose = FALSE;
 
 PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
-VAR msg: ARRAY 256 OF CHAR;  res: LONGINT; 
+VAR msg: ARRAY 256 OF CHAR;  res: WORD; 
 BEGIN
 	IF Verbose THEN 
 		Trace.String("StdIOShell: Activate Command "); Trace.String(cmd); Trace.Ln; 

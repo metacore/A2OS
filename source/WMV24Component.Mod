@@ -110,7 +110,7 @@ TYPE
 		PROCEDURE Load;
 		VAR
 			value, temp : ARRAY 256 OF CHAR;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			Configuration.Get("Applications.WMV24Component.PortSettings", value, res);
 			IF (res = Configuration.Ok) THEN COPY(value, portSettings); END;
@@ -1049,7 +1049,7 @@ TYPE
 		PROCEDURE ToggleOpen(sender, data : ANY);
 		VAR msg, s, t : ARRAY 64 OF CHAR; parityChar : CHAR;
 			r : Streams.StringReader;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			ResetStatus;
 			IF open THEN
@@ -1111,7 +1111,7 @@ TYPE
 			text.ReleaseWrite;
 		END DeleteNCharacters;
 
-		PROCEDURE ReportError(CONST title : ARRAY OF CHAR; res : LONGINT);
+		PROCEDURE ReportError(CONST title : ARRAY OF CHAR; res : WORD);
 		VAR msg : ARRAY 128 OF CHAR;
 		BEGIN
 		CASE res OF
@@ -1130,7 +1130,7 @@ TYPE
 		WMDialogs.Error(title, msg)
 		END ReportError;
 
-		PROCEDURE EvaluateError(res : LONGINT);
+		PROCEDURE EvaluateError(res : WORD);
 		BEGIN
 			CASE res OF
 				|Serials.OverrunError: INC(overrunErrors);
@@ -1305,7 +1305,7 @@ TYPE
 		terminal : TerminalComponent;
 
 		PROCEDURE GetStartupSize(VAR width, height : LONGINT);
-		VAR strings : Strings.StringArray; value : ARRAY 64 OF CHAR; res : LONGINT;
+		VAR strings : Strings.StringArray; value : ARRAY 64 OF CHAR; res : WORD;
 		BEGIN
 			width := DefaultWidth; height := DefaultHeight;
 			Configuration.Get("Applications.WMV24Component.WindowStartupSize", value, res);
@@ -1508,7 +1508,7 @@ BEGIN {EXCLUSIVE}
 END Cleanup;
 
 PROCEDURE InitV24;
-VAR res: LONGINT; msg: ARRAY 32 OF CHAR;
+VAR res: WORD; msg: ARRAY 32 OF CHAR;
 BEGIN
 	Commands.Call("V24.Install",{},res,msg); (* auto-initialize V24 in Windows *)
 END InitV24;

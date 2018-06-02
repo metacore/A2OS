@@ -46,14 +46,14 @@ TYPE
 
 	DropString* = OBJECT(DropInterface)
 
-		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : WORD);
 		END Set;
 
 	END DropString;
 
 	DropURLs* = OBJECT(DropInterface)
 
-		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : WORD);
 		END URL;
 
 	END DropURLs;
@@ -65,25 +65,25 @@ TYPE
 			RETURN FALSE
 		END IsHierarchical;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : WORD);
 		END ClosePut;
 
 		(** only path relative to the current dir are accepted. The string '..' stands for the parent directory *)
-		PROCEDURE ChangeDir*(CONST dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE ChangeDir*(CONST dir : ARRAY OF CHAR; VAR res : WORD);
 		END ChangeDir;
 
 		(** only path relative to the current dir are accepted. The string '..' stands for the parent directory *)
-		PROCEDURE MakeDir*(CONST dir : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE MakeDir*(CONST dir : ARRAY OF CHAR; VAR res : WORD);
 		END MakeDir;
 
 	END DropFiles;
 
 	DropObject* = OBJECT(DropInterface)
 
-		PROCEDURE Set*(object : ANY; VAR res : LONGINT);
+		PROCEDURE Set*(object : ANY; VAR res : WORD);
 		END Set;
 
 	END DropObject;

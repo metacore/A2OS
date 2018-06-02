@@ -213,7 +213,7 @@ BEGIN
 END IsLoaded;
 
 PROCEDURE ModuleState*(context: Commands.Context);
-VAR name: Modules.Name; module: Modules.Module; msg: ARRAY 256 OF CHAR; res: LONGINT;
+VAR name: Modules.Name; module: Modules.Module; msg: ARRAY 256 OF CHAR; res: WORD;
 BEGIN	
 	context.arg.SkipWhitespace;
 	context.arg.String(name);
@@ -238,7 +238,7 @@ END ModuleState;
 
 (** Load the specified module *)
 PROCEDURE Load*(context : Commands.Context); (** modulename ~ *)
-VAR name : Modules.Name; module : Modules.Module; msg : ARRAY 256 OF CHAR; res : LONGINT;
+VAR name : Modules.Name; module : Modules.Module; msg : ARRAY 256 OF CHAR; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(name);
@@ -265,7 +265,7 @@ END Load;
 PROCEDURE FreeDownTo*(context : Commands.Context); (** basemodule ~ *)
 VAR
 	modulename : ARRAY 128 OF CHAR;
-	root, m: Module; res: LONGINT;
+	root, m: Module; res: WORD;
 	timer: Kernel.Timer; msg: ARRAY 64 OF CHAR;
 	nbrOfUnloadedModules : LONGINT;
 BEGIN
@@ -297,7 +297,7 @@ END FreeDownTo;
 
 (** Unload modules from memory *)
 PROCEDURE Free*(context : Commands.Context); (** {modulename} ~ *)
-VAR name, msg : ARRAY 64 OF CHAR; res : LONGINT;
+VAR name, msg : ARRAY 64 OF CHAR; res : WORD;
 BEGIN
 	WHILE context.arg.GetString(name) DO
 		IF name # "" THEN
@@ -432,7 +432,7 @@ VAR
 	file: Files.File; 
 	r: Streams.Reader;
 	filename: Files.FileName;
-	res: LONGINT;
+	res: WORD;
 	msg: ARRAY 256 OF CHAR;
 BEGIN
 	IF context.arg.GetString(filename) THEN

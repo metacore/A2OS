@@ -170,7 +170,7 @@ TYPE
 			started: BOOLEAN;
 			next*: Disk;
 
-		PROCEDURE Transfer*(op, start, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, start, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR  requ: Command;  str: ARRAY 32 OF CHAR;
 		BEGIN
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
@@ -204,7 +204,7 @@ TYPE
 			END;
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: WORD);
 		BEGIN
 			IF msg IS Disks.EjectMsg THEN
 				res := Disks.Unsupported
@@ -346,7 +346,7 @@ BEGIN
 	res := requ.status
 END DoSense;
 
-PROCEDURE SubmitAndSense*(d: Bus;  VAR requ: Command;  maxtry: LONGINT;  msg: ARRAY OF CHAR;  VAR res: LONGINT);
+PROCEDURE SubmitAndSense*(d: Bus;  VAR requ: Command;  maxtry: LONGINT;  msg: ARRAY OF CHAR;  VAR res: WORD);
 VAR key, code, kind: LONGINT; first: BOOLEAN;
 BEGIN
 	first := TRUE;
@@ -385,7 +385,7 @@ BEGIN
 	res := requ.status
 END SubmitAndSense;
 
-PROCEDURE DoTestUnitReady*(b: Bus;  target, lun: SHORTINT;  VAR res: LONGINT);
+PROCEDURE DoTestUnitReady*(b: Bus;  target, lun: SHORTINT;  VAR res: WORD);
 VAR requ: Command;
 BEGIN
 	MakeCmd6(requ.cmd, TestUnitReady, lun, 0, 0, 0);
@@ -394,7 +394,7 @@ BEGIN
 	res := requ.status
 END DoTestUnitReady;
 
-PROCEDURE DoInquiry*(b: Bus;  target, lun: SHORTINT; VAR inq: InquiryData; VAR res: LONGINT);
+PROCEDURE DoInquiry*(b: Bus;  target, lun: SHORTINT; VAR inq: InquiryData; VAR res: WORD);
 VAR requ: Command; data: ARRAY 36 OF CHAR; i: LONGINT;
 BEGIN
 	MakeCmd6(requ.cmd, Inquiry, lun, 0, 36, 0);
@@ -427,7 +427,7 @@ BEGIN
 	END
 END DoInquiry;
 
-PROCEDURE DoStartStopUnit*(b: Bus;  target, lun: SHORTINT; start: BOOLEAN;  VAR res: LONGINT);
+PROCEDURE DoStartStopUnit*(b: Bus;  target, lun: SHORTINT; start: BOOLEAN;  VAR res: WORD);
 VAR	requ: Command;
 BEGIN
 	MakeCmd6(requ.cmd, StartStop, 0, 0, 0, 0);
@@ -437,7 +437,7 @@ BEGIN
 	res := requ.status
 END DoStartStopUnit;
 
-PROCEDURE PreventAllowRemoval(d: Disk;  prevent: BOOLEAN;  VAR res: LONGINT);
+PROCEDURE PreventAllowRemoval(d: Disk;  prevent: BOOLEAN;  VAR res: WORD);
 VAR	requ: Command;
 BEGIN
 	IF Disks.Removable IN d.flags THEN
@@ -450,7 +450,7 @@ BEGIN
 	END
 END PreventAllowRemoval;
 
-PROCEDURE DoReadCapacity*(b: Bus;  target, lun: SHORTINT;  VAR capacity, blockSize: LONGINT;  VAR res: LONGINT);
+PROCEDURE DoReadCapacity*(b: Bus;  target, lun: SHORTINT;  VAR capacity, blockSize: LONGINT;  VAR res: WORD);
 VAR  requ: Command;  data: ARRAY 128 OF CHAR;  i: LONGINT;
 BEGIN
 	capacity := 0;  blockSize := 0;
@@ -468,7 +468,7 @@ BEGIN
 END DoReadCapacity;
 
 PROCEDURE InitDisk(d: Disk);
-VAR  requ: Command;  data: ARRAY 128 OF CHAR; res: LONGINT;
+VAR  requ: Command;  data: ARRAY 128 OF CHAR; res: WORD;
 BEGIN
 	MakeCmd6(requ.cmd, ModeSense, 0, 0, 128, 0);
 	NewCmd(requ, d.target, 0, 6, ADDRESSOF(data), 128);
@@ -489,7 +489,7 @@ BEGIN
 END InitDisk;
 
 PROCEDURE TerminateDisk(d: Disk);
-VAR  res: LONGINT;
+VAR  res: WORD;
 BEGIN
 	IF d.started THEN
 		DoStartStopUnit(d.bus, d.target, 0, FALSE, res);

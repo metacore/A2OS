@@ -225,7 +225,7 @@ END HasBeenExecuted;
 PROCEDURE LoadDriver(driver : Driver) : BOOLEAN;
 VAR
 	commands : Strings.StringArray;
-	flags : SET; msg : ARRAY 256 OF CHAR; res : LONGINT;
+	flags : SET; msg : ARRAY 256 OF CHAR; res : WORD;
 	i : LONGINT;
 BEGIN {EXCLUSIVE}
 	res := -1;

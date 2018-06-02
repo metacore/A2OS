@@ -23,7 +23,7 @@ MODULE SymbiosDisks;	(** non-portable *)
 				writePreComp: LONGINT;
 				capacity: LONGINT;
 
-			PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+			PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 			VAR
 				srb: ASPI.ExecIOCmdSRB; size, n, i, copyAdr, orgadr, orgsize: LONGINT; phys: ARRAY MaxRanges OF Machine.Range;
 			BEGIN

@@ -1585,7 +1585,7 @@ TYPE
 		platform: PlatformDesc;
 		fileName: Files.FileName;
 		mod: Modules.Module;
-		res: LONGINT;
+		res: WORD;
 		msg: ARRAY 8 OF CHAR;
 	BEGIN
 

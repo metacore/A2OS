@@ -4016,7 +4016,7 @@ BEGIN
 	PROCEDURE MakeStackEnhArrayItem*( code: Code;  VAR i: Item;   type: PCT.Struct );   (*fof*)
 	VAR a: PCT.Struct;  zero: PCLIR.Register;
 		PROCEDURE MakeOpenArray( type: PCT.Struct );
-		VAR res: LONGINT;  ea: PCT.EnhArray;
+		VAR res: WORD;  ea: PCT.EnhArray;
 		BEGIN
 			IF type IS PCT.EnhArray THEN
 				MakeOpenArray( type( PCT.EnhArray ).base );  NEW( ea );

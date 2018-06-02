@@ -33,7 +33,7 @@ TYPE
 			at := t; parent := n
 		END New;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : LONGINT);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
 		BEGIN
 			res := -1;
 			caption := Strings.NewString(remoteName);
@@ -50,7 +50,7 @@ TYPE
 			outw := out;
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : LONGINT);
+		PROCEDURE ClosePut*(VAR res : WORD);
 		VAR ei : EntryInfo;
 		BEGIN
 			IF out # NIL THEN out.Update END;
@@ -189,7 +189,7 @@ TYPE
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			res : LONGINT;
+			res : WORD;
 			text : Texts.Text;
 			textPos : Texts.TextPosition;
 			caption, entryName : Strings.String;
@@ -1109,7 +1109,7 @@ BEGIN
 END RemovePartitionLabel;
 
 (* transfer data from rec to target *)
-PROCEDURE CopyFile(rec : Streams.Receiver; target : WMDropTarget.DropFiles; CONST remote : ARRAY OF CHAR; VAR res : LONGINT);
+PROCEDURE CopyFile(rec : Streams.Receiver; target : WMDropTarget.DropFiles; CONST remote : ARRAY OF CHAR; VAR res : WORD);
 VAR w : Streams.Writer; r : Streams.Reader; buf: ARRAY BufSize OF CHAR; len: LONGINT;
 BEGIN
 	res := -1;

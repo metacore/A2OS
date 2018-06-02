@@ -1286,7 +1286,7 @@ VAR trace: Streams.Writer;
 	END TraceProcesses;
 	
 	PROCEDURE Test*;
-	VAR res: LONGINT; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE; 
+	VAR res: WORD; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE; 
 	BEGIN
 		mod := Modules.ThisModule("Reflection",res,msg);
 		ReportModule(trace, mod.refs, pos); 

@@ -309,7 +309,7 @@ TYPE
 				END IndexToColor;
 
 				PROCEDURE SetColor*( col, red, green, blue: INTEGER );   (* 0 <= col, red, green, blue < 256 *)
-				VAR xcol: X11.Color;  res: LONGINT;
+				VAR xcol: X11.Color;  res: WORD;
 				BEGIN
 					IF (col < 0) OR (col > 255) THEN  RETURN   END;
 					rgb[col].r := red;  rgb[col].g := green;  rgb[col].b := blue;
@@ -838,7 +838,7 @@ VAR
 	END GetDisplaySize;
 
 	PROCEDURE Install*;
-	VAR disp: Display; res: LONGINT; s, w, h: LONGINT; xdisp: X11.DisplayPtr;
+	VAR disp: Display; res: WORD; s, w, h: LONGINT; xdisp: X11.DisplayPtr;
 	BEGIN
 		InitNames; xdisp := OpenX11Display( );
 		s := GetDisplaySize( w, h );

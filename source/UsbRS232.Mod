@@ -405,7 +405,7 @@ TYPE
 		open: BOOLEAN;
 		diagnostic: LONGINT;
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN ShowModule(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -421,7 +421,7 @@ TYPE
 		END Open;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR status : Usbdi.Status; buffer: POINTER TO ARRAY OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -438,7 +438,7 @@ TYPE
 		END Send;
 
 		(** Send a single character to the UART. *)
-		PROCEDURE SendChar*(ch: CHAR; VAR res : LONGINT);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
 		VAR status : Usbdi.Status;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -455,7 +455,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleData *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
 			AWAIT(tail # head);
@@ -492,7 +492,7 @@ TYPE
 			RETURN (tail - head) MOD BufSize
 		END Available;
 
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
 		VAR s : SET;
 		BEGIN
 			IF (bps > 0) & (115200 MOD bps = 0) THEN

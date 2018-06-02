@@ -493,7 +493,7 @@ TYPE
 			RETURN result
 		END GetLongint;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : LONGINT);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR ch : ChunkHeader;
 			i : LONGINT;
 			isPNG : BOOLEAN;

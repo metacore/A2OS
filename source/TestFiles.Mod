@@ -80,7 +80,7 @@ TYPE
 		END CreateFile;
 
 		PROCEDURE DeleteFile(CONST filename : ARRAY OF CHAR; VAR error : BOOLEAN);
-		VAR fullname : Files.FileName; res : LONGINT;
+		VAR fullname : Files.FileName; res : WORD;
 		BEGIN
 			COPY(path, fullname); Strings.Append(fullname, filename);
 			log.String("DELETE '"); log.String(fullname); log.String("' ... "); log.Update;

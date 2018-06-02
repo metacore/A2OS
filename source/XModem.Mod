@@ -162,7 +162,7 @@ TYPE
 		END SetHeader;
 
 		PROCEDURE SendInit;
-		VAR res: LONGINT; ch: CHAR;
+		VAR res: WORD; ch: CHAR;
 		BEGIN
 			IF DebugS THEN
 				KernelLog.String("SendInit:"); KernelLog.Ln; KernelLog.String("  waiting for 'C'/NAK...")
@@ -235,7 +235,7 @@ TYPE
 		END SendData;
 
 		PROCEDURE SendEOT;
-		VAR res: LONGINT; ch: CHAR;
+		VAR res: WORD; ch: CHAR;
 		BEGIN
 			(* send EOT *)
 			tx.Char(EOT); tx.Update;
@@ -299,7 +299,7 @@ TYPE
 		END GetHeader;
 
 		PROCEDURE ReceiveInitCRC;
-		VAR res: LONGINT; ch: CHAR;
+		VAR res: WORD; ch: CHAR;
 		BEGIN
 			IF DebugR THEN
 				KernelLog.String("ReceiveInitCRC:"); KernelLog.Ln; KernelLog.String("  sending 'C'..."); KernelLog.Ln
@@ -334,7 +334,7 @@ TYPE
 		END ReceiveInitCRC;
 
 		PROCEDURE ReceiveInitChecksum;
-		VAR res: LONGINT; ch: CHAR;
+		VAR res: WORD; ch: CHAR;
 		BEGIN
 			packetSize := PacketSizeChksum;
 			(* send NAK *)

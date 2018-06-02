@@ -651,7 +651,7 @@ TYPE URLDropTarget* = OBJECT(WMDropTarget.DropTarget);
 END URLDropTarget;
 
 TYPE DropURL* = OBJECT(WMDropTarget.DropURLs)
-	PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : LONGINT);
+	PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : WORD);
 	BEGIN
 		(* handle dropped files -> build up SlideshowData on-the-fly (not via XML file) *)
 		KernelLog.String("Dropped new URL: "); KernelLog.String(url); KernelLog.Ln;

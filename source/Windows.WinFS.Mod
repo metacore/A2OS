@@ -168,7 +168,7 @@ TYPE
 			Prefix( name, fname );  fs.Delete0( fname, key, res );
 		END Delete0;
 
-		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: LONGINT );
+		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
 		VAR old0, new0: FileName;
 		BEGIN
 			Prefix( old, old0 );  Prefix( new, new0 );  fs.Rename0( old0, new0, fold, res );
@@ -186,7 +186,7 @@ TYPE
 			Prefix( name, fname );  RETURN fs.FileKey( fname );
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: LONGINT );
+		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: WORD );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.CreateDirectory0( fname, res );
@@ -260,7 +260,7 @@ TYPE
 			END
 		END Delete0;
 
-		PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: LONGINT );
+		PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
 		VAR fnold, fnnew: FileName;  Fo, Fn: File;  ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			IF TraceFileSystem IN Trace THEN KernelLog.String( "Rename " );  KernelLog.String( old );  KernelLog.String( " -> " );  KernelLog.String( new );  KernelLog.Ln;  END;
@@ -387,7 +387,7 @@ TYPE
 
 		END FileKey;
 
-		PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: LONGINT );
+		PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: WORD );
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.CreateDirectory( name, NIL );
@@ -656,7 +656,7 @@ TYPE
 			ASSERT( hfile # Kernel32.InvalidHandleValue );  fsize := Kernel32.GetFileSize( hfile, NIL );  ASSERT( fsize >= 0 );  SELF.tfname := tfname;  COPY( tfname^, fname );  RETURN TRUE;
 		END ToTemp;
 
-		PROCEDURE Register0*( VAR res: LONGINT );
+		PROCEDURE Register0*( VAR res: WORD );
 		VAR F: File;  ret: Kernel32.BOOL;
 			from, to: ARRAY 256 OF CHAR;
 		BEGIN {EXCLUSIVE}
@@ -846,7 +846,7 @@ VAR
 	PROCEDURE MountDrive(CONST drive: ARRAY OF CHAR; context : Commands.Context);
 	VAR
 		p: Files.Parameters; namebuf1, namebuf2: FileName;  size, snum, mlen, sysfl: LONGINT;
-		res: LONGINT; prefix: ARRAY 256 OF CHAR;
+		res: WORD; prefix: ARRAY 256 OF CHAR;
 	BEGIN
 		COPY(drive,prefix);
 		size := LEN( namebuf1 );  res := Kernel32.GetVolumeInformation( prefix, namebuf1, size, snum, mlen, sysfl, namebuf2, size );

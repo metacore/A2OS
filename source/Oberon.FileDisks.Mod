@@ -17,7 +17,7 @@ TYPE
 			size, cyls, hds, spt: LONGINT;
 			new: BOOLEAN;
 
-		PROCEDURE Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR pos, n: LONGINT; r: Files.Rider;
 		BEGIN
 			ASSERT(ofs = 0);	(* implementation restriction *)
@@ -61,7 +61,7 @@ TYPE
 			size := SELF.size; res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: WORD);
 		BEGIN
 			IF (msg IS Disks.GetGeometryMsg) & (SELF.cyls > 0) THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -76,7 +76,7 @@ TYPE
 
 (** Open a new virtual disk volume in specified file.  If size is specified, a new file of the specified number of blocks is generated.  Afterwards the virtual disk device will be visible with Partitions.Show and can be used like any other device.  The file should preferably be on a boot volume, or otherwise Close must be called before rebooting, to ensure clean shutdown of the virtual device. *)
 PROCEDURE Open*;	(** name [size [cyls hds spt] ] ~ *)
-VAR name: ARRAY 64 OF CHAR; dev: Device; res: LONGINT;
+VAR name: ARRAY 64 OF CHAR; dev: Device; res: WORD;
 BEGIN
 	In.Open; In.Name(name);
 	IF In.Done THEN

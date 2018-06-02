@@ -134,7 +134,7 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 
 			PROCEDURE RegRead32(offset : LONGINT) : LONGINT;
 			VAR
-				res : LONGINT;
+				res : WORD;
 			BEGIN
 				Machine.Portin32(base + offset, res);
 				RETURN res
@@ -261,7 +261,7 @@ TYPE
 
 			PROCEDURE &Constr*(nambar, nabmbar, irq : LONGINT);
 			VAR
-				res : LONGINT;
+				res : WORD;
 				DMAInPhysAdr, DMAOutPhysAdr: LONGINT;
 				i : LONGINT;
 			BEGIN
@@ -642,7 +642,7 @@ TYPE
 			END NofWaveFormats;
 
 			PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution,
-				nofSubChannels, format : LONGINT; VAR res : LONGINT);
+				nofSubChannels, format : LONGINT; VAR res : WORD);
 			VAR
 				playChannel : PlayChannel;
 				sResolution : LONGINT;
@@ -724,7 +724,7 @@ TYPE
 			END AddPlayChannel;
 
 			PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution,
-				nofSubChannels, format : LONGINT; VAR res : LONGINT);
+				nofSubChannels, format : LONGINT; VAR res : WORD);
 			VAR
 				recChannel : RecChannel;
 				item : RecChannelList;

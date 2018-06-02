@@ -95,7 +95,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE UpdateModel(value : LONGINT);
-		VAR integer : Types.Integer; res : LONGINT; model : Models.Model;
+		VAR integer : Types.Integer; res : WORD; model : Models.Model;
 		BEGIN
 			model := modelI;
 			IF (model # NIL) THEN
@@ -105,7 +105,7 @@ TYPE
 		END UpdateModel;
 
 		PROCEDURE ModelChanged(sender, data : ANY);
-		VAR integer : Types.Integer; res : LONGINT;
+		VAR integer : Types.Integer; res : WORD;
 		BEGIN
 			Acquire;
 			modelI.GetGeneric(integer, res);

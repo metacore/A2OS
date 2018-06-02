@@ -257,7 +257,7 @@ BEGIN
 	PCT.InitDB(PCT.database);
 END Compile;
 
-PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 VAR i: LONGINT; ch: CHAR;
 BEGIN
 	FOR i := 0 TO len-1 DO

@@ -10,7 +10,7 @@ CONST
 PROCEDURE Run*;
 VAR enum: XMLObjects.Enumerator; p: ANY; e: XML.Element; value: XML.String;
 	autostart : XML.Element;
-	msg: ARRAY 128 OF CHAR; res: LONGINT;
+	msg: ARRAY 128 OF CHAR; res: WORD;
 BEGIN
 	autostart := Configuration.GetSection("Autostart");
 	IF autostart # NIL THEN

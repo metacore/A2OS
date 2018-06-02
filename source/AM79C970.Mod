@@ -156,7 +156,7 @@ TYPE
 
 		PROCEDURE &Init*(dev: LinkDevice; base, irq: LONGINT);
 		VAR
-			res: LONGINT;
+			res: WORD;
 			s: SET;
 			i,x: INTEGER;
 

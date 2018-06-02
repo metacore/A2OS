@@ -1059,7 +1059,7 @@ BEGIN
 END TestMsg;
 
 PROCEDURE TestLogin*;
-VAR user, password : ARRAY 128 OF CHAR; res : LONGINT;
+VAR user, password : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	user := "TestUser";
 	res := QueryLogin("Test login dialog", user, password);
@@ -1073,7 +1073,7 @@ BEGIN
 END TestLogin;
 
 PROCEDURE TestUserInfo*;
-VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY 128 OF CHAR; res : LONGINT;
+VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY 128 OF CHAR; res : WORD;
 BEGIN
 	res := QueryUserInfo("Test user info dialog", shortName, fullName, eMail, password, passwordConfirm);
 	IF res = ResOk THEN

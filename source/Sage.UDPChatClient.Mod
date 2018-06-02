@@ -97,7 +97,7 @@ TYPE
 	PROCEDURE Client_ACK (seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.ACK, seqNum, uin, sendBuf);
@@ -167,7 +167,7 @@ TYPE
 		uin: LONGINT; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.INFO_REQ, seqNum, uin, sendBuf);
@@ -242,7 +242,7 @@ TYPE
 	PROCEDURE Client_KeepAlive (VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		res: LONGINT;
+		res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.KEEP_ALIVE, seqNum, uin, sendBuf);

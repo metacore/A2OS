@@ -17,7 +17,7 @@ VAR
 
 
 	(* Find the IP address of the specified host. *)
-	PROCEDURE HostByName*( hostname: ARRAY OF CHAR;  VAR adr: IP.Adr;  VAR res: LONGINT );
+	PROCEDURE HostByName*( hostname: ARRAY OF CHAR;  VAR adr: IP.Adr;  VAR res: WORD );
 	VAR hostent: WSock32.PHostent; str: ARRAY 64 OF CHAR; addr: ADDRESS;
 	BEGIN
 		hostent := WSock32.gethostbyname(hostname);
@@ -46,7 +46,7 @@ VAR
 	END HostByName;
 
 (* Find the host name of the specified IP address. *)
-	PROCEDURE HostByNumber*( adr: IP.Adr;  VAR hostname: ARRAY OF CHAR;  VAR res: LONGINT );
+	PROCEDURE HostByNumber*( adr: IP.Adr;  VAR hostname: ARRAY OF CHAR;  VAR res: WORD );
 	VAR len: LONGINT;
 	BEGIN
 		COPY( "", hostname );

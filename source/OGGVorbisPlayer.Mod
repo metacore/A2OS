@@ -137,7 +137,7 @@ TYPE
 
 			(* get the next bit from the stream (lsb first) *)
 			PROCEDURE GetBit(): LONGINT;
-			VAR res: LONGINT;
+			VAR res: WORD;
 			BEGIN
 				IF (bsLive = 0) THEN
 					bsBuff := ORD(r.Get());
@@ -233,7 +233,7 @@ TYPE
 
 		(* get the next bit from the buffer (lsb first) *)
 		PROCEDURE GetBit(VAR buf: ARRAY OF CHAR): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			IF ((LEN(buf) # pos) & (len # pos) & (bsLive = 0)) THEN
 				bsBuff := ORD(buf[pos]);
@@ -2448,7 +2448,7 @@ TYPE
 
 		(* start the decoding proccess *)
 		PROCEDURE StartDecode(VAR soundOutput: SoundOutput): LONGINT;
-		VAR res: LONGINT;
+		VAR res: WORD;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@StartDecode()")
@@ -2705,7 +2705,7 @@ TYPE
 			RETURN Ok
 		END DecodeSetupHeader;
 
-		PROCEDURE DecodeDataPacket(res: LONGINT);
+		PROCEDURE DecodeDataPacket(res: WORD);
 		BEGIN
 			IF (Trace IN Debug) THEN OGGUtilities.String("@DecodeDataPacket()") END;
 			INC(frameCnt);
@@ -2952,7 +2952,7 @@ TYPE
 		END FloorCurveDecode;
 
 		(* calculate determining points of the window and return the amount of data to be returned *)
-		PROCEDURE WindowDecode(VAR res: LONGINT): LONGINT;
+		PROCEDURE WindowDecode(VAR res: WORD): LONGINT;
 		VAR modeNr, previousWindowFlag, nextWindowFlag, previousSize, currentSize: LONGINT;
 		BEGIN
 			IF (Trace IN Debug) THEN
@@ -3537,7 +3537,7 @@ InverseDBLookupReal[255] := 1;
 	END IsM3UPlaylist;
 
 	PROCEDURE GetURLFromM3U(VAR url: Strings.String);
-	VAR res: LONGINT;
+	VAR res: WORD;
 		rh : WebHTTP.RequestHeader;
 		h : WebHTTP.ResponseHeader;
 		con : TCP.Connection;

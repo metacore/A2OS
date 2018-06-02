@@ -92,7 +92,7 @@ END Get;
 PROCEDURE Head*(context : Commands.Context);
 VAR
 	h : WebHTTP.ResponseHeader;
-	res : LONGINT;
+	res : WORD;
 	url : ARRAY 256 OF CHAR;
 	con : TCP.Connection;
 BEGIN
@@ -188,7 +188,7 @@ VAR
 	h: WebHTTP.ResponseHeader;
 	in: Streams.Reader;
 	con: TCP.Connection;
-	res: LONGINT;
+	res: WORD;
 BEGIN
 	IF ~context.arg.GetString(url) THEN RETURN END;
 	

@@ -76,7 +76,7 @@ TYPE
 		mask0, val0, mask1, val1, lastkeys: SET; (* protocol parameters *)
 
 		errors : LONGINT;
-		res : LONGINT;
+		res : WORD;
 
 		port : Serials.Port;
 		m : Inputs.MouseMsg; keys: SET;
@@ -85,7 +85,7 @@ TYPE
 
 		(* Read a mouse event *)
 		PROCEDURE GetMouseEvent(VAR keys: SET;  VAR dx, dy: LONGINT): LONGINT;
-		VAR ch : CHAR; b : SET; res : LONGINT;
+		VAR ch : CHAR; b : SET; res : WORD;
 		BEGIN
 			b := {};
 
@@ -248,7 +248,7 @@ VAR
 
 (* Set mouse speed *)
 PROCEDURE SetSpeed(port : Serials.Port; mouseType, oldBPS, newBPS: LONGINT);
-VAR word, stop, par : INTEGER; c : CHAR;  res : LONGINT;
+VAR word, stop, par : INTEGER; c : CHAR;  res : WORD;
 BEGIN
 	ASSERT(port # NIL);
 	port.Close();
@@ -413,7 +413,7 @@ BEGIN {EXCLUSIVE}
 END Wait;
 
 PROCEDURE LoadSerialPortDriver;
-VAR msg : ARRAY 64 OF CHAR; res : LONGINT;
+VAR msg : ARRAY 64 OF CHAR; res : WORD;
 BEGIN
 	KernelLog.String("MouseSerial: Loading serial port driver..."); KernelLog.Ln;
 	Commands.Call("V24.Install", {Commands.Wait}, res, msg);

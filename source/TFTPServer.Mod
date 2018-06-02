@@ -32,7 +32,7 @@ TYPE
 		VAR socket: UDP.Socket;
 			fip: IP.Adr;
 			lport, fport: LONGINT;
-			res: LONGINT;
+			res: WORD;
 			dead: BOOLEAN;
 			buf: ARRAY BlockSize + 4 OF CHAR;
 			timer: Kernel.Timer;
@@ -81,7 +81,7 @@ TYPE
 		END ExtractString;
 
 		(* SendAck - sends an ack packet *)
-		PROCEDURE SendAck(blockNr: LONGINT; VAR res: LONGINT);
+		PROCEDURE SendAck(blockNr: LONGINT; VAR res: WORD);
 		VAR ackHdr: ARRAY 4 OF CHAR; retries: LONGINT;
 		BEGIN
 			Put2(ackHdr, 0, ACK); Put2(ackHdr, 2, blockNr);
@@ -92,7 +92,7 @@ TYPE
 		END SendAck;
 
 		(* SendError - sends an error packet *)
-		PROCEDURE SendError(errNo: INTEGER; s: ErrorMsg; VAR res: LONGINT);
+		PROCEDURE SendError(errNo: INTEGER; s: ErrorMsg; VAR res: WORD);
 		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: LONGINT;
 		BEGIN
 			Put2(errHdr, 0, ERROR); Put2(errHdr, 2, errNo);
@@ -126,7 +126,7 @@ TYPE
 			r: Files.Rider;
 
 		(* Init - constructor *)
-		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: LONGINT);
+		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: WORD);
 		VAR retries: LONGINT;
 		BEGIN SELF.fip := fip; SELF.fport := fport;
 			file := Files.Old(filename);
@@ -199,7 +199,7 @@ TYPE
 			r: Files.Rider;
 
 		(* Init - constructor *)
-		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: LONGINT);
+		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: WORD);
 		VAR retries: LONGINT;
 		BEGIN
 			SELF.fip := fip; SELF.fport := fport; res := 0;
@@ -298,7 +298,7 @@ TYPE
 			tftprrq: TFTPRRQ;
 			tftpwrq: TFTPWRQ;
 
-		PROCEDURE &Init*(port: LONGINT; VAR res: LONGINT);
+		PROCEDURE &Init*(port: LONGINT; VAR res: WORD);
 		BEGIN NEW(socket, port, res); lport := port
 		END Init;
 
@@ -378,7 +378,7 @@ VAR
 	generator: Random.Generator;
 
 PROCEDURE Start*;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF (tftpserver = NIL) THEN
 		KernelLog.Enter; KernelLog.String("Starting TFTP Server..."); KernelLog.Exit;

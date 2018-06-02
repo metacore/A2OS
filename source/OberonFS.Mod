@@ -589,7 +589,7 @@ TYPE
 			END
 		END Delete0;
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT);
+		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR adr: DiskAdr; oldbuf, newbuf: FileName;  head: FileHeader;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
@@ -619,7 +619,7 @@ TYPE
 		END Enumerate0;
 
 		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
-			VAR res: LONGINT; namebuf: FileName; header: DiskAdr;
+			VAR res: WORD; namebuf: FileName; header: DiskAdr;
 		BEGIN {EXCLUSIVE}
 			header := 0;
 			Check(name, namebuf, res);
@@ -811,7 +811,7 @@ TYPE
 			Files.JoinName(fs.prefix, SELF.name, name)
 		END GetName;
 
-		PROCEDURE Register0*(VAR res: LONGINT);
+		PROCEDURE Register0*(VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			Unbuffer(SELF);
 			IF ~registered & (name # "") THEN
@@ -952,7 +952,7 @@ END enumerate;
 
 (* Check a file name. *)
 
-PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT);
+PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
 	VAR i: LONGINT; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;

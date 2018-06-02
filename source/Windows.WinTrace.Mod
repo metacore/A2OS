@@ -9,7 +9,7 @@ VAR
 	mode: LONGINT; (* none, console or file *)
 
 (* Sender to be used with Stream.Writer *)
-PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 VAR b: Kernel32.BOOL;
 BEGIN
 	IF mode # none THEN
@@ -19,7 +19,7 @@ BEGIN
 END Send;
 
 (* Sender to be used with Stream.Writer *)
-PROCEDURE SendError* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+PROCEDURE SendError* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 VAR b: Kernel32.BOOL;
 BEGIN
 	IF mode # none THEN
@@ -50,7 +50,7 @@ BEGIN
 END Init;
 
 PROCEDURE Close*;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF mode = console THEN
 		Kernel32.CloseHandle(hout);
@@ -63,7 +63,7 @@ BEGIN
 END Close;
 
 PROCEDURE OpenConsole*;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN
 	IF mode = console THEN RETURN 
 	ELSIF mode = file THEN Close

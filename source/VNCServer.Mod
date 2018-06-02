@@ -528,13 +528,13 @@ TYPE
 
 	(** Wait for new TCP connections, start a VNC agent as soon as needed *)
 	Server* = OBJECT
-	VAR res: LONGINT; service, client: TCP.Connection; root : Agent; agent : VNCAgent;
+	VAR res: WORD; service, client: TCP.Connection; root : Agent; agent : VNCAgent;
 		vncInfo : VNCInfo;
 		nofAgents : LONGINT;
 		stopped : BOOLEAN;
 		init : VNCService;
 
-		PROCEDURE &Open*(port: LONGINT; vncInfo : VNCInfo; init : VNCService; VAR res: LONGINT);
+		PROCEDURE &Open*(port: LONGINT; vncInfo : VNCInfo; init : VNCService; VAR res: WORD);
 		BEGIN
 			stopped := FALSE; SELF.vncInfo := vncInfo; SELF.init := init;
 			NEW(service); service.Open(port, IP.NilAdr, TCP.NilPort, res);
@@ -787,7 +787,7 @@ END SendHextile;
 PROCEDURE OpenServer*(port : LONGINT; img : Raster.Image; name, password : ARRAY OF CHAR; ml : VNCMouseListener;
 										kl : VNCKeyboardListener; cl : VNCClipboardListener; ncal : VNCNofClientsActiveListener) : Server;
 VAR server : Server;
-	 vncInfo : VNCInfo; res : LONGINT;
+	 vncInfo : VNCInfo; res : WORD;
 BEGIN
 	NEW(vncInfo);
 	COPY(password, vncInfo.password);
@@ -802,7 +802,7 @@ BEGIN
 END OpenServer;
 
 PROCEDURE OpenService*(port : LONGINT; init : VNCService) : Server;
-VAR server : Server; res : LONGINT;
+VAR server : Server; res : WORD;
 BEGIN
 	NEW(server, port, NIL, init, res);
 	IF res # 0 THEN server := NIL END;

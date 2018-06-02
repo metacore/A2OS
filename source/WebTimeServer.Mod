@@ -25,7 +25,7 @@ VAR
 	time: TCPServices.Service;
 
 PROCEDURE Open*;
-VAR res : LONGINT;
+VAR res : WORD;
 BEGIN
 	NEW(time, TimePort, NewTimeAgent, res);
 END Open;

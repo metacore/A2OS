@@ -60,7 +60,7 @@ TYPE
 			NnofReads*, NnofWrites*, NnofOthers*, (** operation count *)
 			NnofErrors* : HUGEINT; (** read/write errors *)
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			res := Unsupported
 		END Transfer;
@@ -70,14 +70,14 @@ TYPE
 			res := Unsupported
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Message;  VAR res: LONGINT);
+		PROCEDURE Handle*(VAR msg: Message;  VAR res: WORD);
 		BEGIN
 			res := Unsupported
 		END Handle;
 
 		(** Open the device and increment its open count if successful. If the device is opened for the first time, lock it and update its partition table. *)
 
-		PROCEDURE Open*(VAR res: LONGINT);
+		PROCEDURE Open*(VAR res: WORD);
 		VAR lockMsg: LockMsg; unlockMsg: UnlockMsg; ignore: LONGINT;
 		BEGIN
 			res := Ok;
@@ -96,7 +96,7 @@ TYPE
 
 		(** Close the device and decrement its open count. Unlock it if the open count has reached 0. *)
 
-		PROCEDURE Close*(VAR res: LONGINT);
+		PROCEDURE Close*(VAR res: WORD);
 		VAR unlockMsg: UnlockMsg;
 		BEGIN
 			res := Ok; ASSERT(openCount > 0);
@@ -254,7 +254,7 @@ END ReadLogical;
 partition spanning the entire device, with type = 256. If the device has been opened before, do nothing and
 return DeviceInUse, otherwise return Ok. On any other error dev.table is set NIL. *)
 
-PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: LONGINT);
+PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: WORD);
 VAR p, t: PartitionTable; i, pn, tn, size: LONGINT; buf: DiskBlock; valid: BOOLEAN;
 BEGIN
 	IF dev.openCount = 0 THEN

@@ -588,7 +588,7 @@ TYPE
 		END GetTableGeometry;
 
 		(* Get drive geometry and adjust it. *)
-		PROCEDURE GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: LONGINT);
+		PROCEDURE GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: WORD);
 		VAR dev : AosDisks.Device; thds, tspt, dsize: LONGINT; org: AosDisks.GetGeometryMsg;
 		BEGIN
 			dev := disk.device;
@@ -1215,7 +1215,7 @@ TYPE
 
 		(* Returns TRUE if operation trapped *)
 		PROCEDURE SafelyDoOperation() : BOOLEAN;
-		VAR trap, opened : BOOLEAN; res : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR trap, opened : BOOLEAN; res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			trap := FALSE; opened := FALSE;
 			IF (disk.device # NIL) THEN
@@ -1578,7 +1578,7 @@ TYPE
 		END SetParameters;
 
 		PROCEDURE ValidParameters*() : BOOLEAN;
-		VAR res : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (block = -1) & (numblocks = -1) THEN (* optional parameters block & numblocks not set; whole partition *)
 				block := 0;
@@ -1724,7 +1724,7 @@ TYPE
 			context : Commands.Context;
 			arg : Streams.StringReader; errors : Streams.StringWriter;
 			msg: ARRAY 64 OF CHAR;
-			res : LONGINT;
+			res : WORD;
 		BEGIN
 			par := "";
 			Strings.Append(par, prefix); Strings.Append(par, " ");
@@ -1928,7 +1928,7 @@ TYPE
 		END DoOperation;
 
 		(* Initialize the Aos file system in a partition. See AosFiles.Volume.Init *)
-		PROCEDURE InitAosFS(fsres, flag: LONGINT; VAR res: LONGINT);
+		PROCEDURE InitAosFS(fsres, flag: LONGINT; VAR res: WORD);
 		VAR fssize, i, j, ofs, size, x, fsofs: LONGINT; b: ARRAY BS OF CHAR; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ofs := dev.table[partition].start; size := dev.table[partition].size;
@@ -1973,7 +1973,7 @@ TYPE
 		END InitAosFS;
 
 		(* Initialize the Native file system in a partition. *)
-		PROCEDURE InitNativeFS(fsres, flag: LONGINT; VAR res: LONGINT);
+		PROCEDURE InitNativeFS(fsres, flag: LONGINT; VAR res: WORD);
 		VAR ofs, size, fssize, fsofs, startfs, i: LONGINT; b: ARRAY N2KSS*2 OF CHAR; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ofs := dev.table[partition].start; size := dev.table[partition].size;
@@ -2013,7 +2013,7 @@ TYPE
 		END InitNativeFS;
 
 		(* Write the OBL boot loader and an empty config table to disk. *)
-		PROCEDURE InitOBL(flag: LONGINT; VAR res: LONGINT);
+		PROCEDURE InitOBL(flag: LONGINT; VAR res: WORD);
 		VAR
 			buf: ARRAY 10*BS OF CHAR; i, tsize, rsize, lsize, len : LONGINT;
 			f: Files.File; r: Files.Reader;
@@ -2223,7 +2223,7 @@ TYPE
 		END DoOperation;
 
 		(* Overwrite the existing boot loader with the new one, leaving critical data untouched. *)
-		PROCEDURE UpdateOBL(f: Files.File; VAR res: LONGINT);
+		PROCEDURE UpdateOBL(f: Files.File; VAR res: WORD);
 		CONST MaxSize = MaxBootLoaderSize*BS;
 		VAR
 			b, bnew: ARRAY MaxSize OF CHAR; i, tsize, rsize, lsize, len: LONGINT;
@@ -2581,7 +2581,7 @@ TYPE
 			RETURN Strings.NewString(string);
 		END GetAsStringInternal;
 
-		PROCEDURE LoadFromStream*(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE LoadFromStream*(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			ASSERT(r # NIL);
 			entries := NIL; res := Ok; msg := "";
@@ -2592,7 +2592,7 @@ TYPE
 		END LoadFromStream;
 
 		(** Load configuration data from file *)
-		PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 		VAR file : Files.File; r: Files.Reader;
 		BEGIN {EXCLUSIVE}
 			res := Ok; entries := NIL;
@@ -2613,7 +2613,7 @@ TYPE
 		END LoadFromFile;
 
 		(** Store configuration data to file *)
-		PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : LONGINT);
+		PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 		VAR f : Files.File; w : Files.Writer; string : Strings.String;
 		BEGIN {EXCLUSIVE}
 			res := Ok;
@@ -2812,7 +2812,7 @@ TYPE
 		hex : ARRAY 32 OF CHAR;
 
 		(* Read the config table from the specified partition. *)
-		PROCEDURE GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT);
+		PROCEDURE GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD);
 		VAR tsize, reserved, fsOfs: LONGINT;
 		BEGIN {EXCLUSIVE}
 			table := NIL; GetVars(dev, part, tsize, reserved, fsOfs, res);
@@ -2825,7 +2825,7 @@ TYPE
 		END GetTable;
 
 		(* Overwrite the config table on the specified partition. *)
-		PROCEDURE PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT);
+		PROCEDURE PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD);
 		VAR tsize, reserved, fsOfs: LONGINT;
 		BEGIN {EXCLUSIVE}
 			GetVars(dev, part, tsize, reserved, fsOfs, res);
@@ -3034,7 +3034,7 @@ TYPE
 		(* Change type of partition from oldtype to newtype *)
 		PROCEDURE DoOperation*;
 		VAR
-			b: ARRAY BS OF CHAR; e: LONGINT; res : LONGINT; temp: ARRAY 256 OF CHAR;
+			b: ARRAY BS OF CHAR; e: LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT(disk.table[partition].type = oldtype);
 			ASSERT(disk.device.blockSize = BS);
@@ -3250,7 +3250,7 @@ TYPE
 		END CreateLogical;
 
 		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : LONGINT) : BOOLEAN;
-		VAR res : LONGINT; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
+		VAR res : WORD; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			result := FALSE;
 			disk.device.Transfer(AosDisks.Read, ptblock, 1, epbr, 0, res);
@@ -3451,7 +3451,7 @@ TYPE
 		END DeleteLogical;
 
 		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : LONGINT) : BOOLEAN;
-		VAR res : LONGINT; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
+		VAR res : WORD; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			result := FALSE;
 			disk.device.Transfer(AosDisks.Read, ptblock, 1, epbr, 0, res);
@@ -3686,7 +3686,7 @@ END DetectFS;
 
 (** Performs a read on the specified device to see whether a medium is present *)
 PROCEDURE DisketteInserted*(dev : AosDisks.Device) : BOOLEAN;
-VAR res : LONGINT; b : ARRAY BS OF CHAR;
+VAR res : WORD; b : ARRAY BS OF CHAR;
 BEGIN
 	IF (dev = NIL) OR (dev.blockSize # BS) THEN RETURN FALSE END;
 	dev.Transfer(AosDisks.Read, 0, 1, b, 0, res);
@@ -3729,7 +3729,7 @@ BEGIN
 	sum := (-sum) MOD 100H
 END WriteFile;
 
-PROCEDURE CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: LONGINT);
+PROCEDURE CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD);
 CONST Size = 32;
 VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num, i: LONGINT;
 BEGIN
@@ -3755,7 +3755,7 @@ BEGIN
 END CheckFile;
 
 (* Write a boot file on the specified partition. *)
-PROCEDURE InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT);
+PROCEDURE InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
 CONST Frag = 7; LoadAdr = 1000H; StartAdr = 1000H; Frags = 1;
 VAR config: Configuration; i, tsize, reserved, fsOfs, sum, start: LONGINT; data: ARRAY 12+8*Frags OF CHAR;
 BEGIN
@@ -3788,7 +3788,7 @@ BEGIN
 END InitBootFile;
 
 PROCEDURE Eject*(dev : AosDisks.Device; VAR result: ARRAY OF CHAR);
-VAR msg: AosDisks.EjectMsg; res : LONGINT; temp: ARRAY 256 OF CHAR;
+VAR msg: AosDisks.EjectMsg; res : WORD; temp: ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT(dev#NIL);
 	COPY (dev.name, result);
@@ -3801,7 +3801,7 @@ BEGIN
 END Eject;
 
 PROCEDURE Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR);
-VAR msg: AosDisks.SyncMsg; res: LONGINT; temp: ARRAY 256 OF CHAR;
+VAR msg: AosDisks.SyncMsg; res: WORD; temp: ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT(dev # NIL);
 	COPY(dev.name, result);
@@ -4080,7 +4080,7 @@ BEGIN
 	END;
 END WriteType;
 
-PROCEDURE GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: LONGINT; VAR string: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: WORD; VAR string: ARRAY OF CHAR);
 VAR temp : ARRAY 32 OF CHAR;
 BEGIN
 	IF res = AosDisks.MediaChanged THEN string := " (res: media changed)";

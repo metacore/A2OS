@@ -165,7 +165,7 @@ TYPE
 	(** A window may provide information about currently opened documents. Additionally, it can provide a visual component that controls it. *)
 	WindowInfo* = RECORD
 		openDocuments* : ARRAY 16 OF DocumentInfo;
-		handleDocumentInfo* : PROCEDURE {DELEGATE} (CONST info : DocumentInfo; new : BOOLEAN; VAR res : LONGINT);
+		handleDocumentInfo* : PROCEDURE {DELEGATE} (CONST info : DocumentInfo; new : BOOLEAN; VAR res : WORD);
 		vc* : VisualComponentInfo;
 	END;
 

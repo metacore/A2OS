@@ -1304,7 +1304,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo
 			format is the wave format
 		*)
-		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : LONGINT);
+		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
 		VAR
 			playSlotPair: LONGINT;
 			playChannel: PlayerChannel;
@@ -1355,7 +1355,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo
 			format is the wave format
 		*)
-		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : LONGINT);
+		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
 		BEGIN {EXCLUSIVE}
 			IF Logging THEN
 				KernelLog.String("YMF754 - Opening RecordChannel");

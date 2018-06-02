@@ -48,7 +48,7 @@ TYPE
 			"name" must be a unique name for this interface (tested in "AddInterface").
 			"dev" must be a Network.LinkDevice that can be used in other interfaces => multiple IP addresses on the
 			same interface. *)
-		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: LONGINT);
+		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: WORD);
 		VAR
 			i: LONGINT;
 
@@ -338,7 +338,7 @@ TYPE
 			If "gatewayAdr" is "NilAdr", the subnet is considered to have no gateway, else it must be in the same
 			subnet as the "localAdr".
 			"domain" can be an empty string. It is normally used by a DNS implementation. It is not used in IP directly. *)
-		PROCEDURE SetAdrs*(localAdr, maskAdr, gatewayAdr: IP.Adr; VAR res: LONGINT);
+		PROCEDURE SetAdrs*(localAdr, maskAdr, gatewayAdr: IP.Adr; VAR res: WORD);
 		VAR
 			maskSet: SET;
 

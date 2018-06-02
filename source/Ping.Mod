@@ -77,7 +77,7 @@ BEGIN {EXCLUSIVE}
 END Ping;
 
 PROCEDURE TimeoutHandler;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		KernelLog.String("Ping: Timeout! No reply received within "); KernelLog.Int(timeout, 0);
@@ -91,7 +91,7 @@ BEGIN {EXCLUSIVE}
 END TimeoutHandler;
 
 PROCEDURE GetReply(int: IP.Interface; type, code: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		KernelLog.String("Ping: Successful! Reply received within "); KernelLog.Int(Kernel.Elapsed(ms), 0);
@@ -107,7 +107,7 @@ BEGIN {EXCLUSIVE}
 END GetReply;
 
 PROCEDURE Cleanup;
-VAR res: LONGINT;
+VAR res: WORD;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		running := FALSE;

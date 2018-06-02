@@ -535,8 +535,8 @@ TYPE
 			END
 		END Read;
 
-		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR pos: HUGEINT; n: LONGINT;
+		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGWORD );
+		VAR pos: HUGEINT; n: LONGWORD;
 		BEGIN {EXCLUSIVE}
 			ASSERT( (ofs + len) <= LEN( x ) );
 			pos := r.apos * BufferSize + r.bpos;
@@ -567,7 +567,7 @@ TYPE
 			buffer.dirty := TRUE;
 		END Write;
 
-		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
+		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGWORD );
 		VAR pos: HUGEINT; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
@@ -575,7 +575,7 @@ TYPE
 			WHILE len > 0 DO
 				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
 				n := BufferSize - r.bpos;
-				IF n > len THEN n := len END;
+				IF n > len THEN n := LONGINT( len ) END; (*! TODO *)
 				SYSTEM.MOVE( ADDRESSOF( x[ofs] ), ADDRESSOF( buffer.data[r.bpos] ), n );
 				IF (r.bpos + n) > buffer.len THEN buffer.len := r.bpos + n END;
 				INC( pos, n );  INC( ofs, n );  DEC( len, n );  r.apos := pos DIV BufferSize;  r.bpos := LONGINT( pos MOD BufferSize );

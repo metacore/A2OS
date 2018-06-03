@@ -83,18 +83,18 @@ TYPE
 		waitingOn-: ProtectedObject;	(** obj this process is waiting on (for lock or condition) *)
 		id-: LONGINT;	(** unique process ID for tracing *)
 		flags*: SET;	(** process flags *)
-		priority-, staticPriority*: LONGINT;	(** process dynamic priority (can change during priority inversion handling) and static priority *)	(* exported for AosExceptions *)
+		priority-, staticPriority*: WORD;	(** process dynamic priority (can change during priority inversion handling) and static priority *)	(* exported for AosExceptions *)
 		stack*: Machine.Stack;	(** user-level stack of process *)
 		restartPC-: ADDRESS;	(** entry point of body, for SAFE exception recovery *)
 		restartSP-: ADDRESS;	(** stack level at start of body, for SAFE exception recovery *)
 		exp*: Machine.ExceptionState;
 		oldReturnPC: ADDRESS;
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
-		prioRequests : ARRAY NumPriorities OF LONGINT; (* priorities of processes that wait for resources locked by this process, only the highest priority per resource is stored *)
+		prioRequests : ARRAY NumPriorities OF WORD; (* priorities of processes that wait for resources locked by this process, only the highest priority per resource is stored *)
 		context: ANY;
 
 		(* set priority of process: Machine.Objects lock is taken *)
-		PROCEDURE SetPriority(p : LONGINT);
+		PROCEDURE SetPriority(p : WORD);
 		BEGIN
 			DEC(prioRequests[staticPriority]);
 			staticPriority := p;
@@ -364,8 +364,8 @@ TYPE
 
 VAR
 	ready: ReadyProcesses;	(* ready queue represented as an object that contains the queues *)
-	maxReady: LONGINT;	(* for all i : MinPriority <= maxReady < i < NumPriorities : Empty(ready.q[i]) *)
-	lowestAllowedPriority: LONGINT;  (* denotes the minimal user or realtime priority greater than the idle priority that can be
+	maxReady: WORD;	(* for all i : MinPriority <= maxReady < i < NumPriorities : Empty(ready.q[i]) *)
+	lowestAllowedPriority: WORD;  (* denotes the minimal user or realtime priority greater than the idle priority that can be
 	                                                            scheduled depending on the GC status, minPriority = Low if GC is not running,
 	                                                            minPrioriy = GCPriority otherwise *)
 	running-{UNTRACED}: ARRAY Machine.MaxCPU OF Process;	(** processes currently running, exported for Traps, not traced by the GC since it may change during collection *)
@@ -415,11 +415,11 @@ VAR
 PROCEDURE GetMaxPrio(VAR queue: ProcessQueue; VAR new: Process);
 VAR
 	t: Heaps.ProcessLink;
-	maxPriority : LONGINT;
+	maxPriority : WORD;
 BEGIN
 	ASSERT(new = NIL);
 	t := queue.head;
-	maxPriority := MIN(LONGINT);
+	maxPriority := MIN(WORD);
 	WHILE (t # NIL) DO
 		IF (t(Process).priority > maxPriority) THEN
 			new := t(Process); maxPriority := t(Process).priority;
@@ -476,8 +476,8 @@ BEGIN (* {t # NIL & t.next = NIL} *)
 END Put;
 
 (* Select a process of at least the specified priority to run next on current processor (returns NIL if none). Caller must hold ready lock. *)
-PROCEDURE Select(VAR new: Process; priority: LONGINT);
-VAR thresholdPrio: LONGINT;
+PROCEDURE Select(VAR new: Process; priority: WORD);
+VAR thresholdPrio: WORD;
 BEGIN
 	IF Heaps.gcStatus.GetgcOngoing() THEN
 		thresholdPrio := GCPriority
@@ -739,7 +739,7 @@ BEGIN
 END GetProcessID;
 
 (** Set the current process' priority. *)
-PROCEDURE SetPriority*(priority: LONGINT);
+PROCEDURE SetPriority*(priority: WORD);
 VAR id: LONGINT;
 BEGIN
 	ASSERT((priority >= Low) & (priority <= Realtime)); (* priority in bounds *)
@@ -1048,7 +1048,7 @@ BEGIN
 END HaltUnbreakable;
 
 (* Set the return PC which is saved in the process and set it to -1 *)
-PROCEDURE HaltAltPC(haltCode: LONGINT);
+PROCEDURE HaltAltPC(haltCode: WORD);
 VAR bp: ADDRESS; p: Process;
 BEGIN
 	p := running[Machine.ID ()];
@@ -1222,7 +1222,7 @@ BEGIN
 END NewProcess;
 
 (* Create the process associated with an active object (kernel call). *)
-PROCEDURE CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
+PROCEDURE CreateProcess*(body: Body; priority: WORD; flags: SET; obj: ProtectedObject);
 VAR t: Process; type: ADDRESS; heapBlock {UNTRACED}: Heaps.HeapBlock; i: LONGINT;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Ncreate) END;
@@ -1429,8 +1429,8 @@ BEGIN
 END FindCondition;
 
 (* Find highest priority in array of priority counts *)
-PROCEDURE MaxPrio(CONST priorityCounts: ARRAY OF LONGINT): LONGINT;
-VAR i: LONGINT;
+PROCEDURE MaxPrio(CONST priorityCounts: ARRAY OF WORD): WORD;
+VAR i: SIZE;
 BEGIN
 	i := LEN(priorityCounts) - 1;
 	WHILE (i >= 0) & (priorityCounts[i] = 0) DO DEC(i) END;
@@ -1458,7 +1458,7 @@ END Unlock;
     Remark: hdr is an actually UNTRACED parameter. The GC, however, can handle this, see procedure Heaps.Mark, there is a check whether the
     pointer to the header part is valid. In case of hdr, the pointer ot the header part is NIL. *)
 PROCEDURE TransferLock(hdr: Heaps.ProtRecBlock; p: Process);
-VAR maxWaitingPrio: LONGINT;
+VAR maxWaitingPrio: WORD;
 BEGIN
 	p.waitingOn := NIL; hdr.lockedBy := p;
 	IF HandlePriorityInv THEN
@@ -1520,7 +1520,7 @@ END UnlockNoPriorityInv;
 
 (* Unlock a protected object in case priority inversion handling is enabled. Machine.Objects lock is used. *)
 PROCEDURE UnlockPriorityInv(obj: ProtectedObject);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; maxWaitingPrio: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; maxWaitingPrio: WORD;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nunlock) END;
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1639,7 +1639,7 @@ END AwaitNoPriorityInv;
 
 (* Await a condition in case priority inversion handling is enabled. Machine.Objects lock is used. *)
 PROCEDURE AwaitPriorityInv(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id, maxWaitingPrio, prevMaxWaitingPrio: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id, maxWaitingPrio, prevMaxWaitingPrio: WORD;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nawait) END;
 	IF 1 IN flags THEN (* compiler did not generate IF *)
@@ -1800,7 +1800,7 @@ END GCStatusFactory;
 
 PROCEDURE InitPrioRequest;
 VAR
-	i: LONGINT;
+	i: SIZE;
 BEGIN
 	FOR i := 0 TO LEN(init.prioRequests) - 1 DO init.prioRequests[i] := 0 END;
 END InitPrioRequest;

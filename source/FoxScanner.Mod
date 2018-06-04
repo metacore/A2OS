@@ -285,11 +285,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics;   (* error logging *)
 
 		ch-: CHAR;   (* look-ahead character *)
-		position-: Position;
-		(*
-		position-: LONGINT;   (* current position *)
-		line-: LONGINT;
-		*)
+		position-: Position;  (* current position *)
 
 		error-: BOOLEAN;   (* if error occured during scanning *)
 

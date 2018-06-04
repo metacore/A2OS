@@ -257,11 +257,13 @@ VAR
 		dest := src;
 	END SafePut;
 	
-
 	(* set data base pointer (GC protection) *)
-	PROCEDURE PutPtr(base: UnsafeArray; value: ANY);
+	PROCEDURE PutPtr(CONST base: UnsafeArray; value: ANY);
 	BEGIN
+		base.ptr := value;
+		(*
 		SafePut(base.ptr,value);
+		*)
 	END PutPtr;
 
 	PROCEDURE GetSize( base: UnsafeArray ): SIZE;
@@ -1486,19 +1488,6 @@ Sufficient (but not necessary) conditions:
 	END AllocateSameT;
 
 
-	PROCEDURE TempDescCopy( CONST src: UnsafeArrayT ): UnsafeArrayT;
-	VAR dest: UnsafeArrayT; adr: ADDRESS;dim: SIZE;
-	BEGIN
-		dim := GetDim(src);
-		dest := GetArrayDesc(dim);
-		adr := dest;
-		SYSTEM.MOVE( src, adr, dim * SIZEOF(LenInc) + MathLenOffset );
-		PutAdr( src, 0 );
-		PutPtr( src, NIL );  
-		PutFlags( src, {} );  
-		RETURN dest;
-	END TempDescCopy;
-
 	PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
 	VAR oldDest: ADDRESS;
 	BEGIN
@@ -1520,6 +1509,18 @@ Sufficient (but not necessary) conditions:
 		END; 
 	END Assign;
 
+	PROCEDURE TempDescCopy( CONST src: UnsafeArrayT ): UnsafeArrayT;
+	VAR dest: UnsafeArrayT; adr: ADDRESS;dim: SIZE;
+	BEGIN
+		dim := GetDim(src);
+		dest := GetArrayDesc(dim);
+		SYSTEM.MOVE( src, dest, dim * SIZEOF(LenInc) + MathLenOffset );
+		dest.adr := NIL;
+		SYSTEM.PUT(ADDRESS OF dest.ptr, NIL); (* no refcounting here ! *)
+		PutFlags( dest, {} );  
+		RETURN dest;
+	END TempDescCopy;
+
 	(* used when arrays are passed by value *)
 	PROCEDURE CopyArraySelf*( VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT;  elementsize: SIZE );
 	VAR p: UnsafeArrayT;
@@ -1530,7 +1531,7 @@ Sufficient (but not necessary) conditions:
 	END CopyArraySelf;
 
 	PROCEDURE CopyArray*( dest: UnsafeArray (* untraced! *);  CONST src: UnsafeArrayT; elementsize: SIZE );
-	VAR p: ANY; srcdim, destdim: SIZE;
+	VAR srcdim, destdim: SIZE;
 	BEGIN
 		ASSERT(dest # NIL); (* only possible by compiler error *)
 		IF GetDim( src ) # GetDim( dest ) THEN  (* not allowed but possible (tensor) *)
@@ -1557,7 +1558,6 @@ Sufficient (but not necessary) conditions:
 
 	PROCEDURE CopyTensor*( VAR dest: UnsafeArrayT;  CONST src: UnsafeArrayT;
 												 elementsize: SIZE );
-	VAR p: ANY;
 	BEGIN
 		(* Report("dest",dest); Report("src",src); *)
 		IF (src = NIL) THEN dest := NIL
@@ -1575,8 +1575,8 @@ Sufficient (but not necessary) conditions:
 
 		PROCEDURE CopyDescriptor;
 		BEGIN
+			dest.ptr := src.ptr;(* GC! Must do before MOVE (NIL <- src.ptr), then copy redundant *)
 			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(LenInc) *  GetDim( src ));
-			PutPtr(dest, GetPtr(src)); (* GC! *)
 		END CopyDescriptor;
 
 	BEGIN
@@ -9984,12 +9984,13 @@ TYPE
 *)
 
 
-	PROCEDURE DoReshape*( VAR dest: ADDRESS;  src: ADDRESS; CONST shape: ARRAY [ * ] OF SIZE );
-	VAR i, Size: SIZE;  ptr, data: ANY;  new: ADDRESS;
+	PROCEDURE DoReshape*( VAR dest: UnsafeArrayT;  CONST src: UnsafeArrayT; CONST shape: ARRAY [ * ] OF SIZE );
+	VAR i, Size: SIZE;
 
 		oldSize, newSize: SIZE;  oldDim, newDim: SIZE;
 
 		squeezingReshape: BOOLEAN;
+		new: UnsafeArrayT;
 
 		PROCEDURE CheckAlloc;
 		BEGIN
@@ -9997,10 +9998,10 @@ TYPE
 		END CheckAlloc;
 		
 
-		PROCEDURE NewDescriptor;
+		PROCEDURE NewDescriptor(): UnsafeArrayT;
 		BEGIN
 			CheckAlloc;
-			ptr := GetArrayDesc( newDim );  new := ptr;
+			RETURN GetArrayDesc(newDim); 
 		END NewDescriptor;
 
 		(* 	Added by Alexey
@@ -10070,11 +10071,11 @@ TYPE
 
 
 		(* Added by Alexey *)
-		PROCEDURE NewDescriptorForSameData;
-		VAR len, size, i, j: SIZE;
+		PROCEDURE NewDescriptorForSameData(CONST src: UnsafeArrayT): UnsafeArrayT;
+		VAR len, size, i, j: SIZE; new: UnsafeArrayT;
 		BEGIN
 			CheckAlloc();
-			ptr := GetArrayDesc( newDim );  new := ptr;
+			new:= GetArrayDesc( newDim );
 
 			IF ~squeezingReshape THEN
 				size := Size;
@@ -10102,22 +10103,22 @@ TYPE
 			PutSize( new, Size );
 		END NewDescriptorForSameData;
 
-		PROCEDURE NewData;
-		VAR len, size, i: SIZE;
+		PROCEDURE NewData(VAR dest: UnsafeArrayT);
+		VAR len, size, i: SIZE; data: ANY;
 		BEGIN
 			size := Size;
 			FOR i := newDim - 1 TO 0 BY -1 DO
-				len := shape[i];  PutInc( new, i, size );  PutLen( new, i, len );
+				len := shape[i];  PutInc( dest, i, size );  PutLen( dest, i, len );
 				size := size * len;
 			END;
 			TRACE(size);
 			SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
-			PutAdr( new, Align(data) );
-			PutPtr( new, data );  PutDim( new, newDim );
-			PutSize( new, Size );
+			PutAdr( dest, Align(data) );
+			PutPtr( dest, data );  PutDim( dest, newDim );
+			PutSize( dest, Size );
 		END NewData;
 
-		PROCEDURE CopyData;
+		PROCEDURE CopyData(CONST src: UnsafeArrayT; CONST dest: UnsafeArrayT);
 		VAR d, s: SIZE; dadr: ADDRESS;
 
 			PROCEDURE Loop( dim: SIZE;  sadr: ADDRESS );
@@ -10140,44 +10141,16 @@ TYPE
 				s := s * GetLen( src, d );  DEC( d );
 			END;
 			IF d = -1 THEN  (* special case: both continuous *)
-				SYSTEM.MOVE( GetAdr( src ), GetAdr( new ), s );
-			ELSE dadr := GetAdr( new );  Loop( 0, GetAdr( src ) );
+				SYSTEM.MOVE( GetAdr( src ), GetAdr( dest ), s );
+			ELSE dadr := GetAdr( dest );  Loop( 0, GetAdr( src ) );
 			END;
 		END CopyData;
 
-		PROCEDURE CopyDataBack;
-		VAR d, s: SIZE;  sadr: ADDRESS;
-
-			PROCEDURE Loop( dim: SIZE;  dadr: ADDRESS );
-			VAR inc, len, i: SIZE;
-			BEGIN
-				IF dim = d THEN
-					inc := GetIncr( dest, dim );  len := GetLen( dest, dim );
-					FOR i := 0 TO len - 1 DO
-						SYSTEM.MOVE( sadr, dadr, s );  INC( dadr, inc );  INC( sadr, s );
-					END;
-				ELSE
-					inc := GetIncr( dest, dim );  len := GetLen( dest, dim );  INC( dim );
-					FOR i := 0 TO len - 1 DO Loop( dim, dadr );  INC( dadr, inc );  END;
-				END;
-			END Loop;
-
-		BEGIN
-			s := Size;  ASSERT( GetSize( dest ) = s );  d := GetDim( dest ) - 1;
-			WHILE (d >= 0) & (GetIncr( dest, d ) = s) DO
-				s := s * GetLen( dest, d );  DEC( d );
-			END;
-			IF d = -1 THEN  (* special case: both continuous *)
-				SYSTEM.MOVE( GetAdr( new ), GetAdr( dest ), s );
-			ELSE sadr := GetAdr( new );  Loop( 0, GetAdr( dest ) );
-			END;
-		END CopyDataBack;
-
-		PROCEDURE CopyDescriptor( src, dest: ADDRESS );
+		PROCEDURE CopyDescriptor(CONST src: UnsafeArrayT; CONST dest: UnsafeArrayT);
 		BEGIN
 			ASSERT( GetDim( src ) = GetDim( dest ) );
-			SYSTEM.MOVE( src, dest, MathLenOffset + GetDim( src ) * 8 );
 			PutPtr(dest, GetPtr(src)); (* GC ! *)
+			SYSTEM.MOVE( src, dest, MathLenOffset + GetDim( src ) * 8 );
 		END CopyDescriptor;
 
 		PROCEDURE ShapeDiffers( ): BOOLEAN;
@@ -10217,47 +10190,34 @@ TYPE
 
 		IF dest = src THEN (* added by Alexey *)
 			IF ~(RangeFlag IN GetFlags(dest)) OR PreservesContiguity() OR SqueezingReshape() THEN
-				NewDescriptorForSameData;
-				dest := new;
+				dest := NewDescriptorForSameData(src);
 			ELSIF ((newDim = oldDim) & ~ShapeDiffers()) THEN
 				(* create a copy of the original descriptor *)
 				CheckAlloc();
-				ptr := GetArrayDesc(newDim); 
-				Heaps.CheckAssignment(ADDRESS OF dest, ptr);
-				dest := ptr; 
+				dest := GetArrayDesc(newDim); 
 				CopyDescriptor(src,dest);
 			ELSE
 				Err( "RESHAPE: given RANGE array can not be reshaped!" );
 			END;
 		ELSIF (dest = 0) THEN  (* is tensor for sure *)
-			NewDescriptor;  NewData;  CopyData;  dest := new;
+			dest := NewDescriptor();  NewData(dest);  CopyData(src, dest);
 		ELSIF (dest = temporary) THEN
-			NewDescriptorForSameData;
-			dest := new;
+			dest := NewDescriptorForSameData(src);
 		ELSIF TargetContinuous() THEN
-			NewDescriptor; new:=dest;  CopyData;
+			dest := NewDescriptor(); CopyData(src, dest);
 		(*todo: check if target continous memory of correct size, if so don't allocate memory*)
 		ELSIF (newDim # GetDim( dest )) THEN  (* must be tensor *)
 			IF ~(TensorFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				Err( "RESHAPE: new dimension only allowed for TENSOR" );
 			END;
-			NewDescriptor;  NewData;  CopyData;  
-			dest := new;
+			dest := NewDescriptor();  NewData(dest);  CopyData(src, dest);  
 		ELSIF ShapeDiffers() THEN  (* same dim but shape of destination does not match *)
 			IF RangeFlag IN GetFlags( dest ) THEN Err( "RESHAPE: new shape not allowed for RANGE" );  END;
-			(*
-			NewDescriptor;  *) 
-			new := dest;
-			NewData;  CopyData;  
-			new := NIL;
-			(*CopyDescriptor( new, dest );*)
+			NewData(dest);  CopyData(src, dest);  
 		ELSIF ~SameShape( src, dest ) THEN  (* shape for destination matches but that of src is different *)
-			NewDescriptor;  NewData;  CopyData;  CopyDataBack;
+			new := NewDescriptor();  NewData(new);  CopyData(src, new); CopyData(new, dest);
 		ELSE  (* same shape, just copy *)
 			CopyContent( src, dest, Size );  RETURN;
-		END;
-		IF dest = new THEN (* new block *)
-			Heaps.CheckAssignment(ADDRESSOF(dest),new);
 		END;
 
 	END DoReshape;
@@ -10281,8 +10241,7 @@ TYPE
 				Heaps.NewArr(data, tag, size DIV elementSize,1,FALSE);
 				dest.adr := data + ADDRESS(ArrDataArrayOffset);
 			END;
-			SafePut(dest.ptr, data);
-			(*dest.ptr := data;*)
+			PutPtr(dest, data);
 			PutSize( dest, elementSize );
 		END NewData;
 
@@ -10612,8 +10571,8 @@ TYPE
 	END InitOptimization;
 
 	(* functionality used for index designators of including a questiomark such as A[x,*,?,*,x] *)
-	PROCEDURE CopyDescriptor*(VAR destPtr: ANY; src: ADDRESS; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE);
-	VAR srcDim, destDim,i,len,incr: SIZE; dest: ADDRESS;
+	PROCEDURE CopyDescriptor*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE);
+	VAR srcDim, destDim,i,len,incr: SIZE;
 	BEGIN
 		IF src = 0 THEN
 			HALT(100);
@@ -10630,8 +10589,7 @@ TYPE
 			KernelLog.String("destDim "); KernelLog.Int(destDim,1); KernelLog.Ln;
 			*)
 
-			destPtr := GetArrayDesc(destDim); (* destination dimension included *)
-			dest := SYSTEM.VAL(ADDRESS,destPtr);
+			dest := GetArrayDesc(destDim); (* destination dimension included *)
 			(* SYSTEM.MOVE(src,dest,MathLenOffset); *)
 			PutAdr(dest,GetAdr(src));
 			PutPtr(dest,GetPtr(src));
@@ -10658,9 +10616,9 @@ TYPE
 		CONST src: ARRAY [?] OF basetype
 		CONST shape: ARRAY [*] OF LONGINT
 	*)
-	PROCEDURE Reshape*(CONST left: ARRAY [?]; CONST right: ARRAY [*] OF SIZE): ARRAY [?];
+	PROCEDURE Reshape*(CONST left: ARRAY [?]; CONST right: ARRAY [*] OF SIZE): ARRAY {UNSAFE} [?];
 	BEGIN
-		DoReshape(SYSTEM.VAL(ADDRESS,RESULT), SYSTEM.VAL(ADDRESS,left), right);
+		DoReshape(RESULT, left, right);
 		RETURN RESULT
 	END Reshape;
 

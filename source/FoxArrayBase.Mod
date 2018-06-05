@@ -10101,6 +10101,8 @@ TYPE
 			PutAdr( new, GetAdr(src) );
 			PutPtr( new, GetPtr(src) );  PutDim( new, newDim );
 			PutSize( new, Size );
+			
+			RETURN new;
 		END NewDescriptorForSameData;
 
 		PROCEDURE NewData(VAR dest: UnsafeArrayT);

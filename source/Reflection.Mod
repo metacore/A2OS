@@ -513,7 +513,7 @@ CONST
 		END;
 
 		UnsafeArray= POINTER {UNSAFE} TO RECORD
-			ptr: ANY;
+			ptr {UNTRACED}: ANY;
 			adr: ADDRESS;
 			flags: SET;
 			dim: SIZE;

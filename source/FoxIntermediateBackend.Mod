@@ -3024,7 +3024,7 @@ TYPE
 			END;
 			parameter := scope.ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
 			WHILE parameter # NIL DO
-				IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) THEN
+				IF parameter.NeedsTrace() & ~IsVariableParameter(parameter)  & (parameter.kind # SyntaxTree.ConstParameter) THEN
 					Reset (parameter);
 				END;
 				parameter := parameter.nextParameter;
@@ -13424,7 +13424,7 @@ TYPE
 			ELSIF scope IS SyntaxTree.ProcedureScope THEN
 					parameter := scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
 					WHILE parameter # NIL DO
-						IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) THEN
+						IF parameter.NeedsTrace() & ~IsVariableParameter(parameter)  & (parameter.kind # SyntaxTree.ConstParameter) THEN (* immutable or variable parameters do not need tracing  *)
 							Pointers(ToMemoryUnits(module.system,parameter.offsetInBits), NIL,  source, parameter.type, numberPointers);
 						END;
 						parameter := parameter.nextParameter;
@@ -14255,7 +14255,7 @@ TYPE
 		END;
 		parameter := scope.ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
 		WHILE parameter # NIL DO
-			IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) THEN
+			IF parameter.NeedsTrace() & ~IsVariableParameter(parameter)  & (parameter.kind # SyntaxTree.ConstParameter) THEN
 				RETURN TRUE;
 			END;
 			parameter := parameter.nextParameter;

@@ -10283,8 +10283,8 @@ TYPE
 		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
 	END AllocateArrayA;
 
-	PROCEDURE AllocateTensorX*( VAR destA: ARRAY [?]; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
-	VAR descr, data: ANY;  same: BOOLEAN;  i: SIZE;  dim: SIZE; dest: ADDRESS;
+	PROCEDURE AllocateTensorX*( VAR dest: UnsafeArrayT; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
+	VAR data: ANY;  same: BOOLEAN;  i: SIZE;  dim: SIZE;
 
 		PROCEDURE NewData;
 		VAR len, size: SIZE; i: SIZE;
@@ -10303,7 +10303,6 @@ TYPE
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
 				PutAdr( dest, data+ ADDRESS(ArrDataArrayOffset) );			
-
 			END;
 			PutPtr( dest, data );  PutSize( dest, Size );
 		END NewData;
@@ -10314,15 +10313,14 @@ TYPE
 
 	BEGIN
 		dim := LEN( a,0 );
-		dest := SYSTEM.VAL(ADDRESS,destA);
 
 		(*! check range flag! *)
 
-		IF (dest = 0) OR (dim # GetDim( dest )) THEN
-			IF dest # 0 THEN
+		IF (dest = NIL) OR (dim # GetDim( dest )) THEN
+			IF dest # NIL THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
 			END;
-			descr := GetArrayDesc( LEN( a,0 ) );  dest := descr;
+			dest := GetArrayDesc( LEN( a,0 ) );
 			NewData;
 		ELSE
 			i := 0;
@@ -10336,10 +10334,6 @@ TYPE
 			ELSE ClearData
 			END;
 		END;
-		IF dest = descr THEN (* new block *)
-			Heaps.CheckAssignment(ADDRESSOF(destA),dest);
-		END;
-		SYSTEM.PUT(ADDRESSOF(destA),dest);
 	END AllocateTensorX;
 
 	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );

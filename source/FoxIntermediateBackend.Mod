@@ -14010,10 +14010,7 @@ TYPE
 			noRuntimeChecks := options.GetFlag("noRuntimeChecks");
 			noAsserts := options.GetFlag("noAsserts");
 			cooperative := options.GetFlag("cooperative");
-			IF options.GetFlag("newObjectFile") THEN newObjectFile := TRUE; 
-				IF cooperative THEN 
-					SetBuiltinsModuleName("CPU") END
-				END;
+			newObjectFile := options.GetFlag("newObjectFile");
 			IF options.GetString("objectFile",string) & (string = "Minos") THEN 
 				simpleMetaData := TRUE
 			END;

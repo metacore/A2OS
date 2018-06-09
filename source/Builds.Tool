@@ -27,7 +27,7 @@ WIN32 -- 32-bit windows a2
 FSTools.CloseFiles oberon.exe ~
 
 Compiler.Compile -p=Win32
-Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod
+I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod
 Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod
 Commands.Mod In.Mod Out.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod
 SystemVersion.Mod Windows.I386.Traps.Mod Windows.WinTrace.Mod Windows.StdIO.Mod Locks.Mod Windows.Clock.Mod

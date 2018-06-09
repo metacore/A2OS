@@ -1,4 +1,4 @@
-MODULE Runtime; (** AUTHOR "fof"; PURPOSE "runtime support for the Active Obero compiler"; *)
+MODULE Runtime; (** AUTHOR "fof"; PURPOSE "runtime support for the Active Oberon compiler"; *)
 IMPORT SYSTEM;
 
 VAR

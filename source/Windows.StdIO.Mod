@@ -67,7 +67,7 @@ END  StdIO.
 SystemTools.DoCommands 
 
 	Compiler.Compile  -b=AMD --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
-		Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
+		I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
 		Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
 		I386.Reals.Mod Reflection.Mod Locks.Mod Windows.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
 

@@ -212,7 +212,7 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 
 SystemTools.DoCommands
 	Compiler.Compile -p=Linux32
-		Runtime.Mod Trace.Mod Linux.I386.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
+		I386.Runtime.Mod Trace.Mod Linux.I386.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
 		Unix.Objects.Mod 
 		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
 		Pipes.Mod Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

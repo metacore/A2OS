@@ -64,6 +64,6 @@ BEGIN
 END EFITest.
 
 Compiler.Compile --extensions
-	Runtime.Mod Trace.Mod EFI.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod EFILib.Mod EFITest.Mod ~
+	I386.Runtime.Mod Trace.Mod EFI.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod EFILib.Mod EFITest.Mod ~
 Linker.Link --fileName=test.efi --fileFormat=EFI32 --displacement=401000H
 	Runtime Trace EFI EFITrace EFISimpleFS EFIFileProtocol EFILib EFITest ~

@@ -409,4 +409,4 @@ END WAVCodec.
 
 ------------------------------------------------------------------------------
 
-SystemTools.Free WAVCodec;
+System.Free WAVCodec;

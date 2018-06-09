@@ -268,7 +268,7 @@ END TestScanner;
 
 END BenchSyntaxHighlighter.
 
-SystemTools.Free BenchSyntaxHighlighter ~
+System.Free BenchSyntaxHighlighter ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod reader ~
 BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod reader ~
@@ -294,7 +294,7 @@ BenchSyntaxHighlighter.TestScanner Test.Mod Oberon ~
 
 BenchSyntaxHighlighter.TestScanner --details Test.Mod Oberon ~
 
-SystemTools.DoCommands
+System.DoCommands
 	FSTools.Enumerate *.Mod BenchSyntaxHighlighter.Bench -n=1 <#filename#> ~
 	FSTools.Enumerate *.XML BenchSyntaxHighlighter.Bench -n=1 <#filename#> ~
 	FSTools.Enumerate *.TOOL BenchSyntaxHighlighter.Bench -n=1 <#filename#> ~

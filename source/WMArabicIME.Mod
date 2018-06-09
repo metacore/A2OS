@@ -148,7 +148,7 @@ END SelectedCharToUCS;
 
 
 END WMArabicIME.Install~
-SystemTools.Free WMArabicIME~
+System.Free WMArabicIME~
 WMArabicIME.SelectedCharToUCS ~
 
 WMKeyCode.Open ~

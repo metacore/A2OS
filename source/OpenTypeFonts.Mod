@@ -248,7 +248,7 @@ END OpenTypeFonts.
 
 ----------------------------------------------------------
 
-SystemTools.Free OpenTypeFonts OpenType~
+System.Free OpenTypeFonts OpenType~
 OpenTypeFonts.Make schweif.ttf Schweif 12 14 16 18 Scn ~
 
 OpenTypeFonts.Install~

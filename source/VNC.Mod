@@ -934,4 +934,4 @@ VNC.Open portnoy.ethz.ch 5901 ~
 VNC.Show
 VNC.Paste 0 Hello world~
 
-SystemTools.Free VNC ~
+System.Free VNC ~

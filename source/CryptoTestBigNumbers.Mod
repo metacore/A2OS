@@ -47,5 +47,5 @@ IMPORT
 END CryptoTestBigNumbers.
 
 
-SystemTools.Free CryptoTestBigNumbers CryptoBigNumbers~
+System.Free CryptoTestBigNumbers CryptoBigNumbers~
 CryptoTestBigNumbers.Test1~

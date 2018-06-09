@@ -164,10 +164,10 @@ BEGIN
 	Modules.InstallTermHandler (Cleanup);
 END WMUtilities.
 
-SystemTools.Free WMUtilities ~
-SystemTools.FreeDownTo WMUtilities ~
+System.Free WMUtilities ~
+System.FreeDownTo WMUtilities ~
 
-WMUtilities.Call SystemTools.List plugins ~
+WMUtilities.Call System.List plugins ~
 
 WMUtilities.TestWindow ~
 WMUtilities.TestWindowWriter ~

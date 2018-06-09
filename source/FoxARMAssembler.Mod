@@ -415,5 +415,5 @@ TYPE
 
 END FoxARMAssembler.
 
-SystemTools.FreeDownTo  FoxARMInstructionSet ~
+System.FreeDownTo  FoxARMInstructionSet ~
 Alwazs

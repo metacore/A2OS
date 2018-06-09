@@ -39,7 +39,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END PresentViewer.
 
-SystemTools.Free PresentViewer ~
+System.Free PresentViewer ~
 PresentViewer.Open XmasMenu.XML ~
 
 

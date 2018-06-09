@@ -1101,7 +1101,7 @@ Linker.Link --fileName=test.exe --fileFormat=PE32 --displacement=401000H Test ~
 Linker.Link --fileName=a.out --fileFormat=ELF --displacement=08048000H Test ~
 Linker.Link --fileName=a.out --fileFormat=MACHO --displacement=000010E8H Test ~
 
-SystemTools.Free Linker ~
+System.Free Linker ~
 
 
 

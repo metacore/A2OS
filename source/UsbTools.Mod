@@ -19,7 +19,7 @@ MODULE UsbTools; (** AUTHOR "staubesv"; PURPOSE "USB Tools"; *)
  *																	(blocking)
  *																	Example: UsbTools.AwaitAndExecute0 USB0 FSTools.Mount USBDrive AosFS USB0#1~
  *
- *	SystemTools.Free UsbTools ~
+ *	System.Free UsbTools ~
  *
  * History:
  *
@@ -122,4 +122,4 @@ END ExtractDevicename;
 
 END UsbTools.
 
-UsbTools.Mount USB AosFS USB0#1 ~		SystemTools.Free UsbTools ~
+UsbTools.Mount USB AosFS USB0#1 ~		System.Free UsbTools ~

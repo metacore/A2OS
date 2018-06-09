@@ -103,7 +103,7 @@ TYPE
 
 END FoxIntermediateAssembler.
 
-SystemTools.Free FoxInlineAssembler FoxInlineInstructionSet ~
+System.Free FoxInlineAssembler FoxInlineInstructionSet ~
 
 
 

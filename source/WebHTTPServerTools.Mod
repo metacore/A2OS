@@ -125,8 +125,8 @@ END ListHosts;
 
 END WebHTTPServerTools.
 
-SystemTools.Free WebHTTPServerTools~
-SystemTools.FreeDownTo TCP ~
+System.Free WebHTTPServerTools~
+System.FreeDownTo TCP ~
 
 WebHTTPServerTools.Start \r:E:/Test/ ~
 

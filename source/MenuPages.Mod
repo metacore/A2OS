@@ -110,16 +110,16 @@ END Generate;
 
 END MenuPages.
 
-SystemTools.Free MenuPages ~
+System.Free MenuPages ~
 
 MenuPages.Generate MenuPage15.xml TestMenu
-	Hello "SystemTools.Show Hello"
-	World "SystemTools.Show World"
+	Hello "System.Show Hello"
+	World "System.Show World"
 	"" ""
-	News "SystemTools.Show News"
+	News "System.Show News"
 	"" ""
 	"" ""
 	"" ""
-	Reboot "SystemTools.Reboot" 0FF000060H 0FF0000FFH
+	Reboot "System.Reboot" 0FF000060H 0FF0000FFH
 ~
 

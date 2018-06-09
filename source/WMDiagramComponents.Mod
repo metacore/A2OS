@@ -1012,7 +1012,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMDiagramComponents.
 
-SystemTools.Free WMDiagramComponents ~
+System.Free WMDiagramComponents ~
 
 
  

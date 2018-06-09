@@ -394,5 +394,5 @@ END IsoImages.
 
 (*
 IsoImages.Make AosCDPrivate.iso AosCDPrivate.Dsk ~
-SystemTools.Free IsoImages ~
+System.Free IsoImages ~
 *)

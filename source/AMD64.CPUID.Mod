@@ -8,7 +8,7 @@ MODULE CPUID; (** AUTHOR "staubesv"; PURPOSE "Intel/AMD CPUID Information"; *)
  *	CPUID.Show ~ 	displays the processor name and the most relevant features
  *	CPUID.ShowDetailed ~ displays all information provided by CPUID
  *
- *	SystemTools.Free CPUID ~
+ *	System.Free CPUID ~
  *
  * Notes:
  *	- The CPUID instruction is supported by CPUs >= 80486
@@ -1161,6 +1161,6 @@ END Show;
 
 END CPUID.
 
-SystemTools.Free CPUID ~
+System.Free CPUID ~
 
 CPUID.Show ~

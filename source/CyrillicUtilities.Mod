@@ -1396,5 +1396,5 @@ BEGIN
 	Init
 END CyrillicUtilities.
 
-SystemTools.Free CyrillicUtilities~
+System.Free CyrillicUtilities~
 CyrillicUtilities.HashStat ~

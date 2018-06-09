@@ -97,7 +97,7 @@ IMPORT
 END CryptoTestHashes.
 
 
-SystemTools.Free 
+System.Free 
 	CryptoTestHashes 
 	CryptoSHA3 CryptoKeccakSponge CryptoKeccakF1600 
 	CryptoMD5 CryptoSHA1 CryptoSHA256 

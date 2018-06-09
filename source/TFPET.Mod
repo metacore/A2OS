@@ -2880,16 +2880,16 @@ BEGIN
 	InitStrings;
 END TFPET.
 
-SystemTools.Free TFPET ~
+System.Free TFPET ~
 WMMacros.ReadMacros Macros.XML ~
 TFPET.Open TFAOParser.Mod~
 TFPET.Open TFPET.Mod ~
 
-SystemTools.Free TFPET WMXMLTree ~
+System.Free TFPET WMXMLTree ~
 
 PC.Compile TFPET.Mod ~
 
-SystemTools.Free TFXRef TFPET TFModuleTrees TFAOParser TFDumpTS TFCheck TFScopeTools TFTypeSys BimboScanner TFStringPool~
+System.Free TFXRef TFPET TFModuleTrees TFAOParser TFDumpTS TFCheck TFScopeTools TFTypeSys BimboScanner TFStringPool~
 Compiler.Compile TFStringPool.Mod BimboScanner.Mod TFTypeSys.Mod TFScopeTools.Mod TFCheck.Mod TFDumpTS.Mod TFAOParser.Mod TFModuleTrees.Mod TFPET.Mod~
 TFPET.OpenState a.pet ~
 (* Create .xym files for all modules in a directory *)

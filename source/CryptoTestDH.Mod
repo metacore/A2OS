@@ -67,4 +67,4 @@ CryptoTestDH.SSH
 CryptoTestDH.SSL2048
 
 
-SystemTools.Free CryptoTestDH CryptoDiffieHellman  ~
+System.Free CryptoTestDH CryptoDiffieHellman  ~

@@ -899,5 +899,5 @@ END GIFCodec.
 
 -----------------------------------------
 
-SystemTools.Free GIFCodec ~
+System.Free GIFCodec ~
 

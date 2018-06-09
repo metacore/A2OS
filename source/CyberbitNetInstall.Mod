@@ -217,5 +217,5 @@ END CyberbitNetInstall.
 
 ------------------------------------------------------------------------------------------
 
-SystemTools.Free CyberbitNetInstall~
+System.Free CyberbitNetInstall~
 CyberbitNetInstall.Start~

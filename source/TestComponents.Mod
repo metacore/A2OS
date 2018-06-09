@@ -242,4 +242,4 @@ TestComponents.TestStringGrids ~
 
 TestComponents.Test ComponentList ~
 
-SystemTools.Free TestComponents ~
+System.Free TestComponents ~

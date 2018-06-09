@@ -79,7 +79,7 @@ CONST
 END CryptoTestRSA.
 
 
-SystemTools.Free CryptoTestRSA CryptoRSA CryptoPrimes CryptoBigNumbers~
+System.Free CryptoTestRSA CryptoRSA CryptoPrimes CryptoBigNumbers~
 
 CryptoTestRSA.Test1 ~
 

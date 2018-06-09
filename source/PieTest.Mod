@@ -150,5 +150,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END PieTest.
 
-SystemTools.Free PieTest ~
+System.Free PieTest ~
 PieTest.Open ~

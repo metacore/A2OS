@@ -193,5 +193,5 @@ BEGIN
 END WMOGGPlayer.
 
 WMOGGPlayer.Open OGGRadios.Text ~
-SystemTools.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
-SystemTools.Free EnsoniqSound ~
+System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
+System.Free EnsoniqSound ~

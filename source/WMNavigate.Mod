@@ -1983,4 +1983,4 @@ WMNavigate.HideNavigation ~
 WMNavigate.RestoreNavigation ~
 WMNavigate.ToggleNavigation ~
 
-SystemTools.Free WMNavigate ~
+System.Free WMNavigate ~

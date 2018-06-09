@@ -19,7 +19,7 @@ MODULE OSCExample;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: sampleprog
 
 	4.) (if needed) Unload the modules from the framework.
 
-	SystemTools.Free OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
+	System.Free OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
 
 *)
 
@@ -121,7 +121,7 @@ END SampleClient;
 END OSCExample.
 
 PC.Compile OSCStrings.Mod OSC.Mod OSCRegistry.Mod OSCQueue.Mod OSCService.Mod OSCNet.Mod OSCExample.Mod ~
-SystemTools.Free OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
+System.Free OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
 
 OSCExample.StartSampleService ~
 OSCExample.StopSampleService ~

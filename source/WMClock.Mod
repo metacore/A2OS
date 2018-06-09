@@ -484,6 +484,6 @@ BEGIN
 	NEW(contextMenuParAnalog, ViewModeAnalog);
 END WMClock.
 
-SystemTools.Free WMClock~
+System.Free WMClock~
 
 WMClock.Open ~

@@ -61,5 +61,5 @@ END TCPTools.
 
 TCPTools.SendFile 129.132.134.254 9100 test.ps ~
 
-SystemTools.Free TCPTools ~
+System.Free TCPTools ~
 

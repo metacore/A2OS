@@ -11,7 +11,7 @@ MODULE WMPerfMonPlugins; (** AUTHOR "staubesv"; PURPOSE "Performance Monitor plu
  *	- Helper objects that provide access to sampled value to multiple plugins
  *	- Updater object that performs the actual sampling in a single loop for all active Plugins
  *
- * Usage:	WMPerfMonPlugins.Show ~ displays a list of all registered plugins	SystemTools.Free WMPerfMonPlugins ~
+ * Usage:	WMPerfMonPlugins.Show ~ displays a list of all registered plugins	System.Free WMPerfMonPlugins ~
  *
  * Possible improvements:
  *	-	Use low-level timer (Machine.GetTimer) everywhere since Objects.ticks is inaccurate/not reliable

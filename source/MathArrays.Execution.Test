@@ -1,5 +1,5 @@
 # Math Array Exeuction Test Suite
-# options 	--mayTrap --prolog="Compiler.Compile -p=Win32 TesterInput.txt" --command="SystemTools.Free Test Dummy B A;SystemTools.Load Test" --logFile="FoxExecutionTest.Log" --result="MathArrays.Execution.Test.Diff"
+# options 	--mayTrap --prolog="Compiler.Compile -p=Win32 TesterInput.txt" --command="System.Free Test Dummy B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="MathArrays.Execution.Test.Diff"
 
 positive: DIM and LEN
 

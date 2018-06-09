@@ -1275,9 +1275,9 @@ END Installer.
 
 Installer.TestPackages Packages.XML ~
 
-SystemTools.Free Installer ~
+System.Free Installer ~
 
-SystemTools.FreeDownTo Installer ~
+System.FreeDownTo Installer ~
 
 AosTar.Create Install.Tar
 Installer.Mod WMInstaller.Mod

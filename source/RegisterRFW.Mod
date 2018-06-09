@@ -165,4 +165,4 @@ END RegisterRFW3;
 
 END RegisterRFW.
 
-SystemTools.Free RegisterRFW ~
+System.Free RegisterRFW ~

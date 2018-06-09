@@ -237,7 +237,7 @@ BEGIN
 END BimboMail.
 
 BimboMail.Open ~
-SystemTools.Free BimboMail MailStorage POP3Client ~
+System.Free BimboMail MailStorage POP3Client ~
 
 PET.Open MailStorage.Mod ~
 PET.Open POP3Client.Mod ~

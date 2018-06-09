@@ -2066,5 +2066,5 @@ BEGIN
 	Initialize ("AMD64Decoder");
 END Decoder.
 
-SystemTools.FreeDownTo Decoder ~
+System.FreeDownTo Decoder ~
 WMProperties.Obw

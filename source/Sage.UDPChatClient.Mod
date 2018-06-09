@@ -863,4 +863,4 @@ BEGIN
 	Modules.InstallTermHandler (Cleanup);
 END UDPChatClient.
 
-SystemTools.Free UDPChatClient ~	UDPChatClient.Open ~
+System.Free UDPChatClient ~	UDPChatClient.Open ~

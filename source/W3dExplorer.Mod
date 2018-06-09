@@ -168,8 +168,8 @@ END W3dExplorer.
 
 
 W3dExplorer.Open ~
-SystemTools.Free W3dExplorer
-SystemTools.Free W3dExplorer W3dWorld W3dRasterizer W3dObjectGenerator W3dAbstractWorld W3dGeometry W3dMatrix W3dVectors~
+System.Free W3dExplorer
+System.Free W3dExplorer W3dWorld W3dRasterizer W3dObjectGenerator W3dAbstractWorld W3dGeometry W3dMatrix W3dVectors~
 
 Keys 0: Affine 1: SubDivision 2: Perspective 3: Wireframe s: Speed-Test
 New: Near Plane Clipping (retriangulating); Frustum Object culling with Bounding-Spheres

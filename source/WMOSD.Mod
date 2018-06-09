@@ -6,7 +6,7 @@ MODULE WMOSD; (** AUTHOR "staubesv"; PURPOSE "Simple On Screen Display for messa
  *	WMOSD.Close ~
  *
  *	WMOSD.Test ~	Perform endless self-test
- *	SystemTools.Free WMOSD ~
+ *	System.Free WMOSD ~
  *
  * History:
  *
@@ -214,4 +214,4 @@ WMOSD.Close ~
 
 WMOSD.Test ~
 
-SystemTools.Free WMOSD ~
+System.Free WMOSD ~

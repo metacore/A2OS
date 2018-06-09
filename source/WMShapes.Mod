@@ -310,4 +310,4 @@ BEGIN
 	InitStrings;
 END WMShapes.
 
-SystemTools.FreeDownTo WMShapes ~
+System.FreeDownTo WMShapes ~

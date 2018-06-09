@@ -44,7 +44,7 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  *		Option f, file		: Specify the package description file [default: Release.Tool]
  *
  *
- *	SystemTools.Free Release ~
+ *	System.Free Release ~
  *
  * Based on Release.Mod by pjm
  *
@@ -673,9 +673,9 @@ TYPE
 
 			(* Compile command *)
 			tw.SetFontStyle({WMGraphics.FontBold});
-			tw.String("SystemTools.DoCommands"); tw.Ln;
+			tw.String("System.DoCommands"); tw.Ln;
 			tw.SetFontStyle({});
-			tw.String("SystemTools.Timer start ~"); tw.Ln;
+			tw.String("System.Timer start ~"); tw.Ln;
 			IF link THEN
 				tw.String(linker);
 				GetLinkerOptions(temp);
@@ -685,8 +685,8 @@ TYPE
 			END;
 			tw.String(" "); tw.String(temp); tw.Ln;
 			ToStream(tw, 80); (* file list *) tw.Ln; tw.String("~"); tw.Ln;
-			tw.String("SystemTools.Show Time elapsed: ~ SystemTools.Ln ~"); tw.Ln;
-			tw.String("SystemTools.Timer elapsed ~ SystemTools.Ln ~"); tw.Ln;
+			tw.String("System.Show Time elapsed: ~ System.Ln ~"); tw.Ln;
+			tw.String("System.Timer elapsed ~ System.Ln ~"); tw.Ln;
 			tw.String("~");
 			tw.Update;
 
@@ -3393,7 +3393,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END Release.
 
-SystemTools.Free Release ~
+System.Free Release ~
 
 Release.FindPosition Bios32 Usbdi.Mod ~
 

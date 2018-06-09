@@ -2263,4 +2263,4 @@ END Factory;
 
 END DivXDecoder.
 
-SystemTools.Free DivXDecoder ~
+System.Free DivXDecoder ~

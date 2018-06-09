@@ -1034,6 +1034,6 @@ BEGIN
 	WMPerfMonPlugins.updater.AddListener({WMPerfMonPlugins.EventSampleLoopDone}, HandleEvents);
 END WMPerfMonAlerts.
 
-WMPerfMonAlerts.Load ~	WMPerfMonAlerts.Show ~	SystemTools.Free WMPerfMonAlerts ~
+WMPerfMonAlerts.Load ~	WMPerfMonAlerts.Show ~	System.Free WMPerfMonAlerts ~
 
 WMPerfMonAlerts.Disable ~  WMPerfMonAlerts.Enabled ~

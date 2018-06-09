@@ -749,7 +749,7 @@ END WMDiff.
 
 PC.Compile \s DiffLib.Mod XStandardComponents.Mod WMDiff.Mod~
 
-SystemTools.Free WMDiff DiffLib~
+System.Free WMDiff DiffLib~
 
 Problem: When the overview bar is drawn, it is scaled for speedup. This may lead to the disappearance of marking for line differences.
 Therefore documents with different lines are marked additionally by a red filename.

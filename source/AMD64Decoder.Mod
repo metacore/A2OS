@@ -3243,11 +3243,11 @@ END Init;
 
 END AMD64Decoder.
 
-SystemTools.Free AMD64Decoder~
+System.Free AMD64Decoder~
 AMD64Decoder.Init~
 Decoder.Open Test.Abx~
 
 
-SystemTools.Free Decoder~
+System.Free Decoder~
 Decoder.Open Test.Bbx~
 

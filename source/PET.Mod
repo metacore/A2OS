@@ -2950,11 +2950,11 @@ BEGIN
 	InitStrings;
 END PET.
 
-SystemTools.Free PET ~
+System.Free PET ~
 WMMacros.ReadMacros Macros.XML ~
 PET2.Open ~
 PET.Open PET.Mod ~
 
-SystemTools.Free PET WMXMLTree ~
+System.Free PET WMXMLTree ~
 
 PC.Compile PET.Mod ~

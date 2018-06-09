@@ -1262,4 +1262,4 @@ TYPE
 
 END UsbHidParser.
 
-SystemTools.Free UsbHidParser UsbHidParserExt~
+System.Free UsbHidParser UsbHidParserExt~

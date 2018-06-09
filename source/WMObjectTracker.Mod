@@ -90,5 +90,5 @@ END WMObjectTracker.
 
 WMObjectTracker.Open ~
 WMObjectTracker.Close ~
-SystemTools.Free WMObjectTracker ~
+System.Free WMObjectTracker ~
 

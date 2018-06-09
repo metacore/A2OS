@@ -398,7 +398,7 @@ IMPORT
 END CryptoTestCiphers.
 
 
-     SystemTools.Free  
+     System.Free  
      		CryptoTestCiphers CryptoDES3 CryptoDES CryptoIDEA 
      		CryptoARC4  CryptoCAST CryptoAES ~
 

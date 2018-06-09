@@ -180,7 +180,7 @@ TYPE
 END OSCService.
 
 (*
-	SystemTools.Free OSCService ~
+	System.Free OSCService ~
 	OSCService.TestService ~
 	OSCService.EndTestService ~
 *)

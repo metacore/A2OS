@@ -992,7 +992,7 @@ WMVT100.Start Tcp "127.0.0.1" 80~ (* manual access to HTTP server *)
 WMVT100.Start Telnet <server> <portNr>~ (* will include Telnet control characters *)
 WMVT100.Start VT100 <server> <portNr>~ (* will include Telnet/VT100 control characters *)
 
-SystemTools.Free WMVT100 ~	
+System.Free WMVT100 ~	
 
 from wikipedia: Telnet
 All data octets except 0xff are transmitted over Telnet as is. 

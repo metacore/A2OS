@@ -1560,7 +1560,7 @@ END OSC.
 
 PC.Compile OSCStrings.Mod OSC.Mod OSCRegistry.Mod OSCQueue.Mod OSCService.Mod OSCNet.Mod OSCExample.Mod OSCEval.Mod~
 
-SystemTools.Free OSCEval OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
+System.Free OSCEval OSCExample OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
 
 OSC.Test ~
 OSC.TestGetSize ~

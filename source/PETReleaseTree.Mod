@@ -143,4 +143,4 @@ END GenBuildTree;
 
 END PETReleaseTree.
 
-SystemTools.Free ReleaseTree ~
+System.Free ReleaseTree ~

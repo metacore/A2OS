@@ -1179,5 +1179,5 @@ BEGIN
 	InitPrototypes;
 END WMSystemComponents.
 
-SystemTools.Free WMSystemComponents ~
+System.Free WMSystemComponents ~
 

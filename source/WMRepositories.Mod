@@ -783,4 +783,4 @@ END WMRepositories.
 
 WMRepositories.Open ~
 
-SystemTools.Free WMRepositories ~
+System.Free WMRepositories ~

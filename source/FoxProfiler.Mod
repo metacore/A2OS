@@ -408,6 +408,6 @@ WMUtilities.Call --font=Courier FoxProfiler.Report time all ~
 Compiler.Compile --profile TuringCoatWnd.Mod ~
 TuringCoatWnd.Open
 
-SystemTools.Free TuringCoatWnd FoxProfiler ~
+System.Free TuringCoatWnd FoxProfiler ~
 
 FoxProfiler.Reset

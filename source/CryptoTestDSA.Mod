@@ -93,5 +93,5 @@ CONST
 END CryptoTestDSA.
 
 
-SystemTools.Free CryptoTestDSA CryptoDSA CryptoSHA1 ~
+System.Free CryptoTestDSA CryptoDSA CryptoSHA1 ~
 CryptoTestDSA.Do ~

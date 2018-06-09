@@ -482,7 +482,7 @@ FoxTRMTools.BuildHardware -p="AVSP6LX75T" -f="TestNet" ~
 
 FoxTRMTools.BuildHardware -p="ML505" -f="TestNet" ~
 
-SystemTools.Free FoxTRMTools ~
+System.Free FoxTRMTools ~
 
 FoxTRMTools.SplitFiles  code.mem data.mem ~
 FoxTRMTools.SplitFiles  --blocks=8 --strided data.mem ~
@@ -506,7 +506,7 @@ FoxTRMTools.CompareFiles test.code test2.code matrix.txt ~
 
 UARTPC.Open 6 ~
 
-SystemTools.DoCommands
+System.DoCommands
 
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
@@ -598,13 +598,13 @@ PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 
-SystemTools.Show "DONE!" ~
+System.Show "DONE!" ~
 ~
 
 
 
 
-SystemTools.DoCommands
+System.DoCommands
 
 FoxTRMTools.GenerateTestFile --random --size=512 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=1 --patchSpartan6 TestBRAM0con0code.mem ~

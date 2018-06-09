@@ -579,6 +579,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMSearchTool.
 
-SystemTools.Free WMSystemComponents WMSearchTool WMFileManager~
+System.Free WMSystemComponents WMSearchTool WMFileManager~
 WMSearchTool.Open ~
 

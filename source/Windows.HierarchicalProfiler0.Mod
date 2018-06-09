@@ -153,6 +153,6 @@ END HierarchicalProfiler0.
 
 WMProfiler.Open
 
-SystemTools.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
+System.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
 
 Debugging.DisableGC~

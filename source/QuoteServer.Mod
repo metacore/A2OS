@@ -154,6 +154,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END QuoteServer.
 
-QuoteServer.Open ~ 	SystemTools.Free QuoteServer ~ 	PET.Open Quotes.txt ~
+QuoteServer.Open ~ 	System.Free QuoteServer ~ 	PET.Open Quotes.txt ~
 QuoteServer.Open Quotes.txt ~
 QuoteServer.ReadQuotes Quotes.txt ~

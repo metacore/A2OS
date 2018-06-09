@@ -346,5 +346,5 @@ BEGIN
 END CryptoDES.
 
 
-SystemTools.Free CryptoTestCiphers CryptoDES ~
+System.Free CryptoTestCiphers CryptoDES ~
 

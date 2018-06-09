@@ -1312,7 +1312,7 @@ END WMInstaller.
 
 WMInstaller.Open ~
 
-SystemTools.Free WMInstaller ~
+System.Free WMInstaller ~
 
 ~
 FSTools.DeleteFiles WMInstaller.tar ~
@@ -1334,7 +1334,7 @@ Tar.Create WMInstaller.tar
 
 Tar.Extract WMInstaller.tar ~
 
-SystemTools.FreeDownTo PartitionsLib ~
+System.FreeDownTo PartitionsLib ~
 
 PC.Compile \s
 PartitionsLib.Mod

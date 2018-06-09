@@ -2541,7 +2541,7 @@ TYPE
 END MPEGVideoDecoder.
 
 
-SystemTools.Free MPEGVideoDecoder ~
+System.Free MPEGVideoDecoder ~
 MPEGVideoDecoder.Test beauty.mpg~
 
 

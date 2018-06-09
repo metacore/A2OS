@@ -710,10 +710,10 @@ WebHTTPServerTools.Stop ~
 WebFTPServerTools.Start \r:httproot \l:httproot/FTP.Log~
 
 FREE THE SERVER
-SystemTools.Free WebHTTPServerTools WebDefaultSSMP WebSSMPPlugin WebHTTPServer  WebHTTP~
+System.Free WebHTTPServerTools WebDefaultSSMP WebSSMPPlugin WebHTTPServer  WebHTTP~
 
 System.State WebHTTPServer~
-SystemTools.FreeDownTo WebHTTPServer ~
+System.FreeDownTo WebHTTPServer ~
 
 FILES
 TFLog.Mod WebHTTP.Mod WebSSMPPlugin.Mod WebDefaultSSMP.Mod WebHTTPServer.Mod WebWormWatch.Mod public.form.html public.info.ssmp~

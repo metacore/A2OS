@@ -3575,7 +3575,7 @@ BEGIN
 	OGGUtilities.InitLogger;
 END OGGVorbisPlayer.
 
-SystemTools.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
+System.Free WMOGGPlayer OGGVorbisPlayer OGGUtilities ~
 MixerComponents.MasterIncVol ~
 MixerComponents.MasterDecVol ~
 OGGVorbisPlayer.Stop ~

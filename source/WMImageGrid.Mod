@@ -197,5 +197,5 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 END WMImageGrid.
 
 
-SystemTools.FreeDownTo WMImageGrid~
+System.FreeDownTo WMImageGrid~
 WMImageGrid.Test~

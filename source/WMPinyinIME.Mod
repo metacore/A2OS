@@ -584,5 +584,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMPinyinIME.
 
-SystemTools.Free WMPinyinIME ~
+System.Free WMPinyinIME ~
 WMPinyinIME.Install ~

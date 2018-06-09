@@ -44,6 +44,6 @@ BEGIN
 	startTime := Dates.Now();
 END UpTime.
 
-SystemTools.Free UpTime ~
+System.Free UpTime ~
 
 UpTime.Show ~

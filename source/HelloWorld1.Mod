@@ -11,6 +11,6 @@ END Do;
 
 END HelloWorld1.
 
-SystemTools.Free HelloWorld1 ~
+System.Free HelloWorld1 ~
 
 HelloWorld1.Do ~

@@ -466,7 +466,7 @@ BEGIN
 END OSCEval.
 
 PC.Compile OSCStrings.Mod OSC.Mod OSCRegistry.Mod OSCQueue.Mod OSCService.Mod OSCNet.Mod OSCEval.Mod ~
-SystemTools.Free OSCEval OSCTest OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
+System.Free OSCEval OSCTest OSCNet OSCService OSCQueue OSCRegistry OSC OSCUtilities ~
 
 OSCEval.StartEvalService ~
 OSCEval.StopEvalService ~

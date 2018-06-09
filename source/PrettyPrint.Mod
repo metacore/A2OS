@@ -88,7 +88,7 @@ BEGIN
 END PrettyPrint.
 
 
-	SystemTools.Free PrettyPrint ~
+	System.Free PrettyPrint ~
 	
 	PrettyPrint.Convert  PrettyPrint.Mod  Huffman.mod Xyz.Mod ~
 

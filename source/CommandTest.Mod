@@ -46,4 +46,4 @@ END Test;
 
 END CommandTest.
 
-SystemTools.Free CommandTest ~
+System.Free CommandTest ~

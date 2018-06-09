@@ -1008,7 +1008,7 @@ BEGIN
 	ASSERT(BlockSize MOD DirectoryEntrySize = 0); (* we don't want that directory entries spawn blocks *)
 END SSFS.
 
-SystemTools.Free SSFS ~
+System.Free SSFS ~
 
 SSFS.Format Test0#0 ~
 

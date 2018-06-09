@@ -393,5 +393,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END CharacterLineup.
 
-SystemTools.Free CharacterLineup ~ UnihanParser ~
+System.Free CharacterLineup ~ UnihanParser ~
 CharacterLineup.Open ~

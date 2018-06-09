@@ -2343,4 +2343,4 @@ TYPE
 
 END FoxParser.
 
-SystemTools.FreeDownTo FoxParser ~
+System.FreeDownTo FoxParser ~

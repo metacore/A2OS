@@ -661,7 +661,7 @@ TYPE
 
 END FTPClient.
 
-SystemTools.Free FTPClient~
+System.Free FTPClient~
 
 Color Codes
 Highlight

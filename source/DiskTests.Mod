@@ -402,7 +402,7 @@ END ShowDiskres;
 
 END DiskTests.
 
-DiskTests.WriteTestData USB0#1 ~  SystemTools.Free DiskTests ~
+DiskTests.WriteTestData USB0#1 ~  System.Free DiskTests ~
 DiskTests.VerifyTestData USB0#1 ~
 
 DiskTests.Test USB0#1 ~

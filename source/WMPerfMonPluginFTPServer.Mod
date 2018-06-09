@@ -63,4 +63,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginFTPServer.
 
-WMPerfMonPluginFTPServer.Install ~   SystemTools.Free WMPerfMonPluginFTPServer ~
+WMPerfMonPluginFTPServer.Install ~   System.Free WMPerfMonPluginFTPServer ~

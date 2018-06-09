@@ -155,7 +155,7 @@ END MP3Player.
 
 ------------------------------------------------------------
 i810Sound.Install ~
-SystemTools.Free MP3Player ~
+System.Free MP3Player ~
 
 MP3Player.Open htf_44_128.mp3~
 MP3Player.Open track.mp3~

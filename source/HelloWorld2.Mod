@@ -16,6 +16,6 @@ END HelloStream;
 
 END HelloWorld2.
 
-SystemTools.Free HelloWorld2 ~
+System.Free HelloWorld2 ~
 
 HelloWorld2.HelloStream ~

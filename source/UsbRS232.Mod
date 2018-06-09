@@ -5,7 +5,7 @@ MODULE UsbRS232;  (** AUTHOR "staubesv"; PURPOSE "MCT USB-RS232 Converter Driver
  * Usage:
  *
  *	UsbRS232.Install ~ loads this driver
- *	SystemTools.Free UsbRS232 ~
+ *	System.Free UsbRS232 ~
  *
  * Status: BETA
  *
@@ -679,4 +679,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, Priority)
 END UsbRS232.
 
-UsbRS232.Install ~   SystemTools.Free UsbRS232 ~
+UsbRS232.Install ~   System.Free UsbRS232 ~

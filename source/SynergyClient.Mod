@@ -297,6 +297,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END SynergyClient.
 
-SystemTools.Free SynergyClient ~
+System.Free SynergyClient ~
 SynergyClient.Connect "192.168.0.3" "Bluebottle" ~
 SynergyClient.Close ~

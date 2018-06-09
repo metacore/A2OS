@@ -746,7 +746,7 @@ BEGIN
 	Init;
 END BootShell.
 
-SystemTools.DoCommands
+System.DoCommands
 
 	Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
 		ATADisks DiskVolumes DiskFS Keyboard BootShell BootConsole ~
@@ -758,14 +758,14 @@ SystemTools.DoCommands
 	VirtualDisks.Uninstall VM0 ~
 ~~~
 
-SystemTools.DoCommands
+System.DoCommands
 
 	FSTools.DeleteFiles BootShell.img ~
 
 	VirtualDisks.Create BootShell.img 2048 512 ~
 	VirtualDisks.Install -c=80 -h=2 -s=18 -b=512 VDISK0 BootShell.img ~
 
-	Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H Kernel Traps ProcessInfo SystemTools Keyboard BootShell BootConsole ~
+	Linker.Link \P../Test/ \.Obx ../Test/CD.Bin 0100000H 1000H Kernel Traps ProcessInfo System Keyboard BootShell BootConsole ~
 
 	Partitions.Format VDISK0#0 AosFS 640 ../Test/CD.Bin ~
 

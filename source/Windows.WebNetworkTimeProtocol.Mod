@@ -177,5 +177,5 @@ WebNetworkTimeProtocol.GetSimpleTime~
 
 WebNetworkTimeProtocol.SynchronizeSNTP ~
 
-SystemTools.Free WebNetworkTimeProtocol~
-SystemTools.Free Dates ~
+System.Free WebNetworkTimeProtocol~
+System.Free Dates ~

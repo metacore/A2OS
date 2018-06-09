@@ -66,7 +66,7 @@ CONST
 
 END UnixBinary.
 
-   SystemTools.Free  UnixBinary ~
+   System.Free  UnixBinary ~
    
    UnixBinary.Build  oberon.bin -> A2Core ~
    

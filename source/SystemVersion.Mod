@@ -47,5 +47,5 @@ BEGIN
 END SystemVersion.
 
 SystemVersion.Test
-SystemTools.FreeDownTo SystemVersion ~
+System.FreeDownTo SystemVersion ~
 

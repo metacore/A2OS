@@ -110,6 +110,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END Notepad.
 
-SystemTools.Free Notepad~
+System.Free Notepad~
 
 Notepad.Open ~

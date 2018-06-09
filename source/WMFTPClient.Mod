@@ -838,4 +838,4 @@ END WMFTPClient.
 
 ---------------------------------------------
 
-WMFTPClient.Open~		SystemTools.Free WMFTPClient ~
+WMFTPClient.Open~		System.Free WMFTPClient ~

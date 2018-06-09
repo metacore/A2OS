@@ -178,4 +178,4 @@ WhitespaceRemover.Remove -v WhitespaceRemover.Mod ~
 
 WhitespaceRemover.Remove *.Mod ~
 
-SystemTools.Free WhitespaceRemover ~
+System.Free WhitespaceRemover ~

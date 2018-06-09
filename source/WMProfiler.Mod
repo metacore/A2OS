@@ -464,4 +464,4 @@ END WMProfiler.
 
 WMProfiler.Open ~
 
-SystemTools.Free WMProfiler ~
+System.Free WMProfiler ~

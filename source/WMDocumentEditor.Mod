@@ -578,4 +578,4 @@ BEGIN
 	InitStrings;
 END WMDocumentEditor.
 
-SystemTools.FreeDownTo WMDocumentEditor ~
+System.FreeDownTo WMDocumentEditor ~

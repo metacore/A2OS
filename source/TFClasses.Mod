@@ -288,4 +288,4 @@ TYPE
 END TFClasses.
 
 System.Free TFClasses ~
-SystemTools.Free TFClasses~
+System.Free TFClasses~

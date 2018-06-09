@@ -9,7 +9,7 @@ MODULE MouseSerial; (** AUTHOR "pjm"; PURPOSE "Serial mouse driver"; *)
  *
  *	Load mouse driver: MouseSerial.Install ~
  *
- *	To unload the driver, use SystemTools.Free MouseSerial ~
+ *	To unload the driver, use System.Free MouseSerial ~
  *
  * Note:
  *
@@ -466,5 +466,5 @@ END MouseSerial.
 
 MouseSerial.Install ~	MouseSerial.ToggleMouseType 1 ~
 
-SystemTools.Free MouseSerial ~
+System.Free MouseSerial ~
 

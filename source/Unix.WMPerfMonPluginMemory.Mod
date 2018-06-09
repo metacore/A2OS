@@ -73,4 +73,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginMemory.
 
-WMPerfMonPluginMemory.Install ~	SystemTools.Free WMPerfMonPluginMemory ~
+WMPerfMonPluginMemory.Install ~	System.Free WMPerfMonPluginMemory ~

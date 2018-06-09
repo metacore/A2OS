@@ -3301,5 +3301,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END DTPText.
 
-SystemTools.Free DTPText
+System.Free DTPText
 

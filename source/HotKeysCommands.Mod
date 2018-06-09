@@ -149,4 +149,4 @@ HotKeysCommands.ClearLog ~
 HotKeysCommands.EnterCommand ~
 HotKeysCommands.SimulateMouse MouseWheel -3 ~
 
-SystemTools.Free HotKeysCommands ~
+System.Free HotKeysCommands ~

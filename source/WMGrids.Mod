@@ -921,7 +921,7 @@ BEGIN
 	InitProto;
 END WMGrids.
 
-SystemTools.Free WMGrids ~
+System.Free WMGrids ~
 
 History:
 

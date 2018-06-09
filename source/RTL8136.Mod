@@ -3387,7 +3387,7 @@ MAC address 00-08-A1-3C-06-CB
 
 local IP 129.132.134.209
 
-SystemTools.Free RTL8136 ~
+System.Free RTL8136 ~
 RTL8136.Install ~
 WMPerfMon.Open ~
 RTL8136.DebugStati ~

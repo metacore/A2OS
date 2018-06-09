@@ -10,7 +10,7 @@ MODULE VirtualDisks; (** AUTHOR "staubesv"; PURPOSE "Virtual disk driver"; *)
  *	VirtualDisks.InstallRamdisk [Options] diskname size ~ installs and creates a ram disk
  *	VirtualDisks.Uninstall diskname ~
  *
- *	SystemTools.Free VirtualDisks ~
+ *	System.Free VirtualDisks ~
  *
  *)
 
@@ -362,4 +362,4 @@ VirtualDisks.Uninstall RAMDISK ~
 
 VirtualDisks.Install AosCD.iso 2048 ~
 
-SystemTools.Free VirtualDisks ~
+System.Free VirtualDisks ~

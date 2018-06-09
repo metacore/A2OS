@@ -198,4 +198,4 @@ ProcessInfo.ShowProcesses ~
 
 ProcessInfo.ShowStacks ~
 
-SystemTools.Free ProcessInfo ProcessInfo0 ~
+System.Free ProcessInfo ProcessInfo0 ~

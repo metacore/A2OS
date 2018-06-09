@@ -517,6 +517,6 @@ BEGIN
 	InitPrototypes;
 END WMStringGrids.
 
-SystemTools.Free WMStringGrids ~
+System.Free WMStringGrids ~
 
 

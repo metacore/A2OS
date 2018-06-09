@@ -51,4 +51,4 @@ END WMErrors.
 
 WMErrors.Test 1505 ~
 
-SystemTools.Free WMErrors ~
+System.Free WMErrors ~

@@ -511,6 +511,6 @@ BEGIN
 	current := NIL;
 END SkinEngine.
 
-SystemTools.Free SkinEngine ~
+System.Free SkinEngine ~
 
 

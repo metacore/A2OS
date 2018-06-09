@@ -408,7 +408,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMTCPTracker.
 
-SystemTools.Free WMTCPTracker WMStringGrids
+System.Free WMTCPTracker WMStringGrids
 
 WMTCPTracker.Open 250
 TestServer.Open

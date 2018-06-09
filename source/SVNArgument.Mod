@@ -169,5 +169,5 @@ TYPE
 END SVNArgument.
 
 
-SystemTools.Free Argument ~
+System.Free Argument ~
 PC.Compile \s \W SVNArgument.Mod ~

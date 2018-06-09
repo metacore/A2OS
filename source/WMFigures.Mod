@@ -1108,7 +1108,7 @@ BEGIN
 	Streams.OpenWriter(log, KernelLog.Send);
 END WMFigures.
 
-SystemTools.FreeDownTo WMFigures ~
+System.FreeDownTo WMFigures ~
 ----------------
 Example commands for interactive figures (left click for editing and moving; middle clicking for adding points, right-left interclick for deleting points).
 
@@ -1184,4 +1184,4 @@ END TestFigures.
 TestFigures.Do
 TestFigures.Do1
 
-SystemTools.FreeDownTo WMFigures TestFigures ~
+System.FreeDownTo WMFigures TestFigures ~

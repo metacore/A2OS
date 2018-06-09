@@ -337,4 +337,4 @@ BEGIN
 	InitPrototypes;
 END WMScrollableComponents.
 
-SystemTools.Free WMScrollableComponents~
+System.Free WMScrollableComponents~

@@ -1012,8 +1012,8 @@ ModuleParser
 PETModuleTree
 ProcessInfo0
 ProcessInfo
-SystemTools
+System
 Linker
 ~
 
-SystemTools.ListModules -l ~
+System.ListModules -l ~

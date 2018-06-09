@@ -159,7 +159,7 @@ END SelectedCharToUCS;
 
 
 END WMArmenianIME.Install~
-SystemTools.Free WMArmenianIME~
+System.Free WMArmenianIME~
 WMArmenianIME.SelectedCharToUCS ~
 
 WMKeyCode.Open ~

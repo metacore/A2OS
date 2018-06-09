@@ -3082,8 +3082,8 @@ END WMPartitions.
 
 WMPartitions.Open ~
 
-SystemTools.Free WMPartitions WMPartitionsComponents  ~
+System.Free WMPartitions WMPartitionsComponents  ~
 
 PC.Compile \s PartitionsLib.Mod Partitions.Mod FATScavenger.Mod DiskBenchmark.Mod DiskTests.Mod WMPartitionsComponents.Mod WMPartitions.Mod ~
 
-SystemTools.FreeDownTo WMPartitions ~
+System.FreeDownTo WMPartitions ~

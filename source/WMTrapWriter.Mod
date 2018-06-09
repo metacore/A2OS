@@ -45,7 +45,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMTrapWriter.
 
-SystemTools.Free WMTrapWriter WMUtilities ~
+System.Free WMTrapWriter WMUtilities ~
 
 WMTrapWriter.Install
 WMTrapWriter.Uninstall

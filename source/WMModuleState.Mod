@@ -539,5 +539,5 @@ END Open;
 
 END WMModuleState.
 
-SystemTools.Free WMModuleState ~
+System.Free WMModuleState ~
 WMModuleState.Open ~

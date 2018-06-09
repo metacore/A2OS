@@ -481,4 +481,4 @@ WMNavigator.Open ~
 
 WMNavigator.Close ~
 
-SystemTools.Free WMNavigator ~
+System.Free WMNavigator ~

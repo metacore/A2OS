@@ -234,5 +234,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END Bimso.
 
-SystemTools.Free Bimso ~
+System.Free Bimso ~
 Bimso.Open ~

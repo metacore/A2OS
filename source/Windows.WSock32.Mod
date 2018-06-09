@@ -404,4 +404,4 @@ BEGIN
 	InitErrs(); Init();
 END WSock32.
 
-SystemTools.FreeDownTo WSock32~
+System.FreeDownTo WSock32~

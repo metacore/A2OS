@@ -533,7 +533,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 END FoxIntermediateObjectFile.
 
-SystemTools.FreeDownTo FoxIntermediateObjectFile ~
+System.FreeDownTo FoxIntermediateObjectFile ~
 FoxIntermediateObjectFile.Show Builtins  ~
 
 			(* test code to compare ..

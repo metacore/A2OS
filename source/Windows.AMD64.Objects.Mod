@@ -1344,7 +1344,7 @@ o if process is not running, at least state.ESP is valid, and between stack.adr 
 o when releasing the Ready lock, make sure the process state is up to date
 *)
 
-SystemTools.ShowStacks ~
+System.ShowStacks ~
 
 Heaps.SetMetaData 
 

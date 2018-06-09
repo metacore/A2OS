@@ -190,7 +190,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END PCTest.
 
-SystemTools.Free PCTest TestSuite~
+System.Free PCTest TestSuite~
 WMUtilities.Call PCTest.Compile Oberon.Compilation.Test ~	 Verbose testing mode
 WMUtilities.Call PCTest.Compile Oberon.Compilation.Test Oberon.Compilation.tmp ~ Regression testing mode
 WMUtilities.Call PCTest.Execute Oberon.Execution.Test ~	 Verbose testing mode

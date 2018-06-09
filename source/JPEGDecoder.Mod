@@ -3781,4 +3781,4 @@ BEGIN
 
 END JPEGDecoder.
 
-SystemTools.FreeDownTo JPEGDecoder~
+System.FreeDownTo JPEGDecoder~

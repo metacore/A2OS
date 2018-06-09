@@ -169,7 +169,7 @@ END Test;
 
 END MailStorage.
 
-SystemTools.Free MailStorage
+System.Free MailStorage
 MailStorage.Test
 
 Color Codes

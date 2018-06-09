@@ -53,4 +53,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginCpu.
 
-WMPerfMonPluginCpu.Install ~ 	SystemTools.Free WMPerfMonPluginCpu ~
+WMPerfMonPluginCpu.Install ~ 	System.Free WMPerfMonPluginCpu ~

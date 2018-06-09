@@ -164,7 +164,7 @@ TYPE
 
 END TCPServices.
 
-SystemTools.FreeDownTo TCP ~
+System.FreeDownTo TCP ~
 (**
 Notes
 

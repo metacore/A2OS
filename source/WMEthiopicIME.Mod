@@ -232,7 +232,7 @@ BEGIN
 	END;
 
 END WMEthiopicIME.Install~
-SystemTools.FreeDownTo WMEthiopicIME~
+System.FreeDownTo WMEthiopicIME~
 WMEthiopicIME.SelectedCharToUCS ~
 WMEthiopicIME.UCSToChar 121CH ~
 WMEthiopicIME.UCSToChar  4636~

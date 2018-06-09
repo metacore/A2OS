@@ -195,4 +195,4 @@ END CryptoBase64.
 	
 	CryptoBase64.Test ~
 
-	SystemTools.Free CryptoBase64 ~
+	System.Free CryptoBase64 ~

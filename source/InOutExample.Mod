@@ -28,7 +28,7 @@ END Number;
 
 END InOutExample.
 
-SystemTools.Free InOutExample In Out  ~
+System.Free InOutExample In Out  ~
 
 InOutExample.Hello Oberon ~
 InOutExample.Hello ~

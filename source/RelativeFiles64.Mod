@@ -129,7 +129,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 
 END RelativeFiles64.
 
-SystemTools.Free RelativeFiles64 ~
+System.Free RelativeFiles64 ~
 
 FSTools64.Mount Work RelativeFiles64  ./ ~
 FSTools64.Unmount Test ~

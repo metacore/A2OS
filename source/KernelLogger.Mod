@@ -150,4 +150,4 @@ END KernelLogger.
 
 KernelLogger.Start ~
 KernelLogger.Stop ~
-SystemTools.Free WMKernelLog KernelLogger ~
+System.Free WMKernelLog KernelLogger ~

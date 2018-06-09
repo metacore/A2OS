@@ -453,7 +453,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END Serials.
 
-SystemTools.Free V24 Serials ~
+System.Free V24 Serials ~
 
 V24.Install ~
 Serials.Test ~

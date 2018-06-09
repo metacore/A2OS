@@ -61,4 +61,4 @@ WMDesktops.Store Test.Desktop ~
 
 WMDesktops.Load Test.Desktop ~
 
-SystemTools.Free WMDesktops ~
+System.Free WMDesktops ~

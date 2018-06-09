@@ -83,4 +83,4 @@ BEGIN
 	InitMod;
 END PrecisionTimer.
 
-SystemTools.Free PrecisionTimer ~
+System.Free PrecisionTimer ~

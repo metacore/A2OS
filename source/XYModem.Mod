@@ -457,4 +457,4 @@ Aos.Call XYModem.YSend 0 115200 no 1 test.dat ~
 
 Aos.Call XYModem.YReceive 0 115200 no 1 test.dat ~
 
-SystemTools.Free XYModem ~
+System.Free XYModem ~

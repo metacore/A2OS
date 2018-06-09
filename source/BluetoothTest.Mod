@@ -1020,10 +1020,10 @@ END BluetoothTest.
 BluetoothHCI.Mod
 
 
-SystemTools.Free BluetoothTest BluetoothL2CAP BluetoothHCI BluetoothUART BluetoothUSB Bluetooth~
-SystemTools.Free BluetoothTest~
+System.Free BluetoothTest BluetoothL2CAP BluetoothHCI BluetoothUART BluetoothUSB Bluetooth~
+System.Free BluetoothTest~
 
-SystemTools.ListPlugins ~
+System.ListPlugins ~
 
 BluetoothTest.Open UsbBluetooth00 BTTest ~
 

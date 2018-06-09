@@ -16,6 +16,6 @@ END Hello;
 
 END HelloWorld3.
 
-SystemTools.Free HelloWorld2 ~
+System.Free HelloWorld2 ~
 
 HelloWorld3.Hello ~

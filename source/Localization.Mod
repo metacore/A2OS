@@ -33,4 +33,4 @@ BEGIN
 	preferenceList[0] := currentLanguage;
 END Localization.
 
-SystemTools.Free Localization ~
+System.Free Localization ~

@@ -3695,13 +3695,13 @@ TYPE
 					END;
 				END;
 
-				(* check whether the command is SystemTools.DoCommands *)
+				(* check whether the command is System.DoCommands *)
 				IF (i < 22) THEN
 					string[i] := CHR(ch);
 					INC(i);
 					IF (i = 22) THEN
 						string[22] := 0X;
-						IF (string = "SystemTools.DoCommands") OR Strings.StartsWith2("PreliminaryCommands",string) THEN
+						IF (string = "System.DoCommands") OR Strings.StartsWith2("PreliminaryCommands",string) THEN
 							sDoCommands := TRUE;
 						END;
 					END;
@@ -3711,7 +3711,7 @@ TYPE
 					INC(nofLastSelections);
 				END;
 
-				(* We do a special treatment of the command SystemTools.DoCommands since we don't want a single
+				(* We do a special treatment of the command System.DoCommands since we don't want a single
 				tilde character to delimit the parameter string for the particular command - but two tilde characters *)
 				IF sDoCommands THEN
 					IF (ch = ORD("~")) THEN
@@ -3720,7 +3720,7 @@ TYPE
 							utilreader.ReadCh(ch);
 						ELSE
 							(* Two tilde characters only separated with whitespace means this is the
-							end of the SystemTools.DoCommands parameter string *)
+							end of the System.DoCommands parameter string *)
 						END;
 					ELSIF lastWasTilde & ~TextUtilities.IsWhiteSpace(ch,text.isUTF)  THEN
 						lastWasTilde := FALSE;

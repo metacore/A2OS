@@ -7,7 +7,7 @@ MODULE UsbGarminGPS18;  (** AUTHOR "staubesv"; PURPOSE "Garmin GPS 18 USB Driver
  * Usage:
  *
  *	UsbGarminGPS18.Install ~ loads this driver
- *	SystemTools.Free UsbGarminGPS18 ~ unloads it
+ *	System.Free UsbGarminGPS18 ~ unloads it
  *
  * Note: The GPS needs several minutes until it receives PVT (position, velocity, time) data.
  *
@@ -680,4 +680,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, 9)
 END UsbGarminGPS18.
 
-UsbGarminGPS18.Install ~  SystemTools.Free UsbGarminGPS18 ~
+UsbGarminGPS18.Install ~  System.Free UsbGarminGPS18 ~

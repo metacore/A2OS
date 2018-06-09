@@ -65,4 +65,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginVNCServer.
 
-WMPerfMonPluginVNCServer.Install ~	SystemTools.Free WMPerfMonPluginVNCServer ~
+WMPerfMonPluginVNCServer.Install ~	System.Free WMPerfMonPluginVNCServer ~

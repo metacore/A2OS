@@ -240,4 +240,4 @@ END SSHKeys.
 
 SSHKeys.RSAKeyGen ~
 
-SystemTools.Free SSHKeys ~
+System.Free SSHKeys ~

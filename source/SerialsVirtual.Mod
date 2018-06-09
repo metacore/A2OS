@@ -15,7 +15,7 @@ MODULE SerialsVirtual; (** AUTHOR "staubesv"; PURPOSE "Virtual serial port drive
  *
  *	SerialsVirtual.InstallSniffer ~ installs a virtal serial port that acts as proxy for the specified port
  *
- *	SystemTools.Free SerialsVirtual ~ Unregisters virtual serial ports at Serials
+ *	System.Free SerialsVirtual ~ Unregisters virtual serial ports at Serials
  *
  * History:
  *

@@ -271,5 +271,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END MainMenu.
 
-SystemTools.Free MainMenu WMTabComponents ~
+System.Free MainMenu WMTabComponents ~
 MainMenu.Open ~

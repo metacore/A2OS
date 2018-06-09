@@ -174,4 +174,4 @@ END CompilerInterface.
 
 CompilerInterface.Show ~
 
-SystemTools.Free CompilerInterface ~
+System.Free CompilerInterface ~

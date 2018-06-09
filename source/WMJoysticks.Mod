@@ -3,7 +3,7 @@ MODULE WMJoysticks; (** AUTHOR "staubesv"; PURPOSE "Joystick control application
  * Usage:
  *
  *	WMJoysticks.Open [joystickname] ~ opens a viewer for the specified joystick
- *	SystemTools.Free WMJoysticks ~ unloads this module
+ *	System.Free WMJoysticks ~ unloads this module
  *
  * History:
  *
@@ -551,12 +551,12 @@ END WMJoysticks.
 
 Joysticks.Show ~
 
-JoysticksTest.CreateJoystick ~ 	SystemTools.Free JoysticksTest ~
+JoysticksTest.CreateJoystick ~ 	System.Free JoysticksTest ~
 
 WMJoysticks.Open~
 
 WMJoysticks.Open JOYSTICK2 ~
 
-SystemTools.Free WMJoysticks ~
+System.Free WMJoysticks ~
 
-SystemTools.Free WMJoysticks JoysticksTest Joysticks ~
+System.Free WMJoysticks JoysticksTest Joysticks ~

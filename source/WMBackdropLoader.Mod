@@ -132,7 +132,7 @@ BEGIN
 	Modules.InstallTermHandler (Cleanup)
 END WMBackdropLoader.
 
-SystemTools.Free WMBackdropLoader Looks ~
+System.Free WMBackdropLoader Looks ~
 WMBackdropLoader.Open BackdropList.XML ~
 
 

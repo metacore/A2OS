@@ -1824,5 +1824,5 @@ There may be references like this: [[Get|FoxDocumentationBackend.Get]]
 
 *)
 
-SystemTools.Free FoxDocumentationHtml FoxDocumentationBackend FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationTree FoxDocumentationScanner ~
+System.Free FoxDocumentationHtml FoxDocumentationBackend FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationTree FoxDocumentationScanner ~
 Compiler.Compile -d=*.html -i  oc/FoxDocumentationBackend.Mod ~

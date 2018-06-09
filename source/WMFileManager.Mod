@@ -256,6 +256,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMFileManager.
 
-SystemTools.Free WMFileManager WMSystemComponents ~
+System.Free WMFileManager WMSystemComponents ~
 WMFileManager.Open ~
 

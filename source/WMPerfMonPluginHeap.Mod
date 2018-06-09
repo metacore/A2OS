@@ -437,4 +437,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginHeap.
 
-WMPerfMonPluginHeap.Install ~   SystemTools.Free WMPerfMonPluginHeap ~
+WMPerfMonPluginHeap.Install ~   System.Free WMPerfMonPluginHeap ~

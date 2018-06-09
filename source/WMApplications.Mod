@@ -572,4 +572,4 @@ WMApplications.Open test:test:0 ~
 
 WMApplications.Open System:ObjectTracker ~
 
-SystemTools.Free WMApplications ~
+System.Free WMApplications ~

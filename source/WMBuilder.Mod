@@ -3450,8 +3450,8 @@ END WMBuilder.
 
 WMBuilder.Open ~
 
-SystemTools.Free WMBuilder WMInspector WMInspectionComponents ~
-SystemTools.FreeDownTo WMBuilder ~
+System.Free WMBuilder WMInspector WMInspectionComponents ~
+System.FreeDownTo WMBuilder ~
 
 PC.Compile \s
 	Repositories.Mod WMRepositories.Mod

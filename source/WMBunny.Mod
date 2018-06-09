@@ -180,4 +180,4 @@ WMBunny.Insert WMBunnyImages.tar://aos2.gif 25 10 ~
 WMBunny.Insert WMBunnyImages.tar://aos3.gif 25 15 ~
 
 WMBunny.Free~
-SystemTools.Free WMBunny 
+System.Free WMBunny 

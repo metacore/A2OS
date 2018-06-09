@@ -731,4 +731,4 @@ TYPE
 
 END Tar.
 
-SystemTools.Free Tar ~
+System.Free Tar ~

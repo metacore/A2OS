@@ -582,4 +582,4 @@ TYPE
 
 END UsbHidReport.
 
-SystemTools.Free UsbHidReport~
+System.Free UsbHidReport~

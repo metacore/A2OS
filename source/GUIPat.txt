@@ -37,7 +37,7 @@ Each example, suggestively named "GUIPatxyz",
  	
  	Click on [Compile] to compile the source text to an object module "GUIPatxyz.Bbx" which can then be tested (see 3 below).
  	If after executing the object module, the text is modified and recompiled, the loaded version must be unloaded
- 	by executing SystemTools.Free GUIPatxyz ~	(this command acommpanies every module listed below)
+ 	by executing System.Free GUIPatxyz ~	(this command acommpanies every module listed below)
  
 3 - can be tested by executing the commands appearing in this text immediately below the module name and description,
 	as for example "GUIPat1.Open ~"
@@ -70,65 +70,65 @@ At this time (January 2006), the following examples are offered (not yet fully d
 ]]></Span><Span style="Bold"><![CDATA[=======================================================]]></Span><Span style="Normal"><![CDATA[
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat1.Mod]]></Span><Span style="Normal"><![CDATA[ - window positioning
-				GUIPat1.Open ~		SystemTools.Free GUIPat1 ~
+				GUIPat1.Open ~		System.Free GUIPat1 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat2.Mod]]></Span><Span style="Normal"><![CDATA[ - window with embedded panel containing a button
-				GUIPat2.Open ~		SystemTools.Free GUIPat2 ~
+				GUIPat2.Open ~		System.Free GUIPat2 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat3.Mod]]></Span><Span style="Normal"><![CDATA[ - window with embedded list
-				GUIPat3.Open ~		SystemTools.Free GUIPat3 ~
+				GUIPat3.Open ~		System.Free GUIPat3 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat4.Mod]]></Span><Span style="Normal"><![CDATA[ - window with embedded list using data extracted from an XML file TVChannels.XML
-				GUIPat4.Open A ~		SystemTools.Free GUIPat4 ~
+				GUIPat4.Open A ~		System.Free GUIPat4 ~
 				GUIPat4.Open B ~
 				GUIPat4.Open C ~
 				GUIPat4.ReShow ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat5.Mod]]></Span><Span style="Normal"><![CDATA[ - GUIPat4.Mod with corrections
-				GUIPat5.Open A ~		SystemTools.Free GUIPat5 ~
+				GUIPat5.Open A ~		System.Free GUIPat5 ~
 				GUIPat5.Open B ~
 				GUIPat5.Open C ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat6.Mod]]></Span><Span style="Normal"><![CDATA[ - application can be started only once, use of parameters
-				GUIPat6.Open ~		SystemTools.Free GUIPat6 ~
+				GUIPat6.Open ~		System.Free GUIPat6 ~
 				GUIPat6.Open GUIPat6 200x100 ~ or GUIPat6.Open NewWin 150x150  ~
 				GUIPat6.Remove ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat7.Mod]]></Span><Span style="Normal"><![CDATA[ - several windows for the same application, made restorable for the next session
-				GUIPat7.Open ~		SystemTools.Free GUIPat7 ~
+				GUIPat7.Open ~		System.Free GUIPat7 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat8.Mod]]></Span><Span style="Normal"><![CDATA[ - module creating a list is coded to be (re-)useable by GUIPat9.Mod and GUIPat10.Mod
-				Not to use alone, except a test with GUIPat8.Test ~	SystemTools.Free GUIPat8 ~
+				Not to use alone, except a test with GUIPat8.Test ~	System.Free GUIPat8 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat9.Mod]]></Span><Span style="Normal"><![CDATA[ - application can be started only once, uses repeatedly GUIPat8.Mod
-				GUIPat9.Open ~		SystemTools.Free GUIPat9 GUIPat8 ~
+				GUIPat9.Open ~		System.Free GUIPat9 GUIPat8 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat10.Mod]]></Span><Span style="Normal"><![CDATA[ - application uses repeatedly GUIPat8.Mod for constructing lists with different data
-				GUIPat10.Open ~		SystemTools.Free GUIPat10 GUIPat8 ~
+				GUIPat10.Open ~		System.Free GUIPat10 GUIPat8 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat11.Mod]]></Span><Span style="Normal"><![CDATA[ - tight coupling of 3 windows, one plus two from GUIPat11a
-				GUIPat11.Open ~		SystemTools.Free GUIPat11 GUIPat11a ~
+				GUIPat11.Open ~		System.Free GUIPat11 GUIPat11a ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat11a.Mod]]></Span><Span style="Normal"><![CDATA[ - tight coupling of 2 windows
-				GUIPat11a.Open ~		SystemTools.Free GUIPat11a ~
+				GUIPat11a.Open ~		System.Free GUIPat11a ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat12.Mod]]></Span><Span style="Normal"><![CDATA[ - window with scollbar
-				GUIPat12.Open ~		SystemTools.Free GUIPat12 ~
+				GUIPat12.Open ~		System.Free GUIPat12 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat12a.Mod]]></Span><Span style="Normal"><![CDATA[ - window with scollbar and checkbox
-				GUIPat12a.Open ~		SystemTools.Free GUIPat12a ~
+				GUIPat12a.Open ~		System.Free GUIPat12a ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat13.Mod]]></Span><Span style="Normal"><![CDATA[ - unbordered window with pop-up menu ( as used in WMClock.Mod )
-				GUIPat13.Open ~		SystemTools.Free GUIPat13 ~
+				GUIPat13.Open ~		System.Free GUIPat13 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat14.Mod]]></Span><Span style="Normal"><![CDATA[ - single window with user defined toolbar
-				GUIPat14.Open ~		SystemTools.Free GUIPat14 ~
+				GUIPat14.Open ~		System.Free GUIPat14 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat15.Mod]]></Span><Span style="Normal"><![CDATA[ - single window with text editor
-				GUIPat15.Open ~		SystemTools.Free GUIPat15 ~
+				GUIPat15.Open ~		System.Free GUIPat15 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPat16.Mod]]></Span><Span style="Normal"><![CDATA[ - single window with resizer in 4 quadrants
-				GUIPat16.Open ~		SystemTools.Free GUIPat16 ~
+				GUIPat16.Open ~		System.Free GUIPat16 ~
 
 ]]></Span><Span style="AdHoc Oberon 14 1 0 000000FF 00000000"><![CDATA[Standard templates]]></Span><Span style="Normal"><![CDATA[
 
@@ -137,22 +137,22 @@ the development of an application best fit for the Bluebottle environment. Each 
 of source code needed for its particular purpose.
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatW1.Mod]]></Span><Span style="Normal"><![CDATA[ - Single window, non-restorable
-				GUIPatW1.Open ~		SystemTools.Free GUIPatW1 ~
+				GUIPatW1.Open ~		System.Free GUIPatW1 ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatW1R.Mod]]></Span><Span style="Normal"><![CDATA[ - Single window, restorable
-				GUIPatW1R.Open ~		SystemTools.Free GUIPatW1R ~
+				GUIPatW1R.Open ~		System.Free GUIPatW1R ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatWn.Mod]]></Span><Span style="Normal"><![CDATA[ - Multiple windows controlled by number, non-restorable
-				GUIPatWn.Open ~		SystemTools.Free GUIPatWn ~
+				GUIPatWn.Open ~		System.Free GUIPatWn ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatWnR.Mod]]></Span><Span style="Normal"><![CDATA[ - Multiple windows controlled by number, restorable
-				GUIPatWnR.Open ~		SystemTools.Free GUIPatWnR ~
+				GUIPatWnR.Open ~		System.Free GUIPatWnR ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatWc.Mod]]></Span><Span style="Normal"><![CDATA[ - Multiple windows controlled by chain, non-restorable
-				GUIPatWc.Open ~		SystemTools.Free GUIPatWc ~
+				GUIPatWc.Open ~		System.Free GUIPatWc ~
 
 ]]></Span><Span style="Bold"><![CDATA[GUIPatWcR.Mod]]></Span><Span style="Normal"><![CDATA[ - Multiple windows controlled by chain, restorable 
-				GUIPatWcR.Open ~		SystemTools.Free GUIPatWcR ~
+				GUIPatWcR.Open ~		System.Free GUIPatWcR ~
 
 Definition of "restorable": The objects appearing in the display space are externalized and repertoriated in
 	the system file "Auto.dsk" by clicking on [SaveDesktop] under [System] on the desktop menu.

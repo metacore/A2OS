@@ -103,6 +103,6 @@ END Convert;
 
 END WMPicView.
 
-SystemTools.Free WMPicView ~
+System.Free WMPicView ~
 WMPicView.Open  	errorpos.png ~
 WMPicView.Convert BluebottlePic0.png temp.gif ~

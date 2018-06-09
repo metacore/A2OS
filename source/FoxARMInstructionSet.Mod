@@ -2930,7 +2930,7 @@ CONST
 BEGIN Init;
 END FoxARMInstructionSet.
 
-SystemTools.FreeDownTo FoxARMInstructionSet ~
+System.FreeDownTo FoxARMInstructionSet ~
 
 FoxARMInstructionSet.Test BLEQSB  ~
 FoxARMInstructionSet.Test2 ~

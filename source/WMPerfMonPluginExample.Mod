@@ -67,7 +67,7 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginExample.
 
-WMPerfMonPluginExample.Install ~   SystemTools.Free WMPerfMonPluginExample ~
+WMPerfMonPluginExample.Install ~   System.Free WMPerfMonPluginExample ~
 
 WMPerfMonPluginExample.SetValues 112 1 9 ~
 

@@ -2416,6 +2416,6 @@ Error codes
 2838	Lock failed
 2839	Unlock failed
 
-AosATADisk.Install ~		SystemTools.Free ATADisks ~
+AosATADisk.Install ~		System.Free ATADisks ~
 
 ATAErrors.Text

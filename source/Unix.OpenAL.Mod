@@ -941,5 +941,5 @@ Modules.InstallTermHandler(OnClose) ;
 
 END OpenAL.
 
-SystemTools.Free OpenAL~
+System.Free OpenAL~
 

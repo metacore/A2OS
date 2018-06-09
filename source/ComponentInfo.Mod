@@ -263,7 +263,7 @@ END ShowPrototypes;
 
 END ComponentInfo.
 
-SystemTools.Free ComponentInfo ~
+System.Free ComponentInfo ~
 
 ComponentInfo.ShowStatistics * ~
 

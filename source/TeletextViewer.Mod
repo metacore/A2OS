@@ -755,4 +755,4 @@ BEGIN
 END TeletextViewer.
 
 TeletextViewer.Open ~
-SystemTools.Free TeletextViewer ~
+System.Free TeletextViewer ~

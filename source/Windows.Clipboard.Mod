@@ -99,4 +99,4 @@ END Clipboard.
 
 Clipboard.Install ~
 
-SystemTools.Free Clipboard ~
+System.Free Clipboard ~

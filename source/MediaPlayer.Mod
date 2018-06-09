@@ -1493,11 +1493,11 @@ END MediaPlayer.
 
 ------------------------------------------------------------
 i810Sound.Install ~
-SystemTools.Free MediaPlayer ~
-SystemTools.Free WMPlayer MediaPlayer DivXDecoder DivXHelper DivXTypes AVI~
+System.Free MediaPlayer ~
+System.Free WMPlayer MediaPlayer DivXDecoder DivXHelper DivXTypes AVI~
 PC.Compile AVI.Mod DivXTypes.Mod DivXHelper.Mod DivXDecoder.Mod MediaPlayer.Mod WMPlayer.Mod~
 
-SystemTools.Free WMPlayer MediaPlayer ~
+System.Free WMPlayer MediaPlayer ~
 
 WMPlayer.Open flags.avi~
 

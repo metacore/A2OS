@@ -4153,4 +4153,4 @@ BEGIN
 	BootLoaderName := "OBL.Bin";
 END PartitionsLib.
 
-SystemTools.Free PartitionsLib ~
+System.Free PartitionsLib ~

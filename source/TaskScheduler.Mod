@@ -558,4 +558,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END TaskScheduler.
 
-SystemTools.Free WMTaskScheduler TaskScheduler ~
+System.Free WMTaskScheduler TaskScheduler ~

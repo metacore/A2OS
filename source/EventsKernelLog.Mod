@@ -56,4 +56,4 @@ BEGIN
 	Events.AddEvent(ModuleName, Events.Information, Class, Subclass, 0, "Started kernel log event logger", Verbose);
 END EventsKernelLog.
 
-EventsKernelLog.Install ~		SystemTools.Free EventsKernelLog ~
+EventsKernelLog.Install ~		System.Free EventsKernelLog ~

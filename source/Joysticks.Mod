@@ -3,7 +3,7 @@ MODULE Joysticks; (** AUTHOR "staubesv"; PURPOSE "Joystick interface"; *)
  * Usage:
  *
  *	Joysticks.Show ~ displays a list of all accessible joystick instances
- *	SystemTools.Free Joysticks ~	unloads this module
+ *	System.Free Joysticks ~	unloads this module
  *
  * Clients:
  *	1. Get joystick object instance via Joysticks.registry.Get() or Joysticks.registry.GetAll()
@@ -547,4 +547,4 @@ END Joysticks.
 
 Joysticks.Show ~
 
-SystemTools.Free Joysticks ~
+System.Free Joysticks ~

@@ -1159,4 +1159,4 @@ END UsbNetworkUSB200M.
 
 UsbNetworkUSB200M.Install ~
 
-SystemTools.Free UsbNetworkUSB200M UsbNetwork NetworkMii ~
+System.Free UsbNetworkUSB200M UsbNetwork NetworkMii ~

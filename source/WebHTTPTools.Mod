@@ -226,8 +226,8 @@ WebHTTPTools.Get https://highdim.com/ test.html ~
 WebHTTPTools.Get https://www.startpage.com/ test.html ~
 WebHTTP.Mod
 
-SystemTools.Free WebHTTPTools
-SystemTools.FreeDownTo WebHTTP  ~
+System.Free WebHTTPTools
+System.FreeDownTo WebHTTP  ~
 WebHTTPClient WebWormWatch WebHTTPServer WebHTTP~
 WebHTTPServer.Start~
 WebWormWatch.Install~

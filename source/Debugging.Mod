@@ -67,7 +67,7 @@ VAR
 		Exit;
 	END TraceBack;
 
-	(* TraceBackAll implemented in SystemTools.ShowStacks *)
+	(* TraceBackAll implemented in System.ShowStacks *)
 
 	PROCEDURE FileStart*(context: Commands.Context);   (* start writing to a the file Debugging.Text *)
 	VAR w: Files.Writer;  filename: ARRAY 256 OF CHAR;
@@ -252,5 +252,5 @@ BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );
 END Debugging.
 
-SystemTools.FreeDownTo Debugging ~
+System.FreeDownTo Debugging ~
 Debugging.ReportProcedureDescriptors

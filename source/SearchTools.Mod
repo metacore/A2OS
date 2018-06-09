@@ -361,7 +361,7 @@ END Replace;
 
 END SearchTools.
 
-SystemTools.Free SearchTools ~
+System.Free SearchTools ~
 
 SearchTools.Find -s -r E:/Highdim/Hardware/*.xml "?{" ~
 
@@ -371,4 +371,4 @@ SearchTools.Find E:/WinaosNewCommands/winaos/src/*.Mod Commands  ~
 SearchTools.Replace E:/WinaosNewCommands/source/*.Mod AosCommands Commands ~
 SearchTools.Replace E:/WinaosNewCommands/winaos/src/*.Mod AosCommands Commands ~
 
-SystemTools.FreeDownTo SearchTools ~
+System.FreeDownTo SearchTools ~

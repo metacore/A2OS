@@ -561,4 +561,4 @@ TYPE
 
 END FoxMinosObjectFile.
 
-SystemTools.Free FoxMinosObjectFile ~
+System.Free FoxMinosObjectFile ~

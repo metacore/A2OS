@@ -190,4 +190,4 @@ TYPE
 
 END Mail.
 
-SystemTools.FreeDownTo Mail ~
+System.FreeDownTo Mail ~

@@ -586,5 +586,5 @@ BEGIN
 END PNGDecoder.
 
 
-SystemTools.Free PNGDecoder ~
+System.Free PNGDecoder ~
 y.png ~

@@ -78,4 +78,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, Priority)
 END UsbSkeleton.
 
-UsbSkeleton.Install ~ 	SystemTools.Free UsbSkeleton ~
+UsbSkeleton.Install ~ 	System.Free UsbSkeleton ~

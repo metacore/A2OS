@@ -46,8 +46,8 @@ END Text;
 
 END PDFExample.
 
-SystemTools.Free PDF ~
-SystemTools.Free PDFExample ~
+System.Free PDF ~
+System.Free PDFExample ~
 PDFExample.PolyLine~
 PDFExample.FillPoly~
 PDFExample.Text~

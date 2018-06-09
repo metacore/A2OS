@@ -167,6 +167,6 @@ BEGIN
 	Init;
 END WMPerfMonPluginProcesses.
 
-WMPerfMonPluginProcesses.Install ~   SystemTools.Free WMPerfMonPluginProcesses ~
+WMPerfMonPluginProcesses.Install ~   System.Free WMPerfMonPluginProcesses ~
 
 WMPerfMonPluginProcesses.SetNofProcessors 4 ~

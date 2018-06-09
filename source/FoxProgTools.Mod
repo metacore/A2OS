@@ -1105,7 +1105,7 @@ TYPE
 
 END FoxProgTools.
 
-SystemTools.Free FoxProgTools ~
+System.Free FoxProgTools ~
 
 FoxProgTools.Enum -l=2 a b c (* test (* test *) *)   d e  f g h i j k (* ddd *) d d d ~
 FoxProgTools.Enum --incremental a b c d e ~

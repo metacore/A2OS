@@ -1486,7 +1486,7 @@ TYPE
 
 END FoxIntermediateLinker.
 
-SystemTools.FreeDownTo FoxIntermediateLinker ~
+System.FreeDownTo FoxIntermediateLinker ~
 FoxIntermediateObjectFile.Show Test ~
 FoxIntermediateLinker.Link -b=TRM --objectFile=Generic --targetFile=Test Test ~
 FoxGenericObjectFile.Show Test.Gof ~

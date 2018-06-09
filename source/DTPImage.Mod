@@ -260,4 +260,4 @@ BEGIN
 END DTPImage.
 
 ---------------------------------
-SystemTools.Free DTPImage
+System.Free DTPImage

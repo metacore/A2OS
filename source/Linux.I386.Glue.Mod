@@ -208,9 +208,9 @@ END Glue.
 
 
 
-SystemTools.FreeDownTo FoxIntermediateBackend ~
+System.FreeDownTo FoxIntermediateBackend ~
 
-SystemTools.DoCommands
+System.DoCommands
 	Compiler.Compile -p=Linux32
 		I386.Builtins.Mod Trace.Mod Linux.I386.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
 		Unix.Objects.Mod 

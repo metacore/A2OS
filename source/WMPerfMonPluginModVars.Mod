@@ -171,7 +171,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginModVars.
 
-SystemTools.Free WMPerfMonPluginModVars ~
+System.Free WMPerfMonPluginModVars ~
 
 WMPerfMonPluginModVars.Install ~
 

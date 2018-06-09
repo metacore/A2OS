@@ -5430,7 +5430,7 @@ END FoxAMD64InstructionSet.
 
 FoxAMD64InstructionSet.Trace
 
-SystemTools.Free FoxAMD64InstructionSet ~
+System.Free FoxAMD64InstructionSet ~
 
 	(** Instruction Format, cf. [AMD:3], chapter 1
 		[LegacyPrefix] ; Operand-Size Override / modify opcode of media instructions

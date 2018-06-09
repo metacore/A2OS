@@ -987,4 +987,4 @@ IDCT.Change SSE ~
 IDCT.Change SSE2 ~
 
 IDCT.Obx ~
-SystemTools.Free IDCT ~
+System.Free IDCT ~

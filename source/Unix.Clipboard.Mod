@@ -308,7 +308,7 @@ VAR
 BEGIN
 END Clipboard.
 
- SystemTools.Free Clipboard ~
+ System.Free Clipboard ~
  Clipboard.Install ~
 	
 	  ---------------------------------------------
@@ -322,7 +322,7 @@ END Clipboard.
 	   by clicking the MM button. 
 	   
 	   To stop the clipboard synchronization perform:
-	        'SystemTools.Free Clipboard ~'.
+	        'System.Free Clipboard ~'.
 	        
 	        
 	   ---------------------------------------------

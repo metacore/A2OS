@@ -279,7 +279,7 @@ END Bench;
 
 END DiskBenchmark.
 
-DiskBenchmark.Bench USB2#1 ~  SystemTools.Free DiskBenchmark ~
+DiskBenchmark.Bench USB2#1 ~  System.Free DiskBenchmark ~
 
 Partitions.ShowOps ~
 Partitions.ShowOps detail ~

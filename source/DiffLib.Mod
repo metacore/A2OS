@@ -251,7 +251,7 @@ TYPE
 
 END DiffLib.
 
-SystemTools.Free DiffLib~
+System.Free DiffLib~
 DiffLib.Compare DiffTest1.Text DiffTest2.Text~
 
 DiffLib.Compare Configuration.XML Configuration.XML.Bk ~

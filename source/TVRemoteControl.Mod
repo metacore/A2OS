@@ -360,5 +360,5 @@ BEGIN
 END TVRemoteControl.
 
 
-SystemTools.Free TVRemoteControl ~
+System.Free TVRemoteControl ~
 TVRemoteControl.Open ~

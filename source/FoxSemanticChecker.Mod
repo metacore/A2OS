@@ -10264,4 +10264,4 @@ TYPE
 
 END FoxSemanticChecker.
 
-SystemTools.FreeDownTo FoxSemanticChecker ~ 
+System.FreeDownTo FoxSemanticChecker ~ 

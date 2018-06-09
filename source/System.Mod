@@ -1,4 +1,4 @@
-MODULE SystemTools; (** AUTHOR "TF"; PURPOSE "Access to System Functions"; *)
+MODULE System; (** AUTHOR "TF"; PURPOSE "Access to System Functions"; *)
 
 IMPORT
 	Machine, Modules, Objects, Commands, Options, ProcessInfo, Kernel, Streams, Dates, Strings, Plugins, Files, SystemVersion, Heaps, Reflection;
@@ -165,7 +165,7 @@ BEGIN
 	ELSIF (string = "modules") THEN ListModules(context);
 	ELSIF (string = "commands") THEN ListCommands(context);
 	ELSE
-		context.error.String('Usage: SystemTools.List ("plugins"|"modules"|("commands" moduleName))');
+		context.error.String('Usage: System.List ("plugins"|"modules"|("commands" moduleName))');
 		context.error.Ln;
 	END;
 END List;
@@ -440,7 +440,7 @@ BEGIN
 		IF file # NIL THEN
 			r := NEW Files.Reader(file, 0);
 			NEW(newContext, context.in, r, context.out, context.error, context.caller);
-			Commands.Activate("SystemTools.DoCommands", newContext, {Commands.Wait}, res, msg);
+			Commands.Activate("System.DoCommands", newContext, {Commands.Wait}, res, msg);
 		ELSE
 			context.error.String("Error: no such file: "); context.error.String(filename); context.error.Ln;
 		END;
@@ -510,7 +510,7 @@ BEGIN
 
 		IF (commands[i]^ = "") THEN
 			(* This means that two tilde characters were only separated by whitespace. One delimits
-			the last command we have executed and the other one delimits the SystemTools.DoCommands parameters *)
+			the last command we have executed and the other one delimits the System.DoCommands parameters *)
 			EXIT;
 		END;
 
@@ -535,7 +535,7 @@ BEGIN
 		newContext := CreateContext(paramString);
 
 		IF TraceCommands IN Trace THEN
-			context.out.String("SystemTools.DoCommands: Execute command '"); context.out.String(command^);
+			context.out.String("System.DoCommands: Execute command '"); context.out.String(command^);
 			context.out.String("' parameters: ");
 			IF (paramString = NIL) THEN context.out.String("None");
 			ELSE
@@ -547,7 +547,7 @@ BEGIN
 		Commands.Activate(command^, newContext, {Commands.Wait}, res, msg);
 
 		IF res # Commands.Ok THEN
-			context.error.String("SystemTools.DoCommands: Command: '");
+			context.error.String("System.DoCommands: Command: '");
 			context.error.String(command^); context.error.String("', parameters: ");
 			IF paramString = NIL THEN
 				context.error.String("None");
@@ -628,7 +628,7 @@ VAR
 
 	PROCEDURE ShowUsage;
 	BEGIN
-		context.out.String('Usage: SystemTools.Timer  [  ["start" [number]] | ["elapsed" [number]] | ["diff" number1 number2]  ]');
+		context.out.String('Usage: System.Timer  [  ["start" [number]] | ["elapsed" [number]] | ["diff" number1 number2]  ]');
 		context.out.Ln;
 	END ShowUsage;
 
@@ -735,25 +735,25 @@ BEGIN
 	context.out.String(Machine.version);context.out.String(" Kernel CRC="); context.out.Hex(SystemVersion.BootCRC, 8);  context.out.Ln;
 END Version;
 
-END SystemTools.
+END System.
 
-SystemTools.Free SystemTools  ~
-SystemTools.Kill 57 ~
+System.Free System  ~
+System.Kill 57 ~
 
-SystemTools.Time ~
-SystemTools.Show Hello World ~
+System.Time ~
+System.Show Hello World ~
 
-SystemTools.DoCommands
-	SystemTools.Timer start ~
-	SystemTools.Show System Time ~ SystemTools.Time ~ SystemTools.Ln ~
-	SystemTools.Show System Time again ~ SystemTools.Time ~ SystemTools.Ln ~
-	SystemTools.Wait 2000 ~
-	SystemTools.Show Time elapsed: ~ SystemTools.Timer elapsed ~ SystemTools.Ln ~
+System.DoCommands
+	System.Timer start ~
+	System.Show System Time ~ System.Time ~ System.Ln ~
+	System.Show System Time again ~ System.Time ~ System.Ln ~
+	System.Wait 2000 ~
+	System.Show Time elapsed: ~ System.Timer elapsed ~ System.Ln ~
 ~
 
-SystemTools.CollectGarbage ~
+System.CollectGarbage ~
 
-SystemTools.ListModules -r ~
+System.ListModules -r ~
 
-SystemTools.ModuleState Heaps ~
+System.ModuleState Heaps ~
 

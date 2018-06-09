@@ -424,7 +424,7 @@ END WebBrowser.
 
 PC.Compile \s WMCharCodes.Mod NewHTTPClient.Mod Strings.Mod WebBrowserComponents.Mod XMLTransformer.Mod HTMLTransformer.Mod HTMLScanner.Mod HTMLParser.Mod WebBrowserPanel.Mod WebBrowser.Mod~
 
-SystemTools.Free WebBrowser WebBrowserPanel HTMLParser HTMLScanner HTMLTransformer XMLTransformer WebBrowserComponents Utilities NewHTTPClient WMCharCodes~
+System.Free WebBrowser WebBrowserPanel HTMLParser HTMLScanner HTMLTransformer XMLTransformer WebBrowserComponents Utilities NewHTTPClient WMCharCodes~
 
 WebBrowser.Open ~
 

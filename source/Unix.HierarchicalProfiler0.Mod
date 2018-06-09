@@ -200,7 +200,7 @@ WMProfiler.Open~
 HierarchicalProfiler.Start~
 HierarchicalProfiler.Stop~
 HierarchicalProfiler.Show~
-SystemTools.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
+System.Free WMProfiler HierarchicalProfiler HierarchicalProfiler0 ~
 
 Test.Busyloop~
 Test.PingPongTest~

@@ -152,7 +152,7 @@ TYPE
 		PROCEDURE HandleUnloadButton(sender, data : ANY);
 		VAR msg : ARRAY 128 OF CHAR; res : WORD;
 		BEGIN
-			Commands.Call("SystemTools.FreeDownTo WMPerfMonPlugins", {}, res, msg);
+			Commands.Call("System.FreeDownTo WMPerfMonPlugins", {}, res, msg);
 		END HandleUnloadButton;
 
 		PROCEDURE CreateSysinfoPanel() : WMStandardComponents.Panel;

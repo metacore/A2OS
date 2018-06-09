@@ -291,7 +291,7 @@ END PartitionEditor.
 
 PC.Compile \s PartitionEditorTable.Mod PartitionEditorComponents.Mod PartitionEditor.Mod ~
 
-SystemTools.Free PartitionEditor PartitionEditorComponents PartitionEditorTable ~
+System.Free PartitionEditor PartitionEditorComponents PartitionEditorTable ~
 
 PartitionEditor.Open ~
 

@@ -79,6 +79,6 @@ END Open;
 
 END ExampleTextWriter.
 
-SystemTools.Free ExampleTextWriter ~
+System.Free ExampleTextWriter ~
 ExampleTextWriter.Open
  

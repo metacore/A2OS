@@ -443,7 +443,7 @@ OberonDisplay.Install 1024 768;Oberon.Call System.Init ~
 
 OberonDisplay.Remove ~
 
-SystemTools.Free OberonDisplay ~
+System.Free OberonDisplay ~
 
 
 (*

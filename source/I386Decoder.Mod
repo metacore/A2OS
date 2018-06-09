@@ -3339,4 +3339,4 @@ VAR
 END I386Decoder.
 
 I386Decoder.Open TV.Obx~
-SystemTools.Free I386Decoder ~
+System.Free I386Decoder ~

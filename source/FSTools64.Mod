@@ -1123,7 +1123,7 @@ END Exists;
 
 END FSTools64.
 
-SystemTools.Free FSTools64 ~
+System.Free FSTools64 ~
 
 FSTools64.DeleteFiles ./*.Bak ~
 FSTools64.DeleteFiles ./../../source/*.Bak ~

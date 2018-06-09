@@ -4,7 +4,7 @@ MODULE UsbMouse;  (** AUTHOR "staubesv"; PURPOSE "USB Mouse Driver"; *)
  *
  * Usage:
  *	UsbMouse.Install ~ loads this driver
- *	SystemTools.Free UsbMouse ~ unloads this driver
+ *	System.Free UsbMouse ~ unloads this driver
  *
  *	The HID boot protocol for USB mice supports 3 buttons and 2 axes.
  *
@@ -140,4 +140,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, 10)
 END UsbMouse.
 
-UsbMouse.Install ~  SystemTools.Free UsbMouse ~ 
+UsbMouse.Install ~  System.Free UsbMouse ~ 

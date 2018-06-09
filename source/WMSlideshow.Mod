@@ -1200,8 +1200,8 @@ BEGIN
 END WMSlideshow.
 
 (* Testing commands *)
-SystemTools.Free WMSlideshow WMTransFade WMTransMask WMTrans ~
-SystemTools.Free WMSlideshow~
+System.Free WMSlideshow WMTransFade WMTransMask WMTrans ~
+System.Free WMSlideshow~
 
 PC.Compile RetoWMTrans.Mod RetoWMTransMask.Mod RetoWMTransFade.Mod RetoWMSlideshow.Mod~
 

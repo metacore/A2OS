@@ -197,5 +197,5 @@ WebCGI.RegisterCGI RegisterRaily4 RegisterRFW.RegisterRFW4 ~
 WebCGI.RegisterCGI RegisterRaily3 RegisterRFW.RegisterRFW3 ~
 WebCGI.ListCGI ~
 WebCGI.Install ~
-SystemTools.Free RegisterRFW WebCGI ~
+System.Free RegisterRFW WebCGI ~
 

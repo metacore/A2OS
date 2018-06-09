@@ -7,7 +7,7 @@ MODULE System IN Oberon; (** portable, except where noted *) (* pjm *)
  *
  * History:
  *
- *	16.03.2007	Activate SystemTools.FreeDownTo instead of AosTools.FreeDownTo in procedure FreeOberon (staubesv)
+ *	16.03.2007	Activate System.FreeDownTo instead of AosTools.FreeDownTo in procedure FreeOberon (staubesv)
  *)
 
 IMPORT SYSTEM, Kernel, AosFS := Files IN A2, Files, Modules, Objects, Display, Input, Fonts, Viewers, Texts, Oberon, TextFrames,
@@ -1014,9 +1014,9 @@ BEGIN
 	COPY(OberonBaseModule, msg);
 	NEW(arg, LEN(msg)); arg.SetRaw(msg, 0, LEN(msg));
 	NEW(context, NIL, arg, NIL, NIL, NIL);
-	Commands.Activate("SystemTools.FreeDownTo", context, {}, res, msg);
+	Commands.Activate("System.FreeDownTo", context, {}, res, msg);
 	Kernel.UnlockOberon;
-	AosActive.Terminate	(* kill Oberon process in an unclean way (race with above! workaround in SystemTools.Mod) *)
+	AosActive.Terminate	(* kill Oberon process in an unclean way (race with above! workaround in System.Mod) *)
 END FreeOberon;
 
 PROCEDURE Quit*;

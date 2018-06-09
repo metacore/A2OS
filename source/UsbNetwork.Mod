@@ -245,4 +245,4 @@ UsbNetwork.Diag UsbNet#0 ~
 UsbNetwork.Diag UsbNet#1 ~
 UsbNetwork.Diag UsbNet#2 ~
 
-SystemTools.Free UsbNetwork ~
+System.Free UsbNetwork ~

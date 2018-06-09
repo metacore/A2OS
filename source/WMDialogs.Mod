@@ -1109,7 +1109,7 @@ END TestCustomDialog;
 
 END WMDialogs.
 
-SystemTools.Free WMDialogs ~
+System.Free WMDialogs ~
 WMDialogs.Test ~
 WMDialogs.TestMsg ~
 WMDialogs.TestLogin ~

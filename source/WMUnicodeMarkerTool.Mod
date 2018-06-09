@@ -277,7 +277,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMUnicodeMarkerTool.
 
-SystemTools.Free WMUnicodeMarkerTool~
+System.Free WMUnicodeMarkerTool~
 WMUnicodeMarkerTool.Open  ~
 
 

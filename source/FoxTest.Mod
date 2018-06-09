@@ -247,7 +247,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END FoxTest.
 
-SystemTools.Free FoxTest TestSuite Versioning ~
+System.Free FoxTest TestSuite Versioning ~
 
 	FoxTest.Compile 	Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
 
@@ -259,6 +259,6 @@ SystemTools.Free FoxTest TestSuite Versioning ~
 		--verbose
 		--fileName="TesterInput.Mod"
 		--prolog="Compiler.Compile TesterInput.Mod"
-		--command="SystemTools.Free Test Dummy B A;SystemTools.Load Test"
+		--command="System.Free Test Dummy B A;System.Load Test"
 		--logFile="FoxExecutionTest.Log"
 	MathVectors.Test MathVectors.Test.Diff ~

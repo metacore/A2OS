@@ -431,5 +431,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMOverlay.
 
-SystemTools.Free WMOverlay ~
+System.Free WMOverlay ~
 WMOverlay.Open ~

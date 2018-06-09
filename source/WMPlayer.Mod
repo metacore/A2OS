@@ -440,7 +440,7 @@ BEGIN
 END WMPlayer.
 
 ------------------------------------------------------------------------------
-SystemTools.Free WMPlayer ~
+System.Free WMPlayer ~
 WMPlayer.Open track.mp3~
 WMPlayer.Open test.wav~
 WMPlayer.Open FAT:tndx.avi~

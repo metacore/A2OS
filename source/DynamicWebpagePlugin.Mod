@@ -947,8 +947,8 @@ BEGIN
 	Modules.InstallTermHandler(ModuleTerminator)
 END DynamicWebpagePlugin.
 
-SystemTools.Free DynamicWebpagePlugin~
-SystemTools.Free WebHTTPServerTools WebHTTPServer WebHTTP~
+System.Free DynamicWebpagePlugin~
+System.Free WebHTTPServerTools WebHTTPServer WebHTTP~
 
 DynamicWebpagePlugin.Install ~
 DynamicWebpagePlugin.Uninstall ~

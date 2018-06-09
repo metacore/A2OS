@@ -91,4 +91,4 @@ BEGIN
 	InitPlugins;
 END WMPerfMonPluginNetwork.
 
-WMPerfMonPluginNetwork.Install ~  SystemTools.Free WMPerfMonPluginNetwork ~
+WMPerfMonPluginNetwork.Install ~  System.Free WMPerfMonPluginNetwork ~

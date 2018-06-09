@@ -1,5 +1,5 @@
 # Oberon language test and validation suite
-# options 	--mayTrap --prolog="Compiler.Compile -p=Win32 --cellsAreObjects TesterInput.txt" --command="SystemTools.Free Test Tester;ActiveCellsRunner.Execute Test.Cellnet" --logFile="ActiveCells.ExecutionTest.Log" --result="ActiveCells.Execution.Test.Diff"
+# options 	--mayTrap --prolog="Compiler.Compile -p=Win32 --cellsAreObjects TesterInput.txt" --command="System.Free Test Tester;ActiveCellsRunner.Execute Test.Cellnet" --logFile="ActiveCells.ExecutionTest.Log" --result="ActiveCells.Execution.Test.Diff"
 
 # test halt and assert statements and simple procedure call (basics for the test suite)
 

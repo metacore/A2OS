@@ -76,4 +76,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginEvents.
 
-WMPerfMonPluginEvents.Install ~	SystemTools.Free WMPerfMonPluginEvents ~
+WMPerfMonPluginEvents.Install ~	System.Free WMPerfMonPluginEvents ~

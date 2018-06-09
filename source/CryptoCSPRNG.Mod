@@ -62,4 +62,4 @@ END CryptoCSPRNG.
 
 	CryptoCSPRNG.Test ~
 	
-	SystemTools.Free CryptoCSPRNG ~
+	System.Free CryptoCSPRNG ~

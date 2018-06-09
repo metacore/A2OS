@@ -4,7 +4,7 @@ MODULE WMPerfMonPluginInterrupts; (** AUTHOR "staubesv"; PURPOSE "Performance Mo
  *
  * Usage:
  *
- *	WMPerfMonPluginInterrupts.Install ~ loads this plugin		Use SystemTools.Free WMPerfMonPluginInterrupts ~ to unload it
+ *	WMPerfMonPluginInterrupts.Install ~ loads this plugin		Use System.Free WMPerfMonPluginInterrupts ~ to unload it
  *
  *	Once loaded, the plugin is accessible using the Performance Monitor application -> WMPerfMon.Open ~
  *
@@ -196,4 +196,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginInterrupts.
 
-WMPerfMonPluginInterrupts.Install ~		SystemTools.Free WMPerfMonPluginInterrupts ~
+WMPerfMonPluginInterrupts.Install ~		System.Free WMPerfMonPluginInterrupts ~

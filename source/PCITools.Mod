@@ -10,7 +10,7 @@ MODULE PCITools; (** AUTHOR "pjm/staubesv"; PURPOSE "PCI Bus Tools"; *)
  *	PCITools.Scan details ~		displays excessively detailed information
  *	PCITools.DetectHardware ~	performs a PCI function to device driver mapping for all devices found
  *
- *	SystemTools.Free PCITools ~
+ *	System.Free PCITools ~
  *
  * Port of Oberon PCITools.Mod from "pjm" which is based on Linux pci.c and PCI Local Bus Specification Revision 2.0
  *
@@ -507,7 +507,7 @@ END DetectHardware;
 
 END PCITools.
 
-PCITools.Scan ~  SystemTools.Free PCITools DriverDatabase ~
+PCITools.Scan ~  System.Free PCITools DriverDatabase ~
 
 PCITools.Scan details ~
 

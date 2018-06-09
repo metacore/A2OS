@@ -5,7 +5,7 @@
 	HotKeys.Open HotKeys.XML ~ to load this file
 	HotKeys.Show ~ to see a list of currently bound hotkeys
 	
-	WMKeyCode.Open ~	SystemTools.Free WMKeyCode ~
+	WMKeyCode.Open ~	System.Free WMKeyCode ~
 	
 	Valid modifier keys:
 	
@@ -34,7 +34,7 @@
 
 	<!-- Standard hot keys (don't change) -->
 	<HotKey name="Show Hotkeys" keys="F11" command="HotKeys.Show"/>
-	<HotKey name="Disable Hotkeys" keys="F12" command="SystemTools.Free HotKeys"/>
+	<HotKey name="Disable Hotkeys" keys="F12" command="System.Free HotKeys"/>
 	
 	<!-- Example hot keys -->
 	
@@ -105,7 +105,7 @@
 	
 	<HotKey name="BOLD" keys="CTRL+B" command="WMTextStyleTool.SetFontStyle BOLD"/>
 
-	<HotKey name="Close Windows" keys="CTRL+Q" command="SystemTools.Reboot"/>
+	<HotKey name="Close Windows" keys="CTRL+Q" command="System.Reboot"/>
 	<HotKey name="Trace" keys="CTRL+T" command="TLHostData.ToggleTrace;WMKernelLog.Open"/>
 
 	

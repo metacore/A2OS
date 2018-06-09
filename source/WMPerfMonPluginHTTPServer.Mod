@@ -58,4 +58,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginHTTPServer.
 
-WMPerfMonPluginHTTPServer.Install ~   SystemTools.Free WMPerfMonPluginHTTPServer ~
+WMPerfMonPluginHTTPServer.Install ~   System.Free WMPerfMonPluginHTTPServer ~

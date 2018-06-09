@@ -166,4 +166,4 @@ TYPE
 END TeletextBrowser.
 
 
-SystemTools.Free TeletextBrowser ~
+System.Free TeletextBrowser ~

@@ -12,7 +12,7 @@ MODULE HotKeys; (** AUTHOR "staubesv"; PURPOSE "Hotkey support"; *)
  *
  *	HotKeys.Show ~ displays a list of bound hot keys
  *
- *	SystemTools.Free HotKeys ~ disables all hot keys and unloads the module
+ *	System.Free HotKeys ~ disables all hot keys and unloads the module
  *
  * History:
  *

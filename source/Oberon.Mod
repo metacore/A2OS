@@ -42,5 +42,5 @@ Oberon.Start Oberon 0x0 ~	(* Oberon full screen *)
 
 Oberon.Start Oberon 900x700 10 20  ~
 
-SystemTools.Free Oberon ~
+System.Free Oberon ~
 

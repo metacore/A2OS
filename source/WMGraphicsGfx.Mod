@@ -157,5 +157,5 @@ END Test;
 END WMGraphicsGfx.
 
 WMGraphicsGfx.Test ~
-SystemTools.FreeDownTo WMGraphicsGfx ~
+System.FreeDownTo WMGraphicsGfx ~
 

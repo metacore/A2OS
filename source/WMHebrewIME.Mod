@@ -92,7 +92,7 @@ END SelectedCharToUCS;
 
 
 END WMHebrewIME.Install~
-SystemTools.Free WMHebrewIME~
+System.Free WMHebrewIME~
 WMHebrewIME.SelectedCharToUCS ~
 
 WMKeyCode.Open ~

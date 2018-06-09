@@ -53,7 +53,7 @@ MODULE UsbInfo; (** AUTHOR "staubesv"; PURPOSE "USB topology info" *)
  *
  *	UsbInfo.TraceOn Dm Parsing DeviceStates Failed Pipes Init HubRequests Connects Info ~ is interesting when connecting devices
  *
- *	SystemTools.Free UsbInfo ~
+ *	System.Free UsbInfo ~
  *
  * History:
  *
@@ -589,4 +589,4 @@ UsbInfo.ShowDrivers ~
 UsbInfo.ShowHc ~
 UsbInfo.ShowHc details ~
 
-SystemTools.Free UsbInfo ~
+System.Free UsbInfo ~

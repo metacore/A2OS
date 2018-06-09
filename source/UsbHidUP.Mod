@@ -889,4 +889,4 @@ END PrintUsagePageName;
 
 END UsbHidUP.
 
-SystemTools.Free UsbHidUP~
+System.Free UsbHidUP~

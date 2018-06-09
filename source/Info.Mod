@@ -838,7 +838,7 @@ BEGIN
 	Modules.InstallTermHandler(Terminate);
 END Info.
 
-SystemTools.Free Info ~
+System.Free Info ~
 
 Debugging.DisableGC
 Debugging.EnableGC 
@@ -875,7 +875,7 @@ Info.TraceProcessID 7180 * ~
 
 Info.ModuleDetails -d Modules  ~
 
-SystemTools.CollectGarbage ~
+System.CollectGarbage ~
 
 
 Compiler.Compile --symbolFilePrefix=/temp/objEO/ --objectFilePrefix=/temp/objEO/  Info.Mod ~

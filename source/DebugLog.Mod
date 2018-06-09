@@ -643,4 +643,4 @@ BEGIN
 END DebugLog.
 
 DebugLog.Open ~
-SystemTools.Free DebugLog ~
+System.Free DebugLog ~

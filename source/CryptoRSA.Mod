@@ -328,4 +328,4 @@ BEGIN
 	B.AssignInt( two, 2 );
 END CryptoRSA.
 
-SystemTools.Free CryptoRSA ~
+System.Free CryptoRSA ~

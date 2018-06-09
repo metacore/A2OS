@@ -6,7 +6,7 @@ MODULE UsbOhci; (** AUTHOR "staubesv"; PURPOSE "USB Open Host Controller Driver"
  * Usage:
  *
  *	UsbOhci.Install ~ loads this device driver
- *	SystemTools.Free UsbOhci ~ unloads it
+ *	System.Free UsbOhci ~ unloads it
  *
  * References:
  *
@@ -1585,4 +1585,4 @@ BEGIN
 	PCIFindOhci;
 END UsbOhci.
 
-UsbOhci.Install ~ SystemTools.Free UsbOhci ~
+UsbOhci.Install ~ System.Free UsbOhci ~

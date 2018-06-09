@@ -428,7 +428,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMInputMethodTool.
 
-SystemTools.Free WMInputMethodTool ~
+System.Free WMInputMethodTool ~
 WMInputMethodTool.Open  ~
 
 

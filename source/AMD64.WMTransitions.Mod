@@ -788,7 +788,7 @@ BEGIN
 	MMXenabled := 23 IN Machine.features;
 END WMTransitions.
 
-SystemTools.Free WMTransitions ~
+System.Free WMTransitions ~
 
 WMTransitions.Test ~
 WMTransitions.Test2 ~

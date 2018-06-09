@@ -333,7 +333,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END ComponentViewer.
 
-SystemTools.FreeDownTo  ComponentViewer ~
+System.FreeDownTo  ComponentViewer ~
 ComponentViewer.Open FractalDemo.XML ~
 
 ComponentViewer.Open ComponentHelper:Panel:1 ~

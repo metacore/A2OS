@@ -1354,7 +1354,7 @@ BEGIN
 	d.e := 20;
 END FoxInterpreter.
 
-SystemTools.FreeDownTo FoxInterpreterSymbols ~ FoxInterpreter FoxInterpreterSymbols Reflection2 ~
+System.FreeDownTo FoxInterpreterSymbols ~ FoxInterpreter FoxInterpreterSymbols Reflection2 ~
 
 FoxInterpreter.Expression
 	FoxInterpreter.c ~
@@ -1410,8 +1410,8 @@ FoxInterpreter.Statements
 		ELSE suffix := "th"
 		END;
 		IF i MOD 9 = 0 THEN
-			! "SystemTools.Show This is the ?{i}??{suffix}? run." ;
-			! "SystemTools.Ln";
+			! "System.Show This is the ?{i}??{suffix}? run." ;
+			! "System.Ln";
 		END;
 	END;
 ~
@@ -1464,14 +1464,14 @@ FoxInterpreter.Statements
 	a := [[1,2,3],[4,5,6],[7,8,9]];
 	FOR i := 0 TO 2 DO
 	FOR j := 0 TO 2 DO
-		! \+"SystemTools.Show ?{a[i,j]}? ;"+\
+		! \+"System.Show ?{a[i,j]}? ;"+\
 	END;
-		! \+"SystemTools.Ln;"+\ 
+		! \+"System.Ln;"+\ 
 	END;
-	! "SystemTools.Show ?{a}? ";
+	! "System.Show ?{a}? ";
 	? a;
 	? 1+1;
 	? 1+2;
 	~
 
-SystemTools.FreeDownTo FoxInterpreter FoxInterpreterSymbols ~
+System.FreeDownTo FoxInterpreter FoxInterpreterSymbols ~

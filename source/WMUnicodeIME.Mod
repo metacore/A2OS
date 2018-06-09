@@ -247,5 +247,5 @@ END WMUnicodeIME.
 
 -------------------------------------------------
 
-SystemTools.Free WMUnicodeIME ~
+System.Free WMUnicodeIME ~
 WMUnicodeIME.Install ~

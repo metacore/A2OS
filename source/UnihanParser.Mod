@@ -345,7 +345,7 @@ BEGIN
 	ParseFile;
 END UnihanParser.
 
-SystemTools.Free UnihanParser ~
+System.Free UnihanParser ~
 UnihanParser.ParseFile ~
 PET.Open PinyinIMETable.txt
 

@@ -94,4 +94,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END Snow.Snow
 
-SystemTools.Free Snow ~
+System.Free Snow ~

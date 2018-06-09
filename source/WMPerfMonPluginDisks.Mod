@@ -117,4 +117,4 @@ BEGIN
 	InitPlugins;
 END WMPerfMonPluginDisks.
 
-WMPerfMonPluginDisks.Install ~ SystemTools.Free WMPerfMonPluginDisks ~
+WMPerfMonPluginDisks.Install ~ System.Free WMPerfMonPluginDisks ~

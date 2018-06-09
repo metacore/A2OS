@@ -279,7 +279,7 @@ END WAVRecorder.
 
 ------------------------------------------------------------
 i810Sound.Install ~
-SystemTools.Free WAVRecorder ~
+System.Free WAVRecorder ~
 
 WAVRecorder.Open test.wav~
 WAVRecorder.Stop~

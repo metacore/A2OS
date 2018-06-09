@@ -75,7 +75,7 @@ END Open;
 
 END YMF754Util.
 
-SystemTools.Free YMF754Util~
+System.Free YMF754Util~
 YMF754Util.Open 724hwmcode.c~
 
 Tar.Create Sage.YMF754.tar

@@ -544,5 +544,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMTetris.
 
-SystemTools.Free WMTetris ~
+System.Free WMTetris ~
 WMTetris.Open ~

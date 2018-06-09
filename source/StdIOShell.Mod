@@ -27,10 +27,10 @@ BEGIN
 	ELSIF (str = "compile") THEN str := "Compiler.Compile";
 	ELSIF (str = "link") THEN str := "Linker.Link";
 	ELSIF (str = "interpreter") OR (str = "i") THEN str := "InterpreterShell.Start";
-	ELSIF (str = "execute") OR (str = "e") THEN str := "SystemTools.DoFile";
-	ELSIF (str = "do") OR (str = "d") THEN str := "SystemTools.DoCommands";
+	ELSIF (str = "execute") OR (str = "e") THEN str := "System.DoFile";
+	ELSIF (str = "do") OR (str = "d") THEN str := "System.DoCommands";
 	ELSIF (str = "run") OR (str = "r") THEN 
-		IF ~Activate(context, "SystemTools.DoFile") THEN RETURN FALSE END;
+		IF ~Activate(context, "System.DoFile") THEN RETURN FALSE END;
 		str := "Shell.Start";
 	END;
 	RETURN Activate(context, str);
@@ -68,19 +68,19 @@ END StdIOShell.
 Linking a command line shell:
 
 Command line shell: (Windows):
-Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem WMDefaultFont SystemTools Shell StdIOShell ~
+Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem WMDefaultFont System Shell StdIOShell ~
 
 Command line shell including compiler (and linker)
-Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem SystemTools FSTools StdIOShell 
+Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem System FSTools StdIOShell 
 Shell Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend
 ~
 
 
 Command line shell: (Linux):
-Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell SystemTools StdIOShell ~
+Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell System StdIOShell ~
 
 Command line shell including compiler (and linker)
-Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell SystemTools StdIOShell 
+Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell System StdIOShell 
 Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend
 ~
 

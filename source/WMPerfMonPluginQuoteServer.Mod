@@ -56,4 +56,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginQuoteServer.
 
-WMPerfMonPluginQuoteServer.Install ~   SystemTools.Free WMPerfMonPluginQuoteServer ~
+WMPerfMonPluginQuoteServer.Install ~   System.Free WMPerfMonPluginQuoteServer ~

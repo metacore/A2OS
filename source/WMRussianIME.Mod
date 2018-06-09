@@ -134,7 +134,7 @@ BEGIN
 END SelectedCharToUCS;
 
 END WMRussianIME.Install~
-SystemTools.Free WMRussianIME~
+System.Free WMRussianIME~
 
 WMRussianIME.SelectedCharToUCS ~
 

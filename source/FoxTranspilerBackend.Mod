@@ -1650,7 +1650,7 @@ TYPE
 
 END FoxTranspilerBackend.
 
-SystemTools.Free FoxTranspilerBackend ~
+System.Free FoxTranspilerBackend ~
 Compiler.Compile -b=Transpiler Test.Mod ~
 TextCompiler.CompileSelection -b=Transpiler  ~
 TextCompiler.CompileSelection -b=Transpiler --defineMain  ~

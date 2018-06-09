@@ -664,4 +664,4 @@ MODULE JPEG2000DecoderUtil;
 END JPEG2000DecoderUtil.
 
 
-SystemTools.Free JPEG2000Util~
+System.Free JPEG2000Util~

@@ -7160,6 +7160,6 @@ BEGIN
 
 END JPEG2000Decoder.
 
-SystemTools.Free JPEG2000Decoder~
-SystemTools.Free JPEG2000DecoderCS~
-SystemTools.Free JPEG2000Util~
+System.Free JPEG2000Decoder~
+System.Free JPEG2000DecoderCS~
+System.Free JPEG2000Util~

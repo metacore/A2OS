@@ -1731,5 +1731,5 @@ TYPE
 
 END FoxInterpreterSymbols.
 
-SystemTools.FreeDownTo FoxInterpreterSymbols ~
+System.FreeDownTo FoxInterpreterSymbols ~
 FoxInterpreterSymbols.Test ~

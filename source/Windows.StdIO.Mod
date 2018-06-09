@@ -64,7 +64,7 @@ BEGIN
 	Setup
 END  StdIO.
 
-SystemTools.DoCommands 
+System.DoCommands 
 
 	Compiler.Compile  -b=AMD --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
 		I386.Builtins.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 

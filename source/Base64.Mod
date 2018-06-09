@@ -134,4 +134,4 @@ BEGIN
 END Base64.
 
 Base64.Test
-SystemTools.Free Base64 ~
+System.Free Base64 ~

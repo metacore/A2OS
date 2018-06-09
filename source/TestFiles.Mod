@@ -756,17 +756,17 @@ END TestFiles.
 
 TestFiles.CreateTestFiles ~
 
-SystemTools.Free TestFiles TestSuite~
+System.Free TestFiles TestSuite~
 
 WMUtilities.Call TestFiles.Test Files.Test ~	 Verbose testing mode
 WMUtilities.Call TestFiles.Test Files.Test Files.Test.tmp ~ Regression testing mode
 
-SystemTools.DoCommands
+System.DoCommands
 
 	VirtualDisks.InstallRamdisk TEST 163840 ~
 	Partitions.WriteMBR TEST#0 OBEMBR.Bin ~
 
-	SystemTools.Show AosFS File System ~ SystemTools.Ln ~
+	System.Show AosFS File System ~ System.Ln ~
 
 	Partitions.Create TEST#1 76 9999 ~
 	Partitions.Format TEST#1 AosFS ~
@@ -776,7 +776,7 @@ SystemTools.DoCommands
 
 	FSTools.Unmount TEST ~
 
-	SystemTools.Show FatFS File System ~ SystemTools.Ln ~
+	System.Show FatFS File System ~ System.Ln ~
 
 	Partitions.ChangeType TEST#1 76 12 ~
 	Partitions.Format TEST#1 FatFS ~
@@ -786,7 +786,7 @@ SystemTools.DoCommands
 
 	FSTools.Unmount TEST ~
 
-	SystemTools.Show SSFS File System ~ SystemTools.Ln ~
+	System.Show SSFS File System ~ System.Ln ~
 
 	SSFS.Format TEST#1 ~
 	SSFS.Mount TEST TEST#1 ~

@@ -1149,7 +1149,7 @@ SSHGlobals.SetDebug 15 ~
 
 SSHClient.Open ~
 
-SystemTools.Free SSHClient SSH ~
+System.Free SSHClient SSH ~
 
 
 

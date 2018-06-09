@@ -279,6 +279,6 @@ TYPE
 
 END FoxDisassembler.
 
-SystemTools.FreeDownTo FoxDisassembler ~
+System.FreeDownTo FoxDisassembler ~
 FoxDisassembler.Test ins.log ~
 

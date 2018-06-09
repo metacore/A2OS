@@ -117,4 +117,4 @@ BEGIN
 	KernelLog.String("res = "); KernelLog.Int(res, 0); KernelLog.Ln;
 END AFM.X
 
-SystemTools.Free AFM ~
+System.Free AFM ~

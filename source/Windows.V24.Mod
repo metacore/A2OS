@@ -462,7 +462,7 @@ END V24.
 V24.Install ~
 V24.Scan ~
 
-SystemTools.Free V24 ~
+System.Free V24 ~
 
 Serials.Show ~
-SystemTools.Free Serials ~
+System.Free Serials ~

@@ -768,7 +768,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMTextTool.
 
-SystemTools.Free WMTextTool ~
+System.Free WMTextTool ~
 
 WMTextTool.Open  ~
 

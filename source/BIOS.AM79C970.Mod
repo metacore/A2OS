@@ -581,7 +581,7 @@ END AM79C970.
 
 (*
 
-SystemTools.Free AM79C970~
+System.Free AM79C970~
 AM79C970.Install ~
 
 *)

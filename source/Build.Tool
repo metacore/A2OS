@@ -12,7 +12,7 @@ Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
 # Step 2:  Link boot files
 
-SystemTools.DoCommands
+System.DoCommands
 Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
 	ATADisks DiskVolumes DiskFS Loader BootConsole ~
 ~
@@ -37,9 +37,9 @@ Linker.Link \P../Test/ \.Obx ../Test/USBSLOW.Bin 0100000H 1000H Kernel Traps
 
 # Step 3a: Create image for bootable CD (A2.iso)
 
-SystemTools.DoCommands
+System.DoCommands
 
-SystemTools.Timer start ~
+System.Timer start ~
 
 FSTools.Mount RAMDISK RamFS 2000000 4096 ~
 FSTools.DeleteFiles RAMDISK:A2.Dsk ~
@@ -63,7 +63,7 @@ ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
 	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
 	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
 
-SystemTools.Show Copy ZIP archives to TEMP:  ~
+System.Show Copy ZIP archives to TEMP:  ~
 FSTools.CopyTo TEMP: ../Test/
 	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip
 	GuiApplicationsMini.zip GuiApplications.zip
@@ -104,14 +104,14 @@ VirtualDisks.Uninstall VDISK0 ~
 IsoImages.Make ../Test/A2.iso RAMDISK:A2.Dsk ~
 FSTools.Unmount RAMDISK ~
 
-SystemTools.Show CD image build time:  ~ SystemTools.Timer elapsed ~
+System.Show CD image build time:  ~ System.Timer elapsed ~
 ~~
 
 # Step 3b: Create image for bootable CD (A2mini.iso)
 
-SystemTools.DoCommands
+System.DoCommands
 
-SystemTools.Timer start ~
+System.Timer start ~
 
 FSTools.Mount RAMDISK RamFS 2000000 4096 ~
 FSTools.DeleteFiles RAMDISK:A2.Dsk ~
@@ -156,17 +156,17 @@ VirtualDisks.Uninstall VDISK0 ~
 IsoImages.Make ../Test/A2mini.iso RAMDISK:A2.Dsk ~
 FSTools.Unmount RAMDISK ~
 
-SystemTools.Show CD image build time:  ~ SystemTools.Timer elapsed ~
+System.Show CD image build time:  ~ System.Timer elapsed ~
 ~~
 
 # Step 3c: Create image for bootable H.D.D.  (A2HDD.img), should work with bochs, at least.
 
-SystemTools.DoCommands
+System.DoCommands
 
 PCAAMD64.Assemble OBLUnreal.Asm ~
 PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 
-SystemTools.Timer start ~
+System.Timer start ~
 
 FSTools.DeleteFiles ../Test/A2HDD.img ~
 
@@ -206,7 +206,7 @@ Partitions.SetConfig VDISK0#1
 	~
 VirtualDisks.Uninstall VDISK0 ~
 
-SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
+System.Show HDD image build time:  ~ System.Timer elapsed ~
 
 FSTools.CloseFiles ../Test/A2HDD.img ~
 
@@ -215,9 +215,9 @@ FSTools.CloseFiles ../Test/A2HDD.img ~
 
 # Step 3d: Create image for bootable H.D.D.  (A2HDD.img) for VirtualBox
 
-SystemTools.DoCommands
+System.DoCommands
 
-SystemTools.Timer start ~
+System.Timer start ~
 
 FSTools.DeleteFiles ../Test/A2HDD.img ~
 
@@ -260,7 +260,7 @@ Partitions.SetConfig VDISK0#1
 	~
 VirtualDisks.Uninstall VDISK0 ~
 
-SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
+System.Show HDD image build time:  ~ System.Timer elapsed ~
 ~~
 
 ../Test/CompileCommand.Tool
@@ -273,7 +273,7 @@ Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 # Step 3e: Create image for bootable USB  (A2USB.img)
 
 
-SystemTools.DoCommands
+System.DoCommands
 
 Compiler.Compile  -b=AMD --objectFileExtension=.Obx --symbolFileExtension=.Obx --destPath=../Test/ BIOS.PCI.Mod UsbEhci.Mod UsbEhciPCI.Mod  ~
 
@@ -281,7 +281,7 @@ PCAAMD64.Assemble OBLUnreal.Asm ~
 PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 PCAAMD64.Assemble BootManager.Asm ~
 BootManager.Split BootManager.Bin ~
-SystemTools.Timer start ~
+System.Timer start ~
 
 FSTools.DeleteFiles ../Test/A2HDD.img ~
 
@@ -328,7 +328,7 @@ Partitions.SetConfig VDISK0#1
 	~
 VirtualDisks.Uninstall VDISK0 ~
 
-SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
+System.Show HDD image build time:  ~ System.Timer elapsed ~
 
 FSTools.CloseFiles ../Test/A2HDD.img ~
 
@@ -341,7 +341,7 @@ WinDisks.Install E: RW ~
 
 ~
 *** CAUTION: check that drive is not a local drive !!!! ***
-SystemTools.DoCommands
+System.DoCommands
 Partitions.FileToPartition PhysicalDrive1#0 ../Test/A2HDD.img 0 160000  ~
 WinDisks.Uninstall "PhysicalDrive1" ~
 ~

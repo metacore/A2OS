@@ -5,7 +5,7 @@ MODULE UsbFTDI;  (** AUTHOR "neuf"; PURPOSE "FTDI FT232BM USB-RS232 Converter Dr
  * Usage:
  *
  *	UsbFTDI.Install ~ loads this driver
- *	SystemTools.Free UsbFTDI ~
+ *	System.Free UsbFTDI ~
  *
  * Status: BETA
  *
@@ -1266,7 +1266,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 	Usbdi.drivers.Add(Probe, Name, Description, Priority)
 END UsbFTDI.
-SystemTools.Free UsbFTDI ~
+System.Free UsbFTDI ~
 UsbFTDI.Install ~
 UsbFTDI.Open ~
 UsbFTDI.Send ~

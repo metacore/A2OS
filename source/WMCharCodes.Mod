@@ -61,5 +61,5 @@ END WMCharCodes.
 
 WMCharCodes.MakeCodePage ~
 
-SystemTools.Free WMCharCodes ~
+System.Free WMCharCodes ~
 

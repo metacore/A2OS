@@ -179,4 +179,4 @@ BenchTCP.Time 127.0.0.1 ~
 
 BenchTCP.Echo FE80::230:1BFF:FEAF:EEF2 100000~
 BenchTCP.Discard FE80::230:1BFF:FEAF:EEF2 100000~
-SystemTools.Free BenchTCP
+System.Free BenchTCP

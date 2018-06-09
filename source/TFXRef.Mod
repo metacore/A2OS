@@ -968,7 +968,7 @@ END TFXRef.
 (* Make sure the TFPET symbol files are available (takes a few minutes) *)
 TFAOParser.MakeSymbolFiles "D:\Aos\trunk\source\" "*Oberon*"~ (* d:/release/*.Mod *)
 
-SystemTools.Free TFXRef TFDocGenerator~
+System.Free TFXRef TFDocGenerator~
 TFXRef.MakeXRef "D:\Aos\trunk\source\" "*Oberon*"~
 TFXRef.Generate HelloWorld.Mod ~
 TFXRef.Generate I386.VMWareTools.Mod ~

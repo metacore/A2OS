@@ -1087,7 +1087,7 @@ Aos.Call AlmSmtpReceiver.Open
 Aos.Call AlmSmtpReceiver.Close
 Aos.Call NetTracker.Open 100 ~
 System.Free AlmSmtpReceiver  ~
-SystemTools.Free AlmSmtpReceiver ~
+System.Free AlmSmtpReceiver ~
 
 EditTools.OpenAscii ^
 Telnet.Open cda

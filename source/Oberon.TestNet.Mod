@@ -209,4 +209,4 @@ TestNet.SetDevice "3Com90x#0"
 TestNet.SetDevice2 "3Com90x#1"
 TestNet.SendBroadcast  TestNet.SendTest ^ 1 10 100 1000 10000
 
-SystemTools.Free TestNet~
+System.Free TestNet~

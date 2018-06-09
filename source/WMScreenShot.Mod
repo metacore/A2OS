@@ -209,7 +209,7 @@ END SnapShotRange;
 
 END WMScreenShot.
 
-SystemTools.Free WMScreenShot ~
+System.Free WMScreenShot ~
 
 Take a snap shot of the default view store it in test.bmp
 WMScreenShot.SnapShotView test.bmp ~

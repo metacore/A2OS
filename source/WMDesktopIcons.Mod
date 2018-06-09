@@ -366,6 +366,6 @@ BEGIN
 	prototypeBorder.Set(5);
 END WMDesktopIcons.
 
-SystemTools.Free WMDesktopIcons~
+System.Free WMDesktopIcons~
 
 WMDesktopIcons.Open -n ~

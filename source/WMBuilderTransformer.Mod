@@ -783,6 +783,6 @@ WMBuilderTransformer.Transform Testxxx2:Mixer Test ~
 
 WMBuilderTransformer.Transform Demo.wm Test ~
 
-SystemTools.Free WMBuilderTransformer ~
+System.Free WMBuilderTransformer ~
 
 WMBuilderTransformer.Test ~

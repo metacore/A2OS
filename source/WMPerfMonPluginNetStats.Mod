@@ -417,4 +417,4 @@ BEGIN
 	InitPlugins;
 END WMPerfMonPluginNetStats.
 
-WMPerfMonPluginNetStats.Install ~  SystemTools.Free WMPerfMonPluginNetStats ~
+WMPerfMonPluginNetStats.Install ~  System.Free WMPerfMonPluginNetStats ~

@@ -9,10 +9,10 @@ Release.Build --path="../Test/" --build --zip Bios32 ~
 
 # Step 2: Generate disk image & A2VM.zip file
 
-SystemTools.DoCommands
+System.DoCommands
 
-	SystemTools.Show Generating A2 disk image... ~ SystemTools.Ln ~
-	SystemTools.Timer start ~
+	System.Show Generating A2 disk image... ~ System.Ln ~
+	System.Timer start ~
 
 	VirtualDisks.Create ../Test/A2HDD.img 204624 512~
 	VirtualDisks.Install VDISK0 ../Test/A2HDD.img ~
@@ -188,19 +188,19 @@ SystemTools.DoCommands
 		../Test/A2.vmx ../Test/A2.vmdk ../Test/A2HDD.img ../Test/A2qemu.bat ../Test/bochsr.bxrc
 	~
 
-	SystemTools.Ln ~
-	SystemTools.Show Generated A2 HDD image ../Test/A2VM.zip ~ SystemTools.Ln ~
+	System.Ln ~
+	System.Show Generated A2 HDD image ../Test/A2VM.zip ~ System.Ln ~
 
-	SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
-	SystemTools.Ln ~
+	System.Show HDD image build time:  ~ System.Timer elapsed ~
+	System.Ln ~
 ~
 
 # Step 3 (optional): Generate FAT32 formatted disk image
 
-SystemTools.DoCommands
+System.DoCommands
 
-	SystemTools.Show Generating FAT32 disk image... ~ SystemTools.Ln ~
-	SystemTools.Timer start ~
+	System.Show Generating FAT32 disk image... ~ System.Ln ~
+	System.Timer start ~
 
 	VirtualDisks.Create ../Test/FATHDD.img 200000 512~
 	VirtualDisks.Install VDISK1 ../Test/FATHDD.img ~
@@ -285,9 +285,9 @@ SystemTools.DoCommands
 		../Test/A2.vmx
 	~
 
-	SystemTools.Ln ~
-	SystemTools.Show Generated A2 HDD image ../Test/A2VM.zip ~ SystemTools.Ln ~
+	System.Ln ~
+	System.Show Generated A2 HDD image ../Test/A2VM.zip ~ System.Ln ~
 
-	SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
-	SystemTools.Ln ~
+	System.Show HDD image build time:  ~ System.Timer elapsed ~
+	System.Ln ~
 ~~~

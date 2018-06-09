@@ -504,7 +504,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMBackdrop.
 
-SystemTools.Free WMBackdrop ~
+System.Free WMBackdrop ~
 
 (* install backdrop at current view position and size *)
 WMBackdrop.AddBackdropImage "Desktop1_1024x768.png" ? ? ? ?

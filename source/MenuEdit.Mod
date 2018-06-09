@@ -265,5 +265,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END MenuEdit.
 
-SystemTools.Free MenuEdit ~
+System.Free MenuEdit ~
 MenuEdit.Open ~

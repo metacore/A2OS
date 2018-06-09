@@ -751,5 +751,5 @@ END SortDemo.
 
 		SortDemo.Open
 
-		SystemTools.Free SortDemo ~
+		System.Free SortDemo ~
 

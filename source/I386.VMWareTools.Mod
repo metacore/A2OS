@@ -284,5 +284,5 @@ END VMWareTools.
 
 VMWareTools.Install ~
 VMWareTools.GetHostClipboard ~
-SystemTools.Free VMWareTools ~
+System.Free VMWareTools ~
 

@@ -112,4 +112,4 @@ BEGIN
 	InitPlugins;
 END WMPerfMonPluginUsb.
 
-WMPerfMonPluginUsb.Install ~	SystemTools.Free WMPerfMonPluginUsb ~
+WMPerfMonPluginUsb.Install ~	System.Free WMPerfMonPluginUsb ~

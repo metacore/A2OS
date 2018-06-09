@@ -45,4 +45,4 @@ END DisplayRefresher.
 
 DisplayRefresher.Install ~
 
-SystemTools.Free DisplayRefresher ~
+System.Free DisplayRefresher ~

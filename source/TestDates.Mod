@@ -182,7 +182,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END TestDates.
 
-SystemTools.Free TestDates ~
+System.Free TestDates ~
 
 TestDates.TestTimeDifference ~
 

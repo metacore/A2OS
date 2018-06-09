@@ -408,5 +408,5 @@ END WMOTFonts.
 
 --------------------------------------------
 
-SystemTools.Free WMOTFonts~
+System.Free WMOTFonts~
 WMOTFonts.MultiTest~

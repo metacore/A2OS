@@ -89,12 +89,12 @@ END TestAcquire;
 
 END BenchLocks.
 
-SystemTools.Repeat 3
+System.Repeat 3
 	BenchLocks.Bench 32 100000 500 ~
 
 BenchLocks.Bench 64 100000 500 ~
 
-SystemTools.Free BenchLocks ~
+System.Free BenchLocks ~
 
 Configuration.DoCommands
 System.Time start

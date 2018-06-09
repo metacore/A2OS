@@ -1183,4 +1183,4 @@ END WMArchives.
 
 WMArchives.Open ~
 WMArchives.Open traditional.skin ~
-SystemTools.Free WMArchives ~
+System.Free WMArchives ~

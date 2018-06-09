@@ -1161,5 +1161,5 @@ TYPE
 
 END WMGraphicsSmooth.
 
-SystemTools.FreeDownTo WMGraphicsSmooth ~
+System.FreeDownTo WMGraphicsSmooth ~
 

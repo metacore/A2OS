@@ -62,5 +62,5 @@ Usage: PowerManagementEvents.Wake host MAC ~   (* ; "host" as url or IP address;
 Example:
 PowerManagementEvents.Wake 172.168.178.21 000H:040H:0F4H:0C7H:064H:09EH ~ (*game PC*)
 
-SystemTools.Free PowerManagementEvents~
+System.Free PowerManagementEvents~
 *)

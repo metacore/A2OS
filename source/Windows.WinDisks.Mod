@@ -439,4 +439,4 @@ WinDisks.Uninstall "PhysicalDrive0" ~
 WinDisks.Uninstall "F:" ~
 WinDisks.Install "f:" "RW" ~
 
-SystemTools.Free WinDisks ~
+System.Free WinDisks ~

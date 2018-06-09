@@ -1832,4 +1832,4 @@ FoxActiveCells.ReadSpecification Test.spec ~
 FSTools.CopyFiles TL.spec => Test.spec ~
 FoxActiveCells.CompareSpecification Test TL ~~
 
-SystemTools.FreeDownTo FoxActiveCells ~
+System.FreeDownTo FoxActiveCells ~

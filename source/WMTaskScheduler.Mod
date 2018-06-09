@@ -1052,5 +1052,5 @@ END WMTaskScheduler.
 
 WMTaskScheduler.Open ~
 
-SystemTools.Free WMTaskScheduler WMTaskScheduler TaskScheduler 
-SystemTools.Free WMClock~
+System.Free WMTaskScheduler WMTaskScheduler TaskScheduler 
+System.Free WMClock~

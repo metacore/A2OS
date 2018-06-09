@@ -600,7 +600,7 @@ BEGIN
 END RTL8139.
 
 
-SystemTools.Free RTL8139 ~
+System.Free RTL8139 ~
 RTL8139.Install
 System.OpenKernelLog
 TestNet.Mod

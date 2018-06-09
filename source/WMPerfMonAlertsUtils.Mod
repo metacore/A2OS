@@ -111,7 +111,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonAlertsUtils.
 
-WMPerfMonAlertsUtils.SignalCmd 0 ~	SystemTools.Free WMPerfMonAlertsUtils ~
+WMPerfMonAlertsUtils.SignalCmd 0 ~	System.Free WMPerfMonAlertsUtils ~
 WMPerfMonAlertsUtils.SignalCmd 1 ~
 WMPerfMonAlertsUtils.SignalCmd 2 ~
 WMPerfMonAlertsUtils.SignalCmd 3 ~

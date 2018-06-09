@@ -1206,7 +1206,7 @@ OdPlugin.LogHeaderOn ~
 WebDAVPlugin.Uninstall ~
 
 
-SystemTools.Free WebDAVPlugin DeltavBase VCS VCSBase WebDAVClient WebDAVClientTools~
+System.Free WebDAVPlugin DeltavBase VCS VCSBase WebDAVClient WebDAVClientTools~
 ../httproot/WebDAVLog.Sat
 
 DCT is short for WebDAVClientTools to allow for shorter command lines.

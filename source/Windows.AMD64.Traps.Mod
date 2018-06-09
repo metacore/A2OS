@@ -421,7 +421,7 @@ BEGIN
 	Init
 END Traps.
 
-SystemTools.FreeDownTo Traps ~
+System.FreeDownTo Traps ~
 
 (*
 12.03.1998	pjm	Started

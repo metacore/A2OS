@@ -1222,7 +1222,7 @@ BEGIN
 	InitURILiterals;
 END TFWebForum.
 
-SystemTools.Free TFWebForum ~
+System.Free TFWebForum ~
 TFWebForum.CreateForum RFWde ForumRFWde.XML "Raily for Windows (Deutsch)" rfwuser rfwpassword ~
 TFWebForum.CreateForum RFWfr ForumRFWfr.XML "Raily for Windows (Francais)" rfwuser rfwpassword ~
 TFWebForum.CreateForum RFWen ForumRFWen.XML "Raily for Windows (English)" rfwuser rfwpassword ~

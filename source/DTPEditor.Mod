@@ -2520,6 +2520,6 @@ DTPEditor.OpenEmpty 320 240 10 10 10 10 0 ~
 DTPEditor.OpenEmpty 126 178 10 10 10 10 0 ~
 DTPEditor.Open myDTPdocument ~
 
-SystemTools.Free DTPText DTPImage DTPRect DTPEditor DTPView DTPUtilities DTPData~
+System.Free DTPText DTPImage DTPRect DTPEditor DTPView DTPUtilities DTPData~
 PC.Compile DTPData.Mod DTPUtilities.Mod DTPView.Mod DTPEditor.Mod DTPRect.Mod DTPImage.Mod DTPText.Mod~
 

@@ -48,7 +48,7 @@ IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
 
 END WinApplications.
 
-SystemTools.Free WinApplications ~
+System.Free WinApplications ~
 System.Free WinApplications ~
 
 ~

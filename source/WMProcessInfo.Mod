@@ -628,5 +628,5 @@ BEGIN
 	InitPrototypes;
 END WMProcessInfo.
 
-SystemTools.Free WMProcessInfo ~
+System.Free WMProcessInfo ~
 

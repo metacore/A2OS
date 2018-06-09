@@ -50,8 +50,8 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WebTimeServer.
 
-SystemTools.Free WebTimeServer ~
-SystemTools.FreeDownTo TCP ~
+System.Free WebTimeServer ~
+System.FreeDownTo TCP ~
 
 WebTimeServer.Open
 WebTimeServer.Close

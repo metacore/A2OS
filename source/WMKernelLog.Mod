@@ -86,7 +86,7 @@ BEGIN
 END WMKernelLog.
 
 WMKernelLog.Open ~
-SystemTools.Free WMKernelLog ~
+System.Free WMKernelLog ~
 
 KernelLogger.Mod
 KernelLogger.Start ~

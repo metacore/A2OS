@@ -279,11 +279,11 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END UsbStorage.
 
-UsbStorage.Install ~ SystemTools.Free UsbStorage ~
+UsbStorage.Install ~ System.Free UsbStorage ~
 
 UsbStorage.Show ~
 
 PC.Compile \s UsbStorageBase.Mod UsbStorageCbi.Mod UsbStorageScm.Mod UsbStorageBot.Mod
 	UsbStorageBoot.Mod UsbStorage2.Mod ~
 
-SystemTools.Free UsbStorage UsbStorageBoot UsbStorageBot UsbStorageScm UsbStorageCbi UsbStorageBase ~
+System.Free UsbStorage UsbStorageBoot UsbStorageBot UsbStorageScm UsbStorageCbi UsbStorageBase ~

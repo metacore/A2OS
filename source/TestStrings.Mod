@@ -174,4 +174,4 @@ TestStrings.TestSplitJoin A:/Test/HelloWord/Test.Mod / ~
 
 TestStrings.PerformTests ~
 
-SystemTools.Free TestStrings ~
+System.Free TestStrings ~

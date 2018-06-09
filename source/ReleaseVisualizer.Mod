@@ -1228,7 +1228,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END ReleaseVisualizer.
 
-SystemTools.Free ReleaseVisualizer ~
+System.Free ReleaseVisualizer ~
 
 ReleaseVisualizerScan ~
 

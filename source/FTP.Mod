@@ -273,4 +273,4 @@ FTP.PutFiles 	<list of filenames> ~
 FTP.GetFiles <list of filenames> ~
 FTP.Close ~
 
-SystemTools.Free FTP  FTPClient ~
+System.Free FTP  FTPClient ~

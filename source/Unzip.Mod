@@ -388,6 +388,6 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 
 END Unzip.
 
-SystemTools.Free Unzip Inflate ~
+System.Free Unzip Inflate ~
 
 Inflate.Mod	Unzip.Mod

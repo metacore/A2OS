@@ -6,7 +6,7 @@ MODULE UsbPrinter;  (** AUTHOR "staubesv"; PURPOSE "USB Printing Device Class Dr
  *
  * Usage:
  *	UsbPrinter.Install ~ loads this driver
- *	SystemTools.Free UsbPrinter ~ unloads it
+ *	System.Free UsbPrinter ~ unloads it
  *
  * References:
  *	Universal Serial Bus Device Class Definition for Printing Devices 1.0, www.usb.org

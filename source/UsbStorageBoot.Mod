@@ -121,4 +121,4 @@ BEGIN
 	WaitForBootDevice;
 END UsbStorageBoot.
 
-UsbStorageBoot.Install ~  SystemTools.Free UsbStorageBoot ~
+UsbStorageBoot.Install ~  System.Free UsbStorageBoot ~

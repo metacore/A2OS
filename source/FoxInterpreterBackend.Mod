@@ -705,7 +705,7 @@ TYPE
 
 END FoxInterpreterBackend.
 
-SystemTools.Free FoxInterpreterBackend ~
+System.Free FoxInterpreterBackend ~
 Compiler.Compile -b=Interpreter Test.Mod ~
 TextCompiler.CompileSelection -b=Interpreter ~
 

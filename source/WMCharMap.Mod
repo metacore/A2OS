@@ -228,5 +228,5 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMCharMap.
 
-SystemTools.Free WMCharMap ~
+System.Free WMCharMap ~
 WMCharMap.Open ~

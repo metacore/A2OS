@@ -235,6 +235,6 @@ BEGIN
 END WMMixer.
 
 WMMixer.Open ~
-SystemTools.Free WMMixer ~
+System.Free WMMixer ~
 
 WMMixer.MasterDecVol ~

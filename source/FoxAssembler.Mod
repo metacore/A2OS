@@ -924,7 +924,7 @@ TYPE
 
 END FoxAssembler.
 
-SystemTools.Free FoxAssembler ~
+System.Free FoxAssembler ~
 
 
 FoxAssembler.Test

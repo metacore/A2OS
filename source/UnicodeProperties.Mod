@@ -567,7 +567,7 @@ END UnicodeProperties.
 
 
 
-SystemTools.Free UnicodeProperties ~
+System.Free UnicodeProperties ~
 
 
 UnicodeProperties.TestIsMirroredChar 00000028H ~

@@ -615,11 +615,11 @@ BEGIN
 	ClearStats;
 END ReleaseThreadPool.
 
-SystemTools.Free ReleaseThreadPool ~
+System.Free ReleaseThreadPool ~
 
 ReleaseThreadPool.ClearStats ~
 
-SystemTools.DoCommands
+System.DoCommands
 	WMPerfMonPluginModVars.Install ReleaseThreadPool
 		ReleaseThreadPool.NjobsCreated ReleaseThreadPool.NjobsDone ReleaseThreadPool.NjobErrors
 		ReleaseThreadPool.NjobHandoverSucceeded ReleaseThreadPool.NjobHandoverFailed

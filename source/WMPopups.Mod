@@ -305,4 +305,4 @@ TYPE
 
 END WMPopups.
 -----------------------------------------------------
-SystemTools.Free WMPopups
+System.Free WMPopups

@@ -70,4 +70,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginMessages.
 
-WMPerfMonPluginMessages.Install ~  SystemTools.Free WMPerfMonPluginMessages ~
+WMPerfMonPluginMessages.Install ~  System.Free WMPerfMonPluginMessages ~

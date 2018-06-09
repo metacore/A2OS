@@ -956,7 +956,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END TestVideo.
 
-SystemTools.Free TestVideo ~
+System.Free TestVideo ~
 TestVideo.SetLabelFilter -t=250 ~
 TestVideo.SetThresholdFilter -t=300 ~
 
@@ -969,6 +969,6 @@ TestVideo.Uninstall ~
 VideoExample.Start ~
 VideoExample.Stop ~
 
-SystemTools.Free TestVideo ~
+System.Free TestVideo ~
 TestVideo.SetLabelFilter -t=360 p=20 ~
 VideoExample.SimulateImage "sample0.jpg" ~

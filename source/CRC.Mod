@@ -172,4 +172,4 @@ BEGIN
 	InitTable32
 END CRC.
 
-SystemTools.Free CRC ~
+System.Free CRC ~

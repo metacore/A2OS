@@ -537,7 +537,7 @@ Partitions.Show
 OFSTools.Mount CD IsoFS  IDE2 ~
 OFSTools.Unmount CD0 ~
 
-SystemTools.Free ISO9660Files  ISO9660Volumes ~
+System.Free ISO9660Files  ISO9660Volumes ~
 
 System.Directory CD:*.* ~
 

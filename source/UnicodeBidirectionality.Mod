@@ -2742,8 +2742,8 @@ BEGIN
 	showUnicodeControlCharacters := FALSE;
 END UnicodeBidirectionality.
 
-SystemTools.Free UnicodeProperties ~
-SystemTools.Free UnicodeBidirectionality ~
+System.Free UnicodeProperties ~
+System.Free UnicodeBidirectionality ~
 
 
 

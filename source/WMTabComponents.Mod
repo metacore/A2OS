@@ -861,5 +861,5 @@ BEGIN
 	InitPrototypes;
 END WMTabComponents.
 
-SystemTools.Free WMTabComponents ~
+System.Free WMTabComponents ~
 WMTabComponents.Open ~

@@ -116,7 +116,7 @@ TYPE
 
 END FoxTRMAssembler.
 
-SystemTools.Free FoxTRMAssembler FoxTRMInstructionSet ~
+System.Free FoxTRMAssembler FoxTRMInstructionSet ~
 
 
 

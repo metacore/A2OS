@@ -1106,9 +1106,9 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMInspector.
 
-SystemTools.FreeDownTo WMInspector ~
+System.FreeDownTo WMInspector ~
 
-SystemTools.FreeDownTo WMInspectionComponents ~
+System.FreeDownTo WMInspectionComponents ~
 
 WMInspector.Open ~
 

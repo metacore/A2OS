@@ -723,4 +723,4 @@ END GetSelection;
 
 END Partitions.
 
-SystemTools.Free DiskBenchmark Partitions ~
+System.Free DiskBenchmark Partitions ~

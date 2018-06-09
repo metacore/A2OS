@@ -53,7 +53,7 @@ END Float;
 
 END Out.
 
-SystemTools.Free Out ~
+System.Free Out ~
 Out.Hello 
 
 

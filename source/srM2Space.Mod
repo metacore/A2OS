@@ -607,4 +607,4 @@ END pdiv;
 
 END srM2Space.
 
-SystemTools.Free srM3Space
+System.Free srM3Space

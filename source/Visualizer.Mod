@@ -1575,4 +1575,4 @@ Visualizer.Generate -a  -s="A3" -v=all -p=all -h=all -m=2 Trace.Mod BIOS.I386.Ma
 
 Visualizer.Generate -a -s="A3" -v=all -p=all -m=1 WMWindowManager.Mod ~
 
-SystemTools.Free Visualizer ~ Test.svg
+System.Free Visualizer ~ Test.svg

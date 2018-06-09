@@ -605,6 +605,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMEventLog.
 
-WMEventLog.Open ~	SystemTools.Free WMEventLog ~
+WMEventLog.Open ~	System.Free WMEventLog ~
 
 WMEventLog.OpenFile test.log ~

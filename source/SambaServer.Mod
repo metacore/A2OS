@@ -2059,7 +2059,7 @@ END SambaServer.
 
 SambaServer.StartServer ~
 SambaServer.StopServer ~
-SystemTools.Free SambaServer ~
+System.Free SambaServer ~
 
 SambaServer.ListShares ~
 SambaServer.AddShare \AOS AOS: ~

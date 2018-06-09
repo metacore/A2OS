@@ -87,7 +87,7 @@ BEGIN
 	hexdigit := "0123456789ABCDEF";
 END BinToCode.
 
-SystemTools.Free BinToCode~
+System.Free BinToCode~
 BinToCode.Convert Tutorials.Book ~
 
 

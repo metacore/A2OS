@@ -55,4 +55,4 @@ BEGIN
 	InitPlugin;
 END WMPerfMonPluginPerfMon.
 
-WMPerfMonPluginPerfMon.Install ~   SystemTools.Free WMPerfMonPluginPerfMon ~
+WMPerfMonPluginPerfMon.Install ~   System.Free WMPerfMonPluginPerfMon ~

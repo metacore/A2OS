@@ -1188,7 +1188,7 @@ END WebBimbodot.
 
 
 WebBimbodot.Test ~
-SystemTools.Free WebBimbodot ~
+System.Free WebBimbodot ~
 
 WebHTTPServerTools.Start ~
 WebCGI.Install ~

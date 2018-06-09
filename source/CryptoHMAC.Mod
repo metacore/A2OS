@@ -66,4 +66,4 @@ TYPE
 END CryptoHMAC.
 
 
-SystemTools.Free CryptoHMAC ~
+System.Free CryptoHMAC ~

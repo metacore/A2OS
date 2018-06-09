@@ -348,7 +348,7 @@ END ShowLoadError;
 
 END WMRestorable.
 
-SystemTools.Free WMRestorable ~
+System.Free WMRestorable ~
 WMRestorable.Store ~
 WMRestorable.Load ~
 

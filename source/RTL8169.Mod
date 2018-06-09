@@ -1222,7 +1222,7 @@ MAC address 00-08-A1-3C-06-CB
 
 local IP 129.132.134.209
 
-SystemTools.Free RTL8169 ~
+System.Free RTL8169 ~
 RTL8169.Install ~
 WMPerfMon.Open ~
 RTL8169.DebugStati ~

@@ -37,4 +37,4 @@ BEGIN
 	Install;
 END UsbTouchscreen.
 
-SystemTools.Free UsbTouchscreen ~
+System.Free UsbTouchscreen ~

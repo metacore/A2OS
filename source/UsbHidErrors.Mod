@@ -337,4 +337,4 @@ TYPE
 
 END UsbHidErrors.
 
-SystemTools.Free UsbHidErrors ~
+System.Free UsbHidErrors ~

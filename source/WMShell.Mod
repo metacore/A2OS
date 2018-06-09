@@ -3,7 +3,7 @@ MODULE WMShell; (** AUTHOR "staubesv"; PURPOSE "GUI for shell"; *)
  * Usage:
  *
  *	WMShell.Open ~ opens new shell
- *	SystemTools.Free WMShell ~ closes all open shells
+ *	System.Free WMShell ~ closes all open shells
  *
  * History:
  *
@@ -327,5 +327,5 @@ END WMShell.
 
 WMShell.Open ~
 
-SystemTools.Free WMShell ~
-SystemTools.Free WMShell Shell ~
+System.Free WMShell ~
+System.Free WMShell Shell ~

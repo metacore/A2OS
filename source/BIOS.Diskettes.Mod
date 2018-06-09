@@ -6,7 +6,7 @@ MODULE Diskettes; (** non-portable *) (** AUTHOR "pjm"; PURPOSE "Diskette device
  *
  * Usage:
  *	Diskettes.Install ~ will load the floppy disk device driver
- *	SystemTools.Free Diskettes ~ will unload the driver
+ *	System.Free Diskettes ~ will unload the driver
  *
  * History:
  *	01.03.2005	Adapted to Aos, FormatDisk removed (afi)
@@ -602,7 +602,7 @@ Results
 
 Diskettes.Install ~
 
-SystemTools.Free Diskettes ~
+System.Free Diskettes ~
 
 Partitions.Show
 

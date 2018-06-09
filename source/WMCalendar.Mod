@@ -723,4 +723,4 @@ END WMCalendar.
 
 WMCalendar.Open ~
 
-SystemTools.Free WMCalendar ~
+System.Free WMCalendar ~

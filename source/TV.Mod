@@ -739,7 +739,7 @@ BEGIN
 END TV.
 
 
-SystemTools.Free TV ~
+System.Free TV ~
 
 Usage: TV.Open [ [deviceNr] TXT ] ~
 

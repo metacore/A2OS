@@ -342,6 +342,6 @@ END PartitionEditorComponents.
 
 PartitionEditorComponents.Test ~
 
-SystemTools.Free PartitionEditorComponents ~
+System.Free PartitionEditorComponents ~
 
 

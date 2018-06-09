@@ -155,4 +155,4 @@ BEGIN
 END TestTrees.
 
 TestTrees.Open ~
-SystemTools.Free TestTrees WMTrees ~
+System.Free TestTrees WMTrees ~

@@ -31,5 +31,5 @@ END Open;
 
 END CommandLine.
 
-SystemTools.Free CommandLine ~
+System.Free CommandLine ~
 CommandLine.Open

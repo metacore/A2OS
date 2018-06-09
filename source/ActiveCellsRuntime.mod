@@ -536,4 +536,4 @@ type
 end ActiveCellsRuntime.
 
 
-SystemTools.FreeDownTo FoxSemanticChecker ~
+System.FreeDownTo FoxSemanticChecker ~

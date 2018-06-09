@@ -614,8 +614,8 @@ BEGIN
 	Pos:=50; NewWindowPos(0);
 END WMSimpleGraphs.
 
-SystemTools.Free WMSimpleGraphs ~
-SystemTools.FreeDownTo MatrixBase ~
+System.Free WMSimpleGraphs ~
+System.FreeDownTo MatrixBase ~
 
 Compiler.Compile -p=Win32 WMSimpleGraphs.Mod ~
 

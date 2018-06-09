@@ -27,4 +27,4 @@ BEGIN
 END BeepTest.
 
 BeepTest.Go ~
-SystemTools.Free BeepTest ~
+System.Free BeepTest ~

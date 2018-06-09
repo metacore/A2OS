@@ -137,7 +137,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMSkinLoader.
 
-SystemTools.Free WMSkinLoader Looks ~
+System.Free WMSkinLoader Looks ~
 WMSkinLoader.Open SkinList.XML ~
 
 

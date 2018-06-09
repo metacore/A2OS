@@ -188,6 +188,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMGraphicsDemo.
 
-SystemTools.Free WMGraphicsDemo ~
+System.Free WMGraphicsDemo ~
 WMGraphicsDemo.Open ~
 WMGraphicsDemo.TestGfx ~

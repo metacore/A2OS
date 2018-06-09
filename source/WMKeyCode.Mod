@@ -215,4 +215,4 @@ WMKeyCode.Open ~
 WMKeyCode.StartLog ~
 WMKeyCode.StopLog ~
 
-SystemTools.Free WMKeyCode ~
+System.Free WMKeyCode ~

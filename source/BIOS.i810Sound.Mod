@@ -1619,4 +1619,4 @@ Aos.Call PlayRecWave.Play x.wav ~
 Aos.Call MP3Player.Play DATA:/SomeMp3File.Mp3 ~
 
 System.Free i810Sound ~
-SystemTools.Free i810Sound~
+System.Free i810Sound~

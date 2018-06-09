@@ -11,7 +11,7 @@ MODULE UsbUhci; (** AUTHOR "cplattner/staubesv"; PURPOSE "USB Universal Host Con
  * Usage:
  *
  *	UsbUhci.Install ~ to load this device driver
- *	SystemTools.Free UsbUhci ~ unloads it
+ *	System.Free UsbUhci ~ unloads it
  *
  * References:
  *	Universal Host Controller Interface (UHCI) Design Guide, Revision 1.1, http://www.intel.com
@@ -1102,6 +1102,6 @@ BEGIN
 	PCIFindUhci;
 END UsbUhci.
 
-UsbUhci.Install ~  SystemTools.Free UsbUhci ~
+UsbUhci.Install ~  System.Free UsbUhci ~
 
 

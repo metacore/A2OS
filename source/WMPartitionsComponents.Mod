@@ -1658,4 +1658,4 @@ END WMPartitionsComponents.
 
 WMPartitionsComponents.TestPartitionSelector ~
 
-SystemTools.Free WMPartitionsComponents ~
+System.Free WMPartitionsComponents ~

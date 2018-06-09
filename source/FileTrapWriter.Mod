@@ -68,7 +68,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END FileTrapWriter.
 
-SystemTools.Free FileTrapWriter  ~
+System.Free FileTrapWriter  ~
 
 FileTrapWriter.Install
 WMTrapWriter.Install

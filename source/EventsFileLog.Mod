@@ -135,4 +135,4 @@ EventsFileLog.Stop ~
 
 EventsFileLog.Start -append ~
 
-SystemTools.Free EventsFileLog ~
+System.Free EventsFileLog ~

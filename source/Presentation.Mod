@@ -178,7 +178,7 @@ BEGIN
 	NEW(head); NEW(tail); head.next:=tail; head.prev:=head; tail.prev:=head; tail.next:=tail
 END Presentation.
 
-SystemTools.Free Presentation ~
+System.Free Presentation ~
 
 (RembrandtDoc)
 ImageDocs.Open ^

@@ -275,7 +275,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END TestMenu.
 
-SystemTools.Free TestMenu WMMenus ~
+System.Free TestMenu WMMenus ~
 TestMenu.Open ~
 
 TestMenu.OpenPopup

@@ -93,4 +93,4 @@ END Checksum.
 	
 	Checksum.SHA3  Files.Mod  ~
 	
-	SystemTools.Free Checksum ~
+	System.Free Checksum ~

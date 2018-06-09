@@ -739,9 +739,9 @@ END srRender.
 
 srRender.Open ~
 
-SystemTools.Free srRender srvoxels ~
+System.Free srRender srvoxels ~
 
-SystemTools.Free
+System.Free
 srBase
 srRayEngine
 srMath

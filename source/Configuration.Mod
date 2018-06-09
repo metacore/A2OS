@@ -248,7 +248,7 @@ BEGIN
 	Init;
 END Configuration.
 
-SystemTools.Free Configuration ~
+System.Free Configuration ~
 
 PET.Open Configuration.XML
 

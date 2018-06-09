@@ -337,4 +337,4 @@ BEGIN
 	SetLog( NIL );
 END MinosLinker.
 
-SystemTools.Free MinosLinker ~
+System.Free MinosLinker ~

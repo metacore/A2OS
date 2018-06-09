@@ -67,6 +67,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMScribble.
 
-SystemTools.Free WMScribble ~
+System.Free WMScribble ~
 WMScribble.Open ~
 WMPicView.Open scribble.bmp ~

@@ -309,7 +309,7 @@ BEGIN
 	Read("Macros.XML");
 END WMMacros.
 
-WMMacros.ReadMacros Macros.XML ~  SystemTools.Free WMMacros ~
+WMMacros.ReadMacros Macros.XML ~  System.Free WMMacros ~
 
 History:
 

@@ -108,5 +108,5 @@ BEGIN
 END TestComponentDragDrop.
 
 TestComponentDragDrop.Open ~
-SystemTools.Free TestComponentDragDrop ~
+System.Free TestComponentDragDrop ~
 

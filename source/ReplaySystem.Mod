@@ -43,5 +43,5 @@ how to use:
 
 ReplaySystem.Replay SystemTrace20120309_114313_07.txt~
 
-SystemTools.Free DownTo ReplaySystem~
+System.Free DownTo ReplaySystem~
 

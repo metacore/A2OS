@@ -461,7 +461,7 @@ END Init;
 
 END V24.
 
-V24.Install ~		SystemTools.Free V24 ~
+V24.Install ~		System.Free V24 ~
 V24.Scan ~
 
 Example Aos.Par information (typical values usually assigned to the 4 first serial ports)

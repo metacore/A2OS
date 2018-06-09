@@ -677,6 +677,6 @@ TYPE
 	
 END Shell.
 
-SystemTools.Free Shell ~
+System.Free Shell ~
 
 WMShell.Open ~

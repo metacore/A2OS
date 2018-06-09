@@ -36,8 +36,8 @@ MODULE WMComponents;	(** AUTHOR "TF"; PURPOSE "Component Framework based on XML"
 	If no MacroHandlerProcedure is found for a given macro, no substitution takes place.
 	Example:
 
-	onLeftClick = SystemTools.Show ^attribute=generator
-	onMiddleClick = SystemTools.Show ^property=FillColor
+	onLeftClick = System.Show ^attribute=generator
+	onMiddleClick = System.Show ^property=FillColor
 
 *)
 

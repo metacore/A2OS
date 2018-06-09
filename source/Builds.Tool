@@ -17,12 +17,12 @@ WIN32 -- 32-bit windows a2
 	Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
 		Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings
 		Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO
-		Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
+		Traps RelativeFileSystem WMDefaultFont System StdIOShell ~
 
 	## Command line shell including compiler (and linker) ##
 		Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
 			Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace
-			StdIO Traps RelativeFileSystem SystemTools FSTools StdIOShell Shell Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
+			StdIO Traps RelativeFileSystem System FSTools StdIOShell Shell Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 FSTools.CloseFiles oberon.exe ~
 
@@ -38,7 +38,7 @@ Windows.ODBC.Mod Windows.Shell32.Mod Windows.SQL.Mod Windows.WinFS.Mod RelativeF
 Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod BootConsole.Mod
 Shell.Mod StdIOShell.Mod ~
 
-SystemTools.FreeDownTo FoxIntermediateBackend ~
+System.FreeDownTo FoxIntermediateBackend ~
 
 LINUX32 -- 32 bit linux a2
 ================================
@@ -54,7 +54,7 @@ LINUX32 -- 32 bit linux a2
 	## Command line shell including compiler (and linker) ##
 		Linker.Link -p=Linux32 --path=NewAos/
 			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
-			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
 			Shell ~ Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
@@ -72,7 +72,7 @@ LINUX64 -- 64 bit linux a2
 	## Command line shell including compiler (and linker) ##
 		Linker.Link -p=Linux64 --path=NewAos/
 			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
-			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
 			Shell ~ Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 
@@ -107,7 +107,7 @@ WIN64 -- 64-bit windows a2
 
 	Linker.Link --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
 		Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
-		StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
+		StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
 
 	FSTools.CloseFiles oberon.exe ~
 	~
@@ -115,12 +115,12 @@ WIN64 -- 64-bit windows a2
 	
 -----
 
-	SystemTools.DoCommands	
+	System.DoCommands	
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Linux64 ~
 		Linker.Link -p=Linux64 --path=NewAos/
 			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
-			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
 			Shell ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux64/bin/*.* ~
 		FSTools.CopyFiles -o oberon => ../../Linux64/oberon ~
@@ -129,7 +129,7 @@ WIN64 -- 64-bit windows a2
 		Release.Build --build --path=NewAos/ Linux32 ~
 		Linker.Link -p=Linux32 --path=NewAos/
 			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
-			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
+			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
 			Shell ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux32/bin/*.* ~
 		FSTools.CopyFiles -o oberon => ../../Linux32/oberon ~
@@ -146,7 +146,7 @@ WIN64 -- 64-bit windows a2
 		Release.Build --build --path=NewAos/ Win32 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
 			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
-			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
+			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win32/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win32/oberon.exe ~
 
@@ -154,7 +154,7 @@ WIN64 -- 64-bit windows a2
 		Release.Build --build --path=NewAos/ Win64 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
 			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
-			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
+			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win64/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win64/oberon.exe ~
 

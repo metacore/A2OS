@@ -3,7 +3,7 @@ MODULE JoysticksTest; (** AUTHOR "staubesv"; PURPOSE "Joystick simulator for tes
  * Usage:
  *
  *	JoysticksTest.CreateJoystick [nbrOfButtons] ~ creates a new simulated joystick
- *	SystemTools.Free JoysticksTest ~	unload module, unregisters all simulated joysticks at Joysticks.registry
+ *	System.Free JoysticksTest ~	unload module, unregisters all simulated joysticks at Joysticks.registry
  *
  * History:
  *
@@ -140,6 +140,6 @@ Joysticks.Show ~
 
 JoysticksTest.CreateJoystick ~
 
-SystemTools.Free WMJoysticks JoysticksTest Joysticks ~
+System.Free WMJoysticks JoysticksTest Joysticks ~
 
 WMJoysticks.Open ~

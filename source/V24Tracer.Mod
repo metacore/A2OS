@@ -110,5 +110,5 @@ V24Tracer.Enable 0 1 9600 ~ InPort OutPort bps
 V24Tracer.SetMode coarse ~
 V24Tracer.SetMode fine ~
 V24Tracer.Disable ~
-SystemTools.Free V24Tracer ~
+System.Free V24Tracer ~
 

@@ -143,6 +143,6 @@ END Test;
 END POP3Client.
 
 POP3Client.Test
-SystemTools.Free POP3Client
+System.Free POP3Client
 
 

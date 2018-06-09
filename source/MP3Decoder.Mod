@@ -2127,4 +2127,4 @@ BEGIN
 END MP3Decoder.
 
 -------------------------------------
-SystemTools.Free MP3Decoder~
+System.Free MP3Decoder~

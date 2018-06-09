@@ -359,7 +359,7 @@ PC.Compile \s
 	Events.Mod EventsUtils.Mod EventsMemoryLog.Mod EventsKernelLog.Mod EventsFileLog.Mod WMEventLog.Mod
 ~
 
-SystemTools.Free
+System.Free
 	EventsKernelLog  WMEventLog EventsFileLog EventsMemoryLog EventsUtils Events
 ~
 

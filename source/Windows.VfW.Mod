@@ -282,5 +282,5 @@ BEGIN
 	Init()
 END VfW.
 
-SystemTools.Free VfW ~
+System.Free VfW ~
 

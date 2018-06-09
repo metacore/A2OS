@@ -1106,7 +1106,7 @@ END GetCharSpacings;
 
 END PDF.
 
-SystemTools.Free PDF ~
+System.Free PDF ~
 
 
 

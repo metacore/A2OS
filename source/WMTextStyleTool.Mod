@@ -2092,7 +2092,7 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup)
 END WMTextStyleTool.
 
-SystemTools.Free WMTextStyleTool ~
+System.Free WMTextStyleTool ~
 WMTextStyleTool.Open  ~
 
 WMTextStyleTool.SetStyleByName Bold ~

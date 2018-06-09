@@ -98,4 +98,4 @@ WebHTTPServerStatistics.AddURI powerbottle.inf.ethz.ch /index.html~
 
 WebHTTPServerStatistics.Show ~
 
-SystemTools.Free WebHTTPServerStatistics ~
+System.Free WebHTTPServerStatistics ~

@@ -1133,7 +1133,7 @@ BEGIN
 	NEW(decodeInstance,18);
 END FoxTRMInstructionSet.
 
-SystemTools.FreeDownTo FoxTRMInstructionSet ~
+System.FreeDownTo FoxTRMInstructionSet ~
 FoxTRMInstructionSet.DumpInstructionFormats -s ~
 FoxTRMInstructionSet.Test ~
 

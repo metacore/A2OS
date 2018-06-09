@@ -545,4 +545,4 @@ Keyboard.Install ~
 Keyboard.SetLayout KeyCH.Bin ~
 Keyboard.SetLayout KeyUS.Bin ~
 
-SystemTools.Free Keyboard ~
+System.Free Keyboard ~

@@ -6,7 +6,7 @@ MODULE WMUsbInfo; (** AUTHOR "staubesv"; PURPOSE "USB topology info (GUI)"; *)
  * Usage:
  *
  *	WMUsbInfo.Open ~ to start application
- *	SystemTools.Free WMUsbInfo ~ to unload it
+ *	System.Free WMUsbInfo ~ to unload it
  *
  * History:
  *
@@ -1393,4 +1393,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMUsbInfo.
 
-WMUsbInfo.Open ~  SystemTools.Free WMUsbInfo ~
+WMUsbInfo.Open ~  System.Free WMUsbInfo ~

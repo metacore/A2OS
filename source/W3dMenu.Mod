@@ -485,7 +485,7 @@ W3dMenu.Open W3dFun.XML ~
 W3dMenu.Open W3dMenu.XML ~
 W3dMenu.Open W3dNetTool.XML ~
 W3dMenu.Open W3dPersonal.XML ~
-SystemTools.Free W3dMenu ~
+System.Free W3dMenu ~
 
 Compiler.Compile \s W3dVectors.Mod W3dMatrix.Mod W3dGeometry.Mod W3dAbstractWorld.Mod W3dObjectGenerator.Mod
 W3dRasterizer.Mod W3dWorld.Mod W3dExplorer.Mod W3dClusterWatch.Mod W3dMenu.Mod~
@@ -498,7 +498,7 @@ PC.Compile \s TFVectors.Mod TFMatrix.Mod TFGeometry.Mod TFAbstractWorld.Mod TFOb
 Float.TFRasterizer3d.Mod TFWorld3d.Mod TFExplorer.Mod Menu3d.Mod ~
 ~
 
-SystemTools.Free W3dMenu W3dWorld W3dRasterizer W3dObjectGenerator W3dAbstractWorld W3dGeometry W3dMatrix W3dVectors~
+System.Free W3dMenu W3dWorld W3dRasterizer W3dObjectGenerator W3dAbstractWorld W3dGeometry W3dMatrix W3dVectors~
 
 EditTools.OpenAscii W3dFun.XML ~
 EditTools.OpenAscii W3dMenu.XML ~

@@ -533,7 +533,7 @@ END Delete;
 
 END ZipTool.
 
-SystemTools.Free ZipTool ~
+System.Free ZipTool ~
 
 ZipTool.Directory ZeroSkin.zip ~
 ZipTool.Directory --details ZeroSkin.zip ~

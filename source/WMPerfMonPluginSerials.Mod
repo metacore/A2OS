@@ -86,4 +86,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMonPluginSerials.
 
-WMPerfMonPluginSerials.Install ~	SystemTools.Free WMPerfMonPluginSerials ~
+WMPerfMonPluginSerials.Install ~	System.Free WMPerfMonPluginSerials ~

@@ -549,6 +549,6 @@ end OZip.
 	OZip.UncompressFile   OZip.Obj.oz  TTT.Obj ~
 	OZip.UncompressFile   summary.pdf.oz  TTT.pdf ~
 	
-	SystemTools.Free OZip  ~
+	System.Free OZip  ~
 	
 

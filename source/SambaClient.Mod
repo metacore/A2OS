@@ -1224,7 +1224,7 @@ END GetDateTime;
 END SambaClient.
 
 
-SystemTools.Free SambaClient ~
+System.Free SambaClient ~
 
 FSTools.Mount SMB SmbFS 192.168.1.1 sharename userid password~
 

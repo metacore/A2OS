@@ -8,8 +8,8 @@ Heaps.SetOld
 
 Compiler.Compile --noInterfaceCheck
 (* 
-	SystemTools.DoCommands
-	SystemTools.Timer start ~
+	System.DoCommands
+	System.Timer start ~
 
 	Compiler.Compile *)
 
@@ -43,8 +43,8 @@ Compiler.Compile --noInterfaceCheck
 	PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
 	InterpreterShell.Mod WMInterpreterShell.Mod 
 	~
-SystemTools.Show Time elapsed: ~ SystemTools.Ln ~
-SystemTools.Timer elapsed ~ SystemTools.Ln ~
+System.Show Time elapsed: ~ System.Ln ~
+System.Timer elapsed ~ System.Ln ~
 ~
 
 compiler options:
@@ -95,7 +95,7 @@ ActiveCells options
 
 run regression tests
 
-SystemTools.DoCommands
+System.DoCommands
 	FoxTest.Compile	 -l=Test.Log  Oberon.Compilation.Test Oberon.Compilation.AMD64TestDiff ~
 	FoxTest.Compile	-l=Test.Log Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
 	FoxTest.Compile	-l=Test.Log ActiveCells.Execution.Test ActiveCells.Execution.TestDiff ~

@@ -1523,7 +1523,7 @@ END WMV24Component.
 V24.Install ~
 Serials.Show ~
 
-SystemTools.Free WMV24Component WMProgressComponents XYModem ~
+System.Free WMV24Component WMProgressComponents XYModem ~
 WMV24Component.Open ~
 
 Serials.CloseAllPorts ~

@@ -868,7 +868,7 @@ END IPv4.
 
 
 Free:
-SystemTools.Free TraceRoute VNC Ping WMFTPClient FTPClient WebFTPServer TCPServices TLS InitNetwork Ping DHCP TCP DNS UDP ICMP IPv4 IPv6 IP~
+System.Free TraceRoute VNC Ping WMFTPClient FTPClient WebFTPServer TCPServices TLS InitNetwork Ping DHCP TCP DNS UDP ICMP IPv4 IPv6 IP~
 
 Start:
 InitNetwork.Init

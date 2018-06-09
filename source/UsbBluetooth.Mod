@@ -6,7 +6,7 @@ MODULE  UsbBluetooth; (** AUTHOR "staubesv"; PURPOSE "USB device driver for USB 
  *
  * Usage:
  *	UsbBluetooth.Install ~ loads this driver
- *	SystemTools.Free UsbBluetooth ~ unloads it
+ *	System.Free UsbBluetooth ~ unloads it
  *
  * History:
  *
@@ -188,4 +188,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END UsbBluetooth.
 
-SystemTools.Free UsbBluetooth ~  UsbBluetooth.Install ~
+System.Free UsbBluetooth ~  UsbBluetooth.Install ~

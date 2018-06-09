@@ -120,7 +120,7 @@ END Show;
 
 END BenchInterrupts.
 
-SystemTools.Free BenchInterrupts ~
+System.Free BenchInterrupts ~
 
 BenchInterrupts.Bench 1000000 ~
 

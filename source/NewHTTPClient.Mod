@@ -291,6 +291,6 @@ BEGIN
 	Modules.InstallTermHandler(CleanUp)
 END NewHTTPClient.
 
-SystemTools.Free NewHTTPClient ~
+System.Free NewHTTPClient ~
 NewHTTPClient.Test ~
 NewHTTPClient.TestGoogle ~

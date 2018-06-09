@@ -1479,7 +1479,7 @@ BEGIN {EXCLUSIVE}
 END EnsoniqSound.
 
 EnsoniqSound.Install ~
-SystemTools.Free EnsoniqSound ~
+System.Free EnsoniqSound ~
 
 Installation
 Add EnsoniqSound.Install to Configuration.XML, section 'Autostart' to load driver at system startup.

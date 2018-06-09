@@ -136,7 +136,7 @@ END SelectedCharToUCS;
 
 
 END WMUkrainianIME.Install~
-SystemTools.Free WMUkrainianIME~
+System.Free WMUkrainianIME~
 WMUkrainianIME.SelectedCharToUCS ~
 
 WMKeyCode.Open ~

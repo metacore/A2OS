@@ -979,7 +979,7 @@ TYPE
 
 END InterpreterShell.
 
-SystemTools.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols Test ~
+System.Free WMInterpreterShell InterpreterShell FoxInterpreter FoxInterpreterSymbols Test ~
 
 WMInterpreterShell.Open ~
 
@@ -991,5 +991,5 @@ for i := 0 to 100 do
 o.String("i = "); o.Int(i,1); o.Ln
 end
 
-CMD "SystemTools.Show ?{i}?"
+CMD "System.Show ?{i}?"
 

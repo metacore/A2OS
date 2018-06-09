@@ -649,7 +649,7 @@ END TestBase64;
 *)
 END StreamUtilities.
 
-SystemTools.FreeDownTo StreamUtilities ~
+System.FreeDownTo StreamUtilities ~
 
 StreamUtilities.Test hello ~
 StreamUtilities.Test2 abcd efghijk ~

@@ -339,7 +339,7 @@ VideoExample.Open ~
 VideoExample.SimulateImage "Picture 1.jpg" ~
 VideoExample.Start ~
 VideoExample.Stop ~
-SystemTools.Free TestVideo VideoExample VfW  RasterPixelFormats~
+System.Free TestVideo VideoExample VfW  RasterPixelFormats~
 
 
 Video compression formats in Windows (FOURCC identifiers) :

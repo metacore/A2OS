@@ -326,4 +326,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMPerfMon.
 
-WMPerfMon.Open ~ 	SystemTools.Free WMPerfMon ~
+WMPerfMon.Open ~ 	System.Free WMPerfMon ~

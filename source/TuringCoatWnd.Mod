@@ -178,6 +178,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END TuringCoatWnd.
 
-SystemTools.Free TuringCoatWnd ~
+System.Free TuringCoatWnd ~
 TuringCoatWnd.OpenAlpha ~
 TuringCoatWnd.Open ~

@@ -6524,7 +6524,7 @@ BEGIN
 
 END FoxArrayBaseOptimized.
 
-SystemTools.Free ArrayBaseOptimized ~
+System.Free ArrayBaseOptimized ~
 
 ArrayBaseOptimized.Install ~
 ArrayBaseOptimized.InstallSSE2 ~

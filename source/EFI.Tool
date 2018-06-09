@@ -2,7 +2,7 @@
 
 ** Loader * *
 
-SystemTools.DoCommands
+System.DoCommands
 Compiler.Compile --bits=32 --traceModule=Trace
 	I386.Builtins.Mod Trace.Mod EFI.Mod I386.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
 	EFILoadedImage.Mod EFIGraphicsOutput.Mod EFILib.Mod EFIGraphicalConsole.Mod EFIA2Loader.Mod
@@ -14,7 +14,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --
 
 ** Kernel Image **
 
-SystemTools.DoCommands
+System.DoCommands
 Compiler.Compile --newObjectFile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
 	I386.Builtins.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
 	Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
@@ -41,7 +41,7 @@ Linker.Link
 ~
 
 **************** 64 BIT ********************
-SystemTools.FreeDownTo FoxIntermediateBackend ~
+System.FreeDownTo FoxIntermediateBackend ~
 
 
 	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
@@ -51,7 +51,7 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 
 ** Loader **
 ~
-SystemTools.DoCommands
+System.DoCommands
 Compiler.Compile --bits=64 --traceModule=Trace
 	AMD64.Builtins.Mod Trace.Mod EFI.Mod AMD64.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
 	EFILoadedImage.Mod EFIGraphicsOutput.Mod EFILib.Mod EFIGraphicalConsole.Mod EFIA2Loader.Mod
@@ -64,7 +64,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI64 --
 
 ** Kernel Image **
 	
-SystemTools.DoCommands
+System.DoCommands
 	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
 	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
@@ -109,7 +109,7 @@ Boot="DisplayLinear.Install"
 ~~
 
 
-SystemTools.DoCommands
+System.DoCommands
 	VirtualDisks.Create A2HDD.img 65520 512 ~
 	VirtualDisks.Install -b=512 VDISK0 A2HDD.img ~
 
@@ -137,7 +137,7 @@ SystemTools.DoCommands
 	~
 	
 	
-SystemTools.DoCommands
+System.DoCommands
 VirtualDisks.Create A2:A2HDD.img 65520 ~
 VirtualDisks.Install VDISK A2:A2HDD.img ~
 Partitions.InstallBootManager VDISK#0 ~

@@ -711,5 +711,5 @@ BEGIN
 	StrPreviewPanel := Strings.NewString("PreviewPanel");
 END SkinEditor.
 
-SystemTools.Free SkinEditor ~
+System.Free SkinEditor ~
 SkinEditor.Open ~

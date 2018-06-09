@@ -3940,6 +3940,6 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END WMInspectionComponents.
 
-SystemTools.FreeDownTo WMInspectionComponents ~
+System.FreeDownTo WMInspectionComponents ~
 
 

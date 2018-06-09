@@ -1474,8 +1474,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	Partitions.Tool Oberon.Partitions.Mod	# Partition
 
-	NATIVE, WIN { Oberon.Miscellaneous.Mod }	# Miscellaneous
-	Miscellaneous.Tool
+	BIOS { Oberon.Miscellaneous.Mod Miscellaneous.Tool }	# Miscellaneous
 
 	Oberon.Browser.Mod	# Browser (Compiler.Tool)
 	DOS.Tool Oberon.FATFiles.Mod Oberon.DOS.Mod	# DOS

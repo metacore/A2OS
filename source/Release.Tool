@@ -321,7 +321,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BIOS { BIOS.PCI.Mod }
 
 	# Realtime clock driver
-	NATIVE { Clock.Mod }
+	BIOS { BIOS.Clock.Mod }
 	WIN { Windows.Clock.Mod }
 	UNIX { Unix.Clock.Mod }
 

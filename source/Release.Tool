@@ -1,18 +1,18 @@
 # To compile all files in a specific release...
 #
-# A2 Cooperative
+# Bios Cooperative
 #
-#	Release.Build --build --path="./" A2Cooperative ~
+#	Release.Build --build --path="./" Bios32C ~
 #	Linker.Link --fileName=a2.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
-# A2 RPi Cooperative
+# RPi Cooperative
 #
-#	Release.Build --build --path="./" A2RPiCooperative ~
+#	Release.Build --build --path="./" RpiC ~
 #	Linker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
-# A2 Zynq Cooperative
+# Zynq Cooperative
 #
-#	Release.Build --build --path="./" A2ZynqCooperative ~
+#	Release.Build --build --path="./" ZynqC ~
 #	Linker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # WINAOS
@@ -102,7 +102,7 @@ HEADER
 END
 
 BUILDS
-	A2 {
+	Bios32 {
 		INCLUDE "NATIVE I386 I386GEN UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--newObjectFile --mergeSections"
@@ -113,7 +113,7 @@ BUILDS
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	A2Cooperative {
+	Bios32C {
 		INCLUDE "NATIVE I386 COOP NATIVECOOP NATIVEI386COOP I386COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
@@ -124,7 +124,7 @@ BUILDS
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	A2RPiCooperative {
+	RpiC {
 		INCLUDE "NATIVE ARM RPI COOP RPICOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
@@ -135,7 +135,7 @@ BUILDS
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	A2ZynqCooperative {
+	ZynqC {
 		INCLUDE "NATIVE ARM ZYNQ COOP ZYNQCOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"

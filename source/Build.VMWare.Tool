@@ -5,7 +5,7 @@
 
 # Step 1: Compile modules and generate ZIP packages
 
-Release.Build --path="../Test/" --build --zip A2 ~
+Release.Build --path="../Test/" --build --zip Bios32 ~
 
 # Step 2: Generate disk image & A2VM.zip file
 

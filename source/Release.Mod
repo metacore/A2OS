@@ -3395,27 +3395,27 @@ END Release.
 
 SystemTools.Free Release ~
 
-Release.FindPosition A2 Usbdi.Mod ~
+Release.FindPosition Bios32 Usbdi.Mod ~
 
 Release.Analyze --details ~
 
 Release.Check ~
 
-Release.Build A2 ~
+Release.Build Bios32 ~
 
-Release.Build --path="../Test/" -b A2 ~
+Release.Build --path="../Test/" -b Bios32 ~
 
-Release.Build --path="../Test/" --xml A2 ~
+Release.Build --path="../Test/" --xml Bios32 ~
 
 Release.CheckFiles -f=C2Release.Tool ../../CF/trunk/source/*.* ~
 
-Release.Build --path="../Test/" -z A2 ~
+Release.Build --path="../Test/" -z Bios32 ~
 
-Release.RequiredModules A2 WMTextView ~
-Release.WhoImports A2 WMComponents ~
+Release.RequiredModules Bios32 WMTextView ~
+Release.WhoImports Bios32 WMComponents ~
 
 Release.Tool ~
 
-Release.Build --path="../Test" -b -x="Build Oberon Contributions " A2 ~
+Release.Build --path="../Test" -b -x="Build Oberon Contributions " Bios32 ~
 
-Release.Rebuild -b A2 WMTextView.Mod ~
+Release.Rebuild -b Bios32 WMTextView.Mod ~

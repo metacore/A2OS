@@ -7,7 +7,7 @@
 
 # Step 1: Compile modules and generate ZIP packages
 
-Release.Build --path="../Test/" --build --zip --xml A2 ~
+Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
 
 # Step 2:  Link boot files
@@ -268,7 +268,7 @@ SystemTools.Show HDD image build time:  ~ SystemTools.Timer elapsed ~
 
 ***********************************************************************
 # Step 1: Compile modules and generate ZIP packages
-Release.Build --path="../Test/" --build --zip --xml A2 ~
+Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
 # Step 3e: Create image for bootable USB  (A2USB.img)
 

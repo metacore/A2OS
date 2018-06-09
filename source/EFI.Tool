@@ -17,7 +17,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --
 System.DoCommands
 Compiler.Compile --newObjectFile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
 	I386.Builtins.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
-	Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
+	BIOS.Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod BIOS.I386.Traps.Mod Locks.Mod BIOS.PCI.Mod 
 	BIOS.Clock.Mod BIOS.I386.MemCache.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 
 	FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod 
@@ -66,7 +66,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI64 --
 	
 System.DoCommands
 	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
-	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod Objects.Mod Kernel.Mod 
+	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod BIOS.Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod BIOS.AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod BIOS.Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
 	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod 

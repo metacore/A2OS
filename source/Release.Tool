@@ -300,7 +300,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	NATIVE, WIN, UNIX { Modules.Mod }
 	COOP { Coop.Modules.Mod GarbageCollector.Mod }
 
-	NATIVE { Objects.Mod Kernel.Mod }
+	BIOS { BIOS.Objects.Mod Kernel.Mod }
 	WIN32 { Windows.I386.Objects.Mod }
 	WIN64 { Windows.AMD64.Objects.Mod }
 	WIN { Windows.Kernel.Mod }
@@ -1008,9 +1008,9 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonAlerts.Mod WMPerfMonAlertsUtils.Mod WMPerfMonAlerts.XML
 
 	# perfmon kernel plugins
-	NATIVE {
+	BIOS {
 		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
-		WMPerfMonPluginInterrupts.Mod
+		BIOS.WMPerfMonPluginInterrupts.Mod
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
 	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }

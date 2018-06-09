@@ -1571,7 +1571,7 @@ Visualizer.Generate -a  -s="A0" -v=all --procedures=all --hasA=all -d=all --mode
 Visualizer.Generate -a  -s="A3" ratio="fill"' -v=none -p=none -h=all -m=2 -e="Modules Machine Heaps Objects Kernel Raster XMLObjects XML"  WMEvents.Mod WMProperties.Mod WMComponents.Mod WindowManager.Mod ~
 
 
-Visualizer.Generate -a  -s="A3" -v=all -p=all -h=all -m=2 Trace.Mod I386.Machine.Mod Heaps.Mod Objects.Mod Modules.Mod Kernel.Mod  ~
+Visualizer.Generate -a  -s="A3" -v=all -p=all -h=all -m=2 Trace.Mod BIOS.I386.Machine.Mod Heaps.Mod Objects.Mod Modules.Mod Kernel.Mod  ~
 
 Visualizer.Generate -a -s="A3" -v=all -p=all -m=1 WMWindowManager.Mod ~
 

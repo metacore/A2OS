@@ -2,7 +2,7 @@ MODULE EFIMachine; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT SYSTEM, EFI;
 
-(*  I386.Machine.Mod uses following registers as arguments:
+(* BIOS.I386.Machine.Mod uses following registers as arguments:
 	eax	: bootFlag (= address of boot table)
 	esi	: ?
 	edi	: address of frame buffer

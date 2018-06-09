@@ -66,7 +66,7 @@ TYPE
 		beginBlockAdr-, endBlockAdr-: ADDRESS
 	END;
 
-	(* dummy definition to make GC work for both I386 and Win32 - copied from I386.Machine.Mod, but not really used *)
+	(* dummy definition to make GC work for both I386 and Win32 - copied from BIOS.I386.Machine.Mod, but not really used *)
 	Stack* = RECORD	(** values are read-only *)
 		low: ADDRESS;		(* lowest virtual address that may be allocated for stack *)
 		adr*: ADDRESS;		(* lowest address on allocated stack *)	(* exported for Objects only *)

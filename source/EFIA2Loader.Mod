@@ -340,7 +340,7 @@ VAR
 	VAR btIdx : ADDRESS; i : LONGINT; ch : CHAR;
 	BEGIN
 		btIdx := bootTableCfgStrEntry + 8; (* skip type and size fields *)
-		(* copied from I386.Machine.Mod - GetConfig *)
+		(* copied from BIOS.I386.Machine.Mod - GetConfig *)
 		LOOP
 			SYSTEM.GET(btIdx,ch);
 			IF ch = 0X THEN EXIT END;

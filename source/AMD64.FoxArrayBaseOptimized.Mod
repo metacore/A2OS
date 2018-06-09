@@ -6486,7 +6486,7 @@ VAR
 		END;
 	END InstallSSE2;
 
-	(*! to do: at current, this only works for Win, not for native because SSE3Support is not yet implemented in I386.Machine.Mod*)
+	(*! to do: at current, this only works for Win, not for native because SSE3Support is not yet implemented in BIOS.I386.Machine.Mod*)
 	PROCEDURE InstallSSE3*;   (* extra for testing, will be merged with Install in later versions *)
 	BEGIN
 		IF Machine.SSE3Support THEN

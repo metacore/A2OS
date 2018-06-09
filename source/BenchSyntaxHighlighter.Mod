@@ -271,22 +271,22 @@ END BenchSyntaxHighlighter.
 SystemTools.Free BenchSyntaxHighlighter ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod reader ~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod reader ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod reader ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod words ~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod words ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod words ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod rebuildregions~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod rebuildregions ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod rebuildregions ~
 
 BenchSyntaxHighlighter.Bench -n=1000000 Usb.Mod regionlookup~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod regionlookup ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod regionlookup ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod full ~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod full ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod full ~
 
 BenchSyntaxHighlighter.Bench Usb.Mod  ~
-BenchSyntaxHighlighter.Bench I386.Machine.Mod  ~
+BenchSyntaxHighlighter.Bench BIOS.I386.Machine.Mod  ~
 
 Tests:
 

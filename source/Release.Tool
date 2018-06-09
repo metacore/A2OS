@@ -103,7 +103,7 @@ END
 
 BUILDS
 	Bios32 {
-		INCLUDE "BIOS32 NATIVE I386 I386GEN UNCOOP UNCOOP32"
+		INCLUDE "BIOS32 NATIVE I386 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--newObjectFile --mergeSections"
 		TARGET "AMD"
@@ -264,7 +264,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN32 { Windows.I386.Kernel32.Mod }
 	WIN64 { Windows.AMD64.Kernel32.Mod }
 
-	I386GEN { I386.Machine.Mod }
+	BIOS32 { BIOS.I386.Machine.Mod }
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod }
@@ -326,7 +326,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	UNIX { Unix.Clock.Mod }
 
 	# Memory cache control
-	I386GEN { I386.MemCache.Mod }
+	BIOS32 { BIOS.I386.MemCache.Mod }
 	COOP { Coop.MemCache.Mod }
 
 	# Block device interface
@@ -1213,7 +1213,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 		BluetoothTest.Mod
 	}
 
-	I386GEN { I386.BenchInterrupts.Mod }
+	BIOS32 { BIOS.I386.BenchInterrupts.Mod }
 
 	BenchTCP.Mod
 

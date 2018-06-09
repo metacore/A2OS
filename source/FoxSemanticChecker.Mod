@@ -9266,6 +9266,7 @@ TYPE
 			IF (from.form # SyntaxTree.Static) OR (from.staticLength = to.staticLength) THEN
 				IF  fromBase = toBase THEN i := 0
 				ELSIF toBase = NIL THEN i := 1
+				ELSIF fromBase = NIL THEN i := Infinity;
 				ELSIF toBase.SameType(fromBase) THEN i := 0
 				ELSIF (fromBase IS SyntaxTree.MathArrayType) & (toBase IS SyntaxTree.MathArrayType) THEN
 					i := MathArrayTypeDistance(system,fromBase(SyntaxTree.MathArrayType),toBase(SyntaxTree.MathArrayType),varpar);

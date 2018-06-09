@@ -114,7 +114,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Bios32C {
-		INCLUDE "BIOS32C BIOS NATIVE I386 COOP NATIVECOOP NATIVEI386COOP I386COOP"
+		INCLUDE "BIOS32C BIOS NATIVE I386 COOP I386COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "AMD"
@@ -244,12 +244,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	# cooperative runtime system
 	COOP { Counters.Mod }
-	NATIVEI386COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
+	BIOS32C { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WINCOOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
-	NATIVECOOP { HeapManager.Mod BIOS.Environment.Mod }
+	BIOS32C { HeapManager.Mod BIOS.Environment.Mod }
 	RPICOOP { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQCOOP { HeapManager.Mod Zynq.Environment.Mod }
 	WINCOOP { Windows.Environment.Mod }
@@ -762,7 +762,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPTools.Mod						# Some useful TCP-related commands
 
 	# { Performance.Mod }
-	WIN, UNIX, NATIVECOOP { Windows.Performance.Mod } # This is just a dummy
+	WIN, UNIX, BIOS32C { Windows.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod
 

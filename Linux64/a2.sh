@@ -1,4 +1,2 @@
 #!/bin/sh
-
-dir=$(cd `dirname $0` && pwd)
-$dir/oberon run $dir/a2.txt
+cd `dirname $0` && ./oberon run a2.txt

@@ -147,14 +147,14 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32 {
-		INCLUDE "WIN32 WIN UNCOOP UNCOOP32"
+		INCLUDE "WIN32 WIN I386 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win32"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
 	Win64 {
-		INCLUDE "WIN64 WIN UNCOOP UNCOOP64"
+		INCLUDE "WIN64 WIN AMD64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win64"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
@@ -172,7 +172,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32 {
-		INCLUDE "LINUX32 UNIX UNIX32 UNCOOP UNCOOP32"
+		INCLUDE "LINUX32 UNIX UNIX32 I386 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -180,7 +180,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux64 {
-		INCLUDE "LINUX64 UNIX UNIX64 UNCOOP UNCOOP64"
+		INCLUDE "LINUX64 UNIX UNIX64 AMD64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
@@ -188,7 +188,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Darwin32 {
-		INCLUDE "DARWIN32 UNIX UNIX32 UNCOOP UNCOOP32"
+		INCLUDE "DARWIN32 UNIX UNIX32 I386 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -196,7 +196,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Darwin64 {
-		INCLUDE "DARWIN64 UNIX UNIX64 UNCOOP UNCOOP64"
+		INCLUDE "DARWIN64 UNIX UNIX64 AMD64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
@@ -204,7 +204,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Solaris32 {
-		INCLUDE "SOLARIS32 UNIX UNIX32 UNCOOP UNCOOP32"
+		INCLUDE "SOLARIS32 UNIX UNIX32 I386 UNCOOP UNCOOP32"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -212,7 +212,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Solaris64 {
-		INCLUDE "SOLARIS64 UNIX UNIX64 UNCOOP UNCOOP64"
+		INCLUDE "SOLARIS64 UNIX UNIX64 AMD64 UNCOOP UNCOOP64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
@@ -299,8 +299,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
-	BIOS32, WIN32, UNIX32 { I386.Reals.Mod }
-	WIN64, UNIX64 { AMD64.Reals.Mod }
+	I386 { I386.Reals.Mod }
+	AMD64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
 	# default trap handling
@@ -565,14 +565,14 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	BIOS32, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	I386 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	WIN64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
-	BIOS32, WIN32, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
-	WIN64, UNIX64, UNIX64 { AMD64.FoxArrayBaseOptimized.Mod }
+	I386 { I386.FoxArrayBaseOptimized.Mod }
+	AMD64 { AMD64.FoxArrayBaseOptimized.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
@@ -595,8 +595,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	BIOS32, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	WIN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
+	I386 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
@@ -611,8 +611,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	BIOS32, WIN32, UNIX32 { I386.Raster.Mod }
-	WIN64, UNIX64 { AMD64.Raster.Mod }
+	I386 { I386.Raster.Mod }
+	AMD64 { AMD64.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -644,8 +644,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	BIOS32, WIN32, UNIX32 { I386.WMRasterScale.Mod }
-	WIN64, UNIX64 { AMD64.WMRasterScale.Mod }
+	I386 { I386.WMRasterScale.Mod }
+	AMD64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -674,7 +674,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	BIOS32, WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
+	I386 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend
@@ -742,8 +742,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	BIOS32, WIN32, UNIX32 { I386.CPUID.Mod }
-	WIN64 { AMD64.CPUID.Mod }
+	I386 { I386.CPUID.Mod }
+	AMD64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
 
@@ -819,7 +819,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin # MP3 Decoder
 
 	# Video codecs
-	BIOS32, WIN32, UNIX32 {
+	I386 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod	# MPEG1/2 Support
@@ -1106,7 +1106,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	HotKeysCommands.Mod
 
-	BIOS32, WIN { I386.VMWareTools.Mod }		# VMWare
+	I386 { I386.VMWareTools.Mod }		# VMWare
 	SynergyClient.Mod			# Synergy
 
 	NATIVE {
@@ -1119,8 +1119,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	BIOS32, WIN32, UNIX32 { I386.WMTransitions.Mod }
-	WIN64, UNIX64 { AMD64.WMTransitions.Mod }
+	I386 { I386.WMTransitions.Mod }
+	AMD64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
 	WAVRecorder.Mod
@@ -1281,8 +1281,8 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	BIOS32, WIN32, UNIX32 { I386.EFIMachine.Mod }
-	WIN64, UNIX64 { AMD64.EFIMachine.Mod }
+	I386 { I386.EFIMachine.Mod }
+	AMD64 { AMD64.EFIMachine.Mod }
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
 	EFIFileProtocol.Mod EFISimpleFS.Mod
@@ -1311,8 +1311,8 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
 	srBase.Mod srRayEngine.Mod srMath.Mod
-	BIOS32, WIN32, UNIX32 { I386.srE.Mod }
-	WIN64, UNIX64 { AMD64.srE.Mod }
+	I386 { I386.srE.Mod }
+	AMD64 { AMD64.srE.Mod }
 	srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
 	srM2Space.Mod srM3Space.Mod srM5Space.Mod srM6Space.Mod srRastermovie.Mod
@@ -1346,7 +1346,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
 	MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
 
-	BIOS32, WIN32, UNIX32 {
+	I386 {
 
 		# Disable index checking for these modules with \sx for efficiency
 		I386.Array1dBytes.Mod Array1dInt.Mod Array1dRat.Mod Array1dRe.Mod Array1dCplx.Mod I386.ArrayXdBytes.Mod
@@ -1449,8 +1449,8 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	BIOS { BIOS.Oberon.Centronics.Mod }
 
-	BIOS32, WIN32, UNIX32 { I386.Oberon.Bitmaps.Mod }
-	WIN64, UNIX64 { AMD64.Oberon.Bitmaps.Mod }
+	I386 { I386.Oberon.Bitmaps.Mod }
+	AMD64 { AMD64.Oberon.Bitmaps.Mod }
 
 	Oberon.Pictures.Mod
 

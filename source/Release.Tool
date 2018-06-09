@@ -326,7 +326,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# default trap handling
 	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
-	NATIVE { Traps.Mod }
+	BIOS32 { BIOS.I386.Traps.Mod }
 	ARM { ARM.Traps.Mod }
 	WIN32 { Windows.I386.Traps.Mod }
 	WIN64 { Windows.AMD64.Traps.Mod }

@@ -243,8 +243,8 @@ CODE{SYSTEM.i386}
 	; taken from "Software Optimization Guide for AMD64 Processors"
 	; divides two signed 64-bit numbers and delivers the quotient
 	;
-	; In: [EBP+20]:[EBP+16] = dividend (l)
-	; [EBP+12]:[EBP+8] = divisor (r)
+	; In: [EBP+l+4]:[EBP+l+0] = dividend (l)
+	; [EBP+r+4]:[EBP+r+0] = divisor (r)
 	; Out: EDX:EAX = quotient of division
 	MOV EDX, [EBP+l+4] 	    ; dividend_hi
 	MOV EAX, [EBP+l+0] 		; dividend_lo
@@ -340,8 +340,8 @@ CODE{SYSTEM.i386}
 	; computes the low-order half of the product of its
 	; arguments, two 64-bit integers.
 	;
-	; In: [EBP+12]:[EBP+8] = multiplicand (l)
-	; [EBP+20]:[EBP+16] = multiplier (r)
+	; In: [EBP+l+4]:[EBP+l+0] = multiplicand (l)
+	; [EBP+r+4]:[EBP+r+0] = multiplier (r)
 	; Out: EDX:EAX = (multiplicand * multiplier) % 2^64
 	; Destroys: EAX, ECX, EDX, EFlags
 	MOV EDX, [EBP+l+4] 		; multiplicand_hi
@@ -368,8 +368,8 @@ CODE{SYSTEM.i386}
 	; taken from "Software Optimization Guide for AMD64 Processors"
 	; DIVIDES TWO SIGNED 64-BIT NUMBERS AND RETURNS THE REMAINDER.
 	;
-	; IN: [EBP+20]:[EBP+16] = DIVIDEND (l)
-	; [EBP+12]:[EBP+8] = DIVISOR (r)
+	; IN: [EBP+l+4]:[EBP+l+0] = DIVIDEND (l)
+	; [EBP+r+4]:[EBP+r+0] = DIVISOR (r)
 	;
 	; OUT: EDX:EAX = REMAINDER OF DIVISION
 	;

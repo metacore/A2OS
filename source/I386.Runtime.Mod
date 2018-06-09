@@ -19,13 +19,13 @@ CODE{SYSTEM.i386}
 	; taken from "Software Optimization Guide for AMD64 Processors"
 	; divides two signed 64-bit numbers and delivers the quotient
 	;
-	; In: [EBP+20]:[EBP+16] = dividend (l)
-	; [EBP+12]:[EBP+8] = divisor (r)
+	; In: [EBP+l+4]:[EBP+l+0] = dividend (l)
+	; [EBP+r+4]:[EBP+r+0] = divisor (r)
 	; Out: EDX:EAX = quotient of division
-	MOV EDX, [EBP+20] 	    ; dividend_hi
-	MOV EAX, [EBP+16] 		; dividend_lo
-	MOV ECX, [EBP+12] 	    ; divisor_hi
-	MOV EBX, [EBP+8] 	    ; divisor_lo
+	MOV EDX, [EBP+l+4] 	    ; dividend_hi
+	MOV EAX, [EBP+l+0] 		; dividend_lo
+	MOV ECX, [EBP+r+4] 	    ; divisor_hi
+	MOV EBX, [EBP+r+0] 	    ; divisor_lo
 	MOV ESI, ECX 			; divisor_hi
 	XOR ESI, EDX 			; divisor_hi ^ dividend_hi
 	SAR ESI, 31 				; (quotient < 0) ? -1 : 0
@@ -99,7 +99,7 @@ END DivHA;
 
 PROCEDURE DivH*(l,r: HUGEINT): HUGEINT;
 VAR result: HUGEINT;
-BEGIN {UNCOOPERATIVE}
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF l > 0 THEN RETURN DivHA(l,r)
 	ELSIF l< 0 THEN
 		result :=  -DivHA(-l,r);
@@ -116,23 +116,23 @@ CODE{SYSTEM.i386}
 	; computes the low-order half of the product of its
 	; arguments, two 64-bit integers.
 	;
-	; In: [EBP+20]:[EBP+16] = multiplicand (l)
-	; [EBP+12]:[EBP+8] = multiplier (r)
+	; In: [EBP+l+4]:[EBP+l+0] = multiplicand (l)
+	; [EBP+r+4]:[EBP+r+0] = multiplier (r)
 	; Out: EDX:EAX = (multiplicand * multiplier) % 2^64
 	; Destroys: EAX, ECX, EDX, EFlags
-	MOV EDX, [EBP+12] 		; multiplicand_hi
-	MOV ECX, [EBP+20] 		; multiplier_hi
+	MOV EDX, [EBP+l+4] 		; multiplicand_hi
+	MOV ECX, [EBP+r+4] 		; multiplier_hi
 	OR EDX,ECX 				; One operand >= 2^32?
-	MOV EDX, [EBP+16] 		; multiplier_lo
-	MOV EAX, [EBP+8] 		; multiplicand_lo
+	MOV EDX, [EBP+l+0] 		; multiplier_lo
+	MOV EAX, [EBP+r+0] 		; multiplicand_lo
 	JNZ twomul 				; Yes, need two multiplies.
 	MUL EDX 					; multiplicand_lo * multiplier_lo
 	JMP done 					; Done, return to caller.
 	twomul:
-	IMUL EDX, [EBP+12]		; p3_lo = multiplicand_hi * multiplier_lo
+	IMUL EDX, [EBP+l+4]		; p3_lo = multiplicand_hi * multiplier_lo
 	IMUL ECX,EAX 			; p2_lo = multiplier_hi * multiplicand_lo
 	ADD ECX, EDX 			; p2_lo + p3_lo
-	MUL DWORD [EBP+16] 	; p1 = multiplicand_lo * multiplier_lo
+	MUL DWORD [EBP+r+0] 	; p1 = multiplicand_lo * multiplier_lo
 	ADD EDX,ECX 			; p1 + p2_lo + p3_lo = result in EDX:EAX
 	done:
 	POP	ECX
@@ -144,16 +144,16 @@ CODE{SYSTEM.i386}
 	; taken from "Software Optimization Guide for AMD64 Processors"
 	; DIVIDES TWO SIGNED 64-BIT NUMBERS AND RETURNS THE REMAINDER.
 	;
-	; IN: [EBP+20]:[EBP+16] = DIVIDEND
-	; [EBP+12]:[EBP+8] = DIVISOR
+	; IN: [EBP+l+4]:[EBP+l+0] = DIVIDEND (l)
+	; [EBP+r+4]:[EBP+r+0] = DIVISOR (r)
 	;
 	; OUT: EDX:EAX = REMAINDER OF DIVISION
 	;
 	; DESTROYS: EAX, ECX, EDX, EFLAGS
-	MOV EDX, [EBP+20]           	; DIVIDEND-HI
-	MOV EAX, [EBP+16]            	; DIVIDEND-LO
-	MOV ECX, [EBP+12]           	; DIVISOR-HI
-	MOV EBX, [EBP+8]           	; DIVISOR-LO
+	MOV EDX, [EBP+l+4]           	; DIVIDEND-HI
+	MOV EAX, [EBP+l+0]            	; DIVIDEND-LO
+	MOV ECX, [EBP+r+4]           	; DIVISOR-HI
+	MOV EBX, [EBP+r+0]           	; DIVISOR-LO
 	MOV ESI, EDX	                	; SIGN(REMAINDER) == SIGN(DIVIDEND)
 	SAR ESI, 31 		               	; (REMAINDER < 0) ? -1 : 0
 	MOV EDI, EDX	                	; DIVIDEND-HI
@@ -232,19 +232,19 @@ END ModHA;
 
 PROCEDURE ModH*(l,r: HUGEINT): HUGEINT;
 VAR res: HUGEINT;
-BEGIN {UNCOOPERATIVE}
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	res := ModHA(l,r);
 	IF res < 0 THEN INC(res,r) END;
 	RETURN res
 END ModH;
 
 PROCEDURE AbsH*(l: HUGEINT): HUGEINT;
-BEGIN {UNCOOPERATIVE}
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF l< 0 THEN RETURN -l ELSE RETURN l END;
 END AbsH;
 
 PROCEDURE AslH*(l: HUGEINT; r: LONGINT): HUGEINT; (*! coincides with Logic Shift, remove ? *)
-BEGIN {UNCOOPERATIVE}
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	RETURN LslH(l,r)
 END AslH;
 
@@ -252,9 +252,9 @@ PROCEDURE LslH*(l: HUGEINT; r: LONGINT): HUGEINT;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
-	MOV ECX,[EBP+8]
-	MOV EAX,[EBP+12]
-	MOV EDX,[EBP+16]
+	MOV ECX,[EBP+r+0]
+	MOV EAX,[EBP+l+0]
+	MOV EDX,[EBP+l+4]
 	; Shift EDX:EAX left, shift count in ECX (count
 	; applied modulo 64).
 	SHLD EDX,EAX,CL		; First apply shift count.
@@ -271,9 +271,9 @@ PROCEDURE AsrH*(l: HUGEINT; r: LONGINT): HUGEINT;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
-	MOV ECX,[EBP+8]
-	MOV EAX,[EBP+12]
-	MOV EDX,[EBP+16]
+	MOV ECX,[EBP+r+0]
+	MOV EAX,[EBP+l+0]
+	MOV EDX,[EBP+l+4]
 	; Shift EDX:EAX right, shift count in ECX (count
 	; applied modulo 64).
 	SHRD EAX,EDX,CL		; First apply shift count.
@@ -290,9 +290,9 @@ PROCEDURE LsrH*(l: HUGEINT; r: LONGINT): HUGEINT;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
-	MOV ECX,[EBP+8]
-	MOV EAX,[EBP+12]
-	MOV EDX,[EBP+16]
+	MOV ECX,[EBP+r+0]
+	MOV EAX,[EBP+l+0]
+	MOV EDX,[EBP+l+4]
 	; Shift EDX:EAX right, shift count in ECX (count
 	; applied modulo 64).
 	SHRD EAX,EDX,CL		; First apply shift count.
@@ -309,9 +309,9 @@ PROCEDURE RorH*(l: HUGEINT; r: LONGINT): HUGEINT;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
-	MOV ECX,[EBP+8]
-	MOV EAX,[EBP+12]
-	MOV EDX,[EBP+16]
+	MOV ECX,[EBP+r+0]
+	MOV EAX,[EBP+l+0]
+	MOV EDX,[EBP+l+4]
 	; EBX (initially=EAX) -> EDX -> EAX
 	; Shift EDX:EAX right, shift count in ECX (count
 	; applied modulo 64).
@@ -331,9 +331,9 @@ PROCEDURE RolH*(l: HUGEINT; r: LONGINT): HUGEINT;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
-	MOV ECX,[EBP+8]
-	MOV EAX,[EBP+12]
-	MOV EDX,[EBP+16]
+	MOV ECX,[EBP+r+0]
+	MOV EAX,[EBP+l+0]
+	MOV EDX,[EBP+l+4]
 	; EDX <- EAX <- EBX (intially=EDX)
 	; Shift EDX:EAX left, shift count in ECX (count
 	; applied modulo 64).

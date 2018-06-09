@@ -154,7 +154,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32C {
-		INCLUDE "WIN32C WIN COOP WINCOOP"
+		INCLUDE "WIN32C WIN COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace"
 		TARGET "AMD"
@@ -245,14 +245,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	BIOS32C { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
-	WINCOOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
+	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
 	BIOS32C { HeapManager.Mod BIOS.Environment.Mod }
 	RPIC { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
-	WINCOOP { Windows.Environment.Mod }
+	WIN32C { Windows.Environment.Mod }
 
 	LINUX32 { Linux.I386.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX64 { Linux.AMD64.Glue.Mod Linux.AMD64.Unix.Mod }
@@ -388,7 +388,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	WIN { Windows.GDI32.Mod }
 	WIN { Windows.Display.Mod }
-	WINCOOP { Coop.Windows.Display.Mod }
+	WIN32C { Coop.Windows.Display.Mod }
 
 	WIN { Windows.WSock32.Mod }
 	WIN32 { Windows.I386.Network.Mod Windows.I386.IP.Mod }

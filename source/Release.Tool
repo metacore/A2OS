@@ -96,6 +96,30 @@
 #	Files whose name is of the form prefix.mid.suffix where prefix="Release" and suffix#"Mod" will be added to the corresponding package twice:
 #	prefix.mid.suffix AND mid.suffix
 #
+#
+# Naming Convention:
+# 
+# The prefixes included in each build below include the build name itself as well as the name of its target platform and architecture.
+# The filenames of modules are structured accordingly and look as follows:
+#
+#	{Subsystem.}{Platform.}{Architecture.}Module.Mod
+#
+# The platform specifies the system which the module is targeted at and may be one of the following:
+#
+#	NATIVE / WIN / UNIX
+#
+# Platform-specific build prefixes are subdivided as follows:
+#
+# 	NATIVE: BIOS / RPI / ZYNQ
+#	WIN: WIN32 / WIN64
+#	UNIX: UNIX32 / UNIX64
+#
+# The architecture specifies the target of modules that contain inline assembly code and may be one of the following:
+#
+#	I386 / AMD64 / ARM
+#
+# A missing filename component or build prefix shall indicate that the module does not depend on the corresponding subsystem, platform, or architecture.
+# This implies that no specific build should receive preferential treatment.
 
 HEADER
 	VERSION "1.0"

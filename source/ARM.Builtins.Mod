@@ -19,53 +19,52 @@ TYPE
 		
 	PROCEDURE DivS8*(left, right: SHORTINT): SHORTINT;
 	VAR result, dummy: LONGINT;
-	BEGIN	 DivModS32(left, right, result, dummy); RETURN SHORTINT(result)
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, result, dummy); RETURN SHORTINT(result)
 	END DivS8;
 
 	PROCEDURE DivS16*(left, right: INTEGER): INTEGER;
 	VAR result, dummy: LONGINT;
-	BEGIN	 DivModS32(left, right, result, dummy); RETURN INTEGER(result)
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, result, dummy); RETURN INTEGER(result)
 	END DivS16;
 
 	PROCEDURE DivS32*(left, right: LONGINT): LONGINT;
 	VAR result, dummy: LONGINT;
-	BEGIN	 DivModS32(left, right, result, dummy); RETURN result
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, result, dummy); RETURN result
 	END DivS32;
 
 	PROCEDURE DivU32*(left, right: ULONGINT): ULONGINT;
 	VAR result, dummy: LONGINT;
-	BEGIN DivModU32(left, right, result, dummy); RETURN result
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU32(left, right, result, dummy); RETURN result
 	END DivU32;
 
 	PROCEDURE DivS64*(left, right: HUGEINT): HUGEINT;
 	VAR result, dummy: HUGEINT;
-	BEGIN
-		DivModS64(left, right, result, dummy); RETURN result
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS64(left, right, result, dummy); RETURN result
 	END DivS64;
 
 	PROCEDURE ModS8*(left, right: SHORTINT): SHORTINT;
 	VAR result, dummy: LONGINT;
-	BEGIN DivModS32(left, right, dummy, result); RETURN SHORTINT(result)
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, dummy, result); RETURN SHORTINT(result)
 	END ModS8;
 
 	PROCEDURE ModS16*(left, right: INTEGER): INTEGER;
 	VAR result, dummy: LONGINT;
-	BEGIN DivModS32(left, right, dummy, result); RETURN INTEGER(result)
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, dummy, result); RETURN INTEGER(result)
 	END ModS16;
 
 	PROCEDURE ModS32*(left, right: LONGINT): LONGINT;
 	VAR result, dummy: LONGINT;
-	BEGIN DivModS32(left, right, dummy, result); RETURN result
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, dummy, result); RETURN result
 	END ModS32;
 
 	PROCEDURE ModU32*(left, right: ULONGINT): ULONGINT;
 	VAR result, dummy: LONGINT;
-	BEGIN DivModU32(left, right, dummy, result); RETURN result
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU32(left, right, dummy, result); RETURN result
 	END ModU32;
 
 	PROCEDURE ModS64*(left, right: HUGEINT): HUGEINT;
 	VAR result, dummy: HUGEINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 			DivModS64(left, right, dummy, result); RETURN result
 	END ModS64;
 
@@ -100,22 +99,22 @@ TYPE
 	END RolS64;
 
 	PROCEDURE RolU64*(source: HUGEINT; amount: ULONGINT): HUGEINT;
-	BEGIN RETURN RolS64(source, amount)
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, amount)
 	END RolU64;
 
 	PROCEDURE RorS64*(source: HUGEINT; amount: ULONGINT): HUGEINT;
-	BEGIN RETURN RolS64(source, 64 - (amount MOD 64))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorS64;
 	
 	PROCEDURE RorU64*(source: HUGEINT; amount: ULONGINT): HUGEINT;
-	BEGIN RETURN RolS64(source, 64 - (amount MOD 64))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorU64;
 
 	(* signed division and modulus
 	- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
 	*)
 	PROCEDURE DivModS32(dividend, divisor: LONGINT; VAR quotient, remainder: LONGINT);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
 			DivModU32(dividend, divisor, quotient, remainder)
@@ -255,7 +254,7 @@ TYPE
 	- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
 	*)
 	PROCEDURE DivModS64*(dividend, divisor: HUGEINT; VAR quotient, remainder: HUGEINT);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
 			DivModU64(dividend, divisor, quotient, remainder)
@@ -295,7 +294,7 @@ TYPE
 	*)
 	PROCEDURE DivModU64*(dividend, divisor: UHUGEINT; VAR quotient, remainder: UHUGEINT);
 	VAR m: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		quotient := 0;
 
 		IF dividend = 0 THEN remainder := 0; RETURN; END;
@@ -356,7 +355,7 @@ TYPE
 	(* only called when no FPU32 is available *)
 	PROCEDURE AddF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, ye, s: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF SYSTEM.NULL(x) = TRUE THEN x := y
 		ELSIF SYSTEM.NULL(y) = FALSE THEN
 			xe := x DIV C MOD E; (* exponent with bias *)
@@ -390,63 +389,63 @@ TYPE
 	(* only called when no FPU64 is available *)
 	PROCEDURE AddF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Add(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Add(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END AddF64;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE MulF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Mul(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Mul(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END MulF64;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE DivF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Div(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Div(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END DivF64;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE SubF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Sub(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Sub(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,y),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END SubF64;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE AbsF64*(x: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Abs(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Abs(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END AbsF64;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE NegF64*(x: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Neg(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Neg(SYSTEM.VAL(FPE64.Float64,x),SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END NegF64;
 
 	PROCEDURE ConvS32F64*(x: FLOAT64): LONGINT;
-	BEGIN RETURN FPE64.Fix(SYSTEM.VAL(FPE64.Float64,x))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN FPE64.Fix(SYSTEM.VAL(FPE64.Float64,x))
 	END ConvS32F64;
 
 	PROCEDURE ConvS64F64*(x: FLOAT64): HUGEINT;
-	BEGIN RETURN FPE64.FixInt64(SYSTEM.VAL(FPE64.Float64,x))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN FPE64.FixInt64(SYSTEM.VAL(FPE64.Float64,x))
 	END ConvS64F64;
 
 	PROCEDURE ConvS64F32*(x: FLOAT32): HUGEINT;
 	VAR d: FPE64.Float64;
-	BEGIN 
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		FPE64.Double(x, d);
 		RETURN FPE64.FixInt64(d)
 	END ConvS64F32;
 
 	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32F64*(x: FLOAT64): FLOAT32;
-	BEGIN RETURN FPE64.Single(SYSTEM.VAL(FPE64.Float64,x))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN FPE64.Single(SYSTEM.VAL(FPE64.Float64,x))
 	END ConvF32F64;
 
 	(* if an FPU32 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF32F64F*(x: FLOAT64): REAL;
 	VAR r: FLOAT32;
-	BEGIN 
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		r := FPE64.Single(SYSTEM.VAL(FPE64.Float64,x));
 		RETURN SYSTEM.VAL(REAL, r);
 	END ConvF32F64F;
@@ -454,26 +453,26 @@ TYPE
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64F32*(x: FLOAT32): FLOAT64;
 	VAR z: FLOAT64;
-	BEGIN FPE64.Double(x,SYSTEM.VAL(FPE64.Float64,z)); RETURN z
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Double(x,SYSTEM.VAL(FPE64.Float64,z)); RETURN z
 	END ConvF64F32;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S64*(x: HUGEINT): FLOAT64;
 	VAR flt: FLOAT64;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		FPE64.FloatInt64(x, SYSTEM.VAL(FPE64.Float64, flt)); RETURN flt
 	END ConvF64S64;
 
 	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
 	PROCEDURE ConvF64U32*(x: UNSIGNED32): FLOAT64;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		HALT(100); 
 	END ConvF64U32;
 
 	(* if an FPU64 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF64S64F*(x: DoubleWord): LONGREAL;
 	VAR l,h:LONGREAL;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		l := x.low;
 		h := x.high;
 		RETURN  h * 100000000H + l;
@@ -482,42 +481,42 @@ TYPE
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S32*(x: LONGINT): FLOAT64;
 	VAR flt: FLOAT64;
-	BEGIN FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
 	END ConvF64S32;
 
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S16*(x: INTEGER): FLOAT64;
 	VAR flt: FLOAT64;
-	BEGIN FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
+	BEGIN {UNCOOPERATIVE, UNCHECKED} FPE64.Float(x, SYSTEM.VAL(FPE64.Float64,flt)); RETURN flt
 	END ConvF64S16;
 
 	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32S16*(x: INTEGER): FLOAT32;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF32S32(LONGINT(x))
 	END ConvF32S16;
 	
 	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32S8*(x: SHORTINT): FLOAT32;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF32S16(INTEGER(x))
 	END ConvF32S8;
 	
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S8*(x: SHORTINT): FLOAT64;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF64S16(INTEGER(x))
 	END ConvF64S8;
 
 	(* only called when no FPU32 is available *)
 	PROCEDURE SubF32*(left, right: FLOAT32): FLOAT32;
-	BEGIN RETURN AddF32(left, NegF32(right))
+	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN AddF32(left, NegF32(right))
 	END SubF32;
 
 	(* only called when no FPU32 is available *)
 	PROCEDURE MulF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, zh, ye, s: LONGINT;  (*zh, ye in this order; ye used as zh in MULD*)
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF SYSTEM.NULL(y) = TRUE THEN x := 0
 		ELSIF SYSTEM.NULL(y) = FALSE THEN
 			s := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.XOR(x, y))*{31});
@@ -549,7 +548,7 @@ TYPE
 	(* only called when no FPU32 is available *)
 	PROCEDURE DivF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, ye, q, s: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		s := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.XOR(x, y))*{31});
 		IF SYSTEM.NULL(y) = TRUE THEN
 			x := MAXFLOAT32 + s;
@@ -587,7 +586,7 @@ TYPE
 	- corresponds to ENTIER(x) **)
 	PROCEDURE ConvS32F32*(x: FLOAT32): LONGINT;
 	VAR xe, s: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF SYSTEM.NULL(x) = TRUE THEN
 			x := 0
 		ELSE
@@ -609,7 +608,7 @@ TYPE
 	**)
 	PROCEDURE ConvF32S32*(x: LONGINT): FLOAT32;
 	VAR xe, s: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF x = LONGINT(80000000H) THEN (* ABS cannot handle the most negative LONGINT number! *)
 			x := LONGINT(0CF000000H);
 		ELSIF x # 0 THEN
@@ -629,20 +628,20 @@ TYPE
 
 	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32S64*(x: HUGEINT): FLOAT32;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF32F64(ConvF64S64(x))
 	END ConvF32S64;
 
 	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
 	PROCEDURE ConvF32U32*(x: UNSIGNED32): FLOAT32;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		HALT(100); 
 	END ConvF32U32;
 	
 	(* if an FPU32 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF32S64F*(x: DoubleWord): REAL;
 	VAR l,h:REAL;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		l := x.low;
 		h := x.high;
 		RETURN  h * 100000000H + l;
@@ -660,10 +659,12 @@ TYPE
 		result: SHORTINT;
 		i: LONGINT;
 		leftChar, rightChar: CHAR;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		result := 0;
 		i := 0;
 		REPEAT
+			ASSERT (i < LEN (left));
+			ASSERT (i < LEN (right));
 			leftChar := left[i]; rightChar := right[i];
 			IF leftChar < rightChar THEN result := -1
 			ELSIF leftChar > rightChar THEN result := +1
@@ -678,7 +679,7 @@ TYPE
 	PROCEDURE CopyString*(VAR destination: ARRAY OF CHAR; CONST source: ARRAY OF CHAR);
 	VAR
 		sourceLength, destinationLength: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		destinationLength := LEN(destination);
 		sourceLength := LEN(source);
 		IF destinationLength < sourceLength THEN sourceLength := destinationLength END;

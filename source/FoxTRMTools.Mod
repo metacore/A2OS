@@ -464,14 +464,14 @@ FoxTRMTools.Test ~
 Compiler.Compile -b=TRM --objectFile=Intermediate --activeCells --noRuntimeChecks --activeCellsSpecification=FoxAVSP6LX75T --patchSpartan6
 oc/TRM.RS232.Mod
 oc/TRM.Testing.Mod
-oc/TRM.TRMRuntime.Mod
+oc/TRM.Runtime.Mod
 oc/TRM.TestNet.Mdf
 ~
 
 Compiler.Compile -b=TRM --objectFile=Intermediate --activeCells --noRuntimeChecks --activeCellsSpecification=ML505
 oc/TRM.RS232.Mod
 oc/TRM.Testing.Mod
-oc/TRM.TRMRuntime.Mod
+oc/TRM.Runtime.Mod
 oc/TRM.TestNet.Mdf
 ~
 

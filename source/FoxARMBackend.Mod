@@ -9,7 +9,6 @@ IMPORT
 
 CONST
 	Trace = FALSE; (* general trace *)
-	DefaultRuntimeModuleName = "ARMRuntime";
 	SupportMovW = TRUE; (* movw is only available on ARM from V6/V7, not on older platforms *)
 
 	None = -1;
@@ -3475,7 +3474,6 @@ TYPE
 			useFPU32 := FALSE;
 			useFPU64 := FALSE;
 			InitIntermediateBackend;
-			SetRuntimeModuleName(DefaultRuntimeModuleName);
 			SetNewObjectFile(TRUE,FALSE);
 			system := NIL;
 			initLocals := TRUE;

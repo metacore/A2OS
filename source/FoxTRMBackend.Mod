@@ -9,7 +9,6 @@ IMPORT
 
 CONST
 	TraceFixups = FALSE;
-	DefaultRuntimeModuleName = "TRMRuntime";
 	HaltIRQNumber=8;
 	Registers = 8; None=-1;
 	Low=0; High=1;
@@ -2219,7 +2218,6 @@ TYPE
 		PROCEDURE &InitBackendTRM;
 		BEGIN
 			InitIntermediateBackend;
-			SetRuntimeModuleName(DefaultRuntimeModuleName);
 			SetNewObjectFile(TRUE,TRUE);
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;

@@ -534,7 +534,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 END FoxIntermediateObjectFile.
 
 SystemTools.FreeDownTo FoxIntermediateObjectFile ~
-FoxIntermediateObjectFile.Show TRMRuntime  ~
+FoxIntermediateObjectFile.Show Runtime  ~
 
 			(* test code to compare ..
 			backend: Backend.Backend;

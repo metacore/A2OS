@@ -71,7 +71,7 @@ SystemTools.DoCommands
 	Reflection.Mod TrapWriters.Mod AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
 	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod 
 	RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-	ISO9660Files.Mod RelativeFileSystem.Mod Loader.Mod BootConsole.Mod AMD64.ATADisks.Mod ~
+	ISO9660Files.Mod RelativeFileSystem.Mod Loader.Mod BootConsole.Mod BIOS.AMD64.ATADisks.Mod ~
 	
 	Linker.Link
 	--fileName=E:/felix.svn/qemu/disk/IDE.Bin

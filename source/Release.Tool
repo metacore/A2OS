@@ -377,7 +377,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod XMLParser.Mod	# XML parser (swalther)
 	Configuration.Mod Configuration.XML Save.Configuration.XML FileHandlers.Mod		# XML-based configuration file
 
-	BootShell.Mod
+	BIOS { BIOS.BootShell.Mod }
 
 	I386, UNIX32 { I386.Network.Mod }
 	UNIX64 { AMD64.Network.Mod }
@@ -442,12 +442,12 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	DisplayNull.Mod # Virtual display (implements Displays interface)
 
 	# Serial port drivers (implement Serials interface)
-	NATIVE { V24.Mod }
+	BIOS { BIOS.V24.Mod }
 	WIN { Windows.V24.Mod }
 	UNIX { Unix.V24.Mod }
 
 	# PC speaker driver
-	NATIVE { Beep.Mod }
+	BIOS { BIOS.Beep.Mod }
 	WIN { Windows.Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
@@ -457,37 +457,37 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	NATIVE { SCSI.Mod }
 
-	I386 { I386.ATADisks.Mod }
+	BIOS32 { BIOS.I386.ATADisks.Mod }
 
-	I386 { I386.Adaptec7Script.Mod Adaptec7.Mod } # Adaptec SCSI driver
+	BIOS32 { I386.Adaptec7Script.Mod BIOS.Adaptec7.Mod } # Adaptec SCSI driver
 
-	NATIVE {
+	BIOS {
 		# disk drivers (implement Disks interface)
-		NCRScript.Mod SymbiosASPI.Mod SymbiosDisks.Mod NCR810Disks.Mod	# Symbios SCSI driver
+		NCRScript.Mod BIOS.SymbiosASPI.Mod SymbiosDisks.Mod NCR810Disks.Mod	# Symbios SCSI driver
 	}
 
 	# PS/2 keyboard incl. layouts
 
-	I386 { I386.Keyboard.Mod }
+	BIOS32 { BIOS.I386.Keyboard.Mod }
 
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin
 		KeyFR.Bin KeyBE.Bin KeySF.Bin KeyIT.Bin KeyUS.Bin
 
-		MousePS2.Mod MouseSerial.Mod
+		BIOS.MousePS2.Mod MouseSerial.Mod
 
 		# Display drivers (implement Displays interface)
-		DisplayLinear.Mod
+		BIOS.DisplayLinear.Mod
 
 		# Loopback driver (implements Network interface)
 		Loopback.Mod
 
 		# network drivers (implement Network interface)
-		Ethernet3Com90x.Mod RTL8139.Mod RTL8169.Mod Intel8255x.Mod
-		AM79C970.Mod
+		BIOS.Ethernet3Com90x.Mod RTL8139.Mod RTL8169.Mod Intel8255x.Mod
+		BIOS.AM79C970.Mod
 
 		# Sound drivers (implement SoundDevice interface)
-		EnsoniqSound.Mod YMF754.Mod YMF754.Bin i810Sound.Mod
+		BIOS.EnsoniqSound.Mod YMF754.Mod YMF754.Bin BIOS.i810Sound.Mod
 
 		# TV card driver (implements TVDriver interface)
 		BT848.Mod
@@ -495,7 +495,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		# USB core
 		UsbDebug.Mod
 		Usbdi.Mod UsbHcdi.Mod
-		UsbUhci.Mod UsbOhci.Mod UsbEhci.Mod UsbEhciPCI.Mod
+		BIOS.UsbUhci.Mod UsbOhci.Mod UsbEhci.Mod UsbEhciPCI.Mod
 		UsbDriverLoader.Mod UsbUtilities.Mod Usb.Mod UsbHubDriver.Mod
 
 		# USB mass storage class driver
@@ -531,9 +531,9 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		BluetoothHCI.Mod BluetoothL2CAP.Mod BluetoothRFCOMM.Mod
 	}
 
-	NATIVE {
+	BIOS {
 		# Floppy disk driver
-		Diskettes.Mod
+		BIOS.Diskettes.Mod
 	}
 END
 
@@ -1447,7 +1447,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	Oberon.In.Mod Oberon.Out.Mod Oberon.Dates.Mod Oberon.Strings.Mod	# Utility modules
 
-	NATIVE, WIN { Oberon.Centronics.Mod }
+	BIOS { BIOS.Oberon.Centronics.Mod }
 
 	I386, WIN32, UNIX32 { I386.Oberon.Bitmaps.Mod }
 	WIN64, UNIX64 { AMD64.Oberon.Bitmaps.Mod }
@@ -1467,9 +1467,9 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Edit.Tool Oberon.Edit.Mod	# Edit
 	Script.Tool Oberon.Styles.Mod Oberon.ScriptFrames.Mod Oberon.Script.Mod	# Script
 
-	NATIVE {
-	Oberon.Diskettes.Mod	# Diskette driver
-	Backup.Tool Oberon.Diskette.Mod Oberon.Backup.Mod	# Backup
+	BIOS {
+		BIOS.Oberon.Diskettes.Mod	# Diskette driver
+		Backup.Tool Oberon.Diskette.Mod Oberon.Backup.Mod	# Backup
 	}
 
 	Partitions.Tool Oberon.Partitions.Mod	# Partition
@@ -1708,7 +1708,7 @@ PACKAGE OberonApplications ARCHIVE "OberonApplications.zip" SOURCE "OberonApplic
 	V24.Panel Oberon.V24Gadgets.Mod	# V24Gadgets in Applications.Tool
 	Hex.Tool Oberon.Hex.Mod	# Binary file editor in Applications.Tool
 	HPCalc.Panel Oberon.Conversions.Mod Oberon.HPCalc.Mod	# HPCalc in Applications.Tool
-	NATIVE { Snapshot.Tool Oberon.Snapshot.Mod }	# SnapShot in Applications.Tool
+	BIOS { Snapshot.Tool BIOS.Oberon.Snapshot.Mod }	# SnapShot in Applications.Tool
 	EditKeys.Tool Oberon.EditKeys.Mod EditKeys.Text	# EditKeys in Applications.Tool
 	Find.Tool Find.Panel # Find in Applications.Tool
 	Oberon.Find.Mod

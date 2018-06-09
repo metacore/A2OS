@@ -299,7 +299,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
-	I386, WIN32, UNIX32 { I386.Reals.Mod }
+	BIOS32, WIN32, UNIX32 { I386.Reals.Mod }
 	WIN64, UNIX64 { AMD64.Reals.Mod }
 	ARM { ARM.Reals.Mod }
 
@@ -379,7 +379,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BIOS { BIOS.BootShell.Mod }
 
-	I386, UNIX32 { I386.Network.Mod }
+	BIOS32, UNIX32 { I386.Network.Mod }
 	UNIX64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
@@ -401,7 +401,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Windows.CommandLine.Mod	# Command Line Parsing for Windows A2
 	}
 
-	I386 { I386.IP.Mod I386.IPv4.Mod }
+	BIOS32 { I386.IP.Mod I386.IPv4.Mod }
 	ARM { ARM.IP.Mod ARM.IPv4.Mod }
 
 	NATIVE {
@@ -510,7 +510,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		UsbFTDI.Mod
 	}
 
-	I386 { I386.UsbKeyboard.Mod }
+	BIOS32 { I386.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
@@ -565,13 +565,13 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	BIOS32, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	WIN64, UNIX64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
-	I386, WIN32, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
+	BIOS32, WIN32, UNIX32 { I386.FoxArrayBaseOptimized.Mod }
 	WIN64, UNIX64, UNIX64 { AMD64.FoxArrayBaseOptimized.Mod }
 END
 
@@ -595,7 +595,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
+	BIOS32, WIN32, UNIX32 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
 	WIN64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
@@ -611,7 +611,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386, WIN32, UNIX32 { I386.Raster.Mod }
+	BIOS32, WIN32, UNIX32 { I386.Raster.Mod }
 	WIN64, UNIX64 { AMD64.Raster.Mod }
 
 	Localization.Mod
@@ -644,7 +644,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	UnicodeBidirectionality.Mod
 
 	# Move to graphical package!!
-	I386, WIN32, UNIX32 { I386.WMRasterScale.Mod }
+	BIOS32, WIN32, UNIX32 { I386.WMRasterScale.Mod }
 	WIN64, UNIX64 { AMD64.WMRasterScale.Mod }
 
 	WMGraphics.Mod
@@ -674,7 +674,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	I386, WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
+	BIOS32, WIN32 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend
@@ -742,7 +742,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386, WIN32, UNIX32 { I386.CPUID.Mod }
+	BIOS32, WIN32, UNIX32 { I386.CPUID.Mod }
 	WIN64 { AMD64.CPUID.Mod }
 
 	A2Sequencers.Mod
@@ -774,7 +774,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
-	I386, WIN { Info.Mod }
+	BIOS, WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod
 	TFLog.Mod WebHTTP.Mod							# extended HTTP Server (tf/be)
@@ -819,7 +819,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	MP3Decoder.Mod MP3Huffman.Bin # MP3 Decoder
 
 	# Video codecs
-	I386, WIN32, UNIX32 {
+	BIOS32, WIN32, UNIX32 {
 		I386.IDCT.Mod
 		AVI.Mod DivXTypes.Mod I386.DivXHelper.Mod I386.DivXDecoder.Mod # DivX Support
 		MPEGTables.Mod I386.MPEGUtilities.Mod MPEGVideoDecoder.Mod	# MPEG1/2 Support
@@ -972,7 +972,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	MultiLogger.Mod
 
-	I386, WIN {
+	BIOS, WIN {
 		MemoryReader.Mod Decoder.Mod I386Decoder.Mod	# GUI decoder
 		ARMDecoder.Mod AMD64Decoder.Mod DecoderRes.zip
 	}
@@ -1106,7 +1106,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	HotKeysCommands.Mod
 
-	I386, WIN { I386.VMWareTools.Mod }		# VMWare
+	BIOS32, WIN { I386.VMWareTools.Mod }		# VMWare
 	SynergyClient.Mod			# Synergy
 
 	NATIVE {
@@ -1119,7 +1119,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386, WIN32, UNIX32 { I386.WMTransitions.Mod }
+	BIOS32, WIN32, UNIX32 { I386.WMTransitions.Mod }
 	WIN64, UNIX64 { AMD64.WMTransitions.Mod }
 	MediaPlayer.Mod Presentation.Mod
 	MP3Player.Mod WMPlayer.Mod
@@ -1281,7 +1281,7 @@ END
 
 PACKAGE EFI ARCHIVE "EFI.zip" SOURCE "EFISrc.zip" DESCRIPTION "EFI Boot Loader and API"
 	EFI.Tool EFI.Mod
-	I386, WIN32, UNIX32 { I386.EFIMachine.Mod }
+	BIOS32, WIN32, UNIX32 { I386.EFIMachine.Mod }
 	WIN64, UNIX64 { AMD64.EFIMachine.Mod }
 
 	EFIBlockIO.Mod EFIDiskIO.Mod
@@ -1311,7 +1311,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 
 	srRenderTools.Text srReadMe.Text	# Realtime Fractal-Voxel Raytracer (Soren Renner)
 	srBase.Mod srRayEngine.Mod srMath.Mod
-	I386, WIN32, UNIX32 { I386.srE.Mod }
+	BIOS32, WIN32, UNIX32 { I386.srE.Mod }
 	WIN64, UNIX64 { AMD64.srE.Mod }
 	srGL.Mod srHex.Mod srImage.Mod
 	srVoxel.Mod srVoxel2.Mod srVoxel3.Mod srVolShader.Mod srVoxel4.Mod srVoxel5.Mod
@@ -1346,7 +1346,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	CalcFn.Mod CalcD1.Mod CalcD2.Mod CalcD3.Mod CalcD4.Mod CalcGauss.Mod
 	MathMitLef.Mod CalcConvolution.Mod CalcGrunwald.Mod CalcDiethelm.Mod
 
-	NATIVE, WIN32, UNIX32 {
+	BIOS32, WIN32, UNIX32 {
 
 		# Disable index checking for these modules with \sx for efficiency
 		I386.Array1dBytes.Mod Array1dInt.Mod Array1dRat.Mod Array1dRe.Mod Array1dCplx.Mod I386.ArrayXdBytes.Mod
@@ -1449,7 +1449,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	BIOS { BIOS.Oberon.Centronics.Mod }
 
-	I386, WIN32, UNIX32 { I386.Oberon.Bitmaps.Mod }
+	BIOS32, WIN32, UNIX32 { I386.Oberon.Bitmaps.Mod }
 	WIN64, UNIX64 { AMD64.Oberon.Bitmaps.Mod }
 
 	Oberon.Pictures.Mod

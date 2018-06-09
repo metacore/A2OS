@@ -114,7 +114,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Bios32C {
-		INCLUDE "BIOS32C BIOS NATIVE I386 COOP I386COOP"
+		INCLUDE "BIOS32C BIOS NATIVE I386 COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "AMD"
@@ -125,7 +125,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	RpiC {
-		INCLUDE "RPI NATIVE ARM COOP RPICOOP"
+		INCLUDE "RPIC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "ARM"
@@ -136,7 +136,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	ZynqC {
-		INCLUDE "ZYNQ NATIVE ARM COOP ZYNQCOOP"
+		INCLUDE "ZYNQC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace --mergeSections"
 		TARGET "ARM"
@@ -154,7 +154,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32C {
-		INCLUDE "WIN COOP WINCOOP I386COOP"
+		INCLUDE "WIN32C WIN COOP WINCOOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace"
 		TARGET "AMD"
@@ -235,9 +235,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Runtime support for HUGEINT and strings
 	UNCOOP32 { Runtime.Mod }
 	UNCOOP64 { AMD64.Runtime.Mod }
-	I386COOP { I386.CPU.Mod }
-	RPICOOP { RPI.CPU.Mod }
-	ZYNQCOOP { Zynq.CPU.Mod }
+	BIOS32C, WIN32C { I386.CPU.Mod }
+	RPIC { RPI.CPU.Mod }
+	ZYNQC { Zynq.CPU.Mod }
 
 	# Low-level trace output
 	Trace.Mod
@@ -246,12 +246,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Counters.Mod }
 	BIOS32C { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WINCOOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
-	RPICOOP { RPI.Processors.Mod RPI.Timer.Mod }
-	ZYNQCOOP { Zynq.Processors.Mod Zynq.Timer.Mod }
+	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
+	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
 	BIOS32C { HeapManager.Mod BIOS.Environment.Mod }
-	RPICOOP { HeapManager.Mod RPI.Environment.Mod }
-	ZYNQCOOP { HeapManager.Mod Zynq.Environment.Mod }
+	RPIC { HeapManager.Mod RPI.Environment.Mod }
+	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WINCOOP { Windows.Environment.Mod }
 
 	LINUX32 { Linux.I386.Glue.Mod Linux.I386.Unix.Mod }
@@ -268,8 +268,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod }
-	I386COOP { Coop.I386.Machine.Mod }
-	RPICOOP, ZYNQCOOP { Coop.ARM.Machine.Mod }
+	BIOS32C, WIN32C { Coop.I386.Machine.Mod }
+	RPIC, ZYNQC { Coop.ARM.Machine.Mod }
 
 	UNIX32 { Unix.I386.Machine.Mod }
 	UNIX64 { Unix.AMD64.Machine.Mod }

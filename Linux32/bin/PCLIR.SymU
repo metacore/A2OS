@@ -196,7 +196,7 @@ TYPE
 
 	InitHandler* = PROCEDURE ():BOOLEAN; 
 
-	DoneHandler* = PROCEDURE (VAR res: LONGINT); 
+	DoneHandler* = PROCEDURE (VAR res: WORD); 
 
 	GetCodeHandler* = PROCEDURE (VAR code: CodeArray; VAR codelength, hdrlength, addressFactor: LONGINT); 
 
@@ -262,7 +262,7 @@ VAR
 	PROCEDURE ^ Emit*(code: Code); 
 	PROCEDURE ^ SetMethods*(op: Opcode; p: EmitProc); 
 	PROCEDURE ^ CGInit(): BOOLEAN; 
-	PROCEDURE ^ CGDone(VAR res: LONGINT); 
+	PROCEDURE ^ CGDone(VAR res: WORD); 
 	PROCEDURE ^ CGGetCode(VAR code: CodeArray; VAR codelen, hdrlen, addressFactor: LONGINT); 
 	PROCEDURE ^ CGDumpCode(code: Code; VAR instr: Instruction; pc: LONGINT; context: ANY); 
 	PROCEDURE ^ InitDefaultSyscalls*; 

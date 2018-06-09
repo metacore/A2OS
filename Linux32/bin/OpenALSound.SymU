@@ -22,8 +22,8 @@ TYPE
 		PROCEDURE ^ Enable*; 
 		PROCEDURE ^ Disable*; 
 		PROCEDURE ^ GetNativeFrequency*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ OpenPlayChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ OpenRecordChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: SoundDevices.MixerChangedProc); 
 		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangeProc: SoundDevices.MixerChangedProc); 
 		PROCEDURE ^ GetMixerChannel*(channelNr: LONGINT; VAR channel: SoundDevices.MixerChannel); 

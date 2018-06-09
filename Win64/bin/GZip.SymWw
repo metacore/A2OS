@@ -22,7 +22,7 @@ TYPE
 	VAR 
 		writer: Streams.Writer; 
 		s: ZlibDeflate.Stream; 
-		res: LONGINT; 
+		res: WORD; 
 		crc32-: LONGINT; 
 		out: POINTER TO ARRAY BufSize OF CHAR; 
 		flush: SHORTINT; 
@@ -30,13 +30,13 @@ TYPE
 
 		PROCEDURE ^ WriteHeader(w: Streams.Writer); 
 		PROCEDURE ^  & Init*(writer: Streams.Writer; level, strategy, flush: SHORTINT); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	END Deflator; 
 
 	Inflator* = OBJECT 
 	VAR 
 		reader: Streams.Reader; 
-		res: LONGINT; 
+		res: WORD; 
 		transparent: BOOLEAN; 
 		crc32-: LONGINT; 
 		in: POINTER TO ARRAY BufSize OF CHAR; 

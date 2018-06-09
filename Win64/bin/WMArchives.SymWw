@@ -20,8 +20,8 @@ TYPE
 		entryName, caption: Strings.String; 
 
 		PROCEDURE ^  & New*(t: ArchiveTree; n: WMTrees.TreeNode); 
-		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: LONGINT); 
-		PROCEDURE ^ ClosePut*(VAR res: LONGINT); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: WORD); 
+		PROCEDURE ^ ClosePut*(VAR res: WORD); 
 	END ArchiveDropInterface; 
 
 	ArchiveDropTarget* = OBJECT (WMDropTarget.DropTarget)
@@ -129,7 +129,7 @@ VAR
 	PROCEDURE ^ SplitString(string: Strings.String; VAR head, tail: Strings.String; index: LONGINT); 
 	PROCEDURE ^ RemovePath(CONST src: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
 	PROCEDURE ^ RemovePartitionLabel(CONST src: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
-	PROCEDURE ^ CopyFile(rec: Streams.Receiver; target: WMDropTarget.DropFiles; CONST remote: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ CopyFile(rec: Streams.Receiver; target: WMDropTarget.DropFiles; CONST remote: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ InitPrototypes; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

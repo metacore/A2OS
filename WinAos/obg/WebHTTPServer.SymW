@@ -116,11 +116,11 @@ VAR
 	PROCEDURE ^ SendData*(src: Streams.Reader; dst: Streams.Writer); 
 	PROCEDURE ^ AddHost*(host: Host); 
 	PROCEDURE ^ FindHosts*(CONST host: ARRAY OF CHAR): HostList; 
-	PROCEDURE ^ RemoveHost*(CONST host: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StartHTTP*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StartHTTPS*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StopHTTP*(VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StopHTTPS*(VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ RemoveHost*(CONST host: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StartHTTP*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StartHTTPS*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StopHTTP*(VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StopHTTPS*(VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ ShowHosts*(out: Streams.Writer); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

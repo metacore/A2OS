@@ -104,8 +104,8 @@ TYPE
 		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
 		PROCEDURE ^ DropFrames(n: LONGINT); 
 		PROCEDURE ^ GetPos(): LONGINT; 
-		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: LONGINT); 
-		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: WORD); 
+		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ NofFullBuffers(): LONGINT; 
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^ Close; 
@@ -184,9 +184,9 @@ TYPE
 		update*: PROCEDURE {DELEGATE}(state, pos, maxpos, displayTime: LONGINT); 
 		eof: EofHandler; 
 
-		PROCEDURE ^ Open*(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Play*; 
-		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: LONGINT; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: LONGINT; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
 		PROCEDURE ^ GetPos*(): LONGINT; 
@@ -202,7 +202,7 @@ TYPE
 		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY); 
 		PROCEDURE ^ CheckWindow(context: Context); 
 		PROCEDURE ^ InitTime; 
-		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT): Context; 
+		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD): Context; 
 		PROCEDURE ^ FreeContext(context: Context); 
 		PROCEDURE ^ Loop(sender, data: ANY); 
 		PROCEDURE ^ Quit(sender, data: ANY); 

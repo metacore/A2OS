@@ -14,8 +14,8 @@ TYPE
 		lock: Locks.RWLock; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ AcquireRead*; 
 		PROCEDURE ^ ReleaseRead*; 
 		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
@@ -36,8 +36,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Set*(value: BOOLEAN); 
 		PROCEDURE ^ Get*(): BOOLEAN; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Boolean; 
 
@@ -49,8 +49,8 @@ TYPE
 		PROCEDURE ^ Set*(value: LONGINT); 
 		PROCEDURE ^ Get*(): LONGINT; 
 		PROCEDURE ^ Add*(value: LONGINT); 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Integer; 
 
@@ -61,8 +61,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Set*(value: REAL); 
 		PROCEDURE ^ Get*(): REAL; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Real; 
 
@@ -73,8 +73,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Set*(value: LONGREAL); 
 		PROCEDURE ^ Get*(): LONGREAL; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Longreal; 
 
@@ -85,8 +85,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Set*(value: CHAR); 
 		PROCEDURE ^ Get*(): CHAR; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Char; 
 
@@ -99,8 +99,8 @@ TYPE
 		PROCEDURE ^ Get*(): Strings.String; 
 		PROCEDURE ^ SetAOC*(CONST value: ARRAY OF CHAR); 
 		PROCEDURE ^ GetAOC*(VAR value: ARRAY OF CHAR); 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END String; 
 
@@ -114,8 +114,8 @@ TYPE
 		PROCEDURE ^ Include*(element: LONGINT); 
 		PROCEDURE ^ Exclude*(element: LONGINT); 
 		PROCEDURE ^ Contains*(element: LONGINT): BOOLEAN; 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Set; 
 
@@ -136,8 +136,8 @@ TYPE
 		PROCEDURE ^ OnTextChanged(sender, data: ANY); 
 		PROCEDURE ^ SetAsString*(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetAsString*(VAR string: ARRAY OF CHAR); 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Text; 
 
@@ -146,8 +146,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ FindModel(CONST name: ARRAY OF CHAR): Model; 
 		PROCEDURE ^ FindModelByName(CONST fullname: ARRAY OF CHAR): Model; 
-		PROCEDURE ^ SetField*(CONST name: ARRAY OF CHAR; CONST value: Types.Any; VAR res: LONGINT); 
-		PROCEDURE ^ GetField*(CONST name: ARRAY OF CHAR; VAR value: Types.Any; VAR res: LONGINT); 
+		PROCEDURE ^ SetField*(CONST name: ARRAY OF CHAR; CONST value: Types.Any; VAR res: WORD); 
+		PROCEDURE ^ GetField*(CONST name: ARRAY OF CHAR; VAR value: Types.Any; VAR res: WORD); 
 	END Container; 
 VAR 
 	StrBoolean, StrInteger, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer: Strings.String; 

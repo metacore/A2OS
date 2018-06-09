@@ -11,16 +11,16 @@ VAR
 	PROCEDURE ^ GetSuffix(VAR str, suf: ARRAY OF CHAR; sepchar: CHAR); 
 	PROCEDURE ^ Append(VAR to: ARRAY OF CHAR; this: ARRAY OF CHAR); 
 	PROCEDURE ^ NewStyle(width: LONGINT; tabs: ARRAY OF CHAR): Objects.Object; 
-	PROCEDURE ^ WriteDirectory*(VAR W: Texts.Writer; archive: ARRAY OF CHAR; details, tabs: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ WriteDirectory*(VAR W: Texts.Writer; archive: ARRAY OF CHAR; details, tabs: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Directory*; 
-	PROCEDURE ^ doExtract(action: INTEGER; arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File; path, overwrite, show: BOOLEAN; VAR res: LONGINT); 
-	PROCEDURE ^ ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; path, overwrite: BOOLEAN; VAR res: LONGINT); 
-	PROCEDURE ^ OpenFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File; path, overwrite, show: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ doExtract(action: INTEGER; arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File; path, overwrite, show: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ ExtractFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; path, overwrite: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ OpenFile*(arc: Zip.Archive; ent: Zip.Entry; name: ARRAY OF CHAR; VAR tempfile: Files.File; path, overwrite, show: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ cmdOpenExtract(action: INTEGER); 
 	PROCEDURE ^ Extract*; 
 	PROCEDURE ^ ExtractAll*; 
 	PROCEDURE ^ Open*; 
-	PROCEDURE ^ AddFile*(arc: Zip.Archive; srcname, dstname: ARRAY OF CHAR; level, strategy: SHORTINT; VAR res: LONGINT); 
+	PROCEDURE ^ AddFile*(arc: Zip.Archive; srcname, dstname: ARRAY OF CHAR; level, strategy: SHORTINT; VAR res: WORD); 
 	PROCEDURE ^ Add*; 
 	PROCEDURE ^ Delete*; 
 BEGIN

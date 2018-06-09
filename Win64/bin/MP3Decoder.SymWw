@@ -142,15 +142,15 @@ TYPE
 		PROCEDURE ^ IMDCT9pt(in: Raw9; VAR out: Raw9); 
 		PROCEDURE ^ SubbandSynthesis(in: Granule; VAR out: PcmStereo; ch, gr: INTEGER); 
 		PROCEDURE ^ DCT(in: Raw32; VAR out: Raw32; n: INTEGER); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
 		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
 		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
 		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
 		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ GetAudioTime*(): HUGEINT; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 		PROCEDURE ^ DoLayer3; 

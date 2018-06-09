@@ -49,7 +49,7 @@ VAR
 	PROCEDURE ^ ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr; 
 	PROCEDURE ^ AdrToArray*(adr: Adr; CONST array: ARRAY OF CHAR; ofs: LONGINT; LSBfirst: BOOLEAN); 
 	PROCEDURE ^ InterfaceByDstIP*(dst: Adr): Interface; 
-	PROCEDURE ^ InitInterfaces(hostname: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ InitInterfaces(hostname: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ Init; 
 	PROCEDURE {FingerPrint(1732388717)}  - SwapEndian(VAR adr: LONGINT);
 	CODE

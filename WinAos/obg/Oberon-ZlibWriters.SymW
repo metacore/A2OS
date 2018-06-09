@@ -34,6 +34,6 @@ TYPE
 	PROCEDURE ^ WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR written: LONGINT); 
 	PROCEDURE ^ Write*(VAR w: Writer; ch: CHAR); 
 	PROCEDURE ^ Close*(VAR w: Writer); 
-	PROCEDURE ^ Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD); 
 BEGIN
 END ZlibWriters.

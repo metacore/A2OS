@@ -63,7 +63,7 @@ TYPE
 		data: Strings.String; 
 
 		PROCEDURE ^  & Init*(context: Document); 
-		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ GetWriter(): Streams.Writer; 
 		PROCEDURE ^ Write(w: Streams.Writer); 
 	END Stream; 

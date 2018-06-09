@@ -57,7 +57,7 @@ TYPE
 
 	Recursion* = ENUM None* = 0, FromComponent* = 1, FromBottom* = 2 END; 
 
-	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; x, y: LONGINT; VAR res: LONGINT); 
+	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; x, y: LONGINT; VAR res: WORD); 
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
@@ -76,7 +76,7 @@ TYPE
 		x, y: LONGINT; 
 
 		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; x, y: LONGINT); 
-		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: WORD); 
 	END DropString; 
 
 	LanguageExtension* = POINTER TO RECORD (Messages.MessageExtension)
@@ -241,7 +241,7 @@ TYPE
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ AddVisualComponent(c: VisualComponent; x, y: LONGINT); 
 		PROCEDURE ^ EditDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo): BOOLEAN; 
-		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; x, y: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; x, y: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ DragResult*(accepted: BOOLEAN; recipient: ANY; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ StartDrag*(data: ANY; img: WMGraphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WM.DragInfo); 
@@ -426,10 +426,10 @@ VAR
 	PROCEDURE ^ GetPropertyValue(originator: Component; CONST fullname: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ DefaultMacroHandler(CONST macro: Macro; originator: Component; w: Streams.Writer; VAR handled: BOOLEAN); 
 	PROCEDURE ^ FindMacroHandler(CONST namespace: ARRAY OF CHAR): MacroHandlerProcedure; 
-	PROCEDURE ^ AddMacroHandler*(CONST namespace: Namespace; handler: MacroHandlerProcedure; VAR res: LONGINT); 
+	PROCEDURE ^ AddMacroHandler*(CONST namespace: Namespace; handler: MacroHandlerProcedure; VAR res: WORD); 
 	PROCEDURE ^ RemoveMacroHandler*(handler: MacroHandlerProcedure); 
 	PROCEDURE ^ SetAttribute*(context: Commands.Context); 
-	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; caller: Component; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; caller: Component; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ GetComponent*(CONST name: ARRAY OF CHAR): Component; 
 	PROCEDURE ^ GetVisualComponent*(CONST name: ARRAY OF CHAR): VisualComponent; 
 	PROCEDURE ^ SetStyle*(style: XML.Element); 

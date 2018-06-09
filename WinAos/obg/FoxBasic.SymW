@@ -422,7 +422,7 @@ TYPE
 		crc: LONGINT; 
 
 		PROCEDURE ^  & InitStream*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ GetCRC*(): LONGINT; 
 	END CRC32Stream; 
 

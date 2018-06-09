@@ -2,7 +2,6 @@ MODULE FoxTRMBackend;
 	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, BinaryCode := FoxBinaryCode, SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxTRMAssembler, InstructionSet := FoxTRMInstructionSet, SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxIntermediateObjectFile, CodeGenerators := FoxCodeGenerators, D := Debugging, Compiler;
 CONST 
 	TraceFixups = FALSE; 
-	DefaultRuntimeModuleName = \"TRMRuntime"\; 
 	HaltIRQNumber = 8; 
 	Registers = 8; 
 	None =  -1; 
@@ -97,7 +96,7 @@ TYPE
 		stackSize, spillStackPosition: LONGINT; 
 		stackSizeKnown: BOOLEAN; 
 		inStackAllocation: BOOLEAN; 
-		runtimeModuleName: SyntaxTree.IdentifierString; 
+		builtinsModuleName: SyntaxTree.IdentifierString; 
 		forwardFixups: ForwardFixupList; 
 		spillStackStart: LONGINT; 
 		backend: BackendTRM; 

@@ -60,7 +60,7 @@ TYPE
 		file: File; 
 		r: Rider; 
 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: LONGINT); 
 		PROCEDURE ^ Pos*(): LONGINT; 
@@ -112,10 +112,10 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
@@ -141,7 +141,7 @@ TYPE
 		PROCEDURE ^ GetAttributes*(): SET; 
 		PROCEDURE ^ SetAttributes*(flags: SET); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Close*; 
 	END File; 
@@ -202,14 +202,14 @@ VAR
 	PROCEDURE ^ OpenOld(enum: FileSearcher; fs: FileSystem; VAR fname: ARRAY OF CHAR): File; 
 	PROCEDURE ^ Old*(name: ARRAY OF CHAR): File; 
 	PROCEDURE ^ New*(name: ARRAY OF CHAR): File; 
-	PROCEDURE ^ Delete*(VAR name: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ Copy*(name: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ Paste*(name: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ CopyFile*(source, destination: ARRAY OF CHAR; VAR overwrite: BOOLEAN; VAR res: LONGINT); 
-	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Delete*(VAR name: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ Copy*(name: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ Paste*(name: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ CopyFile*(source, destination: ARRAY OF CHAR; VAR overwrite: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ Register*(f: File); 
-	PROCEDURE ^ CreateDirectory*(path: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ CreateDirectory*(path: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
 	PROCEDURE ^ Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 

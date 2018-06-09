@@ -79,7 +79,7 @@ VAR
 
 	PROCEDURE ^ padColl*(VAR conf: ARRAY OF CHAR); 
 	PROCEDURE ^ unpadColl*(VAR conf: ARRAY OF CHAR); 
-	PROCEDURE ^ Dev0*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Dev0*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ I*(i: LONGINT): Array8; 
 	PROCEDURE ^ B*(b: BOOLEAN): Array8; 
 	PROCEDURE ^ msg1(CONST s1: ARRAY OF CHAR); 

@@ -62,7 +62,7 @@ TYPE
 
 	Buffer = OBJECT 
 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	END Buffer; 
 
 	BufferSegment = OBJECT 
@@ -80,7 +80,7 @@ TYPE
 		closed: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(a: Archive; CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ NewSegment; 
 		PROCEDURE ^ WriteBuffer; 
 	END MemoryBuffer; 

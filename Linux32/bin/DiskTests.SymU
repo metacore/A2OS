@@ -58,6 +58,6 @@ TYPE
 	PROCEDURE ^ WriteZeros*(context: Commands.Context); 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 	PROCEDURE ^ TransferBlocks*(context: Commands.Context); 
-	PROCEDURE ^ ShowDiskres(res: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ ShowDiskres(res: WORD; out: Streams.Writer); 
 BEGIN
 END DiskTests.

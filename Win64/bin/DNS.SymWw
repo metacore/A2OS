@@ -14,8 +14,8 @@ VAR
 	currentServer*, serverCount*: LONGINT; 
 	trace: BOOLEAN; 
 
-	PROCEDURE ^ HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: LONGINT); 
-	PROCEDURE ^ HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: WORD); 
+	PROCEDURE ^ HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ InstallDomain*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ InstallDNS*(adr: IP.Adr); 
 	PROCEDURE ^ ToggleTrace*; 

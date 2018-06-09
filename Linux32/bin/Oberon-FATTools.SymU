@@ -19,7 +19,7 @@ TYPE
 	PROCEDURE ^ GetInteger(VAR S: Texts.Scanner; VAR v: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetOption(VAR S: Texts.Scanner; VAR optionChar: CHAR): BOOLEAN; 
 	PROCEDURE ^ Split(p: ARRAY OF CHAR; VAR path: Path): BOOLEAN; 
-	PROCEDURE ^ GetErrorMsg(res: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ SetRootDirectory*; 
 	PROCEDURE ^ CreateDirectory*; 
 	PROCEDURE ^ RemoveDirectory*; 

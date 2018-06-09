@@ -130,7 +130,7 @@ TYPE
 		win: Window; 
 
 		PROCEDURE ^  & New*(win: Window); 
-		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: WORD); 
 	END DropURL; 
 
 	PETPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -230,7 +230,7 @@ TYPE
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
 		PROCEDURE ^ UpdatePages; 
 		PROCEDURE ^ UpdateInfo; 
-		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ UpdateState; 
 		PROCEDURE ^ DragDroppedHandler(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ PositionHandler(sender, data: ANY); 

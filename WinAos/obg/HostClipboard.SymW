@@ -8,8 +8,8 @@ TYPE
 VAR 
 	getFromClipboard, putToClipboard: ClipboardHandler; 
 
-	PROCEDURE ^ Get*(text: Texts.Text; VAR res: LONGINT); 
-	PROCEDURE ^ Put*(text: Texts.Text; VAR res: LONGINT); 
+	PROCEDURE ^ Get*(text: Texts.Text; VAR res: WORD); 
+	PROCEDURE ^ Put*(text: Texts.Text; VAR res: WORD); 
 	PROCEDURE ^ SetHandlers*(get, put: ClipboardHandler); 
 BEGIN
 END HostClipboard.

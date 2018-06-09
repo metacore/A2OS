@@ -72,8 +72,8 @@ TYPE
 		PROCEDURE ^ GetSubChannelSetting*(nr: LONGINT): LONGINT; 
 		PROCEDURE ^ NofWaveFormats*(): LONGINT; 
 		PROCEDURE ^ GetWaveFormat*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
 		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
 		PROCEDURE ^ GetMixerChannel*(channelNr: LONGINT; VAR channel: MixerChannel); 

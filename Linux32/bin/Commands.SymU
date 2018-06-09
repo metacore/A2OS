@@ -51,13 +51,13 @@ TYPE
 		proc: CommandProc; 
 		commandProc: CommandContextProc; 
 		msg: ARRAY 128 OF CHAR; 
-		res: LONGINT; 
+		res: WORD; 
 		module: Modules.Module; 
 		state: LONGINT; 
 		exception: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(CONST moduleName, commandName: Modules.Name; context: Context); 
-		PROCEDURE ^ Join(this: LONGINT; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Join(this: LONGINT; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	BEGIN{ACTIVE, SAFE} 
 	END Runner; 
 VAR 
@@ -67,11 +67,11 @@ VAR
 	defaultContext: Context; 
 
 	PROCEDURE ^ GetEmptyReader(): Streams.Reader; 
-	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
-	PROCEDURE ^ Split*(CONST cmdstr: ARRAY OF CHAR; VAR moduleName, procedureName: Modules.Name; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Split*(CONST cmdstr: ARRAY OF CHAR; VAR moduleName, procedureName: Modules.Name; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ GetContext*(): Context; 
-	PROCEDURE ^ Activate*(CONST cmd: ARRAY OF CHAR; context: Context; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
-	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Activate*(CONST cmd: ARRAY OF CHAR; context: Context; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Init; 
 BEGIN
 END Commands.

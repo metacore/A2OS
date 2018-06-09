@@ -31,10 +31,10 @@ TYPE
 		nofBlocks: LONGINT; 
 		sectorsPerBlock: LONGINT; 
 
-		PROCEDURE ^ ReadBlock(blockNumber: LONGINT; VAR block: Block; VAR res: LONGINT); 
-		PROCEDURE ^ WriteBlock(blockNumber: LONGINT; VAR block: Block; VAR res: LONGINT); 
+		PROCEDURE ^ ReadBlock(blockNumber: LONGINT; VAR block: Block; VAR res: WORD); 
+		PROCEDURE ^ WriteBlock(blockNumber: LONGINT; VAR block: Block; VAR res: WORD); 
 		PROCEDURE ^ Finalize; 
-		PROCEDURE ^  & Init*(device: Disks.Device; partition: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^  & Init*(device: Disks.Device; partition: LONGINT; VAR res: WORD); 
 	END Volume; 
 
 	BlockBitmap = OBJECT {EXCLUSIVE} 
@@ -43,13 +43,13 @@ TYPE
 		hint: LONGINT; 
 		fileSystem: FileSystem; 
 
-		PROCEDURE ^ FreeBlock(blockNumber: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ AllocateBlock(VAR res: LONGINT): LONGINT; 
-		PROCEDURE ^ FindFreeBlock(VAR res: LONGINT; useHint: BOOLEAN): LONGINT; 
+		PROCEDURE ^ FreeBlock(blockNumber: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ AllocateBlock(VAR res: WORD): LONGINT; 
+		PROCEDURE ^ FindFreeBlock(VAR res: WORD; useHint: BOOLEAN): LONGINT; 
 		PROCEDURE ^ IsUsed(blockNumber: LONGINT): BOOLEAN; 
 		PROCEDURE ^ SetUsed(blockNumber: LONGINT; used: BOOLEAN); 
-		PROCEDURE ^ WriteBack(blockNumber: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ LoadFromDisk(VAR res: LONGINT); 
+		PROCEDURE ^ WriteBack(blockNumber: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ LoadFromDisk(VAR res: WORD); 
 		PROCEDURE ^ Show; 
 		PROCEDURE ^  & Init*(fileSystem: FileSystem); 
 	END BlockBitmap; 
@@ -88,21 +88,21 @@ TYPE
 		rootDirectory: DirectoryBlock; 
 		bitmap: BlockBitmap; 
 
-		PROCEDURE ^  & Init*(volume: Volume; VAR res: LONGINT); 
+		PROCEDURE ^  & Init*(volume: Volume; VAR res: WORD); 
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ UpdateInode(inode: Inode; inodeAdr: LONGINT); 
 		PROCEDURE ^ GetFilename(name: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ FindEntry(CONST name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ DeleteFile(inode: Inode; inodeAdr: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ DeleteDnodes(inode: Inode; VAR res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ DeleteFile(inode: Inode; inodeAdr: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ DeleteDnodes(inode: Inode; VAR res: WORD); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
-		PROCEDURE ^ Format(VAR res: LONGINT); 
+		PROCEDURE ^ Format(VAR res: WORD); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 
@@ -124,13 +124,13 @@ TYPE
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 	END File; 
 
 	PROCEDURE ^ ClearBlock(VAR block: Block); 
 	PROCEDURE ^ ClearInode(VAR inode: Inode); 
-	PROCEDURE ^ GetFileSystem(context: Commands.Context; VAR res: LONGINT): FileSystem; 
+	PROCEDURE ^ GetFileSystem(context: Commands.Context; VAR res: WORD): FileSystem; 
 	PROCEDURE ^ Format*(context: Commands.Context); 
 	PROCEDURE ^ Mount*(context: Commands.Context); 
 	PROCEDURE ^ Unmount*(context: Commands.Context); 

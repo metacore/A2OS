@@ -20,9 +20,9 @@ CONST
 VAR 
 	jobNr: INTEGER; 
 
-	PROCEDURE ^ Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data: Streams.Reader; size: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ ShowJobs*(out: Streams.Writer; CONST host, queue: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ RemoveJob*(CONST host, queue, email, job: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ PrintFile*(CONST fn: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data: Streams.Reader; size: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ ShowJobs*(out: Streams.Writer; CONST host, queue: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ RemoveJob*(CONST host, queue, email, job: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ PrintFile*(CONST fn: ARRAY OF CHAR; VAR res: WORD); 
 BEGIN
 END LPR.

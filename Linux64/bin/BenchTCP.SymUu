@@ -38,7 +38,7 @@ TYPE
 VAR 
 	buf: Bytes; 
 
-	PROCEDURE ^ Message(CONST msg1, msg2: ARRAY OF CHAR; res: LONGINT); 
+	PROCEDURE ^ Message(CONST msg1, msg2: ARRAY OF CHAR; res: WORD); 
 	PROCEDURE ^ Report(ms, port, total: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Discard*(context: Commands.Context); 
 	PROCEDURE ^ Echo*(context: Commands.Context); 

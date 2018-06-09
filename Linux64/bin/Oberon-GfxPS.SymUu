@@ -171,8 +171,8 @@ VAR
 	PROCEDURE ^ ImageM(ctxt: Gfx.Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter); 
 	PROCEDURE ^ NewPattern(ctxt: Gfx.Context; img: Images.Image; px, py: REAL): Gfx.Pattern; 
 	PROCEDURE ^ InitMethods; 
-	PROCEDURE ^ Init*(psc: Context; level2, landscape: BOOLEAN; width, height, left, right, bot, top: REAL; res: LONGINT); 
-	PROCEDURE ^ InitEPS*(psc: Context; level2: BOOLEAN; res: LONGINT); 
+	PROCEDURE ^ Init*(psc: Context; level2, landscape: BOOLEAN; width, height, left, right, bot, top: REAL; res: WORD); 
+	PROCEDURE ^ InitEPS*(psc: Context; level2: BOOLEAN; res: WORD); 
 	PROCEDURE ^ Open*(psc: Context; file: Files.File); 
 	PROCEDURE ^ ShowPage*(psc: Context); 
 	PROCEDURE ^ Close*(psc: Context); 

@@ -126,7 +126,7 @@ TYPE
 		token: ARRAY TokenSize OF CHAR; 
 
 		PROCEDURE ^  & Init*(VAR inW: Streams.Writer; outW: Streams.Writer; VAR request: RequestHeader; VAR reply: ResponseHeader); 
-		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ WriteChunked; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Close*; 
@@ -152,7 +152,7 @@ TYPE
 		remain-: LONGINT; 
 
 		PROCEDURE ^  & Init*(VAR inW, outW: Streams.Writer; size: LONGINT); 
-		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Write; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Padding*(ch: CHAR); 
@@ -181,10 +181,10 @@ TYPE
 	PROCEDURE ^ Version*(VAR h: RequestHeader; Maj, Min: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetMethod*(VAR s: ARRAY OF CHAR; VAR method: LONGINT); 
 	PROCEDURE ^ GetMethodName*(code: LONGINT; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: LONGINT; log: TFLog.Log); 
-	PROCEDURE ^ ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: LONGINT); 
-	PROCEDURE ^ ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: LONGINT; log: TFLog.Log); 
-	PROCEDURE ^ ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: LONGINT; log: TFLog.Log); 
+	PROCEDURE ^ ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD; log: TFLog.Log); 
+	PROCEDURE ^ ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD); 
+	PROCEDURE ^ ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log: TFLog.Log); 
+	PROCEDURE ^ ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log: TFLog.Log); 
 	PROCEDURE ^ LogRequestHeader*(log: TFLog.Log; VAR header: RequestHeader); 
 	PROCEDURE ^ LogResponseHeader*(log: TFLog.Log; VAR header: ResponseHeader); 
 	PROCEDURE ^ WriteRequestLine*(s: Streams.Writer; maj, min: LONGINT; method: LONGINT; uri, host: ARRAY OF CHAR); 

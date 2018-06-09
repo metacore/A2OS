@@ -112,14 +112,14 @@ TYPE
 		PROCEDURE ^ OldX(name: ARRAY OF CHAR): File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
 		PROCEDURE ^ Delete0X(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate(file: File; par: Parameter): BOOLEAN; 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RmDirCallback(f: File; par: Parameter): BOOLEAN; 
 		PROCEDURE ^ RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
-		PROCEDURE ^ QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ FindDirectory(path: ARRAY OF CHAR): Directory; 
 		PROCEDURE ^ GetDirectory(cluster: Address): Directory; 
 		PROCEDURE ^ GetDirectoryX(cluster: Address): Directory; 
@@ -175,10 +175,10 @@ TYPE
 		PROCEDURE ^ InclAttribute*(Attr: LONGINT); 
 		PROCEDURE ^ ExclAttribute*(Attr: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ UpdateX; 
-		PROCEDURE ^ DeleteClusterChain(VAR res: LONGINT); 
+		PROCEDURE ^ DeleteClusterChain(VAR res: WORD); 
 		PROCEDURE ^ GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN); 
 	END File; 
 
@@ -193,7 +193,7 @@ TYPE
 	END; 
 
 	ResultParam = POINTER TO RECORD (Parameter)
-		res: LONGINT; 
+		res: WORD; 
 	END; 
 
 	TailGenParam = POINTER TO RECORD (Parameter)
@@ -225,9 +225,9 @@ TYPE
 		PROCEDURE ^ GetShortEntry(VAR entry: ARRAY OF CHAR; name: ARRAY OF CHAR; attr: SET; NTres: CHAR; cluster, size, time, date, wTime, wDate, aDate: LONGINT); 
 		PROCEDURE ^ WriteFileHeader(f: File); 
 		PROCEDURE ^ WriteFileHeaderX(f: File); 
-		PROCEDURE ^ NewSubdirectory(name: ARRAY OF CHAR; VAR res: LONGINT): Directory; 
+		PROCEDURE ^ NewSubdirectory(name: ARRAY OF CHAR; VAR res: WORD): Directory; 
 		PROCEDURE ^ DeleteCallback(f: File; par: Parameter): BOOLEAN; 
-		PROCEDURE ^ DeleteContents(VAR res: LONGINT); 
+		PROCEDURE ^ DeleteContents(VAR res: WORD); 
 		PROCEDURE ^ FindCallback(f: File; par: Parameter): BOOLEAN; 
 		PROCEDURE ^ Find(VAR filename: ARRAY OF CHAR): File; 
 		PROCEDURE ^ FindX(VAR filename: ARRAY OF CHAR): File; 

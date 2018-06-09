@@ -33,7 +33,7 @@ TYPE
 
 	ChargenAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		res: LONGINT; 
+		res: WORD; 
 
 	BEGIN{ACTIVE} 
 	END ChargenAgent; 

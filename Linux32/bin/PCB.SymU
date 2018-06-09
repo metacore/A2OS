@@ -509,7 +509,7 @@ VAR
 	PROCEDURE ^ IsProcReturningPointer*(d: Designator; VAR rtype: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ IsRealtimeProc*(d: Designator; pos: LONGINT): BOOLEAN; 
 	PROCEDURE ^ ConstExpression*(pos: LONGINT; e: Expression): Const; 
-	PROCEDURE ^ NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: LONGINT): PCT.Array; 
+	PROCEDURE ^ NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: WORD): PCT.Array; 
 	PROCEDURE ^ TypeExtension(base, ext: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ ArrayCompatible(Ta, Tf: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ TensorCompatible(pos: LONGINT; ref: BOOLEAN; Ta, Tf: PCT.Struct): BOOLEAN; 

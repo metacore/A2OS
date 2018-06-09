@@ -154,8 +154,8 @@ TYPE
 		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
-		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: LONGINT); 
-		PROCEDURE ^ EvaluateError(res: LONGINT); 
+		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: WORD); 
+		PROCEDURE ^ EvaluateError(res: WORD); 
 		PROCEDURE ^ ReceiveCharacters; 
 	BEGIN{ACTIVE} 
 	END TerminalComponent; 

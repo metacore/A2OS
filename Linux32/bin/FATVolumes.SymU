@@ -77,20 +77,20 @@ TYPE
 		PROCEDURE ^ SetCache*(CacheType, NumBlocks: LONGINT; WriteBehind: BOOLEAN); 
 		PROCEDURE ^ InitCache(VAR cache: Cache; StartAdr, BlockSize, NumBlocks: LONGINT; WriteBehind: BOOLEAN); 
 		PROCEDURE ^ FlushCache(cache: Cache); 
-		PROCEDURE ^ ReadSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ReadSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ WriteSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ WriteSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ ReadSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReadSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ WriteSector*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ WriteSectorX(adr: Address; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ ReadFATEntry*(adr: Address): Address; 
 		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
-		PROCEDURE ^ WriteFATEntry*(adr, link: Address; VAR res: LONGINT); 
-		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
-		PROCEDURE ^ ReadCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ReadClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ WriteCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ WriteClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ AllocCluster*(link: Address; VAR res: LONGINT): Address; 
-		PROCEDURE ^ FreeClusterChain*(cluster: Address; VAR res: LONGINT); 
+		PROCEDURE ^ WriteFATEntry*(adr, link: Address; VAR res: WORD); 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: WORD); 
+		PROCEDURE ^ ReadCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReadClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ WriteCluster*(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ WriteClusterX(adr: Address; VAR data: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ AllocCluster*(link: Address; VAR res: WORD): Address; 
+		PROCEDURE ^ FreeClusterChain*(cluster: Address; VAR res: WORD); 
 		PROCEDURE ^ QuickFormat*; 
 		PROCEDURE ^ InitRoot; 
 		PROCEDURE ^ Synchronize; 
@@ -112,7 +112,7 @@ TYPE
 		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
-		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: WORD); 
 	END FAT12Volume; 
 
 	FAT16Volume* = OBJECT {EXCLUSIVE} (FAT1216Volume)
@@ -120,7 +120,7 @@ TYPE
 		PROCEDURE ^ Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
-		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: WORD); 
 	END FAT16Volume; 
 
 	FAT32Volume* = OBJECT {EXCLUSIVE} (Volume)
@@ -131,7 +131,7 @@ TYPE
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ InitRoot; 
 		PROCEDURE ^ ReadFATEntryX(adr: Address): Address; 
-		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: LONGINT); 
+		PROCEDURE ^ WriteFATEntryX(adr, link: Address; VAR res: WORD); 
 	END FAT32Volume; 
 
 	PROCEDURE ^ New*(context: Files.Parameters); 

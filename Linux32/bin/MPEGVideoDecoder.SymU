@@ -88,7 +88,7 @@ TYPE
 		frametype: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 		PROCEDURE ^ ParseSequenceHeader(): BOOLEAN; 
 		PROCEDURE ^ ReadExtension(): BOOLEAN; 
@@ -97,8 +97,8 @@ TYPE
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
 		PROCEDURE ^ GetCurrentFrame*(): LONGINT; 
 		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ SkipNext(): LONGINT; 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ DecodeSlice(type: LONGINT): BOOLEAN; 
@@ -121,7 +121,7 @@ TYPE
 		singleStream: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GotoNextStartCode(): BOOLEAN; 
 		PROCEDURE ^ SkipZeros(): LONGINT; 
 		PROCEDURE ^ ReadPackHeader(): BOOLEAN; 
@@ -135,7 +135,7 @@ TYPE
 		PROCEDURE ^ SkipData(streamNr: LONGINT; size: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ GetPosInMuxedStream*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GotoNextPacket(VAR stream: StreamType): BOOLEAN; 
-		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ HasMoreData(streamNr: LONGINT): BOOLEAN; 
 	END MPEGDemultiplexer; 
 

@@ -40,12 +40,12 @@ VAR
 	ports: ARRAY (Serials.MaxPorts + 1) OF Serials.Port; 
 
 	PROCEDURE ^ NumberOfPorts*(): LONGINT; 
-	PROCEDURE ^ Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ Stop*(portNo: LONGINT); 
-	PROCEDURE ^ Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: LONGINT); 
-	PROCEDURE ^ SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: LONGINT); 
-	PROCEDURE ^ ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: WORD); 
+	PROCEDURE ^ SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: WORD); 
+	PROCEDURE ^ ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ ClearMC*(portNo: LONGINT; s: SET); 
 	PROCEDURE ^ SetMC*(portNo: LONGINT; s: SET); 
 	PROCEDURE ^ GetMC*(portNo: LONGINT; VAR s: SET); 

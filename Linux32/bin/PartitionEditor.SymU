@@ -30,7 +30,7 @@ TYPE
 VAR 
 	nofWindows: LONGINT; 
 
-	PROCEDURE ^ GetErrorMessage(CONST string1, devicename: ARRAY OF CHAR; res: LONGINT; VAR message: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrorMessage(CONST string1, devicename: ARRAY OF CHAR; res: WORD; VAR message: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ IncCount; 

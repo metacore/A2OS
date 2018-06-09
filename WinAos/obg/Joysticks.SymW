@@ -113,10 +113,10 @@ TYPE
 		PROCEDURE ^ Register*(handler: JoystickMessageHandler); 
 		PROCEDURE ^ Unregister*(handler: JoystickMessageHandler); 
 		PROCEDURE ^ Poll*(VAR message: JoystickDataMessage): BOOLEAN; 
-		PROCEDURE ^ SetGlobalDeadzone*(deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ SetDeadzone*(axisNbr: LONGINT; deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SetGlobalDeadzone*(deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ SetDeadzone*(axisNbr: LONGINT; deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ StartCalibration*; 
-		PROCEDURE ^ StopCalibration*(VAR errorMsg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ StopCalibration*(VAR errorMsg: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Handle*(VAR message: JoystickMessage); 
 		PROCEDURE ^ AddAxis*(index, minValue, maxValue: LONGINT); 
 		PROCEDURE ^ AddCoolieHat*; 

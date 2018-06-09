@@ -111,12 +111,12 @@ TYPE
 		PROCEDURE ^ Render*(img: Raster.Image); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 		PROCEDURE ^ DecodeVOP; 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetVideoInfo*(VAR width, height, milliSecondsPerFrame: LONGINT); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
 		PROCEDURE ^ GetCurrentFrame*(): LONGINT; 
-		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ MakeEdge(framePic: DT.PointerToArrayOfCHAR; framePicBaseOffset, edgedWidth, edgedHeight, edge: LONGINT); 
 		PROCEDURE ^ GetVisualObjectHeader(): BOOLEAN; 
 		PROCEDURE ^ GetGOPHeader(): BOOLEAN; 

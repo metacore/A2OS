@@ -31,10 +31,10 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
@@ -74,9 +74,9 @@ TYPE
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ TryRename*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT): LONGINT; 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
-		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ TryRename*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD): LONGINT; 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
+		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
@@ -115,7 +115,7 @@ TYPE
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetAttributes*(): SET; 
 		PROCEDURE ^ SetAttributes*(attr: SET); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ FlushBuffers; 
 		PROCEDURE ^ Finalize*; 

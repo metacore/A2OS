@@ -146,7 +146,7 @@ TYPE
 		PROCEDURE ^ GetNofPackages(): LONGINT; 
 		PROCEDURE ^ GetPackages*(): PackageArray; 
 		PROCEDURE ^ ReportProgress(nofFilesExtracted: LONGINT); 
-		PROCEDURE ^ ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Unzip(zipFile: AosUnzip.ZipFile): BOOLEAN; 
 		PROCEDURE ^ OpenZipFile(CONST filename: ARRAY OF CHAR; reportErrors: BOOLEAN): AosUnzip.ZipFile; 
 		PROCEDURE ^ GetPackageSizes*; 

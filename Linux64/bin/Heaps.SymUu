@@ -1,5 +1,5 @@
 MODULE Heaps;
-	IMPORT Runtime, SYSTEM, Trace, Machine;
+	IMPORT Builtins, SYSTEM, Trace, Machine;
 CONST 
 	EnableRefCount = TRUE; 
 	Paranoid = TRUE; 

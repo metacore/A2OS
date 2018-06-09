@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ FindRoots*; 
 	END Module; 
 
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR):Module; 
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR):Module; 
 
 	; 
 VAR 
@@ -124,7 +124,7 @@ VAR
 	PROCEDURE ^ GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ SortProcedureDescs(p: ProcedureDescs); 
 	PROCEDURE ^ SortExceptionTable(p: ExceptionTable); 
-	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module; 
 	PROCEDURE ^ ThisModuleByAdr0*(pc: ADDRESS): Module; 
 	PROCEDURE ^ ThisModuleByAdr*(pc: ADDRESS): Module; 
 	PROCEDURE ^ GetProcedure*(CONST moduleName, procedureName: ARRAY OF CHAR; argTdAdr, retTdAdr: ADDRESS; VAR entryAdr: ADDRESS); 
@@ -134,7 +134,7 @@ VAR
 	PROCEDURE ^ TypeOf*(obj: ANY): TypeDesc; 
 	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
-	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Shutdown*(code: LONGINT); 
 	PROCEDURE ^ IsExceptionHandled*(VAR pc, fp: ADDRESS; deep: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetExceptionHandler*(pc: ADDRESS): ADDRESS; 

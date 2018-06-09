@@ -128,7 +128,7 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CollectRegisteredFileSectors(adr: DiskAdr); 
@@ -176,7 +176,7 @@ TYPE
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 	END File; 
 
@@ -189,7 +189,7 @@ TYPE
 	PROCEDURE ^ Marked(vol: Files.Volume; sec: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Match*(mask, name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ enumerate(fs: Files.FileSystem; VAR mask: ARRAY OF CHAR; dpg: DiskAdr; flags: SET; enum: Files.Enumerator; VAR continue: BOOLEAN; VAR fh: FileHeader; VAR fn: ARRAY OF CHAR); 
-	PROCEDURE ^ Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT); 
+	PROCEDURE ^ Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD); 
 	PROCEDURE ^ UpdateHeader(f: File; VAR h: FileHeader); 
 	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: LONGINT); 
 	PROCEDURE ^ NewSuper(f: File); 

@@ -131,7 +131,7 @@ TYPE
 
 	Server* = OBJECT {EXCLUSIVE} 
 	VAR 
-		res: LONGINT; 
+		res: WORD; 
 		service, client: TCP.Connection; 
 		root: Agent; 
 		agent: VNCAgent; 
@@ -140,7 +140,7 @@ TYPE
 		stopped: BOOLEAN; 
 		init: VNCService; 
 
-		PROCEDURE ^  & Open*(port: LONGINT; vncInfo: VNCInfo; init: VNCService; VAR res: LONGINT); 
+		PROCEDURE ^  & Open*(port: LONGINT; vncInfo: VNCInfo; init: VNCService; VAR res: WORD); 
 		PROCEDURE ^ CloseAllOthers(this: Agent); 
 		PROCEDURE ^ Remove(a: Agent); 
 		PROCEDURE ^ AddDirty*(r: Rectangle); 

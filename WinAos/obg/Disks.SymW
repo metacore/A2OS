@@ -41,11 +41,11 @@ TYPE
 		openCount*: LONGINT; 
 		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: HUGEINT; 
 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
-		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: LONGINT); 
-		PROCEDURE ^ Open*(VAR res: LONGINT); 
-		PROCEDURE ^ Close*(VAR res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: WORD); 
+		PROCEDURE ^ Open*(VAR res: WORD); 
+		PROCEDURE ^ Close*(VAR res: WORD); 
 	END Device; 
 
 	EjectMsg* = RECORD (Message)
@@ -81,7 +81,7 @@ VAR
 	PROCEDURE ^ ValidFlag(f: CHAR): BOOLEAN; 
 	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n, res: LONGINT; VAR valid: BOOLEAN); 
 	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: LONGINT; VAR p: PartitionTable; VAR n, res: LONGINT); 
-	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: LONGINT); 
+	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: WORD); 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END Disks.

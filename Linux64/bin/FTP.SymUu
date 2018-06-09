@@ -6,9 +6,9 @@ CONST
 VAR 
 	ftp: FTPClient.FTPClient; 
 
-	PROCEDURE ^ PutFile(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ PutText(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ GetFile(ftp: FTPClient.FTPClient; remote, local: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ PutFile(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ PutText(ftp: FTPClient.FTPClient; local, remote: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ GetFile(ftp: FTPClient.FTPClient; remote, local: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ PutFiles*(context: Commands.Context); 
 	PROCEDURE ^ PutTexts*(context: Commands.Context); 

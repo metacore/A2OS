@@ -38,7 +38,7 @@ VAR
 	PrototypeIsRepeating, PrototypeScaleImage, PrototypeForceNoBg: WMProperties.BooleanProperty; 
 	StrAnimation: Strings.String; 
 
-	PROCEDURE ^ OpenAnimation(filename: ARRAY OF CHAR; VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+	PROCEDURE ^ OpenAnimation(filename: ARRAY OF CHAR; VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
 	PROCEDURE ^ GenAnimation*(): XML.Element; 
 	PROCEDURE ^ FindAnimation*(CONST uid: ARRAY OF CHAR; component: WMComponents.Component): Animation; 
 	PROCEDURE ^ InitPrototypes; 

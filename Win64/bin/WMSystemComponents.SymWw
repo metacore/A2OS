@@ -17,8 +17,8 @@ TYPE
 		overwriteOnce, overwriteAll, overwriteNever, abort: BOOLEAN; 
 
 		PROCEDURE ^  & New*(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: LONGINT); 
-		PROCEDURE ^ ClosePut*(VAR res: LONGINT); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: WORD); 
+		PROCEDURE ^ ClosePut*(VAR res: WORD); 
 	END FilesDropInterface; 
 
 	FilesDropTarget = OBJECT (WMDropTarget.DropTarget)
@@ -105,7 +105,7 @@ TYPE
 		PROCEDURE ^ MyDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
-		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ DragArrived(sender, data: ANY); 

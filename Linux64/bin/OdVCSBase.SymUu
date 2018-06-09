@@ -54,7 +54,7 @@ TYPE
 VAR 
 	errMsg*: ARRAY 256 OF CHAR; 
 	formatStr: ARRAY (FormatLen + 1) OF CHAR; 
-	res: LONGINT; 
+	res: WORD; 
 
 	PROCEDURE ^ splitDirBase(fileName: ARRAY OF CHAR; VAR dir, base: ARRAY OF CHAR); 
 	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): LONGINT; 

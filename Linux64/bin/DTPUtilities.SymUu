@@ -82,7 +82,7 @@ TYPE
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PressHandler(sender, data: ANY); 
 		PROCEDURE ^ OKHandler(sender, data: ANY); 
-		PROCEDURE ^ SetResult(res: LONGINT); 
+		PROCEDURE ^ SetResult(res: WORD); 
 		PROCEDURE ^ GetFieldContent(VAR string: ARRAY OF CHAR); 
 	END ColorChooserWindow; 
 

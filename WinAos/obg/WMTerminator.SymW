@@ -1,0 +1,10 @@
+MODULE WMTerminator;
+	IMPORT Modules, WMDialogs, Commands, Kernel;
+CONST 
+	Ok = WMDialogs.ResOk; 
+	Abort = WMDialogs.ResAbort; 
+
+	PROCEDURE ^ Shutdown*; 
+	PROCEDURE ^ Do*; 
+BEGIN
+END WMTerminator.

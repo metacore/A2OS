@@ -30,7 +30,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END CP1251Decoder; 
 
@@ -39,7 +39,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END CP1251Encoder; 
 
 	KOI8RDecoder = OBJECT (Codecs.TextDecoder)
@@ -49,7 +49,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END KOI8RDecoder; 
 
@@ -58,7 +58,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END KOI8REncoder; 
 
 	KOI8UDecoder = OBJECT (Codecs.TextDecoder)
@@ -68,7 +68,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END KOI8UDecoder; 
 
@@ -77,7 +77,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END KOI8UEncoder; 
 
 	CP866Decoder = OBJECT (Codecs.TextDecoder)
@@ -87,7 +87,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END CP866Decoder; 
 
@@ -96,7 +96,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END CP866Encoder; 
 
 	ISO88595Decoder = OBJECT (Codecs.TextDecoder)
@@ -106,7 +106,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END ISO88595Decoder; 
 
@@ -115,7 +115,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END ISO88595Encoder; 
 
 	; 

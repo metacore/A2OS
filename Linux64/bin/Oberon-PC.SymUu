@@ -25,6 +25,6 @@ VAR
 	PROCEDURE ^ CompileFile*(CONST name, opt: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ CompileAsciiFile*(CONST name, opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
 	PROCEDURE ^ Compile*; 
-	PROCEDURE ^ SenderToLog(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ SenderToLog(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 BEGIN
 END PC.

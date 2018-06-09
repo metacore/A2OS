@@ -71,10 +71,10 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
@@ -87,10 +87,10 @@ TYPE
 		PROCEDURE ^ New0(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Delete0(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate1(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator; useprefix: BOOLEAN); 
 		PROCEDURE ^ FileKey(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Finalize; 
 		PROCEDURE ^ Has*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
@@ -127,7 +127,7 @@ TYPE
 		PROCEDURE ^ SetAttributes*(a: SET); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ ToTemp(): BOOLEAN; 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Close*; 

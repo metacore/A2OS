@@ -382,8 +382,8 @@ TYPE
 VAR 
 	StrNoName: Strings.String; 
 
-	PROCEDURE ^ UTF8ToStream*(CONST string: ARRAY OF CHAR; w: Streams.Writer; VAR res: LONGINT); 
-	PROCEDURE ^ UTF8FromStream*(VAR string: ARRAY OF CHAR; r: Streams.Reader; VAR res: LONGINT); 
+	PROCEDURE ^ UTF8ToStream*(CONST string: ARRAY OF CHAR; w: Streams.Writer; VAR res: WORD); 
+	PROCEDURE ^ UTF8FromStream*(VAR string: ARRAY OF CHAR; r: Streams.Reader; VAR res: WORD); 
 	PROCEDURE ^ NewLine(w: Streams.Writer; level: LONGINT); 
 	PROCEDURE ^ NewString(CONST value: ARRAY OF CHAR): String; 
 BEGIN

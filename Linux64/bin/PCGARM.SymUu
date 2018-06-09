@@ -93,7 +93,7 @@ VAR
 	PROCEDURE ^ LoadAddress(rAdr: LONGINT; adr: PCM.Attribute); 
 	PROCEDURE ^ SystemCall(nr: LONGINT); 
 	PROCEDURE ^ Init(): BOOLEAN; 
-	PROCEDURE ^ Done(VAR res: LONGINT); 
+	PROCEDURE ^ Done(VAR res: WORD); 
 	PROCEDURE ^ Enter(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT); 
 	PROCEDURE ^ Exit(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT); 
 	PROCEDURE ^ Compare(code: PCLIR.Code; VAR instr: PCLIR.Instruction); 

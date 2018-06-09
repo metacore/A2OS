@@ -114,7 +114,7 @@ TYPE
 
 	UnicodePiece* = OBJECT (Piece)
 
-		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: LONGINT); 
+		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: WORD); 
 		PROCEDURE ^ GetUCS32*(index: LONGINT; VAR ucs: Char32); 
 	END UnicodePiece; 
 
@@ -125,7 +125,7 @@ TYPE
 		PROCEDURE ^ SetBuf(CONST buffer: UCS32String); 
 		PROCEDURE ^ SetBufAsUTF8(CONST buffer: ARRAY OF CHAR); 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: LONGINT); 
+		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: WORD); 
 		PROCEDURE ^ GetUCS32*(index: LONGINT; VAR ucs: Char32); 
 		PROCEDURE ^ Split*(pos: LONGINT; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 

@@ -152,7 +152,7 @@ VAR
 	PROCEDURE ^ MakeDistCode(VAR code: Code; bits, offset, size, simple: INTEGER); 
 	PROCEDURE ^ MakeFixedLitLenCode(VAR len: Lengths; VAR code: Code); 
 	PROCEDURE ^ MakeFixedDistCode(VAR len: Lengths; VAR code: Code); 
-	PROCEDURE ^ BuildTree(VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: LONGINT); 
+	PROCEDURE ^ BuildTree(VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: WORD); 
 	PROCEDURE ^ Flush(VAR s: Stream); 
 	PROCEDURE ^ Need(VAR s: Stream; bits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Dump(VAR s: Stream; bits: LONGINT); 

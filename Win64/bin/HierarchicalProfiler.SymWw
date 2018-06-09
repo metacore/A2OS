@@ -97,13 +97,13 @@ VAR
 	PROCEDURE ^ PostProcessProfile(profile: Profile); 
 	PROCEDURE ^ CreateProfile(type: LONGINT; info: LONGINT): Profile; 
 	PROCEDURE ^ GetBufferSize*(time: LONGINT): LONGINT; 
-	PROCEDURE ^ GetProfile*(type, info: LONGINT; VAR profile: Profile; VAR res: LONGINT); 
+	PROCEDURE ^ GetProfile*(type, info: LONGINT; VAR profile: Profile; VAR res: WORD); 
 	PROCEDURE ^ Start*(context: Commands.Context); 
-	PROCEDURE ^ StartProfiling*(maxTime: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ StartProfiling*(maxTime: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ Stop*(context: Commands.Context); 
-	PROCEDURE ^ StopProfiling*(VAR res: LONGINT); 
+	PROCEDURE ^ StopProfiling*(VAR res: WORD); 
 	PROCEDURE ^ Continue*(context: Commands.Context); 
-	PROCEDURE ^ ContinueProfiling*(VAR res: LONGINT); 
+	PROCEDURE ^ ContinueProfiling*(VAR res: WORD); 
 	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: LONGINT): LONGINT; 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 

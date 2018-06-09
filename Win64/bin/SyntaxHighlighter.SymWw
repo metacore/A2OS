@@ -204,8 +204,8 @@ TYPE
 		PROCEDURE ^ GetWordStyle*(reader: Texts.TextReader; position: LONGINT; VAR end: LONGINT): Style; 
 		PROCEDURE ^ GetRegionStyle*(position: LONGINT; state: State; VAR start, end: LONGINT): Style; 
 		PROCEDURE ^ GetStyle*(CONST keyword: ARRAY OF CHAR; length: LONGINT): Style; 
-		PROCEDURE ^ AddToken(CONST tokenname: ARRAY OF CHAR; style: Style; VAR res: LONGINT); 
-		PROCEDURE ^ AddWord(CONST keyword: ARRAY OF CHAR; style: Style; VAR res: LONGINT); 
+		PROCEDURE ^ AddToken(CONST tokenname: ARRAY OF CHAR; style: Style; VAR res: WORD); 
+		PROCEDURE ^ AddWord(CONST keyword: ARRAY OF CHAR; style: Style; VAR res: WORD); 
 		PROCEDURE ^ AddRegion(CONST open, close: ARRAY OF CHAR; nesting, multiline: BOOLEAN; styleOpen, styleClose, styleContent: Style); 
 		PROCEDURE ^ DebugInterface*(code: LONGINT; state: State); 
 		PROCEDURE ^ Dump(out: Streams.Writer); 

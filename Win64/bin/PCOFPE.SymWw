@@ -119,7 +119,7 @@ TYPE
 		sect: Section; 
 		org, ofs: LONGINT; 
 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Pos*(): LONGINT; 
 		PROCEDURE ^ SetPos*(ofs: LONGINT); 
 		PROCEDURE ^  & Open*(sect: Section; ofs: LONGINT); 

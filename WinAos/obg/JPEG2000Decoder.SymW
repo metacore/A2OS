@@ -438,7 +438,7 @@ TYPE
 		minResDec, minLayDec: LONGINT; 
 
 		PROCEDURE ^  & InitNew*(decOpt: J2KU.DecoderOptions); 
-		PROCEDURE ^ Open*(s: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(s: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
 		PROCEDURE ^ Render*(img: Raster.Image); 

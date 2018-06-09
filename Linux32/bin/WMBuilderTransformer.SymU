@@ -85,10 +85,10 @@ TYPE
 		createFormReturnIdent: Identifier; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Transform(component, parent: WMComponents.Component; VAR res: LONGINT); 
-		PROCEDURE ^ GenerateCode(CONST targetName, templateName, skeletonName, moduleName: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ApplyBase(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ApplySkeleton(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Transform(component, parent: WMComponents.Component; VAR res: WORD); 
+		PROCEDURE ^ GenerateCode(CONST targetName, templateName, skeletonName, moduleName: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ApplyBase(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ApplySkeleton(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: WORD); 
 	END Transformer; 
 
 	PROCEDURE ^ GetUCS32String(string: Strings.String): Texts.PUCS32String; 
@@ -99,7 +99,7 @@ TYPE
 	PROCEDURE ^ Indent(writer: Streams.Writer; level: LONGINT); 
 	PROCEDURE ^ TypeToSuffix(CONST moduleName, typeName: ARRAY OF CHAR; VAR suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ GetTypeAsString(component: Repositories.Component; VAR typeString: ARRAY OF CHAR); 
-	PROCEDURE ^ TransformComponent*(component: WMComponents.Component; CONST base, skeleton, fileName, moduleName: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ TransformComponent*(component: WMComponents.Component; CONST base, skeleton, fileName, moduleName: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ Transform*(context: Commands.Context); 
 BEGIN
 END WMBuilderTransformer.

@@ -216,7 +216,7 @@ VAR
 	PROCEDURE ^ Align(value: ADDRESS): ADDRESS; 
 	PROCEDURE ^ GetPtr(base: UnsafeArray): ANY; 
 	PROCEDURE ^ SafePut(VAR dest: ANY; src: ANY); 
-	PROCEDURE ^ PutPtr(base: UnsafeArray; value: ANY); 
+	PROCEDURE ^ PutPtr(CONST base: UnsafeArray; value: ANY); 
 	PROCEDURE ^ GetSize(base: UnsafeArray): SIZE; 
 	PROCEDURE ^ PutSize(base: UnsafeArray; val: SIZE); 
 	PROCEDURE ^ GetDim(base: UnsafeArray): SIZE; 
@@ -256,8 +256,8 @@ VAR
 	PROCEDURE ^ MoveB*(srcadr, destadr, len: SIZE); 
 	PROCEDURE ^ CopyContent(dest, src: ADDRESS; elementSize: SIZE); 
 	PROCEDURE ^ AllocateSameT(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE): BOOLEAN; 
-	PROCEDURE ^ TempDescCopy(CONST src: UnsafeArrayT): UnsafeArrayT; 
 	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
+	PROCEDURE ^ TempDescCopy(CONST src: UnsafeArrayT): UnsafeArrayT; 
 	PROCEDURE ^ CopyArraySelf*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE); 
 	PROCEDURE ^ CopyArray*(dest: UnsafeArray; CONST src: UnsafeArrayT; elementsize: SIZE); 
 	PROCEDURE ^ CopyTensorSelf*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; elementsize: SIZE); 
@@ -1138,10 +1138,11 @@ VAR
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF REAL): ARRAY [*, *] OF REAL; 
 	OPERATOR ^ "`"-(CONST left: ARRAY [*, *] OF LONGREAL): ARRAY [*, *] OF LONGREAL; 
 	PROCEDURE ^ CheckTensorGeometry(left, right, dest: ADDRESS; ldim, rdim: SIZE): BOOLEAN; 
-	PROCEDURE ^ DoReshape*(VAR dest: ADDRESS; src: ADDRESS; CONST shape: ARRAY [*] OF SIZE); 
+	PROCEDURE ^ DoReshape*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; CONST shape: ARRAY [*] OF SIZE); 
 	PROCEDURE ^ AllocateTensorA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray); 
 	PROCEDURE ^ AllocateArrayA*(CONST a: ARRAY OF SIZE; elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray); 
-	PROCEDURE ^ AllocateTensorX*(VAR destA: ARRAY [?] ; CONST a: ARRAY [*] OF SIZE; Size: SIZE; tag: ADDRESS); 
+	PROCEDURE ^ DoAllocateTensorX*(VAR dest: UnsafeArrayT; CONST a: ARRAY [*] OF SIZE; Size: SIZE; tag: ADDRESS); 
+	PROCEDURE ^ AllocateTensorX(VAR dest: ARRAY [?] OF SIZE; CONST a: ARRAY [*] OF SIZE; Size: SIZE; tag: ADDRESS); 
 	PROCEDURE ^ LenA*(VAR dest: ARRAY [*] OF SIZE; src: ADDRESS); 
 	PROCEDURE ^ IncrA*(VAR dest: ARRAY [*] OF SIZE; src: ADDRESS); 
 	PROCEDURE ^ Len*(src: ADDRESS; d: SIZE): SIZE; 
@@ -1157,7 +1158,7 @@ VAR
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF COMPLEX): ARRAY [?] OF COMPLEX; 
 	OPERATOR ^ "**"-(CONST left, right: ARRAY [?] OF LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 	PROCEDURE ^ InitOptimization; 
-	PROCEDURE ^ CopyDescriptor*(VAR destPtr: ANY; src: ADDRESS; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE); 
+	PROCEDURE ^ CopyDescriptor*(VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT; prefixIndices, prefixRanges, suffixIndices, suffixRanges: SIZE); 
 	PROCEDURE ^ Reshape*(CONST left: ARRAY [?] ; CONST right: ARRAY [*] OF SIZE): ARRAY [?] ; 
 	PROCEDURE ^ RangeFromInteger*(CONST integer: SIZE): RANGE; 
 	PROCEDURE ^ ExpandDimensions*(CONST sourceArray: ARRAY [?] ; CONST keptDimensions: ARRAY [*] OF BOOLEAN): ARRAY [?] ; 

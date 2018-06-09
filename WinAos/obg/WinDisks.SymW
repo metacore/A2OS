@@ -41,10 +41,10 @@ TYPE
 		next: VirtualDisk; 
 		drive: LONGINT; 
 
-		PROCEDURE ^ Finish(VAR res: LONGINT); 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Finish(VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
-		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
 		PROCEDURE ^  & New*(handle: Kernel32.HANDLE; CONST diskname: ARRAY OF CHAR; drive: LONGINT; flags: SET; blockSize, blocks: LONGINT); 
 	END VirtualDisk; 
 VAR 

@@ -9,9 +9,9 @@ TYPE
 		size, cyls, hds, spt: LONGINT; 
 		new: BOOLEAN; 
 
-		PROCEDURE ^ Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
-		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: LONGINT); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
 	END Device; 
 
 	PROCEDURE ^ Open*; 

@@ -82,7 +82,7 @@ VAR
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
-	PROCEDURE ^ ShowRes(res: LONGINT; CONST repositoryName, applicationName: ARRAY OF CHAR; out: Streams.Writer); 
+	PROCEDURE ^ ShowRes(res: WORD; CONST repositoryName, applicationName: ARRAY OF CHAR; out: Streams.Writer); 
 	PROCEDURE ^ GetApplicationInfo(CONST repositoryName, applicationName: ARRAY OF CHAR; VAR info: ApplicationInfo): LONGINT; 
 	PROCEDURE ^ ParseApplication(CONST applicationName: ARRAY OF CHAR; CONST application: XML.Element; VAR info: ApplicationInfo): BOOLEAN; 
 	PROCEDURE ^ GetApplication(repository: Repositories.Repository; CONST applicationName: ARRAY OF CHAR): XML.Element; 

@@ -17,8 +17,8 @@ TYPE
 	VAR 
 		sock: WSock32.Socket; 
 
-		PROCEDURE ^  & Open*(lport: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^  & Open*(lport: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, ms: LONGINT; VAR fip: IP.Adr; VAR fport, len, res: LONGINT); 
 		PROCEDURE ^ Close*; 
 	END Socket; 

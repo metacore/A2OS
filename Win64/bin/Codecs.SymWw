@@ -47,13 +47,13 @@ TYPE
 
 	AVDemultiplexer* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AVStreamInfo; 
 		PROCEDURE ^ GetStream*(streamNr: LONGINT): DemuxStream; 
 		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
-		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END AVDemultiplexer; 
 
 	DemuxStream* = OBJECT (Streams.Reader)
@@ -65,12 +65,12 @@ TYPE
 		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: LONGINT); 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ SetPos*(pos: LONGINT); 
-		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END DemuxStream; 
 
 	AudioDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
 		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
@@ -79,36 +79,36 @@ TYPE
 		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
 		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
 		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 	END AudioDecoder; 
 
 	AudioEncoder* = OBJECT 
 
-		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: LONGINT); 
-		PROCEDURE ^ Close*(VAR res: LONGINT); 
+		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: WORD); 
+		PROCEDURE ^ Close*(VAR res: WORD); 
 	END AudioEncoder; 
 
 	VideoDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 		PROCEDURE ^ GetVideoInfo*(VAR width, height, millisecondsPerFrame: LONGINT); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
 		PROCEDURE ^ GetCurrentFrame*(): LONGINT; 
 		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END VideoDecoder; 
 
 	ImageDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
@@ -119,24 +119,24 @@ TYPE
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
 		PROCEDURE ^ SetQuality*(quality: LONGINT); 
-		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: LONGINT); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: WORD); 
 	END ImageEncoder; 
 
 	TextDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END TextDecoder; 
 
 	TextEncoder* = OBJECT 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END TextEncoder; 
 
 	CryptoDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetReader*(): Streams.Reader; 
 	END CryptoDecoder; 
 
@@ -166,8 +166,8 @@ TYPE
 
 	AnimationDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
-		PROCEDURE ^ GetImageSequence*(VAR sequence: ImageSequence; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: ImageSequence; VAR res: WORD); 
 	END AnimationDecoder; 
 
 	DemuxFactory = PROCEDURE ():AVDemultiplexer; 
@@ -192,9 +192,9 @@ TYPE
 
 	AnimationDecoderFactory = PROCEDURE ():AnimationDecoder; 
 
-	PROCEDURE ^ GetDemuxFactoryName(CONST name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: LONGINT); 
-	PROCEDURE ^ GetDecoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: LONGINT); 
-	PROCEDURE ^ GetEncoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: LONGINT); 
+	PROCEDURE ^ GetDemuxFactoryName(CONST name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
+	PROCEDURE ^ GetDecoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
+	PROCEDURE ^ GetEncoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
 	PROCEDURE ^ GetDemultiplexer*(CONST name: ARRAY OF CHAR): AVDemultiplexer; 
 	PROCEDURE ^ GetImageDecoder*(CONST name: ARRAY OF CHAR): ImageDecoder; 
 	PROCEDURE ^ GetImageEncoder*(CONST name: ARRAY OF CHAR): ImageEncoder; 

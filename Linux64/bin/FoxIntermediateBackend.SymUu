@@ -48,7 +48,7 @@ CONST
 	SysInterfaceLookup* = 9; 
 	SysRegisterInterface* = 10; 
 	SysGetProcedure* = 11; 
-	DefaultRuntimeModuleName = \"Runtime"\; 
+	DefaultBuiltinsModuleName = \"Builtins"\; 
 	DefaultTraceModuleName = \"KernelLog"\; 
 	ChannelModuleName = \"Channels"\; 
 	NonPointer =  -1; 
@@ -282,7 +282,7 @@ TYPE
 		supportedImmediate: SupportedImmediateProcedure; 
 		inData: BOOLEAN; 
 		emitLabels: BOOLEAN; 
-		runtimeModuleName: SyntaxTree.IdentifierString; 
+		builtinsModuleName: SyntaxTree.IdentifierString; 
 		newObjectFile: BOOLEAN; 
 		indexCounter: LONGINT; 
 		profile: BOOLEAN; 

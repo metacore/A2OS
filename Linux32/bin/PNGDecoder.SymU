@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ ProcessChunk(x: ChunkHeader); 
 		PROCEDURE ^ GetByte(): CHAR; 
 		PROCEDURE ^ GetLongint(): LONGINT; 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 

@@ -8,7 +8,7 @@ CONST
 	State_Finalizing = 9; 
 	State_Finalized = 10; 
 TYPE 
-	AddComponentProcedure* = PROCEDURE {DELEGATE}(component: Repositories.Component; VAR res: LONGINT); 
+	AddComponentProcedure* = PROCEDURE {DELEGATE}(component: Repositories.Component; VAR res: WORD); 
 
 	DropTarget* = OBJECT (WMDropTarget.DropTarget)
 	VAR 
@@ -25,7 +25,7 @@ TYPE
 		addComponent: AddComponentProcedure; 
 
 		PROCEDURE ^  & Init*(originator: ANY; addComponent: AddComponentProcedure); 
-		PROCEDURE ^ Set(component: Repositories.Component; VAR res: LONGINT); 
+		PROCEDURE ^ Set(component: Repositories.Component; VAR res: WORD); 
 	END DropComponent; 
 
 	RepositoriesView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)

@@ -51,9 +51,9 @@ TYPE
 	PROCEDURE ^ Free*(context: Commands.Context); 
 	PROCEDURE ^ Help*(context: Commands.Context); 
 	PROCEDURE ^ Modules*(context: Commands.Context); 
-	PROCEDURE ^ execute(context: Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ execute(context: Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Start*(context: Commands.Context); 
 	PROCEDURE ^ Version*(context: Commands.Context); 
-	PROCEDURE ^ Execute*(par: Commands.Context; VAR cmdline: ARRAY OF CHAR; VAR res: LONGINT; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Execute*(par: Commands.Context; VAR cmdline: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 BEGIN
 END ShellCommands.

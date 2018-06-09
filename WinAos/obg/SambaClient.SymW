@@ -28,10 +28,10 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: LONGINT); 
+		PROCEDURE ^ Register0*(VAR res: WORD); 
 		PROCEDURE ^ Update*; 
 	END File; 
 

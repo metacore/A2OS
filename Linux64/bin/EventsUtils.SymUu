@@ -29,10 +29,10 @@ TYPE
 		PROCEDURE ^  & Init*(maxNofWrappers, eventsPerWrapper: LONGINT); 
 	END EventContainer; 
 
-	PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ ToStream*(w: Streams.Writer; event: Events.Event); 
-	PROCEDURE ^ FromStream*(r: Streams.Reader; VAR event: Events.Event; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ FromStream*(r: Streams.Reader; VAR event: Events.Event; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ DateTimeFromStream(r: Streams.Reader; VAR dt: Dates.DateTime): BOOLEAN; 
 	PROCEDURE ^ GetTypeString*(type: LONGINT; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ GetType*(CONST string: ARRAY OF CHAR): SHORTINT; 

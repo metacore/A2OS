@@ -49,15 +49,15 @@ TYPE
 		flags: SET; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ State*(): LONGINT; 
 		PROCEDURE ^ HandleTimeout; 
-		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SetPortAndIp; 
-		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: LONGINT); 
+		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: WORD); 
 		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
 		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
 		PROCEDURE ^ Discard*; 
@@ -74,6 +74,6 @@ VAR
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ ReportState(state: LONGINT); 
 	PROCEDURE ^ Report(c: Connection); 
-	PROCEDURE ^ ReportResult(res: LONGINT); 
+	PROCEDURE ^ ReportResult(res: WORD); 
 BEGIN
 END TCP.

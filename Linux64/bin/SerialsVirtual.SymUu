@@ -6,7 +6,7 @@ CONST
 	EnableSendSpeedLimitation = TRUE; 
 	ModuleName = \"SerialsVirtual"\; 
 TYPE 
-	SendProcedure = PROCEDURE {DELEGATE}(ch: CHAR; VAR res: LONGINT); 
+	SendProcedure = PROCEDURE {DELEGATE}(ch: CHAR; VAR res: WORD); 
 
 	VirtualPort = OBJECT {EXCLUSIVE} (Serials.Port)
 	VAR 
@@ -19,13 +19,13 @@ TYPE
 		eachNCharacters, waitForMs: LONGINT; 
 		timer: Kernel.Timer; 
 
-		PROCEDURE ^ PutChar(ch: CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ PutChar(ch: CHAR; VAR res: WORD); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
 		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 
@@ -38,10 +38,10 @@ TYPE
 		port: Serials.Port; 
 		in, out: Streams.Writer; 
 
-		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
 		PROCEDURE ^ Available*(): LONGINT; 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
 		PROCEDURE ^ ClearMC*(s: SET); 

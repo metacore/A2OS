@@ -23,10 +23,10 @@ VAR
 	gethostname: PROCEDURE {C}(name: ADDRESS; len: SIZE):LONGINT; 
 	NDNSReceived-, NDNSSent-, NDNSMismatchID-, NDNSError-: LONGINT; 
 
-	PROCEDURE ^ MailHostByDomain*(CONST domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ HostByName*(CONST hostname: ARRAY OF CHAR; VAR addr: IP.Adr; VAR res: LONGINT); 
-	PROCEDURE ^ HostByNumber*(addr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ GetHostName*(VAR name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ MailHostByDomain*(CONST domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ HostByName*(CONST hostname: ARRAY OF CHAR; VAR addr: IP.Adr; VAR res: WORD); 
+	PROCEDURE ^ HostByNumber*(addr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ GetHostName*(VAR name: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ GetLocalDomain(VAR dom: ARRAY OF CHAR); 
 BEGIN
 END DNS.

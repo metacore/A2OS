@@ -277,7 +277,7 @@ TYPE
 		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
-		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: LONGINT); 
+		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: WORD); 
 		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ UpdateFramePosition; 
 		PROCEDURE ^ FindPositionOwner(x, y: LONGINT): WMComponents.VisualComponent; 
@@ -346,7 +346,7 @@ TYPE
 		PROCEDURE ^  & New(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ UpdateInfo; 
-		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ SetActiveEditor(window: EditWindow); 
 		PROCEDURE ^ RemoveEditor(window: EditWindow); 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
@@ -364,8 +364,8 @@ TYPE
 		PROCEDURE ^ HandleNodeContextMenu(sender: ANY; x, y: LONGINT); 
 		PROCEDURE ^ UpdateCursorPosition(x, y: LONGINT); 
 		PROCEDURE ^ UpdateFramePosition(valid: BOOLEAN; frame: WMRectangles.Rectangle); 
-		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: LONGINT); 
+		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: WORD); 
 		PROCEDURE ^ LoadWindows(data: XML.Element); 
 		PROCEDURE ^ StoreWindows(): XML.Element; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

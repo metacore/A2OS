@@ -110,7 +110,7 @@ TYPE
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^ DiskEventHandler(event: LONGINT; plugin: Plugins.Plugin); 
 		PROCEDURE ^ GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: LONGINT); 
+		PROCEDURE ^ GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: WORD); 
 		PROCEDURE ^ NewFree(type: LONGINT; VAR table: AosDisks.PartitionTable; start, size, ptblock: LONGINT; flags: SET); 
 		PROCEDURE ^ FindFreePrimary(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT); 
 		PROCEDURE ^ FindFreeExtended(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT); 
@@ -274,9 +274,9 @@ TYPE
 		PROCEDURE ^ SetParameters*(CONST fsname, bootname: ARRAY OF CHAR; fsRes: LONGINT; fl: LONGINT); 
 		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
 		PROCEDURE ^ DoOperation*; 
-		PROCEDURE ^ InitAosFS(fsres, flag: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ InitNativeFS(fsres, flag: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ InitOBL(flag: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ InitAosFS(fsres, flag: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ InitNativeFS(fsres, flag: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ InitOBL(flag: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
 	END FormatPartition; 
 
@@ -302,7 +302,7 @@ TYPE
 		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
 		PROCEDURE ^ SetParameters*(CONST bootloader: ARRAY OF CHAR); 
 		PROCEDURE ^ DoOperation*; 
-		PROCEDURE ^ UpdateOBL(f: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ UpdateOBL(f: Files.File; VAR res: WORD); 
 		PROCEDURE ^  & Init*(disk: Disk; partition: LONGINT; out: Streams.Writer); 
 	END UpdateBootLoader; 
 
@@ -365,9 +365,9 @@ TYPE
 		PROCEDURE ^ GetAsString*(): Strings.String; 
 		PROCEDURE ^ SetValueOf*(key, value: Strings.String); 
 		PROCEDURE ^ GetAsStringInternal(): Strings.String; 
-		PROCEDURE ^ LoadFromStream*(r: Streams.Reader; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ LoadFromStream*(r: Streams.Reader; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ ParseRawTable*(config: Configuration); 
 		PROCEDURE ^ ParseStream(r: Streams.Reader): BOOLEAN; 
 		PROCEDURE ^ ChangeEntry*(pos: LONGINT; key, value: Strings.String); 
@@ -386,8 +386,8 @@ TYPE
 		table*: ConfigString; 
 		hex: ARRAY 32 OF CHAR; 
 
-		PROCEDURE ^ GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT); 
-		PROCEDURE ^ PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ ParseConfig*(CONST table: ARRAY OF CHAR; pos: LONGINT): BOOLEAN; 
 		PROCEDURE ^ GetTableAsString*(): Streams.StringWriter; 
 		PROCEDURE ^ FindEntry*(i, type: LONGINT): LONGINT; 
@@ -468,8 +468,8 @@ VAR
 	PROCEDURE ^ DisketteInserted*(dev: AosDisks.Device): BOOLEAN; 
 	PROCEDURE ^ GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs, res: LONGINT); 
 	PROCEDURE ^ WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum, res: LONGINT); 
-	PROCEDURE ^ CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: LONGINT); 
+	PROCEDURE ^ CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: WORD); 
 	PROCEDURE ^ Eject*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ ShowAosFSLimits*; 
@@ -487,7 +487,7 @@ VAR
 	PROCEDURE ^ Get2*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
 	PROCEDURE ^ Get4*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
 	PROCEDURE ^ WriteType*(type: LONGINT; VAR s: ARRAY OF CHAR; VAR color: LONGINT); 
-	PROCEDURE ^ GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: LONGINT; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: WORD; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ GetTransferError*(dev: AosDisks.Device; op, start, res: LONGINT; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteK*(w: Streams.Writer; k: LONGINT); 
 	PROCEDURE ^ SetBootLoaderFile*(context: Commands.Context); 

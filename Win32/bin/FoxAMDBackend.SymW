@@ -118,7 +118,7 @@ TYPE
 
 	CodeGeneratorAMD64 = OBJECT (CodeGenerators.GeneratorWithTickets)
 	VAR 
-		runtimeModuleName: SyntaxTree.IdentifierString; 
+		builtinsModuleName: SyntaxTree.IdentifierString; 
 		cpuBits: LONGINT; 
 		opBP, opSP, opRA, opRB, opRC, opRD, opRSI, opRDI, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; 
 		BP, SP, RA, RD, RS, RC: LONGINT; 

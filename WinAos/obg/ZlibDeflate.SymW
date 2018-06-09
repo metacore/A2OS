@@ -200,6 +200,6 @@ VAR
 	PROCEDURE ^ SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; len: LONGINT); 
 	PROCEDURE ^ Deflate*(VAR stream: Stream; flush: SHORTINT); 
 	PROCEDURE ^ SetParams*(VAR stream: Stream; level, strategy: SHORTINT); 
-	PROCEDURE ^ Compress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Compress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: WORD); 
 BEGIN
 END ZlibDeflate.

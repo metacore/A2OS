@@ -22,7 +22,7 @@ TYPE
 		state: LONGINT; 
 		message: ARRAY 513 OF CHAR; 
 
-		PROCEDURE ^ Connect*(CONST host: ARRAY OF CHAR; port: LONGINT; CONST user, password: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Connect*(CONST host: ARRAY OF CHAR; port: LONGINT; CONST user, password: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Login*(CONST user, password: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Quit*; 
 		PROCEDURE ^ List*; 

@@ -67,7 +67,7 @@ TYPE
 		comments-: LONGINT; 
 		getPC: GetPCProcedure; 
 
-		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^  & InitCommentWriter*(getPC: GetPCProcedure); 

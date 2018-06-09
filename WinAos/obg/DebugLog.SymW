@@ -55,7 +55,7 @@ VAR
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 
 	PROCEDURE ^ GetWriter*(): Streams.Writer; 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ TraceDebugString*(CONST name, value: ARRAY OF CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Int*(x, w: LONGINT); 

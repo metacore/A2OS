@@ -10,7 +10,7 @@ TYPE
 		closed: BOOLEAN; 
 
 		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^  & Init*(size: LONGINT); 
 		PROCEDURE ^ Close*; 

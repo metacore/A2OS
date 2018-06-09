@@ -121,7 +121,7 @@ TYPE
 		videoFramePos: LONGINT; 
 		audioFramePos: LONGINT; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetAVIHeader*(): MainAVIHeaderDesc; 
 		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ReadHeader*(): BOOLEAN; 
@@ -151,7 +151,7 @@ TYPE
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: LONGINT); 
 		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
-		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetVideoWidth*(): LONGINT; 
 		PROCEDURE ^ GetVideoHeight*(): LONGINT; 
 		PROCEDURE ^ GetNextFrameSize*(streamNr: LONGINT): LONGINT; 

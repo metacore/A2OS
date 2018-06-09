@@ -55,7 +55,7 @@ VAR
 	PROCEDURE ^ Safe*(context: Commands.Context); 
 	PROCEDURE ^ Unsafe*(context: Commands.Context); 
 	PROCEDURE ^ ShowUnsafeMessage(out: Streams.Writer); 
-	PROCEDURE ^ ShowRes(out: Streams.Writer; res: LONGINT); 
+	PROCEDURE ^ ShowRes(out: Streams.Writer; res: WORD); 
 	PROCEDURE ^ CloseFiles*(context: Commands.Context); 
 	PROCEDURE ^ Exists*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 BEGIN

@@ -9,7 +9,7 @@ TYPE
 		ch: CHAR; 
 		V24writer: Streams.Writer; 
 		alive: BOOLEAN; 
-		res: LONGINT; 
+		res: WORD; 
 
 		PROCEDURE ^  & Init*(seqNo, portNo, bps: LONGINT); 
 		PROCEDURE ^ Close; 

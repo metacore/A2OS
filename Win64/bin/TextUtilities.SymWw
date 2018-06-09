@@ -18,7 +18,7 @@ TYPE
 
 	Text = Texts.Text; 
 
-	LoaderProc* = PROCEDURE {DELEGATE}(text: Text; filename: ARRAY OF CHAR; VAR res: LONGINT); 
+	LoaderProc* = PROCEDURE {DELEGATE}(text: Text; filename: ARRAY OF CHAR; VAR res: WORD); 
 
 	FormatDescriptor = OBJECT 
 	VAR 
@@ -45,7 +45,7 @@ TYPE
 		attributesBuf: AttributesBuf; 
 
 		PROCEDURE ^  & Init*(text: Texts.Text); 
-		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ SetAttributes*(attributes: Texts.Attributes); 
 		PROCEDURE ^ NewAttributes(): Texts.Attributes; 
@@ -115,7 +115,7 @@ TYPE
 		PROCEDURE ^ LoadLibrary(buf: Strings.Buffer; pos: LONGINT; VARflen: LONGINT); 
 		PROCEDURE ^ IndexToColor(index: LONGINT): LONGINT; 
 		PROCEDURE ^ InsertPiece(ofs, len: LONGINT; attr: Texts.Attributes); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 		PROCEDURE ^ OberonToUni(ch: LONGINT): LONGINT; 
 	END OberonDecoder; 
@@ -138,7 +138,7 @@ TYPE
 		PROCEDURE ^ ColorToIndex(col: LONGINT): LONGINT; 
 		PROCEDURE ^ GetOberonColor(color: LONGINT): LONGINT; 
 		PROCEDURE ^ WritePiece(len: LONGINT); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 		PROCEDURE ^ UniToOberon(ch: LONGINT): LONGINT; 
 	END OberonEncoder; 
 
@@ -162,7 +162,7 @@ TYPE
 		PROCEDURE ^ InsertPiece(charContent: XML.CDataSect); 
 		PROCEDURE ^ InsertChar(pos: LONGINT; ch: Texts.Char32); 
 		PROCEDURE ^ MalformedXML(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ OpenXML*(d: XML.Document); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END BluebottleDecoder; 
@@ -196,7 +196,7 @@ TYPE
 		PROCEDURE ^ WriteObject(o: ANY); 
 		PROCEDURE ^ WriteLabel(CONST label: ARRAY OF CHAR); 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END BluebottleEncoder; 
 
 	UTF8Decoder = OBJECT (Codecs.TextDecoder)
@@ -206,7 +206,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END UTF8Decoder; 
 
@@ -215,7 +215,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END UTF8Encoder; 
 
 	ISO88591Decoder = OBJECT (Codecs.TextDecoder)
@@ -225,7 +225,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END ISO88591Decoder; 
 
@@ -234,7 +234,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END ISO88591Encoder; 
 
 	HEXDecoder = OBJECT (Codecs.TextDecoder)
@@ -244,7 +244,7 @@ TYPE
 		text: Texts.Text; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END HEXDecoder; 
 
@@ -253,7 +253,7 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: LONGINT); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
 	END HEXEncoder; 
 VAR 
 	unicodePropertyReader: UnicodeProperties.UnicodeTxtReader; 
@@ -267,17 +267,17 @@ VAR
 	PROCEDURE ^ CountWhitespace*(utilreader: Texts.TextReader; pos: LONGINT): LONGINT; 
 	PROCEDURE ^ LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format, res: LONGINT); 
 	PROCEDURE ^ DecodeAuto*(CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder; 
-	PROCEDURE ^ Load*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ LoadAscii*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ LoadUTF8*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ LoadUCS16*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ LoadOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ LoadText*(text: Texts.Text; CONST filename: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ Store*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ ExportAscii*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ ExportUTF8*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StoreOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ StoreText*(text: Texts.Text; CONST fileName: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ Load*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadAscii*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadUTF8*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadUCS16*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadText*(text: Texts.Text; CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ Store*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ ExportAscii*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ ExportUTF8*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StoreOberonText*(text: Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ StoreText*(text: Texts.Text; CONST fileName: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ TextToStr*(text: Text; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ SubTextToStream*(text: Text; start, length: LONGINT; w: Streams.Writer); 
 	PROCEDURE ^ TextToStream*(text: Text; w: Streams.Writer); 

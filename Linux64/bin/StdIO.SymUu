@@ -10,8 +10,8 @@ VAR
 
 	PROCEDURE ^ Args(): String; 
 	PROCEDURE ^ ReceiveStdin(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
-	PROCEDURE ^ SendStdout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: LONGINT); 
-	PROCEDURE ^ SendErrout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ SendStdout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ SendErrout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ Setup; 
 BEGIN

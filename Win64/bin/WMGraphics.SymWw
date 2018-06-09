@@ -171,7 +171,7 @@ VAR
 	PROCEDURE ^ CheckImage(obj: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetExtension(CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR); 
 	PROCEDURE ^ LoadImage*(CONST name: ARRAY OF CHAR; shared: BOOLEAN): Image; 
-	PROCEDURE ^ StoreImage*(img: Raster.Image; CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
+	PROCEDURE ^ StoreImage*(img: Raster.Image; CONST name: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ DrawStringInRect*(canvas: Canvas; rect: Rectangle; wrap: BOOLEAN; hAlign, vAlign: LONGINT; CONST text: ARRAY OF CHAR); 
 	PROCEDURE ^ GenCanvas*(img: Raster.Image): BufferCanvas; 
 	PROCEDURE ^ InstallDefaultFont*(f: Font); 

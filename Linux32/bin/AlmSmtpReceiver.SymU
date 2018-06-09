@@ -70,7 +70,7 @@ TYPE
 	SmtpAgent* = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
 		ch: CHAR; 
-		res: LONGINT; 
+		res: WORD; 
 		out: Streams.Writer; 
 		in: Streams.Reader; 
 		log: Files.Writer; 

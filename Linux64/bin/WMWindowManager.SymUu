@@ -90,7 +90,7 @@ TYPE
 
 	WindowInfo* = RECORD 
 		openDocuments*: ARRAY 16 OF DocumentInfo; 
-		handleDocumentInfo*: PROCEDURE {DELEGATE}(CONST info: DocumentInfo; new: BOOLEAN; VAR res: LONGINT); 
+		handleDocumentInfo*: PROCEDURE {DELEGATE}(CONST info: DocumentInfo; new: BOOLEAN; VAR res: WORD); 
 		vc*: VisualComponentInfo; 
 	END; 
 

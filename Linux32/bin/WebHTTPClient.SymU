@@ -15,8 +15,8 @@ TYPE
 VAR 
 	log: TFLog.Log; 
 
-	PROCEDURE ^ Head*(CONST url: ARRAY OF CHAR; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res: LONGINT); 
-	PROCEDURE ^ Get*(CONST url: ARRAY OF CHAR; VAR rHeader: WebHTTP.RequestHeader; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR out: Streams.Reader; VAR res: LONGINT); 
+	PROCEDURE ^ Head*(CONST url: ARRAY OF CHAR; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR res: WORD); 
+	PROCEDURE ^ Get*(CONST url: ARRAY OF CHAR; VAR rHeader: WebHTTP.RequestHeader; VAR con: TCP.Connection; VAR header: WebHTTP.ResponseHeader; VAR out: Streams.Reader; VAR res: WORD); 
 	PROCEDURE ^ CleanUp; 
 BEGIN
 END WebHTTPClient.

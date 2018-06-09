@@ -7,7 +7,7 @@ CONST
 	READERNIL =  -3; 
 	OK = 0; 
 
-	PROCEDURE ^ PrintFile*(CONST printer, fn: ARRAY OF CHAR; VAR res: LONGINT); 
-	PROCEDURE ^ PrintStream*(CONST printer: ARRAY OF CHAR; reader: Streams.Reader; VAR res: LONGINT); 
+	PROCEDURE ^ PrintFile*(CONST printer, fn: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ PrintStream*(CONST printer: ARRAY OF CHAR; reader: Streams.Reader; VAR res: WORD); 
 BEGIN
 END RAWPrinter.

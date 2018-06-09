@@ -26,7 +26,7 @@ TYPE
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
 		PROCEDURE ^ SetQuality*(quality: LONGINT); 
-		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: LONGINT); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: WORD); 
 		PROCEDURE ^ WriteScrDesc(w: Streams.Writer; img: Raster.Image); 
 		PROCEDURE ^ WriteColMap(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
 		PROCEDURE ^ WriteGlobal(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
@@ -47,7 +47,7 @@ TYPE
 		img: Raster.Image; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
@@ -65,8 +65,8 @@ TYPE
 		lcdFlags, backGrndIdx: CHAR; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
-		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
 	END GIFAnimationDecoder; 
 VAR 
 	red, green, blue: ARRAY 256 OF INTEGER; 

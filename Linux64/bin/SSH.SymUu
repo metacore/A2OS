@@ -72,7 +72,7 @@ TYPE
 		rbstart, rbend: LONGINT; 
 		interactive: BOOLEAN; 
 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ NewDataPacket(size: LONGINT): T.Packet; 
 		PROCEDURE ^ SendPacket*(p: T.Packet); 

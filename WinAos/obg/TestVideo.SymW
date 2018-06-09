@@ -45,8 +45,8 @@ VAR
 	PROCEDURE ^ IsEmptyField(buffer: Raster.Image; x, y, w, h: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Dist(buffer: Raster.Image; x0, y0, x1, y1, w, h: LONGINT): LONGINT; 
 	PROCEDURE ^ CheckFields(buffer: Raster.Image); 
-	PROCEDURE ^ BinaryLabler*(buffer: Raster.Image; VAR labelBuffer, equivalence: ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels: LONGINT; VAR labelInfo: ARRAY OF LabelInfo; unifyLabels: BOOLEAN; VAR nofFLabels: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ Trace(buffer: Raster.Image; CONST labelBuffer: ARRAY OF INTEGER; VAR labelInfo: LabelInfo; VAR length: LONGINT; VAR path: ARRAY OF Point; VAR res: LONGINT); 
+	PROCEDURE ^ BinaryLabler*(buffer: Raster.Image; VAR labelBuffer, equivalence: ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels: LONGINT; VAR labelInfo: ARRAY OF LabelInfo; unifyLabels: BOOLEAN; VAR nofFLabels: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ Trace(buffer: Raster.Image; CONST labelBuffer: ARRAY OF INTEGER; VAR labelInfo: LabelInfo; VAR length: LONGINT; VAR path: ARRAY OF Point; VAR res: WORD); 
 	PROCEDURE ^ SimplifyPoly(VAR path: ARRAY OF Point; nofPoints, tolerance: LONGINT; VAR resultPoint: LONGINT); 
 	PROCEDURE ^ ExtractLines(buffer: Raster.Image; CONST path: ARRAY OF Point; pathLength: LONGINT; VAR poly: ARRAY OF Point; VAR nofPoints: LONGINT); 
 	PROCEDURE ^ GetTimer(): HUGEINT; 

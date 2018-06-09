@@ -9,7 +9,7 @@ VAR
 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ StringLn*(CONST s: ARRAY OF CHAR); 

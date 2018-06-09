@@ -76,7 +76,7 @@ TYPE
 		PROCEDURE ^ Versions*(context: Commands.Context); 
 		PROCEDURE ^ UseSvn*(b: BOOLEAN); 
 		PROCEDURE ^ FileUpdate*(b: BOOLEAN); 
-		PROCEDURE ^ UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR; headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR; headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Update*(context: Commands.Context); 
 		PROCEDURE ^ ParseVersions(url: ARRAY OF CHAR; doc: XML.Document; VAR versions: OdUtil.Dict); 
 		PROCEDURE ^ LogReport(CONST url: ARRAY OF CHAR; bc: ARRAY OF CHAR; start, end: LONGINT); 
@@ -86,8 +86,8 @@ TYPE
 		PROCEDURE ^ Checkout*(url: ARRAY OF CHAR; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ Proppatch*(url: ARRAY OF CHAR; VAR props: WebHTTP.AdditionalField; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ Merge*(url: ARRAY OF CHAR; actUrl: U.String; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR); 
-		PROCEDURE ^ SvnWrite(parent: XML.Element; CONST path, filename, version: ARRAY OF CHAR; added: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ SvnParseUpdate(doc: XML.Document; CONST workUrl, workName: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ SvnWrite(parent: XML.Element; CONST path, filename, version: ARRAY OF CHAR; added: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SvnParseUpdate(doc: XML.Document; CONST workUrl, workName: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ SvnWritePROPS(CONST path, filename: ARRAY OF CHAR; props: SvnProps); 
 	END OdSvn; 
 VAR 

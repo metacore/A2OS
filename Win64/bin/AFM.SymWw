@@ -16,11 +16,11 @@ TYPE
 		PROCEDURE ^ GetWidth*(size: REAL; ucs: LONGINT): REAL; 
 		PROCEDURE ^ Kerning(ucs0, ucs1: LONGINT): LONGINT; 
 		PROCEDURE ^ GetStringWidth*(size: REAL; str: ARRAY OF CHAR): REAL; 
-		PROCEDURE ^ LoadAFM(filename: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ LoadAFM(filename: ARRAY OF CHAR; VAR res: WORD); 
 	END FontMetrics; 
 VAR 
 	times*, helvetica*, helveticaBold*: FontMetrics; 
-	res: LONGINT; 
+	res: WORD; 
 
 BEGIN
 END AFM.

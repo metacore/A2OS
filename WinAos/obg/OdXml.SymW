@@ -113,7 +113,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ShowDAVError*(doc: XML.Document): BOOLEAN; 
 		PROCEDURE ^ IsDAVError*(doc: XML.Document; VAR name: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ XmlSize*(doc: XML.Document): LONGINT; 
 		PROCEDURE ^ GetXmlns*(el: XML.Element); 
 		PROCEDURE ^ AbsXmlName*(rawName: XML.String): OdUtil.Line; 

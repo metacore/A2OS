@@ -50,8 +50,8 @@ TYPE
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^ GetNofEntries*(): LONGINT; 
-		PROCEDURE ^ Add*(key: LONGINT; CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
-		PROCEDURE ^ Remove*(CONST name: ARRAY OF CHAR; VAR res: LONGINT); 
+		PROCEDURE ^ Add*(key: LONGINT; CONST name: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Remove*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Enumerate*(CONST mask: ARRAY OF CHAR; proc: EnumeratorProcedure); 
 		PROCEDURE ^ GetNofMatches*(CONST mask: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ FindDuplicate*(key: LONGINT; CONST name: ARRAY OF CHAR): Entry; 

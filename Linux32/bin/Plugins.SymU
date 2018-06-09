@@ -42,10 +42,10 @@ TYPE
 		PROCEDURE ^ Await*(CONST name: ARRAY OF CHAR): Plugin; 
 		PROCEDURE ^ Enumerate*(h: PluginHandler); 
 		PROCEDURE ^ GetAll*(VAR table: Table); 
-		PROCEDURE ^ Add*(p: Plugin; VAR res: LONGINT); 
+		PROCEDURE ^ Add*(p: Plugin; VAR res: WORD); 
 		PROCEDURE ^ Remove*(p: Plugin); 
-		PROCEDURE ^ AddEventHandler*(h: EventHandler; VAR res: LONGINT); 
-		PROCEDURE ^ RemoveEventHandler*(h: EventHandler; VAR res: LONGINT); 
+		PROCEDURE ^ AddEventHandler*(h: EventHandler; VAR res: WORD); 
+		PROCEDURE ^ RemoveEventHandler*(h: EventHandler; VAR res: WORD); 
 		PROCEDURE ^  & Init*(CONST name, desc: ARRAY OF CHAR); 
 	END Registry; 
 VAR 

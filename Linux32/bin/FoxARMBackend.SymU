@@ -2,7 +2,6 @@ MODULE FoxARMBackend;
 	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Backend := FoxBackend, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, IntermediateBackend := FoxIntermediateBackend, CodeGenerators := FoxCodeGenerators, BinaryCode := FoxBinaryCode, SemanticChecker := FoxSemanticChecker, Formats := FoxFormats, Assembler := FoxARMAssembler, InstructionSet := FoxARMInstructionSet, SYSTEM, Diagnostics, Streams, Options, Strings, ObjectFile, Scanner := FoxScanner, ObjectFileFormat := FoxGenericObjectFile, Compiler, D := Debugging;
 CONST 
 	Trace = FALSE; 
-	DefaultRuntimeModuleName = \"ARMRuntime"\; 
 	SupportMovW = TRUE; 
 	None =  -1; 
 	Low = 0; 
@@ -261,7 +260,7 @@ TYPE
 
 	CodeGeneratorARM = OBJECT (CodeGenerators.GeneratorWithTickets)
 	VAR 
-		runtimeModuleName: SyntaxTree.IdentifierString; 
+		builtinsModuleName: SyntaxTree.IdentifierString; 
 		backend: BackendARM; 
 		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD, fpscr: InstructionSet.Operand; 
 		listOfReferences: ListOfReferences; 
@@ -270,7 +269,7 @@ TYPE
 		stackSizeKnown: BOOLEAN; 
 		inStackAllocation: BOOLEAN; 
 
-		PROCEDURE ^  & InitGeneratorARM(CONST runtimeModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM); 
+		PROCEDURE ^  & InitGeneratorARM(CONST builtinsModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM); 
 		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
 		PROCEDURE ^ Supported*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetRuntimeProcedureName(CONST irInstruction: IntermediateCode.Instruction; VAR resultingName: ARRAY OF CHAR); 

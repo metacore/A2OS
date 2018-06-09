@@ -382,7 +382,7 @@ TYPE
 		PROCEDURE ^ DecodeIdentificationHeader(): LONGINT; 
 		PROCEDURE ^ DecodeCommentHeader(): LONGINT; 
 		PROCEDURE ^ DecodeSetupHeader(VAR codec: CodecSetup): LONGINT; 
-		PROCEDURE ^ DecodeDataPacket(res: LONGINT); 
+		PROCEDURE ^ DecodeDataPacket(res: WORD); 
 		PROCEDURE ^ CacheRightHandData; 
 		PROCEDURE ^ OverlapAdd; 
 		PROCEDURE ^ WindowData; 
@@ -392,7 +392,7 @@ TYPE
 		PROCEDURE ^ ResidueDecode; 
 		PROCEDURE ^ NonzeroVectorPropagate; 
 		PROCEDURE ^ FloorCurveDecode(): LONGINT; 
-		PROCEDURE ^ WindowDecode(VAR res: LONGINT): LONGINT; 
+		PROCEDURE ^ WindowDecode(VAR res: WORD): LONGINT; 
 	END VorbisDecoder; 
 
 	ResiduePartitionProc = PROCEDURE {DELEGATE}(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decSate: DecoderState); 

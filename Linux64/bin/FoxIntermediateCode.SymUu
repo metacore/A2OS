@@ -169,10 +169,10 @@ TYPE
 
 	IntermediateBackend* = OBJECT (Backend.Backend)
 	VAR 
-		runtimeModuleName-: SyntaxTree.IdentifierString; 
+		builtinsModuleName-: SyntaxTree.IdentifierString; 
 
 		PROCEDURE ^ SupportedInstruction*(CONST instr: Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ SetRuntimeModuleName*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetBuiltinsModuleName*(CONST name: ARRAY OF CHAR); 
 	END IntermediateBackend; 
 VAR 
 	instructionFormat-: ARRAY NofOpcodes OF InstructionFormat; 

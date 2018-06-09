@@ -351,7 +351,7 @@ TYPE
 		logger*: Streams.Writer; 
 		res*: LONGINT; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 

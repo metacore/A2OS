@@ -23,6 +23,6 @@ TYPE
 	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
 	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
 	PROCEDURE ^ Close*(VAR r: Reader); 
-	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: LONGINT); 
+	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: WORD); 
 BEGIN
 END ZlibReaders.

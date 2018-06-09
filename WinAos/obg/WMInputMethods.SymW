@@ -38,7 +38,7 @@ VAR
 	toolSwitch*: IMToolSwitchCallback; 
 	None-: IMEInterface; 
 
-	PROCEDURE ^ GetIME*(CONST name: ARRAY OF CHAR; VAR res: LONGINT): IMEInstaller; 
+	PROCEDURE ^ GetIME*(CONST name: ARRAY OF CHAR; VAR res: WORD): IMEInstaller; 
 	PROCEDURE ^ SwitchIME*(): IME; 
 	PROCEDURE ^ InstallIME*(newIME: IME); 
 BEGIN

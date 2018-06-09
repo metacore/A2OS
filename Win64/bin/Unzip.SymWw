@@ -32,9 +32,9 @@ TYPE
 		PROCEDURE ^ GetFirst*(): Entry; 
 		PROCEDURE ^ GetNext*(e: Entry): Entry; 
 		PROCEDURE ^ NoOfEntries*(): LONGINT; 
-		PROCEDURE ^ OpenReceiver*(VAR R: Streams.Receiver; entry: Entry; VAR res: LONGINT); 
-		PROCEDURE ^ Extract*(entry: Entry; dest: Streams.Writer; VAR res: LONGINT); 
-		PROCEDURE ^  & New*(F: Files.File; VAR res: LONGINT); 
+		PROCEDURE ^ OpenReceiver*(VAR R: Streams.Receiver; entry: Entry; VAR res: WORD); 
+		PROCEDURE ^ Extract*(entry: Entry; dest: Streams.Writer; VAR res: WORD); 
+		PROCEDURE ^  & New*(F: Files.File; VAR res: WORD); 
 	END ZipFile; 
 
 	PROCEDURE ^ DosToOberonTime(t: LONGINT): LONGINT; 

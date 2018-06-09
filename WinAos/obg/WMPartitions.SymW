@@ -223,7 +223,7 @@ TYPE
 		PROCEDURE ^ SetText(text: Texts.Text); 
 		PROCEDURE ^ SetTextAsString(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ SetParameters(CONST operationName: ARRAY OF CHAR; selection: PartitionsLib.Selection; VAR parameters: Parameters); 
-		PROCEDURE ^ Popup(x, y: LONGINT; VAR res: LONGINT); 
+		PROCEDURE ^ Popup(x, y: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ BuildLayout; 
 		PROCEDURE ^ EvalParameters(): BOOLEAN; 
 		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 

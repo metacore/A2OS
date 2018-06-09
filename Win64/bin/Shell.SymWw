@@ -73,7 +73,7 @@ TYPE
 		echo, dead, close: BOOLEAN; 
 		context: Commands.Context; 
 		command: ARRAY MaxLen OF CHAR; 
-		res: LONGINT; 
+		res: WORD; 
 		nestingLevel: LONGINT; 
 		aliases: Alias; 
 		prompt: ARRAY 32 OF CHAR; 

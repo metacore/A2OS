@@ -9,7 +9,7 @@ TYPE
 		crc*: INTEGER; 
 
 		PROCEDURE ^  & InitStream*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ SetCRC*(crc: INTEGER); 
 		PROCEDURE ^ GetCRC*(): INTEGER; 
 	END CRC16Stream; 
@@ -20,7 +20,7 @@ TYPE
 
 		PROCEDURE ^  & InitStream*; 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ SetCRC*(crc: LONGINT); 
 		PROCEDURE ^ GetCRC*(): LONGINT; 
 		PROCEDURE ^ GetUninvertedCRC*(): LONGINT; 

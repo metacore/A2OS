@@ -48,7 +48,7 @@
 #	UnixBinary.Build oberon.bin -> A2Core ~
 #
 # WINAOS Cooperative
-#	Release.Build --path="./" WinAosCooperative ~
+#	Release.Build --path="./" Win32C ~
 #	Linker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	FSTools.CloseFiles A2.exe ~
 #
@@ -153,14 +153,7 @@ BUILDS
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
-	Win64 {
-		INCLUDE "WIN64 WIN AMD64 UNCOOP UNCOOP64"
-		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Win64"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
-		DISABLED "FALSE"
-	}
-	WinAosCooperative {
+	Win32C {
 		INCLUDE "WIN COOP WINCOOP I386COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "--cooperative --newObjectFile --traceModule=Trace"
@@ -169,6 +162,13 @@ BUILDS
 		SYMBOLEXTENSION "SymCW"
 		PATH "../obj/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
+		DISABLED "FALSE"
+	}
+	Win64 {
+		INCLUDE "WIN64 WIN AMD64 UNCOOP UNCOOP64"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Win64"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Linux32 {

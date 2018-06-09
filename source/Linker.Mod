@@ -1086,11 +1086,11 @@ BEGIN
 	NEW(processing);
 	NEW(finished);
 	NEW(defaults);
+	defaults.Add("Bios32","--fileName=kernel.img --extension=.Gof --displacement=0100000H");
 	defaults.Add("Win32CUI","--fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H");
 	defaults.Add("Linux32","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("Linux64","--fileFormat=Raw --fileName=oberon --extension=.GofUu --displacement=08048000H");
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
-	defaults.Add("A2G","--fileName=kernel.img --extension=.GofG --displacement=0100000H");
 	defaults.Add("Solaris32", "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofU --displacement=0" );
 	defaults.Add("Solaris64", "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofUu --displacement=0" );
 	defaults.Add("Darwin32",   "--fileFormat=UnixRaw --fileName=oberon.bin --extension=.GofU --displacement=0" );

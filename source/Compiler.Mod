@@ -571,6 +571,7 @@ BEGIN
 	NEW(platforms);
 
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
+	DoAddPlatform("Bios32","-b=AMD --newObjectFile --mergeSections --objectFileExtension=.Gof --symbolFileExtension=.SymG --preciseGC");
 	DoAddPlatform("Win32","-b=AMD --newObjectFile --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI");
 	DoAddPlatform("Win64","-b=AMD --bits=64 --newObjectFile --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI");
 	DoAddPlatform("Win32C","-b=AMD --cooperative --newObjectFile --traceModule=Trace --objectFileExtension=.GofCW --symbolFileExtension=.SymCW --platformCC=WINAPI");
@@ -578,7 +579,6 @@ BEGIN
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos"); 
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --newObjectFile --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
 	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --newObjectFile --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
-	DoAddPlatform("A2G","-b=AMD --newObjectFile --mergeSections --objectFileExtension=.GofG --symbolFileExtension=.SymG");
 	DoAddPlatform("A2Coop","-b=AMD --cooperative --newObjectFile --traceModule=Trace --mergeSections");
 	DoAddPlatform("ARMA2","-b=ARM --newObjectFile --mergeSections");
 	DoAddPlatform("Linux32","-b=AMD --newObjectFile --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C");

@@ -129,11 +129,7 @@ BUILDS
 	Bios32 {
 		INCLUDE "BIOS32 BIOS NATIVE I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--newObjectFile --mergeSections"
-		TARGET "AMD"
-		EXTENSION "GofG"
-		SYMBOLEXTENSION "SymG"
-		PATH "AOS"
+		COMPILEOPTIONS "-p=Bios32"
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}

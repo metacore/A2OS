@@ -6,7 +6,7 @@ VAR
 	modules-: LONGINT;
 
 PROCEDURE InsertModule*(a: ADDRESS): BOOLEAN;
-BEGIN
+BEGIN {UNCOOPERATIVE}
 	kernelModule[modules] := a;
 	INC(modules);
 	RETURN TRUE
@@ -19,12 +19,14 @@ END InsertModule;
 	traps if src or destination is not 0X terminated and comparison is not finished
 *)
 PROCEDURE CompareString*(CONST left,right: ARRAY OF CHAR): SHORTINT;
-VAR i: LONGINT; res: SHORTINT; l,r: CHAR;
-BEGIN
+VAR i: SIZE; res: SHORTINT; l, r: CHAR;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	i := 0; res := 0;
 	LOOP
-		l := left[i]; 		(* index check included *)
-		r := right[i];		(* index check included *)
+		ASSERT (i < LEN (left));
+		ASSERT (i < LEN (right));
+		l := left[i];
+		r := right[i];
 		IF (res = 0) THEN
 			IF (l > r) THEN
 				res := 1; EXIT
@@ -41,8 +43,8 @@ END CompareString;
 
 (* copy string from src to dest, emits trap if not 0X terminated or destination too short *)
 PROCEDURE CopyString*(VAR dest: ARRAY OF CHAR; CONST src: ARRAY OF CHAR);
-VAR i: LONGINT; ch :CHAR; l1,l2: LONGINT;
-BEGIN
+VAR i: SIZE; ch :CHAR; l1, l2: SIZE;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(*
 	i := 0;
 	REPEAT
@@ -57,9 +59,20 @@ BEGIN
 	l2 := LEN(src);
 	IF l2 < l1 THEN l1 := l2 END;
 	SYSTEM.MOVE(ADDRESSOF(src[0]),ADDRESSOF(dest[0]),l1);
-	dest[l1-1] := 0X;
+	dest[l1-1] := 0X; (* this implies that COPY assumes a string *)
 END CopyString;
+
+PROCEDURE EnsureAllocatedStack*(size: SIZE);
+VAR i: ADDRESS; temp: ADDRESS;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	FOR i := 0 TO size BY 4096 DO
+		SYSTEM.GET(ADDRESSOF(i)-i,temp);
+	END;
+END EnsureAllocatedStack;
 
 BEGIN
 	(*! assumed that modules = 0, implicit call of InsertModule *)
 END Builtins.
+
+
+Builtins.Obw

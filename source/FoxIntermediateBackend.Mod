@@ -3484,11 +3484,8 @@ TYPE
 			Emit(Push(position,right.op));
 			ReleaseOperand(right);
 
-			IF backend.cooperative THEN
-				CallThis(position,"Runtime",procedureName, 4);
-			ELSE
-				CallThis(position,builtinsModuleName,procedureName, 4);
-			END;
+			CallThis(position,builtinsModuleName,procedureName, 4);
+
 			IntermediateCode.InitRegister(reg,int8,IntermediateCode.GeneralPurposeRegister,AcquireRegister(int8,IntermediateCode.GeneralPurposeRegister));
 			Emit(Result(position,reg));
 			(*
@@ -3527,11 +3524,7 @@ TYPE
 			Emit(Push(position,right.op));
 			ReleaseOperand(right);
 
-			IF backend.cooperative THEN
-				CallThis(position,"Runtime",procedureName, 4);
-			ELSE
-				CallThis(position,builtinsModuleName,procedureName,4);
-			END;
+			CallThis(position,builtinsModuleName,procedureName,4);
 			RestoreRegisters(saved);
 		END CopyString;
 

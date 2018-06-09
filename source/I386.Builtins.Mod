@@ -399,9 +399,6 @@ CODE
 	POP	EDX
 END EntierRH;
 
-
-
-
 (* compare strings,
 	returns 0 if strings are equal,
 	returns +1 if left is lexicographic greater than right,
@@ -409,12 +406,14 @@ END EntierRH;
 	traps if src or destination is not 0X terminated and comparison is not finished
 *)
 PROCEDURE CompareString*(CONST left,right: ARRAY OF CHAR): SHORTINT;
-VAR i: LONGINT; res: SHORTINT; l,r: CHAR;
-BEGIN {UNCOOPERATIVE}
+VAR i: SIZE; res: SHORTINT; l, r: CHAR;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	i := 0; res := 0;
 	LOOP
-		l := left[i]; 		(* index check included *)
-		r := right[i];		(* index check included *)
+		ASSERT (i < LEN (left));
+		ASSERT (i < LEN (right));
+		l := left[i];
+		r := right[i];
 		IF (res = 0) THEN
 			IF (l > r) THEN
 				res := 1; EXIT
@@ -431,8 +430,8 @@ END CompareString;
 
 (* copy string from src to dest, emits trap if not 0X terminated or destination too short *)
 PROCEDURE CopyString*(VAR dest: ARRAY OF CHAR; CONST src: ARRAY OF CHAR);
-VAR i: LONGINT; ch :CHAR; l1,l2: LONGINT;
-BEGIN {UNCOOPERATIVE}
+VAR i: SIZE; ch :CHAR; l1, l2: SIZE;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(*
 	i := 0;
 	REPEAT
@@ -452,27 +451,11 @@ END CopyString;
 
 PROCEDURE EnsureAllocatedStack*(size: SIZE);
 VAR i: ADDRESS; temp: ADDRESS;
-BEGIN {UNCOOPERATIVE}
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	FOR i := 0 TO size BY 4096 DO
 		SYSTEM.GET(ADDRESSOF(i)-i,temp);
-		(*
-		SYSTEM.PUT(ADDRESSOF(val)-i,0);
-		*)
 	END;
-(*
-CODE{SYSTEM.i386}
-	MOV EAX, [EBP+size]
-	SHR EAX,12 ; divide by 4096
-	MOV ECX,-4
-start:
-	MOV EDX,[EBP+ECX]
-	SUB ECX,4096
-	TST EAX
-	DEC EAX
-	JNZ start
-*)
 END EnsureAllocatedStack;
-
 
 BEGIN
 	(*! assumed that modules = 0, implicit call of InsertModule *)

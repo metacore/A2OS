@@ -1271,7 +1271,7 @@ TYPE
 				OR
 				SemanticChecker.IsPointerType(t1) & SemanticChecker.IsPointerType(t2)
 				OR
-				~t1.NeedsTrace() & ~t2.NeedsTrace() & (t1.sizeInBits = t2.sizeInBits)
+				~t1.NeedsTrace() & ~t2.NeedsTrace() & (t1.sizeInBits > 0) & (t1.sizeInBits = t2.sizeInBits) 
 				OR
 				(t1 IS SyntaxTree.MathArrayType) & (t2 IS SyntaxTree.MathArrayType) & 
 				(t1(SyntaxTree.MathArrayType).form = t2(SyntaxTree.MathArrayType).form) & 

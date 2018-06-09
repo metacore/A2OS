@@ -580,7 +580,8 @@ TYPE
 				IF ~(SyntaxTree.Resolved IN type.state) THEN
 					size := -1
 				ELSIF type(SyntaxTree.MathArrayType).form = SyntaxTree.Static THEN
-					size := SizeOf(type(SyntaxTree.MathArrayType).arrayBase.resolved)*type(SyntaxTree.MathArrayType).staticLength
+					size := SizeOf(type(SyntaxTree.MathArrayType).arrayBase.resolved)*type(SyntaxTree.MathArrayType).staticLength;
+					type.SetSize(size);
 				ELSIF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
 					size := addressSize (* pointer to geometry descriptor *)
 				ELSE

@@ -21,7 +21,7 @@ ToDo: full NTP synchronization algorithm.
 Note the comments on leap seconds: http://www.eecis.udel.edu/~mills/leap.html
 *)
 
-IMPORT IP,UDP, Streams, Commands, Configuration, DNS, Machine, Kernel32, Dates;
+IMPORT IP,UDP, Streams, Commands, Configuration, DNS, Kernel32, Dates;
 
 CONST NTPPort*=123;
 
@@ -89,9 +89,8 @@ BEGIN
 	END;
 END Get;
 
-(*Windows Version*)
 (* timeZone and daylightSaving is difference to UTC in minutes*)
-PROCEDURE SetSystemTime*(time:HUGEINT; timeZone, daylightSaving:LONGINT); 
+PROCEDURE SetSystemTime*(time: HUGEINT; timeZone, daylightSaving:LONGINT); 
 VAR st: Kernel32.SystemTime;retBOOL: Kernel32.BOOL;					
 	dt: Dates.DateTime; frac: HUGEINT;
 BEGIN {EXCLUSIVE}
@@ -113,28 +112,6 @@ BEGIN {EXCLUSIVE}
 	st.wHour := SHORT(dt.hour);
 	retBOOL := Kernel32.SetLocalTime(st)
 END SetSystemTime;
-
-(* (*native *)
-PROCEDURE SetSystemTime(time: HUGEINT);
-VAR dt: Dates.DateTime; frac:HUGEINT;
-BEGIN {EXCLUSIVE}
-		frac:=time MOD 100000000H; 
-	time:=time DIV 100000000H MOD 100000000H; 
-	dt:=Dates.ZeroDateNTP;
-	Dates.AddSeconds(dt, LONGINT(time MOD (60*60*24)));
-	time:=time DIV (60*60*24);
-	Dates.AddDays(dt, LONGINT(time));
-	
-	Machine.PutNVByte(0BH, 82X);	(* disable clock & interrupt *)
-	Machine.PutNVByte(0, CHR(dt.seconds0)); 
-	Machine.PutNVByte(2, CHR(dt.minutes)); 
-	Machine.PutNVByte(4, CHR(dt.hours)); 
-	Machine.PutNVByte(7, CHR(dt.day));
-	Machine.PutNVByte(8, CHR(dt.month));
-	Machine.PutNVByte(9, CHR(dt.year));
-	Machine.PutNVByte(0BH, 12X)	(* 24 hour mode & 1 second interrupt *)
-END SetSystemTime;
-*)
 
 (* to be done: full NTP synchronization algorithm from RFC5905 to set machine clock *)
 PROCEDURE SynchronizeNTP;
@@ -179,6 +156,7 @@ BEGIN
 	
 	context.out.String("checking server "); context.out.String(ipstr);context.out.Char(":"); context.out.Int(port,0);  context.out.Ln; context.out.Update;
 	context.out.String("SNTP result, transmit time [seconds.fraction]: "); context.out.Ln;
+
 	context.out.Int(res,5); context.out.Char(":");
 	context.out.Int(packet.TransmitTimestamp DIV 100000000H MOD 100000000H,0);
 	context.out.Char(".");

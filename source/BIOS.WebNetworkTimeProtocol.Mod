@@ -21,7 +21,7 @@ ToDo: full NTP synchronization algorithm.
 Note the comments on leap seconds: http://www.eecis.udel.edu/~mills/leap.html
 *)
 
-IMPORT IP,UDP, Streams, Commands, Configuration, DNS, Machine, Kernel32, Dates;
+IMPORT IP,UDP, Streams, Commands, Configuration, DNS, Machine, Dates;
 
 CONST NTPPort*=123;
 
@@ -89,38 +89,8 @@ BEGIN
 	END;
 END Get;
 
-(*Windows Version*)
-(*
-(* timeZone and daylightSaving is difference to UTC in minutes*)
-PROCEDURE SetSystemTime*(time:HUGEINT; timeZone, daylightSaving:LONGINT); 
-VAR st: Kernel32.SystemTime;retBOOL: Kernel32.BOOL;					
-	dt: Dates.DateTime; frac: HUGEINT;
-BEGIN {EXCLUSIVE}
-	
-	frac:=time MOD 100000000H; 
-	time:=time DIV 100000000H MOD 100000000H; 
-	dt:=Dates.ZeroDateNTP;
-	
-	Dates.AddSeconds(dt, LONGINT(time MOD (LONGINT(60)*60*24)));
-	Dates.AddMinutes(dt, timeZone+daylightSaving);
-	Dates.AddDays(dt, LONGINT(time DIV (LONGINT(60)*60*24)));
-	(*
-	Dates.AddSeconds(dt, LONGINT(time)); (* would need unsigned addition of time, the latter possibly being negative*)
-	*)
-	st.wDay := SHORT(dt.day);
-	st.wMonth := SHORT(dt.month);
-	st.wYear := SHORT(dt.year);
-	st.wMilliseconds := 0; (*!TBD: use frac here*)
-	st.wSecond := SHORT(dt.second);
-	st.wMinute := SHORT(dt.minute);
-	st.wHour := SHORT(dt.hour);
-	retBOOL := Kernel32.SetLocalTime(st)
-END SetSystemTime;
-*)
-
-(*native *)
-(* timeZone and daylightSaving in minutes offset to universal time *)
-PROCEDURE SetSystemTime(time: HUGEINT; timeZone, daylightSaving: LONGINT);
+(* timeZone and daylightSaving in minutes is difference to UTC in minutes *)
+PROCEDURE SetSystemTime* (time: HUGEINT; timeZone, daylightSaving: LONGINT);
 VAR dt: Dates.DateTime; frac:HUGEINT;
 BEGIN {EXCLUSIVE}
 		frac:=time MOD 100000000H; 
@@ -141,15 +111,14 @@ BEGIN {EXCLUSIVE}
 	Machine.PutNVByte(0BH, 12X)	(* 24 hour mode & 1 second interrupt *)
 END SetSystemTime;
 
-
 (* to be done: full NTP synchronization algorithm from RFC5905 to set machine clock *)
 PROCEDURE SynchronizeNTP;
 END SynchronizeNTP;
 
-(* to be done: simple NTP synchronization algo from RFC 4330; parametrization of timeZone and daylightSaving*)
+(* to be done: SNTP synchronization algo from RFC 4330; parametrization of timeZone and daylightSaving*)
 PROCEDURE SynchronizeSNTP*(context:Commands.Context);
 VAR fip: IP.Adr; port, res:LONGINT; packet:Packet;
-(*
+(* SNTP algorithm:
  The roundtrip delay d and system clock offset t are defined as:
       d = (T4 - T1) - (T3 - T2)     t = ((T2 - T1) + (T3 - T4)) / 2.
 This can be used to set the system clock, if a high accuracy clock is retrievable & settable on this hardware/OS

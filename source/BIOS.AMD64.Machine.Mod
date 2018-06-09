@@ -233,7 +233,7 @@ TYPE
 
 	(** exception state, ordering of record fields is predefined! *)
 	ExceptionState* = RECORD
-		halt*: ADDRESS;	(** halt code *)
+		halt*: SIZE;	(** halt code *)
 		pf*: ADDRESS;	(** page fault address *)
 		locks*: SET;	(** active locks *)
 		SP*: ADDRESS;	(** actual RSP value at time of interrupt *)

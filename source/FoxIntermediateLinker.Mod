@@ -717,9 +717,9 @@ TYPE
 			SELF.outputFormat := output;
 			NEW(irLinker, diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
 			IF (inExtension # "") THEN irLinker.objectFile.SetExtension(inExtension) END;
-			IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
+			IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
 				error := TRUE;
-				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 			END;
 			backend := irLinker.backend;
 			system := backend.system;
@@ -1017,9 +1017,9 @@ TYPE
 				IF diagnostics = NIL THEN diagnostics := Basic.GetDefaultDiagnostics() END;
 				SELF.objectFileFormat := objectFileFormat;
 				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
-				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).runtimeModuleName, TRUE) THEN
+				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
 					error := TRUE;
-					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).runtimeModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
+					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Diagnostics.Invalid, Diagnostics.Invalid, "could not load ir file");
 				END;
 				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
 					error := TRUE;

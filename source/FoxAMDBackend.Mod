@@ -502,7 +502,7 @@ TYPE
 	CodeGeneratorAMD64 = OBJECT (CodeGenerators.GeneratorWithTickets)
 	VAR
 		(* static generator state variables, considered constant during generation *)
-		runtimeModuleName: SyntaxTree.IdentifierString;
+		builtinsModuleName: SyntaxTree.IdentifierString;
 		cpuBits: LONGINT;
 		opBP, opSP, opRA, opRB, opRC,  opRD, opRSI, opRDI, opR8, opR9, opR10, opR11, opR12, opR13, opR14, opR15: Assembler.Operand; (* base pointer, stack pointer, register A, depends on cpuBits*)
 		BP, SP, RA, RD, RS, RC: LONGINT; (* base pointer and stack pointer register index, depends on cpuBits *)
@@ -538,7 +538,7 @@ TYPE
 		VAR physicalRegisters: PhysicalRegisters; physicalRegisters32: PhysicalRegisters32; physicalRegisters64: PhysicalRegisters64;
 		BEGIN
 			SELF.backend := backend;
-			runtimeModuleName := runtime;
+			builtinsModuleName := runtime;
 			SELF.cpuBits := backend.bits;
 
 			NEW(emitter,diagnostics);
@@ -602,7 +602,7 @@ TYPE
 
 		PROCEDURE Supported*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			COPY(runtimeModuleName, moduleName);
+			COPY(builtinsModuleName, moduleName);
 			IF (cpuBits=32) & (instruction.op2.type.sizeInBits = IntermediateCode.Bits64) & (instruction.op2.type.form IN IntermediateCode.Integer) THEN
 				CASE instruction.opcode OF
 				IntermediateCode.div:
@@ -3245,7 +3245,7 @@ TYPE
 
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
-			Initialize^(diagnostics,log, flags,checker,system); NEW(cg, runtimeModuleName, diagnostics, SELF);
+			Initialize^(diagnostics,log, flags,checker,system); NEW(cg, builtinsModuleName, diagnostics, SELF);
 		END Initialize;
 
 		PROCEDURE GetSystem*(): Global.System;

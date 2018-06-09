@@ -1299,4 +1299,4 @@ BEGIN
 END Reflection.
 
 
-Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
+Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H  Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~

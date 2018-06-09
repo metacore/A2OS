@@ -11,23 +11,23 @@ WIN32 -- 32-bit windows a2
 	
 	## Link A2.exe (bootconsole for graphical OS) ##
 		Linker.Link --path=NewAos/ --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H
-			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~		
+			Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~		
 
 	## command line shell
 	Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings
+		Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings
 		Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO
 		Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 
 	## Command line shell including compiler (and linker) ##
 		Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace
+			Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace
 			StdIO Traps RelativeFileSystem SystemTools FSTools StdIOShell Shell Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
 FSTools.CloseFiles oberon.exe ~
 
 Compiler.Compile -p=Win32
-I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod
+I386.Builtins.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod
 Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod
 Commands.Mod In.Mod Out.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod
 SystemVersion.Mod Windows.I386.Traps.Mod Windows.WinTrace.Mod Windows.StdIO.Mod Locks.Mod Windows.Clock.Mod
@@ -47,13 +47,13 @@ LINUX32 -- 32 bit linux a2
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Linux32 --path=NewAos/
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel
+		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel
 		KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates
 		Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 	
 	## Command line shell including compiler (and linker) ##
 		Linker.Link -p=Linux32 --path=NewAos/
-			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
+			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
 			Shell ~ Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
@@ -65,13 +65,13 @@ LINUX64 -- 64 bit linux a2
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Linux64 --path=NewAos/
-		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel
+		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel
 		KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates
 		Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 	
 	## Command line shell including compiler (and linker) ##
 		Linker.Link -p=Linux64 --path=NewAos/
-			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
+			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
 			Shell ~ Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend ~
 
@@ -83,7 +83,7 @@ DARWIN32 -- 32 bit darwin a2
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Darwin32 --path=./NewAos/
-				Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection
+				Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection
 				Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 		UnixBinary.Build oberon.bin -> A2Core ~
 
@@ -95,7 +95,7 @@ SOLARIS32 -- 32 bit solaris a2
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Solaris32 --path=./NewAos/
-				Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection
+				Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection
 				Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 		UnixBinary.Build oberon.bin -> A2Core ~
 
@@ -106,7 +106,7 @@ WIN64 -- 64-bit windows a2
 	Release.Build --path=NewAos/ Win64 ~
 
 	Linker.Link --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
-		Runtime Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
+		Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
 		StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
 
 	FSTools.CloseFiles oberon.exe ~
@@ -119,7 +119,7 @@ WIN64 -- 64-bit windows a2
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Linux64 ~
 		Linker.Link -p=Linux64 --path=NewAos/
-			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
+			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
 			Shell ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux64/bin/*.* ~
@@ -128,7 +128,7 @@ WIN64 -- 64-bit windows a2
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Linux32 ~
 		Linker.Link -p=Linux32 --path=NewAos/
-			Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
+			Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
 			TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader SystemTools StdIOShell
 			Shell ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Linux32/bin/*.* ~
@@ -137,7 +137,7 @@ WIN64 -- 64-bit windows a2
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Win32 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H
-			Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool
+			Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool
 			ObjectFile GenericLinker Reflection Loader BootConsole ~		
 		FSTools.CopyFiles -oq NewAos/*.* => ../../WinAos/obg/*.* ~
 		FSTools.CopyFiles -o A2.exe => ../../WinAos/A2.exe ~
@@ -145,7 +145,7 @@ WIN64 -- 64-bit windows a2
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Win32 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
-			Runtime Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
+			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
 			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win32/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win32/oberon.exe ~
@@ -153,7 +153,7 @@ WIN64 -- 64-bit windows a2
 		FSTools.DeleteFiles -s NewAos/* ~
 		Release.Build --build --path=NewAos/ Win64 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
-			Runtime Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
+			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
 			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps SystemTools ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win64/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win64/oberon.exe ~

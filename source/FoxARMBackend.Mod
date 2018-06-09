@@ -534,7 +534,7 @@ TYPE
 
 	CodeGeneratorARM = OBJECT(CodeGenerators.GeneratorWithTickets)
 	VAR
-		runtimeModuleName: SyntaxTree.IdentifierString;
+		builtinsModuleName: SyntaxTree.IdentifierString;
 		backend: BackendARM;
 
 		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD, fpscr: InstructionSet.Operand;
@@ -550,11 +550,11 @@ TYPE
 
 
 
-		PROCEDURE & InitGeneratorARM(CONST runtimeModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM);
+		PROCEDURE & InitGeneratorARM(CONST builtinsModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM);
 		VAR
 			physicalRegisters: PhysicalRegisters;
 		BEGIN
-			SELF.runtimeModuleName := runtimeModuleName;
+			SELF.builtinsModuleName := builtinsModuleName;
 			SELF.backend := backend;
 
 			IF Trace THEN IF backend.useFPU32 THEN D.String("use FPU"); D.Ln ELSE D.String("don't use FPU"); D.Ln END END;
@@ -674,7 +674,7 @@ TYPE
 			END;
 
 			IF ~result THEN
-				COPY(runtimeModuleName, moduleName);
+				COPY(builtinsModuleName, moduleName);
 				GetRuntimeProcedureName(irInstruction, procedureName);
 			END;
 			RETURN result
@@ -3484,7 +3484,7 @@ TYPE
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		BEGIN
 			Initialize^(diagnostics, log, flags, checker, system);
-			NEW(cg, runtimeModuleName, diagnostics, SELF)
+			NEW(cg, builtinsModuleName, diagnostics, SELF)
 		END Initialize;
 
 		PROCEDURE EnterCustomBuiltins;

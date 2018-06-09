@@ -17,23 +17,23 @@
 #
 # WINAOS
 #	Release.Build Win32 ~
-#	Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
+#	Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
 # Command line shell:
-# Linker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
+# Linker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont SystemTools StdIOShell ~
 #
 # LinuxAOS
 #	Release.Build Linux32 ~
 # Command line version:
-#	Linker.Link -p=Linux32 Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader Shell SystemTools StdIOShell ~
+#	Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader Shell SystemTools StdIOShell ~
 # X11 Bootconsole:
-#	Linker.Link -p=Linux32 Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
+#	Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
 # SolarisAOS
 #	Release.Build Solaris32 ~
 # X11 Bootconsole:
 #	Linker.Link -p=Solaris32 --path=NewAos/
-#		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
+#		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
 #		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
 #	UnixBinary.Build oberon.bin -> A2Core ~
@@ -42,7 +42,7 @@
 #	Release.Build Darwin32 ~
 # X11 Bootconsole:
 #	Linker.Link -p=Darwin32 --path=NewAos/
-#		Runtime Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
+#		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Pipes
 #		Commands StdIO TrapWriters Traps Files UnixFiles Clock Dates Reals Strings Diagnostics
 #		BitSets StringPool GenericLinker Reflection Loader BootConsole ~
 #	UnixBinary.Build oberon.bin -> A2Core ~
@@ -233,8 +233,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 # Active Oberon run-time
 
 	# Runtime support for HUGEINT and strings
-	UNCOOP32 { I386.Runtime.Mod }
-	UNCOOP64 { AMD64.Runtime.Mod }
+	UNCOOP32 { I386.Builtins.Mod }
+	UNCOOP64 { AMD64.Builtins.Mod }
 	BIOS32C, WIN32C { I386.CPU.Mod }
 	RPIC { RPI.CPU.Mod }
 	ZYNQC { Zynq.CPU.Mod }
@@ -248,7 +248,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WINCOOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
-	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Coop.Runtime.Mod }
+	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
 	BIOS32C { HeapManager.Mod BIOS.Environment.Mod }
 	RPIC { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }

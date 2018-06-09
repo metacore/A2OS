@@ -67,7 +67,7 @@ END  StdIO.
 SystemTools.DoCommands 
 
 	Compiler.Compile  -b=AMD --newObjectFile  --objectFileExtension=.Gox --symbolFileExtension=.Syx --mergeSections
-		I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
+		I386.Builtins.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
 		Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Streams.Mod Commands.Mod 
 		I386.Reals.Mod Reflection.Mod Locks.Mod Windows.Clock.Mod Files.Mod Dates.Mod Strings.Mod 
 
@@ -84,7 +84,7 @@ SystemTools.DoCommands
 		
 		
 	Linker.Link --fileFormat=PE32CUI --fileName=fox.exe --extension=Gox --displacement=401000H
-		Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
+		Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files 
 		WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader
 		WinTrace StdIO Pipes Shell TestStdIO ~
 		

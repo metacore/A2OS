@@ -195,7 +195,7 @@ TYPE
 		stackSize, spillStackPosition: LONGINT;
 		stackSizeKnown: BOOLEAN;
 		inStackAllocation: BOOLEAN;
-		runtimeModuleName: SyntaxTree.IdentifierString;
+		builtinsModuleName: SyntaxTree.IdentifierString;
 
 		forwardFixups: ForwardFixupList;
 		spillStackStart: LONGINT;
@@ -213,7 +213,7 @@ TYPE
 		VAR physicalRegisters: PhysicalRegisters;
 		BEGIN
 			inStackAllocation := FALSE;
-			SELF.runtimeModuleName := runtime;
+			SELF.builtinsModuleName := runtime;
 			SELF.instructionSet:=instructionSet;
 			backend := b;
 			NEW(physicalRegisters,FALSE);
@@ -349,7 +349,7 @@ TYPE
 		BEGIN
 			opcode := instr.opcode;
 			form := instr.op1.type.form;
-			COPY(runtimeModuleName, moduleName);
+			COPY(builtinsModuleName, moduleName);
 			IF opcode = IntermediateCode.conv THEN (* conversions between float and integer types in a library *)
 				IF form = IntermediateCode.Float THEN
 					IF instr.op2.type.form = IntermediateCode.Float THEN
@@ -2231,7 +2231,7 @@ TYPE
 			Initialize^(diagnostics, log, flags, checker, system); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
 			
 			
-			NEW(cg, runtimeModuleName, diagnostics, SELF,myInstructionSet);
+			NEW(cg, builtinsModuleName, diagnostics, SELF,myInstructionSet);
 			cg.patchSpartan6 := patchSpartan6;
 			recentInstructionWidth := Sections.UnknownSize;
 		END Initialize;

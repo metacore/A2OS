@@ -1486,7 +1486,7 @@ TYPE
 
 		(* code snippets for unsigned
 		ELSE
-			m := Runtime.AslH(1,system.SizeOf(type));
+			m := Builtins.AslH(1,system.SizeOf(type));
 			RETURN (this >= 0) & (this < m)
 		END;
 

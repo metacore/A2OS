@@ -1,4 +1,4 @@
-MODULE Runtime; (** AUTHOR "fof"; PURPOSE "runtime support for the Active Obero compiler"; *)
+MODULE Builtins; (** AUTHOR "fof"; PURPOSE "Built-in functions for the Active Oberon Compiler"; *)
 IMPORT SYSTEM;
 
 VAR
@@ -62,4 +62,4 @@ END CopyString;
 
 BEGIN
 	(*! assumed that modules = 0, implicit call of InsertModule *)
-END Runtime.
+END Builtins.

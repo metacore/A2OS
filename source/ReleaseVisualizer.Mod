@@ -779,7 +779,7 @@ TYPE
 			DEC(j); DEC(i);
 				AddSubSystem(i, "FoxBasic", "A2", 06060FFFFH, j, TRUE);
 				AddSubSystem(i, "BitSets", "A2", 06060FFFFH, j, TRUE);
-				AddSubSystem(i, "Runtime", "A2", 06060FFFFH, j, TRUE);
+				AddSubSystem(i, "Builtins", "A2", 06060FFFFH, j, TRUE);
 				AddSubSystem(i, "ObjectFile", "A2", 06060FFFFH, j, TRUE);
 				AddSubSystem(i, "FoxProgTools", "A2", 06060FFFFH, j, TRUE);
 			DEC(j); DEC(i);

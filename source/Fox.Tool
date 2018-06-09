@@ -128,7 +128,7 @@ some documentation rules
 Building a library: 
 
 	FoxGenericObjectFile.MakeLibrary 
-		Kernel.Lib Runtime.GofW Trace.GofW
+		Kernel.Lib Builtins.GofW Trace.GofW
 		Kernel32.GofW Machine.GofW Heaps.GofW Modules.GofW Objects.GofW
 		Kernel.GofW KernelLog.GofW Streams.GofW Commands.GofW Files.GofW 
 		WinFS.GofW Clock.GofW Dates.GofW Reals.GofW Strings.GofW Diagnostics.GofW BitSets.GofW StringPool.GofW ObjectFile.GofW GenericLinker.GofW Reflection.GofW 

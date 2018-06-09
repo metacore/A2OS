@@ -10,7 +10,7 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 		Knuth, The Art of Computer Programming, Volume 1, Section 2.3.5, Algorithm C
 *)
 
-IMPORT Runtime (* enforce import order *), SYSTEM, Trace, Machine;
+IMPORT Builtins (* enforce import order *), SYSTEM, Trace, Machine;
 
 CONST
 	EnableRefCount =TRUE;
@@ -2132,7 +2132,7 @@ Co
 
 
 Compiler.Compile -p=Win32 --writeBarriers --traceModule=Trace
-I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
+I386.Builtins.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
 Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Reflection.Mod
 Windows.I386.Traps.Mod Windows.WinTrace.Mod Windows.StdIO.Mod Locks.Mod Windows.Clock.Mod Disks.Mod Files.Mod 
@@ -2145,7 +2145,7 @@ StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod BootConsole.Mod
 ~
 
 Compiler.Compile -p=Win32 --traceModule=Trace --writeBarriers Heaps.Mod ~
-Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
+Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
 FSTools.CloseFiles A2.exe ~
 
 

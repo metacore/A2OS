@@ -1,4 +1,4 @@
-MODULE Runtime;
+MODULE Builtins;
 IMPORT SYSTEM, FPE64;
 
 CONST
@@ -685,4 +685,4 @@ TYPE
 		SYSTEM.MOVE(ADDRESSOF(source[0]), ADDRESSOF(destination[0]), sourceLength)
 	END CopyString;
 
-END Runtime.
+END Builtins.

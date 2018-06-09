@@ -57,7 +57,7 @@ CONST
 		SysLock* = 5;  SysUnlock* = 6;  SysStart* = 7;  SysAwait* = 8; SysInterfaceLookup* = 9;
 		SysRegisterInterface* = 10; SysGetProcedure* = 11;
 
-		DefaultRuntimeModuleName ="Runtime";
+		DefaultBuiltinsModuleName ="Builtins";
 		DefaultTraceModuleName ="KernelLog";
 		ChannelModuleName = "Channels";
 		
@@ -818,7 +818,7 @@ TYPE
 				IF ~inline  & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
 					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
 						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
-						IF implementationVisitor.GetRuntimeProcedure(implementationVisitor.runtimeModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
+						IF implementationVisitor.GetRuntimeProcedure(implementationVisitor.builtinsModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
 							size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,stackSize+256));
 							ir.EmitAt(pc,Push(size));
 							implementationVisitor.StaticCallOperand(result,procedure);
@@ -1386,7 +1386,7 @@ TYPE
 		supportedImmediate: SupportedImmediateProcedure;
 		inData: BOOLEAN;  (* to prevent indirect reference to data within data sections, cf. VisitIntegerValue *)
 		emitLabels: BOOLEAN;
-		runtimeModuleName : SyntaxTree.IdentifierString;
+		builtinsModuleName : SyntaxTree.IdentifierString;
 		newObjectFile: BOOLEAN;
 		indexCounter: LONGINT;
 
@@ -1418,7 +1418,7 @@ TYPE
 			newObjectFile: BOOLEAN);
 		BEGIN
 			SELF.system := system;
-			SELF.runtimeModuleName := runtime;
+			SELF.builtinsModuleName := runtime;
 
 			currentScope := NIL;
 			hiddenPointerType := NIL;
@@ -3487,7 +3487,7 @@ TYPE
 			IF backend.cooperative THEN
 				CallThis(position,"Runtime",procedureName, 4);
 			ELSE
-				CallThis(position,runtimeModuleName,procedureName, 4);
+				CallThis(position,builtinsModuleName,procedureName, 4);
 			END;
 			IntermediateCode.InitRegister(reg,int8,IntermediateCode.GeneralPurposeRegister,AcquireRegister(int8,IntermediateCode.GeneralPurposeRegister));
 			Emit(Result(position,reg));
@@ -3530,7 +3530,7 @@ TYPE
 			IF backend.cooperative THEN
 				CallThis(position,"Runtime",procedureName, 4);
 			ELSE
-				CallThis(position,runtimeModuleName,procedureName,4);
+				CallThis(position,builtinsModuleName,procedureName,4);
 			END;
 			RestoreRegisters(saved);
 		END CopyString;
@@ -13888,7 +13888,7 @@ TYPE
 			simpleMetaData := FALSE;
 			newObjectFile := FALSE;
 			InitBackend;
-			SetRuntimeModuleName(DefaultRuntimeModuleName);
+			SetBuiltinsModuleName(DefaultBuiltinsModuleName);
 			SetTraceModuleName(DefaultTraceModuleName);
 		END InitIntermediateBackend;
 		
@@ -13921,7 +13921,7 @@ TYPE
 			Global.GetModuleName(x, name);
 			module.SetModuleName(name);
 
-			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, runtimeModuleName, SELF, newObjectFile);
+			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF, newObjectFile);
 			NEW(declarationVisitor,system,implementationVisitor,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
 
 			NEW(meta, implementationVisitor, declarationVisitor,simpleMetaData);
@@ -13992,7 +13992,7 @@ TYPE
 		BEGIN
 			DefineOptions^(options);
 			options.Add(0X,"trace",Options.String);
-			options.Add(0X,"runtime",Options.String);
+			options.Add(0X,"builtinsModule",Options.String);
 			options.Add(0X,"newObjectFile",Options.Flag);
 			options.Add(0X,"traceModule",Options.String);
 			options.Add(0X,"profile",Options.Flag);
@@ -14019,7 +14019,7 @@ TYPE
 			cooperative := options.GetFlag("cooperative");
 			IF options.GetFlag("newObjectFile") THEN newObjectFile := TRUE; 
 				IF cooperative THEN 
-					SetRuntimeModuleName("CPU") END
+					SetBuiltinsModuleName("CPU") END
 				END;
 			IF options.GetString("objectFile",string) & (string = "Minos") THEN 
 				simpleMetaData := TRUE
@@ -14029,7 +14029,7 @@ TYPE
 				ELSIF string ="full" THEN simpleMetaData := FALSE
 				END;
 			END;
-			IF options.GetString("runtime",name) THEN SetRuntimeModuleName(name) END;
+			IF options.GetString("builtinsModule",name) THEN SetBuiltinsModuleName(name) END;
 			IF options.GetString("traceModule",name) THEN SetTraceModuleName(name) END;
 			optimize := options.GetFlag("optimize");
 			preregisterStatic := options.GetFlag("preregisterStatic");
@@ -14940,13 +14940,13 @@ END FoxIntermediateBackend.
 Compiler.Compile -p=Win32 FoxIntermediateBackend.Mod ~
 
 #	Release.Build --path="/temp/obg/" Win32 ~
-#	Linker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Runtime Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
+#	Linker.Link --fileFormat=PE32 --fileName=A2H.exe --extension=GofW --displacement=401000H  Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~
 FStols.CloseFiles A2Z.exe ~
 
 SystemTools.FreeDownTo FoxIntermediateBackend ~
 
 Compiler.Compile -p=Win32 --destPath=/temp/obg/ --traceModule=Trace
-I386.Runtime.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
+I386.Builtins.Mod Trace.Mod Windows.I386.Kernel32.Mod Windows.I386.Machine.Mod Heaps.Mod 
 Modules.Mod Windows.I386.Objects.Mod Windows.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod 
 Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
 Windows.I386.Traps.Mod Locks.Mod Windows.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 

@@ -4,11 +4,11 @@
 
 SystemTools.DoCommands
 Compiler.Compile --bits=32 --traceModule=Trace
-	I386.Runtime.Mod Trace.Mod EFI.Mod I386.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
+	I386.Builtins.Mod Trace.Mod EFI.Mod I386.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
 	EFILoadedImage.Mod EFIGraphicsOutput.Mod EFILib.Mod EFIGraphicalConsole.Mod EFIA2Loader.Mod
 ~
 Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --displacement=401000H
-	Runtime Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
+	Builtins Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
 	 EFIGraphicalConsole EFIA2Loader~
 ~
 
@@ -16,7 +16,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --
 
 SystemTools.DoCommands
 Compiler.Compile --newObjectFile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
-	I386.Runtime.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
+	I386.Builtins.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
 	Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod Traps.Mod Locks.Mod BIOS.PCI.Mod 
 	BIOS.Clock.Mod BIOS.I386.MemCache.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod UTF8Strings.Mod 
@@ -32,7 +32,7 @@ Linker.Link
 	--extension=Gox
 	--displacement=0100000H
 	--path="./"
-	Runtime Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
+	Builtins Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
 	KernelLog Streams Reflection  TrapWriters Traps  Plugins
 	Diagnostics BitSets StringPool ObjectFile Reals Clock Dates Strings GenericLinker 
 	Commands
@@ -53,11 +53,11 @@ SystemTools.FreeDownTo FoxIntermediateBackend ~
 ~
 SystemTools.DoCommands
 Compiler.Compile --bits=64 --traceModule=Trace
-	AMD64.Runtime.Mod Trace.Mod EFI.Mod AMD64.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
+	AMD64.Builtins.Mod Trace.Mod EFI.Mod AMD64.EFIMachine.Mod EFITrace.Mod EFIFileProtocol.Mod EFISimpleFS.Mod
 	EFILoadedImage.Mod EFIGraphicsOutput.Mod EFILib.Mod EFIGraphicalConsole.Mod EFIA2Loader.Mod
 ~
 Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI64 --displacement=401000H
-	Runtime Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
+	Builtins Trace EFI EFIMachine EFITrace EFISimpleFS  EFIFileProtocol EFILoadedImage EFIGraphicsOutput EFILib 
 	 EFIGraphicalConsole EFIA2Loader
 ~
 ~
@@ -66,7 +66,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI64 --
 	
 SystemTools.DoCommands
 	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
-	AMD64.Runtime.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod Objects.Mod Kernel.Mod 
+	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod BIOS.Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
 	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod 
@@ -77,7 +77,7 @@ SystemTools.DoCommands
 	--fileName=E:/felix.svn/qemu/disk/IDE.Bin
 	--extension=Gos
 	--displacement=0100000H
-	Runtime Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
+	Builtins Trace Machine EFIGraphicalConsole StartConsole Heaps Modules Objects Kernel 
 	KernelLog Plugins Streams Commands Reals 
 	Reflection TrapWriters Traps Locks PCI Clock MemCache Disks Files 
 	ATADisks

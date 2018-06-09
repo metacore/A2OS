@@ -275,7 +275,7 @@ Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
 SystemTools.DoCommands
 
-Compiler.Compile  -b=AMD --objectFileExtension=.Obx --symbolFileExtension=.Obx --destPath=../Test/ BiosFreePCI.Mod UsbEhci.Mod UsbEhciPCI.Mod  ~
+Compiler.Compile  -b=AMD --objectFileExtension=.Obx --symbolFileExtension=.Obx --destPath=../Test/ BIOS.PCI.Mod UsbEhci.Mod UsbEhciPCI.Mod  ~
 
 PCAAMD64.Assemble OBLUnreal.Asm ~
 PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~

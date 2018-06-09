@@ -3696,11 +3696,11 @@ TYPE
 				END;
 
 				(* check whether the command is System.DoCommands *)
-				IF (i < 22) THEN
+				IF (i < 17) THEN
 					string[i] := CHR(ch);
 					INC(i);
-					IF (i = 22) THEN
-						string[22] := 0X;
+					IF (i = 17) THEN
+						string[17] := 0X;
 						IF (string = "System.DoCommands") OR Strings.StartsWith2("PreliminaryCommands",string) THEN
 							sDoCommands := TRUE;
 						END;

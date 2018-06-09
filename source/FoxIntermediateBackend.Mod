@@ -1603,7 +1603,7 @@ TYPE
 		BEGIN
 			IF backend.cooperative THEN
 				Emit(Push(position,IntermediateCode.Immediate(sizeType,trapNo)));
-				CallThis(position,DefaultRuntimeModuleName,"Trap",1); 
+				CallThis(position,"Runtime","Trap",1); 
 			ELSE
 				Emit(Trap(position,trapNo));
 			END;
@@ -3485,7 +3485,7 @@ TYPE
 			ReleaseOperand(right);
 
 			IF backend.cooperative THEN
-				CallThis(position,DefaultRuntimeModuleName,procedureName, 4);
+				CallThis(position,"Runtime",procedureName, 4);
 			ELSE
 				CallThis(position,runtimeModuleName,procedureName, 4);
 			END;
@@ -3528,7 +3528,7 @@ TYPE
 			ReleaseOperand(right);
 
 			IF backend.cooperative THEN
-				CallThis(position,DefaultRuntimeModuleName,procedureName, 4);
+				CallThis(position,"Runtime",procedureName, 4);
 			ELSE
 				CallThis(position,runtimeModuleName,procedureName,4);
 			END;
@@ -7874,7 +7874,7 @@ TYPE
 				Designate(p0,s0);
 				Emit(Push(position,s0.op));
 				ReleaseOperand(s0);
-				CallThis(position,DefaultRuntimeModuleName,"Dispose", 1);
+				CallThis(position,"Runtime","Dispose", 1);
 			(* ---- GETPROCEDURE ----- *)
 			|Global.GetProcedure:
 				Designate(p0,s0);

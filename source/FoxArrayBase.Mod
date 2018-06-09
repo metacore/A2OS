@@ -10283,7 +10283,7 @@ TYPE
 		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
 	END AllocateArrayA;
 
-	PROCEDURE AllocateTensorX*( VAR dest: UnsafeArrayT; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
+	PROCEDURE DoAllocateTensorX*( VAR dest: UnsafeArrayT; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
 	VAR data: ANY;  same: BOOLEAN;  i: SIZE;  dim: SIZE;
 
 		PROCEDURE NewData;
@@ -10334,7 +10334,13 @@ TYPE
 			ELSE ClearData
 			END;
 		END;
+	END DoAllocateTensorX;
+	
+	PROCEDURE AllocateTensorX( VAR dest: ARRAY {UNSAFE} [?] OF SIZE; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
+	BEGIN
+		DoAllocateTensorX(dest,a,Size,tag);
 	END AllocateTensorX;
+	
 
 	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );
 	VAR dim, i: SIZE;

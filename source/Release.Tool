@@ -144,6 +144,13 @@ BUILDS
 		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	Bios64 {
+		INCLUDE "BIOS64 BIOS NATIVE AMD64"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Bios64"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
 	RpiC {
 		INCLUDE "RPIC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
@@ -285,6 +292,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN64 { Windows.AMD64.Kernel32.Mod }
 
 	BIOS32 { BIOS.I386.Machine.Mod }
+	BIOS64 { BIOS.AMD64.Machine.Mod }
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod }
@@ -327,6 +335,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	BIOS32 { BIOS.I386.Traps.Mod }
+	BIOS64 { BIOS.AMD64.Machine.Mod }
 	ARM { ARM.Traps.Mod }
 	WIN32 { Windows.I386.Traps.Mod }
 	WIN64 { Windows.AMD64.Traps.Mod }
@@ -347,6 +356,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# Memory cache control
 	BIOS32 { BIOS.I386.MemCache.Mod }
+	BIOS64 { BIOS.AMD64.MemCache.Mod }
 	COOP { Coop.MemCache.Mod }
 
 	# Block device interface
@@ -400,7 +410,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BIOS { BIOS.BootShell.Mod }
 
 	BIOS32, UNIX32 { I386.Network.Mod }
-	UNIX64 { AMD64.Network.Mod }
+	BIOS64, UNIX64 { AMD64.Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
@@ -422,6 +432,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	}
 
 	BIOS32 { I386.IP.Mod I386.IPv4.Mod }
+	BIOS64 { AMD64.IP.Mod AMD64.IPv4.Mod }
 	ARM { ARM.IP.Mod ARM.IPv4.Mod }
 
 	NATIVE {
@@ -478,8 +489,12 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	NATIVE { SCSI.Mod }
 
 	BIOS32 { BIOS.I386.ATADisks.Mod }
+	BIOS64 { BIOS.AMD64.ATADisks.Mod }
 
-	BIOS32 { BIOS.I386.Adaptec7Script.Mod BIOS.Adaptec7.Mod } # Adaptec SCSI driver
+	# Adaptec SCSI driver
+	BIOS32 { BIOS.I386.Adaptec7Script.Mod }
+	BIOS64 { BIOS.AMD64.Adaptec7Script.Mod }
+	BIOS { BIOS.Adaptec7.Mod }
 
 	BIOS {
 		# disk drivers (implement Disks interface)
@@ -489,6 +504,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PS/2 keyboard incl. layouts
 
 	BIOS32 { BIOS.I386.Keyboard.Mod }
+	BIOS64 { BIOS.AMD64.Keyboard.Mod }
 
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin
@@ -531,6 +547,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 
 	BIOS32 { I386.UsbKeyboard.Mod }
+	BIOS64 { AMD64.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
@@ -1119,7 +1136,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	# Installer
 	WMInstaller.Mod WMInstaller.tar
 
-	NATIVE { # CD recorder
+	BIOS { # CD recorder
 		CDRecordUtils.Mod CDRecordLib.Mod MakeIsoImages.Mod
 		CDRecord.Mod WMCDRecorder.Mod
 	}
@@ -1234,6 +1251,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 	}
 
 	BIOS32 { BIOS.I386.BenchInterrupts.Mod }
+	BIOS64 { BIOS.AMD64.BenchInterrupts.Mod }
 
 	BenchTCP.Mod
 
@@ -1430,7 +1448,7 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	# GPL!
 	NATIVE { UsbRS232.Mod GPL.Text }
 
-	NATIVE { FirewireLowUtil.Mod FirewireLow.Mod FirewireSBP2.Mod }	# IEEE 1394 support (HD)
+	BIOS { FirewireLowUtil.Mod FirewireLow.Mod FirewireSBP2.Mod }	# IEEE 1394 support (HD)
 
 	TeletextServer.zip	# Teletext Server for TV
 END
@@ -1683,9 +1701,9 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	WIN { Windows.Oberon.PlugInDocs.Mod }
 
-	NATIVE {
-	Oberon.Profiler.Mod	# alternative profiler (prk)
-	Oberon.FATDocs.Mod	# FAT browser (be)
+	BIOS32 {
+		Oberon.Profiler.Mod	# alternative profiler (prk)
+		Oberon.FATDocs.Mod	# FAT browser (be)
 	}
 END
 

@@ -1087,6 +1087,7 @@ BEGIN
 	NEW(finished);
 	NEW(defaults);
 	defaults.Add("Bios32","--fileName=kernel.img --extension=.Gof --displacement=0100000H");
+	defaults.Add("Bios64","--fileName=kernel.img --extension=.Goff --displacement=0100000H");
 	defaults.Add("Win32CUI","--fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H");
 	defaults.Add("Linux32","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("Linux64","--fileFormat=Raw --fileName=oberon --extension=.GofUu --displacement=08048000H");

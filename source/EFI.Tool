@@ -68,7 +68,7 @@ System.DoCommands
 	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
 	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod BIOS.Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
-	Reflection.Mod TrapWriters.Mod BIOS.AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod BIOS.Clock.Mod AMD64.MemCache.Mod Disks.Mod Files.Mod 
+	Reflection.Mod TrapWriters.Mod BIOS.AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod BIOS.Clock.Mod BIOS.AMD64.MemCache.Mod Disks.Mod Files.Mod 
 	Dates.Mod Strings.Mod UTF8Strings.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod 
 	RAMVolumes.Mod DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
 	ISO9660Files.Mod RelativeFileSystem.Mod Loader.Mod BootConsole.Mod BIOS.AMD64.ATADisks.Mod ~

@@ -22,6 +22,8 @@ CONST
 
 	DefaultDMASize = 20;	(* default size of ISA DMA area in KB *)
 
+	IsCooperative*= FALSE;
+
 CONST
 	StrongChecks = FALSE;	(* perform strong checks *)
 	Stats* = FALSE;	(* acquire statistics *)
@@ -683,16 +685,16 @@ BEGIN
 					END;
 				ELSIF (vendor = "AuthenticAMD") THEN
 					(* CPUID extended function 1 returns: largest extended function *)
-					CPUID((80000000H), eax, ebx, ecx, edx);
+					CPUID(LONGINT (80000000H), eax, ebx, ecx, edx);
 					largestFunction := SYSTEM.VAL(LONGINT, eax - {31}); (* remove sign *)
 					IF (largestFunction >= 8) THEN
 						(* CPUID extended function 8 returns: *)
-						CPUID((80000008H), eax, ebx, ecx, edx);
+						CPUID(LONGINT (80000008H), eax, ebx, ecx, edx);
 						coresPerProcessor := SYSTEM.VAL(LONGINT, ecx * {0..7}) + 1;
 						threadsPerCore := logicalProcessorCount DIV coresPerProcessor;
 					ELSIF (largestFunction >= 1) THEN
 						(* CPUID extended function 1 returns CmpLegacy bit in ecx *)
-						CPUID((80000001H), eax, ebx, ecx, edx);
+						CPUID(LONGINT (80000001H), eax, ebx, ecx, edx);
 						IF 1 IN ecx THEN (* CmpLegacy bit set -> no hyperthreading *)
 							coresPerProcessor := logicalProcessorCount;
 							threadsPerCore := 1;
@@ -959,7 +961,7 @@ END AllocateDMA;
 
 (* Check if the specified address is RAM. *)
 PROCEDURE IsRAM(adr: ADDRESS): BOOLEAN;
-CONST Pattern1 = (0BEEFC0DEH); Pattern2 = (0AA55FF00H);
+CONST Pattern1 = LONGINT (0BEEFC0DEH); Pattern2 = LONGINT (0AA55FF00H);
 VAR save, x: LONGINT; ok: BOOLEAN;
 BEGIN
 	ok := FALSE;
@@ -1613,13 +1615,13 @@ BEGIN
 		IF TraceVerbose THEN
 			Acquire (TraceOutput);
 			Trace.String("Mapping ");
-			Trace.IntSuffix(SHORT(size), 1, "B"); Trace.String(" at ");
+			Trace.IntSuffix(size, 1, "B"); Trace.String(" at ");
 			Trace.Address (physAdr); Trace.String (" - "); Trace.Address (physAdr+size-1);
 			IF virtAdr = NilAdr THEN
 				Trace.String(" failed")
 			ELSE
 				Trace.String (" to "); Trace.Address (virtAdr);
-				IF ofs # 0 THEN Trace.String (", offset "); Trace.Int(SHORT(ofs), 0) END
+				IF ofs # 0 THEN Trace.String (", offset "); Trace.Int(ofs, 0) END
 			END;
 			Trace.Ln;
 			Release (TraceOutput);
@@ -2786,7 +2788,7 @@ BEGIN
 		IF (i > 31) OR ~(i IN {8, 10..14, 17}) THEN a := ADDRESSOF(glue[i][0])	(* include PUSH 0 *)
 		ELSE a := ADDRESSOF(glue[i][2])	(* skip PUSH 0, processor supplies error code *)
 		END;
-		idt[i].offsetBits0to15 := SHORT (SHORT(a MOD 10000H));
+		idt[i].offsetBits0to15 := INTEGER(a MOD 10000H);
 		(* IRQ0 must be at level 0 because time slicing in Objects needs to set interrupted process' ESP *)
 		(* all irq's are handled at level 0, because of priority experiment in Objects.FieldIRQ *)
 		IF TRUE (* (i < IRQ0) OR (i > IRQ15) OR (i = IRQ0) OR (i = IRQ0 + 1)*) THEN
@@ -2796,8 +2798,8 @@ BEGIN
 			idt[i].selector := User64CodeSel;	(* gdt[3] -> conformant segment => level 0 or 3 *)
 			idt[i].gateType := SYSTEM.VAL(INTEGER, 08E00H)	(* present, DPL 0, system, 64-bit interrupt gate *)
 		END;
-		idt[i].offsetBits16to31 := SHORT (SHORT(a DIV 10000H));
-		idt[i].offsetBits32to63 := SHORT(a DIV 100000000H);
+		idt[i].offsetBits16to31 := INTEGER(a DIV 10000H);
+		idt[i].offsetBits32to63 := LONGINT(a DIV 100000000H);
 		idt[i].reserved := 0;
 	END
 END InitInterrupts;

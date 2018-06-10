@@ -1045,8 +1045,8 @@ END AllocateDMA;
 
 (* Check if the specified address is RAM. *)
 PROCEDURE IsRAM(adr: ADDRESS): BOOLEAN;
-CONST Pattern1 = (0BEEFC0DEH); Pattern2 = (0AA55FF00H);
-VAR save, x: ADDRESS; ok: BOOLEAN;
+CONST Pattern1 = LONGINT (0BEEFC0DEH); Pattern2 = LONGINT (0AA55FF00H);
+VAR save, x: LONGINT; ok: BOOLEAN;
 BEGIN
 	ok := FALSE;
 	SYSTEM.GET (adr, save);

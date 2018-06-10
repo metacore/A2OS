@@ -371,9 +371,10 @@ CODE {SYSTEM.i386}
 	CALL L1
 L1:
 	POP EAX
-	ADD EAX,8
+	ADD EAX, L2 - L1
 	POP EBP
 	RET
+L2:
 		; alphabet
 	DB 1EH, 'a', 'A', 4H,	30H, 'b', 'B', 4H,	2EH, 'c', 'C', 4H,	20H, 'd', 'D', 4H
 	DB 12H, 'e', 'E', 4H,	21H, 'f', 'F', 4H,	22H, 'g', 'G', 4H,	23H, 'h', 'H', 4H
@@ -460,9 +461,10 @@ CODE {SYSTEM.i386}
 	CALL L1
 L1:
 	POP EAX
-	ADD EAX,8
+	ADD EAX, L2 - L1
 	POP EBP
 	RET
+L2:
 	; Keyboard table stolen from Linux Usb keyboard driver, and corrected for Oberon
 	DB 000, 000, 000, 000, 030, 048, 046, 032, 018, 033, 034, 035, 023, 036, 037, 038
 	DB 050, 049, 024, 025, 016, 019, 031, 020, 022, 047, 017, 045, 021 ,044, 002, 003

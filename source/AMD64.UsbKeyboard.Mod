@@ -368,9 +368,11 @@ VAR
 (* TableUS - US keyboard translation table (dead keys: ^=1, '=2, `=3, ~=4, "=5) *)
 PROCEDURE TableUS*(): ADDRESS;
 CODE {SYSTEM.AMD64}
-	LEA RAX, [RIP + L2 - L1];
+	CALL L1
 L1:
-	LEAVE
+	POP RAX
+	ADD RAX, L2 - L1
+	POP RBP
 	RET
 L2:
 		; alphabet
@@ -456,9 +458,11 @@ END TableUS;
 (* maps USB usage ID's to Oberon character code *)
 PROCEDURE UsbScanTab*() : ADDRESS;
 CODE {SYSTEM.AMD64}
-	LEA RAX, [RIP + L2 - L1];
+	CALL L1
 L1:
-	LEAVE
+	POP EAX
+	ADD EAX, L2 - L1
+	POP EBP
 	RET
 L2:
 	; Keyboard table stolen from Linux Usb keyboard driver, and corrected for Oberon

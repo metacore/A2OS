@@ -552,7 +552,7 @@ TYPE
 			IF adr MOD 256 = 0 THEN
 				firstRD := 0;
 			ELSE
-				firstRD := 16 - ((adr MOD 256) DIV 16);
+				firstRD := 16 - (LONGINT (adr MOD 256) DIV 16);
 			END;
 
 			IF DebugRxRing IN Debug THEN
@@ -611,7 +611,7 @@ TYPE
 			IF adr MOD 256 = 0 THEN
 				firstTD := 0;
 			ELSE
-				firstTD := 16 - ((adr MOD 256) DIV 16);
+				firstTD := 16 - (LONGINT (adr MOD 256) DIV 16);
 			END;
 			lastTD := firstTD;
 			nofFreeTx := TxRingSize - firstTD;

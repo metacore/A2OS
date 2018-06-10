@@ -535,7 +535,7 @@ TYPE
 			END;
 			(* TD's must be 32byte aligned for EHCI, 16byte aligned for UHCI & OHCI data structures*)
 			(* currently max qh size is below 128 bytes for EHCI, so a queue head will not cross page boundaries *)
-			pipe.qh := Align(ADDRESS OF pipe.tdBuffer[0], 128);
+			pipe.qh := Machine.Ensure32BitAddress(Align(ADDRESS OF pipe.tdBuffer[0], 128));
 			pipe.tdBase := pipe.qh + 32;
 			ASSERT((pipe.qh >= ADDRESSOF(pipe.tdBuffer[0])) & (pipe.tdBase <= ADDRESSOF(pipe.tdBuffer[pipe.tdBufferLen-1])));
 			IF ~InsertQH(pipe) THEN
@@ -659,7 +659,7 @@ TYPE
 			NEW(pipe.tdBuffer, pipe.tdBufferLen);
 			(* TD's must be 32byte aligned for EHCI data structures, 16byte for UHCI & OHCI data structures *)
 			(* currently max qh size is below 128 bytes for EHCI, so a queue head will not cross page boundaries *)
-			pipe.qh := Align(ADDRESS OF pipe.tdBuffer[0], 128);
+			pipe.qh := Machine.Ensure32BitAddress(Align(ADDRESS OF pipe.tdBuffer[0], 128));
 			pipe.tdBase := pipe.qh + 32;
 			IF Debug.StrongChecks THEN
 				ASSERT(pipe.tdBase >= ADDRESSOF(pipe.tdBuffer[0]));

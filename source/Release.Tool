@@ -130,7 +130,7 @@ BUILDS
 		INCLUDE "BIOS32 BIOS NATIVE I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Bios32"
-		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Bios32C {
@@ -781,7 +781,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPServices.Mod TestServer.Mod	# TCP services
 	TCPTools.Mod						# Some useful TCP-related commands
 
-	# { Performance.Mod }
+	BIOS { Performance.Mod }
 	WIN, UNIX, BIOS32C { Windows.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod

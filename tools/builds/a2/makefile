@@ -6,7 +6,7 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
 tool := $(if $(wildcard oberon), ./oberon, ./original)
-platforms := Linux32 Linux64 Darwin32 Darwin64 Solaris32 Solaris64 Win32 Win64
+platforms := Bios32 Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 Solaris32 Solaris64
 
 target := Linux64
 object := .GofUu

@@ -102,7 +102,7 @@ CODE {SYSTEM.i386}
 	CALL L1
 L1:
 	POP EAX
-	ADD EAX, DWORD L2-L1
+	ADD EAX, L2 - L1
 	JMP DWORD L3
 L2:
 		; alphabet
@@ -512,8 +512,7 @@ END InitKeyboard;
 PROCEDURE SetLayout*(context : Commands.Context); (** KeyboardLayoutFile ~ *)
 VAR layoutFilename : ARRAY 256 OF CHAR;
 BEGIN {EXCLUSIVE}
-	IF (keyboard # NIL) THEN
-		context.arg.GetString(layoutFilename);
+	IF (keyboard # NIL) & context.arg.GetString(layoutFilename) THEN
 		table := TableFromFile(layoutFilename);
 	ELSE
 		context.error.String("Keyboard: No keyboard found."); context.error.Ln;

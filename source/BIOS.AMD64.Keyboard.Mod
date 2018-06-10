@@ -99,10 +99,11 @@ VAR
 
 PROCEDURE TableUS(): ADDRESS;
 CODE {SYSTEM.AMD64}
-	LEA RAX, [RIP + L2 - L1];
+	CALL L1
 L1:
-	LEAVE
-	RET
+	POP RAX
+	ADD RAX, L2 - L1
+	JMP DWORD L3
 L2:
 		; alphabet
 	DB 1EH, 'a', 'A', 4H,	30H, 'b', 'B', 4H,	2EH, 'c', 'C', 4H,	20H, 'd', 'D', 4H
@@ -210,6 +211,7 @@ L2:
 	DB 57H, 0FBH, 0FFH, 0H	; F11
 	DB 58H, 0FCH, 0FFH, 0H	; F12
 	DB 0FFH
+L3:
 END TableUS;
 
 PROCEDURE TableFromFile(name: ARRAY OF CHAR): ADDRESS;
@@ -510,8 +512,7 @@ END InitKeyboard;
 PROCEDURE SetLayout*(context : Commands.Context); (** KeyboardLayoutFile ~ *)
 VAR layoutFilename : ARRAY 256 OF CHAR;
 BEGIN {EXCLUSIVE}
-	IF (keyboard # NIL) THEN
-		context.arg.GetString(layoutFilename);
+	IF (keyboard # NIL) & context.arg.GetString(layoutFilename) THEN
 		table := TableFromFile(layoutFilename);
 	ELSE
 		context.error.String("Keyboard: No keyboard found."); context.error.Ln;

@@ -479,7 +479,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	BIOS32 { BIOS.I386.ATADisks.Mod }
 
-	BIOS32 { I386.Adaptec7Script.Mod BIOS.Adaptec7.Mod } # Adaptec SCSI driver
+	BIOS32 { BIOS.I386.Adaptec7Script.Mod BIOS.Adaptec7.Mod } # Adaptec SCSI driver
 
 	BIOS {
 		# disk drivers (implement Disks interface)

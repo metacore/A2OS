@@ -164,7 +164,7 @@ TYPE
 
 
 		(** Send a packet. Called by its user. Can be called concurrently. *)
-		PROCEDURE Send*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN);
+		PROCEDURE Send*(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN);
 		VAR
 			sniffer: SendSnifferList;
 			discard: BOOLEAN; (* shall the packet be discarded? *)
@@ -191,14 +191,14 @@ TYPE
 		(** Do frame send operation. Must be overridden and implemented by device driver! *)
 		(** Must be able to handle concurrent calls. e.g. by declaring itself as EXCLUSIVE! *)
 
-		PROCEDURE DoSend*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
 		BEGIN
 			HALT(301); (* Abstract! *)
 		END DoSend;
 
 		(* Do internal loopback. Send packet directly to the receive queue. *)
 
-		PROCEDURE Loopback(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE Loopback(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
 		VAR buf: Buffer;
 		BEGIN
 			IF packetCount >= MaxLoopbackPacketsPerMS THEN
@@ -561,7 +561,7 @@ TYPE
 
 	(* Sniffer for sent packets. May modify type, headers and data. Return TRUE if packet shall be discarded. *)
 	(* Must be able to handle concurrent calls. e.g. by declaring itself as EXCLUSIVE. *)
-	SendSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT): BOOLEAN;
+	SendSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT): BOOLEAN;
 
 	(* Sniffer for received packets. May modify type and buffer. Return TRUE if packet shall be discarded. *)
 	(* Will never be called concurrenty from the same LinkDevice. *)

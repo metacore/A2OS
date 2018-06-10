@@ -144,7 +144,7 @@ TYPE
 
 
 		(** Send an IP packet on this interface. *)
-		PROCEDURE Send*(type: LONGINT; destAdr: Adr; VAR l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
+		PROCEDURE Send*(type: LONGINT; destAdr: Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -152,7 +152,7 @@ TYPE
 
 
 		(* Internal procedure to perform the rest of the send operation. Used by "Send" and for IP forwarding. *)
-		PROCEDURE DoSend*(destAdr: Adr; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
+		PROCEDURE DoSend*(destAdr: Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -635,7 +635,7 @@ PROCEDURE AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR);
 VAR
 	i, j, x: LONGINT;
 	a: ARRAY 4 OF CHAR;
-	val, res: LONGINT;
+	val: LONGINT;
 	hexToStr: ARRAY 5 OF CHAR;
 	prefixLenStr: ARRAY 64 OF CHAR;
 	maxZeroRow: LONGINT;
@@ -667,10 +667,6 @@ BEGIN
 				val :=  ORD(adr.ipv6Adr[i]) * 256;
 				val := val + ORD(adr.ipv6Adr[i+1]);
 				Strings.IntToHexStr (val, 3, hexToStr);
-				IF res # Strings.Ok THEN
-					string := "";
-					RETURN;
-				END;
 
 				(* Delete leading zeros *)
 				WHILE (hexToStr[0] = "0") & (hexToStr[1] # 0X) DO
@@ -776,11 +772,10 @@ END AdrToStr;
 	If the LSB is stored at the end [ofs+3], LSBfirst must be set to FALSE.
 		(address "a.b.c.d" is stored as [a,b,c,d])
 *)
-PROCEDURE ArrayToAdr*(VAR array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr;
+PROCEDURE ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr;
 VAR
 	adr: Adr;
 	i, swapTemp: LONGINT;
-
 BEGIN
 	ASSERT((protocol = 4) OR (protocol = 6));
 
@@ -1006,7 +1001,7 @@ END IPConfig;
 	be passed to Checksum2, which sums the data following sequentially on the data summed by this
 	operation. Carries from bit 15 are accumulated in the top 16 bits, so at most 65535 words can be
 	summed by Checksum1 and Checksum2 together. *)
-PROCEDURE Checksum1*(VAR data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): LONGINT;
+PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): LONGINT;
 CODE {SYSTEM.AMD64}
 	MOV EAX, [RBP + chk1]
 	MOV RBX, [RBP + data]
@@ -1027,7 +1022,7 @@ END Checksum1;
 
 (** 	Continue a checksum operation. len can be zero or odd. chk1 can be the result of Checksum1 for
 	the immediately preceding data, or 0 for contiguous data. *)
-PROCEDURE Checksum2*(VAR data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): INTEGER;
+PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): INTEGER;
 	CODE {SYSTEM.AMD64}
 	MOV EAX, [RBP + chk1]
 	MOV RBX, [RBP + data]
@@ -1158,12 +1153,10 @@ END InterfaceByDstIP;
 
 (** Return the reference to an installed interface by its name. NIL is returned if no interface with this name
 	was found. *)
-PROCEDURE InterfaceByName*(name: ARRAY OF CHAR): Interface;
-VAR
-	item: Interface;
+PROCEDURE InterfaceByName*(CONST name: ARRAY OF CHAR): Interface;
+VAR item: Interface;
 BEGIN
 	item := interfaces;
-
 	WHILE (item # NIL) & (item.name # name) DO
 		item := item.next;
 	END;
@@ -1178,7 +1171,6 @@ PROCEDURE InterfaceByDevice*(dev: Network.LinkDevice): Interface;
 VAR
 	item: Interface;
 	unprefInt: Interface;
-
 BEGIN
 	unprefInt := NIL;
 	item := interfaces;
@@ -1250,13 +1242,12 @@ END RemoveReceiver;
 
 
 (** Checks if a string is a valid IPv4 address *)
-PROCEDURE IsValidIPv4Str (ipString: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE IsValidIPv4Str (CONST ipString: ARRAY OF CHAR): BOOLEAN;
 VAR
 	i,j: LONGINT;
 	ipNr: LONGINT;
 	digits: ARRAY 4 OF CHAR;
 	startClass: LONGINT;
-
 BEGIN
 	i := 0;
 
@@ -1535,7 +1526,7 @@ END RemoveInterface;
 
 
 (* Prints out a packet *)
-PROCEDURE PacketOut*(title: ARRAY OF CHAR; buffer: ARRAY OF CHAR; all: BOOLEAN);
+PROCEDURE PacketOut*(CONST title, buffer: ARRAY OF CHAR; all: BOOLEAN);
 VAR
 	i: LONGINT;
 	length: LONGINT;

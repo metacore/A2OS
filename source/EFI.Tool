@@ -15,7 +15,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --
 ** Kernel Image **
 
 System.DoCommands
-Compiler.Compile --newObjectFile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
+Compiler.Compile --newObjectFile --mergeSections -b=AMD --bits=32 --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
 	I386.Builtins.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
 	BIOS.Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod BIOS.I386.Traps.Mod Locks.Mod BIOS.PCI.Mod 

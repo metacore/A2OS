@@ -44,7 +44,7 @@ END SoftwareInterrupt;
 PROCEDURE Bench*(context : Commands.Context); (** [nofSamples] ~ *)
 VAR nofSamples, index, oldNgc, ignore : LONGINT;
 BEGIN {EXCLUSIVE}
-	context.arg.GetInteger(nofSamples, FALSE);
+	context.arg.SkipWhitespace; context.arg.Int(nofSamples, FALSE);
 	IF (nofSamples < MinNofSamples) THEN nofSamples := MinNofSamples;
 	ELSIF (nofSamples > MaxNofSamples) THEN nofSamples := MaxNofSamples;
 	END;
@@ -84,7 +84,7 @@ VAR
 	nofSamples, min, avg, max, i : LONGINT; sum : HUGEINT;
 	diff, diffSum, standardDeviation : LONGREAL;
 BEGIN {EXCLUSIVE}
-	context.arg.GetInteger(mhz, FALSE);
+	context.arg.SkipWhitespace; context.arg.Int(mhz, FALSE);
 	IF (data # NIL) THEN
 		nofSamples := LEN(data);
 		min := MAX(LONGINT); max := MIN(LONGINT); sum := 0;

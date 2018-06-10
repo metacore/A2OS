@@ -392,8 +392,8 @@ TYPE
 				(* card IO information *)
 			busNo, devNo, slotNo: LONGINT;	(* PCI Address *)
 			buffers: ARRAY (QBufferSize + SCBBufferSize + BufferAlignment) OF CHAR;	(* Q and SCB buffers *)
-			scbArea: LONGINT;	(* virtual address of the hardware scb buffer, shared with the sequencer *)
-			queueArea: LONGINT;	(*virtual address of the queue buffers, shared with the sequencer *)
+			scbArea: ADDRESS;	(* virtual address of the hardware scb buffer, shared with the sequencer *)
+			queueArea: ADDRESS;	(*virtual address of the queue buffers, shared with the sequencer *)
 			in, out: LONGINT;	(*pointer to next scb*)
 			base: ADDRESS;	(*virtual address for memory mapped IO / port address for port based IO *)
 			Put1: PROCEDURE (d: Bus; offset: LONGINT; val: CHAR);
@@ -540,13 +540,13 @@ END DumpAllLists;
 
 PROCEDURE PortPut(d: Bus; offset: LONGINT; val: CHAR);
 BEGIN
-	Machine.Portout8(d.base+offset, val)
+	Machine.Portout8(LONGINT(d.base+offset), val)
 END PortPut;
 
 PROCEDURE PortGet(d: Bus; offset: LONGINT): CHAR;
 VAR ch: CHAR;
 BEGIN
-	Machine.Portin8(d.base+offset, ch); RETURN ch
+	Machine.Portin8(LONGINT(d.base+offset), ch); RETURN ch
 END PortGet;
 
 PROCEDURE MemoryPut(d: Bus; offset: LONGINT; val: CHAR);
@@ -687,7 +687,7 @@ BEGIN
 END QInSet;
 
 PROCEDURE QInit(d: Bus);
-VAR paddr, i: LONGINT;
+VAR paddr: ADDRESS; i: WORD;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "QInit"); KernelLog.Ln  END;
 (*
@@ -765,7 +765,7 @@ BEGIN
 END HSFreeScb;
 
 PROCEDURE HSInit(d: Bus);
-VAR  paddr, i: LONGINT;  quit: BOOLEAN;
+VAR  paddr: ADDRESS; i: WORD;  quit: BOOLEAN;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "HSInit"); KernelLog.Ln  END;
 	(*allocate hw-scb buffer*)
@@ -1335,7 +1335,7 @@ END ScbControl;
 
 PROCEDURE BusSchedule(d: Bus;  VAR c: SCSI.Command);
 CONST  MaxRange = 64;
-VAR  index, num, useRange, sgaddr: LONGINT; target: CHAR;  range: ARRAY 2, MaxRange+1 OF Machine.Range;
+VAR  index, num, useRange: LONGINT; sgaddr: ADDRESS; target: CHAR;  range: ARRAY 2, MaxRange+1 OF Machine.Range;
 	(*dog: Watchdog;*)
 	cmd: ARRAY 2, 16 OF CHAR;  cmdBlock: LONGINT;
 BEGIN
@@ -1372,7 +1372,7 @@ BEGIN
 		UNTIL num = 1;
 		SYSTEM.MOVE(ADDRESSOF(c.cmd[0]), ADDRESSOF(cmd[cmdBlock, 0]), c.clen);
 	END;
-	HSSet4(d, index, HScmdPtr, range[0, 0].adr);
+	HSSet4(d, index, HScmdPtr, Machine.Ensure32BitAddress(range[0, 0].adr));
 	HSSet(d, index, HScmdLen, CHR(c.clen));
 
 	IF c.dlen = 0 THEN
@@ -1404,9 +1404,9 @@ BEGIN
 			IF num > 1 THEN KernelLog.Char("%") ELSE KernelLog.Char("$") END
 		END;
 		HSSet(d, index, HSSGcount, CHR(num));
-		HSSet4(d, index, HSSGptr, sgaddr+SIZEOF(Machine.Range));	(*pass address to 2nd block*)
-		HSSet4(d, index, HSdataPtr, range[useRange, 0].adr);
-		HSSet4(d, index, HSdataCnt, range[useRange, 0].size);
+		HSSet4(d, index, HSSGptr, Machine.Ensure32BitAddress(sgaddr+SIZEOF(Machine.Range)));	(*pass address to 2nd block*)
+		HSSet4(d, index, HSdataPtr, Machine.Ensure32BitAddress(range[useRange, 0].adr));
+		HSSet4(d, index, HSdataCnt, LONGINT (range[useRange, 0].size));
 		IF traceCmds IN trace THEN
 			KernelLog.String("  Data = "); KernelLog.Int(c.dlen, 0);
 			KernelLog.Int(useRange, 2);

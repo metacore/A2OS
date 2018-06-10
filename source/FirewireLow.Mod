@@ -60,7 +60,7 @@ TYPE
 
 		(** Allocates the receive buffer for the SelfID DMA context *)
 		PROCEDURE SelfIDAlloc;
-		VAR buffer: FirewireLowUtil.CharBuffer; adr: LONGINT; s: SET;
+		VAR buffer: FirewireLowUtil.CharBuffer; adr: ADDRESS; s: SET;
 		BEGIN
 			(* KernelLog.String("Entering ConfigSelfID"); *)
 			KernelLog.Ln();
@@ -948,7 +948,7 @@ TYPE
 		PROCEDURE SendPacket(contest: Contest; VAR packet : OHCIPacket; z: LONGINT);
 		VAR cycleTimer: SET; desc,descLast: FirewireLowUtil.GeneralDesc; descOMI: FirewireLowUtil.OutputMoreImmediate;
 			descOL: FirewireLowUtil.OutputLast; descOLI: FirewireLowUtil.OutputLastImmediate; block: FirewireLowUtil.Block;
-			branchAddressPtr: LONGINT; ptrToBuf: FirewireLowUtil.CharBuffer;
+			branchAddressPtr: ADDRESS; ptrToBuf: FirewireLowUtil.CharBuffer;
 		BEGIN
 			(* KernelLog.String("Sending packet to node: "); KernelLog.Int(SYSTEM.VAL(LONGINT,packet.nodeID),2); KernelLog.Ln(); *)
 
@@ -1251,7 +1251,7 @@ TYPE
 
 		(** Allocates a buffer for the configuration rom *)
 		PROCEDURE ConfigRomAlloc;
-		VAR buffer: FirewireLowUtil.CharBuffer; adr: LONGINT; s: SET;
+		VAR buffer: FirewireLowUtil.CharBuffer; adr: ADDRESS; s: SET;
 		BEGIN
 			(* KernelLog.String("Entering configuration rom allocation"); KernelLog.Ln(); *)
 			(* Allocating 2k buffer *)
@@ -1389,7 +1389,7 @@ TYPE
 		PROCEDURE InitAsyncRecvCont;
 			VAR i: LONGINT; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
 			quadlet1, quadlet2, quadlet3, quadlet4, reqCount: SET; reqCntst, resCntst: FirewireLowUtil.Contest; block: FirewireLowUtil.Block;
-			branchAddressPtr: LONGINT;
+			branchAddressPtr: ADDRESS;
 		BEGIN
 			desc:= OHCI.IMDesc;
 			reqCntst:= OHCI.ARController.GetReqContest();
@@ -1465,7 +1465,7 @@ TYPE
 		PROCEDURE InitIsochRecvCont;
 		VAR i: LONGINT; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
 			quadlet1, quadlet2, quadlet3, quadlet4, reqCount: SET; contest: FirewireLowUtil.IRContest; block: FirewireLowUtil.Block;
-			branchAddressPtr: LONGINT;
+			branchAddressPtr: ADDRESS;
 		BEGIN
 			OHCI.IRController.ResetIterator();
 			IF OHCI.IRController.hasNext THEN contest:= OHCI.IRController.GetNextContest() END;

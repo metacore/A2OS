@@ -662,17 +662,17 @@ TYPE
 	(** Represents a descriptor block *)
 	Block* = RECORD
 		descNum*: LONGINT;
-		start*: LONGINT;
-		end*: LONGINT; (* Points to first quadlet of last descriptor *)
+		start*: ADDRESS;
+		end*: ADDRESS; (* Points to first quadlet of last descriptor *)
 	END;
 
 	(** Represents a context program *)
 	Program* = OBJECT
-		VAR blockBuffer*: BlockBuffer; bufferAddr*: LONGINT; j,blockNum: LONGINT; hasNext,result: BOOLEAN;
-			branchAddressPtr, branchAddress: LONGINT; nextAddr*: LONGINT; packetOffset*: LONGINT; curDesc*: SET;
+		VAR blockBuffer*: BlockBuffer; bufferAddr*: ADDRESS; j,blockNum: LONGINT; hasNext,result: BOOLEAN;
+			branchAddressPtr, branchAddress: ADDRESS; nextAddr*: ADDRESS; packetOffset*: LONGINT; curDesc*: SET;
 			ptrToBuf*: CharBuffer; oldPtrToBlck,ptrToBlck: CharBuffer;
 
-		PROCEDURE SetBranchAddress*(address,ptr: LONGINT;newPtrToBlck: CharBuffer);
+		PROCEDURE SetBranchAddress*(address,ptr: ADDRESS;newPtrToBlck: CharBuffer);
 		BEGIN
 			oldPtrToBlck:= ptrToBlck;
 			ptrToBlck:= newPtrToBlck;
@@ -684,7 +684,7 @@ TYPE
 		END SetBranchAddress;
 
 		(* Used to set the program buffer address *)
-		 PROCEDURE SetBufferAddr*(addr: LONGINT);
+		 PROCEDURE SetBufferAddr*(addr: ADDRESS);
 		 BEGIN
 		 	bufferAddr:= addr;
 		 	(* nextAddr and curDesc represent basically the same thing *)
@@ -692,7 +692,7 @@ TYPE
 		 	curDesc:= SYSTEM.VAL(SET,bufferAddr); (* just to initialize *)
 		 END SetBufferAddr;
 
-		 PROCEDURE GetBufferAddr*():LONGINT;
+		 PROCEDURE GetBufferAddr*():ADDRESS;
 		 BEGIN
 		 	RETURN bufferAddr;
 		 END GetBufferAddr;
@@ -1510,8 +1510,8 @@ BEGIN
 	END;
 END SetPhyControl;
 
-(** Converts a LONGINT to a set *)
-PROCEDURE ConvertToSet*(l: LONGINT):SET;
+(** Converts a value to a set *)
+PROCEDURE ConvertToSet*(l: ADDRESS):SET;
 BEGIN
 	RETURN SYSTEM.VAL(SET,l)
 END ConvertToSet;
@@ -1531,8 +1531,8 @@ BEGIN
 END DelOffset;
 
 (** Basically does what system.move does *)
-PROCEDURE AllocPacket*(dataAddr: ARRAY OF SET; dataSize: LONGINT;adr: LONGINT):SET;
-VAR i,j: LONGINT; address: SET;
+PROCEDURE AllocPacket*(dataAddr: ARRAY OF SET; dataSize: SIZE;adr: ADDRESS):SET;
+VAR i,j: SIZE; address: SET;
 BEGIN
 	(* dataSize is in bytes *)
 	address:= SYSTEM.VAL(SET,adr);

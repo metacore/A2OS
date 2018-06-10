@@ -744,7 +744,7 @@ END InvertByteOrder;
 
 (* Allocates quadlet aligned buffers *)
 PROCEDURE AllocBuf(size:LONGINT;VAR ptrToBfr: Buffer):SET;
-VAR buffer: Buffer; adr: LONGINT; s: SET;
+VAR buffer: Buffer; adr: ADDRESS; s: SET;
 BEGIN
 	NEW(buffer, size + 4);
 	adr:= ADDRESSOF(buffer[0]);

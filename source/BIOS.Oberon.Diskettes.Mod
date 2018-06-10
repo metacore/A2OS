@@ -51,7 +51,7 @@ VAR
 	state: SHORTINT;
 	result: ARRAY 7 OF SET;
 	errors: ARRAY 3 OF SET;
-	dmabufvirt, dmabufphys, dmabufsize: LONGINT;
+	dmabufvirt, dmabufphys: ADDRESS; dmabufsize: LONGINT;
 	motor, interrupt, installed: BOOLEAN;
 	trace: SHORTINT;
 
@@ -91,7 +91,7 @@ END Error;
 (* SetupDMA - Start a DMA operation *)
 
 PROCEDURE SetupDMA(read: BOOLEAN; chan, len: LONGINT);
-VAR adr, page, mode: LONGINT;
+VAR adr: ADDRESS; page, mode: LONGINT;
 BEGIN
 	adr := dmabufphys;
 	ASSERT(len <= dmabufsize);
@@ -600,10 +600,10 @@ BEGIN {EXCLUSIVE}
 END Remove;
 
 BEGIN
-	dmabufsize := Machine.dmaSize;
+	dmabufsize := LONGINT(Machine.dmaSize);
 	IF dmabufsize > 0 THEN
 		dmabufphys := Machine.lowTop;
-		Machine.MapPhysical(dmabufphys, dmabufsize, SYSTEM.VAL(ADDRESS,dmabufvirt))
+		Machine.MapPhysical(dmabufphys, dmabufsize, dmabufvirt)
 	ELSE
 		dmabufphys := 0
 	END;

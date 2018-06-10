@@ -335,7 +335,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	BIOS32 { BIOS.I386.Traps.Mod }
-	BIOS64 { BIOS.AMD64.Machine.Mod }
+	BIOS64 { BIOS.AMD64.Traps.Mod }
 	ARM { ARM.Traps.Mod }
 	WIN32 { Windows.I386.Traps.Mod }
 	WIN64 { Windows.AMD64.Traps.Mod }
